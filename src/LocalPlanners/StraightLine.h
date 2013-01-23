@@ -278,7 +278,7 @@ StraightLine<MPTraits>::IsConnectedSLSequential(Environment* _env, StatClass& _s
 
   int nIter = 0;
   for(int i = 1; i < nTicks; i++){ //don't need to check the ends, _c1 and _c2
-    tick.Increment(incr);
+    tick += incr;
     _cdCounter++;
     if(_checkCollision){
       if(!tick.InBoundary(_env) || 
@@ -286,10 +286,8 @@ StraightLine<MPTraits>::IsConnectedSLSequential(Environment* _env, StatClass& _s
         ) {
         if(tick.InBoundary(_env))   
           _col = tick;
-        CfgType negIncr;
-        negIncr = incr; 
-        negIncr.negative(incr);
-        tick.Increment(negIncr);
+        CfgType negIncr = -incr; 
+        tick += negIncr;
         _lpOutput->edge.first.SetWeight(_lpOutput->edge.first.GetWeight() + nIter);
         _lpOutput->edge.second.SetWeight(_lpOutput->edge.second.GetWeight() + nIter);
         typename LPOutput<MPTraits>::LPSavedEdge tmp;
@@ -354,9 +352,7 @@ StraightLine<MPTraits>::IsConnectedSLBinary(Environment* _env, StatClass& _stats
 
     int mid = i + (j-i)/2;
     
-    CfgType midCfg = _c1;
-    midCfg.multiply(incr, mid);
-    midCfg.add(_c1, midCfg);
+    CfgType midCfg = incr*mid + _c1;
 
     _cdCounter++;
     
@@ -377,7 +373,7 @@ StraightLine<MPTraits>::IsConnectedSLBinary(Environment* _env, StatClass& _stats
   if(_savePath || _saveFailedPath) {
     CfgType tick = _c1;
     for(int n=1; n<nTicks; ++n) {
-      tick.Increment(incr);
+      tick += incr;
       _lpOutput->path.push_back(tick);
     }
   }

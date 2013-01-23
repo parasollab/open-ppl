@@ -343,7 +343,7 @@ CCsConnector<MPTraits>::ConnectSmallCC( RoadmapType* _rm, StatClass& _stats,
         typename vector<typename LPOutput<MPTraits>::LPSavedEdge>::iterator eit;
         for(eit=lpOutput.savedEdge.begin(); eit!=lpOutput.savedEdge.end(); eit++) {
           CfgType tmp = eit->first.second;
-          if(!tmp.AlmostEqual(rgraph->GetCfg(cc1Elem))){
+          if(tmp != rgraph->GetCfg(cc1Elem)){
             VID tmpVID = rgraph->AddVertex(tmp);
             rgraph->AddEdge(cc1Elem, tmpVID, eit->second);
           }
@@ -400,7 +400,7 @@ CCsConnector<MPTraits>::ConnectBigCC( RoadmapType* _rm, StatClass& _stats,
       typename vector<typename LPOutput<MPTraits>::LPSavedEdge>::iterator eit;
       for(eit = lpOutput.savedEdge.begin(); eit != lpOutput.savedEdge.end(); eit++) {
         CfgType tmp = eit->first.second;
-        if(!tmp.AlmostEqual(rgraph->GetCfg(cc1Elem))){
+        if(tmp != rgraph->GetCfg(cc1Elem)){
           VID tmpVID = rgraph->AddVertex(tmp);
           rgraph->AddEdge(cc1Elem, tmpVID, eit->second);
         }

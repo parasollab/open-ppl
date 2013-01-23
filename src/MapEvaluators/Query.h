@@ -49,7 +49,6 @@ class Query : public MapEvaluatorMethod<MPTraits> {
     virtual void NodeEnhance(RoadmapType* _rdmp, StatClass& _stats) { }
 
     virtual void ReadQuery(string _filename);
-    virtual void WritePath(RoadmapType* _rdmp, string _filename);
 
     virtual bool operator()(); 
 
@@ -221,9 +220,9 @@ Query<MPTraits>::PerformQuery(RoadmapType* _rdmp, StatClass& _stats) {
   for(typename vector<CfgType>::iterator it = m_query.begin(); it+1 != m_query.end(); it++) {
     if(this->m_debug) {
       cout << "\n*Q* query is ...     ";
-      it->Write(cout);
+      cout << *it;
       cout << "\n*Q*                  ";
-      (it+1)->Write(cout);
+      cout << *(it+1);
       cout << "\n*Q* working  ..." << endl;
     }
 
@@ -237,10 +236,10 @@ Query<MPTraits>::PerformQuery(RoadmapType* _rdmp, StatClass& _stats) {
   if(!m_doneSmoothing) {
     if(m_pathFile == "") {
       cerr << "Warning: no path file specified. Outputting path to \"Basic.path\"." << endl;
-      WritePath(_rdmp, "Basic.path");
+      WritePath("Basic.path", m_path);
     }
     else
-      WritePath(_rdmp, m_pathFile);
+      WritePath(m_pathFile, m_path);
 
     if(m_smooth)
       Smooth();
@@ -402,10 +401,10 @@ Query<MPTraits>::PerformQuery(CfgType _start, CfgType _goal, RoadmapType* _rdmp,
     if(connected) {
       if(m_intermediateFile != "") {
         // Print out all start, all graph nodes, and goal; no "ticks" from local planners
-        vector<CfgType> mapCfgTypes;
+        vector<CfgType> mapCfgs;
         for(typename vector<VID>::iterator it = shortestPath.begin(); it != shortestPath.end(); it++)
-          mapCfgTypes.push_back(_rdmp->GetGraph()->GetCfg(*it));
-        WritePathConfigurations(m_intermediateFile, mapCfgTypes, this->GetMPProblem()->GetEnvironment());
+          mapCfgs.push_back(_rdmp->GetGraph()->GetCfg(*it));
+        WritePath(m_intermediateFile, mapCfgs);
       }
       break;
     }
@@ -466,7 +465,7 @@ Query<MPTraits>::Smooth() {
   if(smoothQueryResult) {
     if(m_smoothFile == "")
       cerr << "Warning: no smooth path file specified. Outputting smoothed path to \"Basic.smooth.path\"." << endl;
-    WritePath(rdmp, m_smoothFile);
+    WritePath(m_smoothFile, m_path);
   }
   else if(this->m_debug)
     cout << "*S* Smooth query failed! (This should not happen.)" << endl;
@@ -501,7 +500,7 @@ Query<MPTraits>::CanRecreatePath(RoadmapType* _rdmp, StatClass& _stats,
         << *it << ", " << *(it+1) << ")" << " outputing error path in error.path and exiting." << endl;
       _recreatedPath.insert(_recreatedPath.end(), ci.path.begin(), ci.path.end());
       _recreatedPath.push_back(col);
-      WritePathConfigurations("error.path", _recreatedPath, this->GetMPProblem()->GetEnvironment());
+      WritePath("error.path", _recreatedPath);
       exit(1);
     }
   }
@@ -518,22 +517,12 @@ Query<MPTraits>::ReadQuery(string _filename) {
     cout << endl << "In ReadQuery: can't open infile: " << _filename << endl;
     return;
   }
-  tempCfg.Read(in);
+  in >> tempCfg;
   while(in) {
     m_query.push_back(tempCfg);
-    tempCfg.Read(in);
+    in >> tempCfg;
   }
   in.close();
-}
-
-// Writes path to file
-template<class MPTraits>
-void
-Query<MPTraits>::WritePath(RoadmapType* _rdmp, string _filename) {
-  vector<Cfg*> pPath;
-  for(size_t i = 0; i < m_path.size(); i++)
-    pPath.push_back(&m_path[i]);
-  WritePathConfigurations(_filename, pPath, this->GetMPProblem()->GetEnvironment());
 }
 
 //initialize variable defaults

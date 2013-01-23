@@ -10,9 +10,9 @@
 #include "MPStrategy/ClosedChainStrategy.h"
 #endif
 
-#if (defined(PMPManifold))
-#include "Cfg/ManifoldCfg.h"
-typedef ManifoldCfg PMPLCfgType;
+#if (defined(PMPCfg))
+#include "Cfg/Cfg.h"
+typedef Cfg PMPLCfgType;
 #elif (defined(PMPCfgSurface))
 #include "Cfg/CfgSurface.h"
 typedef CfgSurface PMPLCfgType;

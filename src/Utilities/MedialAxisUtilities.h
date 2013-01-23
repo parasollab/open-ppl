@@ -308,17 +308,16 @@ ClearanceUtility<MPTraits>::ExactCollisionInfo(CfgType& _cfg, CfgType& _clrCfg, 
   CfgType stepDir;
   double factor = 0;
   for(size_t i=0; i<_clrCfg.DOF(); i++) {
-    double cfgi = _cfg.GetSingleParam(i);
     if(i < _clrCfg.PosDOF()) {
-      _clrCfg.SetSingleParam(i, cfgi + clrDir[i]);
-      stepDir.SetSingleParam(i, clrDir[i]);
+      _clrCfg[i] = _cfg[i] + clrDir[i];
+      stepDir[i] = clrDir[i];
       factor += pow(clrDir[i], 2);
     }
     else{
-      _clrCfg.SetSingleParam(i, cfgi);
-      stepDir.SetSingleParam(i, 0.0);
+      _clrCfg[i] = _cfg[i];
+      stepDir[i] = 0.0;
     }
-    stepDir.multiply(stepDir, env->GetPositionRes()/sqrt(factor));
+    stepDir *= env->GetPositionRes()/sqrt(factor);
   }
 
   if(_clrCfg == _cfg)
@@ -333,7 +332,7 @@ ClearanceUtility<MPTraits>::ExactCollisionInfo(CfgType& _cfg, CfgType& _clrCfg, 
     bool tmpValidity = vcm->IsValid(tmpCfg, env, *stats, tmpInfo, &call);
     tmpValidity = tmpValidity && !vcm->IsInsideObstacle(tmpCfg, env, tmpInfo);
     while(!tmpValidity) {
-      tmpCfg.add(tmpCfg, incr);
+      tmpCfg += incr;
 
       tmpValidity = vcm->IsValid(tmpCfg, env, *stats, tmpInfo, &call);
       tmpValidity = tmpValidity && !vcm->IsInsideObstacle(tmpCfg, env, tmpInfo);
@@ -417,18 +416,18 @@ ClearanceUtility<MPTraits>::ApproxCollisionInfo(CfgType& _cfg, CfgType& _clrCfg,
       double factor=0.0;
       for(size_t j=0; j<tmp2.DOF(); j++) {
         if(j < tmp2.PosDOF())
-          factor += pow(tmp2.GetSingleParam(j), 2);
+          factor += pow(tmp2[j], 2);
         else 
-          tmp2.SetSingleParam(j, 0.0);
+          tmp2[j] = 0.0;
       }
-      tmp2.multiply(tmp2, posRes/sqrt(factor), false);
+      tmp2 *= posRes/sqrt(factor);
     }
-    tmp2.add(tmp1, tmp2);
+    tmp2 += tmp1;
     CfgType tmp3;
     tmp3.FindIncrement(tmp1, tmp2, &nTicks, posRes, oriRes);
     for(size_t j = tmp3.PosDOF(); j < tmp3.DOF(); ++j) {
-      if(tmp3.GetSingleParam(j) > 0.5)
-        tmp3.SetSingleParam(j, tmp3.GetSingleParam(j) - 1.0, false);
+      if(tmp3[j] > 0.5)
+        tmp3[j]--;
     }
     incr.push_back(tmp3);
   }
@@ -445,7 +444,7 @@ ClearanceUtility<MPTraits>::ApproxCollisionInfo(CfgType& _cfg, CfgType& _clrCfg,
     size_t i = 0;
     for(CIT incrIT = incr.begin(), tickIT = tick.begin(); 
         incrIT!=incr.end() || tickIT!=tick.end(); ++incrIT, ++tickIT) {
-      tickIT->Increment(*incrIT);
+      *tickIT += *incrIT;
       currInside = vcm->IsInsideObstacle(*tickIT, env, tmpInfo);
       currValidity = vcm->IsValid(*tickIT, env, *stats, tmpInfo, &call);
       currInBBX = tickIT->InBoundary(env, _bb);
@@ -457,8 +456,7 @@ ClearanceUtility<MPTraits>::ApproxCollisionInfo(CfgType& _cfg, CfgType& _clrCfg,
       if(currValidity != initValidity) { // If Validity State has changed
         if(lastLapIndex != i) {
           CfgType candI;
-          candI.negative(*incrIT);
-          candI.add(*tickIT, candI);
+          candI = *tickIT - *incrIT;
           candIn.push_back(candI);
           candTick.push_back(i);
         } 
@@ -487,8 +485,7 @@ ClearanceUtility<MPTraits>::ApproxCollisionInfo(CfgType& _cfg, CfgType& _clrCfg,
     remove.clear();
     foundOne=false;
     for(size_t i=0; i<candIn.size(); ++i) {
-      middleCfg.multiply(incr[candTick[i]], mid);
-      middleCfg.add(candIn[i], middleCfg);
+      middleCfg = incr[candTick[i]] * mid + candIn[i];
       midInside = vcm->IsInsideObstacle(middleCfg,env,tmpInfo);
       midValidity = vcm->IsValid(middleCfg, env, *stats, tmpInfo, &call);
       midInBBX = middleCfg.InBoundary(env,_bb);
@@ -525,8 +522,7 @@ ClearanceUtility<MPTraits>::ApproxCollisionInfo(CfgType& _cfg, CfgType& _clrCfg,
   if(initValidity) { // Low may be initial cfg so keep looking
     while(low == 0.0) {
       mid=(low+high)/2.0;
-      middleCfg.multiply(incr[candTick[0]],mid);
-      middleCfg.add(candIn[0], middleCfg);
+      middleCfg = incr[candTick[0]] * mid + candIn[0];;
 
       midInside = vcm->IsInsideObstacle(middleCfg, env, tmpInfo);
       midValidity = vcm->IsValid(middleCfg, env, *stats, tmpInfo, &call);
@@ -544,8 +540,7 @@ ClearanceUtility<MPTraits>::ApproxCollisionInfo(CfgType& _cfg, CfgType& _clrCfg,
   else { // Pushed out, high is all we need
     mid=high;
   }
-  middleCfg.multiply(incr[candTick[0]], mid);
-  middleCfg.add(candIn[0], middleCfg);
+  middleCfg = incr[candTick[0]] * mid + candIn[0];
   _clrCfg = middleCfg;
   _cdInfo.m_minDist = (initValidity ? 1.0 : -1.0) * dm->Distance(env, middleCfg, _cfg);
 
@@ -825,17 +820,16 @@ MedialAxisUtility<MPTraits>::PushCfgToMedialAxis(CfgType& _cfg, shared_ptr<Bound
   // Determine positional direction to move
   if(this->CollisionInfo(_cfg, transCfg, _bb, tmpInfo)) {
     prevInfo = tmpInfo;
-    //transCfg.subtract(transCfg, _cfg);
-    transCfg.subtract(_cfg, transCfg);
+    transCfg = _cfg - transCfg;
     double magnitude = 0;
     for(size_t i = 0; i < transCfg.DOF(); ++i){
-      magnitude += transCfg.GetSingleParam(i) * transCfg.GetSingleParam(i);
+      magnitude += transCfg[i] * transCfg[i];
     }
     magnitude = sqrt(magnitude);
     for(size_t i = 0; i<transCfg.DOF(); ++i){
-      transCfg.SetSingleParam(i, transCfg.GetSingleParam(i)/magnitude * posRes);
-      if(i > transCfg.PosDOF() && transCfg.GetSingleParam(i) > 0.5){
-        transCfg.SetSingleParam(i, transCfg.GetSingleParam(i) - 1.0, false);
+      transCfg[i] *= posRes/magnitude;
+      if(i > transCfg.PosDOF() && transCfg[i] > 0.5){
+        transCfg[i]--;
       }
     }
     if(this->m_debug) cout << "TRANS CFG: " << transCfg << endl;
@@ -856,8 +850,7 @@ MedialAxisUtility<MPTraits>::PushCfgToMedialAxis(CfgType& _cfg, shared_ptr<Bound
 
     // Increment
     heldCfg = tmpCfg;
-    tmpCfg.multiply(transCfg, checkBack ? cbStepSize : stepSize);
-    tmpCfg.add(_cfg, tmpCfg);
+    tmpCfg = transCfg*(checkBack ? cbStepSize : stepSize) + _cfg;
 
     // Test for in BBX and inside obstacle
     inside = vcm->IsInsideObstacle(tmpCfg, env, tmpInfo);
@@ -997,8 +990,7 @@ MedialAxisUtility<MPTraits>::PushCfgToMedialAxis(CfgType& _cfg, shared_ptr<Bound
   }
   middle = (lBound+uBound)/2.0;
   if(this->m_debug) cout << "Lower and upper bounds: " << lBound << "/" << middle << "/" << uBound  << endl;
-  midMCfg.multiply(transCfg, middle);
-  midMCfg.add(_cfg, midMCfg);
+  midMCfg = transCfg*middle + _cfg;
 
   if(this->m_debug) VDClearComments();
   if(this->m_debug) cout << "start/mid/end: " << endl << startCfg << endl << midMCfg << endl << endingCfg << endl;
@@ -1016,12 +1008,10 @@ MedialAxisUtility<MPTraits>::PushCfgToMedialAxis(CfgType& _cfg, shared_ptr<Bound
   dists[4] = tmpInfo.m_minDist;
 
   middleS = (lBound+middle)/2.0;
-  midSCfg.multiply(transCfg, middleS);
-  midSCfg.add(_cfg, midSCfg);
+  midSCfg = transCfg*middleS + _cfg;
 
   middleE = (middle+uBound)/2.0;
-  midECfg.multiply(transCfg, middleE);
-  midECfg.add(_cfg, midECfg);  
+  midECfg = transCfg*middleE + _cfg;
 
   if(this->m_debug) {
     cout << "dists: ";
@@ -1048,10 +1038,8 @@ MedialAxisUtility<MPTraits>::PushCfgToMedialAxis(CfgType& _cfg, shared_ptr<Bound
     middleS = (lBound + middle)/2.0;
     middleE = (middle + uBound)/2.0;
     if(this->m_debug) cout << "Bounds: " << lBound << "/" << middleS << "/" << middle << "/" << middleE << "/" << uBound << endl;
-    midSCfg.multiply(transCfg, middleS);
-    midSCfg.add(_cfg, midSCfg);
-    midECfg.multiply(transCfg, middleE);
-    midECfg.add(_cfg, midECfg);  
+    midSCfg = transCfg*middleS + _cfg;
+    midECfg = transCfg*middleE + _cfg;
 
     passed = this->CollisionInfo(midSCfg, tmpTransCfg, _bb, tmpInfo);
     if(!passed) return false;

@@ -1,22 +1,24 @@
 #ifndef SURFACEVALIDITY_H_
 #define SURFACEVALIDITY_H_
 
+#ifdef PMPCfgSurface
+
 #include "ValidityCheckerMethod.h"
-#include "Cfg/CfgSurface.h"
 
 template<class MPTraits>
 class SurfaceValidity : public ValidityCheckerMethod<MPTraits> {
   public:
     typedef typename MPTraits::CfgType CfgType;
+    
     SurfaceValidity(string _vcLabel="");
     SurfaceValidity(typename MPTraits::MPProblemType* _problem, XMLNodeReader& _node) ;
 
     virtual ~SurfaceValidity() {}
 
     virtual bool 
-      IsValidImpl(Cfg& _cfg, Environment* _env, StatClass& _stats, CDInfo& _cdInfo, string *_callName);
+      IsValidImpl(CfgType& _cfg, Environment* _env, StatClass& _stats, CDInfo& _cdInfo, string *_callName);
 
-    virtual bool IsInsideObstacle(const Cfg& _cfg, Environment* _env, CDInfo& _cdInfo);
+    virtual bool IsInsideObstacle(const CfgType& _cfg, Environment* _env, CDInfo& _cdInfo);
 
   private:
     string m_vcLabel;
@@ -39,9 +41,9 @@ SurfaceValidity<MPTraits>::SurfaceValidity(typename MPTraits::MPProblemType* _pr
 
 template<class MPTraits>
 bool 
-SurfaceValidity<MPTraits>::IsValidImpl(Cfg& _cfg, Environment* _env, StatClass& _stats, CDInfo& _cdInfo, string *_callName){
+SurfaceValidity<MPTraits>::IsValidImpl(CfgType& _cfg, Environment* _env, StatClass& _stats, CDInfo& _cdInfo, string *_callName){
   bool result=false;
-  int sid = ((CfgSurface&) _cfg).GetSurfaceID();
+  int sid = _cfg.GetSurfaceID();
   if( sid == -1 ) { 
     //call default validity checker specified
     result = this->GetMPProblem()->GetValidityChecker(m_vcLabel)->IsValid(_cfg, _env, _stats, _cdInfo, _callName);
@@ -49,15 +51,14 @@ SurfaceValidity<MPTraits>::IsValidImpl(Cfg& _cfg, Environment* _env, StatClass& 
   else {
     //do surface validity based on sid
     //check if on surface
-    Point2d pt = ((CfgSurface&) _cfg).GetPos();
-    double  h  = ((CfgSurface&) _cfg).GetHeight();
+    Point2d pt = _cfg.GetPos();
+    double  h  = _cfg.GetHeight();
     int numSurfaces = _env->GetNavigableSurfacesCount();
     if( sid>=0 && sid < numSurfaces ) {
       shared_ptr<MultiBody> surface_body = _env->GetNavigableSurface(sid);
       shared_ptr<FixedBody> fb = surface_body->GetFixedBody(0);
       GMSPolyhedron & polyhedron = fb->GetWorldPolyhedron();
-      bool onSurf = polyhedron.IsOnSurface(pt, h);
-      result = onSurf;
+      result = polyhedron.IsOnSurface(pt, h);
     }
   }
   _cfg.SetLabel("VALID", result);
@@ -66,8 +67,8 @@ SurfaceValidity<MPTraits>::IsValidImpl(Cfg& _cfg, Environment* _env, StatClass& 
 }
 
 template<class MPTraits>
-bool SurfaceValidity<MPTraits>::IsInsideObstacle(const Cfg& _cfg, Environment* _env, CDInfo& _cdInfo){
-  int sid = ((CfgSurface&) _cfg).GetSurfaceID();
+bool SurfaceValidity<MPTraits>::IsInsideObstacle(const CfgType& _cfg, Environment* _env, CDInfo& _cdInfo){
+  int sid = _cfg.GetSurfaceID();
   bool result=false;
   //_stats
   StatClass* stats = this->GetMPProblem()->GetStatClass();
@@ -75,23 +76,21 @@ bool SurfaceValidity<MPTraits>::IsInsideObstacle(const Cfg& _cfg, Environment* _
 
   if( sid == -1 ) { 
     //call default validity checker specified
-    CfgType tmpCfg = (CfgType) _cfg;
-    result = this->GetMPProblem()->GetValidityChecker(m_vcLabel)->IsValid(tmpCfg, _env, *stats, _cdInfo, &callee);
-    return !result;
+    CfgType tmpCfg = _cfg;
+    return !this->GetMPProblem()->GetValidityChecker(m_vcLabel)->IsValid(tmpCfg, _env, *stats, _cdInfo, &callee);
   }
   else {
     //do surface validity based on sid
     //check if on surface
     //////////////////////////////////////////////////////////////////////////////
-    Point2d pt = ((CfgSurface&) _cfg).GetPos();
-    double  h  = ((CfgSurface&) _cfg).GetHeight();
+    Point2d pt = _cfg.GetPos();
+    double  h  = _cfg.GetHeight();
     int numSurfaces = _env->GetNavigableSurfacesCount();
     if( sid>=0 && sid < numSurfaces ) {
       shared_ptr<MultiBody> surface_body = _env->GetNavigableSurface(sid);
       shared_ptr<FixedBody> fb = surface_body->GetFixedBody(0);
       GMSPolyhedron & polyhedron = fb->GetWorldPolyhedron();
-      bool onSurf = polyhedron.IsOnSurface(pt, h);
-      result = onSurf;
+      result = polyhedron.IsOnSurface(pt, h);
     }
     else { 
       return false;
@@ -101,4 +100,5 @@ bool SurfaceValidity<MPTraits>::IsInsideObstacle(const Cfg& _cfg, Environment* _
   }
 }
 
+#endif
 #endif

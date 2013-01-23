@@ -129,7 +129,7 @@ ResamplePointStrategy<MPTraits>::Initialize() {
   inPath >> numCfgs;
   for(size_t i=0; i<numCfgs; ++i) {
     CfgType c;
-    c.Read(inPath);
+    inPath >> c;
     m_pathCfgs.push_back(c);
   }
   inPath.close();
@@ -228,7 +228,7 @@ ResamplePointStrategy<MPTraits>::Run() {
 template<class MPTraits>
 void
 ResamplePointStrategy<MPTraits>::Finalize() {
-  WritePathConfigurations(m_outputPathFilename.c_str(), m_outputPathCfgs, this->GetMPProblem()->GetEnvironment()); 
+  WritePath(m_outputPathFilename, m_outputPathCfgs); 
   //write output map
   ofstream osMap(m_outputMapFilename.c_str());
   this->GetMPProblem()->GetRoadmap()->Write(osMap, this->GetMPProblem()->GetEnvironment());
@@ -254,7 +254,7 @@ ResamplePointStrategy<MPTraits>::FindNeighbors(CfgType& _previous, CfgType& _cur
   for(size_t k=0; k < _maxAttempts && numOfSamples > 0; ++k) {  
     CfgType r, c;
     r.GetRandomRay(m_stepSize, env, dm);
-    c.add(r, _current); 
+    c = r + _current; 
     newConfigurationWeight = c.GetSmoothingValue(m_clearanceUtils, this->m_boundary);
     if((newConfigurationWeight > oldConfigurationWeight && m_typeName == "MAX_CLEARANCE") ||
         (newConfigurationWeight < oldConfigurationWeight && m_typeName == "PROTEIN_ENERGY")) {

@@ -18,7 +18,7 @@ class NodeClearanceValidity : public ValidityCheckerMethod<MPTraits> {
 
     virtual void PrintOptions(ostream& _os);
     
-    virtual bool IsValidImpl(Cfg& _cfg, Environment* _env, StatClass& _stats, 
+    virtual bool IsValidImpl(CfgType& _cfg, Environment* _env, StatClass& _stats, 
         CDInfo& _cdInfo, string* _callName);
 
   private:
@@ -56,7 +56,7 @@ NodeClearanceValidity<MPTraits>::PrintOptions(ostream& _os){
 
 template <class MPTraits>
 bool
-NodeClearanceValidity<MPTraits>::IsValidImpl(Cfg& _cfg, Environment* _env, StatClass& _stats, 
+NodeClearanceValidity<MPTraits>::IsValidImpl(CfgType& _cfg, Environment* _env, StatClass& _stats, 
     CDInfo& _cdInfo, string* _callName) {
   /* TODO: remove ifdef when constness problem in STAPL is fixed*/
 #ifndef _PARALLEL

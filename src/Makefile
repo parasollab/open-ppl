@@ -30,20 +30,20 @@ ifndef STL_LIB
   STL_LIB = 4.7.2
 endif 
 
+ifndef ROBOT_DEF
+  # define robot type
+  #ROBOT_DEF = PMPCfg
+  ROBOT_DEF = PMPCfgSurface
+  #ROBOT_DEF = PMPReachDistCC
+  #ROBOT_DEF = PMPReachDistCCFixed
+endif
+
 # include makefile defaults
 include ${UTILS_DIR}/makefile_includes/Makefile.defaults
 include ${PMPL_DIR}/Makefile.PMPLdefaults
 
-ifndef ROBOT_DEF
-  # define robot type
-  ROBOT_DEF = -DPMPManifold
-  #ROBOT_DEF = -DPMPCfgSurface
-  #ROBOT_DEF = -DPMPReachDistCC
-  #ROBOT_DEF = -DPMPReachDistCCFixed
-endif
-
 # macros
-DEFS += ${UTILS_DEF} ${ROBOT_DEF} ${CGAL_DEF} ${STAPL_DEF} 
+DEFS += ${UTILS_DEF} -D${ROBOT_DEF} ${CGAL_DEF} ${STAPL_DEF} 
 INCL =  ${PMPL_INCL} ${UTILS_INCL} ${STAPL_INCL} ${BOOST_INCL} ${CGAL_INCL} ${MPNN_INCL}
 LIBS =  ${PMPL_LIB} ${UTILS_LIB} ${MPNN_LIB} ${STAPL_LIB}
 

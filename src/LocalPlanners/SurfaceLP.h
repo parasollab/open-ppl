@@ -93,10 +93,9 @@ IsConnected(Environment* _env, StatClass& _stats,
   //build or make an increment (as in SL LP)
   ValidityCheckerPointer vcm = this->GetMPProblem()->GetValidityChecker(StraightLine<MPTraits>::m_vcLabel);
   int nTicks;
-  CfgType tick;
-  tick = _c1; 
+  CfgType tick = _c1;
   CfgType incr;
-  incr.FindIncrement(_c1,_c2,&nTicks,_positionRes,_orientationRes);
+  incr.FindIncrement(_c1, _c2, &nTicks, _positionRes, _orientationRes);
   string callee = this->GetName();
   string method = "-SurfaceLP::IsConnected";
   CDInfo cdInfo;
@@ -107,15 +106,15 @@ IsConnected(Environment* _env, StatClass& _stats,
   vector<int> surfaceIDs;
 
   for(int i = 1; i < nTicks && allOnValidSurface; i++){ //don't need to check the ends, _c1 and _c2
-    tick.Increment(incr);
+    tick += incr;
     bool foundValidSurfForTick=false;
     CDInfo tmpCDInfo;
     for(int sid=-1; sid<_env->GetNavigableSurfacesCount()&&!foundValidSurfForTick; sid++) {
       CfgType tmpTick = tick;
-      ((CfgSurface&) tmpTick).SetSurfaceID(sid);//set SurfaceID to test if 2D collision is okay
+      tmpTick.SetSurfaceID(sid);//set SurfaceID to test if 2D collision is okay
       if( sid == -1 ) {
 	 if( vcm->IsValid(tmpTick, _env, _stats, tmpCDInfo, &_callee) ) {
-	    if( fabs(tick.GetSingleParam(1))<m_acceptableHeightDiff ) {
+	    if( fabs(tick.GetHeight())<m_acceptableHeightDiff ) {
 	       //this is valid, -1 should have y-value 0
 	       foundValidSurfForTick = true;
 	       surfaceIDs.push_back(sid);
@@ -132,7 +131,7 @@ IsConnected(Environment* _env, StatClass& _stats,
 	 Point2d pt = tick.GetPos();
 	 double tH = polyhedron.HeightAtPt(pt, isValid); 
 	 if( isValid ) {
-	    double hDiff = fabs(tH-tick.GetSingleParam(1));
+	    double hDiff = fabs(tH-tick.GetHeight());
 	    if( hDiff<m_acceptableHeightDiff ) {
 	       foundValidSurfForTick = true;
 	       surfaceIDs.push_back(sid);
@@ -156,5 +155,6 @@ IsConnected(Environment* _env, StatClass& _stats,
     _stats.IncLPConnections(this->GetNameAndLabel() );  
   return connected;
 }
+
 #endif
 #endif

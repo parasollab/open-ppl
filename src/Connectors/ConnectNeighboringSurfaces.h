@@ -1,6 +1,8 @@
 #ifndef CONNECTNEIGHBORINGSURFACES_H
 #define CONNECTNEIGHBORINGSURFACES_H
 
+#ifdef PMPCfgSurface
+
 #include "ConnectorMethod.h"
 
 #define CLOSEDIST 0.4
@@ -114,7 +116,6 @@ template<typename ColorMap, typename InputIterator, typename OutputIterator>
 void ConnectNeighboringSurfaces<MPTraits>::Connect(RoadmapType* _rm, StatClass& _stats, 
       ColorMap& _cmap, InputIterator _itr1First, InputIterator _itr1Last,
       InputIterator _itr2First, InputIterator _itr2Last, OutputIterator _collision){
-#ifdef PMPCfgSurface  
 
   if(this->m_debug){ cout << endl; PrintOptions(cout); }
   if(m_doneOnce) {
@@ -250,9 +251,9 @@ void ConnectNeighboringSurfaces<MPTraits>::Connect(RoadmapType* _rm, StatClass& 
 	  //add in this node as a connection
 	  //add pt on surface
           m_totalSuccess++;
-	  CfgSurface cfg1(surfacePt[0], surfacePt[1], h, id); 
+	  CfgType cfg1(surfacePt[0], surfacePt[1], h, id); 
 	  VID vid1 = _rm->GetGraph()->AddVertex(cfg1); 
-	  CfgSurface cfg2(queryPt[0], queryPt[1], h, qPtSurfID); 
+	  CfgType cfg2(queryPt[0], queryPt[1], h, qPtSurfID); 
 	  VID vid2 = _rm->GetGraph()->AddVertex(cfg2); 
 	  double dist = (surfacePt-queryPt).norm();
 	  if(this->m_debug) cout << " adding node: " << surfacePt << " and node: " << queryPt << endl;
@@ -281,10 +282,8 @@ void ConnectNeighboringSurfaces<MPTraits>::Connect(RoadmapType* _rm, StatClass& 
       cout << "*** m_totalSuccess = " << m_totalSuccess << endl;
       cout << "*** m_totalFailure = " << m_totalFailure << endl;
     }
-#endif
   }
 
-
-///////////////////////////////////////////////////////////////////////////////
+#endif
 #endif
 

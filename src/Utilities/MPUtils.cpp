@@ -87,22 +87,26 @@ long SRand(string _methodName, int _nextNodeIndex, long _base, bool _reset) {
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 
+//normalize a number to [-1,1)
+double Normalize(double _a){
+  _a = fmod(_a+1.0, 2.0);
+  if(_a < -1E-6)
+    _a+=2.0;
+  _a--;
+  return _a;
+}
+
 // Calculate the minimum DIRECTED angular distance between two angles
-// normalized to 1.0
-double DirectedAngularDistance(double _a,double _b) {
-  // normalize both a and b to [0, 1)
-  _a = _a - floor(_a);
-  _b = _b - floor(_b);
+double DirectedAngularDistance(double _a, double _b) {
+  // normalize both a and b to [-1, 1)
+  _a = Normalize(_a);
+  _b = Normalize(_b);
 
-  // shorten the distance between a and b by shifting a or b by 1.
-  // have to do ROUND-UP INTEGER comparision to avoid subtle numerical errors.
-  int intA = (int)rint(_a*1000000);
-  int intB = (int)rint(_b*1000000);
-
-  if( intB - intA  > 500000 ) 
-    ++_a;
-  else if ( intA - intB > 500000 )
-    ++_b;
+  if( _b - _a  > 1.0 ) 
+    _a+=2.0;
+  else if ( _a - _b > 1.0 )
+    _b+=2.0;
+  
   return _b-_a;
 }
 

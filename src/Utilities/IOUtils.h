@@ -17,7 +17,6 @@
 
 using namespace std;
 
-class Cfg;
 class Environment;
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -213,50 +212,50 @@ void VDInit(string _filename);
 
 void VDClose();
 
-template<class CFG>
-void VDAddNode(CFG _cfg){
+template<class CfgType>
+void VDAddNode(const CfgType& _cfg){
   if(vdo!=NULL){
     (*vdo) << "AddNode " << _cfg << endl;
   }
 };
 
-template<class CFG>
-void VDRemoveNode(CFG _cfg){
+template<class CfgType>
+void VDRemoveNode(const CfgType& _cfg){
   if(vdo!=NULL){
     (*vdo) << "RemoveNode " << _cfg << endl;
   }
 };
 
-template<class CFG>
-void VDAddEdge(CFG _cfg1, CFG _cfg2){
+template<class CfgType>
+void VDAddEdge(const CfgType& _cfg1, const CfgType& _cfg2){
   if(vdo!=NULL){
     (*vdo) << "AddEdge " << _cfg1 << " " << _cfg2 << endl;
   }
 };
 
-template<class CFG>
-void VDRemoveEdge(CFG _cfg1, CFG _cfg2){
+template<class CfgType>
+void VDRemoveEdge(const CfgType& _cfg1, const CfgType& _cfg2){
   if(vdo!=NULL){
     (*vdo) << "RemoveEdge " << _cfg1 << " " << _cfg2 << endl;
   }
 };
 
-template<class CFG>
-void VDAddTempCfg(CFG _cfg, bool _valid){
+template<class CfgType>
+void VDAddTempCfg(const CfgType& _cfg, bool _valid){
   if(vdo!=NULL){
     (*vdo) << "AddTempCfg " << _cfg << " " << _valid << endl;
   }
 };
 
-template<class CFG>
-void VDAddTempRay(CFG _cfg){
+template<class CfgType>
+void VDAddTempRay(const CfgType& _cfg){
   if(vdo!=NULL){
     (*vdo) << "AddTempRay " << _cfg << endl;
   }
 };
 
-template<class CFG>
-void VDAddTempEdge(CFG _cfg1, CFG _cfg2){
+template<class CfgType>
+void VDAddTempEdge(const CfgType& _cfg1, const CfgType& _cfg2){
   if(vdo!=NULL){
     (*vdo) << "AddTempEdge " << _cfg1 << " " << _cfg2 << endl;
   }
@@ -270,8 +269,8 @@ void VDClearLastTemp();
 
 void VDClearComments();
 
-template<class CFG>
-void VDQuery(CFG _cfg1, CFG _cfg2){
+template<class CfgType>
+void VDQuery(const CfgType& _cfg1, const CfgType& _cfg2){
   if(vdo!=NULL){
     (*vdo) << "Query " << _cfg1 << " " << _cfg2 << endl;
   }
@@ -287,59 +286,25 @@ void VDQuery(CFG _cfg1, CFG _cfg2){
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 
-/**Write a list of Cfgs in a give path and path size 
+/**Write a list of Cfgs in a give path
  *to file with given filename.
- *
- *This method writes number of links of robot,
- *path size to output_file. Then Cfgs for
- *each link in robot will be output to file 
- *named "output_file".cfg
- *
- *
- *@param filename Filename for Cfg data.
- *@param path All Gfgs will be written to file.
- *@param env is used to get "robot link" information.
- *@note if file couldn't be opened, error message will be post 
- *and process will be terminated.
- *
- *@see Cfg::printLinkConfigurations
- */
-void WritePathLinkConfigurations(const string _outputFile, 
-    vector<Cfg*>& _path, 
-    Environment* _env);
-
-template <class CFG>
-void WritePathLinkConfigurations(const string _outputFile, 
-    vector<CFG>& _path, 
-    Environment* _env){
-  vector<Cfg*> ppath;
-  for(size_t i=0; i<_path.size(); i++)
-    ppath.push_back(&_path[i]);
-  WritePathLinkConfigurations(_outputFile, ppath, _env);
-}
-
-
-
-/**Write a list of Cfgs in a give path and path size 
- *to file with given filename.
- *@param filename Filename for Cfg data.
- *@param path All Gfgs will be written to file.
- *@param env is not used.
- *@note if file couldn't be opened, error message will be post 
+ *note if file couldn't be opened, error message will be post 
  *and process will be terminated.
  */   
-void WritePathConfigurations(const string _outputFile, 
-    vector<Cfg*>& _path, 
-    Environment* _env);  
-
-template <class CFG>
-void WritePathConfigurations(const string _outputFile, 
-    vector<CFG>& _path, 
-    Environment* _env){
-  vector<Cfg*> ppath;
-  for(size_t i=0; i<_path.size(); i++) 
-    ppath.push_back(&_path[i]);
-  WritePathConfigurations(_outputFile, ppath, _env);
+template<class CfgType>
+void WritePath(string _outputFile, const vector<CfgType>& _path) {
+  ofstream ofs(_outputFile.c_str());
+  if(!ofs){
+    cerr << "Error in WritePath::Cannot open file \"" << _outputFile << "\". Exitting." << endl;
+    exit(1);
+  }
+  ofs << "VIZMO_PATH_FILE   Path Version " << 2012 << endl;
+  ofs << "1" <<endl;
+  ofs << _path.size() << endl;
+  typedef typename vector<CfgType>::const_iterator CIT;
+  for(CIT cit = _path.begin(); cit!=_path.end(); ++cit)
+    ofs << *cit << endl;
+  ofs.close();
 };
 
 ///////////////////////////////////////////////////////////////////////////////

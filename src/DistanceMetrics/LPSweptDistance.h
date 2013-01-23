@@ -19,7 +19,7 @@ class LPSweptDistance : public DistanceMetricMethod<MPTraits> {
 
     virtual void PrintOptions(ostream& _os) const;
     
-    virtual double Distance(Environment* _env, const Cfg& _c1, const Cfg& _c2);
+    virtual double Distance(Environment* _env, const CfgType& _c1, const CfgType& _c2);
     
   protected:
     double SweptDistance(const vector<GMSPolyhedron>& _poly1, const vector<GMSPolyhedron>& _poly2);
@@ -59,7 +59,7 @@ void LPSweptDistance<MPTraits>::PrintOptions(ostream& _os) const {
 }
 
 template<class MPTraits>
-double LPSweptDistance<MPTraits>::Distance(Environment* _env, const Cfg& _c1, const Cfg& _c2) {
+double LPSweptDistance<MPTraits>::Distance(Environment* _env, const CfgType& _c1, const CfgType& _c2) {
   StatClass stats;
   typename MPProblemType::DistanceMetricPointer dm;
   LPOutput<MPTraits> lpOutput;

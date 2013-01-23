@@ -1,6 +1,8 @@
 #ifndef SURFACESAMPLER_H_
 #define SURFACESAMPLER_H_
 
+#ifdef PMPCfgSurface
+
 #include "SamplerMethod.h"
 
 
@@ -93,7 +95,6 @@ class SurfaceSampler : public SamplerMethod<MPTraits> {
     virtual bool Sampler(Environment* _env, shared_ptr<Boundary> _bb, 
         StatClass& _stats, CfgType& _cfgIn, vector<CfgType>& _cfgOut, 
         vector<CfgType>& _cfgCol) { 
-#ifdef PMPCfgSurface
       string callee(this->GetName());
       callee += "::SampleImpl()";
       ValidityCheckerPointer vcp = this->GetMPProblem()->GetValidityChecker(m_vcLabel);
@@ -246,11 +247,11 @@ class SurfaceSampler : public SamplerMethod<MPTraits> {
       }//for i in surfaces
       if(this->m_debug) cout << "Maximum attempts reached." << endl;
       if(this->m_debug) cout << "SurfaceSampler:: done with sampling loop: size of cfgOut: " << _cfgOut.size() << endl;
-#endif //defined PMPCfgSurface
       return true;
     } 
 
 };
 
+#endif
 #endif
 

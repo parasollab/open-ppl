@@ -519,7 +519,7 @@ AddVertex(VERTEX& _v1) {
     CVI v1;
     if ( !IsVertex(_v1,&v1) ) {
         VID vertex_id = GRAPH::add_vertex(_v1);
-        VDAddNode(_v1);
+        //VDAddNode(_v1);
         ChangeEvent event(ChangeEvent::ADD_VERTEX, _v1, vertex_id);
         //cout << "Adding through single" << endl;
         roadmapVCS.addEvent(event);

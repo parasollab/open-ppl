@@ -8,6 +8,8 @@
 template<class MPTraits>
 class ValidityCheckerMethod : public MPBaseObject<MPTraits> {
   public:
+    typedef typename MPTraits::CfgType CfgType;
+
     ValidityCheckerMethod() : MPBaseObject<MPTraits>(), m_validity(true) {}
     ValidityCheckerMethod(typename MPTraits::MPProblemType* _problem, XMLNodeReader& _node) : MPBaseObject<MPTraits>(_problem, _node), m_validity(true){} 
     virtual ~ValidityCheckerMethod(){}
@@ -16,7 +18,7 @@ class ValidityCheckerMethod : public MPBaseObject<MPTraits> {
       _os << this->GetName() << endl;
     }
 
-    bool IsValid(Cfg& _cfg, Environment* _env, StatClass& _stats, 
+    bool IsValid(CfgType& _cfg, Environment* _env, StatClass& _stats, 
         CDInfo& _cdInfo, std::string *_callName) {
       if(m_validity)
         return IsValidImpl(_cfg, _env, _stats, _cdInfo, _callName);
@@ -24,7 +26,7 @@ class ValidityCheckerMethod : public MPBaseObject<MPTraits> {
         return !IsValidImpl(_cfg, _env, _stats, _cdInfo, _callName);
     }
 
-    virtual bool IsInsideObstacle(const Cfg& _cfg, Environment* _env, CDInfo& _cdInfo){
+    virtual bool IsInsideObstacle(const CfgType& _cfg, Environment* _env, CDInfo& _cdInfo){
       cerr << "error: IsInsideObstacle() not defined." << endl;
       exit(-1);
     }
@@ -33,7 +35,7 @@ class ValidityCheckerMethod : public MPBaseObject<MPTraits> {
     void ToggleValidity() { m_validity = !m_validity; }
 
   protected:
-    virtual bool IsValidImpl(Cfg& _cfg, Environment* _env, StatClass& _stats, 
+    virtual bool IsValidImpl(CfgType& _cfg, Environment* _env, StatClass& _stats, 
         CDInfo& _cdInfo, std::string *_callName) = 0; 
 
     bool m_validity;

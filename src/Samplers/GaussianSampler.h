@@ -119,14 +119,14 @@ class GaussianSampler : public SamplerMethod<MPTraits>
         if(!m_useBoundary) {
           do {
             incr.GetRandomRay(fabs(GaussianDistribution(fabs(m_d), fabs(m_d))), _env, dm);
-            cfg2.add(cfg1, incr);
+            cfg2 = cfg1 + incr;
           } while(!cfg2.InBoundary(_env,_bb));
 
           cfg2Free = vc->IsValid(cfg2, _env, _stats, cdInfo, &callee);
         } 
         else {
           incr.GetRandomRay(fabs(GaussianDistribution(fabs(m_d), fabs(m_d))), _env, dm);
-          cfg2.add(cfg1, incr);
+          cfg2 = cfg1 + incr;
 
           cfg2Free = cfg2.InBoundary(_env,_bb) && 
             vc->IsValid(cfg2, _env, _stats, cdInfo, &callee);

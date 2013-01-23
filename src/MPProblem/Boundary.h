@@ -6,6 +6,7 @@
 
 #include "Utilities/IOUtils.h"
 
+class Cfg;
 class Environment;
 
 using namespace mathtool;

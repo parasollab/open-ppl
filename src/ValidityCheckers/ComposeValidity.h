@@ -14,6 +14,7 @@
 template<class MPTraits>
 class ComposeValidity : public ValidityCheckerMethod<MPTraits> {  
   public:
+    typedef typename MPTraits::CfgType CfgType;
     typedef typename MPTraits::MPProblemType MPProblemType;
     typedef typename MPProblemType::ValidityCheckerPointer ValidityCheckerPointer;
 
@@ -25,7 +26,7 @@ class ComposeValidity : public ValidityCheckerMethod<MPTraits> {
     virtual ~ComposeValidity() {}
 
     virtual bool 
-      IsValidImpl(Cfg& _cfg, Environment* _env, StatClass& _stats, 
+      IsValidImpl(CfgType& _cfg, Environment* _env, StatClass& _stats, 
           CDInfo& _cdInfo, string* _callName = NULL);
 
   private:
@@ -71,21 +72,21 @@ ComposeValidity<MPTraits>::ComposeValidity(MPProblemType* _problem, XMLNodeReade
 
 template<class MPTraits>
 bool
-ComposeValidity<MPTraits>::IsValidImpl(Cfg& _cfg, Environment* _env, StatClass& _stats, CDInfo& _cdInfo, string* _callName) {
+ComposeValidity<MPTraits>::IsValidImpl(CfgType& _cfg, Environment* _env, StatClass& _stats, CDInfo& _cdInfo, string* _callName) {
   vector<ValidityCheckerPointer> vcMethod;
   typedef typename vector<ValidityCheckerPointer>::iterator VCIterator;
   for(vector<string>::iterator it = m_label.begin(); it != m_label.end(); ++it) {
     vcMethod.push_back(this->GetMPProblem()->GetValidityChecker(*it));
   }
 
-  ValidityCheckerFunctor comFunc(_cfg, _env, _stats, _cdInfo, _callName); 
+  ValidityCheckerFunctor<MPTraits> comFunc(_cfg, _env, _stats, _cdInfo, _callName); 
 
   if (m_logicalOperator == AND) {
-    Compose<VCIterator, logical_and<bool>, ValidityCheckerFunctor> andRelation;
+    Compose<VCIterator, logical_and<bool>, ValidityCheckerFunctor<MPTraits> > andRelation;
     return andRelation(vcMethod.begin(), vcMethod.end(), logical_and<bool>(), comFunc);
   }
   else if (m_logicalOperator == OR) {
-    Compose<VCIterator, logical_or<bool>, ValidityCheckerFunctor> orRelation;
+    Compose<VCIterator, logical_or<bool>, ValidityCheckerFunctor<MPTraits> > orRelation;
     return orRelation(vcMethod.begin(), vcMethod.end(), logical_or<bool>(), comFunc);
   }
   else { 

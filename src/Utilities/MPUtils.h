@@ -142,6 +142,10 @@ long SRand(string _methodName, int _nextNodeIndex, long _base = 0x1234ABCD, bool
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 
+/**Normalize a value into the range [-1,1)
+ */
+double Normalize(double _a);
+
 /**Calculate the minimum DIRECTED angular distance 
  *between two angles normalized to 1.0 
  */
@@ -415,6 +419,56 @@ class MPBaseObject {
 ///////////////////////////////////////////////////////////////////////////////
 //
 //
+// Cfg Utilities
+//
+//
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+
+template<class CfgType, class Environment>
+bool
+IsWithinResolution(const CfgType& _cfg1, const CfgType& _cfg2, Environment* _env) {
+  CfgType diff = _cfg1 - _cfg2;
+  return diff->PositionMagnitude() <= _env->GetPositionRes() 
+    && diff->OrientationMagnitude() <= _env->GetOrientationRes();
+}	
+
+/** pt1 & pt2 are two endpts of a line segment
+ * find the closest point to the current cfg on that line segment
+ * it could be one of the two endpoints of course
+ */
+template<class CfgType>
+CfgType
+ClosestPtOnLineSegment(const CfgType& _current, const CfgType& _p1, const CfgType& _p2) {
+  CfgType b = _p2 - _p1;
+  CfgType c = _current - _p1;  
+  
+  double bDotC = 0;
+  double bSquared = 0;
+
+  vector<double>::const_iterator itb, itc;
+  for (itb = b.GetData().begin(), itc = c.GetData().begin(); itb != b.GetData().end(); ++itb, ++itc) {
+    bDotC += (*itb)*(*itc);
+    bSquared += (*itb)*(*itb);
+  }
+
+  if (bDotC <= 0) {
+    return _p1;
+  } 
+  else if (bDotC >= bSquared) {
+    return _p2;
+  } 
+  else {
+    CfgType result = b*(bDotC/bSquared) + _p1 ;
+    return result;
+  }
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+//
+//
 // GetCentroid
 //
 //
@@ -427,10 +481,10 @@ GetCentroid(RDMP<CFG, WEIGHT>* _graph, vector<typename RDMP<CFG, WEIGHT>::VID>& 
   CFG center;
   for(size_t i = 0; i < _cc.size(); i++) {
 
-    CFG cfg = (*(_graph->find_vertex(_cc[i]))).property();
-    center.add(center, cfg);
+    CFG& cfg = (*(_graph->find_vertex(_cc[i]))).property();
+    center += cfg;
   }
-  center.divide(center, _cc.size());
+  center /= _cc.size();
   return center;
 };
 
@@ -487,7 +541,7 @@ RRTExpand(typename MPTraits::MPProblemType* _mp,
   //given to the function, and are user defined.
   while(!collision && dm->Distance(env,_start,tick) <= _delta) {
     previous = tick;
-    tick.Increment(incr); //Increment tick
+    tick += incr; //Increment tick
     if(!(tick.InBoundary(env)) || !(vc->IsValid(tick, env, *stats, _cdInfo, &callee))){
       collision = true; //Found a collision; return previous tick, as it is collision-free
     }

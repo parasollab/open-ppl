@@ -2,7 +2,6 @@
 #define COLLISIONDETECTIONVALIDITY_H_
 
 #include "MPProblem/Environment.h"
-#include "Cfg/Cfg.h"
 #include "Utilities/MetricUtils.h"
 #include "ValidityCheckerMethod.h"
 #include "ValidityCheckers/CollisionDetection/CDInfo.h"
@@ -16,15 +15,17 @@
 template<class MPTraits>
 class CollisionDetectionValidity : public ValidityCheckerMethod<MPTraits> {
   public:
+    typedef typename MPTraits::CfgType CfgType;
+
     CollisionDetectionValidity();
     CollisionDetectionValidity(CollisionDetectionMethod* _cdMethod, bool _ignoreSelfCollision = false, int _ignoreIAdjacentLinks = 1);
     CollisionDetectionValidity(typename MPTraits::MPProblemType* _problem, XMLNodeReader& _node);
     virtual ~CollisionDetectionValidity(); 
 
-    virtual bool IsValidImpl(Cfg& _cfg, Environment* _env, 
+    virtual bool IsValidImpl(CfgType& _cfg, Environment* _env, 
         StatClass& _stats, CDInfo& _cdInfo, 
         std::string *_callName);    
-    virtual  bool IsInsideObstacle(const Cfg& _cfg, Environment* _env, CDInfo& _cdInfo); 
+    virtual  bool IsInsideObstacle(const CfgType& _cfg, Environment* _env, CDInfo& _cdInfo); 
 
     cd_predefined GetCDType() const { return m_cdMethod->GetCDType(); }
 
@@ -106,7 +107,7 @@ CollisionDetectionValidity<MPTraits>::~CollisionDetectionValidity(){}
 
 template<class MPTraits>
 bool
-CollisionDetectionValidity<MPTraits>::IsValidImpl(Cfg& _cfg, Environment* _env, StatClass& _stats, CDInfo& _cdInfo, std::string *_callName = NULL) {
+CollisionDetectionValidity<MPTraits>::IsValidImpl(CfgType& _cfg, Environment* _env, StatClass& _stats, CDInfo& _cdInfo, std::string *_callName = NULL) {
   _stats.IncCfgIsColl(_callName);
 
   if(!_cfg.ConfigEnvironment(_env)) {
@@ -235,7 +236,7 @@ CollisionDetectionValidity<MPTraits>::IsInCollision(Environment* _env, StatClass
 
 template<class MPTraits>
 bool
-CollisionDetectionValidity<MPTraits>::IsInsideObstacle(const Cfg& _cfg, Environment* _env, CDInfo& _cdInfo) {
+CollisionDetectionValidity<MPTraits>::IsInsideObstacle(const CfgType& _cfg, Environment* _env, CDInfo& _cdInfo) {
 #ifdef USE_PQP
   return PQP_Solid().IsInsideObstacle(_cfg, _env);
 #else

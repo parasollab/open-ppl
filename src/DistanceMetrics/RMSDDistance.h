@@ -7,14 +7,16 @@
 template<class MPTraits>
 class RMSDDistance : public DistanceMetricMethod<MPTraits> {
   public:
+    typedef typename MPTraits::CfgType CfgType;
+
     RMSDDistance();
     RMSDDistance(typename MPTraits::MPProblemType* _problem, XMLNodeReader& _node, bool _warn = true);
     virtual ~RMSDDistance();
 
-    virtual double Distance(Environment* _env, const Cfg& _c1, const Cfg& _c2);
+    virtual double Distance(Environment* _env, const CfgType& _c1, const CfgType& _c2);
 
   protected:
-    virtual vector<Vector3D> GetCoordinatesForRMSD(const Cfg& _c, Environment* _env);
+    virtual vector<Vector3D> GetCoordinatesForRMSD(const CfgType& _c, Environment* _env);
     double RMSD(vector<Vector3D> _x, vector<Vector3D> _y, int _dim);
 };
 
@@ -35,7 +37,7 @@ RMSDDistance<MPTraits>::~RMSDDistance() {
 
 template<class MPTraits>
 vector<Vector3D>
-RMSDDistance<MPTraits>::GetCoordinatesForRMSD(const Cfg& _c, Environment* _env) {
+RMSDDistance<MPTraits>::GetCoordinatesForRMSD(const CfgType& _c, Environment* _env) {
   _c.ConfigEnvironment(_env);
   vector<Vector3D> coordinates;
   for(int i=0; i< _env->GetMultiBody(_env->GetRobotIndex())->GetFreeBodyCount(); ++i)
@@ -45,7 +47,7 @@ RMSDDistance<MPTraits>::GetCoordinatesForRMSD(const Cfg& _c, Environment* _env) 
 
 template<class MPTraits>
 double
-RMSDDistance<MPTraits>::Distance(Environment* _env, const Cfg& _c1, const Cfg& _c2) {
+RMSDDistance<MPTraits>::Distance(Environment* _env, const CfgType& _c1, const CfgType& _c2) {
   vector<Vector3D> x = GetCoordinatesForRMSD(_c1, _env);
   vector<Vector3D> y = GetCoordinatesForRMSD(_c2, _env);
   return RMSD(x,y,x.size());

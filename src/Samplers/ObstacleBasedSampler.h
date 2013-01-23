@@ -94,12 +94,11 @@ class ObstacleBasedSampler : public SamplerMethod<MPTraits> {
           _result++;
         }
         // Get next shell
-        _cFree.Increment(_incr);
+        _cFree += _incr;
       }
 
       // Reverse direction of _incr
-      CfgType tmp;
-      _incr.subtract(tmp, _incr);
+      _incr = -_incr;
       
       // Add collision shells
       for(int i = 0; i < m_nShellsColl; i++) {
@@ -113,7 +112,7 @@ class ObstacleBasedSampler : public SamplerMethod<MPTraits> {
           _result++;
         }
         // Get next shell
-        _cColl.Increment(_incr);
+        _cColl += _incr;
       }
       return _result;
     }
@@ -155,7 +154,7 @@ class ObstacleBasedSampler : public SamplerMethod<MPTraits> {
         c1BBox = c2BBox;
         c1Free = c2Free;
         // Update new state
-        c2.Increment(r);
+        c2 += r;
         c2BBox = c2.InBoundary(_env, _bb);
         c2Free = vcm->IsValid(c2, _env, _stats, cdInfo, &callee);
       }
@@ -164,8 +163,7 @@ class ObstacleBasedSampler : public SamplerMethod<MPTraits> {
       if(c2BBox) {
         if(c1Free) { // Old state (c1) is free
           // Reverse direction of r
-          CfgType tmp;
-          r.subtract(tmp, r);
+          r = -r;
           // Process configurations
           GenerateShells(_env, _bb, _stats, c1, c2, r, back_insert_iterator<vector<CfgType> >(_cfgOut));
           _cfgCol.push_back(c2);
@@ -179,8 +177,7 @@ class ObstacleBasedSampler : public SamplerMethod<MPTraits> {
       }
       else if(m_useBBX && c1BBox && c1Free) {
         // Reverse direction of r
-        CfgType tmp;
-        r.subtract(tmp, r);
+        r = -r;
         // Process configurations
         GenerateShells(_env, _bb, _stats, c1, c2, r, back_insert_iterator<vector<CfgType> >(_cfgOut));
         _cfgCol.push_back(c2);
@@ -345,9 +342,9 @@ class ObstacleBasedSampler : public SamplerMethod<MPTraits> {
     CfgType GetCfgWithParams(Vector3D& _v) {
       CfgType tmp;
       for(int i = 0; i < 3; i++)
-        tmp.SetSingleParam(i, _v[i]);
+        tmp[i] = _v[i];
       for(int i = 3; i < 6; i++)
-        tmp.SetSingleParam(i, 0.0);
+        tmp[i] = 0.0;
       return tmp;
     }
  

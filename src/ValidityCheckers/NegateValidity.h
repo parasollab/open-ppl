@@ -7,6 +7,7 @@
 template<class MPTraits>
 class NegateValidity : public ValidityCheckerMethod<MPTraits> {
   public:
+    typedef typename MPTraits::CfgType CfgType;
     typedef typename MPTraits::MPProblemType MPProblemType;
     typedef typename MPProblemType::ValidityCheckerPointer ValidityCheckerPointer;
 
@@ -15,7 +16,7 @@ class NegateValidity : public ValidityCheckerMethod<MPTraits> {
     virtual ~NegateValidity() { }
 
     virtual bool 
-      IsValidImpl(Cfg& _cfg, Environment* _env, StatClass& _stats, 
+      IsValidImpl(CfgType& _cfg, Environment* _env, StatClass& _stats, 
           CDInfo& _cdInfo, string *_callName);
 
   private:
@@ -39,15 +40,15 @@ NegateValidity<MPTraits>::NegateValidity(MPProblemType* _problem, XMLNodeReader&
 template<class MPTraits>
 bool
 NegateValidity<MPTraits>::
-IsValidImpl(Cfg& _cfg, Environment* _env, StatClass& _stats, CDInfo& _cdInfo, 
+IsValidImpl(CfgType& _cfg, Environment* _env, StatClass& _stats, CDInfo& _cdInfo, 
     string *_callName) {
   vector<ValidityCheckerPointer> vcMethods;
   typedef typename vector<ValidityCheckerPointer>::iterator VCIterator;
   vcMethods.push_back(this->GetMPProblem()->GetValidityChecker(m_vcLabel));
 
-  ValidityCheckerFunctor comFunc(_cfg, _env, _stats, _cdInfo, _callName); 
+  ValidityCheckerFunctor<MPTraits> comFunc(_cfg, _env, _stats, _cdInfo, _callName); 
 
-  ComposeNegate<VCIterator, ValidityCheckerFunctor> composeNegate;
+  ComposeNegate<VCIterator, ValidityCheckerFunctor<MPTraits> > composeNegate;
   return composeNegate(vcMethods.begin(), comFunc);
 }
 

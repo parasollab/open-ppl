@@ -14,6 +14,8 @@
 template<class MPTraits>
 class AlwaysTrueValidity : public ValidityCheckerMethod<MPTraits> {
   public:
+    typedef typename MPTraits::CfgType CfgType;
+
     AlwaysTrueValidity(){
       this->m_name = "AlwaysTrueValidity";
     }
@@ -26,7 +28,7 @@ class AlwaysTrueValidity : public ValidityCheckerMethod<MPTraits> {
 
     virtual ~AlwaysTrueValidity(){}
 
-    virtual bool IsValidImpl(Cfg& _cfg, Environment* _env, StatClass& _stats, 
+    virtual bool IsValidImpl(CfgType& _cfg, Environment* _env, StatClass& _stats, 
         CDInfo& _cdInfo, string *_callName){
       _cfg.SetLabel("Lazy", true);
       return true;

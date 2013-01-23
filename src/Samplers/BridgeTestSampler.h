@@ -93,15 +93,14 @@ class BridgeTestSampler : public SamplerMethod<MPTraits> {
               vc->IsValid(tmp, _env, _stats, cdInfo, &callee)) {  
             CfgType mid = tmp, incr, cfg1;
             incr.GetRandomRay(fabs(GaussianDistribution(m_d, m_d))/2, _env, dm);
-            cfg1.subtract(mid, incr); 
+            cfg1 = mid - incr; 
             if(this->m_debug)
               cout << "cfg1::" << cfg1 << endl;  
 
             //If cfg1 is invalid (including Bbox) after adjustment, create cfg2 
             if ( !cfg1.InBoundary(_env,_bb) || 
                 !vc->IsValid(cfg1, _env, _stats, cdInfo, &callee)) {
-              CfgType cfg2;
-              cfg2.add(mid, incr);
+              CfgType cfg2 = mid + incr;
               if(this->m_debug)
                 cout << "cfg2::" << cfg2 << endl;  
 
@@ -122,7 +121,7 @@ class BridgeTestSampler : public SamplerMethod<MPTraits> {
           else {
             CfgType cfg1 = tmp, incr, cfg2; 
             incr.GetRandomRay(fabs(GaussianDistribution(m_d, m_d)), _env, dm);
-            cfg2.add(cfg1, incr);
+            cfg2 = cfg1 + incr;
             if(this->m_debug){
               cout << "cfg1::" << cfg1 << endl; 
               cout << "cfg2::" << cfg2 << endl; 
@@ -152,14 +151,13 @@ class BridgeTestSampler : public SamplerMethod<MPTraits> {
           if ( vc->IsValid(tmp, _env, _stats, cdInfo, &callee) ) { 
             CfgType mid = tmp, incr, cfg1;
             incr.GetRandomRay(fabs(GaussianDistribution(m_d, m_d))/2, _env, dm);
-            cfg1.subtract(mid, incr);
+            cfg1 = mid - incr;
             if(this->m_debug)
               cout << "cfg1::" << cfg1 << endl;  
 
             //If invalid cfg1, create cfg2. Want both invalid. 
             if( !vc->IsValid(cfg1, _env, _stats, cdInfo, &callee) ) {
-              CfgType cfg2;
-              cfg2.add(mid, incr);
+              CfgType cfg2 = mid + incr;
               if(this->m_debug)
                 cout << "cfg2::" << cfg2 << endl;  
 
@@ -180,7 +178,7 @@ class BridgeTestSampler : public SamplerMethod<MPTraits> {
           else {
             CfgType cfg1 = tmp, incr, cfg2;
             incr.GetRandomRay(fabs(GaussianDistribution(m_d, m_d)), _env, dm);
-            cfg2.add(cfg1, incr);
+            cfg2 = cfg1 + incr;
             if(this->m_debug){
               cout << "cfg1::" << cfg1 << endl; 
               cout << "cfg2::" << cfg2 << endl; 

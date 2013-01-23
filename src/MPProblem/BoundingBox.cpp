@@ -7,14 +7,14 @@ BoundingBox::BoundingBox(int _DOFs, int _posDOFs ) {
   m_DOFs=_DOFs ;
   m_boundingBox.clear();
   for (int i = 0; i < m_DOFs; i++) {
-    m_boundingBox.push_back(pair<double,double>(0.0,1.0));
+    m_boundingBox.push_back(pair<double,double>(-1.0,1.0));
     if (i < m_posDOFs)
       m_parType.push_back(TRANSLATIONAL);
     else
       m_parType.push_back(REVOLUTE);
   }
   for (int i = m_posDOFs; i < m_DOFs; i++) {    
-    m_jointLimits.push_back(pair<double,double>(0.0,1.0));
+    m_jointLimits.push_back(pair<double,double>(-1.0,1.0));
   }
 }
 
@@ -25,8 +25,8 @@ BoundingBox::BoundingBox(XMLNodeReader& _node) {
   _node.verifyName(string("boundary"));
   m_boundingBox.clear();
   for (int i = 0; i < m_DOFs; i++) {    
-    m_jointLimits.push_back(pair<double,double>(0.0,1.0));
-    m_boundingBox.push_back(pair<double,double>(0.0,1.0));
+    m_jointLimits.push_back(pair<double,double>(-1.0,1.0));
+    m_boundingBox.push_back(pair<double,double>(-1.0,1.0));
     m_parType.push_back(REVOLUTE);
   }
 
@@ -322,8 +322,8 @@ BoundingBox::
 IfSatisfiesConstraints(vector<double> _point) const {
   for (size_t i = 0; i < _point.size() && i < m_boundingBox.size(); i++) {
     if (m_parType[i] == REVOLUTE) {
-      if (_point[i] < 0 || _point[i] > 1) {
-        cout << "Invalid range on REVOLUTE dof." << endl;
+      if (_point[i] < -1.0 || _point[i] > 1.0) {
+        cout << "Invalid range on REVOLUTE dof::" << i << "\twith value::" << _point[i] << endl;
         exit(-1);
         return false;
       }

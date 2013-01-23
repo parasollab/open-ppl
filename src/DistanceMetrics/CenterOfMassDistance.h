@@ -6,11 +6,13 @@
 template<class MPTraits>
 class CenterOfMassDistance : public DistanceMetricMethod<MPTraits> {
   public:
+    typedef typename MPTraits::CfgType CfgType;
+
     CenterOfMassDistance();
     CenterOfMassDistance(typename MPTraits::MPProblemType* _problem, XMLNodeReader& _node);
     virtual ~CenterOfMassDistance();
 
-    virtual double Distance(Environment* _env, const Cfg& _c1, const Cfg& _c2);
+    virtual double Distance(Environment* _env, const CfgType& _c1, const CfgType& _c2);
 };
 
 template<class MPTraits>
@@ -30,7 +32,7 @@ CenterOfMassDistance<MPTraits>::~CenterOfMassDistance() {
 
 template<class MPTraits>
 double 
-CenterOfMassDistance<MPTraits>::Distance(Environment* _env, const Cfg& _c1, const Cfg& _c2) {
+CenterOfMassDistance<MPTraits>::Distance(Environment* _env, const CfgType& _c1, const CfgType& _c2) {
   return (_c1.GetRobotCenterofMass(_env) - _c2.GetRobotCenterofMass(_env)).magnitude();
 }
 

@@ -73,25 +73,23 @@ class UniformObstacleBasedSampler : public SamplerMethod<MPTraits> {
 
       CfgType cfg2;
       CfgType incr;
-      CfgType tmp;
       double dist, r;
 
       incr.GetRandomRay(m_margin, _env, dm);
-      cfg2.add(cfg1, incr);
+      cfg2 = cfg1 + incr;
 
       //scale the distance between c1 and c2
       Vector3D c1, c2, dir;
-      c1[0] = cfg1.GetSingleParam(0);
-      c1[1] = cfg1.GetSingleParam(1);
-      c1[2] = cfg1.GetSingleParam(2);
-      c2[0] = cfg2.GetSingleParam(0);
-      c2[1] = cfg2.GetSingleParam(1);
-      c2[2] = cfg2.GetSingleParam(2);
+      c1[0] = cfg1[0];
+      c1[1] = cfg1[1];
+      c1[2] = cfg1[2];
+      c2[0] = cfg2[0];
+      c2[1] = cfg2[1];
+      c2[2] = cfg2[2];
       dir = c2 - c1;
       dist = sqrt(dir[0]*dir[0] + dir[1]*dir[1] + dir[2]*dir[2]);
       r = m_margin/dist;
-      tmp.multiply(incr, r);
-      cfg2.add(cfg1, tmp);
+      cfg2 = cfg1 + incr*r;
 
       CfgType inter;
       CfgType tick = cfg1;
@@ -104,7 +102,7 @@ class UniformObstacleBasedSampler : public SamplerMethod<MPTraits> {
 
       inter.FindIncrement(cfg1, cfg2, &nTicks, positionRes, orientationRes);
       for(int i=1; i<nTicks; i++) {
-        tick.Increment(inter);
+        tick += inter;
         tickFree = (vc->IsValid(tick, _env, _stats, cdInfo, &callee)) && (!vc->IsInsideObstacle(tick, _env, cdInfo));
         _env->SetBoundary(_bb);
         if(m_useBoundary) 

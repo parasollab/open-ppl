@@ -8,14 +8,16 @@
 template<class MPTraits>
 class KnotTheoryDistance : public DistanceMetricMethod<MPTraits> {
   public:
+    typedef typename MPTraits::CfgType CfgType;
+
     KnotTheoryDistance();
     KnotTheoryDistance(typename MPTraits::MPProblemType* _problem, XMLNodeReader& _node);
     virtual ~KnotTheoryDistance();
     
-    virtual double Distance(Environment* _env, const Cfg& _c1, const Cfg& _c2);
+    virtual double Distance(Environment* _env, const CfgType& _c1, const CfgType& _c2);
     
   protected:
-    virtual vector<Vector3D> GetCoordinatesForKnot(const Cfg& _c, Environment* _env);
+    virtual vector<Vector3D> GetCoordinatesForKnot(const CfgType& _c, Environment* _env);
     double Knot(vector<Vector3D>& _c1, vector<Vector3D>& _c2);
 };
 
@@ -35,7 +37,7 @@ KnotTheoryDistance<MPTraits>::~KnotTheoryDistance(){
 }
 
 template<class MPTraits>
-double KnotTheoryDistance<MPTraits>::Distance(Environment* _env, const Cfg& _c1, const Cfg& _c2) {
+double KnotTheoryDistance<MPTraits>::Distance(Environment* _env, const CfgType& _c1, const CfgType& _c2) {
   vector<Vector3D> c1 = GetCoordinatesForKnot(_c1, _env);
   vector<Vector3D> c2 = GetCoordinatesForKnot(_c2, _env);
   return Knot(c1, c2);
@@ -43,7 +45,7 @@ double KnotTheoryDistance<MPTraits>::Distance(Environment* _env, const Cfg& _c1,
 
 template<class MPTraits>
 vector<Vector3D> 
-KnotTheoryDistance<MPTraits>::GetCoordinatesForKnot(const Cfg& _c, Environment* _env) {
+KnotTheoryDistance<MPTraits>::GetCoordinatesForKnot(const CfgType& _c, Environment* _env) {
   _c.ConfigEnvironment(_env);
   vector<Vector3D> coordinates;
   for(int i=0; i< _env->GetMultiBody(_env->GetRobotIndex())->GetFreeBodyCount(); ++i)

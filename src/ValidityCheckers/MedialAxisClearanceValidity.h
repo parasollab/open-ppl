@@ -18,7 +18,7 @@ class MedialAxisClearanceValidity : public ValidityCheckerMethod<MPTraits> {
 
     virtual void PrintOptions(ostream& _os);
 
-    virtual bool IsValidImpl(Cfg& _cfg, Environment* _env, StatClass& _stats, CDInfo& _cdInfo, string *_callName);
+    virtual bool IsValidImpl(CfgType& _cfg, Environment* _env, StatClass& _stats, CDInfo& _cdInfo, string *_callName);
 
     vector< pair<CfgType,CfgType> >& GetHistory();
     void ClearHistory();
@@ -61,7 +61,7 @@ MedialAxisClearanceValidity<MPTraits>::PrintOptions(ostream& _os){
 
 template<class MPTraits>
 bool 
-MedialAxisClearanceValidity<MPTraits>::IsValidImpl(Cfg& _cfg, Environment* _env, StatClass& _stats, 
+MedialAxisClearanceValidity<MPTraits>::IsValidImpl(CfgType& _cfg, Environment* _env, StatClass& _stats, 
     CDInfo& _cdInfo, string * _callName) {
   CfgType origCfg = _cfg;
   CfgType tmpCfg = _cfg;

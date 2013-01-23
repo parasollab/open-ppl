@@ -134,10 +134,9 @@ MedialAxisRRT<MPTraits>::MedialAxisExtend(CfgType _start, CfgType _goal, vector<
     tick = curr;
 
     //take a step at distance _extendDist
-    CfgType incr;
-    incr.subtract(_goal, curr);
+    CfgType incr = _goal - curr;
     dm->ScaleCfg(env, m_extendDist, origin, incr);
-    tick.add(curr, incr);
+    tick = curr + incr;
     
     //Push tick to the MA
     if(!m_medialAxisUtility.PushToMedialAxis(tick, env->GetBoundary())) {

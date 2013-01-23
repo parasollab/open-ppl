@@ -1,8 +1,5 @@
 #include "IOUtils.h"
 
-#include "Cfg/Cfg.h"
-#include "MPProblem/Environment.h"
-
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 //
@@ -334,64 +331,6 @@ void VDClearComments(){
     (*vdo) << "ClearComments " << endl;
   }
 };
-
-///////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////
-//
-//
-//  Path output
-//
-//
-///////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////
-
-void
-WritePathLinkConfigurations(const string _outputFile,
-			     vector<Cfg*>& _path,
-			     Environment* _env) { 
-  ofstream ofs(_outputFile.c_str());
-  
-  ofs << "VIZMO_PATH_FILE   Path Version " << 2012 << endl;
-  int numofLink = _env->GetMultiBody(_env->GetRobotIndex())->GetFreeBodyCount();
-  ofs << numofLink << endl;
-  ofs << _path.size() << endl;
-  
-  ostringstream cfgFile;
-  cfgFile << _outputFile << ".cfg";
-  ofstream oc(cfgFile.str().c_str());
-  for(size_t i = 0 ; i < _path.size() ; i++){
-    // Translate all path configurations such that their resulting
-    // center of gravity is what was saved (ie, the rover original)
-    //path[i].print_vizmo_format_to_file(env,fp);
-    vector<Vector6D> tmp;
-    _path[i]->PrintLinkConfigurations(_env, tmp);
-    for(size_t j=0; j<tmp.size(); ++j) {
-      ofs << tmp[j][0] << " " << tmp[j][1] << " " << tmp[j][2] << " " 
-          << tmp[j][3] << " " << tmp[j][4] << " " << tmp[j][5] << endl;
-    }	    
-    // Cfg class need Environment Info to interpret 'abstract' Cfg.
-    _path[i]->Write(oc);
-    oc << "\n";
-  }
-  ofs.close();
-}
-
-void
-WritePathConfigurations(const string _outputFile,
-			 vector<Cfg*>& _path,
-			 Environment* _env ) {
-  ofstream ofs(_outputFile.c_str());
-  
-  ofs << "VIZMO_PATH_FILE   Path Version " << 2012 << endl;
-  ofs << "1" <<endl;
-  ofs << _path.size() << endl;
-  
-  for(size_t i = 0 ; i < _path.size() ; i++){
-    _path[i]->Write(ofs);
-    ofs << endl;
-  }
-  ofs.close();
-}
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////

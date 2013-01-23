@@ -100,7 +100,7 @@ class GridSampler : public SamplerMethod<MPTraits> {
       double bbMax = _bb->GetRange(index).second;
 
       // Get starting point (for this dimension)
-      double dofVal = tmp.GetSingleParam(index);
+      double dofVal = tmp[index];
 
       // Resolution of grid
       double delta = (bbMax - bbMin) / (numPoints + 1);
@@ -124,7 +124,7 @@ class GridSampler : public SamplerMethod<MPTraits> {
       }
 
       // Set the parameter at index
-      tmp.SetSingleParam(index, gridVal);
+      tmp[index] = gridVal;
       if(this->m_debug){
         ostringstream oss; 
         oss << "GridSampler::Dim::" << dofVal << "::grid value::" << gridVal; 

@@ -13,7 +13,7 @@ BoundingSphere::BoundingSphere(int _DOFs, int _posDOFs )
       m_parType.push_back(REVOLUTE);
   }
   for (int i = m_posDOFs; i < m_DOFs; i++) {    
-    m_jointLimits.push_back(pair<double,double>(0.0,1.0));
+    m_jointLimits.push_back(pair<double,double>(-1.0,1.0));
   }
 }
 
@@ -32,7 +32,7 @@ BoundingSphere(XMLNodeReader& _node): Boundary(_node) {
       m_parType.push_back(REVOLUTE);
   }
   for (int i = m_posDOFs; i < m_DOFs; i++) {    
-    m_jointLimits.push_back(pair<double,double>(0.0,1.0));
+    m_jointLimits.push_back(pair<double,double>(-1.0,1.0));
   }
 
   XMLNodeReader::childiterator citr;
@@ -255,7 +255,7 @@ IfSatisfiesConstraints(vector<double> _point) const {
   double radius =  m_boundingSphere[m_posDOFs];
   for (size_t i = 0; i < _point.size() && i < m_boundingSphere.size(); i++) {
     if (m_parType[i] == REVOLUTE) {
-      if (_point[i] < 0 || _point[i] > 1) {
+      if (_point[i] < -1.0 || _point[i] > 1.0) {
         cout << "Invalid range on REVOLUTE dof." << endl;
         exit(-1);
         return false;

@@ -239,11 +239,10 @@ LazyQuery<MPTraits>::NodeEnhance(RoadmapType* _rdmp, StatClass& _stats) {
   for(int i = 0; i < m_numEnhance; i++) {
     size_t index = LRand() % m_edges.size(); // do I need a typecast?
     CfgType seed, incr, enhance;
-    seed.add(m_edges[index].first, m_edges[index].second);
-    seed.divide(seed, 2.0);
+    seed = (m_edges[index].first + m_edges[index].second)/2.0;
     DistanceMetricPointer dm = this->GetMPProblem()->GetDistanceMetric(this->m_dmLabel); 
     incr.GetRandomRay(fabs(GaussianDistribution(fabs(m_d), fabs(m_d))), this->GetMPProblem()->GetEnvironment(), dm);
-    enhance.add(seed, incr);
+    enhance = seed + incr;
     enhance.SetLabel("Enhance", true);
    
     if(!enhance.InBoundary(this->GetMPProblem()->GetEnvironment(), this->GetMPProblem()->GetEnvironment()->GetBoundary()))

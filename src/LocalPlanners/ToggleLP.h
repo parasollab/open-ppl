@@ -161,13 +161,12 @@ ToggleLP<MPTraits>::ChooseAlteredCfg(Environment* _env, StatClass& _stats,
     typename boost::disable_if<IsClosedChain<Enable> >::type* _dummy){
   size_t attempts = 0;
   CfgType mid, temp;
-  mid.add(_c1, _c2);
-  mid.divide(_c1, 2.0);
+  mid = (_c1 + _c2)/2.0;
   do{
     CfgType incr;
     double dist = _dm->Distance(_env, _c1, _c2) * sqrt(2.0)/2.0;
     incr.GetRandomRay(dist, _env, _dm);
-    temp.add(incr, mid);
+    temp = incr + mid;
   }while(!temp.InBoundary(_env) && attempts++<10);
   if(attempts==10){ 
     _stats.IncLPStat("Toggle::MaxAttemptsForRay", 1);

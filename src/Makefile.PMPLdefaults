@@ -265,9 +265,15 @@ PMPL_OBJS = \
 	ValidityCheckers/CollisionDetection/VClipCollisionDetection.o \
 	ValidityCheckers/CollisionDetection/SpheresCollisionDetection.o \
 	Cfg/Cfg.o \
-	Cfg/ManifoldCfg.o \
-	Cfg/CfgSurface.o \
         Utilities/MetricUtils.o \
         Utilities/IOUtils.o \
         Utilities/MPUtils.o 
 
+ifeq (${ROBOT_DEF}, PMPCfgSurface)
+  PMPL_OBJS += Cfg/CfgSurface.o
+else
+  ifeq (${ROBOT_DEF}, $(or PMPReachDistCC PMPReachDistCCFixed))
+  PMPL_OBJS += Cfg/Cfg_reach_cc.o \
+	       Cfg/Cfg_reach_cc_fixed.o
+  endif
+endif

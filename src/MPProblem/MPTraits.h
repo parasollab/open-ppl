@@ -21,9 +21,7 @@
 #include "ValidityCheckers/NegateValidity.h"
 #include "ValidityCheckers/NodeClearanceValidity.h"
 #include "ValidityCheckers/ObstacleClearanceValidity.h"
-#ifdef PMPCfgSurface
 #include "ValidityCheckers/SurfaceValidity.h"
-#endif
 
 //neighborhood finder includes
 #include "NeighborhoodFinders/BruteForceNF.h"
@@ -39,27 +37,21 @@
 #include "Samplers/ObstacleBasedSampler.h"
 #include "Samplers/UniformObstacleBasedSampler.h"
 #include "Samplers/UniformRandomSampler.h"
-#ifdef PMPCfgSurface
 #include "Samplers/SurfaceSampler.h"
-#endif
 
 //local planner includes
 #include "LocalPlanners/StraightLine.h"
 #include "LocalPlanners/TransformAtS.h"
 #include "LocalPlanners/RotateAtS.h"
-#ifdef PMPCfgSurface
 #include "LocalPlanners/SurfaceLP.h"
-#endif
 #include "LocalPlanners/ToggleLP.h"
 
 //connector includes
 #include "Connectors/CCsConnector.h"
+#include "Connectors/ConnectNeighboringSurfaces.h"
+#include "Connectors/NeighborhoodConnector.h"
 #include "Connectors/OptimalConnection.h"
 #include "Connectors/OptimalRewire.h"
-#ifdef PMPCfgSurface
-#include "Connectors/ConnectNeighboringSurfaces.h"
-#endif
-#include "Connectors/NeighborhoodConnector.h"
 
 //metric includes
 #include "Metrics/CCDistanceMetric.h"
@@ -127,9 +119,6 @@ struct MPTraits{
     NegateValidity<MPTraits>,
     NodeClearanceValidity<MPTraits>,
     ObstacleClearanceValidity<MPTraits>
-    #ifdef PMPCfgSurface
-    , SurfaceValidity<MPTraits>
-    #endif
     > ValidityCheckerMethodList;
 
   //types of neighborhood finders available in our world
@@ -153,9 +142,6 @@ struct MPTraits{
     MedialAxisSampler<MPTraits>,
     MixSampler<MPTraits>,
     ObstacleBasedSampler<MPTraits>,
-#ifdef PMPCfgSurface
-    SurfaceSampler<MPTraits>,
-#endif
     UniformObstacleBasedSampler<MPTraits>,
     UniformRandomSampler<MPTraits>
       > SamplerMethodList;
@@ -169,18 +155,141 @@ struct MPTraits{
     RotateAtS<MPTraits>,
     StraightLine<MPTraits>,
     //TransformAtS<MPTraits>,
-    #if defined(PMPCfgSurface)
-    SurfaceLP<MPTraits>,
+    ToggleLP<MPTraits>
+    > LocalPlannerMethodList;
+
+  //types of connectors available in our world
+  typedef boost::mpl::list<
+    CCsConnector<MPTraits>, 
+    NeighborhoodConnector<MPTraits>, 
+    //PreferentialAttachment<MPTraits>, 
+    OptimalConnection<MPTraits>,
+    OptimalRewire<MPTraits>//,
+    //ClosestVE<MPTraits>
+      > ConnectorMethodList;
+  
+  //types of metrics available in our world
+  typedef boost::mpl::list<
+    CCDistanceMetric<MPTraits>,
+    ConnectivityMetric<MPTraits>,
+    CoverageDistanceMetric<MPTraits>,
+    CoverageMetric<MPTraits>,
+    DiameterMetric<MPTraits>,
+    NumEdgesMetric<MPTraits>,
+    NumNodesMetric<MPTraits>,
+    TimeMetric<MPTraits>
+    > MetricMethodList;
+  
+  //types of map evaluators available in our world
+  typedef boost::mpl::list<
+    ComposeEvaluator<MPTraits>,
+    ConditionalEvaluator<MPTraits>,
+    LazyQuery<MPTraits>,
+    LazyToggleQuery<MPTraits>,
+    NegateEvaluator<MPTraits>,
+    PrintMapEvaluation<MPTraits>, 
+    Query<MPTraits>,
+    TrueEvaluation<MPTraits>
+    > MapEvaluatorMethodList;
+  
+  //types of motion planning strategies available in our world
+  typedef boost::mpl::list<
+    BasicPRM<MPTraits>,
+    BasicRRTStrategy<MPTraits>,
+    DMTestStrategy<MPTraits>,
+    EvaluateMapStrategy<MPTraits>,
+    MedialAxisRRT<MPTraits>,
+    ResamplePointStrategy<MPTraits>,
+    TogglePRMStrategy<MPTraits>
+    #ifdef _PARALLEL
+    ,BasicParallelPRM<MPTraits>
+    ,RegularSubdivisionMethod<MPTraits>
     #endif
+    > MPStrategyMethodList;
+};
+
+#ifdef PMPCfgSurface
+
+class CfgSurface;
+
+//template specialization for SurfaceCfgs
+template<>
+struct MPTraits<CfgSurface, DefaultWeight<CfgSurface> > {
+  typedef CfgSurface CfgType;
+  typedef DefaultWeight<CfgSurface> WeightType;
+
+  typedef MPProblem<MPTraits> MPProblemType;
+
+  //types of distance metrics available in our world
+  typedef boost::mpl::list<
+    //BinaryLPSweptDistance<MPTraits>,
+    CenterOfMassDistance<MPTraits>,
+    EuclideanDistance<MPTraits>,
+    KnotTheoryDistance<MPTraits>,
+    LPSweptDistance<MPTraits>,
+    //ManhattanDistance<MPTraits>,
+    MinkowskiDistance<MPTraits>,
+    //#if (defined(PMPReachDistCC) || defined(PMPReachDistCCFixed))
+    //ReachableDistance<MPTraits>, 
+    //#endif
+    RMSDDistance<MPTraits>//,
+    //ScaledEuclideanDistance<MPTraits>
+    > DistanceMetricMethodList;
+  
+  //types of validity checkers available in our world
+  typedef boost::mpl::list<
+    AlwaysTrueValidity<MPTraits>,
+    CollisionDetectionValidity<MPTraits>,
+    ComposeValidity<MPTraits>,
+    MedialAxisClearanceValidity<MPTraits>,
+    NegateValidity<MPTraits>,
+    NodeClearanceValidity<MPTraits>,
+    ObstacleClearanceValidity<MPTraits>,
+    SurfaceValidity<MPTraits>
+    > ValidityCheckerMethodList;
+
+  //types of neighborhood finders available in our world
+  typedef boost::mpl::list<
+    //BandsNF<MPTraits>,
+    BruteForceNF<MPTraits>,
+    //CGALNF<MPTraits>,
+    //DPESNF<MPTraits>,
+    HierarchicalNF<MPTraits>,
+    //MetricTreeNF<MPTraits>,
+    //MPNNNF<MPTraits>,
+    RadiusNF<MPTraits>//,
+    //SpillTreeNF<MPTraits> 
+    > NeighborhoodFinderMethodList;
+  
+  //types of samplers available in our world
+  typedef boost::mpl::list<
+    BridgeTestSampler<MPTraits>,
+    GaussianSampler<MPTraits>,
+    GridSampler<MPTraits>,
+    MedialAxisSampler<MPTraits>,
+    MixSampler<MPTraits>,
+    ObstacleBasedSampler<MPTraits>,
+    SurfaceSampler<MPTraits>,
+    UniformObstacleBasedSampler<MPTraits>,
+    UniformRandomSampler<MPTraits>
+      > SamplerMethodList;
+  
+  //types of local planners available in our world
+  typedef boost::mpl::list<
+    //AStarClearance<MPTraits>,
+    //AStarDistance<MPTraits>,
+    //MedialAxisLP<MPTraits>,
+    TransformAtS<MPTraits>,
+    RotateAtS<MPTraits>,
+    StraightLine<MPTraits>,
+    SurfaceLP<MPTraits>,
     ToggleLP<MPTraits>
     > LocalPlannerMethodList;
 
   //types of connectors available in our world
   typedef boost::mpl::list<
     CCsConnector<MPTraits>,
-#if defined(PMPCfgSurface)
     ConnectNeighboringSurfaces<MPTraits>,
-#endif
     NeighborhoodConnector<MPTraits>,
     OptimalConnection<MPTraits>,
     OptimalRewire<MPTraits>/*, 
@@ -227,5 +336,6 @@ struct MPTraits{
     #endif
     > MPStrategyMethodList;
 };
+#endif
 
 #endif
