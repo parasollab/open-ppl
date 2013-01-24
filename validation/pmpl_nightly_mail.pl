@@ -14,7 +14,6 @@ use List::Util qw(min max);
 $outputdir = "/tmp/pmpl_nightly_logs";
 $cron_machine = "zenigata.cse.tamu.edu";
 $MAILTO = "OBPRM\@listserv.tamu.edu";
-#$MAILTO = "jdenny\@cs.tamu.edu";
 $ENV{'PATH'}    = '/usr/local/bin/:/usr/X11R6/bin/:'.$ENV{'PATH'};
 $ENV{'DISPLAY'} = '';
 
@@ -45,17 +44,20 @@ $message  = "\n";
 # search each compilation output for possible failures
 #
 $errcode = max($errcode,
-  &get_error_code("$outputdir/$fulldate/pmpl.LINUX_64_gcc.rigid.debug0.parallel0.out",
-    "Configuration: gcc 4.7.0 (platform=LINUX_64_gcc, robot=rigid, debug=0, parallel=0)"));
+  &get_error_code("$outputdir/$fulldate/pmpl.LINUX_gcc.cfg.debug0.parallel0.out",
+    "Configuration: gcc 4.7.0 (platform=LINUX_gcc, robot=cfg, debug=0, parallel=0)"));
 $errcode = max($errcode,
-  &get_error_code("$outputdir/$fulldate/pmpl.LINUX_64_gcc.rigid.debug1.parallel0.out",
-    "Configuration: gcc 4.7.0 (platform=LINUX_64_gcc, robot=rigid, debug=1, parallel=0)"));
+  &get_error_code("$outputdir/$fulldate/pmpl.LINUX_gcc.cfg.debug1.parallel0.out",
+    "Configuration: gcc 4.7.0 (platform=LINUX_gcc, robot=cfg, debug=1, parallel=0)"));
 $errcode = max($errcode,
-  &get_error_code("$outputdir/$fulldate/pmpl.LINUX_64_gcc.serial.debug0.parallel0.out",
-    "Configuration: gcc 4.7.0 (platform=LINUX_64_gcc, robot=serial, debug=0, parallel=0)"));
+  &get_error_code("$outputdir/$fulldate/pmpl.LINUX_gcc.surface.debug0.parallel0.out",
+    "Configuration: gcc 4.7.0 (platform=LINUX_gcc, robot=surface, debug=0, parallel=0)"));
 $errcode = max($errcode,
-  &get_error_code("$outputdir/$fulldate/pmpl.LINUX_64_gcc.reach.debug0.parallel0.out",
-    "Configuration: gcc 4.7.0 (platform=LINUX_64_gcc, robot=reach, debug=0, parallel=0)"));
+  &get_error_code("$outputdir/$fulldate/pmpl.LINUX_gcc.surface.debug1.parallel0.out",
+    "Configuration: gcc 4.7.0 (platform=LINUX_gcc, robot=surface, debug=1, parallel=0)"));
+#$errcode = max($errcode,
+#  &get_error_code("$outputdir/$fulldate/pmpl.LINUX_64_gcc.reach.debug0.parallel0.out",
+#    "Configuration: gcc 4.7.0 (platform=LINUX_64_gcc, robot=reach, debug=0, parallel=0)"));
 
 #
 # Send out e-mail

@@ -13,11 +13,11 @@ $workdir  = "/scratch/zenigata/jdenny/pmpl_nightly";
 #
 # find out which platform is used 
 #
-if (!defined $opt_c || !(($opt_c eq "LINUX_64_gcc") || ($opt_c eq "LINUX_gcc"))) { 
-  die "must define compilation platform (-c LINUX_64_gcc | LINUX_gcc)"; 
+if (!defined $opt_c || !(($opt_c eq "LINUX_gcc") || ($opt_c eq "LINUX_32_gcc"))) { 
+  die "must define compilation platform (-c LINUX_gcc | LINUX_32_gcc)"; 
 }
-if (!defined $opt_r || !(($opt_r eq "rigid") || ($opt_r eq "serial") || ($opt_r eq "reach"))) { 
-  die "must define robot type (-r rigid | serial | reach)"; 
+if (!defined $opt_r || !(($opt_r eq "cfg") || ($opt_r eq "surface") || ($opt_r eq "reach"))) { 
+  die "must define robot type (-r cfg | surface | reach)"; 
 }
 if (!defined $opt_d || !(($opt_d eq "0") || ($opt_d eq "1"))) { 
   die "must define debugging option (-d 0 | 1)"; 
@@ -26,16 +26,16 @@ if (!defined $opt_p || !(($opt_p eq "0") || ($opt_p eq "1"))) {
   die "must define parallel option (-p 0 | 1)"; 
 }
 $PLATFORM = $opt_c;
-$ROBOT = "-DPMPRigid";
-if($opt_r eq "serial") { $ROBOT = "-DPMPSerial"; }
-if($opt_r eq "reach") { $ROBOT = "-DPMPReachDistCC"; }
+$ROBOT = "PMPCfg";
+if($opt_r eq "surface") { $ROBOT = "PMPCfgSurface"; }
+if($opt_r eq "reach") { $ROBOT = "PMPReachDistCC"; }
 $DEBUG = $opt_d;
 $PARALLEL = $opt_p;
 
 #
 # setup shell variables
 # 
-if ($opt_c eq "LINUX_64_gcc" && $opt_p eq "0") {
+if ($opt_c eq "LINUX_gcc" && $opt_p eq "0") {
   $GCC_PATH = "/usr/lib64/ccache";
   $MYENV    = "/usr/local/bin:$GCC_PATH:/usr/bin:/usr/X11R6/bin";
 }
