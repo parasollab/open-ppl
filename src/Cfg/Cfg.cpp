@@ -29,11 +29,13 @@ vector<Robot> Cfg::m_robots;
 Cfg::Cfg() {
   m_v.clear();
   m_v.resize(m_dof, 0.0);
+  m_witnessCfg.reset();
 }
 
 Cfg::Cfg(const Cfg& _other) :
   m_v(_other.m_v), m_labelMap(_other.m_labelMap),
-  m_statMap(_other.m_statMap) {}
+  m_statMap(_other.m_statMap), 
+  m_clearanceInfo(_other.m_clearanceInfo), m_witnessCfg(_other.m_witnessCfg) {}
 
 void
 Cfg::InitRobots(vector<Robot>& _robots) {
@@ -81,6 +83,8 @@ Cfg::operator=(const Cfg& _cfg) {
     m_v = _cfg.GetData();
     m_labelMap = _cfg.m_labelMap;
     m_statMap = _cfg.m_statMap;
+    m_clearanceInfo = _cfg.m_clearanceInfo;
+    m_witnessCfg = _cfg.m_witnessCfg;
   }
   return *this;
 }
@@ -117,6 +121,7 @@ Cfg::operator+=(const Cfg& _cfg) {
   for(size_t i = 0; i < m_dof; ++i)
     m_v[i] += _cfg[i];
   NormalizeOrientation();
+  m_witnessCfg.reset();
   return *this;
 }
 
@@ -136,6 +141,7 @@ Cfg::operator-=(const Cfg& _cfg) {
       m_v[i] = DirectedAngularDistance(m_v[i], _cfg.m_v[i]);
   }
   NormalizeOrientation();
+  m_witnessCfg.reset();
   return *this;
 }
 
@@ -145,6 +151,7 @@ Cfg::operator-() const {
   for(size_t i = 0; i < m_dof; ++i)
     result[i] = -result[i];
   result.NormalizeOrientation();
+  result.m_witnessCfg.reset();
   return result;
 }
 
@@ -160,6 +167,7 @@ Cfg::operator*=(double _d) {
   for(size_t i = 0; i < m_dof; ++i)
     m_v[i] *= _d;
   NormalizeOrientation();
+  m_witnessCfg.reset();
   return *this;
 }
 
@@ -175,12 +183,14 @@ Cfg::operator/=(double _d) {
   for(size_t i = 0; i < m_dof; ++i)
     m_v[i] /= _d;
   NormalizeOrientation();
+  m_witnessCfg.reset();
   return *this;
 }
 
 double&
 Cfg::operator[](size_t _dof){
   assert(_dof >= 0 && _dof <= m_dof);
+  m_witnessCfg.reset();
   return m_v[_dof];
 }
 
@@ -197,6 +207,7 @@ istream&
 operator>>(istream& _is, Cfg& _cfg) {
   for(vector<double>::iterator i = _cfg.m_v.begin(); i != _cfg.m_v.end(); ++i)
     _is >> (*i);
+  _cfg.m_witnessCfg.reset();
   return _is;
 }
 
@@ -216,6 +227,7 @@ Cfg::SetData(const vector<double>& _data) {
     exit(-1);
   }
   m_v = _data;
+  m_witnessCfg.reset();
 }
 
 bool
@@ -393,7 +405,8 @@ Cfg::GetRandomCfg(Environment* _env) {
 
 void
 Cfg::GetRandomCfg(Environment* _env, shared_ptr<Boundary> _bb) {
-  
+  m_witnessCfg.reset();
+
   // Probably should do something smarter than 3 strikes and exit.
   // eg, if it fails once, check size of bounding box vs robot radius
   // and see if user has an impossibly small (for this robot) bounding
@@ -482,6 +495,7 @@ Cfg::GetResolutionCfg(Environment* _env) {
       m_v.push_back(oriRes);
 
   NormalizeOrientation();
+  m_witnessCfg.reset();
 }
 
 void
@@ -513,6 +527,8 @@ Cfg::IncrementTowardsGoal(const Cfg& _goal, const Cfg& _increment) {
       }
     }
   }
+  
+  m_witnessCfg.reset();
 }
 
 void
@@ -547,6 +563,7 @@ Cfg::FindIncrement(const Cfg& _start, const Cfg& _goal, int _nTicks) {
 
   m_v = incr;
   NormalizeOrientation();
+  m_witnessCfg.reset();
 }
 
 void
@@ -556,6 +573,7 @@ Cfg::WeightedSum(const Cfg& _first, const Cfg& _second, double _weight) {
     v.push_back(_first.m_v[i]*(1.-_weight) + _second.m_v[i]*_weight);
   m_v = v;
   NormalizeOrientation();
+  m_witnessCfg.reset();
 }
 
 void
@@ -569,6 +587,7 @@ Cfg::GetPositionOrientationFrom2Cfg(const Cfg& _c1, const Cfg& _c2) {
   }
   m_v = v;
   NormalizeOrientation();
+  m_witnessCfg.reset();
 }
 
 vector<Vector3D>
@@ -627,4 +646,5 @@ Cfg::GetRandomCfgImpl(Environment* _env, shared_ptr<Boundary> _bb) {
       }
     }
   }
+  m_witnessCfg.reset();
 }

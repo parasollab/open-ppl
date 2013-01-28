@@ -211,6 +211,10 @@ class Cfg {
     map<string,double> m_statMap;
 
   public:
+
+    CDInfo m_clearanceInfo;
+    shared_ptr<Cfg> m_witnessCfg;
+
 #ifdef _PARALLEL
     void define_type(stapl::typer &_t)  
     {
