@@ -28,6 +28,8 @@ CfgSurface::CfgSurface(const CfgSurface& _c) :
   m_pt(_c.m_pt), m_h(_c.m_h), m_surfaceID(_c.m_surfaceID){
     m_labelMap = _c.m_labelMap;
     m_statMap = _c.m_statMap;
+    m_clearanceInfo = _c.m_clearanceInfo;
+    m_witnessCfg = _c.m_witnessCfg;
   }
 
 CfgSurface::CfgSurface(const Point2d& _p, double _h, int _sid) : 
@@ -43,6 +45,8 @@ CfgSurface::operator=(const CfgSurface& _cfg) {
     m_surfaceID = _cfg.m_surfaceID;
     m_labelMap = _cfg.m_labelMap;
     m_statMap = _cfg.m_statMap;
+    m_clearanceInfo = _cfg.m_clearanceInfo;
+    m_witnessCfg = _cfg.m_witnessCfg;
   }
   return *this;
 }
@@ -70,6 +74,7 @@ CfgSurface::operator+=(const CfgSurface& _cfg) {
   m_pt[1] += _cfg.m_pt[1];
   m_h += _cfg.m_h;
   //m_surfaceID = _cfg.m_surfaceID;
+  m_witnessCfg.reset();
   return *this;
 }
 
@@ -86,6 +91,7 @@ CfgSurface::operator-=(const CfgSurface& _cfg) {
   m_pt[1] -= _cfg.m_pt[1];
   m_h -= _cfg.m_h;
   //m_surfaceID = _cfg.m_surfaceID;
+  m_witnessCfg.reset();
   return *this;
 }
 
@@ -95,6 +101,7 @@ CfgSurface::operator-() const {
   result.m_pt[0] = -m_pt[0];
   result.m_pt[1] = -m_pt[1];
   result.m_h = -m_h;
+  result.m_witnessCfg.reset();
   return result;
 }
 
@@ -110,6 +117,7 @@ CfgSurface::operator*=(double _d) {
   m_pt[0] *= _d;
   m_pt[1] *= _d;
   m_h *= _d;
+  m_witnessCfg.reset();
   return *this;
 }
 
@@ -125,11 +133,13 @@ CfgSurface::operator/=(double _d) {
   m_pt[0] /= _d;
   m_pt[1] /= _d;
   m_h /= _d;
+  m_witnessCfg.reset();
   return *this;
 }
 
 double&
 CfgSurface::operator[](size_t _dof){
+  m_witnessCfg.reset();
   assert(_dof >= 0 && _dof <= m_dof);
   switch(_dof){
     case 0 : return m_pt[0];
@@ -159,6 +169,7 @@ CfgSurface::operator[](size_t _dof) const {
 //---------------------------------------------
 istream&
 operator>>(istream& _is, CfgSurface& _cfg) {
+  m_witnessCfg.reset();
   _is >> _cfg.m_surfaceID >> _cfg.m_pt[0] >> _cfg.m_h >> _cfg.m_pt[1];
   if(!_is)
     cerr << "\n\nError in CfgSurface:: Failed to read configuration from stream" << endl;
@@ -194,6 +205,7 @@ CfgSurface::SetData(const vector<double>& _data) {
   m_pt[0] = _data[0];
   m_h = _data[1];
   m_pt[1] = _data[2];
+  m_witnessCfg.reset();
 }
 
 vector<double>
@@ -252,6 +264,7 @@ CfgSurface::GetResolutionCfg(Environment* _env) {
   m_pt[0] = posRes;
   m_h = posRes;
   m_pt[1] = posRes;
+  m_witnessCfg.reset();
 }
 
 void
@@ -263,6 +276,7 @@ CfgSurface::IncrementTowardsGoal(const Cfg& _goal, const Cfg& _increment) {
     else
       operator[](i) += ((const CfgSurface&)_increment)[i];
   }
+  m_witnessCfg.reset();
 }
 
 void
@@ -323,5 +337,6 @@ CfgSurface::GetRandomCfgImpl(Environment *_env, shared_ptr<Boundary> _bb) {
     m_pt[1] = surfPt3d[2];
     //////////////////////////////////////////////////////////////////////////////
   }
+  m_witnessCfg.reset();
 }
 

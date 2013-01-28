@@ -159,6 +159,7 @@ CfgSurface::GetRandomRay(double _incr, Environment* _env, DistanceMetricPointer 
   m_pt[2] = v[1];
   m_h = 0.0; 
   //how to handle surface id?
+  m_witnessCfg.reset();
 }
 
 #endif
