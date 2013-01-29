@@ -35,6 +35,7 @@ class CfgSurface : public Cfg {
     CfgSurface(const Vector3d& _v);
     CfgSurface(const CfgSurface& _c);
     CfgSurface(const Point2d& _p, double _h, int _sid);
+    CfgSurface(const Cfg& _c);
     ///Do nothing
     virtual ~CfgSurface();
 

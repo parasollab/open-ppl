@@ -35,6 +35,9 @@ CfgSurface::CfgSurface(const CfgSurface& _c) :
 CfgSurface::CfgSurface(const Point2d& _p, double _h, int _sid) : 
   m_pt(_p), m_h(_h), m_surfaceID(_sid) {}
 
+CfgSurface::CfgSurface(const Cfg& _c) :
+  m_pt(Point2d(_c[0], _c[2])), m_h(_c[1]), m_surfaceID(INVALID_SURFACE) {}
+
 CfgSurface::~CfgSurface() {}
 
 CfgSurface&
@@ -169,7 +172,7 @@ CfgSurface::operator[](size_t _dof) const {
 //---------------------------------------------
 istream&
 operator>>(istream& _is, CfgSurface& _cfg) {
-  m_witnessCfg.reset();
+  _cfg.m_witnessCfg.reset();
   _is >> _cfg.m_surfaceID >> _cfg.m_pt[0] >> _cfg.m_h >> _cfg.m_pt[1];
   if(!_is)
     cerr << "\n\nError in CfgSurface:: Failed to read configuration from stream" << endl;
