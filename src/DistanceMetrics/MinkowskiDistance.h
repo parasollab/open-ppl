@@ -13,31 +13,32 @@ class MinkowskiDistance : public DistanceMetricMethod<MPTraits> {
     MinkowskiDistance(double _r1 = 3, double _r2 = 3, double _r3 = 1.0/3, bool _normalize = false);
     MinkowskiDistance(typename MPTraits::MPProblemType* _problem, XMLNodeReader& _node, bool _warn = true, bool _parse = true);
     virtual ~MinkowskiDistance();
+    
     virtual void PrintOptions(ostream& _os) const;
     virtual double Distance(Environment* _env, const CfgType& _c1, const CfgType& _c2);
     virtual void ScaleCfg(Environment* _env, double _length, CfgType& _o, CfgType& _c, bool _normalizeOrientation = true);
 
   protected:
     //default implementation
-    template<typename Enable>
-      CfgType DifferenceCfg(const CfgType& _c1, const CfgType& _c2,
-          typename boost::disable_if<IsClosedChain<Enable> >::type* _dummy = 0) {
+    template<typename EnableCfg>
+      EnableCfg DifferenceCfg(const EnableCfg& _c1, const EnableCfg& _c2,
+          typename boost::disable_if<IsClosedChain<EnableCfg> >::type* _dummy = 0) {
         return _c1 - _c2;
       }
 
     //reachable distance implementation
-    template<typename Enable>
-      CfgType* DifferenceCfg(const CfgType& _c1, const CfgType& _c2,
-          typename boost::enable_if<IsClosedChain<Enable> >::type* _dummy = 0) {
+    template<typename EnableCfg>
+      EnableCfg DifferenceCfg(const EnableCfg& _c1, const EnableCfg& _c2,
+          typename boost::enable_if<IsClosedChain<EnableCfg> >::type* _dummy = 0) {
         cerr << "Error::DistanceMetrics for ReachableDistance disabled." << endl;
         exit(1);
         /*vector<double> _v1 = _c1.GetData();
-        vector<double> _v2 = _c2.GetData();
-        if(_v1.size() != _v2.size()) { 
+          vector<double> _v2 = _c2.GetData();
+          if(_v1.size() != _v2.size()) { 
           cout << "ERROR in MinkowskiDistance::DifferenceCfgType, _c1 dofs (" << _v1.size() << ") != _c2 dofs (" << _v2.size() << ")\n"; 
           exit(-1);
-        }
-        if(_v1.size() == MPTraits::CfgTypeType::GetNumOfJoints()) {
+          }
+          if(_v1.size() == MPTraits::CfgTypeType::GetNumOfJoints()) {
           CfgType_fixed_tree c1Linkage;
           c1Linkage.SetData(_v1);
           CfgType_fixed_tree c2Linkage;
@@ -45,7 +46,7 @@ class MinkowskiDistance : public DistanceMetricMethod<MPTraits> {
           CfgType* c = c1Linkage.CreateNewCfg();
           c->subtract(c1Linkage, c2Linkage);
           return c;
-        } else {
+          } else {
           CfgType_free_tree c1Linkage;
           c1Linkage.SetData(_v1);
           CfgType_free_tree c2Linkage;
@@ -53,7 +54,7 @@ class MinkowskiDistance : public DistanceMetricMethod<MPTraits> {
           CfgType* c = c1Linkage.CreateNewCfg();
           c->subtract(c1Linkage, c2Linkage);
           return c;
-        }*/
+          }*/
       }
 
     double PositionDistance(Environment* _env, const CfgType& _c);
@@ -67,8 +68,8 @@ class MinkowskiDistance : public DistanceMetricMethod<MPTraits> {
 };
 
 template<class MPTraits>
-MinkowskiDistance<MPTraits>::MinkowskiDistance(double _r1, double _r2, double _r3, bool _normalize) : 
-  DistanceMetricMethod<MPTraits>(), m_r1(_r1), m_r2(_r2), m_r3(_r3), m_normalize(_normalize) {
+MinkowskiDistance<MPTraits>::MinkowskiDistance(double _r1, double _r2, double _r3, bool _normalize) 
+  : DistanceMetricMethod<MPTraits>(), m_r1(_r1), m_r2(_r2), m_r3(_r3), m_normalize(_normalize) {
     this->m_name = "Minkowski";
   }
 
@@ -77,7 +78,7 @@ MinkowskiDistance<MPTraits>::MinkowskiDistance(typename MPTraits::MPProblemType*
   : DistanceMetricMethod<MPTraits>(_problem, _node, false) {
     this->m_name = "Minkowski";
 
-    if(_parse) {
+    if(_parse){
       m_r1 = _node.numberXMLParameter("r1", false, 3.0, 0.0, 1000.0, "r1");
       m_r2 = _node.numberXMLParameter("r2", false, 3.0, 0.0, 1000.0, "r2");
       m_r3 = _node.numberXMLParameter("r3", false, 1.0/3.0, 0.0, 1000.0, "r3");
@@ -101,7 +102,7 @@ MinkowskiDistance<MPTraits>::PrintOptions(ostream& _os) const {
 template<class MPTraits>
 double
 MinkowskiDistance<MPTraits>::Distance(Environment* _env, const CfgType& _c1, const CfgType& _c2) {
-  CfgType diff = DifferenceCfg<CfgType>(_c1, _c2);
+  CfgType diff = DifferenceCfg(_c1, _c2);
   double pos = PositionDistance(_env, diff);
   double orient = OrientationDistance(diff);
   return pow(pos+orient, m_r3);

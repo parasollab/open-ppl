@@ -12,6 +12,8 @@
 #include "DistanceMetrics/KnotTheoryDistance.h"
 #include "DistanceMetrics/LPSweptDistance.h"
 #include "DistanceMetrics/RMSDDistance.h"
+#include "DistanceMetrics/ManhattanDistance.h"
+#include "DistanceMetrics/ScaledEuclideanDistance.h" 
 
 //validity checker includes
 #include "ValidityCheckers/AlwaysTrueValidity.h"
@@ -101,13 +103,13 @@ struct MPTraits{
     EuclideanDistance<MPTraits>,
     KnotTheoryDistance<MPTraits>,
     LPSweptDistance<MPTraits>,
-    //ManhattanDistance<MPTraits>,
+    ManhattanDistance<MPTraits>,
     MinkowskiDistance<MPTraits>,
     //#if (defined(PMPReachDistCC) || defined(PMPReachDistCCFixed))
     //ReachableDistance<MPTraits>, 
     //#endif
-    RMSDDistance<MPTraits>//,
-    //ScaledEuclideanDistance<MPTraits>
+    RMSDDistance<MPTraits>,
+    ScaledEuclideanDistance<MPTraits>
     > DistanceMetricMethodList;
   
   //types of validity checkers available in our world
