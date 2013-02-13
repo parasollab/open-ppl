@@ -31,7 +31,7 @@ FreeBody::GetWorldPolyhedron() {
   // of "this" body's instance
   Body::GetWorldPolyhedron();
 
-  return worldPolyhedron;
+  return m_worldPolyhedron;
 }
 
 
@@ -46,7 +46,7 @@ FreeBody::GetWorldPolyhedron() {
 void
 FreeBody::Configure(Transformation& _transformation){
   // new transformation (position and orientation) for the reconfiguration
-  worldTransformation = _transformation;
+  m_worldTransformation = _transformation;
 }
 
 //===================================================================
@@ -82,42 +82,42 @@ FreeBody::ComputeWorldTransformation(std::set<int, less<int> >& visited, bool _d
       cout << " " << *V;
     cout << endl;
   }
-  if(visited.find(multibody->GetFreeBodyIndex(*this)) != visited.end()) {
+  if(visited.find(m_multibody->GetFreeBodyIndex(*this)) != visited.end()) {
     if(_debug) {
-    cout << "index " << multibody->GetFreeBodyIndex(*this) << " already visited, transformation is " << worldTransformation << ", returning\n";
+    cout << "index " << m_multibody->GetFreeBodyIndex(*this) << " already visited, transformation is " << m_worldTransformation << ", returning\n";
     }
-    return worldTransformation;
+    return m_worldTransformation;
 
   } else {
     if(_debug) {
-    cout << "index " << multibody->GetFreeBodyIndex(*this) << " not visited yet.\n";
+    cout << "index " << m_multibody->GetFreeBodyIndex(*this) << " not visited yet.\n";
     }
-    visited.insert(multibody->GetFreeBodyIndex(*this));
+    visited.insert(m_multibody->GetFreeBodyIndex(*this));
 
     //for the case when the base is a freebody.
-    if(backwardConnection.empty()) {//base link
+    if(m_backwardConnection.empty()) {//base link
       if(_debug) {
-        cout << "base link, no transformation change, transformation is " << worldTransformation << ", returning\n";
+        cout << "base link, no transformation change, transformation is " << m_worldTransformation << ", returning\n";
       }
-      return worldTransformation;
+      return m_worldTransformation;
     }
       
-    Transformation dh(backwardConnection[0].GetDHparameters());
-    worldTransformation =
-      ((FreeBody*)(backwardConnection[0].GetPreviousBody().get()))->ComputeWorldTransformation(visited, _debug)
-      * backwardConnection[0].GetTransformationToDHFrame()
+    Transformation dh(m_backwardConnection[0].GetDHparameters());
+    m_worldTransformation =
+      ((FreeBody*)(m_backwardConnection[0].GetPreviousBody().get()))->ComputeWorldTransformation(visited, _debug)
+      * m_backwardConnection[0].GetTransformationToDHFrame()
       * dh
-      * backwardConnection[0].GetTransformationToBody2();
+      * m_backwardConnection[0].GetTransformationToBody2();
     if(_debug) {
-      cout << "computing new transformation by:\n\tprior transformation: " << ((FreeBody*)(backwardConnection[0].GetPreviousBody().get()))->ComputeWorldTransformation(visited, false) << endl;
-      cout << "\ttransformation to DH frame: " << backwardConnection[0].GetTransformationToDHFrame() << endl;
-      cout << "\t\tdh from connection: " << backwardConnection[0].GetDHparameters() << endl;
+      cout << "computing new transformation by:\n\tprior transformation: " << ((FreeBody*)(m_backwardConnection[0].GetPreviousBody().get()))->ComputeWorldTransformation(visited, false) << endl;
+      cout << "\ttransformation to DH frame: " << m_backwardConnection[0].GetTransformationToDHFrame() << endl;
+      cout << "\t\tdh from connection: " << m_backwardConnection[0].GetDHparameters() << endl;
       cout << "\tdh: " << dh << endl;
-      cout << "\ttransformation to body 2: " << backwardConnection[0].GetTransformationToBody2() << endl;
-      cout << "new transformation = " << worldTransformation << ", returning\n";
+      cout << "\ttransformation to body 2: " << m_backwardConnection[0].GetTransformationToBody2() << endl;
+      cout << "new transformation = " << m_worldTransformation << ", returning\n";
     }
 
-    return worldTransformation;
+    return m_worldTransformation;
   }
 }
 
@@ -132,18 +132,18 @@ operator>>(istream& _is, FreeBody& _fb){
   //If Joint skip this stuff. If Fixed read in positions like an obstacle
   string baseTag = ReadFieldString(_is, 
       "Base Tag (Planar, Volumetric, Fixed, Joint");
-  _fb.baseType = Robot::GetBaseFromTag(baseTag);
+  _fb.m_baseType = Robot::GetBaseFromTag(baseTag);
 
 
-  if(_fb.baseType == Robot::VOLUMETRIC ||_fb. baseType == Robot::PLANAR){
-    _fb.isBase = true;
+  if(_fb.m_baseType == Robot::VOLUMETRIC ||_fb. m_baseType == Robot::PLANAR){
+    _fb.m_isBase = true;
     string baseMovementTag = ReadFieldString(_is, 
         "Rotation Tag (Rotational, Translational)");
-   _fb.baseMovementType = Robot::GetMovementFromTag(baseMovementTag);
+   _fb.m_baseMovementType = Robot::GetMovementFromTag(baseMovementTag);
   }
-  else if(_fb.baseType == Robot::FIXED){
-    _fb.isBase = true;
-    _fb.worldTransformation = 
+  else if(_fb.m_baseType == Robot::FIXED){
+    _fb.m_isBase = true;
+    _fb.m_worldTransformation = 
       ReadField<Transformation>(_is, "FreeBody Transformation");
   }
 
@@ -154,13 +154,13 @@ ostream&
 operator<<(ostream& _os, FreeBody& _fb){
   _os << _fb.m_filename << " ";
   
-  _os << Robot::GetTagFromBase(_fb.baseType) << " ";
+  _os << Robot::GetTagFromBase(_fb.m_baseType) << " ";
 
-  if(_fb.baseType == Robot::VOLUMETRIC || _fb.baseType == Robot::PLANAR){
-    _os << Robot::GetTagFromMovement(_fb.baseMovementType);   
+  if(_fb.m_baseType == Robot::VOLUMETRIC || _fb.m_baseType == Robot::PLANAR){
+    _os << Robot::GetTagFromMovement(_fb.m_baseMovementType);   
   }
-  else if(_fb.baseType == Robot::FIXED){
-    _os << _fb.worldTransformation;   
+  else if(_fb.m_baseType == Robot::FIXED){
+    _os << _fb.m_worldTransformation;   
   }
 
   return _os;

@@ -39,7 +39,7 @@ IsInCollision(shared_ptr<MultiBody> _robot, shared_ptr<MultiBody> _obstacle,
       
       // if robot check self collision, skip adjacent links.
       if(_robot == _obstacle &&
-	 _robot->GetFreeBody(i)->isWithinI(_obstacle->GetBody(j),_ignoreIAdjacentMultibodies) ) {
+	 _robot->GetFreeBody(i)->IsWithinI(_obstacle->GetBody(j),_ignoreIAdjacentMultibodies) ) {
 	continue;
       }
       
@@ -90,7 +90,7 @@ IsInColl_AllInfo_vclip(shared_ptr<MultiBody> _robot, shared_ptr<MultiBody> _obst
       
       // if robot check self collision, skip adjacent links.
       if(_robot == _obstacle &&
-	 _robot->GetFreeBody(i)->isWithinI(_obstacle->GetBody(j),_ignoreIAdjacentMultibodies) ) {   
+	 _robot->GetFreeBody(i)->IsWithinI(_obstacle->GetBody(j),_ignoreIAdjacentMultibodies) ) {   
 	continue;
       }
       

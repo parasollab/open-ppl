@@ -41,7 +41,7 @@ IsInCollision(shared_ptr<MultiBody> _robot, shared_ptr<MultiBody> _obstacle, Sta
       for(int j=0; j<_obstacle->GetBodyCount(); j++) {
         // if robot check self collision, skip adjacent links.
         if(_robot == _obstacle &&
-           _robot->GetFreeBody(i)->isWithinI(_obstacle->GetBody(j),_ignoreIAdjacentMultibodies) )
+           _robot->GetFreeBody(i)->IsWithinI(_obstacle->GetBody(j),_ignoreIAdjacentMultibodies) )
           continue;
 
         shared_ptr<PQP_Model> obst = _obstacle->GetBody(j)->GetPQPBody();
@@ -90,7 +90,7 @@ IsInCollision(shared_ptr<MultiBody> _robot, shared_ptr<MultiBody> _obstacle, Sta
       for(int j=0; j<_obstacle->GetBodyCount(); j++) {
         // if robot check self collision, skip adjacent links.
         if(_robot == _obstacle &&
-           _robot->GetFreeBody(i)->isWithinI(_obstacle->GetBody(j),_ignoreIAdjacentMultibodies) )
+           _robot->GetFreeBody(i)->IsWithinI(_obstacle->GetBody(j),_ignoreIAdjacentMultibodies) )
           continue;
   
         shared_ptr<PQP_Model> obst = _obstacle->GetBody(j)->GetPQPBody();
@@ -251,7 +251,7 @@ IsInCollision(shared_ptr<MultiBody> _robot, shared_ptr<MultiBody> _obstacle, Sta
         // if robot check self collision, skip adjacent links.
 	//replace with finction that checks is is in i of link
         if(_robot == _obstacle &&
-           _robot->GetFreeBody(i)->isWithinI(_obstacle->GetBody(j),_ignoreIAdjacentMultibodies) )
+           _robot->GetFreeBody(i)->IsWithinI(_obstacle->GetBody(j),_ignoreIAdjacentMultibodies) )
           continue;
 
         shared_ptr<PQP_Model> obst = _obstacle->GetBody(j)->GetPQPBody();
@@ -299,7 +299,7 @@ IsInCollision(shared_ptr<MultiBody> _robot, shared_ptr<MultiBody> _obstacle, Sta
       for(int j=0; j<_obstacle->GetBodyCount(); j++) {
         // if robot check self collision, skip adjacent links.
         if(_robot == _obstacle &&
-           _robot->GetFreeBody(i)->isWithinI(_obstacle->GetBody(j),_ignoreIAdjacentMultibodies) )
+           _robot->GetFreeBody(i)->IsWithinI(_obstacle->GetBody(j),_ignoreIAdjacentMultibodies) )
           continue;
   
         shared_ptr<PQP_Model> obst = _obstacle->GetBody(j)->GetPQPBody();

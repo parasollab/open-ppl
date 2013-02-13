@@ -528,9 +528,9 @@ MultiBody::Read(istream& _is, bool _debug) {
 void MultiBody::buildCDstructure(cd_predefined cdtype)
 {
   for(vector<shared_ptr<FixedBody> >::iterator I = fixedBody.begin(); I != fixedBody.end(); ++I)
-    (*I)->buildCDstructure(cdtype);
+    (*I)->BuildCDStructure(cdtype);
   for(vector<shared_ptr<FreeBody> >::iterator I = freeBody.begin(); I != freeBody.end(); ++I)
-    (*I)->buildCDstructure(cdtype);
+    (*I)->BuildCDStructure(cdtype);
 }
 
 

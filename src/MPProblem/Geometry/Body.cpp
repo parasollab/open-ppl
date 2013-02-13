@@ -1,651 +1,428 @@
-/////////////////////////////////////////////////////////////////////
-//  Body.cpp
-/////////////////////////////////////////////////////////////////////
-
 #include "Body.h"
 #include <sstream>
 
-//===================================================================
-//  Constructors and Destructor
-//===================================================================
 Body::Body(MultiBody* _owner) :
-  multibody(_owner), 
-  CenterOfMassAvailable(false) 
-{}
+  m_multibody(_owner), 
+  m_centerOfMassAvailable(false) {}
 
-Body::Body(MultiBody* _owner, GMSPolyhedron & _polyhedron) :
-  multibody(_owner), 
-  polyhedron(_polyhedron), 
-  worldPolyhedron(_polyhedron), 
-  CenterOfMassAvailable(false) 
-{}
+Body::Body(MultiBody* _owner, GMSPolyhedron& _polyhedron) :
+  m_multibody(_owner), 
+  m_polyhedron(_polyhedron), 
+  m_worldPolyhedron(_polyhedron), 
+  m_centerOfMassAvailable(false) {}
 
-Body::Body(const Body& b) :
-  m_filename(b.m_filename),
-  multibody(b.multibody),
-  worldTransformation(b.worldTransformation),
-  isBase(b.isBase),
-  baseType(b.baseType),
-  baseMovementType(b.baseMovementType),
-  polyhedron(b.polyhedron),
-  worldPolyhedron(b.worldPolyhedron),
-  CenterOfMassAvailable(b.CenterOfMassAvailable),
-  CenterOfMass(b.CenterOfMass),
-  bb_polyhedron(b.bb_polyhedron),
-  bb_world_polyhedron(b.bb_world_polyhedron),
-  forwardConnection(b.forwardConnection),
-  backwardConnection(b.backwardConnection)
-{
+Body::Body(const Body& _b) :
+  m_filename(_b.m_filename),
+  m_multibody(_b.m_multibody),
+  m_worldTransformation(_b.m_worldTransformation),
+  m_isBase(_b.m_isBase),
+  m_baseType(_b.m_baseType),
+  m_baseMovementType(_b.m_baseMovementType),
+  m_polyhedron(_b.m_polyhedron),
+  m_worldPolyhedron(_b.m_worldPolyhedron),
+  m_centerOfMassAvailable(_b.m_centerOfMassAvailable),
+  m_centerOfMass(_b.m_centerOfMass),
+  m_bbPolyhedron(_b.m_bbPolyhedron),
+  m_bbWorldPolyhedron(_b.m_bbWorldPolyhedron),
+  m_forwardConnection(_b.m_forwardConnection),
+  m_backwardConnection(_b.m_backwardConnection) {
+
   for(int i=0; i<6; ++i)
-    boundingBox[i] = b.boundingBox[i];
+    m_boundingBox[i] = _b.m_boundingBox[i];
 
 #ifdef USE_VCLIP
-    vclipBody = b.vclipBody;
+  vclipBody = _b.vclipBody;
 #endif
 #ifdef USE_RAPID
-    rapidBody = b.rapidBody;
+  rapidBody = _b.rapidBody;
 #endif
 #ifdef USE_PQP
-    pqpBody = b.pqpBody;
+  pqpBody = _b.pqpBody;
 #endif
 #ifdef USE_SOLID
-    solidBody = b.solidBody;
+  solidBody = _b.solidBody;
 #endif
 }
 
 Body::~Body() {
 }
 
-//===================================================================
-//  GetWorldPolyhedron
-//
-//  Function: Transform the vertices and normals of the polyhedron
-//            w.r.t. the world frame
-//
-//  Output: The polyhedron transformed w.r.t the world frame
-//
-//===================================================================
-GMSPolyhedron & Body::GetWorldPolyhedron() {
-  for(size_t i=0; i<polyhedron.m_vertexList.size(); ++i)
-    worldPolyhedron.m_vertexList[i] = worldTransformation * polyhedron.m_vertexList[i];
-  for(size_t i=0; i<polyhedron.m_polygonList.size(); ++i)
-    worldPolyhedron.m_polygonList[i].m_normal = worldTransformation.m_orientation * polyhedron.m_polygonList[i].m_normal;
-  return worldPolyhedron;
+bool
+Body::operator==(const Body& _b) const {
+  return (m_worldTransformation == _b.m_worldTransformation) &&
+    (m_polyhedron == _b.m_polyhedron) &&
+    (m_worldPolyhedron == _b.m_worldPolyhedron) &&
+    (m_centerOfMassAvailable == _b.m_centerOfMassAvailable) &&
+    (m_centerOfMass == _b.m_centerOfMass) &&
+    (m_boundingBox[0] == _b.m_boundingBox[0]) &&
+    (m_boundingBox[1] == _b.m_boundingBox[1]) &&
+    (m_boundingBox[2] == _b.m_boundingBox[2]) &&
+    (m_boundingBox[3] == _b.m_boundingBox[3]) &&
+    (m_boundingBox[4] == _b.m_boundingBox[4]) &&
+    (m_boundingBox[5] == _b.m_boundingBox[5]) &&
+    (m_bbPolyhedron == _b.m_bbPolyhedron) &&
+    (m_bbWorldPolyhedron == _b.m_bbWorldPolyhedron) &&
+    (m_forwardConnection == _b.m_forwardConnection) &&
+    (m_backwardConnection == _b.m_backwardConnection);
 }
 
-//===================================================================
-//  GetWorldBoundingBox
-//
-//  Function: Transform the vertices and normals of the BoundingBox
-//            w.r.t. the world frame
-//
-//  Output: The polyhedron transformed w.r.t the world frame
-//
-//===================================================================
-GMSPolyhedron & Body::GetWorldBoundingBox() {
-  for(size_t i=0; i<bb_polyhedron.m_vertexList.size(); ++i) // Transform the vertices
-      bb_world_polyhedron.m_vertexList[i] = worldTransformation * bb_polyhedron.m_vertexList[i];
-  return bb_world_polyhedron;
+GMSPolyhedron& 
+Body::GetWorldPolyhedron() {
+  for(size_t i=0; i<m_polyhedron.m_vertexList.size(); ++i)
+    m_worldPolyhedron.m_vertexList[i] = m_worldTransformation * m_polyhedron.m_vertexList[i];
+  for(size_t i=0; i<m_polyhedron.m_polygonList.size(); ++i)
+    m_worldPolyhedron.m_polygonList[i].m_normal = m_worldTransformation.m_orientation * m_polyhedron.m_polygonList[i].m_normal;
+  return m_worldPolyhedron;
 }
 
-
-//===================================================================
-//  ChangeWorldPolyhedron
-//
-//=================================================================
-void Body::ChangeWorldPolyhedron() {
-  for(size_t i=0; i<polyhedron.m_vertexList.size(); i++)  // Transform the vertices
-    worldPolyhedron.m_vertexList[i] = worldTransformation * polyhedron.m_vertexList[i];
-  for(size_t i=0; i<polyhedron.m_polygonList.size(); i++)  // Transform the normals
-    worldPolyhedron.m_polygonList[i].m_normal = worldTransformation.m_orientation * polyhedron.m_polygonList[i].m_normal;
+GMSPolyhedron& 
+Body::GetWorldBoundingBox() {
+  for(size_t i=0; i<m_bbPolyhedron.m_vertexList.size(); ++i)
+    m_bbWorldPolyhedron.m_vertexList[i] = m_worldTransformation * m_bbPolyhedron.m_vertexList[i];
+  return m_bbWorldPolyhedron;
 }
 
-
-//=============================================================
-// GetPolyhedron
-//
-// Function: return the local coordinates of the body.
-//
-//=============================================================
-GMSPolyhedron & Body::GetPolyhedron() {
-    return polyhedron;
-}
-
-GMSPolyhedron & Body::GetBoundingBoxPolyhedron() {
-  return bb_polyhedron;
-}
-
-
-//===================================================================
-//  Link
-//  Function: Link "this" body to the given other body by setting up
-//            a connectionship between them using the given DH
-//            parameters and the transformation (from the distal
-//	      joint of "this" body to the center of gravity of the other).
-//
-//===================================================================
-void Body::Link(const shared_ptr<Body>& _otherBody, const Transformation & _transformationToBody2, const
-DHparameters &_dhparameters, const Transformation & _transformationToDHFrame) {
-    Connection c(shared_ptr<Body>(this), _otherBody, _transformationToBody2,
-                 _dhparameters, _transformationToDHFrame);
-    Link(c);
-}
-
-//==================================================================
-//  Link
-//  Function: Link "this" body to the given other body by using the
-//            given connection.
-//            Establish a forward and backward connecntionship
-//==================================================================
-void Body::Link(Connection _c) {
-    AddForwardConnection(_c);
-    // Establish a backward connectionship for the next body
-    _c.GetNextBody()->AddBackwardConnection(_c);
-}
-
-//===================================================================
-//  AddForwardConnection
-//  Function: Set up a forward connectionship with the given connection
-//===================================================================
-void Body::AddForwardConnection(Connection _connection) {
-  forwardConnection.push_back(_connection);
-}
-
-//===================================================================
-//  AddBackwardConnection
-//  Function: Set up a backward connectionship with the given connection
-//===================================================================
-void Body::AddBackwardConnection(Connection _connection) {
-  backwardConnection.push_back(_connection);
-}
-
-
-//===================================================================
-//  Read
-//===================================================================
-void Body::ReadBYU(istream & _is) {
-    //---------------------------------------------------------------
-    // Read polyhedron
-    //---------------------------------------------------------------
-    polyhedron.ReadBYU(_is);
-    worldPolyhedron = polyhedron;
-
-    FindBoundingBox();
-}
-
-void Body::buildCDstructure(cd_predefined cdtype) {
-
-#ifdef USE_VCLIP
-  if (cdtype == VCLIP) {
-    GMSPolyhedron poly = GetPolyhedron();
-    Polyhedron* vpoly = new Polyhedron;
-
-    /*if(CfgType().PosDOF()==2){
-      for(size_t v = 0 ; v < poly.m_vertexList.size() ; v++){
-        vpoly->addVertex("",
-            Vect3(poly.m_vertexList[v].getX(),
-              poly.m_vertexList[v].getY(),
-              poly.m_vertexList[v].getZ()-0.001
-              ));
-      }
-      for(size_t v = 0 ; v < poly.m_vertexList.size() ; v++){
-        vpoly->addVertex("",
-            Vect3(poly.m_vertexList[v].getX(),
-              poly.m_vertexList[v].getY(),
-              poly.m_vertexList[v].getZ()+0.001
-              ));
-      }
-    }
-    else{*/
-      for(size_t v = 0 ; v < poly.m_vertexList.size() ; v++){
-        vpoly->addVertex("",
-            Vect3(poly.m_vertexList[v].getX(),
-              poly.m_vertexList[v].getY(),
-              poly.m_vertexList[v].getZ()
-              ));
-      }
-    //}
-
-    vpoly->buildHull();
-    vclipBody = shared_ptr<PolyTree>(new PolyTree);
-    vclipBody->setPoly(vpoly);
-
-  } else
-#endif
-#ifdef USE_RAPID
-      if (cdtype == RAPID){
-	GMSPolyhedron poly = GetPolyhedron();
-
-	rapidBody = shared_ptr<RAPID_model>(new RAPID_model);
-	rapidBody->BeginModel();
-	for(size_t q=0; q < poly.m_polygonList.size(); q++) {
-	    int vertexNum[3];
-	    double point[3][3];
-	    for(int i=0; i<3; i++) {
-	       vertexNum[i] = poly.m_polygonList[q].m_vertexList[i];
-	       Vector3D &tmp = poly.m_vertexList[vertexNum[i]];
-	       for(int j=0; j<3; j++)
-	           point[i][j] = tmp[j];
-	    }
-	    rapidBody->AddTri(point[0], point[1], point[2], q);
-	}
-	rapidBody->EndModel();
-
-    } else
-#endif
-#ifdef USE_PQP
-      if (cdtype == PROXIMITYQUERYPACKAGE){
-	GMSPolyhedron poly = GetPolyhedron();
-
-	pqpBody = shared_ptr<PQP_Model>(new PQP_Model);
-	pqpBody->BeginModel();
-	for(size_t q=0; q < poly.m_polygonList.size(); q++) {
-	    int vertexNum[3];
-	    double point[3][3];
-	    for(int i=0; i<3; i++) {
-	       vertexNum[i] = poly.m_polygonList[q].m_vertexList[i];
-	       Vector3D &tmp = poly.m_vertexList[vertexNum[i]];
-	       for(int j=0; j<3; j++)
-	           point[i][j] = tmp[j];
-	    }
-	    pqpBody->AddTri(point[0], point[1], point[2], q);
-	}
-	pqpBody->EndModel();
-
-    } else
-#endif
-#ifdef USE_SOLID
-      if (cdtype == SOLID){
- 
-
-
-	GMSPolyhedron poly = GetWorldPolyhedron();
-
-	vertex = new MT_Point3[3*poly.m_polygonList.size()];
-	
-	for(size_t q=0; q < poly.m_polygonList.size(); q++) {
-	    int vertexNum[3];
-	    float point[3][3];
-	    for(int i=0; i<3; i++) {
-	       vertexNum[i] = poly.m_polygonList[q].m_vertexList[i];
-	       Vector3D tmp = poly.m_vertexList[vertexNum[i]];
-	       for(int j=0; j<3; j++)
-	           vertex[3*q+i][j] = tmp[j];
-	    }
-
-	}
-
-
-	base = DT_NewVertexBase(vertex[0],sizeof(vertex[0]));
-
-        DT_ShapeHandle shape = DT_NewComplexShape(base);
-	for(size_t q=0; q < poly.m_polygonList.size(); q++) {
-	    int vertexNum[3];
-	    float point[3][3];
-	    for(int i=0; i<3; i++) {
-	       vertexNum[i] = poly.m_polygonList[q].m_vertexList[i];
-	       Vector3D tmp = poly.m_vertexList[vertexNum[i]];
-	       for(int j=0; j<3; j++)
-	           point[i][j] = tmp[j];
-	    }
-	    
-	    DT_Begin();
-	    DT_VertexIndex(3*q+0);
-	    DT_VertexIndex(3*q+1);
-	    DT_VertexIndex(3*q+2);
-	    DT_End();
-
-	}
-	DT_EndComplexShape();
-
-        DT_ObjectHandle object = DT_CreateObject(NULL,shape);
-
-        solidBody = shared_ptr<DT_ObjectHandle>(new DT_ObjectHandle(object));
-
-
-
-    } else
-#endif
-    {
-#ifndef NO_CD_USE
-	cout <<"\n\n\tERROR: all other cd type's undefined\n\n";
-	cout <<"\n  you gave me <" << cdtype << ">";
-#endif
-
-#ifdef USE_VCLIP
-	cout <<"\n\nbut VCLIP = " << VCLIP;
-#endif
-#ifdef USE_RAPID
-	cout <<"\n\nbut RAPID = " << RAPID;
-#endif
-#ifdef USE_PQP
-	cout <<"\n\nbut PQP = " << PROXIMITYQUERYPACKAGE;
-#endif
-#ifdef USE_SOLID
-	cout <<"\n\nbut SOLID = " << SOLID;
-#endif
-#ifndef NO_CD_USE
-	exit(-1);
-#endif
-    }
-}
-
-#ifdef USE_SOLID
-void Body::UpdateVertexBase(){
- 
-
-
-
-        GMSPolyhedron poly = GetWorldPolyhedron();
-
-
-        for(size_t q=0; q < poly.m_polygonList.size(); q++) {
-            int vertexNum[3];
-            for(int i=0; i<3; i++) {
-               vertexNum[i] = poly.m_polygonList[q].m_vertexList[i];
-               Vector3D &tmp = poly.m_vertexList[vertexNum[i]];
-                   vertex[3*q+i][0]=tmp[0];
-                   vertex[3*q+i][1]=tmp[1];
-                   vertex[3*q+i][2]=tmp[2];
-            }
-        }
-
-
-
-        DT_ChangeVertexBase(base,vertex[0]);
-
-}
-#endif
-
-void Body::Read(string _fileName) {
-    //---------------------------------------------------------------
-    // Read polyhedron
-    //---------------------------------------------------------------
-    polyhedron.Read(_fileName);
-    worldPolyhedron = polyhedron;
-
-    GMSPolyhedron poly;
-    poly = GetPolyhedron();
-
-    double minx, miny, minz, maxx, maxy, maxz;
-    minx = maxx = poly.m_vertexList[0].getX();
-    miny = maxy = poly.m_vertexList[0].getY();
-    minz = maxz = poly.m_vertexList[0].getZ();
-    for(size_t i = 1 ; i < poly.m_vertexList.size() ; i++){
-        if(poly.m_vertexList[i].getX() < minx) minx = poly.m_vertexList[i].getX();
-        else if(maxx < poly.m_vertexList[i].getX()) maxx = poly.m_vertexList[i].getX();
-
-        if(poly.m_vertexList[i].getY() < miny) miny = poly.m_vertexList[i].getY();
-        else if(maxy < poly.m_vertexList[i].getY()) maxy = poly.m_vertexList[i].getY();
-
-        if(poly.m_vertexList[i].getZ() < minz) minz = poly.m_vertexList[i].getZ();
-        else if(maxz < poly.m_vertexList[i].getZ()) maxz = poly.m_vertexList[i].getZ();
-    }
-
-//    boundingBox[0] = minx; boundingBox[1] = maxx;
-//    boundingBox[2] = miny; boundingBox[3] = maxy;
-//    boundingBox[4] = minz; boundingBox[5] = maxz;
-      bb_polyhedron.m_vertexList = vector<Vector3D>(8);
-      bb_world_polyhedron.m_vertexList = vector<Vector3D>(8);
-      bb_polyhedron.m_vertexList[0] = Vector3D(minx,miny,minz);
-      bb_polyhedron.m_vertexList[1] = Vector3D(minx,miny,maxz);
-      bb_polyhedron.m_vertexList[2] = Vector3D(minx,maxy,minz);
-      bb_polyhedron.m_vertexList[3] = Vector3D(minx,maxy,maxz);
-      bb_polyhedron.m_vertexList[4] = Vector3D(maxx,miny,minz);
-      bb_polyhedron.m_vertexList[5] = Vector3D(maxx,miny,maxz);
-      bb_polyhedron.m_vertexList[6] = Vector3D(maxx,maxy,minz);
-      bb_polyhedron.m_vertexList[7] = Vector3D(maxx,maxy,maxz);
-
-///////////
-    FindBoundingBox();
-}
-
-//===================================================================
-//  Write
-//===================================================================
-void Body::Write(ostream & _os) {
-  static int numBody = 0;
-  ostringstream oss;
-  oss<<"Obj"<<numBody++<<".g";
-  _os<<oss.str()<<" ";
-  ofstream ofs(oss.str().c_str());
-  polyhedron.WriteBYU(ofs);
-  ofs.close();
-}
-
-
-//===================================================================
-//  ComputeCenterOfMass
-//  
-//  This function is automatically called by GetCenterOfMass()
-//  if it has never been computed. After computing it,
-//  this function will not be called again: rigid body.
-//
-//  This way of computing center of mass is physically not true.
-//  This assumes that each vertex carries the same mass, and
-//  edges are weightless. To be more accurate, we need to
-//  be modify this to consider the length of edges, which is
-//  still an approximation.
-//===================================================================
-void Body::ComputeCenterOfMass(){
-  GMSPolyhedron poly = GetWorldPolyhedron();
-  if (poly.m_vertexList.empty()) {
-	cout << "\nERROR: No Vertices to take Body::CenterOfMass from...\n";
-  }else{
-  	Vector3D sum(0,0,0);
-  	for (size_t i=0; i<poly.m_vertexList.size(); i++) {
-    		sum = sum + poly.m_vertexList[i];
-  	}
-  	CenterOfMass = sum/poly.m_vertexList.size();
-  	CenterOfMassAvailable = true;
-  }
-}
-
-//===================================================================
-//  FindBoundingBox
-//===================================================================
-void Body::FindBoundingBox(){
-
-    GMSPolyhedron poly;
-    poly = GetWorldPolyhedron();
-
-    double minx, miny, minz, maxx, maxy, maxz;
-    minx = maxx = poly.m_vertexList[0].getX();
-    miny = maxy = poly.m_vertexList[0].getY();
-    minz = maxz = poly.m_vertexList[0].getZ();
-    for(size_t i = 1 ; i < poly.m_vertexList.size() ; i++){
-        if(poly.m_vertexList[i].getX() < minx) minx = poly.m_vertexList[i].getX();
-        else if(maxx < poly.m_vertexList[i].getX()) maxx = poly.m_vertexList[i].getX();
-
-        if(poly.m_vertexList[i].getY() < miny) miny = poly.m_vertexList[i].getY();
-        else if(maxy < poly.m_vertexList[i].getY()) maxy = poly.m_vertexList[i].getY();
-
-        if(poly.m_vertexList[i].getZ() < minz) minz = poly.m_vertexList[i].getZ();
-        else if(maxz < poly.m_vertexList[i].getZ()) maxz = poly.m_vertexList[i].getZ();
-    }
-
-    boundingBox[0] = minx; boundingBox[1] = maxx;
-    boundingBox[2] = miny; boundingBox[3] = maxy;
-    boundingBox[4] = minz; boundingBox[5] = maxz;
-}
-
-
-#ifdef USE_VCLIP
-shared_ptr<PolyTree> Body::GetVClipBody(){
-    return vclipBody;
-}
-#endif
-
-//-----------------------------------
-#ifdef USE_RAPID
-shared_ptr<RAPID_model> Body::GetRapidBody() {
-    return rapidBody;
-}
-#endif
-
-#ifdef USE_PQP
-shared_ptr<PQP_Model> Body::GetPQPBody() {
-    return pqpBody;
-}
-#endif
-
-#ifdef USE_SOLID
-shared_ptr<DT_ObjectHandle> Body::GetSolidBody() {
-    return solidBody;
-}
-#endif
-
-
-bool Body::operator==(const Body& b) const
-{
-  return (worldTransformation == b.worldTransformation) &&
-         (polyhedron == b.polyhedron) &&
-         (worldPolyhedron == b.worldPolyhedron) &&
-         (CenterOfMassAvailable == b.CenterOfMassAvailable) &&
-         (CenterOfMass == b.CenterOfMass) &&
-         (boundingBox[0] == b.boundingBox[0]) &&
-         (boundingBox[1] == b.boundingBox[1]) &&
-         (boundingBox[2] == b.boundingBox[2]) &&
-         (boundingBox[3] == b.boundingBox[3]) &&
-         (boundingBox[4] == b.boundingBox[4]) &&
-         (boundingBox[5] == b.boundingBox[5]) &&
-         (bb_polyhedron == b.bb_polyhedron) &&
-         (bb_world_polyhedron == b.bb_world_polyhedron) &&
-         (forwardConnection == b.forwardConnection) &&
-         (backwardConnection == b.backwardConnection);
-}
-
-
-/** isAdjacent:
- to check if two Body share same joint(adjacent) for a robot. */
-bool Body::isAdjacent(shared_ptr<Body> otherBody) 
-{
-  for(vector<Connection>::iterator C = forwardConnection.begin(); C != forwardConnection.end(); ++C)
-    if(C->GetNextBody() == otherBody)
-      return true;
-  for(vector<Connection>::iterator C = backwardConnection.begin(); C != backwardConnection.end(); ++C)
-    if(C->GetPreviousBody() == otherBody)
-      return true;
-  return(*this == *(otherBody.get())); // if the two are the same, return true too.
-}
-
-
-bool Body::isWithinIHelper(Body* body1, Body* body2, int i, Body* prevBody){
-  if(*body1 == *body2){
-    return true;
-  }
-  if(i==0){
-    return false;
-  }
-  typedef vector<Connection>::iterator CIT;
-  for(CIT C = body1->forwardConnection.begin(); C != body1->forwardConnection.end(); ++C)
-    //if(*(C->GetNextBody().get())==*prevBody)
-      if(isWithinIHelper(C->GetNextBody().get(), body2, i-1, body1) )
-        return true;
-  for(CIT C =body1->backwardConnection.begin(); C != body1->backwardConnection.end(); ++C){
-    for(CIT C2 = C->GetPreviousBody()->forwardConnection.begin(); C2!=C->GetPreviousBody()->forwardConnection.end(); C2++){
-      if(*(C2->GetNextBody()) == *body2)
-        return true;
-    }
-    //if(*(C->GetPreviousBody().get())==*prevBody)
-      if(isWithinIHelper(C->GetPreviousBody().get(),body2,i-1, body1) )
-        return true;
-  }
-  
-  return false;
-}
-
-bool Body::isWithinI(shared_ptr<Body> otherBody, int i)
-{
-  
-  if(*this == *(otherBody.get()))
-    return true;
-  if(i==0){
-    return false;
-  }
-  return isWithinIHelper(this,otherBody.get(),i,NULL);
-}
-
-
-/** WorldTransformation
- If worldTransformation has been calculated(updated), this method should be used
- to avoid redundant calculation.
-*/ 
-Transformation & Body::WorldTransformation() 
-{
-  return worldTransformation;
-}
-
-
-///  GetBoundingBox
-double * Body::GetBoundingBox()
-{
-  return boundingBox;
-}
-
-
-///  GetCenterOfMass
-Vector3D Body::GetCenterOfMass()
-{
-  if(!CenterOfMassAvailable) 
+Vector3D 
+Body::GetCenterOfMass(){
+  if(!m_centerOfMassAvailable) 
     ComputeCenterOfMass();
-  return CenterOfMass;
+  return m_centerOfMass;
 }
 
-
-///  GetMultiBody
-MultiBody* Body::GetMultiBody() 
-{
-  return multibody;
-}
-
-
-///  ForwardConnectionCount
-int Body::ForwardConnectionCount() const 
-{
-  return forwardConnection.size();
-}
-
-
-///  BackwardConnectionCount
-int Body::BackwardConnectionCount() const 
-{
-  return backwardConnection.size();
-}
-
-
-///  GetForwardConnection
-Connection & Body::GetForwardConnection(size_t _index) 
-{
-  if (_index < forwardConnection.size())
-    return forwardConnection[_index];
-  else
-  {
+Connection& 
+Body::GetForwardConnection(size_t _index) {
+  if (_index < m_forwardConnection.size())
+    return m_forwardConnection[_index];
+  else{
     cerr << "Error, in Body::GetForwardConnection: requesting connection outside of bounds\n\n";
     exit(-1);
   }
 }
 
-
-///  GetBackwardConnection
-Connection & Body::GetBackwardConnection(size_t _index) 
-{
-  if (_index < backwardConnection.size())
-    return backwardConnection[_index];
-  else
-  {
+Connection& 
+Body::GetBackwardConnection(size_t _index) {
+  if (_index < m_backwardConnection.size())
+    return m_backwardConnection[_index];
+  else{
     cerr << "Error, in Body::GetBackwardConnection: requesting connection outside of bounds\n\n";
     exit(-1);
   }
 }
 
-
-/**
-  PutWorldTransformation
-  Function: Assign the given transformation as a transformation
-            w.r.t the world for "this" body
-*/
-void Body::PutWorldTransformation(Transformation & _worldTransformation)
-{
-  worldTransformation = _worldTransformation;
+void 
+Body::ChangeWorldPolyhedron() {
+  for(size_t i=0; i<m_polyhedron.m_vertexList.size(); i++)  // Transform the vertices
+    m_worldPolyhedron.m_vertexList[i] = m_worldTransformation * m_polyhedron.m_vertexList[i];
+  for(size_t i=0; i<m_polyhedron.m_polygonList.size(); i++)  // Transform the normals
+    m_worldPolyhedron.m_polygonList[i].m_normal = m_worldTransformation.m_orientation * m_polyhedron.m_polygonList[i].m_normal;
 }
+
+//===================================================================
+//  Read
+//===================================================================
+void 
+Body::ReadBYU(istream& _is) {
+  m_polyhedron.ReadBYU(_is);
+  m_worldPolyhedron = m_polyhedron;
+  FindBoundingBox();
+}
+
+void 
+Body::Read(string _fileName) {
+  m_polyhedron.Read(_fileName);
+  m_worldPolyhedron = m_polyhedron;
+  GMSPolyhedron poly;
+  poly = GetPolyhedron();
+  double minx, miny, minz, maxx, maxy, maxz;
+  minx = maxx = poly.m_vertexList[0].getX();
+  miny = maxy = poly.m_vertexList[0].getY();
+  minz = maxz = poly.m_vertexList[0].getZ();
+  for(size_t i = 1 ; i < poly.m_vertexList.size() ; i++){
+    if(poly.m_vertexList[i].getX() < minx) 
+      minx = poly.m_vertexList[i].getX();
+    else if(maxx < poly.m_vertexList[i].getX()) 
+      maxx = poly.m_vertexList[i].getX();
+
+    if(poly.m_vertexList[i].getY() < miny) 
+      miny = poly.m_vertexList[i].getY();
+    else if(maxy < poly.m_vertexList[i].getY()) 
+      maxy = poly.m_vertexList[i].getY();
+
+    if(poly.m_vertexList[i].getZ() < minz) 
+      minz = poly.m_vertexList[i].getZ();
+    else if(maxz < poly.m_vertexList[i].getZ()) 
+      maxz = poly.m_vertexList[i].getZ();
+  }
+
+  m_bbPolyhedron.m_vertexList = vector<Vector3D>(8);
+  m_bbWorldPolyhedron.m_vertexList = vector<Vector3D>(8);
+  m_bbPolyhedron.m_vertexList[0] = Vector3D(minx,miny,minz);
+  m_bbPolyhedron.m_vertexList[1] = Vector3D(minx,miny,maxz);
+  m_bbPolyhedron.m_vertexList[2] = Vector3D(minx,maxy,minz);
+  m_bbPolyhedron.m_vertexList[3] = Vector3D(minx,maxy,maxz);
+  m_bbPolyhedron.m_vertexList[4] = Vector3D(maxx,miny,minz);
+  m_bbPolyhedron.m_vertexList[5] = Vector3D(maxx,miny,maxz);
+  m_bbPolyhedron.m_vertexList[6] = Vector3D(maxx,maxy,minz);
+  m_bbPolyhedron.m_vertexList[7] = Vector3D(maxx,maxy,maxz);
+
+  FindBoundingBox();
+}
+
+void 
+Body::Write(ostream& _os) {
+  static int numBody = 0;
+  ostringstream oss;
+  oss << "Obj" << numBody++ << ".g";
+  _os << oss.str() << " ";
+  ofstream ofs(oss.str().c_str());
+  m_polyhedron.WriteBYU(ofs);
+  ofs.close();
+}
+
+void 
+Body::ComputeCenterOfMass(){
+  GMSPolyhedron poly = GetWorldPolyhedron();
+  if (poly.m_vertexList.empty()) {
+    cout << "\nERROR: No Vertices to take Body::centerOfMass from...\n";
+  }
+  else{
+    Vector3D sum(0,0,0);
+    for (size_t i=0; i<poly.m_vertexList.size(); i++) {
+      sum = sum + poly.m_vertexList[i];
+    }
+    m_centerOfMass = sum/poly.m_vertexList.size();
+    m_centerOfMassAvailable = true;
+  }
+}
+
+void 
+Body::FindBoundingBox(){
+  GMSPolyhedron poly;
+  poly = GetWorldPolyhedron();
+  double minx, miny, minz, maxx, maxy, maxz;
+  minx = maxx = poly.m_vertexList[0].getX();
+  miny = maxy = poly.m_vertexList[0].getY();
+  minz = maxz = poly.m_vertexList[0].getZ();
+  for(size_t i = 1 ; i < poly.m_vertexList.size() ; i++){
+    if(poly.m_vertexList[i].getX() < minx) 
+      minx = poly.m_vertexList[i].getX();
+    else if(maxx < poly.m_vertexList[i].getX()) 
+      maxx = poly.m_vertexList[i].getX();
+
+    if(poly.m_vertexList[i].getY() < miny) 
+      miny = poly.m_vertexList[i].getY();
+    else if(maxy < poly.m_vertexList[i].getY()) 
+      maxy = poly.m_vertexList[i].getY();
+
+    if(poly.m_vertexList[i].getZ() < minz) 
+      minz = poly.m_vertexList[i].getZ();
+    else if(maxz < poly.m_vertexList[i].getZ()) 
+      maxz = poly.m_vertexList[i].getZ();
+  }
+  m_boundingBox[0] = minx; m_boundingBox[1] = maxx;
+  m_boundingBox[2] = miny; m_boundingBox[3] = maxy;
+  m_boundingBox[4] = minz; m_boundingBox[5] = maxz;
+}
+
+bool 
+Body::IsAdjacent(shared_ptr<Body> _otherBody) {
+  for(vector<Connection>::iterator C = m_forwardConnection.begin(); C != m_forwardConnection.end(); ++C)
+    if(C->GetNextBody() == _otherBody)
+      return true;
+  for(vector<Connection>::iterator C = m_backwardConnection.begin(); C != m_backwardConnection.end(); ++C)
+    if(C->GetPreviousBody() == _otherBody)
+      return true;
+  return(*this == *(_otherBody.get()));
+}
+
+bool 
+Body::IsWithinI(shared_ptr<Body> _otherBody, int _i){
+  if(*this == *(_otherBody.get()))
+    return true;
+  if(_i==0){
+    return false;
+  }
+  return IsWithinIHelper(this,_otherBody.get(),_i,NULL);
+}
+
+bool 
+Body::IsWithinIHelper(Body* _body1, Body* _body2, int _i, Body* _prevBody){
+  if(*_body1 == *_body2){
+    return true;
+  }
+  if(_i==0){
+    return false;
+  }
+  typedef vector<Connection>::iterator CIT;
+  for(CIT C = _body1->m_forwardConnection.begin(); C != _body1->m_forwardConnection.end(); ++C) 
+    if(IsWithinIHelper(C->GetNextBody().get(), _body2, _i-1, _body1) )
+      return true;
+  for(CIT C =_body1->m_backwardConnection.begin(); C != _body1->m_backwardConnection.end(); ++C){
+    for(CIT C2 = C->GetPreviousBody()->m_forwardConnection.begin(); C2!=C->GetPreviousBody()->m_forwardConnection.end(); C2++){
+      if(*(C2->GetNextBody()) == *_body2)
+        return true;
+    }
+    if(IsWithinIHelper(C->GetPreviousBody().get(),_body2,_i-1, _body1) )
+      return true;
+  }
+  return false;
+}
+
+////////////////////////////////////////
+// Collision Detection Methods
+// /////////////////////////////////
+void 
+Body::BuildCDStructure(cd_predefined _cdtype) {
+#ifdef USE_VCLIP
+  if (_cdtype == VCLIP) {
+    GMSPolyhedron poly = GetPolyhedron();
+    Polyhedron* vpoly = new Polyhedron;
+    for(size_t v = 0 ; v < poly.m_vertexList.size() ; v++){
+      vpoly->addVertex("",
+          Vect3(poly.m_vertexList[v].getX(),
+            poly.m_vertexList[v].getY(),
+            poly.m_vertexList[v].getZ()
+            ));
+    }
+    vpoly->buildHull();
+    vclipBody = shared_ptr<PolyTree>(new PolyTree);
+    vclipBody->setPoly(vpoly);
+  } 
+  else
+#endif
+#ifdef USE_RAPID
+    if (_cdtype == RAPID){
+      GMSPolyhedron poly = GetPolyhedron();
+      rapidBody = shared_ptr<RAPID_model>(new RAPID_model);
+      rapidBody->BeginModel();
+      for(size_t q=0; q < poly.m_polygonList.size(); q++) {
+        int vertexNum[3];
+        double point[3][3];
+        for(int i=0; i<3; i++) {
+          vertexNum[i] = poly.m_polygonList[q].m_vertexList[i];
+          Vector3D &tmp = poly.m_vertexList[vertexNum[i]];
+          for(int j=0; j<3; j++)
+            point[i][j] = tmp[j];
+        }
+        rapidBody->AddTri(point[0], point[1], point[2], q);
+      }
+      rapidBody->EndModel();
+    } 
+    else
+#endif
+#ifdef USE_PQP
+      if (_cdtype == PROXIMITYQUERYPACKAGE){
+        GMSPolyhedron poly = GetPolyhedron();
+        pqpBody = shared_ptr<PQP_Model>(new PQP_Model);
+        pqpBody->BeginModel();
+        for(size_t q=0; q < poly.m_polygonList.size(); q++) {
+          int vertexNum[3];
+          double point[3][3];
+          for(int i=0; i<3; i++) {
+            vertexNum[i] = poly.m_polygonList[q].m_vertexList[i];
+            Vector3D &tmp = poly.m_vertexList[vertexNum[i]];
+            for(int j=0; j<3; j++)
+              point[i][j] = tmp[j];
+          }
+          pqpBody->AddTri(point[0], point[1], point[2], q);
+        }
+        pqpBody->EndModel();
+      } 
+      else
+#endif
+#ifdef USE_SOLID
+        if (_cdtype == SOLID){
+          GMSPolyhedron poly = GetWorldPolyhedron();
+          vertex = new MT_Point3[3*poly.m_polygonList.size()];
+          for(size_t q=0; q < poly.m_polygonList.size(); q++) {
+            int vertexNum[3];
+            float point[3][3];
+            for(int i=0; i<3; i++) {
+              vertexNum[i] = poly.m_polygonList[q].m_vertexList[i];
+              Vector3D tmp = poly.m_vertexList[vertexNum[i]];
+              for(int j=0; j<3; j++)
+                vertex[3*q+i][j] = tmp[j];
+            }
+          }
+          base = DT_NewVertexBase(vertex[0],sizeof(vertex[0]));
+          DT_ShapeHandle shape = DT_NewComplexShape(base);
+          for(size_t q=0; q < poly.m_polygonList.size(); q++) {
+            int vertexNum[3];
+            float point[3][3];
+            for(int i=0; i<3; i++) {
+              vertexNum[i] = poly.m_polygonList[q].m_vertexList[i];
+              Vector3D tmp = poly.m_vertexList[vertexNum[i]];
+              for(int j=0; j<3; j++)
+                point[i][j] = tmp[j];
+            }
+            DT_Begin();
+            DT_VertexIndex(3*q+0);
+            DT_VertexIndex(3*q+1);
+            DT_VertexIndex(3*q+2);
+            DT_End();
+          }
+          DT_EndComplexShape();
+          DT_ObjectHandle object = DT_CreateObject(NULL,shape);
+          solidBody = shared_ptr<DT_ObjectHandle>(new DT_ObjectHandle(object));
+        } 
+        else
+#endif
+        {
+#ifndef NO_CD_USE
+          cerr <<"\n\n\tERROR: all other cd type's undefined\n\n";
+          cerr <<"\n  you gave me <" << _cdtype << ">";
+#endif
+
+#ifdef USE_VCLIP
+          cerr <<"\n\nbut VCLIP = " << VCLIP;
+#endif
+#ifdef USE_RAPID
+          cerr <<"\n\nbut RAPID = " << RAPID;
+#endif
+#ifdef USE_PQP
+          cerr <<"\n\nbut PQP = " << PROXIMITYQUERYPACKAGE;
+#endif
+#ifdef USE_SOLID
+          cerr <<"\n\nbut SOLID = " << SOLID;
+#endif
+#ifndef NO_CD_USE
+          exit(-1);
+#endif
+        }
+}
+
+#ifdef USE_SOLID
+void 
+Body::UpdateVertexBase(){
+  GMSPolyhedron poly = GetWorldPolyhedron();
+  for(size_t q=0; q < poly.m_polygonList.size(); q++) {
+    int vertexNum[3];
+    for(int i=0; i<3; i++) {
+      vertexNum[i] = poly.m_polygonList[q].m_vertexList[i];
+      Vector3D &tmp = poly.m_vertexList[vertexNum[i]];
+      vertex[3*q+i][0]=tmp[0];
+      vertex[3*q+i][1]=tmp[1];
+      vertex[3*q+i][2]=tmp[2];
+    }
+  }
+  DT_ChangeVertexBase(base,vertex[0]);
+}
+#endif
+
+///////////////////////////////////////////////////////////////////////////////
+//  Connection Methods
+///////////////////////////////////////////////////////////////////////////////
+void 
+Body::Link(const shared_ptr<Body>& _otherBody, const Transformation & _transformationToBody2, const
+    DHparameters &_dhparameters, const Transformation & _transformationToDHFrame) {
+  Connection c(shared_ptr<Body>(this), _otherBody, _transformationToBody2,
+      _dhparameters, _transformationToDHFrame);
+  Link(c);
+}
+
+void 
+Body::Link(Connection _c) {
+  AddForwardConnection(_c);
+  _c.GetNextBody()->AddBackwardConnection(_c);
+}
+

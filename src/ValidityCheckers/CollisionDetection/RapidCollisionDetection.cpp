@@ -30,7 +30,7 @@ IsInCollision(shared_ptr<MultiBody> _robot, shared_ptr<MultiBody> _obstacle,
       
       for(int j=0; j<_obstacle->GetBodyCount(); j++){
 	if(_robot == _obstacle &&
-	   _robot->GetFreeBody(i)->isWithinI(_obstacle->GetBody(j),_ignoreIAdjacentMultibodies) ){
+	   _robot->GetFreeBody(i)->IsWithinI(_obstacle->GetBody(j),_ignoreIAdjacentMultibodies) ){
 	  continue;
         }
 	

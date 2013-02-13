@@ -22,8 +22,8 @@ FixedBody::~FixedBody() {
 GMSPolyhedron&
 FixedBody::GetWorldPolyhedron() {
   GetWorldTransformation(); 
-  worldPolyhedron = Body::GetWorldPolyhedron();
-  return worldPolyhedron;
+  m_worldPolyhedron = Body::GetWorldPolyhedron();
+  return m_worldPolyhedron;
 }
 
 //===================================================================
@@ -31,12 +31,12 @@ FixedBody::GetWorldPolyhedron() {
 //===================================================================
 Transformation&
 FixedBody::GetWorldTransformation() {
-  return worldTransformation;
+  return m_worldTransformation;
 }
 
 ostream& 
 operator<<(ostream& _os, const FixedBody& _fb){
-  return _os << _fb.m_filename << " " << _fb.worldTransformation;
+  return _os << _fb.m_filename << " " << _fb.m_worldTransformation;
 }
 
 istream& 
@@ -45,7 +45,7 @@ operator>>(istream& _is, FixedBody& _fb){
       "FixedBody Filename (geometry file)", false);
   VerifyFileExists(_fb.m_filename);
   _fb.Read(_fb.m_filename);
-  _fb.worldTransformation = 
+  _fb.m_worldTransformation = 
     ReadField<Transformation>(_is, "FixedBody Transformation");
   return _is;
 }
