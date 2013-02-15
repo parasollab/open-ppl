@@ -9,6 +9,7 @@
 #define SURFACELP_H_
 
 #ifdef PMPCfgSurface
+#include "Cfg/CfgSurface.h"
 
 #include "StraightLine.h"
 
@@ -109,10 +110,10 @@ IsConnected(Environment* _env, StatClass& _stats,
     tick += incr;
     bool foundValidSurfForTick=false;
     CDInfo tmpCDInfo;
-    for(int sid=-1; sid<_env->GetNavigableSurfacesCount()&&!foundValidSurfForTick; sid++) {
+    for(int sid=BASE_SURFACE; sid<(int)_env->GetNavigableSurfacesCount()&&!foundValidSurfForTick; sid++) {
       CfgType tmpTick = tick;
       tmpTick.SetSurfaceID(sid);//set SurfaceID to test if 2D collision is okay
-      if( sid == -1 ) {
+      if( sid == BASE_SURFACE ) {
 	 if( vcm->IsValid(tmpTick, _env, _stats, tmpCDInfo, &_callee) ) {
 	    if( fabs(tick.GetHeight())<m_acceptableHeightDiff ) {
 	       //this is valid, -1 should have y-value 0

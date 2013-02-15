@@ -1,7 +1,7 @@
 #ifndef CONNECTNEIGHBORINGSURFACES_H
 #define CONNECTNEIGHBORINGSURFACES_H
 
-#ifdef PMPCfgSurface
+//#ifdef PMPCfgSurface
 
 #include "ConnectorMethod.h"
 
@@ -285,5 +285,5 @@ void ConnectNeighboringSurfaces<MPTraits>::Connect(RoadmapType* _rm, StatClass& 
   }
 
 #endif
-#endif
+//#endif
 
