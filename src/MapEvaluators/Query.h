@@ -30,7 +30,7 @@ class Query : public MapEvaluatorMethod<MPTraits> {
     virtual void PrintOptions(ostream& _os); 
     vector<CfgType>& GetQuery() { return m_query; }
     vector<CfgType>& GetPath() { return m_path; }
-    void SetPathFile(string _filename) {m_pathFile = _filename;}
+    void SetPathFile(string _filename) { m_pathFile = _filename; }
 
     // Reads a query and calls the other PerformQuery(), then calls Smooth() if desired
     virtual bool PerformQuery(RoadmapType* _rdmp, StatClass& _stats);
@@ -55,8 +55,8 @@ class Query : public MapEvaluatorMethod<MPTraits> {
   protected:
     enum GraphSearchAlg {DIJKSTRAS, ASTAR};
     StatClass m_stats;          // Stats
-    vector<CfgType> m_query;        // Holds the start and goal CfgTypes
-    vector<CfgType> m_path;         // The path found
+    vector<CfgType> m_query;    // Holds the start and goal CfgTypes
+    vector<CfgType> m_path;     // The path found
     string m_queryFile;         // Where to read in the query
     string m_pathFile;          // Where to write the initial unsmoothed path
     string m_smoothFile;        // Where to write the smoothed path
@@ -73,9 +73,9 @@ class Query : public MapEvaluatorMethod<MPTraits> {
     //initialize variable defaults
     void Initialize();
 
-    vector<VID> m_pathVIDs; // Stores path nodes for easy reference during smoothing
-    bool m_doneSmoothing;   // Flag to prevent infinite recursion
-    vector<VID> m_toBeDeleted; //nodes to be deleted if m_deleteNodes is enabled.
+    vector<VID> m_pathVIDs;     // Stores path nodes for easy reference during smoothing
+    bool m_doneSmoothing;       // Flag to prevent infinite recursion
+    vector<VID> m_toBeDeleted;  // Nodes to be deleted if m_deleteNodes is enabled.
 };
 
 // Heuristic for A* graph search
@@ -86,7 +86,7 @@ struct Heuristic {
     typedef typename MPTraits::WeightType WeightType;
     
     Heuristic(CfgType& _goal, double _posRes, double _oriRes) :
-      m_goal(_goal), m_posRes(_posRes), m_oriRes(_oriRes) {}
+      m_goal(_goal), m_posRes(_posRes), m_oriRes(_oriRes) { }
 
     WeightType operator()(CfgType& _c1) {
       int tick;
@@ -183,7 +183,7 @@ Query<MPTraits>::PrintOptions(ostream& _os) {
   _os << "\n\tdistance metric = " << m_dmLabel;
   _os << "\n\tlocal planner = " << m_lpLabel;
   _os << "\n\tsearch alg = " << m_searchAlg;
-  _os << "\n\tsmooth = " << m_smooth << endl;
+  _os << "\n\tsmooth = " << m_smooth;
   _os << "\n\tdeleteNodes = " << m_deleteNodes << endl;
 }
 
@@ -198,10 +198,9 @@ Query<MPTraits>::operator()() {
   bool ans = PerformQuery(rdmp, m_stats);
 
   // Delete added nodes (such as start and goal) if desired
-  if(m_deleteNodes){
-    for(typename vector<VID>::iterator it = m_toBeDeleted.begin(); it != m_toBeDeleted.end(); it++){
+  if(m_deleteNodes) {
+    for(typename vector<VID>::iterator it = m_toBeDeleted.begin(); it != m_toBeDeleted.end(); it++)
       rdmp->GetGraph()->delete_vertex(*it);
-    }
     m_toBeDeleted.clear();
   }
 
@@ -271,9 +270,8 @@ Query<MPTraits>::PerformQuery(CfgType _start, CfgType _goal, RoadmapType* _rdmp,
 
   // Process node connection labels
   vector<ConnectorPointer> connectionMethods;
-  if(m_nodeConnectionLabels.empty()){
+  if(m_nodeConnectionLabels.empty())
     m_nodeConnectionLabels.push_back("");
-  }
   
   for(vector<string>::iterator it = m_nodeConnectionLabels.begin(); it != m_nodeConnectionLabels.end(); it++)
     connectionMethods.push_back(this->GetMPProblem()->GetConnector(*it));
@@ -282,13 +280,13 @@ Query<MPTraits>::PerformQuery(CfgType _start, CfgType _goal, RoadmapType* _rdmp,
   VID sVID, gVID;
   if(_rdmp->GetGraph()->IsVertex(_start))
     sVID = _rdmp->GetGraph()->GetVID(_start);
-  else{
+  else {
     sVID = _rdmp->GetGraph()->AddVertex(_start);
     m_toBeDeleted.push_back(sVID);
   }
   if(_rdmp->GetGraph()->IsVertex(_goal))
     gVID = _rdmp->GetGraph()->GetVID(_goal);
-  else{
+  else {
     gVID = _rdmp->GetGraph()->AddVertex(_goal);
     m_toBeDeleted.push_back(gVID);
   }
@@ -491,11 +489,12 @@ Query<MPTraits>::CanRecreatePath(RoadmapType* _rdmp, StatClass& _stats,
     if(this->GetMPProblem()->GetLocalPlanner(m_lpLabel)->IsConnected(
           this->GetMPProblem()->GetEnvironment(), _stats, this->GetMPProblem()->GetDistanceMetric(m_dmLabel),
           _rdmp->GetGraph()->GetCfg(*it), _rdmp->GetGraph()->GetCfg(*(it+1)),
-          col, &ci, this->GetMPProblem()->GetEnvironment()->GetPositionRes(), this->GetMPProblem()->GetEnvironment()->GetOrientationRes(), true, true, true)) {
+          col, &ci, this->GetMPProblem()->GetEnvironment()->GetPositionRes(),
+          this->GetMPProblem()->GetEnvironment()->GetOrientationRes(), true, true, true)) {
       _recreatedPath.insert(_recreatedPath.end(), ci.path.begin(), ci.path.end());
       _recreatedPath.push_back(_rdmp->GetGraph()->GetCfg(*(it+1)));
     }
-    else{
+    else {
       cerr << "Error::When querying, invalid edge of graph was found between vid pair (" 
         << *it << ", " << *(it+1) << ")" << " outputing error path in error.path and exiting." << endl;
       _recreatedPath.insert(_recreatedPath.end(), ci.path.begin(), ci.path.end());
@@ -528,7 +527,7 @@ Query<MPTraits>::ReadQuery(string _filename) {
 //initialize variable defaults
 template<class MPTraits>
 void 
-Query<MPTraits>::Initialize(){
+Query<MPTraits>::Initialize() {
   this->SetName("Query");
   m_doneSmoothing = false;
   m_searchAlg = ASTAR;
