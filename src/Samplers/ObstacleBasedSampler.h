@@ -264,23 +264,9 @@ class ObstacleBasedSampler : public SamplerMethod<MPTraits> {
       return GetCfgWithParams(polyhedron.m_vertexList[x]);
     }
 
-    // Chooses an obstacle MultiBody randomly
-    shared_ptr<MultiBody> InitializeBody(Environment* _env) {
-      int N = _env->GetMultiBodyCount();
-      int roboIndex = _env->GetRobotIndex(); 
-      int obstacleIndex;
-      
-      if(this->m_debug && N == 1)
-        cout << "Infinite loop in InitializeBody() of ObstacleBasedSampler.h because N == 1" << endl;
-      do {
-        obstacleIndex = LRand() % N;   
-      } while(obstacleIndex == roboIndex);
-      return _env->GetMultiBody(obstacleIndex);
-    }
-
     // Checks m_pointSelection and returns an appropriate CfgType
     virtual CfgType ChooseASample(CfgType _cfgIn, Environment* _env, shared_ptr<Boundary> _bb) {
-      shared_ptr<MultiBody> mBody = InitializeBody(_env);
+      shared_ptr<MultiBody> mBody = _env->GetRandomObstacle(); 
       // cspace is for Configuration space (This is for unifying OBPRM and WOBPRM)
       if(m_pointSelection == "cspace") {  
         if(_cfgIn == CfgType())

@@ -19,10 +19,6 @@ class UniformObstacleBasedSampler : public SamplerMethod<MPTraits> {
     UniformObstacleBasedSampler(Environment* _env = NULL, string _vcLabel = "", string _dmLabel = "", double _margin = 0, bool _useBoundary = false)
       : m_margin(_margin), m_useBoundary(_useBoundary), m_vcLabel(_vcLabel), m_dmLabel(_dmLabel) {
         this->SetName("UniformObstacleBasedSampler");
-        if(m_margin == 0){
-          if(_env != NULL)
-            m_margin = (_env->GetMultiBody(_env->GetRobotIndex()))->GetMaxAxisRange();
-        }
       }
 
     UniformObstacleBasedSampler(MPProblemType* _problem, XMLNodeReader& _node) : SamplerMethod<MPTraits>(_problem, _node) {
@@ -58,8 +54,12 @@ class UniformObstacleBasedSampler : public SamplerMethod<MPTraits> {
       bool generated = false;
       int attempts = 0;
       bool cfg1Free;
-
-      _env->ResetBoundingBox(m_margin);
+      double margin = m_margin;
+      if(margin == 0){
+        if(_env != NULL)
+          margin = (_env->GetMultiBody(_cfgIn.GetRobotIndex()))->GetMaxAxisRange();
+      }
+      _env->ResetBoundingBox(margin, _cfgIn.GetRobotIndex());
       shared_ptr<Boundary> bbNew = _env->GetBoundary();
 
       _stats.IncNodesAttempted(this->GetNameAndLabel());
@@ -75,7 +75,7 @@ class UniformObstacleBasedSampler : public SamplerMethod<MPTraits> {
       CfgType incr;
       double dist, r;
 
-      incr.GetRandomRay(m_margin, _env, dm);
+      incr.GetRandomRay(margin, _env, dm);
       cfg2 = cfg1 + incr;
 
       //scale the distance between c1 and c2
@@ -88,7 +88,7 @@ class UniformObstacleBasedSampler : public SamplerMethod<MPTraits> {
       c2[2] = cfg2[2];
       dir = c2 - c1;
       dist = sqrt(dir[0]*dir[0] + dir[1]*dir[1] + dir[2]*dir[2]);
-      r = m_margin/dist;
+      r = margin/dist;
       cfg2 = cfg1 + incr*r;
 
       CfgType inter;
@@ -107,7 +107,7 @@ class UniformObstacleBasedSampler : public SamplerMethod<MPTraits> {
         _env->SetBoundary(_bb);
         if(m_useBoundary) 
           tickFree = tickFree && (tick.InBoundary(_env, _bb));
-        
+
         if(tempFree == tickFree) {
           tempFree = tickFree;
           temp = tick;

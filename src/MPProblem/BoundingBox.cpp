@@ -188,7 +188,7 @@ BoundingBox::InBoundary(const Cfg& _cfg, Environment* _env){
     return false;
 
   // @todo: if there are multiple robots, this needs to be changed.
-  shared_ptr<MultiBody> robot = _env->GetMultiBody(_env->GetRobotIndex()); 
+  shared_ptr<MultiBody> robot = _env->GetMultiBody(_cfg.GetRobotIndex()); 
   if (GetClearance(_cfg.GetRobotCenterPosition()) < robot->GetBoundingSphereRadius()) { //faster, loose check
     // Robot is close to wall, have a strict check.
     _cfg.ConfigEnvironment(_env); // Config the Environment(robot indeed).

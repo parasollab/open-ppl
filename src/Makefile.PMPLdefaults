@@ -269,8 +269,11 @@ PMPL_OBJS = \
         Utilities/IOUtils.o \
         Utilities/MPUtils.o 
 
-ifeq (${ROBOT_DEF}, PMPCfgSurface)
-  PMPL_OBJS += Cfg/CfgSurface.o
+#ifeq (${ROBOT_DEF}, $(or PMPCfgSurface PMPSSSurfaceMult))
+ifneq ($(filter $(ROBOT_DEF), PMPSSSurfaceMult PMPCfgSurface),)
+  	PMPL_OBJS += Cfg/CfgSurface.o \
+               Cfg/SSSurface.o \
+               Cfg/SSSurfaceMult.o
 else
   ifeq (${ROBOT_DEF}, $(or PMPReachDistCC PMPReachDistCCFixed))
   PMPL_OBJS += Cfg/Cfg_reach_cc.o \

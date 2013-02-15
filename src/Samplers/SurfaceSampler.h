@@ -1,7 +1,7 @@
 #ifndef SURFACESAMPLER_H_
 #define SURFACESAMPLER_H_
 
-#ifdef PMPCfgSurface
+//#ifdef PMPCfgSurface
 
 #include "SamplerMethod.h"
 
@@ -253,5 +253,5 @@ class SurfaceSampler : public SamplerMethod<MPTraits> {
 };
 
 #endif
-#endif
+//#endif
 

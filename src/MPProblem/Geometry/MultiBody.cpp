@@ -124,7 +124,7 @@ void MultiBody::ComputePUMAInverseKinematics(Transformation & _t, double _a2, do
 //  Constructors and Destructor
 //===================================================================
 MultiBody::MultiBody() 
-  : bInternal(false), m_isSurface(false), m_multirobot(false), CenterOfMassAvailable(false)
+  : m_multirobot(false), CenterOfMassAvailable(false), m_bodyType(PASSIVE)
 {}
 
 MultiBody::~MultiBody() 
@@ -442,24 +442,26 @@ MultiBody::Read(istream& _is, bool _debug) {
   
   string multibodyType = ReadFieldString(_is, 
       "Multibody Type (Active, Passive, Internal, Surface)");
-
-  bInternal = false;    
-  m_isSurface = false;
-  if(multibodyType == "INTERNAL") {
-    bInternal = true;
-  }
-  else if(multibodyType == "SURFACE") { 
-    m_isSurface = true; 
-    string multibodyTag = ReadFieldString(_is, "Surface Tag");
-    m_label = multibodyTag;
+  if(multibodyType == "PASSIVE")
+      m_bodyType = PASSIVE;
+  else if(multibodyType == "ACTIVE")
+      m_bodyType = ACTIVE;
+  else if(multibodyType == "SURFACE")
+      m_bodyType = SURFACE;
+  else if(multibodyType == "INTERNAL")
+      m_bodyType = INTERNAL;
+  else{
+    cerr << "Error! Unspecified body type. Valid types are ACTIVE, PASSIVE, SURFACE, and INTERNAL" << endl;
+    exit(1);
   }
 
   double fixSum = 0;
   double freeSum = 0;
-  
-  if(multibodyType == "ACTIVE"){
+
+  if(IsActive()){
+
     if(_debug) cout << "Reading Active Body" << endl;
-   
+
     int bodyCount = ReadField<int>(_is, "Body Count");
 
     for(int i=0; i<bodyCount; ++i) {
@@ -467,12 +469,12 @@ MultiBody::Read(istream& _is, bool _debug) {
       FreeBody free(this);
       _is >> free;
       if(_debug)
-      cout << free << endl;
-      
+        cout << free << endl;
+
       //calculate areas on geometry
       freeAreas.push_back(free.GetPolyhedron().m_area);
       freeSum += free.GetPolyhedron().m_area;
-      
+
       //add object to multibody
       AddBody(free);
     }
@@ -486,15 +488,19 @@ MultiBody::Read(istream& _is, bool _debug) {
       _is >> c;
       if(_debug)
         cout << c << endl;
-      
+
       //add connection info to multibody connection map
       jointMap.push_back(make_pair(
             make_pair(c.m_prevBodyIdx, c.m_nextBodyIdx), c.type));
 
     } //endfor i
   }
-  else if(multibodyType == "INTERNAL" || multibodyType == "SURFACE" ||
-      multibodyType == "PASSIVE"){
+  else{ //Passive, Surface, Internal
+    if(IsSurface()) { 
+      string multibodyTag = ReadFieldString(_is, "Surface Tag");
+      m_label = multibodyTag;
+    }
+
     if(_debug) cout << "Reading Other Body" << endl;
 
     //all are same type, namely fixed body
@@ -502,18 +508,13 @@ MultiBody::Read(istream& _is, bool _debug) {
     _is >> fix;
     if(_debug)
       cout << fix << endl;
-    
+
     //calculating area for multibody
     fixAreas.push_back(fix.GetPolyhedron().m_area);
     fixSum += fix.GetPolyhedron().m_area;
-    
+
     //add fixed body to multibody
     AddBody(fix);      
-  }
-  else{
-    cerr << "Error:: Unsupported body type" << endl;
-    cerr << "Choices are Active, Passive, Internal, or Surface" << endl;
-    exit(1);
   }
 
   fixArea = fixSum;
@@ -540,12 +541,22 @@ void MultiBody::buildCDstructure(cd_predefined cdtype)
 void MultiBody::Write(ostream & _os) 
 {
   if(fixedBody.size() > 0){
-    if(bInternal)
-      _os << "INTERNAL" << endl;
-    else if(m_isSurface)
-      _os << "SURFACE " << m_label << endl;
-    else
-      _os << "PASSIVE" << endl;
+    switch(m_bodyType){
+      case INTERNAL:
+        _os << "INTERNAL" << endl;
+        break;
+      case SURFACE:
+        _os << "SURFACE " << m_label << endl;
+        break;
+      case PASSIVE:
+        _os << "PASSIVE" << endl;
+        break;
+      default:
+        cerr << "Multibody::Write Error: unrecognized fixed body type. Valid options are PASSIVE, INTERNAL, and SURFACE"
+          << endl;
+        exit(1);
+        break;
+    }
     for(vector<shared_ptr<FixedBody> >::iterator I = fixedBody.begin(); I != fixedBody.end(); ++I){
       _os << **I << endl;
     }
@@ -582,7 +593,6 @@ void MultiBody::ConfigureJoint(double * _s, int _dof)
     freeBody[i]->GetForwardConnection(0).GetDHparameters().theta = _s[i];
 }
 
-
 //===================================================================
 //  ComputeCenterOfMass
 //
@@ -599,13 +609,13 @@ void MultiBody::ComputeCenterOfMass()
   } 
   else
   {
-     Vector3D sum(0,0,0);
-     for(vector<shared_ptr<FreeBody> >::iterator I = freeBody.begin(); I != freeBody.end(); ++I)
-       sum = sum + (*I)->GetCenterOfMass();
-     for(vector<shared_ptr<FixedBody> >::iterator I = fixedBody.begin(); I != fixedBody.end(); ++I)
-       sum = sum + (*I)->GetCenterOfMass();
-     CenterOfMass = sum / (freeBody.size() + fixedBody.size());
-     CenterOfMassAvailable = true;
+    Vector3D sum(0,0,0);
+    for(vector<shared_ptr<FreeBody> >::iterator I = freeBody.begin(); I != freeBody.end(); ++I)
+      sum = sum + (*I)->GetCenterOfMass();
+    for(vector<shared_ptr<FixedBody> >::iterator I = fixedBody.begin(); I != fixedBody.end(); ++I)
+      sum = sum + (*I)->GetCenterOfMass();
+    CenterOfMass = sum / (freeBody.size() + fixedBody.size());
+    CenterOfMassAvailable = true;
   }
 }
 
@@ -616,7 +626,7 @@ void MultiBody::ComputeCenterOfMass()
 void MultiBody::FindBoundingBox()
 {	
   double minx, miny, minz, maxx, maxy, maxz;
-	
+
   ///////////////////////////////////////////////////////////
   //Check Free Bodys' Boudning Box
   if(!freeBody.empty())
@@ -626,7 +636,7 @@ void MultiBody::FindBoundingBox()
     minx = tmp[0]; maxx = tmp[1];
     miny = tmp[2]; maxy = tmp[3];
     minz = tmp[4]; maxz = tmp[5];
-	
+
     for(vector<shared_ptr<FreeBody> >::iterator I = freeBody.begin()+1; I != freeBody.end(); ++I)
     {
       (*I)->FindBoundingBox();
@@ -636,7 +646,7 @@ void MultiBody::FindBoundingBox()
       minz = min(minz, tmp[4]); maxz = max(maxz, tmp[5]);
     }
   }
-    
+
   ///////////////////////////////////////////////////////////
   //Check Fixed Bodys' Boudning Box
   if(!fixedBody.empty())
@@ -662,7 +672,7 @@ void MultiBody::FindBoundingBox()
   boundingBox[0] = minx; boundingBox[1] = maxx;
   boundingBox[2] = miny; boundingBox[3] = maxy;
   boundingBox[4] = minz; boundingBox[5] = maxz;
-	
+
   ///////////////////////////////////////////////////////////
   // Find maxAxisRange
   double rangex = maxx - minx;
@@ -689,24 +699,24 @@ bool MultiBody::operator==(const MultiBody& mb) const
     if(*(freeBody[i]) != *(mb.freeBody[i]))
       return false;
 
-  return (bInternal == mb.bInternal) &&
-         (CenterOfMass == mb.CenterOfMass) &&
-         (boundingBox[0] == mb.boundingBox[0]) &&
-         (boundingBox[1] == mb.boundingBox[1]) &&
-         (boundingBox[2] == mb.boundingBox[2]) &&
-         (boundingBox[3] == mb.boundingBox[3]) &&
-         (boundingBox[4] == mb.boundingBox[4]) &&
-         (boundingBox[5] == mb.boundingBox[5]) &&
-         (maxAxisRange == mb.maxAxisRange);
+  return (m_bodyType == mb.m_bodyType) &&
+    (CenterOfMass == mb.CenterOfMass) &&
+    (boundingBox[0] == mb.boundingBox[0]) &&
+    (boundingBox[1] == mb.boundingBox[1]) &&
+    (boundingBox[2] == mb.boundingBox[2]) &&
+    (boundingBox[3] == mb.boundingBox[3]) &&
+    (boundingBox[4] == mb.boundingBox[4]) &&
+    (boundingBox[5] == mb.boundingBox[5]) &&
+    (maxAxisRange == mb.maxAxisRange);
 }
 
 #ifdef USE_SOLID
-  void MultiBody::UpdateVertexBase(){
-    for(vector<shared_ptr<FixedBody> >::iterator I = fixedBody.begin(); I != fixedBody.end(); ++I)
-      (*I)->UpdateVertexBase();
-    for(vector<shared_ptr<FreeBody> >::iterator I = freeBody.begin(); I != freeBody.end(); ++I)
-      (*I)->UpdateVertexBase();
-  }
+void MultiBody::UpdateVertexBase(){
+  for(vector<shared_ptr<FixedBody> >::iterator I = fixedBody.begin(); I != fixedBody.end(); ++I)
+    (*I)->UpdateVertexBase();
+  for(vector<shared_ptr<FreeBody> >::iterator I = freeBody.begin(); I != freeBody.end(); ++I)
+    (*I)->UpdateVertexBase();
+}
 #endif
 
 
@@ -723,7 +733,7 @@ struct vertex_index_distance
 struct first_index_equals : public unary_function<vertex_index_distance, bool>
 {
   size_t index;
-  
+
   first_index_equals(size_t i) : index(i) {}
   ~first_index_equals() {}
 
@@ -732,7 +742,7 @@ struct first_index_equals : public unary_function<vertex_index_distance, bool>
 struct second_index_equals : public unary_function<vertex_index_distance, bool>
 {
   size_t index;
-  
+
   second_index_equals(size_t i) : index(i) {}
   ~second_index_equals() {}
 
@@ -757,7 +767,7 @@ void MultiBody::PolygonalApproximation(vector<Vector3D>& result)
       joint = joint + bbox.m_vertexList[i];
     joint = joint / 4;
     result.push_back(joint);
-    
+
     joint = Vector3D(0, 0, 0);
     for(size_t i = 4; i<8; ++i)
       joint = joint + bbox.m_vertexList[i];
@@ -772,7 +782,7 @@ void MultiBody::PolygonalApproximation(vector<Vector3D>& result)
       {
         GMSPolyhedron first_bbox = this->GetFreeBody(i)->GetWorldBoundingBox();
         GMSPolyhedron second_bbox = this->GetFreeBody(i)->GetForwardConnection(0).GetNextBody()->GetWorldBoundingBox();
-        
+
         //find the four closest pairs of points between first_bbox and second_bbox
         vector<Vector3d> first_vertices = first_bbox.m_vertexList;
         vector<Vector3d> second_vertices = second_bbox.m_vertexList;
@@ -789,7 +799,7 @@ void MultiBody::PolygonalApproximation(vector<Vector3D>& result)
           first_vertices[min->first_index] = Vector3D(MAX_INT, MAX_INT, MAX_INT);
           second_vertices[min->second_index] = Vector3D(-MAX_INT, -MAX_INT, -MAX_INT);
         }
-       
+
         //first body in linkage, add the endpoint of linkage 1 that is not closest to linkage 2
         if(i == 0) 
         {
@@ -804,7 +814,7 @@ void MultiBody::PolygonalApproximation(vector<Vector3D>& result)
           other_joint = other_joint / num;
           result.push_back(other_joint);
         }
- 
+
         //compute the joint as the closest 4 vertices from linkage 1 and linkage 2
         Vector3D joint(0, 0, 0);
         for(size_t k = 0; k<4; ++k)
@@ -813,7 +823,7 @@ void MultiBody::PolygonalApproximation(vector<Vector3D>& result)
           joint = joint + second_bbox.m_vertexList[closest_distances[k].second_index];
         joint = joint / 8;
         result.push_back(joint);
-        
+
         //last body in linkage, add endpoint of linkage 2 that is not closest to linkage 1
         if(i == nfree-2)
         {
@@ -832,5 +842,28 @@ void MultiBody::PolygonalApproximation(vector<Vector3D>& result)
       }
     }
   }
+}
+
+//Tests type of MultiBody (active, passive, etc.)
+
+//Internal = fake obstacle (passive, and used for vizmo)
+bool
+MultiBody::IsInternal() const{
+  return m_bodyType == INTERNAL;
+} 
+
+bool
+MultiBody::IsSurface() const {
+  return m_bodyType == SURFACE;
+}
+
+bool
+MultiBody::IsActive() const{
+  return m_bodyType == ACTIVE;
+}
+
+bool
+MultiBody::IsPassive() const{
+  return m_bodyType == PASSIVE;
 }
 

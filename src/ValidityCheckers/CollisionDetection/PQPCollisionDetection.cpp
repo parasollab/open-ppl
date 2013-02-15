@@ -128,12 +128,12 @@ bool
 PQP_Solid::
 IsInsideObstacle(const Cfg& _cfg, Environment* _env) 
 {
-  int nmulti = _env->GetMultiBodyCount();
-  int robot = _env->GetRobotIndex();
+  size_t nmulti = _env->GetUsableMultiBodyCount();
+  size_t robot = _cfg.GetRobotIndex();
 
   Vector3D robot_pt(_cfg.GetData()[0], _cfg.GetData()[1], _cfg.GetData()[2]);
   
-  for( int i=0; i < nmulti; i++ )
+  for(size_t i=0; i < nmulti; i++ )
     if(i != robot && IsInsideObstacle(robot_pt, _env->GetMultiBody(i)))
       return true;
   return false;

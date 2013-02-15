@@ -24,6 +24,7 @@
 #include "ValidityCheckers/NodeClearanceValidity.h"
 #include "ValidityCheckers/ObstacleClearanceValidity.h"
 #include "ValidityCheckers/SurfaceValidity.h"
+#include "ValidityCheckers/SSSurfaceValidity.h"
 
 //neighborhood finder includes
 #include "NeighborhoodFinders/BruteForceNF.h"
@@ -83,6 +84,7 @@
 #include "MPStrategies/ResamplePointStrategy.h"
 #include "MPStrategies/TogglePRMStrategy.h"
 #include "MPStrategies/UnitTest/DMTestStrategy.h"
+#include "MPStrategies/LocalManeuveringStrategy.h"
 
 #ifdef _PARALLEL
 #include "ParallelMethods/BasicParallelPRM.h"
@@ -210,15 +212,26 @@ struct MPTraits{
     > MPStrategyMethodList;
 };
 
+#if(defined(PMPCfgSurface) || defined(PMPSSSurfaceMult))
 #ifdef PMPCfgSurface
-
 class CfgSurface;
+#else
+class SSSurfaceMult;
+#endif
 
 //template specialization for SurfaceCfgs
 template<>
+//struct MPTraits<CfgSurface, DefaultWeight<CfgSurface> > {
+  //typedef CfgSurface CfgType;
+  //typedef DefaultWeight<CfgSurface> WeightType;
+#ifdef PMPSSSurfaceMult
+struct MPTraits<SSSurfaceMult, DefaultWeight<SSSurfaceMult> > {
+  typedef SSSurfaceMult CfgType;
+#else
 struct MPTraits<CfgSurface, DefaultWeight<CfgSurface> > {
   typedef CfgSurface CfgType;
-  typedef DefaultWeight<CfgSurface> WeightType;
+#endif
+  typedef DefaultWeight<CfgType> WeightType;
 
   typedef MPProblem<MPTraits> MPProblemType;
 
@@ -247,7 +260,11 @@ struct MPTraits<CfgSurface, DefaultWeight<CfgSurface> > {
     NegateValidity<MPTraits>,
     NodeClearanceValidity<MPTraits>,
     ObstacleClearanceValidity<MPTraits>,
+#ifdef PMPCfgSurface
     SurfaceValidity<MPTraits>
+#else
+    SSSurfaceValidity<MPTraits>
+#endif
     > ValidityCheckerMethodList;
 
   //types of neighborhood finders available in our world
@@ -271,7 +288,7 @@ struct MPTraits<CfgSurface, DefaultWeight<CfgSurface> > {
     MedialAxisSampler<MPTraits>,
     MixSampler<MPTraits>,
     ObstacleBasedSampler<MPTraits>,
-    SurfaceSampler<MPTraits>,
+    //SurfaceSampler<MPTraits>,
     UniformObstacleBasedSampler<MPTraits>,
     UniformRandomSampler<MPTraits>
       > SamplerMethodList;
@@ -284,14 +301,18 @@ struct MPTraits<CfgSurface, DefaultWeight<CfgSurface> > {
     TransformAtS<MPTraits>,
     RotateAtS<MPTraits>,
     StraightLine<MPTraits>,
+#ifdef PMPCfgSurface
     SurfaceLP<MPTraits>,
+#endif
     ToggleLP<MPTraits>
     > LocalPlannerMethodList;
 
   //types of connectors available in our world
   typedef boost::mpl::list<
     CCsConnector<MPTraits>,
+#ifdef PMPCfgSurface
     ConnectNeighboringSurfaces<MPTraits>,
+#endif
     NeighborhoodConnector<MPTraits>,
     OptimalConnection<MPTraits>,
     OptimalRewire<MPTraits>/*, 
@@ -331,6 +352,9 @@ struct MPTraits<CfgSurface, DefaultWeight<CfgSurface> > {
     EvaluateMapStrategy<MPTraits>,
     MedialAxisRRT<MPTraits>,
     ResamplePointStrategy<MPTraits>,
+#ifdef PMPSSSurfaceMult
+    LocalManeuveringStrategy<MPTraits>,
+#endif
     TogglePRMStrategy<MPTraits>
     #ifdef _PARALLEL
     ,BasicParallelPRM<MPTraits>

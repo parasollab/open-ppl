@@ -133,7 +133,7 @@ class MedialAxisUtility : public ClearanceUtility<MPTraits> {
     size_t m_historyLength;
 };
 
-#ifdef PMPCfgSurface
+//#ifdef PMPCfgSurface
 template<class MPTraits>
 class SurfaceMedialAxisUtility : public MedialAxisUtility<MPTraits> {
   public:
@@ -158,7 +158,7 @@ class SurfaceMedialAxisUtility : public MedialAxisUtility<MPTraits> {
     //***************************************************************//
     double PushCfgToMedialAxis2DSurf(CfgType& _cfg, shared_ptr<Boundary> _bb, bool& _valid);
 };
-#endif
+//#endif
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
@@ -282,7 +282,7 @@ ClearanceUtility<MPTraits>::ExactCollisionInfo(CfgType& _cfg, CfgType& _clrCfg, 
   // If not using the bbx, done
   if(m_useBBX){
     // CfgType is now know as good, get BBX and ROBOT info
-    boost::shared_ptr<MultiBody> robot = env->GetMultiBody(env->GetRobotIndex());
+    boost::shared_ptr<MultiBody> robot = env->GetMultiBody(_cfg.GetRobotIndex());
     std::pair<double,double> bbxRange;
 
     // Find closest point between robot and bbx, set if less than min dist from obstacles
@@ -814,6 +814,7 @@ MedialAxisUtility<MPTraits>::PushCfgToMedialAxis(CfgType& _cfg, shared_ptr<Bound
   
   Environment* env = this->GetMPProblem()->GetEnvironment();
   ValidityCheckerPointer vcm = this->GetMPProblem()->GetValidityChecker(this->m_vcLabel);
+  shared_ptr<MultiBody> robot = env->GetMultiBody(_cfg.GetRobotIndex());
 
   CDInfo tmpInfo;
   tmpInfo.ResetVars();
@@ -931,7 +932,7 @@ template<class MPTraits>
 bool
 MedialAxisUtility<MPTraits>::FindMedialAxisBorderExact(typename MPTraits::CfgType _cfg, shared_ptr<Boundary> _bb, typename MPTraits::CfgType& _transCfg, CDInfo& _prevInfo, typename MPTraits::CfgType& _startCfg, typename MPTraits::CfgType& _endingCfg, double& _upperBound, double& _lowerBound, double& _stepSize) {
   Environment* env = this->GetMPProblem()->GetEnvironment();
-  shared_ptr<MultiBody> robot = env->GetMultiBody(env->GetRobotIndex());
+  shared_ptr<MultiBody> robot = env->GetMultiBody(_cfg.GetRobotIndex());
   ValidityCheckerPointer vcm = this->GetMPProblem()->GetValidityChecker(this->m_vcLabel);
   
   CDInfo tmpInfo;
@@ -1013,7 +1014,7 @@ template<class MPTraits>
 bool
 MedialAxisUtility<MPTraits>::FindMedialAxisBorderApprox(typename MPTraits::CfgType _cfg, shared_ptr<Boundary> _bb, typename MPTraits::CfgType& _transCfg, CDInfo& _prevInfo, typename MPTraits::CfgType& _startCfg, typename MPTraits::CfgType& _endingCfg, double& _upperBound, double& _lowerBound, double& _stepSize) {
   Environment* env = this->GetMPProblem()->GetEnvironment();
-  shared_ptr<MultiBody> robot = env->GetMultiBody(env->GetRobotIndex());
+  //shared_ptr<MultiBody> robot = env->GetMultiBody(_cfg->GetRobotIndex());
   ValidityCheckerPointer vcm = this->GetMPProblem()->GetValidityChecker(this->m_vcLabel);
   
   CDInfo tmpInfo;
@@ -1359,11 +1360,11 @@ double
 SurfaceMedialAxisUtility<MPTraits>::GetClearance2DSurf
 (Environment* _env, const Point2d& _pos, Point2d& _cdPt) {
   if(this->m_debug) cout << "MedialAxisUtility::GetClearance2DSurf" <<endl;
-  if(this->m_debug) cout << "num multibodies: " << _env->GetMultiBodyCount() << endl;
+  if(this->m_debug) cout << "num multibodies: " << _env->GetUsableMultiBodyCount() << endl;
 
   double minDist=_env->GetBoundary()->GetClearance2DSurf(_pos,_cdPt);
 
-  for(int i=1; i<_env->GetMultiBodyCount(); i++) { //skip 0 (assume it's robot)
+  for(int i=1; i<_env->GetUsableMultiBodyCount(); i++) { //skip 0 (assume it's robot)
     if(this->m_debug) cout << " getting mb: " << i << endl;
     shared_ptr<MultiBody> mb = _env->GetMultiBody(i);
     //find clearance

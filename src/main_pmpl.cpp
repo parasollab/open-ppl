@@ -7,7 +7,7 @@
 
 #if (defined(PMPReachDistCC) || defined(PMPReachDistCCFixed))
 #include "MPProblem/ClosedChainProblem.h"
-#include "MPStrategy/ClosedChainStrategy.h"
+#include "MPStrategies/ClosedChainStrategy.h"
 #endif
 
 #if (defined(PMPCfg))
@@ -22,6 +22,9 @@ typedef Cfg_reach_cc PMPLCfgType;
 #elif (defined(PMPReachDistCCFixed))
 #include "Cfg/Cfg_reach_cc_fixed.h"
 typedef Cfg_reach_cc_fixed PMPLCfgType;
+#elif (defined(PMPSSSurfaceMult))
+#include "Cfg/SSSurfaceMult.h"
+typedef SSSurfaceMult PMPLCfgType;
 #else
 #error "Error, must define a RobotType for PMPL application"
 #endif
@@ -34,6 +37,7 @@ void stapl_main(int _argc, char *_argv[])
 int main(int _argc, char** _argv)
 #endif
 {
+
   if(_argc < 3 || !(string(_argv[1]) == "-f")){ 
     cerr << "Error: Incorrect usage. Usage: -f options.xml" << endl;
     exit(1);

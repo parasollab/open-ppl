@@ -210,6 +210,7 @@ MPProblem<MPTraits>::~MPProblem(){
 template<class MPTraits>
 void
 MPProblem<MPTraits>::Initialize(){
+  m_environment = NULL;
   m_roadmap = new RoadmapType();
   m_blockRoadmap = new RoadmapType();
   m_colRoadmap = new RoadmapType();
@@ -405,7 +406,7 @@ MPProblem<MPTraits>::BuildCDStructures(){
   if(m_environment != NULL){
     vector<cd_predefined> cdtypes = GetSelectedCDTypes();
     for(vector<cd_predefined>::iterator C = cdtypes.begin(); C != cdtypes.end(); ++C)
-      m_environment->buildCDstructure(*C);
+      m_environment->BuildCDstructure(*C);
   }
   else{
     cerr << "Error::Cannot BuildCDStructures. Must define an environment. Exiting." << endl;

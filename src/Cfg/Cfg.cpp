@@ -29,13 +29,16 @@ vector<Robot> Cfg::m_robots;
 Cfg::Cfg() {
   m_v.clear();
   m_v.resize(m_dof, 0.0);
+  m_robotIndex = 0;
   m_witnessCfg.reset();
 }
 
 Cfg::Cfg(const Cfg& _other) :
-  m_v(_other.m_v), m_labelMap(_other.m_labelMap),
-  m_statMap(_other.m_statMap), 
-  m_clearanceInfo(_other.m_clearanceInfo), m_witnessCfg(_other.m_witnessCfg) {}
+  m_v(_other.m_v), 
+  m_robotIndex(_other.m_robotIndex),
+  m_labelMap(_other.m_labelMap),
+  m_statMap(_other.m_statMap),
+  m_witnessCfg(_other.m_witnessCfg){}
 
 void
 Cfg::InitRobots(vector<Robot>& _robots) {
@@ -83,6 +86,7 @@ Cfg::operator=(const Cfg& _cfg) {
     m_v = _cfg.GetData();
     m_labelMap = _cfg.m_labelMap;
     m_statMap = _cfg.m_statMap;
+    m_robotIndex = _cfg.m_robotIndex;
     m_clearanceInfo = _cfg.m_clearanceInfo;
     m_witnessCfg = _cfg.m_witnessCfg;
   }
@@ -91,6 +95,8 @@ Cfg::operator=(const Cfg& _cfg) {
 
 bool
 Cfg::operator==(const Cfg& _cfg) const {
+  if (m_robotIndex != _cfg.m_robotIndex)
+    return false;
   for(size_t i = 0; i < m_dof; ++i) {
     if(m_dofTypes[i] == POS || m_dofTypes[i] == JOINT) {
       if(fabs(m_v[i]-_cfg[i]) > numeric_limits<double>::epsilon())
@@ -203,19 +209,46 @@ Cfg::operator[](size_t _dof) const {
 //---------------------------------------------
 // Input/Output operators for Cfg
 //---------------------------------------------
-istream&
-operator>>(istream& _is, Cfg& _cfg) {
-  for(vector<double>::iterator i = _cfg.m_v.begin(); i != _cfg.m_v.end(); ++i)
+void
+Cfg::Read(istream& _is){
+  //first read in robot index, and then read in DOF values
+  _is >> m_robotIndex;
+  //if this failed, then we're done reading Cfgs
+  if (_is.fail())
+    return;
+  for(vector<double>::iterator i = m_v.begin(); i != m_v.end(); ++i){
     _is >> (*i);
+    cout << "Read dof: " << *i << endl;
+    if (_is.fail()){
+      cerr << "Cfg::operator>> error - failed reading values for all dofs" << endl;
+      exit(1);
+    }
+  }
+}
+
+void
+Cfg::Write(ostream& _os) const{
+  //write out robot index, and then dofs
+  _os << setw(4) << m_robotIndex << ' ';
+  for(vector<double>::const_iterator i = m_v.begin(); i != m_v.end(); ++i)
+    _os << setw(4) << *i << ' ';
+  if (_os.fail()){
+    cerr << "Cfg::Write error - failed to write to file" << endl;
+    exit(1);
+  }
+}
+
+istream&
+operator>>(istream& _is, Cfg& _cfg){
+  _cfg.Read(_is);
   _cfg.m_witnessCfg.reset();
   return _is;
 }
 
 
 ostream&
-operator<<(ostream& _os, const Cfg& _cfg) {
-  for(vector<double>::const_iterator i = _cfg.m_v.begin(); i != _cfg.m_v.end(); ++i)
-    _os << setw(4) << *i << ' ';
+operator<<(ostream& _os, const Cfg& _cfg){
+  _cfg.Write(_os);
   return _os;
 }
 
@@ -357,7 +390,7 @@ Cfg::GetRobotCenterofMass(Environment* _env) const {
   typedef vector<Robot>::iterator RIT;
   Vector3D com(0,0,0);
   int numbodies=0;
-  shared_ptr<MultiBody> mb = _env->GetMultiBody(_env->GetRobotIndex());
+  shared_ptr<MultiBody> mb = _env->GetMultiBody(m_robotIndex);
   typedef vector<Robot>::iterator RIT;
   for(RIT rit = m_robots.begin(); rit != m_robots.end(); rit++) {
     GMSPolyhedron poly = mb->GetFreeBody(rit->m_bodyIndex)->GetWorldPolyhedron();
@@ -406,7 +439,6 @@ Cfg::GetRandomCfg(Environment* _env) {
 void
 Cfg::GetRandomCfg(Environment* _env, shared_ptr<Boundary> _bb) {
   m_witnessCfg.reset();
-
   // Probably should do something smarter than 3 strikes and exit.
   // eg, if it fails once, check size of bounding box vs robot radius
   // and see if user has an impossibly small (for this robot) bounding
@@ -414,7 +446,7 @@ Cfg::GetRandomCfg(Environment* _env, shared_ptr<Boundary> _bb) {
   size_t tries = 100;
   while(tries-- > 0) {
     this->GetRandomCfgImpl(_env, _bb);
-  
+
     if(this->InBoundary(_env, _bb))
       return;
   }//endwhile
@@ -422,14 +454,14 @@ Cfg::GetRandomCfg(Environment* _env, shared_ptr<Boundary> _bb) {
   // Print error message and some helpful (I hope!) statistics and exit...
   cout << "\n\nERROR: GetRandomCfg not able to find anything in bounding box."
     <<   "\n       robot radius is "
-    << _env->GetMultiBody(_env->GetRobotIndex())->GetBoundingSphereRadius();
+    << _env->GetMultiBody(m_robotIndex)->GetBoundingSphereRadius();
   _bb->Print(cout);
   exit(-1);
 }
 
 bool
 Cfg::ConfigEnvironment(Environment* _env) const {
-  shared_ptr<MultiBody> mb = _env->GetMultiBody(_env->GetRobotIndex());
+  shared_ptr<MultiBody> mb = _env->GetMultiBody(m_robotIndex);
   int index = 0;
   typedef vector<Robot>::iterator RIT;
   for(RIT rit = m_robots.begin(); rit != m_robots.end(); rit++) {
@@ -527,7 +559,7 @@ Cfg::IncrementTowardsGoal(const Cfg& _goal, const Cfg& _increment) {
       }
     }
   }
-  
+
   m_witnessCfg.reset();
 }
 
@@ -537,8 +569,8 @@ Cfg::FindIncrement(const Cfg& _start, const Cfg& _goal, int* _nTicks, double _po
 
   // adding two basically makes this a rough ceiling...
   *_nTicks = floor(max(diff.PositionMagnitude()/_positionRes, 
-      diff.OrientationMagnitude()/_orientationRes) + 0.5);
-  
+        diff.OrientationMagnitude()/_orientationRes) + 0.5);
+
   this->FindIncrement(_start, _goal, *_nTicks);
 }
 
@@ -594,7 +626,7 @@ vector<Vector3D>
 Cfg::PolyApprox(Environment* _env) const {
   vector<Vector3D> result;
   ConfigEnvironment(_env);
-  _env->GetMultiBody(_env->GetRobotIndex())->PolygonalApproximation(result);
+  _env->GetMultiBody(m_robotIndex)->PolygonalApproximation(result);
   return result;
 }
 

@@ -33,7 +33,7 @@ class CollisionDetectionValidity : public ValidityCheckerMethod<MPTraits> {
     bool IsInCollision(Environment* _env, StatClass& _stats, CDInfo& _cdInfo,
         shared_ptr<MultiBody> _rob, shared_ptr<MultiBody> _obst, std::string *_callName);
     bool IsInCollision(Environment* _env, StatClass& _stats, CDInfo& _cdInfo, 
-        std::string *_callName);
+        size_t _robotIndex, std::string *_callName);
 
     CollisionDetectionMethod* m_cdMethod;
     bool m_ignoreSelfCollision;
@@ -123,7 +123,7 @@ CollisionDetectionValidity<MPTraits>::IsValidImpl(CfgType& _cfg, Environment* _e
   // after updating the environment(multibodies), Ask ENVIRONMENT
   // to check collision! (this is more nature.)
 
-  bool answerFromEnvironment = IsInCollision(_env, _stats, _cdInfo, _callName);
+  bool answerFromEnvironment = IsInCollision(_env, _stats, _cdInfo, _cfg.GetRobotIndex(), _callName);
 #ifdef COLLISIONCFG
   if(answerFromEnvironment) {
     CollisionConfiguration[_cdInfo.m_collidingObstIndex].push_back(v);
@@ -140,16 +140,17 @@ CollisionDetectionValidity<MPTraits>::IsValidImpl(CfgType& _cfg, Environment* _e
 
 template<class MPTraits>
 bool
-CollisionDetectionValidity<MPTraits>::IsInCollision(Environment* _env, StatClass& _stats, CDInfo& _cdInfo, std::string *_callName) {
-  int nmulti = _env->GetMultiBodyCount();
-  int robot = _env->GetRobotIndex();
-  shared_ptr<MultiBody> rob = _env->GetMultiBody(robot);
+CollisionDetectionValidity<MPTraits>::IsInCollision(Environment* _env, StatClass& _stats, CDInfo& _cdInfo,
+    size_t _robotIndex,  std::string *_callName) {
+
+  size_t nmulti = _env->GetUsableMultiBodyCount();
+  shared_ptr<MultiBody> rob = _env->GetMultiBody(_robotIndex);
 
   CDInfo local_cd_info;
   bool ret_val = false;
 
-  for (int i = 0; i < nmulti; i++) {
-    if ( i != robot ) {
+  for (size_t i = 0; i < nmulti; i++) {
+    if ( i != _robotIndex ) {
       // Note that the below call sets _cdInfo as needed
       bool collision_found = IsInCollision(_env, _stats, _cdInfo, rob, _env->GetMultiBody(i), _callName);
       if ( (collision_found) && ( ! _cdInfo.m_retAllInfo) ) {

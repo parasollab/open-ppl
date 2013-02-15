@@ -69,11 +69,14 @@ class Environment {
     //
     //////////////////////////////////////////////////////////////////////////////////////////
 
-    ///Return the number of MultiBody's in the environment
-    virtual int GetMultiBodyCount() const;
+    ///Return the number of MultiBodies in the environment
+    virtual size_t GetUsableMultiBodyCount() const;
 
-    ///Return the number of External Body's in the environment;
-    virtual int GetExternalBodyCount() const;
+    //Returns the number of active MultiBodies in the environment
+    virtual size_t GetActiveBodyCount() const;
+
+    ///Return the number of External Bodies in the environment;
+    virtual size_t GetExternalBodyCount() const;
 
     /**Return a pointer to MultiBody according to this given index.
      *If this index is out of the boundary of list, NULL will be returned.
@@ -82,13 +85,19 @@ class Environment {
     virtual shared_ptr<MultiBody> GetMultiBody(size_t _index) const;
 
     ///Return the number of navigable surfaces in the environment;
-    virtual int GetNavigableSurfacesCount() const;
-    virtual int GetRandomNavigableSurfaceIndex();
+    virtual size_t GetNavigableSurfacesCount() const;
+    virtual size_t GetRandomNavigableSurfaceIndex();
     /**Return a pointer to MultiBody in m_navigableSurfaces given index.
      *If this index is out of the boundary of list, NULL will be returned.
      *@param _index the index for target, a MultiBody pointer
      */
     virtual shared_ptr<MultiBody> GetNavigableSurface(size_t _index) const;
+
+    /*
+    GetRandomObstacle: Will get a random obstacle from m_usableMultibodies that is not an active body
+    */
+
+    shared_ptr<MultiBody> GetRandomObstacle() const;
 
     void PrintOptions(ostream& out_os);
     //////////////////////////////////////////////////////////////////////////////////////////
@@ -119,18 +128,6 @@ class Environment {
     void ComputeResolution(double _posRes, double _oriRes, 
         double _posResFactor, double _oriResFactor, size_t _numJoints = 0);
 
-    //////////////////////////////////////////////////////////////////////////////////////////
-    //
-    //  Robot Index.
-    //
-    //////////////////////////////////////////////////////////////////////////////////////////
-
-    /**Return the Index for Robot in environment. This index is the index for MultiBody list in
-     *this Environment instance.
-     */
-    virtual int GetRobotIndex() const { return robotIndex; }
-
-    //@}
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     //
@@ -154,22 +151,14 @@ class Environment {
     /**@name Bounding Box Methods*/
     //@{
 
-    /**Calculate a Bounding Box that encloses all MultiBodys added to this instance.
-     *Calculate a Bounding Box that encloses all MultiBodys added to this instance except
-     *Robot. Moreover, minmax_BodyAxisRange and resolution for postion are also calculated.
-     *@see MultiBody::GetBoundingBox and MultiBody::GetMaxAxisRange
-     */
-    virtual void FindBoundingBox();
-    virtual void ResetBoundingBox(double _d);
-    virtual void ConstrainBoundingBox(double _d, int _start, int _goal);
-
+    virtual void ResetBoundingBox(double _d, size_t _robotIndex);
     /**Return a Bounding Box that encloses all MultiBodys added to this instance.
      *@see FindBoundingBox, Input::bbox_scale, and Input::bbox
      */
     virtual shared_ptr<Boundary> GetBoundary() const;
     virtual void SetBoundary(shared_ptr<Boundary> _b);
 
-    /**Return manximu axis range of bounding box.
+    /**Return maximum axis range of bounding box.
      *This value is calculated in FindBoundingBox.
      */
     virtual double Getminmax_BodyAxisRange();
@@ -188,7 +177,12 @@ class Environment {
     /**Read data from Environment file and check version.
      */
     void Read(string _filename);
-    void buildCDstructure(cd_predefined cdtype);
+    void BuildCDstructure(cd_predefined cdtype);
+
+    //BuildRobotStructure, builds a robot graph which determines DOFs for a given robot
+    //In an environment with multiple active bodies, for now this function will assume they all have the same DOFs
+    //until PMPL is changed later to support multiple roadmaps for heterogeneous systems. That is, this function assumes
+    //that if there is a multiagent sim going on, the agents are homogenous
     void BuildRobotStructure(); 
     vector<Robot>& GetRobots(){return robotVec;} 
     void SetRobots(const vector<Robot>& _rV) { robotVec=_rV; }
@@ -211,8 +205,8 @@ class Environment {
     //@todo make private
     virtual void SelectUsableMultibodies();
 
-    bool operator==(const Environment& e) const;
-    bool operator!=(const Environment& e) const { return !(*this == e); }
+    bool operator==(const Environment& _rhs) const;
+    bool operator!=(const Environment& _rhs) const { return !(*this == _rhs); }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     //
@@ -223,13 +217,14 @@ class Environment {
     //////////////////////////////////////////////////////////////////////////////////////////
 
   protected:
-    vector<shared_ptr<MultiBody> > multibody;
-    vector<shared_ptr<MultiBody> > usable_multibody;
-    int usable_externalbody_count;
+    vector<shared_ptr<MultiBody> > m_activeBodies;
+    vector<shared_ptr<MultiBody> > m_otherMultiBodies;
+    vector<shared_ptr<MultiBody> > m_usableMultiBodies;
+    size_t m_usableExternalbodyCount;
 
     vector<shared_ptr<MultiBody> > m_navigableSurfaces;
 
-    int robotIndex; //index of the robot in the usable_multibody vector
+    //vector<int> m_robotIndices; //robot indices for multi-robot systems
     shared_ptr<Boundary> m_boundaries;
 
 #if (defined(PMPReachDistCC) || defined(PMPReachDistCCFixed))
@@ -257,25 +252,35 @@ class Environment {
 //===================================================================
 
 //-------------------------------------------------------------------
-///  GetMultiBodyCount
-///  Output: the number of MultiBody's in the environment
+///  GetExternalBodyCount
+///  Output: the number of MultiBodies in the environment
 //-------------------------------------------------------------------
 
-inline int 
+inline size_t 
 Environment::
 GetExternalBodyCount() const {
-  return usable_externalbody_count;
+  return m_usableExternalbodyCount;
 }
 
 
 //-------------------------------------------------------------------
-///  GetMultiBodyCount
-///  Output: the number of MultiBody's in the environment
+///  GetUsableMultiBodyCount
+///  Output: the number of usable MultiBodies in the environment
 //-------------------------------------------------------------------
-inline int 
+inline size_t 
 Environment::
-GetMultiBodyCount() const {
-  return usable_multibody.size();
+GetUsableMultiBodyCount() const {
+  return m_usableMultiBodies.size();
+}
+
+//-------------------------------------------------------------------
+///  GetActiveBodyCount
+///  Output: the number of active MultiBodies in the environment
+//-------------------------------------------------------------------
+inline size_t 
+Environment::
+GetActiveBodyCount() const {
+  return m_activeBodies.size();
 }
 
 //-------------------------------------------------------------------
@@ -284,18 +289,18 @@ GetMultiBodyCount() const {
 //-------------------------------------------------------------------
 inline shared_ptr<MultiBody>
 Environment::
-  GetMultiBody(size_t _index) const {
-    if(_index < usable_multibody.size())
-      return usable_multibody[_index];
-    else
-      return shared_ptr<MultiBody>();
-  }
+GetMultiBody(size_t _index) const {
+  if(_index < m_usableMultiBodies.size())
+    return m_usableMultiBodies[_index];
+  else
+    return shared_ptr<MultiBody>();
+}
 
 //-------------------------------------------------------------------
 ///  GetNavigableSurfaces
 ///  Output: A pointer to a MultiBody in the environment
 //-------------------------------------------------------------------
-inline int 
+inline size_t
 Environment::GetNavigableSurfacesCount() const {
   return m_navigableSurfaces.size();
 }
@@ -305,11 +310,11 @@ Environment::GetNavigableSurfacesCount() const {
 ///  Output: A pointer to a MultiBody in the environment
 //-------------------------------------------------------------------
 inline shared_ptr<MultiBody>
-  Environment::GetNavigableSurface(size_t _index) const {
-    if(_index < m_navigableSurfaces.size() && _index >= 0)
-      return m_navigableSurfaces[_index];
-    else
-      return shared_ptr<MultiBody>();
-  }
+Environment::GetNavigableSurface(size_t _index) const {
+  if(_index < m_navigableSurfaces.size())
+    return m_navigableSurfaces[_index];
+  else
+    return shared_ptr<MultiBody>();
+}
 
 #endif

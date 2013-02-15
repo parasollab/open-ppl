@@ -40,8 +40,8 @@ vector<Vector3D>
 RMSDDistance<MPTraits>::GetCoordinatesForRMSD(const CfgType& _c, Environment* _env) {
   _c.ConfigEnvironment(_env);
   vector<Vector3D> coordinates;
-  for(int i=0; i< _env->GetMultiBody(_env->GetRobotIndex())->GetFreeBodyCount(); ++i)
-    coordinates.push_back(_env->GetMultiBody(_env->GetRobotIndex())->GetFreeBody(i)->WorldTransformation().m_position); 
+  for(int i=0; i< _env->GetMultiBody(_c.GetRobotIndex())->GetFreeBodyCount(); ++i)
+    coordinates.push_back(_env->GetMultiBody(_c.GetRobotIndex())->GetFreeBody(i)->WorldTransformation().m_position); 
   return coordinates;
 }
 

@@ -100,9 +100,7 @@ class Cfg {
     //access dof values
     double& operator[](size_t _dof);
     const double& operator[](size_t _dof) const;
-    //I/O
-    friend ostream& operator<< (ostream&, const Cfg& _cfg);
-    friend istream& operator>> (istream&, Cfg& _cfg);
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     //
@@ -189,6 +187,13 @@ class Cfg {
 
     //polygonal approximation
     vector<Vector3D> PolyApprox (Environment* _env) const;
+
+    size_t GetRobotIndex() const {return m_robotIndex;}
+    void SetRobotIndex(size_t _newIndex){m_robotIndex = _newIndex;}
+
+    //I/O Helper functions
+    virtual void Read(istream& _is);
+    virtual void Write(ostream& _os) const;
   
   protected:
     //Normalize the orientation to the range [-1, 1)
@@ -198,6 +203,8 @@ class Cfg {
     virtual void GetRandomCfgImpl(Environment *_env, shared_ptr<Boundary> bb);
 
     vector<double> m_v;   
+    size_t m_robotIndex; //which active body in the env this cfg refers to
+
     static size_t m_dof;
     static size_t m_posdof;
 
@@ -224,6 +231,10 @@ class Cfg {
     }
 #endif
 }; // class Cfg
+
+//I/O for Cfg
+ostream& operator<< (ostream& _os, const Cfg& _cfg);
+istream& operator>> (istream& _is, Cfg& _cfg);
 
 template<class DistanceMetricPointer>
 void

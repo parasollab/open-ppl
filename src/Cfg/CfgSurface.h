@@ -15,6 +15,9 @@
 #include "Cfg.h"
 #include "Point.h"
 
+#define INVALID_SURFACE -999
+#define BASE_SURFACE -1
+
 using namespace mathtool;
 
 ////////////////////////////////////////////////////////////////////////////////////////////
@@ -36,35 +39,41 @@ class CfgSurface : public Cfg {
     CfgSurface(const CfgSurface& _c);
     CfgSurface(const Point2d& _p, double _h, int _sid);
     CfgSurface(const Cfg& _c);
-    ///Do nothing
-    virtual ~CfgSurface();
 
+    ///Do nothing destructor
+    virtual ~CfgSurface();
+    
+    //assignment operator
     CfgSurface& operator=(const CfgSurface& _cfg);
+
     ///determines equality of this and other configuration
-    bool operator== (const CfgSurface& _cfg) const;
+    bool operator==(const CfgSurface& _cfg) const;
+
     ///determines non-equality of this and other configuration
-    bool operator!= (const CfgSurface& _cfg) const;
+    bool operator!=(const CfgSurface& _cfg) const;
+
     //addition
     CfgSurface operator+(const CfgSurface& _cfg) const;
     CfgSurface& operator+=(const CfgSurface& _cfg);
+
     //subtraction
     CfgSurface operator-(const CfgSurface& _cfg) const;
     CfgSurface& operator-=(const CfgSurface& _cfg);
+
     //negate
     CfgSurface operator-() const;
+
     //scalar multiply
     CfgSurface operator*(double _d) const;
     CfgSurface& operator*=(double _d);
+
     //scalar divide
     CfgSurface operator/(double _d) const;
     CfgSurface& operator/=(double _d);
-    //access dof values
-    double& operator[](size_t _dof);
-    const double& operator[](size_t _dof) const;
-    //I/O
-    friend ostream& operator<< (ostream&, const CfgSurface& _cfg);
-    friend istream& operator>> (istream&, CfgSurface& _cfg);
 
+    //access dof values
+    virtual double& operator[](size_t _dof);
+    virtual const double& operator[](size_t _dof) const;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     //
@@ -124,10 +133,16 @@ class CfgSurface : public Cfg {
     virtual void WeightedSum(const Cfg&, const Cfg&, double _weight = 0.5);       
 
     virtual void GetPositionOrientationFrom2Cfg(const Cfg&, const Cfg&);
+
+    //I/O
+    virtual void Read(istream& _is);
+    virtual void Write(ostream& _os) const;
     
   protected:
     ///Randomly generate a Cfg whose center positon is inside a given bounding box.
     virtual void GetRandomCfgImpl(Environment* env,shared_ptr<Boundary> bb);
+
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     //
     //
@@ -135,7 +150,7 @@ class CfgSurface : public Cfg {
     //
     //
     //////////////////////////////////////////////////////////////////////////////////////////
-  private:
+  protected:
     Point2d m_pt;
     double m_h;
     int m_surfaceID; //surface id that this cfg is associated with 
@@ -148,6 +163,10 @@ class CfgSurface : public Cfg {
     }
 #endif
 };
+
+//IO operators for Cfg
+ostream& operator<< (ostream& _os, const Cfg& _cfg);
+istream& operator>> (istream& _is, Cfg& _cfg);
 
 template<class DistanceMetricPointer>
 void

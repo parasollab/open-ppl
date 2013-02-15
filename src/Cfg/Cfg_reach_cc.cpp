@@ -335,14 +335,13 @@ isWithinResolution(const Cfg &c,
 bool 
 Cfg_reach_cc::
 ConfigEnvironment(Environment* _env) const {
-  int robot = _env->GetRobotIndex();
   Cfg_free_tree::ConfigEnvironment(_env);
   vector<int> link_ids;
-  for(int i=0; i<_env->GetMultiBody(robot)->GetFreeBodyCount(); ++i)
-    link_ids.push_back( _env->GetMultiBody(robot)->GetFreeBodyIndex( _env->GetMultiBody(robot)->GetFreeBody(i) ) );
+  for(int i=0; i<_env->GetMultiBody(m_robotIndex)->GetFreeBodyCount(); ++i)
+    link_ids.push_back( _env->GetMultiBody(m_robotIndex)->GetFreeBodyIndex( _env->GetMultiBody(m_robotIndex)->GetFreeBody(i) ) );
   set<int> visited;
   for(vector<int>::const_iterator L = link_ids.begin(); L != link_ids.end(); ++L)
-    _env->GetMultiBody(robot)->GetFreeBody(*L)->ComputeWorldTransformation(visited);
+    _env->GetMultiBody(m_robotIndex)->GetFreeBody(*L)->ComputeWorldTransformation(visited);
   return true;
 }
 

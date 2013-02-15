@@ -172,5 +172,13 @@ GetPtFromBarycentricCoords(const Point3d& _A, const Point3d& _B, const Point3d& 
   Point3d p = _A + (_u*(_C - _A)) + (_v*(_B - _A));
   return p;
 }
-///////////////////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////////////////
+
+double NormalizeTheta(double _theta){
+  int multiple = ceil(abs(_theta)/(TWOPI));
+  if (_theta > PI)
+    _theta -= (multiple*TWOPI);
+  else if (_theta < -PI)
+    _theta += (multiple*TWOPI);
+
+  return _theta;
+}

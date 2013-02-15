@@ -21,13 +21,9 @@ class BridgeTestSampler : public SamplerMethod<MPTraits> {
     ////////////////////
 
     BridgeTestSampler(Environment* _env = NULL, string _vcLabel = "", string _dmLabel = "", 
-        double _d = 0, bool _useBoundary = false)
+        double _d = 0.5, bool _useBoundary = false)
       : m_d(_d), m_useBoundary(_useBoundary), m_vcLabel(_vcLabel), m_dmLabel(_dmLabel) {
         this->SetName("BridgeTestSampler");
-        if(m_d == 0){
-          if(_env != NULL)   
-            m_d = (_env->GetMultiBody(_env->GetRobotIndex()))->GetMaxAxisRange();
-        }
       }
 
     BridgeTestSampler(MPProblemType* _problem, XMLNodeReader& _node) : SamplerMethod<MPTraits>(_problem, _node) {

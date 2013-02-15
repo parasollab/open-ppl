@@ -22,6 +22,8 @@ class Transformation;
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 //typedef pair<stapl::VID,int> RANGE_TYPE;
 
+enum BodyType{ACTIVE, PASSIVE, SURFACE, INTERNAL};
+
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 /**A MultiBody represent a Obstacle or a Robot in workspace.
   *MultiBody contain one or more Bodys, either Fixed or Free Bodys.
@@ -78,15 +80,8 @@ public:
     //
     //////////////////////////////////////////////////////////////////////////////////////////
     
-    //added by Xinyu Tang
-    //To say whether this multibody is external (fake obstacle);
-    bool IsInternal() const
-    {
-      return bInternal;
-    } 
-
-    bool IsSurface() { return m_isSurface; }
-    void SetIsSurface(bool _is) { m_isSurface=_is; }
+    void SetBodyType(BodyType _newType){m_bodyType = _newType;}
+    BodyType GetBodyType() const{return m_bodyType;}
 
     ///Return a free body accroding to the given index. the index should be in [0,GetFreeBodyCount())
     shared_ptr<FreeBody> GetFreeBody(int _index) const;
@@ -237,53 +232,61 @@ public:
     
     void buildCDstructure(cd_predefined cdtype);
 
+    bool IsInternal() const;
+
+    bool IsSurface() const;
+
+    bool IsActive() const;
+
+    bool IsPassive() const;
+
     //@}
 
-  ///////////////////////////////////////////////////////////////////////////////////////////
-  //
-  //
-  //    I/O
-  //
-  //
-  //////////////////////////////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    //
+    //
+    //    I/O
+    //
+    //
+    //////////////////////////////////////////////////////////////////////////////////////////
     /**@name I/O Methods. Use these method to read in/write out internal state*/
     //@{
 
     /**Write information about this MultiBody instance to outputstream.
-      *First the tag "MultiBody was output, and then calls Fixed and (or) Free Bodys'
-      *write and Connnection's write.
-      *@see FixedBody::Write, FreeBody::Write, and Connection::Write
-      */
+     *First the tag "MultiBody was output, and then calls Fixed and (or) Free Bodys'
+     *write and Connnection's write.
+     *@see FixedBody::Write, FreeBody::Write, and Connection::Write
+     */
     void Write(ostream & _os);
 
     //@}
 
-  ///////////////////////////////////////////////////////////////////////////////////////////
-  //
-  //
-  //    Helpers
-  //
-  //
-  //////////////////////////////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    //
+    //
+    //    Helpers
+    //
+    //
+    //////////////////////////////////////////////////////////////////////////////////////////
     /**@name Help Methods*/
     //@{
 
     /**Configure the joint by the given amount of displacement.
-      *@param _dof Number of Freebody that is going to be reconfigured (moved)
-      *@param _s An array of displacement value. The length of _s is _dof.
-      */
+     *@param _dof Number of Freebody that is going to be reconfigured (moved)
+     *@param _s An array of displacement value. The length of _s is _dof.
+     */
     void ConfigureJoint(double * _s, int _dof);
 
     /**if GetCenterOfMass() is called for the first time, then
-      *ComputeCenterOfMass() is called automatically, and the
-      *computed value is stored in this class for the next time.
-      *@see Body::ComputeCenterOfMass
-      */
+     *ComputeCenterOfMass() is called automatically, and the
+     *computed value is stored in this class for the next time.
+     *@see Body::ComputeCenterOfMass
+     */
     void ComputeCenterOfMass();
 
     /**Calculate bounding box by FreeBodys and FixedBodys in this instance.
-      *maxAxisRange is its byproduct...
-      */
+     *maxAxisRange is its byproduct...
+     */
     void FindBoundingBox();
 
 #ifdef USE_SOLID
@@ -296,7 +299,7 @@ public:
     //@}
 
     void PolygonalApproximation();
- 
+
     bool operator==(const MultiBody& mb) const;
     bool operator!=(const MultiBody& mb) const { return !(*this == mb); }
 
@@ -305,56 +308,52 @@ public:
 
     string GetLabel() { return m_label; }
     void SetLabel(string _label) { m_label = _label; }
-  ///////////////////////////////////////////////////////////////////////////////////////////
-  //
-  //
-  //    Protected data member and member methods
-  //
-  //
-  //////////////////////////////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    //
+    //
+    //    Protected data member and member methods
+    //
+    //
+    //////////////////////////////////////////////////////////////////////////////////////////
 
-protected:    
-  // Area Stuff
-  double fixArea;             ///< Area of FixedBodies
-  double freeArea;            ///< Area of FreeBodies
-  double area;                ///< Total Area of Bodies
-  vector<double> fixAreas;    ///< Vector of Areas of FixedBodies
-  vector<double> freeAreas;   ///< Vector of Areas of FreeBodies
+  protected:    
+    // Area Stuff
+    double fixArea;             ///< Area of FixedBodies
+    double freeArea;            ///< Area of FreeBodies
+    double area;                ///< Total Area of Bodies
+    vector<double> fixAreas;    ///< Vector of Areas of FixedBodies
+    vector<double> freeAreas;   ///< Vector of Areas of FreeBodies
 
-  ///////////////////////////////////////////////////////////////////////////////////////////
-  //
-  //
-  //    Private data member and member methods
-  //
-  //
-  //////////////////////////////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    //
+    //
+    //    Private data member and member methods
+    //
+    //
+    //////////////////////////////////////////////////////////////////////////////////////////
 
-private:
+  private:
     //-----------------------------------------------------------
     ///  Data
     //-----------------------------------------------------------
-  //added by Xinyu Tang
-  // to say whether this multibody is Internal(fake obsbacle);
-  bool bInternal;
-  
-  // to say whether this multibody is a navigable surface
-  bool m_isSurface;
 
-  //does the multibody contain more than one robot
-  bool m_multirobot;
+    //does the multibody contain more than one robot
+    bool m_multirobot;
+    bool CenterOfMassAvailable;
 
-  vector<shared_ptr<FixedBody> > fixedBody;
-  vector<shared_ptr<FreeBody> > freeBody;
-  
-  Vector3D CenterOfMass;
-  bool CenterOfMassAvailable;
-  
-  double boundingBox[6];
-  double maxAxisRange;
+    BodyType m_bodyType; //ACTIVE, PASSIVE, SURFACE, INTERNAL
 
-  Robot::JointMap jointMap;
+    vector<shared_ptr<FixedBody> > fixedBody;
+    vector<shared_ptr<FreeBody> > freeBody;
 
-  string m_label;
+    Vector3D CenterOfMass;
+
+    double boundingBox[6];
+    double maxAxisRange;
+
+    Robot::JointMap jointMap;
+
+    string m_label;
 };
 
 #endif

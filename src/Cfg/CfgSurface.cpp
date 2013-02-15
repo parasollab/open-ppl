@@ -12,9 +12,6 @@
 #include "MPProblem/Geometry/MultiBody.h"
 #include "MPProblem/Environment.h"
 
-#define INVALID_SURFACE -999
-#define BASE_SURFACE -1
-
 CfgSurface::CfgSurface() : 
   m_pt(Point2d(0,0)), m_h(0), m_surfaceID(INVALID_SURFACE) {}
 
@@ -48,6 +45,7 @@ CfgSurface::operator=(const CfgSurface& _cfg) {
     m_surfaceID = _cfg.m_surfaceID;
     m_labelMap = _cfg.m_labelMap;
     m_statMap = _cfg.m_statMap;
+    m_robotIndex = _cfg.m_robotIndex;
     m_clearanceInfo = _cfg.m_clearanceInfo;
     m_witnessCfg = _cfg.m_witnessCfg;
   }
@@ -56,7 +54,8 @@ CfgSurface::operator=(const CfgSurface& _cfg) {
 
 bool
 CfgSurface::operator==(const CfgSurface& _cfg) const {
-  return (m_pt == _cfg.m_pt) && (fabs(m_h-_cfg.m_h) < numeric_limits<double>::epsilon());
+  return (m_pt == _cfg.m_pt) && (fabs(m_h-_cfg.m_h) < numeric_limits<double>::epsilon()) &&
+  m_robotIndex == _cfg.m_robotIndex;
 }
 
 bool
@@ -149,7 +148,7 @@ CfgSurface::operator[](size_t _dof){
     case 1 : return m_h;
     case 2 : return m_pt[1];
     default :
-      cerr << "Cfg Surface Invalid access to index " << _dof << ". Exitting." << endl;
+      cerr << "Cfg Surface Invalid access to index " << _dof << ". Exiting." << endl;
       exit(1);
   }
 }
@@ -162,7 +161,7 @@ CfgSurface::operator[](size_t _dof) const {
     case 1 : return m_h;
     case 2 : return m_pt[1];
     default :
-      cerr << "Cfg Surface Invalid access to index " << _dof << ". Exitting." << endl;
+      cerr << "Cfg Surface Invalid access to index " << _dof << ". Exiting." << endl;
       exit(1);
   }
 }
@@ -170,22 +169,37 @@ CfgSurface::operator[](size_t _dof) const {
 //---------------------------------------------
 // Input/Output operators for CfgSurface
 //---------------------------------------------
+
+void
+CfgSurface::Read(istream& _is){
+  m_witnessCfg.reset();
+  _is >> m_robotIndex >> m_surfaceID >> m_pt[0] >> m_h >> m_pt[1];
+}
+
+void
+CfgSurface::Write(ostream& _os) const{
+  _os << setw(4) << m_robotIndex << " "
+      << setw(4) << m_surfaceID << " "
+      << setw(4) << m_pt[0] << " " 
+      << setw(4) << m_h << " "
+      << setw(4) << m_pt[1] << " ";
+
+  if (_os.fail()){
+    cerr << "CfgSurface::Write error - failed to write to file" << endl;
+    exit(1);
+  }
+}
+
 istream&
 operator>>(istream& _is, CfgSurface& _cfg) {
-  _cfg.m_witnessCfg.reset();
-  _is >> _cfg.m_surfaceID >> _cfg.m_pt[0] >> _cfg.m_h >> _cfg.m_pt[1];
-  if(!_is)
-    cerr << "\n\nError in CfgSurface:: Failed to read configuration from stream" << endl;
+  _cfg.Read(_is);
   return _is;
 }
 
 
 ostream&
-operator<<(ostream& _os, const CfgSurface& _cfg) {
-  _os << _cfg.m_surfaceID << " "
-    << setw(4) << _cfg.m_pt[0] << " " 
-    << setw(4) << _cfg.m_h << " "
-    << setw(4) << _cfg.m_pt[1] << " ";
+operator<<(ostream& _os, const CfgSurface& _cfg){
+  _cfg.Write(_os);
   return _os;
 }
 
@@ -237,7 +251,7 @@ CfgSurface::GetRobotCenterofMass(Environment* _env) const {
 
   Vector3D com(0,0,0);
   GMSPolyhedron poly =
-    _env->GetMultiBody(_env->GetRobotIndex())->GetFreeBody(0)->GetWorldPolyhedron();
+    _env->GetMultiBody(m_robotIndex)->GetFreeBody(0)->GetWorldPolyhedron();
   for(vector<Vector3D>::const_iterator vit = poly.m_vertexList.begin(); vit
       != poly.m_vertexList.end(); ++vit)
     com = com + (*vit);
@@ -246,7 +260,7 @@ CfgSurface::GetRobotCenterofMass(Environment* _env) const {
 }
 
 bool CfgSurface::ConfigEnvironment(Environment* _env) const {
-  shared_ptr<MultiBody> mb = _env->GetMultiBody(_env->GetRobotIndex());
+  shared_ptr<MultiBody> mb = _env->GetMultiBody(m_robotIndex);
 
   // configure the robot according to current Cfg: joint parameters
   // (and base locations/orientations for free flying robots.)
@@ -288,7 +302,7 @@ CfgSurface::FindIncrement(const Cfg& _start, const Cfg& _goal, int* _nTicks, dou
 
   // adding two basically makes this a rough ceiling...
   *_nTicks = floor(((const CfgSurface&)diff).PositionMagnitude()/_positionRes + 0.5);
-  
+
   this->FindIncrement(_start, _goal, *_nTicks);
 }
 

@@ -60,6 +60,10 @@ void LPSweptDistance<MPTraits>::PrintOptions(ostream& _os) const {
 
 template<class MPTraits>
 double LPSweptDistance<MPTraits>::Distance(Environment* _env, const CfgType& _c1, const CfgType& _c2) {
+  if (_c1.GetRobotIndex() != _c2.GetRobotIndex()){
+    cerr << "LPSweptDistance::Distance error - the cfgs reference different multibodies" << endl;
+    exit(1);
+  }
   StatClass stats;
   typename MPProblemType::DistanceMetricPointer dm;
   LPOutput<MPTraits> lpOutput;
@@ -72,7 +76,7 @@ double LPSweptDistance<MPTraits>::Distance(Environment* _env, const CfgType& _c1
   cfgs.push_back(_c2);
   double d = 0;
   vector<GMSPolyhedron> poly2;
-  int robot = _env->GetRobotIndex();
+  int robot = _c1.GetRobotIndex();
   int bodyCount = _env->GetMultiBody(robot)->GetFreeBodyCount();
   cfgs.begin()->ConfigEnvironment(_env);
   for(int b=0; b<bodyCount; ++b)
