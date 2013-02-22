@@ -481,7 +481,7 @@ GetCentroid(RDMP<CFG, WEIGHT>* _graph, vector<typename RDMP<CFG, WEIGHT>::VID>& 
   CFG center;
   for(size_t i = 0; i < _cc.size(); i++) {
 
-    CFG& cfg = (*(_graph->find_vertex(_cc[i]))).property();
+    CFG cfg = _graph->GetCfg(_cc[i]);
     center += cfg;
   }
   center /= _cc.size();

@@ -251,9 +251,11 @@ typedef typename GRAPH::vertex_iterator VI; ///<VI Vertex Iterator
 ///TODO: Remove guard after const issue is fixed in STAPL
 typedef typename GRAPH::const_vertex_iterator CVI; ///< not sure CVI Constant Vertex Iterator
 typedef vertex_descriptor_iterator<CVI> CVDI;
+typedef typename GRAPH::vertex_property& VP;
 #else
 typedef typename GRAPH::vertex_iterator CVI; 
 typedef vertex_descriptor_iterator<CVI> CVDI;
+typedef typename GRAPH::vertex_property VP;
 #endif 
 typedef typename GRAPH::adj_edge_iterator EI;
 typedef vertex_descriptor_iterator<VI> VDI;
@@ -370,16 +372,16 @@ typedef RoadmapChangeEvent<VERTEX, WEIGHT> ChangeEvent;
        //helper function to call dereferece on an iterator whose
        //value_type is VID and convert to CfgType
        template<typename T>
-       VERTEX& GetCfg(T& _t);
+       VP GetCfg(T& _t);
 
        //specialization for a roadmap graph iterator, calls property()
        //template<typename RDMP::VI>
-       VERTEX& GetCfg(VI& _t);
+       VP  GetCfg(VI& _t);
 
        //specialization for a RoadmapGraph<CFG, WEIGHT>::VID
        //calls find_vertex(..) on VID to call property()
        //To do:Temporarily removed constness until it is supported in STAPL
-       VERTEX& GetCfg(VID _t) ;
+       VP  GetCfg(VID _t) ;
 
        //helper function to call dereferece on an iterator whose value_type is VID
        //needed to get around the fact that a roadmap graph iterator
@@ -833,7 +835,7 @@ return IsEdge(vid1, vid2);
 //value_type is VID and convert to CfgType
 template<class VERTEX, class WEIGHT>
 template<typename T>
-VERTEX&
+typename RoadmapGraph<VERTEX, WEIGHT>::VP
 RoadmapGraph<VERTEX, WEIGHT>::GetCfg(T& _t) {
   return (*(this->find_vertex(*_t))).property();
 }
@@ -841,7 +843,7 @@ RoadmapGraph<VERTEX, WEIGHT>::GetCfg(T& _t) {
 //specialization for a roadmap graph iterator, calls property()
 //template<typename RDMP::VI>
 template<class VERTEX, class WEIGHT>
-VERTEX&
+typename RoadmapGraph<VERTEX, WEIGHT>::VP
 RoadmapGraph<VERTEX, WEIGHT>::GetCfg(VI& _t) {
   return (*_t).property();
 }
@@ -849,7 +851,7 @@ RoadmapGraph<VERTEX, WEIGHT>::GetCfg(VI& _t) {
 //specialization for a RoadmapGraph<CFG, WEIGHT>::VID
 //calls find_vertex(..) on VID to call property()
 template<class VERTEX, class WEIGHT>
-VERTEX&
+typename RoadmapGraph<VERTEX, WEIGHT>::VP
 RoadmapGraph<VERTEX, WEIGHT>::GetCfg(VID _t)  {
   return (*this->find_vertex(_t)).property();
 }

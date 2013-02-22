@@ -228,6 +228,7 @@ class Cfg {
       _t.member(m_v);
       _t.member(m_labelMap);
       _t.member(m_statMap);
+      _t.member(m_robotIndex); 
     }
 #endif
 }; // class Cfg
@@ -272,7 +273,7 @@ namespace stapl {
       public:
         //typedef target_t::parameter_type  parameter_type;
         explicit proxy(Accessor const& acc) : Accessor(acc) { }
-        //operator target_t() const { return Accessor::read(); }
+        operator target_t() const { return Accessor::read(); }
         proxy const& operator=(proxy const& rhs) { Accessor::write(rhs); return *this; }
         proxy const& operator=(target_t const& rhs) { Accessor::write(rhs); return *this;}
         int DOF() const { return Accessor::const_invoke(&target_t::DOF);}
