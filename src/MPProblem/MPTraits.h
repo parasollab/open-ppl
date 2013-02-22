@@ -81,6 +81,7 @@
 #include "MPStrategies/BasicRRTStrategy.h"
 #include "MPStrategies/EvaluateMapStrategy.h"
 #include "MPStrategies/MedialAxisRRT.h"
+#include "MPStrategies/OBRRTStrategy.h"
 #include "MPStrategies/ResamplePointStrategy.h"
 #include "MPStrategies/TogglePRMStrategy.h"
 #include "MPStrategies/UnitTest/DMTestStrategy.h"
@@ -203,6 +204,7 @@ struct MPTraits{
     DMTestStrategy<MPTraits>,
     EvaluateMapStrategy<MPTraits>,
     MedialAxisRRT<MPTraits>,
+    OBRRTStrategy<MPTraits>,
     ResamplePointStrategy<MPTraits>,
     TogglePRMStrategy<MPTraits>
     #ifdef _PARALLEL
@@ -350,11 +352,12 @@ struct MPTraits<CfgSurface, DefaultWeight<CfgSurface> > {
     BasicRRTStrategy<MPTraits>,
     DMTestStrategy<MPTraits>,
     EvaluateMapStrategy<MPTraits>,
-    MedialAxisRRT<MPTraits>,
-    ResamplePointStrategy<MPTraits>,
 #ifdef PMPSSSurfaceMult
     LocalManeuveringStrategy<MPTraits>,
 #endif
+    MedialAxisRRT<MPTraits>,
+    OBRRTStrategy<MPTraits>,
+    ResamplePointStrategy<MPTraits>,
     TogglePRMStrategy<MPTraits>
     #ifdef _PARALLEL
     ,BasicParallelPRM<MPTraits>
