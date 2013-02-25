@@ -139,6 +139,7 @@ void ConnectNeighboringSurfaces<MPTraits>::Connect(RoadmapType* _rm, StatClass& 
     if( i>=0 )
       iSurfName=mbSurf1->GetLabel();;
     if(this->m_debug) cout << "ConnectNeighboringSurfaces::Connect(...) - " << i << "  Processing multibody: " << mbSurf1->GetLabel() << endl;
+    if(this->m_debug) cout << "ConnectNeighboringSurfaces::Connect(...) - number fixed bodies: " << mbSurf1->GetFixedBodyCount() << " number free bodies: " << mbSurf1->GetFreeBodyCount() << endl;
     if( find(m_surfacesToIgnore.begin(),m_surfacesToIgnore.end(), iSurfName) != m_surfacesToIgnore.end() ) continue;
     GMSPolyhedron& mbPoly1 =  mbSurf1->GetFixedBody(0)->GetWorldPolyhedron();
     vector<Vector3D>& ptsSurface1 = mbPoly1.GetVertexList();

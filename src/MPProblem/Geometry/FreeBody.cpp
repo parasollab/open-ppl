@@ -47,6 +47,8 @@ void
 FreeBody::Configure(Transformation& _transformation){
   // new transformation (position and orientation) for the reconfiguration
   m_worldTransformation = _transformation;
+  m_centerOfMassAvailable=false;
+  m_worldPolyhedronAvailable=false;//transformation changed
 }
 
 //===================================================================
@@ -76,6 +78,8 @@ FreeBody::GetWorldTransformation(bool _debug) {
 //else it will insert "this" into the set of visited.
 Transformation& 
 FreeBody::ComputeWorldTransformation(std::set<int, less<int> >& visited, bool _debug) {
+  m_centerOfMassAvailable=false;
+  m_worldPolyhedronAvailable=false;//transformation changed
   if(_debug) {
     cout << "ComputeWorldTransformation::visited =";
     for(std::set<int, less<int> >::const_iterator V = visited.begin(); V != visited.end(); ++V)

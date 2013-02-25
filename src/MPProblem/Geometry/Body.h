@@ -175,6 +175,7 @@ class Body {
     GMSPolyhedron m_worldPolyhedron;          
     bool m_centerOfMassAvailable;             
     Vector3D m_centerOfMass;                  
+    bool m_worldPolyhedronAvailable;
     double m_boundingBox[6];                  
     GMSPolyhedron m_bbPolyhedron;
     GMSPolyhedron m_bbWorldPolyhedron;

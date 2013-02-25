@@ -44,6 +44,9 @@ SurfaceValidity<MPTraits>::IsValidImpl(CfgType& _cfg, Environment* _env, StatCla
 
   bool result = false;
   int sid = _cfg.GetSurfaceID();
+  if( this->m_debug ) {
+     cout << " active bodies: " << _env->GetActiveBodyCount() << " usable bodies: " << _env->GetUsableMultiBodyCount() << endl;
+  }
   if( sid == -1 ) { 
     //call default validity checker specified
     result = this->GetMPProblem()->GetValidityChecker(m_vcLabel)->IsValid(_cfg, _env, _stats, _cdInfo, _callName);

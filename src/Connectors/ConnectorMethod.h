@@ -84,8 +84,14 @@ class ConnectorMethod : public MPBaseObject<MPTraits> {
         boost::mpl::for_each<MethodList>(pmpl_detail::VirtualConnect<
             ConnectorMethod<MPTraits>, RoadmapType, StatClass, ColorMap,
             InputIterator, OutputIterator>(this, _rm, _stats, _cmap, _itr1First, _itr1Last,
-              _itr2First, _itr2Last, _collision));
+	      _itr2First, _itr2Last, _collision));
       }
+
+
+    void SetPositionResolution(double _posRes) { m_connectionPosRes=_posRes; }
+    double GetPositionResolution() { return m_connectionPosRes; }
+    void SetOrientationResolution(double _oriRes) { m_connectionOriRes=_oriRes; }
+    double GetOrientationResolution() { return m_connectionOriRes; }
 
     /////////////////////////////////////////////
     // Utility Methods

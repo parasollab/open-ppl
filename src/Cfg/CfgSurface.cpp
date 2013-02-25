@@ -203,6 +203,17 @@ operator<<(ostream& _os, const CfgSurface& _cfg){
   return _os;
 }
 
+bool
+CfgSurface::InBoundary(Environment* _env, shared_ptr<Boundary> _bb) const {
+  Vector3D p(m_pt[0],m_h,m_pt[1]);
+  return _bb->IfSatisfiesConstraints(p);
+}
+
+bool
+CfgSurface::InBoundary(Environment* _env) const {
+  return this->InBoundary(_env,_env->GetBoundary());
+}
+
 vector<double>
 CfgSurface::GetData() const{
   vector<double> data(3);
@@ -331,7 +342,6 @@ CfgSurface::GetPositionOrientationFrom2Cfg(const Cfg& _c1, const Cfg& _c2) {
 
 void
 CfgSurface::GetRandomCfgImpl(Environment *_env, shared_ptr<Boundary> _bb) {
-
   if( m_surfaceID == INVALID_SURFACE ) { // need to set appropriate surface id
     int rindex = _env->GetRandomNavigableSurfaceIndex();
     m_surfaceID = rindex;

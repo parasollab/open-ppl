@@ -44,7 +44,7 @@ template<class MPTraits>
 SurfaceLP<MPTraits>::
 SurfaceLP() : StraightLine<MPTraits>() {
   this->SetName("SurfaceLP");
-  m_acceptableHeightDiff=1.0;
+  m_acceptableHeightDiff=0.75;
 }
 
 template<class MPTraits>
@@ -53,7 +53,7 @@ SurfaceLP(MPProblemType* _problem, XMLNodeReader& _node) :
   StraightLine<MPTraits>(_problem, _node) {
     _node.verifyName("SurfaceLP");
     this->SetName("SurfaceLP");
-    m_acceptableHeightDiff=1.0;
+    m_acceptableHeightDiff=0.75;
   }
 
 template<class MPTraits>
@@ -108,6 +108,7 @@ IsConnected(Environment* _env, StatClass& _stats,
 
   for(int i = 1; i < nTicks && allOnValidSurface; i++){ //don't need to check the ends, _c1 and _c2
     tick += incr;
+    if( this->m_debug ) cout << " SurfaceLP - ticki: " << i << " of nTicks: " << nTicks << " tick: " << tick << endl;
     bool foundValidSurfForTick=false;
     CDInfo tmpCDInfo;
     for(int sid=BASE_SURFACE; sid<(int)_env->GetNavigableSurfacesCount()&&!foundValidSurfForTick; sid++) {
@@ -133,6 +134,7 @@ IsConnected(Environment* _env, StatClass& _stats,
 	 double tH = polyhedron.HeightAtPt(pt, isValid); 
 	 if( isValid ) {
 	    double hDiff = fabs(tH-tick.GetHeight());
+	    if( this->m_debug ) cout << " sid: " << sid << " isValid: " << isValid << " hDiff: " << hDiff << " of acceptableHDiff: " << m_acceptableHeightDiff << " tH: " << tH << " tickHeight: " << tick.GetHeight() << endl;
 	    if( hDiff<m_acceptableHeightDiff ) {
 	       foundValidSurfForTick = true;
 	       surfaceIDs.push_back(sid);

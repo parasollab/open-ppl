@@ -1330,17 +1330,22 @@ SurfaceMedialAxisUtility<MPTraits>::GetClearance2DSurf
   Transformation& trans = _mb->GetFixedBody(0)->WorldTransformation();
   Orientation& orientation = trans.m_orientation;
   //check roughly <- this optimization should be added!!!
-  //Point2d T(trans.m_position[0],trans.m_position[2]);
-  //if( ((_pos-T).norm()-obst.getRadius())>_clear) return minDis;
+  Vector3D mbCenter = _mb->GetFixedBody(0)->GetCenterOfMass();
+  Point2d tPt(mbCenter[0],mbCenter[2]);
+  double* bbx = _mb->GetFixedBody(0)->GetBoundingBox();
+  double rad2d = sqrt(pow(bbx[1]-bbx[0],2.0) + pow(bbx[5]-bbx[4],2.0));
+  double diffWRadius = (_pos-tPt).norm()-rad2d;
+  if( diffWRadius>_clear) return minDis;
+
   GMSPolyhedron& gmsPoly = _mb->GetFixedBody(0)->GetWorldPolyhedron();
   vector<Vector3D>& Geo=gmsPoly.GetVertexList();
   vector< pair<int,int> >& boundaryLines=gmsPoly.GetBoundaryLines();
-  if(this->m_debug) cout << " boundary lines size: " << boundaryLines.size() << endl;
+  if(this->m_debug) cout << " boundary lines size: " << boundaryLines.size() << " transformation: " << trans << endl;
   for(int i=0; i<(int)boundaryLines.size(); i++) {
     int id1 = boundaryLines[i].first;
     int id2 = boundaryLines[i].second;
-    Vector3D v1 = orientation*Geo[id1];
-    Vector3D v2 = orientation*Geo[id2];
+    Vector3D v1 = Geo[id1];
+    Vector3D v2 = Geo[id2];
     Point2d p1(v1[0],v1[2]);
     Point2d p2(v2[0],v2[2]);
     Point2d c;
@@ -1364,14 +1369,14 @@ SurfaceMedialAxisUtility<MPTraits>::GetClearance2DSurf
 
   double minDist=_env->GetBoundary()->GetClearance2DSurf(_pos,_cdPt);
 
-  for(int i=1; i<_env->GetUsableMultiBodyCount(); i++) { //skip 0 (assume it's robot)
-    if(this->m_debug) cout << " getting mb: " << i << endl;
+  for(int i=1; i<(int)_env->GetUsableMultiBodyCount(); i++) { //skip 0 (assume it's robot)
     shared_ptr<MultiBody> mb = _env->GetMultiBody(i);
     //find clearance
     Point2d c;
-    if(this->m_debug) cout << " GetClearance2DSurf (pre-call) (mb,_pos,c,minDist) " << endl;
     double dist = GetClearance2DSurf(mb,_pos,c,minDist);
     if( dist<minDist ){ minDist=dist; _cdPt=c; }
+    if(this->m_debug) cout << " getting mb: " << i;
+    if(this->m_debug) cout << " GetClearance2DSurf (mb,_pos,c,minDist) minDist: " << minDist << endl;
   }//end for i
   return minDist;   
 }
@@ -1393,12 +1398,13 @@ SurfaceMedialAxisUtility<MPTraits>::PushCfgToMedialAxis2DSurf
   if(this->m_debug) cout << " Calling GetClearance2DSurf(env,pos,closest)" << endl;
   double clear=this->GetClearance2DSurf(env,pos,closest);
   Vector2d dir=(pos-closest).normalize()*0.5;
-  Point2d newClosest; 
+  Point2d newClosest=closest; 
   int iter=0;
   int maxIter=1000;
   do{
+    closest=newClosest;
     pos=pos+dir;
-    if(this->m_debug) cout << " Calling GetClearance2DSurf(env,pos,closest)" << endl;
+    if(this->m_debug) cout << " Calling GetClearance2DSurf(env,pos,closest) new pos: " << pos << endl;
     clear=this->GetClearance2DSurf(env,pos,newClosest);
     if(this->m_debug) cout << " computed clearance: " << clear << " iteration: " << iter << endl;
     iter++;

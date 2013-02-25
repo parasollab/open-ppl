@@ -317,16 +317,35 @@ GMSPolyhedron::GetRandPtOnSurface(){
   int size=m_polygonList.size();
   int it;
   bool validIndex=false;
-  while( !validIndex ){
-    it=lrand48() % size;
-    GMSPolygon& tv=m_polygonList[it];
-    if( tv.m_vertexList[0]==tv.m_vertexList[1] || tv.m_vertexList[1]==tv.m_vertexList[2] || tv.m_vertexList[0]==tv.m_vertexList[2] ) continue;
-    else validIndex=true;
+  if( DRand() < 0.5 ) { //half the time choose by area proportional to total
+    while( !validIndex ){
+
+      double rProp=DRand();//generate a prob from 0..1
+      double cummProp=0;
+      it=0;
+      for(vector<GMSPolygon>::const_iterator P = m_polygonList.begin(); P != m_polygonList.end(); ++P,it++){
+	cummProp+= P->m_area/m_area; //this polygon : total area
+	if( rProp <= cummProp ) { //reached desired polygon
+	  break;
+	}
+      }
+      GMSPolygon& tv=m_polygonList[it];
+      if( tv.m_vertexList[0]==tv.m_vertexList[1] || tv.m_vertexList[1]==tv.m_vertexList[2] || tv.m_vertexList[0]==tv.m_vertexList[2] ) continue;
+      else validIndex=true;
+    }
+  }
+  else {//randomly select polygon
+    while( !validIndex ){
+      it=LRand() % size;
+      GMSPolygon& tv=m_polygonList[it];
+      if( tv.m_vertexList[0]==tv.m_vertexList[1] || tv.m_vertexList[1]==tv.m_vertexList[2] || tv.m_vertexList[0]==tv.m_vertexList[2] ) continue;
+      else validIndex=true;
+    }
   }
   GMSPolygon& tv=m_polygonList[it];
   double u,v;
-  u = drand48(); //anything from 0-1 should work for these coords
-  v = drand48(); //anything from 0-1 should work for these coords
+  u = DRand(); //anything from 0-1 should work for these coords
+  v = DRand(); //anything from 0-1 should work for these coords
   if( (u+v)>= 1 ){
     u = 1-u;
     v = 1-v;
@@ -511,7 +530,7 @@ double GMSPolyhedron::PushToMedialAxis(Point3d& _pt) {
   Vector3d dir=(_pt-closest).normalize();
   dir[1]=0;
   dir = dir.normalize()*0.5;
-  Point3d newClosest; 
+  Point3d newClosest=closest; 
   int iteration=0;
   do{
     _pt=_pt+dir;

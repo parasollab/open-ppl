@@ -141,8 +141,8 @@ class Cfg {
     virtual Vector3D GetRobotCenterofMass(Environment* _env) const;
 
     //checks boundary constraints on Cfg
-    bool InBoundary(Environment* _env) const;
-    bool InBoundary(Environment* _env, shared_ptr<Boundary> _bb) const;
+    virtual bool InBoundary(Environment* _env) const;
+    virtual bool InBoundary(Environment* _env, shared_ptr<Boundary> _bb) const;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     //

@@ -3,13 +3,14 @@
 
 Body::Body(MultiBody* _owner) :
   m_multibody(_owner), 
-  m_centerOfMassAvailable(false) {}
+  m_centerOfMassAvailable(false), m_worldPolyhedronAvailable(false) {}
 
 Body::Body(MultiBody* _owner, GMSPolyhedron& _polyhedron) :
   m_multibody(_owner), 
   m_polyhedron(_polyhedron), 
   m_worldPolyhedron(_polyhedron), 
-  m_centerOfMassAvailable(false) {}
+  m_centerOfMassAvailable(false),
+  m_worldPolyhedronAvailable(false){}
 
 Body::Body(const Body& _b) :
   m_filename(_b.m_filename),
@@ -22,6 +23,7 @@ Body::Body(const Body& _b) :
   m_worldPolyhedron(_b.m_worldPolyhedron),
   m_centerOfMassAvailable(_b.m_centerOfMassAvailable),
   m_centerOfMass(_b.m_centerOfMass),
+  m_worldPolyhedronAvailable(_b.m_worldPolyhedronAvailable),
   m_bbPolyhedron(_b.m_bbPolyhedron),
   m_bbWorldPolyhedron(_b.m_bbWorldPolyhedron),
   m_forwardConnection(_b.m_forwardConnection),
@@ -45,6 +47,7 @@ Body::Body(const Body& _b) :
 }
 
 Body::~Body() {
+   m_multibody=NULL;
 }
 
 bool
@@ -52,7 +55,6 @@ Body::operator==(const Body& _b) const {
   return (m_worldTransformation == _b.m_worldTransformation) &&
     (m_polyhedron == _b.m_polyhedron) &&
     (m_worldPolyhedron == _b.m_worldPolyhedron) &&
-    (m_centerOfMassAvailable == _b.m_centerOfMassAvailable) &&
     (m_centerOfMass == _b.m_centerOfMass) &&
     (m_boundingBox[0] == _b.m_boundingBox[0]) &&
     (m_boundingBox[1] == _b.m_boundingBox[1]) &&
@@ -68,10 +70,13 @@ Body::operator==(const Body& _b) const {
 
 GMSPolyhedron& 
 Body::GetWorldPolyhedron() {
-  for(size_t i=0; i<m_polyhedron.m_vertexList.size(); ++i)
-    m_worldPolyhedron.m_vertexList[i] = m_worldTransformation * m_polyhedron.m_vertexList[i];
-  for(size_t i=0; i<m_polyhedron.m_polygonList.size(); ++i)
-    m_worldPolyhedron.m_polygonList[i].m_normal = m_worldTransformation.m_orientation * m_polyhedron.m_polygonList[i].m_normal;
+  if(!m_worldPolyhedronAvailable) {
+    for(size_t i=0; i<m_polyhedron.m_vertexList.size(); ++i)
+      m_worldPolyhedron.m_vertexList[i] = m_worldTransformation * m_polyhedron.m_vertexList[i];
+    for(size_t i=0; i<m_polyhedron.m_polygonList.size(); ++i)
+      m_worldPolyhedron.m_polygonList[i].m_normal = m_worldTransformation.m_orientation * m_polyhedron.m_polygonList[i].m_normal;
+    m_worldPolyhedronAvailable=true;
+  }
   return m_worldPolyhedron;
 }
 
@@ -424,5 +429,7 @@ void
 Body::Link(Connection _c) {
   AddForwardConnection(_c);
   _c.GetNextBody()->AddBackwardConnection(_c);
+  m_worldPolyhedronAvailable=false;
+  m_centerOfMassAvailable=false;
 }
 

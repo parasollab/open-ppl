@@ -58,7 +58,7 @@ public:
     ///Constructor. Set _owner as the owner of this MultiBody instance.
     MultiBody();
 
-    ///Destrucot. Free memory allocated to all Bodys added to this multiBody.
+    ///Destructor. Free memory allocated to all Bodys added to this multiBody.
     virtual ~MultiBody();
 
     //@}

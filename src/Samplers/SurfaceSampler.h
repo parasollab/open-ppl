@@ -1,9 +1,10 @@
 #ifndef SURFACESAMPLER_H_
 #define SURFACESAMPLER_H_
 
-//#ifdef PMPCfgSurface
+#ifdef PMPCfgSurface
 
 #include "SamplerMethod.h"
+#include "Utilities/MedialAxisUtilities.h"
 
 
 template <class MPTraits>
@@ -82,11 +83,13 @@ class SurfaceSampler : public SamplerMethod<MPTraits> {
     double DistToNearestOnSurf(CfgType& _cfg, vector<CfgType>& _cfgsV) {
       double closeD=1e6;
       Point2d pt = _cfg.GetPos();
+      double  h  = _cfg.GetHeight();
       typedef typename vector<CfgType>::iterator CIT;
       for(CIT cit=_cfgsV.begin(); cit!=_cfgsV.end(); cit++){
 	CfgType& tcfg = (*cit);
 	Point2d tpt = tcfg.GetPos();
-	double dist = (tpt-pt).norm();
+	double  th = tcfg.GetHeight();
+	double dist = sqrt( (tpt-pt).normsqr() + pow(h-th, 2.0) );
 	if( dist < closeD ) closeD=dist;
       }
       return closeD;
@@ -104,8 +107,10 @@ class SurfaceSampler : public SamplerMethod<MPTraits> {
       int numSurfaces =  _env->GetNavigableSurfacesCount();
       int attempts = 0;
       SurfaceMedialAxisUtility<MPTraits> mau(this->GetMPProblem(), m_vcLabel, "Euclidean");
+      //mau.SetDebug(true);
       for(int i=-1; i<numSurfaces; i++) {
 	if( this->m_debug) cout << " Sampling for surface: " << i << endl;
+	if( this->m_debug) cout << " num usable multibodies: " << _env->GetUsableMultiBodyCount() << " active bodies: " << _env->GetActiveBodyCount() << endl;
 	string iSurfName="BASE";
 	if( i>=0 )
 	   iSurfName=_env->GetNavigableSurface((size_t) i)->GetLabel();;
@@ -120,7 +125,7 @@ class SurfaceSampler : public SamplerMethod<MPTraits> {
 
 	if(this->m_debug) VDClearAll();
 	do {
-	   bool validFound=false;
+	  bool validFound=false;
 	  _stats.IncNodesAttempted(this->GetNameAndLabel());
 	  attempts++;
 	  CfgType tmp;
@@ -201,13 +206,63 @@ class SurfaceSampler : public SamplerMethod<MPTraits> {
 		    }
 		 }
 		 else if(iterForObs>attempts) {
+		    ///*
+		    validFound = false;
+		    for(int j=0; j<m_obsSampleAttemptsPerIter; j++) {
+		       if( j!= 0 ) {
+			  tmp.GetRandomCfg(_env,_bb);
+		       }
+		       Point3d cdPt;
+		       Point2d pos2d = tmp.GetPos();
+		       double  h     = tmp.GetHeight();
+		       pos3d = Point3d(pos2d[0], h, pos2d[1]);
+		       clear = polyhedron.GetClearance(pos3d, cdPt, -1);
+		       //cdPt is the closest pt on poly to tmp...
+		       //push towards cdPt
+		       if( clear > m_maxObsClearance ) {
+			  Vector2d dir = Point2d(cdPt[0],cdPt[2])-pos2d;
+			  double mag = dir.norm();
+			  double s=0.7;
+			  pos2d = pos2d + s*dir + ((1-s)*drand48())*dir;
+			  bool stillValid=true;
+			  double newH = polyhedron.HeightAtPt(pos2d,stillValid);
+			  if( stillValid ) {
+			     pos3d = Point3d(pos2d[0], newH, pos2d[1]);
+			     clear = polyhedron.GetClearance(pos3d, cdPt, -1);
+			     if( (clear<m_maxObsClearance) && (clear>m_minObsClearance))  {
+				tmp.SetPos(pos2d);
+				tmp.SetHeight(newH);
+				validFound=true;
+				//cout << " generated Obs sample, iter: " << j << " cfg: " << tmp << endl;
+				break;
+			     }
+			  }
+		       }
+		       else {
+			  if( (clear<m_maxObsClearance) && (clear>m_minObsClearance))  {
+			     tmp.SetPos(pos2d);
+			     tmp.SetHeight(h);
+			     validFound=true;
+			     //cout << " generated Obs sample, iter: " << j << " cfg: " << tmp << endl;
+			     break;
+			  }
+		       }
+		    }//endfor j
+
+		    //*/
+		    //the code below seems to work - but better version above...
+		    /*
 		    Point3d cdPt;
                     clear = polyhedron.GetClearance(pos3d, cdPt, -1);
 		    int j=0; 
                     while( ((clear>m_maxObsClearance) || (clear<m_minObsClearance)) && (j<m_obsSampleAttemptsPerIter) ) {
 		       tmp.GetRandomCfg(_env,_bb);
+		       Point2d pos2d = tmp.GetPos();
+		       double  h     = tmp.GetHeight();
+		       pos3d = Point3d(pos2d[0], h, pos2d[1]);
 		       clear = polyhedron.GetClearance(pos3d, cdPt, -1);
 		       j++;
+		       //cout << " obs (surfs): j: " << j << " clear: " << clear << endl;
 		    }
 
 		    if( j<m_obsSampleAttemptsPerIter) {
@@ -219,7 +274,12 @@ class SurfaceSampler : public SamplerMethod<MPTraits> {
 		       tmp.SetHeight(h);
 		       if(this->m_debug) cout << " adding Obs sample surf=" <<i << endl;
 		    } 
-		    else validFound=false;
+		    else {
+		       validFound=false;
+		       if(this->m_debug) 
+		       cout << " NOT adding Obs sample surf="<<i<<" validFound: " << validFound <<" clear: " << clear << " j: " << j << endl;
+		    }
+		    */
 		 }
 		 else {
 		    validFound=true; //this is the random case (which should be true)
@@ -228,14 +288,16 @@ class SurfaceSampler : public SamplerMethod<MPTraits> {
 		 }
 	      }
 
+	      bool stillValid = vcp->IsValid(tmp, _env, _stats, cdInfo, &callee);
 	      double d = DistToNearestOnSurf(tmp,cfgsOnSurface);
-	      if( validFound && (d>m_closeDist) && (clear>m_overallMinClearanceReq) ) {
-		if(this->m_debug) cout << "validFoundIndex::"<<_cfgOut.size()<<" cfg: "<<tmp << " closestNodeDist: " << d <<endl;
+	      if( stillValid && validFound && (d>m_closeDist) && (clear>m_overallMinClearanceReq) ) {
+	      //if( stillValid && validFound && (d>m_closeDist)  ) {
+		if(this->m_debug) cout << "validFoundIndex::"<<_cfgOut.size()<<" cfg: "<<tmp << " closestNodeDist: " << d << " clear: " << clear <<endl;
 		_cfgOut.push_back(tmp);
 		cfgsOnSurface.push_back(tmp);
 	      }
 	      else {
-		if(this->m_debug) cout << "validFound but too close cfg: "<< tmp << " dist: " << d <<endl;
+		if(this->m_debug) cout << "validFound but maybe too close cfg: "<< tmp << " dist: " << d << " of closeDist: " << m_closeDist << " or min clearance not right: " << clear << " of " << m_overallMinClearanceReq << " or pushed to collision: " << stillValid << " validFound: " << validFound <<endl;
 	      }
 	    } else {
 	      _cfgCol.push_back(tmp);
@@ -253,5 +315,5 @@ class SurfaceSampler : public SamplerMethod<MPTraits> {
 };
 
 #endif
-//#endif
+#endif
 
