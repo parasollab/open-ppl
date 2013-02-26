@@ -275,6 +275,9 @@ SortMultiBodies(){
 void 
 Environment::
 SelectUsableMultibodies() {
+  if(!m_boundaries) //no boundary set, so cannot check which obstacles are outside the boundary
+    return;
+
   m_usableMultiBodies = m_activeBodies;
   m_usableExternalbodyCount = 0;
 
