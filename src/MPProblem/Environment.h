@@ -38,7 +38,7 @@ class Environment {
      * Copy Constructor.
      * uses _boundary instead of boundaries in _env
      */
-    Environment(const Environment &_env, const Boundary &_boundary);
+    Environment(const Environment &_env, shared_ptr<Boundary> _boundary);
 
     ///\brief Constructor taking in an XML object
     Environment(XMLNodeReader& _node);

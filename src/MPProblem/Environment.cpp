@@ -49,7 +49,11 @@ Environment(shared_ptr<Boundary> _bb):
  */
 Environment::
 Environment(const Environment &_env) :
-  m_usableExternalbodyCount(_env.m_usableExternalbodyCount),
+  m_activeBodies(_env.m_activeBodies),
+  m_otherMultiBodies(_env.m_otherMultiBodies),
+  m_usableExternalbodyCount(0),
+  m_navigableSurfaces(_env.m_navigableSurfaces),
+  m_boundaries(_env.m_boundaries),
   positionRes(_env.positionRes),
   orientationRes(_env.orientationRes),
   positionResFactor(_env.positionResFactor),
@@ -59,22 +63,12 @@ Environment(const Environment &_env) :
   robotVec(_env.robotVec),
   m_filename(_env.m_filename)
 {
-  if(_env.m_boundaries) 
-    m_boundaries=_env.m_boundaries;
-
-  // only usable bodies in _env will be copied
-  for (size_t i = 0; i < _env.GetUsableMultiBodyCount(); i++) {
-    m_usableMultiBodies.push_back(_env.GetMultiBody(i));
-  }
-
-  // copy of surfaces 
-  for (size_t i = 0; i < _env.GetNavigableSurfacesCount(); i++) {
-    m_navigableSurfaces.push_back(_env.GetNavigableSurface(i));
-  }
 #if (defined(PMPReachDistCC) || defined(PMPReachDistCCFixed))
   rd_res=_env.GetRdRes();
 #endif
-  SelectUsableMultibodies();
+  
+  if(m_boundaries)
+    SelectUsableMultibodies();
 }
 
 /**
@@ -83,7 +77,12 @@ Environment(const Environment &_env) :
  * environment
  */
 Environment::
-Environment(const Environment &_env, const Boundary &_boundary) :
+Environment(const Environment &_env, shared_ptr<Boundary> _boundary) :
+  m_activeBodies(_env.m_activeBodies),
+  m_otherMultiBodies(_env.m_otherMultiBodies),
+  m_usableExternalbodyCount(0),
+  m_navigableSurfaces(_env.m_navigableSurfaces),
+  m_boundaries(_boundary),
   positionRes(_env.positionRes),
   orientationRes(_env.orientationRes),
   positionResFactor(_env.positionResFactor),
@@ -93,19 +92,12 @@ Environment(const Environment &_env, const Boundary &_boundary) :
   robotVec(_env.robotVec),
   m_filename(_env.m_filename)
 {
-  if(_env.m_boundaries) 
-    m_boundaries=_env.m_boundaries;
-  for (size_t i = 0; i < _env.GetUsableMultiBodyCount(); i++) {
-    m_usableMultiBodies.push_back(_env.GetMultiBody(i));
-  }
-  // copy of surfaces 
-  for (size_t i = 0; i < _env.GetNavigableSurfacesCount(); i++) {
-    m_navigableSurfaces.push_back(_env.GetNavigableSurface(i));
-  }
 #if (defined(PMPReachDistCC) || defined(PMPReachDistCCFixed))
   rd_res=_env.GetRdRes();
 #endif
-  SelectUsableMultibodies(); // select usable multibodies
+  
+  if(m_boundaries)
+    SelectUsableMultibodies(); // select usable multibodies
 }
 
 ///\brief Constructor taking in an XML node for parsing
@@ -275,9 +267,6 @@ SortMultiBodies(){
 void 
 Environment::
 SelectUsableMultibodies() {
-  if(!m_boundaries) //no boundary set, so cannot check which obstacles are outside the boundary
-    return;
-
   m_usableMultiBodies = m_activeBodies;
   m_usableExternalbodyCount = 0;
 
