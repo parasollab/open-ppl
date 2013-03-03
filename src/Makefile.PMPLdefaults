@@ -64,10 +64,10 @@ ifeq (${platform}, LINUX_gcc_brazos) 	#linux/gcc on brazos(brazos.tamu.edu)
 	DEPS = -MMD -MF $*.d
 endif
 
-ifeq (${platform}, LINUX_gcc_hopper)    #hopper.nersc.gov
+ifeq (${platform}, CRAY_gcc)    #hopper.nersc.gov
         UTILS_DEF =   -DUSE_RAPID -DUSE_PQP -DTIXML_USE_STL #-DUSE_SOLID
-        UTILS_INCL =  ${RAPID_INCL} ${PQP_INCL} ${TINYXML_INCL} ${MATHTOOL_INCL} #${SOLID_INCL}
-        UTILS_LIB =    ${RAPID_LIB} ${PQP_LIB} ${TINYXML_LIB} ${MATHTOOL_LIB} #${SOLID_LIB}
+        UTILS_INCL =  ${RAPID_INCL} ${PQP_INCL} ${TINYXML_INCL} ${MATHTOOL_INCL} ${MODELLOADER_INCL} #${SOLID_INCL}
+        UTILS_LIB =    ${RAPID_LIB} ${PQP_LIB} ${TINYXML_LIB} ${MATHTOOL_LIB} ${MODELLOADER_LIB} #${SOLID_LIB}
 
         CD_LIBFILE =   ${RAPID_DIR}/libRAPID.a ${PQP_DIR}/lib/libPQP.a #${SOLID_DIR}/lib/libsolid.a
         # No share dir, you've got to have your own boost 
