@@ -946,6 +946,7 @@ MedialAxisUtility<MPTraits>::FindMedialAxisBorderExact(typename MPTraits::CfgTyp
   bool witnessPointMoved = false;
   
   while(!witnessPointMoved) {
+    cout << "Witness Point loop?" << endl;
     // Increment
     heldCfg = tmpCfg;
     tmpCfg = _transCfg*_stepSize + _cfg;
@@ -961,6 +962,9 @@ MedialAxisUtility<MPTraits>::FindMedialAxisBorderExact(typename MPTraits::CfgTyp
       if(!inBBX && !this->m_useBBX){
         return false;
       }
+      //TMP FIX::Alway return false when not inside and obstacle and inside the
+      //bounding box
+      return false;
     }
     else {
       tmpInfo.ResetVars();
