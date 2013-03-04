@@ -946,7 +946,6 @@ MedialAxisUtility<MPTraits>::FindMedialAxisBorderExact(typename MPTraits::CfgTyp
   bool witnessPointMoved = false;
   
   while(!witnessPointMoved) {
-    cout << "Witness Point loop?" << endl;
     // Increment
     heldCfg = tmpCfg;
     tmpCfg = _transCfg*_stepSize + _cfg;
