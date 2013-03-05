@@ -95,6 +95,7 @@
 #include "ParallelMethods/RegularSubdivisionMethod.h"
 #include "ParallelMethods/RadialSubdivisionRRT.h"
 #include "ParallelMethods/RadialBlindRRT.h"
+#include "ParallelMethods/BulkRRT.h"
 #endif
 
 template<class C, class W = DefaultWeight<C> >
@@ -220,6 +221,7 @@ struct MPTraits{
     //,RegularSubdivisionMethod<MPTraits>
     //,RadialSubdivisionRRT<MPTraits>
     ,RadialBlindRRT<MPTraits>
+    ,BulkRRT<MPTraits>
     //,RadialRRGStrategy<MPTraits>
     #endif
     > MPStrategyMethodList;
@@ -375,6 +377,7 @@ struct MPTraits<CfgSurface, DefaultWeight<CfgSurface> > {
     ,BasicParallelPRM<MPTraits>
     ,RegularSubdivisionMethod<MPTraits>
     ,RadialSubdivisionRRT<MPTraits>
+    ,BulkRRT<MPTraits>
     #endif
     > MPStrategyMethodList;
 };
