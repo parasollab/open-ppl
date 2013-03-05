@@ -55,6 +55,8 @@
 #include "Connectors/NeighborhoodConnector.h"
 #include "Connectors/OptimalConnection.h"
 #include "Connectors/OptimalRewire.h"
+#include "Connectors/RRTConnect.h"
+#include "Connectors/RegionConnector.h"
 
 //metric includes
 #include "Metrics/CCDistanceMetric.h"
@@ -86,10 +88,13 @@
 #include "MPStrategies/TogglePRMStrategy.h"
 #include "MPStrategies/UnitTest/DMTestStrategy.h"
 #include "MPStrategies/LocalManeuveringStrategy.h"
+#include "MPStrategies/BlindRRT.h"
 
 #ifdef _PARALLEL
 #include "ParallelMethods/BasicParallelPRM.h"
 #include "ParallelMethods/RegularSubdivisionMethod.h"
+#include "ParallelMethods/RadialSubdivisionRRT.h"
+#include "ParallelMethods/RadialBlindRRT.h"
 #endif
 
 template<class C, class W = DefaultWeight<C> >
@@ -103,51 +108,51 @@ struct MPTraits{
   typedef boost::mpl::list<
     //BinaryLPSweptDistance<MPTraits>,
     CenterOfMassDistance<MPTraits>,
-    EuclideanDistance<MPTraits>,
-    KnotTheoryDistance<MPTraits>,
-    LPSweptDistance<MPTraits>,
-    ManhattanDistance<MPTraits>,
-    MinkowskiDistance<MPTraits>,
+    EuclideanDistance<MPTraits>
+    //KnotTheoryDistance<MPTraits>,
+    //LPSweptDistance<MPTraits>,
+    //ManhattanDistance<MPTraits>,
+    //MinkowskiDistance<MPTraits>,
     //#if (defined(PMPReachDistCC) || defined(PMPReachDistCCFixed))
     //ReachableDistance<MPTraits>, 
     //#endif
-    RMSDDistance<MPTraits>,
-    ScaledEuclideanDistance<MPTraits>
+    //RMSDDistance<MPTraits>,
+    //ScaledEuclideanDistance<MPTraits>
     > DistanceMetricMethodList;
   
   //types of validity checkers available in our world
   typedef boost::mpl::list<
-    AlwaysTrueValidity<MPTraits>,
-    CollisionDetectionValidity<MPTraits>,
-    ComposeValidity<MPTraits>,
-    MedialAxisClearanceValidity<MPTraits>,
-    NegateValidity<MPTraits>,
-    NodeClearanceValidity<MPTraits>,
-    ObstacleClearanceValidity<MPTraits>
+    //AlwaysTrueValidity<MPTraits>,
+    CollisionDetectionValidity<MPTraits>
+    //ComposeValidity<MPTraits>,
+    //MedialAxisClearanceValidity<MPTraits>,
+    //NegateValidity<MPTraits>,
+    //NodeClearanceValidity<MPTraits>,
+    //ObstacleClearanceValidity<MPTraits>
     > ValidityCheckerMethodList;
 
   //types of neighborhood finders available in our world
   typedef boost::mpl::list<
     //BandsNF<MPTraits>,
-    BruteForceNF<MPTraits>,
+    BruteForceNF<MPTraits>
     //CGALNF<MPTraits>,
     //DPESNF<MPTraits>,
-    HierarchicalNF<MPTraits>,
+    //HierarchicalNF<MPTraits>,
     //MetricTreeNF<MPTraits>,
     //MPNNNF<MPTraits>,
-    RadiusNF<MPTraits>//,
+    //RadiusNF<MPTraits>//,
     //SpillTreeNF<MPTraits> 
     > NeighborhoodFinderMethodList;
   
   //types of samplers available in our world
   typedef boost::mpl::list<
-    BridgeTestSampler<MPTraits>,
-    GaussianSampler<MPTraits>,
-    GridSampler<MPTraits>,
-    MedialAxisSampler<MPTraits>,
-    MixSampler<MPTraits>,
-    ObstacleBasedSampler<MPTraits>,
-    UniformObstacleBasedSampler<MPTraits>,
+    //BridgeTestSampler<MPTraits>,
+    //GaussianSampler<MPTraits>,
+    //GridSampler<MPTraits>,
+    //MedialAxisSampler<MPTraits>,
+    //MixSampler<MPTraits>,
+    //ObstacleBasedSampler<MPTraits>,
+    //UniformObstacleBasedSampler<MPTraits>,
     UniformRandomSampler<MPTraits>
       > SamplerMethodList;
   
@@ -156,60 +161,66 @@ struct MPTraits{
     //AStarClearance<MPTraits>,
     //AStarDistance<MPTraits>,
     //MedialAxisLP<MPTraits>,
-    TransformAtS<MPTraits>,
-    RotateAtS<MPTraits>,
-    StraightLine<MPTraits>,
     //TransformAtS<MPTraits>,
-    ToggleLP<MPTraits>
+    //RotateAtS<MPTraits>,
+    StraightLine<MPTraits>
+    //TransformAtS<MPTraits>,
+    //ToggleLP<MPTraits>
     > LocalPlannerMethodList;
 
   //types of connectors available in our world
   typedef boost::mpl::list<
     CCsConnector<MPTraits>, 
-    NeighborhoodConnector<MPTraits>, 
+    NeighborhoodConnector<MPTraits> 
+    ,RRTConnect<MPTraits> 
+    ,RegionConnector<MPTraits> 
     //PreferentialAttachment<MPTraits>, 
-    OptimalConnection<MPTraits>,
-    OptimalRewire<MPTraits>//,
+    //OptimalConnection<MPTraits>,
+    //OptimalRewire<MPTraits>//,
     //ClosestVE<MPTraits>
       > ConnectorMethodList;
   
   //types of metrics available in our world
   typedef boost::mpl::list<
-    CCDistanceMetric<MPTraits>,
-    ConnectivityMetric<MPTraits>,
-    CoverageDistanceMetric<MPTraits>,
-    CoverageMetric<MPTraits>,
-    DiameterMetric<MPTraits>,
+    //CCDistanceMetric<MPTraits>,
+    //ConnectivityMetric<MPTraits>,
+    //CoverageDistanceMetric<MPTraits>,
+    //CoverageMetric<MPTraits>,
+    //DiameterMetric<MPTraits>,
     NumEdgesMetric<MPTraits>,
-    NumNodesMetric<MPTraits>,
-    TimeMetric<MPTraits>
+    NumNodesMetric<MPTraits>
+    //TimeMetric<MPTraits>
     > MetricMethodList;
   
   //types of map evaluators available in our world
   typedef boost::mpl::list<
     ComposeEvaluator<MPTraits>,
     ConditionalEvaluator<MPTraits>,
-    LazyQuery<MPTraits>,
-    LazyToggleQuery<MPTraits>,
-    NegateEvaluator<MPTraits>,
-    PrintMapEvaluation<MPTraits>, 
-    Query<MPTraits>,
-    TrueEvaluation<MPTraits>
+    //LazyQuery<MPTraits>,
+    //LazyToggleQuery<MPTraits>,
+    //NegateEvaluator<MPTraits>,
+    //PrintMapEvaluation<MPTraits>, 
+    Query<MPTraits>
+    //TrueEvaluation<MPTraits>
     > MapEvaluatorMethodList;
   
   //types of motion planning strategies available in our world
   typedef boost::mpl::list<
     BasicPRM<MPTraits>,
-    BasicRRTStrategy<MPTraits>,
-    DMTestStrategy<MPTraits>,
-    EvaluateMapStrategy<MPTraits>,
-    MedialAxisRRT<MPTraits>,
-    OBRRTStrategy<MPTraits>,
-    ResamplePointStrategy<MPTraits>,
-    TogglePRMStrategy<MPTraits>
+    BasicRRTStrategy<MPTraits>
+    //DMTestStrategy<MPTraits>,
+    //EvaluateMapStrategy<MPTraits>,
+    //MedialAxisRRT<MPTraits>,
+    //OBRRTStrategy<MPTraits>,
+    //ResamplePointStrategy<MPTraits>,
+    //TogglePRMStrategy<MPTraits>
+    ,BlindRRT<MPTraits>
     #ifdef _PARALLEL
     ,BasicParallelPRM<MPTraits>
-    ,RegularSubdivisionMethod<MPTraits>
+    //,RegularSubdivisionMethod<MPTraits>
+    //,RadialSubdivisionRRT<MPTraits>
+    ,RadialBlindRRT<MPTraits>
+    //,RadialRRGStrategy<MPTraits>
     #endif
     > MPStrategyMethodList;
 };
@@ -359,9 +370,11 @@ struct MPTraits<CfgSurface, DefaultWeight<CfgSurface> > {
     OBRRTStrategy<MPTraits>,
     ResamplePointStrategy<MPTraits>,
     TogglePRMStrategy<MPTraits>
+    ,BlindRRT<MPTraits>
     #ifdef _PARALLEL
     ,BasicParallelPRM<MPTraits>
     ,RegularSubdivisionMethod<MPTraits>
+    ,RadialSubdivisionRRT<MPTraits>
     #endif
     > MPStrategyMethodList;
 };

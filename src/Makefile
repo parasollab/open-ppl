@@ -3,14 +3,13 @@ ifndef platform
   platform = LINUX_gcc
 endif
 
-
 # set default debug
 ifndef debug
-  debug = 0
+  debug = 1
 endif
 
 ifndef parallel
-  parallel = 0
+  parallel = 1
 endif 
 
 # set directory paths
@@ -99,3 +98,6 @@ reallyreallyclean:
 
 # include automatically generated dependencies
 -include Dependencies
+
+
+

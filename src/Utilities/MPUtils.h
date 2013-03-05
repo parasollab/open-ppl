@@ -136,6 +136,24 @@ long SRand(string _methodName, int _nextNodeIndex, long _base = 0x1234ABCD, bool
 ///////////////////////////////////////////////////////////////////////////////
 //
 //
+//     Region Expand Utilities 
+//
+//
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+
+
+// Maintains a vector of size 2 with Min at the front and Max at the end
+void PushMinMax(vector<double>& _vec, double _num);
+
+vector<double> GetCartesianCoordinates(vector<double> sphericalCoordinates);
+
+int GetQuadrant(double _radians);
+
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+//
+//
 // Simple Utilities (Angular Distance and Compare Second)
 //
 //
@@ -488,6 +506,197 @@ GetCentroid(RDMP<CFG, WEIGHT>* _graph, vector<typename RDMP<CFG, WEIGHT>::VID>& 
   return center;
 };
 
+
+
+
+template<class CfgType, class Environment>
+CfgType 
+SelectDirection(Environment* _env, CfgType dir){
+  if(dir == CfgType()){
+    dir.GetRandomCfg(_env);
+  }else{
+    CfgType r;
+    r.GetRandomCfg(_env);
+    dir.subtract(dir,r);
+  }
+  return dir;
+}
+
+
+template<class CfgType>
+vector<double> 
+GetSphericalCoordinates(CfgType& _cfg) {
+  vector<double> coordinates(3);
+  double rho = 0;   // = sqrt(x^2 + y^2 + z^2)
+  double theta = 0; // = arctan(y/x) 
+  double phi = 0;   // = arccos(z/rho)
+  // Getting cartesian coordinates
+  for (size_t j = 0; j < _cfg.PosDOF(); ++j) {
+    coordinates[j] = _cfg[j];
+    rho += pow(_cfg[j], 2.0);
+  }
+  // Coordinates = [X,Y,Z]
+  rho = sqrt(rho); 
+  theta = atan2(coordinates[1],coordinates[0]);
+  phi = MAX_INT;
+  if(_cfg.PosDOF() == 3)
+    phi = acos(coordinates[2] / rho);
+  
+  // Lets make all angles positive for more accurate comparison between quadrants, since atan2 returns [-2/pi,2/pi]
+  while(theta < 0) 
+    theta += TWOPI; 
+  // from cartesian to polar
+  coordinates[0] = rho;
+  coordinates[1] = theta;
+  coordinates[2] = phi;
+  
+  return coordinates;
+}
+
+
+// Gets the point that is in between the candidate and the neighbor
+template<class CfgType>
+CfgType GetMiddlePoint(CfgType _regionCand, CfgType _neighbor, double _radius) {
+  CfgType middlePoint;
+  middlePoint = _regionCand + _neighbor; 
+  middlePoint = middlePoint/2; 
+  // Getting middle point across the circumference between candidate and neighbor
+  vector<double> midPointCoordinates = GetSphericalCoordinates(middlePoint);
+  midPointCoordinates[0] = _radius;
+  midPointCoordinates = GetCartesianCoordinates(midPointCoordinates);
+
+  middlePoint.SetData(midPointCoordinates);
+  return middlePoint;
+
+}
+
+
+template<class CfgType>
+vector<CfgType> 
+GetMiddlePoints(CfgType& _regionCand, vector<CfgType>& _neighbors, double _radius) {
+  
+  vector<CfgType> middlePoints;
+  // Getting middle point across the circumference between candidate and neighbor
+  for (size_t i = 0; i < _neighbors.size(); ++i) 
+    middlePoints.push_back(GetMiddlePoint(_regionCand, _neighbors[i], _radius));
+
+  return middlePoints;
+
+}
+
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+//
+//
+// Random Node within a region
+//
+//
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+
+/*
+ * Returns a random node within a region characterized by a region candidate
+ * and its neighbors
+ *
+ * */
+
+template<class CfgType>
+CfgType 
+SelectDirection(CfgType& _regionCand, vector<CfgType>& _neighbors, double _radius) {
+
+  SelectDirection(_regionCand, _neighbors, _radius, 0);
+}
+
+
+template<class CfgType>
+CfgType 
+SelectDirection(CfgType& _regionCand, vector<CfgType>& _neighbors, double _radius, double _overlap) {
+  CfgType dir = CfgType();
+  
+  // Store all the angles to get the max and min
+  vector<double> thetas;
+  vector<double> phis;
+
+  if (dir.PosDOF() > 0) {
+    
+    vector<double> candCoordinates = GetSphericalCoordinates(_regionCand);
+    vector<CfgType> midPoints = GetMiddlePoints(_regionCand, _neighbors, _radius);
+    // TODO DEBUG only one neighbor, split region into halves 
+    if (midPoints.size() == 1) {
+      CfgType point = -(midPoints[0]); 
+      midPoints.push_back(point);
+    }
+
+    for (size_t i = 0; i < midPoints.size(); ++i) {
+      // [0] = Rho, [1] = Theta, [2] = Phi
+      vector<double> neighborCoordinates;
+      if(_neighbors.size() == 1)
+        neighborCoordinates = GetSphericalCoordinates(_neighbors[0]);
+      else 
+        neighborCoordinates = GetSphericalCoordinates(_neighbors[i]);
+      
+      vector<double> midPointCoordinates = GetSphericalCoordinates(midPoints[i]);
+      vector<double> increments(3);
+      
+      // FIXME Increments not working, some angles are being shrinked
+      // instead of enlarged
+      increments[1] = (neighborCoordinates[1] - midPointCoordinates[1] ) * _overlap;
+      midPointCoordinates[1] += increments[1];
+      double increment = (neighborCoordinates[2] - midPointCoordinates[2]) * _overlap;
+      midPointCoordinates[2] += increment;
+      
+      // We use this function to avoid pushing all angles and sorting them at the end
+      PushMinMax(thetas, midPointCoordinates[1]);
+      PushMinMax(phis, midPointCoordinates[2]);
+    }
+ 
+    // Is the range calculated correct? If cand theta is outside out [min,max] then fix the range to be [max-2PI, min] 
+    while (thetas[0] > candCoordinates[1] ) {
+      double temp = thetas[0];
+      thetas[0] = thetas[1] - TWOPI;
+      thetas[1] = temp;
+    }
+    while (thetas[1] < candCoordinates[1]) {
+      double temp = thetas[1];
+      thetas[1] = thetas[0] + TWOPI;
+      thetas[0] = temp;
+    }
+    // Randomizing
+    // Rho = radius
+    vector<double> randCoordinates(3);
+    randCoordinates[0] = _radius  * sqrt(DRand()); 
+    randCoordinates[1] = (thetas[1] - thetas[0]) * DRand() + thetas[0];
+    randCoordinates[2] = MAX_INT;
+    if(_regionCand.PosDOF() == 3) 
+      randCoordinates[2] = (phis[1] - phis[0]) * DRand() + phis[0];
+
+    randCoordinates = GetCartesianCoordinates(randCoordinates);
+
+    dir.SetData(randCoordinates);
+
+    // Randomizing Rotational DOFs
+    for (size_t i = dir.PosDOF(); i < dir.DOF(); i++)
+      dir[i] = (2*DRand()-1.0);
+
+    // TODO Fixed-Tree - I am not sure how to divide this space into regions.
+  }else {
+    for (size_t i=0; i < _regionCand.DOF(); i++) {
+      vector<double> minMax;
+      for (size_t j=0; j < _neighbors.size(); j++) {
+        PushMinMax(minMax, _neighbors[j][i]);
+      }
+      dir[i] = (minMax.back() - minMax.front()) * DRand() + minMax.front();
+    }
+  }
+
+  return dir;
+}
+
+
+
+
+
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 //
@@ -539,16 +748,13 @@ RRTExpand(typename MPTraits::MPProblemType* _mp,
 
   //Move out from start towards dir, bounded by number of ticks allowed at a given resolution.  Delta + obsDist are
   //given to the function, and are user defined.
-  while(!collision && dm->Distance(env,_start,tick) <= _delta) {
+  while(!collision && dm->Distance(env,_start,tick) <= _delta && ticker <= nTicks) {
     previous = tick;
     tick += incr; //Increment tick
     if(!(tick.InBoundary(env)) || !(vc->IsValid(tick, env, *stats, _cdInfo, &callee))){
       collision = true; //Found a collision; return previous tick, as it is collision-free
     }
     ++ticker;
-    if (ticker == nTicks){ //Have we reached the max amount of increments?
-      break;
-    }
   }
   if(previous != _start){ //Did we go anywhere?
     _newCfg = previous;//Last Cfg pushed back is the final tick allowed
@@ -558,6 +764,155 @@ RRTExpand(typename MPTraits::MPProblemType* _mp,
   else
     return false;
 }
+
+/*
+ *  Expand for Lazy RRT where three different values can be returned: OUTOFBOUNDARY, INVALID, VALID
+ * */
+
+namespace ExpansionType {
+  enum Expansion {
+    IN_COLLISION,
+    NO_COLLISION,
+    OUT_OF_BOUNDARY,
+    NO_EXPANSION,
+    JUMPED,
+  };
+ 
+  string GetExpansionTypeString(Expansion expansion);
+
+}
+// TODO Cesar. Better naming
+namespace NodeState {
+  enum State {
+    COLLISION,
+    FREE,
+  };
+}
+
+template<class MPTraits>
+ExpansionType::Expansion
+BlindRRTExpand(typename MPTraits::MPProblemType* _mp, 
+    string _vc, string _dm, string _expansionType, 
+    typename MPTraits::CfgType _start, 
+    typename MPTraits::CfgType _dir, 
+    vector< pair<typename MPTraits::CfgType, int> >& _newCfgs, // pair = Cfg , weight. weight is the distance from the Cfg to the start Cfg 
+    double _delta, CDInfo& _cdInfo,
+    double _posRes, double _oriRes){
+  
+  //Setup...primarily for collision checks that occur later on
+  StatClass* stats = _mp->GetStatClass();
+  string callee("RRTUtility::BlindRRTExpand");
+  Environment* env = _mp->GetEnvironment();
+  typename MPTraits::MPProblemType::DistanceMetricPointer dm = _mp->GetDistanceMetric(_dm);
+  typename MPTraits::MPProblemType::ValidityCheckerPointer vc = _mp->GetValidityChecker(_vc);
+
+  typedef typename MPTraits::CfgType CfgType;
+  typename vector<typename MPTraits::CfgType>::iterator startCIterator;
+  typename MPTraits::CfgType incr, tick = _start, previous = _start;
+  // if any collision is encountered, collision becomes true
+  // jump is to know if we should go directly to _delta
+  bool collision=false, outOfBoundary=false, jump=false;
+  // this tracks collision changes along the expansion
+  bool prevCollision = !vc->IsValid(_start, env, *stats, _cdInfo, &callee); 
+  int nTicks, ticker = 0;
+  pair<CfgType, int> cfgWeight; 
+  incr.FindIncrement(tick,_dir,&nTicks, _posRes, _oriRes);
+
+  //Move out from start towards dir, bounded by number of ticks allowed at a given resolution.  Delta + obsDist are
+  //given to the function, and are user defined.
+  while(!outOfBoundary && dm->Distance(env,_start,tick) <= _delta && ticker <= nTicks) {
+    previous = tick;
+    tick += incr; //Increment tick
+    ++ticker;
+    
+    if(!(tick.InBoundary(env)) ) {
+      outOfBoundary = true; // Expansion is out of boundary, return previous tick
+    }
+    else if (!(vc->IsValid(tick, env, *stats, _cdInfo, &callee))) { // no need for further checking, get ray and return
+      collision = true; //Found a collision, activate flag
+      previous.SetStat("Validity", NodeState::FREE);
+      if(!prevCollision) {
+        
+        cfgWeight = make_pair(previous, ticker - 1); // previous is one tick behind
+        _newCfgs.push_back(cfgWeight);
+        
+        // we track all nodes
+        if(_expansionType == "All") {
+          tick.SetStat("Validity", NodeState::COLLISION);
+          
+          cfgWeight = make_pair(tick, ticker);  
+          _newCfgs.push_back(cfgWeight);
+        
+        } else if ("First") {  // we dont need to track every change, lets jump to delta
+          jump = true;
+          break;
+        }
+        
+        prevCollision = true;
+      }
+    } else {
+      tick.SetStat("Validity", NodeState::FREE);
+      
+      if(prevCollision) {
+        
+        // we track all nodes
+        if(_expansionType == "All") {
+          previous.SetStat("Validity", NodeState::COLLISION);
+          
+          cfgWeight = make_pair(previous, ticker - 1); // previous is one tick behind 
+          _newCfgs.push_back(cfgWeight);
+        
+        } 
+         
+        cfgWeight = make_pair(tick, ticker); 
+        _newCfgs.push_back(cfgWeight);
+        
+        // if we place the previous two lines at the beginning to have a nested-if clause, the order cfgs are added is
+        // wrong, so we have to check twice for the expansion label
+        if (_expansionType == "First") {
+          jump = true;
+          break;
+        }
+
+        prevCollision = false; 
+      }
+    }
+  }
+
+  if (jump) {
+    // we need to jump directly to delta, lets take the direction and scale to delta 
+    CfgType origin;
+    CfgType dir = _dir - _start;
+    dm->ScaleCfg(env, _delta, origin, dir);
+    previous = dir + _start;
+    vc->IsValid(previous, env, *stats, _cdInfo, &callee); // lets validate previous and see where we expanded 
+  } 
+  if(previous != _start){ //Did we go anywhere?
+    
+    cfgWeight = make_pair(previous, ticker); 
+    // TODO Cesar: previous might get added in the previous step
+    if(previous != _newCfgs.back().first) 
+      _newCfgs.push_back(cfgWeight);//Last Cfg pushed back is the final tick allowed
+    
+    if (collision) {    // encountered collision in the way
+      return ExpansionType::IN_COLLISION;
+    
+    // TODO Cesar: implement laziness level with direct expansion
+    //} else if (outOfBoundary) { 
+        
+    } else {            // No collision and not out of boundary
+      return ExpansionType::NO_COLLISION;
+    }
+
+  }
+  // Didn't find a place to go :(
+  else
+    return ExpansionType::NO_EXPANSION;     
+}
+
+
+
+
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////

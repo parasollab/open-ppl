@@ -1,11 +1,11 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <MotionPlanning>
   <MPProblem>
-    <Environment input_env="narrow.env">
+    <Environment input_env="maze.env">
       <robot Cfg_name="Cfg_2D" num_joints="0" pos_dof="2" dofs="2"> 
         <boundary type="bbox" translational_scale="1">
-          <parameter id="0" label="x" type="translational" min="-15" max="15" />
-          <parameter id="1" label="y" type="translational" min="-15" max="15" />
+         <parameter id="0" label="x" type="translational" min="-38.5" max="38.8" />
+         <parameter id="1" label="y" type="translational" min="-25" max="28" />
         </boundary>
       </robot>
     </Environment>
@@ -28,8 +28,8 @@
     
     <Connectors>
       <NeighborhoodConnector label="Closest" nf="BFNF" k="5" CheckIfSameCC="false" lp_method="sl" unconnected="true"/>
-      <NeighborhoodConnector label="QueryClosest" nf="BFNF" k="1" CheckIfSameCC="false" lp_method="sl" unconnected="true"/>
-      <RRTConnect label="RRTConnect" nf="BFNF" delta="1.9" minDist="0.1" iterations="10000" lp_method="sl" vcLabel="cd" />
+      <NeighborhoodConnector label="1Closest" nf="BFNF" k="1" CheckIfSameCC="false" lp_method="sl" unconnected="true"/>
+      <RRTConnect label="RRTConnect" nf="BFNF" delta="2.0" minDist="0.1" iterations="5" lp_method="sl" vcLabel="cd" />
     </Connectors>
     
     <LocalPlanners>
@@ -37,18 +37,14 @@
     </LocalPlanners>
     
     <MapEvaluators>
-      <Query label="Query" queryFile="narrow.query" pathFile="RRT.123456.path" dmMethod="euclidean" lpMethod="sl"
+      <Query label="Query" queryFile="maze.query" pathFile="RRT.123456.path" dmMethod="euclidean" lpMethod="sl"
         smooth="false" smoothFile="smooth.path" debug="false">
-        <NodeConnectionMethod method="Closest"/>
+        <NodeConnectionMethod method="1Closest"/>
         <SmoothConnectionMethod method="AllToAll"/>
       </Query>
-      <ConditionalEvaluator label="NodesEval" metric_method="NumNodes" value="2000" operator=">=" />
+      <ConditionalEvaluator label="NodesEval" metric_method="NumNodes" value="1" operator=">=" />
       <ConditionalEvaluator label="NodesPRM" metric_method="NumNodes" value="2" operator=">=" />
-      <ConditionalEvaluator label="RRTEval" metric_method="NumNodes" value="840" operator=">=" />
-      <ComposeEvaluator label="QueryEval" operator="or">
-        <Evaluator label="NodesEval"/>
-        <Evaluator label="Query"/>
-      </ComposeEvaluator>
+      <ConditionalEvaluator label="RRTEval" metric_method="NumNodes" value="40" operator=">=" />
     </MapEvaluators>
     
     <Metrics>
@@ -64,26 +60,23 @@
         <!--component_connection_method Method="ConnectCCs"/-->
         <evaluation_method Method="NodesPRM"/>
       </BasicPRM>
-
- 
     
-      <BlindRRT label="BlindRRT" delta="2.0" minDist="0.1" CCconnection="ClosestNode" expansionType="All" 
-        samplerLabel="UniformRandomFree" lpLabel="sl" dmLabel="euclidean" initialSamples="200"
-        nfLabel="BFNF" vcLabel="cd" connectorLabel="RRTConnect" query="narrow.query" debug="false" evaluateGoal="true">
-
-        <Evaluator label="NodesEval"/>
+      <BlindRRT label="BlindRRT" delta="4.0" minDist="0.02" CCconnection="Mixed" expansionType="All" 
+        lpLabel="sl" dmLabel="euclidean" initialSamples="2000"
+        nfLabel="BFNF" vcLabel="cd" connectorLabel="RRTConnect" query="maze.query" debug="false" evaluateGoal="true">
+        <Evaluator label="Query"/>
       </BlindRRT>
       
-      <BasicRRTStrategy label="RRT" delta="2.0" minDist="0.1" 
+      <BasicRRTStrategy label="RRT" delta="2.0" minDist="0.01" 
         numRoots="1" m="1" growthFocus="0.01" samplerLabel="UniformRandomFree" lpLabel="sl" dmLabel="euclidean"
-        nfLabel="BFNF" vcLabel="cd" connectorLabel="kClosest" query="narrow.query" gtype="UNDIRECTED_TREE" debug="false" evaluateGoal="false">
-        <Evaluator label="Query"/>
+        nfLabel="BFNF" vcLabel="cd" connectorLabel="kClosest" query="maze.query" gtype="UNDIRECTED_TREE" debug="false" evaluateGoal="false">
+        <Evaluator label="RRTEval"/>
       </BasicRRTStrategy>
 
     
     </MPStrategies>
 
-    <Solver mpStrategyLabel="BlindRRT" seed="123456" baseFilename="BlindRRT"/>
+    <Solver mpStrategyLabel="BlindRRT" seed="500" baseFilename="BlindRRTMixed"/>
   </MPProblem>
 </MotionPlanning>
 

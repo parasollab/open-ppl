@@ -245,6 +245,7 @@ typedef stapl::dynamic_graph<stapl::DIRECTED, stapl::NONMULTIEDGES, VERTEX,WEIGH
 typedef stapl::sequential::graph<stapl::DIRECTED, stapl::NONMULTIEDGES, VERTEX,WEIGHT> GRAPH;
 #endif 
 typedef typename GRAPH::vertex_descriptor VID;
+typedef typename GRAPH::vertex_descriptor vertex_descriptor;
 typedef typename GRAPH::edge_descriptor EID;
 typedef typename GRAPH::vertex_iterator VI; ///<VI Vertex Iterator
 #ifndef _PARALLEL

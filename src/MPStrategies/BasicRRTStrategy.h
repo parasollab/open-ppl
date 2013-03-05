@@ -95,7 +95,7 @@ BasicRRTStrategy<MPTraits>::ParseXML(XMLNodeReader& _node) {
   }
 
   m_delta = _node.numberXMLParameter("delta", false, 1.0, 0.0, MAX_DBL, "Delta Distance");
-  m_minDist = _node.numberXMLParameter("minDist", false, 0.0, 0.0, MAX_DBL, "Minimum Distance");
+  m_minDist = _node.numberXMLParameter("minDist", false, 0.0, 0.0, m_delta, "Minimum Distance");
   m_numRoots = _node.numberXMLParameter("numRoots", false, 1, 0, MAX_INT, "Number of Roots");
   m_growthFocus = _node.numberXMLParameter("growthFocus", false, 0.0, 0.0, 1.0, "#GeneratedTowardsGoal/#Generated");
   m_h = _node.numberXMLParameter("h", false, 0, 1, MAX_INT, "Hop Limit");
@@ -380,12 +380,14 @@ BasicRRTStrategy<MPTraits>::ExpandTree(CfgType& _dir){
   StatClass* expandStatClass = this->GetMPProblem()->GetStatClass();
   string expandClockName = "RRTExpand time ";
   expandStatClass->StartClock(expandClockName);
-
-  if(!RRTExpand<MPTraits>(this->GetMPProblem(), m_vc, m_dm, nearest, _dir, newCfg, m_delta, weight, cdInfo, env->GetPositionRes(), env->GetOrientationRes())) {
+  bool expanded = RRTExpand<MPTraits>(this->GetMPProblem(), m_vc, m_dm, nearest, _dir, newCfg, 
+      m_delta, weight, cdInfo, env->GetPositionRes(), env->GetOrientationRes());
+  
+  if(!expanded) {
     if(this->m_debug) cout << "RRT could not expand!" << endl; 
     return recentVID;
   }
-  cout<<"RRT expanded"<<endl;
+  if(this->m_debug) cout<<"RRT expanded"<<endl;
   expandStatClass->StopClock(expandClockName);
   // If good to go, add to roadmap
   if(dm->Distance(env, newCfg, nearest) >= m_minDist ) {

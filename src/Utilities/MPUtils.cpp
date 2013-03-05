@@ -173,12 +173,99 @@ GetPtFromBarycentricCoords(const Point3d& _A, const Point3d& _B, const Point3d& 
   return p;
 }
 
-double NormalizeTheta(double _theta){
-  int multiple = ceil(abs(_theta)/(TWOPI));
-  if (_theta > PI)
-    _theta -= (multiple*TWOPI);
-  else if (_theta < -PI)
-    _theta += (multiple*TWOPI);
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+//
+//
+// Expansion Type Namespace and Enum
+//
+//
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
 
-  return _theta;
+namespace ExpansionType {
+  
+  const char* expansionTypeString[]= {
+    "OUT_OF_BOUNDARY",
+    "IN_COLLISION",
+    "COLLISION_FREE",
+    "NO_EXPANSION"
+  };
+
+  string GetExpansionTypeString(Expansion expansion) {
+    return expansionTypeString[expansion];
+  }
 }
+
+
+
+
+///////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////
+
+
+// Maintains a vector of size 2 with Min at the front and Max at the end
+void PushMinMax(vector<double>& _vec, double _num) {
+  // Empty Case
+  if (_vec.size() == 0) 
+    _vec.push_back(_num);
+  // Only one
+  else if (_vec.size() == 1) {
+    if (_vec.front() < _num) 
+      _vec.push_back(_num);
+    else {
+      _vec.push_back(_vec.front());
+      _vec[0] = _num;
+    }
+  }
+  // Compare and update if necessary
+  else {
+    if (_num < _vec[0])
+      _vec[0] = _num;
+    else if (_num > _vec[1]) 
+      _vec[1] = _num;
+  }
+}
+
+
+vector<double>
+GetCartesianCoordinates(vector<double> sphericalCoordinates) {
+  vector<double> coordinates(2);
+  double rho = sphericalCoordinates[0];   
+  double theta = sphericalCoordinates[1];  
+  double phi = sphericalCoordinates[2];   
+  
+  // from cartesian to polar
+  coordinates[0] = rho * cos(theta) ;
+  coordinates[1] = rho * sin(theta) ;
+  
+  // 3D case
+  if(phi != MAX_INT) {
+    coordinates[0] *= sin(phi) ;
+    coordinates[1] *= sin(phi) ;
+    coordinates.push_back(rho * cos(phi));
+  
+  }
+  return coordinates;
+}
+
+int
+GetQuadrant(double _radians) {
+  while (_radians < 0)
+    _radians += TWOPI;
+  while (_radians > TWOPI)
+    _radians -= TWOPI;
+
+  if (_radians > 0 && _radians < PI/2) {
+    return 1;
+  } else if (_radians > PI/2 && _radians < PI) {
+    return 2;
+  } else if (_radians > PI && _radians < 3*PI/2) {
+    return 3;
+  } else if (_radians > 3*PI/2 && _radians < TWOPI) {
+    return 4;
+  }
+  return 0;
+}
+
+

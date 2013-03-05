@@ -4,8 +4,8 @@
     <Environment input_env="narrow.env">
       <robot Cfg_name="Cfg_2D" num_joints="0" pos_dof="2" dofs="2"> 
         <boundary type="bbox" translational_scale="1">
-          <parameter id="0" label="x" type="translational" min="-15" max="15" />
-          <parameter id="1" label="y" type="translational" min="-15" max="15" />
+          <parameter id="0" label="x" type="translational" min="-25" max="25" />
+          <parameter id="1" label="y" type="translational" min="-25" max="25" />
         </boundary>
       </robot>
     </Environment>
@@ -28,8 +28,8 @@
     
     <Connectors>
       <NeighborhoodConnector label="Closest" nf="BFNF" k="5" CheckIfSameCC="false" lp_method="sl" unconnected="true"/>
-      <NeighborhoodConnector label="QueryClosest" nf="BFNF" k="1" CheckIfSameCC="false" lp_method="sl" unconnected="true"/>
-      <RRTConnect label="RRTConnect" nf="BFNF" delta="1.9" minDist="0.1" iterations="10000" lp_method="sl" vcLabel="cd" />
+      <RRTConnect label="RRTConnect" nf="BFNF" delta="1.9" minDist="0.1" iterations="5" lp_method="sl" vcLabel="cd" />
+      <RegionConnector Label="RegionConnector" lp_method="sl" k="2" numIters="0" nf="BFNF" dmLabel="euclidean"/>
     </Connectors>
     
     <LocalPlanners>
@@ -42,7 +42,7 @@
         <NodeConnectionMethod method="Closest"/>
         <SmoothConnectionMethod method="AllToAll"/>
       </Query>
-      <ConditionalEvaluator label="NodesEval" metric_method="NumNodes" value="2000" operator=">=" />
+      <ConditionalEvaluator label="NodesEval" metric_method="NumNodes" value="100" operator=">=" />
       <ConditionalEvaluator label="NodesPRM" metric_method="NumNodes" value="2" operator=">=" />
       <ConditionalEvaluator label="RRTEval" metric_method="NumNodes" value="840" operator=">=" />
       <ComposeEvaluator label="QueryEval" operator="or">
@@ -57,33 +57,37 @@
     
     <MPStrategies>  
    
-      <!-- Basic PRM where num samples is based on Number -->
-      <BasicPRM label="PRM">
-        <node_generation_method Method="UniformRandom" Number="2" Attempts="10"/>
-        <node_connection_method Method="RRTConnect"/>
-        <!--component_connection_method Method="ConnectCCs"/-->
-        <evaluation_method Method="NodesPRM"/>
-      </BasicPRM>
+    <!-- Parallel Radial RRT *********COMPILE UNDER PARALLEL OPTION **********--> 
+      <RadialBlindRRT label="RadialBlindRRT" filename="radialBlindRRT" debug="true" >
+        <!-- the training samples (numTestSamples) should at most equal nmNodes -->
+	<region_constr numRegions = "1" rayLength= "25" numNeighbors = "0"/> 
+	<!-- numAttempts should at least equal numNodes-->
+        <rrt_constr numNodes = "200" numAttempts = "20" delta= "4.0" numCCIters="10"
+          minDist = "0.05" strictBranching="true" expansionType="All" CCconnection="ClosestNode"  /> 
+	<vc_method vcm = "cd"/> 
+	<dm_method Method="euclidean"/>
+	<connectionMethod Label="RegionConnect"/>
+        <nf_method Method="BFNF"/>
+      </RadialBlindRRT>
 
- 
+
+
+        <!-- Parallel Strategiees and Methods *********COMPILE UNDER PARALLEL OPTION **********--> 
+      <BasicParallelPRM label="BasicParallelPRM" iterations="1" debug="true">
+        <node_generation_method Method="UniformRandom" Number="10"/>
+        <node_connection_method Method="Closest"/>
+      </BasicParallelPRM>
     
-      <BlindRRT label="BlindRRT" delta="2.0" minDist="0.1" CCconnection="ClosestNode" expansionType="All" 
+      <BlindRRT label="BlindRRT" delta="2.0" minDist="0.1" CCconnection="ClosestNode" expansionType="First" 
         samplerLabel="UniformRandomFree" lpLabel="sl" dmLabel="euclidean" initialSamples="200"
         nfLabel="BFNF" vcLabel="cd" connectorLabel="RRTConnect" query="narrow.query" debug="false" evaluateGoal="true">
 
         <Evaluator label="NodesEval"/>
       </BlindRRT>
-      
-      <BasicRRTStrategy label="RRT" delta="2.0" minDist="0.1" 
-        numRoots="1" m="1" growthFocus="0.01" samplerLabel="UniformRandomFree" lpLabel="sl" dmLabel="euclidean"
-        nfLabel="BFNF" vcLabel="cd" connectorLabel="kClosest" query="narrow.query" gtype="UNDIRECTED_TREE" debug="false" evaluateGoal="false">
-        <Evaluator label="Query"/>
-      </BasicRRTStrategy>
-
     
     </MPStrategies>
 
-    <Solver mpStrategyLabel="BlindRRT" seed="123456" baseFilename="BlindRRT"/>
+    <Solver mpStrategyLabel="RadialBlindRRT" seed="123456" baseFilename="RadialBlindRRT"/>
   </MPProblem>
 </MotionPlanning>
 

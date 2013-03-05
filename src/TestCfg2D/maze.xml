@@ -1,0 +1,139 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<motion_planning>
+  <!--VizmoDebug filename="malp.output" /-->
+  <MPProblem>
+
+    <environment input_env="maze.env">
+      <robot Cfg_name="Cfg_2D" num_joints="0" pos_dof="2" dofs="2"> 
+        <boundary type="bbox" translational_scale="1">
+         <parameter id="0" Label="x" type="translational" min="-38.5" max="38.8" />
+         <parameter id="1" Label="y" type="translational" min="-35" max="35" />
+        </boundary>
+      </robot>
+    </environment>
+
+    <resolution pos_res="0.10" ori_res="0.10"/> 
+
+    <distance_metrics>
+      <euclidean Label="default"/>
+      <scaledEuclidean Label= "scaledEuclidean" scale ="0.5"/>
+      <euclidean Label="euclidean"/>
+      <rmsd Label="rmsd" />
+      <lp_swept Label="lp_swept" pos_res='5' ori_res='5' use_bbox="true">
+        <lp_methods>
+          <StraightLine Label="dm_lp" length="0" binary_search="0"/>
+        </lp_methods>
+      </lp_swept>      
+           
+      <binary_lp_swept Label="bp_swept" pos_res='5' ori_res='5' use_bbox="true">
+        <lp_methods>
+          <StraightLine Label="dm_lp" length="0" binary_search="0"/>
+        </lp_methods>
+      </binary_lp_swept> 
+    </distance_metrics>    
+
+    <validity_test>
+      <CollisionDetection Label="cd1" method="RAPID" />
+      <CollisionDetection Label="cd2" method="PQP" />
+      <CollisionDetection Label="cd3" method="VCLIP" />
+      <NodeClearance Label="nc" delta="0.3" dm_method="euclidean" nf_method="BFNF" />
+      <NegateValidity Label="nv" method="cd1"/>
+      <MedialAxisClearance Label="mac" vc_method="cd2" dm_method="euclidean" lp_method="slb"
+                           clearance_type="exact" penetration_type="exact"
+                           clearance_rays="20" penetration_rays="20"
+                           use_bbx="true" epsilon="0.01" history_len="5" ma_clearance="2.0" />
+      <ComposeValidity Label="cv" operator="AND" >
+        <vc_method method="cd2" />
+        <vc_method method="mac" />
+		  </ComposeValidity>
+    </validity_test>
+
+    <NeighborhoodFinder>
+      <BFNF Label="BFNF" dm_method="euclidean"/>
+    </NeighborhoodFinder>
+    <MPRegions/>
+  </MPProblem>
+  
+  <MPStrategy>
+    <node_generation_methods>
+      <UniformRandomFreeSampler Label="UniformRandomFree" vc_method="mac"/>
+      <ObstacleBasedSampler Label="OBPRM" vc_method="cd1" usebbx="false" dm_method="euclidean">
+        <step_size number="0.0"/>
+        <n_shells_coll number="0"/>
+        <n_shells_free number="1"/>
+      </ObstacleBasedSampler>
+      <GaussianSampler Label="Gauss" vc_method="cd1" gauss_d="0.01" usebbx="false" dm_method="euclidean"/>
+      <BridgeTestSampler Label="Bridge" vc_method="cd1" bridge_d="0.2" dm_method="euclidean"/>
+      <MedialAxisSampler Label="MAPRM" vc_method="cd2" dm_method="euclidean"
+                         clearance_type="exact" penetration_type="exact"
+                         clearance_rays="20" penetration_rays="20"
+                         use_bbx="true" epsilon="0.01" debug="false" />
+      <NegateSampler Label="negateFree" Method="UniformRandomFree"/>
+    </node_generation_methods>
+    
+    <connection_methods>
+      <NeighborhoodConnection Label="Closest" nf="BFNF" k="2" CheckIfSameCC="false" lp_method="malp"/>
+      <ConnectCCs Label="ConnectCCs" smallcc="5" kpairs="2" nf="BFNF" lp_method="malp"/>
+    </connection_methods>
+
+    <lp_methods>
+      <StraightLine Label="sls" length="0" binary_search="0" vc_method="cd1"/>
+      <StraightLine Label="slb" length="0" binary_search="1" vc_method="cd2"/>
+      <RotateAtS    Label="ras" length="0" binary_search="1" vc_method="cd2" s="0.5" />
+      <TransformAtS Label="tas" length="0" binary_search="1" vc_method="cd2" s="0.5" />
+      <AStar        Label="as"  vc_method="cd2" n_tries="1.0" n_neighbors="5.0" />
+      <MedialAxisLP Label="malp" length="0" binary_search="1" vc_method="cd2" dm_method="euclidean"
+                    ma_lp_method="ma_lp" env_lp_method="env_lp" mac_vc_method="mac"
+                    clearance_type="exact" penetration_type="exact"
+                    clearance_rays="20" penetration_rays="20" use_bbx="true" 
+                    epsilon="2.0" sample_epsilon="0.01" history_len="5" debug="true" max_itr="10">
+        <lp_methods>
+          <StraightLine Label="ma_lp" length="0" binary_search="1" vc_method="cv"/>
+          <StraightLine Label="env_lp" length="0" binary_search="1" vc_method="cd2"/>
+        </lp_methods>
+      </MedialAxisLP>
+    </lp_methods>
+    
+    <MPEvaluator_methods>
+      <MPRegionConditionalEvaluators>
+        <TestEvaluation Label="TestEval" size="10" dm_method="euclidean" lp_method="ras"/>
+        <PrintMapEvaluation Label="PrintMap" base_name="Basic" dm_method="euclidean" lp_method="ras"/>
+        <QueryEvaluation Label="Query" filename="narrow.query" lp_method="ras">
+          <node_connection_method Method="Closest"/>
+        </QueryEvaluation>
+      </MPRegionConditionalEvaluators>
+    </MPEvaluator_methods>
+    
+    <MPStrategyMethod Controller="PRM3">
+
+      <BasicPRMStrategy Label="PRM1" seed="1234567" filename="Basic" iterations="1" 
+                        num_samples="10" dm_method="euclidean" >
+        <node_generation_method Method="MAPRM" Number="1"/>
+        <node_connection_method Method="Closest"/>
+        <evaluation_method      Method="TestEval"/>
+       <!--node_generation_method Method="Gauss" Number="10"/>
+        <node_generation_method Method="UniformRandomFree" Number="10"/>
+        <node_connection_method Method="Closest"/>
+        <node_generation_method Method="OBPRM" Number="10"/>
+        <component_connection_method Method="ConnectCCs"/>
+        <dm_method Method="euclidean"/-->
+      </BasicPRMStrategy>
+
+      <BasicPRMStrategy Label="PRM2" seed="1234567" filename="Probabilities" iterations="1" num_samples="10" dm_method="euclidean">
+        <node_generation_method Method="Gauss" Number="0" Probability="0.2"/>
+        <node_generation_method Method="OBPRM" Number="0" Probability="0.8"/>
+        <node_connection_method Method="Closest"/>
+        <component_connection_method Method="ConnectCCs"/>
+        <evaluation_method Method="TestEval"/>
+        <dm_method Method="euclidean"/>
+      </BasicPRMStrategy>
+
+      <BasicPRMStrategy Label="PRM3" seed="12345678" filename="MAZE" iterations="1" num_samples="10"
+                        dm_method="euclidean" inputMap="maze.input.200.map" startAt="node connection">
+        <node_connection_method Method="Closest"/>
+      </BasicPRMStrategy>
+
+    </MPStrategyMethod>
+  </MPStrategy>
+</motion_planning>
+
