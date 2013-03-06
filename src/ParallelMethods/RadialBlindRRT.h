@@ -150,7 +150,7 @@ void RadialBlindRRT<MPTraits>::Run() {
     // TODO VIZMO DEBUG
     VDAddNode(root);
   }
-
+pMap->size();
   PrintOnce("ROOT  : ", root);
   PrintOnce("LENGTH  : ", this->m_radius); 
   rmi_fence();
@@ -162,35 +162,31 @@ void RadialBlindRRT<MPTraits>::Run() {
   this->RegionVertex(regionView, problem, root);
   t1.stop();
   rmi_fence(); 
-
+pMap->size();
   cout << "STEP 2: Make edge between k-closest regions " << endl;
   ///For each vertex v find k closest to v in a map_reduce fashion
   t2.start();
   this->RegionEdge(regionView, problem);
   t2.stop();
   rmi_fence();
-
-  cout << "STEP 3: Construct RRT in each region " << endl;
+pMap->size();
+  cout << "STEP 3: Construct Blind RRT in each region " << endl;
   t3.start();
   BuildRRT(regionView, problem, root);
   t3.stop();
   rmi_fence();
-  PrintOnce("Num of Edges before: ", pMap->num_edges());
-  rmi_fence();
-
-  cout << "STEP 4 : Connect branches in each region " << endl;
+pMap->size();
+  cout << "STEP 4 : Global CC Connect " << endl;
   t4.start();
   //  ConnectRegions(regionView, problem);
   t4.stop();
   rmi_fence();
 
-  PrintOnce("Num of Edges after: ", pMap->num_edges());
   cout << "STEP 5 : Remove Cycles " << endl;
   t5.start();
   //  RemoveCycles(pMap);
   t5.stop();
   t0.stop();
-  PrintOnce("Num of Edges after Remove Cycle: ", pMap->num_edges());
   rmi_fence();
 
 
@@ -234,8 +230,8 @@ void RadialBlindRRT<MPTraits>::Run() {
     stat_out << "#P \t RGV  \t RGE  \t BRRT \t RCON  \t CYCLE \t TOT \t VERT \t EDGES "  << endl;
 
     stat_out << get_num_locations() << "\n" << t1.value() << "\n" << t2.value() << "\n" << t3.value()
-      << "\n" << t4.value() <<  "\n" << t5.value()  << t0.value() 
-      << "\n" << pMap->size() << "\n" << pMap->num_edges() << endl;
+      << "\n" << t4.value() <<  "\n" << t5.value()  << t0.value(); 
+//  stat_out << "\n" << /*pMap->size()*/ << "\n" <</* pMap->num_edges() */<< endl;
 
     stat_out.close();	   
   }

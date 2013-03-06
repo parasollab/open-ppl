@@ -71,8 +71,8 @@ class RadialRegion {
   vector<pair<size_t, VID> > GetCCs() {
       
     typedef stapl::graph_view<typename GraphType::GRAPH> RoadmapViewType;
-    RoadmapViewType roadmapView  (m_problem->GetRoadmap()->GetGraph());
-    typename RoadmapViewType::view_container_type* localGraph = stapl::native_view(roadmapView)[get_location_id()].get_container();
+    RoadmapViewType roadmapView  (*(m_problem->GetRoadmap()->GetGraph()));
+    typename RoadmapViewType::view_container_type* localTree = stapl::native_view(roadmapView)[get_location_id()].get_container();
 
     vector< pair<size_t,VID> > localCCs;
     m_cmap.reset();
@@ -494,7 +494,7 @@ class BuildRadialRRT {
     
     VID AddVertex(CfgType _cfg) const {
       VID newVID = m_problem->GetRoadmap()->GetGraph()->add_vertex(_cfg);
-    //  _localGraph->add_vertex(newVID, _cfg); 
+    //  _localTree->add_vertex(newVID, _cfg); 
       VDAddNode(_cfg);
       return newVID;
     }
@@ -508,8 +508,8 @@ class BuildRadialRRT {
 
       pair<WeightType, WeightType> weights = make_pair(WeightType("RRTExpand", _weight), WeightType("RRTExpand", _weight));
       m_problem->GetRoadmap()->GetGraph()->AddEdge(_vid1, _vid2, weights);
-    //  _localGraph->add_edge(_vid1, _vid2, _weight); 
-    //  _localGraph->add_edge(_vid2, _vid1, _weight); 
+    //  _localTree->add_edge(_vid1, _vid2, _weight); 
+    //  _localTree->add_edge(_vid2, _vid1, _weight); 
       
     }
 
@@ -519,8 +519,8 @@ class BuildRadialRRT {
 
         CfgType regionCand = _view.property().GetCandidate();
         vector<CfgType> neighbors = _view.property().GetNeighbors();
-        //LocalGraphType* localGraph = new LocalGraphType(); 
-        //localGraph->add_vertex(0, m_root);
+        //LocalGraphType* localTree = new LocalGraphType(); 
+        //localTree->add_vertex(0, m_root);
         ///Setup global variables
         DistanceMetricPointer dm = m_problem->GetDistanceMetric(m_dm);
         NeighborhoodFinderPointer nfp = m_problem->GetNeighborhoodFinder(m_nf);
@@ -598,6 +598,7 @@ class BuildRadialRRT {
         PrintValue("Local Tree ", branch.size());
         // TODO necessary to set branch???
         _view.property().SetBranch(branch);
+      
       }
 
 
@@ -737,10 +738,10 @@ class BuildRadialRRT {
       stapl::sequential::vector_property_map<typename GraphType::GRAPH, size_t> cmap;
       vector< pair<size_t,VID> > ccs;
       typedef stapl::graph_view<typename GraphType::GRAPH> RoadmapViewType;
-      RoadmapViewType roadmapView  (globalTree);
-      typename RoadmapViewType::view_container_type& localGraph = stapl::native_view(roadmapView)[get_location_id()].container();
+      RoadmapViewType roadmapView  (*globalTree);
+      typename RoadmapViewType::view_container_type& localTree = stapl::native_view(roadmapView)[get_location_id()].container();
 
-      stapl::sequential::get_cc_stats(localGraph ,cmap, ccs);      
+      stapl::sequential::get_cc_stats(localTree ,cmap, ccs);      
       
       cmap.reset();
       if(ccs.size()==1) return;
@@ -758,7 +759,7 @@ class BuildRadialRRT {
         // always expand from the root CC
         cc1VID = ccs[ rand1 ].second; 
         iters++;
-        stapl::sequential::get_cc(localGraph,cmap,cc1VID,cc1);
+        stapl::sequential::get_cc(localTree,cmap,cc1VID,cc1);
         cmap.reset();
         if (cc1.size() == 1) {
 
@@ -798,7 +799,7 @@ class BuildRadialRRT {
           exit(-1);
 
         }
-        stapl::sequential::get_cc(localGraph,cmap,cc2VID,cc2);
+        stapl::sequential::get_cc(localTree,cmap,cc2VID,cc2);
         cmap.reset();
 
         // Maybe this is an invalid node, don't use it
@@ -814,7 +815,7 @@ class BuildRadialRRT {
         // We got a pair of CCs, attempt to Connect them!
         pConnection->Connect(rdmp, *stats, cmap, cc1.begin(), cc1.end(), cc2.begin(), cc2.end()) ;
 
-        stapl::sequential::get_cc_stats(localGraph,cmap, ccs);
+        stapl::sequential::get_cc_stats(localTree,cmap, ccs);
         cmap.reset();
 
       }
@@ -868,12 +869,12 @@ class BuildRadialRRT {
         return closestCC;
       }
 /*
-      void ConnectCCs(vector<VID>& _cc1, vector<VID>& _cc2, typename GraphType::GRAPH _localGraph) {
+      void ConnectCCs(vector<VID>& _cc1, vector<VID>& _cc2, typename GraphType::GRAPH _localTree) {
         
         
       }
       
-      void Connect(LocalGraphType _localGraph, vector<VID>::iterator _itr1First, vector<VID>::iterator  _itr1Last,
+      void Connect(LocalGraphType _localTree, vector<VID>::iterator _itr1First, vector<VID>::iterator  _itr1Last,
             vector<VID>::iterator _itr2First, vector<VID>::iterator _itr2Last) const {
 
         GraphType* globalTree = m_problem->GetRoadmap()->GetGraph();
@@ -926,7 +927,7 @@ class BuildRadialRRT {
       }
 
 
-      bool ExpandTree(LocalGraphType* _localGraph, CfgType _dir, vector<VID>* _targetTree, VID& recentVID, double _delta) const {
+      bool ExpandTree(LocalGraphType* _localTree, CfgType _dir, vector<VID>* _targetTree, VID& recentVID, double _delta) const {
 
         // Setup MP Variables
         Environment* env = m_problem->GetEnvironment();
@@ -1209,8 +1210,8 @@ class ConnectRegionCCs {
         stats->StartClock(clockName.str());
 
         typedef stapl::graph_view<typename GraphType::GRAPH> RoadmapViewType;
-        RoadmapViewType roadmapView  (globalTree);
-        typename RoadmapViewType::view_container_type* localGraph = stapl::native_view(roadmapView)[get_location_id()].get_container();
+        RoadmapViewType roadmapView  (*globalTree);
+        typename RoadmapViewType::view_container_type* localTree = stapl::native_view(roadmapView)[get_location_id()].get_container();
 
         
         ColorMap cmap;
@@ -1221,7 +1222,7 @@ class ConnectRegionCCs {
           
           RadialRegion<MPTraits> tRegion = (*(_gview.find_vertex((*ei).target()))).property();
           
-          stapl::sequential::get_cc_stats(stapl::native_view(roadmapView)[get_location_id()].container() ,cmap, localCCs);      
+          stapl::sequential::get_cc_stats(localTree ,cmap, localCCs);      
 
           int randCC = LRand() % localCCs.size();
           // Fill in the local CC
