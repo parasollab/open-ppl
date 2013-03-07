@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <MotionPlanning>
   <MPProblem>
-    <Environment input_env="center.env">
+    <Environment input_env="narrow.env">
       <robot Cfg_name="Cfg_2D" num_joints="0" pos_dof="2" dofs="2"> 
         <boundary type="bbox" translational_scale="1">
           <parameter id="0" label="x" type="translational" min="-25" max="25" />
@@ -60,7 +60,7 @@
     <!-- Parallel Radial RRT *********COMPILE UNDER PARALLEL OPTION **********--> 
       <RadialBlindRRT label="RadialBlindRRT" filename="radialBlindRRT" debug="true" >
         <!-- the training samples (numTestSamples) should at most equal nmNodes -->
-	<region_constr numRegions = "1" rayLength= "25" numNeighbors = "0"/> 
+	<region_constr numRegions = "4" rayLength= "25" numNeighbors = "2"/> 
 	<!-- numAttempts should at least equal numNodes-->
         <rrt_constr numNodes = "200" numAttempts = "20" delta= "4.0" numCCIters="10"
           minDist = "0.05" strictBranching="true" expansionType="All" CCconnection="ClosestNode"  /> 

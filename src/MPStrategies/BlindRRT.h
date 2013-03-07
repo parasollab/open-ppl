@@ -29,7 +29,7 @@ class BlindRRT : public MPStrategyMethod<MPTraits> {
 
     BlindRRT();
     BlindRRT(MPProblemType* _problem, XMLNodeReader& _node, bool _warnXML = true);
-    
+
     void InitializeParallel(CfgType _root, CfgType& _regionCand, vector<CfgType>* _neighbors, 
         bool _strictBranching, double _overlap, double _radius);
 
@@ -49,7 +49,7 @@ class BlindRRT : public MPStrategyMethod<MPTraits> {
     virtual int ExpandTree(CfgType& _dir);
     void ConnectCCs();
     VID GetClosestCC(VID _node, VID _nodeCCVID);
-   
+
     bool GetValidity(CfgType& _cfg);
 
     void EvaluateGoals();
@@ -71,12 +71,11 @@ class BlindRRT : public MPStrategyMethod<MPTraits> {
     size_t m_initialSamples;
     string m_expansionType; // describes how cfgs are added along the expansion
 
-/*  Data members for parallel implementation */    
+    /*  Data members for parallel implementation */    
     CfgType m_regionCand;
     vector<CfgType>* m_neighbors;
     double m_overlap;
     double m_radius;
-    vector<VID> m_branch; // keep track of the local branch
     bool m_strictBranching;
 
 };
@@ -93,7 +92,6 @@ BlindRRT<MPTraits>::InitializeParallel(CfgType _root, CfgType& _regionCand, vect
     bool _strictBranching, double _overlap, double _radius) {
 
   m_roots.push_back(_root);
-  m_branch.push_back(0);
   m_regionCand = _regionCand;
   m_neighbors = _neighbors;
   m_overlap = _overlap;
@@ -204,7 +202,7 @@ BlindRRT<MPTraits>::Initialize(){
       } else {
         cit2->SetStat("Validity", NodeState::FREE);
       }
-      
+
       m_roots.push_back(*cit1);
       m_goals.push_back(*cit2);
       m_goalsNotFound.push_back(m_goals.size()-1);
@@ -223,7 +221,6 @@ BlindRRT<MPTraits>::Initialize(){
 
   for(typename vector<CfgType>::iterator C = m_roots.begin(); C!=m_roots.end(); C++){
     VID vid = this->GetMPProblem()->GetRoadmap()->GetGraph()->AddVertex(*C);
-     m_branch.push_back(vid);
   }
 
   if(this->m_debug) cout<<"\nEnding Initializing BlindRRT"<<endl;
@@ -320,16 +317,16 @@ BlindRRT<MPTraits>::Finalize() {
 template<class MPTraits>
 bool
 BlindRRT<MPTraits>::GetValidity(CfgType& _cfg){
-  
+
   Environment* env = this->GetMPProblem()->GetEnvironment();
   StatClass* stats = this->GetMPProblem()->GetStatClass();
   ValidityCheckerPointer vc = this->GetMPProblem()->GetValidityChecker(m_vc);
   string callee("BlindRRT::GetValidity");
   CDInfo  cdInfo;
-  
+
   if(!_cfg.IsLabel("VALID"))  
     vc->IsValid(_cfg, env, *stats, cdInfo, &callee); 
-  
+
   return _cfg.GetLabel("VALID");
 }
 
@@ -368,19 +365,19 @@ BlindRRT<MPTraits>::ExpandTree(CfgType& _dir){
 
   string kcloseClockName = "kclosest time ";
   stats->StartClock(kcloseClockName);
-  
-  nf->KClosest(rdmp, m_branch.begin(), m_branch.end(), _dir, 1, back_inserter(kClosest));
-  
+
+  nf->KClosest(rdmp, _dir, 1, back_inserter(kClosest));
+
   stats->StopClock(kcloseClockName);
 
   VID nearestVID = kClosest[0];
   CfgType nearest;
-  
+
   nearest = (rdmp->GetGraph()->GetCfg(nearestVID));
 
   string expandClockName = "BlindRRTExpand time ";
   stats->StartClock(expandClockName);
-  
+
   ExpansionType::Expansion expansion;
   vector<pair<CfgType, int> > expansionCfgs;  // this will contain all cfgs from start to goal inclusive
   expansionCfgs.push_back(make_pair(nearest, 0));
@@ -389,18 +386,18 @@ BlindRRT<MPTraits>::ExpandTree(CfgType& _dir){
       env->GetPositionRes(), env->GetOrientationRes());
 
   stats->StopClock(expandClockName);
-  
+
   if (expansion == ExpansionType::NO_EXPANSION) {  
     if(this->m_debug) cout << "RRT could not expand!" << endl; 
     return 0;
   }
-  
+
   CfgType& newCfg = expansionCfgs.back().first; // last cfg in the returned array is delta away from nearest
 
   if(this->m_debug) cout<<"RRT expanded"<<endl;
   // If good to go, add to roadmap
   if(dm->Distance(env, newCfg, nearest) >= m_minDist && expansion != ExpansionType::OUT_OF_BOUNDARY ) {
-    
+
     // Adding Nodes
     vector<VID> expansionVIDs;
     expansionVIDs.push_back(nearestVID);
@@ -411,9 +408,8 @@ BlindRRT<MPTraits>::ExpandTree(CfgType& _dir){
       CfgType& cfg2 = expansionCfgs[i].first;
       VID newVID = rdmp->GetGraph()->AddVertex(expansionCfgs[i].first);
       expansionVIDs.push_back(newVID );
-      m_branch.push_back(newVID);
     }
-    
+
     pair<WeightType, WeightType> weights;
     // Adding Edges
     int weight;
@@ -428,12 +424,12 @@ BlindRRT<MPTraits>::ExpandTree(CfgType& _dir){
       }
 
       if(expansionCfgs[i-1].first.GetLabel("VALID") &&  
-            expansionCfgs[i].first.GetLabel("VALID")) {
+          expansionCfgs[i].first.GetLabel("VALID")) {
         weight = expansionCfgs[i].second - expansionCfgs[i-1].second; // Edge weight 
         weights = make_pair(WeightType("RRTExpand", weight), WeightType("RRTExpand", weight));
         rdmp->GetGraph()->AddEdge(expansionVIDs[i-1], expansionVIDs[i], weights);
       }
-      
+
       if(expansion == ExpansionType::JUMPED) // we can only add one edge, start -> middle  
         break;
     }
@@ -536,10 +532,10 @@ BlindRRT<MPTraits>::ConnectCCs() {
 
     stapl::sequential::get_cc_stats(*(rdmp->GetGraph()),cmap, ccs);
     cmap.reset();
-    
+
     //if(m_evaluateGoal)
     //  EvaluateGoals();
-    
+
     //evaluate the roadmap
     bool evalMap = this->EvaluateMap(m_evaluators);
     //mapPassedEvaluation = m_evaluateGoal && m_goalsNotFound.size()==0;
@@ -572,10 +568,10 @@ BlindRRT<MPTraits>::GetClosestCC(VID _node, VID _nodeCCVID) {
   vector<VID> closestNodesOtherCCs;
   //find closest VID from other CCS
   for(CCSIT ccsit = ccs.begin(); ccsit!=ccs.end(); ccsit++){
-    
+
     if(ccsit->second == _nodeCCVID)
       continue;
-    
+
     vector<VID> cc;
     stapl::sequential::get_cc(*(rdmp->GetGraph()),cmap,ccsit->second,cc);
     cmap.reset();
@@ -608,18 +604,18 @@ BlindRRT<MPTraits>::RemoveInvalidNodes() {
   StatClass* stats = this->GetMPProblem()->GetStatClass();
   CDInfo  cdInfo;
   string callee("RemoveInvalidNodes");
-  
+
   vector<VID> allVIDs;
   rdmp->GetGraph()->GetVerticesVID(allVIDs);
 
   for (size_t i=0; i<allVIDs.size(); i++) {
     CfgType cfg = (rdmp->GetGraph()->GetCfg(allVIDs[i]));
-    
+
     if (!cfg.IsLabel("VALID") ) {
       vc->IsValid(cfg, env, *stats, cdInfo, &callee); 
-      
+
     }
-    
+
     if (!cfg.GetLabel("VALID") ) {
       rdmp->GetGraph()->delete_vertex(allVIDs[i]); 
       //VDRemoveNode(cfg); 

@@ -58,11 +58,11 @@ class RadialBlindRRT : public RadialSubdivisionRRT<MPTraits> {
 
 template<class MPTraits>
 RadialBlindRRT<MPTraits>::RadialBlindRRT(MPProblemType* _problem, 
-XMLNodeReader& _node) :
+    XMLNodeReader& _node) :
   RadialSubdivisionRRT<MPTraits>(_problem, _node) {
-  this->SetName("RadialBlindRRT");
-  ParseXML(_node);
-}
+    this->SetName("RadialBlindRRT");
+    ParseXML(_node);
+  }
 
 template<class MPTraits>
 RadialBlindRRT<MPTraits>::RadialBlindRRT() {
@@ -96,11 +96,11 @@ RadialBlindRRT<MPTraits>::BuildRRT(graph_view<RadialRegionGraph> _regionView,
     MPProblemType* _problem, CfgType _root) {
 
   BuildRadialRRT<MPTraits> wf(_problem,this->m_numNodes,this->m_dmLabel,this->m_vcLabel,
-    this->m_nfLabel,m_CCconnection,m_expansionType,this->m_delta,this->m_minDist,
+      this->m_nfLabel,m_CCconnection,m_expansionType,this->m_delta,this->m_minDist,
       _root,this->m_numAttempts,m_numCCIters,this->m_overlap, this->m_strictBranching);
 
-//  MPStrategyPointer strategy = this->GetMPProblem()->GetMPStrategy("BlindRRT");
-//  BuildRadialBlindRRT<MPTraits> wf(strategy, _root, m_radius, m_strictBranching, m_overlap); 
+  //  MPStrategyPointer strategy = this->GetMPProblem()->GetMPStrategy("BlindRRT");
+  //  BuildRadialBlindRRT<MPTraits> wf(strategy, _root, m_radius, m_strictBranching, m_overlap); 
   new_algorithms::for_each(_regionView,wf);
 }
 
@@ -150,7 +150,6 @@ void RadialBlindRRT<MPTraits>::Run() {
     // TODO VIZMO DEBUG
     VDAddNode(root);
   }
-pMap->size();
   PrintOnce("ROOT  : ", root);
   PrintOnce("LENGTH  : ", this->m_radius); 
   rmi_fence();
@@ -162,20 +161,17 @@ pMap->size();
   this->RegionVertex(regionView, problem, root);
   t1.stop();
   rmi_fence(); 
-pMap->size();
   cout << "STEP 2: Make edge between k-closest regions " << endl;
   ///For each vertex v find k closest to v in a map_reduce fashion
   t2.start();
   this->RegionEdge(regionView, problem);
   t2.stop();
   rmi_fence();
-pMap->size();
   cout << "STEP 3: Construct Blind RRT in each region " << endl;
   t3.start();
   BuildRRT(regionView, problem, root);
   t3.stop();
   rmi_fence();
-pMap->size();
   cout << "STEP 4 : Global CC Connect " << endl;
   t4.start();
   //  ConnectRegions(regionView, problem);
@@ -231,7 +227,7 @@ pMap->size();
 
     stat_out << get_num_locations() << "\n" << t1.value() << "\n" << t2.value() << "\n" << t3.value()
       << "\n" << t4.value() <<  "\n" << t5.value()  << t0.value(); 
-//  stat_out << "\n" << /*pMap->size()*/ << "\n" <</* pMap->num_edges() */<< endl;
+    //  stat_out << "\n" << /*pMap->size()*/ << "\n" <</* pMap->num_edges() */<< endl;
 
     stat_out.close();	   
   }
@@ -240,7 +236,7 @@ pMap->size();
   ///DEBUG
   cout << "Write Region Graph " << endl;
   write_graph(regionView, "radialRegion.out");
-  
+
   rmi_fence(); 
 
 }
@@ -258,7 +254,7 @@ void RadialBlindRRT<MPTraits>::Finalize(){
     cout << "RadialBlindRRT::Finalize(): can't open outfile: ";
     exit(-1);
   }else{
-     problem->GetRoadmap()->Write(osMap, this->GetMPProblem()->GetEnvironment());
+    problem->GetRoadmap()->Write(osMap, this->GetMPProblem()->GetEnvironment());
     osMap.close();
   }
   stapl::rmi_fence();

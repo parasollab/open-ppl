@@ -71,7 +71,7 @@ class RRTConnect: public ConnectorMethod<MPTraits> {
     string m_vcLabel;
 };
 
-template<class MPTraits>
+  template<class MPTraits>
 RRTConnect<MPTraits>::RRTConnect(string _lp, string _nf, int _iterations, int _fail, 
     bool _countFailures, bool _delta, bool _minDist) 
   : ConnectorMethod<MPTraits>(), m_iterations(_iterations), m_fail(_fail), 
@@ -82,7 +82,7 @@ RRTConnect<MPTraits>::RRTConnect(string _lp, string _nf, int _iterations, int _f
     this->m_nfMethod = _nf;
   }
 
-template<class MPTraits>
+  template<class MPTraits>
 RRTConnect<MPTraits>::RRTConnect(MPProblemType* _problem, XMLNodeReader& _node) 
   : ConnectorMethod<MPTraits>(_problem, _node) {
     ParseXML(_node);
@@ -112,13 +112,13 @@ void
 RRTConnect<MPTraits>::PrintOptions(ostream& _os){
   ConnectorMethod<MPTraits>::PrintOptions(_os);
   /*
-  _os << "    " << this->GetName() << "::  k = ";
-  _os << m_k << "  fail = " << m_fail ;
-  _os << "  count_failures = " << this->m_countFailures;
-  _os << "  unconnected = " << m_unconnected;
-  _os << "  random = " << m_random;
-  _os << endl;
-  */
+     _os << "    " << this->GetName() << "::  k = ";
+     _os << m_k << "  fail = " << m_fail ;
+     _os << "  count_failures = " << this->m_countFailures;
+     _os << "  unconnected = " << m_unconnected;
+     _os << "  random = " << m_random;
+     _os << endl;
+     */
 }
 
 /*
@@ -137,7 +137,7 @@ void
 RRTConnect<MPTraits>::Connect(RoadmapType* _rm, StatClass& _stats, 
     ColorMap& _cmap, InputIterator _itr1First, InputIterator _itr1Last,
     InputIterator _itr2First, InputIterator _itr2Last, OutputIterator _collision){
-  
+
   if(this->m_debug){
     cout << endl; 
     PrintOptions(cout);
@@ -153,31 +153,31 @@ RRTConnect<MPTraits>::Connect(RoadmapType* _rm, StatClass& _stats,
   for(InputIterator it = _itr2First; it != _itr2Last; ++it) {
     treeB->push_back(*it);
   }
-  
+
   // TODO All good till here
   size_t iter = 0;
   bool connected = false;
   while( iter < m_iterations && !connected) {
-    
+
     CfgType dir = this->SelectDirection();
     // Expand in direction of Ta
     VID recent;
     this->ExpandTree(dir, treeA, recent, m_delta);
-    
+
     if(recent != INVALID_VID) {
       CfgType recentCfg = _rm->GetGraph()->GetCfg(recent);
-      
+
       m_totalSuccess++;
       treeA->push_back(recent);
-      
+
       VID newVID;
-      
+
       // Since expand goes until collision or goal is detected, we shouldnt iterate.
       // TODO Cesar if(Expand) break;
       // do {
-        connected = this->ExpandTree(recentCfg, treeB, newVID, MAX_DBL);
+      connected = this->ExpandTree(recentCfg, treeB, newVID, MAX_DBL);
       //} while (newVID != INVALID_VID && !connected);
-      
+
 
     } else {
       m_totalFailure++;
@@ -187,7 +187,7 @@ RRTConnect<MPTraits>::Connect(RoadmapType* _rm, StatClass& _stats,
     swap(treeA, treeB);
     iter++;
   }
-  
+
 
   if(this->m_debug) cout << "*** kClosest Time = " << _stats.GetSeconds("kClosest") << endl;
   if(this->m_debug) cout << "*** m_totalSuccess = " << m_totalSuccess << endl;
@@ -215,7 +215,7 @@ RRTConnect<MPTraits>::ExpandTree(CfgType& _dir, vector<VID>* _targetTree, VID& r
   // Choose the closest node from the three    
   nf->KClosest(rdmp, _targetTree->begin(), _targetTree->end(), _dir, 1, back_inserter(kClosest));
   kcloseStatClass->StopClock(kcloseClockName);
-  
+
   bool connected = false;
 
   const CfgType& nearest = rdmp->GetGraph()->GetCfg(kClosest[0]);
@@ -227,10 +227,10 @@ RRTConnect<MPTraits>::ExpandTree(CfgType& _dir, vector<VID>* _targetTree, VID& r
   expandStatClass->StartClock(expandClockName);
 
   string dmLabel = this->GetMPProblem()->GetNeighborhoodFinder(this->m_nfMethod)->GetDMMethod()->GetLabel();
-  
+
   bool expanded = RRTExpand<MPTraits>(this->GetMPProblem(), m_vcLabel, dmLabel, nearest, _dir, newCfg, 
       _delta, weight, cdInfo, env->GetPositionRes(), env->GetOrientationRes());
-  
+
   if(!expanded) {
     if(this->m_debug) cout << "RRT could not expand!" << endl; 
     return connected;
@@ -245,13 +245,13 @@ RRTConnect<MPTraits>::ExpandTree(CfgType& _dir, vector<VID>* _targetTree, VID& r
     } else {
       recentVID = rdmp->GetGraph()->AddVertex(newCfg);
     } 
-    
+
     pair<WeightType, WeightType> weights = make_pair(WeightType("RRTConnect", weight), WeightType("RRTConnect", weight));
     rdmp->GetGraph()->AddEdge(kClosest[0], recentVID, weights);
     //rdmp->GetGraph()->GetCfg(recentVID).SetStat("Parent", kClosest[0]);
   } 
- 
- return connected;
+
+  return connected;
 }
 
 

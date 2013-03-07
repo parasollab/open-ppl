@@ -48,14 +48,14 @@ class RadialRegion {
   /* void Print(ostream &os) const  {
      os << "  "  << m_data << " "; 
      }*/
-  
+
   // Getters
   vector<RegionType> GetNeighbors() { return m_neighbors; }
   RegionType GetCandidate() { return m_data; }
   vector<VID> GetBranch() { return  m_branch;}
   WeightType GetWeight() { return  m_weight;}
   ColorMap GetColorMap() { return m_cmap; } 
-  
+
   // Setters
   void SetCandidate(const RegionType& _data) { m_data= _data; }
   void SetNeighbors(const vector<RegionType>& _neighbors) { m_neighbors= _neighbors; }
@@ -67,9 +67,9 @@ class RadialRegion {
     for(int i=0; i<_branch.size(); i++) 
       m_branch.push_back(_branch[i]);
   }
-  
+
   vector<pair<size_t, VID> > GetCCs() {
-      
+
     typedef stapl::graph_view<typename GraphType::GRAPH> RoadmapViewType;
     RoadmapViewType roadmapView  (*(m_problem->GetRoadmap()->GetGraph()));
     typename RoadmapViewType::view_container_type* localTree = stapl::native_view(roadmapView)[get_location_id()].get_container();
@@ -119,7 +119,7 @@ namespace stapl {
         vector<pair<size_t, VID> > GetCCs() { return Accessor::invoke(&target_t::GetCCs); }
         WeightType GetWeight() { return Accessor::invoke(&target_t::GetWeight); }
         ColorMap GetColorMap() { return Accessor::invoke(&target_t::GetColorMap); }
-        
+
         void SetCandidate(const RegionType _data) { Accessor::invoke(&target_t::SetCandidate, _data); }
         void SetNeighbors(const vector<RegionType> _neighbors) { Accessor::invoke(&target_t::SetNeighbors, _neighbors); }
         void SetBranch(const vector<VID> _branch) { Accessor::invoke(&target_t::SetBranch, _branch); }
@@ -351,8 +351,8 @@ struct RegionVertexByCCs{
     /// Add point to region graph and have them evenly distributed
     template <typename Region>
       void operator() (Region _region) const {
-        
-         
+
+
         double alpha = (double)  2*3.141596/m_numRegions;
         vector<double> pos = m_basePoint.GetPosition();
         const double xBase = m_basePoint[0];
@@ -491,16 +491,16 @@ class BuildRadialRRT {
       _t.member(m_strictBranching);
       _t.member(m_overlap);
     }
-    
+
     VID AddVertex(CfgType _cfg) const {
       VID newVID = m_problem->GetRoadmap()->GetGraph()->add_vertex(_cfg);
-    //  _localTree->add_vertex(newVID, _cfg); 
+      //  _localTree->add_vertex(newVID, _cfg); 
       VDAddNode(_cfg);
       return newVID;
     }
-   
+
     void AddEdge(VID _vid1, VID _vid2, int _weight, vector<pair<VID, VID> >& _pendingEdges, vector<int>& _pendingWeights) const { 
-      if(_vid1 == 0 || _vid2 == 0) {
+      if((_vid1 == 0 || _vid2 == 0) && stapl::get_location_id() != 0) { 
         _pendingEdges.push_back(make_pair(_vid1,_vid2));
         _pendingWeights.push_back(_weight);
         return;
@@ -508,9 +508,9 @@ class BuildRadialRRT {
 
       pair<WeightType, WeightType> weights = make_pair(WeightType("RRTExpand", _weight), WeightType("RRTExpand", _weight));
       m_problem->GetRoadmap()->GetGraph()->AddEdge(_vid1, _vid2, weights);
-    //  _localTree->add_edge(_vid1, _vid2, _weight); 
-    //  _localTree->add_edge(_vid2, _vid1, _weight); 
-      
+      //  _localTree->add_edge(_vid1, _vid2, _weight); 
+      //  _localTree->add_edge(_vid2, _vid1, _weight); 
+
     }
 
     // Run //
@@ -529,10 +529,13 @@ class BuildRadialRRT {
         StatClass* stats = m_problem->GetStatClass();
         string callee("RadialRRT::ExpandTree");
         vector<VID> branch;
+
+        vector<VID> invalidNodes; // instead iterating over all nodes, just keep record of the invalid ones so we dont have to hit the graph every time
+        vector<VID> validNodes; 
         branch.clear();
         size_t attempts=0;
         size_t maxAttempts = std::max(m_numNodes,m_numAttempts);
-        branch.push_back(0);
+
         vector<pair<VID, VID> > pendingEdges;
         vector<int> pendingWeights;
         while(branch.size()<m_numNodes && attempts < maxAttempts) {
@@ -550,7 +553,7 @@ class BuildRadialRRT {
           /*At the first iteration, root is the only node in the tree so no need to call kclosest
             This prevent everyone banging on location 0 for root, however, if statement (branching) will be
             called m_numNodes times, let's hope branch prediction is smart enough to optimize it*/
-          if(branch.size() == 1){
+          if(branch.size() == 0){
             nearestVID = 0;
             nearest = m_root;
           } else {
@@ -562,7 +565,7 @@ class BuildRadialRRT {
             nearestVID = kClosest[0];
           }
           // TODO DEBUG: do not add to root twice for each branch, remember to delete
-          if (m_strictBranching && branch.size() > 1 && nearestVID == 0) continue;
+          if (m_strictBranching && branch.size() > 0 && nearestVID == 0) continue;
 
           if (nearestVID == 0) {
             nearest = m_root;
@@ -573,11 +576,7 @@ class BuildRadialRRT {
           }
 
           //If expansion succeeds add to global tree and a copy in local t
-          vector<VID> newVIDs; 
-          int samplesMade = ExpandTree(newVIDs, nearestVID, nearest, dir, pendingEdges, pendingWeights);
-
-          for(size_t i=0; i<newVIDs.size(); i++)
-            branch.push_back(newVIDs[i]);
+          int samplesMade = ExpandTree(branch, nearestVID, nearest, dir, pendingEdges, pendingWeights);
 
           attempts++;
 
@@ -589,20 +588,20 @@ class BuildRadialRRT {
           ConnectCCs(); 
         }
         /*
-        for (int i=0; i<pendingEdges.size(); i++) {
-          pair<WeightType, WeightType> weights = make_pair(WeightType("RRTExpand", pendingWeights[i]), WeightType("RRTExpand", pendingWeights[i]));
-          globalTree->AddEdge(pendingEdges[i].first, pendingEdges[i].second, weights);
-        }
-*/
+           for (int i=0; i<pendingEdges.size(); i++) {
+           pair<WeightType, WeightType> weights = make_pair(WeightType("RRTExpand", pendingWeights[i]), WeightType("RRTExpand", pendingWeights[i]));
+           globalTree->AddEdge(pendingEdges[i].first, pendingEdges[i].second, weights);
+           }
+           */
         PrintValue("Max Attempts : ", attempts);
         PrintValue("Local Tree ", branch.size());
         // TODO necessary to set branch???
         _view.property().SetBranch(branch);
-      
+
       }
 
 
-    int ExpandTree(vector<VID>& _expansionVIDs, VID _nearestVID, CfgType& _nearest, CfgType& _dir, 
+    int ExpandTree(vector<VID>& _currBranch, VID _nearestVID, CfgType& _nearest, CfgType& _dir, 
         vector<pair<VID, VID> >& _pendingEdges, vector<int>& _pendingWeights) const {
       GraphType* globalTree = m_problem->GetRoadmap()->GetGraph();
       Environment* env = m_problem->GetEnvironment();
@@ -624,7 +623,7 @@ class BuildRadialRRT {
 
           //TODO fix weight
           AddEdge(_nearestVID, newVID, weight, _pendingEdges, _pendingWeights); 
-          
+
           //pair<WeightType, WeightType> weights = make_pair(WeightType("RRTExpand", weight), WeightType("RRTExpand", weight));
           //globalTree->AddEdge(_nearestVID, newVID, weights);
         }
@@ -650,14 +649,15 @@ class BuildRadialRRT {
         if(dm->Distance(env, newCfg, _nearest) >= m_minDist && expansion != ExpansionType::OUT_OF_BOUNDARY ) {
 
           // Adding Nodes
-          _expansionVIDs.push_back(_nearestVID);
-          // expansionCfgs.front().first.SetStat("Parent", kClosest[0]);
+          vector<VID> expansionVIDs;
+          expansionVIDs.push_back(_nearestVID);
 
           // we already added startCfg remember?
           for(size_t i=1; i<expansionCfgs.size(); i++ ) {
             CfgType& cfg2 = expansionCfgs[i].first;
             VID newVID = AddVertex(expansionCfgs[i].first);
-            _expansionVIDs.push_back(newVID);
+            expansionVIDs.push_back(newVID );
+            _currBranch.push_back(newVID);
           }
 
           pair<WeightType, WeightType> weights;
@@ -676,7 +676,7 @@ class BuildRadialRRT {
             if(expansionCfgs[i-1].first.GetLabel("VALID") &&  
                 expansionCfgs[i].first.GetLabel("VALID")) {
               weight = expansionCfgs[i].second - expansionCfgs[i-1].second; // Edge weight 
-              AddEdge(_expansionVIDs[i-1], _expansionVIDs[i], weight, _pendingEdges, _pendingWeights);
+              AddEdge(expansionVIDs[i-1], expansionVIDs[i], weight, _pendingEdges, _pendingWeights);
             }
 
             if(expansion == ExpansionType::JUMPED) // we can only add one edge, start -> middle  
@@ -695,22 +695,28 @@ class BuildRadialRRT {
     void RemoveInvalidNodes(vector<VID>& _allVIDs) const {
 
       RoadmapType* rdmp = m_problem->GetRoadmap();
+      GraphType* globalTree = m_problem->GetRoadmap()->GetGraph();
       StatClass* stats = m_problem->GetStatClass();
       ValidityCheckerPointer vc = m_problem->GetValidityChecker(m_vc);
       Environment* env = m_problem->GetEnvironment();
       CDInfo  cdInfo;
       string callee("BlindRRT::RemoveInvalidNodes");
 
-      vector<VID> allVIDs;
-      rdmp->GetGraph()->GetVerticesVID(allVIDs);
+      //     vector<VID> allVIDs;
+      //      rdmp->GetGraph()->GetVerticesVID(allVIDs);
 
-      for (size_t i=0; i<allVIDs.size(); i++) {
-        CfgType cfg = (rdmp->GetGraph()->GetCfg(allVIDs[i]));
+      for (size_t i=0; i<_allVIDs.size(); i++) {
+        VID vid = _allVIDs[i];
+        CfgType cfg = (*(globalTree->distribution().container_manager().begin()->find_vertex(vid))).property();
+
         if (!cfg.IsLabel("VALID")) 
           vc->IsValid(cfg, env, *stats, cdInfo, &callee); 
-        
+
         if (!cfg.GetLabel("VALID") ) {
-          rdmp->GetGraph()->delete_vertex(allVIDs[i]); 
+          //          PrintValue("Deleting Cfg ", cfg);
+          //          PrintValue("Deleting VID ", _allVIDs[i]);
+          cout << endl;
+          rdmp->GetGraph()->delete_vertex(_allVIDs[i]); 
           //VDRemoveNode(cfg); 
         }
       }
@@ -734,7 +740,7 @@ class BuildRadialRRT {
 
       stringstream clockName; clockName << "Component Connection";
       stats->StartClock(clockName.str());
-      
+
       stapl::sequential::vector_property_map<typename GraphType::GRAPH, size_t> cmap;
       vector< pair<size_t,VID> > ccs;
       typedef stapl::graph_view<typename GraphType::GRAPH> RoadmapViewType;
@@ -742,7 +748,7 @@ class BuildRadialRRT {
       typename RoadmapViewType::view_container_type& localTree = stapl::native_view(roadmapView)[get_location_id()].container();
 
       stapl::sequential::get_cc_stats(localTree ,cmap, ccs);      
-      
+
       cmap.reset();
       if(ccs.size()==1) return;
 
@@ -750,7 +756,7 @@ class BuildRadialRRT {
       vector<VID> cc2;
       VID cc1VID; 
       VID cc2VID; 
-      
+
       bool alt = false;
       bool mapPassedEvaluation = false;
       size_t iters = 0;
@@ -764,7 +770,7 @@ class BuildRadialRRT {
         if (cc1.size() == 1) {
 
           CfgType cfg = m_problem->GetRoadmap()->GetGraph()->GetCfg(cc1[0]);
-          
+
           if (!cfg.IsLabel("VALID")) 
             vc->IsValid(cfg, env, *stats, cdInfo, &callee); 
           if (!cfg.GetLabel("VALID"))
@@ -819,6 +825,9 @@ class BuildRadialRRT {
         cmap.reset();
 
       }
+      //
+      //
+      //
 
 
       stats->StopClock(clockName.str());
@@ -828,163 +837,163 @@ class BuildRadialRRT {
 
     VID GetClosestCC(VID _node, VID _nodeCCVID) const {
 
-        RoadmapType* rdmp = m_problem->GetRoadmap();
-        NeighborhoodFinderPointer nf = m_problem->GetNeighborhoodFinder(m_nf);
+      RoadmapType* rdmp = m_problem->GetRoadmap();
+      NeighborhoodFinderPointer nf = m_problem->GetNeighborhoodFinder(m_nf);
 
-        stapl::sequential::vector_property_map<typename GraphType::GRAPH, size_t> cmap;
-        vector< pair<size_t,VID> > ccs;
-        stapl::sequential::get_cc_stats(*(rdmp->GetGraph()),cmap, ccs);
+      stapl::sequential::vector_property_map<typename GraphType::GRAPH, size_t> cmap;
+      vector< pair<size_t,VID> > ccs;
+      stapl::sequential::get_cc_stats(*(rdmp->GetGraph()),cmap, ccs);
 
-        typedef typename vector<pair<size_t, VID> >::iterator CCSIT;
+      typedef typename vector<pair<size_t, VID> >::iterator CCSIT;
 
-        // Key = nodeVID, Value = CCVID
-        // For easy retrieval of the CC once the closest node is found
-        map<VID, VID> nodesAndCCs;
-        typedef typename vector<pair<size_t, VID> >::iterator CCSIT;
-        vector<VID> closestNodesOtherCCs;
-        //find closest VID from other CCS
-        for(CCSIT ccsit = ccs.begin(); ccsit!=ccs.end(); ccsit++){
+      // Key = nodeVID, Value = CCVID
+      // For easy retrieval of the CC once the closest node is found
+      map<VID, VID> nodesAndCCs;
+      typedef typename vector<pair<size_t, VID> >::iterator CCSIT;
+      vector<VID> closestNodesOtherCCs;
+      //find closest VID from other CCS
+      for(CCSIT ccsit = ccs.begin(); ccsit!=ccs.end(); ccsit++){
 
-          if(ccsit->second == _nodeCCVID)
-            continue;
+        if(ccsit->second == _nodeCCVID)
+          continue;
 
-          vector<VID> cc;
-          stapl::sequential::get_cc(*(rdmp->GetGraph()),cmap,ccsit->second,cc);
-          cmap.reset();
-          vector<VID> closest;
-          nf->KClosest(rdmp, cc.begin(), cc.end(), _node, 1, back_inserter(closest));
-          if (closest.size() != 0) { 
-            closestNodesOtherCCs.push_back(closest[0]);
-            nodesAndCCs[closest[0]] = ccsit->second; 
-          }
+        vector<VID> cc;
+        stapl::sequential::get_cc(*(rdmp->GetGraph()),cmap,ccsit->second,cc);
+        cmap.reset();
+        vector<VID> closest;
+        nf->KClosest(rdmp, cc.begin(), cc.end(), _node, 1, back_inserter(closest));
+        if (closest.size() != 0) { 
+          closestNodesOtherCCs.push_back(closest[0]);
+          nodesAndCCs[closest[0]] = ccsit->second; 
         }
-
-        //find closest VID from other CCS reps
-        vector<VID> closestNode;
-        nf->KClosest(rdmp, closestNodesOtherCCs.begin(), 
-            closestNodesOtherCCs.end(), _node, 1, back_inserter(closestNode));
-
-        VID closestCC = nodesAndCCs[ closestNode[0] ];
-
-        return closestCC;
-      }
-/*
-      void ConnectCCs(vector<VID>& _cc1, vector<VID>& _cc2, typename GraphType::GRAPH _localTree) {
-        
-        
-      }
-      
-      void Connect(LocalGraphType _localTree, vector<VID>::iterator _itr1First, vector<VID>::iterator  _itr1Last,
-            vector<VID>::iterator _itr2First, vector<VID>::iterator _itr2Last) const {
-
-        GraphType* globalTree = m_problem->GetRoadmap()->GetGraph();
-
-        // Ta = itr1, Tb = itr2
-        vector<VID>* treeA = new vector<VID>();
-        vector<VID>* treeB = new vector<VID>();
-        for(InputIterator it = _itr1First; it != _itr1Last; ++it) {
-          treeA->push_back(*it);
-        }
-        for(InputIterator it = _itr2First; it != _itr2Last; ++it) {
-          treeB->push_back(*it);
-        }
-
-        // TODO All good till here
-        size_t iter = 0;
-        bool connected = false;
-        while( iter < m_iterations && !connected) {
-
-          CfgType dir = this->SelectDirection();
-          // Expand in direction of Ta
-          VID recent;
-          ExpandTree(dir, treeA, recent, m_delta);
-
-          if(recent != INVALID_VID) {
-            CfgType recentCfg = GetCfg(recent);
-
-            m_totalSuccess++;
-            treeA->push_back(recent);
-
-            VID newVID;
-
-            connected = ExpandTree(recentCfg, treeB, newVID, MAX_DBL);
-
-          } else {
-            int i = 0;
-            // m_totalFailure++;
-          }
-
-          // Switching trees
-          swap(treeA, treeB);
-          iter++;
-        }
-
-        
-           if(this->m_debug) cout << "*** kClosest Time = " << _stats.GetSeconds("kClosest") << endl;
-           if(this->m_debug) cout << "*** m_totalSuccess = " << m_totalSuccess << endl;
-           if(this->m_debug) cout << "*** m_totalFailure = " << m_totalFailure << endl;
-           
       }
 
+      //find closest VID from other CCS reps
+      vector<VID> closestNode;
+      nf->KClosest(rdmp, closestNodesOtherCCs.begin(), 
+          closestNodesOtherCCs.end(), _node, 1, back_inserter(closestNode));
 
-      bool ExpandTree(LocalGraphType* _localTree, CfgType _dir, vector<VID>* _targetTree, VID& recentVID, double _delta) const {
+      VID closestCC = nodesAndCCs[ closestNode[0] ];
 
-        // Setup MP Variables
-        Environment* env = m_problem->GetEnvironment();
-        StatClass* stats = m_problem->GetStatClass();
-        RoadmapType* rdmp = m_problem->GetRoadmap();
-        GraphType* globalTree = m_problem->GetRoadmap()->GetGraph();
-        DistanceMetricPointer dm = m_problem->GetDistanceMetric(m_dm);
-        NeighborhoodFinderPointer nf = m_problem->GetNeighborhoodFinder(m_nf);
+      return closestCC;
+    }
+    /*
+       void ConnectCCs(vector<VID>& _cc1, vector<VID>& _cc2, typename GraphType::GRAPH _localTree) {
 
-        recentVID = INVALID_VID;
-        CDInfo  cdInfo;
-        // Find closest Cfg in map
-        vector<VID> kClosest;
-        vector<CfgType> cfgs;
 
-        string kcloseClockName = "kclosest time ";
-        stats->StartClock(kcloseClockName);
-        // Choose the closest node from the three    
-        nf->KClosest(rdmp, _targetTree->begin(), _targetTree->end(), _dir, 1, back_inserter(kClosest));
-        kcloseStatClass->StopClock(kcloseClockName);
+       }
 
-        bool connected = false;
+       void Connect(LocalGraphType _localTree, vector<VID>::iterator _itr1First, vector<VID>::iterator  _itr1Last,
+       vector<VID>::iterator _itr2First, vector<VID>::iterator _itr2Last) const {
 
-        CfgType nearest = GetCfg(kClosest[0]);
-        CfgType newCfg;
-        int weight;
+       GraphType* globalTree = m_problem->GetRoadmap()->GetGraph();
 
-        string expandClockName = "RRTConnect time ";
-        stats->StartClock(expandClockName);
+// Ta = itr1, Tb = itr2
+vector<VID>* treeA = new vector<VID>();
+vector<VID>* treeB = new vector<VID>();
+for(InputIterator it = _itr1First; it != _itr1Last; ++it) {
+treeA->push_back(*it);
+}
+for(InputIterator it = _itr2First; it != _itr2Last; ++it) {
+treeB->push_back(*it);
+}
 
-        string dmLabel = this->GetMPProblem()->GetNeighborhoodFinder(this->m_nfMethod)->GetDMMethod()->GetLabel();
+// TODO All good till here
+size_t iter = 0;
+bool connected = false;
+while( iter < m_iterations && !connected) {
 
-        bool expanded = RRTExpand<MPTraits>(this->GetMPProblem(), m_vcLabel, dmLabel, nearest, _dir, newCfg, 
-            _delta, weight, cdInfo, env->GetPositionRes(), env->GetOrientationRes());
+CfgType dir = this->SelectDirection();
+// Expand in direction of Ta
+VID recent;
+ExpandTree(dir, treeA, recent, m_delta);
 
-        if(!expanded) {
-          if(this->m_debug) cout << "RRT could not expand!" << endl; 
-          return connected;
-        }
-        if (this->m_debug) cout<<"RRT expanded"<<endl;
-        expandStatClass->StopClock(expandClockName);
-        if(dm->Distance(env, newCfg, nearest) >= m_minDist) {
-          // if newCfg = Dir, we reached goal
-          if (newCfg == _dir && IsVertex(_dir))  {
-            recentVID = GetVID(_dir);
-            connected = true;
-          } else {
-            recentVID = rdmp->GetGraph()->AddVertex(newCfg);
-          } 
+if(recent != INVALID_VID) {
+CfgType recentCfg = GetCfg(recent);
 
-          pair<WeightType, WeightType> weights = make_pair(WeightType("RRTConnect", weight), WeightType("RRTConnect", weight));
-          AddEdge(kClosest[0], recentVID, weights);
-          //rdmp->GetGraph()->GetCfg(recentVID).SetStat("Parent", kClosest[0]);
-        } 
+m_totalSuccess++;
+treeA->push_back(recent);
 
-        return connected;
-      }
+VID newVID;
+
+connected = ExpandTree(recentCfg, treeB, newVID, MAX_DBL);
+
+} else {
+int i = 0;
+    // m_totalFailure++;
+    }
+
+// Switching trees
+swap(treeA, treeB);
+iter++;
+}
+
+
+if(this->m_debug) cout << "*** kClosest Time = " << _stats.GetSeconds("kClosest") << endl;
+if(this->m_debug) cout << "*** m_totalSuccess = " << m_totalSuccess << endl;
+if(this->m_debug) cout << "*** m_totalFailure = " << m_totalFailure << endl;
+
+}
+
+
+bool ExpandTree(LocalGraphType* _localTree, CfgType _dir, vector<VID>* _targetTree, VID& recentVID, double _delta) const {
+
+// Setup MP Variables
+Environment* env = m_problem->GetEnvironment();
+StatClass* stats = m_problem->GetStatClass();
+RoadmapType* rdmp = m_problem->GetRoadmap();
+GraphType* globalTree = m_problem->GetRoadmap()->GetGraph();
+DistanceMetricPointer dm = m_problem->GetDistanceMetric(m_dm);
+NeighborhoodFinderPointer nf = m_problem->GetNeighborhoodFinder(m_nf);
+
+recentVID = INVALID_VID;
+CDInfo  cdInfo;
+// Find closest Cfg in map
+vector<VID> kClosest;
+vector<CfgType> cfgs;
+
+string kcloseClockName = "kclosest time ";
+stats->StartClock(kcloseClockName);
+// Choose the closest node from the three    
+nf->KClosest(rdmp, _targetTree->begin(), _targetTree->end(), _dir, 1, back_inserter(kClosest));
+kcloseStatClass->StopClock(kcloseClockName);
+
+bool connected = false;
+
+CfgType nearest = GetCfg(kClosest[0]);
+CfgType newCfg;
+int weight;
+
+string expandClockName = "RRTConnect time ";
+stats->StartClock(expandClockName);
+
+string dmLabel = this->GetMPProblem()->GetNeighborhoodFinder(this->m_nfMethod)->GetDMMethod()->GetLabel();
+
+bool expanded = RRTExpand<MPTraits>(this->GetMPProblem(), m_vcLabel, dmLabel, nearest, _dir, newCfg, 
+    _delta, weight, cdInfo, env->GetPositionRes(), env->GetOrientationRes());
+
+if(!expanded) {
+  if(this->m_debug) cout << "RRT could not expand!" << endl; 
+  return connected;
+}
+if (this->m_debug) cout<<"RRT expanded"<<endl;
+expandStatClass->StopClock(expandClockName);
+if(dm->Distance(env, newCfg, nearest) >= m_minDist) {
+  // if newCfg = Dir, we reached goal
+  if (newCfg == _dir && IsVertex(_dir))  {
+    recentVID = GetVID(_dir);
+    connected = true;
+  } else {
+    recentVID = rdmp->GetGraph()->AddVertex(newCfg);
+  } 
+
+  pair<WeightType, WeightType> weights = make_pair(WeightType("RRTConnect", weight), WeightType("RRTConnect", weight));
+  AddEdge(kClosest[0], recentVID, weights);
+  //rdmp->GetGraph()->GetCfg(recentVID).SetStat("Parent", kClosest[0]);
+} 
+
+return connected;
+}
 */
 
 };
@@ -1175,7 +1184,7 @@ class ConnectRegionCCs {
     typedef typename MPTraits::WeightType WeightType;
     typedef typename MPProblemType::GraphType GraphType;
     typedef typename stapl::sequential::vector_property_map< typename GraphType::GRAPH ,size_t > ColorMap;
-    
+
     MPProblemType* m_problem;
     ConnectorPointer m_ncp;
     string m_dmLabel;
@@ -1213,26 +1222,26 @@ class ConnectRegionCCs {
         RoadmapViewType roadmapView  (*globalTree);
         typename RoadmapViewType::view_container_type* localTree = stapl::native_view(roadmapView)[get_location_id()].get_container();
 
-        
+
         ColorMap cmap;
         vector< pair<size_t,VID> > localCCs;
         vector<VID> localCC;
-        
+
         for(typename vertexView::adj_edge_iterator ei = edges.begin(); ei != edges.end(); ++ei){
-          
+
           RadialRegion<MPTraits> tRegion = (*(_gview.find_vertex((*ei).target()))).property();
-          
+
           stapl::sequential::get_cc_stats(localTree ,cmap, localCCs);      
 
           int randCC = LRand() % localCCs.size();
           // Fill in the local CC
           stapl::sequential::get_cc(globalTree, cmap, localCCs[randCC].second, localCC);
-          
+
           CfgType localccCentroid = GetCentroid(globalTree, localCC);
           ColorMap remoteCmap = tRegion.GetColorMap(); 
           vector< pair<size_t,VID> > remoteCCs = tRegion.GetCCs();
           VID closestRemoteCC = GetClosestCentroid(localccCentroid, remoteCCs, remoteCmap);
-          
+
           // Fill in the remote CC
           vector<VID> remoteCC;
           stapl::sequential::get_cc(globalTree, remoteCmap, closestRemoteCC, remoteCC);
@@ -1245,19 +1254,19 @@ class ConnectRegionCCs {
 
         }
       }
-    
+
     // returns the VID of the centroid from the vec _ccs that is closest to _centroid
     VID GetClosestCentroid(CfgType _centroid, vector<pair<size_t, VID> > _ccs, ColorMap _cmap) const {
       DistanceMetricPointer dm = m_problem->GetDistanceMetric(m_dmLabel);
       Environment* env = m_problem->GetEnvironment();
       GraphType* globalTree = m_problem->GetRoadmap()->GetGraph();
-      
+
 
       vector<VID> cc;
 
       double currMinDist = MAX_DBL;
       VID currMinVID = INVALID_VID;
-      
+
       for (int i=0; i<_ccs.size(); i++) {
         // TODO Cesar fix STAPL 
         stapl::sequential::get_cc(globalTree,_cmap,_ccs[i].second,cc);
@@ -1267,7 +1276,7 @@ class ConnectRegionCCs {
           currMinDist = dist;
           currMinVID = _ccs[i].second;
         }
-        
+
         cc.clear();
       }
       return currMinVID;

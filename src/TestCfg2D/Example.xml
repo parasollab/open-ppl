@@ -39,11 +39,11 @@
     <MapEvaluators>
       <Query label="Query" queryFile="narrow.query" pathFile="RRT.123456.path" dmMethod="euclidean" lpMethod="sl"
         smooth="false" smoothFile="smooth.path" debug="false">
-        <NodeConnectionMethod method="Closest"/>
+        <NodeConnectionMethod method="QueryClosest"/>
         <SmoothConnectionMethod method="AllToAll"/>
       </Query>
       <ConditionalEvaluator label="NodesEval" metric_method="NumNodes" value="2000" operator=">=" />
-      <ConditionalEvaluator label="NodesPRM" metric_method="NumNodes" value="2" operator=">=" />
+      <ConditionalEvaluator label="NodesPRM" metric_method="NumNodes" value="1" operator=">=" />
       <ConditionalEvaluator label="RRTEval" metric_method="NumNodes" value="840" operator=">=" />
       <ComposeEvaluator label="QueryEval" operator="or">
         <Evaluator label="NodesEval"/>
@@ -69,15 +69,15 @@
     
       <BlindRRT label="BlindRRT" delta="2.0" minDist="0.1" CCconnection="ClosestNode" expansionType="All" 
         samplerLabel="UniformRandomFree" lpLabel="sl" dmLabel="euclidean" initialSamples="200"
-        nfLabel="BFNF" vcLabel="cd" connectorLabel="RRTConnect" query="narrow.query" debug="false" evaluateGoal="true">
+        nfLabel="BFNF" vcLabel="cd" connectorLabel="RRTConnect" query="narrow.query" debug="false" evaluateGoal="false">
 
-        <Evaluator label="NodesEval"/>
+        <Evaluator label="Query"/>
       </BlindRRT>
       
-      <BasicRRTStrategy label="RRT" delta="2.0" minDist="0.1" 
+      <BasicRRTStrategy label="RRT" delta="2.0" minDist="0.1"
         numRoots="1" m="1" growthFocus="0.01" samplerLabel="UniformRandomFree" lpLabel="sl" dmLabel="euclidean"
         nfLabel="BFNF" vcLabel="cd" connectorLabel="kClosest" query="narrow.query" gtype="UNDIRECTED_TREE" debug="false" evaluateGoal="false">
-        <Evaluator label="Query"/>
+        <Evaluator label="NodesPRM"/>
       </BasicRRTStrategy>
 
     
