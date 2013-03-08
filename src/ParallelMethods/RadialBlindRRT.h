@@ -174,11 +174,10 @@ void RadialBlindRRT<MPTraits>::Run() {
   rmi_fence();
   cout << "STEP 4 : Global CC Connect " << endl;
   t4.start();
-  //  ConnectRegions(regionView, problem);
+  // ConnectRegions(regionView, problem);
   t4.stop();
   rmi_fence();
 
-  cout << "STEP 5 : Remove Cycles " << endl;
   t5.start();
   //  RemoveCycles(pMap);
   t5.stop();

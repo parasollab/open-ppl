@@ -807,7 +807,6 @@ BlindRRTExpand(typename MPTraits::MPProblemType* _mp,
   typename MPTraits::MPProblemType::ValidityCheckerPointer vc = _mp->GetValidityChecker(_vc);
 
   typedef typename MPTraits::CfgType CfgType;
-  typename vector<typename MPTraits::CfgType>::iterator startCIterator;
   typename MPTraits::CfgType incr, tick = _start, previous = _start;
   // if any collision is encountered, collision becomes true
   // jump is to know if we should go directly to _delta
@@ -830,7 +829,7 @@ BlindRRTExpand(typename MPTraits::MPProblemType* _mp,
     }
     else if (!(vc->IsValid(tick, env, *stats, _cdInfo, &callee))) { // no need for further checking, get ray and return
       collision = true; //Found a collision, activate flag
-      previous.SetStat("Validity", NodeState::FREE);
+      //previous.SetStat("Validity", NodeState::FREE);
       if(!prevCollision) {
         
         cfgWeight = make_pair(previous, ticker - 1); // previous is one tick behind
@@ -838,10 +837,11 @@ BlindRRTExpand(typename MPTraits::MPProblemType* _mp,
         
         // we track all nodes
         if(_expansionType == "All") {
-          tick.SetStat("Validity", NodeState::COLLISION);
+          //tick.SetStat("Validity", NodeState::COLLISION);
           
-          cfgWeight = make_pair(tick, ticker);  
-          _newCfgs.push_back(cfgWeight);
+          // TODO Cesar do we really want to add in collision nodes???
+          // cfgWeight = make_pair(tick, ticker);  
+          // _newCfgs.push_back(cfgWeight);
         
         } else if ("First") {  // we dont need to track every change, lets jump to delta
           jump = true;
@@ -851,16 +851,17 @@ BlindRRTExpand(typename MPTraits::MPProblemType* _mp,
         prevCollision = true;
       }
     } else {
-      tick.SetStat("Validity", NodeState::FREE);
+      //tick.SetStat("Validity", NodeState::FREE);
       
       if(prevCollision) {
         
         // we track all nodes
         if(_expansionType == "All") {
-          previous.SetStat("Validity", NodeState::COLLISION);
+          //previous.SetStat("Validity", NodeState::COLLISION);
           
-          cfgWeight = make_pair(previous, ticker - 1); // previous is one tick behind 
-          _newCfgs.push_back(cfgWeight);
+          // TODO Cesar do we really want to add in collision nodes???
+          // cfgWeight = make_pair(previous, ticker - 1); // previous is one tick behind 
+          // _newCfgs.push_back(cfgWeight);
         
         } 
          

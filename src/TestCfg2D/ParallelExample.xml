@@ -60,7 +60,7 @@
     <!-- Parallel Radial RRT *********COMPILE UNDER PARALLEL OPTION **********--> 
       <RadialBlindRRT label="RadialBlindRRT" filename="radialBlindRRT" debug="true" >
         <!-- the training samples (numTestSamples) should at most equal nmNodes -->
-	<region_constr numRegions = "4" rayLength= "25" numNeighbors = "2"/> 
+	<region_constr numRegions = "2" rayLength= "25" numNeighbors = "1"/> 
 	<!-- numAttempts should at least equal numNodes-->
         <rrt_constr numNodes = "200" numAttempts = "20" delta= "4.0" numCCIters="10"
           minDist = "0.05" strictBranching="true" expansionType="All" CCconnection="ClosestNode"  /> 

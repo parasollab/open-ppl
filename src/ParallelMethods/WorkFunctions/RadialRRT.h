@@ -32,6 +32,7 @@ class RadialRegion {
   vector<VID> m_branch;
   WeightType  m_weight;
   ColorMap m_cmap;  // refreshed everytime GetCCs is called;
+  vector<pair<size_t, VID> > m_ccs;
 
   public:
   RadialRegion(RegionType _data=RegionType()) : m_data(_data) { }
@@ -55,6 +56,7 @@ class RadialRegion {
   vector<VID> GetBranch() { return  m_branch;}
   WeightType GetWeight() { return  m_weight;}
   ColorMap GetColorMap() { return m_cmap; } 
+  vector<pair<size_t, VID> > GetCCs() { return m_ccs;  }
 
   // Setters
   void SetCandidate(const RegionType& _data) { m_data= _data; }
@@ -62,30 +64,22 @@ class RadialRegion {
   void SetBranch(const vector<VID>& _branch) {m_branch = _branch;}
   void SetWeight(const WeightType _weight) {m_weight = _weight;}
   void SetMPProblem(const MPProblemType* _problem) {m_problem = _problem;}
+  void SetColorMap(const ColorMap& _cmap) { m_cmap = _cmap; } 
+  void SetCCs(const vector<pair<size_t, VID> >& _ccs) { m_ccs = _ccs; } 
 
   void AddToBranch(const vector<VID>& _branch) {
     for(int i=0; i<_branch.size(); i++) 
       m_branch.push_back(_branch[i]);
   }
 
-  vector<pair<size_t, VID> > GetCCs() {
-
-    typedef stapl::graph_view<typename GraphType::GRAPH> RoadmapViewType;
-    RoadmapViewType roadmapView  (*(m_problem->GetRoadmap()->GetGraph()));
-    typename RoadmapViewType::view_container_type* localTree = stapl::native_view(roadmapView)[get_location_id()].get_container();
-
-    vector< pair<size_t,VID> > localCCs;
-    m_cmap.reset();
-
-    stapl::sequential::get_cc_stats(stapl::native_view(roadmapView)[get_location_id()].container() ,m_cmap, localCCs);      
-    return localCCs;
-  }
 
   void define_type(stapl::typer& _t) { 
     _t.member(m_data);
     _t.member(m_neighbors);
     _t.member(m_branch);
     _t.member(m_problem);
+    _t.member(m_cmap);
+    _t.member(m_ccs);
   }
 
 };
@@ -125,6 +119,8 @@ namespace stapl {
         void SetBranch(const vector<VID> _branch) { Accessor::invoke(&target_t::SetBranch, _branch); }
         void SetWeight(const WeightType _weight) { Accessor::invoke(&target_t::SetWeight, _weight); }
         void SetMPProblem(const MPProblemType* _problem) {Accessor::invoke(&target_t::SetMPProblem, _problem); }
+        void SetColorMap(const ColorMap& _cmap) { Accessor::invoke(&target_t::SetColorMap, _cmap); } 
+        void SetCCs(const vector<pair<size_t, VID> >& _ccs) { Accessor::invoke(&target_t::SetCCs, _ccs) ; } 
         void AddToBranch(const vector<VID> _branch) { Accessor::invoke(&target_t::AddToBranch, _branch); }
     }; //struct proxy
 }
@@ -439,6 +435,7 @@ class BuildRadialRRT {
     typedef typename MPProblemType::ValidityCheckerPointer ValidityCheckerPointer;
     typedef typename MPProblemType::NeighborhoodFinderPointer NeighborhoodFinderPointer;
     typedef typename MPProblemType::ConnectorPointer ConnectorPointer;
+    typedef stapl::counter<stapl::default_timer> STAPLTimer;
 
     MPProblemType* m_problem;
     size_t m_numNodes;
@@ -495,7 +492,7 @@ class BuildRadialRRT {
     VID AddVertex(CfgType _cfg) const {
       VID newVID = m_problem->GetRoadmap()->GetGraph()->add_vertex(_cfg);
       //  _localTree->add_vertex(newVID, _cfg); 
-      VDAddNode(_cfg);
+      // VDAddNode(_cfg);
       return newVID;
     }
 
@@ -506,8 +503,11 @@ class BuildRadialRRT {
         return;
       }
 
-      pair<WeightType, WeightType> weights = make_pair(WeightType("RRTExpand", _weight), WeightType("RRTExpand", _weight));
-      m_problem->GetRoadmap()->GetGraph()->AddEdge(_vid1, _vid2, weights);
+//      pair<WeightType, WeightType> weights = make_pair(WeightType("RRTExpand", _weight), WeightType("RRTExpand", _weight));
+      WeightType weight("RRTExpand", _weight);
+/// m_problem->GetRoadmap()->GetGraph()->AddEdge(_vid1, _vid2, weights);
+      m_problem->GetRoadmap()->GetGraph()->add_edge(_vid1, _vid2, weight);
+      m_problem->GetRoadmap()->GetGraph()->add_edge(_vid2, _vid1, weight);
       //  _localTree->add_edge(_vid1, _vid2, _weight); 
       //  _localTree->add_edge(_vid2, _vid1, _weight); 
 
@@ -522,6 +522,8 @@ class BuildRadialRRT {
         //LocalGraphType* localTree = new LocalGraphType(); 
         //localTree->add_vertex(0, m_root);
         ///Setup global variables
+        STAPLTimer t0,t1,t2,t3,t4,t5, expandTree, kclosest;
+        STAPLTimer expansionClk, process; 
         DistanceMetricPointer dm = m_problem->GetDistanceMetric(m_dm);
         NeighborhoodFinderPointer nfp = m_problem->GetNeighborhoodFinder(m_nf);
         Environment* env = m_problem->GetEnvironment();
@@ -538,6 +540,9 @@ class BuildRadialRRT {
 
         vector<pair<VID, VID> > pendingEdges;
         vector<int> pendingWeights;
+        
+        t0.start();
+        t1.start();
         while(branch.size()<m_numNodes && attempts < maxAttempts) {
 
           CfgType dir, nearest, newCfg;
@@ -572,37 +577,71 @@ class BuildRadialRRT {
           } else {
             // Hack to make sure nearest is always local
             // nearest = (*(globalTree->find_vertex(nearestVID))).property();
+            kclosest.start();
             nearest =   (*(globalTree->distribution().container_manager().begin()->find_vertex(nearestVID))).property();
+            kclosest.stop();
           }
 
           //If expansion succeeds add to global tree and a copy in local t
-          int samplesMade = ExpandTree(branch, nearestVID, nearest, dir, pendingEdges, pendingWeights);
+          expandTree.start();
+          int samplesMade = ExpandTree(branch, nearestVID, nearest, dir, pendingEdges, pendingWeights, expansionClk, process);
+          expandTree.stop();
 
           attempts++;
 
         }
+        t1.stop();
         if (m_expansionType != "") { 
-          cout << "Removing Invalid Nodes" << endl;
+          t2.start(); 
           RemoveInvalidNodes(branch);
-          cout << "Connecting CCs" << endl;
+          t2.stop();
+          t3.start();
           ConnectCCs(); 
+          t3.stop();
         }
-        /*
-           for (int i=0; i<pendingEdges.size(); i++) {
-           pair<WeightType, WeightType> weights = make_pair(WeightType("RRTExpand", pendingWeights[i]), WeightType("RRTExpand", pendingWeights[i]));
-           globalTree->AddEdge(pendingEdges[i].first, pendingEdges[i].second, weights);
-           }
-           */
+        t4.start();
+        for (int i=0; i<pendingEdges.size(); i++) {
+          pair<WeightType, WeightType> weights = make_pair(WeightType("RRTExpand", pendingWeights[i]), WeightType("RRTExpand", pendingWeights[i]));
+          globalTree->AddEdge(pendingEdges[i].first, pendingEdges[i].second, weights);
+        }
+        t4.stop();
+
+
+        t5.start();
+        // setting CCs
+        stapl::sequential::vector_property_map<typename GraphType::GRAPH, size_t> cmap;
+        vector< pair<size_t,VID> > ccs;
+        typedef stapl::graph_view<typename GraphType::GRAPH> RoadmapViewType;
+        RoadmapViewType roadmapView  (*globalTree);
+        typename RoadmapViewType::view_container_type& localTree = stapl::native_view(roadmapView)[get_location_id()].container();
+
+        _view.property().SetCCs(ccs);
+        _view.property().SetColorMap(cmap);
+        _view.property().SetBranch(branch);
+        
+        t5.stop();
+        t0.stop();
+        
         PrintValue("Max Attempts : ", attempts);
         PrintValue("Local Tree ", branch.size());
-        // TODO necessary to set branch???
-        _view.property().SetBranch(branch);
+        
+        PrintValue("Blind Build: ", t1.value() );
+        PrintValue("K Closest: ", kclosest.value() );
+        PrintValue("Expand Tree: ", expandTree.value() );
+        PrintValue("AddVertex Loop: ", expansionClk.value() );
+        PrintValue("AddEdge: ", process.value() );
+        PrintValue("Remove Invalid: ",t2.value() );
+        PrintValue("Connect CCs: ", t3.value() );
+        PrintValue("Pending Edges: ", t4.value() ); 
+        PrintValue("Setting CCs: ", t5.value() ); 
+        PrintValue("Setting CCs: ", t5.value() ); 
+        PrintValue("Total: ", t0.value() ); 
 
       }
 
 
     int ExpandTree(vector<VID>& _currBranch, VID _nearestVID, CfgType& _nearest, CfgType& _dir, 
-        vector<pair<VID, VID> >& _pendingEdges, vector<int>& _pendingWeights) const {
+        vector<pair<VID, VID> >& _pendingEdges, vector<int>& _pendingWeights, STAPLTimer& expansionClk, STAPLTimer& process) const {
       GraphType* globalTree = m_problem->GetRoadmap()->GetGraph();
       Environment* env = m_problem->GetEnvironment();
       DistanceMetricPointer dm = m_problem->GetDistanceMetric(m_dm);
@@ -614,6 +653,7 @@ class BuildRadialRRT {
       CDInfo cdInfo;
       int weight;  
 
+
       if(m_expansionType == "") {
         if(RRTExpand<MPTraits>(m_problem,m_vc, m_dm, _nearest, _dir, newCfg, m_delta, weight, cdInfo, 
               env->GetPositionRes(), env->GetOrientationRes())
@@ -621,8 +661,8 @@ class BuildRadialRRT {
 
           newVID = AddVertex(newCfg);
 
-          //TODO fix weight
           AddEdge(_nearestVID, newVID, weight, _pendingEdges, _pendingWeights); 
+          // VDAddEdge(newCfg, _nearest);
 
           //pair<WeightType, WeightType> weights = make_pair(WeightType("RRTExpand", weight), WeightType("RRTExpand", weight));
           //globalTree->AddEdge(_nearestVID, newVID, weights);
@@ -638,13 +678,12 @@ class BuildRadialRRT {
             _nearest, _dir, expansionCfgs, m_delta, cdInfo, 
             env->GetPositionRes(), env->GetOrientationRes());
 
-
+        
         if (expansion == ExpansionType::NO_EXPANSION) {  
           return 0;
         }
-
         CfgType& newCfg = expansionCfgs.back().first; // last cfg in the returned array is delta away from nearest
-
+        int nodesAdded = 0;
         // If good to go, add to roadmap
         if(dm->Distance(env, newCfg, _nearest) >= m_minDist && expansion != ExpansionType::OUT_OF_BOUNDARY ) {
 
@@ -653,6 +692,7 @@ class BuildRadialRRT {
           expansionVIDs.push_back(_nearestVID);
 
           // we already added startCfg remember?
+        expansionClk.start();
           for(size_t i=1; i<expansionCfgs.size(); i++ ) {
             CfgType& cfg2 = expansionCfgs[i].first;
             VID newVID = AddVertex(expansionCfgs[i].first);
@@ -660,9 +700,11 @@ class BuildRadialRRT {
             _currBranch.push_back(newVID);
           }
 
+        expansionClk.stop();
           pair<WeightType, WeightType> weights;
           // Adding Edges
           int weight;
+          process.start();
           for(size_t i=1; i<expansionCfgs.size(); i++ ) {
 
             // For some reason, not all nodes have the VALID label
@@ -682,11 +724,14 @@ class BuildRadialRRT {
             if(expansion == ExpansionType::JUMPED) // we can only add one edge, start -> middle  
               break;
           }
-          return expansionCfgs.size() - 1;    // substract one cause the start already belonged to the tree
+          process.stop();
+
+          nodesAdded=  expansionCfgs.size() - 1;    // substract one cause the start already belonged to the tree
         } else {  // did not reach minDist :(
           return 0;
         }
 
+        return nodesAdded;
       }   // End Blind
 
       return 0; // return 
@@ -702,9 +747,6 @@ class BuildRadialRRT {
       CDInfo  cdInfo;
       string callee("BlindRRT::RemoveInvalidNodes");
 
-      //     vector<VID> allVIDs;
-      //      rdmp->GetGraph()->GetVerticesVID(allVIDs);
-
       for (size_t i=0; i<_allVIDs.size(); i++) {
         VID vid = _allVIDs[i];
         CfgType cfg = (*(globalTree->distribution().container_manager().begin()->find_vertex(vid))).property();
@@ -713,9 +755,6 @@ class BuildRadialRRT {
           vc->IsValid(cfg, env, *stats, cdInfo, &callee); 
 
         if (!cfg.GetLabel("VALID") ) {
-          //          PrintValue("Deleting Cfg ", cfg);
-          //          PrintValue("Deleting VID ", _allVIDs[i]);
-          cout << endl;
           rdmp->GetGraph()->delete_vertex(_allVIDs[i]); 
           //VDRemoveNode(cfg); 
         }

@@ -520,7 +520,7 @@ class RoadmapGraph :
       typename RoadmapGraph<VERTEX, WEIGHT>::VID
       RoadmapGraph<VERTEX,WEIGHT>::
       AddVertex(VERTEX& _v1) {
-        // #ifndef _PARALLEL
+        #ifndef _PARALLEL
         CVI v1;
         if ( !IsVertex(_v1,&v1) ) {
           VID vertex_id = GRAPH::add_vertex(_v1);
@@ -536,10 +536,10 @@ class RoadmapGraph :
           //return (v1->vid); // return vertex id 
           return ((*v1).descriptor()); // return vertex id 
         }
-        //   #else 
+           #else 
         VID vertex_id = GRAPH::add_vertex(_v1);
         return vertex_id;
-        //    #endif
+            #endif
       };
 
     // require that VERTEX data (configuration) is unique
@@ -738,7 +738,7 @@ class RoadmapGraph :
       typename RoadmapGraph<VERTEX, WEIGHT>::VID
       RoadmapGraph<VERTEX,WEIGHT>::
       GetVID(VERTEX& _v1) {
-        //    #ifndef _PARALLEL
+       #ifndef _PARALLEL
         CVI v1;
         if ( IsVertex(_v1,&v1) ) {
           //return v1->vid;
@@ -746,23 +746,23 @@ class RoadmapGraph :
         } else {
           return INVALID_VID;
         }
-        //    #else 
+           #else 
         cout << "WARNING::STAPL working on fixing problem with const iterators";
         return INVALID_VID;
-        //    #endif
+           #endif
       }
 
     template<class VERTEX, class WEIGHT>
       bool
       RoadmapGraph<VERTEX,WEIGHT>::
       IsVertex(VERTEX& _v1){
-        //    #ifndef _PARALLEL ////implement parallel version as map reduce
+          #ifndef _PARALLEL ////implement parallel version as map reduc
         CVI v1;
         return ( IsVertex(_v1,&v1) );
-        /*    #else
-        // cout << "WARNING::STAPL working on fixing problem with const iterators";
+           #else
+        cout << "WARNING::STAPL working on fixing problem with const iterators";
         return false;
-#endif*/
+#endif
       }
 
     /*

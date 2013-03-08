@@ -51,8 +51,8 @@ class RRTConnect: public ConnectorMethod<MPTraits> {
 
     //////////////////////
     // Utility Method
-    bool 
-      ExpandTree(CfgType& _dir, vector<VID>* _targetTree, VID& recentVID, double _delta);
+    bool ExpandTree(CfgType& _dir, vector<VID>* _targetTree, double _delta, VID& _newVID, CfgType& _newCfg);
+    bool ExpandTree(CfgType& _dir, const VID& _dirVID, vector<VID>* _targetTree, double _delta, VID& _newVID, CfgType& _newCfg, bool _interTree);
 
     CfgType SelectDirection();
 
@@ -145,6 +145,7 @@ RRTConnect<MPTraits>::Connect(RoadmapType* _rm, StatClass& _stats,
 
 
   // Ta = itr1, Tb = itr2
+  map<VID, CfgType> existingNodes;
   vector<VID>* treeA = new vector<VID>();
   vector<VID>* treeB = new vector<VID>();
   for(InputIterator it = _itr1First; it != _itr1Last; ++it) {
@@ -161,23 +162,17 @@ RRTConnect<MPTraits>::Connect(RoadmapType* _rm, StatClass& _stats,
 
     CfgType dir = this->SelectDirection();
     // Expand in direction of Ta
-    VID recent;
-    this->ExpandTree(dir, treeA, recent, m_delta);
+    VID newVID, interTreeVID;
+    CfgType newCfg, interTreeCfg;
+    ExpandTree(dir, treeA, m_delta, newVID, newCfg);
 
-    if(recent != INVALID_VID) {
-      CfgType recentCfg = _rm->GetGraph()->GetCfg(recent);
+    if(newVID != INVALID_VID) {
 
       m_totalSuccess++;
-      treeA->push_back(recent);
-
-      VID newVID;
+      treeA->push_back(newVID);
 
       // Since expand goes until collision or goal is detected, we shouldnt iterate.
-      // TODO Cesar if(Expand) break;
-      // do {
-      connected = this->ExpandTree(recentCfg, treeB, newVID, MAX_DBL);
-      //} while (newVID != INVALID_VID && !connected);
-
+      connected = ExpandTree(newCfg, newVID, treeB, MAX_DBL, interTreeVID, interTreeCfg, true);
 
     } else {
       m_totalFailure++;
@@ -194,16 +189,22 @@ RRTConnect<MPTraits>::Connect(RoadmapType* _rm, StatClass& _stats,
   if(this->m_debug) cout << "*** m_totalFailure = " << m_totalFailure << endl;
 }
 
+template<class MPTraits>
+bool
+RRTConnect<MPTraits>::ExpandTree(CfgType& _dir, vector<VID>* _targetTree, double _delta, VID& _newVID, CfgType& _newCfg){
+
+  return ExpandTree(_dir, INVALID_VID, _targetTree, _delta, _newVID, _newCfg, false);
+}
 
 template<class MPTraits>
 bool
-RRTConnect<MPTraits>::ExpandTree(CfgType& _dir, vector<VID>* _targetTree, VID& recentVID, double _delta){
+RRTConnect<MPTraits>::ExpandTree(CfgType& _dir, const VID& _dirVID, vector<VID>* _targetTree, double _delta, VID& _newVID, CfgType& _newCfg, bool _interTree){
   // Setup MP Variables
   Environment* env = this->GetMPProblem()->GetEnvironment();
   DistanceMetricPointer dm = this->GetMPProblem()->GetNeighborhoodFinder(this->m_nfMethod)->GetDMMethod();
   NeighborhoodFinderPointer nf = this->GetMPProblem()->GetNeighborhoodFinder(this->m_nfMethod);
   RoadmapType* rdmp = this->GetMPProblem()->GetRoadmap();
-  recentVID = INVALID_VID;
+  _newVID = INVALID_VID;
   CDInfo  cdInfo;
   // Find closest Cfg in map
   vector<VID> kClosest;
@@ -219,7 +220,6 @@ RRTConnect<MPTraits>::ExpandTree(CfgType& _dir, vector<VID>* _targetTree, VID& r
   bool connected = false;
 
   const CfgType& nearest = rdmp->GetGraph()->GetCfg(kClosest[0]);
-  CfgType newCfg;
   int weight;
 
   StatClass* expandStatClass = this->GetMPProblem()->GetStatClass();
@@ -228,7 +228,7 @@ RRTConnect<MPTraits>::ExpandTree(CfgType& _dir, vector<VID>* _targetTree, VID& r
 
   string dmLabel = this->GetMPProblem()->GetNeighborhoodFinder(this->m_nfMethod)->GetDMMethod()->GetLabel();
 
-  bool expanded = RRTExpand<MPTraits>(this->GetMPProblem(), m_vcLabel, dmLabel, nearest, _dir, newCfg, 
+  bool expanded = RRTExpand<MPTraits>(this->GetMPProblem(), m_vcLabel, dmLabel, nearest, _dir, _newCfg, 
       _delta, weight, cdInfo, env->GetPositionRes(), env->GetOrientationRes());
 
   if(!expanded) {
@@ -237,17 +237,17 @@ RRTConnect<MPTraits>::ExpandTree(CfgType& _dir, vector<VID>* _targetTree, VID& r
   }
   if (this->m_debug) cout<<"RRT expanded"<<endl;
   expandStatClass->StopClock(expandClockName);
-  if(dm->Distance(env, newCfg, nearest) >= m_minDist) {
-    // if newCfg = Dir, we reached goal
-    if (newCfg == _dir && rdmp->GetGraph()->IsVertex(_dir))  {
-      recentVID = rdmp->GetGraph()->GetVID(_dir);
+  if(dm->Distance(env, _newCfg, nearest) >= m_minDist) {
+    // if _newCfg = Dir, we reached goal
+    if (_newCfg == _dir && _interTree)  {  // this expansion is between trees
+      _newVID = _dirVID;
       connected = true;
     } else {
-      recentVID = rdmp->GetGraph()->AddVertex(newCfg);
+      _newVID = rdmp->GetGraph()->AddVertex(_newCfg);
     } 
 
     pair<WeightType, WeightType> weights = make_pair(WeightType("RRTConnect", weight), WeightType("RRTConnect", weight));
-    rdmp->GetGraph()->AddEdge(kClosest[0], recentVID, weights);
+    rdmp->GetGraph()->AddEdge(kClosest[0], _newVID, weights);
     //rdmp->GetGraph()->GetCfg(recentVID).SetStat("Parent", kClosest[0]);
   } 
 
