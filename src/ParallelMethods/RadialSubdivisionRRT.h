@@ -167,7 +167,7 @@ void
 RadialSubdivisionRRT<MPTraits>::BuildRRT(graph_view<RadialRegionGraph> _regionView, 
     MPProblemType* _problem, CfgType _root) {
   // no expansion type or CCconnection labels required
-  BuildRadialRRT<MPTraits> wf(_problem,m_numNodes,m_dmLabel,m_vcLabel,m_nfLabel,"","",m_delta,m_minDist,
+  BuildRadialRRT<MPTraits> wf(_problem,m_numNodes,m_dmLabel,m_vcLabel,m_nfLabel,m_delta,m_minDist,
       _root,m_numAttempts, m_overlap, m_strictBranching);
 
 //  MPStrategyPointer strategy = this->GetMPProblem()->GetMPStrategy("BlindRRT");

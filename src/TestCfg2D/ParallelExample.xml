@@ -4,8 +4,8 @@
     <Environment input_env="narrow.env">
       <robot Cfg_name="Cfg_2D" num_joints="0" pos_dof="2" dofs="2"> 
         <boundary type="bbox" translational_scale="1">
-          <parameter id="0" label="x" type="translational" min="-25" max="25" />
-          <parameter id="1" label="y" type="translational" min="-25" max="25" />
+          <parameter id="0" label="x" type="translational" min="-50" max="50" />
+          <parameter id="1" label="y" type="translational" min="-50" max="50" />
         </boundary>
       </robot>
     </Environment>
@@ -28,7 +28,7 @@
     
     <Connectors>
       <NeighborhoodConnector label="Closest" nf="BFNF" k="5" CheckIfSameCC="false" lp_method="sl" unconnected="true"/>
-      <RRTConnect label="RRTConnect" nf="BFNF" delta="1.9" minDist="0.1" iterations="5" lp_method="sl" vcLabel="cd" />
+      <RRTConnect label="RRTConnect" nf="BFNF" delta="1.9" minDist="0.1" iterations="15" lp_method="sl" vcLabel="cd" />
       <RegionConnector Label="RegionConnector" lp_method="sl" k="2" numIters="0" nf="BFNF" dmLabel="euclidean"/>
     </Connectors>
     
@@ -60,9 +60,9 @@
     <!-- Parallel Radial RRT *********COMPILE UNDER PARALLEL OPTION **********--> 
       <RadialBlindRRT label="RadialBlindRRT" filename="radialBlindRRT" debug="true" >
         <!-- the training samples (numTestSamples) should at most equal nmNodes -->
-	<region_constr numRegions = "2" rayLength= "25" numNeighbors = "1"/> 
+	<region_constr numRegions = "2" rayLength= "50" numNeighbors = "1"/> 
 	<!-- numAttempts should at least equal numNodes-->
-        <rrt_constr numNodes = "200" numAttempts = "20" delta= "4.0" numCCIters="10"
+        <rrt_constr numNodes = "100" numAttempts = "20" delta= "4.0" numCCIters="25"
           minDist = "0.05" strictBranching="true" expansionType="All" CCconnection="ClosestNode"  /> 
 	<vc_method vcm = "cd"/> 
 	<dm_method Method="euclidean"/>

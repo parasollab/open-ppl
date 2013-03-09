@@ -5,7 +5,7 @@ endif
 
 # set default debug
 ifndef debug
-  debug = 0
+  debug = 1
 endif
 
 ifndef parallel

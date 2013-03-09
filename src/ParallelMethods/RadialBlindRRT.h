@@ -95,7 +95,7 @@ void
 RadialBlindRRT<MPTraits>::BuildRRT(graph_view<RadialRegionGraph> _regionView, 
     MPProblemType* _problem, CfgType _root) {
 
-  BuildRadialRRT<MPTraits> wf(_problem,this->m_numNodes,this->m_dmLabel,this->m_vcLabel,
+  BuildRadialBlindRRT<MPTraits> wf(_problem,this->m_numNodes,this->m_dmLabel,this->m_vcLabel,
       this->m_nfLabel,m_CCconnection,m_expansionType,this->m_delta,this->m_minDist,
       _root,this->m_numAttempts,m_numCCIters,this->m_overlap, this->m_strictBranching);
 
