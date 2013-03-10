@@ -41,6 +41,7 @@ class MPProblem
     void SetEnvironment(Environment* _e) {m_environment = _e;};
     
     RoadmapType* GetRoadmap() { return m_roadmap; }
+    void SetRoadmap(RoadmapType* _roadmap){m_roadmap = _roadmap;}
     RoadmapType* GetBlockRoadmap() { return m_blockRoadmap; }
     RoadmapType* GetColRoadmap() { return m_colRoadmap; }
     

@@ -40,6 +40,8 @@ class BasicRRTStrategy : public MPStrategyMethod<MPTraits> {
     virtual void Run();
     virtual void Finalize();
     virtual void PrintOptions(ostream& _os);
+    
+    void SetMPProblem(MPProblemType* _problem);
      
     //return path computed if RRT is successfully run with a query
     vector<CfgType> GetPath(){return m_query->GetPath();}
@@ -527,5 +529,13 @@ BasicRRTStrategy<MPTraits>::EvaluateGoals(){
       i--;
     }
   }
+}
+
+template<class MPTraits>
+void 
+BasicRRTStrategy<MPTraits>::SetMPProblem(MPProblemType* _problem){
+  MPBaseObject<MPTraits>::SetMPProblem(_problem);
+  if(m_query)
+    m_query->SetMPProblem(_problem);
 }
 #endif
