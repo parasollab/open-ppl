@@ -20,7 +20,9 @@ class Query : public MapEvaluatorMethod<MPTraits> {
     typedef typename MPProblemType::VID VID;
     typedef typename MPProblemType::ConnectorPointer ConnectorPointer;
 
-    Query();
+    Query(bool _deleteNodes=false, string _searchAlg="astar", string _pathFile = "Basic.path", string _smoothFile="Basic.smooth.path",
+    string _intermediateFile = "", string lpLabel="", string _dmLabel="", bool _smooth=false);
+
     Query(string _queryFileName);
     Query(CfgType _start, CfgType _goal);
     Query(MPProblemType* _problem, XMLNodeReader& _node, bool _warn = true);
@@ -72,6 +74,7 @@ class Query : public MapEvaluatorMethod<MPTraits> {
   private:
     //initialize variable defaults
     void Initialize();
+    void SetSearchAlgViaString(string _alg);
 
     vector<VID> m_pathVIDs;     // Stores path nodes for easy reference during smoothing
     bool m_doneSmoothing;       // Flag to prevent infinite recursion
@@ -102,8 +105,13 @@ struct Heuristic {
 };
 
 template<class MPTraits>
-Query<MPTraits>::Query() {
-  Initialize();
+Query<MPTraits>::Query(bool _deleteNodes, string _searchAlg, string _pathFile, string _smoothFile, string _intermediateFile, string _lpLabel,
+    string _dmLabel, bool _smooth):
+  m_pathFile(_pathFile), m_smoothFile(_smoothFile), m_intermediateFile(_intermediateFile), m_lpLabel(_lpLabel), m_dmLabel(_dmLabel),
+  m_deleteNodes(_deleteNodes),m_smooth(_smooth){
+    this->SetName("Query");
+    m_doneSmoothing = false;
+    SetSearchAlgViaString(_searchAlg);
 }
 
 // Reads in query from a file
@@ -162,14 +170,7 @@ Query<MPTraits>::ParseXML(XMLNodeReader& _node, bool _warn) {
 
   // Ignore case for graph search algorithm
   transform(searchAlg.begin(), searchAlg.end(), searchAlg.begin(), ::tolower);
-  if(searchAlg == "dijkstras")
-    m_searchAlg = DIJKSTRAS;
-  else if(searchAlg == "astar")
-    m_searchAlg = ASTAR;
-  else {
-    cout << "Error: invalid graphSearchAlg; valid choices are: \"dijkstras\", \"astar\". Exiting." << endl;
-    exit(1);
-  }
+  SetSearchAlgViaString(searchAlg);
 }
 
 template<class MPTraits>
@@ -272,7 +273,7 @@ Query<MPTraits>::PerformQuery(CfgType _start, CfgType _goal, RoadmapType* _rdmp,
   vector<ConnectorPointer> connectionMethods;
   if(m_nodeConnectionLabels.empty())
     m_nodeConnectionLabels.push_back("");
-  
+
   for(vector<string>::iterator it = m_nodeConnectionLabels.begin(); it != m_nodeConnectionLabels.end(); it++)
     connectionMethods.push_back(this->GetMPProblem()->GetConnector(*it));
 
@@ -538,6 +539,19 @@ Query<MPTraits>::Initialize() {
   m_dmLabel = "";
   m_deleteNodes = false;
   m_smooth = false;
+}
+
+template<class MPTraits>
+void
+Query<MPTraits>::SetSearchAlgViaString(string _alg){
+  if(_alg == "dijkstras")
+    m_searchAlg = DIJKSTRAS;
+  else if(_alg == "astar")
+    m_searchAlg = ASTAR;
+  else {
+    cout << "Error: invalid graphSearchAlg; valid choices are: \"dijkstras\", \"astar\". Exiting." << endl;
+    exit(1);
+  }
 }
 
 #endif
