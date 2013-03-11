@@ -851,13 +851,28 @@ RoadmapGraph<VERTEX, WEIGHT>::GetCfg(VI& _t) {
   return (*_t).property();
 }
 
+template<typename V>
+struct VertexProp {
+  typedef  V result_type;
+  template<typename P>
+   result_type operator()(P& p){
+      return p;
+    }
+};
 //specialization for a RoadmapGraph<CFG, WEIGHT>::VID
 //calls find_vertex(..) on VID to call property()
 template<class VERTEX, class WEIGHT>
 typename RoadmapGraph<VERTEX, WEIGHT>::VP
 RoadmapGraph<VERTEX, WEIGHT>::GetCfg(VID _t)  {
+  #ifndef _PARALLEL
   return (*this->find_vertex(_t)).property();
+  #else
+  return (GRAPH::vp_apply(_t, VertexProp<VP>()));
+  #endif
 }
+
+
+
 //helper function to call dereferece on an iterator whose value_type is VID
 //needed to get around the fact that a roadmap graph iterator 
 //requires and extra descriptor() call

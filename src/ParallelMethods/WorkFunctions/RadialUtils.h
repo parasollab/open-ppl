@@ -194,11 +194,13 @@ class RadialUtils {
     while(ccs.size() > 1 && iters <= m_numCCIters && failures < maxFailures) {
       int rand1 = LRand() % ccs.size();
       // always expand from the root CC
-      cc1VID = ccs[ rand1 ].second; 
+      cc1VID = ccs[ rand1 ].second;
       stapl::sequential::get_cc(*m_localTree,colorMap,cc1VID,cc1);
       if (cc1.size() == 1) {
-        PrintValue("Getting: ", cc1[0]);
-        CfgType cfg  =   (*(globalTree->distribution().container_manager().begin()->find_vertex(cc1[0]))).property();
+       // PrintValue("Getting: ", cc1[0]);
+        //CfgType cfg  =   (*(globalTree->distribution().container_manager().begin()->find_vertex(cc1[0]))).property();
+       // CfgType cfg  =   (*(globalTree->find_vertex(cc1[0]))).property();
+        CfgType cfg  =   globalTree->GetCfg(cc1[0]);
 
         if (!IsValid(vc, cfg, env, stats)) {
           failures++; 
@@ -247,7 +249,9 @@ class RadialUtils {
       // Maybe this is an invalid node, don't use it
       if (cc2.size() == 1) {
 
-        CfgType cfg  =   (*(globalTree->distribution().container_manager().begin()->find_vertex(cc2[0]))).property();
+        //CfgType cfg  =   (*(globalTree->distribution().container_manager().begin()->find_vertex(cc2[0]))).property();
+        //CfgType cfg  =   (*(globalTree->find_vertex(cc2[0]))).property();
+        CfgType cfg  =   globalTree->GetCfg(cc2[0]);
 
         if (!IsValid(vc, cfg, env, stats)) {
           failures++;
@@ -284,7 +288,9 @@ class RadialUtils {
 
     for (size_t i=0; i<_allVIDs.size(); i++) {
       VID vid = _allVIDs[i];
-      CfgType cfg = (*(globalTree->distribution().container_manager().begin()->find_vertex(vid))).property();
+      //CfgType cfg = (*(globalTree->find_vertex(vid))).property();
+      CfgType cfg = globalTree->GetCfg(vid);
+      //CfgType cfg = (*(globalTree->distribution().container_manager().begin()->find_vertex(vid))).property();
 
       if (!IsValid(vc, cfg, env, stats))
         rdmp->GetGraph()->delete_vertex(_allVIDs[i]); 

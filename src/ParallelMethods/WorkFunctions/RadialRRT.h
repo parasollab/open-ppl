@@ -38,7 +38,8 @@ class RadialRegion {
   public:
   RadialRegion(RegionType _data=RegionType()) : m_data(_data) { }
   RadialRegion(const RadialRegion& _other) 
-    : m_data(_other.m_data),m_neighbors(_other.m_neighbors),m_branch(_other.m_branch), m_problem(_other.m_problem) { }
+    : m_data(_other.m_data),m_neighbors(_other.m_neighbors),m_branch(_other.m_branch), 
+      m_problem(_other.m_problem), m_ccs(_other.m_ccs){ }
 
   //friend ostream& operator<< (ostream&, const Cfg&);
   friend ostream& operator<< (ostream& _os, const RadialRegion& _r) {
@@ -79,7 +80,7 @@ class RadialRegion {
     _t.member(m_neighbors);
     _t.member(m_branch);
     _t.member(m_problem);
-    _t.member(m_colorMap);
+   // _t.member(m_colorMap);
     _t.member(m_ccs);
   }
 
@@ -235,7 +236,7 @@ class RadialRegionEdge{
           CfgType neighbor = (*(_v2.find_vertex((*itr).first))).property().GetCandidate();
           neighbors.push_back(neighbor);
           // TODO Vizmo Debug
-          VDAddEdge(cfg,neighbor);
+          //VDAddEdge(cfg,neighbor);
         }
         _v1.property().SetNeighbors(neighbors);
       }
@@ -277,7 +278,7 @@ struct RadialRegionVertex{
         point.GetRandomRay(m_radius, env, dmm);
         //point.GetRandomCfg(m_radius, m_radius);
         _vw.property().SetCandidate(point);
-        VDAddNode(point);
+        //VDAddNode(point);
       }
 
 };
@@ -317,7 +318,7 @@ struct RadialRegionVertex2D{
         regionCand[1] = (m_radius * sin(theta));
 
         _vw.property().SetCandidate(regionCand);
-        VDAddNode(regionCand);
+        //VDAddNode(regionCand);
 
       }
 
@@ -362,7 +363,7 @@ struct RegionVertexByCCs{
         regionCand[1] = (m_radius * sin(theta));
 
         _region.property().SetCandidate(regionCand);
-        VDAddNode(regionCand);
+        //VDAddNode(regionCand);
 
       }
 
@@ -497,7 +498,8 @@ class BuildRadialRRT {
 //            if (this->m_debug) VDAddNode(newCfg);
             //TODO fix weight
             pair<WeightType, WeightType> weights = make_pair(WeightType("RRTExpand", weight), WeightType("RRTExpand", weight));
-            globalTree->AddEdge(nearestVID, newVID,weights);
+            //globalTree->AddEdge(nearestVID, newVID,weights);
+            globalTree->add_edge_async(nearestVID, newVID,weights.first);
             branch.push_back(newVID);
           }
           ++ctr1;
@@ -670,9 +672,9 @@ class BuildRadialBlindRRT {
         radialUtils.SetLocalTree(localTree);
         t1.stop();
         // I print the clocks all scattered because sometimes it gets stuck, so I can know where
-        PrintValue("Blind Build: ", t1.value() );
-        PrintValue("K Closest: ", kclosest.value() );
-        PrintValue("Expand Tree: ", expandTree.value() );
+       // PrintValue("Blind Build: ", t1.value() );
+       // PrintValue("K Closest: ", kclosest.value() );
+       // PrintValue("Expand Tree: ", expandTree.value() );
         // PrintValue("AddVertex Loop: ", expansionClk.value() );
         // PrintValue("AddEdge: ", process.value() );
         vector<STAPLTimer> timers;
@@ -680,7 +682,7 @@ class BuildRadialBlindRRT {
           t2.start(); 
           radialUtils.RemoveInvalidNodes(branch);
           t2.stop();
-          PrintValue("Remove Invalid: ",t2.value() );
+         // PrintValue("Remove Invalid: ",t2.value() );
           t3.start();
           
           
@@ -692,19 +694,19 @@ class BuildRadialBlindRRT {
           radialUtils.ConnectCCs(/*timers*/); 
           t3.stop();
           for(int i = 0; i<3; i++) {
-            PrintValue("Connect CC Step: ", timers[i].value());
+         //   PrintValue("Connect CC Step: ", timers[i].value());
           }
-          PrintValue("Connect CCs: ", t3.value() );
+         // PrintValue("Connect CCs: ", t3.value() );
         }
-        t4.start();
-        /*
+        /*t4.start();
+        
         for (int i=0; i<pendingEdges.size(); i++) {
           WeightType weight ("RRTExpand", pendingWeights[i]);
           globalTree->add_edge(pendingEdges[i].first, pendingEdges[i].second, weight );
           globalTree->add_edge(pendingEdges[i].second, pendingEdges[i].first, weight );
         }
-        */
-        t4.stop();
+        
+        t4.stop();*/
         // PrintValue("Pending Edges: ", t4.value() ); 
 
 
@@ -714,20 +716,20 @@ class BuildRadialBlindRRT {
         vector< pair<size_t,VID> > ccs;
 
         stapl::sequential::get_cc_stats(localTree,colorMap,ccs);
-        
         _view.property().SetCCs(ccs);
-        _view.property().SetColorMap(colorMap);
-        _view.property().SetBranch(branch);
+        //Why are we setting branches?
+        //_view.property().SetColorMap(colorMap);
+        //_view.property().SetBranch(branch);
         
         t5.stop();
-        PrintValue("Setting CCs: ", t5.value() ); 
+       // PrintValue("Setting CCs: ", t5.value() ); 
         t0.stop();
         
         PrintValue("Max Attempts : ", attempts);
         PrintValue("Local Tree ", branch.size());
         
          
-        PrintValue("Total: ", t0.value() ); 
+       // PrintValue("Total: ", t0.value() ); 
 
       }
 
@@ -866,7 +868,7 @@ class BuildRadialRRG {
 
             VID newVID = globalTree->add_vertex(newCfg);
             // TODO Fix VIZMO DEBUG
-            VDAddNode(newCfg);
+            //VDAddNode(newCfg);
             branch.push_back(newVID);
 
             // After expanding, attempt connections to recent node
@@ -907,8 +909,11 @@ class BuildRadialRRG {
 
 };
 
-
-template<class MPTraits>
+//Looks like this class is not used so I will comment it out for now
+//If it is used, then there is a problem, because the computation of local CCs is suppose to be local
+//Why are we making calls to remote view/color map
+//Also, if this is the only place Set/Get colormap is used then we don't need the member function m_colorMap
+/*template<class MPTraits>
 class ConnectRegionCCs {
   private:
     typedef typename MPTraits::MPProblemType MPProblemType;
@@ -1017,9 +1022,110 @@ class ConnectRegionCCs {
       return currMinVID;
     }
 
+};*/
+
+
+template<class MPTraits>
+class ConnectGlobalCCs {
+  private:
+    typedef typename MPTraits::MPProblemType MPProblemType;
+    typedef typename MPProblemType::ConnectorPointer ConnectorPointer;
+    typedef typename MPProblemType::LocalPlannerPointer LocalPlannerPointer;
+    typedef typename MPProblemType::DistanceMetricPointer DistanceMetricPointer;
+    typedef typename MPTraits::CfgType CfgType;
+    typedef typename MPProblemType::VID VID;
+    typedef typename MPTraits::WeightType WeightType;
+    typedef typename MPProblemType::GraphType GraphType;
+
+    MPProblemType* m_problem;
+    ConnectorPointer m_ncp;
+    //LPOutput<MPTraits> lpOutput;
+  public:
+    ConnectGlobalCCs(MPProblemType* _problem, ConnectorPointer _ncp) :m_problem(_problem){
+      m_ncp = _ncp;
+    }
+
+    void define_type(stapl::typer &_t){
+      _t.member(m_problem);
+      _t.member(m_ncp);
+    }
+
+
+    template<typename vertexView, typename repeatView> 
+      void operator()(vertexView _view, repeatView& _gview)const {
+        
+        CfgType col;
+        Environment* env = m_problem->GetEnvironment();
+        StatClass* stats = m_problem->GetStatClass();
+        LPOutput<MPTraits> lpOutput;
+        int weight;  
+        //TODO : remove hardcoded DM
+        DistanceMetricPointer dm = m_problem->GetDistanceMetric("euclidean");
+        //edges are assumed to be directed
+        typedef typename vertexView::adj_edges_type ADJV;
+        ADJV  edges = _view.edges();
+   
+        //SOURCE REGION
+        vector<pair<size_t,VID> > sCCs = _view.property().GetCCs();
+        queue<VID> sPendingQ;
+        for(typename vector<pair<size_t,VID> >::iterator it = sCCs.begin(); it != sCCs.end(); it++)
+            sPendingQ.push((*it).second);
+       
+        //TARGET REGIONS
+
+        for(typename vertexView::adj_edge_iterator ei = edges.begin(); ei != edges.end(); ++ei){
+          RadialRegion<MPTraits> tRegion = (*(_gview.find_vertex((*ei).target()))).property();
+          vector<pair<size_t,VID> > tCCs = tRegion.GetCCs();
+          queue<VID> tPendingQ;
+          vector<VID>  tConnected;
+          stapl::sequential::vector_property_map<typename GraphType::GRAPH, size_t> cmap;
+          
+          for(typename vector<pair<size_t,VID> >::iterator tit = tCCs.begin(); tit != tCCs.end(); tit++)
+            tPendingQ.push((*tit).second);
+         
+          while(!sPendingQ.empty()){
+            VID sId = sPendingQ.front();
+            sPendingQ.pop();  // really?
+            for(typename vector<VID>::iterator vit = tConnected.begin(); vit != tConnected.end(); vit++){
+                if(m_problem->GetLocalPlanner("sl")->
+                   IsConnected(env,*stats, dm,
+                   m_problem->GetRoadmap()->GetGraph()->GetCfg(sId),
+                   m_problem->GetRoadmap()->GetGraph()->GetCfg(*vit),
+                   col, &lpOutput, env->GetPositionRes(), env->GetOrientationRes(), 
+                   (false) )){
+                     // if connection was made, add edge and break
+                     //m_problem->GetRoadmap()->GetGraph()->AddEdge(sId, *vit, lpOutput.edge);
+                     pair<WeightType, WeightType> weights = make_pair(WeightType("GlobalConnect", weight), WeightType("GlobalConnect", weight));
+                     //globalTree->AddEdge(nearestVID, newVID,weights);
+                     m_problem->GetRoadmap()->GetGraph()->add_edge_async(sId, *vit,weights.first);
+                     break;
+                }
+             }
+             while(!tPendingQ.empty()){
+               VID tId = tPendingQ.front();
+               tPendingQ.pop(); /// how do you return a value and remove it in one line?
+               ///TODO: Remove hard-coded sl lp
+               if(m_problem->GetLocalPlanner("sl")->
+                   IsConnected(env,*stats, dm,
+                   m_problem->GetRoadmap()->GetGraph()->GetCfg(sId),
+                   m_problem->GetRoadmap()->GetGraph()->GetCfg(tId),
+                   col, &lpOutput, env->GetPositionRes(), env->GetOrientationRes(), 
+                   (false) )){
+                     // if connection was made, add edge and increment remote connected set 
+                     //m_problem->GetRoadmap()->GetGraph()->AddEdge(sId, tId, lpOutput.edge);
+                     pair<WeightType, WeightType> weights = make_pair(WeightType("GlobalConnect", weight), WeightType("GlobalConnect", weight));
+                     m_problem->GetRoadmap()->GetGraph()->add_edge_async(sId, tId,weights.first);
+                     tConnected.push_back(tId);
+               }
+
+             }
+
+          }
+
+        }
+      }
+
 };
-
-
 
 
 #endif 

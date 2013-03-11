@@ -110,8 +110,8 @@ RadialBlindRRT<MPTraits>::ConnectRegions(graph_view<RadialRegionGraph> _regionVi
     MPProblemType* _problem) {
 
   ConnectorPointer pConnection;
-  pConnection = _problem->GetMPStrategy()->GetConnector()->GetMethod(this->m_connectorLabel);
-  ConnectRegion<MPTraits> wf(_problem, pConnection);
+  pConnection = _problem->GetConnector(this->m_connectorLabel);
+  ConnectGlobalCCs<MPTraits> wf(_problem, pConnection);
   map_func(wf, _regionView, repeat_view(_regionView));
 }
 
@@ -127,7 +127,6 @@ void RadialBlindRRT<MPTraits>::Run() {
   cout << "RadialBlindRRT:: Run()" << endl;
   //Set up variables 
   MPProblemType* problem = this->GetMPProblem();
-  StatClass* regionStats = problem->GetStatClass();
   Environment* env = problem->GetEnvironment();
 
   ///If random ray length is not given, then compute approximate value from given boundary
@@ -171,10 +170,14 @@ void RadialBlindRRT<MPTraits>::Run() {
   t3.start();
   BuildRRT(regionView, problem, root);
   t3.stop();
+  PrintOnce("#VERTICES b4 : ", pMap->num_vertices());
+  PrintOnce("#EDGES b4 : ", pMap->num_edges());
   rmi_fence();
   cout << "STEP 4 : Global CC Connect " << endl;
   t4.start();
-  // ConnectRegions(regionView, problem);
+  ConnectRegions(regionView, problem);
+  PrintOnce("#VERTICES after : ", pMap->num_vertices());
+  PrintOnce("#EDGES after : ", pMap->num_edges());
   t4.stop();
   rmi_fence();
 
@@ -186,7 +189,7 @@ void RadialBlindRRT<MPTraits>::Run() {
 
 
 
-  if(get_location_id() == 0){
+ // if(get_location_id() == 0){
 
     //  DEBUGGIN REGIONS 
     /*
@@ -201,9 +204,9 @@ void RadialBlindRRT<MPTraits>::Run() {
        VDRemoveEdge(root, cfg1);
        } 
        */
-    pMap->delete_vertex(0);
+   // pMap->delete_vertex(0);
 
-  }
+ // }
 
 
   /*PrintOnce("REGIONGRAPH VERTEX TIME: ", t1.value());
@@ -233,8 +236,8 @@ void RadialBlindRRT<MPTraits>::Run() {
 
   rmi_fence();
   ///DEBUG
-  cout << "Write Region Graph " << endl;
-  write_graph(regionView, "radialRegion.out");
+  //cout << "Write Region Graph " << endl;
+  //write_graph(regionView, "radialRegion.out");
 
   rmi_fence(); 
 
