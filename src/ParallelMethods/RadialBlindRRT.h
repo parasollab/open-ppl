@@ -94,8 +94,9 @@ template<class MPTraits>
 void 
 RadialBlindRRT<MPTraits>::BuildRRT(graph_view<RadialRegionGraph> _regionView, 
     MPProblemType* _problem, CfgType _root) {
-
-  BuildRadialBlindRRT<MPTraits> wf(_problem,this->m_numNodes,this->m_dmLabel,this->m_vcLabel,
+  ///adding this for strong scaling, replace with m_numNodes if interested in weak scaling
+  size_t nodesPerRegion = this->m_numNodes/stapl::get_num_locations();
+  BuildRadialBlindRRT<MPTraits> wf(_problem,nodesPerRegion,this->m_dmLabel,this->m_vcLabel,
       this->m_nfLabel,m_CCconnection,m_expansionType,this->m_delta,this->m_minDist,
       _root,this->m_numAttempts,m_numCCIters,this->m_overlap, this->m_strictBranching);
 
@@ -147,44 +148,47 @@ void RadialBlindRRT<MPTraits>::Run() {
   if(stapl::get_location_id() == 0){ 
     pMap->add_vertex(root);
     // TODO VIZMO DEBUG
-    VDAddNode(root);
+    //VDAddNode(root);
   }
-  PrintOnce("ROOT  : ", root);
-  PrintOnce("LENGTH  : ", this->m_radius); 
+  //PrintOnce("ROOT  : ", root);
+  //PrintOnce("LENGTH  : ", this->m_radius); 
   rmi_fence();
 
   staplTimer t0,t1,t2,t3,t4,t5;
-  cout << "STEP 1: Randomly generate n points with  m_radius length from the center" << endl; 
+  //cout << "STEP 1: Randomly generate n points with  m_radius length from the center" << endl; 
   t0.start();
   t1.start();
   this->RegionVertex(regionView, problem, root);
   t1.stop();
+  PrintOnce("STEP 1 REGION VERTEX (s) : ", t1.value());
   rmi_fence(); 
-  cout << "STEP 2: Make edge between k-closest regions " << endl;
+  //cout << "STEP 2: Make edge between k-closest regions " << endl;
   ///For each vertex v find k closest to v in a map_reduce fashion
   t2.start();
-  this->RegionEdge(regionView, problem);
+  if (regionView.size() >1) this->RegionEdge(regionView, problem);
   t2.stop();
+  PrintOnce("STEP 2 REGION EDGE (s) : ", t2.value());
   rmi_fence();
-  cout << "STEP 3: Construct Blind RRT in each region " << endl;
+  //cout << "STEP 3: Construct Blind RRT in each region " << endl;
   t3.start();
   BuildRRT(regionView, problem, root);
   t3.stop();
-  PrintOnce("#VERTICES b4 : ", pMap->num_vertices());
-  PrintOnce("#EDGES b4 : ", pMap->num_edges());
+  PrintOnce("STEP 3 BUILD RRT (s) : ", t3.value());
   rmi_fence();
-  cout << "STEP 4 : Global CC Connect " << endl;
+ // cout << "STEP 4 : Global CC Connect " << endl;
   t4.start();
-  ConnectRegions(regionView, problem);
-  PrintOnce("#VERTICES after : ", pMap->num_vertices());
-  PrintOnce("#EDGES after : ", pMap->num_edges());
+  if(regionView.size() > 1) ConnectRegions(regionView, problem);
   t4.stop();
   rmi_fence();
 
-  t5.start();
+  //t5.start();
   //  RemoveCycles(pMap);
-  t5.stop();
+  //t5.stop();
   t0.stop();
+  PrintOnce("STEP 4 CONNECT REGIONS (s) : ", t4.value());
+  PrintOnce("TOTAL TIME (s) : ", t0.value());
+  PrintOnce("#VERTICES  : ", pMap->num_vertices());
+  PrintOnce("#EDGES  : ", pMap->num_edges());
   rmi_fence();
 
 
@@ -225,11 +229,11 @@ void RadialBlindRRT<MPTraits>::Run() {
     basefname << this->GetBaseFilename() << ".N" << this->m_numNodes << ".R" << this->m_numRegions << ".p" << get_num_locations() << ".run" << this->m_runs;
     ofstream stat_out((basefname.str() + ".stats").c_str());
 
-    stat_out << "#P \t RGV  \t RGE  \t BRRT \t RCON  \t CYCLE \t TOT \t VERT \t EDGES "  << endl;
+    stat_out << "#P \t RGV  \t RGE  \t BRRT \t RCON   \t TOT \t VERT \t EDGES "  << endl;
 
     stat_out << get_num_locations() << "\n" << t1.value() << "\n" << t2.value() << "\n" << t3.value()
-      << "\n" << t4.value() <<  "\n" << t5.value()  << t0.value(); 
-    //  stat_out << "\n" << /*pMap->size()*/ << "\n" <</* pMap->num_edges() */<< endl;
+      << "\n" << t4.value() <<  "\n" <<  t0.value(); 
+    stat_out << "\n" << pMap->size() << "\n" << pMap->num_edges() << endl;
 
     stat_out.close();	   
   }

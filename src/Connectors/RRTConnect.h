@@ -244,11 +244,18 @@ RRTConnect<MPTraits>::ExpandTree(CfgType& _dir, const VID& _dirVID, vector<VID>*
       connected = true;
     } else {
       _newVID = rdmp->GetGraph()->AddVertex(_newCfg);
+      #ifdef _PARALLEL
+      this->m_localGraph->add_vertex(_newVID, _newCfg);
+      #endif
     } 
 
     pair<WeightType, WeightType> weights = make_pair(WeightType("RRTConnect", weight), WeightType("RRTConnect", weight));
     rdmp->GetGraph()->AddEdge(kClosest[0], _newVID, weights);
     //rdmp->GetGraph()->GetCfg(recentVID).SetStat("Parent", kClosest[0]);
+    #ifdef _PARALLEL
+    this->m_localGraph->add_edge(kClosest[0],_newVID);
+    this->m_localGraph->add_edge(_newVID, kClosest[0]);
+    #endif
   } 
 
   return connected;

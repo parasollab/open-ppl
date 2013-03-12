@@ -18,8 +18,8 @@ class RadialUtils {
   typedef typename stapl::sequential::map_property_map< typename GraphType::GRAPH ,size_t > ColorMap;
   typedef pair<size_t, VID> CCType;
   typedef typename stapl::graph_view<typename GraphType::GRAPH> RoadmapViewType;
-  typedef typename RoadmapViewType::view_container_type LocalTreeType;
-
+  //typedef typename RoadmapViewType::view_container_type LocalTreeType;
+  typedef typename stapl::sequential::graph<stapl::DIRECTED, stapl::NONMULTIEDGES, CfgType,WeightType> LocalTreeType;
   private:
   MPProblemType* m_problem;
   size_t m_numCCIters;
@@ -62,6 +62,7 @@ class RadialUtils {
   inline VID AddVertex(CfgType _cfg) const {
     VID newVID = m_problem->GetRoadmap()->GetGraph()->add_vertex(_cfg);
     //  _localTree->add_vertex(newVID, _cfg); 
+        m_localTree->add_vertex(newVID, _cfg); 
     // VDAddNode(_cfg);
     return newVID;
   }
@@ -77,13 +78,12 @@ class RadialUtils {
     WeightType weight("RRTExpand", _weight);
     /// m_problem->GetRoadmap()->GetGraph()->AddEdge(_vid1, _vid2, weights);
     GraphType* globalTree = m_problem->GetRoadmap()->GetGraph();
-    globalTree->add_edge(_vid1, _vid2, weight);
-    globalTree->add_edge(_vid2, _vid1, weight);
-    //  _localTree->add_edge(_vid1, _vid2, _weight); 
-    //  _localTree->add_edge(_vid2, _vid1, _weight); 
+    globalTree->add_edge_async(_vid1, _vid2, weight);
+    globalTree->add_edge_async(_vid2, _vid1, weight);
+    m_localTree->add_edge(_vid1, _vid2); 
+    m_localTree->add_edge(_vid2, _vid1); 
 
   }
-
 
   int ExpandTree(vector<VID>& _currBranch, VID _nearestVID, CfgType& _nearest, CfgType& _dir, 
       vector<pair<VID, VID> >& _pendingEdges, vector<int>& _pendingWeights, STAPLTimer& expansionClk, STAPLTimer& process)  {
@@ -124,7 +124,7 @@ class RadialUtils {
         CfgType& cfg2 = expansionCfgs[i].first;
         VID newVID = AddVertex(expansionCfgs[i].first);
         expansionVIDs.push_back(newVID );
-        _currBranch.push_back(newVID);
+        _currBranch.push_back(newVID);/// branch is being replaced as local tree, remove this
       }
 
       expansionClk.stop();
@@ -200,7 +200,8 @@ class RadialUtils {
        // PrintValue("Getting: ", cc1[0]);
         //CfgType cfg  =   (*(globalTree->distribution().container_manager().begin()->find_vertex(cc1[0]))).property();
        // CfgType cfg  =   (*(globalTree->find_vertex(cc1[0]))).property();
-        CfgType cfg  =   globalTree->GetCfg(cc1[0]);
+        //CfgType cfg  =   globalTree->GetCfg(cc1[0]);
+        CfgType cfg  =   (*(m_localTree->find_vertex(cc1[0]))).property();
 
         if (!IsValid(vc, cfg, env, stats)) {
           failures++; 
@@ -223,7 +224,8 @@ class RadialUtils {
     //    _timer[1].stop();
 
       } else if (m_CCconnection == "ClosestCC") {
-        CfgType centroid = GetCentroid(globalTree,cc1);
+        CfgType centroid = GetCentroid(globalTree,cc1);  //is this suppose to be a global operation?
+        //CfgType centroid = GetCentroid(m_localTree,cc1);
         cc2VID = GetClosestCCByCentroid(centroid, cc1VID, ccs, colorMap);
         
 
@@ -251,7 +253,8 @@ class RadialUtils {
 
         //CfgType cfg  =   (*(globalTree->distribution().container_manager().begin()->find_vertex(cc2[0]))).property();
         //CfgType cfg  =   (*(globalTree->find_vertex(cc2[0]))).property();
-        CfgType cfg  =   globalTree->GetCfg(cc2[0]);
+        //CfgType cfg  =   globalTree->GetCfg(cc2[0]);
+        CfgType cfg  =   (*(m_localTree->find_vertex(cc2[0]))).property();
 
         if (!IsValid(vc, cfg, env, stats)) {
           failures++;
@@ -262,6 +265,7 @@ class RadialUtils {
       }
       // We got a pair of CCs, attempt to Connect them!
 //      _timer[2].start();
+      pConnection->SetLocalGraph(m_localTree);
       pConnection->Connect(rdmp, *stats, colorMap, cc1.begin(), cc1.end(), cc2.begin(), cc2.end()) ;
  //     _timer[2].stop();
 
@@ -275,7 +279,7 @@ class RadialUtils {
 
   }
 
-
+//Rewrite function to take iterate through local tree instead of allVIDs vector
   void RemoveInvalidNodes(vector<VID>& _allVIDs) {
 
     RoadmapType* rdmp = m_problem->GetRoadmap();
@@ -289,16 +293,17 @@ class RadialUtils {
     for (size_t i=0; i<_allVIDs.size(); i++) {
       VID vid = _allVIDs[i];
       //CfgType cfg = (*(globalTree->find_vertex(vid))).property();
-      CfgType cfg = globalTree->GetCfg(vid);
+      //CfgType cfg = globalTree->GetCfg(vid);
       //CfgType cfg = (*(globalTree->distribution().container_manager().begin()->find_vertex(vid))).property();
+      CfgType cfg = (*(m_localTree->find_vertex(vid))).property();
 
-      if (!IsValid(vc, cfg, env, stats))
+      if (!IsValid(vc, cfg, env, stats)) {
         rdmp->GetGraph()->delete_vertex(_allVIDs[i]); 
+        m_localTree->delete_vertex(_allVIDs[i]);
       //VDRemoveNode(cfg); 
+      }
     }
   }
-
-
 
 
 
@@ -371,7 +376,8 @@ class RadialUtils {
         continue;
       
       stapl::sequential::get_cc(*m_localTree,_colorMap,_ccs[i].second,cc);
-      CfgType otherCentroid = GetCentroid(globalTree,cc);
+      CfgType otherCentroid = GetCentroid(globalTree,cc); // is this a global operation?
+      //CfgType otherCentroid = GetCentroid(m_localTree,cc);
       double dist = dm->Distance(env, _centroid, otherCentroid);
       if (dist < currMinDist) {
         currMinDist = dist;

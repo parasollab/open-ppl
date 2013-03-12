@@ -46,6 +46,10 @@ class ConnectorMethod : public MPBaseObject<MPTraits> {
     typedef typename MPTraits::MPProblemType MPProblemType;
     typedef typename MPProblemType::RoadmapType RoadmapType;
     typedef typename MPProblemType::VID VID; 
+    typedef typename MPTraits::WeightType WeightType;
+    #ifdef _PARALLEL
+    typedef typename stapl::sequential::graph<stapl::DIRECTED, stapl::NONMULTIEDGES, CfgType,WeightType> SeqGraphType;
+    #endif
 
     ConnectorMethod();
     ConnectorMethod(MPProblemType* _problem, XMLNodeReader& _node);
@@ -92,7 +96,9 @@ class ConnectorMethod : public MPBaseObject<MPTraits> {
     double GetPositionResolution() { return m_connectionPosRes; }
     void SetOrientationResolution(double _oriRes) { m_connectionOriRes=_oriRes; }
     double GetOrientationResolution() { return m_connectionOriRes; }
-
+    #ifdef _PARALLEL
+    void SetLocalGraph(SeqGraphType* localGraph) { m_localGraph = localGraph;}
+    #endif
     /////////////////////////////////////////////
     // Utility Methods
     typename vector<pair<pair<VID, VID>, bool> >::const_iterator ConnectionAttemptsBegin() const { return m_connectionAttempts.begin(); }
@@ -118,6 +124,9 @@ class ConnectorMethod : public MPBaseObject<MPTraits> {
     bool    m_addAllEdges; 
     double  m_connectionPosRes;
     double  m_connectionOriRes;
+    #ifdef _PARALLEL
+    SeqGraphType* m_localGraph;
+    #endif
 };
 
 template<class MPTraits>

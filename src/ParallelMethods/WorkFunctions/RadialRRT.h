@@ -526,14 +526,16 @@ class BuildRadialBlindRRT {
     typedef typename MPTraits::WeightType WeightType;
     typedef typename MPProblemType::RoadmapType RoadmapType;
     typedef typename MPProblemType::GraphType GraphType;
-    typedef typename GraphType::GRAPH LocalGraphType;
+    //typedef typename GraphType::GRAPH LocalGraphType;
     typedef typename MPProblemType::DistanceMetricPointer DistanceMetricPointer;
     typedef typename MPProblemType::ValidityCheckerPointer ValidityCheckerPointer;
     typedef typename MPProblemType::NeighborhoodFinderPointer NeighborhoodFinderPointer;
     typedef typename MPProblemType::ConnectorPointer ConnectorPointer;
     typedef typename stapl::graph_view<typename GraphType::GRAPH> RoadmapViewType;
+    //typedef typename stapl::native_view<typename GraphType::GRAPH> NativeViewType;
     typedef stapl::counter<stapl::default_timer> STAPLTimer;
-
+    
+    typedef typename stapl::sequential::graph<stapl::DIRECTED, stapl::NONMULTIEDGES, CfgType,WeightType> LocalGraphType;
     MPProblemType* m_problem;
     size_t m_numNodes;
     size_t m_numCCIters;
@@ -592,8 +594,10 @@ class BuildRadialBlindRRT {
 
         CfgType regionCand = _view.property().GetCandidate();
         vector<CfgType> neighbors = _view.property().GetNeighbors();
-        //LocalGraphType* localTree = new LocalGraphType(); 
-        //localTree->add_vertex(0, m_root);
+        LocalGraphType* localTree = new LocalGraphType(); 
+        //LocalGraphType localTree;
+        localTree->clear();
+        localTree->add_vertex(0, m_root);
         ///Setup global variables
         STAPLTimer t0,t1,t2,t3,t4,t5, expandTree, kclosest;
         STAPLTimer expansionClk, process; 
@@ -607,6 +611,7 @@ class BuildRadialBlindRRT {
         RadialUtils<MPTraits> radialUtils (m_problem, m_dm, m_vc, m_nf, m_CCconnection, m_expansionType, m_delta, m_minDist, m_numCCIters);
         string callee("RadialRRT::ExpandTree");
         vector<VID> branch;
+        radialUtils.SetLocalTree(*localTree);
 
         vector<VID> invalidNodes; // instead iterating over all nodes, just keep record of the invalid ones so we dont have to hit the graph every time
         vector<VID> validNodes; 
@@ -617,8 +622,8 @@ class BuildRadialBlindRRT {
         vector<pair<VID, VID> > pendingEdges;
         vector<int> pendingWeights;
         
-        t0.start();
-        t1.start();
+        /*t0.start();
+        t1.start();*/
         while(branch.size()<m_numNodes && attempts < maxAttempts) {
 
           CfgType dir, nearest, newCfg;
@@ -659,43 +664,49 @@ class BuildRadialBlindRRT {
           }
 
           //If expansion succeeds add to global tree and a copy in local t
-          expandTree.start();
+          //expandTree.start();
+          //int samplesMade = radialUtils.ExpandTree(nearestVID, nearest, dir, pendingEdges, pendingWeights, expansionClk, process);
           int samplesMade = radialUtils.ExpandTree(branch, nearestVID, nearest, dir, pendingEdges, pendingWeights, expansionClk, process);
-          expandTree.stop();
+          //expandTree.stop();
 
           attempts++;
 
         }
-        
-        RoadmapViewType roadmapView  (*globalTree);
-        typename RoadmapViewType::view_container_type& localTree = stapl::native_view(roadmapView)[get_location_id()].container();
-        radialUtils.SetLocalTree(localTree);
-        t1.stop();
+       /*RoadmapViewType roadmapView  (*globalTree);
+        PrintValue("ROADMAP view size : ", roadmapView.size());
+        NativeViewType native_vw = native_view(roadmapView);
+        typename RoadmapViewType::view_container_type& localTree2 = native_vw[get_location_id()].container();
+        PrintValue("NATIVE VIEW on GTREE : ", localTree2.size());
+        PrintValue("NATIVE VIEW on GTREE num vertices: ", localTree2.num_vertices());*/
+        //radialUtils.SetLocalTree(localTree);
+        //t1.stop();
         // I print the clocks all scattered because sometimes it gets stuck, so I can know where
        // PrintValue("Blind Build: ", t1.value() );
        // PrintValue("K Closest: ", kclosest.value() );
        // PrintValue("Expand Tree: ", expandTree.value() );
         // PrintValue("AddVertex Loop: ", expansionClk.value() );
         // PrintValue("AddEdge: ", process.value() );
-        vector<STAPLTimer> timers;
+        //vector<STAPLTimer> timers;
+        //PrintValue("BRANCH size b4 rm invalid nodes : ", branch.size());
         if (m_expansionType != "") { 
-          t2.start(); 
+          //t2.start(); 
           radialUtils.RemoveInvalidNodes(branch);
-          t2.stop();
+         // radialUtils.RemoveInvalidNodes();
+          //t2.stop();
          // PrintValue("Remove Invalid: ",t2.value() );
-          t3.start();
+          //t3.start();
           
           
-          for(int i = 0; i<5; i++) {
+         /* for(int i = 0; i<5; i++) {
             STAPLTimer timer;
             timers.push_back(timer);
-          }
+          }*/
           // TODO debug timer if need for using it!
           radialUtils.ConnectCCs(/*timers*/); 
-          t3.stop();
-          for(int i = 0; i<3; i++) {
+          //t3.stop();
+         // for(int i = 0; i<3; i++) {
          //   PrintValue("Connect CC Step: ", timers[i].value());
-          }
+         // }
          // PrintValue("Connect CCs: ", t3.value() );
         }
         /*t4.start();
@@ -709,27 +720,25 @@ class BuildRadialBlindRRT {
         t4.stop();*/
         // PrintValue("Pending Edges: ", t4.value() ); 
 
-
-        t5.start();
+        //t5.start();
         // setting CCs
         stapl::sequential::vector_property_map<typename GraphType::GRAPH, size_t> colorMap;
         vector< pair<size_t,VID> > ccs;
 
-        stapl::sequential::get_cc_stats(localTree,colorMap,ccs);
+        stapl::sequential::get_cc_stats(*localTree,colorMap,ccs);
         _view.property().SetCCs(ccs);
         //Why are we setting branches?
         //_view.property().SetColorMap(colorMap);
         //_view.property().SetBranch(branch);
         
-        t5.stop();
+        //t5.stop();
        // PrintValue("Setting CCs: ", t5.value() ); 
-        t0.stop();
+        //t0.stop();
         
-        PrintValue("Max Attempts : ", attempts);
-        PrintValue("Local Tree ", branch.size());
-        
+       // PrintValue("Max Attempts : ", attempts);
          
-       // PrintValue("Total: ", t0.value() ); 
+       // PrintValue("Total: ", t0.value() );
+       delete localTree;
 
       }
 
