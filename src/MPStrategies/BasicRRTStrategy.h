@@ -396,7 +396,7 @@ BasicRRTStrategy<MPTraits>::ExpandTree(CfgType& _dir){
   
   expandStatClass->StopClock(expandClockName);
   
-  if(m_debug) cout << "RRT expanded to " << newCfg << endl;
+  if(this->m_debug) cout << "RRT expanded to " << newCfg << endl;
   
   // If good to go, add to roadmap
   if(dm->Distance(env, newCfg, nearest) >= m_minDist ) {
