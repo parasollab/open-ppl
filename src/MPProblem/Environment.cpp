@@ -66,7 +66,7 @@ Environment(const Environment &_env) :
 #if (defined(PMPReachDistCC) || defined(PMPReachDistCCFixed))
   rd_res=_env.GetRdRes();
 #endif
-  
+
   if(m_boundaries)
     SelectUsableMultibodies();
 }
@@ -95,7 +95,7 @@ Environment(const Environment &_env, shared_ptr<Boundary> _boundary) :
 #if (defined(PMPReachDistCC) || defined(PMPReachDistCCFixed))
   rd_res=_env.GetRdRes();
 #endif
-  
+
   if(m_boundaries)
     SelectUsableMultibodies(); // select usable multibodies
 }
@@ -120,7 +120,7 @@ Environment(XMLNodeReader& _node) :
 #if (defined(PMPReachDistCC) || defined(PMPReachDistCCFixed))
   rd_res = 0.005;
 #endif
- 
+
   m_filename = _node.stringXMLParameter("input_env", true, "", "env filename");
   Read(m_filename);
 
@@ -146,7 +146,7 @@ Environment(XMLNodeReader& _node) :
             m_boundaries = shared_ptr<BoundingSphere>(new BoundingSphere(*citr2));
           }
 
-         //@todo assumption of input bbox not strong. When no bbox provided call FindBoundingBox()
+          //@todo assumption of input bbox not strong. When no bbox provided call FindBoundingBox()
         } else {
           citr2->warnUnknownNode();
         }
@@ -163,10 +163,10 @@ Environment(XMLNodeReader& _node) :
       citr->warnUnknownNode();
     }
   }
- 
+
   // Compute RESOLUTION
   ComputeResolution(pos_res, ori_res, positionResFactor, orientationResFactor, num_joints);
-  
+
   SelectUsableMultibodies();
 }
 
@@ -203,27 +203,27 @@ Environment::ComputeResolution(double _posRes, double _oriRes,
   m_activeBodies[0]->FindBoundingBox();
   double bodiesMinSpan = m_activeBodies[0]->GetMaxAxisRange();
   for(size_t i = 1 ; i < m_activeBodies.size() ; i++){
-      m_activeBodies[i]->FindBoundingBox();
-      bodiesMinSpan = min(bodiesMinSpan,m_activeBodies[i]->GetMaxAxisRange());
+    m_activeBodies[i]->FindBoundingBox();
+    bodiesMinSpan = min(bodiesMinSpan,m_activeBodies[i]->GetMaxAxisRange());
   }
 
   for(size_t i = 0 ; i < m_otherMultiBodies.size() ; i++){
-      m_otherMultiBodies[i]->FindBoundingBox();
-      bodiesMinSpan = min(bodiesMinSpan,m_otherMultiBodies[i]->GetMaxAxisRange());
+    m_otherMultiBodies[i]->FindBoundingBox();
+    bodiesMinSpan = min(bodiesMinSpan,m_otherMultiBodies[i]->GetMaxAxisRange());
   }
- 
+
   // Set to XML input resolution if specified, else compute resolution factor
   if ( _posRes > 0 ) positionRes = _posRes;
   else                   positionRes = bodiesMinSpan * _posResFactor;
 
   if ( _oriRes > 0 ) orientationRes = _oriRes;
   else                   orientationRes = 0.05;
-  
+
 #if (defined(PMPReachDistCC) || defined(PMPReachDistCCFixed))
   //make sure to calculate the rdRes based upon the DOF of the robot
   rd_res = _numJoints * rd_res;
 #endif
-  
+
   minmax_BodyAxisRange = bodiesMinSpan;
 }
 
@@ -256,9 +256,10 @@ SortMultiBodies(){
         m_otherMultiBodies[i] = pMidBody;
       }
     }
-    if (i != j+1)
+    if (i != j+1){
       cerr << "Wrong sorting in void Environment::SortMultiBodies(){}"<<endl;
       exit(-1);
+    }
   }
 }
 
@@ -277,7 +278,7 @@ SelectUsableMultibodies() {
   maxx = m_boundaries->GetRange(0).second;
   miny = m_boundaries->GetRange(1).first; 
   maxy = m_boundaries->GetRange(1).second;
-  
+
   if(m_boundaries->GetPosDOFs() < 3){
     minz = 0;
     maxz = 0;
@@ -288,24 +289,24 @@ SelectUsableMultibodies() {
   }
 
   for (size_t i = 0; i < m_otherMultiBodies.size(); i++) {
-      m_otherMultiBodies.at(i)->FindBoundingBox();
-      const double *obb = m_otherMultiBodies.at(i)->GetBoundingBox();
-        if (((obb[0] <= maxx && obb[0] >= minx) || (obb[1] <= maxx && obb[1] >= minx)) &&
-            ((obb[2] <= maxy && obb[2] >= miny) || (obb[3] <= maxy && obb[3] >= miny)) &&
-            ((obb[4] <= maxz && obb[4] >= minz) || (obb[5] <= maxz && obb[5] >= minz))) {
-          // any point in obstacle's bbox inside boundaries => obstacle is usable
-          m_usableMultiBodies.push_back(m_otherMultiBodies[i]);
-          if (!(m_otherMultiBodies[i]->IsInternal()))
-            m_usableExternalbodyCount++;
-        } else { // bounding boxes cross each other 
-          if (!(obb[0] > maxx || obb[1] < minx || 
-                obb[2] > maxy || obb[3] < miny || 
-                obb[4] > maxz || obb[5] < minz)) {
-            m_usableMultiBodies.push_back(m_otherMultiBodies[i]);
-            if (!(m_otherMultiBodies[i]->IsInternal()))
-              m_usableExternalbodyCount++;
-          }
-        }
+    m_otherMultiBodies.at(i)->FindBoundingBox();
+    const double *obb = m_otherMultiBodies.at(i)->GetBoundingBox();
+    if (((obb[0] <= maxx && obb[0] >= minx) || (obb[1] <= maxx && obb[1] >= minx)) &&
+        ((obb[2] <= maxy && obb[2] >= miny) || (obb[3] <= maxy && obb[3] >= miny)) &&
+        ((obb[4] <= maxz && obb[4] >= minz) || (obb[5] <= maxz && obb[5] >= minz))) {
+      // any point in obstacle's bbox inside boundaries => obstacle is usable
+      m_usableMultiBodies.push_back(m_otherMultiBodies[i]);
+      if (!(m_otherMultiBodies[i]->IsInternal()))
+        m_usableExternalbodyCount++;
+    } else { // bounding boxes cross each other 
+      if (!(obb[0] > maxx || obb[1] < minx || 
+            obb[2] > maxy || obb[3] < miny || 
+            obb[4] > maxz || obb[5] < minz)) {
+        m_usableMultiBodies.push_back(m_otherMultiBodies[i]);
+        if (!(m_otherMultiBodies[i]->IsInternal()))
+          m_usableExternalbodyCount++;
+      }
+    }
   }
 }
 
@@ -320,17 +321,17 @@ SelectUsableMultibodies() {
 void 
 Environment::
 Write(ostream & _os) {
-    _os << m_usableMultiBodies.size() << endl;
-    for (size_t i=0; i < m_usableMultiBodies.size(); i++)
-        m_usableMultiBodies[i]->Write(_os);
+  _os << m_usableMultiBodies.size() << endl;
+  for (size_t i=0; i < m_usableMultiBodies.size(); i++)
+    m_usableMultiBodies[i]->Write(_os);
 }
 
 /*void 
-Environment::
-FindBoundingBox(){
+  Environment::
+  FindBoundingBox(){
   if (m_multibody.empty()){
-    cerr << "Environment::FindBoundingBox() error - no multibodies exist." << endl;
-    exit(1);
+  cerr << "Environment::FindBoundingBox() error - no multibodies exist." << endl;
+  exit(1);
   }
 
   const double * tmp;
@@ -344,42 +345,42 @@ FindBoundingBox(){
   miny = tmp[2]; maxy = tmp[3];
   minz = tmp[4]; maxz = tmp[5];
 
-  //loop over rest of multibody vec
-  for(size_t i = 1 ; i < m_multibody.size() ; i++){
-      m_multibody[i]->FindBoundingBox();
-      tmp = m_multibody[i]->GetBoundingBox();
-      minx = min(minx,tmp[0]); maxx = max(maxx,tmp[1]);
-      miny = min(miny,tmp[2]); maxy = max(maxy,tmp[3]);
-      minz = min(minz,tmp[4]); maxz = max(maxz,tmp[5]);
-      bodiesMinSpan = min(bodiesMinSpan,m_multibody[i]->GetMaxAxisRange());
-  }
-  //loop over nav surfaces
-  for(size_t i = 0 ; i < m_navigableSurfaces.size() ; i++){
-    m_navigableSurfaces[i]->FindBoundingBox();
-    tmp = m_navigableSurfaces[i]->GetBoundingBox();
-    minx = min(minx,tmp[0]); maxx = max(maxx,tmp[1]);
-    miny = min(miny,tmp[2]); maxy = max(maxy,tmp[3]);
-    minz = min(minz,tmp[4]); maxz = max(maxz,tmp[5]);
-    bodiesMinSpan = min(bodiesMinSpan,m_navigableSurfaces[i]->GetMaxAxisRange());
-  }
+//loop over rest of multibody vec
+for(size_t i = 1 ; i < m_multibody.size() ; i++){
+m_multibody[i]->FindBoundingBox();
+tmp = m_multibody[i]->GetBoundingBox();
+minx = min(minx,tmp[0]); maxx = max(maxx,tmp[1]);
+miny = min(miny,tmp[2]); maxy = max(maxy,tmp[3]);
+minz = min(minz,tmp[4]); maxz = max(maxz,tmp[5]);
+bodiesMinSpan = min(bodiesMinSpan,m_multibody[i]->GetMaxAxisRange());
+}
+//loop over nav surfaces
+for(size_t i = 0 ; i < m_navigableSurfaces.size() ; i++){
+m_navigableSurfaces[i]->FindBoundingBox();
+tmp = m_navigableSurfaces[i]->GetBoundingBox();
+minx = min(minx,tmp[0]); maxx = max(maxx,tmp[1]);
+miny = min(miny,tmp[2]); maxy = max(maxy,tmp[3]);
+minz = min(minz,tmp[4]); maxz = max(maxz,tmp[5]);
+bodiesMinSpan = min(bodiesMinSpan,m_navigableSurfaces[i]->GetMaxAxisRange());
+}
 
-  //Also, now that environment does not track a "robot" index and there are potentially many robots,
-  //something more sophisticated needs to be done here
-  double min_clearance = robotSpan/3.0;
-  vector<double> boundingBox;
-  boundingBox.push_back(minx-min_clearance); 
-  boundingBox.push_back(maxx+min_clearance);
-  boundingBox.push_back(miny-min_clearance); 
-  boundingBox.push_back(maxy+min_clearance);
-  boundingBox.push_back(minz-min_clearance); 
-  boundingBox.push_back(maxz+min_clearance);
+//Also, now that environment does not track a "robot" index and there are potentially many robots,
+//something more sophisticated needs to be done here
+double min_clearance = robotSpan/3.0;
+vector<double> boundingBox;
+boundingBox.push_back(minx-min_clearance); 
+boundingBox.push_back(maxx+min_clearance);
+boundingBox.push_back(miny-min_clearance); 
+boundingBox.push_back(maxy+min_clearance);
+boundingBox.push_back(minz-min_clearance); 
+boundingBox.push_back(maxz+min_clearance);
 
-  m_boundaries->SetRange(boundingBox);
-  m_boundaries->TranslationalScale(2); ///\todo fix this default.
-  //defaults bbox_scale to 2 when no bbox is defined.
+m_boundaries->SetRange(boundingBox);
+m_boundaries->TranslationalScale(2); ///\todo fix this default.
+//defaults bbox_scale to 2 when no bbox is defined.
 
-  positionRes = bodiesMinSpan * positionResFactor;
-  minmax_BodyAxisRange = bodiesMinSpan;
+positionRes = bodiesMinSpan * positionResFactor;
+minmax_BodyAxisRange = bodiesMinSpan;
 }*/
 
 void
@@ -424,11 +425,11 @@ ResetBoundingBox(double _d, size_t _robotIndex){
   }
 
   for(size_t i=0; i<m_otherMultiBodies.size(); i++) {
-      m_otherMultiBodies[i]->FindBoundingBox();
-      tmp = m_otherMultiBodies[i]->GetBoundingBox();
-      minx = min(minx, tmp[0]);  maxx = max(maxx, tmp[1]);
-      miny = min(miny, tmp[2]);  maxy = max(maxy, tmp[3]);
-      minz = min(minz, tmp[4]);  maxz = max(maxz, tmp[5]);
+    m_otherMultiBodies[i]->FindBoundingBox();
+    tmp = m_otherMultiBodies[i]->GetBoundingBox();
+    minx = min(minx, tmp[0]);  maxx = max(maxx, tmp[1]);
+    miny = min(miny, tmp[2]);  maxy = max(maxy, tmp[3]);
+    minz = min(minz, tmp[4]);  maxz = max(maxz, tmp[5]);
   }
 
   minx = min(minx-_d, origin_minx);
@@ -467,6 +468,67 @@ void Environment::SetBoundary(shared_ptr<Boundary> _b){
   m_boundaries = _b;
 }
 
+int Environment::AddObstacle(string _modelFileName, const vector<double>& _where, const vector<cd_predefined>& _cdTypes){
+  shared_ptr<MultiBody> mb(new MultiBody());
+  mb->Initialize(_modelFileName,_where); 
+  for(vector<cd_predefined>::const_iterator cdIter = _cdTypes.begin(); cdIter != _cdTypes.end(); ++cdIter){
+    mb->buildCDstructure(*cdIter);
+  }
+
+  m_otherMultiBodies.push_back(mb);
+  //check to see if it should be in the usable multibodies
+  double minx, maxx, miny, maxy, minz, maxz;
+
+  minx = m_boundaries->GetRange(0).first; 
+  maxx = m_boundaries->GetRange(0).second;
+  miny = m_boundaries->GetRange(1).first; 
+  maxy = m_boundaries->GetRange(1).second;
+
+  if(m_boundaries->GetPosDOFs() < 3){
+    minz = 0;
+    maxz = 0;
+  }
+  else{
+    minz = m_boundaries->GetRange(2).first; 
+    maxz = m_boundaries->GetRange(2).second;
+  }
+
+  const double *obb = mb->GetBoundingBox();
+  if (((obb[0] <= maxx && obb[0] >= minx) || (obb[1] <= maxx && obb[1] >= minx)) &&
+      ((obb[2] <= maxy && obb[2] >= miny) || (obb[3] <= maxy && obb[3] >= miny)) &&
+      ((obb[4] <= maxz && obb[4] >= minz) || (obb[5] <= maxz && obb[5] >= minz))) {
+    // any point in obstacle's bbox inside boundaries => obstacle is usable
+    m_usableMultiBodies.push_back(mb);
+    m_usableExternalbodyCount++;
+  } else { // bounding boxes cross each other 
+    if (!(obb[0] > maxx || obb[1] < minx || 
+          obb[2] > maxy || obb[3] < miny || 
+          obb[4] > maxz || obb[5] < minz)) {
+      m_usableMultiBodies.push_back(mb);
+      m_usableExternalbodyCount++;
+    }
+  }
+
+  return m_otherMultiBodies.size()-1;
+}
+
+void Environment::RemoveObstacleAt(size_t position){
+  if (position < m_otherMultiBodies.size()){
+    shared_ptr<MultiBody> mb = m_otherMultiBodies.at(position);
+
+    m_otherMultiBodies.erase(m_otherMultiBodies.begin()+position);
+    //try to find mb in usableMultiBodies
+    vector<shared_ptr<MultiBody> >::iterator vecIter;
+    for(vecIter = m_usableMultiBodies.end()-1; 
+        vecIter != m_usableMultiBodies.begin()-1 && !(*vecIter==mb); --vecIter);
+
+    if(*vecIter == mb)
+      m_usableMultiBodies.erase(vecIter);
+  } else {
+    cerr << "Environment::RemoveObstacleAt Warning: unable to remove obst at position " << position << endl;
+  }
+}
+
 void 
 Environment::Read(string _filename) {  
   VerifyFileExists(_filename);
@@ -482,8 +544,8 @@ Environment::Read(string _filename) {
     mb->Read(ifs, false/*m_debug*/);
 
     //if( mb->GetFreeBodyCount() == 1) {
-      //initial simple test to see if moveable robot
-      //m_robotIndices.push_back(m);
+    //initial simple test to see if moveable robot
+    //m_robotIndices.push_back(m);
     //}
 
     if( mb->IsActive() )
@@ -609,10 +671,10 @@ operator==(const Environment& _rhs) const
       return false;
 
   return (m_usableExternalbodyCount == _rhs.m_usableExternalbodyCount &&
-    (*m_boundaries == *_rhs.m_boundaries) &&
-    (positionRes == _rhs.positionRes) &&
-    (orientationRes == _rhs.orientationRes) &&
-    (minmax_BodyAxisRange == _rhs.minmax_BodyAxisRange));
+      (*m_boundaries == *_rhs.m_boundaries) &&
+      (positionRes == _rhs.positionRes) &&
+      (orientationRes == _rhs.orientationRes) &&
+      (minmax_BodyAxisRange == _rhs.minmax_BodyAxisRange));
 }
 
 

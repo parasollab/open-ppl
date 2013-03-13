@@ -78,6 +78,8 @@ class Environment {
     ///Return the number of External Bodies in the environment;
     virtual size_t GetExternalBodyCount() const;
 
+    virtual size_t GetObstacleCount() const;
+
     /**Return a pointer to MultiBody according to this given index.
      *If this index is out of the boundary of list, NULL will be returned.
      *@param _index the index for target, a MultiBody pointer
@@ -163,6 +165,18 @@ class Environment {
      */
     virtual double Getminmax_BodyAxisRange();
     //@}
+    //
+    
+    //AddObstacle
+    //_modelFileName: path to .obj file that specifies geometry of the obstacle
+    //_where: a 6 dof vector specifying position and orientation of the geometry:
+    //      (x, y, z, rotation about X, rotation about Y, rotation about Z)
+    //return value: obstacle's index in m_otherMultiBodies on success, -1 otherwise
+    int AddObstacle(string _modelFileName, const vector<double>& _where, const vector<cd_predefined>& _cdTypes);
+
+    //RemoveObstacleAt
+    //Removes multibody stored at position given in m_otherMultiBodies
+    void RemoveObstacleAt(size_t position);
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     //
@@ -281,6 +295,16 @@ inline size_t
 Environment::
 GetActiveBodyCount() const {
   return m_activeBodies.size();
+}
+
+//-------------------------------------------------------------------
+///  GetObstacleCount
+///  Output: the number of multibodies in m_otherMultiBodies
+//-------------------------------------------------------------------
+inline size_t
+Environment::
+GetObstacleCount() const{
+  return m_otherMultiBodies.size();
 }
 
 //-------------------------------------------------------------------

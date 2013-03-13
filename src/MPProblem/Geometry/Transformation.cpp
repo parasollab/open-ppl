@@ -17,12 +17,22 @@ const Transformation Transformation::Identity = Transformation(Orientation(Ident
 Transformation::Transformation() :
   m_position(0.0, 0.0, 0.0),
   m_orientation(Orientation::Matrix){
-  }
+}
 
 Transformation::Transformation(const Orientation& _orientation, const Vector3D& _position) :
   m_position(_position),
   m_orientation(_orientation){
-  }
+}
+
+Transformation::Transformation(const vector<double>& _configuration, Orientation::OrientationType _type){
+  m_position[0] = _configuration[0];
+  m_position[1] = _configuration[1];
+  m_position[2] = _configuration[2];
+
+  //alpha, beta, and gamma are in opposite order as FixedXYZ
+  Orientation myOri(_type, _configuration[5], _configuration[4], _configuration[3]);
+  m_orientation = myOri;
+}
 
 //==============================================================================
 // Function: Create a transformation corresponding to the given DH parameters by

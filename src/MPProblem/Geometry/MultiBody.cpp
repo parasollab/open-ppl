@@ -130,6 +130,43 @@ MultiBody::MultiBody()
 MultiBody::~MultiBody() 
 {}
 
+void MultiBody::Initialize(string _modelFile, vector<double> _where, BodyType _type){
+  if (_where.size() < 6){
+    cerr << "Error attempting to create a multibody with less than 6 dofs. Num dofs: " << _where.size() << endl;
+    exit(1);
+  }
+
+  m_bodyType = _type;
+
+  if (IsActive() || IsSurface()){
+    cerr << "MultiBody::Initialize not yet implemented for active or surface multibodies" << endl;
+    exit(1);
+  }
+
+  if (IsPassive()){
+    //create a fixed body
+
+    FixedBody fix(this);
+    fix.SetFileName(_modelFile);
+    fix.Read(_modelFile);
+
+    Transformation worldTransform(_where);
+    fix.PutWorldTransformation(worldTransform);
+
+    //add fixed body to multibody
+    AddBody(fix);      
+    //calculating area for multibody
+    fixAreas.push_back(fix.GetPolyhedron().m_area);
+    fixArea = fix.GetPolyhedron().m_area;
+
+    freeArea = 0;
+    area = fixArea + freeArea;
+
+    FindBoundingBox();
+    ComputeCenterOfMass();
+  }
+}
+
 
 //-------------------------------------------------------------------
 //  GetFreeBody
@@ -416,7 +453,7 @@ double MultiBody::GetArea() const
 void MultiBody::CalculateArea()
 {
   fixArea = freeArea = 0;
-  
+
   for(vector<shared_ptr<FixedBody> >::iterator I = fixedBody.begin(); I != fixedBody.end(); ++I) 
   {
     fixAreas.push_back((*I)->GetPolyhedron().m_area);
@@ -439,17 +476,17 @@ void MultiBody::CalculateArea()
 void 
 MultiBody::Read(istream& _is, bool _debug) {
   if(_debug) cout << "In MultiBody::Read" << endl;
-  
+
   string multibodyType = ReadFieldString(_is, 
       "Multibody Type (Active, Passive, Internal, Surface)");
   if(multibodyType == "PASSIVE")
-      m_bodyType = PASSIVE;
+    m_bodyType = PASSIVE;
   else if(multibodyType == "ACTIVE")
-      m_bodyType = ACTIVE;
+    m_bodyType = ACTIVE;
   else if(multibodyType == "SURFACE")
-      m_bodyType = SURFACE;
+    m_bodyType = SURFACE;
   else if(multibodyType == "INTERNAL")
-      m_bodyType = INTERNAL;
+    m_bodyType = INTERNAL;
   else{
     cerr << "Error! Unspecified body type. Valid types are ACTIVE, PASSIVE, SURFACE, and INTERNAL" << endl;
     exit(1);

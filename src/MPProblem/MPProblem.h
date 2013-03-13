@@ -113,6 +113,16 @@ class MPProblem
  
     void BuildCDStructures();
 
+    //AddObstacle, will add an obstacle to the environment
+    //_modelFileName: a string specifying the path to the .obj file to be added as an obstacle
+    //_where: 6 dofs for obstacle placement: (x, y, z, rotation about X, rotation about Y, rotation about Z)
+    //return value: the obstacle's index in the Environment's m_otherMultiBodies on success, -1 on failure
+    int AddObstacle(string _modelFileName, const vector<double>& _where);
+
+    //RemoveObstacleAt
+    //a wrapper call to remove a multibody from the environment
+    void RemoveObstacleAt(size_t _index);
+
   protected:
     virtual void Initialize();
     void ReadXMLFile(const string& _filename, typename MPTraits::MPProblemType* _problem);
@@ -425,6 +435,31 @@ MPProblem<MPTraits>::GetSelectedCDTypes() const{
     if(CollisionDetectionValidity<MPTraits>* method = dynamic_cast<CollisionDetectionValidity<MPTraits>*>(mit->second.get()))   
       cdTypes.push_back(method->GetCDType());
   return cdTypes;
+}
+
+template<class MPTraits>
+int
+MPProblem<MPTraits>::AddObstacle(string _modelFileName, const vector<double>& _where){
+  if(m_environment != NULL){
+    vector<cd_predefined> cdtypes = GetSelectedCDTypes();
+    int index =  m_environment->AddObstacle(_modelFileName, _where, cdtypes);
+    return index;
+  }
+  else{
+    cerr << "MPProblem::AddObstacle Warning: Attempted to add obstacle to a NULL environment" << endl;
+    return -1;
+  }
+}
+
+template<class MPTraits>
+void
+MPProblem<MPTraits>::RemoveObstacleAt(size_t _index){
+  if(m_environment != NULL){
+    m_environment->RemoveObstacleAt(_index);
+  }
+  else{
+    cerr << "MPProblem::RemoveObstacleAt Warning: Attempted to remove an obstacle from a NULL environment" << endl;
+  }
 }
 
 #endif

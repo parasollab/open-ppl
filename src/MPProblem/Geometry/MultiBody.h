@@ -79,6 +79,7 @@ public:
     //  Get/Set Free Body info
     //
     //////////////////////////////////////////////////////////////////////////////////////////
+    void Initialize(string _modelFile, vector<double> _where=vector<double>(6,0), BodyType _type=PASSIVE);
     
     void SetBodyType(BodyType _newType){m_bodyType = _newType;}
     BodyType GetBodyType() const{return m_bodyType;}

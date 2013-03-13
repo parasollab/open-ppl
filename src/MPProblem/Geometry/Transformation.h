@@ -36,6 +36,9 @@ class Transformation {
     ///Create a Transformation with given position and orientation.
     Transformation(const Orientation& _orientation, const Vector3D& _position);
 
+    //Create a Transformation out of a vector3D and interpret the orientation as _type
+    Transformation(const vector<double>& _configuration, Orientation::OrientationType _type = Orientation::FixedXYZ);
+
     //This constructor will take the four values from DHparameters and insert
     //them into the constructed Transformation object.  Essentially this sets
     //the reference frame for this particular Transformation.

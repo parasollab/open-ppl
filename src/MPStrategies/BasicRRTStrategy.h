@@ -393,8 +393,11 @@ BasicRRTStrategy<MPTraits>::ExpandTree(CfgType& _dir){
     if(this->m_debug) cout << "RRT could not expand!" << endl; 
     return recentVID;
   }
-  cout<<"RRT expanded"<<endl;
+  
   expandStatClass->StopClock(expandClockName);
+  
+  if(m_debug) cout << "RRT expanded to " << newCfg << endl;
+  
   // If good to go, add to roadmap
   if(dm->Distance(env, newCfg, nearest) >= m_minDist ) {
     recentVID = this->GetMPProblem()->GetRoadmap()->GetGraph()->AddVertex(newCfg);
