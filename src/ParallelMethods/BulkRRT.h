@@ -190,10 +190,10 @@ void BulkRRT<MPTraits>::ParseXML(XMLNodeReader& _node){
       m_parallelNF = citr->boolXMLParameter("parallelNF",true,true,"If true, parallelize NF");
       citr->warnUnrequestedAttributes();
     }else if(citr->getName() == "delta_var") {
-      m_delta = citr->numberXMLParameter("delta", true, 0.0, 0.0, 1.0, "Delta Variable for ExtendTree method");
+      m_delta = citr->numberXMLParameter("delta", true, 0.0, 0.0, MAX_DBL, "Delta Variable for ExtendTree method");
       citr->warnUnrequestedAttributes();
     }else if(citr->getName() == "min_distance") {
-      m_minDist = citr->numberXMLParameter("minDist", true, 0.0, 0.0, 1.0, "Minimum Distance to see if new node is too close to closet cfg");
+      m_minDist = citr->numberXMLParameter("minDist", true, 0.0, 0.0, MAX_DBL, "Minimum Distance to see if new node is too close to closet cfg");
       citr->warnUnrequestedAttributes();
     }else {
       citr->warnUnknownNode();
