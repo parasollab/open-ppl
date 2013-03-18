@@ -532,7 +532,7 @@ class BuildRadialBlindRRT {
     typedef typename MPProblemType::NeighborhoodFinderPointer NeighborhoodFinderPointer;
     typedef typename MPProblemType::ConnectorPointer ConnectorPointer;
     typedef typename stapl::graph_view<typename GraphType::GRAPH> RoadmapViewType;
-    //typedef typename stapl::native_view<typename GraphType::GRAPH> NativeViewType;
+    typedef typename stapl::part_native_view<RoadmapViewType>::view_type NativeViewType;
     typedef stapl::counter<stapl::default_timer> STAPLTimer;
     
     typedef typename stapl::sequential::graph<stapl::DIRECTED, stapl::NONMULTIEDGES, CfgType,WeightType> LocalGraphType;
@@ -672,12 +672,13 @@ class BuildRadialBlindRRT {
           attempts++;
 
         }
-       /*RoadmapViewType roadmapView  (*globalTree);
+        /*RoadmapViewType roadmapView  (*globalTree);
         PrintValue("ROADMAP view size : ", roadmapView.size());
         NativeViewType native_vw = native_view(roadmapView);
-        typename RoadmapViewType::view_container_type& localTree2 = native_vw[get_location_id()].container();
-        PrintValue("NATIVE VIEW on GTREE : ", localTree2.size());
-        PrintValue("NATIVE VIEW on GTREE num vertices: ", localTree2.num_vertices());*/
+        //typename RoadmapViewType::view_container_type& localTree2 = native_vw[get_location_id()];
+        typename NativeViewType::value_type localTree2 = native_vw[get_location_id()];
+        PrintValue("NATIVE VIEW on GTREE : ", localTree2.size());*/
+        //PrintValue("NATIVE VIEW on GTREE num vertices: ", localTree2.num_vertices());
         //radialUtils.SetLocalTree(localTree);
         //t1.stop();
         // I print the clocks all scattered because sometimes it gets stuck, so I can know where
@@ -1032,6 +1033,14 @@ class ConnectRegionCCs {
     }
 
 };*/
+template<typename VID>
+struct RegionCC {
+  typedef  vector<pair<size_t, VID> > result_type;
+  template<typename P>
+  result_type operator()(P& p) const{
+    return p.GetCCs();
+  }
+};
 
 
 template<class MPTraits>
@@ -1073,7 +1082,8 @@ class ConnectGlobalCCs {
         //edges are assumed to be directed
         typedef typename vertexView::adj_edges_type ADJV;
         ADJV  edges = _view.edges();
-   
+        size_t rgsize = _gview.size();
+        //PrintValue("Edge descriptor : " , edges.descriptor());
         //SOURCE REGION
         vector<pair<size_t,VID> > sCCs = _view.property().GetCCs();
         queue<VID> sPendingQ;
@@ -1083,8 +1093,12 @@ class ConnectGlobalCCs {
         //TARGET REGIONS
 
         for(typename vertexView::adj_edge_iterator ei = edges.begin(); ei != edges.end(); ++ei){
-          RadialRegion<MPTraits> tRegion = (*(_gview.find_vertex((*ei).target()))).property();
-          vector<pair<size_t,VID> > tCCs = tRegion.GetCCs();
+          if((_view.descriptor()) == rgsize-1 && ((*ei).target()) == rgsize-2) continue; // remove one edge from edge list
+           
+          vector<pair<size_t, VID> > tCCs = (_gview.vp_apply(((*ei).target()), RegionCC<VID>()));
+          
+          /*RadialRegion<MPTraits> tRegion = (*(_gview.find_vertex((*ei).target()))).property();
+          vector<pair<size_t,VID> > tCCs = tRegion.GetCCs();*/
           queue<VID> tPendingQ;
           vector<VID>  tConnected;
           stapl::sequential::vector_property_map<typename GraphType::GRAPH, size_t> cmap;
