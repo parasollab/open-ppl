@@ -533,6 +533,12 @@ void
 Environment::Read(string _filename) {  
   VerifyFileExists(_filename);
 
+  m_activeBodies.clear();
+  m_otherMultiBodies.clear();
+  m_usableMultiBodies.clear();
+  m_usableExternalbodyCount = 0;
+  m_navigableSurfaces.clear();
+
   // open file and read first field
   ifstream ifs(_filename.c_str());
 
