@@ -203,6 +203,7 @@ Body::ComputeCenterOfMass(){
 void 
 Body::FindBoundingBox(){
   GMSPolyhedron poly;
+  m_worldPolyhedronAvailable = false;
   poly = GetWorldPolyhedron();
   double minx, miny, minz, maxx, maxy, maxz;
   minx = maxx = poly.m_vertexList[0].getX();
