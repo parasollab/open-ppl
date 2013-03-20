@@ -309,7 +309,10 @@ MPProblem<MPTraits>::ParseChild(XMLNodeReader::childiterator citr, typename MPTr
   }
   else if(citr->getName() == "Solver") {
     m_solver = citr->stringXMLParameter("mpStrategyLabel", true, "", "The strategy pointed to by this label will be used to solve the problem");
-    m_solverSeed = citr->numberXMLParameter("seed", true, 1, 0, MAX_INT, "The random number generator seed for the solver.");
+
+    // making seed random in case is not provided
+    int defaultSeed = (int) time(NULL);
+    m_solverSeed = citr->numberXMLParameter("seed", false, (int) time(NULL), 0, MAX_INT, "The random number generator seed for the solver.");
     m_solverBaseName = citr->stringXMLParameter("baseFilename", true, "", "BaseFilename for the solver.");
     ostringstream oss;
     oss << m_solverBaseName << "." << m_solverSeed;

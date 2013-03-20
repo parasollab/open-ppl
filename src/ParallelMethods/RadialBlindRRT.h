@@ -98,7 +98,7 @@ RadialBlindRRT<MPTraits>::BuildRRT(graph_view<RadialRegionGraph> _regionView,
   size_t nodesPerRegion = this->m_numNodes/stapl::get_num_locations();
   BuildRadialBlindRRT<MPTraits> wf(_problem,nodesPerRegion,this->m_dmLabel,this->m_vcLabel,
       this->m_nfLabel,m_CCconnection,m_expansionType,this->m_delta,this->m_minDist,
-      _root,this->m_numAttempts,m_numCCIters,this->m_overlap, this->m_strictBranching);
+      _root,this->m_numAttempts,m_numCCIters,this->m_overlap, this->m_strictBranching, this->m_debug);
 
   //  MPStrategyPointer strategy = this->GetMPProblem()->GetMPStrategy("BlindRRT");
   //  BuildRadialBlindRRT<MPTraits> wf(strategy, _root, m_radius, m_strictBranching, m_overlap); 
@@ -148,7 +148,7 @@ void RadialBlindRRT<MPTraits>::Run() {
   if(stapl::get_location_id() == 0){ 
     pMap->add_vertex(root);
     // TODO VIZMO DEBUG
-    //VDAddNode(root);
+    if (this->m_debug) VDAddNode(root);
   }
   //PrintOnce("ROOT  : ", root);
   //PrintOnce("LENGTH  : ", this->m_radius); 
@@ -181,9 +181,6 @@ void RadialBlindRRT<MPTraits>::Run() {
   t4.stop();
   rmi_fence();
 
-  //t5.start();
-  //  RemoveCycles(pMap);
-  //t5.stop();
   t0.stop();
   PrintOnce("STEP 4 CONNECT REGIONS (s) : ", t4.value());
   PrintOnce("TOTAL TIME (s) : ", t0.value());

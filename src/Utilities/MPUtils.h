@@ -840,8 +840,8 @@ BlindRRTExpand(typename MPTraits::MPProblemType* _mp,
           //tick.SetStat("Validity", NodeState::COLLISION);
           
           // TODO Cesar do we really want to add in collision nodes???
-          // cfgWeight = make_pair(tick, ticker);  
-          // _newCfgs.push_back(cfgWeight);
+          cfgWeight = make_pair(tick, ticker);  
+          _newCfgs.push_back(cfgWeight);
         
         } else if ("First") {  // we dont need to track every change, lets jump to delta
           jump = true;
@@ -860,8 +860,8 @@ BlindRRTExpand(typename MPTraits::MPProblemType* _mp,
           //previous.SetStat("Validity", NodeState::COLLISION);
           
           // TODO Cesar do we really want to add in collision nodes???
-          // cfgWeight = make_pair(previous, ticker - 1); // previous is one tick behind 
-          // _newCfgs.push_back(cfgWeight);
+          cfgWeight = make_pair(previous, ticker - 1); // previous is one tick behind 
+          _newCfgs.push_back(cfgWeight);
         
         } 
          

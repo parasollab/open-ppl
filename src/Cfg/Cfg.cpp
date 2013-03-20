@@ -104,7 +104,8 @@ Cfg::operator==(const Cfg& _cfg) const {
         return false;
     }
     else {
-      if(fabs(DirectedAngularDistance(m_v[i], _cfg[i])) > numeric_limits<double>::epsilon()) 
+      // decreasing numeric limits so if two Cfgs are close enough they will be equal
+      if(fabs(DirectedAngularDistance(m_v[i], _cfg[i])) > numeric_limits<float>::epsilon()) 
         return false;
     }
   }
