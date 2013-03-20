@@ -258,6 +258,7 @@ PMPL_OBJS = \
 	MPProblem/Boundary.o \
         MPProblem/BoundingBox.o \
 	MPProblem/BoundingSphere.o\
+	Samplers/SimilarStructureSampler.o \
 	ValidityCheckers/CollisionDetection/CDInfo.o \
 	ValidityCheckers/CollisionDetection/CollisionDetectionMethod.o \
 	ValidityCheckers/CollisionDetection/RapidCollisionDetection.o \

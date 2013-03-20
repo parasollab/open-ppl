@@ -3,6 +3,7 @@
 
 #include "DistanceMetricMethod.h"
 #include "MPProblem/Environment.h"
+template <class MPTraits> class SimilarStructureSampler;
 
 template<class MPTraits>
 class RMSDDistance : public DistanceMetricMethod<MPTraits> {
@@ -18,6 +19,8 @@ class RMSDDistance : public DistanceMetricMethod<MPTraits> {
   protected:
     virtual vector<Vector3D> GetCoordinatesForRMSD(const CfgType& _c, Environment* _env);
     double RMSD(vector<Vector3D> _x, vector<Vector3D> _y, int _dim);
+
+  friend class SimilarStructureSampler<MPTraits>;
 };
 
 template<class MPTraits>

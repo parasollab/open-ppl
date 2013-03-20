@@ -38,9 +38,10 @@
 #include "Samplers/MedialAxisSampler.h"
 #include "Samplers/MixSampler.h"
 #include "Samplers/ObstacleBasedSampler.h"
+#include "Samplers/SimilarStructureSampler.h"
+#include "Samplers/SurfaceSampler.h"
 #include "Samplers/UniformObstacleBasedSampler.h"
 #include "Samplers/UniformRandomSampler.h"
-#include "Samplers/SurfaceSampler.h"
 
 //local planner includes
 #include "LocalPlanners/StraightLine.h"
@@ -147,6 +148,7 @@ struct MPTraits{
     MedialAxisSampler<MPTraits>,
     MixSampler<MPTraits>,
     ObstacleBasedSampler<MPTraits>,
+    SimilarStructureSampler<MPTraits>,
     UniformObstacleBasedSampler<MPTraits>,
     UniformRandomSampler<MPTraits>
       > SamplerMethodList;
