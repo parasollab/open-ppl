@@ -69,7 +69,6 @@ class RadialUtils {
   inline VID AddVertex(CfgType _cfg) const {
     VID newVID = m_problem->GetRoadmap()->GetGraph()->add_vertex(_cfg);
     m_localTree->add_vertex(newVID, _cfg); 
-    cout << endl << "AddingNode: " << newVID << "\t" << _cfg << endl;
     if(m_debug)  VDAddNode(_cfg);
     return newVID;
   }
@@ -243,9 +242,6 @@ class RadialUtils {
     size_t failures = 0;
     size_t maxFailures = 100;
     
-    cout << endl << "Graph" << endl;
-    stapl::sequential::write_graph(*m_localTree, cout);
-
 
     while(ccs.size() > 1 && iters <= m_numCCIters && failures < maxFailures) {
       int rand1 = LRand() % ccs.size();
@@ -254,11 +250,6 @@ class RadialUtils {
       colorMap.reset();
       stapl::sequential::get_cc(*m_localTree,colorMap,cc1VID,cc1);
       
-      cout << endl <<  "CC1:" << endl;
-      for(int i=0; i<cc1.size(); i++) {
-        cout << cc1[i] << " ";
-      }
-      cout << endl;
       
       if (cc1.size() == 1) {
         // PrintValue("Getting: ", cc1[0]);
@@ -297,17 +288,18 @@ class RadialUtils {
 
       } else if(m_CCconnection == "Mixed") {
         
-        if (connectSwitch % 10) {
+        if (connectSwitch % 10 == 0) {
           cc2VID = GetClosestCCByClosestNode(cc1VID, ccs, colorMap);
+        
+        } else if (connectSwitch % 5 == 0) {
+          VID randomNode = cc1[LRand() % cc1.size()];
+          cc2VID = GetClosestCCByRandomNode(randomNode, cc1VID);
         
         } else if (connectSwitch % 3 == 0) {
           int rand2 = LRand() % ccs.size();
           if (rand1 == rand2) continue;
           cc2VID = ccs[ rand2 ].second; 
 
-        } else if (connectSwitch % 3 == 1) {
-          VID randomNode = cc1[LRand() % cc1.size()];
-          cc2VID = GetClosestCCByRandomNode(randomNode, cc1VID);
         } else {
           CfgType centroid = GetCentroid(cc1); 
           cc2VID = GetClosestCCByCentroid(centroid, cc1VID, ccs, colorMap);
@@ -324,12 +316,6 @@ class RadialUtils {
       
       colorMap.reset();
       stapl::sequential::get_cc(*m_localTree,colorMap,cc2VID,cc2);
-      
-      cout << endl <<  "CC2:" << endl;
-      for(int i=0; i<cc2.size(); i++) {
-        cout << cc2[i] << " ";
-      }
-      cout << endl;
       
       // Maybe this is an invalid node, don't use it
       if (cc2.size() == 1) {
@@ -358,6 +344,7 @@ class RadialUtils {
 
     }
 
+    if(m_debug) cout << "Number of CCs after CC Connection: " << ccs.size() << endl;
     stats->StopClock(clockName.str());
 
   }

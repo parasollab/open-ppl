@@ -111,7 +111,7 @@ RadialBlindRRT<MPTraits>::ConnectRegions(graph_view<RadialRegionGraph> _regionVi
     MPProblemType* _problem) {
 
   ConnectorPointer pConnection;
-  pConnection = _problem->GetConnector(this->m_connectorLabel);
+  pConnection = _problem->GetConnector("RegionRRTConnect");
   ConnectGlobalCCs<MPTraits> wf(_problem, pConnection);
   map_func(wf, _regionView, repeat_view(_regionView));
 }
@@ -161,21 +161,24 @@ void RadialBlindRRT<MPTraits>::Run() {
   this->RegionVertex(regionView, problem, root);
   t1.stop();
   PrintOnce("STEP 1 REGION VERTEX (s) : ", t1.value());
+  
   rmi_fence(); 
-  //cout << "STEP 2: Make edge between k-closest regions " << endl;
+  
   ///For each vertex v find k closest to v in a map_reduce fashion
   t2.start();
   if (regionView.size() >1) this->RegionEdge(regionView, problem);
   t2.stop();
   PrintOnce("STEP 2 REGION EDGE (s) : ", t2.value());
+  
   rmi_fence();
-  //cout << "STEP 3: Construct Blind RRT in each region " << endl;
+  
   t3.start();
   BuildRRT(regionView, problem, root);
   t3.stop();
   PrintOnce("STEP 3 BUILD RRT (s) : ", t3.value());
+  
   rmi_fence();
- // cout << "STEP 4 : Global CC Connect " << endl;
+  
   t4.start();
   if(regionView.size() > 1) ConnectRegions(regionView, problem);
   t4.stop();

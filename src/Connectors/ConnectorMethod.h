@@ -48,7 +48,7 @@ class ConnectorMethod : public MPBaseObject<MPTraits> {
     typedef typename MPProblemType::VID VID; 
     typedef typename MPTraits::WeightType WeightType;
     #ifdef _PARALLEL
-    typedef typename stapl::sequential::graph<stapl::DIRECTED, stapl::NONMULTIEDGES, CfgType,WeightType> SeqGraphType;
+    typedef typename stapl::sequential::graph<stapl::DIRECTED, stapl::NONMULTIEDGES, CfgType,WeightType> SequentialGraphType;
     #endif
 
     ConnectorMethod();
@@ -97,7 +97,8 @@ class ConnectorMethod : public MPBaseObject<MPTraits> {
     void SetOrientationResolution(double _oriRes) { m_connectionOriRes=_oriRes; }
     double GetOrientationResolution() { return m_connectionOriRes; }
     #ifdef _PARALLEL
-    void SetLocalGraph(SeqGraphType* localGraph) { m_localGraph = localGraph;}
+    void SetLocalGraph(SequentialGraphType* _localGraph) { m_localGraph = _localGraph;}
+    void SetRemoteGraph(SequentialGraphType* _remoteGraph) { m_remoteGraph = _remoteGraph;}
     #endif
     /////////////////////////////////////////////
     // Utility Methods
@@ -125,7 +126,8 @@ class ConnectorMethod : public MPBaseObject<MPTraits> {
     double  m_connectionPosRes;
     double  m_connectionOriRes;
     #ifdef _PARALLEL
-    SeqGraphType* m_localGraph;
+    SequentialGraphType* m_localGraph;
+    SequentialGraphType* m_remoteGraph;
     #endif
 };
 

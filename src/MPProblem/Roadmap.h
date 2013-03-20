@@ -42,6 +42,7 @@ class Roadmap {
 
     //access the roadmap graph
     GraphType* GetGraph(){return m_graph;}
+    void SetGraph(GraphType* _graph) { m_graph = _graph; }
 
   private:
     std::map<std::pair<VID,VID>, bool> m_lpCache; //cache of attempted edges

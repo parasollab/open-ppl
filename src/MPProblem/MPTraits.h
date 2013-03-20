@@ -57,6 +57,7 @@
 #include "Connectors/OptimalRewire.h"
 #include "Connectors/RRTConnect.h"
 #include "Connectors/RegionConnector.h"
+#include "Connectors/RegionRRTConnect.h"
 
 //metric includes
 #include "Metrics/CCDistanceMetric.h"
@@ -174,6 +175,7 @@ struct MPTraits{
     CCsConnector<MPTraits>, 
     NeighborhoodConnector<MPTraits> 
     ,RRTConnect<MPTraits> 
+    ,RegionRRTConnect<MPTraits> 
     ,RegionConnector<MPTraits> 
     //PreferentialAttachment<MPTraits>, 
     //OptimalConnection<MPTraits>,
