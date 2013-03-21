@@ -48,7 +48,7 @@ class RadialBlindRRT : public RadialSubdivisionRRT<MPTraits> {
 
     void ConnectRegions(graph_view<RadialRegionGraph> _regionView, MPProblemType* _problem);
 
-    void RemoveCycles(RoadmapGraph<CfgType, WeightType>* _rmg);
+    void DeleteInvalid(graph_view<RadialRegionGraph> _regionView);
 
   protected:
     string m_expansionType;
@@ -112,15 +112,16 @@ RadialBlindRRT<MPTraits>::ConnectRegions(graph_view<RadialRegionGraph> _regionVi
 
   ConnectorPointer pConnection;
   pConnection = _problem->GetConnector("RegionRRTConnect");
-  ConnectGlobalCCs<MPTraits> wf(_problem, pConnection);
+  ConnectGlobalCCs<MPTraits> wf(_problem, pConnection, this->m_debug);
   map_func(wf, _regionView, repeat_view(_regionView));
 }
 
 template<class MPTraits>
 void 
-RadialBlindRRT<MPTraits>::RemoveCycles(RoadmapGraph<CfgType, WeightType>* _rmg) {
-  GraphView rmView(*_rmg);
-  remove_cycles(rmView);
+RadialBlindRRT<MPTraits>::DeleteInvalid(graph_view<RadialRegionGraph> _regionView) {
+  
+  DeleteInvalidCCs<MPTraits> wf(this->GetMPProblem()); 
+  new_algorithms::for_each(_regionView,wf);
 }
 
 template<class MPTraits>
@@ -183,9 +184,15 @@ void RadialBlindRRT<MPTraits>::Run() {
   if(regionView.size() > 1) ConnectRegions(regionView, problem);
   t4.stop();
   rmi_fence();
-
-  t0.stop();
   PrintOnce("STEP 4 CONNECT REGIONS (s) : ", t4.value());
+
+  t5.start();
+  DeleteInvalid(regionView);
+  t5.stop();
+  rmi_fence();
+  PrintOnce("STEP 5 DELETE INVALID CCs : ", t5.value());
+  
+  t0.stop();
   PrintOnce("TOTAL TIME (s) : ", t0.value());
   PrintOnce("#VERTICES  : ", pMap->num_vertices());
   PrintOnce("#EDGES  : ", pMap->num_edges());
@@ -226,13 +233,22 @@ void RadialBlindRRT<MPTraits>::Run() {
   stapl::rmi_fence();
   if(get_location_id() == 0){
     stringstream basefname;
-    basefname << this->GetBaseFilename() << ".N" << this->m_numNodes << ".R" << this->m_numRegions << ".p" << get_num_locations() << ".run" << this->m_runs;
-    ofstream stat_out((basefname.str() + ".stats").c_str());
+    //basefname << this->GetBaseFilename() << ".N" << this->m_numNodes << ".R" << this->m_numRegions << ".p" << get_num_locations() << ".run" << this->m_runs;
+    basefname << this->GetBaseFilename();
+    
+    ofstream stat_out((basefname.str() + ".stat").c_str());
 
-    stat_out << "#P \t RGV  \t RGE  \t BRRT \t RCON   \t TOT \t VERT \t EDGES "  << endl;
-
-    stat_out << get_num_locations() << "\n" << t1.value() << "\n" << t2.value() << "\n" << t3.value()
-      << "\n" << t4.value() <<  "\n" <<  t0.value(); 
+    stat_out << "#P \t RGV  \t RGE  \t BRRT \t RCON \t DEL \t TOT \t VERT \t EDGES "  << endl;
+    stat_out << setprecision(5);
+    stat_out << fixed;
+    stat_out << get_num_locations() << "\n" 
+    << t1.value() << "\n" 
+    << t2.value() << "\n" 
+    << t3.value() << "\n" 
+    << t4.value() << "\n" 
+    << t5.value() << "\n" 
+    << t0.value(); 
+    
     stat_out << "\n" << pMap->size() << "\n" << pMap->num_edges() << endl;
 
     stat_out.close();	   
@@ -254,7 +270,8 @@ void RadialBlindRRT<MPTraits>::Finalize(){
   stringstream basefname;
   MPProblemType* problem = this->GetMPProblem();
 
-  basefname << this->GetBaseFilename() << ".p" << stapl::get_num_locations() << ".r" << this->m_numRegions;
+  //basefname << this->GetBaseFilename() << ".N" << this->m_numNodes << ".R" << this->m_numRegions << ".p" << get_num_locations() ;
+  basefname << this->GetBaseFilename() ;
   ofstream osMap((basefname.str() + ".map").c_str());
   if(!osMap){
     cout << "RadialBlindRRT::Finalize(): can't open outfile: ";

@@ -113,7 +113,7 @@ class RadialUtils {
     globalTree->add_edge_async(_vid2, _vid1, weight);
     m_localTree->add_edge(_vid1, _vid2); 
     m_localTree->add_edge(_vid2, _vid1); 
-    
+
     VDAddEdge(_cfg1, _cfg2);
   }
 
@@ -163,7 +163,7 @@ class RadialUtils {
           newVID = AddVertex(expansionCfgs[i].first);
           _currBranch.push_back(newVID);/// branch is being replaced as local tree, remove this
         }
-        
+
         expansionVIDs.push_back(newVID );
 
       }
@@ -180,7 +180,7 @@ class RadialUtils {
             IsValid(vc, expansionCfgs[i-1].first, env, stats) &&  
             IsValid(vc, expansionCfgs[i].first, env, stats) ) {
           weight = expansionCfgs[i].second - expansionCfgs[i-1].second; // Edge weight 
-          
+
           if(!m_debug) AddEdge(expansionVIDs[i-1], expansionVIDs[i], weight, _pendingEdges, _pendingWeights);
           else AddEdgeDebug(expansionVIDs[i-1], expansionVIDs[i], expansionCfgs[i-1].first, expansionCfgs[i].first, weight, _pendingEdges, _pendingWeights);
 
@@ -234,23 +234,25 @@ class RadialUtils {
     vector<VID> cc2;
     VID cc1VID; 
     VID cc2VID; 
-    
+
 
     size_t connectSwitch = 0;
     bool mapPassedEvaluation = false;
     size_t iters = 0;
     size_t failures = 0;
     size_t maxFailures = 100;
-    
+
+    // instead of a certain number of iterations, make it proportional to the number of CCs we have
+    m_numCCIters = ccs.size() * m_numCCIters;
 
     while(ccs.size() > 1 && iters <= m_numCCIters && failures < maxFailures) {
       int rand1 = LRand() % ccs.size();
       cc1VID = ccs[ rand1 ].second;
-      
+
       colorMap.reset();
       stapl::sequential::get_cc(*m_localTree,colorMap,cc1VID,cc1);
-      
-      
+
+
       if (cc1.size() == 1) {
         // PrintValue("Getting: ", cc1[0]);
         //CfgType cfg  =   (*(globalTre->distribution().container_manager().begin()->find_vertex(cc1[0]))).property();
@@ -270,31 +272,15 @@ class RadialUtils {
         if (rand1 == rand2) continue;
         cc2VID = ccs[ rand2 ].second; 
 
-      } else if(m_CCconnection == "ClosestRandomNode") {
-
-        VID randomNode = cc1[LRand() % cc1.size()];
-
-        //    _timer[1].start();
-        cc2VID = GetClosestCCByRandomNode(randomNode, cc1VID);
-        //    _timer[1].stop();
-
-      } else if (m_CCconnection == "ClosestCC") {
-        //CfgType centroid = GetCentroid(globalTre,cc1);  //is this suppose to be a global operation?
-        CfgType centroid = GetCentroid(cc1);
-        cc2VID = GetClosestCCByCentroid(centroid, cc1VID, ccs, colorMap);
-      
-      } else if (m_CCconnection == "ClosestNode"){
-        cc2VID = GetClosestCCByClosestNode(cc1VID, ccs, colorMap);
-
       } else if(m_CCconnection == "Mixed") {
-        
+/*
         if (connectSwitch % 10 == 0) {
-          cc2VID = GetClosestCCByClosestNode(cc1VID, ccs, colorMap);
-        
+          cc2VID = GetClosestNodeToCentroid(cc1VID, ccs, colorMap);
+
         } else if (connectSwitch % 5 == 0) {
           VID randomNode = cc1[LRand() % cc1.size()];
-          cc2VID = GetClosestCCByRandomNode(randomNode, cc1VID);
-        
+          cc2VID = GetClosestNodeToNode(randomNode, cc1VID);
+
         } else if (connectSwitch % 3 == 0) {
           int rand2 = LRand() % ccs.size();
           if (rand1 == rand2) continue;
@@ -302,21 +288,21 @@ class RadialUtils {
 
         } else {
           CfgType centroid = GetCentroid(cc1); 
-          cc2VID = GetClosestCCByCentroid(centroid, cc1VID, ccs, colorMap);
+          cc2VID = GetClosestCentroidToCentroid(centroid, cc1VID, ccs, colorMap);
         }
         connectSwitch++;        
-
+*/
       } else {
-        cout << "Unknown CC connection type: " << m_CCconnection << endl;
-        exit(-1);
+        cc2VID = GetClosest(cc1VID, ccs, m_CCconnection);
 
       }
+      
       if (cc2VID == INVALID_VID )
         continue;
-      
+
       colorMap.reset();
       stapl::sequential::get_cc(*m_localTree,colorMap,cc2VID,cc2);
-      
+
       // Maybe this is an invalid node, don't use it
       if (cc2.size() == 1) {
 
@@ -380,152 +366,147 @@ class RadialUtils {
 
 
   ////////////////////////////
-  //  GetClosestCCByRandomNode
+  //  NodeToNode
   ////////////////////////////
-  VID GetClosestCCByRandomNode(VID _node, VID _nodeCCVID) const {
-    if (m_localTree == NULL) {
-      cout << "Error! Did not Set Local Tree using native view" << endl;
-      exit(-1);
+  // Absolute closest pair of nodes
+  ////////////////////////////
+  double
+    GetDistanceNodeToNode(vector<VID>& _sourceCC, vector<VID>& _targetCC) const {
+      NeighborhoodFinderPointer nf = m_problem->GetNeighborhoodFinder(m_nf);
+      RoadmapType* rdmp = m_problem->GetRoadmap();
+      DistanceMetricPointer dm = m_problem->GetDistanceMetric(m_dm);
+      Environment* env = m_problem->GetEnvironment();
+      vector<pair<VID,VID> > closestPair;
+      nf->KClosestPairs(rdmp, _sourceCC.begin(), _sourceCC.end(), _targetCC.begin(), _targetCC.end(), 1, back_inserter(closestPair));
+      if (closestPair.empty())
+        return INVALID_VID;
+
+      VID vid1 = closestPair[0].first; 
+      VID vid2 = closestPair[0].second;
+
+      CfgType cfg1 = (*(m_localTree->find_vertex(vid1))).property();
+      CfgType cfg2 = (*(m_localTree->find_vertex(vid2))).property();
+
+      return dm->Distance(env, cfg1, cfg2);
     }
 
-    RoadmapType* rdmp = m_problem->GetRoadmap();
-    NeighborhoodFinderPointer nf = m_problem->GetNeighborhoodFinder(m_nf);
-
-    ColorMap colorMap;
-    vector< pair<size_t,VID> > ccs;
-    colorMap.reset();
-    stapl::sequential::get_cc_stats(*m_localTree,colorMap,ccs);
-
-    typedef typename vector<pair<size_t, VID> >::iterator CCSIT;
-
-    // Key = nodeVID, Value = CCVID
-    // For easy retrieval of the CC once the closest node is found
-    map<VID, VID> nodesAndCCs;
-    typedef typename vector<pair<size_t, VID> >::iterator CCSIT;
-    vector<VID> closestNodesOtherCCs;
-    //find closest VID from other CCS
-    for(CCSIT ccsit = ccs.begin(); ccsit!=ccs.end(); ccsit++){
-
-      if(ccsit->second == _nodeCCVID)
-        continue;
-
-      vector<VID> cc;
-      colorMap.reset();
-      stapl::sequential::get_cc(*m_localTree,colorMap,ccsit->second,cc);
-      vector<VID> closest;
-      nf->KClosest(rdmp, cc.begin(), cc.end(), _node, 1, back_inserter(closest));
-      if (closest.size() != 0) { 
-        closestNodesOtherCCs.push_back(closest[0]);
-        nodesAndCCs[closest[0]] = ccsit->second; 
-      }
-    }
-
-    //find closest VID from other CCS reps
-    vector<VID> closestNode;
-    nf->KClosest(rdmp, closestNodesOtherCCs.begin(), 
-        closestNodesOtherCCs.end(), _node, 1, back_inserter(closestNode));
-
-    VID closestCC = nodesAndCCs[ closestNode[0] ];
-
-    return closestCC;
-  }
-
-
   ////////////////////////////
-  //  GetClosestCCByClosestNode
+  //  NodeToCentroid
   ////////////////////////////
-  //  Calculate the centroid of all CCs, find the closest node from the centroid to CC provided,
-  //  choose smallest distance as the target CC
-  VID GetClosestCCByClosestNode(VID _ccVID, vector<pair<size_t, VID> > _ccs, ColorMap _colorMap) const {
+  //  Calculate the centroid of target CC, find the closest node to sourceCC,
+  ////////////////////////////
+  double
+    GetDistanceNodeToCentroid(vector<VID>& _sourceCC, vector<VID>& _targetCC) const {
 
-    if (m_localTree == NULL) {
-      cout << "Error! Did not Set Local Tree using native view" << endl;
-      exit(-1);
-    }
-    DistanceMetricPointer dm = m_problem->GetDistanceMetric(m_dm);
-    Environment* env = m_problem->GetEnvironment();
-    NeighborhoodFinderPointer nf = m_problem->GetNeighborhoodFinder(m_nf);
-    RoadmapType* rdmp = m_problem->GetRoadmap();
-
-    vector<VID> cc;
-    _colorMap.reset();
-    stapl::sequential::get_cc(*m_localTree,_colorMap,_ccVID,cc);
-    vector<VID> otherCC;
-
-    double currMinDist = MAX_DBL;
-    VID currMinVID = INVALID_VID;
-
-    for (int i=0; i<_ccs.size(); i++) {
-      // TODO Cesar fix STAPL 
-      if(_ccs[i].second == _ccVID)
-        continue;
-
-      _colorMap.reset();
-      stapl::sequential::get_cc(*m_localTree,_colorMap,_ccs[i].second,otherCC);
-      //CfgType otherCentroid = GetCentroid(globalTre,cc); // is this a global operation?
-      CfgType otherCentroid = GetCentroid(otherCC);
-      
-      //find closest VID from other CCS reps
+      RoadmapType* rdmp = m_problem->GetRoadmap();
+      NeighborhoodFinderPointer nf = m_problem->GetNeighborhoodFinder(m_nf);
+      DistanceMetricPointer dm = m_problem->GetDistanceMetric(m_dm);
+      CfgType targetCentroid = GetCentroid(_targetCC);
+      Environment* env = m_problem->GetEnvironment();
       vector<VID> closestNode;
-      nf->KClosest(rdmp, cc.begin(), cc.end(), otherCentroid, 1, back_inserter(closestNode));
+      nf->KClosest(rdmp, _sourceCC.begin(), _sourceCC.end(), targetCentroid, 1, back_inserter(closestNode));
       if (closestNode.empty())
         return INVALID_VID;
-      
+
       VID closest = closestNode[0]; 
       CfgType cfg  =   (*(m_localTree->find_vertex(closest))).property();
-      double dist = dm->Distance(env, cfg, otherCentroid);
-      if (dist < currMinDist) {
-        currMinDist = dist;
-        currMinVID = _ccs[i].second;
-      }
+      return dm->Distance(env, cfg, targetCentroid);
 
-      otherCC.clear();
     }
-    return currMinVID;
-
-  }
 
   ////////////////////////////
-  //  GetClosestCCByCentroid
+  //  CentroidToNode
   ////////////////////////////
-  // returns the VID of the centroid from the vec _ccs that is closest to _centroid
-  VID GetClosestCCByCentroid(CfgType _centroid, VID _ccVID, vector<pair<size_t, VID> > _ccs, ColorMap _colorMap) const {
-    if (m_localTree == NULL) {
-      cout << "Error! Did not Set Local Tree using native view" << endl;
-      exit(-1);
+  //  Get the closest node to centroid of sourceCC
+  //////////////////////////// 
+  double
+    GetDistanceCentroidToNode(vector<VID>& _sourceCC, vector<VID>& _targetCC) const {
+
+      RoadmapType* rdmp = m_problem->GetRoadmap();
+      NeighborhoodFinderPointer nf = m_problem->GetNeighborhoodFinder(m_nf);
+      DistanceMetricPointer dm = m_problem->GetDistanceMetric(m_dm);
+      Environment* env = m_problem->GetEnvironment();
+      CfgType sourceCentroid = GetCentroid(_sourceCC);
+      vector<VID> closestNode;
+      nf->KClosest(rdmp, _targetCC.begin(), _targetCC.end(), sourceCentroid, 1, back_inserter(closestNode));
+      if (closestNode.empty())
+        return INVALID_VID;
+
+      VID closest = closestNode[0]; 
+      CfgType cfg  = (*(m_localTree->find_vertex(closest))).property();
+      return dm->Distance(env, sourceCentroid, cfg);
     }
-    DistanceMetricPointer dm = m_problem->GetDistanceMetric(m_dm);
-    Environment* env = m_problem->GetEnvironment();
 
-    vector<VID> cc;
+  ////////////////////////////
+  //  CentroidToCentroid
+  ////////////////////////////
+  //  Distance between centroids 
+  //////////////////////////// 
+  double
+    GetDistanceCentroidToCentroid(vector<VID>& _sourceCC, vector<VID>& _targetCC) const {
+      CfgType sourceCentroid = GetCentroid(_sourceCC);
+      CfgType targetCentroid = GetCentroid(_targetCC);
+      DistanceMetricPointer dm = m_problem->GetDistanceMetric(m_dm);
+      Environment* env = m_problem->GetEnvironment();
 
-    double currMinDist = MAX_DBL;
-    VID currMinVID = INVALID_VID;
+      return dm->Distance(env, sourceCentroid, targetCentroid);
+    }
 
-    for (int i=0; i<_ccs.size(); i++) {
-      // TODO Cesar fix STAPL 
-      if(_ccs[i].second == _ccVID)
-        continue;
-
-      _colorMap.reset();
-      stapl::sequential::get_cc(*m_localTree,_colorMap,_ccs[i].second,cc);
-      // CfgType otherCentroid = GetCentroid(globalTre,cc); // is this a global operation?
-      CfgType otherCentroid = GetCentroid(cc);
-      double dist = dm->Distance(env, _centroid, otherCentroid);
-      if (dist < currMinDist) {
-        currMinDist = dist;
-        currMinVID = _ccs[i].second;
+  VID
+    GetClosest(VID _ccVID, vector<CCType> _ccs, string _criteria) const {
+      if (m_localTree == NULL) {
+        cout << "Error! Did not Set Local Tree using native view" << endl;
+        exit(-1);
       }
+      ColorMap colorMap;
+      vector<VID> sourceCC;
+      vector<VID> targetCC;
+      double currMinDist = MAX_DBL;
+      VID currMinVID = INVALID_VID;
+      double dist; 
+      colorMap.reset();
+      stapl::sequential::get_cc(*m_localTree,colorMap,_ccVID,sourceCC);
 
-      cc.clear();
+      for (int i=0; i<_ccs.size(); i++) {
+        if(_ccs[i].second == _ccVID)
+          continue;
+
+        colorMap.reset();
+        stapl::sequential::get_cc(*m_localTree,colorMap,_ccs[i].second,targetCC);
+
+        /////////////////////////////////
+        // Call different methods
+        /////////////////////////////////
+        if(_criteria == "NodeToNode")
+          dist = GetDistanceNodeToNode(sourceCC, targetCC);
+
+        else if (_criteria == "NodeToCentroid")
+          dist = GetDistanceNodeToCentroid(sourceCC, targetCC);
+
+        else if (_criteria == "CentroidToNode")
+          dist = GetDistanceCentroidToNode(sourceCC, targetCC);
+
+        else if (_criteria == "CentroidToCentroid")
+          dist = GetDistanceNodeToNode(sourceCC, targetCC);
+        
+        else {
+          cout << "Unknown CC connection type: " << _criteria << endl;
+          exit(-1);
+        }
+
+        if (dist < currMinDist) {
+          currMinDist = dist;
+          currMinVID = _ccs[i].second;
+        }
+
+        targetCC.clear();
+      }
+      return currMinVID;
     }
-    return currMinVID;
-  }
-
 
 
   CfgType
-  GetCentroid(vector<VID>& _cc) const {
+    GetCentroid(vector<VID>& _cc) const {
       CfgType center;
       for(size_t i = 0; i < _cc.size(); i++) {
         CfgType cfg = (*(m_localTree->find_vertex(_cc[i]))).property();

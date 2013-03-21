@@ -1081,15 +1081,18 @@ class ConnectGlobalCCs {
 
     MPProblemType* m_problem;
     ConnectorPointer m_connector;
-  
+    bool m_debug;
+
   public:
-    ConnectGlobalCCs(MPProblemType* _problem, ConnectorPointer _connector) :m_problem(_problem){
+    ConnectGlobalCCs(MPProblemType* _problem, ConnectorPointer _connector, bool _debug = false) :m_problem(_problem){
       m_connector = _connector;
+      m_debug = _debug;
     }
 
     void define_type(stapl::typer &_t){
       _t.member(m_problem);
       _t.member(m_connector);
+      _t.member(m_debug);
     }
 
 
@@ -1118,9 +1121,10 @@ class ConnectGlobalCCs {
 
         //TARGET REGIONS
         stapl::sequential::vector_property_map<typename GraphType::GRAPH, size_t> colorMap;
-        cout << endl << "LocalTree" << endl;
-        stapl::sequential::write_graph(localTree, cout);
-
+        if(m_debug) {
+          cout << endl << "LocalTree" << endl;
+          stapl::sequential::write_graph(localTree, cout);
+        }
         for(typename vertexView::adj_edge_iterator ei = edges.begin(); ei != edges.end(); ++ei){
           if((_view.descriptor()) == rgsize-1 && ((*ei).target()) == rgsize-2) continue; // remove one edge from edge list
 
@@ -1131,10 +1135,10 @@ class ConnectGlobalCCs {
           
           LocalGraphType remoteTree = (_gview.vp_apply(((*ei).target()), RegionLocalTree<MPTraits>()));
           rrtConnect->SetRemoteGraph(&remoteTree);
-
-          cout << endl << "RemoteTree" << endl;
-          stapl::sequential::write_graph(remoteTree, cout);
-          
+          if (m_debug) {
+            cout << endl << "RemoteTree" << endl;
+            stapl::sequential::write_graph(remoteTree, cout);
+          }
           // get target CCs
           //vector<CCType > remoteCCs = (_gview.vp_apply(((*ei).target()), RegionCCs<VID>()));
           vector<CCType > remoteCCs;
@@ -1160,12 +1164,13 @@ class ConnectGlobalCCs {
             vector<VID> localCC;
             colorMap.reset();
             stapl::sequential::get_cc(localTree,colorMap, localCCVID, localCC);
-            cout << endl << "LocalCC:" << endl;
-            for(int i=0; i<localCC.size(); i++) {
-              cout << localCC[i] << " ";
+            if(m_debug) {
+              cout << endl << "LocalCC:" << endl;
+              for(int i=0; i<localCC.size(); i++) {
+                cout << localCC[i] << " ";
+              }
+              cout << endl;
             }
-            cout << endl;
-
             vector<VID> remoteCC;
             for(typename set<VID>::iterator it = connectedCCs.begin(); it != connectedCCs.end(); it++) {
               VID remoteCCVID = (*it); 
@@ -1177,12 +1182,13 @@ class ConnectGlobalCCs {
               colorMap.reset();
               remoteCC.clear();
               stapl::sequential::get_cc(remoteTree,colorMap, remoteCCVID, remoteCC);
-              cout << endl << "RemoteCC:" << endl;
-              for(int i=0; i<remoteCC.size(); i++) {
-                cout << remoteCC[i] << " ";
+              if(m_debug) {
+                cout << endl << "RemoteCC:" << endl;
+                for(int i=0; i<remoteCC.size(); i++) {
+                  cout << remoteCC[i] << " ";
+                }
+                cout << endl;
               }
-              cout << endl;
-
               
               if ( rrtConnect->IsConnect(m_problem->GetRoadmap(), *stats, colorMap, localCC.begin(), localCC.end(),
                     remoteCC.begin(), remoteCC.end()) ) 
@@ -1230,5 +1236,63 @@ class ConnectGlobalCCs {
 
 };
 
+
+
+template<class MPTraits>
+class DeleteInvalidCCs {
+  private:
+    typedef typename MPTraits::MPProblemType MPProblemType;
+    typedef typename MPProblemType::ConnectorPointer ConnectorPointer;
+    typedef typename MPProblemType::LocalPlannerPointer LocalPlannerPointer;
+    typedef typename MPProblemType::DistanceMetricPointer DistanceMetricPointer;
+    typedef typename MPTraits::CfgType CfgType;
+    typedef typename MPProblemType::VID VID;
+    typedef typename MPTraits::WeightType WeightType;
+    typedef typename MPProblemType::GraphType GraphType;
+    typedef typename stapl::sequential::graph<stapl::DIRECTED, stapl::NONMULTIEDGES, CfgType,WeightType> LocalGraphType;
+    typedef typename stapl::sequential::map_property_map< typename GraphType::GRAPH ,size_t > ColorMap;
+    typedef pair<size_t, VID> CCType;
+
+    MPProblemType* m_problem;
+    bool m_debug;
+
+  public:
+    DeleteInvalidCCs(MPProblemType* _problem, bool _debug = false) :m_problem(_problem){
+      m_debug = _debug;
+    }
+
+    void define_type(stapl::typer &_t){
+      _t.member(m_problem);
+      _t.member(m_debug);
+    }
+
+
+    template<typename View> 
+      void operator()(View _view) const
+      {
+
+        LocalGraphType localTree = (_view.property().GetLocalTree()); 
+        GraphType* globalTree = m_problem->GetRoadmap()->GetGraph();
+        vector<CCType > ccs;
+        ColorMap colorMap;
+        colorMap.reset();
+        stapl::sequential::get_cc_stats(localTree, colorMap, ccs);      
+        
+        vector<VID> cc;
+        vector<VID> toBeDeleted;
+        
+        for(int i=0; i<ccs.size(); i++) {
+          if(ccs[i].second != 0) {
+            colorMap.reset();
+            stapl::sequential::get_cc(localTree,colorMap, ccs[i].second, cc);
+            for(int j=0; j<cc.size(); j++) {
+              globalTree->delete_vertex(cc[j]);
+            }
+          
+          }
+        }
+      
+      }
+};
 
 #endif 
