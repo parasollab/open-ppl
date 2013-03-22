@@ -77,8 +77,8 @@ DecomposeWS(Environment* _env, BoundingBox* _cBoundary,unsigned int _nx, unsigne
 	  zmax = (zmax+zoverlap < _cBoundary->GetRange(2).second) ? zmax+zoverlap : zmax;
 	  tmp.SetParameter(2,zmin,zmax);
         }
-	tmp.SetParameter(1,xmin,xmax);
-	tmp.SetParameter(0,ymin,ymax);
+	tmp.SetParameter(0,xmin,xmax);
+	tmp.SetParameter(1,ymin,ymax);
 	*(_out++) = tmp;
       }
     }
