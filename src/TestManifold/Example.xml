@@ -58,6 +58,8 @@
     <MPEvaluator_methods>
       <PrintMapEvaluation Label="PrintMap" base_name="Basic"/>
       <ConditionalEvaluation Label="NodesEval" metric_method="NumNodes" value="100" operator=">=" />
+      <ConditionalEvaluator label="FreqNodeEval" metric_method="NumNodes" value="50" operator="%" />
+
     </MPEvaluator_methods>
 
     <MetricMethods>
