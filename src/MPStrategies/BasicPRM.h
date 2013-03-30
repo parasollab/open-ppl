@@ -108,7 +108,7 @@ BasicPRM<MPTraits>::ParseXML(XMLNodeReader& _node) {
       cIter != _node.children_end(); ++cIter){
     if(cIter->getName() == "node_generation_method") {
       string generationMethod = cIter->stringXMLParameter("Method", true, "", 
-        "Node Connection Method");
+        "Node Generation Method");
       int numPerIteration = cIter->numberXMLParameter("Number", true, 1, 0, 
         MAX_INT, "Number of samples");
       int attemptsPerIteration = cIter->numberXMLParameter("Attempts", false, 
