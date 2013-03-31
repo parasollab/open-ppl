@@ -292,7 +292,7 @@ struct MPTraits<CfgSurface, DefaultWeight<CfgSurface> > {
     MedialAxisSampler<MPTraits>,
     MixSampler<MPTraits>,
     ObstacleBasedSampler<MPTraits>,
-    //SurfaceSampler<MPTraits>,
+    SurfaceSampler<MPTraits>,
     UniformObstacleBasedSampler<MPTraits>,
     UniformRandomSampler<MPTraits>
       > SamplerMethodList;
