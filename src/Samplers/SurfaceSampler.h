@@ -221,7 +221,6 @@ class SurfaceSampler : public SamplerMethod<MPTraits> {
 		       //push towards cdPt
 		       if( clear > m_maxObsClearance ) {
 			  Vector2d dir = Point2d(cdPt[0],cdPt[2])-pos2d;
-			  double mag = dir.norm();
 			  double s=0.7;
 			  pos2d = pos2d + s*dir + ((1-s)*drand48())*dir;
 			  bool stillValid=true;
