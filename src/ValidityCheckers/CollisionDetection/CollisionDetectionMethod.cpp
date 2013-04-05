@@ -1,38 +1,24 @@
 #include "CollisionDetectionMethod.h"
 
-CollisionDetectionMethod::
-CollisionDetectionMethod() {
-  m_cdtype = CD_USER1;
-}
+CollisionDetectionMethod::CollisionDetectionMethod(string _name, CDType _type, cd_predefined _cdtype) : 
+  m_name(_name), m_type(_type), m_cdtype(_cdtype) {
+  }
 
-CollisionDetectionMethod::
-~CollisionDetectionMethod() {
-}
+CollisionDetectionMethod::~CollisionDetectionMethod() {}
 
 bool
-CollisionDetectionMethod::
-operator==(const CollisionDetectionMethod& _cd) const {
-  return GetName() == _cd.GetName();
-}
-
-int
-CollisionDetectionMethod::
-GetType() {
-  return m_type;
+CollisionDetectionMethod::operator==(const CollisionDetectionMethod& _cd) const {
+  return m_name == _cd.m_name;
 }
 
 void
-CollisionDetectionMethod::
-PrintOptions(ostream& _os) const {
-  _os << "    " << GetName() << " ";
-  _os << endl;
+CollisionDetectionMethod::PrintOptions(ostream& _os) const {
+  _os << "\t" << m_name << " " << endl;
 }
 
 bool 
-CollisionDetectionMethod::
-IsInsideObstacle(const Cfg& _cfg, Environment* _env, CDInfo& _cdInfo) {
-  cerr<<"IsInsideObstacle: Not implemeneted yet"<<endl;
+CollisionDetectionMethod::IsInsideObstacle(const Cfg& _cfg, Environment* _env, CDInfo& _cdInfo) {
+  cerr << "IsInsideObstacle: Not implemeneted yet" << endl;
   exit(1);
-  return false;
 }
 

@@ -216,19 +216,19 @@ template<class MPTraits>
 bool
 CollisionDetectionValidity<MPTraits>::IsInCollision(Environment* _env, StatClass& _stats, CDInfo& _cdInfo,
     shared_ptr<MultiBody> _rob, shared_ptr<MultiBody> _obst, std::string *_callName) {
-  int tp = m_cdMethod->GetType();
+  CollisionDetectionMethod::CDType tp = m_cdMethod->GetType();
   // Type Out: no collision sure; collision unsure.
-  if((tp == Out) && (m_cdMethod->IsInCollision(_rob, _obst, _stats, _cdInfo, _callName, m_ignoreIAdjacentLinks) == false)) {
+  if((tp == CollisionDetectionMethod::Out) && (m_cdMethod->IsInCollision(_rob, _obst, _stats, _cdInfo, _callName, m_ignoreIAdjacentLinks) == false)) {
     return false;
   }
 
   // Type In: no collision unsure; collision sure.
-  if ((tp == In) && (m_cdMethod->IsInCollision(_rob, _obst, _stats, _cdInfo, _callName, m_ignoreIAdjacentLinks) == true)) {
+  if ((tp == CollisionDetectionMethod::In) && (m_cdMethod->IsInCollision(_rob, _obst, _stats, _cdInfo, _callName, m_ignoreIAdjacentLinks) == true)) {
     return true;
   }
 
   // Type Exact: no collision sure; collision sure.
-  if(tp == Exact) {
+  if(tp == CollisionDetectionMethod::Exact) {
     return m_cdMethod->IsInCollision(_rob, _obst, _stats, _cdInfo, _callName, m_ignoreIAdjacentLinks);
   }
 
