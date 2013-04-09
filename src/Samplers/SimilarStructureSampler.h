@@ -52,6 +52,7 @@ struct ActivityFraction : public ActivityNumber<CFG> {
 
 struct DistributionType {
   virtual double Random() = 0;
+  virtual ostream& Print(ostream& _os) const = 0;
 };
 
 struct DistributionConstant : public DistributionType {
@@ -62,6 +63,10 @@ struct DistributionConstant : public DistributionType {
   virtual double Random() { return m_value; }
   
   friend ostream& operator<<(ostream& _os, const DistributionConstant& _d);
+  virtual ostream& Print(ostream& _os) const {
+    _os << *this;
+    return _os;
+  }
 };
 
 struct DistributionUniform : public DistributionType {
@@ -71,6 +76,10 @@ struct DistributionUniform : public DistributionType {
 
   virtual double Random() { return m_low + DRand() * m_high; }
   friend ostream& operator<<(ostream& _os, const DistributionUniform& _d);
+  virtual ostream& Print(ostream& _os) const {
+    _os << *this;
+    return _os;
+  }
 };
 
 struct DistributionGaussian : public DistributionType {
@@ -80,6 +89,10 @@ struct DistributionGaussian : public DistributionType {
 
   virtual double Random() { return GaussianDistribution(m_mean, m_std); }
   friend ostream& operator<<(ostream& _os, const DistributionGaussian& _d);
+  virtual ostream& Print(ostream& _os) const {
+    _os << *this;
+    return _os;
+  }
 };
 
 
@@ -191,8 +204,8 @@ class SimilarStructureSampler : public SamplerMethod<MPTraits>
     SamplerMethod<MPTraits>::PrintOptions(_out);
     _out << "\tvcLabel = " << m_vcLabel << endl;
     
-    _out << "\ttargetRangeDistribution = " << m_targetRangeDistribution << endl;
-    _out << "\tsubtargetDriftDistribution = " << m_subtargetDriftDistribution << endl;
+    _out << "\ttargetRangeDistribution = "; m_targetRangeDistribution->Print(_out); _out << endl;
+    _out << "\tsubtargetDriftDistribution = "; m_subtargetDriftDistribution->Print(_out); _out << endl;
     
     _out << "\tjointActivity = " << m_jointActivityString;
     if(m_jointActivityString == "fraction")
