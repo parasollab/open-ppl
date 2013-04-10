@@ -179,7 +179,6 @@ CfgSurface::Read(istream& _is){
 void
 CfgSurface::Write(ostream& _os) const{
   _os << setw(4) << m_robotIndex << " "
-      << setw(4) << m_surfaceID << " "
       << setw(4) << m_pt[0] << " " 
       << setw(4) << m_h << " "
       << setw(4) << m_pt[1] << " ";
