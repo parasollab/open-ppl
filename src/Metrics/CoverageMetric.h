@@ -48,9 +48,9 @@ CoverageMetric<MPTraits>::CoverageMetric(MPProblemType* _problem, XMLNodeReader&
     m_outFileName = _node.stringXMLParameter("outfilename", true, "", "filename for recording results");
     //read in samples
     m_samples.clear();
-    ifstream is(m_filename.c_str());
-    copy(istream_iterator<CfgType>(is), istream_iterator<CfgType>(), back_insert_iterator<vector<CfgType> >(m_samples));
-    is.close();
+    RoadmapType covRdmp;
+    covRdmp.Read(m_filename.c_str());
+    covRdmp.GetGraph()->GetVerticesData(m_samples);
 
     output.open((m_outFileName+".coverage").c_str());
 
