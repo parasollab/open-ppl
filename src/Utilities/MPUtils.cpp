@@ -244,7 +244,8 @@ GetCartesianCoordinates(vector<double> sphericalCoordinates) {
     coordinates[0] *= sin(phi) ;
     coordinates[1] *= sin(phi) ;
     coordinates.push_back(rho * cos(phi));
-  
+    for (int i=0; i<3; i++)
+      coordinates.push_back(2*DRand()-1.0);
   }
   return coordinates;
 }

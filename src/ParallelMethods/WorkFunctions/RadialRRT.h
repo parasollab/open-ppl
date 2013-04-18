@@ -123,7 +123,7 @@ namespace stapl {
         void SetMPProblem(const MPProblemType* _problem) {Accessor::invoke(&target_t::SetMPProblem, _problem); }
         void SetCCs(const vector<pair<size_t, VID> >& _ccs) { Accessor::invoke(&target_t::SetCCs, _ccs) ; } 
         void SetLocalTree(const LocalGraphType _localTree) {Accessor::invoke(&target_t::SetLocalTree, _localTree); }
-        
+
         void AddToBranch(const vector<VID> _branch) { Accessor::invoke(&target_t::AddToBranch, _branch); }
     }; //struct proxy
 }
@@ -137,6 +137,7 @@ class ConnectRegion {
     typedef typename MPProblemType::VID VID;
     typedef typename MPTraits::WeightType WeightType;
     typedef typename MPProblemType::GraphType GraphType;
+    typedef typename stapl::sequential::map_property_map< typename GraphType::GRAPH ,size_t > ColorMap;
 
     MPProblemType* m_problem;
     ConnectorPointer m_connector;
@@ -166,7 +167,7 @@ class ConnectRegion {
           vector<VID> tVids = tRegion.GetBranch();
 
           /// NOW CONNECT
-          stapl::sequential::vector_property_map< typename GraphType::GRAPH ,size_t > colorMap;
+          ColorMap colorMap;
           m_connector->Connect(m_problem->GetRoadmap(),*(m_problem->GetStatClass()), colorMap,
               sVids.begin(),sVids.end(),
               tVids.begin(),tVids.end());
@@ -495,12 +496,14 @@ class BuildRadialRRT {
               && (dm->Distance(env, newCfg, nearest) >= m_minDist)) {
 
             VID newVID = globalTree->add_vertex(newCfg);
-            // TODO Fix VIZMO DEBUG
-            //            if (this->m_debug) VDAddNode(newCfg);
             //TODO fix weight
             pair<WeightType, WeightType> weights = make_pair(WeightType("RRTExpand", weight), WeightType("RRTExpand", weight));
             //globalTree->AddEdge(nearestVID, newVID,weights);
             globalTree->add_edge_async(nearestVID, newVID,weights.first);
+            
+            // TODO Fix VIZMO DEBUG
+            // if (this->m_debug) VDAddNode(newCfg);
+            VDAddEdge(newCfg, nearest);
             branch.push_back(newVID);
           }
           ++ctr1;
@@ -535,6 +538,7 @@ class BuildRadialBlindRRT {
     typedef typename stapl::graph_view<typename GraphType::GRAPH> RoadmapViewType;
     typedef typename stapl::part_native_view<RoadmapViewType>::view_type NativeViewType;
     typedef stapl::counter<stapl::default_timer> STAPLTimer;
+    typedef typename stapl::sequential::map_property_map< typename GraphType::GRAPH ,size_t > ColorMap;
 
     typedef typename stapl::sequential::graph<stapl::DIRECTED, stapl::NONMULTIEDGES, CfgType,WeightType> LocalGraphType;
     MPProblemType* m_problem;
@@ -603,8 +607,6 @@ class BuildRadialBlindRRT {
         localTree->clear();
         localTree->add_vertex(0, m_root);
         ///Setup global variables
-        STAPLTimer t0,t1,t2,t3,t4,t5, expandTree, kclosest;
-        STAPLTimer expansionClk, process; 
         DistanceMetricPointer dm = m_problem->GetDistanceMetric(m_dm);
         NeighborhoodFinderPointer nfp = m_problem->GetNeighborhoodFinder(m_nf);
         Environment* env = m_problem->GetEnvironment();
@@ -612,10 +614,9 @@ class BuildRadialBlindRRT {
         GraphType* globalTree = m_problem->GetRoadmap()->GetGraph();
 
         // thes are used to keep work function small
-        RadialUtils<MPTraits> radialUtils (m_problem, m_dm, m_vc, m_nf, m_CCconnection, m_expansionType, m_delta, m_minDist, m_numCCIters, m_debug);
+        RadialUtils<MPTraits> radialUtils (m_problem, localTree, m_dm, m_vc, m_nf, m_CCconnection, m_expansionType, m_delta, m_minDist, m_numCCIters, m_debug);
         string callee("RadialRRT::ExpandTree");
         vector<VID> branch;
-        radialUtils.SetLocalTree(*localTree);
 
         vector<VID> invalidNodes; // instead iterating over all nodes, just keep record of the invalid ones so we dont have to hit the graph every time
         vector<VID> validNodes; 
@@ -626,8 +627,6 @@ class BuildRadialBlindRRT {
         vector<pair<VID, VID> > pendingEdges;
         vector<int> pendingWeights;
 
-        /*t0.start();
-          t1.start();*/
         while(branch.size()<m_numNodes && attempts < maxAttempts) {
 
           CfgType dir, nearest, newCfg;
@@ -651,9 +650,7 @@ class BuildRadialBlindRRT {
             back_insert_iterator<vector<VID> > iterBegin(kClosest);
 
             //Find closest from local tree
-            kclosest.start();
             nfp->KClosest((m_problem->GetRoadmap()),branch.begin(),branch.end(), dir, 1, iterBegin); 
-            kclosest.stop();
             nearestVID = kClosest[0];
           }
           // TODO DEBUG: do not add to root twice for each branch, remember to delete
@@ -670,51 +667,16 @@ class BuildRadialBlindRRT {
           //If expansion succeeds add to global tree and a copy in local t
           //expandTree.start();
           //int samplesMade = radialUtils.ExpandTree(nearestVID, nearest, dir, pendingEdges, pendingWeights, expansionClk, process);
-          int samplesMade = radialUtils.ExpandTree(branch, nearestVID, nearest, dir, pendingEdges, pendingWeights, expansionClk, process);
+          int samplesMade = radialUtils.ExpandTree(branch, nearestVID, nearest, dir, pendingEdges, pendingWeights);
           //expandTree.stop();
 
           attempts++;
 
         }
-        /*RoadmapViewType roadmapView  (*globalTree);
-          PrintValue("ROADMAP view size : ", roadmapView.size());
-          NativeViewType native_vw = native_view(roadmapView);
-        //typename RoadmapViewType::view_container_type& localTree2 = native_vw[get_location_id()];
-        typename NativeViewType::value_type localTree2 = native_vw[get_location_id()];
-        PrintValue("NATIVE VIEW on GTREE : ", localTree2.size());*/
-        //PrintValue("NATIVE VIEW on GTREE num vertices: ", localTree2.num_vertices());
-        //radialUtils.SetLocalTree(localTree);
-        //t1.stop();
-        // I print the clocks all scattered because sometimes it gets stuck, so I can know where
-        // PrintValue("Blind Build: ", t1.value() );
-        // PrintValue("K Closest: ", kclosest.value() );
-        // PrintValue("Expand Tree: ", expandTree.value() );
-        // PrintValue("AddVertex Loop: ", expansionClk.value() );
-        // PrintValue("AddEdge: ", process.value() );
-        //vector<STAPLTimer> timers;
-        //PrintValue("BRANCH size b4 rm invalid nodes : ", branch.size());
-        if (m_expansionType != "") { 
-          //t2.start(); 
           radialUtils.RemoveInvalidNodes(branch);
-          // radialUtils.RemoveInvalidNodes();
-          //t2.stop();
-          // PrintValue("Remove Invalid: ",t2.value() );
-          //t3.start();
-
-
-          /* for(int i = 0; i<5; i++) {
-             STAPLTimer timer;
-             timers.push_back(timer);
-             }*/
-          // TODO debug timer if need for using it!
-          radialUtils.ConnectCCs(/*timers*/); 
-          //t3.stop();
-          // for(int i = 0; i<3; i++) {
-          //   PrintValue("Connect CC Step: ", timers[i].value());
-          // }
-          // PrintValue("Connect CCs: ", t3.value() );
-        }
-        /*t4.start();
+          radialUtils.ConnectCCs(); 
+        
+        /*
 
           for (int i=0; i<pendingEdges.size(); i++) {
           WeightType weight ("RRTExpand", pendingWeights[i]);
@@ -722,12 +684,11 @@ class BuildRadialBlindRRT {
           globalTree->add_edge(pendingEdges[i].second, pendingEdges[i].first, weight );
           }
 
-          t4.stop();*/
-        // PrintValue("Pending Edges: ", t4.value() ); 
+          */
 
         //t5.start();
         // setting CCs
-        stapl::sequential::vector_property_map<typename GraphType::GRAPH, size_t> colorMap;
+        ColorMap colorMap;
         vector< pair<size_t,VID> > ccs;
 
         stapl::sequential::get_cc_stats(*localTree,colorMap,ccs);
@@ -752,179 +713,6 @@ class BuildRadialBlindRRT {
 
 };
 
-
-template<class MPTraits>
-class BuildRadialRRG {
-
-  protected:
-    typedef typename MPTraits::MPProblemType MPProblemType;
-    typedef typename MPTraits::CfgType CfgType;
-    typedef typename MPTraits::WeightType WeightType;
-    typedef typename MPProblemType::VID VID;
-    typedef typename MPProblemType::GraphType GraphType;
-    typedef typename MPProblemType::DistanceMetricPointer DistanceMetricPointer;
-    typedef typename MPProblemType::NeighborhoodFinderPointer NeighborhoodFinderPointer;
-    typedef typename MPProblemType::ConnectorPointer ConnectorPointer;
-
-    MPProblemType* m_problem;
-    size_t m_numNodes;
-    string m_dmLabel;
-    string m_vcLabel;
-    string m_nfLabel;
-    string m_ncLabel;
-    double m_delta;
-    double m_minDist;
-    CfgType m_root;
-    size_t m_numAttempts;
-    bool m_strictBranching;
-    size_t m_k;
-
-  public:
-    BuildRadialRRG(MPProblemType* _problem, size_t  _numNodes, string _dmLabel, string _vcLabel, string _nfLabel, 
-        string _ncLabel, double _delta, double _minDist, CfgType _root, size_t _k, size_t _numAttempts, bool _strictBranching=false) {
-
-      m_problem = _problem;
-      m_numNodes = _numNodes;
-      m_dmLabel = _dmLabel;
-      m_delta = _delta;
-      m_vcLabel = _vcLabel;
-      m_nfLabel = _nfLabel;
-      m_ncLabel = _ncLabel;
-      m_minDist = _minDist;
-      m_root = _root;
-      m_numAttempts = _numAttempts;
-      m_strictBranching = _strictBranching;
-      // k-closest to connect, if k=0, then connect to ALL
-      m_k = _k;
-    }
-
-    void define_type(stapl::typer& _t) {
-      _t.member(m_numNodes);
-      _t.member(m_problem);
-      _t.member(m_dmLabel);
-      _t.member(m_delta);
-      _t.member(m_vcLabel);
-      _t.member(m_nfLabel);
-      _t.member(m_ncLabel);
-      _t.member(m_minDist);
-      _t.member(m_root);
-      _t.member(m_numAttempts);
-      _t.member(m_strictBranching);
-      _t.member(m_k);
-    }
-
-    template<typename View> 
-      void operator()(View _view) const
-      {
-
-        CfgType regionCand = _view.property().GetCandidate();
-        vector<CfgType> neighbors = _view.property().GetNeighbors();
-
-        ///Setup global variables
-        DistanceMetricPointer dmm = m_problem->GetDistanceMetric()->GetMethod(m_dmLabel);
-        NeighborhoodFinderPointer nfp = m_problem->GetNeighborhoodFinder()->GetMethod(m_nfLabel);
-        Environment* env = m_problem->GetEnvironment();
-        GraphType* globalTree = m_problem->GetRoadmap()->m_pRoadmap;
-        vector<VID> branch;
-        branch.clear();
-
-        size_t ctr1=0;
-        size_t maxAttempts = std::max(m_numNodes,m_numAttempts);
-        while(branch.size()<m_numNodes && ctr1 < maxAttempts)
-        { 
-
-          CfgType dir, nearest, newCfg;
-          VID nearestVID;
-
-          double radius = dmm->Distance(env, m_root, regionCand);
-          // No neighbors means only one region? 
-          if(neighbors.size() == 0)
-            dir.GetRandomCfg(env);
-          else // TODO implement overlap
-            dir = CfgType(); //SelectDirection(regionCand, neighbors, radius, m_overlap);
-
-
-
-          /*At the first iteration, root is the only node in the tree so no need to call kclosest
-            This prevent everyone banging on location 0 for root, however, if statement (branching) will be
-            called m_numNodes times, let's hope branch prediction is smart enough to optimize it*/
-          if(branch.size() == 0){
-            nearestVID = 0;
-            nearest = m_root;
-          }else{
-
-            vector<VID> kClosest;
-            back_insert_iterator<vector<VID> > iterBegin(kClosest);
-
-            //Find closest from local tree
-            nfp->KClosest((m_problem->GetRoadmap()),branch.begin(),branch.end(), dir, 1, iterBegin); 
-            nearestVID = kClosest[0];
-
-          }
-
-          // TODO DEBUG: do not add to root twice for each branch, remember to delete
-          if (m_strictBranching && branch.size() > 1 && nearestVID == 0) continue;
-
-          if (nearestVID == 0) {
-            nearest = m_root;
-          } else {
-            // Hack to make sure nearest is always local
-            // nearest = (*(globalTree->find_vertex(nearestVID))).property();
-            nearest =   (*(globalTree->distribution().container_manager().begin()->find_vertex(nearestVID))).property();
-          }
-
-          CDInfo cdInfo;
-          int weight;  
-
-          //If expansion succeeds add to global tree and a copy in local tree
-          if(RRTExpand<MPTraits>(m_problem,m_vcLabel, m_dmLabel, nearest, dir, newCfg, m_delta, weight, cdInfo,
-                env->GetPositionRes(), env->GetOrientationRes())
-              && (dmm->Distance(env, newCfg, nearest) >= m_minDist))
-          {
-
-
-            VID newVID = globalTree->add_vertex(newCfg);
-            // TODO Fix VIZMO DEBUG
-            //VDAddNode(newCfg);
-            branch.push_back(newVID);
-
-            // After expanding, attempt connections to recent node
-            vector<VID> currentVID;
-            currentVID.push_back(newVID);
-
-            ConnectorPointer pConnection;
-            pConnection = m_problem->GetMPStrategy()->GetConnector()->GetMethod(m_ncLabel);    
-
-            // Calling Connect Method and connecting nodes
-            stapl::sequential::vector_property_map<typename GraphType::GRAPH,size_t > colorMap;
-            if (m_k == 0) {
-              pConnection->Connect(m_problem->GetRoadmap(), 
-                  *(m_problem->GetStatClass()), colorMap,
-                  currentVID.begin(), currentVID.end(), 
-                  branch.begin(), branch.end());
-            }
-            else {
-              vector<VID> kClosest;
-              back_insert_iterator<vector<VID> > iterBegin(kClosest);
-              nfp->KClosest((m_problem->GetRoadmap()),branch.begin(),branch.end(), dir, m_k, iterBegin); 
-
-              pConnection->Connect(m_problem->GetRoadmap(), 
-                  *(m_problem->GetStatClass()), colorMap,
-                  currentVID.begin(), currentVID.end(), 
-                  kClosest.begin(), kClosest.end());
-
-            }
-          }
-
-          ++ctr1;
-        }
-        PrintValue("Max Attempts : ", ctr1);
-        PrintValue("Local Tree ", branch.size());
-        _view.property().SetBranch(branch);
-
-      }
-
-};
 
 //Looks like this class is not used so I will comment it out for now
 //If it is used, then there is a problem, because the computation of local CCs is suppose to be local
@@ -1056,7 +844,7 @@ struct RegionLocalTree {
   typedef typename MPTraits::CfgType CfgType;
   typedef typename MPTraits::WeightType WeightType;
   typedef typename MPProblemType::GraphType GraphType;
-  
+
   typedef typename stapl::sequential::graph<stapl::DIRECTED, stapl::NONMULTIEDGES, CfgType,WeightType> result_type;
   template<typename P>
     result_type operator()(P& p) const{
@@ -1077,6 +865,7 @@ class ConnectGlobalCCs {
     typedef typename MPTraits::WeightType WeightType;
     typedef typename MPProblemType::GraphType GraphType;
     typedef typename stapl::sequential::graph<stapl::DIRECTED, stapl::NONMULTIEDGES, CfgType,WeightType> LocalGraphType;
+    typedef typename stapl::sequential::map_property_map< typename GraphType::GRAPH ,size_t > ColorMap;
     typedef pair<size_t, VID> CCType;
 
     MPProblemType* m_problem;
@@ -1104,26 +893,27 @@ class ConnectGlobalCCs {
         StatClass* stats = m_problem->GetStatClass();
         LPOutput<MPTraits> lpOutput;
         boost::shared_ptr<RegionRRTConnect<MPTraits> > rrtConnect (boost::dynamic_pointer_cast<RegionRRTConnect<MPTraits> >(m_connector));
-        
-        
+
+
         DistanceMetricPointer dm = m_problem->GetDistanceMetric("");
         //edges are assumed to be directed
         typedef typename vertexView::adj_edges_type ADJV;
         ADJV  edges = _view.edges();
         size_t rgsize = _gview.size();
-        
+
         //SOURCE REGION
         LocalGraphType localTree = (_view.property().GetLocalTree()); 
         rrtConnect->SetLocalGraph(&localTree);
 
-        vector<CCType > localCCs = _view.property().GetCCs();
+        vector<CCType > localCCs;
+        ColorMap colorMap;
+        colorMap.reset();
+        stapl::sequential::get_cc_stats(localTree, colorMap, localCCs);      
         queue<VID> pendingCCs;
 
         //TARGET REGIONS
-        stapl::sequential::vector_property_map<typename GraphType::GRAPH, size_t> colorMap;
         if(m_debug) {
-          cout << endl << "LocalTree" << endl;
-          stapl::sequential::write_graph(localTree, cout);
+          cout << endl << "Setting LocalTree" << endl;
         }
         for(typename vertexView::adj_edge_iterator ei = edges.begin(); ei != edges.end(); ++ei){
           if((_view.descriptor()) == rgsize-1 && ((*ei).target()) == rgsize-2) continue; // remove one edge from edge list
@@ -1131,13 +921,12 @@ class ConnectGlobalCCs {
           // fill up the queue with source CCs
           for(typename vector<pair<size_t,VID> >::iterator it = localCCs.begin(); it != localCCs.end(); it++)
             pendingCCs.push((*it).second);
-         
-          
+
+
           LocalGraphType remoteTree = (_gview.vp_apply(((*ei).target()), RegionLocalTree<MPTraits>()));
           rrtConnect->SetRemoteGraph(&remoteTree);
           if (m_debug) {
-            cout << endl << "RemoteTree" << endl;
-            stapl::sequential::write_graph(remoteTree, cout);
+            cout << endl << "Setting RemoteTree" << endl;
           }
           // get target CCs
           //vector<CCType > remoteCCs = (_gview.vp_apply(((*ei).target()), RegionCCs<VID>()));
@@ -1156,13 +945,14 @@ class ConnectGlobalCCs {
           /*RadialRegion<MPTraits> tRegion = (*(_gview.find_vertex((*ei).target()))).property();
             vector<pair<size_t,VID> > tCCs = tRegion.GetCCs();*/
 
+          vector<VID> localCC;
 
           while(!pendingCCs.empty()){
             VID localCCVID = pendingCCs.front();
             pendingCCs.pop();  // really?
 
-            vector<VID> localCC;
             colorMap.reset();
+            localCC.clear();
             stapl::sequential::get_cc(localTree,colorMap, localCCVID, localCC);
             if(m_debug) {
               cout << endl << "LocalCC:" << endl;
@@ -1188,21 +978,24 @@ class ConnectGlobalCCs {
                   cout << remoteCC[i] << " ";
                 }
                 cout << endl;
+                cout << "(C) Connecting: " << localCCVID << " - " << remoteCCVID << endl;
               }
-              
+
               if ( rrtConnect->IsConnect(m_problem->GetRoadmap(), *stats, colorMap, localCC.begin(), localCC.end(),
-                    remoteCC.begin(), remoteCC.end()) ) 
-                break;
+                    remoteCC.begin(), remoteCC.end()) ) { 
+                if (m_debug) cout << "Connected" << endl;
+                  break;
+              }
 
             }
-
             remoteCC.clear();
             for(typename set<VID>::iterator it = unconnectedCCs.begin(); it != unconnectedCCs.end();) {
-              
+
               VID remoteCCVID = (*it);
               // remoteCC and localCC are already connected, most likely by the root, update the sets
+
               if ( remoteCCVID == localCCVID ) { 
-                 
+
                 typename set<VID>::iterator tmp = it;
                 it++;
                 connectedCCs.insert(*tmp);
@@ -1210,17 +1003,26 @@ class ConnectGlobalCCs {
                 continue; 
               }
 
-
               colorMap.reset();
               remoteCC.clear();
               stapl::sequential::get_cc(remoteTree,colorMap, remoteCCVID, remoteCC);
-
+              
+              if(m_debug) {
+                cout << endl << "RemoteCC:" << endl;
+                for(int i=0; i<remoteCC.size(); i++) {
+                  cout << remoteCC[i] << " ";
+                }
+                cout << endl;
+                cout << "(UC) Connecting: " << localCCVID << " - " << remoteCCVID << endl;
+              }
+              
               if ( rrtConnect->IsConnect(m_problem->GetRoadmap(), *stats, colorMap, localCC.begin(), localCC.end(),
                     remoteCC.begin(), remoteCC.end()) ) {
                 typename set<VID>::iterator tmp = it;
                 it++;
                 connectedCCs.insert(*tmp);
                 unconnectedCCs.erase(tmp);
+                if (m_debug) cout << "Connected" << endl;
 
               } else {
                 it++;
@@ -1237,6 +1039,52 @@ class ConnectGlobalCCs {
 };
 
 
+
+// t = vertex descr
+template<typename T>
+struct concat_vector_wf
+{
+  typedef vector<T> result_type;
+
+  template<typename Ref1, typename Ref2>
+    result_type operator()(Ref1 const& lhs, Ref2 const& rhs)
+    {
+      result_type dest(lhs);
+      std::copy(rhs.begin(), rhs.end(), std::back_inserter(dest));
+      return dest;
+    }
+};
+
+
+template<typename T, typename PropertyMap>
+struct is_in_cc
+{
+  typedef vector<T> result_type;
+  size_t m_ccid;
+  PropertyMap m_pmap;
+  
+  is_in_cc(size_t ccid, PropertyMap pmap)
+    : m_ccid(ccid), m_pmap(pmap)
+  {}
+
+  template<typename Vref>
+  result_type operator() (Vref v)
+  {
+    if(m_pmap.get(v).get_cc() == m_ccid)
+      return result_type(1,v.descriptor());
+    else
+      return result_type();
+    return result_type();
+  }
+
+  void define_type(stapl::typer& t)
+  {
+    t.member(m_ccid);
+    t.member(m_pmap);
+  }
+};
+
+/*
 
 template<class MPTraits>
 class DeleteInvalidCCs {
@@ -1276,23 +1124,25 @@ class DeleteInvalidCCs {
         vector<CCType > ccs;
         ColorMap colorMap;
         colorMap.reset();
-        stapl::sequential::get_cc_stats(localTree, colorMap, ccs);      
         
+        stapl::sequential::get_cc_stats(localTree, colorMap, ccs);      
+
         vector<VID> cc;
         vector<VID> toBeDeleted;
-        
+
         for(int i=0; i<ccs.size(); i++) {
-          if(ccs[i].second != 0) {
+          if(ccs[i].second != 0 || ccs[i].first == 1) {
             colorMap.reset();
+            cc.clear();
             stapl::sequential::get_cc(localTree,colorMap, ccs[i].second, cc);
             for(int j=0; j<cc.size(); j++) {
               globalTree->delete_vertex(cc[j]);
             }
-          
+
           }
         }
-      
+
       }
 };
-
+*/
 #endif 

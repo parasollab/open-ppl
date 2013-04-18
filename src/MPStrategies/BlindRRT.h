@@ -77,7 +77,7 @@ class BlindRRT : public MPStrategyMethod<MPTraits> {
     double m_overlap;
     double m_radius;
     bool m_strictBranching;
-
+    RadialUtils<MPTraits> m_radialUtils;
 };
 
 template<class MPTraits>
@@ -223,6 +223,10 @@ BlindRRT<MPTraits>::Initialize(){
     VID vid = this->GetMPProblem()->GetRoadmap()->GetGraph()->AddVertex(*C);
   }
 
+
+  m_radialUtils = RadialUtils<MPTraits> (this->GetProblem(), NULL, m_dm, m_vc, 
+      m_nf, m_CCconnection, m_expansionType, m_delta, m_minDist, m_numCCIters, this->m_debug);
+
   if(this->m_debug) cout<<"\nEnding Initializing BlindRRT"<<endl;
 }
 
@@ -241,15 +245,16 @@ BlindRRT<MPTraits>::Run() {
 
   bool mapPassedEvaluation = false;
   size_t samples = 0;
+  
+  vector<VID> branch(m_roots.begin(), m_roots.end());
+
   while(!mapPassedEvaluation && samples < m_initialSamples){
     CfgType dir = SelectDir();
     //grow towards the direction
-    int samplesMade = this->ExpandTree(dir);
+    //int samplesMade = this->ExpandTree(dir);
+    int samplesMade = radialUtils.ExpandTree(branch, dir);
     samples += samplesMade;
 
-    //if(m_evaluateGoal)
-    //  EvaluateGoals();
-    //evaluate the roadmap
     bool evalMap = this->EvaluateMap(m_evaluators);
     mapPassedEvaluation = evalMap && ((m_evaluateGoal && m_goalsNotFound.size()==0) || !m_evaluateGoal);
 
@@ -260,8 +265,8 @@ BlindRRT<MPTraits>::Run() {
   // Did we exit because we found a goal, or because we met the number of nodes?
   if((m_evaluateGoal && m_goalsNotFound.size() !=0) || !m_evaluateGoal) {
     // Get VALID CCs
-    RemoveInvalidNodes();
-    ConnectCCs();
+    m_radialUtils.RemoveInvalidNodes(branch);
+    m_radiaUtils.ConnectCCs();
   }
   stats->StopClock("BlindRRT Generation");
   if(this->m_debug) {
@@ -305,7 +310,7 @@ BlindRRT<MPTraits>::Finalize() {
 
   //output stats
   str = this->GetBaseFilename() + ".stat";
-  ofstream  osStat(str.c_str());
+  ofstream osStat(str.c_str());
   osStat << "NodeGen+Connection Stats" << endl;
   stats->PrintAllStats(osStat, this->GetMPProblem()->GetRoadmap());
   stats->PrintClock("BlindRRT Generation", osStat);

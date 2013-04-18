@@ -14,12 +14,10 @@ class RadialUtils {
   typedef typename MPProblemType::ValidityCheckerPointer ValidityCheckerPointer;
   typedef typename MPProblemType::NeighborhoodFinderPointer NeighborhoodFinderPointer;
   typedef typename MPProblemType::ConnectorPointer ConnectorPointer;
-  typedef stapl::counter<stapl::default_timer> STAPLTimer;
   typedef typename stapl::sequential::map_property_map< typename GraphType::GRAPH ,size_t > ColorMap;
   typedef pair<size_t, VID> CCType;
-  typedef typename stapl::graph_view<typename GraphType::GRAPH> RoadmapViewType;
-  //typedef typename RoadmapViewType::view_container_type LocalTreeType;
   typedef typename stapl::sequential::graph<stapl::DIRECTED, stapl::NONMULTIEDGES, CfgType,WeightType> LocalTreeType;
+
   private:
   MPProblemType* m_problem;
   size_t m_numCCIters;
@@ -35,7 +33,7 @@ class RadialUtils {
   bool m_debug;
 
   public:
-  RadialUtils(MPProblemType* _problem, string _dm, string _vc, string _nf, string _CCconnection, string _expansionType,
+  RadialUtils(MPProblemType* _problem, LocalTreeType* _localTree, string _dm, string _vc, string _nf, string _CCconnection, string _expansionType,
       double _delta, double _minDist, size_t _numCCIters=0, bool _debug=false) { 
 
     m_problem = _problem;
@@ -48,12 +46,13 @@ class RadialUtils {
     m_expansionType = _expansionType;
     m_minDist = _minDist;
     m_debug = _debug;
-  }
 
-  ////////////////////////////
-  //  SetLocalTree
-  ////////////////////////////
-  void SetLocalTree(LocalTreeType& _localTree) { m_localTree = &_localTree; }
+    if (_localTree == NULL)
+      m_localTree = m_problem->GetRoadmap()->GetGraph();
+
+    else 
+      m_localTree = _localTree; 
+  }
 
   // A wrapper for checking validity since sometimes the label is not set
   bool IsValid(ValidityCheckerPointer _vc, CfgType& _cfg, Environment* _env, StatClass* _stats) {
@@ -117,11 +116,42 @@ class RadialUtils {
     VDAddEdge(_cfg1, _cfg2);
   }
 
+
+  ////////////////////////////
+  //  ExpandTree Wrapper for Sequential Blind RRT
+  ////////////////////////////
+  int ExpandTree(vector<VID>& _currBranch, CfgType& _dir)  {
+    NeighborhoodFinderPointer nf = m_problem->GetNeighborhoodFinder(m_nf);
+    RoadmapType* rdmp = m_problem->GetRoadmap();
+    StatClass* stats = m_problem->GetStatClass();
+
+    vector<pair <VID, VID> > dummy1;
+    vector<int> dummy2;
+
+    vector<VID> kClosest;
+    vector<CfgType> cfgs;
+
+    string kcloseClockName = "kclosest time ";
+    stats->StartClock(kcloseClockName);
+
+    nf->KClosest(rdmp, _dir, 1, back_inserter(kClosest));
+
+    stats->StopClock(kcloseClockName);
+
+    VID nearestVID = kClosest[0];
+    CfgType nearest;
+
+    nearest = (rdmp->GetGraph()->GetCfg(nearestVID));
+
+    ExpandTree(_currBranch, nearestVID, nearest, _dir,dummy1, dummy2);
+
+  }
+
   ////////////////////////////
   //  ExpandTree
   ////////////////////////////
   int ExpandTree(vector<VID>& _currBranch, VID _nearestVID, CfgType& _nearest, CfgType& _dir, 
-      vector<pair<VID, VID> >& _pendingEdges, vector<int>& _pendingWeights, STAPLTimer& expansionClk, STAPLTimer& process)  {
+      vector<pair<VID, VID> >& _pendingEdges, vector<int>& _pendingWeights)  {
     Environment* env = m_problem->GetEnvironment();
     DistanceMetricPointer dm = m_problem->GetDistanceMetric(m_dm);
     ValidityCheckerPointer vc = m_problem->GetValidityChecker(m_vc);
@@ -153,7 +183,6 @@ class RadialUtils {
       expansionVIDs.push_back(_nearestVID);
 
       // we already added startCfg remember?
-      expansionClk.start();
       for(size_t i=1; i<expansionCfgs.size(); i++ ) {
         CfgType& cfg2 = expansionCfgs[i].first;
         VID newVID = INVALID_VID;
@@ -168,11 +197,9 @@ class RadialUtils {
 
       }
 
-      expansionClk.stop();
       pair<WeightType, WeightType> weights;
       // Adding Edges
       int weight;
-      process.start();
       for(size_t i=1; i<expansionCfgs.size(); i++ ) {
 
 
@@ -189,7 +216,6 @@ class RadialUtils {
         if(expansion == ExpansionType::JUMPED) // we can only add one edge, start -> middle  
           break;
       }
-      process.stop();
 
       nodesAdded=  expansionCfgs.size() - 1;    // substract one cause the start already belonged to the tree
     }
@@ -203,7 +229,7 @@ class RadialUtils {
   //  ConnectCCs
   ////////////////////////////
   // TODO: Debug timer if there is need for using it!
-  void ConnectCCs( /*vector<STAPLTimer>& _timer */) {
+  void ConnectCCs() {
     if (m_localTree == NULL) {
       cout << "Error! Did not Set Local Tree using native view" << endl;
       exit(-1);;
@@ -221,12 +247,10 @@ class RadialUtils {
     stringstream clockName; clockName << "Component Connection";
     stats->StartClock(clockName.str());
 
-    //    _timer[0].start();
     ColorMap colorMap;
     vector< CCType > ccs;
     colorMap.reset();
     stapl::sequential::get_cc_stats(*m_localTree, colorMap, ccs);      
-    //  _timer[0].stop();
 
     if(ccs.size()==1) return;
     if(m_debug) cout << "Number of CCs before CC Connection: " << ccs.size() << endl;
@@ -273,30 +297,30 @@ class RadialUtils {
         cc2VID = ccs[ rand2 ].second; 
 
       } else if(m_CCconnection == "Mixed") {
-/*
-        if (connectSwitch % 10 == 0) {
-          cc2VID = GetClosestNodeToCentroid(cc1VID, ccs, colorMap);
+        /*
+           if (connectSwitch % 10 == 0) {
+           cc2VID = GetClosestNodeToCentroid(cc1VID, ccs, colorMap);
 
-        } else if (connectSwitch % 5 == 0) {
-          VID randomNode = cc1[LRand() % cc1.size()];
-          cc2VID = GetClosestNodeToNode(randomNode, cc1VID);
+           } else if (connectSwitch % 5 == 0) {
+           VID randomNode = cc1[LRand() % cc1.size()];
+           cc2VID = GetClosestNodeToNode(randomNode, cc1VID);
 
-        } else if (connectSwitch % 3 == 0) {
-          int rand2 = LRand() % ccs.size();
-          if (rand1 == rand2) continue;
-          cc2VID = ccs[ rand2 ].second; 
+           } else if (connectSwitch % 3 == 0) {
+           int rand2 = LRand() % ccs.size();
+           if (rand1 == rand2) continue;
+           cc2VID = ccs[ rand2 ].second; 
 
-        } else {
-          CfgType centroid = GetCentroid(cc1); 
-          cc2VID = GetClosestCentroidToCentroid(centroid, cc1VID, ccs, colorMap);
-        }
-        connectSwitch++;        
-*/
+           } else {
+           CfgType centroid = GetCentroid(cc1); 
+           cc2VID = GetClosestCentroidToCentroid(centroid, cc1VID, ccs, colorMap);
+           }
+           connectSwitch++;        
+           */
       } else {
         cc2VID = GetClosest(cc1VID, ccs, m_CCconnection);
 
       }
-      
+
       if (cc2VID == INVALID_VID )
         continue;
 
@@ -319,10 +343,8 @@ class RadialUtils {
 
       }
       // We got a pair of CCs, attempt to Connect them!
-      //      _timer[2].start();
       pConnection->SetLocalGraph(m_localTree);
       pConnection->Connect(rdmp, *stats, colorMap, cc1.begin(), cc1.end(), cc2.begin(), cc2.end()) ;
-      //     _timer[2].stop();
 
       iters++;
       colorMap.reset();
@@ -488,7 +510,7 @@ class RadialUtils {
 
         else if (_criteria == "CentroidToCentroid")
           dist = GetDistanceNodeToNode(sourceCC, targetCC);
-        
+
         else {
           cout << "Unknown CC connection type: " << _criteria << endl;
           exit(-1);
@@ -514,7 +536,7 @@ class RadialUtils {
       }
       center /= _cc.size();
       return center;
-    };
+    }
 
 
 };

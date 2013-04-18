@@ -31,7 +31,7 @@
       <RRTConnect label="RRTConnect" nf="BFNF" delta="15.0" minDist="1.1" iterations="10" lp_method="sl" vcLabel="cd" debug="true"/>
       <RegionRRTConnect label="RegionRRTConnect" nf="BFNF" delta="15.0" 
                         minDist="1.1" iterations="10" lp_method="sl" vcLabel="cd" debug="true"/>
-      <RegionConnector Label="RegionConnector" lp_method="sl" k="2" numIters="0" nf="BFNF" dmLabel="euclidean"/>
+      <RegionConnector label="RegionConnector" lp_method="sl" k="2" numIters="4" nf="BFNF" dmLabel="euclidean"/>
     </Connectors>
     
     <LocalPlanners>
@@ -65,14 +65,30 @@
         <!-- the training samples (numTestSamples) should at most equal nmNodes -->
 	<region_constr numRegions = "1" rayLength= "150" numNeighbors = "0"/> 
 	<!-- numAttempts should at least equal numNodes-->
-        <rrt_constr numNodes = "1000" numAttempts = "5000" delta= "10.0" numCCIters="5"
+        <rrt_constr numNodes = "100" numAttempts = "5000" delta= "10.0" numCCIters="5"
           minDist = "1.1" strictBranching="false" expansionType="All" CCconnection="CentroidToNode"  /> 
 	<vc_method vcm = "cd"/> 
 	<dm_method Method="euclidean"/>
 	<connectionMethod Label="RRTConnect"/>
         <nf_method Method="BFNF"/>
       </RadialBlindRRT>
+
+
    
+    <!-- Parallel Radial RRT *********COMPILE UNDER PARALLEL OPTION **********--> 
+      <RadialSubdivisionRRT label="RadialSubdivisionRRT" filename="radialSubdivisionRRT" debug="false" >
+        <!-- the training samples (numTestSamples) should at most equal nmNodes -->
+	<region_constr numRegions = "4" rayLength= "150" numNeighbors = "2"/> 
+	<!-- numAttempts should at least equal numNodes-->
+        <rrt_constr numNodes = "500" numAttempts = "5000" delta= "10.0" minDist = "1.1" strictBranching="false" /> 
+	<vc_method vcm = "cd"/> 
+	<dm_method Method="euclidean"/>
+	<connectionMethod Label="RegionConnector"/>
+        <nf_method Method="BFNF"/>
+      </RadialSubdivisionRRT>
+   
+
+
       <BulkRRT label="BulkRRT" filename="bulk" debug="false">
          <num_runs nRuns = "1"/>
          <total_nodes totalNodes ="50"/>
@@ -89,7 +105,7 @@
     
     </MPStrategies>
 
-    <Solver mpStrategyLabel="RadialBlindRRT" seed="123456" baseFilename="RadialBlindRRT"/>
+    <Solver mpStrategyLabel="RadialSubdivisionRRT" seed="123456" baseFilename="RadialSubdivisionRRT"/>
   </MPProblem>
 </MotionPlanning>
 

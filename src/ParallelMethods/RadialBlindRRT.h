@@ -29,6 +29,7 @@ class RadialBlindRRT : public RadialSubdivisionRRT<MPTraits> {
     typedef typename stapl::graph<stapl::DIRECTED, stapl::NONMULTIEDGES, 
             RadialRegion<MPTraits>, WeightType> RadialRegionGraph;
     typedef stapl::counter<stapl::default_timer> staplTimer;
+    typedef typename stapl::sequential::map_property_map< typename GraphType::GRAPH ,size_t > ColorMap;
 
 
     RadialBlindRRT(MPProblemType* _problem, XMLNodeReader& _node);
@@ -120,8 +121,43 @@ template<class MPTraits>
 void 
 RadialBlindRRT<MPTraits>::DeleteInvalid(graph_view<RadialRegionGraph> _regionView) {
   
-  DeleteInvalidCCs<MPTraits> wf(this->GetMPProblem()); 
-  new_algorithms::for_each(_regionView,wf);
+  /// COMPUTE CCs AND SET REGION CCs
+  typedef static_array<cc_color_property> property_storage_type;
+  typedef graph_external_property_map<graph_view<RadialRegionGraph>, cc_color_property, property_storage_type> property_map_type;
+				      
+  ///TODO: proper fix by making cc_color_property derived from cfg class
+  /// and then use internal_property_map
+  GraphType* pMap = this->GetMPProblem()->GetRoadmap()->GetGraph();
+  property_storage_type prop_storage(2*pMap->num_vertices());
+  property_map_type     map(_regionView, &prop_storage);
+  
+  connected_components(_regionView, map);
+  rmi_fence();
+
+  vector<pair<VID,size_t> > ccs = cc_stats(_regionView,map);
+  rmi_fence();
+
+
+  VID rootCC = 0;
+
+  ColorMap colorMap;
+  vector<VID> cc;
+  for(int i=0; i<ccs.size(); i++) {
+
+    if(ccs[i].first != rootCC) {
+      cc = stapl::map_reduce(is_in_cc<VID, property_map_type>(ccs[i].first, map), concat_vector_wf<VID>(), _regionView);
+
+      if(stapl::get_location_id() == 0){ 
+
+        for(int j=0; j<cc.size(); j++) {
+          pMap->delete_vertex(cc[j]);
+        }
+
+      }
+
+    }
+
+  }
 }
 
 template<class MPTraits>
@@ -181,7 +217,7 @@ void RadialBlindRRT<MPTraits>::Run() {
   rmi_fence();
   
   t4.start();
-  if(regionView.size() > 1) ConnectRegions(regionView, problem);
+ // if(regionView.size() > 1) ConnectRegions(regionView, problem);
   t4.stop();
   rmi_fence();
   PrintOnce("STEP 4 CONNECT REGIONS (s) : ", t4.value());

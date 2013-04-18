@@ -148,6 +148,9 @@ RRTConnect<MPTraits>::Connect(RoadmapType* _rm, StatClass& _stats,
   map<VID, CfgType> existingNodes;
   vector<VID>* treeA = new vector<VID>();
   vector<VID>* treeB = new vector<VID>();
+  treeA->reserve(_itr1Last - _itr1First); 
+  treeB->reserve(_itr2Last - _itr2First); 
+  
   for(InputIterator it = _itr1First; it != _itr1Last; ++it) {
     treeA->push_back(*it);
   }

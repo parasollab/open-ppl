@@ -56,6 +56,7 @@ class RegionRRTConnect: public ConnectorMethod<MPTraits> {
     bool ExpandTree(CfgType& _dir, const VID& _dirVID, vector<VID>* _targetTree, bool _isLocal, double _delta, VID& _newVID, CfgType& _newCfg, bool _interTree);
 
     CfgType SelectDirection();
+    void UpdateTrees();
 
   private:
     //////////////////////
@@ -70,6 +71,12 @@ class RegionRRTConnect: public ConnectorMethod<MPTraits> {
     double m_delta;
     double m_minDist;
     string m_vcLabel;
+
+    vector<pair<VID, CfgType> > m_localPendingVIDs;
+    vector<pair<VID, CfgType> > m_remotePendingVIDs;
+    vector<pair<VID, VID> > m_localPendingEdges;
+    vector<pair<VID, VID> > m_remotePendingEdges;
+
 };
 
   template<class MPTraits>
@@ -259,6 +266,12 @@ RegionRRTConnect<MPTraits>::ExpandTree(CfgType& _dir, const VID& _dirVID, vector
       _newVID = rdmp->GetGraph()->add_vertex(_newCfg);
       
       targetGraph->add_vertex(_newVID, _newCfg);
+      /*
+      if(_isLocal)
+        m_localPendingVIDs.push_back(make_pair(_newVID, _newCfg));
+      else
+        m_remotePendingVIDs.push_back(make_pair(_newVID, _newCfg));
+      */
       if(this->m_debug) VDAddNode(_newCfg);
       #endif
     } 
@@ -277,6 +290,12 @@ RegionRRTConnect<MPTraits>::ExpandTree(CfgType& _dir, const VID& _dirVID, vector
     
     targetGraph->add_edge(kClosest[0],_newVID);
     targetGraph->add_edge(_newVID, kClosest[0]);
+    /*
+    if(_isLocal)
+      m_localPendingEdges.push_back(make_pair(_newVID, kClosest[0]));
+    else
+      m_remotePendingEdges.push_back(make_pair(_newVID, kClosest[0]));
+    */
     if(this->m_debug) VDAddEdge(nearest, _newCfg);
     #endif
     _targetTree->push_back(_newVID); 
@@ -286,6 +305,27 @@ RegionRRTConnect<MPTraits>::ExpandTree(CfgType& _dir, const VID& _dirVID, vector
 }
 
 
+template<class MPTraits>
+void
+RegionRRTConnect<MPTraits>::UpdateTrees(){
+  
+  for(int i=0; i<m_localPendingVIDs.size(); i++) {
+      this->m_localGraph->add_vertex(m_localPendingVIDs[i].first,m_localPendingVIDs[i].second);
+  }
+  for(int i=0; i<m_remotePendingVIDs.size(); i++) {
+      this->m_remoteGraph->add_vertex(m_remotePendingVIDs[i].first,m_remotePendingVIDs[i].second);
+  }
+  
+  for(int i=0; i<m_localPendingEdges.size(); i++) {
+      this->m_localGraph->add_edge(m_localPendingEdges[i].first,m_localPendingEdges[i].second);
+      this->m_localGraph->add_edge(m_localPendingEdges[i].second,m_localPendingEdges[i].first);
+  }
+  for(int i=0; i<m_remotePendingEdges.size(); i++) {
+      this->m_remoteGraph->add_edge(m_remotePendingEdges[i].first,m_remotePendingEdges[i].second);
+      this->m_remoteGraph->add_edge(m_remotePendingEdges[i].second,m_remotePendingEdges[i].first);
+  }
+
+}
 
 
 template<class MPTraits>

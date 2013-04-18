@@ -66,11 +66,11 @@ class RadialSubdivisionRRT : public MPStrategyMethod<MPTraits> {
 
 template<class MPTraits>
 RadialSubdivisionRRT<MPTraits>::RadialSubdivisionRRT(MPProblemType* _problem, 
-XMLNodeReader& _node) :
+    XMLNodeReader& _node) :
   MPStrategyMethod<MPTraits>(_problem, _node) {
-  this->SetName("RadialSubdivisionRRT");
+    this->SetName("RadialSubdivisionRRT");
     ParseXML(_node);
-}
+  }
 
 template<class MPTraits>
 RadialSubdivisionRRT<MPTraits>::RadialSubdivisionRRT() {
@@ -170,8 +170,6 @@ RadialSubdivisionRRT<MPTraits>::BuildRRT(graph_view<RadialRegionGraph> _regionVi
   BuildRadialRRT<MPTraits> wf(_problem,m_numNodes,m_dmLabel,m_vcLabel,m_nfLabel,m_delta,m_minDist,
       _root,m_numAttempts, m_overlap, m_strictBranching);
 
-//  MPStrategyPointer strategy = this->GetMPProblem()->GetMPStrategy("BlindRRT");
-//  BuildRadialBlindRRT<MPTraits> wf(strategy, _root, m_radius, m_strictBranching, m_overlap); 
   new_algorithms::for_each(_regionView,wf);
 }
 
@@ -181,7 +179,7 @@ RadialSubdivisionRRT<MPTraits>::ConnectRegions(graph_view<RadialRegionGraph> _re
     MPProblemType* _problem) {
 
   ConnectorPointer pConnection;
-  pConnection = _problem->GetMPStrategy()->GetConnector()->GetMethod(m_connectorLabel);
+  pConnection = _problem->GetConnector(m_connectorLabel);
   ConnectRegion<MPTraits> wf(_problem, pConnection);
   map_func(wf, _regionView, repeat_view(_regionView));
 }
@@ -250,7 +248,7 @@ void RadialSubdivisionRRT<MPTraits>::Run() {
 
   cout << "STEP 4 : Connect branches in each region " << endl;
   t4.start();
-  //  ConnectRegions(regionView, problem);
+  ConnectRegions(regionView, problem);
   t4.stop();
   rmi_fence();
 
@@ -314,7 +312,7 @@ void RadialSubdivisionRRT<MPTraits>::Run() {
   ///DEBUG
   cout << "Write Region Graph " << endl;
   write_graph(regionView, "radialRegion.out");
-  
+
   rmi_fence(); 
 
 }
@@ -332,7 +330,7 @@ void RadialSubdivisionRRT<MPTraits>::Finalize(){
     cout << "RadialSubdivisionRRT::Finalize(): can't open outfile: ";
     exit(-1);
   }else{
-     problem->GetRoadmap()->Write(osMap, this->GetMPProblem()->GetEnvironment());
+    problem->GetRoadmap()->Write(osMap, this->GetMPProblem()->GetEnvironment());
     osMap.close();
   }
   stapl::rmi_fence();

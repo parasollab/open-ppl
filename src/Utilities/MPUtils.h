@@ -539,8 +539,10 @@ GetSphericalCoordinates(CfgType& _cfg) {
   rho = sqrt(rho); 
   theta = atan2(coordinates[1],coordinates[0]);
   phi = MAX_INT;
-  if(_cfg.PosDOF() == 3)
+  if(_cfg.PosDOF() == 3) {
     phi = acos(coordinates[2] / rho);
+  
+  }
   
   // Lets make all angles positive for more accurate comparison between quadrants, since atan2 returns [-2/pi,2/pi]
   while(theta < 0) 
@@ -549,6 +551,9 @@ GetSphericalCoordinates(CfgType& _cfg) {
   coordinates[0] = rho;
   coordinates[1] = theta;
   coordinates[2] = phi;
+  
+  for (int i=_cfg.PosDOF(); i<_cfg.DOF(); i++)
+    coordinates.push_back(2*DRand()-1.0);
   
   return coordinates;
 }
