@@ -29,6 +29,7 @@
 //neighborhood finder includes
 #include "NeighborhoodFinders/BruteForceNF.h"
 #include "NeighborhoodFinders/HierarchicalNF.h"
+#include "NeighborhoodFinders/HopLimitNF.h"
 #include "NeighborhoodFinders/RadiusNF.h"
 
 //sampler includes
@@ -134,6 +135,7 @@ struct MPTraits{
     //CGALNF<MPTraits>,
     //DPESNF<MPTraits>,
     HierarchicalNF<MPTraits>,
+    HopLimitNF<MPTraits>,
     //MetricTreeNF<MPTraits>,
     //MPNNNF<MPTraits>,
     RadiusNF<MPTraits>//,

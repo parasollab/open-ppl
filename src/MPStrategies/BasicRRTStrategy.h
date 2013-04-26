@@ -6,7 +6,6 @@
 #define BASICRRTSTRATEGY_H_
 
 #include "MPStrategyMethod.h"
-#include "graph/algorithms/count_hop_pairs.h"
 #include <boost/make_shared.hpp>
 
 template<class MPTraits>
@@ -28,7 +27,7 @@ class BasicRRTStrategy : public MPStrategyMethod<MPTraits> {
     BasicRRTStrategy(string _lp="sl", string _dm="euclidean",
         string _nf="bfnf", string _vc="cd1", string _nc="kClosest", string _gt="UNDIRECTED_TREE", vector<string> _evaluators=vector<string>(),
         double _delta=10.0, double _minDist=0.01, double _growthFocus=0.05, bool _evaluateGoal=true, CfgType _start=CfgType(), CfgType _goal=CfgType(),
-        size_t _numRoots=1, size_t _numDirections=1, int _hopLimit=0, bool _growGoals=false);
+        size_t _numRoots=1, size_t _numDirections=1, bool _growGoals=false);
 
     BasicRRTStrategy(MPProblemType* _problem, XMLNodeReader& _node, bool _warnXML = true);
 
@@ -66,7 +65,6 @@ class BasicRRTStrategy : public MPStrategyMethod<MPTraits> {
     double m_delta, m_minDist, m_growthFocus;
     bool m_evaluateGoal;
     size_t m_numRoots,m_numDirections;
-    int m_hopLimit;
     bool m_growGoals;
     vector< vector<VID> > m_trees;
     typename vector<vector<VID> >::iterator m_currentTree;
@@ -78,10 +76,10 @@ template<class MPTraits>
 BasicRRTStrategy<MPTraits>::BasicRRTStrategy(string _lp, string _dm,
     string _nf, string _vc, string _nc, string _gt, vector<string> _evaluators,
     double _delta, double _minDist, double _growthFocus, bool _evaluateGoal, CfgType _start, CfgType _goal,
-    size_t _numRoots, size_t _numDirections, int _hopLimit, bool _growGoals):
+    size_t _numRoots, size_t _numDirections, bool _growGoals):
   m_evaluators(_evaluators), m_lp(_lp), m_dm(_dm), m_nf(_nf), m_vc(_vc), m_query(new Query<MPTraits>(_start, _goal)),
   m_nc(_nc), m_gt(_gt),  m_delta(_delta), m_minDist(_minDist), m_growthFocus(_growthFocus),
-  m_evaluateGoal(_evaluateGoal), m_numRoots(_numRoots), m_numDirections(_numDirections), m_hopLimit(_hopLimit), m_growGoals(_growGoals){
+  m_evaluateGoal(_evaluateGoal), m_numRoots(_numRoots), m_numDirections(_numDirections), m_growGoals(_growGoals){
     this->SetName("BasicRRTStrategy");
   }
 
@@ -113,7 +111,6 @@ BasicRRTStrategy<MPTraits>::ParseXML(XMLNodeReader& _node) {
   m_minDist = _node.numberXMLParameter("minDist", false, 0.0, 0.0, m_delta, "Minimum Distance");
   m_numRoots = _node.numberXMLParameter("numRoots", false, 1, 0, MAX_INT, "Number of Roots");
   m_growthFocus = _node.numberXMLParameter("growthFocus", false, 0.0, 0.0, 1.0, "#GeneratedTowardsGoal/#Generated");
-  m_hopLimit = _node.numberXMLParameter("h", false, 0, 1, MAX_INT, "Hop Limit");
   m_vc = _node.stringXMLParameter("vcLabel", true, "", "Validity Test Method");
   m_nf = _node.stringXMLParameter("nfLabel", true, "", "Neighborhood Finder");
   m_dm = _node.stringXMLParameter("dmLabel",true,"","Distance Metric");
@@ -144,7 +141,6 @@ BasicRRTStrategy<MPTraits>::PrintOptions(ostream& _os) {
   _os << "\tLocal Planner:: " << m_lp << endl;
   _os << "\tConnection Method:: " << m_nc << endl;
   _os << "\tGraph Type:: " << m_gt << endl;
-  _os << "\tHop Limit:: " << m_hopLimit << endl;
   _os << "\tEvaluate Goal:: " << m_evaluateGoal << endl;
   _os << "\tEvaluators:: " << endl;
   _os << "\tGrow Goals:: " << m_growGoals << endl;
@@ -331,29 +327,6 @@ BasicRRTStrategy<MPTraits>::ConnectNeighbors(VID _newVID, VID _nearVID){
   if (_newVID != INVALID_VID) {
     vector<VID> currentVID;
     currentVID.push_back(_newVID);
-    vector <VID> vRes;
-    if( m_hopLimit>0){
-      StatClass * hopStatClass = this->GetMPProblem()->GetStatClass();
-      string hopClockName = "Total bfs time ";
-      hopStatClass->StartClock(hopClockName);
-
-      stapl::sequential::map_property_map<typename GraphType::GRAPH, size_t> hopmap;
-      hopmap.put(_nearVID, 0);
-      stapl::sequential::map_property_map<typename GraphType::GRAPH, size_t> colormap;
-      RoadmapGraph<CfgType,WeightType>* rmapG=this->GetMPProblem()->GetRoadmap()->GetGraph();
-      stapl::sequential::hops_detail::hops_visitor<typename GraphType::GRAPH> vis(*rmapG,hopmap,m_hopLimit);
-      breadth_first_search_early_quit(*rmapG,_nearVID,vis,colormap);
-
-      typedef typename vector<VID>::iterator TRIT;
-      vector <VID> store = vis.get_res();
-      for(TRIT trit = store.begin();trit!=store.end();trit++){
-        if(find(m_currentTree->begin(),m_currentTree->end(),*trit)!=m_currentTree->end()){
-          vRes.push_back(*trit);
-          break;
-        }
-      } 
-      hopStatClass->StopClock(hopClockName);
-    }
 
     ConnectorPointer pConnection;
     pConnection = this->GetMPProblem()->GetConnector(m_nc);
@@ -363,17 +336,11 @@ BasicRRTStrategy<MPTraits>::ConnectNeighbors(VID _newVID, VID _nearVID){
     string conClockName = "Total Connection time ";
     conStatClass->StartClock(conClockName);
 
-    if(m_hopLimit==0) //full roadmap
-      pConnection->Connect(this->GetMPProblem()->GetRoadmap(),
+    pConnection->Connect(this->GetMPProblem()->GetRoadmap(),
           *(this->GetMPProblem()->GetStatClass()), cmap,
           currentVID.begin(), currentVID.end(),
           m_currentTree->begin(), m_currentTree->end());
-    else {
-      pConnection->Connect(this->GetMPProblem()->GetRoadmap(),
-          *(this->GetMPProblem()->GetStatClass()), cmap,
-          currentVID.begin(), currentVID.end(),
-          vRes.begin(), vRes.end());
-    }
+    
     conStatClass->StopClock(conClockName);
   }
 
