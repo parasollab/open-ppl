@@ -537,26 +537,24 @@ RRTExpand(typename MPTraits::MPProblemType* _mp,
   incr.FindIncrement(tick,_dir,&nTicks, _posRes, _oriRes);
   _weight = nTicks;
 
-  //Move out from start towards dir, bounded by number of ticks allowed at a given resolution.  Delta + obsDist are
-  //given to the function, and are user defined.
-  while(!collision && dm->Distance(env,_start,tick) <= _delta) {
+  //Move out from start towards dir, bounded by number of ticks allowed at a
+  //given resolution and the distance _delta: the maximum distance to grow
+  while(!collision && dm->Distance(env,_start,tick) <= _delta && ticker <= nTicks) {
     previous = tick;
-    tick += incr; //Increment tick
+    tick += incr; 
     if(!(tick.InBoundary(env)) || !(vc->IsValid(tick, env, *stats, _cdInfo, &callee))){
-      collision = true; //Found a collision; return previous tick, as it is collision-free
+      collision = true; //return previous tick, as it is collision-free
     }
     ++ticker;
-    if (ticker == nTicks){ //Have we reached the max amount of increments?
-      break;
+  }
+    if(previous != _start){ 
+      _newCfg = previous;//Last Cfg pushed back is the final tick allowed
+      return true;
     }
-  }
-  if(previous != _start){ //Did we go anywhere?
-    _newCfg = previous;//Last Cfg pushed back is the final tick allowed
-    return true;     
-  }
-  //Didn't find a place to go :(
-  else
-    return false;
+    //Didn't find a place to go :(
+    else
+      return false;
+
 }
 
 ///////////////////////////////////////////////////////////////////////////////

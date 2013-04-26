@@ -99,11 +99,11 @@ Cfg::operator==(const Cfg& _cfg) const {
     return false;
   for(size_t i = 0; i < m_dof; ++i) {
     if(m_dofTypes[i] == POS || m_dofTypes[i] == JOINT) {
-      if(fabs(m_v[i]-_cfg[i]) > numeric_limits<double>::epsilon())
+      if(fabs(m_v[i]-_cfg[i]) > numeric_limits<float>::epsilon())
         return false;
     }
     else {
-      if(fabs(DirectedAngularDistance(m_v[i], _cfg[i])) > numeric_limits<double>::epsilon()) 
+      if(fabs(DirectedAngularDistance(m_v[i], _cfg[i])) > numeric_limits<float>::epsilon()) 
         return false;
     }
   }
