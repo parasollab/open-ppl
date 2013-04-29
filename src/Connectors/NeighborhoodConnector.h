@@ -294,13 +294,21 @@ NeighborhoodConnector<MPTraits>::ConnectNeighbors(
 
     // attempt connection with the local planner
     CfgType col;
-    if(this->GetMPProblem()->GetLocalPlanner(this->m_lpMethod)->
-        IsConnected(this->GetMPProblem()->GetEnvironment(), _stats, dm,
-          _rm->GetGraph()->GetCfg(_vid),
-          _rm->GetGraph()->GetCfg(itr2),
-          col, &lpOutput, this->m_connectionPosRes, this->m_connectionOriRes, 
-          (!this->m_addAllEdges) )){
+    CfgType& c1 = _rm->GetGraph()->GetCfg(_vid);
+    CfgType& c2 = _rm->GetGraph()->GetCfg(itr2);
 
+    bool good = this->GetMPProblem()->GetLocalPlanner(this->m_lpMethod)->
+      IsConnected(this->GetMPProblem()->GetEnvironment(), _stats, dm,
+          c1, c2, col, &lpOutput, this->m_connectionPosRes, this->m_connectionOriRes, 
+          (!this->m_addAllEdges));
+
+    c1.IncStat("totalConnectionAttempts", 1);
+    c2.IncStat("totalonnectionAttempts", 1);
+
+    if(good){
+      // increment # of successful connection attempts
+      c1.IncStat("succConnectionAttempts", 1);
+      c2.IncStat("succConnectionAttempts", 1);
       // if connection was made, add edge and record the successful connection
       if(this->m_debug) cout << " | connection was successful";
       _rm->GetGraph()->AddEdge(_vid, *itr2, lpOutput.edge);
@@ -309,7 +317,7 @@ NeighborhoodConnector<MPTraits>::ConnectNeighbors(
       _rm->SetCache(_vid,*itr2,true);
       ++success;
       this->m_connectionAttempts.push_back(make_pair(make_pair(_vid, *itr2), true));
-    }
+    } 
     else {
       // mark the failed connection in the roadmap's cache
       if(this->m_debug) cout << " | connection failed | failure incremented" << endl;
@@ -335,7 +343,7 @@ NeighborhoodConnector<MPTraits>::FindKNeighbors(RoadmapType* _rm, CfgType cfg,
     InputIterator _itrFirst, InputIterator _itrLast, int _k, 
     const vector<VID>& _iterNeighbors, OutputIterator _closestIter){
   typedef typename MPTraits::MPProblemType::NeighborhoodFinderPointer NeighborhoodFinderPointer;
- #ifndef _PARALLEL 
+#ifndef _PARALLEL 
   if(m_random){
     // find k random (unique) neighbors
     set<int> ids(_iterNeighbors.begin(), _iterNeighbors.end());
@@ -364,11 +372,11 @@ NeighborhoodConnector<MPTraits>::FindKNeighbors(RoadmapType* _rm, CfgType cfg,
     else 
       return nfptr->KClosest(_rm, _itrFirst, _itrLast, cfg, _k, _closestIter);
   } 
- #else
+#else
   // find k-closest using just brute force
   NeighborhoodFinderPointer nf = this->GetMPProblem()->GetNeighborhoodFinder(this->m_nfMethod);
   return nf->KClosest(_rm, _itrFirst, _itrLast, cfg, _k, _closestIter);
- #endif 
+#endif 
 }            
 
 ///////////////////////////////////////////////////////////////////////////////

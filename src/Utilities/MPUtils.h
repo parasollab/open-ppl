@@ -160,6 +160,15 @@ class CompareSecond {
   }
 };
 
+/* Compare the second of a pair reversed */
+template <typename T, typename U>
+class CompareSecondReverse {
+ public:
+  bool operator()(const pair<T, U>& _a, const pair<T, U>& _b) const {
+    return _a.second > _b.second;
+  }
+};
+
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 //
@@ -584,7 +593,6 @@ bool PtInTriangle(const Point2d& _A, const Point2d& _B, const Point2d& _C, const
 // point inside triangle defined by barycentric coords. _u,_v
 //----------------------------------------------------------------------------
 Point3d GetPtFromBarycentricCoords(const Point3d& _A, const Point3d& _B, const Point3d& _C, double _u, double _v); 
-
 
 //----------------------------------------------------------------------------
 //NormalizeTheta: given a value, lock it into the range -PI to PI

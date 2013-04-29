@@ -322,7 +322,7 @@ BoundingBox::
 IfSatisfiesConstraints(vector<double> _point) const {
   for (size_t i = 0; i < _point.size() && i < m_boundingBox.size(); i++) {
     if (m_parType[i] == REVOLUTE) {
-      if (_point[i] < -1.0 || _point[i] > 1.0) {
+      if (fabs(_point[i]) >= 1.0 + numeric_limits<double>::epsilon()) {
         cout << "Invalid range on REVOLUTE dof::" << i << "\twith value::" << _point[i] << endl;
         exit(-1);
         return false;

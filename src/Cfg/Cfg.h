@@ -121,6 +121,7 @@ class Cfg {
     double GetStat(string _stat);
     bool IsStat(string _stat);
     void SetStat(string _stat, double _value);
+    void IncStat(string _stat, double _value);
 
     /// Return the number of degrees of freedom for the configuration class
     static size_t DOF() {return m_dof;};
@@ -152,7 +153,7 @@ class Cfg {
     //
     //////////////////////////////////////////////////////////////////////////////////////////
     /** 
-     * Confguration where workspace robot's EVERY VERTEX
+     * Configuration where workspace robot's EVERY VERTEX
      * is guaranteed to lie within the environment specified bounding box If
      * not, a cfg couldn't be found in the bbx, and the program will abort.
      * The function will try a predefined number of times

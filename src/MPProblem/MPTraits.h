@@ -57,6 +57,7 @@
 #include "Connectors/NeighborhoodConnector.h"
 #include "Connectors/OptimalConnection.h"
 #include "Connectors/OptimalRewire.h"
+#include "Connectors/CCExpansion.h"
 
 //metric includes
 #include "Metrics/CCDistanceMetric.h"

@@ -316,6 +316,11 @@ Cfg::SetStat(string _stat, double _value) {
   m_statMap[_stat] = _value;
 }
 
+void
+Cfg::IncStat(string _stat, double _value) {
+  m_statMap[_stat] += _value;
+}
+
 vector<double>
 Cfg::GetPosition() const {
   vector<double> ret;  
