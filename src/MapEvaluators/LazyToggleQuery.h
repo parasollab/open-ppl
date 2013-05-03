@@ -94,7 +94,7 @@ LazyToggleQuery<MPTraits>::PerformQuery(CfgType _start, CfgType _goal, RoadmapTy
   VID sVID, gVID = INVALID_VID;
 
   // If not just started and start/goal aren't connected, go back and sample more
-  if(_rdmp->GetGraph()->IsVertex(_start)) {
+  if(_rdmp->GetGraph()->IsVertex(_start) && _rdmp->GetGraph()->IsVertex(_goal)) {
     sVID = _rdmp->GetGraph()->GetVID(_start);
     gVID = _rdmp->GetGraph()->GetVID(_goal);
     cmap.reset();

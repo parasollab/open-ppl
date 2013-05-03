@@ -217,6 +217,10 @@ Query<MPTraits>::PerformQuery(RoadmapType* _rdmp, StatClass& _stats) {
     cerr << "Error in Query::PerformQuery() because m_query is empty.\n"
       << "Sometimes caused by reading the wrong query file in the XML." << endl;
 
+  //clear out path before calling query to ensure that only portions relevant to
+  //the query appear in the overall output.
+  m_path.clear();
+
   for(typename vector<CfgType>::iterator it = m_query.begin(); it+1 != m_query.end(); it++) {
     if(this->m_debug) {
       cout << "\n*Q* query is ...     ";
