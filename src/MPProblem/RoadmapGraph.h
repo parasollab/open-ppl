@@ -198,6 +198,37 @@ class vertex_descriptor_iterator
   }
 };
 
+template <typename VertexIterator>
+class vertex_property_iterator
+  : public boost::iterator_adaptor<
+                                   vertex_property_iterator<VertexIterator>   //Derived
+                                   , VertexIterator                             //Base
+                                   , typename VertexIterator::value_type::property_reference //Value
+                                   , boost::use_default                         //CategoryOrTraversal
+                                   , typename VertexIterator::value_type::property_reference //Reference
+                                  >
+{
+ public:
+  vertex_property_iterator()
+    : vertex_property_iterator::iterator_adaptor_() 
+  {}
+  
+  explicit vertex_property_iterator(VertexIterator vi)
+    : vertex_property_iterator::iterator_adaptor_(vi)
+  {}
+  
+  template <typename OtherVertexIterator>
+  vertex_property_iterator(vertex_property_iterator<OtherVertexIterator> const other)
+    : vertex_property_iterator::iterator_adaptor_(other.base())
+  {}
+
+  //overload dereference to call property() instead
+  typename VertexIterator::value_type::property_reference dereference() const  
+  { 
+    return this->base()->property(); 
+  }
+};
+
 
 /////////////////////////////////////////////////////////////////////
 //
@@ -251,14 +282,17 @@ typedef typename GRAPH::vertex_iterator VI; ///<VI Vertex Iterator
 ///TODO: Remove guard after const issue is fixed in STAPL
 typedef typename GRAPH::const_vertex_iterator CVI; ///< not sure CVI Constant Vertex Iterator
 typedef vertex_descriptor_iterator<CVI> CVDI;
+typedef vertex_property_iterator<CVI> CVPI;
 typedef typename GRAPH::vertex_property& VP;
 #else
 typedef typename GRAPH::vertex_iterator CVI; 
 typedef vertex_descriptor_iterator<CVI> CVDI;
+typedef vertex_property_iterator<CVI> CVPI;
 typedef typename GRAPH::vertex_property VP;
 #endif 
 typedef typename GRAPH::adj_edge_iterator EI;
 typedef vertex_descriptor_iterator<VI> VDI;
+typedef vertex_property_iterator<VI> VPI;
 typedef RoadmapChangeEvent<VERTEX, WEIGHT> ChangeEvent;
 
   ///////////////////////////////////////////////////////////////////////////////////////////

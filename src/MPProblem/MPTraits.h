@@ -67,7 +67,9 @@
 #include "Metrics/DiameterMetric.h"
 #include "Metrics/NumEdgesMetric.h"
 #include "Metrics/NumNodesMetric.h"
+#include "Metrics/RoadmapSet.h"
 #include "Metrics/TimeMetric.h"
+#include "Metrics/VectorSet.h"
 
 //map evaluator includes
 #include "MapEvaluators/ComposeEvaluator.h"
@@ -178,12 +180,19 @@ struct MPTraits{
     //ClosestVE<MPTraits>
       > ConnectorMethodList;
   
+  typedef ConnectivityMetric<MPTraits, RoadmapSet<MPTraits> > ConnectivityMetricRoadmapSet;
+  typedef ConnectivityMetric<MPTraits, VectorSet<MPTraits> > ConnectivityMetricVectorSet;
+  typedef CoverageMetric<MPTraits, RoadmapSet<MPTraits> > CoverageMetricRoadmapSet;
+  typedef CoverageMetric<MPTraits, VectorSet<MPTraits> > CoverageMetricVectorSet;
+
   //types of metrics available in our world
   typedef boost::mpl::list<
     CCDistanceMetric<MPTraits>,
-    ConnectivityMetric<MPTraits>,
+    ConnectivityMetricRoadmapSet,
+    ConnectivityMetricVectorSet,
     CoverageDistanceMetric<MPTraits>,
-    CoverageMetric<MPTraits>,
+    CoverageMetricRoadmapSet,
+    CoverageMetricVectorSet,
     DiameterMetric<MPTraits>,
     NumEdgesMetric<MPTraits>,
     NumNodesMetric<MPTraits>,
@@ -327,12 +336,19 @@ struct MPTraits<CfgSurface, DefaultWeight<CfgSurface> > {
     ClosestVE<MPTraits>*/
       > ConnectorMethodList;
   
+  typedef ConnectivityMetric<MPTraits, RoadmapSet<MPTraits> > ConnectivityMetricRoadmapSet;
+  typedef ConnectivityMetric<MPTraits, VectorSet<MPTraits> > ConnectivityMetricVectorSet;
+  typedef CoverageMetric<MPTraits, RoadmapSet<MPTraits> > CoverageMetricRoadmapSet;
+  typedef CoverageMetric<MPTraits, VectorSet<MPTraits> > CoverageMetricVectorSet;
+
   //types of metrics available in our world
   typedef boost::mpl::list<
     CCDistanceMetric<MPTraits>,
-    ConnectivityMetric<MPTraits>,
+    ConnectivityMetricRoadmapSet,
+    ConnectivityMetricVectorSet,
     CoverageDistanceMetric<MPTraits>,
-    CoverageMetric<MPTraits>,
+    CoverageMetricRoadmapSet,
+    CoverageMetricVectorSet,
     DiameterMetric<MPTraits>,
     NumEdgesMetric<MPTraits>,
     NumNodesMetric<MPTraits>,

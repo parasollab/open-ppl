@@ -3,14 +3,14 @@
 
 #include "CoverageMetric.h"
 
-template<class MPTraits>
-class ConnectivityMetric : public CoverageMetric<MPTraits> {
+template<class MPTraits, class Set>
+class ConnectivityMetric : public CoverageMetric<MPTraits, Set> {
   public:
     typedef typename MPTraits::CfgType CfgType;
     typedef typename MPTraits::MPProblemType MPProblemType;
     typedef typename MPProblemType::VID VID;
 
-    ConnectivityMetric(const vector<CfgType>& _samples = vector<CfgType>(), 
+    ConnectivityMetric(const Set& _samples = Set(), 
         const vector<string>& _connectorLabels = vector<string>(), 
         bool _computeAllCCs = false);
     ConnectivityMetric(MPProblemType* _problem, XMLNodeReader& _node, bool _computeAllCCs = false);
@@ -25,34 +25,34 @@ class ConnectivityMetric : public CoverageMetric<MPTraits> {
     ofstream output;
 };
 
-template<class MPTraits>
-ConnectivityMetric<MPTraits>::ConnectivityMetric(const vector<CfgType>& _samples, const vector<string>& _connectorLabels, bool _computeAllCCs)
-  : CoverageMetric<MPTraits>(_samples, _connectorLabels, _computeAllCCs){
-  this->SetName("ConnectivityMetric");
+template<class MPTraits, class Set>
+ConnectivityMetric<MPTraits, Set>::ConnectivityMetric(const Set& _samples, const vector<string>& _connectorLabels, bool _computeAllCCs)
+  : CoverageMetric<MPTraits, Set>(_samples, _connectorLabels, _computeAllCCs){
+  this->SetName("ConnectivityMetric" + Set::GetName());
 }
 
-template<class MPTraits>
-ConnectivityMetric<MPTraits>::ConnectivityMetric(MPProblemType* _problem, XMLNodeReader& _node, bool _computeAllCCs)
-  : CoverageMetric<MPTraits>(_problem, _node, _computeAllCCs) {
-    this->SetName("ConnectivityMetric");
+template<class MPTraits, class Set>
+ConnectivityMetric<MPTraits, Set>::ConnectivityMetric(MPProblemType* _problem, XMLNodeReader& _node, bool _computeAllCCs)
+  : CoverageMetric<MPTraits, Set>(_problem, _node, _computeAllCCs) {
+    this->SetName("ConnectivityMetric" + Set::GetName());
 
     output.open((this->m_outFileName+".connectivity").c_str());
 }
 
-template<class MPTraits>
-ConnectivityMetric<MPTraits>::~ConnectivityMetric() {
+template<class MPTraits, class Set>
+ConnectivityMetric<MPTraits, Set>::~ConnectivityMetric() {
 }
 
-template<class MPTraits>
+template<class MPTraits, class Set>
 void 
-ConnectivityMetric<MPTraits>::PrintOptions(ostream& _os) {
+ConnectivityMetric<MPTraits, Set>::PrintOptions(ostream& _os) {
   _os << "Percentage of queries solved" << endl;
 }
 
-template<class MPTraits>
+template<class MPTraits, class Set>
 double 
-ConnectivityMetric<MPTraits>::operator()() {
-  CoverageMetric<MPTraits>::operator()(); // Call CoverageMetric first
+ConnectivityMetric<MPTraits, Set>::operator()() {
+  CoverageMetric<MPTraits, Set>::operator()(); // Call CoverageMetric first
 
   static size_t numcalls = 0;
   int numQueries = 0;
