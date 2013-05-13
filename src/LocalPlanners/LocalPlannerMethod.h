@@ -53,7 +53,8 @@ class LocalPlannerMethod : public MPBaseObject<MPTraits> {
     }
 
     virtual vector<CfgType> ReconstructPath(Environment* _env, DistanceMetricPointer _dm, 
-        const CfgType& _c1, const CfgType& _c2, const vector<CfgType>& _intermediates, double _posRes, double _oriRes) {
+        const CfgType& _c1, const CfgType& _c2, const vector<CfgType>& _intermediates, 
+        double _posRes, double _oriRes) {
       StatClass dummyStats;
       LPOutput<MPTraits>* lpOutput = new LPOutput<MPTraits>();
       IsConnected(_env, dummyStats, _dm, _c1, _c2, lpOutput, _posRes, _oriRes, false, true, false);

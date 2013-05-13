@@ -37,16 +37,14 @@ class ToggleLP: public LocalPlannerMethod<MPTraits> {
       CfgType ChooseAlteredCfg(Environment* _env, StatClass& _stats,
           DistanceMetricPointer _dm,
           const CfgType& _c1, const CfgType& _c2,
-          typename boost::disable_if<IsClosedChain<Enable> >::type* _dummy = 0
-          );
+          typename boost::disable_if<IsClosedChain<Enable> >::type* _dummy = 0);
 
     // Specialization for closed chains - choose random point
     template <typename Enable>
       CfgType ChooseAlteredCfg(Environment* _env, StatClass& _stats,
           DistanceMetricPointer _dm,
           const CfgType& _c1, const CfgType& _c2,
-          typename boost::enable_if<IsClosedChain<Enable> >::type* _dummy = 0
-          );
+          typename boost::enable_if<IsClosedChain<Enable> >::type* _dummy = 0);
 
     bool IsConnectedToggle(Environment* _env, StatClass& _stats,
         DistanceMetricPointer _dm, const CfgType& _c1, const CfgType& _c2, CfgType& _col,
@@ -78,7 +76,7 @@ ToggleLP<MPTraits>::ToggleLP(string _vc, string _lp, int _maxIter) :
 template<class MPTraits>
 ToggleLP<MPTraits>::ToggleLP(MPProblemType* _problem, XMLNodeReader& _node) : LocalPlannerMethod<MPTraits>(_problem, _node) {
   InitVars();
-  
+
   m_vcLabel = _node.stringXMLParameter("vcLabel", true, "", "Validity Test Method");
   m_lpLabel = _node.stringXMLParameter("lpLabel", true, "", "Local Planner Method");
   m_maxIter = _node.numberXMLParameter("maxIter", false, 10, 0, MAX_INT, "Maximum number of m_iterations");
@@ -117,7 +115,7 @@ ToggleLP<MPTraits>::IsConnected(Environment* _env, StatClass& _stats,
   //If I am wrong please correct
   bool connected = false;
   ///To do : fix me-Dijkstra doesn't compile with pGraph!!!!!!
-  #ifndef _PARALLEL
+#ifndef _PARALLEL
   //clear lpOutput
   _lpOutput->Clear();
   pathGraph.clear();
@@ -146,9 +144,9 @@ ToggleLP<MPTraits>::IsConnected(Environment* _env, StatClass& _stats,
   }
 
   _stats.IncLPCollDetCalls(this->GetNameAndLabel(), cdCounter);
-  #else
+#else
   stapl_assert(false, "ToggleLP calling Dijkstra on pGraph");
-  #endif
+#endif
   return connected;
 }
 
@@ -373,7 +371,7 @@ ToggleLP<MPTraits>::ToggleConnect(Environment* _env, StatClass& _stats, Distance
   //c is outside of the bounding box, degenerate case
   if(!connect && c == CfgType()) return false;
 
-  //successful conntection, add the edge and return validity state
+  //successful connection, add the edge and return validity state
   if(connect){
     if(_toggle){
       CfgType s = _s, g = _g;
@@ -419,7 +417,8 @@ ToggleLP<MPTraits>::ToggleConnect(Environment* _env, StatClass& _stats, Distance
 template<class MPTraits>
 vector<typename MPTraits::CfgType> 
 ToggleLP<MPTraits>::ReconstructPath(Environment* _env, DistanceMetricPointer _dm, 
-        const CfgType& _c1, const CfgType& _c2, const vector<CfgType>& _intermediates, double _posRes, double _oriRes){
+    const CfgType& _c1, const CfgType& _c2, const vector<CfgType>& _intermediates, 
+    double _posRes, double _oriRes){
   StatClass dummyStats;
   LocalPlannerPointer lpMethod = this->GetMPProblem()->GetLocalPlanner(m_lpLabel);
   LPOutput<MPTraits>* lpOutput = new LPOutput<MPTraits>();

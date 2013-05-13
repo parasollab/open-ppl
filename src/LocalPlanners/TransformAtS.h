@@ -34,8 +34,10 @@ class TransformAtS : public StraightLine<MPTraits> {
   protected:
 
     virtual bool IsReversible() {return false;}
+
     virtual void GetSequenceNodes(const CfgType& _c1, const CfgType& _c2, double _s,
         vector<CfgType>& _sequence, bool _reverse = true);
+
     virtual bool IsConnectedOneWay(Environment* _env, StatClass& _stats,
         DistanceMetricPointer _dm,
         const CfgType& _c1, const CfgType& _c2, CfgType& _col, 

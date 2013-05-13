@@ -41,15 +41,13 @@ class SurfaceLP: public StraightLine<MPTraits>{
 
 // Definitions for Constructors and Destructor
 template<class MPTraits>
-SurfaceLP<MPTraits>::
-SurfaceLP() : StraightLine<MPTraits>() {
+SurfaceLP<MPTraits>::SurfaceLP() : StraightLine<MPTraits>() {
   this->SetName("SurfaceLP");
   m_acceptableHeightDiff=0.75;
 }
 
 template<class MPTraits>
-SurfaceLP<MPTraits>::
-SurfaceLP(MPProblemType* _problem, XMLNodeReader& _node) : 
+SurfaceLP<MPTraits>::SurfaceLP(MPProblemType* _problem, XMLNodeReader& _node) : 
   StraightLine<MPTraits>(_problem, _node) {
     _node.verifyName("SurfaceLP");
     this->SetName("SurfaceLP");
@@ -61,8 +59,8 @@ SurfaceLP<MPTraits>::~SurfaceLP() { }
 
 // Definitions for I/O and Access
 template<class MPTraits>
-void SurfaceLP<MPTraits>::
-PrintOptions(ostream& _os) {
+void 
+SurfaceLP<MPTraits>::PrintOptions(ostream& _os) {
   _os << "    " << this->GetName() << "::  ";
   _os << "vcLabel = " << " " << this->m_vcLabel << " ";
   _os << "acceptableHeightDiff = " << m_acceptableHeightDiff << " ";
@@ -71,14 +69,14 @@ PrintOptions(ostream& _os) {
 
 // Main IsConnected Function
 template<class MPTraits>
-bool SurfaceLP<MPTraits>::
-IsConnected(Environment* _env, StatClass& _stats,
-        DistanceMetricPointer _dm,
-        const CfgType& _c1, const CfgType& _c2, CfgType& _col, 
-        LPOutput<MPTraits>* _lpOutput,
-        double _positionRes, double _orientationRes,
-        bool _checkCollision, 
-        bool _savePath, bool _saveFailedPath){
+bool
+SurfaceLP<MPTraits>::IsConnected(Environment* _env, StatClass& _stats,
+    DistanceMetricPointer _dm,
+    const CfgType& _c1, const CfgType& _c2, CfgType& _col, 
+    LPOutput<MPTraits>* _lpOutput,
+    double _positionRes, double _orientationRes,
+    bool _checkCollision, 
+    bool _savePath, bool _saveFailedPath){
 
 
   bool connected = false;
@@ -115,33 +113,39 @@ IsConnected(Environment* _env, StatClass& _stats,
       CfgType tmpTick = tick;
       tmpTick.SetSurfaceID(sid);//set SurfaceID to test if 2D collision is okay
       if( sid == BASE_SURFACE ) {
-	 if( vcm->IsValid(tmpTick, _env, _stats, tmpCDInfo, &_callee) ) {
-	    if( fabs(tick.GetHeight())<m_acceptableHeightDiff ) {
-	       //this is valid, -1 should have y-value 0
-	       foundValidSurfForTick = true;
-	       surfaceIDs.push_back(sid);
-	    }
-	 }//endif vcm->IsValid
+        if( vcm->IsValid(tmpTick, _env, _stats, tmpCDInfo, &_callee) ) {
+          if( fabs(tick.GetHeight())<m_acceptableHeightDiff ) {
+            //this is valid, -1 should have y-value 0
+            foundValidSurfForTick = true;
+            surfaceIDs.push_back(sid);
+          }
+        }//endif vcm->IsValid
       }
       else {
-	 ///////////////////////////////////////////////////////////////////////////////
-	 //from 0--numSurfaces-1, check height
-	 shared_ptr<MultiBody> surface_body = _env->GetNavigableSurface(sid);
-	 shared_ptr<FixedBody> fb = surface_body->GetFixedBody(0);
-	 GMSPolyhedron& polyhedron = fb->GetWorldPolyhedron();
-	 bool isValid=false;
-	 Point2d pt = tick.GetPos();
-	 double tH = polyhedron.HeightAtPt(pt, isValid); 
-	 if( isValid ) {
-	    double hDiff = fabs(tH-tick.GetHeight());
-	    if( this->m_debug ) cout << " sid: " << sid << " isValid: " << isValid << " hDiff: " << hDiff << " of acceptableHDiff: " << m_acceptableHeightDiff << " tH: " << tH << " tickHeight: " << tick.GetHeight() << endl;
-	    if( hDiff<m_acceptableHeightDiff ) {
-	       foundValidSurfForTick = true;
-	       surfaceIDs.push_back(sid);
-	    }
-	 }
+        ///////////////////////////////////////////////////////////////////////////////
+        //from 0--numSurfaces-1, check height
+        shared_ptr<MultiBody> surface_body = _env->GetNavigableSurface(sid);
+        shared_ptr<FixedBody> fb = surface_body->GetFixedBody(0);
+        GMSPolyhedron& polyhedron = fb->GetWorldPolyhedron();
+        bool isValid=false;
+        Point2d pt = tick.GetPos();
+        double tH = polyhedron.HeightAtPt(pt, isValid); 
+        if( isValid ) {
+          double hDiff = fabs(tH-tick.GetHeight());
+          if( this->m_debug ) 
+            cout << " sid: " << sid 
+              << " isValid: " << isValid 
+              << " hDiff: " << hDiff 
+              << " of acceptableHDiff: " << m_acceptableHeightDiff 
+              << " tH: " << tH 
+              << " tickHeight: " << tick.GetHeight() << endl;
+          if( hDiff<m_acceptableHeightDiff ) {
+            foundValidSurfForTick = true;
+            surfaceIDs.push_back(sid);
+          }
+        }
 
-	 ///////////////////////////////////////////////////////////////////////////////
+        ///////////////////////////////////////////////////////////////////////////////
       }
     }//endfor j
 
