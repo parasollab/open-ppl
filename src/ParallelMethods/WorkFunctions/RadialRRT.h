@@ -547,7 +547,6 @@ class BuildRadialBlindRRT {
     string m_dm;
     string m_vc;
     string m_nf;
-    string m_expansionType;
     string m_CCconnection;
     double m_delta;
     double m_minDist;
@@ -558,7 +557,7 @@ class BuildRadialBlindRRT {
     bool m_debug;
 
   public:
-    BuildRadialBlindRRT(MPProblemType* _problem, size_t _numNodes, string _dm, string _vc, string _nf, string _CCconnection, string _expansionType,
+    BuildRadialBlindRRT(MPProblemType* _problem, size_t _numNodes, string _dm, string _vc, string _nf, string _CCconnection, 
         double _delta, double _minDist, CfgType _root, size_t _numAttempts, size_t _numCCIters=0, double _overlap=0, bool _strictBranching=true, bool _debug=false) {
 
       m_problem = _problem;
@@ -569,7 +568,6 @@ class BuildRadialBlindRRT {
       m_vc = _vc;
       m_nf = _nf;
       m_CCconnection = _CCconnection;
-      m_expansionType = _expansionType;
       m_minDist = _minDist;
       m_root = _root;
       m_numAttempts = _numAttempts;
@@ -587,7 +585,6 @@ class BuildRadialBlindRRT {
       _t.member(m_vc);
       _t.member(m_nf);
       _t.member(m_CCconnection);
-      _t.member(m_expansionType);
       _t.member(m_minDist);
       _t.member(m_root);
       _t.member(m_numAttempts);
@@ -614,7 +611,7 @@ class BuildRadialBlindRRT {
         GraphType* globalTree = m_problem->GetRoadmap()->GetGraph();
 
         // thes are used to keep work function small
-        RadialUtils<MPTraits> radialUtils (m_problem, localTree, m_dm, m_vc, m_nf, m_CCconnection, m_expansionType, m_delta, m_minDist, m_numCCIters, m_debug);
+        RadialUtils<MPTraits> radialUtils (m_problem, localTree, m_dm, m_vc, m_nf, m_CCconnection, m_delta, m_minDist, m_numCCIters, m_debug);
         string callee("RadialRRT::ExpandTree");
         vector<VID> branch;
 

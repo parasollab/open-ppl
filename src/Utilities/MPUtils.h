@@ -145,10 +145,7 @@ long SRand(string _methodName, int _nextNodeIndex, long _base = 0x1234ABCD, bool
 
 // Maintains a vector of size 2 with Min at the front and Max at the end
 void PushMinMax(vector<double>& _vec, double _num);
-
 vector<double> GetCartesianCoordinates(vector<double> sphericalCoordinates);
-
-int GetQuadrant(double _radians);
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
@@ -522,7 +519,7 @@ SelectDirection(Environment* _env, CfgType dir){
   return dir;
 }
 
-
+// from cartesion to spherical
 template<class CfgType>
 vector<double> 
 GetSphericalCoordinates(CfgType& _cfg) {
@@ -698,10 +695,6 @@ SelectDirection(CfgType& _regionCand, vector<CfgType>& _neighbors, double _radiu
   return dir;
 }
 
-
-
-
-
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 //
@@ -771,33 +764,29 @@ RRTExpand(typename MPTraits::MPProblemType* _mp,
 }
 
 /*
- *  Expand for Lazy RRT where three different values can be returned: OUTOFBOUNDARY, INVALID, VALID
+ *  Expand for Blind RRT where three different values can be returned: OUTOFBOUNDARY, INVALID, VALID
  * */
-
 namespace ExpansionType {
   enum Expansion {
     IN_COLLISION,
     NO_COLLISION,
-    OUT_OF_BOUNDARY,
     NO_EXPANSION,
-    JUMPED,
   };
  
   string GetExpansionTypeString(Expansion expansion);
 
 }
-// TODO Cesar. Better naming
-namespace NodeState {
-  enum State {
-    COLLISION,
-    FREE,
-  };
-}
+
+/*
+ * Blind RRT Expand
+ * Expands up to delta distance or when reaching out of boundary. If a collision is 
+ * encountered, it records the last valid sample and keeps growing.
+ */
 
 template<class MPTraits>
 ExpansionType::Expansion
 BlindRRTExpand(typename MPTraits::MPProblemType* _mp, 
-    string _vc, string _dm, string _expansionType, 
+    string _vc, string _dm, 
     typename MPTraits::CfgType _start, 
     typename MPTraits::CfgType _dir, 
     vector< pair<typename MPTraits::CfgType, int> >& _newCfgs, // pair = Cfg , weight. weight is the distance from the Cfg to the start Cfg 
@@ -814,8 +803,7 @@ BlindRRTExpand(typename MPTraits::MPProblemType* _mp,
   typedef typename MPTraits::CfgType CfgType;
   typename MPTraits::CfgType incr, tick = _start, previous = _start;
   // if any collision is encountered, collision becomes true
-  // jump is to know if we should go directly to _delta
-  bool collision=false, outOfBoundary=false, jump=false;
+  bool collision=false, outOfBoundary=false;
   // this tracks collision changes along the expansion
   bool prevCollision = !vc->IsValid(_start, env, *stats, _cdInfo, &callee); 
   int nTicks, ticker = 0;
@@ -828,71 +816,41 @@ BlindRRTExpand(typename MPTraits::MPProblemType* _mp,
     previous = tick;
     tick += incr; //Increment tick
     ++ticker;
-    
+
     if(!(tick.InBoundary(env)) ) {
       outOfBoundary = true; // Expansion is out of boundary, return previous tick
-    }
-    else if (!(vc->IsValid(tick, env, *stats, _cdInfo, &callee))) { // no need for further checking, get ray and return
+    } else if (!(vc->IsValid(tick, env, *stats, _cdInfo, &callee))) { 
       collision = true; //Found a collision, activate flag
-      //previous.SetStat("Validity", NodeState::FREE);
       if(!prevCollision) {
-        
+        // record the previous sample since it is valid
         cfgWeight = make_pair(previous, ticker - 1); // previous is one tick behind
         _newCfgs.push_back(cfgWeight);
-        
-        // we track all nodes
-        if(_expansionType == "All") {
-          //tick.SetStat("Validity", NodeState::COLLISION);
-          
-          // TODO Cesar do we really want to add in collision nodes???
-          cfgWeight = make_pair(tick, ticker);  
-          _newCfgs.push_back(cfgWeight);
-        
-        } else if ("First") {  // we dont need to track every change, lets jump to delta
-          jump = true;
-          break;
-        }
-        
+
+        // TODO do we really want to add in collision nodes???
+        /*
+        cfgWeight = make_pair(tick, ticker);  
+        _newCfgs.push_back(cfgWeight);
+        */
         prevCollision = true;
       }
     } else {
-      //tick.SetStat("Validity", NodeState::FREE);
-      
+
       if(prevCollision) {
-        
-        // we track all nodes
-        if(_expansionType == "All") {
-          //previous.SetStat("Validity", NodeState::COLLISION);
-          
-          // TODO Cesar do we really want to add in collision nodes???
-          cfgWeight = make_pair(previous, ticker - 1); // previous is one tick behind 
-          _newCfgs.push_back(cfgWeight);
-        
-        } 
-         
+
+        /*
+        // TODO do we really want to add in collision nodes???
+        cfgWeight = make_pair(previous, ticker - 1); // previous is one tick behind 
+        _newCfgs.push_back(cfgWeight);
+        */
+  
+        // record this sample since the previous was in collision
         cfgWeight = make_pair(tick, ticker); 
         _newCfgs.push_back(cfgWeight);
-        
-        // if we place the previous two lines at the beginning to have a nested-if clause, the order cfgs are added is
-        // wrong, so we have to check twice for the expansion label
-        if (_expansionType == "First") {
-          jump = true;
-          break;
-        }
 
         prevCollision = false; 
       }
     }
   }
-
-  if (jump) {
-    // we need to jump directly to delta, lets take the direction and scale to delta 
-    CfgType origin;
-    CfgType dir = _dir - _start;
-    dm->ScaleCfg(env, _delta, origin, dir);
-    previous = dir + _start;
-    vc->IsValid(previous, env, *stats, _cdInfo, &callee); // lets validate previous and see where we expanded 
-  } 
   if(previous != _start){ //Did we go anywhere?
     
     cfgWeight = make_pair(previous, ticker); 
@@ -903,9 +861,6 @@ BlindRRTExpand(typename MPTraits::MPProblemType* _mp,
     if (collision) {    // encountered collision in the way
       return ExpansionType::IN_COLLISION;
     
-    // TODO Cesar: implement laziness level with direct expansion
-    //} else if (outOfBoundary) { 
-        
     } else {            // No collision and not out of boundary
       return ExpansionType::NO_COLLISION;
     }
@@ -915,9 +870,6 @@ BlindRRTExpand(typename MPTraits::MPProblemType* _mp,
   else
     return ExpansionType::NO_EXPANSION;     
 }
-
-
-
 
 
 ///////////////////////////////////////////////////////////////////////////////

@@ -1,4 +1,9 @@
+/////////////////////////
+//Class RadiaUtils
+////////////////////////
 
+#ifndef RADIALUTILS_H_
+#define RADIALUTILS_H_
 #include "ParallelMethods/ParallelSBMPHeader.h"
 
 template<class MPTraits>
@@ -20,20 +25,22 @@ class RadialUtils {
 
   private:
   MPProblemType* m_problem;
-  size_t m_numCCIters;
+  size_t m_numCCIters; // iterations of the CC connection phase
   string m_dm;
   string m_vc;
   string m_nf;
-  string m_expansionType;
-  string m_CCconnection;
+  string m_CCconnection; // CC connection policy
   double m_delta;
   double m_minDist;
-  LocalTreeType* m_localTree;
+  LocalTreeType* m_localTree; // the tree we are working on (parallel)
   string m_callee = "RadialUtils";
   bool m_debug;
 
   public:
-  RadialUtils(MPProblemType* _problem, LocalTreeType* _localTree, string _dm, string _vc, string _nf, string _CCconnection, string _expansionType,
+  
+  RadialUtils() {}
+
+  RadialUtils(MPProblemType* _problem, LocalTreeType* _localTree, string _dm, string _vc, string _nf, string _CCconnection, 
       double _delta, double _minDist, size_t _numCCIters=0, bool _debug=false) { 
 
     m_problem = _problem;
@@ -43,14 +50,14 @@ class RadialUtils {
     m_vc = _vc;
     m_nf = _nf;
     m_CCconnection = _CCconnection;
-    m_expansionType = _expansionType;
     m_minDist = _minDist;
     m_debug = _debug;
 
+/*
     if (_localTree == NULL)
       m_localTree = m_problem->GetRoadmap()->GetGraph();
 
-    else 
+    else  */
       m_localTree = _localTree; 
   }
 
@@ -75,6 +82,8 @@ class RadialUtils {
   ////////////////////////////
   //  ADD EDGE
   ////////////////////////////
+  // this is used with no debugging purposes on parallel so it does not write out to the vizmo 
+  // or graph
   void AddEdge(VID _vid1, VID _vid2, int _weight, vector<pair<VID, VID> >& _pendingEdges, vector<int>& _pendingWeights) { 
 
     if((_vid1 == 0 || _vid2 == 0) && stapl::get_location_id() != 0) { 
@@ -83,7 +92,6 @@ class RadialUtils {
       return;
     }
 
-    //      pair<WeightType, WeightType> weights = make_pair(WeightType("RRTExpand", _weight), WeightType("RRTExpand", _weight));
     WeightType weight("RRTExpand", _weight);
     /// m_problem->GetRoadmap()->GetGraph()->AddEdge(_vid1, _vid2, weights);
     GraphType* globalTree = m_problem->GetRoadmap()->GetGraph();
@@ -96,6 +104,7 @@ class RadialUtils {
   ////////////////////////////
   //  AddEdgeDebug
   ////////////////////////////
+  // Used when we want to see the results on vizmo
   void AddEdgeDebug(VID _vid1, VID _vid2, CfgType _cfg1, CfgType _cfg2, int _weight, vector<pair<VID, VID> >& _pendingEdges, vector<int>& _pendingWeights) { 
 
     if((_vid1 == 0 || _vid2 == 0) && stapl::get_location_id() != 0) { 
@@ -104,7 +113,6 @@ class RadialUtils {
       return;
     }
 
-    //      pair<WeightType, WeightType> weights = make_pair(WeightType("RRTExpand", _weight), WeightType("RRTExpand", _weight));
     WeightType weight("RRTExpand", _weight);
     /// m_problem->GetRoadmap()->GetGraph()->AddEdge(_vid1, _vid2, weights);
     GraphType* globalTree = m_problem->GetRoadmap()->GetGraph();
@@ -164,7 +172,7 @@ class RadialUtils {
     ExpansionType::Expansion expansion;
     vector<pair<CfgType, int> > expansionCfgs;  // this will contain all cfgs from start to goal inclusive
     expansionCfgs.push_back(make_pair(_nearest, 0));
-    expansion = BlindRRTExpand<MPTraits>(m_problem, m_vc, m_dm, m_expansionType, 
+    expansion = BlindRRTExpand<MPTraits>(m_problem, m_vc, m_dm,  
         _nearest, _dir, expansionCfgs, m_delta, cdInfo, 
         env->GetPositionRes(), env->GetOrientationRes());
 
@@ -176,7 +184,7 @@ class RadialUtils {
     CfgType& newCfg = expansionCfgs.back().first; // last cfg in the returned array is delta away from nearest
     int nodesAdded = 0;
     // If good to go, add to roadmap
-    if(dm->Distance(env, newCfg, _nearest) >= m_minDist && expansion != ExpansionType::OUT_OF_BOUNDARY ) {
+    if(dm->Distance(env, newCfg, _nearest) >= m_minDist ) {
 
       // Adding Nodes
       vector<VID> expansionVIDs;
@@ -186,7 +194,7 @@ class RadialUtils {
       for(size_t i=1; i<expansionCfgs.size(); i++ ) {
         CfgType& cfg2 = expansionCfgs[i].first;
         VID newVID = INVALID_VID;
-        // Expansion returns both valid and invalid so we can track valid edges,
+        // Expansion returns both valid and invalid  so we can track valid edges,
         // but only add valid nodes to the tree
         if (IsValid(vc, expansionCfgs[i].first, env, stats)) { 
           newVID = AddVertex(expansionCfgs[i].first);
@@ -212,9 +220,6 @@ class RadialUtils {
           else AddEdgeDebug(expansionVIDs[i-1], expansionVIDs[i], expansionCfgs[i-1].first, expansionCfgs[i].first, weight, _pendingEdges, _pendingWeights);
 
         }
-
-        if(expansion == ExpansionType::JUMPED) // we can only add one edge, start -> middle  
-          break;
       }
 
       nodesAdded=  expansionCfgs.size() - 1;    // substract one cause the start already belonged to the tree
@@ -232,7 +237,7 @@ class RadialUtils {
   void ConnectCCs() {
     if (m_localTree == NULL) {
       cout << "Error! Did not Set Local Tree using native view" << endl;
-      exit(-1);;
+      exit(-1);
     }
     //Setup MP variables
     StatClass* stats = m_problem->GetStatClass();
@@ -270,18 +275,15 @@ class RadialUtils {
     m_numCCIters = ccs.size() * m_numCCIters;
 
     while(ccs.size() > 1 && iters <= m_numCCIters && failures < maxFailures) {
+      // get a random CC to work on
       int rand1 = LRand() % ccs.size();
       cc1VID = ccs[ rand1 ].second;
 
       colorMap.reset();
       stapl::sequential::get_cc(*m_localTree,colorMap,cc1VID,cc1);
 
-
+      
       if (cc1.size() == 1) {
-        // PrintValue("Getting: ", cc1[0]);
-        //CfgType cfg  =   (*(globalTre->distribution().container_manager().begin()->find_vertex(cc1[0]))).property();
-        // CfgType cfg  =   (*(globalTre->find_vertex(cc1[0]))).property();
-        //CfgType cfg  =   globalTre->GetCfg(cc1[0]);
         CfgType cfg  =   (*(m_localTree->find_vertex(cc1[0]))).property();
 
         if (!IsValid(vc, cfg, env, stats)) {
@@ -290,12 +292,14 @@ class RadialUtils {
 
         }
       }
+      // do we need random selection?
       if (m_CCconnection == "Random") {
 
         int rand2 = LRand() % ccs.size();
         if (rand1 == rand2) continue;
-        cc2VID = ccs[ rand2 ].second; 
+        cc2VID = ccs[ rand2 ].second;
 
+      // do we need mixed selection?
       } else if(m_CCconnection == "Mixed") {
         /*
            if (connectSwitch % 10 == 0) {
@@ -361,7 +365,7 @@ class RadialUtils {
   ////////////////////////////
   //  RemoveInvalidNodes
   ////////////////////////////
-  //Rewrite function to take iterate through local tree instead of allVIDs vector
+  // Rewrite function to take iterate through local tree instead of allVIDs vector
   void RemoveInvalidNodes(vector<VID>& _allVIDs) {
 
     RoadmapType* rdmp = m_problem->GetRoadmap();
@@ -480,6 +484,9 @@ class RadialUtils {
         cout << "Error! Did not Set Local Tree using native view" << endl;
         exit(-1);
       }
+
+      // here we are measuring the distances using the policy/criteria supplied
+      // we are choosing the CC with the minimum distance
       ColorMap colorMap;
       vector<VID> sourceCC;
       vector<VID> targetCC;
@@ -497,7 +504,7 @@ class RadialUtils {
         stapl::sequential::get_cc(*m_localTree,colorMap,_ccs[i].second,targetCC);
 
         /////////////////////////////////
-        // Call different methods
+        // Call the appropriate method
         /////////////////////////////////
         if(_criteria == "NodeToNode")
           dist = GetDistanceNodeToNode(sourceCC, targetCC);
@@ -540,3 +547,7 @@ class RadialUtils {
 
 
 };
+
+
+#endif
+

@@ -52,7 +52,6 @@ class RadialBlindRRT : public RadialSubdivisionRRT<MPTraits> {
     void DeleteInvalid(graph_view<RadialRegionGraph> _regionView);
 
   protected:
-    string m_expansionType;
     string m_CCconnection;
     size_t m_numCCIters;
 };
@@ -79,7 +78,6 @@ void RadialBlindRRT<MPTraits>::ParseXML(XMLNodeReader& _node){
   for( citr = _node.children_begin(); citr!= _node.children_end(); ++citr) {
     if(citr->getName() == "rrt_constr") {
       m_CCconnection = citr->stringXMLParameter("CCconnection",true,"","CC connection strategy");
-      m_expansionType = citr->stringXMLParameter("expansionType", true, "", "Normal, Blind, Witness");
       m_numCCIters = citr->numberXMLParameter("numCCIters", true, 1, 0, MAX_INT, "Number of iteration for the local CC connection");
       citr->warnUnrequestedAttributes();
     }
@@ -98,7 +96,7 @@ RadialBlindRRT<MPTraits>::BuildRRT(graph_view<RadialRegionGraph> _regionView,
   ///adding this for strong scaling, replace with m_numNodes if interested in weak scaling
   size_t nodesPerRegion = this->m_numNodes/stapl::get_num_locations();
   BuildRadialBlindRRT<MPTraits> wf(_problem,nodesPerRegion,this->m_dmLabel,this->m_vcLabel,
-      this->m_nfLabel,m_CCconnection,m_expansionType,this->m_delta,this->m_minDist,
+      this->m_nfLabel,m_CCconnection,this->m_delta,this->m_minDist,
       _root,this->m_numAttempts,m_numCCIters,this->m_overlap, this->m_strictBranching, this->m_debug);
 
   //  MPStrategyPointer strategy = this->GetMPProblem()->GetMPStrategy("BlindRRT");

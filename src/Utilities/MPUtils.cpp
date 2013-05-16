@@ -173,32 +173,6 @@ GetPtFromBarycentricCoords(const Point3d& _A, const Point3d& _B, const Point3d& 
   return p;
 }
 
-///////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////
-//
-//
-// Expansion Type Namespace and Enum
-//
-//
-///////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////
-
-namespace ExpansionType {
-  
-  const char* expansionTypeString[]= {
-    "OUT_OF_BOUNDARY",
-    "IN_COLLISION",
-    "COLLISION_FREE",
-    "NO_EXPANSION"
-  };
-
-  string GetExpansionTypeString(Expansion expansion) {
-    return expansionTypeString[expansion];
-  }
-}
-
-
-
 
 ///////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////////
@@ -228,6 +202,7 @@ void PushMinMax(vector<double>& _vec, double _num) {
 }
 
 
+// from spherical to cartesian
 vector<double>
 GetCartesianCoordinates(vector<double> sphericalCoordinates) {
   vector<double> coordinates(2);
@@ -248,25 +223,6 @@ GetCartesianCoordinates(vector<double> sphericalCoordinates) {
       coordinates.push_back(2*DRand()-1.0);
   }
   return coordinates;
-}
-
-int
-GetQuadrant(double _radians) {
-  while (_radians < 0)
-    _radians += TWOPI;
-  while (_radians > TWOPI)
-    _radians -= TWOPI;
-
-  if (_radians > 0 && _radians < PI/2) {
-    return 1;
-  } else if (_radians > PI/2 && _radians < PI) {
-    return 2;
-  } else if (_radians > PI && _radians < 3*PI/2) {
-    return 3;
-  } else if (_radians > 3*PI/2 && _radians < TWOPI) {
-    return 4;
-  }
-  return 0;
 }
 
 
