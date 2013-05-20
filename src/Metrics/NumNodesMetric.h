@@ -17,7 +17,6 @@ class NumNodesMetric : public MetricMethod<MPTraits> {
     virtual ~NumNodesMetric(){}
 
     virtual double operator()(){
-      cout << "NODES EVAL :: " << this->GetMPProblem()->GetRoadmap()->GetGraph()->get_num_vertices() << endl;
       return this->GetMPProblem()->GetRoadmap()->GetGraph()->get_num_vertices();
     }
 };
