@@ -6,8 +6,6 @@
 template<class MPTraits>
 class VectorSet {
   public:
-
-    typedef typename MPTraits::MPProblemType MPProblemType;
     typedef typename MPTraits::CfgType CfgType;
     typedef typename vector<CfgType>::iterator Iterator;
     typedef typename vector<CfgType>::const_iterator ConstIterator;
@@ -16,7 +14,7 @@ class VectorSet {
 
     VectorSet(vector<CfgType>& _cfgs) : m_cfgs(_cfgs) {}
 
-    VectorSet(MPProblemType* _problem, XMLNodeReader& _node) {
+    VectorSet(XMLNodeReader& _node) {
       //reads in a list of cfgs from a file
       string filename = _node.stringXMLParameter("filename", true, "", "filename containing witness samples");
       ifstream is(filename.c_str());

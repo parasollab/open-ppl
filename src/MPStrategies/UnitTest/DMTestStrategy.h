@@ -104,16 +104,19 @@ Run()
   dm->PrintOptions(cout);
   cout << endl;
 
-  vector<typename MPTraits::CfgType> nodes;
-  m_rdmp->GetGraph()->GetVerticesData(nodes);
-
-  m_numToVerify = min(m_numToVerify, nodes.size());
-  for(size_t i=0; i<m_numToVerify; ++i) {
+  size_t numVerified = 0;
+  typedef typename RoadmapType::GraphType GraphType;
+  GraphType* g = m_rdmp->GetGraph();
+  for(typename GraphType::VI vi = g->begin();
+      numVerified < m_numToVerify && vi != g->end();
+      ++vi, ++numVerified){
     stats->StartClock("Iteration");
-    cout << "testing distances to node " << i << ": " << nodes[i] << endl;
+    cout << "testing distances to node: " << g->GetVertex(vi) << endl;
     vector<pair<size_t, double> > d;
-    for(typename vector<typename MPTraits::CfgType>::iterator N = nodes.begin(); N != nodes.end(); ++N) {
-      d.push_back(make_pair(distance(nodes.begin(), N), dm->Distance(this->GetMPProblem()->GetEnvironment(), nodes[i], *N)));
+    for(typename GraphType::VI vi2 = g->begin(); vi2!=g->end(); ++vi2){
+      d.push_back(make_pair(distance(g->begin(), vi2), 
+            dm->Distance(this->GetMPProblem()->GetEnvironment(), 
+              g->GetVertex(vi), g->GetVertex(vi2))));
       cout << "\t" << d.back().second << endl;
     }
     cout << endl;
@@ -129,16 +132,17 @@ Run()
   cout << ":" << stats->GetSeconds("Distance Metric") << " sec (ie, " << stats->GetUSeconds("Distance Metric") << " usec)";
   cout << endl;
 
-  if(nodes.size() > 1) {
-    typename MPTraits::CfgType origin(nodes[0]);
-    typename MPTraits::CfgType c(nodes[1]);
-    cout << "\nScale Cfg: 1/2x\n\torigin = " << origin << "\n\tc = " << c << "\n\tscaled distance = " << dm->Distance(this->GetMPProblem()->GetEnvironment(), nodes[0], nodes[1]) * 0.5 << endl;
-    dm->ScaleCfg(this->GetMPProblem()->GetEnvironment(), dm->Distance(this->GetMPProblem()->GetEnvironment(), nodes[0], nodes[1]) * 0.5, origin, c);
+  if(g->get_num_vertices() > 1) {
+    typename GraphType::VI vi = g->begin(), vi2 = vi+1;
+    typename MPTraits::CfgRef origin = g->GetVertex(vi);
+    typename MPTraits::CfgType c = g->GetVertex(vi2);
+    double dist = dm->Distance(this->GetMPProblem()->GetEnvironment(), origin, c);
+    cout << "\nScale Cfg: 1/2x\n\torigin = " << origin << "\n\tc = " << c << "\n\tscaled distance = " << dist * 0.5 << endl;
+    dm->ScaleCfg(this->GetMPProblem()->GetEnvironment(), dist * 0.5, origin, c);
     cout << "\n\tc' = " << c << "\n\tnew distance = " << dm->Distance(this->GetMPProblem()->GetEnvironment(), origin, c) << endl;
-    origin = nodes[0];
-    c = nodes[1];
-    cout << "\nScale Cfg: 2x\n\torigin = " << origin << "\n\tc = " << c << "\n\tscaled distance = " << dm->Distance(this->GetMPProblem()->GetEnvironment(), nodes[0], nodes[1]) * 2 << endl;
-    dm->ScaleCfg(this->GetMPProblem()->GetEnvironment(), dm->Distance(this->GetMPProblem()->GetEnvironment(), nodes[0], nodes[1]) * 2, origin, c);
+    c = g->GetVertex(vi2);
+    cout << "\nScale Cfg: 2x\n\torigin = " << origin << "\n\tc = " << c << "\n\tscaled distance = " << dist * 2 << endl;
+    dm->ScaleCfg(this->GetMPProblem()->GetEnvironment(), dist * 2, origin, c);
     cout << "\n\tc' = " << c << "\n\tnew distance = " << dm->Distance(this->GetMPProblem()->GetEnvironment(), origin, c) << endl;
   }
 }

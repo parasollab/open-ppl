@@ -233,8 +233,6 @@ LazyQuery<MPTraits>::NodeEnhance(RoadmapType* _rdmp, StatClass& _stats) {
   if(this->m_debug)
     cout << "*E* In LazyQuery::NodeEnhance. Generated these VIDs:";
   stapl::sequential::vector_property_map<GraphType, size_t> cmap;
-  vector<VID> allVIDs;
-  _rdmp->GetGraph()->GetVerticesVID(allVIDs);
 
   for(int i = 0; i < m_numEnhance; i++) {
     size_t index = LRand() % m_edges.size(); // do I need a typecast?
@@ -249,16 +247,14 @@ LazyQuery<MPTraits>::NodeEnhance(RoadmapType* _rdmp, StatClass& _stats) {
       continue;
 
     // Add enhance to roadmap and connect
-    vector<VID> newVID(1, _rdmp->GetGraph()->AddVertex(enhance));
+    VID newVID = _rdmp->GetGraph()->AddVertex(enhance);
     for(vector<string>::iterator label = this->m_nodeConnectionLabels.begin();
             label != this->m_nodeConnectionLabels.end(); label++) {
       cmap.reset();
-      this->GetMPProblem()->GetConnector(*label)->Connect(_rdmp, _stats,
-          cmap, newVID.begin(), newVID.end(), allVIDs.begin(), allVIDs.end());
+      this->GetMPProblem()->GetConnector(*label)->Connect(_rdmp, _stats, cmap, newVID);
     }
-    allVIDs.push_back(newVID[0]);
     if(this->m_debug)
-      cout << " " << newVID[0];
+      cout << " " << newVID;
   }
   if(this->m_debug)
     cout << endl;

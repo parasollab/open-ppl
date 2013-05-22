@@ -5,10 +5,7 @@ template<class MPTraits>
 class RoadmapSet {
   public:
 
-    typedef typename MPTraits::MPProblemType MPProblemType;
     typedef typename MPTraits::MPProblemType::RoadmapType RoadmapType;
-    typedef typename MPTraits::CfgType CfgType;
-    typedef typename MPTraits::WeightType WeightType;
     typedef typename RoadmapType::GraphType GraphType;
     typedef typename GraphType::VPI Iterator;
     typedef typename GraphType::CVPI ConstIterator;
@@ -18,7 +15,7 @@ class RoadmapSet {
     RoadmapSet(const RoadmapType& _roadmap) :
       m_roadmap(_roadmap) {}
 
-    RoadmapSet(MPProblemType* _problem, XMLNodeReader& _node) {
+    RoadmapSet(XMLNodeReader& _node) {
       string filename = _node.stringXMLParameter("filename", true, "", "filename containing witness samples");
       m_roadmap.Read(filename.c_str());
     }

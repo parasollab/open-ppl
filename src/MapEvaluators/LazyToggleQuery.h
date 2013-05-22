@@ -114,10 +114,6 @@ LazyToggleQuery<MPTraits>::PerformQuery(CfgType _start, CfgType _goal, RoadmapTy
     if(Query<MPTraits>::PerformQuery(_start, _goal, _rdmp, _stats))
       return true; // Found a path
 
-    vector<VID> freeVIDs, blockVIDs;
-    _rdmp->GetGraph()->GetVerticesVID(freeVIDs);
-    bRdmp->GetGraph()->GetVerticesVID(blockVIDs);
-
     if(gVID == INVALID_VID) {
       sVID = _rdmp->GetGraph()->GetVID(_start);
       gVID = _rdmp->GetGraph()->GetVID(_goal);
@@ -131,16 +127,14 @@ LazyToggleQuery<MPTraits>::PerformQuery(CfgType _start, CfgType _goal, RoadmapTy
       q.pop_front();
 
       if(node.GetLabel("VALID")) { // Lazy-connect
-        vector<VID> newVID(1, _rdmp->GetGraph()->AddVertex(node));
+        VID newVID = _rdmp->GetGraph()->AddVertex(node);
         if(this->m_debug)
-          cout << "*T* Adding a free node to roadmap: " << node << ", VID = " << newVID[0] << endl;
+          cout << "*T* Adding a free node to roadmap: " << node << ", VID = " << newVID << endl;
         for(vector<string>::iterator label = this->m_nodeConnectionLabels.begin();
             label != this->m_nodeConnectionLabels.end(); label++) {
           cmap.reset();
-          this->GetMPProblem()->GetConnector(*label)->Connect(_rdmp, _stats,
-              cmap, newVID.begin(), newVID.end(), freeVIDs.begin(), freeVIDs.end());
+          this->GetMPProblem()->GetConnector(*label)->Connect(_rdmp, _stats, cmap, newVID);
         }
-        freeVIDs.push_back(newVID[0]);
         if(m_iterative) {
           cmap.reset();
           if(this->m_recordKeep)
@@ -151,22 +145,19 @@ LazyToggleQuery<MPTraits>::PerformQuery(CfgType _start, CfgType _goal, RoadmapTy
       }
 
       else { // Toggle-connect
-        vector<VID> newVID(1, bRdmp->GetGraph()->AddVertex(node));
+        VID newVID = bRdmp->GetGraph()->AddVertex(node);
         if(this->m_debug)
-          cout << "*T* Adding a blocked node to roadmap: " << node << ", VID = " << newVID[0] << endl;
+          cout << "*T* Adding a blocked node to roadmap: " << node << ", VID = " << newVID << endl;
         size_t size = q.size();
         this->GetMPProblem()->GetValidityChecker(this->m_vcLabel)->ToggleValidity();
         if(m_iterative)
-          this->GetMPProblem()->GetConnector(m_toggleConnect)->Connect(bRdmp, _stats,
-              cmap, newVID.begin(), newVID.end(), blockVIDs.begin(), blockVIDs.end(), front_inserter(q));
+          this->GetMPProblem()->GetConnector(m_toggleConnect)->Connect(bRdmp, _stats, cmap, newVID, front_inserter(q));
         else
-          this->GetMPProblem()->GetConnector(m_toggleConnect)->Connect(bRdmp, _stats,
-              cmap, newVID.begin(), newVID.end(), blockVIDs.begin(), blockVIDs.end(), back_inserter(q));
+          this->GetMPProblem()->GetConnector(m_toggleConnect)->Connect(bRdmp, _stats, cmap, newVID, back_inserter(q));
         if(this->m_debug)
           for(size_t i = 0; i < q.size()-size; i++)
             cout << "*T* Pushing free node into queue: " << q[i] << endl;
         this->GetMPProblem()->GetValidityChecker(this->m_vcLabel)->ToggleValidity();
-        blockVIDs.push_back(newVID[0]);
       }
     }
 

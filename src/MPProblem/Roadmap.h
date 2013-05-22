@@ -135,21 +135,19 @@ Roadmap<MPTraits>::Write(ostream& _os, Environment* _env,
 template <class MPTraits>
 vector<typename Roadmap<MPTraits>::VID>
 Roadmap<MPTraits>::AppendRoadmap(const Roadmap<MPTraits>& _rdmp) {
-  vector<VID> fromVIDs, toVIDs;
-  _rdmp.m_graph->GetVerticesVID(fromVIDs); // get vertices
+  vector<VID> toVIDs;
   typename vector<VID>::iterator vit;
   //copy vertices
-  for(vit = fromVIDs.begin(); vit < fromVIDs.end(); vit++) {
-    CfgType cfg = (*(_rdmp.m_graph->find_vertex(*vit))).property();
-    toVIDs.push_back(m_graph->AddVertex(cfg));
+  typedef typename GraphType::VI VI;
+  for(VI vit = _rdmp.m_graph->begin(); vit!=_rdmp.m_graph->end(); ++vit){
+    toVIDs.push_back(m_graph->AddVertex(m_graph->GetVertex(vit)));
   }
   vector<pair<pair<VID,VID>, WeightType> > edges;
   typename vector<pair<pair<VID,VID>, WeightType> >::iterator eit;
-  for(vit = fromVIDs.begin(); vit < fromVIDs.end(); vit++) {
+  for(VI vit = _rdmp.m_graph->begin(); vit!=_rdmp.m_graph->end(); ++vit) {
     edges.clear();
     //use iterator to traverse the adj edges and then put the data into edges
-    typename RoadmapGraph<CfgType, WeightType>::vertex_iterator vi = _rdmp.m_graph->find_vertex(*vit);
-    for(typename RoadmapGraph<CfgType, WeightType>::adj_edge_iterator ei =(*vi).begin(); ei!=(*vi).end(); ei++ ){
+    for(typename RoadmapGraph<CfgType, WeightType>::adj_edge_iterator ei =(*vit).begin(); ei!=(*vit).end(); ei++ ){
       pair<pair<VID,VID>, WeightType> singleEdge;
       singleEdge.first.first=(*ei).source();
       singleEdge.first.second=(*ei).target();

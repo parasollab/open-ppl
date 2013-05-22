@@ -55,10 +55,10 @@ class NeighborhoodConnector: public ConnectorMethod<MPTraits> {
 
     //////////////////////
     // Core: Connection method
-    template<typename ColorMap, typename InputIterator, typename OutputIterator>
-      void Connect(RoadmapType* _rm, StatClass& _stats,
-          ColorMap& _cmap, InputIterator _itr1First, InputIterator _itr1Last,
-          InputIterator _itr2First, InputIterator _itr2Last, OutputIterator _collision) ;
+    template<typename ColorMap, typename InputIterator1, typename InputIterator2, typename OutputIterator>
+      void Connect(RoadmapType* _rm, StatClass& _stats, ColorMap& _cmap, 
+          InputIterator1 _itr1First, InputIterator1 _itr1Last,
+          InputIterator2 _itr2First, InputIterator2 _itr2Last, OutputIterator _collision) ;
 
   protected:
     template<typename ColorMap, typename InputIterator, typename OutputIterator>
@@ -141,11 +141,11 @@ NeighborhoodConnector<MPTraits>::PrintOptions(ostream& _os){
 }
 
 template<class MPTraits>
-template<typename ColorMap, typename InputIterator, typename OutputIterator>
+template<typename ColorMap, typename InputIterator1, typename InputIterator2, typename OutputIterator>
 void
-NeighborhoodConnector<MPTraits>::Connect(RoadmapType* _rm, StatClass& _stats, 
-    ColorMap& _cmap, InputIterator _itr1First, InputIterator _itr1Last,
-    InputIterator _itr2First, InputIterator _itr2Last, OutputIterator _collision){
+NeighborhoodConnector<MPTraits>::Connect(RoadmapType* _rm, StatClass& _stats, ColorMap& _cmap,
+    InputIterator1 _itr1First, InputIterator1 _itr1Last,
+    InputIterator2 _itr2First, InputIterator2 _itr2Last, OutputIterator _collision){
 
   if(this->m_debug){
     cout << endl; 
@@ -166,16 +166,17 @@ NeighborhoodConnector<MPTraits>::Connect(RoadmapType* _rm, StatClass& _stats,
   }
 
   m_totalSuccess = m_totalFailure = 0;
-  for(InputIterator itr1 = _itr1First; itr1 != _itr1Last; ++itr1){
+  for(InputIterator1 itr1 = _itr1First; itr1 != _itr1Last; ++itr1){
 
     // find cfg pointed to by itr1
+    VID vid = _rm->GetGraph()->GetVID(itr1);
     CfgType vCfg = _rm->GetGraph()->GetVertex(itr1);
     if(this->m_debug){
+      cout << (itr1 - _itr1First) << "\tAttempting connections: VID = " << vid << "  --> " << vCfg
 #ifdef PMPCfgSurface
-      cout << (itr1 - _itr1First) << "\tAttempting connections: VID = " << *itr1 << "  --> " << vCfg << " sid: " << vCfg.GetSurfaceID()  << endl;
-#else
-      cout << (itr1 - _itr1First) << "\tAttempting connections: VID = " << *itr1 << "  --> " << vCfg << endl;
+      << " sid: " << vCfg.GetSurfaceID()
 #endif
+      << endl;
     }
 
     bool enoughConnected = true;
@@ -189,14 +190,13 @@ NeighborhoodConnector<MPTraits>::Connect(RoadmapType* _rm, StatClass& _stats,
       _stats.StartClock("kClosest");
 
       vector<VID> closest;
-      back_insert_iterator<vector<VID> > iterBegin(closest);
-      FindKNeighbors(_rm, vCfg, _itr2First, _itr2Last, kToFind, iterNeighbors, iterBegin);   
+      FindKNeighbors(_rm, vCfg, _itr2First, _itr2Last, kToFind, iterNeighbors, back_inserter(closest));   
 
       _stats.StopClock("kClosest");
 
       if(this->m_debug) copy(closest.begin(), closest.end(), ostream_iterator<VID>(cout, " "));
 
-      ConnectNeighbors(_rm, _stats, _cmap, *itr1, closest.begin(), closest.end(), _collision);
+      ConnectNeighbors(_rm, _stats, _cmap, vid, closest.begin(), closest.end(), _collision);
       enoughConnected = true;
 
       if(m_iterSuccess < m_k){
@@ -360,7 +360,7 @@ NeighborhoodConnector<MPTraits>::FindKNeighbors(RoadmapType* _rm, CfgType cfg,
       } while(ids.find(id) != ids.end());
       ids.insert(id);
 
-      *_closestIter = *(_itrFirst + id);
+      *_closestIter = _rm->GetGraph()->GetVID(_itrFirst + id);
       ++_closestIter;
     }
     return _closestIter;

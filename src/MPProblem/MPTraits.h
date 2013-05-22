@@ -188,11 +188,11 @@ struct MPTraits{
  
 #ifndef _PARALLEL
   typedef ConnectivityMetric<MPTraits, RoadmapSet<MPTraits> > ConnectivityMetricRoadmapSet;
-#endif
-  typedef ConnectivityMetric<MPTraits, VectorSet<MPTraits> > ConnectivityMetricVectorSet;
-#ifndef _PARALLEL
+  typedef CoverageDistanceMetric<MPTraits, RoadmapSet<MPTraits> > CoverageDistanceMetricRoadmapSet;
   typedef CoverageMetric<MPTraits, RoadmapSet<MPTraits> > CoverageMetricRoadmapSet;
 #endif
+  typedef ConnectivityMetric<MPTraits, VectorSet<MPTraits> > ConnectivityMetricVectorSet;
+  typedef CoverageDistanceMetric<MPTraits, VectorSet<MPTraits> > CoverageDistanceMetricVectorSet;
   typedef CoverageMetric<MPTraits, VectorSet<MPTraits> > CoverageMetricVectorSet;
 
   //types of metrics available in our world
@@ -200,12 +200,11 @@ struct MPTraits{
     CCDistanceMetric<MPTraits>,
 #ifndef _PARALLEL
     ConnectivityMetricRoadmapSet,
-#endif
-    ConnectivityMetricVectorSet,
-    CoverageDistanceMetric<MPTraits>,
-#ifndef _PARALLEL
+    CoverageDistanceMetricRoadmapSet,
     CoverageMetricRoadmapSet,
 #endif
+    ConnectivityMetricVectorSet,
+    CoverageDistanceMetricVectorSet,
     CoverageMetricVectorSet,
     DiameterMetric<MPTraits>,
     NumEdgesMetric<MPTraits>,

@@ -22,10 +22,10 @@ class OptimalRewire : public OptimalConnection<MPTraits> {
       void ConnectNeighbors (RoadmapType* _rm, StatClass& _stats,
           VID _vid, vector<VID>& _closest, OutputIterator _collision);
 
-    template<typename ColorMap, typename InputIterator, typename OutputIterator>
-      void Connect( RoadmapType* _rm, StatClass& _stats, ColorMap& cmap,
-          InputIterator _iter1First, InputIterator _iter1Last,
-          InputIterator _iter2First, InputIterator _iter2Last, OutputIterator _collision);
+    template<typename ColorMap, typename InputIterator1, typename InputIterator2, typename OutputIterator>
+      void Connect(RoadmapType* _rm, StatClass& _stats, ColorMap& cmap,
+          InputIterator1 _iter1First, InputIterator1 _iter1Last,
+          InputIterator2 _iter2First, InputIterator2 _iter2Last, OutputIterator _collision);
 
     double GetShortestPath(VID _root, VID _vid, RoadmapType* _rm);
     double GetDistance(VID _vid1, VID _vid2, RoadmapType* _rm);
@@ -85,26 +85,26 @@ OptimalRewire<MPTraits>::GetDistance(VID _vid1, VID _vid2, RoadmapType* _rm) {
 }
 
 template <class MPTraits>
-template<typename ColorMap, typename InputIterator, typename OutputIterator>
+template<typename ColorMap, typename InputIterator1, typename InputIterator2, typename OutputIterator>
 void 
-OptimalRewire<MPTraits>::Connect( RoadmapType* _rm, StatClass& _stats,
-    ColorMap& cmap,
-    InputIterator _iter1First, InputIterator _iter1Last,
-    InputIterator _iter2First, InputIterator _iter2Last, 
+OptimalRewire<MPTraits>::Connect(RoadmapType* _rm, StatClass& _stats, ColorMap& cmap,
+    InputIterator1 _iter1First, InputIterator1 _iter1Last,
+    InputIterator2 _iter2First, InputIterator2 _iter2Last, 
     OutputIterator _collision) {
 
   if (this->m_debug) { cout << endl; this->PrintOptions (cout); }
   ///To do - uncomment after const vertex iter problem  in STAPL pGraph is fixed
 #ifndef _PARALLEL
-  for (InputIterator iter1 = _iter1First; iter1 != _iter1Last; ++iter1) {
-    CfgType cfg = _rm->GetGraph()->GetVertex(*iter1);
+  for (InputIterator1 iter1 = _iter1First; iter1 != _iter1Last; ++iter1) {
+    VID vid = _rm->GetGraph()->GetVID(iter1);
+    CfgType cfg = _rm->GetGraph()->GetVertex(iter1);
     if (this->m_debug) {
-      cout << "Attempting connection from " << *iter1 << "--> " << cfg << endl;
+      cout << "Attempting connection from " << vid << "--> " << cfg << endl;
     }
     vector<VID> closest;
     back_insert_iterator< vector<VID> > iterBegin(closest);
     this->FindNeighbors(_rm, cfg, _iter2First, _iter2Last, iterBegin); 
-    this->ConnectNeighbors(_rm, _stats, *iter1, closest, _collision);
+    this->ConnectNeighbors(_rm, _stats, vid, closest, _collision);
   }
 #else 
   stapl_assert(false,"Optimal Rewire using const VIT");

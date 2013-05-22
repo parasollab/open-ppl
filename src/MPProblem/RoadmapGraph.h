@@ -93,14 +93,11 @@ class RoadmapGraph : public
       VID GetVID(const T& _t);
 
     //specialization for a roadmap graph iterator, calls descriptor()
-    VID GetVID(VI& _t);
+    VID GetVID(const VI& _t);
     
     //specialization for a Vertex type
     VID GetVID(const VERTEX& _t);
     
-    void GetVerticesData(vector<VERTEX>& _v) const; //get all vertices data from whole graph
-    void GetVerticesVID(vector<VID>& _v) const;     //get all VIDs from whole graph
-
     //////////////////////////////////
     // Adding & accessing edges
     //////////////////////////////////
@@ -209,7 +206,7 @@ RoadmapGraph<VERTEX, WEIGHT>::GetVID(const T& _t) {
 //specialization for a roadmap graph iterator, calls descriptor()
 template<class VERTEX, class WEIGHT>
 typename RoadmapGraph<VERTEX, WEIGHT>::VID
-RoadmapGraph<VERTEX, WEIGHT>::GetVID(VI& _t) {
+RoadmapGraph<VERTEX, WEIGHT>::GetVID(const VI& _t) {
   return (*_t).descriptor();
 }
 
@@ -221,32 +218,6 @@ RoadmapGraph<VERTEX,WEIGHT>::GetVID(const VERTEX& _t) {
   if(IsVertex(_t, vi))
     return (*vi).descriptor();
   return INVALID_VID;
-}
-
-template <class VERTEX, class WEIGHT>
-void
-RoadmapGraph<VERTEX,WEIGHT>::GetVerticesData(vector<VERTEX>& _v) const {
-#ifndef _PARALLEL
-  _v.clear();
-  _v.reserve(this->get_num_vertices());
-  for(CVI vi = this->begin(); vi!=this->end(); ++vi)
-    _v.push_back((*vi).property());
-#else
-  cerr << "Error::GetVerticesData should not be used in Parallel code." << endl;
-#endif
-}
-
-template <class VERTEX, class WEIGHT>
-void
-RoadmapGraph<VERTEX,WEIGHT>::GetVerticesVID(vector<VID>& _v) const {
-#ifndef _PARALLEL
-  _v.clear();
-  _v.reserve(this->get_num_vertices());
-  for(CVI vi = this->begin(); vi!=this->end(); vi++)
-    _v.push_back((*vi).descriptor());
-#else
-  cerr << "Error::GetVerticesVID should not be used in Parallel code." << endl;
-#endif
 }
 
 //////////////////////////////////

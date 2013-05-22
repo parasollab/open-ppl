@@ -41,10 +41,10 @@ class CCsConnector: public ConnectorMethod<MPTraits> {
     virtual void PrintOptions(ostream& _os);
     virtual void ParseXML(XMLNodeReader& _node);
 
-    template <typename ColorMap, typename InputIterator, typename OutputIterator>
-      void Connect(RoadmapType* _rm, StatClass& _stats,
-          ColorMap& _cmap, InputIterator _itr1First, InputIterator _itr1Last,
-          InputIterator _itr2First, InputIterator _itr2Last, OutputIterator _collision);
+    template <typename ColorMap, typename InputIterator1, typename InputIterator2, typename OutputIterator>
+      void Connect(RoadmapType* _rm, StatClass& _stats, ColorMap& _cmap, 
+          InputIterator1 _itr1First, InputIterator1 _itr1Last,
+          InputIterator2 _itr2First, InputIterator2 _itr2Last, OutputIterator _collision);
 
     template<typename OutputIterator>
       void ConnectSmallCC(RoadmapType* _rm, StatClass& _stats,
@@ -207,11 +207,11 @@ CCsConnector<MPTraits>::ClosestInterCCDist(RoadmapType* _rm,
 }
 
 template<class MPTraits>
-template<typename ColorMap, typename InputIterator, typename OutputIterator>
+template<typename ColorMap, typename InputIterator1, typename InputIterator2, typename OutputIterator>
 void
-CCsConnector<MPTraits>::Connect( RoadmapType* _rm, StatClass& _stats, 
-    ColorMap& _cmap, InputIterator _itr1First, InputIterator _itr1Last,
-    InputIterator _itr2First, InputIterator _itr2Last, OutputIterator _collision) {
+CCsConnector<MPTraits>::Connect( RoadmapType* _rm, StatClass& _stats, ColorMap& _cmap, 
+    InputIterator1 _itr1First, InputIterator1 _itr1Last,
+    InputIterator2 _itr2First, InputIterator2 _itr2Last, OutputIterator _collision) {
 
   if(this->m_debug){
     cout << "components(m_kPairs="<< m_kPairs ;

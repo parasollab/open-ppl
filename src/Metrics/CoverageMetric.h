@@ -41,12 +41,10 @@ CoverageMetric<MPTraits, Set>::CoverageMetric(const Set& _samples, const vector<
 
 template<class MPTraits, class Set>
 CoverageMetric<MPTraits, Set>::CoverageMetric(MPProblemType* _problem, XMLNodeReader& _node, bool _computeAllCCs)
-  : MetricMethod<MPTraits>(_problem, _node) {
+  : MetricMethod<MPTraits>(_problem, _node), m_samples(_node) {
     this->SetName("CoverageMetric" + Set::GetName());
 
     m_outFileName = _node.stringXMLParameter("outfilename", true, "", "filename for recording results");
-    //read in samples
-    m_samples = Set(_problem, _node);
 
     output.open((m_outFileName+".coverage").c_str());
 

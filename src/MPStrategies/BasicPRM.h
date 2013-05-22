@@ -36,7 +36,8 @@ class BasicPRM : public MPStrategyMethod<MPTraits> {
 
  protected:
    //helper functions for operator()
-   void ConnectNodes(vector<VID>& _allNodesVID, vector<VID>& _thisIterationNodesVID);
+   template<class InputIterator>
+     void ConnectNodes(InputIterator _first, InputIterator _last);
    void ConnectComponents();
 
    //data
@@ -51,7 +52,7 @@ class BasicPRM : public MPStrategyMethod<MPTraits> {
 
  private:
    template <typename OutputIterator>
-     void GenerateNodes(OutputIterator _allOut, OutputIterator _thisIterationOut);
+     void GenerateNodes(OutputIterator _thisIterationOut);
 };
 
 template<class MPTraits>
@@ -214,31 +215,25 @@ BasicPRM<MPTraits>::Run(){
 
   //setup variables
   StatClass* stats = this->GetMPProblem()->GetStatClass();
-  vector<VID> allNodesVID;
-  this->GetMPProblem()->GetRoadmap()->GetGraph()->GetVerticesVID(allNodesVID);
 
   if(this->m_recordKeep) stats->StartClock("Map Generation");
   
   bool mapPassedEvaluation = false;
   while(!mapPassedEvaluation){
-    if(allNodesVID.size() != this->GetMPProblem()->GetRoadmap()->GetGraph()->get_num_vertices()){
-      allNodesVID.clear();
-      this->GetMPProblem()->GetRoadmap()->GetGraph()->GetVerticesVID(allNodesVID);
-      if(this->m_debug)
-        cout << "\nMy roadmap is not equal to my vids.\nnum nodes = " << allNodesVID.size() << endl;
-    }
     m_currentIteration++;
-    vector<VID> thisIterationNodesVID;
+    vector<VID> vids;
     if(m_startAt <= NODE_GENERATION) {
       if(this->m_debug) cout << "\ngenerating nodes: ";
-      GenerateNodes(back_insert_iterator<vector<VID> >(allNodesVID), 
-          back_insert_iterator<vector<VID> >(thisIterationNodesVID));
+      GenerateNodes(back_insert_iterator<vector<VID> >(vids));
     }
-    else
-      this->GetMPProblem()->GetRoadmap()->GetGraph()->GetVerticesVID(thisIterationNodesVID);
     if(m_startAt <= NODE_CONNECTION) {
       if(this->m_debug) cout << "\nconnecting nodes: ";
-      ConnectNodes(allNodesVID, thisIterationNodesVID);
+      if(m_startAt == NODE_CONNECTION){
+        GraphType* g = this->GetMPProblem()->GetRoadmap()->GetGraph(); 
+        ConnectNodes(g->begin(), g->end());
+      }
+      else
+        ConnectNodes(vids.begin(), vids.end());
     }
     if(m_startAt <= COMPONENT_CONNECTION) {
       if(this->m_debug) cout << "\nconnecting components: ";
@@ -288,8 +283,9 @@ BasicPRM<MPTraits>::Finalize(){
 }
 
 template<class MPTraits>
+template<class InputIterator>
 void 
-BasicPRM<MPTraits>::ConnectNodes(vector<VID>& _allNodesVID, vector<VID>& _thisIterationNodesVID) {
+BasicPRM<MPTraits>::ConnectNodes(InputIterator _first, InputIterator _last) {
   StatClass* stats = this->GetMPProblem()->GetStatClass();
   string connectorClockName = "Total Node Connection";
   if(this->m_recordKeep) stats->StartClock(connectorClockName);
@@ -304,9 +300,7 @@ BasicPRM<MPTraits>::ConnectNodes(vector<VID>& _allNodesVID, vector<VID>& _thisIt
     if(this->m_recordKeep) stats->StartClock(connectorSubClockName);
 
     if(this->m_debug) cout << "\n\t";
-    vector<VID> nodesVID(_thisIterationNodesVID.begin(), _thisIterationNodesVID.end());
-    pConnection->Connect(this->GetMPProblem()->GetRoadmap(), *(this->GetMPProblem()->GetStatClass()), cmap,
-        nodesVID.begin(), nodesVID.end(), _allNodesVID.begin(), _allNodesVID.end());
+    pConnection->Connect(this->GetMPProblem()->GetRoadmap(), *(this->GetMPProblem()->GetStatClass()), cmap, _first, _last);
     if(this->m_debug) {
       cmap.reset();
       cout << this->GetMPProblem()->GetRoadmap()->GetGraph()->get_num_edges() << " edges, " 
@@ -364,7 +358,7 @@ BasicPRM<MPTraits>::ConnectComponents() {
 template<class MPTraits>
 template<typename OutputIterator> 
 void 
-BasicPRM<MPTraits>::GenerateNodes(OutputIterator _allOut, OutputIterator _thisIterationOut){
+BasicPRM<MPTraits>::GenerateNodes(OutputIterator _thisIterationOut){
   CDInfo cdInfo;
   StatClass* pStatClass = this->GetMPProblem()->GetStatClass();
   string clockName = "Total Node Generation"; 
@@ -407,7 +401,6 @@ BasicPRM<MPTraits>::GenerateNodes(OutputIterator _allOut, OutputIterator _thisIt
         VID vid = this->GetMPProblem()->GetRoadmap()->GetGraph()->AddVertex(*cit);
         //store value and increment iterator
         *_thisIterationOut++ = vid;
-        *_allOut++ = vid;
       }
     }
     else{ 
@@ -420,7 +413,6 @@ BasicPRM<MPTraits>::GenerateNodes(OutputIterator _allOut, OutputIterator _thisIt
           VID vid = this->GetMPProblem()->GetRoadmap()->GetGraph()->AddVertex(*cit);
           //store value and increment iterator
           *_thisIterationOut++ = vid;
-          *_allOut++ = vid;
         }
       }
     }
