@@ -24,7 +24,7 @@ class Roadmap {
     typedef typename GraphType::vertex_descriptor VID;  
 
     Roadmap();
-    Roadmap(Roadmap<MPTraits>& _rdmp);  
+    Roadmap(const Roadmap<MPTraits>& _rdmp);  
     ~Roadmap();
     
     //Read graph information from roadmap file.
@@ -34,14 +34,15 @@ class Roadmap {
 
     //Append nodes and edges from one roadmap (_rdmp) into 
     //another roadmap (to_rdmp)
-    vector<VID> AppendRoadmap(Roadmap<MPTraits>& _rdmp);
+    vector<VID> AppendRoadmap(const Roadmap<MPTraits>& _rdmp);
 
     //access and set the LP cache
     bool IsCached(VID _v1, VID _v2);
     void SetCache(VID _v1, VID _v2, bool _b);
 
     //access the roadmap graph
-    GraphType* GetGraph(){return m_graph;}
+    GraphType* GetGraph() {return m_graph;}
+    const GraphType* GetGraph() const {return m_graph;}
 
   private:
     std::map<std::pair<VID,VID>, bool> m_lpCache; //cache of attempted edges
@@ -53,7 +54,7 @@ Roadmap<MPTraits>::
 Roadmap() : m_graph(new GraphType()){}
 
 template <class MPTraits>
-Roadmap<MPTraits>::Roadmap(Roadmap<MPTraits>& _rdmp) : m_graph(new GraphType()) {
+Roadmap<MPTraits>::Roadmap(const Roadmap<MPTraits>& _rdmp) : m_graph(new GraphType()) {
   AppendRoadmap(_rdmp);
 }
 
@@ -133,7 +134,7 @@ Roadmap<MPTraits>::Write(ostream& _os, Environment* _env,
 
 template <class MPTraits>
 vector<typename Roadmap<MPTraits>::VID>
-Roadmap<MPTraits>::AppendRoadmap(Roadmap<MPTraits>& _rdmp) {
+Roadmap<MPTraits>::AppendRoadmap(const Roadmap<MPTraits>& _rdmp) {
   vector<VID> fromVIDs, toVIDs;
   _rdmp.m_graph->GetVerticesVID(fromVIDs); // get vertices
   typename vector<VID>::iterator vit;
@@ -157,9 +158,7 @@ Roadmap<MPTraits>::AppendRoadmap(Roadmap<MPTraits>& _rdmp) {
     } 
     for(eit = edges.begin(); eit < edges.end(); eit++) {
       if(!m_graph->IsEdge((*eit).first.first, (*eit).first.second)) { //add an edge if it is not yet in m_graph
-        CfgType cfgA = (*(_rdmp.m_graph->find_vertex((*eit).first.first))).property();
-        CfgType cfgB = (*(_rdmp.m_graph->find_vertex((*eit).first.second))).property();
-        m_graph->AddEdge(cfgA, cfgB, (*eit).second);
+        m_graph->AddEdge((*eit).first.first, (*eit).first.second, (*eit).second);
       }
     } //endfor eit  
   } //endfor vit
