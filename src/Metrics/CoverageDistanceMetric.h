@@ -9,8 +9,8 @@ class CoverageDistanceMetric : public MetricMethod<MPTraits> {
     typedef typename MPTraits::CfgType CfgType;
     typedef typename MPTraits::WeightType WeightType;
     typedef typename MPTraits::MPProblemType MPProblemType;
-    typedef typename RoadmapGraph<CfgType, WeightType>::VID VID;
     typedef typename MPProblemType::RoadmapType RoadmapType;
+    typedef typename RoadmapType::VID VID;
 
     CoverageDistanceMetric(string _dmLabel = "", string _fileName = "");
     CoverageDistanceMetric(MPProblemType* _problem, XMLNodeReader& _node);
@@ -79,10 +79,9 @@ CoverageDistanceMetric<MPTraits>::operator()() {
     double distance;
     vector<VID> kClosest;
     BruteForceNF<MPTraits> bfnf(this->GetMPProblem(), m_dmLabel, "__CoverageDistanceMetricNF");
-    bfnf.KClosest(this->GetMPProblem()->GetRoadmap(), this->GetMPProblem()->GetRoadmap()->GetGraph()->descriptor_begin(), 
-                  this->GetMPProblem()->GetRoadmap()->GetGraph()->descriptor_end(), *cfgit, 1, 
-                  back_insert_iterator<vector<VID> >(kClosest));
-    CfgType nearest = this->GetMPProblem()->GetRoadmap()->GetGraph()->GetCfg(kClosest[0]);
+    RoadmapType* rdmp = this->GetMPProblem()->GetRoadmap();
+    bfnf.KClosest(rdmp, rdmp->GetGraph()->begin(), rdmp->GetGraph()->end(), *cfgit, 1, back_inserter(kClosest));
+    CfgType nearest = this->GetMPProblem()->GetRoadmap()->GetGraph()->GetVertex(kClosest[0]);
     distance = this->GetMPProblem()->GetDistanceMetric(m_dmLabel)->Distance(env, *cfgit, nearest);
     disVec.push_back(distance);
   } 

@@ -45,11 +45,11 @@
 #include "Samplers/UniformRandomSampler.h"
 
 //local planner includes
-#include "LocalPlanners/StraightLine.h"
-#include "LocalPlanners/TransformAtS.h"
 #include "LocalPlanners/RotateAtS.h"
+#include "LocalPlanners/StraightLine.h"
 #include "LocalPlanners/SurfaceLP.h"
 #include "LocalPlanners/ToggleLP.h"
+#include "LocalPlanners/TransformAtS.h"
 
 //connector includes
 #include "Connectors/CCsConnector.h"
@@ -67,7 +67,9 @@
 #include "Metrics/DiameterMetric.h"
 #include "Metrics/NumEdgesMetric.h"
 #include "Metrics/NumNodesMetric.h"
+#ifndef _PARALLEL
 #include "Metrics/RoadmapSet.h"
+#endif
 #include "Metrics/TimeMetric.h"
 #include "Metrics/VectorSet.h"
 
@@ -168,11 +170,10 @@ struct MPTraits{
     //AStarClearance<MPTraits>,
     //AStarDistance<MPTraits>,
     //MedialAxisLP<MPTraits>,
-    TransformAtS<MPTraits>,
     RotateAtS<MPTraits>,
     StraightLine<MPTraits>,
-    //TransformAtS<MPTraits>,
-    ToggleLP<MPTraits>
+    ToggleLP<MPTraits>,
+    TransformAtS<MPTraits>
     > LocalPlannerMethodList;
 
   //types of connectors available in our world
@@ -184,19 +185,27 @@ struct MPTraits{
     OptimalRewire<MPTraits>//,
     //ClosestVE<MPTraits>
       > ConnectorMethodList;
-  
+ 
+#ifndef _PARALLEL
   typedef ConnectivityMetric<MPTraits, RoadmapSet<MPTraits> > ConnectivityMetricRoadmapSet;
+#endif
   typedef ConnectivityMetric<MPTraits, VectorSet<MPTraits> > ConnectivityMetricVectorSet;
+#ifndef _PARALLEL
   typedef CoverageMetric<MPTraits, RoadmapSet<MPTraits> > CoverageMetricRoadmapSet;
+#endif
   typedef CoverageMetric<MPTraits, VectorSet<MPTraits> > CoverageMetricVectorSet;
 
   //types of metrics available in our world
   typedef boost::mpl::list<
     CCDistanceMetric<MPTraits>,
+#ifndef _PARALLEL
     ConnectivityMetricRoadmapSet,
+#endif
     ConnectivityMetricVectorSet,
     CoverageDistanceMetric<MPTraits>,
+#ifndef _PARALLEL
     CoverageMetricRoadmapSet,
+#endif
     CoverageMetricVectorSet,
     DiameterMetric<MPTraits>,
     NumEdgesMetric<MPTraits>,

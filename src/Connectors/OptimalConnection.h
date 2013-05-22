@@ -106,7 +106,7 @@ OptimalConnection<MPTraits>::Connect( RoadmapType* _rm, StatClass& _stats,
   ///To do - uncomment after const vertex iter problem  in STAPL pGraph is fixed
   #ifndef _PARALLEL
   for (InputIterator iter1 = _iter1First; iter1 != _iter1Last; ++iter1) {
-    CfgType cfg = _rm->GetGraph()->GetCfg(*iter1);
+    CfgType cfg = _rm->GetGraph()->GetVertex(*iter1);
     if (this->m_debug) {
       cout << "Attempting connection from " << *iter1 << "--> " << cfg << endl;
     }
@@ -137,8 +137,8 @@ OptimalConnection<MPTraits>::ConnectNeighbors(RoadmapType* _rm, StatClass& _stat
     CfgType col;
     if(this->GetMPProblem()->GetLocalPlanner(this->m_lpMethod)->
         IsConnected(this->GetMPProblem()->GetEnvironment(), _stats, dm,
-          _rm->GetGraph()->GetCfg(_vid),
-          _rm->GetGraph()->GetCfg(*iter2),
+          _rm->GetGraph()->GetVertex(_vid),
+          _rm->GetGraph()->GetVertex(*iter2),
           col, &lpOutput, this->m_connectionPosRes, this->m_connectionOriRes, (!this->m_addAllEdges) )) {  
 
       _rm->GetGraph()->AddEdge(_vid, *iter2, lpOutput.edge);

@@ -65,6 +65,7 @@ class ToggleLP: public LocalPlannerMethod<MPTraits> {
     bool m_degeneracyReached;
     deque<CfgType> m_colHist;
     GraphType pathGraph;
+    VID svid, gvid;
 };
 
 template<class MPTraits>
@@ -119,9 +120,8 @@ ToggleLP<MPTraits>::IsConnected(Environment* _env, StatClass& _stats,
   //clear lpOutput
   _lpOutput->Clear();
   pathGraph.clear();
-  CfgType c1 = _c1, c2 = _c2;
-  VID svid = pathGraph.AddVertex(c1);
-  VID gvid = pathGraph.AddVertex(c2);
+  svid = pathGraph.AddVertex(_c1);
+  gvid = pathGraph.AddVertex(_c2);
 
   _stats.IncLPAttempts(this->GetNameAndLabel());
   int cdCounter = 0; 
@@ -240,19 +240,15 @@ ToggleLP<MPTraits>::IsConnectedToggle(Environment* _env, StatClass& _stats,
     VDAddTempCfg(_col, false);
   }
   if(isValid){
-    pathGraph.AddVertex(n);
+    VID nvid = pathGraph.AddVertex(n);
     CfgType c2, c3;
     bool b1 = lpMethod->IsConnected(_env, _stats, _dm, _c1, n, c2, _lpOutput, _positionRes, _orientationRes, true, false, false);
     if(b1){
-      CfgType c1 = _c1;
-      pathGraph.AddEdge(c1, n, WeightType());
-      pathGraph.AddEdge(n, c1, WeightType());
+      pathGraph.AddEdge(svid, nvid, pair<WeightType, WeightType>());
     }
     bool b2 = lpMethod->IsConnected(_env, _stats, _dm, _c2, n, c3, _lpOutput, _positionRes, _orientationRes, true, false, false);
     if(b2){
-      CfgType c2 = _c2;
-      pathGraph.AddEdge(c2, n, WeightType());
-      pathGraph.AddEdge(n, c2, WeightType());
+      pathGraph.AddEdge(gvid, nvid, pair<WeightType, WeightType>());
     }
     if(this->m_debug) {
       VDAddNode(n);
@@ -374,9 +370,7 @@ ToggleLP<MPTraits>::ToggleConnect(Environment* _env, StatClass& _stats, Distance
   //successful connection, add the edge and return validity state
   if(connect){
     if(_toggle){
-      CfgType s = _s, g = _g;
-      pathGraph.AddEdge(s, g, WeightType());
-      pathGraph.AddEdge(g, s, WeightType());
+      pathGraph.AddEdge(pathGraph.GetVID(_s), pathGraph.GetVID(_g), pair<WeightType, WeightType>());
     }
     if(this->m_debug && _toggle)
       VDAddEdge(_s, _g);

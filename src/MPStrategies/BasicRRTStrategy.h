@@ -367,7 +367,7 @@ BasicRRTStrategy<MPTraits>::ExpandTree(CfgType& _dir){
   nf->KClosest(this->GetMPProblem()->GetRoadmap(), m_currentTree->begin(), m_currentTree->end(), _dir, 1, back_inserter(kClosest));
   kcloseStatClass->StopClock(kcloseClockName);
 
-  CfgType nearest = this->GetMPProblem()->GetRoadmap()->GetGraph()->GetCfg(kClosest[0]);
+  CfgType nearest = this->GetMPProblem()->GetRoadmap()->GetGraph()->GetVertex(kClosest[0]);
   CfgType newCfg;
   int weight;
 
@@ -394,7 +394,7 @@ BasicRRTStrategy<MPTraits>::ExpandTree(CfgType& _dir){
     }
     else
       this->GetMPProblem()->GetRoadmap()->GetGraph()->AddEdge(kClosest[0], recentVID, WeightType("RRTExpand", weight));
-    this->GetMPProblem()->GetRoadmap()->GetGraph()->GetCfg(recentVID).SetStat("Parent", kClosest[0]);
+    this->GetMPProblem()->GetRoadmap()->GetGraph()->GetVertex(recentVID).SetStat("Parent", kClosest[0]);
 
 
     if(std::string::npos!=m_gt.find("GRAPH")){
@@ -423,7 +423,7 @@ BasicRRTStrategy<MPTraits>::ExpandTree(CfgType& _dir){
         }
         else 
           this->GetMPProblem()->GetRoadmap()->GetGraph()->AddEdge(kClosest[0], otherVID, WeightType("RRTExpand", weight));        
-        this->GetMPProblem()->GetRoadmap()->GetGraph()->GetCfg(otherVID).SetStat("Parent", kClosest[0]);
+        this->GetMPProblem()->GetRoadmap()->GetGraph()->GetVertex(otherVID).SetStat("Parent", kClosest[0]);
 
         if(std::string::npos!=m_gt.find("GRAPH")){
           ConnectNeighbors( otherVID, kClosest[0]);
@@ -451,7 +451,7 @@ BasicRRTStrategy<MPTraits>::ConnectTrees(VID _recentlyGrown){
 
   if(m_trees.size()==1) return; //trees connected
 
-  CfgType c1 = rdmp->GetGraph()->GetCfg(_recentlyGrown);
+  CfgType c1 = rdmp->GetGraph()->GetVertex(_recentlyGrown);
 
   VID closestNode;
   CfgType closestCfg;
@@ -465,7 +465,7 @@ BasicRRTStrategy<MPTraits>::ConnectTrees(VID _recentlyGrown){
       vector<VID> closest;
       nf->KClosest(rdmp, trit->begin(), trit->end(), _recentlyGrown, 1, back_inserter(closest));
       if (closest.size() != 0){
-        c2  = rdmp->GetGraph()->GetCfg(closest[0]);
+        c2  = rdmp->GetGraph()->GetVertex(closest[0]);
         double dist = dm->Distance(env,c1,c2);
         if(dist<minDis){
           treeClosest = trit;
@@ -509,7 +509,7 @@ BasicRRTStrategy<MPTraits>::ConnectTrees(VID _recentlyGrown){
     }
     else
       this->GetMPProblem()->GetRoadmap()->GetGraph()->AddEdge(closestNode, newVID, WeightType("RRTExpand", weight));
-    this->GetMPProblem()->GetRoadmap()->GetGraph()->GetCfg(closestNode).SetStat("Parent", newVID);
+    this->GetMPProblem()->GetRoadmap()->GetGraph()->GetVertex(closestNode).SetStat("Parent", newVID);
 
     if(std::string::npos!=m_gt.find("GRAPH")){
       ConnectNeighbors(newVID, closestNode);
@@ -526,21 +526,26 @@ BasicRRTStrategy<MPTraits>::EvaluateGoals(){
   DistanceMetricPointer dmp = this->GetMPProblem()->GetDistanceMetric(m_dm);
   LocalPlannerPointer lpp = this->GetMPProblem()->GetLocalPlanner(m_lp);
   NeighborhoodFinderPointer nfp = this->GetMPProblem()->GetNeighborhoodFinder(m_nf);
+  RoadmapType* rdmp = this->GetMPProblem()->GetRoadmap();
+
   LPOutput<MPTraits> lpOutput;
   // Check if goals have been found
   for(vector<size_t>::iterator i = m_goalsNotFound.begin(); i!=m_goalsNotFound.end(); i++){
     vector<VID> closests;
-    nfp->KClosest(this->GetMPProblem()->GetRoadmap(), m_goals[*i], 1, back_inserter(closests));     
-    CfgType closest = this->GetMPProblem()->GetRoadmap()->GetGraph()->GetCfg(closests[0]);
+    nfp->KClosest(rdmp, m_goals[*i], 1, back_inserter(closests));     
+    CfgType closest = rdmp->GetGraph()->GetVertex(closests[0]);
     double dist = dmp->Distance(env, m_goals[*i], closest);
     if(this->m_debug) cout << "Distance to goal::" << dist << endl;
     CfgType col;
     if(dist < m_delta && lpp->IsConnected(env, *stats, dmp, closest, m_goals[*i], col, &lpOutput,
           env->GetPositionRes(), env->GetOrientationRes(), true, false, false)){
       if(this->m_debug) cout << "Goal found::" << m_goals[*i] << endl;
-      if(!(this->GetMPProblem()->GetRoadmap()->GetGraph()->IsVertex( m_goals[*i])))
-        this->GetMPProblem()->GetRoadmap()->GetGraph()->AddVertex(m_goals[*i]);
-      this->GetMPProblem()->GetRoadmap()->GetGraph()->AddEdge(closest, m_goals[*i], lpOutput.edge);
+      VID goalVID;
+      if(!(rdmp->GetGraph()->IsVertex( m_goals[*i])))
+        goalVID = rdmp->GetGraph()->AddVertex(m_goals[*i]);
+      else
+        goalVID = rdmp->GetGraph()->GetVID(m_goals[*i]);
+      rdmp->GetGraph()->AddEdge(closests[0], goalVID, lpOutput.edge);
       m_goalsNotFound.erase(i);
       i--;
     }

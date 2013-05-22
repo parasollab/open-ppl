@@ -9,9 +9,9 @@ class RoadmapSet {
     typedef typename MPTraits::MPProblemType::RoadmapType RoadmapType;
     typedef typename MPTraits::CfgType CfgType;
     typedef typename MPTraits::WeightType WeightType;
-    typedef RoadmapGraph<CfgType, WeightType> GraphType;
-    typedef typename GraphType::VPI iterator;
-    typedef typename GraphType::CVPI const_iterator;
+    typedef typename RoadmapType::GraphType GraphType;
+    typedef typename GraphType::VPI Iterator;
+    typedef typename GraphType::CVPI ConstIterator;
 
     RoadmapSet() {}
 
@@ -35,24 +35,24 @@ class RoadmapSet {
       return m_roadmap->GetGraph()->get_num_vertices();
     }
 
-    iterator begin() {
+    Iterator begin() {
       //returns a cfg iterator from m_roadmap begin
-      return iterator(m_roadmap->GetGraph()->begin());
+      return m_roadmap->GetGraph()->begin();
     }
 
-    iterator end() {
+    Iterator end() {
       //returns a cfg iterator from m_roadmap end
-      return iterator(m_roadmap->GetGraph()->end());
+      return m_roadmap->GetGraph()->end();
     }
 
-    const_iterator begin() const {
+    ConstIterator begin() const {
       //returns a const cfg iterator from m_roadmap begin
-      return const_iterator(m_roadmap->GetGraph()->begin());
+      return m_roadmap->GetGraph()->begin();
     }
 
-    const_iterator end() const {
+    ConstIterator end() const {
       //returns a const cfg iterator from m_roadmap end
-      return const_iterator(m_roadmap->GetGraph()->end());
+      return m_roadmap->GetGraph()->end();
     }
 
     static string GetName() { return "RoadmapSet"; }

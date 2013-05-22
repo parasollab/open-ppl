@@ -9,8 +9,8 @@ class VectorSet {
 
     typedef typename MPTraits::MPProblemType MPProblemType;
     typedef typename MPTraits::CfgType CfgType;
-    typedef typename vector<CfgType>::iterator iterator;
-    typedef typename vector<CfgType>::const_iterator const_iterator;
+    typedef typename vector<CfgType>::iterator Iterator;
+    typedef typename vector<CfgType>::const_iterator ConstIterator;
 
     VectorSet() {}
 
@@ -27,13 +27,13 @@ class VectorSet {
 
     size_t size() const { return m_cfgs.size(); }
 
-    iterator begin() { return m_cfgs.begin(); }
+    Iterator begin() { return m_cfgs.begin(); }
 
-    iterator end() { return m_cfgs.end(); }
+    Iterator end() { return m_cfgs.end(); }
 
-    const_iterator begin() const { return m_cfgs.begin(); }
+    ConstIterator begin() const { return m_cfgs.begin(); }
 
-    const_iterator end() const { return m_cfgs.end(); }
+    ConstIterator end() const { return m_cfgs.end(); }
 
     static string GetName() { return "VectorSet"; }
 

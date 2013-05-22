@@ -588,7 +588,7 @@ ClearanceUtility<MPTraits>::RoadmapClearance(){
   GraphType* g = this->GetMPProblem()->GetRoadmap()->GetGraph();
   vector<double> clearanceVec;
   for(typename GraphType::edge_iterator it = g->edges_begin(); it != g->edges_end(); it++){
-    double currentClearance = MinEdgeClearance(g->GetCfg((*it).source()), g->GetCfg((*it).target()), (*it).property());
+    double currentClearance = MinEdgeClearance(g->GetVertex((*it).source()), g->GetVertex((*it).target()), (*it).property());
     clearanceVec.push_back(currentClearance);//Save this value for variance computation later
     runningTotal+=currentClearance;
     if(currentClearance < minClearance){//Did we find a new minimum clearance value?
@@ -628,7 +628,7 @@ ClearanceUtility<MPTraits>::PathClearance(VID _startVID, VID _goalVID){
     g->find_edge(ed, vi, ei);
     WeightType weight = (*ei).property();
     pathLength += weight.Weight();
-    double currentClearance = MinEdgeClearance(g->GetCfg((*ei).source()), g->GetCfg((*ei).target()), weight); 
+    double currentClearance = MinEdgeClearance(g->GetVertex((*ei).source()), g->GetVertex((*ei).target()), weight); 
     clearanceVec.push_back(currentClearance);
     runningTotal += currentClearance;
     if(currentClearance < minClearance){

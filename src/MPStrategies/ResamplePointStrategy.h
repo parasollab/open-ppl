@@ -263,12 +263,13 @@ ResamplePointStrategy<MPTraits>::FindNeighbors(CfgType& _previous, CfgType& _cur
       secondConnectFlag = lpp->IsConnected(env, *stats, dm, c, _next, &lpOutput, 
             env->GetPositionRes(), env->GetOrientationRes());
 
-      if(rdmp->GetGraph()->GetVID(c) == INVALID_VID) {
-        rdmp->GetGraph()->AddVertex(c);// the vertex did not exist 
-      } 
+      VID cvid = rdmp->GetGraph()->GetVID(c);
+      if(cvid == INVALID_VID)
+        cvid = rdmp->GetGraph()->AddVertex(c);// the vertex did not exist 
+
       if(firstConnectFlag && secondConnectFlag) {
-        rdmp->GetGraph()->AddEdge(_previous, c, lpOutput.edge); 
-        rdmp->GetGraph()->AddEdge(c, _next, lpOutput.edge);  
+        rdmp->GetGraph()->AddEdge(rdmp->GetGraph()->GetVID(_previous), cvid, lpOutput.edge); 
+        rdmp->GetGraph()->AddEdge(cvid, rdmp->GetGraph()->GetVID(_next), lpOutput.edge);  
         result.push_back(pair<CfgType,double>(c, newConfigurationWeight));
         numOfSamples--;
       }

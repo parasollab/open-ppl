@@ -406,7 +406,7 @@ Query<MPTraits>::PerformQuery(CfgType _start, CfgType _goal, RoadmapType* _rdmp,
         // Print out all start, all graph nodes, and goal; no "ticks" from local planners
         vector<CfgType> mapCfgs;
         for(typename vector<VID>::iterator it = shortestPath.begin(); it != shortestPath.end(); it++)
-          mapCfgs.push_back(_rdmp->GetGraph()->GetCfg(*it));
+          mapCfgs.push_back(_rdmp->GetGraph()->GetVertex(*it));
         WritePath(m_intermediateFile, mapCfgs);
       }
       break;
@@ -482,7 +482,7 @@ bool
 Query<MPTraits>::CanRecreatePath(RoadmapType* _rdmp, StatClass& _stats,
     vector<VID>& _attemptedPath, vector<CfgType>& _recreatedPath) {
 
-  _recreatedPath.push_back(_rdmp->GetGraph()->GetCfg(*(_attemptedPath.begin())));
+  _recreatedPath.push_back(_rdmp->GetGraph()->GetVertex(*(_attemptedPath.begin())));
   for(typename vector<VID>::iterator it = _attemptedPath.begin(); it+1 != _attemptedPath.end(); it++) {
     LPOutput<MPTraits> ci;
     typename GraphType::vertex_iterator vi;
@@ -493,11 +493,11 @@ Query<MPTraits>::CanRecreatePath(RoadmapType* _rdmp, StatClass& _stats,
 
     if(this->GetMPProblem()->GetLocalPlanner(m_lpLabel)->IsConnected(
           this->GetMPProblem()->GetEnvironment(), _stats, this->GetMPProblem()->GetDistanceMetric(m_dmLabel),
-          _rdmp->GetGraph()->GetCfg(*it), _rdmp->GetGraph()->GetCfg(*(it+1)),
+          _rdmp->GetGraph()->GetVertex(*it), _rdmp->GetGraph()->GetVertex(*(it+1)),
           col, &ci, this->GetMPProblem()->GetEnvironment()->GetPositionRes(),
           this->GetMPProblem()->GetEnvironment()->GetOrientationRes(), true, true, true)) {
       _recreatedPath.insert(_recreatedPath.end(), ci.path.begin(), ci.path.end());
-      _recreatedPath.push_back(_rdmp->GetGraph()->GetCfg(*(it+1)));
+      _recreatedPath.push_back(_rdmp->GetGraph()->GetVertex(*(it+1)));
     }
     else {
       cerr << "Error::When querying, invalid edge of graph was found between vid pair (" 

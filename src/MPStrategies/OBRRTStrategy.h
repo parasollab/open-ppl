@@ -133,9 +133,9 @@ OBRRTStrategy<MPTraits>::ExpandTree(CfgType& _dir){
 
   nf->KClosest(this->GetMPProblem()->GetRoadmap(), _dir, 1, back_inserter(kClosest));
   #ifndef _PARALLEL
-  CfgType& nearest = this->GetMPProblem()->GetRoadmap()->GetGraph()->GetCfg(kClosest[0]);
+  CfgType& nearest = this->GetMPProblem()->GetRoadmap()->GetGraph()->GetVertex(kClosest[0]);
   #else
-  CfgType nearest = this->GetMPProblem()->GetRoadmap()->GetGraph()->GetCfg(kClosest[0]);
+  CfgType nearest = this->GetMPProblem()->GetRoadmap()->GetGraph()->GetVertex(kClosest[0]);
   #endif
   CfgType newCfg;
   bool verifiedValid = false;

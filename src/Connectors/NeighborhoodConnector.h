@@ -169,7 +169,7 @@ NeighborhoodConnector<MPTraits>::Connect(RoadmapType* _rm, StatClass& _stats,
   for(InputIterator itr1 = _itr1First; itr1 != _itr1Last; ++itr1){
 
     // find cfg pointed to by itr1
-    CfgType vCfg = _rm->GetGraph()->GetCfg(itr1);
+    CfgType vCfg = _rm->GetGraph()->GetVertex(itr1);
     if(this->m_debug){
 #ifdef PMPCfgSurface
       cout << (itr1 - _itr1First) << "\tAttempting connections: VID = " << *itr1 << "  --> " << vCfg << " sid: " << vCfg.GetSurfaceID()  << endl;
@@ -234,8 +234,8 @@ NeighborhoodConnector<MPTraits>::ConnectNeighbors(
     if(this->m_debug) cout << " | VID = " << *itr2;
     if(this->m_debug) cout << " | dist = " << 
       dm->Distance(this->GetMPProblem()->GetEnvironment(), 
-          _rm->GetGraph()->GetCfg(_vid),
-          _rm->GetGraph()->GetCfg(itr2));
+          _rm->GetGraph()->GetVertex(_vid),
+          _rm->GetGraph()->GetVertex(itr2));
 
     // stopping conditions
     if(this->m_countFailures && failure >= m_fail){
@@ -295,8 +295,8 @@ NeighborhoodConnector<MPTraits>::ConnectNeighbors(
 
     // attempt connection with the local planner
     CfgType col;
-    CfgRef c1 = _rm->GetGraph()->GetCfg(_vid);
-    CfgRef c2 = _rm->GetGraph()->GetCfg(itr2);
+    CfgRef c1 = _rm->GetGraph()->GetVertex(_vid);
+    CfgRef c2 = _rm->GetGraph()->GetVertex(itr2);
 
     bool good = this->GetMPProblem()->GetLocalPlanner(this->m_lpMethod)->
       IsConnected(this->GetMPProblem()->GetEnvironment(), _stats, dm,

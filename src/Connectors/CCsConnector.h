@@ -194,9 +194,9 @@ CCsConnector<MPTraits>::ClosestInterCCDist(RoadmapType* _rm,
   const CfgType& cfg2;
 
   for(VIDIT i =_cc1.begin(); i != _cc1.end(); ++i){
-    cfg1 = _rm->GetGraph()->GetCfg(*i);
+    cfg1 = _rm->GetGraph()->GetVertex(*i);
     for(VIDIT j = _cc2.begin(); j != _cc2.end(); ++j){
-      cfg2 = _rm->GetGraph()->GetCfg(*j);
+      cfg2 = _rm->GetGraph()->GetVertex(*j);
       dist = dmm->Distance(env,cfg1,cfg2);
       if(dist<min_dist){
         min_dist=dist;
@@ -332,8 +332,8 @@ CCsConnector<MPTraits>::ConnectSmallCC( RoadmapType* _rm, StatClass& _stats,
       if (!rgraph->IsEdge(cc1Elem, cc2Elem) 
           && this->GetMPProblem()->GetLocalPlanner(this->m_lpMethod)->
           IsConnected(this->GetMPProblem()->GetEnvironment(),_stats,dmm,
-            rgraph->GetCfg(cc1Elem),
-            rgraph->GetCfg(cc2Elem),
+            rgraph->GetVertex(cc1Elem),
+            rgraph->GetVertex(cc2Elem),
             _col, &lpOutput, this->m_connectionPosRes, 
             this->m_connectionOriRes, !this->m_addAllEdges)) {
         rgraph->AddEdge(cc1Elem, cc2Elem, lpOutput.edge);
@@ -343,7 +343,7 @@ CCsConnector<MPTraits>::ConnectSmallCC( RoadmapType* _rm, StatClass& _stats,
         typename vector<typename LPOutput<MPTraits>::LPSavedEdge>::iterator eit;
         for(eit=lpOutput.savedEdge.begin(); eit!=lpOutput.savedEdge.end(); eit++) {
           CfgType tmp = eit->first.second;
-          if(tmp != rgraph->GetCfg(cc1Elem)){
+          if(tmp != rgraph->GetVertex(cc1Elem)){
             VID tmpVID = rgraph->AddVertex(tmp);
             rgraph->AddEdge(cc1Elem, tmpVID, eit->second);
           }
@@ -389,8 +389,8 @@ CCsConnector<MPTraits>::ConnectBigCC( RoadmapType* _rm, StatClass& _stats,
     if (!rgraph->IsEdge(cc1Elem,cc2Elem) 
         && this->GetMPProblem()->GetLocalPlanner(this->m_lpMethod)->
         IsConnected(this->GetMPProblem()->GetEnvironment(),_stats,dmm,
-          rgraph->GetCfg(cc1Elem),
-          rgraph->GetCfg(cc2Elem),
+          rgraph->GetVertex(cc1Elem),
+          rgraph->GetVertex(cc2Elem),
           _col, &lpOutput, this->m_connectionPosRes, 
           this->m_connectionOriRes, !this->m_addAllEdges)) {
       rgraph->AddEdge(cc1Elem, cc2Elem, lpOutput.edge);
@@ -400,7 +400,7 @@ CCsConnector<MPTraits>::ConnectBigCC( RoadmapType* _rm, StatClass& _stats,
       typename vector<typename LPOutput<MPTraits>::LPSavedEdge>::iterator eit;
       for(eit = lpOutput.savedEdge.begin(); eit != lpOutput.savedEdge.end(); eit++) {
         CfgType tmp = eit->first.second;
-        if(tmp != rgraph->GetCfg(cc1Elem)){
+        if(tmp != rgraph->GetVertex(cc1Elem)){
           VID tmpVID = rgraph->AddVertex(tmp);
           rgraph->AddEdge(cc1Elem, tmpVID, eit->second);
         }

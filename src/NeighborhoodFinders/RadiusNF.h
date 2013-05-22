@@ -82,14 +82,14 @@ RadiusNF<MPTraits>::KClosest(RoadmapType* _roadmap, InputIterator _first, InputI
 
   // Find all nodes within radius
   for(InputIterator it = _first; it != _last; it++) {
-    CfgType node = map->GetCfg(it);
+    CfgType node = map->GetVertex(it);
     if(node == _cfg) // Don't connect to itself
       continue;
 
     // If within radius, add to list
     double dist = dmm->Distance(env, _cfg, node);
     if(dist <= m_radius){
-      VID vid = map->GetVid(it);
+      VID vid = map->GetVID(it);
       inRadius.push_back(make_pair(vid, dist));
     }
   }
@@ -124,17 +124,17 @@ RadiusNF<MPTraits>::KClosestPairs(RoadmapType* _roadmap,
  
   // Find all pairs within radius
   for(InputIterator it1 = _first1; it1 != _last1; it1++) {
-    CfgType node1 = map->GetCfg(it1);
+    CfgType node1 = map->GetVertex(it1);
     for(InputIterator it2 = _first2; it2 != _last2; it2++) {
       if(*it1 == *it2) // Don't connect to itself
         continue;
-      CfgType node2 = map->GetCfg(it2);
+      CfgType node2 = map->GetVertex(it2);
       
       // If within radius, add to list
       double dist = dmm->Distance(env, node1, node2);
       if(dist <= m_radius){
-        VID vid1 = map->GetVid(it1);
-        VID vid2 = map->GetVid(it2);
+        VID vid1 = map->GetVID(it1);
+        VID vid2 = map->GetVID(it2);
         inRadius.push_back(make_pair(make_pair(vid1, vid2), dist));
       }
     }

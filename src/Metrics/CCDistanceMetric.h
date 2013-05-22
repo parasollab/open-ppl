@@ -85,8 +85,8 @@ CCDistanceMetric<MPTraits>::operator()() {
 
       vector<pair<VID, VID> > pairs;
       distance.push_back(this->GetMPProblem()->GetDistanceMetric(m_dmLabel)->Distance(pEnv,
-                                                                                 pMap->GetCfg(pairs[0].first),
-                                                                                 pMap->GetCfg(pairs[0].second)));
+                                                                                 pMap->GetVertex(pairs[0].first),
+                                                                                 pMap->GetVertex(pairs[0].second)));
     }
   }
   ccDistance = *(distance.begin());

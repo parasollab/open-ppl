@@ -378,7 +378,7 @@ CCExpansion<MPTraits>::RandomExpand(RoadmapType* _rm, StatClass& _stats, int _in
   DistanceMetricPointer dm = this->GetMPProblem()->GetNeighborhoodFinder(this->m_nfMethod)->GetDMMethod();
 
   // Expansion node
-  prev = node = _rm->GetGraph()->GetCfg(m_expansionChains[_index]);
+  prev = node = _rm->GetGraph()->GetVertex(m_expansionChains[_index]);
 
   for(int j = 0; j < m_nIterations; ++j){
     /// PRODUCE FIRST DIRECTIONAL RAY ///////////////////////////
@@ -421,7 +421,7 @@ CCExpansion<MPTraits>::ExpandFrom(RoadmapType* _rm, StatClass& _stats, int _inde
   DistanceMetricPointer dm = this->GetMPProblem()->GetNeighborhoodFinder(this->m_nfMethod)->GetDMMethod();
 
   // Expansion node
-  prev = node = _rm->GetGraph()->GetCfg(m_expansionChains[_index]);
+  prev = node = _rm->GetGraph()->GetVertex(m_expansionChains[_index]);
 
   for(int j = 0; j < m_nIterations; ++j){
     // CC might contain 1 node, this will handle the initial expansion step
@@ -472,7 +472,7 @@ CCExpansion<MPTraits>::ExpandTo(RoadmapType* _rm, StatClass& _stats, int _index)
   DistanceMetricPointer dm = this->GetMPProblem()->GetNeighborhoodFinder(this->m_nfMethod)->GetDMMethod();
 
   // Expansion node
-  prev = node = _rm->GetGraph()->GetCfg(m_expansionChains[_index]);
+  prev = node = _rm->GetGraph()->GetVertex(m_expansionChains[_index]);
 
   for(int j = 0; j < m_nIterations; ++j){
     // Produce first expansion ray to the target node
@@ -516,7 +516,7 @@ CCExpansion<MPTraits>::MedialAxisExpand(RoadmapType* _rm, StatClass& _stats, int
   DistanceMetricPointer dm = this->GetMPProblem()->GetNeighborhoodFinder(this->m_nfMethod)->GetDMMethod();
 
   /// Kick-Off Expansion history with a random ray
-  prev = _rm->GetGraph()->GetCfg(m_expansionChains[_index]);
+  prev = _rm->GetGraph()->GetVertex(m_expansionChains[_index]);
   dir1.GetRandomRay(m_maxStepDistance, this->GetMPProblem()->GetEnvironment(), dm);
   dir2 = -dir1;
 
@@ -623,7 +623,7 @@ CCExpansion<MPTraits>::FindDifficultNodes(RoadmapType* _rm, StatClass& _stats, v
   typedef typename vector<pair<VID,double> >::iterator PIDIT;
   PIDIT it2 = nodeWeights.begin();
   for(VIDIT it = _cc1.begin(); it != _cc1.end(); ++it){
-    CfgType& cfg = _rm->GetGraph()->GetCfg(*it);
+    CfgType& cfg = _rm->GetGraph()->GetVertex(*it);
     if(!cfg.IsStat("succConnectionAttempts") || !cfg.IsStat("totalConnectionAttempts")){
       *it2++ = pair<VID,double>(*it,0.0); // Node has never had an attempted connections
     } 
@@ -681,7 +681,7 @@ CCExpansion<MPTraits>::TargetCCInfo(RoadmapType* _rm, vector<VID>& _curCC){
   DistanceMetricPointer dm = this->GetMPProblem()->GetNeighborhoodFinder(this->m_nfMethod)->GetDMMethod();
 
   for(VIDIT it = _curCC.begin(); it != _curCC.end(); ++it){
-    CfgType cfg = _rm->GetGraph()->GetCfg(*it);
+    CfgType cfg = _rm->GetGraph()->GetVertex(*it);
     double dist = dm->Distance(this->GetMPProblem()->GetEnvironment(),cfg,m_goalTargetNode);
     cc1Mod.push_back(make_pair(*it,dist));
     m_avgIntraDistTarget = m_avgIntraDistTarget + dist;
@@ -712,7 +712,7 @@ CCExpansion<MPTraits>::SelectCandidates(RoadmapType* _rm, StatClass& _stats, vec
   else if(m_nodeSelectionOption == m_F){
     vector< pair<VID,double> > cc1Mod;
     for(VIDIT it = _curCC.begin(); it != _curCC.end(); ++it){
-      CfgType cfg = _rm->GetGraph()->GetCfg(*it);
+      CfgType cfg = _rm->GetGraph()->GetVertex(*it);
       double dist = dm->Distance(this->GetMPProblem()->GetEnvironment(),cfg,m_srcCentroid);
       cc1Mod.push_back(make_pair(*it,dist));
     }
@@ -864,7 +864,7 @@ CCExpansion<MPTraits>::IsClear(RoadmapType* _rm, CfgType& bumpPoint){
 
   // Check to make sure that we are not expanding back into the chain
   for(VIDIT it = m_allExpansionNodes.begin(); it != m_allExpansionNodes.end(); ++it){
-    CfgType bb = _rm->GetGraph()->GetCfg(*it);
+    CfgType bb = _rm->GetGraph()->GetVertex(*it);
     bool test1 = (bb != bumpPoint); // Do not self compare!
     bool test2 = (dm->Distance(this->GetMPProblem()->GetEnvironment(), bumpPoint, bb) < m_minStepDistance);
     if(test1 && test2 && (++numFails > m_maxFailedExpansions))

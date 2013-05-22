@@ -257,10 +257,10 @@ ClosestVE<CFG, WEIGHT>::FindKClosestPairs(Roadmap<CFG, WEIGHT>* _rm,
   }
 
   typedef RoadmapGraph<CFG, WEIGHT> RoadmapGraphType;
-  typedef pmpl_detail::GetCfg<RoadmapGraphType> GetCfg;
+  typedef pmpl_detail::GetVertex<RoadmapGraphType> GetVertex;
   
   shared_ptr<DistanceMetricMethod> dm = this->GetMPProblem()->GetNeighborhoodFinder()->GetMethod(this->m_nfMethod)->GetDMMethod();
-  CFG cfg = GetCfg()(_rm->m_pRoadmap, _vid);
+  CFG cfg = GetVertex()(_rm->m_pRoadmap, _vid);
   vector<pair<CfgVEType<CFG,WEIGHT>,double> > kp;
   pair<CfgVEType<CFG,WEIGHT>,double> tmp2;
 
@@ -270,7 +270,7 @@ ClosestVE<CFG, WEIGHT>::FindKClosestPairs(Roadmap<CFG, WEIGHT>* _rm,
 
   // now go through all kp and find closest m_kClosest
   for (InputIterator v1 = _verts1; v1 != _verts2; v1++) {
-    CFG c1 = GetCfg()(_rm->m_pRoadmap, v1);
+    CFG c1 = GetVertex()(_rm->m_pRoadmap, v1);
     if (cfg != c1 ) { 
       tmp2.first = CfgVEType<CFG,WEIGHT>(_vid, *v1);
       tmp2.second = dm->Distance(_rm->GetEnvironment(), cfg, c1);
@@ -283,8 +283,8 @@ ClosestVE<CFG, WEIGHT>::FindKClosestPairs(Roadmap<CFG, WEIGHT>* _rm,
     VID vd1 = _edges[e1].first.first;
     VID vd2 = _edges[e1].first.second;
 
-    CFG endpt1 = GetCfg()(_rm->m_pRoadmap, vd1);
-    CFG endpt2 = GetCfg()(_rm->m_pRoadmap, vd2);
+    CFG endpt1 = GetVertex()(_rm->m_pRoadmap, vd1);
+    CFG endpt2 = GetVertex()(_rm->m_pRoadmap, vd2);
     CFG tmp;
     tmp.ClosestPtOnLineSegment(cfg,endpt1,endpt2);
 
@@ -328,7 +328,7 @@ ClosestVE<CFG,WEIGHT>::Connect(Roadmap<CFG,WEIGHT>* _rm, StatClass& _stats,
     OutputIterator _collision){
 
   typedef RoadmapGraph<CFG, WEIGHT> RoadmapGraphType;
-  typedef pmpl_detail::GetCfg<RoadmapGraphType> GetCfg;
+  typedef pmpl_detail::GetVertex<RoadmapGraphType> GetVertex;
   
   shared_ptr<DistanceMetricMethod> dm = this->GetMPProblem()->GetNeighborhoodFinder()->GetMethod(this->m_nfMethod)->GetDMMethod();
   typename LocalPlanners<CFG, WEIGHT>::LocalPlannerPointer lp =
@@ -393,14 +393,14 @@ ClosestVE<CFG,WEIGHT>::Connect(Roadmap<CFG,WEIGHT>* _rm, StatClass& _stats,
         }
       }
 
-      CFG cfg1 = GetCfg()(_rm->m_pRoadmap, kp->m_vid1);
+      CFG cfg1 = GetVertex()(_rm->m_pRoadmap, kp->m_vid1);
       CFG cfg2;
 
       if ( kp->m_cfg2IsOnEdge ) {
         cfg2 = kp->m_cfgOnEdge;
       }
       else{
-        cfg2 = GetCfg()(_rm->m_pRoadmap, kp->m_vid2);
+        cfg2 = GetVertex()(_rm->m_pRoadmap, kp->m_vid2);
       }
 
       bool test1 = !_rm->m_pRoadmap->IsEdge(cfg1, cfg2);

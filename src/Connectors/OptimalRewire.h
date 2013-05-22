@@ -77,8 +77,8 @@ double
 OptimalRewire<MPTraits>::GetDistance(VID _vid1, VID _vid2, RoadmapType* _rm) {
 
   
-  CfgType cfg1 = _rm->GetGraph()->GetCfg(_vid1);
-  CfgType cfg2 = _rm->GetGraph()->GetCfg(_vid2);
+  CfgType cfg1 = _rm->GetGraph()->GetVertex(_vid1);
+  CfgType cfg2 = _rm->GetGraph()->GetVertex(_vid2);
   double distance = this->GetMPProblem()->GetNeighborhoodFinder(this->m_nfMethod)->GetDMMethod()->
     Distance(this->GetMPProblem()->GetEnvironment(), cfg1, cfg2);
   return distance;
@@ -97,7 +97,7 @@ OptimalRewire<MPTraits>::Connect( RoadmapType* _rm, StatClass& _stats,
   ///To do - uncomment after const vertex iter problem  in STAPL pGraph is fixed
 #ifndef _PARALLEL
   for (InputIterator iter1 = _iter1First; iter1 != _iter1Last; ++iter1) {
-    CfgType cfg = _rm->GetGraph()->GetCfg(*iter1);
+    CfgType cfg = _rm->GetGraph()->GetVertex(*iter1);
     if (this->m_debug) {
       cout << "Attempting connection from " << *iter1 << "--> " << cfg << endl;
     }
@@ -135,7 +135,7 @@ OptimalRewire<MPTraits>::ConnectNeighbors (RoadmapType* _rm, StatClass& _stats,
       if(this->GetMPProblem()->GetLocalPlanner(this->m_lpMethod)->
           IsConnected(this->GetMPProblem()->GetEnvironment(), _stats, dm,
             vi->property(),
-            _rm->GetGraph()->GetCfg(neighbor),
+            _rm->GetGraph()->GetVertex(neighbor),
             col, &lpOutput, this->m_connectionPosRes, this->m_connectionOriRes, true )) {
         vmin = neighbor;
         currentMin = neighborCost + GetDistance(_vid, neighbor, _rm);
@@ -147,8 +147,8 @@ OptimalRewire<MPTraits>::ConnectNeighbors (RoadmapType* _rm, StatClass& _stats,
   if (vmin != parent) {
     _rm->GetGraph()->AddEdge(_vid, vmin, minlpOutput.edge);
     vi->property().SetStat("Parent", vmin);
-    CfgType cfg1 = _rm->GetGraph()->GetCfg(parent);
-    CfgType cfg2 = _rm->GetGraph()->GetCfg(_vid);
+    CfgType cfg1 = _rm->GetGraph()->GetVertex(parent);
+    CfgType cfg2 = _rm->GetGraph()->GetVertex(_vid);
     _rm->GetGraph()->delete_edge(parent, _vid);
     _rm->GetGraph()->delete_edge(_vid, parent);
     VDRemoveEdge(cfg1, cfg2);     // for vizmo
@@ -166,8 +166,8 @@ OptimalRewire<MPTraits>::ConnectNeighbors (RoadmapType* _rm, StatClass& _stats,
     if( ( vidCost + GetDistance(neighbor, _vid, _rm)) < neighborCost ) { 
       if(this->GetMPProblem()->GetLocalPlanner(this->m_lpMethod)->
           IsConnected(this->GetMPProblem()->GetEnvironment(), _stats, dm,
-            _rm->GetGraph()->GetCfg(_vid),
-            _rm->GetGraph()->GetCfg(neighbor),
+            _rm->GetGraph()->GetVertex(_vid),
+            _rm->GetGraph()->GetVertex(neighbor),
             col, &lpOutput, this->m_connectionPosRes, this->m_connectionOriRes, true )) {
         // Getting the parent
         vi = _rm->GetGraph()->find_vertex(neighbor);
@@ -177,8 +177,8 @@ OptimalRewire<MPTraits>::ConnectNeighbors (RoadmapType* _rm, StatClass& _stats,
           parent = vi->property().GetStat("Parent");
         }
         // Removing the parent-child edge
-        CfgType cfg1 = _rm->GetGraph()->GetCfg(parent);
-        CfgType cfg2 = _rm->GetGraph()->GetCfg(neighbor);
+        CfgType cfg1 = _rm->GetGraph()->GetVertex(parent);
+        CfgType cfg2 = _rm->GetGraph()->GetVertex(neighbor);
         _rm->GetGraph()->delete_edge(parent, neighbor);
         VDRemoveEdge(cfg1, cfg2);
         _rm->GetGraph()->delete_edge(neighbor, parent);

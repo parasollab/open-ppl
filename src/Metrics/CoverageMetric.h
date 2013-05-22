@@ -103,7 +103,7 @@ CoverageMetric<MPTraits, Set>::operator()() {
   StatClass stats;
 
   int index = 0;
-  for(typename Set::iterator i = m_samples.begin(); i != m_samples.end(); ++i) {
+  for(typename Set::Iterator i = m_samples.begin(); i != m_samples.end(); ++i) {
     VID sampleVID = rgraph->AddVertex(*i);
     sampleList.clear();
     sampleList.push_back(sampleVID);

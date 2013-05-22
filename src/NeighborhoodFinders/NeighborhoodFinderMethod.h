@@ -91,20 +91,20 @@ class NeighborhoodFinderMethod : public MPBaseObject<MPTraits> {
     template<typename InputIterator, typename OutputIterator>
       OutputIterator KClosest(RoadmapType* _rmp, 
           InputIterator _first, InputIterator _last, VID _v, size_t _k, OutputIterator _out) {
-        return KClosest(_rmp, _first, _last, _rmp->GetGraph()->GetCfg(_v), _k, _out);
+        return KClosest(_rmp, _first, _last, _rmp->GetGraph()->GetVertex(_v), _k, _out);
       }
 
     // KClosest that operate over the entire roadmap to find the _kclosest to a VID or CFG
     // NOTE: These are the prefered methods for _kClosest computations
     template<typename OutputIterator>
       OutputIterator KClosest(RoadmapType* _rmp, VID _v, size_t _k, OutputIterator _out){
-        return KClosest(_rmp, _rmp->Graph()->GetCfg(_v), _k, _out);
+        return KClosest(_rmp, _rmp->Graph()->GetVertex(_v), _k, _out);
       }
 
     template<typename OutputIterator>
       OutputIterator KClosest(RoadmapType* _rmp, CfgType _cfg, size_t _k, OutputIterator _out){
         m_fromRDMPVersion = true;
-        return KClosest(_rmp, _rmp->GetGraph()->descriptor_begin(), _rmp->GetGraph()->descriptor_end(), _cfg, _k, _out);
+        return KClosest(_rmp, _rmp->GetGraph()->begin(), _rmp->GetGraph()->end(), _cfg, _k, _out);
       }
 
     // do the work here, and have the function above obtain the CFG and call this one

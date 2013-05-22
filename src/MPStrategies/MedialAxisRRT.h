@@ -77,7 +77,7 @@ MedialAxisRRT<MPTraits>::ExpandTree(CfgType& _dir){
   // Find closest Cfg in map
   vector<VID> kClosest;
   nf->KClosest(rdmp, _dir, 1, back_inserter(kClosest));     
-  CfgType nearest = rdmp->GetGraph()->GetCfg(kClosest[0]);
+  CfgType nearest = rdmp->GetGraph()->GetVertex(kClosest[0]);
  
   //Medial Axis Extend from nearest to _dir
   vector<CfgType> intermediateNodes;
@@ -98,8 +98,8 @@ MedialAxisRRT<MPTraits>::ExpandTree(CfgType& _dir){
     recentVID = rdmp->GetGraph()->AddVertex(newCfg);
     //TODO fix weight
     pair<WeightType, WeightType> weights = make_pair(WeightType(this->m_lp, dist, intermediateNodes), WeightType(this->m_lp, dist, intermediateNodes));
-    rdmp->GetGraph()->AddEdge(nearest, newCfg, weights);
-    rdmp->GetGraph()->GetCfg(recentVID).SetStat("Parent", kClosest[0]);
+    rdmp->GetGraph()->AddEdge(kClosest[0], recentVID, weights);
+    rdmp->GetGraph()->GetVertex(recentVID).SetStat("Parent", kClosest[0]);
   } 
   
   if(this->m_debug)
