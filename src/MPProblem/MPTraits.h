@@ -253,6 +253,12 @@ struct MPTraits<CfgSurface, DefaultWeight<CfgSurface> > {
   typedef CfgSurface CfgType;
 #endif
   typedef DefaultWeight<CfgType> WeightType;
+#ifdef _PARALLEL
+  typedef CfgType CfgRef;
+#else
+  typedef CfgType& CfgRef;
+#endif
+
 
   typedef MPProblem<MPTraits> MPProblemType;
 
