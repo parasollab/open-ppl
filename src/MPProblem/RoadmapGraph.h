@@ -198,6 +198,7 @@ class vertex_descriptor_iterator
   }
 };
 
+#ifndef _PARALLEL
 template <typename VertexIterator>
 class vertex_property_iterator
   : public boost::iterator_adaptor<
@@ -228,6 +229,38 @@ class vertex_property_iterator
     return this->base()->property(); 
   }
 };
+#else
+template <typename VertexIterator>
+class vertex_property_iterator
+  : public boost::iterator_adaptor<
+                                   vertex_property_iterator<VertexIterator>   //Derived
+                                   , VertexIterator                             //Base
+                                   , typename VertexIterator::value_type::property_type //Value
+                                   , boost::use_default                         //CategoryOrTraversal
+                                   , typename VertexIterator::value_type::property_type //Reference
+                                  >
+{
+ public:
+  vertex_property_iterator()
+    : vertex_property_iterator::iterator_adaptor_() 
+  {}
+  
+  explicit vertex_property_iterator(VertexIterator vi)
+    : vertex_property_iterator::iterator_adaptor_(vi)
+  {}
+  
+  template <typename OtherVertexIterator>
+  vertex_property_iterator(vertex_property_iterator<OtherVertexIterator> const other)
+    : vertex_property_iterator::iterator_adaptor_(other.base())
+  {}
+
+  //overload dereference to call property() instead
+  typename VertexIterator::value_type::property_type dereference() const  
+  { 
+    return (*(this->base())).property(); 
+  }
+};
+#endif
 
 
 /////////////////////////////////////////////////////////////////////
@@ -366,7 +399,7 @@ typedef RoadmapChangeEvent<VERTEX, WEIGHT> ChangeEvent;
          *existing vertex's VID will be returned.
          *@see WeightedMultiDiGraph::AddVertex(VERTEX&)
          */
-       virtual VID  AddVertex(VERTEX&); 
+       virtual VID  AddVertex(const VERTEX&); 
 
        /**Add a list of new (isolated) vertices to graph.
          *
@@ -390,7 +423,7 @@ typedef RoadmapChangeEvent<VERTEX, WEIGHT> ChangeEvent;
        virtual int  AddEdge(VID, VID, pair<WEIGHT,WEIGHT>&);
        virtual int  AddEdge(VID, VID, pair<WEIGHT*,WEIGHT*>&);
        virtual int  AddEdge(VERTEX&, VERTEX&, pair<WEIGHT*,WEIGHT*>&);
-       virtual bool IsVertex(VERTEX&, CVI*) ;
+       virtual bool IsVertex(const VERTEX&, CVI*) ;
        virtual int  AddEdge(VERTEX&, VERTEX&, WEIGHT); 
        virtual int  AddEdge(VERTEX&, VERTEX&, pair<WEIGHT,WEIGHT>&);
        //#endif
@@ -399,7 +432,7 @@ typedef RoadmapChangeEvent<VERTEX, WEIGHT> ChangeEvent;
        virtual vector<VID> ConvertVertices2VIDs(vector<VERTEX>&);  //convert vertices to corresponding VIDs
        virtual vector<VERTEX> ConvertVIDs2Vertices(vector<VID>&);  //convert VIDs to vertices
        virtual VID  GetVID(VERTEX&);
-       virtual bool IsVertex(VERTEX&); 
+       virtual bool IsVertex(const VERTEX&); 
        virtual bool IsEdge(VERTEX& v1, VERTEX& v2);
        virtual bool IsEdge(VID vid1, VID vid2);
        
@@ -550,7 +583,7 @@ Init(const int _numNodes, const int _numEdges) {
 template<class VERTEX, class WEIGHT>
 typename RoadmapGraph<VERTEX, WEIGHT>::VID
 RoadmapGraph<VERTEX,WEIGHT>::
-AddVertex(VERTEX& _v1) {
+AddVertex(const VERTEX& _v1) {
     #ifndef _PARALLEL
     CVI v1;
     if ( !IsVertex(_v1,&v1) ) {
@@ -786,7 +819,7 @@ GetVID(VERTEX& _v1) {
 template<class VERTEX, class WEIGHT>
 bool
 RoadmapGraph<VERTEX,WEIGHT>::
-IsVertex(VERTEX& _v1){
+IsVertex(const VERTEX& _v1){
     #ifndef _PARALLEL ////implement parallel version as map reduce
     CVI v1;
     return ( IsVertex(_v1,&v1) );
@@ -820,7 +853,7 @@ VERTEX v;
 template<class VERTEX, class WEIGHT>
 bool
 RoadmapGraph<VERTEX,WEIGHT>::
-IsVertex(VERTEX& _v1, CVI*  _v1ptr)  {
+IsVertex(const VERTEX& _v1, CVI*  _v1ptr)  {
 
      VI vi = this->begin();
     bool found = false;

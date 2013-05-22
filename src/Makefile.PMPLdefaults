@@ -140,7 +140,7 @@ endif
 #cd to STAPL dir and compile STAPL lib
 ifeq (${parallel}, 1)
 ${STAPL_DIR}/lib/libstapl.a:
-	cd ${STAPL_DIR}; ${MAKE} platform=${platform} stl=${STL_LIB}
+	cd ${STAPL_DIR}; ${MAKE} platform=${platform} stl=tools/libstdc++/${STL_LIB}
 STAPL_LIBFILE = ${STAPL_DIR}/lib/libstapl.a
 endif
 

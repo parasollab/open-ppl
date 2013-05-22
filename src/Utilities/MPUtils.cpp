@@ -90,7 +90,8 @@ long SRand(string _methodName, int _nextNodeIndex, long _base, bool _reset) {
 //normalize a number to [-1,1)
 double Normalize(double _a){
   _a = fmod(_a+1.0, 2.0);
-  if(_a < -1E-6)
+  //if(_a < -1E-6)
+  if(_a < 0.0)
     _a+=2.0;
   _a--;
   return _a;

@@ -33,6 +33,7 @@ template<class MPTraits>
 class NeighborhoodConnector: public ConnectorMethod<MPTraits> {
   public:
     typedef typename MPTraits::CfgType CfgType;
+    typedef typename MPTraits::CfgRef CfgRef;
     typedef typename MPTraits::MPProblemType MPProblemType;
     typedef typename MPProblemType::RoadmapType RoadmapType;
     typedef typename MPProblemType::VID VID; 
@@ -294,8 +295,8 @@ NeighborhoodConnector<MPTraits>::ConnectNeighbors(
 
     // attempt connection with the local planner
     CfgType col;
-    CfgType& c1 = _rm->GetGraph()->GetCfg(_vid);
-    CfgType& c2 = _rm->GetGraph()->GetCfg(itr2);
+    CfgRef c1 = _rm->GetGraph()->GetCfg(_vid);
+    CfgRef c2 = _rm->GetGraph()->GetCfg(itr2);
 
     bool good = this->GetMPProblem()->GetLocalPlanner(this->m_lpMethod)->
       IsConnected(this->GetMPProblem()->GetEnvironment(), _stats, dm,

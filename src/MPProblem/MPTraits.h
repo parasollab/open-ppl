@@ -101,6 +101,11 @@ template<class C, class W = DefaultWeight<C> >
 struct MPTraits{
   typedef C CfgType;
   typedef W WeightType;
+#ifdef _PARALLEL
+  typedef C CfgRef;
+#else
+  typedef C& CfgRef;
+#endif
 
   typedef MPProblem<MPTraits> MPProblemType;
 
