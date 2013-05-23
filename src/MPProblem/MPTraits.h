@@ -355,18 +355,25 @@ struct MPTraits<CfgSurface, DefaultWeight<CfgSurface> > {
     ClosestVE<MPTraits>*/
       > ConnectorMethodList;
   
+#ifndef _PARALLEL
   typedef ConnectivityMetric<MPTraits, RoadmapSet<MPTraits> > ConnectivityMetricRoadmapSet;
-  typedef ConnectivityMetric<MPTraits, VectorSet<MPTraits> > ConnectivityMetricVectorSet;
+  typedef CoverageDistanceMetric<MPTraits, RoadmapSet<MPTraits> > CoverageDistanceMetricRoadmapSet;
   typedef CoverageMetric<MPTraits, RoadmapSet<MPTraits> > CoverageMetricRoadmapSet;
+#endif
+  typedef ConnectivityMetric<MPTraits, VectorSet<MPTraits> > ConnectivityMetricVectorSet;
+  typedef CoverageDistanceMetric<MPTraits, VectorSet<MPTraits> > CoverageDistanceMetricVectorSet;
   typedef CoverageMetric<MPTraits, VectorSet<MPTraits> > CoverageMetricVectorSet;
 
   //types of metrics available in our world
   typedef boost::mpl::list<
     CCDistanceMetric<MPTraits>,
+#ifndef _PARALLEL
     ConnectivityMetricRoadmapSet,
-    ConnectivityMetricVectorSet,
-    CoverageDistanceMetric<MPTraits>,
+    CoverageDistanceMetricRoadmapSet,
     CoverageMetricRoadmapSet,
+#endif
+    ConnectivityMetricVectorSet,
+    CoverageDistanceMetricVectorSet,
     CoverageMetricVectorSet,
     DiameterMetric<MPTraits>,
     NumEdgesMetric<MPTraits>,

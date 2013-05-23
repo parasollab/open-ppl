@@ -38,10 +38,10 @@ class ConnectNeighboringSurfaces: public ConnectorMethod<MPTraits> {
 
     //////////////////////
     // Core: Connection method
-    template<typename ColorMap, typename InputIterator, typename OutputIterator>
-      void Connect(RoadmapType* _rm, StatClass& _stats,
-          ColorMap& _cmap, InputIterator _itr1First, InputIterator _itr1Last,
-          InputIterator _itr2First, InputIterator _itr2Last, OutputIterator _collision) ;
+    template<typename ColorMap, typename InputIterator1, typename InputIterator2, typename OutputIterator>
+      void Connect(RoadmapType* _rm, StatClass& _stats, ColorMap& _cmap, 
+          InputIterator1 _itr1First, InputIterator1 _itr1Last,
+          InputIterator2 _itr2First, InputIterator2 _itr2Last, OutputIterator _collision) ;
 
   private:
     //////////////////////
@@ -112,10 +112,11 @@ void ConnectNeighboringSurfaces<MPTraits>::PrintOptions(ostream& _os){
 //
 ///////////////////////////////////////////////////////////////////////////////
 template<class MPTraits>
-template<typename ColorMap, typename InputIterator, typename OutputIterator>
-void ConnectNeighboringSurfaces<MPTraits>::Connect(RoadmapType* _rm, StatClass& _stats, 
-      ColorMap& _cmap, InputIterator _itr1First, InputIterator _itr1Last,
-      InputIterator _itr2First, InputIterator _itr2Last, OutputIterator _collision){
+template<typename ColorMap, typename InputIterator1, typename InputIterator2, typename OutputIterator>
+void
+ConnectNeighboringSurfaces<MPTraits>::Connect(RoadmapType* _rm, StatClass& _stats, ColorMap& _cmap, 
+    InputIterator1 _itr1First, InputIterator1 _itr1Last,
+    InputIterator2 _itr2First, InputIterator2 _itr2Last, OutputIterator _collision){
 
   if(this->m_debug){ cout << endl; PrintOptions(cout); }
   if(m_doneOnce) {
