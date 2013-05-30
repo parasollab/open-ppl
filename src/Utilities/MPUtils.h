@@ -599,5 +599,33 @@ Point3d GetPtFromBarycentricCoords(const Point3d& _A, const Point3d& _B, const P
 //----------------------------------------------------------------------------
 double NormalizeTheta(double _theta);
 
+
+template <class MPTraits, class P>
+struct DistanceCompareFirst : public binary_function<P, P, bool> {
+  typedef typename MPTraits::MPProblemType::DistanceMetricPointer DistanceMetricPointer;
+  
+  Environment* m_env;
+  DistanceMetricPointer m_dm;
+  typename P::first_type m_cfg;
+
+  DistanceCompareFirst(Environment* _e, DistanceMetricPointer _d, const typename P::first_type& _c) : 
+    m_env(_e), m_dm(_d), m_cfg(_c) {}
+  ~DistanceCompareFirst() {}
+
+  bool operator()(const P& _p1, const P& _p2) const {
+    return (m_dm->Distance(m_env, m_cfg, _p1.first) < m_dm->Distance(m_env, m_cfg, _p2.first));
+  }
+};
+
+
+template <class P>
+struct PlusSecond : public binary_function<typename P::second_type, 
+					    P, 
+					    typename P::second_type> {
+  typename P::second_type operator()(const typename P::second_type& p1, const P& p2) const {
+    return plus<typename P::second_type>()(p1, p2.second);
+  }
+};
+
 #endif
 

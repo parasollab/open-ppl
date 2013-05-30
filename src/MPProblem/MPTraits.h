@@ -87,12 +87,13 @@
 #include "MPStrategies/BasicPRM.h"
 #include "MPStrategies/BasicRRTStrategy.h"
 #include "MPStrategies/EvaluateMapStrategy.h"
+#include "MPStrategies/LocalManeuveringStrategy.h"
 #include "MPStrategies/MedialAxisRRT.h"
 #include "MPStrategies/OBRRTStrategy.h"
 #include "MPStrategies/ResamplePointStrategy.h"
 #include "MPStrategies/TogglePRMStrategy.h"
 #include "MPStrategies/UnitTest/DMTestStrategy.h"
-#include "MPStrategies/LocalManeuveringStrategy.h"
+#include "MPStrategies/UtilityGuidedGenerator.h"
 
 #ifdef _PARALLEL
 #include "ParallelMethods/BasicParallelPRM.h"
@@ -233,7 +234,8 @@ struct MPTraits{
     MedialAxisRRT<MPTraits>,
     OBRRTStrategy<MPTraits>,
     ResamplePointStrategy<MPTraits>,
-    TogglePRMStrategy<MPTraits>
+    TogglePRMStrategy<MPTraits>,
+    UtilityGuidedGenerator<MPTraits>
     #ifdef _PARALLEL
     ,BasicParallelPRM<MPTraits>
     ,RegularSubdivisionMethod<MPTraits>
@@ -405,7 +407,8 @@ struct MPTraits<CfgSurface, DefaultWeight<CfgSurface> > {
     MedialAxisRRT<MPTraits>,
     OBRRTStrategy<MPTraits>,
     ResamplePointStrategy<MPTraits>,
-    TogglePRMStrategy<MPTraits>
+    TogglePRMStrategy<MPTraits>,
+    UtilityGuidedGenerator<MPTraits>
     #ifdef _PARALLEL
     ,BasicParallelPRM<MPTraits>
     ,RegularSubdivisionMethod<MPTraits>
