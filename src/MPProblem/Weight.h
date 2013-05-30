@@ -116,15 +116,11 @@ DefaultWeight<CfgType>::operator=(const DefaultWeight<CfgType>& _w){
 template<class CfgType>
 ostream& 
 operator<<(ostream& _os, const DefaultWeight<CfgType>& _w){
-  /*_os << _w.m_intermediates.size() << " ";
-  for(vector<CfgType>::const_iterator cit = _w.m_intermediates.begin(); cit!= _w.m_intermediates.end(); cit++){
-    _os << *cit << " ";
+  _os << _w.m_intermediates.size() << " ";
+   for(typename vector<CfgType>::const_iterator cit = _w.m_intermediates.begin(); cit!= _w.m_intermediates.end(); cit++){
+    _os << *cit;
   }
-  */
-  //TODO::FIX::for now output 0 for number of intermediates, util vizmo gets updated. Then replace with the above code.
-  _os << "0 ";
-  _os << _w.m_weight;
-  return _os;
+  return _os << _w.m_weight;
 }
 
 template<class CfgType>

@@ -3,6 +3,7 @@
 
 #include "ValidityCheckerMethod.h"
 #include "Utilities/MedialAxisUtilities.h"
+#include "ValidityCheckers/CollisionDetectionValidity.h"
 
 template<class MPTraits>
 class MedialAxisClearanceValidity : public ValidityCheckerMethod<MPTraits> {
@@ -18,12 +19,14 @@ class MedialAxisClearanceValidity : public ValidityCheckerMethod<MPTraits> {
 
     virtual void PrintOptions(ostream& _os);
 
+    virtual bool IsInsideObstacle(const CfgType& _cfg, Environment* _env, CDInfo& _cdInfo);
+
     virtual bool IsValidImpl(CfgType& _cfg, Environment* _env, StatClass& _stats, CDInfo& _cdInfo, string *_callName);
 
     vector< pair<CfgType,CfgType> >& GetHistory();
     void ClearHistory();
 
-  private:  
+  private: 
     MedialAxisUtility<MPTraits> m_medialAxisUtility;
     double m_clearance;
     vector< pair<CfgType,CfgType> > m_history;
@@ -59,10 +62,26 @@ MedialAxisClearanceValidity<MPTraits>::PrintOptions(ostream& _os){
   m_medialAxisUtility.PrintOptions(_os);
 }
 
+
+template<class MPTraits>
+bool 
+MedialAxisClearanceValidity<MPTraits>::IsInsideObstacle(const CfgType& _cfg, Environment* _env, CDInfo& _cdInfo){
+  typename MPProblemType::ValidityCheckerPointer vcm = this->GetMPProblem()->GetValidityChecker(m_medialAxisUtility.GetValidityCheckerLabel());
+  return vcm->IsInsideObstacle(_cfg, _env, _cdInfo);
+}
+
 template<class MPTraits>
 bool 
 MedialAxisClearanceValidity<MPTraits>::IsValidImpl(CfgType& _cfg, Environment* _env, StatClass& _stats, 
     CDInfo& _cdInfo, string * _callName) {
+  typename MPProblemType::ValidityCheckerPointer vc = this->GetMPProblem()->GetValidityChecker(m_medialAxisUtility.GetValidityCheckerLabel());
+  bool isFree = vc->IsValid(_cfg, _env, _stats, _cdInfo, _callName);
+
+  if(!isFree){
+    _cfg.SetLabel("VALID", !isFree);
+    return !isFree;
+  }
+
   CfgType origCfg = _cfg;
   CfgType tmpCfg = _cfg;
   if(!m_medialAxisUtility.PushToMedialAxis(tmpCfg, _env->GetBoundary())) {

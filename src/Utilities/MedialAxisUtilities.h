@@ -36,6 +36,7 @@ class ClearanceUtility : public MPBaseObject<MPTraits> {
     virtual void PrintOptions(ostream& _os) const;
 
     string GetDistanceMetricLabel() const {return m_dmLabel;}
+    string GetValidityCheckerLabel() const {return m_vcLabel;}
 
     //*********************************************************************//
     // Calculate Collision Information                                     //
@@ -99,6 +100,8 @@ class MedialAxisUtility : public ClearanceUtility<MPTraits> {
     MedialAxisUtility(MPProblemType* _problem, XMLNodeReader& _node);
 
     void ParseXML(XMLNodeReader& _node);
+
+    double GetEpsilon() const {return m_epsilon;}
 
     virtual void PrintOptions(ostream& _os) const;
 

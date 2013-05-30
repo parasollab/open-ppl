@@ -45,6 +45,7 @@
 #include "Samplers/UniformRandomSampler.h"
 
 //local planner includes
+#include "LocalPlanners/MedialAxisLP.h"
 #include "LocalPlanners/RotateAtS.h"
 #include "LocalPlanners/StraightLine.h"
 #include "LocalPlanners/SurfaceLP.h"
@@ -170,7 +171,7 @@ struct MPTraits{
   typedef boost::mpl::list<
     //AStarClearance<MPTraits>,
     //AStarDistance<MPTraits>,
-    //MedialAxisLP<MPTraits>,
+    MedialAxisLP<MPTraits>,
     RotateAtS<MPTraits>,
     StraightLine<MPTraits>,
     ToggleLP<MPTraits>,
@@ -334,7 +335,7 @@ struct MPTraits<CfgSurface, DefaultWeight<CfgSurface> > {
   typedef boost::mpl::list<
     //AStarClearance<MPTraits>,
     //AStarDistance<MPTraits>,
-    //MedialAxisLP<MPTraits>,
+    MedialAxisLP<MPTraits>,
     TransformAtS<MPTraits>,
     RotateAtS<MPTraits>,
     StraightLine<MPTraits>,
