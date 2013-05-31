@@ -64,7 +64,6 @@ class MedialAxisLP : public LocalPlannerMethod<MPTraits> {
 // Definitions for Constructors and Destructor
 template<class MPTraits>
 MedialAxisLP<MPTraits>::MedialAxisLP(MedialAxisUtility<MPTraits> _medialAxisUtility,
-    MedialAxisClearanceValidity<MPTraits> _macVCM,
     double _macEpsilon, int _maxIter) : 
   LocalPlannerMethod<MPTraits>(), 
   m_medialAxisUtility(_medialAxisUtility), 
