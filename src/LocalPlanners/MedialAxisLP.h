@@ -59,6 +59,8 @@ class MedialAxisLP : public LocalPlannerMethod<MPTraits> {
     
     MedialAxisClearanceValidity<MPTraits> m_macVCM;  //mac validity checker
     StraightLine<MPTraits> m_envLP, m_macLP;         //straight line local planners
+
+    bool m_macVCMAdded;
 };
 
 // Definitions for Constructors and Destructor
@@ -89,8 +91,8 @@ MedialAxisLP<MPTraits>::Init(){
   this->SetName("MedialAxisLP");
 
   //Construct a medial axis clearance validity
+  m_macVCMAdded = false;
   m_macVCM = MedialAxisClearanceValidity<MPTraits>(m_medialAxisUtility, m_macEpsilon);
-  this->GetMPProblem()->AddValidityChecker(ValidityCheckerPointer(&m_macVCM), "MAC::" + this->GetNameAndLabel());
 
   //Local planner methods
   m_envLP = StraightLine<MPTraits>(m_medialAxisUtility.GetValidityCheckerLabel(), true);
@@ -123,6 +125,11 @@ MedialAxisLP<MPTraits>::IsConnected(Environment* _env,
     CfgType& _col, LPOutput<MPTraits>* _lpOutput,
     double _positionRes, double _orientationRes,
     bool _checkCollision, bool _savePath, bool _saveFailedPath) {  
+  
+  if(!m_macVCMAdded){
+    this->GetMPProblem()->AddValidityChecker(ValidityCheckerPointer(&m_macVCM), "MAC::" + this->GetNameAndLabel());
+    m_macVCMAdded = true;
+  }
 
   //Check that appropriate save path variables are set
   if(!_checkCollision) {
