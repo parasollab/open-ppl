@@ -1,157 +1,99 @@
-/////////////////////////////////////////////////////////////////////
-//  Connection.cpp
-//  Created   3/ 1/98 Aaron Michalk
-/////////////////////////////////////////////////////////////////////
-
 #include "Connection.h"
 #include "MultiBody.h"
 
-
-//===================================================================
-//  Constructors and Destructor
-//===================================================================
-Connection::Connection(MultiBody* _owner)
-  : m_multibody(_owner) {
+Connection::Connection(MultiBody* _owner) : m_multibody(_owner) {
 }
 
-Connection::Connection(const shared_ptr<Body>& _body1, const shared_ptr<Body>& _body2)
-  : transformationToBody2(Transformation::Identity),
-    transformationToDHFrame(Transformation::Identity),
-    dhparameters(DHparameters(0.0, 0.0, 0.0, 0.0))
-{
-  body[0] = _body1;
-  body[1] = _body2;
+Connection::Connection(const shared_ptr<Body>& _body1, const shared_ptr<Body>& _body2) {
+  m_bodies[0] = _body1;
+  m_bodies[1] = _body2;
 }
 
 Connection::Connection(const shared_ptr<Body>& _body1, const shared_ptr<Body>& _body2, 
-                       const Transformation & _transformationToBody2, 
-	               const DHparameters & _dhparameters, 
-                       const Transformation & _transformationToDHFrame) 
-  : transformationToBody2(_transformationToBody2),
-    transformationToDHFrame(_transformationToDHFrame),
-    dhparameters(_dhparameters)
-{
-  body[0] = _body1;
-  body[1] = _body2;
-}
+    const Transformation & _transformationToBody2, 
+    const DHparameters & _dhparameters, 
+    const Transformation & _transformationToDHFrame) 
+  : m_transformationToBody2(_transformationToBody2),
+  m_transformationToDHFrame(_transformationToDHFrame),
+  m_dhParameters(_dhparameters) {
+    m_bodies[0] = _body1;
+    m_bodies[1] = _body2;
+  }
 
-Connection::~Connection() 
-{}
+Connection::~Connection() {}
 
-
-//-------------------------------------------------------------------
-//  IsFirstBody
-//-------------------------------------------------------------------
-bool Connection::IsFirstBody(const shared_ptr<Body>& _body) const
-{
-  return body[0] == _body;
-}
-
-
-//-------------------------------------------------------------------
-//  GetPreviousBody
-//-------------------------------------------------------------------
-shared_ptr<Body> Connection::GetPreviousBody() 
-{
-  return body[0];
-}
-
-//-------------------------------------------------------------------
-//  GetNextBody
-//-------------------------------------------------------------------
-shared_ptr<Body> Connection::GetNextBody() 
-{
-  return body[1];
-}
-
-   
-//-------------------------------------------------------------------
-//  GetConnectionType
-//-------------------------------------------------------------------
-Robot::JointType Connection::GetConnectionType() const
-{
-  return type;
-}
-
-
-//-------------------------------------------------------------------
-//  GetDHparameters
-//-------------------------------------------------------------------
-DHparameters & Connection::GetDHparameters() 
-{
-  return dhparameters;
-}
-
-
-//-------------------------------------------------------------------
-//  GetTransformationToBody2
-//-------------------------------------------------------------------
-Transformation & Connection::GetTransformationToBody2() 
-{
-  return transformationToBody2;
-}
-
-//-------------------------------------------------------------------
-//  GetTransformationToDHFrame
-//-------------------------------------------------------------------
-Transformation & Connection::GetTransformationToDHFrame() 
-{
-  return transformationToDHFrame;
-}
-
-//===================================================================
-//  Write
-//===================================================================
 ostream&
-operator<<(ostream& _os, const Connection& _c){
-  return _os << _c.m_prevBodyIdx << " " << _c.m_nextBodyIdx << " "
-    << Robot::GetTagFromJointType(_c.type) << endl 
-    << _c.transformationToDHFrame << " " << _c.dhparameters << " "
-    << _c.transformationToBody2;
+operator<<(ostream& _os, const Connection& _c) {
+  return _os << _c.m_bodyIndices.first << " " << _c.m_bodyIndices.second << " "
+    << Robot::GetTagFromJointType(_c.m_jointType) << endl 
+    << _c.m_transformationToDHFrame << " " << _c.m_dhParameters << " "
+    << _c.m_transformationToBody2;
 }
 
-//===================================================================
-//  Read
-//===================================================================
 istream&
 operator>>(istream& _is, Connection& _c){
   //body indices
-  _c.m_prevBodyIdx = ReadField<int>(_is, "Previous Body Index");
-  _c.m_nextBodyIdx = ReadField<int>(_is, "Next Body Index");
+  _c.m_bodyIndices.first = ReadField<int>(_is, "Previous Body Index");
+  _c.m_bodyIndices.second = ReadField<int>(_is, "Next Body Index");
   
   //grab the shared_ptr to bodies
-  _c.body[0] = _c.m_multibody->GetFreeBody(_c.m_prevBodyIdx);
-  _c.body[1] = _c.m_multibody->GetFreeBody(_c.m_nextBodyIdx);
+  _c.m_bodies[0] = _c.m_multibody->GetFreeBody(_c.m_bodyIndices.first);
+  _c.m_bodies[1] = _c.m_multibody->GetFreeBody(_c.m_bodyIndices.second);
 
   //grab the joint type
   string connectionTypeTag = ReadFieldString(_is, "Connection Type");
-  _c.type = Robot::GetJointTypeFromTag(connectionTypeTag);
+  _c.m_jointType = Robot::GetJointTypeFromTag(connectionTypeTag);
+
+  //grab the joint limits for revolute and spherical joints
+  if(_c.m_jointType == Robot::REVOLUTE || _c.m_jointType == Robot::SPHERICAL){
+    _c.m_jointLimits[0].first = _c.m_jointLimits[1].first = -1;
+    _c.m_jointLimits[0].second = _c.m_jointLimits[1].second = 1;
+    size_t numRange = _c.m_jointType == Robot::REVOLUTE ? 1 : 2;
+    for(size_t i = 0; i<numRange; i++){
+      string tok;
+      if(_is >> tok){
+        size_t del = tok.find(":");
+        if(del == string::npos){
+          cerr << "Error::Reading joint range " << i << ". Should be delimited by ':'." << endl;
+          exit(1);
+        }
+        istringstream minv(tok.substr(0,del)), maxv(tok.substr(del+1, tok.length()));
+        if(!(minv>>_c.m_jointLimits[i].first && maxv>>_c.m_jointLimits[i].second)){
+          cerr << "Error::Reading joint range " << i << "." << endl;
+          exit(1);
+        }
+      }
+      else if(numRange == 2 && i==1) { //error. only 1 token provided.
+        cerr << "Error::Reading spherical joint ranges. Only one provided." << endl;
+        exit(1);
+      }
+    }
+  }
 
   //transformation to DHFrame
-  _c.transformationToDHFrame = 
+  _c.m_transformationToDHFrame = 
     ReadField<Transformation>(_is, "Transformation to DH frame");
 
   //DH parameters
-  _c.dhparameters = ReadField<DHparameters>(_is, "DH Parameters");
+  _c.m_dhParameters = ReadField<DHparameters>(_is, "DH Parameters");
 
   //transformation to next body
-  _c.transformationToBody2 =
+  _c.m_transformationToBody2 =
     ReadField<Transformation>(_is, "Transform to next body");
 
   //make the connection
-  _c.body[0]->Link(_c);
+  _c.m_bodies[0]->Link(_c);
 
   return _is;
 }
 
-bool Connection::operator==(const Connection& c) const 
-{
+bool
+Connection::operator==(const Connection& c) const {
   return
-    body[0] == c.body[0] &&
-    body[1] == c.body[1] &&
-    transformationToBody2 == c.transformationToBody2 &&
-    transformationToDHFrame == c.transformationToDHFrame &&
-    dhparameters == c.dhparameters &&
-    type == c.type
-    ;
+    m_bodies[0] == c.m_bodies[0] &&
+    m_bodies[1] == c.m_bodies[1] &&
+    m_transformationToBody2 == c.m_transformationToBody2 &&
+    m_transformationToDHFrame == c.m_transformationToDHFrame &&
+    m_dhParameters == c.m_dhParameters &&
+    m_jointType == c.m_jointType;
 }

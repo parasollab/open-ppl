@@ -549,11 +549,6 @@ StatClass::ComputeIntraCCFeatures(RoadmapType* _rdmp, Environment* _env, Distanc
     m_avgMeanIntraCCDistToCm /= ccs.size();
     m_avgSigmaIntraCCDistToCm /= ccs.size();
   }
-
-  CfgType tcfg;
-  double norm = _env->Getminmax_BodyAxisRange()*tcfg.DOF();
-  cout << "norm value = " << norm << endl;
-
 #endif
 }
 
@@ -665,11 +660,6 @@ StatClass::ComputeInterCCFeatures(MPProblemType* _problem, RoadmapType* _rdmp, s
   if (minCCDistanceBetweenClosestPairs.size() > 1)
     m_sigmaInterCCDist /= minCCDistanceBetweenClosestPairs.size() - 1;
   m_sigmaInterCCDist = sqrt(m_sigmaInterCCDist);
-
-  CfgType tcfg;
-  double norm = _problem->GetEnvironment()->Getminmax_BodyAxisRange()
-    *_problem->GetEnvironment()->GetBoundary()->GetDOFs();
-  cout << "norm value = " << norm << endl;
 #endif
 }
 

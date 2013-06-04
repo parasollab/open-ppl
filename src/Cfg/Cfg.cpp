@@ -13,7 +13,6 @@
 #include "MPProblem/Geometry/MultiBody.h"
 #include "MPProblem/Environment.h"
 #include "Utilities/MetricUtils.h"
-#include "ValidityCheckers/CollisionDetection/CDInfo.h"
 
 ClearanceInfo::~ClearanceInfo() {
   if(m_direction != NULL)
@@ -23,6 +22,7 @@ ClearanceInfo::~ClearanceInfo() {
 ////////////////////////////////////////////////////////////////////
 size_t Cfg::m_dof;
 size_t Cfg::m_posdof;
+size_t Cfg::m_numJoints;
 vector<Cfg::DofType> Cfg::m_dofTypes;
 vector<Robot> Cfg::m_robots;
 
@@ -44,6 +44,7 @@ void
 Cfg::InitRobots(vector<Robot>& _robots) {
   m_robots = _robots;
   m_posdof = 0;
+  m_numJoints = 0;
   for(vector<Robot>::iterator rit = m_robots.begin(); rit != m_robots.end(); rit++) {
     if(rit->m_base == Robot::PLANAR) {
       m_dofTypes.push_back(POS);
@@ -64,14 +65,16 @@ Cfg::InitRobots(vector<Robot>& _robots) {
       }
     }
     for(Robot::JointIT jit = rit->m_joints.begin(); jit != rit->m_joints.end(); jit++) {
-      if(jit->second == Robot::REVOLUTE) {
+      if(jit->get<0>() == Robot::REVOLUTE) {
         m_dofTypes.push_back(JOINT);
+        m_numJoints++;
       }
-      else if(jit->second == Robot::SPHERICAL) {
+      else if(jit->get<0>() == Robot::SPHERICAL) {
         m_dofTypes.push_back(JOINT);
         m_dofTypes.push_back(JOINT);
+        m_numJoints+=2;
       }
-      else if(jit->second == Robot::NONACTUATED){
+      else if(jit->get<0>() == Robot::NONACTUATED){
         //skip, do nothing
       }
     }
@@ -407,7 +410,7 @@ Cfg::GetRobotCenterofMass(Environment* _env) const {
     numbodies++;  
 
     for(Robot::JointIT i = rit->m_joints.begin(); i != rit->m_joints.end(); ++i){
-      GMSPolyhedron poly1 = mb->GetFreeBody(i->first.second)->GetWorldPolyhedron();
+      GMSPolyhedron poly1 = mb->GetFreeBody(i->get<1>().second)->GetWorldPolyhedron();
       Vector3D polycom1(0,0,0);
       for(vector<Vector3D>::const_iterator vit1 = poly1.m_vertexList.begin(); vit1 != poly1.m_vertexList.end(); ++vit1)
         polycom1 = polycom1 + (*vit1);
@@ -420,18 +423,6 @@ Cfg::GetRobotCenterofMass(Environment* _env) const {
 
   com = com/numbodies;
   return com;
-}
-
-// tests whether or not robot in this configuration has every vertex inside
-// the environment specified bounding box
-bool
-Cfg::InBoundary(Environment* _env, shared_ptr<Boundary> _bb) const {
-  return _bb->InBoundary(*this, _env); 
-}
-
-bool
-Cfg::InBoundary(Environment* _env) const {
-  return InBoundary(_env,_env->GetBoundary());
 }
 
 // generates random configuration where workspace robot's EVERY VERTEX
@@ -452,15 +443,14 @@ Cfg::GetRandomCfg(Environment* _env, shared_ptr<Boundary> _bb) {
   while(tries-- > 0) {
     this->GetRandomCfgImpl(_env, _bb);
 
-    if(this->InBoundary(_env, _bb))
+    if(_env->InBounds(*this, _bb))
       return;
-  }//endwhile
+  }
 
   // Print error message and some helpful (I hope!) statistics and exit...
-  cout << "\n\nERROR: GetRandomCfg not able to find anything in bounding box."
-    <<   "\n       robot radius is "
-    << _env->GetMultiBody(m_robotIndex)->GetBoundingSphereRadius();
-  _bb->Print(cout);
+  cerr << "\n\nERROR: GetRandomCfg not able to find anything in boundary: " 
+    << *_bb << ".\n       robot radius is "
+    << _env->GetMultiBody(m_robotIndex)->GetBoundingSphereRadius() << ".";
   exit(-1);
 }
 
@@ -500,11 +490,11 @@ Cfg::ConfigEnvironment(Environment* _env) const {
     }
     typedef Robot::JointMap::iterator MIT;
     for(MIT mit = rit->m_joints.begin(); mit != rit->m_joints.end(); mit++) {
-      if(mit->second!=Robot::NONACTUATED) {
-        size_t second = mit->first.second;
+      if(mit->get<0>() != Robot::NONACTUATED) {
+        size_t second = mit->get<1>().second;
         mb->GetFreeBody(second)->GetBackwardConnection(0).GetDHparameters().theta = m_v[index]*PI;
         index++;
-        if(mit->second==Robot::SPHERICAL){
+        if(mit->get<0>() == Robot::SPHERICAL){
           mb->GetFreeBody(second)->GetBackwardConnection(0).GetDHparameters().alpha = m_v[index]*PI;
           index++;
         }
@@ -671,14 +661,19 @@ Cfg::GetRandomCfgImpl(Environment* _env, shared_ptr<Boundary> _bb) {
       }
     }
     for(Robot::JointIT i = rit->m_joints.begin(); i != rit->m_joints.end(); ++i) {
-      if(i->second == Robot::REVOLUTE) {
-        //double angle = _bb->GetRandomValueInParameter(i+index);
-        m_v.push_back(2.0*DRand()-1.0);
+      if(i->get<0>() == Robot::REVOLUTE) {
+        pair<double, double> r = i->get<2>();
+        double t = DRand()*(r.second-r.first)+r.first;
+        m_v.push_back(t);
         index++;
       }
-      else if(i->second == Robot::SPHERICAL) {
-        m_v.push_back(2.0*DRand()-1.0);
-        m_v.push_back(2.0*DRand()-1.0);
+      else if(i->get<0>() == Robot::SPHERICAL) {
+        pair<double, double> r = i->get<2>();
+        double t = DRand()*(r.second-r.first)+r.first;
+        r = i->get<3>();
+        double a = DRand()*(r.second-r.first)+r.first;
+        m_v.push_back(t);
+        m_v.push_back(a);
         index++;
       }
     }

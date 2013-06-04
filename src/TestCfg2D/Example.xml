@@ -1,14 +1,7 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <MotionPlanning>
   <MPProblem>
-    <Environment input_env="narrow.env">
-      <robot Cfg_name="Cfg_2D" num_joints="0" pos_dof="2" dofs="2"> 
-        <boundary type="bbox" translational_scale="1">
-          <parameter id="0" label="x" type="translational" min="-15" max="15" />
-          <parameter id="1" label="y" type="translational" min="-15" max="15" />
-        </boundary>
-      </robot>
-    </Environment>
+    <Environment filename="narrow.env"/>
 
     <DistanceMetrics>
       <Euclidean label="euclidean"/>

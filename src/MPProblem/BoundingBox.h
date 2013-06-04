@@ -2,50 +2,37 @@
 #define BOUNDINGBOX_H_
 
 #include "Boundary.h"
-//#include "MPUtils.h"
-
-class Environment;
 
 class BoundingBox :  public Boundary {
   public:
-    BoundingBox(int _DOFs = 0, int _posDOFs = 0);
-    BoundingBox(XMLNodeReader& _node);
-    BoundingBox(const BoundingBox& _bbox);
-    ~BoundingBox();
+    BoundingBox();
+    BoundingBox(const BoundingBox& _bbx);
+    ~BoundingBox() {}
 
-    void Clear();
-    bool operator==(const Boundary& _bb) const;
+    bool operator==(const Boundary& _b) const;
 
-    void SetParameter(int _par, double _first, double _second);
-    std::vector<BoundingBox> Partition(int _par, double _point, double _epsilon);
+    double GetMaxDist(double _r1 = 2.0, double _r2 = 0.5) const;
+    pair<double, double> GetRange(size_t _i) const;
+    
+    Point3d GetRandomPoint() const;
+    bool InBoundary(Vector3D _p) const;
+    double GetClearance(Vector3D _p) const;
+    Vector3D GetClearancePoint(Vector3D _p) const;
+    double GetClearance2DSurf(Point2d _pos, Point2d& _cdPt) const;
+    
+    void ResetBoundary(vector<pair<double, double> >& _obstBBX, double _d);
+   
+    void Read(istream& _is);
+    void Write(ostream& _os) const;
+    
+  private:
+    pair<double, double> m_bbx[3];
 
-    int FindSplitParameter(BoundingBox& _boundingBox);
-
-    BoundingBox GetCombination(BoundingBox& _boundingBox);
-    double GetClearance(Vector3D _point3d) const;
-    Point3d GetRandomPoint();
-
-    void TranslationalScale(double _scaleFactor);
-
-
-    void Print(std::ostream& _os, char _rangeSep=':', char _parSep=';') const;
-
-    bool IfWrap(int _par);
-    bool IfEnoughRoom(int _par, double _room);
-    bool IfSatisfiesConstraints(Vector3D _point3d) const;
-    bool IfSatisfiesConstraints(vector<double> _cfg) const;
-    bool InBoundary(const Cfg& _cfg, Environment* _env);
-
-  public:
 #ifdef _PARALLEL
-
+  public:
     void define_type(stapl::typer &_t)
     {
-      _t.member(m_jointLimits);
-      _t.member(m_boundingBox);
-      _t.member(m_posDOFs);
-      _t.member(m_DOFs);
-      _t.member(m_parType);
+      _t.member(m_bbx);
     }
 #endif
 };

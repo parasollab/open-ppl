@@ -243,7 +243,7 @@ LazyQuery<MPTraits>::NodeEnhance(RoadmapType* _rdmp, StatClass& _stats) {
     enhance = seed + incr;
     enhance.SetLabel("Enhance", true);
    
-    if(!enhance.InBoundary(this->GetMPProblem()->GetEnvironment(), this->GetMPProblem()->GetEnvironment()->GetBoundary()))
+    if(!this->GetMPProblem()->GetEnvironment()->InBounds(enhance))
       continue;
 
     // Add enhance to roadmap and connect

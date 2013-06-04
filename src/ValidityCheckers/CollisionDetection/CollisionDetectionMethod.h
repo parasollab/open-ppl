@@ -5,8 +5,8 @@
 
 class MultiBody;
 class StatClass;
-class CDInfo;
 class Cfg;
+class CDInfo;
 
 class CollisionDetectionMethod {
   public:

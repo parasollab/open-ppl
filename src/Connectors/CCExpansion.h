@@ -26,6 +26,7 @@
 #define CCEXPANSION_H_
 
 #include "ConnectorMethod.h"
+#include "Utilities/RRTExpand.h"
 
 //#########################//
 // CCExpansion Method //

@@ -286,32 +286,17 @@ ClearanceUtility<MPTraits>::ExactCollisionInfo(CfgType& _cfg, CfgType& _clrCfg, 
   if(m_useBBX){
     // CfgType is now know as good, get BBX and ROBOT info
     boost::shared_ptr<MultiBody> robot = env->GetMultiBody(_cfg.GetRobotIndex());
-    std::pair<double,double> bbxRange;
 
     // Find closest point between robot and bbx, set if less than min dist from obstacles
     for(int m=0; m < robot->GetFreeBodyCount(); ++m) {
       GMSPolyhedron &poly = robot->GetFreeBody(m)->GetWorldPolyhedron();
       for(size_t j = 0; j < poly.m_vertexList.size(); ++j){
-        for(size_t k=0; k<_cfg.PosDOF(); ++k) { // For all positional DOFs
-          bbxRange = _bb->GetRange(k);
-          if((poly.m_vertexList[j][k] - bbxRange.first) < _cdInfo.m_minDist) {
-            for(size_t l=0; l<_cfg.PosDOF(); ++l) {// Save new closest point
-              _cdInfo.m_robotPoint[l]  = poly.m_vertexList[j][l];
-              _cdInfo.m_objectPoint[l] = poly.m_vertexList[j][l];
-            }
-            _cdInfo.m_objectPoint[k] = bbxRange.first; // Lower Bound
-            _cdInfo.m_minDist = poly.m_vertexList[j][k]-bbxRange.first;
-            _cdInfo.m_nearestObstIndex = -(k*2);
-          }
-          if((bbxRange.second - poly.m_vertexList[j][k]) < _cdInfo.m_minDist) {
-            for(size_t l=0; l<_cfg.PosDOF(); ++l) {// Save new closest point
-              _cdInfo.m_robotPoint[l]  = poly.m_vertexList[j][l];
-              _cdInfo.m_objectPoint[l] = poly.m_vertexList[j][l];
-            }
-            _cdInfo.m_objectPoint[k] = bbxRange.second; // Upper Bound
-            _cdInfo.m_minDist = bbxRange.second-poly.m_vertexList[j][k];
-            _cdInfo.m_nearestObstIndex = -(k*2+1);
-          }
+        double clr = _bb->GetClearance(poly.m_vertexList[j]);
+        if(clr < _cdInfo.m_minDist){
+          _cdInfo.m_robotPoint = poly.m_vertexList[j];
+          _cdInfo.m_objectPoint = _bb->GetClearancePoint(poly.m_vertexList[j]);
+          _cdInfo.m_minDist = clr;
+          _cdInfo.m_nearestObstIndex = -1;
         }
       }
     }
@@ -349,7 +334,7 @@ ClearanceUtility<MPTraits>::ExactCollisionInfo(CfgType& _cfg, CfgType& _clrCfg, 
 
       tmpValidity = vcm->IsValid(tmpCfg, env, *stats, tmpInfo, &call);
       tmpValidity = tmpValidity && !vcm->IsInsideObstacle(tmpCfg, env, tmpInfo);
-      bool inBBX = tmpCfg.InBoundary(env, _bb);
+      bool inBBX = env->InBounds(tmpCfg, _bb);
       if(!inBBX) { 
         if(this->m_debug) cout << "ERROR: Fell out of BBX, error out... " << endl;
         return false;
@@ -392,16 +377,10 @@ ClearanceUtility<MPTraits>::ApproxCollisionInfo(CfgType& _cfg, CfgType& _clrCfg,
 
 
   // Calculate MaxRange for dist calc
-  double maxRange(0.0);
-  for(size_t i=0; i< _cfg.PosDOF(); ++i) {
-    std::pair<double,double> range = env->GetBoundary()->GetRange(i);
-    double tmpRange = range.second-range.first;
-    if(tmpRange > maxRange) 
-      maxRange = tmpRange;
-  }
+  double maxRange = env->GetBoundary()->GetMaxDist();
 
   // If in BBX, check validity to get _cdInfo, return false if not valid
-  if(!_cfg.InBoundary(env,_bb))
+  if(!env->InBounds(_cfg, _bb))
     return false;
 
   _cdInfo.ResetVars();
@@ -469,7 +448,7 @@ ClearanceUtility<MPTraits>::ApproxCollisionInfo(CfgType& _cfg, CfgType& _clrCfg,
       *tickIT += *incrIT;
       currInside = vcm->IsInsideObstacle(*tickIT, env, tmpInfo);
       currValidity = vcm->IsValid(*tickIT, env, *stats, tmpInfo, &call);
-      currInBBX = tickIT->InBoundary(env, _bb);
+      currInBBX = env->InBounds(*tickIT, _bb);
       currValidity = currValidity && !currInside;
 
       if(m_useBBX) 
@@ -509,7 +488,7 @@ ClearanceUtility<MPTraits>::ApproxCollisionInfo(CfgType& _cfg, CfgType& _clrCfg,
       middleCfg = incr[candTick[i]] * mid + candIn[i];
       midInside = vcm->IsInsideObstacle(middleCfg,env,tmpInfo);
       midValidity = vcm->IsValid(middleCfg, env, *stats, tmpInfo, &call);
-      midInBBX = middleCfg.InBoundary(env,_bb);
+      midInBBX = env->InBounds(middleCfg, _bb);
       midValidity = midValidity && !midInside;
       if(m_useBBX) 
         midValidity = (midValidity && midInBBX);
@@ -547,7 +526,7 @@ ClearanceUtility<MPTraits>::ApproxCollisionInfo(CfgType& _cfg, CfgType& _clrCfg,
 
       midInside = vcm->IsInsideObstacle(middleCfg, env, tmpInfo);
       midValidity = vcm->IsValid(middleCfg, env, *stats, tmpInfo, &call);
-      midInBBX = middleCfg.InBoundary(env,_bb);
+      midInBBX = env->InBounds(middleCfg, _bb);
       midValidity = midValidity && !midInside;
       if(m_useBBX) 
         midValidity = (midValidity && midInBBX);
@@ -568,7 +547,7 @@ ClearanceUtility<MPTraits>::ApproxCollisionInfo(CfgType& _cfg, CfgType& _clrCfg,
   if(_clrCfg == _cfg)
     return false;
   
-  if(_clrCfg.InBoundary(env, _bb)) {
+  if(env->InBounds(_clrCfg, _bb)) {
     _cfg.m_clearanceInfo = _cdInfo;
     _cfg.m_witnessCfg = shared_ptr<Cfg>(new CfgType(_clrCfg));
     return true;
@@ -955,7 +934,7 @@ MedialAxisUtility<MPTraits>::FindMedialAxisBorderExact(typename MPTraits::CfgTyp
 
     // Test for in BBX and inside obstacle
     bool inside = vcm->IsInsideObstacle(tmpCfg, env, tmpInfo);
-    bool inBBX = tmpCfg.InBoundary(env, _bb);
+    bool inBBX = env->InBounds(tmpCfg, _bb);
     if(this->m_debug) VDAddTempCfg(tmpCfg, (inside || !inBBX));
     if(this->m_debug) VDClearLastTemp();
 
@@ -1045,7 +1024,7 @@ MedialAxisUtility<MPTraits>::FindMedialAxisBorderApprox(typename MPTraits::CfgTy
 
     // Test for in BBX and inside obstacle
     bool inside = vcm->IsInsideObstacle(tmpCfg, env, tmpInfo);
-    bool inBBX = tmpCfg.InBoundary(env, _bb);
+    bool inBBX = env->InBounds(tmpCfg, _bb);
     if(this->m_debug) VDAddTempCfg(tmpCfg, (inside || !inBBX));
     if(this->m_debug) VDClearLastTemp();
 

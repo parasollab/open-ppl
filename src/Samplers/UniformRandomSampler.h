@@ -56,7 +56,7 @@ class UniformRandomSampler : public SamplerMethod<MPTraits> {
       tmp.GetRandomCfg(_env,_bb);     
 
       //Is configuration within boundary? 
-      bool inBBX = tmp.InBoundary(_env, _bb);          
+      bool inBBX = _env->InBounds(tmp, _bb);          
       if(this->m_debug){ 
         cout << "tmp::" << tmp << endl;
         cout << "InBoudary::" << inBBX << endl;

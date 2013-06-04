@@ -54,9 +54,6 @@ class SSSurface : public CfgSurface {
     template<class DistanceMetricPointer>
       void GetRandomRay(double _incr, Environment* _env, DistanceMetricPointer _dm, bool _norm=true);
 
-
-    virtual vector<Robot> GetRobots(int) {return vector<Robot>();}
-
     SSSurface& operator=(const SSSurface& _rhs);
    // virtual void WeightedSum(const Cfg&, const Cfg&, double _weight = 0.5);       
     ///////////////////////////////////////////////////////////////////////////////////////////

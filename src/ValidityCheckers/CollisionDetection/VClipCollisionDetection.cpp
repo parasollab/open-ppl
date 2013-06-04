@@ -1,6 +1,7 @@
 #ifdef USE_VCLIP
 
 #include "VClipCollisionDetection.h"
+#include "CDInfo.h"
 #include "Utilities/MetricUtils.h"
 #include "MPProblem/Geometry/MultiBody.h"
 

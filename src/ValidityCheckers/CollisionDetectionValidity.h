@@ -5,7 +5,6 @@
 #include "Utilities/MetricUtils.h"
 #include "ValidityCheckerMethod.h"
 #include "ValidityCheckers/CollisionDetection/CDInfo.h"
-#include "ValidityCheckers/CollisionDetection/CollisionDetectionMethod.h"
 #include "ValidityCheckers/CollisionDetection/RapidCollisionDetection.h"
 #include "ValidityCheckers/CollisionDetection/PQPCollisionDetection.h"
 #include "ValidityCheckers/CollisionDetection/VClipCollisionDetection.h"

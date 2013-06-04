@@ -96,31 +96,30 @@ class GridSampler : public SamplerMethod<MPTraits> {
       int numPoints = it->second;
 
       // Get bounding box min and max (for this dimension)
-      double bbMin = _bb->GetRange(index).first;
-      double bbMax = _bb->GetRange(index).second;
+      pair<double, double> range = _env->GetRange(index, _bb);
 
       // Get starting point (for this dimension)
       double dofVal = tmp[index];
 
       // Resolution of grid
-      double delta = (bbMax - bbMin) / (numPoints + 1);
+      double delta = (range.second - range.first) / (numPoints + 1);
 
       // Number of grid cells from bounding box min
-      double steps = floor(((dofVal - bbMin) / delta) + 0.5);
+      double steps = floor(((dofVal - range.first) / delta) + 0.5);
 
       // The grid location closest to dofVal
-      double gridVal = steps*delta + bbMin;
+      double gridVal = steps*delta + range.first;
 
       // Push gridVal inside bounding box (if necessary)
-      gridVal = min(bbMax, gridVal);
-      gridVal = max(bbMin, gridVal);
+      gridVal = min(range.second, gridVal);
+      gridVal = max(range.first, gridVal);
 
       // If the bounding box is an obstacle, move gridVal further inside bounding box (if necessary) 
       if(m_useBoundary) {
-        if(fabs(bbMax - gridVal) <= delta/10)
-          gridVal = bbMax - delta;
-        if(fabs(bbMin - gridVal) <= delta/10)
-          gridVal = bbMin + delta;
+        if(fabs(range.second - gridVal) <= delta/10)
+          gridVal = range.second - delta;
+        if(fabs(range.first - gridVal) <= delta/10)
+          gridVal = range.first + delta;
       }
 
       // Set the parameter at index
@@ -135,7 +134,7 @@ class GridSampler : public SamplerMethod<MPTraits> {
     }
 
     // Is tmp a valid configuration?
-    if(tmp.InBoundary(_env,_bb) && 
+    if(_env->InBounds(tmp, _bb) && 
         vc->IsValid(tmp, _env, _stats, cdInfo, &callee)) {
       // Yes (sampler successful)
       _cfgOut.push_back(tmp);

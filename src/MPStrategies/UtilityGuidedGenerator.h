@@ -172,7 +172,7 @@ UtilityGuidedGenerator<MPTraits>::Run() {
       while(!inBBX && !isValid) {
         stats->IncNodesAttempted(this->GetNameAndLabel());
         q.GetRandomCfg(env, bb);
-        inBBX = q.InBoundary(env, bb);
+        inBBX = env->InBounds(q, bb);
         if(inBBX) {
           isValid = vcm->IsValid(q, env, *stats, cdInfo, &callee);
           if(isValid) 
@@ -210,7 +210,7 @@ UtilityGuidedGenerator<MPTraits>::Run() {
       //add the sample to the model and roadmap (if free)
       stats->IncNodesAttempted(this->GetNameAndLabel());
       stats->StopClock("Total Sampling Time");
-      bool isColl = !q.InBoundary(env, bb) || !vcm->IsValid(q, env, *stats, cdInfo, &callee);
+      bool isColl = !env->InBounds(q, bb) || !vcm->IsValid(q, env, *stats, cdInfo, &callee);
       if(!isColl) {
         if(this->m_debug) cout << "valid, adding to roadmap and model\n";
         stats->IncNodesGenerated(this->GetNameAndLabel());

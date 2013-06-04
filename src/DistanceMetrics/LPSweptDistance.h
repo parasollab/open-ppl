@@ -5,6 +5,8 @@
 #include "MPProblem/Environment.h"
 #include "LocalPlanners/LPOutput.h"
 
+class StatClass;
+
 template<class MPTraits>
 class LPSweptDistance : public DistanceMetricMethod<MPTraits> {
   public:

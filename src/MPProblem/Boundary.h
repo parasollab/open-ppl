@@ -11,72 +11,39 @@ class Environment;
 
 using namespace mathtool;
 
-///\todo add MPBaseObject defautl constructor
 class Boundary {
   public:
     enum parameter_type{TRANSLATIONAL,REVOLUTE,PRISMATIC};
-    Boundary();
-    Boundary(XMLNodeReader& _node);
-    virtual ~Boundary();
-    virtual double GetClearance(Vector3D _point3d) const = 0;
-    virtual bool IfSatisfiesConstraints(Vector3D _point3d) const =0;
-    virtual bool InBoundary(const Cfg& _cfg, Environment* _env) = 0;
-    virtual bool operator==(const Boundary& _bb) const =0; 
-    virtual Point3d GetRandomPoint() = 0; 
-    double GetRandomValueInParameter(int _par);
+    
+    Boundary(){}
+    virtual ~Boundary(){}
+   
+    friend ostream& operator<<(ostream& _os, const Boundary& _b);
+    virtual bool operator==(const Boundary& _b) const = 0; 
+   
+    virtual double GetMaxDist(double _r1 = 2.0, double _r2 = 0.5) const = 0;
+    virtual pair<double, double> GetRange(size_t _i) const = 0;
+
+    virtual Point3d GetRandomPoint() const = 0; 
+    virtual bool InBoundary(Vector3D _p) const = 0;
+    virtual double GetClearance(Vector3D _p) const = 0;
+    virtual Vector3D GetClearancePoint(Vector3D _p) const = 0;
+    virtual double GetClearance2DSurf(Point2d _pos, Point2d& _cdPt) const = 0;
+   
+    virtual void ResetBoundary(vector<pair<double, double> >& _obstBBX, double _d) = 0;
+
     virtual bool IsInterSect(Boundary* _b){ return true;}//not implemented yet
     virtual Boundary* GetIntersect(Boundary* _b){return _b;}//not implemented yet
     virtual bool IsOverlap(Boundary* _b){return true;}//not implemented yet
     virtual Boundary* GetOverlap(Boundary* _b){return _b;}//not implemented yet
-    virtual void Print(std::ostream& _os, char _rangeSep=':', char _parSep=';') const=0 ;
-    const std::pair<double,double> GetRange(int _par) const;
-    parameter_type GetType(int _par) const;
-    void TranslationalScale(double _scaleFactor);
-    void SetParameter(int _par, double _pFirst, double _pSecond);
-    void SetRange(std::vector<double>& _ranges);
-    virtual bool IfEnoughRoom(int _par, double _room) =0;
-    int GetDOFs() const;
-    int GetPosDOFs() const;
-    
-    double GetClearance2DSurf(Point2d _pos, Point2d& _cdPt) const;
-  protected:
-    std::vector<parameter_type> m_parType;
-    vector< std::pair<double,double> > m_jointLimits; 
-    int m_posDOFs;
-    int m_DOFs;
-    std::vector< std::pair<double,double> > m_boundingBox;
+
+    virtual void Read(istream& _is) = 0;
+    virtual void Write(ostream& _os) const = 0 ;
   
-  public:
 #ifdef _PARALLEL
-
+  public:
     void define_type(stapl::typer&) { }
-
 #endif
 };
-
-#ifdef _PARALLEL
-namespace stapl {
-
-
-  /*
-
-     template <typename Accessor>
-     class proxy<Boundary, Accessor> 
-     : public Accessor {
-     private:
-     friend class proxy_core_access;
-     typedef Boundary target_t;
-
-     public:
-     explicit proxy(Accessor const& acc) : Accessor(acc) { }
-  //operator target_t() const { return Accessor::read(); }
-  proxy const& operator=(proxy const& rhs) { Accessor::write(rhs); return *this; }
-  proxy const& operator=(target_t const& rhs) { Accessor::write(rhs); return *this;}
-  double GetRandomValueInParameter(int _par) { return Accessor::invoke(&target_t::GetRandomValueInParameter, _par);}
-  };*/
-
-
-}
+    
 #endif
-
-#endif /*_Boundary_h_*/

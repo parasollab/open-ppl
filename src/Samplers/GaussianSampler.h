@@ -80,7 +80,7 @@ class GaussianSampler : public SamplerMethod<MPTraits>
         //and only check validity with obstacles. Otherwise have both conditions.
         bool cfg1Free;
         if(!m_useBoundary) {
-          if(!cfg1.InBoundary(_env,_bb)){
+          if(!_env->InBounds(cfg1, _bb)){
             if(this->m_debug){
               VDAddTempCfg(cfg1, false); 
               VDComment("GaussianSampler::Attempt out of bounds."); 
@@ -91,7 +91,7 @@ class GaussianSampler : public SamplerMethod<MPTraits>
           cfg1Free = vc->IsValid(cfg1, _env, _stats, cdInfo, &callee);
         }
         else { 
-          cfg1Free = cfg1.InBoundary(_env,_bb) && 
+          cfg1Free = _env->InBounds(cfg1, _bb) && 
             vc->IsValid(cfg1, _env, _stats, cdInfo, &callee);
         } 
 
@@ -116,7 +116,7 @@ class GaussianSampler : public SamplerMethod<MPTraits>
           do {
             incr.GetRandomRay(fabs(GaussianDistribution(fabs(m_d), fabs(m_d))), _env, dm);
             cfg2 = cfg1 + incr;
-          } while(!cfg2.InBoundary(_env,_bb));
+          } while(!_env->InBounds(cfg2, _bb));
 
           cfg2Free = vc->IsValid(cfg2, _env, _stats, cdInfo, &callee);
         } 
@@ -124,7 +124,7 @@ class GaussianSampler : public SamplerMethod<MPTraits>
           incr.GetRandomRay(fabs(GaussianDistribution(fabs(m_d), fabs(m_d))), _env, dm);
           cfg2 = cfg1 + incr;
 
-          cfg2Free = cfg2.InBoundary(_env,_bb) && 
+          cfg2Free = _env->InBounds(cfg2, _bb) && 
             vc->IsValid(cfg2, _env, _stats, cdInfo, &callee);
         }
 

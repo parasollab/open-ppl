@@ -22,10 +22,10 @@ using boost::shared_ptr;
 
 #include "MPProblem/Robot.h"
 #include "Utilities/MPUtils.h"
+#include "ValidityCheckers/CollisionDetection/CDInfo.h"
 
 class Cfg;
 class Environment;
-class CDInfo;
 class Boundary;
 
 /////////////////////////////////////////////////////////////////////////////////////////////
@@ -76,7 +76,6 @@ class Cfg {
     virtual ~Cfg() {};
 
     static void InitRobots(vector<Robot>& _robots);
-    virtual vector<Robot> GetRobots(int){return vector<Robot>();};
 
     Cfg& operator=(const Cfg& _cfg);
     ///determines equality of this and other configuration
@@ -126,7 +125,7 @@ class Cfg {
     /// Return the number of degrees of freedom for the configuration class
     static size_t DOF() {return m_dof;};
     static size_t PosDOF() {return m_posdof;}
-    static size_t GetNumOfJoints() {return 0;}
+    static size_t GetNumOfJoints() {return m_numJoints;}
     virtual const string GetName() const {return "Cfg";};
 
     /// methods for Distance Metric.
@@ -140,10 +139,6 @@ class Cfg {
     //at this Cfg
     virtual Vector3D GetRobotCenterPosition() const;
     virtual Vector3D GetRobotCenterofMass(Environment* _env) const;
-
-    //checks boundary constraints on Cfg
-    virtual bool InBoundary(Environment* _env) const;
-    virtual bool InBoundary(Environment* _env, shared_ptr<Boundary> _bb) const;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     //
@@ -208,6 +203,7 @@ class Cfg {
 
     static size_t m_dof;
     static size_t m_posdof;
+    static size_t m_numJoints;
 
     enum DofType {POS, ROT, JOINT};
     static vector<DofType> m_dofTypes;

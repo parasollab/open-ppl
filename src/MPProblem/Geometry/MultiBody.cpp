@@ -527,9 +527,7 @@ MultiBody::Read(istream& _is, bool _debug) {
         cout << c << endl;
 
       //add connection info to multibody connection map
-      jointMap.push_back(make_pair(
-            make_pair(c.m_prevBodyIdx, c.m_nextBodyIdx), c.type));
-
+      jointMap.push_back(Robot::Joint(c.m_jointType, c.m_bodyIndices, c.m_jointLimits[0], c.m_jointLimits[1])); 
     } //endfor i
   }
   else{ //Passive, Surface, Internal

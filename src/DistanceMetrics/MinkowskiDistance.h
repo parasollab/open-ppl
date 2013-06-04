@@ -123,13 +123,7 @@ MinkowskiDistance<MPTraits>::ScaleCfg(Environment* _env, double _length, CfgType
 template<class MPTraits>
 double
 MinkowskiDistance<MPTraits>::PositionDistance(Environment* _env, const CfgType& _c) {
-  double diagonal = 0;
-  for(size_t i=0; i<_c.PosDOF(); ++i) {
-    std::pair<double,double> range = _env->GetBoundary()->GetRange(i);
-    diagonal += pow(fabs(range.second-range.first), m_r1);
-  }
-  diagonal = pow(diagonal, m_r3);
-
+  double diagonal = _env->GetBoundary()->GetMaxDist(m_r1, m_r3);
   vector<double> p = _c.GetPosition();
   double pos = 0;
   for(size_t i=0; i<p.size(); ++i) 

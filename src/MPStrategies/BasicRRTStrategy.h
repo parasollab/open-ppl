@@ -6,6 +6,7 @@
 #define BASICRRTSTRATEGY_H_
 
 #include "MPStrategyMethod.h"
+#include "Utilities/RRTExpand.h"
 #include <boost/make_shared.hpp>
 
 template<class MPTraits>
@@ -191,7 +192,7 @@ BasicRRTStrategy<MPTraits>::Initialize(){
     size_t i = 0;
     while(i < m_numRoots){
       tmp.GetRandomCfg(env);
-      if (tmp.InBoundary(env)
+      if(env->InBounds(tmp)
           && this->GetMPProblem()->GetValidityChecker(m_vc)->IsValid(tmp, env, *stats, cdInfo, &callee)){ 
         VID add = this->GetMPProblem()->GetRoadmap()->GetGraph()->AddVertex(tmp);
         m_trees.push_back(vector<VID>(1,add));

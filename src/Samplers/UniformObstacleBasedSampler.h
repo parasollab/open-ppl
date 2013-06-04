@@ -59,7 +59,7 @@ class UniformObstacleBasedSampler : public SamplerMethod<MPTraits> {
         if(_env != NULL)
           margin = (_env->GetMultiBody(_cfgIn.GetRobotIndex()))->GetMaxAxisRange();
       }
-      _env->ResetBoundingBox(margin, _cfgIn.GetRobotIndex());
+      _env->ResetBoundary(margin, _cfgIn.GetRobotIndex());
       shared_ptr<Boundary> bbNew = _env->GetBoundary();
 
       _stats.IncNodesAttempted(this->GetNameAndLabel());
@@ -106,7 +106,7 @@ class UniformObstacleBasedSampler : public SamplerMethod<MPTraits> {
         tickFree = (vc->IsValid(tick, _env, _stats, cdInfo, &callee)) && (!vc->IsInsideObstacle(tick, _env, cdInfo));
         _env->SetBoundary(_bb);
         if(m_useBoundary) 
-          tickFree = tickFree && (tick.InBoundary(_env, _bb));
+          tickFree = tickFree && _env->InBounds(tick, _bb);
 
         if(tempFree == tickFree) {
           tempFree = tickFree;
@@ -115,12 +115,12 @@ class UniformObstacleBasedSampler : public SamplerMethod<MPTraits> {
         else {	//tempFree != tickFree
           _stats.IncNodesGenerated(this->GetNameAndLabel());
           generated = true;
-          if(tempFree && (temp.InBoundary(_env, _bb))) {
+          if(tempFree && _env->InBounds(temp, _bb)) {
             _cfgOut.push_back(temp);
             tempFree = tickFree;
             temp = tick;
           }
-          else if(tickFree && (tick.InBoundary(_env, _bb))) {       //tickFree
+          else if(tickFree && _env->InBounds(tick, _bb)) {       //tickFree
             _cfgOut.push_back(tick);
             tempFree = tickFree;
             temp = tick;

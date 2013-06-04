@@ -105,11 +105,11 @@ Roadmap<MPTraits>::Write(ostream& _os, Environment* _env,
   _os << "PMPL Roadmap Version 041805";
   _os << endl << "#####PREAMBLESTART#####";
   _os << endl << "../pmpl -f " << _env->GetEnvFileName() << " ";//commandLine;
-  _os << " -bbox "; _env->GetBoundary()->Print(_os, ',', ',');
+  _os << " -bbox " << *(_env->GetBoundary());
   if(!_boundaries.empty()) {
     typedef vector<shared_ptr<Boundary> >::const_iterator BIT;
     for(BIT bit = _boundaries.begin(); bit!=_boundaries.end(); bit++) {
-      _os << " -bbox "; (*bit)->Print(_os, ',', ',');
+      _os << " -bbox " << *bit;
     }
   }
   _os << endl << "#####PREAMBLESTOP#####";
