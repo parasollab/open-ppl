@@ -46,7 +46,7 @@ BoundingBox::GetRandomPoint() const {
 }
 
 bool 
-BoundingBox::InBoundary(Vector3D _p) const {
+BoundingBox::InBoundary(const Vector3D& _p) const {
   for(int i = 0; i < 3; ++i)
     if( _p[i] < m_bbx[i].first || _p[i] > m_bbx[i].second)
       return false;
@@ -54,7 +54,7 @@ BoundingBox::InBoundary(Vector3D _p) const {
 }
 
 double 
-BoundingBox::GetClearance(Vector3D _p) const {
+BoundingBox::GetClearance(const Vector3D& _p) const {
   double minClearance = numeric_limits<double>::max();
   for (int i = 0; i < 3; ++i) {
     double clearance = min((_p[i] - m_bbx[i].first ), (m_bbx[i].second - _p[i]));
@@ -65,7 +65,7 @@ BoundingBox::GetClearance(Vector3D _p) const {
 }
     
 Vector3D
-BoundingBox::GetClearancePoint(Vector3D _p) const {
+BoundingBox::GetClearancePoint(const Vector3D& _p) const {
   Vector3D clrP = _p;
   double minClearance = numeric_limits<double>::max();
   for (int i = 0; i < 3; ++i) {

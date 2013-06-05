@@ -388,11 +388,11 @@ Environment::InCSpace(const Cfg& _cfg, shared_ptr<Boundary> _b){
   for(RIT rit = m_robots.begin(); rit != m_robots.end(); rit++) {
     if(rit->m_base != Robot::FIXED) {
       Vector3D p;
-      p[index] = _cfg[index];
-      p[index+1] = _cfg[index+1];
+      p[0] = _cfg[index];
+      p[1] = _cfg[index+1];
       index+=2;
       if(rit->m_base == Robot::VOLUMETRIC) {
-        p[index] = _cfg[index];
+        p[2] = _cfg[index];
         index++;
       }
       if(!_b->InBoundary(p))

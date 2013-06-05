@@ -15,9 +15,9 @@ class BoundingBox :  public Boundary {
     pair<double, double> GetRange(size_t _i) const;
     
     Point3d GetRandomPoint() const;
-    bool InBoundary(Vector3D _p) const;
-    double GetClearance(Vector3D _p) const;
-    Vector3D GetClearancePoint(Vector3D _p) const;
+    bool InBoundary(const Vector3D& _p) const;
+    double GetClearance(const Vector3D& _p) const;
+    Vector3D GetClearancePoint(const Vector3D& _p) const;
     double GetClearance2DSurf(Point2d _pos, Point2d& _cdPt) const;
     
     void ResetBoundary(vector<pair<double, double> >& _obstBBX, double _d);

@@ -41,17 +41,17 @@ BoundingSphere::GetRandomPoint() const {
 }
 
 bool
-BoundingSphere::InBoundary(Vector3D _p) const {
+BoundingSphere::InBoundary(const Vector3D& _p) const {
   return (_p-m_center).norm() < m_radius;
 }
 
 double
-BoundingSphere::GetClearance(Vector3D _p) const {
+BoundingSphere::GetClearance(const Vector3D& _p) const {
   return m_radius - (_p - m_center).norm();
 }
 
 Vector3D
-BoundingSphere::GetClearancePoint(Vector3D _p) const {
+BoundingSphere::GetClearancePoint(const Vector3D& _p) const {
   Vector3D v = (_p - m_center).normalize();
   return v + m_center;
 }

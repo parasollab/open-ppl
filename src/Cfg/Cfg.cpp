@@ -484,7 +484,7 @@ Cfg::ConfigEnvironment(Environment* _env) const {
       }
       // configure the robot according to current Cfg: joint parameters
       // (and base locations/orientations for free flying robots.)
-      Transformation t1 = Transformation(Orientation(Orientation::FixedXYZ, gamma*PI, beta*PI, alpha*PI), Vector3D(x,y,z));
+      Transformation t1(Orientation(Orientation::FixedXYZ, gamma*PI, beta*PI, alpha*PI), Vector3D(x,y,z));
       // update link i
       mb->GetFreeBody(rit->m_bodyIndex)->Configure(t1);
     }
