@@ -3,8 +3,9 @@
 
 #if(defined(PMPCfgSurface) || defined(PMPSSSurfaceMult))
 
-#include "ValidityCheckerMethod.h"
 #include "MPProblem/Environment.h"
+#include "Utilities/MetricUtils.h"
+#include "ValidityCheckerMethod.h"
 
 template<class MPTraits>
 class SurfaceValidity : public ValidityCheckerMethod<MPTraits> {

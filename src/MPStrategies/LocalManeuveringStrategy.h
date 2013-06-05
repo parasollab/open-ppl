@@ -217,6 +217,13 @@ class LocalManeuveringStrategy : public MPStrategyMethod<MPTraits> {
     double GetPullInMinSteeringAngle(){return m_pullInSteerMin;}
     void SetPullInMinSteeringAngle(double _newAngle){m_pullInSteerMin = NormalizeTheta(fabs(_newAngle));}
 
+    //interface functions for GB direct interface
+    void SetGoals(vector<CfgType>& _goals) { m_goals=_goals; }
+    void SetRoots(vector<CfgType>& _roots) { m_roots=_roots; }
+    void SetGuidePath(Path3D _gp) { m_guidePath=_gp; }
+    bool GetSuccessfulPlanFound() { return m_successfulPlanFound; }
+    vector<CfgType>& GetGeneratedTrajectories() { return m_gbPaths; } 
+
   protected:
     string m_vc; //validy checker
     string m_query; //path for query file start and goal configurations)
@@ -236,6 +243,7 @@ class LocalManeuveringStrategy : public MPStrategyMethod<MPTraits> {
     VID m_goal; //VID of configuration in our tree at the goal
     vector<CfgType> m_roots; //starting (input) configurations of each agent
     vector<CfgType> m_goals; //guide path sub goals
+    bool m_successfulPlanFound;
     vector<size_t> m_goalsNotFound; //goals along the guide path that haven't yet been reached
     vector<CfgType> m_gbPaths; //our pseudo-roadmap containing all the paths for all agents
     vector<pair<int,int> > m_planTimes; //tracks time agent began planning, and how long each agent planned
@@ -255,6 +263,8 @@ class LocalManeuveringStrategy : public MPStrategyMethod<MPTraits> {
     m_deadlock1TurnSteerMin,m_deadlock1TurnSteerMax,m_deadlock2Divisor;
 
     double m_pullInForwardProbability,m_pullInNormalBackwardProbability, m_pullInSteerMin;
+    //debug
+    Vector2d m_debugGlobalGoalDir;
 };
 
 template<class MPTraits>
@@ -263,38 +273,50 @@ LocalManeuveringStrategy<MPTraits>::LocalManeuveringStrategy() :
     this->SetName("LocalManeuveringStrategy");
     m_delta = 0.05;
     m_maxNumTicks = 1;
-    m_maxNumIter = 1000;
+    //m_maxNumIter = 1000;
+    //m_maxNumIter = 300;
+    m_maxNumIter = 300;
     m_numRoots =  1;
     m_vc = "";
     m_query = "";
     m_path = "";
     m_gbPath = "";
-    m_goalReachDistance = 1.0;
+    //m_goalReachDistance = 1.0;
+    m_goalReachDistance = 5.0;
     m_goalReachOrientation = 0.34;
-    m_guidePathSubGoal =  3;
+    //m_guidePathSubGoal =  3;
+    m_guidePathSubGoal = 15;
     m_guidePathFile = "";
     m_planType = "";
 
     //parameterize the behaviors
+    //m_maxStartTime = 50;
     m_maxStartTime = 50;
     m_forwardPullOutDistMin = 1.25;
     m_forwardPullOutDistMax  = 6.0;
     m_forwardReqAngle  = 0.52536;
     m_forwardPullOutTurnDistMin = 10.0;
     m_forwardPullOutTurnDistMax  = 22.5;
-    m_forwardPullOutSteerMin = 0.10;
-    m_forwardPullOutSteerMax = 0.15;
+    //m_forwardPullOutSteerMin = 0.10;
+    //m_forwardPullOutSteerMax = 0.15;
+    m_forwardPullOutSteerMin = 0.05;
+    m_forwardPullOutSteerMax = 0.08;
 
-    m_backPullOutDistMin = 3.75;
-    m_backPullOutDistMax = 8.75;
+    m_backPullOutDistMin = 6.75;
+    m_backPullOutDistMax = 12.75;
+    //m_backPullOutTurnDistMin = 10.0;
+    //m_backPullOutTurnDistMax = 15.0;
     m_backPullOutTurnDistMin = 10.0;
     m_backPullOutTurnDistMax = 15.0;
+    //m_backTowardGoalDistMin = 0.25;
+    //m_backTowardGoalDistMax = 7.75;
     m_backTowardGoalDistMin = 0.25;
-    m_backTowardGoalDistMax = 7.75;
+    m_backTowardGoalDistMax = 2.75;
     m_backPullOutTurnSteerMin = 0.05;
     m_backPullOutTurnSteerMax = 0.20;
+    //m_backPullOutTurnSteerMax = 0.20;
 
-
+/*
     m_deadlock1RightTurnFreq = 0.75;
     m_deadlock1TurnDistMin = 3.75;
     m_deadlock1TurnDistMax = 7.50;
@@ -302,15 +324,29 @@ LocalManeuveringStrategy<MPTraits>::LocalManeuveringStrategy() :
     m_deadlock1TowardGoalDistMax = 12.25;
     m_deadlock1TurnSteerMin = 0.05;
     m_deadlock1TurnSteerMax = 0.20;
+*/
+    m_deadlock1RightTurnFreq = 0.75;
+    m_deadlock1TurnDistMin = 3.25;
+    m_deadlock1TurnDistMax = 7.50;
+    m_deadlock1TowardGoalDistMin = 2.5;
+    m_deadlock1TowardGoalDistMax = 10.25;
+    m_deadlock1TurnSteerMin = 0.05;
+    m_deadlock1TurnSteerMax = 0.15;
 
-    m_deadlock2DistMin = 12.5;
-    m_deadlock2DistMax = 22.5;
+    //m_deadlock2DistMin = 12.5;
+    //m_deadlock2DistMax = 22.5;
+    //m_deadlock2DistMin = 7.5;
+    //m_deadlock2DistMax = 16.5;
+    m_deadlock2DistMin = 4.5;
+    m_deadlock2DistMax = 10.5;
     m_deadlock2Divisor = 0.5;
 
     m_pullInForwardProbability = 0.75;
 
     m_pullInNormalBackwardProbability = 0.5;
     m_pullInSteerMin = 0.10;
+
+    m_successfulPlanFound=false;
 }
 
 template<class MPTraits>
@@ -460,6 +496,16 @@ LocalManeuveringStrategy<MPTraits>::PrintOptions(ostream& _os) {
   _os << "\tpull-in probability of normal (versus method2) backward pull-in given a backward-pull in:: " <<
     m_pullInNormalBackwardProbability << endl;
   _os << "\tpull-in minimum steering angle:: " << m_pullInSteerMin << endl;
+
+  _os << "\tplanType: " << m_planType << endl;
+  _os << " Set roots: " << endl;
+  for(int i=0; i<(int)m_roots.size(); i++) {
+     _os << " root: " << i << " ["<< m_roots[i]<<"]"<<endl;
+  }
+  _os << " Set goals: " << endl;
+  for(int i=0; i<(int)m_goals.size(); i++) {
+     _os << " root: " << i << " ["<< m_goals[i]<<"]"<<endl;
+  }
 }
 
 template<class MPTraits>
@@ -514,71 +560,77 @@ LocalManeuveringStrategy<MPTraits>::Initialize(){
   ValidityCheckerPointer vc = this->GetMPProblem()->GetValidityChecker(m_vc);
   CDInfo cdInfo;
   string callee = "LocalManeuveringStrategy::Initialize";
+
   // Setup RRT Variables
   CfgType tmp, tmp2;
   PrintOptions(cout);
   if (this->m_debug)
     cout << "num robots: " << env->GetActiveBodyCount() << endl;
+  cout << " validity checker name: " << vc->GetName() << endl;
   //tmp.SetNumCfgs( env->GetActiveBodyCount() );
 
   //the query file will first contain the starting positions, and then the goal positions
   //first we'll read the start positions
-  if(m_query != ""){
-    cout << "Query file is " << m_query << endl;
-    ifstream ifs(m_query.c_str());
-    ifs >> tmp;
-    if(!ifs){
-      cerr << "Error, could not read starting configurations from query file: " << m_query.c_str() <<  endl;
-      exit(1);
-    }
-    m_roots.push_back(tmp);
+  if(m_goals.size()==0) {
+     if(m_query != ""){
+	cout << "Query file is " << m_query << endl;
+	ifstream ifs(m_query.c_str());
+	ifs >> tmp;
+	if(!ifs){
+	   cerr << "Error, could not read starting configurations from query file: " << m_query.c_str() <<  endl;
+	   exit(1);
+	}
+	m_roots.push_back(tmp);
 
-    //now read goal positions
-    CfgType tmp2;
-    //tmp2.SetNumCfgs(env->GetActiveBodyCount());
-    ifs >> tmp2;
+	//now read goal positions
+	CfgType tmp2;
+	//tmp2.SetNumCfgs(env->GetActiveBodyCount());
+	ifs >> tmp2;
 
-    if(!ifs){
-      cerr << "Error, could not read end configurations from query file." << endl;
-      exit(1);
-    }
+	if(!ifs){
+	   cerr << "Error, could not read end configurations from query file." << endl;
+	   exit(1);
+	}
 
-    m_goals.push_back(tmp2);
+	m_goals.push_back(tmp2);
+     }
+     else{
+	// Add random start and goal configurations
+	// Add root vertex/vertices
+	if (this->m_debug)
+	   cout << "No query file given." << endl;
+
+	for (size_t i=0; i<m_numRoots; ) {
+	   tmp.GetRandomCfg(env);
+	   //if (tmp.InBoundary(env)
+	   //&& vc->IsValid(tmp, env, *stats, cdInfo, &callee))
+	   if( vc->IsValid(tmp, env, *stats, cdInfo, &callee)){
+	      m_roots.push_back(tmp);
+	      m_goals.push_back(tmp);
+	      ++i;
+	   }//end check for valid config
+	   else
+	      cerr << "config was not valid, cannot plan for it." << endl;
+	}//end for loop
+     }//end if-else statement
   }
-  else{
-    // Add random start and goal configurations
-    // Add root vertex/vertices
-    if (this->m_debug)
-      cout << "No query file given." << endl;
-
-    for (size_t i=0; i<m_numRoots; ) {
-      tmp.GetRandomCfg(env);
-      //if (tmp.InBoundary(env)
-      //&& vc->IsValid(tmp, env, *stats, cdInfo, &callee))
-      if( vc->IsValid(tmp, env, *stats, cdInfo, &callee)){
-        m_roots.push_back(tmp);
-        m_goals.push_back(tmp);
-        ++i;
-      }//end check for valid config
-      else
-        cerr << "config was not valid, cannot plan for it." << endl;
-    }//end for loop
-  }//end if-else statement
 
   /////////////read guide path////////////////////////////////////////
-  if(m_guidePathFile != ""){
-    ifstream ifs(m_guidePathFile.c_str());
-    double x,y,h;
-    ifs >> x >> h >> y;
-    while(ifs){
-      m_guidePath.push_back( make_pair(Point2d(x,y), h) );
-      ifs >> x >> h >> y;
-    }
+  if( m_guidePath.size()==0 ) {
+     if(m_guidePathFile != ""){
+	ifstream ifs(m_guidePathFile.c_str());
+	double x,y,h;
+	ifs >> x >> h >> y;
+	while(ifs){
+	   m_guidePath.push_back( make_pair(Point2d(x,y), h) );
+	   ifs >> x >> h >> y;
+	}
+     }
   }
   //for now assume that each agent is biased by the same path
   for(size_t i=0; i<env->GetActiveBodyCount(); i++)
     m_perAgentPath.push_back( m_guidePath );
-  cout << "Number of active bodies: " << env->GetActiveBodyCount() << endl;
+  cout << "Number of active bodies: " << env->GetActiveBodyCount() << " number of usable bodies: " << env->GetUsableMultiBodyCount() << endl;
   cout << "Number of roots: " << m_roots.size() << endl;
 
   for(CfgIter C = m_roots.begin(); C!=m_roots.end(); C++){
@@ -651,12 +703,20 @@ LocalManeuveringStrategy<MPTraits>::Run(){
     }
   }
 
-  cerr << "Number of agents to determine start times for: " << numCfgs << endl;
+  cerr << "Number of agents to determine start times for: " << numCfgs << " plantype: " << m_planType << endl;
+  size_t rind = LRand() % numCfgs;
   for (size_t j=0;j<numCfgs;j++){ //determine all start times
     //determine a random start time for this agent between (0, m_maxStartTime) inclusive 
     size_t startTick = LRand()%(m_maxStartTime+1);
+    //experimental///////////////////////////////
+    /*if( numCfgs == 1 ) startTick=0;
+    else {
+       if(j==rind) startTick = 0; //the first one will start it off
+    }*/
+    /////////////////////////////////////////////
     startTimes.insert(make_pair(startTick,j));
   }
+
   for (typename multiset<pair<size_t,size_t>,CompareStartTimes>::iterator setIter = startTimes.begin(); setIter!=startTimes.end();setIter++){
     size_t startTick = setIter->first;
     //only trying to get one trajectory for each agent
@@ -681,6 +741,7 @@ LocalManeuveringStrategy<MPTraits>::Run(){
     }
   }
   cerr << "Run method finished with code: " << trajectorySuccess << endl;
+  m_successfulPlanFound=trajectorySuccess;
   stats->StopClock("Trajectory Generation");
 }//end Run method
 
@@ -698,11 +759,12 @@ LocalManeuveringStrategy<MPTraits>::Finalize(){
     BuffPath(i);
   }//end iteration through m_planTimes
 
-
+/*
   if (m_query.compare("") == 0 && m_path.compare("") == 0) {
     cerr << "No query or path provided." << endl;
     return;
   }
+*/
 
   //iterate through plantimes, if everybody has plan length of 0, no success
   size_t planTimesIndex = 0;
@@ -710,19 +772,28 @@ LocalManeuveringStrategy<MPTraits>::Finalize(){
   for (;planTimesIndex<numCfgs && m_planTimes.at(planTimesIndex).second == 0;planTimesIndex++);
   if (planTimesIndex == numCfgs)
     m_gbPath.clear(); //all plan times were 0
+
+    /*
   cerr << "Attempting to build path file: " << m_path << " from query " << m_query << endl;
   if (this->m_debug){
     cout << "\nAuto-building path file " << m_path << " from query " << m_query << endl; 
     cout << "\nWriting GBPATH: " << m_gbPath << ", which is of size " << m_gbPaths.size() << endl;
     cout << "Writing Vizmo path configurations to " << m_path << endl;
   }
+  */
+
   cout << "planTimesIndex: " << planTimesIndex << endl;
   cout << "numCfgs: " << numCfgs << endl;
+  cout << "size of m_gbPaths: " << m_gbPaths.size() << endl;
+  
+  /*
   if (planTimesIndex != numCfgs){
     WriteGBPathConfigurations(m_gbPath, m_gbPaths); //GB
 
     WriteVizmoPathConfigurations(m_path, m_gbPaths, this->GetMPProblem()->GetEnvironment()); //Vizmo
   }
+  */
+
 }//end Finalize
 
 //AttemptPullOutTrajectory, attempts to plan a collision-free trajectory for each individual config inside of
@@ -751,7 +822,12 @@ LocalManeuveringStrategy<MPTraits>::AttemptPullOutTrajectory( size_t _startTick,
   Point2d pos = current.GetPos();
   double angRad = current.GetRotY();
 
+  cout << " goal pos: " << goal << " cur pos: " << pos << " angRad: " << angRad << endl;
+  cout << " maxSpeed/maxVel: " << maxVel << endl;
+
   angRad += PI/2.0;  //if agent imported facing 0,0, actually is facing 0,1
+  //angRad += 3*PI/2.0;  //if agent imported facing 0,0, actually is facing 0,1
+  cout << " new angRad: " << angRad;
   if (angRad > PI)
     angRad -= (2.0 * PI);
 
@@ -763,6 +839,8 @@ LocalManeuveringStrategy<MPTraits>::AttemptPullOutTrajectory( size_t _startTick,
   }
   Vector2d dir2N   = (goal - pos);
   dir2N  = dir2N.normalize();
+  if( this->m_debug ) { cout << " dir to goal: " << dir2N << endl; }
+  m_debugGlobalGoalDir=dir2N;
   double theta = atan2(dir2N[1],-dir2N[0]) - atan2(dirN[1],dirN[0]); 
   if (theta > PI)
     theta -= (2.0*PI);
@@ -824,6 +902,7 @@ LocalManeuveringStrategy<MPTraits>::AttemptPullOutTrajectory( size_t _startTick,
       return false;
 
     //now attempt a short  move forward toward goal
+    potentialPath.back().GetCfgs().at(_cfgIndex).SetReverse(false);
     planDist = DRand() * (m_backTowardGoalDistMax - m_backTowardGoalDistMin) + m_backTowardGoalDistMin;
     if (!TryPlanTowardGoal( _startTick, _cfgIndex, planDist/(maxVel*m_delta), potentialPath,m_guidePath.at(m_guidePathSubGoal).first))
       return false;
@@ -852,18 +931,48 @@ LocalManeuveringStrategy<MPTraits>::CombinePaths(vector<CfgType>& _originalPath,
   //corresponding configuration, replace it. Else, we've moved onto a time outside of _originalPath, so we'll
   //add the configuration to it
 
+  //TMPTMPTMPTMP
+  for (CfgIter pathIter = _newPath.begin(); pathIter!= _newPath.end(); pathIter++){
+     cout << " path cfg: " << (*pathIter).GetCfgs()[_index].GetPos() << endl;
+  }//end for loop
+
+  cout << " size of originalPath: " << _originalPath.size() << " newPath.size: " << _newPath.size() << endl;
+
+
   //while index < original's size, replace item
   //while index >= original's size, insert new item into original
   size_t lastIndex = m_planTimes.at(_index).first;
   size_t originalSize = _originalPath.size();
-  for (CfgIter pathIter = _newPath.begin(); pathIter!= _newPath.end(); pathIter++){
-    if (lastIndex < originalSize){ 
-      _originalPath.at(lastIndex) = *pathIter;
-    }else{  
-      _originalPath.push_back(*pathIter);
-    }
-    lastIndex++;
-  }//end for loop
+  cout << "_index: " << _index << " lastIndex: " << lastIndex << " originalSize: " << originalSize << endl;
+  //if( _newPath.size() < _originalPath.size() ) {
+     //int lastValid = _newPath.size()-1;
+     //for (CfgIter pathIter = _originalPath.begin()+lastValid; pathIter!= _originalPath.end(); pathIter++){
+	//(*pathIter).GetCfgs()[_index]=_originalPath[lastValid-1].GetCfgs()[_index];
+     //}//end for loop
+  //}
+  //else {
+     for (CfgIter pathIter = _newPath.begin(); pathIter!= _newPath.end(); pathIter++){
+	if (lastIndex < originalSize){ 
+	   _originalPath.at(lastIndex) = *pathIter;
+	}else{  
+	   _originalPath.push_back(*pathIter);
+	}
+	lastIndex++;
+     }//end for loop
+  //}
+  ///*
+  lastIndex = m_planTimes.at(_index).first;
+  if( (lastIndex+_newPath.size()) < _originalPath.size() ) {
+     cout << " adding right values to path. " << endl;
+     //need to copy last of _newPath to the rest of originalPath
+     for (CfgIter pathIter = _originalPath.begin()+lastIndex+_newPath.size()-1; 
+          pathIter!= _originalPath.end(); pathIter++) {
+	cout << " copying cfg: " << _originalPath[lastIndex+_newPath.size()-2].GetCfgs()[_index].GetPos() << endl;
+	(*pathIter).GetCfgs()[_index]=_originalPath[lastIndex+_newPath.size()-2].GetCfgs()[_index];
+     }
+  }
+  //*/
+  cout << " now BuffPath. " << endl;
 
   //buff out the end, to account for variable start times
   BuffPath(_index);
@@ -876,6 +985,10 @@ LocalManeuveringStrategy<MPTraits>::TryPlan(size_t& _startTick, size_t _cfgIndex
     vector<CfgType>& _potentialPath, double _steeringAngle, bool _backwards){
   if (this->m_debug)
     cout << "LocalManeuveringStrategy::TryPlan" << endl;
+  if(_planSteps==0) {
+     cout << " plansteps == 0, quick exit" << endl;
+     return true;
+  }
 
   //Setup...primarily for collision checks that occur later on
   Environment* env = this->GetMPProblem()->GetEnvironment();
@@ -898,6 +1011,7 @@ LocalManeuveringStrategy<MPTraits>::TryPlan(size_t& _startTick, size_t _cfgIndex
 
   if (this->m_debug)
     cout << "Going to plan for " << _planSteps << " timesteps" << endl;
+  cout << " Validity checker: " << vc->GetName() << endl;
 
   ////////////////////////////////////////////////////////////////////////////
 
@@ -909,6 +1023,20 @@ LocalManeuveringStrategy<MPTraits>::TryPlan(size_t& _startTick, size_t _cfgIndex
       ori -= (2.0 * PI);*/
 
     next = next.Update(m_delta);
+ 
+    double angRad = next.GetRotY(); 
+    angRad += PI/2.0;  //if agent imported facing 0,0, actually is facing 0,1
+    //angRad += 3*PI/2.0;  //if agent imported facing 0,0, actually is facing 0,1
+    Vector2d dirN = Vector2d(cos(angRad),sin(angRad)); 
+    dirN   = dirN.normalize();
+    cout << " TryPlan. pos: " << next.GetPos() << " dirN: " << dirN << endl;
+    Vector2d dir2N=m_debugGlobalGoalDir;
+    double theta = atan2(dir2N[1],-dir2N[0]) - atan2(dirN[1],dirN[0]); 
+    if (theta > PI)
+       theta -= (2.0*PI);
+    else if (theta < -PI)
+       theta += (2.0*PI);
+    cout << iteration << " off by angle: " << theta/PI * 180.0  << endl;
 
     /*ori -= PI/2.0;
       if (ori < -PI)
@@ -926,11 +1054,11 @@ LocalManeuveringStrategy<MPTraits>::TryPlan(size_t& _startTick, size_t _cfgIndex
     //check state
     //if(!(tick.InBoundary(env)) || !(vc->IsValid(tick, env, *stats, cdInfo, &callee)))
     if(!(vc->IsValid(tick, env, *stats, cdInfo, &callee))){
-      //cerr << "Failed movement" << endl;
+      cout << "Failed movement: " << endl; // << tick << endl;
       return false; //break out of here, collision
     }
     else {
-      //cerr << "Successful movement" << endl;
+      cout << "Successful movement: " << endl; // << tick << endl;
       _potentialPath.push_back( tick ); //no collision (yet)
     }
 
@@ -983,13 +1111,24 @@ LocalManeuveringStrategy<MPTraits>::TryPlanTowardGoal(size_t& _startTick, size_t
   for (int iteration=0; iteration < _planSteps; iteration++){
     CompositeCfgType next = current;
 
-    /*ori += PI/2.0;
+    ///*//Adding this back in
+      ori += PI/2.0;
       if (ori > PI)
-      ori -= (2.0 * PI);*/
+      ori -= (2.0 * PI);//*/
 
     dir  = Vector2d(cos(ori),sin(ori));
     dir  = dir.normalize();                		
     dir2 = (_goal - pos);                   		
+
+    Vector2d dir2N=m_debugGlobalGoalDir;
+    double thetaDBG = atan2(dir2N[1],-dir2N[0]) - atan2(dir[1],dir[0]); 
+    if (thetaDBG > PI)
+       thetaDBG -= (2.0*PI);
+    else if (thetaDBG < -PI)
+       thetaDBG += (2.0*PI);
+    cout << " dir: " << dir << " dir2 (toward goal): " << dir2 << " prevGlobGorDir: " << dir2N << " off by angle: " << thetaDBG/PI * 180.0  << endl;
+
+
 
     //x is inverted in this coordinate system
     theta = atan2(dir2[1],-dir2[0]) - atan2(dir[1],dir[0]);
@@ -997,6 +1136,7 @@ LocalManeuveringStrategy<MPTraits>::TryPlanTowardGoal(size_t& _startTick, size_t
 
     if(abs(theta) < _orientationTolerance){ //if we're facing less than _orientationTolerance rads (0.10
       //default) from goal, just go straight
+      cout << "just going straight. theta: " << theta << " orientationTolerance: " << _orientationTolerance << endl;
       steeringAngle = 0.0;
     }
     else{
@@ -1004,12 +1144,17 @@ LocalManeuveringStrategy<MPTraits>::TryPlanTowardGoal(size_t& _startTick, size_t
         steeringAngle = maxSteeringAngle / max(_divisor,1.0);
       else
         steeringAngle = maxSteeringAngle / max(_divisor,1.0) * -1.0;
+      cout << " theta: " << theta << " steeringAngle: " << steeringAngle << " maxSteeringAngle: " << maxSteeringAngle << " divisor: " << _divisor << endl;
     }
     next.SetSteeringAngle(steeringAngle);
+    cout << " setting steer angle: " << steeringAngle << endl;
 
-    /*ori -= PI/2.0;
+    ////////////////////////////////////////////////////////////////
+    //POTENTIAL BIG CHANGE, I ADDED THIS BACK IN
+    ///* //Adding this back in
+    ori -= PI/2.0;
       if (ori < -PI)
-      ori += 2.0 * PI;*/
+      ori += 2.0 * PI;//*/
 
     next = next.Update(m_delta);
 
@@ -1025,10 +1170,14 @@ LocalManeuveringStrategy<MPTraits>::TryPlanTowardGoal(size_t& _startTick, size_t
     ///////////////////////////////////////////////
     //check state
     //if(!(tick.InBoundary(env)) || !(vc->IsValid(tick, env, *stats, cdInfo, &callee)))
-    if( !(vc->IsValid(tick, env, *stats, cdInfo, &callee)))
+    if( !(vc->IsValid(tick, env, *stats, cdInfo, &callee))) {
+       cout << " found invalid cfg at iter: " << iteration << " cfgIndex: " << _cfgIndex << " bad pos: " << next.GetPos() << endl;
       return false; //break out of here, collision
-    else 
+    }
+    else  {
+       cout << " found valid cfg at iter: " << iteration << " cfgIndex: " << _cfgIndex << " good pos: " << next.GetPos() << endl;
       _potentialPath.push_back( tick ); //no collision (yet)
+    }
     ///////////////////////////////////////////////
 
 
@@ -1040,6 +1189,58 @@ LocalManeuveringStrategy<MPTraits>::TryPlanTowardGoal(size_t& _startTick, size_t
   return true;
 }
 
+template<class MPTraits>
+bool
+LocalManeuveringStrategy<MPTraits>::AttemptDeadlockTrajectory(size_t _startTick, size_t _cfgIndex){
+  if (this->m_debug)
+    cout << "LocalManeuveringStrategy::AttemptDeadlockTrajectory" << endl;
+
+  double planDist = DRand() * (m_deadlock1TurnDistMax-m_deadlock1TurnDistMin) + m_deadlock1TurnDistMin;
+  double steeringAngle = DRand() * (m_deadlock1TurnSteerMin - m_deadlock1TurnSteerMax) -
+    m_deadlock1TurnSteerMin;
+
+  if (DRand() > m_deadlock1RightTurnFreq) //try a left-hand turn with probability (1-rightTurnFrequency)
+
+    steeringAngle *= -1.0; 
+  vector<CfgType> potentialPath; //our possible arc
+
+  double maxVel = m_gbPaths.at(_startTick).GetCfgs().at(_cfgIndex).GetMaxSpeed();
+
+  //move back a tad
+  double planDist0 = DRand()*10;//btw 0 and 10 dist
+  if (!TryPlan( _startTick, _cfgIndex, planDist/(maxVel*m_delta),potentialPath, 0, true))
+    return false;
+
+  //attempt an initial turn
+  if (!TryPlan( _startTick, _cfgIndex, planDist/(maxVel*m_delta),potentialPath, steeringAngle, false))
+    return false;
+
+  //followed by a short straight movement
+  double planDist2 = DRand() * (m_deadlock1TowardGoalDistMax-m_deadlock1TowardGoalDistMin) +
+    m_deadlock1TowardGoalDistMin;
+
+  if (!TryPlan( _startTick, _cfgIndex, planDist2/(maxVel*m_delta), potentialPath, 0, false))
+    return false;
+
+  //and finally an equivalent, but opposite, turn to straighten back out
+  if (!TryPlan( _startTick, _cfgIndex, planDist/(maxVel*m_delta), potentialPath, steeringAngle*-1.0, false))
+    return false;
+
+  //finally another short forward movement
+  if (!TryPlan( _startTick, _cfgIndex, planDist2/(maxVel*m_delta), potentialPath, 0, false))
+    return false;
+
+  m_planTimes.at(_cfgIndex).second = potentialPath.size(); 
+  if (this->m_debug)
+    cout << "last configuration added to potentialPath: " << potentialPath.back().GetCfgs().at(_cfgIndex).GetPos() <<
+      ", " << potentialPath.back().GetCfgs().at(_cfgIndex).GetRotY() << endl;
+
+  CombinePaths(m_gbPaths, potentialPath, _cfgIndex);
+
+  return true;
+}//end AttemptDeadlockTrajectory method
+
+/*
 template<class MPTraits>
 bool
 LocalManeuveringStrategy<MPTraits>::AttemptDeadlockTrajectory(size_t _startTick, size_t _cfgIndex){
@@ -1085,6 +1286,7 @@ LocalManeuveringStrategy<MPTraits>::AttemptDeadlockTrajectory(size_t _startTick,
 
   return true;
 }//end AttemptDeadlockTrajectory method
+*/
 
 template<class MPTraits>
 bool
@@ -1098,6 +1300,13 @@ LocalManeuveringStrategy<MPTraits>::AttemptDeadlockTrajectory2(size_t _startTick
   vector<CfgType> potentialPath; //our possible arc
 
   double maxVel = m_gbPaths.at(_startTick).GetCfgs().at(_cfgIndex).GetMaxSpeed();
+
+/*
+  //move back a tad
+  double planDist0 = DRand()*6;//btw 0 and 6 dist
+  if (!TryPlan( _startTick, _cfgIndex, planDist/(maxVel*m_delta),potentialPath, 0, true))
+    return false;
+    */
 
   //simply try to plan toward the goal, varying the steering angle between maximum and 1/5*maximum
   //vary the steering angle to be between maximum and 1/2 maximum
@@ -1218,8 +1427,18 @@ LocalManeuveringStrategy<MPTraits>::AttemptPullInTrajectory(size_t _startTick, s
   if (actualPlanSteps < 0)
     steeringAngle *= -1.0;
 
+  cout << " Zero TryPlan for steps: " << planSteps << endl;
+  cout << " _cfgIndex: " << _cfgIndex << " thetaDiff: " << thetaDiff << " startTick: " << _startTick << endl;
   if (!TryPlan(_startTick,  _cfgIndex, planSteps, potentialPath, steeringAngle, false))
     return false;
+  
+  cout << " just returned from TryPlan. potentialPath size: " << potentialPath.size() << endl;
+  if( potentialPath.size()==0 ) { //unsuccessful/unneeded first TryPlan
+     CfgType tick;
+     //tick=m_gbPaths.at(_startTick);
+     tick=m_roots[0];
+     potentialPath.push_back( tick );
+  }
 
   //now move X-R distance, so first determine X:
   //to determine X, we need our distance to the goal point, plus the angle between our heading and the vector
@@ -1228,6 +1447,7 @@ LocalManeuveringStrategy<MPTraits>::AttemptPullInTrajectory(size_t _startTick, s
 
   angRad = potentialPath.back().GetCfgs().at(_cfgIndex).GetRotY();
   angRad += PI/2.0;  //if agent imported facing 0,0, actually is facing 0,1
+  //angRad += 3*PI/2.0;  //if agent imported facing 0,0, actually is facing 0,1
   if (angRad > PI)
     angRad -= (2.0 * PI);
   Vector2d dir2N   = (goalPos - pos);
@@ -1243,6 +1463,8 @@ LocalManeuveringStrategy<MPTraits>::AttemptPullInTrajectory(size_t _startTick, s
   double xDist = fabs((Vector2d(goalPos-pos)).norm() * cos(theta));
   double yDist = fabs((Vector2d(goalPos-pos)).norm() * sin(theta));
 
+  cout << " xDist: " << xDist << " yDist: " << yDist << endl;
+
   //vary the steering angle so that car may turn sooner in other random attempts
   //but don't let it be too small
   double steeringMin = max(m_pullInSteerMin,fabs(asin(wheelbase/min(xDist/2.0,yDist/2.0))));
@@ -1256,6 +1478,7 @@ LocalManeuveringStrategy<MPTraits>::AttemptPullInTrajectory(size_t _startTick, s
   actualPlanSteps = xDist/(maxVel*m_delta);
   planSteps = (int)fabs(actualPlanSteps);
 
+  cout << " First TryPlan for steps: " << planSteps << "steeringAngle: " << steeringAngle << endl;
   if (!TryPlan(_startTick,  _cfgIndex, planSteps, potentialPath, 0.0, false))
     return false;
 
@@ -1267,6 +1490,7 @@ LocalManeuveringStrategy<MPTraits>::AttemptPullInTrajectory(size_t _startTick, s
   if (backIn && turnThenReverse)
     steeringAngle *= -1.0;
 
+  cout << " Second TryPlan for steps: " << planSteps << endl;
   if (!TryPlan(_startTick,  _cfgIndex, planSteps, potentialPath, steeringAngle, backIn && !turnThenReverse))
     return false;
 

@@ -150,6 +150,10 @@ class SSSurface : public CfgSurface {
     //The current state will remain intact
     SSSurface Update(double _dt);
 
+    ////////////////////////////////////////////////////////////
+    //this should have been implemented in the first plac3
+    bool ConfigEnvironment(Environment* _env) const;
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     //
     //

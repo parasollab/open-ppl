@@ -109,6 +109,7 @@ class SurfaceSampler : public SamplerMethod<MPTraits> {
       SurfaceMedialAxisUtility<MPTraits> mau(this->GetMPProblem(), m_vcLabel, "Euclidean");
       //mau.SetDebug(true);
       for(int i=-1; i<numSurfaces; i++) {
+	cout << " Sampling for surface: " << i << endl;
 	if( this->m_debug) cout << " Sampling for surface: " << i << endl;
 	if( this->m_debug) cout << " num usable multibodies: " << _env->GetUsableMultiBodyCount() << " active bodies: " << _env->GetActiveBodyCount() << endl;
 	string iSurfName="BASE";
