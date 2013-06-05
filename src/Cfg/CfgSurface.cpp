@@ -203,17 +203,6 @@ operator<<(ostream& _os, const CfgSurface& _cfg){
   return _os;
 }
 
-bool
-CfgSurface::InBoundary(Environment* _env, shared_ptr<Boundary> _bb) const {
-  Vector3D p(m_pt[0],m_h,m_pt[1]);
-  return _bb->IfSatisfiesConstraints(p);
-}
-
-bool
-CfgSurface::InBoundary(Environment* _env) const {
-  return this->InBoundary(_env,_env->GetBoundary());
-}
-
 vector<double>
 CfgSurface::GetData() const{
   vector<double> data(3);

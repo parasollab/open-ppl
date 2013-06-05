@@ -137,13 +137,10 @@ class CfgSurface : public Cfg {
     //I/O
     virtual void Read(istream& _is);
     virtual void Write(ostream& _os) const;
-    
-    virtual bool InBoundary(Environment* _env) const;
-    virtual bool InBoundary(Environment* _env, shared_ptr<Boundary> _bb) const;
+  
   protected:
     ///Randomly generate a Cfg whose center positon is inside a given bounding box.
     virtual void GetRandomCfgImpl(Environment* env,shared_ptr<Boundary> bb);
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     //

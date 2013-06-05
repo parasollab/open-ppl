@@ -132,7 +132,7 @@ class SurfaceSampler : public SamplerMethod<MPTraits> {
 	  tmp.SetSurfaceID(i);
 	  tmp.GetRandomCfg(_env,_bb);
 	  double clear = MAX_DBL;
-	  bool inBBX = tmp.InBoundary(_env, _bb);
+	  bool inBBX = _env->InBounds(tmp, _bb);
 	  if(this->m_debug) cout<<"tmp::"<<tmp<<" sid: "<< tmp.GetSurfaceID() << endl;
 	  if(this->m_debug) cout<<"InBoundary::"<<inBBX<<endl;
 	  if(inBBX) {
