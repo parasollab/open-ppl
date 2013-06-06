@@ -259,6 +259,11 @@ template<>
 struct MPTraits<CfgSurface, DefaultWeight<CfgSurface> > {
   typedef CfgSurface CfgType;
   typedef DefaultWeight<CfgType> WeightType;
+#ifdef _PARALLEL
+  typedef CfgSurface CfgRef;
+#else
+  typedef CfgSurface& CfgRef;
+#endif
 
   typedef MPProblem<MPTraits> MPProblemType;
 
@@ -313,9 +318,9 @@ struct MPTraits<CfgSurface, DefaultWeight<CfgSurface> > {
   //types of motion planning strategies available in our world
   typedef boost::mpl::list<
     BasicPRM<MPTraits>//,
-#ifdef PMPSSSurfaceMult
-    ,LocalManeuveringStrategy<MPTraits>
-#endif
+//#ifdef PMPSSSurfaceMult
+//    ,LocalManeuveringStrategy<MPTraits>
+//#endif
     #ifdef _PARALLEL
     //,BasicParallelPRM<GBMPTraits>
     //,RegularSubdivisionMethod<GBMPTraits>
