@@ -78,7 +78,7 @@ class ConnectorMethod : public MPBaseObject<MPTraits> {
     template<typename ColorMap, typename OutputIterator>
       void Connect(RoadmapType* _rm, StatClass& _stats, ColorMap& _cmap,
           VID _vid, OutputIterator _collision){
-        Connect(_rm, _stats, _cmap, _vid, _collision);
+        Connect(_rm, _stats, _cmap, _vid, _rm->GetGraph()->begin(), _rm->GetGraph()->end(), _collision);
       }
 
     template<typename ColorMap, typename InputIterator>
@@ -112,7 +112,7 @@ class ConnectorMethod : public MPBaseObject<MPTraits> {
           InputIterator _itrFirst, InputIterator _itrLast, 
           OutputIterator _collision){
         vector<VID> vids(1, _vid);
-        Connect(_rm, _stats, _cmap, vids.begin(), vids.end(), _itrFirst, _itrLast, back_inserter(_collision));
+        Connect(_rm, _stats, _cmap, vids.begin(), vids.end(), _itrFirst, _itrLast, _collision);
       }
 
     template<typename ColorMap, typename InputIterator1, typename InputIterator2>
