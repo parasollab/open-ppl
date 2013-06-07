@@ -45,6 +45,7 @@ Cfg::InitRobots(vector<Robot>& _robots) {
   m_robots = _robots;
   m_posdof = 0;
   m_numJoints = 0;
+  m_dofTypes.clear();
   for(vector<Robot>::iterator rit = m_robots.begin(); rit != m_robots.end(); rit++) {
     if(rit->m_base == Robot::PLANAR) {
       m_dofTypes.push_back(POS);

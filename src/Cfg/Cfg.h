@@ -215,6 +215,7 @@ class Cfg {
     map<string,double> m_statMap;
 
   public:
+    static const vector<Robot>& GetRobots() { return m_robots; }
 
     CDInfo m_clearanceInfo;
     shared_ptr<Cfg> m_witnessCfg;

@@ -311,6 +311,7 @@ Environment::BuildRobotStructure() {
   shared_ptr<MultiBody> robot = m_activeBodies[_robotIndex];
   int fixedBodyCount = robot->GetFixedBodyCount();
   int freeBodyCount = robot->GetFreeBodyCount();
+  m_robotGraph = RobotGraph();
   for (int i = 0; i < fixedBodyCount; i++) {
     m_robotGraph.add_vertex(i);
   }
@@ -345,6 +346,7 @@ Environment::BuildRobotStructure() {
   get_cc_stats(m_robotGraph, cmap, ccs);
   if(ccs.size()>1)
     robot->SetMultirobot(true);
+  m_robots.clear();
   for(size_t i = 0; i < ccs.size(); i++) {
     cmap.reset();
     vector<RID> cc;
