@@ -71,7 +71,7 @@ CollisionDetectionValidity<MPTraits>::CollisionDetectionValidity(typename MPTrai
       m_cdMethod = new PQP();
       method_found = true;
     } else if (cd_label == "PQP_SOLID") {
-      m_cdMethod = new PQP_Solid();
+      m_cdMethod = new PQPSolid();
       method_found = true;
     }
 #endif
@@ -238,7 +238,7 @@ template<class MPTraits>
 bool
 CollisionDetectionValidity<MPTraits>::IsInsideObstacle(const CfgType& _cfg, Environment* _env, CDInfo& _cdInfo) {
 #ifdef USE_PQP
-  return PQP_Solid().IsInsideObstacle(_cfg, _env);
+  return PQPSolid().IsInsideObstacle(_cfg, _env);
 #else
   cerr << "Recompile with PQP to use CollisionDetectionValidity::IsInsideObstacle" <<endl;
   exit(1);
