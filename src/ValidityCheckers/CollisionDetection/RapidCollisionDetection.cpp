@@ -26,7 +26,7 @@ Rapid::IsInCollision(shared_ptr<MultiBody> _robot, shared_ptr<MultiBody> _obstac
 
     for(int j=0; j<_obstacle->GetBodyCount(); j++){
       if(_robot == _obstacle &&
-          _robot->GetFreeBody(i)->IsWithinI(_obstacle->GetBody(j),_ignoreIAdjacentMultibodies) ){
+          _robot->GetFreeBody(i)->IsWithinI(_obstacle->GetBody(j), _ignoreIAdjacentMultibodies) ){
         continue;
       }
 
@@ -40,14 +40,13 @@ Rapid::IsInCollision(shared_ptr<MultiBody> _robot, shared_ptr<MultiBody> _obstac
         p1[p] = t1.m_position[p];
         p2[p] = t2.m_position[p];
       }
-      
+
       if(RAPID_Collide(t1.m_orientation.matrix, p1, rob.get(),
             t2.m_orientation.matrix, p2, obst.get(), RAPID_FIRST_CONTACT)) {
-        cout << "Error in CollisionDetection::RAPID_Collide, RAPID_ERR_COLLIDE_OUT_OF_MEMORY"
-          << RAPID_Collide(t1.m_orientation.matrix, p1, rob.get(), t2.m_orientation.matrix, p2, obst.get(), RAPID_FIRST_CONTACT) << endl;
+        cerr << "Error in CollisionDetection::RAPID_Collide, RAPID_ERR_COLLIDE_OUT_OF_MEMORY" << endl;
         exit(1);
       }
-      
+
       if(RAPID_num_contacts) {
         _cdInfo.m_rapidContactID1 = RAPID_contact[0].id1;
         _cdInfo.m_rapidContactID2 = RAPID_contact[0].id2;

@@ -64,7 +64,7 @@ VClip::IsInCollision(shared_ptr<MultiBody> _robot, shared_ptr<MultiBody> _obstac
 bool
 VClip::FillCdInfo(shared_ptr<MultiBody> _robot, shared_ptr<MultiBody> _obstacle, 
     CDInfo& _cdInfo, int _ignoreIAdjacentMultibodies) {
-  Real dist, m_minCurrentDist;
+  Real dist, minCurrentDist;
   VClipPose x12;  
   Vect3 cp1, cp2; //closest points between bodies, in local frame
   
@@ -73,7 +73,7 @@ VClip::FillCdInfo(shared_ptr<MultiBody> _robot, shared_ptr<MultiBody> _obstacle,
   _cdInfo.ResetVars();
   _cdInfo.m_retAllInfo = true;
 
-  m_minCurrentDist = MaxDist;  // =  1e10 by CollisionDetection.h
+  minCurrentDist = MaxDist;  // =  1e10 by CollisionDetection.h
 
   for(int i=0; i<_robot->GetFreeBodyCount(); i++) {
     shared_ptr<PolyTree> rob = _robot->GetFreeBody(i)->GetVClipBody();
@@ -91,13 +91,13 @@ VClip::FillCdInfo(shared_ptr<MultiBody> _robot, shared_ptr<MultiBody> _obstacle,
       dist = PolyTree::vclip(rob.get(),obst.get(),x12,closestFeaturesHT, cp1, cp2);
 
       if ( dist <= 0.0 ) {
-        if (dist < m_minCurrentDist)
+        if (dist < minCurrentDist)
           _cdInfo.m_collidingObstIndex = j;
         isInCollision = true;
       }
 
-      if (dist < m_minCurrentDist) {
-        m_minCurrentDist = dist;
+      if (dist < minCurrentDist) {
+        minCurrentDist = dist;
         _cdInfo.m_nearestObstIndex = j;
         _cdInfo.m_minDist = dist;
 
