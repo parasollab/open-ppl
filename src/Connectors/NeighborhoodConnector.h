@@ -8,14 +8,14 @@
 /**Connect nodes in map to their k closest neighbors.
  *Following Algorithm is used:
  *   -# for evry node, cfg1, in roadmap
- *       -# find k closet neighbors for cfg1
+ *       -# find k closest neighbors for cfg1
  *       -# lp_set is a local planner set defined in info.lpsetid
  *       -# for every node, cfg2, in k-closest neighbor list for cfg1
  *           -# using local planning functions in lp_set
  *              to connect cfg1 and cfg2
  *           -# if connected, add this edge to map, _rm.
  *       -#end for
- *   -# end for
+ *   -# end for,
  *
  *@param info provides inforamtion other than connection, like
  *collision dection, local planner, and distance metrics.
@@ -99,15 +99,15 @@ NeighborhoodConnector<MPTraits>::NeighborhoodConnector(string _lp, string _nf, i
   : ConnectorMethod<MPTraits>(), m_k(_k), m_fail(_m), 
   m_countFailures(_countFailures), m_unconnected(_unconnected),
   m_random(_random), m_checkIfSameCC(_checkIfSameCC){
-    this->SetName("NeighborhoodConnector"); 
-    this->m_lpMethod = _lp;
-    this->m_nfMethod = _nf;
+    this->SetName("NeighborhoodConnector");
+    this->m_lpMethod = _lp; // Local Planner
+    this->m_nfMethod = _nf; // Neighborhood Finder
   }
 
+//Read from XML to get the parameters. 
 template<class MPTraits>
 NeighborhoodConnector<MPTraits>::NeighborhoodConnector(MPProblemType* _problem, XMLNodeReader& _node) 
-  : ConnectorMethod<MPTraits>(_problem, _node), 
-  m_k(KCLOSEST), m_fail(MFAILURE), m_countFailures(false), m_unconnected(false), m_random(false){
+  : ConnectorMethod<MPTraits>(_problem, _node) {
     ParseXML(_node);
   }
 
@@ -184,6 +184,7 @@ NeighborhoodConnector<MPTraits>::Connect(RoadmapType* _rm, StatClass& _stats, Co
     vector<VID> iterNeighbors;
 
     do{
+      //if unconnected do not count existing connections towards k
       if(m_unconnected) kToFind = min(2*kToFind, iterSize);
       if(this->m_debug) cout << "kToFind = " << kToFind << endl;
 
@@ -254,12 +255,14 @@ NeighborhoodConnector<MPTraits>::ConnectNeighbors(
     }
 
     // don't attempt the connection if it already failed once before
+    // TO DO (if x and not x == False)?
     if(_rm->IsCached(_vid,*itr2)){
       if(!_rm->IsCached(_vid,*itr2)){
-        if(this->m_debug) cout << " | skipping... this connection already failed once";
-        if(this->m_debug) cout << " | failure incremented";
-        ++failure;
-        if(this->m_debug) cout << endl;
+	if(this->m_debug) {
+	  cout << " | skipping... this connection already failed once"
+               << " | failure incremented" << endl;
+	}
+	++failure;
         continue;
       }
     }
@@ -348,11 +351,11 @@ NeighborhoodConnector<MPTraits>::FindKNeighbors(RoadmapType* _rm, CfgType cfg,
   if(m_random){
     // find k random (unique) neighbors
     set<int> ids(_iterNeighbors.begin(), _iterNeighbors.end());
-    if(!m_unconnected && m_k != 0)
-    {
+    if(!m_unconnected && m_k != 0) {
       ids.insert(_rm->GetGraph()->GetVID(cfg));
       _k++;
     }
+    //Add k (or k-1) ids to closestIter
     for(int i = ids.size(); i < _k && i<(_itrLast-_itrFirst); i++){
       int id = 0;
       do {
@@ -368,13 +371,13 @@ NeighborhoodConnector<MPTraits>::FindKNeighbors(RoadmapType* _rm, CfgType cfg,
   else {
     // find the k-closest neighbors
     NeighborhoodFinderPointer nfptr = this->GetMPProblem()->GetNeighborhoodFinder(this->m_nfMethod);
-    if(_itrLast - _itrFirst == (int)_rm->GetGraph()->get_num_vertices()) 
+    //If # of pairs == # of vert
+    if(_itrLast - _itrFirst == (int)_rm->GetGraph()->get_num_vertices())
       return nfptr->KClosest(_rm, cfg, _k, _closestIter);
-    else 
+    else
       return nfptr->KClosest(_rm, _itrFirst, _itrLast, cfg, _k, _closestIter);
   } 
 #else
-  // find k-closest using just brute force
   NeighborhoodFinderPointer nf = this->GetMPProblem()->GetNeighborhoodFinder(this->m_nfMethod);
   return nf->KClosest(_rm, _itrFirst, _itrLast, cfg, _k, _closestIter);
 #endif 
