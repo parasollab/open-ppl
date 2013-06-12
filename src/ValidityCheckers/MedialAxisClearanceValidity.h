@@ -21,7 +21,7 @@ class MedialAxisClearanceValidity : public ValidityCheckerMethod<MPTraits> {
 
     virtual bool IsInsideObstacle(const CfgType& _cfg, Environment* _env, CDInfo& _cdInfo);
 
-    virtual bool IsValidImpl(CfgType& _cfg, Environment* _env, StatClass& _stats, CDInfo& _cdInfo, string *_callName);
+    virtual bool IsValidImpl(CfgType& _cfg, Environment* _env, StatClass& _stats, CDInfo& _cdInfo, string* _callName);
 
     vector< pair<CfgType,CfgType> >& GetHistory();
     void ClearHistory();
@@ -73,7 +73,7 @@ MedialAxisClearanceValidity<MPTraits>::IsInsideObstacle(const CfgType& _cfg, Env
 template<class MPTraits>
 bool 
 MedialAxisClearanceValidity<MPTraits>::IsValidImpl(CfgType& _cfg, Environment* _env, StatClass& _stats, 
-    CDInfo& _cdInfo, string * _callName) {
+    CDInfo& _cdInfo, string* _callName) {
   typename MPProblemType::ValidityCheckerPointer vc = this->GetMPProblem()->GetValidityChecker(m_medialAxisUtility.GetValidityCheckerLabel());
   bool isFree = vc->IsValid(_cfg, _env, _stats, _cdInfo, _callName);
 

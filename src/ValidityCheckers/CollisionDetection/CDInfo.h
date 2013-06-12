@@ -1,5 +1,5 @@
-#ifndef CDINFO_h
-#define CDINFO_h
+#ifndef CDINFO_H_
+#define CDINFO_H_
 
 #include "Vector.h"
 
@@ -13,11 +13,11 @@ class CDInfo {
   void ResetVars();
   
   int m_collidingObstIndex;   ///< The index for fisrt discovered obstacle which collides with robot.
-  bool m_retAllInfo;          ///< Is this instance contains all (following) infomation.
+  bool m_retAllInfo;          ///< If this instance contains all (following) infomation.
   int m_nearestObstIndex;     ///< The index for closest obstacle
-  double m_minDist;            ///< Distance between Robot and closet obstacle
-  Vector3D m_robotPoint;       ///< Cloest point on Robot to closet obstacle
-  Vector3D m_objectPoint;      ///< Cloest point on closet obstacle to Robot
+  double m_minDist;            ///< Distance between Robot and closest obstacle
+  Vector3D m_robotPoint;       ///< Closest point on Robot to closest obstacle
+  Vector3D m_objectPoint;      ///< Closest point on closest obstacle to Robot
   ///////////////////////////////////////////////////////////////////////////////////////////
   //for obrrt need contact information
   int m_rapidContactID1;

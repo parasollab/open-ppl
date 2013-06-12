@@ -19,7 +19,7 @@ class ValidityCheckerMethod : public MPBaseObject<MPTraits> {
     }
 
     bool IsValid(CfgType& _cfg, Environment* _env, StatClass& _stats, 
-        CDInfo& _cdInfo, std::string *_callName) {
+        CDInfo& _cdInfo, std::string* _callName) {
       if(m_validity)
         return IsValidImpl(_cfg, _env, _stats, _cdInfo, _callName);
       else
@@ -36,7 +36,7 @@ class ValidityCheckerMethod : public MPBaseObject<MPTraits> {
 
   protected:
     virtual bool IsValidImpl(CfgType& _cfg, Environment* _env, StatClass& _stats, 
-        CDInfo& _cdInfo, std::string *_callName) = 0; 
+        CDInfo& _cdInfo, std::string* _callName) = 0; 
 
     bool m_validity;
 };

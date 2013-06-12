@@ -23,16 +23,16 @@ class CollisionDetectionValidity : public ValidityCheckerMethod<MPTraits> {
 
     virtual bool IsValidImpl(CfgType& _cfg, Environment* _env, 
         StatClass& _stats, CDInfo& _cdInfo, 
-        std::string *_callName);    
-    virtual  bool IsInsideObstacle(const CfgType& _cfg, Environment* _env, CDInfo& _cdInfo); 
+        string* _callName);    
+    virtual bool IsInsideObstacle(const CfgType& _cfg, Environment* _env, CDInfo& _cdInfo); 
 
     cd_predefined GetCDType() const { return m_cdMethod->GetCDType(); }
 
   private:
     bool IsInCollision(Environment* _env, StatClass& _stats, CDInfo& _cdInfo,
-        shared_ptr<MultiBody> _rob, shared_ptr<MultiBody> _obst, std::string *_callName);
+        shared_ptr<MultiBody> _rob, shared_ptr<MultiBody> _obst, string* _callName);
     bool IsInCollision(Environment* _env, StatClass& _stats, CDInfo& _cdInfo, 
-        size_t _robotIndex, std::string *_callName);
+        size_t _robotIndex, string* _callName);
 
     CollisionDetectionMethod* m_cdMethod;
     bool m_ignoreSelfCollision;
@@ -58,45 +58,46 @@ CollisionDetectionValidity<MPTraits>::CollisionDetectionValidity(typename MPTrai
     m_ignoreSelfCollision = _node.boolXMLParameter("ignoreSelfCollision", false, false, "Check for self collision"); 
     m_ignoreIAdjacentLinks  = _node.numberXMLParameter("ignore_i_adjacent_links", false, 1, 0, 100, "number of links to ignore for linkages");
 
-    std::string cd_label = _node.stringXMLParameter("method",true,"","method");
-    bool method_found = false;
+    string cdLabel = _node.stringXMLParameter("method",true,"","method");
+    bool methodFound = false;
 #ifdef USE_RAPID
-    if (cd_label == "RAPID") {
+    if (cdLabel == "RAPID") {
       m_cdMethod = new Rapid();
-      method_found = true;
+      methodFound = true;
     }
 #endif
 #ifdef USE_PQP
-    if (cd_label == "PQP") {
+    if (cdLabel == "PQP") {
       m_cdMethod = new PQP();
-      method_found = true;
-    } else if (cd_label == "PQP_SOLID") {
+      methodFound = true;
+    } 
+    else if (cdLabel == "PQP_SOLID") {
       m_cdMethod = new PQPSolid();
-      method_found = true;
+      methodFound = true;
     }
 #endif
 #ifdef USE_VCLIP
-    if (cd_label == "VCLIP") {
+    if (cdLabel == "VCLIP") {
       m_cdMethod = new VClip();
-      method_found = true;
+      methodFound = true;
     }
 #endif
 #ifdef USE_SOLID
-    if (cd_label == "SOLID") {
+    if (cdLabel == "SOLID") {
       m_cdMethod = new Solid();
-      method_found = true;
+      methodFound = true;
     }
 #endif
-    if (cd_label == "BoundingSpheres") {
+    if (cdLabel == "BoundingSpheres") {
       m_cdMethod = new BoundingSpheres();
-      method_found = true;
+      methodFound = true;
     }
-    if (cd_label == "InsideSpheres") {
+    if (cdLabel == "InsideSpheres") {
       m_cdMethod = new InsideSpheres();
-      method_found = true;
+      methodFound = true;
     }
-    if (!method_found) {
-      std::cerr << "Unknown Collision Detection Library Label \"" << cd_label << "\"" << std::endl;
+    if (!methodFound) {
+      cerr << "Unknown Collision Detection Library Label \"" << cdLabel << "\"" << endl;
       exit(1);
     }
   }
@@ -106,30 +107,24 @@ CollisionDetectionValidity<MPTraits>::~CollisionDetectionValidity(){}
 
 template<class MPTraits>
 bool
-CollisionDetectionValidity<MPTraits>::IsValidImpl(CfgType& _cfg, Environment* _env, StatClass& _stats, CDInfo& _cdInfo, std::string *_callName = NULL) {
+CollisionDetectionValidity<MPTraits>::IsValidImpl(CfgType& _cfg, Environment* _env, StatClass& _stats, CDInfo& _cdInfo, string* _callName = NULL) {
   _stats.IncCfgIsColl(_callName);
 
   if(!_cfg.ConfigEnvironment(_env)) {
-    _cfg.SetLabel("VALID", !true);
-    //return true;
+    _cfg.SetLabel("VALID", false);
     return false;
   }
 
-  bool Clear = (_callName) ? false : true; 
+  bool clear = (_callName) ? false : true; 
   if(!_callName)
-    _callName = new std::string("isColl(e,s,cd,cdi,ep)");
+    _callName = new string("isColl(e,s,cd,cdi,ep)");
 
   // after updating the environment(multibodies), Ask ENVIRONMENT
-  // to check collision! (this is more nature.)
+  // to check collision! (this is more natural)
 
   bool answerFromEnvironment = IsInCollision(_env, _stats, _cdInfo, _cfg.GetRobotIndex(), _callName);
-#ifdef COLLISIONCFG
-  if(answerFromEnvironment) {
-    CollisionConfiguration[_cdInfo.m_collidingObstIndex].push_back(v);
-  }
-#endif
 
-  if(Clear) 
+  if(clear) 
     delete _callName;
 
   _cfg.SetLabel("VALID", !answerFromEnvironment); 
@@ -140,50 +135,55 @@ CollisionDetectionValidity<MPTraits>::IsValidImpl(CfgType& _cfg, Environment* _e
 template<class MPTraits>
 bool
 CollisionDetectionValidity<MPTraits>::IsInCollision(Environment* _env, StatClass& _stats, CDInfo& _cdInfo,
-    size_t _robotIndex,  std::string *_callName) {
+    size_t _robotIndex,  string* _callName) {
 
-  size_t nmulti = _env->GetUsableMultiBodyCount();
+  size_t nMulti = _env->GetUsableMultiBodyCount();
   shared_ptr<MultiBody> rob = _env->GetMultiBody(_robotIndex);
 
-  CDInfo local_cd_info;
-  bool ret_val = false;
+  CDInfo localCDInfo;
+  bool retVal = false;
 
-  for (size_t i = 0; i < nmulti; i++) {
+  for (size_t i = 0; i < nMulti; i++) {
     if ( i != _robotIndex ) {
       // Note that the below call sets _cdInfo as needed
-      bool collision_found = IsInCollision(_env, _stats, _cdInfo, rob, _env->GetMultiBody(i), _callName);
-      if ( (collision_found) && ( ! _cdInfo.m_retAllInfo) ) {
+      bool collisionFound = IsInCollision(_env, _stats, _cdInfo, rob, _env->GetMultiBody(i), _callName);
+      if ( (collisionFound) && (!_cdInfo.m_retAllInfo) ) {
         _cdInfo.m_collidingObstIndex = i;
         return true;
-      } else  if (_cdInfo.m_retAllInfo) {  // store more info
-        if ((collision_found) && (!ret_val)) {
+      }
+      else  if (_cdInfo.m_retAllInfo) {  // store more info
+        if ((collisionFound) && (!retVal)) {
           // m_collidingObstIndex is always the FIRST obstacle found in collision
           // m_nearestObstIndex is 'nearest' obstacle (colliding or not)
-          local_cd_info.m_collidingObstIndex = i;
-          ret_val = true;
+          localCDInfo.m_collidingObstIndex = i;
+          retVal = true;
         }
 
         // Be certain that IsInCollision set _cdInfo.m_minDist
         // Check new mins against old, reset *_points if needed
-        // Store everything in local_cd_info, copy back to _cdInfo at end of function.
+        // Store everything in localCDInfo, copy back to _cdInfo at end of function.
 
-        if (_cdInfo.m_minDist < local_cd_info.m_minDist) {
-          local_cd_info.m_nearestObstIndex = i;
-          local_cd_info.m_minDist = _cdInfo.m_minDist;
-          local_cd_info.m_robotPoint = _cdInfo.m_robotPoint;
-          local_cd_info.m_objectPoint = _cdInfo.m_objectPoint;
-        } // end updating local_cd_info
+        if (_cdInfo.m_minDist < localCDInfo.m_minDist) {
+          localCDInfo.m_nearestObstIndex = i;
+          localCDInfo.m_minDist = _cdInfo.m_minDist;
+          localCDInfo.m_robotPoint = _cdInfo.m_robotPoint;
+          localCDInfo.m_objectPoint = _cdInfo.m_objectPoint;
+        } // end updating localCDInfo
       }
-    } else {
+    }
+    else {
       if(m_ignoreSelfCollision){
         //robot self checking turned off
         if (_cdInfo.m_retAllInfo) {
-          // local_cd_info should contain "all the info" across all objects
+          // localCDInfo should contain "all the info" across all objects
           // _cdInfo only contains info for the last one processed above
-          _cdInfo = local_cd_info;
+          _cdInfo = localCDInfo;
         }
-        ret_val =false;
-      } else {
+        //The line below was commented because it does not make sense to reset the return value
+        //to false whenever m_ignoreSelfCollision is true.
+        //retVal = false;
+      }
+      else {
         // robot self checking. Warning: rob and _env->GetMultiBody(robot) may NOT be the same.
         if ( (rob->GetBodyCount() > 1) && 
             (IsInCollision(_env, _stats, _cdInfo, rob, rob, _callName)) ) {
@@ -202,19 +202,19 @@ CollisionDetectionValidity<MPTraits>::IsInCollision(Environment* _env, StatClass
   } // end for i
 
   if (_cdInfo.m_retAllInfo) {
-    // local_cd_info should contain "all the info" across all objects
+    // localCDInfo should contain "all the info" across all objects
     // _cdInfo only contains info for the last one processed above
-    _cdInfo = local_cd_info;
+    _cdInfo = localCDInfo;
   }
 
-  return ret_val;
+  return retVal;
 } 
 
 
 template<class MPTraits>
 bool
 CollisionDetectionValidity<MPTraits>::IsInCollision(Environment* _env, StatClass& _stats, CDInfo& _cdInfo,
-    shared_ptr<MultiBody> _rob, shared_ptr<MultiBody> _obst, std::string *_callName) {
+    shared_ptr<MultiBody> _rob, shared_ptr<MultiBody> _obst, string* _callName) {
   CollisionDetectionMethod::CDType tp = m_cdMethod->GetType();
   // Type Out: no collision sure; collision unsure.
   if((tp == CollisionDetectionMethod::Out) && (m_cdMethod->IsInCollision(_rob, _obst, _stats, _cdInfo, _callName, m_ignoreIAdjacentLinks) == false)) {
@@ -222,6 +222,7 @@ CollisionDetectionValidity<MPTraits>::IsInCollision(Environment* _env, StatClass
   }
 
   // Type In: no collision unsure; collision sure.
+  // WARNING: If the Type is In, the result will always be true.
   if ((tp == CollisionDetectionMethod::In) && (m_cdMethod->IsInCollision(_rob, _obst, _stats, _cdInfo, _callName, m_ignoreIAdjacentLinks) == true)) {
     return true;
   }
@@ -240,7 +241,7 @@ CollisionDetectionValidity<MPTraits>::IsInsideObstacle(const CfgType& _cfg, Envi
 #ifdef USE_PQP
   return PQPSolid().IsInsideObstacle(_cfg, _env);
 #else
-  cerr << "Recompile with PQP to use CollisionDetectionValidity::IsInsideObstacle" <<endl;
+  cerr << "Recompile with PQP to use CollisionDetectionValidity::IsInsideObstacle" << endl;
   exit(1);
 #endif
 }
