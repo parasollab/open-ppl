@@ -66,16 +66,16 @@ Cfg::InitRobots(vector<Robot>& _robots) {
       }
     }
     for(Robot::JointIT jit = rit->m_joints.begin(); jit != rit->m_joints.end(); jit++) {
-      if(jit->get<0>() == Robot::REVOLUTE) {
+      if((*jit)->GetConnectionType() == Connection::REVOLUTE) {
         m_dofTypes.push_back(JOINT);
         m_numJoints++;
       }
-      else if(jit->get<0>() == Robot::SPHERICAL) {
+      else if((*jit)->GetConnectionType() == Connection::SPHERICAL) {
         m_dofTypes.push_back(JOINT);
         m_dofTypes.push_back(JOINT);
         m_numJoints+=2;
       }
-      else if(jit->get<0>() == Robot::NONACTUATED){
+      else if((*jit)->GetConnectionType() == Connection::NONACTUATED){
         //skip, do nothing
       }
     }
@@ -411,7 +411,7 @@ Cfg::GetRobotCenterofMass(Environment* _env) const {
     numbodies++;  
 
     for(Robot::JointIT i = rit->m_joints.begin(); i != rit->m_joints.end(); ++i){
-      GMSPolyhedron poly1 = mb->GetFreeBody(i->get<1>().second)->GetWorldPolyhedron();
+      GMSPolyhedron poly1 = mb->GetFreeBody((*i)->GetNextBodyIndex())->GetWorldPolyhedron();
       Vector3D polycom1(0,0,0);
       for(vector<Vector3D>::const_iterator vit1 = poly1.m_vertexList.begin(); vit1 != poly1.m_vertexList.end(); ++vit1)
         polycom1 = polycom1 + (*vit1);
@@ -491,11 +491,11 @@ Cfg::ConfigEnvironment(Environment* _env) const {
     }
     typedef Robot::JointMap::iterator MIT;
     for(MIT mit = rit->m_joints.begin(); mit != rit->m_joints.end(); mit++) {
-      if(mit->get<0>() != Robot::NONACTUATED) {
-        size_t second = mit->get<1>().second;
+      if((*mit)->GetConnectionType() != Connection::NONACTUATED) {
+        size_t second = (*mit)->GetNextBodyIndex();
         mb->GetFreeBody(second)->GetBackwardConnection(0).GetDHparameters().theta = m_v[index]*PI;
         index++;
-        if(mit->get<0>() == Robot::SPHERICAL){
+        if((*mit)->GetConnectionType() == Connection::SPHERICAL){
           mb->GetFreeBody(second)->GetBackwardConnection(0).GetDHparameters().alpha = m_v[index]*PI;
           index++;
         }
@@ -662,16 +662,16 @@ Cfg::GetRandomCfgImpl(Environment* _env, shared_ptr<Boundary> _bb) {
       }
     }
     for(Robot::JointIT i = rit->m_joints.begin(); i != rit->m_joints.end(); ++i) {
-      if(i->get<0>() == Robot::REVOLUTE) {
-        pair<double, double> r = i->get<2>();
+      if((*i)->GetConnectionType() == Connection::REVOLUTE) {
+        pair<double, double> r = (*i)->GetJointLimits(0);
         double t = DRand()*(r.second-r.first)+r.first;
         m_v.push_back(t);
         index++;
       }
-      else if(i->get<0>() == Robot::SPHERICAL) {
-        pair<double, double> r = i->get<2>();
+      else if((*i)->GetConnectionType() == Connection::SPHERICAL) {
+        pair<double, double> r = (*i)->GetJointLimits(0);
         double t = DRand()*(r.second-r.first)+r.first;
-        r = i->get<3>();
+        r = (*i)->GetJointLimits(1);
         double a = DRand()*(r.second-r.first)+r.first;
         m_v.push_back(t);
         m_v.push_back(a);

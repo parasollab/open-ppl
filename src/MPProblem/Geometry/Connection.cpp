@@ -2,9 +2,11 @@
 #include "MultiBody.h"
 
 Connection::Connection(MultiBody* _owner) : m_multibody(_owner) {
+  m_globalIndex = m_globalCounter++;
 }
 
 Connection::Connection(const shared_ptr<Body>& _body1, const shared_ptr<Body>& _body2) {
+  m_globalIndex = m_globalCounter++;
   m_bodies[0] = _body1;
   m_bodies[1] = _body2;
 }
@@ -16,16 +18,44 @@ Connection::Connection(const shared_ptr<Body>& _body1, const shared_ptr<Body>& _
   : m_transformationToBody2(_transformationToBody2),
   m_transformationToDHFrame(_transformationToDHFrame),
   m_dhParameters(_dhparameters) {
+    m_globalIndex = m_globalCounter++;
     m_bodies[0] = _body1;
     m_bodies[1] = _body2;
   }
 
 Connection::~Connection() {}
 
+Connection::JointType
+Connection::GetJointTypeFromTag(const string _tag){
+  if(_tag == "REVOLUTE")
+    return Connection::REVOLUTE;
+  else if (_tag == "SPHERICAL")
+    return Connection::SPHERICAL;
+  else if(_tag == "NONACTUATED")
+    return Connection::NONACTUATED;
+  else {
+    cerr << "Error::Incorrect Joint Type Specified::" << _tag << endl;
+    cerr << "Choices are:: Revolute, Spherical or Nonactuated" << endl;
+    exit(1);
+  }
+}
+
+string
+Connection::GetTagFromJointType(const Connection::JointType& _jt){
+  switch(_jt){
+    case REVOLUTE:
+      return "REVOLUTE";
+    case SPHERICAL:
+      return "SPHERICAL";
+    default:
+      return "Unknown Joint Type";
+  }
+} 
+
 ostream&
 operator<<(ostream& _os, const Connection& _c) {
   return _os << _c.m_bodyIndices.first << " " << _c.m_bodyIndices.second << " "
-    << Robot::GetTagFromJointType(_c.m_jointType) << endl 
+    << Connection::GetTagFromJointType(_c.m_jointType) << endl 
     << _c.m_transformationToDHFrame << " " << _c.m_dhParameters << " "
     << _c.m_transformationToBody2;
 }
@@ -35,20 +65,20 @@ operator>>(istream& _is, Connection& _c){
   //body indices
   _c.m_bodyIndices.first = ReadField<int>(_is, "Previous Body Index");
   _c.m_bodyIndices.second = ReadField<int>(_is, "Next Body Index");
-  
+
   //grab the shared_ptr to bodies
   _c.m_bodies[0] = _c.m_multibody->GetFreeBody(_c.m_bodyIndices.first);
   _c.m_bodies[1] = _c.m_multibody->GetFreeBody(_c.m_bodyIndices.second);
 
   //grab the joint type
   string connectionTypeTag = ReadFieldString(_is, "Connection Type");
-  _c.m_jointType = Robot::GetJointTypeFromTag(connectionTypeTag);
+  _c.m_jointType = Connection::GetJointTypeFromTag(connectionTypeTag);
 
   //grab the joint limits for revolute and spherical joints
-  if(_c.m_jointType == Robot::REVOLUTE || _c.m_jointType == Robot::SPHERICAL){
+  if(_c.m_jointType == Connection::REVOLUTE || _c.m_jointType == Connection::SPHERICAL){
     _c.m_jointLimits[0].first = _c.m_jointLimits[1].first = -1;
     _c.m_jointLimits[0].second = _c.m_jointLimits[1].second = 1;
-    size_t numRange = _c.m_jointType == Robot::REVOLUTE ? 1 : 2;
+    size_t numRange = _c.m_jointType == Connection::REVOLUTE ? 1 : 2;
     for(size_t i = 0; i<numRange; i++){
       string tok;
       if(_is >> tok){
@@ -97,3 +127,5 @@ Connection::operator==(const Connection& c) const {
     m_dhParameters == c.m_dhParameters &&
     m_jointType == c.m_jointType;
 }
+
+size_t Connection::m_globalCounter = 0;

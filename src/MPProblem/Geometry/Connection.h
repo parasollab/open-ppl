@@ -16,7 +16,6 @@
 #include "boost/shared_ptr.hpp"
 using boost::shared_ptr;
 
-
 /////////////////////////////////////////////////////////////////////
 class Body;
 class MultiBody;
@@ -24,6 +23,7 @@ class MultiBody;
 
 class Connection {
   public:
+    enum JointType {REVOLUTE, SPHERICAL, NONACTUATED}; //1dof vs 2dof rotational joints
 
     Connection(MultiBody* _owner);    
     Connection(const shared_ptr<Body>& _body1, const shared_ptr<Body>& _body2 = shared_ptr<Body>());
@@ -34,16 +34,23 @@ class Connection {
 
     virtual ~Connection();
 
+    static JointType GetJointTypeFromTag(const string _tag);
+    static string GetTagFromJointType(const JointType& _jt);
     /**Check if a give body is the first body of this connection instance or not.
      */
     bool IsFirstBody(const shared_ptr<Body>& _body) const {return _body == m_bodies[0];}
 
     shared_ptr<Body> GetPreviousBody() {return m_bodies[0];} 
+    size_t GetPreviousBodyIndex() {return m_bodyIndices.first;} 
     shared_ptr<Body> GetNextBody() {return m_bodies[1];}
-    Robot::JointType GetConnectionType() const {return m_jointType;}
+    size_t GetNextBodyIndex() {return m_bodyIndices.second;} 
+    JointType GetConnectionType() const {return m_jointType;}
     DHparameters& GetDHparameters() {return m_dhParameters;}
     Transformation& GetTransformationToBody2() {return m_transformationToBody2;}
     Transformation& GetTransformationToDHFrame() {return m_transformationToDHFrame;}
+    const pair<double, double>& GetJointLimits(int _i) const {return m_jointLimits[_i];}
+
+    size_t GetGlobalIndex() const {return m_globalIndex;}
 
     friend ostream& operator<<(ostream& _os, const Connection& _c);
     friend istream& operator>>(istream& _is, Connection& _c);
@@ -58,10 +65,13 @@ class Connection {
     Transformation m_transformationToBody2;
     Transformation m_transformationToDHFrame;
     DHparameters m_dhParameters;
-    
-    Robot::JointType m_jointType;
+
+    size_t m_globalIndex;
+    JointType m_jointType;
     pair<size_t, size_t> m_bodyIndices; //(previous body, next body)
     pair<double, double> m_jointLimits[2]; //valid range within [-1,1)
+
+    static size_t m_globalCounter; //global counter for connection indices
 };
 
 #endif

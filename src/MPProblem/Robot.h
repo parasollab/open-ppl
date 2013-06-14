@@ -3,20 +3,18 @@
 
 #include <vector>
 #include <string>
-#include "boost/tuple/tuple.hpp"
+#include "boost/shared_ptr.hpp"
+using boost::shared_ptr;
 
 using namespace std;
+
+class Connection;
 
 struct Robot {
   enum Base {PLANAR, VOLUMETRIC, FIXED, JOINT}; //2D plane vs 3D
   enum BaseMovement {ROTATIONAL, TRANSLATIONAL}; //rotation+translation, just translation, no movement
-  enum JointType {REVOLUTE, SPHERICAL, NONACTUATED}; //1dof vs 2dof rotational joints
-  //Joint is defined as a quadruple:
-  //  0 - joint type
-  //  1 - body indices of joint connection
-  //  2 - joint constraints for joint dof #1 (e.g., in revolute/prismatic joints)
-  //  3 - joint constraints for joint dof #2 (e.g., used in spherical joint) 
-  typedef boost::tuple<JointType, pair<size_t, size_t>, pair<double, double>, pair<double, double> > Joint;
+  
+  typedef shared_ptr<Connection> Joint;
   typedef vector<Joint> JointMap;
   typedef JointMap::iterator JointIT;
 
@@ -30,11 +28,9 @@ struct Robot {
 
   static Base GetBaseFromTag(const string _tag);      
   static BaseMovement GetMovementFromTag(const string _tag);  
-  static JointType GetJointTypeFromTag(const string _tag);
 
   static string GetTagFromBase(const Base& _b);
   static string GetTagFromMovement(const BaseMovement& _bm);
-  static string GetTagFromJointType(const JointType& _jt);
 
 #ifdef _PARALLEL
   public:

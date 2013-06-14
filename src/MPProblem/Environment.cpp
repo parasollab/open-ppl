@@ -162,10 +162,10 @@ Environment::GetRange(size_t _i, shared_ptr<Boundary> _b){
     }
     typedef Robot::JointMap::iterator MIT;
     for(MIT mit = rit->m_joints.begin(); mit != rit->m_joints.end(); mit++) {
-      if(mit->get<0>() != Robot::NONACTUATED) {
-        if(_i == index++) return mit->get<2>();
-        if(mit->get<0>() == Robot::SPHERICAL){
-          if(_i == index++) return mit->get<3>();
+      if((*mit)->GetConnectionType() != Connection::NONACTUATED) {
+        if(_i == index++) return (*mit)->GetJointLimits(0);
+        if((*mit)->GetConnectionType() == Connection::SPHERICAL){
+          if(_i == index++) return (*mit)->GetJointLimits(1);
         }
       } 
     }
@@ -372,7 +372,7 @@ Environment::BuildRobotStructure() {
       size_t index = m_robotGraph.find_vertex(cc[j])->property();
       typedef Robot::JointMap::iterator MIT;
       for(MIT mit = robot->GetJointMap().begin(); mit!=robot->GetJointMap().end(); mit++){
-        if(mit->get<1>().first == index){
+        if((*mit)->GetPreviousBodyIndex() == index){
           jm.push_back(*mit);
         }
       }
@@ -416,12 +416,12 @@ Environment::InCSpace(const Cfg& _cfg, shared_ptr<Boundary> _b){
     }
     typedef Robot::JointMap::iterator MIT;
     for(MIT mit = rit->m_joints.begin(); mit != rit->m_joints.end(); mit++) {
-      if(mit->get<0>() != Robot::NONACTUATED) {
-        if(_cfg[index] < mit->get<2>().first || _cfg[index] > mit->get<2>().second)
+      if((*mit)->GetConnectionType() != Connection::NONACTUATED) {
+        if(_cfg[index] < (*mit)->GetJointLimits(0).first || _cfg[index] > (*mit)->GetJointLimits(0).second)
           return false;
         index++;
-        if(mit->get<0>() == Robot::SPHERICAL){
-          if(_cfg[index] < mit->get<3>().first || _cfg[index] > mit->get<3>().second)
+        if((*mit)->GetConnectionType() == Connection::SPHERICAL){
+          if(_cfg[index] < (*mit)->GetJointLimits(1).first || _cfg[index] > (*mit)->GetJointLimits(1).second)
             return false;
           index++;
         }

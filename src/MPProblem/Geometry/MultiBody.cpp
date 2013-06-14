@@ -521,13 +521,12 @@ MultiBody::Read(istream& _is, bool _debug) {
     int connectionCount = ReadField<int>(_is, "Number of Connections");
 
     for(int i=0; i<connectionCount; i++) {
-      Connection c(this);
-      _is >> c;
+      //add connection info to multibody connection map
+      shared_ptr<Connection> c(new Connection(this));
+      jointMap.push_back(c);
+      _is >> *jointMap.back();
       if(_debug)
         cout << c << endl;
-
-      //add connection info to multibody connection map
-      jointMap.push_back(Robot::Joint(c.m_jointType, c.m_bodyIndices, c.m_jointLimits[0], c.m_jointLimits[1])); 
     } //endfor i
   }
   else{ //Passive, Surface, Internal
