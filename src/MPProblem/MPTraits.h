@@ -31,6 +31,7 @@
 #include "NeighborhoodFinders/HierarchicalNF.h"
 #include "NeighborhoodFinders/HopLimitNF.h"
 #include "NeighborhoodFinders/RadiusNF.h"
+#include "NeighborhoodFinders/RandomNF.h"
 
 //sampler includes
 #include "Samplers/BridgeTestSampler.h"
@@ -150,7 +151,8 @@ struct MPTraits{
     HopLimitNF<MPTraits>,
     //MetricTreeNF<MPTraits>,
     //MPNNNF<MPTraits>,
-    RadiusNF<MPTraits>//,
+    RadiusNF<MPTraits>,
+    RandomNF<MPTraits>//,
     //SpillTreeNF<MPTraits> 
     > NeighborhoodFinderMethodList;
   
