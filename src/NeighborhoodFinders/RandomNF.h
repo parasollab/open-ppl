@@ -52,7 +52,7 @@ RandomNF<MPTraits>::KClosest(RoadmapType* _rmp, InputIterator _first, InputItera
   
   set<int> ids;
 
-  for (int i = 0; i < _k && i<(_last-_first); ++i) {
+  for (size_t i = 0; i < _k && i<(_last-_first); ++i) {
     int id = 0;
     do {
       id = (int)(LRand()%(_last-_first));
@@ -82,7 +82,7 @@ RandomNF<MPTraits>::KClosestPairs(RoadmapType* _rmp,
   GraphType* map = _rmp->GetGraph();
   set<pair<int,int> > ids;
   
-  for(int i=0,j=0; i < _k && i<(_last1-_first1) && j<(_last2-_first2); i++, j++) {
+  for(size_t i=0,j=0; i < _k && i<(_last1-_first1) && j<(_last2-_first2); i++, j++) {
     int id1=0,id2=0;
     pair<int,int> pairId = make_pair(0,0);
     do {
