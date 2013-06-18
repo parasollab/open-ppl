@@ -2,7 +2,7 @@
 #define RANDOMNF_H_
 
 #include "NeighborhoodFinderMethod.h"
-    
+
 template<class MPTraits>
 class RandomNF : public NeighborhoodFinderMethod<MPTraits> {
   public:
@@ -11,93 +11,102 @@ class RandomNF : public NeighborhoodFinderMethod<MPTraits> {
     typedef typename MPProblemType::RoadmapType RoadmapType;
     typedef typename MPProblemType::VID VID;
     typedef typename MPProblemType::GraphType GraphType;
-      
-    RandomNF(MPProblemType* _problem = NULL, string _dmLabel = "", string _label = ""):
-      NeighborhoodFinderMethod<MPTraits>(_problem, _dmLabel, _label) {
-	this->SetName("RandomNF");
-    }
-    
+    typedef typename MPProblemType::DistanceMetricPointer DistanceMetricPointer;
+
+    RandomNF(string _dmLabel = "", bool _unconnected = false, size_t _k = 5):
+      NeighborhoodFinderMethod<MPTraits>(_dmLabel, _unconnected) {
+        this->SetName("RandomNF");
+        this->m_nfType = K;
+        this->m_k = _k;
+      }
+
     RandomNF(MPProblemType* _problem, XMLNodeReader& _node):
       NeighborhoodFinderMethod<MPTraits>(_problem,_node) {
-	this->SetName("RandomNF");
+        this->SetName("RandomNF");
+        this->m_nfType = K;
+        this->m_k = _node.numberXMLParameter("k", true, 5, 0, MAX_INT, "Number of neighbors to find");
+      }
+
+    virtual void PrintOptions(ostream& _os) const {
+      NeighborhoodFinderMethod<MPTraits>::PrintOptions(_os);
+      _os << "\tk: " << this->m_k << endl;
     }
-    virtual ~RandomNF() {}
 
-    //Doesn't actually compute k-closest, but k-random neighbors. 
+    //Find k-random neighbors. 
     template<typename InputIterator, typename OutputIterator>
-    OutputIterator KClosest(RoadmapType* _rmp,
-	InputIterator _first, InputIterator _last,CfgType _cfg, size_t _k, OutputIterator _out);
-    template <typename InputIterator, typename OutputIterator>
-    OutputIterator KClosestPairs(RoadmapType* _rmp,
-	InputIterator _first1, InputIterator _last1,
-	InputIterator _first2, InputIterator _last2,
-	size_t _k, OutputIterator _out);
+      OutputIterator FindNeighbors(RoadmapType* _rmp, 
+          InputIterator _first, InputIterator _last, const CfgType& _cfg, OutputIterator _out);
 
-    //TODO: PrintOptions; will be added by Jory later.
+    //Find k-random pairs of neighbors
+    template<typename InputIterator, typename OutputIterator>
+      OutputIterator FindNeighborPairs(RoadmapType* _rmp,
+          InputIterator _first1, InputIterator _last1, 
+          InputIterator _first2, InputIterator _last2, 
+          OutputIterator _out);
 };
 
 template <class MPTraits>
 template <typename InputIterator, typename OutputIterator>
 OutputIterator
-RandomNF<MPTraits>::KClosest(RoadmapType* _rmp, InputIterator _first, InputIterator _last,
-    CfgType _cfg, size_t _k, OutputIterator _out) {
+RandomNF<MPTraits>::FindNeighbors(RoadmapType* _rmp, InputIterator _first, InputIterator _last,
+    const CfgType& _cfg, OutputIterator _out) {
+
+  Environment* env = this->GetMPProblem()->GetEnvironment();
+  GraphType* map = _rmp->GetGraph();
+  DistanceMetricPointer dmm = this->GetMPProblem()->GetDistanceMetric(this->m_dmLabel);
 
   this->IncrementNumQueries();
-  #ifndef _PARALLEL
   this->StartTotalTime();
   this->StartQueryTime();
-  #endif
 
-  GraphType* map = _rmp->GetGraph();
-  
-  set<int> ids;
-  size_t size = _last-_first;
-  for (size_t i = 0; i < _k && i<size; ++i) {
-    int id = 0;
+  set<VID> vids;
+  VID cvid = map->GetVID(_cfg);
+
+  size_t dist = distance(_first, _last);
+  for(size_t i = 0; i < this->m_k && i < dist; ++i) {
+    VID vid;
     do {
-      id = (int)(LRand()%(size));
-    }
-    while(ids.find(id) != ids.end() &&
-	map->GetVID(_cfg) == map->GetVID(_first+id));
-    ids.insert(id);
-    *_out = map->GetVID(_first+id);
-    ++_out;
+      vid = map->GetVID(_first + LRand() % dist);
+    } while(vids.find(vid) != vids.end() && cvid == vid && this->CheckUnconnected(_rmp, _cfg, vid));
+    vids.insert(vid);
+    *_out++ = make_pair(vid, dmm->Distance(env, _cfg, map->GetVertex(vid)));
   }
 
-  #ifndef _PARALLEL
   this->EndQueryTime();
   this->EndTotalTime();
-  #endif
-  
+
   return _out; 
 }
 
 template<class MPTraits>
 template<typename InputIterator, typename OutputIterator>
 OutputIterator
-RandomNF<MPTraits>::KClosestPairs(RoadmapType* _rmp,
+RandomNF<MPTraits>::FindNeighborPairs(RoadmapType* _rmp,
     InputIterator _first1, InputIterator _last1,
     InputIterator _first2, InputIterator _last2,
-    size_t _k, OutputIterator _out) {
-  GraphType* map = _rmp->GetGraph();
-  set<pair<int,int> > ids;
+    OutputIterator _out) {
 
-  size_t size1 = _last1-_first1;
-  size_t size2 = _last2-_first2;
-  for(size_t i=0,j=0; i < _k && i<size1 && j<size2; i++, j++) {
-    int id1=0,id2=0;
-    pair<int,int> pairId = make_pair(0,0);
+  Environment* env = this->GetMPProblem()->GetEnvironment();
+  GraphType* map = _rmp->GetGraph();
+  DistanceMetricPointer dmm = this->GetMPProblem()->GetDistanceMetric(this->m_dmLabel);
+  
+  set<pair<VID, VID> > ids;
+
+  size_t dist1 = distance(_first1, _last1), dist2 = distance(_first2, _last2);
+  for(size_t i=0; i < this->m_k && i < dist1 && i < dist2; ++i) {
+    VID vid1, vid2;
+    pair<VID, VID> pairId;
     do {
-      id1 = (int)(LRand()%(size1));
-      id2 = (int)(LRand()%(size2));
-      pairId = make_pair(id1,id2);
-    }
-    while(ids.find(pairId) != ids.end() &&
-	map->GetVID(_first1+id1) == map->GetVID(_first2+id2));
+      vid1 = map->GetVID(_first1 + LRand() % dist1);
+      vid2 = map->GetVID(_first2 + LRand() % dist2);
+      pairId = make_pair(vid1, vid2);
+    } while(ids.find(pairId) != ids.end() && vid1 == vid2);
     ids.insert(pairId);
-    *_out = make_pair(map->GetVID(_first1+id1),map->GetVID(_first2+id2));
-    ++_out;
+    *_out++ = make_pair(
+        make_pair(vid1, vid2),
+        dmm->Distance(env, map->GetVertex(vid1), map->GetVertex(vid2)));
   }
+  
   return _out;
 }
 

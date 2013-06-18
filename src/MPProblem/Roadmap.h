@@ -36,16 +36,11 @@ class Roadmap {
     //another roadmap (to_rdmp)
     vector<VID> AppendRoadmap(const Roadmap<MPTraits>& _rdmp);
 
-    //access and set the LP cache
-    bool IsCached(VID _v1, VID _v2);
-    void SetCache(VID _v1, VID _v2, bool _b);
-
     //access the roadmap graph
     GraphType* GetGraph() {return m_graph;}
     const GraphType* GetGraph() const {return m_graph;}
 
   private:
-    std::map<std::pair<VID,VID>, bool> m_lpCache; //cache of attempted edges
     GraphType* m_graph; //stapl graph
 };
 
@@ -60,8 +55,7 @@ Roadmap<MPTraits>::Roadmap(const Roadmap<MPTraits>& _rdmp) : m_graph(new GraphTy
 
 template <class MPTraits>
 Roadmap<MPTraits>::~Roadmap(){
-  if( m_graph != NULL ) 
-    delete m_graph;
+  delete m_graph;
   m_graph = NULL;
 }
 
@@ -161,21 +155,6 @@ Roadmap<MPTraits>::AppendRoadmap(const Roadmap<MPTraits>& _rdmp) {
     } //endfor eit  
   } //endfor vit
   return toVIDs;
-}
-
-template<class MPTraits>
-bool 
-Roadmap<MPTraits>::IsCached(VID _v1, VID _v2) {
-  if(m_lpCache.count(make_pair(min(_v1,_v2), max(_v1,_v2))) > 0)
-    return true;
-  else
-    return false;
-}
-
-template<class MPTraits>
-void
-Roadmap<MPTraits>::SetCache(VID _v1, VID _v2, bool _b) {
-  m_lpCache[make_pair(min(_v1,_v2),max(_v1,_v2))] = _b;
 }
 
 #endif

@@ -30,6 +30,7 @@
 #include "NeighborhoodFinders/BruteForceNF.h"
 #include "NeighborhoodFinders/HierarchicalNF.h"
 #include "NeighborhoodFinders/HopLimitNF.h"
+#include "NeighborhoodFinders/OptimalNF.h"
 #include "NeighborhoodFinders/RadiusNF.h"
 #include "NeighborhoodFinders/RandomNF.h"
 
@@ -57,8 +58,7 @@
 #include "Connectors/CCsConnector.h"
 #include "Connectors/ConnectNeighboringSurfaces.h"
 #include "Connectors/NeighborhoodConnector.h"
-#include "Connectors/OptimalConnection.h"
-#include "Connectors/OptimalRewire.h"
+#include "Connectors/RewireConnector.h"
 #include "Connectors/CCExpansion.h"
 
 //metric includes
@@ -151,6 +151,7 @@ struct MPTraits{
     HopLimitNF<MPTraits>,
     //MetricTreeNF<MPTraits>,
     //MPNNNF<MPTraits>,
+    OptimalNF<MPTraits>,
     RadiusNF<MPTraits>,
     RandomNF<MPTraits>//,
     //SpillTreeNF<MPTraits> 
@@ -185,8 +186,7 @@ struct MPTraits{
     CCsConnector<MPTraits>, 
     NeighborhoodConnector<MPTraits>, 
     //PreferentialAttachment<MPTraits>, 
-    OptimalConnection<MPTraits>,
-    OptimalRewire<MPTraits>//,
+    RewireConnector<MPTraits>//,
     //ClosestVE<MPTraits>
       > ConnectorMethodList;
  

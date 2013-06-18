@@ -120,7 +120,7 @@ class StatClass {
 
     //help
     template<class GraphType>
-      void DisplayCCStats(ostream& _os, GraphType&, int);
+      void DisplayCCStats(ostream& _os, GraphType&);
 
     //m_lpInfo represents information about the Local Planners, referenced by name
     //  m_lpInfo.first is the name of the Local Planner
@@ -294,10 +294,7 @@ StatClass::PrintAllStats(ostream& _os, RoadmapType* _rmap, int _numCCs) {
 
   _os << endl;
 
-  if (_numCCs==ALL)    {DisplayCCStats(_os, *(_rmap->GetGraph()));      }
-  else if (_numCCs==0) {DisplayCCStats(_os, *(_rmap->GetGraph()),0);     }
-  else                {DisplayCCStats(_os, *(_rmap->GetGraph()),_numCCs);}
-
+  DisplayCCStats(_os, *_rmap->GetGraph());
 
   ///Below removed b/c it counts Coll Detection too fine grained.  We have decided 
   ///to only keep Total times Cfg::isCollision is called.  This makes the 'price' for a 
@@ -671,30 +668,20 @@ StatClass::ComputeInterCCFeatures(MPProblemType* _problem, RoadmapType* _rdmp, s
  */
 template<class GraphType>
 void
-StatClass::DisplayCCStats(ostream& _os, GraphType& _g, int _maxCCPrint=-1)  {
-
-  ///Modified for VC
-  //temporary ifdef because of color map and get_cc_stats, we need a pDisplayCCStats
-#ifndef _PARALLEL
+StatClass::DisplayCCStats(ostream& _os, GraphType& _g)  {
 
   typedef typename GraphType::vertex_descriptor VID;
   stapl::sequential::vector_property_map<GraphType, size_t> cMap;
 
-  vector<pair<size_t, VID> > ccStats;
-  stapl::sequential::get_cc_stats(_g, cMap, ccStats);
-  if (_maxCCPrint == -1) {
-    _maxCCPrint = ccStats.size();
-  }
+  vector<pair<size_t, VID> > ccs;
+  stapl::sequential::get_cc_stats(_g, cMap, ccs);
 
-  int ccNum = 1;
-  _os << "\nThere are " << ccStats.size() << " connected components:";
-  for (typename vector< pair<size_t,VID> >::iterator vi = ccStats.begin(); vi != ccStats.end(); vi++) {
-    _os << "\nCC[" << ccNum << "]: " << vi->first ;
+  size_t ccnum = 0;
+  _os << "\nThere are " << ccs.size() << " connected components:";
+  for(typename vector<pair<size_t,VID> >::iterator vi = ccs.begin(); vi != ccs.end(); ++vi) {
+    _os << "\nCC[" << ccnum++ << "]: " << vi->first ;
     _os << " (vid=" << size_t(vi->second) << ")";
-    ccNum++;
-    if (ccNum > _maxCCPrint) return;
   }
-#endif
 }
 
 #endif

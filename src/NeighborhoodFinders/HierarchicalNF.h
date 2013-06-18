@@ -3,9 +3,6 @@
 
 #include "NeighborhoodFinderMethod.h"
 #include "BruteForceNF.h"
-#include <vector>
-
-using namespace std;
 
 template<class MPTraits>
 class HierarchicalNF : public NeighborhoodFinderMethod<MPTraits> {
@@ -15,40 +12,53 @@ class HierarchicalNF : public NeighborhoodFinderMethod<MPTraits> {
     typedef typename MPProblemType::RoadmapType RoadmapType;
     typedef typename MPProblemType::VID VID; 
 
-    HierarchicalNF(MPProblemType* _problem = NULL, string _dmm = "", string _dmm2 = "", size_t _k2 = 5, string _label = "") 
-      : NeighborhoodFinderMethod<MPTraits>(_problem, _dmm, _label), m_dmLabel2(_dmm2), m_k2(_k2) {
+    HierarchicalNF(string _dmLabel1 = "", string _dmLabel2 = "", size_t _k1 = 10, size_t _k2 = 5, bool _unconnected = false) 
+      : NeighborhoodFinderMethod<MPTraits>(),
+      m_nf1(_dmLabel1, _unconnected, _k1),
+      m_nf2(_dmLabel2, _unconnected, _k2) {
         this->SetName("HierarchicalNF");
-        m_nf1 = new BruteForceNF<MPTraits>(_problem, _dmm,"");
-        m_nf2 = new BruteForceNF<MPTraits>(_problem, _dmm2,"");
+        this->m_nfType = K;
       }
 
     HierarchicalNF(MPProblemType* _problem, XMLNodeReader& _node) 
-      : NeighborhoodFinderMethod<MPTraits>(_problem,_node) {
+      : NeighborhoodFinderMethod<MPTraits>(_problem, _node) {
         this->SetName("HierarchicalNF");
-        m_k2 = _node.numberXMLParameter("k2", true, 5, 0, MAX_INT, "K value for HierarchicalNF");
-        m_dmLabel2 = _node.stringXMLParameter("dmLabel2",true,"","Distance Metric Method the second one");
+        this->m_nfType = K;
 
-        m_nf1 = new BruteForceNF<MPTraits>(_problem, m_dmLabel,"");
-        m_nf2 = new BruteForceNF<MPTraits>(_problem, m_dmLabel2,"");
+        size_t k = _node.numberXMLParameter("k", true, 5, 0, MAX_INT, "K1 value for HierarchicalNF");
+        size_t k2 = _node.numberXMLParameter("k2", true, 5, 0, MAX_INT, "K2 value for HierarchicalNF");
+        string dmLabel2 = _node.stringXMLParameter("dmLabel2",true,"","Second distance metric method");
+
+        m_nf1 = BruteForceNF<MPTraits>(this->m_dmLabel, this->m_unconnected, k);
+        m_nf2 = BruteForceNF<MPTraits>(dmLabel2, this->m_unconnected, k2);
       }
 
-    virtual ~HierarchicalNF(){
-      delete m_nf1;
-      delete m_nf2;
-    }
-
     virtual void PrintOptions(ostream& _os) const {
-     NeighborhoodFinderMethod<MPTraits>::PrintOptions(_os);
-      _os << "dmMethod2: " << m_dmLabel2 << " "
-        << "k2: " << m_k2 << " ";
+      NeighborhoodFinderMethod<MPTraits>::PrintOptions(_os);
+      _os << "\tNF1: ";
+      m_nf1.PrintOptions(_os); 
+      _os << endl;
+      _os << "\tNF2: ";
+      m_nf2.PrintOptions(_os);
+      _os << endl;
     }
 
     template<typename InputIterator, typename OutputIterator>
       OutputIterator KClosest(RoadmapType* _rmp, 
           InputIterator _first, InputIterator _last, CfgType _cfg, size_t _k, OutputIterator _out){
-        vector<VID> closest;
-        m_nf1->KClosest(_rmp, _first, _last, _cfg, m_k2, back_inserter(closest));
-        return m_nf2->KClosest(_rmp, closest.begin(), closest.end(), _cfg, _k, _out);
+
+        this->IncrementNumQueries();
+        this->StartTotalTime();
+        this->StartQueryTime();
+
+        vector<pair<VID, double> > closest;
+        m_nf1.FindNeighbors(_rmp, _first, _last, _cfg, back_inserter(closest));
+        m_nf2.FindNeighbors(_rmp, closest.begin(), closest.end(), _cfg, _out);
+  
+        this->EndQueryTime();
+        this->EndTotalTime();
+
+        return _out;
       }
 
     // KClosest that operate over two ranges of VIDS.  K total pair<VID,VID> are returned that
@@ -64,11 +74,8 @@ class HierarchicalNF : public NeighborhoodFinderMethod<MPTraits> {
       }
 
   private:
-    string m_dmLabel; 
-    string m_dmLabel2;
-    BruteForceNF<MPTraits> *m_nf1;
-    BruteForceNF<MPTraits> *m_nf2;
-    size_t m_k2;
+    BruteForceNF<MPTraits> m_nf1;
+    BruteForceNF<MPTraits> m_nf2;
 };
 
-#endif //end #ifndef
+#endif

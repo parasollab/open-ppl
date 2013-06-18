@@ -4,7 +4,6 @@
 #include <boost/mpl/for_each.hpp>
 #include "Utilities/MPUtils.h"
 #include "Utilities/MetricUtils.h"
-#include "MPProblem/RoadmapGraph.h"
 
 namespace pmpl_detail{
   template<typename CM, typename RDMP, typename STATS, typename CMAP,
@@ -48,12 +47,14 @@ class ConnectorMethod : public MPBaseObject<MPTraits> {
     typedef typename MPProblemType::RoadmapType RoadmapType;
     typedef typename MPProblemType::VID VID; 
 
-    ConnectorMethod();
+    ConnectorMethod(string _lpLabel = "", string _nfLabel = "");
     ConnectorMethod(MPProblemType* _problem, XMLNodeReader& _node);
-    virtual ~ConnectorMethod(){}
 
-    /////////////////////////////////////////////
+    virtual void PrintOptions(ostream& _os);
+
+    ////////////////////////////////////////////////////////////////////////////
     // Connection Methods
+    ////////////////////////////////////////////////////////////////////////////
     template<typename ColorMap>
       void Connect(RoadmapType* _rm, StatClass& _stats, ColorMap& _cmap){
         vector<CfgType> collision;
@@ -138,59 +139,77 @@ class ConnectorMethod : public MPBaseObject<MPTraits> {
             );
       }
 
-
-    void SetPositionResolution(double _posRes) { m_connectionPosRes=_posRes; }
-    double GetPositionResolution() { return m_connectionPosRes; }
-    void SetOrientationResolution(double _oriRes) { m_connectionOriRes=_oriRes; }
-    double GetOrientationResolution() { return m_connectionOriRes; }
-
     /////////////////////////////////////////////
     // Utility Methods
-    typename vector<pair<pair<VID, VID>, bool> >::const_iterator ConnectionAttemptsBegin() const { return m_connectionAttempts.begin(); }
-    typename vector<pair<pair<VID, VID>, bool> >::const_iterator ConnectionAttemptsEnd() const { return m_connectionAttempts.end(); }
-    void ClearConnectionAttempts() { m_connectionAttempts.clear(); }
+    typedef pair<VID, VID> ConnectionAttempt;
+    void AddConnectionAttempt(VID _v1, VID _v2, bool _b);
     
-    virtual void PrintOptions(ostream& _os){
-      _os << "Name: " << this->GetName() << " ";
-      _os << "connPosRes: " << m_connectionPosRes << " ";
-      _os << "connOriRes: " << m_connectionOriRes << " ";
-      _os << "addPartialEdge: " << m_addPartialEdge << " ";
-      _os << "addAllEdges: " << m_addAllEdges << " ";
-      _os << "nf: " << m_nfMethod << " ";
-      _os << "lp: " << m_lpMethod << " ";
-    }
-
+    //Connection Attempts storage. Used for a single connection iteration
+    typedef vector<pair<ConnectionAttempt, bool> > ConnectionAttempts;
+    typename ConnectionAttempts::const_iterator ConnectionAttemptsBegin() const { return m_attempts.begin(); }
+    typename ConnectionAttempts::const_iterator ConnectionAttemptsEnd() const { return m_attempts.end(); }
+    void ClearConnectionAttempts() { m_attempts.clear(); }
+    
+    //Connection attempt cache storage. Used for all time
+    typedef map<ConnectionAttempt, bool> ConnectionAttemptsCache;
+    bool IsCached(VID _v1, VID _v2);
+    bool GetCached(VID _v1, VID _v2);
+    
   protected:
-    vector<pair<pair<VID, VID>, bool> > m_connectionAttempts;
-    CDInfo* m_cdInfo;
-    string  m_lpMethod;
-    string  m_nfMethod;
+    ConnectionAttempts m_attempts;
+    ConnectionAttemptsCache m_attemptsCache;
+    string  m_nfLabel;
+    string  m_lpLabel;
     bool    m_addPartialEdge;
-    bool    m_addAllEdges; 
-    double  m_connectionPosRes;
-    double  m_connectionOriRes;
 };
 
 template<class MPTraits>
-ConnectorMethod<MPTraits>::ConnectorMethod(){
-  this->SetName("ConnectorMethod");
-  m_connectionPosRes = 0.05;
-  m_connectionOriRes = 0.05;
-  m_addPartialEdge = false;
-  m_addAllEdges = false;
+ConnectorMethod<MPTraits>::ConnectorMethod(string _nfLabel, string _lpLabel) : 
+  m_nfLabel(_nfLabel), m_lpLabel(_lpLabel), 
+  m_addPartialEdge(false) {
+    this->SetName("ConnectorMethod");
+    m_addPartialEdge = false;
 }
 
 template<class MPTraits>
 ConnectorMethod<MPTraits>::ConnectorMethod(MPProblemType* _problem, XMLNodeReader& _node) 
-  : MPBaseObject<MPTraits>(_problem, _node){
+  : MPBaseObject<MPTraits>(_problem, _node) {
     this->SetName("ConnectorMethod");
-    m_connectionPosRes = _problem->GetEnvironment()->GetPositionRes();
-    m_connectionOriRes = _problem->GetEnvironment()->GetOrientationRes();     
-    m_nfMethod = _node.stringXMLParameter("nf", true, "", "nf");
-    m_lpMethod = _node.stringXMLParameter("lp_method", true, "", "Local Planner");
     m_addPartialEdge = false;
-    m_addAllEdges = false;
-  }
+    m_nfLabel = _node.stringXMLParameter("nfLabel", true, "", "Neighborhood Finder");
+    m_lpLabel = _node.stringXMLParameter("lpLabel", true, "", "Local Planner");
+}
+
+template<class MPTraits>
+void
+ConnectorMethod<MPTraits>::PrintOptions(ostream& _os){
+  _os << "Name: " << this->GetNameAndLabel() << endl;
+  _os << "\tnfLabel: " << m_nfLabel << endl;
+  _os << "\tlpLabel: " << m_lpLabel << endl;
+  _os << "\taddPartialEdge: " << m_addPartialEdge << endl;
+}
+
+template<class MPTraits>
+void
+ConnectorMethod<MPTraits>::AddConnectionAttempt(VID _v1, VID _v2, bool _b){
+  ConnectionAttempt att(_v1, _v2);
+  m_attempts.push_back(make_pair(att, _b));
+  m_attemptsCache[att] = _b;
+}
+
+template<class MPTraits>
+bool 
+ConnectorMethod<MPTraits>::IsCached(VID _v1, VID _v2) {
+  ConnectionAttempt att(_v1, _v2);
+  return m_attemptsCache.count(att) > 0;
+}
+
+template<class MPTraits>
+bool 
+ConnectorMethod<MPTraits>::GetCached(VID _v1, VID _v2) {
+  ConnectionAttempt att(_v1, _v2);
+  return m_attemptsCache[att];
+}
 
 #endif 
 

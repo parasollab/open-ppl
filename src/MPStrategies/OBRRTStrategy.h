@@ -128,14 +128,14 @@ OBRRTStrategy<MPTraits>::ExpandTree(CfgType& _dir){
   NeighborhoodFinderPointer nf = this->GetMPProblem()->GetNeighborhoodFinder(this->m_nf);
   VID recentVID = INVALID_VID;
   // Find closest Cfg in map
-  vector<VID> kClosest;
+  vector<pair<VID, double> > kClosest;
   vector<CfgType> cfgs;
 
-  nf->KClosest(this->GetMPProblem()->GetRoadmap(), _dir, 1, back_inserter(kClosest));
+  nf->FindNeighbors(this->GetMPProblem()->GetRoadmap(), _dir, back_inserter(kClosest));
   #ifndef _PARALLEL
-  CfgType& nearest = this->GetMPProblem()->GetRoadmap()->GetGraph()->GetVertex(kClosest[0]);
+  CfgType& nearest = this->GetMPProblem()->GetRoadmap()->GetGraph()->GetVertex(kClosest[0].first);
   #else
-  CfgType nearest = this->GetMPProblem()->GetRoadmap()->GetGraph()->GetVertex(kClosest[0]);
+  CfgType nearest = this->GetMPProblem()->GetRoadmap()->GetGraph()->GetVertex(kClosest[0].first);
   #endif
   CfgType newCfg;
   bool verifiedValid = false;
@@ -183,10 +183,10 @@ OBRRTStrategy<MPTraits>::ExpandTree(CfgType& _dir){
   // If good to go, add to roadmap
   if(verifiedValid && dm->Distance(env, newCfg, nearest) >= this->m_minDist) {
     recentVID = this->GetMPProblem()->GetRoadmap()->GetGraph()->AddVertex(newCfg);
-    cout << "Expanded tree to recent vid::" << recentVID << "::with parent::" << kClosest[0] << endl;
+    cout << "Expanded tree to recent vid::" << recentVID << "::with parent::" << kClosest[0].first << endl;
     //TODO fix weight
     pair<WeightType, WeightType> weights = make_pair(WeightType(), WeightType());
-    this->GetMPProblem()->GetRoadmap()->GetGraph()->AddEdge(kClosest[0], recentVID, weights);
+    this->GetMPProblem()->GetRoadmap()->GetGraph()->AddEdge(kClosest[0].first, recentVID, weights);
   } 
 
   if(this->m_debug) cout << " OBRRTStrategy::ExpandTree -- done call" << endl;

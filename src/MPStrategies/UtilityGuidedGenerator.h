@@ -309,11 +309,10 @@ GenerateEntropyGuidedSample() {
       cmap.reset();
       get_cc(*rmap->GetGraph(), cmap, cc2Vid, cc2);
       
-      vector<pair<VID, VID> > kp(1);
-      nf->KClosestPairs(rmap, cc1.begin(), cc1.end(), cc2.begin(), cc2.end(), 1, kp.begin());
-      dist = dm->Distance(env, 
-			  (*(rmap->GetGraph()->find_vertex(kp[0].first))).property(),
-			  (*(rmap->GetGraph()->find_vertex(kp[0].second))).property());
+      vector<pair<pair<VID, VID>, double> > kp;
+      nf->FindNeighborPairs(rmap, cc1.begin(), cc1.end(), cc2.begin(), cc2.end(), back_inserter(kp));
+      dist = kp[0].second;
+      
       if(this->m_debug)
         cout << "\t\t\tdist between cc " << cc1Vid << " and " << cc2Vid << " is " << dist << endl;
       if(dist < minDist) {

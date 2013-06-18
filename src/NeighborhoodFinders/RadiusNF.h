@@ -4,11 +4,6 @@
 #define RADIUSNF_H_
 
 #include "NeighborhoodFinderMethod.h"
-#include <vector>
-
-using namespace std;
-
-class Environment;
 
 template<class MPTraits>
 class RadiusNF: public NeighborhoodFinderMethod<MPTraits> {
@@ -20,28 +15,29 @@ class RadiusNF: public NeighborhoodFinderMethod<MPTraits> {
     typedef typename MPProblemType::GraphType GraphType;
     typedef typename MPProblemType::DistanceMetricPointer DistanceMetricPointer;
 
-    RadiusNF(MPProblemType* _problem = NULL, string _dmLabel = "", double _r = 1.0, string _label = "") :
-      NeighborhoodFinderMethod<MPTraits>(_problem, _dmLabel, _label), m_radius(_r) {
+    RadiusNF(string _dmLabel = "", bool _unconnected = false, double _r = 1.0) :
+      NeighborhoodFinderMethod<MPTraits>(_dmLabel, _unconnected) {
         this->SetName("RadiusNF");
+        this->m_nfType = RADIUS;
+        this->m_radius = _r;
       }
     
     RadiusNF(MPProblemType* _problem, XMLNodeReader& _node) :
       NeighborhoodFinderMethod<MPTraits>(_problem, _node) {
         this->SetName("RadiusNF");
-        m_radius = _node.numberXMLParameter("radius", true, 0.5, 0.0, MAX_DBL, "Radius");
+        this->m_nfType = RADIUS;
+        this->m_radius = _node.numberXMLParameter("radius", true, 0.5, 0.0, MAX_DBL, "Radius");
         _node.warnUnrequestedAttributes();
       }
     
-    virtual ~RadiusNF() {}
-    
     virtual void PrintOptions(ostream& _os) const {
       NeighborhoodFinderMethod<MPTraits>::PrintOptions(_os);
-      _os << "radius: " << m_radius << " ";
+      _os << "\tradius: " << this->m_radius << endl;
     }
     
     template<typename InputIterator, typename OutputIterator>
       OutputIterator KClosest(RoadmapType* _rmp, 
-          InputIterator _first, InputIterator _last, CfgType _cfg, size_t _k, OutputIterator _out);
+          InputIterator _first, InputIterator _last, const CfgType& _cfg, OutputIterator _out);
 
     // KClosest that operate over two ranges of VIDS.  K total pair<VID,VID> are returned that
     // represent the _kclosest pairs of VIDs between the two ranges.
@@ -49,78 +45,60 @@ class RadiusNF: public NeighborhoodFinderMethod<MPTraits> {
       OutputIterator KClosestPairs(RoadmapType* _rmp,
           InputIterator _first1, InputIterator _last1, 
           InputIterator _first2, InputIterator _last2, 
-          size_t _k, OutputIterator _out);
-
-  private:
-    double m_radius;
+          OutputIterator _out);
 };
 
 // Returns all nodes within radius from _cfg
 template<class MPTraits>
 template<typename InputIterator, typename OutputIterator>
 OutputIterator 
-RadiusNF<MPTraits>::KClosest(RoadmapType* _roadmap, InputIterator _first, InputIterator _last, 
-    CfgType _cfg, size_t _k, OutputIterator _out) {
+RadiusNF<MPTraits>::KClosest(RoadmapType* _rmp, InputIterator _first, InputIterator _last, 
+    const CfgType& _cfg, OutputIterator _out) {
   
-  // TO DO NOTE: A temporary fix to support parallel runtime. The problem here is that is the way
-  // we pass pointer around which is a bit ugly with parallelism. In this particular case
-  // the pointer to GetMPProblem became invalid because of the way RadiusNF is called from
-  // Connector, thus call to timing stats below seg fault. One fix is to call RadiusNF(_node, _problem)
-  // constructor and this will be done when parallel code supports all NF. What this means is 
-  // that I can not just support RadiusNF by itself.
-  #ifndef _PARALLEL
+  this->IncrementNumQueries();
   this->StartTotalTime();
   this->StartQueryTime();
-  #endif
-
-  this->IncrementNumQueries();
   
   Environment* env = this->GetMPProblem()->GetEnvironment();
-  GraphType* map = _roadmap->GetGraph();
-  DistanceMetricPointer dmm = this->GetMPProblem()->GetDistanceMetric(this->m_dmLabel);
-  vector<pair<VID, double> > inRadius;
+  GraphType* map = _rmp->GetGraph();
+  DistanceMetricPointer dmm = this->GetDMMethod(this->m_dmLabel);
+  set<pair<VID, double>, CompareSecond<VID, double>()> inRadius;
 
   // Find all nodes within radius
   for(InputIterator it = _first; it != _last; it++) {
+    
+    if(this->CheckUnconnected(_rmp, _cfg, map->GetVID(it)))
+      continue;
+    
     CfgType node = map->GetVertex(it);
     if(node == _cfg) // Don't connect to itself
       continue;
 
     // If within radius, add to list
     double dist = dmm->Distance(env, _cfg, node);
-    if(dist <= m_radius){
-      VID vid = map->GetVID(it);
-      inRadius.push_back(make_pair(vid, dist));
-    }
+    if(dist <= this->m_radius)
+      inRadius.push_back(make_pair(map->GetVID(it), dist));
   }
- 
-  sort(inRadius.begin(), inRadius.end(), CompareSecond<VID, double>());
-  
-  // Output results
-  for(size_t i = 0; i < inRadius.size(); i++)
-    *(_out++) = inRadius[i].first;
 
-  #ifndef _PARALLEL
   this->EndQueryTime();
   this->EndTotalTime();
-  #endif
   
-  return _out;
+  return copy(inRadius.begin(), inRadius.end(), _out);
 }
 
 // Returns all pairs within radius
 template<class MPTraits>
 template<typename InputIterator, typename OutputIterator>
 OutputIterator 
-RadiusNF<MPTraits>::KClosestPairs(RoadmapType* _roadmap,
+RadiusNF<MPTraits>::KClosestPairs(RoadmapType* _rmp,
     InputIterator _first1, InputIterator _last1,
     InputIterator _first2, InputIterator _last2,
-    size_t _k, OutputIterator _out) {
+    OutputIterator _out) {
    
   Environment* env = this->GetMPProblem()->GetEnvironment();
-  GraphType* map = _roadmap->GetGraph();
+  GraphType* map = _rmp->GetGraph();
   DistanceMetricPointer dmm = this->GetMPProblem()->GetDistanceMetric(this->m_dmLabel);
-  vector<pair<pair<VID, VID >, double> > inRadius;
+  set<pair<pair<VID, VID >, double> > inRadius;
  
   // Find all pairs within radius
   for(InputIterator it1 = _first1; it1 != _last1; it1++) {
@@ -132,21 +110,15 @@ RadiusNF<MPTraits>::KClosestPairs(RoadmapType* _roadmap,
       
       // If within radius, add to list
       double dist = dmm->Distance(env, node1, node2);
-      if(dist <= m_radius){
-        VID vid1 = map->GetVID(it1);
-        VID vid2 = map->GetVID(it2);
-        inRadius.push_back(make_pair(make_pair(vid1, vid2), dist));
+      if(dist <= this->m_radius){
+        inRadius.push_back(make_pair(
+              make_pair(map->GetVID(it1), map->GetVID(it2)),
+              dist));
       }
     }
   }
  
-  // Sort pairs by increasing distance
-  sort(inRadius.begin(), inRadius.end(), CompareSecond<pair<VID, VID>, double>());
-  
-  // Output results
-  for(size_t i = 0; i < inRadius.size(); i++)
-    *(_out++) = inRadius[i].first;
-  return _out;
+  return copy(inRadius.begin(), inRadius.end(), _out);
 }
 
 #endif

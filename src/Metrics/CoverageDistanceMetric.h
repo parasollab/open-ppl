@@ -58,19 +58,19 @@ CoverageDistanceMetric<MPTraits, Set>::PrintOptions(ostream& _os) {
 template<class MPTraits, class Set>
 double
 CoverageDistanceMetric<MPTraits, Set>::operator()() {
-  Environment* env = this->GetMPProblem()->GetEnvironment();
   unsigned int i;
   vector <double> disVec;
   //from each sample in the coverage set, distance to the nearest nodes in the roadmap is calculated
   for(typename Set::Iterator i = m_samples.begin(); i!=m_samples.end(); ++i){
-    double distance;
-    vector<VID> kClosest;
-    BruteForceNF<MPTraits> bfnf(this->GetMPProblem(), m_dmLabel, "__CoverageDistanceMetricNF");
+    vector<pair<VID, double> > kClosest;
+    BruteForceNF<MPTraits> bfnf(m_dmLabel, false, 1);
+    bfnf.SetMPProblem(this->GetMPProblem());
+    bfnf.SetLabel("__CoverageDistanceMetricNF");
     RoadmapType* rdmp = this->GetMPProblem()->GetRoadmap();
-    bfnf.KClosest(rdmp, rdmp->GetGraph()->begin(), rdmp->GetGraph()->end(), *i, 1, back_inserter(kClosest));
-    CfgType nearest = this->GetMPProblem()->GetRoadmap()->GetGraph()->GetVertex(kClosest[0]);
-    distance = this->GetMPProblem()->GetDistanceMetric(m_dmLabel)->Distance(env, *i, nearest);
-    disVec.push_back(distance);
+    bfnf.FindNeighbors(rdmp, rdmp->GetGraph()->begin(), rdmp->GetGraph()->end(), *i, back_inserter(kClosest));
+    CfgType nearest = this->GetMPProblem()->GetRoadmap()->GetGraph()->GetVertex(kClosest[0].first);
+    //distance = this->GetMPProblem()->GetDistanceMetric(m_dmLabel)->Distance(env, *i, nearest);
+    disVec.push_back(kClosest[0].second);
   } 
   //average of distance vector and standard deviation is calculated
   double avgSum = 0, stdDev = 0.0;
