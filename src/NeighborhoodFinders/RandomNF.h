@@ -51,11 +51,11 @@ RandomNF<MPTraits>::KClosest(RoadmapType* _rmp, InputIterator _first, InputItera
   GraphType* map = _rmp->GetGraph();
   
   set<int> ids;
-
-  for (size_t i = 0; i < _k && i<(_last-_first); ++i) {
+  size_t size = _last-_first;
+  for (size_t i = 0; i < _k && i<size; ++i) {
     int id = 0;
     do {
-      id = (int)(LRand()%(_last-_first));
+      id = (int)(LRand()%(size));
     }
     while(ids.find(id) != ids.end() &&
 	map->GetVID(_cfg) == map->GetVID(_first+id));
@@ -81,13 +81,15 @@ RandomNF<MPTraits>::KClosestPairs(RoadmapType* _rmp,
     size_t _k, OutputIterator _out) {
   GraphType* map = _rmp->GetGraph();
   set<pair<int,int> > ids;
-  
-  for(size_t i=0,j=0; i < _k && i<(_last1-_first1) && j<(_last2-_first2); i++, j++) {
+
+  size_t size1 = _last1-_first1;
+  size_t size2 = _last2-_first2;
+  for(size_t i=0,j=0; i < _k && i<size1 && j<size2; i++, j++) {
     int id1=0,id2=0;
     pair<int,int> pairId = make_pair(0,0);
     do {
-      id1 = (int)(LRand()%(_last1-_first1));
-      id2 = (int)(LRand()%(_last2-_first2));
+      id1 = (int)(LRand()%(size1));
+      id2 = (int)(LRand()%(size2));
       pairId = make_pair(id1,id2);
     }
     while(ids.find(pairId) != ids.end() &&
