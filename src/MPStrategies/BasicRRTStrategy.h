@@ -197,6 +197,7 @@ BasicRRTStrategy<MPTraits>::Initialize(){
         VID add = this->GetMPProblem()->GetRoadmap()->GetGraph()->AddVertex(tmp);
         m_trees.push_back(vector<VID>(1,add));
       }
+      i++;
     }
   }
 
@@ -216,7 +217,7 @@ BasicRRTStrategy<MPTraits>::Run() {
   // Setup MP Variables
   StatClass* stats = this->GetMPProblem()->GetStatClass();
 
-  stats->StartClock("RRT Generation");
+  if(this->m_recordKeep) stats->StartClock("RRT Generation");
 
   CfgType dir;
   bool mapPassedEvaluation = false;
@@ -232,7 +233,7 @@ BasicRRTStrategy<MPTraits>::Run() {
 
     VID recent = this->ExpandTree(dir);
     if(recent != INVALID_VID){
-      //conntect various trees together
+      //connect various trees together
       ConnectTrees(recent);
       //see if tree is connected to goals
       if(m_evaluateGoal)
@@ -249,7 +250,7 @@ BasicRRTStrategy<MPTraits>::Run() {
     else mapPassedEvaluation = evalMap && m_trees.size()==1;
   }
 
-  stats->StopClock("RRT Generation");
+  if(this->m_recordKeep) stats->StopClock("RRT Generation");
   if(this->m_debug) {
     stats->PrintClock("RRT Generation", cout);
     cout<<"\nEnd Running BasicRRTStrategy::" << endl;  
@@ -335,14 +336,14 @@ BasicRRTStrategy<MPTraits>::ConnectNeighbors(VID _newVID, VID _nearVID){
 
     StatClass* conStatClass = this->GetMPProblem()->GetStatClass();
     string conClockName = "Total Connection time ";
-    conStatClass->StartClock(conClockName);
+    if(this->m_recordKeep) conStatClass->StartClock(conClockName);
 
     pConnection->Connect(this->GetMPProblem()->GetRoadmap(),
           *(this->GetMPProblem()->GetStatClass()), cmap,
           currentVID.begin(), currentVID.end(),
           m_currentTree->begin(), m_currentTree->end());
     
-    conStatClass->StopClock(conClockName);
+    if(this->m_recordKeep) conStatClass->StopClock(conClockName);
   }
 
 }
@@ -364,9 +365,9 @@ BasicRRTStrategy<MPTraits>::ExpandTree(CfgType& _dir){
 
   StatClass* kcloseStatClass = this->GetMPProblem()->GetStatClass();
   string kcloseClockName = "kclosest time ";
-  kcloseStatClass->StartClock(kcloseClockName);
+  if(this->m_recordKeep) kcloseStatClass->StartClock(kcloseClockName);
   nf->FindNeighbors(this->GetMPProblem()->GetRoadmap(), m_currentTree->begin(), m_currentTree->end(), _dir, back_inserter(kClosest));
-  kcloseStatClass->StopClock(kcloseClockName);
+  if(this->m_recordKeep) kcloseStatClass->StopClock(kcloseClockName);
 
   CfgType nearest = this->GetMPProblem()->GetRoadmap()->GetGraph()->GetVertex(kClosest[0].first);
   CfgType newCfg;
@@ -374,14 +375,14 @@ BasicRRTStrategy<MPTraits>::ExpandTree(CfgType& _dir){
 
   StatClass* expandStatClass = this->GetMPProblem()->GetStatClass();
   string expandClockName = "RRTExpand time ";
-  expandStatClass->StartClock(expandClockName);
+  if(this->m_recordKeep) expandStatClass->StartClock(expandClockName);
 
   if(!RRTExpand<MPTraits>(this->GetMPProblem(), m_vc, m_dm, nearest, _dir, newCfg, m_delta, weight, cdInfo, env->GetPositionRes(), env->GetOrientationRes())) {
     if(this->m_debug) cout << "RRT could not expand!" << endl; 
     return recentVID;
   }
 
-  expandStatClass->StopClock(expandClockName);
+  if(this->m_recordKeep) expandStatClass->StopClock(expandClockName);
 
   if(this->m_debug) cout << "RRT expanded to " << newCfg << endl;
 
@@ -404,13 +405,13 @@ BasicRRTStrategy<MPTraits>::ExpandTree(CfgType& _dir){
 
     for( size_t i=2 ;i<=m_numDirections; i++){//expansion to other m-1 directions
       CfgType randdir = this->SelectDirection();
-      expandStatClass->StartClock(expandClockName);
+      if(this->m_recordKeep) expandStatClass->StartClock(expandClockName);
       bool expandFlag = RRTExpand<MPTraits>(this->GetMPProblem(), m_vc, m_dm, nearest, randdir, newCfg, m_delta, weight, cdInfo, env->GetPositionRes(), env->GetOrientationRes());
 
-      expandStatClass->StopClock(expandClockName);
+      if(this->m_recordKeep) expandStatClass->StopClock(expandClockName);
       StatClass* conStatClass = this->GetMPProblem()->GetStatClass();
       string conClockName = "Connection time ";
-      conStatClass->StartClock(conClockName);
+      if(this->m_recordKeep) conStatClass->StartClock(conClockName);
 
       if(!expandFlag) {
         if(this->m_debug) cout << "RRT could not expand to additional directions!" << endl;
@@ -430,7 +431,7 @@ BasicRRTStrategy<MPTraits>::ExpandTree(CfgType& _dir){
           ConnectNeighbors( otherVID, kClosest[0].first);
         }
       }
-      conStatClass->StopClock(conClockName);
+      if(this->m_recordKeep) conStatClass->StopClock(conClockName);
     }
   }
 
@@ -442,13 +443,10 @@ void
 BasicRRTStrategy<MPTraits>::ConnectTrees(VID _recentlyGrown){
   //Setup MP variables
   Environment* env = this->GetMPProblem()->GetEnvironment();
-  StatClass* stats = this->GetMPProblem()->GetStatClass();
   RoadmapType* rdmp = this->GetMPProblem()->GetRoadmap();
   DistanceMetricPointer dm = this->GetMPProblem()->GetDistanceMetric(m_dm);
   NeighborhoodFinderPointer nf = this->GetMPProblem()->GetNeighborhoodFinder(m_nf);
   CDInfo  cdInfo;
-  stringstream clockName; clockName << "Component Connection";
-  stats->StartClock(clockName.str());
 
   if(m_trees.size()==1) return; //trees connected
 
