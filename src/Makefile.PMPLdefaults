@@ -71,8 +71,8 @@ ifeq (${platform}, CRAY_gcc)    #hopper.nersc.gov || edison.nersc.gov || rain.cs
 
         CD_LIBFILE =   ${RAPID_DIR}/libRAPID.a ${PQP_DIR}/lib/libPQP.a #${SOLID_DIR}/lib/libsolid.a
         # first boost for rain, second for nersc machines
-        BOOST_ROOT = /opt/boost/gcc-4.7.2/boost-1.48
-        #BOOST_ROOT = /global/homes/i/ipapadop/usr/hopper/boost/boost_1_48
+        BOOST_ROOT = /opt/boost/gcc-4.7.2/boost-1.53
+	#BOOST_ROOT = /global/homes/i/ipapadop/usr/hopper/boost/boost_1_48
         BOOST_INCL = -I$(BOOST_ROOT)/include
         Boost_LIBRARY_DIRS = $(BOOST_ROOT)/lib
         BOOST_LIB = -L$(Boost_LIBRARY_DIRS) -l$(shell ls $(Boost_LIBRARY_DIRS) | grep -m 1 -e boost_serialization | sed 's/lib//g' | sed 's/\.so//g' | sed 's/\.a//g')
