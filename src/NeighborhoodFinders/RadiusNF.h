@@ -36,13 +36,13 @@ class RadiusNF: public NeighborhoodFinderMethod<MPTraits> {
     }
     
     template<typename InputIterator, typename OutputIterator>
-      OutputIterator KClosest(RoadmapType* _rmp, 
+      OutputIterator FindNeighbors(RoadmapType* _rmp, 
           InputIterator _first, InputIterator _last, const CfgType& _cfg, OutputIterator _out);
 
     // KClosest that operate over two ranges of VIDS.  K total pair<VID,VID> are returned that
     // represent the _kclosest pairs of VIDs between the two ranges.
     template<typename InputIterator, typename OutputIterator>
-      OutputIterator KClosestPairs(RoadmapType* _rmp,
+      OutputIterator FindNeighborPairs(RoadmapType* _rmp,
           InputIterator _first1, InputIterator _last1, 
           InputIterator _first2, InputIterator _last2, 
           OutputIterator _out);
@@ -52,7 +52,7 @@ class RadiusNF: public NeighborhoodFinderMethod<MPTraits> {
 template<class MPTraits>
 template<typename InputIterator, typename OutputIterator>
 OutputIterator 
-RadiusNF<MPTraits>::KClosest(RoadmapType* _rmp, InputIterator _first, InputIterator _last, 
+RadiusNF<MPTraits>::FindNeighbors(RoadmapType* _rmp, InputIterator _first, InputIterator _last, 
     const CfgType& _cfg, OutputIterator _out) {
   
   this->IncrementNumQueries();
@@ -61,8 +61,8 @@ RadiusNF<MPTraits>::KClosest(RoadmapType* _rmp, InputIterator _first, InputItera
   
   Environment* env = this->GetMPProblem()->GetEnvironment();
   GraphType* map = _rmp->GetGraph();
-  DistanceMetricPointer dmm = this->GetDMMethod(this->m_dmLabel);
-  set<pair<VID, double>, CompareSecond<VID, double>()> inRadius;
+  DistanceMetricPointer dmm = this->GetMPProblem()->GetDistanceMetric(this->m_dmLabel);
+  set<pair<VID, double>, CompareSecond<VID, double> > inRadius;
 
   // Find all nodes within radius
   for(InputIterator it = _first; it != _last; it++) {
@@ -77,7 +77,7 @@ RadiusNF<MPTraits>::KClosest(RoadmapType* _rmp, InputIterator _first, InputItera
     // If within radius, add to list
     double dist = dmm->Distance(env, _cfg, node);
     if(dist <= this->m_radius)
-      inRadius.push_back(make_pair(map->GetVID(it), dist));
+      inRadius.insert(make_pair(map->GetVID(it), dist));
   }
 
   this->EndQueryTime();
@@ -90,7 +90,7 @@ RadiusNF<MPTraits>::KClosest(RoadmapType* _rmp, InputIterator _first, InputItera
 template<class MPTraits>
 template<typename InputIterator, typename OutputIterator>
 OutputIterator 
-RadiusNF<MPTraits>::KClosestPairs(RoadmapType* _rmp,
+RadiusNF<MPTraits>::FindNeighborPairs(RoadmapType* _rmp,
     InputIterator _first1, InputIterator _last1,
     InputIterator _first2, InputIterator _last2,
     OutputIterator _out) {
@@ -111,7 +111,7 @@ RadiusNF<MPTraits>::KClosestPairs(RoadmapType* _rmp,
       // If within radius, add to list
       double dist = dmm->Distance(env, node1, node2);
       if(dist <= this->m_radius){
-        inRadius.push_back(make_pair(
+        inRadius.insert(make_pair(
               make_pair(map->GetVID(it1), map->GetVID(it2)),
               dist));
       }
