@@ -1,5 +1,9 @@
-// Samples by "snapping" random configurations to lattice points in a grid
-
+/*
+ * GridSampler.h
+ * This samplers generates randomly a cfg c. Then for the dimensions stablished in the xml file
+ * it generates a grid of points changing the values of c's dimensions and validate them.
+ *
+*/
 #ifndef GRIDSAMPLER_H_
 #define GRIDSAMPLER_H_
 
@@ -9,15 +13,16 @@
 template <class MPTraits>
 class GridSampler : public SamplerMethod<MPTraits> {
 
-  string m_vcLabel; // Validity checker method 
-  map<size_t, size_t> m_numPoints; // Map of dimension to number of grid points
-  bool m_useBoundary; // Is the bounding box an obstacle?
+    string m_vcLabel; // Validity checker method 
+    map<size_t, size_t> m_numPoints; // Map of dimension to number of grid points
+    bool m_useBoundary; // Is the bounding box an obstacle?
 
   public:
-  typedef typename MPTraits::CfgType CfgType;
-  typedef typename MPTraits::MPProblemType MPProblemType;
-  typedef typename MPProblemType::ValidityCheckerPointer ValidityCheckerPointer;
-
+    typedef typename MPTraits::CfgType CfgType;
+    typedef typename MPTraits::MPProblemType MPProblemType;
+    typedef typename MPProblemType::ValidityCheckerPointer ValidityCheckerPointer;
+ 
+    
   ////////////////////////////
   //Constructors
   ////////////////////////////
@@ -67,14 +72,9 @@ class GridSampler : public SamplerMethod<MPTraits> {
       _os << "\t\t" << it->first << ", " << it->second << endl;
   }
 
-  // Attempts to sample, returns true if successful
+  // Attempts to sample, bool value is not working, it just return true at the end.
   virtual bool Sampler(Environment* _env, shared_ptr<Boundary> _bb, StatClass& _stats, 
       CfgType& _cfgIn, vector<CfgType>& _cfgOut, vector<CfgType>& _cfgCol) {
-
-    // When using grid sampler, set the TestEval to a number 
-    // that is a no more than 70-80% of the total number of 
-    // possible grid points. Otherwise a very long time may pass
-    // before enough unique points are generated
 
     string callee = this->GetNameAndLabel() + "::Sampler()";
     ValidityCheckerPointer vc = this->GetMPProblem()->GetValidityChecker(m_vcLabel);
@@ -85,79 +85,121 @@ class GridSampler : public SamplerMethod<MPTraits> {
     if(tmp == CfgType())
       tmp.GetRandomCfg(_env,_bb);
 
-    if(this->m_debug){
-      VDClearAll();  
-      VDAddTempCfg(tmp, true);
-    }
-
-    // Loop through each dimension index
+    //Calculate total number of cfg to be created
+    size_t totalCell = 1;
     for(map<size_t, size_t>::iterator it = m_numPoints.begin(); it != m_numPoints.end(); it++) {
+      totalCell = totalCell* it->second;
+    }
+    //Generate all the points in the grid for the asked dimensions 
+    for(int iter=0; iter<totalCell; iter++){
+      map<size_t,size_t> coordinates;
+      map<size_t,int> tempSize;
+      int dimSize = 1;
+      //Get the cummulative sizes of the dimensions required.
+      //Multiply the size of the n first dimensions and each time use one more dim.
+      for(map<size_t, size_t>::iterator it = m_numPoints.begin(); it != m_numPoints.end(); it++){
+        int index = it->first;
+        int sizee = it->second;
+        dimSize =dimSize * sizee;
+        tempSize[index]=dimSize;
+      } 
+      //Returns coordinates in the grid as int value (uses m_numPoints)
+      getCoordLocation(iter,totalCell,coordinates,tempSize); 
+      
+      //Turn the grid's coordinates into real values (uses m_numPoints, _env, _bb)
+      map<size_t,double> locations ;     
+      getRealLocation(locations,coordinates, _env, _bb);
+      
+      //Update the DoF values of the point generated.
+      for (map<size_t, double>::iterator it = locations.begin(); it != locations.end(); it++){
+        int index = it->first;
+        double sizee = it->second;
+        tmp[index] = sizee;
+      }
+
+      // Is tmp a valid configuration?
+      if(_env->InBounds(tmp, _bb) && vc->IsValid(tmp, _env, _stats, cdInfo, &callee)) {
+        // Yes (sampler successful)
+          _cfgOut.push_back(tmp);
+      }
+    }
+    return true;
+  }
+
+  private :
+ 
+  /*
+   * Calculate the grid's coordinates for a cfg specified as an int number (use m_numPoints)
+   * Each point in the grid is numerated. This function transforms the int number
+   * into coordinates of the dimensions required.
+   */
+  void getCoordLocation(int _iter, size_t _totalCell,map<size_t,size_t>& _coords, map<size_t,int> tempSize){     
+    int iterVal = _iter; //Assigning variable value as _iter.
+    int divResult= 0;
+    int mod = 0;
+    int lastIt= 0;
+    //Check if it is just one point's dimension required
+    //If the grid is defined in 1 dim, then return _iter as the coordinate.
+    if(tempSize.size() == 1){
+     map<size_t, size_t>::iterator iterat = m_numPoints.begin();
+      int inde = iterat->first;
+      _coords[inde] = _iter;
+      return;
+    }
+    //If there more than 1 dim, for each dim is needed to take the values of the coordinates
+    //by dividing the int value that represent the grid point by the tempSize related to
+    //each dim.
+    //Note: It starts at the end of the map going backwards saving the mod value.
+    for(map<size_t, int>::reverse_iterator it = tempSize.rbegin(); it != tempSize.rend();it++){
+      int ind = it->first;
+      int siz = it->second; //Saving the cummulative size of ind dim
+
+      if(it == tempSize.rbegin()){ //If this is the bigger dimension just safe 0
+        _coords[ind] = 0;
+        lastIt = ind; //Saving the reference value to the location asigned with 0.
+      }
+      else {
+        divResult = iterVal/siz; //Divide iterVal by siz
+        mod = iterVal%siz; //Calculate mod of iterVal mod siz.
+        _coords[lastIt] = divResult; //Saving divResult but using the preceding iter 
+        _coords[ind] = mod; //Saving the mod value using the present iter
+        lastIt = ind; //Update auxiliaries
+        iterVal = mod;
+      } 
+    }
+        
+  }
+  
+  //Calculate the real point in the workspace for a cfg having the number of grid's point
+  //of each dimension. 
+  void getRealLocation(map<size_t,double>& _locations, map<size_t,size_t> _coordinates, 
+      Environment*  _env, shared_ptr<Boundary>  _bb){
+    
+    for(map<size_t, size_t>::iterator it = m_numPoints.begin(); it != m_numPoints.end(); it++){
       int index = it->first;
       int numPoints = it->second;
 
       // Get bounding box min and max (for this dimension)
       pair<double, double> range = _env->GetRange(index, _bb);
-
-      // Get starting point (for this dimension)
-      double dofVal = tmp[index];
-
+    
       // Resolution of grid
-      double delta = (range.second - range.first) / (numPoints + 1);
-
-      // Number of grid cells from bounding box min
-      double steps = floor(((dofVal - range.first) / delta) + 0.5);
-
-      // The grid location closest to dofVal
-      double gridVal = steps*delta + range.first;
-
-      // Push gridVal inside bounding box (if necessary)
+      double auxPoints = (double) numPoints;
+      double delta;
+      if(numPoints == 0){
+        delta = (range.second - range.first);
+      }else{
+        delta = (range.second - range.first) / auxPoints;
+      }
+      // Get the real place in the workspace . 
+      double coor = (double) _coordinates[index];
+      double gridVal = (coor * delta) + range.first;
+      //Push gridVal inside bounding box (if necessary)
       gridVal = min(range.second, gridVal);
-      gridVal = max(range.first, gridVal);
+      gridVal = max(range.first, gridVal);      
+      _locations[index] =(double) gridVal;  
+    } 
 
-      // If the bounding box is an obstacle, move gridVal further inside bounding box (if necessary) 
-      if(m_useBoundary) {
-        if(fabs(range.second - gridVal) <= delta/10)
-          gridVal = range.second - delta;
-        if(fabs(range.first - gridVal) <= delta/10)
-          gridVal = range.first + delta;
-      }
-
-      // Set the parameter at index
-      tmp[index] = gridVal;
-      if(this->m_debug){
-        ostringstream oss; 
-        oss << "GridSampler::Dim::" << dofVal << "::grid value::" << gridVal; 
-        VDComment(oss.str());
-        VDClearLastTemp();
-        VDAddTempCfg(tmp, true);
-      }
-    }
-
-    // Is tmp a valid configuration?
-    if(_env->InBounds(tmp, _bb) && 
-        vc->IsValid(tmp, _env, _stats, cdInfo, &callee)) {
-      // Yes (sampler successful)
-      _cfgOut.push_back(tmp);
-
-      if(this->m_debug){
-        VDClearLastTemp();
-        VDAddTempCfg(tmp, true);
-        ostringstream oss; 
-        oss << "GridSampler::Successful";
-        VDComment(oss.str()); 
-      } 
-      return true;
-    }
-    else if(this->m_debug){
-      VDClearLastTemp();
-      VDAddTempCfg(tmp, false);
-      ostringstream oss; 
-      oss << "GridSampler::failure";
-      VDComment(oss.str()); 
-    }
-
-    return false;
-  }
+  } 
 };
 
 #endif
