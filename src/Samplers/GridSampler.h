@@ -91,7 +91,7 @@ class GridSampler : public SamplerMethod<MPTraits> {
       totalCell = totalCell* it->second;
     }
     //Generate all the points in the grid for the asked dimensions 
-    for(int iter=0; iter<totalCell; iter++){
+    for(size_t iter=0; iter<totalCell; iter++){
       map<size_t,size_t> coordinates;
       map<size_t,int> tempSize;
       int dimSize = 1;
