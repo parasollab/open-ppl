@@ -266,7 +266,10 @@ class ObstacleBasedSampler : public SamplerMethod<MPTraits> {
 
     // Checks m_pointSelection and returns an appropriate CfgType
     virtual CfgType ChooseASample(CfgType _cfgIn, Environment* _env, shared_ptr<Boundary> _bb) {
-      shared_ptr<MultiBody> mBody = _env->GetRandomObstacle(); 
+      shared_ptr<MultiBody> mBody;
+      if(m_pointSelection != "cspace") {
+        mBody = _env->GetRandomObstacle();
+      }
       // cspace is for Configuration space (This is for unifying OBPRM and WOBPRM)
       if(m_pointSelection == "cspace") {  
         if(_cfgIn == CfgType())
