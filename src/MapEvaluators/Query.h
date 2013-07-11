@@ -370,7 +370,7 @@ Query<MPTraits>::PerformQuery(CfgType _start, CfgType _goal, RoadmapType* _rdmp,
       }
       switch(m_searchAlg) {
         case DIJKSTRAS:
-          stapl::sequential::find_path_dijkstra(*(_rdmp->GetGraph()), sVID, gVID, shortestPath, WeightType::MaxWeight());
+          find_path_dijkstra(*(_rdmp->GetGraph()), sVID, gVID, shortestPath, WeightType::MaxWeight());
           break;
         case ASTAR:
           Heuristic<MPTraits> heuristic(_goal, this->GetMPProblem()->GetEnvironment()->GetOrientationRes(),
@@ -451,8 +451,7 @@ Query<MPTraits>::Smooth() {
     cout << "*S* Starting connection among path nodes" << endl;
   stapl::sequential::vector_property_map<typename GraphType::GRAPH, size_t> cmap;
   cmap.reset();
-  for(typename vector<ConnectorPointer>::iterator itr = methods.begin();
-      itr != methods.end(); itr++)
+  for(typename vector<ConnectorPointer>::iterator itr = methods.begin(); itr != methods.end(); itr++)
     (*itr)->Connect(rdmp, *stats, cmap, m_pathVIDs.begin(), m_pathVIDs.end(), m_pathVIDs.begin(), m_pathVIDs.end());
   m_doneSmoothing = true;
 

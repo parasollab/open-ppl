@@ -55,10 +55,11 @@ BruteForceNF<MPTraits>::FindNeighbors(RoadmapType* _rmp, InputIterator _first, I
   GraphType* map = _rmp->GetGraph();
   DistanceMetricPointer dmm = this->GetMPProblem()->GetDistanceMetric(this->m_dmLabel);
   
-  if(!this->m_k){
-    for(InputIterator i = _first; i!=_last; ++i)
-      *_out++ = make_pair(_rmp->GetGraph()->GetVID(i),
-          dmm->Distance(env, map->GetVertex(i), _cfg));
+  if(!this->m_k) {
+    for(InputIterator it = _first; it != _last; ++it)
+      if(map->GetVertex(it) != _cfg)
+        *_out++ = make_pair(_rmp->GetGraph()->GetVID(it),
+            dmm->Distance(env, map->GetVertex(it), _cfg));
     return _out;
   }
 
