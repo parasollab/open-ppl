@@ -36,7 +36,7 @@ class HopLimitNF : public NeighborhoodFinderMethod<MPTraits> {
     }
 
     template<typename InputIterator, typename OutputIterator>
-      OutputIterator KClosest(RoadmapType* _rmp, 
+      OutputIterator FindNeighbors(RoadmapType* _rmp, 
           InputIterator _first, InputIterator _last, const CfgType& _cfg, OutputIterator _out);
 
     // KClosest that operate over two ranges of VIDS.  K total pair<VID,VID> are returned that
@@ -55,40 +55,33 @@ class HopLimitNF : public NeighborhoodFinderMethod<MPTraits> {
 template<class MPTraits>
 template<typename InputIterator, typename OutputIterator>
 OutputIterator 
-HopLimitNF<MPTraits>::KClosest(RoadmapType* _rmp, InputIterator _first, InputIterator _last, 
+HopLimitNF<MPTraits>::FindNeighbors(RoadmapType* _rmp, InputIterator _first, InputIterator _last, 
     const CfgType& _cfg, OutputIterator _out) {
 
   this->IncrementNumQueries();
   this->StartTotalTime();
   this->StartQueryTime();
 
-  GraphType* map = _rmp->GetGraph();
+  GraphType* graph = _rmp->GetGraph();
   NeighborhoodFinderPointer nf = this->GetMPProblem()->GetNeighborhoodFinder(m_nfLabel);
   typename MPProblemType::DistanceMetricPointer dm = nf->GetDMMethod();
 
-  VID v = map->GetVID(_cfg);
-  if(v == INVALID_VID) {
-    vector<pair<VID, double> > nearestVID;
-    nf->KClosest(_rmp, _first, _last, _cfg, back_inserter(nearestVID));
-    v = nearestVID[0].first;
-  }
+  VID v = graph->GetVID(_cfg);
+  typename GraphType::vertex_iterator vi = graph->find_vertex(v);
+  VID parent = vi->property().GetStat("Parent");
 
   vector<VID> vRes;
   typedef stapl::sequential::map_property_map<typename GraphType::GRAPH, size_t> ColorMap;
   ColorMap hopMap, colorMap;
-  hopMap.put(v, 0); 
-  stapl::sequential::hops_detail::hops_visitor<typename GraphType::GRAPH> vis(*map, hopMap, m_h, vRes);
-  breadth_first_search_early_quit(*map, v, vis, colorMap);
-
-  set<pair<VID, double>, CompareSecond<VID, double>()> closest;
-  for(typename vector<VID>::iterator vit = vRes.begin(); vit!=vRes.end(); ++vit){
-    closest.push_back(make_pair(*vit, dm->Distance(this->GetMPPRoblem()->GetEnvironment(), _cfg, this->GetVertex(vit))));
-  }
+  hopMap.put(parent, 0); 
+  stapl::sequential::hops_detail::hops_visitor<typename GraphType::GRAPH> vis(*graph, hopMap, m_h, vRes);
+  breadth_first_search_early_quit(*graph, parent, vis, colorMap);
+  nf->FindNeighbors(_rmp, vRes.begin(), vRes.end(), _cfg, _out);
 
   this->EndQueryTime();
   this->EndTotalTime();
   
-  return copy(closest.begin(), closest.end(), _out);
+  return _out;
 }
 
 template<class MPTraits>
