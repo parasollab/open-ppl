@@ -12,7 +12,7 @@
     </ValidityCheckers>
     
     <NeighborhoodFinders>
-      <BruteForceNF label="BFNF" dmLabel="euclidean"/>
+      <BruteForceNF label="BFNF" k="5" dmLabel="euclidean"/>
     </NeighborhoodFinders>
     
     <Samplers>
@@ -20,7 +20,7 @@
     </Samplers>
     
     <Connectors>
-      <NeighborhoodConnector label="Closest" nf="BFNF" k="5" CheckIfSameCC="false" lp_method="sl" unconnected="true"/>
+      <NeighborhoodConnector label="Closest" nfLabel="BFNF" CheckIfSameCC="false" lpLabel="sl" unconnected="true"/>
     </Connectors>
     
     <LocalPlanners>
