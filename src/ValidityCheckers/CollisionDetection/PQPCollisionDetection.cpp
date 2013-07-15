@@ -24,17 +24,13 @@ PQP::IsInCollision(shared_ptr<MultiBody> _robot, shared_ptr<MultiBody> _obstacle
     double minDistSoFar = MaxDist;
     _cdInfo.ResetVars();
     _cdInfo.m_retAllInfo = true;
-    Vector3D robotPt, obsPt;
+    Vector3d robotPt, obsPt;
     bool retVal = false;
 
     //for each part of robot
     for(int i=0 ; i < _robot->GetFreeBodyCount(); i++){
       shared_ptr<PQP_Model> rob = _robot->GetFreeBody(i)->GetPQPBody();
       Transformation& t1 = _robot->GetFreeBody(i)->WorldTransformation();                   // Changed Transformation & to Transformation&
-      t1.m_orientation.ConvertType(Orientation::Matrix);
-      double p1[3];
-      for(int ip1 = 0; ip1 < 3; ip1++)
-        p1[ip1] = t1.m_position[ip1];
 
       //for each part of obstacle
       for(int j=0; j < _obstacle->GetBodyCount(); j++){
@@ -46,13 +42,10 @@ PQP::IsInCollision(shared_ptr<MultiBody> _robot, shared_ptr<MultiBody> _obstacle
         shared_ptr<PQP_Model> obst = _obstacle->GetBody(j)->GetPQPBody();
 
         Transformation& t2 = _obstacle->GetBody(j)->WorldTransformation();
-        t2.m_orientation.ConvertType(Orientation::Matrix);
-        double p2[3]; 
-        for(int ip2 = 0; ip2 < 3; ip2++) p2[ip2] = t2.m_position[ip2];
 
-        if(PQP_Distance(&res,t1.m_orientation.matrix,p1,rob.get(),
-                        t2.m_orientation.matrix,p2,obst.get(),0.0,0.0)){         
-          cerr << "Error in CollisionDetection::PQP_Collide, PQP_ERR_COLLIDE_OUT_OF_MEMORY"<<endl;
+        if(PQP_Distance(&res, t1.rotation().matrix(), t1.translation(), rob.get(),
+                        t2.rotation().matrix(), t2.translation(), obst.get(), 0.0, 0.0)){         
+          cerr << "Error in CollisionDetection::PQP_Collide, PQP_ERR_COLLIDE_OUT_OF_MEMORY" << endl;
           exit(1);
         }
 
@@ -68,7 +61,7 @@ PQP::IsInCollision(shared_ptr<MultiBody> _robot, shared_ptr<MultiBody> _obstacle
           minDistSoFar=res.Distance();
           _cdInfo.m_minDist = minDistSoFar;
 
-          // change a 3 elmt array to Vector3D class
+          // change a 3 elmt array to Vector3d class
           for(int k=0; k < 3; k++) {
             robotPt[k] = res.P1()[k];
             obsPt[k] = res.P2()[k];
@@ -96,19 +89,11 @@ PQP::IsInCollision(shared_ptr<MultiBody> _robot, shared_ptr<MultiBody> _obstacle
         shared_ptr<PQP_Model> obst = _obstacle->GetBody(j)->GetPQPBody();
         Transformation& t1 = _robot->GetFreeBody(i)->WorldTransformation();
         Transformation& t2 = _obstacle->GetBody(j)->WorldTransformation();
-        t1.m_orientation.ConvertType(Orientation::Matrix);
-        t2.m_orientation.ConvertType(Orientation::Matrix);
-        double p1[3], p2[3];
-        for(int p=0; p < 3; p++) {
-          p1[p] = t1.m_position[p];
-          p2[p] = t2.m_position[p];
-        }
   
         PQP_CollideResult result;
-        if(PQP_Collide(&result, t1.m_orientation.matrix, p1, rob.get(),
-                       t2.m_orientation.matrix, p2, obst.get(), PQP_FIRST_CONTACT)){         
-           cout << "Error in CollisionDetection::PQP_Collide, PQP_ERR_COLLIDE_OUT_OF_MEMORY"
-                << PQP_Collide(&result, t1.m_orientation.matrix, p1, rob.get(), t2.m_orientation.matrix, p2, obst.get(), PQP_FIRST_CONTACT) << endl;
+        if(PQP_Collide(&result, t1.rotation().matrix(), t1.translation(), rob.get(),
+                       t2.rotation().matrix(), t2.translation(), obst.get(), PQP_FIRST_CONTACT)){         
+          cerr << "Error in CollisionDetection::PQP_Collide, PQP_ERR_COLLIDE_OUT_OF_MEMORY" << endl;
           exit(1);
         }
         if(result.Colliding()) 
@@ -124,7 +109,7 @@ PQPSolid::IsInsideObstacle(const Cfg& _cfg, Environment* _env){
   size_t nmulti = _env->GetUsableMultiBodyCount();
   size_t robot = _cfg.GetRobotIndex();
 
-  Vector3D robotPt(_cfg.GetData()[0], _cfg.GetData()[1], _cfg.GetData()[2]);
+  Vector3d robotPt(_cfg.GetData()[0], _cfg.GetData()[1], _cfg.GetData()[2]);
   
   for(size_t i=0; i < nmulti; i++ )
     if(i != robot && IsInsideObstacle(robotPt, _env->GetMultiBody(i)))
@@ -158,7 +143,7 @@ PQPSolid::BuildPQPSegment(PQP_REAL _dX, PQP_REAL _dY, PQP_REAL _dZ) const{
 
 
 bool 
-PQPSolid::IsInsideObstacle(Vector3D _robotPt, shared_ptr<MultiBody> _obstacle){
+PQPSolid::IsInsideObstacle(Vector3d _robotPt, shared_ptr<MultiBody> _obstacle){
   static PQP_Model* mPRay = BuildPQPSegment(1e10,0,0);
   assert(mPRay != NULL);
 
@@ -169,13 +154,9 @@ PQPSolid::IsInsideObstacle(Vector3D _robotPt, shared_ptr<MultiBody> _obstacle){
     shared_ptr<PQP_Model> obst = _obstacle->GetBody(j)->GetPQPBody();
     //GMSPolyhedron& poly=_obstacle->GetBody(j)->GetPolyhedron();
     Transformation& t2 = _obstacle->GetBody(j)->WorldTransformation();
-    t2.m_orientation.ConvertType(Orientation::Matrix);
-    double p2[3];
-    for(int p=0; p < 3; p++) 
-      p2[p] = t2.m_position[p];
     
     PQP_CollideResult result;
-    PQP_Collide(&result,r,t,mPRay,t2.m_orientation.matrix,p2,obst.get());
+    PQP_Collide(&result, r, t, mPRay, t2.rotation().matrix(), t2.translation(), obst.get());
 
     if(result.NumPairs() % 2 == 1)
       return true;
@@ -195,15 +176,13 @@ PQPSolid::IsInCollision(shared_ptr<MultiBody> _robot, shared_ptr<MultiBody> _obs
   if (_cdInfo.m_retAllInfo == true){
     PQP_DistanceResult res;
     double minDistSoFar = MaxDist;
-    Vector3D robotPt, obsPt;
+    Vector3d robotPt, obsPt;
     bool retVal=false;
 
     //for each part of robot
     for(int i=0; i < _robot->GetFreeBodyCount(); i++){
       shared_ptr<PQP_Model> rob = _robot->GetFreeBody(i)->GetPQPBody();
       Transformation& t1 = _robot->GetFreeBody(i)->WorldTransformation();
-      t1.m_orientation.ConvertType(Orientation::Matrix);
-      double p1[3]; for(int ip1=0; ip1<3; ip1++) p1[ip1] = t1.m_position[ip1];
 
       //for each part of obstacle
       for(int j=0; j < _obstacle->GetBodyCount(); j++){
@@ -216,13 +195,9 @@ PQPSolid::IsInCollision(shared_ptr<MultiBody> _robot, shared_ptr<MultiBody> _obs
         shared_ptr<PQP_Model> obst = _obstacle->GetBody(j)->GetPQPBody();
 
         Transformation& t2 = _obstacle->GetBody(j)->WorldTransformation();
-        t2.m_orientation.ConvertType(Orientation::Matrix);
-        double p2[3];
-        for(int ip2=0; ip2 < 3; ip2++) 
-          p2[ip2] = t2.m_position[ip2];
 
-        if(PQP_Distance(&res,t1.m_orientation.matrix,p1,rob.get(),
-                        t2.m_orientation.matrix,p2,obst.get(),0.0,0.0)){   
+        if(PQP_Distance(&res, t1.rotation().matrix(), t1.translation(), rob.get(),
+                        t2.rotation().matrix(), t2.translation(), obst.get(), 0.0, 0.0)){   
           cerr << "Error in CollisionDetection::PQP_Collide, PQP_ERR_COLLIDE_OUT_OF_MEMORY"<<endl;
           exit(1);
         }
@@ -236,7 +211,7 @@ PQPSolid::IsInCollision(shared_ptr<MultiBody> _robot, shared_ptr<MultiBody> _obs
           minDistSoFar=res.Distance();
           _cdInfo.m_minDist = minDistSoFar;
 
-          // change a 3 elmt array to Vector3D class
+          // change a 3 elmt array to Vector3d class
           for(int k=0;k < 3;k++){
             robotPt[k] = res.P1()[k];
             obsPt[k] = res.P2()[k];
@@ -267,18 +242,10 @@ PQPSolid::IsInCollision(shared_ptr<MultiBody> _robot, shared_ptr<MultiBody> _obs
         shared_ptr<PQP_Model> obst = _obstacle->GetBody(j)->GetPQPBody();
         Transformation& t1 = _robot->GetFreeBody(i)->WorldTransformation();
         Transformation& t2 = _obstacle->GetBody(j)->WorldTransformation();
-        t1.m_orientation.ConvertType(Orientation::Matrix);
-        t2.m_orientation.ConvertType(Orientation::Matrix);
-        double p1[3], p2[3];
-        for(int p=0; p < 3; p++){
-          p1[p] = t1.m_position[p];
-          p2[p] = t2.m_position[p];
-        }
   
-        if(PQP_Collide(&result, t1.m_orientation.matrix, p1, rob.get(),
-                       t2.m_orientation.matrix, p2, obst.get(), PQP_FIRST_CONTACT)){
-              cerr << "Error in CollisionDetection::PQP_Collide, PQP_ERR_COLLIDE_OUT_OF_MEMORY"
-              << PQP_Collide(&result, t1.m_orientation.matrix, p1, rob.get(), t2.m_orientation.matrix, p2, obst.get(), PQP_FIRST_CONTACT) << endl;
+        if(PQP_Collide(&result, t1.rotation().matrix(), t1.translation(), rob.get(),
+                       t2.rotation().matrix(), t2.translation(), obst.get(), PQP_FIRST_CONTACT)){
+          cerr << "Error in CollisionDetection::PQP_Collide, PQP_ERR_COLLIDE_OUT_OF_MEMORY" << endl;
           exit(1);
         }
         if(result.Colliding()) 

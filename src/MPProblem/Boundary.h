@@ -2,7 +2,6 @@
 #define BOUNDARY_H_
 
 #include "Vector.h"
-#include "Point.h"
 
 #include "Utilities/IOUtils.h"
 
@@ -25,9 +24,9 @@ class Boundary {
     virtual pair<double, double> GetRange(size_t _i) const = 0;
 
     virtual Point3d GetRandomPoint() const = 0; 
-    virtual bool InBoundary(const Vector3D& _p) const = 0;
-    virtual double GetClearance(const Vector3D& _p) const = 0;
-    virtual Vector3D GetClearancePoint(const Vector3D& _p) const = 0;
+    virtual bool InBoundary(const Vector3d& _p) const = 0;
+    virtual double GetClearance(const Vector3d& _p) const = 0;
+    virtual Vector3d GetClearancePoint(const Vector3d& _p) const = 0;
     virtual double GetClearance2DSurf(Point2d _pos, Point2d& _cdPt) const = 0;
    
     virtual void ResetBoundary(vector<pair<double, double> >& _obstBBX, double _d) = 0;

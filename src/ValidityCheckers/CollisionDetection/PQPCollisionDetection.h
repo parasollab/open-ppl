@@ -23,7 +23,7 @@ class PQPSolid : public PQP {
 			     StatClass& _stats, CDInfo& _cdInfo,std::string* _callName=NULL, int ignoreIAdjacentMultibodies=1);
   
   virtual bool IsInsideObstacle(const Cfg& _cfg, Environment* _env);
-  virtual bool IsInsideObstacle(Vector3D _robot_pt, shared_ptr<MultiBody> _obstacle);
+  virtual bool IsInsideObstacle(Vector3d _robot_pt, shared_ptr<MultiBody> _obstacle);
   
   PQP_Model* BuildPQPSegment(PQP_REAL _dX, PQP_REAL _dY, PQP_REAL _dZ) const;
 };

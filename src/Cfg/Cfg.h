@@ -137,8 +137,8 @@ class Cfg {
 
     //Calculate the center position and center of mass of the robot configures
     //at this Cfg
-    virtual Vector3D GetRobotCenterPosition() const;
-    virtual Vector3D GetRobotCenterofMass(Environment* _env) const;
+    virtual Vector3d GetRobotCenterPosition() const;
+    virtual Vector3d GetRobotCenterofMass(Environment* _env) const;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     //
@@ -182,7 +182,7 @@ class Cfg {
       double GetSmoothingValue(ClearanceUtility<MPTraits>& _clearanceUtils, shared_ptr<Boundary> _bb);
 
     //polygonal approximation
-    vector<Vector3D> PolyApprox (Environment* _env) const;
+    vector<Vector3d> PolyApprox (Environment* _env) const;
 
     size_t GetRobotIndex() const {return m_robotIndex;}
     void SetRobotIndex(size_t _newIndex){m_robotIndex = _newIndex;}

@@ -371,7 +371,7 @@ SSSurface SSSurface::Update(double _dt){
     //pos.set(pos[0] + vel*_dt*cos(theta), pos[1] + vel*_dt*sin(theta)); -- way it should be
 
     //way it actually is with the weird coordinates
-    pos.set(pos[0] - vel*_dt*cos(theta), pos[1] + vel*_dt*sin(theta));
+    pos(pos[0] - vel*_dt*cos(theta), pos[1] + vel*_dt*sin(theta));
 
     if (!straightLine){
       theta = theta + (vel*_dt)/turningRadius;
@@ -392,11 +392,9 @@ bool SSSurface::ConfigEnvironment(Environment* _env) const {
 
   // configure the robot according to current Cfg: joint parameters
   // (and base locations/orientations for free flying robots.)
-  Transformation T1 = Transformation(Orientation(Orientation::FixedXYZ, 
-        0, 
-        m_orientation[1], 
-        0),
-      Vector3D(m_pt[0], m_h, m_pt[1]));
+  Transformation T1 = Transformation(
+      Vector3d(m_pt[0], m_h, m_pt[1]),
+      Orientation(EulerAngle(0, m_orientation[1], 0)));
   // update link i
   mb->GetFreeBody(0)->Configure(T1);
 

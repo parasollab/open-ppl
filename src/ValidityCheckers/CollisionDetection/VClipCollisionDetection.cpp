@@ -101,9 +101,9 @@ VClip::FillCdInfo(shared_ptr<MultiBody> _robot, shared_ptr<MultiBody> _obstacle,
         _cdInfo.m_nearestObstIndex = j;
         _cdInfo.m_minDist = dist;
 
-        // change a 3 elmt array to Vector3D class
-        Vector3D robotPt(cp1[0], cp1[1], cp1[2]);
-        Vector3D obstPt(cp2[0], cp2[1], cp2[2]);
+        // change a 3 elmt array to Vector3d class
+        Vector3d robotPt(cp1[0], cp1[1], cp1[2]);
+        Vector3d obstPt(cp2[0], cp2[1], cp2[2]);
 
         // transform points to world coords
         _cdInfo.m_robotPoint = _robot->GetFreeBody(i)->WorldTransformation() * robotPt;
@@ -117,14 +117,13 @@ VClip::FillCdInfo(shared_ptr<MultiBody> _robot, shared_ptr<MultiBody> _obstacle,
 
 VClipPose
 VClip::GetVClipPose(const Transformation& myT, const Transformation& obstT) {	
-  Transformation diff = Transformation(obstT).Inverse() * myT;
-  diff.m_orientation.ConvertType(Orientation::EulerXYZ);
+  Transformation diff = (-obstT) * myT;
+  Quaternion q;
+  convertFromMatrix(q, diff.rotation().matrix());
 
-  Vect3 XYZ(diff.m_position.getX(),diff.m_position.getY(),diff.m_position.getZ());
+  Vect3 XYZ(diff.translation()[0], diff.translation()[1], diff.translation()[2]);
 
-  Quat RPY(diff.m_orientation.alpha, Vect3::I);
-  RPY.postmult(Quat(diff.m_orientation.beta, Vect3::J));
-  RPY.postmult(Quat(diff.m_orientation.gamma, Vect3::K));
+  Quat RPY(q.real(), q.imaginary()[0], q.imaginary()[1], q.imaginary()[2]);
 
   return VClipPose(RPY, XYZ);
 }

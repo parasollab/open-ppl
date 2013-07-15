@@ -13,12 +13,12 @@
 #define CFGSURFACE_H_
 
 #include "Cfg.h"
-#include "Point.h"
+
+#include <Vector.h>
+using namespace mathtool;
 
 #define INVALID_SURFACE -999
 #define BASE_SURFACE -1
-
-using namespace mathtool;
 
 ////////////////////////////////////////////////////////////////////////////////////////////
 class GMSPolyhedron;
@@ -105,8 +105,8 @@ class CfgSurface : public Cfg {
     virtual double PositionMagnitude() const;
 
     ///The center position is get from param, c, configuration. (The position part of c)
-    virtual Vector3D GetRobotCenterPosition() const;
-    virtual Vector3D GetRobotCenterofMass(Environment*) const;
+    virtual Vector3d GetRobotCenterPosition() const;
+    virtual Vector3d GetRobotCenterofMass(Environment*) const;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     //

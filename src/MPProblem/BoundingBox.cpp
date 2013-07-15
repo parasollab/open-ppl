@@ -46,7 +46,7 @@ BoundingBox::GetRandomPoint() const {
 }
 
 bool 
-BoundingBox::InBoundary(const Vector3D& _p) const {
+BoundingBox::InBoundary(const Vector3d& _p) const {
   for(int i = 0; i < 3; ++i)
     if( _p[i] < m_bbx[i].first || _p[i] > m_bbx[i].second)
       return false;
@@ -54,7 +54,7 @@ BoundingBox::InBoundary(const Vector3D& _p) const {
 }
 
 double 
-BoundingBox::GetClearance(const Vector3D& _p) const {
+BoundingBox::GetClearance(const Vector3d& _p) const {
   double minClearance = numeric_limits<double>::max();
   for (int i = 0; i < 3; ++i) {
     double clearance = min((_p[i] - m_bbx[i].first ), (m_bbx[i].second - _p[i]));
@@ -64,9 +64,9 @@ BoundingBox::GetClearance(const Vector3D& _p) const {
   return minClearance;
 }
     
-Vector3D
-BoundingBox::GetClearancePoint(const Vector3D& _p) const {
-  Vector3D clrP = _p;
+Vector3d
+BoundingBox::GetClearancePoint(const Vector3d& _p) const {
+  Vector3d clrP = _p;
   double minClearance = numeric_limits<double>::max();
   for (int i = 0; i < 3; ++i) {
     if(_p[i] - m_bbx[i].first < minClearance){
@@ -91,19 +91,19 @@ BoundingBox::GetClearance2DSurf(Point2d _pos, Point2d& _cdPt) const {
     _pos[1]-cbbx[4],cbbx[5]-_pos[1]};
   if(dist[0]<minDist){     
     minDist=dist[0];
-    _cdPt.set(cbbx[0], _pos[1]);
+    _cdPt(cbbx[0], _pos[1]);
   }
   if(dist[1]<minDist){
     minDist=dist[1];
-    _cdPt.set(cbbx[1], _pos[1]);
+    _cdPt(cbbx[1], _pos[1]);
   }
   if(dist[2]<minDist){
     minDist=dist[2];
-    _cdPt.set(_pos[0], cbbx[4]);
+    _cdPt(_pos[0], cbbx[4]);
   }
   if(dist[3]<minDist){
     minDist=dist[3];
-    _cdPt.set(_pos[0], cbbx[5]);
+    _cdPt(_pos[0], cbbx[5]);
   }
 
   if( minDist<0 ) minDist=0;

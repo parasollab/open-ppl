@@ -15,9 +15,9 @@ class BoundingSphere : public Boundary {
     pair<double, double> GetRange(size_t _i) const;
 
     Point3d GetRandomPoint() const;
-    bool InBoundary(const Vector3D& _p) const;
-    double GetClearance(const Vector3D& _p) const;
-    Vector3D GetClearancePoint(const Vector3D& _p) const;
+    bool InBoundary(const Vector3d& _p) const;
+    double GetClearance(const Vector3d& _p) const;
+    Vector3d GetClearancePoint(const Vector3d& _p) const;
     double GetClearance2DSurf(Point2d _pos, Point2d& _cdPt) const;
 
     void ResetBoundary(vector<pair<double, double> >& _obstBBX, double _d);
@@ -26,7 +26,7 @@ class BoundingSphere : public Boundary {
     void Write(ostream& _os) const;
 
   private:
-    Vector3D m_center;
+    Vector3d m_center;
     double m_radius;
 
 #ifdef _PARALLEL

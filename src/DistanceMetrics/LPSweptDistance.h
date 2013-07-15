@@ -106,7 +106,7 @@ double LPSweptDistance<MPTraits>::SweptDistance(const vector<GMSPolyhedron>& _po
   int count = 0;
   for(size_t b=0; b<_poly1.size(); ++b)
     for(size_t i=0; i<_poly1[b].m_vertexList.size(); ++i) {
-      d += (_poly1[b].m_vertexList[i] - _poly2[b].m_vertexList[i]).magnitude();
+      d += (_poly1[b].m_vertexList[i] - _poly2[b].m_vertexList[i]).norm();
       count++;
     }
   return d/(double)count;

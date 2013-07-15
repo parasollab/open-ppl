@@ -93,7 +93,7 @@ class Environment {
     //_where: a 6 dof vector specifying position and orientation of the geometry:
     //      (x, y, z, rotation about X, rotation about Y, rotation about Z)
     //return value: obstacle's index in m_obstacleBodies on success, -1 otherwise
-    int AddObstacle(string _modelFileName, const vector<double>& _where, const vector<cd_predefined>& _cdTypes);
+    int AddObstacle(string _modelFileName, const Transformation& _where, const vector<cd_predefined>& _cdTypes);
 
     //RemoveObstacleAt
     //Removes multibody stored at position given in m_obstacleBodies

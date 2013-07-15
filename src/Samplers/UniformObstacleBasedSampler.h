@@ -79,7 +79,7 @@ class UniformObstacleBasedSampler : public SamplerMethod<MPTraits> {
       cfg2 = cfg1 + incr;
 
       //scale the distance between c1 and c2
-      Vector3D c1, c2, dir;
+      Vector3d c1, c2, dir;
       c1[0] = cfg1[0];
       c1[1] = cfg1[1];
       c1[2] = cfg1[2];

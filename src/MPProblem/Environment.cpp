@@ -229,7 +229,7 @@ Environment::GetRandomNavigableSurfaceIndex()  {
 }
 
 int
-Environment::AddObstacle(string _modelFileName, const vector<double>& _where, const vector<cd_predefined>& _cdTypes){
+Environment::AddObstacle(string _modelFileName, const Transformation& _where, const vector<cd_predefined>& _cdTypes){
   shared_ptr<MultiBody> mb(new MultiBody());
   
   mb->Initialize(_modelFileName, _where);
@@ -389,7 +389,7 @@ Environment::InCSpace(const Cfg& _cfg, shared_ptr<Boundary> _b){
   typedef vector<Robot>::iterator RIT;
   for(RIT rit = m_robots.begin(); rit != m_robots.end(); rit++) {
     if(rit->m_base != Robot::FIXED) {
-      Vector3D p;
+      Vector3d p;
       p[0] = _cfg[index];
       p[1] = _cfg[index+1];
       index+=2;
@@ -443,7 +443,7 @@ Environment::InWSpace(const Cfg& _cfg, shared_ptr<Boundary> _b){
     //check each part of the robot multibody for being inside of the boundary
     for(int m=0; m<robot->GetFreeBodyCount(); ++m) {
 
-      typedef vector<Vector3D>::const_iterator VIT;
+      typedef vector<Vector3d>::const_iterator VIT;
 
       Transformation& worldTransformation = robot->GetFreeBody(m)->WorldTransformation();
 

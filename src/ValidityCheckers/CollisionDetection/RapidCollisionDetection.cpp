@@ -33,16 +33,9 @@ Rapid::IsInCollision(shared_ptr<MultiBody> _robot, shared_ptr<MultiBody> _obstac
       shared_ptr<RAPID_model> obst = _obstacle->GetBody(j)->GetRapidBody();
       Transformation& t1 = _robot->GetFreeBody(i)->WorldTransformation();
       Transformation& t2 = _obstacle->GetBody(j)->WorldTransformation();
-      t1.m_orientation.ConvertType(Orientation::Matrix);
-      t2.m_orientation.ConvertType(Orientation::Matrix);
-      double p1[3], p2[3];
-      for(int p=0; p<3; p++) {
-        p1[p] = t1.m_position[p];
-        p2[p] = t2.m_position[p];
-      }
 
-      if(RAPID_Collide(t1.m_orientation.matrix, p1, rob.get(),
-            t2.m_orientation.matrix, p2, obst.get(), RAPID_FIRST_CONTACT)) {
+      if(RAPID_Collide(t1.rotation().matrix(), t1.translation(), rob.get(),
+            t2.rotation().matrix(), t2.translation(), obst.get(), RAPID_FIRST_CONTACT)) {
         cerr << "Error in CollisionDetection::RAPID_Collide, RAPID_ERR_COLLIDE_OUT_OF_MEMORY" << endl;
         exit(1);
       }

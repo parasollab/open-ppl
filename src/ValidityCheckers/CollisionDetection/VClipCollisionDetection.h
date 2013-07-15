@@ -8,7 +8,8 @@
 #include <vclip.h>
 typedef VclipPose VClipPose; //typedef allows our naming convention on VClip objects.
 
-class Transformation;
+#include <Transformation.h>
+using namespace mathtool;
 
 class VClip : public CollisionDetectionMethod {
   public:

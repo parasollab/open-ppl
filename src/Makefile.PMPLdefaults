@@ -2,7 +2,7 @@
 ifeq (${platform}, LINUX_32_gcc) 	#linux/gcc on 32 bit machine
 	UTILS_DEF = -DUSE_VCLIP -DUSE_RAPID -DUSE_PQP -DTIXML_USE_STL #-DUSE_SOLID
 	UTILS_INCL = ${VCLIP_INCL} ${RAPID_INCL} ${PQP_INCL} ${TINYXML_INCL} ${MATHTOOL_INCL} ${MODELLOADER_INCL}  #${SOLID_INCL}
-	UTILS_LIB = ${VCLIP_LIB} ${RAPID_LIB} ${PQP_LIB} ${TINYXML_LIB} ${MATHTOOL_LIB} ${MODELLOADER_LIB} ${KMEANS_LIB} #${SOLID_LIB}
+	UTILS_LIB = ${VCLIP_LIB} ${RAPID_LIB} ${PQP_LIB} ${TINYXML_LIB} ${MODELLOADER_LIB} ${KMEANS_LIB} #${SOLID_LIB}
 	
 	CD_LIBFILE = ${VCLIP_DIR}/lib/libvclip.a ${RAPID_DIR}/libRAPID.a ${PQP_DIR}/lib/libPQP.a #${SOLID_DIR}/lib/libsolid.a
 
@@ -15,7 +15,7 @@ ifeq (${platform}, LINUX_gcc_mh) 	#linux/gcc on manhattan
 	#temporarily remove VCLIP - does not compile because of hash map
 	UTILS_DEF =   -DUSE_RAPID -DUSE_PQP -DTIXML_USE_STL #-DUSE_SOLID
 	UTILS_INCL =   ${RAPID_INCL} ${PQP_INCL} ${TINYXML_INCL} ${MATHTOOL_INCL} ${MODELLOADER_INCL}  #${SOLID_INCL}
-	UTILS_LIB =   ${RAPID_LIB} ${PQP_LIB} ${TINYXML_LIB} ${MATHTOOL_LIB} ${MODELLOADER_LIB} ${KMEANS_LIB} #${SOLID_LIB}
+	UTILS_LIB =   ${RAPID_LIB} ${PQP_LIB} ${TINYXML_LIB} ${MODELLOADER_LIB} ${KMEANS_LIB} #${SOLID_LIB}
 	
 	CD_LIBFILE =   ${RAPID_DIR}/libRAPID.a ${PQP_DIR}/lib/libPQP.a #${SOLID_DIR}/lib/libsolid.a
 
@@ -32,7 +32,7 @@ endif
 ifeq (${platform}, LINUX_gcc) 	#linux/gcc on 64 bit machine
 	UTILS_DEF = -DUSE_RAPID -DUSE_PQP -DTIXML_USE_STL -DUSE_VCLIP# -DUSE_SOLID 
 	UTILS_INCL = ${RAPID_INCL} ${PQP_INCL} ${VCLIP_INCL} ${TINYXML_INCL} ${MATHTOOL_INCL} ${MODELLOADER_INCL}  #${SOLID_INCL} 
-	UTILS_LIB = ${RAPID_LIB} ${PQP_LIB} ${VCLIP_LIB} ${TINYXML_LIB} ${MATHTOOL_LIB} ${MODELLOADER_LIB} ${KMEANS_LIB} #${SOLID_LIB} 
+	UTILS_LIB = ${RAPID_LIB} ${PQP_LIB} ${VCLIP_LIB} ${TINYXML_LIB} ${MODELLOADER_LIB} ${KMEANS_LIB} #${SOLID_LIB} 
 	
 	CD_LIBFILE = ${RAPID_DIR}/libRAPID.a ${PQP_DIR}/lib/libPQP.a ${VCLIP_DIR}/lib/libvclip.a #${SOLID_DIR}/lib/libsolid.a 
 
@@ -53,7 +53,7 @@ endif
 ifeq (${platform}, LINUX_gcc_brazos) 	#linux/gcc on brazos(brazos.tamu.edu)
 	UTILS_DEF =   -DUSE_RAPID -DUSE_PQP -DTIXML_USE_STL #-DUSE_SOLID
 	UTILS_INCL =  ${RAPID_INCL} ${PQP_INCL} ${TINYXML_INCL} ${MATHTOOL_INCL} ${MODELLOADER_INCL}  #${SOLID_INCL}
-	UTILS_LIB =    ${RAPID_LIB} ${PQP_LIB} ${TINYXML_LIB} ${MATHTOOL_LIB} ${MODELLOADER_LIB} #${SOLID_LIB}
+	UTILS_LIB =    ${RAPID_LIB} ${PQP_LIB} ${TINYXML_LIB} ${MODELLOADER_LIB} #${SOLID_LIB}
 	CD_LIBFILE =   ${RAPID_DIR}/libRAPID.a ${PQP_DIR}/lib/libPQP.a #${SOLID_DIR}/lib/libsolid.a
 	#use same boost as used in STAPL
         BOOST_ROOT = /home/ipapadop/usr/boost_1_48
@@ -67,7 +67,7 @@ endif
 ifeq (${platform}, CRAY_gcc)    #hopper.nersc.gov || edison.nersc.gov || rain.cse.tamu.edu
         UTILS_DEF =   -DUSE_RAPID -DUSE_PQP -DTIXML_USE_STL #-DUSE_SOLID
         UTILS_INCL =  ${RAPID_INCL} ${PQP_INCL} ${TINYXML_INCL} ${MATHTOOL_INCL} ${MODELLOADER_INCL} #${SOLID_INCL}
-        UTILS_LIB =    ${RAPID_LIB} ${PQP_LIB} ${TINYXML_LIB} ${MATHTOOL_LIB} ${MODELLOADER_LIB} #${SOLID_LIB}
+        UTILS_LIB =    ${RAPID_LIB} ${PQP_LIB} ${TINYXML_LIB} ${MODELLOADER_LIB} #${SOLID_LIB}
 
         CD_LIBFILE =   ${RAPID_DIR}/libRAPID.a ${PQP_DIR}/lib/libPQP.a #${SOLID_DIR}/lib/libsolid.a
         # first boost for rain, second for nersc machines
@@ -83,7 +83,7 @@ endif
 ifeq (${platform}, AIX_64_gcc)	#aix/64-bit/gcc (e.g., hydra.tamu.edu)
 	UTILS_DEF = -DUSE_VCLIP -DUSE_RAPID -DUSE_PQP -DTIXML_USE_STL #-DUSE_SOLID
 	UTILS_INCL = ${VCLIP_INCL} ${RAPID_INCL} ${PQP_INCL} ${TINYXML_INCL} ${MATHTOOL_INCL} ${MODELLOADER_INCL}  #${SOLID_INCL}
-	UTILS_LIB = ${VCLIP_LIB} ${RAPID_LIB} ${PQP_LIB} ${TINYXML_LIB} ${MATHTOOL_LIB} ${MODELLOADER_LIB} ${KMEANS_LIB} #${SOLID_LIB}
+	UTILS_LIB = ${VCLIP_LIB} ${RAPID_LIB} ${PQP_LIB} ${TINYXML_LIB} ${MODELLOADER_LIB} ${KMEANS_LIB} #${SOLID_LIB}
 
 	CD_LIBFILE = ${VCLIP_DIR}/lib/libvclip.a ${RAPID_DIR}/libRAPID.a ${PQP_DIR}/lib/libPQP.a #${SOLID_DIR}/lib/libsolid.a
 
@@ -95,7 +95,7 @@ endif
 ifeq (${platform}, AIX_64_xlC)	#aix/64-bit/native compiler (e.g., hydra.tamu.edu)
 	UTILS_DEF = -DUSE_RAPID -DUSE_PQP -DTIXML_USE_STL #-DUSE_SOLID
 	UTILS_INCL = ${RAPID_INCL} ${PQP_INCL} ${TINYXML_INCL} ${MATHTOOL_INCL} ${MODELLOADER_INCL}  #${SOLID_INCL}
-	UTILS_LIB = ${RAPID_LIB} ${PQP_LIB} ${TINYXML_LIB} ${MATHTOOL_LIB} ${MODELLOADER_LIB} ${KMEANS_LIB} #${SOLID_LIB}
+	UTILS_LIB = ${RAPID_LIB} ${PQP_LIB} ${TINYXML_LIB} ${MODELLOADER_LIB} ${KMEANS_LIB} #${SOLID_LIB}
 
 	CD_LIBFILE = ${RAPID_DIR}/libRAPID.a ${PQP_DIR}/lib/libPQP.a #${SOLID_DIR}/lib/libsolid.a
 
@@ -107,7 +107,7 @@ endif
 ifeq (${platform}, MACOS_gcc) 	#fink/gcc on 64 bit machine
 	UTILS_DEF = -DUSE_VCLIP -DUSE_RAPID -DUSE_PQP -DTIXML_USE_STL #-DUSE_SOLID
 	UTILS_INCL = ${VCLIP_INCL} ${RAPID_INCL} ${PQP_INCL} ${TINYXML_INCL} ${MATHTOOL_INCL} ${MODELLOADER_INCL}  #${SOLID_INCL}
-	UTILS_LIB = ${VCLIP_LIB} ${RAPID_LIB} ${PQP_LIB} ${TINYXML_LIB} ${MATHTOOL_LIB} ${MODELLOADER_LIB} ${KMEANS_LIB} #${SOLID_LIB}
+	UTILS_LIB = ${VCLIP_LIB} ${RAPID_LIB} ${PQP_LIB} ${TINYXML_LIB} ${MODELLOADER_LIB} ${KMEANS_LIB} #${SOLID_LIB}
 	
 	CD_LIBFILE = ${VCLIP_DIR}/lib/libvclip.a ${RAPID_DIR}/libRAPID.a ${PQP_DIR}/lib/libPQP.a #${SOLID_DIR}/lib/libsolid.a
 
@@ -187,12 +187,7 @@ XML_LIBFILE = ${TINYXML_DIR}/libtinyxml.a
 
 # mathtool
 MATHTOOL_DIR = ${UTILS_DIR}/mathtool
-MATHTOOL_LIB = -L${MATHTOOL_DIR} -lmathtool
 MATHTOOL_INCL = -I${MATHTOOL_DIR}
-${MATHTOOL_DIR}/libmathtool.a: 
-	cd ${MATHTOOL_DIR}; ${MAKE} platform=${platform} debug=${debug}
-
-MATHTOOL_LIBFILE = ${MATHTOOL_DIR}/libmathtool.a
 
 # modelloader
 MODELLOADER_DIR = ${UTILS_DIR}/modelloader
@@ -248,8 +243,6 @@ PMPL_OBJS = \
 	MPProblem/Geometry/Connection.o \
 	MPProblem/Geometry/Contact.o \
 	MPProblem/Geometry/DHparameters.o \
-	MPProblem/Geometry/Transformation.o \
-	MPProblem/Geometry/Orientation.o \
 	MPProblem/Geometry/GMSPolyhedron.o \
 	MPProblem/Geometry/Body.o \
 	MPProblem/Geometry/MultiBody.o \

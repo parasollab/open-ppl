@@ -420,7 +420,7 @@ GetRandomRay(double incr, Environment* env, shared_ptr<DistanceMetricMethod> dm,
 }
 
 
-Vector3D Cfg_reach_cc::GetRobotCenterofMass(Environment* env) const {
+Vector3d Cfg_reach_cc::GetRobotCenterofMass(Environment* env) const {
  cerr << "Warning, GetRobotCenterofMass not implemented yet\n";
   exit(-1);
 }
@@ -785,7 +785,7 @@ void ClosedChainStrategy::Solve(){
             cout << "\tear_joint2: " << ear_joint2.first << "," << ear_joint2.second << "," << ear_joint2.third << endl;
             * //
 
-            Vector3D joint1, joint2;
+            Vector3d joint1, joint2;
             {
             //note, following assumes link orientated along x-axis for longest length
             //get world coords for joint1.second
@@ -793,13 +793,13 @@ void ClosedChainStrategy::Solve(){
             //cout << "\tjoint1_bbox1:\n";
             //for_each(joint1_bbox1.vertexList, joint1_bbox1.vertexList + joint1_bbox1.numVertices, cout << boost::lambda::constant("\t\t") << boost::lambda::_1 << "\n");
 
-            Vector3D joint1_bbox1_endpoint1;
+            Vector3d joint1_bbox1_endpoint1;
             for(int j=0; j<4; ++j)
               joint1_bbox1_endpoint1 = joint1_bbox1_endpoint1 + joint1_bbox1.vertexList[j];
             joint1_bbox1_endpoint1 = joint1_bbox1_endpoint1 / 4;
             //cout << "\tjoint1_bbox1_endpoint1: " << joint1_bbox1_endpoint1 << endl;
 
-            Vector3D joint1_bbox1_endpoint2;
+            Vector3d joint1_bbox1_endpoint2;
             for(int j=4; j<8; ++j)
               joint1_bbox1_endpoint2 = joint1_bbox1_endpoint2 + joint1_bbox1.vertexList[j];
             joint1_bbox1_endpoint2 = joint1_bbox1_endpoint2 / 4;
@@ -810,23 +810,23 @@ void ClosedChainStrategy::Solve(){
             //cout << "\tjoint1_bbox2:\n";
             //for_each(joint1_bbox2.vertexList, joint1_bbox2.vertexList + joint1_bbox2.numVertices, cout << boost::lambda::constant("\t\t") << boost::lambda::_1 << "\n");
             
-            Vector3D joint1_bbox2_endpoint1;
+            Vector3d joint1_bbox2_endpoint1;
             for(int j=0; j<4; ++j)
               joint1_bbox2_endpoint1 = joint1_bbox2_endpoint1 + joint1_bbox2.vertexList[j];
             joint1_bbox2_endpoint1 = joint1_bbox2_endpoint1 / 4;
             //cout << "\tjoint1_bbox2_endpoint1: " << joint1_bbox2_endpoint1 << endl;
 
-            Vector3D joint1_bbox2_endpoint2;
+            Vector3d joint1_bbox2_endpoint2;
             for(int j=4; j<8; ++j)
               joint1_bbox2_endpoint2 = joint1_bbox2_endpoint2 + joint1_bbox2.vertexList[j];
             joint1_bbox2_endpoint2 = joint1_bbox2_endpoint2 / 4;
             //cout << "\tjoint1_bbox2_endpoint2: " << joint1_bbox2_endpoint2 << endl;
 
             //find intersection coord
-            Vector3D a = joint1_bbox1_endpoint1 - joint1_bbox2_endpoint1;
-            Vector3D b = joint1_bbox1_endpoint1 - joint1_bbox2_endpoint2;
-            Vector3D c = joint1_bbox1_endpoint2 - joint1_bbox2_endpoint1;
-            Vector3D d = joint1_bbox1_endpoint2 - joint1_bbox2_endpoint2;
+            Vector3d a = joint1_bbox1_endpoint1 - joint1_bbox2_endpoint1;
+            Vector3d b = joint1_bbox1_endpoint1 - joint1_bbox2_endpoint2;
+            Vector3d c = joint1_bbox1_endpoint2 - joint1_bbox2_endpoint1;
+            Vector3d d = joint1_bbox1_endpoint2 - joint1_bbox2_endpoint2;
             //cout << "\t\ta: " << a << "\tb: " << b << "\tc: " << c << "\td: " << d << endl;
 
             if(a.magnitude() <= b.magnitude() && a.magnitude() <= c.magnitude() && a.magnitude() <= d.magnitude())
@@ -848,13 +848,13 @@ void ClosedChainStrategy::Solve(){
             //cout << "\tjoint2_bbox1:\n";
             //for_each(joint2_bbox1.vertexList, joint2_bbox1.vertexList + joint2_bbox1.numVertices, cout << boost::lambda::constant("\t\t") << boost::lambda::_1 << "\n");
             
-            Vector3D joint2_bbox1_endpoint1;
+            Vector3d joint2_bbox1_endpoint1;
             for(int j=0; j<4; ++j)
               joint2_bbox1_endpoint1 = joint2_bbox1_endpoint1 + joint2_bbox1.vertexList[j];
             joint2_bbox1_endpoint1 = joint2_bbox1_endpoint1 / 4;
             //cout << "\tjoint2_bbox1_endpoint1: " << joint2_bbox1_endpoint1 << endl;
 
-            Vector3D joint2_bbox1_endpoint2;
+            Vector3d joint2_bbox1_endpoint2;
             for(int j=4; j<8; ++j)
               joint2_bbox1_endpoint2 = joint2_bbox1_endpoint2 + joint2_bbox1.vertexList[j];
             joint2_bbox1_endpoint2 = joint2_bbox1_endpoint2 / 4;
@@ -865,23 +865,23 @@ void ClosedChainStrategy::Solve(){
             //cout << "\tjoint2_bbox2:\n";
             //for_each(joint2_bbox2.vertexList, joint2_bbox2.vertexList + joint2_bbox2.numVertices, cout << boost::lambda::constant("\t\t") << boost::lambda::_1 << "\n");
             
-            Vector3D joint2_bbox2_endpoint1;
+            Vector3d joint2_bbox2_endpoint1;
             for(int j=0; j<4; ++j)
               joint2_bbox2_endpoint1 = joint2_bbox2_endpoint1 + joint2_bbox2.vertexList[j];
             joint2_bbox2_endpoint1 = joint2_bbox2_endpoint1 / 4;
             //cout << "\tjoint2_bbox2_endpoint1: " << joint2_bbox2_endpoint1 << endl;
 
-            Vector3D joint2_bbox2_endpoint2;
+            Vector3d joint2_bbox2_endpoint2;
             for(int j=4; j<8; ++j)
               joint2_bbox2_endpoint2 = joint2_bbox2_endpoint2 + joint2_bbox2.vertexList[j];
             joint2_bbox2_endpoint2 = joint2_bbox2_endpoint2 / 4;
             //cout << "\tjoint2_bbox2_endpoint2: " << joint2_bbox2_endpoint2 << endl;
 
             //find intersection coord
-            Vector3D a = joint2_bbox1_endpoint1 - joint2_bbox2_endpoint1;
-            Vector3D b = joint2_bbox1_endpoint1 - joint2_bbox2_endpoint2;
-            Vector3D c = joint2_bbox1_endpoint2 - joint2_bbox2_endpoint1;
-            Vector3D d = joint2_bbox1_endpoint2 - joint2_bbox2_endpoint2;
+            Vector3d a = joint2_bbox1_endpoint1 - joint2_bbox2_endpoint1;
+            Vector3d b = joint2_bbox1_endpoint1 - joint2_bbox2_endpoint2;
+            Vector3d c = joint2_bbox1_endpoint2 - joint2_bbox2_endpoint1;
+            Vector3d d = joint2_bbox1_endpoint2 - joint2_bbox2_endpoint2;
             //cout << "\t\ta: " << a << "\tb: " << b << "\tc: " << c << "\td: " << d << endl;
 
             if(a.magnitude() <= b.magnitude() && a.magnitude() <= c.magnitude() && a.magnitude() <= d.magnitude())

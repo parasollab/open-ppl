@@ -13,21 +13,19 @@
  *Denavit-Hartenberg Parameters are used to connection 
  */
 
-/////////////////////////////////////////////////////////////////////////////////////////
 #ifndef DHparameters_h
 #define DHparameters_h
 
-/////////////////////////////////////////////////////////////////////////////////////////
-//Include general headers
 #include <iostream>
 #include <fstream>
-
 using namespace std;
+
+#include <Transformation.h>
+using namespace mathtool;
 
 class DHparameters {
   public:
     DHparameters(double _alpha = 0.0, double _a = 0.0, double _d = 0.0, double _theta = 0.0);
-    virtual ~DHparameters();
 
     ///Read alpha, a, d, and theta one by one from _is.
     friend istream& operator>>(istream&, DHparameters&);
@@ -36,10 +34,12 @@ class DHparameters {
 
     bool operator==(const DHparameters& dh) const;
 
-    double alpha;   ///<Angle between two x axis
-    double a;       ///<distance between two z axis
-    double d;       ///<algebraic distance along z axis
-    double theta;   ///<Angle between two z axis
+    Transformation GetTransformation() const;
+
+    double m_alpha;   ///<Angle between two x axis
+    double m_a;       ///<distance between two z axis
+    double m_d;       ///<algebraic distance along z axis
+    double m_theta;   ///<Angle between two z axis
 };
 
 #endif

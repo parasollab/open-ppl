@@ -251,7 +251,7 @@ ClosedChainProblem::MyCalculateJointAngle(Environment* env, Link* link1, Link* l
   //assume orientations of links now, later compute automatically from earJoints
   
   GMSPolyhedron& link1_poly = env->GetMultiBody(env->GetRobotIndex())->GetFreeBody(link1->GetID())->GetWorldPolyhedron();
-  Vector3D joint1; //end of link1_poly
+  Vector3d joint1; //end of link1_poly
   for(int i=0; i<4; ++i) 
     joint1 = joint1 + link1_poly.m_vertexList[i];
   joint1 = joint1 / 4;
@@ -259,7 +259,7 @@ ClosedChainProblem::MyCalculateJointAngle(Environment* env, Link* link1, Link* l
 
 /*
   GMSPolyhedron& link2_poly = env->GetMultiBody(env->GetRobotIndex())->GetFreeBody(link2->GetID())->GetWorldPolyhedron();
-  Vector3D end_link2; //end of link2_poly
+  Vector3d end_link2; //end of link2_poly
   for(int i=0; i<4; ++i) 
     end_link2 = end_link2 + link2_poly.m_vertexList[i];
   end_link2 = end_link2 / 4;
@@ -276,7 +276,7 @@ ClosedChainProblem::MyCalculateJointAngle(Environment* env, Link* link1, Link* l
 
   int link3_id = actual_ear_links.back();
   GMSPolyhedron& link3_poly = env->GetMultiBody(env->GetRobotIndex())->GetFreeBody(link3_id)->GetWorldPolyhedron();
-  Vector3D end_link3; //end of link3_poly
+  Vector3d end_link3; //end of link3_poly
   for(int i=0; i<4; ++i) 
     end_link3 = end_link3 + link3_poly.m_vertexList[i];
   end_link3 = end_link3 / 4;
@@ -296,7 +296,7 @@ ClosedChainProblem::MyCalculateJointAngle(Environment* env, Link* link1, Link* l
   }
   //cout << "\t\tlink4_id = " << link4_id << endl;
   GMSPolyhedron& link4_poly = env->GetMultiBody(env->GetRobotIndex())->GetFreeBody(link4_id)->GetWorldPolyhedron();
-  Vector3D joint2; //start of link4_poly
+  Vector3d joint2; //start of link4_poly
   for(int i=4; i<8; ++i) 
     joint2 = joint2 + link4_poly.m_vertexList[i];
   joint2 = joint2 / 4;
@@ -305,9 +305,9 @@ ClosedChainProblem::MyCalculateJointAngle(Environment* env, Link* link1, Link* l
   //cout << "\t\t\tear_length = " << (end_link3 - joint1).magnitude() << endl;
 
   //beta = angle between (joint2-joint1) and (end_link3 - joint1)
-  Vector3D V1 = joint2 - joint1;
+  Vector3d V1 = joint2 - joint1;
   V1.normalize();
-  Vector3D V2 = end_link3 - joint1;
+  Vector3d V2 = end_link3 - joint1;
   V2.normalize();
 
   /*
@@ -468,7 +468,7 @@ void ClosedChainProblem::PrintConfiguration(Environment* env, ostream & ofPath)
 //void ClosedChainProblem::ConfigBase(Environment* env, const vector<double>& v = vector<double>(6, 0))
 void ClosedChainProblem::ConfigBase(Environment* env, const vector<double>& v)
 {
-  Transformation T1 = Transformation(Orientation(Orientation::FixedXYZ, v[5]*TWOPI, v[4]*TWOPI, v[3]*TWOPI), Vector3D(v[0], v[1], v[2]));
+  Transformation T1 = Transformation(Orientation(Orientation::FixedXYZ, v[5]*TWOPI, v[4]*TWOPI, v[3]*TWOPI), Vector3d(v[0], v[1], v[2]));
   env->GetMultiBody(env->GetRobotIndex())->GetFreeBody(0)->Configure(T1);
 }
 
@@ -483,7 +483,7 @@ void ClosedChainProblem::ConfigEnvironment(Environment* env)
   //configure base
   //cout << "\tconfiguring base\n";
   /*
-  Transformation T1 = Transformation(Orientation(Orientation::FixedXYZ, 0, 0, 0), Vector3D(0, 0, 0)); //fixed base
+  Transformation T1 = Transformation(Orientation(Orientation::FixedXYZ, 0, 0, 0), Vector3d(0, 0, 0)); //fixed base
   env->GetMultiBody(robot)->GetFreeBody(0)->Configure(T1);
   */
   ConfigBase(env);
@@ -685,12 +685,12 @@ void ClosedChainProblem::PrintEarJointCoords(Environment* env, Link* ear_root)
   {
     GMSPolyhedron& link_poly = env->GetMultiBody(env->GetRobotIndex())->GetFreeBody(*L)->GetWorldPolyhedron();
 
-    Vector3D endpoint2;
+    Vector3d endpoint2;
     for(int i=0; i<4; ++i)
       endpoint2 = endpoint2 + link_poly.m_vertexList[i];
     endpoint2 = endpoint2 / 4;
 
-    Vector3D endpoint1;
+    Vector3d endpoint1;
     for(int i=4; i<8; ++i)
       endpoint1 = endpoint1 + link_poly.m_vertexList[i];
     endpoint1 = endpoint1 / 4;

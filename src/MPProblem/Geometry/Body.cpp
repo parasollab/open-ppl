@@ -74,7 +74,7 @@ Body::GetWorldPolyhedron() {
     for(size_t i=0; i<m_polyhedron.m_vertexList.size(); ++i)
       m_worldPolyhedron.m_vertexList[i] = m_worldTransformation * m_polyhedron.m_vertexList[i];
     for(size_t i=0; i<m_polyhedron.m_polygonList.size(); ++i)
-      m_worldPolyhedron.m_polygonList[i].m_normal = m_worldTransformation.m_orientation * m_polyhedron.m_polygonList[i].m_normal;
+      m_worldPolyhedron.m_polygonList[i].m_normal = m_worldTransformation.rotation() * m_polyhedron.m_polygonList[i].m_normal;
     m_worldPolyhedronAvailable=true;
   }
   return m_worldPolyhedron;
@@ -87,7 +87,7 @@ Body::GetWorldBoundingBox() {
   return m_bbWorldPolyhedron;
 }
 
-Vector3D 
+Vector3d 
 Body::GetCenterOfMass(){
   if(!m_centerOfMassAvailable) 
     ComputeCenterOfMass();
@@ -119,7 +119,7 @@ Body::ChangeWorldPolyhedron() {
   for(size_t i=0; i<m_polyhedron.m_vertexList.size(); i++)  // Transform the vertices
     m_worldPolyhedron.m_vertexList[i] = m_worldTransformation * m_polyhedron.m_vertexList[i];
   for(size_t i=0; i<m_polyhedron.m_polygonList.size(); i++)  // Transform the normals
-    m_worldPolyhedron.m_polygonList[i].m_normal = m_worldTransformation.m_orientation * m_polyhedron.m_polygonList[i].m_normal;
+    m_worldPolyhedron.m_polygonList[i].m_normal = m_worldTransformation.rotation() * m_polyhedron.m_polygonList[i].m_normal;
 }
 
 //===================================================================
@@ -139,36 +139,36 @@ Body::Read(string _fileName) {
   GMSPolyhedron poly;
   poly = GetPolyhedron();
   double minx, miny, minz, maxx, maxy, maxz;
-  minx = maxx = poly.m_vertexList[0].getX();
-  miny = maxy = poly.m_vertexList[0].getY();
-  minz = maxz = poly.m_vertexList[0].getZ();
+  minx = maxx = poly.m_vertexList[0][0];
+  miny = maxy = poly.m_vertexList[0][1];
+  minz = maxz = poly.m_vertexList[0][2];
   for(size_t i = 1 ; i < poly.m_vertexList.size() ; i++){
-    if(poly.m_vertexList[i].getX() < minx) 
-      minx = poly.m_vertexList[i].getX();
-    else if(maxx < poly.m_vertexList[i].getX()) 
-      maxx = poly.m_vertexList[i].getX();
+    if(poly.m_vertexList[i][0] < minx) 
+      minx = poly.m_vertexList[i][0];
+    else if(maxx < poly.m_vertexList[i][0]) 
+      maxx = poly.m_vertexList[i][0];
 
-    if(poly.m_vertexList[i].getY() < miny) 
-      miny = poly.m_vertexList[i].getY();
-    else if(maxy < poly.m_vertexList[i].getY()) 
-      maxy = poly.m_vertexList[i].getY();
+    if(poly.m_vertexList[i][1] < miny) 
+      miny = poly.m_vertexList[i][1];
+    else if(maxy < poly.m_vertexList[i][1]) 
+      maxy = poly.m_vertexList[i][1];
 
-    if(poly.m_vertexList[i].getZ() < minz) 
-      minz = poly.m_vertexList[i].getZ();
-    else if(maxz < poly.m_vertexList[i].getZ()) 
-      maxz = poly.m_vertexList[i].getZ();
+    if(poly.m_vertexList[i][2] < minz) 
+      minz = poly.m_vertexList[i][2];
+    else if(maxz < poly.m_vertexList[i][2]) 
+      maxz = poly.m_vertexList[i][2];
   }
 
-  m_bbPolyhedron.m_vertexList = vector<Vector3D>(8);
-  m_bbWorldPolyhedron.m_vertexList = vector<Vector3D>(8);
-  m_bbPolyhedron.m_vertexList[0] = Vector3D(minx,miny,minz);
-  m_bbPolyhedron.m_vertexList[1] = Vector3D(minx,miny,maxz);
-  m_bbPolyhedron.m_vertexList[2] = Vector3D(minx,maxy,minz);
-  m_bbPolyhedron.m_vertexList[3] = Vector3D(minx,maxy,maxz);
-  m_bbPolyhedron.m_vertexList[4] = Vector3D(maxx,miny,minz);
-  m_bbPolyhedron.m_vertexList[5] = Vector3D(maxx,miny,maxz);
-  m_bbPolyhedron.m_vertexList[6] = Vector3D(maxx,maxy,minz);
-  m_bbPolyhedron.m_vertexList[7] = Vector3D(maxx,maxy,maxz);
+  m_bbPolyhedron.m_vertexList = vector<Vector3d>(8);
+  m_bbWorldPolyhedron.m_vertexList = vector<Vector3d>(8);
+  m_bbPolyhedron.m_vertexList[0] = Vector3d(minx,miny,minz);
+  m_bbPolyhedron.m_vertexList[1] = Vector3d(minx,miny,maxz);
+  m_bbPolyhedron.m_vertexList[2] = Vector3d(minx,maxy,minz);
+  m_bbPolyhedron.m_vertexList[3] = Vector3d(minx,maxy,maxz);
+  m_bbPolyhedron.m_vertexList[4] = Vector3d(maxx,miny,minz);
+  m_bbPolyhedron.m_vertexList[5] = Vector3d(maxx,miny,maxz);
+  m_bbPolyhedron.m_vertexList[6] = Vector3d(maxx,maxy,minz);
+  m_bbPolyhedron.m_vertexList[7] = Vector3d(maxx,maxy,maxz);
 
   FindBoundingBox();
 }
@@ -191,7 +191,7 @@ Body::ComputeCenterOfMass(){
     cout << "\nERROR: No Vertices to take Body::centerOfMass from...\n";
   }
   else{
-    Vector3D sum(0,0,0);
+    Vector3d sum(0,0,0);
     for (size_t i=0; i<poly.m_vertexList.size(); i++) {
       sum = sum + poly.m_vertexList[i];
     }
@@ -206,24 +206,24 @@ Body::FindBoundingBox(){
   m_worldPolyhedronAvailable = false;
   poly = GetWorldPolyhedron();
   double minx, miny, minz, maxx, maxy, maxz;
-  minx = maxx = poly.m_vertexList[0].getX();
-  miny = maxy = poly.m_vertexList[0].getY();
-  minz = maxz = poly.m_vertexList[0].getZ();
+  minx = maxx = poly.m_vertexList[0][0];
+  miny = maxy = poly.m_vertexList[0][1];
+  minz = maxz = poly.m_vertexList[0][2];
   for(size_t i = 1 ; i < poly.m_vertexList.size() ; i++){
-    if(poly.m_vertexList[i].getX() < minx) 
-      minx = poly.m_vertexList[i].getX();
-    else if(maxx < poly.m_vertexList[i].getX()) 
-      maxx = poly.m_vertexList[i].getX();
+    if(poly.m_vertexList[i][0] < minx) 
+      minx = poly.m_vertexList[i][0];
+    else if(maxx < poly.m_vertexList[i][0]) 
+      maxx = poly.m_vertexList[i][0];
 
-    if(poly.m_vertexList[i].getY() < miny) 
-      miny = poly.m_vertexList[i].getY();
-    else if(maxy < poly.m_vertexList[i].getY()) 
-      maxy = poly.m_vertexList[i].getY();
+    if(poly.m_vertexList[i][1] < miny) 
+      miny = poly.m_vertexList[i][1];
+    else if(maxy < poly.m_vertexList[i][1]) 
+      maxy = poly.m_vertexList[i][1];
 
-    if(poly.m_vertexList[i].getZ() < minz) 
-      minz = poly.m_vertexList[i].getZ();
-    else if(maxz < poly.m_vertexList[i].getZ()) 
-      maxz = poly.m_vertexList[i].getZ();
+    if(poly.m_vertexList[i][2] < minz) 
+      minz = poly.m_vertexList[i][2];
+    else if(maxz < poly.m_vertexList[i][2]) 
+      maxz = poly.m_vertexList[i][2];
   }
   m_boundingBox[0] = minx; m_boundingBox[1] = maxx;
   m_boundingBox[2] = miny; m_boundingBox[3] = maxy;
@@ -285,9 +285,9 @@ Body::BuildCDStructure(cd_predefined _cdtype) {
     Polyhedron* vpoly = new Polyhedron;
     for(size_t v = 0 ; v < poly.m_vertexList.size() ; v++){
       vpoly->addVertex("",
-          Vect3(poly.m_vertexList[v].getX(),
-            poly.m_vertexList[v].getY(),
-            poly.m_vertexList[v].getZ()
+          Vect3(poly.m_vertexList[v][0],
+            poly.m_vertexList[v][1],
+            poly.m_vertexList[v][2]
             ));
     }
     vpoly->buildHull();
@@ -306,7 +306,7 @@ Body::BuildCDStructure(cd_predefined _cdtype) {
         double point[3][3];
         for(int i=0; i<3; i++) {
           vertexNum[i] = poly.m_polygonList[q].m_vertexList[i];
-          Vector3D &tmp = poly.m_vertexList[vertexNum[i]];
+          Vector3d &tmp = poly.m_vertexList[vertexNum[i]];
           for(int j=0; j<3; j++)
             point[i][j] = tmp[j];
         }
@@ -326,7 +326,7 @@ Body::BuildCDStructure(cd_predefined _cdtype) {
           double point[3][3];
           for(int i=0; i<3; i++) {
             vertexNum[i] = poly.m_polygonList[q].m_vertexList[i];
-            Vector3D &tmp = poly.m_vertexList[vertexNum[i]];
+            Vector3d &tmp = poly.m_vertexList[vertexNum[i]];
             for(int j=0; j<3; j++)
               point[i][j] = tmp[j];
           }
@@ -345,7 +345,7 @@ Body::BuildCDStructure(cd_predefined _cdtype) {
             float point[3][3];
             for(int i=0; i<3; i++) {
               vertexNum[i] = poly.m_polygonList[q].m_vertexList[i];
-              Vector3D tmp = poly.m_vertexList[vertexNum[i]];
+              Vector3d tmp = poly.m_vertexList[vertexNum[i]];
               for(int j=0; j<3; j++)
                 vertex[3*q+i][j] = tmp[j];
             }
@@ -357,7 +357,7 @@ Body::BuildCDStructure(cd_predefined _cdtype) {
             float point[3][3];
             for(int i=0; i<3; i++) {
               vertexNum[i] = poly.m_polygonList[q].m_vertexList[i];
-              Vector3D tmp = poly.m_vertexList[vertexNum[i]];
+              Vector3d tmp = poly.m_vertexList[vertexNum[i]];
               for(int j=0; j<3; j++)
                 point[i][j] = tmp[j];
             }
@@ -405,7 +405,7 @@ Body::UpdateVertexBase(){
     int vertexNum[3];
     for(int i=0; i<3; i++) {
       vertexNum[i] = poly.m_polygonList[q].m_vertexList[i];
-      Vector3D &tmp = poly.m_vertexList[vertexNum[i]];
+      Vector3d &tmp = poly.m_vertexList[vertexNum[i]];
       vertex[3*q+i][0]=tmp[0];
       vertex[3*q+i][1]=tmp[1];
       vertex[3*q+i][2]=tmp[2];

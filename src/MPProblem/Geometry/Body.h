@@ -25,7 +25,6 @@
 using boost::shared_ptr;
 
 class MultiBody;
-class Transformation;
 class DHparameters;
 
 /**class Body is a high level represented object in workspace.
@@ -67,7 +66,7 @@ class Body {
 
     MultiBody* GetMultiBody() {return m_multibody;}
     double* GetBoundingBox() {return m_boundingBox;}
-    Vector3D GetCenterOfMass();
+    Vector3d GetCenterOfMass();
     Connection& GetForwardConnection(size_t _index);
     Connection& GetBackwardConnection(size_t _index);
 
@@ -174,7 +173,7 @@ class Body {
     GMSPolyhedron m_polyhedron;               
     GMSPolyhedron m_worldPolyhedron;          
     bool m_centerOfMassAvailable;             
-    Vector3D m_centerOfMass;                  
+    Vector3d m_centerOfMass;                  
     bool m_worldPolyhedronAvailable;
     double m_boundingBox[6];                  
     GMSPolyhedron m_bbPolyhedron;

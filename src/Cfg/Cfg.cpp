@@ -372,7 +372,7 @@ Cfg::OrientationMagnitude() const {
   return sqrt(result);
 }
 
-Vector3D
+Vector3d
 Cfg::GetRobotCenterPosition() const {
   double x = 0, y = 0, z = 0;
   int numRobots = m_robots.size();
@@ -389,22 +389,22 @@ Cfg::GetRobotCenterPosition() const {
     index += rit->m_joints.size();
   }
 
-  return Vector3D(x/numRobots, y/numRobots, z/numRobots);
+  return Vector3d(x/numRobots, y/numRobots, z/numRobots);
 }
 
-Vector3D 
+Vector3d 
 Cfg::GetRobotCenterofMass(Environment* _env) const {
   ConfigEnvironment(_env);
 
   typedef vector<Robot>::iterator RIT;
-  Vector3D com(0,0,0);
+  Vector3d com(0,0,0);
   int numbodies=0;
   shared_ptr<MultiBody> mb = _env->GetMultiBody(m_robotIndex);
   typedef vector<Robot>::iterator RIT;
   for(RIT rit = m_robots.begin(); rit != m_robots.end(); rit++) {
     GMSPolyhedron poly = mb->GetFreeBody(rit->m_bodyIndex)->GetWorldPolyhedron();
-    Vector3D polycom(0,0,0);
-    for(vector<Vector3D>::const_iterator  vit = poly.m_vertexList.begin(); vit != poly.m_vertexList.end(); ++vit)
+    Vector3d polycom(0,0,0);
+    for(vector<Vector3d>::const_iterator  vit = poly.m_vertexList.begin(); vit != poly.m_vertexList.end(); ++vit)
       polycom = polycom + (*vit);
     polycom = polycom / poly.m_vertexList.size();
     com = com + polycom;
@@ -412,8 +412,8 @@ Cfg::GetRobotCenterofMass(Environment* _env) const {
 
     for(Robot::JointIT i = rit->m_joints.begin(); i != rit->m_joints.end(); ++i){
       GMSPolyhedron poly1 = mb->GetFreeBody((*i)->GetNextBodyIndex())->GetWorldPolyhedron();
-      Vector3D polycom1(0,0,0);
-      for(vector<Vector3D>::const_iterator vit1 = poly1.m_vertexList.begin(); vit1 != poly1.m_vertexList.end(); ++vit1)
+      Vector3d polycom1(0,0,0);
+      for(vector<Vector3d>::const_iterator vit1 = poly1.m_vertexList.begin(); vit1 != poly1.m_vertexList.end(); ++vit1)
         polycom1 = polycom1 + (*vit1);
       polycom1 = polycom1 / poly1.m_vertexList.size();
       com = com + polycom1;
@@ -485,7 +485,7 @@ Cfg::ConfigEnvironment(Environment* _env) const {
       }
       // configure the robot according to current Cfg: joint parameters
       // (and base locations/orientations for free flying robots.)
-      Transformation t1(Orientation(Orientation::FixedXYZ, gamma*PI, beta*PI, alpha*PI), Vector3D(x,y,z));
+      Transformation t1(Vector3d(x, y, z), Orientation(EulerAngle(gamma*PI, beta*PI, alpha*PI)));
       // update link i
       mb->GetFreeBody(rit->m_bodyIndex)->Configure(t1);
     }
@@ -493,10 +493,10 @@ Cfg::ConfigEnvironment(Environment* _env) const {
     for(MIT mit = rit->m_joints.begin(); mit != rit->m_joints.end(); mit++) {
       if((*mit)->GetConnectionType() != Connection::NONACTUATED) {
         size_t second = (*mit)->GetNextBodyIndex();
-        mb->GetFreeBody(second)->GetBackwardConnection(0).GetDHparameters().theta = m_v[index]*PI;
+        mb->GetFreeBody(second)->GetBackwardConnection(0).GetDHparameters().m_theta = m_v[index]*PI;
         index++;
         if((*mit)->GetConnectionType() == Connection::SPHERICAL){
-          mb->GetFreeBody(second)->GetBackwardConnection(0).GetDHparameters().alpha = m_v[index]*PI;
+          mb->GetFreeBody(second)->GetBackwardConnection(0).GetDHparameters().m_alpha = m_v[index]*PI;
           index++;
         }
       } 
@@ -618,9 +618,9 @@ Cfg::GetPositionOrientationFrom2Cfg(const Cfg& _c1, const Cfg& _c2) {
   m_witnessCfg.reset();
 }
 
-vector<Vector3D>
+vector<Vector3d>
 Cfg::PolyApprox(Environment* _env) const {
-  vector<Vector3D> result;
+  vector<Vector3d> result;
   ConfigEnvironment(_env);
   _env->GetMultiBody(m_robotIndex)->PolygonalApproximation(result);
   return result;

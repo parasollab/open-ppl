@@ -1,28 +1,11 @@
-// $Id$
-/////////////////////////////////////////////////////////////////////
-//  MultiBody.c
-//
-//  Created   3/ 1/98 Aaron Michalk
-/////////////////////////////////////////////////////////////////////
-
-/////////////////////////////////////////////////////////////////////////////////
-// header files for C-space Toolkit
-/////////////////////////////////////////////////////////////////////////////////
-//#include <sys/time.h>
-#ifdef HPUX
-#include <sys/io.h>
-#endif
-
-//////////////////////////////////////////////////////////////////////////////////
 #include "MultiBody.h"
-#include "Transformation.h"
+
 #include <numeric>
 
-#define MAXCONTACT  10
+//#include "Transformation.h"
+//using namespace mathtool;
 
-//
-// Global variable to be used for contact checking by C-Space Toolkit
-//
+#define MAXCONTACT  10
 
 //===================================================================
 //  ComputePUMAInverseKinematics
@@ -32,9 +15,10 @@ void MultiBody::ComputePUMAInverseKinematics(Transformation & _t, double _a2, do
     //---------------------------------------------------------------
     //  Compute theta1
     //---------------------------------------------------------------
-    double root = sqrt(_t.m_position.getX()*_t.m_position.getX() + _t.m_position.getY()*_t.m_position.getY() - _d3*_d3);
-    theta[0][0] = atan2(_t.m_position.getY(), _t.m_position.getX()) - atan2(_d3, root);
-    theta[4][0] = atan2(_t.m_position.getY(), _t.m_position.getX()) - atan2(_d3, root);
+    const Vector3d& pos = _t.translation();
+    double root = sqrt(pos[0]*pos[0] + pos[1]*pos[1] - _d3*_d3);
+    theta[0][0] = atan2(pos[1], pos[0]) - atan2(_d3, root);
+    theta[4][0] = atan2(pos[1], pos[0]) - atan2(_d3, root);
     int i;
     for (i=1; i < 4; i++) {
         theta[i][0] = theta[0][0];
@@ -43,7 +27,7 @@ void MultiBody::ComputePUMAInverseKinematics(Transformation & _t, double _a2, do
     //---------------------------------------------------------------
     //  Compute theta3
     //---------------------------------------------------------------
-    double K = (_t.m_position.getX()*_t.m_position.getX() + _t.m_position.getY()*_t.m_position.getY() + _t.m_position.getZ()*_t.m_position.getZ() - _a2*_a2 - _a3*_a3 - _d3*_d3 - _d4*_d4)/(2*_a2);
+    double K = (pos.normsqr() - _a2*_a2 - _a3*_a3 - _d3*_d3 - _d4*_d4)/(2*_a2);
     theta[0][2] = atan2(_a3, _d4) - atan2(K,  sqrt(_a3*_a3 + _d4*_d4 - K*K));
     theta[1][2] = theta[0][2];
     theta[2][2] = atan2(_a3, _d4) - atan2(K, -sqrt(_a3*_a3 + _d4*_d4 - K*K));
@@ -61,17 +45,17 @@ void MultiBody::ComputePUMAInverseKinematics(Transformation & _t, double _a2, do
         c1 = cos(theta[i][0]);
         s3 = sin(theta[i][2]);
         c3 = cos(theta[i][2]);
-        theta[i][1] = atan2((-_a3 - _a2*c3)*_t.m_position.getZ() - (c1*_t.m_position.getX() + s1*_t.m_position.getY())*(_d4 - _a2*s3),
-                              (_a2*s3 - _d4)*_t.m_position.getZ() - (_a3 + _a2*c3)*(c1*_t.m_position.getX() + s1*_t.m_position.getY()))
+        theta[i][1] = atan2((-_a3 - _a2*c3)*pos[2] - (c1*pos[0] + s1*pos[1])*(_d4 - _a2*s3),
+                              (_a2*s3 - _d4)*pos[2] - (_a3 + _a2*c3)*(c1*pos[0] + s1*pos[1]))
                         - theta[i][2];
         theta[i+1][1] = theta[i][1];
     }
     //---------------------------------------------------------------
     //  Compute theta4
     //---------------------------------------------------------------
-    double r13 = _t.m_orientation.matrix[1][3];
-    double r23 = _t.m_orientation.matrix[2][3];
-    double r33 = _t.m_orientation.matrix[3][3];
+    double r13 = _t.rotation().matrix()[1][3];
+    double r23 = _t.rotation().matrix()[2][3];
+    double r33 = _t.rotation().matrix()[3][3];
     double s23, c23;
     for (i=0; i < 8; i += 2) {
         s1 = sin(theta[i][0]);
@@ -101,9 +85,9 @@ void MultiBody::ComputePUMAInverseKinematics(Transformation & _t, double _a2, do
     //  Compute theta6
     //---------------------------------------------------------------
     double s5, c5;
-    double r11 = _t.m_orientation.matrix[1][1];
-    double r21 = _t.m_orientation.matrix[2][1];
-    double r31 = _t.m_orientation.matrix[3][1];
+    double r11 = _t.rotation().matrix()[1][1];
+    double r21 = _t.rotation().matrix()[2][1];
+    double r31 = _t.rotation().matrix()[3][1];
     for (i=0; i < 8; i += 2) {
         s1 = sin(theta[i][0]);
         c1 = cos(theta[i][0]);
@@ -130,12 +114,7 @@ MultiBody::MultiBody()
 MultiBody::~MultiBody() 
 {}
 
-void MultiBody::Initialize(string _modelFile, vector<double> _where, BodyType _type){
-  if (_where.size() < 6){
-    cerr << "Error attempting to create a multibody with less than 6 dofs. Num dofs: " << _where.size() << endl;
-    exit(1);
-  }
-
+void MultiBody::Initialize(string _modelFile, const Transformation& _where, BodyType _type){
   m_bodyType = _type;
 
   if (IsActive() || IsSurface()){
@@ -145,7 +124,6 @@ void MultiBody::Initialize(string _modelFile, vector<double> _where, BodyType _t
 
   if (IsPassive()){
     //create a fixed body
-
     FixedBody fix(this);
     fix.SetFileName(_modelFile);
     fix.Read(_modelFile);
@@ -351,7 +329,7 @@ bool MultiBody::IsManipulator() const
 //-------------------------------------------------------------------
 //  GetCenterOfMass
 //-------------------------------------------------------------------
-Vector3D MultiBody::GetCenterOfMass()
+Vector3d MultiBody::GetCenterOfMass()
 {
   if(!CenterOfMassAvailable) 
     ComputeCenterOfMass();
@@ -624,7 +602,7 @@ void MultiBody::Write(ostream & _os)
 void MultiBody::ConfigureJoint(double * _s, int _dof) 
 {
   for(size_t i = 0; i<(size_t)_dof; ++i)
-    freeBody[i]->GetForwardConnection(0).GetDHparameters().theta = _s[i];
+    freeBody[i]->GetForwardConnection(0).GetDHparameters().m_theta = _s[i];
 }
 
 //===================================================================
@@ -643,7 +621,7 @@ void MultiBody::ComputeCenterOfMass()
   } 
   else
   {
-    Vector3D sum(0,0,0);
+    Vector3d sum(0,0,0);
     for(vector<shared_ptr<FreeBody> >::iterator I = freeBody.begin(); I != freeBody.end(); ++I)
       sum = sum + (*I)->GetCenterOfMass();
     for(vector<shared_ptr<FixedBody> >::iterator I = fixedBody.begin(); I != fixedBody.end(); ++I)
@@ -785,7 +763,7 @@ struct second_index_equals : public unary_function<vertex_index_distance, bool>
 
 //==================================================================
 //Polygonal Approximation
-void MultiBody::PolygonalApproximation(vector<Vector3D>& result)
+void MultiBody::PolygonalApproximation(vector<Vector3d>& result)
 {
   result.clear();
 
@@ -796,13 +774,13 @@ void MultiBody::PolygonalApproximation(vector<Vector3D>& result)
     //rigid body, return the line between the first 4 vertices and the second 4 vertices of the world bounding box
     GMSPolyhedron bbox = this->GetFreeBody(0)->GetWorldBoundingBox();
 
-    Vector3D joint(0, 0, 0);
+    Vector3d joint(0, 0, 0);
     for(size_t i = 0; i<4; ++i)
       joint = joint + bbox.m_vertexList[i];
     joint = joint / 4;
     result.push_back(joint);
 
-    joint = Vector3D(0, 0, 0);
+    joint = Vector3d(0, 0, 0);
     for(size_t i = 4; i<8; ++i)
       joint = joint + bbox.m_vertexList[i];
     joint = joint / 4;
@@ -826,18 +804,18 @@ void MultiBody::PolygonalApproximation(vector<Vector3D>& result)
           vector<vertex_index_distance> distances;
           for(size_t j=0; j<first_vertices.size(); ++j)
             for(size_t k=0; k<second_vertices.size(); ++k)
-              distances.push_back(vertex_index_distance(j, k, (first_vertices[j] - second_vertices[k]).magnitude()));
+              distances.push_back(vertex_index_distance(j, k, (first_vertices[j] - second_vertices[k]).norm()));
           vector<vertex_index_distance>::const_iterator min = min_element(distances.begin(), distances.end());
           closest_distances.push_back(*min);
           //mark vertices as used by setting to MAX_INT and -MAX_INT
-          first_vertices[min->first_index] = Vector3D(MAX_INT, MAX_INT, MAX_INT);
-          second_vertices[min->second_index] = Vector3D(-MAX_INT, -MAX_INT, -MAX_INT);
+          first_vertices[min->first_index] = Vector3d(MAX_INT, MAX_INT, MAX_INT);
+          second_vertices[min->second_index] = Vector3d(-MAX_INT, -MAX_INT, -MAX_INT);
         }
 
         //first body in linkage, add the endpoint of linkage 1 that is not closest to linkage 2
         if(i == 0) 
         {
-          Vector3D other_joint(0, 0, 0);
+          Vector3d other_joint(0, 0, 0);
           int num = 0;
           for(size_t k = 0; num<4 && k<first_bbox.m_vertexList.size(); ++k)
             if(find_if(closest_distances.begin(), closest_distances.end(), first_index_equals(k)) == closest_distances.end()) 
@@ -850,7 +828,7 @@ void MultiBody::PolygonalApproximation(vector<Vector3D>& result)
         }
 
         //compute the joint as the closest 4 vertices from linkage 1 and linkage 2
-        Vector3D joint(0, 0, 0);
+        Vector3d joint(0, 0, 0);
         for(size_t k = 0; k<4; ++k)
           joint = joint + first_bbox.m_vertexList[closest_distances[k].first_index];
         for(size_t k = 0; k<4; ++k)
@@ -861,7 +839,7 @@ void MultiBody::PolygonalApproximation(vector<Vector3D>& result)
         //last body in linkage, add endpoint of linkage 2 that is not closest to linkage 1
         if(i == nfree-2)
         {
-          Vector3D other_joint(0, 0, 0);
+          Vector3d other_joint(0, 0, 0);
           int num = 0;
           for(size_t k = 0; num<4 && k<second_bbox.m_vertexList.size(); ++k)
             if(find_if(closest_distances.begin(), closest_distances.end(), second_index_equals(k)) == closest_distances.end()) 

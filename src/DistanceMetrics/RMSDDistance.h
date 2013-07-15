@@ -17,8 +17,8 @@ class RMSDDistance : public DistanceMetricMethod<MPTraits> {
     virtual double Distance(Environment* _env, const CfgType& _c1, const CfgType& _c2);
 
   protected:
-    virtual vector<Vector3D> GetCoordinatesForRMSD(const CfgType& _c, Environment* _env);
-    double RMSD(vector<Vector3D> _x, vector<Vector3D> _y, int _dim);
+    virtual vector<Vector3d> GetCoordinatesForRMSD(const CfgType& _c, Environment* _env);
+    double RMSD(vector<Vector3d> _x, vector<Vector3d> _y, int _dim);
 
   friend class SimilarStructureSampler<MPTraits>;
 };
@@ -39,26 +39,26 @@ RMSDDistance<MPTraits>::~RMSDDistance() {
 }
 
 template<class MPTraits>
-vector<Vector3D>
+vector<Vector3d>
 RMSDDistance<MPTraits>::GetCoordinatesForRMSD(const CfgType& _c, Environment* _env) {
   _c.ConfigEnvironment(_env);
-  vector<Vector3D> coordinates;
+  vector<Vector3d> coordinates;
   for(int i=0; i< _env->GetMultiBody(_c.GetRobotIndex())->GetFreeBodyCount(); ++i)
-    coordinates.push_back(_env->GetMultiBody(_c.GetRobotIndex())->GetFreeBody(i)->WorldTransformation().m_position); 
+    coordinates.push_back(_env->GetMultiBody(_c.GetRobotIndex())->GetFreeBody(i)->WorldTransformation().translation()); 
   return coordinates;
 }
 
 template<class MPTraits>
 double
 RMSDDistance<MPTraits>::Distance(Environment* _env, const CfgType& _c1, const CfgType& _c2) {
-  vector<Vector3D> x = GetCoordinatesForRMSD(_c1, _env);
-  vector<Vector3D> y = GetCoordinatesForRMSD(_c2, _env);
+  vector<Vector3d> x = GetCoordinatesForRMSD(_c1, _env);
+  vector<Vector3d> y = GetCoordinatesForRMSD(_c2, _env);
   return RMSD(x,y,x.size());
 }
 
 template<class MPTraits>
 double
-RMSDDistance<MPTraits>::RMSD(vector<Vector3D> _x, vector<Vector3D> _y, int _dim) {
+RMSDDistance<MPTraits>::RMSD(vector<Vector3d> _x, vector<Vector3d> _y, int _dim) {
   if((int)_x.size() < _dim || (int)_y.size() < _dim || _dim <= 0) {
     cout << "Error in MyDistanceMetrics::RMSD, not enough data in vectors" << endl;
     exit(101);
@@ -70,7 +70,7 @@ RMSDDistance<MPTraits>::RMSD(vector<Vector3D> _x, vector<Vector3D> _y, int _dim)
 
   //first step, remove any translation between x and y.
   int n;
-  Vector3D sumx(0,0,0), sumy(0,0,0);
+  Vector3d sumx(0,0,0), sumy(0,0,0);
   for(n=0; n<_dim; ++n) {
     sumx = sumx + _x[n];
     sumy = sumy + _y[n];
@@ -97,18 +97,18 @@ RMSDDistance<MPTraits>::RMSD(vector<Vector3D> _x, vector<Vector3D> _y, int _dim)
   //                     e     f    a[2] };
   //Now, decide this parameters.
   //using a matrix here would be clearer, simply s = r.transpose()*R;
-  Vector3D col[3];
+  Vector3d col[3];
   double a[3], d, e, f;
   double detR; // determinant of r, we need its sign later.
   for(int i=0; i<3; ++i) {
-    col[i] = Vector3D(r[0][i], r[1][i], r[2][i]);
+    col[i] = Vector3d(r[0][i], r[1][i], r[2][i]);
     a[i] = col[i].normsqr();
   }
-  d = col[0].dotProduct(col[1]);
-  e = col[0].dotProduct(col[2]);
-  f = col[1].dotProduct(col[2]);
-  Vector3D col1X2 = col[1].crossProduct(col[2]);
-  detR = col[0].dotProduct(col1X2);
+  d = col[0]*col[1];
+  e = col[0]*col[2];
+  f = col[1]*col[2];
+  Vector3d col1X2 = col[1] % col[2];
+  detR = col[0]*col1X2;
 
   // now solve for the eigenvalues of the matrix, since we
   // know we have three non-negative eigenvalue, we can directly

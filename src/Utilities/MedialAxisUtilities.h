@@ -302,7 +302,7 @@ ClearanceUtility<MPTraits>::ExactCollisionInfo(CfgType& _cfg, CfgType& _clrCfg, 
     }
   }
  
-  Vector3D clrDir = _cdInfo.m_objectPoint - _cdInfo.m_robotPoint;
+  Vector3d clrDir = _cdInfo.m_objectPoint - _cdInfo.m_robotPoint;
   CfgType stepDir;
   double factor = 0;
   for(size_t i=0; i<_clrCfg.DOF(); i++) {
@@ -955,7 +955,7 @@ MedialAxisUtility<MPTraits>::FindMedialAxisBorderExact(typename MPTraits::CfgTyp
       if(this->m_debug) cout << "TMP Cfg: " << tmpCfg;
       CfgType tmpTransCfg;
       if(this->CollisionInfo(tmpCfg, tmpTransCfg, _bb, tmpInfo)) {
-        Vector3D transDir = tmpInfo.m_objectPoint - _prevInfo.m_objectPoint;
+        Vector3d transDir = tmpInfo.m_objectPoint - _prevInfo.m_objectPoint;
         if(this->m_debug) cout << " obst: " << tmpInfo.m_nearestObstIndex;
         double tmpDist = 0.0;
         for(size_t i=0; i<_transCfg.PosDOF(); i++)
@@ -1314,7 +1314,7 @@ SurfaceMedialAxisUtility<MPTraits>::GetClearance2DSurf
   if(this->m_debug) cout << " getting world transformation. num fixed bodies: " << _mb->GetFixedBodyCount() << endl; 
   Transformation& trans = _mb->GetFixedBody(0)->WorldTransformation();
   //check roughly <- this optimization should be added!!!
-  Vector3D mbCenter = _mb->GetFixedBody(0)->GetCenterOfMass();
+  Vector3d mbCenter = _mb->GetFixedBody(0)->GetCenterOfMass();
   Point2d tPt(mbCenter[0],mbCenter[2]);
   double* bbx = _mb->GetFixedBody(0)->GetBoundingBox();
   double rad2d = sqrt(pow(bbx[1]-bbx[0],2.0) + pow(bbx[5]-bbx[4],2.0));
@@ -1322,14 +1322,14 @@ SurfaceMedialAxisUtility<MPTraits>::GetClearance2DSurf
   if( diffWRadius>_clear) return minDis;
 
   GMSPolyhedron& gmsPoly = _mb->GetFixedBody(0)->GetWorldPolyhedron();
-  vector<Vector3D>& Geo=gmsPoly.GetVertexList();
+  vector<Vector3d>& Geo=gmsPoly.GetVertexList();
   vector< pair<int,int> >& boundaryLines=gmsPoly.GetBoundaryLines();
   if(this->m_debug) cout << " boundary lines size: " << boundaryLines.size() << " transformation: " << trans << endl;
   for(int i=0; i<(int)boundaryLines.size(); i++) {
     int id1 = boundaryLines[i].first;
     int id2 = boundaryLines[i].second;
-    Vector3D v1 = Geo[id1];
-    Vector3D v2 = Geo[id2];
+    Vector3d v1 = Geo[id1];
+    Vector3d v2 = Geo[id2];
     Point2d p1(v1[0],v1[2]);
     Point2d p2(v2[0],v2[2]);
     Point2d c;

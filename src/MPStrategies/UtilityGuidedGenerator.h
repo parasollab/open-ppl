@@ -22,7 +22,7 @@ struct ApproximateCSpaceModel {
   double FreeProbability(const CfgType& _c, int _k) {
     sort(m_modelNodes.begin(), m_modelNodes.end(), 
 	 DistanceCompareFirst<MPTraits, pair<CfgType,double> >(m_env, m_dm, _c));
-    int size = (int)min(_k, m_modelNodes.size());
+    int size = min<int>(_k, m_modelNodes.size());
     if(size == 0)
       return 0.0;
     else

@@ -16,7 +16,7 @@
 Contact::Contact() {
 }
 
-Contact::Contact(Body *_body1,  Body * _body2, Vector3D & _position, Vector3D & _normal1, Vector3D & _normal2) {
+Contact::Contact(Body *_body1,  Body * _body2, Vector3d & _position, Vector3d & _normal1, Vector3d & _normal2) {
   body[0] = _body1;
   body[1] = _body2;
   position = _position;
@@ -33,7 +33,7 @@ Contact::~Contact() {
 }
 
 void Contact::ComputeTangential(){
-  Vector3D direction;
+  Vector3d direction;
   double mat[3][3];
 
     // Get the rotation matrix for 90 degree w.r.t y-axis
@@ -51,7 +51,7 @@ void Contact::ComputeTangential(){
 //  to get the orthogonal
 //===================================================================
 void Contact::ComputeOrthogonal(){
-  Vector3D direction;
+  Vector3d direction;
   double mat[3][3];
 
     // Get the rotation matrix for 90 degree w.r.t x-axis
@@ -72,20 +72,20 @@ void Contact::ComputeTransform(){
   double mat[3][3];
 
 
-  mat[0][0] = normal[0].getX();  mat[1][0] = normal[0].getY();  mat[2][0] = normal[0].getZ();
-  mat[0][1] = tangential[0].getX();  mat[1][1] = tangential[0].getY();  mat[2][1] = tangential[0].getZ();
-  mat[0][2] = orthogonal[0].getX();  mat[1][2] = orthogonal[0].getY();  mat[2][2] = orthogonal[0].getZ();
+  mat[0][0] = normal[0][0];  mat[1][0] = normal[0][1];  mat[2][0] = normal[0][2];
+  mat[0][1] = tangential[0][0];  mat[1][1] = tangential[0][1];  mat[2][1] = tangential[0][2];
+  mat[0][2] = orthogonal[0][0];  mat[1][2] = orthogonal[0][1];  mat[2][2] = orthogonal[0][2];
 
   // Get the transformation (w.r.t world) for the second body
   Orientation orientation(mat);
-  UtransformToContact[0] = Transformation(orientation, position);
+  UtransformToContact[0] = Transformation(position, orientation);
 
 
-  mat[0][0] = normal[1].getX();  mat[1][0] = normal[1].getY();  mat[2][0] = normal[1].getZ();
-  mat[0][1] = tangential[1].getX();  mat[1][1] = tangential[1].getY();  mat[2][1] = tangential[1].getZ();
-  mat[0][2] = orthogonal[1].getX();  mat[1][2] = orthogonal[1].getY();  mat[2][2] = orthogonal[1].getZ();
+  mat[0][0] = normal[1][0];  mat[1][0] = normal[1][1];  mat[2][0] = normal[1][2];
+  mat[0][1] = tangential[1][0];  mat[1][1] = tangential[1][1];  mat[2][1] = tangential[1][2];
+  mat[0][2] = orthogonal[1][0];  mat[1][2] = orthogonal[1][1];  mat[2][2] = orthogonal[1][2];
 
   // Get the transformation (w.r.t world) for the first body
   orientation = Orientation(mat);
-  UtransformToContact[1] = Transformation(orientation, position);
+  UtransformToContact[1] = Transformation(position, orientation);
 }

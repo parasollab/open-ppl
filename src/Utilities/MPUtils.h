@@ -16,7 +16,6 @@
 using boost::shared_ptr;
 
 #include "Vector.h"
-#include "Point.h"
 using namespace mathtool;
 
 #include "IOUtils.h"
@@ -31,7 +30,6 @@ using namespace mathtool;
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 
-#define TWOPI           (PI*2.0)
 #define DEGTORAD (PI/180.0)
 #define RADTODEG (180.0/PI)
 

@@ -265,7 +265,7 @@ class SimilarStructureSampler : public SamplerMethod<MPTraits>
   vector<double> HalfRotationEffects(const CfgType &_cfg, Environment *_env) {
     RMSDDistance<MPTraits> rmsd;
     
-    const vector<Vector3D> original_coords = rmsd.GetCoordinatesForRMSD(_cfg, _env);
+    const vector<Vector3d> original_coords = rmsd.GetCoordinatesForRMSD(_cfg, _env);
     const vector<double> original_joints = _cfg.GetData();
     
     vector<double> altered_joints = original_joints;
@@ -277,7 +277,7 @@ class SimilarStructureSampler : public SamplerMethod<MPTraits>
 
       CfgType altered_cfg;
       altered_cfg.SetData(altered_joints);
-      const vector<Vector3D> altered_coords = rmsd.GetCoordinatesForRMSD(altered_cfg, _env);
+      const vector<Vector3d> altered_coords = rmsd.GetCoordinatesForRMSD(altered_cfg, _env);
       
       if(m_doAlignment) { 
         effects[j] = rmsd.RMSD(original_coords, altered_coords, original_coords.size()); 

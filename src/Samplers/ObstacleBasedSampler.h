@@ -192,21 +192,21 @@ class ObstacleBasedSampler : public SamplerMethod<MPTraits> {
 
     // Returns a CfgType at the center of mass of the MultiBody
     CfgType ChooseCenterOfMass(shared_ptr<MultiBody> _mBody) {
-      Vector3D x = _mBody->GetCenterOfMass();
+      Vector3d x = _mBody->GetCenterOfMass();
       return GetCfgWithParams(x);
     }
 
     // Returns a CfgType at a random vertex of the MultiBody
     CfgType ChooseRandomVertex(shared_ptr<MultiBody> _mBody, bool _isFreeBody) { 
       GMSPolyhedron polyhedron = GetPolyhedron(_mBody, _isFreeBody);
-      Vector3D x = polyhedron.m_vertexList[(int)(DRand()*polyhedron.m_vertexList.size())];
+      Vector3d x = polyhedron.m_vertexList[(int)(DRand()*polyhedron.m_vertexList.size())];
       return GetCfgWithParams(x);
     }
 
     // Returns a point inside the triangle determined by the vectors
-    Vector3D ChoosePointOnTriangle(Vector3D _p, Vector3D _q, Vector3D _r) {
-      Vector3D u = _q - _p; // From _p to _q
-      Vector3D v = _r - _p; // From _p to _r
+    Vector3d ChoosePointOnTriangle(Vector3d _p, Vector3d _q, Vector3d _r) {
+      Vector3d u = _q - _p; // From _p to _q
+      Vector3d v = _r - _p; // From _p to _r
       double s = DRand(); 
       double t = DRand();
       // Keep point inside the triangle
@@ -231,10 +231,10 @@ class ObstacleBasedSampler : public SamplerMethod<MPTraits> {
       // Choose the triangle of the MultiBody with that index
       GMSPolygon *poly = &polyhedron.m_polygonList[index];
       // Choose a random point in that triangle
-      Vector3D p = polyhedron.m_vertexList[poly->m_vertexList[0]];
-      Vector3D q = polyhedron.m_vertexList[poly->m_vertexList[1]];
-      Vector3D r = polyhedron.m_vertexList[poly->m_vertexList[2]];
-      Vector3D x = ChoosePointOnTriangle(p, q, r);
+      Vector3d p = polyhedron.m_vertexList[poly->m_vertexList[0]];
+      Vector3d q = polyhedron.m_vertexList[poly->m_vertexList[1]];
+      Vector3d r = polyhedron.m_vertexList[poly->m_vertexList[2]];
+      Vector3d x = ChoosePointOnTriangle(p, q, r);
       return GetCfgWithParams(x);
     }
 
@@ -243,10 +243,10 @@ class ObstacleBasedSampler : public SamplerMethod<MPTraits> {
       GMSPolyhedron polyhedron = GetPolyhedron(_mBody, _isFreeBody);
       // Choose a random triangle
       GMSPolygon *poly = &polyhedron.m_polygonList[(int)(DRand()*polyhedron.m_polygonList.size())];
-      Vector3D p = polyhedron.m_vertexList[poly->m_vertexList[0]];
-      Vector3D q = polyhedron.m_vertexList[poly->m_vertexList[1]];
-      Vector3D r = polyhedron.m_vertexList[poly->m_vertexList[2]];
-      Vector3D x = ChoosePointOnTriangle(p, q, r);
+      Vector3d p = polyhedron.m_vertexList[poly->m_vertexList[0]];
+      Vector3d q = polyhedron.m_vertexList[poly->m_vertexList[1]];
+      Vector3d r = polyhedron.m_vertexList[poly->m_vertexList[2]];
+      Vector3d x = ChoosePointOnTriangle(p, q, r);
       return GetCfgWithParams(x);
     }
 
@@ -328,7 +328,7 @@ class ObstacleBasedSampler : public SamplerMethod<MPTraits> {
   private:
     
     // Returns a CfgType with the coordinates specified in the vector and no rotation
-    CfgType GetCfgWithParams(Vector3D& _v) {
+    CfgType GetCfgWithParams(Vector3d& _v) {
       CfgType tmp;
       for(int i = 0; i < 3; i++)
         tmp[i] = _v[i];

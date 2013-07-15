@@ -141,14 +141,14 @@ ConnectNeighboringSurfaces<MPTraits>::Connect(RoadmapType* _rm, StatClass& _stat
     if(this->m_debug) cout << "ConnectNeighboringSurfaces::Connect(...) - number fixed bodies: " << mbSurf1->GetFixedBodyCount() << " number free bodies: " << mbSurf1->GetFreeBodyCount() << endl;
     if( find(m_surfacesToIgnore.begin(),m_surfacesToIgnore.end(), iSurfName) != m_surfacesToIgnore.end() ) continue;
     GMSPolyhedron& mbPoly1 =  mbSurf1->GetFixedBody(0)->GetWorldPolyhedron();
-    vector<Vector3D>& ptsSurface1 = mbPoly1.GetVertexList();
+    vector<Vector3d>& ptsSurface1 = mbPoly1.GetVertexList();
     vector< pair<int,int> >& blines1 =  mbPoly1.GetBoundaryLines();
 
     if(this->m_debug) cout << " Number of boundary lines: " << blines1.size() << endl;
     for(size_t bl_i=0; bl_i<blines1.size(); bl_i++) {
       pair<int,int> line = blines1[bl_i];
-      Vector3D v13d = ptsSurface1[line.first];
-      Vector3D v23d = ptsSurface1[line.second];
+      Vector3d v13d = ptsSurface1[line.first];
+      Vector3d v23d = ptsSurface1[line.second];
       Point3d p13d(v13d[0],v13d[1],v13d[2]);
       Point3d p23d(v23d[0],v23d[1],v23d[2]);
       if(this->m_debug) cout << " edge: p1(3d): " << p13d << " p2(3d): " << p23d << " m_k: " << m_k << endl;

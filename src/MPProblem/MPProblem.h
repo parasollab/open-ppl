@@ -117,7 +117,7 @@ class MPProblem
     //_modelFileName: a string specifying the path to the .obj file to be added as an obstacle
     //_where: 6 dofs for obstacle placement: (x, y, z, rotation about X, rotation about Y, rotation about Z)
     //return value: the obstacle's index in the Environment's m_otherMultiBodies on success, -1 on failure
-    int AddObstacle(string _modelFileName, const vector<double>& _where);
+    int AddObstacle(string _modelFileName, const Transformation& _where);
 
     //RemoveObstacleAt
     //a wrapper call to remove a multibody from the environment
@@ -439,7 +439,7 @@ MPProblem<MPTraits>::GetSelectedCDTypes() const{
 
 template<class MPTraits>
 int
-MPProblem<MPTraits>::AddObstacle(string _modelFileName, const vector<double>& _where){
+MPProblem<MPTraits>::AddObstacle(string _modelFileName, const Transformation& _where){
   if(m_environment != NULL){
     vector<cd_predefined> cdtypes = GetSelectedCDTypes();
     int index =  m_environment->AddObstacle(_modelFileName, _where, cdtypes);

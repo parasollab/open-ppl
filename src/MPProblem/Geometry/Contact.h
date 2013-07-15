@@ -1,21 +1,9 @@
-// $Id$
+#ifndef CONTACT_H_
+#define CONTACT_H_
 
-/**@file Contact.h
-   @author Aaron Michalk
-   @date 2/25/98 
-*/
+#include <Transformation.h>
+using namespace mathtool;
 
-///////////////////////////////////////////////////////////////////////////////////////////
-
-#ifndef Contact_h
-#define Contact_h
-
-///////////////////////////////////////////////////////////////////////////////////////////
-//Include OBPRM headers
-#include "Transformation.h"
-
-///////////////////////////////////////////////////////////////////////////////////////////
-// Forward declaration
 class Body;
 
 class Contact {
@@ -34,16 +22,16 @@ public:
     //-----------------------------------------------------------
     //@{
     Contact();
-    Contact(Body * _body1,  Body * _body2, Vector3D & _position, Vector3D & _normal1, Vector3D & _normal2);
+    Contact(Body * _body1,  Body * _body2, Vector3d & _position, Vector3d & _normal1, Vector3d & _normal2);
     ~Contact();
     //@}
 
     Body *GetBody(int _index);
     Transformation & GetUtransformToContact(int _index);
-    Vector3D & GetPosition();
-    Vector3D & GetNormal(int _index);
-    Vector3D & GetTangential(int _index);
-    Vector3D & GetOrthogonal(int _index);
+    Vector3d & GetPosition();
+    Vector3d & GetNormal(int _index);
+    Vector3d & GetTangential(int _index);
+    Vector3d & GetOrthogonal(int _index);
     void ComputeTangential();
     void ComputeOrthogonal();
     void ComputeTransform();
@@ -65,10 +53,10 @@ private:
     //-----------------------------------------------------------
     Body *body[2];  // Body identities
     Transformation UtransformToContact[2];
-    Vector3D position;
-    Vector3D normal[2];
-    Vector3D tangential[2];
-    Vector3D orthogonal[2];
+    Vector3d position;
+    Vector3d normal[2];
+    Vector3d tangential[2];
+    Vector3d orthogonal[2];
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////
@@ -87,21 +75,20 @@ inline Transformation & Contact::GetUtransformToContact(int _index){
   return UtransformToContact[_index];
 }
 
-inline Vector3D & Contact::GetPosition(){
+inline Vector3d & Contact::GetPosition(){
   return position;
 }
 
-inline Vector3D & Contact::GetNormal(int _index){
+inline Vector3d & Contact::GetNormal(int _index){
   return normal[_index];
 }
 
-inline Vector3D & Contact::GetTangential(int _index){
+inline Vector3d & Contact::GetTangential(int _index){
   return tangential[_index];
 }
 
-inline Vector3D & Contact::GetOrthogonal(int _index){
+inline Vector3d & Contact::GetOrthogonal(int _index){
   return orthogonal[_index];
 }
-
 
 #endif

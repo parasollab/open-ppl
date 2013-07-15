@@ -51,12 +51,11 @@ LIBS =  ${PMPL_LIB} ${UTILS_LIB} ${MPNN_LIB} ${STAPL_LIB}
 # targets
 default_target: libs
 
-utils: stapl_lib cd_libs xml_libs nn_libs mathtool_lib modelloader_lib kmeans_lib 
+utils: stapl_lib cd_libs xml_libs nn_libs modelloader_lib kmeans_lib 
 stapl_lib: ${STAPL_LIBFILE}
 cd_libs: ${CD_LIBFILE}
 xml_libs: ${XML_LIBFILE}
 nn_libs: ${MPNN_LIBFILE}
-mathtool_lib: ${MATHTOOL_LIBFILE}
 modelloader_lib: ${MODELLOADER_LIBFILE}
 kmeans_lib: ${KMEANS_LIBFILE}
 

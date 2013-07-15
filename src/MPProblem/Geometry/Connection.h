@@ -10,16 +10,17 @@
 #ifndef Connection_h
 #define Connection_h
 
-#include "MPProblem/Geometry/DHparameters.h"
-#include "MPProblem/Geometry/Transformation.h"
-#include "MPProblem/Robot.h"
-#include "boost/shared_ptr.hpp"
+#include <boost/shared_ptr.hpp>
 using boost::shared_ptr;
 
-/////////////////////////////////////////////////////////////////////
+#include <Transformation.h>
+using namespace mathtool;
+
+#include "MPProblem/Geometry/DHparameters.h"
+#include "MPProblem/Robot.h"
+
 class Body;
 class MultiBody;
-
 
 class Connection {
   public:
@@ -40,17 +41,24 @@ class Connection {
      */
     bool IsFirstBody(const shared_ptr<Body>& _body) const {return _body == m_bodies[0];}
 
+    //connection index
+    size_t GetGlobalIndex() const {return m_globalIndex;}
+    
+    //connection type and limits
+    JointType GetConnectionType() const {return m_jointType;}
+    const pair<double, double>& GetJointLimits(int _i) const {return m_jointLimits[_i];}
+    
+    //body indices
     shared_ptr<Body> GetPreviousBody() {return m_bodies[0];} 
     size_t GetPreviousBodyIndex() {return m_bodyIndices.first;} 
     shared_ptr<Body> GetNextBody() {return m_bodies[1];}
     size_t GetNextBodyIndex() {return m_bodyIndices.second;} 
-    JointType GetConnectionType() const {return m_jointType;}
+    
+    //Joint transformations
     DHparameters& GetDHparameters() {return m_dhParameters;}
-    Transformation& GetTransformationToBody2() {return m_transformationToBody2;}
-    Transformation& GetTransformationToDHFrame() {return m_transformationToDHFrame;}
-    const pair<double, double>& GetJointLimits(int _i) const {return m_jointLimits[_i];}
-
-    size_t GetGlobalIndex() const {return m_globalIndex;}
+    const DHparameters& GetDHparameters() const {return m_dhParameters;}
+    const Transformation& GetTransformationToBody2() const {return m_transformationToBody2;}
+    const Transformation& GetTransformationToDHFrame() const {return m_transformationToDHFrame;}
 
     friend ostream& operator<<(ostream& _os, const Connection& _c);
     friend istream& operator>>(istream& _is, Connection& _c);

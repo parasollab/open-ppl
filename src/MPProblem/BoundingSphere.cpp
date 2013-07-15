@@ -41,18 +41,18 @@ BoundingSphere::GetRandomPoint() const {
 }
 
 bool
-BoundingSphere::InBoundary(const Vector3D& _p) const {
+BoundingSphere::InBoundary(const Vector3d& _p) const {
   return (_p-m_center).norm() < m_radius;
 }
 
 double
-BoundingSphere::GetClearance(const Vector3D& _p) const {
+BoundingSphere::GetClearance(const Vector3d& _p) const {
   return m_radius - (_p - m_center).norm();
 }
 
-Vector3D
-BoundingSphere::GetClearancePoint(const Vector3D& _p) const {
-  Vector3D v = (_p - m_center).normalize();
+Vector3d
+BoundingSphere::GetClearancePoint(const Vector3d& _p) const {
+  Vector3d v = (_p - m_center).normalize();
   return v + m_center;
 }
 
@@ -78,7 +78,7 @@ BoundingSphere::ResetBoundary(vector<pair<double, double> >& _obstBBX, double _d
 
 void
 BoundingSphere::Read(istream& _is) {
-  m_center = ReadField<Vector3D>(_is, "Center point of bounding sphere");
+  m_center = ReadField<Vector3d>(_is, "Center point of bounding sphere");
   m_radius = ReadField<double>(_is, "Radius of bounding sphere");
 }
 

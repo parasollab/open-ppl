@@ -106,7 +106,7 @@ FreeBody::ComputeWorldTransformation(std::set<int, less<int> >& visited, bool _d
       return m_worldTransformation;
     }
       
-    Transformation dh(m_backwardConnection[0].GetDHparameters());
+    Transformation dh = m_backwardConnection[0].GetDHparameters().GetTransformation();
     m_worldTransformation =
       ((FreeBody*)(m_backwardConnection[0].GetPreviousBody().get()))->ComputeWorldTransformation(visited, _debug)
       * m_backwardConnection[0].GetTransformationToDHFrame()

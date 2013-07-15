@@ -8,7 +8,7 @@
     </DistanceMetrics> 
 
     <ValidityCheckers>    
-      <CollisionDetection label="cd" method="RAPID" />
+      <CollisionDetection label="cd" method="RAPID"/>
     </ValidityCheckers>
     
     <NeighborhoodFinders>

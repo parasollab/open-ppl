@@ -2,6 +2,7 @@
 #define CDINFO_H_
 
 #include "Vector.h"
+using namespace mathtool;
 
 const double MaxDist =  1e10;
 
@@ -16,8 +17,8 @@ class CDInfo {
   bool m_retAllInfo;          ///< If this instance contains all (following) infomation.
   int m_nearestObstIndex;     ///< The index for closest obstacle
   double m_minDist;            ///< Distance between Robot and closest obstacle
-  Vector3D m_robotPoint;       ///< Closest point on Robot to closest obstacle
-  Vector3D m_objectPoint;      ///< Closest point on closest obstacle to Robot
+  Vector3d m_robotPoint;       ///< Closest point on Robot to closest obstacle
+  Vector3d m_objectPoint;      ///< Closest point on closest obstacle to Robot
   ///////////////////////////////////////////////////////////////////////////////////////////
   //for obrrt need contact information
   int m_rapidContactID1;

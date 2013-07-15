@@ -769,10 +769,10 @@ CCExpansion<MPTraits>::GetMedialAxisRay(RoadmapType* _rm, CfgType& _prev, CfgTyp
   Vector3d d = u%n;
 
   CfgType dir;
-  dir[0] = d.getX();
-  dir[1] = d.getY();
+  dir[0] = d[0];
+  dir[1] = d[1];
   if(_curr.PosDOF() == 3)
-    dir[2] = d.getZ();
+    dir[2] = d[2];
 
   UnitVec(dir);
   CfgType origin;

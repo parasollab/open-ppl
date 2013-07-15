@@ -255,7 +255,7 @@ OBRRTStrategy<MPTraits>::g2(CfgType& _near, CfgType& _dir, bool& _verifiedValid,
 
     int randIndex = (LRand() % (numBodies-1)) + 1;
     GMSPolyhedron& poly = env->GetMultiBody(randIndex)->GetFixedBody(0)->GetWorldPolyhedron();
-    vector<Vector3D>& vertexList    = poly.m_vertexList; 
+    vector<Vector3d>& vertexList    = poly.m_vertexList; 
     vector<GMSPolygon>& polygonList = poly.m_polygonList; 
     //random polygon
     int randPolyInd = LRand() % polygonList.size();
@@ -263,9 +263,9 @@ OBRRTStrategy<MPTraits>::g2(CfgType& _near, CfgType& _dir, bool& _verifiedValid,
     int v1Ind= polygonList[randPolyInd].m_vertexList[randEdgeInd];
     randEdgeInd = (randEdgeInd+1)%3;
     int v2Ind= polygonList[randPolyInd].m_vertexList[randEdgeInd];
-    Vector3D vertex1 = vertexList[v1Ind];
-    Vector3D vertex2 = vertexList[v2Ind];
-    Vector3D OV = vecScale * ( vertex1 - vertex2); //make obstacle vector
+    Vector3d vertex1 = vertexList[v1Ind];
+    Vector3d vertex2 = vertexList[v2Ind];
+    Vector3d OV = vecScale * ( vertex1 - vertex2); //make obstacle vector
     if( DRand() < 0.5 ) OV = -1.0 * OV; //half the time switch direction
 
     //apply this obstacle vector
@@ -370,7 +370,7 @@ OBRRTStrategy<MPTraits>::g5(CfgType& _near, CfgType& _dir, bool& _verifiedValid,
     }
   }
   GMSPolyhedron& poly = env->GetMultiBody(cIndex)->GetFixedBody(0)->GetWorldPolyhedron();
-  vector<Vector3D>& vertexList    = poly.m_vertexList; 
+  vector<Vector3d>& vertexList    = poly.m_vertexList; 
   vector<GMSPolygon>& polygonList = poly.m_polygonList; 
   //random polygon
   int randPolyInd = LRand() % polygonList.size();
@@ -379,9 +379,9 @@ OBRRTStrategy<MPTraits>::g5(CfgType& _near, CfgType& _dir, bool& _verifiedValid,
   int v1Ind= polygonList[randPolyInd].m_vertexList[randEdgeInd];
   randEdgeInd = (randEdgeInd+1)%3;
   int v2Ind= polygonList[randPolyInd].m_vertexList[randEdgeInd];
-  Vector3D vertex1 = vertexList[v1Ind];
-  Vector3D vertex2 = vertexList[v2Ind];
-  Vector3D OV = vecScale * ( vertex1 - vertex2); //make obstacle vector
+  Vector3d vertex1 = vertexList[v1Ind];
+  Vector3d vertex2 = vertexList[v2Ind];
+  Vector3d OV = vecScale * ( vertex1 - vertex2); //make obstacle vector
   if( DRand() < 0.5 ) OV = -1.0 * OV; //half the time switch direction
 
   //apply this obstacle vector
