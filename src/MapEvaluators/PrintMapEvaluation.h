@@ -54,20 +54,21 @@ bool
 PrintMapEvaluation<MPTraits>::operator()() {
   int numNodes = this->GetMPProblem()->GetRoadmap()->GetGraph()->get_num_vertices();
   int numEdges = this->GetMPProblem()->GetRoadmap()->GetGraph()->get_num_edges();
-  int numCollNodes = this->GetMPProblem()->GetBlockRoadmap()->GetGraph()->get_num_vertices();
-  int numCollEdges = this->GetMPProblem()->GetBlockRoadmap()->GetGraph()->get_num_edges();
-
   ostringstream osName;
   osName << m_baseName << "." << numNodes << "." << numEdges << ".map";
-  ostringstream osCollName;
-  osCollName << m_baseName << "." << numCollNodes << "." << numCollEdges << ".block.map";
-
   ofstream osMap(osName.str().c_str());
   this->GetMPProblem()->GetRoadmap()->Write(osMap, this->GetMPProblem()->GetEnvironment());
-  osMap.close();
-  ofstream osCollMap(osCollName.str().c_str());
-  this->GetMPProblem()->GetBlockRoadmap()->Write(osCollMap, this->GetMPProblem()->GetEnvironment());
-  osCollMap.close();
+  osMap.close();  
+  
+  int numCollNodes = this->GetMPProblem()->GetBlockRoadmap()->GetGraph()->get_num_vertices();
+  int numCollEdges = this->GetMPProblem()->GetBlockRoadmap()->GetGraph()->get_num_edges();
+  if(numCollNodes) {
+    ostringstream osCollName;
+    osCollName << m_baseName << "." << numCollNodes << "." << numCollEdges << ".block.map";
+    ofstream osCollMap(osCollName.str().c_str());
+    this->GetMPProblem()->GetBlockRoadmap()->Write(osCollMap, this->GetMPProblem()->GetEnvironment());
+    osCollMap.close();
+  }
 
   return true;
 }

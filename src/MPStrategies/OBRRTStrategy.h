@@ -23,8 +23,7 @@ class OBRRTStrategy : public BasicRRTStrategy<MPTraits> {
     typedef typename MPProblemType::NeighborhoodFinderPointer NeighborhoodFinderPointer;
 
     OBRRTStrategy();
-    OBRRTStrategy(MPProblemType* _problem, XMLNodeReader& _node);
-    virtual ~OBRRTStrategy() {}
+    OBRRTStrategy(MPProblemType* _problem, XMLNodeReader& _node, bool _parse = true, bool _warn = true);
 
     virtual void ParseXML(XMLNodeReader& _node);
 
@@ -54,10 +53,13 @@ OBRRTStrategy<MPTraits>::OBRRTStrategy() {
 };
 
 template<class MPTraits>
-OBRRTStrategy<MPTraits>::OBRRTStrategy(MPProblemType* _problem, XMLNodeReader& _node) : 
+OBRRTStrategy<MPTraits>::OBRRTStrategy(MPProblemType* _problem, XMLNodeReader& _node, bool _parse, bool _warn) : 
   BasicRRTStrategy<MPTraits>(_problem, _node, false), m_medialAxisUtility(_problem, _node){
     this->SetName("OBRRTStrategy");
-    ParseXML(_node);
+    if(_parse)
+      ParseXML(_node);
+    if(_warn)
+      _node.warnUnrequestedAttributes();
   };
 
 template<class MPTraits>
@@ -72,8 +74,6 @@ OBRRTStrategy<MPTraits>::ParseXML(XMLNodeReader& _node) {
   m_g6 = _node.numberXMLParameter("g6", false, 0.0, 0.0, 1.0, "g6 Growth Method");
   m_g7 = _node.numberXMLParameter("g7", false, 0.0, 0.0, 1.0, "g7 Growth Method"); 
   m_g8 = _node.numberXMLParameter("g8", false, 0.0, 0.0, 1.0, "g8 Growth Method");
-
-  _node.warnUnrequestedAttributes();
 
   //Normalize probabilities
   double total = m_g0 + m_g1 + m_g2 + m_g3 + m_g4 + m_g5 + m_g6 + m_g7 + m_g8;
@@ -183,7 +183,7 @@ OBRRTStrategy<MPTraits>::ExpandTree(CfgType& _dir){
   // If good to go, add to roadmap
   if(verifiedValid && dm->Distance(env, newCfg, nearest) >= this->m_minDist) {
     recentVID = this->GetMPProblem()->GetRoadmap()->GetGraph()->AddVertex(newCfg);
-    cout << "Expanded tree to recent vid::" << recentVID << "::with parent::" << kClosest[0].first << endl;
+    if(this->m_debug) cout << "Expanded tree to recent vid::" << recentVID << "::with parent::" << kClosest[0].first << endl;
     //TODO fix weight
     pair<WeightType, WeightType> weights = make_pair(WeightType(), WeightType());
     this->GetMPProblem()->GetRoadmap()->GetGraph()->AddEdge(kClosest[0].first, recentVID, weights);

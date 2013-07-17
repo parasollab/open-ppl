@@ -237,16 +237,19 @@ BasicRRTStrategy<MPTraits>::Run() {
       //see if tree is connected to goals
       if(m_evaluateGoal)
         EvaluateGoals();
+      
+      //evaluate the roadmap
+      bool evalMap = this->EvaluateMap(m_evaluators);
+      if(!m_growGoals){ 
+        mapPassedEvaluation = m_trees.size()==1 && evalMap && ((m_evaluateGoal && m_goalsNotFound.size()==0) || !m_evaluateGoal);
+        if(this->m_debug && m_goalsNotFound.size()==0)
+          cout << "RRT FOUND ALL GOALS" << endl;
+      }
+      else 
+        mapPassedEvaluation = evalMap && m_trees.size()==1;
     }
-
-    //evaluate the roadmap
-    bool evalMap = this->EvaluateMap(m_evaluators);
-    if(!m_growGoals){ 
-      mapPassedEvaluation = m_trees.size()==1 && evalMap && ((m_evaluateGoal && m_goalsNotFound.size()==0) || !m_evaluateGoal);
-      if(this->m_debug && m_goalsNotFound.size()==0)
-        cout << "RRT FOUND ALL GOALS" << endl;
-    }
-    else mapPassedEvaluation = evalMap && m_trees.size()==1;
+    else
+      mapPassedEvaluation = false;
   }
 
   if(this->m_recordKeep) stats->StopClock("RRT Generation");

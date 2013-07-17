@@ -101,7 +101,7 @@ class StatClass {
     // Graph Operation Statistics Accessors/Modifiers
     int GetGOStat(string _s) {return m_goStats[_s];}
     void SetGOStat(string _s, int _v) {m_goStats[_s]=_v;}
-    void IncGOStat(string _s, double _v=1) {m_goStats[_s]+=_v;}
+    void IncGOStat(string _s, int _v = 1) {m_goStats[_s]+=_v;}
 
     //Local Planner Statistics Accessors/Modifiers
     double GetLPStat(string _s){return m_lpStats[_s];}

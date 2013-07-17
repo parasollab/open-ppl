@@ -87,6 +87,7 @@
 #include "MapEvaluators/TrueEvaluation.h"
 
 //mp strategies includes
+#include "MPStrategies/AdaptiveRRT.h"
 #include "MPStrategies/BasicPRM.h"
 #include "MPStrategies/BasicRRTStrategy.h"
 #include "MPStrategies/EvaluateMapStrategy.h"
@@ -232,6 +233,7 @@ struct MPTraits{
   
   //types of motion planning strategies available in our world
   typedef boost::mpl::list<
+    AdaptiveRRT<MPTraits>,
     BasicPRM<MPTraits>,
     BasicRRTStrategy<MPTraits>,
     DMTestStrategy<MPTraits>,

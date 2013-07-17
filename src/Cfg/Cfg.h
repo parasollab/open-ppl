@@ -119,8 +119,8 @@ class Cfg {
 
     double GetStat(string _stat);
     bool IsStat(string _stat);
-    void SetStat(string _stat, double _value);
-    void IncStat(string _stat, double _value);
+    void SetStat(string _stat, double _value = 0.0);
+    void IncStat(string _stat, double _value = 1.0);
 
     /// Return the number of degrees of freedom for the configuration class
     static size_t DOF() {return m_dof;};
