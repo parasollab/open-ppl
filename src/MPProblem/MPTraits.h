@@ -42,6 +42,7 @@
 #include "Samplers/MixSampler.h"
 #include "Samplers/ObstacleBasedSampler.h"
 #include "Samplers/SimilarStructureSampler.h"
+#include "Samplers/SurfaceGridSampler.h"
 #include "Samplers/SurfaceSampler.h"
 #include "Samplers/UniformObstacleBasedSampler.h"
 #include "Samplers/UniformRandomSampler.h"
@@ -295,7 +296,8 @@ struct MPTraits<CfgSurface, DefaultWeight<CfgSurface> > {
   
   //types of samplers available in our world
   typedef boost::mpl::list<
-    SurfaceSampler<MPTraits>
+    SurfaceSampler<MPTraits>,
+    SurfaceGridSampler<MPTraits>
       > SamplerMethodList;
   
   //types of local planners available in our world
@@ -505,5 +507,4 @@ struct MPTraits<CfgSurface, DefaultWeight<CfgSurface> > {
 */
 
 #endif
-
 #endif
