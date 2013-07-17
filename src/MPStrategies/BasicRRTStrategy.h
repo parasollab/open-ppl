@@ -7,7 +7,6 @@
 
 #include "MPStrategyMethod.h"
 #include "Utilities/RRTExpand.h"
-#include <boost/make_shared.hpp>
 
 template<class MPTraits>
 class BasicRRTStrategy : public MPStrategyMethod<MPTraits> {
