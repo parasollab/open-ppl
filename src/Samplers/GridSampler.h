@@ -10,8 +10,6 @@
 #include "SamplerMethod.h"
 #include <algorithm>
 
-map<size_t, size_t> InitMap;
-
 template <class MPTraits>
 class GridSampler : public SamplerMethod<MPTraits> {
 
@@ -29,7 +27,7 @@ class GridSampler : public SamplerMethod<MPTraits> {
   //Constructors
   ////////////////////////////
 
-  GridSampler(string _vcm = "", map<size_t, size_t> _numPoints = InitMap, bool _useBoundary = false) 
+  GridSampler(string _vcm = "", map<size_t, size_t> _numPoints = (map<size_t, size_t>()), bool _useBoundary = false) 
     : m_vcLabel(_vcm), m_numPoints(_numPoints), m_useBoundary(_useBoundary) {
       this->SetName("GridSampler");
     }

@@ -3,8 +3,6 @@
 
 #include "MPStrategyMethod.h"
 
-map<string, pair<int, int> > InitSamplerMap;
-
 template<class MPTraits>
 class BasicPRM : public MPStrategyMethod<MPTraits> { 
  public:
@@ -19,7 +17,7 @@ class BasicPRM : public MPStrategyMethod<MPTraits> {
    typedef typename MPProblemType::ConnectorPointer ConnectorPointer;
    typedef typename MPProblemType::MapEvaluatorPointer MapEvaluatorPointer;
 
-   BasicPRM(const map<string, pair<int, int> >& _samplerLabels = InitSamplerMap, 
+   BasicPRM(const map<string, pair<int, int> >& _samplerLabels = (map<string, pair<int, int> >()), 
        const vector<string>& _connectorLabels = vector<string>(),
        const vector<string>& _componentConnectorLabels = vector<string>(),
        const vector<string>& _evaluatorLabels = vector<string>(),
