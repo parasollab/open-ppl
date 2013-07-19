@@ -188,7 +188,7 @@ struct MPTraits{
     //CCDistanceMetric<MPTraits>,
     //ConnectivityMetric<MPTraits>,
     //CoverageDistanceMetric<MPTraits>,
-    //CoverageMetric<MPTraits>,
+    CoverageMetric<MPTraits>,
     //DiameterMetric<MPTraits>,
     NumEdgesMetric<MPTraits>,
     NumNodesMetric<MPTraits>
@@ -221,7 +221,7 @@ struct MPTraits{
     #ifdef _PARALLEL
     ,BasicParallelPRM<MPTraits>
     //,RegularSubdivisionMethod<MPTraits>
-    //,RadialSubdivisionRRT<MPTraits>
+    ,RadialSubdivisionRRT<MPTraits>
     ,RadialBlindRRT<MPTraits>
     ,BulkRRT<MPTraits>
     //,RadialRRGStrategy<MPTraits>

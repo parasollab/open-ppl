@@ -79,7 +79,7 @@ class RadialRegion {
     _t.member(m_data);
     _t.member(m_neighbors);
     _t.member(m_branch);
-    _t.member(m_problem);
+    //_t.member(m_problem);
     _t.member(m_ccs);
     _t.member(m_localTree);
   }

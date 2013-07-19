@@ -39,15 +39,16 @@
     </LocalPlanners>
     
     <MapEvaluators>
-      <Query label="Query" queryFile="narrow.query" pathFile="RRT.123456.path" dmMethod="euclidean" lpMethod="sl"
+      <!--<Query label="Query" queryFile="narrow.query" pathFile="RRT.123456.path" dmMethod="euclidean" lpMethod="sl"
         smooth="false" smoothFile="smooth.path" debug="false">
         <NodeConnectionMethod method="Closest"/>
         <SmoothConnectionMethod method="AllToAll"/>
-      </Query>
-      <ConditionalEvaluator label="NodesEval" metric_method="NumNodes" value="100" operator=">=" />
+      </Query> -->
+      <ConditionalEvaluator label="NodesEval" metric_method="NumNodes" value="1001" operator=">=" />
       <ConditionalEvaluator label="NodesPRM" metric_method="NumNodes" value="2" operator=">=" />
       <ConditionalEvaluator label="NodesRRT" metric_method="NumNodes" value="3300" operator=">=" />
       <ConditionalEvaluator label="RRTEval" metric_method="NumNodes" value="840" operator=">=" />
+      <ConditionalEvaluator label="CoverageEval" metric_method="Coverage" value="0.5" operator=">=" />
       <ComposeEvaluator label="QueryEval" operator="or">
         <Evaluator label="NodesEval"/>
         <Evaluator label="Query"/>
@@ -56,6 +57,10 @@
     
     <Metrics>
       <NumNodesMetric label="NumNodes" />
+      <CoverageMetric label="Coverage" filename="coverageSetMap.map" outfilename="coverageOutput260" compute_all_ccs="false">
+        <!--<NodeConnectionMethod label="Closest"/>-->
+	<Connector label="Closest"/>
+      </CoverageMetric>
     </Metrics>
     
     <MPStrategies>  
@@ -63,7 +68,7 @@
     <!-- Parallel Radial RRT *********COMPILE UNDER PARALLEL OPTION **********--> 
       <RadialBlindRRT label="RadialBlindRRT" filename="radialBlindRRT" debug="true" >
         <!-- the training samples (numTestSamples) should at most equal nmNodes -->
-	<region_constr numRegions = "1" rayLength= "150" numNeighbors = "0"/> 
+	<region_constr numRegions = "4" rayLength= "150" numNeighbors = "2"/> 
 	<!-- numAttempts should at least equal numNodes-->
         <rrt_constr numNodes = "100" numAttempts = "5000" delta= "10.0" numCCIters="5"
           minDist = "1.1" strictBranching="false" expansionType="All" CCconnection="CentroidToNode"  /> 
@@ -91,7 +96,7 @@
 
       <BulkRRT label="BulkRRT" filename="bulk" debug="false">
          <num_runs nRuns = "1"/>
-         <total_nodes totalNodes ="50"/>
+         <total_nodes totalNodes ="1000"/>
          <k_nodes kNodes = "1"/>
          <vc_method vcm = "cd"/>
          <delta_var delta = "10.0"/>
@@ -100,12 +105,13 @@
          <dm_method Method="euclidean"/>
          <nf_method Method="BFNF"/>
          <min_distance minDist ="1.0"/>
+	 <!--<query query = "narrow.query"/>-->
       </BulkRRT>
 
     
     </MPStrategies>
 
-    <Solver mpStrategyLabel="RadialSubdivisionRRT" seed="123456" baseFilename="RadialSubdivisionRRT"/>
+    <Solver mpStrategyLabel="BulkRRT" seed="123456" baseFilename="RadialSubdivisionRRT"/>
   </MPProblem>
 </MotionPlanning>
 

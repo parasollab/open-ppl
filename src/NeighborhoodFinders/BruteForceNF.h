@@ -75,10 +75,12 @@ BruteForceNF<MPTraits>::KClosest(RoadmapType* _rmp, InputIterator _first, InputI
   // Keep sorted list of k best so far
   priority_queue<pair<VID, double>, vector<pair<VID, double> >, CompareSecond<VID, double> > pq;
   for(InputIterator it = _first; it != _last; it++) {
-    //CfgType node = map->GetCfg(it);
-    CfgType node = (*(map->distribution().container_manager().begin()->find_vertex(map->GetVid(it)))).property(); 
+    CfgType node = map->GetCfg(it);
+  
+  
+    //CfgType node = (*(map->distribution().container_manager().begin()->find_vertex(map->GetVid(it)))).property(); 
     double dist = dmm->Distance(env, _cfg, node);
-
+  
     if(node == _cfg) // Don't connect to self
       continue;
     if(pq.size() < _k){
@@ -124,14 +126,14 @@ BruteForceNF<MPTraits>::KClosestPairs(RoadmapType* _rmp,
 
   // Find all pairs
   for(InputIterator it1 = _first1; it1 != _last1; it1++) {
-//    CfgType node1 = map->GetCfg(it1);
-    CfgType node1 = (*(map->distribution().container_manager().begin()->find_vertex(map->GetVid(it1)))).property(); 
+    CfgType node1 = map->GetCfg(it1);
+    //CfgType node1 = (*(map->distribution().container_manager().begin()->find_vertex(map->GetVid(it1)))).property(); 
     for(InputIterator it2 = _first2; it2 != _last2; it2++) {
       if(*it1 == *it2) // Don't connect to self
         continue;
 
-//      CfgType node2 = map->GetCfg(it2);
-      CfgType node2 = (*(map->distribution().container_manager().begin()->find_vertex(map->GetVid(it2)))).property(); 
+      CfgType node2 = map->GetCfg(it2);
+      //CfgType node2 = (*(map->distribution().container_manager().begin()->find_vertex(map->GetVid(it2)))).property(); 
       double dist = dmm->Distance(env, node1, node2);
       if(pq.size() < _k){
         VID vid1 = map->GetVid(it1);

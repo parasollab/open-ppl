@@ -118,7 +118,7 @@ RadialBlindRRT<MPTraits>::ConnectRegions(graph_view<RadialRegionGraph> _regionVi
 template<class MPTraits>
 void 
 RadialBlindRRT<MPTraits>::DeleteInvalid(graph_view<RadialRegionGraph> _regionView) {
-  
+  cout << "IN DELETE VERTEX view size " << _regionView.size() << endl;
   /// COMPUTE CCs AND SET REGION CCs
   typedef static_array<cc_color_property> property_storage_type;
   typedef graph_external_property_map<graph_view<RadialRegionGraph>, cc_color_property, property_storage_type> property_map_type;
@@ -140,6 +140,7 @@ RadialBlindRRT<MPTraits>::DeleteInvalid(graph_view<RadialRegionGraph> _regionVie
 
   ColorMap colorMap;
   vector<VID> cc;
+  
   for(int i=0; i<ccs.size(); i++) {
 
     if(ccs[i].first != rootCC) {

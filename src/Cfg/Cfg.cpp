@@ -37,8 +37,8 @@ Cfg::Cfg(const Cfg& _other) :
   m_v(_other.m_v), 
   m_robotIndex(_other.m_robotIndex),
   m_labelMap(_other.m_labelMap),
-  m_statMap(_other.m_statMap),
-  m_witnessCfg(_other.m_witnessCfg){}
+  m_statMap(_other.m_statMap){}
+  //m_witnessCfg(_other.m_witnessCfg){} why copy this?
 
 void
 Cfg::InitRobots(vector<Robot>& _robots) {
