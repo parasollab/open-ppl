@@ -29,6 +29,8 @@ class MedialAxisLP : public LocalPlannerMethod<MPTraits> {
 
     virtual void PrintOptions(ostream& _os);
 
+    MedialAxisUtility<MPTraits> GetMedialAxisUtility() {return m_medialAxisUtility;}
+
     virtual bool IsConnected(Environment* _env, StatClass& _stats,
         DistanceMetricPointer _dm, const CfgType& _c1, const CfgType& _c2, 
         CfgType& _col, LPOutput<MPTraits>* _lpOutput, double _positionRes, 
@@ -70,6 +72,7 @@ MedialAxisLP<MPTraits>::MedialAxisLP(MedialAxisUtility<MPTraits> _medialAxisUtil
   LocalPlannerMethod<MPTraits>(), 
   m_medialAxisUtility(_medialAxisUtility), 
   m_macEpsilon(_macEpsilon), m_maxIter(_maxIter) {
+    this->SetMPProblem(_medialAxisUtility.GetMPProblem());
     Init();
   }
 
@@ -261,10 +264,10 @@ MedialAxisLP<MPTraits>::IsConnectedRec(Environment* _env,
 
 template<class MPTraits> 
 bool 
-MedialAxisLP<MPTraits>::EpsilonClosePath( Environment *_env,
+MedialAxisLP<MPTraits>::EpsilonClosePath(Environment* _env,
     StatClass& _stats, DistanceMetricPointer _dm, 
-    const CfgType &_c1, const CfgType &_c2, 
-    CfgType &_mid, LPOutput<MPTraits>* _lpOutput,
+    const CfgType& _c1, const CfgType& _c2, 
+    CfgType& _mid, LPOutput<MPTraits>* _lpOutput,
     double _posRes, double _oriRes) {
 
   if(this->m_debug) cout << "MedialAxisLP::EpsilonClosePath()" << endl;

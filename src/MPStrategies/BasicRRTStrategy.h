@@ -277,7 +277,7 @@ BasicRRTStrategy<MPTraits>::Finalize() {
     str = this->GetBaseFilename() + ".path";
     m_query->SetPathFile(str);
     if(m_evaluateGoal){
-      if(m_query->PerformQuery(this->GetMPProblem()->GetRoadmap(), *stats)){
+      if(m_query->PerformQuery(this->GetMPProblem()->GetRoadmap())){
         if(this->m_debug) cout << "Query successful! Output written to " << str << "." << endl;
       }
       else{

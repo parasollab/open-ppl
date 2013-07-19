@@ -25,18 +25,18 @@ class LazyToggleQuery : public LazyQuery<MPTraits> {
     LazyToggleQuery(MPProblemType* _problem, XMLNodeReader& _node, bool _warn = true);
     virtual ~LazyToggleQuery() {};
 
-    void ParseXML(XMLNodeReader& _node, bool _warn);
+    void ParseXML(XMLNodeReader& _node);
     virtual void PrintOptions(ostream& _os);
 
     // Overrides PerformQuery in Query, calls Query::PerformQuery() and adds Toggle functionality
-    virtual bool PerformQuery(CfgType _start, CfgType _goal, RoadmapType* _rdmp, StatClass& _stats);
+    virtual bool PerformQuery(CfgType _start, CfgType _goal, RoadmapType* _rdmp);
 
     // Overrides LazyQuery::ProcessInvalidNode, called in LazyQuery::CanRecreatePath()
     virtual void ProcessInvalidNode(CfgType node);
 
   protected:
     string m_toggleConnect;   // Connection method for blocked nodes
-    bool m_iterative;         // Process the queue in an interative fashion?
+    bool m_iterative;         // Process the queue in an iterative fashion?
 
   private:
     deque<CfgType> q;             // A list of both free and blocked witness nodes
@@ -46,14 +46,14 @@ template<class MPTraits>
 LazyToggleQuery<MPTraits>::LazyToggleQuery(MPProblemType* _problem, XMLNodeReader& _node, bool _warn) :
     LazyQuery<MPTraits>(_problem, _node, false) {
   this->SetName("LazyToggleQuery");
-  ParseXML(_node, _warn);
+  ParseXML(_node);
   if(_warn)
     _node.warnUnrequestedAttributes();
 }
 
 template<class MPTraits>
 void
-LazyToggleQuery<MPTraits>::ParseXML(XMLNodeReader& _node, bool _warn) {
+LazyToggleQuery<MPTraits>::ParseXML(XMLNodeReader& _node) {
   m_iterative = _node.boolXMLParameter("iterative", false, true, "Process queue in either iterative or grouped method");
   for(XMLNodeReader::childiterator citr = _node.children_begin(); citr != _node.children_end(); citr++) {
     if(citr->getName() == "ToggleConnectionMethod") {
@@ -83,7 +83,7 @@ LazyToggleQuery<MPTraits>::ProcessInvalidNode(CfgType node) {
 // Overrides PerformQuery in Query, calls Query::PerformQuery() and adds Toggle functionality
 template<class MPTraits>
 bool
-LazyToggleQuery<MPTraits>::PerformQuery(CfgType _start, CfgType _goal, RoadmapType* _rdmp, StatClass& _stats) {
+LazyToggleQuery<MPTraits>::PerformQuery(CfgType _start, CfgType _goal, RoadmapType* _rdmp) {
 
   if(this->m_debug)
     cout << "*T* in LazyToggleQuery::PerformQuery" << endl;
@@ -111,7 +111,7 @@ LazyToggleQuery<MPTraits>::PerformQuery(CfgType _start, CfgType _goal, RoadmapTy
     // Extract paths until start and goal not connected
     if(this->m_debug)
       cout << "*T* Calling Query::PerformQuery" << endl;
-    if(Query<MPTraits>::PerformQuery(_start, _goal, _rdmp, _stats))
+    if(Query<MPTraits>::PerformQuery(_start, _goal, _rdmp))
       return true; // Found a path
 
     if(gVID == INVALID_VID) {
@@ -133,7 +133,7 @@ LazyToggleQuery<MPTraits>::PerformQuery(CfgType _start, CfgType _goal, RoadmapTy
         for(vector<string>::iterator label = this->m_nodeConnectionLabels.begin();
             label != this->m_nodeConnectionLabels.end(); label++) {
           cmap.reset();
-          this->GetMPProblem()->GetConnector(*label)->Connect(_rdmp, _stats, cmap, newVID);
+          this->GetMPProblem()->GetConnector(*label)->Connect(_rdmp, *stats, cmap, newVID);
         }
         if(m_iterative) {
           cmap.reset();
@@ -151,9 +151,9 @@ LazyToggleQuery<MPTraits>::PerformQuery(CfgType _start, CfgType _goal, RoadmapTy
         size_t size = q.size();
         this->GetMPProblem()->GetValidityChecker(this->m_vcLabel)->ToggleValidity();
         if(m_iterative)
-          this->GetMPProblem()->GetConnector(m_toggleConnect)->Connect(bRdmp, _stats, cmap, newVID, front_inserter(q));
+          this->GetMPProblem()->GetConnector(m_toggleConnect)->Connect(bRdmp, *stats, cmap, newVID, front_inserter(q));
         else
-          this->GetMPProblem()->GetConnector(m_toggleConnect)->Connect(bRdmp, _stats, cmap, newVID, back_inserter(q));
+          this->GetMPProblem()->GetConnector(m_toggleConnect)->Connect(bRdmp, *stats, cmap, newVID, back_inserter(q));
         if(this->m_debug)
           for(size_t i = 0; i < q.size()-size; i++)
             cout << "*T* Pushing free node into queue: " << q[i] << endl;
