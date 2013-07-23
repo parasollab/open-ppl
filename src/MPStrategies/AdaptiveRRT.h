@@ -1,6 +1,6 @@
 /**
  * AdaptiveRRT.h
- * 
+ *
  * Description: AdaptiveRRT employs structural filtering to the RRT paradigm by
  * providing a two-level cost-adaptive strategy to select the RRT growth method.
  * First using the "visibility" of a node the method selects a set of RRT
@@ -43,7 +43,7 @@ class AdaptiveRRT : public OBRRTStrategy<MPTraits> {
     typedef typename MPProblemType::NeighborhoodFinderPointer NeighborhoodFinderPointer;
 
     AdaptiveRRT(double _wallPenalty = 0.5, double _gamma = 0.5,
-        const GrowthSets& _growthSets = GrowthSets(), CostMethod _c = FIXED); 
+        const GrowthSets& _growthSets = GrowthSets(), CostMethod _c = FIXED);
     AdaptiveRRT(MPProblemType* _problem, XMLNodeReader& _node);
 
     virtual void Initialize();
@@ -87,7 +87,7 @@ AdaptiveRRT<MPTraits>::AdaptiveRRT(double _wallPenalty, double _gamma,
   }
 
 template<class MPTraits>
-AdaptiveRRT<MPTraits>::AdaptiveRRT(MPProblemType* _problem, XMLNodeReader& _node) : 
+AdaptiveRRT<MPTraits>::AdaptiveRRT(MPProblemType* _problem, XMLNodeReader& _node) :
   OBRRTStrategy<MPTraits>(_problem, _node, false, false){
     this->SetName("AdaptiveRRT");
     ParseXML(_node);
@@ -111,7 +111,7 @@ AdaptiveRRT<MPTraits>::ParseXML(XMLNodeReader& _node) {
           citr2->warnUnknownNode();
       }
       m_growthSets[threshold] = growthSet;
-    } 
+    }
     else
       citr->warnUnknownNode();
   }
@@ -134,7 +134,7 @@ AdaptiveRRT<MPTraits>::ParseXML(XMLNodeReader& _node) {
 }
 
 template<class MPTraits>
-void 
+void
 AdaptiveRRT<MPTraits>::PrintOptions(ostream& _os){
   BasicRRTStrategy<MPTraits>::PrintOptions(_os);
   _os << "\tWallPenalty::" << m_wallPenalty << endl;
@@ -171,7 +171,7 @@ AdaptiveRRT<MPTraits>::Initialize(){
 }
 
 template<class MPTraits>
-typename AdaptiveRRT<MPTraits>::VID 
+typename AdaptiveRRT<MPTraits>::VID
 AdaptiveRRT<MPTraits>::ExpandTree(CfgType& _dir){
 
   // Setup MP Variables
@@ -182,8 +182,8 @@ AdaptiveRRT<MPTraits>::ExpandTree(CfgType& _dir){
   //get the expand node from the roadmap
   NeighborhoodFinderPointer nf = this->GetMPProblem()->GetNeighborhoodFinder(this->m_nf);
   vector<pair<VID, double> > kClosest;
-  nf->FindNeighbors(this->GetMPProblem()->GetRoadmap(), 
-      this->m_currentTree->begin(), this->m_currentTree->end(), 
+  nf->FindNeighbors(this->GetMPProblem()->GetRoadmap(),
+      this->m_currentTree->begin(), this->m_currentTree->end(),
       _dir, back_inserter(kClosest));
   CfgType& nearest = this->GetMPProblem()->GetRoadmap()->GetGraph()->GetVertex(kClosest[0].first);
 
@@ -228,7 +228,7 @@ AdaptiveRRT<MPTraits>::ExpandTree(CfgType& _dir){
 
   //expansion Failed Penalize nearest with 0
   if(!verifiedValid) {
-    if(this->m_debug) cout << "Growth Failed on::" << nearest << ", with visibility::" << visibility << endl; 
+    if(this->m_debug) cout << "Growth Failed on::" << nearest << ", with visibility::" << visibility << endl;
     nearest.IncStat("Fail");
     AvgVisibility(nearest, 0);
 
@@ -254,7 +254,8 @@ AdaptiveRRT<MPTraits>::ExpandTree(CfgType& _dir){
     //Generate Waypoints is from AdaptiveMultiResRRT, but this one does not
     //acutally add nodes.
     recentVID = UpdateTree(kClosest[0].first, newCfg, _dir);
-  } 
+    this->m_currentTree->push_back(recentVID);
+  }
   else{
     //could not expand at least m_minDist. Penalize nearest with 0;
     nearest.IncStat("Fail");
@@ -273,8 +274,8 @@ AdaptiveRRT<MPTraits>::SelectGrowthMethod(GrowthSet& _gs){
   //compute p_i*/c_i and the sum over all growth methods
   for(GrowthSet::const_iterator gsit = _gs.begin(); gsit!=_gs.end(); ++gsit){
     if(this->m_debug)
-      cout << "Method::" << gsit->first 
-        << "::Cost::" << GetCost(gsit->first, _gs) 
+      cout << "Method::" << gsit->first
+        << "::Cost::" << GetCost(gsit->first, _gs)
         << "::Weight::" << gsit->second.second << endl;
     double pistar = CostInsensitiveProb(gsit->first, _gs)/GetCost(gsit->first, _gs);
     pistars[gsit->first] = pistar;
@@ -284,8 +285,8 @@ AdaptiveRRT<MPTraits>::SelectGrowthMethod(GrowthSet& _gs){
   //compute p_i for each method
   for(GrowthSet::const_iterator gsit = _gs.begin(); gsit!=_gs.end(); ++gsit){
     pis[gsit->first] = pistars[gsit->first]/spc;
-    if(this->m_debug) 
-      cout << "Method::" << gsit->first 
+    if(this->m_debug)
+      cout << "Method::" << gsit->first
         << "::Prob::" << pis[gsit->first] << endl;
   }
 
@@ -295,8 +296,13 @@ AdaptiveRRT<MPTraits>::SelectGrowthMethod(GrowthSet& _gs){
   double r = DRand(), cumm = 0.0;
   for(map<string, double>::const_iterator mit = pis.begin(); mit!=pis.end(); ++mit){
     cumm += mit->second;
-    if(r <= cumm)
+    if(r <= cumm) {
+      if(this->m_debug) {
+        cout << "r::" << r << endl;
+        cout << "MethodSelected::" << mit->first << endl;
+      }
       return mit->first;
+    }
   }
 
   cerr << "Error::Growth method not selected." << endl;
@@ -431,7 +437,7 @@ AdaptiveRRT<MPTraits>::UpdateTree(CfgType& _newCfg, VID _nearVID, bool _againstW
 //which is why we multiply by (total-1) and divide by (total) instead of (total)
 //and (total+1)
 template<class MPTraits>
-void 
+void
 AdaptiveRRT<MPTraits>::AvgVisibility(CfgType& _cfg, double _val){
   double success = _cfg.GetStat("Success");
   double fail = _cfg.GetStat("Fail");
@@ -442,7 +448,7 @@ AdaptiveRRT<MPTraits>::AvgVisibility(CfgType& _cfg, double _val){
 //Visibility is stored with the cfg. Isolate definition of visibility to this
 //function.
 template<class MPTraits>
-double 
+double
 AdaptiveRRT<MPTraits>::GetVisibility(CfgType& _cfg){
   if(!_cfg.IsStat("Visibility")){
     cerr << "Warning::Visibility not a statistic of node::" << _cfg << endl;
@@ -454,7 +460,7 @@ AdaptiveRRT<MPTraits>::GetVisibility(CfgType& _cfg){
   return _cfg.GetStat("Visibility");
 }
 
-template<class MPTraits>    
+template<class MPTraits>
 double
 AdaptiveRRT<MPTraits>::GetCost(string _s, GrowthSet& _gs){
   if(m_costMethod == FIXED)
@@ -466,7 +472,7 @@ AdaptiveRRT<MPTraits>::GetCost(string _s, GrowthSet& _gs){
 }
 
 template<class MPTraits>
-double 
+double
 AdaptiveRRT<MPTraits>::CostInsensitiveProb(string _s, GrowthSet& _gs){
   double sw = 0.0;
   for(GrowthSet::const_iterator gsit = _gs.begin(); gsit!=_gs.end(); ++gsit){

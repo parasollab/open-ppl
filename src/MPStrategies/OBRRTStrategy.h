@@ -1,6 +1,6 @@
 /**
  * OBRRTStrategy.h
- * 
+ *
  * Description: OBRRT Strategy header file
  *
  * Author: Evan Greco
@@ -44,7 +44,7 @@ class OBRRTStrategy : public BasicRRTStrategy<MPTraits> {
     MedialAxisUtility<MPTraits> m_medialAxisUtility;
 
     double m_g0, m_g1, m_g2, m_g3, m_g4, m_g5, m_g6, m_g7, m_g8; //Growth method probabilities; can be found in OBRRT paper/TR
-    double m_g0N, m_g1N, m_g2N, m_g3N, m_g4N, m_g5N, m_g6N, m_g7N, m_g8N; 
+    double m_g0N, m_g1N, m_g2N, m_g3N, m_g4N, m_g5N, m_g6N, m_g7N, m_g8N;
 };
 
 template<class MPTraits>
@@ -53,7 +53,7 @@ OBRRTStrategy<MPTraits>::OBRRTStrategy() {
 };
 
 template<class MPTraits>
-OBRRTStrategy<MPTraits>::OBRRTStrategy(MPProblemType* _problem, XMLNodeReader& _node, bool _parse, bool _warn) : 
+OBRRTStrategy<MPTraits>::OBRRTStrategy(MPProblemType* _problem, XMLNodeReader& _node, bool _parse, bool _warn) :
   BasicRRTStrategy<MPTraits>(_problem, _node, false), m_medialAxisUtility(_problem, _node){
     this->SetName("OBRRTStrategy");
     if(_parse)
@@ -72,7 +72,7 @@ OBRRTStrategy<MPTraits>::ParseXML(XMLNodeReader& _node) {
   m_g4 = _node.numberXMLParameter("g4", false, 0.0, 0.0, 1.0, "g4 Growth Method");
   m_g5 = _node.numberXMLParameter("g5", false, 0.0, 0.0, 1.0, "g5 Growth Method");
   m_g6 = _node.numberXMLParameter("g6", false, 0.0, 0.0, 1.0, "g6 Growth Method");
-  m_g7 = _node.numberXMLParameter("g7", false, 0.0, 0.0, 1.0, "g7 Growth Method"); 
+  m_g7 = _node.numberXMLParameter("g7", false, 0.0, 0.0, 1.0, "g7 Growth Method");
   m_g8 = _node.numberXMLParameter("g8", false, 0.0, 0.0, 1.0, "g8 Growth Method");
 
   //Normalize probabilities
@@ -131,7 +131,9 @@ OBRRTStrategy<MPTraits>::ExpandTree(CfgType& _dir){
   vector<pair<VID, double> > kClosest;
   vector<CfgType> cfgs;
 
-  nf->FindNeighbors(this->GetMPProblem()->GetRoadmap(), _dir, back_inserter(kClosest));
+  nf->FindNeighbors(this->GetMPProblem()->GetRoadmap(),
+      this->m_currentTree->begin(), this->m_currentTree->end(),
+      _dir, back_inserter(kClosest));
   #ifndef _PARALLEL
   CfgType& nearest = this->GetMPProblem()->GetRoadmap()->GetGraph()->GetVertex(kClosest[0].first);
   #else
@@ -183,11 +185,12 @@ OBRRTStrategy<MPTraits>::ExpandTree(CfgType& _dir){
   // If good to go, add to roadmap
   if(verifiedValid && dm->Distance(env, newCfg, nearest) >= this->m_minDist) {
     recentVID = this->GetMPProblem()->GetRoadmap()->GetGraph()->AddVertex(newCfg);
+    this->m_currentTree->push_back(recentVID);
     if(this->m_debug) cout << "Expanded tree to recent vid::" << recentVID << "::with parent::" << kClosest[0].first << endl;
     //TODO fix weight
     pair<WeightType, WeightType> weights = make_pair(WeightType(), WeightType());
     this->GetMPProblem()->GetRoadmap()->GetGraph()->AddEdge(kClosest[0].first, recentVID, weights);
-  } 
+  }
 
   if(this->m_debug) cout << " OBRRTStrategy::ExpandTree -- done call" << endl;
   return recentVID;
@@ -204,13 +207,13 @@ OBRRTStrategy<MPTraits>::g0(CfgType& _near, CfgType& _dir, bool& _verifiedValid)
   CfgType newCfg;
   int weight;
   if(!RRTExpand<MPTraits>(this->GetMPProblem(), this->m_vc, this->m_dm, _near, _dir, newCfg, this->m_delta, weight, cdInfo, env->GetPositionRes(), env->GetOrientationRes())) {
-    if(this->m_debug) cout << "RRT could not expand!" << endl; 
+    if(this->m_debug) cout << "RRT could not expand!" << endl;
   }
   else {
     _verifiedValid = true;
   }
 
-  return newCfg;  
+  return newCfg;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -228,7 +231,7 @@ OBRRTStrategy<MPTraits>::g1(CfgType& _near, CfgType& _dir, bool& _verifiedValid)
   }
   int weight;
   if(!RRTExpand<MPTraits>(this->GetMPProblem(), this->m_vc, this->m_dm, _near, _dir, newCfg, this->m_delta, weight, cdInfo, env->GetPositionRes(), env->GetOrientationRes())) {
-    if(this->m_debug) cout << "RRT could not expand!" << endl; 
+    if(this->m_debug) cout << "RRT could not expand!" << endl;
   }
   else {
     _verifiedValid = true;
@@ -255,8 +258,8 @@ OBRRTStrategy<MPTraits>::g2(CfgType& _near, CfgType& _dir, bool& _verifiedValid,
 
     int randIndex = (LRand() % (numBodies-1)) + 1;
     GMSPolyhedron& poly = env->GetMultiBody(randIndex)->GetFixedBody(0)->GetWorldPolyhedron();
-    vector<Vector3d>& vertexList    = poly.m_vertexList; 
-    vector<GMSPolygon>& polygonList = poly.m_polygonList; 
+    vector<Vector3d>& vertexList    = poly.m_vertexList;
+    vector<GMSPolygon>& polygonList = poly.m_polygonList;
     //random polygon
     int randPolyInd = LRand() % polygonList.size();
     int randEdgeInd = LRand() % 3;
@@ -279,7 +282,7 @@ OBRRTStrategy<MPTraits>::g2(CfgType& _near, CfgType& _dir, bool& _verifiedValid,
     }
     int weight;
     if(!RRTExpand<MPTraits>(this->GetMPProblem(), this->m_vc, this->m_dm, _near, _dir, newCfg, this->m_delta, weight, cdInfo, env->GetPositionRes(), env->GetOrientationRes())) {
-      if(this->m_debug) cout << "RRT could not expand!" << endl; 
+      if(this->m_debug) cout << "RRT could not expand!" << endl;
     }
     else {
       _verifiedValid = true;
@@ -305,9 +308,9 @@ OBRRTStrategy<MPTraits>::g4(CfgType& _near, CfgType& _dir, bool& _verifiedValid)
     _dir[i] = _near[i];
   }
   int weight;
-  // rotation first 
+  // rotation first
   if(!RRTExpand<MPTraits>(this->GetMPProblem(), this->m_vc, this->m_dm, _near, _dir, newCfg1, this->m_delta, weight, cdInfo, env->GetPositionRes(), env->GetOrientationRes())) {
-    if(this->m_debug) cout << "RRT could not expand!" << endl; 
+    if(this->m_debug) cout << "RRT could not expand!" << endl;
   }
   else {
     _verifiedValid = true;
@@ -319,13 +322,13 @@ OBRRTStrategy<MPTraits>::g4(CfgType& _near, CfgType& _dir, bool& _verifiedValid)
       newDir[i] = dirOrig[i];
     }
     if(!RRTExpand<MPTraits>(this->GetMPProblem(), this->m_vc, this->m_dm, newNear, newDir, newCfg2, this->m_delta, weight, cdInfo, env->GetPositionRes(), env->GetOrientationRes())) {
-      if(this->m_debug) cout << "RRT could not expand!" << endl; 
+      if(this->m_debug) cout << "RRT could not expand!" << endl;
     }
     else{
       CfgType col;
       LPOutput<MPTraits> lpOutput;
-      if(this->GetMPProblem()->GetLocalPlanner(this->m_lp)->IsConnected(env, *this->GetMPProblem()->GetStatClass(), 
-            this->GetMPProblem()->GetDistanceMetric(this->m_dm), _near, newCfg2, col, &lpOutput, env->GetPositionRes(), env->GetOrientationRes())) 
+      if(this->GetMPProblem()->GetLocalPlanner(this->m_lp)->IsConnected(env, *this->GetMPProblem()->GetStatClass(),
+            this->GetMPProblem()->GetDistanceMetric(this->m_dm), _near, newCfg2, col, &lpOutput, env->GetPositionRes(), env->GetOrientationRes()))
         return newCfg2;
     }
   }
@@ -344,9 +347,9 @@ OBRRTStrategy<MPTraits>::g5(CfgType& _near, CfgType& _dir, bool& _verifiedValid,
   CfgType newCfg;
 
   int weight;
-  // rotation first 
+  // rotation first
   if(!RRTExpand<MPTraits>(this->GetMPProblem(), this->m_vc, this->m_dm, _near, _dir, newCfg, this->m_delta, weight, cdInfo, env->GetPositionRes(), env->GetOrientationRes())) {
-    if(this->m_debug) cout << "RRT could not expand!" << endl; 
+    if(this->m_debug) cout << "RRT could not expand!" << endl;
   }
 
   //cout << " expand succeeded...check out cdInfo. "<<endl;
@@ -358,9 +361,9 @@ OBRRTStrategy<MPTraits>::g5(CfgType& _near, CfgType& _dir, bool& _verifiedValid,
   double vecScale = 10.0;
 
   //this kind of assumes cdInfo has values set which currently only RAPID does
-  //correctly 
+  //correctly
   int cIndex = cdInfo.m_collidingObstIndex;
-  int obsContactIndex = cdInfo.m_rapidContactID2; 
+  int obsContactIndex = cdInfo.m_rapidContactID2;
   int numBodies = env->GetUsableMultiBodyCount();
 
   if( cIndex == -1 || obsContactIndex == -1 ) {
@@ -370,8 +373,8 @@ OBRRTStrategy<MPTraits>::g5(CfgType& _near, CfgType& _dir, bool& _verifiedValid,
     }
   }
   GMSPolyhedron& poly = env->GetMultiBody(cIndex)->GetFixedBody(0)->GetWorldPolyhedron();
-  vector<Vector3d>& vertexList    = poly.m_vertexList; 
-  vector<GMSPolygon>& polygonList = poly.m_polygonList; 
+  vector<Vector3d>& vertexList    = poly.m_vertexList;
+  vector<GMSPolygon>& polygonList = poly.m_polygonList;
   //random polygon
   int randPolyInd = LRand() % polygonList.size();
   if( obsContactIndex != -1 ) randPolyInd = obsContactIndex;
@@ -394,9 +397,9 @@ OBRRTStrategy<MPTraits>::g5(CfgType& _near, CfgType& _dir, bool& _verifiedValid,
     }
   }
 
-  // rotation first 
+  // rotation first
   if(!RRTExpand<MPTraits>(this->GetMPProblem(), this->m_vc, this->m_dm, _near, _dir, newCfg, this->m_delta, weight, cdInfo, env->GetPositionRes(), env->GetOrientationRes())) {
-    if(this->m_debug) cout << "RRT could not expand!" << endl; 
+    if(this->m_debug) cout << "RRT could not expand!" << endl;
   }
   else {
     _verifiedValid = true;
@@ -423,14 +426,14 @@ OBRRTStrategy<MPTraits>::g7(CfgType& _near, CfgType& _dir, bool& _verifiedValid)
   dir2.GetRandomRay(vscale, env, dm);
 
   int weight;
-  // expand to c1  
+  // expand to c1
   if(!RRTExpand<MPTraits>(this->GetMPProblem(), this->m_vc, this->m_dm, _near, dir1, newCfg1, this->m_delta, weight, cdInfo, env->GetPositionRes(), env->GetOrientationRes())) {
-    if(this->m_debug) cout << "RRT could not expand!" << endl; 
+    if(this->m_debug) cout << "RRT could not expand!" << endl;
   }
 
-  // expand to c2 
+  // expand to c2
   if(!RRTExpand<MPTraits>(this->GetMPProblem(), this->m_vc, this->m_dm, _near, dir2, newCfg2, this->m_delta, weight, cdInfo, env->GetPositionRes(), env->GetOrientationRes())) {
-    if(this->m_debug) cout << "RRT could not expand!" << endl; 
+    if(this->m_debug) cout << "RRT could not expand!" << endl;
   }
 
   // subtract newCfg2 and newCfg1 to get cspace vec
@@ -446,7 +449,7 @@ OBRRTStrategy<MPTraits>::g7(CfgType& _near, CfgType& _dir, bool& _verifiedValid)
 
   // final expand
   if(!RRTExpand<MPTraits>(this->GetMPProblem(), this->m_vc, this->m_dm, _near, _dir, newCfg3, this->m_delta, weight, cdInfo, env->GetPositionRes(), env->GetOrientationRes())) {
-    if(this->m_debug) cout << "RRT could not expand!" << endl; 
+    if(this->m_debug) cout << "RRT could not expand!" << endl;
   }
   else {
     _verifiedValid = true;
@@ -472,17 +475,17 @@ OBRRTStrategy<MPTraits>::g8(CfgType& _near, CfgType& _dir, bool& _verifiedValid)
 
 
   if(!m_medialAxisUtility.PushToMedialAxis(newCfg, this->GetMPProblem()->GetEnvironment()->GetBoundary())){
-    return newCfg;// CfgType(); //Error out   
+    return newCfg;// CfgType(); //Error out
   }
   else{ //pushed to medial axis, now check RRTexpand
     int weight;
     if(!RRTExpand<MPTraits>(this->GetMPProblem(), this->m_vc, this->m_dm, _near, newCfg, newCfg2, this->m_delta, weight, cdInfo, env->GetPositionRes(), env->GetOrientationRes())) {
-      if(this->m_debug) cout << "RRT could not expand!" << endl; 
+      if(this->m_debug) cout << "RRT could not expand!" << endl;
     }
     else {
       _verifiedValid = true;
     }
-    return newCfg2;     
+    return newCfg2;
   }
 }
 
