@@ -57,6 +57,7 @@
 #include "LocalPlanners/TransformAtS.h"
 
 //connector includes
+#include "Connectors/AdaptiveConnector.h"
 #include "Connectors/CCsConnector.h"
 #include "Connectors/ConnectNeighboringSurfaces.h"
 #include "Connectors/NeighborhoodConnector.h"
@@ -187,8 +188,9 @@ struct MPTraits{
 
   //types of connectors available in our world
   typedef boost::mpl::list<
+    AdaptiveConnector<MPTraits>,
     CCsConnector<MPTraits>, 
-    NeighborhoodConnector<MPTraits>, 
+    NeighborhoodConnector<MPTraits>,
     //PreferentialAttachment<MPTraits>, 
     RewireConnector<MPTraits>//,
     //ClosestVE<MPTraits>
