@@ -5,37 +5,37 @@
 
     <DistanceMetrics>
       <Euclidean label="euclidean"/>
-    </DistanceMetrics> 
+    </DistanceMetrics>
 
-    <ValidityCheckers>    
+    <ValidityCheckers>
       <CollisionDetection label="cd" method="RAPID" />
     </ValidityCheckers>
-    
+
     <NeighborhoodFinders>
-      <BruteForceNF label="BFNF" dmLabel="euclidean"/>
+      <BruteForceNF label="BFNF" k="5" dmLabel="euclidean"/>
     </NeighborhoodFinders>
-    
+
     <Samplers>
       <UniformRandomSampler label="UniformRandom" vcLabel="cd"/>
     </Samplers>
-    
+
     <Connectors>
-      <NeighborhoodConnector label="Closest" nf="BFNF" k="5" CheckIfSameCC="false" lp_method="sl" unconnected="true"/>
+      <NeighborhoodConnector label="Closest" nfLabel="BFNF" checkIfSameCC="false" lpLabel="sl"/>
     </Connectors>
-    
+
     <LocalPlanners>
       <StraightLine label="sl" binaryEvaluation="true" vcLabel="cd"/>
     </LocalPlanners>
-    
+
     <MapEvaluators>
       <ConditionalEvaluator label="NodesEval" metric_method="NumNodes" value="100" operator=">=" />
     </MapEvaluators>
-    
+
     <Metrics>
       <NumNodesMetric label="NumNodes" />
     </Metrics>
-    
-    <MPStrategies>  
+
+    <MPStrategies>
       <BasicPRM label="BasicPRM">
         <node_generation_method Method="UniformRandom" Number="10" Attempts="10"/>
         <node_connection_method Method="Closest"/>
