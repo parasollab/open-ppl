@@ -3,6 +3,7 @@
 
 #include "MPUtils.h"
 #include "MetricUtils.h"
+#include "ValidityCheckers/CollisionDetection/CDInfo.h"
 
 struct ClearanceStats{
   double m_avgClearance;

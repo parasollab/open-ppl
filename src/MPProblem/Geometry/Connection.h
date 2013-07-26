@@ -57,7 +57,9 @@ class Connection {
     //Joint transformations
     DHparameters& GetDHparameters() {return m_dhParameters;}
     const DHparameters& GetDHparameters() const {return m_dhParameters;}
+    Transformation& GetTransformationToBody2() {return m_transformationToBody2;}
     const Transformation& GetTransformationToBody2() const {return m_transformationToBody2;}
+    Transformation& GetTransformationToDHFrame() {return m_transformationToDHFrame;}
     const Transformation& GetTransformationToDHFrame() const {return m_transformationToDHFrame;}
 
     friend ostream& operator<<(ostream& _os, const Connection& _c);

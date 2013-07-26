@@ -7,6 +7,8 @@
 #include "MapEvaluatorMethod.h"
 #include "LocalPlanners/LPOutput.h"
 #include "Utilities/MetricUtils.h"
+#include "Utilities/MedialAxisUtilities.h"
+#include "LocalPlanners/MedialAxisLP.h"
 
 template<class MPTraits>
 class Query : public MapEvaluatorMethod<MPTraits> {

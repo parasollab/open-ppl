@@ -9,6 +9,7 @@
 
 #include "LocalPlannerMethod.h"
 #include "StraightLine.h"
+#include "ValidityCheckers/MedialAxisClearanceValidity.h"
 
 template<class MPTraits>
 class MedialAxisLP : public LocalPlannerMethod<MPTraits> {
