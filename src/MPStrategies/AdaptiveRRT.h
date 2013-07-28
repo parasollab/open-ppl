@@ -242,7 +242,7 @@ AdaptiveRRT<MPTraits>::ExpandTree(CfgType& _dir){
   double dist = dm->Distance(env, newCfg, nearest);
 
   if(m_costMethod == REWARD)
-    UpdateCost(this->m_delta - dist + 1E-6, gm, rgsit->second);
+    UpdateCost(max(this->m_delta - dist, 0.0) + 1E-6, gm, rgsit->second);
 
   if(dist >= this->m_minDist) {
     //expansion success
