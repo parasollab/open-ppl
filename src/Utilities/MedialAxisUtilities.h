@@ -58,7 +58,7 @@ class ClearanceUtility : public MPBaseObject<MPTraits> {
     // Get Approximate Collision Information Function                      //
     //   Calculate the approximate clearance using a series of rays. The   //
     // specified number of rays are sent out till they change in validity. //
-    // The shortest ray is then considered the best calididate.            //
+    // The shortest ray is then considered the best candidate.             //
     //*********************************************************************//
     bool ApproxCollisionInfo(CfgType& _cfg, CfgType& _clrCfg, shared_ptr<Boundary> _bb, CDInfo& _cdInfo);
 
@@ -290,7 +290,7 @@ ClearanceUtility<MPTraits>::ExactCollisionInfo(CfgType& _cfg, CfgType& _clrCfg, 
 
     // Find closest point between robot and bbx, set if less than min dist from obstacles
     for(int m=0; m < robot->GetFreeBodyCount(); ++m) {
-      GMSPolyhedron &poly = robot->GetFreeBody(m)->GetWorldPolyhedron();
+      GMSPolyhedron& poly = robot->GetFreeBody(m)->GetWorldPolyhedron();
       for(size_t j = 0; j < poly.m_vertexList.size(); ++j){
         double clr = _bb->GetClearance(poly.m_vertexList[j]);
         if(clr < _cdInfo.m_minDist){
@@ -356,7 +356,7 @@ ClearanceUtility<MPTraits>::ExactCollisionInfo(CfgType& _cfg, CfgType& _clrCfg, 
 // Get Approximate Collision Information Function                      //
 //   Calculate the approximate clearance using a series of rays. The   //
 // specified number of rays are sent out till they change in validity. //
-// The shortest ray is then considered the best calididate.            //
+// The shortest ray is then considered the best candidate.             //
 //*********************************************************************//
 template<class MPTraits>
 bool

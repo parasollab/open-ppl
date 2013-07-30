@@ -32,7 +32,7 @@ typedef SSSurfaceMult PMPLCfgType;
 using namespace std;
 
 #ifdef _PARALLEL
-void stapl_main(int _argc, char *_argv[])
+void stapl_main(int _argc, char* _argv[])
 #else 
 int main(int _argc, char** _argv)
 #endif

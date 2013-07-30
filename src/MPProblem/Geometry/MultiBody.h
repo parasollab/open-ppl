@@ -95,8 +95,8 @@ public:
     //
     //////////////////////////////////////////////////////////////////////////////////////////
 
-    /**Return a free body accroding to the given index.
-      *_index should in [0, GetFreeBodyCount()+GetFixedBodyCount())
+    /**Return a free body according to the given index.
+      *_index should be in [0, GetFreeBodyCount()+GetFixedBodyCount())
       *if _index is smaller than GetFixedBodyCount(), then fixed body will be returned.
       *if _index is larger than GetFixedBodyCount(), then free body with (_index-GetFixedBodyCount())
       *index will be returned.

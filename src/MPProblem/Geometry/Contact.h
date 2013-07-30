@@ -22,16 +22,16 @@ public:
     //-----------------------------------------------------------
     //@{
     Contact();
-    Contact(Body * _body1,  Body * _body2, Vector3d & _position, Vector3d & _normal1, Vector3d & _normal2);
+    Contact(Body* _body1, Body* _body2, Vector3d& _position, Vector3d& _normal1, Vector3d& _normal2);
     ~Contact();
     //@}
 
-    Body *GetBody(int _index);
-    Transformation & GetUtransformToContact(int _index);
-    Vector3d & GetPosition();
-    Vector3d & GetNormal(int _index);
-    Vector3d & GetTangential(int _index);
-    Vector3d & GetOrthogonal(int _index);
+    Body* GetBody(int _index);
+    Transformation& GetUtransformToContact(int _index);
+    Vector3d& GetPosition();
+    Vector3d& GetNormal(int _index);
+    Vector3d& GetTangential(int _index);
+    Vector3d& GetOrthogonal(int _index);
     void ComputeTangential();
     void ComputeOrthogonal();
     void ComputeTransform();
@@ -51,7 +51,7 @@ private:
     //       body1 - belonging to manipulator (free body)
     //       body2 - belonging to obstacle (fixed body)
     //-----------------------------------------------------------
-    Body *body[2];  // Body identities
+    Body* body[2];  // Body identities
     Transformation UtransformToContact[2];
     Vector3d position;
     Vector3d normal[2];
@@ -67,27 +67,27 @@ private:
 //
 //////////////////////////////////////////////////////////////////////////////////////////
 
-inline Body * Contact::GetBody(int _index){
+inline Body* Contact::GetBody(int _index){
   return body[_index];
 }
 
-inline Transformation & Contact::GetUtransformToContact(int _index){
+inline Transformation& Contact::GetUtransformToContact(int _index){
   return UtransformToContact[_index];
 }
 
-inline Vector3d & Contact::GetPosition(){
+inline Vector3d& Contact::GetPosition(){
   return position;
 }
 
-inline Vector3d & Contact::GetNormal(int _index){
+inline Vector3d& Contact::GetNormal(int _index){
   return normal[_index];
 }
 
-inline Vector3d & Contact::GetTangential(int _index){
+inline Vector3d& Contact::GetTangential(int _index){
   return tangential[_index];
 }
 
-inline Vector3d & Contact::GetOrthogonal(int _index){
+inline Vector3d& Contact::GetOrthogonal(int _index){
   return orthogonal[_index];
 }
 

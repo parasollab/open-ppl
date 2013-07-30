@@ -14,7 +14,7 @@ class CDInfo {
   void ResetVars();
   
   int m_collidingObstIndex;   ///< The index for fisrt discovered obstacle which collides with robot.
-  bool m_retAllInfo;          ///< If this instance contains all (following) infomation.
+  bool m_retAllInfo;          ///< If this instance contains all (following) information.
   int m_nearestObstIndex;     ///< The index for closest obstacle
   double m_minDist;            ///< Distance between Robot and closest obstacle
   Vector3d m_robotPoint;       ///< Closest point on Robot to closest obstacle

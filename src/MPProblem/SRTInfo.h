@@ -1,5 +1,5 @@
-#ifndef _SRTInfo_h_
-#define _SRTInfo_h_
+#ifndef _SRTINFO_H_
+#define _SRTINFO_H_
 
 ///////////////////////////////////////////////////////////////////////////
 // Class primarily designed to hold vertex data for regional graph for SRTs
@@ -81,4 +81,4 @@ namespace stapl {
   }; //struct proxy
 }
 
-#endif /*_SRTInfo_h_*/
+#endif /*_SRTINFO_H_*/

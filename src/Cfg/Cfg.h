@@ -61,7 +61,7 @@ class ClearanceInfo {
 /**
  *This class provides storage, tools, and operators for representing configuration.
  *
- *Comparasion, baisc operations (+ - * / ), or more advanced operations
+ *Comparison, basic operations (+ - * / ), or more advanced operations
  *(like weighted sum, AlmostEqual.. ) are also provided.
  *This class also provides input/output functions to read/write instances of this class
  *to many kinds of file (formats).
@@ -104,7 +104,7 @@ class Cfg {
     ///////////////////////////////////////////////////////////////////////////////////////////
     //
     //
-    //    Access Methods : Retrive and set related information of this class
+    //    Access Methods : Retrieve and set related information of this class
     //
     //
     //////////////////////////////////////////////////////////////////////////////////////////
@@ -196,7 +196,7 @@ class Cfg {
     virtual void NormalizeOrientation(int _index = -1);
     
     //generates random configuration within C-space
-    virtual void GetRandomCfgImpl(Environment *_env, shared_ptr<Boundary> bb);
+    virtual void GetRandomCfgImpl(Environment* _env, shared_ptr<Boundary> bb);
 
     vector<double> m_v;   
     size_t m_robotIndex; //which active body in the env this cfg refers to
@@ -221,7 +221,7 @@ class Cfg {
     shared_ptr<Cfg> m_witnessCfg;
 
 #ifdef _PARALLEL
-    void define_type(stapl::typer &_t)  
+    void define_type(stapl::typer& _t)  
     {
       _t.member(m_v);
       _t.member(m_labelMap);

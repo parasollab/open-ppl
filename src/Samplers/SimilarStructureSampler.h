@@ -262,7 +262,7 @@ class SimilarStructureSampler : public SamplerMethod<MPTraits>
 
   // Store the effect (in terms of unaligned RMSD change) for each
   // joint of each seed node of rotating that joint by 180 degrees.
-  vector<double> HalfRotationEffects(const CfgType &_cfg, Environment *_env) {
+  vector<double> HalfRotationEffects(const CfgType& _cfg, Environment* _env) {
     RMSDDistance<MPTraits> rmsd;
     
     const vector<Vector3d> original_coords = rmsd.GetCoordinatesForRMSD(_cfg, _env);

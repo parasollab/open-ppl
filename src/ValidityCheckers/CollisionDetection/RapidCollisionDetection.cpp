@@ -18,7 +18,7 @@ Rapid::IsInCollision(shared_ptr<MultiBody> _robot, shared_ptr<MultiBody> _obstac
   if (_cdInfo.m_retAllInfo) {
     cerr << endl;
     cerr << "Currently unable to return ALL info using RAPID cd." << endl;
-    cerr << "Default/ing to minimal information." << endl;
+    cerr << "Defaulting to minimal information." << endl;
   }
 
   for(int i=0 ; i<_robot->GetFreeBodyCount(); i++){

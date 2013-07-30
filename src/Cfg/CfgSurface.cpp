@@ -328,7 +328,7 @@ CfgSurface::GetPositionOrientationFrom2Cfg(const Cfg& _c1, const Cfg& _c2) {
 }
 
 void
-CfgSurface::GetRandomCfgImpl(Environment *_env, shared_ptr<Boundary> _bb) {
+CfgSurface::GetRandomCfgImpl(Environment* _env, shared_ptr<Boundary> _bb) {
   if( m_surfaceID == INVALID_SURFACE ) { // need to set appropriate surface id
     int rindex = _env->GetRandomNavigableSurfaceIndex();
     m_surfaceID = rindex;

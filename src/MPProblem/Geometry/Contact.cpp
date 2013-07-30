@@ -1,6 +1,6 @@
 #include "Contact.h"
 
-#define PLANE_SIZE  5.0
+#define PLANE_SIZE 5.0
 
 
 //-------------------------------------------------------------------
@@ -9,7 +9,7 @@
 Contact::Contact() {
 }
 
-Contact::Contact(Body *_body1,  Body * _body2, Vector3d & _position, Vector3d & _normal1, Vector3d & _normal2) {
+Contact::Contact(Body* _body1, Body* _body2, Vector3d& _position, Vector3d& _normal1, Vector3d& _normal2) {
   body[0] = _body1;
   body[1] = _body2;
   position = _position;
