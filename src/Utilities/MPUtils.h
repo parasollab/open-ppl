@@ -75,7 +75,7 @@ class StatClass;
 enum cd_predefined {
   /// voronoi clip
 #ifdef USE_VCLIP
-  VCLIP, 
+  VCLIP,
 #endif
   /// Robust and Accurate Polygon Interference Detection
 #ifdef USE_RAPID
@@ -92,7 +92,7 @@ enum cd_predefined {
   INSIDE_SPHERES,
   BOUNDING_SPHERES,
   CD_USER1
-};    
+};
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
@@ -104,7 +104,7 @@ enum cd_predefined {
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 
-//return non-negative double-prevision floating-point values 
+//return non-negative double-prevision floating-point values
 //uniformly distributed over the interval [0.0, 1.0)
 double DRand();
 
@@ -136,7 +136,7 @@ long SRand(string _methodName, int _nextNodeIndex, long _base = 0x1234ABCD, bool
 ///////////////////////////////////////////////////////////////////////////////
 //
 //
-//     Region Expand Utilities 
+//     Region Expand Utilities
 //
 //
 ///////////////////////////////////////////////////////////////////////////////
@@ -161,8 +161,8 @@ vector<double> GetCartesianCoordinates(vector<double> sphericalCoordinates);
  */
 double Normalize(double _a);
 
-/**Calculate the minimum DIRECTED angular distance 
- *between two angles normalized to 1.0 
+/**Calculate the minimum DIRECTED angular distance
+ *between two angles normalized to 1.0
  */
 double DirectedAngularDistance(double _a, double _b);
 
@@ -185,66 +185,66 @@ class CompareSecond {
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 
-template <typename InputIterator, typename BinaryOperator, typename UnaryOperator>  
+template <typename InputIterator, typename BinaryOperator, typename UnaryOperator>
 struct Compose {
-  bool operator()(InputIterator _first, InputIterator _last, 
+  bool operator()(InputIterator _first, InputIterator _last,
       BinaryOperator _binaryOp, UnaryOperator _op) {
     if (_first == _last)
       return false;
     else {
       bool result = _op(*_first++);
       while (_first != _last)
-        result = _binaryOp(result, _op(*_first++)); 
-      return result;  
+        result = _binaryOp(result, _op(*_first++));
+      return result;
     }
-  }  
+  }
 };
 
-template <typename InputIterator, typename UnaryOperator>  
+template <typename InputIterator, typename UnaryOperator>
 struct Compose<InputIterator, logical_and<bool>, UnaryOperator> {
-  bool operator()(InputIterator _first, InputIterator _last, 
+  bool operator()(InputIterator _first, InputIterator _last,
       logical_and<bool> _binaryOp, UnaryOperator _op) {
-    if (_first == _last) 
+    if (_first == _last)
       return false;
     else {
       bool result = _op(*_first++);
       if (result == false)
-        return result;	
+        return result;
       while (_first != _last) {
-        result = _binaryOp(result, _op(*_first++)); 
+        result = _binaryOp(result, _op(*_first++));
         if (result == false)
-          return result;	
+          return result;
       }
-      return result;  
+      return result;
     }
-  }  
+  }
 };
 
-template <typename InputIterator, typename UnaryOperator>  
+template <typename InputIterator, typename UnaryOperator>
 struct Compose<InputIterator, logical_or<bool>, UnaryOperator> {
-  bool operator()(InputIterator _first, InputIterator _last, 
+  bool operator()(InputIterator _first, InputIterator _last,
       logical_or<bool> _binaryOp, UnaryOperator _op) {
     if (_first == _last)
       return false;
     else {
       bool result = _op(*_first++);
       if (result == true)
-        return result;	
+        return result;
       while (_first != _last) {
-        result = _binaryOp(result, _op(*_first++)); 
+        result = _binaryOp(result, _op(*_first++));
         if (result == true)
-          return result;	
+          return result;
       }
-      return result;  
+      return result;
     }
-  }  
+  }
 };
 
-template <typename InputIterator, typename UnaryOperator>  
+template <typename InputIterator, typename UnaryOperator>
 struct ComposeNegate {
   bool operator()(InputIterator _it, UnaryOperator _op) {
-    return !_op(*_it); 
-  }  
+    return !_op(*_it);
+  }
 };
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -307,11 +307,11 @@ class MethodSet {
     bool AddMethod(MethodPointer _e, const string& _label) {
       if(m_universe.find(_e->GetName()) != m_universe.end()) {
         _e->SetLabel(_label);
-        if(m_elements.empty()) 
+        if(m_elements.empty())
           m_default = _label;
-        if(m_elements.find(_label) == m_elements.end()) 
+        if(m_elements.find(_label) == m_elements.end())
           m_elements[_label] = _e;
-        else 
+        else
           cerr << "\nWarning, method list already has a pointer associated with \"" << _label << "\", not added\n";
         return true;
       }
@@ -323,9 +323,9 @@ class MethodSet {
 
     MethodPointer GetMethod(const string& _label) {
       MethodPointer element;
-      if(_label == "") 
+      if(_label == "")
         element = m_elements[m_default];
-      else 
+      else
         element = m_elements[_label];
       if(element.get() == NULL) {
         cerr << "\n\tError, requesting element with name \"" << _label << "\" which does not exist in " << m_name << ".\n";
@@ -362,8 +362,8 @@ class MethodSet {
 
   protected:
     typedef boost::function<MethodPointer(typename MPTraits::MPProblemType*, XMLNodeReader&)> FactoryType;
-    
-    template <typename Last> 
+
+    template <typename Last>
       void AddToUniverse(Last, Last){}
 
     template <typename First, typename Last>
@@ -396,9 +396,9 @@ class MPBaseObject {
     typedef typename MPTraits::MPProblemType MPProblemType;
     MPBaseObject(MPProblemType* _problem = NULL, string _label = "", string _name = "", bool _debug = false) :
       m_problem(_problem), m_label(_label), m_name(_name), m_debug(_debug) {};
-    MPBaseObject(MPProblemType* _problem, XMLNodeReader& _node, string _name="") : 
-      m_problem(_problem), m_label(""), m_name(_name), m_debug(false) { 
-        ParseXML(_node); 
+    MPBaseObject(MPProblemType* _problem, XMLNodeReader& _node, string _name="") :
+      m_problem(_problem), m_label(""), m_name(_name), m_debug(false) {
+        ParseXML(_node);
       };
 
     virtual ~MPBaseObject() {}
@@ -444,9 +444,9 @@ template<class CfgType, class Environment>
 bool
 IsWithinResolution(const CfgType& _cfg1, const CfgType& _cfg2, Environment* _env) {
   CfgType diff = _cfg1 - _cfg2;
-  return diff->PositionMagnitude() <= _env->GetPositionRes() 
+  return diff->PositionMagnitude() <= _env->GetPositionRes()
     && diff->OrientationMagnitude() <= _env->GetOrientationRes();
-}	
+}
 
 /** pt1 & pt2 are two endpts of a line segment
  * find the closest point to the current cfg on that line segment
@@ -456,8 +456,8 @@ template<class CfgType>
 CfgType
 ClosestPtOnLineSegment(const CfgType& _current, const CfgType& _p1, const CfgType& _p2) {
   CfgType b = _p2 - _p1;
-  CfgType c = _current - _p1;  
-  
+  CfgType c = _current - _p1;
+
   double bDotC = 0;
   double bSquared = 0;
 
@@ -469,10 +469,10 @@ ClosestPtOnLineSegment(const CfgType& _current, const CfgType& _p1, const CfgTyp
 
   if (bDotC <= 0) {
     return _p1;
-  } 
+  }
   else if (bDotC >= bSquared) {
     return _p2;
-  } 
+  }
   else {
     CfgType result = b*(bDotC/bSquared) + _p1 ;
     return result;
@@ -507,7 +507,7 @@ GetCentroid(RDMP<CFG, WEIGHT>* _graph, vector<typename RDMP<CFG, WEIGHT>::VID>& 
 
 
 template<class CfgType, class Environment>
-CfgType 
+CfgType
 SelectDirection(Environment* _env, CfgType dir){
   if(dir == CfgType()){
     dir.GetRandomCfg(_env);
@@ -521,11 +521,11 @@ SelectDirection(Environment* _env, CfgType dir){
 
 // from cartesion to spherical
 template<class CfgType>
-vector<double> 
+vector<double>
 GetSphericalCoordinates(CfgType& _cfg) {
   vector<double> coordinates(3);
   double rho = 0;   // = sqrt(x^2 + y^2 + z^2)
-  double theta = 0; // = arctan(y/x) 
+  double theta = 0; // = arctan(y/x)
   double phi = 0;   // = arccos(z/rho)
   // Getting cartesian coordinates
   for (size_t j = 0; j < _cfg.PosDOF(); ++j) {
@@ -533,25 +533,25 @@ GetSphericalCoordinates(CfgType& _cfg) {
     rho += pow(_cfg[j], 2.0);
   }
   // Coordinates = [X,Y,Z]
-  rho = sqrt(rho); 
+  rho = sqrt(rho);
   theta = atan2(coordinates[1],coordinates[0]);
   phi = MAX_INT;
   if(_cfg.PosDOF() == 3) {
     phi = acos(coordinates[2] / rho);
-  
+
   }
-  
+
   // Lets make all angles positive for more accurate comparison between quadrants, since atan2 returns [-2/pi,2/pi]
-  while(theta < 0) 
-    theta += TWOPI; 
+  while(theta < 0)
+    theta += TWOPI;
   // from cartesian to polar
   coordinates[0] = rho;
   coordinates[1] = theta;
   coordinates[2] = phi;
-  
+
   for (int i=_cfg.PosDOF(); i<_cfg.DOF(); i++)
     coordinates.push_back(2*DRand()-1.0);
-  
+
   return coordinates;
 }
 
@@ -560,8 +560,8 @@ GetSphericalCoordinates(CfgType& _cfg) {
 template<class CfgType>
 CfgType GetMiddlePoint(CfgType _regionCand, CfgType _neighbor, double _radius) {
   CfgType middlePoint;
-  middlePoint = _regionCand + _neighbor; 
-  middlePoint = middlePoint/2; 
+  middlePoint = _regionCand + _neighbor;
+  middlePoint = middlePoint/2;
   // Getting middle point across the circumference between candidate and neighbor
   vector<double> midPointCoordinates = GetSphericalCoordinates(middlePoint);
   midPointCoordinates[0] = _radius;
@@ -574,12 +574,12 @@ CfgType GetMiddlePoint(CfgType _regionCand, CfgType _neighbor, double _radius) {
 
 
 template<class CfgType>
-vector<CfgType> 
+vector<CfgType>
 GetMiddlePoints(CfgType& _regionCand, vector<CfgType>& _neighbors, double _radius) {
-  
+
   vector<CfgType> middlePoints;
   // Getting middle point across the circumference between candidate and neighbor
-  for (size_t i = 0; i < _neighbors.size(); ++i) 
+  for (size_t i = 0; i < _neighbors.size(); ++i)
     middlePoints.push_back(GetMiddlePoint(_regionCand, _neighbors[i], _radius));
 
   return middlePoints;
@@ -604,7 +604,7 @@ GetMiddlePoints(CfgType& _regionCand, vector<CfgType>& _neighbors, double _radiu
  * */
 
 template<class CfgType>
-CfgType 
+CfgType
 SelectDirection(CfgType& _regionCand, vector<CfgType>& _neighbors, double _radius) {
 
   SelectDirection(_regionCand, _neighbors, _radius, 0);
@@ -612,21 +612,21 @@ SelectDirection(CfgType& _regionCand, vector<CfgType>& _neighbors, double _radiu
 
 
 template<class CfgType>
-CfgType 
+CfgType
 SelectDirection(CfgType& _regionCand, vector<CfgType>& _neighbors, double _radius, double _overlap) {
   CfgType dir = CfgType();
-  
+
   // Store all the angles to get the max and min
   vector<double> thetas;
   vector<double> phis;
 
   if (dir.PosDOF() > 0) {
-    
+
     vector<double> candCoordinates = GetSphericalCoordinates(_regionCand);
     vector<CfgType> midPoints = GetMiddlePoints(_regionCand, _neighbors, _radius);
-    // TODO DEBUG only one neighbor, split region into halves 
+    // TODO DEBUG only one neighbor, split region into halves
     if (midPoints.size() == 1) {
-      CfgType point = -(midPoints[0]); 
+      CfgType point = -(midPoints[0]);
       midPoints.push_back(point);
     }
 
@@ -635,25 +635,25 @@ SelectDirection(CfgType& _regionCand, vector<CfgType>& _neighbors, double _radiu
       vector<double> neighborCoordinates;
       if(_neighbors.size() == 1)
         neighborCoordinates = GetSphericalCoordinates(_neighbors[0]);
-      else 
+      else
         neighborCoordinates = GetSphericalCoordinates(_neighbors[i]);
-      
+
       vector<double> midPointCoordinates = GetSphericalCoordinates(midPoints[i]);
       vector<double> increments(3);
-      
+
       // FIXME Increments not working, some angles are being shrinked
       // instead of enlarged
       increments[1] = (neighborCoordinates[1] - midPointCoordinates[1] ) * _overlap;
       midPointCoordinates[1] += increments[1];
       double increment = (neighborCoordinates[2] - midPointCoordinates[2]) * _overlap;
       midPointCoordinates[2] += increment;
-      
+
       // We use this function to avoid pushing all angles and sorting them at the end
       PushMinMax(thetas, midPointCoordinates[1]);
       PushMinMax(phis, midPointCoordinates[2]);
     }
- 
-    // Is the range calculated correct? If cand theta is outside out [min,max] then fix the range to be [max-2PI, min] 
+
+    // Is the range calculated correct? If cand theta is outside out [min,max] then fix the range to be [max-2PI, min]
     while (thetas[0] > candCoordinates[1] ) {
       double temp = thetas[0];
       thetas[0] = thetas[1] - TWOPI;
@@ -667,10 +667,10 @@ SelectDirection(CfgType& _regionCand, vector<CfgType>& _neighbors, double _radiu
     // Randomizing
     // Rho = radius
     vector<double> randCoordinates(3);
-    randCoordinates[0] = _radius  * sqrt(DRand()); 
+    randCoordinates[0] = _radius  * sqrt(DRand());
     randCoordinates[1] = (thetas[1] - thetas[0]) * DRand() + thetas[0];
     randCoordinates[2] = MAX_INT;
-    if(_regionCand.PosDOF() == 3) 
+    if(_regionCand.PosDOF() == 3)
       randCoordinates[2] = (phis[1] - phis[0]) * DRand() + phis[0];
 
     randCoordinates = GetCartesianCoordinates(randCoordinates);
@@ -721,14 +721,14 @@ SelectDirection(CfgType& _regionCand, vector<CfgType>& _neighbors, double _radiu
 
 template<class MPTraits>
 bool
-RRTExpand(typename MPTraits::MPProblemType* _mp, 
-    string _vc, string _dm, 
-    typename MPTraits::CfgType _start, 
-    typename MPTraits::CfgType _dir, 
-    typename MPTraits::CfgType& _newCfg, 
+RRTExpand(typename MPTraits::MPProblemType* _mp,
+    string _vc, string _dm,
+    typename MPTraits::CfgType _start,
+    typename MPTraits::CfgType _dir,
+    typename MPTraits::CfgType& _newCfg,
     double _delta, int& _weight, CDInfo& _cdInfo,
     double _posRes, double _oriRes){
-  
+
   //Setup...primarily for collision checks that occur later on
   StatClass* stats = _mp->GetStatClass();
   Environment* env = _mp->GetEnvironment();
@@ -756,7 +756,7 @@ RRTExpand(typename MPTraits::MPProblemType* _mp,
   }
   if(previous != _start){ //Did we go anywhere?
     _newCfg = previous;//Last Cfg pushed back is the final tick allowed
-    return true;     
+    return true;
   }
   //Didn't find a place to go :(
   else
@@ -772,27 +772,27 @@ namespace ExpansionType {
     NO_COLLISION,
     NO_EXPANSION,
   };
- 
+
   string GetExpansionTypeString(Expansion expansion);
 
 }
 
 /*
  * Blind RRT Expand
- * Expands up to delta distance or when reaching out of boundary. If a collision is 
+ * Expands up to delta distance or when reaching out of boundary. If a collision is
  * encountered, it records the last valid sample and keeps growing.
  */
 
 template<class MPTraits>
 ExpansionType::Expansion
-BlindRRTExpand(typename MPTraits::MPProblemType* _mp, 
-    string _vc, string _dm, 
-    typename MPTraits::CfgType _start, 
-    typename MPTraits::CfgType _dir, 
-    vector< pair<typename MPTraits::CfgType, int> >& _newCfgs, // pair = Cfg , weight. weight is the distance from the Cfg to the start Cfg 
+BlindRRTExpand(typename MPTraits::MPProblemType* _mp,
+    string _vc, string _dm,
+    typename MPTraits::CfgType _start,
+    typename MPTraits::CfgType _dir,
+    vector< pair<typename MPTraits::CfgType, int> >& _newCfgs, // pair = Cfg , weight. weight is the distance from the Cfg to the start Cfg
     double _delta, CDInfo& _cdInfo,
     double _posRes, double _oriRes){
-  
+
   //Setup...primarily for collision checks that occur later on
   StatClass* stats = _mp->GetStatClass();
   string callee("RRTUtility::BlindRRTExpand");
@@ -805,9 +805,9 @@ BlindRRTExpand(typename MPTraits::MPProblemType* _mp,
   // if any collision is encountered, collision becomes true
   bool collision=false, outOfBoundary=false;
   // this tracks collision changes along the expansion
-  bool prevCollision = !vc->IsValid(_start, env, *stats, _cdInfo, &callee); 
+  bool prevCollision = !vc->IsValid(_start, env, *stats, _cdInfo, &callee);
   int nTicks, ticker = 0;
-  pair<CfgType, int> cfgWeight; 
+  pair<CfgType, int> cfgWeight;
   incr.FindIncrement(tick,_dir,&nTicks, _posRes, _oriRes);
 
   //Move out from start towards dir, bounded by number of ticks allowed at a given resolution.  Delta + obsDist are
@@ -819,7 +819,7 @@ BlindRRTExpand(typename MPTraits::MPProblemType* _mp,
 
     if(!(tick.InBoundary(env)) ) {
       outOfBoundary = true; // Expansion is out of boundary, return previous tick
-    } else if (!(vc->IsValid(tick, env, *stats, _cdInfo, &callee))) { 
+    } else if (!(vc->IsValid(tick, env, *stats, _cdInfo, &callee))) {
       collision = true; //Found a collision, activate flag
       if(!prevCollision) {
         // record the previous sample since it is valid
@@ -828,7 +828,7 @@ BlindRRTExpand(typename MPTraits::MPProblemType* _mp,
 
         // TODO do we really want to add in collision nodes???
         /*
-        cfgWeight = make_pair(tick, ticker);  
+        cfgWeight = make_pair(tick, ticker);
         _newCfgs.push_back(cfgWeight);
         */
         prevCollision = true;
@@ -839,28 +839,28 @@ BlindRRTExpand(typename MPTraits::MPProblemType* _mp,
 
         /*
         // TODO do we really want to add in collision nodes???
-        cfgWeight = make_pair(previous, ticker - 1); // previous is one tick behind 
+        cfgWeight = make_pair(previous, ticker - 1); // previous is one tick behind
         _newCfgs.push_back(cfgWeight);
         */
-  
+
         // record this sample since the previous was in collision
-        cfgWeight = make_pair(tick, ticker); 
+        cfgWeight = make_pair(tick, ticker);
         _newCfgs.push_back(cfgWeight);
 
-        prevCollision = false; 
+        prevCollision = false;
       }
     }
   }
   if(previous != _start){ //Did we go anywhere?
-    
-    cfgWeight = make_pair(previous, ticker); 
+
+    cfgWeight = make_pair(previous, ticker);
     // TODO Cesar: previous might get added in the previous step
-    if(previous != _newCfgs.back().first) 
+    if(previous != _newCfgs.back().first)
       _newCfgs.push_back(cfgWeight);//Last Cfg pushed back is the final tick allowed
-    
+
     if (collision) {    // encountered collision in the way
       return ExpansionType::IN_COLLISION;
-    
+
     } else {            // No collision and not out of boundary
       return ExpansionType::NO_COLLISION;
     }
@@ -868,7 +868,7 @@ BlindRRTExpand(typename MPTraits::MPProblemType* _mp,
   }
   // Didn't find a place to go :(
   else
-    return ExpansionType::NO_EXPANSION;     
+    return ExpansionType::NO_EXPANSION;
 }
 
 
@@ -898,7 +898,7 @@ bool PtInTriangle(const Point2d& _A, const Point2d& _B, const Point2d& _C, const
 // GetPtFromBarycentricCoords: given triange defined by _A,_B,_C, return the
 // point inside triangle defined by barycentric coords. _u,_v
 //----------------------------------------------------------------------------
-Point3d GetPtFromBarycentricCoords(const Point3d& _A, const Point3d& _B, const Point3d& _C, double _u, double _v); 
+Point3d GetPtFromBarycentricCoords(const Point3d& _A, const Point3d& _B, const Point3d& _C, double _u, double _v);
 
 
 //----------------------------------------------------------------------------

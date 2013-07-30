@@ -37,8 +37,8 @@ class RadialRegion {
 
   public:
   RadialRegion(RegionType _data=RegionType()) : m_data(_data) { }
-  RadialRegion(const RadialRegion& _other) 
-    : m_data(_other.m_data),m_neighbors(_other.m_neighbors),m_branch(_other.m_branch), 
+  RadialRegion(const RadialRegion& _other)
+    : m_data(_other.m_data),m_neighbors(_other.m_neighbors),m_branch(_other.m_branch),
     m_problem(_other.m_problem), m_ccs(_other.m_ccs){ }
 
   //friend ostream& operator<< (ostream&, const Cfg&);
@@ -46,10 +46,10 @@ class RadialRegion {
     //  _r.Print(_s);
     _os << " " << _r.m_data << " " << _r.m_weight << " " << _r.m_branch.size() << " ";
     return _os;
-  }  
+  }
 
   /* void Print(ostream &os) const  {
-     os << "  "  << m_data << " "; 
+     os << "  "  << m_data << " ";
      }*/
 
   // Getters
@@ -66,16 +66,16 @@ class RadialRegion {
   void SetBranch(const vector<VID>& _branch) {m_branch = _branch;}
   void SetWeight(const WeightType _weight) {m_weight = _weight;}
   void SetMPProblem(const MPProblemType* _problem) {m_problem = _problem;}
-  void SetCCs(const vector<pair<size_t, VID> >& _ccs) { m_ccs = _ccs; } 
+  void SetCCs(const vector<pair<size_t, VID> >& _ccs) { m_ccs = _ccs; }
   void SetLocalTree(const LocalGraphType _localTree) {m_localTree = _localTree;}
 
   void AddToBranch(const vector<VID>& _branch) {
-    for(int i=0; i<_branch.size(); i++) 
+    for(int i=0; i<_branch.size(); i++)
       m_branch.push_back(_branch[i]);
   }
 
 
-  void define_type(stapl::typer& _t) { 
+  void define_type(stapl::typer& _t) {
     _t.member(m_data);
     _t.member(m_neighbors);
     _t.member(m_branch);
@@ -88,7 +88,7 @@ class RadialRegion {
 
 namespace stapl {
   template <typename Accessor, class MPTraits>
-    class proxy<RadialRegion<MPTraits>, Accessor> 
+    class proxy<RadialRegion<MPTraits>, Accessor>
     : public Accessor {
 
       private:
@@ -121,7 +121,7 @@ namespace stapl {
         void SetBranch(const vector<VID> _branch) { Accessor::invoke(&target_t::SetBranch, _branch); }
         void SetWeight(const WeightType _weight) { Accessor::invoke(&target_t::SetWeight, _weight); }
         void SetMPProblem(const MPProblemType* _problem) {Accessor::invoke(&target_t::SetMPProblem, _problem); }
-        void SetCCs(const vector<pair<size_t, VID> >& _ccs) { Accessor::invoke(&target_t::SetCCs, _ccs) ; } 
+        void SetCCs(const vector<pair<size_t, VID> >& _ccs) { Accessor::invoke(&target_t::SetCCs, _ccs) ; }
         void SetLocalTree(const LocalGraphType _localTree) {Accessor::invoke(&target_t::SetLocalTree, _localTree); }
 
         void AddToBranch(const vector<VID> _branch) { Accessor::invoke(&target_t::AddToBranch, _branch); }
@@ -153,13 +153,13 @@ class ConnectRegion {
     }
 
 
-    template<typename vertexView, typename repeatView> 
+    template<typename vertexView, typename repeatView>
       void operator()(vertexView _view, repeatView& _gview)const {
 
         typedef typename vertexView::adj_edges_type ADJV;
         ADJV  edges = _view.edges();
         //SOURCE REGION
-        vector<VID> sVids = _view.property().GetBranch(); 
+        vector<VID> sVids = _view.property().GetBranch();
         //TARGET REGION
 
         for(typename vertexView::adj_edge_iterator ei = edges.begin(); ei != edges.end(); ++ei){
@@ -197,7 +197,7 @@ class RadialRegionEdge{
 
   public:
     typedef typename stapl::graph<stapl::DIRECTED, stapl::NONMULTIEDGES, RadialRegion<MPTraits>, WeightType> RadialRegionGraph;
-    RadialRegionEdge(MPProblemType* _problem, size_t _k, string _dmLabel): 
+    RadialRegionEdge(MPProblemType* _problem, size_t _k, string _dmLabel):
       m_problem(_problem), m_k(_k), m_dmLabel(_dmLabel) {
       }
 
@@ -222,13 +222,13 @@ class RadialRegionEdge{
 
         // vector< NFType > nfresult = map_reduce(is_coarse_wf(nfMapfnc), NFReduceFunc<MPTraits>(), _v2);
 
-        NFMapFunc<MPTraits> nfMap; 
+        NFMapFunc<MPTraits> nfMap;
         vector<NFType> nfresult = nfMap.FindNeighbors(env, dmm, _v2.begin(), _v2.end(), cfg, m_k);
         //Add Edge between v and its k closest
 
 
         for(typename vector<pair<VID, double> >::iterator itr = nfresult.begin(); itr != nfresult.end(); ++itr)
-        { 
+        {
           // PrintValue("REDGE WF DIST : ", (*itr).second);
           typename RadialRegionGraph::edge_descriptor ed1(vid, (*itr).first);
           //typename RadialRegionGraph::edge_descriptor ed2((*itr).first, vid);
@@ -244,7 +244,7 @@ class RadialRegionEdge{
       }
 
 
-};  
+};
 
 
 template<class MPTraits>
@@ -256,10 +256,10 @@ struct RadialRegionVertex{
     MPProblemType* m_problem;
     CfgType m_root;
     double m_radius;
-    string m_dmLabel; 
+    string m_dmLabel;
 
   public:
-    RadialRegionVertex(MPProblemType* _problem, CfgType _root=CfgType(), double _radius=MAX_DBL, string _dmLabel=""): 
+    RadialRegionVertex(MPProblemType* _problem, CfgType _root=CfgType(), double _radius=MAX_DBL, string _dmLabel=""):
       m_problem(_problem),m_root(_root),m_radius(_radius){
         m_dmLabel = _dmLabel;
       }
@@ -295,7 +295,7 @@ struct RadialRegionVertex2D{
     double m_radius;
     double m_numRegions;
   public:
-    RadialRegionVertex2D(size_t _numRegions, CfgType _basePoint=CfgType(), double _radius=MAX_DBL): 
+    RadialRegionVertex2D(size_t _numRegions, CfgType _basePoint=CfgType(), double _radius=MAX_DBL):
       m_numRegions(_numRegions),m_basePoint(_basePoint),m_radius(_radius){
       }
 
@@ -312,7 +312,7 @@ struct RadialRegionVertex2D{
         vector<double> pos = m_basePoint.GetPosition();
         const double xBase = m_basePoint[0];
         const double yBase = m_basePoint[1];
-        double thetaBase = atan2(yBase,xBase); 
+        double thetaBase = atan2(yBase,xBase);
         double theta = _vw.descriptor() * alpha + thetaBase;
 
         CfgType regionCand;
@@ -338,7 +338,7 @@ struct RegionVertexByCCs{
     double m_radius;
     double m_numRegions;
   public:
-    RegionVertexByCCs(size_t _numRegions, CfgType _basePoint=CfgType(), double _radius=MAX_DBL): 
+    RegionVertexByCCs(size_t _numRegions, CfgType _basePoint=CfgType(), double _radius=MAX_DBL):
       m_numRegions(_numRegions),m_basePoint(_basePoint),m_radius(_radius){
       }
 
@@ -357,7 +357,7 @@ struct RegionVertexByCCs{
         vector<double> pos = m_basePoint.GetPosition();
         const double xBase = m_basePoint[0];
         const double yBase = m_basePoint[1];
-        double thetaBase = atan2(yBase,xBase); 
+        double thetaBase = atan2(yBase,xBase);
         double theta = _region.descriptor() * alpha + thetaBase;
 
         CfgType regionCand;
@@ -404,7 +404,7 @@ class BuildRadialRRT {
     double m_overlap;
 
   public:
-    BuildRadialRRT(MPProblemType* _problem, size_t _numNodes, string _dm, string _vcm, string _nfm, 
+    BuildRadialRRT(MPProblemType* _problem, size_t _numNodes, string _dm, string _vcm, string _nfm,
         double _delta, double _minDist, CfgType _root, size_t _numAttempts, const double _overlap, bool _strictBranching) {
 
       m_problem = _problem;
@@ -434,7 +434,7 @@ class BuildRadialRRT {
       _t.member(m_overlap);
     }
 
-    template<typename View> 
+    template<typename View>
       void operator()(View _view) const {
 
         CfgType regionCand = _view.property().GetCandidate();
@@ -456,10 +456,10 @@ class BuildRadialRRT {
           VID nearestVID;
 
           double radius = dm->Distance(env, m_root, regionCand);
-          // No neighbors means only one region? 
+          // No neighbors means only one region?
           if(neighbors.size() == 0)
             dir.GetRandomCfg(env);
-          else 
+          else
             dir = SelectDirection(regionCand, neighbors, radius, m_overlap);
 
           /*At the first iteration, root is the only node in the tree so no need to call kclosest
@@ -473,7 +473,7 @@ class BuildRadialRRT {
             back_insert_iterator<vector<VID> > iterBegin(kClosest);
 
             //Find closest from local tree
-            nfp->KClosest((m_problem->GetRoadmap()),branch.begin(),branch.end(), dir, 1, iterBegin); 
+            nfp->KClosest((m_problem->GetRoadmap()),branch.begin(),branch.end(), dir, 1, iterBegin);
             nearestVID = kClosest[0];
           }
           // TODO DEBUG: do not add to root twice for each branch, remember to delete
@@ -488,10 +488,10 @@ class BuildRadialRRT {
           }
 
           CDInfo cdInfo;
-          int weight;  
+          int weight;
           //If expansion succeeds add to global tree and a copy in local tree
 
-          if(RRTExpand<MPTraits>(m_problem,m_vcm, m_dm, nearest, dir, newCfg, m_delta, weight, cdInfo, 
+          if(RRTExpand<MPTraits>(m_problem,m_vcm, m_dm, nearest, dir, newCfg, m_delta, weight, cdInfo,
                 env->GetPositionRes(), env->GetOrientationRes())
               && (dm->Distance(env, newCfg, nearest) >= m_minDist)) {
 
@@ -500,7 +500,7 @@ class BuildRadialRRT {
             pair<WeightType, WeightType> weights = make_pair(WeightType("RRTExpand", weight), WeightType("RRTExpand", weight));
             //globalTree->AddEdge(nearestVID, newVID,weights);
             globalTree->add_edge_async(nearestVID, newVID,weights.first);
-            
+
             // TODO Fix VIZMO DEBUG
             // if (this->m_debug) VDAddNode(newCfg);
             VDAddEdge(newCfg, nearest);
@@ -557,7 +557,7 @@ class BuildRadialBlindRRT {
     bool m_debug;
 
   public:
-    BuildRadialBlindRRT(MPProblemType* _problem, size_t _numNodes, string _dm, string _vc, string _nf, string _CCconnection, 
+    BuildRadialBlindRRT(MPProblemType* _problem, size_t _numNodes, string _dm, string _vc, string _nf, string _CCconnection,
         double _delta, double _minDist, CfgType _root, size_t _numAttempts, size_t _numCCIters=0, double _overlap=0, bool _strictBranching=true, bool _debug=false) {
 
       m_problem = _problem;
@@ -594,12 +594,12 @@ class BuildRadialBlindRRT {
     }
 
     // Run //
-    template<typename View> 
+    template<typename View>
       void operator()(View _view) const {
 
         CfgType regionCand = _view.property().GetCandidate();
         vector<CfgType> neighbors = _view.property().GetNeighbors();
-        LocalGraphType* localTree = new LocalGraphType(); 
+        LocalGraphType* localTree = new LocalGraphType();
         //LocalGraphType localTree;
         localTree->clear();
         localTree->add_vertex(0, m_root);
@@ -616,7 +616,7 @@ class BuildRadialBlindRRT {
         vector<VID> branch;
 
         vector<VID> invalidNodes; // instead iterating over all nodes, just keep record of the invalid ones so we dont have to hit the graph every time
-        vector<VID> validNodes; 
+        vector<VID> validNodes;
         branch.clear();
         size_t attempts=0;
         size_t maxAttempts = std::max(m_numNodes,m_numAttempts);
@@ -630,10 +630,10 @@ class BuildRadialBlindRRT {
           VID nearestVID;
 
           double radius = dm->Distance(env, m_root, regionCand);
-          // No neighbors means only one region? 
+          // No neighbors means only one region?
           if(neighbors.size() == 0)
             dir.GetRandomCfg(env);
-          else 
+          else
             dir = SelectDirection(regionCand, neighbors, radius, m_overlap);
 
           /*At the first iteration, root is the only node in the tree so no need to call kclosest
@@ -647,7 +647,7 @@ class BuildRadialBlindRRT {
             back_insert_iterator<vector<VID> > iterBegin(kClosest);
 
             //Find closest from local tree
-            nfp->KClosest((m_problem->GetRoadmap()),branch.begin(),branch.end(), dir, 1, iterBegin); 
+            nfp->KClosest((m_problem->GetRoadmap()),branch.begin(),branch.end(), dir, 1, iterBegin);
             nearestVID = kClosest[0];
           }
           // TODO DEBUG: do not add to root twice for each branch, remember to delete
@@ -671,8 +671,8 @@ class BuildRadialBlindRRT {
 
         }
           radialUtils.RemoveInvalidNodes(branch);
-          radialUtils.ConnectCCs(); 
-        
+          radialUtils.ConnectCCs();
+
         /*
 
           for (int i=0; i<pendingEdges.size(); i++) {
@@ -696,7 +696,7 @@ class BuildRadialBlindRRT {
         //_view.property().SetBranch(branch);
 
         //t5.stop();
-        // PrintValue("Setting CCs: ", t5.value() ); 
+        // PrintValue("Setting CCs: ", t5.value() );
         //t0.stop();
 
         // PrintValue("Max Attempts : ", attempts);
@@ -744,13 +744,13 @@ class BuildRadialBlindRRT {
   }
 
 
-  template<typename vertexView, typename repeatView> 
+  template<typename vertexView, typename repeatView>
   void operator()(vertexView _view, repeatView& _gview)const {
 
   typedef typename vertexView::adj_edges_type ADJV;
   ADJV  edges = _view.edges();
 //SOURCE REGION
-vector<VID> localVIDs = _view.property().GetBranch(); 
+vector<VID> localVIDs = _view.property().GetBranch();
 
 //Setup MP variables
 Environment* env = m_problem->GetEnvironment();
@@ -773,14 +773,14 @@ for(typename vertexView::adj_edge_iterator ei = edges.begin(); ei != edges.end()
 
 RadialRegion<MPTraits> tRegion = (*(_gview.find_vertex((*ei).target()))).property();
 
-stapl::sequential::get_cc_stats(localTree ,colorMap, localCCs);      
+stapl::sequential::get_cc_stats(localTree ,colorMap, localCCs);
 
 int randCC = LRand() % localCCs.size();
 // Fill in the local CC
 stapl::sequential::get_cc(globalTree, colorMap, localCCs[randCC].second, localCC);
 
 CfgType localccCentroid = GetCentroid(globalTree, localCC);
-ColorMap remoteCmap = tRegion.GetColorMap(); 
+ColorMap remoteCmap = tRegion.GetColorMap();
 vector< pair<size_t,VID> > remoteCCs = tRegion.GetCCs();
 VID closestRemoteCC = GetClosestCentroid(localccCentroid, remoteCCs, remoteCmap);
 
@@ -810,7 +810,7 @@ VID GetClosestCentroid(CfgType _centroid, vector<pair<size_t, VID> > _ccs, Color
   VID currMinVID = INVALID_VID;
 
   for (int i=0; i<_ccs.size(); i++) {
-    // TODO Cesar fix STAPL 
+    // TODO Cesar fix STAPL
     stapl::sequential::get_cc(globalTree,_colorMap,_ccs[i].second,cc);
     CfgType otherCentroid = GetCentroid(globalTree,cc);
     double dist = dm->Distance(env, _centroid, otherCentroid);
@@ -882,7 +882,7 @@ class ConnectGlobalCCs {
     }
 
 
-    template<typename vertexView, typename repeatView> 
+    template<typename vertexView, typename repeatView>
       void operator()(vertexView _view, repeatView& _gview)const {
 
         CfgType col;
@@ -899,13 +899,13 @@ class ConnectGlobalCCs {
         size_t rgsize = _gview.size();
 
         //SOURCE REGION
-        LocalGraphType localTree = (_view.property().GetLocalTree()); 
+        LocalGraphType localTree = (_view.property().GetLocalTree());
         rrtConnect->SetLocalGraph(&localTree);
 
         vector<CCType > localCCs;
         ColorMap colorMap;
         colorMap.reset();
-        stapl::sequential::get_cc_stats(localTree, colorMap, localCCs);      
+        stapl::sequential::get_cc_stats(localTree, colorMap, localCCs);
         queue<VID> pendingCCs;
 
         //TARGET REGIONS
@@ -931,7 +931,7 @@ class ConnectGlobalCCs {
 
           //TODO Cesar: calculate ccs locally
           colorMap.reset();
-          stapl::sequential::get_cc_stats(remoteTree, colorMap, remoteCCs);      
+          stapl::sequential::get_cc_stats(remoteTree, colorMap, remoteCCs);
 
           set<VID> unconnectedCCs;
           for(typename vector<pair<size_t,VID> >::iterator it = remoteCCs.begin(); it != remoteCCs.end(); it++)
@@ -960,10 +960,10 @@ class ConnectGlobalCCs {
             }
             vector<VID> remoteCC;
             for(typename set<VID>::iterator it = connectedCCs.begin(); it != connectedCCs.end(); it++) {
-              VID remoteCCVID = (*it); 
+              VID remoteCCVID = (*it);
               // remoteCC and localCC are already connected, most likely by the root, update the sets
-              if ( remoteCCVID == localCCVID ) { 
-                break;   
+              if ( remoteCCVID == localCCVID ) {
+                break;
               }
 
               colorMap.reset();
@@ -979,7 +979,7 @@ class ConnectGlobalCCs {
               }
 
               if ( rrtConnect->IsConnect(m_problem->GetRoadmap(), *stats, colorMap, localCC.begin(), localCC.end(),
-                    remoteCC.begin(), remoteCC.end()) ) { 
+                    remoteCC.begin(), remoteCC.end()) ) {
                 if (m_debug) cout << "Connected" << endl;
                   break;
               }
@@ -991,19 +991,19 @@ class ConnectGlobalCCs {
               VID remoteCCVID = (*it);
               // remoteCC and localCC are already connected, most likely by the root, update the sets
 
-              if ( remoteCCVID == localCCVID ) { 
+              if ( remoteCCVID == localCCVID ) {
 
                 typename set<VID>::iterator tmp = it;
                 it++;
                 connectedCCs.insert(*tmp);
                 unconnectedCCs.erase(tmp);
-                continue; 
+                continue;
               }
 
               colorMap.reset();
               remoteCC.clear();
               stapl::sequential::get_cc(remoteTree,colorMap, remoteCCVID, remoteCC);
-              
+
               if(m_debug) {
                 cout << endl << "RemoteCC:" << endl;
                 for(int i=0; i<remoteCC.size(); i++) {
@@ -1012,7 +1012,7 @@ class ConnectGlobalCCs {
                 cout << endl;
                 cout << "(UC) Connecting: " << localCCVID << " - " << remoteCCVID << endl;
               }
-              
+
               if ( rrtConnect->IsConnect(m_problem->GetRoadmap(), *stats, colorMap, localCC.begin(), localCC.end(),
                     remoteCC.begin(), remoteCC.end()) ) {
                 typename set<VID>::iterator tmp = it;
@@ -1059,7 +1059,7 @@ struct is_in_cc
   typedef vector<T> result_type;
   size_t m_ccid;
   PropertyMap m_pmap;
-  
+
   is_in_cc(size_t ccid, PropertyMap pmap)
     : m_ccid(ccid), m_pmap(pmap)
   {}
@@ -1112,17 +1112,17 @@ class DeleteInvalidCCs {
     }
 
 
-    template<typename View> 
+    template<typename View>
       void operator()(View _view) const
       {
 
-        LocalGraphType localTree = (_view.property().GetLocalTree()); 
+        LocalGraphType localTree = (_view.property().GetLocalTree());
         GraphType* globalTree = m_problem->GetRoadmap()->GetGraph();
         vector<CCType > ccs;
         ColorMap colorMap;
         colorMap.reset();
-        
-        stapl::sequential::get_cc_stats(localTree, colorMap, ccs);      
+
+        stapl::sequential::get_cc_stats(localTree, colorMap, ccs);
 
         vector<VID> cc;
         vector<VID> toBeDeleted;
@@ -1142,4 +1142,4 @@ class DeleteInvalidCCs {
       }
 };
 */
-#endif 
+#endif

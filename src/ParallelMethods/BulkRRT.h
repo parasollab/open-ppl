@@ -19,7 +19,7 @@ using namespace stapl;
 
 class XMLNodeReader;
 
- 
+
 template<class MPTraits>
 class BulkWF {
 
@@ -32,24 +32,24 @@ class BulkWF {
   typedef typename MPProblemType::NeighborhoodFinderPointer NeighborhoodFinderPointer;
   typedef vector<pair<VID, double> > NFResultType;
   private:
-  
+
   MPProblemType* m_problem;
   string m_dm;
   string m_vcm;
   double m_delta;
   double m_minDist;
-  
+
   public:
-  BulkWF(MPProblemType* _problem, string _dm, string _vcm, 
+  BulkWF(MPProblemType* _problem, string _dm, string _vcm,
     double _delta, double _minDist) {
-    
+
     m_problem = _problem;
     m_dm = _dm;
     m_delta = _delta;
     m_vcm = _vcm;
     m_minDist = _minDist;
   }
-  
+
   void define_type(stapl::typer& _t) {
       _t.member(m_problem);
       _t.member(m_dm);
@@ -57,22 +57,22 @@ class BulkWF {
       _t.member(m_minDist);
   }
 
-  template<typename View, typename GraphView> 
-  void operator()(const View& _view, GraphView& _gview){  
+  template<typename View, typename GraphView>
+  void operator()(const View& _view, GraphView& _gview){
     //PrintValue("WF gview size", _gview.size());
     //PrintValue("WF view size", _view.size());
     ///Setup global variables
     DistanceMetricPointer dmm = m_problem->GetDistanceMetric("euclidean");
     Environment* env = m_problem->GetEnvironment();
     NeighborhoodFinderPointer nf = m_problem->GetNeighborhoodFinder("BFNF");
-      for(typename View::iterator vit = _view.begin(); vit != _view.end(); ++vit){  
-            
+      for(typename View::iterator vit = _view.begin(); vit != _view.end(); ++vit){
+
         CfgType newCfg, nearest, dir;
         VID nearestVID;
         CDInfo cdInfo;
-        int weight;  
+        int weight;
         vector<VID> kClosest(1);
-        
+
         //We want to find a random configuration to attempt expansion that way.
         //CfgType dir = SelectDirection(env);
         dir.GetRandomCfg(env);
@@ -83,13 +83,13 @@ class BulkWF {
         //NFResultType nfresult = nfMap.FindNeighbors(env, dmm, _gview.begin(), _gview.end(), dir, 1);
         //nearestVID = nfresult[0].first;
 	nearest = (*(_gview.find_vertex(nearestVID))).property();
-	
+
 	//PrintValue("WF closest", nearestVID);
-	
-	//if(this->m_debug) cout << "RRT could not expand!" << endl; 
+
+	//if(this->m_debug) cout << "RRT could not expand!" << endl;
         if((nearestVID != -999) && RRTExpand<MPTraits>(m_problem, m_vcm, m_dm, nearest, dir, newCfg, m_delta, weight, cdInfo, env->GetPositionRes(), env->GetOrientationRes())
-		    && (dmm->Distance(env, newCfg, nearest) >= m_minDist))   { 
-            //do not change the root  
+		    && (dmm->Distance(env, newCfg, nearest) >= m_minDist))   {
+            //do not change the root
 	    //PrintValue("newCfg", newCfg);
             //if((*vit).descriptor() != 0) (*vit).property() = newCfg;
 	    VID newVID = _gview.add_vertex(newCfg);
@@ -121,7 +121,7 @@ class BulkRRT : public MPStrategyMethod<MPTraits> {
   typedef typename MPProblemType::ValidityCheckerPointer ValidityCheckerPointer;
   typedef typename MPProblemType::VID VID;
   typedef graph_view<GraphType>  gviewType;
-  
+
   BulkRRT(typename MPTraits::MPProblemType* _problem, XMLNodeReader& _node);
   BulkRRT();
   virtual ~BulkRRT();
@@ -133,8 +133,8 @@ class BulkRRT : public MPStrategyMethod<MPTraits> {
   void InitializeTree();
   virtual void Finalize();
   virtual void PrintOptions(ostream& _os);
-    
-    
+
+
   private:
   ///////////////////////////////////////////////
   //general variables
@@ -153,7 +153,7 @@ class BulkRRT : public MPStrategyMethod<MPTraits> {
   double m_delta;
   int m_weight;
   bool m_parallelNF;
-  
+
 
 };
 
@@ -165,13 +165,13 @@ BulkRRT<MPTraits>::BulkRRT(typename MPTraits::MPProblemType* _problem, XMLNodeRe
 
 template<class MPTraits>
 BulkRRT<MPTraits>::BulkRRT()
-{ 
+{
 this->SetName("BulkRRT");
 }
 
 
 template<class MPTraits>
-BulkRRT<MPTraits>::~BulkRRT() { 
+BulkRRT<MPTraits>::~BulkRRT() {
   /*if(m_query != NULL)
     delete m_query;*/
 }
@@ -181,15 +181,15 @@ void BulkRRT<MPTraits>::ParseXML(XMLNodeReader& _node){
   XMLNodeReader::childiterator citr;
   for( citr = _node.children_begin(); citr!= _node.children_end(); ++citr) {
     if(citr->getName() == "num_runs") {
-      m_runs = citr->numberXMLParameter(string("nRuns"), true, 
+      m_runs = citr->numberXMLParameter(string("nRuns"), true,
         int(1), int(0), MAX_INT, string("Runs number"));
       citr->warnUnrequestedAttributes();
     }else if(citr->getName() == "total_nodes") {
-      m_totalNodes = citr->numberXMLParameter(string("totalNodes"), true, 
+      m_totalNodes = citr->numberXMLParameter(string("totalNodes"), true,
         int(1), int(0), MAX_INT, string("Total number of nodes to be created"));
       citr->warnUnrequestedAttributes();
     }else if(citr->getName() == "k_nodes") {
-      m_kNodes = citr->numberXMLParameter(string("kNodes"), true, 
+      m_kNodes = citr->numberXMLParameter(string("kNodes"), true,
         int(1), int(0), MAX_INT, string("Number of new nodes made before upgrading tree"));
       citr->warnUnrequestedAttributes();
     }else if(citr->getName() == "vc_method") {
@@ -210,7 +210,7 @@ void BulkRRT<MPTraits>::ParseXML(XMLNodeReader& _node){
       m_minDist = citr->numberXMLParameter("minDist", true, 0.0, 0.0, MAX_DBL, "Minimum Distance to see if new node is too close to closet cfg");
       citr->warnUnrequestedAttributes();
     }else if(citr->getName() == "evaluation_method"){
-      string evalMethod = citr->stringXMLParameter("Method", true, "", 
+      string evalMethod = citr->stringXMLParameter("Method", true, "",
         "Evaluation Method");
       m_evaluatorLabels.push_back(evalMethod);
       citr->warnUnrequestedAttributes();
@@ -226,7 +226,7 @@ void BulkRRT<MPTraits>::ParseXML(XMLNodeReader& _node){
     }else {
       citr->warnUnknownNode();
     }
-  
+
   }
 };
 
@@ -237,37 +237,37 @@ void BulkRRT<MPTraits>::Initialize() {
 
 template<class MPTraits>
 void BulkRRT<MPTraits>::Run() {
-  
+
   cout << "BulkRRT:: Run()" << endl;
-  
+
 
   //Set up variables needed for BulkRRT
   MPProblemType* m_problem = this->GetMPProblem();
   StatClass* stat = m_problem->GetStatClass();
   Environment* env = m_problem->GetEnvironment();
   ValidityCheckerPointer vc = m_problem->GetValidityChecker(m_vcMethod);
-  string callee = "BulkRRT::";  
+  string callee = "BulkRRT::";
   CDInfo cdInfo;
- 
-  
-  
+
+
+
   //GraphType pMap(m_totalNodes+1);
   GraphType* pMap = m_problem->GetRoadmap()->GetGraph();
   //GraphType pMap;
   gviewType rmView(*pMap);
   CfgType root;
- 
-  
-  if(stapl::get_location_id() == 0){ 
-    
+
+
+  if(stapl::get_location_id() == 0){
+
     //keep looping until a valid root node is made
     /*int condition(0);
     while(condition== 0){
-      
+
       CfgType root;
       /*root.GetRandomCfg(env);
-      
-      if (root.InBoundary(env) && 
+
+      if (root.InBoundary(env) &&
         vc->IsValid(root, env, *stat, cdInfo, &callee)){
         PrintOnce("ROOT " , root);
         pMap[0].property() = root;
@@ -280,11 +280,11 @@ void BulkRRT<MPTraits>::Run() {
 
   }
   PrintOnce("ROOT " , root);
-  stapl::rmi_fence(); 
-  
+  stapl::rmi_fence();
+
 
   //WORK
-  BulkWF<MPTraits> wf(m_problem, m_dm, m_vcMethod, m_delta, m_minDist); 
+  BulkWF<MPTraits> wf(m_problem, m_dm, m_vcMethod, m_delta, m_minDist);
   //int partition = m_totalNodes/m_kNodes;
   typedef stapl::array<VID> vidArray;
   typedef stapl::array_view<vidArray> viewVidArray;
@@ -292,7 +292,7 @@ void BulkRRT<MPTraits>::Run() {
   t1.start();
   bool mapPassedEvaluation = false;
   while(!mapPassedEvaluation){
-    vidArray PA(m_kNodes*get_num_locations()); 
+    vidArray PA(m_kNodes*get_num_locations());
     viewVidArray v(PA);
     //PrintOnce("PARTITION " , partition);
     //stapl::map_func(wf,stapl::balance_view(rmView,partition),repeat_view(rmView));
@@ -300,9 +300,9 @@ void BulkRRT<MPTraits>::Run() {
     mapPassedEvaluation = this->EvaluateMap(m_evaluatorLabels);
   }
   stapl::rmi_fence(); //do I really need to fence?
-  
+
   t1.stop();
-  
+
   //STATS
   /*PrintValue("DIR TIME: ", t2.value());
   PrintValue("NN TIME : ", t3.value());
@@ -316,23 +316,22 @@ template<class MPTraits>
 void BulkRRT<MPTraits>::Finalize(){
   ///Write graph here :: DEBUG
 
- /* string str;
+  string str;
   stringstream basefname;
-  MPProblem* m_problem = GetMPProblem();
+  MPProblemType* problem = this->GetMPProblem();
 
-  
-  basefname << GetBaseFilename() << ".p" << stapl::get_num_locations() << ".it" << m_runs <<".m"<<m_kNodes;
+  //basefname << this->GetBaseFilename() << ".N" << this->m_numNodes << ".R" << this->m_numRegions << ".p" << get_num_locations() ;
+  basefname << this->GetBaseFilename() ;
   ofstream osMap((basefname.str() + ".map").c_str());
   if(!osMap){
-     cout << "BulkRRt::Finalize(): can't open outfile: ";
-     exit(-1);
+    cout << "RadialBlindRRT::Finalize(): can't open outfile: ";
+    exit(-1);
   }else{
-    m_problem->GetMPRegion(_regionID)->WriteRoadmapForVizmo(osMap);
+    problem->GetRoadmap()->Write(osMap, this->GetMPProblem()->GetEnvironment());
     osMap.close();
   }
-  stapl::rmi_fence();*/
-  cout << "location [" << stapl::get_location_id() <<"] ALL FINISHED" << endl;
   stapl::rmi_fence();
+  cout << "location [" << stapl::get_location_id() <<"] ALL FINISHED" << endl;
 }
 
 template<class MPTraits>
@@ -340,4 +339,4 @@ void BulkRRT<MPTraits>::PrintOptions(ostream& _os){
    _os << "BulkRRT:: PrintOptions \n";
 }
 
-#endif 
+#endif

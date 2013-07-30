@@ -13,7 +13,7 @@
 #include "DistanceMetrics/LPSweptDistance.h"
 #include "DistanceMetrics/RMSDDistance.h"
 #include "DistanceMetrics/ManhattanDistance.h"
-#include "DistanceMetrics/ScaledEuclideanDistance.h" 
+#include "DistanceMetrics/ScaledEuclideanDistance.h"
 
 //validity checker includes
 #include "ValidityCheckers/AlwaysTrueValidity.h"
@@ -89,7 +89,6 @@
 #include "MPStrategies/TogglePRMStrategy.h"
 #include "MPStrategies/UnitTest/DMTestStrategy.h"
 #include "MPStrategies/LocalManeuveringStrategy.h"
-#include "MPStrategies/BlindRRT.h"
 
 #ifdef _PARALLEL
 #include "ParallelMethods/BasicParallelPRM.h"
@@ -97,6 +96,7 @@
 #include "ParallelMethods/RadialSubdivisionRRT.h"
 #include "ParallelMethods/RadialBlindRRT.h"
 #include "ParallelMethods/BulkRRT.h"
+#include "MPStrategies/BlindRRT.h"
 #endif
 
 template<class C, class W = DefaultWeight<C> >
@@ -116,12 +116,12 @@ struct MPTraits{
     //ManhattanDistance<MPTraits>,
     //MinkowskiDistance<MPTraits>,
     //#if (defined(PMPReachDistCC) || defined(PMPReachDistCCFixed))
-    //ReachableDistance<MPTraits>, 
+    //ReachableDistance<MPTraits>,
     //#endif
     //RMSDDistance<MPTraits>,
     //ScaledEuclideanDistance<MPTraits>
     > DistanceMetricMethodList;
-  
+
   //types of validity checkers available in our world
   typedef boost::mpl::list<
     //AlwaysTrueValidity<MPTraits>,
@@ -143,9 +143,9 @@ struct MPTraits{
     //MetricTreeNF<MPTraits>,
     //MPNNNF<MPTraits>,
     //RadiusNF<MPTraits>//,
-    //SpillTreeNF<MPTraits> 
+    //SpillTreeNF<MPTraits>
     > NeighborhoodFinderMethodList;
-  
+
   //types of samplers available in our world
   typedef boost::mpl::list<
     //BridgeTestSampler<MPTraits>,
@@ -157,7 +157,7 @@ struct MPTraits{
     //UniformObstacleBasedSampler<MPTraits>,
     UniformRandomSampler<MPTraits>
       > SamplerMethodList;
-  
+
   //types of local planners available in our world
   typedef boost::mpl::list<
     //AStarClearance<MPTraits>,
@@ -172,17 +172,17 @@ struct MPTraits{
 
   //types of connectors available in our world
   typedef boost::mpl::list<
-    CCsConnector<MPTraits>, 
-    NeighborhoodConnector<MPTraits> 
-    ,RRTConnect<MPTraits> 
-    ,RegionRRTConnect<MPTraits> 
-    ,RegionConnector<MPTraits> 
-    //PreferentialAttachment<MPTraits>, 
+    CCsConnector<MPTraits>,
+    NeighborhoodConnector<MPTraits>
+    ,RRTConnect<MPTraits>
+    ,RegionRRTConnect<MPTraits>
+    ,RegionConnector<MPTraits>
+    //PreferentialAttachment<MPTraits>,
     //OptimalConnection<MPTraits>,
     //OptimalRewire<MPTraits>//,
     //ClosestVE<MPTraits>
       > ConnectorMethodList;
-  
+
   //types of metrics available in our world
   typedef boost::mpl::list<
     //CCDistanceMetric<MPTraits>,
@@ -194,7 +194,7 @@ struct MPTraits{
     NumNodesMetric<MPTraits>
     //TimeMetric<MPTraits>
     > MetricMethodList;
-  
+
   //types of map evaluators available in our world
   typedef boost::mpl::list<
     ComposeEvaluator<MPTraits>,
@@ -202,23 +202,23 @@ struct MPTraits{
     //LazyQuery<MPTraits>,
     //LazyToggleQuery<MPTraits>,
     //NegateEvaluator<MPTraits>,
-    //PrintMapEvaluation<MPTraits>, 
+    //PrintMapEvaluation<MPTraits>,
     Query<MPTraits>
     //TrueEvaluation<MPTraits>
     > MapEvaluatorMethodList;
-  
+
   //types of motion planning strategies available in our world
   typedef boost::mpl::list<
     BasicPRM<MPTraits>,
-    BasicRRTStrategy<MPTraits>
+    BasicRRTStrategy<MPTraits>,
     //DMTestStrategy<MPTraits>,
-    //EvaluateMapStrategy<MPTraits>,
+    EvaluateMapStrategy<MPTraits>
     //MedialAxisRRT<MPTraits>,
     //OBRRTStrategy<MPTraits>,
     //ResamplePointStrategy<MPTraits>,
     //TogglePRMStrategy<MPTraits>
-    ,BlindRRT<MPTraits>
     #ifdef _PARALLEL
+    ,BlindRRT<MPTraits>
     ,BasicParallelPRM<MPTraits>
     //,RegularSubdivisionMethod<MPTraits>
     ,RadialSubdivisionRRT<MPTraits>
@@ -262,12 +262,12 @@ struct MPTraits<CfgSurface, DefaultWeight<CfgSurface> > {
     //ManhattanDistance<MPTraits>,
     MinkowskiDistance<MPTraits>,
     //#if (defined(PMPReachDistCC) || defined(PMPReachDistCCFixed))
-    //ReachableDistance<MPTraits>, 
+    //ReachableDistance<MPTraits>,
     //#endif
     RMSDDistance<MPTraits>//,
     //ScaledEuclideanDistance<MPTraits>
     > DistanceMetricMethodList;
-  
+
   //types of validity checkers available in our world
   typedef boost::mpl::list<
     AlwaysTrueValidity<MPTraits>,
@@ -294,9 +294,9 @@ struct MPTraits<CfgSurface, DefaultWeight<CfgSurface> > {
     //MetricTreeNF<MPTraits>,
     //MPNNNF<MPTraits>,
     RadiusNF<MPTraits>//,
-    //SpillTreeNF<MPTraits> 
+    //SpillTreeNF<MPTraits>
     > NeighborhoodFinderMethodList;
-  
+
   //types of samplers available in our world
   typedef boost::mpl::list<
     BridgeTestSampler<MPTraits>,
@@ -309,7 +309,7 @@ struct MPTraits<CfgSurface, DefaultWeight<CfgSurface> > {
     UniformObstacleBasedSampler<MPTraits>,
     UniformRandomSampler<MPTraits>
       > SamplerMethodList;
-  
+
   //types of local planners available in our world
   typedef boost::mpl::list<
     //AStarClearance<MPTraits>,
@@ -332,11 +332,11 @@ struct MPTraits<CfgSurface, DefaultWeight<CfgSurface> > {
 #endif
     NeighborhoodConnector<MPTraits>,
     OptimalConnection<MPTraits>,
-    OptimalRewire<MPTraits>/*, 
-    PreferentialAttachment<MPTraits>, 
+    OptimalRewire<MPTraits>/*,
+    PreferentialAttachment<MPTraits>,
     ClosestVE<MPTraits>*/
       > ConnectorMethodList;
-  
+
   //types of metrics available in our world
   typedef boost::mpl::list<
     CCDistanceMetric<MPTraits>,
@@ -348,7 +348,7 @@ struct MPTraits<CfgSurface, DefaultWeight<CfgSurface> > {
     NumNodesMetric<MPTraits>,
     TimeMetric<MPTraits>
     > MetricMethodList;
-  
+
   //types of map evaluators available in our world
   typedef boost::mpl::list<
     ComposeEvaluator<MPTraits>,
@@ -356,11 +356,11 @@ struct MPTraits<CfgSurface, DefaultWeight<CfgSurface> > {
     LazyQuery<MPTraits>,
     LazyToggleQuery<MPTraits>,
     NegateEvaluator<MPTraits>,
-    PrintMapEvaluation<MPTraits>, 
+    PrintMapEvaluation<MPTraits>,
     Query<MPTraits>,
     TrueEvaluation<MPTraits>
     > MapEvaluatorMethodList;
-  
+
   //types of motion planning strategies available in our world
   typedef boost::mpl::list<
     BasicPRM<MPTraits>,

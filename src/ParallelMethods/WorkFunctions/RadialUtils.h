@@ -37,11 +37,11 @@ class RadialUtils {
   bool m_debug;
 
   public:
-  
+
   RadialUtils() {}
 
-  RadialUtils(MPProblemType* _problem, LocalTreeType* _localTree, string _dm, string _vc, string _nf, string _CCconnection, 
-      double _delta, double _minDist, size_t _numCCIters=0, bool _debug=false) { 
+  RadialUtils(MPProblemType* _problem, LocalTreeType* _localTree, string _dm, string _vc, string _nf, string _CCconnection,
+      double _delta, double _minDist, size_t _numCCIters=0, bool _debug=false) {
 
     m_problem = _problem;
     m_numCCIters = _numCCIters;
@@ -58,14 +58,14 @@ class RadialUtils {
       m_localTree = m_problem->GetRoadmap()->GetGraph();
 
     else  */
-      m_localTree = _localTree; 
+      m_localTree = _localTree;
   }
 
   // A wrapper for checking validity since sometimes the label is not set
   bool IsValid(ValidityCheckerPointer _vc, CfgType& _cfg, Environment* _env, StatClass* _stats) {
     CDInfo cdInfo;
-    if (!_cfg.IsLabel("VALID")) 
-      _vc->IsValid(_cfg, _env, *_stats, cdInfo, &m_callee); 
+    if (!_cfg.IsLabel("VALID"))
+      _vc->IsValid(_cfg, _env, *_stats, cdInfo, &m_callee);
     return _cfg.GetLabel("VALID");
   }
 
@@ -74,7 +74,7 @@ class RadialUtils {
   ////////////////////////////
   inline VID AddVertex(CfgType _cfg) const {
     VID newVID = m_problem->GetRoadmap()->GetGraph()->add_vertex(_cfg);
-    m_localTree->add_vertex(newVID, _cfg); 
+    m_localTree->add_vertex(newVID, _cfg);
     if(m_debug)  VDAddNode(_cfg);
     return newVID;
   }
@@ -82,11 +82,11 @@ class RadialUtils {
   ////////////////////////////
   //  ADD EDGE
   ////////////////////////////
-  // this is used with no debugging purposes on parallel so it does not write out to the vizmo 
+  // this is used with no debugging purposes on parallel so it does not write out to the vizmo
   // or graph
-  void AddEdge(VID _vid1, VID _vid2, int _weight, vector<pair<VID, VID> >& _pendingEdges, vector<int>& _pendingWeights) { 
+  void AddEdge(VID _vid1, VID _vid2, int _weight, vector<pair<VID, VID> >& _pendingEdges, vector<int>& _pendingWeights) {
 
-    if((_vid1 == 0 || _vid2 == 0) && stapl::get_location_id() != 0) { 
+    if((_vid1 == 0 || _vid2 == 0) && stapl::get_location_id() != 0) {
       _pendingEdges.push_back(make_pair(_vid1,_vid2));
       _pendingWeights.push_back(_weight);
       return;
@@ -97,17 +97,17 @@ class RadialUtils {
     GraphType* globalTree = m_problem->GetRoadmap()->GetGraph();
     globalTree->add_edge_async(_vid1, _vid2, weight);
     globalTree->add_edge_async(_vid2, _vid1, weight);
-    m_localTree->add_edge(_vid1, _vid2); 
-    m_localTree->add_edge(_vid2, _vid1); 
+    m_localTree->add_edge(_vid1, _vid2);
+    m_localTree->add_edge(_vid2, _vid1);
   }
 
   ////////////////////////////
   //  AddEdgeDebug
   ////////////////////////////
   // Used when we want to see the results on vizmo
-  void AddEdgeDebug(VID _vid1, VID _vid2, CfgType _cfg1, CfgType _cfg2, int _weight, vector<pair<VID, VID> >& _pendingEdges, vector<int>& _pendingWeights) { 
+  void AddEdgeDebug(VID _vid1, VID _vid2, CfgType _cfg1, CfgType _cfg2, int _weight, vector<pair<VID, VID> >& _pendingEdges, vector<int>& _pendingWeights) {
 
-    if((_vid1 == 0 || _vid2 == 0) && stapl::get_location_id() != 0) { 
+    if((_vid1 == 0 || _vid2 == 0) && stapl::get_location_id() != 0) {
       _pendingEdges.push_back(make_pair(_vid1,_vid2));
       _pendingWeights.push_back(_weight);
       return;
@@ -118,8 +118,8 @@ class RadialUtils {
     GraphType* globalTree = m_problem->GetRoadmap()->GetGraph();
     globalTree->add_edge_async(_vid1, _vid2, weight);
     globalTree->add_edge_async(_vid2, _vid1, weight);
-    m_localTree->add_edge(_vid1, _vid2); 
-    m_localTree->add_edge(_vid2, _vid1); 
+    m_localTree->add_edge(_vid1, _vid2);
+    m_localTree->add_edge(_vid2, _vid1);
 
     VDAddEdge(_cfg1, _cfg2);
   }
@@ -158,7 +158,7 @@ class RadialUtils {
   ////////////////////////////
   //  ExpandTree
   ////////////////////////////
-  int ExpandTree(vector<VID>& _currBranch, VID _nearestVID, CfgType& _nearest, CfgType& _dir, 
+  int ExpandTree(vector<VID>& _currBranch, VID _nearestVID, CfgType& _nearest, CfgType& _dir,
       vector<pair<VID, VID> >& _pendingEdges, vector<int>& _pendingWeights)  {
     Environment* env = m_problem->GetEnvironment();
     DistanceMetricPointer dm = m_problem->GetDistanceMetric(m_dm);
@@ -167,17 +167,17 @@ class RadialUtils {
     StatClass* stats = m_problem->GetStatClass();
     string callee("RadialRRT::ExpandTree");
     CDInfo cdInfo;
-    int weight;  
+    int weight;
 
     ExpansionType::Expansion expansion;
     vector<pair<CfgType, int> > expansionCfgs;  // this will contain all cfgs from start to goal inclusive
     expansionCfgs.push_back(make_pair(_nearest, 0));
-    expansion = BlindRRTExpand<MPTraits>(m_problem, m_vc, m_dm,  
-        _nearest, _dir, expansionCfgs, m_delta, cdInfo, 
+    expansion = BlindRRTExpand<MPTraits>(m_problem, m_vc, m_dm,
+        _nearest, _dir, expansionCfgs, m_delta, cdInfo,
         env->GetPositionRes(), env->GetOrientationRes());
 
 
-    if (expansion == ExpansionType::NO_EXPANSION) {  
+    if (expansion == ExpansionType::NO_EXPANSION) {
       return 0;
     }
 
@@ -196,7 +196,7 @@ class RadialUtils {
         VID newVID = INVALID_VID;
         // Expansion returns both valid and invalid  so we can track valid edges,
         // but only add valid nodes to the tree
-        if (IsValid(vc, expansionCfgs[i].first, env, stats)) { 
+        if (IsValid(vc, expansionCfgs[i].first, env, stats)) {
           newVID = AddVertex(expansionCfgs[i].first);
           _currBranch.push_back(newVID);/// branch is being replaced as local tree, remove this
         }
@@ -210,11 +210,16 @@ class RadialUtils {
       int weight;
       for(size_t i=1; i<expansionCfgs.size(); i++ ) {
 
-
+        LPOutput<MPTraits> lpout;
+        CfgType col;
         if(expansionVIDs[i-1] != INVALID_VID && expansionVIDs[i] != INVALID_VID &&
-            IsValid(vc, expansionCfgs[i-1].first, env, stats) &&  
-            IsValid(vc, expansionCfgs[i].first, env, stats) ) {
-          weight = expansionCfgs[i].second - expansionCfgs[i-1].second; // Edge weight 
+            IsValid(vc, expansionCfgs[i-1].first, env, stats) &&
+            IsValid(vc, expansionCfgs[i].first, env, stats) &&
+            m_problem->GetLocalPlanner("")->IsConnected(
+              env, *stats, dm, expansionCfgs[i-1].first,
+              expansionCfgs[i].first, col, &lpout,
+              env->GetPositionRes(), env->GetOrientationRes(), true)) {
+          weight = expansionCfgs[i].second - expansionCfgs[i-1].second; // Edge weight
 
           if(!m_debug) AddEdge(expansionVIDs[i-1], expansionVIDs[i], weight, _pendingEdges, _pendingWeights);
           else AddEdgeDebug(expansionVIDs[i-1], expansionVIDs[i], expansionCfgs[i-1].first, expansionCfgs[i].first, weight, _pendingEdges, _pendingWeights);
@@ -255,14 +260,14 @@ class RadialUtils {
     ColorMap colorMap;
     vector< CCType > ccs;
     colorMap.reset();
-    stapl::sequential::get_cc_stats(*m_localTree, colorMap, ccs);      
+    stapl::sequential::get_cc_stats(*m_localTree, colorMap, ccs);
 
     if(ccs.size()==1) return;
     if(m_debug) cout << "Number of CCs before CC Connection: " << ccs.size() << endl;
     vector<VID> cc1;
     vector<VID> cc2;
-    VID cc1VID; 
-    VID cc2VID; 
+    VID cc1VID;
+    VID cc2VID;
 
 
     size_t connectSwitch = 0;
@@ -282,12 +287,12 @@ class RadialUtils {
       colorMap.reset();
       stapl::sequential::get_cc(*m_localTree,colorMap,cc1VID,cc1);
 
-      
+
       if (cc1.size() == 1) {
         CfgType cfg  =   (*(m_localTree->find_vertex(cc1[0]))).property();
 
         if (!IsValid(vc, cfg, env, stats)) {
-          failures++; 
+          failures++;
           continue;
 
         }
@@ -312,13 +317,13 @@ class RadialUtils {
            } else if (connectSwitch % 3 == 0) {
            int rand2 = LRand() % ccs.size();
            if (rand1 == rand2) continue;
-           cc2VID = ccs[ rand2 ].second; 
+           cc2VID = ccs[ rand2 ].second;
 
            } else {
-           CfgType centroid = GetCentroid(cc1); 
+           CfgType centroid = GetCentroid(cc1);
            cc2VID = GetClosestCentroidToCentroid(centroid, cc1VID, ccs, colorMap);
            }
-           connectSwitch++;        
+           connectSwitch++;
            */
       } else {
         cc2VID = GetClosest(cc1VID, ccs, m_CCconnection);
@@ -352,7 +357,7 @@ class RadialUtils {
 
       iters++;
       colorMap.reset();
-      stapl::sequential::get_cc_stats(*m_localTree, colorMap, ccs);      
+      stapl::sequential::get_cc_stats(*m_localTree, colorMap, ccs);
 
     }
 
@@ -383,9 +388,9 @@ class RadialUtils {
       CfgType cfg = (*(m_localTree->find_vertex(vid))).property();
 
       if (!IsValid(vc, cfg, env, stats)) {
-        rdmp->GetGraph()->delete_vertex(_allVIDs[i]); 
+        rdmp->GetGraph()->delete_vertex(_allVIDs[i]);
         m_localTree->delete_vertex(_allVIDs[i]);
-        //VDRemoveNode(cfg); 
+        //VDRemoveNode(cfg);
       }
     }
   }
@@ -407,7 +412,7 @@ class RadialUtils {
       if (closestPair.empty())
         return INVALID_VID;
 
-      VID vid1 = closestPair[0].first; 
+      VID vid1 = closestPair[0].first;
       VID vid2 = closestPair[0].second;
 
       CfgType cfg1 = (*(m_localTree->find_vertex(vid1))).property();
@@ -434,7 +439,7 @@ class RadialUtils {
       if (closestNode.empty())
         return INVALID_VID;
 
-      VID closest = closestNode[0]; 
+      VID closest = closestNode[0];
       CfgType cfg  =   (*(m_localTree->find_vertex(closest))).property();
       return dm->Distance(env, cfg, targetCentroid);
 
@@ -444,7 +449,7 @@ class RadialUtils {
   //  CentroidToNode
   ////////////////////////////
   //  Get the closest node to centroid of sourceCC
-  //////////////////////////// 
+  ////////////////////////////
   double
     GetDistanceCentroidToNode(vector<VID>& _sourceCC, vector<VID>& _targetCC) const {
 
@@ -458,7 +463,7 @@ class RadialUtils {
       if (closestNode.empty())
         return INVALID_VID;
 
-      VID closest = closestNode[0]; 
+      VID closest = closestNode[0];
       CfgType cfg  = (*(m_localTree->find_vertex(closest))).property();
       return dm->Distance(env, sourceCentroid, cfg);
     }
@@ -466,8 +471,8 @@ class RadialUtils {
   ////////////////////////////
   //  CentroidToCentroid
   ////////////////////////////
-  //  Distance between centroids 
-  //////////////////////////// 
+  //  Distance between centroids
+  ////////////////////////////
   double
     GetDistanceCentroidToCentroid(vector<VID>& _sourceCC, vector<VID>& _targetCC) const {
       CfgType sourceCentroid = GetCentroid(_sourceCC);
@@ -492,7 +497,7 @@ class RadialUtils {
       vector<VID> targetCC;
       double currMinDist = MAX_DBL;
       VID currMinVID = INVALID_VID;
-      double dist; 
+      double dist;
       colorMap.reset();
       stapl::sequential::get_cc(*m_localTree,colorMap,_ccVID,sourceCC);
 

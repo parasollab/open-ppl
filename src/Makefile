@@ -10,7 +10,7 @@ endif
 
 ifndef parallel
   parallel = 1
-endif 
+endif
 
 # set directory paths
 ifndef PMPL_DIR
@@ -27,7 +27,7 @@ endif
 
 ifndef STL_LIB
   STL_LIB = 4.7.2
-endif 
+endif
 
 ifndef ROBOT_DEF
   # define robot type
@@ -43,14 +43,14 @@ include ${UTILS_DIR}/makefile_includes/Makefile.defaults
 include ${PMPL_DIR}/Makefile.PMPLdefaults
 
 # macros
-DEFS += ${UTILS_DEF} -D${ROBOT_DEF} ${CGAL_DEF} ${STAPL_DEF} 
+DEFS += ${UTILS_DEF} -D${ROBOT_DEF} ${CGAL_DEF} ${STAPL_DEF}
 INCL =  ${PMPL_INCL} ${UTILS_INCL} ${STAPL_INCL} ${BOOST_INCL} ${CGAL_INCL} ${MPNN_INCL}
 LIBS =  ${PMPL_LIB} ${UTILS_LIB} ${MPNN_LIB} ${STAPL_LIB}
 
 # targets
 default_target: libs
 
-utils: stapl_lib cd_libs xml_libs nn_libs mathtool_lib modelloader_lib kmeans_lib 
+utils: stapl_lib cd_libs xml_libs nn_libs mathtool_lib modelloader_lib kmeans_lib
 stapl_lib: ${STAPL_LIBFILE}
 cd_libs: ${CD_LIBFILE}
 xml_libs: ${XML_LIBFILE}
@@ -61,7 +61,7 @@ kmeans_lib: ${KMEANS_LIBFILE}
 
 objs: utils ${PMPL_OBJS}
 
-libs: utils ${PMPL_LIBFILE} 
+libs: utils ${PMPL_LIBFILE}
 
 ${PMPL_LIBFILE}: objs
 	${AR} ${PMPL_LIBFILE} ${PMPL_OBJS}

@@ -34,7 +34,7 @@ Cfg::Cfg() {
 }
 
 Cfg::Cfg(const Cfg& _other) :
-  m_v(_other.m_v), 
+  m_v(_other.m_v),
   m_robotIndex(_other.m_robotIndex),
   m_labelMap(_other.m_labelMap),
   m_statMap(_other.m_statMap){}
@@ -105,7 +105,7 @@ Cfg::operator==(const Cfg& _cfg) const {
     }
     else {
       // decreasing numeric limits so if two Cfgs are close enough they will be equal
-      if(fabs(DirectedAngularDistance(m_v[i], _cfg[i])) > numeric_limits<float>::epsilon()) 
+      if(fabs(DirectedAngularDistance(m_v[i], _cfg[i])) > numeric_limits<float>::epsilon())
         return false;
     }
   }
@@ -220,7 +220,7 @@ Cfg::Read(istream& _is){
     return;
   for(vector<double>::iterator i = m_v.begin(); i != m_v.end(); ++i){
     _is >> (*i);
-    cout << "Read dof: " << *i << endl;
+    //cout << "Read dof: " << *i << endl;
     if (_is.fail()){
       cerr << "Cfg::operator>> error - failed reading values for all dofs" << endl;
       exit(1);
@@ -258,7 +258,7 @@ void
 Cfg::SetData(const vector<double>& _data) {
   if(_data.size() != m_dof) {
     cout << "\n\nERROR in Cfg::SetData, ";
-    cout << "DOF of data and Cfg are not equal " << _data.size() << "\t!=\t" << m_dof << endl; 
+    cout << "DOF of data and Cfg are not equal " << _data.size() << "\t!=\t" << m_dof << endl;
     exit(-1);
   }
   m_v = _data;
@@ -320,7 +320,7 @@ Cfg::SetStat(string _stat, double _value) {
 
 vector<double>
 Cfg::GetPosition() const {
-  vector<double> ret;  
+  vector<double> ret;
   for(size_t i = 0; i < m_dof; ++i) {
     if(m_dofTypes[i] == POS)
       ret.push_back(m_v[i]);
@@ -334,14 +334,14 @@ Cfg::GetOrientation() const {
   for(size_t i = 0; i < m_dof; ++i) {
     if(m_dofTypes[i] != POS)
       ret.push_back(m_v[i]);
-  }     
+  }
   return ret;
 }
 
 double
 Cfg::Magnitude() const {
   double result = 0.0;
-  for(size_t i = 0; i < m_dof; ++i) 
+  for(size_t i = 0; i < m_dof; ++i)
     result += m_v[i]*m_v[i];
   return sqrt(result);
 }
@@ -349,7 +349,7 @@ Cfg::Magnitude() const {
 double
 Cfg::PositionMagnitude() const {
   double result = 0.0;
-  for(size_t i = 0; i < m_dof; ++i) 
+  for(size_t i = 0; i < m_dof; ++i)
     if(m_dofTypes[i] == POS)
       result += m_v[i]*m_v[i];
   return sqrt(result);
@@ -385,7 +385,7 @@ Cfg::GetRobotCenterPosition() const {
   return Vector3D(x/numRobots, y/numRobots, z/numRobots);
 }
 
-Vector3D 
+Vector3D
 Cfg::GetRobotCenterofMass(Environment* _env) const {
   ConfigEnvironment(_env);
 
@@ -401,7 +401,7 @@ Cfg::GetRobotCenterofMass(Environment* _env) const {
       polycom = polycom + (*vit);
     polycom = polycom / poly.m_vertexList.size();
     com = com + polycom;
-    numbodies++;  
+    numbodies++;
 
     for(Robot::JointIT i = rit->m_joints.begin(); i != rit->m_joints.end(); ++i){
       GMSPolyhedron poly1 = mb->GetFreeBody(i->first.second)->GetWorldPolyhedron();
@@ -423,7 +423,7 @@ Cfg::GetRobotCenterofMass(Environment* _env) const {
 // the environment specified bounding box
 bool
 Cfg::InBoundary(Environment* _env, shared_ptr<Boundary> _bb) const {
-  return _bb->InBoundary(*this, _env); 
+  return _bb->InBoundary(*this, _env);
 }
 
 bool
@@ -505,7 +505,7 @@ Cfg::ConfigEnvironment(Environment* _env) const {
           mb->GetFreeBody(second)->GetBackwardConnection(0).GetDHparameters().alpha = m_v[index]*PI;
           index++;
         }
-      } 
+      }
     }  // config the robot
   }
   for(int i = 0; i < mb->GetFreeBodyCount(); i++) {
@@ -523,9 +523,9 @@ Cfg::GetResolutionCfg(Environment* _env) {
   double oriRes = _env->GetOrientationRes();
 
   for(size_t i = 0; i < m_dof; i++)
-    if(m_dofTypes[i] == POS) 
+    if(m_dofTypes[i] == POS)
       m_v.push_back(posRes);
-    else 
+    else
       m_v.push_back(oriRes);
 
   NormalizeOrientation();
@@ -570,7 +570,7 @@ Cfg::FindIncrement(const Cfg& _start, const Cfg& _goal, int* _nTicks, double _po
   Cfg diff = _goal - _start;
 
   // adding two basically makes this a rough ceiling...
-  *_nTicks = floor(max(diff.PositionMagnitude()/_positionRes, 
+  *_nTicks = floor(max(diff.PositionMagnitude()/_positionRes,
         diff.OrientationMagnitude()/_orientationRes) + 0.5);
 
   this->FindIncrement(_start, _goal, *_nTicks);
@@ -580,7 +580,7 @@ void
 Cfg::FindIncrement(const Cfg& _start, const Cfg& _goal, int _nTicks) {
   vector<double> incr;
   for(size_t i = 0; i < m_dof; ++i) {
-    if(m_dofTypes[i] == POS) 
+    if(m_dofTypes[i] == POS)
       incr.push_back((_goal.m_v[i] - _start.m_v[i])/_nTicks);
     else if(m_dofTypes[i] == JOINT) {
       double a = _start.m_v[i];
@@ -641,10 +641,10 @@ Cfg::NormalizeOrientation(int _index) {
         m_v[i] = Normalize(m_v[i]);
       }
     }
-  } 
+  }
   else if(m_dofTypes[_index] != POS) {  // orientation index
     m_v[_index] = Normalize(m_v[_index]);
-  } 
+  }
 }
 
 //generates random configuration within C-space
@@ -658,12 +658,12 @@ Cfg::GetRandomCfgImpl(Environment* _env, shared_ptr<Boundary> _bb) {
       Point3d p = _bb->GetRandomPoint();
       size_t posDOF = rit->m_base == Robot::VOLUMETRIC ? 3 : 2;
       for(size_t i = 0; i < posDOF; i++) {
-        m_v.push_back(p[i]); 
+        m_v.push_back(p[i]);
       }
       if(rit->m_baseMovement == Robot::ROTATIONAL) {
         size_t oriDOF = rit->m_base == Robot::VOLUMETRIC ? 3 : 1;
         for(size_t i = 0; i < oriDOF; i++) {
-          m_v.push_back(2.0*DRand()-1.0); 
+          m_v.push_back(2.0*DRand()-1.0);
         }
       }
     }

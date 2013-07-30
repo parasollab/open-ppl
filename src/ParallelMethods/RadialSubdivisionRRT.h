@@ -26,7 +26,7 @@ class RadialSubdivisionRRT : public MPStrategyMethod<MPTraits> {
     typedef typename MPProblemType::SamplerPointer SamplerPointer;
     typedef typename MPProblemType::ConnectorPointer ConnectorPointer;
     typedef typename MPProblemType::MPStrategyPointer MPStrategyPointer;
-    typedef typename stapl::graph<stapl::DIRECTED, stapl::NONMULTIEDGES, 
+    typedef typename stapl::graph<stapl::DIRECTED, stapl::NONMULTIEDGES,
             RadialRegion<MPTraits>, WeightType> RadialRegionGraph;
     typedef stapl::counter<stapl::default_timer> staplTimer;
 
@@ -55,8 +55,8 @@ class RadialSubdivisionRRT : public MPStrategyMethod<MPTraits> {
     void RemoveCycles(RoadmapGraph<CfgType, WeightType>* _rmg);
 
   protected:
-    size_t m_numRegions, m_numNeighbors,m_numNodes,m_runs,m_numAttempts; 
-    double m_radius, m_delta,m_minDist;  
+    size_t m_numRegions, m_numNeighbors,m_numNodes,m_runs,m_numAttempts;
+    double m_radius, m_delta,m_minDist;
     string m_vcLabel, m_dmLabel, m_nfLabel, m_connectorLabel;
     bool m_strictBranching;
     double m_overlap;
@@ -65,7 +65,7 @@ class RadialSubdivisionRRT : public MPStrategyMethod<MPTraits> {
 };
 
 template<class MPTraits>
-RadialSubdivisionRRT<MPTraits>::RadialSubdivisionRRT(MPProblemType* _problem, 
+RadialSubdivisionRRT<MPTraits>::RadialSubdivisionRRT(MPProblemType* _problem,
     XMLNodeReader& _node) :
   MPStrategyMethod<MPTraits>(_problem, _node) {
     this->SetName("RadialSubdivisionRRT");
@@ -74,7 +74,7 @@ RadialSubdivisionRRT<MPTraits>::RadialSubdivisionRRT(MPProblemType* _problem,
 
 template<class MPTraits>
 RadialSubdivisionRRT<MPTraits>::RadialSubdivisionRRT() {
-  this->SetName("RadialSubdivisionRRT");      
+  this->SetName("RadialSubdivisionRRT");
 }
 
 template<class MPTraits>
@@ -95,10 +95,10 @@ void RadialSubdivisionRRT<MPTraits>::ParseXML(XMLNodeReader& _node){
       m_minDist = citr->numberXMLParameter("minDist", true, 0.0, 0.0, MAX_DBL, "Minimum Distance to see if new node is too close to closet cfg");
       m_numAttempts = citr->numberXMLParameter("numAttempts", true, 1, 0, MAX_INT,  "Number of samples to attempt per region");
       m_strictBranching = citr->boolXMLParameter("strictBranching", true, false, "if true, root only has 'regions' number of edges");
-      m_overlap = citr->numberXMLParameter("overlap", false, 0.0, 0.0, 0.99, "percentage of the overlap of regions"); 
+      m_overlap = citr->numberXMLParameter("overlap", false, 0.0, 0.0, 0.99, "percentage of the overlap of regions");
       citr->warnUnrequestedAttributes();
     }else if(citr->getName() == "num_runs") {
-      m_runs = citr->numberXMLParameter(string("nRuns"), true, 
+      m_runs = citr->numberXMLParameter(string("nRuns"), true,
           int(1), int(0), MAX_INT, string("Runs number"));
       citr->warnUnrequestedAttributes();
     }else if (citr->getName() == "vc_method") {
@@ -125,20 +125,20 @@ void RadialSubdivisionRRT<MPTraits>::Initialize() {
 }
 
 
-///Compute approximate ray lenght from boundary if not given by user  
+///Compute approximate ray lenght from boundary if not given by user
 template<class MPTraits>
 double RadialSubdivisionRRT<MPTraits>::ComputeRandomRayLength(Boundary& _cBoundary) {
   double xrange = (_cBoundary.GetRange(0).second - _cBoundary.GetRange(0).first);
   double yrange = (_cBoundary.GetRange(1).second - _cBoundary.GetRange(1).first);
   double zrange = 0.0;
-  if (_cBoundary.GetPosDOFs() > 2) 
+  if (_cBoundary.GetPosDOFs() > 2)
     zrange = (_cBoundary.GetRange(2).second - _cBoundary.GetRange(2).first);
   double branges[] = {xrange,yrange,zrange};
   return ((5*(*max_element(branges,branges+_cBoundary.GetPosDOFs()))));
 }
 
 template<class MPTraits>
-void 
+void
 RadialSubdivisionRRT<MPTraits>::RegionVertex (graph_view<RadialRegionGraph> _regionView, MPProblemType*_problem, CfgType _root) {
 
   DistanceMetricPointer dmm = _problem->GetDistanceMetric(m_dmLabel);
@@ -147,24 +147,24 @@ RadialSubdivisionRRT<MPTraits>::RegionVertex (graph_view<RadialRegionGraph> _reg
   point.GetRandomRay(m_radius, env, dmm);
 
   if (_root.PosDOF() == 2) {
-    RadialRegionVertex2D<MPTraits> wf(m_numRegions,point,m_radius);  
+    RadialRegionVertex2D<MPTraits> wf(m_numRegions,point,m_radius);
     new_algorithms::for_each(_regionView,wf);
   } else {
-    RadialRegionVertex<MPTraits> wf(_problem, _root, m_radius, m_dmLabel);  
+    RadialRegionVertex<MPTraits> wf(_problem, _root, m_radius, m_dmLabel);
     new_algorithms::for_each(_regionView,wf);
   }
 }
 
 template<class MPTraits>
-void 
+void
 RadialSubdivisionRRT<MPTraits>::RegionEdge(graph_view<RadialRegionGraph> _regionView, MPProblemType* _problem) {
-  RadialRegionEdge<MPTraits> wf(_problem,m_numNeighbors,m_dmLabel);
+  RadialRegionEdge<MPTraits> wf(_problem,m_numRegions > m_numNeighbors ? m_numNeighbors : m_numRegions-1, m_dmLabel);
   map_func(wf,_regionView,repeat_view(_regionView));
 }
 
 template<class MPTraits>
-void 
-RadialSubdivisionRRT<MPTraits>::BuildRRT(graph_view<RadialRegionGraph> _regionView, 
+void
+RadialSubdivisionRRT<MPTraits>::BuildRRT(graph_view<RadialRegionGraph> _regionView,
     MPProblemType* _problem, CfgType _root) {
   // no expansion type or CCconnection labels required
   BuildRadialRRT<MPTraits> wf(_problem,m_numNodes,m_dmLabel,m_vcLabel,m_nfLabel,m_delta,m_minDist,
@@ -174,8 +174,8 @@ RadialSubdivisionRRT<MPTraits>::BuildRRT(graph_view<RadialRegionGraph> _regionVi
 }
 
 template<class MPTraits>
-void 
-RadialSubdivisionRRT<MPTraits>::ConnectRegions(graph_view<RadialRegionGraph> _regionView, 
+void
+RadialSubdivisionRRT<MPTraits>::ConnectRegions(graph_view<RadialRegionGraph> _regionView,
     MPProblemType* _problem) {
 
   ConnectorPointer pConnection;
@@ -185,7 +185,7 @@ RadialSubdivisionRRT<MPTraits>::ConnectRegions(graph_view<RadialRegionGraph> _re
 }
 
 template<class MPTraits>
-void 
+void
 RadialSubdivisionRRT<MPTraits>::RemoveCycles(RoadmapGraph<CfgType, WeightType>* _rmg) {
   GraphView rmView(*_rmg);
   remove_cycles(rmView);
@@ -194,7 +194,7 @@ RadialSubdivisionRRT<MPTraits>::RemoveCycles(RoadmapGraph<CfgType, WeightType>* 
 template<class MPTraits>
 void RadialSubdivisionRRT<MPTraits>::Run() {
   cout << "RadialSubdivisionRRT:: Run()" << endl;
-  //Set up variables 
+  //Set up variables
   MPProblemType* problem = this->GetMPProblem();
   StatClass* regionStats = problem->GetStatClass();
   Environment* env = problem->GetEnvironment();
@@ -211,30 +211,30 @@ void RadialSubdivisionRRT<MPTraits>::Run() {
   ///Assumption: root is at the center and is valid
   ///delayed check for validity- if root is not valid, delete it and then connect all edges
   ///from it to one of its target (still need to check those edges are valid
-  /// randomize root generated by location 0, can be anywhere or native state 
+  /// randomize root generated by location 0, can be anywhere or native state
 
-  if(stapl::get_location_id() == 0){ 
+  if(stapl::get_location_id() == 0){
     pMap->add_vertex(root);
     // TODO VIZMO DEBUG
     VDAddNode(root);
   }
 
   PrintOnce("ROOT  : ", root);
-  PrintOnce("LENGTH  : ", m_radius); 
+  PrintOnce("LENGTH  : ", m_radius);
   rmi_fence();
 
   staplTimer t0,t1,t2,t3,t4,t5;
-  cout << "STEP 1: Randomly generate n points with  m_radius length from the center" << endl; 
+  cout << "STEP 1: Randomly generate n points with  m_radius length from the center" << endl;
   t0.start();
   t1.start();
   RegionVertex(regionView, problem, root);
   t1.stop();
-  rmi_fence(); 
+  rmi_fence();
 
   cout << "STEP 2: Make edge between k-closest regions " << endl;
   ///For each vertex v find k closest to v in a map_reduce fashion
   t2.start();
-  RegionEdge(regionView, problem);
+  if (regionView.size() >1) RegionEdge(regionView, problem);
   t2.stop();
   rmi_fence();
 
@@ -265,18 +265,18 @@ void RadialSubdivisionRRT<MPTraits>::Run() {
 
   if(get_location_id() == 0){
 
-    //  DEBUGGIN REGIONS 
+    //  DEBUGGIN REGIONS
     /*
        typename RoadmapGraph<CfgType, WeightType>::vertex_iterator vi = pMap->find_vertex(0);
        typename RoadmapGraph<CfgType, WeightType>::adj_edge_iterator ei = (*vi).begin();
 
        for(; ei != (*vi).end(); ++ei){
-       VID target = ((*ei).target()); 
+       VID target = ((*ei).target());
        cout << "Finding Vertex::" << target << endl;
        CfgType cfg1 = (*(pMap->find_vertex(target))).property();
        VDRemoveEdge(cfg1, root);
        VDRemoveEdge(root, cfg1);
-       } 
+       }
        */
     pMap->delete_vertex(0);
 
@@ -302,10 +302,10 @@ void RadialSubdivisionRRT<MPTraits>::Run() {
     stat_out << "#P \t RGV  \t RGE  \t BRRT \t RCON  \t CYCLE \t TOT \t VERT \t EDGES "  << endl;
 
     stat_out << get_num_locations() << "\n" << t1.value() << "\n" << t2.value() << "\n" << t3.value()
-      << "\n" << t4.value() <<  "\n" << t5.value()  << t0.value() 
+      << "\n" << t4.value() <<  "\n" << t5.value()  << t0.value()
       << "\n" << pMap->size() << "\n" << pMap->num_edges() << endl;
 
-    stat_out.close();	   
+    stat_out.close();
   }
 
   rmi_fence();
@@ -313,7 +313,7 @@ void RadialSubdivisionRRT<MPTraits>::Run() {
   cout << "Write Region Graph " << endl;
   write_graph(regionView, "radialRegion.out");
 
-  rmi_fence(); 
+  rmi_fence();
 
 }
 
@@ -324,7 +324,7 @@ void RadialSubdivisionRRT<MPTraits>::Finalize(){
   stringstream basefname;
   MPProblemType* problem = this->GetMPProblem();
 
-  basefname << this->GetBaseFilename() << ".p" << stapl::get_num_locations() << ".r" << m_numRegions;
+  basefname << this->GetBaseFilename();// << ".p" << stapl::get_num_locations() << ".r" << m_numRegions;
   ofstream osMap((basefname.str() + ".map").c_str());
   if(!osMap){
     cout << "RadialSubdivisionRRT::Finalize(): can't open outfile: ";
@@ -343,4 +343,4 @@ void RadialSubdivisionRRT<MPTraits>::PrintOptions(ostream& _os){
 }
 
 
-#endif 
+#endif
