@@ -71,7 +71,7 @@ class BulkWF {
         VID nearestVID;
         CDInfo cdInfo;
         int weight;
-        vector<VID> kClosest(1);
+        vector<VID> kClosest;
 
         //We want to find a random configuration to attempt expansion that way.
         //CfgType dir = SelectDirection(env);
@@ -100,6 +100,7 @@ class BulkWF {
 	    typename GraphType::edge_descriptor ed1(nearestVID,newVID);
             typename GraphType::edge_descriptor ed2(newVID,nearestVID);
             _gview.add_edge_async(ed1);
+            _gview.add_edge_async(ed2);
 
         }
 
