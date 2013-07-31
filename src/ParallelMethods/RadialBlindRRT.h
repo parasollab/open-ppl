@@ -49,7 +49,8 @@ class RadialBlindRRT : public RadialSubdivisionRRT<MPTraits> {
 
     void ConnectRegions(graph_view<RadialRegionGraph> _regionView, MPProblemType* _problem);
 
-    void DeleteInvalid(graph_view<RadialRegionGraph> _regionView);
+    //void DeleteInvalid(graph_view<RadialRegionGraph> _regionView);
+    void DeleteInvalid(graph_view<GraphType> _regionView);
 
   protected:
     string m_CCconnection;
@@ -117,11 +118,13 @@ RadialBlindRRT<MPTraits>::ConnectRegions(graph_view<RadialRegionGraph> _regionVi
 
 template<class MPTraits>
 void
-RadialBlindRRT<MPTraits>::DeleteInvalid(graph_view<RadialRegionGraph> _regionView) {
+//RadialBlindRRT<MPTraits>::DeleteInvalid(graph_view<RadialRegionGraph> _regionView) {
+RadialBlindRRT<MPTraits>::DeleteInvalid(graph_view<GraphType> _regionView) {
   cout << "IN DELETE VERTEX view size " << _regionView.size() << endl;
   /// COMPUTE CCs AND SET REGION CCs
   typedef static_array<cc_color_property> property_storage_type;
-  typedef graph_external_property_map<graph_view<RadialRegionGraph>, cc_color_property, property_storage_type> property_map_type;
+  //typedef graph_external_property_map<graph_view<RadialRegionGraph>, cc_color_property, property_storage_type> property_map_type;
+  typedef graph_external_property_map<graph_view<GraphType>, cc_color_property, property_storage_type> property_map_type;
 
   ///TODO: proper fix by making cc_color_property derived from cfg class
   /// and then use internal_property_map
@@ -145,7 +148,6 @@ RadialBlindRRT<MPTraits>::DeleteInvalid(graph_view<RadialRegionGraph> _regionVie
 
     if(ccs[i].first != rootCC) {
       cc = stapl::map_reduce(is_in_cc<VID, property_map_type>(ccs[i].first, map), concat_vector_wf<VID>(), _regionView);
-
       if(stapl::get_location_id() == 0){
 
         for(int j=0; j<cc.size(); j++) {
@@ -173,6 +175,7 @@ void RadialBlindRRT<MPTraits>::Run() {
 
   graph_view<RadialRegionGraph> regionView(radialRegion);
   GraphType* pMap = problem->GetRoadmap()->GetGraph();
+  graph_view<GraphType> graphView(*pMap);
   rmi_fence();
 
   CfgType root;
@@ -222,7 +225,8 @@ void RadialBlindRRT<MPTraits>::Run() {
   PrintOnce("STEP 4 CONNECT REGIONS (s) : ", t4.value());
 
   t5.start();
-  DeleteInvalid(regionView);
+  //DeleteInvalid(regionView);
+  DeleteInvalid(graphView);
   t5.stop();
   rmi_fence();
   PrintOnce("STEP 5 DELETE INVALID CCs : ", t5.value());
