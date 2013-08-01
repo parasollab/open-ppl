@@ -134,6 +134,8 @@ Body::ReadBYU(istream& _is) {
 
 void 
 Body::Read(string _fileName) {
+  SetFileName(_fileName);
+
   m_polyhedron.Read(_fileName);
   m_worldPolyhedron = m_polyhedron;
   GMSPolyhedron poly;

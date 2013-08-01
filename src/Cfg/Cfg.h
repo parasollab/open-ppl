@@ -75,7 +75,7 @@ class Cfg {
     Cfg(const Cfg& _other);
     virtual ~Cfg() {};
 
-    static void InitRobots(vector<Robot>& _robots);
+    static void InitRobots(vector<Robot>& _robots, ostream& _os=std::cout);
 
     Cfg& operator=(const Cfg& _cfg);
     ///determines equality of this and other configuration

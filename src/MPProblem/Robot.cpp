@@ -12,9 +12,9 @@ class IsConnectionGloballyFirst {
 } connectionComparator;
 
 Robot::Robot(Base _base, BaseMovement _baseMovement, 
-    JointMap _joints, int _bodyIndex) : 
+    JointMap _joints, int _bodyIndex, const shared_ptr<Body>& _body) :
   m_base(_base), m_baseMovement(_baseMovement), 
-  m_joints(_joints), m_bodyIndex(_bodyIndex) {
+  m_joints(_joints), m_bodyIndex(_bodyIndex), m_body(_body) {
     //always sort joint lists based on global indices
     std::sort(m_joints.begin(), m_joints.end(), connectionComparator);
   }

@@ -120,6 +120,7 @@ class Environment {
     bool InWSpace(const Cfg& _cfg, shared_ptr<Boundary> _b);
 
     string m_filename; //which file did this environment come from
+    bool m_saveDofs; //should we save the dof information to a file
     
     double m_positionRes; //positional resolution of movement
     double m_orientationRes; //rotational resolution of movement

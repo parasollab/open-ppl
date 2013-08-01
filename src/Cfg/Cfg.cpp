@@ -38,54 +38,91 @@ Cfg::Cfg(const Cfg& _other) :
   m_robotIndex(_other.m_robotIndex),
   m_labelMap(_other.m_labelMap),
   m_statMap(_other.m_statMap),
-  m_witnessCfg(_other.m_witnessCfg){}
+  m_witnessCfg(_other.m_witnessCfg) {}
 
 void
-Cfg::InitRobots(vector<Robot>& _robots) {
+Cfg::InitRobots(vector<Robot>& _robots, ostream& _os) {
   m_robots = _robots;
   m_posdof = 0;
   m_numJoints = 0;
   m_dofTypes.clear();
+  
+  _os << "DoF List: " << endl;
+  
+  int dof=0;
   for(vector<Robot>::iterator rit = m_robots.begin(); rit != m_robots.end(); rit++) {
+
+    _os << "\tRobot with base index " << rit->m_bodyIndex;
+    _os << " (" << rit->m_body->GetFileName() << "):" << endl;
+
     if(rit->m_base == Robot::PLANAR) {
       m_dofTypes.push_back(POS);
       m_dofTypes.push_back(POS);
       m_posdof += 2;
-      if(rit->m_baseMovement == Robot::ROTATIONAL)
+      
+      _os << "\t\t" << dof++ << ": X position" << endl;
+      _os << "\t\t" << dof++ << ": Y position" << endl;
+      
+      if(rit->m_baseMovement == Robot::ROTATIONAL) {
         m_dofTypes.push_back(ROT);
+
+        _os << "\t\t" << dof++ << ": Rotation about Z" << endl;
+      }
     }
     if(rit->m_base == Robot::VOLUMETRIC) {
       m_dofTypes.push_back(POS);
       m_dofTypes.push_back(POS);
       m_dofTypes.push_back(POS);
       m_posdof += 3;
+
+      _os << "\t\t" << dof++ << ": X position" << endl;
+      _os << "\t\t" << dof++ << ": Y position" << endl;
+      _os << "\t\t" << dof++ << ": Z position" << endl;
       if(rit->m_baseMovement == Robot::ROTATIONAL) {
         m_dofTypes.push_back(ROT);
         m_dofTypes.push_back(ROT);
         m_dofTypes.push_back(ROT);
+
+        _os << "\t\t" << dof++ << ": Rotation about X" << endl;
+        _os << "\t\t" << dof++ << ": Rotation about Y" << endl;
+        _os << "\t\t" << dof++ << ": Rotation about Z" << endl;
       }
     }
     for(Robot::JointIT jit = rit->m_joints.begin(); jit != rit->m_joints.end(); jit++) {
       if((*jit)->GetConnectionType() == Connection::REVOLUTE) {
         m_dofTypes.push_back(JOINT);
         m_numJoints++;
+
+        _os << "\t\t" << dof++ << ": ";
+        _os << "Rotational joint from body " << (*jit)->GetPreviousBodyIndex();
+        _os << " (" << (*jit)->GetPreviousBody()->GetFileName() << ")";
+        _os << " to body " << (*jit)->GetNextBodyIndex();
+        _os << " (" << (*jit)->GetNextBody()->GetFileName() << ")" << endl;
       }
       else if((*jit)->GetConnectionType() == Connection::SPHERICAL) {
         m_dofTypes.push_back(JOINT);
         m_dofTypes.push_back(JOINT);
         m_numJoints+=2;
+
+        _os << "\t\t" << dof++;
+        _os << "/" << dof++ << ": ";
+        _os << "Spherical joint from body " << (*jit)->GetPreviousBodyIndex();
+        _os << " (" << (*jit)->GetPreviousBody()->GetFileName() << ")";
+        _os << " to body " << (*jit)->GetNextBodyIndex();
+        _os << " (" << (*jit)->GetNextBody()->GetFileName() << ")" << endl;
       }
-      else if((*jit)->GetConnectionType() == Connection::NONACTUATED){
+      else if((*jit)->GetConnectionType() == Connection::NONACTUATED) {
         //skip, do nothing
       }
     }
   }
+  
   m_dof = m_dofTypes.size();
 }
 
 Cfg&
 Cfg::operator=(const Cfg& _cfg) {
-  if(this != &_cfg){
+  if(this != &_cfg) {
     m_v.clear();
     m_v = _cfg.GetData();
     m_labelMap = _cfg.m_labelMap;
@@ -144,7 +181,7 @@ Cfg::operator-(const Cfg& _cfg) const {
 
 Cfg&
 Cfg::operator-=(const Cfg& _cfg) {
-  for(size_t i = 0; i < m_dof; ++i){
+  for(size_t i = 0; i < m_dof; ++i) {
     if(m_dofTypes[i] == POS || m_dofTypes[i] == JOINT)
       m_v[i] -= _cfg[i];
     else
@@ -198,7 +235,7 @@ Cfg::operator/=(double _d) {
 }
 
 double&
-Cfg::operator[](size_t _dof){
+Cfg::operator[](size_t _dof) {
   assert(_dof >= 0 && _dof <= m_dof);
   m_witnessCfg.reset();
   return m_v[_dof];
@@ -214,16 +251,16 @@ Cfg::operator[](size_t _dof) const {
 // Input/Output operators for Cfg
 //---------------------------------------------
 void
-Cfg::Read(istream& _is){
+Cfg::Read(istream& _is) {
   //first read in robot index, and then read in DOF values
   _is >> m_robotIndex;
   //if this failed, then we're done reading Cfgs
   if (_is.fail())
     return;
-  for(vector<double>::iterator i = m_v.begin(); i != m_v.end(); ++i){
+  for(vector<double>::iterator i = m_v.begin(); i != m_v.end(); ++i) {
     _is >> (*i);
     cout << "Read dof: " << *i << endl;
-    if (_is.fail()){
+    if (_is.fail()) {
       cerr << "Cfg::operator>> error - failed reading values for all dofs" << endl;
       exit(1);
     }
@@ -236,14 +273,14 @@ Cfg::Write(ostream& _os) const{
   _os << setw(4) << m_robotIndex << ' ';
   for(vector<double>::const_iterator i = m_v.begin(); i != m_v.end(); ++i)
     _os << setw(4) << *i << ' ';
-  if (_os.fail()){
+  if (_os.fail()) {
     cerr << "Cfg::Write error - failed to write to file" << endl;
     exit(1);
   }
 }
 
 istream&
-operator>>(istream& _is, Cfg& _cfg){
+operator>>(istream& _is, Cfg& _cfg) {
   _cfg.Read(_is);
   _cfg.m_witnessCfg.reset();
   return _is;
@@ -251,7 +288,7 @@ operator>>(istream& _is, Cfg& _cfg){
 
 
 ostream&
-operator<<(ostream& _os, const Cfg& _cfg){
+operator<<(ostream& _os, const Cfg& _cfg) {
   _cfg.Write(_os);
   return _os;
 }
@@ -410,7 +447,7 @@ Cfg::GetRobotCenterofMass(Environment* _env) const {
     com = com + polycom;
     numbodies++;  
 
-    for(Robot::JointIT i = rit->m_joints.begin(); i != rit->m_joints.end(); ++i){
+    for(Robot::JointIT i = rit->m_joints.begin(); i != rit->m_joints.end(); ++i) {
       GMSPolyhedron poly1 = mb->GetFreeBody((*i)->GetNextBodyIndex())->GetWorldPolyhedron();
       Vector3d polycom1(0,0,0);
       for(vector<Vector3d>::const_iterator vit1 = poly1.m_vertexList.begin(); vit1 != poly1.m_vertexList.end(); ++vit1)
@@ -495,7 +532,7 @@ Cfg::ConfigEnvironment(Environment* _env) const {
         size_t second = (*mit)->GetNextBodyIndex();
         mb->GetFreeBody(second)->GetBackwardConnection(0).GetDHparameters().m_theta = m_v[index]*PI;
         index++;
-        if((*mit)->GetConnectionType() == Connection::SPHERICAL){
+        if((*mit)->GetConnectionType() == Connection::SPHERICAL) {
           mb->GetFreeBody(second)->GetBackwardConnection(0).GetDHparameters().m_alpha = m_v[index]*PI;
           index++;
         }

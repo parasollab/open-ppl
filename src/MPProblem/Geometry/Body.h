@@ -46,6 +46,7 @@ class Body {
     bool operator==(const Body& b) const;
     bool operator!=(const Body& b) const { return !(*this == b); }
     void SetFileName(string _filename) { m_filename=_filename; }
+    string GetFileName() { return m_filename; }
 
     ///Return transformation of this body in world coordinate. 
     virtual Transformation& GetWorldTransformation() = 0;
