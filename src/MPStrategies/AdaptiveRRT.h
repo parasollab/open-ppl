@@ -12,6 +12,8 @@
 #ifndef ADAPTIVERRT_H_
 #define ADAPTIVERRT_H_
 
+#include <stdint.h>
+
 //assembly code to measure cpu cycles
 static inline uint64_t GetCycles(){
   uint64_t n;
