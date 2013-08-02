@@ -120,7 +120,6 @@ template<class MPTraits>
 void
 //RadialBlindRRT<MPTraits>::DeleteInvalid(graph_view<RadialRegionGraph> _regionView) {
 RadialBlindRRT<MPTraits>::DeleteInvalid(graph_view<GraphType> _regionView) {
-  cout << "IN DELETE VERTEX view size " << _regionView.size() << endl;
   /// COMPUTE CCs AND SET REGION CCs
   typedef static_array<cc_color_property> property_storage_type;
   //typedef graph_external_property_map<graph_view<RadialRegionGraph>, cc_color_property, property_storage_type> property_map_type;
@@ -138,26 +137,18 @@ RadialBlindRRT<MPTraits>::DeleteInvalid(graph_view<GraphType> _regionView) {
   vector<pair<VID,size_t> > ccs = cc_stats(_regionView,map);
   rmi_fence();
 
-
   VID rootCC = 0;
 
   ColorMap colorMap;
   vector<VID> cc;
 
   for(int i=0; i<ccs.size(); i++) {
-
     if(ccs[i].first != rootCC) {
       cc = stapl::map_reduce(is_in_cc<VID, property_map_type>(ccs[i].first, map), concat_vector_wf<VID>(), _regionView);
-      if(stapl::get_location_id() == 0){
-
-        for(int j=0; j<cc.size(); j++) {
-          pMap->delete_vertex(cc[j]);
-        }
-
+      for(int j=0; j<cc.size(); j++) {
+        pMap->delete_vertex(cc[j]);
       }
-
     }
-
   }
 }
 
@@ -239,24 +230,24 @@ void RadialBlindRRT<MPTraits>::Run() {
 
 
 
- // if(get_location_id() == 0){
+  // if(get_location_id() == 0){
 
-    //  DEBUGGIN REGIONS
-    /*
-       typename RoadmapGraph<CfgType, WeightType>::vertex_iterator vi = pMap->find_vertex(0);
-       typename RoadmapGraph<CfgType, WeightType>::adj_edge_iterator ei = (*vi).begin();
+  //  DEBUGGIN REGIONS
+  /*
+     typename RoadmapGraph<CfgType, WeightType>::vertex_iterator vi = pMap->find_vertex(0);
+     typename RoadmapGraph<CfgType, WeightType>::adj_edge_iterator ei = (*vi).begin();
 
-       for(; ei != (*vi).end(); ++ei){
-       VID target = ((*ei).target());
-       cout << "Finding Vertex::" << target << endl;
-       CfgType cfg1 = (*(pMap->find_vertex(target))).property();
-       VDRemoveEdge(cfg1, root);
-       VDRemoveEdge(root, cfg1);
-       }
-       */
-   // pMap->delete_vertex(0);
+     for(; ei != (*vi).end(); ++ei){
+     VID target = ((*ei).target());
+     cout << "Finding Vertex::" << target << endl;
+     CfgType cfg1 = (*(pMap->find_vertex(target))).property();
+     VDRemoveEdge(cfg1, root);
+     VDRemoveEdge(root, cfg1);
+     }
+     */
+  // pMap->delete_vertex(0);
 
- // }
+  // }
 
 
   /*PrintOnce("REGIONGRAPH VERTEX TIME: ", t1.value());
@@ -281,12 +272,12 @@ void RadialBlindRRT<MPTraits>::Run() {
     stat_out << setprecision(5);
     stat_out << fixed;
     stat_out << get_num_locations() << "\n"
-    << t1.value() << "\n"
-    << t2.value() << "\n"
-    << t3.value() << "\n"
-    << t4.value() << "\n"
-    << t5.value() << "\n"
-    << t0.value();
+      << t1.value() << "\n"
+      << t2.value() << "\n"
+      << t3.value() << "\n"
+      << t4.value() << "\n"
+      << t5.value() << "\n"
+      << t0.value();
 
     stat_out << "\n" << pMap->size() << "\n" << pMap->num_edges() << endl;
 
