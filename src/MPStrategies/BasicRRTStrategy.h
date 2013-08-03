@@ -49,6 +49,8 @@ class BasicRRTStrategy : public MPStrategyMethod<MPTraits> {
     // Helper functions
     CfgType GoalBiasedDirection();
     CfgType SelectDirection();
+    CfgType SelectDispersedDirection(VID v1);
+    vector<CfgType> SelectNeighbors(VID v1);
     virtual VID ExpandTree(CfgType& _dir);
     void ConnectTrees(VID _recentlyGrown);
     void ConnectNeighbors(VID _newVID, VID _nearVID);
@@ -64,7 +66,7 @@ class BasicRRTStrategy : public MPStrategyMethod<MPTraits> {
     string m_gt;
     double m_delta, m_minDist, m_growthFocus;
     bool m_evaluateGoal;
-    size_t m_numRoots,m_numDirections;
+    size_t m_numRoots,m_numDirections, m_maxTrial;
     bool m_growGoals;
     vector< vector<VID> > m_trees;
     typename vector<vector<VID> >::iterator m_currentTree;
@@ -120,6 +122,7 @@ BasicRRTStrategy<MPTraits>::ParseXML(XMLNodeReader& _node) {
   m_gt = _node.stringXMLParameter("gtype",true,"","Graph type dir/undirected tree/graph");
   m_evaluateGoal = _node.boolXMLParameter("evaluateGoal", false, false, "");
   m_growGoals = _node.boolXMLParameter("growGoals",false,false,"Determines whether or not we grow a tree from the goal");
+  m_maxTrial = _node.numberXMLParameter("trial", false, 3, 1, 1000, "Number of trials to get a dispersed direction");
 
   //optionally read in a query and create a Query object.
   string query = _node.stringXMLParameter("query", false, "", "Query Filename");
@@ -326,6 +329,64 @@ BasicRRTStrategy<MPTraits>::SelectDirection(){
 }
 
 template<class MPTraits>
+typename MPTraits::CfgType 
+BasicRRTStrategy<MPTraits>::SelectDispersedDirection(VID vd1){
+  StatClass* disperseStatClass = this->GetMPProblem()->GetStatClass();
+  string disperseClockName = "disperse sampling time ";
+  disperseStatClass->StartClock(disperseClockName);
+
+  CfgType bestCfg;
+  typename GraphType::vertex_iterator vi = this->GetMPProblem()->GetRoadmap()->GetGraph()->find_vertex(vd1);
+
+  CfgType c1 = (*vi).property();
+  double maxAngle =-MAX_DBL;
+  for(int i=0 ;i<m_maxTrial; i++){
+    CfgType randdir = this->SelectDirection();
+    //calculating angle between unit vectors
+    CfgType difCfg =randdir-c1;
+    difCfg=difCfg/difCfg.Magnitude();
+    vector<double> v1 = difCfg.GetData();
+    //do for all the expanded directions
+    vector<CfgType> x= SelectNeighbors(vd1);
+    double minAngle =MAX_DBL;
+    for(typename vector<CfgType>::iterator vecIT = x.begin(); vecIT!=x.end(); vecIT++){   
+      CfgType difCfg2 =*vecIT-c1;
+      difCfg2=difCfg2/difCfg2.Magnitude();
+      vector<double> v2 = difCfg2.GetData();
+      double res=0;
+      for(int j=0;j<v1.size(); j++){
+        res+=(v1[j]*v2[j]); 
+      }
+     
+      double angle = acos(res)*180/M_PI;
+      if(minAngle>angle)
+        minAngle=angle;
+    }
+    if(maxAngle < minAngle){
+      maxAngle = minAngle;
+      bestCfg = randdir;
+    }
+  }
+ 
+  disperseStatClass->StopClock(disperseClockName);
+
+  return bestCfg;
+}
+
+template<class MPTraits>
+vector<typename MPTraits::CfgType>
+BasicRRTStrategy<MPTraits>::SelectNeighbors(VID v1){
+  typename GraphType::vertex_iterator vi = this->GetMPProblem()->GetRoadmap()->GetGraph()->find_vertex(v1);
+  vector<CfgType> vec;
+  for(typename GraphType::adj_edge_iterator ei =(*vi).begin(); ei!=(*vi).end(); ei++){
+    VID tgt = (*ei).target();
+    CfgType target = this->GetMPProblem()->GetRoadmap()->GetGraph()->GetVertex(tgt);
+    vec.push_back(target);
+  }
+  return vec;
+}
+
+template<class MPTraits>
 void
 BasicRRTStrategy<MPTraits>::ConnectNeighbors(VID _newVID, VID _nearVID){
   if (_newVID != INVALID_VID) {
@@ -364,6 +425,40 @@ BasicRRTStrategy<MPTraits>::ExpandTree(CfgType& _dir){
   // Find closest Cfg in map
   vector<pair<VID, double> > kClosest;
   vector<CfgType> cfgs;
+  
+  GraphType* g = this->GetMPProblem()->GetRoadmap()->GetGraph();
+
+  int numRoadmapVertex  = g->get_num_vertices();
+  typedef typename vector<vector<VID> >::iterator TRIT;
+  int treeSize = 0;
+  for(TRIT trit = m_trees.begin(); trit!=m_trees.end(); ++trit){
+    treeSize+=trit->size();
+  }
+  bool fixTree=false;
+  if( treeSize > numRoadmapVertex)
+    fixTree = true;
+  else{
+    vector<pair<size_t, VID> > ccs;
+    stapl::sequential::vector_property_map<GraphType, size_t> cmap;
+    get_cc_stats(*g, cmap, ccs);
+    if(ccs.size() != m_trees.size())
+      fixTree = true;
+  }
+  if( fixTree ){ //node deleted by dynamic environment, fix all trees 
+    m_trees.clear();
+    vector<pair<size_t, VID> > ccs;
+    stapl::sequential::vector_property_map<GraphType, size_t> cmap;
+    get_cc_stats(*g, cmap, ccs);
+    vector<VID> ccVIDs;
+    typename vector<pair<size_t, VID> >::const_iterator ccIt;
+    for(ccIt = ccs.begin(); ccIt != ccs.end(); ccIt++) {
+      cmap.reset();
+      ccVIDs.clear();
+      get_cc(*g, cmap, ccIt->second, ccVIDs);
+      m_trees.push_back(ccVIDs);
+    }   
+    m_currentTree = m_trees.begin();
+  }
 
   StatClass* kcloseStatClass = this->GetMPProblem()->GetStatClass();
   string kcloseClockName = "kclosest time ";
@@ -406,7 +501,7 @@ BasicRRTStrategy<MPTraits>::ExpandTree(CfgType& _dir){
     }
 
     for( size_t i=2 ;i<=m_numDirections; i++){//expansion to other m-1 directions
-      CfgType randdir = this->SelectDirection();
+      CfgType randdir = this->SelectDispersedDirection(kClosest[0].first); 
       if(this->m_recordKeep) expandStatClass->StartClock(expandClockName);
       bool expandFlag = RRTExpand<MPTraits>(this->GetMPProblem(), m_vc, m_dm, nearest, randdir, newCfg, m_delta, weight, cdInfo, env->GetPositionRes(), env->GetOrientationRes());
 

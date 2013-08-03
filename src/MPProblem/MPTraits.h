@@ -86,6 +86,7 @@
 #include "MapEvaluators/NegateEvaluator.h"
 #include "MapEvaluators/PrintMapEvaluation.h"
 #include "MapEvaluators/Query.h"
+#include "MapEvaluators/ReplanningEvaluation.h"
 #include "MapEvaluators/TrueEvaluation.h"
 
 //mp strategies includes
@@ -231,6 +232,7 @@ struct MPTraits{
     NegateEvaluator<MPTraits>,
     PrintMapEvaluation<MPTraits>, 
     Query<MPTraits>,
+    ReplanningEvaluation<MPTraits>,
     TrueEvaluation<MPTraits>
     > MapEvaluatorMethodList;
   
