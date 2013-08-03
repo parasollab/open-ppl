@@ -89,7 +89,6 @@ ReplanningEvaluation<MPTraits>::operator()() {
   string replanClockName = "Replan Evaluator  ";
   ReplanStatClass->StartClock(replanClockName);
   static bool flag = false;
-  static int itr=0;
   if(flag == false){ //called first time
     SetEnvironment();
     ResetValidity();

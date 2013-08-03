@@ -340,7 +340,7 @@ BasicRRTStrategy<MPTraits>::SelectDispersedDirection(VID vd1){
 
   CfgType c1 = (*vi).property();
   double maxAngle =-MAX_DBL;
-  for(int i=0 ;i<m_maxTrial; i++){
+  for(size_t i=0 ;i<m_maxTrial; i++){
     CfgType randdir = this->SelectDirection();
     //calculating angle between unit vectors
     CfgType difCfg =randdir-c1;
@@ -354,7 +354,7 @@ BasicRRTStrategy<MPTraits>::SelectDispersedDirection(VID vd1){
       difCfg2=difCfg2/difCfg2.Magnitude();
       vector<double> v2 = difCfg2.GetData();
       double res=0;
-      for(int j=0;j<v1.size(); j++){
+      for(size_t j=0;j<v1.size(); j++){
         res+=(v1[j]*v2[j]); 
       }
      
