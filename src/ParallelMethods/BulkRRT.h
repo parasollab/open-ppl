@@ -30,7 +30,8 @@ class BulkWF {
   typedef typename MPProblemType::VID VID;
   typedef typename MPProblemType::DistanceMetricPointer DistanceMetricPointer;
   typedef typename MPProblemType::NeighborhoodFinderPointer NeighborhoodFinderPointer;
-  typedef vector<pair<VID, double> > NFResultType;
+  typedef pair<pair<VID,CfgType>, double> NFType;
+  typedef vector<NFType> NFResultType;
   private:
 
   MPProblemType* m_problem;
@@ -71,20 +72,24 @@ class BulkWF {
         VID nearestVID;
         CDInfo cdInfo;
         int weight;
-        vector<VID> kClosest;
+        //vector<VID> kClosest;
 
         //We want to find a random configuration to attempt expansion that way.
         //CfgType dir = SelectDirection(env);
         dir.GetRandomCfg(env);
         //PrintValue("WF dir", dir);
-        nf->KClosest(m_problem->GetRoadmap(), dir, 1, back_inserter(kClosest));
-        //NFMapFunc<MPTraits> nfMap;
-	nearestVID = kClosest[0];
-        //NFResultType nfresult = nfMap.FindNeighbors(env, dmm, _gview.begin(), _gview.end(), dir, 1);
-        //nearestVID = nfresult[0].first;
-	nearest = (*(_gview.find_vertex(nearestVID))).property();
+        //nf->KClosest(m_problem->GetRoadmap(), dir, 1, back_inserter(kClosest));
+        NFMapFunc<MPTraits> nfMap;
+	//NFMapFunc<MPTraits>  nfMapfnc(m_problem, dir, 1);
+	//nearestVID = kClosest[0];
+        NFResultType nfresult = nfMap.FindNeighbor(env, dmm, _gview.begin(), _gview.end(), dir, 1);
+	//NFResultType nfresult = map_reduce(is_coarse_wf(nfMapfnc), NFReduceFunc<MPTraits>(), _gview);
+        nearestVID = nfresult[0].first.first;
+	//nearest = (*(_gview.find_vertex(nearestVID))).property();
+	nearest = nfresult[0].first.second;
 
-	//PrintValue("WF closest", nearestVID);
+	//PrintValue("WF closestVID", nearestVID);
+	//PrintValue("WF closest", nearest);
 
 	//if(this->m_debug) cout << "RRT could not expand!" << endl;
         if((nearestVID != -999) && RRTExpand<MPTraits>(m_problem, m_vcm, m_dm, nearest, dir, newCfg, m_delta, weight, cdInfo, env->GetPositionRes(), env->GetOrientationRes())
@@ -103,6 +108,7 @@ class BulkWF {
             _gview.add_edge_async(ed2);
 
         }
+	 //cout << "VECTOR VID size " : << kClosest.size() << endl;
 
       }
     }
@@ -280,7 +286,10 @@ void BulkRRT<MPTraits>::Run() {
     pMap->add_vertex(root);
 
   }
-  PrintOnce("ROOT " , root);
+  
+  //pMap->add_vertex(1,root);
+  
+  PrintValue("ROOT " , root);
   stapl::rmi_fence();
 
 

@@ -30,7 +30,8 @@ class NFMapFunc {
     typedef typename MPTraits::CfgType CfgType;
     typedef typename MPProblemType::DistanceMetricPointer DistanceMetricPointer;
     typedef pair<VID, double> NFType;
-
+    typedef pair<pair<VID,CfgType>, double> NFType2;
+    typedef vector<NFType2> NFResultType; 
     typedef CfgType RegionType;
     MPProblemType* m_problem;
     CfgType m_cfg;
@@ -39,6 +40,7 @@ class NFMapFunc {
     string m_dmLabel;
 
   public:
+  typedef NFResultType result_type;
     NFMapFunc(MPProblemType* _problem=NULL, CfgType _cfg = CfgType(), size_t _k=0, bool _radial=false, string _dmLabel=""): 
       m_problem(_problem),m_cfg(_cfg), m_k(_k),m_radial(_radial), m_dmLabel(_dmLabel){
       }
@@ -72,6 +74,7 @@ class NFMapFunc {
           int k, bool radial=false) {
         int max_index = 0;
         double max_value = MAX_DIST;
+	cout << "FINDNEIGHBOR " << endl;
         vector< pair< VID, double > > closest(k, make_pair(-999, max_value));
         // now go through all kp and find closest k
         int count = 0;
@@ -103,16 +106,64 @@ class NFMapFunc {
 
       }
 
+      //Compute Neighbor Function
+    template<typename InputIterator>
+      vector<NFType2>
+      FindNeighbor(Environment* _env, DistanceMetricPointer _dmm,
+          InputIterator _input_first, InputIterator _input_last, CfgType  _cfg, 
+          int k) {
+        int max_index = 0;
+        double max_value = MAX_DIST;
+	//cout << "k " << k << endl;
+        //vector< pair< VID, double > > closest(k, make_pair(-999, max_value));
+	vector<NFType2> closest(k, make_pair(make_pair(-999,CfgType()), max_value));
+        // now go through all kp and find closest k
+        int count = 0;
+        for(InputIterator V1 = _input_first; V1 != _input_last; ++V1) {
+          count++;
+          CfgType  v1 = (*V1).property();
+	  //cout << "cfg : " << v1 << endl;
+
+          //if(v1 == _cfg || v1 == CfgType() )
+	  if(v1 == _cfg)
+            continue; //don't connect same or invalid cfg
+
+          double dist = _dmm->Distance(_env, _cfg, v1);
+          //cout << "dist : " << dist << endl;
+          if(dist < closest[max_index].second) { 
+            VID tmp = (*V1).descriptor();
+            //closest[max_index] = make_pair(tmp, dist);
+	    //cout << "id : " << tmp << endl;
+	    //cout << "cfg : " << v1 << endl;
+	    closest[max_index] = make_pair(make_pair(tmp,v1), dist);
+            max_value = dist;
+            //search for new max_index (faster O(k) than sort O(k log k) )
+            for (size_t p = 0; p < closest.size(); ++p) {
+              if (max_value < closest[p].second) {
+                max_value = closest[p].second;
+                max_index = p;
+              }
+            }
+          }
+        }
+        ////why sorting?
+        // sort(closest.begin(), closest.end(), compare_second<VID, double>());
+        return closest;
+
+      }
 };
 
 template<class MPTraits>
 struct NFReduceFunc {
   typedef typename MPTraits::MPProblemType MPProblemType;
   typedef typename MPProblemType::VID VID;
-  typedef pair<VID, double> NFType;
+  typedef typename MPTraits::CfgType CfgType;
+  //typedef pair<VID, double> NFType;
+  typedef pair<pair<VID,CfgType>, double> NFType;
+  typedef vector<NFType> result_type;
 
   template <typename View1, typename View2>
-    vector<NFType> operator() (View1 vec1, View2 vec2) {
+    result_type operator() (View1 vec1, View2 vec2) {
       size_t k = vec1.size();
       vector<NFType> closest;
       closest.clear();
