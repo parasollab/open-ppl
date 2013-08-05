@@ -330,39 +330,42 @@ BasicRRTStrategy<MPTraits>::SelectDirection(){
 
 template<class MPTraits>
 typename MPTraits::CfgType 
-BasicRRTStrategy<MPTraits>::SelectDispersedDirection(VID vd1){
+BasicRRTStrategy<MPTraits>::SelectDispersedDirection(VID vd1) {
   StatClass* disperseStatClass = this->GetMPProblem()->GetStatClass();
   string disperseClockName = "disperse sampling time ";
   disperseStatClass->StartClock(disperseClockName);
 
   CfgType bestCfg;
+  
   typename GraphType::vertex_iterator vi = this->GetMPProblem()->GetRoadmap()->GetGraph()->find_vertex(vd1);
-
   CfgType c1 = (*vi).property();
-  double maxAngle =-MAX_DBL;
-  for(size_t i=0 ;i<m_maxTrial; i++){
+
+  double maxAngle = -MAX_DBL;
+  for(size_t i=0; i<m_maxTrial; i++) {
     CfgType randdir = this->SelectDirection();
+
     //calculating angle between unit vectors
-    CfgType difCfg =randdir-c1;
-    difCfg=difCfg/difCfg.Magnitude();
+    CfgType difCfg = randdir - c1;
+    difCfg = difCfg/difCfg.Magnitude();
     vector<double> v1 = difCfg.GetData();
+
     //do for all the expanded directions
-    vector<CfgType> x= SelectNeighbors(vd1);
-    double minAngle =MAX_DBL;
-    for(typename vector<CfgType>::iterator vecIT = x.begin(); vecIT!=x.end(); vecIT++){   
-      CfgType difCfg2 =*vecIT-c1;
-      difCfg2=difCfg2/difCfg2.Magnitude();
+    vector<CfgType> x = SelectNeighbors(vd1);
+    double minAngle = MAX_DBL;
+    for(typename vector<CfgType>::iterator vecIT = x.begin(); vecIT!=x.end(); vecIT++) {
+      CfgType difCfg2 = *vecIT - c1;
+      difCfg2 = difCfg2/difCfg2.Magnitude();
       vector<double> v2 = difCfg2.GetData();
       double res=0;
-      for(size_t j=0;j<v1.size(); j++){
+      for(size_t j=0; j<v1.size(); j++) {
         res+=(v1[j]*v2[j]); 
       }
      
       double angle = acos(res)*180/M_PI;
-      if(minAngle>angle)
-        minAngle=angle;
+      if(minAngle > angle)
+        minAngle = angle;
     }
-    if(maxAngle < minAngle){
+    if(maxAngle < minAngle) {
       maxAngle = minAngle;
       bestCfg = randdir;
     }
@@ -432,19 +435,19 @@ BasicRRTStrategy<MPTraits>::ExpandTree(CfgType& _dir){
   typedef typename vector<vector<VID> >::iterator TRIT;
   int treeSize = 0;
   for(TRIT trit = m_trees.begin(); trit!=m_trees.end(); ++trit){
-    treeSize+=trit->size();
+    treeSize += trit->size();
   }
-  bool fixTree=false;
-  if( treeSize > numRoadmapVertex)
+  bool fixTree = false;
+  if(treeSize > numRoadmapVertex)
     fixTree = true;
-  else{
+  else {
     vector<pair<size_t, VID> > ccs;
     stapl::sequential::vector_property_map<GraphType, size_t> cmap;
     get_cc_stats(*g, cmap, ccs);
     if(ccs.size() != m_trees.size())
       fixTree = true;
   }
-  if( fixTree ){ //node deleted by dynamic environment, fix all trees 
+  if(fixTree) { //node deleted by dynamic environment, fix all trees 
     m_trees.clear();
     vector<pair<size_t, VID> > ccs;
     stapl::sequential::vector_property_map<GraphType, size_t> cmap;

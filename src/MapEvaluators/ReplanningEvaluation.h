@@ -8,7 +8,7 @@ class ReplanningEvaluation : public LazyQuery<MPTraits> {
   public:
     typedef typename MPTraits::CfgType CfgType;
     typedef typename MPTraits::MPProblemType MPProblemType;
-     typedef typename MPProblemType::RoadmapType RoadmapType;
+    typedef typename MPProblemType::RoadmapType RoadmapType;
     typedef typename MPProblemType::GraphType GraphType;
     typedef typename MPProblemType::ValidityCheckerPointer ValidityCheckerPointer;
     typedef typename MPProblemType::VID VID;
@@ -16,30 +16,34 @@ class ReplanningEvaluation : public LazyQuery<MPTraits> {
     typedef typename GraphType::adj_edge_iterator adj_edge_iterator;
 
     ReplanningEvaluation();
-    ReplanningEvaluation(string _envFile, string _vcLabel, const char* _queryFileName = ""):
-      m_envFile(_envFile), LazyQuery<MPTraits>(_queryFileName, _vcLabel){
+    ReplanningEvaluation(string _envFile, string _vcLabel, const char* _queryFileName = "") :
+      m_envFile(_envFile), LazyQuery<MPTraits>(_queryFileName, _vcLabel) {
       this->SetName("ReplanningEvaluation");
     }
-    
     ReplanningEvaluation(CfgType _start, CfgType _goal, string _vcLabel) :
-            LazyQuery<MPTraits>(_start, _goal, _vcLabel) { this->SetName("ReplanningEvaluation"); }
-
+      m_envFile(""), LazyQuery<MPTraits>(_start, _goal, _vcLabel) { 
+      this->SetName("ReplanningEvaluation");
+    }
     ReplanningEvaluation(typename MPTraits::MPProblemType* _problem, XMLNodeReader& _node);
     virtual ~ReplanningEvaluation();
+    
     virtual void PrintOptions(ostream& _os);
 
-    vector<VID> GetRoots();
     virtual bool operator()();
 
     virtual bool CanRecreatePath(RoadmapType* _rdmp, 
       vector<VID>& _attemptedPath, vector<CfgType>& _recreatedPath);
 
+  private:
     void SetEnvironment();  
-    void RemoveInvalidPortions();
     void ResetValidity();
+    void RemoveInvalidPortions();
+    vector<VID> GetRoots();
+
   protected:
     string m_envFile;
 };
+
 
 template<class MPTraits>
 ReplanningEvaluation<MPTraits>::ReplanningEvaluation() {
@@ -49,8 +53,9 @@ ReplanningEvaluation<MPTraits>::ReplanningEvaluation() {
 
 template<class MPTraits>
 ReplanningEvaluation<MPTraits>::ReplanningEvaluation(typename MPTraits::MPProblemType* _problem, XMLNodeReader& _node)
-     : LazyQuery<MPTraits>(_problem, _node, false){
-     m_envFile = _node.stringXMLParameter("envFile", true, "", "Environment filename");
+  : LazyQuery<MPTraits>(_problem, _node, false) {
+  this->SetName("ReplanningEvaluation");
+  m_envFile = _node.stringXMLParameter("envFile", true, "", "Environment filename");
 }
 
 template<class MPTraits>
@@ -59,27 +64,9 @@ ReplanningEvaluation<MPTraits>::~ReplanningEvaluation() {
 
 template<class MPTraits>
 void
-ReplanningEvaluation<MPTraits>::PrintOptions(ostream& _os){
+ReplanningEvaluation<MPTraits>::PrintOptions(ostream& _os) {
+  LazyQuery<MPTraits>::PrintOptions(_os);
   _os << "\n\tEnvironment = " << m_envFile <<endl;
-}
-
-template<class MPTraits>
-vector< typename ReplanningEvaluation<MPTraits>::VID>
-ReplanningEvaluation<MPTraits>::GetRoots(){
-  vector<VID> vecRoot;
-  GraphType* g = this->GetMPProblem()->GetRoadmap()->GetGraph(); 
-  typedef typename vector<CfgType>::iterator CIT;
-
-  {
-    for(CIT cit1 = this->m_query.begin(), cit2 = cit1+1; cit2!=this->m_query.end(); cit1++, cit2++){
-      VID qVID;
-      if(g->IsVertex(*cit1) ){
-        qVID= g->GetVID(*cit1);
-        vecRoot.push_back(qVID);
-      }  
-    }
-  } 
-  return vecRoot;
 }
 
 template<class MPTraits>
@@ -88,13 +75,16 @@ ReplanningEvaluation<MPTraits>::operator()() {
   StatClass* ReplanStatClass = this->GetMPProblem()->GetStatClass();
   string replanClockName = "Replan Evaluator  ";
   ReplanStatClass->StartClock(replanClockName);
+  
   static bool flag = false;
   if(flag == false){ //called first time
     SetEnvironment();
     ResetValidity();
     flag = true;
   }
+  
   bool ans = Query<MPTraits>::operator()();
+  
   ReplanStatClass->StopClock(replanClockName);
   return ans;
 }
@@ -103,59 +93,25 @@ template<class MPTraits>
 bool
 ReplanningEvaluation<MPTraits>::CanRecreatePath(RoadmapType* _rdmp, 
         vector<VID>& _attemptedPath, vector<CfgType>& _recreatedPath) {
- bool ans = LazyQuery<MPTraits>::CanRecreatePath(_rdmp, _attemptedPath, _recreatedPath);
- StatClass* RemoveStatClass = this->GetMPProblem()->GetStatClass();
- string removeClockName = "Remove Invalid  ";
- 
- if(!ans){
-   RemoveStatClass->StartClock(removeClockName);
-   RemoveInvalidPortions();
-   RemoveStatClass->StopClock(removeClockName);
- }
- return ans;
+  bool ans = LazyQuery<MPTraits>::CanRecreatePath(_rdmp, _attemptedPath, _recreatedPath);
+  if(!ans) {
+    StatClass* RemoveStatClass = this->GetMPProblem()->GetStatClass();
+    string removeClockName = "Remove Invalid  ";
+    RemoveStatClass->StartClock(removeClockName);
+    RemoveInvalidPortions();
+    RemoveStatClass->StopClock(removeClockName);
+  }
+  return ans;
 }
 
 template<class MPTraits>
 void
 ReplanningEvaluation<MPTraits>::SetEnvironment() {
-  Environment* env =this->GetMPProblem()->GetEnvironment() ;
+  Environment* env = this->GetMPProblem()->GetEnvironment();
   if(this->m_debug) cout<<"#oldobs:"<<env->GetUsableMultiBodyCount()<<endl;
   env->Read(m_envFile.c_str() );
   this->GetMPProblem()->BuildCDStructures();
   if(this->m_debug) cout<<"#newobs:"<<env->GetUsableMultiBodyCount()<<endl;
-}
-
-template<class MPTraits>
-void
-ReplanningEvaluation<MPTraits>::RemoveInvalidPortions() {
-  GraphType* g = this->GetMPProblem()->GetRoadmap()->GetGraph();
-  vector <VID> vecRoots = GetRoots();
-
-  vector<pair<size_t, VID> > ccs;
-  stapl::sequential::vector_property_map<GraphType, size_t> cmap;
-  get_cc_stats(*g, cmap, ccs);
-  vector<VID> cciVIDs;
-
-  //Delete CCs other than the one containing roots 
-  typename vector<pair<size_t, VID> >::iterator ccIt;
-  typename vector<VID>::iterator vecIt;
-  for(ccIt = ccs.begin(); ccIt != ccs.end(); ccIt++) {
-    bool flag = false ;
-    for(vecIt = vecRoots.begin(); vecIt!=vecRoots.end(); vecIt++){
-      if(stapl::sequential::is_same_cc(*g, cmap, *vecIt, ccIt->second)){// contained in some root's cc
-        flag=true;
-        break;
-      }
-    }
-    if(!flag){
-      cmap.reset();
-      cciVIDs.clear();
-      get_cc(*g, cmap, ccIt->second, cciVIDs);
-      for(typename vector<VID>::iterator vecit=cciVIDs.begin();vecit!=cciVIDs.end();vecit++){
-        g->delete_vertex(*vecit);
-      }  
-    }
-  }
 }
 
 template<class MPTraits>
@@ -168,6 +124,51 @@ ReplanningEvaluation<MPTraits>::ResetValidity() {
       (*ei).property().SetChecked(MAX_INT);
     }
   }
+}
+
+template<class MPTraits>
+void
+ReplanningEvaluation<MPTraits>::RemoveInvalidPortions() {
+  GraphType* g = this->GetMPProblem()->GetRoadmap()->GetGraph();
+  vector <VID> vecRoots = GetRoots();
+
+  vector<pair<size_t, VID> > ccs;
+  stapl::sequential::vector_property_map<GraphType, size_t> cmap;
+  get_cc_stats(*g, cmap, ccs);
+
+  //Delete CCs other than the one containing roots 
+  for(typename vector<pair<size_t, VID> >::iterator ccIt = ccs.begin(); ccIt != ccs.end(); ccIt++) {
+    bool partOfRootCC = false;
+    for(typename vector<VID>::iterator vecIt = vecRoots.begin(); vecIt!=vecRoots.end(); vecIt++) {
+      if(stapl::sequential::is_same_cc(*g, cmap, *vecIt, ccIt->second)){// contained in some root's cc
+        partOfRootCC = true;
+        break;
+      }
+    }
+    if(!partOfRootCC) {
+      cmap.reset();
+      vector<VID> cciVIDs;
+      get_cc(*g, cmap, ccIt->second, cciVIDs);
+      for(typename vector<VID>::iterator vecit=cciVIDs.begin(); vecit!=cciVIDs.end(); vecit++) {
+        g->delete_vertex(*vecit);
+      }  
+    }
+  }
+}
+
+template<class MPTraits>
+vector<typename ReplanningEvaluation<MPTraits>::VID>
+ReplanningEvaluation<MPTraits>::GetRoots() {
+  GraphType* g = this->GetMPProblem()->GetRoadmap()->GetGraph(); 
+
+  vector<VID> vecRoot;
+  for(typename vector<CfgType>::iterator cit1 = this->m_query.begin(), cit2 = cit1+1; cit2!=this->m_query.end(); cit1++, cit2++) {
+    if(g->IsVertex(*cit1)) {
+      VID qVID = g->GetVID(*cit1);
+      vecRoot.push_back(qVID);
+    }  
+  }
+  return vecRoot;
 }
 
 #endif
