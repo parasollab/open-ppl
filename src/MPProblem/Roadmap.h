@@ -29,8 +29,7 @@ class Roadmap {
     
     //Read graph information from roadmap file.
     void Read(string _filename);
-    void Write(ostream& _os, Environment* _env, 
-        const vector<shared_ptr<Boundary> >& _boundaries = vector<shared_ptr<Boundary> >());
+    void Write(ostream& _os, Environment* _env);
 
     //Append nodes and edges from one roadmap (_rdmp) into 
     //another roadmap (to_rdmp)
@@ -93,30 +92,12 @@ Roadmap<MPTraits>::Read(string _filename) {
 }
 
 template<class MPTraits>
-void 
-Roadmap<MPTraits>::Write(ostream& _os, Environment* _env, 
-    const vector<shared_ptr<Boundary> >& _boundaries) {
-  _os << "PMPL Roadmap Version 041805";
-  _os << endl << "#####PREAMBLESTART#####";
-  _os << endl << "../pmpl -f " << _env->GetEnvFileName() << " ";//commandLine;
-  _os << " -bbox " << *(_env->GetBoundary());
-  if(!_boundaries.empty()) {
-    typedef vector<shared_ptr<Boundary> >::const_iterator BIT;
-    for(BIT bit = _boundaries.begin(); bit!=_boundaries.end(); bit++) {
-      _os << " -bbox " << *bit;
-    }
-  }
-  _os << endl << "#####PREAMBLESTOP#####";
+void
+Roadmap<MPTraits>::Write(ostream& _os, Environment* _env){
 
-  _os << endl << "#####ENVFILESTART#####";
+  _os << "#####ENVFILESTART#####";
   _os << endl << _env->GetEnvFileName();
   _os << endl << "#####ENVFILESTOP#####";
-  _os << endl;
-
-  _os << "#####LPSTART#####" << endl << "0" << endl << "#####LPSTOP#####" << endl;
-  _os << "#####CDSTART#####" << endl << "0" << endl << "#####CDSTOP#####" << endl;
-  _os << "#####DMSTART#####" << endl << "0" << endl << "#####DMSTOP#####" << endl;
-  _os << "#####RNGSEEDSTART#####" << endl << "0" << endl << "#####RNGSEEDSTOP#####" << endl;
   _os << endl;
 
 #ifndef _PARALLEL
