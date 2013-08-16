@@ -24,11 +24,11 @@ class ToggleLP: public LocalPlannerMethod<MPTraits> {
     virtual void PrintOptions(ostream& _os);
 
     virtual bool IsConnected(Environment* _env, StatClass& _stats,
-        DistanceMetricPointer _dm, const CfgType& _c1, const CfgType& _c2, CfgType& _col, 
+        DistanceMetricPointer _dm, const CfgType& _c1, const CfgType& _c2, CfgType& _col,
         LPOutput<MPTraits>* _lpOutput, double _positionRes, double _orientationRes,
         bool _checkCollision=true, bool _savePath=false, bool _saveFailedPath=false);
 
-    virtual vector<CfgType> ReconstructPath(Environment* _env, DistanceMetricPointer _dm, 
+    virtual vector<CfgType> ReconstructPath(Environment* _env, DistanceMetricPointer _dm,
         const CfgType& _c1, const CfgType& _c2, const vector<CfgType>& _intermediates, double _posRes, double _oriRes);
   protected:
 
@@ -51,7 +51,7 @@ class ToggleLP: public LocalPlannerMethod<MPTraits> {
         LPOutput<MPTraits>* _lpOutput, int& _cdCounter, double _positionRes, double _orientationRes,
         bool _checkCollision=true, bool _savePath=false, bool _saveFailedPath=false);
 
-    bool ToggleConnect(Environment* _env, StatClass& _stats, 
+    bool ToggleConnect(Environment* _env, StatClass& _stats,
         DistanceMetricPointer _dm, const CfgType& _s, const CfgType& _g, const CfgType& _n1, const CfgType& _n2, bool _toggle,
         LPOutput<MPTraits>* _lpOutput, double _positionRes, double _orientationRes, int _depth=0);
 
@@ -69,7 +69,7 @@ class ToggleLP: public LocalPlannerMethod<MPTraits> {
 };
 
 template<class MPTraits>
-ToggleLP<MPTraits>::ToggleLP(string _vc, string _lp, int _maxIter) : 
+ToggleLP<MPTraits>::ToggleLP(string _vc, string _lp, int _maxIter) :
   m_vcLabel(_vc), m_lpLabel(_lp), m_maxIter(_maxIter) {
     InitVars();
   }
@@ -86,10 +86,12 @@ ToggleLP<MPTraits>::ToggleLP(MPProblemType* _problem, XMLNodeReader& _node) : Lo
 }
 
 template<class MPTraits>
-void 
+void
 ToggleLP<MPTraits>::InitVars(){
   this->SetName("ToggleLP");
   m_iterations = 0;
+  m_degeneracyReached = false;
+  svid = gvid = -1;
 }
 
 template<class MPTraits>
@@ -107,9 +109,9 @@ ToggleLP<MPTraits>::PrintOptions(ostream& _os) {
 }
 
 template<class MPTraits>
-bool 
+bool
 ToggleLP<MPTraits>::IsConnected(Environment* _env, StatClass& _stats,
-    DistanceMetricPointer _dm, const CfgType& _c1, const CfgType& _c2, CfgType& _col, 
+    DistanceMetricPointer _dm, const CfgType& _c1, const CfgType& _c2, CfgType& _col,
     LPOutput<MPTraits>* _lpOutput, double _positionRes, double _orientationRes,
     bool _checkCollision, bool _savePath, bool _saveFailedPath) {
   //Note : Initialize connected to false to avoid compiler warning in parallel code
@@ -124,10 +126,10 @@ ToggleLP<MPTraits>::IsConnected(Environment* _env, StatClass& _stats,
   gvid = pathGraph.AddVertex(_c2);
 
   _stats.IncLPAttempts(this->GetNameAndLabel());
-  int cdCounter = 0; 
+  int cdCounter = 0;
 
-  connected = IsConnectedToggle(_env, _stats, _dm, _c1, _c2, _col, 
-      _lpOutput, cdCounter, _positionRes, _orientationRes, 
+  connected = IsConnectedToggle(_env, _stats, _dm, _c1, _c2, _col,
+      _lpOutput, cdCounter, _positionRes, _orientationRes,
       _checkCollision, _savePath, _saveFailedPath);
   if(connected){
     _stats.IncLPConnections(this->GetNameAndLabel());
@@ -166,7 +168,7 @@ ToggleLP<MPTraits>::ChooseAlteredCfg(Environment* _env, StatClass& _stats,
     incr.GetRandomRay(dist, _env, _dm);
     temp = incr + mid;
   }while(!_env->InBounds(temp) && attempts++<10);
-  if(attempts==10){ 
+  if(attempts==10){
     _stats.IncLPStat("Toggle::MaxAttemptsForRay", 1);
     return CfgType();
   }
@@ -178,7 +180,7 @@ template<class MPTraits>
 template <typename Enable>
 typename MPTraits::CfgType
 ToggleLP<MPTraits>::ChooseAlteredCfg(Environment* _env, StatClass& _stats,
-    DistanceMetricPointer _dm, 
+    DistanceMetricPointer _dm,
     const CfgType& _c1, const CfgType& _c2,
     typename boost::enable_if<IsClosedChain<Enable> >::type* _dummy){
   CfgType temp;
@@ -193,7 +195,7 @@ bool
 ToggleLP<MPTraits>::IsConnectedToggle(Environment* _env, StatClass& _stats,
     DistanceMetricPointer _dm, const CfgType& _c1, const CfgType& _c2, CfgType& _col,
     LPOutput<MPTraits>* _lpOutput, int& _cdCounter, double _positionRes, double _orientationRes,
-    bool _checkCollision, bool _savePath, bool _saveFailedPath) { 
+    bool _checkCollision, bool _savePath, bool _saveFailedPath) {
 
   m_iterations=0;
   m_degeneracyReached=false;
@@ -329,19 +331,19 @@ ToggleLP<MPTraits>::CalcStats(StatClass& _stats, bool _val, bool _toggle){
   double collisionFailure = _stats.GetLPStat("Toggle::CollisionFailure");
   double degenerateFailure = _stats.GetLPStat("Toggle::DegenerateFailure");
   double blockingFailure = _stats.GetLPStat("Toggle::BlockingFailure");
-  _stats.SetLPStat("Toggle::FreeSuccess%", freeSuccess/(freeSuccess+freeFailure)); 
-  _stats.SetLPStat("Toggle::CollisionSuccess%", collisionSuccess/(collisionSuccess+collisionFailure)); 
-  _stats.SetLPStat("Toggle::TotalSuccess%", (freeSuccess+collisionSuccess)/(collisionSuccess+collisionFailure+freeSuccess+freeFailure)); 
-  _stats.SetLPStat("Toggle::IterAvg", _stats.GetLPStat("Toggle::TotalIterations")/_stats.GetLPStat("Toggle::TotalCalls")); 
-  _stats.SetLPStat("Toggle::DegeneracyFailure%", degenerateFailure/(collisionFailure+freeFailure)); 
-  _stats.SetLPStat("Toggle::BlockingFailure%", blockingFailure/(collisionFailure+freeFailure)); 
-  _stats.SetLPStat("Toggle::DegenerateIterAvg", _stats.GetLPStat("Toggle::DegenerateFailureIter")/degenerateFailure); 
-  _stats.SetLPStat("Toggle::BlockingIterAvg", _stats.GetLPStat("Toggle::BlockingFailureIter")/blockingFailure); 
+  _stats.SetLPStat("Toggle::FreeSuccess%", freeSuccess/(freeSuccess+freeFailure));
+  _stats.SetLPStat("Toggle::CollisionSuccess%", collisionSuccess/(collisionSuccess+collisionFailure));
+  _stats.SetLPStat("Toggle::TotalSuccess%", (freeSuccess+collisionSuccess)/(collisionSuccess+collisionFailure+freeSuccess+freeFailure));
+  _stats.SetLPStat("Toggle::IterAvg", _stats.GetLPStat("Toggle::TotalIterations")/_stats.GetLPStat("Toggle::TotalCalls"));
+  _stats.SetLPStat("Toggle::DegeneracyFailure%", degenerateFailure/(collisionFailure+freeFailure));
+  _stats.SetLPStat("Toggle::BlockingFailure%", blockingFailure/(collisionFailure+freeFailure));
+  _stats.SetLPStat("Toggle::DegenerateIterAvg", _stats.GetLPStat("Toggle::DegenerateFailureIter")/degenerateFailure);
+  _stats.SetLPStat("Toggle::BlockingIterAvg", _stats.GetLPStat("Toggle::BlockingFailureIter")/blockingFailure);
 }
 
 template<class MPTraits>
 bool
-ToggleLP<MPTraits>::ToggleConnect(Environment* _env, StatClass& _stats, DistanceMetricPointer _dm, 
+ToggleLP<MPTraits>::ToggleConnect(Environment* _env, StatClass& _stats, DistanceMetricPointer _dm,
     const CfgType& _s, const CfgType& _g, const CfgType& _n1, const CfgType& _n2, bool _toggle,
     LPOutput<MPTraits>* _lpOutput, double _positionRes, double _orientationRes, int _depth) {
 
@@ -386,13 +388,13 @@ ToggleLP<MPTraits>::ToggleConnect(Environment* _env, StatClass& _stats, Distance
 
   //look for degeneracies
   if(_n1==c || _n2==c){
-    m_degeneracyReached=true; 
+    m_degeneracyReached=true;
     return false;
   }
   typedef typename deque<CfgType>::iterator CIT;
   for(CIT cit = m_colHist.begin(); cit!=m_colHist.end(); cit++){
     if(c==*cit){
-      m_degeneracyReached=true; 
+      m_degeneracyReached=true;
       return false;
     }
   }
@@ -406,12 +408,12 @@ ToggleLP<MPTraits>::ToggleConnect(Environment* _env, StatClass& _stats, Distance
   else
     return ToggleConnect(_env, _stats, _dm, _n1, c, _s, _g, !_toggle, _lpOutput, _positionRes, _orientationRes, _depth+1) ||
       ToggleConnect(_env, _stats, _dm, _n2, c, _s, _g, !_toggle, _lpOutput, _positionRes, _orientationRes, _depth+1);
-} 
+}
 
 template<class MPTraits>
-vector<typename MPTraits::CfgType> 
-ToggleLP<MPTraits>::ReconstructPath(Environment* _env, DistanceMetricPointer _dm, 
-    const CfgType& _c1, const CfgType& _c2, const vector<CfgType>& _intermediates, 
+vector<typename MPTraits::CfgType>
+ToggleLP<MPTraits>::ReconstructPath(Environment* _env, DistanceMetricPointer _dm,
+    const CfgType& _c1, const CfgType& _c2, const vector<CfgType>& _intermediates,
     double _posRes, double _oriRes){
   StatClass dummyStats;
   LocalPlannerPointer lpMethod = this->GetMPProblem()->GetLocalPlanner(m_lpLabel);

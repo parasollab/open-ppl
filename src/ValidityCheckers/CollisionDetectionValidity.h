@@ -19,19 +19,19 @@ class CollisionDetectionValidity : public ValidityCheckerMethod<MPTraits> {
     CollisionDetectionValidity();
     CollisionDetectionValidity(CollisionDetectionMethod* _cdMethod, bool _ignoreSelfCollision = false, int _ignoreIAdjacentLinks = 1);
     CollisionDetectionValidity(typename MPTraits::MPProblemType* _problem, XMLNodeReader& _node);
-    virtual ~CollisionDetectionValidity(); 
+    virtual ~CollisionDetectionValidity();
 
-    virtual bool IsValidImpl(CfgType& _cfg, Environment* _env, 
-        StatClass& _stats, CDInfo& _cdInfo, 
-        string* _callName);    
-    virtual bool IsInsideObstacle(const CfgType& _cfg, Environment* _env, CDInfo& _cdInfo); 
+    virtual bool IsValidImpl(CfgType& _cfg, Environment* _env,
+        StatClass& _stats, CDInfo& _cdInfo,
+        string* _callName);
+    virtual bool IsInsideObstacle(const CfgType& _cfg, Environment* _env, CDInfo& _cdInfo);
 
     cd_predefined GetCDType() const { return m_cdMethod->GetCDType(); }
 
   private:
     bool IsInCollision(Environment* _env, StatClass& _stats, CDInfo& _cdInfo,
         shared_ptr<MultiBody> _rob, shared_ptr<MultiBody> _obst, string* _callName);
-    bool IsInCollision(Environment* _env, StatClass& _stats, CDInfo& _cdInfo, 
+    bool IsInCollision(Environment* _env, StatClass& _stats, CDInfo& _cdInfo,
         size_t _robotIndex, string* _callName);
 
     CollisionDetectionMethod* m_cdMethod;
@@ -40,22 +40,26 @@ class CollisionDetectionValidity : public ValidityCheckerMethod<MPTraits> {
 };
 
 template<class MPTraits>
-CollisionDetectionValidity<MPTraits>::CollisionDetectionValidity() : ValidityCheckerMethod<MPTraits>() {
+CollisionDetectionValidity<MPTraits>::CollisionDetectionValidity() :
+  ValidityCheckerMethod<MPTraits>(),
+  m_cdMethod(NULL),
+  m_ignoreSelfCollision(false),
+  m_ignoreIAdjacentLinks(0) {
   this->m_name = "CollisionDetection";
 }
 
 template<class MPTraits>
-CollisionDetectionValidity<MPTraits>::CollisionDetectionValidity(CollisionDetectionMethod* _cdMethod, bool _ignoreSelfCollision, int _ignoreIAdjacentLinks) 
+CollisionDetectionValidity<MPTraits>::CollisionDetectionValidity(CollisionDetectionMethod* _cdMethod, bool _ignoreSelfCollision, int _ignoreIAdjacentLinks)
   : ValidityCheckerMethod<MPTraits>(), m_cdMethod(_cdMethod), m_ignoreSelfCollision(_ignoreSelfCollision), m_ignoreIAdjacentLinks(_ignoreIAdjacentLinks) {
     this->m_name = "CollisionDetection";
   }
 
 template<class MPTraits>
-CollisionDetectionValidity<MPTraits>::CollisionDetectionValidity(typename MPTraits::MPProblemType* _problem, XMLNodeReader& _node) 
+CollisionDetectionValidity<MPTraits>::CollisionDetectionValidity(typename MPTraits::MPProblemType* _problem, XMLNodeReader& _node)
   : ValidityCheckerMethod<MPTraits>(_problem, _node) {
     this->m_name = "CollisionDetection";
 
-    m_ignoreSelfCollision = _node.boolXMLParameter("ignoreSelfCollision", false, false, "Check for self collision"); 
+    m_ignoreSelfCollision = _node.boolXMLParameter("ignoreSelfCollision", false, false, "Check for self collision");
     m_ignoreIAdjacentLinks  = _node.numberXMLParameter("ignore_i_adjacent_links", false, 1, 0, 100, "number of links to ignore for linkages");
 
     string cdLabel = _node.stringXMLParameter("method",true,"","method");
@@ -70,7 +74,7 @@ CollisionDetectionValidity<MPTraits>::CollisionDetectionValidity(typename MPTrai
     if (cdLabel == "PQP") {
       m_cdMethod = new PQP();
       methodFound = true;
-    } 
+    }
     else if (cdLabel == "PQP_SOLID") {
       m_cdMethod = new PQPSolid();
       methodFound = true;
@@ -115,7 +119,7 @@ CollisionDetectionValidity<MPTraits>::IsValidImpl(CfgType& _cfg, Environment* _e
     return false;
   }
 
-  bool clear = (_callName) ? false : true; 
+  bool clear = (_callName) ? false : true;
   if(!_callName)
     _callName = new string("isColl(e,s,cd,cdi,ep)");
 
@@ -124,10 +128,10 @@ CollisionDetectionValidity<MPTraits>::IsValidImpl(CfgType& _cfg, Environment* _e
 
   bool answerFromEnvironment = IsInCollision(_env, _stats, _cdInfo, _cfg.GetRobotIndex(), _callName);
 
-  if(clear) 
+  if(clear)
     delete _callName;
 
-  _cfg.SetLabel("VALID", !answerFromEnvironment); 
+  _cfg.SetLabel("VALID", !answerFromEnvironment);
   return !answerFromEnvironment;
 }
 
@@ -185,7 +189,7 @@ CollisionDetectionValidity<MPTraits>::IsInCollision(Environment* _env, StatClass
       }
       else {
         // robot self checking. Warning: rob and _env->GetMultiBody(robot) may NOT be the same.
-        if ( (rob->GetBodyCount() > 1) && 
+        if ( (rob->GetBodyCount() > 1) &&
             (IsInCollision(_env, _stats, _cdInfo, rob, rob, _callName)) ) {
           if (_cdInfo.m_retAllInfo) {
             // set stuff to indicate odd happenning
@@ -208,7 +212,7 @@ CollisionDetectionValidity<MPTraits>::IsInCollision(Environment* _env, StatClass
   }
 
   return retVal;
-} 
+}
 
 
 template<class MPTraits>

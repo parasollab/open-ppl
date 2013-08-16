@@ -31,11 +31,11 @@ class StatClass;
 
 template<class MPTraits>
 bool
-RRTExpand(typename MPTraits::MPProblemType* _mp, 
-    string _vc, string _dm, 
-    typename MPTraits::CfgType _start, 
-    typename MPTraits::CfgType _dir, 
-    typename MPTraits::CfgType& _newCfg, 
+RRTExpand(typename MPTraits::MPProblemType* _mp,
+    string _vc, string _dm,
+    const typename MPTraits::CfgType& _start,
+    const typename MPTraits::CfgType& _dir,
+    typename MPTraits::CfgType& _newCfg,
     double _delta, int& _weight, CDInfo& _cdInfo,
     double _posRes, double _oriRes){
 
@@ -58,13 +58,13 @@ RRTExpand(typename MPTraits::MPProblemType* _mp,
   //given resolution and the distance _delta: the maximum distance to grow
   while(!collision && dm->Distance(env,_start,tick) <= _delta && ticker <= nTicks) {
     previous = tick;
-    tick += incr; 
+    tick += incr;
     if(!env->InBounds(tick) || !(vc->IsValid(tick, env, *stats, _cdInfo, &callee))){
       collision = true; //return previous tick, as it is collision-free
     }
     ++ticker;
   }
-  if(previous != _start){ 
+  if(previous != _start){
     _newCfg = previous;//Last Cfg pushed back is the final tick allowed
     return true;
   }

@@ -26,11 +26,11 @@ class Connection {
   public:
     enum JointType {REVOLUTE, SPHERICAL, NONACTUATED}; //1dof vs 2dof rotational joints
 
-    Connection(MultiBody* _owner);    
+    Connection(MultiBody* _owner);
     Connection(const shared_ptr<Body>& _body1, const shared_ptr<Body>& _body2 = shared_ptr<Body>());
-    Connection(const shared_ptr<Body>& _body1, const shared_ptr<Body>& _body2, 
-        const Transformation & _transformationToBody2, 
-        const DHparameters & _dhparameters, 
+    Connection(const shared_ptr<Body>& _body1, const shared_ptr<Body>& _body2,
+        const Transformation & _transformationToBody2,
+        const DHparameters & _dhparameters,
         const Transformation & _transformationToDHFrame);
 
     virtual ~Connection();
@@ -43,17 +43,17 @@ class Connection {
 
     //connection index
     size_t GetGlobalIndex() const {return m_globalIndex;}
-    
+
     //connection type and limits
     JointType GetConnectionType() const {return m_jointType;}
     const pair<double, double>& GetJointLimits(int _i) const {return m_jointLimits[_i];}
-    
+
     //body indices
-    shared_ptr<Body> GetPreviousBody() {return m_bodies[0];} 
-    size_t GetPreviousBodyIndex() {return m_bodyIndices.first;} 
-    shared_ptr<Body> GetNextBody() {return m_bodies[1];}
-    size_t GetNextBodyIndex() {return m_bodyIndices.second;} 
-    
+    shared_ptr<Body> GetPreviousBody() const {return m_bodies[0];}
+    size_t GetPreviousBodyIndex() const {return m_bodyIndices.first;}
+    shared_ptr<Body> GetNextBody() const {return m_bodies[1];}
+    size_t GetNextBodyIndex() const {return m_bodyIndices.second;}
+
     //Joint transformations
     DHparameters& GetDHparameters() {return m_dhParameters;}
     const DHparameters& GetDHparameters() const {return m_dhParameters;}

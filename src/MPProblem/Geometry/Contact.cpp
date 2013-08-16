@@ -6,7 +6,7 @@
 //-------------------------------------------------------------------
 //  Constructors and Destructor
 //-------------------------------------------------------------------
-Contact::Contact() {
+Contact::Contact() : body({NULL, NULL}) {
 }
 
 Contact::Contact(Body* _body1, Body* _body2, Vector3d& _position, Vector3d& _normal1, Vector3d& _normal2) {
@@ -16,8 +16,8 @@ Contact::Contact(Body* _body1, Body* _body2, Vector3d& _position, Vector3d& _nor
   normal[0] = _normal1;
   normal[1] = _normal2;
 
-  // Get the tangential and orthogonal from the normals 
-  // in order to prepare for the subsequent computations 
+  // Get the tangential and orthogonal from the normals
+  // in order to prepare for the subsequent computations
   ComputeTangential();
   ComputeOrthogonal();
 }
@@ -33,7 +33,7 @@ void Contact::ComputeTangential(){
     mat[0][0] =  0.0;    mat[0][1] =  0.0;    mat[0][2] = 1.0;
     mat[1][0] =  0.0;    mat[1][1] =  1.0;    mat[1][2] = 0.0;
     mat[2][0] = -1.0;    mat[2][1] =  0.0;    mat[2][2] = 0.0;
-  
+
     Orientation orientation(mat);
     tangential[0] = orientation * normal[0];
     tangential[1] = orientation * normal[1];
@@ -51,7 +51,7 @@ void Contact::ComputeOrthogonal(){
     mat[0][0] = 1.0;    mat[0][1] =  0.0;    mat[0][2] =  0.0;
     mat[1][0] = 0.0;    mat[1][1] =  0.0;    mat[1][2] = -1.0;
     mat[2][0] = 0.0;    mat[2][1] =  1.0;    mat[2][2] =  0.0;
-  
+
     Orientation orientation(mat);
     orthogonal[0] = orientation * normal[0];
     orthogonal[1] = orientation * normal[1];

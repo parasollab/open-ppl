@@ -21,16 +21,17 @@ class ScaledEuclideanDistance : public EuclideanDistance<MPTraits> {
 };
 
 template<class MPTraits>
-ScaledEuclideanDistance<MPTraits>::ScaledEuclideanDistance(double _scale, bool _normalize) : EuclideanDistance<MPTraits>(_normalize) {
+ScaledEuclideanDistance<MPTraits>::ScaledEuclideanDistance(double _scale, bool _normalize) :
+  EuclideanDistance<MPTraits>(_normalize), m_scale(0.5) {
   this->m_name = "ScaledEuclidean";
 }
 
 template<class MPTraits>
-ScaledEuclideanDistance<MPTraits>::ScaledEuclideanDistance(typename MPTraits::MPProblemType* _problem, XMLNodeReader& _node) : 
+ScaledEuclideanDistance<MPTraits>::ScaledEuclideanDistance(typename MPTraits::MPProblemType* _problem, XMLNodeReader& _node) :
   EuclideanDistance<MPTraits>(_problem, _node, false) {
     this->m_name = "ScaledEuclidean";
     m_scale = _node.numberXMLParameter("scale", false, 0.5, 0.0, 1.0, "scale factor");
-    
+
     _node.warnUnrequestedAttributes();
   }
 
@@ -46,8 +47,8 @@ ScaledEuclideanDistance<MPTraits>::PrintOptions(ostream& _os) const {
 }
 
 //Calculating the scaled distance (result)
-template<class MPTraits> 
-double 
+template<class MPTraits>
+double
 ScaledEuclideanDistance<MPTraits>::Distance(Environment* _env, const CfgType& _c1, const CfgType& _c2) {
   CfgType c = this->DifferenceCfg(_c1, _c2);
   double result = pow(m_scale*this->PositionDistance(_env, c) + (1-m_scale)*this->OrientationDistance(c), this->m_r3);

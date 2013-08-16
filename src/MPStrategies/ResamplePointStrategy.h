@@ -1,5 +1,5 @@
-#ifndef RESAMPLEPOINTSTRATEGY_H_ 
-#define RESAMPLEPOINTSTRATEGY_H_ 
+#ifndef RESAMPLEPOINTSTRATEGY_H_
+#define RESAMPLEPOINTSTRATEGY_H_
 
 #include "MPStrategyMethod.h"
 
@@ -12,9 +12,9 @@ class ResamplePointStrategy : public MPStrategyMethod<MPTraits> {
     typedef typename MPProblemType::VID VID;
     typedef typename MPProblemType::DistanceMetricPointer DistanceMetricPointer;
     typedef typename MPProblemType::LocalPlannerPointer LocalPlannerPointer;
-    
-    ResamplePointStrategy(); 
-    ResamplePointStrategy(MPProblemType* _problem, XMLNodeReader& _node); 
+
+    ResamplePointStrategy();
+    ResamplePointStrategy(MPProblemType* _problem, XMLNodeReader& _node);
     virtual ~ResamplePointStrategy();
 
     virtual void PrintOptions(ostream& _os);
@@ -45,12 +45,15 @@ class ResamplePointStrategy : public MPStrategyMethod<MPTraits> {
 template<class MPTraits>
 ResamplePointStrategy<MPTraits>::ResamplePointStrategy() {
   this->m_name = "ResamplePointStrategy";
+  m_numResamples = 0;
+  m_stepSize = -1;
+  m_userValue = -1;
 }
 
 template<class MPTraits>
 ResamplePointStrategy<MPTraits>::ResamplePointStrategy(MPProblemType* _problem, XMLNodeReader& _node) : MPStrategyMethod<MPTraits>(_problem, _node) {
   this->m_name = "ResamplePointStrategy";
-  ParseXML(_node); 
+  ParseXML(_node);
 }
 
 template<class MPTraits>
@@ -86,7 +89,7 @@ ResamplePointStrategy<MPTraits>::ParseXML(XMLNodeReader& _node) {
   m_typeName = _node.stringXMLParameter("typeName", true, "", "type of the CFG task");
   m_dmLabel = _node.stringXMLParameter("dmLabel", true, "", "Distance metric");
   m_lpLabel = _node.stringXMLParameter("lpLabel", true, "", "Local Planner");
- 
+
   if(m_typeName == "MAX_CLEARANCE"){
     m_clearanceUtils = ClearanceUtility<MPTraits>(this->GetMPProblem(), _node);
   }
@@ -113,18 +116,18 @@ void
 ResamplePointStrategy<MPTraits>::Initialize() {
   //load input map
   this->GetMPProblem()->GetRoadmap()->Read(m_inputMapFilename.c_str());
-  
+
   //load input path
   ifstream inPath(m_inputPathFilename.c_str());
-  
+
   if(this->m_debug)
     cout<<m_inputPathFilename.c_str();
-  
+
   size_t numCfgs = 0;
   if(m_typeName == "MAX_CLEARANCE"){//max clearance
     string line;
     getline(inPath, line); //skip header line
-    getline(inPath, line); //skip header line  
+    getline(inPath, line); //skip header line
   }
   inPath >> numCfgs;
   for(size_t i=0; i<numCfgs; ++i) {
@@ -141,7 +144,7 @@ ResamplePointStrategy<MPTraits>::Run() {
   double currentConfigurationWeight = 0.0;
   double temp = 0.0;
   size_t maxAttempts = 1000;
-  
+
   if(this->m_debug){
     cout << "ResamplePointStrategy::Run" << endl;
     cout << "\ntypeName::" << m_typeName << endl;
@@ -152,21 +155,21 @@ ResamplePointStrategy<MPTraits>::Run() {
 
   StatClass* stats = this->GetMPProblem()->GetStatClass();
   stats->StartClock("Resampling");
-  
+
   vector<double> smoothingValues;
-  
+
   typename vector<CfgType>::iterator cit = m_pathCfgs.begin();
   m_outputPathCfgs.push_back(*cit);
-  
-  
-  if(this->m_debug){ 
+
+
+  if(this->m_debug){
     temp = cit->GetSmoothingValue(m_clearanceUtils, this->m_boundary);
     cout << "oldsmoothingvalues:" << endl << temp << ";";
     smoothingValues.push_back(temp);
   }
 
   ++cit;
-  
+
   for(; cit+1 != m_pathCfgs.end(); ++cit) {
 
     currentConfigurationWeight = cit->GetSmoothingValue(m_clearanceUtils, this->m_boundary);
@@ -177,14 +180,14 @@ ResamplePointStrategy<MPTraits>::Run() {
       CfgType previous = *(cit-1);
       CfgType current = *cit;
       CfgType next = *(cit+1);
-      
-      vector<pair<CfgType, double> > sampledNeighbors = FindNeighbors(previous, current, next, maxAttempts); 
+
+      vector<pair<CfgType, double> > sampledNeighbors = FindNeighbors(previous, current, next, maxAttempts);
 
       if(sampledNeighbors.size() > 0) {
         typename vector<pair<CfgType, double> >::iterator nit = sampledNeighbors.begin();
         m_outputPathCfgs.push_back(nit->first);
         *cit = nit->first;
-        if(this->m_debug){ 
+        if(this->m_debug){
           temp = nit->first.GetSmoothingValue(m_clearanceUtils, this->m_boundary);
           smoothingValues.push_back(temp);
         }
@@ -215,7 +218,7 @@ ResamplePointStrategy<MPTraits>::Run() {
   stats->StopClock("Resampling");
 
   if(this->m_debug){
-    stats->PrintClock("Resampling", cout); 
+    stats->PrintClock("Resampling", cout);
     cout << endl;
     cout << "newsmoothingvalues:" << endl;
     for(vector<double>::iterator dit = smoothingValues.begin(); dit!=smoothingValues.end(); ++dit)  {
@@ -228,7 +231,7 @@ ResamplePointStrategy<MPTraits>::Run() {
 template<class MPTraits>
 void
 ResamplePointStrategy<MPTraits>::Finalize() {
-  WritePath(m_outputPathFilename, m_outputPathCfgs); 
+  WritePath(m_outputPathFilename, m_outputPathCfgs);
   //write output map
   ofstream osMap(m_outputMapFilename.c_str());
   this->GetMPProblem()->GetRoadmap()->Write(osMap, this->GetMPProblem()->GetEnvironment());
@@ -248,35 +251,35 @@ ResamplePointStrategy<MPTraits>::FindNeighbors(CfgType& _previous, CfgType& _cur
   StatClass* stats = this->GetMPProblem()->GetStatClass();
   RoadmapType* rdmp = this->GetMPProblem()->GetRoadmap();
   Environment* env = this->GetMPProblem()->GetEnvironment();
-  
+
   oldConfigurationWeight = _current.GetSmoothingValue(m_clearanceUtils, this->m_boundary);
-  
-  for(size_t k=0; k < _maxAttempts && numOfSamples > 0; ++k) {  
+
+  for(size_t k=0; k < _maxAttempts && numOfSamples > 0; ++k) {
     CfgType r, c;
     r.GetRandomRay(m_stepSize, env, dm);
-    c = r + _current; 
+    c = r + _current;
     newConfigurationWeight = c.GetSmoothingValue(m_clearanceUtils, this->m_boundary);
     if((newConfigurationWeight > oldConfigurationWeight && m_typeName == "MAX_CLEARANCE") ||
         (newConfigurationWeight < oldConfigurationWeight && m_typeName == "PROTEIN_ENERGY")) {
-      firstConnectFlag = lpp->IsConnected(env, *stats, dm, _previous, c, &lpOutput, 
+      firstConnectFlag = lpp->IsConnected(env, *stats, dm, _previous, c, &lpOutput,
             env->GetPositionRes(), env->GetOrientationRes());
-      secondConnectFlag = lpp->IsConnected(env, *stats, dm, c, _next, &lpOutput, 
+      secondConnectFlag = lpp->IsConnected(env, *stats, dm, c, _next, &lpOutput,
             env->GetPositionRes(), env->GetOrientationRes());
 
       VID cvid = rdmp->GetGraph()->GetVID(c);
       if(cvid == INVALID_VID)
-        cvid = rdmp->GetGraph()->AddVertex(c);// the vertex did not exist 
+        cvid = rdmp->GetGraph()->AddVertex(c);// the vertex did not exist
 
       if(firstConnectFlag && secondConnectFlag) {
-        rdmp->GetGraph()->AddEdge(rdmp->GetGraph()->GetVID(_previous), cvid, lpOutput.edge); 
-        rdmp->GetGraph()->AddEdge(cvid, rdmp->GetGraph()->GetVID(_next), lpOutput.edge);  
+        rdmp->GetGraph()->AddEdge(rdmp->GetGraph()->GetVID(_previous), cvid, lpOutput.edge);
+        rdmp->GetGraph()->AddEdge(cvid, rdmp->GetGraph()->GetVID(_next), lpOutput.edge);
         result.push_back(pair<CfgType,double>(c, newConfigurationWeight));
         numOfSamples--;
       }
     }
   }//for
 
-  if(m_typeName == "MAX_CLEARANCE") 
+  if(m_typeName == "MAX_CLEARANCE")
     sort(result.begin(), result.end(), SortDescend());
   else if(m_typeName == "PROTEIN_ENERGY")
     sort(result.begin(), result.end(), SortAscend());

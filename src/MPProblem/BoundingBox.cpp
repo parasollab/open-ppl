@@ -1,12 +1,14 @@
 #include "BoundingBox.h"
 #include "Utilities/MPUtils.h"
 
-BoundingBox::BoundingBox() { 
+BoundingBox::BoundingBox() {
   for(int i = 0; i < 3; ++i)
     m_bbx[i] = make_pair(-numeric_limits<double>::max(), numeric_limits<double>::max());
 }
 
-BoundingBox::BoundingBox(const BoundingBox& _bbx) : m_bbx(_bbx.m_bbx) {}
+BoundingBox::BoundingBox(const BoundingBox& _bbx) {
+  copy(_bbx.m_bbx, _bbx.m_bbx + 2, m_bbx);
+}
 
 bool
 BoundingBox::operator==(const Boundary& _b) const {
@@ -25,7 +27,7 @@ BoundingBox::GetMaxDist(double _r1, double _r2) const{
   }
   return pow(maxdist, _r2);
 }
-    
+
 pair<double, double>
 BoundingBox::GetRange(size_t _i) const {
   if(_i > 2){
@@ -38,14 +40,14 @@ BoundingBox::GetRange(size_t _i) const {
 Point3d
 BoundingBox::GetRandomPoint() const {
   Point3d p;
-  
+
   for(int i=0; i<3; ++i)
     p[i] = m_bbx[i].first + (m_bbx[i].second - m_bbx[i].first)*DRand();
-  
+
   return p;
 }
 
-bool 
+bool
 BoundingBox::InBoundary(const Vector3d& _p) const {
   for(int i = 0; i < 3; ++i)
     if( _p[i] < m_bbx[i].first || _p[i] > m_bbx[i].second)
@@ -53,7 +55,7 @@ BoundingBox::InBoundary(const Vector3d& _p) const {
   return true;
 }
 
-double 
+double
 BoundingBox::GetClearance(const Vector3d& _p) const {
   double minClearance = numeric_limits<double>::max();
   for (int i = 0; i < 3; ++i) {
@@ -63,7 +65,7 @@ BoundingBox::GetClearance(const Vector3d& _p) const {
   }
   return minClearance;
 }
-    
+
 Vector3d
 BoundingBox::GetClearancePoint(const Vector3d& _p) const {
   Vector3d clrP = _p;
@@ -81,7 +83,7 @@ BoundingBox::GetClearancePoint(const Vector3d& _p) const {
   return clrP;
 }
 
-double 
+double
 BoundingBox::GetClearance2DSurf(Point2d _pos, Point2d& _cdPt) const {
   double minDist=1e10;
   double cbbx[6]={m_bbx[0].first,m_bbx[0].second,
@@ -89,7 +91,7 @@ BoundingBox::GetClearance2DSurf(Point2d _pos, Point2d& _cdPt) const {
     m_bbx[2].first,m_bbx[2].second};
   double dist[4]={_pos[0]-cbbx[0],cbbx[1]-_pos[0],
     _pos[1]-cbbx[4],cbbx[5]-_pos[1]};
-  if(dist[0]<minDist){     
+  if(dist[0]<minDist){
     minDist=dist[0];
     _cdPt(cbbx[0], _pos[1]);
   }
@@ -111,7 +113,7 @@ BoundingBox::GetClearance2DSurf(Point2d _pos, Point2d& _cdPt) const {
   return minDist;
 }
 
-void 
+void
 BoundingBox::ResetBoundary(vector<pair<double, double> >& _obstBBX, double _d){
   for(int i = 0; i<3; ++i){
     m_bbx[i].first = _obstBBX[i].first - _d;

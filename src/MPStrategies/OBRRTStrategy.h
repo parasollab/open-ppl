@@ -49,12 +49,16 @@ class OBRRTStrategy : public BasicRRTStrategy<MPTraits> {
 
 template<class MPTraits>
 OBRRTStrategy<MPTraits>::OBRRTStrategy() {
+  m_g0 = m_g1 = m_g2 = m_g3 = m_g4 = m_g5 = m_g6 = m_g7 = m_g8 =
+    m_g0N = m_g1N = m_g2N = m_g3N = m_g4N = m_g5N = m_g6N = m_g7N = m_g8N = 0;
   this->SetName("OBRRTStrategy");
 };
 
 template<class MPTraits>
 OBRRTStrategy<MPTraits>::OBRRTStrategy(MPProblemType* _problem, XMLNodeReader& _node, bool _parse, bool _warn) :
   BasicRRTStrategy<MPTraits>(_problem, _node, false), m_medialAxisUtility(_problem, _node){
+    m_g0 = m_g1 = m_g2 = m_g3 = m_g4 = m_g5 = m_g6 = m_g7 = m_g8 =
+      m_g0N = m_g1N = m_g2N = m_g3N = m_g4N = m_g5N = m_g6N = m_g7N = m_g8N = 0;
     this->SetName("OBRRTStrategy");
     if(_parse)
       ParseXML(_node);
@@ -134,11 +138,11 @@ OBRRTStrategy<MPTraits>::ExpandTree(CfgType& _dir){
   nf->FindNeighbors(this->GetMPProblem()->GetRoadmap(),
       this->m_currentTree->begin(), this->m_currentTree->end(),
       _dir, back_inserter(kClosest));
-  #ifndef _PARALLEL
+#ifndef _PARALLEL
   CfgType& nearest = this->GetMPProblem()->GetRoadmap()->GetGraph()->GetVertex(kClosest[0].first);
-  #else
+#else
   CfgType nearest = this->GetMPProblem()->GetRoadmap()->GetGraph()->GetVertex(kClosest[0].first);
-  #endif
+#endif
   CfgType newCfg;
   bool verifiedValid = false;
 

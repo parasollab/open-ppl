@@ -29,12 +29,12 @@ class Query : public MapEvaluatorMethod<MPTraits> {
     bool _smooth=false, bool _maSmooth=false);
 
     Query(string _queryFileName);
-    Query(CfgType _start, CfgType _goal);
+    Query(const CfgType& _start, const CfgType& _goal);
     Query(MPProblemType* _problem, XMLNodeReader& _node, bool _warn = true);
     virtual ~Query() { }
 
     void ParseXML(XMLNodeReader& _node);
-    virtual void PrintOptions(ostream& _os); 
+    virtual void PrintOptions(ostream& _os);
     vector<CfgType>& GetQuery() { return m_query; }
     vector<CfgType>& GetPath() { return m_path; }
     void SetPathFile(string _filename) { m_pathFile = _filename; }
@@ -43,7 +43,7 @@ class Query : public MapEvaluatorMethod<MPTraits> {
     virtual bool PerformQuery(RoadmapType* _rdmp);
 
     // Performs the real query work
-    virtual bool PerformQuery(CfgType _start, CfgType _goal, RoadmapType* _rdmp);
+    virtual bool PerformQuery(const CfgType& _start, const CfgType& _goal, RoadmapType* _rdmp);
 
     // Smooths the query path by skipping intermediate nodes in the path
     virtual void Smooth();
@@ -59,7 +59,7 @@ class Query : public MapEvaluatorMethod<MPTraits> {
 
     virtual void ReadQuery(string _filename);
 
-    virtual bool operator()(); 
+    virtual bool operator()();
 
   protected:
     enum GraphSearchAlg {DIJKSTRAS, ASTAR};
@@ -95,11 +95,11 @@ struct Heuristic {
   public:
     typedef typename MPTraits::CfgType CfgType;
     typedef typename MPTraits::WeightType WeightType;
-    
-    Heuristic(CfgType& _goal, double _posRes, double _oriRes) :
+
+    Heuristic(const CfgType& _goal, double _posRes, double _oriRes) :
       m_goal(_goal), m_posRes(_posRes), m_oriRes(_oriRes) { }
 
-    WeightType operator()(CfgType& _c1) {
+    WeightType operator()(const CfgType& _c1) {
       int tick;
       CfgType incr;
       incr.FindIncrement(_c1, m_goal, &tick, m_posRes, m_oriRes);
@@ -131,7 +131,7 @@ Query<MPTraits>::Query(string _queryFileName) {
 
 // Uses start/goal to set up query
 template<class MPTraits>
-Query<MPTraits>::Query(CfgType _start, CfgType _goal) {
+Query<MPTraits>::Query(const CfgType& _start, const CfgType& _goal) {
   Initialize();
   m_query.push_back(_start);
   m_query.push_back(_goal);
@@ -203,7 +203,7 @@ template<class MPTraits>
 bool
 Query<MPTraits>::operator()() {
 
-  RoadmapType* rdmp = this->GetMPProblem()->GetRoadmap();  
+  RoadmapType* rdmp = this->GetMPProblem()->GetRoadmap();
 
   // Perform query
   bool ans = PerformQuery(rdmp);
@@ -244,7 +244,7 @@ Query<MPTraits>::PerformQuery(RoadmapType* _rdmp) {
       if(this->m_debug)
         cout << endl << "*Q* In Query::PerformQuery(): didn't connect";
       return false;
-    } 
+    }
   }
 
   if(m_pathFile == "") {
@@ -264,10 +264,10 @@ Query<MPTraits>::PerformQuery(RoadmapType* _rdmp) {
 // Performs the query
 template<class MPTraits>
 bool
-Query<MPTraits>::PerformQuery(CfgType _start, CfgType _goal, RoadmapType* _rdmp) {
+Query<MPTraits>::PerformQuery(const CfgType& _start, const CfgType& _goal, RoadmapType* _rdmp) {
 
   if(this->m_debug)
-    cout << "*Q* Begin query" << endl;  
+    cout << "*Q* Begin query" << endl;
   VDComment("Begin Query");
 
   StatClass* stats = this->GetMPProblem()->GetStatClass();
@@ -390,9 +390,9 @@ Query<MPTraits>::PerformQuery(CfgType _start, CfgType _goal, RoadmapType* _rdmp)
       }
       if(this->m_recordKeep)
         stats->StopClock("Query Graph Search");
-#endif 
+#endif
       if(this->m_debug)
-        cout << "*Q* Start(" << shortestPath[1] << ") and Goal(" << shortestPath[shortestPath.size()-2] 
+        cout << "*Q* Start(" << shortestPath[1] << ") and Goal(" << shortestPath[shortestPath.size()-2]
           << ") seem connected to same ccIt[" << distance(ccsBegin, ccIt)+1  << "]!" << endl;
 
       // Attempt to recreate path
@@ -456,14 +456,14 @@ Query<MPTraits>::Smooth() {
     double posRes = env->GetPositionRes();
     double oriRes = env->GetOrientationRes();
 
-    if(this->m_recordKeep) stats->StartClock("Path Smoother"); 
+    if(this->m_recordKeep) stats->StartClock("Path Smoother");
     //This variable will store how many nodes were skipped
     size_t skips = 0;
 
     vector<VID> oldPathVIDs = m_pathVIDs;
     m_pathVIDs.clear();
     m_path.clear();
-    
+
     //Save the first node in the path. (i.e. it can never be skipped)
     m_pathVIDs.push_back(oldPathVIDs[0]);
     if(m_smooth){
@@ -529,7 +529,7 @@ Query<MPTraits>::Smooth() {
         }
       }
     }
-    
+
     //Output the path if it is wanted
     if(m_smooth){
       if(m_smoothFile==""){
@@ -541,7 +541,7 @@ Query<MPTraits>::Smooth() {
         WritePath(m_smoothFile, m_path);
       }
     }
-    if(this->m_recordKeep) stats->StopClock("Path Smoother"); 
+    if(this->m_recordKeep) stats->StopClock("Path Smoother");
   }
   else{
     cerr << "*S* Error. m_pathVIDs in " << this->GetNameAndLabel() << " is empty. Aborting smoothing operation(s)." << endl;
@@ -564,7 +564,7 @@ Query<MPTraits>::MedialAxisSmooth(){
     shared_ptr<Boundary> bBox = this->GetMPProblem()->GetEnvironment()->GetBoundary();
     MedialAxisUtility<MPTraits> mau = dynamic_cast<MedialAxisLP<MPTraits>*>(maLP.get())->GetMedialAxisUtility();
 
-    if(this->m_recordKeep) stats->StartClock("Medial Axis Path Smoother"); 
+    if(this->m_recordKeep) stats->StartClock("Medial Axis Path Smoother");
     size_t n = m_pathVIDs.size();
 
     //Copy all the nodes from m_pathVIDs to avoid modifying them
@@ -604,7 +604,7 @@ Query<MPTraits>::MedialAxisSmooth(){
       if(result){
         m_path.push_back(start);
         AddToPath(&tmpOutput, pushedNodes[0]);
-        
+
         //Connect the nodes that are already in the medial axis
         i = 1;
         while(result && i<n){
@@ -730,7 +730,7 @@ Query<MPTraits>::CanRecreatePath(RoadmapType* _rdmp, vector<VID>& _attemptedPath
       _recreatedPath.push_back(_rdmp->GetGraph()->GetVertex(*(it+1)));
     }
     else {
-      cerr << "Error::When querying, invalid edge of graph was found between vid pair (" 
+      cerr << "Error::When querying, invalid edge of graph was found between vid pair ("
         << *it << ", " << *(it+1) << ")" << " outputting error path to \"error.path\" and exiting." << endl;
       _recreatedPath.insert(_recreatedPath.end(), ci.path.begin(), ci.path.end());
       _recreatedPath.push_back(col);
@@ -761,7 +761,7 @@ Query<MPTraits>::ReadQuery(string _filename) {
 
 //initialize variable defaults
 template<class MPTraits>
-void 
+void
 Query<MPTraits>::Initialize() {
   this->SetName("Query");
   m_searchAlg = ASTAR;

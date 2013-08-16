@@ -13,8 +13,10 @@
 
 Environment::Environment() :
   m_filename(""),
+  m_saveDofs(false),
   m_positionRes(ENV_RES_DEFAULT),
-  m_orientationRes(ENV_RES_DEFAULT) {
+  m_orientationRes(ENV_RES_DEFAULT),
+  m_rdRes(ENV_RES_DEFAULT) {
   }
 
 Environment::Environment(XMLNodeReader& _node) {
@@ -27,6 +29,8 @@ Environment::Environment(XMLNodeReader& _node) {
   m_orientationRes = _node.numberXMLParameter("orientationRes", false, 0.05, 0.0, MAX_DBL, "orientation resolution");
 #if (defined(PMPReachDistCC) || defined(PMPReachDistCCFixed))
   m_rdRes = _node.numberXMLParameter("rdRes", false, .005, .00001, MAX_DBL, "reachable distance resolution");
+#else
+  m_rdRes = ENV_RES_DEFAULT;
 #endif
 
   Read(m_filename);
@@ -35,7 +39,7 @@ Environment::Environment(XMLNodeReader& _node) {
 
 Environment::~Environment() {}
 
-void 
+void
 Environment::Read(string _filename) {
   VerifyFileExists(_filename);
   m_filename = _filename;
@@ -60,7 +64,7 @@ Environment::Read(string _filename) {
   int multibodyCount = ReadField<int>(ifs, "Number of Multibodies");
 
   //parse and construct each multibody
-  for (int m=0; m<multibodyCount; m++) {    
+  for (int m=0; m<multibodyCount; m++) {
     shared_ptr<MultiBody> mb(new MultiBody());
     mb->Read(ifs, false/*m_debug*/);
 
@@ -90,7 +94,7 @@ Environment::PrintOptions(ostream& _os) {
   _os << "\tboundary::" << *m_boundary << endl;
 }
 
-void 
+void
 Environment::Write(ostream & _os) {
   _os << m_usableMultiBodies.size() << endl;
   for (size_t i=0; i < m_usableMultiBodies.size(); i++)
@@ -99,7 +103,7 @@ Environment::Write(ostream & _os) {
 
 //ComputeResolution, if _posRes is <0, auto compute
 //the resolutions based on min_max body spans.
-void 
+void
 Environment::ComputeResolution(double _positionResFactor) {
   if(m_activeBodies.empty()) {
     cerr << "Environment::ComputeResolution error - no active multibodies in the environment!" << endl;
@@ -168,7 +172,7 @@ Environment::GetRange(size_t _i, shared_ptr<Boundary> _b) {
         if((*mit)->GetConnectionType() == Connection::SPHERICAL) {
           if(_i == index++) return (*mit)->GetJointLimits(1);
         }
-      } 
+      }
     }
   }
   return make_pair(0,0);
@@ -220,7 +224,7 @@ Environment::GetRandomObstacle() const{
 //------------------------------------------------------------------
 //  GetRandomNavigableSurfaceIndex
 //  Output: An index between -1 and m_navigableSurfaces.size()-1
-//          -1 means base index 
+//          -1 means base index
 //------------------------------------------------------------------
 size_t
 Environment::GetRandomNavigableSurfaceIndex() {
@@ -232,7 +236,7 @@ Environment::GetRandomNavigableSurfaceIndex() {
 int
 Environment::AddObstacle(string _modelFileName, const Transformation& _where, const vector<cd_predefined>& _cdTypes) {
   shared_ptr<MultiBody> mb(new MultiBody());
-  
+
   mb->Initialize(_modelFileName, _where);
 
   for(vector<cd_predefined>::const_iterator cdIter = _cdTypes.begin(); cdIter != _cdTypes.end(); ++cdIter)
@@ -240,7 +244,7 @@ Environment::AddObstacle(string _modelFileName, const Transformation& _where, co
 
   m_obstacleBodies.push_back(mb);
   m_usableMultiBodies.push_back(mb);
-  
+
   return m_obstacleBodies.size()-1;
 }
 
@@ -251,7 +255,7 @@ void Environment::RemoveObstacleAt(size_t position) {
     m_obstacleBodies.erase(m_obstacleBodies.begin()+position);
     //try to find mb in usableMultiBodies
     vector<shared_ptr<MultiBody> >::iterator vecIter;
-    for(vecIter = m_usableMultiBodies.end()-1; 
+    for(vecIter = m_usableMultiBodies.end()-1;
         vecIter != m_usableMultiBodies.begin()-1 && !(*vecIter==mb); --vecIter);
 
     if(*vecIter == mb)
@@ -271,7 +275,7 @@ Environment::BuildCDstructure(cd_predefined cdtype) {
     (*M)->buildCDstructure(cdtype);
 }
 
-void 
+void
 Environment::ReadBoundary(istream& _is) {
   string bndry = ReadFieldString(_is, "Boundary tag.");
   if(bndry != "BOUNDARY") {
@@ -321,8 +325,8 @@ Environment::BuildRobotStructure() {
   }
   //Total amount of bodies in environment: free + fixed
   for (int i = 0; i < freeBodyCount + fixedBodyCount; i++) {
-    shared_ptr<Body> body = robot->GetBody(i);  
-    //For each body, find forward connections and connect them 
+    shared_ptr<Body> body = robot->GetBody(i);
+    //For each body, find forward connections and connect them
     for (int j = 0; j < body->ForwardConnectionCount(); j++) {
       shared_ptr<Body> forward = body->GetForwardConnection(j).GetNextBody();
       if (forward->IsFixedBody()) {
@@ -336,11 +340,11 @@ Environment::BuildRobotStructure() {
         int nextIndex = robot->GetFreeBodyIndex(castFreeBody);
         m_robotGraph.add_edge(i, nextIndex);
       }
-    } 
+    }
   }
 
   //Robot ID typedef
-  typedef RobotGraph::vertex_descriptor RID; 
+  typedef RobotGraph::vertex_descriptor RID;
   vector<pair<size_t, RID> > ccs;
   stapl::sequential::vector_property_map<RobotGraph, size_t> cmap;
   //Initialize CC information
@@ -390,7 +394,7 @@ Environment::BuildRobotStructure() {
   }
 }
 
-bool 
+bool
 Environment::InCSpace(const Cfg& _cfg, shared_ptr<Boundary> _b) {
   size_t index = 0;
   typedef vector<Robot>::iterator RIT;
@@ -432,13 +436,13 @@ Environment::InCSpace(const Cfg& _cfg, shared_ptr<Boundary> _b) {
             return false;
           index++;
         }
-      } 
+      }
     }
   }
   return true;
 }
 
-bool 
+bool
 Environment::InWSpace(const Cfg& _cfg, shared_ptr<Boundary> _b) {
 
   shared_ptr<MultiBody> robot = GetMultiBody(_cfg.GetRobotIndex());
@@ -465,15 +469,15 @@ Environment::InWSpace(const Cfg& _cfg, shared_ptr<Boundary> _b) {
       }
 
       //boundary of polyhedron is inside the boundary thus the whole geometry is
-      if(bcheck) 
+      if(bcheck)
         continue;
 
       //the boundary intersected. Now check the geometry itself.
       GMSPolyhedron &poly = robot->GetFreeBody(m)->GetPolyhedron();
       for(VIT v = poly.m_vertexList.begin(); v != poly.m_vertexList.end(); ++v)
         if(!_b->InBoundary(worldTransformation * (*v)))
-          return false;      
+          return false;
     }
   }
-  return true; 
+  return true;
 }

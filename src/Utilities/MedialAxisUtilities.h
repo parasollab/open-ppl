@@ -23,7 +23,7 @@ class ClearanceUtility : public MPBaseObject<MPTraits> {
     typedef typename MPProblemType::VID VID;
     typedef typename MPProblemType::DistanceMetricPointer DistanceMetricPointer;
     typedef typename MPProblemType::ValidityCheckerPointer ValidityCheckerPointer;
-    
+
     ClearanceUtility(MPProblemType* _problem = NULL,
         string _vcLabel = "", string _dmLabel = "",
         bool _exactClearance = false, bool _exactPenetration = false,
@@ -44,7 +44,7 @@ class ClearanceUtility : public MPBaseObject<MPTraits> {
     //   This is a wrapper function for getting the collision information  //
     // for the medial axis computation, calls either approx or exact       //
     //*********************************************************************//
-    bool CollisionInfo(CfgType& _cfg, CfgType& _clrCfg, shared_ptr<Boundary> _bb, CDInfo& _cdInfo); 
+    bool CollisionInfo(CfgType& _cfg, CfgType& _clrCfg, shared_ptr<Boundary> _bb, CDInfo& _cdInfo);
 
     //*********************************************************************//
     // Get Exact Collision Information Function                            //
@@ -68,8 +68,8 @@ class ClearanceUtility : public MPBaseObject<MPTraits> {
     // paths and edges                                                     //
     //*********************************************************************//
     ClearanceStats RoadmapClearance();
-    
-    ClearanceStats PathClearance(VID _startVID, VID _goalVID);  
+
+    ClearanceStats PathClearance(VID _startVID, VID _goalVID);
 
     double MinEdgeClearance(const CfgType& _c1, const CfgType& _c2, const WeightType& _weight);
   protected:
@@ -90,12 +90,12 @@ class MedialAxisUtility : public ClearanceUtility<MPTraits> {
     typedef typename MPTraits::MPProblemType MPProblemType;
     typedef typename MPProblemType::DistanceMetricPointer DistanceMetricPointer;
     typedef typename MPProblemType::ValidityCheckerPointer ValidityCheckerPointer;
-    
+
     MedialAxisUtility(MPProblemType* _problem = NULL,
         string _vcLabel = "", string _dmLabel = "",
         bool _exactClearance = false, bool _exactPenetration = false,
         size_t _clearanceRays = 10, size_t _penetrationRays = 10,
-        bool _useBBX = true, bool _positional = true, bool _debug = false, 
+        bool _useBBX = true, bool _positional = true, bool _debug = false,
         double _epsilon = 0.1, size_t _historyLength = 5);
 
     MedialAxisUtility(MPProblemType* _problem, XMLNodeReader& _node);
@@ -128,10 +128,10 @@ class MedialAxisUtility : public ClearanceUtility<MPTraits> {
     bool PushCfgToMedialAxis(CfgType& _cfg, shared_ptr<Boundary> _bb);
 
   private:
-    bool FindInitialDirection(CfgType _cfg, shared_ptr<Boundary> _bb, double _posRes, CfgType& _transCfg, CDInfo& _prevInfo);
-    bool FindMedialAxisBorderExact(CfgType _cfg, shared_ptr<Boundary> _bb, CfgType& _transCfg, CDInfo& _prevInfo, CfgType& _startCfg, CfgType& _endingCfg, double& _upperBound, double& _lowerBound, double& _stepSize);
-    bool FindMedialAxisBorderApprox(CfgType _cfg, shared_ptr<Boundary> _bb, CfgType& _transCfg, CDInfo& _prevInfo, CfgType& _startCfg, CfgType& _endingCfg, double& _upperBound, double& _lowerBound, double& _stepSize);
-    CfgType BinarySearchForPeaks(CfgType _startCfg, CfgType _midMCfg, CfgType _endingCfg, double _lowerBound, double _upperBound, CfgType _transCfg, CfgType& _cfg, shared_ptr<Boundary> _bb, vector<double> _dists);
+    bool FindInitialDirection(CfgType& _cfg, shared_ptr<Boundary> _bb, double _posRes, CfgType& _transCfg, CDInfo& _prevInfo);
+    bool FindMedialAxisBorderExact(const CfgType& _cfg, shared_ptr<Boundary> _bb, CfgType& _transCfg, CDInfo& _prevInfo, CfgType& _startCfg, CfgType& _endingCfg, double _upperBound, double _lowerBound, double _stepSize);
+    bool FindMedialAxisBorderApprox(const CfgType& _cfg, shared_ptr<Boundary> _bb, CfgType& _transCfg, CDInfo& _prevInfo, CfgType& _startCfg, CfgType& _endingCfg, double _upperBound, double _lowerBound, double _stepSize);
+    CfgType BinarySearchForPeaks(CfgType& _startCfg, CfgType& _midMCfg, CfgType& _endingCfg, double _lowerBound, double _upperBound, CfgType& _transCfg, CfgType& _cfg, shared_ptr<Boundary> _bb, vector<double>& _dists);
 
     double m_epsilon;
     size_t m_historyLength;
@@ -145,10 +145,10 @@ class SurfaceMedialAxisUtility : public MedialAxisUtility<MPTraits> {
     typedef typename MPTraits::MPProblemType MPProblemType;
     typedef typename MPProblemType::DistanceMetricPointer DistanceMetricPointer;
     typedef typename MPProblemType::ValidityCheckerPointer ValidityCheckerPointer;
-    
+
     SurfaceMedialAxisUtility(MPProblemType* _problem = NULL,
         string _vcLabel = "", string _dmLabel = "");
-    
+
     //***************************************************************//
     //get clearance functions for surface configurations             //
     //***************************************************************//
@@ -201,17 +201,17 @@ void
 ClearanceUtility<MPTraits>::ParseXML(XMLNodeReader& _node){
   m_vcLabel = _node.stringXMLParameter("vcLabel", true, "", "Validity Test Method");
   m_dmLabel = _node.stringXMLParameter("dmLabel", true, "", "Distance metric");
-  
+
   //clearance and penetration types
   string clearanceType = _node.stringXMLParameter("clearanceType", true, "", "Clearance Computation (exact or approx)");
   m_exactClearance = clearanceType.compare("exact")==0;
   string penetrationType = _node.stringXMLParameter("penetrationType",true, "", "Penetration Computation (exact or approx)");
   m_exactPenetration = penetrationType.compare("exact")==0;
-  
+
   //if approximate calculations require number of rays to be defined
   m_clearanceRays = _node.numberXMLParameter("clearanceRays", !m_exactClearance, 10, 1, 1000, "Number of Clearance Rays");
   m_penetrationRays = _node.numberXMLParameter("penetrationRays", !m_exactPenetration, 10, 1, 1000, "Number of Penetration Rays");
-  
+
   m_useBBX = _node.boolXMLParameter("useBBX", false, true, "Use the Bounding Box as an Obstacle");
   m_positional = _node.boolXMLParameter("positional", false, true, "Use only positional DOFs");
 }
@@ -239,8 +239,8 @@ ClearanceUtility<MPTraits>::PrintOptions(ostream& _os) const{
 //*********************************************************************//
 template<class MPTraits>
 bool
-ClearanceUtility<MPTraits>::CollisionInfo(CfgType& _cfg, CfgType& _clrCfg, shared_ptr<Boundary> _bb, CDInfo& _cdInfo){ 
-  if(m_exactClearance) 
+ClearanceUtility<MPTraits>::CollisionInfo(CfgType& _cfg, CfgType& _clrCfg, shared_ptr<Boundary> _bb, CDInfo& _cdInfo){
+  if(m_exactClearance)
     return ExactCollisionInfo(_cfg, _clrCfg, _bb, _cdInfo);
   else
     return ApproxCollisionInfo(_cfg, _clrCfg, _bb, _cdInfo);
@@ -260,10 +260,10 @@ ClearanceUtility<MPTraits>::ExactCollisionInfo(CfgType& _cfg, CfgType& _clrCfg, 
     _clrCfg = CfgType(*_cfg.m_witnessCfg);
     return true;
   }
-  
+
   VDClearAll();
   VDAddTempCfg(_cfg, false);
-  
+
   // ClearanceUtility variables
   Environment* env = this->GetMPProblem()->GetEnvironment();
   StatClass* stats = this->GetMPProblem()->GetStatClass();
@@ -302,7 +302,7 @@ ClearanceUtility<MPTraits>::ExactCollisionInfo(CfgType& _cfg, CfgType& _clrCfg, 
       }
     }
   }
- 
+
   Vector3d clrDir = _cdInfo.m_objectPoint - _cdInfo.m_robotPoint;
   CfgType stepDir;
   double factor = 0;
@@ -336,7 +336,7 @@ ClearanceUtility<MPTraits>::ExactCollisionInfo(CfgType& _cfg, CfgType& _clrCfg, 
       tmpValidity = vcm->IsValid(tmpCfg, env, *stats, tmpInfo, &call);
       tmpValidity = tmpValidity && !vcm->IsInsideObstacle(tmpCfg, env, tmpInfo);
       bool inBBX = env->InBounds(tmpCfg, _bb);
-      if(!inBBX) { 
+      if(!inBBX) {
         if(this->m_debug) cout << "ERROR: Fell out of BBX, error out... " << endl;
         return false;
       }
@@ -366,7 +366,7 @@ ClearanceUtility<MPTraits>::ApproxCollisionInfo(CfgType& _cfg, CfgType& _clrCfg,
     _clrCfg = CfgType(*_cfg.m_witnessCfg);
     return true;
   }
-  
+
   // ClearanceUtility variables
   Environment* env = this->GetMPProblem()->GetEnvironment();
   StatClass* stats = this->GetMPProblem()->GetStatClass();
@@ -385,7 +385,7 @@ ClearanceUtility<MPTraits>::ApproxCollisionInfo(CfgType& _cfg, CfgType& _clrCfg,
     return false;
 
   _cdInfo.ResetVars();
-  _cdInfo.m_retAllInfo = true;	
+  _cdInfo.m_retAllInfo = true;
 
   bool initInside = vcm->IsInsideObstacle(_cfg, env, _cdInfo);             // Initially Inside Obst
   bool initValidity = vcm->IsValid(_cfg, env, *stats, _cdInfo, &call); // Initial Validity
@@ -397,10 +397,10 @@ ClearanceUtility<MPTraits>::ApproxCollisionInfo(CfgType& _cfg, CfgType& _clrCfg,
   double posRes = env->GetPositionRes(), oriRes = env->GetOrientationRes();
 
   // Generate 'numRays' random directions at a distance 'dist' away from 'cfg'
-  if(initValidity) 
+  if(initValidity)
     numRays = m_clearanceRays;
-  else                 
-    numRays = m_penetrationRays;    
+  else
+    numRays = m_penetrationRays;
 
   vector<CfgType> directions, candIn, tick, incr;
   typedef typename vector<CfgType>::iterator CIT;
@@ -419,7 +419,7 @@ ClearanceUtility<MPTraits>::ApproxCollisionInfo(CfgType& _cfg, CfgType& _clrCfg,
       for(size_t j=0; j<tmp2.DOF(); j++) {
         if(j < tmp2.PosDOF())
           factor += pow(tmp2[j], 2);
-        else 
+        else
           tmp2[j] = 0.0;
       }
       tmp2 *= posRes/sqrt(factor);
@@ -444,7 +444,7 @@ ClearanceUtility<MPTraits>::ApproxCollisionInfo(CfgType& _cfg, CfgType& _clrCfg,
     iterations++;
     // For Each Ray
     size_t i = 0;
-    for(CIT incrIT = incr.begin(), tickIT = tick.begin(); 
+    for(CIT incrIT = incr.begin(), tickIT = tick.begin();
         incrIT!=incr.end() || tickIT!=tick.end(); ++incrIT, ++tickIT) {
       *tickIT += *incrIT;
       currInside = vcm->IsInsideObstacle(*tickIT, env, tmpInfo);
@@ -452,7 +452,7 @@ ClearanceUtility<MPTraits>::ApproxCollisionInfo(CfgType& _cfg, CfgType& _clrCfg,
       currInBBX = env->InBounds(*tickIT, _bb);
       currValidity = currValidity && !currInside;
 
-      if(m_useBBX) 
+      if(m_useBBX)
         currValidity = (currValidity && currInBBX);
 
       if(currValidity != initValidity) { // If Validity State has changed
@@ -460,7 +460,7 @@ ClearanceUtility<MPTraits>::ApproxCollisionInfo(CfgType& _cfg, CfgType& _clrCfg,
           CfgType candI = *tickIT - *incrIT;
           candIn.push_back(candI);
           candTick.push_back(i);
-        } 
+        }
         if(lastLapIndex == (size_t)-1)  // Set lastLapIndex to first ray changing state
           lastLapIndex = (i==0)?(incr.size()-1):(i-1);
       }
@@ -491,13 +491,13 @@ ClearanceUtility<MPTraits>::ApproxCollisionInfo(CfgType& _cfg, CfgType& _clrCfg,
       midValidity = vcm->IsValid(middleCfg, env, *stats, tmpInfo, &call);
       midInBBX = env->InBounds(middleCfg, _bb);
       midValidity = midValidity && !midInside;
-      if(m_useBBX) 
+      if(m_useBBX)
         midValidity = (midValidity && midInBBX);
 
       if(midValidity != initValidity) { // If Validity State has changed
         remove.push_back(false);
         foundOne = true;
-      } 
+      }
       else {
         remove.push_back(true);
       }
@@ -514,7 +514,7 @@ ClearanceUtility<MPTraits>::ApproxCollisionInfo(CfgType& _cfg, CfgType& _clrCfg,
         }
       }
       high=mid;
-    } 
+    }
     else {
       low=mid;
     }
@@ -529,7 +529,7 @@ ClearanceUtility<MPTraits>::ApproxCollisionInfo(CfgType& _cfg, CfgType& _clrCfg,
       midValidity = vcm->IsValid(middleCfg, env, *stats, tmpInfo, &call);
       midInBBX = env->InBounds(middleCfg, _bb);
       midValidity = midValidity && !midInside;
-      if(m_useBBX) 
+      if(m_useBBX)
         midValidity = (midValidity && midInBBX);
       if(midValidity != initValidity) // If Validity State has changed
         high=mid;
@@ -537,7 +537,7 @@ ClearanceUtility<MPTraits>::ApproxCollisionInfo(CfgType& _cfg, CfgType& _clrCfg,
         low=mid;
     }
     mid=low;
-  } 
+  }
   else { // Pushed out, high is all we need
     mid=high;
   }
@@ -547,7 +547,7 @@ ClearanceUtility<MPTraits>::ApproxCollisionInfo(CfgType& _cfg, CfgType& _clrCfg,
 
   if(_clrCfg == _cfg)
     return false;
-  
+
   if(env->InBounds(_clrCfg, _bb)) {
     _cfg.m_clearanceInfo = _cdInfo;
     _cfg.m_witnessCfg = shared_ptr<Cfg>(new CfgType(_clrCfg));
@@ -590,7 +590,7 @@ ClearanceUtility<MPTraits>::RoadmapClearance(){
 }
 
 template<class MPTraits>
-ClearanceStats 
+ClearanceStats
 ClearanceUtility<MPTraits>::PathClearance(VID _startVID, VID _goalVID){
   GraphType* g = this->GetMPProblem()->GetRoadmap()->GetGraph();
   vector<VID> path;
@@ -611,11 +611,11 @@ ClearanceUtility<MPTraits>::PathClearance(VID _startVID, VID _goalVID){
     g->find_edge(ed, vi, ei);
     WeightType weight = (*ei).property();
     pathLength += weight.Weight();
-    double currentClearance = MinEdgeClearance(g->GetVertex((*ei).source()), g->GetVertex((*ei).target()), weight); 
+    double currentClearance = MinEdgeClearance(g->GetVertex((*ei).source()), g->GetVertex((*ei).target()), weight);
     clearanceVec.push_back(currentClearance);
     runningTotal += currentClearance;
     if(currentClearance < minClearance){
-      minClearance = currentClearance;    
+      minClearance = currentClearance;
     }
   }
   stats.m_minClearance = minClearance;
@@ -623,7 +623,7 @@ ClearanceUtility<MPTraits>::PathClearance(VID _startVID, VID _goalVID){
   stats.m_avgClearance = average;
   double varSum = 0;
   for(vector<double>::iterator it = clearanceVec.begin(); it != clearanceVec.end(); it++){
-    varSum+=pow(((*it) - average), 2);  
+    varSum+=pow(((*it) - average), 2);
   }
   stats.m_clearanceVariance = varSum / clearanceVec.size();
   stats.m_pathLength = pathLength;
@@ -638,7 +638,7 @@ ClearanceUtility<MPTraits>::MinEdgeClearance(const CfgType& _c1, const CfgType& 
   //Reconstruct the path given the two nodes
   vector<CfgType> intermediates = _weight.GetIntermediates();
   vector<CfgType> reconEdge = this->GetMPProblem()->GetLocalPlanner(_weight.GetLPLabel())->
-    ReconstructPath(env, this->GetMPProblem()->GetDistanceMetric(m_dmLabel), _c1, _c2, intermediates, 
+    ReconstructPath(env, this->GetMPProblem()->GetDistanceMetric(m_dmLabel), _c1, _c2, intermediates,
         env->GetPositionRes(), env->GetOrientationRes());
   typedef typename vector<CfgType>::iterator CIT;
   for(CIT it = reconEdge.begin(); it != reconEdge.end(); ++it){
@@ -673,8 +673,8 @@ MedialAxisUtility<MPTraits>::MedialAxisUtility(MPProblemType* _problem,
     size_t _clearanceRays, size_t _penetrationRays,
     bool _useBBX, bool _positional, bool _debug,
     double _epsilon, size_t _historyLength) :
-  ClearanceUtility<MPTraits>(_problem, _vcLabel, _dmLabel, 
-      _exactClearance, _exactPenetration, _clearanceRays, _penetrationRays, 
+  ClearanceUtility<MPTraits>(_problem, _vcLabel, _dmLabel,
+      _exactClearance, _exactPenetration, _clearanceRays, _penetrationRays,
       _useBBX, _positional, _debug),
   m_epsilon(_epsilon), m_historyLength(_historyLength){
     this->m_name = "MedialAxisUtility";
@@ -712,11 +712,11 @@ MedialAxisUtility<MPTraits>::PushToMedialAxis(CfgType& _cfg, shared_ptr<Boundary
   string call = this->GetName() + "::PushToMedialAxis";
   if(this->m_debug)
     cout << endl << call << endl << "Being Pushed: " << _cfg;
- 
+
   Environment* env = this->GetMPProblem()->GetEnvironment();
   StatClass* stats = this->GetMPProblem()->GetStatClass();
   ValidityCheckerPointer vcm = this->GetMPProblem()->GetValidityChecker(this->m_vcLabel);
-  
+
   CDInfo tmpInfo;
   tmpInfo.ResetVars();
   tmpInfo.m_retAllInfo = true;
@@ -726,20 +726,20 @@ MedialAxisUtility<MPTraits>::PushToMedialAxis(CfgType& _cfg, shared_ptr<Boundary
   bool inCollision = !(vcm->IsValid(_cfg, env, *stats, tmpInfo, &call));
 
   if(this->m_debug) cout << " Inside/In-Collision: " << inside << "/" << inCollision << endl;
-  
+
   if(inside || inCollision){
     if(!PushFromInsideObstacle(_cfg, _bb))
       return false;
   }
-  
+
   // Cfg is free, find medial axis
-  if(!PushCfgToMedialAxis(_cfg, _bb)) { 
-    if(this->m_debug) cout << "Not found!! ERR in pushtomedialaxis" << endl; 
-    return false; 
+  if(!PushCfgToMedialAxis(_cfg, _bb)) {
+    if(this->m_debug) cout << "Not found!! ERR in pushtomedialaxis" << endl;
+    return false;
   }
-  
+
   if(this->m_debug) cout << "FINAL CfgType: " << _cfg << endl << call << "::END" << endl << endl;
-  
+
   return true;
 }
 
@@ -756,7 +756,7 @@ MedialAxisUtility<MPTraits>::PushFromInsideObstacle(CfgType& _cfg, shared_ptr<Bo
   // Initialization
   string call = this->GetName() + "::PushFromInsideObstacle";
   if(this->m_debug) cout << call << endl << " CfgType: " << _cfg << endl;
-  
+
   // Variables
   CfgType transCfg = _cfg;
 
@@ -767,17 +767,17 @@ MedialAxisUtility<MPTraits>::PushFromInsideObstacle(CfgType& _cfg, shared_ptr<Bo
   //Determine direction to move
   if(this->CollisionInfo(_cfg, transCfg, _bb, tmpInfo)) {
     if(this->m_debug) cout << "Clearance Cfg: " << transCfg << endl;
-  } 
+  }
   else
     return false;
-    
-  //bad collision information call might return the current Cfg 
+
+  //bad collision information call might return the current Cfg
   //as the clearance Cfg.
   if(transCfg == _cfg)
     return false;
-  
+
   _cfg = transCfg;
-  
+
   if(this->m_debug) cout << "FINAL CfgType: " << _cfg << endl << call << "::END " << endl;
   return true;
 }
@@ -794,7 +794,7 @@ MedialAxisUtility<MPTraits>::PushCfgToMedialAxis(CfgType& _cfg, shared_ptr<Bound
   // Initialization
   string call = this->GetName() + "::PushCfgToMedialAxis";
   if(this->m_debug) cout << call << endl << "Cfg: " << _cfg << " eps: " << m_epsilon << endl;
-  
+
   Environment* env = this->GetMPProblem()->GetEnvironment();
   ValidityCheckerPointer vcm = this->GetMPProblem()->GetValidityChecker(this->m_vcLabel);
   shared_ptr<MultiBody> robot = env->GetMultiBody(_cfg.GetRobotIndex());
@@ -802,7 +802,7 @@ MedialAxisUtility<MPTraits>::PushCfgToMedialAxis(CfgType& _cfg, shared_ptr<Bound
   CDInfo tmpInfo;
   tmpInfo.ResetVars();
   tmpInfo.m_retAllInfo = true;
-  
+
   // Should already be in free space
   if(vcm->IsInsideObstacle(_cfg, env, tmpInfo)){
     return false;
@@ -823,7 +823,7 @@ MedialAxisUtility<MPTraits>::PushCfgToMedialAxis(CfgType& _cfg, shared_ptr<Bound
     borderFound = FindMedialAxisBorderApprox(_cfg, _bb, transCfg, prevInfo, startCfg, endingCfg, upperBound, lowerBound, stepSize);
   if(!borderFound)
     return false;
-  
+
   double middle = (lowerBound+upperBound)/2.0;
   if(this->m_debug) cout << "Lower and upper bounds: " << lowerBound << "/" << middle << "/" << upperBound  << endl;
   CfgType midMCfg = transCfg*middle + _cfg;
@@ -849,7 +849,7 @@ MedialAxisUtility<MPTraits>::PushCfgToMedialAxis(CfgType& _cfg, shared_ptr<Bound
   CfgType midSCfg = transCfg*middleS + _cfg;
 
   double middleE = (middle+upperBound)/2.0;
-  CfgType midECfg = transCfg*middleE + _cfg;  
+  CfgType midECfg = transCfg*middleE + _cfg;
 
   if(this->m_debug) {
     cout << "dists: ";
@@ -858,11 +858,11 @@ MedialAxisUtility<MPTraits>::PushCfgToMedialAxis(CfgType& _cfg, shared_ptr<Bound
     cout << endl;
   }
 
-  if(this->m_debug) cout << "start/mids/end: " << endl << startCfg << endl << midSCfg 
+  if(this->m_debug) cout << "start/mids/end: " << endl << startCfg << endl << midSCfg
     << endl << midMCfg << endl << midECfg << endl << endingCfg << endl;
 
   midMCfg = BinarySearchForPeaks(startCfg, midMCfg, endingCfg, lowerBound, upperBound, transCfg, _cfg, _bb, dists);
-  
+
   if(midMCfg == CfgType())
     return false;
 
@@ -876,18 +876,20 @@ MedialAxisUtility<MPTraits>::PushCfgToMedialAxis(CfgType& _cfg, shared_ptr<Bound
   }
 
   _cfg = midMCfg;
-  
+
   if(this->m_debug) cout << "FINAL Cfg: " << _cfg << " steps: " << stepSize << endl;
-  
+
   return true;
 }
 
 template<class MPTraits>
 bool
-MedialAxisUtility<MPTraits>::FindInitialDirection(typename MPTraits::CfgType _cfg, shared_ptr<Boundary> _bb, double _posRes, typename MPTraits::CfgType& _transCfg, CDInfo& _prevInfo) {
+MedialAxisUtility<MPTraits>::FindInitialDirection(
+    CfgType& _cfg, shared_ptr<Boundary> _bb,
+    double _posRes, CfgType& _transCfg, CDInfo& _prevInfo) {
   _prevInfo.ResetVars();
   _prevInfo.m_retAllInfo = true;
-  
+
   if(this->CollisionInfo(_cfg, _transCfg, _bb, _prevInfo)) {
     _transCfg = _cfg - _transCfg;
     double magnitude = 0;
@@ -902,7 +904,7 @@ MedialAxisUtility<MPTraits>::FindInitialDirection(typename MPTraits::CfgType _cf
       }
     }
     if(this->m_debug) cout << "TRANS CFG: " << _transCfg << endl;
-    
+
     return true;
   }
   else{
@@ -913,21 +915,26 @@ MedialAxisUtility<MPTraits>::FindInitialDirection(typename MPTraits::CfgType _cf
 
 template<class MPTraits>
 bool
-MedialAxisUtility<MPTraits>::FindMedialAxisBorderExact(typename MPTraits::CfgType _cfg, shared_ptr<Boundary> _bb, typename MPTraits::CfgType& _transCfg, CDInfo& _prevInfo, typename MPTraits::CfgType& _startCfg, typename MPTraits::CfgType& _endingCfg, double& _upperBound, double& _lowerBound, double& _stepSize) {
+MedialAxisUtility<MPTraits>::FindMedialAxisBorderExact(
+    const CfgType& _cfg, shared_ptr<Boundary> _bb,
+    CfgType& _transCfg, CDInfo& _prevInfo,
+    CfgType& _startCfg,
+    CfgType& _endingCfg,
+    double _upperBound, double _lowerBound, double _stepSize) {
   Environment* env = this->GetMPProblem()->GetEnvironment();
   shared_ptr<MultiBody> robot = env->GetMultiBody(_cfg.GetRobotIndex());
   ValidityCheckerPointer vcm = this->GetMPProblem()->GetValidityChecker(this->m_vcLabel);
-  
+
   CDInfo tmpInfo;
   tmpInfo.ResetVars();
   tmpInfo.m_retAllInfo = true;
-  
+
   // Determine gap for medial axis
   CfgType tmpCfg = _cfg;
   CfgType heldCfg;
   _stepSize = 0.0;
   bool witnessPointMoved = false;
-  
+
   while(!witnessPointMoved) {
     // Increment
     heldCfg = tmpCfg;
@@ -980,7 +987,7 @@ MedialAxisUtility<MPTraits>::FindMedialAxisBorderExact(typename MPTraits::CfgTyp
     }
   }
 
-  // Setup start, middle and end CfgTypes  
+  // Setup start, middle and end CfgTypes
   _startCfg = heldCfg;
   _endingCfg = tmpCfg;
   if(this->m_debug) {
@@ -998,15 +1005,20 @@ MedialAxisUtility<MPTraits>::FindMedialAxisBorderExact(typename MPTraits::CfgTyp
 
 template<class MPTraits>
 bool
-MedialAxisUtility<MPTraits>::FindMedialAxisBorderApprox(typename MPTraits::CfgType _cfg, shared_ptr<Boundary> _bb, typename MPTraits::CfgType& _transCfg, CDInfo& _prevInfo, typename MPTraits::CfgType& _startCfg, typename MPTraits::CfgType& _endingCfg, double& _upperBound, double& _lowerBound, double& _stepSize) {
+MedialAxisUtility<MPTraits>::FindMedialAxisBorderApprox(
+    const CfgType& _cfg, shared_ptr<Boundary> _bb,
+    CfgType& _transCfg, CDInfo& _prevInfo,
+    CfgType& _startCfg,
+    CfgType& _endingCfg,
+    double _upperBound, double _lowerBound, double _stepSize) {
   Environment* env = this->GetMPProblem()->GetEnvironment();
   //shared_ptr<MultiBody> robot = env->GetMultiBody(_cfg->GetRobotIndex());
   ValidityCheckerPointer vcm = this->GetMPProblem()->GetValidityChecker(this->m_vcLabel);
-  
+
   CDInfo tmpInfo;
   tmpInfo.ResetVars();
   tmpInfo.m_retAllInfo = true;
-  
+
   // Determine gap for medial axis
   CfgType tmpCfg = _cfg;
   CfgType heldCfg;
@@ -1016,7 +1028,7 @@ MedialAxisUtility<MPTraits>::FindMedialAxisBorderApprox(typename MPTraits::CfgTy
   deque<CfgType> segCfgs;
   bool peakFound = false, checkBack = false, fellOut = false;
   double errEps = numeric_limits<double>::epsilon(); // Arbitrary Value for errEps
-  
+
   while(!peakFound) {
 
     // Increment
@@ -1117,7 +1129,7 @@ MedialAxisUtility<MPTraits>::FindMedialAxisBorderApprox(typename MPTraits::CfgTy
   if(segCfgs.size() < 2)
     return false;
 
-  // Setup start, middle and end CfgTypes  
+  // Setup start, middle and end CfgTypes
   _startCfg = segCfgs[0];
   _endingCfg = segCfgs[segCfgs.size()-1];
   if(this->m_debug) {
@@ -1131,7 +1143,7 @@ MedialAxisUtility<MPTraits>::FindMedialAxisBorderApprox(typename MPTraits::CfgTy
   _upperBound = fellOut ? _stepSize-1.0 : _stepSize;
   if(fellOut) {
     _lowerBound = _upperBound-1.0;
-  } 
+  }
   else {
     if(segCfgs.size() < (_stepSize - cbStepSize))
       _lowerBound = _stepSize - segCfgs.size();
@@ -1144,10 +1156,16 @@ MedialAxisUtility<MPTraits>::FindMedialAxisBorderApprox(typename MPTraits::CfgTy
 
 template<class MPTraits>
 typename MPTraits::CfgType
-MedialAxisUtility<MPTraits>::BinarySearchForPeaks(typename MPTraits::CfgType _startCfg, typename MPTraits::CfgType _midMCfg, typename MPTraits::CfgType _endingCfg, double _lowerBound, double _upperBound, typename MPTraits::CfgType _transCfg, typename MPTraits::CfgType& _cfg, shared_ptr<Boundary> _bb, vector<double> _dists) {
+MedialAxisUtility<MPTraits>::BinarySearchForPeaks(
+    CfgType& _startCfg,
+    CfgType& _midMCfg,
+    CfgType& _endingCfg,
+    double _lowerBound, double _upperBound,
+    CfgType& _transCfg, CfgType& _cfg,
+    shared_ptr<Boundary> _bb, vector<double>& _dists) {
   Environment* env = this->GetMPProblem()->GetEnvironment();
   DistanceMetricPointer dm = this->GetMPProblem()->GetDistanceMetric(this->m_dmLabel);
-  
+
   // Variables for modified binary search
   size_t attempts = 0, maxAttempts = 20, badPeaks = 0, maxBadPeaks = 10;
   vector<double> deltas(4, 0), distsFromMax(5, 0);
@@ -1167,7 +1185,7 @@ MedialAxisUtility<MPTraits>::BinarySearchForPeaks(typename MPTraits::CfgType _st
     double middleE = (middle + _upperBound)/2.0;
     if(this->m_debug) cout << "Bounds: " << _lowerBound << "/" << middleS << "/" << middle << "/" << middleE << "/" << _upperBound << endl;
     CfgType midSCfg = _transCfg*middleS + _cfg;
-    CfgType midECfg = _transCfg*middleE + _cfg;  
+    CfgType midECfg = _transCfg*middleE + _cfg;
 
     CfgType tmpTransCfg;
     CDInfo tmpInfo;
@@ -1175,7 +1193,7 @@ MedialAxisUtility<MPTraits>::BinarySearchForPeaks(typename MPTraits::CfgType _st
     if(!passed) return CfgType();
     _dists[1] = tmpInfo.m_minDist;
 
-    passed = this->CollisionInfo(midECfg, tmpTransCfg, _bb, tmpInfo); 
+    passed = this->CollisionInfo(midECfg, tmpTransCfg, _bb, tmpInfo);
     if(!passed) return CfgType();
     _dists[3] = tmpInfo.m_minDist;
 
@@ -1204,7 +1222,7 @@ MedialAxisUtility<MPTraits>::BinarySearchForPeaks(typename MPTraits::CfgType _st
       _dists[4] = _dists[2];
       _dists[2] = _dists[1];
       _upperBound = middle;
-    } 
+    }
     else if(deltas[1] > errEps && deltas[2] <= errEps && distsFromMax[2] < errEps) {
       peak = 2;
       _startCfg = midSCfg;
@@ -1213,7 +1231,7 @@ MedialAxisUtility<MPTraits>::BinarySearchForPeaks(typename MPTraits::CfgType _st
       _dists[4] = _dists[3];
       _lowerBound = middleS;
       _upperBound = middleE;
-    } 
+    }
     else if(deltas[2] > errEps && deltas[3] <= errEps && distsFromMax[3] < errEps) {
       peak = 3;
       _startCfg = _midMCfg;
@@ -1221,7 +1239,7 @@ MedialAxisUtility<MPTraits>::BinarySearchForPeaks(typename MPTraits::CfgType _st
       _dists[0] = _dists[2];
       _dists[2] = _dists[3];
       _lowerBound = middle;
-    } 
+    }
     else {
       if(deltas[0] > errEps && deltas[1] > errEps && deltas[2] > errEps && deltas[3] > errEps) {
         peak = 3;
@@ -1230,7 +1248,7 @@ MedialAxisUtility<MPTraits>::BinarySearchForPeaks(typename MPTraits::CfgType _st
         _dists[0] = _dists[2];
         _dists[2] = _dists[3];
         _lowerBound = middle;
-      } 
+      }
       else if(deltas[0] < -errEps && deltas[1] < -errEps && deltas[2] < -errEps && deltas[3] < -errEps) {
         peak = 1;
         _endingCfg = _midMCfg;
@@ -1238,21 +1256,21 @@ MedialAxisUtility<MPTraits>::BinarySearchForPeaks(typename MPTraits::CfgType _st
         _dists[4] = _dists[2];
         _dists[2] = _dists[1];
         _upperBound = middle;
-      } 
+      }
       else {
         // No peak found, recalculate old, mid and new clearance
         badPeaks++;
         peak = -1;
 
-        if(this->CollisionInfo(_startCfg, tmpTransCfg, _bb, tmpInfo) 
+        if(this->CollisionInfo(_startCfg, tmpTransCfg, _bb, tmpInfo)
             && _dists[0] >= tmpInfo.m_minDist)
           _dists[0] = tmpInfo.m_minDist;
 
-        if(this->CollisionInfo(_midMCfg, tmpTransCfg, _bb, tmpInfo) 
+        if(this->CollisionInfo(_midMCfg, tmpTransCfg, _bb, tmpInfo)
             && _dists[2] >= tmpInfo.m_minDist)
           _dists[2] = tmpInfo.m_minDist;
 
-        if(this->CollisionInfo(_endingCfg, tmpTransCfg, _bb, tmpInfo) 
+        if(this->CollisionInfo(_endingCfg, tmpTransCfg, _bb, tmpInfo)
             && _dists[4] >= tmpInfo.m_minDist)
           _dists[4] = tmpInfo.m_minDist;
       }
@@ -1306,13 +1324,13 @@ inline double distsqr
 
 //get clearance of the point
 template<class MPTraits>
-double 
+double
 SurfaceMedialAxisUtility<MPTraits>::GetClearance2DSurf
 (shared_ptr<MultiBody> _mb, const Point2d& _pos, Point2d& _cdPt, double _clear)
 {
   double minDis=1e10;
   if(this->m_debug) cout << " GetClearance2DSurf (start call) (mb,pos,cdPt, clear)" << endl;
-  if(this->m_debug) cout << " getting world transformation. num fixed bodies: " << _mb->GetFixedBodyCount() << endl; 
+  if(this->m_debug) cout << " getting world transformation. num fixed bodies: " << _mb->GetFixedBodyCount() << endl;
   Transformation& trans = _mb->GetFixedBody(0)->WorldTransformation();
   //check roughly <- this optimization should be added!!!
   Vector3d mbCenter = _mb->GetFixedBody(0)->GetCenterOfMass();
@@ -1340,13 +1358,13 @@ SurfaceMedialAxisUtility<MPTraits>::GetClearance2DSurf
 
   double clearDist = sqrt(minDis);
   if(this->m_debug) cout << " computed clearance: " << clearDist << endl;
-  return clearDist; 
+  return clearDist;
 
 }
 
 //get clearance of the point
 template<class MPTraits>
-double 
+double
 SurfaceMedialAxisUtility<MPTraits>::GetClearance2DSurf
 (Environment* _env, const Point2d& _pos, Point2d& _cdPt) {
   if(this->m_debug) cout << "MedialAxisUtility::GetClearance2DSurf" <<endl;
@@ -1363,18 +1381,18 @@ SurfaceMedialAxisUtility<MPTraits>::GetClearance2DSurf
     if(this->m_debug) cout << " getting mb: " << i;
     if(this->m_debug) cout << " GetClearance2DSurf (mb,_pos,c,minDist) minDist: " << minDist << endl;
   }//end for i
-  return minDist;   
+  return minDist;
 }
 
 template<class MPTraits>
 double
 SurfaceMedialAxisUtility<MPTraits>::PushCfgToMedialAxis2DSurf
 (CfgType& _cfg, shared_ptr<Boundary> _bb, bool& _valid) {
-  
+
   string call = this->GetName() + "::PushCfgToMedialAxis2DSurf";
-  
+
   if(this->m_debug) cout << call << endl << "Cfg: " << _cfg  << endl;
-  
+
   Environment* env = this->GetMPProblem()->GetEnvironment();
   ValidityCheckerPointer vcm = this->GetMPProblem()->GetValidityChecker(this->m_vcLabel);
   ////////////////////////////////////////////
@@ -1383,7 +1401,7 @@ SurfaceMedialAxisUtility<MPTraits>::PushCfgToMedialAxis2DSurf
   if(this->m_debug) cout << " Calling GetClearance2DSurf(env,pos,closest)" << endl;
   double clear=this->GetClearance2DSurf(env,pos,closest);
   Vector2d dir=(pos-closest).normalize()*0.5;
-  Point2d newClosest=closest; 
+  Point2d newClosest=closest;
   int iter=0;
   int maxIter=1000;
   do{

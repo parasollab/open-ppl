@@ -20,23 +20,23 @@ using namespace std;
 
 template<typename CFG, typename WEIGHT>
 class RoadmapChangeEvent {
-  
+
   public:
     typedef typename stapl::sequential::graph<stapl::DIRECTED, stapl::NONMULTIEDGES, CFG, WEIGHT>::vertex_descriptor VID;
     enum ChangeType { ADD_VERTEX, REMOVE_VERTEX };
-    
+
     class BaseChangeEvent {
       public:
         virtual ~BaseChangeEvent() {}
         virtual ChangeType GetType() const = 0;
-      
+
       protected:
         ChangeType item_type;
     };
-    
+
     class AddVertexEvent : public BaseChangeEvent {
-      public: 
-        AddVertexEvent(CFG _cfg, VID _vid) {
+      public:
+        AddVertexEvent(const CFG& _cfg, VID _vid) {
           cfg = _cfg;
           vid = _vid;
           this->item_type = ADD_VERTEX;
@@ -46,13 +46,13 @@ class RoadmapChangeEvent {
         ChangeType GetType() const { return this->item_type; }
         const CFG& GetCFG() const { return cfg; }
         VID GetVID() const { return vid; }
-        
+
       protected:
         CFG cfg;
         VID vid;
         //ChangeType item_type;
     };
-    
+
     class RemoveVertexEvent : public BaseChangeEvent
     {
       public:
@@ -64,20 +64,20 @@ class RoadmapChangeEvent {
 
         ChangeType GetType() const { return this->item_type; }
         VID GetVID() const { return vid; }
-        
+
       protected:
         int vid;
         //ChangeType item_type;
     };
-    
+
     // create a constructor for each event...
-    
+
     // default constructor
     RoadmapChangeEvent();
-    
+
     // AddVertexEvent constructor
-    RoadmapChangeEvent(ChangeType type, CFG _cfg, VID _vid);
-    
+    RoadmapChangeEvent(ChangeType type, const CFG& _cfg, VID _vid);
+
     // RemoveVertexEvent constructor
     RoadmapChangeEvent(ChangeType type, VID _vid);
 
@@ -90,33 +90,28 @@ class RoadmapChangeEvent {
     const BaseChangeEvent* GetEvent() const;
     const AddVertexEvent* GetAddVertexEvent() const;
     const RemoveVertexEvent* GetRemoveVertexEvent() const;
-    
+
   protected:
     BaseChangeEvent* event;
 };
 
 template<typename CFG, typename WEIGHT>
-RoadmapChangeEvent<CFG, WEIGHT>::
-RoadmapChangeEvent()
-{
-  
+RoadmapChangeEvent<CFG, WEIGHT>::RoadmapChangeEvent() {
 }
 
 template<typename CFG, typename WEIGHT>
-RoadmapChangeEvent<CFG, WEIGHT>::
-RoadmapChangeEvent(ChangeType type, CFG _cfg, VID _vid)
-{
+RoadmapChangeEvent<CFG, WEIGHT>::RoadmapChangeEvent(ChangeType type, const CFG& _cfg, VID _vid) : event(NULL) {
   if (type == ADD_VERTEX)
   {
     event = new AddVertexEvent(_cfg, _vid);
-    
+
     /*
     cout << "Adding ADD_VERTEX event"
-          << ", VID = " << _vid 
+          << ", VID = " << _vid
           << ", CFG = " << _cfg << endl;
     */
   }
-}  
+}
 
 template<typename CFG, typename WEIGHT>
 RoadmapChangeEvent<CFG, WEIGHT>::
@@ -125,9 +120,9 @@ RoadmapChangeEvent(ChangeType type, VID _vid)
   if (type == REMOVE_VERTEX)
   {
     event = new RemoveVertexEvent(_vid);
-  
+
     /*
-    cout << "Adding REMOVE_VERTEX event, of type " << event->GetType() 
+    cout << "Adding REMOVE_VERTEX event, of type " << event->GetType()
         << ", VID = " << _vid << endl;
     */
   }
@@ -137,7 +132,7 @@ template<typename CFG, typename WEIGHT>
 RoadmapChangeEvent<CFG, WEIGHT>::
 ~RoadmapChangeEvent() {
 }
-  
+
 template<typename CFG, typename WEIGHT>
 bool
 RoadmapChangeEvent<CFG, WEIGHT>::
@@ -173,7 +168,7 @@ GetAddVertexEvent() const {
   else {
     cout << "Could not cast to AddVertexEvent... invalid type" << endl;
     return NULL;
-  }  
+  }
 }
 
 template<typename CFG, typename WEIGHT>
@@ -185,7 +180,7 @@ GetRemoveVertexEvent() const {
   else {
     cout << "Could not cast to RemoveVertexEvent... invalid type" << endl;
     return NULL;
-  }  
+  }
 }
 
 #endif

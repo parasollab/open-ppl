@@ -25,9 +25,11 @@ class BasicRRTStrategy : public MPStrategyMethod<MPTraits> {
 
     //Non-XML constructor sets all private variables
     BasicRRTStrategy(string _lp="sl", string _dm="euclidean",
-        string _nf="bfnf", string _vc="cd1", string _nc="kClosest", string _gt="UNDIRECTED_TREE", vector<string> _evaluators=vector<string>(),
-        double _delta=10.0, double _minDist=0.01, double _growthFocus=0.05, bool _evaluateGoal=true, CfgType _start=CfgType(), CfgType _goal=CfgType(),
-        size_t _numRoots=1, size_t _numDirections=1, bool _growGoals=false);
+        string _nf="bfnf", string _vc="cd1", string _nc="kClosest",
+        string _gt="UNDIRECTED_TREE", vector<string> _evaluators=vector<string>(),
+        double _delta=10.0, double _minDist=0.01, double _growthFocus=0.05,
+        bool _evaluateGoal=true, const CfgType& _start=CfgType(), const CfgType& _goal=CfgType(),
+        size_t _numRoots=1, size_t _numDirections=1, size_t _maxTrial = 3, bool _growGoals=false);
 
     BasicRRTStrategy(MPProblemType* _problem, XMLNodeReader& _node, bool _warnXML = true);
 
@@ -77,11 +79,14 @@ class BasicRRTStrategy : public MPStrategyMethod<MPTraits> {
 template<class MPTraits>
 BasicRRTStrategy<MPTraits>::BasicRRTStrategy(string _lp, string _dm,
     string _nf, string _vc, string _nc, string _gt, vector<string> _evaluators,
-    double _delta, double _minDist, double _growthFocus, bool _evaluateGoal, CfgType _start, CfgType _goal,
-    size_t _numRoots, size_t _numDirections, bool _growGoals):
+    double _delta, double _minDist, double _growthFocus, bool _evaluateGoal,
+    const CfgType& _start, const CfgType& _goal,
+    size_t _numRoots, size_t _numDirections, size_t _maxTrial, bool _growGoals):
   m_evaluators(_evaluators), m_lp(_lp), m_dm(_dm), m_nf(_nf), m_vc(_vc), m_query(new Query<MPTraits>(_start, _goal)),
   m_nc(_nc), m_gt(_gt),  m_delta(_delta), m_minDist(_minDist), m_growthFocus(_growthFocus),
-  m_evaluateGoal(_evaluateGoal), m_numRoots(_numRoots), m_numDirections(_numDirections), m_growGoals(_growGoals){
+  m_evaluateGoal(_evaluateGoal), m_numRoots(_numRoots),
+  m_numDirections(_numDirections), m_maxTrial(_maxTrial),
+  m_growGoals(_growGoals){
     this->SetName("BasicRRTStrategy");
   }
 
@@ -104,7 +109,7 @@ BasicRRTStrategy<MPTraits>::ParseXML(XMLNodeReader& _node) {
       string evalMethod = citr->stringXMLParameter("label", true, "", "Evaluation Method");
       m_evaluators.push_back(evalMethod);
       citr->warnUnrequestedAttributes();
-    } 
+    }
     else
       citr->warnUnknownNode();
   }
@@ -160,7 +165,7 @@ BasicRRTStrategy<MPTraits>::PrintOptions(ostream& _os) {
 //Initialization Phase
 /////////////////////
 template<class MPTraits>
-void 
+void
 BasicRRTStrategy<MPTraits>::Initialize(){
   if(this->m_debug) cout<<"\nInitializing BasicRRTStrategy::"<<endl;
 
@@ -195,7 +200,7 @@ BasicRRTStrategy<MPTraits>::Initialize(){
     while(i < m_numRoots){
       tmp.GetRandomCfg(env);
       if(env->InBounds(tmp)
-          && this->GetMPProblem()->GetValidityChecker(m_vc)->IsValid(tmp, env, *stats, cdInfo, &callee)){ 
+          && this->GetMPProblem()->GetValidityChecker(m_vc)->IsValid(tmp, env, *stats, cdInfo, &callee)){
         VID add = this->GetMPProblem()->GetRoadmap()->GetGraph()->AddVertex(tmp);
         m_trees.push_back(vector<VID>(1,add));
       }
@@ -240,15 +245,15 @@ BasicRRTStrategy<MPTraits>::Run() {
       //see if tree is connected to goals
       if(m_evaluateGoal)
         EvaluateGoals();
-      
+
       //evaluate the roadmap
       bool evalMap = this->EvaluateMap(m_evaluators);
-      if(!m_growGoals){ 
+      if(!m_growGoals){
         mapPassedEvaluation = m_trees.size()==1 && evalMap && ((m_evaluateGoal && m_goalsNotFound.size()==0) || !m_evaluateGoal);
         if(this->m_debug && m_goalsNotFound.size()==0)
           cout << "RRT FOUND ALL GOALS" << endl;
       }
-      else 
+      else
         mapPassedEvaluation = evalMap && m_trees.size()==1;
     }
     else
@@ -258,7 +263,7 @@ BasicRRTStrategy<MPTraits>::Run() {
   if(this->m_recordKeep) stats->StopClock("RRT Generation");
   if(this->m_debug) {
     stats->PrintClock("RRT Generation", cout);
-    cout<<"\nEnd Running BasicRRTStrategy::" << endl;  
+    cout<<"\nEnd Running BasicRRTStrategy::" << endl;
   }
 }
 
@@ -311,7 +316,7 @@ typename MPTraits::CfgType
 BasicRRTStrategy<MPTraits>::GoalBiasedDirection(){
   // Determine direction, make sure goal not found
   if (m_goalsNotFound.size() == 0){
-    return CfgType(); 
+    return CfgType();
   }
   else {
     size_t goalNum = LRand()%m_goalsNotFound.size();
@@ -320,7 +325,7 @@ BasicRRTStrategy<MPTraits>::GoalBiasedDirection(){
 }
 
 template<class MPTraits>
-typename MPTraits::CfgType 
+typename MPTraits::CfgType
 BasicRRTStrategy<MPTraits>::SelectDirection(){
   Environment* env = this->GetMPProblem()->GetEnvironment();
   CfgType dir;
@@ -329,14 +334,14 @@ BasicRRTStrategy<MPTraits>::SelectDirection(){
 }
 
 template<class MPTraits>
-typename MPTraits::CfgType 
+typename MPTraits::CfgType
 BasicRRTStrategy<MPTraits>::SelectDispersedDirection(VID vd1) {
   StatClass* disperseStatClass = this->GetMPProblem()->GetStatClass();
   string disperseClockName = "disperse sampling time ";
   disperseStatClass->StartClock(disperseClockName);
 
   CfgType bestCfg;
-  
+
   typename GraphType::vertex_iterator vi = this->GetMPProblem()->GetRoadmap()->GetGraph()->find_vertex(vd1);
   CfgType c1 = (*vi).property();
 
@@ -358,9 +363,9 @@ BasicRRTStrategy<MPTraits>::SelectDispersedDirection(VID vd1) {
       vector<double> v2 = difCfg2.GetData();
       double res=0;
       for(size_t j=0; j<v1.size(); j++) {
-        res+=(v1[j]*v2[j]); 
+        res+=(v1[j]*v2[j]);
       }
-     
+
       double angle = acos(res)*180/M_PI;
       if(minAngle > angle)
         minAngle = angle;
@@ -370,7 +375,7 @@ BasicRRTStrategy<MPTraits>::SelectDispersedDirection(VID vd1) {
       bestCfg = randdir;
     }
   }
- 
+
   disperseStatClass->StopClock(disperseClockName);
 
   return bestCfg;
@@ -408,14 +413,14 @@ BasicRRTStrategy<MPTraits>::ConnectNeighbors(VID _newVID, VID _nearVID){
           *(this->GetMPProblem()->GetStatClass()), cmap,
           currentVID.begin(), currentVID.end(),
           m_currentTree->begin(), m_currentTree->end());
-    
+
     if(this->m_recordKeep) conStatClass->StopClock(conClockName);
   }
 
 }
 
 template<class MPTraits>
-typename BasicRRTStrategy<MPTraits>::VID 
+typename BasicRRTStrategy<MPTraits>::VID
 BasicRRTStrategy<MPTraits>::ExpandTree(CfgType& _dir){
   // Setup MP Variables
   Environment* env = this->GetMPProblem()->GetEnvironment();
@@ -428,7 +433,7 @@ BasicRRTStrategy<MPTraits>::ExpandTree(CfgType& _dir){
   // Find closest Cfg in map
   vector<pair<VID, double> > kClosest;
   vector<CfgType> cfgs;
-  
+
   GraphType* g = this->GetMPProblem()->GetRoadmap()->GetGraph();
 
   int numRoadmapVertex  = g->get_num_vertices();
@@ -447,7 +452,7 @@ BasicRRTStrategy<MPTraits>::ExpandTree(CfgType& _dir){
     if(ccs.size() != m_trees.size())
       fixTree = true;
   }
-  if(fixTree) { //node deleted by dynamic environment, fix all trees 
+  if(fixTree) { //node deleted by dynamic environment, fix all trees
     m_trees.clear();
     vector<pair<size_t, VID> > ccs;
     stapl::sequential::vector_property_map<GraphType, size_t> cmap;
@@ -459,7 +464,7 @@ BasicRRTStrategy<MPTraits>::ExpandTree(CfgType& _dir){
       ccVIDs.clear();
       get_cc(*g, cmap, ccIt->second, ccVIDs);
       m_trees.push_back(ccVIDs);
-    }   
+    }
     m_currentTree = m_trees.begin();
   }
 
@@ -478,7 +483,7 @@ BasicRRTStrategy<MPTraits>::ExpandTree(CfgType& _dir){
   if(this->m_recordKeep) expandStatClass->StartClock(expandClockName);
 
   if(!RRTExpand<MPTraits>(this->GetMPProblem(), m_vc, m_dm, nearest, _dir, newCfg, m_delta, weight, cdInfo, env->GetPositionRes(), env->GetOrientationRes())) {
-    if(this->m_debug) cout << "RRT could not expand!" << endl; 
+    if(this->m_debug) cout << "RRT could not expand!" << endl;
     return recentVID;
   }
 
@@ -504,7 +509,7 @@ BasicRRTStrategy<MPTraits>::ExpandTree(CfgType& _dir){
     }
 
     for( size_t i=2 ;i<=m_numDirections; i++){//expansion to other m-1 directions
-      CfgType randdir = this->SelectDispersedDirection(kClosest[0].first); 
+      CfgType randdir = this->SelectDispersedDirection(kClosest[0].first);
       if(this->m_recordKeep) expandStatClass->StartClock(expandClockName);
       bool expandFlag = RRTExpand<MPTraits>(this->GetMPProblem(), m_vc, m_dm, nearest, randdir, newCfg, m_delta, weight, cdInfo, env->GetPositionRes(), env->GetOrientationRes());
 
@@ -515,7 +520,7 @@ BasicRRTStrategy<MPTraits>::ExpandTree(CfgType& _dir){
 
       if(!expandFlag) {
         if(this->m_debug) cout << "RRT could not expand to additional directions!" << endl;
-      }  
+      }
       else if(dm->Distance(env, newCfg, nearest) >= m_minDist ) {
         VID otherVID = this->GetMPProblem()->GetRoadmap()->GetGraph()->AddVertex(newCfg);
         m_currentTree->push_back(otherVID);
@@ -523,8 +528,8 @@ BasicRRTStrategy<MPTraits>::ExpandTree(CfgType& _dir){
           pair<WeightType, WeightType> weights = make_pair(WeightType("RRTExpand", weight), WeightType("RRTExpand", weight));
           this->GetMPProblem()->GetRoadmap()->GetGraph()->AddEdge(kClosest[0].first, otherVID, weights);
         }
-        else 
-          this->GetMPProblem()->GetRoadmap()->GetGraph()->AddEdge(kClosest[0].first, otherVID, WeightType("RRTExpand", weight));        
+        else
+          this->GetMPProblem()->GetRoadmap()->GetGraph()->AddEdge(kClosest[0].first, otherVID, WeightType("RRTExpand", weight));
         this->GetMPProblem()->GetRoadmap()->GetGraph()->GetVertex(otherVID).SetStat("Parent", kClosest[0].first);
 
         if(std::string::npos!=m_gt.find("GRAPH")){
@@ -556,7 +561,7 @@ BasicRRTStrategy<MPTraits>::ConnectTrees(VID _recentlyGrown){
   CfgType closestCfg;
   double minDis = MAX_DBL;
   typename vector<vector<VID> >::iterator treeClosest = m_currentTree;
-  CfgType c2;  
+  CfgType c2;
   typedef typename vector<vector<VID> >::iterator TRIT;
 
   for(TRIT trit = m_trees.begin(); trit!=m_trees.end(); ++trit){
@@ -601,7 +606,7 @@ BasicRRTStrategy<MPTraits>::ConnectTrees(VID _recentlyGrown){
     else  //too close to add, keep expanding current tree
       return;
 
-    //add to roadmap 
+    //add to roadmap
     if(std::string::npos!=m_gt.find("UNDIRECTED")){
       pair<WeightType, WeightType> weights = make_pair(WeightType("RRTExpand", weight), WeightType("RRTExpand", weight));
       this->GetMPProblem()->GetRoadmap()->GetGraph()->AddEdge(closestNode, newVID, weights);
@@ -631,7 +636,7 @@ BasicRRTStrategy<MPTraits>::EvaluateGoals(){
   // Check if goals have been found
   for(vector<size_t>::iterator i = m_goalsNotFound.begin(); i!=m_goalsNotFound.end(); i++){
     vector<pair<VID, double> > closests;
-    nfp->FindNeighbors(rdmp, m_goals[*i], back_inserter(closests));     
+    nfp->FindNeighbors(rdmp, m_goals[*i], back_inserter(closests));
     CfgType closest = rdmp->GetGraph()->GetVertex(closests[0].first);
     double dist = dmp->Distance(env, m_goals[*i], closest);
     if(this->m_debug) cout << "Distance to goal::" << dist << endl;
@@ -652,7 +657,7 @@ BasicRRTStrategy<MPTraits>::EvaluateGoals(){
 }
 
 template<class MPTraits>
-void 
+void
 BasicRRTStrategy<MPTraits>::SetMPProblem(MPProblemType* _problem){
   MPBaseObject<MPTraits>::SetMPProblem(_problem);
   if(m_query)

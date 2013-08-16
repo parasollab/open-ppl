@@ -9,7 +9,7 @@
 
 class Environment {
   public:
-    
+
     Environment();
     Environment(XMLNodeReader& _node);
     virtual ~Environment();
@@ -17,7 +17,7 @@ class Environment {
     ///////////////////////////////////////////////////
     //I/O
     ///////////////////////////////////////////////////
-    
+
     //Return the file from which the environment came.
     const string& GetEnvFileName() const {return m_filename;}
 
@@ -36,12 +36,12 @@ class Environment {
     //Return the resolution for rotation discretization.
     double GetOrientationRes() const { return m_orientationRes; }
     void SetOrientationRes(const double rRes) {m_orientationRes=rRes;}
-    
+
 #if (defined(PMPReachDistCC) || defined(PMPReachDistCCFixed))
     //return the resolution for reachable distance discretization.
-    double GetRDRes() const {return m_rdRes;} 
+    double GetRDRes() const {return m_rdRes;}
 #endif
-    
+
     //ComputeResolution, if _posRes is <0, auto compute
     //the resolutions based on min_max body spans.
     void ComputeResolution(double _positionResFactor = 0.05);
@@ -49,7 +49,7 @@ class Environment {
     ///////////////////////////////////////////////////////////
     //Boundary
     ///////////////////////////////////////////////////////////
-    
+
     shared_ptr<Boundary> GetBoundary() const {return m_boundary;}
     void SetBoundary(shared_ptr<Boundary> _b) {m_boundary = _b;}
 
@@ -58,11 +58,11 @@ class Environment {
     //robot at that configuration is inside of the workspace).
     bool InBounds(const Cfg& _cfg) {return InBounds(_cfg, m_boundary);}
     bool InBounds(const Cfg& _cfg, shared_ptr<Boundary> _b);
-    
+
     //access the possible range of values for the _i th DOF
     pair<double, double> GetRange(size_t _i) {return GetRange(_i, m_boundary);}
     pair<double, double> GetRange(size_t _i, shared_ptr<Boundary> _b);
-   
+
     //reset the boundary to the minimum bounding box surrounding the obstacles
     //increased by a margin of _d + robotRadius
     void ResetBoundary(double _d, size_t _robotIndex);
@@ -70,7 +70,7 @@ class Environment {
     ///////////////////////////////////////////////////////////
     //MultiBodies
     ///////////////////////////////////////////////////////////
-    
+
     size_t GetActiveBodyCount() const {return m_activeBodies.size();}
     size_t GetObstacleCount() const {return m_obstacleBodies.size();}
     size_t GetUsableMultiBodyCount() const {return m_usableMultiBodies.size();}
@@ -102,15 +102,15 @@ class Environment {
     void BuildCDstructure(cd_predefined cdtype);
 
   protected:
-    
+
     void ReadBoundary(istream& _is);
-   
+
     //BuildRobotStructure, builds a robot graph which determines DOFs for a given robot
     //In an environment with multiple active bodies, for now this function will assume they all have the same DOFs
     //until PMPL is changed later to support multiple roadmaps for heterogeneous systems. That is, this function assumes
     //that if there is a multiagent sim going on, the agents are homogenous
-    void BuildRobotStructure(); 
-    
+    void BuildRobotStructure();
+
     //determine if _cfg is inside of the C-space defined by this workspace
     //boundary, and the joint limits of the robot
     bool InCSpace(const Cfg& _cfg, shared_ptr<Boundary> _b);
@@ -121,7 +121,7 @@ class Environment {
 
     string m_filename; //which file did this environment come from
     bool m_saveDofs; //should we save the dof information to a file
-    
+
     double m_positionRes; //positional resolution of movement
     double m_orientationRes; //rotational resolution of movement
     double m_rdRes; //resolution for movement in RD space
@@ -131,7 +131,7 @@ class Environment {
     typedef stapl::sequential::graph<stapl::UNDIRECTED, stapl::NONMULTIEDGES, size_t> RobotGraph;
     RobotGraph m_robotGraph;
     vector<Robot> m_robots; //computed set of robots in C-space for a single active body
-    
+
     shared_ptr<Boundary> m_boundary; //boundary of the workspace
 
     vector<shared_ptr<MultiBody> > m_activeBodies; //robots
@@ -146,7 +146,7 @@ Environment::GetMultiBody(size_t _index) const {
   if(_index < m_usableMultiBodies.size())
     return m_usableMultiBodies[_index];
   else {
-    cerr << "Error:Cannot access MultiBody with index " << _index 
+    cerr << "Error:Cannot access MultiBody with index " << _index
       << ". Possible indices are [0, " << m_usableMultiBodies.size() << ")." << endl;
     exit(1);
   }
@@ -157,7 +157,7 @@ shared_ptr<MultiBody> Environment::GetNavigableSurface(size_t _index) const {
   if(_index < m_navigableSurfaces.size())
     return m_navigableSurfaces[_index];
   else {
-    cerr << "Error:Cannot access NavigableSurface with index " << _index 
+    cerr << "Error:Cannot access NavigableSurface with index " << _index
       << ". Possible indices are [0, " << m_navigableSurfaces.size() << ")." << endl;
     exit(1);
   }

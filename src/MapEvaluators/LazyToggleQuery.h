@@ -19,9 +19,9 @@ class LazyToggleQuery : public LazyQuery<MPTraits> {
     typedef typename MPProblemType::VID VID;
 
     LazyToggleQuery(const char* _queryFileName = "", string _vcLabel = "") :
-      LazyQuery<MPTraits>(_queryFileName, _vcLabel) { this->SetName("LazyToggleQuery"); }
-    LazyToggleQuery(CfgType _start, CfgType _goal, string _vcLabel) :
-      LazyQuery<MPTraits>(_start, _goal, _vcLabel) { this->SetName("LazyToggleQuery"); }
+      LazyQuery<MPTraits>(_queryFileName, _vcLabel), m_iterative(true) { this->SetName("LazyToggleQuery"); }
+    LazyToggleQuery(const CfgType& _start, const CfgType& _goal, string _vcLabel) :
+      LazyQuery<MPTraits>(_start, _goal, _vcLabel), m_iterative(true) { this->SetName("LazyToggleQuery"); }
     LazyToggleQuery(MPProblemType* _problem, XMLNodeReader& _node, bool _warn = true);
     virtual ~LazyToggleQuery() {};
 
@@ -32,7 +32,7 @@ class LazyToggleQuery : public LazyQuery<MPTraits> {
     virtual bool PerformQuery(CfgType _start, CfgType _goal, RoadmapType* _rdmp);
 
     // Overrides LazyQuery::ProcessInvalidNode, called in LazyQuery::CanRecreatePath()
-    virtual void ProcessInvalidNode(CfgType node);
+    virtual void ProcessInvalidNode(const CfgType& node);
 
   protected:
     string m_toggleConnect;   // Connection method for blocked nodes
@@ -74,7 +74,7 @@ LazyToggleQuery<MPTraits>::PrintOptions(ostream& _os) {
 // Overrides LazyQuery::ProcessInvalidNode, called in LazyQuery::CanRecreatePath()
 template<class MPTraits>
 void
-LazyToggleQuery<MPTraits>::ProcessInvalidNode(CfgType node) {
+LazyToggleQuery<MPTraits>::ProcessInvalidNode(const CfgType& node) {
   if(this->m_debug)
     cout << "*T* Pushing blocked node into queue: " << node << endl;
   q.push_back(node);

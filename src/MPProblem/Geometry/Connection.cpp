@@ -1,23 +1,26 @@
 #include "Connection.h"
 #include "MultiBody.h"
 
-Connection::Connection(MultiBody* _owner) : m_multibody(_owner) {
+Connection::Connection(MultiBody* _owner) : m_multibody(_owner), m_jointType(NONACTUATED) {
   m_globalIndex = m_globalCounter++;
 }
 
-Connection::Connection(const shared_ptr<Body>& _body1, const shared_ptr<Body>& _body2) {
+Connection::Connection(const shared_ptr<Body>& _body1, const shared_ptr<Body>& _body2) :
+  m_multibody(NULL), m_jointType(NONACTUATED) {
   m_globalIndex = m_globalCounter++;
   m_bodies[0] = _body1;
   m_bodies[1] = _body2;
 }
 
-Connection::Connection(const shared_ptr<Body>& _body1, const shared_ptr<Body>& _body2, 
-    const Transformation & _transformationToBody2, 
-    const DHparameters & _dhparameters, 
-    const Transformation & _transformationToDHFrame) 
-  : m_transformationToBody2(_transformationToBody2),
+Connection::Connection(const shared_ptr<Body>& _body1, const shared_ptr<Body>& _body2,
+    const Transformation & _transformationToBody2,
+    const DHparameters & _dhparameters,
+    const Transformation & _transformationToDHFrame)
+  : m_multibody(NULL),
+  m_transformationToBody2(_transformationToBody2),
   m_transformationToDHFrame(_transformationToDHFrame),
-  m_dhParameters(_dhparameters) {
+  m_dhParameters(_dhparameters),
+  m_jointType(NONACTUATED) {
     m_globalIndex = m_globalCounter++;
     m_bodies[0] = _body1;
     m_bodies[1] = _body2;
@@ -50,12 +53,12 @@ Connection::GetTagFromJointType(const Connection::JointType& _jt){
     default:
       return "Unknown Joint Type";
   }
-} 
+}
 
 ostream&
 operator<<(ostream& _os, const Connection& _c) {
   return _os << _c.m_bodyIndices.first << " " << _c.m_bodyIndices.second << " "
-    << Connection::GetTagFromJointType(_c.m_jointType) << endl 
+    << Connection::GetTagFromJointType(_c.m_jointType) << endl
     << _c.m_transformationToDHFrame << " " << _c.m_dhParameters << " "
     << _c.m_transformationToBody2;
 }
@@ -101,7 +104,7 @@ operator>>(istream& _is, Connection& _c){
   }
 
   //transformation to DHFrame
-  _c.m_transformationToDHFrame = 
+  _c.m_transformationToDHFrame =
     ReadField<Transformation>(_is, "Transformation to DH frame");
 
   //DH parameters
