@@ -557,7 +557,7 @@ BasicRRTStrategy<MPTraits>::ConnectTrees(VID _recentlyGrown){
 
   CfgType c1 = rdmp->GetGraph()->GetVertex(_recentlyGrown);
 
-  VID closestNode;
+  VID closestNode = INVALID_VID;
   CfgType closestCfg;
   double minDis = MAX_DBL;
   typename vector<vector<VID> >::iterator treeClosest = m_currentTree;
@@ -568,7 +568,7 @@ BasicRRTStrategy<MPTraits>::ConnectTrees(VID _recentlyGrown){
     if(trit != m_currentTree){
       vector<pair<VID, double> > closest;
       nf->FindNeighbors(rdmp, trit->begin(), trit->end(), c1, back_inserter(closest));
-      if (closest.size() != 0){
+      if(closest.size() != 0) {
         c2  = rdmp->GetGraph()->GetVertex(closest[0].first);
         double dist = dm->Distance(env,c1,c2);
         if(dist<minDis){

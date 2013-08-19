@@ -96,41 +96,24 @@ class RoadmapChangeEvent {
 };
 
 template<typename CFG, typename WEIGHT>
-RoadmapChangeEvent<CFG, WEIGHT>::RoadmapChangeEvent() {
+RoadmapChangeEvent<CFG, WEIGHT>::RoadmapChangeEvent() : event(NULL) {
 }
 
 template<typename CFG, typename WEIGHT>
 RoadmapChangeEvent<CFG, WEIGHT>::RoadmapChangeEvent(ChangeType type, const CFG& _cfg, VID _vid) : event(NULL) {
   if (type == ADD_VERTEX)
-  {
     event = new AddVertexEvent(_cfg, _vid);
-
-    /*
-    cout << "Adding ADD_VERTEX event"
-          << ", VID = " << _vid
-          << ", CFG = " << _cfg << endl;
-    */
-  }
 }
 
 template<typename CFG, typename WEIGHT>
-RoadmapChangeEvent<CFG, WEIGHT>::
-RoadmapChangeEvent(ChangeType type, VID _vid)
-{
+RoadmapChangeEvent<CFG, WEIGHT>::RoadmapChangeEvent(ChangeType type, VID _vid) : event(NULL) {
   if (type == REMOVE_VERTEX)
-  {
     event = new RemoveVertexEvent(_vid);
-
-    /*
-    cout << "Adding REMOVE_VERTEX event, of type " << event->GetType()
-        << ", VID = " << _vid << endl;
-    */
-  }
 }
 
 template<typename CFG, typename WEIGHT>
-RoadmapChangeEvent<CFG, WEIGHT>::
-~RoadmapChangeEvent() {
+RoadmapChangeEvent<CFG, WEIGHT>::~RoadmapChangeEvent() {
+  delete event;
 }
 
 template<typename CFG, typename WEIGHT>

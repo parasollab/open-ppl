@@ -734,9 +734,7 @@ void MultiBody::UpdateVertexBase(){
 }
 #endif
 
-
-struct vertex_index_distance
-{
+struct vertex_index_distance {
   size_t first_index, second_index;
   double distance;
 
@@ -745,8 +743,8 @@ struct vertex_index_distance
 
   bool operator<(const vertex_index_distance& v) const { return distance < v.distance; }
 };
-struct first_index_equals : public unary_function<vertex_index_distance, bool>
-{
+
+struct first_index_equals : public unary_function<vertex_index_distance, bool> {
   size_t index;
 
   first_index_equals(size_t i) : index(i) {}
@@ -754,8 +752,8 @@ struct first_index_equals : public unary_function<vertex_index_distance, bool>
 
   bool operator()(const vertex_index_distance& v) const { return v.first_index == index; }
 };
-struct second_index_equals : public unary_function<vertex_index_distance, bool>
-{
+
+struct second_index_equals : public unary_function<vertex_index_distance, bool> {
   size_t index;
 
   second_index_equals(size_t i) : index(i) {}
@@ -766,8 +764,7 @@ struct second_index_equals : public unary_function<vertex_index_distance, bool>
 
 //==================================================================
 //Polygonal Approximation
-void MultiBody::PolygonalApproximation(vector<Vector3d>& result)
-{
+void MultiBody::PolygonalApproximation(vector<Vector3d>& result) {
   result.clear();
 
   int nfree = GetFreeBodyCount();

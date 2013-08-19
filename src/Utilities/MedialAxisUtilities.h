@@ -129,8 +129,16 @@ class MedialAxisUtility : public ClearanceUtility<MPTraits> {
 
   private:
     bool FindInitialDirection(CfgType& _cfg, shared_ptr<Boundary> _bb, double _posRes, CfgType& _transCfg, CDInfo& _prevInfo);
-    bool FindMedialAxisBorderExact(const CfgType& _cfg, shared_ptr<Boundary> _bb, CfgType& _transCfg, CDInfo& _prevInfo, CfgType& _startCfg, CfgType& _endingCfg, double _upperBound, double _lowerBound, double _stepSize);
-    bool FindMedialAxisBorderApprox(const CfgType& _cfg, shared_ptr<Boundary> _bb, CfgType& _transCfg, CDInfo& _prevInfo, CfgType& _startCfg, CfgType& _endingCfg, double _upperBound, double _lowerBound, double _stepSize);
+    bool FindMedialAxisBorderExact(
+        const CfgType& _cfg, shared_ptr<Boundary> _bb,
+        CfgType& _transCfg, CDInfo& _prevInfo,
+        CfgType& _startCfg, CfgType& _endingCfg,
+        double& _upperBound, double& _lowerBound, double& _stepSize);
+    bool FindMedialAxisBorderApprox(
+        const CfgType& _cfg, shared_ptr<Boundary> _bb,
+        CfgType& _transCfg, CDInfo& _prevInfo,
+        CfgType& _startCfg, CfgType& _endingCfg,
+        double& _upperBound, double& _lowerBound, double& _stepSize);
     CfgType BinarySearchForPeaks(CfgType& _startCfg, CfgType& _midMCfg, CfgType& _endingCfg, double _lowerBound, double _upperBound, CfgType& _transCfg, CfgType& _cfg, shared_ptr<Boundary> _bb, vector<double>& _dists);
 
     double m_epsilon;
@@ -815,7 +823,7 @@ MedialAxisUtility<MPTraits>::PushCfgToMedialAxis(CfgType& _cfg, shared_ptr<Bound
     return false;
 
   CfgType startCfg, endingCfg;
-  double upperBound = 0, lowerBound = 0, stepSize = 0.0;
+  double upperBound = 0, lowerBound = 0, stepSize = 0;
   bool borderFound;
   if(this->m_exactClearance)
     borderFound = FindMedialAxisBorderExact(_cfg, _bb, transCfg, prevInfo, startCfg, endingCfg, upperBound, lowerBound, stepSize);
@@ -918,9 +926,8 @@ bool
 MedialAxisUtility<MPTraits>::FindMedialAxisBorderExact(
     const CfgType& _cfg, shared_ptr<Boundary> _bb,
     CfgType& _transCfg, CDInfo& _prevInfo,
-    CfgType& _startCfg,
-    CfgType& _endingCfg,
-    double _upperBound, double _lowerBound, double _stepSize) {
+    CfgType& _startCfg, CfgType& _endingCfg,
+    double& _upperBound, double& _lowerBound, double& _stepSize) {
   Environment* env = this->GetMPProblem()->GetEnvironment();
   shared_ptr<MultiBody> robot = env->GetMultiBody(_cfg.GetRobotIndex());
   ValidityCheckerPointer vcm = this->GetMPProblem()->GetValidityChecker(this->m_vcLabel);
@@ -1008,9 +1015,8 @@ bool
 MedialAxisUtility<MPTraits>::FindMedialAxisBorderApprox(
     const CfgType& _cfg, shared_ptr<Boundary> _bb,
     CfgType& _transCfg, CDInfo& _prevInfo,
-    CfgType& _startCfg,
-    CfgType& _endingCfg,
-    double _upperBound, double _lowerBound, double _stepSize) {
+    CfgType& _startCfg, CfgType& _endingCfg,
+    double& _upperBound, double& _lowerBound, double& _stepSize) {
   Environment* env = this->GetMPProblem()->GetEnvironment();
   //shared_ptr<MultiBody> robot = env->GetMultiBody(_cfg->GetRobotIndex());
   ValidityCheckerPointer vcm = this->GetMPProblem()->GetValidityChecker(this->m_vcLabel);
@@ -1085,43 +1091,42 @@ MedialAxisUtility<MPTraits>::FindMedialAxisBorderApprox(
         return false;
       }
 
-      if(!peakFound) { // enumerate deltas to find peak
-        int posCnt=0, negCnt=0, zroCnt=0;
-        for(deque<double>::iterator dit = segDists.begin(); dit+1 != segDists.end(); ++dit) {
-          double distDelta = *(dit+1) - (*dit);
-          if(distDelta > errEps)
-            ++posCnt;
-          else if(distDelta < -errEps)
-            ++negCnt;
-          else
-            ++zroCnt;
-        }
-        if(this->m_debug) cout << "  Pos/Zero/Neg counts: " << posCnt << "/" << zroCnt << "/" << negCnt << endl;
-        if((negCnt > 0 && negCnt > posCnt) || (zroCnt > 0 && zroCnt > posCnt)) {
-          if(posCnt < 1 && (zroCnt < 1 || negCnt < 1)){ // Only see negatives or zeros, check back
-            --cbStepSize;
-            --_stepSize;
-            checkBack = true;
-          }
-          else {
-            peakFound = true;
-            if(this->m_debug) {
-              cout << "Found peak!  Dists: ";
-              for(size_t i=0; i<size_t(segDists.size()); i++)
-                cout << segDists[i] << " ";
-              cout << endl;
-            }
-          }
-        }
-        else { // No peak found
-          checkBack = false;
-        }
-      } else {
-        if(this->m_debug) cout << endl;
+      // enumerate deltas to find peak
+      int posCnt=0, negCnt=0, zroCnt=0;
+      for(deque<double>::iterator dit = segDists.begin(); dit+1 != segDists.end(); ++dit) {
+        double distDelta = *(dit+1) - (*dit);
+        if(distDelta > errEps)
+          ++posCnt;
+        else if(distDelta < -errEps)
+          ++negCnt;
+        else
+          ++zroCnt;
       }
+      if(this->m_debug) cout << "  Pos/Zero/Neg counts: " << posCnt << "/" << zroCnt << "/" << negCnt << endl;
+      if((negCnt > 0 && negCnt > posCnt) || (zroCnt > 0 && zroCnt > posCnt)) {
+        if(posCnt < 1 && (zroCnt < 1 || negCnt < 1)){ // Only see negatives or zeros, check back
+          --cbStepSize;
+          --_stepSize;
+          checkBack = true;
+        }
+        else {
+          peakFound = true;
+          if(this->m_debug) {
+            cout << "Found peak!  Dists: ";
+            for(size_t i=0; i<size_t(segDists.size()); i++)
+              cout << segDists[i] << " ";
+            cout << endl;
+          }
+        }
+      }
+      else { // No peak found
+        checkBack = false;
+      }
+      if(this->m_debug) cout << endl;
+
       // Increment step size
       if(!peakFound)
-        _stepSize ++;
+        _stepSize++;
     }
   }
 
@@ -1303,7 +1308,7 @@ SurfaceMedialAxisUtility<MPTraits>::SurfaceMedialAxisUtility(MPProblemType* _pro
     string _vcLabel, string _dmLabel) :
   MedialAxisUtility<MPTraits>(_problem, _vcLabel, _dmLabel){
     this->m_name = "SurfaceMedialAxisUtility";
-}
+  }
 
 //the square of the distance from pos to p1p2
 inline double distsqr
@@ -1325,7 +1330,7 @@ inline double distsqr
 //get clearance of the point
 template<class MPTraits>
 double
-SurfaceMedialAxisUtility<MPTraits>::GetClearance2DSurf
+  SurfaceMedialAxisUtility<MPTraits>::GetClearance2DSurf
 (shared_ptr<MultiBody> _mb, const Point2d& _pos, Point2d& _cdPt, double _clear)
 {
   double minDis=1e10;
