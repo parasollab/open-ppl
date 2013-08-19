@@ -815,7 +815,7 @@ MedialAxisUtility<MPTraits>::PushCfgToMedialAxis(CfgType& _cfg, shared_ptr<Bound
     return false;
 
   CfgType startCfg, endingCfg;
-  double upperBound, lowerBound, stepSize = 0.0;
+  double upperBound = 0, lowerBound = 0, stepSize = 0.0;
   bool borderFound;
   if(this->m_exactClearance)
     borderFound = FindMedialAxisBorderExact(_cfg, _bb, transCfg, prevInfo, startCfg, endingCfg, upperBound, lowerBound, stepSize);

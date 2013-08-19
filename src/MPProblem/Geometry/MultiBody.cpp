@@ -110,8 +110,9 @@ void MultiBody::ComputePUMAInverseKinematics(Transformation & _t, double _a2, do
 MultiBody::MultiBody()
   : fixArea(0), freeArea(0), area(0), m_multirobot(false),
   CenterOfMassAvailable(false), m_bodyType(PASSIVE),
-  boundingBox({0, 0, 0, 0, 0, 0}), maxAxisRange(0)
-{}
+  maxAxisRange(0) {
+    fill(boundingBox, boundingBox+6, 0);
+}
 
 MultiBody::~MultiBody()
 {}

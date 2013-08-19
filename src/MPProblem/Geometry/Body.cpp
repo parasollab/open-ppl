@@ -6,8 +6,9 @@ Body::Body(MultiBody* _owner) :
   m_isBase(false),
   m_baseType(Robot::PLANAR),
   m_baseMovementType(Robot::TRANSLATIONAL),
-  m_centerOfMassAvailable(false), m_worldPolyhedronAvailable(false),
-  m_boundingBox({0, 0, 0, 0, 0, 0}) {}
+  m_centerOfMassAvailable(false), m_worldPolyhedronAvailable(false) {
+    fill(m_boundingBox, m_boundingBox+6, 0);
+  }
 
 Body::Body(MultiBody* _owner, GMSPolyhedron& _polyhedron) :
   m_multibody(_owner),
@@ -17,8 +18,9 @@ Body::Body(MultiBody* _owner, GMSPolyhedron& _polyhedron) :
   m_polyhedron(_polyhedron),
   m_worldPolyhedron(_polyhedron),
   m_centerOfMassAvailable(false),
-  m_worldPolyhedronAvailable(false),
-  m_boundingBox({0, 0, 0, 0, 0, 0}){}
+  m_worldPolyhedronAvailable(false) {
+    fill(m_boundingBox, m_boundingBox+6, 0);
+  }
 
 Body::Body(const Body& _b) :
   m_filename(_b.m_filename),

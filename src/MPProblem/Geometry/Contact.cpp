@@ -6,7 +6,8 @@
 //-------------------------------------------------------------------
 //  Constructors and Destructor
 //-------------------------------------------------------------------
-Contact::Contact() : body({NULL, NULL}) {
+Contact::Contact() {
+  body[0] = body[1] = NULL;
 }
 
 Contact::Contact(Body* _body1, Body* _body2, Vector3d& _position, Vector3d& _normal1, Vector3d& _normal2) {
