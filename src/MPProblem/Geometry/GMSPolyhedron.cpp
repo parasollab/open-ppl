@@ -12,7 +12,7 @@ using namespace std;
 GMSPolygon::GMSPolygon() : m_area(0){
 }
 
-GMSPolygon::GMSPolygon(const GMSPolygon& _p) 
+GMSPolygon::GMSPolygon(const GMSPolygon& _p)
   : m_vertexList(_p.m_vertexList), m_normal(_p.m_normal), m_area(_p.m_area){
   }
 
@@ -30,9 +30,9 @@ GMSPolygon::operator==(const GMSPolygon& _p) const{
 GMSPolyhedron::GMSPolyhedron(): m_area(0), m_maxRadius(0), m_minRadius(0), m_boundaryBuilt(false), m_force2DBoundary(false){
 }
 
-GMSPolyhedron::GMSPolyhedron(const GMSPolyhedron& _p) 
+GMSPolyhedron::GMSPolyhedron(const GMSPolyhedron& _p)
   : m_vertexList(_p.m_vertexList), m_polygonList(_p.m_polygonList),
-  m_area(_p.m_area), m_maxRadius(_p.m_maxRadius), m_minRadius(_p.m_minRadius), 
+  m_area(_p.m_area), m_maxRadius(_p.m_maxRadius), m_minRadius(_p.m_minRadius),
   m_boundaryLines(_p.m_boundaryLines), m_boundaryBuilt(_p.m_boundaryBuilt),
   m_force2DBoundary(_p.m_force2DBoundary){
 }
@@ -96,11 +96,11 @@ GMSPolyhedron::Read(string _fileName){
     ext = _fileName.substr(pos+1);
   if (ext == "dat"){
     com = Read(_is);
-  } 
+  }
   else if (ext == "g" || ext == "obj"){
-    com = ReadModel(_fileName); 
-  } 
-  else{ 
+    com = ReadModel(_fileName);
+  }
+  else{
     cerr << "ERROR: \"" << _fileName << "\" format is unrecognized.";
     cerr << "Formats are recognized by file suffixes: GMS(*.dat), BYU(*.g), and OBJ(*.obj)" << endl;
     exit(1);
@@ -124,7 +124,7 @@ GMSPolyhedron::Read(istream& _is){
 
   int numVertices;
   _is >> numVertices;
-  for(int i=0; i<numVertices; ++i){
+  for(int i=0; i<numVertices && _is; ++i){
     Vector3d v;
     _is >> v;
     m_vertexList.push_back(v);
@@ -146,7 +146,7 @@ GMSPolyhedron::Read(istream& _is){
     _is >> numPolyVertices;
     GMSPolygon p;
     p.m_vertexList = vector<int>(numPolyVertices, -1);
-    for(int j=0; j<numPolyVertices; ++j) 
+    for(int j=0; j<numPolyVertices; ++j)
       _is >> p.m_vertexList[j];
     m_polygonList.push_back(p);
   }
@@ -176,7 +176,7 @@ GMSPolyhedron::ReadBYU(istream& _is){
   _is >> nPartPolys;          // throwaway for now
 
   Vector3d sum(0,0,0), com;
-  for(int i=0; i<numVertices; ++i){
+  for(int i=0; i<numVertices && _is; ++i){
     Vector3d v;
     _is >> v;
     m_vertexList.push_back(v);
@@ -260,11 +260,16 @@ GMSPolyhedron::LoadFromIModel(IModel* _imodel, Vector3d& _com){
 }
 
 Vector3d
-GMSPolyhedron::ReadModel(string _fileName){  
+GMSPolyhedron::ReadModel(string _fileName){
   IModel* imodel = CreateModelLoader(_fileName, false);
+  if(!imodel) {
+    cerr << "Error reading model::" << _fileName << endl;
+    exit(1);
+  }
   Vector3d com;
   LoadFromIModel( imodel, com );
   ComputeNormals();
+  delete imodel;
   return com;
 }
 
@@ -308,7 +313,7 @@ GMSPolyhedron::WriteBYU(ostream& _os){
 
 //=========================================================================
 //  GetRandPtOnSurface
-//  This function will return a point that lies on the surface of the 
+//  This function will return a point that lies on the surface of the
 //  polyhedron. Function taken from GB code.
 //=========================================================================
 Point3d
@@ -362,7 +367,7 @@ GMSPolyhedron::GetRandPtOnSurface(){
 
 ///////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////////
-/// next two functions adapted from GB code as well 
+/// next two functions adapted from GB code as well
 bool
 GMSPolyhedron::IsOnSurface(Point2d& _pt, double _h){
   //using vertices in m_ProjectedPts
@@ -402,7 +407,7 @@ GMSPolyhedron::HeightAtPt(Point2d _pt, bool& _valid){
     double u,v;
     if( PtInTriangle( p0, p1, p2, _pt, u, v ) ){
       _valid = true;
-      Point3d pt3d = GetPtFromBarycentricCoords( p03d, p13d, p23d, u, v ); 
+      Point3d pt3d = GetPtFromBarycentricCoords( p03d, p13d, p23d, u, v );
       return pt3d[1];
     }
   }
@@ -410,7 +415,7 @@ GMSPolyhedron::HeightAtPt(Point2d _pt, bool& _valid){
   return -19999.0; //went through all of the triangles and inconsistency found in iscollision check
 }
 
-void 
+void
 GMSPolyhedron::BuildBoundary2D() {
   m_boundaryLines.clear();
   m_boundaryBuilt=false;
@@ -418,7 +423,7 @@ GMSPolyhedron::BuildBoundary2D() {
   BuildBoundary();
 }
 
-void 
+void
 GMSPolyhedron::BuildBoundary() {
   if( m_boundaryBuilt ) return; //only allow this to be attempted once
   if( m_boundaryLines.size() > 0 ) return; // this has been done
@@ -427,7 +432,7 @@ GMSPolyhedron::BuildBoundary() {
   typedef vector<GMSPolygon>::iterator PIT;
 
   //build all the lines locally
-  vector< Vector<int,2> > lines; 
+  vector< Vector<int,2> > lines;
   //TriVector& triP=m_SurfaceModel->GetTriP();
   //vector<GMSPolygon>& triP = m_polygonList;
   lines.reserve(m_polygonList.size()*3);
@@ -470,7 +475,7 @@ GMSPolyhedron::BuildBoundary() {
 	if((l[0]==line[0]&&l[1]==line[1])||(l[0]==line[1]&&l[1]==line[0]))
 	  count++;
       }
-      if( count==1 ) 
+      if( count==1 )
 	m_boundaryLines.push_back( make_pair(line[0],line[1]) );
     }//endfor iD<3
   }//endfor iT
@@ -479,7 +484,7 @@ GMSPolyhedron::BuildBoundary() {
 
 ////////////////////////////////////////////////////////////////////////////////
 //the square of the distance from pos to p1p2
-inline double 
+inline double
 distsqr3D(const Point3d& _pos, const Point3d& _p1, const Point3d& _p2, Point3d& _cdPt)
 {
 
@@ -530,7 +535,7 @@ double GMSPolyhedron::PushToMedialAxis(Point3d& _pt) {
   Vector3d dir=(_pt-closest).normalize();
   dir[1]=0;
   dir = dir.normalize()*0.5;
-  Point3d newClosest=closest; 
+  Point3d newClosest=closest;
   int iteration=0;
   do{
     _pt=_pt+dir;

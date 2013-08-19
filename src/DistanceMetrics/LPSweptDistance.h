@@ -14,25 +14,25 @@ class LPSweptDistance : public DistanceMetricMethod<MPTraits> {
     typedef typename MPTraits::WeightType WeightType;
     typedef typename MPTraits::MPProblemType MPProblemType;
     typedef typename MPProblemType::LocalPlannerPointer LocalPlannerPointer;
-    
+
     LPSweptDistance(MPProblemType* _problem, XMLNodeReader& _node, bool _warn = true);
     LPSweptDistance(string _lpLabel="", double _positionRes = 0.1, double _orientationRes = 0.1, bool _bbox = false);
     virtual ~LPSweptDistance();
 
     virtual void PrintOptions(ostream& _os) const;
-    
+
     virtual double Distance(Environment* _env, const CfgType& _c1, const CfgType& _c2);
-    
+
   protected:
     double SweptDistance(const vector<GMSPolyhedron>& _poly1, const vector<GMSPolyhedron>& _poly2);
-    
+
     string m_lpLabel;
     double m_positionRes, m_orientationRes;
     bool m_useBbox;
 };
 
 template<class MPTraits>
-LPSweptDistance<MPTraits>::LPSweptDistance(string _lpLabel, double _posRes, double _oriRes, bool _bbox) : 
+LPSweptDistance<MPTraits>::LPSweptDistance(string _lpLabel, double _posRes, double _oriRes, bool _bbox) :
   DistanceMetricMethod<MPTraits>(), m_lpLabel(_lpLabel), m_positionRes(_posRes), m_orientationRes(_oriRes), m_useBbox(_bbox) {
     this->m_name = "LPSwept";
 }
@@ -44,7 +44,7 @@ LPSweptDistance<MPTraits>::LPSweptDistance(MPProblemType* _problem, XMLNodeReade
   m_orientationRes = _node.numberXMLParameter("oriRes", false, _problem->GetEnvironment()->GetOrientationRes(), 0.0, 1000.0, "orientation resolution");
   m_useBbox = _node.boolXMLParameter("useBBox", false, false, "use bbox instead of robot vertices");
   m_lpLabel = _node.stringXMLParameter("lpLabel", true, "", "Local Planner");
-  
+
   if(_warn)
     _node.warnUnrequestedAttributes();
 }
@@ -54,7 +54,7 @@ LPSweptDistance<MPTraits>::~LPSweptDistance() {}
 
 template<class MPTraits>
 void LPSweptDistance<MPTraits>::PrintOptions(ostream& _os) const {
-  DistanceMetricMethod<MPTraits>::PrintOptions(_os); 
+  DistanceMetricMethod<MPTraits>::PrintOptions(_os);
   _os << "\tpositionRes = " << m_positionRes;
   _os << "\torientationRes = " << m_orientationRes;
   _os << "\tuse_bbox = " << m_useBbox;
@@ -108,8 +108,8 @@ double LPSweptDistance<MPTraits>::SweptDistance(const vector<GMSPolyhedron>& _po
     for(size_t i=0; i<_poly1[b].m_vertexList.size(); ++i) {
       d += (_poly1[b].m_vertexList[i] - _poly2[b].m_vertexList[i]).norm();
       count++;
-    }
-  return d/(double)count;
+  }
+  return count ? d/(double)count : 0;
 }
 
 #endif

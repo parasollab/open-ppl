@@ -107,7 +107,9 @@ CollisionDetectionValidity<MPTraits>::CollisionDetectionValidity(typename MPTrai
   }
 
 template<class MPTraits>
-CollisionDetectionValidity<MPTraits>::~CollisionDetectionValidity(){}
+CollisionDetectionValidity<MPTraits>::~CollisionDetectionValidity() {
+  delete m_cdMethod;
+}
 
 template<class MPTraits>
 bool

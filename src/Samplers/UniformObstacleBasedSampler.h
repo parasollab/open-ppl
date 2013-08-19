@@ -7,7 +7,7 @@ template<typename MPTraits>
 class UniformObstacleBasedSampler : public SamplerMethod<MPTraits> {
   private:
     double m_margin;
-    bool m_useBoundary;  
+    bool m_useBoundary;
     string m_vcLabel, m_dmLabel;
 
   public:
@@ -56,8 +56,7 @@ class UniformObstacleBasedSampler : public SamplerMethod<MPTraits> {
       bool cfg1Free;
       double margin = m_margin;
       if(margin == 0){
-        if(_env != NULL)
-          margin = (_env->GetMultiBody(_cfgIn.GetRobotIndex()))->GetMaxAxisRange();
+        margin = _env->GetMultiBody(_cfgIn.GetRobotIndex())->GetMaxAxisRange();
       }
       _env->ResetBoundary(margin, _cfgIn.GetRobotIndex());
       shared_ptr<Boundary> bbNew = _env->GetBoundary();
@@ -94,7 +93,7 @@ class UniformObstacleBasedSampler : public SamplerMethod<MPTraits> {
       CfgType inter;
       CfgType tick = cfg1;
       int nTicks;
-      double positionRes = _env->GetPositionRes(); 
+      double positionRes = _env->GetPositionRes();
       double orientationRes = _env->GetOrientationRes();
       bool tempFree = cfg1Free;
       bool tickFree;
@@ -105,7 +104,7 @@ class UniformObstacleBasedSampler : public SamplerMethod<MPTraits> {
         tick += inter;
         tickFree = (vc->IsValid(tick, _env, _stats, cdInfo, &callee)) && (!vc->IsInsideObstacle(tick, _env, cdInfo));
         _env->SetBoundary(_bb);
-        if(m_useBoundary) 
+        if(m_useBoundary)
           tickFree = tickFree && _env->InBounds(tick, _bb);
 
         if(tempFree == tickFree) {
@@ -128,7 +127,7 @@ class UniformObstacleBasedSampler : public SamplerMethod<MPTraits> {
         }
       }
       return generated;
-    }   
+    }
 };
 
 #endif

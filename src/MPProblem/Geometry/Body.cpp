@@ -275,8 +275,9 @@ Body::IsWithinIHelper(Body* _body1, Body* _body2, int _i, Body* _prevBody){
   for(CIT C = _body1->m_forwardConnection.begin(); C != _body1->m_forwardConnection.end(); ++C)
     if(IsWithinIHelper(C->GetNextBody().get(), _body2, _i-1, _body1) )
       return true;
-  for(CIT C =_body1->m_backwardConnection.begin(); C != _body1->m_backwardConnection.end(); ++C){
-    for(CIT C2 = C->GetPreviousBody()->m_forwardConnection.begin(); C2!=C->GetPreviousBody()->m_forwardConnection.end(); C2++){
+  for(CIT C =_body1->m_backwardConnection.begin(); C != _body1->m_backwardConnection.end(); ++C) {
+    shared_ptr<Body> prev = C->GetPreviousBody();
+    for(CIT C2 = prev->m_forwardConnection.begin(); C2 != prev->m_forwardConnection.end(); ++C2){
       if(*(C2->GetNextBody()) == *_body2)
         return true;
     }

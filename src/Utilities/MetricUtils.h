@@ -13,8 +13,8 @@
 using namespace std;
 
 /**Provide timing information.
- *This class is used to measure the running time between StartClock and 
- *StopClock. Client side could provide clock name, when StopClock is called 
+ *This class is used to measure the running time between StartClock and
+ *StopClock. Client side could provide clock name, when StopClock is called
  *the name will be print out, and running time as well.
  */
 class ClockClass {
@@ -84,7 +84,7 @@ class StatClass {
 
     template<class MPProblemType, class RoadmapType>
       void ComputeInterCCFeatures(MPProblemType* _problem, RoadmapType* _rdmp, string _nfMethod, string _dmMethod);
-      
+
     void PrintFeatures(ostream& _os);
     int IncNodesGenerated(string _samplerName, int _incr=1);
     int IncNodesAttempted(string _samplerName, int _incr=1);
@@ -138,7 +138,7 @@ class StatClass {
     unsigned long int m_isCollTotal;
 
     //features
-    
+
     //m_samplerInfo represents sampler nodes attempted and generated
     //  map<string, pair<int, int> > represents a mapping between the sampler name
     //  and first the # of attempted samples, then the number of generated samples
@@ -206,15 +206,16 @@ StatClass::PrintAllStats(ostream& _os, RoadmapType* _rmap, int _numCCs) {
     _os << setw(40) << "Name" << setw(20) << "Attempts" << setw(20) << "Successes\n\n";
     map<string, pair<unsigned long int, unsigned long int> >::iterator nodeIter;
     for(nodeIter=m_samplerInfo.begin();nodeIter!=m_samplerInfo.end();nodeIter++) {
-      _os << setw(40) << nodeIter->first << setw(20) << nodeIter->second.first 
+      _os << setw(40) << nodeIter->first << setw(20) << nodeIter->second.first
         << setw(20) << nodeIter->second.second << endl;
       totalAttempts += nodeIter->second.first;
       totalGenerated += nodeIter->second.second;
     }//end for loop
 
-    _os << "  Total Sampler Attempts: " << totalAttempts << "\n  Total Succeeded: " 
-      << totalGenerated << "\n  Success %: "
-      << ((double)totalGenerated)/totalAttempts * 100.0 << endl;
+    if(totalAttempts > 0)
+      _os << "  Total Sampler Attempts: " << totalAttempts << "\n  Total Succeeded: "
+        << totalGenerated << "\n  Success %: "
+        << ((double)totalGenerated)/totalAttempts * 100.0 << endl;
   }//end check on attempted nodes generated
 
   size_t i;
@@ -288,7 +289,7 @@ StatClass::PrintAllStats(ostream& _os, RoadmapType* _rmap, int _numCCs) {
       _os << "Number of Collision Detection Calls: " << endl;
       for(i=0;i<MaxCD;i++)
       if (strcmp(CDNameList[i],"empty")!=0)
-      _os << setw(20) << CDNameList[i] 
+      _os << setw(20) << CDNameList[i]
       << setw(15) << NumCollDetCalls[i] << endl;
    */
 
@@ -296,13 +297,13 @@ StatClass::PrintAllStats(ostream& _os, RoadmapType* _rmap, int _numCCs) {
 
   DisplayCCStats(_os, *_rmap->GetGraph());
 
-  ///Below removed b/c it counts Coll Detection too fine grained.  We have decided 
-  ///to only keep Total times Cfg::isCollision is called.  This makes the 'price' for a 
+  ///Below removed b/c it counts Coll Detection too fine grained.  We have decided
+  ///to only keep Total times Cfg::isCollision is called.  This makes the 'price' for a
   ///free node the same as a collision node.  Will be added back after collision detection
   ///counting is properly fixed     --Roger 9/17/2005
   /*
      _os << endl << endl << "Collision Detection Exact Counts:" << endl;
-     for (i=0, iter=CollDetCountByName.begin(); iter != CollDetCountByName.end(); iter++, i++) 
+     for (i=0, iter=CollDetCountByName.begin(); iter != CollDetCountByName.end(); iter++, i++)
      {
      total+=iter->second;
      _os << i << ") " << iter->second << " ";
@@ -362,14 +363,14 @@ PrintDataLine(ostream& _myostream, RoadmapType* _rmap, int _showColumnHeaders) {
     if (ccStats[i].first == 1) ++sumIsolatedNodes;
   _myostream << sumIsolatedNodes << " ";
 
-  int sumCDcalls=0; 
+  int sumCDcalls=0;
   for(map<string, unsigned long int>::const_iterator M = m_numCollDetCalls.begin(); M != m_numCollDetCalls.end(); ++M)
     sumCDcalls += M->second;
   _myostream << sumCDcalls << " ";
 
   int sumAtt=0;
   int sumCD =0;
-  
+
   std::map<string, boost::tuple<unsigned long int, unsigned long int, unsigned long int> >::const_iterator iter1;
   for(iter1 = m_lpInfo.begin(); iter1 != m_lpInfo.end(); ++iter1) {
     sumAtt += iter1->second.get<0>();
@@ -419,7 +420,7 @@ StatClass::ComputeIntraCCFeatures(RoadmapType* _rdmp, Environment* _env, Distanc
       cciCfgs.push_back((*(_rdmp->GetGraph()->find_vertex(*itr))).property());
 
     if (cciCfgs.size() > 1) {
-      //compute shortest, longest, mean, and std-dev (sigma) distances 
+      //compute shortest, longest, mean, and std-dev (sigma) distances
       //between nodes for cci
 
       double cciMinIntraCCDist = 0;
@@ -452,7 +453,7 @@ StatClass::ComputeIntraCCFeatures(RoadmapType* _rdmp, Environment* _env, Distanc
         cciSigmaIntraCCDist /= (nPairs-1);
       cciSigmaIntraCCDist = sqrt(cciSigmaIntraCCDist);
 
-      //compute shortest, longest, mean and std-dev (sigma) edge sizes 
+      //compute shortest, longest, mean and std-dev (sigma) edge sizes
       //in the component
       vector<pair<VID,VID> > cciEdges;
       cMap.reset();

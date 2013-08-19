@@ -556,13 +556,14 @@ Query<MPTraits>::MedialAxisSmooth(){
   //Smooth() should prevent the call of this function whenever it is empty
   if(this->m_debug) cout << "\n*M* Executing Query::MedialAxisSmooth()" << endl;
 
-  LocalPlannerPointer maLP = this->GetMPProblem()->GetLocalPlanner(m_malpLabel);
-  bool result = maLP->GetName()=="MedialAxisLP";
-  if(result){
+  MedialAxisLP<MPTraits>* maLP = dynamic_cast<MedialAxisLP<MPTraits>*>(
+      this->GetMPProblem()->GetLocalPlanner(m_malpLabel).get());
+  if(maLP){
+    bool result = true;
     StatClass* stats = this->GetMPProblem()->GetStatClass();
     GraphType* graph = this->GetMPProblem()->GetRoadmap()->GetGraph();
     shared_ptr<Boundary> bBox = this->GetMPProblem()->GetEnvironment()->GetBoundary();
-    MedialAxisUtility<MPTraits> mau = dynamic_cast<MedialAxisLP<MPTraits>*>(maLP.get())->GetMedialAxisUtility();
+    MedialAxisUtility<MPTraits>& mau = maLP->GetMedialAxisUtility();
 
     if(this->m_recordKeep) stats->StartClock("Medial Axis Path Smoother");
     size_t n = m_pathVIDs.size();
@@ -608,7 +609,7 @@ Query<MPTraits>::MedialAxisSmooth(){
         //Connect the nodes that are already in the medial axis
         i = 1;
         while(result && i<n){
-          result = maLP->IsConnected(env, *stats, dm, pushedNodes[i-1], pushedNodes[i], &tmpOutput, posRes, oriRes, true, true, true);
+          result = maLP->LocalPlannerMethod<MPTraits>::IsConnected(env, *stats, dm, pushedNodes[i-1], pushedNodes[i], &tmpOutput, posRes, oriRes, true, true, true);
           if(result){
             AddToPath(&tmpOutput, pushedNodes[i]);
           }

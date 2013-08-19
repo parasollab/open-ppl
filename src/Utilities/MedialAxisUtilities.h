@@ -453,7 +453,7 @@ ClearanceUtility<MPTraits>::ApproxCollisionInfo(CfgType& _cfg, CfgType& _clrCfg,
     // For Each Ray
     size_t i = 0;
     for(CIT incrIT = incr.begin(), tickIT = tick.begin();
-        incrIT!=incr.end() || tickIT!=tick.end(); ++incrIT, ++tickIT) {
+        incrIT!=incr.end() && tickIT!=tick.end(); ++incrIT, ++tickIT) {
       *tickIT += *incrIT;
       currInside = vcm->IsInsideObstacle(*tickIT, env, tmpInfo);
       currValidity = vcm->IsValid(*tickIT, env, *stats, tmpInfo, &call);

@@ -403,16 +403,19 @@ class SimilarStructureSampler : public SamplerMethod<MPTraits>
            _cfgOut.push_back(similar_cfg);
            if(this->m_debug)
              log << "1" << endl;
-        } else if(vcm->IsValid(similar_cfg, env, Stat, cdInfo, &calle)) {
+        }
+        else if(vcm->IsValid(similar_cfg, env, Stat, cdInfo, &calle)) {
           Stat.IncNodesGenerated(this->GetNameAndLabel());
           _cfgOut.push_back(similar_cfg);
           if(this->m_debug)
             log << "1" << endl;
-        } else {
+        }
+        else {
           if(m_saveInvalid)
             _cfgCol.push_back(similar_cfg);
           if(this->m_debug)
-            log << "0" << endl; continue;
+            log << "0" << endl;
+          continue;
         }
       }
       log.close();

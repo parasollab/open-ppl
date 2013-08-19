@@ -501,7 +501,7 @@ MultiBody::Read(istream& _is, bool _debug) {
     string connectionTag = ReadFieldString(_is, "Connections tag");
     int connectionCount = ReadField<int>(_is, "Number of Connections");
 
-    for(int i=0; i<connectionCount; i++) {
+    for(int i=0; i<connectionCount && _is; i++) {
       //add connection info to multibody connection map
       shared_ptr<Connection> c(new Connection(this));
       jointMap.push_back(c);

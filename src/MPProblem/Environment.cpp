@@ -64,7 +64,7 @@ Environment::Read(string _filename) {
   int multibodyCount = ReadField<int>(ifs, "Number of Multibodies");
 
   //parse and construct each multibody
-  for (int m=0; m<multibodyCount; m++) {
+  for (int m=0; m<multibodyCount && ifs; m++) {
     shared_ptr<MultiBody> mb(new MultiBody());
     mb->Read(ifs, false/*m_debug*/);
 

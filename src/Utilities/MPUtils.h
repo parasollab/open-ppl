@@ -533,7 +533,7 @@ struct DistanceCompareFirst : public binary_function<P, P, bool> {
 
   Environment* m_env;
   DistanceMetricPointer m_dm;
-  typename P::first_type m_cfg;
+  const typename P::first_type& m_cfg;
 
   DistanceCompareFirst(Environment* _e, DistanceMetricPointer _d, const typename P::first_type& _c) :
     m_env(_e), m_dm(_d), m_cfg(_c) {}

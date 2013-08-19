@@ -92,29 +92,27 @@ class RoadmapChangeEvent {
     const RemoveVertexEvent* GetRemoveVertexEvent() const;
 
   protected:
-    BaseChangeEvent* event;
+    shared_ptr<BaseChangeEvent> event;
 };
 
 template<typename CFG, typename WEIGHT>
-RoadmapChangeEvent<CFG, WEIGHT>::RoadmapChangeEvent() : event(NULL) {
+RoadmapChangeEvent<CFG, WEIGHT>::RoadmapChangeEvent() {
 }
 
 template<typename CFG, typename WEIGHT>
-RoadmapChangeEvent<CFG, WEIGHT>::RoadmapChangeEvent(ChangeType type, const CFG& _cfg, VID _vid) : event(NULL) {
+RoadmapChangeEvent<CFG, WEIGHT>::RoadmapChangeEvent(ChangeType type, const CFG& _cfg, VID _vid) {
   if (type == ADD_VERTEX)
-    event = new AddVertexEvent(_cfg, _vid);
+    event = shared_ptr<BaseChangeEvent>(new AddVertexEvent(_cfg, _vid));
 }
 
 template<typename CFG, typename WEIGHT>
-RoadmapChangeEvent<CFG, WEIGHT>::RoadmapChangeEvent(ChangeType type, VID _vid) : event(NULL) {
+RoadmapChangeEvent<CFG, WEIGHT>::RoadmapChangeEvent(ChangeType type, VID _vid) {
   if (type == REMOVE_VERTEX)
-    event = new RemoveVertexEvent(_vid);
+    event = shared_ptr<BaseChangeEvent>(new RemoveVertexEvent(_vid));
 }
 
 template<typename CFG, typename WEIGHT>
-RoadmapChangeEvent<CFG, WEIGHT>::~RoadmapChangeEvent() {
-  delete event;
-}
+RoadmapChangeEvent<CFG, WEIGHT>::~RoadmapChangeEvent() {}
 
 template<typename CFG, typename WEIGHT>
 bool

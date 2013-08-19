@@ -28,7 +28,7 @@ namespace pmpl_detail {
           NF* m_memory;
           RDMP* m_rdmp;
           I m_first, m_last;
-          CFG m_cfg;
+          const CFG& m_cfg;
           O m_output;
       };
 

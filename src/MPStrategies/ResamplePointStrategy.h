@@ -130,7 +130,7 @@ ResamplePointStrategy<MPTraits>::Initialize() {
     getline(inPath, line); //skip header line
   }
   inPath >> numCfgs;
-  for(size_t i=0; i<numCfgs; ++i) {
+  for(size_t i=0; i<numCfgs && inPath; ++i) {
     CfgType c;
     inPath >> c;
     m_pathCfgs.push_back(c);

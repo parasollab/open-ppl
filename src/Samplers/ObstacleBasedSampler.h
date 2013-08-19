@@ -21,12 +21,12 @@ class ObstacleBasedSampler : public SamplerMethod<MPTraits> {
     ObstacleBasedSampler(Environment* _env = NULL, string _vcLabel = "", string _dmLabel = "",
         int _free = 1, int _coll = 0, double _step = 0, bool _useBBX = true, string _pointSelection = "cspace")
       : m_vcLabel(_vcLabel), m_dmLabel(_dmLabel), m_nShellsFree(_free), m_nShellsColl(_coll), m_stepSize(_step), m_useBBX(_useBBX), m_pointSelection(_pointSelection) {
-      this->SetName("ObstacleBasedSampler");
-      // If the step size is unreasonable, set it to the minimum
-      if(m_stepSize <= 0.0)
-        if(_env != NULL)
-          m_stepSize = min(_env->GetPositionRes(), _env->GetOrientationRes());
-    }
+        this->SetName("ObstacleBasedSampler");
+        // If the step size is unreasonable, set it to the minimum
+        if(m_stepSize <= 0.0)
+          if(_env != NULL)
+            m_stepSize = min(_env->GetPositionRes(), _env->GetOrientationRes());
+      }
 
     ObstacleBasedSampler(MPProblemType* _problem, XMLNodeReader& _node) : SamplerMethod<MPTraits>(_problem, _node) {
       this->SetName("ObstacleBasedSampler");
@@ -52,8 +52,8 @@ class ObstacleBasedSampler : public SamplerMethod<MPTraits> {
 
       // Check if the read point_selection is valid
       if(m_pointSelection != "cspace" && m_pointSelection != "cM" && m_pointSelection != "rV" &&
-             m_pointSelection != "rT" && m_pointSelection != "rW" && m_pointSelection != "eV" &&
-             m_pointSelection != "rV_rT" && m_pointSelection != "rV_rW" && m_pointSelection != "all") {
+          m_pointSelection != "rT" && m_pointSelection != "rW" && m_pointSelection != "eV" &&
+          m_pointSelection != "rV_rT" && m_pointSelection != "rV_rW" && m_pointSelection != "all") {
         cerr << "Select a valid point selection type first.\
           cspace, cM, rV ,rT, rW, eV, rV_rT, rV_rW, and all are valid selection types. Exiting." << endl;
         exit(-1);
@@ -73,49 +73,49 @@ class ObstacleBasedSampler : public SamplerMethod<MPTraits> {
 
     // Generates and adds shells to their containers
     template<typename OutputIterator>
-    OutputIterator GenerateShells(Environment* _env, shared_ptr<Boundary> _bb, StatClass& _stats,
+      OutputIterator GenerateShells(Environment* _env, shared_ptr<Boundary> _bb, StatClass& _stats,
           CfgType& _cFree, CfgType& _cColl, CfgType& _incr, OutputIterator _result) {
 
-      string callee = this->GetNameAndLabel() + "::GenerateShells()";
-      ValidityCheckerPointer vcm = this->GetMPProblem()->GetValidityChecker(m_vcLabel);
-      CDInfo cdInfo;
-      if(this->m_debug)
-        cout << "nShellsColl = " << m_nShellsColl << endl;
+        string callee = this->GetNameAndLabel() + "::GenerateShells()";
+        ValidityCheckerPointer vcm = this->GetMPProblem()->GetValidityChecker(m_vcLabel);
+        CDInfo cdInfo;
+        if(this->m_debug)
+          cout << "nShellsColl = " << m_nShellsColl << endl;
 
-      // Add free shells
-      for(int i = 0; i < m_nShellsFree; i++) {
-        // If the shell is valid
-        if(_env->InBounds(_cFree, _bb) &&
-            vcm->IsValid(_cFree, _env, _stats, cdInfo, &callee)) {
-          if(this->m_recordKeep)
-            _stats.IncNodesGenerated(this->GetNameAndLabel());
-          // Add shell
-          *_result = _cFree;
-          _result++;
+        // Add free shells
+        for(int i = 0; i < m_nShellsFree; i++) {
+          // If the shell is valid
+          if(_env->InBounds(_cFree, _bb) &&
+              vcm->IsValid(_cFree, _env, _stats, cdInfo, &callee)) {
+            if(this->m_recordKeep)
+              _stats.IncNodesGenerated(this->GetNameAndLabel());
+            // Add shell
+            *_result = _cFree;
+            _result++;
+          }
+          // Get next shell
+          _cFree += _incr;
         }
-        // Get next shell
-        _cFree += _incr;
-      }
 
-      // Reverse direction of _incr
-      _incr = -_incr;
+        // Reverse direction of _incr
+        _incr = -_incr;
 
-      // Add collision shells
-      for(int i = 0; i < m_nShellsColl; i++) {
-        // If the shell is valid
-        if(_env->InBounds(_cColl, _bb) &&
-            !vcm->IsValid(_cColl, _env, _stats, cdInfo, &callee)) {
-          if(this->m_recordKeep)
-            _stats.IncNodesGenerated(this->GetNameAndLabel());
-          // Add shell
-          *_result = _cColl;
-          _result++;
+        // Add collision shells
+        for(int i = 0; i < m_nShellsColl; i++) {
+          // If the shell is valid
+          if(_env->InBounds(_cColl, _bb) &&
+              !vcm->IsValid(_cColl, _env, _stats, cdInfo, &callee)) {
+            if(this->m_recordKeep)
+              _stats.IncNodesGenerated(this->GetNameAndLabel());
+            // Add shell
+            *_result = _cColl;
+            _result++;
+          }
+          // Get next shell
+          _cColl += _incr;
         }
-        // Get next shell
-        _cColl += _incr;
+        return _result;
       }
-      return _result;
-    }
 
     virtual bool Sampler(Environment* _env, shared_ptr<Boundary> _bb, StatClass& _stats,
         CfgType& _cfgIn, vector<CfgType>& _cfgOut, vector<CfgType>& _cfgCol) {

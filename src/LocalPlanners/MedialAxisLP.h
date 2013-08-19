@@ -30,36 +30,36 @@ class MedialAxisLP : public LocalPlannerMethod<MPTraits> {
 
     virtual void PrintOptions(ostream& _os);
 
-    MedialAxisUtility<MPTraits> GetMedialAxisUtility() {return m_medialAxisUtility;}
+    MedialAxisUtility<MPTraits>& GetMedialAxisUtility() {return m_medialAxisUtility;}
 
     virtual bool IsConnected(Environment* _env, StatClass& _stats,
-        DistanceMetricPointer _dm, const CfgType& _c1, const CfgType& _c2, 
-        CfgType& _col, LPOutput<MPTraits>* _lpOutput, double _positionRes, 
-        double _orientationRes, bool _checkCollision=true, 
+        DistanceMetricPointer _dm, const CfgType& _c1, const CfgType& _c2,
+        CfgType& _col, LPOutput<MPTraits>* _lpOutput, double _positionRes,
+        double _orientationRes, bool _checkCollision=true,
         bool _savePath=true, bool _saveFailedPath=true);
 
-    virtual vector<CfgType> ReconstructPath(Environment* _env, DistanceMetricPointer _dm, 
-        const CfgType& _c1, const CfgType& _c2, 
-        const vector<CfgType>& _intermediates, 
+    virtual vector<CfgType> ReconstructPath(Environment* _env, DistanceMetricPointer _dm,
+        const CfgType& _c1, const CfgType& _c2,
+        const vector<CfgType>& _intermediates,
         double _posRes, double _oriRes);
 
   protected:
     void Init();
 
     bool IsConnectedRec(Environment* _env, StatClass& _stats,
-        DistanceMetricPointer _dm, const CfgType& _c1, const CfgType& _c2, 
+        DistanceMetricPointer _dm, const CfgType& _c1, const CfgType& _c2,
         CfgType& _col, LPOutput<MPTraits>* _lpOutput,
         double _posRes, double _oriRes, int _itr=0);
 
     bool EpsilonClosePath(Environment* _env, StatClass& _stats, DistanceMetricPointer _dm,
         const CfgType& _c1, const CfgType& _c2,
-        CfgType& _mid, LPOutput<MPTraits>* _lpOutput, 
+        CfgType& _mid, LPOutput<MPTraits>* _lpOutput,
         double _posRes, double _oriRes);
 
-    MedialAxisUtility<MPTraits> m_medialAxisUtility; //stores operations and variables for medial axis 
+    MedialAxisUtility<MPTraits> m_medialAxisUtility; //stores operations and variables for medial axis
     double m_macEpsilon; //some epsilon
     int m_maxIter; //maximum depth of recursion
-    
+
     MedialAxisClearanceValidity<MPTraits> m_macVCM;  //mac validity checker
     StraightLine<MPTraits> m_envLP, m_macLP;         //straight line local planners
 
@@ -69,16 +69,16 @@ class MedialAxisLP : public LocalPlannerMethod<MPTraits> {
 // Definitions for Constructors and Destructor
 template<class MPTraits>
 MedialAxisLP<MPTraits>::MedialAxisLP(MedialAxisUtility<MPTraits> _medialAxisUtility,
-    double _macEpsilon, int _maxIter) : 
-  LocalPlannerMethod<MPTraits>(), 
-  m_medialAxisUtility(_medialAxisUtility), 
+    double _macEpsilon, int _maxIter) :
+  LocalPlannerMethod<MPTraits>(),
+  m_medialAxisUtility(_medialAxisUtility),
   m_macEpsilon(_macEpsilon), m_maxIter(_maxIter) {
     this->SetMPProblem(_medialAxisUtility.GetMPProblem());
     Init();
   }
 
-template<class MPTraits> 
-MedialAxisLP<MPTraits>::MedialAxisLP(MPProblemType* _problem, XMLNodeReader& _node) : 
+template<class MPTraits>
+MedialAxisLP<MPTraits>::MedialAxisLP(MPProblemType* _problem, XMLNodeReader& _node) :
   LocalPlannerMethod<MPTraits>(_problem, _node), m_medialAxisUtility(_problem, _node) {
     m_macEpsilon = _node.numberXMLParameter("macEpsilon", false, 0.1, 0.0, 1.0, "Epsilon-Close to the MA");
     m_maxIter = _node.numberXMLParameter("maxIter", false, 2, 1, 1000, "Maximum Number of Recursive Iterations");
@@ -86,7 +86,7 @@ MedialAxisLP<MPTraits>::MedialAxisLP(MPProblemType* _problem, XMLNodeReader& _no
     Init();
   }
 
-template<class MPTraits> 
+template<class MPTraits>
 MedialAxisLP<MPTraits>::~MedialAxisLP() { }
 
 template<class MPTraits>
@@ -100,7 +100,7 @@ MedialAxisLP<MPTraits>::Init(){
 
   //Local planner methods
   m_envLP = StraightLine<MPTraits>(m_medialAxisUtility.GetValidityCheckerLabel(), true);
-  m_macLP = StraightLine<MPTraits>("MAC::" + this->GetNameAndLabel(), true);    
+  m_macLP = StraightLine<MPTraits>("MAC::" + this->GetNameAndLabel(), true);
 
   //make sure MPProblems point to the correct place
   m_macVCM.SetMPProblem(this->GetMPProblem());
@@ -108,8 +108,8 @@ MedialAxisLP<MPTraits>::Init(){
   m_macLP.SetMPProblem(this->GetMPProblem());
 }
 
-template<class MPTraits> 
-void 
+template<class MPTraits>
+void
 MedialAxisLP<MPTraits>::PrintOptions(ostream& _os) {
   LocalPlannerMethod<MPTraits>::PrintOptions(_os);
   m_medialAxisUtility.PrintOptions(_os);
@@ -121,15 +121,15 @@ MedialAxisLP<MPTraits>::PrintOptions(ostream& _os) {
 }
 
 // Main IsConnected Function
-template<class MPTraits> 
-bool 
+template<class MPTraits>
+bool
 MedialAxisLP<MPTraits>::IsConnected(Environment* _env,
     StatClass& _stats, DistanceMetricPointer _dm,
-    const CfgType& _c1, const CfgType& _c2, 
+    const CfgType& _c1, const CfgType& _c2,
     CfgType& _col, LPOutput<MPTraits>* _lpOutput,
     double _positionRes, double _orientationRes,
-    bool _checkCollision, bool _savePath, bool _saveFailedPath) {  
-  
+    bool _checkCollision, bool _savePath, bool _saveFailedPath) {
+
   if(!m_macVCMAdded){
     this->GetMPProblem()->AddValidityChecker(ValidityCheckerPointer(&m_macVCM), "MAC::" + this->GetNameAndLabel());
     m_macVCMAdded = true;
@@ -170,7 +170,7 @@ MedialAxisLP<MPTraits>::IsConnected(Environment* _env,
   connected = IsConnectedRec(_env, _stats, _dm, _c1, _c2, _col, _lpOutput, _positionRes, _orientationRes, 1);
 
   if(connected) {
-    _stats.IncLPConnections(this->GetNameAndLabel() );  
+    _stats.IncLPConnections(this->GetNameAndLabel() );
     _lpOutput->edge.first.SetWeight(_lpOutput->path.size());
     _lpOutput->edge.second.SetWeight(_lpOutput->path.size());
     _lpOutput->AddIntermediatesToWeights(this->m_saveIntermediates);
@@ -186,11 +186,11 @@ MedialAxisLP<MPTraits>::IsConnected(Environment* _env,
 }
 
 // Recursive IsConnected function
-template<class MPTraits> 
-bool 
-MedialAxisLP<MPTraits>::IsConnectedRec(Environment* _env, 
-    StatClass& _stats, DistanceMetricPointer _dm, 
-    const CfgType& _c1, const CfgType& _c2, 
+template<class MPTraits>
+bool
+MedialAxisLP<MPTraits>::IsConnectedRec(Environment* _env,
+    StatClass& _stats, DistanceMetricPointer _dm,
+    const CfgType& _c1, const CfgType& _c2,
     CfgType& _col, LPOutput<MPTraits>* _lpOutput,
     double _posRes, double _oriRes, int _itr) {
 
@@ -214,8 +214,8 @@ MedialAxisLP<MPTraits>::IsConnectedRec(Environment* _env,
     if(m_envLP.IsConnected(_env, _stats, _dm, _c1, _c2, _col, &tmpLPOutput, _posRes, _oriRes, true, true, true)) {
       for(size_t j=0; j<tmpLPOutput.path.size(); ++j)
         _lpOutput->path.push_back(tmpLPOutput.path[j]);
-      return true;  
-    } 
+      return true;
+    }
     else {
       return false;
     }
@@ -259,15 +259,15 @@ MedialAxisLP<MPTraits>::IsConnectedRec(Environment* _env,
   _lpOutput->path.push_back(_c2);
 
   VDClearLastTemp();
-  _stats.IncLPCollDetCalls(this->GetNameAndLabel(), cdCounter);  
+  _stats.IncLPCollDetCalls(this->GetNameAndLabel(), cdCounter);
   return true;
 };
 
-template<class MPTraits> 
-bool 
+template<class MPTraits>
+bool
 MedialAxisLP<MPTraits>::EpsilonClosePath(Environment* _env,
-    StatClass& _stats, DistanceMetricPointer _dm, 
-    const CfgType& _c1, const CfgType& _c2, 
+    StatClass& _stats, DistanceMetricPointer _dm,
+    const CfgType& _c1, const CfgType& _c2,
     CfgType& _mid, LPOutput<MPTraits>* _lpOutput,
     double _posRes, double _oriRes) {
 
@@ -285,7 +285,7 @@ MedialAxisLP<MPTraits>::EpsilonClosePath(Environment* _env,
     _mid.FindIncrement( _c1, _c2, &nTicks, _posRes, _oriRes);
     for(size_t i=_mid.PosDOF(); i<_mid.DOF(); i++) {
       if( _mid[i] > 0.5 )
-        _mid[i] -= 1.0; 
+        _mid[i] -= 1.0;
     }
 
     _mid *= ((double)nTicks/2.0);
@@ -314,7 +314,7 @@ MedialAxisLP<MPTraits>::EpsilonClosePath(Environment* _env,
   if(passed) {
     for(size_t j=0; j<testLPOutput.path.size(); ++j)
       maLPOutput.path.push_back(testLPOutput.path[j]);
-  } 
+  }
   else {
     m_macLP.IsConnected(_env, _stats, _dm, _c1, _c2, col, &maLPOutput, posEps, oriEps, false, true, true);
   }
@@ -328,13 +328,13 @@ MedialAxisLP<MPTraits>::EpsilonClosePath(Environment* _env,
     if(history.size() == 1 && !(history[0].first == history[0].second) ) { // Validity Checker didn't push properly
       if(this->m_debug) cout << "VC didn't push properly" << endl;
       _mid = history[0].second;
-    } 
+    }
     else {
       if(this->m_debug) cout << "VC did push properly" << endl;
       _mid = maLPOutput.path[maLPOutput.path.size()/2];
       m_medialAxisUtility.PushToMedialAxis(_mid, _env->GetBoundary());
     }
-  } 
+  }
   else {
     if(this->m_debug) cout << "Finding mid from history" << endl;
     for(size_t i=0; i<history.size(); ++i) {
@@ -363,7 +363,7 @@ MedialAxisLP<MPTraits>::EpsilonClosePath(Environment* _env,
           tmpLPOutput.path.push_back(testLPOutput.path[j]);
         if(i != maLPOutput.path.size()-2)
           tmpLPOutput.path.push_back(maLPOutput.path[i+1]);
-      } 
+      }
       else {
         passed = false;
         break;
@@ -375,18 +375,18 @@ MedialAxisLP<MPTraits>::EpsilonClosePath(Environment* _env,
       for (size_t j=0; j<tmpLPOutput.path.size(); ++j)
         _lpOutput->path.push_back(tmpLPOutput.path[j]);
       return true;
-    } 
+    }
     else {
       return false;
     }
-  } 
+  }
   else
     return false;
 
 }
 
 template<class MPTraits>
-vector<typename MPTraits::CfgType> 
+vector<typename MPTraits::CfgType>
 MedialAxisLP<MPTraits>::ReconstructPath(Environment* _env,
     DistanceMetricPointer _dm, const CfgType& _c1,
     const CfgType& _c2, const vector<CfgType>& _intermediates,
