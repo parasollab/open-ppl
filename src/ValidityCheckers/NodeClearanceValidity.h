@@ -16,9 +16,9 @@ class NodeClearanceValidity : public ValidityCheckerMethod<MPTraits> {
     NodeClearanceValidity(MPProblemType* _problem, XMLNodeReader& _node);
     virtual ~NodeClearanceValidity();
 
-    virtual void PrintOptions(ostream& _os);
-    
-    virtual bool IsValidImpl(CfgType& _cfg, Environment* _env, StatClass& _stats, 
+    virtual void PrintOptions(ostream& _os) const;
+
+    virtual bool IsValidImpl(CfgType& _cfg, Environment* _env, StatClass& _stats,
         CDInfo& _cdInfo, string* _callName);
 
   private:
@@ -27,7 +27,7 @@ class NodeClearanceValidity : public ValidityCheckerMethod<MPTraits> {
 };
 
 template <class MPTraits>
-NodeClearanceValidity<MPTraits>::NodeClearanceValidity(double _delta, string _nfLabel) : 
+NodeClearanceValidity<MPTraits>::NodeClearanceValidity(double _delta, string _nfLabel) :
   ValidityCheckerMethod<MPTraits>(), m_delta(_delta), m_nfLabel(_nfLabel) {
     this->m_name = "NodeClearanceValidity";
   }
@@ -37,7 +37,7 @@ NodeClearanceValidity<MPTraits>::NodeClearanceValidity(MPProblemType* _problem, 
   ValidityCheckerMethod<MPTraits>(_problem, _node) {
     this->m_name = "NodeClearanceValidity";
     m_delta = _node.numberXMLParameter("delta", true, 1.0, 0.0, MAX_DBL, "Clearance from every other node");
-    m_nfLabel = _node.stringXMLParameter("nfLabel", true, "", "Neighborhood Finder to be used"); 
+    m_nfLabel = _node.stringXMLParameter("nfLabel", true, "", "Neighborhood Finder to be used");
   }
 
 template <class MPTraits>
@@ -45,7 +45,7 @@ NodeClearanceValidity<MPTraits>::~NodeClearanceValidity() {}
 
 template <class MPTraits>
 void
-NodeClearanceValidity<MPTraits>::PrintOptions(ostream& _os){
+NodeClearanceValidity<MPTraits>::PrintOptions(ostream& _os) const {
   ValidityCheckerMethod<MPTraits>::PrintOptions(_os);
   _os << "\tdelta::" << m_delta
     << "\tnfLabel::" << m_nfLabel << endl;
@@ -53,7 +53,7 @@ NodeClearanceValidity<MPTraits>::PrintOptions(ostream& _os){
 
 template <class MPTraits>
 bool
-NodeClearanceValidity<MPTraits>::IsValidImpl(CfgType& _cfg, Environment* _env, StatClass& _stats, 
+NodeClearanceValidity<MPTraits>::IsValidImpl(CfgType& _cfg, Environment* _env, StatClass& _stats,
     CDInfo& _cdInfo, string* _callName) {
   /* TODO: remove ifdef when constness problem in STAPL is fixed*/
 #ifndef _PARALLEL

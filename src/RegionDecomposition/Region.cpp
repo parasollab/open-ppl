@@ -28,12 +28,12 @@ Region::Region(shared_ptr<Boundary> _bbox, std::vector<VID>& _ids ){
   }
 }
 
-shared_ptr<Boundary> 
+shared_ptr<Boundary>
 Region::GetBoundary() const{
   return m_bb;
 }
 
-const std::vector<pair<VID, size_t> >& 
+const std::vector<pair<VID, size_t> >&
 Region::GetCCs() const{
   return m_ccs;
 }
@@ -72,14 +72,14 @@ std::vector<VID>
 Region::GetAllVIDs() const{
   vector<VID> allVIDs;
   return allVIDs;
-} 
+}
 
-bool 
+bool
 Region::operator==(const Region& _a) const{
   return (m_bb == _a.m_bb) &&
     (m_ccs == _a.m_ccs) &&
     (m_vids == _a.m_vids);
-} 
+}
 
 ostream& operator<< (ostream& _os, const Region& _r) {
   _r.Print(_os);
@@ -96,7 +96,7 @@ void
 Region::
 Print(ostream& _os) const  {
   typedef std::vector<VID>::const_iterator itr;
-  _os << "  " << "Region Weight :" << m_vids.size() << " "; 
+  _os << "  " << "Region Weight :" << m_vids.size() << " ";
   _os << "Region VIDs: ";
   for(itr vit = m_vids.begin(); vit!=m_vids.end(); vit++){
     _os << "  " << *vit<< "";

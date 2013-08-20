@@ -28,7 +28,7 @@ class MedialAxisLP : public LocalPlannerMethod<MPTraits> {
     MedialAxisLP(MPProblemType* _problem, XMLNodeReader& _node);
     virtual ~MedialAxisLP();
 
-    virtual void PrintOptions(ostream& _os);
+    virtual void PrintOptions(ostream& _os) const;
 
     MedialAxisUtility<MPTraits>& GetMedialAxisUtility() {return m_medialAxisUtility;}
 
@@ -110,7 +110,7 @@ MedialAxisLP<MPTraits>::Init(){
 
 template<class MPTraits>
 void
-MedialAxisLP<MPTraits>::PrintOptions(ostream& _os) {
+MedialAxisLP<MPTraits>::PrintOptions(ostream& _os) const {
   LocalPlannerMethod<MPTraits>::PrintOptions(_os);
   m_medialAxisUtility.PrintOptions(_os);
   _os << "\tcdLPMethod = " << m_envLP.GetName() << endl;

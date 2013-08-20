@@ -1,7 +1,7 @@
 /**
 * HierarchicalLP.h
 *
-* This class perfoms Hierarchical Local Planner which tries to apply Local Planners 
+* This class perfoms Hierarchical Local Planner which tries to apply Local Planners
 * one by one till one of them works or all of them fail.
 */
 
@@ -19,18 +19,18 @@ class HierarchicalLP: public LocalPlannerMethod<MPTraits>{
     typedef typename MPTraits::MPProblemType MPProblemType;
     typedef typename MPProblemType::DistanceMetricPointer DistanceMetricPointer;
     typedef typename MPProblemType::LocalPlannerPointer LocalPlannerPointer;
-    
+
     HierarchicalLP(const vector<string>& _lpLabels = vector<string>());
-    
+
     HierarchicalLP(MPProblemType* _problem, XMLNodeReader& _node);
-    
-    virtual void PrintOptions(ostream& _os);
+
+    virtual void PrintOptions(ostream& _os) const;
 
     virtual bool IsConnected(Environment* _env, StatClass& _stats, DistanceMetricPointer _dm,
         const CfgType& _c1, const CfgType& _c2, CfgType& _col, LPOutput<MPTraits>* _lpOutput,
         double _posRes, double _oriRes, bool _checkCollision = true,
         bool _savePath = false, bool _saveFailedPath = false);
-  private:    
+  private:
     vector<string> m_lpLabels;
 };
 
@@ -40,7 +40,7 @@ HierarchicalLP<MPTraits>::HierarchicalLP(const vector<string>& _lpLabels) : m_lp
 }
 
 template<class MPTraits>
-HierarchicalLP<MPTraits>::HierarchicalLP(MPProblemType* _problem, XMLNodeReader& _node): 
+HierarchicalLP<MPTraits>::HierarchicalLP(MPProblemType* _problem, XMLNodeReader& _node):
   LocalPlannerMethod<MPTraits>(_problem, _node){
     this->SetName("HierarchicalLP");
     XMLNodeReader::childiterator citr;
@@ -57,11 +57,10 @@ HierarchicalLP<MPTraits>::HierarchicalLP(MPProblemType* _problem, XMLNodeReader&
 
 template<class MPTraits>
 void
-HierarchicalLP<MPTraits>::PrintOptions(ostream& _os){
+HierarchicalLP<MPTraits>::PrintOptions(ostream& _os) const {
   LocalPlannerMethod<MPTraits>::PrintOptions(_os);
-  for(vector<string>::iterator it = m_lpLabels.begin(); it != m_lpLabels.end(); it++){
+  for(vector<string>::const_iterator it = m_lpLabels.begin(); it != m_lpLabels.end(); it++)
     _os <<"\t "<<*it << "\n";
-  }
   _os <<endl;
 }
 

@@ -12,7 +12,7 @@ class ScaledEuclideanDistance : public EuclideanDistance<MPTraits> {
     ScaledEuclideanDistance(typename MPTraits::MPProblemType* _problem, XMLNodeReader& _node);
     virtual ~ScaledEuclideanDistance();
 
-    void PrintOptions(ostream& _os) const;
+    virtual void PrintOptions(ostream& _os) const;
 
     virtual double Distance(Environment* _env, const CfgType& _c1, const CfgType& _c2);
 

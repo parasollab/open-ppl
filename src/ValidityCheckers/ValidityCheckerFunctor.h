@@ -5,9 +5,9 @@ template<class MPTraits>
 class ValidityCheckerFunctor {
   public:
     typedef typename MPTraits::CfgType CfgType;
-    ValidityCheckerFunctor(CfgType& _cfg, Environment* _env, StatClass& _stats, 
-        CDInfo& _cdInfo, string* _callName) : 
-      m_cfg(_cfg), m_env(_env), m_stats(_stats), m_cdInfo(_cdInfo), 
+    ValidityCheckerFunctor(CfgType& _cfg, Environment* _env, StatClass& _stats,
+        CDInfo& _cdInfo, string* _callName) :
+      m_cfg(_cfg), m_env(_env), m_stats(_stats), m_cdInfo(_cdInfo),
       m_callName(_callName) {}
 
     ~ValidityCheckerFunctor() {}

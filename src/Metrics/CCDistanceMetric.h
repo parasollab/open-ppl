@@ -15,7 +15,7 @@ class CCDistanceMetric : public MetricMethod<MPTraits> {
     CCDistanceMetric(MPProblemType* _problem, XMLNodeReader& _node);
     virtual ~CCDistanceMetric();
 
-    virtual void PrintOptions(ostream& _os);
+    virtual void PrintOptions(ostream& _os) const;
 
     double operator()();
 
@@ -42,14 +42,14 @@ CCDistanceMetric<MPTraits>::~CCDistanceMetric() {
 }
 
 template<class MPTraits>
-void 
-CCDistanceMetric<MPTraits>::PrintOptions(ostream& _os) {
+void
+CCDistanceMetric<MPTraits>::PrintOptions(ostream& _os) const {
   _os << "CC distance" << endl;
   _os << "\tdistance metric = " << m_dmLabel << endl;
 }
 
 template<class MPTraits>
-double 
+double
 CCDistanceMetric<MPTraits>::operator()() {
 
   vector<double> distance;

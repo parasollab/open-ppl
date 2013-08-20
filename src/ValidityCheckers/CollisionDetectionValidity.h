@@ -63,44 +63,30 @@ CollisionDetectionValidity<MPTraits>::CollisionDetectionValidity(typename MPTrai
     m_ignoreIAdjacentLinks  = _node.numberXMLParameter("ignore_i_adjacent_links", false, 1, 0, 100, "number of links to ignore for linkages");
 
     string cdLabel = _node.stringXMLParameter("method",true,"","method");
-    bool methodFound = false;
+
+    if (cdLabel == "BoundingSpheres")
+      m_cdMethod = new BoundingSpheres();
+    else if (cdLabel == "InsideSpheres")
+      m_cdMethod = new InsideSpheres();
 #ifdef USE_RAPID
-    if (cdLabel == "RAPID") {
+    else if (cdLabel == "RAPID")
       m_cdMethod = new Rapid();
-      methodFound = true;
-    }
 #endif
 #ifdef USE_PQP
-    if (cdLabel == "PQP") {
+    else if (cdLabel == "PQP")
       m_cdMethod = new PQP();
-      methodFound = true;
-    }
-    else if (cdLabel == "PQP_SOLID") {
+    else if (cdLabel == "PQP_SOLID")
       m_cdMethod = new PQPSolid();
-      methodFound = true;
-    }
 #endif
 #ifdef USE_VCLIP
-    if (cdLabel == "VCLIP") {
+    else if (cdLabel == "VCLIP")
       m_cdMethod = new VClip();
-      methodFound = true;
-    }
 #endif
 #ifdef USE_SOLID
-    if (cdLabel == "SOLID") {
+    else if (cdLabel == "SOLID")
       m_cdMethod = new Solid();
-      methodFound = true;
-    }
 #endif
-    if (cdLabel == "BoundingSpheres") {
-      m_cdMethod = new BoundingSpheres();
-      methodFound = true;
-    }
-    if (cdLabel == "InsideSpheres") {
-      m_cdMethod = new InsideSpheres();
-      methodFound = true;
-    }
-    if (!methodFound) {
+    else {
       cerr << "Unknown Collision Detection Library Label \"" << cdLabel << "\"" << endl;
       exit(1);
     }

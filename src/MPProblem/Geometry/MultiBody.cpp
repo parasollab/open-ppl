@@ -482,7 +482,7 @@ MultiBody::Read(istream& _is, bool _debug) {
 
     int bodyCount = ReadField<int>(_is, "Body Count");
 
-    for(int i=0; i<bodyCount; ++i) {
+    for(int i=0; i<bodyCount && _is; ++i) {
       //read the free body
       FreeBody free(this);
       _is >> free;

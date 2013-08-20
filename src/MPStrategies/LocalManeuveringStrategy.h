@@ -38,7 +38,7 @@ class LocalManeuveringStrategy : public MPStrategyMethod<MPTraits> {
     virtual void Initialize();
     virtual void Run();
     virtual void Finalize();
-    virtual void PrintOptions(ostream& _os);
+    virtual void PrintOptions(ostream& _os) const;
 
     struct CompareStartTimes {
       bool operator() (const pair<int,int>& _lhs, const pair<int,int>& _rhs) const{
@@ -88,7 +88,7 @@ class LocalManeuveringStrategy : public MPStrategyMethod<MPTraits> {
     //turn at that fraction of its maximum steering angle
     bool TryPlanTowardGoal(size_t& _startTick, size_t _cfgIndex, int _planSteps,
         vector<CfgType>& _potentialPath, Point2d _goal, double _orientationTolerance=0.10, double _divisor=1.0);
-    
+
     //Gets and Sets for all variables
     std::string GetPlanType(){return m_planType;}
     void SetPlanType(string _newPlanType){m_planType = _newPlanType;}
@@ -107,7 +107,7 @@ class LocalManeuveringStrategy : public MPStrategyMethod<MPTraits> {
 
     string GetValidityChecker(){return m_vc;}
     void SetValidityChecker(string _newVC){m_vc = _newVC;}
-    
+
     string GetQueryFile(){return m_query;}
     void SetQueryFile(string _newQueryFile){m_query = _newQueryFile;}
 
@@ -137,7 +137,7 @@ class LocalManeuveringStrategy : public MPStrategyMethod<MPTraits> {
 
     double GetMinForwardPullOutDistMax(){return m_forwardPullOutDistMax;}
     void SetMinForwardPullOutDistMax(double _newDist){m_forwardPullOutDistMax = fabs(_newDist);}
-    
+
     double GetForwardAngleTolerance(){return m_forwardReqAngle;}
     void SetForwardAngleTolerance(double _newAngle){m_forwardReqAngle = NormalizeTheta(fabs(_newAngle));}
 
@@ -146,7 +146,7 @@ class LocalManeuveringStrategy : public MPStrategyMethod<MPTraits> {
 
     double GetForwardPullOutTurnDistMax(){ return m_forwardPullOutTurnDistMax;}
     void SetForwardPullOutTurnDistMax(double _newDist){ m_forwardPullOutTurnDistMax = fabs(_newDist);}
-    
+
     double GetForwardPullOutSteerMin(){return m_forwardPullOutSteerMin;}
     void SetForwardPullOutSteerMin(double _newAngle){m_forwardPullOutSteerMin = NormalizeTheta(fabs(_newAngle));}
 
@@ -179,7 +179,7 @@ class LocalManeuveringStrategy : public MPStrategyMethod<MPTraits> {
 
     double GetDeadLock1RightTurnFreq(){return m_deadlock1RightTurnFreq;}
     void SetDeadLock1RightTurnFreq(double _newFreq){m_deadlock1RightTurnFreq = max(min(1.0, _newFreq),0.0);}
-    
+
     double GetDeadlock1TurnDistMin(){return m_deadlock1TurnDistMin;}
     void GetDeadlock1TurnDistMin(double _newDist){m_deadlock1TurnDistMin = fabs(_newDist);}
 
@@ -191,7 +191,7 @@ class LocalManeuveringStrategy : public MPStrategyMethod<MPTraits> {
 
     double GetDeadlock1TowardGoalDistMax(){return m_deadlock1TowardGoalDistMax;}
     void SetDeadlock1TowardGoalDistMax(double _newDist){m_deadlock1TowardGoalDistMax = fabs(_newDist);}
-    
+
     double GetDeadlock1TurnSteerMin(){return m_deadlock1TurnSteerMin;}
     void SetDeadlock1TurnSteerMin(double _newAngle){m_deadlock1TurnSteerMin = NormalizeTheta(fabs(_newAngle));}
 
@@ -209,7 +209,7 @@ class LocalManeuveringStrategy : public MPStrategyMethod<MPTraits> {
 
     double GetForwardPullInProbability(){return m_pullInForwardProbability;}
     void SetForwardPullInProbability(double _newProb){m_pullInForwardProbability = max(min(1.0,_newProb),0.0);}
-    
+
     double GetBackwardPullInNormalProbability(){return m_pullInNormalBackwardProbability;}
     void SetBackwardPullInNormalProbability(double _newProb){
       m_pullInNormalBackwardProbability = max(min(1.0,_newProb),0.0);}
@@ -222,7 +222,7 @@ class LocalManeuveringStrategy : public MPStrategyMethod<MPTraits> {
     void SetRoots(vector<CfgType>& _roots) { m_roots=_roots; }
     void SetGuidePath(Path3D _gp) { m_guidePath=_gp; }
     bool GetSuccessfulPlanFound() { return m_successfulPlanFound; }
-    vector<CfgType>& GetGeneratedTrajectories() { return m_gbPaths; } 
+    vector<CfgType>& GetGeneratedTrajectories() { return m_gbPaths; }
 
   protected:
     string m_vc; //validy checker
@@ -268,7 +268,7 @@ class LocalManeuveringStrategy : public MPStrategyMethod<MPTraits> {
 };
 
 template<class MPTraits>
-LocalManeuveringStrategy<MPTraits>::LocalManeuveringStrategy() : 
+LocalManeuveringStrategy<MPTraits>::LocalManeuveringStrategy() :
   MPStrategyMethod<MPTraits>(){
     this->SetName("LocalManeuveringStrategy");
     m_delta = 0.05;
@@ -365,7 +365,7 @@ LocalManeuveringStrategy<MPTraits>::~LocalManeuveringStrategy() {
 }
 
 template<class MPTraits>
-void 
+void
 LocalManeuveringStrategy<MPTraits>::ParseXML(XMLNodeReader& _node) {
 
   m_delta = _node.numberXMLParameter("delta", false, 0.05, 0.0, 1.0, "Delta Distance");
@@ -451,8 +451,8 @@ LocalManeuveringStrategy<MPTraits>::ParseXML(XMLNodeReader& _node) {
 }//end ParseXML
 
 template<class MPTraits>
-void 
-LocalManeuveringStrategy<MPTraits>::PrintOptions(ostream& _os) {
+void
+LocalManeuveringStrategy<MPTraits>::PrintOptions(ostream& _os) const {
   _os << "LocalManeuveringStrategy::PrintOptions" << endl;
   _os << "\tValidity Checker:: " << m_vc << endl;
   _os << "\tdelta:: " << m_delta << endl;
@@ -706,7 +706,7 @@ LocalManeuveringStrategy<MPTraits>::Run(){
   cerr << "Number of agents to determine start times for: " << numCfgs << " plantype: " << m_planType << endl;
   size_t rind = LRand() % numCfgs;
   for (size_t j=0;j<numCfgs;j++){ //determine all start times
-    //determine a random start time for this agent between (0, m_maxStartTime) inclusive 
+    //determine a random start time for this agent between (0, m_maxStartTime) inclusive
     size_t startTick = LRand()%(m_maxStartTime+1);
     //experimental///////////////////////////////
     /*if( numCfgs == 1 ) startTick=0;
@@ -776,7 +776,7 @@ LocalManeuveringStrategy<MPTraits>::Finalize(){
     /*
   cerr << "Attempting to build path file: " << m_path << " from query " << m_query << endl;
   if (this->m_debug){
-    cout << "\nAuto-building path file " << m_path << " from query " << m_query << endl; 
+    cout << "\nAuto-building path file " << m_path << " from query " << m_query << endl;
     cout << "\nWriting GBPATH: " << m_gbPath << ", which is of size " << m_gbPaths.size() << endl;
     cout << "Writing Vizmo path configurations to " << m_path << endl;
   }
@@ -785,7 +785,7 @@ LocalManeuveringStrategy<MPTraits>::Finalize(){
   cout << "planTimesIndex: " << planTimesIndex << endl;
   cout << "numCfgs: " << numCfgs << endl;
   cout << "size of m_gbPaths: " << m_gbPaths.size() << endl;
-  
+
   /*
   if (planTimesIndex != numCfgs){
     WriteGBPathConfigurations(m_gbPath, m_gbPaths); //GB
@@ -799,7 +799,7 @@ LocalManeuveringStrategy<MPTraits>::Finalize(){
 //AttemptPullOutTrajectory, attempts to plan a collision-free trajectory for each individual config inside of
 //SSSurfaceMult
 template<class MPTraits>
-bool 
+bool
 LocalManeuveringStrategy<MPTraits>::AttemptPullOutTrajectory( size_t _startTick, size_t _cfgIndex){
   if (this->m_debug)
     cout << "LocalManeuveringStrategy::AttemptPullOutTrajectory" << endl;
@@ -831,7 +831,7 @@ LocalManeuveringStrategy<MPTraits>::AttemptPullOutTrajectory( size_t _startTick,
   if (angRad > PI)
     angRad -= (2.0 * PI);
 
-  Vector2d dirN = Vector2d(cos(angRad),sin(angRad)); 
+  Vector2d dirN = Vector2d(cos(angRad),sin(angRad));
   dirN   = dirN.normalize();
   if (this->m_debug){
     cout << " agent: " << _cfgIndex << " pos: " << pos  << endl;
@@ -841,7 +841,7 @@ LocalManeuveringStrategy<MPTraits>::AttemptPullOutTrajectory( size_t _startTick,
   dir2N  = dir2N.normalize();
   if( this->m_debug ) { cout << " dir to goal: " << dir2N << endl; }
   m_debugGlobalGoalDir=dir2N;
-  double theta = atan2(dir2N[1],-dir2N[0]) - atan2(dirN[1],dirN[0]); 
+  double theta = atan2(dir2N[1],-dir2N[0]) - atan2(dirN[1],dirN[0]);
   if (theta > PI)
     theta -= (2.0*PI);
   else if (theta < -PI)
@@ -886,7 +886,7 @@ LocalManeuveringStrategy<MPTraits>::AttemptPullOutTrajectory( size_t _startTick,
       cout << "Agent theta: " << theta/PI * 180.0 << endl;
     }
     double steeringAngle = DRand() * (m_backPullOutTurnSteerMax-m_backPullOutTurnSteerMin) + m_backPullOutTurnSteerMin;
-    if (theta > 0) 
+    if (theta > 0)
       steeringAngle *= -1.0;
 
 
@@ -909,7 +909,7 @@ LocalManeuveringStrategy<MPTraits>::AttemptPullOutTrajectory( size_t _startTick,
 
   }//end backward strategy
 
-  m_planTimes.at(_cfgIndex).second = potentialPath.size(); 
+  m_planTimes.at(_cfgIndex).second = potentialPath.size();
 
   CombinePaths(m_gbPaths, potentialPath, _cfgIndex);
 
@@ -917,7 +917,7 @@ LocalManeuveringStrategy<MPTraits>::AttemptPullOutTrajectory( size_t _startTick,
 }//end of AttemptPullOutTrajectory function
 
 template<class MPTraits>
-void 
+void
 LocalManeuveringStrategy<MPTraits>::CombinePaths(vector<CfgType>& _originalPath, vector<CfgType>& _newPath, size_t _index){
   if (this->m_debug)
     cout << "LocalManeuveringStrategy::CombinePaths" << endl;
@@ -952,9 +952,9 @@ LocalManeuveringStrategy<MPTraits>::CombinePaths(vector<CfgType>& _originalPath,
   //}
   //else {
      for (CfgIter pathIter = _newPath.begin(); pathIter!= _newPath.end(); pathIter++){
-	if (lastIndex < originalSize){ 
+	if (lastIndex < originalSize){
 	   _originalPath.at(lastIndex) = *pathIter;
-	}else{  
+	}else{
 	   _originalPath.push_back(*pathIter);
 	}
 	lastIndex++;
@@ -965,7 +965,7 @@ LocalManeuveringStrategy<MPTraits>::CombinePaths(vector<CfgType>& _originalPath,
   if( (lastIndex+_newPath.size()) < _originalPath.size() ) {
      cout << " adding right values to path. " << endl;
      //need to copy last of _newPath to the rest of originalPath
-     for (CfgIter pathIter = _originalPath.begin()+lastIndex+_newPath.size()-1; 
+     for (CfgIter pathIter = _originalPath.begin()+lastIndex+_newPath.size()-1;
           pathIter!= _originalPath.end(); pathIter++) {
 	cout << " copying cfg: " << _originalPath[lastIndex+_newPath.size()-2].GetCfgs()[_index].GetPos() << endl;
 	(*pathIter).GetCfgs()[_index]=_originalPath[lastIndex+_newPath.size()-2].GetCfgs()[_index];
@@ -1023,15 +1023,15 @@ LocalManeuveringStrategy<MPTraits>::TryPlan(size_t& _startTick, size_t _cfgIndex
       ori -= (2.0 * PI);*/
 
     next = next.Update(m_delta);
- 
-    double angRad = next.GetRotY(); 
+
+    double angRad = next.GetRotY();
     angRad += PI/2.0;  //if agent imported facing 0,0, actually is facing 0,1
     //angRad += 3*PI/2.0;  //if agent imported facing 0,0, actually is facing 0,1
-    Vector2d dirN = Vector2d(cos(angRad),sin(angRad)); 
+    Vector2d dirN = Vector2d(cos(angRad),sin(angRad));
     dirN   = dirN.normalize();
     cout << " TryPlan. pos: " << next.GetPos() << " dirN: " << dirN << endl;
     Vector2d dir2N=m_debugGlobalGoalDir;
-    double theta = atan2(dir2N[1],-dir2N[0]) - atan2(dirN[1],dirN[0]); 
+    double theta = atan2(dir2N[1],-dir2N[0]) - atan2(dirN[1],dirN[0]);
     if (theta > PI)
        theta -= (2.0*PI);
     else if (theta < -PI)
@@ -1117,11 +1117,11 @@ LocalManeuveringStrategy<MPTraits>::TryPlanTowardGoal(size_t& _startTick, size_t
       ori -= (2.0 * PI);//*/
 
     dir  = Vector2d(cos(ori),sin(ori));
-    dir  = dir.normalize();                		
-    dir2 = (_goal - pos);                   		
+    dir  = dir.normalize();
+    dir2 = (_goal - pos);
 
     Vector2d dir2N=m_debugGlobalGoalDir;
-    double thetaDBG = atan2(dir2N[1],-dir2N[0]) - atan2(dir[1],dir[0]); 
+    double thetaDBG = atan2(dir2N[1],-dir2N[0]) - atan2(dir[1],dir[0]);
     if (thetaDBG > PI)
        thetaDBG -= (2.0*PI);
     else if (thetaDBG < -PI)
@@ -1201,7 +1201,7 @@ LocalManeuveringStrategy<MPTraits>::AttemptDeadlockTrajectory(size_t _startTick,
 
   if (DRand() > m_deadlock1RightTurnFreq) //try a left-hand turn with probability (1-rightTurnFrequency)
 
-    steeringAngle *= -1.0; 
+    steeringAngle *= -1.0;
   vector<CfgType> potentialPath; //our possible arc
 
   double maxVel = m_gbPaths.at(_startTick).GetCfgs().at(_cfgIndex).GetMaxSpeed();
@@ -1230,7 +1230,7 @@ LocalManeuveringStrategy<MPTraits>::AttemptDeadlockTrajectory(size_t _startTick,
   if (!TryPlan( _startTick, _cfgIndex, planDist2/(maxVel*m_delta), potentialPath, 0, false))
     return false;
 
-  m_planTimes.at(_cfgIndex).second = potentialPath.size(); 
+  m_planTimes.at(_cfgIndex).second = potentialPath.size();
   if (this->m_debug)
     cout << "last configuration added to potentialPath: " << potentialPath.back().GetCfgs().at(_cfgIndex).GetPos() <<
       ", " << potentialPath.back().GetCfgs().at(_cfgIndex).GetRotY() << endl;
@@ -1253,7 +1253,7 @@ LocalManeuveringStrategy<MPTraits>::AttemptDeadlockTrajectory(size_t _startTick,
 
   if (DRand() > m_deadlock1RightTurnFreq) //try a left-hand turn with probability (1-rightTurnFrequency)
 
-    steeringAngle *= -1.0; 
+    steeringAngle *= -1.0;
   vector<CfgType> potentialPath; //our possible arc
 
   double maxVel = m_gbPaths.at(_startTick).GetCfgs().at(_cfgIndex).GetMaxSpeed();
@@ -1277,7 +1277,7 @@ LocalManeuveringStrategy<MPTraits>::AttemptDeadlockTrajectory(size_t _startTick,
   if (!TryPlan( _startTick, _cfgIndex, planDist2/(maxVel*m_delta), potentialPath, 0, false))
     return false;
 
-  m_planTimes.at(_cfgIndex).second = potentialPath.size(); 
+  m_planTimes.at(_cfgIndex).second = potentialPath.size();
   if (this->m_debug)
     cout << "last configuration added to potentialPath: " << potentialPath.back().GetCfgs().at(_cfgIndex).GetPos() <<
       ", " << potentialPath.back().GetCfgs().at(_cfgIndex).GetRotY() << endl;
@@ -1315,7 +1315,7 @@ LocalManeuveringStrategy<MPTraits>::AttemptDeadlockTrajectory2(size_t _startTick
         m_goals.front().GetCfgs().at(_cfgIndex).GetPos(), divisor))
     return false;
 
-  m_planTimes.at(_cfgIndex).second = potentialPath.size(); 
+  m_planTimes.at(_cfgIndex).second = potentialPath.size();
 
   if (this->m_debug)
     cout << "last configuration added to potentialPath: " << potentialPath.back().GetCfgs().at(_cfgIndex).GetPos() <<
@@ -1327,7 +1327,7 @@ LocalManeuveringStrategy<MPTraits>::AttemptDeadlockTrajectory2(size_t _startTick
 }//end AttemptDeadlockTrajectory2 method
 
 template<class MPTraits>
-bool 
+bool
 LocalManeuveringStrategy<MPTraits>::AttemptPullInTrajectory(size_t _startTick, size_t _cfgIndex){
 
   if (this->m_debug)
@@ -1356,7 +1356,7 @@ LocalManeuveringStrategy<MPTraits>::AttemptPullInTrajectory(size_t _startTick, s
   Point2d pos = currentCfg.GetPos();
   double angRad = currentCfg.GetRotY();
 
-  Vector2d self = Vector2d(cos(angRad),sin(angRad)); 
+  Vector2d self = Vector2d(cos(angRad),sin(angRad));
   self   = self.normalize();
   Vector2d goalVec = Vector2d(cos(goalAngRad),sin(goalAngRad));
   goalVec = goalVec.normalize();
@@ -1367,7 +1367,7 @@ LocalManeuveringStrategy<MPTraits>::AttemptPullInTrajectory(size_t _startTick, s
     cout << "goalPos: " << goalPos << " goalAngRad: " << goalAngRad << endl;
   }
 
-  double theta = atan2(goalVec[1],goalVec[0]) - atan2(self[1],self[0]); 
+  double theta = atan2(goalVec[1],goalVec[0]) - atan2(self[1],self[0]);
   if (theta > PI)
     theta -= (2.0*PI);
   else if (theta < -PI)
@@ -1384,12 +1384,12 @@ LocalManeuveringStrategy<MPTraits>::AttemptPullInTrajectory(size_t _startTick, s
   // then the number of timesteps I need to turn at my maximum velocity, minimum turning radius until I face
   // my desired orientation is theta_diff/rads. Ideally, this would be an integer value, but it won't be in
   // practice, so perhaps we should think about altering R until we can find an integer value?
-  // 
+  //
   // after we're on track, we'll form a triangle with my vector, and a perpendicular vector emanating from the
   // goal. We need to find X=straight-head distance to travel until we intersect the goal vector
   // perpendicularly.
   // Using the some trig, we can determine X using our distance from the goal (hypotenuse)
-  // as well as the angle between my current orientation and the vector pointing towards the goal. 
+  // as well as the angle between my current orientation and the vector pointing towards the goal.
   // after X is found, subtract R= turning radius from X. Travel X-R units, and then turn at minimum
   // turning radius until facing goal, at which point, move straight ahead until we're at goal. Stop.
   // with some probability, agent will attempt to back in at the end instead of pull forward
@@ -1413,7 +1413,7 @@ LocalManeuveringStrategy<MPTraits>::AttemptPullInTrajectory(size_t _startTick, s
     desiredTheta += 2.0*PI;
 
   //find angle between angRad and desiredTheta
-  Vector2d desiredVec = Vector2d(cos(desiredTheta),sin(desiredTheta)); 
+  Vector2d desiredVec = Vector2d(cos(desiredTheta),sin(desiredTheta));
   desiredVec = desiredVec.normalize();
   double thetaDiff = atan2(desiredVec[1],desiredVec[0]) - atan2(self[1],self[0]);
   if (thetaDiff > PI)
@@ -1431,7 +1431,7 @@ LocalManeuveringStrategy<MPTraits>::AttemptPullInTrajectory(size_t _startTick, s
   cout << " _cfgIndex: " << _cfgIndex << " thetaDiff: " << thetaDiff << " startTick: " << _startTick << endl;
   if (!TryPlan(_startTick,  _cfgIndex, planSteps, potentialPath, steeringAngle, false))
     return false;
-  
+
   cout << " just returned from TryPlan. potentialPath size: " << potentialPath.size() << endl;
   if( potentialPath.size()==0 ) { //unsuccessful/unneeded first TryPlan
      CfgType tick;
@@ -1452,10 +1452,10 @@ LocalManeuveringStrategy<MPTraits>::AttemptPullInTrajectory(size_t _startTick, s
     angRad -= (2.0 * PI);
   Vector2d dir2N   = (goalPos - pos);
   dir2N  = dir2N.normalize();
-  self = Vector2d(cos(angRad),sin(angRad)); 
+  self = Vector2d(cos(angRad),sin(angRad));
   self   = self.normalize();
 
-  theta = atan2(dir2N[1],-dir2N[0]) - atan2(self[1],self[0]); 
+  theta = atan2(dir2N[1],-dir2N[0]) - atan2(self[1],self[0]);
   if (theta > PI)
     theta -= (2.0*PI);
   else if (theta < -PI)
@@ -1503,7 +1503,7 @@ LocalManeuveringStrategy<MPTraits>::AttemptPullInTrajectory(size_t _startTick, s
 
   potentialPath.back().GetCfgs().at(_cfgIndex).SetVelocity(Vector2d(0.0,0.0));
 
-  m_planTimes.at(_cfgIndex).second = potentialPath.size(); 
+  m_planTimes.at(_cfgIndex).second = potentialPath.size();
   CombinePaths(m_gbPaths, potentialPath, _cfgIndex);
 
   return true;
@@ -1513,7 +1513,7 @@ template<class MPTraits>
 void
 LocalManeuveringStrategy<MPTraits>::BuffPath(size_t _index){
   int lastCfgIndex = m_planTimes.at(_index).first+m_planTimes.at(_index).second - 1;
-  size_t numCfgsToAdd = m_gbPaths.size() - lastCfgIndex-1; 
+  size_t numCfgsToAdd = m_gbPaths.size() - lastCfgIndex-1;
   CfgType lastCfg = m_gbPaths.at(lastCfgIndex);
   vector<CompositeCfgType>& cfgs = lastCfg.GetCfgs();
   Point2d pos = cfgs.at(_index).GetPos();

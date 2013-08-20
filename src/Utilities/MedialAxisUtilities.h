@@ -226,7 +226,7 @@ ClearanceUtility<MPTraits>::ParseXML(XMLNodeReader& _node){
 
 template<class MPTraits>
 void
-ClearanceUtility<MPTraits>::PrintOptions(ostream& _os) const{
+ClearanceUtility<MPTraits>::PrintOptions(ostream& _os) const {
   _os << "\tvcLabel = " << m_vcLabel << endl;
   _os << "\tdmLabel = " << m_dmLabel << endl;
   _os << "\tuseBBX = " << m_useBBX << endl;
@@ -704,7 +704,7 @@ MedialAxisUtility<MPTraits>::ParseXML(XMLNodeReader& _node){
 
 template<class MPTraits>
 void
-MedialAxisUtility<MPTraits>::PrintOptions(ostream& _os) const{
+MedialAxisUtility<MPTraits>::PrintOptions(ostream& _os) const {
   ClearanceUtility<MPTraits>::PrintOptions(_os);
   _os << "\tepsilon::" << m_epsilon << endl;
   _os << "\thistory length::" << m_historyLength << endl;

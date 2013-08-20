@@ -10,7 +10,7 @@
 
 #include "TransformAtS.h"
 
-template<class MPTraits> 
+template<class MPTraits>
 class RotateAtS : public TransformAtS<MPTraits> {
   public:
 
@@ -23,15 +23,15 @@ class RotateAtS : public TransformAtS<MPTraits> {
 
   protected:
 
-    virtual bool IsReversible() {return fabs(this->m_sValue - 0.5) < std::numeric_limits<double>::epsilon();} 
-    virtual void GetSequenceNodes(const CfgType& _c1, const CfgType& _c2, double _s, 
-        vector<CfgType>& _sequence, bool _reverse = false); 
+    virtual bool IsReversible() {return fabs(this->m_sValue - 0.5) < std::numeric_limits<double>::epsilon();}
+    virtual void GetSequenceNodes(const CfgType& _c1, const CfgType& _c2, double _s,
+        vector<CfgType>& _sequence, bool _reverse = false);
 };
 
 template<class MPTraits>
 RotateAtS<MPTraits>::RotateAtS(double _s):
   TransformAtS<MPTraits>(_s) {
-    this->SetName("RotateAtS"); 
+    this->SetName("RotateAtS");
   }
 
 template<class MPTraits>

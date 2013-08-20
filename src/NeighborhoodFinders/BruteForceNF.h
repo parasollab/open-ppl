@@ -33,28 +33,28 @@ class BruteForceNF : public NeighborhoodFinderMethod<MPTraits> {
     }
 
     template<typename InputIterator, typename OutputIterator>
-      OutputIterator FindNeighbors(RoadmapType* _rmp, 
+      OutputIterator FindNeighbors(RoadmapType* _rmp,
           InputIterator _first, InputIterator _last, const CfgType& _cfg, OutputIterator _out);
 
     // KClosest that operate over two ranges of VIDS.  K total pair<VID,VID> are returned that
     // represent the _kclosest pairs of VIDs between the two ranges.
     template<typename InputIterator, typename OutputIterator>
       OutputIterator FindNeighborPairs(RoadmapType* _rmp,
-          InputIterator _first1, InputIterator _last1, 
-          InputIterator _first2, InputIterator _last2, 
+          InputIterator _first1, InputIterator _last1,
+          InputIterator _first2, InputIterator _last2,
           OutputIterator _out);
 };
 
 template<class MPTraits>
 template<typename InputIterator, typename OutputIterator>
-OutputIterator 
-BruteForceNF<MPTraits>::FindNeighbors(RoadmapType* _rmp, InputIterator _first, InputIterator _last, 
+OutputIterator
+BruteForceNF<MPTraits>::FindNeighbors(RoadmapType* _rmp, InputIterator _first, InputIterator _last,
     const CfgType& _cfg, OutputIterator _out) {
-  
+
   Environment* env = this->GetMPProblem()->GetEnvironment();
   GraphType* map = _rmp->GetGraph();
   DistanceMetricPointer dmm = this->GetMPProblem()->GetDistanceMetric(this->m_dmLabel);
-  
+
   if(!this->m_k) {
     for(InputIterator it = _first; it != _last; ++it)
       if(map->GetVertex(it) != _cfg)
@@ -66,21 +66,21 @@ BruteForceNF<MPTraits>::FindNeighbors(RoadmapType* _rmp, InputIterator _first, I
   this->IncrementNumQueries();
   this->StartTotalTime();
   this->StartQueryTime();
-  
+
   // Keep sorted list of k best so far
   priority_queue<pair<VID, double>, vector<pair<VID, double> >, CompareSecond<VID, double> > pq;
   for(InputIterator it = _first; it != _last; it++) {
-    
+
     if(this->CheckUnconnected(_rmp, _cfg, map->GetVID(it)))
       continue;
-    
+
     CfgType node = map->GetVertex(it);
 
     if(node == _cfg) // Don't connect to self
       continue;
-    
+
     double dist = dmm->Distance(env, _cfg, node);
-    
+
     if(pq.size() < this->m_k){
       VID vid = map->GetVID(it);
       pq.push(make_pair(vid, dist));
@@ -102,23 +102,23 @@ BruteForceNF<MPTraits>::FindNeighbors(RoadmapType* _rmp, InputIterator _first, I
 
   this->EndQueryTime();
   this->EndTotalTime();
-  
+
   // Reverse order
   return copy(closest.rbegin(), closest.rend(), _out);
 }
 
 template<class MPTraits>
 template<typename InputIterator, typename OutputIterator>
-OutputIterator 
+OutputIterator
 BruteForceNF<MPTraits>::FindNeighborPairs(RoadmapType* _rmp,
-    InputIterator _first1, InputIterator _last1, 
+    InputIterator _first1, InputIterator _last1,
     InputIterator _first2, InputIterator _last2,
     OutputIterator _out) {
-  
+
   Environment* env = this->GetMPProblem()->GetEnvironment();
   GraphType* map = _rmp->GetGraph();
   DistanceMetricPointer dmm = this->GetMPProblem()->GetDistanceMetric(this->m_dmLabel);
-  
+
   if(!this->m_k){
     for(InputIterator i1 = _first1; i1!=_last1; ++i1)
       for(InputIterator i2 = _first2; i2!=_last2; ++i2)

@@ -11,7 +11,7 @@ class TrueEvaluation : public MapEvaluatorMethod<MPTraits> {
     TrueEvaluation(typename MPTraits::MPProblemType* _problem, XMLNodeReader& _node);
     virtual ~TrueEvaluation();
 
-    virtual void PrintOptions(ostream& _os);
+    virtual void PrintOptions(ostream& _os) const;
 
     virtual bool operator()();
     virtual bool operator()(int _regionID);
@@ -34,7 +34,7 @@ TrueEvaluation<MPTraits>::~TrueEvaluation() {
 
 template<class MPTraits>
 void
-TrueEvaluation<MPTraits>::PrintOptions(ostream& _os){
+TrueEvaluation<MPTraits>::PrintOptions(ostream& _os) const {
   _os << "True Evaluator always returns true, no options present." << endl;
 }
 

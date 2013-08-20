@@ -21,25 +21,25 @@ class ConnectNeighboringSurfaces: public ConnectorMethod<MPTraits> {
     typedef typename MPTraits::CfgType CfgType;
     typedef typename MPTraits::MPProblemType MPProblemType;
     typedef typename MPProblemType::RoadmapType RoadmapType;
-    typedef typename MPProblemType::VID VID; 
+    typedef typename MPProblemType::VID VID;
     typedef typename vector<VID>::iterator VIDIT;
-   
+
     //////////////////////
     // Constructors and Destructor
-    ConnectNeighboringSurfaces(string _nf = "", string _lp = "", 
+    ConnectNeighboringSurfaces(string _nf = "", string _lp = "",
         int _k = KATTEMPTS, string _surfacesStrToIgnore="");
     ConnectNeighboringSurfaces(MPProblemType* _problem, XMLNodeReader& _node);
     virtual ~ConnectNeighboringSurfaces();
 
     //////////////////////
     // Used in new MPProblem framework.
-    virtual void PrintOptions(ostream& _os);  
+    virtual void PrintOptions(ostream& _os) const;
     virtual void ParseXML(XMLNodeReader& _node);
 
     //////////////////////
     // Core: Connection method
     template<typename ColorMap, typename InputIterator1, typename InputIterator2, typename OutputIterator>
-      void Connect(RoadmapType* _rm, StatClass& _stats, ColorMap& _cmap, 
+      void Connect(RoadmapType* _rm, StatClass& _stats, ColorMap& _cmap,
           InputIterator1 _itr1First, InputIterator1 _itr1Last,
           InputIterator2 _itr2First, InputIterator2 _itr2Last, OutputIterator _collision) ;
 
@@ -57,17 +57,17 @@ class ConnectNeighboringSurfaces: public ConnectorMethod<MPTraits> {
 
 ///////////////////////////////////////////////////////////////////////////////
 template<class MPTraits>
-ConnectNeighboringSurfaces<MPTraits>::ConnectNeighboringSurfaces(string _nf, string _lp, int _k, string _surfacesStrToIgnore) 
+ConnectNeighboringSurfaces<MPTraits>::ConnectNeighboringSurfaces(string _nf, string _lp, int _k, string _surfacesStrToIgnore)
   : ConnectorMethod<MPTraits>(_nf, _lp), m_k(_k), m_surfacesStrToIgnore(_surfacesStrToIgnore) {
-    this->SetName("ConnectNeighboringSurfaces"); 
+    this->SetName("ConnectNeighboringSurfaces");
     m_doneOnce = false;
     m_surfacesToIgnore = GetTags(m_surfacesStrToIgnore,",");
   }
 
 ///////////////////////////////////////////////////////////////////////////////
 template<class MPTraits>
-ConnectNeighboringSurfaces<MPTraits>::ConnectNeighboringSurfaces(MPProblemType* _problem, XMLNodeReader& _node) 
-  : ConnectorMethod<MPTraits>(_problem, _node), 
+ConnectNeighboringSurfaces<MPTraits>::ConnectNeighboringSurfaces(MPProblemType* _problem, XMLNodeReader& _node)
+  : ConnectorMethod<MPTraits>(_problem, _node),
   m_k(KATTEMPTS), m_doneOnce(false) {
     ParseXML(_node);
     m_surfacesToIgnore = GetTags(m_surfacesStrToIgnore,",");
@@ -75,13 +75,13 @@ ConnectNeighboringSurfaces<MPTraits>::ConnectNeighboringSurfaces(MPProblemType* 
 
 ///////////////////////////////////////////////////////////////////////////////
 template<class MPTraits>
-ConnectNeighboringSurfaces<MPTraits>::~ConnectNeighboringSurfaces(){ 
+ConnectNeighboringSurfaces<MPTraits>::~ConnectNeighboringSurfaces(){
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 template<class MPTraits>
 void ConnectNeighboringSurfaces<MPTraits>::ParseXML(XMLNodeReader& _node){
-  this->SetName("ConnectNeighboringSurfaces"); 
+  this->SetName("ConnectNeighboringSurfaces");
   m_k = _node.numberXMLParameter("k", true, 0, 0, 10000, "k-value (max neighbors to find). k = 0 --> all-pairs");
   m_surfacesStrToIgnore = _node.stringXMLParameter("surfacesToIgnore", false, "", "surfaces to ignore (separated by , only [no spaces])");
   _node.warnUnrequestedAttributes();
@@ -89,7 +89,7 @@ void ConnectNeighboringSurfaces<MPTraits>::ParseXML(XMLNodeReader& _node){
 
 ///////////////////////////////////////////////////////////////////////////////
 template<class MPTraits>
-void ConnectNeighboringSurfaces<MPTraits>::PrintOptions(ostream& _os){
+void ConnectNeighboringSurfaces<MPTraits>::PrintOptions(ostream& _os) const {
   ConnectorMethod<MPTraits>::PrintOptions(_os);
   _os << "    " << this->GetName() << "::  k = " << m_k << endl;
   _os << "\tsurfacesToIgnore = [";
@@ -105,14 +105,14 @@ void ConnectNeighboringSurfaces<MPTraits>::PrintOptions(ostream& _os){
 // for each s \in surface
 //     for each bl \in s->boundarLines()
 //         for each specified division pt P along bl
-//            does P represent valid connection between s and some surface 
+//            does P represent valid connection between s and some surface
 //            given a delta value (height difference)
 //
 ///////////////////////////////////////////////////////////////////////////////
 template<class MPTraits>
 template<typename ColorMap, typename InputIterator1, typename InputIterator2, typename OutputIterator>
 void
-ConnectNeighboringSurfaces<MPTraits>::Connect(RoadmapType* _rm, StatClass& _stats, ColorMap& _cmap, 
+ConnectNeighboringSurfaces<MPTraits>::Connect(RoadmapType* _rm, StatClass& _stats, ColorMap& _cmap,
     InputIterator1 _itr1First, InputIterator1 _itr1Last,
     InputIterator2 _itr2First, InputIterator2 _itr2Last, OutputIterator _collision){
 
@@ -227,7 +227,7 @@ ConnectNeighboringSurfaces<MPTraits>::Connect(RoadmapType* _rm, StatClass& _stat
 	  }
 	  else {
 	    if(this->m_debug) cout << " checking surface : " << mbSurf2->GetLabel() << endl;
-	    if( mbPoly2.IsOnSurface(queryPt,h) ) { 
+	    if( mbPoly2.IsOnSurface(queryPt,h) ) {
 	      double otherSurfHeight = mbPoly2.HeightAtPt(queryPt, validOtherHeight);
 	      if(this->m_debug) cout << "On projected surface. otherSurfHeight: " << otherSurfHeight << " current height: " << h << endl;
 	      if( fabs(otherSurfHeight-h)< CLOSEDIST ) {
@@ -251,10 +251,10 @@ ConnectNeighboringSurfaces<MPTraits>::Connect(RoadmapType* _rm, StatClass& _stat
 	  //add in this node as a connection
 	  //add pt on surface
           m_totalSuccess++;
-	  CfgType cfg1(surfacePt[0], surfacePt[1], h, id); 
-	  VID vid1 = _rm->GetGraph()->AddVertex(cfg1); 
-	  CfgType cfg2(queryPt[0], queryPt[1], h, qPtSurfID); 
-	  VID vid2 = _rm->GetGraph()->AddVertex(cfg2); 
+	  CfgType cfg1(surfacePt[0], surfacePt[1], h, id);
+	  VID vid1 = _rm->GetGraph()->AddVertex(cfg1);
+	  CfgType cfg2(queryPt[0], queryPt[1], h, qPtSurfID);
+	  VID vid2 = _rm->GetGraph()->AddVertex(cfg2);
 	  double dist = (surfacePt-queryPt).norm();
 	  if(this->m_debug) cout << " adding node: " << surfacePt << " and node: " << queryPt << endl;
 	  if(this->m_debug) cout << " sampleBtwSurfaces added nid1: " << vid1 << " pt: "<< surfacePt << " surfID: " << id  << endl;

@@ -51,7 +51,7 @@ class AdaptiveRRT : public OBRRTStrategy<MPTraits> {
     virtual void Initialize();
 
     virtual void ParseXML(XMLNodeReader& _node);
-    virtual void PrintOptions(ostream& _os);
+    virtual void PrintOptions(ostream& _os) const;
 
   protected:
     // Helper functions
@@ -137,13 +137,13 @@ AdaptiveRRT<MPTraits>::ParseXML(XMLNodeReader& _node) {
 
 template<class MPTraits>
 void
-AdaptiveRRT<MPTraits>::PrintOptions(ostream& _os){
+AdaptiveRRT<MPTraits>::PrintOptions(ostream& _os) const {
   BasicRRTStrategy<MPTraits>::PrintOptions(_os);
   _os << "\tWallPenalty::" << m_wallPenalty << endl;
   _os << "\tGamma::" << m_gamma << endl;
   _os << "\tGrowthSets::" << endl;
-  typedef typename GrowthSets::iterator GSIT;
-  typedef typename GrowthSet::iterator GIT;
+  typedef typename GrowthSets::const_iterator GSIT;
+  typedef typename GrowthSet::const_iterator GIT;
   for(GSIT gsit = m_growthSets.begin(); gsit!=m_growthSets.end(); ++gsit){
     _os << "\t\tGrowthSet::" << gsit->first << endl;
     for(GIT git = gsit->second.begin(); git!=gsit->second.end(); ++git){

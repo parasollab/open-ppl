@@ -103,7 +103,7 @@ class MPProblem
     MPStrategyPointer GetMPStrategy(const string& _l){return m_mpStrategies->GetMethod(_l);}
     void AddMPStrategy(MPStrategyPointer _mps, const string& _l){m_mpStrategies->AddMethod(_mps, _l);}
 
-    virtual void PrintOptions(ostream& _os);
+    virtual void PrintOptions(ostream& _os) const;
 
     void SetMPProblem();
 
@@ -363,7 +363,7 @@ MPProblem<MPTraits>::ToggleValidity(){
 
 template<class MPTraits>
 void
-MPProblem<MPTraits>::PrintOptions(ostream& _os) {
+MPProblem<MPTraits>::PrintOptions(ostream& _os) const {
   _os << "MPProblem" << endl;
   m_environment->PrintOptions(_os);
   m_distanceMetrics->PrintOptions(_os);

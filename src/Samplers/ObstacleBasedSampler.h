@@ -23,9 +23,10 @@ class ObstacleBasedSampler : public SamplerMethod<MPTraits> {
       : m_vcLabel(_vcLabel), m_dmLabel(_dmLabel), m_nShellsFree(_free), m_nShellsColl(_coll), m_stepSize(_step), m_useBBX(_useBBX), m_pointSelection(_pointSelection) {
         this->SetName("ObstacleBasedSampler");
         // If the step size is unreasonable, set it to the minimum
-        if(m_stepSize <= 0.0)
-          if(_env != NULL)
+        if(m_stepSize <= 0.0) {
+          if(_env)
             m_stepSize = min(_env->GetPositionRes(), _env->GetOrientationRes());
+        }
       }
 
     ObstacleBasedSampler(MPProblemType* _problem, XMLNodeReader& _node) : SamplerMethod<MPTraits>(_problem, _node) {

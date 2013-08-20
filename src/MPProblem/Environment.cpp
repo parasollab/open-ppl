@@ -84,7 +84,7 @@ Environment::Read(string _filename) {
 }
 
 void
-Environment::PrintOptions(ostream& _os) {
+Environment::PrintOptions(ostream& _os) const {
   _os << "Environment" << endl;
   _os << "\tpositionRes::" << m_positionRes << endl;
   _os << "\torientationRes::" << m_orientationRes << endl;

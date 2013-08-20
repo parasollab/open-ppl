@@ -7,7 +7,7 @@
 ReachableDistance::ReachableDistance(double _s1, double _s2) : DistanceMetricMethod(), m_scale1(_s1), m_scale2(_s2)  {
   m_name = "reachable";
 }
-  
+
 ReachableDistance::
 ReachableDistance(XMLNodeReader& _node, MPProblem* _problem, bool _warn) : DistanceMetricMethod(_node, _problem, false) {
   m_name = "reachable";
@@ -41,13 +41,13 @@ double ReachableDistance::Distance(Environment* _env, const Cfg& _c1, const Cfg&
     dPosition += sqr(fabs(v1[i] - v2[i])/(range.second-range.first));
   }
   dPosition = sqrt(dPosition);
-  
+
   //get the length difference
   double dLength = ((CfgType)_c1).LengthDistance((CfgType)_c2);
-  
+
   //get the orientation difference
   double dOri = ((CfgType)_c1).OrientationDistance((CfgType)_c2);
-  
+
   return (m_scale1*dPosition + m_scale2*dLength + (1-m_scale1-m_scale2)*dOri);
 }
 

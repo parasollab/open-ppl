@@ -1,6 +1,6 @@
 /**
  * SRTStrategy.h
- * 
+ *
  * Description: RRT Strategy header file
  *
  * Author: Kasra Manavi
@@ -27,7 +27,7 @@
 #include "Sampler.h"
 
 class SRTStrategy : public MPStrategyMethod {
- 
+
  public:
 
    SRTStrategy(XMLNodeReader& in_Node, MPProblem* in_pProblem, bool isInherited=false);
@@ -38,13 +38,13 @@ class SRTStrategy : public MPStrategyMethod {
    virtual void Run(int in_RegionID, //RoadmapGraph<CfgType, WeightType>* candGraph,
 		    vector<pair<CfgType,vector<VID> > >* trees);
    virtual void Finalize(int in_RegionID);
-   virtual void PrintOptions(ostream& out_os);
-   virtual void RRTStrategy(int in_RegionID, vector<CfgType> RRTQueue, 
+   virtual void PrintOptions(ostream& out_os) const;
+   virtual void RRTStrategy(int in_RegionID, vector<CfgType> RRTQueue,
 			    //RoadmapGraph<CfgType, WeightType>* candGraph,
 			    vector<pair<CfgType,vector<VID> > >* trees);
 
  protected:
-   
+
    // Helper functions
    void ConnectComponents(MPRegion<CfgType, WeightType>* region);
    bool EvaluateMap(int in_RegionID);
@@ -62,7 +62,7 @@ class SRTStrategy : public MPStrategyMethod {
  private:
 
    ClockClass MapGenClock;
-   
+
 };
 
 #include "MPStrategy.h"

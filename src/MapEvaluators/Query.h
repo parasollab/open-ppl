@@ -34,7 +34,7 @@ class Query : public MapEvaluatorMethod<MPTraits> {
     virtual ~Query() { }
 
     void ParseXML(XMLNodeReader& _node);
-    virtual void PrintOptions(ostream& _os);
+    virtual void PrintOptions(ostream& _os) const;
     vector<CfgType>& GetQuery() { return m_query; }
     vector<CfgType>& GetPath() { return m_path; }
     void SetPathFile(string _filename) { m_pathFile = _filename; }
@@ -182,7 +182,7 @@ Query<MPTraits>::ParseXML(XMLNodeReader& _node) {
 
 template<class MPTraits>
 void
-Query<MPTraits>::PrintOptions(ostream& _os) {
+Query<MPTraits>::PrintOptions(ostream& _os) const {
   _os << this->GetNameAndLabel() << "::";
   _os << "\n\tquery file = \"" << m_queryFile << "\"";
   _os << "\n\tpath file = \"" << m_pathFile << "\"";

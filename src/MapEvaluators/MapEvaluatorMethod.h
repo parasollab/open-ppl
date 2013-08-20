@@ -11,8 +11,8 @@ class MapEvaluatorMethod : public MPBaseObject<MPTraits> {
       : MPBaseObject<MPTraits>(_problem, _node) {}
     virtual ~MapEvaluatorMethod() {}
 
-    virtual void PrintOptions(ostream& _os){
-      _os << this->GetName() << endl; 
+    virtual void PrintOptions(ostream& _os) const {
+      _os << this->GetName() << endl;
     }
 
     //HasState is called by strategies that start from an existing roadmap

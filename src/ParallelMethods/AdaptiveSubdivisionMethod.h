@@ -9,7 +9,7 @@
 
 
 typedef typename stapl::dynamic_graph<stapl::DIRECTED, stapl::NONMULTIEDGES, AdaptiveRegion<CfgType>, WeightType> RGraph;
-typedef typename RGraph::vertex_descriptor PVID; 
+typedef typename RGraph::vertex_descriptor PVID;
 typedef typename RGraph::vertex_iterator PVI;
 
 class XMLNodeReader;
@@ -28,7 +28,7 @@ class AdaptiveSubdivisionMethod : public MPStrategyMethod {
     virtual void Initialize(int _regionID);
     virtual void Run(int _regionID);
     virtual void Finalize(int _regionID);
-    virtual void PrintOptions(ostream& _os);
+    virtual void PrintOptions(ostream& _os) const;
 
   private:
     vector<string> m_regionConnectionLabels;
@@ -44,4 +44,4 @@ class AdaptiveSubdivisionMethod : public MPStrategyMethod {
     ConnectCCs<CfgType, WeightType>* m_ccConnector;
 };
 
-#endif 
+#endif

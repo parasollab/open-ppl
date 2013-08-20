@@ -13,7 +13,7 @@ class DMTestStrategy : public MPStrategyMethod<MPTraits> {
     virtual ~DMTestStrategy();
 
     virtual void ParseXML(XMLNodeReader& _node);
-    virtual void PrintOptions(ostream& _out);
+    virtual void PrintOptions(ostream& _out) const;
 
     virtual void Initialize(){}
     virtual void Run();
@@ -59,9 +59,7 @@ ParseXML(XMLNodeReader& _node)
 
 template <class MPTraits>
 void
-DMTestStrategy<MPTraits>::
-PrintOptions(ostream& _out)
-{
+DMTestStrategy<MPTraits>::PrintOptions(ostream& _out) const {
   _out << "DMTestStrategy ::  m_inputRoadmapFilename = \"" << m_inputRoadmapFilename
     << "\"\tm_dmMethod = " << m_dmMethod
     << "\tm_numToVerify = " << m_numToVerify << endl;

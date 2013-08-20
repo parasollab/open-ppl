@@ -32,16 +32,16 @@ class RandomNF : public NeighborhoodFinderMethod<MPTraits> {
       _os << "\tk: " << this->m_k << endl;
     }
 
-    //Find k-random neighbors. 
+    //Find k-random neighbors.
     template<typename InputIterator, typename OutputIterator>
-      OutputIterator FindNeighbors(RoadmapType* _rmp, 
+      OutputIterator FindNeighbors(RoadmapType* _rmp,
           InputIterator _first, InputIterator _last, const CfgType& _cfg, OutputIterator _out);
 
     //Find k-random pairs of neighbors
     template<typename InputIterator, typename OutputIterator>
       OutputIterator FindNeighborPairs(RoadmapType* _rmp,
-          InputIterator _first1, InputIterator _last1, 
-          InputIterator _first2, InputIterator _last2, 
+          InputIterator _first1, InputIterator _last1,
+          InputIterator _first2, InputIterator _last2,
           OutputIterator _out);
 };
 
@@ -75,7 +75,7 @@ RandomNF<MPTraits>::FindNeighbors(RoadmapType* _rmp, InputIterator _first, Input
   this->EndQueryTime();
   this->EndTotalTime();
 
-  return _out; 
+  return _out;
 }
 
 template<class MPTraits>
@@ -89,7 +89,7 @@ RandomNF<MPTraits>::FindNeighborPairs(RoadmapType* _rmp,
   Environment* env = this->GetMPProblem()->GetEnvironment();
   GraphType* map = _rmp->GetGraph();
   DistanceMetricPointer dmm = this->GetMPProblem()->GetDistanceMetric(this->m_dmLabel);
-  
+
   set<pair<VID, VID> > ids;
 
   size_t dist1 = distance(_first1, _last1), dist2 = distance(_first2, _last2);
@@ -106,7 +106,7 @@ RandomNF<MPTraits>::FindNeighborPairs(RoadmapType* _rmp,
         make_pair(vid1, vid2),
         dmm->Distance(env, map->GetVertex(vid1), map->GetVertex(vid2)));
   }
-  
+
   return _out;
 }
 

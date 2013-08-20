@@ -22,11 +22,11 @@ namespace pmpl_detail { //hide NeighborhoodFinderMethodList in pmpl_detail names
     RankWeightedRandomPolicy,
     DistanceWeightedRandomPolicy
     > PolicyList;
-  
+
   template<typename P, typename RDMP, typename I, typename O>
       struct VirtualSelectNeighbors{
         public:
-          VirtualSelectNeighbors(P* _v, RDMP* _r, I _f, I _l, O _o) : 
+          VirtualSelectNeighbors(P* _v, RDMP* _r, I _f, I _l, O _o) :
             m_memory(_v), m_rdmp(_r), m_first(_f), m_last(_l), m_output(_o){}
 
           template<typename T>
@@ -69,7 +69,7 @@ class ClosestPolicy : public Policy {
 
     template<typename RDMP, typename InputIterator, typename OutputIterator>
       void SelectNeighbors(RDMP* _rmp, InputIterator _first, InputIterator _last, OutputIterator _out){
-        
+
         if(m_debug) cout << "ClosestPolicy::SelectNeighbors()" << endl;
 
         typedef typename RDMP::VID VID;
@@ -83,7 +83,7 @@ class ClosestPolicy : public Policy {
             pq.push(*it);
           }
         }
-        
+
         // Transfer k closest to vector, sorted greatest to least dist
         vector<pair<VID, double> > closest;
         while(!pq.empty()) {
@@ -105,7 +105,7 @@ class RandomPolicy : public Policy {
 
     template<typename RDMP, typename InputIterator, typename OutputIterator>
       void SelectNeighbors(RDMP* _rmp, InputIterator _first, InputIterator _last, OutputIterator _out){
-        
+
         if(m_debug) cout << "RandomPolicy::SelectNeighbors()" << endl;
 
         vector<typename RDMP::VID> neighbors;
@@ -120,11 +120,11 @@ class RandomPolicy : public Policy {
           // select random candidate that hasn't been added yet
           bool done = false;
           while(!done) {
-            
+
             size_t id = (size_t)(LRand()%(_last - _first));
             p = _first + id;
 
-            typename RDMP::VID v = p->first;        
+            typename RDMP::VID v = p->first;
             if(m_debug) cout << "\tchecking id = " << id << ", VID = " << v;
 
             // check to see if this has been added
@@ -181,7 +181,7 @@ class PreferentialPolicy : public Policy {
             if(found == maxIter)
               break;
           }
-        }  
+        }
       }
 
     //////////////////////
@@ -190,7 +190,7 @@ class PreferentialPolicy : public Policy {
       double PrefProb(RDMP* _rm, typename RDMP::VID _vid, size_t _n, size_t _totDegree) {
         size_t candidateDegree = _rm->m_pRoadmap->get_degree(_vid);
         size_t totalDegree = _totDegree;
-        if (_totDegree == (size_t)-1) totalDegree = _rm->m_pRoadmap->get_num_edges(); 
+        if (_totDegree == (size_t)-1) totalDegree = _rm->m_pRoadmap->get_num_edges();
         if (m_debug) cout << "PrefProb(" << _vid << ", " << _n << ") = " << 1 + candidateDegree << " / " << _n + totalDegree << endl;
         return ((double)(1 + candidateDegree) / (double)(_n + totalDegree));
       }
@@ -210,7 +210,7 @@ class PreferentialPolicy : public Policy {
 };
 
 class RankWeightedRandomPolicy : public Policy {
-  public:  
+  public:
     RankWeightedRandomPolicy(size_t _k = 0, double _alpha = 0.0, bool _debug = false) : Policy(_k, _debug) { m_alpha = _alpha; }
     virtual ~RankWeightedRandomPolicy() {}
 
@@ -262,7 +262,7 @@ class RankWeightedRandomPolicy : public Policy {
 
               if (m_debug) cout << endl;
             }
-          }  
+          }
         }
       }
 
@@ -326,7 +326,7 @@ class DistanceWeightedRandomPolicy : public Policy {
 
               if (m_debug) cout << endl;
             }
-          }  
+          }
         }
       }
 
@@ -342,7 +342,7 @@ class Band : public MPBaseObject {
       SetName("Band");
     }
 
-    Band(XMLNodeReader& _node, MPProblem* _problem): MPBaseObject(_node, _problem) {  
+    Band(XMLNodeReader& _node, MPProblem* _problem): MPBaseObject(_node, _problem) {
       SetName("Band");
       m_dmLabel = _node.stringXMLParameter("dmMethod", true, "default", "Distance Metric Method");
 
@@ -358,19 +358,19 @@ class Band : public MPBaseObject {
 
       if (policy == "closest") {
         m_policy = new ClosestPolicy(k, m_debug);
-      } 
+      }
       else if (policy == "random") {
         m_policy = new RandomPolicy(k, m_debug);
-      } 
+      }
       else if (policy == "RWR") {
         m_policy = new RankWeightedRandomPolicy(k, alpha, m_debug);
-      } 
+      }
       else if (policy == "DWR") {
         m_policy = new DistanceWeightedRandomPolicy(k, alpha, m_debug);
-      } 
+      }
       else if (policy == "preferential") {
         m_policy = new PreferentialPolicy(k, m_debug);
-      } 
+      }
       else {
         cout << "policy \"" << policy << "\" is not a valid option.  Exiting..." << endl;
         exit(-1);
@@ -390,7 +390,7 @@ class Band : public MPBaseObject {
   protected:
     template<typename RDMP, typename InputIterator>
       vector< pair<typename RDMP::VID, double> >
-      GetCandidateSet(RDMP* _rmp, 
+      GetCandidateSet(RDMP* _rmp,
           InputIterator _first, InputIterator _last, typename RDMP::CfgType _cfg){
         if (m_debug) cout << "Band::GetCandidateSet()" << endl;
 
@@ -403,7 +403,7 @@ class Band : public MPBaseObject {
     template<typename RDMP, typename InputIterator>
       vector< pair<typename RDMP::VID, double> >
       GetDistList(RDMP* _rmp,
-          InputIterator _first, InputIterator _last, typename RDMP::CfgType _cfg) {  
+          InputIterator _first, InputIterator _last, typename RDMP::CfgType _cfg) {
         if (m_debug) cout << "Band::GetDistList()" << endl;
 
         typedef typename RDMP::VID VID;
@@ -447,7 +447,7 @@ class Band : public MPBaseObject {
 
 class DBand : public Band {
   public:
-    DBand(XMLNodeReader& _node, MPProblem* _problem) : Band(_node, _problem){ 
+    DBand(XMLNodeReader& _node, MPProblem* _problem) : Band(_node, _problem){
       SetName("DBand");
     }
 
@@ -468,7 +468,7 @@ class DBand : public Band {
   private:
     template <typename RDMP, typename InputIterator>
       vector< pair<typename RDMP::VID, double> >
-      GetCandidateSet(RDMP* _rmp, 
+      GetCandidateSet(RDMP* _rmp,
           InputIterator _first, InputIterator _last, typename RDMP::CfgType _cfg) {
         if (m_debug) cout << "DBand::GetCandidateSet()" << endl;
 
@@ -501,7 +501,7 @@ class DBand : public Band {
 
 class RBand : public Band {
   public:
-    RBand(XMLNodeReader& _node, MPProblem* _problem) : Band(_node, _problem) { 
+    RBand(XMLNodeReader& _node, MPProblem* _problem) : Band(_node, _problem) {
       SetName("RBand");
     }
 
@@ -522,7 +522,7 @@ class RBand : public Band {
   private:
     template<typename RDMP, typename InputIterator>
       vector< pair<typename RDMP::VID, double> >
-      GetCandidateSet(RDMP* _rmp, 
+      GetCandidateSet(RDMP* _rmp,
           InputIterator _first, InputIterator _last, typename RDMP::CfgType _cfg) {
         if (m_debug) cout << "RBand::GetCandidateSet()" << endl;
 
@@ -572,11 +572,11 @@ class BandsNF: public NeighborhoodFinderMethod {
         if (citr->getName() == "DBand") {
           Band* dband = new DBand(*citr, _problem);
           m_bands.push_back(dband);
-        } 
+        }
         else if(citr->getName() == "RBand") {
           Band* rband = new RBand(*citr, _problem);
           m_bands.push_back(rband);
-        } 
+        }
       }
     }
 
@@ -585,15 +585,15 @@ class BandsNF: public NeighborhoodFinderMethod {
     }
 
     template<typename RDMP, typename InputIterator, typename OutputIterator>
-      OutputIterator KClosest(RDMP* _rmp, 
+      OutputIterator KClosest(RDMP* _rmp,
           InputIterator _first, InputIterator _last, typename RDMP::CfgType _cfg, size_t _k, OutputIterator _out);
 
     // KClosest that operate over two ranges of VIDS.  K total pair<VID,VID> are returned that
     // represent the _kclosest pairs of VIDs between the two ranges.
     template<typename RDMP, typename InputIterator, typename OutputIterator>
       OutputIterator KClosestPairs(RDMP* _rmp,
-          InputIterator _first1, InputIterator _last1, 
-          InputIterator _first2, InputIterator _last2, 
+          InputIterator _first1, InputIterator _last1,
+          InputIterator _first2, InputIterator _last2,
           size_t _k, OutputIterator _out);
 
   private:
@@ -602,10 +602,10 @@ class BandsNF: public NeighborhoodFinderMethod {
 
 // Returns all nodes within radius from _cfg
 template<typename RDMP, typename InputIterator, typename OutputIterator>
-OutputIterator 
-BandsNF::KClosest(RDMP* _roadmap, InputIterator _first, InputIterator _last, 
+OutputIterator
+BandsNF::KClosest(RDMP* _roadmap, InputIterator _first, InputIterator _last,
     typename RDMP::CfgType _cfg, size_t _k, OutputIterator _out) {
-  
+
   typedef typename RDMP::VID VID;
   typedef typename RDMP::CfgType CFG;
   typedef typename RDMP::RoadmapGraphType RoadmapGraphType;
@@ -630,7 +630,7 @@ BandsNF::KClosest(RDMP* _roadmap, InputIterator _first, InputIterator _last,
     else if((*bandIT)->GetName() == "RBand"){
       bandNeighbors = ((RBand*)*bandIT)->GetNeighbors(_roadmap, _first, _last, _cfg);
     }
-    
+
     typename vector< pair<VID, double> >::iterator itr;
     for (itr = bandNeighbors.begin(); itr != bandNeighbors.end(); ++itr) {
       if ((*itr).first != INVALID_VID) {
@@ -641,7 +641,7 @@ BandsNF::KClosest(RDMP* _roadmap, InputIterator _first, InputIterator _last,
   }
 
   sort(neighbors.begin(), neighbors.end(), CompareSecond<VID, double>());
-  
+
   // now add VIDs from neighbors to output
   for (size_t p = 0; p < neighbors.size(); p++) {
     if (neighbors[p].first != INVALID_VID) {
@@ -654,13 +654,13 @@ BandsNF::KClosest(RDMP* _roadmap, InputIterator _first, InputIterator _last,
 
   EndQueryTime();
   EndTotalTime();
-  
+
   return _out;
 }
 
 // Returns all pairs within radius
 template<typename RDMP, typename InputIterator, typename OutputIterator>
-OutputIterator 
+OutputIterator
 BandsNF::KClosestPairs(RDMP* _roadmap,
     InputIterator _first1, InputIterator _last1,
     InputIterator _first2, InputIterator _last2,

@@ -11,13 +11,13 @@ template<class MPTraits>
 class SurfaceValidity : public ValidityCheckerMethod<MPTraits> {
   public:
     typedef typename MPTraits::CfgType CfgType;
-    
+
     SurfaceValidity(string _vcLabel="");
     SurfaceValidity(typename MPTraits::MPProblemType* _problem, XMLNodeReader& _node) ;
 
     virtual ~SurfaceValidity() {}
 
-    virtual bool 
+    virtual bool
       IsValidImpl(CfgType& _cfg, Environment* _env, StatClass& _stats, CDInfo& _cdInfo, string* _callName);
 
   private:
@@ -32,7 +32,7 @@ SurfaceValidity<MPTraits>::SurfaceValidity(string _vcLabel) : ValidityCheckerMet
 }
 
 template<class MPTraits>
-SurfaceValidity<MPTraits>::SurfaceValidity(typename MPTraits::MPProblemType* _problem, XMLNodeReader& _node) 
+SurfaceValidity<MPTraits>::SurfaceValidity(typename MPTraits::MPProblemType* _problem, XMLNodeReader& _node)
   : ValidityCheckerMethod<MPTraits>(_problem, _node){
     _node.verifyName("SurfaceValidity");
     this->m_name = "SurfaceValidity";
@@ -40,7 +40,7 @@ SurfaceValidity<MPTraits>::SurfaceValidity(typename MPTraits::MPProblemType* _pr
   }
 
 template<class MPTraits>
-bool 
+bool
 SurfaceValidity<MPTraits>::IsValidImpl(CfgType& _cfg, Environment* _env, StatClass& _stats, CDInfo& _cdInfo, string* _callName){
 
   bool result = false;
@@ -48,7 +48,7 @@ SurfaceValidity<MPTraits>::IsValidImpl(CfgType& _cfg, Environment* _env, StatCla
   if( this->m_debug ) {
      cout << " active bodies: " << _env->GetActiveBodyCount() << " usable bodies: " << _env->GetUsableMultiBodyCount() << endl;
   }
-  if( sid == -1 ) { 
+  if( sid == -1 ) {
     //call default validity checker specified
     result = this->GetMPProblem()->GetValidityChecker(m_vcLabel)->IsValid(_cfg, _env, _stats, _cdInfo, _callName);
   }

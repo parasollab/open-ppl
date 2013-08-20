@@ -11,7 +11,7 @@
 
 template<class MPTraits> struct LPOutput;
 
-template<class MPTraits> 
+template<class MPTraits>
 class LocalPlannerMethod : public MPBaseObject<MPTraits> {
   public:
     typedef typename MPTraits::CfgType CfgType;
@@ -26,7 +26,7 @@ class LocalPlannerMethod : public MPBaseObject<MPTraits> {
 
     virtual ~LocalPlannerMethod(){}
 
-    virtual void PrintOptions(ostream& _os){};
+    virtual void PrintOptions(ostream& _os) const {};
 
     virtual bool IsConnected(Environment* _env, StatClass& _stats,
         DistanceMetricPointer _dm,
@@ -52,8 +52,8 @@ class LocalPlannerMethod : public MPBaseObject<MPTraits> {
           _savePath,_saveFailedPath);
     }
 
-    virtual vector<CfgType> ReconstructPath(Environment* _env, DistanceMetricPointer _dm, 
-        const CfgType& _c1, const CfgType& _c2, const vector<CfgType>& _intermediates, 
+    virtual vector<CfgType> ReconstructPath(Environment* _env, DistanceMetricPointer _dm,
+        const CfgType& _c1, const CfgType& _c2, const vector<CfgType>& _intermediates,
         double _posRes, double _oriRes) {
       StatClass dummyStats;
       LPOutput<MPTraits>* lpOutput = new LPOutput<MPTraits>();
@@ -64,7 +64,7 @@ class LocalPlannerMethod : public MPBaseObject<MPTraits> {
     }
 
   protected:
-    bool m_saveIntermediates; 
+    bool m_saveIntermediates;
 };
 
 #endif

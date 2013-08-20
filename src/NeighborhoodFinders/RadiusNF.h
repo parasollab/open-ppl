@@ -21,7 +21,7 @@ class RadiusNF: public NeighborhoodFinderMethod<MPTraits> {
         this->m_nfType = RADIUS;
         this->m_radius = _r;
       }
-    
+
     RadiusNF(MPProblemType* _problem, XMLNodeReader& _node) :
       NeighborhoodFinderMethod<MPTraits>(_problem, _node) {
         this->SetName("RadiusNF");
@@ -29,36 +29,36 @@ class RadiusNF: public NeighborhoodFinderMethod<MPTraits> {
         this->m_radius = _node.numberXMLParameter("radius", true, 0.5, 0.0, MAX_DBL, "Radius");
         _node.warnUnrequestedAttributes();
       }
-    
+
     virtual void PrintOptions(ostream& _os) const {
       NeighborhoodFinderMethod<MPTraits>::PrintOptions(_os);
       _os << "\tradius: " << this->m_radius << endl;
     }
-    
+
     template<typename InputIterator, typename OutputIterator>
-      OutputIterator FindNeighbors(RoadmapType* _rmp, 
+      OutputIterator FindNeighbors(RoadmapType* _rmp,
           InputIterator _first, InputIterator _last, const CfgType& _cfg, OutputIterator _out);
 
     // KClosest that operate over two ranges of VIDS.  K total pair<VID,VID> are returned that
     // represent the _kclosest pairs of VIDs between the two ranges.
     template<typename InputIterator, typename OutputIterator>
       OutputIterator FindNeighborPairs(RoadmapType* _rmp,
-          InputIterator _first1, InputIterator _last1, 
-          InputIterator _first2, InputIterator _last2, 
+          InputIterator _first1, InputIterator _last1,
+          InputIterator _first2, InputIterator _last2,
           OutputIterator _out);
 };
 
 // Returns all nodes within radius from _cfg
 template<class MPTraits>
 template<typename InputIterator, typename OutputIterator>
-OutputIterator 
-RadiusNF<MPTraits>::FindNeighbors(RoadmapType* _rmp, InputIterator _first, InputIterator _last, 
+OutputIterator
+RadiusNF<MPTraits>::FindNeighbors(RoadmapType* _rmp, InputIterator _first, InputIterator _last,
     const CfgType& _cfg, OutputIterator _out) {
-  
+
   this->IncrementNumQueries();
   this->StartTotalTime();
   this->StartQueryTime();
-  
+
   Environment* env = this->GetMPProblem()->GetEnvironment();
   GraphType* map = _rmp->GetGraph();
   DistanceMetricPointer dmm = this->GetMPProblem()->GetDistanceMetric(this->m_dmLabel);
@@ -66,10 +66,10 @@ RadiusNF<MPTraits>::FindNeighbors(RoadmapType* _rmp, InputIterator _first, Input
 
   // Find all nodes within radius
   for(InputIterator it = _first; it != _last; it++) {
-    
+
     if(this->CheckUnconnected(_rmp, _cfg, map->GetVID(it)))
       continue;
-    
+
     CfgType node = map->GetVertex(it);
     if(node == _cfg) // Don't connect to itself
       continue;
@@ -82,24 +82,24 @@ RadiusNF<MPTraits>::FindNeighbors(RoadmapType* _rmp, InputIterator _first, Input
 
   this->EndQueryTime();
   this->EndTotalTime();
-  
+
   return copy(inRadius.begin(), inRadius.end(), _out);
 }
 
 // Returns all pairs within radius
 template<class MPTraits>
 template<typename InputIterator, typename OutputIterator>
-OutputIterator 
+OutputIterator
 RadiusNF<MPTraits>::FindNeighborPairs(RoadmapType* _rmp,
     InputIterator _first1, InputIterator _last1,
     InputIterator _first2, InputIterator _last2,
     OutputIterator _out) {
-   
+
   Environment* env = this->GetMPProblem()->GetEnvironment();
   GraphType* map = _rmp->GetGraph();
   DistanceMetricPointer dmm = this->GetMPProblem()->GetDistanceMetric(this->m_dmLabel);
   set<pair<pair<VID, VID >, double> > inRadius;
- 
+
   // Find all pairs within radius
   for(InputIterator it1 = _first1; it1 != _last1; it1++) {
     CfgType node1 = map->GetVertex(it1);
@@ -107,7 +107,7 @@ RadiusNF<MPTraits>::FindNeighborPairs(RoadmapType* _rmp,
       if(*it1 == *it2) // Don't connect to itself
         continue;
       CfgType node2 = map->GetVertex(it2);
-      
+
       // If within radius, add to list
       double dist = dmm->Distance(env, node1, node2);
       if(dist <= this->m_radius){
@@ -117,7 +117,7 @@ RadiusNF<MPTraits>::FindNeighborPairs(RoadmapType* _rmp,
       }
     }
   }
- 
+
   return copy(inRadius.begin(), inRadius.end(), _out);
 }
 

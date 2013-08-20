@@ -10,8 +10,8 @@ class MetricMethod : public MPBaseObject<MPTraits> {
     MetricMethod(typename MPTraits::MPProblemType* _problem, XMLNodeReader& _node) : MPBaseObject<MPTraits>(_problem, _node) {}
     virtual ~MetricMethod(){}
 
-    virtual void PrintOptions(ostream& _os){
-      _os << this->GetName() << endl; 
+    virtual void PrintOptions(ostream& _os) const {
+      _os << this->GetName() << endl;
     }
 
     virtual double operator()() = 0;

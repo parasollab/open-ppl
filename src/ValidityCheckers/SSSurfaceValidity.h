@@ -28,7 +28,7 @@ class SSSurfaceValidity : public ValidityCheckerMethod<MPTraits> {
 
     virtual ~SSSurfaceValidity() {}
 
-    virtual bool 
+    virtual bool
       IsValidImpl(CfgType& _cfg, Environment* _env, StatClass& _stats, CDInfo& _cdInfo, string* _callName);
 
   private:
@@ -48,7 +48,7 @@ SSSurfaceValidity<MPTraits>::SSSurfaceValidity(string _vcLabel) : ValidityChecke
 }
 
   template<class MPTraits>
-SSSurfaceValidity<MPTraits>::SSSurfaceValidity(typename MPTraits::MPProblemType* _problem, XMLNodeReader& _node) 
+SSSurfaceValidity<MPTraits>::SSSurfaceValidity(typename MPTraits::MPProblemType* _problem, XMLNodeReader& _node)
   : ValidityCheckerMethod<MPTraits>(_problem, _node){
     _node.verifyName("SSSurfaceValidity");
     this->m_name = "SSSurfaceValidity";
@@ -60,7 +60,7 @@ SSSurfaceValidity<MPTraits>::SSSurfaceValidity(typename MPTraits::MPProblemType*
   }
 
 template<class MPTraits>
-bool 
+bool
 SSSurfaceValidity<MPTraits>::IsValidImpl(CfgType& _cfg, Environment* _env, StatClass& _stats, CDInfo& _cdInfo, string* _callName){
 
   vector<TmpCfgType>& cfgs = _cfg.GetCfgs();

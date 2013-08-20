@@ -9,12 +9,12 @@ class PrintMapEvaluation : public MapEvaluatorMethod<MPTraits> {
 
     PrintMapEvaluation();
     PrintMapEvaluation(string _baseName);
-    PrintMapEvaluation(typename MPTraits::MPProblemType* _problem, XMLNodeReader& _node); 
+    PrintMapEvaluation(typename MPTraits::MPProblemType* _problem, XMLNodeReader& _node);
     virtual ~PrintMapEvaluation();
-  
-    virtual void PrintOptions(ostream& _os);
-  
-    virtual bool operator()(); 
+
+    virtual void PrintOptions(ostream& _os) const;
+
+    virtual bool operator()();
 
   protected:
     string m_baseName;
@@ -44,7 +44,7 @@ PrintMapEvaluation<MPTraits>::~PrintMapEvaluation() {
 
 template<class MPTraits>
 void
-PrintMapEvaluation<MPTraits>::PrintOptions(ostream& _os) {
+PrintMapEvaluation<MPTraits>::PrintOptions(ostream& _os) const {
   _os << "PrintMapEvalaution" << endl;
   _os << "\tbase filename = " << m_baseName << endl;
 }
@@ -58,8 +58,8 @@ PrintMapEvaluation<MPTraits>::operator()() {
   osName << m_baseName << "." << numNodes << "." << numEdges << ".map";
   ofstream osMap(osName.str().c_str());
   this->GetMPProblem()->GetRoadmap()->Write(osMap, this->GetMPProblem()->GetEnvironment());
-  osMap.close();  
-  
+  osMap.close();
+
   int numCollNodes = this->GetMPProblem()->GetBlockRoadmap()->GetGraph()->get_num_vertices();
   int numCollEdges = this->GetMPProblem()->GetBlockRoadmap()->GetGraph()->get_num_edges();
   if(numCollNodes) {

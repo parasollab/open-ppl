@@ -17,52 +17,52 @@ ostream& operator<<(ostream& os, const NodeTypeCounts& nt)
 
 
 HybridPRM::
-HybridPRM(XMLNodeReader& in_Node, MPProblem* in_pProblem) : MPStrategyMethod(in_Node,in_pProblem) 
+HybridPRM(XMLNodeReader& in_Node, MPProblem* in_pProblem) : MPStrategyMethod(in_Node,in_pProblem)
 {
   ParseXML(in_Node);
 }
 
 
 HybridPRM::
-~HybridPRM() 
+~HybridPRM()
 {}
 
 
-void 
+void
 HybridPRM::
-ParseXML(XMLNodeReader& in_Node) 
+ParseXML(XMLNodeReader& in_Node)
 {
-  for(XMLNodeReader::childiterator citr = in_Node.children_begin(); citr!= in_Node.children_end(); ++citr) 
+  for(XMLNodeReader::childiterator citr = in_Node.children_begin(); citr!= in_Node.children_end(); ++citr)
   {
-    if(citr->getName() == "node_generation_method") 
+    if(citr->getName() == "node_generation_method")
     {
       string node_gen_method = citr->stringXMLParameter("Method",true,"","Method");
       m_node_gen_labels.push_back(node_gen_method);
       int initial_cost = citr->numberXMLParameter("initial_cost",false,1,1,MAX_INT,"initial_cost");
       m_node_gen_costs[node_gen_method] = initial_cost;
       citr->warnUnrequestedAttributes();
-    } 
-    else if(citr->getName() == "node_connection_method") 
+    }
+    else if(citr->getName() == "node_connection_method")
     {
       string connect_method = citr->stringXMLParameter("Method",true,"","Method");
       m_node_conn_labels.push_back(connect_method);
       citr->warnUnrequestedAttributes();
-    } 
+    }
     else if(citr->getName() == "evaluation_method")
     {
       string evalMethod = citr->stringXMLParameter("Method", true, "", "Evaluation Method");
       m_evaluator_labels.push_back(evalMethod);
       citr->warnUnrequestedAttributes();
     }
-    else if(citr->getName() == "stat_nf_method") 
+    else if(citr->getName() == "stat_nf_method")
     {
       nf_label = citr->stringXMLParameter("Method",true, "", "Neighborhood Finder Method for Stats computations");
       citr->warnUnrequestedAttributes();
-    } 
-    else 
+    }
+    else
       citr->warnUnknownNode();
   }
-  
+
   m_percentage_random = in_Node.numberXMLParameter("percent_random", true, 0.5, 0.0, 1.0, "percent_random");
   m_bin_size = in_Node.numberXMLParameter("bin_size", true, 5, 1, MAX_INT, "bin_size");
   m_window_percent = in_Node.numberXMLParameter("window_percent", true, 0.5, 0.0, 1.0, "window_percent");
@@ -76,9 +76,7 @@ ParseXML(XMLNodeReader& in_Node)
 
 
 void
-HybridPRM::
-PrintOptions(ostream& out_os) 
-{
+HybridPRM::PrintOptions(ostream& out_os) const {
   using boost::lambda::_1;
 
   out_os << "HybridPRM::\n";
@@ -94,7 +92,7 @@ PrintOptions(ostream& out_os)
   out_os << "\tnode_connection_methods: "; for_each(m_node_conn_labels.begin(), m_node_conn_labels.end(), out_os << _1 << " "); out_os << endl;
   //out_os << "\tcomponent_connection_methods: "; for_each(m_component_conn_labels.begin(), m_component_conn_labels.end(), out_os << _1 << " "); out_os << endl;
   out_os << "\tevaluator_methods: "; for_each(m_evaluator_labels.begin(), m_evaluator_labels.end(), out_os << _1 << " "); out_os << endl;
-  
+
   //out_os << "\twitness_queries:\n"; for_each(m_witness_nodes.begin(), m_witness_nodes.end(), out_os << constant("\t\t") << _1 << " "); out_os << endl;
 }
 
@@ -107,7 +105,7 @@ void HybridPRM::Initialize(){
   ssRandomSeed << GetBaseSeed();
   base_filename = GetBaseFilename() + "." + ssRandomSeed.str();
   instanceNumber++;
- 
+
   //setup output of statistics
   string outCharname = base_filename + ".char";
   char_ofstream.open(outCharname.c_str());
@@ -126,20 +124,20 @@ void HybridPRM::Initialize(){
   char_ofstream << endl;
 
   GetMPProblem()->GetStatClass()->StartClock("Everything");
-  
+
    //initialize weights, probabilities, costs, set m_node_gen_probabilities_use = m_node_gen_probabilities
    initialize_weights_probabilities_costs();
    copy_learned_prob_to_prob_use();
   //initialize visibility maps for calculating rewards for cc_expand nodes
   //map<VID, Visibility> vis_map;
-  
+
   //initialize node_types accounting for stats
   //NodeTypeCounts node_types;
   //int num_vis_low(0), num_vis_medium(0), num_vis_high(0);
-  
+
   //initialize diameter accounting for stats
   //double total_dia_time(0),largest_cc_dia(0),sum_cc_dia(0);
-    
+
   //double witness_connectivity(0), witness_coverage(0), total_query_time(0);
   //unsigned int witness_queries = m_witness_nodes.size()*(m_witness_nodes.size()-1)/2;
 }
@@ -153,8 +151,8 @@ void HybridPRM::Run(){
   {
     cout << "\n\nStart of bin.\n";
     print_weights_probabilities_costs(cout);
-    
-    do 
+
+    do
     {
       if((totalSamples % m_bin_size == 0) || (in_learning_window(totalSamples) != in_learning_window(totalSamples - 1)))
       {
@@ -179,19 +177,19 @@ void HybridPRM::Run(){
 
       //for each valid sampled node, connect it to the roadmap, record reward and cost, update sampler probabilities
       for(vector<CfgType>::iterator C = vectorCfgs.begin(); C != vectorCfgs.end(); ++C)
-      { 
-        if(C->IsLabel("VALID") && C->GetLabel("VALID")) 
+      {
+        if(C->IsLabel("VALID") && C->GetLabel("VALID"))
         {
           cmap.reset();
           int nNumPrevCCs = get_cc_count(*(GetMPProblem()->GetRoadmap()->m_pRoadmap), cmap);
-	          
+
           //add node to roadmap
           VID newVID = GetMPProblem()->GetRoadmap()->m_pRoadmap->AddVertex(*C);
-	    
+
           //connect node to roadmap
           unsigned long int num_cd_before_conn = pStatClass->GetIsCollTotal();
           vector<pair<pair<VID,VID>,bool> > connection_attempts;
-    	  for(vector<string>::iterator itr = m_node_conn_labels.begin(); itr != m_node_conn_labels.end(); ++itr) 
+    	  for(vector<string>::iterator itr = m_node_conn_labels.begin(); itr != m_node_conn_labels.end(); ++itr)
           {
             vector<VID> new_free_vid(1, newVID);
             vector<VID> map_vids;
@@ -202,20 +200,20 @@ void HybridPRM::Run(){
             connector->GetMethod(*itr)->Connect(
                 GetMPProblem()->GetRoadmap(), *pStatClass, cmap,
                 new_free_vid.begin(), new_free_vid.end(),
-                map_vids.begin(), map_vids.end()); 
-            connection_attempts.insert(connection_attempts.end(), 
+                map_vids.begin(), map_vids.end());
+            connection_attempts.insert(connection_attempts.end(),
                 connector->GetMethod(*itr)->ConnectionAttemptsBegin(),
                 connector->GetMethod(*itr)->ConnectionAttemptsEnd());
-            
+
     	  }
           unsigned long int num_cd_after_conn = pStatClass->GetIsCollTotal();
-          
+
           //update visibilities based on connection attempts
-          for(vector<pair<pair<VID,VID>,bool> >::const_iterator CA = connection_attempts.begin(); CA != connection_attempts.end(); ++CA) 
+          for(vector<pair<pair<VID,VID>,bool> >::const_iterator CA = connection_attempts.begin(); CA != connection_attempts.end(); ++CA)
           {
             vis_map[CA->first.first].attempts++;
             vis_map[CA->first.second].attempts++;
-            if(CA->second) 
+            if(CA->second)
             {
               vis_map[CA->first.first].connections++;
               vis_map[CA->first.second].connections++;
@@ -231,7 +229,7 @@ void HybridPRM::Run(){
           else
             num_vis_high++;
           */
-    	  
+
           //compute sampler cost
           //unsigned long int cost = (double)(num_cd_after_conn - num_cd_before_gen) / (double)vectorCfgs.size();
           //unsigned long int cost = (double)(num_cd_after_gen - num_cd_before_gen) / (double)vectorCfgs.size() + (num_cd_after_conn - num_cd_before_conn);
@@ -261,7 +259,7 @@ void HybridPRM::Run(){
           ++totalSamples;
 
     	  //if at the end of the bin, update probabilities, reinitialize weights
-          if(totalSamples % m_bin_size == 0) 
+          if(totalSamples % m_bin_size == 0)
           {
             cout << "\nEnd of bin.\n";
             if(m_sampler_selection_distribution == "nowindow")
@@ -282,7 +280,7 @@ void HybridPRM::Run(){
           //Compute Witness Coverage and Connectivity
           Clock_Class query_time;
           query_time.StartClock("query_time");
-          if(witness_connectivity != 100) 
+          if(witness_connectivity != 100)
           { //all queries not already solved
             pair<unsigned int, unsigned int> witness_qry = ConnectionsWitnessToRoadmap(m_witness_nodes,&(GetMPProblem()->GetRoadmap()),m_query_stat);
             witness_coverage = 100*witness_qry.first/m_witness_nodes.size();
@@ -298,13 +296,13 @@ void HybridPRM::Run(){
           //Compute Diameters
           Clock_Class dia_time;
           dia_time.StartClock("dia_time");
-          if((totalSamples % 50 == 0) || (totalSamples == 1)) 
+          if((totalSamples % 50 == 0) || (totalSamples == 1))
           { //only every 50 samples
             vector<pair<size_t, VID> > cc;
             cmap.reset();
             get_cc_stats(*(GetMPProblem()->GetRoadmap()->m_pRoadmap), cmap, cc);
             largest_cc_dia = sum_cc_dia = 0;
-            for(vector<pair<size_t, VID> >::const_iterator CC = cc.begin(); CC != cc.end(); ++CC) 
+            for(vector<pair<size_t, VID> >::const_iterator CC = cc.begin(); CC != cc.end(); ++CC)
             {
               double _cc_dia = cc_diamater(GetMPProblem()->GetRoadmap()->m_pRoadmap, CC->second);
               sum_cc_dia += _cc_dia;
@@ -314,23 +312,23 @@ void HybridPRM::Run(){
           dia_time.StopClock();
           total_dia_time += dia_time.GetClock_SEC();
           */
-   
+
           //Print out node stats
           cmap.reset();
           char_ofstream << totalSamples
                         << ":" << pStatClass->GetIsCollTotal()
-                        << ":" << get_cc_count(*(GetMPProblem()->GetRoadmap()->m_pRoadmap), cmap) 
+                        << ":" << get_cc_count(*(GetMPProblem()->GetRoadmap()->m_pRoadmap), cmap)
                         //<< ":" << largest_cc_dia << ":" << sum_cc_dia
                         << node_types
                         //<< ":" << witness_connectivity
                         //<< ":" << num_vis_low << ":" << num_vis_medium << ":" << num_vis_high;
                         ;
           char_ofstream << ":" << next_node_gen;
-          for(vector<string>::const_iterator S = m_node_gen_labels.begin(); S != m_node_gen_labels.end(); ++S) 
+          for(vector<string>::const_iterator S = m_node_gen_labels.begin(); S != m_node_gen_labels.end(); ++S)
             char_ofstream << ":" << m_node_gen_probabilities[*S];
-          for(vector<string>::const_iterator S = m_node_gen_labels.begin(); S != m_node_gen_labels.end(); ++S) 
+          for(vector<string>::const_iterator S = m_node_gen_labels.begin(); S != m_node_gen_labels.end(); ++S)
             char_ofstream << ":" << m_node_gen_num_sampled[*S];
-          for(vector<string>::const_iterator S = m_node_gen_labels.begin(); S != m_node_gen_labels.end(); ++S) 
+          for(vector<string>::const_iterator S = m_node_gen_labels.begin(); S != m_node_gen_labels.end(); ++S)
             char_ofstream << ":" << m_node_gen_num_oversampled[*S];
           char_ofstream << endl;
 
@@ -375,7 +373,7 @@ void HybridPRM::Finalize(){
   cout << "Query Stats" << endl;
   m_query_stat.PrintAllStats(GetMPProblem()->GetRoadmap());
   */
-  std::cout.rdbuf(sbuf);  // restore original stream buffer 
+  std::cout.rdbuf(sbuf);  // restore original stream buffer
   pStatClass->PrintFeatures(stat_ofstream);
   stat_ofstream.close();
 
@@ -384,7 +382,7 @@ void HybridPRM::Finalize(){
 
 void
 HybridPRM::
-initialize_weights_probabilities_costs() 
+initialize_weights_probabilities_costs()
 {
   m_node_gen_weights.clear();
   m_node_gen_probabilities.clear();
@@ -407,7 +405,7 @@ initialize_weights_probabilities_costs()
 
 void
 HybridPRM::
-copy_learned_prob_to_prob_use() 
+copy_learned_prob_to_prob_use()
 {
   m_node_gen_probabilities_use.clear();
   for(vector<string>::const_iterator NG = m_node_gen_labels.begin(); NG != m_node_gen_labels.end(); ++NG)
@@ -417,7 +415,7 @@ copy_learned_prob_to_prob_use()
 
 void
 HybridPRM::
-print_weights_probabilities_costs(ostream& _out) 
+print_weights_probabilities_costs(ostream& _out)
 {
   _out << endl;
   _out << "Sampler::\tWeight\tProNoCost\tPro\tCost\n";
@@ -436,7 +434,7 @@ print_weights_probabilities_costs(ostream& _out)
 
 string
 HybridPRM::
-select_next_sampling_method(bool learning) 
+select_next_sampling_method(bool learning)
 {
   //create probability ranges for each sampler
   double pro_sum = 0;
@@ -444,9 +442,9 @@ select_next_sampling_method(bool learning)
   for(vector<string>::const_iterator NG = m_node_gen_labels.begin(); NG != m_node_gen_labels.end(); ++NG)
   {
     double gen_prob = 0;
-    if(learning && m_sampler_selection_distribution == "window_uniform") 
+    if(learning && m_sampler_selection_distribution == "window_uniform")
       gen_prob = m_node_gen_probabilities_uniform[*NG];
-    else if(m_sampler_selection_distribution == "nowindow") 
+    else if(m_sampler_selection_distribution == "nowindow")
       gen_prob = m_node_gen_probabilities_use[*NG];
     else
       gen_prob = m_node_gen_probabilities[*NG];
@@ -462,7 +460,7 @@ select_next_sampling_method(bool learning)
   }
 
   //return the sampler with the highest probability if outside learning window and "window_hybrid_outsidewindow_highest" selected
-  if(!learning && m_sampler_selection_distribution == "window_hybrid_outsidewindow_highest") 
+  if(!learning && m_sampler_selection_distribution == "window_hybrid_outsidewindow_highest")
   {
     double max_probability = 0;
     string max_gen = "";
@@ -474,13 +472,13 @@ select_next_sampling_method(bool learning)
       }
     //cout << "***\tHighest sampler after learning :: " << max_gen << endl;
     return max_gen;
-  } 
-  else 
+  }
+  else
   {
     //select sampler based on probability ranges
     double random_num = DRand();
     for(vector<string>::const_iterator NG = m_node_gen_labels.begin(); NG != m_node_gen_labels.end(); ++NG)
-      if(map_pro_range[*NG].first < random_num && random_num < map_pro_range[*NG].second) 
+      if(map_pro_range[*NG].first < random_num && random_num < map_pro_range[*NG].second)
       { //we have a winner
         //cout << "***   The next node generator is::  " << *NG << endl;
         return *NG;
@@ -501,21 +499,21 @@ double
 HybridPRM::
 compute_visibility_reward(string next_node_gen, double visibility, double threshold, int prev_cc_count, int curr_cc_count, NodeTypeCounts& node_types)
 {
-  if(curr_cc_count > prev_cc_count) //CC Create 
+  if(curr_cc_count > prev_cc_count) //CC Create
   {
     node_types.num_cc_create++;
     return 1.0;
-  } 
+  }
   else if(curr_cc_count < prev_cc_count) //CC Merge
   {
     node_types.num_cc_merge++;
     return 1.0;
-  } 
-  else 
+  }
+  else
   { //Reward based on visibility
-    if(visibility < threshold) //CC Expand 
+    if(visibility < threshold) //CC Expand
       node_types.num_cc_expand++;
-    else //CC Oversample 
+    else //CC Oversample
     {
       node_types.num_cc_oversample++;
       m_node_gen_num_oversampled[next_node_gen]++;
@@ -538,7 +536,7 @@ in_learning_window(int totalSamples) const
 
 void
 HybridPRM::
-reward_and_update_weights_probabilities(string node_gen_selected, double reward, unsigned long int cost) 
+reward_and_update_weights_probabilities(string node_gen_selected, double reward, unsigned long int cost)
 {
   int K = m_node_gen_labels.size();
 
@@ -548,7 +546,7 @@ reward_and_update_weights_probabilities(string node_gen_selected, double reward,
     int num_sampled = m_node_gen_num_sampled[node_gen_selected];
     int prev_avg_cost = m_node_gen_costs[node_gen_selected];
     int new_avg_cost = (prev_avg_cost * num_sampled + cost) / (num_sampled + 1);
-    m_node_gen_costs[node_gen_selected] = new_avg_cost; 
+    m_node_gen_costs[node_gen_selected] = new_avg_cost;
   }
 
   //update weights:
@@ -576,12 +574,12 @@ reward_and_update_weights_probabilities(string node_gen_selected, double reward,
     prob_nocost_total += (m_node_gen_probabilities_no_cost[*NG] / double(m_node_gen_costs[*NG]));
   for(vector<string>::const_iterator NG = m_node_gen_labels.begin(); NG != m_node_gen_labels.end(); ++NG)
   {
-    if(!m_count_cost) 
+    if(!m_count_cost)
       m_node_gen_probabilities[*NG] = m_node_gen_probabilities_no_cost[*NG];
     else
       m_node_gen_probabilities[*NG] = (m_node_gen_probabilities_no_cost[*NG] / double(m_node_gen_costs[*NG])) / prob_nocost_total;
   }
- 
+
   //normalize weights (not in original algorithm, but prevents infinite weights
   double smallest_weight = -1;
   for(vector<string>::const_iterator NG = m_node_gen_labels.begin(); NG != m_node_gen_labels.end(); ++NG)
@@ -597,13 +595,13 @@ reward_and_update_weights_probabilities(string node_gen_selected, double reward,
 
 
 /*
-bool 
+bool
 HybridPRM::
-CanConnectComponents(vector<CfgType>& cc_a, vector<CfgType>& cc_b, StatClass& stat) 
+CanConnectComponents(vector<CfgType>& cc_a, vector<CfgType>& cc_b, StatClass& stat)
 {
   // variables needed for the local planner call in loop
   LocalPlanners <CfgType, WeightType>* lp = GetMPProblem()->GetMPStrategy()->GetLocalPlanners();
-  LPOutput<CfgType, WeightType> lp_output; 
+  LPOutput<CfgType, WeightType> lp_output;
   Environment* env = GetMPProblem()->GetEnvironment();
   CollisionDetection* cd = GetMPProblem()->GetCollisionDetection();
   DistanceMetric* dm = GetMPProblem()->GetDistanceMetric();
@@ -612,11 +610,11 @@ CanConnectComponents(vector<CfgType>& cc_a, vector<CfgType>& cc_b, StatClass& st
   //StatClass Stats;
 
   typedef vector< CfgType >::iterator CFG_ITRTR;
-  for(CFG_ITRTR i_cc_a = cc_a.begin(); i_cc_a < cc_a.end(); i_cc_a++) 
+  for(CFG_ITRTR i_cc_a = cc_a.begin(); i_cc_a < cc_a.end(); i_cc_a++)
   {
     sort(cc_b.begin(), cc_b.end(), CFG_CFG_DIST_COMPARE<CfgType>(*i_cc_a,dm,env));
-    for(CFG_ITRTR i_cc_b = cc_b.begin(); i_cc_b < cc_b.end(); i_cc_b++) 
-      if(lp->IsConnected(env, stat, dm, (*i_cc_a), (*i_cc_b), &lp_output, pos_res, ori_res, true)) 
+    for(CFG_ITRTR i_cc_b = cc_b.begin(); i_cc_b < cc_b.end(); i_cc_b++)
+      if(lp->IsConnected(env, stat, dm, (*i_cc_a), (*i_cc_b), &lp_output, pos_res, ori_res, true))
         return true; // st  op as soon as one cc in a can connect to a node in b
   }
   return false;
@@ -625,15 +623,15 @@ CanConnectComponents(vector<CfgType>& cc_a, vector<CfgType>& cc_b, StatClass& st
 
 
 /*
-double 
+double
 HybridPRM::
-cc_diamater(RoadmapGraph<CfgType,WeightType>* pGraph, VID _cc) 
+cc_diamater(RoadmapGraph<CfgType,WeightType>* pGraph, VID _cc)
 {
   // vector<VID> cc_vids;
   // GetCC ( *pGraph, _cc, cc_vids);
   double return_val = 0.0;
 //  for(int i=0; i<cc_vids.size(); ++i) {
-//  //  RoadmapGraph<CfgType,WeightType> *result; 
+//  //  RoadmapGraph<CfgType,WeightType> *result;
 //  //  result = new RoadmapGraph<CfgType,WeightType>;
 //    //double length = DijkstraSSSP(*(pGraph),*result,cc_vids[i]);
 //    double length = DijkstraSSSP(*(pGraph),cc_vids[i]);
@@ -654,25 +652,25 @@ cc_diamater(RoadmapGraph<CfgType,WeightType>* pGraph, VID _cc)
 /*
 pair<unsigned int, unsigned int>
 HybridPRM::
-ConnectionsWitnessToRoadmap(vector<CfgType>& witness_cfgs, Roadmap<CfgType, WeightType>* rdmp, StatClass& stat) 
+ConnectionsWitnessToRoadmap(vector<CfgType>& witness_cfgs, Roadmap<CfgType, WeightType>* rdmp, StatClass& stat)
 {
   int small_cc_size = 0;
-  
+
   stapl::sequential::vector_property_map<stapl::stapl_color<size_t> > cmap;
   cmap.reset();
   vector<pair<size_t, VID> > cc;
   get_cc_stats(*(rdmp->m_pRoadmap), cmap, cc);
-	
+
   // small_cc_size = int(double(cc[0].first) * double(0.01));
   vector<vector<unsigned int> > connected_to_cc;
   vector<unsigned int> tmp_vector;
   for(unsigned int i=0; i< cc.size(); i++)
     connected_to_cc.push_back(tmp_vector);
-  
+
   unsigned int possible_connections = 0;
   vector<CfgType> witness_test_cfg;
   typedef vector<CfgType>::iterator CFG_ITRTR;
-  for(unsigned int i=0; i < witness_cfgs.size(); i++) 
+  for(unsigned int i=0; i < witness_cfgs.size(); i++)
   {
     witness_test_cfg.clear();
     witness_test_cfg.push_back(witness_cfgs[i]);
@@ -680,7 +678,7 @@ ConnectionsWitnessToRoadmap(vector<CfgType>& witness_cfgs, Roadmap<CfgType, Weig
     typedef vector < pair< int, VID > >::iterator CC_ITRTR;
     unsigned int j=0;
     bool i_witness_can_connect = false;
-    for(unsigned int j=0; j < cc.size(); j++) 
+    for(unsigned int j=0; j < cc.size(); j++)
     {
       CfgType* tmp_pointer = new CfgType((*(rdmp->m_pRoadmap->find_vertex(cc[j].second))).property());
       vector<VID> cc_cfgs_aux;
@@ -688,29 +686,29 @@ ConnectionsWitnessToRoadmap(vector<CfgType>& witness_cfgs, Roadmap<CfgType, Weig
       get_cc(*(rdmp->m_pRoadmap), cmap, rdmp->m_pRoadmap->GetVID(*(tmp_pointer)), cc_cfgs_aux);
       vector<CfgType> cc_cfgs = rdmp->m_pRoadmap->ConvertVIDs2Vertices(cc_cfgs_aux);
       delete tmp_pointer;
-      if(cc_cfgs.size() >= small_cc_size) 
-        if(CanConnectComponents(witness_test_cfg, cc_cfgs, stat)) 
+      if(cc_cfgs.size() >= small_cc_size)
+        if(CanConnectComponents(witness_test_cfg, cc_cfgs, stat))
         {
           i_witness_can_connect = true;
           connected_to_cc[j].push_back(i);
         }
     }
     if(i_witness_can_connect)
-      possible_connections++; 
+      possible_connections++;
   }
 
   unsigned int possible_queries = 0;
   typedef vector<unsigned int>::iterator INT_ITRTR;
   typedef vector<vector<unsigned int> >::iterator DINT_ITRTR;
-  for(DINT_ITRTR i_ccs=connected_to_cc.begin(); i_ccs < connected_to_cc.end(); i_ccs++) 
+  for(DINT_ITRTR i_ccs=connected_to_cc.begin(); i_ccs < connected_to_cc.end(); i_ccs++)
   {
     bool i_in_j = false;
-    for(DINT_ITRTR i_ccs_other= i_ccs+1; i_ccs_other < connected_to_cc.end(); i_ccs_other++) 
-      for(INT_ITRTR i_el_i = i_ccs->begin(); i_el_i < i_ccs->end(); i_el_i++) 
+    for(DINT_ITRTR i_ccs_other= i_ccs+1; i_ccs_other < connected_to_cc.end(); i_ccs_other++)
+      for(INT_ITRTR i_el_i = i_ccs->begin(); i_el_i < i_ccs->end(); i_el_i++)
       {
-        //test whether *i_ccs is in *(i_ccs+1)  
-        for(INT_ITRTR i_el_j = (i_ccs_other)->begin(); i_el_j < (i_ccs_other)->end(); i_el_j++) 
-          if((*i_el_i) == (*i_el_j)) 
+        //test whether *i_ccs is in *(i_ccs+1)
+        for(INT_ITRTR i_el_j = (i_ccs_other)->begin(); i_el_j < (i_ccs_other)->end(); i_el_j++)
+          if((*i_el_i) == (*i_el_j))
           {
             i_ccs_other->insert(i_ccs_other->end(),i_ccs->begin(),i_ccs->end());
             i_in_j = true;
@@ -721,9 +719,9 @@ ConnectionsWitnessToRoadmap(vector<CfgType>& witness_cfgs, Roadmap<CfgType, Weig
       }
   }
 
-  for(DINT_ITRTR i_con=connected_to_cc.begin(); i_con < connected_to_cc.end(); i_con++) 
+  for(DINT_ITRTR i_con=connected_to_cc.begin(); i_con < connected_to_cc.end(); i_con++)
   {
-    // count whether *i_witness_cfg can connect to this cc in rdmp  
+    // count whether *i_witness_cfg can connect to this cc in rdmp
     // count the number of queries that could be done through this cc
     sort(i_con->begin(),i_con->end());
     INT_ITRTR newEnd;
@@ -737,7 +735,7 @@ ConnectionsWitnessToRoadmap(vector<CfgType>& witness_cfgs, Roadmap<CfgType, Weig
 */
 
 
-bool 
+bool
 HybridPRM::
 evaluate_map()
 {

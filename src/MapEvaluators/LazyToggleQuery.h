@@ -26,7 +26,7 @@ class LazyToggleQuery : public LazyQuery<MPTraits> {
     virtual ~LazyToggleQuery() {};
 
     void ParseXML(XMLNodeReader& _node);
-    virtual void PrintOptions(ostream& _os);
+    virtual void PrintOptions(ostream& _os) const;
 
     // Overrides PerformQuery in Query, calls Query::PerformQuery() and adds Toggle functionality
     virtual bool PerformQuery(CfgType _start, CfgType _goal, RoadmapType* _rdmp);
@@ -65,7 +65,7 @@ LazyToggleQuery<MPTraits>::ParseXML(XMLNodeReader& _node) {
 
 template<class MPTraits>
 void
-LazyToggleQuery<MPTraits>::PrintOptions(ostream& _os) {
+LazyToggleQuery<MPTraits>::PrintOptions(ostream& _os) const {
   LazyQuery<MPTraits>::PrintOptions(_os);
   _os << "\ttoggleConnect = " << m_toggleConnect << endl;
   _os << "\titerative = " << m_iterative << endl;

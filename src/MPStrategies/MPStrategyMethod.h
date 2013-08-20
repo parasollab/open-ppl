@@ -7,7 +7,7 @@
 template<class MPTraits>
 class MPStrategyMethod : public MPBaseObject<MPTraits> {
   public:
-   
+
     typedef typename MPTraits::MPProblemType MPProblemType;
     typedef typename MPProblemType::MapEvaluatorPointer MapEvaluatorPointer;
 
@@ -22,7 +22,7 @@ class MPStrategyMethod : public MPBaseObject<MPTraits> {
     virtual void Initialize()=0;
     virtual void Run()=0;
     virtual void Finalize()=0;
-    virtual void PrintOptions(ostream& _os);
+    virtual void PrintOptions(ostream& _os) const;
 
     string GetBaseFilename(){return m_baseFilename;}
     void SetBaseFilename(string _s){m_baseFilename = _s;}
@@ -59,7 +59,7 @@ MPStrategyMethod<MPTraits>::ParseXML(XMLNodeReader& _node){
 
 template<class MPTraits>
 void
-MPStrategyMethod<MPTraits>::PrintOptions(ostream& _os){
+MPStrategyMethod<MPTraits>::PrintOptions(ostream& _os) const {
   _os << this->GetName() << endl;
 }
 
@@ -83,13 +83,13 @@ MPStrategyMethod<MPTraits>::EvaluateMap(vector<string> _evaluators) {
     StatClass* stats = this->GetMPProblem()->GetStatClass();
 
     bool mapPassedEvaluation = false;
-    string clockName = this->GetNameAndLabel() + "::EvaluateMap()"; 
+    string clockName = this->GetNameAndLabel() + "::EvaluateMap()";
     stats->StartClock(clockName);
     mapPassedEvaluation = true;
 
     for(vector<string>::iterator I = _evaluators.begin(); I != _evaluators.end(); ++I) {
       MapEvaluatorPointer evaluator = this->GetMPProblem()->GetMapEvaluator(*I);
-      stringstream evaluatorClockName; 
+      stringstream evaluatorClockName;
       evaluatorClockName << clockName << "::" << evaluator->GetName();
       stats->StartClock(evaluatorClockName.str());
       if(this->m_debug) cout << "\n\t";
@@ -111,7 +111,7 @@ MPStrategyMethod<MPTraits>::EvaluateMap(vector<string> _evaluators) {
     stats->StopClock(clockName);
     if(this->m_debug) stats->PrintClock(clockName, cout);
     return mapPassedEvaluation;
-  } 
+  }
 }
 
-#endif 
+#endif

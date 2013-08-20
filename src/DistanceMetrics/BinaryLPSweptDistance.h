@@ -11,9 +11,9 @@ class BinaryLPSweptDistance : public LPSweptDistance {
     virtual ~BinaryLPSweptDistance();
 
     virtual void PrintOptions(ostream& _os) const;
-    
+
     virtual double Distance(Environment* _env, const Cfg& _c1, const Cfg& _c2);
-    
+
   protected:
     double m_tolerance;
     int m_maxAttempts;

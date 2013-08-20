@@ -1,15 +1,15 @@
 MPMultiStrategy::
 MPMultiStrategy(XMLNodeReader& in_Node, MPProblem* in_pProblem) :
   MPStrategyMethod(in_Node,in_pProblem) {
-    ParseXML(in_Node);    
+    ParseXML(in_Node);
   }
 
-void 
+void
 MPMultiStrategy::
-PrintOptions(ostream& out_os) { 
+PrintOptions(ostream& out_os) const {
 }
 
-void 
+void
 MPMultiStrategy::
 ParseXML(XMLNodeReader& in_Node) {
   XMLNodeReader::childiterator citr;
@@ -23,12 +23,12 @@ ParseXML(XMLNodeReader& in_Node) {
   }
 }
 
-void 
+void
 MPMultiStrategy::
-operator()() { 
+operator()() {
   // initializing from input
   typedef vector< string >::iterator VITRTR;
-  for (VITRTR s_itrtr = m_strategy_methods.begin(); s_itrtr < m_strategy_methods.end(); s_itrtr++) { 
+  for (VITRTR s_itrtr = m_strategy_methods.begin(); s_itrtr < m_strategy_methods.end(); s_itrtr++) {
     MPStrategyMethod* strategy = GetMPProblem()->GetMPStrategy()->
       GetMPStrategyMethod(*s_itrtr);
     (*strategy)();

@@ -25,12 +25,12 @@ class SampleWF {
       m_problem = _problem;
 
     }
-    void define_type(stapl::typer& _t) { 
+    void define_type(stapl::typer& _t) {
     }
 
-    SampleWF(const SampleWF& _wf, std::size_t _offset) {} 
+    SampleWF(const SampleWF& _wf, std::size_t _offset) {}
 
-    template<typename View> 
+    template<typename View>
     void operator()(const View& _view) const {
       cout << "Entered sample wf" << endl;
       int num_nodes = _view.size();
@@ -45,7 +45,7 @@ class SampleWF {
       size_t j(0);
       typedef typename vector<CfgType>::iterator VIT;
       for(VIT vit = outNodes.begin(); vit  != outNodes.end(); ++vit, j++) {
-          
+
         CfgType tmp = *vit;
         m_problem->GetRoadmap()->GetGraph()->add_vertex(tmp);
 
@@ -60,7 +60,7 @@ class ConnectWF {
     typedef typename MPProblemType::GraphType GraphType;
     typedef typename MPProblemType::VID VID;
     typedef typename MPProblemType::ConnectorPointer ConnectorPointer;
-    
+
     ConnectorPointer m_nodeCon;
     MPProblemType* m_problem;
 
@@ -75,18 +75,18 @@ class ConnectWF {
     }
     template <typename NativeView, typename RepeatView>
     void operator()(NativeView _vw1, RepeatView _vw2) const {
-	
+
       psbmp::PrintValue("Basic Parallel- Native View : " , _vw1.size());
       psbmp::PrintValue("Basic Parallel - Repeat View : " , _vw2.size());
-        
+
       vector<VID> v1;
-      vector<VID> v2; 
-	
+      vector<VID> v2;
+
       ///why not pass views directly to connector?
       for(typename NativeView::vertex_iterator vit1 = _vw1.begin(); vit1!= _vw1.end(); ++vit1){
 	v1.push_back((*vit1).descriptor());
       }
-	
+
       for(typename RepeatView::vertex_iterator vit2 = _vw2.begin(); vit2!= _vw2.end(); ++vit2){
 	v2.push_back((*vit2).descriptor());
       }
@@ -110,20 +110,20 @@ class BasicParallelPRM : public MPStrategyMethod<MPTraits> {
     typedef typename MPProblemType::VID VID;
     typedef typename MPProblemType::SamplerPointer SamplerPointer;
     typedef typename MPProblemType::ConnectorPointer ConnectorPointer;
-   
-    BasicParallelPRM(const vector<pair<string, int> >& _vecStrNodeGenLabels = vector<pair<string, int> >(), 
+
+    BasicParallelPRM(const vector<pair<string, int> >& _vecStrNodeGenLabels = vector<pair<string, int> >(),
        const vector<string>& _vecStrNodeConnectionLabels = vector<string>(),
        string _nodeGen = "", int _numIterations = 0, int _numSamples = 0);
-   
+
     BasicParallelPRM(typename MPTraits::MPProblemType* _problem, XMLNodeReader& _node);
-    
+
     virtual ~BasicParallelPRM() {};
 
-    virtual void PrintOptions(ostream& _os);
-    virtual void ParseXML(XMLNodeReader& _inPNode); 
+    virtual void PrintOptions(ostream& _os) const;
+    virtual void ParseXML(XMLNodeReader& _inPNode);
 
     virtual void Initialize() {};
-    virtual void Run(); 
+    virtual void Run();
     virtual void Finalize();
 
   private:
@@ -133,7 +133,7 @@ class BasicParallelPRM : public MPStrategyMethod<MPTraits> {
     int m_numIterations;
     int m_numSamples;
 };
-    
+
 template<class MPTraits>
 BasicParallelPRM<MPTraits>::BasicParallelPRM(const vector<pair<string, int> >& _vecStrNodeGenLabels, const vector<string>& _vecStrNodeConnectionLabels,
   string _nodeGen, int _numIterations, int _numSamples)
@@ -146,24 +146,24 @@ template<class MPTraits>
 BasicParallelPRM<MPTraits>::BasicParallelPRM(typename MPTraits::MPProblemType* _problem, XMLNodeReader& _node):
   MPStrategyMethod<MPTraits>(_problem, _node){
   if (this->m_debug) cout << "BasicParallelPRM::BasicParallelPRM" << endl;
-  ParseXML(_node);    
+  ParseXML(_node);
   this->SetName("BasicParallelPRM");
 }
 
 
 template<class MPTraits>
-void 
+void
 BasicParallelPRM<MPTraits>::ParseXML(XMLNodeReader& _node) {
   if (this->m_debug) cout << "BasicParallelPRM::ParseXML" << endl;
 
   m_numIterations = _node.numberXMLParameter("iterations", true, int(1), int(0), MAX_INT, "iterations of strategy");
-  
+
   XMLNodeReader::childiterator citr;
   for( citr = _node.children_begin(); citr!= _node.children_end(); ++citr) {
     if(citr->getName() == "node_generation_method") {
       string node_gen_method = citr->stringXMLParameter(string("Method"), true,
         string(""), string("Node Generation Method"));
-      int numPerIteration = citr->numberXMLParameter(string("Number"), true, 
+      int numPerIteration = citr->numberXMLParameter(string("Number"), true,
         int(1), int(0), MAX_INT, string("Number of samples"));
       m_vecStrNodeGenLabels.push_back(pair<string, int>(node_gen_method, numPerIteration));
       citr->warnUnrequestedAttributes();
@@ -182,12 +182,12 @@ BasicParallelPRM<MPTraits>::ParseXML(XMLNodeReader& _node) {
 
 template<class MPTraits>
 void
-BasicParallelPRM<MPTraits>::PrintOptions(ostream& _os) {
+BasicParallelPRM<MPTraits>::PrintOptions(ostream& _os) const {
   MPStrategyMethod<MPTraits>::PrintOptions(_os);
   typedef vector<pair<string, int> >::iterator VIter;
   typedef vector<string>::iterator StringIter;
   _os<<"\nSamplers\n";
-  for(VIter vIter=m_vecStrNodeGenLabels.begin(); 
+  for(VIter vIter=m_vecStrNodeGenLabels.begin();
       vIter!=m_vecStrNodeGenLabels.end(); vIter++){
     _os<<"\t"<<vIter->first<<"\tNumber:"<<vIter->second;
   }
@@ -200,16 +200,16 @@ BasicParallelPRM<MPTraits>::PrintOptions(ostream& _os) {
 }
 
 template<class MPTraits>
-void 
+void
 BasicParallelPRM<MPTraits>::Run() {
   if (this->m_debug) cout << "BasicParallelPRM::Run()" << endl;
 
-  GraphType* rmg = this->GetMPProblem()->GetRoadmap()->GetGraph(); 
+  GraphType* rmg = this->GetMPProblem()->GetRoadmap()->GetGraph();
 
   stapl::counter<stapl::default_timer> t1,t2;
 
   double sample_timer=0.0, connect_timer=0.0 ;
-  for(int it =1; it<= m_numIterations; ++it) {       
+  for(int it =1; it<= m_numIterations; ++it) {
     typedef vector<pair<string, int> >::iterator I;
 
     //---------------------------
@@ -221,7 +221,7 @@ BasicParallelPRM<MPTraits>::Run() {
       SamplerPointer nodeGen = this->GetMPProblem()->GetSampler(itr->first);
       typedef stapl::array<CfgType> cfgArray;
       typedef stapl::array_view<cfgArray> viewCfgArray;
-      cfgArray PA(itr->second); 
+      cfgArray PA(itr->second);
       viewCfgArray v(PA);
 
       t1.start();
@@ -229,8 +229,8 @@ BasicParallelPRM<MPTraits>::Run() {
       stapl::map_func(sampleWf,stapl::balance_view(v,stapl::get_num_locations()));
       sample_timer = t1.stop();
 
-      if (this->m_debug) 
-        cout<<"\n processor #----->["<<stapl::get_location_id()<<"] NodeGeneration time  = "  << sample_timer << endl; 
+      if (this->m_debug)
+        cout<<"\n processor #----->["<<stapl::get_location_id()<<"] NodeGeneration time  = "  << sample_timer << endl;
     }
     stapl::rmi_fence();
     //---------------------------
@@ -238,27 +238,27 @@ BasicParallelPRM<MPTraits>::Run() {
     //---------------------------
     cout << "Connecting Phase" << endl;
     typedef vector<string>::iterator J;
-    for(J itr = m_vecStrNodeConnectionLabels.begin(); itr != m_vecStrNodeConnectionLabels.end(); ++itr) {      
+    for(J itr = m_vecStrNodeConnectionLabels.begin(); itr != m_vecStrNodeConnectionLabels.end(); ++itr) {
       if (this->m_debug) cout << "BasicParallelPRM::graph size " << rmg->size() << endl;
 
-      ConnectorPointer connector = this->GetMPProblem()->GetConnector(*itr);    
+      ConnectorPointer connector = this->GetMPProblem()->GetConnector(*itr);
       typedef stapl::graph_view<GraphType>   VType;
       VType g_view(*rmg);
-      
+
       t2.start();
       ConnectWF<MPTraits> connWf(connector, this->GetMPProblem());
       stapl::map_func(connWf, stapl::native_view(g_view), stapl::repeat_view(g_view));
       connect_timer = t2.stop();
       if (this->m_debug) {
-          cout<<"\n processor #["<<stapl::get_location_id()<<"] NodeConnection time  = "  << connect_timer << endl; 
-        
+          cout<<"\n processor #["<<stapl::get_location_id()<<"] NodeConnection time  = "  << connect_timer << endl;
+
       }
     }
   }
 }
 
 template<class MPTraits>
-void 
+void
 BasicParallelPRM<MPTraits>::Finalize() {
   if (this->m_debug) cout << "BasicParallelPRM::Finalize()";
   //---------------------------
@@ -268,7 +268,7 @@ BasicParallelPRM<MPTraits>::Finalize() {
   string str = this->GetBaseFilename() + ".map";
   ofstream osMap(str.c_str());
   if(!osMap) {
-        
+
      cerr << "ERROR::Can't open outfile. "<< endl;
      cerr << "Reference this error on line "<< __LINE__ << " of file " << __FILE__ << endl;
      exit(-1);

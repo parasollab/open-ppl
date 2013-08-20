@@ -53,7 +53,7 @@ class UtilityGuidedGenerator : public MPStrategyMethod<MPTraits> {
   virtual ~UtilityGuidedGenerator();
 
   virtual void ParseXML(XMLNodeReader& _node);
-  virtual void PrintOptions(ostream& _os);
+  virtual void PrintOptions(ostream& _os) const;
 
   virtual void Initialize();
   virtual void Run();
@@ -115,7 +115,7 @@ UtilityGuidedGenerator<MPTraits>::ParseXML(XMLNodeReader& _node) {
 
 template <class MPTraits>
 void
-UtilityGuidedGenerator<MPTraits>::PrintOptions(ostream& _os) {
+UtilityGuidedGenerator<MPTraits>::PrintOptions(ostream& _os) const {
   MPStrategyMethod<MPTraits>::PrintOptions(_os);
   _os << "\tValidity Checker: " << m_vcLabel << endl;
   _os << "\tNeighborhood Finder: " << m_nfLabel << endl;

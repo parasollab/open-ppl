@@ -18,7 +18,7 @@ class ComposeEvaluator : public MapEvaluatorMethod<MPTraits> {
     ComposeEvaluator(MPProblemType* _problem, XMLNodeReader& _node);
     ~ComposeEvaluator() { }
 
-    virtual void PrintOptions(ostream& _os);
+    virtual void PrintOptions(ostream& _os) const;
 
     virtual bool operator()();
 
@@ -34,7 +34,7 @@ ComposeEvaluator<MPTraits>::ComposeEvaluator(LogicalOperator _logicalOperator, c
   }
 
 template<class MPTraits>
-ComposeEvaluator<MPTraits>::ComposeEvaluator(MPProblemType* _problem, XMLNodeReader& _node) 
+ComposeEvaluator<MPTraits>::ComposeEvaluator(MPProblemType* _problem, XMLNodeReader& _node)
   : MapEvaluatorMethod<MPTraits>(_problem, _node) {
     this->SetName("ComposeEvaluator");
 
@@ -68,9 +68,9 @@ ComposeEvaluator<MPTraits>::ComposeEvaluator(MPProblemType* _problem, XMLNodeRea
   }
 
 template<class MPTraits>
-void ComposeEvaluator<MPTraits>::PrintOptions(ostream& _os) {
+void ComposeEvaluator<MPTraits>::PrintOptions(ostream& _os) const {
   _os << this->GetName() << "::" ;
-  for(vector<string>::iterator it = m_evalLabels.begin(); it != m_evalLabels.end(); it++)
+  for(vector<string>::const_iterator it = m_evalLabels.begin(); it != m_evalLabels.end(); it++)
     _os << "\n\t evaluation method = \'" << *it << "\'";
   _os << "\n\t operator = " << m_logicalOperator << endl;
 }

@@ -3,7 +3,7 @@
 
 const double MAX_DIST =  1e10;
 
-/**This is the interface for all distance metric methods(euclidean, 
+/**This is the interface for all distance metric methods(euclidean,
  *scaledEuclidean, minkowski, manhattan, com, etc.).
  */
 template<class MPTraits>
@@ -58,12 +58,12 @@ DistanceMetricMethod<MPTraits>::ScaleCfg(Environment* _env, double _length, CfgT
     for(size_t i=0; i<currentCfg.DOF(); ++i)
       currentCfg[i] = (aboveCfg[i] + belowCfg[i]) / 2.0;
     double magnitude = Distance(_env, origin, currentCfg);
-    if( (magnitude >= _length*0.9) && (magnitude <= _length*1.1)) 
+    if( (magnitude >= _length*0.9) && (magnitude <= _length*1.1))
       break;
-    if(magnitude>_length) 
+    if(magnitude>_length)
       aboveCfg = currentCfg;
-    else 
-      belowCfg = currentCfg; 
+    else
+      belowCfg = currentCfg;
   }
 
   _c = currentCfg;

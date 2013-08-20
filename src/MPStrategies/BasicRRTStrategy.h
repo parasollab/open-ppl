@@ -40,7 +40,7 @@ class BasicRRTStrategy : public MPStrategyMethod<MPTraits> {
     virtual void Initialize();
     virtual void Run();
     virtual void Finalize();
-    virtual void PrintOptions(ostream& _os);
+    virtual void PrintOptions(ostream& _os) const;
 
     void SetMPProblem(MPProblemType* _problem);
 
@@ -140,8 +140,7 @@ BasicRRTStrategy<MPTraits>::ParseXML(XMLNodeReader& _node) {
 
 template<class MPTraits>
 void
-BasicRRTStrategy<MPTraits>::PrintOptions(ostream& _os) {
-  typedef vector<string>::iterator SIT;
+BasicRRTStrategy<MPTraits>::PrintOptions(ostream& _os) const {
   _os << "BasicRRTStrategy::PrintOptions" << endl;
   _os << "\tNeighborhood Finder:: " << m_nf << endl;
   _os << "\tDistance Metric:: " << m_dm << endl;
@@ -152,6 +151,7 @@ BasicRRTStrategy<MPTraits>::PrintOptions(ostream& _os) {
   _os << "\tEvaluate Goal:: " << m_evaluateGoal << endl;
   _os << "\tEvaluators:: " << endl;
   _os << "\tGrow Goals:: " << m_growGoals << endl;
+  typedef vector<string>::const_iterator SIT;
   for(SIT sit = m_evaluators.begin(); sit!=m_evaluators.end(); sit++)
     _os << "\t\t" << *sit << endl;
   _os << "\tdelta:: " << m_delta << endl;

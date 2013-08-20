@@ -19,7 +19,7 @@ class TransformAtS : public StraightLine<MPTraits> {
     TransformAtS(MPProblemType* _problem, XMLNodeReader& _node);
     virtual ~TransformAtS();
 
-    virtual void PrintOptions(ostream& _os);
+    virtual void PrintOptions(ostream& _os) const;
 
     virtual bool IsConnected(Environment* _env, StatClass& _stats,
         DistanceMetricPointer _dm,
@@ -28,7 +28,7 @@ class TransformAtS : public StraightLine<MPTraits> {
         double _positionRes, double _orientationRes,
         bool _checkCollision = true, bool _savePath = false, bool _saveFailedPath = false);
 
-    virtual vector<CfgType> ReconstructPath(Environment* _env, DistanceMetricPointer _dm, 
+    virtual vector<CfgType> ReconstructPath(Environment* _env, DistanceMetricPointer _dm,
         const CfgType& _c1, const CfgType& _c2, const vector<CfgType>& _intermediates, double _posRes, double _oriRes);
 
   protected:
@@ -40,7 +40,7 @@ class TransformAtS : public StraightLine<MPTraits> {
 
     virtual bool IsConnectedOneWay(Environment* _env, StatClass& _stats,
         DistanceMetricPointer _dm,
-        const CfgType& _c1, const CfgType& _c2, CfgType& _col, 
+        const CfgType& _c1, const CfgType& _c2, CfgType& _col,
         LPOutput<MPTraits>* _lpOutput,
         double _positionRes, double _orientationRes,
         bool _checkCollision = true, bool _savePath = false,
@@ -50,7 +50,7 @@ class TransformAtS : public StraightLine<MPTraits> {
 };
 
 template <class MPTraits>
-TransformAtS<MPTraits>::TransformAtS(double _s): 
+TransformAtS<MPTraits>::TransformAtS(double _s):
   StraightLine<MPTraits>(), m_sValue(_s) {
     this->SetName("TransformAtS");
   }
@@ -70,7 +70,7 @@ TransformAtS<MPTraits>::~TransformAtS() { }
 // Prints options
 template <class MPTraits>
 void
-TransformAtS<MPTraits>::PrintOptions(ostream& _os) {
+TransformAtS<MPTraits>::PrintOptions(ostream& _os) const {
   _os << this->GetName() <<  endl;
   _os << "\tbinaryEvaluation = " << this->m_binaryEvaluation << endl;
   _os << "\tsValue = " << m_sValue << endl;
@@ -80,7 +80,7 @@ TransformAtS<MPTraits>::PrintOptions(ostream& _os) {
 template <class MPTraits>
 bool
 TransformAtS<MPTraits>::IsConnected(Environment* _env, StatClass& _stats,
-    DistanceMetricPointer _dm, const CfgType& _c1, const CfgType& _c2, CfgType& _col, 
+    DistanceMetricPointer _dm, const CfgType& _c1, const CfgType& _c2, CfgType& _col,
     LPOutput<MPTraits>* _lpOutput, double _posRes, double _oriRes,
     bool _checkCollision, bool _savePath, bool _saveFailedPath) {
 
@@ -104,7 +104,7 @@ TransformAtS<MPTraits>::IsConnected(Environment* _env, StatClass& _stats,
 
 template <class MPTraits>
 void
-TransformAtS<MPTraits>::GetSequenceNodes(const CfgType& _c1, const CfgType& _c2, double _s, 
+TransformAtS<MPTraits>::GetSequenceNodes(const CfgType& _c1, const CfgType& _c2, double _s,
     vector<CfgType>& _sequence, bool _reverse) {
   CfgType thisCopy;
   vector<double> _v1 = _c1.GetData();
@@ -153,7 +153,7 @@ TransformAtS<MPTraits>::GetSequenceNodes(const CfgType& _c1, const CfgType& _c2,
 template<class MPTraits>
 bool
 TransformAtS<MPTraits>::IsConnectedOneWay(Environment* _env, StatClass& _stats,
-    DistanceMetricPointer _dm, const CfgType& _c1, const CfgType& _c2, CfgType& _col, 
+    DistanceMetricPointer _dm, const CfgType& _c1, const CfgType& _c2, CfgType& _col,
     LPOutput<MPTraits>* _lpOutput, double _posRes, double _oriRes,
     bool _checkCollision, bool _savePath, bool _saveFailedPath, bool _forward) {
   string callee = this->GetNameAndLabel() + "::IsConnectedOneWay()";
@@ -161,9 +161,9 @@ TransformAtS<MPTraits>::IsConnectedOneWay(Environment* _env, StatClass& _stats,
   CDInfo cdInfo;
 
   if(this->m_debug)
-    cout << "Start CFG positional DOF: " << _c1.PosDOF() << endl; 
+    cout << "Start CFG positional DOF: " << _c1.PosDOF() << endl;
 
-  vector<CfgType> sequence; 
+  vector<CfgType> sequence;
   bool connected = true;
   int cdCounter = 0;
   GetSequenceNodes(_c1, _c2, this->m_sValue, sequence, _forward);
@@ -226,8 +226,8 @@ TransformAtS<MPTraits>::IsConnectedOneWay(Environment* _env, StatClass& _stats,
 
 // Returns the path
 template<class MPTraits>
-vector<typename TransformAtS<MPTraits>::CfgType> 
-TransformAtS<MPTraits>::ReconstructPath(Environment* _env, DistanceMetricPointer _dm, 
+vector<typename TransformAtS<MPTraits>::CfgType>
+TransformAtS<MPTraits>::ReconstructPath(Environment* _env, DistanceMetricPointer _dm,
     const CfgType& _c1, const CfgType& _c2, const vector<CfgType>& _intermediates, double _posRes, double _oriRes) {
 
   StatClass dummyStats;

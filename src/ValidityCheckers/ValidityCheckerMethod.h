@@ -11,14 +11,14 @@ class ValidityCheckerMethod : public MPBaseObject<MPTraits> {
     typedef typename MPTraits::CfgType CfgType;
 
     ValidityCheckerMethod() : MPBaseObject<MPTraits>(), m_validity(true) {}
-    ValidityCheckerMethod(typename MPTraits::MPProblemType* _problem, XMLNodeReader& _node) : MPBaseObject<MPTraits>(_problem, _node), m_validity(true){} 
+    ValidityCheckerMethod(typename MPTraits::MPProblemType* _problem, XMLNodeReader& _node) : MPBaseObject<MPTraits>(_problem, _node), m_validity(true){}
     virtual ~ValidityCheckerMethod(){}
 
-    virtual void PrintOptions(ostream& _os){
+    virtual void PrintOptions(ostream& _os) const {
       _os << this->GetName() << endl;
     }
 
-    bool IsValid(CfgType& _cfg, Environment* _env, StatClass& _stats, 
+    bool IsValid(CfgType& _cfg, Environment* _env, StatClass& _stats,
         CDInfo& _cdInfo, std::string* _callName) {
       if(m_validity)
         return IsValidImpl(_cfg, _env, _stats, _cdInfo, _callName);
@@ -35,8 +35,8 @@ class ValidityCheckerMethod : public MPBaseObject<MPTraits> {
     void ToggleValidity() { m_validity = !m_validity; }
 
   protected:
-    virtual bool IsValidImpl(CfgType& _cfg, Environment* _env, StatClass& _stats, 
-        CDInfo& _cdInfo, std::string* _callName) = 0; 
+    virtual bool IsValidImpl(CfgType& _cfg, Environment* _env, StatClass& _stats,
+        CDInfo& _cdInfo, std::string* _callName) = 0;
 
     bool m_validity;
 };

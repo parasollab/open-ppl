@@ -20,22 +20,22 @@ template <class InputIterator, class EqualityComparable>
 InputIterator
 find_first(InputIterator first, InputIterator last,
            const EqualityComparable& value) {
-  while((first != last) && !(value == first->first)) 
+  while((first != last) && !(value == first->first))
     first++;
-  return first; 
+  return first;
 };
 
 template <class GRAPH>
 struct ConstantCapacity {
   typedef typename GRAPH::EI EI;
   vector<pair<EI, double> > capacity_map;
-  
+
   ConstantCapacity(GRAPH& G) {
     vector<VID> vids;
     G.GetVerticesVID(vids);
     typename GRAPH::VI v;
     EI e;
-    for(typename vector<VID>::const_iterator V = vids.begin(); V != vids.end(); 
+    for(typename vector<VID>::const_iterator V = vids.begin(); V != vids.end();
 ++V) {
       G.IsVertex(*V, &v);
       for(e = v->edgelist.begin(); e != v->edgelist.end(); ++e)
@@ -43,7 +43,7 @@ struct ConstantCapacity {
     }
   }
   ~ConstantCapacity() {}
-  
+
   void SetCapacity(EI e, double c) {
     if(c <= 0) {
       typename vector<pair<EI, double> >::iterator CM =
@@ -52,9 +52,9 @@ struct ConstantCapacity {
         CM->second = 0;
     }
   }
-  
+
   double GetCapacity(EI e) const {
-    typename vector<pair<EI, double> >::const_iterator CM = 
+    typename vector<pair<EI, double> >::const_iterator CM =
       find_first(capacity_map.begin(), capacity_map.end(), e);
     if(CM != capacity_map.end())
       return CM->second;
@@ -65,13 +65,13 @@ template <class GRAPH>
 struct InverseWeightCapacity {
   typedef typename GRAPH::EI EI;
   vector<pair<EI, double> > capacity_map;
-  
+
   InverseWeightCapacity(GRAPH& G) {
     vector<VID> vids;
     G.GetVerticesVID(vids);
     typename GRAPH::VI v;
     EI e;
-    for(typename vector<VID>::const_iterator V = vids.begin(); V != vids.end(); 
+    for(typename vector<VID>::const_iterator V = vids.begin(); V != vids.end();
 ++V) {
       G.IsVertex(*V, &v);
       for(e = v->edgelist.begin(); e != v->edgelist.end(); ++e)
@@ -79,9 +79,9 @@ struct InverseWeightCapacity {
     }
   }
   ~InverseWeightCapacity() {}
-  
+
   void SetCapacity(EI e, double c) {
-    typename vector<pair<EI, double> >::iterator CM = 
+    typename vector<pair<EI, double> >::iterator CM =
       find_first(capacity_map.begin(), capacity_map.end(), e);
     if(CM != capacity_map.end())
       if(c <= 0)
@@ -89,9 +89,9 @@ struct InverseWeightCapacity {
       else
         CM->second = c;
   }
-  
+
   double GetCapacity(EI e) const {
-    typename vector<pair<EI, double> >::const_iterator CM = 
+    typename vector<pair<EI, double> >::const_iterator CM =
       find_first(capacity_map.begin(), capacity_map.end(), e);
     if(CM != capacity_map.end())
       return CM->second;

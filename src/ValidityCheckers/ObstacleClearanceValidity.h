@@ -14,7 +14,7 @@ class ObstacleClearanceValidity : public ValidityCheckerMethod<MPTraits> {
 
     virtual ~ObstacleClearanceValidity() { }
 
-    virtual void PrintOptions(ostream& _os);
+    virtual void PrintOptions(ostream& _os) const;
 
     virtual bool IsValidImpl(CfgType& _cfg, Environment* _env, StatClass& _stats, CDInfo& _cdInfo, string* _callName);
 
@@ -38,7 +38,7 @@ ObstacleClearanceValidity<MPTraits>::ObstacleClearanceValidity(typename MPTraits
 
 template<class MPTraits>
 void
-ObstacleClearanceValidity<MPTraits>::PrintOptions(ostream& _os){
+ObstacleClearanceValidity<MPTraits>::PrintOptions(ostream& _os) const {
   ValidityCheckerMethod<MPTraits>::PrintOptions(_os);
   _os << "\tRequired Clearance::" << m_obstClearance << endl;
   _os << "\tClearanceUtil::" << endl;
@@ -46,7 +46,7 @@ ObstacleClearanceValidity<MPTraits>::PrintOptions(ostream& _os){
 }
 
 template<class MPTraits>
-bool 
+bool
 ObstacleClearanceValidity<MPTraits>::IsValidImpl(CfgType& _cfg, Environment* _env, StatClass& _stats, CDInfo& _cdInfo, string* _callName) {
 
   shared_ptr<Boundary> bb = _env->GetBoundary();

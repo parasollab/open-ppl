@@ -27,7 +27,7 @@
     pCCon = _ccm;
     bbox = &_bbox;
   }
-  
+
   void region_rrt_con_wf::define_type(stapl::typer &t) {
     t.member(region);
     t.member(bbox);
@@ -35,9 +35,9 @@
 //fin class region_rrt_con_wf
 
 
-//debut class region_rrt_edge_wf 
+//debut class region_rrt_edge_wf
   region_rrt_edge_wf::region_rrt_edge_wf(MPR_type* _mpr, LP_type* _plp,// CCM_type _ccm,
-		     Environment* _penv, BoundingBox _bbox, 
+		     Environment* _penv, BoundingBox _bbox,
 		     DistanceMetric* _dm, string _dm_label,
 		     int _nc, int _nr) {
     region = _mpr;
@@ -49,26 +49,26 @@
     nc = _nc;
     nr = _nr;
   }
-  
+
   void region_rrt_edge_wf::define_type(stapl::typer &t) {
     t.member(region);
     t.member(bbox);
   }
 //fin class region_rrt_edge_wf
 
-//debut class ParallelRRTRoadmap  
+//debut class ParallelRRTRoadmap
   //ParallelRRTRoadmap::ParallelRRTRoadmap(XMLNodeReader& in_pNode, MPProblem* in_pProblem) :
    ParallelSRTStrategy::ParallelSRTStrategy(XMLNodeReader& in_pNode, MPProblem* in_pProblem) :
     MPStrategyMethod(in_pNode,in_pProblem) {
     //LOG_DEBUG_MSG("ParallelRRTRoadmap::ParallelRRTRoadmap()");
-    ParseXML(in_pNode);   
+    ParseXML(in_pNode);
     cout << "testconstr" << endl;
   };
-    
+
     //virtual ~ParallelRRTRoadmap::ParallelRRTRoadmap() {}
     ParallelSRTStrategy::~ParallelSRTStrategy() {}
 
-    void ParallelSRTStrategy::PrintOptions(ostream& out_os) {
+    void ParallelSRTStrategy::PrintOptions(ostream& out_os) const {
       cout << "test printoption" << endl;
       }
     void ParallelSRTStrategy::Initialize(int in_RegionID){
@@ -76,10 +76,10 @@
       }
     double ParallelSRTStrategy::RRTDistance(SRTStrategy* srt, Environment* env, BoundingBox bb, CfgType c1, CfgType c2) {
     }
-    
+
     void ParallelSRTStrategy::ParseXML(XMLNodeReader& in_pNode) {
       //LOG_DEBUG_MSG("ParallelRRTRoadmap::ParseXML()");
-     cout << "test parallel srt" << endl; 
+     cout << "test parallel srt" << endl;
       XMLNodeReader::childiterator citr;
       for( citr = in_pNode.children_begin(); citr!= in_pNode.children_end(); ++citr) {
 	if (citr->getName() == "sequential_strategy") {
@@ -88,7 +88,7 @@
 	  m_strategiesLabels.push_back(strategy_string);
 	  citr->warnUnrequestedAttributes();
 	} else if (citr->getName() == "component_connection_method"){
-	  string connectCCMethod = citr->stringXMLParameter(string("Method"), true, 
+	  string connectCCMethod = citr->stringXMLParameter(string("Method"), true,
 							    string(""), string("Component Connection Method"));
 	  m_ComponentConnectionLabels.push_back(connectCCMethod);
 	  citr->warnUnrequestedAttributes();
@@ -96,11 +96,11 @@
 	  dm_label = citr->stringXMLParameter(string("Method"),true,string(""),string("Distance Metric"));
 	  citr->warnUnrequestedAttributes();
 	} else if(citr->getName()=="nc") {
-	  nc = citr->numberXMLParameter(string("Number"), true, 
+	  nc = citr->numberXMLParameter(string("Number"), true,
 					int(1), int(0), MAX_INT, string("Number of close candidates for SRTRegion"));
 	  citr->warnUnrequestedAttributes();
 	} else if(citr->getName()=="nr") {
-	  nr = citr->numberXMLParameter(string("Number"), true, 
+	  nr = citr->numberXMLParameter(string("Number"), true,
 					int(1), int(0), MAX_INT, string("Number of random candidates for SRTRegion"));
 	  citr->warnUnrequestedAttributes();
 	} else if(citr->getName() == "num_runs") {
@@ -113,12 +113,12 @@
       }
      // LOG_DEBUG_MSG("ParallelRRTRoadmap::ParseXML()");
     }
-    
+
     void ParallelSRTStrategy::Run(int in_RegionID) {
-     cout << "testrun" << endl; 
+     cout << "testrun" << endl;
       // Problem Setup
       //LOG_DEBUG_MSG("ParallelRRTRoadmap::Run()");
-      //OBPRM_srand(getSeed()); 
+      //OBPRM_srand(getSeed());
       region = GetMPProblem()->GetMPRegion(in_RegionID);
       stats = region->GetStatClass();
       stats->ClearStats();
@@ -126,7 +126,7 @@
       LocalPlanners<CfgType, WeightType>* pLp = GetMPProblem()->GetMPStrategy()->GetLocalPlanners();
       DistanceMetric* dm = GetMPProblem()->GetDistanceMetric();
       shared_ptr <DistanceMetricMethod> dmm = GetMPProblem()->GetDistanceMetric()->GetMethod(dm_label);
-     cout << "testrun2" << endl; 
+     cout << "testrun2" << endl;
       // Candidate Setup
       stapl::p_vector<pair<VID,VID> > candPairs();
       cGraph = new RoadmapGraph<CfgType,WeightType>();
@@ -135,7 +135,7 @@
       vector<pair<CfgType,vector<VID> > >* pairs = &Cpairs;
 
       // RoadmapGraph
-      RoadmapGraph<CfgType,WeightType> * rmg = region->GetRoadmap()->m_pRoadmap; 
+      RoadmapGraph<CfgType,WeightType> * rmg = region->GetRoadmap()->m_pRoadmap;
       NonDecomposition<CfgType>* decomposer = new NonDecomposition<CfgType>();
       boost::shared_ptr<BoundingBox> bbox = pEnv->GetBoundingBox();
       rg = region->GetSRTRegionGraph();
@@ -143,10 +143,10 @@
 cout << "testrun3" << endl;
       // Timing
       stapl::counter<stapl::default_timer> t1,t2, t3, t4, t5;
-      double construct_timer=0.0, integrator_timer=0.0, srt_construct=0.0, srt_edge_timer=0.0, total_timer=0.0;      
+      double construct_timer=0.0, integrator_timer=0.0, srt_construct=0.0, srt_edge_timer=0.0, total_timer=0.0;
       //TODO number of iteration hard coded should be removed
       for(int it =1; it<= 10; ++it) {
-	
+
 	//----------------------
 	// Decompose space
 	//----------------------
@@ -155,11 +155,11 @@ cout << "testrun3" << endl;
 	if ( stapl::get_location_id() == 0) {
 	  decomposer->DecomposeWS(pEnv,*bbox, mesh_size, 1, 1, vbox_arr.begin());
 	}
-	
+
 	typedef vector<string>::iterator I,J, K;
-	
+
 	//---------------------------
-	// Generate && connect regional(local) roadmap 
+	// Generate && connect regional(local) roadmap
 	//---------------------------
 	string srt = "SRT";
 	SRTStrategy* strategy = dynamic_cast<SRTStrategy*>(GetMPProblem()->GetMPStrategy()->GetMPStrategyMethod(srt));
@@ -172,7 +172,7 @@ cout << "testrun3" << endl;
 	constructRRTRoadmap(v,bb_view,region,strategy,in_RegionID, pairs);
 	construct_timer = t1.stop();
 
-	cout<<"\n processor #----->["<<stapl::get_location_id()<<"] roadmap_construct_time = "  << construct_timer << endl; 
+	cout<<"\n processor #----->["<<stapl::get_location_id()<<"] roadmap_construct_time = "  << construct_timer << endl;
 	strategy->SetBoundary(bbox);
 cout << "testrun4" << endl;
 	//---------------------------
@@ -182,7 +182,7 @@ cout << "testrun4" << endl;
 	double Xmin = bbox->GetRange(0).first, Xmax = bbox->GetRange(0).second;
 	double Ymin = bbox->GetRange(1).first, Ymax = bbox->GetRange(1).second;
 	double Zmin = bbox->GetRange(2).first, Zmax = bbox->GetRange(2).second;
-		
+
 	for (int l=0; l<Cpairs.size(); ++l) {
 	  BoundingBox bb(bbox->GetDOFs(),bbox->GetPosDOFs());
 	  bb.SetParameter(0,Xmin, Xmax);
@@ -194,16 +194,16 @@ cout << "testrun4" << endl;
 	}
 	srt_construct = t2.stop();
 
-	cout<<"\n processor #----->["<<stapl::get_location_id()<<"] srt_region_construct_time  = "  << srt_construct << endl; 
+	cout<<"\n processor #----->["<<stapl::get_location_id()<<"] srt_region_construct_time  = "  << srt_construct << endl;
 	strategy->SetBoundary(bbox);
 
 	stapl::rmi_fence(); // Make sure processors don't start early on cand graph
-	
+
 	//===============
 	// Find K-Closest and connect roadmap graph
 	//================
 	//cout << "Find K-Closest and Add Edges to attempt connection..." << endl;
-	
+
 	// USING 1 PROCESSOR
 
 	if ( stapl::get_location_id() == 0) {
@@ -211,7 +211,7 @@ cout << "testrun4" << endl;
 	  stapl::sequential::vector_property_map< GRAPH,size_t > cmap;
 	//  cmap.reset();
 	  cout << " !! Useful Stats !! "<< endl;
-	  cout << region->GetRoadmap()->m_pRoadmap->get_num_vertices() << " Vertices \n" 
+	  cout << region->GetRoadmap()->m_pRoadmap->get_num_vertices() << " Vertices \n"
 	       << region->GetRoadmap()->m_pRoadmap->get_num_edges() << " Edges \n "
 	       << get_cc_count(*(region->GetRoadmap()->m_pRoadmap), cmap) << " Connected Components"
 	       << endl;
@@ -230,7 +230,7 @@ cout << "testrun4" << endl;
 	  stapl::sequential::vector_property_map< GRAPH,size_t > cmap1;
 	//  cmap1.reset();
 	  cout << " !! Region Graph Useful Stats !! "<< endl;
-	  cout << region->GetRoadmap()->m_pRoadmap->get_num_vertices() << " Vertices \n" 
+	  cout << region->GetRoadmap()->m_pRoadmap->get_num_vertices() << " Vertices \n"
 	       << region->GetRoadmap()->m_pRoadmap->get_num_edges() << " Edges \n "
 	       << get_cc_count(*(region->GetSRTRegionGraph()), cmap1) << " Connected Components"
 	       << endl;
@@ -253,7 +253,7 @@ cout << "testrun4" << endl;
 	      //cout << "Cfg1 = " << c1;
 	      //cout << ", Cfg2 = " << c2 << endl;
 	      double dist = dmm->Distance(pEnv, c1, c2); //bbx,
-	      
+
 	      if (dist != 0) {
 		if (nc_vid.size() < nc) {
 		  nc_vid.push_back(vid2);
@@ -298,7 +298,7 @@ cout << "testrun4" << endl;
 	  srt_edge_timer = t3.stop();
 	  cmap1.reset();
 	  cout << " !! Region Graph Useful Stats !! "<< endl;
-	  cout << region->GetRoadmap()->m_pRoadmap->get_num_vertices() << " Vertices \n" 
+	  cout << region->GetRoadmap()->m_pRoadmap->get_num_vertices() << " Vertices \n"
 	       << region->GetRoadmap()->m_pRoadmap->get_num_edges() << " Edges \n "
 	       << get_cc_count(*(region->GetSRTRegionGraph()), cmap1) << " Connected Components"
 	       << endl;
@@ -307,7 +307,7 @@ cout << "testrun4" << endl;
 
 
 
-	  cout<<"\n processor #----->["<<stapl::get_location_id()<<"] srt_region_determine_time = "  << srt_edge_timer << endl; 
+	  cout<<"\n processor #----->["<<stapl::get_location_id()<<"] srt_region_determine_time = "  << srt_edge_timer << endl;
 
 	}
 
@@ -320,14 +320,14 @@ cout << "testrun4" << endl;
 
 	typedef stapl::p_graph_view_base<RegionGraph<SRTInfo,WeightType> >   VBType;
 	VBType rge_view(*rg);
-	
+
 	//native or balance?
-	stapl::part_native_view<VBType>::view_type vbnative = 
+	stapl::part_native_view<VBType>::view_type vbnative =
 	  stapl::part_native_view<VBType>()(rge_view);
-	
+
 	typedef stapl::p_graph_view_base<RoadmapGraph<CfgType,WeightType> >   gvbType;
 	gvbType rme_view(*rmg);
-	stapl::p_graph_partition_view_helper<gvbType>::view_type rm_innerbview = 
+	stapl::p_graph_partition_view_helper<gvbType>::view_type rm_innerbview =
 	  stapl::p_graph_partition_view_helper<gvbType>()(rme_view);
 	t3.start();
 	determineRGEdges(vbnative,rm_innerbview,
@@ -339,7 +339,7 @@ cout << "testrun4" << endl;
 	*/
 	// END USING ALL PROCESSORS
 
-	
+
 	//=================
 	// Region connection of mesh graph
 	//=============================
@@ -350,9 +350,9 @@ cout << "testrun4" << endl;
 
 	//ccc_rrt->PrintValues(cout);
 
-	for(K itr2 = m_ComponentConnectionLabels.begin(); itr2 != m_ComponentConnectionLabels.end(); ++itr2) {               
+	for(K itr2 = m_ComponentConnectionLabels.begin(); itr2 != m_ComponentConnectionLabels.end(); ++itr2) {
 	  //cout << "Begin Connections Using: " << *itr2 << endl;
-	  
+
 	  Connector<CfgType, WeightType>::ConnectionPointer pCCConnection;
 	  pCCConnection = GetMPProblem()->GetMPStrategy()->GetConnector()->GetMethod(*itr2);
 	  //typedef stapl::sequential::p_graph_view_base<RegionGraph<SRTInfo,WeightType> >   VType;
@@ -360,14 +360,14 @@ cout << "testrun4" << endl;
           typedef graph_view<RegionGraph<SRTInfo,WeightType> > VType;
           //typedef stapl::sequential::p_graph_view_base<RoadmapGraph<CfgType,WeightType> >   VType;
           VType rg_view(*rg);
-	  
+
 	  //native or balance?
-	  stapl::part_native_view<VType>::view_type vnative = 
+	  stapl::part_native_view<VType>::view_type vnative =
 	    stapl::part_native_view<VType>()(rg_view);
-	  
+
 	  typedef graph_view<RoadmapGraph<CfgType,WeightType> >   gvType;
           gvType rm_view(*rmg);
-	  //stapl::p_graph_partition_view_helper<gvType>::view_type rm_innerview = 
+	  //stapl::p_graph_partition_view_helper<gvType>::view_type rm_innerview =
 	  //stapl::p_graph_partition_view_helper<gvType>()(rm_view);
 //It's not use in the code, why is it here?
 
@@ -379,20 +379,20 @@ cout << "testrun4" << endl;
 	  t4.start();
 	  connectRRTRegion(vnative,region,pLp,pCCConnection,pEnv,*bbox);
 	  integrator_timer = t4.stop();
-	  cout<<"\n processor #----->["<<stapl::get_location_id()<<"] srt_region_connect_time  = "  << integrator_timer << endl; 
+	  cout<<"\n processor #----->["<<stapl::get_location_id()<<"] srt_region_connect_time  = "  << integrator_timer << endl;
 	}
 	total_timer = t5.stop();
-	cout<<"\n processor #----->["<<stapl::get_location_id()<<"] total_time  = "  << total_timer << endl; 
+	cout<<"\n processor #----->["<<stapl::get_location_id()<<"] total_time  = "  << total_timer << endl;
       }
     }
-    
+
     void ParallelSRTStrategy::Finalize(int in_RegionID){
-      
+
       //LOG_DEBUG_MSG("ParallelRRTStrategy::Finalize()");
       //---------------------------
       // Write roadmap to file
       //---------------------------
-     cout << "testfin" << endl; 
+     cout << "testfin" << endl;
       if( stapl::get_location_id() == 0){
 
 	string str, rg_str,out_stat;
@@ -412,19 +412,19 @@ cout << "testrun4" << endl;
 	  //stats->WriteGraphStats(outStat,region->GetRoadmap()->m_pRoadmap);
 	  outStat.close();
 	}
-        
+
         //typedef typename RoadmapGraph<CFG,WEIGHT>::vertex_descriptor VID;
 	stapl::sequential::vector_property_map< GRAPH,size_t > cmap;
 	cmap.reset();
 	cout << " !! Useful Stats !! "<< endl;
-	cout << region->GetRoadmap()->m_pRoadmap->get_num_vertices() << " Vertices \n " 
+	cout << region->GetRoadmap()->m_pRoadmap->get_num_vertices() << " Vertices \n "
 	     << region->GetRoadmap()->m_pRoadmap->get_num_edges() << " Edges \n "
 	     << get_cc_count(*(region->GetRoadmap()->m_pRoadmap), cmap) << " Connected Components"
 	     << endl;
 
       }
       //cout << "!!ALL FINISHED!!"<< endl;
-   
+
    }
 
 //fin class ParallelRRTRoadmap

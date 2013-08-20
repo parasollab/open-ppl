@@ -1,8 +1,8 @@
 //////////////////////////////////
 // AlwaysTrueValidity
 //
-// This code defines the validity 
-// of the configuration as 'always 
+// This code defines the validity
+// of the configuration as 'always
 // true.'
 //////////////////////////////////
 
@@ -20,7 +20,7 @@ class AlwaysTrueValidity : public ValidityCheckerMethod<MPTraits> {
       this->m_name = "AlwaysTrueValidity";
     }
 
-    AlwaysTrueValidity(typename MPTraits::MPProblemType* _problem, XMLNodeReader& _node) 
+    AlwaysTrueValidity(typename MPTraits::MPProblemType* _problem, XMLNodeReader& _node)
       : ValidityCheckerMethod<MPTraits>(_problem, _node){
         _node.verifyName("AlwaysTrueValidity");
         this->m_name = "AlwaysTrueValidity";
@@ -28,7 +28,7 @@ class AlwaysTrueValidity : public ValidityCheckerMethod<MPTraits> {
 
     virtual ~AlwaysTrueValidity(){}
 
-    virtual bool IsValidImpl(CfgType& _cfg, Environment* _env, StatClass& _stats, 
+    virtual bool IsValidImpl(CfgType& _cfg, Environment* _env, StatClass& _stats,
         CDInfo& _cdInfo, string* _callName){
       _cfg.SetLabel("Lazy", true);
       return true;

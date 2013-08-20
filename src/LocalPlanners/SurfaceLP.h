@@ -1,8 +1,8 @@
 /**
  * SurfaceLP.h
- * This class defines the surface local planner which performs 
+ * This class defines the surface local planner which performs
  * connections between configurations and handles checking between
- * validity between CFGs on any kind of surface. 
+ * validity between CFGs on any kind of surface.
  */
 
 #ifndef SURFACELP_H_
@@ -26,14 +26,14 @@ class SurfaceLP: public StraightLine<MPTraits>{
     SurfaceLP(MPProblemType* _problem, XMLNodeReader& _node);
     virtual ~SurfaceLP();
 
-    virtual void PrintOptions(ostream& _os);
+    virtual void PrintOptions(ostream& _os) const;
 
     virtual bool IsConnected(Environment* _env, StatClass& _stats,
         DistanceMetricPointer _dm,
-        const CfgType& _c1, const CfgType& _c2, CfgType& _col, 
+        const CfgType& _c1, const CfgType& _c2, CfgType& _col,
         LPOutput<MPTraits>* _lpOutput,
         double _positionRes, double _orientationRes,
-        bool _checkCollision = true, 
+        bool _checkCollision = true,
         bool _savePath = true, bool _saveFailedPath = false);
 
     double m_acceptableHeightDiff;
@@ -47,7 +47,7 @@ SurfaceLP<MPTraits>::SurfaceLP() : StraightLine<MPTraits>() {
 }
 
 template<class MPTraits>
-SurfaceLP<MPTraits>::SurfaceLP(MPProblemType* _problem, XMLNodeReader& _node) : 
+SurfaceLP<MPTraits>::SurfaceLP(MPProblemType* _problem, XMLNodeReader& _node) :
   StraightLine<MPTraits>(_problem, _node) {
     _node.verifyName("SurfaceLP");
     this->SetName("SurfaceLP");
@@ -59,8 +59,8 @@ SurfaceLP<MPTraits>::~SurfaceLP() { }
 
 // Definitions for I/O and Access
 template<class MPTraits>
-void 
-SurfaceLP<MPTraits>::PrintOptions(ostream& _os) {
+void
+SurfaceLP<MPTraits>::PrintOptions(ostream& _os) const {
   _os << "    " << this->GetName() << "::  ";
   _os << "vcLabel = " << " " << this->m_vcLabel << " ";
   _os << "acceptableHeightDiff = " << m_acceptableHeightDiff << " ";
@@ -72,10 +72,10 @@ template<class MPTraits>
 bool
 SurfaceLP<MPTraits>::IsConnected(Environment* _env, StatClass& _stats,
     DistanceMetricPointer _dm,
-    const CfgType& _c1, const CfgType& _c2, CfgType& _col, 
+    const CfgType& _c1, const CfgType& _c2, CfgType& _col,
     LPOutput<MPTraits>* _lpOutput,
     double _positionRes, double _orientationRes,
-    bool _checkCollision, 
+    bool _checkCollision,
     bool _savePath, bool _saveFailedPath){
 
 
@@ -83,8 +83,8 @@ SurfaceLP<MPTraits>::IsConnected(Environment* _env, StatClass& _stats,
   _stats.IncLPAttempts(this->GetNameAndLabel());
 
   _lpOutput->path.clear();
-  //This is where we check if each intermediate configuration is on specified 
-  //surface or a neighboring surface. 
+  //This is where we check if each intermediate configuration is on specified
+  //surface or a neighboring surface.
   //If they are on different surfaces and we must check incrementally and validate
   //height component
   connected = true; //assume it starts connected (the check will negate this)
@@ -129,15 +129,15 @@ SurfaceLP<MPTraits>::IsConnected(Environment* _env, StatClass& _stats,
         GMSPolyhedron& polyhedron = fb->GetWorldPolyhedron();
         bool isValid=false;
         Point2d pt = tick.GetPos();
-        double tH = polyhedron.HeightAtPt(pt, isValid); 
+        double tH = polyhedron.HeightAtPt(pt, isValid);
         if( isValid ) {
           double hDiff = fabs(tH-tick.GetHeight());
-          if( this->m_debug ) 
-            cout << " sid: " << sid 
-              << " isValid: " << isValid 
-              << " hDiff: " << hDiff 
-              << " of acceptableHDiff: " << m_acceptableHeightDiff 
-              << " tH: " << tH 
+          if( this->m_debug )
+            cout << " sid: " << sid
+              << " isValid: " << isValid
+              << " hDiff: " << hDiff
+              << " of acceptableHDiff: " << m_acceptableHeightDiff
+              << " tH: " << tH
               << " tickHeight: " << tick.GetHeight() << endl;
           if( hDiff<m_acceptableHeightDiff ) {
             foundValidSurfForTick = true;
@@ -159,7 +159,7 @@ SurfaceLP<MPTraits>::IsConnected(Environment* _env, StatClass& _stats,
   }//endfor i<nTicks
 
   if ( connected )
-    _stats.IncLPConnections(this->GetNameAndLabel() );  
+    _stats.IncLPConnections(this->GetNameAndLabel() );
   return connected;
 }
 

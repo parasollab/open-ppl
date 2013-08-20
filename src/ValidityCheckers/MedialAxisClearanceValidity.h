@@ -17,7 +17,7 @@ class MedialAxisClearanceValidity : public ValidityCheckerMethod<MPTraits> {
 
     void ParseXML(XMLNodeReader& _node);
 
-    virtual void PrintOptions(ostream& _os);
+    virtual void PrintOptions(ostream& _os) const;
 
     virtual bool IsInsideObstacle(const CfgType& _cfg, Environment* _env, CDInfo& _cdInfo);
 
@@ -26,7 +26,7 @@ class MedialAxisClearanceValidity : public ValidityCheckerMethod<MPTraits> {
     vector< pair<CfgType,CfgType> >& GetHistory();
     void ClearHistory();
 
-  private: 
+  private:
     MedialAxisUtility<MPTraits> m_medialAxisUtility;
     double m_clearance;
     vector< pair<CfgType,CfgType> > m_history;
@@ -55,7 +55,7 @@ MedialAxisClearanceValidity<MPTraits>::ParseXML(XMLNodeReader& _node){
 
 template<class MPTraits>
 void
-MedialAxisClearanceValidity<MPTraits>::PrintOptions(ostream& _os){
+MedialAxisClearanceValidity<MPTraits>::PrintOptions(ostream& _os) const {
   ValidityCheckerMethod<MPTraits>::PrintOptions(_os);
   _os << "\tMaximum distance from medial axis::" << m_clearance << endl;
   _os << "\tMedialAxisUtility::" << endl;
@@ -64,15 +64,15 @@ MedialAxisClearanceValidity<MPTraits>::PrintOptions(ostream& _os){
 
 
 template<class MPTraits>
-bool 
+bool
 MedialAxisClearanceValidity<MPTraits>::IsInsideObstacle(const CfgType& _cfg, Environment* _env, CDInfo& _cdInfo){
   typename MPProblemType::ValidityCheckerPointer vcm = this->GetMPProblem()->GetValidityChecker(m_medialAxisUtility.GetValidityCheckerLabel());
   return vcm->IsInsideObstacle(_cfg, _env, _cdInfo);
 }
 
 template<class MPTraits>
-bool 
-MedialAxisClearanceValidity<MPTraits>::IsValidImpl(CfgType& _cfg, Environment* _env, StatClass& _stats, 
+bool
+MedialAxisClearanceValidity<MPTraits>::IsValidImpl(CfgType& _cfg, Environment* _env, StatClass& _stats,
     CDInfo& _cdInfo, string* _callName) {
   typename MPProblemType::ValidityCheckerPointer vc = this->GetMPProblem()->GetValidityChecker(m_medialAxisUtility.GetValidityCheckerLabel());
   bool isFree = vc->IsValid(_cfg, _env, _stats, _cdInfo, _callName);
@@ -101,15 +101,15 @@ MedialAxisClearanceValidity<MPTraits>::IsValidImpl(CfgType& _cfg, Environment* _
 }
 
 template<class MPTraits>
-vector< pair<typename MPTraits::CfgType, typename MPTraits::CfgType> >& 
+vector< pair<typename MPTraits::CfgType, typename MPTraits::CfgType> >&
 MedialAxisClearanceValidity<MPTraits>::GetHistory() {
-  return m_history; 
+  return m_history;
 }
 
 template<class MPTraits>
-void 
-MedialAxisClearanceValidity<MPTraits>::ClearHistory() { 
-  m_history.clear(); 
+void
+MedialAxisClearanceValidity<MPTraits>::ClearHistory() {
+  m_history.clear();
 }
 
 #endif

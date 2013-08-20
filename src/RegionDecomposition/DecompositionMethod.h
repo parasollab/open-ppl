@@ -14,8 +14,8 @@ class DecompositionMethod : public MPBaseObject {
     DecompositionMethod(){}
     ~DecompositionMethod(){}
 
-    virtual RegionGraph Decompose(shared_ptr<Boundary> _bbx = NULL, 
-        vector<VID> _v = vector<VID>()) = 0; 
+    virtual RegionGraph Decompose(shared_ptr<Boundary> _bbx = NULL,
+        vector<VID> _v = vector<VID>()) = 0;
 };
 
 #endif

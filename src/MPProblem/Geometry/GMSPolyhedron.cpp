@@ -141,7 +141,7 @@ GMSPolyhedron::Read(istream& _is){
 
   int numPolygons;
   _is >> numPolygons;
-  for(int i=0; i<numPolygons; ++i){
+  for(int i=0; i<numPolygons && _is; ++i){
     int numPolyVertices;
     _is >> numPolyVertices;
     GMSPolygon p;
@@ -192,7 +192,7 @@ GMSPolyhedron::ReadBYU(istream& _is){
   }
   com = Vector3d(0.0, 0.0, 0.0);
 
-  for(int i=0; i<numPolygons; ++i){
+  for(int i=0; i<numPolygons && _is; ++i){
     GMSPolygon p;
     do{
       int tmp;

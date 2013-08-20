@@ -22,7 +22,7 @@ class Environment {
     const string& GetEnvFileName() const {return m_filename;}
 
     void Read(string _filename);
-    void PrintOptions(ostream& _os);
+    void PrintOptions(ostream& _os) const;
     void Write(ostream & _os);
 
     //////////////////////////////////////////////////////////

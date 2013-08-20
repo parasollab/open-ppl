@@ -65,9 +65,9 @@ class MixSampler : public SamplerMethod<MPTraits> {
 
   protected:
     // Attempts to sample, returns true if successful
-    virtual bool Sampler(Environment* _env, shared_ptr<Boundary> _bb, StatClass& _stats, 
+    virtual bool Sampler(Environment* _env, shared_ptr<Boundary> _bb, StatClass& _stats,
         CfgType& _cfgIn, vector<CfgType>& _cfgOut, vector<CfgType>& _cfgCol) {
-      
+
       double rand = DRand();
       for(vector<pair<string, double> >::iterator it = samplers.begin(); it != samplers.end(); it++)
         if(rand < it->second)

@@ -17,7 +17,7 @@ class ResamplePointStrategy : public MPStrategyMethod<MPTraits> {
     ResamplePointStrategy(MPProblemType* _problem, XMLNodeReader& _node);
     virtual ~ResamplePointStrategy();
 
-    virtual void PrintOptions(ostream& _os);
+    virtual void PrintOptions(ostream& _os) const;
     virtual void ParseXML(XMLNodeReader& _node);
 
     virtual void Initialize();
@@ -61,7 +61,7 @@ ResamplePointStrategy<MPTraits>::~ResamplePointStrategy(){}
 
 template<class MPTraits>
 void
-ResamplePointStrategy<MPTraits>::PrintOptions(ostream& _os){
+ResamplePointStrategy<MPTraits>::PrintOptions(ostream& _os) const {
   _os << "ResamplePointStrategy::\n";
   _os << "\tinputPathFilename = \"" << m_inputPathFilename << "\"\n";
   _os << "\toutputPathFilename = \"" << m_outputPathFilename << "\"\n";

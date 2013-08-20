@@ -1,7 +1,7 @@
 /* CCsConnector
  *
  * Try to connect different connected components of the roadmap.
- * We try to connect k-closest pairs of connected components. 
+ * We try to connect k-closest pairs of connected components.
  * When connecting the CCs, we only attempt neighboring pairs of nodes.
  */
 
@@ -18,27 +18,27 @@ class CCsConnector: public ConnectorMethod<MPTraits> {
     typedef typename MPTraits::MPProblemType MPProblemType;
     typedef typename MPProblemType::RoadmapType RoadmapType;
     typedef typename RoadmapType::GraphType GraphType;
-    typedef typename MPProblemType::VID VID; 
+    typedef typename MPProblemType::VID VID;
     typedef typename MPProblemType::DistanceMetricPointer DistanceMetricPointer;
     typedef typename MPProblemType::NeighborhoodFinderPointer NeighborhoodFinderPointer;
     typedef typename MPProblemType::LocalPlannerPointer LocalPlannerPointer;
 
-    CCsConnector(string _nfLabel = "", string _lpLabel = "", size_t _k = 5); 
+    CCsConnector(string _nfLabel = "", string _lpLabel = "", size_t _k = 5);
     CCsConnector(MPProblemType* _problem, XMLNodeReader& _node);
 
-    virtual void PrintOptions(ostream& _os);
+    virtual void PrintOptions(ostream& _os) const;
 
     template <typename ColorMap, typename InputIterator1, typename InputIterator2, typename OutputIterator>
-      void Connect(RoadmapType* _rm, StatClass& _stats, ColorMap& _cmap, 
+      void Connect(RoadmapType* _rm, StatClass& _stats, ColorMap& _cmap,
           InputIterator1 _itr1First, InputIterator1 _itr1Last,
           InputIterator2 _itr2First, InputIterator2 _itr2Last, OutputIterator _collision);
 
   protected:
-    
+
     template<typename OutputIterator>
       void ConnectCC(RoadmapType* _rm, StatClass& _stats,
           vector<VID>& _cc1Vec, vector<VID>& _cc2Vec,
-          OutputIterator _collision);  
+          OutputIterator _collision);
 
     // compute all pair distance between ccs.
     // approximated using coms of ccs
@@ -56,20 +56,20 @@ class CCsConnector: public ConnectorMethod<MPTraits> {
 
 template<class MPTraits>
 CCsConnector<MPTraits>::CCsConnector(string _nfLabel, string _lpLabel, size_t _k)
-  : ConnectorMethod<MPTraits>(_nfLabel, _lpLabel), m_k(_k) { 
-    this->SetName("CCsConnector"); 
+  : ConnectorMethod<MPTraits>(_nfLabel, _lpLabel), m_k(_k) {
+    this->SetName("CCsConnector");
   }
 
 template<class MPTraits>
-CCsConnector<MPTraits>::CCsConnector(MPProblemType* _problem, XMLNodeReader& _node) 
-  : ConnectorMethod<MPTraits>(_problem, _node) { 
-    this->SetName("CCsConnector"); 
+CCsConnector<MPTraits>::CCsConnector(MPProblemType* _problem, XMLNodeReader& _node)
+  : ConnectorMethod<MPTraits>(_problem, _node) {
+    this->SetName("CCsConnector");
     m_k = _node.numberXMLParameter("k", true, 5,0,1000, "k closest CCs");
   }
 
 template<class MPTraits>
 void
-CCsConnector<MPTraits>::PrintOptions(ostream& _os){
+CCsConnector<MPTraits>::PrintOptions(ostream& _os) const {
   ConnectorMethod<MPTraits>::PrintOptions(_os);
   _os << "\tk: " << m_k << endl;
 }
@@ -77,15 +77,15 @@ CCsConnector<MPTraits>::PrintOptions(ostream& _os){
 template<class MPTraits>
 template<typename ColorMap, typename InputIterator1, typename InputIterator2, typename OutputIterator>
 void
-CCsConnector<MPTraits>::Connect(RoadmapType* _rm, StatClass& _stats, ColorMap& _cmap, 
+CCsConnector<MPTraits>::Connect(RoadmapType* _rm, StatClass& _stats, ColorMap& _cmap,
     InputIterator1 _itr1First, InputIterator1 _itr1Last,
     InputIterator2 _itr2First, InputIterator2 _itr2Last, OutputIterator _collision) {
 
   GraphType* rgraph = _rm->GetGraph();
-  
+
   if(this->m_debug){
     PrintOptions(cout);
-    _stats.DisplayCCStats(cout, *rgraph); 
+    _stats.DisplayCCStats(cout, *rgraph);
     cout << endl;
   }
 
@@ -100,19 +100,19 @@ CCsConnector<MPTraits>::Connect(RoadmapType* _rm, StatClass& _stats, ColorMap& _
   /// ConnectkCCs
   ///////////////////////////////////////////////////////////////////////////////////
   size_t k = m_k ? m_k : ccs.size();
-    
-  if(this->m_debug) 
+
+  if(this->m_debug)
     cout << "Connecting " << m_k << "-closest CCs" << endl;
 
   ComputeAllPairsCCDist(_rm, _cmap, ccs);
 
   typedef typename vector<pair<size_t, VID> >::iterator CCIT;
   for(CCIT itr1 = ccs.begin(); itr1 != ccs.end(); ++itr1) {
-    
+
     //grab the k-closest CCs to connect to
     vector<VID> kCCID;
     GetKCCs(k, itr1->second, kCCID);
-   
+
     typedef typename vector<VID>::iterator VIDIT;
     for(VIDIT itr2 = kCCID.begin(); itr2 != kCCID.end(); ++itr2) {
 
@@ -132,9 +132,9 @@ CCsConnector<MPTraits>::Connect(RoadmapType* _rm, StatClass& _stats, ColorMap& _
         cout << " ...done\n";
     }
   }
-  
+
   if(this->m_debug) {
-    _stats.DisplayCCStats(cout, *(rgraph)); 
+    _stats.DisplayCCStats(cout, *(rgraph));
     cout << endl;
   }
 }
@@ -168,7 +168,7 @@ CCsConnector<MPTraits>::ConnectCC(RoadmapType* _rm, StatClass& _stats,
     if (!lp->IsConnected(env, _stats, dmm,
           rgraph->GetVertex(cc1Elem),
           rgraph->GetVertex(cc2Elem),
-          _col, &lpOutput, 
+          _col, &lpOutput,
           env->GetPositionRes(), env->GetOrientationRes(), true)) {
       rgraph->AddEdge(cc1Elem, cc2Elem, lpOutput.edge);
       return;
@@ -193,7 +193,7 @@ template<typename ColorMap>
 void
 CCsConnector<MPTraits>::ComputeAllPairsCCDist(RoadmapType* _rm,
     ColorMap& _cmap, vector<pair<size_t, VID> >& _ccs){
-  
+
   GraphType* rgraph=_rm->GetGraph();
   Environment* env = this->GetMPProblem()->GetEnvironment();
   DistanceMetricPointer dmm = this->GetMPProblem()->GetNeighborhoodFinder(this->m_nfLabel)->GetDMMethod();
@@ -226,7 +226,7 @@ void
 CCsConnector<MPTraits>::GetKCCs(size_t _k, VID _ccid, vector<VID>& _kCCID){
   typedef vector<double>::iterator IT;
   vector<pair<VID, double> >& dis2CCs = m_ccDist[_ccid];
-  partial_sort(dis2CCs.begin(), dis2CCs.begin() + _k, dis2CCs.end(), CompareSecond<VID, double>());  
+  partial_sort(dis2CCs.begin(), dis2CCs.begin() + _k, dis2CCs.end(), CompareSecond<VID, double>());
 
   //copy
   for(typename vector<pair<VID, double> >::iterator i=dis2CCs.begin(); i != dis2CCs.begin() + _k; ++i)
