@@ -25,7 +25,7 @@ class Query : public MapEvaluatorMethod<MPTraits> {
     typedef typename MPProblemType::DistanceMetricPointer DistanceMetricPointer;
 
     Query(bool _deleteNodes=false, string _searchAlg="astar", string _pathFile="Basic.path", string _smoothFile="Basic.smooth.path",
-    string _maSmoothFile="Basic.maSmooth.path", string _intermediateFile="", string lpLabel="", string _dmLabel="", string _malpLabel="",
+    string _maSmoothFile="Basic.maSmooth.path", string _intermediateFile="", string _lpLabel="", string _dmLabel="", string _malpLabel="",
     bool _smooth=false, bool _maSmooth=false);
 
     Query(string _queryFileName);
@@ -115,11 +115,11 @@ struct Heuristic {
 template<class MPTraits>
 Query<MPTraits>::Query(bool _deleteNodes, string _searchAlg, string _pathFile, string _smoothFile, string _maSmoothFile,
     string _intermediateFile, string _lpLabel, string _dmLabel, string _malpLabel, bool _smooth, bool _maSmooth) :
-  m_pathFile(_pathFile), m_smoothFile(_smoothFile), m_maSmoothFile(_maSmoothFile), m_intermediateFile(_intermediateFile),
-  m_lpLabel(_lpLabel), m_dmLabel(_dmLabel), m_malpLabel(_malpLabel), m_deleteNodes(_deleteNodes), m_smooth(_smooth),
-  m_maSmooth(_maSmooth){
-    this->SetName("Query");
-    SetSearchAlgViaString(_searchAlg);
+    m_pathFile(_pathFile), m_smoothFile(_smoothFile), m_maSmoothFile(_maSmoothFile), m_intermediateFile(_intermediateFile),
+    m_lpLabel(_lpLabel), m_dmLabel(_dmLabel), m_malpLabel(_malpLabel), m_deleteNodes(_deleteNodes), m_smooth(_smooth),
+    m_maSmooth(_maSmooth){
+  this->SetName("Query");
+  SetSearchAlgViaString(_searchAlg);
 }
 
 // Reads in query from a file
@@ -140,13 +140,13 @@ Query<MPTraits>::Query(const CfgType& _start, const CfgType& _goal) {
 // Constructor with XML
 template<class MPTraits>
 Query<MPTraits>::Query(MPProblemType* _problem, XMLNodeReader& _node, bool _warn) :
-  MapEvaluatorMethod<MPTraits>(_problem, _node) {
-    Initialize();
-    ParseXML(_node);
-    if(_warn)
-      _node.warnUnrequestedAttributes();
-    ReadQuery(m_queryFile);
-  }
+    MapEvaluatorMethod<MPTraits>(_problem, _node) {
+  Initialize();
+  ParseXML(_node);
+  if(_warn)
+    _node.warnUnrequestedAttributes();
+  ReadQuery(m_queryFile);
+}
 
 template<class MPTraits>
 void

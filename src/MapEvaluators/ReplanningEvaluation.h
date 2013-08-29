@@ -12,8 +12,8 @@ class ReplanningEvaluation : public LazyQuery<MPTraits> {
     typedef typename MPProblemType::GraphType GraphType;
     typedef typename MPProblemType::ValidityCheckerPointer ValidityCheckerPointer;
     typedef typename MPProblemType::VID VID;
-    typedef typename GraphType::vertex_iterator vertex_iterator;
-    typedef typename GraphType::adj_edge_iterator adj_edge_iterator;
+    typedef typename GraphType::vertex_iterator VertexIterator;
+    typedef typename GraphType::adj_edge_iterator AdjEdgeIterator;
 
     ReplanningEvaluation();
     ReplanningEvaluation(string _envFile, string _vcLabel, const char* _queryFileName = "") :
@@ -53,7 +53,7 @@ ReplanningEvaluation<MPTraits>::ReplanningEvaluation() {
 
 template<class MPTraits>
 ReplanningEvaluation<MPTraits>::ReplanningEvaluation(typename MPTraits::MPProblemType* _problem, XMLNodeReader& _node)
-  : LazyQuery<MPTraits>(_problem, _node, false) {
+    : LazyQuery<MPTraits>(_problem, _node, false) {
   this->SetName("ReplanningEvaluation");
   m_envFile = _node.stringXMLParameter("envFile", true, "", "Environment filename");
 }
@@ -92,14 +92,14 @@ ReplanningEvaluation<MPTraits>::operator()() {
 template<class MPTraits>
 bool
 ReplanningEvaluation<MPTraits>::CanRecreatePath(RoadmapType* _rdmp,
-        vector<VID>& _attemptedPath, vector<CfgType>& _recreatedPath) {
+    vector<VID>& _attemptedPath, vector<CfgType>& _recreatedPath) {
   bool ans = LazyQuery<MPTraits>::CanRecreatePath(_rdmp, _attemptedPath, _recreatedPath);
   if(!ans) {
-    StatClass* RemoveStatClass = this->GetMPProblem()->GetStatClass();
+    StatClass* removeStats = this->GetMPProblem()->GetStatClass();
     string removeClockName = "Remove Invalid  ";
-    RemoveStatClass->StartClock(removeClockName);
+    removeStats->StartClock(removeClockName);
     RemoveInvalidPortions();
-    RemoveStatClass->StopClock(removeClockName);
+    removeStats->StopClock(removeClockName);
   }
   return ans;
 }
@@ -118,9 +118,9 @@ template<class MPTraits>
 void
 ReplanningEvaluation<MPTraits>::ResetValidity() {
   GraphType* g = this->GetMPProblem()->GetRoadmap()->GetGraph();
-  for(vertex_iterator vi = g->begin(); vi!=g->end(); vi++){
+  for(VertexIterator vi = g->begin(); vi!=g->end(); vi++){
     ((*vi).property()).SetLabel("VALID",false);
-    for(adj_edge_iterator ei =(*vi).begin(); ei!=(*vi).end(); ei++){
+    for(AdjEdgeIterator ei =(*vi).begin(); ei!=(*vi).end(); ei++){
       (*ei).property().SetChecked(MAX_INT);
     }
   }

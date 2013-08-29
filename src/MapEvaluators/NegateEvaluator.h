@@ -24,22 +24,21 @@ class NegateEvaluator : public MapEvaluatorMethod<MPTraits> {
 };
 
 template<class MPTraits>
-NegateEvaluator<MPTraits>::NegateEvaluator(string _label) :
-  m_evalLabel(_label){
-    this->SetName("NegateEvaluator");
-  }
+NegateEvaluator<MPTraits>::NegateEvaluator(string _label) : m_evalLabel(_label){
+  this->SetName("NegateEvaluator");
+}
 
 template<class MPTraits>
 NegateEvaluator<MPTraits>::NegateEvaluator(MPProblemType* _problem, XMLNodeReader& _node) :
-  MapEvaluatorMethod<MPTraits>(_problem, _node) {
-    this->SetName("NegateEvaluator");
-    m_evalLabel = _node.stringXMLParameter("evalLabel", true, "", "Evaluator Label");
-  }
+    MapEvaluatorMethod<MPTraits>(_problem, _node) {
+  this->SetName("NegateEvaluator");
+  m_evalLabel = _node.stringXMLParameter("evalLabel", true, "", "Evaluator Label");
+}
 
 template<class MPTraits>
 void
 NegateEvaluator<MPTraits>::PrintOptions(ostream& _os) const {
-  _os << this->GetName() << ":: evaluation method = " << m_evalLabel << endl;
+  _os << this->GetNameAndLabel() << endl << "evaluation method = " << m_evalLabel << endl;
 }
 
 template<class MPTraits>

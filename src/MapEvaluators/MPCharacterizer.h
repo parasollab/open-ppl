@@ -4,79 +4,75 @@
 class MPProblem;
 
 template<typename CFG,typename WEIGHT>
-class NodeCharacterizerMethod : public MPBaseObject
-{
+class NodeCharacterizerMethod : public MPBaseObject {
   public:
   typedef typename RoadmapGraph<CFG, WEIGHT>::VID VID;
-    NodeCharacterizerMethod(XMLNodeReader& in_Node, MPProblem* in_pProblem) :
-      MPBaseObject(in_Node,in_pProblem) { };
+    NodeCharacterizerMethod(XMLNodeReader& _inNode, MPProblem* _inpProblem) :
+      MPBaseObject(_inNode,_inpProblem) { };
     NodeCharacterizerMethod() {};
     virtual ~NodeCharacterizerMethod() {}
-    virtual void ParseXML(XMLNodeReader& in_Node)=0;
+    virtual void ParseXML(XMLNodeReader& _inNode)=0;
     virtual void Characterize()=0;
     virtual void Characterize(VID) {};
-    virtual void PrintOptions(ostream& out_os) const {}
+    virtual void PrintOptions(ostream& _out_os) const {}
 };
 
 
 template<typename CFG,typename WEIGHT>
-class CCExpandCharacterizer : public NodeCharacterizerMethod<CFG,WEIGHT>
-{
+class CCExpandCharacterizer : public NodeCharacterizerMethod<CFG,WEIGHT> {
   public:
 
     typedef typename RoadmapGraph<CFG, WEIGHT>::VID VID;
 
     CCExpandCharacterizer(shared_ptr<DistanceMetricMethod> _dm) : dm(_dm) {}
 
-    CCExpandCharacterizer(XMLNodeReader& in_Node, MPProblem* in_pProblem) :
-      NodeCharacterizerMethod<CFG,WEIGHT>(in_Node,in_pProblem) {
-      ParseXML(in_Node);
-      string dm_label =in_Node.stringXMLParameter(string("dm_method"), false,
+    CCExpandCharacterizer(XMLNodeReader& _inNode, MPProblem* _inpProblem) :
+      NodeCharacterizerMethod<CFG,WEIGHT>(_inNode,_inpProblem) {
+      ParseXML(_inNode);
+      string dm_label =_inNode.stringXMLParameter(string("dm_method"), false,
                                     string("default"), string("Distance Metric Method"));
-      m_lp = in_Node.stringXMLParameter(string("lp_method"), false, string("default"), string("Local Planner"));
-      dm = in_pProblem->GetDistanceMetric()->GetMethod(dm_label);
+      m_lp = _inNode.stringXMLParameter(string("lp_method"), false, string("default"), string("Local Planner"));
+      dm = _inpProblem->GetDistanceMetric()->GetMethod(dm_label);
     };
 
-    virtual void ParseXML(XMLNodeReader& in_Node) { };
+    virtual void ParseXML(XMLNodeReader& _inNode) { };
 
     virtual void Characterize() {
       cout << "CCExpandCharacterizer::Characterize() Not implemented" << endl;
       exit(-1);
     };
 
-    virtual void Characterize(VID in_vid) {
+    virtual void Characterize(VID _inVid) {
       Roadmap<CFG,WEIGHT>* pRoadmap = this->GetMPProblem()->GetRoadmap();
       RoadmapGraph<CFG,WEIGHT>* pGraph = pRoadmap->m_pRoadmap;
       LocalPlanners < CFG, WEIGHT > * lp = this->GetMPProblem()->GetMPStrategy()->GetLocalPlanners();
       LPOutput< CFG, WEIGHT > lp_output;
-      Environment * env = this->GetMPProblem()->GetEnvironment();
+      Environment* env = this->GetMPProblem()->GetEnvironment();
       double pos_res = this->GetMPProblem()->GetEnvironment()->GetPositionRes();
       double ori_res = this->GetMPProblem()->GetEnvironment()->GetOrientationRes();
       StatClass Stats;
 
       vector<VID> neighbors;
-      if(pGraph->get_successors(in_vid, neighbors) > 1)
-      {
+      if(pGraph->get_successors(_inVid, neighbors) > 1){
          cout << "Pls sort me first since your not using CHECKIF SAME CC" << endl; exit(-1);
       }
       //Next find neighbor's neighbors
       vector<VID> neighbor_neighbor;
       pGraph->get_successors(neighbors[0],neighbor_neighbor);
       bool is_expansion = true;
-      for(typename vector<VID>::iterator i_n = neighbor_neighbor.begin(); i_n !=neighbor_neighbor.end(); ++i_n)
-      {  //test connection to each;
+      for(typename vector<VID>::iterator i_n = neighbor_neighbor.begin(); i_n !=neighbor_neighbor.end(); ++i_n) {  //test connection to each;
         if(!(lp->GetMethod(m_lp)->
                IsConnected(env, Stats, dm,
-                           (*(pGraph->find_vertex(in_vid))).property(),
+                           (*(pGraph->find_vertex(_inVid))).property(),
                            (*(pGraph->find_vertex(*i_n))).property(),
                            &lp_output, pos_res, ori_res, true))) {
-          is_expansion = false; // cannot connect in_vid to neighbor_neighbor
+          is_expansion = false; // cannot connect _inVid to neighbor_neighbor
         }
       }
       if(is_expansion)
-         ((*(pGraph->find_vertex(in_vid))).property()).SetLabel("CCEXPAND",true);
+         ((*(pGraph->find_vertex(_inVid))).property()).SetLabel("CCEXPAND",true);
       else
-         (*(pGraph->find_vertex(in_vid))).property().SetLabel("CCOVERSAMPLE",true);
+         (*(pGraph->find_vertex(_inVid))).property().SetLabel("CCOVERSAMPLE",true);
 
     };
     virtual void PrintOptions(ostream& out_os) const {};
@@ -88,25 +84,22 @@ class CCExpandCharacterizer : public NodeCharacterizerMethod<CFG,WEIGHT>
 
 
 template<typename CFG,typename WEIGHT>
-class LocalNodeInfoCharacterizer : public NodeCharacterizerMethod<CFG,WEIGHT>
-{
+class LocalNodeInfoCharacterizer : public NodeCharacterizerMethod<CFG,WEIGHT> {
   public:
     typedef typename RoadmapGraph<CFG, WEIGHT>::VID VID;
     LocalNodeInfoCharacterizer(string _dm, double dRadius) : NodeCharacterizerMethod<CFG,WEIGHT>(), m_dmLabel(_dm), m_dRadius(dRadius)  {}
-    LocalNodeInfoCharacterizer(XMLNodeReader& in_Node, MPProblem* in_pProblem) :
-      NodeCharacterizerMethod<CFG,WEIGHT>(in_Node,in_pProblem) {
+    LocalNodeInfoCharacterizer(XMLNodeReader& _inNode, MPProblem* _inpProblem) :
+      NodeCharacterizerMethod<CFG,WEIGHT>(_inNode,_inpProblem) {
 
       m_dRadius = 0;
-      ParseXML(in_Node);
-      m_dmLabel =in_Node.stringXMLParameter(string("dm_method"), false,
+      ParseXML(_inNode);
+      m_dmLabel =_inNode.stringXMLParameter(string("dm_method"), false,
                                     string("default"), string("Distance Metric Method"));
     };
 
-    virtual void ParseXML(XMLNodeReader& in_Node) {
+    virtual void ParseXML(XMLNodeReader& _inNode) {
 
-
-
-      m_dRadius = in_Node.numberXMLParameter(string("radius"),true,double(0.5),
+      m_dRadius = _inNode.numberXMLParameter(string("radius"),true,double(0.5),
                                           double(0.0),double(1000.0),
                                           string("Radius Value"));
 
@@ -127,8 +120,7 @@ class LocalNodeInfoCharacterizer : public NodeCharacterizerMethod<CFG,WEIGHT>
       cout << "********ColGraph has "<< col_vids.size() << " nodes" << endl;
       cout << "Starting Range Query" << endl;
       typename vector<VID>::iterator itr;
-      for(itr = vids.begin(); itr != vids.end(); ++itr)
-      {
+      for(itr = vids.begin(); itr != vids.end(); ++itr) {
         vector<VID> vid;//s = dm->RangeQuery(pRoadmap,*itr,m_dRadius);
         vector<VID> col_vids;// = dm->RangeQuery(pColRoadmap,(*(pGraph->find_vertex(*itr))).property(),m_dRadius);
         rnf->KClosest(pRoadmap, *itr, 1, back_inserter(vid));
@@ -184,32 +176,30 @@ class LocalNodeInfoCharacterizer : public NodeCharacterizerMethod<CFG,WEIGHT>
 
 
 
-
-
-
-
 template<typename CFG, typename WEIGHT>
 class MPCharacterizer : public MPBaseObject {
 public:
   MPCharacterizer(vector< NodeCharacterizerMethod<CFG,WEIGHT>* > all) : all_NodeCharacterizerMethod(all) {};
-  MPCharacterizer(XMLNodeReader& in_Node, MPProblem* in_pProblem) :
-      MPBaseObject(in_Node, in_pProblem) {
-    ParseXML(in_Node);
+  MPCharacterizer(XMLNodeReader& _inNode, MPProblem* _inpProblem) :
+      MPBaseObject(_inNode, _inpProblem) {
+    ParseXML(_inNode);
   }
 
-  void ParseXML(XMLNodeReader& in_Node) {
+  void ParseXML(XMLNodeReader& _inNode) {
 
     XMLNodeReader::childiterator citr;
-    for(citr = in_Node.children_begin(); citr!= in_Node.children_end(); ++citr) {
+    for(citr = _inNode.children_begin(); citr!= _inNode.children_end(); ++citr) {
       if(citr->getName() == "LocalNodeInfoCharacterizer") {
         LocalNodeInfoCharacterizer<CFG,WEIGHT>* localnodeinfo =
             new LocalNodeInfoCharacterizer<CFG,WEIGHT>(*citr,this->GetMPProblem());
         all_NodeCharacterizerMethod.push_back(localnodeinfo);
-      } else if(citr->getName() == "CCExpandCharacterizer") {
+      }
+      else if(citr->getName() == "CCExpandCharacterizer") {
         CCExpandCharacterizer<CFG,WEIGHT>* expandchar =
             new CCExpandCharacterizer<CFG,WEIGHT>(*citr,this->GetMPProblem());
         all_NodeCharacterizerMethod.push_back(expandchar);
-      } else {
+      }
+      else {
         citr->warnUnrequestedAttributes();
       }
     }

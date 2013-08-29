@@ -45,7 +45,7 @@ PrintMapEvaluation<MPTraits>::~PrintMapEvaluation() {
 template<class MPTraits>
 void
 PrintMapEvaluation<MPTraits>::PrintOptions(ostream& _os) const {
-  _os << "PrintMapEvalaution" << endl;
+  _os << this->GetNameAndLabel() << endl;
   _os << "\tbase filename = " << m_baseName << endl;
 }
 

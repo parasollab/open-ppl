@@ -12,7 +12,7 @@ class MapEvaluatorMethod : public MPBaseObject<MPTraits> {
     virtual ~MapEvaluatorMethod() {}
 
     virtual void PrintOptions(ostream& _os) const {
-      _os << this->GetName() << endl;
+      _os << this->GetNameAndLabel() << endl;
     }
 
     //HasState is called by strategies that start from an existing roadmap
@@ -21,7 +21,7 @@ class MapEvaluatorMethod : public MPBaseObject<MPTraits> {
     //note that most evaluators do not have state, so this is set to false by default
     virtual bool HasState() const {return false;}
 
-    virtual bool operator ()() = 0;
+    virtual bool operator()() = 0;
 };
 
 #endif
