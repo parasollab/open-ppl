@@ -23,7 +23,7 @@ class CollisionDetectionValidity : public ValidityCheckerMethod<MPTraits> {
 
     virtual bool IsValidImpl(CfgType& _cfg, Environment* _env,
         StatClass& _stats, CDInfo& _cdInfo,
-        string* _callName);
+        string* _callName = NULL);
     virtual bool IsInsideObstacle(const CfgType& _cfg, Environment* _env, CDInfo& _cdInfo);
 
     cd_predefined GetCDType() const { return m_cdMethod->GetCDType(); }
@@ -45,8 +45,8 @@ CollisionDetectionValidity<MPTraits>::CollisionDetectionValidity() :
   m_cdMethod(NULL),
   m_ignoreSelfCollision(false),
   m_ignoreIAdjacentLinks(0) {
-  this->m_name = "CollisionDetection";
-}
+    this->m_name = "CollisionDetection";
+  }
 
 template<class MPTraits>
 CollisionDetectionValidity<MPTraits>::CollisionDetectionValidity(CollisionDetectionMethod* _cdMethod, bool _ignoreSelfCollision, int _ignoreIAdjacentLinks)
@@ -60,7 +60,7 @@ CollisionDetectionValidity<MPTraits>::CollisionDetectionValidity(typename MPTrai
     this->m_name = "CollisionDetection";
 
     m_ignoreSelfCollision = _node.boolXMLParameter("ignoreSelfCollision", false, false, "Check for self collision");
-    m_ignoreIAdjacentLinks  = _node.numberXMLParameter("ignore_i_adjacent_links", false, 1, 0, 100, "number of links to ignore for linkages");
+    m_ignoreIAdjacentLinks  = _node.numberXMLParameter("ignoreIAdjacentLinks", false, 1, 0, MAX_INT, "number of links to ignore for linkages");
 
     string cdLabel = _node.stringXMLParameter("method",true,"","method");
 
@@ -99,7 +99,7 @@ CollisionDetectionValidity<MPTraits>::~CollisionDetectionValidity() {
 
 template<class MPTraits>
 bool
-CollisionDetectionValidity<MPTraits>::IsValidImpl(CfgType& _cfg, Environment* _env, StatClass& _stats, CDInfo& _cdInfo, string* _callName = NULL) {
+CollisionDetectionValidity<MPTraits>::IsValidImpl(CfgType& _cfg, Environment* _env, StatClass& _stats, CDInfo& _cdInfo, string* _callName) {
   _stats.IncCfgIsColl(_callName);
 
   if(!_cfg.ConfigEnvironment(_env)) {
@@ -107,7 +107,7 @@ CollisionDetectionValidity<MPTraits>::IsValidImpl(CfgType& _cfg, Environment* _e
     return false;
   }
 
-  bool clear = (_callName) ? false : true;
+  bool clear = _callName ? false : true;
   if(!_callName)
     _callName = new string("isColl(e,s,cd,cdi,ep)");
 
@@ -122,7 +122,6 @@ CollisionDetectionValidity<MPTraits>::IsValidImpl(CfgType& _cfg, Environment* _e
   _cfg.SetLabel("VALID", !answerFromEnvironment);
   return !answerFromEnvironment;
 }
-
 
 template<class MPTraits>
 bool
@@ -182,7 +181,7 @@ CollisionDetectionValidity<MPTraits>::IsInCollision(Environment* _env, StatClass
           if (_cdInfo.m_retAllInfo) {
             // set stuff to indicate odd happenning
             _cdInfo.m_collidingObstIndex = -1;
-            _cdInfo.m_minDist = MaxDist;
+            _cdInfo.m_minDist = maxDist;
             _cdInfo.m_nearestObstIndex = -1;
             _cdInfo.m_robotPoint[0] = _cdInfo.m_robotPoint[1] = _cdInfo.m_robotPoint[2] = 0;
             _cdInfo.m_objectPoint[0] = _cdInfo.m_objectPoint[1] = _cdInfo.m_objectPoint[2] = 0;
@@ -209,13 +208,13 @@ CollisionDetectionValidity<MPTraits>::IsInCollision(Environment* _env, StatClass
     shared_ptr<MultiBody> _rob, shared_ptr<MultiBody> _obst, string* _callName) {
   CollisionDetectionMethod::CDType tp = m_cdMethod->GetType();
   // Type Out: no collision sure; collision unsure.
-  if((tp == CollisionDetectionMethod::Out) && (m_cdMethod->IsInCollision(_rob, _obst, _stats, _cdInfo, _callName, m_ignoreIAdjacentLinks) == false)) {
+  if((tp == CollisionDetectionMethod::Out) && !m_cdMethod->IsInCollision(_rob, _obst, _stats, _cdInfo, _callName, m_ignoreIAdjacentLinks)) {
     return false;
   }
 
   // Type In: no collision unsure; collision sure.
   // WARNING: If the Type is In, the result will always be true.
-  if ((tp == CollisionDetectionMethod::In) && (m_cdMethod->IsInCollision(_rob, _obst, _stats, _cdInfo, _callName, m_ignoreIAdjacentLinks) == true)) {
+  if ((tp == CollisionDetectionMethod::In) && m_cdMethod->IsInCollision(_rob, _obst, _stats, _cdInfo, _callName, m_ignoreIAdjacentLinks)) {
     return true;
   }
 

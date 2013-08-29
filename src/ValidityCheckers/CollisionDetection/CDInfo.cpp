@@ -1,20 +1,19 @@
 #include "CDInfo.h"
 
-CDInfo::
-CDInfo() {
+CDInfo::CDInfo() {
   ResetVars();
 }
 
-CDInfo::
-~CDInfo() {
+CDInfo::~CDInfo() {
 }
 
-void CDInfo::ResetVars() {
+void
+CDInfo::ResetVars() {
   m_collidingObstIndex = -1;
-  
+
   m_retAllInfo = false;
   m_nearestObstIndex = -1;
-  m_minDist = MaxDist;
+  m_minDist = maxDist;
   m_robotPoint(0, 0, 0);
   m_objectPoint(0, 0, 0);
   m_rapidContactID1=-1;

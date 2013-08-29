@@ -59,9 +59,9 @@ SurfaceValidity<MPTraits>::IsValidImpl(CfgType& _cfg, Environment* _env, StatCla
     double  h  = _cfg.GetHeight();
     int numSurfaces = _env->GetNavigableSurfacesCount();
     if( sid>=0 && sid < numSurfaces ) {
-      shared_ptr<MultiBody> surface_body = _env->GetNavigableSurface(sid);
-      shared_ptr<FixedBody> fb = surface_body->GetFixedBody(0);
-      GMSPolyhedron & polyhedron = fb->GetWorldPolyhedron();
+      shared_ptr<MultiBody> surfaceBody = _env->GetNavigableSurface(sid);
+      shared_ptr<FixedBody> fb = surfaceBody->GetFixedBody(0);
+      GMSPolyhedron& polyhedron = fb->GetWorldPolyhedron();
       result = polyhedron.IsOnSurface(pt, h);
     }
     //////////////////////////////////////////////////////////////////////////////

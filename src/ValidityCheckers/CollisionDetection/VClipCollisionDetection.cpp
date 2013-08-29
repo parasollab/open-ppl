@@ -12,7 +12,7 @@ VClip::~VClip() {}
 ClosestFeaturesHT closestFeaturesHT(3000);
 
 bool
-VClip::IsInCollision(shared_ptr<MultiBody> _robot, shared_ptr<MultiBody> _obstacle, 
+VClip::IsInCollision(shared_ptr<MultiBody> _robot, shared_ptr<MultiBody> _obstacle,
     StatClass& _stats, CDInfo& _cdInfo, string* _callName, int _ignoreIAdjacentMultibodies) {
   _stats.IncNumCollDetCalls(m_name, _callName);
 
@@ -31,9 +31,9 @@ VClip::IsInCollision(shared_ptr<MultiBody> _robot, shared_ptr<MultiBody> _obstac
 
       // if robot check self collision, skip adjacent links.
       if(_robot == _obstacle &&
-          _robot->GetFreeBody(i)->IsWithinI(_obstacle->GetBody(j),_ignoreIAdjacentMultibodies) ) {
+          _robot->GetFreeBody(i)->IsWithinI(_obstacle->GetBody(j),_ignoreIAdjacentMultibodies) )
         continue;
-      }
+
 
       shared_ptr<PolyTree> obst = _obstacle->GetBody(j)->GetVClipBody();
       x12 = GetVClipPose(_robot->GetFreeBody(i)->WorldTransformation(),
@@ -62,18 +62,18 @@ VClip::IsInCollision(shared_ptr<MultiBody> _robot, shared_ptr<MultiBody> _obstac
  * gets updated correctly.
  */
 bool
-VClip::FillCdInfo(shared_ptr<MultiBody> _robot, shared_ptr<MultiBody> _obstacle, 
+VClip::FillCdInfo(shared_ptr<MultiBody> _robot, shared_ptr<MultiBody> _obstacle,
     CDInfo& _cdInfo, int _ignoreIAdjacentMultibodies) {
   Real dist, minCurrentDist;
-  VClipPose x12;  
+  VClipPose x12;
   Vect3 cp1, cp2; //closest points between bodies, in local frame
-  
+
   bool isInCollision = false;
-  
+
   _cdInfo.ResetVars();
   _cdInfo.m_retAllInfo = true;
 
-  minCurrentDist = MaxDist;  // =  1e10 by CollisionDetection.h
+  minCurrentDist = maxDist;  // =  1e10 by CollisionDetection.h
 
   for(int i=0; i<_robot->GetFreeBodyCount(); i++) {
     shared_ptr<PolyTree> rob = _robot->GetFreeBody(i)->GetVClipBody();
@@ -81,9 +81,9 @@ VClip::FillCdInfo(shared_ptr<MultiBody> _robot, shared_ptr<MultiBody> _obstacle,
     for(int j=0; j<_obstacle->GetBodyCount(); j++) {
       // if robot check self collision, skip adjacent links.
       if(_robot == _obstacle &&
-          _robot->GetFreeBody(i)->IsWithinI(_obstacle->GetBody(j),_ignoreIAdjacentMultibodies) ) {   
+          _robot->GetFreeBody(i)->IsWithinI(_obstacle->GetBody(j),_ignoreIAdjacentMultibodies) )
         continue;
-      }
+
 
       shared_ptr<PolyTree> obst = _obstacle->GetBody(j)->GetVClipBody();
       x12 = GetVClipPose(_robot->GetFreeBody(i)->WorldTransformation(),
@@ -116,16 +116,16 @@ VClip::FillCdInfo(shared_ptr<MultiBody> _robot, shared_ptr<MultiBody> _obstacle,
 }
 
 VClipPose
-VClip::GetVClipPose(const Transformation& myT, const Transformation& obstT) {	
-  Transformation diff = (-obstT) * myT;
+VClip::GetVClipPose(const Transformation& _myT, const Transformation& _obstT) {
+  Transformation diff = (-_obstT) * _myT;
   Quaternion q;
   convertFromMatrix(q, diff.rotation().matrix());
 
-  Vect3 XYZ(diff.translation()[0], diff.translation()[1], diff.translation()[2]);
+  Vect3 pos(diff.translation()[0], diff.translation()[1], diff.translation()[2]);
 
-  Quat RPY(q.real(), q.imaginary()[0], q.imaginary()[1], q.imaginary()[2]);
+  Quat rot(q.real(), q.imaginary()[0], q.imaginary()[1], q.imaginary()[2]);
 
-  return VClipPose(RPY, XYZ);
+  return VClipPose(rot, pos);
 }
 
 #endif

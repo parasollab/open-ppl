@@ -57,16 +57,16 @@ NodeClearanceValidity<MPTraits>::IsValidImpl(CfgType& _cfg, Environment* _env, S
     CDInfo& _cdInfo, string* _callName) {
   /* TODO: remove ifdef when constness problem in STAPL is fixed*/
 #ifndef _PARALLEL
-  vector<pair<VID, double> > KClosest;
+  vector<pair<VID, double> > kClosest;
   this->GetMPProblem()->GetNeighborhoodFinder(m_nfLabel)->FindNeighbors(
-      this->GetMPProblem()->GetRoadmap(), static_cast<CfgType>(_cfg), back_inserter(KClosest) );
+      this->GetMPProblem()->GetRoadmap(), static_cast<CfgType>(_cfg), back_inserter(kClosest) );
 
-  if(KClosest.empty()) {
+  if(kClosest.empty()) {
     _cfg.SetLabel("VALID", true);
     return true;
   }
 
-  bool result = m_delta < KClosest[0].second;
+  bool result = m_delta < kClosest[0].second;
 
   _cfg.SetLabel("VALID", result);
   return result;

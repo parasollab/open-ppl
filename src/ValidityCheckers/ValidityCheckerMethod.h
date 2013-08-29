@@ -15,7 +15,7 @@ class ValidityCheckerMethod : public MPBaseObject<MPTraits> {
     virtual ~ValidityCheckerMethod(){}
 
     virtual void PrintOptions(ostream& _os) const {
-      _os << this->GetName() << endl;
+      _os << this->GetNameAndLabel() << endl;
     }
 
     bool IsValid(CfgType& _cfg, Environment* _env, StatClass& _stats,
