@@ -634,7 +634,8 @@ BasicRRTStrategy<MPTraits>::EvaluateGoals(){
 
   LPOutput<MPTraits> lpOutput;
   // Check if goals have been found
-  for(vector<size_t>::iterator i = m_goalsNotFound.begin(); i!=m_goalsNotFound.end(); i++){
+  vector<size_t>::iterator i = m_goalsNotFound.begin();
+  while(i != m_goalsNotFound.end()) {
     vector<pair<VID, double> > closests;
     nfp->FindNeighbors(rdmp, m_goals[*i], back_inserter(closests));
     CfgType closest = rdmp->GetGraph()->GetVertex(closests[0].first);
@@ -652,6 +653,8 @@ BasicRRTStrategy<MPTraits>::EvaluateGoals(){
       rdmp->GetGraph()->AddEdge(closests[0].first, goalVID, lpOutput.edge);
       i = m_goalsNotFound.erase(i);
     }
+    else
+      ++i;
   }
 }
 
