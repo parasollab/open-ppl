@@ -406,7 +406,7 @@ BasicPRM<MPTraits>::GenerateNodes(OutputIterator _thisIterationOut){
     else{
       if(!cit->IsLabel("VALID")){
         !(this->GetMPProblem()->GetValidityChecker(m_vcLabel)->IsValid(
-              *cit, this->GetMPProblem()->GetEnvironment(), *(this->GetMPProblem()->GetStatClass()), cdInfo, &callee));
+              *cit, this->GetMPProblem()->GetEnvironment(), *(this->GetMPProblem()->GetStatClass()), cdInfo, callee));
       }
       if(cit->IsLabel("VALID") && cit->GetLabel("VALID")) {
         if(!this->GetMPProblem()->GetRoadmap()->GetGraph()->IsVertex(*cit)) {

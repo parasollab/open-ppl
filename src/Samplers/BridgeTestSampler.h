@@ -85,7 +85,7 @@ class BridgeTestSampler : public SamplerMethod<MPTraits> {
           //If tmp is valid configuration extend rays in opposite directions
           //at length Gaussian d/2
           if(_env->InBounds(tmp, _bb) &&
-              vc->IsValid(tmp, _env, _stats, cdInfo, &callee)) {
+              vc->IsValid(tmp, _env, _stats, cdInfo, callee)) {
             CfgType mid = tmp, incr, cfg1;
             incr.GetRandomRay(fabs(GaussianDistribution(m_d, m_d))/2, _env, dm);
             cfg1 = mid - incr;
@@ -94,14 +94,14 @@ class BridgeTestSampler : public SamplerMethod<MPTraits> {
 
             //If cfg1 is invalid (including Bbox) after adjustment, create cfg2
             if(!_env->InBounds(cfg1, _bb) ||
-                !vc->IsValid(cfg1, _env, _stats, cdInfo, &callee)) {
+                !vc->IsValid(cfg1, _env, _stats, cdInfo, callee)) {
               CfgType cfg2 = mid + incr;
               if(this->m_debug)
                 cout << "cfg2::" << cfg2 << endl;
 
               //If cfg2 also invalid, node generation successful
               if(!_env->InBounds(cfg2, _bb) ||
-                  !vc->IsValid(cfg2, _env, _stats, cdInfo, &callee)) {
+                  !vc->IsValid(cfg2, _env, _stats, cdInfo, callee)) {
                 _stats.IncNodesGenerated(this->GetNameAndLabel());
                 generated = true;
                 if(this->m_debug)
@@ -124,10 +124,10 @@ class BridgeTestSampler : public SamplerMethod<MPTraits> {
             //If both cfg1 and cfg2 invalid, create mid and generate node
             //successfully if mid is valid
             if(!_env->InBounds(cfg2, _bb) ||
-                !vc->IsValid(cfg2, _env, _stats, cdInfo, &callee)) {
+                !vc->IsValid(cfg2, _env, _stats, cdInfo, callee)) {
               CfgType mid;
               mid.WeightedSum(cfg1, cfg2, 0.5);
-              if(_env->InBounds(mid, _bb) && (vc->IsValid(mid, _env, _stats, cdInfo, &callee))) {
+              if(_env->InBounds(mid, _bb) && (vc->IsValid(mid, _env, _stats, cdInfo, callee))) {
                 _stats.IncNodesGenerated(this->GetNameAndLabel());
                 generated = true;
                 if(this->m_debug)
@@ -143,7 +143,7 @@ class BridgeTestSampler : public SamplerMethod<MPTraits> {
         else {
           //If tmp is valid configuration extend rays in opposite directions
           //at length Gaussian d/2
-          if(vc->IsValid(tmp, _env, _stats, cdInfo, &callee)) {
+          if(vc->IsValid(tmp, _env, _stats, cdInfo, callee)) {
             CfgType mid = tmp, incr, cfg1;
             incr.GetRandomRay(fabs(GaussianDistribution(m_d, m_d))/2, _env, dm);
             cfg1 = mid - incr;
@@ -151,14 +151,14 @@ class BridgeTestSampler : public SamplerMethod<MPTraits> {
               cout << "cfg1::" << cfg1 << endl;
 
             //If invalid cfg1, create cfg2. Want both invalid.
-            if(!vc->IsValid(cfg1, _env, _stats, cdInfo, &callee)) {
+            if(!vc->IsValid(cfg1, _env, _stats, cdInfo, callee)) {
               CfgType cfg2 = mid + incr;
               if(this->m_debug)
                 cout << "cfg2::" << cfg2 << endl;
 
               //If both cfg1 and cfg2 invalid; valid tmp is successfully generated
               //midpoint node
-              if(!vc->IsValid(cfg2, _env, _stats, cdInfo, &callee)) {
+              if(!vc->IsValid(cfg2, _env, _stats, cdInfo, callee)) {
                 _stats.IncNodesGenerated(this->GetNameAndLabel());
                 generated = true;
                 if(this->m_debug)
@@ -180,12 +180,12 @@ class BridgeTestSampler : public SamplerMethod<MPTraits> {
             }
 
             //If both cfg1 and cfg2 invalid, get midpoint
-            if(!vc->IsValid(cfg2, _env, _stats, cdInfo, &callee)) {
+            if(!vc->IsValid(cfg2, _env, _stats, cdInfo, callee)) {
               CfgType mid;
               mid.WeightedSum(cfg1, cfg2, 0.5);
 
               //If valid midpoint, successful node is generated
-              if(vc->IsValid(mid, _env, _stats, cdInfo, &callee)) {
+              if(vc->IsValid(mid, _env, _stats, cdInfo, callee)) {
                 _stats.IncNodesGenerated(this->GetNameAndLabel());
                 generated = true;
                 if(this->m_debug)

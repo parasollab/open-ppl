@@ -208,7 +208,7 @@ ToggleLP<MPTraits>::IsConnectedToggle(Environment* _env, StatClass& _stats,
     cout<<"ToggleLP LP::"<<"\n\t"<<_c1<<"\n\t"<<_c2<<endl;
   }
 
-  string Callee(this->GetNameAndLabel()+"::IsConnectedToggle");
+  string callee(this->GetNameAndLabel()+"::IsConnectedToggle");
   ValidityCheckerPointer vcm = this->GetMPProblem()->GetValidityChecker(m_vcLabel);
   LocalPlannerPointer lpMethod = this->GetMPProblem()->GetLocalPlanner(m_lpLabel);
 
@@ -227,7 +227,7 @@ ToggleLP<MPTraits>::IsConnectedToggle(Environment* _env, StatClass& _stats,
   if(n == CfgType())
     return false;
 
-  bool isValid = vcm->IsValid(n, _env, _stats, cdInfo, &Callee);
+  bool isValid = vcm->IsValid(n, _env, _stats, cdInfo, callee);
   _cdCounter++;
 
   if(this->m_debug){

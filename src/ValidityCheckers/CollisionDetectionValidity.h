@@ -23,16 +23,16 @@ class CollisionDetectionValidity : public ValidityCheckerMethod<MPTraits> {
 
     virtual bool IsValidImpl(CfgType& _cfg, Environment* _env,
         StatClass& _stats, CDInfo& _cdInfo,
-        string* _callName = NULL);
+        const string& _callName);
     virtual bool IsInsideObstacle(const CfgType& _cfg, Environment* _env, CDInfo& _cdInfo);
 
     cd_predefined GetCDType() const { return m_cdMethod->GetCDType(); }
 
   private:
     bool IsInCollision(Environment* _env, StatClass& _stats, CDInfo& _cdInfo,
-        shared_ptr<MultiBody> _rob, shared_ptr<MultiBody> _obst, string* _callName);
+        shared_ptr<MultiBody> _rob, shared_ptr<MultiBody> _obst, const string& _callName);
     bool IsInCollision(Environment* _env, StatClass& _stats, CDInfo& _cdInfo,
-        size_t _robotIndex, string* _callName);
+        size_t _robotIndex, const string& _callName);
 
     CollisionDetectionMethod* m_cdMethod;
     bool m_ignoreSelfCollision;
@@ -99,7 +99,7 @@ CollisionDetectionValidity<MPTraits>::~CollisionDetectionValidity() {
 
 template<class MPTraits>
 bool
-CollisionDetectionValidity<MPTraits>::IsValidImpl(CfgType& _cfg, Environment* _env, StatClass& _stats, CDInfo& _cdInfo, string* _callName) {
+CollisionDetectionValidity<MPTraits>::IsValidImpl(CfgType& _cfg, Environment* _env, StatClass& _stats, CDInfo& _cdInfo, const string& _callName) {
   _stats.IncCfgIsColl(_callName);
 
   if(!_cfg.ConfigEnvironment(_env)) {
@@ -107,17 +107,10 @@ CollisionDetectionValidity<MPTraits>::IsValidImpl(CfgType& _cfg, Environment* _e
     return false;
   }
 
-  bool clear = _callName ? false : true;
-  if(!_callName)
-    _callName = new string("isColl(e,s,cd,cdi,ep)");
-
   // after updating the environment(multibodies), Ask ENVIRONMENT
   // to check collision! (this is more natural)
 
   bool answerFromEnvironment = IsInCollision(_env, _stats, _cdInfo, _cfg.GetRobotIndex(), _callName);
-
-  if(clear)
-    delete _callName;
 
   _cfg.SetLabel("VALID", !answerFromEnvironment);
   return !answerFromEnvironment;
@@ -126,7 +119,7 @@ CollisionDetectionValidity<MPTraits>::IsValidImpl(CfgType& _cfg, Environment* _e
 template<class MPTraits>
 bool
 CollisionDetectionValidity<MPTraits>::IsInCollision(Environment* _env, StatClass& _stats, CDInfo& _cdInfo,
-    size_t _robotIndex,  string* _callName) {
+    size_t _robotIndex,  const string& _callName) {
 
   size_t nMulti = _env->GetUsableMultiBodyCount();
   shared_ptr<MultiBody> rob = _env->GetMultiBody(_robotIndex);
@@ -205,7 +198,7 @@ CollisionDetectionValidity<MPTraits>::IsInCollision(Environment* _env, StatClass
 template<class MPTraits>
 bool
 CollisionDetectionValidity<MPTraits>::IsInCollision(Environment* _env, StatClass& _stats, CDInfo& _cdInfo,
-    shared_ptr<MultiBody> _rob, shared_ptr<MultiBody> _obst, string* _callName) {
+    shared_ptr<MultiBody> _rob, shared_ptr<MultiBody> _obst, const string& _callName) {
   CollisionDetectionMethod::CDType tp = m_cdMethod->GetType();
   // Type Out: no collision sure; collision unsure.
   if((tp == CollisionDetectionMethod::Out) && !m_cdMethod->IsInCollision(_rob, _obst, _stats, _cdInfo, _callName, m_ignoreIAdjacentLinks)) {

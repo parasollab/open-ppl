@@ -397,14 +397,14 @@ class SimilarStructureSampler : public SamplerMethod<MPTraits>
         RMSDDistance<MPTraits> rmsd;
         if(this->m_debug)
           log << rmsd.Distance(env, original_cfg, similar_cfg) << "\t";
-        CDInfo cdInfo;string calle(this->GetName());calle+="::_BiasedSample()";
+        CDInfo cdInfo;string callee(this->GetName());callee+="::_BiasedSample()";
         if(m_ignoreValidity) {
            Stat.IncNodesGenerated(this->GetNameAndLabel());
            _cfgOut.push_back(similar_cfg);
            if(this->m_debug)
              log << "1" << endl;
         }
-        else if(vcm->IsValid(similar_cfg, env, Stat, cdInfo, &calle)) {
+        else if(vcm->IsValid(similar_cfg, env, Stat, cdInfo, callee)) {
           Stat.IncNodesGenerated(this->GetNameAndLabel());
           _cfgOut.push_back(similar_cfg);
           if(this->m_debug)

@@ -24,7 +24,7 @@ class VClip : public CollisionDetectionMethod {
      * collision between two ajacent links will be ignore.
      */
     virtual bool IsInCollision(shared_ptr<MultiBody> _robot, shared_ptr<MultiBody> _obstacle,
-        StatClass& _stats, CDInfo& _cdInfo, string* _callName = NULL, int _ignoreIAdjacentMultibodies = 1);
+        StatClass& _stats, CDInfo& _cdInfo, const string& _callName, int _ignoreIAdjacentMultibodies = 1);
 
   protected:
     VClipPose GetVClipPose(const Transformation&, const Transformation&);

@@ -11,8 +11,8 @@ Rapid::Rapid() : CollisionDetectionMethod("RAPID", Exact, RAPID) {}
 Rapid::~Rapid() {}
 
 bool
-Rapid::IsInCollision(shared_ptr<MultiBody> _robot, shared_ptr<MultiBody> _obstacle, 
-    StatClass& _stats, CDInfo& _cdInfo, string* _callName, int _ignoreIAdjacentMultibodies) {
+Rapid::IsInCollision(shared_ptr<MultiBody> _robot, shared_ptr<MultiBody> _obstacle,
+    StatClass& _stats, CDInfo& _cdInfo, const string& _callName, int _ignoreIAdjacentMultibodies) {
   _stats.IncNumCollDetCalls(m_name, _callName);
 
   if (_cdInfo.m_retAllInfo) {

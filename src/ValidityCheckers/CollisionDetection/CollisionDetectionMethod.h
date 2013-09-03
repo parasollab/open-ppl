@@ -38,7 +38,9 @@ class CollisionDetectionMethod {
 
     /**Check collision between MultiBody of robot and obstacle.
     */
-    virtual bool IsInCollision(shared_ptr<MultiBody> _rob, shared_ptr<MultiBody> _obstacle, StatClass& _Stats, CDInfo& _cdInfo, string* _callName = NULL, int _ignoreIAdjacentMultibodies = 1) = 0;
+    virtual bool IsInCollision(shared_ptr<MultiBody> _rob,
+        shared_ptr<MultiBody> _obstacle, StatClass& _Stats, CDInfo& _cdInfo,
+        const string& _callName, int _ignoreIAdjacentMultibodies = 1) = 0;
 
   protected:
     string m_name;

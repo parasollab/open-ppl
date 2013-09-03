@@ -118,7 +118,7 @@ class GridSampler : public SamplerMethod<MPTraits> {
       }
 
       // Is tmp a valid configuration?
-      if(_env->InBounds(tmp, _bb) && vc->IsValid(tmp, _env, _stats, cdInfo, &callee)) {
+      if(_env->InBounds(tmp, _bb) && vc->IsValid(tmp, _env, _stats, cdInfo, callee)) {
         // Yes (sampler successful)
           _cfgOut.push_back(tmp);
       }

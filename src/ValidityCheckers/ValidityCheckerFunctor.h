@@ -6,7 +6,7 @@ class ValidityCheckerFunctor {
   public:
     typedef typename MPTraits::CfgType CfgType;
     ValidityCheckerFunctor(CfgType& _cfg, Environment* _env, StatClass& _stats,
-        CDInfo& _cdInfo, string* _callName) :
+        CDInfo& _cdInfo, const string& _callName) :
       m_cfg(_cfg), m_env(_env), m_stats(_stats), m_cdInfo(_cdInfo),
       m_callName(_callName) {}
 
@@ -22,7 +22,7 @@ class ValidityCheckerFunctor {
     Environment* m_env;
     StatClass& m_stats;
     CDInfo& m_cdInfo;
-    string* m_callName;
+    const string& m_callName;
 };
 
 #endif

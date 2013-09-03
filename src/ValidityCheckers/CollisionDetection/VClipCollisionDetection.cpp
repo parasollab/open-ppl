@@ -13,7 +13,7 @@ ClosestFeaturesHT closestFeaturesHT(3000);
 
 bool
 VClip::IsInCollision(shared_ptr<MultiBody> _robot, shared_ptr<MultiBody> _obstacle,
-    StatClass& _stats, CDInfo& _cdInfo, string* _callName, int _ignoreIAdjacentMultibodies) {
+    StatClass& _stats, CDInfo& _cdInfo, const string& _callName, int _ignoreIAdjacentMultibodies) {
   _stats.IncNumCollDetCalls(m_name, _callName);
 
   if (_cdInfo.m_retAllInfo == true)

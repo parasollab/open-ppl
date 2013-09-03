@@ -62,9 +62,9 @@ class StatClass {
 
     void ClearStats();
 
-    int IncNumCollDetCalls(string _cdName , string* _callName = NULL);
+    int IncNumCollDetCalls(string _cdName, const string& _callName);
     unsigned long int GetIsCollTotal() { return m_isCollTotal; }
-    void IncCfgIsColl(string* _callName = NULL);
+    void IncCfgIsColl(const string& _callName);
 
     int IncLPConnections(string _lpName , int _incr=1);
     int IncLPAttempts(string _lpName, int _incr=1 );

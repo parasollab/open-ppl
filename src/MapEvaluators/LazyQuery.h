@@ -125,7 +125,7 @@ LazyQuery<MPTraits>::CanRecreatePath(RoadmapType* _rdmp, vector<VID>& _attempted
     CfgType node = _rdmp->GetGraph()->GetVertex(_attemptedPath[index]);
     if(node.IsLabel("VALID") && node.GetLabel("VALID"))
       continue;
-    if(!vcm->IsValid(node, env, stats, cdInfo, &callee)) {
+    if(!vcm->IsValid(node, env, stats, cdInfo, callee)) {
       // Add invalid edges to list
       if(m_numEnhance && !node.IsLabel("Enhance")) {
         typename GraphType::vertex_reference v1 = *(_rdmp->GetGraph()->find_vertex(_attemptedPath[index]));

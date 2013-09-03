@@ -64,7 +64,7 @@ class UniformRandomSampler : public SamplerMethod<MPTraits> {
 
       //Good. Now determine validity.
       if(inBBX) {
-        bool isValid = vcm->IsValid(tmp, _env, _stats, cdInfo, &callee);
+        bool isValid = vcm->IsValid(tmp, _env, _stats, cdInfo, callee);
         if(this->m_debug){
           cout << "IsValid::" << isValid << endl;
           VDAddTempCfg(tmp, isValid);

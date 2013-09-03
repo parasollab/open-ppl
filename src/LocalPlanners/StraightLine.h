@@ -192,7 +192,7 @@ StraightLine<MPTraits>::IsConnectedFunc(Environment* _env, StatClass& _stats,
     if(_checkCollision){
       cdCounter++;
       if(!_env->InBounds(intermediate) ||
-          !vcm->IsValid(intermediate, _env, _stats, cdInfo, &callee)) {
+          !vcm->IsValid(intermediate, _env, _stats, cdInfo, callee)) {
         if(_env->InBounds(intermediate))
           _col = intermediate;
         return false;
@@ -281,7 +281,7 @@ StraightLine<MPTraits>::IsConnectedSLSequential(Environment* _env, StatClass& _s
     _cdCounter++;
     if(_checkCollision){
       if(!_env->InBounds(tick) ||
-          !vcm->IsValid(tick, _env, _stats, cdInfo, &callee)) {
+          !vcm->IsValid(tick, _env, _stats, cdInfo, callee)) {
         if(_env->InBounds(tick))
           _col = tick;
         CfgType negIncr = -incr;
@@ -355,7 +355,7 @@ StraightLine<MPTraits>::IsConnectedSLBinary(Environment* _env, StatClass& _stats
     _cdCounter++;
 
     if(!_env->InBounds(midCfg) ||
-        !vcm->IsValid(midCfg, _env, _stats, cdInfo, &callee) ) {
+        !vcm->IsValid(midCfg, _env, _stats, cdInfo, callee) ) {
       if(_env->InBounds(midCfg))
         _col=midCfg;
       return false;

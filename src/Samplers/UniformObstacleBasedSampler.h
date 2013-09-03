@@ -68,7 +68,7 @@ class UniformObstacleBasedSampler : public SamplerMethod<MPTraits> {
       if(cfg1 == CfgType())
         cfg1.GetRandomCfg(_env, bbNew);
 
-      cfg1Free = (vc->IsValid(cfg1, _env, _stats, cdInfo, &callee)) && (!vc->IsInsideObstacle(cfg1, _env, cdInfo));
+      cfg1Free = (vc->IsValid(cfg1, _env, _stats, cdInfo, callee)) && (!vc->IsInsideObstacle(cfg1, _env, cdInfo));
 
       CfgType cfg2;
       CfgType incr;
@@ -102,7 +102,7 @@ class UniformObstacleBasedSampler : public SamplerMethod<MPTraits> {
       inter.FindIncrement(cfg1, cfg2, &nTicks, positionRes, orientationRes);
       for(int i=1; i<nTicks; i++) {
         tick += inter;
-        tickFree = (vc->IsValid(tick, _env, _stats, cdInfo, &callee)) && (!vc->IsInsideObstacle(tick, _env, cdInfo));
+        tickFree = (vc->IsValid(tick, _env, _stats, cdInfo, callee)) && (!vc->IsInsideObstacle(tick, _env, cdInfo));
         _env->SetBoundary(_bb);
         if(m_useBoundary)
           tickFree = tickFree && _env->InBounds(tick, _bb);

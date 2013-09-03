@@ -181,7 +181,7 @@ TransformAtS<MPTraits>::IsConnectedOneWay(Environment* _env, StatClass& _stats,
     for(typename vector<CfgType>::iterator I = sequence.begin()+1; I != sequence.end()-1; I++) { // _c1 and _c2 not double checked
       cdCounter++;
       if(_env->InBounds(*I)) {
-        if(!vcm->IsValid(*I, _env, _stats, cdInfo, &callee)) {
+        if(!vcm->IsValid(*I, _env, _stats, cdInfo, callee)) {
           _col = *I;
           connected = false;
           break;

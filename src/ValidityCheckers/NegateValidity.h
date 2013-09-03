@@ -17,7 +17,7 @@ class NegateValidity : public ValidityCheckerMethod<MPTraits> {
 
     virtual bool
       IsValidImpl(CfgType& _cfg, Environment* _env, StatClass& _stats,
-          CDInfo& _cdInfo, string* _callName);
+          CDInfo& _cdInfo, const string& _callName);
 
   private:
     string m_vcLabel;
@@ -41,7 +41,7 @@ template<class MPTraits>
 bool
 NegateValidity<MPTraits>::
 IsValidImpl(CfgType& _cfg, Environment* _env, StatClass& _stats, CDInfo& _cdInfo,
-    string* _callName) {
+   const string& _callName) {
   vector<ValidityCheckerPointer> vcMethods;
   typedef typename vector<ValidityCheckerPointer>::iterator VCIterator;
   vcMethods.push_back(this->GetMPProblem()->GetValidityChecker(m_vcLabel));

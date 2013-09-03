@@ -87,7 +87,7 @@ class ObstacleBasedSampler : public SamplerMethod<MPTraits> {
         for(int i = 0; i < m_nShellsFree; i++) {
           // If the shell is valid
           if(_env->InBounds(_cFree, _bb) &&
-              vcm->IsValid(_cFree, _env, _stats, cdInfo, &callee)) {
+              vcm->IsValid(_cFree, _env, _stats, cdInfo, callee)) {
             if(this->m_recordKeep)
               _stats.IncNodesGenerated(this->GetNameAndLabel());
             // Add shell
@@ -105,7 +105,7 @@ class ObstacleBasedSampler : public SamplerMethod<MPTraits> {
         for(int i = 0; i < m_nShellsColl; i++) {
           // If the shell is valid
           if(_env->InBounds(_cColl, _bb) &&
-              !vcm->IsValid(_cColl, _env, _stats, cdInfo, &callee)) {
+              !vcm->IsValid(_cColl, _env, _stats, cdInfo, callee)) {
             if(this->m_recordKeep)
               _stats.IncNodesGenerated(this->GetNameAndLabel());
             // Add shell
@@ -132,7 +132,7 @@ class ObstacleBasedSampler : public SamplerMethod<MPTraits> {
       // Old state
       CfgType c1 = ChooseASample(_cfgIn, _env, _bb);
       bool c1BBox = _env->InBounds(c1, _bb);
-      bool c1Free = vcm->IsValid(c1, _env, _stats, cdInfo, &callee);
+      bool c1Free = vcm->IsValid(c1, _env, _stats, cdInfo, callee);
 
       // New state
       CfgType c2 = c1;
@@ -157,7 +157,7 @@ class ObstacleBasedSampler : public SamplerMethod<MPTraits> {
         // Update new state
         c2 += r;
         c2BBox = _env->InBounds(c2, _bb);
-        c2Free = vcm->IsValid(c2, _env, _stats, cdInfo, &callee);
+        c2Free = vcm->IsValid(c2, _env, _stats, cdInfo, callee);
       }
 
       // If new state is in BBox (there must be a validity change)

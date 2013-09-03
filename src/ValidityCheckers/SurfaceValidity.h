@@ -18,7 +18,7 @@ class SurfaceValidity : public ValidityCheckerMethod<MPTraits> {
     virtual ~SurfaceValidity() {}
 
     virtual bool
-      IsValidImpl(CfgType& _cfg, Environment* _env, StatClass& _stats, CDInfo& _cdInfo, string* _callName);
+      IsValidImpl(CfgType& _cfg, Environment* _env, StatClass& _stats, CDInfo& _cdInfo, const string& _callName);
 
   private:
     string m_vcLabel;
@@ -41,7 +41,7 @@ SurfaceValidity<MPTraits>::SurfaceValidity(typename MPTraits::MPProblemType* _pr
 
 template<class MPTraits>
 bool
-SurfaceValidity<MPTraits>::IsValidImpl(CfgType& _cfg, Environment* _env, StatClass& _stats, CDInfo& _cdInfo, string* _callName){
+SurfaceValidity<MPTraits>::IsValidImpl(CfgType& _cfg, Environment* _env, StatClass& _stats, CDInfo& _cdInfo, const string& _callName){
 
   bool result = false;
   int sid = _cfg.GetSurfaceID();

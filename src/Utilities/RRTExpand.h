@@ -59,7 +59,7 @@ RRTExpand(typename MPTraits::MPProblemType* _mp,
   while(!collision && dm->Distance(env,_start,tick) <= _delta && ticker <= nTicks) {
     previous = tick;
     tick += incr;
-    if(!env->InBounds(tick) || !(vc->IsValid(tick, env, *stats, _cdInfo, &callee))){
+    if(!env->InBounds(tick) || !(vc->IsValid(tick, env, *stats, _cdInfo, callee))){
       collision = true; //return previous tick, as it is collision-free
     }
     ++ticker;
