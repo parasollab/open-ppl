@@ -1,0 +1,63 @@
+echo $1
+cd $1
+echo "
+Gauss"
+find -name Gauss.*.stat | xargs ../filter 123456789 | xargs grep "Number of Nodes" | xargs ../avg Nodes 4 0
+find -name Gauss.*.stat | xargs ../filter 123456789 | xargs grep "Total Cfg" | xargs ../avg CD 4 0
+find -name Gauss.*.stat | xargs ../filter 123456789 | xargs grep "Map Generation:" | xargs ../avg Time 4 1
+echo "
+Gauss_RRT"
+find -name Gauss_RRT.*.stat | xargs ../filter 123456789 | xargs grep "Number of Nodes" | xargs ../avg Nodes 4 0
+find -name Gauss_RRT.*.stat | xargs ../filter 123456789 | xargs grep "Total Cfg" | xargs ../avg CD 4 0
+find -name Gauss_RRT.*.stat | xargs ../filter 123456789 | xargs grep "Total RRT" | xargs ../avg RRTTime 4 0
+find -name Gauss_RRT.*.stat | xargs ../filter 123456789 | xargs grep "CC Operations" | xargs ../avg ccOps 4 0
+find -name Gauss_RRT.*.stat | xargs ../filter 123456789 | xargs grep "Number of RRTs" | xargs ../avg numRRTs 5 0
+find -name Gauss_RRT.*.stat | xargs ../filter 123456789 | xargs grep "RRT Vertices" | xargs ../avg RRTVert 4 0
+find -name Gauss_RRT.*.stat | xargs ../filter 123456789 | xargs grep "Map Generation:" | xargs ../avg Time 4 1
+echo "
+OBPRM"
+find -name OBPRM.*.stat | xargs ../filter 123456789 | xargs grep "Number of Nodes" | xargs ../avg Nodes 4 0
+find -name OBPRM.*.stat | xargs ../filter 123456789 | xargs grep "Total Cfg" | xargs ../avg CD 4 0
+find -name OBPRM.*.stat | xargs ../filter 123456789 | xargs grep "Map Generation:" | xargs ../avg Time 4 1
+echo "
+OBPRM_RRT"
+find -name OBPRM_RRT.*.stat | xargs ../filter 123456789 | xargs grep "Number of Nodes" | xargs ../avg Nodes 4 0
+find -name OBPRM_RRT.*.stat | xargs ../filter 123456789 | xargs grep "Total Cfg" | xargs ../avg CD 4 0
+find -name OBPRM_RRT.*.stat | xargs ../filter 123456789 | xargs grep "Total RRT" | xargs ../avg RRTTime 4 0
+find -name OBPRM_RRT.*.stat | xargs ../filter 123456789 | xargs grep "CC Operations" | xargs ../avg ccOps 4 0
+find -name OBPRM_RRT.*.stat | xargs ../filter 123456789 | xargs grep "Number of RRTs" | xargs ../avg numRRTs 5 0
+find -name OBPRM_RRT.*.stat | xargs ../filter 123456789 | xargs grep "RRT Vertices" | xargs ../avg RRTVert 4 0
+find -name OBPRM_RRT.*.stat | xargs ../filter 123456789 | xargs grep "Map Generation:" | xargs ../avg Time 4 1
+echo "
+Toggle"
+find -name Toggle.*.stat | xargs ../filter 123456789 | xargs grep "Number of Nodes" | xargs ../avg Nodes 4 0
+find -name Toggle.*.stat | xargs ../filter 123456789 | xargs grep "Total Cfg" | xargs ../avg CD 4 0
+find -name Toggle.*.stat | xargs ../filter 123456789 | xargs grep "Map Generation:" | xargs ../avg Time 4 1
+echo "
+Toggle_RRT"
+find -name Toggle_RRT.*.stat | xargs ../filter 123456789 | xargs grep "Number of Nodes" | xargs ../avg Nodes 4 0
+find -name Toggle_RRT.*.stat | xargs ../filter 123456789 | xargs grep "Total Cfg" | xargs ../avg CD 4 0
+find -name Toggle_RRT.*.stat | xargs ../filter 123456789 | xargs grep "Total RRT" | xargs ../avg RRTTime 4 0
+find -name Toggle_RRT.*.stat | xargs ../filter 123456789 | xargs grep "CC Operations" | xargs ../avg ccOps 4 0
+find -name Toggle_RRT.*.stat | xargs ../filter 123456789 | xargs grep "Number of RRTs" | xargs ../avg numRRTs 5 0
+find -name Toggle_RRT.*.stat | xargs ../filter 123456789 | xargs grep "RRT Vertices" | xargs ../avg RRTVert 4 0
+find -name Toggle_RRT.*.stat | xargs ../filter 123456789 | xargs grep "Map Generation:" | xargs ../avg Time 4 1
+echo "
+Uniform"
+find -name Uniform.*.stat | xargs ../filter 123456789 | xargs grep "Number of Nodes" | xargs ../avg Nodes 4 0
+find -name Uniform.*.stat | xargs ../filter 123456789 | xargs grep "Total Cfg" | xargs ../avg CD 4 0
+find -name Uniform.*.stat | xargs ../filter 123456789 | xargs grep "Map Generation:" | xargs ../avg Time 4 1
+echo "
+Uniform_RRT"
+find -name Uniform_RRT.*.stat | xargs ../filter 123456789 | xargs grep "Number of Nodes" | xargs ../avg Nodes 4 0
+find -name Uniform_RRT.*.stat | xargs ../filter 123456789 | xargs grep "Total Cfg" | xargs ../avg CD 4 0
+find -name Uniform_RRT.*.stat | xargs ../filter 123456789 | xargs grep "Total RRT" | xargs ../avg RRTTime 4 0
+find -name Uniform_RRT.*.stat | xargs ../filter 123456789 | xargs grep "CC Operations" | xargs ../avg ccOps 4 0
+find -name Uniform_RRT.*.stat | xargs ../filter 123456789 | xargs grep "Number of RRTs" | xargs ../avg numRRTs 5 0
+find -name Uniform_RRT.*.stat | xargs ../filter 123456789 | xargs grep "RRT Vertices" | xargs ../avg RRTVert 4 0
+find -name Uniform_RRT.*.stat | xargs ../filter 123456789 | xargs grep "Map Generation:" | xargs ../avg Time 4 1
+echo "
+RRT"
+find -name RRT.*.stat | xargs ../filter 123456789 | xargs grep "Number of Nodes" | xargs ../avg Nodes 4 0
+find -name RRT.*.stat | xargs ../filter 123456789 | xargs grep "Total Cfg" | xargs ../avg CD 4 0
+find -name RRT.*.stat | xargs ../filter 123456789 | xargs grep "RRT Generation:" | xargs ../avg Time 4 1
