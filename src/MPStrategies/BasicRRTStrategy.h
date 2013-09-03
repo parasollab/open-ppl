@@ -238,6 +238,10 @@ BasicRRTStrategy<MPTraits>::Run() {
       dir = this->SelectDirection();
     }
 
+    // Randomize Current Tree
+    m_currentTree = m_trees.begin() + LRand()%m_trees.size();
+    //cout << "m_trees.size() = " << m_trees.size() << ", currentTree = " << m_currentTree - m_trees.begin() << endl;
+
     VID recent = this->ExpandTree(dir);
     if(recent != INVALID_VID){
       //connect various trees together

@@ -1,0 +1,50 @@
+Gauss:
+
+checkEdgeCases = false
+checkImportant = false
+trimAll        = true
+biasConnect    = false
+maxRRTSize     = 50*20
+
+g1a3:     9.96
+g2a3:    10.12 < speedup: 333.9
+Gauss: 3378.69 (49/50)
+
+OBPRM:
+
+checkEdgeCases = false
+checkImportant = false
+trimAll        = true
+biasConnect    = true
+maxRRTSize     = 50*20
+
+o1a4:     10.64
+o2a3:     11.27 < speedup: 1429.4
+OBPRM: 16109.2 (26/50)
+
+Toggle:
+
+checkEdgeCases = false
+checkImportant = false
+trimAll        = true
+biasConnect    = false
+maxRRTSize     = 50*20
+
+t1a3:       8.61
+t2a3:       8.888 < speedup: 1733.1
+Toggle: 15407.0 (22/50)
+
+Uniform:
+
+checkEdgeCases = false
+checkImportant = false
+trimAll        = true
+biasConnect    = false
+maxRRTSize     = 100*20
+
+u1a3:       13.66
+u2a4:       12.33 < speedup: 1070.7 (PRM), 5.77 (RRT)
+Uniform: 13201.8  (24/50)
+
+RRT:        71.19 (50/50)
+

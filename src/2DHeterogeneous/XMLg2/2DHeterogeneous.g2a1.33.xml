@@ -1,0 +1,243 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<MotionPlanning>
+  <MPProblem>
+    
+    <Environment filename="heterogeneous.env"/>
+
+    <DistanceMetrics>
+      <Euclidean label="euclidean"/>
+    </DistanceMetrics>    
+
+    <ValidityCheckers>    
+      <CollisionDetection label="cd1" method="RAPID"/>
+      <CollisionDetection label="cd2" method="PQP"/>
+      <NegateValidity label="nv" vcLabel="cd1"/>
+      <AlwaysTrueValidity label="alwaysTrue"/>
+    </ValidityCheckers>
+
+    <NeighborhoodFinders>
+      <BruteForceNF label="BFNF" dmLabel="euclidean" unconnected="false" k="5"/>
+      <BruteForceNF label="BFNF50" dmLabel="euclidean" unconnected="false" k="50"/>
+      <BruteForceNF label="Nearest" dmLabel="euclidean" unconnected="false" k="1"/>
+      <BruteForceNF label="BFNFAll" dmLabel="euclidean" k="0"/>
+    </NeighborhoodFinders>
+    
+    <Samplers>
+      <UniformRandomSampler label="UniformRandom" vcLabel="alwaysTrue"/>
+      <UniformRandomSampler label="UniformRandomFree" vcLabel="cd1"/>
+      <ObstacleBasedSampler label="OBPRM" vcLabel="cd1" useBBX="false" pointSelection="cspace" 
+        dmLabel="euclidean" stepSize="0.0" nShellsColl="0" nShellsFree="1" debug="false"/>
+      <GaussianSampler label="Gauss" vcLabel="cd1" d="0.5" dmLabel="euclidean" useBBX="false"/>
+      <BridgeTestSampler label="Bridge" vcLabel="cd1" d="0.2" dmLabel="euclidean" useBBX="true"/>
+      <MedialAxisSampler label="MAPRM" vcLabel="cd2" dmLabel="euclidean" 
+        clearanceType="exact" penetrationType="exact"
+        useBBX="true" debug="false" positional="true" 
+        epsilon="0.01" historyLength="100"/>
+      <MixSampler label="MixSampler">
+        <Sampler label="UniformRandomFree" p="0.8"/>
+        <Sampler label="UniformRandom" p="0.2"/>
+      </MixSampler>
+    </Samplers>
+
+    <LocalPlanners>
+      <StraightLine label="sl" binaryEvaluation="true" vcLabel="cd1"/>
+      <StraightLine label="slAlwaysTrue" binaryEvaluation="true" vcLabel="alwaysTrue"/>
+    </LocalPlanners>
+
+    <Connectors>
+      <NeighborhoodConnector label="Closest" nfLabel="BFNF" lpLabel="sl" checkIfSameCC="false" debug="false"/>
+      <NeighborhoodConnector label="ToggleRRTConnector" nfLabel="Nearest" lpLabel="sl" checkIfSameCC="true"/>
+      <NeighborhoodConnector label="ToggleConnectValid" nfLabel="BFNF" lpLabel="sl" countFailures="true" fail="1"
+        checkIfSameCC="false"/>
+      <NeighborhoodConnector label="ToggleConnect" nfLabel="BFNF" lpLabel="sl" countFailures="true" fail="1" CheckIfSameCC="false"/>
+      <NeighborhoodConnector label="LazyToggleConnect" nfLabel="BFNF50" lpLabel="sl" countFailures="true"
+        fail="1" CheckIfSameCC="false"/>
+      <NeighborhoodConnector label="ClosestAlwaysTrue" nfLabel="BFNF" lpLabel="slAlwaysTrue" checkIfSameCC="false"/>
+      <NeighborhoodConnector label="AllToAll" nfLabel="BFNFAll" lpLabel="sl" checkIfSameCC="false"/>
+    </Connectors>
+
+    <Metrics>
+      <NumNodesMetric label="NumNodes"/>
+    </Metrics>
+
+    <MapEvaluators>
+      <TrueEvaluation label="TrueEvaluator" />
+      <Query label="Query" queryFile="heterogeneous.query" pathFile="Basic.path" dmMethod="euclidean" lpMethod="sl"
+        smooth="false" smoothFile="smooth.path" debug="false" recordKeep="true">
+        <NodeConnectionMethod method="Closest"/>
+        <SmoothConnectionMethod method="AllToAll"/>
+      </Query>
+      <LazyQuery label="LazyQuery" queryFile="heterogeneous.query" pathFile="Basic.path" smoothFile="smooth.path"
+        lpMethod="sl" dmMethod="euclidean" vcMethod="cd1" graphSearchAlg="astar"
+        smooth="false" deleteNodes="false" debug="false" recordKeep="true" numEnhance="0" d="0.5">
+        <NodeConnectionMethod method="ClosestAlwaysTrue"/>
+        <SmoothConnectionMethod method="AllToAll"/>
+        <Resolution mult="27"/>
+        <Resolution mult="16"/>
+        <Resolution mult="1"/>
+      </LazyQuery>
+      <LazyToggleQuery label="LazyToggleQuery" queryFile="heterogeneous.query" pathFile="Basic.path" smoothFile="smooth.path"
+        lpMethod="sl" dmMethod="euclidean" vcMethod="cd1" graphSearchAlg="astar"
+        smooth="false" deleteNodes="false" iterative="true" debug="false" recordKeep="true">
+        <NodeConnectionMethod method="ClosestAlwaysTrue"/>
+        <ToggleConnectionMethod method="LazyToggleConnect"/>
+        <Resolution mult="27"/>
+        <Resolution mult="16"/>
+        <Resolution mult="1"/>
+      </LazyToggleQuery>
+      <PrintMapEvaluation label="PrintMap" base_name="Basic"/>
+      <ConditionalEvaluator label="NodesEval" metric_method="NumNodes" value="100" operator=">=" />
+      <ConditionalEvaluator label="FreqNodeEval" metric_method="NumNodes" value="50" operator="%"/>
+      <ComposeEvaluator label="ModQuery" operator="and">
+        <Evaluator label="FreqNodeEval"/>
+        <Evaluator label="Query"/>
+      </ComposeEvaluator>
+    </MapEvaluators>
+
+    <MPStrategies>
+      <!-- Basic PRM where num samples is based on Number -->
+      <BasicPRM label="Gauss" recordKeep="true">
+        <node_generation_method Method="Gauss" Number="50" Attempts="10"/>
+        <node_connection_method Method="Closest"/>
+        <evaluation_method Method="ModQuery"/>
+      </BasicPRM>
+
+      <!-- BasicRRT -->
+      <BasicRRTStrategy label="BasicRRT" delta="10.0" minDist="0.001" 
+        numRoots="1" m="1" growthFocus="0.01" samplerLabel="UniformRandomFree" lpLabel="sl" dmLabel="euclidean"
+        nfLabel="Nearest" vcLabel="cd1" connectorLabel="Closest" query="heterogeneous.query" gtype="UNDIRECTED_TREE" debug="true" evaluateGoal="false">
+        <Evaluator label="NodesEval"/>
+      </BasicRRTStrategy>
+
+      <!-- Toggle PRM --> 
+      <TogglePRMStrategy label="TogglePRM" priority="true" vcLabel="cd1">
+        <Sampler methodLabel="UniformRandomFree" number="10" attempts="1"/>
+        <Connector methodLabel="ToggleConnectValid"/>
+        <ColConnector methodLabel="ToggleConnect"/>
+        <Evaluator methodLabel="Query"/>
+      </TogglePRMStrategy>
+
+      <TogglePRMStrategyWithRRT label="ToggleRRT" maxNPCCSize="3" initSamples="50" maxRRTSize="100"
+        delta="10" minDist="0.1" vcLabel="cd1" nfLabel="BFNF" nfVertexLabel="Nearest" trimDepth="2"
+        dmLabel="euclidean" ncLabel="ToggleRRTConnector" priority="false" growthFocus="0.5"
+        checkEdgeCases="true" checkImportant="true" trimAll="false" biasConnect="true" recordKeep="true" rrtDebug="true">
+        <Sampler methodLabel="UniformRandomFree" number="50" attempts="10"/>
+        <Connector methodLabel="ToggleConnectValid"/>
+        <ColConnector methodLabel="ToggleConnect"/>
+        <Evaluator methodLabel="ModQuery"/>
+      </TogglePRMStrategyWithRRT>
+
+      <BasicPRMWithRRT label="g2a1" maxNPCCSize="3" initSamples="50" maxRRTSize="10"
+        delta="10" minDist="0.1" vcLabel="cd1" nfLabel="BFNF" nfVertexLabel="Nearest" trimDepth="2"
+        dmLabel="euclidean" ncLabel="ToggleRRTConnector" priority="false" growthFocus="0.5"
+        checkEdgeCases="false" checkImportant="false" trimAll="false" biasConnect="false" recordKeep="true" rrtDebug="false">
+        <node_generation_method Method="Gauss" Number="50" Attempts="10"/>
+        <node_connection_method Method="Closest"/>
+        <evaluation_method Method="ModQuery"/>
+      </BasicPRMWithRRT>
+
+      <BasicPRMWithRRT label="g2a2" maxNPCCSize="3" initSamples="50" maxRRTSize="20"
+        delta="10" minDist="0.1" vcLabel="cd1" nfLabel="BFNF" nfVertexLabel="Nearest" trimDepth="2"
+        dmLabel="euclidean" ncLabel="ToggleRRTConnector" priority="false" growthFocus="0.5"
+        checkEdgeCases="false" checkImportant="false" trimAll="false" biasConnect="false" recordKeep="true" rrtDebug="false">
+        <node_generation_method Method="Gauss" Number="50" Attempts="10"/>
+        <node_connection_method Method="Closest"/>
+        <evaluation_method Method="ModQuery"/>
+      </BasicPRMWithRRT>
+
+      <BasicPRMWithRRT label="g2a3" maxNPCCSize="3" initSamples="50" maxRRTSize="50"
+        delta="10" minDist="0.1" vcLabel="cd1" nfLabel="BFNF" nfVertexLabel="Nearest" trimDepth="2"
+        dmLabel="euclidean" ncLabel="ToggleRRTConnector" priority="false" growthFocus="0.5"
+        checkEdgeCases="false" checkImportant="false" trimAll="false" biasConnect="false" recordKeep="true" rrtDebug="false">
+        <node_generation_method Method="Gauss" Number="50" Attempts="10"/>
+        <node_connection_method Method="Closest"/>
+        <evaluation_method Method="ModQuery"/>
+      </BasicPRMWithRRT>
+
+      <BasicPRMWithRRT label="g2a4" maxNPCCSize="3" initSamples="50" maxRRTSize="100"
+        delta="10" minDist="0.1" vcLabel="cd1" nfLabel="BFNF" nfVertexLabel="Nearest" trimDepth="2"
+        dmLabel="euclidean" ncLabel="ToggleRRTConnector" priority="false" growthFocus="0.5"
+        checkEdgeCases="false" checkImportant="false" trimAll="false" biasConnect="false" recordKeep="true" rrtDebug="false">
+        <node_generation_method Method="Gauss" Number="50" Attempts="10"/>
+        <node_connection_method Method="Closest"/>
+        <evaluation_method Method="ModQuery"/>
+      </BasicPRMWithRRT>
+
+      <BasicPRMWithRRT label="g2a5" maxNPCCSize="3" initSamples="50" maxRRTSize="200"
+        delta="10" minDist="0.1" vcLabel="cd1" nfLabel="BFNF" nfVertexLabel="Nearest" trimDepth="2"
+        dmLabel="euclidean" ncLabel="ToggleRRTConnector" priority="false" growthFocus="0.5"
+        checkEdgeCases="false" checkImportant="false" trimAll="false" biasConnect="false" recordKeep="true" rrtDebug="false">
+        <node_generation_method Method="Gauss" Number="50" Attempts="10"/>
+        <node_connection_method Method="Closest"/>
+        <evaluation_method Method="ModQuery"/>
+      </BasicPRMWithRRT>
+
+      <BasicPRMWithRRT label="g2a6" maxNPCCSize="3" initSamples="50" maxRRTSize="500"
+        delta="10" minDist="0.1" vcLabel="cd1" nfLabel="BFNF" nfVertexLabel="Nearest" trimDepth="2"
+        dmLabel="euclidean" ncLabel="ToggleRRTConnector" priority="false" growthFocus="0.5"
+        checkEdgeCases="false" checkImportant="false" trimAll="false" biasConnect="false" recordKeep="true" rrtDebug="false">
+        <node_generation_method Method="Gauss" Number="50" Attempts="10"/>
+        <node_connection_method Method="Closest"/>
+        <evaluation_method Method="ModQuery"/>
+      </BasicPRMWithRRT>
+
+      <BasicPRMWithRRT label="g2b1" maxNPCCSize="3" initSamples="50" maxRRTSize="10"
+        delta="10" minDist="0.1" vcLabel="cd1" nfLabel="BFNF" nfVertexLabel="Nearest" trimDepth="2"
+        dmLabel="euclidean" ncLabel="ToggleRRTConnector" priority="false" growthFocus="0.5"
+        checkEdgeCases="true" checkImportant="true" trimAll="false" biasConnect="false" recordKeep="true" rrtDebug="false">
+        <node_generation_method Method="Gauss" Number="50" Attempts="10"/>
+        <node_connection_method Method="Closest"/>
+        <evaluation_method Method="ModQuery"/>
+      </BasicPRMWithRRT>
+
+      <BasicPRMWithRRT label="g2b2" maxNPCCSize="3" initSamples="50" maxRRTSize="20"
+        delta="10" minDist="0.1" vcLabel="cd1" nfLabel="BFNF" nfVertexLabel="Nearest" trimDepth="2"
+        dmLabel="euclidean" ncLabel="ToggleRRTConnector" priority="false" growthFocus="0.5"
+        checkEdgeCases="true" checkImportant="true" trimAll="false" biasConnect="false" recordKeep="true" rrtDebug="false">
+        <node_generation_method Method="Gauss" Number="50" Attempts="10"/>
+        <node_connection_method Method="Closest"/>
+        <evaluation_method Method="ModQuery"/>
+      </BasicPRMWithRRT>
+
+      <BasicPRMWithRRT label="g2b3" maxNPCCSize="3" initSamples="50" maxRRTSize="50"
+        delta="10" minDist="0.1" vcLabel="cd1" nfLabel="BFNF" nfVertexLabel="Nearest" trimDepth="2"
+        dmLabel="euclidean" ncLabel="ToggleRRTConnector" priority="false" growthFocus="0.5"
+        checkEdgeCases="true" checkImportant="true" trimAll="false" biasConnect="false" recordKeep="true" rrtDebug="false">
+        <node_generation_method Method="Gauss" Number="50" Attempts="10"/>
+        <node_connection_method Method="Closest"/>
+        <evaluation_method Method="ModQuery"/>
+      </BasicPRMWithRRT>
+
+      <BasicPRMWithRRT label="g2b4" maxNPCCSize="3" initSamples="50" maxRRTSize="100"
+        delta="10" minDist="0.1" vcLabel="cd1" nfLabel="BFNF" nfVertexLabel="Nearest" trimDepth="2"
+        dmLabel="euclidean" ncLabel="ToggleRRTConnector" priority="false" growthFocus="0.5"
+        checkEdgeCases="true" checkImportant="true" trimAll="false" biasConnect="false" recordKeep="true" rrtDebug="false">
+        <node_generation_method Method="Gauss" Number="50" Attempts="10"/>
+        <node_connection_method Method="Closest"/>
+        <evaluation_method Method="ModQuery"/>
+      </BasicPRMWithRRT>
+
+      <BasicPRMWithRRT label="g2b5" maxNPCCSize="3" initSamples="50" maxRRTSize="200"
+        delta="10" minDist="0.1" vcLabel="cd1" nfLabel="BFNF" nfVertexLabel="Nearest" trimDepth="2"
+        dmLabel="euclidean" ncLabel="ToggleRRTConnector" priority="false" growthFocus="0.5"
+        checkEdgeCases="true" checkImportant="true" trimAll="false" biasConnect="false" recordKeep="true" rrtDebug="false">
+        <node_generation_method Method="Gauss" Number="50" Attempts="10"/>
+        <node_connection_method Method="Closest"/>
+        <evaluation_method Method="ModQuery"/>
+      </BasicPRMWithRRT>
+
+      <BasicPRMWithRRT label="g2b6" maxNPCCSize="3" initSamples="50" maxRRTSize="500"
+        delta="10" minDist="0.1" vcLabel="cd1" nfLabel="BFNF" nfVertexLabel="Nearest" trimDepth="2"
+        dmLabel="euclidean" ncLabel="ToggleRRTConnector" priority="false" growthFocus="0.5"
+        checkEdgeCases="true" checkImportant="true" trimAll="false" biasConnect="false" recordKeep="true" rrtDebug="false">
+        <node_generation_method Method="Gauss" Number="50" Attempts="10"/>
+        <node_connection_method Method="Closest"/>
+        <evaluation_method Method="ModQuery"/>
+      </BasicPRMWithRRT>
+
+    </MPStrategies>
+  
+    <Solver mpStrategyLabel="g2a1" seed="817227358" baseFilename="g2a1/g2a1.33" vizmoDebug="true" recordKeep="true"/>
+
+  </MPProblem>
+</MotionPlanning>

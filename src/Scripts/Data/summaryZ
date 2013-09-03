@@ -1,0 +1,28 @@
+All methods:
+
+checkEdgeCases = true
+checkImportant = true
+trimAll        = true
+biasConnect    = true
+maxRRTSize     = Varies
+
+            |   ZTunnel1  |   ZTunnel2  |     ZTunnel3      |   ZTunnel4
+
+Gauss_RRT   |   15.14     |   11.33     |     5.983         |   13.60
+Gauss       |   21.63     |   14.72     |     49.48         |   12690  (49/50)
+Speedup     |    1.43     |   1.299     |     8.270         |   932.8
+
+OBPRM_RRT   |   10.32     |   5.990     |     5.644         |   17.10
+OBPRM       |  100.20     |   63.59     |     416.9         |   24350  (21/50)
+Speedup     |    9.71     |   10.62     |     73.86         |   1424 
+
+Toggle_RRT  |   21.93     |   10.58     |     8.311         |   21.35
+Toggle      |  120.10     |   107.7     |     15460 (21/50) |   ---    (00/50)
+Speedup     |    5.48     |   10.18     |     1861          |   1686 
+
+Uniform_RRT |   13.03     |   8.119     |     9.953         |   33.81
+Uniform     |   86.13     |   59.61     |     2524          |   ---    (00/50)
+SpeedupPRM  |    6.61     |   7.342     |     253.7         |   1065 
+RRT         |   29.31     |   40.66     |     352.6         |   773.7
+SpeedupRRT  |    2.25     |   5.008     |     35.44         |   22.88
+

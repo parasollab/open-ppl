@@ -1,0 +1,9 @@
+./ZTunnel4.Gauss.sh
+./ZTunnel4.Gauss_RRT.sh
+./ZTunnel4.Uniform.sh
+./ZTunnel4.Uniform_RRT.sh
+./ZTunnel4.OBPRM.sh
+./ZTunnel4.OBPRM_RRT.sh
+./ZTunnel4.Toggle.sh
+./ZTunnel4.Toggle_RRT.sh
+./ZTunnel4.RRT.sh

@@ -1,0 +1,4 @@
+ZTunnel1: small: 0.05
+ZTunnel2: medium: 0.10
+ZTunnel3: larger: 0.25
+ZTunnel4: largest: 0.30

@@ -10,6 +10,7 @@ class MPStrategyMethod : public MPBaseObject<MPTraits> {
 
     typedef typename MPTraits::MPProblemType MPProblemType;
     typedef typename MPProblemType::MapEvaluatorPointer MapEvaluatorPointer;
+    typedef typename MPProblemType::VID VID;
 
     MPStrategyMethod();
     MPStrategyMethod(MPProblemType* _problem, XMLNodeReader& _node);
@@ -29,6 +30,9 @@ class MPStrategyMethod : public MPBaseObject<MPTraits> {
     void SetBoundary(shared_ptr<Boundary> bb){m_boundary=bb;};
 
     bool EvaluateMap(vector<string> _evaluators);
+
+    // Virtual method used in PRMWithRRTStrategy
+    virtual bool CheckNarrowPassageSample(VID _vid) { return false; }
 
   protected:
     shared_ptr<Boundary> m_boundary;

@@ -1,0 +1,9 @@
+./Hook.g1a1.sh
+./Hook.g1a2.sh
+./Hook.g1a3.sh
+./Hook.g1a4.sh
+./Hook.g1b1.sh
+./Hook.g1b2.sh
+./Hook.g1b3.sh
+./Hook.g1b4.sh
+./Hook.Gauss.sh

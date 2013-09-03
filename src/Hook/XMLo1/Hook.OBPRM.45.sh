@@ -1,0 +1,4 @@
+#!/bin/bash
+#PBS -q parallel -l mem=1000mb -l walltime=20:00:00 -N Hook.OBPRM.45 -V
+cd ./Hook/
+../pmpl -f Hook.OBPRM.45.xml >& Hook.OBPRM.45.log

@@ -1,0 +1,125 @@
+2DHeterogeneous
+
+/////////// these are probably old, don't trust them
+maxNPCCSize = 1 // New: 3
+initSamples = 50
+delta = 10
+minDist = 0.1
+trimDepth = 3 // New: 2
+number = 100 // New: 50
+
+Gauss: d=0.5
+///////////////////////////////////
+
+checkEdgeCases = checkImportant = true, false
+maxRRTSize = 10, 20, 50, 100, 200, 500
+trimAll = true, false
+biasConnect = true, false
+
+===
+
+Set 1: find proper values for trimAll and biasConnect
+
+  Subset a: cEC = cI = F
+  (Construct a lot of RRTs, knowing that some might be unnecessary)
+    tr1a1: trimAll = F, biasConnect = F, maxRRTSize = 200: 177.1 s //////////// I think times are old
+    tr1a2: trimAll = F, biasConnect = T, maxRRTSize = 200: 122.5 s
+    tr1a3: trimAll = T, biasConnect = F, maxRRTSize = 200: 115.4 s <-- prediction
+    tr1a4: trimAll = T, biasConnect = T, maxRRTSize = 200: 100.1 s <-- best
+  
+  Subset b: cEC = cI = T
+  (Carefully pick which RRTs to focus on, knowing that we might miss some important ones)
+    tr1b1: trimAll = F, biasConnect = F, maxRRTSize = 200: 67.4 s
+    tr1b2: trimAll = F, biasConnect = T, maxRRTSize = 200: 54.5 s
+    tr1b3: trimAll = T, biasConnect = F, maxRRTSize = 200: 65.8 s <-- prediction
+    tr1b4: trimAll = T, biasConnect = T, maxRRTSize = 200: 47.7 s <-- best
+
+(399/400)
+
+===
+
+Set 2: find best maxRRTSize, with proper values of trimAll and biasConnect from Set 1
+
+  Subset a: cEC = cI = F (trimAll = T, biasConnect = T)
+  (Construct a lot of RRTs, knowing that some might be unnecessary)
+    tr2a1: maxRRTSize = 10:   61.4 s
+    tr2a2: maxRRTSize = 20:   54.1 s <-- best
+    tr2a3: maxRRTSize = 50:   95.7 s
+    tr2a4: maxRRTSize = 100:  69.5 s <-- prediction
+    tr2a5: maxRRTSize = 200:  96.8 s
+    tr2a6: maxRRTSize = 500: 122.6 s
+
+  Subset b: cEC = cI = T (trimAll = T, biasConnect = T)
+  (Carefully pick which RRTs to focus on, knowing that we might miss some important ones)
+    tr2b1: maxRRTSize = 10:   67.8 s
+    tr2b2: maxRRTSize = 20:   52.5 s
+    tr2b3: maxRRTSize = 50:   46.8 s <-- best
+    tr2b4: maxRRTSize = 100:  56.3 s <-- prediction
+    tr2b5: maxRRTSize = 200:  47.8 s <-- close 2nd best
+    tr2b6: maxRRTSize = 500:  81.9 s
+
+(600/600)
+
+===
+
+Toggle PRM:        68.3 s (48/50) <-- slower than: tr1b*, tr2a1, tr2a2, tr2b(1-5)
+Lazy Toggle Free: 396.0 s (50/50)
+Uniform:          609.3 s (50/50)
+
+===
+
+Results for Set 1
+
+Nodes: trimAll = T makes the nodes go down (obv), effect still present but not as pronouned
+  in subset b (due to fewer RRTs created). Fewest nodes in tr1a3, tr1a4, and tr1b4
+
+CD: Both trimAll = T and biasConnect = T reduce CDs. In subset b, biasConnect = T has reduced effect
+
+Time: (worst) tr1a1 > tr1a2 > tr1a3 > tr1a4 (best), clear trend.
+      (worst) tr1b1 = tr1b3 > tr1b2 > tr1b4 (best), trend less clear, biasConnect = T has less effect
+  Subset b is vastly superior to subset a. tr1b4 is the best at 47.7 s, while TogglePRM is 68.3 s.
+
+RRTTime: in Subset a, RRTTime is ~80-85% of total time. In Subset b, RRTTime is ~35% of total time.
+  Trends follow pretty closely with Time
+
+CC: biasConnect = T causes MORE CC operations. trimAll = T causes fewer CC operations.
+
+numRRTs: much higher and pretty consistent in Subset a. In Subset b, biasConnect = T causes dramatic increase
+
+RRT Vertices (avg per RRT): very high in tr1a1 and tr1a2, much lower in the rest. biasConnect = T causes slight
+  increase in vertices, trimAll = T reduces vertices greatly in Subset a and slightly in Subset b.
+
+ToggleRRT solves a higher percentage (399/400 = 99.75%) of tests across all variants, while
+              TogglePRM solves fewer ( 48/ 50 = 96.00%).
+
+Conclusions:
+  trimAll = T is always good.
+  biasConnect = T is generally good, but causes more CC operations and higher numRRTs, yet decreases time.
+  Subset b (cEC = cI = T) is better (after doing the mod evaluator). We only need a few RRTs in the difficult spaces.
+  Toggle RRT can be better than Toggle PRM, but speedup is not that impressive. Prediction: speedup will be more
+    nocticeable in harder 3D problems. In this 2D environment, Toggle PRM is pretty much guaranteed to get lots of
+    vertices in the narrow passages, so Toggle RRT's benefit is not as great. When Toggle PRM struggles to find the
+    narrow passages, Toggle RRT should provide more benefit.
+
+===
+
+Results for Set 2
+
+Nodes: In general goes down with increasing RRT size.
+CD: In general goes up with increasing RRT size.
+Time: concave upward shaped
+RRTTime: the ratio RRTTime/Time increases consistently with increasing RRT size.
+CC: Goes down with increasing RRT size.
+numRRTs: slightly decreases with increasing RRT size.
+RRT Vertices (avg per RRT): increases consistently with increasing RRT Size.
+
+In general, time fluctuates probably due to different sizes of narrow passages that must be explored.
+Times are more consistent in Subset b.
+Toggle RRT solved 600/600 = 100% of cases, while Toggle PRM solved 48/50 = 96%.
+
+Conclusions:
+  Finding a suitable RRT size is crucial.
+
+===
+
+Hi Jory!

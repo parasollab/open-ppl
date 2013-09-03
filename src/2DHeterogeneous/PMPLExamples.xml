@@ -1,0 +1,391 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<MotionPlanning>
+  <MPProblem>
+    
+    <Environment filename="heterogeneous.env"/>
+
+    <DistanceMetrics>
+      <Euclidean label="euclidean"/>
+      <ScaledEuclidean label= "scaledEuclidean" scale ="0.5"/>
+      <CenterOfMass label="com"/>
+      <KnotTheory label="knot"/>
+      <Manhattan label="manhattan"/>
+      <Minkowski label="minkowski" r1="3.0" r2="3.0" r3="0.333" normalize="false"/>
+      <RMSD label="rmsd"/>
+      <LPSwept label="lp_swept" posRes='5' oriRes='5' useBBox="true" lpLabel="sl"/>
+      <binary_lp_swept label="bp_swept" pos_res='5' ori_res='5' use_bbox="true" lp_method="sl"/>
+    </DistanceMetrics>    
+
+    <ValidityCheckers>    
+      <CollisionDetection label="cd1" method="RAPID"/>
+      <CollisionDetection label="cd2" method="PQP"/>
+      <CollisionDetection label="cd3" method="VCLIP"/>
+      <CollisionDetection label="cd4" method="PQP_SOLID"/>
+      <NodeClearanceValidity label="nc" delta="0.3" dmLabel="euclidean" nfLabel="Nearest"/>
+      <NegateValidity label="nv" vcLabel="cd1"/>
+      <MedialAxisClearance label="mac" maClearance="0.5" vcLabel="cd2" dmLabel="euclidean"
+        clearanceType="exact" penetrationType="exact" useBBX="true" positional="true" 
+        epsilon="0.01" historyLength="5"/>
+      <ComposeValidity label="cv" operator="AND">
+        <ValidityChecker label="cd2"/>
+        <ValidityChecker label="mac"/>
+      </ComposeValidity>
+      <AlwaysTrueValidity label="alwaysTrue"/>
+      <ObstacleClearance label="oc" obstClearance="2.5" vcLabel="cd4" dmLabel="euclidean"
+        clearanceType="exact" penetrationType="exact" useBBX="true" positional="true"/>
+    </ValidityCheckers>
+
+    <NeighborhoodFinders>
+      <BruteForceNF label="BFNF" dmLabel="euclidean" unconnected="false" k="5"/>
+      <BruteForceNF label="BFNF50" dmLabel="euclidean" unconnected="false" k="50"/>
+      <BruteForceNF label="Nearest" dmLabel="euclidean" unconnected="false" k="1"/>
+      <BruteForceNF label="BFNFAll" dmLabel="euclidean" k="0"/>
+      <HierarchicalNF label="HierarchicalNF" dmLabel="euclidean" k="6" dmLabel2="euclidean" k2="3"/> 
+      <HopLimitNF label="HLNF" hoplimit="2" dmLabel="" nfLabel="BFNF"/>
+      <OptimalNF label="OptimalK" nfLabel="BFNF"/>
+      <RadiusNF label="RadiusNF" dmLabel="euclidean" radius="5"/>
+      <RandomNF label="RandomNF" dmLabel="euclidean" k="5"/>
+    </NeighborhoodFinders>
+    
+    <Samplers>
+      <UniformRandomSampler label="UniformRandom" vcLabel="alwaysTrue"/>
+      <UniformRandomSampler label="UniformRandomFree" vcLabel="cd1"/>
+      <ObstacleBasedSampler label="OBPRM" vcLabel="cd1" useBBX="false" pointSelection="cspace" 
+        dmLabel="euclidean" stepSize="0.0" nShellsColl="0" nShellsFree="1" debug="false"/>
+      <GaussianSampler label="Gauss" vcLabel="cd1" d="0.5" dmLabel="euclidean" useBBX="false"/>
+      <BridgeTestSampler label="Bridge" vcLabel="cd1" d="0.2" dmLabel="euclidean" useBBX="true"/>
+      <MedialAxisSampler label="MAPRM" vcLabel="cd2" dmLabel="euclidean" 
+        clearanceType="exact" penetrationType="exact"
+        useBBX="true" debug="false" positional="true" 
+        epsilon="0.01" historyLength="100"/>
+      <NegateSampler label="negateFree" method="UniformRandomFree"/>
+      <GridSampler label="Grid" vcLabel="cd1" useBBX="true">
+        <Dimension index="0" points="10"/>
+        <Dimension index="1" points="5"/>
+        <Dimension index="2" points="5"/>
+      </GridSampler>
+      <MixSampler label="MixSampler">
+        <Sampler label="UniformRandomFree" p="0.8"/>
+        <Sampler label="UniformRandom" p="0.2"/>
+      </MixSampler>
+      <UniformObstacleBasedSampler label="UOBPRM" vcLabel="cd1" useBBX="false" dmLabel="euclidean" d="0.02" />
+    </Samplers>
+
+    <LocalPlanners>
+      <StraightLine label="sl" binaryEvaluation="true" vcLabel="cd1"/>
+      <StraightLine label="slAlwaysTrue" binaryEvaluation="true" vcLabel="alwaysTrue"/>
+      <RotateAtS label="ras" binaryEvaluation="true" vcLabel="cd1" s="0.5" saveIntermediates="false"/>
+      <TransformAtS label="tas" binaryEvaluation="true" vcLabel="cd1" s="0.5" saveIntermediates="false"/>
+      <AStarDistance label="asd" vcMethod="cd1" maxTries="6" numNeighbors="10" histLength="10" debug="true"/>
+      <AStarClearance label="asc" vcMethod="cd2" maxTries="6" numNeighbors="3" histLength="10" penetration="2"/>
+      <MedialAxisLP label="malp" vcLabel="cd2" dmLabel="euclidean"
+        clearanceType="exact" penetrationType="exact" useBBX="true"
+        epsilon="0.01" historyLength="5" positional="true" debug="false"
+        macEpsilon="0.5" maxIter="10" saveIntermediates="false"/>
+      <ToggleLP label="togglelp" vcLabel="cd1" maxIter="5" lpLabel="sl" recordKeep="false"/>
+      <HierarchicalLP label="hlp">
+        <LocalPlanner method="sl"/>
+        <LocalPlanner method="ras"/>
+        <LocalPlanner method="malp"/>
+      </HierarchicalLP>
+    </LocalPlanners>
+
+    <Connectors>
+      <CCsConnector label="ConnectCCs" nfLabel="BFNF" lpLabel="sl" k="5" smallcc="5"/>
+      <!--ClosestVE label="ClosestVE" kClosest="1" nfLabel="BFNF" lpLabel="sl"/-->
+      <NeighborhoodConnector label="Closest" nfLabel="BFNF" lpLabel="sl" checkIfSameCC="false" debug="false"/>
+      <NeighborhoodConnector label="ToggleRRTConnector" nfLabel="Nearest" lpLabel="sl" checkIfSameCC="true"/>
+      <NeighborhoodConnector label="ToggleConnectValid" nfLabel="BFNF" lpLabel="sl" countFailures="true" fail="1"
+        checkIfSameCC="false"/>
+      <NeighborhoodConnector label="ToggleConnect" nfLabel="BFNF" lpLabel="sl" countFailures="true" fail="1" CheckIfSameCC="false"/>
+      <NeighborhoodConnector label="LazyToggleConnect" nfLabel="BFNF50" lpLabel="sl" countFailures="true"
+        fail="1" CheckIfSameCC="false"/>
+      <NeighborhoodConnector label="ClosestAlwaysTrue" nfLabel="BFNF" lpLabel="slAlwaysTrue" checkIfSameCC="false"/>
+      <NeighborhoodConnector label="AllToAll" nfLabel="BFNFAll" lpLabel="sl" checkIfSameCC="false"/>
+      <!--PreferentialAttachment label="Preferential" lp_method="sl" nf="BFNF" k="2" fail="5" unconnected="true"
+        random="true" dm_method="euclidean" CheckIfSameCC="false"/-->
+      <OptimalConnection label="OptimalConnector" nfLabel="BFNF" lpLabel="sl" radius="false"/>
+      <OptimalConnection label="OptimalConnectorHLNF" nfLabel="HLNF" lpLabel="sl" radius="false"/>
+      <RewireConnector label="OptimalRewire" nfLabel="OptimalK" lpLabel="sl"/>
+    </Connectors>
+
+    <Metrics>
+      <NumNodesMetric label="NumNodes"/>
+      <NumEdgesMetric label="NumEdges"/>
+      <CoverageMetricRoadmapSet label="CoverageRoadmapSet" filename="coverage" outfilename="Basic" computeAllCCs="false">
+        <Connector label="Closest"/>
+      </CoverageMetricRoadmapSet>
+      <CoverageMetricVectorSet label="CoverageVectorSet" filename="coverage" outfilename="Basic" computeAllCCs="false">
+        <Connector label="Closest"/>
+      </CoverageMetricVectorSet>
+      <CoverageDistanceMetric label="CoverageDistance" filename="coverage" outfilename="Basic" dmLabel="euclidean"/>
+      <ConnectivityMetricRoadmapSet label="ConnectivityRoadmapSet" filename="connectivity" outfilename="Basic">
+        <Connector label="Closest"/>
+      </ConnectivityMetricRoadmapSet>
+      <ConnectivityMetricVectorSet label="ConnectivityVectorSet" filename="connectivity" outfilename="Basic">
+        <Connector label="Closest"/>
+      </ConnectivityMetricVectorSet>
+      <DiameterMetric label="Diameter"/>
+      <CCDistanceMetric label="CCDistance" dmLabel="euclidean"/>
+      <TimeMetric label="TimeInSec"/>
+    </Metrics>
+
+    <MapEvaluators>
+      <TrueEvaluation label="TrueEvaluator" />
+      <Query label="Query" queryFile="heterogeneous.query" pathFile="Basic.path" dmMethod="euclidean" lpMethod="sl"
+        smooth="true" smoothFile="smooth.path" debug="false" recordKeep="true">
+        <NodeConnectionMethod method="Closest"/>
+        <SmoothConnectionMethod method="AllToAll"/>
+      </Query>
+      <LazyQuery label="LazyQuery" queryFile="heterogeneous.query" pathFile="Basic.path" smoothFile="smooth.path"
+        lpMethod="sl" dmMethod="euclidean" vcMethod="cd1" graphSearchAlg="astar"
+        smooth="false" deleteNodes="false" debug="false" recordKeep="true" numEnhance="0" d="0.5">
+        <NodeConnectionMethod method="ClosestAlwaysTrue"/>
+        <SmoothConnectionMethod method="AllToAll"/>
+        <Resolution mult="27"/>
+        <Resolution mult="16"/>
+        <Resolution mult="1"/>
+      </LazyQuery>
+      <LazyToggleQuery label="LazyToggleQuery" queryFile="heterogeneous.query" pathFile="Basic.path" smoothFile="smooth.path"
+        lpMethod="sl" dmMethod="euclidean" vcMethod="cd1" graphSearchAlg="astar"
+        smooth="false" deleteNodes="false" iterative="true" debug="false" recordKeep="true">
+        <NodeConnectionMethod method="ClosestAlwaysTrue"/>
+        <ToggleConnectionMethod method="LazyToggleConnect"/>
+        <Resolution mult="27"/>
+        <Resolution mult="16"/>
+        <Resolution mult="1"/>
+      </LazyToggleQuery>
+      <PrintMapEvaluation label="PrintMap" base_name="Basic"/>
+      <ConditionalEvaluator label="NodesEval" metric_method="NumNodes" value="100" operator=">=" />
+      <ConditionalEvaluator label="EdgesEval" metric_method="NumEdges" value="1000" operator=">" />
+      <ConditionalEvaluator label="FreqNodeEval" metric_method="NumNodes" value="50" operator="%"/>
+      <NegateEvaluator label="Neg" evalLabel="NodesEval"/>
+      <ComposeEvaluator label="Com1" operator="or">
+        <Evaluator label="NodesEval"/>
+        <Evaluator label="Query"/>
+      </ComposeEvaluator>
+      <ComposeEvaluator label="Com2" operator="and">
+        <Evaluator label="Com1"/>
+        <Evaluator label="PrintMap"/>
+      </ComposeEvaluator>
+      <ComposeEvaluator label="ModQuery" operator="and">
+        <Evaluator label="FreqNodeEval"/>
+        <Evaluator label="Query"/>
+      </ComposeEvaluator>
+    </MapEvaluators>
+
+    <!-- For **UAStrategy use** -->
+    <!--partitioning_methods>
+      <Kmeans label="kmeans" destination="uas/">
+        <Feature Name="X" Weight="1"/>
+        <Feature Name="Y" Weight="1"/>
+        <Feature Name="Z" Weight="1"/>
+        <Feature Name="visibility" Weight="1"/>
+      </Kmeans>
+      <Growable label="growable" destination="uas/">
+        <Feature Name="visibility" Weight="1"/>
+      </Growable>
+      <Hierarchical label="hierarchical" destination="uas/">
+        <Feature Name="X" Weight="1"/>
+        <Feature Name="Y" Weight="1"/>
+        <Feature Name="Z" Weight="1"/>
+        <Feature Name="visibility" Weight="1"/>
+      </Hierarchical>
+      <PGmeans label="pgmeans" destination="uas/">
+        <Feature Name="X" Weight="1"/>
+        <Feature Name="Y" Weight="1"/>
+        <Feature Name="Z" Weight="1"/>
+        <Feature Name="visibility" Weight="1"/>
+      </PGmeans>
+      <Successive label="successive" destination="uas/">
+        <PartitioningMethod Method="kmeans"/>
+        <PartitioningMethod Method="kmeans"/>
+      </Successive>
+    </partitioning_methods>
+
+    <partitioning_evaluators>
+      <AVGEvaluator label="avg" Feature="visibility"/>
+      <STDEvaluator label="std" Feature="visibility"/>
+    </partitioning_evaluators-->
+    <!-- ** ** -->
+
+    <MPStrategies>
+
+      <!-- Basic PRM where num samples is based on Number -->
+      <BasicPRM label="BasicPRM1" recordKeep="true">
+        <node_generation_method Method="UniformRandomFree" Number="10" Attempts="10"/>
+        <!--node_generation_method Method="Gauss" Number="10" Attempts="10"/-->
+        <!--node_generation_method Method="OBPRM" Number="10" Attempts="10"/-->
+        <!--node_generation_method Method="MAPRM" Number="10" Attempts="10"/-->
+        <node_connection_method Method="Closest"/>
+        <!--component_connection_method Method="ConnectCCs"/-->
+        <evaluation_method Method="Query"/>
+      </BasicPRM>
+
+      <!-- Basic PRM restarted from an input roadmap input.map at the beginning of node connection -->
+      <BasicPRM label="BasicPRM2" inputMap="input.map" startAt="node connection">
+        <node_generation_method Method="UniformRandomFree" Number="10" Attempts="10"/>
+        <node_connection_method Method="Closest"/>
+        <component_connection_method Method="ConnectCCs"/>
+        <evaluation_method Method="NodesEval"/>
+      </BasicPRM>
+
+      <!-- PRM* -->
+      <BasicPRM label="OptimalPRM">
+        <node_generation_method Method="UniformRandomFree" Number="100" Attempts="100"/>
+        <node_connection_method Method="OptimalConnector"/>
+        <evaluation_method Method="NodesEval"/>
+      </BasicPRM>
+
+      <!-- BasicRRT -->
+      <BasicRRTStrategy label="BasicRRT" delta="10.0" minDist="0.001" 
+        numRoots="1" m="1" growthFocus="0.01" samplerLabel="UniformRandomFree" lpLabel="sl" dmLabel="euclidean"
+        nfLabel="Nearest" vcLabel="cd1" connectorLabel="Closest" query="heterogeneous.query" gtype="UNDIRECTED_TREE" debug="true" evaluateGoal="false">
+        <Evaluator label="NodesEval"/>
+      </BasicRRTStrategy>
+
+      <!-- RRG -->
+      <!-- If optimal connection is wanted, the correct connector needs to be selected --> 
+      <BasicRRTStrategy label="RRG" delta="10.0" minDist="0.001" 
+        numRoots="1" m="1" growthFocus="0.01" samplerLabel="UniformRandomFree" lpLabel="sl" dmLabel="euclidean"
+        nfLabel="Nearest" vcLabel="cd1" query="heterogeneous.query" connectorLabel="OptimalConnector" gtype="UNDIRECTED_GRAPH">
+        <Evaluator label="NodesEval"/>
+      </BasicRRTStrategy>
+
+      <!-- RRT* -->
+      <!-- The connector needs to be OptimalRewire for RRT* --> 
+      <BasicRRTStrategy label="RRTstar" delta="10.0" minDist="0.001" 
+        numRoots="1" m="1" growthFocus="0.01" samplerLabel="UniformRandomFree" lpLabel="sl" dmLabel="euclidean"
+        nfLabel="Nearest" vcLabel="cd1" query="heterogeneous.query" connectorLabel="OptimalRewire" gtype="UNDIRECTED_GRAPH">
+        <Evaluator label="NodesEval"/>
+      </BasicRRTStrategy>
+
+      <!-- OBRRT --> 
+      <OBRRTStrategy label="OBRRT" delta="10.0" minDist="0.001" 
+        numRoots="1" growthFocus="0.01" samplerLabel="UniformRandomFree" lpLabel="sl" dmLabel="euclidean"
+        nfLabel="Nearest" vcLabel="cd1" query="heterogeneous.query" gtype="UNDIRECTED_TREE"
+        g0="0.1" g1="0.1" g2="0.1" g3="0.1" g4="0.1" g5="0.1" g6="0.1" g7="0.0" g8="0.1"
+        clearanceType="exact" penetrationType="exact" useBBX="true" 
+        positional="true" epsilon="0.01" historyLength="100">
+        <Evaluator label="NodesEval"/>
+      </OBRRTStrategy>
+
+      <!-- MedialAxisRRT --> 
+      <MedialAxisRRT label="MARRT"
+        delta="10.0" minDist="0.001" numRoots="1" growthFocus="0.00" samplerLabel="UniformRandom" lpLabel="sl" dmLabel="euclidean"
+        nfLabel="Nearest" vcLabel="cd2" query="heterogeneous.query" gtype="UNDIRECTED_TREE" 
+        clearanceType="exact" penetrationType="exact" useBBX="true"
+        positional="true" epsilon="0.1" historyLength="20" debug="false"
+        extendDist="1.0" maxIntermediates="10">
+        <Evaluator label="NodesEval"/>
+      </MedialAxisRRT>
+
+      <!-- Toggle PRM --> 
+      <TogglePRMStrategy label="TogglePRM" priority="true" vcLabel="cd1">
+        <Sampler methodLabel="UniformRandomFree" number="10" attempts="1"/>
+        <Connector methodLabel="ToggleConnectValid"/>
+        <ColConnector methodLabel="ToggleConnect"/>
+        <Evaluator methodLabel="Query"/>
+      </TogglePRMStrategy>
+
+      <!-- MPMultiStrategy PRM -->
+      <MPMultiStrategy label="MPMulti" iterations="10" num_samples="10">
+        <strategy Method="TogglePRM"/>
+        <strategy Method="BasicPRM"/>
+      </MPMultiStrategy>
+
+      <!-- Hybrid PRM --> 
+      <HybridPRM label="HybridPRM" iterations="10" num_samples="10" 
+        percent_random="0.5" bin_size="20" window_percent="0.5" Count_Cost="false" fixed_cost="false" 
+        resetting_learning="false" sampler_selection_distribution="window_hybrid">
+        <node_generation_method Method="Uniform" initial_cost="1"/>
+        <node_generation_method Method="Gauss" initial_cost="1"/>
+        <node_connection_method Method="Closest"/>
+        <stat_nf_method Method="BFNF"/>
+        <evaluation_method Method="Query"/>
+      </HybridPRM>
+
+      <!-- UAStrategy --> 
+      <UAStrategy label="UAPRM" iterations="10" num_samples="10">
+        <training_strategy Strategy="PRM1"/>
+        <region_identifier Method="kmeans"/>
+        <distribution_feature Feature="visibility"/>
+        <region_strategy Strategy="Hybrid"/>
+        <!--evaluation_method Method="NodesEval"/-->
+        <evaluation_method Method="Query"/>
+      </UAStrategy>
+
+      <!-- Compare  --> 
+      <Compare label="Comparer" iterations="1" num_samples="10">
+        <input Method="rmpinput1"/>
+        <input Method="rmpinput2"/>
+        <!--comparer_method Method="ConnectableComponent"/-->
+        <!--comparer_method Method="RandomConnect"/-->
+        <comparer_method Method="RegionCoverageComparer"/>
+      </Compare>
+
+      <!-- EvaluateMapStrategy -->
+      <EvaluateMapStrategy label="EvaluateMapStrategy" mapFilename="heterogeneous.map">
+        <Evaluator label="NodesEval"/>
+      </EvaluateMapStrategy>
+
+      <!-- Resample Point Strategy  --> 
+      <ResamplePointStrategy label="ResamplePoint" typeName="MAX_CLEARANCE"
+        inputMap="heterogeneous.map" inputPath="heterogeneous.path" outputMap="resample.map"
+        outputPath="resample.path" numResamples="1" stepSize="0.3" userValue="0.3"
+        vcLabel="cd1" dmLabel="euclidean" lpLabel="lp"
+        clearanceType="exact" penetrationType="exact" useBBX="true" positional="true"/>
+      
+      <UtilityGuidedGenerator label="UtilityGuided" vcLabel="cd1" nfLabel="BFNF" connectorLabel="Closest">
+        <Evaluator label="NodesEval"/>
+      </UtilityGuidedGenerator>
+
+      <!-- Parallel Strategiees and Methods *********COMPILE UNDER PARALLEL OPTION **********--> 
+      <BasicParallelPRM label="BasicParallelPRM" iterations="1" debug="true">
+        <node_generation_method Method="UniformRandom" Number="10"/>
+        <node_connection_method Method="Closest"/>
+      </BasicParallelPRM>
+      
+      <RegularSubdivisionMethod label="RegularSubdivisionMethod" iterations="1" debug="true">
+        <node_generation_method Method="UniformRandomFree" Number="100"/>
+        <node_connection_method Method="Closest"/> 
+        <!--sequential_strategy  Strategy="BasicPRM1"/--> 
+        <num_row nRow = "4"/>
+        <n_col nCol = "4"/>
+        <num_runs nRuns = "1"/>
+        <overlap xeps = "0.25" yeps = "0.25" zeps = "0"/>
+        <region_connect_k k1 = "1" k2 = "1" nf = "BFNF" lp= "sl" type = "random"/> 
+      </RegularSubdivisionMethod>
+
+      <TogglePRMStrategyWithRRT label="ToggleRRT" maxNPCCSize="1" initSamples="10" maxRRTSize="100"
+        delta="10" minDist="0.1" vcLabel="cd1" nfLabel="BFNF" nfVertexLabel="Nearest" trimDepth="2"
+        dmLabel="euclidean" ncLabel="ToggleRRTConnector" priority="false" growthFocus="0.5"
+        checkEdgeCases="true" checkImportant="true" trimAll="false" biasConnect="true" recordKeep="true" rrtDebug="true">
+        <Sampler methodLabel="UniformRandomFree" number="10" attempts="10"/>
+        <Connector methodLabel="ToggleConnectValid"/>
+        <ColConnector methodLabel="ToggleConnect"/>
+        <Evaluator methodLabel="ModQuery"/>
+      </TogglePRMStrategyWithRRT>
+
+      <BasicPRMWithRRT label="PRMWithRRT" maxNPCCSize="3" initSamples="50" maxRRTSize="100"
+        delta="10" minDist="0.1" vcLabel="cd1" nfLabel="BFNF" nfVertexLabel="Nearest" trimDepth="2"
+        dmLabel="euclidean" ncLabel="ToggleRRTConnector" priority="false" growthFocus="0.5"
+        checkEdgeCases="true" checkImportant="true" trimAll="true" biasConnect="true" recordKeep="true" rrtDebug="true">
+        <node_generation_method Method="Gauss" Number="50" Attempts="10"/>
+        <node_connection_method Method="Closest"/>
+        <evaluation_method Method="ModQuery"/>
+      </BasicPRMWithRRT>
+
+      <!-- SRT -->
+      <BasicRRTStrategy label="SRT" delta="10" minDist="0.1" numRoots="1000" m="1" growthFocus="0.01"
+        lpLabel="sl" dmLabel="euclidean" nfLabel="Nearest" vcLabel="cd1" connectorLabel="Closest"
+        gtype="UNDIRECTED_TREE" debug="false" evaluateGoal="false" growGoals="true">
+        <Evaluator label="Query"/>
+      </BasicRRTStrategy>
+
+    </MPStrategies>
+  
+    <Solver mpStrategyLabel="SRT" seed="130000" baseFilename="SRT1000" vizmoDebug="true" recordKeep="true"/>
+
+  </MPProblem>
+</MotionPlanning>

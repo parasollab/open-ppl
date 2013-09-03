@@ -1,0 +1,13 @@
+./2DHeterogeneous.u2a1.sh
+./2DHeterogeneous.u2a2.sh
+./2DHeterogeneous.u2a3.sh
+./2DHeterogeneous.u2a4.sh
+./2DHeterogeneous.u2a5.sh
+./2DHeterogeneous.u2a6.sh
+./2DHeterogeneous.u2b1.sh
+./2DHeterogeneous.u2b2.sh
+./2DHeterogeneous.u2b3.sh
+./2DHeterogeneous.u2b4.sh
+./2DHeterogeneous.u2b5.sh
+./2DHeterogeneous.u2b6.sh
+./2DHeterogeneous.Uniform.sh

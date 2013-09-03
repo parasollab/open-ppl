@@ -1,0 +1,209 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<MotionPlanning>
+  <MPProblem>
+
+    <Environment input_env="heterogeneous.env">
+      <robot Cfg_name="Cfg_2D" num_joints="0" pos_dof="2" dofs="2"> 
+        <boundary type="bbox" translational_scale="1">
+          <parameter id="0" label="x" type="translational" min="-12" max="13" />
+          <parameter id="1" label="y" type="translational" min="-50" max="20" />
+        </boundary>
+      </robot>
+    </Environment>
+
+    <DistanceMetrics>
+      <Euclidean label="euclidean"/>
+    </DistanceMetrics>    
+
+    <ValidityCheckers>    
+      <CollisionDetection label="cd1" method="RAPID"/>
+      <NegateValidity label="nv" vcLabel="cd1"/>
+      <AlwaysTrueValidity label="alwaysTrue"/>
+    </ValidityCheckers>
+
+    <NeighborhoodFinders>
+      <BruteForceNF label="BFNF" dmLabel="euclidean"/>
+    </NeighborhoodFinders>
+    
+    <Samplers>
+      <UniformRandomSampler label="UniformRandom" vcLabel="alwaysTrue"/>
+      <UniformRandomSampler label="UniformRandomFree" vcLabel="cd1"/>
+      <MixSampler label="MixSampler">
+        <Sampler label="UniformRandomFree" p="0.8"/>
+        <Sampler label="UniformRandom" p="0.2"/>
+      </MixSampler>
+    </Samplers>
+
+    <LocalPlanners>
+      <StraightLine label="sl" binaryEvaluation="true" vcLabel="cd1"/>
+      <StraightLine label="slAlwaysTrue" binaryEvaluation="true" vcLabel="alwaysTrue"/>
+    </LocalPlanners>
+
+    <Connectors>
+      <ClosestVE label="ClosestVE" kClosest="1" nf="BFNF" lp_method="sl"/>
+      <NeighborhoodConnector label="Closest" nf="BFNF" k="5" CheckIfSameCC="false" lp_method="sl" unconnected="true"/>
+      <NeighborhoodConnector label="ToggleRRTConnector" nf="BFNF" k="1" CheckIfSameCC="false" lp_method="sl" unconnected="true"/>
+      <NeighborhoodConnector label="ToggleConnectValid" nf="BFNF" k="5" count_failures="true" fail="1"
+        CheckIfSameCC="true"
+        lp_method="sl" unconnected="true"/>
+      <NeighborhoodConnector label="ToggleConnect" nf="BFNF" k="5" count_failures="true" fail="1" CheckIfSameCC="false"
+        lp_method="sl" unconnected="true"/>
+      <NeighborhoodConnector label="LazyToggleConnect" nf="BFNF" k="50" count_failures="true" fail="1" CheckIfSameCC="false"
+        lp_method="sl" unconnected="true"/>
+      <NeighborhoodConnector label="ClosestAlwaysTrue" nf="BFNF" k="5" CheckIfSameCC="false" lp_method="slAlwaysTrue" unconnected="true"/>
+      <NeighborhoodConnector label="AllToAll" nf="BFNF" k="0" CheckIfSameCC="false" lp_method="sl" unconnected="true"/>
+    </Connectors>
+
+    <MapEvaluators>
+      <TrueEvaluation label="TrueEvaluator" />
+      <Query label="Query" queryFile="heterogeneous.query" pathFile="Basic.path" dmMethod="euclidean" lpMethod="sl"
+        smooth="false" smoothFile="smooth.path" debug="false" recordKeep="true">
+        <NodeConnectionMethod method="Closest"/>
+        <SmoothConnectionMethod method="AllToAll"/>
+      </Query>
+      <LazyQuery label="LazyQuery" queryFile="heterogeneous.query" pathFile="Basic.path" smoothFile="smooth.path"
+        lpMethod="sl" dmMethod="euclidean" vcMethod="cd1" graphSearchAlg="astar"
+        smooth="false" deleteNodes="false" debug="false" recordKeep="true" numEnhance="0" d="0.5">
+        <NodeConnectionMethod method="ClosestAlwaysTrue"/>
+        <SmoothConnectionMethod method="AllToAll"/>
+        <Resolution mult="27"/>
+        <Resolution mult="16"/>
+        <Resolution mult="1"/>
+      </LazyQuery>
+      <LazyToggleQuery label="LazyToggleQuery" queryFile="heterogeneous.query" pathFile="Basic.path" smoothFile="smooth.path"
+        lpMethod="sl" dmMethod="euclidean" vcMethod="cd1" graphSearchAlg="astar"
+        smooth="false" deleteNodes="false" iterative="true" debug="false" recordKeep="true">
+        <NodeConnectionMethod method="ClosestAlwaysTrue"/>
+        <ToggleConnectionMethod method="LazyToggleConnect"/>
+        <Resolution mult="27"/>
+        <Resolution mult="16"/>
+        <Resolution mult="1"/>
+      </LazyToggleQuery>
+      <PrintMapEvaluation label="PrintMap" base_name="Basic"/>
+      <ConditionalEvaluator label="NodesEval" metric_method="NumNodes" value="100" operator=">=" />
+      <ConditionalEvaluator label="EdgesEval" metric_method="NumEdges" value="1000" operator=">" />
+      <NegateEvaluator label="Neg" evalLabel="NodesEval"/>
+      <ComposeEvaluator label="Com1" operator="or">
+        <Evaluator label="NodesEval"/>
+        <Evaluator label="Query"/>
+      </ComposeEvaluator>
+      <ComposeEvaluator label="Com2" operator="and">
+        <Evaluator label="Com1"/>
+        <Evaluator label="PrintMap"/>
+      </ComposeEvaluator>
+    </MapEvaluators>
+
+    <MPStrategies>
+
+      <!-- Toggle RRT --> 
+      <ToggleRRTStrategy label="tr1a1" maxNPCCSize="1" initSamples="50" maxRRTSize="200"
+        delta="10" minDist="0.1" vcLabel="cd1" nfLabel="BFNF" trimDepth="3"
+        dmLabel="euclidean" ncLabel="ToggleRRTConnector" priority="false" growthFocus="0.5"
+        checkEdgeCases="false" checkImportant="false" trimAll="false" biasConnect="false">
+        <Sampler methodLabel="UniformRandomFree" number="100" attempts="1"/>
+        <Connector methodLabel="ToggleConnectValid"/>
+        <ColConnector methodLabel="ToggleConnect"/>
+        <Evaluator methodLabel="Query"/>
+      </ToggleRRTStrategy>
+
+      <ToggleRRTStrategy label="tr1a2" maxNPCCSize="1" initSamples="50" maxRRTSize="200"
+        delta="10" minDist="0.1" vcLabel="cd1" nfLabel="BFNF" trimDepth="3"
+        dmLabel="euclidean" ncLabel="ToggleRRTConnector" priority="false" growthFocus="0.5"
+        checkEdgeCases="false" checkImportant="false" trimAll="false" biasConnect="true">
+        <Sampler methodLabel="UniformRandomFree" number="100" attempts="1"/>
+        <Connector methodLabel="ToggleConnectValid"/>
+        <ColConnector methodLabel="ToggleConnect"/>
+        <Evaluator methodLabel="Query"/>
+      </ToggleRRTStrategy>
+
+      <ToggleRRTStrategy label="tr1a3" maxNPCCSize="1" initSamples="50" maxRRTSize="200"
+        delta="10" minDist="0.1" vcLabel="cd1" nfLabel="BFNF" trimDepth="3"
+        dmLabel="euclidean" ncLabel="ToggleRRTConnector" priority="false" growthFocus="0.5"
+        checkEdgeCases="false" checkImportant="false" trimAll="true" biasConnect="false">
+        <Sampler methodLabel="UniformRandomFree" number="100" attempts="1"/>
+        <Connector methodLabel="ToggleConnectValid"/>
+        <ColConnector methodLabel="ToggleConnect"/>
+        <Evaluator methodLabel="Query"/>
+      </ToggleRRTStrategy>
+
+      <ToggleRRTStrategy label="tr1a4" maxNPCCSize="1" initSamples="50" maxRRTSize="200"
+        delta="10" minDist="0.1" vcLabel="cd1" nfLabel="BFNF" trimDepth="3"
+        dmLabel="euclidean" ncLabel="ToggleRRTConnector" priority="false" growthFocus="0.5"
+        checkEdgeCases="false" checkImportant="false" trimAll="true" biasConnect="true">
+        <Sampler methodLabel="UniformRandomFree" number="100" attempts="1"/>
+        <Connector methodLabel="ToggleConnectValid"/>
+        <ColConnector methodLabel="ToggleConnect"/>
+        <Evaluator methodLabel="Query"/>
+      </ToggleRRTStrategy>
+
+      <ToggleRRTStrategy label="tr1b1" maxNPCCSize="1" initSamples="50" maxRRTSize="200"
+        delta="10" minDist="0.1" vcLabel="cd1" nfLabel="BFNF" trimDepth="3"
+        dmLabel="euclidean" ncLabel="ToggleRRTConnector" priority="false" growthFocus="0.5"
+        checkEdgeCases="true" checkImportant="true" trimAll="false" biasConnect="false">
+        <Sampler methodLabel="UniformRandomFree" number="100" attempts="1"/>
+        <Connector methodLabel="ToggleConnectValid"/>
+        <ColConnector methodLabel="ToggleConnect"/>
+        <Evaluator methodLabel="Query"/>
+      </ToggleRRTStrategy>
+
+      <ToggleRRTStrategy label="tr1b2" maxNPCCSize="1" initSamples="50" maxRRTSize="200"
+        delta="10" minDist="0.1" vcLabel="cd1" nfLabel="BFNF" trimDepth="3"
+        dmLabel="euclidean" ncLabel="ToggleRRTConnector" priority="false" growthFocus="0.5"
+        checkEdgeCases="true" checkImportant="true" trimAll="false" biasConnect="true">
+        <Sampler methodLabel="UniformRandomFree" number="100" attempts="1"/>
+        <Connector methodLabel="ToggleConnectValid"/>
+        <ColConnector methodLabel="ToggleConnect"/>
+        <Evaluator methodLabel="Query"/>
+      </ToggleRRTStrategy>
+
+      <ToggleRRTStrategy label="tr1b3" maxNPCCSize="1" initSamples="50" maxRRTSize="200"
+        delta="10" minDist="0.1" vcLabel="cd1" nfLabel="BFNF" trimDepth="3"
+        dmLabel="euclidean" ncLabel="ToggleRRTConnector" priority="false" growthFocus="0.5"
+        checkEdgeCases="true" checkImportant="true" trimAll="true" biasConnect="false">
+        <Sampler methodLabel="UniformRandomFree" number="100" attempts="1"/>
+        <Connector methodLabel="ToggleConnectValid"/>
+        <ColConnector methodLabel="ToggleConnect"/>
+        <Evaluator methodLabel="Query"/>
+      </ToggleRRTStrategy>
+
+      <ToggleRRTStrategy label="tr1b4" maxNPCCSize="1" initSamples="50" maxRRTSize="200"
+        delta="10" minDist="0.1" vcLabel="cd1" nfLabel="BFNF" trimDepth="3"
+        dmLabel="euclidean" ncLabel="ToggleRRTConnector" priority="false" growthFocus="0.5"
+        checkEdgeCases="true" checkImportant="true" trimAll="true" biasConnect="true">
+        <Sampler methodLabel="UniformRandomFree" number="100" attempts="1"/>
+        <Connector methodLabel="ToggleConnectValid"/>
+        <ColConnector methodLabel="ToggleConnect"/>
+        <Evaluator methodLabel="Query"/>
+      </ToggleRRTStrategy>
+
+      <ToggleRRTStrategy label="ToggleRRT" maxNPCCSize="1" initSamples="20" maxRRTSize="200"
+        delta="10" minDist="0.1" vcLabel="cd1" nfLabel="BFNF" trimDepth="3"
+        dmLabel="euclidean" ncLabel="ToggleRRTConnector" priority="false" growthFocus="0.5"
+        checkEdgeCases="false" checkImportant="false" trimAll="true" biasConnect="true">
+        <Sampler methodLabel="UniformRandomFree" number="50" attempts="1"/>
+        <Connector methodLabel="ToggleConnectValid"/>
+        <ColConnector methodLabel="ToggleConnect"/>
+        <Evaluator methodLabel="Query"/>
+      </ToggleRRTStrategy>
+
+      <!-- Basic PRM where num samples is based on Number -->
+      <BasicPRM label="BasicPRM1" recordKeep="true">
+        <node_generation_method Method="UniformRandomFree" Number="10" Attempts="10"/>
+        <node_connection_method Method="ClosestAlwaysTrue"/>
+        <evaluation_method Method="LazyToggleQuery"/>
+      </BasicPRM>
+
+      <!-- Toggle PRM --> 
+      <TogglePRMStrategy label="TogglePRM" priority="true" vcLabel="cd1">
+        <Sampler methodLabel="UniformRandom" number="10" attempts="1"/>
+        <Connector methodLabel="ToggleConnectValid"/>
+        <ColConnector methodLabel="ToggleConnect"/>
+        <Evaluator methodLabel="Query"/>
+      </TogglePRMStrategy>
+
+    </MPStrategies>
+  
+    <Solver mpStrategyLabel="tr1b4" seed="1890856878" baseFilename="tr1b4/tr1b4.25" vizmoDebug="false" recordKeep="true"/>
+
+  </MPProblem>
+</MotionPlanning>

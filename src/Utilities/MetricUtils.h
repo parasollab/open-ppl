@@ -101,7 +101,12 @@ class StatClass {
     // Graph Operation Statistics Accessors/Modifiers
     int GetGOStat(string _s) {return m_goStats[_s];}
     void SetGOStat(string _s, int _v) {m_goStats[_s]=_v;}
-    void IncGOStat(string _s, int _v = 1) {m_goStats[_s]+=_v;}
+    void IncGOStat(string _s, int _v=1) {m_goStats[_s]+=_v;}
+
+    // RRT Statistics Accessors/Modifiers
+    int GetRRTStat(string _s) {return m_rrtStats[_s];}
+    void SetRRTStat(string _s, int _v) {m_rrtStats[_s]=_v;}
+    void IncRRTStat(string _s, int _v=1) {m_rrtStats[_s]+=_v;}
 
     //Local Planner Statistics Accessors/Modifiers
     double GetLPStat(string _s){return m_lpStats[_s];}
@@ -179,7 +184,7 @@ class StatClass {
 
   private:
     //LP Statistics
-    map<string, int> m_goStats;
+    map<string, int> m_goStats, m_rrtStats;
     map<string, double> m_lpStats, m_nfStats;
     map<string, vector<double> > m_histories;
     string m_auxFileDest;
@@ -246,6 +251,19 @@ StatClass::PrintAllStats(ostream& _os, RoadmapType* _rmap, int _numCCs) {
         << setw(40) << gosit->second << endl;
     }
   }
+
+  // output for RRT statistics.
+  if(m_rrtStats.size()>0){
+    _os<<"\n\n RRT Statistics:\n\n";
+    _os<< setw(40) << "Statistic"
+      << setw(40) << "Value" << endl << endl;
+    typedef map<string, int>::iterator RRTSIT;
+    for(RRTSIT rrtsit=m_rrtStats.begin(); rrtsit!=m_rrtStats.end(); rrtsit++){
+      _os << setw(40) << rrtsit->first
+        << setw(40) << rrtsit->second << endl;
+    }
+  }
+
   //output for local planner statistics. Only output if map is populated
   if(m_lpStats.size()>0){
     _os<<"\n\n Local Planner Statistics:\n\n";

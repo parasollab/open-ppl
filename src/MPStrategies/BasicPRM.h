@@ -5,54 +5,54 @@
 
 template<class MPTraits>
 class BasicPRM : public MPStrategyMethod<MPTraits> {
- public:
-   enum Start {NODE_GENERATION, NODE_CONNECTION, COMPONENT_CONNECTION, MAP_EVALUATION};
+  public:
+    enum Start {NODE_GENERATION, NODE_CONNECTION, COMPONENT_CONNECTION, MAP_EVALUATION};
 
-   typedef typename MPTraits::CfgType CfgType;
-   typedef typename MPTraits::MPProblemType MPProblemType;
-   typedef typename MPProblemType::RoadmapType RoadmapType;
-   typedef typename MPProblemType::GraphType GraphType;
-   typedef typename MPProblemType::VID VID;
-   typedef typename MPProblemType::SamplerPointer SamplerPointer;
-   typedef typename MPProblemType::ConnectorPointer ConnectorPointer;
-   typedef typename MPProblemType::MapEvaluatorPointer MapEvaluatorPointer;
+    typedef typename MPTraits::CfgType CfgType;
+    typedef typename MPTraits::MPProblemType MPProblemType;
+    typedef typename MPProblemType::RoadmapType RoadmapType;
+    typedef typename MPProblemType::GraphType GraphType;
+    typedef typename MPProblemType::VID VID;
+    typedef typename MPProblemType::SamplerPointer SamplerPointer;
+    typedef typename MPProblemType::ConnectorPointer ConnectorPointer;
+    typedef typename MPProblemType::MapEvaluatorPointer MapEvaluatorPointer;
 
-   BasicPRM(const map<string, pair<int, int> >& _samplerLabels = (map<string, pair<int, int> >()),
-       const vector<string>& _connectorLabels = vector<string>(),
-       const vector<string>& _componentConnectorLabels = vector<string>(),
-       const vector<string>& _evaluatorLabels = vector<string>(),
-       string _vcLabel = "",
-       string _inputMapFilename = "",
-       Start _startAt = NODE_GENERATION);
-   BasicPRM(typename MPTraits::MPProblemType* _problem, XMLNodeReader& _node);
-   virtual ~BasicPRM();
+    BasicPRM(const map<string, pair<int, int> >& _samplerLabels = map<string, pair<int, int> >(),
+        const vector<string>& _connectorLabels = vector<string>(),
+        const vector<string>& _componentConnectorLabels = vector<string>(),
+        const vector<string>& _evaluatorLabels = vector<string>(),
+        string _vcLabel = "",
+        string _inputMapFilename = "",
+        Start _startAt = NODE_GENERATION);
+    BasicPRM(typename MPTraits::MPProblemType* _problem, XMLNodeReader& _node);
+    virtual ~BasicPRM();
 
-   virtual void ParseXML(XMLNodeReader& _node);
-   virtual void PrintOptions(ostream& _os) const;
+    virtual void ParseXML(XMLNodeReader& _node);
+    virtual void PrintOptions(ostream& _os) const;
 
-   virtual void Initialize();
-   virtual void Run();
-   virtual void Finalize();
+    virtual void Initialize();
+    virtual void Run();
+    virtual void Finalize();
 
- protected:
-   //helper functions for operator()
-   template<class InputIterator>
-     void ConnectNodes(InputIterator _first, InputIterator _last);
-   void ConnectComponents();
+  protected:
+    //helper functions for operator()
+    template<class InputIterator>
+      void ConnectNodes(InputIterator _first, InputIterator _last);
+    void ConnectComponents();
 
-   //data
-   map<string, pair<int, int> > m_samplerLabels;
-   vector<string> m_connectorLabels;
-   vector<string> m_componentConnectorLabels;
-   vector<string> m_evaluatorLabels;
-   int m_currentIteration;
-   string m_vcLabel;
-   string m_inputMapFilename;
-   Start m_startAt;
+    //data
+    map<string, pair<int, int> > m_samplerLabels;
+    vector<string> m_connectorLabels;
+    vector<string> m_componentConnectorLabels;
+    vector<string> m_evaluatorLabels;
+    int m_currentIteration;
+    string m_vcLabel;
+    string m_inputMapFilename;
+    Start m_startAt;
 
- private:
-   template <typename OutputIterator>
-     void GenerateNodes(OutputIterator _thisIterationOut);
+  private:
+    template <typename OutputIterator>
+      void GenerateNodes(OutputIterator _thisIterationOut);
 };
 
 template<class MPTraits>
@@ -218,7 +218,7 @@ BasicPRM<MPTraits>::Run(){
 
   if(this->m_recordKeep) stats->StartClock("Map Generation");
 
-  bool mapPassedEvaluation = false;
+  bool mapPassedEvaluation = this->EvaluateMap(m_evaluatorLabels);
   while(!mapPassedEvaluation){
     m_currentIteration++;
     vector<VID> vids;
@@ -314,6 +314,13 @@ BasicPRM<MPTraits>::ConnectNodes(InputIterator _first, InputIterator _last) {
       if(this->m_debug) stats->PrintClock(connectorSubClockName, cout);
     }
   }
+
+  for(; _first != _last; _first++) {
+    VID vid = this->GetMPProblem()->GetRoadmap()->GetGraph()->GetVID(_first);
+    if(CheckNarrowPassageSample(vid))
+        break;
+  }
+
   if(this->m_recordKeep) {
     stats->StopClock(connectorClockName);
     if(this->m_debug) stats->PrintClock(connectorClockName, cout);

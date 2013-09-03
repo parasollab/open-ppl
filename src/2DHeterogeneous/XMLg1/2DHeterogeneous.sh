@@ -1,0 +1,9 @@
+./2DHeterogeneous.g1a1.sh
+./2DHeterogeneous.g1a2.sh
+./2DHeterogeneous.g1a3.sh
+./2DHeterogeneous.g1a4.sh
+./2DHeterogeneous.g1b1.sh
+./2DHeterogeneous.g1b2.sh
+./2DHeterogeneous.g1b3.sh
+./2DHeterogeneous.g1b4.sh
+./2DHeterogeneous.Gauss.sh

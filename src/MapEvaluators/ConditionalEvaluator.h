@@ -83,7 +83,7 @@ ConditionalEvaluator<MPTraits>::operator()() {
     case GEQ: return metricValue >= m_value;
     case MOD:
       static double prevVal=0.0;
-      if(floor(metricValue/m_value) != floor(prevVal/m_value)  && m_value>0){
+      if(prevVal == 0.0 || (floor(metricValue/m_value) != floor(prevVal/m_value) && m_value > 0)){
           prevVal = metricValue;
           return true;
       }

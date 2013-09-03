@@ -84,7 +84,7 @@ TogglePRMStrategy<MPTraits>::ParseXML(XMLNodeReader& _node) {
     else
       citr->warnUnknownNode();
   }
-  _node.warnUnrequestedAttributes();
+  //_node.warnUnrequestedAttributes();
 }
 
 template<class MPTraits>
@@ -139,6 +139,8 @@ TogglePRMStrategy<MPTraits>::Run() {
         VID vid = this->GetMPProblem()->GetRoadmap()->GetGraph()->AddVertex(cfg);
         allNodesVID.push_back(vid);
         Connect(make_pair("valid", vid), allNodesVID, queue);
+
+        CheckNarrowPassageSample(vid);
       }
       else { // Invalid, add to obstacle roadmap. Toggle validity while connecting
         VID vid = this->GetMPProblem()->GetBlockRoadmap()->GetGraph()->AddVertex(cfg);

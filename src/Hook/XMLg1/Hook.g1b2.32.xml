@@ -1,0 +1,186 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<MotionPlanning>
+  <MPProblem>
+
+    <Environment filename="hook.env"/>
+
+    <DistanceMetrics>
+      <Euclidean label="euclidean"/>
+    </DistanceMetrics>    
+
+    <ValidityCheckers>    
+      <CollisionDetection label="cd1" method="RAPID"/>
+      <AlwaysTrueValidity label="alwaysTrue"/>
+    </ValidityCheckers>
+
+    <NeighborhoodFinders>
+      <BruteForceNF label="BFNF" dmLabel="euclidean" unconnected="false" k="5"/>
+      <BruteForceNF label="BFNF50" dmLabel="euclidean" unconnected="false" k="50"/>
+      <BruteForceNF label="Nearest" dmLabel="euclidean" unconnected="false" k="1"/>
+      <BruteForceNF label="BFNFAll" dmLabel="euclidean" k="0"/>
+    </NeighborhoodFinders>
+    
+    <Samplers>
+      <UniformRandomSampler label="UniformRandom" vcLabel="alwaysTrue"/>
+      <UniformRandomSampler label="UniformRandomFree" vcLabel="cd1"/>
+      <ObstacleBasedSampler label="OBPRM" vcLabel="cd1" useBBX="true" pointSelection="cspace" 
+        dmLabel="euclidean" stepSize="1" nShellsColl="0" nShellsFree="1" debug="false"/>
+      <GaussianSampler label="Gauss" vcLabel="cd1" d="25" dmLabel="euclidean" useBBX="false"/>
+    </Samplers>
+
+    <LocalPlanners>
+      <StraightLine label="sl" binaryEvaluation="true" vcLabel="cd1"/>
+      <StraightLine label="slAlwaysTrue" binaryEvaluation="true" vcLabel="alwaysTrue"/>
+    </LocalPlanners>
+
+    <Connectors>
+      <CCsConnector label="ConnectCCs" nfLabel="BFNF" lpLabel="sl" k="5" smallcc="5"/>
+      <NeighborhoodConnector label="Closest" nfLabel="BFNF" lpLabel="sl" checkIfSameCC="false" debug="false"/>
+      <NeighborhoodConnector label="ToggleRRTConnector" nfLabel="Nearest" lpLabel="sl" checkIfSameCC="true"/>
+      <NeighborhoodConnector label="ToggleConnectValid" nfLabel="BFNF" lpLabel="sl" countFailures="true" fail="1"
+        checkIfSameCC="false"/>
+      <NeighborhoodConnector label="ToggleConnect" nfLabel="BFNF" lpLabel="sl" countFailures="true" fail="1" CheckIfSameCC="false"/>
+      <NeighborhoodConnector label="LazyToggleConnect" nfLabel="BFNF50" lpLabel="sl" countFailures="true"
+        fail="1" CheckIfSameCC="false"/>
+      <NeighborhoodConnector label="ClosestAlwaysTrue" nfLabel="BFNF" lpLabel="slAlwaysTrue" checkIfSameCC="false"/>
+      <NeighborhoodConnector label="AllToAll" nfLabel="BFNFAll" lpLabel="sl" checkIfSameCC="false"/>
+    </Connectors>
+
+    <Metrics>
+      <NumNodesMetric label="NumNodes"/>
+    </Metrics>
+
+    <MapEvaluators>
+      <Query label="Query" queryFile="hook.query" pathFile="Basic.path" dmMethod="euclidean" lpMethod="sl"
+        smooth="false" smoothFile="smooth.path" debug="false" recordKeep="true" vcMethod="cd1">
+        <NodeConnectionMethod method="Closest"/>
+        <SmoothConnectionMethod method="AllToAll"/>
+      </Query>
+      <ConditionalEvaluator label="FreqNodeEval" metric_method="NumNodes" value="50" operator="%"/>
+      <ComposeEvaluator label="ModQuery" operator="and">
+        <Evaluator label="FreqNodeEval"/>
+        <Evaluator label="Query"/>
+      </ComposeEvaluator>
+    </MapEvaluators>
+
+    <MPStrategies>
+      
+      <BasicPRM label="Uniform" recordKeep="true">
+        <node_generation_method Method="UniformRandomFree" Number="10" Attempts="10"/>
+        <node_connection_method Method="Closest"/>
+        <evaluation_method Method="ModQuery"/>
+      </BasicPRM>
+
+      <BasicPRM label="Gauss" recordKeep="true">
+        <node_generation_method Method="Gauss" Number="10" Attempts="10"/>
+        <node_connection_method Method="Closest"/>
+        <evaluation_method Method="ModQuery"/>
+      </BasicPRM>
+
+      <BasicPRM label="OBPRM" recordKeep="true">
+        <node_generation_method Method="OBPRM" Number="10" Attempts="10"/>
+        <node_connection_method Method="Closest"/>
+        <evaluation_method Method="ModQuery"/>
+      </BasicPRM>
+
+      <TogglePRMStrategy label="Toggle" priority="true" vcLabel="cd1">
+        <Sampler methodLabel="UniformRandomFree" number="10" attempts="10"/>
+        <Connector methodLabel="ToggleConnectValid"/>
+        <ColConnector methodLabel="ToggleConnect"/>
+        <Evaluator methodLabel="ModQuery"/>
+      </TogglePRMStrategy>
+
+      <BasicRRTStrategy label="BasicRRT" delta="50" minDist="1" 
+        numRoots="1" m="1" growthFocus="0.01" lpLabel="sl" dmLabel="euclidean"
+        nfLabel="BFNF" vcLabel="cd1" query="hook.query" gtype="UNDIRECTED_TREE" debug="false" evaluateGoal="true"
+        recordKeep="true">
+      </BasicRRTStrategy>
+
+      <TogglePRMStrategyWithRRT label="ToggleRRT" maxNPCCSize="3" initSamples="25" maxRRTSize="100"
+        delta="50" minDist="1" vcLabel="cd1" nfLabel="BFNF" nfVertexLabel="Nearest" trimDepth="2"
+        dmLabel="euclidean" ncLabel="ToggleRRTConnector" priority="false" growthFocus="0.5"
+        checkEdgeCases="true" checkImportant="true" trimAll="false" biasConnect="true" recordKeep="true" rrtDebug="false">
+        <Sampler methodLabel="UniformRandomFree" number="10" attempts="10"/>
+        <Connector methodLabel="ToggleConnectValid"/>
+        <ColConnector methodLabel="ToggleConnect"/>
+        <Evaluator methodLabel="ModQuery"/>
+      </TogglePRMStrategyWithRRT>
+
+      <BasicPRMWithRRT label="g1a1" maxNPCCSize="3" initSamples="25" maxRRTSize="100"
+        delta="50" minDist="1" vcLabel="cd1" nfLabel="BFNF" nfVertexLabel="Nearest" trimDepth="2"
+        dmLabel="euclidean" ncLabel="ToggleRRTConnector" priority="false" growthFocus="0.5"
+        checkEdgeCases="false" checkImportant="false" trimAll="false" biasConnect="false" recordKeep="true" rrtDebug="false">
+        <node_generation_method Method="Gauss" Number="10" Attempts="10"/>
+        <node_connection_method Method="Closest"/>
+        <evaluation_method Method="ModQuery"/>
+      </BasicPRMWithRRT>
+
+      <BasicPRMWithRRT label="g1a2" maxNPCCSize="3" initSamples="25" maxRRTSize="100"
+        delta="50" minDist="1" vcLabel="cd1" nfLabel="BFNF" nfVertexLabel="Nearest" trimDepth="2"
+        dmLabel="euclidean" ncLabel="ToggleRRTConnector" priority="false" growthFocus="0.5"
+        checkEdgeCases="false" checkImportant="false" trimAll="false" biasConnect="true" recordKeep="true" rrtDebug="false">
+        <node_generation_method Method="Gauss" Number="10" Attempts="10"/>
+        <node_connection_method Method="Closest"/>
+        <evaluation_method Method="ModQuery"/>
+      </BasicPRMWithRRT>
+
+      <BasicPRMWithRRT label="g1a3" maxNPCCSize="3" initSamples="25" maxRRTSize="100"
+        delta="50" minDist="1" vcLabel="cd1" nfLabel="BFNF" nfVertexLabel="Nearest" trimDepth="2"
+        dmLabel="euclidean" ncLabel="ToggleRRTConnector" priority="false" growthFocus="0.5"
+        checkEdgeCases="false" checkImportant="false" trimAll="true" biasConnect="false" recordKeep="true" rrtDebug="false">
+        <node_generation_method Method="Gauss" Number="10" Attempts="10"/>
+        <node_connection_method Method="Closest"/>
+        <evaluation_method Method="ModQuery"/>
+      </BasicPRMWithRRT>
+
+      <BasicPRMWithRRT label="g1a4" maxNPCCSize="3" initSamples="25" maxRRTSize="100"
+        delta="50" minDist="1" vcLabel="cd1" nfLabel="BFNF" nfVertexLabel="Nearest" trimDepth="2"
+        dmLabel="euclidean" ncLabel="ToggleRRTConnector" priority="false" growthFocus="0.5"
+        checkEdgeCases="false" checkImportant="false" trimAll="true" biasConnect="true" recordKeep="true" rrtDebug="false">
+        <node_generation_method Method="Gauss" Number="10" Attempts="10"/>
+        <node_connection_method Method="Closest"/>
+        <evaluation_method Method="ModQuery"/>
+      </BasicPRMWithRRT>
+
+      <BasicPRMWithRRT label="g1b1" maxNPCCSize="3" initSamples="25" maxRRTSize="100"
+        delta="50" minDist="1" vcLabel="cd1" nfLabel="BFNF" nfVertexLabel="Nearest" trimDepth="2"
+        dmLabel="euclidean" ncLabel="ToggleRRTConnector" priority="false" growthFocus="0.5"
+        checkEdgeCases="true" checkImportant="true" trimAll="false" biasConnect="false" recordKeep="true" rrtDebug="false">
+        <node_generation_method Method="Gauss" Number="10" Attempts="10"/>
+        <node_connection_method Method="Closest"/>
+        <evaluation_method Method="ModQuery"/>
+      </BasicPRMWithRRT>
+
+      <BasicPRMWithRRT label="g1b2" maxNPCCSize="3" initSamples="25" maxRRTSize="100"
+        delta="50" minDist="1" vcLabel="cd1" nfLabel="BFNF" nfVertexLabel="Nearest" trimDepth="2"
+        dmLabel="euclidean" ncLabel="ToggleRRTConnector" priority="false" growthFocus="0.5"
+        checkEdgeCases="true" checkImportant="true" trimAll="false" biasConnect="true" recordKeep="true" rrtDebug="false">
+        <node_generation_method Method="Gauss" Number="10" Attempts="10"/>
+        <node_connection_method Method="Closest"/>
+        <evaluation_method Method="ModQuery"/>
+      </BasicPRMWithRRT>
+
+      <BasicPRMWithRRT label="g1b3" maxNPCCSize="3" initSamples="25" maxRRTSize="100"
+        delta="50" minDist="1" vcLabel="cd1" nfLabel="BFNF" nfVertexLabel="Nearest" trimDepth="2"
+        dmLabel="euclidean" ncLabel="ToggleRRTConnector" priority="false" growthFocus="0.5"
+        checkEdgeCases="true" checkImportant="true" trimAll="true" biasConnect="false" recordKeep="true" rrtDebug="false">
+        <node_generation_method Method="Gauss" Number="10" Attempts="10"/>
+        <node_connection_method Method="Closest"/>
+        <evaluation_method Method="ModQuery"/>
+      </BasicPRMWithRRT>
+
+      <BasicPRMWithRRT label="g1b4" maxNPCCSize="3" initSamples="25" maxRRTSize="100"
+        delta="50" minDist="1" vcLabel="cd1" nfLabel="BFNF" nfVertexLabel="Nearest" trimDepth="2"
+        dmLabel="euclidean" ncLabel="ToggleRRTConnector" priority="false" growthFocus="0.5"
+        checkEdgeCases="true" checkImportant="true" trimAll="true" biasConnect="true" recordKeep="true" rrtDebug="false">
+        <node_generation_method Method="Gauss" Number="10" Attempts="10"/>
+        <node_connection_method Method="Closest"/>
+        <evaluation_method Method="ModQuery"/>
+      </BasicPRMWithRRT>
+
+    </MPStrategies>
+  
+    <Solver mpStrategyLabel="g1b2" seed="700424386" baseFilename="g1b2/g1b2.32" vizmoDebug="true" recordKeep="true"/>
+
+  </MPProblem>
+</MotionPlanning>

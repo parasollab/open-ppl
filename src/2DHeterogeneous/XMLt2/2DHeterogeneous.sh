@@ -1,0 +1,13 @@
+./2DHeterogeneous.t2a1.sh
+./2DHeterogeneous.t2a2.sh
+./2DHeterogeneous.t2a3.sh
+./2DHeterogeneous.t2a4.sh
+./2DHeterogeneous.t2a5.sh
+./2DHeterogeneous.t2a6.sh
+./2DHeterogeneous.t2b1.sh
+./2DHeterogeneous.t2b2.sh
+./2DHeterogeneous.t2b3.sh
+./2DHeterogeneous.t2b4.sh
+./2DHeterogeneous.t2b5.sh
+./2DHeterogeneous.t2b6.sh
+./2DHeterogeneous.Toggle.sh

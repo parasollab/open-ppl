@@ -1,0 +1,22 @@
+echo $1
+cd $1
+echo "RRT"
+find -name RRT.*.stat | xargs ../filter $2 | xargs grep "Number of Nodes" | xargs ../avg Nodes 4 0
+find -name RRT.*.stat | xargs ../filter $2 | xargs grep "Total Cfg" | xargs ../avg CD 4 0
+find -name RRT.*.stat | xargs ../filter $2 | xargs grep "RRT Generation:" | xargs ../avg Time 4 1
+echo "OBRRT"
+find -name OBRRT.*.stat | xargs ../filter $2 | xargs grep "Number of Nodes" | xargs ../avg Nodes 4 0
+find -name OBRRT.*.stat | xargs ../filter $2 | xargs grep "Total Cfg" | xargs ../avg CD 4 0
+find -name OBRRT.*.stat | xargs ../filter $2 | xargs grep "RRT Generation:" | xargs ../avg Time 4 1
+echo "AdaptiveRRT1"
+find -name AdaptiveRRT1.*.stat | xargs ../filter $2 | xargs grep "Number of Nodes" | xargs ../avg Nodes 4 0
+find -name AdaptiveRRT1.*.stat | xargs ../filter $2 | xargs grep "Total Cfg" | xargs ../avg CD 4 0
+find -name AdaptiveRRT1.*.stat | xargs ../filter $2 | xargs grep "RRT Generation:" | xargs ../avg Time 4 1
+echo "AdaptiveRRT2"
+find -name AdaptiveRRT2.*.stat | xargs ../filter $2 | xargs grep "Number of Nodes" | xargs ../avg Nodes 4 0
+find -name AdaptiveRRT2.*.stat | xargs ../filter $2 | xargs grep "Total Cfg" | xargs ../avg CD 4 0
+find -name AdaptiveRRT2.*.stat | xargs ../filter $2 | xargs grep "RRT Generation:" | xargs ../avg Time 4 1
+echo "AdaptiveRRT3"
+find -name AdaptiveRRT3.*.stat | xargs ../filter $2 | xargs grep "Number of Nodes" | xargs ../avg Nodes 4 0
+find -name AdaptiveRRT3.*.stat | xargs ../filter $2 | xargs grep "Total Cfg" | xargs ../avg CD 4 0
+find -name AdaptiveRRT3.*.stat | xargs ../filter $2 | xargs grep "RRT Generation:" | xargs ../avg Time 4 1

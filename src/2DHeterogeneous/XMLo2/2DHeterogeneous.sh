@@ -1,0 +1,13 @@
+./2DHeterogeneous.o2a1.sh
+./2DHeterogeneous.o2a2.sh
+./2DHeterogeneous.o2a3.sh
+./2DHeterogeneous.o2a4.sh
+./2DHeterogeneous.o2a5.sh
+./2DHeterogeneous.o2a6.sh
+./2DHeterogeneous.o2b1.sh
+./2DHeterogeneous.o2b2.sh
+./2DHeterogeneous.o2b3.sh
+./2DHeterogeneous.o2b4.sh
+./2DHeterogeneous.o2b5.sh
+./2DHeterogeneous.o2b6.sh
+./2DHeterogeneous.OBPRM.sh

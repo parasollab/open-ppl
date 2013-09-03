@@ -1,0 +1,69 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<MotionPlanning>
+  <MPProblem>
+
+    <Environment filename="heterogeneous.env"/>
+
+    <DistanceMetrics>
+      <Euclidean label="euclidean"/>
+    </DistanceMetrics>
+
+    <ValidityCheckers>
+      <CollisionDetection label="cd1" method="RAPID"/>
+      <CollisionDetection label="cd2" method="PQP"/>
+      <AlwaysTrueValidity label="alwaysTrue"/>
+    </ValidityCheckers>
+
+    <NeighborhoodFinders>
+      <BruteForceNF label="BFNF" dmLabel="euclidean" unconnected="false" k="5"/>
+      <BruteForceNF label="BFNF50" dmLabel="euclidean" unconnected="false" k="50"/>
+      <BruteForceNF label="Nearest" dmLabel="euclidean" unconnected="false" k="1"/>
+      <BruteForceNF label="BFNFAll" dmLabel="euclidean" k="0"/>
+    </NeighborhoodFinders>
+
+    <Samplers>
+      <UniformRandomSampler label="UniformRandomFree" vcLabel="cd1"/>
+    </Samplers>
+
+    <LocalPlanners>
+      <StraightLine label="sl" binaryEvaluation="true" vcLabel="cd1"/>
+      <StraightLine label="slAlwaysTrue" binaryEvaluation="true" vcLabel="alwaysTrue"/>
+    </LocalPlanners>
+
+    <Connectors>
+      <NeighborhoodConnector label="Closest" nfLabel="BFNF" lpLabel="sl" checkIfSameCC="false" debug="false"/>
+      <NeighborhoodConnector label="ToggleRRTConnector" nfLabel="Nearest" lpLabel="sl" checkIfSameCC="true"/>
+      <NeighborhoodConnector label="ToggleConnectValid" nfLabel="BFNF" lpLabel="sl" countFailures="true" fail="1"
+        checkIfSameCC="false"/>
+      <NeighborhoodConnector label="ToggleConnect" nfLabel="BFNF" lpLabel="sl" countFailures="true" fail="1" CheckIfSameCC="false"/>
+      <NeighborhoodConnector label="LazyToggleConnect" nfLabel="BFNF50" lpLabel="sl" countFailures="true"
+        fail="1" CheckIfSameCC="false"/>
+      <NeighborhoodConnector label="ClosestAlwaysTrue" nfLabel="BFNF" lpLabel="slAlwaysTrue" checkIfSameCC="false"/>
+      <NeighborhoodConnector label="AllToAll" nfLabel="BFNFAll" lpLabel="sl" checkIfSameCC="false"/>
+    </Connectors>
+
+    <Metrics>
+      <NumNodesMetric label="NumNodes"/>
+    </Metrics>
+
+    <MapEvaluators>
+      <TrueEvaluation label="TrueEvaluator" />
+      <Query label="Query" queryFile="heterogeneous.query" pathFile="Basic.path" dmMethod="euclidean" lpMethod="sl"
+        smooth="false" smoothFile="smooth.path" debug="false" recordKeep="true">
+        <NodeConnectionMethod method="Closest"/>
+        <SmoothConnectionMethod method="AllToAll"/>
+      </Query>
+    </MapEvaluators>
+
+    <MPStrategies>
+      <BasicRRTStrategy label="SRT" delta="10" minDist="0.1" numRoots="400" m="1" growthFocus="0.01"
+        lpLabel="sl" dmLabel="euclidean" nfLabel="Nearest" vcLabel="cd1" connectorLabel="Closest"
+        gtype="UNDIRECTED_TREE" debug="false" evaluateGoal="false" growGoals="true" recordKeep="true">
+        <Evaluator label="Query"/>
+      </BasicRRTStrategy>
+    </MPStrategies>
+
+    <Solver mpStrategyLabel="SRT" seed="106361690" baseFilename="SRT/SRT.36" vizmoDebug="true" recordKeep="true"/>
+
+  </MPProblem>
+</MotionPlanning>
