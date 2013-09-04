@@ -702,8 +702,8 @@ Query<MPTraits>::MedialAxisSmooth(){
 template<class MPTraits>
 void
 Query<MPTraits>::AddToPath(LPOutput<MPTraits>* _lpOutput, CfgType& _end){
-  if(!_lpOutput->path.empty()){
-    m_path.insert(m_path.end(), _lpOutput->path.begin(), _lpOutput->path.end());
+  if(!_lpOutput->m_path.empty()){
+    m_path.insert(m_path.end(), _lpOutput->m_path.begin(), _lpOutput->m_path.end());
   }
   m_path.push_back(_end);
 }
@@ -727,13 +727,13 @@ Query<MPTraits>::CanRecreatePath(RoadmapType* _rdmp, vector<VID>& _attemptedPath
           _rdmp->GetGraph()->GetVertex(*it), _rdmp->GetGraph()->GetVertex(*(it+1)),
           col, &ci, this->GetMPProblem()->GetEnvironment()->GetPositionRes(),
           this->GetMPProblem()->GetEnvironment()->GetOrientationRes(), true, true, true)) {
-      _recreatedPath.insert(_recreatedPath.end(), ci.path.begin(), ci.path.end());
+      _recreatedPath.insert(_recreatedPath.end(), ci.m_path.begin(), ci.m_path.end());
       _recreatedPath.push_back(_rdmp->GetGraph()->GetVertex(*(it+1)));
     }
     else {
       cerr << "Error::When querying, invalid edge of graph was found between vid pair ("
         << *it << ", " << *(it+1) << ")" << " outputting error path to \"error.path\" and exiting." << endl;
-      _recreatedPath.insert(_recreatedPath.end(), ci.path.begin(), ci.path.end());
+      _recreatedPath.insert(_recreatedPath.end(), ci.m_path.begin(), ci.m_path.end());
       _recreatedPath.push_back(col);
       WritePath("error.path", _recreatedPath);
       exit(1);

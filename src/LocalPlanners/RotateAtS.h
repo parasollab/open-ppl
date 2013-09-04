@@ -23,33 +23,34 @@ class RotateAtS : public TransformAtS<MPTraits> {
 
   protected:
 
-    virtual bool IsReversible() {return fabs(this->m_sValue - 0.5) < std::numeric_limits<double>::epsilon();}
-    virtual void GetSequenceNodes(const CfgType& _c1, const CfgType& _c2, double _s,
-        vector<CfgType>& _sequence, bool _reverse = false);
+    virtual bool IsReversible() {
+      return fabs(this->m_sValue - 0.5) < std::numeric_limits<double>::epsilon();
+    }
+
+    virtual void GetSequenceNodes(const CfgType& _c1, const CfgType& _c2,
+        double _s, vector<CfgType>& _sequence, bool _reverse = false);
 };
 
 template<class MPTraits>
-RotateAtS<MPTraits>::RotateAtS(double _s):
-  TransformAtS<MPTraits>(_s) {
-    this->SetName("RotateAtS");
-  }
+RotateAtS<MPTraits>::RotateAtS(double _s) : TransformAtS<MPTraits>(_s) {
+  this->SetName("RotateAtS");
+}
 
 template<class MPTraits>
 RotateAtS<MPTraits>::RotateAtS(MPProblemType* _problem, XMLNodeReader& _node):
-  TransformAtS<MPTraits>(_problem, _node) {
-    this->SetName("RotateAtS");
-    this->m_sValue = _node.numberXMLParameter("s", true, 0.5, 0.0, 1.0, "Rotate at s value");
-
-    _node.warnUnrequestedAttributes();
-  }
+    TransformAtS<MPTraits>(_problem, _node) {
+  this->SetName("RotateAtS");
+  this->m_sValue = _node.numberXMLParameter("s", true, 0.5, 0.0, 1.0, "Rotate at s value");
+  _node.warnUnrequestedAttributes();
+}
 
 template<class MPTraits>
 RotateAtS<MPTraits>::~RotateAtS() {}
 
 template<class MPTraits>
 void
-RotateAtS<MPTraits>::GetSequenceNodes(const CfgType& _c1, const CfgType& _c2, double _s,
-    vector<CfgType>& _sequence, bool _reverse) {
+RotateAtS<MPTraits>::GetSequenceNodes(const CfgType& _c1, const CfgType& _c2,
+    double _s, vector<CfgType>& _sequence, bool _reverse) {
 
   CfgType thisCopy;
   vector<double> _v1 = _c1.GetData();

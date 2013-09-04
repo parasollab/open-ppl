@@ -211,7 +211,7 @@ LazyQuery<MPTraits>::CanRecreatePath(RoadmapType* _rdmp, vector<VID>& _attempted
         _rdmp->GetGraph()->GetVertex(*(it+1)),
         &lpOut, this->GetMPProblem()->GetEnvironment()->GetPositionRes(),
         this->GetMPProblem()->GetEnvironment()->GetOrientationRes(), false, true, false);
-    _recreatedPath.insert(_recreatedPath.end(), lpOut.path.begin(), lpOut.path.end());
+    _recreatedPath.insert(_recreatedPath.end(), lpOut.m_path.begin(), lpOut.m_path.end());
     _recreatedPath.push_back(_rdmp->GetGraph()->GetVertex(*(it+1)));
   }
 

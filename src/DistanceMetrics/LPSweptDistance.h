@@ -74,7 +74,7 @@ double LPSweptDistance<MPTraits>::Distance(Environment* _env, const CfgType& _c1
   lpMethod->IsConnected(_env, stats, dm, _c1, _c2, dummy, &lpOutput, m_positionRes, m_orientationRes, false, true);
   //lpPath does not include _c1 and _c2, so adding them manually
   vector<CfgType> cfgs(1, _c1);
-  cfgs.insert(cfgs.end(), lpOutput.path.begin(), lpOutput.path.end());
+  cfgs.insert(cfgs.end(), lpOutput.m_path.begin(), lpOutput.m_path.end());
   cfgs.push_back(_c2);
   double d = 0;
   vector<GMSPolyhedron> poly2;

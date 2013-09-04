@@ -261,9 +261,9 @@ ConnectNeighboringSurfaces<MPTraits>::Connect(RoadmapType* _rm, StatClass& _stat
 	  if(this->m_debug) cout << " sampleBtwSurfaces added nid2: " << vid2 << " pt: "<< queryPt << " surfID: " << qPtSurfID  << endl;
 
 	  LPOutput<MPTraits> lpOutput;
-	  lpOutput.edge.first.SetWeight(dist);
-	  lpOutput.edge.second.SetWeight(dist);
-	  _rm->GetGraph()->AddEdge(vid1, vid2, lpOutput.edge);
+	  lpOutput.m_edge.first.SetWeight(dist);
+	  lpOutput.m_edge.second.SetWeight(dist);
+	  _rm->GetGraph()->AddEdge(vid1, vid2, lpOutput.m_edge);
 
 	}//endif qPtOnSurf
 	else {

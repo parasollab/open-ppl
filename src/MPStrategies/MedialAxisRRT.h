@@ -167,7 +167,7 @@ MedialAxisRRT<MPTraits>::MedialAxisExtend(const CfgType& _start, const CfgType& 
     //structures
     CfgType col;
     if(lp->IsConnected(env, *stats, dm, curr, tick, col, &lpOutput, positionRes, orientationRes)){
-      pathLength += lpOutput.edge.first.GetWeight();
+      pathLength += lpOutput.m_edge.first.GetWeight();
       if(pathLength >= this->m_delta){
         if(this->m_debug) cout << "expanded past delta." << endl;
         if(_innerNodes.size() > 0){

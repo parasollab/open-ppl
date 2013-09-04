@@ -212,7 +212,7 @@ NeighborhoodConnector<MPTraits>::ConnectNeighbors(
       c1.IncStat("succConnectionAttempts", 1);
       c2.IncStat("succConnectionAttempts", 1);
       // if connection was made, add edge and record the successful connection
-      _rm->GetGraph()->AddEdge(_vid, v2, lpOutput.edge);
+      _rm->GetGraph()->AddEdge(_vid, v2, lpOutput.m_edge);
     }
     else {
       if(this->m_debug) cout << " | connection failed | failure incremented" << endl;

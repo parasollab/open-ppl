@@ -650,7 +650,7 @@ BasicRRTStrategy<MPTraits>::EvaluateGoals(){
         goalVID = rdmp->GetGraph()->AddVertex(m_goals[*i]);
       else
         goalVID = rdmp->GetGraph()->GetVID(m_goals[*i]);
-      rdmp->GetGraph()->AddEdge(closests[0].first, goalVID, lpOutput.edge);
+      rdmp->GetGraph()->AddEdge(closests[0].first, goalVID, lpOutput.m_edge);
       i = m_goalsNotFound.erase(i);
     }
     else

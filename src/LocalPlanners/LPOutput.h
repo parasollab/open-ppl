@@ -8,30 +8,31 @@ struct LPOutput {
   typedef pair<WeightType, WeightType> LPEdge;
   typedef pair<pair<CfgType, CfgType>, LPEdge> LPSavedEdge;
 
-  vector<CfgType> path;          // Path found by local planner.
-  vector<CfgType> intermediates;
-  LPEdge edge; // Contains weights of edges defined in path.
-  vector<LPSavedEdge> savedEdge;  // Failed Edge: savedEdge.second -> position failed.
+  vector<CfgType> m_path;           // Path found by local planner.
+  vector<CfgType> m_intermediates;
+  LPEdge m_edge;                    // Contains weights of edges defined in path.
+  vector<LPSavedEdge> m_savedEdge;  // Failed Edge: savedEdge.second -> position
+                                  //   failed.
 
-  void Clear(){
-    path.clear();
-    intermediates.clear();
-    edge.first.SetWeight(0);
-    edge.second.SetWeight(0);
-    savedEdge.clear();
-  }
-  
-  void SetLPLabel(string _l){
-    edge.first.SetLPLabel(_l);
-    edge.second.SetLPLabel(_l);
+  void Clear() {
+    m_path.clear();
+    m_intermediates.clear();
+    m_edge.first.SetWeight(0);
+    m_edge.second.SetWeight(0);
+    m_savedEdge.clear();
   }
 
-  void AddIntermediatesToWeights(bool _saveIntermediates){
-    if(_saveIntermediates){
-      edge.first.SetIntermediates(intermediates);
-      vector<CfgType> tmp = intermediates;
+  void SetLPLabel(string _l) {
+    m_edge.first.SetLPLabel(_l);
+    m_edge.second.SetLPLabel(_l);
+  }
+
+  void AddIntermediatesToWeights(bool _saveIntermediates) {
+    if(_saveIntermediates) {
+      m_edge.first.SetIntermediates(m_intermediates);
+      vector<CfgType> tmp = m_intermediates;
       reverse(tmp.begin(), tmp.end());
-      edge.second.SetIntermediates(tmp);
+      m_edge.second.SetIntermediates(tmp);
     }
   }
 };

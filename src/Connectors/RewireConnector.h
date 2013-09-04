@@ -127,7 +127,7 @@ RewireConnector<MPTraits>::ConnectNeighbors(RoadmapType* _rm, StatClass& _stats,
 
   // Found optimal path from neighbors
   if(vmin != parent) {
-    _rm->GetGraph()->AddEdge(_vid, vmin, minlpOutput.edge);
+    _rm->GetGraph()->AddEdge(_vid, vmin, minlpOutput.m_edge);
     vi->property().SetStat("Parent", vmin);
     CfgRef cfg1 = _rm->GetGraph()->GetVertex(parent);
     CfgRef cfg2 = _rm->GetGraph()->GetVertex(_vid);
@@ -166,7 +166,7 @@ RewireConnector<MPTraits>::ConnectNeighbors(RoadmapType* _rm, StatClass& _stats,
         _rm->GetGraph()->delete_edge(neighbor, parent);
         VDRemoveEdge(cfg2, cfg1);
         // Add edge to optimal path to neighbor
-        _rm->GetGraph()->AddEdge(_vid, neighbor, lpOutput.edge);
+        _rm->GetGraph()->AddEdge(_vid, neighbor, lpOutput.m_edge);
         vi->property().SetStat("Parent", _vid);
         if(this->m_debug) cout << "Added Neighbor Edge" << endl;
       }

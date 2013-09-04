@@ -271,8 +271,8 @@ ResamplePointStrategy<MPTraits>::FindNeighbors(CfgType& _previous, CfgType& _cur
         cvid = rdmp->GetGraph()->AddVertex(c);// the vertex did not exist
 
       if(firstConnectFlag && secondConnectFlag) {
-        rdmp->GetGraph()->AddEdge(rdmp->GetGraph()->GetVID(_previous), cvid, lpOutput.edge);
-        rdmp->GetGraph()->AddEdge(cvid, rdmp->GetGraph()->GetVID(_next), lpOutput.edge);
+        rdmp->GetGraph()->AddEdge(rdmp->GetGraph()->GetVID(_previous), cvid, lpOutput.m_edge);
+        rdmp->GetGraph()->AddEdge(cvid, rdmp->GetGraph()->GetVID(_next), lpOutput.m_edge);
         result.push_back(pair<CfgType,double>(c, newConfigurationWeight));
         numOfSamples--;
       }
