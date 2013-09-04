@@ -317,7 +317,7 @@ BasicPRM<MPTraits>::ConnectNodes(InputIterator _first, InputIterator _last) {
 
   for(; _first != _last; _first++) {
     VID vid = this->GetMPProblem()->GetRoadmap()->GetGraph()->GetVID(_first);
-    if(CheckNarrowPassageSample(vid))
+    if(this->CheckNarrowPassageSample(vid))
         break;
   }
 

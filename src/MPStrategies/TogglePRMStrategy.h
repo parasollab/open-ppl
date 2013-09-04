@@ -140,7 +140,7 @@ TogglePRMStrategy<MPTraits>::Run() {
         allNodesVID.push_back(vid);
         Connect(make_pair("valid", vid), allNodesVID, queue);
 
-        CheckNarrowPassageSample(vid);
+        this->CheckNarrowPassageSample(vid);
       }
       else { // Invalid, add to obstacle roadmap. Toggle validity while connecting
         VID vid = this->GetMPProblem()->GetBlockRoadmap()->GetGraph()->AddVertex(cfg);
