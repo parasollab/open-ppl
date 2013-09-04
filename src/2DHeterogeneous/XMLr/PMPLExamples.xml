@@ -109,6 +109,13 @@
         debug="false" evaluateGoal="true" recordKeep="true">
       </BasicRRTStrategy>
 
+      <SRTStrategy label="SRT" delta="10" minDist="0.01"
+        lpLabel="sl" dmLabel="euclidean" nfLabel="Nearest" vcLabel="cd1"
+        query="narrow.query" gtype="UNDIRECTED_GRAPH" debug="true" recordKeep="true"
+        samples="400" expansions="30" closeCent="8" randCent="5" closePairs="20" connIter="30">
+        <Evaluator label="ModQuery"/>
+      </SRTStrategy>
+
       <!-- Toggle PRM --> 
       <TogglePRMStrategy label="TogglePRM" priority="true" vcLabel="cd1">
         <Sampler methodLabel="UniformRandomFree" number="10" attempts="1"/>

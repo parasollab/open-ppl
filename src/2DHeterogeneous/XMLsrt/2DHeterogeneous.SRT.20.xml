@@ -1,16 +1,17 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <MotionPlanning>
   <MPProblem>
-
+    
     <Environment filename="heterogeneous.env"/>
 
     <DistanceMetrics>
       <Euclidean label="euclidean"/>
-    </DistanceMetrics>
+    </DistanceMetrics>    
 
-    <ValidityCheckers>
+    <ValidityCheckers>    
       <CollisionDetection label="cd1" method="RAPID"/>
       <CollisionDetection label="cd2" method="PQP"/>
+      <NegateValidity label="nv" vcLabel="cd1"/>
       <AlwaysTrueValidity label="alwaysTrue"/>
     </ValidityCheckers>
 
@@ -20,9 +21,22 @@
       <BruteForceNF label="Nearest" dmLabel="euclidean" unconnected="false" k="1"/>
       <BruteForceNF label="BFNFAll" dmLabel="euclidean" k="0"/>
     </NeighborhoodFinders>
-
+    
     <Samplers>
+      <UniformRandomSampler label="UniformRandom" vcLabel="alwaysTrue"/>
       <UniformRandomSampler label="UniformRandomFree" vcLabel="cd1"/>
+      <ObstacleBasedSampler label="OBPRM" vcLabel="cd1" useBBX="false" pointSelection="cspace" 
+        dmLabel="euclidean" stepSize="0.25" nShellsColl="0" nShellsFree="1" debug="false"/>
+      <GaussianSampler label="Gauss" vcLabel="cd1" d="0.5" dmLabel="euclidean" useBBX="false"/>
+      <BridgeTestSampler label="Bridge" vcLabel="cd1" d="0.2" dmLabel="euclidean" useBBX="true"/>
+      <MedialAxisSampler label="MAPRM" vcLabel="cd2" dmLabel="euclidean" 
+        clearanceType="exact" penetrationType="exact"
+        useBBX="true" debug="false" positional="true" 
+        epsilon="0.01" historyLength="100"/>
+      <MixSampler label="MixSampler">
+        <Sampler label="UniformRandomFree" p="0.8"/>
+        <Sampler label="UniformRandom" p="0.2"/>
+      </MixSampler>
     </Samplers>
 
     <LocalPlanners>
@@ -53,16 +67,57 @@
         <NodeConnectionMethod method="Closest"/>
         <SmoothConnectionMethod method="AllToAll"/>
       </Query>
+      <LazyQuery label="LazyQuery" queryFile="heterogeneous.query" pathFile="Basic.path" smoothFile="smooth.path"
+        lpMethod="sl" dmMethod="euclidean" vcMethod="cd1" graphSearchAlg="astar"
+        smooth="false" deleteNodes="false" debug="false" recordKeep="true" numEnhance="0" d="0.5">
+        <NodeConnectionMethod method="ClosestAlwaysTrue"/>
+        <SmoothConnectionMethod method="AllToAll"/>
+        <Resolution mult="27"/>
+        <Resolution mult="16"/>
+        <Resolution mult="1"/>
+      </LazyQuery>
+      <LazyToggleQuery label="LazyToggleQuery" queryFile="heterogeneous.query" pathFile="Basic.path" smoothFile="smooth.path"
+        lpMethod="sl" dmMethod="euclidean" vcMethod="cd1" graphSearchAlg="astar"
+        smooth="false" deleteNodes="false" iterative="true" debug="false" recordKeep="true">
+        <NodeConnectionMethod method="ClosestAlwaysTrue"/>
+        <ToggleConnectionMethod method="LazyToggleConnect"/>
+        <Resolution mult="27"/>
+        <Resolution mult="16"/>
+        <Resolution mult="1"/>
+      </LazyToggleQuery>
+      <PrintMapEvaluation label="PrintMap" base_name="Basic"/>
+      <ConditionalEvaluator label="NodesEval" metric_method="NumNodes" value="100" operator=">=" />
+      <ConditionalEvaluator label="FreqNodeEval" metric_method="NumNodes" value="50" operator="%"/>
+      <ComposeEvaluator label="ModQuery" operator="and">
+        <Evaluator label="FreqNodeEval"/>
+        <Evaluator label="Query"/>
+      </ComposeEvaluator>
     </MapEvaluators>
 
     <MPStrategies>
-      <BasicRRTStrategy label="SRT" delta="10" minDist="0.1" numRoots="400" m="1" growthFocus="0.01"
-        lpLabel="sl" dmLabel="euclidean" nfLabel="Nearest" vcLabel="cd1" connectorLabel="Closest"
-        gtype="UNDIRECTED_TREE" debug="false" evaluateGoal="false" growGoals="true" recordKeep="true">
-        <Evaluator label="Query"/>
-      </BasicRRTStrategy>
-    </MPStrategies>
+      <!-- Basic PRM where num samples is based on Number -->
+      <BasicPRM label="OBPRM" recordKeep="true">
+        <node_generation_method Method="OBPRM" Number="50" Attempts="10"/>
+        <node_connection_method Method="Closest"/>
+        <evaluation_method Method="ModQuery"/>
+      </BasicPRM>
 
+      <!-- BasicRRT -->
+      <BasicRRTStrategy label="RRT" delta="10.0" minDist="0.01"
+        numRoots="1" m="1" growthFocus="0.01" lpLabel="sl" dmLabel="euclidean"
+        nfLabel="Nearest" vcLabel="cd1" query="heterogeneous.query" gtype="UNDIRECTED_TREE"
+        debug="false" evaluateGoal="true" recordKeep="true">
+      </BasicRRTStrategy>
+
+      <SRTStrategy label="SRT" delta="10" minDist="0.01"
+        lpLabel="sl" dmLabel="euclidean" nfLabel="Nearest" vcLabel="cd1"
+        query="heterogeneous.query" gtype="UNDIRECTED_GRAPH" debug="false" recordKeep="true"
+        samples="100" expansions="20" closeCent="15" randCent="8" closePairs="20" connIter="30">
+        <Evaluator label="ModQuery"/>
+      </SRTStrategy>
+
+    </MPStrategies>
+  
     <Solver mpStrategyLabel="SRT" seed="808052927" baseFilename="SRT/SRT.20" vizmoDebug="true" recordKeep="true"/>
 
   </MPProblem>

@@ -167,7 +167,9 @@ SRTStrategy<MPTraits>::Run() {
 
   if(this->m_recordKeep) stats->StartClock("SRT Generation");
 
+  int iteration = 1;
   do {
+    cout << "Starting iteration " << iteration++ << endl;
     //grow "k" randomly placed trees for "m" iterations
     GenerateTrees();
     ExpandTrees();

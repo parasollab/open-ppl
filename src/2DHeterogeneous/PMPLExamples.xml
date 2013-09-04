@@ -377,11 +377,12 @@
       </BasicPRMWithRRT>
 
       <!-- SRT -->
-      <BasicRRTStrategy label="SRT" delta="10" minDist="0.1" numRoots="1000" m="1" growthFocus="0.01"
-        lpLabel="sl" dmLabel="euclidean" nfLabel="Nearest" vcLabel="cd1" connectorLabel="Closest"
-        gtype="UNDIRECTED_TREE" debug="false" evaluateGoal="false" growGoals="true">
-        <Evaluator label="Query"/>
-      </BasicRRTStrategy>
+      <SRTStrategy label="SRT" delta="" minDist="0.01"
+        lpLabel="sl" dmLabel="euclidean" nfLabel="Nearest" vcLabel="cd1"
+        query="narrow.query" gtype="UNDIRECTED_GRAPH" debug="true" recordKeep="true"
+        samples="5" expansions="10" closeCent="1" randCent="2" closePairs="2" connIter="5">
+        <Evaluator label="ModQuery"/>
+      </SRTStrategy>
 
     </MPStrategies>
   

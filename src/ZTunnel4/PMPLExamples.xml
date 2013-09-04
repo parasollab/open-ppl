@@ -65,78 +65,20 @@
     </MapEvaluators>
 
     <MPStrategies>
-      
-      <BasicPRM label="Uniform" recordKeep="true">
-        <node_generation_method Method="UniformRandomFree" Number="10" Attempts="10"/>
-        <node_connection_method Method="Closest"/>
-        <evaluation_method Method="ModQuery"/>
-      </BasicPRM>
-
-      <BasicPRM label="Gauss" recordKeep="true">
-        <node_generation_method Method="Gauss" Number="10" Attempts="10"/>
-        <node_connection_method Method="Closest"/>
-        <evaluation_method Method="ModQuery"/>
-      </BasicPRM>
-
-      <BasicPRM label="OBPRM" recordKeep="true">
-        <node_generation_method Method="OBPRM" Number="10" Attempts="10"/>
-        <node_connection_method Method="Closest"/>
-        <evaluation_method Method="ModQuery"/>
-      </BasicPRM>
-
-      <TogglePRMStrategy label="Toggle" priority="true" vcLabel="cd4">
-        <Sampler methodLabel="UniformRandomFree" number="10" attempts="10"/>
-        <Connector methodLabel="ToggleConnectValid"/>
-        <ColConnector methodLabel="ToggleConnect"/>
-        <Evaluator methodLabel="ModQuery"/>
-      </TogglePRMStrategy>
-
-      <BasicRRTStrategy label="RRT" delta="5" minDist="0.05" 
+      <BasicRRTStrategy label="RRT" delta="5" minDist="0.05"
         numRoots="1" m="1" growthFocus="0.01" lpLabel="sl" dmLabel="euclidean"
         nfLabel="BFNF" vcLabel="cd4" query="z_tunnel.query" gtype="UNDIRECTED_TREE" debug="false" evaluateGoal="true"
         recordKeep="true">
       </BasicRRTStrategy>
-
-      <TogglePRMStrategyWithRRT label="Toggle_RRT" maxNPCCSize="3" initSamples="20" maxRRTSize="500" attemptRatio="200"
-        delta="5" minDist="0.1" vcLabel="cd4" nfLabel="BFNF" nfVertexLabel="Nearest" trimDepth="2"
-        dmLabel="euclidean" ncLabel="ToggleRRTConnector" priority="false" growthFocus="0.25"
-        checkEdgeCases="true" checkImportant="true" trimAll="true" biasConnect="true" recordKeep="true" rrtDebug="false">
-        <Sampler methodLabel="UniformRandomFree" number="10" attempts="10"/>
-        <Connector methodLabel="ToggleConnectValid"/>
-        <ColConnector methodLabel="ToggleConnect"/>
-        <Evaluator methodLabel="ModQuery"/>
-      </TogglePRMStrategyWithRRT>
-
-      <BasicPRMWithRRT label="Gauss_RRT" maxNPCCSize="3" initSamples="20" maxRRTSize="500" attemptRatio="200"
-        delta="5" minDist="0.1" vcLabel="cd4" nfLabel="BFNF" nfVertexLabel="Nearest" trimDepth="2"
-        dmLabel="euclidean" ncLabel="ToggleRRTConnector" priority="false" growthFocus="0.25"
-        checkEdgeCases="true" checkImportant="true" trimAll="true" biasConnect="true" recordKeep="true" rrtDebug="true">
-        <node_generation_method Method="Gauss" Number="10" Attempts="10"/>
-        <node_connection_method Method="Closest"/>
-        <evaluation_method Method="ModQuery"/>
-      </BasicPRMWithRRT>
-
-      <BasicPRMWithRRT label="OBPRM_RRT" maxNPCCSize="3" initSamples="20" maxRRTSize="500" attemptRatio="200"
-        delta="5" minDist="0.1" vcLabel="cd4" nfLabel="BFNF" nfVertexLabel="Nearest" trimDepth="2"
-        dmLabel="euclidean" ncLabel="ToggleRRTConnector" priority="false" growthFocus="0.25"
-        checkEdgeCases="true" checkImportant="true" trimAll="true" biasConnect="true" recordKeep="true" rrtDebug="false">
-        <node_generation_method Method="OBPRM" Number="10" Attempts="10"/>
-        <node_connection_method Method="Closest"/>
-        <evaluation_method Method="ModQuery"/>
-      </BasicPRMWithRRT>
-
-      <BasicPRMWithRRT label="Uniform_RRT" maxNPCCSize="3" initSamples="20" maxRRTSize="500" attemptRatio="200"
-        delta="5" minDist="0.1" vcLabel="cd4" nfLabel="BFNF" nfVertexLabel="Nearest" trimDepth="2"
-        dmLabel="euclidean" ncLabel="ToggleRRTConnector" priority="false" growthFocus="0.25"
-        checkEdgeCases="true" checkImportant="true" trimAll="true" biasConnect="true" recordKeep="true" rrtDebug="false">
-        <node_generation_method Method="UniformRandomFree" Number="10" Attempts="10"/>
-        <node_connection_method Method="Closest"/>
-        <evaluation_method Method="ModQuery"/>
-      </BasicPRMWithRRT>
-
+      <SRTStrategy label="SRT" delta="5" minDist="0.1"
+        lpLabel="sl" dmLabel="euclidean" nfLabel="Nearest" vcLabel="cd4"
+        query="narrow.query" gtype="UNDIRECTED_GRAPH" debug="false" recordKeep="true"
+        samples="200" expansions="10" closeCent="15" randCent="8" closePairs="20" connIter="100">
+        <Evaluator label="ModQuery"/>
+      </SRTStrategy>
     </MPStrategies>
-  
-    <Solver mpStrategyLabel="Gauss_RRT" seed="120000" baseFilename="Gauss_RRT" vizmoDebug="true" recordKeep="true"/>
+
+    <Solver mpStrategyLabel="SRT" seed="0" baseFilename="SRT/SRT" vizmoDebug="true" recordKeep="true"/>
 
   </MPProblem>
 </MotionPlanning>
