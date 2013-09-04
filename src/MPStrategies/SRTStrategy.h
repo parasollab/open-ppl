@@ -111,7 +111,6 @@ SRTStrategy<MPTraits>::ParseXML(XMLNodeReader& _node) {
   //optionally read in a query and create a Query object.
   string query = _node.stringXMLParameter("query", false, "", "Query Filename");
   if(!query.empty()) {
-    cout << "New query is created" << endl;
     m_query = new Query<MPTraits>(query);
   }
 }
@@ -144,7 +143,6 @@ SRTStrategy<MPTraits>::Initialize(){
   if(m_query) {
     vector<CfgType>& queryCfgs = m_query->GetQuery();
     typedef typename vector<CfgType>::iterator CIT;
-    cout << queryCfgs.size() << endl;
     for(CIT cit = queryCfgs.begin(); cit != queryCfgs.end(); cit++){
       VID v = this->GetMPProblem()->GetRoadmap()->GetGraph()->AddVertex(*cit);
       m_trees[v] = Tree(*cit, vector<VID>(1, v));
@@ -257,8 +255,7 @@ SRTStrategy<MPTraits>::ExpandTrees() {
 
   typedef typename Trees::iterator TIT;
   for(TIT tit = m_trees.begin(); tit!=m_trees.end(); ++tit) {
-
-    for(size_t i = 0; i < m_numExpansions; ++i) {
+    while(tit->second.second.size() < m_numExpansions) {
       CfgType dir = this->SelectDirection();
       VID recent = this->ExpandTree(tit->first, dir);
     }
@@ -416,10 +413,11 @@ SRTStrategy<MPTraits>::RRTConnect(VID _t1, VID _t2) {
     if(v != INVALID_VID) {
       //greedily extend t2 towards t1
       CfgType qnew = this->GetMPProblem()->GetRoadmap()->GetGraph()->GetVertex(v);
-      VID v2;
-      do
+      VID v2 = v, v2repeated;
+      do {
+        v2repeated = v2;
         v2 = ExpandTree(_t2, qnew);
-      while(v2 != INVALID_VID && v2 != v);
+      } while(v2 != INVALID_VID && v2 != v && v2 != v2repeated);
       if(v2 == v)
         return true;
     }
