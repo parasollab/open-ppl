@@ -113,7 +113,7 @@ SurfaceLP<MPTraits>::IsConnected(Environment* _env, StatClass& _stats,
       CfgType tmpTick = tick;
       tmpTick.SetSurfaceID(sid);//set SurfaceID to test if 2D collision is okay
       if( sid == BASE_SURFACE ) {
-        if( vcm->IsValid(tmpTick, _env, _stats, tmpCDInfo, &_callee) ) {
+      if( vcm->IsValid(tmpTick, _env, _stats, tmpCDInfo, _callee) ) {
           if( fabs(tick.GetHeight())<m_acceptableHeightDiff ) {
             //this is valid, -1 should have y-value 0
             foundValidSurfForTick = true;

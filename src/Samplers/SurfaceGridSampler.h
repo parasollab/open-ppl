@@ -103,7 +103,7 @@ class SurfaceGridSampler : public SamplerMethod<MPTraits> {
                 tmp.SetPos(pt);
                 tmp.SetHeight(tH);
                 //Validate surface cfg
-                bool isValid = vcp->IsValid(tmp, _env, _stats, cdInfo, &callee);
+                bool isValid = vcp->IsValid(tmp, _env, _stats, cdInfo, callee);
                 if(isValid){
                   //Add valid surface cfg
                   _cfgOut.push_back(tmp);
@@ -127,7 +127,7 @@ class SurfaceGridSampler : public SamplerMethod<MPTraits> {
               tmp.SetPos(pt);
               //Height is 0 for this points
               tmp.SetHeight(0);
-              bool isValid = vcp->IsValid(tmp, _env, _stats, cdInfo, &callee);
+              bool isValid = vcp->IsValid(tmp, _env, _stats, cdInfo, callee);
               if(isValid){
                 _cfgOut.push_back(tmp);
               }else{
