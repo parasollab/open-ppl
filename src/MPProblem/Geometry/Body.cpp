@@ -255,33 +255,27 @@ Body::IsAdjacent(shared_ptr<Body> _otherBody) {
 
 bool
 Body::IsWithinI(shared_ptr<Body> _otherBody, int _i){
-  if(*this == *(_otherBody.get()))
-    return true;
-  if(_i==0){
-    return false;
-  }
+  //Visit the recursive, flood-fill based helper function.
   return IsWithinIHelper(this,_otherBody.get(),_i,NULL);
 }
 
 bool
 Body::IsWithinIHelper(Body* _body1, Body* _body2, int _i, Body* _prevBody){
-  if(*_body1 == *_body2){
+  if(_body1 == _body2 || *_body1 == *_body2){
     return true;
   }
   if(_i==0){
     return false;
   }
+
   typedef vector<Connection>::iterator CIT;
   for(CIT C = _body1->m_forwardConnection.begin(); C != _body1->m_forwardConnection.end(); ++C)
-    if(IsWithinIHelper(C->GetNextBody().get(), _body2, _i-1, _body1) )
+    Body* next = C->GetNextBody().get();
+    if(next != _prevBody && IsWithinIHelper(next, _body2, _i-1, _body1))
       return true;
   for(CIT C =_body1->m_backwardConnection.begin(); C != _body1->m_backwardConnection.end(); ++C) {
-    shared_ptr<Body> prev = C->GetPreviousBody();
-    for(CIT C2 = prev->m_forwardConnection.begin(); C2 != prev->m_forwardConnection.end(); ++C2){
-      if(*(C2->GetNextBody()) == *_body2)
-        return true;
-    }
-    if(IsWithinIHelper(C->GetPreviousBody().get(),_body2,_i-1, _body1) )
+    Body* prev = C->GetPreviousBody().get();
+    if(prev != _prevBody && IsWithinIHelper(prev, _body2, _i-1, _body1))
       return true;
   }
   return false;
