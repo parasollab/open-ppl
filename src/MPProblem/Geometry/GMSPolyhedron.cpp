@@ -26,6 +26,24 @@ GMSPolygon::operator==(const GMSPolygon& _p) const{
     (m_area == _p.m_area);
 }
 
+pair<int, int>
+GMSPolygon::CommonEdge(const GMSPolygon& _p) {
+  int count = 0;
+  pair<int, int> edgeID(-1, -1);
+  for(int i=0; i<m_vertexList.size(); i++) {
+    for(int j=0; j<m_vertexList.size(); j++) {
+      if(m_vertexList[i] == _p.m_vertexList[j]) {
+        count++;
+        if(edgeID.first == -1)
+          edgeID.first = m_vertexList[i];
+        else
+          edgeID.second = m_vertexList[i];
+      }
+    }
+  }
+  return edgeID;
+}
+
 //End Polygon begin Polyhedron implementation
 GMSPolyhedron::GMSPolyhedron(): m_area(0), m_maxRadius(0), m_minRadius(0), m_boundaryBuilt(false), m_force2DBoundary(false){
 }

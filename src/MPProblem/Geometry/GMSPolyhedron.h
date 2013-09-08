@@ -26,6 +26,9 @@ class GMSPolygon {
 
     bool operator==(const GMSPolygon& _p) const;
 
+    ///Find the common edge between two polygons
+    pair<int, int> CommonEdge(const GMSPolygon& _p);
+
     vector<int> m_vertexList; // A list of index, which points to vertex in Polyhedron
     Vector3d m_normal; // The normal vector of this polygon 
     double m_area; // Size of this polygon

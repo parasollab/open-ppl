@@ -46,6 +46,7 @@
 #include "Samplers/SurfaceSampler.h"
 #include "Samplers/UniformObstacleBasedSampler.h"
 #include "Samplers/UniformRandomSampler.h"
+#include "Samplers/UniformMedialAxisSampler.h"
 
 //local planner includes
 #include "LocalPlanners/HierarchicalLP.h"
@@ -172,7 +173,8 @@ struct MPTraits{
     ObstacleBasedSampler<MPTraits>,
     SimilarStructureSampler<MPTraits>,
     UniformObstacleBasedSampler<MPTraits>,
-    UniformRandomSampler<MPTraits>
+    UniformRandomSampler<MPTraits>,
+    UniformMedialAxisSampler<MPTraits>
       > SamplerMethodList;
   
   //types of local planners available in our world
