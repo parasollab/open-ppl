@@ -5,13 +5,6 @@
 #include "MetricUtils.h"
 #include "ValidityCheckers/CollisionDetection/CDInfo.h"
 
-struct ClearanceStats{
-  double m_avgClearance;
-  double m_minClearance;
-  double m_clearanceVariance;
-  double m_pathLength;
-};
-
 //used to encapsulate all the fields and functions necessary for clearance and penetration calculations
 template<class MPTraits>
 class ClearanceUtility : public MPBaseObject<MPTraits> {
@@ -70,6 +63,7 @@ class ClearanceUtility : public MPBaseObject<MPTraits> {
     ClearanceStats RoadmapClearance();
     
     ClearanceStats PathClearance(VID _startVID, VID _goalVID);  
+    ClearanceStats PathClearance(vector<VID>& _path);
 
     double MinEdgeClearance(const CfgType& _c1, const CfgType& _c2, const WeightType& _weight);
   protected:
@@ -627,6 +621,50 @@ ClearanceUtility<MPTraits>::PathClearance(VID _startVID, VID _goalVID){
   }
   stats.m_clearanceVariance = varSum / clearanceVec.size();
   stats.m_pathLength = pathLength;
+  return stats;
+}
+
+template<class MPTraits>
+ClearanceStats 
+ClearanceUtility<MPTraits>::PathClearance(vector<VID>& _path){
+  if(_path.empty())
+    return ClearanceStats();
+
+  GraphType* g = this->GetMPProblem()->GetRoadmap()->GetGraph();
+  Environment* env = this->GetMPProblem()->GetEnvironment();
+  DistanceMetricPointer dm = this->GetMPProblem()->GetDistanceMetric(m_dmLabel);
+
+  typedef typename GraphType::EI EI;
+  typedef typename GraphType::VI VI;
+  typedef typename GraphType::EID EID;
+
+  vector<double> clearanceVec;
+  double pathLength = 0;
+
+  typedef typename vector<VID>::iterator VIT;
+  for(VIT vit = _path.begin(); (vit+1)!=_path.end(); ++vit){
+    EI ei;
+    VI vi;
+    EID ed(*vit, *(vit+1));
+    g->find_edge(ed, vi, ei);
+    WeightType weight = (*ei).property();
+    pathLength += weight.Weight();
+
+    double currentClearance = MinEdgeClearance(g->GetVertex((*ei).source()), g->GetVertex((*ei).target()), weight);
+    clearanceVec.push_back(currentClearance);
+  }
+
+  // min, max, avg, variance of graph edge variances
+  ClearanceStats stats;
+  stats.m_pathLength = pathLength;
+  stats.m_minClearance = *min_element(clearanceVec.begin(), clearanceVec.end());
+  stats.m_avgClearance = accumulate(clearanceVec.begin(), clearanceVec.end(), 0.0) / (double)clearanceVec.size();
+  double varSum = 0;
+  for(vector<double>::iterator it = clearanceVec.begin(); it != clearanceVec.end(); it++){
+    varSum += pow(((*it) - stats.m_avgClearance), 2);
+  }
+  stats.m_clearanceVariance = varSum / (double)clearanceVec.size();
+
   return stats;
 }
 

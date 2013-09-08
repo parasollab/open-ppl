@@ -12,6 +12,13 @@
 
 using namespace std;
 
+struct ClearanceStats{
+  double m_avgClearance;
+  double m_minClearance;
+  double m_clearanceVariance;
+  double m_pathLength;
+};
+
 /**Provide timing information.
  *This class is used to measure the running time between StartClock and 
  *StopClock. Client side could provide clock name, when StopClock is called 
@@ -174,6 +181,10 @@ class StatClass {
     double m_avgCCSize;
     double m_sigmaCCSize;
 
+    // Clearance Results
+    ClearanceStats m_roadmapClearance;
+    ClearanceStats m_pathClearance;
+
   protected:
     map<string, unsigned long int> m_numCollDetCalls;
 
@@ -327,6 +338,15 @@ StatClass::PrintAllStats(ostream& _os, RoadmapType* _rmap, int _numCCs) {
   for(CIT cit =m_clockMap.begin(); cit!= m_clockMap.end(); cit++) {
     _os << setw(40) << cit->first << setw(40) << cit->second.GetSeconds() << endl;
   }
+
+  _os << "\nRoadmapAvgClr " << m_roadmapClearance.m_avgClearance
+      << "\nRoadmapMinClr " << m_roadmapClearance.m_minClearance
+      << "\nRoadmapVarClr " << m_roadmapClearance.m_clearanceVariance
+      << "\nPathAvgClr    " << m_pathClearance.m_avgClearance
+      << "\nPathMinClr    " << m_pathClearance.m_minClearance
+      << "\nPathVarClr    " << m_pathClearance.m_clearanceVariance
+      << "\nPathLength    " << m_pathClearance.m_pathLength
+      << endl;
 
 #endif
 

@@ -87,6 +87,7 @@ class Query : public MapEvaluatorMethod<MPTraits> {
 
     vector<VID> m_pathVIDs;     // Stores path nodes for easy reference during smoothing
     vector<VID> m_toBeDeleted;  // Nodes to be deleted if m_deleteNodes is enabled.
+    ClearanceUtility<MPTraits> m_clearanceUtility;
 };
 
 // Heuristic for A* graph search
@@ -120,6 +121,7 @@ Query<MPTraits>::Query(bool _deleteNodes, string _searchAlg, string _pathFile, s
   m_maSmooth(_maSmooth){
     this->SetName("Query");
     SetSearchAlgViaString(_searchAlg);
+    m_clearanceUtility = ClearanceUtility<MPTraits>(this->GetMPProblem());
 }
 
 // Reads in query from a file
@@ -127,6 +129,7 @@ template<class MPTraits>
 Query<MPTraits>::Query(string _queryFileName) {
   Initialize();
   ReadQuery(_queryFileName);
+  m_clearanceUtility = ClearanceUtility<MPTraits>(this->GetMPProblem());
 }
 
 // Uses start/goal to set up query
@@ -135,6 +138,7 @@ Query<MPTraits>::Query(CfgType _start, CfgType _goal) {
   Initialize();
   m_query.push_back(_start);
   m_query.push_back(_goal);
+  m_clearanceUtility = ClearanceUtility<MPTraits>(this->GetMPProblem());
 }
 
 // Constructor with XML
@@ -146,11 +150,13 @@ Query<MPTraits>::Query(MPProblemType* _problem, XMLNodeReader& _node, bool _warn
     if(_warn)
       _node.warnUnrequestedAttributes();
     ReadQuery(m_queryFile);
+    m_clearanceUtility = ClearanceUtility<MPTraits>(_problem, _node);
   }
 
 template<class MPTraits>
 void
 Query<MPTraits>::ParseXML(XMLNodeReader& _node) {
+  m_clearanceUtility = ClearanceUtility<MPTraits>(this->GetMPProblem(), _node);
   m_queryFile = _node.stringXMLParameter("queryFile", true, "", "Query filename");
   m_pathFile = _node.stringXMLParameter("pathFile", false, "", "Query output path filename");
   m_smooth = _node.boolXMLParameter("smooth", false, false, "Whether or not to smooth the path");
@@ -391,6 +397,7 @@ Query<MPTraits>::PerformQuery(CfgType _start, CfgType _goal, RoadmapType* _rdmp)
       if(this->m_recordKeep)
         stats->StopClock("Query Graph Search");
 #endif 
+      stats->m_pathClearance = m_clearanceUtility.PathClearance(shortestPath);
       if(this->m_debug)
         cout << "*Q* Start(" << shortestPath[1] << ") and Goal(" << shortestPath[shortestPath.size()-2] 
           << ") seem connected to same ccIt[" << distance(ccsBegin, ccIt)+1  << "]!" << endl;

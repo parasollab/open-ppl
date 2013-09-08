@@ -49,6 +49,7 @@ class BasicPRM : public MPStrategyMethod<MPTraits> {
    string m_vcLabel;
    string m_inputMapFilename;
    Start m_startAt;
+   ClearanceUtility<MPTraits> m_clearanceUtility;
 
  private:
    template <typename OutputIterator>
@@ -68,6 +69,7 @@ BasicPRM<MPTraits>::BasicPRM(const map<string, pair<int, int> >& _samplerLabels,
   m_evaluatorLabels(_evaluatorLabels), m_currentIteration(0), m_vcLabel(_vcLabel), 
   m_inputMapFilename(_inputMapFilename), m_startAt(_startAt){
     this->SetName("BasicPRM");
+    m_clearanceUtility = ClearanceUtility<MPTraits>(this->GetMPProblem());
   }
 
 template<class MPTraits>
@@ -76,6 +78,7 @@ BasicPRM<MPTraits>::BasicPRM(typename MPTraits::MPProblemType* _problem, XMLNode
   m_inputMapFilename(""), m_startAt(NODE_GENERATION){
     this->SetName("BasicPRM");
     ParseXML(_node);
+    m_clearanceUtility = ClearanceUtility<MPTraits>(_problem, _node);
   }
 
 template<class MPTraits>
@@ -252,6 +255,7 @@ BasicPRM<MPTraits>::Run(){
   }
 
   if(this->m_debug) cout<<"\nEnd Running BasicPRM::"<<endl;
+  stats->m_roadmapClearance = m_clearanceUtility.RoadmapClearance();
 }
 
 template<class MPTraits>
