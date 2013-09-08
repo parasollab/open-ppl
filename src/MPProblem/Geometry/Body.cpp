@@ -269,10 +269,11 @@ Body::IsWithinIHelper(Body* _body1, Body* _body2, int _i, Body* _prevBody){
   }
 
   typedef vector<Connection>::iterator CIT;
-  for(CIT C = _body1->m_forwardConnection.begin(); C != _body1->m_forwardConnection.end(); ++C)
+  for(CIT C = _body1->m_forwardConnection.begin(); C != _body1->m_forwardConnection.end(); ++C) {
     Body* next = C->GetNextBody().get();
     if(next != _prevBody && IsWithinIHelper(next, _body2, _i-1, _body1))
       return true;
+  }
   for(CIT C =_body1->m_backwardConnection.begin(); C != _body1->m_backwardConnection.end(); ++C) {
     Body* prev = C->GetPreviousBody().get();
     if(prev != _prevBody && IsWithinIHelper(prev, _body2, _i-1, _body1))
