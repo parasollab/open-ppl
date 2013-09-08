@@ -32,7 +32,7 @@ double GRand(bool _reset) {
       rsq = v1*v1 + v2*v2;
     } while (rsq >= 1.0 || rsq == 0.0);
     double fac = sqrt(-2.0*log(rsq)/rsq);
-    //Generates two gaussians and returns one and stores the other for another call 
+    //Generates two gaussians and returns one and stores the other for another call
     gset = v1*fac;
     hasNext = true;
     return v2*fac;
@@ -53,7 +53,7 @@ long SRand(long _seedVal){
   if(oldSeed != _seedVal) {
     oldSeed = _seedVal;
     return SRand("NONE", 0, _seedVal, true);
-  } 
+  }
   else
     return SRand("NONE", 0, _seedVal);
 }
@@ -70,7 +70,7 @@ long SRand(string _methodName, int _nextNodeIndex, long _base, bool _reset) {
       methodID += tmp*(i+1)*(i+2);
     }
     srand48(long (baseSeed * (_nextNodeIndex+1) + methodID));
-  } 
+  }
   else {
     srand48(baseSeed);
   }
@@ -103,11 +103,11 @@ double DirectedAngularDistance(double _a, double _b) {
   _a = Normalize(_a);
   _b = Normalize(_b);
 
-  if( _b - _a  > 1.0 ) 
+  if( _b - _a  > 1.0 )
     _a+=2.0;
   else if ( _a - _b > 1.0 )
     _b+=2.0;
-  
+
   return _b-_a;
 }
 
@@ -143,10 +143,13 @@ PtInTriangle(const Point2d& _A, const Point2d& _B, const Point2d& _C,const Point
 //   uses barycentric coordinates to compute this and return the uv-coords
 //   for potential usage later
 //----------------------------------------------------------------------------
-bool 
+bool
 PtInTriangle(const Point2d& _A, const Point2d& _B, const Point2d& _C,const Point2d& _P,
  double& _u, double& _v) {
-  // Compute vectors        
+
+  double eps = 0.0001;
+
+  // Compute vectors
   Vector2d v0 = _C - _A;
   Vector2d v1 = _B - _A;
   Vector2d v2 = _P - _A;
@@ -159,12 +162,12 @@ PtInTriangle(const Point2d& _A, const Point2d& _B, const Point2d& _C,const Point
   double dot12 = v1*v2;
 
   // Compute barycentric coordinates
-  double invDenom = 1 / (dot00 * dot11 - dot01 * dot01);
+  double invDenom = 1. / (dot00 * dot11 - dot01 * dot01);
   _u = (dot11 * dot02 - dot01 * dot12) * invDenom;
   _v = (dot00 * dot12 - dot01 * dot02) * invDenom;
 
   // Check if point is in triangle
-  return (_u > 0) && (_v > 0) && (_u + _v < 1);
+  return (_u >= -eps) && (_v >= -eps) && (_u + _v < 1. + eps);
 }
 
 Point3d
