@@ -4,7 +4,7 @@
 #include "SamplerMethod.h"
 #include "Utilities/MedialAxisUtilities.h"
 
-static bool outDebug = false;
+//static bool outDebug = false;
 
 template<typename MPTraits>
 class UniformMedialAxisSampler : public SamplerMethod<MPTraits> {
@@ -181,7 +181,7 @@ class UniformMedialAxisSampler : public SamplerMethod<MPTraits> {
           //tiangle-triangle
           else if(tempID >=0 && tickID >= 0) {
             bool tt = CheckTriTri(_env, _w1, tempID, tickID);
-            if(outDebug) {
+            /*if(outDebug) {
               CfgType t1, t2;
               for(size_t i = 0; i<CfgType::DOF(); ++i) {
                 t1[i] = _c1.m_clearanceInfo.m_objectPoint[i];
@@ -193,7 +193,7 @@ class UniformMedialAxisSampler : public SamplerMethod<MPTraits> {
               VDAddTempCfg(t2, false);
               VDClearAll();
               outDebug = false;
-            }
+            }*/
             return tt;
           }
           //triangle-vertex
@@ -366,12 +366,15 @@ class UniformMedialAxisSampler : public SamplerMethod<MPTraits> {
       //test if there is one common vertex between the triangles
       int vert = polyhedron.m_polygonList[_t1].CommonVertex(polyhedron.m_polygonList[_t2]);
       if(vert != -1) {
-        cout << "There is only one common vertex it seems -_-" << endl;
-        return false;
+        //cout << "There is only one common vertex it seems -_-" << endl;
+        Vector3d& n1 = polyhedron.m_polygonList[_t1].m_normal;
+        Vector3d& n2 = polyhedron.m_polygonList[_t2].m_normal;
+        return asin((n1 % n2).norm()/(n1.norm() * n2.norm())) < 0;
+          return true;
       }
       //no common edge or vertex, triangles are not adjacent
       else {
-        outDebug = true;
+        //outDebug = true;
         return true;
         //return false;
       }
