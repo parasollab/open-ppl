@@ -4,6 +4,8 @@
 #include "SamplerMethod.h"
 #include "Utilities/MedialAxisUtilities.h"
 
+static bool outDebug = false;
+
 template<typename MPTraits>
 class UniformMedialAxisSampler : public SamplerMethod<MPTraits> {
   private:
@@ -87,19 +89,21 @@ class UniformMedialAxisSampler : public SamplerMethod<MPTraits> {
 
       cfg1Free = vc->IsValid(cfg1, _env, _stats, cdInfo, &callee) && !vc->IsInsideObstacle(cfg1, _env, cdInfo);
 
-      VDClearAll();
+      /*VDClearAll();
       VDComment("Cfg1");
       VDAddTempCfg(cfg1, cfg1Free);
+      */
 
       CfgType tmp;
       m_clearanceUtility.CollisionInfo(cfg1, tmp, _bb, cfg1.m_clearanceInfo);
       cfg1Witness = cfg1.m_clearanceInfo.m_nearestObstIndex;
 
-      CfgType t1;
+      /*CfgType t1;
       for(size_t i = 0; i<CfgType::DOF(); ++i)
         t1[i] = cfg1.m_clearanceInfo.m_objectPoint[i];
       VDAddTempCfg(t1, false);
       VDClearLastTemp();
+      */
       //cout << "Witness Point::" << cfg1.m_clearanceInfo.m_objectPoint << endl;
 
       CfgType cfg2;
@@ -126,14 +130,14 @@ class UniformMedialAxisSampler : public SamplerMethod<MPTraits> {
         m_clearanceUtility.CollisionInfo(tick, tmp, _bb, tick.m_clearanceInfo);
         tickWitness = tick.m_clearanceInfo.m_nearestObstIndex;
 
-        VDAddTempCfg(tick, true);
+        /*VDAddTempCfg(tick, true);
         CfgType t1;
         for(size_t i = 0; i<CfgType::DOF(); ++i)
           t1[i] = tick.m_clearanceInfo.m_objectPoint[i];
         VDAddTempCfg(t1, false);
         VDClearLastTemp();
         VDClearLastTemp();
-
+        */
         bool crossed = CheckMedialAxisCrossing(_env, temp, tempWitness, tick, tickWitness);
         if(crossed) {
           //keep witness with higher clearance
@@ -142,7 +146,7 @@ class UniformMedialAxisSampler : public SamplerMethod<MPTraits> {
           //  && !vc->IsInsideObstacle(tick, _env, cdInfo);
 
           if(temp.m_clearanceInfo.m_minDist > 0 || tick.m_clearanceInfo.m_minDist > 0) {
-          //if(/*tempFree || tickFree*/) {
+          //if(/*tempFree || tickFree*/)
             CfgType& higher = temp.m_clearanceInfo.m_minDist > tick.m_clearanceInfo.m_minDist ? temp : tick;
 
             if(_env->InBounds(higher, _bb)) {
@@ -160,6 +164,8 @@ class UniformMedialAxisSampler : public SamplerMethod<MPTraits> {
       return generated;
     }
 
+  protected:
+
     bool CheckMedialAxisCrossing(Environment* _env,
         const CfgType& _c1, int _w1,
         const CfgType& _c2, int _w2) {
@@ -169,57 +175,42 @@ class UniformMedialAxisSampler : public SamplerMethod<MPTraits> {
       if(_w1 == _w2) {
         //Find the triangles which the witness points belong to first
         //assume obstacle multibodies have 1 body
-        int tempID = FindTriangle(_env, _w1, _c1);
-        int tickID = FindTriangle(_env, _w2, _c2);
+        int tempID = FindVertex(_env, _w1, _c1);
+        if(tempID == 1) {
+          tempID = FindTriangle(_env, _w1, _c1);
+          assert(tempID != -1); //triangle id should be found! error!
+        }
+        int tickID = FindVertex(_env, _w2, _c2);
+        if(tickID == 1) {
+          tickID = FindTriangle(_env, _w2, _c2);
+          assert(tickID != -1); //triangle id should be found! error!
+        }
 
-        //if the triangle IDs have not been set, there has been an error in
-        //the triangle computation
-        assert(tempID != -1 && tickID != -1);
-
-        //witness point is on a vertex, ignore this point
-        //if(tempID == -2 || tickID == -2)
-        //  return false;
-
-        //Check if two triangles are adjacent to each other
-        //Find the common edge between two triangles
-        GMSPolyhedron& polyhedron = _env->GetMultiBody(_w1)->GetBody(0)->GetPolyhedron();
         if(tempID != tickID) {
-          pair<int, int> edge = polyhedron.m_polygonList[tempID].CommonEdge(polyhedron.m_polygonList[tickID]);
-          Vector3d v0, v1, v2;
-          if(edge.first != -1 && edge.second != -1) {  //If there is a common edge (v0, v1) between two triangle facets
-            //Get vertex information for two facets
-            v0 = polyhedron.m_vertexList[edge.first];
-            v1 = polyhedron.m_vertexList[edge.second];
-            for(vector<int>::iterator I = polyhedron.m_polygonList[tempID].m_vertexList.begin(); I != polyhedron.m_polygonList[tempID].m_vertexList.end(); I++) {
-              if((*I != edge.first) && (*I != edge.second))
-                v2 = polyhedron.m_vertexList[*I];
-            }
-            //Find out which triangle is on the left and which is on the right
-            Vector3d va = v1 - v0;  //Common edge (v0, v1)
-            Vector3d vb = v2 - v0;  //The other edge (v0, v2)
-            int left, right;
-            //The face is on the left of the common edge if (va x vb).normal vector of the face > 0
-            //If < 0, the face is on the right
-            if(((va % vb) * polyhedron.m_polygonList[tempID].m_normal) > 0) {
-              left = tempID;
-              right = tickID;
-            }
-            else {
-              left = tickID;
-              right = tempID;
-            }
-            //Check if the two triangles form a concave face
-            //If (normal vector of left) x (normal vector of right) is the
-            //opposite direction of the common edge, they form a concave face
-            if(((polyhedron.m_polygonList[left].m_normal % polyhedron.m_polygonList[right].m_normal) * va) < -0.0001){  //Concave
-              return true;
-            }
-            else {  //Convex
-              return false;
-            }
+          //vertex-vertex
+          if(tempID < 0 && tickID < 0) {
+            return false;
           }
-          else {  //no common edge, generate valid medial axis crossing
-            //return true;
+          //tiangle-triangle
+          else if(tempID >=0 && tickID >= 0) {
+            bool tt = CheckTriTri(_env, _w1, tempID, tickID);
+            if(outDebug) {
+              CfgType t1, t2;
+              for(size_t i = 0; i<CfgType::DOF(); ++i) {
+                t1[i] = _c1.m_clearanceInfo.m_objectPoint[i];
+                t2[i] = _c2.m_clearanceInfo.m_objectPoint[i];
+              }
+              VDAddTempCfg(_c1, true);
+              VDAddTempCfg(t1, false);
+              VDAddTempCfg(_c2, true);
+              VDAddTempCfg(t2, false);
+              VDClearAll();
+              outDebug = false;
+            }
+            return tt;
+          }
+          //triangle-vertex
+          else {
             return false;
           }
         }
@@ -232,19 +223,40 @@ class UniformMedialAxisSampler : public SamplerMethod<MPTraits> {
       }
     }
 
+    int FindVertex(Environment* _env, int _witness, const CfgType& _c) {
+      StatClass* stat = this->GetMPProblem()->GetStatClass();
+      stat->StartClock("FindVertex");
+      //Find the vertex which the witness points belong to first
+      //assume obstacle multibodies have 1 body
+      GMSPolyhedron& polyhedron = _env->GetMultiBody(_witness)->GetBody(0)->GetPolyhedron();
+      const Transformation& t = _env->GetMultiBody(_witness)->GetBody(0)->WorldTransformation();
+
+      Vector3d witnessPoint = -t * _c.m_clearanceInfo.m_objectPoint;
+      for(size_t i=0; i < polyhedron.m_vertexList.size(); ++i) {
+        Vector3d& vert = polyhedron.m_vertexList[i];
+
+        if(witnessPoint == vert) {
+            stat->StopClock("FindVertex");
+            return -i - 1;
+        }
+      }
+      stat->StopClock("FindVertex");
+      return 1;
+    }
+
     int FindTriangle(Environment* _env, int _witness, const CfgType& _c) {
       StatClass* stat = this->GetMPProblem()->GetStatClass();
       stat->StartClock("FindTriangle");
       //Find the triangles which the witness points belong to first
       //assume obstacle multibodies have 1 body
       GMSPolyhedron& polyhedron = _env->GetMultiBody(_witness)->GetBody(0)->GetPolyhedron();
-      Transformation& t = _env->GetMultiBody(_witness)->GetBody(0)->WorldTransformation();
+      const Transformation& t = _env->GetMultiBody(_witness)->GetBody(0)->WorldTransformation();
 
       Vector3d witnessPoint = -t * _c.m_clearanceInfo.m_objectPoint;
-      double minProjDist = 1e6;
+
       int id = -1;
       for(size_t i=0; i < polyhedron.m_polygonList.size(); ++i) {
-      //for(size_t i=polyhedron.m_polygonList.size()-1; i >= 0; --i) {
+
         GMSPolygon& poly = polyhedron.m_polygonList[i];
 
         //Find the max dimension among the normal vector so we know which
@@ -261,12 +273,9 @@ class UniformMedialAxisSampler : public SamplerMethod<MPTraits> {
           maxDim = 2;
         }
 
-        Vector3d v0 = polyhedron.m_vertexList[poly.m_vertexList[0]];
-        Vector3d v1 = polyhedron.m_vertexList[poly.m_vertexList[1]];
-        Vector3d v2 = polyhedron.m_vertexList[poly.m_vertexList[2]];
-
-        //if(witnessPoint == v0 || witnessPoint == v1 || witnessPoint == v2)
-        //  return -2;
+        const Vector3d& v0 = polyhedron.m_vertexList[poly.m_vertexList[0]];
+        const Vector3d& v1 = polyhedron.m_vertexList[poly.m_vertexList[1]];
+        const Vector3d& v2 = polyhedron.m_vertexList[poly.m_vertexList[2]];
 
         Vector3d vp = witnessPoint - v0;
         double projDist = (witnessPoint - (witnessPoint - (poly.m_normal * (vp*poly.m_normal)))).norm();
@@ -282,16 +291,15 @@ class UniformMedialAxisSampler : public SamplerMethod<MPTraits> {
           //Store the triangle id if the witness point belongs to it
           /*cout << "\n::PointInTriangle Test::" << i << endl
             << "v0:: " << v0 << "\tv1:: " << v1 << "\tv2:: " << v2 << endl
-            << "tempWitnessPoint:: " << tempWitnessPoint << "\ttickWitnessPoint:: " << tickWitnessPoint << endl
+            << "WitnessPoint:: " << witnessPoint << endl
             << "Normal:: " << poly.m_normal << endl
             << "p0:: " << p0 << "\tp1:: " << p1 << "\tp2:: " << p2 << endl
             << "ptemp:: " << ptemp << endl
             << "ptempIn:: " << PtInTriangle(p0, p1, p2, ptemp) << endl;
-            */
-
+          */
           double u,v;
           bool inTri = PtInTriangle(p0, p1, p2, ptemp, u, v);
-
+          //cout << "u::" << u << "\tv::" << v << endl;
           if(inTri) {
             //cout << "projDist::" << projDist << endl;
             stat->StopClock("FindTriangle");
@@ -306,6 +314,60 @@ class UniformMedialAxisSampler : public SamplerMethod<MPTraits> {
       //the triangle computation
       stat->StopClock("FindTriangle");
       return id;
+    }
+
+    bool CheckTriTri(Environment* _env, int _w, int _t1, int _t2) {
+      //Check if two triangles are adjacent to each other
+      GMSPolyhedron& polyhedron = _env->GetMultiBody(_w)->GetBody(0)->GetPolyhedron();
+
+      //test if there is a common edge (v0, v1) between the triangles
+      pair<int, int> edge = polyhedron.m_polygonList[_t1].CommonEdge(polyhedron.m_polygonList[_t2]);
+      if(edge.first != -1 && edge.second != -1) {
+        //Get vertex information for two facets
+        const Vector3d& v0 = polyhedron.m_vertexList[edge.first];
+        const Vector3d& v1 = polyhedron.m_vertexList[edge.second];
+        Vector3d v2;
+        for(vector<int>::iterator I = polyhedron.m_polygonList[_t1].m_vertexList.begin(); I != polyhedron.m_polygonList[_t1].m_vertexList.end(); I++) {
+          if((*I != edge.first) && (*I != edge.second))
+            v2 = polyhedron.m_vertexList[*I];
+        }
+        //Find out which triangle is on the left and which is on the right
+        Vector3d va = v1 - v0;  //Common edge (v0, v1)
+        Vector3d vb = v2 - v0;  //The other edge (v0, v2)
+        int left, right;
+        //The face is on the left of the common edge if (va x vb).normal vector of the face > 0
+        //If < 0, the face is on the right
+        if(((va % vb) * polyhedron.m_polygonList[_t1].m_normal) > 0) {
+          left = _t1;
+          right = _t2;
+        }
+        else {
+          left = _t2;
+          right = _t1;
+        }
+        //Check if the two triangles form a concave face
+        //If (normal vector of left) x (normal vector of right) is the
+        //opposite direction of the common edge, they form a concave face
+        if(((polyhedron.m_polygonList[left].m_normal % polyhedron.m_polygonList[right].m_normal) * va) < -0.0001){  //Concave
+          return true;
+        }
+        else {  //Convex
+          return false;
+        }
+      }
+
+      //test if there is one common vertex between the triangles
+      int vert = polyhedron.m_polygonList[_t1].CommonVertex(polyhedron.m_polygonList[_t2]);
+      if(vert != -1) {
+        //cout << "There is only one common vertex it seems -_-" << endl;
+        return false;
+      }
+      //no common edge or vertex, triangles are not adjacent
+      else {
+        outDebug = true;
+        return true;
+        //return false;
+      }
     }
 
 };
