@@ -322,7 +322,7 @@ class UniformMedialAxisSampler : public SamplerMethod<MPTraits> {
     }
 
     bool CheckVertVert(Environment* _env, int _w, int _v1, int _v2) {
-      return true;
+      return false;
     }
 
     bool CheckTriTri(Environment* _env, int _w, int _t1, int _t2) {
