@@ -139,8 +139,17 @@ class UniformMedialAxisSampler : public SamplerMethod<MPTraits> {
           //if the triangle IDs have not been set, there has been an error in
           //the triangle computation
           assert(tempID != -1 && tickID != -1);
-          //if(tempID == -1 || tickID == -1)
-          //  continue;
+
+          //witness point is on a vertex, ignore this point
+          if(tempID == -2) {
+            tempWitness = tickWitness;
+            temp = tick;
+            //if(tempID == -2)
+            //  temp = tick;
+            continue;
+          }
+          if(tickID == -2)
+            continue;
 
           //Check if two triangles are adjacent to each other
           //Find the common edge between two triangles
@@ -201,7 +210,7 @@ class UniformMedialAxisSampler : public SamplerMethod<MPTraits> {
               }
             }
             else {  //no common edge, generate valid medial axis crossing
-              tickFree = vc->IsValid(tick, _env, _stats, cdInfo, &callee)
+              /*tickFree = vc->IsValid(tick, _env, _stats, cdInfo, &callee)
                 && !vc->IsInsideObstacle(tick, _env, cdInfo);
               if(tempFree && tickFree) {
                 if((temp.m_clearanceInfo.m_minDist > tick.m_clearanceInfo.m_minDist) && _env->InBounds(temp, _bb)) {
@@ -218,7 +227,7 @@ class UniformMedialAxisSampler : public SamplerMethod<MPTraits> {
                   tempFree = tickFree;
                   temp = tick;
                 }
-              }
+              }*/
             }
           }
         }
@@ -297,8 +306,8 @@ class UniformMedialAxisSampler : public SamplerMethod<MPTraits> {
         Vector3d v1 = polyhedron.m_vertexList[poly.m_vertexList[1]];
         Vector3d v2 = polyhedron.m_vertexList[poly.m_vertexList[2]];
 
-        //if(witnessPoint == v0 || witnessPoint == v1 || witnessPoint == v2)
-        //  return -1;
+        if(witnessPoint == v0 || witnessPoint == v1 || witnessPoint == v2)
+          return -2;
 
         Vector3d vp = witnessPoint - v0;
         double projDist = (witnessPoint - (witnessPoint - (poly.m_normal * (vp*poly.m_normal)))).norm();
