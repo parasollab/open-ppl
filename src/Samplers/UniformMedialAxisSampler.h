@@ -8,6 +8,7 @@ template<typename MPTraits>
 class UniformMedialAxisSampler : public SamplerMethod<MPTraits> {
   private:
     double m_length;
+    double m_stepSize;
     bool m_useBoundary;
     string m_vcLabel, m_dmLabel;
     ClearanceUtility<MPTraits> m_clearanceUtility;
@@ -20,9 +21,9 @@ class UniformMedialAxisSampler : public SamplerMethod<MPTraits> {
 
     UniformMedialAxisSampler(Environment* _env = NULL,
         string _vcLabel = "", string _dmLabel = "",
-        double _length = 0, bool _useBoundary = false,
+        double _length = 0, double _stepSize = 0, bool _useBoundary = false,
         const ClearanceUtility<MPTraits>& _clearanceUtility = ClearanceUtility<MPTraits>())
-      : m_length(_length), m_useBoundary(_useBoundary),
+      : m_length(_length), m_stepSize(_stepSize), m_useBoundary(_useBoundary),
       m_vcLabel(_vcLabel), m_dmLabel(_dmLabel),
       m_clearanceUtility(_clearanceUtility) {
         this->SetName("UniformMedialAxisSampler");
@@ -39,6 +40,7 @@ class UniformMedialAxisSampler : public SamplerMethod<MPTraits> {
       m_vcLabel = _node.stringXMLParameter("vcLabel", true, "", "Validity Test Method");
       m_dmLabel =_node.stringXMLParameter("dmLabel", true, "default", "Distance Metric Method");
       m_length = _node.numberXMLParameter("d", true, 0.0, 0.0, MAX_DBL, "generate line segment with length d");
+      m_stepSize = _node.numberXMLParameter("t", true, 0.0, 0.0, MAX_DBL, "the step size t to generate intermediate nodes");
       m_useBoundary = _node.boolXMLParameter("useBBX", true, false, "Use bounding box as obstacle");
 
       _node.warnUnrequestedAttributes();
@@ -50,6 +52,7 @@ class UniformMedialAxisSampler : public SamplerMethod<MPTraits> {
       _os << "\tvcLabel = " << m_vcLabel << endl;
       _os << "\tdmLabel = " << m_dmLabel << endl;
       _os << "\tlength = " << m_length << endl;
+      _os << "\tstepSize = " << m_stepSize << endl;
       _os << "\tuseBoundary = " << m_useBoundary << endl;
     }
 
@@ -70,11 +73,15 @@ class UniformMedialAxisSampler : public SamplerMethod<MPTraits> {
       int cfg1Witness;
 
       double length = m_length ? m_length : _env->GetMultiBody(_cfgIn.GetRobotIndex())->GetMaxAxisRange();
+      double stepSize = m_stepSize ? m_stepSize : 100*_env->GetPositionRes();
+
+      _env->ExpandBoundary(length, _cfgIn.GetRobotIndex());
+      shared_ptr<Boundary> bbNew = _env->GetBoundary();
 
       //Generate first cfg
       CfgType cfg1 = _cfgIn;
       if(cfg1 == CfgType())
-        cfg1.GetRandomCfg(_env, _bb);
+        cfg1.GetRandomCfg(_env, bbNew);
 
       cfg1Free = vc->IsValid(cfg1, _env, _stats, cdInfo, &callee) && !vc->IsInsideObstacle(cfg1, _env, cdInfo);
 
@@ -109,7 +116,7 @@ class UniformMedialAxisSampler : public SamplerMethod<MPTraits> {
       int nTicks;
       CfgType inter;
       inter.FindIncrement(cfg1, cfg2, &nTicks,
-          100*_env->GetPositionRes(), 100*_env->GetOrientationRes());
+          stepSize, 100*_env->GetOrientationRes());
 
       for(int i=1; i<nTicks; ++i) {
 

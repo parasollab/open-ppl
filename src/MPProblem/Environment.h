@@ -67,6 +67,9 @@ class Environment {
     //increased by a margin of _d + robotRadius
     void ResetBoundary(double _d, size_t _robotIndex);
 
+    //expand the boundary by a margin of _d + robotRadius
+    void ExpandBoundary(double _d, size_t _robotIndex);
+
     ///////////////////////////////////////////////////////////
     //MultiBodies
     ///////////////////////////////////////////////////////////
