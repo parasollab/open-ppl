@@ -147,7 +147,7 @@ bool
 PtInTriangle(const Point2d& _A, const Point2d& _B, const Point2d& _C,const Point2d& _P,
  double& _u, double& _v) {
 
-  double eps = 0.0001;
+  double eps = 0.0000001;
 
   // Compute vectors
   Vector2d v0 = _C - _A;

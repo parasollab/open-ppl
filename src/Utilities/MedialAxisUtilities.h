@@ -627,13 +627,12 @@ ClearanceUtility<MPTraits>::PathClearance(VID _startVID, VID _goalVID){
 }
 
 template<class MPTraits>
-ClearanceStats 
+ClearanceStats
 ClearanceUtility<MPTraits>::PathClearance(vector<VID>& _path){
   if(_path.empty())
     return ClearanceStats();
 
   GraphType* g = this->GetMPProblem()->GetRoadmap()->GetGraph();
-  Environment* env = this->GetMPProblem()->GetEnvironment();
   DistanceMetricPointer dm = this->GetMPProblem()->GetDistanceMetric(m_dmLabel);
 
   typedef typename GraphType::EI EI;

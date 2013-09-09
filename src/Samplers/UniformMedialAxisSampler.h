@@ -132,81 +132,21 @@ class UniformMedialAxisSampler : public SamplerMethod<MPTraits> {
         //witness points belong to are adjacent and form a concave face
         if(tempWitness == tickWitness) {
           //Find the triangles which the witness points belong to first
-          //GMSPolyhedron& polyhedron = _env->GetMultiBody(temp.GetRobotIndex())->GetBody(0)->GetPolyhedron();
-          //cout << "tickWitness::" << tempWitness << endl;
-          GMSPolyhedron& polyhedron = _env->GetMultiBody(tempWitness)->GetBody(0)->GetPolyhedron();
-          Transformation& t = _env->GetMultiBody(tempWitness)->GetBody(0)->WorldTransformation();
-          Vector3d tempWitnessPoint = temp.m_clearanceInfo.m_objectPoint;
-          Vector3d tickWitnessPoint = tick.m_clearanceInfo.m_objectPoint;
-          int tempID = -1, tickID = -1;  //polygon/triangle id
-          for(size_t i=0; i < polyhedron.m_polygonList.size(); ++i) {
-            GMSPolygon& poly = polyhedron.m_polygonList[i];
-            //Find the max dimension among the normal vector so we know which
-            //two dimensions (except the max dimension) form the surface (in
-            //order to call PtInTriangle function)
+          //assume obstacle multibodies have 1 body
+          int tempID = FindTriangle(_env, tickWitness, temp);
+          int tickID = FindTriangle(_env, tickWitness, tick);
 
-            double maxv = fabs(poly.m_normal[0]);
-            int maxDim = 0;
-            if(fabs(poly.m_normal[1]) > maxv) {
-              maxv = fabs(poly.m_normal[1]);
-              maxDim = 1;
-            }
-            if(fabs(poly.m_normal[2]) > maxv) {
-              maxv = fabs(poly.m_normal[2]);
-              maxDim = 2;
-            }
-            Vector3d v0 = t * polyhedron.m_vertexList[poly.m_vertexList[0]];
-            Vector3d v1 = t * polyhedron.m_vertexList[poly.m_vertexList[1]];
-            Vector3d v2 = t * polyhedron.m_vertexList[poly.m_vertexList[2]];
-            //p0, p1, p2 are the vertices of the triangle
-            size_t dim1 = min((maxDim+1) % 3, (maxDim+2) % 3);
-            size_t dim2 = max((maxDim+1) % 3, (maxDim+2) % 3);
-            Point2d p0(v0[dim1], v0[dim2]);
-            Point2d p1(v1[dim1], v1[dim2]);
-            Point2d p2(v2[dim1], v2[dim2]);
-            Point2d ptemp(tempWitnessPoint[dim1], tempWitnessPoint[dim2]);
-            Point2d ptick(tickWitnessPoint[dim1], tickWitnessPoint[dim2]);
+          //if the triangle IDs have not been set, there has been an error in
+          //the triangle computation
+          assert(tempID != -1 && tickID != -1);
 
-            //Store the triangle id if the witness point belongs to it
-            /*cout << "\n::PointInTriangle Test::" << i << endl
-              << "v0:: " << v0 << "\tv1:: " << v1 << "\tv2:: " << v2 << endl
-              << "tempWitnessPoint:: " << tempWitnessPoint << "\ttickWitnessPoint:: " << tickWitnessPoint << endl
-              << "Normal:: " << poly.m_normal << endl
-              << "p0:: " << p0 << "\tp1:: " << p1 << "\tp2:: " << p2 << endl
-              << "ptemp:: " << ptemp << "\tptick:: " << ptick << endl
-              << "ptempIn:: " << PtInTriangle(p0, p1, p2, ptemp) << endl
-              << "ptickIn:: " << PtInTriangle(p0, p1, p2, ptick) << endl;
-            */
-
-            double u,v;
-            if(PtInTriangle(p0, p1, p2, ptemp, u, v))
-              tempID = i;
-            //cout << "u::" << u << "\tv::" << v << endl;
-            if(PtInTriangle(p0, p1, p2, ptick, u, v))
-              tickID = i;
-            //cout << "u::" << u << "\tv::" << v << endl;
-
-            /*cout << "\n::PointInTriangle Test::" << i
-              << "\tp0:: " << v0 << "\tp1:: " << v1 << "\tp2:: " << v2 << endl
-              << "ptemp:: " << tempWitnessPoint << "\tptick:: " << tickWitnessPoint << endl
-              << "ptempIn:: " << PtInTriangle(v0, v1, v2, tempWitnessPoint) << endl
-              << "ptickIn:: " << PtInTriangle(v0, v1, v2, tickWitnessPoint) << endl;
-            if(PtInTriangle(v0, v1, v2, tempWitnessPoint))
-              tempID = i;
-            if(PtInTriangle(v0, v1, v2, tickWitnessPoint))
-              tickID = i;
-              */
-
-          }
-          //cout << "tempID::" << tempID << endl;
-          //cout << "tickID::" << tickID << endl;
-          if(tempID == -1 || tickID == -1) exit(1);//cout << "Error witness does not belong to any triangle." << endl;
           //Check if two triangles are adjacent to each other
           //Find the common edge between two triangles
+          GMSPolyhedron& polyhedron = _env->GetMultiBody(tickWitness)->GetBody(0)->GetPolyhedron();
           if(tempID != tickID) {
             pair<int, int> edge = polyhedron.m_polygonList[tempID].CommonEdge(polyhedron.m_polygonList[tickID]);
             Vector3d v0, v1, v2;
-            if((edge.first != -1) && (edge.second != -1)) {  //If there is a common edge (v0, v1) between two triangle facets
+            if(edge.first != -1 && edge.second != -1) {  //If there is a common edge (v0, v1) between two triangle facets
               //Get vertex information for two facets
               v0 = polyhedron.m_vertexList[edge.first];
               v1 = polyhedron.m_vertexList[edge.second];
@@ -231,18 +171,22 @@ class UniformMedialAxisSampler : public SamplerMethod<MPTraits> {
               //Check if the two triangles form a concave face
               //If (normal vector of left) x (normal vector of right) is the
               //opposite direction of the common edge, they form a concave face
-              if((((polyhedron.m_polygonList[left].m_normal) % (polyhedron.m_polygonList[right].m_normal)) * va) > 0){  //Concave
+              if((((polyhedron.m_polygonList[left].m_normal) % (polyhedron.m_polygonList[right].m_normal)) * va) < 0){  //Concave
                 //Find the medial axis
-                tickFree = (vc->IsValid(tick, _env, _stats, cdInfo, &callee)) && (!vc->IsInsideObstacle(tick, _env, cdInfo));
+                tickFree = vc->IsValid(tick, _env, _stats, cdInfo, &callee)
+                  && !vc->IsInsideObstacle(tick, _env, cdInfo);
+
                 if(tempFree && tickFree) {
-                  _stats.IncNodesGenerated(this->GetNameAndLabel());
-                  generated = true;
                   if((temp.m_clearanceInfo.m_minDist > tick.m_clearanceInfo.m_minDist) && _env->InBounds(temp, _bb)) {
+                    _stats.IncNodesGenerated(this->GetNameAndLabel());
+                    generated = true;
                     _cfgOut.push_back(temp);
                     tempFree = tickFree;
                     temp = tick;
                   }
                   else if((tick.m_clearanceInfo.m_minDist > temp.m_clearanceInfo.m_minDist) && _env->InBounds(tick, _bb)) {
+                    _stats.IncNodesGenerated(this->GetNameAndLabel());
+                    generated = true;
                     _cfgOut.push_back(tick);
                     tempFree = tickFree;
                     temp = tick;
@@ -254,20 +198,43 @@ class UniformMedialAxisSampler : public SamplerMethod<MPTraits> {
                 temp = tick;
               }
             }
+            else {  //no common edge, generate valid medial axis crossing
+              tickFree = vc->IsValid(tick, _env, _stats, cdInfo, &callee)
+                && !vc->IsInsideObstacle(tick, _env, cdInfo);
+              if(tempFree && tickFree) {
+                if((temp.m_clearanceInfo.m_minDist > tick.m_clearanceInfo.m_minDist) && _env->InBounds(temp, _bb)) {
+                  _stats.IncNodesGenerated(this->GetNameAndLabel());
+                  generated = true;
+                  _cfgOut.push_back(temp);
+                  tempFree = tickFree;
+                  temp = tick;
+                }
+                else if((tick.m_clearanceInfo.m_minDist > temp.m_clearanceInfo.m_minDist) && _env->InBounds(tick, _bb)) {
+                  _stats.IncNodesGenerated(this->GetNameAndLabel());
+                  generated = true;
+                  _cfgOut.push_back(tick);
+                  tempFree = tickFree;
+                  temp = tick;
+                }
+              }
+            }
           }
         }
         else {  //tempWitness != tickWitness; the closest obstacle changes
-          tickFree = vc->IsValid(tick, _env, _stats, cdInfo, &callee) && !vc->IsInsideObstacle(tick, _env, cdInfo);
+          tickFree = vc->IsValid(tick, _env, _stats, cdInfo, &callee)
+            && !vc->IsInsideObstacle(tick, _env, cdInfo);
           //Both temp and tick are valid, keep the one with larger clearance
           if(tempFree && tickFree) {
-            _stats.IncNodesGenerated(this->GetNameAndLabel());
-            generated = true;
             if((temp.m_clearanceInfo.m_minDist > tick.m_clearanceInfo.m_minDist) && _env->InBounds(temp, _bb)) {
+              _stats.IncNodesGenerated(this->GetNameAndLabel());
+              generated = true;
               _cfgOut.push_back(temp);
               tempFree = tickFree;
               temp = tick;
             }
             else if((tick.m_clearanceInfo.m_minDist > temp.m_clearanceInfo.m_minDist) && _env->InBounds(tick, _bb)) {
+              _stats.IncNodesGenerated(this->GetNameAndLabel());
+              generated = true;
               _cfgOut.push_back(tick);
               tempFree = tickFree;
               temp = tick;
@@ -275,14 +242,16 @@ class UniformMedialAxisSampler : public SamplerMethod<MPTraits> {
           }
           //Either temp or tick is valid, keep the valid one
           else if(tempFree || tickFree) {
-            _stats.IncNodesGenerated(this->GetNameAndLabel());
-            generated = true;
             if(tempFree && _env->InBounds(temp, _bb)) {
+              _stats.IncNodesGenerated(this->GetNameAndLabel());
+              generated = true;
               _cfgOut.push_back(temp);
               tempFree = tickFree;
               temp = tick;
             }
             else if(tickFree && _env->InBounds(tick, _bb)){
+              _stats.IncNodesGenerated(this->GetNameAndLabel());
+              generated = true;
               _cfgOut.push_back(tick);
               tempFree = tickFree;
               temp = tick;
@@ -293,41 +262,79 @@ class UniformMedialAxisSampler : public SamplerMethod<MPTraits> {
       return generated;
     }
 
-    //check collision of line _x -> _xNew at velocity _vel, time step _time
-    /*bool PtInTriangle(Point3d _p1, Point3d _p2, Point3d _p3, Point3d _p) {
+    int FindTriangle(Environment* _env, int _witness, const CfgType& _c) {
+      StatClass* stat = this->GetMPProblem()->GetStatClass();
+      stat->StartClock("FindTriangle");
+      //Find the triangles which the witness points belong to first
+      //assume obstacle multibodies have 1 body
+      GMSPolyhedron& polyhedron = _env->GetMultiBody(_witness)->GetBody(0)->GetPolyhedron();
+      Transformation& t = _env->GetMultiBody(_witness)->GetBody(0)->WorldTransformation();
 
-      //project _p onto plane
-      Vector3d normal = (_p2 - _p1) % (_p3 - _p1);
-      Vector3d op = _p - _p1;
-      double dist = normal * op;
-      Vector3d projp = _p + normal*dist;
+      Vector3d witnessPoint = -t * _c.m_clearanceInfo.m_objectPoint;
+      double minProjDist = 1e6;
+      int id = -1;
+      for(size_t i=0; i < polyhedron.m_polygonList.size(); ++i) {
+      //for(size_t i=polyhedron.m_polygonList.size()-1; i >= 0; --i) {
+        GMSPolygon& poly = polyhedron.m_polygonList[i];
 
-      double eps = 0.001;//numeric_limits<float>::epsilon();
+        //Find the max dimension among the normal vector so we know which
+        //two dimensions (except the max dimension) form the surface (in
+        //order to call PtInTriangle function)
+        double maxv = fabs(poly.m_normal[0]);
+        int maxDim = 0;
+        if(fabs(poly.m_normal[1]) > maxv) {
+          maxv = fabs(poly.m_normal[1]);
+          maxDim = 1;
+        }
+        if(fabs(poly.m_normal[2]) > maxv) {
+          maxv = fabs(poly.m_normal[2]);
+          maxDim = 2;
+        }
 
-      // Compute vectors
-      Vector3d v0 = _p3 - _p1;
-      Vector3d v1 = _p2 - _p1;
-      //Vector3d v2 = _p - _p1;
-      Vector3d v2 = projp - _p1;
+        Vector3d v0 = polyhedron.m_vertexList[poly.m_vertexList[0]];
+        Vector3d v1 = polyhedron.m_vertexList[poly.m_vertexList[1]];
+        Vector3d v2 = polyhedron.m_vertexList[poly.m_vertexList[2]];
 
-      // Compute dot products
-      double dot00 = v0*v0;
-      double dot01 = v0*v1;
-      double dot02 = v0*v2;
-      double dot11 = v1*v1;
-      double dot12 = v1*v2;
+        Vector3d vp = witnessPoint - v0;
+        double projDist = (witnessPoint - (witnessPoint - (poly.m_normal * (vp*poly.m_normal)))).norm();
+        if(projDist <= 0.0001) {
+          //p0, p1, p2 are the vertices of the triangle
+          size_t dim1 = min((maxDim+1) % 3, (maxDim+2) % 3);
+          size_t dim2 = max((maxDim+1) % 3, (maxDim+2) % 3);
+          Point2d p0(v0[dim1], v0[dim2]);
+          Point2d p1(v1[dim1], v1[dim2]);
+          Point2d p2(v2[dim1], v2[dim2]);
+          Point2d ptemp(witnessPoint[dim1], witnessPoint[dim2]);
 
-      // Compute barycentric coordinates
-      double invDenom = 1 / (dot00 * dot11 - dot01 * dot01);
-      double u = (dot11 * dot02 - dot01 * dot12) * invDenom;
-      double v = (dot00 * dot12 - dot01 * dot02) * invDenom;
+          //Store the triangle id if the witness point belongs to it
+          /*cout << "\n::PointInTriangle Test::" << i << endl
+            << "v0:: " << v0 << "\tv1:: " << v1 << "\tv2:: " << v2 << endl
+            << "tempWitnessPoint:: " << tempWitnessPoint << "\ttickWitnessPoint:: " << tickWitnessPoint << endl
+            << "Normal:: " << poly.m_normal << endl
+            << "p0:: " << p0 << "\tp1:: " << p1 << "\tp2:: " << p2 << endl
+            << "ptemp:: " << ptemp << endl
+            << "ptempIn:: " << PtInTriangle(p0, p1, p2, ptemp) << endl;
+            */
 
-      //Check if point is in triangle
-      //relaxing barycentric condition from u > 0 && v > 0 && u+v < 1.0
-      return (u >= 0.0 - eps)
-        && (v >= 0.0 - eps)
-        && (u + v <= 1.0 + eps);
-    }*/
+          double u,v;
+          bool inTri = PtInTriangle(p0, p1, p2, ptemp, u, v);
+
+          if(inTri) {
+            //cout << "projDist::" << projDist << endl;
+            stat->StopClock("FindTriangle");
+            return i;
+            //id = i;
+            //minProjDist = projDist;
+          }
+        }
+      }
+
+      //if the triangle IDs have not been set, there has been an error in
+      //the triangle computation
+      stat->StopClock("FindTriangle");
+      return id;
+    }
+
 };
 
 #endif
