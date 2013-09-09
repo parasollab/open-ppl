@@ -322,6 +322,7 @@ class UniformMedialAxisSampler : public SamplerMethod<MPTraits> {
     }
 
     bool CheckVertVert(Environment* _env, int _w, int _v1, int _v2) {
+      cout << "Vert vert?" << endl;
       return false;
     }
 
@@ -380,7 +381,17 @@ class UniformMedialAxisSampler : public SamplerMethod<MPTraits> {
     }
 
     bool CheckVertTri(Environment* _env, int _w, int _v, int _t) {
-      return false;
+      //Check if vertex belongs to triangle, thus are adjacent
+      GMSPolyhedron& polyhedron = _env->GetMultiBody(_w)->GetBody(0)->GetPolyhedron();
+      Vector3d& vert = polyhedron.m_vertexList[_v];
+      GMSPolygon& poly = polyhedron.m_polygonList[_t];
+      for(size_t i = 0; i<poly.m_vertexList.size(); ++i) {
+        //shares a common vertex, return false!
+        if(vert == polyhedron.m_vertexList[poly.m_vertexList[i]])
+          return false;
+      }
+      //vertex and triangle are separate, must've crossed the medial axis
+      return true;
     }
 };
 
