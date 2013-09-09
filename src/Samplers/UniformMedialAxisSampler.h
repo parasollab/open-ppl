@@ -322,8 +322,18 @@ class UniformMedialAxisSampler : public SamplerMethod<MPTraits> {
     }
 
     bool CheckVertVert(Environment* _env, int _w, int _v1, int _v2) {
-      cout << "Vert vert?" << endl;
-      return false;
+      GMSPolyhedron& polyhedron = _env->GetMultiBody(_w)->GetBody(0)->GetPolyhedron();
+      vector<GMSPolygon>& polygons = polyhedron.m_polygonList;
+
+      typedef vector<GMSPolygon>::iterator PIT;
+      for(PIT pit = polygons.begin(); pit!=polygons.end(); ++pit) {
+        vector<int>& verts = pit->m_vertexList;
+        if(find(verts.begin(), verts.end(), _v1) != verts.end() &&
+          find(verts.begin(), verts.end(), _v2) != verts.end())
+          return false;
+      }
+
+      return true;
     }
 
     bool CheckTriTri(Environment* _env, int _w, int _t1, int _t2) {
