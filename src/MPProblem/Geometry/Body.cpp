@@ -2,15 +2,17 @@
 #include <sstream>
 
 Body::Body(MultiBody* _owner) :
-  m_multibody(_owner), 
+  m_multibody(_owner),
+  m_convexHullAvailable(false),
   m_centerOfMassAvailable(false), m_worldPolyhedronAvailable(false) {}
 
 Body::Body(MultiBody* _owner, GMSPolyhedron& _polyhedron) :
-  m_multibody(_owner), 
-  m_polyhedron(_polyhedron), 
-  m_worldPolyhedron(_polyhedron), 
+  m_multibody(_owner),
+  m_polyhedron(_polyhedron),
+  m_worldPolyhedron(_polyhedron),
+  m_convexHullAvailable(false),
   m_centerOfMassAvailable(false),
-  m_worldPolyhedronAvailable(false){}
+  m_worldPolyhedronAvailable(false) {}
 
 Body::Body(const Body& _b) :
   m_filename(_b.m_filename),
@@ -21,6 +23,8 @@ Body::Body(const Body& _b) :
   m_baseMovementType(_b.m_baseMovementType),
   m_polyhedron(_b.m_polyhedron),
   m_worldPolyhedron(_b.m_worldPolyhedron),
+  m_convexHull(_b.m_convexHull),
+  m_convexHullAvailable(_b.m_convexHullAvailable),
   m_centerOfMassAvailable(_b.m_centerOfMassAvailable),
   m_centerOfMass(_b.m_centerOfMass),
   m_worldPolyhedronAvailable(_b.m_worldPolyhedronAvailable),
@@ -68,7 +72,7 @@ Body::operator==(const Body& _b) const {
     (m_backwardConnection == _b.m_backwardConnection);
 }
 
-GMSPolyhedron& 
+GMSPolyhedron&
 Body::GetWorldPolyhedron() {
   if(!m_worldPolyhedronAvailable) {
     for(size_t i=0; i<m_polyhedron.m_vertexList.size(); ++i)
@@ -80,21 +84,21 @@ Body::GetWorldPolyhedron() {
   return m_worldPolyhedron;
 }
 
-GMSPolyhedron& 
+GMSPolyhedron&
 Body::GetWorldBoundingBox() {
   for(size_t i=0; i<m_bbPolyhedron.m_vertexList.size(); ++i)
     m_bbWorldPolyhedron.m_vertexList[i] = m_worldTransformation * m_bbPolyhedron.m_vertexList[i];
   return m_bbWorldPolyhedron;
 }
 
-Vector3d 
+Vector3d
 Body::GetCenterOfMass(){
-  if(!m_centerOfMassAvailable) 
+  if(!m_centerOfMassAvailable)
     ComputeCenterOfMass();
   return m_centerOfMass;
 }
 
-Connection& 
+Connection&
 Body::GetForwardConnection(size_t _index) {
   if (_index < m_forwardConnection.size())
     return m_forwardConnection[_index];
@@ -104,7 +108,7 @@ Body::GetForwardConnection(size_t _index) {
   }
 }
 
-Connection& 
+Connection&
 Body::GetBackwardConnection(size_t _index) {
   if (_index < m_backwardConnection.size())
     return m_backwardConnection[_index];
@@ -114,7 +118,7 @@ Body::GetBackwardConnection(size_t _index) {
   }
 }
 
-void 
+void
 Body::ChangeWorldPolyhedron() {
   for(size_t i=0; i<m_polyhedron.m_vertexList.size(); i++)  // Transform the vertices
     m_worldPolyhedron.m_vertexList[i] = m_worldTransformation * m_polyhedron.m_vertexList[i];
@@ -125,14 +129,14 @@ Body::ChangeWorldPolyhedron() {
 //===================================================================
 //  Read
 //===================================================================
-void 
+void
 Body::ReadBYU(istream& _is) {
   m_polyhedron.ReadBYU(_is);
   m_worldPolyhedron = m_polyhedron;
   FindBoundingBox();
 }
 
-void 
+void
 Body::Read(string _fileName) {
   SetFileName(_fileName);
 
@@ -145,19 +149,19 @@ Body::Read(string _fileName) {
   miny = maxy = poly.m_vertexList[0][1];
   minz = maxz = poly.m_vertexList[0][2];
   for(size_t i = 1 ; i < poly.m_vertexList.size() ; i++){
-    if(poly.m_vertexList[i][0] < minx) 
+    if(poly.m_vertexList[i][0] < minx)
       minx = poly.m_vertexList[i][0];
-    else if(maxx < poly.m_vertexList[i][0]) 
+    else if(maxx < poly.m_vertexList[i][0])
       maxx = poly.m_vertexList[i][0];
 
-    if(poly.m_vertexList[i][1] < miny) 
+    if(poly.m_vertexList[i][1] < miny)
       miny = poly.m_vertexList[i][1];
-    else if(maxy < poly.m_vertexList[i][1]) 
+    else if(maxy < poly.m_vertexList[i][1])
       maxy = poly.m_vertexList[i][1];
 
-    if(poly.m_vertexList[i][2] < minz) 
+    if(poly.m_vertexList[i][2] < minz)
       minz = poly.m_vertexList[i][2];
-    else if(maxz < poly.m_vertexList[i][2]) 
+    else if(maxz < poly.m_vertexList[i][2])
       maxz = poly.m_vertexList[i][2];
   }
 
@@ -175,7 +179,7 @@ Body::Read(string _fileName) {
   FindBoundingBox();
 }
 
-void 
+void
 Body::Write(ostream& _os) {
   static int numBody = 0;
   ostringstream oss;
@@ -186,7 +190,7 @@ Body::Write(ostream& _os) {
   ofs.close();
 }
 
-void 
+void
 Body::ComputeCenterOfMass(){
   GMSPolyhedron poly = GetWorldPolyhedron();
   if (poly.m_vertexList.empty()) {
@@ -202,7 +206,7 @@ Body::ComputeCenterOfMass(){
   }
 }
 
-void 
+void
 Body::FindBoundingBox(){
   GMSPolyhedron poly;
   m_worldPolyhedronAvailable = false;
@@ -212,19 +216,19 @@ Body::FindBoundingBox(){
   miny = maxy = poly.m_vertexList[0][1];
   minz = maxz = poly.m_vertexList[0][2];
   for(size_t i = 1 ; i < poly.m_vertexList.size() ; i++){
-    if(poly.m_vertexList[i][0] < minx) 
+    if(poly.m_vertexList[i][0] < minx)
       minx = poly.m_vertexList[i][0];
-    else if(maxx < poly.m_vertexList[i][0]) 
+    else if(maxx < poly.m_vertexList[i][0])
       maxx = poly.m_vertexList[i][0];
 
-    if(poly.m_vertexList[i][1] < miny) 
+    if(poly.m_vertexList[i][1] < miny)
       miny = poly.m_vertexList[i][1];
-    else if(maxy < poly.m_vertexList[i][1]) 
+    else if(maxy < poly.m_vertexList[i][1])
       maxy = poly.m_vertexList[i][1];
 
-    if(poly.m_vertexList[i][2] < minz) 
+    if(poly.m_vertexList[i][2] < minz)
       minz = poly.m_vertexList[i][2];
-    else if(maxz < poly.m_vertexList[i][2]) 
+    else if(maxz < poly.m_vertexList[i][2])
       maxz = poly.m_vertexList[i][2];
   }
   m_boundingBox[0] = minx; m_boundingBox[1] = maxx;
@@ -232,7 +236,7 @@ Body::FindBoundingBox(){
   m_boundingBox[4] = minz; m_boundingBox[5] = maxz;
 }
 
-bool 
+bool
 Body::IsAdjacent(shared_ptr<Body> _otherBody) {
   for(vector<Connection>::iterator C = m_forwardConnection.begin(); C != m_forwardConnection.end(); ++C)
     if(C->GetNextBody() == _otherBody)
@@ -243,7 +247,7 @@ Body::IsAdjacent(shared_ptr<Body> _otherBody) {
   return(*this == *(_otherBody.get()));
 }
 
-bool 
+bool
 Body::IsWithinI(shared_ptr<Body> _otherBody, int _i){
   if(*this == *(_otherBody.get()))
     return true;
@@ -253,7 +257,7 @@ Body::IsWithinI(shared_ptr<Body> _otherBody, int _i){
   return IsWithinIHelper(this,_otherBody.get(),_i,NULL);
 }
 
-bool 
+bool
 Body::IsWithinIHelper(Body* _body1, Body* _body2, int _i, Body* _prevBody){
   if(*_body1 == *_body2){
     return true;
@@ -262,7 +266,7 @@ Body::IsWithinIHelper(Body* _body1, Body* _body2, int _i, Body* _prevBody){
     return false;
   }
   typedef vector<Connection>::iterator CIT;
-  for(CIT C = _body1->m_forwardConnection.begin(); C != _body1->m_forwardConnection.end(); ++C) 
+  for(CIT C = _body1->m_forwardConnection.begin(); C != _body1->m_forwardConnection.end(); ++C)
     if(IsWithinIHelper(C->GetNextBody().get(), _body2, _i-1, _body1) )
       return true;
   for(CIT C =_body1->m_backwardConnection.begin(); C != _body1->m_backwardConnection.end(); ++C){
@@ -279,7 +283,7 @@ Body::IsWithinIHelper(Body* _body1, Body* _body2, int _i, Body* _prevBody){
 ////////////////////////////////////////
 // Collision Detection Methods
 // /////////////////////////////////
-void 
+void
 Body::BuildCDStructure(cd_predefined _cdtype) {
 #ifdef USE_VCLIP
   if (_cdtype == VCLIP) {
@@ -295,7 +299,7 @@ Body::BuildCDStructure(cd_predefined _cdtype) {
     vpoly->buildHull();
     vclipBody = shared_ptr<PolyTree>(new PolyTree);
     vclipBody->setPoly(vpoly);
-  } 
+  }
   else
 #endif
 #ifdef USE_RAPID
@@ -315,7 +319,7 @@ Body::BuildCDStructure(cd_predefined _cdtype) {
         rapidBody->AddTri(point[0], point[1], point[2], q);
       }
       rapidBody->EndModel();
-    } 
+    }
     else
 #endif
 #ifdef USE_PQP
@@ -335,7 +339,7 @@ Body::BuildCDStructure(cd_predefined _cdtype) {
           pqpBody->AddTri(point[0], point[1], point[2], q);
         }
         pqpBody->EndModel();
-      } 
+      }
       else
 #endif
 #ifdef USE_SOLID
@@ -372,7 +376,7 @@ Body::BuildCDStructure(cd_predefined _cdtype) {
           DT_EndComplexShape();
           DT_ObjectHandle object = DT_CreateObject(NULL,shape);
           solidBody = shared_ptr<DT_ObjectHandle>(new DT_ObjectHandle(object));
-        } 
+        }
         else
 #endif
         {
@@ -400,7 +404,7 @@ Body::BuildCDStructure(cd_predefined _cdtype) {
 }
 
 #ifdef USE_SOLID
-void 
+void
 Body::UpdateVertexBase(){
   GMSPolyhedron poly = GetWorldPolyhedron();
   for(size_t q=0; q < poly.m_polygonList.size(); q++) {
@@ -420,7 +424,7 @@ Body::UpdateVertexBase(){
 ///////////////////////////////////////////////////////////////////////////////
 //  Connection Methods
 ///////////////////////////////////////////////////////////////////////////////
-void 
+void
 Body::Link(const shared_ptr<Body>& _otherBody, const Transformation & _transformationToBody2, const
     DHparameters &_dhparameters, const Transformation & _transformationToDHFrame) {
   Connection c(shared_ptr<Body>(this), _otherBody, _transformationToBody2,
@@ -428,7 +432,7 @@ Body::Link(const shared_ptr<Body>& _otherBody, const Transformation & _transform
   Link(c);
 }
 
-void 
+void
 Body::Link(Connection _c) {
   AddForwardConnection(_c);
   _c.GetNextBody()->AddBackwardConnection(_c);
@@ -436,3 +440,48 @@ Body::Link(Connection _c) {
   m_centerOfMassAvailable=false;
 }
 
+bool
+Body::IsConvexHullVertex(const Vector3d& _v) {
+  if(!m_convexHullAvailable)
+    ComputeConvexHull();
+
+  vector<Vector3d>::iterator vit;
+  for(vit = m_convexHull.m_vertexList.begin(); vit!= m_convexHull.m_vertexList.end(); ++vit)
+    if(_v == *vit)
+      return true;
+  return false;
+}
+
+#include <CGAL/Simple_cartesian.h>
+#include <CGAL/algorithm.h>
+#include <CGAL/Polyhedron_3.h>
+#include <CGAL/convex_hull_3.h>
+
+typedef CGAL::Simple_cartesian<double>  K;
+typedef CGAL::Polyhedron_3<K>                     Polyhedron_3;
+typedef K::Segment_3                              Segment_3;
+typedef K::Point_3                                Point_3;
+
+void
+Body::ComputeConvexHull() {
+
+  //copy polyhedron points into vector
+  vector<Point_3> points;
+  typedef vector<Vector3d>::iterator VIT;
+  for(VIT vit = m_polyhedron.m_vertexList.begin(); vit!= m_polyhedron.m_vertexList.end(); ++vit)
+    points.push_back(Point_3((*vit)[0], (*vit)[1], (*vit)[2]));
+
+  //define polyhedron to hold convex hull
+  Polyhedron_3 poly;
+
+  //compute convex hull of non-collinear points
+  CGAL::convex_hull_3(points.begin(), points.end(), poly);
+
+  //iterate through convex hull
+  cout << "Convex hull::" << endl;
+  cout << poly.size_of_vertices() << endl;
+  for(Polyhedron_3::Point_iterator vit = poly.points_begin(); vit != poly.points_end(); ++vit)
+    m_convexHull.m_vertexList.push_back(Vector3d((*vit)[0], (*vit)[1], (*vit)[2]));
+
+  m_convexHullAvailable = true;
+}

@@ -366,17 +366,16 @@ class UniformMedialAxisSampler : public SamplerMethod<MPTraits> {
       //test if there is one common vertex between the triangles
       int vert = polyhedron.m_polygonList[_t1].CommonVertex(polyhedron.m_polygonList[_t2]);
       if(vert != -1) {
+        return !_env->GetMultiBody(_w)->GetBody(0)->IsConvexHullVertex(polyhedron.m_vertexList[vert]);
         //cout << "There is only one common vertex it seems -_-" << endl;
-        Vector3d& n1 = polyhedron.m_polygonList[_t1].m_normal;
-        Vector3d& n2 = polyhedron.m_polygonList[_t2].m_normal;
-        return asin((n1 % n2).norm()/(n1.norm() * n2.norm())) < 0;
-          return true;
+        //Vector3d& n1 = polyhedron.m_polygonList[_t1].m_normal;
+        //Vector3d& n2 = polyhedron.m_polygonList[_t2].m_normal;
+        //return asin((n1 % n2).norm()/(n1.norm() * n2.norm())) > 0;
       }
       //no common edge or vertex, triangles are not adjacent
       else {
         //outDebug = true;
         return true;
-        //return false;
       }
     }
 
