@@ -217,11 +217,13 @@ class UniformMedialAxisSampler : public SamplerMethod<MPTraits> {
               return CheckVertTri(_env, _w1, -(tickID+1), tempID);
           }
         }
-        else { //triangle id didn't change
+        //triangle id didn't change - no medial axis crossing
+        else {
           return false;
         }
       }
-      else {  //tempWitness != tickWitness; the closest obstacle changes
+      //tempWitness != tickWitness, closest obstacle changed!
+      else {
         return true;
       }
     }
@@ -320,7 +322,7 @@ class UniformMedialAxisSampler : public SamplerMethod<MPTraits> {
     }
 
     bool CheckVertVert(Environment* _env, int _w, int _v1, int _v2) {
-      return false;
+      return true;
     }
 
     bool CheckTriTri(Environment* _env, int _w, int _t1, int _t2) {
