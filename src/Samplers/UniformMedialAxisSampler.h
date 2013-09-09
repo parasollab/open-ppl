@@ -40,7 +40,7 @@ class UniformMedialAxisSampler : public SamplerMethod<MPTraits> {
       m_vcLabel = _node.stringXMLParameter("vcLabel", true, "", "Validity Test Method");
       m_dmLabel =_node.stringXMLParameter("dmLabel", true, "default", "Distance Metric Method");
       m_length = _node.numberXMLParameter("d", true, 0.0, 0.0, MAX_DBL, "generate line segment with length d");
-      m_stepSize = _node.numberXMLParameter("t", true, 0.0, 0.0, MAX_DBL, "the step size t to generate intermediate nodes");
+      m_stepSize = _node.numberXMLParameter("t", false, 1, 0, MAX_INT, "the step size t, as a factor of the resolution");
       m_useBoundary = _node.boolXMLParameter("useBBX", true, false, "Use bounding box as obstacle");
 
       _node.warnUnrequestedAttributes();
@@ -73,15 +73,17 @@ class UniformMedialAxisSampler : public SamplerMethod<MPTraits> {
       int cfg1Witness;
 
       double length = m_length ? m_length : _env->GetMultiBody(_cfgIn.GetRobotIndex())->GetMaxAxisRange();
-      double stepSize = m_stepSize ? m_stepSize : 100*_env->GetPositionRes();
 
+      //extend boundary
       _env->ExpandBoundary(length, _cfgIn.GetRobotIndex());
-      shared_ptr<Boundary> bbNew = _env->GetBoundary();
 
       //Generate first cfg
       CfgType cfg1 = _cfgIn;
       if(cfg1 == CfgType())
-        cfg1.GetRandomCfg(_env, bbNew);
+        cfg1.GetRandomCfg(_env, _bb);
+
+      //restore boundary
+      _env->ExpandBoundary(-length - 2*_env->GetMultiBody(_cfgIn.GetRobotIndex())->GetBoundingSphereRadius(), _cfgIn.GetRobotIndex());
 
       cfg1Free = vc->IsValid(cfg1, _env, _stats, cdInfo, &callee) && !vc->IsInsideObstacle(cfg1, _env, cdInfo);
 
@@ -110,174 +112,124 @@ class UniformMedialAxisSampler : public SamplerMethod<MPTraits> {
       //VDAddTempCfg(cfg2, true);
 
       CfgType tick = cfg1, temp = cfg1;
-      bool tickFree, tempFree = cfg1Free;
+      //bool tickFree, tempFree = cfg1Free;
       int tickWitness, tempWitness = cfg1Witness;
 
       int nTicks;
       CfgType inter;
       inter.FindIncrement(cfg1, cfg2, &nTicks,
-          stepSize, 100*_env->GetOrientationRes());
+          m_stepSize * _env->GetPositionRes(), m_stepSize * _env->GetOrientationRes());
 
       for(int i=1; i<nTicks; ++i) {
 
         tick += inter;
-
-        VDAddTempCfg(tick, true);
-
         m_clearanceUtility.CollisionInfo(tick, tmp, _bb, tick.m_clearanceInfo);
         tickWitness = tick.m_clearanceInfo.m_nearestObstIndex;
 
+        VDAddTempCfg(tick, true);
         CfgType t1;
         for(size_t i = 0; i<CfgType::DOF(); ++i)
-          t1[i] = cfg1.m_clearanceInfo.m_objectPoint[i];
+          t1[i] = tick.m_clearanceInfo.m_objectPoint[i];
         VDAddTempCfg(t1, false);
-
         VDClearLastTemp();
         VDClearLastTemp();
 
-        //The closest obstacle is the same, check if the triangles which the
-        //witness points belong to are adjacent and form a concave face
-        if(tempWitness == tickWitness) {
-          //Find the triangles which the witness points belong to first
-          //assume obstacle multibodies have 1 body
-          int tempID = FindTriangle(_env, tickWitness, temp);
-          int tickID = FindTriangle(_env, tickWitness, tick);
+        bool crossed = CheckMedialAxisCrossing(_env, temp, tempWitness, tick, tickWitness);
+        if(crossed) {
+          //keep witness with higher clearance
 
-          //if the triangle IDs have not been set, there has been an error in
-          //the triangle computation
-          assert(tempID != -1 && tickID != -1);
+          //tickFree = vc->IsValid(tick, _env, _stats, cdInfo, &callee)
+          //  && !vc->IsInsideObstacle(tick, _env, cdInfo);
 
-          //witness point is on a vertex, ignore this point
-          if(tempID == -2) {
-            tempWitness = tickWitness;
-            temp = tick;
-            //if(tempID == -2)
-            //  temp = tick;
-            continue;
-          }
-          if(tickID == -2)
-            continue;
+          if(temp.m_clearanceInfo.m_minDist > 0 || tick.m_clearanceInfo.m_minDist > 0) {
+          //if(/*tempFree || tickFree*/) {
+            CfgType& higher = temp.m_clearanceInfo.m_minDist > tick.m_clearanceInfo.m_minDist ? temp : tick;
 
-          //Check if two triangles are adjacent to each other
-          //Find the common edge between two triangles
-          GMSPolyhedron& polyhedron = _env->GetMultiBody(tickWitness)->GetBody(0)->GetPolyhedron();
-          if(tempID != tickID) {
-            pair<int, int> edge = polyhedron.m_polygonList[tempID].CommonEdge(polyhedron.m_polygonList[tickID]);
-            Vector3d v0, v1, v2;
-            if(edge.first != -1 && edge.second != -1) {  //If there is a common edge (v0, v1) between two triangle facets
-              //Get vertex information for two facets
-              v0 = polyhedron.m_vertexList[edge.first];
-              v1 = polyhedron.m_vertexList[edge.second];
-              for(vector<int>::iterator I = polyhedron.m_polygonList[tempID].m_vertexList.begin(); I != polyhedron.m_polygonList[tempID].m_vertexList.end(); I++) {
-                if((*I != edge.first) && (*I != edge.second))
-                  v2 = polyhedron.m_vertexList[*I];
-              }
-              //Find out which triangle is on the left and which is on the right
-              Vector3d va = v1 - v0;  //Common edge (v0, v1)
-              Vector3d vb = v2 - v0;  //The other edge (v0, v2)
-              int left, right;
-              //The face is on the left of the common edge if (va x vb).normal vector of the face > 0
-              //If < 0, the face is on the right
-              if(((va % vb) * polyhedron.m_polygonList[tempID].m_normal) > 0) {
-                left = tempID;
-                right = tickID;
-              }
-              else {
-                left = tickID;
-                right = tempID;
-              }
-              //Check if the two triangles form a concave face
-              //If (normal vector of left) x (normal vector of right) is the
-              //opposite direction of the common edge, they form a concave face
-              if((((polyhedron.m_polygonList[left].m_normal) % (polyhedron.m_polygonList[right].m_normal)) * va) < -0.0001){  //Concave
-                //Find the medial axis
-                tickFree = vc->IsValid(tick, _env, _stats, cdInfo, &callee)
-                  && !vc->IsInsideObstacle(tick, _env, cdInfo);
-
-                if(tempFree && tickFree) {
-                  if((temp.m_clearanceInfo.m_minDist > tick.m_clearanceInfo.m_minDist) && _env->InBounds(temp, _bb)) {
-                    _stats.IncNodesGenerated(this->GetNameAndLabel());
-                    generated = true;
-                    _cfgOut.push_back(temp);
-                    tempFree = tickFree;
-                    temp = tick;
-                  }
-                  else if((tick.m_clearanceInfo.m_minDist > temp.m_clearanceInfo.m_minDist) && _env->InBounds(tick, _bb)) {
-                    _stats.IncNodesGenerated(this->GetNameAndLabel());
-                    generated = true;
-                    _cfgOut.push_back(tick);
-                    tempFree = tickFree;
-                    temp = tick;
-                  }
-                }
-              }
-              else {  //Convex
-                tempWitness = tickWitness;
-                temp = tick;
-              }
-            }
-            else {  //no common edge, generate valid medial axis crossing
-              /*tickFree = vc->IsValid(tick, _env, _stats, cdInfo, &callee)
-                && !vc->IsInsideObstacle(tick, _env, cdInfo);
-              if(tempFree && tickFree) {
-                if((temp.m_clearanceInfo.m_minDist > tick.m_clearanceInfo.m_minDist) && _env->InBounds(temp, _bb)) {
-                  _stats.IncNodesGenerated(this->GetNameAndLabel());
-                  generated = true;
-                  _cfgOut.push_back(temp);
-                  tempFree = tickFree;
-                  temp = tick;
-                }
-                else if((tick.m_clearanceInfo.m_minDist > temp.m_clearanceInfo.m_minDist) && _env->InBounds(tick, _bb)) {
-                  _stats.IncNodesGenerated(this->GetNameAndLabel());
-                  generated = true;
-                  _cfgOut.push_back(tick);
-                  tempFree = tickFree;
-                  temp = tick;
-                }
-              }*/
-            }
-          }
-        }
-        else {  //tempWitness != tickWitness; the closest obstacle changes
-          tickFree = vc->IsValid(tick, _env, _stats, cdInfo, &callee)
-            && !vc->IsInsideObstacle(tick, _env, cdInfo);
-          //Both temp and tick are valid, keep the one with larger clearance
-          if(tempFree && tickFree) {
-            if((temp.m_clearanceInfo.m_minDist > tick.m_clearanceInfo.m_minDist) && _env->InBounds(temp, _bb)) {
+            if(_env->InBounds(higher, _bb)) {
               _stats.IncNodesGenerated(this->GetNameAndLabel());
               generated = true;
               _cfgOut.push_back(temp);
-              tempFree = tickFree;
-              temp = tick;
-            }
-            else if((tick.m_clearanceInfo.m_minDist > temp.m_clearanceInfo.m_minDist) && _env->InBounds(tick, _bb)) {
-              _stats.IncNodesGenerated(this->GetNameAndLabel());
-              generated = true;
-              _cfgOut.push_back(tick);
-              tempFree = tickFree;
-              temp = tick;
-            }
-          }
-          //Either temp or tick is valid, keep the valid one
-          else if(tempFree || tickFree) {
-            if(tempFree && _env->InBounds(temp, _bb)) {
-              _stats.IncNodesGenerated(this->GetNameAndLabel());
-              generated = true;
-              _cfgOut.push_back(temp);
-              tempFree = tickFree;
-              temp = tick;
-            }
-            else if(tickFree && _env->InBounds(tick, _bb)){
-              _stats.IncNodesGenerated(this->GetNameAndLabel());
-              generated = true;
-              _cfgOut.push_back(tick);
-              tempFree = tickFree;
-              temp = tick;
             }
           }
         }
+
+        tempWitness = tickWitness;
+        //tempFree = tickFree;
+        temp = tick;
       }
       return generated;
+    }
+
+    bool CheckMedialAxisCrossing(Environment* _env,
+        const CfgType& _c1, int _w1,
+        const CfgType& _c2, int _w2) {
+
+      //The closest obstacle is the same, check if the triangles which the
+      //witness points belong to are adjacent and form a concave face
+      if(_w1 == _w2) {
+        //Find the triangles which the witness points belong to first
+        //assume obstacle multibodies have 1 body
+        int tempID = FindTriangle(_env, _w1, _c1);
+        int tickID = FindTriangle(_env, _w2, _c2);
+
+        //if the triangle IDs have not been set, there has been an error in
+        //the triangle computation
+        assert(tempID != -1 && tickID != -1);
+
+        //witness point is on a vertex, ignore this point
+        //if(tempID == -2 || tickID == -2)
+        //  return false;
+
+        //Check if two triangles are adjacent to each other
+        //Find the common edge between two triangles
+        GMSPolyhedron& polyhedron = _env->GetMultiBody(_w1)->GetBody(0)->GetPolyhedron();
+        if(tempID != tickID) {
+          pair<int, int> edge = polyhedron.m_polygonList[tempID].CommonEdge(polyhedron.m_polygonList[tickID]);
+          Vector3d v0, v1, v2;
+          if(edge.first != -1 && edge.second != -1) {  //If there is a common edge (v0, v1) between two triangle facets
+            //Get vertex information for two facets
+            v0 = polyhedron.m_vertexList[edge.first];
+            v1 = polyhedron.m_vertexList[edge.second];
+            for(vector<int>::iterator I = polyhedron.m_polygonList[tempID].m_vertexList.begin(); I != polyhedron.m_polygonList[tempID].m_vertexList.end(); I++) {
+              if((*I != edge.first) && (*I != edge.second))
+                v2 = polyhedron.m_vertexList[*I];
+            }
+            //Find out which triangle is on the left and which is on the right
+            Vector3d va = v1 - v0;  //Common edge (v0, v1)
+            Vector3d vb = v2 - v0;  //The other edge (v0, v2)
+            int left, right;
+            //The face is on the left of the common edge if (va x vb).normal vector of the face > 0
+            //If < 0, the face is on the right
+            if(((va % vb) * polyhedron.m_polygonList[tempID].m_normal) > 0) {
+              left = tempID;
+              right = tickID;
+            }
+            else {
+              left = tickID;
+              right = tempID;
+            }
+            //Check if the two triangles form a concave face
+            //If (normal vector of left) x (normal vector of right) is the
+            //opposite direction of the common edge, they form a concave face
+            if(((polyhedron.m_polygonList[left].m_normal % polyhedron.m_polygonList[right].m_normal) * va) < -0.0001){  //Concave
+              return true;
+            }
+            else {  //Convex
+              return false;
+            }
+          }
+          else {  //no common edge, generate valid medial axis crossing
+            //return true;
+            return false;
+          }
+        }
+        else { //triangle id didn't change
+          return false;
+        }
+      }
+      else {  //tempWitness != tickWitness; the closest obstacle changes
+        return true;
+      }
     }
 
     int FindTriangle(Environment* _env, int _witness, const CfgType& _c) {
@@ -313,8 +265,8 @@ class UniformMedialAxisSampler : public SamplerMethod<MPTraits> {
         Vector3d v1 = polyhedron.m_vertexList[poly.m_vertexList[1]];
         Vector3d v2 = polyhedron.m_vertexList[poly.m_vertexList[2]];
 
-        if(witnessPoint == v0 || witnessPoint == v1 || witnessPoint == v2)
-          return -2;
+        //if(witnessPoint == v0 || witnessPoint == v1 || witnessPoint == v2)
+        //  return -2;
 
         Vector3d vp = witnessPoint - v0;
         double projDist = (witnessPoint - (witnessPoint - (poly.m_normal * (vp*poly.m_normal)))).norm();
