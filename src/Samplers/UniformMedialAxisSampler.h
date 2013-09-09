@@ -189,7 +189,7 @@ class UniformMedialAxisSampler : public SamplerMethod<MPTraits> {
         if(tempID != tickID) {
           //vertex-vertex
           if(tempID < 0 && tickID < 0) {
-            return CheckVertVert(_env, _w1, -(tempID+1), -(tickID+1))
+            return CheckVertVert(_env, _w1, -(tempID+1), -(tickID+1));
           }
           //tiangle-triangle
           else if(tempID >=0 && tickID >= 0) {
