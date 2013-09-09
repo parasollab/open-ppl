@@ -26,6 +26,7 @@ class Boundary {
     virtual Point3d GetRandomPoint() const = 0; 
     virtual bool InBoundary(const Vector3d& _p) const = 0;
     virtual double GetClearance(const Vector3d& _p) const = 0;
+    virtual int GetSideID(const Vector3d& _p) const = 0;
     virtual Vector3d GetClearancePoint(const Vector3d& _p) const = 0;
     virtual double GetClearance2DSurf(Point2d _pos, Point2d& _cdPt) const = 0;
    
