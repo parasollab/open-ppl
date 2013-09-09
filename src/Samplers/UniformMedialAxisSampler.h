@@ -189,7 +189,7 @@ class UniformMedialAxisSampler : public SamplerMethod<MPTraits> {
         if(tempID != tickID) {
           //vertex-vertex
           if(tempID < 0 && tickID < 0) {
-            return false;
+            return CheckVertVert(_env, _w1, -(tempID+1), -(tickID+1))
           }
           //tiangle-triangle
           else if(tempID >=0 && tickID >= 0) {
@@ -211,7 +211,10 @@ class UniformMedialAxisSampler : public SamplerMethod<MPTraits> {
           }
           //triangle-vertex
           else {
-            return false;
+            if(tempID < 0)
+              return CheckVertTri(_env, _w1, -(tempID+1), tickID);
+            else
+              return CheckVertTri(_env, _w1, -(tickID+1), tempID);
           }
         }
         else { //triangle id didn't change
@@ -316,6 +319,10 @@ class UniformMedialAxisSampler : public SamplerMethod<MPTraits> {
       return id;
     }
 
+    bool CheckVertVert(Environment* _env, int _w, int _v1, int _v2) {
+      return false;
+    }
+
     bool CheckTriTri(Environment* _env, int _w, int _t1, int _t2) {
       //Check if two triangles are adjacent to each other
       GMSPolyhedron& polyhedron = _env->GetMultiBody(_w)->GetBody(0)->GetPolyhedron();
@@ -370,6 +377,9 @@ class UniformMedialAxisSampler : public SamplerMethod<MPTraits> {
       }
     }
 
+    bool CheckVertTri(Environment* _env, int _w, int _v, int _t) {
+      return false;
+    }
 };
 
 #endif
