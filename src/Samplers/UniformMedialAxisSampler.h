@@ -90,20 +90,20 @@ class UniformMedialAxisSampler : public SamplerMethod<MPTraits> {
       cfg1Free = vc->IsValid(cfg1, _env, _stats, cdInfo, &callee) && !vc->IsInsideObstacle(cfg1, _env, cdInfo);
 
       /*VDClearAll();
-      VDComment("Cfg1");
-      VDAddTempCfg(cfg1, cfg1Free);
-      */
+        VDComment("Cfg1");
+        VDAddTempCfg(cfg1, cfg1Free);
+        */
 
       CfgType tmp;
       m_clearanceUtility.CollisionInfo(cfg1, tmp, _bb, cfg1.m_clearanceInfo);
       cfg1Witness = cfg1.m_clearanceInfo.m_nearestObstIndex;
 
       /*CfgType t1;
-      for(size_t i = 0; i<CfgType::DOF(); ++i)
+        for(size_t i = 0; i<CfgType::DOF(); ++i)
         t1[i] = cfg1.m_clearanceInfo.m_objectPoint[i];
-      VDAddTempCfg(t1, false);
-      VDClearLastTemp();
-      */
+        VDAddTempCfg(t1, false);
+        VDClearLastTemp();
+        */
       //cout << "Witness Point::" << cfg1.m_clearanceInfo.m_objectPoint << endl;
 
       CfgType cfg2;
@@ -116,7 +116,6 @@ class UniformMedialAxisSampler : public SamplerMethod<MPTraits> {
       //VDAddTempCfg(cfg2, true);
 
       CfgType tick = cfg1, temp = cfg1;
-      //bool tickFree, tempFree = cfg1Free;
       int tickWitness, tempWitness = cfg1Witness;
 
       int nTicks;
@@ -131,34 +130,22 @@ class UniformMedialAxisSampler : public SamplerMethod<MPTraits> {
         tickWitness = tick.m_clearanceInfo.m_nearestObstIndex;
 
         /*VDAddTempCfg(tick, true);
-        CfgType t1;
-        for(size_t i = 0; i<CfgType::DOF(); ++i)
+          CfgType t1;
+          for(size_t i = 0; i<CfgType::DOF(); ++i)
           t1[i] = tick.m_clearanceInfo.m_objectPoint[i];
-        VDAddTempCfg(t1, false);
-        VDClearLastTemp();
-        VDClearLastTemp();
-        */
+          VDAddTempCfg(t1, false);
+          VDClearLastTemp();
+          VDClearLastTemp();
+          */
         bool crossed = CheckMedialAxisCrossing(_env, temp, tempWitness, tick, tickWitness);
         if(crossed) {
-          //keep witness with higher clearance
-
-          //tickFree = vc->IsValid(tick, _env, _stats, cdInfo, &callee)
-          //  && !vc->IsInsideObstacle(tick, _env, cdInfo);
-
-          if(temp.m_clearanceInfo.m_minDist > 0 || tick.m_clearanceInfo.m_minDist > 0) {
-          //if(/*tempFree || tickFree*/)
-            CfgType& higher = temp.m_clearanceInfo.m_minDist > tick.m_clearanceInfo.m_minDist ? temp : tick;
-
-            if(_env->InBounds(higher, _bb)) {
-              _stats.IncNodesGenerated(this->GetNameAndLabel());
-              generated = true;
-              _cfgOut.push_back(temp);
-            }
+          //cout << "Crossed, entering binary search." << endl;
+          if(BinarySearch(_env, _bb, _stats, temp, tempWitness, tick, tickWitness, _cfgOut)) {
+            generated = true;
           }
         }
 
         tempWitness = tickWitness;
-        //tempFree = tickFree;
         temp = tick;
       }
       return generated;
@@ -241,8 +228,8 @@ class UniformMedialAxisSampler : public SamplerMethod<MPTraits> {
         Vector3d& vert = polyhedron.m_vertexList[i];
 
         if(witnessPoint == vert) {
-            stat->StopClock("FindVertex");
-            return -i - 1;
+          stat->StopClock("FindVertex");
+          return -i - 1;
         }
       }
       stat->StopClock("FindVertex");
@@ -301,7 +288,7 @@ class UniformMedialAxisSampler : public SamplerMethod<MPTraits> {
             << "p0:: " << p0 << "\tp1:: " << p1 << "\tp2:: " << p2 << endl
             << "ptemp:: " << ptemp << endl
             << "ptempIn:: " << PtInTriangle(p0, p1, p2, ptemp) << endl;
-          */
+            */
           double u,v;
           bool inTri = PtInTriangle(p0, p1, p2, ptemp, u, v);
           //cout << "u::" << u << "\tv::" << v << endl;
@@ -329,7 +316,7 @@ class UniformMedialAxisSampler : public SamplerMethod<MPTraits> {
       for(PIT pit = polygons.begin(); pit!=polygons.end(); ++pit) {
         vector<int>& verts = pit->m_vertexList;
         if(find(verts.begin(), verts.end(), _v1) != verts.end() &&
-          find(verts.begin(), verts.end(), _v2) != verts.end())
+            find(verts.begin(), verts.end(), _v2) != verts.end())
           return false;
       }
 
@@ -379,7 +366,7 @@ class UniformMedialAxisSampler : public SamplerMethod<MPTraits> {
       //test if there is one common vertex between the triangles
       int vert = polyhedron.m_polygonList[_t1].CommonVertex(polyhedron.m_polygonList[_t2]);
       if(vert != -1) {
-        //cout << "There is only one common vertex it seems -_-" << endl;
+        cout << "There is only one common vertex it seems -_-" << endl;
         return false;
       }
       //no common edge or vertex, triangles are not adjacent
@@ -402,6 +389,111 @@ class UniformMedialAxisSampler : public SamplerMethod<MPTraits> {
       }
       //vertex and triangle are separate, must've crossed the medial axis
       return true;
+    }
+
+    bool BinarySearch(Environment* _env, shared_ptr<Boundary> _bb, StatClass& _stats,
+        const CfgType& _c1, int _w1, const CfgType& _c2, int _w2,
+        vector<CfgType>& _cfgOut) {
+
+      CfgType left = _c1, right = _c2;
+      //grab initial IDs
+      int leftOI = _w1, rightOI = _w2;
+      int leftID = leftOI, rightID = rightOI;
+      if(_w1 == _w2) {
+        leftID = FindVertex(_env, leftOI, left);
+        if(leftID == 1) {
+          leftID = FindTriangle(_env, leftOI, left);
+          assert(leftID != -1); //triangle id should be found! error!
+        }
+        rightID = FindVertex(_env, rightOI, right);
+        if(rightID == 1) {
+          rightID = FindTriangle(_env, rightOI, right);
+          assert(rightID != -1); //triangle id should be found! error!
+        }
+      }
+
+      //iterate until distance between _c1 and _c2 is below
+      //environment resolution
+      CfgType incr;
+      int nTicks;
+      incr.FindIncrement(left, right, &nTicks, _env->GetPositionRes(), _env->GetOrientationRes());
+
+      while(nTicks > 1) {
+        //compute midpoint
+        CfgType mid = (left + right) / 2;
+
+        //grab witness id
+        CfgType tmp;
+        m_clearanceUtility.CollisionInfo(mid, tmp, _bb, mid.m_clearanceInfo);
+        int midOI = mid.m_clearanceInfo.m_nearestObstIndex;
+
+        //discovered new obstacle index, need to recurse on each side
+        if(midOI != leftOI || midOI != rightOI) {
+          bool l = false;
+          if(CheckMedialAxisCrossing(_env, left, leftOI, mid, midOI))
+            l = BinarySearch(_env, _bb, _stats, left, leftOI, mid, midOI, _cfgOut);
+          bool r = false;
+          if(CheckMedialAxisCrossing(_env, mid, midOI, right, rightOI))
+            r = BinarySearch(_env, _bb, _stats, mid, midOI, right, rightOI, _cfgOut);
+          if(l || r)
+            return true;
+          else
+            return false;
+        }
+
+        //find triangle id
+        int midID = midOI;
+        if(_w1 == _w2) {
+          midID = FindVertex(_env, midOI, mid);
+          if(midID == 1) {
+            midID = FindTriangle(_env, midOI, mid);
+            assert(midID != -1); //triangle id should be found! error!
+          }
+        }
+
+        //search on right half
+        if(midID == leftID) {
+          //left = mid
+          leftOI = midOI;
+          leftID = midID;
+          left = mid;
+        }
+        //search on left half
+        else if(midID == rightID) {
+          //right = mid
+          rightOI = midOI;
+          rightID = midID;
+          right = mid;
+        }
+        //middle has completely different midpoint, recurse on each half
+        else {
+          bool l = false;
+          if(CheckMedialAxisCrossing(_env, left, leftOI, mid, midOI))
+            l = BinarySearch(_env, _bb, _stats, left, leftOI, mid, midOI, _cfgOut);
+          bool r = false;
+          if(CheckMedialAxisCrossing(_env, mid, midOI, right, rightOI))
+            r = BinarySearch(_env, _bb, _stats, mid, midOI, right, rightOI, _cfgOut);
+          if(l || r)
+            return true;
+          else
+            return false;
+        }
+
+        //set nticks
+        incr.FindIncrement(left, right, &nTicks, _env->GetPositionRes(), _env->GetOrientationRes());
+      }
+
+      //keep witness with higher clearance
+      if(left.m_clearanceInfo.m_minDist > 0 || right.m_clearanceInfo.m_minDist > 0) {
+        const CfgType& higher = left.m_clearanceInfo.m_minDist > right.m_clearanceInfo.m_minDist ? left : right;
+
+        if(_env->InBounds(higher, _bb)) {
+          _stats.IncNodesGenerated(this->GetNameAndLabel());
+          _cfgOut.push_back(higher);
+          return true;
+        }
+      }
+      return false;
     }
 };
 
