@@ -139,6 +139,8 @@ class UniformMedialAxisSampler : public SamplerMethod<MPTraits> {
           //if the triangle IDs have not been set, there has been an error in
           //the triangle computation
           assert(tempID != -1 && tickID != -1);
+          //if(tempID == -1 || tickID == -1)
+          //  continue;
 
           //Check if two triangles are adjacent to each other
           //Find the common edge between two triangles
@@ -171,7 +173,7 @@ class UniformMedialAxisSampler : public SamplerMethod<MPTraits> {
               //Check if the two triangles form a concave face
               //If (normal vector of left) x (normal vector of right) is the
               //opposite direction of the common edge, they form a concave face
-              if((((polyhedron.m_polygonList[left].m_normal) % (polyhedron.m_polygonList[right].m_normal)) * va) < 0){  //Concave
+              if((((polyhedron.m_polygonList[left].m_normal) % (polyhedron.m_polygonList[right].m_normal)) * va) < -0.0001){  //Concave
                 //Find the medial axis
                 tickFree = vc->IsValid(tick, _env, _stats, cdInfo, &callee)
                   && !vc->IsInsideObstacle(tick, _env, cdInfo);
@@ -294,6 +296,9 @@ class UniformMedialAxisSampler : public SamplerMethod<MPTraits> {
         Vector3d v0 = polyhedron.m_vertexList[poly.m_vertexList[0]];
         Vector3d v1 = polyhedron.m_vertexList[poly.m_vertexList[1]];
         Vector3d v2 = polyhedron.m_vertexList[poly.m_vertexList[2]];
+
+        //if(witnessPoint == v0 || witnessPoint == v1 || witnessPoint == v2)
+        //  return -1;
 
         Vector3d vp = witnessPoint - v0;
         double projDist = (witnessPoint - (witnessPoint - (poly.m_normal * (vp*poly.m_normal)))).norm();
