@@ -161,14 +161,16 @@ class UniformMedialAxisSampler : public SamplerMethod<MPTraits> {
       if(_w1 == _w2) {
         //Check if the witness points are on the bounding box
         if(_w1 == -1) {
-          const Transformation& t = _env->GetMultiBody(_w1)->GetBody(0)->WorldTransformation();
-          int side1 = _env->GetBoundary()->GetSideID(_c1.m_clearanceInfo.m_objectPoint);
-          int side2 = _env->GetBoundary()->GetSideID(_c2.m_clearanceInfo.m_objectPoint);
-          if (side1 == side2)
+          //int side1 = _env->GetBoundary()->GetSideID(_c1.m_clearanceInfo.m_objectPoint);
+          //int side2 = _env->GetBoundary()->GetSideID(_c2.m_clearanceInfo.m_objectPoint);
+          int side1 = _env->GetBoundary()->GetSideID(_c1.GetData());
+          int side2 = _env->GetBoundary()->GetSideID(_c2.GetData());
+          if(side1 == side2)
             return false;
           else
             return true;
         }
+
         //Find the triangles which the witness points belong to first
         //assume obstacle multibodies have 1 body
         int tempID = FindVertex(_env, _w1, _c1);
@@ -409,7 +411,7 @@ class UniformMedialAxisSampler : public SamplerMethod<MPTraits> {
 
       CfgType left = _c1, right = _c2;
       //grab initial IDs
-      int leftOI = _w1, rightOI = _w2;
+      /*int leftOI = _w1, rightOI = _w2;
       int leftID = leftOI, rightID = rightOI;
       if(_w1 == _w2) {
         leftID = FindVertex(_env, leftOI, left);
@@ -493,7 +495,7 @@ class UniformMedialAxisSampler : public SamplerMethod<MPTraits> {
 
         //set nticks
         incr.FindIncrement(left, right, &nTicks, _env->GetPositionRes(), _env->GetOrientationRes());
-      }
+      }*/
 
       //keep witness with higher clearance
       if(left.m_clearanceInfo.m_minDist > 0 || right.m_clearanceInfo.m_minDist > 0) {

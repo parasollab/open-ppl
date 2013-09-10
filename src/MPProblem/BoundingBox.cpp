@@ -1,7 +1,7 @@
 #include "BoundingBox.h"
 #include "Utilities/MPUtils.h"
 
-BoundingBox::BoundingBox() { 
+BoundingBox::BoundingBox() {
   for(int i = 0; i < 3; ++i)
     m_bbx[i] = make_pair(-numeric_limits<double>::max(), numeric_limits<double>::max());
 }
@@ -45,7 +45,7 @@ BoundingBox::GetRandomPoint() const {
   return p;
 }
 
-bool 
+bool
 BoundingBox::InBoundary(const Vector3d& _p) const {
   for(int i = 0; i < 3; ++i)
     if( _p[i] < m_bbx[i].first || _p[i] > m_bbx[i].second)
@@ -53,7 +53,7 @@ BoundingBox::InBoundary(const Vector3d& _p) const {
   return true;
 }
 
-double 
+double
 BoundingBox::GetClearance(const Vector3d& _p) const {
   double minClearance = numeric_limits<double>::max();
   for (int i = 0; i < 3; ++i) {
@@ -64,15 +64,39 @@ BoundingBox::GetClearance(const Vector3d& _p) const {
   return minClearance;
 }
 
+/*
 int
 BoundingBox::GetSideID(const Vector3d& _p) const {
+  cout << "GetSideID::" << _p << endl;
   double minClearance = numeric_limits<double>::max();
   int id, faceID;
   for (int i = 0; i < 3; ++i) {
-    if((_p[i] - m_bbx[i].first) < (m_bbx[i].second - _p[i])) 
-      id = -(i+1);
+    cout << "i::" << i << endl;
+    cout << _p[i] - m_bbx[i].first << "\t" << m_bbx[i].second - _p[i] << endl;
+    if((_p[i] - m_bbx[i].first) < (m_bbx[i].second - _p[i]))
+      id = i;
     else
-      id = -2*(i+1);
+      id = i+3;
+    double clearance = min((_p[i] - m_bbx[i].first ), (m_bbx[i].second - _p[i]));
+    if (clearance < minClearance || i == 0) {
+      faceID = id;
+      minClearance = clearance;
+    }
+  }
+  cout << "faceID::" << faceID << endl;
+  return faceID;
+}
+*/
+
+int
+BoundingBox::GetSideID(const vector<double>& _p) const {
+  double minClearance = numeric_limits<double>::max();
+  int id, faceID;
+  for (int i = 0; i < _p.size(); ++i) {
+    if((_p[i] - m_bbx[i].first) < (m_bbx[i].second - _p[i]))
+      id = i;
+    else
+      id = i+3;
     double clearance = min((_p[i] - m_bbx[i].first ), (m_bbx[i].second - _p[i]));
     if (clearance < minClearance || i == 0) {
       faceID = id;
@@ -99,7 +123,7 @@ BoundingBox::GetClearancePoint(const Vector3d& _p) const {
   return clrP;
 }
 
-double 
+double
 BoundingBox::GetClearance2DSurf(Point2d _pos, Point2d& _cdPt) const {
   double minDist=1e10;
   double cbbx[6]={m_bbx[0].first,m_bbx[0].second,
@@ -107,7 +131,7 @@ BoundingBox::GetClearance2DSurf(Point2d _pos, Point2d& _cdPt) const {
     m_bbx[2].first,m_bbx[2].second};
   double dist[4]={_pos[0]-cbbx[0],cbbx[1]-_pos[0],
     _pos[1]-cbbx[4],cbbx[5]-_pos[1]};
-  if(dist[0]<minDist){     
+  if(dist[0]<minDist){
     minDist=dist[0];
     _cdPt(cbbx[0], _pos[1]);
   }
@@ -129,7 +153,7 @@ BoundingBox::GetClearance2DSurf(Point2d _pos, Point2d& _cdPt) const {
   return minDist;
 }
 
-void 
+void
 BoundingBox::ResetBoundary(vector<pair<double, double> >& _obstBBX, double _d){
   for(int i = 0; i<3; ++i){
     m_bbx[i].first = _obstBBX[i].first - _d;

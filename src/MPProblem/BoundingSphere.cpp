@@ -1,13 +1,13 @@
 #include "BoundingSphere.h"
 #include "Cfg/Cfg.h"
 
-BoundingSphere::BoundingSphere() : 
-  m_center(0.0, 0.0, 0.0), 
+BoundingSphere::BoundingSphere() :
+  m_center(0.0, 0.0, 0.0),
   m_radius(numeric_limits<double>::max()) {
   }
 
-BoundingSphere::BoundingSphere(const BoundingSphere& _bs) : 
-  m_center(_bs.m_center), 
+BoundingSphere::BoundingSphere(const BoundingSphere& _bs) :
+  m_center(_bs.m_center),
   m_radius(_bs.m_radius) {
   }
 
@@ -51,7 +51,8 @@ BoundingSphere::GetClearance(const Vector3d& _p) const {
 }
 
 int
-BoundingSphere::GetSideID(const Vector3d& _p) const {
+//BoundingSphere::GetSideID(const Vector3d& _p) const {
+BoundingSphere::GetSideID(const vector<double>& _p) const {
   return -1;
 }
 
