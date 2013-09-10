@@ -452,12 +452,19 @@ Body::IsConvexHullVertex(const Vector3d& _v) {
   return false;
 }
 
-#include <CGAL/Simple_cartesian.h>
+//#include <CGAL/Simple_cartesian.h>
+#include <CGAL/Quotient.h>
+#include <CGAL/MP_Float.h>
+#include <../src/CGAL/MP_Float.cpp>
+//#include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
+#include <CGAL/Exact_predicates_exact_constructions_kernel.h>
 #include <CGAL/algorithm.h>
 #include <CGAL/Polyhedron_3.h>
 #include <CGAL/convex_hull_3.h>
 
-typedef CGAL::Simple_cartesian<double>  K;
+//typedef CGAL::Simple_cartesian<double>            K;
+//typedef CGAL::Exact_predicates_inexact_constructions_kernel  K;
+typedef CGAL::Exact_predicates_exact_constructions_kernel  K;
 typedef CGAL::Polyhedron_3<K>                     Polyhedron_3;
 typedef K::Segment_3                              Segment_3;
 typedef K::Point_3                                Point_3;
@@ -481,7 +488,7 @@ Body::ComputeConvexHull() {
   cout << "Convex hull::" << endl;
   cout << poly.size_of_vertices() << endl;
   for(Polyhedron_3::Point_iterator vit = poly.points_begin(); vit != poly.points_end(); ++vit)
-    m_convexHull.m_vertexList.push_back(Vector3d((*vit)[0], (*vit)[1], (*vit)[2]));
+    m_convexHull.m_vertexList.push_back(Vector3d(to_double((*vit)[0]), to_double((*vit)[1]), to_double((*vit)[2])));
 
   m_convexHullAvailable = true;
 }

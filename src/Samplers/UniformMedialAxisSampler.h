@@ -71,7 +71,6 @@ class UniformMedialAxisSampler : public SamplerMethod<MPTraits> {
       CDInfo cdInfo;
 
       bool generated = false;
-      bool cfg1Free;
       int cfg1Witness;
 
       double length = m_length ? m_length : _env->GetMultiBody(_cfgIn.GetRobotIndex())->GetMaxAxisRange();
@@ -87,7 +86,7 @@ class UniformMedialAxisSampler : public SamplerMethod<MPTraits> {
       //restore boundary
       _env->ExpandBoundary(-length - 2*_env->GetMultiBody(_cfgIn.GetRobotIndex())->GetBoundingSphereRadius(), _cfgIn.GetRobotIndex());
 
-      cfg1Free = vc->IsValid(cfg1, _env, _stats, cdInfo, &callee) && !vc->IsInsideObstacle(cfg1, _env, cdInfo);
+      //cfg1Free = vc->IsValid(cfg1, _env, _stats, cdInfo, &callee) && !vc->IsInsideObstacle(cfg1, _env, cdInfo);
 
       /*VDClearAll();
         VDComment("Cfg1");
@@ -441,7 +440,7 @@ class UniformMedialAxisSampler : public SamplerMethod<MPTraits> {
         int midOI = mid.m_clearanceInfo.m_nearestObstIndex;
 
         //discovered new obstacle index, need to recurse on each side
-        if(midOI != leftOI || midOI != rightOI) {
+        if(midOI != leftOI && midOI != rightOI) {
           bool l = false;
           if(CheckMedialAxisCrossing(_env, left, leftOI, mid, midOI))
             l = BinarySearch(_env, _bb, _stats, left, leftOI, mid, midOI, _cfgOut);
@@ -498,9 +497,16 @@ class UniformMedialAxisSampler : public SamplerMethod<MPTraits> {
 
       //keep witness with higher clearance
       if(left.m_clearanceInfo.m_minDist > 0 || right.m_clearanceInfo.m_minDist > 0) {
-        const CfgType& higher = left.m_clearanceInfo.m_minDist > right.m_clearanceInfo.m_minDist ? left : right;
+        CfgType& higher = left.m_clearanceInfo.m_minDist > right.m_clearanceInfo.m_minDist ? left : right;
 
-        if(_env->InBounds(higher, _bb)) {
+        ValidityCheckerPointer vc = this->GetMPProblem()->GetValidityChecker(m_vcLabel);
+        CDInfo cdInfo;
+        string callee = this->GetNameAndLabel() + "::BinS";
+        bool cfgFree = _env->InBounds(higher)
+          && vc->IsValid(higher, _env, _stats, cdInfo, &callee)
+          && !vc->IsInsideObstacle(higher, _env, cdInfo);
+
+        if(cfgFree) {
           _stats.IncNodesGenerated(this->GetNameAndLabel());
           _cfgOut.push_back(higher);
           return true;
