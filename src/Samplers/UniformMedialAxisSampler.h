@@ -411,9 +411,13 @@ class UniformMedialAxisSampler : public SamplerMethod<MPTraits> {
 
       CfgType left = _c1, right = _c2;
       //grab initial IDs
-      /*int leftOI = _w1, rightOI = _w2;
+      int leftOI = _w1, rightOI = _w2;
       int leftID = leftOI, rightID = rightOI;
-      if(_w1 == _w2) {
+      if(_w1 == -1)  //the witness point is on the bounding box
+        leftID = _bb->GetSideID(_c1.GetData());
+      if(_w2 == -1)  //the witness point is on the bounding box
+        rightID = _bb->GetSideID(_c2.GetData());
+      if((_w1 == _w2) && (_w1 != -1)) {
         leftID = FindVertex(_env, leftOI, left);
         if(leftID == 1) {
           leftID = FindTriangle(_env, leftOI, left);
@@ -457,7 +461,9 @@ class UniformMedialAxisSampler : public SamplerMethod<MPTraits> {
 
         //find triangle id
         int midID = midOI;
-        if(_w1 == _w2) {
+        if(midOI == -1)  //witness point is on the bounding box
+          midID = _bb->GetSideID(mid.GetData());
+        if((_w1 == _w2) && (_w1 != -1)) {
           midID = FindVertex(_env, midOI, mid);
           if(midID == 1) {
             midID = FindTriangle(_env, midOI, mid);
@@ -495,7 +501,7 @@ class UniformMedialAxisSampler : public SamplerMethod<MPTraits> {
 
         //set nticks
         incr.FindIncrement(left, right, &nTicks, _env->GetPositionRes(), _env->GetOrientationRes());
-      }*/
+      }
 
       //keep witness with higher clearance
       if(left.m_clearanceInfo.m_minDist > 0 || right.m_clearanceInfo.m_minDist > 0) {
