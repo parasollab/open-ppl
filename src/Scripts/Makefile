@@ -18,5 +18,11 @@ normalize: normalize.cpp
 avg: avg.cpp
 	g++ avg.cpp -o avg
 
+dist: dist.cpp
+	g++ dist.cpp -o dist
+
+parsemap: parsemap.cpp
+	g++ parsemap.cpp -o parsemap
+
 clean:
-	rm xmlgen scripts filter dataCollect normalize avg
+	rm xmlgen scripts filter dataCollect normalize avg dist parsemap
