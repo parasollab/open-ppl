@@ -3,7 +3,7 @@
 cd $1
 
 filename=../$1.results
-tests=(MAPRM UMAPRM)
+tests=(UniformRandom)
 
 echo $1 > $filename
 for t in ${tests[@]}
@@ -19,7 +19,7 @@ do
   find -name $t.*.stat | xargs ../filter $2 | xargs grep "PathVarClr" | xargs ../avg PathVarClr 2 0 >> $filename
   #find -name $t.*.stat | xargs ../filter $2 | xargs grep "Map Generation:" | xargs ../avg Time 4 1 >> $filename
   find -name $t.*.map | xargs ../parsemap
-  find -name $t.*.coords | xargs ../dist *.env
+  find -name $t.*.coords | xargs ../dist *.env.dist
   find -name $t.*.dist | xargs grep "standard deviation:" | xargs ../avg Uniformity 5 0 >> $filename
 done
 

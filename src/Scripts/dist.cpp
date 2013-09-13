@@ -139,13 +139,13 @@ double distance(vertex* node1, vertex* node2)
 }
 int main(int argc, char* argv[])
 {
-  for (int i = 2; i < argc; ++i) {
+  for (int index = 2; index < argc; ++index) {
     ifstream fin(argv[1], ios::in);  //Read in object env file
-    ifstream fintxt(argv[i],ios::in);  //Read in map file containing x, y, z info for each vertex
+    ifstream fintxt(argv[index],ios::in);  //Read in map file containing x, y, z info for each vertex
     vector<vertex*> model_vertices;
     vector<face*> model_faces;
 
-    ofstream fouth((string(argv[i]) + ".out").c_str(), ios::out);  //Output file for minimum distance
+    ofstream fouth((string(argv[index]) + ".out").c_str(), ios::out);  //Output file for minimum distance
     if( !fin.good() )
     {	//Not good. File not found
       cerr<<"env File  not found"<<endl;
@@ -258,6 +258,7 @@ int main(int argc, char* argv[])
     for(int i=0;i<number_nodes;i++)
       interdistance[i] = new double [number_nodes];
 
+    /*
     //Calculate individula distance
     double sumsurface =0;
     for(int i=0;i<number_nodes;i++)
@@ -288,6 +289,7 @@ int main(int argc, char* argv[])
     //Calculates the number of vertex in each face
     for(int i=0;i<number_nodes;i++)
       maxface[i]->vertex_contains++;
+    */
 
     //Calculate inter-node distance 
     for(int i=0;i<number_nodes;i++){
@@ -366,7 +368,7 @@ int main(int argc, char* argv[])
 
     weighted_average = weighted_average/(number_nodes * total_area);
 
-    ofstream ofs((string(argv[i]) + ".dist").c_str());
+    ofstream ofs((string(argv[index]) + ".dist").c_str());
 
     /*
     ofs << "--------To Surface------------------------" << endl;
