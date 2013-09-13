@@ -1,4 +1,4 @@
-all: xmlgen scripts filter dataCollect normalize avg
+all: xmlgen scripts filter dataCollect normalize avg dist parsemap
 
 xmlgen: xmlgen.cpp
 	g++ xmlgen.cpp -o xmlgen
