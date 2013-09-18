@@ -11,47 +11,47 @@
 namespace pmpl_detail {
 
   template<typename NF, typename RDMP, typename I, typename CFG, typename O>
-      struct VirtualFindNeighbors{
-        public:
-          VirtualFindNeighbors(NF* _v, RDMP* _r, I _f, I _l, const CFG& _c, O _o) :
-            m_memory(_v), m_rdmp(_r), m_first(_f), m_last(_l), m_cfg(_c), m_output(_o){
-            }
+    struct VirtualFindNeighbors{
+      public:
+        VirtualFindNeighbors(NF* _v, RDMP* _r, I _f, I _l, const CFG& _c, O _o) :
+          m_memory(_v), m_rdmp(_r), m_first(_f), m_last(_l), m_cfg(_c), m_output(_o){
+          }
 
-          template<typename T>
-            void operator()(T& _t) {
-              T* tptr = dynamic_cast<T*>(m_memory);
-              if(tptr != NULL){
-                tptr->FindNeighbors(m_rdmp, m_first, m_last, m_cfg, m_output);
-              }
+        template<typename T>
+          void operator()(T& _t) {
+            T* tptr = dynamic_cast<T*>(m_memory);
+            if(tptr != NULL){
+              tptr->FindNeighbors(m_rdmp, m_first, m_last, m_cfg, m_output);
             }
-        private:
-          NF* m_memory;
-          RDMP* m_rdmp;
-          I m_first, m_last;
-          const CFG& m_cfg;
-          O m_output;
-      };
+          }
+      private:
+        NF* m_memory;
+        RDMP* m_rdmp;
+        I m_first, m_last;
+        const CFG& m_cfg;
+        O m_output;
+    };
 
   template<typename NF, typename RDMP, typename I, typename O>
-      struct VirtualFindNeighborPairs{
-        public:
-          VirtualFindNeighborPairs(NF* _v, RDMP* _r, I _f1, I _l1, I _f2, I _l2, O _o) :
-            m_memory(_v), m_rdmp(_r), m_first1(_f1), m_last1(_l1), m_first2(_f2), m_last2(_l2), m_output(_o){
-            }
+    struct VirtualFindNeighborPairs{
+      public:
+        VirtualFindNeighborPairs(NF* _v, RDMP* _r, I _f1, I _l1, I _f2, I _l2, O _o) :
+          m_memory(_v), m_rdmp(_r), m_first1(_f1), m_last1(_l1), m_first2(_f2), m_last2(_l2), m_output(_o){
+          }
 
-          template<typename T>
-            void operator()(T& _t) {
-              T* tptr = dynamic_cast<T*>(m_memory);
-              if(tptr != NULL){
-                tptr->FindNeighborPairs(m_rdmp, m_first1, m_last1, m_first2, m_last2, m_output);
-              }
+        template<typename T>
+          void operator()(T& _t) {
+            T* tptr = dynamic_cast<T*>(m_memory);
+            if(tptr != NULL){
+              tptr->FindNeighborPairs(m_rdmp, m_first1, m_last1, m_first2, m_last2, m_output);
             }
-        private:
-          NF* m_memory;
-          RDMP* m_rdmp;
-          I m_first1, m_last1, m_first2, m_last2;
-          O m_output;
-      };
+          }
+      private:
+        NF* m_memory;
+        RDMP* m_rdmp;
+        I m_first1, m_last1, m_first2, m_last2;
+        O m_output;
+    };
 }
 
 // K      - NF will find k-closest neighbors
@@ -73,14 +73,14 @@ class NeighborhoodFinderMethod : public MPBaseObject<MPTraits> {
     NeighborhoodFinderMethod(MPProblemType* _problem, XMLNodeReader& _node, bool _requireDM = true);
 
     virtual void PrintOptions(ostream& _os) const {
-      _os << this->GetName() << endl
+      _os << this->GetNameAndLabel() << endl
         << "\tdmLabel: " << m_dmLabel << endl
         << "\tunconnected: " << m_unconnected << endl;
     }
 
     NFType GetNFType() const {return m_nfType;}
     size_t& GetK() {return m_k;}
-    double& GetRadius(){return m_radius;}
+    double& GetRadius() {return m_radius;}
 
     virtual typename MPProblemType::DistanceMetricPointer GetDMMethod() const;
 
