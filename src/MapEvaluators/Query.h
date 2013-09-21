@@ -31,12 +31,15 @@ class Query : public MapEvaluatorMethod<MPTraits> {
     Query(string _queryFileName);
     Query(const CfgType& _start, const CfgType& _goal);
     Query(MPProblemType* _problem, XMLNodeReader& _node, bool _warn = true);
+    Query(MPProblemType* _problem, CfgType _start, CfgType _goal, const vector<string>& _connectorLabels=vector<string>(), 
+	  bool _deleteNodes=true, string _searchAlg="astar", bool _smooth=false, bool _maSmooth=false); 
     virtual ~Query() { }
 
     void ParseXML(XMLNodeReader& _node);
     virtual void PrintOptions(ostream& _os) const;
     vector<CfgType>& GetQuery() { return m_query; }
     vector<CfgType>& GetPath() { return m_path; }
+    vector<VID>& GetPathVIDs() { return m_pathVIDs; }
     void SetPathFile(string _filename) { m_pathFile = _filename; }
 
     // Reads a query and calls the other PerformQuery(), then calls Smooth() if desired
@@ -148,6 +151,18 @@ Query<MPTraits>::Query(MPProblemType* _problem, XMLNodeReader& _node, bool _warn
   ReadQuery(m_queryFile);
 }
 
+// Uses start/goal to set up query for an existing MPProblem
+template<class MPTraits>
+Query<MPTraits>::Query(MPProblemType* _problem, CfgType _start, CfgType _goal, const vector<string>& _connectorLabels, bool _deleteNodes, string _searchAlg, bool _smooth, bool _maSmooth) :
+  m_deleteNodes(_deleteNodes), m_smooth(_smooth), m_maSmooth(_maSmooth) {
+
+  SetSearchAlgViaString(_searchAlg);
+  m_nodeConnectionLabels=_connectorLabels;
+  m_query.push_back(_start);
+  m_query.push_back(_goal);
+  this->SetMPProblem(_problem);
+}
+
 template<class MPTraits>
 void
 Query<MPTraits>::ParseXML(XMLNodeReader& _node) {
@@ -208,13 +223,6 @@ Query<MPTraits>::operator()() {
   // Perform query
   bool ans = PerformQuery(rdmp);
 
-  // Delete added nodes (such as start and goal) if desired
-  if(m_deleteNodes) {
-    for(typename vector<VID>::iterator it = m_toBeDeleted.begin(); it != m_toBeDeleted.end(); it++)
-      rdmp->GetGraph()->delete_vertex(*it);
-    m_toBeDeleted.clear();
-  }
-
   return ans;
 }
 
@@ -247,17 +255,21 @@ Query<MPTraits>::PerformQuery(RoadmapType* _rdmp) {
     }
   }
 
-  if(m_pathFile == "") {
-    cerr << "Warning: no path file specified. Outputting path to \"Basic.path\"." << endl;
-    WritePath("Basic.path", m_path);
-  }
-  else{
+  if(m_pathFile != "") {
     WritePath(m_pathFile, m_path);
   }
   if(m_smooth || m_maSmooth)
     Smooth();
   if(m_maSmooth)
     MedialAxisSmooth();
+  
+  // Delete added nodes (such as start and goal) if desired
+  if(m_deleteNodes) {
+    for(typename vector<VID>::iterator it = m_toBeDeleted.begin(); it != m_toBeDeleted.end(); it++)
+      _rdmp->GetGraph()->delete_vertex(*it);
+    m_toBeDeleted.clear();
+  }
+
   return true;
 }
 
@@ -400,8 +412,7 @@ Query<MPTraits>::PerformQuery(const CfgType& _start, const CfgType& _goal, Roadm
       if(CanRecreatePath(_rdmp, shortestPath, recreatedPath)) {
         connected = true;
         m_path.insert(m_path.end(), recreatedPath.begin(), recreatedPath.end());
-        if(m_smooth || m_maSmooth)
-          m_pathVIDs.insert(m_pathVIDs.end(),shortestPath.begin(),shortestPath.end());
+        m_pathVIDs.insert(m_pathVIDs.end(),shortestPath.begin(),shortestPath.end());
         break;
       }
       else if(this->m_debug)

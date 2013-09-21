@@ -101,6 +101,7 @@ class Environment {
 
     void BuildCDstructure(cd_predefined cdtype);
 
+    void SetRobots(vector<Robot> _robots) { m_robots=_robots; }
   protected:
 
     void ReadBoundary(istream& _is);

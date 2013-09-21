@@ -602,9 +602,7 @@ LocalManeuveringStrategy<MPTraits>::Initialize(){
 
 	for (size_t i=0; i<m_numRoots; ) {
 	   tmp.GetRandomCfg(env);
-	   //if (tmp.InBoundary(env)
-	   //&& vc->IsValid(tmp, env, *stats, cdInfo, &callee))
-	   if( vc->IsValid(tmp, env, *stats, cdInfo, &callee)){
+	   if( vc->IsValid(tmp, env, *stats, cdInfo, callee)){
 	      m_roots.push_back(tmp);
 	      m_goals.push_back(tmp);
 	      ++i;
@@ -1052,8 +1050,7 @@ LocalManeuveringStrategy<MPTraits>::TryPlan(size_t& _startTick, size_t _cfgIndex
 
     ///////////////////////////////////////////////
     //check state
-    //if(!(tick.InBoundary(env)) || !(vc->IsValid(tick, env, *stats, cdInfo, &callee)))
-    if(!(vc->IsValid(tick, env, *stats, cdInfo, &callee))){
+    if(!(vc->IsValid(tick, env, *stats, cdInfo, callee))){
       cout << "Failed movement: " << endl; // << tick << endl;
       return false; //break out of here, collision
     }
@@ -1169,8 +1166,7 @@ LocalManeuveringStrategy<MPTraits>::TryPlanTowardGoal(size_t& _startTick, size_t
 
     ///////////////////////////////////////////////
     //check state
-    //if(!(tick.InBoundary(env)) || !(vc->IsValid(tick, env, *stats, cdInfo, &callee)))
-    if( !(vc->IsValid(tick, env, *stats, cdInfo, &callee))) {
+    if( !(vc->IsValid(tick, env, *stats, cdInfo, callee))) {
        cout << " found invalid cfg at iter: " << iteration << " cfgIndex: " << _cfgIndex << " bad pos: " << next.GetPos() << endl;
       return false; //break out of here, collision
     }
