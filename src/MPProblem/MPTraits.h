@@ -49,6 +49,7 @@
 #include "Samplers/UniformRandomSampler.h"
 
 //local planner includes
+#include "LocalPlanners/AStar.h"
 #include "LocalPlanners/HierarchicalLP.h"
 #include "LocalPlanners/MedialAxisLP.h"
 #include "LocalPlanners/RotateAtS.h"
@@ -178,8 +179,8 @@ struct MPTraits{
 
   //types of local planners available in our world
   typedef boost::mpl::list<
-    //AStarClearance<MPTraits>,
-    //AStarDistance<MPTraits>,
+    AStarClearance<MPTraits>,
+    AStarDistance<MPTraits>,
     HierarchicalLP<MPTraits>,
     MedialAxisLP<MPTraits>,
     RotateAtS<MPTraits>,
