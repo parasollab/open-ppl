@@ -58,6 +58,12 @@
 #include "LocalPlanners/ToggleLP.h"
 #include "LocalPlanners/TransformAtS.h"
 
+//path smoothing includes
+#include "PathModifiers/CombinedPathModifier.h"
+#include "PathModifiers/MedialAxisPathModifier.h"
+#include "PathModifiers/ResamplePathModifier.h"
+#include "PathModifiers/ShortcuttingPathModifier.h"
+
 //connector includes
 #include "Connectors/AdaptiveConnector.h"
 #include "Connectors/CCsConnector.h"
@@ -99,7 +105,6 @@
 #include "MPStrategies/LocalManeuveringStrategy.h"
 #include "MPStrategies/MedialAxisRRT.h"
 #include "MPStrategies/OBRRTStrategy.h"
-#include "MPStrategies/ResamplePointStrategy.h"
 #include "MPStrategies/TogglePRMStrategy.h"
 #include "MPStrategies/UnitTest/DMTestStrategy.h"
 #include "MPStrategies/UtilityGuidedGenerator.h"
@@ -189,6 +194,14 @@ struct MPTraits{
     TransformAtS<MPTraits>
     > LocalPlannerMethodList;
 
+  //types of path smoothing available in our world
+  typedef boost::mpl::list<
+    CombinedPathModifier<MPTraits>,
+    MedialAxisPathModifier<MPTraits>,
+    ResamplePathModifier<MPTraits>,
+    ShortcuttingPathModifier<MPTraits>
+      > PathModifierMethodList;
+
   //types of connectors available in our world
   typedef boost::mpl::list<
     AdaptiveConnector<MPTraits>,
@@ -247,7 +260,6 @@ struct MPTraits{
     EvaluateMapStrategy<MPTraits>,
     MedialAxisRRT<MPTraits>,
     OBRRTStrategy<MPTraits>,
-    ResamplePointStrategy<MPTraits>,
     TogglePRMStrategy<MPTraits>,
     UtilityGuidedGenerator<MPTraits>
     #ifdef _PARALLEL
@@ -310,6 +322,14 @@ struct MPTraits<CfgSurface, DefaultWeight<CfgSurface> > {
   typedef boost::mpl::list<
     SurfaceLP<MPTraits>
     > LocalPlannerMethodList;
+
+  //types of path smoothing available in our world
+  typedef boost::mpl::list<
+    CombinedPathModifier<MPTraits>,
+    MedialAxisPathModifier<MPTraits>,
+    ResamplePathModifier<MPTraits>,
+    ShortcuttingPathModifier<MPTraits>
+    > PathModifierMethodList;
 
   //types of connectors available in our world
   typedef boost::mpl::list<
@@ -385,6 +405,11 @@ struct LocalManeuversMPTraits{
   //types of local planners available in our world
   typedef boost::mpl::list<
     > LocalPlannerMethodList;
+
+  //types of path smoothing available in our world
+  typedef boost::mpl::list<
+    CombinedPathModifier<MPTraits>
+    > PathModifierMethodList;
 
   //types of connectors available in our world
   typedef boost::mpl::list<
@@ -470,6 +495,11 @@ struct MPTraits<CfgSurface, DefaultWeight<CfgSurface> > {
   typedef boost::mpl::list<
     SurfaceLP<MPTraits>
     > LocalPlannerMethodList;
+
+  //types of path smoothing available in our world
+  typedef boost::mpl::list<
+    CombinedPathModifier<MPTraits>
+  > PathModifierMethodList;
 
   //types of connectors available in our world
   typedef boost::mpl::list<
