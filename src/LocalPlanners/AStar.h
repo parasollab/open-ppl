@@ -375,7 +375,7 @@ size_t
 AStarDistance<MPTraits>::ChooseOptimalNeighbor(
     Environment* _env, StatClass& _stats, CfgType& _col, DistanceMetricPointer _dm,
     const CfgType& _c1, const CfgType& _c2, vector<CfgType>& _neighbors) {
-  double minDistance = MAXFLOAT;
+  double minDistance = MAX_DBL;
   size_t retPosition = 0;
   double value = 0;
   for(size_t i = 0; i < _neighbors.size(); i++) {
@@ -455,7 +455,7 @@ size_t
 AStarClearance<MPTraits>::ChooseOptimalNeighbor(
     Environment* _env, StatClass& _stats, CfgType& _col, DistanceMetricPointer _dm,
     const CfgType& _c1, const CfgType& _c2, vector<CfgType>& _neighbors) {
-  double maxClearance = -MAXFLOAT;
+  double maxClearance = -MAX_DBL;
   size_t retPosition = 0;
   double value = 0;
 

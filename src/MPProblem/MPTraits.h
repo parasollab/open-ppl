@@ -270,13 +270,7 @@ struct MPTraits{
 };
 
 #if(defined(PMPCfgSurface) || defined(PMPSSSurfaceMult))
-//#ifdef PMPCfgSurface
-//class CfgSurface;
-//#else
-//class SSSurfaceMult;
-//#endif
 class CfgSurface;
-class SSSurfaceMult;
 
 #ifdef PMPCfgSurface
 template<>
@@ -365,37 +359,38 @@ struct MPTraits<CfgSurface, DefaultWeight<CfgSurface> > {
 
 
 #ifdef PMPSSSurfaceMult
-/*
+class SSSurfaceMult;
 template<>
-struct LocalManeuversMPTraits<SSSurfaceMult, DefaultWeight<SSSurfaceMult> > {
+struct MPTraits<SSSurfaceMult, DefaultWeight<SSSurfaceMult> > {
   typedef SSSurfaceMult CfgType;
   typedef DefaultWeight<CfgType> WeightType;
-*/
-template<class C, class W = DefaultWeight<C> >
-struct LocalManeuversMPTraits{
-  typedef C CfgType;
-  typedef W WeightType;
+#ifdef _PARALLEL
+  typedef SSSurfaceMult CfgRef;
+#else
+  typedef SSSurfaceMult& CfgRef;
+#endif
 
-  typedef MPProblem<LocalManeuversMPTraits> MPProblemType;
+
+  typedef MPProblem<MPTraits> MPProblemType;
 
   //types of distance metrics available in our world
   typedef boost::mpl::list<
-    EuclideanDistance<LocalManeuversMPTraits>
+    EuclideanDistance<MPTraits>
     > DistanceMetricMethodList;
 
   //types of validity checkers available in our world
   typedef boost::mpl::list<
-    CollisionDetectionValidity<LocalManeuversMPTraits>,
+    CollisionDetectionValidity<MPTraits>,
 //#ifdef PMPCfgSurface
-//    SurfaceValidity<LocalManeuversMPTraits>
+//    SurfaceValidity<MPTraits>
 //#else
-    SSSurfaceValidity<LocalManeuversMPTraits>
+    SSSurfaceValidity<MPTraits>
 //#endif
     > ValidityCheckerMethodList;
 
   //types of neighborhood finders available in our world
   typedef boost::mpl::list<
-    BruteForceNF<LocalManeuversMPTraits>
+    BruteForceNF<MPTraits>
     > NeighborhoodFinderMethodList;
 
   //types of samplers available in our world
@@ -414,30 +409,30 @@ struct LocalManeuversMPTraits{
   //types of connectors available in our world
   typedef boost::mpl::list<
 //#ifdef PMPCfgSurface
-//    ConnectNeighboringSurfaces<LocalManeuversMPTraits>,
-//    NeighborhoodConnector<LocalManeuversMPTraits>//,
+//    ConnectNeighboringSurfaces<MPTraits>,
+//    NeighborhoodConnector<MPTraits>//,
 //#endif
       > ConnectorMethodList;
 
   //types of metrics available in our world
   typedef boost::mpl::list<
-    NumNodesMetric<LocalManeuversMPTraits>
+    NumNodesMetric<MPTraits>
     > MetricMethodList;
 
   //types of map evaluators available in our world
   typedef boost::mpl::list<
-    ConditionalEvaluator<LocalManeuversMPTraits>
+    ConditionalEvaluator<MPTraits>
     > MapEvaluatorMethodList;
 
   //types of motion planning strategies available in our world
   typedef boost::mpl::list<
-    BasicPRM<LocalManeuversMPTraits>//,
+    BasicPRM<MPTraits>//,
 #ifdef PMPSSSurfaceMult
-    ,LocalManeuveringStrategy<LocalManeuversMPTraits>
+    ,LocalManeuveringStrategy<MPTraits>
 #endif
     #ifdef _PARALLEL
-    //,BasicParallelPRM<GBLocalManeuversMPTraits>
-    //,RegularSubdivisionMethod<GBLocalManeuversMPTraits>
+    //,BasicParallelPRM<GBMPTraits>
+    //,RegularSubdivisionMethod<GBMPTraits>
     #endif
     > MPStrategyMethodList;
 };
