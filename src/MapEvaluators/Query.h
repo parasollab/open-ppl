@@ -450,7 +450,7 @@ Query<MPTraits>::Smooth() {
 template<class MPTraits>
 bool
 Query<MPTraits>::CanRecreatePath(RoadmapType* _rdmp, vector<VID>& _attemptedPath, vector<CfgType>& _recreatedPath) {
-  StatClass* stats = this->GetMPProblem()->GetStatClass();
+  //StatClass* stats = this->GetMPProblem()->GetStatClass();
   _recreatedPath.push_back(_rdmp->GetGraph()->GetVertex(*(_attemptedPath.begin())));
   for(typename vector<VID>::iterator it = _attemptedPath.begin(); it+1 != _attemptedPath.end(); it++) {
     LPOutput<MPTraits> ci;
@@ -460,7 +460,16 @@ Query<MPTraits>::CanRecreatePath(RoadmapType* _rdmp, vector<VID>& _attemptedPath
     _rdmp->GetGraph()->find_edge(ed, vi, ei);
     CfgType col;
 
-    if(this->GetMPProblem()->GetLocalPlanner(m_lpLabel)->IsConnected(
+    WeightType& edge = (*ei).property();
+    vector<CfgType> path =
+      this->GetMPProblem()->GetLocalPlanner(m_lpLabel)->ReconstructPath(this->GetMPProblem()->GetEnvironment(),
+      this->GetMPProblem()->GetDistanceMetric(m_dmLabel), _rdmp->GetGraph()->GetVertex(*it),
+      _rdmp->GetGraph()->GetVertex(*(it+1)), edge.GetIntermediates(),
+      this->GetMPProblem()->GetEnvironment()->GetPositionRes(), this->GetMPProblem()->GetEnvironment()->GetOrientationRes());
+    _recreatedPath.insert(_recreatedPath.end(), path.begin(), path.end());
+    _recreatedPath.push_back(_rdmp->GetGraph()->GetVertex(*(it+1)));
+
+    /*if(this->GetMPProblem()->GetLocalPlanner(m_lpLabel)->IsConnected(
           this->GetMPProblem()->GetEnvironment(), *stats, this->GetMPProblem()->GetDistanceMetric(m_dmLabel),
           _rdmp->GetGraph()->GetVertex(*it), _rdmp->GetGraph()->GetVertex(*(it+1)),
           col, &ci, this->GetMPProblem()->GetEnvironment()->GetPositionRes(),
@@ -475,7 +484,7 @@ Query<MPTraits>::CanRecreatePath(RoadmapType* _rdmp, vector<VID>& _attemptedPath
       _recreatedPath.push_back(col);
       WritePath("error.path", _recreatedPath);
       exit(1);
-    }
+    }*/
   }
   return true;
 }

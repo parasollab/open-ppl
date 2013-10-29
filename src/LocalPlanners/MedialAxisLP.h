@@ -23,7 +23,7 @@ class MedialAxisLP : public LocalPlannerMethod<MPTraits> {
     typedef typename MPProblemType::LocalPlannerPointer LocalPlannerPointer;
 
     MedialAxisLP(MedialAxisUtility<MPTraits> _medialAxisUtility = MedialAxisUtility<MPTraits>(),
-        double _macEpsilon = 0.01, int _maxIter = 2);
+        double _macEpsilon = 0.01, size_t _maxIter = 2);
     MedialAxisLP(MPProblemType* _problem, XMLNodeReader& _node);
     virtual ~MedialAxisLP();
 
@@ -54,7 +54,7 @@ class MedialAxisLP : public LocalPlannerMethod<MPTraits> {
         Environment* _env, StatClass& _stats, DistanceMetricPointer _dm,
         const CfgType& _c1, const CfgType& _c2, CfgType& _col,
         LPOutput<MPTraits>* _lpOutput,
-        double _posRes, double _oriRes, int _itr = 0);
+        double _posRes, double _oriRes, size_t _itr = 0);
 
     bool EpsilonClosePath(
         Environment* _env, StatClass& _stats, DistanceMetricPointer _dm,
@@ -62,36 +62,62 @@ class MedialAxisLP : public LocalPlannerMethod<MPTraits> {
         LPOutput<MPTraits>* _lpOutput,
         double _posRes, double _oriRes);
 
+    bool IsConnectedIter(
+        Environment* _env, StatClass& _stats, DistanceMetricPointer _dm,
+        const CfgType& _c1, const CfgType& _c2, CfgType& _col,
+        LPOutput<MPTraits>* _lpOutput,
+        double _posRes, double _oriRes);
+
+    bool IsConnectedBin(
+        Environment* _env, StatClass& _stats, DistanceMetricPointer _dm,
+        const CfgType& _c1, const CfgType& _c2, CfgType& _col,
+        LPOutput<MPTraits>* _lpOutput,
+        double _posRes, double _oriRes);
+
+    string m_controller;
+
     MedialAxisUtility<MPTraits> m_medialAxisUtility; //stores operations and
-                                                    //variables for medial axis
+    //variables for medial axis
     double m_macEpsilon; //some epsilon
-    int m_maxIter; //maximum depth of recursion
+    size_t m_maxIter; //maximum depth of recursion
+    double m_r; //factor of the resolution
 
     MedialAxisClearanceValidity<MPTraits> m_macVCM;  //mac validity checker
     StraightLine<MPTraits> m_envLP, m_macLP;     //straight line local planners
 
-    bool m_macVCMAdded;
+    bool m_macVCAdded;
 };
 
 // Definitions for Constructors and Destructor
 template<class MPTraits>
-MedialAxisLP<MPTraits>::MedialAxisLP(MedialAxisUtility<MPTraits> _medialAxisUtility,
-    double _macEpsilon, int _maxIter) : LocalPlannerMethod<MPTraits>(),
-    m_medialAxisUtility(_medialAxisUtility), m_macEpsilon(_macEpsilon), m_maxIter(_maxIter) {
-  this->SetMPProblem(_medialAxisUtility.GetMPProblem());
-  Init();
-}
+MedialAxisLP<MPTraits>::MedialAxisLP(
+    MedialAxisUtility<MPTraits> _medialAxisUtility,
+    double _macEpsilon, size_t _maxIter) :
+  LocalPlannerMethod<MPTraits>(),
+  m_medialAxisUtility(_medialAxisUtility),
+  m_macEpsilon(_macEpsilon), m_maxIter(_maxIter) {
+    this->SetMPProblem(_medialAxisUtility.GetMPProblem());
+    Init();
+  }
 
 template<class MPTraits>
 MedialAxisLP<MPTraits>::MedialAxisLP(MPProblemType* _problem, XMLNodeReader& _node) :
-    LocalPlannerMethod<MPTraits>(_problem, _node), m_medialAxisUtility(_problem, _node) {
-  m_macEpsilon = _node.numberXMLParameter("macEpsilon", false, 0.1, 0.0, 1.0,
-      "Epsilon-Close to the MA");
-  m_maxIter = _node.numberXMLParameter("maxIter", false, 2, 1, 1000,
-      "Maximum Number of Recursive Iterations");
-  _node.warnUnrequestedAttributes();
-  Init();
-}
+  LocalPlannerMethod<MPTraits>(_problem, _node), m_medialAxisUtility(_problem, _node) {
+    m_medialAxisUtility.SetDebug(false);
+    m_controller = _node.stringXMLParameter("controller", true, "", "Which algorithm to run?");
+    transform(m_controller.begin(), m_controller.end(), m_controller.begin(), ::toupper);
+    m_maxIter = _node.numberXMLParameter("maxIter", true, 2, 1, MAX_INT, "Maximum Number of Iterations");
+    if(m_controller == "RECURSIVE")
+      m_macEpsilon = _node.numberXMLParameter("macEpsilon", true, 0.1, 0.0, MAX_DBL, "Epsilon-Close to the MA");
+    else if(m_controller == "ITERATIVE" || m_controller == "BINARY")
+      m_r = _node.numberXMLParameter("r", true, 1.0, 0.0, MAX_DBL, "Resolution for Iter and Bin");
+    else {
+      cerr << "ERROR::MALP::Unknown controller '" << m_controller << "'. Exiting." << endl;
+      exit(1);
+    }
+    _node.warnUnrequestedAttributes();
+    Init();
+  }
 
 template<class MPTraits>
 MedialAxisLP<MPTraits>::~MedialAxisLP() {}
@@ -102,7 +128,7 @@ MedialAxisLP<MPTraits>::Init() {
   this->SetName("MedialAxisLP");
 
   //Construct a medial axis clearance validity
-  m_macVCMAdded = false;
+  m_macVCAdded = false;
   m_macVCM = MedialAxisClearanceValidity<MPTraits>(m_medialAxisUtility, m_macEpsilon);
 
   //Local planner methods
@@ -121,10 +147,10 @@ MedialAxisLP<MPTraits>::PrintOptions(ostream& _os) const {
   LocalPlannerMethod<MPTraits>::PrintOptions(_os);
   m_medialAxisUtility.PrintOptions(_os);
   _os << "\tcdLPMethod = " << m_envLP.GetName() << endl
-      << "\tmacLPMethod = " << m_macLP.GetName() << endl
-      << "\tmacVCMethod = " << m_macVCM.GetName() <<endl
-      << "\tmacEpsilon = " << m_macEpsilon << endl
-      << "\tmaxIter = " << m_maxIter << endl;
+    << "\tmacLPMethod = " << m_macLP.GetName() << endl
+    << "\tmacVCMethod = " << m_macVCM.GetName() <<endl
+    << "\tmacEpsilon = " << m_macEpsilon << endl
+    << "\tmaxIter = " << m_maxIter << endl;
 }
 
 // Main IsConnected Function
@@ -137,34 +163,35 @@ MedialAxisLP<MPTraits>::IsConnected(
     double _positionRes, double _orientationRes,
     bool _checkCollision, bool _savePath, bool _saveFailedPath) {
 
-  if(!m_macVCMAdded) {
-    this->GetMPProblem()->AddValidityChecker(ValidityCheckerPointer(&m_macVCM),
+  if(!m_macVCAdded) {
+    m_macVCAdded = true;
+    this->GetMPProblem()->AddValidityChecker(
+        ValidityCheckerPointer(&m_macVCM),
         "MAC::" + this->GetNameAndLabel());
-    m_macVCMAdded = true;
   }
 
   //Check that appropriate save path variables are set
   if(!_checkCollision) {
     if(this->m_debug) {
       cerr << "WARNING, in MedialAxisLP::IsConnected: checkCollision should be "
-           << "set to true (false is not applicable for this local planner), "
-           << "setting to true.\n";
+        << "set to true (false is not applicable for this local planner), "
+        << "setting to true.\n";
     }
     _checkCollision = true;
   }
   if(!_savePath) {
     if(this->m_debug) {
       cerr << "WARNING, in MedialAxisLP::IsConnected: savePath should be set "
-           << "to true (false is not applicable for this local planner), "
-           << "setting to true.\n";
+        << "to true (false is not applicable for this local planner), "
+        << "setting to true.\n";
     }
     _savePath = true;
   }
   if(!_saveFailedPath) {
     if(this->m_debug) {
       cerr << "WARNING, in MedialAxisLP::IsConnected: saveFailedPath should be "
-           << "set to true (false is not applicable for this local planner), "
-           << "setting to true.\n";
+        << "set to true (false is not applicable for this local planner), "
+        << "setting to true.\n";
     }
     _saveFailedPath = true;
   }
@@ -174,21 +201,41 @@ MedialAxisLP<MPTraits>::IsConnected(
 
   if(this->m_debug) {
     cout << "\nMedialAxisLP::IsConnected" << endl
-         << "Start: " << _c1 << endl
-         << "End  : " << _c2 << endl;
+      << "Start: " << _c1 << endl
+      << "End  : " << _c2 << endl;
   }
 
   bool connected = false;
   _stats.IncLPAttempts(this->GetNameAndLabel());
-  if(this->m_debug) {
-    VDComment("Initial CFGs");
-    VDAddTempCfg(_c1,true);
-    VDAddTempCfg(_c2,true);
-    VDClearComments();
-  }
+  if(m_controller == "RECURSIVE") {
+    if(this->m_debug) {
+      VDComment("Initial CFGs");
+      VDAddTempCfg(_c1,true);
+      VDAddTempCfg(_c2,true);
+      VDClearComments();
+    }
 
-  connected = IsConnectedRec(_env, _stats, _dm, _c1, _c2, _col, _lpOutput,
-      _positionRes, _orientationRes, 1);
+    connected = IsConnectedRec(_env, _stats, _dm, _c1, _c2, _col, _lpOutput,
+        _positionRes, _orientationRes, 1);
+
+    if(this->m_debug) {
+      VDClearLastTemp();
+      VDClearLastTemp();
+    }
+
+  }
+  else if(m_controller == "ITERATIVE") {
+    connected = IsConnectedIter(_env, _stats, _dm, _c1, _c2, _col, _lpOutput,
+        _positionRes, _orientationRes);
+  }
+  else if(m_controller == "BINARY") {
+    connected = IsConnectedBin(_env, _stats, _dm, _c1, _c2, _col, _lpOutput,
+        _positionRes, _orientationRes);
+  }
+  else {
+    cerr << "ERROR::MALP::Unknown controller '" << m_controller << "'. Exiting." << endl;
+    exit(1);
+  }
 
   if(connected) {
     _stats.IncLPConnections(this->GetNameAndLabel() );
@@ -196,11 +243,6 @@ MedialAxisLP<MPTraits>::IsConnected(
     _lpOutput->m_edge.second.SetWeight(_lpOutput->m_path.size());
     _lpOutput->AddIntermediatesToWeights(this->m_saveIntermediates);
     _lpOutput->SetLPLabel(this->GetLabel());
-  }
-
-  if(this->m_debug) {
-    VDClearLastTemp();
-    VDClearLastTemp();
   }
 
   return connected;
@@ -213,12 +255,12 @@ MedialAxisLP<MPTraits>::IsConnectedRec(
     Environment* _env, StatClass& _stats, DistanceMetricPointer _dm,
     const CfgType& _c1, const CfgType& _c2, CfgType& _col,
     LPOutput<MPTraits>* _lpOutput,
-    double _posRes, double _oriRes, int _itr) {
+    double _posRes, double _oriRes, size_t _itr) {
 
   if(this->m_debug) {
     cout << "  MedialAxisLP::IsConnectedRec" << endl
-         << "  Start  : " << _c1 << endl
-         << "  End    : " << _c2 << endl;
+      << "  Start  : " << _c1 << endl
+      << "  End    : " << _c2 << endl;
   }
 
   if(_itr > m_maxIter) return false;
@@ -382,15 +424,14 @@ MedialAxisLP<MPTraits>::EpsilonClosePath(
   if(passed) {
     if(this->m_debug) {
       cout << "macLPMethod->IsConnected Passed: maLPOutput.size: "
-           << maLPOutput.m_path.size() << endl;
+        << maLPOutput.m_path.size() << endl;
     }
     // Test individual segments
     for(size_t i = 0; i < maLPOutput.m_path.size() - 1; ++i) {
       if(m_envLP.IsConnected(_env, _stats, _dm,maLPOutput.m_path[i],
             maLPOutput.m_path[i + 1], col, &testLPOutput, _posRes, _oriRes, false,
             true, true)) {
-        for(size_t j = 0; j < testLPOutput.m_path.size(); ++j)
-          tmpLPOutput.m_path.push_back(testLPOutput.m_path[j]);
+        copy(testLPOutput.m_path.begin(), testLPOutput.m_path.end(), back_inserter(tmpLPOutput.m_path));
         if(i != maLPOutput.m_path.size() - 2)
           tmpLPOutput.m_path.push_back(maLPOutput.m_path[i + 1]);
       }
@@ -401,11 +442,9 @@ MedialAxisLP<MPTraits>::EpsilonClosePath(
     }
     // If passed, save path and exit
     if(passed == true) {
-      if(this->m_debug) {
+      if(this->m_debug)
         cout << "envLP.IsConnected Passed: tmpLPOutput.size: " << tmpLPOutput.m_path.size() << endl;
-      }
-      for (size_t j = 0; j < tmpLPOutput.m_path.size(); ++j)
-        _lpOutput->m_path.push_back(tmpLPOutput.m_path[j]);
+      copy(tmpLPOutput.m_path.begin(), tmpLPOutput.m_path.end(), back_inserter(_lpOutput->m_path));
       return true;
     }
     else
@@ -414,6 +453,180 @@ MedialAxisLP<MPTraits>::EpsilonClosePath(
   else
     return false;
 }
+
+template<class MPTraits>
+bool
+MedialAxisLP<MPTraits>::IsConnectedIter(
+    Environment* _env, StatClass& _stats, DistanceMetricPointer _dm,
+    const CfgType& _c1, const CfgType& _c2, CfgType& _col,
+    LPOutput<MPTraits>* _lpOutput,
+    double _posRes, double _oriRes) {
+
+  if(this->m_debug) {
+    cout << "  MedialAxisLP::IsConnectedIter" << endl
+      << "  Start  : " << _c1 << endl
+      << "  End    : " << _c2 << endl;
+
+    VDClearAll();
+    VDAddTempCfg(_c1, false);
+    VDAddTempCfg(_c2, false);
+  }
+
+
+  CfgType curr = _c1, col;
+  LPOutput<MPTraits> lpOutput;
+  int nticks;
+  size_t iter = 0;
+
+  do {
+
+    CfgType prev = curr;
+
+    //Find tick at resolution
+    CfgType tick;
+    tick.FindIncrement(curr, _c2, &nticks, m_r*_posRes, m_r*_oriRes);
+    curr += tick;
+
+    //close enough to goal. Generate last segment of path and quit
+    if(curr == _c2) {
+      //check for valid connection between previous cfg and final cfg
+      //if valid, save path.
+      if(!m_envLP.IsConnected(_env, _stats, _dm, prev, _c2, col,
+            &lpOutput, _posRes, _oriRes, true, true, true)) {
+        if(this->m_debug) cout << "Couldn't connect prev: " << prev << " to final: " << _c2 << endl;
+        return false;
+      }
+
+      copy(lpOutput.m_path.begin(), lpOutput.m_path.end(), back_inserter(_lpOutput->m_path));
+
+      if(this->m_debug) {
+        VDAddTempEdge(prev, _c2);
+        cout << "Final cfg reached. Connected!" << endl;
+      }
+      return true;
+    }
+
+    if(this->m_debug) cout << "Next::" << curr << endl;
+
+    //Push to medial axis
+    if(! m_medialAxisUtility.PushToMedialAxis(curr, _env->GetBoundary())) {
+      if(this->m_debug) cout << "Push failed. Return false." <<endl;
+      return false;
+    }
+
+    if(this->m_debug) {
+      cout << "Pushed::" << curr << endl;
+      VDAddTempCfg(curr, true);
+    }
+
+    //check for pushes to previous configs, if true, return false
+    if(curr == prev) {
+      if(this->m_debug) cout << "Push to prev location. Returning false." << endl;
+      return false;
+    }
+
+    //check for valid connection between previous cfg and pushed cfg
+    //if valid, save path.
+    if(!m_envLP.IsConnected(_env, _stats, _dm, prev, curr, col,
+          &lpOutput, _posRes, _oriRes, true, true, true)) {
+      if(this->m_debug) cout << "Couldn't connect prev: " << prev << " to curr: " << curr << endl;
+      return false;
+    }
+
+    if(this->m_debug) VDAddTempEdge(prev, curr);
+
+    if(curr != _c2)
+      _lpOutput->m_intermediates.push_back(curr);
+
+    copy(lpOutput.m_path.begin(), lpOutput.m_path.end(), back_inserter(_lpOutput->m_path));
+
+  } while(iter++ < m_maxIter);
+
+  if(this->m_debug) cout << "Max iter reached. Not connected." << endl;
+  return false;
+}
+
+
+template<class MPTraits>
+bool
+MedialAxisLP<MPTraits>::IsConnectedBin(
+    Environment* _env, StatClass& _stats, DistanceMetricPointer _dm,
+    const CfgType& _c1, const CfgType& _c2, CfgType& _col,
+    LPOutput<MPTraits>* _lpOutput,
+    double _posRes, double _oriRes) {
+
+  if(this->m_debug) {
+    cout << "  MedialAxisLP::IsConnectedBin" << endl
+      << "  Start  : " << _c1 << endl
+      << "  End    : " << _c2 << endl;
+
+    VDClearAll();
+    VDAddTempCfg(_c1, false);
+    VDAddTempCfg(_c2, false);
+  }
+
+  map<double, pair<CfgType, LPOutput<MPTraits> > > path;
+  typedef pair<pair<double, CfgType>, pair<double, CfgType> > Segment;
+  queue<Segment> segQueue; //queue stores segments to process
+  size_t iter = 0;
+
+  segQueue.push(Segment(make_pair(0, _c1), make_pair(1, _c2)));
+
+  while(!segQueue.empty() && iter++ < m_maxIter) {
+    //grab next pair
+    Segment seg = segQueue.front();
+    segQueue.pop();
+
+    int nTicks;
+    CfgType incr;
+    incr.FindIncrement(seg.first.second, seg.second.second, &nTicks, m_r*_posRes, m_r*_oriRes);
+    //if pair is close enough, test a connection and add to final path
+    if(nTicks <= 1) {
+      LPOutput<MPTraits> lpOutput;
+      CfgType col;
+      if(!m_envLP.IsConnected(_env, _stats, _dm, seg.first.second, seg.second.second, col, &lpOutput, _posRes, _oriRes, true, true, true)) {
+        if(this->m_debug) cout << "Connection on segment ({"
+          << seg.first.second << "}, {" << seg.second.second << "}) failed." << endl;
+        return false;
+      }
+
+      //add to path
+      path[seg.first.first] = make_pair(seg.second.second, lpOutput);
+    }
+    //not close enough, so push to MA and push back resulting segments
+    else {
+      CfgType mid = (seg.first.second + seg.second.second)/2;
+      double midval = (seg.first.first + seg.second.first)/2.;
+
+      if(!m_medialAxisUtility.PushToMedialAxis(mid, _env->GetBoundary())) {
+        if(this->m_debug) cout << "Push failed." << endl;
+        return false;
+      }
+
+      segQueue.push(Segment(seg.first, make_pair(midval, mid)));
+      segQueue.push(Segment(make_pair(midval, mid), seg.second));
+    }
+  }
+
+  if(segQueue.empty()) {
+    if(this->m_debug) cout << "Connected!" << endl;
+
+    //assemble path
+    typedef typename map<double, pair<CfgType, LPOutput<MPTraits> > >::iterator PIT;
+    for(PIT pit = path.begin(); pit != path.end(); ++pit) {
+      if(pit->second.first != _c2)
+        _lpOutput->m_intermediates.push_back(pit->second.first);
+      copy(pit->second.second.m_path.begin(), pit->second.second.m_path.end(), back_inserter(_lpOutput->m_path));
+    }
+
+    return true;
+  }
+  else {
+    if(this->m_debug) cout << "Max iter reached. Not connected..." << endl;
+    return false;
+  }
+}
+
 
 template<class MPTraits>
 vector<typename MPTraits::CfgType>

@@ -269,8 +269,10 @@ ClearanceUtility<MPTraits>::ExactCollisionInfo(CfgType& _cfg, CfgType& _clrCfg, 
     return true;
   }
 
-  VDClearAll();
-  VDAddTempCfg(_cfg, false);
+  if(this->m_debug) {
+    VDClearAll();
+    VDAddTempCfg(_cfg, false);
+  }
 
   // ClearanceUtility variables
   Environment* env = this->GetMPProblem()->GetEnvironment();
@@ -352,7 +354,8 @@ ClearanceUtility<MPTraits>::ExactCollisionInfo(CfgType& _cfg, CfgType& _clrCfg, 
     _clrCfg = tmpCfg;
   }
 
-  VDAddTempCfg(_clrCfg, true);
+  if(this->m_debug)
+    VDAddTempCfg(_clrCfg, true);
 
   _cfg.m_clearanceInfo = _cdInfo;
   _cfg.m_witnessCfg = shared_ptr<Cfg>(new CfgType(_clrCfg));
@@ -836,8 +839,10 @@ MedialAxisUtility<MPTraits>::PushCfgToMedialAxis(CfgType& _cfg, shared_ptr<Bound
   if(this->m_debug) cout << "Lower and upper bounds: " << lowerBound << "/" << middle << "/" << upperBound  << endl;
   CfgType midMCfg = transCfg*middle + _cfg;
 
-  if(this->m_debug) VDClearComments();
-  if(this->m_debug) cout << "start/mid/end: " << endl << startCfg << endl << midMCfg << endl << endingCfg << endl;
+  if(this->m_debug) {
+    VDClearComments();
+    cout << "start/mid/end: " << endl << startCfg << endl << midMCfg << endl << endingCfg << endl;
+  }
 
   vector<double> dists(5, 0);
   CfgType tmpTransCfg;
@@ -950,8 +955,10 @@ MedialAxisUtility<MPTraits>::FindMedialAxisBorderExact(
     // Test for in BBX and inside obstacle
     bool inside = vcm->IsInsideObstacle(tmpCfg, env, tmpInfo);
     bool inBBX = env->InBounds(tmpCfg, _bb);
-    if(this->m_debug) VDAddTempCfg(tmpCfg, (inside || !inBBX));
-    if(this->m_debug) VDClearLastTemp();
+    if(this->m_debug) {
+      VDAddTempCfg(tmpCfg, (inside || !inBBX));
+      VDClearLastTemp();
+    }
 
     // If inside obstacle or out of the bbx, step back
     if(inside || !inBBX) {
@@ -1044,8 +1051,10 @@ MedialAxisUtility<MPTraits>::FindMedialAxisBorderApprox(
     // Test for in BBX and inside obstacle
     bool inside = vcm->IsInsideObstacle(tmpCfg, env, tmpInfo);
     bool inBBX = env->InBounds(tmpCfg, _bb);
-    if(this->m_debug) VDAddTempCfg(tmpCfg, (inside || !inBBX));
-    if(this->m_debug) VDClearLastTemp();
+    if(this->m_debug) {
+      VDAddTempCfg(tmpCfg, (inside || !inBBX));
+      VDClearLastTemp();
+    }
 
     // If inside obstacle or out of the bbx, step back
     if(inside || !inBBX) {
