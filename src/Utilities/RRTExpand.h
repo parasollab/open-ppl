@@ -40,7 +40,6 @@ RRTExpand(typename MPTraits::MPProblemType* _mp,
     double _posRes, double _oriRes){
 
   //Setup...primarily for collision checks that occur later on
-  StatClass* stats = _mp->GetStatClass();
   Environment* env = _mp->GetEnvironment();
   typename MPTraits::MPProblemType::DistanceMetricPointer dm = _mp->GetDistanceMetric(_dm);
   typename MPTraits::MPProblemType::ValidityCheckerPointer vc = _mp->GetValidityChecker(_vc);
@@ -59,9 +58,9 @@ RRTExpand(typename MPTraits::MPProblemType* _mp,
   while(!collision && dm->Distance(env,_start,tick) <= _delta && ticker <= nTicks) {
     previous = tick;
     tick += incr;
-    if(!env->InBounds(tick) || !(vc->IsValid(tick, env, *stats, _cdInfo, callee))){
+    if(!env->InBounds(tick) || !(vc->IsValid(tick, _cdInfo, callee)))
       collision = true; //return previous tick, as it is collision-free
-    }
+
     ++ticker;
   }
   if(previous != _start){

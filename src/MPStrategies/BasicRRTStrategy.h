@@ -170,9 +170,7 @@ BasicRRTStrategy<MPTraits>::Initialize(){
   if(this->m_debug) cout<<"\nInitializing BasicRRTStrategy::"<<endl;
 
   // Setup MP variables
-  StatClass* stats = this->GetMPProblem()->GetStatClass();
   Environment* env = this->GetMPProblem()->GetEnvironment();
-  CDInfo cdInfo;
   string callee = "BasicRRTStrategy::RRT";
   // Setup RRT Variables
   CfgType tmp;
@@ -200,7 +198,7 @@ BasicRRTStrategy<MPTraits>::Initialize(){
     while(i < m_numRoots){
       tmp.GetRandomCfg(env);
       if(env->InBounds(tmp)
-          && this->GetMPProblem()->GetValidityChecker(m_vc)->IsValid(tmp, env, *stats, cdInfo, callee)){
+          && this->GetMPProblem()->GetValidityChecker(m_vc)->IsValid(tmp, callee)){
         VID add = this->GetMPProblem()->GetRoadmap()->GetGraph()->AddVertex(tmp);
         m_trees.push_back(vector<VID>(1,add));
       }

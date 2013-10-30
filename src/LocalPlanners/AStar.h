@@ -260,7 +260,6 @@ AStar<MPTraits>::FindNeighbors(
   vector<CfgType> neighbors, ret;
   vector<double> posOnly, oriOnly;
   string callee = this->GetNameAndLabel() + "::FindNeighbors";
-  CDInfo cdInfo;
   ValidityCheckerPointer vcm = this->GetMPProblem()->GetValidityChecker(m_vcLabel);
 
   //Push 2 cfgs into neighbors whose position or orientation is the same
@@ -314,7 +313,7 @@ AStar<MPTraits>::FindNeighbors(
     tmp.IncrementTowardsGoal(_goal, neighbors[i]);
     if(_current == tmp) continue;
     cdCounter++;
-    if(vcm->IsValid(tmp, _env, _stats, cdInfo, callee)) {
+    if(vcm->IsValid(tmp, callee)) {
       ret.push_back(tmp);
     }
     if(ret.size() >= m_numNeighbors)

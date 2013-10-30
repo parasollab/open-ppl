@@ -167,7 +167,6 @@ TransformAtS<MPTraits>::IsConnectedOneWay(
     bool _checkCollision, bool _savePath, bool _saveFailedPath, bool _forward) {
   string callee = this->GetNameAndLabel() + "::IsConnectedOneWay()";
   ValidityCheckerPointer vcm = this->GetMPProblem()->GetValidityChecker(this->m_vcLabel);
-  CDInfo cdInfo;
 
   if(this->m_debug)
     cout << "Start CFG positional DOF: " << _c1.PosDOF() << endl;
@@ -190,7 +189,7 @@ TransformAtS<MPTraits>::IsConnectedOneWay(
     { // _c1 and _c2 not double checked
       cdCounter++;
       if(_env->InBounds(*I)) {
-        if(!vcm->IsValid(*I, _env, _stats, cdInfo, callee)) {
+        if(!vcm->IsValid(*I, callee)) {
           _col = *I;
           connected = false;
           break;

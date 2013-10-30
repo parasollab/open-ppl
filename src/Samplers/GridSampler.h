@@ -1,4 +1,4 @@
-/*
+  /*
  * GridSampler.h
  * This samplers generates randomly a cfg c. Then for the dimensions stablished in the xml file
  * it generates a grid of points changing the values of c's dimensions and validate them.
@@ -78,7 +78,6 @@ class GridSampler : public SamplerMethod<MPTraits> {
 
     string callee = this->GetNameAndLabel() + "::Sampler()";
     ValidityCheckerPointer vc = this->GetMPProblem()->GetValidityChecker(m_vcLabel);
-    CDInfo cdInfo;
 
     // Set tmp to _cfgIn or a random configuration
     CfgType tmp = _cfgIn;
@@ -118,7 +117,7 @@ class GridSampler : public SamplerMethod<MPTraits> {
       }
 
       // Is tmp a valid configuration?
-      if(_env->InBounds(tmp, _bb) && vc->IsValid(tmp, _env, _stats, cdInfo, callee)) {
+      if(_env->InBounds(tmp, _bb) && vc->IsValid(tmp, callee)) {
         // Yes (sampler successful)
           _cfgOut.push_back(tmp);
       }

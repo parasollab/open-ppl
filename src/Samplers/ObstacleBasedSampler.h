@@ -79,7 +79,6 @@ class ObstacleBasedSampler : public SamplerMethod<MPTraits> {
 
         string callee = this->GetNameAndLabel() + "::GenerateShells()";
         ValidityCheckerPointer vcm = this->GetMPProblem()->GetValidityChecker(m_vcLabel);
-        CDInfo cdInfo;
         if(this->m_debug)
           cout << "nShellsColl = " << m_nShellsColl << endl;
 
@@ -87,7 +86,7 @@ class ObstacleBasedSampler : public SamplerMethod<MPTraits> {
         for(int i = 0; i < m_nShellsFree; i++) {
           // If the shell is valid
           if(_env->InBounds(_cFree, _bb) &&
-              vcm->IsValid(_cFree, _env, _stats, cdInfo, callee)) {
+              vcm->IsValid(_cFree, callee)) {
             if(this->m_recordKeep)
               _stats.IncNodesGenerated(this->GetNameAndLabel());
             // Add shell
@@ -105,7 +104,7 @@ class ObstacleBasedSampler : public SamplerMethod<MPTraits> {
         for(int i = 0; i < m_nShellsColl; i++) {
           // If the shell is valid
           if(_env->InBounds(_cColl, _bb) &&
-              !vcm->IsValid(_cColl, _env, _stats, cdInfo, callee)) {
+              !vcm->IsValid(_cColl, callee)) {
             if(this->m_recordKeep)
               _stats.IncNodesGenerated(this->GetNameAndLabel());
             // Add shell
@@ -124,7 +123,6 @@ class ObstacleBasedSampler : public SamplerMethod<MPTraits> {
       string callee = this->GetNameAndLabel() + "::Sampler()";
       ValidityCheckerPointer vcm = this->GetMPProblem()->GetValidityChecker(m_vcLabel);
       DistanceMetricPointer dm = this->GetMPProblem()->GetDistanceMetric(m_dmLabel);
-      CDInfo cdInfo;
 
       if(this->m_recordKeep)
         _stats.IncNodesAttempted(this->GetNameAndLabel());
@@ -132,7 +130,7 @@ class ObstacleBasedSampler : public SamplerMethod<MPTraits> {
       // Old state
       CfgType c1 = ChooseASample(_cfgIn, _env, _bb);
       bool c1BBox = _env->InBounds(c1, _bb);
-      bool c1Free = vcm->IsValid(c1, _env, _stats, cdInfo, callee);
+      bool c1Free = vcm->IsValid(c1, callee);
 
       // New state
       CfgType c2 = c1;
@@ -157,7 +155,7 @@ class ObstacleBasedSampler : public SamplerMethod<MPTraits> {
         // Update new state
         c2 += r;
         c2BBox = _env->InBounds(c2, _bb);
-        c2Free = vcm->IsValid(c2, _env, _stats, cdInfo, callee);
+        c2Free = vcm->IsValid(c2, callee);
       }
 
       // If new state is in BBox (there must be a validity change)

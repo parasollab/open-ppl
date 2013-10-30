@@ -239,13 +239,12 @@ ToggleLP<MPTraits>::IsConnectedToggle(
 
   if(this->m_recordKeep) _stats.IncLPStat("Toggle::TotalCalls", 1);
 
-  CDInfo cdInfo;
   CfgType temp = ChooseAlteredCfg<CfgType>(_env, _stats, _dm, _c1, _c2);
   CfgType n = temp;
   if(n == CfgType())
     return false;
 
-  bool isValid = vcm->IsValid(n, _env, _stats, cdInfo, callee);
+  bool isValid = vcm->IsValid(n, callee);
   _cdCounter++;
 
   if(this->m_debug){

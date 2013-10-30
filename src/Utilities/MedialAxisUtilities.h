@@ -274,7 +274,6 @@ ClearanceUtility<MPTraits>::ExactCollisionInfo(CfgType& _cfg, CfgType& _clrCfg, 
 
   // ClearanceUtility variables
   Environment* env = this->GetMPProblem()->GetEnvironment();
-  StatClass* stats = this->GetMPProblem()->GetStatClass();
 
   // Setup Validity Checker
   string callee = this->GetName() + "::ExactCollisionInfo";
@@ -283,8 +282,8 @@ ClearanceUtility<MPTraits>::ExactCollisionInfo(CfgType& _cfg, CfgType& _clrCfg, 
   _cdInfo.m_retAllInfo = true;
 
   // If not in BBX or valid, return false (IsValid gets _cdInfo)
-  bool initInside = vcm->IsInsideObstacle(_cfg, env, _cdInfo);             // Initially Inside Obst
-  bool initValidity = vcm->IsValid(_cfg, env, *stats, _cdInfo, callee); // Initial Validity
+  bool initInside = vcm->IsInsideObstacle(_cfg);             // Initially Inside Obst
+  bool initValidity = vcm->IsValid(_cfg, _cdInfo, callee); // Initial Validity
   initValidity = initValidity && !initInside;
 
   if(!initValidity){
@@ -331,18 +330,17 @@ ClearanceUtility<MPTraits>::ExactCollisionInfo(CfgType& _cfg, CfgType& _clrCfg, 
     return false;
 
   if(!initValidity){
-    CDInfo tmpInfo;
     CfgType incr, tmpCfg = _clrCfg;
     int nTicks;
     incr.FindIncrement(_cfg, _clrCfg, &nTicks, env->GetPositionRes(), env->GetOrientationRes());
 
-    bool tmpValidity = vcm->IsValid(tmpCfg, env, *stats, tmpInfo, callee);
-    tmpValidity = tmpValidity && !vcm->IsInsideObstacle(tmpCfg, env, tmpInfo);
+    bool tmpValidity = vcm->IsValid(tmpCfg, callee);
+    tmpValidity = tmpValidity && !vcm->IsInsideObstacle(tmpCfg);
     while(!tmpValidity) {
       tmpCfg += incr;
 
-      tmpValidity = vcm->IsValid(tmpCfg, env, *stats, tmpInfo, callee);
-      tmpValidity = tmpValidity && !vcm->IsInsideObstacle(tmpCfg, env, tmpInfo);
+      tmpValidity = vcm->IsValid(tmpCfg, callee);
+      tmpValidity = tmpValidity && !vcm->IsInsideObstacle(tmpCfg);
       bool inBBX = env->InBounds(tmpCfg, _bb);
       if(!inBBX) {
         if(this->m_debug) cout << "ERROR: Fell out of BBX, error out... " << endl;
@@ -377,7 +375,6 @@ ClearanceUtility<MPTraits>::ApproxCollisionInfo(CfgType& _cfg, CfgType& _clrCfg,
 
   // ClearanceUtility variables
   Environment* env = this->GetMPProblem()->GetEnvironment();
-  StatClass* stats = this->GetMPProblem()->GetStatClass();
 
   // Initialization
   string callee = this->GetName() + "::ApproxCollisionInfo";
@@ -395,12 +392,11 @@ ClearanceUtility<MPTraits>::ApproxCollisionInfo(CfgType& _cfg, CfgType& _clrCfg,
   _cdInfo.ResetVars();
   _cdInfo.m_retAllInfo = true;
 
-  bool initInside = vcm->IsInsideObstacle(_cfg, env, _cdInfo);             // Initially Inside Obst
-  bool initValidity = vcm->IsValid(_cfg, env, *stats, _cdInfo, callee); // Initial Validity
+  bool initInside = vcm->IsInsideObstacle(_cfg);           // Initially Inside Obst
+  bool initValidity = vcm->IsValid(_cfg, _cdInfo, callee); // Initial Validity
   initValidity = initValidity && !initInside;
 
   // Setup Major Variables and Constants:
-  CDInfo tmpInfo;
   size_t numRays;
   double posRes = env->GetPositionRes(), oriRes = env->GetOrientationRes();
 
@@ -455,8 +451,8 @@ ClearanceUtility<MPTraits>::ApproxCollisionInfo(CfgType& _cfg, CfgType& _clrCfg,
     for(CIT incrIT = incr.begin(), tickIT = tick.begin();
         incrIT!=incr.end() && tickIT!=tick.end(); ++incrIT, ++tickIT) {
       *tickIT += *incrIT;
-      currInside = vcm->IsInsideObstacle(*tickIT, env, tmpInfo);
-      currValidity = vcm->IsValid(*tickIT, env, *stats, tmpInfo, callee);
+      currInside = vcm->IsInsideObstacle(*tickIT);
+      currValidity = vcm->IsValid(*tickIT, callee);
       currInBBX = env->InBounds(*tickIT, _bb);
       currValidity = currValidity && !currInside;
 
@@ -495,8 +491,8 @@ ClearanceUtility<MPTraits>::ApproxCollisionInfo(CfgType& _cfg, CfgType& _clrCfg,
     foundOne=false;
     for(size_t i=0; i<candIn.size(); ++i) {
       middleCfg = incr[candTick[i]] * mid + candIn[i];
-      midInside = vcm->IsInsideObstacle(middleCfg,env,tmpInfo);
-      midValidity = vcm->IsValid(middleCfg, env, *stats, tmpInfo, callee);
+      midInside = vcm->IsInsideObstacle(middleCfg);
+      midValidity = vcm->IsValid(middleCfg, callee);
       midInBBX = env->InBounds(middleCfg, _bb);
       midValidity = midValidity && !midInside;
       if(m_useBBX)
@@ -533,8 +529,8 @@ ClearanceUtility<MPTraits>::ApproxCollisionInfo(CfgType& _cfg, CfgType& _clrCfg,
       mid=(low+high)/2.0;
       middleCfg = incr[candTick[0]] * mid + candIn[0];
 
-      midInside = vcm->IsInsideObstacle(middleCfg, env, tmpInfo);
-      midValidity = vcm->IsValid(middleCfg, env, *stats, tmpInfo, callee);
+      midInside = vcm->IsInsideObstacle(middleCfg);
+      midValidity = vcm->IsValid(middleCfg, callee);
       midInBBX = env->InBounds(middleCfg, _bb);
       midValidity = midValidity && !midInside;
       if(m_useBBX)
@@ -721,8 +717,6 @@ MedialAxisUtility<MPTraits>::PushToMedialAxis(CfgType& _cfg, shared_ptr<Boundary
   if(this->m_debug)
     cout << endl << callee << endl << "Being Pushed: " << _cfg;
 
-  Environment* env = this->GetMPProblem()->GetEnvironment();
-  StatClass* stats = this->GetMPProblem()->GetStatClass();
   ValidityCheckerPointer vcm = this->GetMPProblem()->GetValidityChecker(this->m_vcLabel);
 
   CDInfo tmpInfo;
@@ -730,8 +724,8 @@ MedialAxisUtility<MPTraits>::PushToMedialAxis(CfgType& _cfg, shared_ptr<Boundary
   tmpInfo.m_retAllInfo = true;
 
   // If invalid, push to the outside of the obstacle
-  bool inside = vcm->IsInsideObstacle(_cfg, env, tmpInfo);
-  bool inCollision = !(vcm->IsValid(_cfg, env, *stats, tmpInfo, callee));
+  bool inside = vcm->IsInsideObstacle(_cfg);
+  bool inCollision = !(vcm->IsValid(_cfg, tmpInfo, callee));
 
   if(this->m_debug) cout << " Inside/In-Collision: " << inside << "/" << inCollision << endl;
 
@@ -812,9 +806,8 @@ MedialAxisUtility<MPTraits>::PushCfgToMedialAxis(CfgType& _cfg, shared_ptr<Bound
   tmpInfo.m_retAllInfo = true;
 
   // Should already be in free space
-  if(vcm->IsInsideObstacle(_cfg, env, tmpInfo)){
+  if(vcm->IsInsideObstacle(_cfg))
     return false;
-  }
 
   // Determine positional direction to move
   CfgType transCfg;
@@ -948,7 +941,7 @@ MedialAxisUtility<MPTraits>::FindMedialAxisBorderExact(
     tmpCfg = _transCfg*_stepSize + _cfg;
 
     // Test for in BBX and inside obstacle
-    bool inside = vcm->IsInsideObstacle(tmpCfg, env, tmpInfo);
+    bool inside = vcm->IsInsideObstacle(tmpCfg);
     bool inBBX = env->InBounds(tmpCfg, _bb);
     if(this->m_debug) VDAddTempCfg(tmpCfg, (inside || !inBBX));
     if(this->m_debug) VDClearLastTemp();
@@ -1042,7 +1035,7 @@ MedialAxisUtility<MPTraits>::FindMedialAxisBorderApprox(
     tmpCfg = _transCfg*(checkBack ? cbStepSize : _stepSize) + _cfg;
 
     // Test for in BBX and inside obstacle
-    bool inside = vcm->IsInsideObstacle(tmpCfg, env, tmpInfo);
+    bool inside = vcm->IsInsideObstacle(tmpCfg);
     bool inBBX = env->InBounds(tmpCfg, _bb);
     if(this->m_debug) VDAddTempCfg(tmpCfg, (inside || !inBBX));
     if(this->m_debug) VDClearLastTemp();
@@ -1399,7 +1392,6 @@ SurfaceMedialAxisUtility<MPTraits>::PushCfgToMedialAxis2DSurf
   if(this->m_debug) cout << callee << endl << "Cfg: " << _cfg  << endl;
 
   Environment* env = this->GetMPProblem()->GetEnvironment();
-  ValidityCheckerPointer vcm = this->GetMPProblem()->GetValidityChecker(this->m_vcLabel);
   ////////////////////////////////////////////
   Point2d closest;
   Point2d pos=_cfg.GetPos();

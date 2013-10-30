@@ -105,14 +105,13 @@ SurfaceLP<MPTraits>::IsConnected(
     if(this->m_debug)
       cout << " SurfaceLP - ticki: " << i << " of nTicks: " << nTicks << " tick: " << tick <<endl;
     bool foundValidSurfForTick = false;
-    CDInfo tmpCDInfo;
     for(int sid = BASE_SURFACE; sid < (int)_env->GetNavigableSurfacesCount() &&
         !foundValidSurfForTick; sid++) {
       CfgType tmpTick = tick;
       tmpTick.SetSurfaceID(sid);//set SurfaceID to test if 2D collision is okay
 
       if(sid == BASE_SURFACE) {
-        if(vcm->IsValid(tmpTick, _env, _stats, tmpCDInfo, callee)) {
+        if(vcm->IsValid(tmpTick, callee)) {
           if(fabs(tick.GetHeight()) < m_acceptableHeightDiff) {
             //B
             //this is valid, -1 should have y-value 0

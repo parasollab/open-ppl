@@ -5,7 +5,6 @@
 
 class Environment;
 class StatClass;
-class CDInfo;
 
 template <class MPTraits>
 class UniformRandomSampler : public SamplerMethod<MPTraits> {
@@ -44,7 +43,6 @@ class UniformRandomSampler : public SamplerMethod<MPTraits> {
 
       string callee(this->GetNameAndLabel() + "::SampleImpl()");
       ValidityCheckerPointer vcm = this->GetMPProblem()->GetValidityChecker(m_vcLabel);
-      CDInfo cdInfo;
 
       if(this->m_debug)
         VDClearAll();
@@ -64,7 +62,7 @@ class UniformRandomSampler : public SamplerMethod<MPTraits> {
 
       //Good. Now determine validity.
       if(inBBX) {
-        bool isValid = vcm->IsValid(tmp, _env, _stats, cdInfo, callee);
+        bool isValid = vcm->IsValid(tmp, callee);
         if(this->m_debug){
           cout << "IsValid::" << isValid << endl;
           VDAddTempCfg(tmp, isValid);

@@ -34,7 +34,7 @@ class CollisionDetectionMethod {
      * return true, if robot is completely contained inside any obs.
      * otherwise, false will be returned.
      */
-    virtual bool IsInsideObstacle(const Cfg& _cfg, Environment* _env, CDInfo& _cdInfo);
+    virtual bool IsInsideObstacle(const Cfg& _cfg);
 
     /**Check collision between MultiBody of robot and obstacle.
     */

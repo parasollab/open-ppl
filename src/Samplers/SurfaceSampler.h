@@ -102,8 +102,6 @@ class SurfaceSampler : public SamplerMethod<MPTraits> {
       callee += "::SampleImpl()";
       ValidityCheckerPointer vcp = this->GetMPProblem()->GetValidityChecker(m_vcLabel);
 
-      CDInfo cdInfo;
-
       int numSurfaces =  _env->GetNavigableSurfacesCount();
       int attempts = 0;
       SurfaceMedialAxisUtility<MPTraits> mau(this->GetMPProblem(), m_vcLabel, "Euclidean");
@@ -138,7 +136,7 @@ class SurfaceSampler : public SamplerMethod<MPTraits> {
 	  if(this->m_debug) cout<<"InBoundary::"<<inBBX<<endl;
 	  if(inBBX) {
 	    if(this->m_debug) cout << "vcp::name " << vcp->GetName() << endl;
-	    bool isValid = vcp->IsValid(tmp, _env, _stats, cdInfo, callee);
+	    bool isValid = vcp->IsValid(tmp, callee);
 	    if(this->m_debug) cout << "IsValid::" << isValid << endl;
 	    if(isValid) {
 	      if( i==-1 ) {
@@ -158,7 +156,7 @@ class SurfaceSampler : public SamplerMethod<MPTraits> {
 		           (clear<m_minObsClearance)) &&
 			   (j<m_obsSampleAttemptsPerIter) ) {
 		       tmp.GetRandomCfg(_env,_bb);
-		       isValid = vcp->IsValid(tmp, _env, _stats, cdInfo, callee);
+		       isValid = vcp->IsValid(tmp, callee);
 		       clear = mau.GetClearance2DSurf(_env, tmp.GetPos(), cdPt);
 		       j++;
 		    }
@@ -197,7 +195,7 @@ class SurfaceSampler : public SamplerMethod<MPTraits> {
 		    h       =pos3d[1];
 		    tmp.SetPos(pos2d);
 		    tmp.SetHeight(h);
-		    validFound = vcp->IsValid(tmp, _env, _stats, cdInfo, callee);
+		    validFound = vcp->IsValid(tmp, callee);
 		    if( !validFound ) {
 		       if(this->m_debug) cout << " after medial axis push, no longer valid...restoring old cfg." << endl;
 		       tmp = tmp2;
@@ -288,7 +286,7 @@ class SurfaceSampler : public SamplerMethod<MPTraits> {
 		 }
 	      }
 
-	      bool stillValid = vcp->IsValid(tmp, _env, _stats, cdInfo, callee);
+	      bool stillValid = vcp->IsValid(tmp, callee);
 	      double d = DistToNearestOnSurf(tmp,cfgsOnSurface);
 	      if( stillValid && validFound && (d>m_closeDist) && (clear>m_overallMinClearanceReq) ) {
 	      //if( stillValid && validFound && (d>m_closeDist)  ) {

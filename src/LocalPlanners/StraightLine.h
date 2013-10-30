@@ -172,7 +172,6 @@ StraightLine<MPTraits>::IsConnectedFunc(
   ValidityCheckerPointer vcm =
       this->GetMPProblem()->GetValidityChecker(m_vcLabel);
   string callee = this->GetName() + "::IsConnectedSLSequential";
-  CDInfo cdInfo;
 
   _stats.IncLPAttempts(this->GetNameAndLabel());
   int cdCounter = 0;
@@ -184,7 +183,7 @@ StraightLine<MPTraits>::IsConnectedFunc(
     if(_checkCollision){
       cdCounter++;
       if(!_env->InBounds(intermediate) ||
-          !vcm->IsValid(intermediate, _env, _stats, cdInfo, callee)) {
+          !vcm->IsValid(intermediate, callee)) {
         if(_env->InBounds(intermediate))
           _col = intermediate;
         return false;
@@ -246,14 +245,13 @@ StraightLine<MPTraits>::IsConnectedSLSequential(
   incr.FindIncrement(_c1, _c2, &nTicks, _positionRes, _orientationRes);
 #endif
   string callee = this->GetName() + "::IsConnectedSLSequential";
-  CDInfo cdInfo;
 
   int nIter = 0;
   for(int i = 1; i < nTicks; i++){ //don't need to check the ends, _c1 and _c2
     tick += incr;
     _cdCounter++;
     if(_checkCollision){
-      if(!_env->InBounds(tick) || !vcm->IsValid(tick, _env, _stats, cdInfo, callee)) {
+      if(!_env->InBounds(tick) || !vcm->IsValid(tick, callee)) {
         if(_env->InBounds(tick))
           _col = tick;
         CfgType negIncr = -incr;
@@ -297,7 +295,6 @@ StraightLine<MPTraits>::IsConnectedSLBinary(
         _cdCounter, _positionRes, _orientationRes, _checkCollision, _savePath, _saveFailedPath);
 
   string callee = this->GetName() + "::IsConnectedSLBinary";
-  CDInfo cdInfo;
 
   int nTicks;
   CfgType incr;
@@ -326,7 +323,7 @@ StraightLine<MPTraits>::IsConnectedSLBinary(
 
     _cdCounter++;
 
-    if(!_env->InBounds(midCfg) || !vcm->IsValid(midCfg, _env, _stats, cdInfo, callee) ) {
+    if(!_env->InBounds(midCfg) || !vcm->IsValid(midCfg, callee) ) {
       if(_env->InBounds(midCfg))
         _col = midCfg;
       return false;

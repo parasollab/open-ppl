@@ -16,7 +16,7 @@ class ObstacleClearanceValidity : public ValidityCheckerMethod<MPTraits> {
 
     virtual void PrintOptions(ostream& _os) const;
 
-    virtual bool IsValidImpl(CfgType& _cfg, Environment* _env, StatClass& _stats, CDInfo& _cdInfo, const string& _callName);
+    virtual bool IsValidImpl(CfgType& _cfg, CDInfo& _cdInfo, const string& _callName);
 
   private:
     double m_obstClearance;
@@ -47,16 +47,17 @@ ObstacleClearanceValidity<MPTraits>::PrintOptions(ostream& _os) const {
 
 template<class MPTraits>
 bool
-ObstacleClearanceValidity<MPTraits>::IsValidImpl(CfgType& _cfg, Environment* _env, StatClass& _stats, CDInfo& _cdInfo, const string& _callName) {
+ObstacleClearanceValidity<MPTraits>::IsValidImpl(CfgType& _cfg, CDInfo& _cdInfo, const string& _callName) {
+  Environment* env = this->GetMPProblem()->GetEnvironment();
 
-  shared_ptr<Boundary> bb = _env->GetBoundary();
+  shared_ptr<Boundary> b = env->GetBoundary();
   _cdInfo.ResetVars();
   _cdInfo.m_retAllInfo = true;
 
   CfgType cfg = _cfg;
   CfgType dummy;
 
-  bool valid = m_clearanceUtility.CollisionInfo(cfg, dummy, bb, _cdInfo);
+  bool valid = m_clearanceUtility.CollisionInfo(cfg, dummy, b, _cdInfo);
 
   if(this->m_debug){
     cout << "CFG::" << _cfg << endl;
