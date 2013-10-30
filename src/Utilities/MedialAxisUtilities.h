@@ -3,13 +3,17 @@
 
 #include "MPUtils.h"
 #include "MetricUtils.h"
+#include "LocalPlanners/StraightLine.h"
 #include "ValidityCheckers/CollisionDetection/CDInfo.h"
 
 struct ClearanceStats{
-  double m_avgClearance;
-  double m_minClearance;
-  double m_clearanceVariance;
+  double m_avg;
+  double m_min;
+  double m_max;
+  double m_var;
   double m_pathLength;
+
+  ClearanceStats() : m_avg(0), m_min(0), m_max(0), m_var(0), m_pathLength(0) {}
 };
 
 //used to encapsulate all the fields and functions necessary for clearance and penetration calculations
@@ -17,6 +21,7 @@ template<class MPTraits>
 class ClearanceUtility : public MPBaseObject<MPTraits> {
   public:
     typedef typename MPTraits::CfgType CfgType;
+    typedef typename MPTraits::CfgRef CfgRef;
     typedef typename MPTraits::WeightType WeightType;
     typedef typename MPTraits::MPProblemType MPProblemType;
     typedef typename MPProblemType::GraphType GraphType;
@@ -38,6 +43,7 @@ class ClearanceUtility : public MPBaseObject<MPTraits> {
 
     string GetDistanceMetricLabel() const {return m_dmLabel;}
     string GetValidityCheckerLabel() const {return m_vcLabel;}
+    void SetValidityCheckerLabel(const string& _s) {m_vcLabel = _s;}
 
     //*********************************************************************//
     // Calculate Collision Information                                     //
@@ -69,7 +75,7 @@ class ClearanceUtility : public MPBaseObject<MPTraits> {
     //*********************************************************************//
     ClearanceStats RoadmapClearance();
 
-    ClearanceStats PathClearance(VID _startVID, VID _goalVID);
+    ClearanceStats PathClearance(vector<VID>& _path);
 
     double MinEdgeClearance(const CfgType& _c1, const CfgType& _c2, const WeightType& _weight);
   protected:
@@ -575,83 +581,106 @@ ClearanceUtility<MPTraits>::ApproxCollisionInfo(CfgType& _cfg, CfgType& _clrCfg,
 template<class MPTraits>
 ClearanceStats
 ClearanceUtility<MPTraits>::RoadmapClearance(){
-  ClearanceStats output;
-  ///temp until edge iterator & operator != in new stapl dynamic graph is fixed
-  double minClearance = 1e6;
-  double runningTotal = 0;
   GraphType* g = this->GetMPProblem()->GetRoadmap()->GetGraph();
   vector<double> clearanceVec;
+
+  //loop over graph edges and calculate clearance
   for(typename GraphType::edge_iterator it = g->edges_begin(); it != g->edges_end(); it++){
     double currentClearance = MinEdgeClearance(g->GetVertex((*it).source()), g->GetVertex((*it).target()), (*it).property());
     clearanceVec.push_back(currentClearance);//Save this value for variance computation later
-    runningTotal+=currentClearance;
-    if(currentClearance < minClearance){//Did we find a new minimum clearance value?
-      minClearance = currentClearance;
-    }
   }
-  output.m_minClearance = minClearance;
-  double average = runningTotal / g->get_num_edges();
-  output.m_avgClearance = average;
+
+  //min, max, avg, variance of graph edge variances
+  ClearanceStats stats;
+  stats.m_min = *min_element(clearanceVec.begin(), clearanceVec.end());
+  stats.m_max = *max_element(clearanceVec.begin(), clearanceVec.end());
+  stats.m_avg = accumulate(clearanceVec.begin(), clearanceVec.end(), 0.0) / (double)clearanceVec.size();
   double varSum = 0;
   for(vector<double>::iterator it = clearanceVec.begin(); it != clearanceVec.end(); it++){
-    varSum += pow(((*it) - average), 2);
+    varSum += pow(((*it) - stats.m_avg), 2);
   }
-  output.m_clearanceVariance = varSum / clearanceVec.size();
-  return output;
+  stats.m_var = varSum / (double)clearanceVec.size();
+
+  return stats;
 }
 
 template<class MPTraits>
 ClearanceStats
-ClearanceUtility<MPTraits>::PathClearance(VID _startVID, VID _goalVID){
+ClearanceUtility<MPTraits>::PathClearance(vector<VID>& _path){
+  if(_path.empty())
+    return ClearanceStats();
+
   GraphType* g = this->GetMPProblem()->GetRoadmap()->GetGraph();
-  vector<VID> path;
-  find_path_dijkstra(*g, _startVID, _goalVID, path, WeightType::MaxWeight());
-  ClearanceStats stats;
+  Environment* env = this->GetMPProblem()->GetEnvironment();
+  DistanceMetricPointer dm = this->GetMPProblem()->GetDistanceMetric(m_dmLabel);
+
   typedef typename GraphType::EI EI;
   typedef typename GraphType::VI VI;
   typedef typename GraphType::EID EID;
-  double runningTotal = 0;
-  double minClearance = 1e6;
-  double pathLength = 0;
+
   vector<double> clearanceVec;
+  double pathLength = 0;
+
   typedef typename vector<VID>::iterator VIT;
-  for(VIT vit = path.begin(); (vit+1)!=path.end(); ++vit){
+  for(VIT vit = _path.begin(); (vit+1)!=_path.end(); ++vit){
     EI ei;
     VI vi;
     EID ed(*vit, *(vit+1));
     g->find_edge(ed, vi, ei);
-    WeightType weight = (*ei).property();
-    pathLength += weight.Weight();
-    double currentClearance = MinEdgeClearance(g->GetVertex((*ei).source()), g->GetVertex((*ei).target()), weight);
+    CfgRef s = g->GetVertex((*ei).source()), t = g->GetVertex((*ei).target());
+    pathLength += dm->Distance(env, s, t);
+    double currentClearance = MinEdgeClearance(s, t, (*ei).property());
     clearanceVec.push_back(currentClearance);
-    runningTotal += currentClearance;
-    if(currentClearance < minClearance){
-      minClearance = currentClearance;
-    }
   }
-  stats.m_minClearance = minClearance;
-  double average = runningTotal / (path.size()/2);
-  stats.m_avgClearance = average;
+
+  //min, max, avg, variance of graph edge variances
+  ClearanceStats stats;
+  stats.m_pathLength = pathLength;
+  stats.m_min = *min_element(clearanceVec.begin(), clearanceVec.end());
+  stats.m_max = *max_element(clearanceVec.begin(), clearanceVec.end());
+  stats.m_avg = accumulate(clearanceVec.begin(), clearanceVec.end(), 0.0) / (double)clearanceVec.size();
   double varSum = 0;
   for(vector<double>::iterator it = clearanceVec.begin(); it != clearanceVec.end(); it++){
-    varSum+=pow(((*it) - average), 2);
+    varSum += sqr((*it) - stats.m_avg);
   }
-  stats.m_clearanceVariance = varSum / clearanceVec.size();
-  stats.m_pathLength = pathLength;
+  stats.m_var = varSum / (double)clearanceVec.size();
+
   return stats;
 }
 
 template<class MPTraits>
 double
 ClearanceUtility<MPTraits>::MinEdgeClearance(const CfgType& _c1, const CfgType& _c2, const WeightType& _weight){
+  if(_weight.HasClearance()){
+    return _weight.GetClearance();
+  }
   Environment* env = this->GetMPProblem()->GetEnvironment();
+  DistanceMetricPointer dm = this->GetMPProblem()->GetDistanceMetric(m_dmLabel);
   double minClearance = 1e6;
   //Reconstruct the path given the two nodes
   vector<CfgType> intermediates = _weight.GetIntermediates();
-  vector<CfgType> reconEdge = this->GetMPProblem()->GetLocalPlanner(_weight.GetLPLabel())->
-    ReconstructPath(env, this->GetMPProblem()->GetDistanceMetric(m_dmLabel), _c1, _c2, intermediates,
-        env->GetPositionRes(), env->GetOrientationRes());
+  vector<CfgType> reconEdge;
   typedef typename vector<CfgType>::iterator CIT;
+  if(_weight.GetLPLabel() != "RRTExpand"){
+    reconEdge = this->GetMPProblem()->GetLocalPlanner(_weight.GetLPLabel())->
+      ReconstructPath(env, dm, _c1, _c2, intermediates,
+          env->GetPositionRes(), env->GetOrientationRes());
+  }
+  else{
+    StraightLine<MPTraits> sl;
+    sl.SetMPProblem(this->GetMPProblem());
+    intermediates.insert(intermediates.begin(), _c1);
+    intermediates.push_back(_c2);
+    for(CIT cit = intermediates.begin(); (cit+1)!=intermediates.end(); ++cit){
+      StatClass dummyStats;
+      LPOutput<MPTraits> lpOutput;
+      CfgType col;
+      vector<CfgType> edge = sl.ReconstructPath(env, dm, *cit, *(cit+1), intermediates, env->GetPositionRes(), env->GetOrientationRes());
+      reconEdge.insert(reconEdge.end(), edge.begin(), edge.end());
+    }
+  }
+  reconEdge.insert(reconEdge.begin(), _c1);
+  reconEdge.push_back(_c2);
   for(CIT it = reconEdge.begin(); it != reconEdge.end(); ++it){
     CDInfo collInfo;
     CfgType clrCfg;
@@ -790,6 +819,7 @@ MedialAxisUtility<MPTraits>::PushFromInsideObstacle(CfgType& _cfg, shared_ptr<Bo
   _cfg = transCfg;
 
   if(this->m_debug) cout << "FINAL CfgType: " << _cfg << endl << callee << "::END " << endl;
+
   return true;
 }
 
@@ -953,7 +983,7 @@ MedialAxisUtility<MPTraits>::FindMedialAxisBorderExact(
     tmpCfg = _transCfg*_stepSize + _cfg;
 
     // Test for in BBX and inside obstacle
-    bool inside = vcm->IsInsideObstacle(tmpCfg, env, tmpInfo);
+    bool inside = false;//vcm->IsInsideObstacle(tmpCfg, env, tmpInfo);
     bool inBBX = env->InBounds(tmpCfg, _bb);
     if(this->m_debug) {
       VDAddTempCfg(tmpCfg, (inside || !inBBX));

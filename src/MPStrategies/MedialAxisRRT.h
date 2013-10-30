@@ -22,10 +22,12 @@ class MedialAxisRRT : public BasicRRTStrategy<MPTraits> {
     typedef typename MPProblemType::LocalPlannerPointer LocalPlannerPointer;
 
     MedialAxisRRT(const MedialAxisUtility<MPTraits>& _medialAxisUtility = MedialAxisUtility<MPTraits>(),
-        double _extendDist = 0.5, size_t _maxIntermediates = 10);
+        double _extendDist = 0.5, bool _addIntermediates = false, size_t _maxIntermediates = 10);
     MedialAxisRRT(MPProblemType* _problem, XMLNodeReader& _node);
 
     virtual void ParseXML(XMLNodeReader& _node);
+
+    virtual void Initialize();
 
   private:
     virtual VID ExpandTree(CfgType& _dir);
@@ -34,19 +36,20 @@ class MedialAxisRRT : public BasicRRTStrategy<MPTraits> {
     // MARRTExpand: Expands an RRT with a node that is pushed to the //
     // Medial Axis.                                                  //
     //***************************************************************//
-    bool MedialAxisExtend(const CfgType& _start, const CfgType& _goal, vector<CfgType>& _innerNodes);
+    bool MedialAxisExtend(const CfgType& _start, const CfgType& _goal, vector<CfgType>& _innerNodes, double& _length);
 
     MedialAxisUtility<MPTraits> m_medialAxisUtility;
     double m_extendDist;
+    bool m_addIntermediates;
     size_t m_maxIntermediates;
 };
 
 template<class MPTraits>
 MedialAxisRRT<MPTraits>::MedialAxisRRT(
     const MedialAxisUtility<MPTraits>& _medialAxisUtility,
-    double _extendDist, size_t _maxIntermediates) :
+    double _extendDist, bool _addIntermediates, size_t _maxIntermediates) :
   m_medialAxisUtility(_medialAxisUtility), m_extendDist(_extendDist),
-  m_maxIntermediates(_maxIntermediates) {
+  m_addIntermediates(_addIntermediates), m_maxIntermediates(_maxIntermediates) {
     this->SetName("MedialAxisRRT");
   }
 
@@ -62,7 +65,20 @@ template<class MPTraits>
 void
 MedialAxisRRT<MPTraits>::ParseXML(XMLNodeReader& _node) {
   m_extendDist = _node.numberXMLParameter("extendDist", true, 0.5, 0.0, MAX_DBL, "Step size for regular RRT extend");
-  m_maxIntermediates = _node.numberXMLParameter("maxIntermediates", true, 5, 1, MAX_INT, "Maximum Number Of Intermediates");
+  m_addIntermediates = _node.boolXMLParameter("addIntermediates", false, false, "Add all intermediates to nodes of tree");
+  m_maxIntermediates = _node.numberXMLParameter("maxIntermediates", false, 10, 1, MAX_INT, "Maximum number of intermediates on an edge");
+}
+
+template<class MPTraits>
+void
+MedialAxisRRT<MPTraits>::Initialize() {
+  vector<CfgType>& queryCfgs = this->m_query->GetQuery();
+  typedef typename vector<CfgType>::iterator CIT;
+  for(CIT cit = queryCfgs.begin(); cit!=queryCfgs.end(); ++cit){
+    m_medialAxisUtility.PushToMedialAxis(*cit,
+        this->GetMPProblem()->GetEnvironment()->GetBoundary());
+  }
+  BasicRRTStrategy<MPTraits>::Initialize();
 }
 
 template<class MPTraits>
@@ -81,7 +97,8 @@ MedialAxisRRT<MPTraits>::ExpandTree(CfgType& _dir){
 
   //Medial Axis Extend from nearest to _dir
   vector<CfgType> intermediateNodes;
-  if(!MedialAxisExtend(nearest, _dir, intermediateNodes)) {
+  double dist;
+  if(!MedialAxisExtend(nearest, _dir, intermediateNodes, dist)) {
     if(this->m_debug) cout << "MARRT could not expand!" << endl;
     return INVALID_VID;
   }
@@ -89,13 +106,26 @@ MedialAxisRRT<MPTraits>::ExpandTree(CfgType& _dir){
   //successful  extend. Update the roadmap
   if(this->m_debug) cout << "MARRT expanded." << endl;
 
-  VID recentVID = INVALID_VID;
-  CfgType newCfg = intermediateNodes.back();
-  intermediateNodes.pop_back();
-  double dist = dm->Distance(env, newCfg, nearest);
   // If good to go, add to roadmap
-  if(dist >= this->m_minDist) {
-    recentVID = rdmp->GetGraph()->AddVertex(newCfg);
+  VID recentVID;
+  if(m_addIntermediates){
+    typedef typename vector<CfgType>::iterator CIT;
+    VID previousVID = kClosest[0].first;
+    CfgType prevCfg = nearest;
+    for(CIT cit = intermediateNodes.begin(); cit!=intermediateNodes.end(); cit++){
+      dist = dm->Distance(env, prevCfg, *cit);
+      recentVID = rdmp->GetGraph()->AddVertex(*cit);
+      //TODO fix weight
+      pair<WeightType, WeightType> weights = make_pair(WeightType(this->m_lp, dist), WeightType(this->m_lp, dist));
+      rdmp->GetGraph()->AddEdge(previousVID, recentVID, weights);
+      rdmp->GetGraph()->GetVertex(recentVID).SetStat("Parent", previousVID);
+      previousVID = recentVID;
+      prevCfg = *cit;
+    }
+  }
+  else{
+    recentVID = rdmp->GetGraph()->AddVertex(intermediateNodes.back());
+    intermediateNodes.pop_back();
     //TODO fix weight
     pair<WeightType, WeightType> weights = make_pair(WeightType(this->m_lp, dist, intermediateNodes), WeightType(this->m_lp, dist, intermediateNodes));
     rdmp->GetGraph()->AddEdge(kClosest[0].first, recentVID, weights);
@@ -114,7 +144,7 @@ MedialAxisRRT<MPTraits>::ExpandTree(CfgType& _dir){
 //***************************************************************//
 template<class MPTraits>
 bool
-MedialAxisRRT<MPTraits>::MedialAxisExtend(const CfgType& _start, const CfgType& _goal, vector<CfgType>& _innerNodes){
+MedialAxisRRT<MPTraits>::MedialAxisExtend(const CfgType& _start, const CfgType& _goal, vector<CfgType>& _innerNodes, double &_length){
   //Setup
   StatClass* stats = this->GetMPProblem()->GetStatClass();
   Environment* env = this->GetMPProblem()->GetEnvironment();
@@ -125,12 +155,45 @@ MedialAxisRRT<MPTraits>::MedialAxisExtend(const CfgType& _start, const CfgType& 
 
   string callee("MPUtility::MARRTExpand");
 
-  CfgType tick, curr = _start, origin;
+  CfgType tick = _start, curr = _start, origin, col;
   double positionRes = env->GetPositionRes();
   double orientationRes = env->GetOrientationRes();
-  double pathLength = 0;
+  double dist = 0;
+  _length = 0;
 
-  while(_innerNodes.size() <= m_maxIntermediates) {
+  do {
+    curr = tick;
+    _length += dist;
+    _innerNodes.push_back(curr);
+
+    if(_innerNodes.size() > m_maxIntermediates)
+      break;
+    //take a step at distance _extendDist
+    CfgType incr = _goal - curr;
+    dm->ScaleCfg(env, m_extendDist, origin, incr);
+    tick = curr + incr;
+
+    //Push tick to the MA
+    if(!m_medialAxisUtility.PushToMedialAxis(tick, env->GetBoundary())) {
+      if(this->m_debug) cout << "PushToMedialAxis failed...MARRTExpand failed" << endl;
+      break;
+    }
+
+    dist = dm->Distance(env, curr, tick);
+
+  } while(
+      dist > this->m_minDist
+      && lp->IsConnected(env, *stats, dm, curr, tick, col, &lpOutput, positionRes, orientationRes)
+      && _length+dist <= this->m_delta
+      );
+
+  _innerNodes.erase(_innerNodes.begin());
+  if(_innerNodes.empty())
+    return false;
+  else
+    return true;
+
+  /*while(_innerNodes.size() <= m_maxIntermediates) {
     tick = curr;
 
     //take a step at distance _extendDist
@@ -195,7 +258,7 @@ MedialAxisRRT<MPTraits>::MedialAxisExtend(const CfgType& _start, const CfgType& 
     curr = tick;
   }
   if(this->m_debug) cout << "max intermediates reached.  Returning..." << endl;
-  return true;
+  return true;*/
 }
 
 #endif

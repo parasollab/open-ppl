@@ -10,6 +10,7 @@ class RewireConnector : public ConnectorMethod<MPTraits> {
     typedef typename MPProblemType::VID VID;
     typedef typename MPTraits::CfgType CfgType;
     typedef typename MPTraits::CfgRef CfgRef;
+    typedef typename MPTraits::WeightType WeightType;
     typedef typename MPProblemType::RoadmapType RoadmapType;
     typedef typename RoadmapType::GraphType GraphType;
     typedef typename MPProblemType::DistanceMetricPointer DistanceMetricPointer;
@@ -23,13 +24,16 @@ class RewireConnector : public ConnectorMethod<MPTraits> {
           InputIterator1 _itr1First, InputIterator1 _itr1Last,
           InputIterator2 _itr2First, InputIterator2 _itr2Last, OutputIterator _collision);
 
-  protected:
+  private:
     template<typename OutputIterator>
       void ConnectNeighbors (RoadmapType* _rm, StatClass& _stats,
           VID _vid, vector<pair<VID, double> >& _closest, OutputIterator _collision);
 
     double GetDistance(VID _vid1, VID _vid2, RoadmapType* _rm);
     double GetShortestPath(VID _root, VID _vid, RoadmapType* _rm);
+
+    bool m_distanceBased;
+    ClearanceUtility<MPTraits> m_clearanceUtility;
 };
 
 template<class MPTraits>
@@ -42,6 +46,12 @@ template<class MPTraits>
 RewireConnector<MPTraits>::RewireConnector(MPProblemType* _problem, XMLNodeReader& _node)
   : ConnectorMethod<MPTraits>(_problem, _node) {
     this->SetName("RewireConnector");
+    m_distanceBased = _node.boolXMLParameter("distanceBased", false, true,
+        "Optimization criteria. True means shortest paths, false means highest clearance.");
+    if(!m_distanceBased){
+      m_clearanceUtility = ClearanceUtility<MPTraits>(_problem, _node);
+    }
+    _node.warnUnrequestedAttributes();
   }
 
 template<class MPTraits>
@@ -105,59 +115,64 @@ RewireConnector<MPTraits>::ConnectNeighbors(RoadmapType* _rm, StatClass& _stats,
   VID vmin = parent;    // initialize min to current vid
 
   double currentMin = GetShortestPath(root, _vid, _rm);
-  for(size_t i = 0; i < _closest.size(); i++) {
-    VID neighbor = _closest[i].first;
+  double minWeight = 0;
+
+  typedef typename vector<pair<VID, double> >::reverse_iterator RVIT;
+  for(RVIT rvit = _closest.rbegin(); rvit!=_closest.rend(); rvit++) {
+    VID neighbor = rvit->first;
     CfgType col;
     double neighborCost = GetShortestPath(root, neighbor, _rm);
-    double neighborDistance = _closest[i].second;
-    if(neighborCost + neighborDistance < currentMin) {
-      bool connectable = this->GetMPProblem()->GetLocalPlanner(this->m_lpLabel)->
-        IsConnected(env, _stats, dm,
-            vi->property(),
-            _rm->GetGraph()->GetVertex(neighbor),
-            col, &lpOutput, env->GetPositionRes(), env->GetOrientationRes(), true);
-      this->AddConnectionAttempt(vi->descriptor(), neighbor, connectable);
-      if(connectable) {
+    double neighborDistance = GetDistance(neighbor, _vid, _rm);
+    if((m_distanceBased && neighborCost + neighborDistance < currentMin) ||
+        (!m_distanceBased && min(neighborCost, neighborDistance) > currentMin)) {
+      if(this->GetMPProblem()->GetLocalPlanner(this->m_lpLabel)->
+          IsConnected(env, _stats, dm, vi->property(), _rm->GetGraph()->GetVertex(neighbor),
+            col, &lpOutput, env->GetPositionRes(), env->GetOrientationRes(), true)) {
         vmin = neighbor;
-        currentMin = neighborCost + neighborDistance;
+        if(m_distanceBased)
+          currentMin = neighborCost + neighborDistance;
+        else
+          currentMin = min(neighborCost, neighborDistance);
+        minWeight = neighborDistance;
         minlpOutput = lpOutput;
       }
     }
   }
 
   // Found optimal path from neighbors
-  if(vmin != parent) {
+  if (vmin != parent) {
+    if(!m_distanceBased){
+      minlpOutput.m_edge.first.SetClearance(minWeight);
+      minlpOutput.m_edge.second.SetClearance(minWeight);
+    }
     _rm->GetGraph()->AddEdge(_vid, vmin, minlpOutput.m_edge);
     vi->property().SetStat("Parent", vmin);
     CfgRef cfg1 = _rm->GetGraph()->GetVertex(parent);
     CfgRef cfg2 = _rm->GetGraph()->GetVertex(_vid);
-    _rm->GetGraph()->delete_edge(parent, _vid);
-    _rm->GetGraph()->delete_edge(_vid, parent);
     VDRemoveEdge(cfg1, cfg2);     // for vizmo
     VDRemoveEdge(cfg2, cfg1);
+    _rm->GetGraph()->delete_edge(parent, _vid);
+    _rm->GetGraph()->delete_edge(_vid, parent);
   }
-  if(this->m_debug) cout << "Connected to Optimal Neighbor" << endl;
+  if (this->m_debug) cout << "Connected to Optimal Neighbor" << endl;
 
   double vidCost = GetShortestPath(root, _vid, _rm);
-  for(size_t i = 0; i < _closest.size(); i++) {
-    VID neighbor = _closest[i].first;
+  for (RVIT rvit = _closest.rbegin(); rvit!=_closest.rend(); rvit++) {
+    VID neighbor = rvit->first;
     CfgType col;
     double neighborCost = GetShortestPath(root, neighbor, _rm);
-    if(vidCost + _closest[i].second < neighborCost) {
-      bool connectable = this->GetMPProblem()->GetLocalPlanner(this->m_lpLabel)->
-        IsConnected(env, _stats, dm,
+    double neighborDist = GetDistance(neighbor, _vid, _rm);
+    if((m_distanceBased && vidCost + neighborDist < neighborCost) ||
+        (!m_distanceBased && min(vidCost, neighborDist) > neighborCost)){
+      if(this->GetMPProblem()->GetLocalPlanner(this->m_lpLabel)->
+          IsConnected(env, _stats, dm,
             _rm->GetGraph()->GetVertex(_vid),
             _rm->GetGraph()->GetVertex(neighbor),
-            col, &lpOutput, env->GetPositionRes(), env->GetOrientationRes(), true);
-      this->AddConnectionAttempt(_vid, neighbor, connectable);
-      if(connectable) {
+            col, &lpOutput, env->GetPositionRes(), env->GetOrientationRes(), true )) {
         // Getting the parent
         vi = _rm->GetGraph()->find_vertex(neighbor);
         ei = (*vi).begin();
-        parent = ((*ei).target());
-        if(vi->property().GetStat("Parent")!=parent) {
-          parent = vi->property().GetStat("Parent");
-        }
+        parent = vi->property().GetStat("Parent");
         // Removing the parent-child edge
         CfgRef cfg1 = _rm->GetGraph()->GetVertex(parent);
         CfgRef cfg2 = _rm->GetGraph()->GetVertex(neighbor);
@@ -166,9 +181,13 @@ RewireConnector<MPTraits>::ConnectNeighbors(RoadmapType* _rm, StatClass& _stats,
         _rm->GetGraph()->delete_edge(neighbor, parent);
         VDRemoveEdge(cfg2, cfg1);
         // Add edge to optimal path to neighbor
+        if(!m_distanceBased){
+          lpOutput.m_edge.first.SetClearance(neighborDist);
+          lpOutput.m_edge.second.SetClearance(neighborDist);
+        }
         _rm->GetGraph()->AddEdge(_vid, neighbor, lpOutput.m_edge);
         vi->property().SetStat("Parent", _vid);
-        if(this->m_debug) cout << "Added Neighbor Edge" << endl;
+        if (this->m_debug) cout << "Added Neighbor Edge" << endl;
       }
     }
   }
@@ -178,11 +197,21 @@ template<class MPTraits>
 double
 RewireConnector<MPTraits>::GetShortestPath(VID _root, VID _vid, RoadmapType* _rm) {
   vector<VID> shortest;
-  stapl::sequential::find_path_dijkstra(*(_rm->GetGraph()), _root, _vid, shortest, GraphType::edge_property::MaxWeight());
-  double totalWeight = 0;
-  if(shortest.size() > 0) {
-    for(size_t i = 0; i < shortest.size() - 1; i++) {
-      totalWeight += GetDistance(shortest[i], shortest[i+1], _rm);
+  VID v = _vid;
+  shortest.push_back(v);
+  while(_rm->GetGraph()->GetVertex(v).IsStat("Parent")){
+    v = _rm->GetGraph()->GetVertex(v).GetStat("Parent");
+    shortest.push_back(v);
+  }
+
+  double totalWeight = m_distanceBased ? 0 : 1e6;
+
+  if (shortest.size() > 0) {
+    for (size_t i = 0; i < shortest.size() - 1; i++) {
+      if(m_distanceBased)
+        totalWeight += GetDistance(shortest[i], shortest[i+1], _rm);
+      else
+        totalWeight = min(totalWeight, GetDistance(shortest[i], shortest[i+1], _rm));
     }
   }
   return totalWeight;
@@ -191,11 +220,27 @@ RewireConnector<MPTraits>::GetShortestPath(VID _root, VID _vid, RoadmapType* _rm
 template<class MPTraits>
 double
 RewireConnector<MPTraits>::GetDistance(VID _vid1, VID _vid2, RoadmapType* _rm) {
-  CfgRef cfg1 = _rm->GetGraph()->GetVertex(_vid1);
-  CfgRef cfg2 = _rm->GetGraph()->GetVertex(_vid2);
-  double distance = this->GetMPProblem()->GetNeighborhoodFinder(this->m_nfLabel)->GetDMMethod()->
-    Distance(this->GetMPProblem()->GetEnvironment(), cfg1, cfg2);
-  return distance;
+  typedef typename RoadmapType::GraphType::EI EI;
+  EI ei;
+  if(!m_distanceBased && _rm->GetGraph()->IsEdge(_vid1, _vid2, ei) && (*ei).property().HasClearance()){
+    //return weight for this edge based on clearance
+    return (*ei).property().GetClearance();
+  }
+  else if(m_distanceBased){
+    //grab the individual Cfgs and calculate distance
+    CfgRef cfg1 = _rm->GetGraph()->GetVertex(_vid1);
+    CfgRef cfg2 = _rm->GetGraph()->GetVertex(_vid2);
+    double distance = this->GetMPProblem()->GetNeighborhoodFinder(this->m_nfLabel)->GetDMMethod()->
+      Distance(this->GetMPProblem()->GetEnvironment(), cfg1, cfg2);
+    return distance;
+  }
+  else{
+    //calculate the clearance between them.
+    CfgRef cfg1 = _rm->GetGraph()->GetVertex(_vid1);
+    CfgRef cfg2 = _rm->GetGraph()->GetVertex(_vid2);
+    WeightType w(this->m_lpLabel);
+    return m_clearanceUtility.MinEdgeClearance(cfg1, cfg2, w);
+  }
 }
 
 #endif

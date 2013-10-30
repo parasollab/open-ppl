@@ -15,6 +15,7 @@ class Query : public MapEvaluatorMethod<MPTraits> {
 
   public:
     typedef typename MPTraits::CfgType CfgType;
+    typedef typename MPTraits::CfgRef CfgRef;
     typedef typename MPTraits::WeightType WeightType;
     typedef typename MPTraits::MPProblemType MPProblemType;
     typedef typename MPProblemType::RoadmapType RoadmapType;
@@ -264,6 +265,7 @@ template<class MPTraits>
 bool
 Query<MPTraits>::PerformQuery(const CfgType& _start, const CfgType& _goal, RoadmapType* _rdmp) {
 
+
   if(this->m_debug)
     cout << "*Q* Begin query" << endl;
   VDComment("Begin Query");
@@ -451,6 +453,7 @@ template<class MPTraits>
 bool
 Query<MPTraits>::CanRecreatePath(RoadmapType* _rdmp, vector<VID>& _attemptedPath, vector<CfgType>& _recreatedPath) {
   //StatClass* stats = this->GetMPProblem()->GetStatClass();
+  Environment* env = this->GetMPProblem()->GetEnvironment();
   _recreatedPath.push_back(_rdmp->GetGraph()->GetVertex(*(_attemptedPath.begin())));
   for(typename vector<VID>::iterator it = _attemptedPath.begin(); it+1 != _attemptedPath.end(); it++) {
     LPOutput<MPTraits> ci;
@@ -459,15 +462,32 @@ Query<MPTraits>::CanRecreatePath(RoadmapType* _rdmp, vector<VID>& _attemptedPath
     typename GraphType::edge_descriptor ed(*it, *(it+1));
     _rdmp->GetGraph()->find_edge(ed, vi, ei);
     CfgType col;
+    CfgRef c1 = _rdmp->GetGraph()->GetVertex(*it);
+    CfgRef c2 = _rdmp->GetGraph()->GetVertex(*(it+1));
+    WeightType& weight = (*ei).property();
+    vector<CfgType> intermediates = weight.GetIntermediates();
 
-    WeightType& edge = (*ei).property();
-    vector<CfgType> path =
-      this->GetMPProblem()->GetLocalPlanner(m_lpLabel)->ReconstructPath(this->GetMPProblem()->GetEnvironment(),
-      this->GetMPProblem()->GetDistanceMetric(m_dmLabel), _rdmp->GetGraph()->GetVertex(*it),
-      _rdmp->GetGraph()->GetVertex(*(it+1)), edge.GetIntermediates(),
-      this->GetMPProblem()->GetEnvironment()->GetPositionRes(), this->GetMPProblem()->GetEnvironment()->GetOrientationRes());
-    _recreatedPath.insert(_recreatedPath.end(), path.begin(), path.end());
-    _recreatedPath.push_back(_rdmp->GetGraph()->GetVertex(*(it+1)));
+    if(weight.GetLPLabel() != "RRTExpand"){
+      vector<CfgType> edge = this->GetMPProblem()->GetLocalPlanner(weight.GetLPLabel())->
+        ReconstructPath(env, this->GetMPProblem()->GetDistanceMetric(m_dmLabel), c1, c2, intermediates,
+            env->GetPositionRes(), env->GetOrientationRes());
+      _recreatedPath.insert(_recreatedPath.end(), edge.begin(), edge.end());
+    }
+    else{
+      StraightLine<MPTraits> sl;
+      sl.SetMPProblem(this->GetMPProblem());
+      intermediates.insert(intermediates.begin(), c1);
+      intermediates.push_back(c2);
+      typedef typename vector<CfgType>::iterator CIT;
+      for(CIT cit = intermediates.begin(); (cit+1)!=intermediates.end(); ++cit){
+        StatClass dummyStats;
+        LPOutput<MPTraits> lpOutput;
+        CfgType col;
+        vector<CfgType> edge = sl.ReconstructPath(env, this->GetMPProblem()->GetDistanceMetric(m_dmLabel), *cit, *(cit+1), intermediates, env->GetPositionRes(), env->GetOrientationRes());
+        _recreatedPath.insert(_recreatedPath.end(), edge.begin(), edge.end());
+      }
+    }
+    _recreatedPath.push_back(c2);
 
     /*if(this->GetMPProblem()->GetLocalPlanner(m_lpLabel)->IsConnected(
           this->GetMPProblem()->GetEnvironment(), *stats, this->GetMPProblem()->GetDistanceMetric(m_dmLabel),

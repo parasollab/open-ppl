@@ -53,6 +53,10 @@ class DefaultWeight {
     void SetChecked(int _mult) { m_checkedMult = min(m_checkedMult, _mult); }
     int GetChecked() const { return m_checkedMult; }
 
+    bool HasClearance() const {return m_hasClearance;}
+    double GetClearance() const {return m_clearance;}
+    void SetClearance(double _c){m_hasClearance=true; m_clearance = _c;}
+
     // Data
   protected:
     string m_lpLabel;
@@ -61,6 +65,8 @@ class DefaultWeight {
 
     static double MAX_WEIGHT;
     int m_checkedMult;
+    bool m_hasClearance;
+    double m_clearance;
 
   public:
     //changed local to member
@@ -79,7 +85,7 @@ double DefaultWeight<CfgType>::MAX_WEIGHT = numeric_limits<double>::max();
 
 template<class CfgType>
 DefaultWeight<CfgType>::DefaultWeight(string _lpLabel, double _w, const vector<CfgType>& _intermediates):
-  m_lpLabel(_lpLabel), m_weight(_w), m_intermediates(_intermediates), m_checkedMult(numeric_limits<int>::max()){
+  m_lpLabel(_lpLabel), m_weight(_w), m_intermediates(_intermediates), m_checkedMult(numeric_limits<int>::max()), m_hasClearance(false){
   }
 
 template<class CfgType>
@@ -110,6 +116,8 @@ DefaultWeight<CfgType>::operator=(const DefaultWeight<CfgType>& _w){
   m_weight = _w.GetWeight();
   m_intermediates = _w.GetIntermediates();
   m_checkedMult = _w.GetChecked();
+  m_hasClearance = _w.HasClearance();
+  m_clearance = _w.GetClearance();
   return *this;
 }
 

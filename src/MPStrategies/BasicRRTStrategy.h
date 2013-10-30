@@ -74,6 +74,8 @@ class BasicRRTStrategy : public MPStrategyMethod<MPTraits> {
     typename vector<vector<VID> >::iterator m_currentTree;
     vector<CfgType> m_goals, m_roots;
     vector<size_t> m_goalsNotFound;
+
+    ClearanceUtility<MPTraits> m_clearanceUtility;
 };
 
 template<class MPTraits>
@@ -92,7 +94,7 @@ BasicRRTStrategy<MPTraits>::BasicRRTStrategy(string _lp, string _dm,
 
 template<class MPTraits>
 BasicRRTStrategy<MPTraits>::BasicRRTStrategy(MPProblemType* _problem, XMLNodeReader& _node, bool _warnXML) :
-  MPStrategyMethod<MPTraits>(_problem, _node){
+  MPStrategyMethod<MPTraits>(_problem, _node), m_query((Query<MPTraits>*)NULL), m_clearanceUtility(_problem, _node){
     this->SetName("BasicRRTStrategy");
     ParseXML(_node);
     if (_warnXML) _node.warnUnrequestedAttributes();
@@ -119,6 +121,8 @@ BasicRRTStrategy<MPTraits>::ParseXML(XMLNodeReader& _node) {
   m_numRoots = _node.numberXMLParameter("numRoots", false, 1, 0, MAX_INT, "Number of Roots");
   m_growthFocus = _node.numberXMLParameter("growthFocus", false, 0.0, 0.0, 1.0, "#GeneratedTowardsGoal/#Generated");
   m_vc = _node.stringXMLParameter("vcLabel", true, "", "Validity Test Method");
+  m_vc = _node.stringXMLParameter("vcLabel", true, "", "Validity Test Method");
+  m_clearanceUtility.SetValidityCheckerLabel(_node.stringXMLParameter("vcLabel2", false, m_vc, "Validity Test Method"));
   m_nf = _node.stringXMLParameter("nfLabel", true, "", "Neighborhood Finder");
   m_dm = _node.stringXMLParameter("dmLabel",true,"","Distance Metric");
   m_lp = _node.stringXMLParameter("lpLabel", true, "", "Local Planning Method");
@@ -281,7 +285,8 @@ BasicRRTStrategy<MPTraits>::Finalize() {
   string str;
 
   //perform query if query was given as input
-  if(m_query){
+  vector<VID> path;
+  if(m_query) {
     str = this->GetBaseFilename() + ".path";
     m_query->SetPathFile(str);
     if(m_evaluateGoal){
@@ -292,6 +297,7 @@ BasicRRTStrategy<MPTraits>::Finalize() {
         if(this->m_debug) cout << "Query unsuccessful." << endl;
       }
     }
+    path = m_query->GetPathVIDs();
   }
 
   //output final map
@@ -306,6 +312,25 @@ BasicRRTStrategy<MPTraits>::Finalize() {
   osStat << "NodeGen+Connection Stats" << endl;
   stats->PrintAllStats(osStat, this->GetMPProblem()->GetRoadmap());
   stats->PrintClock("RRT Generation", osStat);
+
+  //print roadmap clearance stats
+  osStat << endl << endl;
+  cout << "Calculating Roadmap Clearance" << endl;
+  ClearanceStats cr = m_clearanceUtility.RoadmapClearance();
+  cout << "Calculating Path Clearance" << endl;
+  ClearanceStats cp = m_clearanceUtility.PathClearance(path);
+  osStat
+    << "RoadmapAvgClr " << cr.m_avg << endl
+    << "RoadmapMinClr " << cr.m_min << endl
+    << "RoadmapMaxClr " << cr.m_max << endl
+    << "RoadmapVarClr " << cr.m_var << endl
+    << "PathAvgClr    " << cp.m_avg << endl
+    << "PathMinClr    " << cp.m_min << endl
+    << "PathMaxClr    " << cp.m_max << endl
+    << "PathVarClr    " << cp.m_var << endl
+    << "PathLength    " << cp.m_pathLength << endl;
+
+
   osStat.close();
 
   if(this->m_debug) cout<<"\nEnd Finalizing BasicRRTStrategy"<<endl;
@@ -503,7 +528,6 @@ BasicRRTStrategy<MPTraits>::ExpandTree(CfgType& _dir){
       this->GetMPProblem()->GetRoadmap()->GetGraph()->AddEdge(kClosest[0].first, recentVID, WeightType("RRTExpand", weight));
     this->GetMPProblem()->GetRoadmap()->GetGraph()->GetVertex(recentVID).SetStat("Parent", kClosest[0].first);
 
-
     if(std::string::npos!=m_gt.find("GRAPH")){
       ConnectNeighbors(recentVID, kClosest[0].first);
     }
@@ -533,7 +557,7 @@ BasicRRTStrategy<MPTraits>::ExpandTree(CfgType& _dir){
         this->GetMPProblem()->GetRoadmap()->GetGraph()->GetVertex(otherVID).SetStat("Parent", kClosest[0].first);
 
         if(std::string::npos!=m_gt.find("GRAPH")){
-          ConnectNeighbors( otherVID, kClosest[0].first);
+          ConnectNeighbors(otherVID, kClosest[0].first);
         }
       }
       if(this->m_recordKeep) conStatClass->StopClock(conClockName);
@@ -545,7 +569,7 @@ BasicRRTStrategy<MPTraits>::ExpandTree(CfgType& _dir){
 
 template<class MPTraits>
 void
-BasicRRTStrategy<MPTraits>::ConnectTrees(VID _recentlyGrown){
+BasicRRTStrategy<MPTraits>::ConnectTrees(VID _recentlyGrown) {
   //Setup MP variables
   Environment* env = this->GetMPProblem()->GetEnvironment();
   RoadmapType* rdmp = this->GetMPProblem()->GetRoadmap();
@@ -665,4 +689,5 @@ BasicRRTStrategy<MPTraits>::SetMPProblem(MPProblemType* _problem){
   if(m_query)
     m_query->SetMPProblem(_problem);
 }
+
 #endif
