@@ -237,6 +237,10 @@ AdaptiveRRT<MPTraits>::ExpandTree(CfgType& _dir){
     if(m_costMethod == REWARD)
       UpdateCost(this->m_delta, gm, rgsit->second);
 
+    //reward the growth strategy based upon expanded distance in proportion to
+    //delta_q
+    RewardGrowthMethod(-this->m_minDist, gm, rgsit->second);
+
     return recentVID;
   }
 
@@ -249,19 +253,26 @@ AdaptiveRRT<MPTraits>::ExpandTree(CfgType& _dir){
   if(dist >= this->m_minDist) {
     //expansion success
     nearest.IncStat("Success");
-    //reward the growth strategy based upon expanded distance in proportion to
-    //delta_q
-    RewardGrowthMethod(dist/this->m_delta, gm, rgsit->second);
     //update the tree
     //Generate Waypoints is from AdaptiveMultiResRRT, but this one does not
     //acutally add nodes.
     recentVID = UpdateTree(kClosest[0].first, newCfg, _dir);
-    this->m_currentTree->push_back(recentVID);
+    if(recentVID > this->m_currentTree->back()) {
+      this->m_currentTree->push_back(recentVID);
+      //reward the growth strategy based upon expanded distance in proportion to
+      //delta_q
+      RewardGrowthMethod(dist/this->m_delta, gm, rgsit->second);
+    }
+    else {
+      //node already existed in the roadmap. decrement reward
+      RewardGrowthMethod(-this->m_minDist, gm, rgsit->second);
+    }
   }
   else{
     //could not expand at least m_minDist. Penalize nearest with 0;
     nearest.IncStat("Fail");
     AvgVisibility(nearest, 0);
+    RewardGrowthMethod(-this->m_minDist, gm, rgsit->second);
   }
 
   return recentVID;
@@ -478,9 +489,9 @@ double
 AdaptiveRRT<MPTraits>::CostInsensitiveProb(string _s, GrowthSet& _gs){
   double sw = 0.0;
   for(GrowthSet::const_iterator gsit = _gs.begin(); gsit!=_gs.end(); ++gsit){
-    sw+=gsit->second.second;
+    sw+=log(gsit->second.second+1);
   }
-  return (1.-m_gamma)*_gs[_s].second/sw + m_gamma*double(_gs.size());
+  return (1.-m_gamma)*log(_gs[_s].second+1)/sw + m_gamma*double(_gs.size());
 }
 
 #endif

@@ -189,7 +189,8 @@ OBRRTStrategy<MPTraits>::ExpandTree(CfgType& _dir){
   // If good to go, add to roadmap
   if(verifiedValid && dm->Distance(env, newCfg, nearest) >= this->m_minDist) {
     recentVID = this->GetMPProblem()->GetRoadmap()->GetGraph()->AddVertex(newCfg);
-    this->m_currentTree->push_back(recentVID);
+    if(recentVID > this->m_currentTree->back())
+      this->m_currentTree->push_back(recentVID);
     if(this->m_debug) cout << "Expanded tree to recent vid::" << recentVID << "::with parent::" << kClosest[0].first << endl;
     //TODO fix weight
     pair<WeightType, WeightType> weights = make_pair(WeightType(), WeightType());
