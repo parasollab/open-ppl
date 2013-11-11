@@ -432,8 +432,7 @@ CCExpansion<MPTraits>::ExpandFrom(RoadmapType* _rm, StatClass& _stats, int _inde
     }
     else {
       direction = prev - away;
-      CfgType origin;
-      dm->ScaleCfg(this->GetMPProblem()->GetEnvironment(),m_maxStepDistance,origin,direction);
+      dm->ScaleCfg(m_maxStepDistance, direction);
       direction = direction + prev;
     }
 
@@ -775,8 +774,7 @@ CCExpansion<MPTraits>::GetMedialAxisRay(RoadmapType* _rm, CfgType& _prev, CfgTyp
     dir[2] = d[2];
 
   UnitVec(dir);
-  CfgType origin;
-  dm->ScaleCfg(this->GetMPProblem()->GetEnvironment(),m_maxStepDistance,origin,dir);
+  dm->ScaleCfg(m_maxStepDistance, dir);
   _dir = dir;
 }
 

@@ -51,7 +51,6 @@ OutputIterator
 RandomNF<MPTraits>::FindNeighbors(RoadmapType* _rmp, InputIterator _first, InputIterator _last,
     const CfgType& _cfg, OutputIterator _out) {
 
-  Environment* env = this->GetMPProblem()->GetEnvironment();
   GraphType* map = _rmp->GetGraph();
   DistanceMetricPointer dmm = this->GetMPProblem()->GetDistanceMetric(this->m_dmLabel);
 
@@ -69,7 +68,7 @@ RandomNF<MPTraits>::FindNeighbors(RoadmapType* _rmp, InputIterator _first, Input
       vid = map->GetVID(_first + LRand() % dist);
     } while(vids.find(vid) != vids.end() && cvid == vid && this->CheckUnconnected(_rmp, _cfg, vid));
     vids.insert(vid);
-    *_out++ = make_pair(vid, dmm->Distance(env, _cfg, map->GetVertex(vid)));
+    *_out++ = make_pair(vid, dmm->Distance(_cfg, map->GetVertex(vid)));
   }
 
   this->EndQueryTime();
@@ -86,7 +85,6 @@ RandomNF<MPTraits>::FindNeighborPairs(RoadmapType* _rmp,
     InputIterator _first2, InputIterator _last2,
     OutputIterator _out) {
 
-  Environment* env = this->GetMPProblem()->GetEnvironment();
   GraphType* map = _rmp->GetGraph();
   DistanceMetricPointer dmm = this->GetMPProblem()->GetDistanceMetric(this->m_dmLabel);
 
@@ -104,7 +102,7 @@ RandomNF<MPTraits>::FindNeighborPairs(RoadmapType* _rmp,
     ids.insert(pairId);
     *_out++ = make_pair(
         make_pair(vid1, vid2),
-        dmm->Distance(env, map->GetVertex(vid1), map->GetVertex(vid2)));
+        dmm->Distance(map->GetVertex(vid1), map->GetVertex(vid2)));
   }
 
   return _out;

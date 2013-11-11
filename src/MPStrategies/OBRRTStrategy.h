@@ -127,7 +127,6 @@ typename OBRRTStrategy<MPTraits>::VID
 OBRRTStrategy<MPTraits>::ExpandTree(CfgType& _dir){
   if(this->m_debug) cout << " OBRRTStrategy::ExpandTree -- in expand call" << endl;
   // Setup MP Variables
-  Environment* env = this->GetMPProblem()->GetEnvironment();
   DistanceMetricPointer dm = this->GetMPProblem()->GetDistanceMetric(this->m_dm);
   NeighborhoodFinderPointer nf = this->GetMPProblem()->GetNeighborhoodFinder(this->m_nf);
   VID recentVID = INVALID_VID;
@@ -187,7 +186,7 @@ OBRRTStrategy<MPTraits>::ExpandTree(CfgType& _dir){
   }
 
   // If good to go, add to roadmap
-  if(verifiedValid && dm->Distance(env, newCfg, nearest) >= this->m_minDist) {
+  if(verifiedValid && dm->Distance(newCfg, nearest) >= this->m_minDist) {
     recentVID = this->GetMPProblem()->GetRoadmap()->GetGraph()->AddVertex(newCfg);
     if(recentVID > this->m_currentTree->back())
       this->m_currentTree->push_back(recentVID);
@@ -450,7 +449,7 @@ OBRRTStrategy<MPTraits>::g7(CfgType& _near, CfgType& _dir, bool& _verifiedValid)
 
   _dir = _near + cspaceDir;
 
-  dm->ScaleCfg(env, vscale, _near, _dir, true);
+  dm->ScaleCfg(vscale, _dir, _near);
 
   // final expand
   if(!RRTExpand<MPTraits>(this->GetMPProblem(), this->m_vc, this->m_dm, _near, _dir, newCfg3, this->m_delta, weight, cdInfo, env->GetPositionRes(), env->GetOrientationRes())) {

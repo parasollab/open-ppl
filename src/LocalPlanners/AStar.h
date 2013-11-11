@@ -378,7 +378,7 @@ AStarDistance<MPTraits>::ChooseOptimalNeighbor(
   size_t retPosition = 0;
   double value = 0;
   for(size_t i = 0; i < _neighbors.size(); i++) {
-    value = _dm->Distance(_env, _neighbors[i], _c2);
+    value = _dm->Distance(_neighbors[i], _c2);
     if (value < minDistance) {
       retPosition = i;
       minDistance = value;

@@ -540,7 +540,7 @@ struct DistanceCompareFirst : public binary_function<P, P, bool> {
   ~DistanceCompareFirst() {}
 
   bool operator()(const P& _p1, const P& _p2) const {
-    return (m_dm->Distance(m_env, m_cfg, _p1.first) < m_dm->Distance(m_env, m_cfg, _p2.first));
+    return (m_dm->Distance(m_cfg, _p1.first) < m_dm->Distance(m_cfg, _p2.first));
   }
 };
 

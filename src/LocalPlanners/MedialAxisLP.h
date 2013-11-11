@@ -299,7 +299,7 @@ MedialAxisLP<MPTraits>::EpsilonClosePath(
   bool passed = true, found = false;
 
   // Closer than epsilon so calc pushed mid and test at _env res
-  if(_dm->Distance(_env, _c1, _c2) < m_medialAxisUtility.GetEpsilon()) {
+  if(_dm->Distance(_c1, _c2) < m_medialAxisUtility.GetEpsilon()) {
     if(this->m_debug) cout << "Segment is shorter than epsilon..." << endl;
 
     _mid.FindIncrement( _c1, _c2, &nTicks, _posRes, _oriRes);
@@ -317,7 +317,7 @@ MedialAxisLP<MPTraits>::EpsilonClosePath(
   }
 
   // Calculate relationship between resolution and m_epsilon
-  double rEpsilon = _dm->Distance(_env, _c1, _c2) / m_medialAxisUtility.GetEpsilon();
+  double rEpsilon = _dm->Distance(_c1, _c2) / m_medialAxisUtility.GetEpsilon();
 
   if(this->m_debug) cout << " Ticks wanted: " << rEpsilon << endl;
 

@@ -490,7 +490,7 @@ BasicRRTStrategy<MPTraits>::ExpandTree(CfgType& _dir){
   if(this->m_debug) cout << "RRT expanded to " << newCfg << endl;
 
   // If good to go, add to roadmap
-  if(dm->Distance(env, newCfg, nearest) >= m_minDist ) {
+  if(dm->Distance(newCfg, nearest) >= m_minDist ) {
     recentVID = this->GetMPProblem()->GetRoadmap()->GetGraph()->AddVertex(newCfg);
     m_currentTree->push_back(recentVID);
     if(std::string::npos!=m_gt.find("UNDIRECTED")){
@@ -519,7 +519,7 @@ BasicRRTStrategy<MPTraits>::ExpandTree(CfgType& _dir){
       if(!expandFlag) {
         if(this->m_debug) cout << "RRT could not expand to additional directions!" << endl;
       }
-      else if(dm->Distance(env, newCfg, nearest) >= m_minDist ) {
+      else if(dm->Distance(newCfg, nearest) >= m_minDist ) {
         VID otherVID = this->GetMPProblem()->GetRoadmap()->GetGraph()->AddVertex(newCfg);
         m_currentTree->push_back(otherVID);
         if(std::string::npos!=m_gt.find("UNDIRECTED")){
@@ -568,7 +568,7 @@ BasicRRTStrategy<MPTraits>::ConnectTrees(VID _recentlyGrown){
       nf->FindNeighbors(rdmp, trit->begin(), trit->end(), c1, back_inserter(closest));
       if(closest.size() != 0) {
         c2  = rdmp->GetGraph()->GetVertex(closest[0].first);
-        double dist = dm->Distance(env,c1,c2);
+        double dist = dm->Distance(c1,c2);
         if(dist<minDis){
           treeClosest = trit;
           minDis = dist;
@@ -596,7 +596,7 @@ BasicRRTStrategy<MPTraits>::ConnectTrees(VID _recentlyGrown){
       m_trees.erase(treeClosest);
       newVID = _recentlyGrown;
     }
-    else if(dm->Distance(env, newCfg, c2) >= m_minDist ) {
+    else if(dm->Distance(newCfg, c2) >= m_minDist ) {
       newVID = this->GetMPProblem()->GetRoadmap()->GetGraph()->AddVertex(newCfg);
       treeClosest->push_back(newVID);
       m_currentTree = treeClosest;
@@ -637,7 +637,7 @@ BasicRRTStrategy<MPTraits>::EvaluateGoals(){
     vector<pair<VID, double> > closests;
     nfp->FindNeighbors(rdmp, m_goals[*i], back_inserter(closests));
     CfgType closest = rdmp->GetGraph()->GetVertex(closests[0].first);
-    double dist = dmp->Distance(env, m_goals[*i], closest);
+    double dist = dmp->Distance(m_goals[*i], closest);
     if(this->m_debug) cout << "Distance to goal::" << dist << endl;
     CfgType col;
     if(dist < m_delta && lpp->IsConnected(env, *stats, dmp, closest, m_goals[*i], col, &lpOutput,

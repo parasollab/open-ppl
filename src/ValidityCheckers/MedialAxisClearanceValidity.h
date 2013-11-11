@@ -96,7 +96,7 @@ MedialAxisClearanceValidity<MPTraits>::IsValidImpl(CfgType& _cfg,
   m_history.push_back(make_pair(origCfg, tmpCfg));
 
   string dmLabel = m_medialAxisUtility.GetDistanceMetricLabel();
-  double dist = this->GetMPProblem()->GetDistanceMetric(dmLabel)->Distance(env, tmpCfg, _cfg);
+  double dist = this->GetMPProblem()->GetDistanceMetric(dmLabel)->Distance(tmpCfg, _cfg);
   bool result = dist < m_clearance;
 
   _cfg.SetLabel("VALID", result);

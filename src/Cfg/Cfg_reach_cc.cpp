@@ -414,7 +414,7 @@ GetRandomRay(double incr, Environment* env, shared_ptr<DistanceMetricMethod> dm,
 
   }
 
-  // dm->ScaleCfg(env, incr, origin, tick);
+  // dm->ScaleCfg(incr, tick, origin);
   *this=tick;
 
 }

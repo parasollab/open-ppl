@@ -275,7 +275,7 @@ class SimilarStructureSampler : public SamplerMethod<MPTraits>
   vector<double> HalfRotationEffects(const CfgType& _cfg, Environment* _env) {
     RMSDDistance<MPTraits> rmsd;
 
-    const vector<Vector3d> original_coords = rmsd.GetCoordinatesForRMSD(_cfg, _env);
+    const vector<Vector3d> original_coords = rmsd.GetCoordinatesForRMSD(_cfg);
     const vector<double> original_joints = _cfg.GetData();
 
     vector<double> altered_joints = original_joints;
@@ -287,7 +287,7 @@ class SimilarStructureSampler : public SamplerMethod<MPTraits>
 
       CfgType altered_cfg;
       altered_cfg.SetData(altered_joints);
-      const vector<Vector3d> altered_coords = rmsd.GetCoordinatesForRMSD(altered_cfg, _env);
+      const vector<Vector3d> altered_coords = rmsd.GetCoordinatesForRMSD(altered_cfg);
 
       if(m_doAlignment) {
         effects[j] = rmsd.RMSD(original_coords, altered_coords, original_coords.size());
@@ -396,7 +396,7 @@ class SimilarStructureSampler : public SamplerMethod<MPTraits>
 
         RMSDDistance<MPTraits> rmsd;
         if(this->m_debug)
-          log << rmsd.Distance(env, original_cfg, similar_cfg) << "\t";
+          log << rmsd.Distance(original_cfg, similar_cfg) << "\t";
         string callee(this->GetName());callee+="::_BiasedSample()";
         if(m_ignoreValidity) {
            Stat.IncNodesGenerated(this->GetNameAndLabel());

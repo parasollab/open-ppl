@@ -547,7 +547,7 @@ ClearanceUtility<MPTraits>::ApproxCollisionInfo(CfgType& _cfg, CfgType& _clrCfg,
   }
   middleCfg = incr[candTick[0]] * mid + candIn[0];
   _clrCfg = middleCfg;
-  _cdInfo.m_minDist = (initValidity ? 1.0 : -1.0) * dm->Distance(env, middleCfg, _cfg);
+  _cdInfo.m_minDist = (initValidity ? 1.0 : -1.0) * dm->Distance(middleCfg, _cfg);
 
   if(_clrCfg == _cfg)
     return false;
@@ -1161,7 +1161,6 @@ MedialAxisUtility<MPTraits>::BinarySearchForPeaks(
     double _lowerBound, double _upperBound,
     CfgType& _transCfg, CfgType& _cfg,
     shared_ptr<Boundary> _bb, vector<double>& _dists) {
-  Environment* env = this->GetMPProblem()->GetEnvironment();
   DistanceMetricPointer dm = this->GetMPProblem()->GetDistanceMetric(this->m_dmLabel);
 
   // Variables for modified binary search
@@ -1274,7 +1273,7 @@ MedialAxisUtility<MPTraits>::BinarySearchForPeaks(
       }
     }
     if(this->m_debug) cout << " peak: " << peak << "  cfg: " << _midMCfg;
-    double gapDist = dm->Distance(env, _startCfg, _endingCfg);
+    double gapDist = dm->Distance(_startCfg, _endingCfg);
     if(this->m_debug) cout << " gap: " << gapDist << endl;
     if(m_epsilon >= gapDist)
       peaked = true;

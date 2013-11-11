@@ -194,7 +194,7 @@ RewireConnector<MPTraits>::GetDistance(VID _vid1, VID _vid2, RoadmapType* _rm) {
   CfgRef cfg1 = _rm->GetGraph()->GetVertex(_vid1);
   CfgRef cfg2 = _rm->GetGraph()->GetVertex(_vid2);
   double distance = this->GetMPProblem()->GetNeighborhoodFinder(this->m_nfLabel)->GetDMMethod()->
-    Distance(this->GetMPProblem()->GetEnvironment(), cfg1, cfg2);
+    Distance(cfg1, cfg2);
   return distance;
 }
 

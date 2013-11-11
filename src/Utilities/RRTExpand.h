@@ -55,7 +55,7 @@ RRTExpand(typename MPTraits::MPProblemType* _mp,
 
   //Move out from start towards dir, bounded by number of ticks allowed at a
   //given resolution and the distance _delta: the maximum distance to grow
-  while(!collision && dm->Distance(env,_start,tick) <= _delta && ticker <= nTicks) {
+  while(!collision && dm->Distance(_start, tick) <= _delta && ticker <= nTicks) {
     previous = tick;
     tick += incr;
     if(!env->InBounds(tick) || !(vc->IsValid(tick, _cdInfo, callee)))

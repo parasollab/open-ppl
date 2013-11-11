@@ -7,12 +7,14 @@
 #include "Weight.h"
 
 //distance metric includes
+#include "DistanceMetrics/BinaryLPSweptDistance.h"
 #include "DistanceMetrics/CenterOfMassDistance.h"
 #include "DistanceMetrics/EuclideanDistance.h"
 #include "DistanceMetrics/KnotTheoryDistance.h"
 #include "DistanceMetrics/LPSweptDistance.h"
 #include "DistanceMetrics/RMSDDistance.h"
 #include "DistanceMetrics/ManhattanDistance.h"
+#include "DistanceMetrics/ReachableDistance.h"
 #include "DistanceMetrics/ScaledEuclideanDistance.h"
 
 //validity checker includes
@@ -128,16 +130,16 @@ struct MPTraits{
 
   //types of distance metrics available in our world
   typedef boost::mpl::list<
-    //BinaryLPSweptDistance<MPTraits>,
+    BinaryLPSweptDistance<MPTraits>,
     CenterOfMassDistance<MPTraits>,
     EuclideanDistance<MPTraits>,
     KnotTheoryDistance<MPTraits>,
     LPSweptDistance<MPTraits>,
     ManhattanDistance<MPTraits>,
     MinkowskiDistance<MPTraits>,
-    //#if (defined(PMPReachDistCC) || defined(PMPReachDistCCFixed))
-    //ReachableDistance<MPTraits>,
-    //#endif
+    #if (defined(PMPReachDistCC) || defined(PMPReachDistCCFixed))
+    ReachableDistance<MPTraits>,
+    #endif
     RMSDDistance<MPTraits>,
     ScaledEuclideanDistance<MPTraits>
     > DistanceMetricMethodList;

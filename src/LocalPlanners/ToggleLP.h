@@ -179,7 +179,7 @@ ToggleLP<MPTraits>::ChooseAlteredCfg(
   mid = (_c1 + _c2)/2.0;
   do{
     CfgType incr;
-    double dist = _dm->Distance(_env, _c1, _c2) * sqrt(2.0)/2.0;
+    double dist = _dm->Distance(_c1, _c2) * sqrt(2.0)/2.0;
     incr.GetRandomRay(dist, _env, _dm);
     temp = incr + mid;
   } while(!_env->InBounds(temp) && attempts++ < 10);

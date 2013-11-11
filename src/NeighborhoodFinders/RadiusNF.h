@@ -59,7 +59,6 @@ RadiusNF<MPTraits>::FindNeighbors(RoadmapType* _rmp, InputIterator _first, Input
   this->StartTotalTime();
   this->StartQueryTime();
 
-  Environment* env = this->GetMPProblem()->GetEnvironment();
   GraphType* map = _rmp->GetGraph();
   DistanceMetricPointer dmm = this->GetMPProblem()->GetDistanceMetric(this->m_dmLabel);
   set<pair<VID, double>, CompareSecond<VID, double> > inRadius;
@@ -75,7 +74,7 @@ RadiusNF<MPTraits>::FindNeighbors(RoadmapType* _rmp, InputIterator _first, Input
       continue;
 
     // If within radius, add to list
-    double dist = dmm->Distance(env, _cfg, node);
+    double dist = dmm->Distance(_cfg, node);
     if(dist <= this->m_radius)
       inRadius.insert(make_pair(map->GetVID(it), dist));
   }
@@ -95,7 +94,6 @@ RadiusNF<MPTraits>::FindNeighborPairs(RoadmapType* _rmp,
     InputIterator _first2, InputIterator _last2,
     OutputIterator _out) {
 
-  Environment* env = this->GetMPProblem()->GetEnvironment();
   GraphType* map = _rmp->GetGraph();
   DistanceMetricPointer dmm = this->GetMPProblem()->GetDistanceMetric(this->m_dmLabel);
   set<pair<pair<VID, VID >, double> > inRadius;
@@ -109,7 +107,7 @@ RadiusNF<MPTraits>::FindNeighborPairs(RoadmapType* _rmp,
       CfgType node2 = map->GetVertex(it2);
 
       // If within radius, add to list
-      double dist = dmm->Distance(env, node1, node2);
+      double dist = dmm->Distance(node1, node2);
       if(dist <= this->m_radius){
         inRadius.insert(make_pair(
               make_pair(map->GetVID(it1), map->GetVID(it2)),

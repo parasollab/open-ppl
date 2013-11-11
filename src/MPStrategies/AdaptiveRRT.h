@@ -177,7 +177,6 @@ typename AdaptiveRRT<MPTraits>::VID
 AdaptiveRRT<MPTraits>::ExpandTree(CfgType& _dir){
 
   // Setup MP Variables
-  Environment* env = this->GetMPProblem()->GetEnvironment();
   DistanceMetricPointer dm = this->GetMPProblem()->GetDistanceMetric(this->m_dm);
   VID recentVID = INVALID_VID;
 
@@ -195,7 +194,7 @@ AdaptiveRRT<MPTraits>::ExpandTree(CfgType& _dir){
   if(this->m_debug)
     cout << "nearest:: " << nearest << "\tvisibility:: " << visibility << endl;
 
-  if(dm->Distance(env, _dir, nearest) < this->m_minDist){
+  if(dm->Distance(_dir, nearest) < this->m_minDist){
     //chosen a q_rand which is too close. Penalize nearest with 0.
     nearest.IncStat("Fail");
     AvgVisibility(nearest, 0);
@@ -245,7 +244,7 @@ AdaptiveRRT<MPTraits>::ExpandTree(CfgType& _dir){
   }
 
   // If good to go, add to roadmap
-  double dist = dm->Distance(env, newCfg, nearest);
+  double dist = dm->Distance(newCfg, nearest);
 
   if(m_costMethod == REWARD)
     UpdateCost(max(this->m_delta - dist, 0.0) + 1E-6, gm, rgsit->second);
@@ -379,13 +378,12 @@ AdaptiveRRT<MPTraits>::Grow(string _s, CfgType& _nearest, CfgType& _dir, bool& _
 template<class MPTraits>
 typename AdaptiveRRT<MPTraits>::VID
 AdaptiveRRT<MPTraits>::UpdateTree(VID _expandNode, CfgType& _newCfg, CfgType& _dir){
-  Environment* env = this->GetMPProblem()->GetEnvironment();
   DistanceMetricPointer dm = this->GetMPProblem()->GetDistanceMetric(this->m_dm);
 
   CfgType& nearest = this->GetMPProblem()->GetRoadmap()->GetGraph()->GetVertex(_expandNode);
 
   double visibility = GetVisibility(nearest);
-  double distToNear = dm->Distance(env, nearest, _newCfg);
+  double distToNear = dm->Distance(nearest, _newCfg);
   //if expansion did not reach at least m_delta * visibility and q_new is not q_rand
   //Then it will be a partial expansion
   bool partial = distToNear < this->m_delta && _newCfg != _dir;

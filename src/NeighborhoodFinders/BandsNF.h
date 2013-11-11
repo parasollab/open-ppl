@@ -413,7 +413,6 @@ class Band : public MPBaseObject<MPTraits> {
           InputIterator _first, InputIterator _last, const CfgType& _cfg) {
         if (m_debug) cout << "Band<MPTraits>:::GetDistList()" << endl;
 
-        Environment* env = this->GetMPProblem()->GetEnvironment();
         GraphType* map = _rmp->GetGraph();
         DistanceMetricPointer dmm = this->GetMPProblem()->GetDistanceMetric(this->m_dmLabel);
 
@@ -426,7 +425,7 @@ class Band : public MPBaseObject<MPTraits> {
           if(v1 == _cfg)
             continue; //don't connect same
 
-          double dist = dmm->Distance(env, _cfg, v1);
+          double dist = dmm->Distance(_cfg, v1);
           distList.push_back(make_pair(map->GetVID(V1), dist));
         }
 
