@@ -52,7 +52,7 @@ MedialAxisRRT<MPTraits>::MedialAxisRRT(
 
 template<class MPTraits>
 MedialAxisRRT<MPTraits>::MedialAxisRRT(MPProblemType* _problem, XMLNodeReader& _node) :
-  BasicRRTStrategy<MPTraits>(_problem, _node, false), m_medialAxisUtility(_problem, _node){
+  BasicRRTStrategy<MPTraits>(_problem, _node, false, true), m_medialAxisUtility(_problem, _node){
     this->SetName("MedialAxisRRT");
     ParseXML(_node);
     _node.warnUnrequestedAttributes();

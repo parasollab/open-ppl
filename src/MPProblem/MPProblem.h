@@ -11,6 +11,7 @@
 #include "NeighborhoodFinders/NeighborhoodFinderMethod.h"
 #include "Samplers/SamplerMethod.h"
 #include "LocalPlanners/LocalPlannerMethod.h"
+#include "Extenders/ExtenderMethod.h"
 #include "PathModifiers/PathModifierMethod.h"
 #include "Connectors/ConnectorMethod.h"
 #include "Metrics/MetricMethod.h"
@@ -73,6 +74,11 @@ class MPProblem
     typedef typename LocalPlannerSet::MethodPointer LocalPlannerPointer;
     LocalPlannerPointer GetLocalPlanner(const string& _l){return m_localPlanners->GetMethod(_l);}
     void AddLocalPlanner(LocalPlannerPointer _lp, const string& _l){m_localPlanners->AddMethod(_lp, _l);}
+
+    typedef MethodSet<MPTraits, ExtenderMethod<MPTraits> > ExtenderSet;
+    typedef typename ExtenderSet::MethodPointer ExtenderPointer;
+    ExtenderPointer GetExtender(const string& _l){return m_extenders->GetMethod(_l);}
+    void AddExtender(ExtenderPointer _mps, const string& _l){m_extenders->AddMethod(_mps, _l);}
 
     typedef MethodSet<MPTraits, PathModifierMethod<MPTraits> > PathModifierSet;
     typedef typename PathModifierSet::MethodPointer PathModifierPointer;
@@ -146,6 +152,7 @@ class MPProblem
     NeighborhoodFinderSet* m_neighborhoodFinders;
     SamplerSet* m_samplers;
     LocalPlannerSet* m_localPlanners;
+    ExtenderSet* m_extenders;
     PathModifierSet* m_pathModifiers;
     ConnectorSet* m_connectors;
     MetricSet* m_metrics;
@@ -240,6 +247,7 @@ MPProblem<MPTraits>::Initialize(){
   m_neighborhoodFinders = new NeighborhoodFinderSet(typename MPTraits::NeighborhoodFinderMethodList(), "NeighborhoodFinders");
   m_samplers = new SamplerSet(typename MPTraits::SamplerMethodList(), "Samplers");
   m_localPlanners = new LocalPlannerSet(typename MPTraits::LocalPlannerMethodList(), "LocalPlanners");
+  m_extenders = new ExtenderSet(typename MPTraits::ExtenderMethodList(), "Extenders");
   m_pathModifiers = new PathModifierSet(typename MPTraits::PathModifierMethodList(), "PathModifiers");
   m_connectors = new ConnectorSet(typename MPTraits::ConnectorMethodList(), "Connectors");
   m_metrics = new MetricSet(typename MPTraits::MetricMethodList(), "Metrics");
@@ -309,6 +317,10 @@ MPProblem<MPTraits>::ParseChild(XMLNodeReader::childiterator citr, typename MPTr
   }
   else if(citr->getName() == "LocalPlanners") {
     m_localPlanners->ParseXML(_problem, *citr);
+    return true;
+  }
+  else if(citr->getName() == "Extenders") {
+    m_extenders->ParseXML(_problem, *citr);
     return true;
   }
   else if(citr->getName() == "PathModifiers") {
@@ -384,6 +396,7 @@ MPProblem<MPTraits>::PrintOptions(ostream& _os) const {
   m_neighborhoodFinders->PrintOptions(_os);
   m_samplers->PrintOptions(_os);
   m_localPlanners->PrintOptions(_os);
+  m_extenders->PrintOptions(_os);
   m_pathModifiers->PrintOptions(_os);
   m_connectors->PrintOptions(_os);
   m_metrics->PrintOptions(_os);
@@ -399,6 +412,7 @@ MPProblem<MPTraits>::SetMPProblem(){
   m_neighborhoodFinders->SetMPProblem(this);
   m_samplers->SetMPProblem(this);
   m_localPlanners->SetMPProblem(this);
+  m_extenders->SetMPProblem(this);
   m_pathModifiers->SetMPProblem(this);
   m_connectors->SetMPProblem(this);
   m_metrics->SetMPProblem(this);

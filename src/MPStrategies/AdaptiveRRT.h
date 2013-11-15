@@ -21,10 +21,10 @@ static inline uint64_t GetCycles(){
   return n;
 }
 
-#include "OBRRTStrategy.h"
+#include "BasicRRTStrategy.h"
 
 template<class MPTraits>
-class AdaptiveRRT : public OBRRTStrategy<MPTraits> {
+class AdaptiveRRT : public BasicRRTStrategy<MPTraits> {
   public:
 
     //cost calculation for the AdaptiveRRT
@@ -59,7 +59,6 @@ class AdaptiveRRT : public OBRRTStrategy<MPTraits> {
     string SelectGrowthMethod(GrowthSet& _gs);
     void UpdateCost(double _cost, string _s, GrowthSet& _gs);
     void RewardGrowthMethod(double _r, string _s, GrowthSet& _gs);
-    CfgType Grow(string _s, CfgType& _nearest, CfgType& _dir, bool& _verifiedValid);
     VID UpdateTree(VID _nearest, CfgType& _new, CfgType& _dir);
     VID UpdateTree(CfgType& _newCfg, VID _nearVID, bool _againstWall, double _ratio);
 
@@ -90,7 +89,7 @@ AdaptiveRRT<MPTraits>::AdaptiveRRT(double _wallPenalty, double _gamma,
 
 template<class MPTraits>
 AdaptiveRRT<MPTraits>::AdaptiveRRT(MPProblemType* _problem, XMLNodeReader& _node) :
-  OBRRTStrategy<MPTraits>(_problem, _node, false, false){
+  BasicRRTStrategy<MPTraits>(_problem, _node, false, true){
     this->SetName("AdaptiveRRT");
     ParseXML(_node);
     _node.warnUnrequestedAttributes();
@@ -104,9 +103,9 @@ AdaptiveRRT<MPTraits>::ParseXML(XMLNodeReader& _node) {
       double threshold = citr->numberXMLParameter("threshold", true, 0.0, 0.0, 1.0, "Threshold of visibility for selecting GrowthSet");
       GrowthSet growthSet;
       for(XMLNodeReader::childiterator citr2 = citr->children_begin(); citr2 != citr->children_end(); ++citr2){
-        if(citr2->getName() == "Method"){
-          string method = citr2->stringXMLParameter("method", true, "", "Growth strategy");
-          growthSet[method] = make_pair(make_pair(0, 0), 1.0);
+        if(citr2->getName() == "Extender"){
+          string label = citr2->stringXMLParameter("label", true, "", "Extender strategy");
+          growthSet[label] = make_pair(make_pair(0, 0), 1.0);
           citr2->warnUnrequestedAttributes();
         }
         else
@@ -202,7 +201,6 @@ AdaptiveRRT<MPTraits>::ExpandTree(CfgType& _dir){
   }
 
   //select the growth set based upon the visibility of the nearest node
-  bool verifiedValid = false;
   GrowthSets::reverse_iterator rgsit = m_growthSets.rbegin();
   for(; rgsit!=m_growthSets.rend(); ++rgsit){
     if(visibility > rgsit->first){
@@ -217,7 +215,10 @@ AdaptiveRRT<MPTraits>::ExpandTree(CfgType& _dir){
   //start timing from cycles
   uint64_t start = GetCycles();
 
-  CfgType newCfg = Grow(gm, nearest, _dir, verifiedValid);
+  CfgType newCfg;
+  vector<CfgType> intermediateNodes;
+  bool verifiedValid = this->GetMPProblem()->GetExtender(gm)
+    ->Extend(nearest, _dir, newCfg, intermediateNodes);
 
   //end timing from cycles
   uint64_t end = GetCycles();
@@ -344,33 +345,6 @@ AdaptiveRRT<MPTraits>::RewardGrowthMethod(double _r, string _s, GrowthSet& _gs){
   double factor = exp(m_gamma * (_r/CostInsensitiveProb(_s, _gs)) / double(_gs.size()));
   //update the weight on growth method _s
   _gs[_s].second *= factor;
-}
-
-template<class MPTraits>
-typename AdaptiveRRT<MPTraits>::CfgType
-AdaptiveRRT<MPTraits>::Grow(string _s, CfgType& _nearest, CfgType& _dir, bool& _verifiedValid){
-  if(_s == "G0")
-    return this->g0(_nearest, _dir, _verifiedValid);
-  else if(_s == "G1")
-    return this->g1(_nearest, _dir, _verifiedValid);
-  else if(_s == "G2")
-    return this->g2(_nearest, _dir, _verifiedValid, false);
-  else if(_s == "G3")
-    return this->g2(_nearest, _dir, _verifiedValid, true);
-  else if(_s == "G4")
-    return this->g4(_nearest, _dir, _verifiedValid);
-  else if(_s == "G5")
-    return this->g5(_nearest, _dir, _verifiedValid, false);
-  else if(_s == "G6")
-    return this->g5(_nearest, _dir, _verifiedValid, true);
-  else if(_s == "G7")
-    return this->g7(_nearest, _dir, _verifiedValid);
-  else if(_s == "G8")
-    return this->g8(_nearest, _dir, _verifiedValid);
-  else{
-    cerr << "Error::Invalid growth method requested::" << _s << endl;
-    exit(1);
-  }
 }
 
 //This function simply calls the correct update tree based on expansion

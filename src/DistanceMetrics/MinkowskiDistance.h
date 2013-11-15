@@ -124,7 +124,7 @@ MinkowskiDistance<MPTraits>::ScaleCfg(double _length, CfgType& _c, const CfgType
   double originalLength = this->Distance(_o, _c);
   double diff = _length - originalLength;
   do {
-    _c *= _length/originalLength;
+    _c = (_c - _o) * (_length / originalLength) + _o;
     originalLength = this->Distance(_o, _c);
     diff = _length - originalLength;
   } while((diff > 0.1) || (diff < -0.1));

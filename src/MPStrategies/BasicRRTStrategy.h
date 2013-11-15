@@ -6,7 +6,7 @@
 #define BASICRRTSTRATEGY_H_
 
 #include "MPStrategyMethod.h"
-#include "Utilities/RRTExpand.h"
+#include "Extenders/BasicExtender.h"
 
 template<class MPTraits>
 class BasicRRTStrategy : public MPStrategyMethod<MPTraits> {
@@ -26,16 +26,17 @@ class BasicRRTStrategy : public MPStrategyMethod<MPTraits> {
     //Non-XML constructor sets all private variables
     BasicRRTStrategy(string _lp="sl", string _dm="euclidean",
         string _nf="bfnf", string _vc="cd1", string _nc="kClosest",
-        string _gt="UNDIRECTED_TREE", vector<string> _evaluators=vector<string>(),
+        string _gt="UNDIRECTED_TREE", string _extenderLabel="BERO",
+        vector<string> _evaluators=vector<string>(),
         double _delta=10.0, double _minDist=0.01, double _growthFocus=0.05,
         bool _evaluateGoal=true, const CfgType& _start=CfgType(), const CfgType& _goal=CfgType(),
         size_t _numRoots=1, size_t _numDirections=1, size_t _maxTrial = 3, bool _growGoals=false);
 
-    BasicRRTStrategy(MPProblemType* _problem, XMLNodeReader& _node, bool _warnXML = true);
+    BasicRRTStrategy(MPProblemType* _problem, XMLNodeReader& _node, bool _warnXML = true, bool _child = false);
 
     virtual ~BasicRRTStrategy();
 
-    virtual void ParseXML(XMLNodeReader& _node);
+    virtual void ParseXML(XMLNodeReader& _node, bool _child = false);
 
     virtual void Initialize();
     virtual void Run();
@@ -66,35 +67,38 @@ class BasicRRTStrategy : public MPStrategyMethod<MPTraits> {
     shared_ptr<Query<MPTraits> > m_query;
     string m_nc;
     string m_gt;
+    string m_extenderLabel;
     double m_delta, m_minDist, m_growthFocus;
     bool m_evaluateGoal;
     size_t m_numRoots,m_numDirections, m_maxTrial;
     bool m_growGoals;
     vector< vector<VID> > m_trees;
     typename vector<vector<VID> >::iterator m_currentTree;
-    vector<CfgType> m_goals, m_roots;
+    vector<CfgType> m_goals;
     vector<size_t> m_goalsNotFound;
 };
 
 template<class MPTraits>
 BasicRRTStrategy<MPTraits>::BasicRRTStrategy(string _lp, string _dm,
-    string _nf, string _vc, string _nc, string _gt, vector<string> _evaluators,
-    double _delta, double _minDist, double _growthFocus, bool _evaluateGoal,
-    const CfgType& _start, const CfgType& _goal,
-    size_t _numRoots, size_t _numDirections, size_t _maxTrial, bool _growGoals):
-  m_evaluators(_evaluators), m_lp(_lp), m_dm(_dm), m_nf(_nf), m_vc(_vc), m_query(new Query<MPTraits>(_start, _goal)),
-  m_nc(_nc), m_gt(_gt),  m_delta(_delta), m_minDist(_minDist), m_growthFocus(_growthFocus),
-  m_evaluateGoal(_evaluateGoal), m_numRoots(_numRoots),
-  m_numDirections(_numDirections), m_maxTrial(_maxTrial),
-  m_growGoals(_growGoals){
+    string _nf, string _vc, string _nc, string _gt, string _extenderLabel,
+    vector<string> _evaluators, double _delta, double _minDist,
+    double _growthFocus, bool _evaluateGoal, const CfgType& _start,
+    const CfgType& _goal, size_t _numRoots, size_t _numDirections,
+    size_t _maxTrial, bool _growGoals):
+  m_evaluators(_evaluators), m_lp(_lp), m_dm(_dm), m_nf(_nf), m_vc(_vc),
+  m_query(new Query<MPTraits>(_start, _goal)), m_nc(_nc), m_gt(_gt),
+  m_extenderLabel(_extenderLabel), m_delta(_delta), m_minDist(_minDist),
+  m_growthFocus(_growthFocus), m_evaluateGoal(_evaluateGoal),
+  m_numRoots(_numRoots), m_numDirections(_numDirections), m_maxTrial(_maxTrial),
+  m_growGoals(_growGoals) {
     this->SetName("BasicRRTStrategy");
   }
 
 template<class MPTraits>
-BasicRRTStrategy<MPTraits>::BasicRRTStrategy(MPProblemType* _problem, XMLNodeReader& _node, bool _warnXML) :
+BasicRRTStrategy<MPTraits>::BasicRRTStrategy(MPProblemType* _problem, XMLNodeReader& _node, bool _warnXML, bool _child) :
   MPStrategyMethod<MPTraits>(_problem, _node){
     this->SetName("BasicRRTStrategy");
-    ParseXML(_node);
+    ParseXML(_node, _child);
     if (_warnXML) _node.warnUnrequestedAttributes();
   }
 
@@ -103,7 +107,7 @@ BasicRRTStrategy<MPTraits>::~BasicRRTStrategy(){ }
 
 template<class MPTraits>
 void
-BasicRRTStrategy<MPTraits>::ParseXML(XMLNodeReader& _node) {
+BasicRRTStrategy<MPTraits>::ParseXML(XMLNodeReader& _node, bool _child) {
   for(XMLNodeReader::childiterator citr = _node.children_begin(); citr != _node.children_end(); ++citr){
     if(citr->getName() == "Evaluator"){
       string evalMethod = citr->stringXMLParameter("label", true, "", "Evaluation Method");
@@ -125,6 +129,8 @@ BasicRRTStrategy<MPTraits>::ParseXML(XMLNodeReader& _node) {
   m_numDirections = _node.numberXMLParameter("m", false, 1, 1, 1000, "Number of directions to extend");
   m_nc = _node.stringXMLParameter("connectorLabel",false,"","Node Connection Method");
   m_gt = _node.stringXMLParameter("gtype",true,"","Graph type dir/undirected tree/graph");
+  if(!_child)
+    m_extenderLabel = _node.stringXMLParameter("extenderLabel", true, "", "Extender label");
   m_evaluateGoal = _node.boolXMLParameter("evaluateGoal", false, false, "");
   m_growGoals = _node.boolXMLParameter("growGoals",false,false,"Determines whether or not we grow a tree from the goal");
   m_maxTrial = _node.numberXMLParameter("trial", false, 3, 1, 1000, "Number of trials to get a dispersed direction");
@@ -148,6 +154,7 @@ BasicRRTStrategy<MPTraits>::PrintOptions(ostream& _os) const {
   _os << "\tLocal Planner:: " << m_lp << endl;
   _os << "\tConnection Method:: " << m_nc << endl;
   _os << "\tGraph Type:: " << m_gt << endl;
+  _os << "\tExtender:: " << m_extenderLabel << endl;
   _os << "\tEvaluate Goal:: " << m_evaluateGoal << endl;
   _os << "\tEvaluators:: " << endl;
   _os << "\tGrow Goals:: " << m_growGoals << endl;
@@ -421,7 +428,6 @@ template<class MPTraits>
 typename BasicRRTStrategy<MPTraits>::VID
 BasicRRTStrategy<MPTraits>::ExpandTree(CfgType& _dir){
   // Setup MP Variables
-  Environment* env = this->GetMPProblem()->GetEnvironment();
   DistanceMetricPointer dm = this->GetMPProblem()->GetDistanceMetric(m_dm);
   NeighborhoodFinderPointer nf = this->GetMPProblem()->GetNeighborhoodFinder(m_nf);
   LocalPlannerPointer lp = this->GetMPProblem()->GetLocalPlanner(m_lp);
@@ -474,13 +480,14 @@ BasicRRTStrategy<MPTraits>::ExpandTree(CfgType& _dir){
 
   CfgType nearest = this->GetMPProblem()->GetRoadmap()->GetGraph()->GetVertex(kClosest[0].first);
   CfgType newCfg;
-  int weight;
+  int weight = 0;
 
   StatClass* expandStatClass = this->GetMPProblem()->GetStatClass();
   string expandClockName = "RRTExpand time ";
   if(this->m_recordKeep) expandStatClass->StartClock(expandClockName);
 
-  if(!RRTExpand<MPTraits>(this->GetMPProblem(), m_vc, m_dm, nearest, _dir, newCfg, m_delta, weight, cdInfo, env->GetPositionRes(), env->GetOrientationRes())) {
+  vector<CfgType> intermediateNodes;
+  if(!this->GetMPProblem()->GetExtender(m_extenderLabel)->Extend(nearest, _dir, newCfg, intermediateNodes)) {
     if(this->m_debug) cout << "RRT could not expand!" << endl;
     return recentVID;
   }
@@ -509,7 +516,8 @@ BasicRRTStrategy<MPTraits>::ExpandTree(CfgType& _dir){
     for( size_t i=2 ;i<=m_numDirections; i++){//expansion to other m-1 directions
       CfgType randdir = this->SelectDispersedDirection(kClosest[0].first);
       if(this->m_recordKeep) expandStatClass->StartClock(expandClockName);
-      bool expandFlag = RRTExpand<MPTraits>(this->GetMPProblem(), m_vc, m_dm, nearest, randdir, newCfg, m_delta, weight, cdInfo, env->GetPositionRes(), env->GetOrientationRes());
+      bool expandFlag = this->GetMPProblem()->GetExtender(m_extenderLabel)
+        ->Extend(nearest, randdir, newCfg, intermediateNodes);
 
       if(this->m_recordKeep) expandStatClass->StopClock(expandClockName);
       StatClass* conStatClass = this->GetMPProblem()->GetStatClass();
@@ -545,7 +553,6 @@ template<class MPTraits>
 void
 BasicRRTStrategy<MPTraits>::ConnectTrees(VID _recentlyGrown){
   //Setup MP variables
-  Environment* env = this->GetMPProblem()->GetEnvironment();
   RoadmapType* rdmp = this->GetMPProblem()->GetRoadmap();
   DistanceMetricPointer dm = this->GetMPProblem()->GetDistanceMetric(m_dm);
   NeighborhoodFinderPointer nf = this->GetMPProblem()->GetNeighborhoodFinder(m_nf);
@@ -580,8 +587,10 @@ BasicRRTStrategy<MPTraits>::ConnectTrees(VID _recentlyGrown){
   }
 
   CfgType newCfg;
-  int weight;
-  if(!RRTExpand<MPTraits>(this->GetMPProblem(), m_vc, m_dm, closestCfg, c1, newCfg, MAX_DBL, weight, cdInfo, env->GetPositionRes(), env->GetOrientationRes())) {
+  int weight = 0;
+  vector<CfgType> intermediateNodes;
+  if(!this->GetMPProblem()->GetExtender(m_extenderLabel)
+      ->Extend(closestCfg, c1, newCfg, intermediateNodes)) {
     if(this->m_debug) cout << "RRT could not expand in connection phase, trapped!" << endl;
     return;
   }

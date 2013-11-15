@@ -60,6 +60,15 @@
 #include "LocalPlanners/ToggleLP.h"
 #include "LocalPlanners/TransformAtS.h"
 
+//extenders includes
+#include "Extenders/BasicExtender.h"
+#include "Extenders/MixExtender.h"
+#include "Extenders/RandomObstacleVector.h"
+#include "Extenders/RotationThenTranslation.h"
+#include "Extenders/TraceCSpaceObstacle.h"
+#include "Extenders/TraceMAPush.h"
+#include "Extenders/TraceObstacle.h"
+
 //path smoothing includes
 #include "PathModifiers/CombinedPathModifier.h"
 #include "PathModifiers/MedialAxisPathModifier.h"
@@ -106,7 +115,6 @@
 #include "MPStrategies/EvaluateMapStrategy.h"
 #include "MPStrategies/LocalManeuveringStrategy.h"
 #include "MPStrategies/MedialAxisRRT.h"
-#include "MPStrategies/OBRRTStrategy.h"
 #include "MPStrategies/TogglePRMStrategy.h"
 #include "MPStrategies/UnitTest/DMTestStrategy.h"
 #include "MPStrategies/UtilityGuidedGenerator.h"
@@ -197,6 +205,17 @@ struct MPTraits{
     TransformAtS<MPTraits>
     > LocalPlannerMethodList;
 
+  //types of extenders avaible in our world
+  typedef boost::mpl::list<
+    BasicExtender<MPTraits>,
+    MixExtender<MPTraits>,
+    RandomObstacleVector<MPTraits>,
+    RotationThenTranslation<MPTraits>,
+    TraceCSpaceObstacle<MPTraits>,
+    TraceMAPush<MPTraits>,
+    TraceObstacle<MPTraits>
+      > ExtenderMethodList;
+
   //types of path smoothing available in our world
   typedef boost::mpl::list<
     CombinedPathModifier<MPTraits>,
@@ -207,7 +226,8 @@ struct MPTraits{
 
   //types of connectors available in our world
   typedef boost::mpl::list<
-    AdaptiveConnector<MPTraits>,
+  AdaptiveConnector<MPTraits>,
+  CCExpansion<MPTraits>,
     CCsConnector<MPTraits>,
     NeighborhoodConnector<MPTraits>,
     //PreferentialAttachment<MPTraits>,
@@ -262,7 +282,6 @@ struct MPTraits{
     DMTestStrategy<MPTraits>,
     EvaluateMapStrategy<MPTraits>,
     MedialAxisRRT<MPTraits>,
-    OBRRTStrategy<MPTraits>,
     TogglePRMStrategy<MPTraits>,
     UtilityGuidedGenerator<MPTraits>,
     VisibilityBasedPRM<MPTraits>
@@ -320,6 +339,17 @@ struct MPTraits<CfgSurface, DefaultWeight<CfgSurface> > {
   typedef boost::mpl::list<
     SurfaceLP<MPTraits>
     > LocalPlannerMethodList;
+
+  //types of extenders avaible in our world
+  typedef boost::mpl::list<
+    BasicExtender<MPTraits>,
+    MixExtender<MPTraits>,
+    RandomObstacleVector<MPTraits>,
+    RotationThenTranslation<MPTraits>,
+    TraceCSpaceObstacle<MPTraits>,
+    TraceMAPush<MPTraits>,
+    TraceObstacle<MPTraits>
+      > ExtenderMethodList;
 
   //types of path smoothing available in our world
   typedef boost::mpl::list<
@@ -404,6 +434,17 @@ struct MPTraits<SSSurfaceMult, DefaultWeight<SSSurfaceMult> > {
   //types of local planners available in our world
   typedef boost::mpl::list<
     > LocalPlannerMethodList;
+
+  //types of extenders avaible in our world
+  typedef boost::mpl::list<
+    BasicExtender<MPTraits>,
+    MixExtender<MPTraits>,
+    RandomObstacleVector<MPTraits>,
+    RotationThenTranslation<MPTraits>,
+    TraceCSpaceObstacle<MPTraits>,
+    TraceMAPush<MPTraits>,
+    TraceObstacle<MPTraits>
+      > ExtenderMethodList;
 
   //types of path smoothing available in our world
   typedef boost::mpl::list<
@@ -494,6 +535,17 @@ struct MPTraits<CfgSurface, DefaultWeight<CfgSurface> > {
   typedef boost::mpl::list<
     SurfaceLP<MPTraits>
     > LocalPlannerMethodList;
+
+  //types of extenders avaible in our world
+  typedef boost::mpl::list<
+    BasicExtender<MPTraits>,
+    MixExtender<MPTraits>,
+    RandomObstacleVector<MPTraits>,
+    RotationThenTranslation<MPTraits>,
+    TraceCSpaceObstacle<MPTraits>,
+    TraceMAPush<MPTraits>,
+    TraceObstacle<MPTraits>
+      > ExtenderMethodList;
 
   //types of path smoothing available in our world
   typedef boost::mpl::list<
