@@ -110,6 +110,7 @@
 #include "MPStrategies/TogglePRMStrategy.h"
 #include "MPStrategies/UnitTest/DMTestStrategy.h"
 #include "MPStrategies/UtilityGuidedGenerator.h"
+#include "MPStrategies/VisibilityBasedPRM.h"
 
 #ifdef _PARALLEL
 #include "ParallelMethods/BasicParallelPRM.h"
@@ -263,7 +264,8 @@ struct MPTraits{
     MedialAxisRRT<MPTraits>,
     OBRRTStrategy<MPTraits>,
     TogglePRMStrategy<MPTraits>,
-    UtilityGuidedGenerator<MPTraits>
+    UtilityGuidedGenerator<MPTraits>,
+    VisibilityBasedPRM<MPTraits>
     #ifdef _PARALLEL
     ,BasicParallelPRM<MPTraits>
     ,RegularSubdivisionMethod<MPTraits>
