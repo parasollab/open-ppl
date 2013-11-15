@@ -243,7 +243,6 @@ VisibilityBasedPRM<MPTraits>::ConnectVisibleGuardSets(vector<CfgType>& _outNode)
       //Attempt connection to current guard node *cit
       if(lp->IsConnected(env, *stats, dm, _outNode[0], *cit, col, &lpOutput,
             env->GetPositionRes(), env->GetOrientationRes(), true)) {
-        vector<CfgType>* validSubset = &(*git);
         CfgType* validNode = &(*cit);
         validEdges.push_back(make_pair(g->GetVID(*validNode), lpOutput.m_edge));
         visibleGuardSets.push_back(git);
