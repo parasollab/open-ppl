@@ -28,6 +28,8 @@ struct EmptyTraits{
   
   typedef boost::mpl::list<> LocalPlannerMethodList;
   
+  typedef boost::mpl::list<> ExtenderMethodList;
+  
   typedef boost::mpl::list<> PathModifierMethodList;
 
   typedef boost::mpl::list<> ConnectorMethodList;
