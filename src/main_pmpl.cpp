@@ -33,12 +33,12 @@ using namespace std;
 
 #ifdef _PARALLEL
 void stapl_main(int _argc, char* _argv[])
-#else 
+#else
 int main(int _argc, char** _argv)
 #endif
 {
 
-  if(_argc < 3 || !(string(_argv[1]) == "-f")){ 
+  if(_argc < 3 || !(string(_argv[1]) == "-f")){
     cerr << "Error: Incorrect usage. Usage: -f options.xml" << endl;
     exit(1);
   }
@@ -47,7 +47,9 @@ int main(int _argc, char** _argv)
   typedef Traits::MPProblemType MPProblemType;
   MPProblemType* problem = new MPProblemType(_argv[2]);
   problem->PrintOptions(cout);
-  problem->Solve();
+  for(size_t i=0; i<problem->getSolverNum(); i++) {
+    problem->Solve(i);
+  }
 
   #ifndef _PARALLEL
   return 0;

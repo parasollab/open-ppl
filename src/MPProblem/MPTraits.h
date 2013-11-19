@@ -115,6 +115,7 @@
 #include "MPStrategies/EvaluateMapStrategy.h"
 #include "MPStrategies/LocalManeuveringStrategy.h"
 #include "MPStrategies/MedialAxisRRT.h"
+#include "MPStrategies/MultiStrategy.h"
 #include "MPStrategies/TogglePRMStrategy.h"
 #include "MPStrategies/UnitTest/DMTestStrategy.h"
 #include "MPStrategies/UtilityGuidedGenerator.h"
@@ -226,8 +227,8 @@ struct MPTraits{
 
   //types of connectors available in our world
   typedef boost::mpl::list<
-  AdaptiveConnector<MPTraits>,
-  CCExpansion<MPTraits>,
+    AdaptiveConnector<MPTraits>,
+    CCExpansion<MPTraits>,
     CCsConnector<MPTraits>,
     NeighborhoodConnector<MPTraits>,
     //PreferentialAttachment<MPTraits>,
@@ -282,6 +283,7 @@ struct MPTraits{
     DMTestStrategy<MPTraits>,
     EvaluateMapStrategy<MPTraits>,
     MedialAxisRRT<MPTraits>,
+    MultiStrategy<MPTraits>,
     TogglePRMStrategy<MPTraits>,
     UtilityGuidedGenerator<MPTraits>,
     VisibilityBasedPRM<MPTraits>

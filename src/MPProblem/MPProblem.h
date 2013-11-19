@@ -119,9 +119,11 @@ class MPProblem
 
     void SetMPProblem();
 
-    void SetSolverSeed(long _ss) { m_solverSeed=_ss; }
-    void SetMPSolver(string _solver) { m_solver=_solver; }
-    void Solve();
+    typedef boost::tuples::tuple<string, long, string, string> Solver;
+    //solver, seed, baseName, vizmoDebugName
+    void SetSolverSeed(int _index, long _ss) { get<1>(m_solver[_index])=_ss; }
+    void SetMPSolver(int _index, string _solver) { get<0>(m_solver[_index])=_solver; }
+    void Solve(int _solve_num);
 
     void BuildCDStructures();
 
@@ -134,6 +136,7 @@ class MPProblem
     //RemoveObstacleAt
     //a wrapper call to remove a multibody from the environment
     void RemoveObstacleAt(size_t _index);
+    int getSolverNum() { return m_solver.size(); }
 
   protected:
     virtual void Initialize();
@@ -168,10 +171,7 @@ class MPProblem
 //#endif
     MPStrategySet* m_mpStrategies;
 
-    string m_solver;
-    long m_solverSeed;
-    string m_solverBaseName;
-    string m_solverVizmoDebug;
+    vector<Solver> m_solver;
 
   private:
     bool m_cdBuilt;
@@ -253,11 +253,6 @@ MPProblem<MPTraits>::Initialize(){
   m_metrics = new MetricSet(typename MPTraits::MetricMethodList(), "Metrics");
   m_mapEvaluators = new MapEvaluatorSet(typename MPTraits::MapEvaluatorMethodList(), "MapEvaluators");
   m_mpStrategies = new MPStrategySet(typename MPTraits::MPStrategyMethodList(), "MPStrategies");
-
-  m_solver = "";
-  m_solverSeed = 1;
-  m_solverBaseName = "PMPLOutput";
-  m_solverVizmoDebug = "";
 
   m_cdBuilt = false;
 }
@@ -344,15 +339,17 @@ MPProblem<MPTraits>::ParseChild(XMLNodeReader::childiterator citr, typename MPTr
     return true;
   }
   else if(citr->getName() == "Solver") {
-    m_solver = citr->stringXMLParameter("mpStrategyLabel", true, "", "The strategy pointed to by this label will be used to solve the problem");
-    m_solverSeed = citr->numberXMLParameter("seed", true, 1, 0, MAX_INT, "The random number generator seed for the solver.");
-    m_solverBaseName = citr->stringXMLParameter("baseFilename", true, "", "BaseFilename for the solver.");
+    string m_label = citr->stringXMLParameter("mpStrategyLabel", true, "", "The strategy pointed to by this label will be used to solve the problem");
+    long m_seed = citr->numberXMLParameter("seed", true, 1, 0, MAX_INT, "The random number generator seed for the solver.");
+    string m_baseFilename = citr->stringXMLParameter("baseFilename", true, "", "BaseFilename for the solver.");
     ostringstream oss;
-    oss << m_solverBaseName << "." << m_solverSeed;
-    m_solverBaseName = oss.str();
-    bool vdOutput = citr->boolXMLParameter("vizmoDebug", false, false, "True yields VizmoDebug output for the solver.");
-    if(vdOutput)
-      m_solverVizmoDebug = m_solverBaseName + ".vd";
+    oss << m_baseFilename << "." << m_seed;
+    m_baseFilename = oss.str();
+    bool m_vdOutput = citr->boolXMLParameter("vizmoDebug", false, false, "True yields VizmoDebug output for the solver.");
+    string m_vizmoDebugName = "";
+    if(m_vdOutput)
+        m_vizmoDebugName = m_baseFilename + ".vd";
+    m_solver.push_back(Solver(m_label, m_seed, m_baseFilename, m_vizmoDebugName));
     return true;
   }
   else
@@ -371,7 +368,7 @@ MPProblem<MPTraits>::ParseXML(XMLNodeReader& _node, typename MPTraits::MPProblem
 
   BuildCDStructures();
 
-  if(m_solver == ""){
+  if(m_solver.empty()){
     cerr << "Error::Must define a solver within the XML. Exiting." << endl;
     exit(1);
   }
@@ -422,22 +419,30 @@ MPProblem<MPTraits>::SetMPProblem(){
 
 template<class MPTraits>
 void
-MPProblem<MPTraits>::Solve() {
+MPProblem<MPTraits>::Solve(int _solve_num) {
   if(!m_cdBuilt)
     BuildCDStructures();
 
-  if(m_solverVizmoDebug != ""){
-    VDInit(m_solverVizmoDebug);
+  if(get<3>(m_solver[_solve_num]) != ""){
+    VDInit(get<3>(m_solver[_solve_num]));
   }
 
-  cout << "\n\nMPProblem is solving with MPStrategyMethod labeled " << m_solver << "." << endl;
-  SRand(m_solverSeed);
-  GetMPStrategy(m_solver)->SetBaseFilename(m_solverBaseName);
-  GetMPStrategy(m_solver)->operator()();
+  cout << "\n\nMPProblem is solving with MPStrategyMethod labeled " << get<0>(m_solver[_solve_num]) << "." << endl;
+  SRand(get<1>(m_solver[_solve_num]));
+  GetMPStrategy(get<0>(m_solver[_solve_num]))->SetBaseFilename(get<2>(m_solver[_solve_num]));
+  GetMPStrategy(get<0>(m_solver[_solve_num]))->operator()();
 
-  if(m_solverVizmoDebug != ""){
+  if(get<3>(m_solver[_solve_num]) != ""){
     VDClose();
   }
+  delete m_roadmap;
+  delete m_blockRoadmap;
+  delete m_colRoadmap;
+  delete m_stats;
+  m_roadmap = new RoadmapType();
+  m_blockRoadmap = new RoadmapType();
+  m_colRoadmap = new RoadmapType();
+  m_stats = new StatClass();
 };
 
 template<class MPTraits>
