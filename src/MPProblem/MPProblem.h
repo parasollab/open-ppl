@@ -136,7 +136,7 @@ class MPProblem
     //RemoveObstacleAt
     //a wrapper call to remove a multibody from the environment
     void RemoveObstacleAt(size_t _index);
-    int getSolverNum() { return m_solver.size(); }
+    size_t getSolverNum() { return m_solver.size(); }
 
   protected:
     virtual void Initialize();
