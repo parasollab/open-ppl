@@ -121,6 +121,7 @@ class MPProblem
 
     typedef boost::tuples::tuple<string, long, string, string> Solver;
     //solver, seed, baseName, vizmoDebugName
+    void AddSolverSet(string _label, long _seed, string _baseFileName, string _vizmoDebugName) { m_solver.push_back(Solver(_label, _seed, _baseFileName, _vizmoDebugName)); }
     void SetSolverSeed(int _index, long _ss) { get<1>(m_solver[_index])=_ss; }
     void SetMPSolver(int _index, string _solver) { get<0>(m_solver[_index])=_solver; }
     void Solve(int _solve_num);
@@ -435,6 +436,8 @@ MPProblem<MPTraits>::Solve(int _solve_num) {
   if(get<3>(m_solver[_solve_num]) != ""){
     VDClose();
   }
+
+  /*
   delete m_roadmap;
   delete m_blockRoadmap;
   delete m_colRoadmap;
@@ -443,6 +446,7 @@ MPProblem<MPTraits>::Solve(int _solve_num) {
   m_blockRoadmap = new RoadmapType();
   m_colRoadmap = new RoadmapType();
   m_stats = new StatClass();
+  */
 };
 
 template<class MPTraits>
