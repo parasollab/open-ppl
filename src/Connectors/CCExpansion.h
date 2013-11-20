@@ -743,19 +743,16 @@ CCExpansion<MPTraits>::GetMedialAxisRay(RoadmapType* _rm, CfgType& _prev, CfgTyp
   uA = -uA;
   uB = -uB;
 
-  double uAElems[3], uBElems[3];
+  Vector3d v, u;
   for(int i = 0; i < 3; ++i){
     if(i == 2 && _curr.PosDOF() != 3){
-      uAElems[2] = 0;
-      uBElems[2] = 0;
+      v[2] = u[2] = 0;
       break;
     }
-    uAElems[i] = uA[i];
-    uBElems[i] = uB[i];
+    v[i] = uA[i];
+    u[i] = uB[i];
   }
 
-  Vector3d v(uAElems);
-  Vector3d u(uBElems);
   Vector3d n = u%v;
   Vector3d d = u%n;
 
