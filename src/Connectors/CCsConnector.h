@@ -149,7 +149,6 @@ CCsConnector<MPTraits>::ConnectCC(RoadmapType* _rm, StatClass& _stats,
   GraphType* rgraph = _rm->GetGraph();
   LPOutput<MPTraits> lpOutput;
   NeighborhoodFinderPointer nf = this->GetMPProblem()->GetNeighborhoodFinder(this->m_nfLabel);
-  DistanceMetricPointer dmm = nf->GetDMMethod();
   LocalPlannerPointer lp = this->GetMPProblem()->GetLocalPlanner(this->m_lpLabel);
 
   typedef vector<pair<pair<VID, VID>, double> > NeighborPairs;
@@ -165,9 +164,7 @@ CCsConnector<MPTraits>::ConnectCC(RoadmapType* _rm, StatClass& _stats,
     VID cc2Elem = npit->first.second;
 
     CfgType _col;
-    if (!lp->IsConnected(env, _stats, dmm,
-          rgraph->GetVertex(cc1Elem),
-          rgraph->GetVertex(cc2Elem),
+    if (!lp->IsConnected(rgraph->GetVertex(cc1Elem), rgraph->GetVertex(cc2Elem),
           _col, &lpOutput,
           env->GetPositionRes(), env->GetOrientationRes(), true)) {
       rgraph->AddEdge(cc1Elem, cc2Elem, lpOutput.m_edge);

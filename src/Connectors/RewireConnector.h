@@ -94,7 +94,6 @@ RewireConnector<MPTraits>::ConnectNeighbors(RoadmapType* _rm, StatClass& _stats,
     VID _vid, vector<pair<VID, double> >& _closest, OutputIterator _collision) {
 
   Environment* env = this->GetMPProblem()->GetEnvironment();
-  DistanceMetricPointer dm = this->GetMPProblem()->GetNeighborhoodFinder(this->m_nfLabel)->GetDMMethod();
   LPOutput<MPTraits> lpOutput, minlpOutput;
 
   typename GraphType::vertex_iterator vi = _rm->GetGraph()->find_vertex(_vid);
@@ -112,9 +111,7 @@ RewireConnector<MPTraits>::ConnectNeighbors(RoadmapType* _rm, StatClass& _stats,
     double neighborDistance = _closest[i].second;
     if(neighborCost + neighborDistance < currentMin) {
       bool connectable = this->GetMPProblem()->GetLocalPlanner(this->m_lpLabel)->
-        IsConnected(env, _stats, dm,
-            vi->property(),
-            _rm->GetGraph()->GetVertex(neighbor),
+        IsConnected(vi->property(), _rm->GetGraph()->GetVertex(neighbor),
             col, &lpOutput, env->GetPositionRes(), env->GetOrientationRes(), true);
       this->AddConnectionAttempt(vi->descriptor(), neighbor, connectable);
       if(connectable) {
@@ -145,9 +142,8 @@ RewireConnector<MPTraits>::ConnectNeighbors(RoadmapType* _rm, StatClass& _stats,
     double neighborCost = GetShortestPath(root, neighbor, _rm);
     if(vidCost + _closest[i].second < neighborCost) {
       bool connectable = this->GetMPProblem()->GetLocalPlanner(this->m_lpLabel)->
-        IsConnected(env, _stats, dm,
-            _rm->GetGraph()->GetVertex(_vid),
-            _rm->GetGraph()->GetVertex(neighbor),
+        IsConnected(
+            _rm->GetGraph()->GetVertex(_vid), _rm->GetGraph()->GetVertex(neighbor),
             col, &lpOutput, env->GetPositionRes(), env->GetOrientationRes(), true);
       this->AddConnectionAttempt(_vid, neighbor, connectable);
       if(connectable) {

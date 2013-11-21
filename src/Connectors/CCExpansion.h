@@ -805,7 +805,7 @@ CCExpansion<MPTraits>::UpdateRoadmap(RoadmapType* _rm, StatClass& _stats, CfgTyp
     CfgType col;
     DistanceMetricPointer dm = this->GetMPProblem()->GetNeighborhoodFinder(this->m_nfLabel)->GetDMMethod();
     test = this->GetMPProblem()->GetLocalPlanner(this->m_lpLabel)->
-      IsConnected(this->GetMPProblem()->GetEnvironment(), _stats, dm, _prev, _target, col, &lpOutput,
+      IsConnected(_prev, _target, col, &lpOutput,
           this->GetMPProblem()->GetEnvironment()->GetPositionRes(),
           this->GetMPProblem()->GetEnvironment()->GetOrientationRes(),
           true);

@@ -16,7 +16,7 @@ class MedialAxisPathModifier : public PathModifierMethod<MPTraits> {
     typedef typename MPProblemType::LocalPlannerPointer LocalPlannerPointer;
     typedef typename MPProblemType::DistanceMetricPointer DistanceMetricPointer;
 
-    MedialAxisPathModifier(const string _dmLabel = "", const string  _lpLabel = "",
+    MedialAxisPathModifier(const string  _lpLabel = "",
         const string _malpLabel = "");
     MedialAxisPathModifier(MPProblemType* _problem, XMLNodeReader& _node);
 
@@ -26,17 +26,16 @@ class MedialAxisPathModifier : public PathModifierMethod<MPTraits> {
     bool ModifyImpl(vector<CfgType>& _originalPath, vector<CfgType>& _newPath);
 
   private:
-    string m_dmLabel;           // Distance metric
-    string m_lpLabel;           // Local planner
+    string m_lpLabel;
     string m_malpLabel;
 
 };
 
 // Non-XML Constructor
 template<class MPTraits>
-MedialAxisPathModifier<MPTraits>::MedialAxisPathModifier(const string _dmLabel,
+MedialAxisPathModifier<MPTraits>::MedialAxisPathModifier(
     const string  _lpLabel, const string _malpLabel) :
-  PathModifierMethod<MPTraits>(), m_dmLabel(_dmLabel), m_lpLabel(_lpLabel),
+  PathModifierMethod<MPTraits>(), m_lpLabel(_lpLabel),
   m_malpLabel(_malpLabel) {
     this->SetName("MedialAxisPathModifier");
   }
@@ -52,7 +51,6 @@ MedialAxisPathModifier<MPTraits>::MedialAxisPathModifier(MPProblemType* _problem
 template<class MPTraits>
 void
 MedialAxisPathModifier<MPTraits>::ParseXML(XMLNodeReader& _node) {
-  m_dmLabel = _node.stringXMLParameter("dmLabel", false, "", "Distance metric method");
   m_lpLabel = _node.stringXMLParameter("lpLabel", true, "", "Local planner method");
   m_malpLabel = _node.stringXMLParameter("malpLabel", true, "", "Medial axis local planner label needed by MedialAxisPathModifier");
 }
@@ -61,7 +59,6 @@ template<class MPTraits>
 void
 MedialAxisPathModifier<MPTraits>::PrintOptions(ostream& _os) const {
   PathModifierMethod<MPTraits>::PrintOptions(_os);
-  _os << "\tdistance metric = \"" << m_dmLabel << "\"" << endl;
   _os << "\tlocal planner = \"" << m_lpLabel << "\"" << endl;
   _os << "\tmedial axis local planner = \"" << m_malpLabel << "\"" << endl;
 }
@@ -82,7 +79,6 @@ MedialAxisPathModifier<MPTraits>::ModifyImpl(vector<CfgType>& _originalPath, vec
     LocalPlannerPointer lp = this->GetMPProblem()->GetLocalPlanner(this->m_lpLabel);
     Environment* env = this->GetMPProblem()->GetEnvironment();
     StatClass* stats = this->GetMPProblem()->GetStatClass();
-    DistanceMetricPointer dm = this->GetMPProblem()->GetDistanceMetric(this->m_dmLabel);
     LPOutput<MPTraits> tmpOutput;
 
     MedialAxisLP<MPTraits>* malp = dynamic_cast<MedialAxisLP<MPTraits>*>(
@@ -125,7 +121,7 @@ MedialAxisPathModifier<MPTraits>::ModifyImpl(vector<CfgType>& _originalPath, vec
         _newPath.clear();
 
         //Connect the start configuration and its pushed version
-        result = lp->IsConnected(env, *stats, dm, start, pushedNodes[0], &tmpOutput, posRes, oriRes, true, true, true);
+        result = lp->IsConnected(start, pushedNodes[0], &tmpOutput, posRes, oriRes, true, true, true);
         if(result) {
           _newPath.push_back(start);
           this->AddToPath(_newPath, &(tmpOutput), pushedNodes[0]);
@@ -133,7 +129,7 @@ MedialAxisPathModifier<MPTraits>::ModifyImpl(vector<CfgType>& _originalPath, vec
           //Connect the nodes that are already in the medial axis
           i = 1;
           while(result && i < n) {
-            result = malp->LocalPlannerMethod<MPTraits>::IsConnected(env, *stats, dm, pushedNodes[i-1], pushedNodes[i], &tmpOutput, posRes, oriRes, true, true, true);
+            result = malp->LocalPlannerMethod<MPTraits>::IsConnected(pushedNodes[i-1], pushedNodes[i], &tmpOutput, posRes, oriRes, true, true, true);
             if(result) {
               this->AddToPath(_newPath, &tmpOutput, pushedNodes[i]);
             }
@@ -142,7 +138,7 @@ MedialAxisPathModifier<MPTraits>::ModifyImpl(vector<CfgType>& _originalPath, vec
                 cout << "*M*\t" << malp->GetNameAndLabel() << " failed to connect the pair of nodes (" << (i-1) << ", " << i << ")" << endl
                 << "*M*\tAttempting Failure Control Measures (FCM):" << endl;
               //First FCM: Try with the other local planner
-              result = lp->IsConnected(env, *stats, dm, pushedNodes[i-1], pushedNodes[i], &tmpOutput, posRes, oriRes, true, true, true);
+              result = lp->IsConnected(pushedNodes[i-1], pushedNodes[i], &tmpOutput, posRes, oriRes, true, true, true);
               if(result) {
                 if(this->m_debug)
                   cout << "*M*\t\tFCM1: " << lp->GetNameAndLabel() << " succeeded" << endl;
@@ -156,18 +152,18 @@ MedialAxisPathModifier<MPTraits>::ModifyImpl(vector<CfgType>& _originalPath, vec
                 //Copying the old configurations
                 CfgType oldCfg1 = graph->GetVertex(pathVIDs[i-1]);
                 CfgType oldCfg2 = graph->GetVertex(pathVIDs[i]);
-                result = lp->IsConnected(env, *stats, dm, pushedNodes[i-1], oldCfg1, &tmpOutput, posRes, oriRes, true, true, true);
+                result = lp->IsConnected(pushedNodes[i-1], oldCfg1, &tmpOutput, posRes, oriRes, true, true, true);
                 if(result) {
                   if(this->m_debug)
                     cout << "*M*\t\tFCM2: First connection established" << endl;
                   this->AddToPath(_newPath, &(tmpOutput), oldCfg1);
-                  result = lp->IsConnected(env, *stats, dm, oldCfg1, oldCfg2, &tmpOutput, posRes, oriRes, true, true, true);
+                  result = lp->IsConnected(oldCfg1, oldCfg2, &tmpOutput, posRes, oriRes, true, true, true);
                 }
                 if(result) {
                   if(this->m_debug)
                     cout << "*M*\t\tFCM2: Second connection established" << endl;
                   this->AddToPath(_newPath, &(tmpOutput), oldCfg2);
-                  result = lp->IsConnected(env, *stats, dm, oldCfg2, pushedNodes[i], &tmpOutput, posRes, oriRes, true, true, true);
+                  result = lp->IsConnected(oldCfg2, pushedNodes[i], &tmpOutput, posRes, oriRes, true, true, true);
                 }
                 if(result) {
                   if(this->m_debug)
@@ -184,7 +180,7 @@ MedialAxisPathModifier<MPTraits>::ModifyImpl(vector<CfgType>& _originalPath, vec
           }
           if(result) {//If all the intermediate connections succeeded
             //Connect the goal configuration and its pushed version
-            result = lp->IsConnected(env, *stats, dm, pushedNodes[n-1], goal, &tmpOutput, posRes, oriRes, true, true, true);
+            result = lp->IsConnected(pushedNodes[n-1], goal, &tmpOutput, posRes, oriRes, true, true, true);
             if(result) {
               //Add to path
               this->AddToPath(_newPath, &tmpOutput, goal);

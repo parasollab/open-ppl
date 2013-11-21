@@ -115,7 +115,6 @@ template<class MPTraits>
 bool
 MedialAxisRRT<MPTraits>::MedialAxisExtend(const CfgType& _start, const CfgType& _goal, vector<CfgType>& _innerNodes){
   //Setup
-  StatClass* stats = this->GetMPProblem()->GetStatClass();
   Environment* env = this->GetMPProblem()->GetEnvironment();
   DistanceMetricPointer dm = this->GetMPProblem()->GetDistanceMetric(this->m_dm);
   LocalPlannerPointer lp = this->GetMPProblem()->GetLocalPlanner(this->m_lp);
@@ -165,7 +164,7 @@ MedialAxisRRT<MPTraits>::MedialAxisExtend(const CfgType& _start, const CfgType& 
     //We pushed to the MA and went somewhere, check visibility and update
     //structures
     CfgType col;
-    if(lp->IsConnected(env, *stats, dm, curr, tick, col, &lpOutput, positionRes, orientationRes)){
+    if(lp->IsConnected(curr, tick, col, &lpOutput, positionRes, orientationRes)){
       pathLength += lpOutput.m_edge.first.GetWeight();
       if(pathLength >= this->m_delta){
         if(this->m_debug) cout << "expanded past delta." << endl;

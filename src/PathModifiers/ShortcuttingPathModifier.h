@@ -72,7 +72,6 @@ ShortcuttingPathModifier<MPTraits>::ModifyImpl(vector<CfgType>& _originalPath, v
     LocalPlannerPointer lp = this->GetMPProblem()->GetLocalPlanner(m_lpLabel);
     Environment* env = this->GetMPProblem()->GetEnvironment();
     StatClass* stats = this->GetMPProblem()->GetStatClass();
-    DistanceMetricPointer dm = this->GetMPProblem()->GetDistanceMetric(m_dmLabel);
     LPOutput<MPTraits> tmpOutput;
 
     bool reconstruct, skip;
@@ -99,7 +98,7 @@ ShortcuttingPathModifier<MPTraits>::ModifyImpl(vector<CfgType>& _originalPath, v
       if((i+1) == j) {//If the vertices are adjacent, there are no nodes to skip
         //Only reconstruct and save path if smoothing output is wanted.
         if(smoothFileOutput) {
-          reconstruct = lp->IsConnected(env, *stats, dm, graph->GetVertex(originalPathVIDs[i]),
+          reconstruct = lp->IsConnected(graph->GetVertex(originalPathVIDs[i]),
               graph->GetVertex(originalPathVIDs[j]), &tmpOutput, posRes, oriRes, true, true, true);
           this->AddToPath(_newPath, &tmpOutput, graph->GetVertex(originalPathVIDs[j]));
           if(!reconstruct) { //If could not reconstruct, abort the output, but continue skipping nodes
@@ -120,7 +119,7 @@ ShortcuttingPathModifier<MPTraits>::ModifyImpl(vector<CfgType>& _originalPath, v
       }
       else{
         //Try to make a connection by skipping nodes betwen i and j
-        skip = lp->IsConnected(env, *stats, dm, graph->GetVertex(originalPathVIDs[i]),
+        skip = lp->IsConnected(graph->GetVertex(originalPathVIDs[i]),
             graph->GetVertex(originalPathVIDs[j]), &tmpOutput, posRes, oriRes, true, true);
         if(skip) {
           if(smoothFileOutput)

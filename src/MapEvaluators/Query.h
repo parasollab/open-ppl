@@ -450,7 +450,6 @@ Query<MPTraits>::Smooth() {
 template<class MPTraits>
 bool
 Query<MPTraits>::CanRecreatePath(RoadmapType* _rdmp, vector<VID>& _attemptedPath, vector<CfgType>& _recreatedPath) {
-  StatClass* stats = this->GetMPProblem()->GetStatClass();
   _recreatedPath.push_back(_rdmp->GetGraph()->GetVertex(*(_attemptedPath.begin())));
   for(typename vector<VID>::iterator it = _attemptedPath.begin(); it+1 != _attemptedPath.end(); it++) {
     LPOutput<MPTraits> ci;
@@ -461,7 +460,6 @@ Query<MPTraits>::CanRecreatePath(RoadmapType* _rdmp, vector<VID>& _attemptedPath
     CfgType col;
 
     if(this->GetMPProblem()->GetLocalPlanner(m_lpLabel)->IsConnected(
-          this->GetMPProblem()->GetEnvironment(), *stats, this->GetMPProblem()->GetDistanceMetric(m_dmLabel),
           _rdmp->GetGraph()->GetVertex(*it), _rdmp->GetGraph()->GetVertex(*(it+1)),
           col, &ci, this->GetMPProblem()->GetEnvironment()->GetPositionRes(),
           this->GetMPProblem()->GetEnvironment()->GetOrientationRes(), true, true, true)) {

@@ -17,12 +17,12 @@ class RotateAtS : public TransformAtS<MPTraits> {
     typedef typename MPTraits::CfgType CfgType;
     typedef typename MPTraits::MPProblemType MPProblemType;
 
-    RotateAtS(double _s = 0.5);
+    RotateAtS(double _s = 0.5, const string& _vcLabel = "", bool _evalation = false,
+        bool _saveIntermediates = false);
     RotateAtS(MPProblemType* _problem, XMLNodeReader& _node);
     virtual ~RotateAtS();
 
   protected:
-
     virtual bool IsReversible() {
       return fabs(this->m_sValue - 0.5) < std::numeric_limits<double>::epsilon();
     }
@@ -32,7 +32,9 @@ class RotateAtS : public TransformAtS<MPTraits> {
 };
 
 template<class MPTraits>
-RotateAtS<MPTraits>::RotateAtS(double _s) : TransformAtS<MPTraits>(_s) {
+RotateAtS<MPTraits>::RotateAtS(double _s, const string& _vcLabel,
+    bool _evalation, bool _saveIntermediates) :
+  TransformAtS<MPTraits>(_s, _vcLabel, _evalation, _saveIntermediates) {
   this->SetName("RotateAtS");
 }
 
@@ -40,7 +42,6 @@ template<class MPTraits>
 RotateAtS<MPTraits>::RotateAtS(MPProblemType* _problem, XMLNodeReader& _node):
     TransformAtS<MPTraits>(_problem, _node) {
   this->SetName("RotateAtS");
-  this->m_sValue = _node.numberXMLParameter("s", true, 0.5, 0.0, 1.0, "Rotate at s value");
   _node.warnUnrequestedAttributes();
 }
 

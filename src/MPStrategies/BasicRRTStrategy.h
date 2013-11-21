@@ -632,7 +632,6 @@ template<class MPTraits>
 void
 BasicRRTStrategy<MPTraits>::EvaluateGoals(){
   // Setup MP Variables
-  StatClass* stats = this->GetMPProblem()->GetStatClass();
   Environment* env = this->GetMPProblem()->GetEnvironment();
   DistanceMetricPointer dmp = this->GetMPProblem()->GetDistanceMetric(m_dm);
   LocalPlannerPointer lpp = this->GetMPProblem()->GetLocalPlanner(m_lp);
@@ -649,7 +648,7 @@ BasicRRTStrategy<MPTraits>::EvaluateGoals(){
     double dist = dmp->Distance(m_goals[*i], closest);
     if(this->m_debug) cout << "Distance to goal::" << dist << endl;
     CfgType col;
-    if(dist < m_delta && lpp->IsConnected(env, *stats, dmp, closest, m_goals[*i], col, &lpOutput,
+    if(dist < m_delta && lpp->IsConnected(closest, m_goals[*i], col, &lpOutput,
           env->GetPositionRes(), env->GetOrientationRes(), true, false, false)){
       if(this->m_debug) cout << "Goal found::" << m_goals[*i] << endl;
       VID goalVID;

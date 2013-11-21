@@ -77,12 +77,11 @@ LPSweptDistance<MPTraits>::Distance(const CfgType& _c1, const CfgType& _c2) {
   }
   Environment* env = this->GetMPProblem()->GetEnvironment();
   StatClass stats;
-  DistanceMetricPointer dm;
   LocalPlannerPointer lpMethod = this->GetMPProblem()->GetLocalPlanner(m_lpLabel);
   LPOutput<MPTraits> lpOutput;
   CfgType dummy;
 
-  lpMethod->IsConnected(env, stats, dm, _c1, _c2, dummy, &lpOutput, m_positionRes, m_orientationRes, false, true);
+  lpMethod->IsConnected(_c1, _c2, dummy, &lpOutput, m_positionRes, m_orientationRes, false, true);
   //lpPath does not include _c1 and _c2, so adding them manually
   vector<CfgType> cfgs(1, _c1);
   cfgs.insert(cfgs.end(), lpOutput.m_path.begin(), lpOutput.m_path.end());

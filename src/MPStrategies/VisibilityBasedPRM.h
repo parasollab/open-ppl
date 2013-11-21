@@ -34,7 +34,7 @@ class VisibilityBasedPRM : public MPStrategyMethod<MPTraits> {
     typedef typename MPProblemType::ValidityCheckerPointer ValidityCheckerPointer;
 
     VisibilityBasedPRM(const string _sampler = "",
-        const string _vc = "", const string _lp = "", const string _dm = "",
+        const string _vc = "", const string _lp = "",
         const int _maxFailedIterations = 10);
     VisibilityBasedPRM(MPProblemType* _problem, XMLNodeReader& _node);
 
@@ -50,7 +50,6 @@ class VisibilityBasedPRM : public MPStrategyMethod<MPTraits> {
     string m_samplerLabel;
     string m_vcLabel;
     string m_lpLabel;
-    string m_dmLabel;
     int m_maxFailedIterations;
 
     //Local data
@@ -65,10 +64,10 @@ class VisibilityBasedPRM : public MPStrategyMethod<MPTraits> {
 template<class MPTraits>
 VisibilityBasedPRM<MPTraits>::VisibilityBasedPRM(
     const string _sampler,
-    const string _vc, const string _lp, const string _dm,
+    const string _vc, const string _lp,
     const int _maxFailedIterations) :
     m_samplerLabel(_sampler),
-    m_vcLabel(_vc), m_lpLabel(_lp), m_dmLabel(_dm),
+    m_vcLabel(_vc), m_lpLabel(_lp),
     m_maxFailedIterations(_maxFailedIterations) {
   this->SetName("VisibilityBasedPRM");
 }
@@ -90,7 +89,6 @@ VisibilityBasedPRM<MPTraits>::ParseXML(XMLNodeReader& _node) {
       "Node Sampler Method");
   m_vcLabel = _node.stringXMLParameter("vcLabel", true, "", "Validity Checker");
   m_lpLabel = _node.stringXMLParameter("lpLabel", true, "sl", "Local Planner");
-  m_dmLabel = _node.stringXMLParameter("dmLabel", true, "", "Distance Metric");
   m_maxFailedIterations = _node.numberXMLParameter("maxFailedIterations", true, 10, 1,
       MAX_INT, "Maximum consecutive failed iterations");
 }
@@ -103,7 +101,6 @@ VisibilityBasedPRM<MPTraits>::PrintOptions(ostream& _os) const {
       << "\n\tSampler: " << m_samplerLabel
       << "\n\tValidity Checker: " << m_vcLabel
       << "\n\tLocal Planner: " << m_lpLabel
-      << "\n\tDistance Metric: " << m_dmLabel
       << "\n\tMaximum consecutive failed iterations: " << m_maxFailedIterations
       << endl;
 }
@@ -216,12 +213,9 @@ VisibilityBasedPRM<MPTraits>::GenerateNode(vector<CfgType>& _outNode) {
 template<class MPTraits>
 bool
 VisibilityBasedPRM<MPTraits>::ConnectVisibleGuardSets(vector<CfgType>& _outNode) {
-
   LocalPlannerPointer lp = this->GetMPProblem()->GetLocalPlanner(m_lpLabel);
-  DistanceMetricPointer dm = this->GetMPProblem()->GetDistanceMetric(m_dmLabel);
   GraphType* g = this->GetMPProblem()->GetRoadmap()->GetGraph();
   Environment* env = this->GetMPProblem()->GetEnvironment();
-  StatClass* stats = this->GetMPProblem()->GetStatClass();
 
   typedef typename vector<CfgType>::iterator CIT;
   typedef typename vector<vector<CfgType> >::iterator GIT; //Guard subset iterator
@@ -241,7 +235,7 @@ VisibilityBasedPRM<MPTraits>::ConnectVisibleGuardSets(vector<CfgType>& _outNode)
       if(this->m_debug) cout << "\n\tAttempting connection to node " << g->GetVID(*cit);
 
       //Attempt connection to current guard node *cit
-      if(lp->IsConnected(env, *stats, dm, _outNode[0], *cit, col, &lpOutput,
+      if(lp->IsConnected(_outNode[0], *cit, col, &lpOutput,
             env->GetPositionRes(), env->GetOrientationRes(), true)) {
         CfgType* validNode = &(*cit);
         validEdges.push_back(make_pair(g->GetVID(*validNode), lpOutput.m_edge));

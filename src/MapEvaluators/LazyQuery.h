@@ -103,9 +103,7 @@ LazyQuery<MPTraits>::PrintOptions(ostream& _os) const {
 template<class MPTraits>
 bool
 LazyQuery<MPTraits>::CanRecreatePath(RoadmapType* _rdmp, vector<VID>& _attemptedPath, vector<CfgType>& _recreatedPath) {
-
   ValidityCheckerPointer vcm = this->GetMPProblem()->GetValidityChecker(m_vcLabel);
-  StatClass& stats = *(this->GetMPProblem()->GetStatClass());
   string callee = "LazyQuery::CanRecreatePath()";
   vector<VID> neighbors;
   size_t size = _attemptedPath.size();
@@ -168,7 +166,6 @@ LazyQuery<MPTraits>::CanRecreatePath(RoadmapType* _rdmp, vector<VID>& _attempted
         continue;
 
       if(this->GetMPProblem()->GetLocalPlanner(this->m_lpLabel)->IsConnected(
-            this->GetMPProblem()->GetEnvironment(), stats, this->GetMPProblem()->GetDistanceMetric(this->m_dmLabel),
             _rdmp->GetGraph()->GetVertex(_attemptedPath[index]),
             _rdmp->GetGraph()->GetVertex(_attemptedPath[index+1]),
             witness, &ci, this->GetMPProblem()->GetEnvironment()->GetPositionRes() * *resIt,
@@ -204,7 +201,6 @@ LazyQuery<MPTraits>::CanRecreatePath(RoadmapType* _rdmp, vector<VID>& _attempted
   for(typename vector<VID>::iterator it = _attemptedPath.begin(); (it+1) != _attemptedPath.end(); it++) {
     LPOutput<MPTraits> lpOut;
     this->GetMPProblem()->GetLocalPlanner(this->m_lpLabel)->IsConnected(
-        this->GetMPProblem()->GetEnvironment(), stats, this->GetMPProblem()->GetDistanceMetric(this->m_dmLabel),
         _rdmp->GetGraph()->GetVertex(*it),
         _rdmp->GetGraph()->GetVertex(*(it+1)),
         &lpOut, this->GetMPProblem()->GetEnvironment()->GetPositionRes(),

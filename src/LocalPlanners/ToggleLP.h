@@ -15,23 +15,23 @@ class ToggleLP: public LocalPlannerMethod<MPTraits> {
     typedef typename MPProblemType::ValidityCheckerPointer ValidityCheckerPointer;
     typedef typename MPProblemType::LocalPlannerPointer LocalPlannerPointer;
 
-    ToggleLP(string _vc = "", string _lp = "", int _maxIter = 0);
+    ToggleLP(const string& _vcLabel = "", const string& _lpLabel = "",
+        const string& _dmLabel = "",
+        int _maxIter = 0, bool _saveIntermediates = false);
     ToggleLP(MPProblemType* _problem, XMLNodeReader& _node);
     void InitVars();
     virtual ~ToggleLP();
 
-    void CalcStats(StatClass& _stats, bool _var, bool _toggle);
+    void CalcStats(bool _var, bool _toggle);
     virtual void PrintOptions(ostream& _os) const;
 
     virtual bool IsConnected(
-        Environment* _env, StatClass& _stats, DistanceMetricPointer _dm,
         const CfgType& _c1, const CfgType& _c2, CfgType& _col,
         LPOutput<MPTraits>* _lpOutput,
         double _positionRes, double _orientationRes,
         bool _checkCollision = true, bool _savePath = false, bool _saveFailedPath = false);
 
     virtual vector<CfgType> ReconstructPath(
-        Environment* _env, DistanceMetricPointer _dm,
         const CfgType& _c1, const CfgType& _c2,
         const vector<CfgType>& _intermediates,
         double _posRes, double _oriRes);
@@ -41,32 +41,28 @@ class ToggleLP: public LocalPlannerMethod<MPTraits> {
     // Default for non closed chains - alters midpoint to a distance delta away
     // on a random ray
     template <typename Enable> CfgType ChooseAlteredCfg(
-        Environment* _env, StatClass& _stats, DistanceMetricPointer _dm,
         const CfgType& _c1, const CfgType& _c2,
         typename boost::disable_if<IsClosedChain<Enable> >::type* _dummy = 0);
 
     // Specialization for closed chains - choose random point
     template <typename Enable> CfgType ChooseAlteredCfg(
-        Environment* _env, StatClass& _stats, DistanceMetricPointer _dm,
         const CfgType& _c1, const CfgType& _c2,
         typename boost::enable_if<IsClosedChain<Enable> >::type* _dummy = 0);
 
     bool IsConnectedToggle(
-        Environment* _env, StatClass& _stats, DistanceMetricPointer _dm,
         const CfgType& _c1, const CfgType& _c2, CfgType& _col,
         LPOutput<MPTraits>* _lpOutput, int& _cdCounter,
         double _positionRes, double _orientationRes,
         bool _checkCollision = true, bool _savePath = false, bool _saveFailedPath = false);
 
     bool ToggleConnect(
-        Environment* _env, StatClass& _stats, DistanceMetricPointer _dm,
         const CfgType& _s, const CfgType& _g, const CfgType& _n1, const CfgType& _n2,
         bool _toggle, LPOutput<MPTraits>* _lpOutput,
         double _positionRes, double _orientationRes, int _depth = 0);
 
   private:
     //input
-    string m_vcLabel, m_lpLabel;
+    string m_vcLabel, m_lpLabel, m_dmLabel;
     int m_maxIter;
 
     //needed variables for record keeping and cycle detection
@@ -78,8 +74,10 @@ class ToggleLP: public LocalPlannerMethod<MPTraits> {
 };
 
 template<class MPTraits>
-ToggleLP<MPTraits>::ToggleLP(string _vc, string _lp, int _maxIter) :
-    m_vcLabel(_vc), m_lpLabel(_lp), m_maxIter(_maxIter) {
+ToggleLP<MPTraits>::ToggleLP(const string& _vclabel, const string& _lpLabel, 
+    const string& _dmLabel, int _maxIter, bool _saveIntermediates) :
+  LocalPlannerMethod<MPTraits>(_saveIntermediates),
+  m_vcLabel(_vclabel), m_lpLabel(_lpLabel), m_dmLabel(_dmLabel), m_maxIter(_maxIter) {
   InitVars();
 }
 
@@ -88,8 +86,9 @@ ToggleLP<MPTraits>::ToggleLP(MPProblemType* _problem, XMLNodeReader& _node) :
     LocalPlannerMethod<MPTraits>(_problem, _node) {
   InitVars();
 
-  m_vcLabel = _node.stringXMLParameter("vcLabel", true, "", "Validity Test Method");
-  m_lpLabel = _node.stringXMLParameter("lpLabel", true, "", "Local Planner Method");
+  m_vcLabel = _node.stringXMLParameter("vcLabel", true, "", "Validity Test Label");
+  m_lpLabel = _node.stringXMLParameter("lpLabel", true, "", "Local Planner Label");
+  m_dmLabel = _node.stringXMLParameter("dmLabel", true, "", "Distance Metric Label");
   m_maxIter = _node.numberXMLParameter("maxIter", false, 10, 0, MAX_INT,
       "Maximum number of m_iterations");
 
@@ -112,21 +111,23 @@ ToggleLP<MPTraits>::~ToggleLP() {
 template<class MPTraits>
 void
 ToggleLP<MPTraits>::PrintOptions(ostream& _os) const {
-  _os << "    " << this->GetNameAndLabel() << "::  "
-      << "maxIter =  " << m_maxIter << " "
-      << "vc =  " << m_vcLabel << " "
-      << "lp =  " << m_lpLabel << " "
+  LocalPlannerMethod<MPTraits>::PrintOptions(_os);
+  _os << "\tmax iter =  " << m_maxIter
+      << "\n\tvc label :  " << m_vcLabel
+      << "\n\tlp label : " << m_lpLabel
+      << "\n\tdm label : " << m_dmLabel
       << endl;
 }
 
 template<class MPTraits>
 bool
 ToggleLP<MPTraits>::IsConnected(
-    Environment* _env, StatClass& _stats, DistanceMetricPointer _dm,
     const CfgType& _c1, const CfgType& _c2, CfgType& _col,
     LPOutput<MPTraits>* _lpOutput,
     double _positionRes, double _orientationRes,
     bool _checkCollision, bool _savePath, bool _saveFailedPath) {
+  StatClass* stats = this->GetMPProblem()->GetStatClass();
+
   //Note : Initialize connected to false to avoid compiler warning in parallel
   //code.  If I am wrong please correct
   bool connected = false;
@@ -138,13 +139,13 @@ ToggleLP<MPTraits>::IsConnected(
   m_sVID = m_pathGraph.AddVertex(_c1);
   m_gVID = m_pathGraph.AddVertex(_c2);
 
-  _stats.IncLPAttempts(this->GetNameAndLabel());
+  stats->IncLPAttempts(this->GetNameAndLabel());
   int cdCounter = 0;
 
-  connected = IsConnectedToggle(_env, _stats, _dm, _c1, _c2, _col, _lpOutput,
-      cdCounter, _positionRes, _orientationRes, _checkCollision, _savePath, _saveFailedPath);
+  connected = IsConnectedToggle(_c1, _c2, _col, _lpOutput, cdCounter,
+      _positionRes, _orientationRes, _checkCollision, _savePath, _saveFailedPath);
   if(connected){
-    _stats.IncLPConnections(this->GetNameAndLabel());
+    stats->IncLPConnections(this->GetNameAndLabel());
     //find path in m_pathGraph
     vector<VID> path;
     stapl::sequential::find_path_dijkstra(m_pathGraph, m_sVID, m_gVID, path,
@@ -158,7 +159,7 @@ ToggleLP<MPTraits>::IsConnected(
     _lpOutput->SetLPLabel(this->GetLabel());
   }
 
-  _stats.IncLPCollDetCalls(this->GetNameAndLabel(), cdCounter);
+  stats->IncLPCollDetCalls(this->GetNameAndLabel(), cdCounter);
 #else
   stapl_assert(false, "ToggleLP calling Dijkstra on pGraph");
 #endif
@@ -171,20 +172,23 @@ template<class MPTraits>
 template <typename Enable>
 typename MPTraits::CfgType
 ToggleLP<MPTraits>::ChooseAlteredCfg(
-    Environment* _env, StatClass& _stats, DistanceMetricPointer _dm,
     const CfgType& _c1, const CfgType& _c2,
     typename boost::disable_if<IsClosedChain<Enable> >::type* _dummy){
+  Environment* env = this->GetMPProblem()->GetEnvironment();
+  DistanceMetricPointer dm = this->GetMPProblem()->GetDistanceMetric(m_dmLabel);
+  StatClass* stats = this->GetMPProblem()->GetStatClass();
+
   size_t attempts = 0;
   CfgType mid, temp;
   mid = (_c1 + _c2)/2.0;
   do{
     CfgType incr;
-    double dist = _dm->Distance(_c1, _c2) * sqrt(2.0)/2.0;
-    incr.GetRandomRay(dist, _env, _dm);
+    double dist = dm->Distance(_c1, _c2) * sqrt(2.0)/2.0;
+    incr.GetRandomRay(dist, env, dm);
     temp = incr + mid;
-  } while(!_env->InBounds(temp) && attempts++ < 10);
+  } while(!env->InBounds(temp) && attempts++ < 10);
   if(attempts == 10){
-    _stats.IncLPStat("Toggle::MaxAttemptsForRay", 1);
+    stats->IncLPStat("Toggle::MaxAttemptsForRay", 1);
     return CfgType();
   }
   return temp;
@@ -195,56 +199,59 @@ template<class MPTraits>
 template <typename Enable>
 typename MPTraits::CfgType
 ToggleLP<MPTraits>::ChooseAlteredCfg(
-    Environment* _env, StatClass& _stats, DistanceMetricPointer _dm,
     const CfgType& _c1, const CfgType& _c2,
     typename boost::enable_if<IsClosedChain<Enable> >::type* _dummy) {
+  Environment* env = this->GetMPProblem()->GetEnvironment();
+
   CfgType temp;
   do{
-    temp.GetRandomCfg(_env);
-  } while(!_env->InBounds(temp));
+    temp.GetRandomCfg(env);
+  } while(!env->InBounds(temp));
   return temp;
 }
 
 template<class MPTraits>
 bool
 ToggleLP<MPTraits>::IsConnectedToggle(
-    Environment* _env, StatClass& _stats, DistanceMetricPointer _dm,
     const CfgType& _c1, const CfgType& _c2, CfgType& _col,
     LPOutput<MPTraits>* _lpOutput, int& _cdCounter,
     double _positionRes, double _orientationRes,
     bool _checkCollision, bool _savePath, bool _saveFailedPath) {
+  StatClass* stats = this->GetMPProblem()->GetStatClass();
 
   m_iterations = 0;
   m_degeneracyReached = false;
   m_colHist.clear();
 
-  if(this->m_recordKeep) _stats.IncLPStat("Toggle::TotalLP", 1);
+  if(this->m_recordKeep) stats->IncLPStat("Toggle::TotalLP", 1);
 
   if(this->m_debug) {
-    cout << "Total LP::" << _stats.GetLPStat("Toggle::TotalLP") << endl
+    cout << "Total LP::" << stats->GetLPStat("Toggle::TotalLP") << endl
          << "ToggleLP LP::" << "\n\t" << _c1 << "\n\t" << _c2 << endl;
   }
 
   string callee(this->GetNameAndLabel()+"::IsConnectedToggle");
-  ValidityCheckerPointer vcm = this->GetMPProblem()->GetValidityChecker(m_vcLabel);
-  LocalPlannerPointer lpMethod = this->GetMPProblem()->GetLocalPlanner(m_lpLabel);
+  ValidityCheckerPointer vc = this->GetMPProblem()->GetValidityChecker(m_vcLabel);
+  LocalPlannerPointer lp = this->GetMPProblem()->GetLocalPlanner(m_lpLabel);
 
-  if(lpMethod->IsConnected(_env, _stats, _dm, _c1, _c2, _col, _lpOutput,
-      _positionRes, _orientationRes, _checkCollision, _savePath, _saveFailedPath)) {
+  if(lp->IsConnected(_c1, _c2, _col, _lpOutput,
+      _positionRes, _orientationRes, _checkCollision, _savePath, _saveFailedPath))
     return true;
-  }
+
   if(_col == CfgType())
     return false;
-  if(this->m_debug) cout << "col::" << _col << endl;
+  if(this->m_debug)
+    cout << "col::" << _col << endl;
 
-  if(this->m_recordKeep) _stats.IncLPStat("Toggle::TotalCalls", 1);
+  if(this->m_recordKeep)
+    stats->IncLPStat("Toggle::TotalCalls", 1);
 
-  CfgType temp = ChooseAlteredCfg<CfgType>(_env, _stats, _dm, _c1, _c2);
+  CfgType temp = ChooseAlteredCfg<CfgType>(_c1, _c2);
   CfgType n = temp;
   if(n == CfgType())
     return false;
 
-  bool isValid = vcm->IsValid(n, callee);
+  bool isValid = vc->IsValid(n, callee);
   _cdCounter++;
 
   if(this->m_debug){
@@ -261,16 +268,14 @@ ToggleLP<MPTraits>::IsConnectedToggle(
   if(isValid){
     VID nvid = m_pathGraph.AddVertex(n);
     CfgType c2, c3;
-    bool b1 = lpMethod->IsConnected(_env, _stats, _dm, _c1, n, c2, _lpOutput,
+    bool b1 = lp->IsConnected(_c1, n, c2, _lpOutput,
         _positionRes, _orientationRes, true, false, false);
-    if(b1){
+    if(b1)
       m_pathGraph.AddEdge(m_sVID, nvid, pair<WeightType, WeightType>());
-    }
-    bool b2 = lpMethod->IsConnected(_env, _stats, _dm, _c2, n, c3, _lpOutput,
+    bool b2 = lp->IsConnected(_c2, n, c3, _lpOutput,
         _positionRes, _orientationRes, true, false, false);
-    if(b2){
+    if(b2)
       m_pathGraph.AddEdge(m_gVID, nvid, pair<WeightType, WeightType>());
-    }
     if(this->m_debug) {
       VDAddNode(n);
       VDAddTempEdge(_c1, n);
@@ -281,12 +286,12 @@ ToggleLP<MPTraits>::IsConnectedToggle(
            << "n-c3::" << b2 << "::" << c3 << endl;
     }
     if(!b1 && c2 != CfgType())
-      b1 = ToggleConnect(_env, _stats, _dm, _col, c2, _c1, n, false, _lpOutput,
+      b1 = ToggleConnect(_col, c2, _c1, n, false, _lpOutput,
           _positionRes, _orientationRes);
     else if(this->m_debug && b1)
       VDAddEdge(_c1, n);
     if(!b2 && c3 != CfgType() && b1)
-      b2 = ToggleConnect(_env, _stats, _dm, _col, c3, _c2, n, false, _lpOutput,
+      b2 = ToggleConnect(_col, c3, _c2, n, false, _lpOutput,
           _positionRes, _orientationRes);
     else if(this->m_debug && b2)
       VDAddEdge(_c2, n);
@@ -298,11 +303,12 @@ ToggleLP<MPTraits>::IsConnectedToggle(
       VDAddTempCfg(_col, false);
       VDAddTempCfg(n, isValid);
     }
-    if(this->m_recordKeep) CalcStats(_stats, b1 && b2, true);
+    if(this->m_recordKeep)
+      CalcStats(b1 && b2, true);
     return b1 && b2;
   }
   else{
-    bool b = ToggleConnect(_env, _stats, _dm, _col, n, _c1, _c2, false, _lpOutput,
+    bool b = ToggleConnect(_col, n, _c1, _c2, false, _lpOutput,
         _positionRes, _orientationRes);
     if(b && this->m_debug) {
       VDQuery(_c1, _c2);
@@ -312,69 +318,71 @@ ToggleLP<MPTraits>::IsConnectedToggle(
       VDAddTempCfg(_col, false);
       VDAddTempCfg(n, isValid);
     }
-    if(this->m_recordKeep) CalcStats(_stats, b, false);
+    if(this->m_recordKeep)
+      CalcStats(b, false);
     return b;
   }
 };
 
 template<class MPTraits>
 void
-ToggleLP<MPTraits>::CalcStats(StatClass& _stats, bool _val, bool _toggle) {
+ToggleLP<MPTraits>::CalcStats(bool _val, bool _toggle) {
+  StatClass* stats = this->GetMPProblem()->GetStatClass();
+
   if(_val) {
     if(_toggle)
-      _stats.IncLPStat("Toggle::FreeSuccess", 1);
+      stats->IncLPStat("Toggle::FreeSuccess", 1);
     else
-      _stats.IncLPStat("Toggle::CollisionSuccess", 1);
-    _stats.AddToHistory("Toggle::IterationSuccess", m_iterations);
+      stats->IncLPStat("Toggle::CollisionSuccess", 1);
+    stats->AddToHistory("Toggle::IterationSuccess", m_iterations);
   }
   else {
     if(_toggle)
-      _stats.IncLPStat("Toggle::FreeFailure", 1);
+      stats->IncLPStat("Toggle::FreeFailure", 1);
     else
-      _stats.IncLPStat("Toggle::CollisionFailure", 1);
-    _stats.AddToHistory("Toggle::IterationFailure", m_iterations);
+      stats->IncLPStat("Toggle::CollisionFailure", 1);
+    stats->AddToHistory("Toggle::IterationFailure", m_iterations);
     if(m_degeneracyReached) {
-      _stats.IncLPStat("Toggle::DegenerateFailure", 1);
-      _stats.IncLPStat("Toggle::DegenerateFailureIter", m_iterations);
+      stats->IncLPStat("Toggle::DegenerateFailure", 1);
+      stats->IncLPStat("Toggle::DegenerateFailureIter", m_iterations);
     }
     else {
-      _stats.IncLPStat("Toggle::BlockingFailure", 1);
-      _stats.IncLPStat("Toggle::BlockingFailureIter", m_iterations);
+      stats->IncLPStat("Toggle::BlockingFailure", 1);
+      stats->IncLPStat("Toggle::BlockingFailureIter", m_iterations);
     }
   }
-  _stats.AddToHistory("Toggle::Iteration", m_iterations);
-  _stats.IncLPStat("Toggle::TotalIterations", m_iterations);
-  if(m_iterations > _stats.GetLPStat("Toggle::MaxIterations"))
-    _stats.SetLPStat("Toggle::MaxIterations", m_iterations);
+  stats->AddToHistory("Toggle::Iteration", m_iterations);
+  stats->IncLPStat("Toggle::TotalIterations", m_iterations);
+  if(m_iterations > stats->GetLPStat("Toggle::MaxIterations"))
+    stats->SetLPStat("Toggle::MaxIterations", m_iterations);
 
 
-  double freeSuccess = _stats.GetLPStat("Toggle::FreeSuccess");
-  double collisionSuccess = _stats.GetLPStat("Toggle::CollisionSuccess");
-  double freeFailure = _stats.GetLPStat("Toggle::FreeFailure");
-  double collisionFailure = _stats.GetLPStat("Toggle::CollisionFailure");
-  double degenerateFailure = _stats.GetLPStat("Toggle::DegenerateFailure");
-  double blockingFailure = _stats.GetLPStat("Toggle::BlockingFailure");
-  _stats.SetLPStat("Toggle::FreeSuccess%", freeSuccess / (freeSuccess + freeFailure));
-  _stats.SetLPStat("Toggle::CollisionSuccess%",
+  double freeSuccess = stats->GetLPStat("Toggle::FreeSuccess");
+  double collisionSuccess = stats->GetLPStat("Toggle::CollisionSuccess");
+  double freeFailure = stats->GetLPStat("Toggle::FreeFailure");
+  double collisionFailure = stats->GetLPStat("Toggle::CollisionFailure");
+  double degenerateFailure = stats->GetLPStat("Toggle::DegenerateFailure");
+  double blockingFailure = stats->GetLPStat("Toggle::BlockingFailure");
+  stats->SetLPStat("Toggle::FreeSuccess%", freeSuccess / (freeSuccess + freeFailure));
+  stats->SetLPStat("Toggle::CollisionSuccess%",
       collisionSuccess / (collisionSuccess + collisionFailure));
-  _stats.SetLPStat("Toggle::TotalSuccess%", (freeSuccess + collisionSuccess) /
+  stats->SetLPStat("Toggle::TotalSuccess%", (freeSuccess + collisionSuccess) /
       (collisionSuccess + collisionFailure + freeSuccess + freeFailure));
-  _stats.SetLPStat("Toggle::IterAvg",
-      _stats.GetLPStat("Toggle::TotalIterations") / _stats.GetLPStat("Toggle::TotalCalls"));
-  _stats.SetLPStat("Toggle::DegeneracyFailure%",
+  stats->SetLPStat("Toggle::IterAvg",
+      stats->GetLPStat("Toggle::TotalIterations") / stats->GetLPStat("Toggle::TotalCalls"));
+  stats->SetLPStat("Toggle::DegeneracyFailure%",
       degenerateFailure / (collisionFailure + freeFailure));
-  _stats.SetLPStat("Toggle::BlockingFailure%",
+  stats->SetLPStat("Toggle::BlockingFailure%",
       blockingFailure / (collisionFailure + freeFailure));
-  _stats.SetLPStat("Toggle::DegenerateIterAvg",
-      _stats.GetLPStat("Toggle::DegenerateFailureIter") / degenerateFailure);
-  _stats.SetLPStat("Toggle::BlockingIterAvg",
-      _stats.GetLPStat("Toggle::BlockingFailureIter") / blockingFailure);
+  stats->SetLPStat("Toggle::DegenerateIterAvg",
+      stats->GetLPStat("Toggle::DegenerateFailureIter") / degenerateFailure);
+  stats->SetLPStat("Toggle::BlockingIterAvg",
+      stats->GetLPStat("Toggle::BlockingFailureIter") / blockingFailure);
 }
 
 template<class MPTraits>
 bool
 ToggleLP<MPTraits>::ToggleConnect(
-    Environment* _env, StatClass& _stats, DistanceMetricPointer _dm,
     const CfgType& _s, const CfgType& _g, const CfgType& _n1, const CfgType& _n2,
     bool _toggle, LPOutput<MPTraits>* _lpOutput,
     double _positionRes, double _orientationRes, int _depth) {
@@ -392,7 +400,7 @@ ToggleLP<MPTraits>::ToggleConnect(
          << endl;
 
   //set up variables for VC and LP
-  LocalPlannerPointer lpMethod = this->GetMPProblem()->GetLocalPlanner(m_lpLabel);
+  LocalPlannerPointer lp = this->GetMPProblem()->GetLocalPlanner(m_lpLabel);
 
   if(this->m_debug) VDAddTempEdge(_s, _g);
 
@@ -400,7 +408,7 @@ ToggleLP<MPTraits>::ToggleConnect(
   CfgType c; // collision CfgType
   if(!_toggle)
     this->GetMPProblem()->GetValidityChecker(m_vcLabel)->ToggleValidity();
-  bool connect = lpMethod->IsConnected(_env, _stats, _dm, _s, _g, c, _lpOutput,
+  bool connect = lp->IsConnected(_s, _g, c, _lpOutput,
       _positionRes, _orientationRes, true, false, false);
   if(!_toggle)
     this->GetMPProblem()->GetValidityChecker(m_vcLabel)->ToggleValidity();
@@ -445,49 +453,45 @@ ToggleLP<MPTraits>::ToggleConnect(
 
   //recurse
   if(!_toggle)
-    return ToggleConnect(_env, _stats, _dm, _n1, c, _s, _g, !_toggle, _lpOutput,
-        _positionRes, _orientationRes, _depth+1) && ToggleConnect(_env, _stats,
-        _dm, _n2, c, _s, _g, !_toggle, _lpOutput, _positionRes, _orientationRes,
-        _depth+1);
+    return ToggleConnect(_n1, c, _s, _g, !_toggle, _lpOutput,
+        _positionRes, _orientationRes, _depth+1) && ToggleConnect(_n2, c, _s,
+          _g, !_toggle, _lpOutput, _positionRes, _orientationRes, _depth+1);
   else
-    return ToggleConnect(_env, _stats, _dm, _n1, c, _s, _g, !_toggle, _lpOutput,
-        _positionRes, _orientationRes, _depth+1) || ToggleConnect(_env, _stats,
-        _dm, _n2, c, _s, _g, !_toggle, _lpOutput, _positionRes, _orientationRes,
-        _depth+1);
+    return ToggleConnect(_n1, c, _s, _g, !_toggle, _lpOutput,
+        _positionRes, _orientationRes, _depth+1) || ToggleConnect(_n2, c, _s,
+          _g, !_toggle, _lpOutput, _positionRes, _orientationRes, _depth+1);
 }
 
 template<class MPTraits>
 vector<typename MPTraits::CfgType>
 ToggleLP<MPTraits>::ReconstructPath(
-    Environment* _env, DistanceMetricPointer _dm,
     const CfgType& _c1, const CfgType& _c2,
     const vector<CfgType>& _intermediates,
     double _posRes, double _oriRes) {
-  StatClass dummyStats;
-  LocalPlannerPointer lpMethod = this->GetMPProblem()->GetLocalPlanner(m_lpLabel);
+  LocalPlannerPointer lp = this->GetMPProblem()->GetLocalPlanner(m_lpLabel);
   LPOutput<MPTraits>* lpOutput = new LPOutput<MPTraits>();
   LPOutput<MPTraits>* dummyLPOutput = new LPOutput<MPTraits>();
   CfgType col;
   if(_intermediates.size() > 0) {
-    lpMethod->IsConnected(_env, dummyStats, _dm, _c1, _intermediates[0], col,
+    lp->IsConnected(_c1, _intermediates[0], col,
         dummyLPOutput, _posRes, _oriRes, false, true, false);
     for(size_t j = 0; j < dummyLPOutput->m_path.size(); j++)
       lpOutput->m_path.push_back(dummyLPOutput->m_path[j]);
     for(size_t i = 0; i < _intermediates.size() - 1; i++) {
       lpOutput->m_path.push_back(_intermediates[i]);
-      lpMethod->IsConnected(_env, dummyStats, _dm, _intermediates[i], _intermediates[i + 1],
+      lp->IsConnected(_intermediates[i], _intermediates[i + 1],
           col, dummyLPOutput, _posRes, _oriRes, false, true, false);
       for(size_t j = 0; j < dummyLPOutput->m_path.size(); j++)
         lpOutput->m_path.push_back(dummyLPOutput->m_path[j]);
     }
     lpOutput->m_path.push_back(_intermediates[_intermediates.size() - 1]);
-    lpMethod->IsConnected(_env, dummyStats, _dm, _intermediates[_intermediates.size() - 1],
+    lp->IsConnected(_intermediates[_intermediates.size() - 1],
         _c2, col, dummyLPOutput, _posRes, _oriRes, false, true, false);
     for(size_t j = 0; j < dummyLPOutput->m_path.size(); j++)
       lpOutput->m_path.push_back(dummyLPOutput->m_path[j]);
   }
   else {
-    lpMethod->IsConnected(_env, dummyStats, _dm, _c1, _c2, col, dummyLPOutput,
+    lp->IsConnected(_c1, _c2, col, dummyLPOutput,
         _posRes, _oriRes, false, true, false);
     for(size_t j = 0; j < dummyLPOutput->m_path.size(); j++)
       lpOutput->m_path.push_back(dummyLPOutput->m_path[j]);
