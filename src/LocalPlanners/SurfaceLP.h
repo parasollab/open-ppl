@@ -42,7 +42,7 @@ class SurfaceLP : public StraightLine<MPTraits> {
 template<class MPTraits>
 SurfaceLP<MPTraits>::SurfaceLP(const string& _vcLabel, bool _evalation,
         bool _saveIntermediates) : StraightLine<MPTraits>(_vcLabel, _evalation,
-          _saveIntermediates)
+          _saveIntermediates) {
   this->SetName("SurfaceLP");
   m_acceptableHeightDiff = 0.75;
 }
@@ -80,7 +80,7 @@ SurfaceLP<MPTraits>::IsConnected(
   StatClass* stats = this->GetMPProblem()->GetStatClass();
 
   bool connected = false;
-  stats.IncLPAttempts(this->GetNameAndLabel());
+  stats->IncLPAttempts(this->GetNameAndLabel());
 
   _lpOutput->m_path.clear();
   //This is where we check if each intermediate configuration is on specified
@@ -160,7 +160,7 @@ SurfaceLP<MPTraits>::IsConnected(
   }//endfor i<nTicks
 
   if(connected)
-    stats.IncLPConnections(this->GetNameAndLabel());
+    stats->IncLPConnections(this->GetNameAndLabel());
   return connected;
 }
 
