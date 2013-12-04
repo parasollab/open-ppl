@@ -119,12 +119,13 @@ class MPProblem
 
     void SetMPProblem();
 
-    typedef boost::tuples::tuple<string, long, string, string> Solver;
     //solver, seed, baseName, vizmoDebugName
-    void AddSolverSet(string _label, long _seed, string _baseFileName, string _vizmoDebugName) { m_solver.push_back(Solver(_label, _seed, _baseFileName, _vizmoDebugName)); }
-    void SetSolverSeed(int _index, long _ss) { get<1>(m_solver[_index])=_ss; }
-    void SetMPSolver(int _index, string _solver) { get<0>(m_solver[_index])=_solver; }
-    void Solve(int _solve_num);
+    typedef boost::tuples::tuple<string, long, string, string> Solver;
+    void AddSolver(const string& _label, long _seed,
+        const string& _baseFileName, const string& _vizmoDebugName) {
+      m_solvers.push_back(Solver(_label, _seed, _baseFileName, _vizmoDebugName));
+    }
+    void Solve();
 
     void BuildCDStructures();
 
@@ -137,7 +138,6 @@ class MPProblem
     //RemoveObstacleAt
     //a wrapper call to remove a multibody from the environment
     void RemoveObstacleAt(size_t _index);
-    size_t getSolverNum() { return m_solver.size(); }
 
   protected:
     virtual void Initialize();
@@ -172,7 +172,7 @@ class MPProblem
 //#endif
     MPStrategySet* m_mpStrategies;
 
-    vector<Solver> m_solver;
+    vector<Solver> m_solvers;
 
   private:
     bool m_cdBuilt;
@@ -350,7 +350,7 @@ MPProblem<MPTraits>::ParseChild(XMLNodeReader::childiterator citr, typename MPTr
     string m_vizmoDebugName = "";
     if(m_vdOutput)
         m_vizmoDebugName = m_baseFilename + ".vd";
-    m_solver.push_back(Solver(m_label, m_seed, m_baseFilename, m_vizmoDebugName));
+    m_solvers.push_back(Solver(m_label, m_seed, m_baseFilename, m_vizmoDebugName));
     return true;
   }
   else
@@ -369,7 +369,7 @@ MPProblem<MPTraits>::ParseXML(XMLNodeReader& _node, typename MPTraits::MPProblem
 
   BuildCDStructures();
 
-  if(m_solver.empty()){
+  if(m_solvers.empty()){
     cerr << "Error::Must define a solver within the XML. Exiting." << endl;
     exit(1);
   }
@@ -420,33 +420,38 @@ MPProblem<MPTraits>::SetMPProblem(){
 
 template<class MPTraits>
 void
-MPProblem<MPTraits>::Solve(int _solve_num) {
+MPProblem<MPTraits>::Solve() {
   if(!m_cdBuilt)
     BuildCDStructures();
 
-  if(get<3>(m_solver[_solve_num]) != ""){
-    VDInit(get<3>(m_solver[_solve_num]));
+
+  //Solver is tuple<MPStrategyMethod label, seed, base filename, vizmo debug filename>
+  typedef vector<Solver>::iterator SIT;
+  for(SIT sit = m_solvers.begin(); sit != m_solvers.end(); ++sit) {
+    //clear roadmap structures
+    delete m_roadmap;
+    delete m_blockRoadmap;
+    delete m_colRoadmap;
+    delete m_stats;
+    m_roadmap = new RoadmapType();
+    m_blockRoadmap = new RoadmapType();
+    m_colRoadmap = new RoadmapType();
+    m_stats = new StatClass();
+
+    //initialize vizmo debug if there is a valid filename
+    if(sit->get<3>() != "")
+      VDInit(sit->get<3>());
+
+    //call solver
+    cout << "\n\nMPProblem is solving with MPStrategyMethod labeled " << sit->get<0>() << "." << endl;
+    SRand(sit->get<1>());
+    GetMPStrategy(sit->get<0>())->SetBaseFilename(sit->get<2>());
+    GetMPStrategy(sit->get<0>())->operator()();
+
+    //close vizmo debug if necessary
+    if(sit->get<3>() != "")
+      VDClose();
   }
-
-  cout << "\n\nMPProblem is solving with MPStrategyMethod labeled " << get<0>(m_solver[_solve_num]) << "." << endl;
-  SRand(get<1>(m_solver[_solve_num]));
-  GetMPStrategy(get<0>(m_solver[_solve_num]))->SetBaseFilename(get<2>(m_solver[_solve_num]));
-  GetMPStrategy(get<0>(m_solver[_solve_num]))->operator()();
-
-  if(get<3>(m_solver[_solve_num]) != ""){
-    VDClose();
-  }
-
-  /*
-  delete m_roadmap;
-  delete m_blockRoadmap;
-  delete m_colRoadmap;
-  delete m_stats;
-  m_roadmap = new RoadmapType();
-  m_blockRoadmap = new RoadmapType();
-  m_colRoadmap = new RoadmapType();
-  m_stats = new StatClass();
-  */
 };
 
 template<class MPTraits>
