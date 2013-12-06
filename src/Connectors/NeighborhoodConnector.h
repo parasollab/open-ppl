@@ -139,7 +139,6 @@ NeighborhoodConnector<MPTraits>::ConnectNeighbors(
     OutputIterator _collision){
 
   Environment* env = this->GetMPProblem()->GetEnvironment();
-  NeighborhoodFinderPointer nf = this->GetMPProblem()->GetNeighborhoodFinder(this->m_nfLabel);
   LocalPlannerPointer lp = this->GetMPProblem()->GetLocalPlanner(this->m_lpLabel);
   GraphType* map = _rm->GetGraph();
 
@@ -194,8 +193,7 @@ NeighborhoodConnector<MPTraits>::ConnectNeighbors(
     CfgRef c2 = map->GetVertex(v2);
 
     CfgType col;
-    bool connectable = lp->IsConnected(env, _stats, nf->GetDMMethod(),
-          c1, c2, col, &lpOutput,
+    bool connectable = lp->IsConnected(c1, c2, col, &lpOutput,
           env->GetPositionRes(), env->GetOrientationRes(), true);
     if(col != CfgType())
       *_collision++ = col;

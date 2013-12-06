@@ -76,7 +76,6 @@ class SurfaceGridSampler : public SamplerMethod<MPTraits> {
       string callee(this->GetName());
       callee += "::SampleImpl()";
       ValidityCheckerPointer vcp = this->GetMPProblem()->GetValidityChecker(m_vcLabel);
-      CDInfo cdInfo;
       int numSurfaces=  _env->GetNavigableSurfacesCount(); //Number of navigable surface
       for(int i=-1; i<numSurfaces; i++) {
         //For the navigable surfaces not including the surface -1 (ground)
@@ -103,7 +102,7 @@ class SurfaceGridSampler : public SamplerMethod<MPTraits> {
                 tmp.SetPos(pt);
                 tmp.SetHeight(tH);
                 //Validate surface cfg
-                bool isValid = vcp->IsValid(tmp, _env, _stats, cdInfo, callee);
+                bool isValid = vcp->IsValid(tmp, callee);
                 if(isValid){
                   //Add valid surface cfg
                   _cfgOut.push_back(tmp);
@@ -127,7 +126,7 @@ class SurfaceGridSampler : public SamplerMethod<MPTraits> {
               tmp.SetPos(pt);
               //Height is 0 for this points
               tmp.SetHeight(0);
-              bool isValid = vcp->IsValid(tmp, _env, _stats, cdInfo, callee);
+              bool isValid = vcp->IsValid(tmp, callee);
               if(isValid){
                 _cfgOut.push_back(tmp);
               }else{

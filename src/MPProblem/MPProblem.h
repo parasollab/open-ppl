@@ -11,6 +11,7 @@
 #include "NeighborhoodFinders/NeighborhoodFinderMethod.h"
 #include "Samplers/SamplerMethod.h"
 #include "LocalPlanners/LocalPlannerMethod.h"
+#include "Extenders/ExtenderMethod.h"
 #include "PathModifiers/PathModifierMethod.h"
 #include "Connectors/ConnectorMethod.h"
 #include "Metrics/MetricMethod.h"
@@ -74,6 +75,11 @@ class MPProblem
     LocalPlannerPointer GetLocalPlanner(const string& _l){return m_localPlanners->GetMethod(_l);}
     void AddLocalPlanner(LocalPlannerPointer _lp, const string& _l){m_localPlanners->AddMethod(_lp, _l);}
 
+    typedef MethodSet<MPTraits, ExtenderMethod<MPTraits> > ExtenderSet;
+    typedef typename ExtenderSet::MethodPointer ExtenderPointer;
+    ExtenderPointer GetExtender(const string& _l){return m_extenders->GetMethod(_l);}
+    void AddExtender(ExtenderPointer _mps, const string& _l){m_extenders->AddMethod(_mps, _l);}
+
     typedef MethodSet<MPTraits, PathModifierMethod<MPTraits> > PathModifierSet;
     typedef typename PathModifierSet::MethodPointer PathModifierPointer;
     PathModifierPointer GetPathModifier(const string& _l){return m_pathModifiers->GetMethod(_l);}
@@ -113,8 +119,12 @@ class MPProblem
 
     void SetMPProblem();
 
-    void SetSolverSeed(long _ss) { m_solverSeed=_ss; }
-    void SetMPSolver(string _solver) { m_solver=_solver; }
+    //solver, seed, baseName, vizmoDebugName
+    typedef boost::tuples::tuple<string, long, string, string> Solver;
+    void AddSolver(const string& _label, long _seed,
+        const string& _baseFileName, const string& _vizmoDebugName) {
+      m_solvers.push_back(Solver(_label, _seed, _baseFileName, _vizmoDebugName));
+    }
     void Solve();
 
     void BuildCDStructures();
@@ -146,6 +156,7 @@ class MPProblem
     NeighborhoodFinderSet* m_neighborhoodFinders;
     SamplerSet* m_samplers;
     LocalPlannerSet* m_localPlanners;
+    ExtenderSet* m_extenders;
     PathModifierSet* m_pathModifiers;
     ConnectorSet* m_connectors;
     MetricSet* m_metrics;
@@ -161,10 +172,7 @@ class MPProblem
 //#endif
     MPStrategySet* m_mpStrategies;
 
-    string m_solver;
-    long m_solverSeed;
-    string m_solverBaseName;
-    string m_solverVizmoDebug;
+    vector<Solver> m_solvers;
 
   private:
     bool m_cdBuilt;
@@ -240,16 +248,12 @@ MPProblem<MPTraits>::Initialize(){
   m_neighborhoodFinders = new NeighborhoodFinderSet(typename MPTraits::NeighborhoodFinderMethodList(), "NeighborhoodFinders");
   m_samplers = new SamplerSet(typename MPTraits::SamplerMethodList(), "Samplers");
   m_localPlanners = new LocalPlannerSet(typename MPTraits::LocalPlannerMethodList(), "LocalPlanners");
+  m_extenders = new ExtenderSet(typename MPTraits::ExtenderMethodList(), "Extenders");
   m_pathModifiers = new PathModifierSet(typename MPTraits::PathModifierMethodList(), "PathModifiers");
   m_connectors = new ConnectorSet(typename MPTraits::ConnectorMethodList(), "Connectors");
   m_metrics = new MetricSet(typename MPTraits::MetricMethodList(), "Metrics");
   m_mapEvaluators = new MapEvaluatorSet(typename MPTraits::MapEvaluatorMethodList(), "MapEvaluators");
   m_mpStrategies = new MPStrategySet(typename MPTraits::MPStrategyMethodList(), "MPStrategies");
-
-  m_solver = "";
-  m_solverSeed = 1;
-  m_solverBaseName = "PMPLOutput";
-  m_solverVizmoDebug = "";
 
   m_cdBuilt = false;
 }
@@ -311,6 +315,10 @@ MPProblem<MPTraits>::ParseChild(XMLNodeReader::childiterator citr, typename MPTr
     m_localPlanners->ParseXML(_problem, *citr);
     return true;
   }
+  else if(citr->getName() == "Extenders") {
+    m_extenders->ParseXML(_problem, *citr);
+    return true;
+  }
   else if(citr->getName() == "PathModifiers") {
     m_pathModifiers->ParseXML(_problem, *citr);
     return true;
@@ -332,15 +340,17 @@ MPProblem<MPTraits>::ParseChild(XMLNodeReader::childiterator citr, typename MPTr
     return true;
   }
   else if(citr->getName() == "Solver") {
-    m_solver = citr->stringXMLParameter("mpStrategyLabel", true, "", "The strategy pointed to by this label will be used to solve the problem");
-    m_solverSeed = citr->numberXMLParameter("seed", true, 1, 0, MAX_INT, "The random number generator seed for the solver.");
-    m_solverBaseName = citr->stringXMLParameter("baseFilename", true, "", "BaseFilename for the solver.");
+    string m_label = citr->stringXMLParameter("mpStrategyLabel", true, "", "The strategy pointed to by this label will be used to solve the problem");
+    long m_seed = citr->numberXMLParameter("seed", true, 1, 0, MAX_INT, "The random number generator seed for the solver.");
+    string m_baseFilename = citr->stringXMLParameter("baseFilename", true, "", "BaseFilename for the solver.");
     ostringstream oss;
-    oss << m_solverBaseName << "." << m_solverSeed;
-    m_solverBaseName = oss.str();
-    bool vdOutput = citr->boolXMLParameter("vizmoDebug", false, false, "True yields VizmoDebug output for the solver.");
-    if(vdOutput)
-      m_solverVizmoDebug = m_solverBaseName + ".vd";
+    oss << m_baseFilename << "." << m_seed;
+    m_baseFilename = oss.str();
+    bool m_vdOutput = citr->boolXMLParameter("vizmoDebug", false, false, "True yields VizmoDebug output for the solver.");
+    string m_vizmoDebugName = "";
+    if(m_vdOutput)
+        m_vizmoDebugName = m_baseFilename + ".vd";
+    m_solvers.push_back(Solver(m_label, m_seed, m_baseFilename, m_vizmoDebugName));
     return true;
   }
   else
@@ -359,7 +369,7 @@ MPProblem<MPTraits>::ParseXML(XMLNodeReader& _node, typename MPTraits::MPProblem
 
   BuildCDStructures();
 
-  if(m_solver == ""){
+  if(m_solvers.empty()){
     cerr << "Error::Must define a solver within the XML. Exiting." << endl;
     exit(1);
   }
@@ -384,6 +394,7 @@ MPProblem<MPTraits>::PrintOptions(ostream& _os) const {
   m_neighborhoodFinders->PrintOptions(_os);
   m_samplers->PrintOptions(_os);
   m_localPlanners->PrintOptions(_os);
+  m_extenders->PrintOptions(_os);
   m_pathModifiers->PrintOptions(_os);
   m_connectors->PrintOptions(_os);
   m_metrics->PrintOptions(_os);
@@ -399,6 +410,7 @@ MPProblem<MPTraits>::SetMPProblem(){
   m_neighborhoodFinders->SetMPProblem(this);
   m_samplers->SetMPProblem(this);
   m_localPlanners->SetMPProblem(this);
+  m_extenders->SetMPProblem(this);
   m_pathModifiers->SetMPProblem(this);
   m_connectors->SetMPProblem(this);
   m_metrics->SetMPProblem(this);
@@ -412,17 +424,33 @@ MPProblem<MPTraits>::Solve() {
   if(!m_cdBuilt)
     BuildCDStructures();
 
-  if(m_solverVizmoDebug != ""){
-    VDInit(m_solverVizmoDebug);
-  }
 
-  cout << "\n\nMPProblem is solving with MPStrategyMethod labeled " << m_solver << "." << endl;
-  SRand(m_solverSeed);
-  GetMPStrategy(m_solver)->SetBaseFilename(m_solverBaseName);
-  GetMPStrategy(m_solver)->operator()();
+  //Solver is tuple<MPStrategyMethod label, seed, base filename, vizmo debug filename>
+  typedef vector<Solver>::iterator SIT;
+  for(SIT sit = m_solvers.begin(); sit != m_solvers.end(); ++sit) {
+    //clear roadmap structures
+    delete m_roadmap;
+    delete m_blockRoadmap;
+    delete m_colRoadmap;
+    delete m_stats;
+    m_roadmap = new RoadmapType();
+    m_blockRoadmap = new RoadmapType();
+    m_colRoadmap = new RoadmapType();
+    m_stats = new StatClass();
 
-  if(m_solverVizmoDebug != ""){
-    VDClose();
+    //initialize vizmo debug if there is a valid filename
+    if(sit->get<3>() != "")
+      VDInit(sit->get<3>());
+
+    //call solver
+    cout << "\n\nMPProblem is solving with MPStrategyMethod labeled " << sit->get<0>() << "." << endl;
+    SRand(sit->get<1>());
+    GetMPStrategy(sit->get<0>())->SetBaseFilename(sit->get<2>());
+    GetMPStrategy(sit->get<0>())->operator()();
+
+    //close vizmo debug if necessary
+    if(sit->get<3>() != "")
+      VDClose();
   }
 };
 

@@ -1,11 +1,14 @@
 #include "GMSPolyhedron.h"
-#include "Utilities/MPUtils.h"
+
 #include <fstream>
-#include <cstring>
+
 #include "MovieBYULoader.h"
 #include "ModelFactory.h"
-#include "ObjLoader.h"
 #include "ModelTool.h"
+#include "ObjLoader.h"
+
+#include "Utilities/IOUtils.h"
+#include "Utilities/MPUtils.h"
 
 using namespace std;
 
@@ -78,14 +81,8 @@ Vector3d
 GMSPolyhedron::Read(string _fileName){
   Vector3d com;	//com = Center of Mass
 
-  //---------------------------------------------------------------
-  // Get polyhedron file name and try to open the file
-  //---------------------------------------------------------------
-  ifstream _is(_fileName.c_str());
-  if (!_is) {
-    cout << "Can't open \"" << _fileName << "\"." << endl;
-    exit(1);
-  }
+  if(!FileExists(_fileName))
+    throw ParseException(WHERE, "Geometry file '" + _fileName + "' does not exist.");
 
   //---------------------------------------------------------------
   // Read polyhedron
@@ -95,7 +92,8 @@ GMSPolyhedron::Read(string _fileName){
   if(pos != string::npos)
     ext = _fileName.substr(pos+1);
   if (ext == "dat"){
-    com = Read(_is);
+    ifstream ifs(_fileName.c_str());
+    com = Read(ifs);
   }
   else if (ext == "g" || ext == "obj"){
     com = ReadModel(_fileName);
@@ -106,10 +104,6 @@ GMSPolyhedron::Read(string _fileName){
     exit(1);
   }
 
-  //---------------------------------------------------------------
-  // Close file
-  //---------------------------------------------------------------
-  _is.close();
   return com;
 }
 

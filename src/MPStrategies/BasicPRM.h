@@ -359,7 +359,6 @@ template<class MPTraits>
 template<typename OutputIterator>
 void
 BasicPRM<MPTraits>::GenerateNodes(OutputIterator _thisIterationOut){
-  CDInfo cdInfo;
   StatClass* pStatClass = this->GetMPProblem()->GetStatClass();
   string clockName = "Total Node Generation";
   if(this->m_recordKeep) pStatClass->StartClock(clockName);
@@ -404,10 +403,9 @@ BasicPRM<MPTraits>::GenerateNodes(OutputIterator _thisIterationOut){
       }
     }
     else{
-      if(!cit->IsLabel("VALID")){
-        !(this->GetMPProblem()->GetValidityChecker(m_vcLabel)->IsValid(
-              *cit, this->GetMPProblem()->GetEnvironment(), *(this->GetMPProblem()->GetStatClass()), cdInfo, callee));
-      }
+      if(!cit->IsLabel("VALID"))
+        !(this->GetMPProblem()->GetValidityChecker(m_vcLabel)->IsValid(*cit, callee));
+
       if(cit->IsLabel("VALID") && cit->GetLabel("VALID")) {
         if(!this->GetMPProblem()->GetRoadmap()->GetGraph()->IsVertex(*cit)) {
           VID vid = this->GetMPProblem()->GetRoadmap()->GetGraph()->AddVertex(*cit);

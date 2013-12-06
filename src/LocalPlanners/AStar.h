@@ -20,31 +20,28 @@
 template <class MPTraits>
 class AStar : public LocalPlannerMethod<MPTraits> {
   public:
-
     typedef typename MPTraits::CfgType CfgType;
     typedef typename MPTraits::WeightType WeightType;
     typedef typename MPTraits::MPProblemType MPProblemType;
     typedef typename MPProblemType::DistanceMetricPointer DistanceMetricPointer;
     typedef typename MPProblemType::ValidityCheckerPointer ValidityCheckerPointer;
 
-    AStar(string _vcLabel = "", size_t _maxTries = 0, size_t _numNeighbors = 0,
-        size_t _histLength = 5);
+    AStar(const string& _vcLabel = "", size_t _maxTries = 0,
+        size_t _numNeighbors = 0, size_t _histLength = 5, bool _saveIntermediates = false);
 
     AStar(MPProblemType* _problem, XMLNodeReader& _node);
 
     virtual ~AStar();
 
-    virtual void PrintOptions(ostream& _os);
+    virtual void PrintOptions(ostream& _os) const;
 
     virtual bool IsConnected(
-        Environment* _env, StatClass& _stats, DistanceMetricPointer _dm,
         const CfgType& _c1, const CfgType& _c2, CfgType& _col,
         LPOutput<MPTraits>* _lpOutput,
         double _positionRes, double _orientationRes,
         bool _checkCollision = true, bool _savePath = false, bool _saveFailedPath = false);
 
     virtual vector<CfgType> ReconstructPath(
-        Environment* _env, DistanceMetricPointer _dm,
         const CfgType& _c1, const CfgType& _c2, const vector<CfgType>& _intermediates,
         double _posRes, double _oriRes) {
       vector<CfgType> tmp = _intermediates;
@@ -56,17 +53,15 @@ class AStar : public LocalPlannerMethod<MPTraits> {
         LPOutput<MPTraits>* _lpOutput, string _debugMsg);
 
     virtual bool IsConnectedOneWay(
-        Environment* _env, StatClass& _stats, DistanceMetricPointer _dm,
         const CfgType& _c1, const CfgType& _c2, CfgType& _col,
         LPOutput<MPTraits>* _lpOutput,
         double _positionRes, double _orientationRes,
         bool _checkCollision = true, bool _savePath = false, bool _saveFailedPath = false);
 
-    virtual size_t ChooseOptimalNeighbor(
-        Environment* _env, StatClass& _stats, CfgType& _col, DistanceMetricPointer _dm,
+    virtual size_t ChooseOptimalNeighbor(CfgType& _col,
         const CfgType& _c1, const CfgType& _c2, vector<CfgType>& _neighbors) = 0;
 
-    virtual vector<CfgType> FindNeighbors(Environment* _env, StatClass& _stats,
+    virtual vector<CfgType> FindNeighbors(
         const CfgType& _current, const CfgType& _goal, const CfgType& _increment);
 
     string m_vcLabel;
@@ -75,48 +70,43 @@ class AStar : public LocalPlannerMethod<MPTraits> {
     size_t m_histLength;   // how many nodes should I keep track of for cycles
 };
 
-
 template <class MPTraits>
-AStar<MPTraits>::AStar(string _vcLabel,
-    size_t _maxTries, size_t _numNeighbors, size_t _histLength) :
-    LocalPlannerMethod<MPTraits>(), m_vcLabel(_vcLabel), m_maxTries(_maxTries),
+AStar<MPTraits>::AStar(const string& _vcLabel,
+    size_t _maxTries, size_t _numNeighbors, size_t _histLength, bool _saveIntermediates) :
+    LocalPlannerMethod<MPTraits>(_saveIntermediates),
+    m_vcLabel(_vcLabel), m_maxTries(_maxTries),
     m_numNeighbors(_numNeighbors), m_histLength(_histLength) {
   this->SetName("AStar");
 }
-
 
 template <class MPTraits>
 AStar<MPTraits>::AStar(MPProblemType* _problem, XMLNodeReader& _node) :
   LocalPlannerMethod<MPTraits>(_problem, _node) {
   this->SetName("AStar");
-  m_vcLabel = _node.stringXMLParameter("vcLabel", true, "", "Validity Test Method");
+  m_vcLabel = _node.stringXMLParameter("vcLabel", true, "", "Validity Test Label");
   m_maxTries = _node.numberXMLParameter("maxTries", true, 0, 0, MAX_INT, "n tries");
   m_numNeighbors = _node.numberXMLParameter("numNeighbors", true, 0, 0, MAX_INT, "n neighbors");
   m_histLength = _node.numberXMLParameter("histLength", false, 5, 0, MAX_INT,
       "history length for detecting cycles");
 }
 
-
 template <class MPTraits>
 AStar<MPTraits>::~AStar() {}
 
-
 template <class MPTraits>
 void
-AStar<MPTraits>::PrintOptions(ostream& _os) {
-  _os << "    " << this->GetNameAndLabel() << "::  "
-      << "maxTries = " << m_maxTries << " "
-      << "numNeighbors = " << m_numNeighbors << " "
-      << "vcLabel = " << m_vcLabel << " "
-      << "histLength = " << m_histLength << " "
+AStar<MPTraits>::PrintOptions(ostream& _os) const {
+  LocalPlannerMethod<MPTraits>::PrintOptions(_os);
+  _os << "\tvc label : " << m_vcLabel
+      << "\n\tmax tries = " << m_maxTries
+      << "\n\tnum neighbors = " << m_numNeighbors
+      << "\n\thist length = " << m_histLength
       << endl;
 }
-
 
 template <class MPTraits>
 bool
 AStar<MPTraits>::IsConnected(
-    Environment* _env, StatClass& _stats, DistanceMetricPointer _dm,
     const CfgType& _c1, const CfgType& _c2, CfgType& _col,
     LPOutput<MPTraits>* _lpOutput,
     double _positionRes, double _orientationRes,
@@ -125,11 +115,11 @@ AStar<MPTraits>::IsConnected(
   _lpOutput->Clear();
   bool connected = false;
 
-  connected = IsConnectedOneWay(_env, _stats, _dm, _c1, _c2,_col, _lpOutput,
+  connected = IsConnectedOneWay(_c1, _c2,_col, _lpOutput,
       _positionRes, _orientationRes, _checkCollision, _savePath, _saveFailedPath);
 
   if(!connected) { //try the other way
-    connected = IsConnectedOneWay(_env, _stats, _dm, _c2, _c1,_col, _lpOutput,
+    connected = IsConnectedOneWay(_c2, _c1,_col, _lpOutput,
         _positionRes, _orientationRes, _checkCollision, _savePath, _saveFailedPath);
     if (_savePath)
       reverse(_lpOutput->m_path.begin(), _lpOutput->m_path.end());
@@ -142,7 +132,6 @@ AStar<MPTraits>::IsConnected(
 
   return connected;
 }
-
 
 template <class MPTraits>
 bool
@@ -160,15 +149,14 @@ AStar<MPTraits>::SetLPOutputFail(const CfgType& _c, const CfgType& _p,
   return false;
 }
 
-
 template <class MPTraits>
 bool
 AStar<MPTraits>::IsConnectedOneWay(
-    Environment* _env, StatClass& _stats, DistanceMetricPointer _dm,
     const CfgType& _c1, const CfgType& _c2, CfgType& _col,
     LPOutput<MPTraits>* _lpOutput,
     double _positionRes, double _orientationRes,
     bool _checkCollision, bool _savePath, bool _saveFailedPath) {
+    StatClass* stats = this->GetMPProblem()->GetStatClass();
 
   if(this->m_debug) {
     VDClearAll();
@@ -176,7 +164,7 @@ AStar<MPTraits>::IsConnectedOneWay(
     VDAddTempCfg(_c2, false);
   }
 
-  _stats.IncLPAttempts(this->GetNameAndLabel());
+  stats->IncLPAttempts(this->GetNameAndLabel());
 
   CfgType p = _c1;
   CfgType incr;
@@ -199,7 +187,7 @@ AStar<MPTraits>::IsConnectedOneWay(
       hist.pop_back();
 
     //find neighbors
-    neighbors = FindNeighbors(_env, _stats, p, _c2, incr);
+    neighbors = FindNeighbors(p, _c2, incr);
 
     //neighbors all in collision
     if(neighbors.size() == 0) {
@@ -208,7 +196,7 @@ AStar<MPTraits>::IsConnectedOneWay(
     }
 
     //choose the optimal neighbor. Pure virtual function.
-    p = neighbors[ChooseOptimalNeighbor(_env, _stats,_col, _dm, _c1, _c2, neighbors)];
+    p = neighbors[ChooseOptimalNeighbor(_col, _c1, _c2, neighbors)];
     neighbors.clear();
 
     //chose new p so we need to detect cycles
@@ -246,22 +234,20 @@ AStar<MPTraits>::IsConnectedOneWay(
   _lpOutput->m_edge.second.SetWeight(_lpOutput->m_edge.second.GetWeight() + iter);
 
   if(connected)
-    _stats.IncLPConnections(this->GetNameAndLabel());
+    stats->IncLPConnections(this->GetNameAndLabel());
 
   return connected;
 }
 
-
 template <class MPTraits>
 vector<typename MPTraits::CfgType>
 AStar<MPTraits>::FindNeighbors(
-    Environment* _env, StatClass& _stats,
     const CfgType& _current, const CfgType& _goal, const CfgType& _increment) {
   vector<CfgType> neighbors, ret;
   vector<double> posOnly, oriOnly;
   string callee = this->GetNameAndLabel() + "::FindNeighbors";
-  CDInfo cdInfo;
-  ValidityCheckerPointer vcm = this->GetMPProblem()->GetValidityChecker(m_vcLabel);
+  ValidityCheckerPointer vc = this->GetMPProblem()->GetValidityChecker(m_vcLabel);
+  StatClass* stats = this->GetMPProblem()->GetStatClass();
 
   //Push 2 cfgs into neighbors whose position or orientation is the same
   //as _increment
@@ -314,72 +300,78 @@ AStar<MPTraits>::FindNeighbors(
     tmp.IncrementTowardsGoal(_goal, neighbors[i]);
     if(_current == tmp) continue;
     cdCounter++;
-    if(vcm->IsValid(tmp, _env, _stats, cdInfo, callee)) {
+    if(vc->IsValid(tmp, callee))
       ret.push_back(tmp);
-    }
     if(ret.size() >= m_numNeighbors)
       break;
   }
-  _stats.IncLPCollDetCalls(this->GetNameAndLabel(), cdCounter);
+  stats->IncLPCollDetCalls(this->GetNameAndLabel(), cdCounter);
   return ret;
 }
 
 //////////////////////////////////////////////////////////////////
 // AStarDistance
 //////////////////////////////////////////////////////////////////
-
 template <class MPTraits>
 class AStarDistance : public AStar<MPTraits> {
   public:
-
     typedef typename MPTraits::CfgType CfgType;
     typedef typename MPTraits::MPProblemType MPProblemType;
     typedef typename MPProblemType::DistanceMetricPointer DistanceMetricPointer;
 
-    AStarDistance(string _vcLabel = "", size_t _maxTries = 0,
-        size_t _numNeighbors = 0, size_t _histLength = 5);
+    AStarDistance(const string& _vcLabel = "", const string& _dmLabel = "",
+        size_t _maxTries = 0, size_t _numNeighbors = 0, size_t _histLength = 5);
 
     AStarDistance(MPProblemType* _problem, XMLNodeReader& _node);
 
     virtual ~AStarDistance();
 
-    virtual size_t ChooseOptimalNeighbor(
-        Environment* _env, StatClass& _stats, CfgType& _col, DistanceMetricPointer _dm,
+    virtual void PrintOptions(ostream& _os) const;
+
+    virtual size_t ChooseOptimalNeighbor(CfgType& _col,
         const CfgType& _c1, const CfgType& _c2, vector<CfgType>& _neighbors);
+
+  private:
+    string m_dmLabel;
 };
 
-
 template <class MPTraits>
-AStarDistance<MPTraits>::AStarDistance(
-    string _vcLabel, size_t _maxTries, size_t _numNeighbors, size_t _histLength) :
-    AStar<MPTraits>(_vcLabel, _maxTries, _numNeighbors, _histLength) {
+AStarDistance<MPTraits>::AStarDistance(const string& _vcLabel, const string& _dmLabel,
+    size_t _maxTries, size_t _numNeighbors, size_t _histLength) :
+    AStar<MPTraits>(_vcLabel, _maxTries, _numNeighbors, _histLength),
+    m_dmLabel(_dmLabel) {
   this->SetName("AStarDistance");
 }
-
 
 template <class MPTraits>
 AStarDistance<MPTraits>::AStarDistance(MPProblemType* _problem, XMLNodeReader& _node) :
     AStar<MPTraits>(_problem, _node) {
   this->SetName("AStarDistance");
+  m_dmLabel = _node.stringXMLParameter("dmLabel", true, "", "Distance Metric Label");
   _node.warnUnrequestedAttributes();
 }
-
 
 template <class MPTraits>
 AStarDistance<MPTraits>::~AStarDistance() {}
 
+template <class MPTraits>
+void
+AStarDistance<MPTraits>::PrintOptions(ostream& _os) const {
+  AStar<MPTraits>::PrintOptions(_os);
+  _os << "\tdm label : " << m_dmLabel << endl;
+}
 
 //find Cfg closest to goal. ASTAR_DISTANCE
 template <class MPTraits>
 size_t
-AStarDistance<MPTraits>::ChooseOptimalNeighbor(
-    Environment* _env, StatClass& _stats, CfgType& _col, DistanceMetricPointer _dm,
+AStarDistance<MPTraits>::ChooseOptimalNeighbor(CfgType& _col,
     const CfgType& _c1, const CfgType& _c2, vector<CfgType>& _neighbors) {
+  DistanceMetricPointer dm = this->GetMPProblem()->GetDistanceMetric(m_dmLabel);
   double minDistance = MAX_DBL;
   size_t retPosition = 0;
   double value = 0;
   for(size_t i = 0; i < _neighbors.size(); i++) {
-    value = _dm->Distance(_env, _neighbors[i], _c2);
+    value = dm->Distance(_neighbors[i], _c2);
     if (value < minDistance) {
       retPosition = i;
       minDistance = value;
@@ -391,16 +383,14 @@ AStarDistance<MPTraits>::ChooseOptimalNeighbor(
 //////////////////////////////////////////////////////////////////
 // AStarClearance
 //////////////////////////////////////////////////////////////////
-
 template <class MPTraits>
 class AStarClearance : public AStar<MPTraits> {
   public:
-
     typedef typename MPTraits::CfgType CfgType;
     typedef typename MPTraits::MPProblemType MPProblemType;
     typedef typename MPProblemType::DistanceMetricPointer DistanceMetricPointer;
 
-    AStarClearance(string _vcLabel = "",
+    AStarClearance(const string& _vcLabel = "",
         size_t _maxTries = 0, size_t _numNeighbors = 0, size_t _histLength = 5,
         const ClearanceUtility<MPTraits>& _c = ClearanceUtility<MPTraits>());
 
@@ -408,26 +398,22 @@ class AStarClearance : public AStar<MPTraits> {
 
     virtual ~AStarClearance();
 
-    virtual void PrintOptions(ostream& _os);
+    virtual void PrintOptions(ostream& _os) const;
 
-    virtual size_t ChooseOptimalNeighbor(
-        Environment* _env, StatClass& _stats, CfgType& _col, DistanceMetricPointer _dm,
+    virtual size_t ChooseOptimalNeighbor(CfgType& _col,
         const CfgType& _c1, const CfgType& _c2, vector<CfgType>& _neighbors);
 
   private:
     ClearanceUtility<MPTraits> m_clearanceUtility;
 };
 
-
 template <class MPTraits>
-AStarClearance<MPTraits>::AStarClearance(
-    string _vcLabel,
+AStarClearance<MPTraits>::AStarClearance(const string& _vcLabel,
     size_t _maxTries, size_t _numNeighbors, size_t _histLength,
     const ClearanceUtility<MPTraits>& _c) :
     AStar<MPTraits>(_vcLabel, _maxTries, _numNeighbors, _histLength), m_clearanceUtility(_c) {
   this->SetName("AStarClearance");
 }
-
 
 template <class MPTraits>
 AStarClearance<MPTraits>::AStarClearance(MPProblemType* _problem, XMLNodeReader& _node) :
@@ -436,25 +422,22 @@ AStarClearance<MPTraits>::AStarClearance(MPProblemType* _problem, XMLNodeReader&
   _node.warnUnrequestedAttributes();
 }
 
-
 template <class MPTraits>
 AStarClearance<MPTraits>::~AStarClearance() {}
 
-
 template <class MPTraits>
 void
-AStarClearance<MPTraits>::PrintOptions(ostream& _os) {
+AStarClearance<MPTraits>::PrintOptions(ostream& _os) const {
   AStar<MPTraits>::PrintOptions(_os);
   m_clearanceUtility.PrintOptions(_os);
 }
 
-
 //find Cfg with largest clearance. ASTAR_CLEARANCE
 template <class MPTraits>
 size_t
-AStarClearance<MPTraits>::ChooseOptimalNeighbor(
-    Environment* _env, StatClass& _stats, CfgType& _col, DistanceMetricPointer _dm,
+AStarClearance<MPTraits>::ChooseOptimalNeighbor(CfgType& _col,
     const CfgType& _c1, const CfgType& _c2, vector<CfgType>& _neighbors) {
+  Environment* env = this->GetMPProblem()->GetEnvironment();
   double maxClearance = -MAX_DBL;
   size_t retPosition = 0;
   double value = 0;
@@ -463,7 +446,7 @@ AStarClearance<MPTraits>::ChooseOptimalNeighbor(
   CfgType tmp;
 
   for(size_t i = 0; i < _neighbors.size(); i++) {
-    m_clearanceUtility.CollisionInfo(_neighbors[i], tmp, _env->GetBoundary(), tmpInfo);
+    m_clearanceUtility.CollisionInfo(_neighbors[i], tmp, env->GetBoundary(), tmpInfo);
     value = tmpInfo.m_minDist;
     if (value > maxClearance) {
       retPosition = i;
@@ -472,5 +455,4 @@ AStarClearance<MPTraits>::ChooseOptimalNeighbor(
   }
   return retPosition;
 }
-
 #endif

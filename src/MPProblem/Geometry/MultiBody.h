@@ -192,7 +192,7 @@ public:
       *Number of bodys (fixed and free), areas, bounding box, and center of mass are all computed
       *in here.
       */
-    virtual void Read(istream& is, bool _debug = false);
+    void Read(istream& is, bool _debug = false);
 
     void buildCDstructure(cd_predefined cdtype);
 
@@ -287,6 +287,8 @@ public:
     //-----------------------------------------------------------
     ///  Data
     //-----------------------------------------------------------
+
+    string m_modelDataDir; //directory where environment file is stored
 
     //does the multibody contain more than one robot
     bool m_multirobot;

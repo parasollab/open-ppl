@@ -197,7 +197,6 @@ template<class MPTraits>
 void
 TogglePRMStrategy<MPTraits>::GenerateNodes(deque<pair<string, CfgType> >& _queue) {
 
-  CDInfo cdInfo;
   StatClass* stats = this->GetMPProblem()->GetStatClass();
   stringstream clockName;
   clockName << "Node Generation";
@@ -233,7 +232,7 @@ TogglePRMStrategy<MPTraits>::GenerateNodes(deque<pair<string, CfgType> >& _queue
       // If not validated yet, determine validity
       if(!(*cit).IsLabel("VALID"))
         this->GetMPProblem()->GetValidityChecker(m_vcLabel)->IsValid(
-              *cit, this->GetMPProblem()->GetEnvironment(), *stats, cdInfo, callee);
+              *cit, callee);
 
       // Put nodes into queue, keeping track of validity
       if((*cit).GetLabel("VALID")) {

@@ -89,7 +89,6 @@ public:
 
     vector<CfgType> outNodes, colNodes;
     vector<VID> regionVIDs;
-    CDInfo cdInfo;
     string callee("Generator");
     BoundingBox bb = _v1;
     shared_ptr<BoundingBox> boundary = shared_ptr<BoundingBox>(new BoundingBox(bb));
@@ -107,8 +106,7 @@ public:
       CfgType tmp = *vit;
       ///Add Valid Node Only
       //TODO: Pass validity checker label as string
-      if(m_problem->GetValidityChecker("cd1")->IsValid(tmp, m_problem->GetEnvironment(), *stat,
-        cdInfo, &callee)) {
+      if(m_problem->GetValidityChecker("cd1")->IsValid(tmp, &callee)) {
 
         VID vid = m_problem->GetRoadmap()->GetGraph()->add_vertex(tmp);
         regionVIDs.push_back(vid);

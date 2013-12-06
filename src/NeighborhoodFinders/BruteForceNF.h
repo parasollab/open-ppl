@@ -51,7 +51,6 @@ OutputIterator
 BruteForceNF<MPTraits>::FindNeighbors(RoadmapType* _rmp, InputIterator _first, InputIterator _last,
     const CfgType& _cfg, OutputIterator _out) {
 
-  Environment* env = this->GetMPProblem()->GetEnvironment();
   GraphType* map = _rmp->GetGraph();
   DistanceMetricPointer dmm = this->GetMPProblem()->GetDistanceMetric(this->m_dmLabel);
 
@@ -59,7 +58,7 @@ BruteForceNF<MPTraits>::FindNeighbors(RoadmapType* _rmp, InputIterator _first, I
     for(InputIterator it = _first; it != _last; ++it)
       if(map->GetVertex(it) != _cfg)
         *_out++ = make_pair(_rmp->GetGraph()->GetVID(it),
-            dmm->Distance(env, map->GetVertex(it), _cfg));
+            dmm->Distance(map->GetVertex(it), _cfg));
     return _out;
   }
 
@@ -79,7 +78,7 @@ BruteForceNF<MPTraits>::FindNeighbors(RoadmapType* _rmp, InputIterator _first, I
     if(node == _cfg) // Don't connect to self
       continue;
 
-    double dist = dmm->Distance(env, _cfg, node);
+    double dist = dmm->Distance(_cfg, node);
 
     if(pq.size() < this->m_k){
       VID vid = map->GetVID(it);
@@ -115,7 +114,6 @@ BruteForceNF<MPTraits>::FindNeighborPairs(RoadmapType* _rmp,
     InputIterator _first2, InputIterator _last2,
     OutputIterator _out) {
 
-  Environment* env = this->GetMPProblem()->GetEnvironment();
   GraphType* map = _rmp->GetGraph();
   DistanceMetricPointer dmm = this->GetMPProblem()->GetDistanceMetric(this->m_dmLabel);
 
@@ -125,7 +123,7 @@ BruteForceNF<MPTraits>::FindNeighborPairs(RoadmapType* _rmp,
         if(i1 != i2)
           *_out++ = make_pair(
               make_pair(map->GetVID(i1), map->GetVID(i2)),
-              dmm->Distance(env, map->GetVertex(i1), map->GetVertex(i2)));
+              dmm->Distance(map->GetVertex(i1), map->GetVertex(i2)));
     return _out;
   }
 
@@ -140,7 +138,7 @@ BruteForceNF<MPTraits>::FindNeighborPairs(RoadmapType* _rmp,
         continue;
 
       CfgType node2 = map->GetVertex(it2);
-      double dist = dmm->Distance(env, node1, node2);
+      double dist = dmm->Distance(node1, node2);
       if(pq.size() < this->m_k){
         VID vid1 = map->GetVID(it1);
         VID vid2 = map->GetVID(it2);

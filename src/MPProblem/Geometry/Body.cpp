@@ -1,6 +1,8 @@
 #include "Body.h"
 #include <sstream>
 
+string Body::m_modelDataDir;
+
 Body::Body(MultiBody* _owner) :
   m_multibody(_owner),
   m_isBase(false),
@@ -136,17 +138,13 @@ Body::ChangeWorldPolyhedron() {
 //  Read
 //===================================================================
 void
-Body::ReadBYU(istream& _is) {
-  m_polyhedron.ReadBYU(_is);
-  m_worldPolyhedron = m_polyhedron;
-  FindBoundingBox();
-}
+Body::Read() {
 
-void
-Body::Read(string _fileName) {
-  SetFileName(_fileName);
+  string filename = m_modelDataDir == "/" ? m_filename : m_modelDataDir + m_filename;
+  if(!FileExists(filename))
+    throw ParseException(WHERE, "Geometry file '" + filename + "' not found.");
 
-  m_polyhedron.Read(_fileName);
+  m_polyhedron.Read(filename);
   m_worldPolyhedron = m_polyhedron;
   GMSPolyhedron poly;
   poly = GetPolyhedron();

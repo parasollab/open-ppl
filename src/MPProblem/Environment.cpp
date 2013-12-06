@@ -41,8 +41,15 @@ Environment::~Environment() {}
 
 void
 Environment::Read(string _filename) {
-  VerifyFileExists(_filename);
+
+  if(!FileExists(_filename))
+    throw ParseException(WHERE, "Environment file '" + _filename + "' does not exist.");
+
   m_filename = _filename;
+  size_t sl = m_filename.rfind('/');
+  m_modelDataDir = m_filename.substr(0, sl == string::npos ? 0 : sl);
+  cout << "m_modelDataDir::" << m_modelDataDir << endl;
+  Body::m_modelDataDir = m_modelDataDir + "/";
 
   m_activeBodies.clear();
   m_obstacleBodies.clear();
@@ -56,17 +63,16 @@ Environment::Read(string _filename) {
   ReadBoundary(ifs);
 
   //read number of multibodies
-  string mbds = ReadFieldString(ifs, "Multibodies tag.");
-  if(mbds != "MULTIBODIES") {
-    cerr << "Error reading tag for multibodies." << endl;
-    exit(1);
-  }
-  int multibodyCount = ReadField<int>(ifs, "Number of Multibodies");
+  string mbds = ReadFieldString(ifs, WHERE, "Failed reading multibodies tag.");
+  if(mbds != "MULTIBODIES")
+    throw ParseException(WHERE, "Failed reading multibodies tag. Should read 'Multibodies'. Read '" + mbds + "'.");
+
+  size_t multibodyCount = ReadField<size_t>(ifs, WHERE, "Failed reading number of multibodies.");
 
   //parse and construct each multibody
   for (int m=0; m<multibodyCount && ifs; m++) {
     shared_ptr<MultiBody> mb(new MultiBody());
-    mb->Read(ifs, false/*m_debug*/);
+    mb->Read(ifs);
 
     if( mb->IsActive() )
       m_activeBodies.push_back(mb);
@@ -277,24 +283,17 @@ Environment::BuildCDstructure(cd_predefined cdtype) {
 
 void
 Environment::ReadBoundary(istream& _is) {
-  string bndry = ReadFieldString(_is, "Boundary tag.");
-  if(bndry != "BOUNDARY") {
-    cerr << "Error reading environment. First item should be boundary." << endl;
-    exit(1);
-  }
+  string bndry = ReadFieldString(_is, WHERE, "Failed reading boundary tag.");
+  if(bndry != "BOUNDARY")
+    throw ParseException(WHERE, "Failed reading boundary tag. Should read 'Boundary'. Read '" + bndry + "'.");
 
-  string btype = ReadFieldString(_is, "Boundary type.");
-  if(btype == "BOX") {
+  string btype = ReadFieldString(_is, WHERE, "Failed reading boundary type. Options are: box or sphere.");
+  if(btype == "BOX")
     m_boundary = shared_ptr<BoundingBox>(new BoundingBox());
-
-  }
-  else if(btype == "SPHERE") {
+  else if(btype == "SPHERE")
     m_boundary = shared_ptr<BoundingSphere>(new BoundingSphere());
-  }
-  else {
-    cerr << "Error::Unrecognized boundary type::" << btype << endl;
-    exit(1);
-  }
+  else
+    throw ParseException(WHERE, "Failed reading boundary type '" + btype + "'. Options are: box or sphere.");
 
   m_boundary->Read(_is);
 

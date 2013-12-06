@@ -258,8 +258,7 @@ Cfg::Read(istream& _is) {
   if (_is.fail())
     return;
   for(vector<double>::iterator i = m_v.begin(); i != m_v.end(); ++i) {
-    _is >> (*i);
-    cout << "Read dof: " << *i << endl;
+    _is >> *i;
     if (_is.fail()) {
       cerr << "Cfg::operator>> error - failed reading values for all dofs" << endl;
       exit(1);

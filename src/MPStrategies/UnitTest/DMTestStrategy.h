@@ -104,8 +104,7 @@ Run()
     vector<pair<size_t, double> > d;
     for(typename GraphType::VI vi2 = g->begin(); vi2!=g->end(); ++vi2){
       d.push_back(make_pair(distance(g->begin(), vi2),
-            dm->Distance(this->GetMPProblem()->GetEnvironment(),
-              g->GetVertex(vi), g->GetVertex(vi2))));
+            dm->Distance(g->GetVertex(vi), g->GetVertex(vi2))));
       cout << "\t" << d.back().second << endl;
     }
     cout << endl;
@@ -125,14 +124,14 @@ Run()
     typename GraphType::VI vi = g->begin(), vi2 = vi+1;
     typename MPTraits::CfgRef origin = g->GetVertex(vi);
     typename MPTraits::CfgType c = g->GetVertex(vi2);
-    double dist = dm->Distance(this->GetMPProblem()->GetEnvironment(), origin, c);
+    double dist = dm->Distance(origin, c);
     cout << "\nScale Cfg: 1/2x\n\torigin = " << origin << "\n\tc = " << c << "\n\tscaled distance = " << dist * 0.5 << endl;
-    dm->ScaleCfg(this->GetMPProblem()->GetEnvironment(), dist * 0.5, origin, c);
-    cout << "\n\tc' = " << c << "\n\tnew distance = " << dm->Distance(this->GetMPProblem()->GetEnvironment(), origin, c) << endl;
+    dm->ScaleCfg(dist * 0.5, c, origin);
+    cout << "\n\tc' = " << c << "\n\tnew distance = " << dm->Distance(origin, c) << endl;
     c = g->GetVertex(vi2);
     cout << "\nScale Cfg: 2x\n\torigin = " << origin << "\n\tc = " << c << "\n\tscaled distance = " << dist * 2 << endl;
-    dm->ScaleCfg(this->GetMPProblem()->GetEnvironment(), dist * 2, origin, c);
-    cout << "\n\tc' = " << c << "\n\tnew distance = " << dm->Distance(this->GetMPProblem()->GetEnvironment(), origin, c) << endl;
+    dm->ScaleCfg(dist * 2, c, origin);
+    cout << "\n\tc' = " << c << "\n\tnew distance = " << dm->Distance(origin, c) << endl;
   }
 }
 

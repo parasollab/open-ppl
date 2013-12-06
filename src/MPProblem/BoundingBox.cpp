@@ -130,24 +130,19 @@ BoundingBox::Read(istream& _is){
   string line;
   getline(_is, line);
   istringstream iss(line);
-  for(size_t i = 0; i<3; ++i){
+  for(size_t i = 0; i<3; ++i) {
     string tok;
     if(iss >> tok){
       size_t del = tok.find(":");
-      if(del == string::npos){
-        cerr << "Error::Reading bounding box range " << i << ". Should be delimited by ':'." << endl;
-        exit(1);
-      }
+      if(del == string::npos)
+        throw ParseException(WHERE, "Failed reading bounding box range. Should be delimited by ':'.");
+
       istringstream minv(tok.substr(0,del)), maxv(tok.substr(del+1, tok.length()));
-      if(!(minv>>m_bbx[i].first && maxv>>m_bbx[i].second)){
-        cerr << "Error::Reading bounding box range " << i << "." << endl;
-        exit(1);
-      }
+      if(!(minv>>m_bbx[i].first && maxv>>m_bbx[i].second))
+        throw ParseException(WHERE, "Failed reading bounding box range.");
     }
-    else if(i<2) { //error. only 1 token provided.
-      cerr << "Error::Reading bounding box ranges. Only one provided." << endl;
-      exit(1);
-    }
+    else if(i<2) //error. only 1 token provided.
+      throw ParseException(WHERE, "Failed reading bounding box ranges. Only one provided.");
   }
 }
 

@@ -55,7 +55,7 @@ MedialAxisRRT<MPTraits>::MedialAxisRRT(
 
 template<class MPTraits>
 MedialAxisRRT<MPTraits>::MedialAxisRRT(MPProblemType* _problem, XMLNodeReader& _node) :
-  BasicRRTStrategy<MPTraits>(_problem, _node, false), m_medialAxisUtility(_problem, _node){
+  BasicRRTStrategy<MPTraits>(_problem, _node, false, true), m_medialAxisUtility(_problem, _node){
     this->SetName("MedialAxisRRT");
     ParseXML(_node);
     _node.warnUnrequestedAttributes();
@@ -85,7 +85,6 @@ template<class MPTraits>
 typename MedialAxisRRT<MPTraits>::VID
 MedialAxisRRT<MPTraits>::ExpandTree(CfgType& _dir){
   // Setup MP Variables
-  Environment* env = this->GetMPProblem()->GetEnvironment();
   DistanceMetricPointer dm = this->GetMPProblem()->GetDistanceMetric(this->m_dm);
   NeighborhoodFinderPointer nf = this->GetMPProblem()->GetNeighborhoodFinder(this->m_nf);
   RoadmapType* rdmp = this->GetMPProblem()->GetRoadmap();
@@ -106,14 +105,16 @@ MedialAxisRRT<MPTraits>::ExpandTree(CfgType& _dir){
   //successful  extend. Update the roadmap
   if(this->m_debug) cout << "MARRT expanded." << endl;
 
+  VID recentVID = INVALID_VID;
+  CfgType newCfg = intermediateNodes.back();
+  intermediateNodes.pop_back();
   // If good to go, add to roadmap
-  VID recentVID;
   if(m_addIntermediates){
     typedef typename vector<CfgType>::iterator CIT;
     VID previousVID = kClosest[0].first;
     CfgType prevCfg = nearest;
     for(CIT cit = intermediateNodes.begin(); cit!=intermediateNodes.end(); cit++){
-      dist = dm->Distance(env, prevCfg, *cit);
+      dist = dm->Distance(prevCfg, *cit);
       recentVID = rdmp->GetGraph()->AddVertex(*cit);
       //TODO fix weight
       pair<WeightType, WeightType> weights = make_pair(WeightType(this->m_lp, dist), WeightType(this->m_lp, dist));
@@ -146,7 +147,6 @@ template<class MPTraits>
 bool
 MedialAxisRRT<MPTraits>::MedialAxisExtend(const CfgType& _start, const CfgType& _goal, vector<CfgType>& _innerNodes, double &_length){
   //Setup
-  StatClass* stats = this->GetMPProblem()->GetStatClass();
   Environment* env = this->GetMPProblem()->GetEnvironment();
   DistanceMetricPointer dm = this->GetMPProblem()->GetDistanceMetric(this->m_dm);
   LocalPlannerPointer lp = this->GetMPProblem()->GetLocalPlanner(this->m_lp);
@@ -155,7 +155,7 @@ MedialAxisRRT<MPTraits>::MedialAxisExtend(const CfgType& _start, const CfgType& 
 
   string callee("MPUtility::MARRTExpand");
 
-  CfgType tick = _start, curr = _start, origin, col;
+  CfgType tick, curr = _start;
   double positionRes = env->GetPositionRes();
   double orientationRes = env->GetOrientationRes();
   double dist = 0;
@@ -170,7 +170,7 @@ MedialAxisRRT<MPTraits>::MedialAxisExtend(const CfgType& _start, const CfgType& 
       break;
     //take a step at distance _extendDist
     CfgType incr = _goal - curr;
-    dm->ScaleCfg(env, m_extendDist, origin, incr);
+    dm->ScaleCfg(m_extendDist, incr);
     tick = curr + incr;
 
     //Push tick to the MA
@@ -179,11 +179,11 @@ MedialAxisRRT<MPTraits>::MedialAxisExtend(const CfgType& _start, const CfgType& 
       break;
     }
 
-    dist = dm->Distance(env, curr, tick);
+    dist = dm->Distance(curr, tick);
 
   } while(
       dist > this->m_minDist
-      && lp->IsConnected(env, *stats, dm, curr, tick, col, &lpOutput, positionRes, orientationRes)
+      && lp->IsConnected(curr, tick, &lpOutput, positionRes, orientationRes)
       && _length+dist <= this->m_delta
       );
 
@@ -198,7 +198,7 @@ MedialAxisRRT<MPTraits>::MedialAxisExtend(const CfgType& _start, const CfgType& 
 
     //take a step at distance _extendDist
     CfgType incr = _goal - curr;
-    dm->ScaleCfg(env, m_extendDist, origin, incr);
+    dm->ScaleCfg(m_extendDist, incr);
     tick = curr + incr;
 
     //Push tick to the MA
@@ -229,7 +229,7 @@ MedialAxisRRT<MPTraits>::MedialAxisExtend(const CfgType& _start, const CfgType& 
     //We pushed to the MA and went somewhere, check visibility and update
     //structures
     CfgType col;
-    if(lp->IsConnected(env, *stats, dm, curr, tick, col, &lpOutput, positionRes, orientationRes)){
+    if(lp->IsConnected(curr, tick, col, &lpOutput, positionRes, orientationRes)){
       pathLength += lpOutput.m_edge.first.GetWeight();
       if(pathLength >= this->m_delta){
         if(this->m_debug) cout << "expanded past delta." << endl;

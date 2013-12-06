@@ -10,20 +10,18 @@
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 
-XMLNodeReader::
-XMLNodeReader(TiXmlNode* _node, const string& _filename ):
-      m_node(_node),m_childBuilt(false),m_xmlFilename(_filename) { 
-  if(_node == NULL) {
-    cerr << "XMLNodeReader::XMLNodeReader() Invalid TiXMLNode pointer" << endl;
+XMLNodeReader::XMLNodeReader(TiXmlNode* _node, const string& _filename ):
+  m_node(_node),m_childBuilt(false),m_xmlFilename(_filename) {
+    if(_node == NULL) {
+      cerr << "XMLNodeReader::XMLNodeReader() Invalid TiXMLNode pointer" << endl;
+    }
   }
-}
 
-XMLNodeReader::
-XMLNodeReader(const string& _filename, TiXmlDocument& _doc, 
-                          const string& _desiredNode) {
-  
+XMLNodeReader::XMLNodeReader(const string& _filename, TiXmlDocument& _doc,
+    const string& _desiredNode) {
+
   bool loadOkay = _doc.LoadFile();
-  
+
   if (!loadOkay) {
     cerr << "Could not load test file. Error=" << _doc.ErrorDesc() <<". Exiting.\n";
     exit(-1);
@@ -32,7 +30,7 @@ XMLNodeReader(const string& _filename, TiXmlDocument& _doc,
   TiXmlNode* node = NULL;
   node = _doc.FirstChild(_desiredNode.c_str());
   if(node == NULL) {
-    cerr << "parseInputXMLFile Unable to find Node: " << _desiredNode << endl; 
+    cerr << "parseInputXMLFile Unable to find Node: " << _desiredNode << endl;
   }
   m_node = node;
   m_xmlFilename= _filename;
@@ -40,21 +38,19 @@ XMLNodeReader(const string& _filename, TiXmlDocument& _doc,
 }
 
 string
-XMLNodeReader::getName() const
-{ 
+XMLNodeReader::getName() const {
   if(m_node == NULL) {
     cerr << "XMLNodeReader::getName() -- error" << endl << flush;
     exit(-1);
   }
   return m_node->ValueStr();
 }
- 
-bool 
-XMLNodeReader::
-hasChild(const string& _childName) const {
+
+bool
+XMLNodeReader::hasChild(const string& _childName) const {
   for( TiXmlNode* child = m_node->FirstChild(); child !=0; child = child->NextSibling()) {
     if(child->Type() == TiXmlNode::ELEMENT) {
-      if(child->ValueStr() == _childName) { 
+      if(child->ValueStr() == _childName) {
         return true;
       }
     }
@@ -64,11 +60,10 @@ hasChild(const string& _childName) const {
 
 
 XMLNodeReader
-XMLNodeReader::
-getFirstChild(const string& _childName) {
+XMLNodeReader::getFirstChild(const string& _childName) {
   for( TiXmlNode* child = m_node->FirstChild(); child !=0; child = child->NextSibling()) {
     if(child->Type() == TiXmlNode::ELEMENT) {
-      if(child->ValueStr() == _childName) { 
+      if(child->ValueStr() == _childName) {
         return XMLNodeReader(child,m_xmlFilename);
       }
     }
@@ -79,16 +74,14 @@ getFirstChild(const string& _childName) {
 }
 
 
-XMLNodeReader::childiterator 
-XMLNodeReader::
-children_begin() {
+XMLNodeReader::childiterator
+XMLNodeReader::children_begin() {
   BuildChildVector();
   return m_children.begin();
 }
 
-XMLNodeReader::childiterator 
-XMLNodeReader::
-children_end() {
+XMLNodeReader::childiterator
+XMLNodeReader::children_end() {
   BuildChildVector();
   return m_children.end();
 }
@@ -96,11 +89,10 @@ children_end() {
 
 
 string
-XMLNodeReader::
-stringXMLParameter (const string& _name,
-                                bool _req,
-                                const string& _default,
-                                const string& _desc) {
+XMLNodeReader::stringXMLParameter(const string& _name,
+    bool _req,
+    const string& _default,
+    const string& _desc) {
   VerifyElement();
   m_reqAttributes.push_back(_name);
   const char* attrVal =  m_node->ToElement()->Attribute(_name.c_str());
@@ -114,25 +106,22 @@ stringXMLParameter (const string& _name,
     }
   } else {
     toReturn = string(attrVal);
-  } 
+  }
   return toReturn;
 }
 
-bool 
-XMLNodeReader::
-hasXMLParameter(const string& _name) {
+bool
+XMLNodeReader::hasXMLParameter(const string& _name) {
   const char* attrVal =  m_node->ToElement()->Attribute(_name.c_str());
-  if(attrVal == NULL) 
+  if(attrVal == NULL)
     return false;
   else
     return true;
 }
 
-bool 
-XMLNodeReader::
-boolXMLParameter (const string& _name, bool _req,
-                        bool _default, const string& _desc) {
-  
+bool
+XMLNodeReader::boolXMLParameter(const string& _name, bool _req,
+    bool _default, const string& _desc) {
   // like a string, then to lower, check for == "true" || "false"
   VerifyElement();
   m_reqAttributes.push_back(_name);
@@ -147,8 +136,8 @@ boolXMLParameter (const string& _name, bool _req,
     }
   } else {
     toReturn = string(attrVal);
-  } 
-  
+  }
+
   transform(toReturn.begin(), toReturn.end(), toReturn.begin(), (int(*)(int)) toupper);
   if(toReturn == "TRUE") {
     return true;
@@ -157,12 +146,11 @@ boolXMLParameter (const string& _name, bool _req,
   } else {
     PrintAttrWrongType(_name,_desc);
   }
- return false; 
+  return false;
 }
 
-void 
-XMLNodeReader::
-warnUnrequestedAttributes() {
+void
+XMLNodeReader::warnUnrequestedAttributes() {
   VerifyElement();
   vector<string>::iterator strItr;
   vector<string> unreqAttr;
@@ -175,7 +163,7 @@ warnUnrequestedAttributes() {
     cout << "*************************************************************" << endl;
     cout << "XML Warning:: Unrequested Attributes Exist" << endl;
     cout << "XML file:: " << m_xmlFilename << endl;
-    cout << "Parent Node: " << getName() << endl; 
+    cout << "Parent Node: " << getName() << endl;
     cout << "Unrequested Attributes::" << endl;
     for(strItr = unreqAttr.begin(); strItr != unreqAttr.end(); ++strItr)
       cout << "          " << *strItr << endl;
@@ -184,27 +172,24 @@ warnUnrequestedAttributes() {
   }
 }
 
-void 
-XMLNodeReader::
-warnUnknownNode() {
+void
+XMLNodeReader::warnUnknownNode() {
   cout << "*************************************************************" << endl;
   cout << "XML Warning:: Unknown Node -- Ignoring" << endl;
   cout << "XML file:: " << m_xmlFilename << endl;
-  cout << "Node Name: " << getName() << endl; 
+  cout << "Node Name: " << getName() << endl;
   cout << *m_node << endl;
   cout << "*************************************************************" << endl;
-
 }
- 
 
-void 
-XMLNodeReader::
-verifyName(const string& _name) {
+
+void
+XMLNodeReader::verifyName(const string& _name) {
   if(getName() != _name) {
     cout << "*************************************************************" << endl;
     cout << "XML ERROR:: Node Name Mismatch" << endl;
     cout << "XML file:: " << m_xmlFilename << endl;
-    cout << "Node Name: " << getName() << " Requested Name: " << _name << endl; 
+    cout << "Node Name: " << getName() << " Requested Name: " << _name << endl;
     cout << *m_node << endl;
     cout << "*************************************************************" << endl;
     exit(-1);
@@ -212,8 +197,7 @@ verifyName(const string& _name) {
 }
 
 void
-XMLNodeReader::
-VerifyElement() const {
+XMLNodeReader::VerifyElement() const {
   if(!IsElement()) {
     cerr << "XMLNode::verifyElement() ERROR: Node is not an element." << endl;
     cerr << *m_node << endl;
@@ -221,35 +205,32 @@ VerifyElement() const {
   }
 }
 
-void 
-XMLNodeReader::
-PrintAttrWrongType(const string& _name, const string& _desc) const {
+void
+XMLNodeReader::PrintAttrWrongType(const string& _name, const string& _desc) const {
   cerr << "*************************************************************" << endl;
   cerr << "XML Error:: Wrong Type of Attribute requested" << endl;
   cerr << "XML file:: " << m_xmlFilename << endl;
-  cerr << "Parent Node: " << getName() << ", Attribute Requested: "; 
+  cerr << "Parent Node: " << getName() << ", Attribute Requested: ";
   cerr << _name << endl;
   cerr << "Attribute Description: " << _desc << endl;
   cerr << *m_node << endl;
   cerr << "*************************************************************" << endl;
 }
 
-void 
-XMLNodeReader::
-PrintAttrMissing(const string& _name, const string& _desc) const {
+void
+XMLNodeReader::PrintAttrMissing(const string& _name, const string& _desc) const {
   cerr << "*************************************************************" << endl;
   cerr << "XML Error:: Missing required Attribute" << endl;
   cerr << "XML file:: " << m_xmlFilename << endl;
-  cerr << "Parent Node: " << getName() << ", Attribute Missing: "; 
+  cerr << "Parent Node: " << getName() << ", Attribute Missing: ";
   cerr << _name << endl;
   cerr << "Attribute Description: " << _desc << endl;
   cerr << *m_node << endl;
   cerr << "*************************************************************" << endl;
 }
- 
+
 void
-XMLNodeReader::
-PrintMissingRequestedChild(const string& _childName) {
+XMLNodeReader::PrintMissingRequestedChild(const string& _childName) {
   cerr << "*************************************************************" << endl;
   cerr << "XML Error:: Error Finding Child" << endl;
   cerr << "XML file:: " << m_xmlFilename << endl;
@@ -258,12 +239,11 @@ PrintMissingRequestedChild(const string& _childName) {
   cerr << "*************************************************************" << endl;
 }
 
-void 
-XMLNodeReader::
-BuildChildVector() {
+void
+XMLNodeReader::BuildChildVector() {
   if(!m_childBuilt) {
     for( TiXmlNode* child = m_node->FirstChild(); child !=NULL; child = child->NextSibling()) {
-      if(child->Type() == TiXmlNode::ELEMENT) { 
+      if(child->Type() == TiXmlNode::ELEMENT) {
         m_children.push_back(XMLNodeReader(child,m_xmlFilename));
       }
     }
@@ -271,9 +251,8 @@ BuildChildVector() {
   }
 }
 
-bool 
-XMLNodeReader::
-HasRequestedAttr(string _name) {
+bool
+XMLNodeReader::HasRequestedAttr(string _name) {
   vector<string>::iterator strItr;
   for(strItr = m_reqAttributes.begin(); strItr != m_reqAttributes.end(); ++strItr) {
     if(*strItr == _name) {
@@ -342,24 +321,79 @@ void VDClearComments(){
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 
-void
-VerifyFileExists(const string _name) {
-  ifstream is(_name.c_str());
-  if (!is.is_open()) {
-    cerr << "\nERROR: Can't open \"" << _name << "\"" << endl;
-    exit(1);
-  }                                                                             
-  is.close();
+//determine if a file exists or not
+bool
+FileExists(const string& _filename, bool _err) {
+  ifstream ifs(_filename.c_str());
+  if(!ifs.good()) {
+    if(_err) cerr << "File (" << _filename << ") not found";
+    return false;
+  }
+  return true;
 }
 
-string 
-ReadFieldString(istream& _is, string _error, bool _toUpper){
-  string s = ReadField<string>(_is, _error);
+//discard all commented lines util the next uncommented line is found
+void
+GoToNext(istream& _is) {
+  string line;
+  while(!_is.eof()) {
+    char c;
+    while(isspace(_is.peek()))
+      _is.get(c);
+
+    c = _is.peek();
+    if(!IsCommentLine(c))
+      return;
+    else
+      getline(_is, line);
+  }
+}
+
+//GetPathName from given filename
+string
+GetPathName(const string& _filename) {
+  size_t pos = _filename.rfind('/');
+  return pos == string::npos ? "" : _filename.substr(0, pos+1);
+}
+
+//read the string using above ReadField and tranform it to upper case
+string
+ReadFieldString(istream& _is, const string& _where, const string& _error, bool _toUpper) {
+  string s = ReadField<string>(_is, _where, _error);
   if(_toUpper)
     transform(s.begin(), s.end(), s.begin(), ::toupper);
   return s;
-};
+}
 
+//optionally read a color from a comment line
+/*Color4
+GetColorFromComment(istream& _is) {
+  string line;
+  while(!_is.eof()) {
+    char c;
+    while(isspace(_is.peek()))
+      _is.get(c);
+
+    c = _is.peek();
+    if(!IsCommentLine(c))
+      return Color4(0.5, 0.5, 0.5, 1);
+    else{
+      getline(_is, line);
+      //colors begin with VIZMO_COLOR
+      if(line[7] == 'C'){
+        size_t loc = line.find(" ");
+        string sub = line.substr(loc+1);
+        istringstream iss(sub);
+        float r, g, b;
+        if(!(iss >> r >> g >> b))
+          throw ParseException(WHERE, "Cannot parse MultiBody color");
+        return Color4(r, g, b, 1);
+      }
+    }
+  }
+  return Color4();
+}
+*/
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
@@ -380,6 +414,6 @@ vector<string> GetTags(string _stags, string _delim) {
   if(_stags.length() > 0){
     tokens.push_back(_stags);
   }
-  return tokens; 
+  return tokens;
 }
 

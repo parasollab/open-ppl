@@ -211,7 +211,6 @@ ResamplePathModifier<MPTraits>::FindNeighbors(CfgType& _previous, CfgType& _curr
   LPOutput<MPTraits> lpOutput;
   DistanceMetricPointer dm = this->GetMPProblem()->GetDistanceMetric(this->m_dmLabel);
   LocalPlannerPointer lp = this->GetMPProblem()->GetLocalPlanner(this->m_lpLabel);
-  StatClass* stats = this->GetMPProblem()->GetStatClass();
   GraphType* graph = this->GetMPProblem()->GetRoadmap()->GetGraph();
   Environment* env = this->GetMPProblem()->GetEnvironment();
 
@@ -224,9 +223,9 @@ ResamplePathModifier<MPTraits>::FindNeighbors(CfgType& _previous, CfgType& _curr
     newConfigurationWeight = c.GetSmoothingValue(m_clearanceUtils, m_boundary);
     if((newConfigurationWeight > oldConfigurationWeight && m_typeName == "MAX_CLEARANCE") ||
         (newConfigurationWeight < oldConfigurationWeight && m_typeName == "PROTEIN_ENERGY")) {
-      firstConnectFlag = lp->IsConnected(env, *stats, dm, _previous, c, &lpOutput,
+      firstConnectFlag = lp->IsConnected(_previous, c, &lpOutput,
             env->GetPositionRes(), env->GetOrientationRes());
-      secondConnectFlag = lp->IsConnected(env, *stats, dm, c, _next, &lpOutput,
+      secondConnectFlag = lp->IsConnected(c, _next, &lpOutput,
             env->GetPositionRes(), env->GetOrientationRes());
 
       VID cvid = graph->GetVID(c);

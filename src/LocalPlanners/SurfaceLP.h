@@ -22,14 +22,14 @@ class SurfaceLP : public StraightLine<MPTraits> {
     typedef typename MPProblemType::DistanceMetricPointer DistanceMetricPointer;
     typedef typename MPProblemType::ValidityCheckerPointer ValidityCheckerPointer;
 
-    SurfaceLP();
+    SurfaceLP(const string& _vcLabel = "", bool _evalation = false,
+        bool _saveIntermediates = false);
     SurfaceLP(MPProblemType* _problem, XMLNodeReader& _node);
     virtual ~SurfaceLP();
 
     virtual void PrintOptions(ostream& _os) const;
 
     virtual bool IsConnected(
-        Environment* _env, StatClass& _stats, DistanceMetricPointer _dm,
         const CfgType& _c1, const CfgType& _c2, CfgType& _col,
         LPOutput<MPTraits>* _lpOutput,
         double _positionRes, double _orientationRes,
@@ -40,7 +40,9 @@ class SurfaceLP : public StraightLine<MPTraits> {
 
 // Definitions for Constructors and Destructor
 template<class MPTraits>
-SurfaceLP<MPTraits>::SurfaceLP() : StraightLine<MPTraits>() {
+SurfaceLP<MPTraits>::SurfaceLP(const string& _vcLabel, bool _evalation,
+        bool _saveIntermediates) : StraightLine<MPTraits>(_vcLabel, _evalation,
+          _saveIntermediates) {
   this->SetName("SurfaceLP");
   m_acceptableHeightDiff = 0.75;
 }
@@ -60,9 +62,9 @@ SurfaceLP<MPTraits>::~SurfaceLP() { }
 template<class MPTraits>
 void
 SurfaceLP<MPTraits>::PrintOptions(ostream& _os) const {
-  _os << "    " << this->GetNameAndLabel() << "::  "
-      << "vcLabel = " << " " << this->m_vcLabel << " "
-      << "acceptableHeightDiff = " << m_acceptableHeightDiff << " "
+  StraightLine<MPTraits>::PrintOptions(_os);
+  _os << "\tvc label : " << this->m_vcLabel
+      << "\n\tacceptable height diff = " << m_acceptableHeightDiff
       << endl;
 }
 
@@ -70,14 +72,15 @@ SurfaceLP<MPTraits>::PrintOptions(ostream& _os) const {
 template<class MPTraits>
 bool
 SurfaceLP<MPTraits>::IsConnected(
-    Environment* _env, StatClass& _stats, DistanceMetricPointer _dm,
     const CfgType& _c1, const CfgType& _c2, CfgType& _col,
     LPOutput<MPTraits>* _lpOutput,
     double _positionRes, double _orientationRes,
     bool _checkCollision, bool _savePath, bool _saveFailedPath){
+  Environment* env = this->GetMPProblem()->GetEnvironment();
+  StatClass* stats = this->GetMPProblem()->GetStatClass();
 
   bool connected = false;
-  _stats.IncLPAttempts(this->GetNameAndLabel());
+  stats->IncLPAttempts(this->GetNameAndLabel());
 
   _lpOutput->m_path.clear();
   //This is where we check if each intermediate configuration is on specified
@@ -87,8 +90,8 @@ SurfaceLP<MPTraits>::IsConnected(
   connected = true; //assume it starts connected (the check will negate this)
 
   //build or make an increment (as in SL LP)
-  ValidityCheckerPointer vcm =
-      this->GetMPProblem()->GetValidityChecker(StraightLine<MPTraits>::m_vcLabel);
+  ValidityCheckerPointer vc =
+      this->GetMPProblem()->GetValidityChecker(this->m_vcLabel);
   int nTicks;
   CfgType tick = _c1;
   CfgType incr;
@@ -105,26 +108,25 @@ SurfaceLP<MPTraits>::IsConnected(
     if(this->m_debug)
       cout << " SurfaceLP - ticki: " << i << " of nTicks: " << nTicks << " tick: " << tick <<endl;
     bool foundValidSurfForTick = false;
-    CDInfo tmpCDInfo;
-    for(int sid = BASE_SURFACE; sid < (int)_env->GetNavigableSurfacesCount() &&
+    for(int sid = BASE_SURFACE; sid < (int)env->GetNavigableSurfacesCount() &&
         !foundValidSurfForTick; sid++) {
       CfgType tmpTick = tick;
       tmpTick.SetSurfaceID(sid);//set SurfaceID to test if 2D collision is okay
 
       if(sid == BASE_SURFACE) {
-        if(vcm->IsValid(tmpTick, _env, _stats, tmpCDInfo, callee)) {
+        if(vc->IsValid(tmpTick, callee)) {
           if(fabs(tick.GetHeight()) < m_acceptableHeightDiff) {
             //B
             //this is valid, -1 should have y-value 0
             foundValidSurfForTick = true;
             surfaceIDs.push_back(sid);
           }
-        }//endif vcm->IsValid
+        }//endif vc->IsValid
       }
       else {
         ////////////////////////////////////////////////////////////////////////
         //from 0--numSurfaces-1, check height
-        shared_ptr<MultiBody> surfaceBody = _env->GetNavigableSurface(sid);
+        shared_ptr<MultiBody> surfaceBody = env->GetNavigableSurface(sid);
         shared_ptr<FixedBody> fixedBody = surfaceBody->GetFixedBody(0);
         GMSPolyhedron& polyhedron = fixedBody->GetWorldPolyhedron();
         bool isValid = false;
@@ -158,7 +160,7 @@ SurfaceLP<MPTraits>::IsConnected(
   }//endfor i<nTicks
 
   if(connected)
-    _stats.IncLPConnections(this->GetNameAndLabel());
+    stats->IncLPConnections(this->GetNameAndLabel());
   return connected;
 }
 

@@ -21,10 +21,10 @@ static inline uint64_t GetCycles(){
   return n;
 }
 
-#include "OBRRTStrategy.h"
+#include "BasicRRTStrategy.h"
 
 template<class MPTraits>
-class AdaptiveRRT : public OBRRTStrategy<MPTraits> {
+class AdaptiveRRT : public BasicRRTStrategy<MPTraits> {
   public:
 
     //cost calculation for the AdaptiveRRT
@@ -59,7 +59,6 @@ class AdaptiveRRT : public OBRRTStrategy<MPTraits> {
     string SelectGrowthMethod(GrowthSet& _gs);
     void UpdateCost(double _cost, string _s, GrowthSet& _gs);
     void RewardGrowthMethod(double _r, string _s, GrowthSet& _gs);
-    CfgType Grow(string _s, CfgType& _nearest, CfgType& _dir, bool& _verifiedValid);
     VID UpdateTree(VID _nearest, CfgType& _new, CfgType& _dir);
     VID UpdateTree(CfgType& _newCfg, VID _nearVID, bool _againstWall, double _ratio);
 
@@ -90,7 +89,7 @@ AdaptiveRRT<MPTraits>::AdaptiveRRT(double _wallPenalty, double _gamma,
 
 template<class MPTraits>
 AdaptiveRRT<MPTraits>::AdaptiveRRT(MPProblemType* _problem, XMLNodeReader& _node) :
-  OBRRTStrategy<MPTraits>(_problem, _node, false, false){
+  BasicRRTStrategy<MPTraits>(_problem, _node, false, true){
     this->SetName("AdaptiveRRT");
     ParseXML(_node);
     _node.warnUnrequestedAttributes();
@@ -104,9 +103,9 @@ AdaptiveRRT<MPTraits>::ParseXML(XMLNodeReader& _node) {
       double threshold = citr->numberXMLParameter("threshold", true, 0.0, 0.0, 1.0, "Threshold of visibility for selecting GrowthSet");
       GrowthSet growthSet;
       for(XMLNodeReader::childiterator citr2 = citr->children_begin(); citr2 != citr->children_end(); ++citr2){
-        if(citr2->getName() == "Method"){
-          string method = citr2->stringXMLParameter("method", true, "", "Growth strategy");
-          growthSet[method] = make_pair(make_pair(0, 0), 1.0);
+        if(citr2->getName() == "Extender"){
+          string label = citr2->stringXMLParameter("label", true, "", "Extender strategy");
+          growthSet[label] = make_pair(make_pair(0, 0), 1.0);
           citr2->warnUnrequestedAttributes();
         }
         else
@@ -177,7 +176,6 @@ typename AdaptiveRRT<MPTraits>::VID
 AdaptiveRRT<MPTraits>::ExpandTree(CfgType& _dir){
 
   // Setup MP Variables
-  Environment* env = this->GetMPProblem()->GetEnvironment();
   DistanceMetricPointer dm = this->GetMPProblem()->GetDistanceMetric(this->m_dm);
   VID recentVID = INVALID_VID;
 
@@ -195,7 +193,7 @@ AdaptiveRRT<MPTraits>::ExpandTree(CfgType& _dir){
   if(this->m_debug)
     cout << "nearest:: " << nearest << "\tvisibility:: " << visibility << endl;
 
-  if(dm->Distance(env, _dir, nearest) < this->m_minDist){
+  if(dm->Distance(_dir, nearest) < this->m_minDist){
     //chosen a q_rand which is too close. Penalize nearest with 0.
     nearest.IncStat("Fail");
     AvgVisibility(nearest, 0);
@@ -203,7 +201,6 @@ AdaptiveRRT<MPTraits>::ExpandTree(CfgType& _dir){
   }
 
   //select the growth set based upon the visibility of the nearest node
-  bool verifiedValid = false;
   GrowthSets::reverse_iterator rgsit = m_growthSets.rbegin();
   for(; rgsit!=m_growthSets.rend(); ++rgsit){
     if(visibility > rgsit->first){
@@ -218,7 +215,10 @@ AdaptiveRRT<MPTraits>::ExpandTree(CfgType& _dir){
   //start timing from cycles
   uint64_t start = GetCycles();
 
-  CfgType newCfg = Grow(gm, nearest, _dir, verifiedValid);
+  CfgType newCfg;
+  vector<CfgType> intermediateNodes;
+  bool verifiedValid = this->GetMPProblem()->GetExtender(gm)
+    ->Extend(nearest, _dir, newCfg, intermediateNodes);
 
   //end timing from cycles
   uint64_t end = GetCycles();
@@ -237,11 +237,15 @@ AdaptiveRRT<MPTraits>::ExpandTree(CfgType& _dir){
     if(m_costMethod == REWARD)
       UpdateCost(this->m_delta, gm, rgsit->second);
 
+    //reward the growth strategy based upon expanded distance in proportion to
+    //delta_q
+    RewardGrowthMethod(-this->m_minDist, gm, rgsit->second);
+
     return recentVID;
   }
 
   // If good to go, add to roadmap
-  double dist = dm->Distance(env, newCfg, nearest);
+  double dist = dm->Distance(newCfg, nearest);
 
   if(m_costMethod == REWARD)
     UpdateCost(max(this->m_delta - dist, 0.0) + 1E-6, gm, rgsit->second);
@@ -249,19 +253,26 @@ AdaptiveRRT<MPTraits>::ExpandTree(CfgType& _dir){
   if(dist >= this->m_minDist) {
     //expansion success
     nearest.IncStat("Success");
-    //reward the growth strategy based upon expanded distance in proportion to
-    //delta_q
-    RewardGrowthMethod(dist/this->m_delta, gm, rgsit->second);
     //update the tree
     //Generate Waypoints is from AdaptiveMultiResRRT, but this one does not
     //acutally add nodes.
     recentVID = UpdateTree(kClosest[0].first, newCfg, _dir);
-    this->m_currentTree->push_back(recentVID);
+    if(recentVID > this->m_currentTree->back()) {
+      this->m_currentTree->push_back(recentVID);
+      //reward the growth strategy based upon expanded distance in proportion to
+      //delta_q
+      RewardGrowthMethod(dist/this->m_delta, gm, rgsit->second);
+    }
+    else {
+      //node already existed in the roadmap. decrement reward
+      RewardGrowthMethod(-this->m_minDist, gm, rgsit->second);
+    }
   }
   else{
     //could not expand at least m_minDist. Penalize nearest with 0;
     nearest.IncStat("Fail");
     AvgVisibility(nearest, 0);
+    RewardGrowthMethod(-this->m_minDist, gm, rgsit->second);
   }
 
   return recentVID;
@@ -336,45 +347,17 @@ AdaptiveRRT<MPTraits>::RewardGrowthMethod(double _r, string _s, GrowthSet& _gs){
   _gs[_s].second *= factor;
 }
 
-template<class MPTraits>
-typename AdaptiveRRT<MPTraits>::CfgType
-AdaptiveRRT<MPTraits>::Grow(string _s, CfgType& _nearest, CfgType& _dir, bool& _verifiedValid){
-  if(_s == "G0")
-    return this->g0(_nearest, _dir, _verifiedValid);
-  else if(_s == "G1")
-    return this->g1(_nearest, _dir, _verifiedValid);
-  else if(_s == "G2")
-    return this->g2(_nearest, _dir, _verifiedValid, false);
-  else if(_s == "G3")
-    return this->g2(_nearest, _dir, _verifiedValid, true);
-  else if(_s == "G4")
-    return this->g4(_nearest, _dir, _verifiedValid);
-  else if(_s == "G5")
-    return this->g5(_nearest, _dir, _verifiedValid, false);
-  else if(_s == "G6")
-    return this->g5(_nearest, _dir, _verifiedValid, true);
-  else if(_s == "G7")
-    return this->g7(_nearest, _dir, _verifiedValid);
-  else if(_s == "G8")
-    return this->g8(_nearest, _dir, _verifiedValid);
-  else{
-    cerr << "Error::Invalid growth method requested::" << _s << endl;
-    exit(1);
-  }
-}
-
 //This function simply calls the correct update tree based on expansion
 //type.
 template<class MPTraits>
 typename AdaptiveRRT<MPTraits>::VID
 AdaptiveRRT<MPTraits>::UpdateTree(VID _expandNode, CfgType& _newCfg, CfgType& _dir){
-  Environment* env = this->GetMPProblem()->GetEnvironment();
   DistanceMetricPointer dm = this->GetMPProblem()->GetDistanceMetric(this->m_dm);
 
   CfgType& nearest = this->GetMPProblem()->GetRoadmap()->GetGraph()->GetVertex(_expandNode);
 
   double visibility = GetVisibility(nearest);
-  double distToNear = dm->Distance(env, nearest, _newCfg);
+  double distToNear = dm->Distance(nearest, _newCfg);
   //if expansion did not reach at least m_delta * visibility and q_new is not q_rand
   //Then it will be a partial expansion
   bool partial = distToNear < this->m_delta && _newCfg != _dir;
@@ -478,9 +461,9 @@ double
 AdaptiveRRT<MPTraits>::CostInsensitiveProb(string _s, GrowthSet& _gs){
   double sw = 0.0;
   for(GrowthSet::const_iterator gsit = _gs.begin(); gsit!=_gs.end(); ++gsit){
-    sw+=gsit->second.second;
+    sw+=log(gsit->second.second+1);
   }
-  return (1.-m_gamma)*_gs[_s].second/sw + m_gamma*double(_gs.size());
+  return (1.-m_gamma)*log(_gs[_s].second+1)/sw + m_gamma*double(_gs.size());
 }
 
 #endif

@@ -17,7 +17,7 @@ class FixedBody : public Body {
     //
     //
     //////////////////////////////////////////////////////////////////////////////////////////
-    FixedBody(MultiBody* _owner);
+    FixedBody(MultiBody* _owner, const string& _filename = "");
     FixedBody(MultiBody* _owner, GMSPolyhedron& _polyhedron);
 
     virtual ~FixedBody();
@@ -32,7 +32,7 @@ class FixedBody : public Body {
 
     virtual int IsFixedBody(){return true;}
 
-    /**This function returns a Polyhedron whose vertices and normals are represented in 
+    /**This function returns a Polyhedron whose vertices and normals are represented in
      *world coordinate.
      */
     virtual GMSPolyhedron& GetWorldPolyhedron();

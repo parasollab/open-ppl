@@ -3,60 +3,66 @@
 
 #include "DistanceMetricMethod.h"
 
-/**This computes the knot theory distance between two cfgs.  Taking the topological information into perspective.
-  */
+/*
+ * This computes the knot theory distance between two cfgs.
+ * Taking the topological information into perspective.
+ */
 template<class MPTraits>
 class KnotTheoryDistance : public DistanceMetricMethod<MPTraits> {
   public:
     typedef typename MPTraits::CfgType CfgType;
+    typedef typename MPTraits::MPProblemType MPProblemType;
 
     KnotTheoryDistance();
-    KnotTheoryDistance(typename MPTraits::MPProblemType* _problem, XMLNodeReader& _node);
+    KnotTheoryDistance(MPProblemType* _problem, XMLNodeReader& _node);
     virtual ~KnotTheoryDistance();
 
-    virtual double Distance(Environment* _env, const CfgType& _c1, const CfgType& _c2);
+    virtual double Distance(const CfgType& _c1, const CfgType& _c2);
 
-  protected:
-    virtual vector<Vector3d> GetCoordinatesForKnot(const CfgType& _c, Environment* _env);
+  private:
+    virtual vector<Vector3d> GetCoordinatesForKnot(const CfgType& _c);
     double Knot(vector<Vector3d>& _c1, vector<Vector3d>& _c2);
 };
 
 template<class MPTraits>
 KnotTheoryDistance<MPTraits>::KnotTheoryDistance() : DistanceMetricMethod<MPTraits>() {
-  this->m_name = "KnotTheory";
+  this->SetName("KnotTheory");
 }
 
 template<class MPTraits>
-KnotTheoryDistance<MPTraits>::
-KnotTheoryDistance(typename MPTraits::MPProblemType* _problem, XMLNodeReader& _node) : DistanceMetricMethod<MPTraits>(_problem, _node) {
-  this->m_name = "KnotTheory";
+KnotTheoryDistance<MPTraits>::KnotTheoryDistance(MPProblemType* _problem,
+    XMLNodeReader& _node) :
+  DistanceMetricMethod<MPTraits>(_problem, _node) {
+  this->SetName("KnotTheory");
 }
 
 template<class MPTraits>
-KnotTheoryDistance<MPTraits>::~KnotTheoryDistance(){
+KnotTheoryDistance<MPTraits>::~KnotTheoryDistance() {
 }
 
 template<class MPTraits>
-double KnotTheoryDistance<MPTraits>::Distance(Environment* _env, const CfgType& _c1, const CfgType& _c2) {
-  vector<Vector3d> c1 = GetCoordinatesForKnot(_c1, _env);
-  vector<Vector3d> c2 = GetCoordinatesForKnot(_c2, _env);
+double
+KnotTheoryDistance<MPTraits>::Distance(const CfgType& _c1, const CfgType& _c2) {
+  vector<Vector3d> c1 = GetCoordinatesForKnot(_c1);
+  vector<Vector3d> c2 = GetCoordinatesForKnot(_c2);
   return Knot(c1, c2);
 }
 
 template<class MPTraits>
 vector<Vector3d>
-KnotTheoryDistance<MPTraits>::GetCoordinatesForKnot(const CfgType& _c, Environment* _env) {
-  _c.ConfigEnvironment(_env);
+KnotTheoryDistance<MPTraits>::GetCoordinatesForKnot(const CfgType& _c) {
+  Environment* env = this->GetMPProblem()->GetEnvironment();
+  _c.ConfigEnvironment(env);
   vector<Vector3d> coordinates;
-  for(int i=0; i< _env->GetMultiBody(_c.GetRobotIndex())->GetFreeBodyCount(); ++i)
-    coordinates.push_back(_env->GetMultiBody(_c.GetRobotIndex())->GetFreeBody(i)->WorldTransformation().translation());
+  for(int i=0; i< env->GetMultiBody(_c.GetRobotIndex())->GetFreeBodyCount(); ++i)
+    coordinates.push_back(env->GetMultiBody(_c.GetRobotIndex())->GetFreeBody(i)
+        ->WorldTransformation().translation());
   return coordinates;
 }
 
 template<class MPTraits>
 double
-KnotTheoryDistance<MPTraits>::Knot(vector<Vector3d>& _c1, vector<Vector3d>& _c2){
-
+KnotTheoryDistance<MPTraits>::Knot(vector<Vector3d>& _c1, vector<Vector3d>& _c2) {
   if (_c1.empty() || _c1.size()<2) {
     cerr << "\n\nError in KnotTheoryDistance::Distance(), _c1 has too few links, exiting.\n";
     exit(1);

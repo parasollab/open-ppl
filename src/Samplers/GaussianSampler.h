@@ -64,7 +64,6 @@ class GaussianSampler : public SamplerMethod<MPTraits>
 
         string callee(this->GetName() + "::SampleImpl()");
         ValidityCheckerPointer vc = this->GetMPProblem()->GetValidityChecker(m_vcLabel);
-        CDInfo cdInfo;
         DistanceMetricPointer dm = this->GetMPProblem()->GetDistanceMetric(m_dmLabel);
 
         if(this->m_debug)
@@ -87,11 +86,11 @@ class GaussianSampler : public SamplerMethod<MPTraits>
             return false;
           }
           //We are in the box
-          cfg1Free = vc->IsValid(cfg1, _env, _stats, cdInfo, callee);
+          cfg1Free = vc->IsValid(cfg1, callee);
         }
         else {
           cfg1Free = _env->InBounds(cfg1, _bb) &&
-            vc->IsValid(cfg1, _env, _stats, cdInfo, callee);
+            vc->IsValid(cfg1, callee);
         }
 
         if(this->m_debug){
@@ -117,14 +116,14 @@ class GaussianSampler : public SamplerMethod<MPTraits>
             cfg2 = cfg1 + incr;
           } while(!_env->InBounds(cfg2, _bb));
 
-          cfg2Free = vc->IsValid(cfg2, _env, _stats, cdInfo, callee);
+          cfg2Free = vc->IsValid(cfg2, callee);
         }
         else {
           incr.GetRandomRay(fabs(GaussianDistribution(fabs(m_d), fabs(m_d))), _env, dm);
           cfg2 = cfg1 + incr;
 
           cfg2Free = _env->InBounds(cfg2, _bb) &&
-            vc->IsValid(cfg2, _env, _stats, cdInfo, callee);
+            vc->IsValid(cfg2, callee);
         }
 
         if(this->m_debug){

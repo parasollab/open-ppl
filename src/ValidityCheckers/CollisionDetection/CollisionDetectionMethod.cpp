@@ -17,7 +17,7 @@ CollisionDetectionMethod::PrintOptions(ostream& _os) const {
 }
 
 bool
-CollisionDetectionMethod::IsInsideObstacle(const Cfg& _cfg, Environment* _env, CDInfo& _cdInfo) {
+CollisionDetectionMethod::IsInsideObstacle(const Cfg& _cfg) {
   cerr << "IsInsideObstacle: Not implemeneted yet" << endl;
   exit(1);
 }
