@@ -457,8 +457,9 @@ void
 MultiBody::Read(istream& _is, bool _debug) {
   if(_debug) cout << "In MultiBody::Read" << endl;
 
-  string multibodyType = ReadFieldString(_is,
-      "Multibody Type (Active, Passive, Internal, Surface)");
+  string multibodyType = ReadFieldString(_is, WHERE,
+      "Failed reading multibody type. Options are: active, passive, internal, or surface.");
+  //need to update to use enum like Body and Connections
   if(multibodyType == "PASSIVE")
     m_bodyType = PASSIVE;
   else if(multibodyType == "ACTIVE")
@@ -467,10 +468,8 @@ MultiBody::Read(istream& _is, bool _debug) {
     m_bodyType = SURFACE;
   else if(multibodyType == "INTERNAL")
     m_bodyType = INTERNAL;
-  else{
-    cerr << "Error! Unspecified body type. Valid types are ACTIVE, PASSIVE, SURFACE, and INTERNAL" << endl;
-    exit(1);
-  }
+  else
+    throw ParseException(WHERE, "Failed reading multibody type. Options are: active, passive, internal, or surface.");
 
   double fixSum = 0;
   double freeSum = 0;
@@ -479,9 +478,9 @@ MultiBody::Read(istream& _is, bool _debug) {
 
     if(_debug) cout << "Reading Active Body" << endl;
 
-    int bodyCount = ReadField<int>(_is, "Body Count");
+    size_t bodyCount = ReadField<size_t>(_is, WHERE, "Failed reading body count.");
 
-    for(int i=0; i<bodyCount && _is; ++i) {
+    for(size_t i=0; i < bodyCount && _is; ++i) {
       //read the free body
       FreeBody free(this);
       _is >> free;
@@ -497,10 +496,12 @@ MultiBody::Read(istream& _is, bool _debug) {
     }
 
     //get connection info
-    string connectionTag = ReadFieldString(_is, "Connections tag");
-    int connectionCount = ReadField<int>(_is, "Number of Connections");
+    string connectionTag = ReadFieldString(_is, WHERE, "Failed reading connections tag.");
+    if(connectionTag != "CONNECTIONS")
+      throw ParseException(WHERE, "Failed reading connections tag. Should read 'Connections'. Read '" + connectionTag + "'.");
+    size_t connectionCount = ReadField<size_t>(_is, WHERE, "Failed reading number of connections.");
 
-    for(int i=0; i<connectionCount && _is; i++) {
+    for(size_t i=0; i<connectionCount && _is; i++) {
       //add connection info to multibody connection map
       shared_ptr<Connection> c(new Connection(this));
       jointMap.push_back(c);
@@ -510,10 +511,8 @@ MultiBody::Read(istream& _is, bool _debug) {
     } //endfor i
   }
   else{ //Passive, Surface, Internal
-    if(IsSurface()) {
-      string multibodyTag = ReadFieldString(_is, "Surface Tag");
-      m_label = multibodyTag;
-    }
+    if(IsSurface())
+      m_label = ReadFieldString(_is, WHERE, "Failed reading surface tag.");
 
     if(_debug) cout << "Reading Other Body" << endl;
 

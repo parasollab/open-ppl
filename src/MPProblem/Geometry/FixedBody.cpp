@@ -42,10 +42,10 @@ operator<<(ostream& _os, const FixedBody& _fb){
 
 istream&
 operator>>(istream& _is, FixedBody& _fb){
-  _fb.m_filename = ReadFieldString(_is,
-      "FixedBody Filename (geometry file)", false);
+  _fb.m_filename = ReadFieldString(_is, WHERE,
+      "Failed reading geometry filename.", false);
   _fb.Read();
-  _fb.m_worldTransformation =
-    ReadField<Transformation>(_is, "FixedBody Transformation");
+  _fb.m_worldTransformation = ReadField<Transformation>(_is, WHERE,
+      "Failed reading fixed body transformation.");
   return _is;
 }

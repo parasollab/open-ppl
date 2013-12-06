@@ -141,7 +141,9 @@ void
 Body::Read() {
 
   string filename = m_modelDataDir == "/" ? m_filename : m_modelDataDir + m_filename;
-  VerifyFileExists(filename);
+  if(!FileExists(filename))
+    throw ParseException(WHERE, "Geometry file '" + filename + "' not found.");
+
   m_polyhedron.Read(filename);
   m_worldPolyhedron = m_polyhedron;
   GMSPolyhedron poly;

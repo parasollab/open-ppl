@@ -127,26 +127,41 @@ FreeBody::ComputeWorldTransformation(std::set<int, less<int> >& visited, bool _d
 
 istream&
 operator>>(istream& _is, FreeBody& _fb){
-  _fb.m_filename = ReadFieldString(_is, "FreeBody filename (geometry file)", false);
+  _fb.m_filename = ReadFieldString(_is, WHERE,
+      "Failed reading geometry filename.", false);
   _fb.Read();
 
   //Read for Base Type.  If Planar or Volumetric, read in two more strings
   //If Joint skip this stuff. If Fixed read in positions like an obstacle
-  string baseTag = ReadFieldString(_is,
-      "Base Tag (Planar, Volumetric, Fixed, Joint");
+  string baseTag = ReadFieldString(_is, WHERE,
+      "Failed reading base tag. Options are: planar, volumetric, fixed, or joint.");
   _fb.m_baseType = Robot::GetBaseFromTag(baseTag);
 
+  switch(_fb.m_baseType) {
+    //if base is volumetric or planar we should parse the rotational type
+    case Robot::VOLUMETRIC:
+    case Robot::PLANAR:
+      {
+        _fb.m_isBase = true;
+        string baseMovementTag = ReadFieldString(_is, WHERE,
+            "Failed reading rotation tag. Options are: rotational or translational.");
+        _fb.m_baseMovementType = Robot::GetMovementFromTag(baseMovementTag);
+        break;
+      }
 
-  if(_fb.m_baseType == Robot::VOLUMETRIC ||_fb. m_baseType == Robot::PLANAR){
-    _fb.m_isBase = true;
-    string baseMovementTag = ReadFieldString(_is,
-        "Rotation Tag (Rotational, Translational)");
-   _fb.m_baseMovementType = Robot::GetMovementFromTag(baseMovementTag);
-  }
-  else if(_fb.m_baseType == Robot::FIXED){
-    _fb.m_isBase = true;
-    _fb.m_worldTransformation =
-      ReadField<Transformation>(_is, "FreeBody Transformation");
+      //if base if fixed we should read a transformation
+    case Robot::FIXED:
+      {
+        _fb.m_isBase = true;
+        _fb.m_worldTransformation =
+          ReadField<Transformation>(_is, WHERE,
+              "Failed reading fixed based transformation.");
+        break;
+      }
+
+      //if the base is a joint nothing additional is parsed
+    case Robot::JOINT:
+      break;
   }
 
   return _is;
