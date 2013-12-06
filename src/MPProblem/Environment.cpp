@@ -43,6 +43,10 @@ void
 Environment::Read(string _filename) {
   VerifyFileExists(_filename);
   m_filename = _filename;
+  size_t sl = m_filename.rfind('/');
+  m_modelDataDir = m_filename.substr(0, sl == string::npos ? 0 : sl);
+  cout << "m_modelDataDir::" << m_modelDataDir << endl;
+  Body::m_modelDataDir = m_modelDataDir + "/";
 
   m_activeBodies.clear();
   m_obstacleBodies.clear();
@@ -66,7 +70,7 @@ Environment::Read(string _filename) {
   //parse and construct each multibody
   for (int m=0; m<multibodyCount && ifs; m++) {
     shared_ptr<MultiBody> mb(new MultiBody());
-    mb->Read(ifs, false/*m_debug*/);
+    mb->Read(ifs);
 
     if( mb->IsActive() )
       m_activeBodies.push_back(mb);

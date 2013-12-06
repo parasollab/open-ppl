@@ -127,9 +127,8 @@ void MultiBody::Initialize(string _modelFile, const Transformation& _where, Body
 
   if (IsPassive()){
     //create a fixed body
-    FixedBody fix(this);
-    fix.SetFileName(_modelFile);
-    fix.Read(_modelFile);
+    FixedBody fix(this, _modelFile);
+    fix.Read();
 
     Transformation worldTransform(_where);
     fix.PutWorldTransformation(worldTransform);

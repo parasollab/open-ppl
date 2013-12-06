@@ -3,8 +3,9 @@
 //===================================================================
 //  Constructors and Destructor
 //===================================================================
-FixedBody::FixedBody(MultiBody* _owner) :
-  Body(_owner){
+FixedBody::FixedBody(MultiBody* _owner, const string& _filename) :
+  Body(_owner) {
+    m_filename = _filename;
 }
 
 FixedBody::FixedBody(MultiBody* _owner, GMSPolyhedron& _polyhedron) :
@@ -21,7 +22,7 @@ FixedBody::~FixedBody() {
 //===================================================================
 GMSPolyhedron&
 FixedBody::GetWorldPolyhedron() {
-  GetWorldTransformation(); 
+  GetWorldTransformation();
   m_worldPolyhedron = Body::GetWorldPolyhedron();
   return m_worldPolyhedron;
 }
@@ -34,18 +35,17 @@ FixedBody::GetWorldTransformation() {
   return m_worldTransformation;
 }
 
-ostream& 
+ostream&
 operator<<(ostream& _os, const FixedBody& _fb){
   return _os << _fb.m_filename << " " << _fb.m_worldTransformation;
 }
 
-istream& 
+istream&
 operator>>(istream& _is, FixedBody& _fb){
-  _fb.m_filename = ReadFieldString(_is, 
+  _fb.m_filename = ReadFieldString(_is,
       "FixedBody Filename (geometry file)", false);
-  VerifyFileExists(_fb.m_filename);
-  _fb.Read(_fb.m_filename);
-  _fb.m_worldTransformation = 
+  _fb.Read();
+  _fb.m_worldTransformation =
     ReadField<Transformation>(_is, "FixedBody Transformation");
   return _is;
 }

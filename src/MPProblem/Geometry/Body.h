@@ -45,7 +45,7 @@ class Body {
 
     bool operator==(const Body& b) const;
     bool operator!=(const Body& b) const { return !(*this == b); }
-    void SetFileName(string _filename) { m_filename=_filename; }
+
     string GetFileName() { return m_filename; }
 
     ///Return transformation of this body in world coordinate.
@@ -102,13 +102,7 @@ class Body {
     void SetBase(Robot::Base _baseType) { m_baseType = _baseType; };
     void SetBaseMovement(Robot::BaseMovement _baseMovementType) { m_baseMovementType = _baseMovementType; };
 
-    void Read(string _fileName);
-
-    /**Read BYU format data from given inpustream.
-     *Call GMSPolyhedron::ReadBYU, calculate the bounding box, and then call buildCDstructure
-     *to create auxilary data structure for collision detection.
-     */
-    void ReadBYU(istream& _is);
+    void Read();
 
     virtual void Write(ostream& _os);
 
@@ -162,6 +156,8 @@ class Body {
      * connection.  Establish a forward and backward connectionship.
      */
     void Link(const Connection& _c);
+
+    static string m_modelDataDir;
 
   protected:
     string m_filename;
