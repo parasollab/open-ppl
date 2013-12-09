@@ -115,7 +115,6 @@
 #include "MPStrategies/BasicRRTStrategy.h"
 #include "MPStrategies/EvaluateMapStrategy.h"
 #include "MPStrategies/LocalManeuveringStrategy.h"
-#include "MPStrategies/MedialAxisRRT.h"
 #include "MPStrategies/MultiStrategy.h"
 #include "MPStrategies/PushQueryToMA.h"
 #include "MPStrategies/TogglePRMStrategy.h"
@@ -285,7 +284,6 @@ struct MPTraits{
     BasicRRTStrategy<MPTraits>,
     DMTestStrategy<MPTraits>,
     EvaluateMapStrategy<MPTraits>,
-    MedialAxisRRT<MPTraits>,
     MultiStrategy<MPTraits>,
     PushQueryToMA<MPTraits>,
     TogglePRMStrategy<MPTraits>,
