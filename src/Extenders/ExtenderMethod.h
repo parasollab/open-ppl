@@ -1,9 +1,6 @@
 #ifndef EXTENDERMETHOD_H_
 #define EXTENDERMETHOD_H_
 
-#include <string>
-#include <iostream>
-
 template<class MPTraits>
 class ExtenderMethod : public MPBaseObject<MPTraits> {
   public:

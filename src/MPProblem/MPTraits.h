@@ -62,6 +62,7 @@
 
 //extenders includes
 #include "Extenders/BasicExtender.h"
+#include "Extenders/MedialAxisExtender.h"
 #include "Extenders/MixExtender.h"
 #include "Extenders/RandomObstacleVector.h"
 #include "Extenders/RotationThenTranslation.h"
@@ -116,6 +117,7 @@
 #include "MPStrategies/LocalManeuveringStrategy.h"
 #include "MPStrategies/MedialAxisRRT.h"
 #include "MPStrategies/MultiStrategy.h"
+#include "MPStrategies/PushQueryToMA.h"
 #include "MPStrategies/TogglePRMStrategy.h"
 #include "MPStrategies/UnitTest/DMTestStrategy.h"
 #include "MPStrategies/UtilityGuidedGenerator.h"
@@ -209,6 +211,7 @@ struct MPTraits{
   //types of extenders avaible in our world
   typedef boost::mpl::list<
     BasicExtender<MPTraits>,
+    MedialAxisExtender<MPTraits>,
     MixExtender<MPTraits>,
     RandomObstacleVector<MPTraits>,
     RotationThenTranslation<MPTraits>,
@@ -284,6 +287,7 @@ struct MPTraits{
     EvaluateMapStrategy<MPTraits>,
     MedialAxisRRT<MPTraits>,
     MultiStrategy<MPTraits>,
+    PushQueryToMA<MPTraits>,
     TogglePRMStrategy<MPTraits>,
     UtilityGuidedGenerator<MPTraits>,
     VisibilityBasedPRM<MPTraits>

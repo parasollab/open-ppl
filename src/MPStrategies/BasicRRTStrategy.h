@@ -12,6 +12,7 @@ template<class MPTraits>
 class BasicRRTStrategy : public MPStrategyMethod<MPTraits> {
   public:
     typedef typename MPTraits::CfgType CfgType;
+    typedef typename MPTraits::CfgRef CfgRef;
     typedef typename MPTraits::WeightType WeightType;
     typedef typename MPTraits::MPProblemType MPProblemType;
     typedef typename MPProblemType::RoadmapType RoadmapType;
@@ -21,6 +22,7 @@ class BasicRRTStrategy : public MPStrategyMethod<MPTraits> {
     typedef typename MPProblemType::ValidityCheckerPointer ValidityCheckerPointer;
     typedef typename MPProblemType::NeighborhoodFinderPointer NeighborhoodFinderPointer;
     typedef typename MPProblemType::LocalPlannerPointer LocalPlannerPointer;
+    typedef typename MPProblemType::ExtenderPointer ExtenderPointer;
     typedef typename MPProblemType::ConnectorPointer ConnectorPointer;
 
     //Non-XML constructor sets all private variables
@@ -124,7 +126,6 @@ BasicRRTStrategy<MPTraits>::ParseXML(XMLNodeReader& _node, bool _child) {
   m_minDist = _node.numberXMLParameter("minDist", false, 0.0, 0.0, m_delta, "Minimum Distance");
   m_numRoots = _node.numberXMLParameter("numRoots", false, 1, 0, MAX_INT, "Number of Roots");
   m_growthFocus = _node.numberXMLParameter("growthFocus", false, 0.0, 0.0, 1.0, "#GeneratedTowardsGoal/#Generated");
-  m_vc = _node.stringXMLParameter("vcLabel", true, "", "Validity Test Method");
   m_vc = _node.stringXMLParameter("vcLabel", true, "", "Validity Test Method");
   m_clearanceUtility.SetValidityCheckerLabel(_node.stringXMLParameter("vcLabel2", false, m_vc, "Validity Test Method"));
   m_nf = _node.stringXMLParameter("nfLabel", true, "", "Neighborhood Finder");
@@ -237,18 +238,18 @@ BasicRRTStrategy<MPTraits>::Run() {
 
   CfgType dir;
   bool mapPassedEvaluation = false;
-  while(!mapPassedEvaluation){
+  while(!mapPassedEvaluation) {
     //find my growth direction. Default is too randomly select node or bias towards a goal
     double randomRatio = DRand();
-    if(randomRatio<m_growthFocus){
+    if(randomRatio < m_growthFocus)
       dir = GoalBiasedDirection();
-    }
-    else{
+    else
       dir = this->SelectDirection();
-    }
 
+    //grow the tree towards dir
     VID recent = this->ExpandTree(dir);
     if(recent != INVALID_VID){
+
       //connect various trees together
       ConnectTrees(recent);
       //see if tree is connected to goals
@@ -257,7 +258,7 @@ BasicRRTStrategy<MPTraits>::Run() {
 
       //evaluate the roadmap
       bool evalMap = this->EvaluateMap(m_evaluators);
-      if(!m_growGoals){
+      if(!m_growGoals) {
         mapPassedEvaluation = m_trees.size()==1 && evalMap && ((m_evaluateGoal && m_goalsNotFound.size()==0) || !m_evaluateGoal);
         if(this->m_debug && m_goalsNotFound.size()==0)
           cout << "RRT FOUND ALL GOALS" << endl;
@@ -265,8 +266,6 @@ BasicRRTStrategy<MPTraits>::Run() {
       else
         mapPassedEvaluation = evalMap && m_trees.size()==1;
     }
-    else
-      mapPassedEvaluation = false;
   }
 
   if(this->m_recordKeep) stats->StopClock("RRT Generation");
@@ -320,7 +319,7 @@ BasicRRTStrategy<MPTraits>::Finalize() {
 
   //print roadmap clearance stats
   osStat << endl << endl;
-  cout << "Calculating Roadmap Clearance" << endl;
+  /*cout << "Calculating Roadmap Clearance" << endl;
   ClearanceStats cr = m_clearanceUtility.RoadmapClearance();
   cout << "Calculating Path Clearance" << endl;
   ClearanceStats cp = m_clearanceUtility.PathClearance(path);
@@ -334,7 +333,7 @@ BasicRRTStrategy<MPTraits>::Finalize() {
     << "PathMaxClr    " << cp.m_max << endl
     << "PathVarClr    " << cp.m_var << endl
     << "PathLength    " << cp.m_pathLength << endl;
-
+*/
 
   osStat.close();
 
@@ -345,7 +344,7 @@ template<class MPTraits>
 typename MPTraits::CfgType
 BasicRRTStrategy<MPTraits>::GoalBiasedDirection(){
   // Determine direction, make sure goal not found
-  if (m_goalsNotFound.size() == 0){
+  if (m_goalsNotFound.size() == 0) {
     return CfgType();
   }
   else {
@@ -416,7 +415,7 @@ vector<typename MPTraits::CfgType>
 BasicRRTStrategy<MPTraits>::SelectNeighbors(VID v1){
   typename GraphType::vertex_iterator vi = this->GetMPProblem()->GetRoadmap()->GetGraph()->find_vertex(v1);
   vector<CfgType> vec;
-  for(typename GraphType::adj_edge_iterator ei =(*vi).begin(); ei!=(*vi).end(); ei++){
+  for(typename GraphType::adj_edge_iterator ei =(*vi).begin(); ei!=(*vi).end(); ei++) {
     VID tgt = (*ei).target();
     CfgType target = this->GetMPProblem()->GetRoadmap()->GetGraph()->GetVertex(tgt);
     vec.push_back(target);
@@ -446,7 +445,6 @@ BasicRRTStrategy<MPTraits>::ConnectNeighbors(VID _newVID, VID _nearVID){
 
     if(this->m_recordKeep) conStatClass->StopClock(conClockName);
   }
-
 }
 
 template<class MPTraits>
@@ -455,22 +453,22 @@ BasicRRTStrategy<MPTraits>::ExpandTree(CfgType& _dir){
   // Setup MP Variables
   DistanceMetricPointer dm = this->GetMPProblem()->GetDistanceMetric(m_dm);
   NeighborhoodFinderPointer nf = this->GetMPProblem()->GetNeighborhoodFinder(m_nf);
-  LocalPlannerPointer lp = this->GetMPProblem()->GetLocalPlanner(m_lp);
-  LPOutput<MPTraits> lpOutput;
+  ExtenderPointer e = this->GetMPProblem()->GetExtender(m_extenderLabel);
+  RoadmapType* rdmp = this->GetMPProblem()->GetRoadmap();
+  GraphType* g = rdmp->GetGraph();
+
   VID recentVID = INVALID_VID;
-  CDInfo  cdInfo;
+
   // Find closest Cfg in map
-  vector<pair<VID, double> > kClosest;
+  vector<pair<VID, double> > neighbors;
   vector<CfgType> cfgs;
 
-  GraphType* g = this->GetMPProblem()->GetRoadmap()->GetGraph();
-
-  int numRoadmapVertex  = g->get_num_vertices();
+  size_t numRoadmapVertex  = g->get_num_vertices();
   typedef typename vector<vector<VID> >::iterator TRIT;
-  int treeSize = 0;
-  for(TRIT trit = m_trees.begin(); trit!=m_trees.end(); ++trit){
+  size_t treeSize = 0;
+  for(TRIT trit = m_trees.begin(); trit!=m_trees.end(); ++trit)
     treeSize += trit->size();
-  }
+
   bool fixTree = false;
   if(treeSize > numRoadmapVertex)
     fixTree = true;
@@ -481,7 +479,9 @@ BasicRRTStrategy<MPTraits>::ExpandTree(CfgType& _dir){
     if(ccs.size() != m_trees.size())
       fixTree = true;
   }
-  if(fixTree) { //node deleted by dynamic environment, fix all trees
+
+  //node deleted by dynamic environment, fix all trees
+  if(fixTree) {
     m_trees.clear();
     vector<pair<size_t, VID> > ccs;
     stapl::sequential::vector_property_map<GraphType, size_t> cmap;
@@ -497,76 +497,97 @@ BasicRRTStrategy<MPTraits>::ExpandTree(CfgType& _dir){
     m_currentTree = m_trees.begin();
   }
 
-  StatClass* kcloseStatClass = this->GetMPProblem()->GetStatClass();
-  string kcloseClockName = "kclosest time ";
-  if(this->m_recordKeep) kcloseStatClass->StartClock(kcloseClockName);
-  nf->FindNeighbors(this->GetMPProblem()->GetRoadmap(), m_currentTree->begin(), m_currentTree->end(), _dir, back_inserter(kClosest));
-  if(this->m_recordKeep) kcloseStatClass->StopClock(kcloseClockName);
+  StatClass* stats = this->GetMPProblem()->GetStatClass();
+  if(this->m_recordKeep) stats->StartClock("NeighborhoodFinding");
+  nf->FindNeighbors(rdmp, m_currentTree->begin(), m_currentTree->end(), _dir, back_inserter(neighbors));
+  if(this->m_recordKeep) stats->StopClock("NeighborhoodFinding");
 
-  CfgType nearest = this->GetMPProblem()->GetRoadmap()->GetGraph()->GetVertex(kClosest[0].first);
+  VID nearVID = neighbors[0].first;
+  CfgRef nearest = g->GetVertex(nearVID);
+
+  if(this->m_recordKeep) stats->StartClock("Extend");
+  vector<CfgType> intermediates, rintermediates;
   CfgType newCfg;
-  int weight = 0;
+  bool extendSucc = e->Extend(nearest, _dir, newCfg, intermediates);
+  double dist;
+  if(intermediates.empty())
+    dist = dm->Distance(nearest, newCfg);
+  else {
+    dist = dm->Distance(nearest, intermediates.front());
+    typedef typename vector<CfgType>::iterator CIT;
+    for(CIT cit1 = intermediates.begin(), cit2 = cit1 + 1; cit2 != intermediates.end(); ++cit1, ++cit2)
+      dist += dm->Distance(*cit1, *cit2);
+    dist += dm->Distance(intermediates.back(), newCfg);
+    copy(intermediates.rbegin(), intermediates.rend(), back_inserter(rintermediates));
+  }
+  if(this->m_recordKeep) stats->StopClock("Extend");
 
-  StatClass* expandStatClass = this->GetMPProblem()->GetStatClass();
-  string expandClockName = "RRTExpand time ";
-  if(this->m_recordKeep) expandStatClass->StartClock(expandClockName);
-
-  vector<CfgType> intermediateNodes;
-  if(!this->GetMPProblem()->GetExtender(m_extenderLabel)->Extend(nearest, _dir, newCfg, intermediateNodes)) {
+  //failed expansion return
+  if(!extendSucc) {
     if(this->m_debug) cout << "RRT could not expand!" << endl;
     return recentVID;
   }
 
-  if(this->m_recordKeep) expandStatClass->StopClock(expandClockName);
-
-  if(this->m_debug) cout << "RRT expanded to " << newCfg << endl;
+  static size_t expansions = 0;
+  cout << "Expansion:: " << ++expansions << "\tto " << newCfg << endl;
 
   // If good to go, add to roadmap
-  if(dm->Distance(newCfg, nearest) >= m_minDist ) {
-    recentVID = this->GetMPProblem()->GetRoadmap()->GetGraph()->AddVertex(newCfg);
+  if(dist >= m_minDist ) {
+    recentVID = g->AddVertex(newCfg);
+    g->GetVertex(recentVID).SetStat("Parent", neighbors[0].first);
     m_currentTree->push_back(recentVID);
-    if(std::string::npos!=m_gt.find("UNDIRECTED")){
-      pair<WeightType, WeightType> weights = make_pair(WeightType("RRTExpand", weight), WeightType("RRTExpand", weight));
-      this->GetMPProblem()->GetRoadmap()->GetGraph()->AddEdge(kClosest[0].first, recentVID, weights);
-    }
+
+    if(m_gt.find("UNDIRECTED") != string::npos)
+      g->AddEdge(nearVID, recentVID,
+          make_pair(WeightType("RRTExpand", dist, intermediates),
+            WeightType("RRTExpand", dist, rintermediates)));
     else
-      this->GetMPProblem()->GetRoadmap()->GetGraph()->AddEdge(kClosest[0].first, recentVID, WeightType("RRTExpand", weight));
-    this->GetMPProblem()->GetRoadmap()->GetGraph()->GetVertex(recentVID).SetStat("Parent", kClosest[0].first);
+      g->AddEdge(nearVID, recentVID, WeightType("RRTExpand", dist, intermediates));
 
-    if(std::string::npos!=m_gt.find("GRAPH")){
-      ConnectNeighbors(recentVID, kClosest[0].first);
-    }
+    if(m_gt.find("GRAPH") != string::npos)
+      ConnectNeighbors(recentVID, neighbors[0].first);
 
-    for( size_t i=2 ;i<=m_numDirections; i++){//expansion to other m-1 directions
-      CfgType randdir = this->SelectDispersedDirection(kClosest[0].first);
-      if(this->m_recordKeep) expandStatClass->StartClock(expandClockName);
-      bool expandFlag = this->GetMPProblem()->GetExtender(m_extenderLabel)
-        ->Extend(nearest, randdir, newCfg, intermediateNodes);
+    //expansion to other m-1 directions
+    for(size_t i = 2; i <= m_numDirections; ++i) {
+      CfgType randdir = this->SelectDispersedDirection(nearVID);
 
-      if(this->m_recordKeep) expandStatClass->StopClock(expandClockName);
-      StatClass* conStatClass = this->GetMPProblem()->GetStatClass();
-      string conClockName = "Connection time ";
-      if(this->m_recordKeep) conStatClass->StartClock(conClockName);
+      if(this->m_recordKeep) stats->StartClock("Extend");
+      vector<CfgType> intermediates, rintermediates;
+      bool extendSucc = e->Extend(nearest, randdir, newCfg, intermediates);
+      if(intermediates.empty())
+        dist = dm->Distance(nearest, newCfg);
+      else {
+        dist = dm->Distance(nearest, intermediates.front());
+        typedef typename vector<CfgType>::iterator CIT;
+        for(CIT cit1 = intermediates.begin(), cit2 = cit1 + 1;
+            cit2 != intermediates.end(); ++cit1, ++cit2)
+          dist += dm->Distance(*cit1, *cit2);
+        dist += dm->Distance(intermediates.back(), newCfg);
+        copy(intermediates.rbegin(), intermediates.rend(), back_inserter(rintermediates));
+      }
+      if(this->m_recordKeep) stats->StopClock("Extend");
 
-      if(!expandFlag) {
+      if(!extendSucc) {
         if(this->m_debug) cout << "RRT could not expand to additional directions!" << endl;
       }
-      else if(dm->Distance(newCfg, nearest) >= m_minDist ) {
-        VID otherVID = this->GetMPProblem()->GetRoadmap()->GetGraph()->AddVertex(newCfg);
+      else if(dist >= m_minDist) {
+        VID otherVID = g->AddVertex(newCfg);
+        g->GetVertex(otherVID).SetStat("Parent", nearVID);
         m_currentTree->push_back(otherVID);
-        if(std::string::npos!=m_gt.find("UNDIRECTED")){
-          pair<WeightType, WeightType> weights = make_pair(WeightType("RRTExpand", weight), WeightType("RRTExpand", weight));
-          this->GetMPProblem()->GetRoadmap()->GetGraph()->AddEdge(kClosest[0].first, otherVID, weights);
-        }
-        else
-          this->GetMPProblem()->GetRoadmap()->GetGraph()->AddEdge(kClosest[0].first, otherVID, WeightType("RRTExpand", weight));
-        this->GetMPProblem()->GetRoadmap()->GetGraph()->GetVertex(otherVID).SetStat("Parent", kClosest[0].first);
 
-        if(std::string::npos!=m_gt.find("GRAPH")){
-          ConnectNeighbors(otherVID, kClosest[0].first);
+        if(m_gt.find("UNDIRECTED") != string::npos)
+          g->AddEdge(nearVID, otherVID,
+              make_pair(WeightType("RRTExpand", dist, intermediates),
+                WeightType("RRTExpand", dist, rintermediates)));
+        else
+          g->AddEdge(nearVID, otherVID, WeightType("RRTExpand", dist, intermediates));
+
+        if(m_gt.find("GRAPH") != string::npos) {
+          if(this->m_recordKeep) stats->StartClock("Connection");
+          ConnectNeighbors(otherVID, nearVID);
+          if(this->m_recordKeep) stats->StopClock("Connection");
         }
       }
-      if(this->m_recordKeep) conStatClass->StopClock(conClockName);
     }
   }
 
