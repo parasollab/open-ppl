@@ -443,16 +443,16 @@ MPProblem<MPTraits>::Solve() {
     m_colRoadmap = new RoadmapType();
     m_stats = new StatClass();
 
-    //initialize vizmo debug if there is a valid filename
-    if(sit->get<3>())
-      VDInit(m_baseFilename + ".vd");
-
-    //call solver
     cout << "\n\nMPProblem is solving with MPStrategyMethod labeled " << sit->get<0>() << "." << endl;
     SRand(sit->get<1>());
     m_baseFilename = sit->get<2>();
     m_stats->SetAuxDest(m_baseFilename);
 
+    //initialize vizmo debug if there is a valid filename
+    if(sit->get<3>())
+      VDInit(m_baseFilename + ".vd");
+
+    //call solver
     GetMPStrategy(sit->get<0>())->operator()();
 
     //close vizmo debug if necessary
