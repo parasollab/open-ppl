@@ -410,6 +410,8 @@ class MPBaseObject {
     bool GetDebug() const {return m_debug;}
     void SetDebug(bool _d) {m_debug = _d;}
 
+    const string& GetBaseFilename() const {return m_problem->GetBaseFilename();}
+
   private:
     MPProblemType* m_problem;
     string m_label;

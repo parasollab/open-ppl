@@ -39,6 +39,8 @@ class MPProblem
     MPProblem(XMLNodeReader& _node, typename MPTraits::MPProblemType* _problem, bool _parse = true);
     virtual ~MPProblem();
 
+    const string& GetBaseFilename() const {return m_baseFilename;}
+
     Environment* GetEnvironment() {return m_environment;};
     void SetEnvironment(Environment* _e) {m_environment = _e;};
 
@@ -119,11 +121,11 @@ class MPProblem
 
     void SetMPProblem();
 
-    //solver, seed, baseName, vizmoDebugName
-    typedef boost::tuples::tuple<string, long, string, string> Solver;
+    //solver label, random seed, baseFilename, yes/no vizmo debug
+    typedef boost::tuples::tuple<string, long, string, bool> Solver;
     void AddSolver(const string& _label, long _seed,
-        const string& _baseFileName, const string& _vizmoDebugName) {
-      m_solvers.push_back(Solver(_label, _seed, _baseFileName, _vizmoDebugName));
+        const string& _baseFileName, bool _vizmoDebug) {
+      m_solvers.push_back(Solver(_label, _seed, _baseFileName, _vizmoDebug));
     }
     void Solve();
 
@@ -173,6 +175,8 @@ class MPProblem
     MPStrategySet* m_mpStrategies;
 
     vector<Solver> m_solvers;
+
+    string m_baseFilename;
 
   private:
     bool m_cdBuilt;
@@ -254,6 +258,8 @@ MPProblem<MPTraits>::Initialize(){
   m_metrics = new MetricSet(typename MPTraits::MetricMethodList(), "Metrics");
   m_mapEvaluators = new MapEvaluatorSet(typename MPTraits::MapEvaluatorMethodList(), "MapEvaluators");
   m_mpStrategies = new MPStrategySet(typename MPTraits::MPStrategyMethodList(), "MPStrategies");
+
+  m_baseFilename = "";
 
   m_cdBuilt = false;
 }
@@ -340,17 +346,16 @@ MPProblem<MPTraits>::ParseChild(XMLNodeReader::childiterator citr, typename MPTr
     return true;
   }
   else if(citr->getName() == "Solver") {
-    string m_label = citr->stringXMLParameter("mpStrategyLabel", true, "", "The strategy pointed to by this label will be used to solve the problem");
-    long m_seed = citr->numberXMLParameter("seed", true, 1, 0, MAX_INT, "The random number generator seed for the solver.");
-    string m_baseFilename = citr->stringXMLParameter("baseFilename", true, "", "BaseFilename for the solver.");
+    string label = citr->stringXMLParameter("mpStrategyLabel", true, "",
+        "The strategy pointed to by this label will be used to solve the problem");
+    long seed = citr->numberXMLParameter("seed", true, 1, 0, MAX_INT,
+        "The random number generator seed for the solver.");
+    string baseFilename = citr->stringXMLParameter("baseFilename", true, "", "BaseFilename for the solver.");
     ostringstream oss;
-    oss << m_baseFilename << "." << m_seed;
-    m_baseFilename = oss.str();
-    bool m_vdOutput = citr->boolXMLParameter("vizmoDebug", false, false, "True yields VizmoDebug output for the solver.");
-    string m_vizmoDebugName = "";
-    if(m_vdOutput)
-        m_vizmoDebugName = m_baseFilename + ".vd";
-    m_solvers.push_back(Solver(m_label, m_seed, m_baseFilename, m_vizmoDebugName));
+    oss << baseFilename << "." << seed;
+    baseFilename = oss.str();
+    bool vdOutput = citr->boolXMLParameter("vizmoDebug", false, false, "True yields VizmoDebug output for the solver.");
+    m_solvers.push_back(Solver(label, seed, baseFilename, vdOutput));
     return true;
   }
   else
@@ -439,17 +444,19 @@ MPProblem<MPTraits>::Solve() {
     m_stats = new StatClass();
 
     //initialize vizmo debug if there is a valid filename
-    if(sit->get<3>() != "")
-      VDInit(sit->get<3>());
+    if(sit->get<3>())
+      VDInit(m_baseFilename + ".vd");
 
     //call solver
     cout << "\n\nMPProblem is solving with MPStrategyMethod labeled " << sit->get<0>() << "." << endl;
     SRand(sit->get<1>());
-    GetMPStrategy(sit->get<0>())->SetBaseFilename(sit->get<2>());
+    m_baseFilename = sit->get<2>();
+    m_stats->SetAuxDest(m_baseFilename);
+
     GetMPStrategy(sit->get<0>())->operator()();
 
     //close vizmo debug if necessary
-    if(sit->get<3>() != "")
+    if(sit->get<3>())
       VDClose();
   }
 };

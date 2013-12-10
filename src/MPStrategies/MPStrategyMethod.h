@@ -24,17 +24,12 @@ class MPStrategyMethod : public MPBaseObject<MPTraits> {
     virtual void Finalize()=0;
     virtual void PrintOptions(ostream& _os) const;
 
-    string GetBaseFilename(){return m_baseFilename;}
-    void SetBaseFilename(string _s){m_baseFilename = _s;}
     void SetBoundary(shared_ptr<Boundary> bb){m_boundary=bb;};
 
-    bool EvaluateMap(vector<string> _evaluators);
+    bool EvaluateMap(const vector<string>& _evaluators);
 
   protected:
     shared_ptr<Boundary> m_boundary;
-
-  private:
-    string m_baseFilename;
 };
 
 template<class MPTraits>
@@ -66,8 +61,6 @@ MPStrategyMethod<MPTraits>::PrintOptions(ostream& _os) const {
 template<class MPTraits>
 void
 MPStrategyMethod<MPTraits>::operator()(){
-  this->GetMPProblem()->GetStatClass()->SetAuxDest(GetBaseFilename());
-
   Initialize();
   Run();
   Finalize();
@@ -75,10 +68,9 @@ MPStrategyMethod<MPTraits>::operator()(){
 
 template<class MPTraits>
 bool
-MPStrategyMethod<MPTraits>::EvaluateMap(vector<string> _evaluators) {
-  if(_evaluators.empty()) {
+MPStrategyMethod<MPTraits>::EvaluateMap(const vector<string>& _evaluators) {
+  if(_evaluators.empty())
     return true;
-  }
   else {
     StatClass* stats = this->GetMPProblem()->GetStatClass();
 
@@ -87,7 +79,7 @@ MPStrategyMethod<MPTraits>::EvaluateMap(vector<string> _evaluators) {
     stats->StartClock(clockName);
     mapPassedEvaluation = true;
 
-    for(vector<string>::iterator I = _evaluators.begin(); I != _evaluators.end(); ++I) {
+    for(vector<string>::const_iterator I = _evaluators.begin(); I != _evaluators.end(); ++I) {
       MapEvaluatorPointer evaluator = this->GetMPProblem()->GetMapEvaluator(*I);
       stringstream evaluatorClockName;
       evaluatorClockName << clockName << "::" << evaluator->GetName();

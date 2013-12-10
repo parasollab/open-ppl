@@ -291,8 +291,6 @@ BasicRRTStrategy<MPTraits>::Finalize() {
   //perform query if query was given as input
   vector<VID> path;
   if(m_query) {
-    str = this->GetBaseFilename() + ".path";
-    m_query->SetPathFile(str);
     if(m_evaluateGoal){
       if(m_query->PerformQuery(this->GetMPProblem()->GetRoadmap())){
         if(this->m_debug) cout << "Query successful! Output written to " << str << "." << endl;

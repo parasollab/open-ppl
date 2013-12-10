@@ -57,7 +57,6 @@ void MultiStrategy<MPTraits>::Initialize() {
   for(size_t i = 0; i < m_labels.size(); i++) {
     cout<<m_labels[i]<<endl;
     this->GetMPProblem()->GetMPStrategy(m_labels[i])->Initialize();
-    this->GetMPProblem()->GetMPStrategy(m_labels[i])->SetBaseFilename(this->GetBaseFilename());
   }
 }
 
