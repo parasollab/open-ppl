@@ -33,6 +33,7 @@ class ClearanceUtility : public MPBaseObject<MPTraits> {
         string _vcLabel = "", string _dmLabel = "",
         bool _exactClearance = false, bool _exactPenetration = false,
         size_t _clearanceRays = 10, size_t _penetrationRays = 10,
+        double _approxStepSize = MAX_DBL, double _approxResolution = MAX_DBL,
         bool _useBBX = true, bool _positional = true, bool _debug = false);
 
     ClearanceUtility(MPProblemType* _problem, XMLNodeReader& _node);
@@ -85,6 +86,7 @@ class ClearanceUtility : public MPBaseObject<MPTraits> {
     bool m_exactPenetration;         //use exact penetration calculations
     size_t m_clearanceRays;          //number of rays used to approximate clearance
     size_t m_penetrationRays;        //number of rays used to approximate penetration
+    double m_approxStepSize, m_approxResolution;         //initial stepsize and final resolution used for approximate clearance/penetration, multiples of env res
     bool m_useBBX;                   //use bounding box as obstacle
     bool m_positional;               //use only positional dofs
 };
@@ -193,14 +195,21 @@ ClearanceUtility<MPTraits>::ClearanceUtility(MPProblemType* _problem,
     string _vcLabel, string _dmLabel,
     bool _exactClearance, bool _exactPenetration,
     size_t _clearanceRays, size_t _penetrationRays,
+    double _approxStepSize, double _approxResolution, 
     bool _useBBX, bool _positional, bool _debug):
   m_vcLabel(_vcLabel), m_dmLabel(_dmLabel),
   m_exactClearance(_exactClearance), m_exactPenetration(_exactPenetration),
   m_clearanceRays(_clearanceRays), m_penetrationRays(_penetrationRays),
+  m_approxStepSize(_approxStepSize), m_approxResolution(_approxResolution),
   m_useBBX(_useBBX), m_positional(_positional){
     this->m_name = "ClearanceUtility";
     this->SetMPProblem(_problem);
     this->m_debug = _debug;
+
+    if(m_approxStepSize == MAX_DBL && this->GetMPProblem() != NULL && this->GetMPProblem()->GetEnvironment() != NULL) 
+      m_approxStepSize = 1 / this->GetMPProblem()->GetEnvironment()->GetBoundary()->GetMaxDist();
+    if(m_approxResolution == MAX_DBL && this->GetMPProblem() != NULL && this->GetMPProblem()->GetEnvironment() != NULL) 
+      m_approxResolution = 1 / this->GetMPProblem()->GetEnvironment()->GetBoundary()->GetMaxDist();
   }
 
 template<class MPTraits>
@@ -223,6 +232,9 @@ ClearanceUtility<MPTraits>::ParseXML(XMLNodeReader& _node){
   m_exactPenetration = penetrationType.compare("exact")==0;
 
   //if approximate calculations require number of rays to be defined
+  double minStepSize = 1 / this->GetMPProblem()->GetEnvironment()->GetBoundary()->GetMaxDist();
+  m_approxStepSize = _node.numberXMLParameter("stepSize", false, minStepSize, minStepSize, MAX_DBL, "Step size for initial approximate computations as multiple of environment resolution");
+  m_approxResolution = _node.numberXMLParameter("resolution", false, minStepSize, minStepSize, MAX_DBL, "Resolution for final approximate computations as multiple of environment resolution");
   m_clearanceRays = _node.numberXMLParameter("clearanceRays", !m_exactClearance, 10, 1, 1000, "Number of Clearance Rays");
   m_penetrationRays = _node.numberXMLParameter("penetrationRays", !m_exactPenetration, 10, 1, 1000, "Number of Penetration Rays");
 
@@ -235,15 +247,20 @@ void
 ClearanceUtility<MPTraits>::PrintOptions(ostream& _os) const {
   _os << "\tvcLabel = " << m_vcLabel << endl;
   _os << "\tdmLabel = " << m_dmLabel << endl;
+  _os << "\tpositional = " << m_positional << endl;
   _os << "\tuseBBX = " << m_useBBX << endl;
   _os << "\tclearance = ";
-  _os << ((m_exactClearance) ? "exact, " : "approx, ");
-  if(!m_exactClearance) _os << m_clearanceRays << " rays";
+  _os << ((m_exactClearance) ? "exact" : "approx");
+  if(!m_exactClearance) _os << ", " << m_clearanceRays << " rays";
   _os << endl;
   _os << "\tpenetration = ";
-  _os << ((m_exactPenetration) ? "exact, " : "approx, ");
-  if(!m_exactPenetration) _os << m_penetrationRays << " rays";
+  _os << ((m_exactPenetration) ? "exact" : "approx");
+  if(!m_exactPenetration) _os << ", " << m_penetrationRays << " rays";
   _os << endl;
+  if(!m_exactClearance || !m_exactPenetration) {
+    _os << "\tapproxStepSize = " << m_approxStepSize << endl;
+    _os << "\tapproxResolution = " << m_approxResolution << endl;
+  }
 }
 
 //*********************************************************************//
@@ -373,156 +390,228 @@ ClearanceUtility<MPTraits>::ExactCollisionInfo(CfgType& _cfg, CfgType& _clrCfg, 
 // specified number of rays are sent out till they change in validity. //
 // The shortest ray is then considered the best candidate.             //
 //*********************************************************************//
+
+template<class CfgType>
+struct Ray {
+  CfgType m_incr;
+  CfgType m_tick;
+
+  Ray(const CfgType& _i, const CfgType& _t) : m_incr(_i), m_tick(_t) {}
+  ~Ray() {}
+};
+
 template<class MPTraits>
 bool
 ClearanceUtility<MPTraits>::ApproxCollisionInfo(CfgType& _cfg, CfgType& _clrCfg, shared_ptr<Boundary> _bb, CDInfo& _cdInfo){
+  // Check computation cache
   if(_cfg.m_witnessCfg.get() != 0) {
     _cdInfo = _cfg.m_clearanceInfo;
     _clrCfg = CfgType(*_cfg.m_witnessCfg);
     return true;
   }
 
-  // ClearanceUtility variables
+  // If in BBX, check validity to get _cdInfo, return false if not valid
   Environment* env = this->GetMPProblem()->GetEnvironment();
+  if(!env->InBounds(_cfg, _bb))
+    return false;
 
   // Initialization
   string callee = this->GetName() + "::ApproxCollisionInfo";
   DistanceMetricPointer dm  = this->GetMPProblem()->GetDistanceMetric(m_dmLabel);
   ValidityCheckerPointer vcm = this->GetMPProblem()->GetValidityChecker(m_vcLabel);
-
-
-  // Calculate MaxRange for dist calc
-  double maxRange = env->GetBoundary()->GetMaxDist();
-
-  // If in BBX, check validity to get _cdInfo, return false if not valid
-  if(!env->InBounds(_cfg, _bb))
-    return false;
-
   _cdInfo.ResetVars();
   _cdInfo.m_retAllInfo = true;
 
-  bool initInside = vcm->IsInsideObstacle(_cfg);           // Initially Inside Obst
-  bool initValidity = vcm->IsValid(_cfg, _cdInfo, callee); // Initial Validity
+  // Compute initial validity state
+  bool initInside = vcm->IsInsideObstacle(_cfg);
+  bool initValidity = vcm->IsValid(_cfg, _cdInfo, callee);
+  if(this->m_debug) cout << "\nDEBUG:: initInside = " << initInside << "\tinitValidity = " << initValidity;
   initValidity = initValidity && !initInside;
+  if(this->m_debug) cout << "\tinitValidity -> " << initValidity << endl;
 
-  // Setup Major Variables and Constants:
+  // Setup random rays
   size_t numRays;
-  double posRes = env->GetPositionRes(), oriRes = env->GetOrientationRes();
-
-  // Generate 'numRays' random directions at a distance 'dist' away from 'cfg'
   if(initValidity)
     numRays = m_clearanceRays;
   else
     numRays = m_penetrationRays;
-
-  vector<CfgType> directions, candIn, tick, incr;
-  typedef typename vector<CfgType>::iterator CIT;
-  vector<size_t> candTick;
-  int nTicks;
-  candIn.clear();
-
-  // Setup translation rays
+  if(this->m_debug) cout << "DEBUG:: numRays = " << numRays << endl;
+  vector<Ray<CfgType> > rays;
+  double posRes = env->GetPositionRes();
   for(size_t i=0; i<numRays; ++i) {
-    CfgType tmp1 = _cfg;
-    tick.push_back(tmp1);
-    CfgType tmp2;
-    tmp2.GetRandomRay(posRes/maxRange, env, dm, false);
+    CfgType tmpDirection;
+    tmpDirection.GetRandomRay(m_approxStepSize * env->GetPositionRes(), env, dm, false);
+    if(this->m_debug) cout << "DEBUG:: tmpDirection " << i << " is " << tmpDirection << endl;
     if(m_positional) { // Use only positional dofs
       double factor=0.0;
-      for(size_t j=0; j<tmp2.DOF(); j++) {
-        if(j < tmp2.PosDOF())
-          factor += pow(tmp2[j], 2);
+      for(size_t j=0; j<tmpDirection.DOF(); j++) {
+        if(j < tmpDirection.PosDOF())
+          factor += pow(tmpDirection[j], 2);
         else
-          tmp2[j] = 0.0;
+          tmpDirection[j] = 0.0;
       }
-      tmp2 *= posRes/sqrt(factor);
+      tmpDirection *= posRes/sqrt(factor);
     }
-    tmp2 += tmp1;
-    CfgType tmp3;
-    tmp3.FindIncrement(tmp1, tmp2, &nTicks, posRes, oriRes);
-    for(size_t j = tmp3.PosDOF(); j < tmp3.DOF(); ++j) {
-      if(tmp3[j] > 0.5)
-        tmp3[j]--;
+    if(this->m_debug) {
+      cout << "DEBUG:: tmpDirection " << i << " is " << tmpDirection << endl;
+      cout << "DEBUG:: \tdistance(_cfg, _cfg+tmpDirection) = " << dm->Distance(_cfg, _cfg + tmpDirection) << endl;
     }
-    incr.push_back(tmp3);
+    rays.push_back(Ray<CfgType>(tmpDirection, _cfg));
+  }
+  if(this->m_debug) {
+    cout << "DEBUG:: rays initialized\n";
+    cout << "DEBUG:: \ttick are:\n\t\t";
+    for(typename vector<Ray<CfgType> >::const_iterator I = rays.begin(); I != rays.end(); ++I)
+      cout << I->m_tick << "\n\t\t";
+    cout << endl;
+    cout << "DEBUG:: \tincr are:\n\t\t";
+    for(typename vector<Ray<CfgType> >::const_iterator I = rays.begin(); I != rays.end(); ++I)
+      cout << I->m_incr << "\n\t\t";
+    cout << endl;
   }
 
-  // Setup to step out along each direction:
-  bool stateChangedFlag = false, currValidity, currInside, currInBBX;
-  size_t lastLapIndex = -1;
+  // Step out along each direction to determine the candidates
+  vector<pair<size_t, CfgType> > candidates;
+  bool stateChangedFlag = false;
   size_t iterations = 0, maxIterations=10000; // Arbitrary TODO: Smarter maxIter number
-
-  // Shoot out each ray to determine the candidates
-  while(!stateChangedFlag && iterations < maxIterations) {
-    iterations++;
-    // For Each Ray
-    size_t i = 0;
-    for(CIT incrIT = incr.begin(), tickIT = tick.begin();
-        incrIT!=incr.end() && tickIT!=tick.end(); ++incrIT, ++tickIT) {
-      *tickIT += *incrIT;
-      currInside = vcm->IsInsideObstacle(*tickIT);
-      currValidity = vcm->IsValid(*tickIT, callee);
-      currInBBX = env->InBounds(*tickIT, _bb);
+  if(this->m_debug) cout << "DEBUG:: stepping out along each direction to find candidates";
+  while(!stateChangedFlag && iterations++ < maxIterations) {
+    if(this->m_debug) cout << "\n\t" << iterations;
+    for(typename vector<Ray<CfgType> >::iterator I = rays.begin(); I != rays.end(); ++I) {
+      //step out
+      I->m_tick += I->m_incr;
+      
+      //determine new state
+      CDInfo tmpInfo;
+      bool currInside = vcm->IsInsideObstacle(I->m_tick);
+      bool currValidity = vcm->IsValid(I->m_tick, tmpInfo, callee);
       currValidity = currValidity && !currInside;
+      if(m_useBBX) 
+        currValidity = (currValidity && env->InBounds(I->m_tick, _bb));
+      if(this->m_debug) cout << " (currValidity for direction " << distance(rays.begin(), I) << " = " << currValidity << ")";
 
-      if(m_useBBX)
-        currValidity = (currValidity && currInBBX);
-
-      if(currValidity != initValidity) { // If Validity State has changed
-        if(lastLapIndex != i) {
-          CfgType candI = *tickIT - *incrIT;
-          candIn.push_back(candI);
-          candTick.push_back(i);
-        }
-        if(lastLapIndex == (size_t)-1)  // Set lastLapIndex to first ray changing state
-          lastLapIndex = (i==0)?(incr.size()-1):(i-1);
-      }
-      if(lastLapIndex == i){
-        stateChangedFlag = true; // lastLapIndex == i, made full pass
-        break; // Once validity changes, exit loop
-      }
-      i++;
-    } // End for
-  } // End while
-
-  if(candIn.size() == 0)
-    return false;
-
-  double low=0.0, mid=0.5, high=1.0;
-  CfgType middleCfg;
-  bool midInside, midValidity, midInBBX, foundOne;
-  vector<bool> remove;
-
-  // Binary search on candidates to find the best result
-  while(candIn.size() > 1) {
-    mid=(low+high)/2.0;
-    remove.clear();
-    foundOne=false;
-    for(size_t i=0; i<candIn.size(); ++i) {
-      middleCfg = incr[candTick[i]] * mid + candIn[i];
-      midInside = vcm->IsInsideObstacle(middleCfg);
-      midValidity = vcm->IsValid(middleCfg, callee);
-      midInBBX = env->InBounds(middleCfg, _bb);
-      midValidity = midValidity && !midInside;
-      if(m_useBBX)
-        midValidity = (midValidity && midInBBX);
-
-      if(midValidity != initValidity) { // If Validity State has changed
-        remove.push_back(false);
-        foundOne = true;
-      }
-      else {
-        remove.push_back(true);
+      //if state has changed, add to candidate list
+      if(currValidity != initValidity) {
+        stateChangedFlag = true;
+        CfgType candidate = I->m_tick - I->m_incr;
+        candidates.push_back(make_pair(distance(rays.begin(), I), candidate));
       }
     }
+  }
+  if(this->m_debug) {
+    cout << "\nDEBUG:: done stepping out along rays\n";
+    cout << "   found " << candidates.size() << " candidates:\n";
+    for(typename vector<pair<size_t, CfgType> >::iterator I = candidates.begin(); I != candidates.end(); ++I) {
+      cout << "\t" << I->first << ": " << I->second;
+   
+      CDInfo tmpInfo;
+      bool currInside = vcm->IsInsideObstacle(I->second);
+      bool currValidity = vcm->IsValid(I->second, tmpInfo, callee);
+      currValidity = currValidity && !currInside;
+      if(m_useBBX) 
+        currValidity = (currValidity && env->InBounds(I->second, _bb));
+      cout << " (currValidity = " << currValidity << ")";
+      cout << endl;
+    }
+  }
+
+  // Remove spurious candidates 
+  // (not sure why but validity states not consistent sometimes and causes infinite loop later in binary search)
+  if(this->m_debug) cout << "DEBUG:: checking for spurious candidates and removing them\n";
+  vector<bool> remove;
+  for(typename vector<pair<size_t, CfgType> >::iterator I = candidates.begin(); I != candidates.end(); ++I) {
+    if(this->m_debug) cout << "\t" << I->first;
+    CDInfo tmpInfo;
+    
+    CfgType lowCfg = rays[I->first].m_incr * 0.0 + I->second;
+    bool lowInside = vcm->IsInsideObstacle(lowCfg);
+    bool lowValidity = vcm->IsValid(lowCfg, tmpInfo, callee);
+    lowValidity = lowValidity && !lowInside;
+    if(m_useBBX) 
+      lowValidity = (lowValidity && env->InBounds(lowCfg, _bb));
+    if(this->m_debug) cout << " (lowValidity = " << lowValidity << ")";
+
+    CfgType highCfg = rays[I->first].m_incr * 1.0 + I->second;
+    bool highInside = vcm->IsInsideObstacle(highCfg);
+    bool highValidity = vcm->IsValid(highCfg, tmpInfo, callee);
+    highValidity = highValidity && !highInside;
+    if(m_useBBX) 
+      highValidity = (highValidity && env->InBounds(highCfg, _bb));
+    if(this->m_debug) {
+      cout << " (highValidity = " << highValidity << ")";
+      cout << endl;
+    }
+
+    remove.push_back(lowValidity == highValidity);
+  }
+  if(this->m_debug) {
+    cout << "   remove = ";
+    copy(remove.begin(), remove.end(), ostream_iterator<bool>(cout, " "));
+    cout << endl;
+  }
+  size_t offset=0;
+  for(size_t i=0; i<remove.size(); ++i) 
+    if(remove[i]) {
+      candidates.erase(candidates.begin() + (i-offset));
+      offset++;
+    }
+
+  if(this->m_debug) {
+    cout << "   found " << candidates.size() << " candidates:\n";
+    for(typename vector<pair<size_t, CfgType> >::iterator I = candidates.begin(); I != candidates.end(); ++I) {
+      cout << "\t" << I->first << ": " << I->second;
+ 
+      CDInfo tmpInfo;
+      bool currInside = vcm->IsInsideObstacle(I->second);
+      bool currValidity = vcm->IsValid(I->second, tmpInfo, callee);
+      currValidity = currValidity && !currInside;
+      if(m_useBBX) 
+        currValidity = (currValidity && env->InBounds(I->second, _bb));
+      cout << " (currValidity = " << currValidity << ")";
+      cout << endl;
+    }
+  }
+
+  if(candidates.size() == 0)
+    return false;
+
+  // Binary search on candidates to find the best result at specified resolution
+  if(this->m_debug) cout << "DEBUG:: binary searching on candidates to find best result\n";
+  double low=0.0, mid=0.5, high=1.0;
+  while(candidates.size() > 1 || 
+        (candidates.size() == 1 && 
+         dm->Distance((rays[candidates.front().first].m_incr * low + candidates.front().second), (rays[candidates.front().first].m_incr * high + candidates.front().second)) > m_approxResolution * env->GetPositionRes())) {
+    mid = (low+high)/2.0;
+    vector<bool> remove;
+    bool foundStateChange = false;
+    if(this->m_debug) cout << "   mid = " << mid << "\t";
+    for(typename vector<pair<size_t, CfgType> >::iterator I = candidates.begin(); I != candidates.end(); ++I) {
+      CfgType middleCfg = rays[I->first].m_incr * mid + I->second;
+      CDInfo tmpInfo;
+      bool midInside = vcm->IsInsideObstacle(middleCfg);
+      bool midValidity = vcm->IsValid(middleCfg, tmpInfo, callee);
+      midValidity = midValidity && !midInside;
+      if(m_useBBX)
+        midValidity = (midValidity && env->InBounds(middleCfg, _bb));
+      if(this->m_debug) cout << "(midValidity for direction " << I->first << " = " << midValidity << ", distance = " << dm->Distance((rays[I->first].m_incr * low + I->second), middleCfg) << ") ";
+
+      remove.push_back(midValidity == initValidity);
+      if(midValidity != initValidity) // If Validity State has changed
+        foundStateChange = true;
+    }
+    if(this->m_debug) cout << endl;
 
     // If at least one good candidate is found, remove all known bad ones
-    if(foundOne) {
-      size_t offset=0;
+    if(foundStateChange) {
+      if(this->m_debug) {
+        cout << "\tfound state change: remove = ";
+        copy(remove.begin(), remove.end(), ostream_iterator<bool>(cout, " "));
+        cout << endl;
+      }
+     size_t offset=0;
       for(size_t i=0; i<remove.size(); ++i) {
         if(remove[i]) {
-          candIn.erase(candIn.begin() + (i-offset));
-          candTick.erase(candTick.begin() + (i-offset));
+          candidates.erase(candidates.begin() + (i-offset));
           offset++;
         }
       }
@@ -532,35 +621,40 @@ ClearanceUtility<MPTraits>::ApproxCollisionInfo(CfgType& _cfg, CfgType& _clrCfg,
       low=mid;
     }
   }
+  if(this->m_debug) {
+    cout << "DEBUG:: done with binary search\n";
+    cout << "   resulting candidate: " << candidates[0].first << ": " << candidates[0].second << endl;
+    cout << "   low = " << low << "\thigh = " << high << endl;
+  }
 
-  if(initValidity) { // Low may be initial cfg so keep looking
+  // Finalizing search, keep mid as the low cfg if computing clearance and mid as the high cfg if computing penetration
+  if(initValidity) { // Computing clerarance, so low is needed as long as its not the initial cfg
     while(low == 0.0) {
       mid=(low+high)/2.0;
-      middleCfg = incr[candTick[0]] * mid + candIn[0];
+      CfgType middleCfg = rays[candidates[0].first].m_incr * mid + candidates[0].second;
 
-      midInside = vcm->IsInsideObstacle(middleCfg);
-      midValidity = vcm->IsValid(middleCfg, callee);
-      midInBBX = env->InBounds(middleCfg, _bb);
+      CDInfo tmpInfo;
+      bool midInside = vcm->IsInsideObstacle(middleCfg);
+      bool midValidity = vcm->IsValid(middleCfg, tmpInfo, callee);
       midValidity = midValidity && !midInside;
       if(m_useBBX)
-        midValidity = (midValidity && midInBBX);
+        midValidity = (midValidity && env->InBounds(middleCfg, _bb));
       if(midValidity != initValidity) // If Validity State has changed
         high=mid;
       else
         low=mid;
     }
     mid=low;
-  }
-  else { // Pushed out, high is all we need
+  } else { // Computing penetration, so high is needed and will never be the initial cfg 
     mid=high;
   }
-  middleCfg = incr[candTick[0]] * mid + candIn[0];
-  _clrCfg = middleCfg;
-  _cdInfo.m_minDist = (initValidity ? 1.0 : -1.0) * dm->Distance(middleCfg, _cfg);
 
-  if(_clrCfg == _cfg)
+  // Set return info
+  if(this->m_debug) cout << "DEBUG:: setting info, returning\n";
+  _clrCfg = rays[candidates[0].first].m_incr * mid + candidates[0].second;
+  _cdInfo.m_minDist = (initValidity ? 1.0 : -1.0) * dm->Distance(_clrCfg, _cfg);
+  if(_clrCfg == _cfg) //shouldn't happen, but should return an error
     return false;
-
   if(env->InBounds(_clrCfg, _bb)) {
     _cfg.m_clearanceInfo = _cdInfo;
     _cfg.m_witnessCfg = shared_ptr<Cfg>(new CfgType(_clrCfg));

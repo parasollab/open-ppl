@@ -8,7 +8,8 @@
     </DistanceMetrics> 
 
     <ValidityCheckers>    
-      <CollisionDetection label="cd" method="RAPID"/>
+      <CollisionDetection label="cd" method="PQP_SOLID"/>
+      <AlwaysTrueValidity label="always_true"/>
     </ValidityCheckers>
     
     <NeighborhoodFinders>
@@ -41,9 +42,22 @@
         <node_connection_method Method="Closest"/>
         <evaluation_method Method="NodesEval"/>
       </BasicPRM>
+      <ClearanceTest label="ClearanceTest" dmLabel="euclidean" debug="true">
+        <node_generation_method Method="UniformRandom" Number="5" Attempts="100"/>
+        <clearance vcLabel="cd" dmLabel="euclidean" clearanceType="exact" penetrationType="exact" useBBX="true" positional="false"/>
+        <clearance vcLabel="cd" dmLabel="euclidean" clearanceType="exact" penetrationType="exact" useBBX="false" positional="true"/>
+        <!--
+        <clearance vcLabel="cd" dmLabel="euclidean" clearanceType="approx" clearanceRays="7" penetrationType="exact" stepSize="10" resolution="1" useBBX="true" positional="false" debug="true" />
+        -->
+        <clearance vcLabel="cd" dmLabel="euclidean" clearanceType="approx" clearanceRays="1" penetrationType="approx" penetrationRays="1" useBBX="true" positional="false"/>
+        <clearance vcLabel="cd" dmLabel="euclidean" clearanceType="approx" clearanceRays="10" penetrationType="approx" penetrationRays="10" useBBX="true" positional="false"/>
+      </ClearanceTest>
     </MPStrategies>
 
     <Solver mpStrategyLabel="BasicPRM" seed="1234567" baseFilename="Basic"/>
+    <!--
+    <Solver mpStrategyLabel="ClearanceTest" seed="1234567" baseFilename="Basic"/>
+    -->
   </MPProblem>
 </MotionPlanning>
 

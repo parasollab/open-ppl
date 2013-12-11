@@ -118,6 +118,7 @@
 #include "MPStrategies/MultiStrategy.h"
 #include "MPStrategies/PushQueryToMA.h"
 #include "MPStrategies/TogglePRMStrategy.h"
+#include "MPStrategies/UnitTest/ClearanceTestStrategy.h"
 #include "MPStrategies/UnitTest/DMTestStrategy.h"
 #include "MPStrategies/UtilityGuidedGenerator.h"
 #include "MPStrategies/VisibilityBasedPRM.h"
@@ -282,6 +283,7 @@ struct MPTraits{
     AdaptiveRRT<MPTraits>,
     BasicPRM<MPTraits>,
     BasicRRTStrategy<MPTraits>,
+    ClearanceTestStrategy<MPTraits>,
     DMTestStrategy<MPTraits>,
     EvaluateMapStrategy<MPTraits>,
     MultiStrategy<MPTraits>,
