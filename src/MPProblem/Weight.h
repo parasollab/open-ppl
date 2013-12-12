@@ -34,10 +34,10 @@ class DefaultWeight {
     virtual bool operator<(const DefaultWeight& _other) const ;
 
     // Read/Write values of datamember to given input/output stream.
-    template<class CfgType2>
-    friend ostream& operator<< (ostream& _os, const DefaultWeight<CfgType2>& _w);
-    template<class CfgType2>
-    friend istream& operator>> (istream& _is, DefaultWeight<CfgType2>& _w);
+    template<class C>
+      friend ostream& operator<<(ostream& _os, const DefaultWeight<C>& _w);
+    template<class C>
+      friend istream& operator>>(istream& _is, DefaultWeight<C>& _w);
 
     // Access Methods
     string GetLPLabel() const { return m_lpLabel; }
@@ -65,7 +65,7 @@ class DefaultWeight {
   public:
     //changed local to member
 #ifdef _PARALLEL
-    void define_type(stapl::typer &t)  
+    void define_type(stapl::typer &t)
     {
       t.member(m_weight);
       t.member(m_lpLabel);
@@ -92,19 +92,19 @@ DefaultWeight<CfgType>::InvalidWeight(){
 }
 
 template<class CfgType>
-DefaultWeight<CfgType> 
+DefaultWeight<CfgType>
 DefaultWeight<CfgType>::MaxWeight(){
   return DefaultWeight<CfgType>("INVALID", MAX_WEIGHT);
 }
 
 template<class CfgType>
-bool 
+bool
 DefaultWeight<CfgType>::operator==(const DefaultWeight<CfgType>& _tmp) const{
   return ( (m_lpLabel==_tmp.GetLPLabel()) && (m_weight==_tmp.GetWeight()) );
 }
 
 template<class CfgType>
-const DefaultWeight<CfgType>& 
+const DefaultWeight<CfgType>&
 DefaultWeight<CfgType>::operator=(const DefaultWeight<CfgType>& _w){
   m_lpLabel = _w.GetLPLabel();
   m_weight = _w.GetWeight();
@@ -114,31 +114,37 @@ DefaultWeight<CfgType>::operator=(const DefaultWeight<CfgType>& _w){
 }
 
 template<class CfgType>
-ostream& 
+ostream&
 operator<<(ostream& _os, const DefaultWeight<CfgType>& _w){
   _os << _w.m_intermediates.size() << " ";
-   for(typename vector<CfgType>::const_iterator cit = _w.m_intermediates.begin(); cit!= _w.m_intermediates.end(); cit++){
+  for(typename vector<CfgType>::const_iterator cit = _w.m_intermediates.begin(); cit!= _w.m_intermediates.end(); cit++){
     _os << *cit;
   }
   return _os << _w.m_weight;
 }
 
 template<class CfgType>
-istream& 
+istream&
 operator>>(istream& _is, DefaultWeight<CfgType>& _w){
-  int tmp;
-  _is >> tmp >> _w.m_weight;
-  return _is;
+  size_t numIntermediates;
+  _is >> numIntermediates;
+  _w.m_intermediates.clear();
+  CfgType tmp;
+  for(size_t i = 0; i < numIntermediates; ++i) {
+    _is >> tmp;
+    _w.m_intermediates.push_back(tmp);
+  }
+  return _is >> _w.m_weight;
 }
 
 template<class CfgType>
-DefaultWeight<CfgType> 
+DefaultWeight<CfgType>
 DefaultWeight<CfgType>::operator+(const DefaultWeight<CfgType>& _other) const {
   return DefaultWeight<CfgType>(m_lpLabel, m_weight+_other.m_weight);
 }
 
 template<class CfgType>
-bool 
+bool
 DefaultWeight<CfgType>::operator<(const DefaultWeight<CfgType>& _other) const {
   return m_weight < _other.m_weight;
 }
