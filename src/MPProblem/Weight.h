@@ -42,6 +42,7 @@ class DefaultWeight {
     // Access Methods
     string GetLPLabel() const { return m_lpLabel; }
     void SetLPLabel(string _lpLabel){ m_lpLabel = _lpLabel; }
+    vector<CfgType>& GetIntermediates() { return m_intermediates; }
     const vector<CfgType>& GetIntermediates() const { return m_intermediates; }
     void SetIntermediates(vector<CfgType>& _intermediates){ m_intermediates = _intermediates;}
 
