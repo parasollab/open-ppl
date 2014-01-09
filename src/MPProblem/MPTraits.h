@@ -82,6 +82,7 @@
 #include "Connectors/NeighborhoodConnector.h"
 #include "Connectors/RewireConnector.h"
 #include "Connectors/CCExpansion.h"
+#include "Connectors/ClosestVE.h"
 
 //metric includes
 #include "Metrics/CCDistanceMetric.h"
@@ -232,8 +233,8 @@ struct MPTraits{
     CCsConnector<MPTraits>,
     NeighborhoodConnector<MPTraits>,
     //PreferentialAttachment<MPTraits>,
-    RewireConnector<MPTraits>//,
-    //ClosestVE<MPTraits>
+    RewireConnector<MPTraits>,
+    ClosestVE<MPTraits>
       > ConnectorMethodList;
 
 #ifndef _PARALLEL
