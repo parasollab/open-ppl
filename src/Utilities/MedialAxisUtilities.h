@@ -38,6 +38,7 @@ class ClearanceUtility : public MPBaseObject<MPTraits> {
 
     string GetDistanceMetricLabel() const {return m_dmLabel;}
     string GetValidityCheckerLabel() const {return m_vcLabel;}
+    bool   GetExactClearance() const {return m_exactClearance;}
 
     //*********************************************************************//
     // Calculate Collision Information                                     //

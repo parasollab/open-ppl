@@ -59,6 +59,7 @@
 #include "LocalPlanners/SurfaceLP.h"
 #include "LocalPlanners/ToggleLP.h"
 #include "LocalPlanners/TransformAtS.h"
+#include "LocalPlanners/ApproxSpheres.h"
 
 //extenders includes
 #include "Extenders/BasicExtender.h"
@@ -204,7 +205,8 @@ struct MPTraits{
     RotateAtS<MPTraits>,
     StraightLine<MPTraits>,
     ToggleLP<MPTraits>,
-    TransformAtS<MPTraits>
+    TransformAtS<MPTraits>,
+    ApproxSpheres<MPTraits>
     > LocalPlannerMethodList;
 
   //types of extenders avaible in our world
