@@ -246,7 +246,6 @@ ClosestVE<MPTraits>::FindKClosestPairs(RoadmapType* _rm,
   typedef typename RoadmapType::GraphType GraphType;
 
   DistanceMetricPointer dm = this->GetMPProblem()->GetNeighborhoodFinder(this->m_nfLabel)->GetDMMethod();
-  Environment* env = this->GetMPProblem()->GetEnvironment();
   LocalPlannerPointer lp = this->GetMPProblem()->GetLocalPlanner(this->m_lpLabel);
 
   CfgType cfg = _rm->GetGraph()->GetVertex(_vid);
