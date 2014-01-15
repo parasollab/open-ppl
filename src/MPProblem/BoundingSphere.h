@@ -6,6 +6,7 @@
 class BoundingSphere : public Boundary {
   public:
     BoundingSphere();
+    BoundingSphere(const Vector3d& _center, double _radius);
     BoundingSphere(const BoundingSphere& _bs);
     ~BoundingSphere() {}
 
@@ -45,7 +46,7 @@ class BoundingSphere : public Boundary {
 #ifdef _PARALLEL
 namespace stapl {
   template <typename Accessor>
-    class proxy<BoundingSphere, Accessor> 
+    class proxy<BoundingSphere, Accessor>
     : public Accessor {
       private:
         friend class proxy_core_access;

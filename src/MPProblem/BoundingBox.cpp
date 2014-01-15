@@ -6,6 +6,13 @@ BoundingBox::BoundingBox() {
     m_bbx[i] = make_pair(-numeric_limits<double>::max(), numeric_limits<double>::max());
 }
 
+BoundingBox::BoundingBox(pair<double, double> _x, pair<double, double> _y,
+    pair<double, double> _z) {
+  m_bbx[0] = _x;
+  m_bbx[1] = _y;
+  m_bbx[2] = _z;
+}
+
 BoundingBox::BoundingBox(const BoundingBox& _bbx) {
   copy(_bbx.m_bbx, _bbx.m_bbx + 2, m_bbx);
 }

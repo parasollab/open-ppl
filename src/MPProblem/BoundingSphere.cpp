@@ -4,7 +4,11 @@
 BoundingSphere::BoundingSphere() :
   m_center(0.0, 0.0, 0.0),
   m_radius(numeric_limits<double>::max()) {
-  }
+}
+
+BoundingSphere::BoundingSphere(const Vector3d& _center, double _radius) :
+  m_center(_center), m_radius(_radius) {
+}
 
 BoundingSphere::BoundingSphere(const BoundingSphere& _bs) :
   m_center(_bs.m_center),

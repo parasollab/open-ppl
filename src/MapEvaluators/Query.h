@@ -29,7 +29,7 @@ class Query : public MapEvaluatorMethod<MPTraits> {
     string _intermediateFile="", string _lpLabel="", string _dmLabel="",
     string _pathModifierLabel="");
 
-    Query(string _queryFileName);
+    Query(string _queryFileName, const vector<string>& _connLabels = vector<string>());
     Query(const CfgType& _start, const CfgType& _goal);
     Query(MPProblemType* _problem, XMLNodeReader& _node, bool _warn = true);
     Query(MPProblemType* _problem, CfgType _start, CfgType _goal, const vector<string>& _connectorLabels=vector<string>(),
@@ -121,7 +121,7 @@ Query<MPTraits>::Query(bool _deleteNodes, string _searchAlg, string _pathFile,
 
 // Reads in query from a file
 template<class MPTraits>
-Query<MPTraits>::Query(string _queryFileName) {
+Query<MPTraits>::Query(string _queryFileName, const vector<string>& _connLabels) : m_nodeConnectionLabels(_connLabels) {
   Initialize();
   ReadQuery(_queryFileName);
 }
