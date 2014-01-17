@@ -49,12 +49,12 @@ class UniformRandomSampler : public SamplerMethod<MPTraits> {
 
       _stats.IncNodesAttempted(this->GetNameAndLabel());
 
-      //Obtain a random configuration
+      //Obtain a random configuration within _bb
       CfgType tmp;
-      tmp.GetRandomCfg(_env,_bb);
+      tmp.GetRandomCfg(_env, _bb);
 
-      //Is configuration within boundary?
-      bool inBBX = _env->InBounds(tmp, _bb);
+      //Is configuration within environment boundary?
+      bool inBBX = _env->InBounds(tmp, _env->GetBoundary());
       if(this->m_debug){
         cout << "tmp::" << tmp << endl;
         cout << "InBoudary::" << inBBX << endl;
