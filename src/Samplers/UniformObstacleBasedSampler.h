@@ -105,10 +105,10 @@ class UniformObstacleBasedSampler : public SamplerMethod<MPTraits> {
       CfgType temp = cfg1;
 
       inter.FindIncrement(cfg1, cfg2, &nTicks, positionRes, orientationRes);
+      _env->GetBoundary()->ResetBoundary(origBoundary, 0);
       for(int i=1; i<nTicks; i++) {
         tick += inter;
         tickFree = (vc->IsValid(tick, callee)) && (!vc->IsInsideObstacle(tick));
-        _env->GetBoundary()->ResetBoundary(origBoundary, 0);
         if(m_useBoundary)
           tickFree = tickFree && _env->InBounds(tick, _bb);
 
