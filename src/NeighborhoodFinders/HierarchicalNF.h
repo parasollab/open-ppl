@@ -2,7 +2,7 @@
 #define HIERARCHICALNF_H_
 
 #include "NeighborhoodFinderMethod.h"
-#include "BruteForceNF.h"
+//#include "graph/algorithms/count_hop_pairs.h"
 
 template<class MPTraits>
 class HierarchicalNF : public NeighborhoodFinderMethod<MPTraits> {
@@ -11,71 +11,100 @@ class HierarchicalNF : public NeighborhoodFinderMethod<MPTraits> {
     typedef typename MPTraits::MPProblemType MPProblemType;
     typedef typename MPProblemType::RoadmapType RoadmapType;
     typedef typename MPProblemType::VID VID;
+    typedef typename MPProblemType::GraphType GraphType;
+    typedef typename MPProblemType::NeighborhoodFinderPointer NeighborhoodFinderPointer;
 
-    HierarchicalNF(string _dmLabel1 = "", string _dmLabel2 = "", size_t _k1 = 10, size_t _k2 = 5, bool _unconnected = false)
-      : NeighborhoodFinderMethod<MPTraits>(),
-      m_nf1(_dmLabel1, _unconnected, _k1),
-      m_nf2(_dmLabel2, _unconnected, _k2) {
+    HierarchicalNF(string _dmLabel = "") :
+      NeighborhoodFinderMethod<MPTraits>(_dmLabel) {
         this->SetName("HierarchicalNF");
-        this->m_nfType = K;
+        this->m_nfType = OTHER;
       }
 
-    HierarchicalNF(MPProblemType* _problem, XMLNodeReader& _node)
-      : NeighborhoodFinderMethod<MPTraits>(_problem, _node) {
+    HierarchicalNF(MPProblemType* _problem, XMLNodeReader& _node) :
+      NeighborhoodFinderMethod<MPTraits>(_problem, _node) {
         this->SetName("HierarchicalNF");
-        this->m_nfType = K;
-
-        size_t k = _node.numberXMLParameter("k", true, 5, 0, MAX_INT, "K1 value for HierarchicalNF");
-        size_t k2 = _node.numberXMLParameter("k2", true, 5, 0, MAX_INT, "K2 value for HierarchicalNF");
-        string dmLabel2 = _node.stringXMLParameter("dmLabel2",true,"","Second distance metric method");
-
-        m_nf1 = BruteForceNF<MPTraits>(this->m_dmLabel, this->m_unconnected, k);
-        m_nf2 = BruteForceNF<MPTraits>(dmLabel2, this->m_unconnected, k2);
+        this->m_nfType = OTHER;
+        m_nfLabel = _node.stringXMLParameter("nfLabel", true, "default", "Neighbor Finder Method1");
+	m_nfLabel2 = _node.stringXMLParameter("nfLabel2", true, "default", "Neighbor Finder Method2");
+        _node.warnUnrequestedAttributes();
       }
 
     virtual void PrintOptions(ostream& _os) const {
       NeighborhoodFinderMethod<MPTraits>::PrintOptions(_os);
-      _os << "\tNF1: ";
-      m_nf1.PrintOptions(_os);
-      _os << endl;
-      _os << "\tNF2: ";
-      m_nf2.PrintOptions(_os);
-      _os << endl;
+      _os  << "\tnfLabel: " << m_nfLabel << endl;
+      _os  << "\tnfLabel2: " << m_nfLabel2 << endl;
     }
 
     template<typename InputIterator, typename OutputIterator>
-      OutputIterator KClosest(RoadmapType* _rmp,
-          InputIterator _first, InputIterator _last, CfgType _cfg, size_t _k, OutputIterator _out){
-
-        this->IncrementNumQueries();
-        this->StartTotalTime();
-        this->StartQueryTime();
-
-        vector<pair<VID, double> > closest;
-        m_nf1.FindNeighbors(_rmp, _first, _last, _cfg, back_inserter(closest));
-        m_nf2.FindNeighbors(_rmp, closest.begin(), closest.end(), _cfg, _out);
-
-        this->EndQueryTime();
-        this->EndTotalTime();
-
-        return _out;
-      }
+      OutputIterator FindNeighbors(RoadmapType* _rmp,
+          InputIterator _first, InputIterator _last, const CfgType& _cfg, OutputIterator _out);
 
     // KClosest that operate over two ranges of VIDS.  K total pair<VID,VID> are returned that
     // represent the _kclosest pairs of VIDs between the two ranges.
-
     template<typename InputIterator, typename OutputIterator>
-      OutputIterator KClosestPairs(RoadmapType* _rmp,
+      OutputIterator FindNeighborPairs(RoadmapType* _rmp,
           InputIterator _first1, InputIterator _last1,
           InputIterator _first2, InputIterator _last2,
-          size_t _k, OutputIterator _out){
-        cerr << "ERROR:: HierarchicalNF::KClosestPairs is not yet implemented. Exiting" << endl;
-        exit(1);
-      }
+          OutputIterator _out);
 
   private:
-    BruteForceNF<MPTraits> m_nf1;
-    BruteForceNF<MPTraits> m_nf2;
+    string m_nfLabel;
+    string m_nfLabel2;
+    vector<pair<VID, double> > m_closest; 
+    vector<VID> ccVIDs;
+   
 };
+
+template<class MPTraits>
+template<typename InputIterator, typename OutputIterator>
+OutputIterator
+HierarchicalNF<MPTraits>::FindNeighbors(RoadmapType* _rmp, InputIterator _first, InputIterator _last,
+    const CfgType& _cfg, OutputIterator _out) {
+
+  this->IncrementNumQueries();
+  this->StartTotalTime();
+  this->StartQueryTime();
+
+  GraphType* graph = _rmp->GetGraph();
+  NeighborhoodFinderPointer nf = this->GetMPProblem()->GetNeighborhoodFinder(m_nfLabel); 
+  NeighborhoodFinderPointer nf2 = this->GetMPProblem()->GetNeighborhoodFinder(m_nfLabel2);
+ 
+  
+  nf->FindNeighbors(_rmp, _first, _last, _cfg, back_inserter(m_closest));
+  
+
+ 
+ typename vector<pair<VID, double> >::const_iterator ccIt;
+    stapl::sequential::vector_property_map<GraphType, size_t> cmap;
+    for(ccIt = m_closest.begin(); ccIt != m_closest.end(); ccIt++) {
+      cmap.reset();
+      ccVIDs.clear();
+    
+    get_cc(*graph, cmap, ccIt->first, ccVIDs);
+    }  
+ 
+  nf2->FindNeighbors(_rmp,ccVIDs.begin(),ccVIDs.end(), _cfg, _out);
+
+  if(this->m_debug){
+    nf->PrintOptions(cout);
+    nf2->PrintOptions(cout);
+   }  
+  
+  this->EndQueryTime();
+  this->EndTotalTime();
+
+  return _out;
+}
+
+template<class MPTraits>
+template<typename InputIterator, typename OutputIterator>
+OutputIterator
+HierarchicalNF<MPTraits>::FindNeighborPairs(RoadmapType* _rmp,
+    InputIterator _first1, InputIterator _last1,
+    InputIterator _first2, InputIterator _last2,
+    OutputIterator _out) {
+  cerr << "ERROR:: HierarchicalNF::FindNeighborPairs is not yet implemented. Exiting." << endl;
+  exit(1);
+}
 
 #endif
