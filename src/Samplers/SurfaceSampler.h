@@ -20,6 +20,7 @@ class SurfaceSampler : public SamplerMethod<MPTraits> {
     double m_maxObsClearance;
     double m_minObsClearance;
     double m_overallMinClearanceReq;
+    map< string, double > m_customSurfaceClearance;
     string m_surfacesStrToIgnore;
     vector<string> m_surfacesToIgnore;
 
@@ -71,12 +72,25 @@ class SurfaceSampler : public SamplerMethod<MPTraits> {
       _out << "\tminObsClearance = " << m_minObsClearance
         << "\tmaxObsClearance = " << m_maxObsClearance
 	<< "\toverallMinClearanceReq = " << m_overallMinClearanceReq << endl;
+      _out << "\tcloseDist = " << m_closeDist << endl;
       _out << "\tsurfacesToIgnore = [";
       for(int i=0; i<(int)m_surfacesToIgnore.size();i++) {
 	 _out << m_surfacesToIgnore[i];
 	 if( i!=((int)m_surfacesStrToIgnore.size()-1)) _out << ",";
       }
       _out << "]" << endl;
+
+      _out << "\tcustomSurfaceClearances = [ ";
+      typedef map<string,double>::iterator NIT;
+      map<string,double> localCopy = m_customSurfaceClearance;
+      for(NIT nit=localCopy.begin(); nit!=localCopy.end(); nit++) {
+	 _out << "(" << nit->first << "," << nit->second << ") "; 
+      }
+      _out << " ]" << endl;
+    }
+
+    void AddCustomSurfaceClearance(string _surfName, double _clearance) {
+       m_customSurfaceClearance[_surfName] = _clearance;
     }
 
   protected:
@@ -107,13 +121,20 @@ class SurfaceSampler : public SamplerMethod<MPTraits> {
       SurfaceMedialAxisUtility<MPTraits> mau(this->GetMPProblem(), m_vcLabel, "Euclidean");
       //mau.SetDebug(true);
       for(int i=-1; i<numSurfaces; i++) {
+	double thisSurfaceClearance = m_closeDist;
 	cout << " Sampling for surface: " << i << endl;
 	if( this->m_debug) cout << " Sampling for surface: " << i << endl;
 	if( this->m_debug) cout << " num usable multibodies: " << _env->GetUsableMultiBodyCount() << " active bodies: " << _env->GetActiveBodyCount() << endl;
 	string iSurfName="BASE";
 	if( i>=0 )
-	   iSurfName=_env->GetNavigableSurface((size_t) i)->GetLabel();;
+	   iSurfName=_env->GetNavigableSurface((size_t) i)->GetLabel();
 	if( find(m_surfacesToIgnore.begin(),m_surfacesToIgnore.end(), iSurfName) != m_surfacesToIgnore.end() ) continue;
+	map<string,double>::iterator nit = m_customSurfaceClearance.find(iSurfName);
+
+	if(nit!=m_customSurfaceClearance.end()) {
+	   thisSurfaceClearance = nit->second;
+	   cout << " surface: " << nit->first << " has custom clearance: " << nit->second << endl;
+	}
 	attempts = 0;
 	vector<CfgType> cfgsOnSurface;
 
@@ -288,14 +309,15 @@ class SurfaceSampler : public SamplerMethod<MPTraits> {
 
 	      bool stillValid = vcp->IsValid(tmp, callee);
 	      double d = DistToNearestOnSurf(tmp,cfgsOnSurface);
-	      if( stillValid && validFound && (d>m_closeDist) && (clear>m_overallMinClearanceReq) ) {
+	      //if( stillValid && validFound && (d>m_closeDist) && (clear>m_overallMinClearanceReq) ) {
+	      if( stillValid && validFound && (d>thisSurfaceClearance) && (clear>m_overallMinClearanceReq) ) {
 	      //if( stillValid && validFound && (d>m_closeDist)  ) {
-		if(this->m_debug) cout << "validFoundIndex::"<<_cfgOut.size()<<" cfg: "<<tmp << " closestNodeDist: " << d << " clear: " << clear <<endl;
+		//if(this->m_debug) cout << "validFoundIndex::"<<_cfgOut.size()<<" cfg: "<<tmp << " closestNodeDist: " << d << " clear: " << clear <<endl;
 		_cfgOut.push_back(tmp);
 		cfgsOnSurface.push_back(tmp);
 	      }
 	      else {
-		if(this->m_debug) cout << "validFound but maybe too close cfg: "<< tmp << " dist: " << d << " of closeDist: " << m_closeDist << " or min clearance not right: " << clear << " of " << m_overallMinClearanceReq << " or pushed to collision: " << stillValid << " validFound: " << validFound <<endl;
+		//if(this->m_debug) cout << "validFound but maybe too close cfg: "<< tmp << " dist: " << d << " of closeDist: " << m_closeDist << " or min clearance not right: " << clear << " of " << m_overallMinClearanceReq << " or pushed to collision: " << stillValid << " validFound: " << validFound <<endl;
 	      }
 	    } else {
 	      _cfgCol.push_back(tmp);
