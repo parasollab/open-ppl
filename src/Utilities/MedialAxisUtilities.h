@@ -195,7 +195,7 @@ ClearanceUtility<MPTraits>::ClearanceUtility(MPProblemType* _problem,
     string _vcLabel, string _dmLabel,
     bool _exactClearance, bool _exactPenetration,
     size_t _clearanceRays, size_t _penetrationRays,
-    double _approxStepSize, double _approxResolution, 
+    double _approxStepSize, double _approxResolution,
     bool _useBBX, bool _positional, bool _debug):
   m_vcLabel(_vcLabel), m_dmLabel(_dmLabel),
   m_exactClearance(_exactClearance), m_exactPenetration(_exactPenetration),
@@ -206,9 +206,9 @@ ClearanceUtility<MPTraits>::ClearanceUtility(MPProblemType* _problem,
     this->SetMPProblem(_problem);
     this->m_debug = _debug;
 
-    if(m_approxStepSize == MAX_DBL && this->GetMPProblem() != NULL && this->GetMPProblem()->GetEnvironment() != NULL) 
+    if(m_approxStepSize == MAX_DBL && this->GetMPProblem() != NULL && this->GetMPProblem()->GetEnvironment() != NULL)
       m_approxStepSize = 1 / this->GetMPProblem()->GetEnvironment()->GetBoundary()->GetMaxDist();
-    if(m_approxResolution == MAX_DBL && this->GetMPProblem() != NULL && this->GetMPProblem()->GetEnvironment() != NULL) 
+    if(m_approxResolution == MAX_DBL && this->GetMPProblem() != NULL && this->GetMPProblem()->GetEnvironment() != NULL)
       m_approxResolution = 1 / this->GetMPProblem()->GetEnvironment()->GetBoundary()->GetMaxDist();
   }
 
@@ -480,13 +480,13 @@ ClearanceUtility<MPTraits>::ApproxCollisionInfo(CfgType& _cfg, CfgType& _clrCfg,
     for(typename vector<Ray<CfgType> >::iterator I = rays.begin(); I != rays.end(); ++I) {
       //step out
       I->m_tick += I->m_incr;
-      
+
       //determine new state
       CDInfo tmpInfo;
       bool currInside = vcm->IsInsideObstacle(I->m_tick);
       bool currValidity = vcm->IsValid(I->m_tick, tmpInfo, callee);
       currValidity = currValidity && !currInside;
-      if(m_useBBX) 
+      if(m_useBBX)
         currValidity = (currValidity && env->InBounds(I->m_tick, _bb));
       if(this->m_debug) cout << " (currValidity for direction " << distance(rays.begin(), I) << " = " << currValidity << ")";
 
@@ -503,31 +503,31 @@ ClearanceUtility<MPTraits>::ApproxCollisionInfo(CfgType& _cfg, CfgType& _clrCfg,
     cout << "   found " << candidates.size() << " candidates:\n";
     for(typename vector<pair<size_t, CfgType> >::iterator I = candidates.begin(); I != candidates.end(); ++I) {
       cout << "\t" << I->first << ": " << I->second;
-   
+
       CDInfo tmpInfo;
       bool currInside = vcm->IsInsideObstacle(I->second);
       bool currValidity = vcm->IsValid(I->second, tmpInfo, callee);
       currValidity = currValidity && !currInside;
-      if(m_useBBX) 
+      if(m_useBBX)
         currValidity = (currValidity && env->InBounds(I->second, _bb));
       cout << " (currValidity = " << currValidity << ")";
       cout << endl;
     }
   }
 
-  // Remove spurious candidates 
+  // Remove spurious candidates
   // (not sure why but validity states not consistent sometimes and causes infinite loop later in binary search)
   if(this->m_debug) cout << "DEBUG:: checking for spurious candidates and removing them\n";
   vector<bool> remove;
   for(typename vector<pair<size_t, CfgType> >::iterator I = candidates.begin(); I != candidates.end(); ++I) {
     if(this->m_debug) cout << "\t" << I->first;
     CDInfo tmpInfo;
-    
+
     CfgType lowCfg = rays[I->first].m_incr * 0.0 + I->second;
     bool lowInside = vcm->IsInsideObstacle(lowCfg);
     bool lowValidity = vcm->IsValid(lowCfg, tmpInfo, callee);
     lowValidity = lowValidity && !lowInside;
-    if(m_useBBX) 
+    if(m_useBBX)
       lowValidity = (lowValidity && env->InBounds(lowCfg, _bb));
     if(this->m_debug) cout << " (lowValidity = " << lowValidity << ")";
 
@@ -535,7 +535,7 @@ ClearanceUtility<MPTraits>::ApproxCollisionInfo(CfgType& _cfg, CfgType& _clrCfg,
     bool highInside = vcm->IsInsideObstacle(highCfg);
     bool highValidity = vcm->IsValid(highCfg, tmpInfo, callee);
     highValidity = highValidity && !highInside;
-    if(m_useBBX) 
+    if(m_useBBX)
       highValidity = (highValidity && env->InBounds(highCfg, _bb));
     if(this->m_debug) {
       cout << " (highValidity = " << highValidity << ")";
@@ -550,7 +550,7 @@ ClearanceUtility<MPTraits>::ApproxCollisionInfo(CfgType& _cfg, CfgType& _clrCfg,
     cout << endl;
   }
   size_t offset=0;
-  for(size_t i=0; i<remove.size(); ++i) 
+  for(size_t i=0; i<remove.size(); ++i)
     if(remove[i]) {
       candidates.erase(candidates.begin() + (i-offset));
       offset++;
@@ -560,12 +560,12 @@ ClearanceUtility<MPTraits>::ApproxCollisionInfo(CfgType& _cfg, CfgType& _clrCfg,
     cout << "   found " << candidates.size() << " candidates:\n";
     for(typename vector<pair<size_t, CfgType> >::iterator I = candidates.begin(); I != candidates.end(); ++I) {
       cout << "\t" << I->first << ": " << I->second;
- 
+
       CDInfo tmpInfo;
       bool currInside = vcm->IsInsideObstacle(I->second);
       bool currValidity = vcm->IsValid(I->second, tmpInfo, callee);
       currValidity = currValidity && !currInside;
-      if(m_useBBX) 
+      if(m_useBBX)
         currValidity = (currValidity && env->InBounds(I->second, _bb));
       cout << " (currValidity = " << currValidity << ")";
       cout << endl;
@@ -578,8 +578,8 @@ ClearanceUtility<MPTraits>::ApproxCollisionInfo(CfgType& _cfg, CfgType& _clrCfg,
   // Binary search on candidates to find the best result at specified resolution
   if(this->m_debug) cout << "DEBUG:: binary searching on candidates to find best result\n";
   double low=0.0, mid=0.5, high=1.0;
-  while(candidates.size() > 1 || 
-        (candidates.size() == 1 && 
+  while(candidates.size() > 1 ||
+        (candidates.size() == 1 &&
          dm->Distance((rays[candidates.front().first].m_incr * low + candidates.front().second), (rays[candidates.front().first].m_incr * high + candidates.front().second)) > m_approxResolution * env->GetPositionRes())) {
     mid = (low+high)/2.0;
     vector<bool> remove;
@@ -645,7 +645,7 @@ ClearanceUtility<MPTraits>::ApproxCollisionInfo(CfgType& _cfg, CfgType& _clrCfg,
         low=mid;
     }
     mid=low;
-  } else { // Computing penetration, so high is needed and will never be the initial cfg 
+  } else { // Computing penetration, so high is needed and will never be the initial cfg
     mid=high;
   }
 
