@@ -50,6 +50,8 @@ class DefaultWeight {
     double Weight() const { return GetWeight(); } //for GraphAlgo interface
     void SetWeight(double _w){ m_weight = _w; }
 
+    static double GetMaxWeight() { return MAX_WEIGHT; }
+
     bool IsChecked(int _mult) const { return m_checkedMult <= _mult; }
     void SetChecked(int _mult) { m_checkedMult = min(m_checkedMult, _mult); }
     int GetChecked() const { return m_checkedMult; }
