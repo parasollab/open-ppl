@@ -1,9 +1,6 @@
 #ifndef PATHMODIFIERMETHOD_H_
 #define PATHMODIFIERMETHOD_H_
 
-#include	<string>
-#include	<iostream>
-
 #include "Utilities/MPUtils.h"
 #include "LocalPlanners/LPOutput.h"
 
@@ -22,15 +19,18 @@ class PathModifierMethod : public MPBaseObject<MPTraits> {
     virtual void ParseXML(XMLNodeReader& _node);
     virtual void PrintOptions(ostream& _os) const;
 
-    virtual void Modify(vector<CfgType>& _originalPath, vector<CfgType>& _newPath);
+    virtual void Modify(vector<CfgType>& _path, vector<CfgType>& _newPath);
 
   protected:
 
-    virtual bool ModifyImpl(vector<CfgType>& _originalPath, vector<CfgType>& _newPath) =0;
+    virtual bool ModifyImpl(vector<CfgType>& _path, vector<CfgType>& _newPath) = 0;
 
     // Helper methods
     void AddToPath(vector<CfgType>& _path, LPOutput<MPTraits>* _lpOutput, CfgType& _end);
+
     vector<VID> GetPathVIDs(vector<CfgType>& _path, GraphType* _graph);
+
+    void RemoveBranches(const string& _dmLabel, vector<CfgType>& _path, vector<CfgType>& _newPath);
 };
 
 // Non-XML Constructor
@@ -62,8 +62,8 @@ PathModifierMethod<MPTraits>::PrintOptions(ostream& _os) const {
 
 template<class MPTraits>
 void
-PathModifierMethod<MPTraits>::Modify(vector<CfgType>& _originalPath, vector<CfgType>& _newPath) {
-  ModifyImpl(_originalPath, _newPath);
+PathModifierMethod<MPTraits>::Modify(vector<CfgType>& _path, vector<CfgType>& _newPath) {
+  ModifyImpl(_path, _newPath);
 }
 
 // Auxiliary function created to avoid checking emptiness everytime
@@ -87,6 +87,40 @@ PathModifierMethod<MPTraits>::GetPathVIDs(vector<CfgType>& _path, GraphType* _gr
       pathVIDs.push_back(v);
   }
   return pathVIDs;
+}
+
+template<class MPTraits>
+void
+PathModifierMethod<MPTraits>::RemoveBranches(const string& _dmLabel, vector<CfgType>& _path, vector<CfgType>& _newPath) {
+  _newPath.clear();
+  typedef typename MPProblemType::DistanceMetricPointer DistanceMetricPointer;
+
+  Environment* env = this->GetMPProblem()->GetEnvironment();
+  DistanceMetricPointer dm = this->GetMPProblem()->GetDistanceMetric(_dmLabel);
+
+  //RemoveBranches Algorithm
+  //_path = {q_1, q_2, ..., q_m}
+  //for i = 1 -> m
+  //  _newPath = _newPath + {q_i}
+  //  j <- m
+  //  while(d(q_i, q_j) > resolution
+  //    j <- j - 1
+  //  i <- j
+  //return _newPath
+
+  double res = min(env->GetPositionRes(), env->GetOrientationRes());
+
+  typedef typename vector<CfgType>::iterator CIT;
+  for(CIT cit = _path.begin(); cit != _path.end(); ++cit) {
+    _newPath.push_back(*cit);
+
+    typedef typename vector<CfgType>::reverse_iterator RCIT;
+    RCIT rcit = _path.rbegin();
+    while(dm->Distance(*cit, *rcit) > res)
+      rcit++;
+
+    cit = rcit.base()-1;
+  }
 }
 
 #endif

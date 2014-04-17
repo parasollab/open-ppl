@@ -13,22 +13,21 @@ class ShortcuttingPathModifier : public PathModifierMethod<MPTraits> {
     typedef typename MPProblemType::LocalPlannerPointer LocalPlannerPointer;
     typedef typename MPProblemType::DistanceMetricPointer DistanceMetricPointer;
 
-    ShortcuttingPathModifier(const string _dmLabel = "", const string _lpLabel = "");
+    ShortcuttingPathModifier(const string& _dmLabel = "", const string& _lpLabel = "");
     ShortcuttingPathModifier(MPProblemType* _problem, XMLNodeReader& _node);
 
     virtual void ParseXML(XMLNodeReader& _node);
     virtual void PrintOptions(ostream& _os) const;
 
-    bool ModifyImpl(vector<CfgType>& _originalPath, vector<CfgType>& _newPath);
+    bool ModifyImpl(vector<CfgType>& _path, vector<CfgType>& _newPath);
 
   private:
-    string m_dmLabel;           // Distance metric
-    string m_lpLabel;           // Local planner
+    string m_lpLabel; // Local planner
 };
 
 template<class MPTraits>
-ShortcuttingPathModifier<MPTraits>::ShortcuttingPathModifier(const string _dmLabel, const string _lpLabel) :
-  PathModifierMethod<MPTraits>(), m_dmLabel(_dmLabel), m_lpLabel(_lpLabel) {
+ShortcuttingPathModifier<MPTraits>::ShortcuttingPathModifier(const string& _dmLabel, const string& _lpLabel) :
+  PathModifierMethod<MPTraits>(), m_lpLabel(_lpLabel) {
     this->SetName("ShortcuttingPathModifier");
   }
 
@@ -41,7 +40,6 @@ ShortcuttingPathModifier<MPTraits>::ShortcuttingPathModifier(MPProblemType* _pro
 template<class MPTraits>
 void
 ShortcuttingPathModifier<MPTraits>::ParseXML(XMLNodeReader& _node) {
-  m_dmLabel = _node.stringXMLParameter("dmLabel", false, "", "Distance metric method");
   m_lpLabel = _node.stringXMLParameter("lpLabel", true, "", "Local planner method");
 }
 
@@ -49,7 +47,6 @@ template<class MPTraits>
 void
 ShortcuttingPathModifier<MPTraits>::PrintOptions(ostream& _os) const {
   PathModifierMethod<MPTraits>::PrintOptions(_os);
-  _os << "\tdistance metric = \"" << m_dmLabel << "\"" << endl;
   _os << "\tlocal planner = \"" << m_lpLabel << "\"" << endl;
 }
 
@@ -57,13 +54,13 @@ ShortcuttingPathModifier<MPTraits>::PrintOptions(ostream& _os) const {
 // This function is also supposed to be used before MedialAxisSmooth.
 template<class MPTraits>
 bool
-ShortcuttingPathModifier<MPTraits>::ModifyImpl(vector<CfgType>& _originalPath, vector<CfgType>& _newPath) {
+ShortcuttingPathModifier<MPTraits>::ModifyImpl(vector<CfgType>& _path, vector<CfgType>& _newPath) {
 
   if(this->m_debug) cout << "\n*S* Executing ShortcuttingPathModifier::Modifier" << endl;
 
   GraphType* graph = this->GetMPProblem()->GetRoadmap()->GetGraph();
 
-  vector<VID> originalPathVIDs = this->GetPathVIDs(_originalPath, graph);
+  vector<VID> originalPathVIDs = this->GetPathVIDs(_path, graph);
 
   bool smoothFileOutput = false;
 
