@@ -140,11 +140,11 @@ Cfg::operator==(const Cfg& _cfg) const {
     return false;
   for(size_t i = 0; i < m_dof; ++i) {
     if(m_dofTypes[i] == POS || m_dofTypes[i] == JOINT) {
-      if(fabs(m_v[i]-_cfg[i]) > 10.0 * numeric_limits<float>::epsilon())
+      if(abs(m_v[i] - _cfg[i]) > abs(min(m_v[i], _cfg[i]))*numeric_limits<double>::epsilon())
         return false;
     }
     else {
-      if(fabs(DirectedAngularDistance(m_v[i], _cfg[i])) > 10.0 * numeric_limits<float>::epsilon())
+      if(abs(DirectedAngularDistance(m_v[i], _cfg[i])) > abs(min(m_v[i], _cfg[i])) * numeric_limits<double>::epsilon())
         return false;
     }
   }
@@ -270,8 +270,10 @@ void
 Cfg::Write(ostream& _os) const{
   //write out robot index, and then dofs
   _os << setw(4) << m_robotIndex << ' ';
+  _os << scientific << setprecision(17);
   for(vector<double>::const_iterator i = m_v.begin(); i != m_v.end(); ++i)
-    _os << setw(4) << *i << ' ';
+    _os << setw(25) << *i << ' ';
+  _os.unsetf(ios_base::floatfield);
   if (_os.fail()) {
     cerr << "Cfg::Write error - failed to write to file" << endl;
     exit(1);

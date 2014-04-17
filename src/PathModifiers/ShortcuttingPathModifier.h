@@ -58,16 +58,17 @@ ShortcuttingPathModifier<MPTraits>::PrintOptions(ostream& _os) const {
 template<class MPTraits>
 bool
 ShortcuttingPathModifier<MPTraits>::ModifyImpl(vector<CfgType>& _originalPath, vector<CfgType>& _newPath) {
+
   if(this->m_debug) cout << "\n*S* Executing ShortcuttingPathModifier::Modifier" << endl;
 
   GraphType* graph = this->GetMPProblem()->GetRoadmap()->GetGraph();
 
   vector<VID> originalPathVIDs = this->GetPathVIDs(_originalPath, graph);
 
-  bool smoothFileOutput=false;
+  bool smoothFileOutput = false;
 
   if(!originalPathVIDs.empty()) {
-    smoothFileOutput=true;
+    smoothFileOutput = true;
 
     LocalPlannerPointer lp = this->GetMPProblem()->GetLocalPlanner(m_lpLabel);
     Environment* env = this->GetMPProblem()->GetEnvironment();
@@ -111,13 +112,14 @@ ShortcuttingPathModifier<MPTraits>::ModifyImpl(vector<CfgType>& _originalPath, v
               WritePath("error.smooth.path", _newPath);
               _newPath.clear();
             }
+            return false;
           }
         }
         newPathVIDs.push_back(originalPathVIDs[j]);
         i = j;
         j = n-1;
       }
-      else{
+      else {
         //Try to make a connection by skipping nodes betwen i and j
         skip = lp->IsConnected(graph->GetVertex(originalPathVIDs[i]),
             graph->GetVertex(originalPathVIDs[j]), &tmpOutput, posRes, oriRes, true, true);
@@ -129,7 +131,7 @@ ShortcuttingPathModifier<MPTraits>::ModifyImpl(vector<CfgType>& _originalPath, v
           i = j;
           j = n-1;
         }
-        else{
+        else {
           //Could not skip. Try the previous node.
           --j;
         }
@@ -150,12 +152,14 @@ ShortcuttingPathModifier<MPTraits>::ModifyImpl(vector<CfgType>& _originalPath, v
 
     if(this->m_recordKeep)
       stats->StopClock("Path Modifier");
+
+    return true;
   }
   else{
     cerr << "*S* Error. originalPathVIDs in " << this->GetNameAndLabel()
       << " is empty. Aborting smoothing operation(s)." << endl;
+    return false;
   }
-  return !smoothFileOutput;
 }
 
 #endif

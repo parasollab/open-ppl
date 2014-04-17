@@ -60,7 +60,6 @@ class RoadmapGraph : public
     typedef RoadmapVCS<VERTEX, WEIGHT> RoadmapVCSType;
 
     RoadmapGraph() {}
-    ~RoadmapGraph() {}
 
     //////////////////////////////////
     // Adding & accessing vertices

@@ -81,11 +81,10 @@ template<class MPTraits>
 vector<typename MPTraits::MPProblemType::VID>
 PathModifierMethod<MPTraits>::GetPathVIDs(vector<CfgType>& _path, GraphType* _graph) {
   vector<VID> pathVIDs;
-  VID v;
   for(CfgIter cit = _path.begin(); cit != _path.end(); ++cit) {
-    v = _graph->GetVID(*cit);
+    VID v = _graph->GetVID(*cit);
     if(v != INVALID_VID)
-      pathVIDs.push_back(_graph->GetVID(*cit));
+      pathVIDs.push_back(v);
   }
   return pathVIDs;
 }
