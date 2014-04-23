@@ -4,9 +4,6 @@ CDInfo::CDInfo() {
   ResetVars();
 }
 
-CDInfo::~CDInfo() {
-}
-
 void
 CDInfo::ResetVars() {
   m_collidingObstIndex = -1;

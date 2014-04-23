@@ -72,6 +72,7 @@
 
 //path smoothing includes
 #include "PathModifiers/CombinedPathModifier.h"
+#include "PathModifiers/CRetractionPathModifier.h"
 #include "PathModifiers/MedialAxisPathModifier.h"
 #include "PathModifiers/ResamplePathModifier.h"
 #include "PathModifiers/ShortcuttingPathModifier.h"
@@ -223,6 +224,7 @@ struct MPTraits{
 
   //types of path smoothing available in our world
   typedef boost::mpl::list<
+    CRetractionPathModifier<MPTraits>,
     CombinedPathModifier<MPTraits>,
     MedialAxisPathModifier<MPTraits>,
     ResamplePathModifier<MPTraits>,

@@ -38,6 +38,7 @@ Cfg::Cfg(const Cfg& _other) :
   m_robotIndex(_other.m_robotIndex),
   m_labelMap(_other.m_labelMap),
   m_statMap(_other.m_statMap),
+  m_clearanceInfo(_other.m_clearanceInfo),
   m_witnessCfg(_other.m_witnessCfg) {}
 
 void

@@ -119,8 +119,14 @@ PathModifierMethod<MPTraits>::RemoveBranches(const string& _dmLabel, vector<CfgT
     while(dm->Distance(*cit, *rcit) > res)
       rcit++;
 
+    //when q_i != q_j, push q_j onto the new path to avoid skipping it in the loop
+    if(cit != rcit.base()-1)
+      _newPath.push_back(*rcit);
+
     cit = rcit.base()-1;
   }
+  //the loop doesn't push the goal of the path, be sure to do it
+  _newPath.push_back(_path.back());
 }
 
 #endif

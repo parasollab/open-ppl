@@ -9,7 +9,6 @@ const double maxDist =  1e10;
 class CDInfo {
  public:
   CDInfo();
-  ~CDInfo();
 
   void ResetVars();
 

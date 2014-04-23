@@ -53,8 +53,10 @@ void MultiStrategy<MPTraits>::Initialize() {
 template<class MPTraits>
 void MultiStrategy<MPTraits>::Run() {
   typedef vector<string>::iterator SIT;
-  for(SIT sit = m_labels.begin(); sit != m_labels.end(); ++sit)
+  for(SIT sit = m_labels.begin(); sit != m_labels.end(); ++sit) {
+    cout << "MultiStrategy: Beginning Strategy: " << *sit << endl;
     (*this->GetMPProblem()->GetMPStrategy(*sit))();
+  }
 }
 
 template<class MPTraits>
