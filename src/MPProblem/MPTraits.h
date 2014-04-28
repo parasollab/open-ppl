@@ -116,6 +116,7 @@
 #include "MPStrategies/BasicRRTStrategy.h"
 #include "MPStrategies/EvaluateMapStrategy.h"
 #include "MPStrategies/LocalManeuveringStrategy.h"
+#include "MPStrategies/LPCompare.h"
 #include "MPStrategies/ModifyPath.h"
 #include "MPStrategies/MultiStrategy.h"
 #include "MPStrategies/PushQueryToMA.h"
@@ -289,6 +290,7 @@ struct MPTraits{
     ClearanceTestStrategy<MPTraits>,
     DMTestStrategy<MPTraits>,
     EvaluateMapStrategy<MPTraits>,
+    LPCompare<MPTraits>,
     ModifyPath<MPTraits>,
     MultiStrategy<MPTraits>,
     PushQueryToMA<MPTraits>,
