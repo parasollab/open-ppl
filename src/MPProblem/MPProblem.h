@@ -443,7 +443,7 @@ MPProblem<MPTraits>::Solve() {
       VDInit(sit->get<3>());
 
     //call solver
-    cout << "\n\nMPProblem is solving with MPStrategyMethod labeled " << sit->get<0>() << "." << endl;
+    cout << "\n\nMPProblem is solving with MPStrategyMethod labeled " << sit->get<0>() << " using seed " << sit->get<1>() << "." << endl;
     SRand(sit->get<1>());
     GetMPStrategy(sit->get<0>())->SetBaseFilename(sit->get<2>());
     GetMPStrategy(sit->get<0>())->operator()();
