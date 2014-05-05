@@ -270,8 +270,10 @@ ClearanceUtility<MPTraits>::ExactCollisionInfo(CfgType& _cfg, CfgType& _clrCfg, 
     return true;
   }
 
-  VDClearAll();
-  VDAddTempCfg(_cfg, false);
+  if(this->m_debug) {
+    VDClearAll();
+    VDAddTempCfg(_cfg, false);
+  }
 
   // ClearanceUtility variables
   Environment* env = this->GetMPProblem()->GetEnvironment();
@@ -351,7 +353,8 @@ ClearanceUtility<MPTraits>::ExactCollisionInfo(CfgType& _cfg, CfgType& _clrCfg, 
     _clrCfg = tmpCfg;
   }
 
-  VDAddTempCfg(_clrCfg, true);
+  if(this->m_debug)
+    VDAddTempCfg(_clrCfg, true);
 
   _cfg.m_clearanceInfo = _cdInfo;
   _cfg.m_witnessCfg = shared_ptr<Cfg>(new CfgType(_clrCfg));
@@ -643,8 +646,7 @@ ClearanceUtility<MPTraits>::MinEdgeClearance(const CfgType& _c1, const CfgType& 
   //Reconstruct the path given the two nodes
   vector<CfgType> intermediates = _weight.GetIntermediates();
   vector<CfgType> reconEdge = this->GetMPProblem()->GetLocalPlanner(_weight.GetLPLabel())->
-    ReconstructPath(env, this->GetMPProblem()->GetDistanceMetric(m_dmLabel), _c1, _c2, intermediates,
-        env->GetPositionRes(), env->GetOrientationRes());
+    ReconstructPath(_c1, _c2, intermediates, env->GetPositionRes(), env->GetOrientationRes());
   typedef typename vector<CfgType>::iterator CIT;
   for(CIT it = reconEdge.begin(); it != reconEdge.end(); ++it){
     CDInfo collInfo;
@@ -1323,7 +1325,7 @@ inline double distsqr
 //get clearance of the point
 template<class MPTraits>
 double
-  SurfaceMedialAxisUtility<MPTraits>::GetClearance2DSurf
+SurfaceMedialAxisUtility<MPTraits>::GetClearance2DSurf
 (shared_ptr<MultiBody> _mb, const Point2d& _pos, Point2d& _cdPt, double _clear)
 {
   double minDis=1e10;

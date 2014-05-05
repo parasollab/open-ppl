@@ -54,6 +54,12 @@ BoundingSphere::GetClearance(const Vector3d& _p) const {
   return m_radius - (_p - m_center).norm();
 }
 
+int
+BoundingSphere::GetSideID(const vector<double>& _p) const {
+  return -1;
+}
+
+
 Vector3d
 BoundingSphere::GetClearancePoint(const Vector3d& _p) const {
   Vector3d v = (_p - m_center).normalize();

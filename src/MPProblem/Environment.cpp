@@ -216,6 +216,21 @@ Environment::ResetBoundary(double _d, size_t _robotIndex) {
   m_boundary->ResetBoundary(obstBBX, _d);
 }
 
+//expand the boundary by a margin of _d + robotRadius
+void
+Environment::ExpandBoundary(double _d, size_t _robotIndex) {
+
+  double robotRadius = GetMultiBody(_robotIndex)->GetBoundingSphereRadius();
+  _d += robotRadius;
+
+  vector<pair<double, double> > originBBX(3);
+  originBBX[0] = GetBoundary()->GetRange(0);
+  originBBX[1] = GetBoundary()->GetRange(1);
+  originBBX[2] = GetBoundary()->GetRange(2);
+
+  m_boundary->ResetBoundary(originBBX, _d);
+}
+
 shared_ptr<MultiBody>
 Environment::GetRandomObstacle() const{
   if(!m_obstacleBodies.size()) {

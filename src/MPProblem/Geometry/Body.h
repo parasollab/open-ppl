@@ -157,9 +157,14 @@ class Body {
      */
     void Link(const Connection& _c);
 
+    bool IsConvexHullVertex(const Vector3d& _v);
+
     static string m_modelDataDir;
 
   protected:
+
+    void ComputeConvexHull();
+
     string m_filename;
     MultiBody* m_multibody;
     Transformation m_worldTransformation;
@@ -169,6 +174,8 @@ class Body {
 
     GMSPolyhedron m_polyhedron;
     GMSPolyhedron m_worldPolyhedron;
+    GMSPolyhedron m_convexHull;
+    bool m_convexHullAvailable;
     bool m_centerOfMassAvailable;
     Vector3d m_centerOfMass;
     bool m_worldPolyhedronAvailable;

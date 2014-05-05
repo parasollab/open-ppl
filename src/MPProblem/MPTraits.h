@@ -47,6 +47,7 @@
 #include "Samplers/SimilarStructureSampler.h"
 #include "Samplers/SurfaceGridSampler.h"
 #include "Samplers/SurfaceSampler.h"
+#include "Samplers/UniformMedialAxisSampler.h"
 #include "Samplers/UniformObstacleBasedSampler.h"
 #include "Samplers/UniformRandomSampler.h"
 
@@ -192,6 +193,7 @@ struct MPTraits{
     MixSampler<MPTraits>,
     ObstacleBasedSampler<MPTraits>,
     SimilarStructureSampler<MPTraits>,
+    UniformMedialAxisSampler<MPTraits>,
     UniformObstacleBasedSampler<MPTraits>,
     UniformRandomSampler<MPTraits>
       > SamplerMethodList;

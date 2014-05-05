@@ -38,6 +38,7 @@ Cfg::Cfg(const Cfg& _other) :
   m_robotIndex(_other.m_robotIndex),
   m_labelMap(_other.m_labelMap),
   m_statMap(_other.m_statMap),
+  m_clearanceInfo(_other.m_clearanceInfo),
   m_witnessCfg(_other.m_witnessCfg) {}
 
 void
@@ -236,14 +237,14 @@ Cfg::operator/=(double _d) {
 
 double&
 Cfg::operator[](size_t _dof) {
-  assert(_dof <= m_dof);
+  assert(_dof >= 0 && _dof <= m_dof);
   m_witnessCfg.reset();
   return m_v[_dof];
 }
 
 const double&
 Cfg::operator[](size_t _dof) const {
-  assert(_dof <= m_dof);
+  assert(_dof >= 0 && _dof <= m_dof);
   return m_v[_dof];
 }
 

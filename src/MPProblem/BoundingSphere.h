@@ -18,6 +18,7 @@ class BoundingSphere : public Boundary {
     Point3d GetRandomPoint() const;
     bool InBoundary(const Vector3d& _p) const;
     double GetClearance(const Vector3d& _p) const;
+    int GetSideID(const vector<double>& _p) const;
     Vector3d GetClearancePoint(const Vector3d& _p) const;
     double GetClearance2DSurf(Point2d _pos, Point2d& _cdPt) const;
 
