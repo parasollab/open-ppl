@@ -1,11 +1,14 @@
 #include "GMSPolyhedron.h"
-#include "Utilities/MPUtils.h"
+
 #include <fstream>
-#include <cstring>
+
 #include "MovieBYULoader.h"
 #include "ModelFactory.h"
-#include "ObjLoader.h"
 #include "ModelTool.h"
+#include "ObjLoader.h"
+
+#include "Utilities/IOUtils.h"
+#include "Utilities/MPUtils.h"
 
 using namespace std;
 
@@ -108,14 +111,8 @@ Vector3d
 GMSPolyhedron::Read(string _fileName){
   Vector3d com;	//com = Center of Mass
 
-  //---------------------------------------------------------------
-  // Get polyhedron file name and try to open the file
-  //---------------------------------------------------------------
-  ifstream _is(_fileName.c_str());
-  if (!_is) {
-    cout << "Can't open \"" << _fileName << "\"." << endl;
-    exit(1);
-  }
+  if(!FileExists(_fileName))
+    throw ParseException(WHERE, "Geometry file '" + _fileName + "' does not exist.");
 
   //---------------------------------------------------------------
   // Read polyhedron
@@ -125,7 +122,8 @@ GMSPolyhedron::Read(string _fileName){
   if(pos != string::npos)
     ext = _fileName.substr(pos+1);
   if (ext == "dat"){
-    com = Read(_is);
+    ifstream ifs(_fileName.c_str());
+    com = Read(ifs);
   }
   else if (ext == "g" || ext == "obj"){
     com = ReadModel(_fileName);
@@ -136,10 +134,6 @@ GMSPolyhedron::Read(string _fileName){
     exit(1);
   }
 
-  //---------------------------------------------------------------
-  // Close file
-  //---------------------------------------------------------------
-  _is.close();
   return com;
 }
 
@@ -154,7 +148,7 @@ GMSPolyhedron::Read(istream& _is){
 
   int numVertices;
   _is >> numVertices;
-  for(int i=0; i<numVertices; ++i){
+  for(int i=0; i<numVertices && _is; ++i){
     Vector3d v;
     _is >> v;
     m_vertexList.push_back(v);
@@ -171,7 +165,7 @@ GMSPolyhedron::Read(istream& _is){
 
   int numPolygons;
   _is >> numPolygons;
-  for(int i=0; i<numPolygons; ++i){
+  for(int i=0; i<numPolygons && _is; ++i){
     int numPolyVertices;
     _is >> numPolyVertices;
     GMSPolygon p;
@@ -206,7 +200,7 @@ GMSPolyhedron::ReadBYU(istream& _is){
   _is >> nPartPolys;          // throwaway for now
 
   Vector3d sum(0,0,0), com;
-  for(int i=0; i<numVertices; ++i){
+  for(int i=0; i<numVertices && _is; ++i){
     Vector3d v;
     _is >> v;
     m_vertexList.push_back(v);
@@ -222,7 +216,7 @@ GMSPolyhedron::ReadBYU(istream& _is){
   }
   com = Vector3d(0.0, 0.0, 0.0);
 
-  for(int i=0; i<numPolygons; ++i){
+  for(int i=0; i<numPolygons && _is; ++i){
     GMSPolygon p;
     do{
       int tmp;
@@ -292,9 +286,14 @@ GMSPolyhedron::LoadFromIModel(IModel* _imodel, Vector3d& _com){
 Vector3d
 GMSPolyhedron::ReadModel(string _fileName){
   IModel* imodel = CreateModelLoader(_fileName, false);
+  if(!imodel) {
+    cerr << "Error reading model::" << _fileName << endl;
+    exit(1);
+  }
   Vector3d com;
   LoadFromIModel( imodel, com );
   ComputeNormals();
+  delete imodel;
   return com;
 }
 

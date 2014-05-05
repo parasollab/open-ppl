@@ -16,7 +16,7 @@ class CoverageDistanceMetric : public MetricMethod<MPTraits> {
     CoverageDistanceMetric(MPProblemType* _problem, XMLNodeReader& _node);
     virtual ~CoverageDistanceMetric();
 
-    virtual void PrintOptions(ostream& _os);
+    virtual void PrintOptions(ostream& _os) const;
 
     double operator()();
 
@@ -29,7 +29,7 @@ class CoverageDistanceMetric : public MetricMethod<MPTraits> {
 
 template<class MPTraits, class Set>
 CoverageDistanceMetric<MPTraits, Set>::CoverageDistanceMetric(
-    const Set& _samples, string _dmLabel, string _outFileName) 
+    const Set& _samples, string _dmLabel, string _outFileName)
   : m_samples(_samples), m_dmLabel(_dmLabel), m_outFileName(_outFileName) {
     this->SetName("CoverageDistanceMetric" + Set::GetName());
   }
@@ -50,7 +50,7 @@ CoverageDistanceMetric<MPTraits, Set>::~CoverageDistanceMetric() {
 
 template<class MPTraits, class Set>
 void
-CoverageDistanceMetric<MPTraits, Set>::PrintOptions(ostream& _os) {
+CoverageDistanceMetric<MPTraits, Set>::PrintOptions(ostream& _os) const {
   _os << "Distance Metric:" << m_dmLabel<< endl;
   _os << "Coverage set size:" << m_samples.size() << endl;
 }
@@ -71,7 +71,7 @@ CoverageDistanceMetric<MPTraits, Set>::operator()() {
     CfgType nearest = this->GetMPProblem()->GetRoadmap()->GetGraph()->GetVertex(kClosest[0].first);
     //distance = this->GetMPProblem()->GetDistanceMetric(m_dmLabel)->Distance(env, *i, nearest);
     disVec.push_back(kClosest[0].second);
-  } 
+  }
   //average of distance vector and standard deviation is calculated
   double avgSum = 0, stdDev = 0.0;
   for(i = 0; i<disVec.size(); i++){

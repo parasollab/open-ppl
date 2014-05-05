@@ -63,10 +63,10 @@ void SRTStrategy::ParseXML(XMLNodeReader& in_Node) {
     } else
       citr->warnUnknownNode();
   }
-  
+
   using boost::lambda::_1;
   cout << "\nSRTStrategy::ParseXML:\n";
-  cout << "\tnode_generation_methods: "; 
+  cout << "\tnode_generation_methods: ";
   for(vector<pair<string, int> >::iterator I = m_NodeGenerationLabels.begin(); I!=m_NodeGenerationLabels.end(); I++)
     cout<<I->first<<"\tNumber:"<<I->second<<" ";
   cout << endl;
@@ -81,10 +81,10 @@ void SRTStrategy::ParseXML(XMLNodeReader& in_Node) {
   cout << "\tlp_method: " << m_LPMethod << endl;
   cout << "\tdm_method: " << dm_label << endl;
   cout << "\tnf_method: " << nf_label << endl;
-  cout << "\tstrVcmethod = " << strVcmethod << endl;  
+  cout << "\tstrVcmethod = " << strVcmethod << endl;
 }
 
-void SRTStrategy::PrintOptions(ostream& out_os) {
+void SRTStrategy::PrintOptions(ostream& out_os) const {
   out_os<<"SRTStrategy::PrintOptions()\n";
   out_os<<"\nNodeGenerators\n";
   typedef vector<pair<string,int> >::iterator PIT;
@@ -115,7 +115,7 @@ void SRTStrategy::PrintOptions(ostream& out_os) {
 
 void SRTStrategy::Initialize(int in_RegionID){
    cout<<"\nInitializing SRTStrategy::"<<in_RegionID<<endl;
-   //OBPRM_srand(getSeed()); 
+   //OBPRM_srand(getSeed());
    cout<<"\nEnding Initializing SRTStrategy"<<endl;
 }
 
@@ -127,7 +127,7 @@ void SRTStrategy::Run(int in_RegionID) {
   vector<pair<CfgType,vector<VID> > >* pairs;
   RRTStrategy(in_RegionID, goals, pairs);
   //ConnectComponents(region);
-  //cout <<"\nEnd Running SRTStrategy::" << in_RegionID << endl;  
+  //cout <<"\nEnd Running SRTStrategy::" << in_RegionID << endl;
 }
 
 void SRTStrategy::Run(int in_RegionID, //RoadmapGraph<CfgType,WeightType>* candGraph,
@@ -138,18 +138,18 @@ void SRTStrategy::Run(int in_RegionID, //RoadmapGraph<CfgType,WeightType>* candG
   bool mapPassedEvaluation = false;
   RRTStrategy(in_RegionID, goals, trees);
   //ConnectComponents(region);
-  //cout << "\nEnd Running SRTStrategy::" << in_RegionID << endl;  
+  //cout << "\nEnd Running SRTStrategy::" << in_RegionID << endl;
 }
 
 // MAIN RRT METHOD
-void SRTStrategy::RRTStrategy(int in_RegionID, vector<CfgType> RRTQueue, 
+void SRTStrategy::RRTStrategy(int in_RegionID, vector<CfgType> RRTQueue,
 			      //RoadmapGraph<CfgType,WeightType>* candGraph,
 			      vector<pair<CfgType,vector<VID> > >* trees) {
 
   //cout << "In SRTStrategy::RRTStrategy num_nodes = " << num_nodes << endl;
   // Setup MP Variables
   MPRegion<CfgType,WeightType>*      region = GetMPProblem()->GetMPRegion(in_RegionID);
-  StatClass*                        regionStats = region->GetStatClass();
+  //StatClass*                        regionStats = region->GetStatClass();
   Environment*                       env = region->GetRoadmap()->GetEnvironment();
   shared_ptr <DistanceMetricMethod>  _dm = GetMPProblem()->GetDistanceMetric()->GetMethod(dm_label);
   LocalPlanners<CfgType,WeightType>* lp = GetMPProblem()->GetMPStrategy()->GetLocalPlanners();
@@ -168,12 +168,12 @@ void SRTStrategy::RRTStrategy(int in_RegionID, vector<CfgType> RRTQueue,
   CfgType tmp, dir;
   bool connecting=true, checkCollision=false, savePath=false, saveFailed=false, mapPassed=false;
   vector<bool> found;
-  
+
   for (int j=0; j<RRTQueue.size(); ++j)
     found.push_back(false);
-  
+
   MapGenClock.StartClock();
-  
+
   // For the number of iterations
   for (int h=0; h<m_CurrentIteration; ++h) {
     // Main loop for generation
@@ -181,14 +181,14 @@ void SRTStrategy::RRTStrategy(int in_RegionID, vector<CfgType> RRTQueue,
       do {
 	tmp.GetRandomCfg(env,m_boundary);
       } while( !tmp.InBoundingBox(env, m_boundary) ||
-               !this->GetMPProblem()->GetValidityChecker()->GetMethod(strVcmethod)->IsValid(tmp, env, *regionStats, cdInfo, true, &callee));      
-      
+               !this->GetMPProblem()->GetValidityChecker()->GetMethod(strVcmethod)->IsValid(tmp, cdInfo, true, &callee));
+
       CfgType root = CfgType(tmp);//, cent = CfgType(tmp);
       CfgType centroidCFG = CfgType(tmp);
       vector<VID> tree = vector<VID>();
       CfgType* cent = &centroidCFG;
       //centroid = CfgType(tmp);
-      
+
       VID tempVID, centroidVID;
       tempVID     = region->GetRoadmap()->m_pRoadmap->AddVertex(root);
       //cout << "Added Root VID = " << tempVID << endl;
@@ -206,7 +206,7 @@ void SRTStrategy::RRTStrategy(int in_RegionID, vector<CfgType> RRTQueue,
 			this->GetMPProblem()->GetDistanceMetric()->GetMethod(dm_label),
 			this->GetMPProblem()->GetValidityChecker(), strVcmethod,
 			this->GetMPProblem()->GetCollisionDetection(),
-			this->GetMPProblem()->GetNeighborhoodFinder(), nf_label, 
+			this->GetMPProblem()->GetNeighborhoodFinder(), nf_label,
 			tree, centroidCFG,attempts);*/
       //cout << "SRTStrategy::RRTStrategy: centroidCFG: " << centroidCFG << endl;
       //centroidVID = candGraph->AddVertex(centroidCFG);
@@ -219,29 +219,29 @@ void SRTStrategy::RRTStrategy(int in_RegionID, vector<CfgType> RRTQueue,
       //if (mapPassed)
       //cout << "Map Evaluator Passed... Iteration = " << h << endl;
     }
-  }  
+  }
   typedef vector<pair<CfgType,vector<VID> > >::iterator cand_iter;
   for (cand_iter c = candPairs.begin(); c != candPairs.end(); ++c) {
     //cout << "Paired VIDs: " << c->first << "/" << c->second << endl;
     trees->push_back(*c);
-  }  
+  }
 }
 
 void SRTStrategy::Finalize(int in_RegionID) {
 
   cout<<"\nFinalizing SRTStrategy::"<<in_RegionID<<endl;
-  
+
   //setup region variables
   MPRegion<CfgType,WeightType>* region = GetMPProblem()->GetMPRegion(in_RegionID);
   StatClass* regionStats = region->GetStatClass();
   string str;
-  
+
   //output final map
   str = GetBaseFilename() + ".map";
   ofstream osMap(str.c_str());
   region->WriteRoadmapForVizmo(osMap);
   osMap.close();
-  
+
   //output stats
   str = GetBaseFilename() + ".stat";
   ofstream  osStat(str.c_str());
@@ -253,34 +253,34 @@ void SRTStrategy::Finalize(int in_RegionID) {
   //regionStats->PrintFeatures();
   cout.rdbuf(sbuf);  // restore original stream buffer
   osStat.close();
-  
+
   cout<<"\nEnd Finalizing SRTStrategy"<<endl;
 }
 
 void SRTStrategy::ConnectComponents(MPRegion<CfgType, WeightType>* region) {
-  
+
   ClockClass ComponentConnClock;
   stringstream clockName; clockName << "Iteration " << m_CurrentIteration << ", Component Connection";
   ComponentConnClock.StartClock();//clockName.str().c_str()
   stapl::sequential::vector_property_map< GRAPH,size_t > cmap;
-  
-  for (vector<string>::iterator I = m_ComponentConnectionLabels.begin(); 
+
+  for (vector<string>::iterator I = m_ComponentConnectionLabels.begin();
        I != m_ComponentConnectionLabels.end(); ++I) {
     Connector<CfgType, WeightType>::ConnectionPointer pConnection;
     pConnection = GetMPProblem()->GetMPStrategy()->GetConnector()->GetMethod(*I);
-    
+
     ClockClass ComponentConnSubClock;
     stringstream connectorClockName; connectorClockName << "Iteration " << m_CurrentIteration << ", " << pConnection->GetName();
     ComponentConnSubClock.StartClock(); //connectorClockName.str().c_str()
-    
+
     cout << "\n\t";
     vector<CfgType> collision;
 
     cmap.reset();
-    cout << region->GetRoadmap()->m_pRoadmap->get_num_edges() << " edges, " 
+    cout << region->GetRoadmap()->m_pRoadmap->get_num_edges() << " edges, "
 	 << get_cc_count(*(region->GetRoadmap()->m_pRoadmap), cmap) << " connected components"
 	 << endl;
-    
+
     cout << "\t";
     ComponentConnSubClock.StopPrintClock(connectorClockName);
   }
@@ -294,13 +294,13 @@ bool SRTStrategy::EvaluateMap(int in_RegionID) {
   if ( !m_EvaluatorLabels.empty() ) {
 
     ClockClass EvalClock;
-    stringstream clockName; clockName << "Iteration " << m_CurrentIteration << ", Map Evaluation"; 
+    stringstream clockName; clockName << "Iteration " << m_CurrentIteration << ", Map Evaluation";
     EvalClock.StartClock();//clockName.str().c_str()
     mapPassedEvaluation = true;
 
-    for (vector<string>::iterator I = m_EvaluatorLabels.begin(); 
+    for (vector<string>::iterator I = m_EvaluatorLabels.begin();
 	 I != m_EvaluatorLabels.end(); ++I) {
-      
+
       MapEvaluator<CfgType, WeightType>::MapEvaluationMethodPtr pEvaluator;
       //pEvaluator = GetMPProblem()->GetMPStrategy()->GetMapEvaluator()->GetConditionalMethod(*I);
       ClockClass EvalSubClock;

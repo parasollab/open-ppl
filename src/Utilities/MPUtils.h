@@ -69,7 +69,7 @@ using namespace mathtool;
 enum cd_predefined {
   /// voronoi clip
 #ifdef USE_VCLIP
-  VCLIP, 
+  VCLIP,
 #endif
   /// Robust and Accurate Polygon Interference Detection
 #ifdef USE_RAPID
@@ -86,7 +86,7 @@ enum cd_predefined {
   INSIDE_SPHERES,
   BOUNDING_SPHERES,
   CD_USER1
-};    
+};
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
@@ -98,7 +98,7 @@ enum cd_predefined {
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 
-//return non-negative double-prevision floating-point values 
+//return non-negative double-prevision floating-point values
 //uniformly distributed over the interval [0.0, 1.0)
 double DRand();
 
@@ -140,8 +140,8 @@ long SRand(string _methodName, int _nextNodeIndex, long _base = 0x1234ABCD, bool
  */
 double Normalize(double _a);
 
-/**Calculate the minimum DIRECTED angular distance 
- *between two angles normalized to 1.0 
+/**Calculate the minimum DIRECTED angular distance
+ *between two angles normalized to 1.0
  */
 double DirectedAngularDistance(double _a, double _b);
 
@@ -173,66 +173,66 @@ class CompareSecondReverse {
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 
-template <typename InputIterator, typename BinaryOperator, typename UnaryOperator>  
+template <typename InputIterator, typename BinaryOperator, typename UnaryOperator>
 struct Compose {
-  bool operator()(InputIterator _first, InputIterator _last, 
+  bool operator()(InputIterator _first, InputIterator _last,
       BinaryOperator _binaryOp, UnaryOperator _op) {
     if (_first == _last)
       return false;
     else {
       bool result = _op(*_first++);
       while (_first != _last)
-        result = _binaryOp(result, _op(*_first++)); 
-      return result;  
+        result = _binaryOp(result, _op(*_first++));
+      return result;
     }
-  }  
+  }
 };
 
-template <typename InputIterator, typename UnaryOperator>  
+template <typename InputIterator, typename UnaryOperator>
 struct Compose<InputIterator, logical_and<bool>, UnaryOperator> {
-  bool operator()(InputIterator _first, InputIterator _last, 
+  bool operator()(InputIterator _first, InputIterator _last,
       logical_and<bool> _binaryOp, UnaryOperator _op) {
-    if (_first == _last) 
+    if (_first == _last)
       return false;
     else {
       bool result = _op(*_first++);
       if (result == false)
-        return result;	
+        return result;
       while (_first != _last) {
-        result = _binaryOp(result, _op(*_first++)); 
+        result = _binaryOp(result, _op(*_first++));
         if (result == false)
-          return result;	
+          return result;
       }
-      return result;  
+      return result;
     }
-  }  
+  }
 };
 
-template <typename InputIterator, typename UnaryOperator>  
+template <typename InputIterator, typename UnaryOperator>
 struct Compose<InputIterator, logical_or<bool>, UnaryOperator> {
-  bool operator()(InputIterator _first, InputIterator _last, 
+  bool operator()(InputIterator _first, InputIterator _last,
       logical_or<bool> _binaryOp, UnaryOperator _op) {
     if (_first == _last)
       return false;
     else {
       bool result = _op(*_first++);
       if (result == true)
-        return result;	
+        return result;
       while (_first != _last) {
-        result = _binaryOp(result, _op(*_first++)); 
+        result = _binaryOp(result, _op(*_first++));
         if (result == true)
-          return result;	
+          return result;
       }
-      return result;  
+      return result;
     }
-  }  
+  }
 };
 
-template <typename InputIterator, typename UnaryOperator>  
+template <typename InputIterator, typename UnaryOperator>
 struct ComposeNegate {
   bool operator()(InputIterator _it, UnaryOperator _op) {
-    return !_op(*_it); 
-  }  
+    return !_op(*_it);
+  }
 };
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -295,11 +295,11 @@ class MethodSet {
     bool AddMethod(MethodPointer _e, const string& _label) {
       if(m_universe.find(_e->GetName()) != m_universe.end()) {
         _e->SetLabel(_label);
-        if(m_elements.empty()) 
+        if(m_elements.empty())
           m_default = _label;
-        if(m_elements.find(_label) == m_elements.end()) 
+        if(m_elements.find(_label) == m_elements.end())
           m_elements[_label] = _e;
-        else 
+        else
           cerr << "\nWarning, method list already has a pointer associated with \"" << _label << "\", not added\n";
         return true;
       }
@@ -311,9 +311,9 @@ class MethodSet {
 
     MethodPointer GetMethod(const string& _label) {
       MethodPointer element;
-      if(_label == "") 
+      if(_label == "")
         element = m_elements[m_default];
-      else 
+      else
         element = m_elements[_label];
       if(element.get() == NULL) {
         cerr << "\n\tError, requesting element with name \"" << _label << "\" which does not exist in " << m_name << ".\n";
@@ -350,8 +350,8 @@ class MethodSet {
 
   protected:
     typedef boost::function<MethodPointer(typename MPTraits::MPProblemType*, XMLNodeReader&)> FactoryType;
-    
-    template <typename Last> 
+
+    template <typename Last>
       void AddToUniverse(Last, Last){}
 
     template <typename First, typename Last>
@@ -382,24 +382,26 @@ template<class MPTraits>
 class MPBaseObject {
   public:
     typedef typename MPTraits::MPProblemType MPProblemType;
-    MPBaseObject(MPProblemType* _problem = NULL, string _label = "", string _name = "", bool _debug = false) :
-      m_problem(_problem), m_label(_label), m_name(_name), m_debug(_debug) {};
-    MPBaseObject(MPProblemType* _problem, XMLNodeReader& _node, string _name="") : 
-      m_problem(_problem), m_label(""), m_name(_name), m_debug(false) { 
-        ParseXML(_node); 
-      };
 
+    MPBaseObject(MPProblemType* _problem = NULL, string _label = "", string _name = "", bool _debug = false) :
+      m_problem(_problem), m_label(_label), m_name(_name), m_debug(_debug), m_recordKeep(true) {};
+    MPBaseObject(MPProblemType* _problem, XMLNodeReader& _node, string _name="") :
+      m_problem(_problem), m_name(_name) {
+        ParseXML(_node);
+      };
     virtual ~MPBaseObject() {}
 
     virtual void ParseXML(XMLNodeReader& _node) {
       m_label = _node.stringXMLParameter("label", false, "", "Label Identifier");
-      m_debug = _node.boolXMLParameter("debug", false, false, "Run-time debug on(true)/off(false)");
-      m_recordKeep = _node.boolXMLParameter("recordKeep", false, false, "Keeping track of algorithmic statistics, on(true)/off(false)");
+      m_debug = _node.boolXMLParameter("debug", false, false,
+          "Run-time debug on(true)/off(false)");
+      m_recordKeep = _node.boolXMLParameter("recordKeep", false, true,
+          "Keeping track of algorithmic statistics, on(true)/off(false)");
     };
 
     MPProblemType* GetMPProblem() const {return m_problem;}
     virtual void SetMPProblem(MPProblemType* _m){m_problem = _m;}
-    virtual void PrintOptions(ostream& _os) {};
+    virtual void PrintOptions(ostream& _os) const {};
     string GetLabel() const {return m_label;}
     void SetLabel(string _s) {m_label = _s;}
     string GetName()  const {return m_name;}
@@ -432,9 +434,9 @@ template<class CfgType, class Environment>
 bool
 IsWithinResolution(const CfgType& _cfg1, const CfgType& _cfg2, Environment* _env) {
   CfgType diff = _cfg1 - _cfg2;
-  return diff->PositionMagnitude() <= _env->GetPositionRes() 
+  return diff->PositionMagnitude() <= _env->GetPositionRes()
     && diff->OrientationMagnitude() <= _env->GetOrientationRes();
-}	
+}
 
 /** pt1 & pt2 are two endpts of a line segment
  * find the closest point to the current cfg on that line segment
@@ -444,8 +446,8 @@ template<class CfgType>
 CfgType
 ClosestPtOnLineSegment(const CfgType& _current, const CfgType& _p1, const CfgType& _p2) {
   CfgType b = _p2 - _p1;
-  CfgType c = _current - _p1;  
-  
+  CfgType c = _current - _p1;
+
   double bDotC = 0;
   double bSquared = 0;
 
@@ -457,10 +459,10 @@ ClosestPtOnLineSegment(const CfgType& _current, const CfgType& _p1, const CfgTyp
 
   if (bDotC <= 0) {
     return _p1;
-  } 
+  }
   else if (bDotC >= bSquared) {
     return _p2;
-  } 
+  }
   else {
     CfgType result = b*(bDotC/bSquared) + _p1 ;
     return result;
@@ -517,7 +519,7 @@ bool PtInTriangle(const Point2d& _A, const Point2d& _B, const Point2d& _C, const
 // GetPtFromBarycentricCoords: given triange defined by _A,_B,_C, return the
 // point inside triangle defined by barycentric coords. _u,_v
 //----------------------------------------------------------------------------
-Point3d GetPtFromBarycentricCoords(const Point3d& _A, const Point3d& _B, const Point3d& _C, double _u, double _v); 
+Point3d GetPtFromBarycentricCoords(const Point3d& _A, const Point3d& _B, const Point3d& _C, double _u, double _v);
 
 //----------------------------------------------------------------------------
 //NormalizeTheta: given a value, lock it into the range -PI to PI
@@ -528,24 +530,24 @@ double NormalizeTheta(double _theta);
 template <class MPTraits, class P>
 struct DistanceCompareFirst : public binary_function<P, P, bool> {
   typedef typename MPTraits::MPProblemType::DistanceMetricPointer DistanceMetricPointer;
-  
+
   Environment* m_env;
   DistanceMetricPointer m_dm;
-  typename P::first_type m_cfg;
+  const typename P::first_type& m_cfg;
 
-  DistanceCompareFirst(Environment* _e, DistanceMetricPointer _d, const typename P::first_type& _c) : 
+  DistanceCompareFirst(Environment* _e, DistanceMetricPointer _d, const typename P::first_type& _c) :
     m_env(_e), m_dm(_d), m_cfg(_c) {}
   ~DistanceCompareFirst() {}
 
   bool operator()(const P& _p1, const P& _p2) const {
-    return (m_dm->Distance(m_env, m_cfg, _p1.first) < m_dm->Distance(m_env, m_cfg, _p2.first));
+    return (m_dm->Distance(m_cfg, _p1.first) < m_dm->Distance(m_cfg, _p2.first));
   }
 };
 
 
 template <class P>
-struct PlusSecond : public binary_function<typename P::second_type, 
-					    P, 
+struct PlusSecond : public binary_function<typename P::second_type,
+					    P,
 					    typename P::second_type> {
   typename P::second_type operator()(const typename P::second_type& p1, const P& p2) const {
     return plus<typename P::second_type>()(p1, p2.second);

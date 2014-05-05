@@ -1,18 +1,30 @@
 #include "Body.h"
 #include <sstream>
 
+string Body::m_modelDataDir;
+
 Body::Body(MultiBody* _owner) :
   m_multibody(_owner),
+  m_isBase(false),
+  m_baseType(Robot::PLANAR),
+  m_baseMovementType(Robot::TRANSLATIONAL),
   m_convexHullAvailable(false),
-  m_centerOfMassAvailable(false), m_worldPolyhedronAvailable(false) {}
+  m_centerOfMassAvailable(false), m_worldPolyhedronAvailable(false) {
+    fill(m_boundingBox, m_boundingBox+6, 0);
+  }
 
 Body::Body(MultiBody* _owner, GMSPolyhedron& _polyhedron) :
   m_multibody(_owner),
+  m_isBase(false),
+  m_baseType(Robot::PLANAR),
+  m_baseMovementType(Robot::TRANSLATIONAL),
   m_polyhedron(_polyhedron),
   m_worldPolyhedron(_polyhedron),
   m_convexHullAvailable(false),
   m_centerOfMassAvailable(false),
-  m_worldPolyhedronAvailable(false) {}
+  m_worldPolyhedronAvailable(false) {
+    fill(m_boundingBox, m_boundingBox+6, 0);
+  }
 
 Body::Body(const Body& _b) :
   m_filename(_b.m_filename),
@@ -130,17 +142,12 @@ Body::ChangeWorldPolyhedron() {
 //  Read
 //===================================================================
 void
-Body::ReadBYU(istream& _is) {
-  m_polyhedron.ReadBYU(_is);
-  m_worldPolyhedron = m_polyhedron;
-  FindBoundingBox();
-}
+Body::Read() {
+  string filename = m_modelDataDir == "/" ? m_filename : m_modelDataDir + m_filename;
+  if(!FileExists(filename))
+    throw ParseException(WHERE, "Geometry file '" + filename + "' not found.");
 
-void
-Body::Read(string _fileName) {
-  SetFileName(_fileName);
-
-  m_polyhedron.Read(_fileName);
+  m_polyhedron.Read(filename);
   m_worldPolyhedron = m_polyhedron;
   GMSPolyhedron poly;
   poly = GetPolyhedron();
@@ -249,32 +256,28 @@ Body::IsAdjacent(shared_ptr<Body> _otherBody) {
 
 bool
 Body::IsWithinI(shared_ptr<Body> _otherBody, int _i){
-  if(*this == *(_otherBody.get()))
-    return true;
-  if(_i==0){
-    return false;
-  }
+  //Visit the recursive, flood-fill based helper function.
   return IsWithinIHelper(this,_otherBody.get(),_i,NULL);
 }
 
 bool
 Body::IsWithinIHelper(Body* _body1, Body* _body2, int _i, Body* _prevBody){
-  if(*_body1 == *_body2){
+  if(_body1 == _body2 || *_body1 == *_body2){
     return true;
   }
   if(_i==0){
     return false;
   }
+
   typedef vector<Connection>::iterator CIT;
-  for(CIT C = _body1->m_forwardConnection.begin(); C != _body1->m_forwardConnection.end(); ++C)
-    if(IsWithinIHelper(C->GetNextBody().get(), _body2, _i-1, _body1) )
+  for(CIT C = _body1->m_forwardConnection.begin(); C != _body1->m_forwardConnection.end(); ++C) {
+    Body* next = C->GetNextBody().get();
+    if(next != _prevBody && IsWithinIHelper(next, _body2, _i-1, _body1))
       return true;
-  for(CIT C =_body1->m_backwardConnection.begin(); C != _body1->m_backwardConnection.end(); ++C){
-    for(CIT C2 = C->GetPreviousBody()->m_forwardConnection.begin(); C2!=C->GetPreviousBody()->m_forwardConnection.end(); C2++){
-      if(*(C2->GetNextBody()) == *_body2)
-        return true;
-    }
-    if(IsWithinIHelper(C->GetPreviousBody().get(),_body2,_i-1, _body1) )
+  }
+  for(CIT C =_body1->m_backwardConnection.begin(); C != _body1->m_backwardConnection.end(); ++C) {
+    Body* prev = C->GetPreviousBody().get();
+    if(prev != _prevBody && IsWithinIHelper(prev, _body2, _i-1, _body1))
       return true;
   }
   return false;
@@ -433,7 +436,7 @@ Body::Link(const shared_ptr<Body>& _otherBody, const Transformation & _transform
 }
 
 void
-Body::Link(Connection _c) {
+Body::Link(const Connection& _c) {
   AddForwardConnection(_c);
   _c.GetNextBody()->AddBackwardConnection(_c);
   m_worldPolyhedronAvailable=false;

@@ -13,7 +13,7 @@ class ConditionalEvaluator : public MapEvaluatorMethod<MPTraits> {
     ConditionalEvaluator(typename MPTraits::MPProblemType* _problem, XMLNodeReader& _node);
     virtual ~ConditionalEvaluator() {}
 
-    virtual void PrintOptions(ostream& _os);
+    virtual void PrintOptions(ostream& _os) const;
 
     virtual bool operator()();
 
@@ -55,7 +55,8 @@ ConditionalEvaluator<MPTraits>::ConditionalEvaluator(typename MPTraits::MPProble
 }
 
 template<class MPTraits>
-void ConditionalEvaluator<MPTraits>::PrintOptions(ostream& _os) {
+void
+ConditionalEvaluator<MPTraits>::PrintOptions(ostream& _os) const {
   MapEvaluatorMethod<MPTraits>::PrintOptions(_os);
   _os << "\tmetric method: " << m_metric << endl;
   _os << "\tvalue: " << m_value << endl;
@@ -65,27 +66,28 @@ void ConditionalEvaluator<MPTraits>::PrintOptions(ostream& _os) {
     case LEQ: cout << "<="; break;
     case GT: cout << ">"; break;
     case GEQ: cout << ">="; break;
-    case MOD: cout << "%"; break;          
+    case MOD: cout << "%"; break;
   }
-  _os << endl; 
+  _os << endl;
 }
 
 template<class MPTraits>
-bool ConditionalEvaluator<MPTraits>::operator()() {
-  double metric_value = this->GetMPProblem()->GetMetric(m_metric)->operator()();
+bool
+ConditionalEvaluator<MPTraits>::operator()() {
+  double metricValue = this->GetMPProblem()->GetMetric(m_metric)->operator()();
 
   switch(m_operator){
-    case LT: return metric_value < m_value;
-    case LEQ: return metric_value <= m_value;
-    case GT: return metric_value > m_value;
-    case GEQ: return metric_value >= m_value;
-    case MOD: 
+    case LT: return metricValue < m_value;
+    case LEQ: return metricValue <= m_value;
+    case GT: return metricValue > m_value;
+    case GEQ: return metricValue >= m_value;
+    case MOD:
       static double prevVal=0.0;
-      if(floor(metric_value/m_value) != floor(prevVal/m_value)  && m_value>0){
-          prevVal = metric_value;
+      if(floor(metricValue/m_value) != floor(prevVal/m_value)  && m_value>0){
+          prevVal = metricValue;
           return true;
-      } 
-      prevVal = metric_value;
+      }
+      prevVal = metricValue;
       return false;
     default:
       cout << "unknown label is read" << endl;

@@ -56,7 +56,7 @@ public:
     //
     //////////////////////////////////////////////////////////////////////////////////////////
     void Initialize(string _modelFile, const Transformation& _where = Transformation(), BodyType _type=PASSIVE);
-    
+
     void SetBodyType(BodyType _newType){m_bodyType = _newType;}
     BodyType GetBodyType() const{return m_bodyType;}
 
@@ -159,7 +159,7 @@ public:
       */
     double GetFixArea() const;
 
-    /**Get a list of areas of fixed bodys in this instance. 
+    /**Get a list of areas of fixed bodys in this instance.
       *(computed in Get method)
       */
     vector<double> GetFixAreas() const;
@@ -168,12 +168,12 @@ public:
       */
     double GetFreeArea() const;
 
-    /**Get a list of areas of free bodys in this instance. 
+    /**Get a list of areas of free bodys in this instance.
       *(computed in Get method)
       */
     vector<double> GetFreeAreas() const;
 
-    /**Get total area of free bodys and fixed bodys in this instance. 
+    /**Get total area of free bodys and fixed bodys in this instance.
       *(computed in Get method)
       */
     double GetArea() const;
@@ -192,8 +192,8 @@ public:
       *Number of bodys (fixed and free), areas, bounding box, and center of mass are all computed
       *in here.
       */
-    virtual void Read(istream& is, bool _debug = false);
-    
+    void Read(istream& is, bool _debug = false);
+
     void buildCDstructure(cd_predefined cdtype);
 
     bool IsInternal() const;
@@ -267,7 +267,7 @@ public:
     //
     //////////////////////////////////////////////////////////////////////////////////////////
 
-  protected:    
+  protected:
     // Area Stuff
     double fixArea;             ///< Area of FixedBodies
     double freeArea;            ///< Area of FreeBodies
@@ -287,6 +287,8 @@ public:
     //-----------------------------------------------------------
     ///  Data
     //-----------------------------------------------------------
+
+    string m_modelDataDir; //directory where environment file is stored
 
     //does the multibody contain more than one robot
     bool m_multirobot;

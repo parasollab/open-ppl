@@ -7,7 +7,7 @@ template<typename MPTraits>
 class UniformObstacleBasedSampler : public SamplerMethod<MPTraits> {
   private:
     double m_margin;
-    bool m_useBoundary;  
+    bool m_useBoundary;
     string m_vcLabel, m_dmLabel;
 
   public:
@@ -47,7 +47,6 @@ class UniformObstacleBasedSampler : public SamplerMethod<MPTraits> {
 
     virtual bool Sampler(Environment* _env, shared_ptr<Boundary> _bb, StatClass& _stats, CfgType& _cfgIn, vector<CfgType>& _cfgOut, vector<CfgType>& _cfgCol) {
       string callee(this->GetNameAndLabel() + "::SampleImpl()");
-      CDInfo cdInfo;
       ValidityCheckerPointer vc = this->GetMPProblem()->GetValidityChecker(m_vcLabel);
       DistanceMetricPointer dm = this->GetMPProblem()->GetDistanceMetric(m_dmLabel);
 
@@ -56,9 +55,14 @@ class UniformObstacleBasedSampler : public SamplerMethod<MPTraits> {
       bool cfg1Free;
       double margin = m_margin;
       if(margin == 0){
-        if(_env != NULL)
-          margin = (_env->GetMultiBody(_cfgIn.GetRobotIndex()))->GetMaxAxisRange();
+        margin = _env->GetMultiBody(_cfgIn.GetRobotIndex())->GetMaxAxisRange();
       }
+
+      vector<pair<double, double> > origBoundary;
+      for(size_t i=0; i<3; i++) {
+        origBoundary.push_back(make_pair(_bb->GetRange(i).first, _bb->GetRange(i).second));
+      }
+
       _env->ResetBoundary(margin, _cfgIn.GetRobotIndex());
       shared_ptr<Boundary> bbNew = _env->GetBoundary();
 
@@ -69,7 +73,7 @@ class UniformObstacleBasedSampler : public SamplerMethod<MPTraits> {
       if(cfg1 == CfgType())
         cfg1.GetRandomCfg(_env, bbNew);
 
-      cfg1Free = (vc->IsValid(cfg1, _env, _stats, cdInfo, &callee)) && (!vc->IsInsideObstacle(cfg1, _env, cdInfo));
+      cfg1Free = (vc->IsValid(cfg1, callee)) && (!vc->IsInsideObstacle(cfg1));
 
       CfgType cfg2;
       CfgType incr;
@@ -94,18 +98,18 @@ class UniformObstacleBasedSampler : public SamplerMethod<MPTraits> {
       CfgType inter;
       CfgType tick = cfg1;
       int nTicks;
-      double positionRes = _env->GetPositionRes(); 
+      double positionRes = _env->GetPositionRes();
       double orientationRes = _env->GetOrientationRes();
       bool tempFree = cfg1Free;
       bool tickFree;
       CfgType temp = cfg1;
 
       inter.FindIncrement(cfg1, cfg2, &nTicks, positionRes, orientationRes);
+      _env->GetBoundary()->ResetBoundary(origBoundary, 0);
       for(int i=1; i<nTicks; i++) {
         tick += inter;
-        tickFree = (vc->IsValid(tick, _env, _stats, cdInfo, &callee)) && (!vc->IsInsideObstacle(tick, _env, cdInfo));
-        _env->SetBoundary(_bb);
-        if(m_useBoundary) 
+        tickFree = (vc->IsValid(tick, callee)) && (!vc->IsInsideObstacle(tick));
+        if(m_useBoundary)
           tickFree = tickFree && _env->InBounds(tick, _bb);
 
         if(tempFree == tickFree) {
@@ -128,7 +132,7 @@ class UniformObstacleBasedSampler : public SamplerMethod<MPTraits> {
         }
       }
       return generated;
-    }   
+    }
 };
 
 #endif

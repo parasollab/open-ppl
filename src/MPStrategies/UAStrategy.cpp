@@ -7,7 +7,7 @@
 UAStrategy::UAStrategy(XMLNodeReader& in_Node, MPProblem* in_pProblem):MPStrategyMethod(in_Node, in_pProblem), m_CurrentIteration(0){
   ParseXML(in_Node);
 }
-   
+
 void UAStrategy::ParseXML(XMLNodeReader& in_Node){
    XMLNodeReader::childiterator citr;
    for(citr = in_Node.children_begin(); citr!=in_Node.children_end(); citr++){
@@ -53,14 +53,14 @@ void UAStrategy::Run(){
 
    //create training roadmap
    ms->GetMPStrategyMethod(m_TrainingStrategy)->operator()();
-   
+
    //identify regions
    IdentifyRegions();
    if(GetMPProblem()->GetMPStrategy()->GetPartitioningEvaluators()!=NULL)
       EvaluatePartitions();
    CollectMinMaxBBX();
    OverlapBBX();
-   vector<double> probabilities = GetProbabilities(); 
+   vector<double> probabilities = GetProbabilities();
    WriteRegionsSeparate();
    m_pt->WritePartitions(GetMPProblem(),
    GetMPProblem()->GetMPStrategy()->GetPartitioningMethods()->GetPartitioningMethod(m_PartitioningMethod)->GetClusteringDestination()+"region.",
@@ -96,8 +96,8 @@ void UAStrategy::Run(){
       //restore bounding box values
       RestoreBB();
 
-      mapPassedEvaluation = EvaluateMap(m_EvaluatorLabels); 
-   } 
+      mapPassedEvaluation = EvaluateMap(m_EvaluatorLabels);
+   }
 
    //finalize the region solvers
    typedef vector<vector<MPStrategyMethod*> >::iterator VIT;
@@ -113,18 +113,18 @@ void UAStrategy::Run(){
 
 void UAStrategy::Finalize(){
    cout<<"\nFinalizing UAStrategy::"<<endl;
- 
+
    //setup variables
    StatClass* stats = GetMPProblem()->GetStatClass();
- 
+
    string str;
-  
+
    //output final map
    str = GetBaseFilename() + ".map";
    ofstream osMap(str.c_str());
    GetMPProblem()->WriteRoadmapForVizmo(osMap);
    osMap.close();
-  
+
    //output stats
    str = GetBaseFilename() + ".stat";
    ofstream  osStat(str.c_str());
@@ -141,7 +141,7 @@ void UAStrategy::Finalize(){
    cout<<"\nEnd Finalizing UAStrategy"<<endl;
 }
 
-void UAStrategy::PrintOptions(ostream& out_os){
+void UAStrategy::PrintOptions(ostream& out_os) const {
    out_os<<"UAStrategy Options:"<<endl;
    out_os<<"\tTraining Strategy:"<<m_TrainingStrategy<<endl;
    GetMPProblem()->GetMPStrategy()->GetMPStrategyMethod(m_TrainingStrategy)->PrintOptions(out_os);
@@ -160,7 +160,7 @@ void UAStrategy::PrintOptions(ostream& out_os){
    out_os<<endl;
 }
 
-void UAStrategy::IdentifyRegions(){   
+void UAStrategy::IdentifyRegions(){
    Partition* p=new Partition(GetMPProblem()->GetRoadmap(), 0);
    LeafPartitionNode lp(p);
    m_pt = new PartitionTree(lp);
@@ -171,7 +171,7 @@ void UAStrategy::IdentifyRegions(){
 void UAStrategy::CollectMinMaxBBX(){
    m_min.clear();
    m_max.clear();
-   
+
    vector< vector< VID >* > Clusters = GetPartitionsVID();
    typedef vector< vector< VID >* >::iterator CIT;
    typedef vector< VID >::iterator NIT;
@@ -179,10 +179,10 @@ void UAStrategy::CollectMinMaxBBX(){
    Roadmap < CfgType, WeightType > * rm = GetMPProblem()->GetRoadmap();
    vector< double > CurrPos;
    double dtmp;
-   CfgType NodeData; 
+   CfgType NodeData;
 
    for( CIT itrCluster = Clusters.begin(); itrCluster != Clusters.end(); ++itrCluster){
-      
+
       //
       // Collect the min/max x,y,z for this cluster
       //
@@ -191,8 +191,8 @@ void UAStrategy::CollectMinMaxBBX(){
       Min[1] = 1.7e308;
       Min[2] = 1.7e308;
       Max[0] = Max[1] = Max[2] = -(1.7e308);
-      
-      if( (*itrCluster)->size() < 1 ){ 
+
+      if( (*itrCluster)->size() < 1 ){
          Max[0] = Max[1] = Max[2] = Min[0] = Min[1] = Min[2] = 0;
       }
       else{
@@ -203,41 +203,41 @@ void UAStrategy::CollectMinMaxBBX(){
          NIT itrNode = (*itrCluster)->begin();
          NodeData = rm->m_pRoadmap->find_vertex(*itrNode)->property();
          CurrPos = NodeData.GetPosition();
-         
+
          dtmp = CurrPos[0];
-         Min[0] = Max[0] = dtmp; 
+         Min[0] = Max[0] = dtmp;
          dtmp = CurrPos[1];
-         Min[1] = Max[1] = dtmp; 
+         Min[1] = Max[1] = dtmp;
          dtmp = CurrPos[2];
-         Min[2] = Max[2] = dtmp; 
-         
+         Min[2] = Max[2] = dtmp;
+
          itrNode++;
-         
+
          //
          // Loop through remaining nodes to find min/max values.
          //
          while( itrNode != (*itrCluster)->end() ){
             NodeData = rm->m_pRoadmap->find_vertex(*itrNode)->property();
             CurrPos = NodeData.GetPosition();
-            
+
             dtmp = CurrPos[0];
             if( dtmp < Min[0] )     { Min[0] = dtmp; }
             else if( dtmp > Max[0]) { Max[0] = dtmp; }
-            
+
             dtmp = CurrPos[1];
             if( dtmp < Min[1] )     { Min[1] = dtmp; }
             else if( dtmp > Max[1]) { Max[1] = dtmp; }
-            
+
             dtmp = CurrPos[2];
             if( dtmp < Min[2] )     { Min[2] = dtmp; }
             else if( dtmp > Max[2]) { Max[2] = dtmp; }
-            
+
             itrNode++;
          }
       }
-      
+
       m_min.push_back(Min);
-      m_max.push_back(Max); 
+      m_max.push_back(Max);
    }
 }
 
@@ -247,8 +247,8 @@ void UAStrategy::OverlapBBX(){
    Environment *env = GetMPProblem()->GetEnvironment();
    boost::shared_ptr<Boundary> bb = GetMPProblem()->GetEnvironment()->GetBoundary();
    double robot_radius = 1.25*env->GetMultiBody(env->GetRobotIndex())->GetBoundingSphereRadius();
-   
-   if(m_OverlapMethod=="default"){ 
+
+   if(m_OverlapMethod=="default"){
       for(int x = 0; x<3; x++){
          vector<int> indx;
          for(size_t i =0; i<m_min.size();i++)indx.push_back(i);
@@ -317,11 +317,11 @@ void UAStrategy::OverlapBBX(){
             vector<double> centerB = centers[k];
             double weight = sqrt((centerB[0]-centerA[0])*(centerB[0]-centerA[0])+
                                  (centerB[1]-centerA[1])*(centerB[1]-centerA[1])+
-                                 (centerB[2]-centerA[2])*(centerB[2]-centerA[2])); 
+                                 (centerB[2]-centerA[2])*(centerB[2]-centerA[2]));
             g.add_edge(j, k, weight);
          }
       }
-      
+
       Graph mst_g;
       stapl::sequential::mst_kruskals(g, mst_g, 0);
       //perform swapping//
@@ -346,7 +346,7 @@ void UAStrategy::OverlapBBX(){
                   vector<double> centerB = cfg.GetPosition();
                   double weight = sqrt((centerB[0]-centerA[0])*(centerB[0]-centerA[0])+
                         (centerB[1]-centerA[1])*(centerB[1]-centerA[1])+
-                        (centerB[2]-centerA[2])*(centerB[2]-centerA[2])); 
+                        (centerB[2]-centerA[2])*(centerB[2]-centerA[2]));
                   regionDists.push_back(pair<VID, double>(*svit, weight));
                }
                sort(regionDists.begin(), regionDists.end(), sortRegionFunc);
@@ -386,7 +386,7 @@ void UAStrategy::OverlapBBX(){
                vector<double> centB = cfg.GetPosition();
                double weight = sqrt((centB[0]-centerN[0])*(centB[0]-centerN[0])+
                      (centB[1]-centerN[1])*(centB[1]-centerN[1])+
-                     (centB[2]-centerN[2])*(centB[2]-centerN[2])); 
+                     (centB[2]-centerN[2])*(centB[2]-centerN[2]));
                regionDistsA.push_back(pair<VID, double>(*svit, weight));
             }
             for(VVIT svit = Clusters[v2]->begin(); svit!=Clusters[v2]->end(); svit++){
@@ -394,7 +394,7 @@ void UAStrategy::OverlapBBX(){
                vector<double> centB = cfg.GetPosition();
                double weight = sqrt((centB[0]-centerN[0])*(centB[0]-centerN[0])+
                      (centB[1]-centerN[1])*(centB[1]-centerN[1])+
-                     (centB[2]-centerN[2])*(centB[2]-centerN[2])); 
+                     (centB[2]-centerN[2])*(centB[2]-centerN[2]));
                regionDistsB.push_back(pair<VID, double>(*svit, weight));
             }
             sort(regionDistsA.begin(), regionDistsA.end(), sortRegionFunc);
@@ -434,7 +434,7 @@ void UAStrategy::OverlapBBX(){
 }
 
 void UAStrategy::IntToStr(int myInt, string &myString){
-	std::stringstream ss;          
+	std::stringstream ss;
 	ss << myInt;
 	ss >> myString;
 }
@@ -473,12 +473,12 @@ vector<double> UAStrategy::GetProbabilities(){
       average/=(double)features.size();
       averages.push_back(average);
    }
-   
+
    double sum=0;
    vector<double> result;
-   
+
    for(size_t RegionID = 0; RegionID<averages.size();RegionID++){
-      
+
       cout<<"doing the redistribiution now"<<endl;
       sum=0;
       for(size_t i=0;i<averages.size(); i++){
@@ -486,9 +486,9 @@ vector<double> UAStrategy::GetProbabilities(){
       }
       double VisibilityOfRegion = averages[RegionID];
       cout<<"V="<<VisibilityOfRegion<<"\t(1-v)^2="<<(1-averages[RegionID])*(1-averages[RegionID])<<"\tsum="<<sum<<endl<<flush;
-      result.push_back((1-averages[RegionID])*(1-averages[RegionID])/sum);	
+      result.push_back((1-averages[RegionID])*(1-averages[RegionID])/sum);
    }
-   
+
    cout<<"done with redistribute now display results"<<result.size()<<endl<<flush;
    for(size_t probs = 0; probs<result.size(); probs++){
       cout<<probs<<" = "<<result[probs]<<endl<<flush;
@@ -556,7 +556,7 @@ vector<vector<VID>* > UAStrategy::GetPartitionsVID(){
    return Clusters;
 }
 
-void UAStrategy::EvaluatePartitions(){   
+void UAStrategy::EvaluatePartitions(){
    string filename=GetBaseFilename()+".partitions";
    vector<vector<double> > eval=GetMPProblem()->GetMPStrategy()->GetPartitioningEvaluators()->Evaluate(filename, GetPartitions());
 }
@@ -591,11 +591,11 @@ void UAStrategy::WriteRegionsSeparate(){
       //regionProblem.GetRoadmap()->m_pRoadmap->AddEdge(cfg2,cfg1,0);
       ostringstream oss;
       oss<<baseFileName<<"."<<count<<".map";
-      ofstream  myofstream(oss.str().c_str());    
+      ofstream  myofstream(oss.str().c_str());
       if (!myofstream) {
          cerr << "print_feature_maps::WriteRoadmapForVizmo: can't open outfile: " << endl;
          exit(-1);
-      } 
+      }
       regionProblem.WriteRoadmapForVizmo(myofstream);
       myofstream.close();
    }

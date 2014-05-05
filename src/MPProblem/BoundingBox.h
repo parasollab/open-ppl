@@ -6,6 +6,9 @@
 class BoundingBox :  public Boundary {
   public:
     BoundingBox();
+    BoundingBox(pair<double, double> _x,
+        pair<double, double> _y,
+        pair<double, double> _z = pair<double, double>(-numeric_limits<double>::max(), numeric_limits<double>::max()));
     BoundingBox(const BoundingBox& _bbx);
     ~BoundingBox() {}
 

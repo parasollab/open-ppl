@@ -38,7 +38,7 @@ struct locVec {
   typedef typename MPTraits::MPProblemType MPProblemType;
   typedef typename MPProblemType::VID VID;
   typedef vector<VID> result_type;
-  
+
   template <typename View>
   result_type operator() (View _v) {
     return _v;
@@ -51,7 +51,7 @@ struct mergeVec {
   typedef typename MPTraits::MPProblemType MPProblemType;
   typedef typename MPProblemType::VID VID;
   typedef vector<VID> result_type;
-  
+
   template <typename View1, typename View2>
   result_type operator() (View1 vec1, View2 vec2) {
     result_type v3(vec1.size() + vec2.size());
@@ -65,7 +65,7 @@ struct mergeVec {
 };
 
 /**
- * Custom vertex property that implements coloring should extend Cfg class 
+ * Custom vertex property that implements coloring should extend Cfg class
    for internal coloring
  */
  struct cc_color_property {
@@ -81,27 +81,27 @@ struct mergeVec {
 
 namespace stapl {
 template <typename Accessor>
-class proxy<cc_color_property, Accessor> 
+class proxy<cc_color_property, Accessor>
   : public Accessor
-{ 
+{
 private:
   friend class proxy_core_access;
   typedef cc_color_property   target_t;
 
 public:
-  explicit proxy(Accessor const& acc) 
+  explicit proxy(Accessor const& acc)
     : Accessor(acc) { }
 
   operator target_t() const { return Accessor::read(); }
 
-  proxy const& operator=(proxy const& rhs) { 
+  proxy const& operator=(proxy const& rhs) {
     Accessor::write(rhs);
     return *this;
   }
 
-  proxy const& operator=(target_t const& rhs) { 
-    Accessor::write(rhs); 
-    return *this; 
+  proxy const& operator=(target_t const& rhs) {
+    Accessor::write(rhs);
+    return *this;
   }
 
   void set_color(size_t _c) { Accessor::invoke(&target_t::set_color, _c); }
@@ -114,10 +114,10 @@ public:
 //TODO: Combine the two set cc workfunctions
 template<class MPTraits>
 struct SetRegionCC{
-  
+
   typedef typename MPTraits::MPProblemType MPProblemType;
   typedef typename MPProblemType::VID VID;
-  
+
   template <typename RGView, typename CCView>
   void operator()(RGView _v1, CCView _v2) {
      std::vector<pair<VID,size_t> > ccVec;
@@ -131,10 +131,10 @@ struct SetRegionCC{
 
 template<class MPTraits>
 struct SetRegionCCVIDS{
-  
+
   typedef typename MPTraits::MPProblemType MPProblemType;
   typedef typename MPProblemType::VID VID;
-  
+
   template <typename RGView, typename CCView>
   void operator()(RGView _v1, CCView _v2) {
      std::vector<VID> ccVec;
@@ -147,7 +147,7 @@ struct SetRegionCCVIDS{
 };
 
 template<typename RGType, typename RType, typename CMap, class MPTraits>
-class RegionCCConnector 
+class RegionCCConnector
 {
   private:
   typedef typename MPTraits::CfgType CfgType;
@@ -156,39 +156,39 @@ class RegionCCConnector
   typedef typename MPProblemType::GraphType GraphType;
   typedef CCsConnector<MPTraits>* NCP;
   typedef std::tr1::tuple<NCP,string, int> ConnectTuple;
-  
+
   MPProblemType* m_problem;
   RGType* m_g;
   CMap m_cmap;
   ConnectTuple m_ct;
-  
+
   public:
 
   RegionCCConnector(MPProblemType* _problem, RGType* _g,CMap _cmap, ConnectTuple _ct) :m_problem(_problem),m_g(_g), m_cmap(_cmap){
     ///Tuple needs explicit assignment? //copy failed
     m_ct = _ct;
   }
-  
-  void define_type(stapl::typer &_t)  
+
+  void define_type(stapl::typer &_t)
   {
   }
-  
-  template<typename regionView> 
+
+  template<typename regionView>
   void operator()(regionView _view) const
   {
     /// CONNECTOR PARAMETERS
-    
+
     NCP ncp = std::tr1::get<0>(m_ct);             /// connection method pointer
     string connectType = std::tr1::get<1>(m_ct); ///random,closest or largest
     int  k = std::tr1::get<2>(m_ct);    ////k ccs or vids to attempt from each region
-    
+
     typedef graph_view<GraphType>  view_type;
     view_type rmView(*(m_problem->GetRoadmap()->GetGraph()));
-    
-    
+
+
     typedef typename regionView::adj_edges_type ADJV;
     ADJV  edges = _view.edges();
-    
+
        //SOURCE REGION
     vector<pair<VID, size_t> > sCCs = _view.property().GetCCs();
     std::sort(sCCs.begin(), sCCs.end(), RegionCCSort<pair<VID, size_t> >());
@@ -199,7 +199,7 @@ class RegionCCConnector
       array_view<static_array<std::vector<VID> > > scandView(sArrayCand);
       cc_stats(rmView, m_cmap,(*sIT).first,scandView);
       sCand = map_reduce(locVec<MPTraits>(),mergeVec<MPTraits>(), scandView);
-	 
+
 	 //TARGET REGIONS
       for(typename regionView::adj_edge_iterator ei = edges.begin(); ei != edges.end(); ++ei){
         RType tRegion = (*(m_g->find_vertex((*ei).target()))).property();
@@ -207,7 +207,7 @@ class RegionCCConnector
         vector<VID> tCand;
         std::sort(tCCs.begin(), tCCs.end(), RegionCCSort<pair<VID, size_t> >());
         tCand.clear();
-        for(typename vector<pair<VID, size_t> >::iterator tIT = tCCs.begin(); tIT != tCCs.begin() + std::min(static_cast<int>(tCCs.size()), k); ++tIT) {	
+        for(typename vector<pair<VID, size_t> >::iterator tIT = tCCs.begin(); tIT != tCCs.begin() + std::min(static_cast<int>(tCCs.size()), k); ++tIT) {
           static_array<std::vector<VID> > tArrayCand(get_num_locations());
           array_view<static_array<std::vector<VID> > > tcandView(tArrayCand);
           ///NOTE : crashes at p>2
@@ -216,24 +216,24 @@ class RegionCCConnector
           //3: implement and use inverse property map
 	  cc_stats(rmView, m_cmap,(*tIT).first,tcandView);
 	  tCand = map_reduce(locVec<MPTraits>(),mergeVec<MPTraits>(), tcandView);
-	     
+
           //NOW CONNECT
           ///\TODO : Check whether to connect small or big CCs
-	     
+
           vector<CfgType> col;
 	  ncp->ConnectBigCC(m_problem->GetRoadmap(),*(m_problem->GetStatClass()),sCand, tCand, back_inserter(col));
-	     
+
         }
     }
   }
-    
+
  }
-        
+
 };
 
 
 template<typename RGType, typename RType, class MPTraits>
-class RegionRandomConnector 
+class RegionRandomConnector
 {
   private:
   typedef typename MPTraits::CfgType CfgType;
@@ -242,43 +242,43 @@ class RegionRandomConnector
   typedef typename MPProblemType::GraphType GraphType;
   typedef typename MPProblemType::ConnectorPointer NCP;
   typedef std::tr1::tuple<NCP,string, int> ConnectTuple;
-  
-  MPProblemType* m_problem; 
+
+  MPProblemType* m_problem;
   RGType* m_g;
   ConnectTuple m_ct;
- 
+
   public:
 
   RegionRandomConnector(MPProblemType* _problem, RGType* _g, ConnectTuple _ct) :m_problem(_problem),m_g(_g){
     m_ct = _ct;
   }
-  
-  
-  void define_type(stapl::typer &_t)  
+
+
+  void define_type(stapl::typer &_t)
   {
   }
-  
-  template<typename regionView> 
+
+  template<typename regionView>
   void operator()(regionView _view) const
   {
     /// CONNECTOR PARAMETERS
     NCP ncp = std::tr1::get<0>(m_ct);             /// connection method pointer
     string connectType = std::tr1::get<1>(m_ct); ///random,closest or largest
     int  k = std::tr1::get<2>(m_ct);    ////k ccs or vids to attempt from each region
-    
+
     typedef typename regionView::adj_edges_type ADJV;
     ADJV  edges = _view.edges();
-    
-     //Algo: Randomly pick vid(cfg) in source region and attempt connection with k-closest vid (cfg) in target region 
+
+     //Algo: Randomly pick vid(cfg) in source region and attempt connection with k-closest vid (cfg) in target region
       //SOURCE REGION
       vector<VID> sCand;
-      vector<VID> sVids = _view.property().RegionVIDs(); 
+      vector<VID> sVids = _view.property().RegionVIDs();
       std::random_shuffle(sVids.begin(), sVids.end());
       sCand.clear();
       for(typename vector<VID>::iterator sVIT = sVids.begin(); sVIT != sVids.begin() + std::min(static_cast<int>(sVids.size()), k); ++sVIT) {
         sCand.push_back(*sVIT);
       }
-      
+
       //TARGET REGION
       for(typename regionView::adj_edge_iterator ei = edges.begin(); ei != edges.end(); ++ei){
         RType tRegion = (*(m_g->find_vertex((*ei).target()))).property();
@@ -289,7 +289,7 @@ class RegionRandomConnector
        //	for(vector<VID>::iterator tVIT = tVids.begin(); tVIT != tVids.begin() + std::min(static_cast<int>(tVids.size()), k); ++tVIT) {
 	//  tCand.push_back(*tVIT);
        // }
-      
+
       /// NOW CONNECT
       stapl::sequential::vector_property_map<typename GraphType::GRAPH,size_t > cmap;
       ncp->Connect(m_problem->GetRoadmap(),*(m_problem->GetStatClass()), cmap,
@@ -298,11 +298,11 @@ class RegionRandomConnector
      // PrintValue("RANDOM - source size : ", sCand.size());
      // PrintValue("RANDOM - target size : ", tCand.size());
      // ncp->ConnectSmallCC(m_region->GetRoadmap(),*(m_region->GetStatClass()),sCand, tCand, col.begin());
-       
+
      }
-	     
+
   }
-        
+
 };
 
 

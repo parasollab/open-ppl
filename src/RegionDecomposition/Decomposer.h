@@ -9,7 +9,7 @@
 #ifndef DECOMPOSER_H_
 #define DECOMPOSER_H_
 
-namespace pmpl_detail { 
+namespace pmpl_detail {
   typedef boost::mpl::list<
     WorkSpaceDecomposer,
     ClusteringDecomposer
@@ -17,7 +17,7 @@ namespace pmpl_detail {
 }
 
 template <class CFG>
-class Decomposer : private ElementSet<DecompositionMethod>, public MPBaseObject {			 
+class Decomposer : private ElementSet<DecompositionMethod>, public MPBaseObject {
   public:
     typedef typename ElementSet<DecompositionMethod>::MethodPointer DecompositionPointer;
 
@@ -27,14 +27,14 @@ class Decomposer : private ElementSet<DecompositionMethod>, public MPBaseObject 
     template <typename MethodList>
       Decomposer() : ElementSet<DecompositionMethod>(MethodList()) {}
 
-    Decomposer() : ElementSet<DecompositionMethod>(pmpl_detail::DecomposerMethodList()) {}    
+    Decomposer() : ElementSet<DecompositionMethod>(pmpl_detail::DecomposerMethodList()) {}
 
     template <typename MethodList>
       Decomposer(XMLNodeReader& _node, MPProblem* _problem, MethodList const&)
       : ElementSet<DecompositionMethod>(MethodList()), MPBaseObject(_problem){}
 
     Decomposer(XMLNodeReader& _node, MPProblem* _problem)
-      : ElementSet<DecompositionMethod<CFG> >(pmpl_detail::DecompositionMethodList()), 
+      : ElementSet<DecompositionMethod<CFG> >(pmpl_detail::DecompositionMethodList()),
       MPBaseObject(_problem) {}
 
     ~Decomposer() {}
@@ -46,7 +46,7 @@ class Decomposer : private ElementSet<DecompositionMethod>, public MPBaseObject 
       return ElementSet<DecompositionMethod>::GetMethod(_label);
     }
 
-    virtual void PrintOptions(ostream& _os) { }
+    virtual void PrintOptions(ostream& _os) const {}
 };
 
 #endif

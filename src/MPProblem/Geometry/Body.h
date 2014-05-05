@@ -45,7 +45,7 @@ class Body {
 
     bool operator==(const Body& b) const;
     bool operator!=(const Body& b) const { return !(*this == b); }
-    void SetFileName(string _filename) { m_filename=_filename; }
+
     string GetFileName() { return m_filename; }
 
     ///Return transformation of this body in world coordinate.
@@ -102,13 +102,7 @@ class Body {
     void SetBase(Robot::Base _baseType) { m_baseType = _baseType; };
     void SetBaseMovement(Robot::BaseMovement _baseMovementType) { m_baseMovementType = _baseMovementType; };
 
-    void Read(string _fileName);
-
-    /**Read BYU format data from given inpustream.
-     *Call GMSPolyhedron::ReadBYU, calculate the bounding box, and then call buildCDstructure
-     *to create auxilary data structure for collision detection.
-     */
-    void ReadBYU(istream& _is);
+    void Read();
 
     virtual void Write(ostream& _os);
 
@@ -147,8 +141,8 @@ class Body {
     ////////////////////////////////////////////////////////////////////////////////
     int ForwardConnectionCount() const {return m_forwardConnection.size();}
     int BackwardConnectionCount() const {return m_backwardConnection.size();}
-    void AddForwardConnection(Connection _connection) {m_forwardConnection.push_back(_connection);}
-    void AddBackwardConnection(Connection _connection) {m_backwardConnection.push_back(_connection);}
+    void AddForwardConnection(const Connection& _connection) {m_forwardConnection.push_back(_connection);}
+    void AddBackwardConnection(const Connection& _connection) {m_backwardConnection.push_back(_connection);}
     /**Link
      * Function: Link "this" body to the given other body by setting up a
      * connectionship between them using the given DH parameters and the
@@ -161,9 +155,11 @@ class Body {
      * Function: Link "this" body to the given body by using the given
      * connection.  Establish a forward and backward connectionship.
      */
-    void Link(Connection _c);
+    void Link(const Connection& _c);
 
     bool IsConvexHullVertex(const Vector3d& _v);
+
+    static string m_modelDataDir;
 
   protected:
 

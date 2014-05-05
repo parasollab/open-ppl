@@ -6,7 +6,16 @@ BoundingBox::BoundingBox() {
     m_bbx[i] = make_pair(-numeric_limits<double>::max(), numeric_limits<double>::max());
 }
 
-BoundingBox::BoundingBox(const BoundingBox& _bbx) : m_bbx(_bbx.m_bbx) {}
+BoundingBox::BoundingBox(pair<double, double> _x, pair<double, double> _y,
+    pair<double, double> _z) {
+  m_bbx[0] = _x;
+  m_bbx[1] = _y;
+  m_bbx[2] = _z;
+}
+
+BoundingBox::BoundingBox(const BoundingBox& _bbx) {
+  copy(_bbx.m_bbx, _bbx.m_bbx + 2, m_bbx);
+}
 
 bool
 BoundingBox::operator==(const Boundary& _b) const {
@@ -63,30 +72,6 @@ BoundingBox::GetClearance(const Vector3d& _p) const {
   }
   return minClearance;
 }
-
-/*
-int
-BoundingBox::GetSideID(const Vector3d& _p) const {
-  cout << "GetSideID::" << _p << endl;
-  double minClearance = numeric_limits<double>::max();
-  int id, faceID;
-  for (int i = 0; i < 3; ++i) {
-    cout << "i::" << i << endl;
-    cout << _p[i] - m_bbx[i].first << "\t" << m_bbx[i].second - _p[i] << endl;
-    if((_p[i] - m_bbx[i].first) < (m_bbx[i].second - _p[i]))
-      id = i;
-    else
-      id = i+3;
-    double clearance = min((_p[i] - m_bbx[i].first ), (m_bbx[i].second - _p[i]));
-    if (clearance < minClearance || i == 0) {
-      faceID = id;
-      minClearance = clearance;
-    }
-  }
-  cout << "faceID::" << faceID << endl;
-  return faceID;
-}
-*/
 
 int
 BoundingBox::GetSideID(const vector<double>& _p) const {
@@ -170,24 +155,19 @@ BoundingBox::Read(istream& _is){
   string line;
   getline(_is, line);
   istringstream iss(line);
-  for(size_t i = 0; i<3; ++i){
+  for(size_t i = 0; i<3; ++i) {
     string tok;
     if(iss >> tok){
       size_t del = tok.find(":");
-      if(del == string::npos){
-        cerr << "Error::Reading bounding box range " << i << ". Should be delimited by ':'." << endl;
-        exit(1);
-      }
+      if(del == string::npos)
+        throw ParseException(WHERE, "Failed reading bounding box range. Should be delimited by ':'.");
+
       istringstream minv(tok.substr(0,del)), maxv(tok.substr(del+1, tok.length()));
-      if(!(minv>>m_bbx[i].first && maxv>>m_bbx[i].second)){
-        cerr << "Error::Reading bounding box range " << i << "." << endl;
-        exit(1);
-      }
+      if(!(minv>>m_bbx[i].first && maxv>>m_bbx[i].second))
+        throw ParseException(WHERE, "Failed reading bounding box range.");
     }
-    else if(i<2) { //error. only 1 token provided.
-      cerr << "Error::Reading bounding box ranges. Only one provided." << endl;
-      exit(1);
-    }
+    else if(i<2) //error. only 1 token provided.
+      throw ParseException(WHERE, "Failed reading bounding box ranges. Only one provided.");
   }
 }
 

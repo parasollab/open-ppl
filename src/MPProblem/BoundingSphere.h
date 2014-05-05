@@ -6,6 +6,7 @@
 class BoundingSphere : public Boundary {
   public:
     BoundingSphere();
+    BoundingSphere(const Vector3d& _center, double _radius);
     BoundingSphere(const BoundingSphere& _bs);
     ~BoundingSphere() {}
 

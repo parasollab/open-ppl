@@ -514,8 +514,8 @@ class UniformMedialAxisSampler : public SamplerMethod<MPTraits> {
         CDInfo cdInfo;
         string callee = this->GetNameAndLabel() + "::BinS";
         bool cfgFree = _env->InBounds(higher)
-          && vc->IsValid(higher, _env, _stats, cdInfo, &callee)
-          && !vc->IsInsideObstacle(higher, _env, cdInfo);
+          && vc->IsValid(higher, cdInfo, callee)
+          && !vc->IsInsideObstacle(higher);
 
         if(cfgFree) {
           _stats.IncNodesGenerated(this->GetNameAndLabel());

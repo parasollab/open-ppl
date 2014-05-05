@@ -10,17 +10,17 @@ class ConnectivityMetric : public CoverageMetric<MPTraits, Set> {
     typedef typename MPTraits::MPProblemType MPProblemType;
     typedef typename MPProblemType::VID VID;
 
-    ConnectivityMetric(const Set& _samples = Set(), 
-        const vector<string>& _connectorLabels = vector<string>(), 
+    ConnectivityMetric(const Set& _samples = Set(),
+        const vector<string>& _connectorLabels = vector<string>(),
         bool _computeAllCCs = false);
     ConnectivityMetric(MPProblemType* _problem, XMLNodeReader& _node, bool _computeAllCCs = false);
-    
+
     virtual ~ConnectivityMetric();
 
-    virtual void PrintOptions(ostream& _os);
+    virtual void PrintOptions(ostream& _os) const;
 
     double operator()();
-    
+
   private:
     ofstream output;
 };
@@ -44,13 +44,13 @@ ConnectivityMetric<MPTraits, Set>::~ConnectivityMetric() {
 }
 
 template<class MPTraits, class Set>
-void 
-ConnectivityMetric<MPTraits, Set>::PrintOptions(ostream& _os) {
+void
+ConnectivityMetric<MPTraits, Set>::PrintOptions(ostream& _os) const {
   _os << "Percentage of queries solved" << endl;
 }
 
 template<class MPTraits, class Set>
-double 
+double
 ConnectivityMetric<MPTraits, Set>::operator()() {
   CoverageMetric<MPTraits, Set>::operator()(); // Call CoverageMetric first
 

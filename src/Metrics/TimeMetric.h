@@ -12,10 +12,10 @@ class TimeMetric : public MetricMethod<MPTraits> {
     TimeMetric(typename MPTraits::MPProblemType* _problem, XMLNodeReader& _node);
     virtual ~TimeMetric();
 
-    virtual void PrintOptions(ostream& _os);
+    virtual void PrintOptions(ostream& _os) const;
 
     double operator()();
-   
+
 };
 
 template<class MPTraits>
@@ -35,7 +35,7 @@ TimeMetric<MPTraits>::~TimeMetric() {
 
 template<class MPTraits>
 void
-TimeMetric<MPTraits>::PrintOptions(ostream& _os){
+TimeMetric<MPTraits>::PrintOptions(ostream& _os) const {
   _os << "Time allowed" << endl;
 }
 

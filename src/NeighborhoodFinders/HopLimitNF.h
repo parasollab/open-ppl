@@ -28,7 +28,7 @@ class HopLimitNF : public NeighborhoodFinderMethod<MPTraits> {
         m_nfLabel = _node.stringXMLParameter("nfLabel", true, "default", "Neighbor Finder Method");
         _node.warnUnrequestedAttributes();
       }
-    
+
     virtual void PrintOptions(ostream& _os) const {
       NeighborhoodFinderMethod<MPTraits>::PrintOptions(_os);
       _os << "\th: " << m_h << endl
@@ -36,15 +36,15 @@ class HopLimitNF : public NeighborhoodFinderMethod<MPTraits> {
     }
 
     template<typename InputIterator, typename OutputIterator>
-      OutputIterator FindNeighbors(RoadmapType* _rmp, 
+      OutputIterator FindNeighbors(RoadmapType* _rmp,
           InputIterator _first, InputIterator _last, const CfgType& _cfg, OutputIterator _out);
 
     // KClosest that operate over two ranges of VIDS.  K total pair<VID,VID> are returned that
     // represent the _kclosest pairs of VIDs between the two ranges.
     template<typename InputIterator, typename OutputIterator>
       OutputIterator FindNeighborPairs(RoadmapType* _rmp,
-          InputIterator _first1, InputIterator _last1, 
-          InputIterator _first2, InputIterator _last2, 
+          InputIterator _first1, InputIterator _last1,
+          InputIterator _first2, InputIterator _last2,
           OutputIterator _out);
 
   private:
@@ -54,8 +54,8 @@ class HopLimitNF : public NeighborhoodFinderMethod<MPTraits> {
 
 template<class MPTraits>
 template<typename InputIterator, typename OutputIterator>
-OutputIterator 
-HopLimitNF<MPTraits>::FindNeighbors(RoadmapType* _rmp, InputIterator _first, InputIterator _last, 
+OutputIterator
+HopLimitNF<MPTraits>::FindNeighbors(RoadmapType* _rmp, InputIterator _first, InputIterator _last,
     const CfgType& _cfg, OutputIterator _out) {
 
   this->IncrementNumQueries();
@@ -73,22 +73,22 @@ HopLimitNF<MPTraits>::FindNeighbors(RoadmapType* _rmp, InputIterator _first, Inp
   vector<VID> vRes;
   typedef stapl::sequential::map_property_map<typename GraphType::GRAPH, size_t> ColorMap;
   ColorMap hopMap, colorMap;
-  hopMap.put(parent, 0); 
+  hopMap.put(parent, 0);
   stapl::sequential::hops_detail::hops_visitor<typename GraphType::GRAPH> vis(*graph, hopMap, m_h, vRes);
   breadth_first_search_early_quit(*graph, parent, vis, colorMap);
   nf->FindNeighbors(_rmp, vRes.begin(), vRes.end(), _cfg, _out);
 
   this->EndQueryTime();
   this->EndTotalTime();
-  
+
   return _out;
 }
 
 template<class MPTraits>
 template<typename InputIterator, typename OutputIterator>
-OutputIterator 
+OutputIterator
 HopLimitNF<MPTraits>::FindNeighborPairs(RoadmapType* _rmp,
-    InputIterator _first1, InputIterator _last1, 
+    InputIterator _first1, InputIterator _last1,
     InputIterator _first2, InputIterator _last2,
     OutputIterator _out) {
   cerr << "ERROR:: HopLimitNF::FindNeighborPairs is not yet implemented. Exiting." << endl;

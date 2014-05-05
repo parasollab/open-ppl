@@ -4,7 +4,11 @@
 BoundingSphere::BoundingSphere() :
   m_center(0.0, 0.0, 0.0),
   m_radius(numeric_limits<double>::max()) {
-  }
+}
+
+BoundingSphere::BoundingSphere(const Vector3d& _center, double _radius) :
+  m_center(_center), m_radius(_radius) {
+}
 
 BoundingSphere::BoundingSphere(const BoundingSphere& _bs) :
   m_center(_bs.m_center),
@@ -85,8 +89,8 @@ BoundingSphere::ResetBoundary(vector<pair<double, double> >& _obstBBX, double _d
 
 void
 BoundingSphere::Read(istream& _is) {
-  m_center = ReadField<Vector3d>(_is, "Center point of bounding sphere");
-  m_radius = ReadField<double>(_is, "Radius of bounding sphere");
+  m_center = ReadField<Vector3d>(_is, WHERE, "Failed reading center point of bounding sphere.");
+  m_radius = ReadField<double>(_is, WHERE, "Failed reading radius of bounding sphere.");
 }
 
 void

@@ -15,18 +15,18 @@ class MPNNNF: public NeighborhoodFinderMethod {
 
 public:
   typedef typename RoadmapGraph<CFG, WEIGHT>::VID VID;
-  
-  MPNNNF() { 
-    
+
+  MPNNNF() {
+
     m_epsilon = 0.0;
     m_use_scaling = 0;
     m_use_rotational = 0;
     m_max_points = 50000;
     m_max_neighbors = 1000;
-    
+
     CFG temp;
     int dim = temp.DOF();
-    
+
     // NOTE: everything after the 3rd DOF is rotational.
     vector<int> topology(dim);
     for (int i = 0; i < dim; i++) {
@@ -38,22 +38,22 @@ public:
         else
           topology[i] = 1;
     }
-    
+
     kdtree = new MPNNWrapper(topology, m_max_points, m_max_neighbors, m_epsilon);
-    
+
     m_cur_roadmap_version = -1;
   }
 
   MPNNNF(XMLNodeReader& _node, MPProblem* _problem) :
     NeighborhoodFinderMethod(_node, _problem) {
-  
-    
+
+
     m_epsilon = _node.numberXMLParameter("epsilon", false, 0.0, 0.0, 100.0, "Epsilon value for MPNN");
     m_use_scaling = _node.numberXMLParameter("use_scaling", true, 0, 0, 1, "Bounding-box scaling used on pos DOFs");
-    m_use_rotational = _node.numberXMLParameter("use_rotational", true, 0, 0, 1, "Use rotational-coordinate topology"); 
+    m_use_rotational = _node.numberXMLParameter("use_rotational", true, 0, 0, 1, "Use rotational-coordinate topology");
     m_max_points = _node.numberXMLParameter("max_points", false, 50000, 0, 1000000, "Max points for MPNN");
     m_max_neighbors = _node.numberXMLParameter("max_k", false, 1000, 0, 10000,"Max neighbors for MPNN");
-    
+
     CFG temp;
     int dim = temp.DOF();
     // NOTE: everything after the 3rd DOF is rotational.
@@ -67,9 +67,9 @@ public:
         else
           topology[i] = 1;
     }
-    
+
     kdtree = new MPNNWrapper(topology, m_max_points, m_max_neighbors, m_epsilon);
-    
+
     m_cur_roadmap_version = -1;
 
     m_max_bbox_range = 0.0;
@@ -78,18 +78,18 @@ public:
       double tmp_range = range.second-range.first;
       if(tmp_range > m_max_bbox_range) m_max_bbox_range = tmp_range;
     }
-    
+
   }
 
   MPNNNF(shared_ptr<DistanceMetricMethod> _dmm, std::string _label) :
     NeighborhoodFinderMethod(_dmm, _label) {
-    
+
     m_epsilon = 0.0;
     m_use_scaling = 0;
     m_use_rotational = 0;
     m_max_points = 50000;
     m_max_neighbors = 1000;
-    
+
     CFG temp;
     int dim = temp.DOF();
     // NOTE: everything after the 3rd DOF is rotational.
@@ -103,7 +103,7 @@ public:
         else
           topology[i] = 1;
     }
-   
+
     kdtree = new MPNNWrapper(topology, m_max_points, m_max_neighbors, m_epsilon);
 
     m_cur_roadmap_version = -1;
@@ -123,55 +123,55 @@ public:
 
   // this may end up being a private function used to create an internal
   // CGAL kdtree that will be populated by a roadmap in the future
-  void 
+  void
   AddPoint(CFG _cfg, VID _v);
 
-  
+
   // Find the k closest to _v that is in the set represented by the iterators
   // You should create a temporary tree based on the iterators to search
   // not optimal, but should still do it...
   template <typename InputIterator, typename OutputIterator>
   OutputIterator
-  KClosest( Roadmap<CFG,WEIGHT>* _rmp, 
+  KClosest( Roadmap<CFG,WEIGHT>* _rmp,
     InputIterator _input_first, InputIterator _input_last, VID _v, int k,
     OutputIterator _out);
-  
+
 
   // Find the k closest to _v that is in the set represented by the iterators
   // You should create a temporary tree based on the iterators to search
   // not optimal, but should still do it...
   template <typename InputIterator, typename OutputIterator>
   OutputIterator
-  KClosest( Roadmap<CFG,WEIGHT>* _rmp, 
-    InputIterator _input_first, InputIterator _input_last, CFG _cfg, int k, 
+  KClosest( Roadmap<CFG,WEIGHT>* _rmp,
+    InputIterator _input_first, InputIterator _input_last, CFG _cfg, int k,
     OutputIterator _out);
 
-  
+
   // KClosest that operate over the internal kd-tree structure
   //   to find the kclosest to a VID or CFG
   //
   // NOTE: These are the prefered methods for kClosest computations
   template <typename OutputIterator>
   OutputIterator
-  KClosest( Roadmap<CFG,WEIGHT>* _rmp, 
+  KClosest( Roadmap<CFG,WEIGHT>* _rmp,
     VID _v, int k, OutputIterator _out);
-  
+
   template <typename OutputIterator>
   OutputIterator
-  KClosest( Roadmap<CFG,WEIGHT>* _rmp, 
+  KClosest( Roadmap<CFG,WEIGHT>* _rmp,
     CFG _cfg, int k, OutputIterator _out);
-  
+
 
   // KClosest that operate over two ranges of VIDS.  K total pair<VID,VID> are returned that
   // represent the kclosest pairs of VIDs between the two ranges.
   template <typename InputIterator, typename OutputIterator>
   OutputIterator
   KClosestPairs( Roadmap<CFG,WEIGHT>* _rmp,
-    InputIterator _in1_first, InputIterator _in1_last, 
-    InputIterator _in2_first, InputIterator _in2_last, 
+    InputIterator _in1_first, InputIterator _in1_last,
+    InputIterator _in2_first, InputIterator _in2_last,
     int k, OutputIterator _out);
 
-  
+
   void
   UpdateInternalModel( Roadmap<CFG,WEIGHT>* _rmp );
 
@@ -183,7 +183,7 @@ private:
   double m_max_bbox_range;
   int m_max_points; // maximum number of points the internal kd-tree can store
   int m_max_neighbors; // maximum number of neighbors the internal kd-tree can find
-  
+
   MPNNWrapper *kdtree; // set up by the AddPoint function
 };
 
@@ -195,7 +195,7 @@ MPNNNF<CFG, WEIGHT>::AddPoint(CFG _cfg, VID _v)
   kdtree->add_node(_cfg.GetData(), _v);
 }
 
-    
+
 // Find the k closest to _v that is in the set represented by the iterators
 // You should create a temporary tree based on the iterators to search
 // not optimal, but should still do it...
@@ -203,14 +203,14 @@ template <typename CFG, typename WEIGHT>
 template <typename InputIterator, typename OutputIterator>
 OutputIterator
 MPNNNF<CFG,WEIGHT>::
-KClosest( Roadmap<CFG,WEIGHT>* _rmp, 
+KClosest( Roadmap<CFG,WEIGHT>* _rmp,
     InputIterator _input_first, InputIterator _input_last, VID _v, int k,
     OutputIterator _out) {
   RoadmapGraph<CFG,WEIGHT>* pMap = _rmp->m_pRoadmap;
   CFG _v_cfg = (*(pMap->find_vertex(_v))).property();
-  
+
   this->KClosest(_rmp, _input_first, _input_last, _v_cfg, k, _out);
-  
+
   return _out;
 }
 
@@ -221,17 +221,17 @@ template <typename CFG, typename WEIGHT>
 template <typename InputIterator, typename OutputIterator>
 OutputIterator
 MPNNNF<CFG,WEIGHT>::
-KClosest( Roadmap<CFG,WEIGHT>* _rmp, 
+KClosest( Roadmap<CFG,WEIGHT>* _rmp,
   InputIterator _input_first, InputIterator _input_last, CFG _cfg, int k,
   OutputIterator _out) {
-  
+
   IncrementNumQueries();
   StartTotalTime();
 
 //cout << "Running KCloseset???" << endl << flush;
   RoadmapGraph<CFG,WEIGHT>* pMap = _rmp->m_pRoadmap;
   int dim = _cfg.DOF();
-  
+
   // NOTE: everything after the 3rd DOF is rotational.
   vector<int> topology(dim);
   for (size_t i = 0; i < topology.size(); i++) {
@@ -243,12 +243,12 @@ KClosest( Roadmap<CFG,WEIGHT>* _rmp,
       else
         topology[i] = 1;
   }
-  
+
   double m_epsilon = 0.0;
   MPNNWrapper *localKdtree = new MPNNWrapper(topology, 20000, 1000, m_epsilon);
-  
+
   // add configurations from iterator into local kdtree
-  InputIterator V1; 
+  InputIterator V1;
   for (V1 = _input_first; V1 != _input_last; ++V1) {
     CFG v1 = (*(pMap->find_vertex(*V1))).property();
     if (m_use_scaling) {
@@ -260,7 +260,7 @@ KClosest( Roadmap<CFG,WEIGHT>* _rmp,
   }
 
   vector< pair<VID, double> > results(k, pair<VID, double>(-999, -999.9));
-  
+
   if (m_use_scaling) {
     _cfg.SetSingleParam(0, _cfg.GetSingleParam(0)/m_max_bbox_range * 2 * PI);
     _cfg.SetSingleParam(1, _cfg.GetSingleParam(1)/m_max_bbox_range * 2 * PI);
@@ -276,9 +276,9 @@ KClosest( Roadmap<CFG,WEIGHT>* _rmp,
     //cout << results[i].second << " - VID = " << results[i].first << endl;
     ++_out;
   }
-  
+
   localKdtree->MPNNWrapper::~MPNNWrapper();
-  
+
   EndTotalTime();
   return _out;
 }
@@ -290,12 +290,12 @@ template <typename CFG, typename WEIGHT>
 template <typename OutputIterator>
 OutputIterator
 MPNNNF<CFG,WEIGHT>::
-KClosest( Roadmap<CFG,WEIGHT>* _rmp, 
+KClosest( Roadmap<CFG,WEIGHT>* _rmp,
   VID _v, int k, OutputIterator _out) {
 
   RoadmapGraph<CFG,WEIGHT>* pMap = _rmp->m_pRoadmap;
   CFG _cfg = (*(pMap->find_vertex(_v))).property();
-  
+
   this->KClosest(_rmp, _cfg, k, _out);
   return _out;
 }
@@ -307,10 +307,10 @@ template <typename CFG, typename WEIGHT>
 template <typename OutputIterator>
 OutputIterator
 MPNNNF<CFG,WEIGHT>::
-KClosest( Roadmap<CFG,WEIGHT>* _rmp, 
+KClosest( Roadmap<CFG,WEIGHT>* _rmp,
   CFG _cfg, int k, OutputIterator _out) {
   StartTotalTime();
-  
+
   StartConstructionTime();
   this->UpdateInternalModel(_rmp);
   EndConstructionTime();
@@ -323,7 +323,7 @@ KClosest( Roadmap<CFG,WEIGHT>* _rmp,
     _cfg.SetSingleParam(1, _cfg.GetSingleParam(1)/m_max_bbox_range * 2 * PI);
     _cfg.SetSingleParam(2, _cfg.GetSingleParam(2)/m_max_bbox_range * 2 * PI);
   }
-  
+
   StartQueryTime();
 //  cout << "Finding " << k << "-closest to point: " << _cfg << endl;
   kdtree->KClosest(_cfg.GetData(), k, results.begin());
@@ -349,19 +349,19 @@ template<typename InputIterator, typename OutputIterator>
 OutputIterator
 MPNNNF<CFG,WEIGHT>::
 KClosestPairs( Roadmap<CFG,WEIGHT>* _rmp,
-  InputIterator _in1_first, InputIterator _in1_last, 
-  InputIterator _in2_first, InputIterator _in2_last, 
+  InputIterator _in1_first, InputIterator _in1_last,
+  InputIterator _in2_first, InputIterator _in2_last,
   int k, OutputIterator _out) {
 
-  // we will take an incremental approach here... 
-  
+  // we will take an incremental approach here...
+
   // STEP 1:
   // create local roadmap to hold [_in2_first ... _in2_last]
   //
   RoadmapGraph<CFG,WEIGHT>* pMap = _rmp->m_pRoadmap;
   CFG dimCfg = (*(pMap->find_vertex(*_in1_first))).property();
-  int dim = dimCfg.DOF(); 
-  
+  int dim = dimCfg.DOF();
+
   // NOTE: everything after the 3rd DOF is rotational.
   vector<int> topology(dim);
   for (size_t i = 0; i < topology.size(); i++) {
@@ -373,29 +373,29 @@ KClosestPairs( Roadmap<CFG,WEIGHT>* _rmp,
       else
         topology[i] = 1;
   }
-  
+
   MPNNWrapper *localKdtree = new MPNNWrapper(topology, 50000, 1000, m_epsilon);
-  
+
   InputIterator v_iter;
   for (v_iter = _in2_first; v_iter != _in2_last; ++v_iter) {
     CFG v_iter_cfg = (*(pMap->find_vertex(*v_iter))).property();
     localKdtree->add_node(v_iter_cfg.GetData(), *v_iter);
   }
   //
-  
+
   // STEP 2:
   // iterate through vids in _in1_first, calculating KClosest with respect
   //   to the local kd tree... compile master list of results
-  // 
+  //
   vector< pair< pair<VID, VID>, double> > query_results;
   //OutputIterator query_results;
-  
+
   for (v_iter = _in1_first; v_iter != _in1_last; ++v_iter) {
     vector< pair<VID, double> > iter_results(k, pair<VID, double>(-999, -999.9));
-    
+
     CFG query_pt = (*(pMap->find_vertex(*v_iter))).property();
     localKdtree->KClosest(query_pt.GetData(), k, iter_results.begin());
-    
+
     // push local results back to master list
     typename vector< pair<VID, double> >::iterator iter;
     for (iter = iter_results.begin(); iter != iter_results.end(); ++iter) {
@@ -408,9 +408,9 @@ KClosestPairs( Roadmap<CFG,WEIGHT>* _rmp,
       }
     }
   }
-  
+
   sort(query_results.begin(), query_results.end(), compare_second<pair<VID, VID>, double>());
-  
+
   typename vector< pair< pair<VID, VID>, double> >::iterator q_iter;
   int count = 0;
   for (q_iter = query_results.begin(); q_iter != query_results.end(); ++q_iter) {
@@ -420,7 +420,7 @@ KClosestPairs( Roadmap<CFG,WEIGHT>* _rmp,
     ++_out;
     count++;
   }
-  
+
   return _out;
 }
 
@@ -432,18 +432,18 @@ UpdateInternalModel( Roadmap<CFG,WEIGHT>* _rmp )
   int new_version = _rmp->m_pRoadmap->roadmapVCS.get_version_number();
   if (this->m_cur_roadmap_version == new_version)
     return;
-  
+
   //cout << "Updating internal model from version " << this->m_cur_roadmap_version << " to " << new_version << endl;
-  
+
   typename RoadmapVCS<CFG, WEIGHT>::cce_iter start;
   if (this->m_cur_roadmap_version == -1)
     start = _rmp->m_pRoadmap->roadmapVCS.begin();
   else
     start = _rmp->m_pRoadmap->roadmapVCS.iter_at(m_cur_roadmap_version);
-  
+
   typename RoadmapVCS<CFG, WEIGHT>::cce_iter end = _rmp->m_pRoadmap->roadmapVCS.end();
   typename RoadmapVCS<CFG, WEIGHT>::cce_iter iter;
-  
+
   for (iter = start; iter != end; iter++) {
     if ((*iter).second.IsTypeAddVertex()) {
       //cout << "Add vertex event found... VID = " << (*iter).second.GetAddVertexEvent()->GetVID() << endl;
@@ -456,7 +456,7 @@ UpdateInternalModel( Roadmap<CFG,WEIGHT>* _rmp )
       this->AddPoint(tmp, (*iter).second.GetAddVertexEvent()->GetVID());
     }
   }
-  
+
   m_cur_roadmap_version = new_version;
 }
 

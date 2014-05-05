@@ -4,15 +4,15 @@
 #include "Vector.h"
 using namespace mathtool;
 
-const double MaxDist =  1e10;
+const double maxDist =  1e10;
 
 class CDInfo {
  public:
   CDInfo();
   ~CDInfo();
-  
+
   void ResetVars();
-  
+
   int m_collidingObstIndex;   ///< The index for fisrt discovered obstacle which collides with robot.
   bool m_retAllInfo;          ///< If this instance contains all (following) information.
   int m_nearestObstIndex;     ///< The index for closest obstacle

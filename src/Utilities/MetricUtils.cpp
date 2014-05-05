@@ -77,30 +77,22 @@ StatClass::ClearStats() {
 // calls for the method by the name of CDName
 //----------------------------------------
 int
-StatClass::IncNumCollDetCalls(string _cdName, string* _callName) {
+StatClass::IncNumCollDetCalls(string _cdName, const string& _callName) {
   m_numCollDetCalls[_cdName]++;
-
   // If a caller's name was provided
   // then increment the verification counter
   // with that name.
-
-  if( _callName )
-  { m_collDetCountByName[*_callName]++; }
-
+  m_collDetCountByName[_callName]++;
   return m_numCollDetCalls[_cdName];
 }
 
 //----------------------------------------
 // Increment the number of Cfg::isCollision
-// calls 
-//---------------------------------------- 
+// calls
+//----------------------------------------
 void
-StatClass::IncCfgIsColl(string* _callName) {
-  if(_callName )
-    m_isCollByName[*_callName]++; 
-  else
-    m_isCollByName["UNKNOWN"]++; 
-
+StatClass::IncCfgIsColl(const string& _callName) {
+  m_isCollByName[_callName]++;
   m_isCollTotal++;
 }
 
@@ -149,7 +141,7 @@ StatClass::PrintFeatures(ostream& _os) {
 
   if (connectionsAttempted == 0)
     _os << 0.0 << endl;
-  else 
+  else
     _os << ((double)connectionsMade)/connectionsAttempted << endl;
 
   _os << "General features:" << endl;
@@ -195,40 +187,40 @@ StatClass::StartClock(string _name) {
       m_clockMap[_name].SetName(_name);
     m_clockMap[_name].StartClock();
   }
-  else  
-    cerr<<"Error::Attempting to start a non-existing clock"<< endl; 
+  else
+    cerr<<"Error::Attempting to start a non-existing clock"<< endl;
 }
 
 void
 StatClass::StopClock(string _name) {
   if(_name != "")
-    m_clockMap[_name].StopClock(); 
-  else 
-    cerr<<"Error::Attempting to stop a non-existing clock"<< _name << endl; 
+    m_clockMap[_name].StopClock();
+  else
+    cerr<<"Error::Attempting to stop a non-existing clock"<< _name << endl;
 }
 
-void 
+void
 StatClass::StopPrintClock(string _name, ostream& _os) {
   if(_name != "")
     m_clockMap[_name].StopPrintClock(_os);
-  else 
-    cerr<<"Error::Attempting to stop and print a non-existing clock"<< _name << endl; 
+  else
+    cerr<<"Error::Attempting to stop and print a non-existing clock"<< _name << endl;
 }
 
-void 
+void
 StatClass::PrintClock(string _name, ostream& _os) {
   if(_name !="")
     m_clockMap[_name].PrintClock(_os);
-  else 
-    cerr<<"Error::Attempting to print a non-existing clock"<< _name << endl; 
+  else
+    cerr<<"Error::Attempting to print a non-existing clock"<< _name << endl;
 }
 
 void
 StatClass::ClearClock(string _name) {
   if(_name != "")
     m_clockMap[_name].ClearClock();
-  else 
-    cerr<<"Error::Attempting to clear a non-existing clock"<< _name << endl; 
+  else
+    cerr<<"Error::Attempting to clear a non-existing clock"<< _name << endl;
 }
 
 double
@@ -236,17 +228,17 @@ StatClass::GetSeconds(string _name) {
   if(_name !="")
     return m_clockMap[_name].GetSeconds();
   else {
-    cerr<<"Attempting to GetSeconds for a non-existing clock:: "<< _name << endl; 
+    cerr<<"Attempting to GetSeconds for a non-existing clock:: "<< _name << endl;
     return 0;
   }
 }
 
-int 
+int
 StatClass::GetUSeconds(string _name) {
   if(_name != "")
     return m_clockMap[_name].GetUSeconds();
   else {
-    cerr<<"Attempting to GetUSeconds for a non-existing clock::"<< _name << endl; 
+    cerr<<"Attempting to GetUSeconds for a non-existing clock::"<< _name << endl;
     return 0;
   }
 }
@@ -273,7 +265,7 @@ ClockClass::ClockClass() {
 ClockClass::
 ~ClockClass() {}
 
-void 
+void
 ClockClass::SetName(string _name){
   m_clockName = _name;
 }

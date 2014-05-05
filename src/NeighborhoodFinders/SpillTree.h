@@ -3,7 +3,7 @@
 #ifndef _ST_SPILL_TREE_CLASS_H_
 #define _ST_SPILL_TREE_CLASS_H_
 
- 
+
 
 
 #include "Graph.h"
@@ -21,7 +21,7 @@ template<typename CFGTYPE, typename WEIGHT>
 class vertexDistance{
 public:
   typedef typename RoadmapGraph<CFGTYPE, WEIGHT>::VID VID;
-  
+
   VID vertex;
   double distance;
 
@@ -36,10 +36,10 @@ template<typename CFGTYPE, typename WEIGHT>
 class spillTreeNode{
 
  public:
-  typedef typename RoadmapGraph<CFGTYPE, WEIGHT>::VID VID;   
+  typedef typename RoadmapGraph<CFGTYPE, WEIGHT>::VID VID;
   vector<VID> *verticies;
   vector<VID> verticiesObj;
-  double maxDistance;  
+  double maxDistance;
   CFGTYPE center;
   VID mostDistantVertex1;
   VID mostDistantVertex2;
@@ -66,13 +66,13 @@ class spillTreeNode{
 };
 
 
-template<typename CFGTYPE, typename WEIGHT> 
+template<typename CFGTYPE, typename WEIGHT>
 class spillTree{
-  
+
  public:
   typedef stapl::sequential::graph<stapl::DIRECTED, stapl::NONMULTIEDGES, spillTreeNode<CFGTYPE, WEIGHT>* > graphType;
   typedef typename RoadmapGraph<CFGTYPE, WEIGHT>::VID VID;
-  
+
   int maxLeafSize;
   double overlapDistance;
   double maxPerBranch;
@@ -98,7 +98,7 @@ class spillTree{
     isMetricTree=_isMetricTree;
   }
 
-  
+
   bool isLeaf(VID node){
     //typename RoadmapGraph<CFGTYPE, WEIGHT>::vertex_iterator vi= tree->find_vertex(node);
     //return ((*vi).size()==0);
@@ -129,7 +129,7 @@ class spillTree{
     return newNodeVID;
   }
 
-  
+
 
   void splitNode(VID node){
     std::vector<VID> rSublist;
@@ -140,9 +140,9 @@ class spillTree{
     createChild(node,lSublist);
     createChild(node,rSublist);
   }
-  
 
- 
+
+
   vector<vertexDistance<CFGTYPE, WEIGHT> >* addIfClosest(const CFGTYPE &queryCFG, VID v,  vector<vertexDistance<CFGTYPE, WEIGHT> > *closest, int k){
     RoadmapGraph<CFGTYPE,WEIGHT>* pMap = rmap->m_pRoadmap;
     if((*(pMap->find_vertex(v))).property() == queryCFG && !includeQueryCFG){
@@ -153,7 +153,7 @@ class spillTree{
     vertexDistance<CFGTYPE, WEIGHT> distance_v(v, distance(v,queryCFG));
     for(typename std::vector<vertexDistance<CFGTYPE, WEIGHT> >::iterator iter = closest->begin(); iter != closest->end(); iter++){
       if(v==(*iter).vertex)
-        return closest;  
+        return closest;
       if(distance_v.distance<(*iter).distance){
         closest->insert(iter,distance_v);
         if((int)closest->size()>k)
@@ -173,7 +173,7 @@ class spillTree{
       closest=addIfClosest(queryCFG, *iter, closest, k);
     }
   }
-  
+
   bool canPrune(const CFGTYPE &queryCFG, int k, VID node, const vector<vertexDistance<CFGTYPE, WEIGHT> > *closest){
     return ((closest->back().distance)<(distance(getNodeDataStructure(node)->center,queryCFG)-getNodeDataStructure(node)->maxDistance));
   }
@@ -182,7 +182,7 @@ class spillTree{
     if(isLeaf(node)){
       //vector<VID> *v2=getNodeDataStructure(node)->verticies;
       //cout<<"finding closest"<<endl;
-      findClosest(queryCFG, k, node, closest);   
+      findClosest(queryCFG, k, node, closest);
     }else{
       if(isToLeftOfPartition(queryCFG, node)){
         //cout<<"query left"<<endl;
@@ -220,9 +220,9 @@ class spillTree{
     return query((*(pMap->find_vertex(v))).property(), k);
   }
 
-  
 
-  
+
+
   double project(VID v1, VID v2, VID v3){
     RoadmapGraph<CFGTYPE,WEIGHT>* pMap = rmap->m_pRoadmap;
     CFGTYPE cfg1 = (*(pMap->find_vertex(v1))).property();
@@ -230,15 +230,15 @@ class spillTree{
     CFGTYPE cfg3 = (*(pMap->find_vertex(v3))).property();
     return project(cfg1, cfg2, cfg3);
   }
-    
-  
+
+
   double project(const CFGTYPE &cfg, VID v2, VID v3){
     RoadmapGraph<CFGTYPE,WEIGHT>* pMap = rmap->m_pRoadmap;
     CFGTYPE cfg2 = (*(pMap->find_vertex(v2))).property();
     CFGTYPE cfg3 = (*(pMap->find_vertex(v3))).property();
     return project(cfg, cfg2, cfg3);
   }
-      
+
   CGAL::Point_d< CGAL::Cartesian_d<double> > toCgalPoint(VID v){
     RoadmapGraph<CFGTYPE,WEIGHT>* pMap = rmap->m_pRoadmap;
     CFGTYPE cfg = (*(pMap->find_vertex(v))).property();
@@ -268,9 +268,9 @@ class spillTree{
     }
     return distToP2;
   }
-  
-  
-  
+
+
+
 
   //does not work, need to configure to use accual projection
   void divideListAtMidpoint(spillTreeNode<CFGTYPE, WEIGHT> *node, vector<VID>& _lSublist, vector<VID>& _rSublist, double _overlapDistance){
@@ -294,13 +294,13 @@ class spillTree{
         //cout<<"in right"<<endl;
       }
     }
-   
+
     _lSublist=lSublist;
     _rSublist=rSublist;
   }
 
 
-  
+
   vector<double>* getProjections(vector<VID>* verticies, VID mdv1, VID mdv2){
     vector<double>* projections = new vector<double>;
     projections->reserve(verticies->size());
@@ -322,13 +322,13 @@ class spillTree{
     vector<double> *projections= getProjections(node->verticies, node->mostDistantVertex1, node->mostDistantVertex2);
     vector<double> sortedProjections = *projections;
     //cout<<"Got Projections found"<<endl;
-    sort(sortedProjections.begin(),sortedProjections.end()); 
-    std::vector<double>::iterator iter = sortedProjections.begin(); 
+    sort(sortedProjections.begin(),sortedProjections.end());
+    std::vector<double>::iterator iter = sortedProjections.begin();
     for(int i=0; i<((double)sortedProjections.size())/2; i++){
       iter++;
     }
     node->median=*iter;
- 
+
     std::vector<double>::iterator projection=projections->begin();
     for(typename std::vector<VID>::iterator iter = node->verticies->begin(); iter != node->verticies->end(); iter++){
       //cout<<"dividing based on projection"<<endl;
@@ -452,7 +452,7 @@ class spillTree{
 
   //change to use existing method if one exists
   void findMostDistantPair(vector<VID> *verticies, VID& _v1, VID& _v2){
-    /*   
+    /*
     double maxDist=0;
     for(std::list<VID>::iterator list_iter = verticies->begin(); list_iter != verticies->end();list_iter++){
       cout<<"in findMostDistantPair loop"<<endl;
@@ -462,14 +462,14 @@ class spillTree{
  _v1=*list_iter;
  _v2=mdv;
       }
-    } 
+    }
     */
-           
+
     VID v1=findMostDistant(verticies->front(), verticies);
     VID v2=findMostDistant(v1, verticies);
     _v1=v1;
     _v2=v2;
-         
+
   }
 
   void setRoadmap(Roadmap<CFGTYPE,WEIGHT>* _rmp){
@@ -477,7 +477,7 @@ class spillTree{
   }
 
 
- 
+
   double getMaxDistance(const CFGTYPE &center, vector<VID> verticies){
     double max=0;
     for(typename std::vector<VID>::iterator iter = verticies.begin(); iter != verticies.end(); ++iter) {
@@ -487,8 +487,8 @@ class spillTree{
     return max;
   }
 
-  
-  CFGTYPE getCenter(vector<VID>& verticies){ 
+
+  CFGTYPE getCenter(vector<VID>& verticies){
     RoadmapGraph<CFGTYPE,WEIGHT>* pMap = rmap->m_pRoadmap;
     CFGTYPE center;
     for(typename std::vector<VID>::iterator iter = verticies.begin(); iter != verticies.end(); ++iter) {
@@ -498,7 +498,7 @@ class spillTree{
     center.divide(center, verticies.size());
     return center;
   }
-  
+
 
   void create(vector<VID> &verticies){
     //cout<<"in createm list size ="<<verticies.size()<<endl;
@@ -525,14 +525,14 @@ class spillTree{
       VID rChild=root;
       tree->add_edge(_root, lChild);
       tree->add_edge(_root, rChild);
-    }    
+    }
     root = _root;
     //list<VID> *v4=getNodeDataStructure(_root)->verticies;
   }
 
 
 
-  
+
   //need to change midpoint one
   bool isToLeftOfPartition(const CFGTYPE &cfg, VID node){
     if(divideAtMedian){
@@ -548,7 +548,7 @@ class spillTree{
     CFGTYPE cfg = (*(pMap->find_vertex(vertex))).property();
     return isToLeftOfPartition(cfg, node);
   }
-  
+
   void addVertexToLeaf(VID newVertex, VID leaf){
     getNodeDataStructure(leaf)->verticies->push_back(newVertex);
     if((int)getNodeDataStructure(leaf)->verticies->size()>maxLeafSize){
@@ -563,7 +563,7 @@ class spillTree{
     }
   }
 
-    
+
   void addVertex(VID newVertex, VID node){
     getNodeDataStructure(node)->maxDistance = max(distance(newVertex, getNodeDataStructure(node)->center), getNodeDataStructure(node)->maxDistance);
     if(isLeaf(node)){
@@ -577,7 +577,7 @@ class spillTree{
     }
     //cout<<"done adding vertex"<<endl;
   }
-    
+
 
 
   void addVertex(VID newVertex){
@@ -592,12 +592,12 @@ class spillTree{
     return Euclidean(cfg1,cfg2);
   }
 
-  
+
   double Euclidean(const CFGTYPE &cfg1, const CFGTYPE &cfg2){
     return Euclidean(cfg1.GetData(),cfg2.GetData());
   }
-  
- 
+
+
   double Euclidean( const vector<double>& v1, const vector<double>& v2){
     double diff, dist = 0.0;
     int d;
@@ -613,9 +613,9 @@ class spillTree{
       }
       //return .5;
       return sqrt(dist);
-    } 
+    }
   }
-  
+
 };
 
-#endif 
+#endif

@@ -1,7 +1,7 @@
 //////////////////////////////////////////////
 //ComposeValidity.h
 //
-//This class composes one or more validity 
+//This class composes one or more validity
 //checker methods.
 /////////////////////////////////////////////
 
@@ -12,7 +12,7 @@
 #include "ValidityCheckerFunctor.h"
 
 template<class MPTraits>
-class ComposeValidity : public ValidityCheckerMethod<MPTraits> {  
+class ComposeValidity : public ValidityCheckerMethod<MPTraits> {
   public:
     typedef typename MPTraits::CfgType CfgType;
     typedef typename MPTraits::MPProblemType MPProblemType;
@@ -22,12 +22,11 @@ class ComposeValidity : public ValidityCheckerMethod<MPTraits> {
 
     ComposeValidity(LogicalOperator _logicalOperator = AND,
         const vector<string>& _vcLabel = vector<string>());
-    ComposeValidity(MPProblemType* _problem, XMLNodeReader& _node);   
+    ComposeValidity(MPProblemType* _problem, XMLNodeReader& _node);
     virtual ~ComposeValidity() {}
 
-    virtual bool 
-      IsValidImpl(CfgType& _cfg, Environment* _env, StatClass& _stats, 
-          CDInfo& _cdInfo, string* _callName = NULL);
+    virtual bool
+      IsValidImpl(CfgType& _cfg, CDInfo& _cdInfo, const string& _callName);
 
   private:
     LogicalOperator m_logicalOperator;
@@ -36,7 +35,7 @@ class ComposeValidity : public ValidityCheckerMethod<MPTraits> {
 
 template<class MPTraits>
 ComposeValidity<MPTraits>::ComposeValidity(LogicalOperator _operator,
-    const vector<string>& _vcLabel) : 
+    const vector<string>& _vcLabel) :
   ValidityCheckerMethod<MPTraits>(), m_logicalOperator(_operator), m_label(_vcLabel) {
     this->m_name = "ComposeValidity";
   }
@@ -47,7 +46,7 @@ ComposeValidity<MPTraits>::ComposeValidity(MPProblemType* _problem, XMLNodeReade
     _node.verifyName("ComposeValidity");
     this->m_name = "ComposeValidity";
 
-    string logicalOperator = _node.stringXMLParameter("operator", true, "", "operator");    
+    string logicalOperator = _node.stringXMLParameter("operator", true, "", "operator");
     if(logicalOperator == "AND" || logicalOperator == "and") {
       m_logicalOperator = AND;
     }
@@ -72,14 +71,14 @@ ComposeValidity<MPTraits>::ComposeValidity(MPProblemType* _problem, XMLNodeReade
 
 template<class MPTraits>
 bool
-ComposeValidity<MPTraits>::IsValidImpl(CfgType& _cfg, Environment* _env, StatClass& _stats, CDInfo& _cdInfo, string* _callName) {
+ComposeValidity<MPTraits>::IsValidImpl(CfgType& _cfg, CDInfo& _cdInfo, const string& _callName) {
   vector<ValidityCheckerPointer> vcMethod;
   typedef typename vector<ValidityCheckerPointer>::iterator VCIterator;
   for(vector<string>::iterator it = m_label.begin(); it != m_label.end(); ++it) {
     vcMethod.push_back(this->GetMPProblem()->GetValidityChecker(*it));
   }
 
-  ValidityCheckerFunctor<MPTraits> comFunc(_cfg, _env, _stats, _cdInfo, _callName); 
+  ValidityCheckerFunctor<MPTraits> comFunc(_cfg, _cdInfo, _callName);
 
   if (m_logicalOperator == AND) {
     Compose<VCIterator, logical_and<bool>, ValidityCheckerFunctor<MPTraits> > andRelation;
@@ -89,10 +88,10 @@ ComposeValidity<MPTraits>::IsValidImpl(CfgType& _cfg, Environment* _env, StatCla
     Compose<VCIterator, logical_or<bool>, ValidityCheckerFunctor<MPTraits> > orRelation;
     return orRelation(vcMethod.begin(), vcMethod.end(), logical_or<bool>(), comFunc);
   }
-  else { 
+  else {
     cerr << "Error::Compose Validity read unknown label." << endl;
     return false;
-  }        
+  }
 }
 
 #endif

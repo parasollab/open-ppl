@@ -1,7 +1,7 @@
 #include "CollisionDetectionMethod.h"
 
-CollisionDetectionMethod::CollisionDetectionMethod(string _name, CDType _type, cd_predefined _cdtype) : 
-  m_name(_name), m_type(_type), m_cdtype(_cdtype) {
+CollisionDetectionMethod::CollisionDetectionMethod(string _name, CDType _type, cd_predefined _cdType) :
+  m_name(_name), m_type(_type), m_cdType(_cdType) {
   }
 
 CollisionDetectionMethod::~CollisionDetectionMethod() {}
@@ -16,8 +16,8 @@ CollisionDetectionMethod::PrintOptions(ostream& _os) const {
   _os << "\t" << m_name << " " << endl;
 }
 
-bool 
-CollisionDetectionMethod::IsInsideObstacle(const Cfg& _cfg, Environment* _env, CDInfo& _cdInfo) {
+bool
+CollisionDetectionMethod::IsInsideObstacle(const Cfg& _cfg) {
   cerr << "IsInsideObstacle: Not implemeneted yet" << endl;
   exit(1);
 }

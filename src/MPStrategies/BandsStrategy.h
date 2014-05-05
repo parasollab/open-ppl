@@ -39,12 +39,12 @@
    m_M2 = double(0);
    }
 
-   double GetVariance() const { if(m_count ==0) return 0;  
+   double GetVariance() const { if(m_count ==0) return 0;
    return m_M2/(m_count - double(1)); }
    double GetStandardDeviation() const { return sqrt(GetVariance()); }
-   double GetMean() const { if(m_count ==0) return 0;  
+   double GetMean() const { if(m_count ==0) return 0;
    if(abs(m_mean) > 1e-3) return m_mean; else return double(0); }
-   double GetMax() const { if(m_count ==0) return 0;  
+   double GetMax() const { if(m_count ==0) return 0;
    if(abs(m_mean) > 1e-3) return m_max;else return double(0); }
    double GetMin() const { if(m_count ==0) return 0;  return m_min;}
    unsigned long long int GetCount() const { return m_count;}
@@ -97,7 +97,7 @@ class BIRContainer : public MPSMContainer {
 
 class BandsIncrementalRoadmap : public MPStrategyMethod {
   public:
-    typedef RoadmapGraph<CfgType, WeightType>::VID VID;   
+    typedef RoadmapGraph<CfgType, WeightType>::VID VID;
     BandsIncrementalRoadmap(BIRContainer cont) : MPStrategyMethod(cont.parent) {
       m_vecStrNodeGenLabels = cont.m_vecStrNodeGenLabels;
       m_vecStrNodeConnectionLabels = cont.m_vecStrNodeConnectionLabels;
@@ -113,14 +113,14 @@ class BandsIncrementalRoadmap : public MPStrategyMethod {
       resize_bbox = cont.resize_bbox;
       dm = cont.dm;
 
-    }  
+    }
     BandsIncrementalRoadmap(XMLNodeReader& in_Node, MPProblem* in_pProblem) :
       MPStrategyMethod(in_Node,in_pProblem) {
-        ParseXML(in_Node);    
+        ParseXML(in_Node);
       };
     virtual ~BandsIncrementalRoadmap() {}
 
-    virtual void PrintOptions(ostream& out_os) { };
+    virtual void PrintOptions(ostream& out_os) const {};
 
     virtual void ParseXML(XMLNodeReader& in_Node) {
       cout << "BandsIncrementalRoadmap::ParseXML()" << endl;
@@ -148,8 +148,8 @@ class BandsIncrementalRoadmap : public MPStrategyMethod {
           citr->warnUnrequestedAttributes();
         } else if (citr->getName() == "step_size") {
           m_stepSize = citr->numberXMLParameter(string("step_size"), true,
-              int(100),int(0),int(MAX_INT), 
-              string("Iteration step size")); 
+              int(100),int(0),int(MAX_INT),
+              string("Iteration step size"));
         } else if(citr->getName() == "NeighborhoodFinder") {
           string nf_method = citr->stringXMLParameter(string("Method"),true,
               string(""),string("NeighborhoodFinder Method"));
@@ -161,7 +161,7 @@ class BandsIncrementalRoadmap : public MPStrategyMethod {
       }
 
       m_queryFilename = in_Node.stringXMLParameter("query_filename", true, "", "Query Filename");
-      m_posRes = in_Node.numberXMLParameter(string("pos_res"), false, 0.0, 0.0, 10.0, 
+      m_posRes = in_Node.numberXMLParameter(string("pos_res"), false, 0.0, 0.0, 10.0,
           string("positional resolution"));
       //    m_nfStats = in_Node.stringXMLParameter("nf_stat", true, "", "NF for stat output");
       resize_bbox = in_Node.boolXMLParameter(string("resize_bbox"), false, false,
@@ -248,7 +248,7 @@ class BandsIncrementalRoadmap : public MPStrategyMethod {
           cout << "reading sampler with label: " << *itr << endl;
           pNodeGen = GetMPProblem()->GetMPStrategy()->GetSampler()->GetMethod(*itr);
           pNodeGen->Sample(GetMPProblem()->GetEnvironment(), *pStatClass, m_numNodes, 100*m_numNodes,
-              back_inserter(vectorCfgs));  
+              back_inserter(vectorCfgs));
 
           cout << "Finished : " << vectorCfgs.size();
           vector<VID> vids =  GetMPProblem()->AddToRoadmap(vectorCfgs);
@@ -271,14 +271,14 @@ class BandsIncrementalRoadmap : public MPStrategyMethod {
         //----------
         //
         //-----------------
-        cout << "CONNECT ROADMAP NODES" << endl;   
+        cout << "CONNECT ROADMAP NODES" << endl;
 
         pStatClass->StartClock("Node Connection");
         Connector<CfgType, WeightType>* connector = GetMPProblem()->GetMPStrategy()->GetConnector();
         stapl::sequential::vector_property_map< GRAPH,size_t > cmap;
         cmap.reset();
         typedef vector<string>::iterator J;
-        for(J itr = m_vecStrNodeConnectionLabels.begin(); 
+        for(J itr = m_vecStrNodeConnectionLabels.begin();
              itr != m_vecStrNodeConnectionLabels.end(); ++itr)
         {
 
@@ -299,7 +299,7 @@ class BandsIncrementalRoadmap : public MPStrategyMethod {
 
 
 
-        /*string outputFilename = getBaseFilename() + ".map"; 
+        /*string outputFilename = getBaseFilename() + ".map";
           ofstream  myofstream(outputFilename.c_str());
 
           if (!myofstream) {
@@ -315,7 +315,7 @@ class BandsIncrementalRoadmap : public MPStrategyMethod {
         //pStatClass->PrintAllStats(GetMPProblem()->GetRoadmap());
 
         pStatClass->StartClock("Query");
-        cout << "BEGIN isSameCCC" << endl <<flush; 
+        cout << "BEGIN isSameCCC" << endl <<flush;
         cmap.reset();
         querySucceeded = is_same_cc(*GetMPProblem()->GetRoadmap()->m_pRoadmap, cmap, 0, 1);
 
@@ -349,7 +349,7 @@ class BandsIncrementalRoadmap : public MPStrategyMethod {
           cout << " (vid=" << size_t(vi->second) << ")";
           ccnum++;
           }*/
-        // VID far_vid(-1), far_vid2(-1); 
+        // VID far_vid(-1), far_vid2(-1);
 
         //ComponentDiameter(*GetMPProblem()->GetRoadmap()->m_pRoadmap,CCStats[0].second, &far_vid);
         //double diameter = ComponentDiameter(*GetMPProblem()->GetRoadmap()->m_pRoadmap, far_vid,&far_vid2);
@@ -367,11 +367,11 @@ class BandsIncrementalRoadmap : public MPStrategyMethod {
           << "\t" << elapsed_ng << "\t" <<  "-1" << "\t" << elapsed_con
           << "\t" << CCStats.size()
           << "\t" << double(CCStats[0].first) / double(GetMPProblem()->GetRoadmap()->m_pRoadmap->get_num_vertices()-2)
-          << "\t" << double(CCStats[CCStats.size()-1].first) / double(GetMPProblem()->GetRoadmap()->m_pRoadmap->get_num_vertices()-2) 
-          << "\t" << querySucceeded 
-          << "\t" << edges.GetMin() << "\t" << edges.GetMax() << "\t" << edges.GetMean() 
-          << "\t" << edges.GetStandardDeviation() << "\t" << degree.GetMin() << "\t" << degree.GetMax() 
-          << "\t" << degree.GetMean() << "\t" << degree.GetStandardDeviation() 
+          << "\t" << double(CCStats[CCStats.size()-1].first) / double(GetMPProblem()->GetRoadmap()->m_pRoadmap->get_num_vertices()-2)
+          << "\t" << querySucceeded
+          << "\t" << edges.GetMin() << "\t" << edges.GetMax() << "\t" << edges.GetMean()
+          << "\t" << edges.GetStandardDeviation() << "\t" << degree.GetMin() << "\t" << degree.GetMax()
+          << "\t" << degree.GetMean() << "\t" << degree.GetStandardDeviation()
           << "\t" << hop_diameter << "\t" << weight_diameter
           << endl;
 
@@ -383,7 +383,7 @@ class BandsIncrementalRoadmap : public MPStrategyMethod {
           /*
           ofstream total_out((basefname.str() + ".total").c_str());
           //total_out << basefname.str()
-          total_out << GetMPProblem()->GetRoadmap()->m_pRoadmap->get_num_vertices()-2 
+          total_out << GetMPProblem()->GetRoadmap()->m_pRoadmap->get_num_vertices()-2
             << "\t" << GetMPProblem()->GetRoadmap()->m_pRoadmap->get_num_edges() / 2
             //<< "\t" << pStatClass->m_connectionsAttempted << "\t" << double(pStatClass->m_connectionsMade) / double(pStatClass->m_connectionsAttempted)
             << "\t" << pStatClass->m_isCollByName["straightline-straightline::IsConnectedSLBinary"]
@@ -394,11 +394,11 @@ class BandsIncrementalRoadmap : public MPStrategyMethod {
             //        << "\t" << double(nf->GetNFMethod(m_nfStats)->GetConstructionTime()) / double(GetMPProblem()->GetRoadmap()->m_pRoadmap->get_num_vertices()-2)
             << "\t" << CCStats.size()
             << "\t" << double(CCStats[0].first) / double(GetMPProblem()->GetRoadmap()->m_pRoadmap->get_num_vertices()-2)
-            << "\t" << double(CCStats[CCStats.size()-1].first) / double(GetMPProblem()->GetRoadmap()->m_pRoadmap->get_num_vertices()-2) 
+            << "\t" << double(CCStats[CCStats.size()-1].first) / double(GetMPProblem()->GetRoadmap()->m_pRoadmap->get_num_vertices()-2)
             << "\t" << querySucceeded
-            << "\t" << edges.GetMin() << "\t" << edges.GetMax() << "\t" << edges.GetMean() 
-            << "\t" << edges.GetStandardDeviation() << "\t" << degree.GetMin() << "\t" << degree.GetMax() 
-            << "\t" << degree.GetMean() << "\t" << degree.GetStandardDeviation() 
+            << "\t" << edges.GetMin() << "\t" << edges.GetMax() << "\t" << edges.GetMean()
+            << "\t" << edges.GetStandardDeviation() << "\t" << degree.GetMin() << "\t" << degree.GetMax()
+            << "\t" << degree.GetMean() << "\t" << degree.GetStandardDeviation()
             << "\t" << diameter
             << endl;
 
@@ -482,9 +482,9 @@ class BandsIncrementalRoadmap : public MPStrategyMethod {
       LPOutput<CfgType,WeightType> out_lp_output;
       for ( size_t i=0; i<vec_dist_vid.size(); ++i) {
         if ( GetMPProblem()->GetMPStrategy()->GetLocalPlanners()->GetMethod(m_strLocalPlannerLabel)->
-            IsConnected ( GetMPProblem()->GetEnvironment(), _mystat, dm, _test, 
-              (*(_graph.find_vertex(vec_dist_vid[i].second))).property(), &out_lp_output, 
-              GetMPProblem()->GetEnvironment()->GetPositionRes(), 
+            IsConnected ( GetMPProblem()->GetEnvironment(), _mystat, dm, _test,
+              (*(_graph.find_vertex(vec_dist_vid[i].second))).property(), &out_lp_output,
+              GetMPProblem()->GetEnvironment()->GetPositionRes(),
               GetMPProblem()->GetEnvironment()->GetOrientationRes(),
               true, false, false)) {
           return true;
@@ -498,7 +498,7 @@ class BandsIncrementalRoadmap : public MPStrategyMethod {
       stapl::sequential::vector_property_map< GRAPH,size_t > cmap;
       get_cc_stats(_graph, cmap, CCStats);
       for(size_t i=0; i<CCStats.size(); ++i) {
-        if(CanConnectToComponent(_graph, CCStats[i].second, _start) 
+        if(CanConnectToComponent(_graph, CCStats[i].second, _start)
             && CanConnectToComponent(_graph, CCStats[i].second, _goal)) {
           return true;
         }
@@ -546,7 +546,7 @@ class BandsIncrementalRoadmap : public MPStrategyMethod {
 // this MPStrategy reads in a single roadmap, k, and d and outputs two things:
 // 1) a file containing a list of the distance to the k-th closest neighbor in the roadmap, sorted ascending
 //   e.g.   "1 7\n2 4\n3 5" ... "5000 8";
-// 2) for several values of d, a file containing a list of the # neighbors within d distance, sorted decreasing    
+// 2) for several values of d, a file containing a list of the # neighbors within d distance, sorted decreasing
 //
 //  it also computes the connectivity stats and others (scale-free, expansion)
 //@note we are no longer computing 1 and 2 above by default , the compute_dist_neighbor need to be set to do this
@@ -597,7 +597,7 @@ class BandsStats : public MPStrategyMethod {
 
     }
     BandsStats(XMLNodeReader& in_Node, MPProblem* problem) : MPStrategyMethod(in_Node, problem){
-      ParseXML(in_Node);   
+      ParseXML(in_Node);
       ExpanderStatsClass = new EdgeExpanderStats(in_Node, problem);
     }
 
@@ -606,7 +606,7 @@ class BandsStats : public MPStrategyMethod {
 
       input_map_filename = in_Node.stringXMLParameter(string("input_map_filename"), true, string(""),string("input .map filename"));
       ideal_map_filename = in_Node.stringXMLParameter(string("ideal_map_filename"), true, string(""),string("all-pairs .map filename"));
-      interval = in_Node.numberXMLParameter(string("interval"), false, 100, 1, 1000000, string("interval for stats"));		
+      interval = in_Node.numberXMLParameter(string("interval"), false, 100, 1, 1000000, string("interval for stats"));
       k = in_Node.numberXMLParameter(string("k"), true, 0, 0, 10000, string("k-value for calculation"));
       dist = in_Node.numberXMLParameter(string("dist"), true, 0.0, 0.0, 1000.0, string("dist for calculation"));
       out_filename_dist = in_Node.stringXMLParameter(string("out_filename_dist"), true, string(""),string("output filename - dist of k-th closest node"));
@@ -623,7 +623,7 @@ class BandsStats : public MPStrategyMethod {
       for(RoadmapGraph<CfgType,WeightType>::VDI vitr = pMap->descriptor_begin(); vitr != pMap->descriptor_end(); ++vitr) {
         vector<VID> adj_verts;
         pMap->get_successors(*vitr, adj_verts);
-        for(vector<VID>::iterator iter2 = adj_verts.begin(); iter2 != adj_verts.end(); iter2++) {    
+        for(vector<VID>::iterator iter2 = adj_verts.begin(); iter2 != adj_verts.end(); iter2++) {
           vector<VID> adj_verts2;
           pMap->get_successors(*vitr, adj_verts2);
           scaleFreeMetric += adj_verts.size()*adj_verts2.size();
@@ -661,7 +661,7 @@ class BandsStats : public MPStrategyMethod {
       stapl::sequential::vector_property_map< GRAPH,size_t > cmap;
       get_cc_stats(*(rmp.m_pRoadmap), cmap, ccstats);
       for(vector< pair<size_t, VID> >::iterator iter = ccstats.begin(); iter < ccstats.end(); iter++){
-        sameCCPairs+=iter->first*(iter->first-1)/2;      
+        sameCCPairs+=iter->first*(iter->first-1)/2;
       }
       return sameCCPairs;
     }
@@ -734,7 +734,7 @@ class BandsStats : public MPStrategyMethod {
       //string statsFileName=name+outfile+".unionStats";
       //ofstream  myofstream(statsFileName.c_str());
       //int sameCCPair = fastCompareAllPairs(rmp);
-      /* 
+      /*
          vector<int>::iterator unionIter;
          if(is_union){
          sameCCPairUnion=fastCompareAllPairs(union_rmp);
@@ -778,7 +778,7 @@ class BandsStats : public MPStrategyMethod {
       stapl::sequential::vector_property_map< GRAPH,size_t > cmap;
       get_cc_stats(*(rmp.m_pRoadmap), cmap, CCStats);
       std::sort (CCStats.begin(),  CCStats.end(), __CCVID_Compare<std::pair<int,VID> >() );
-      // test 
+      // test
       /* int ccnum = 0;
          cout << "\nThere are " << CCStats.size() << " connected components:";
          for (vector< pair<size_t,VID> >::iterator vi = CCStats.begin(); vi != CCStats.end(); vi++) {
@@ -812,10 +812,10 @@ class BandsStats : public MPStrategyMethod {
           stats.sameCCSizes[i]=0;
           //cout<<"cc size = 0 = "<<stats.sameCCSizes[i]<<endl;
           //stats.sameCCSizes.push_back(0);
-        } 
+        }
         //cout<<endl;
       }
-    }  
+    }
 
 
 
@@ -826,7 +826,7 @@ class BandsStats : public MPStrategyMethod {
       computeEdgeLengthFromdm(rmp,avg_edge_length, max_edge_length, average_max_edge_length);
 
       //int sameCCPairUnion = fastCompareAllPairs(union_rmp);
-      //cout<<"in print at interval"<<endl;    
+      //cout<<"in print at interval"<<endl;
       string statsFileName = input_map_filename + ".ccstats";
 
       ofstream  myofstream(statsFileName.c_str());
@@ -844,7 +844,7 @@ class BandsStats : public MPStrategyMethod {
       double diameter = computeDiameter(rmp);
 
       vector<int> hop_graph_stats;
-      //hop_graph.resize(ExpanderStatsClass->mpl); 
+      //hop_graph.resize(ExpanderStatsClass->mpl);
       hop_graph_stats= ExpanderStatsClass->hop_graph(rmp);
       vector<int> triangle_participation = ExpanderStatsClass->triangleParticipation(rmp);
       /*
@@ -892,7 +892,7 @@ class BandsStats : public MPStrategyMethod {
       //cout<<"before loop"<<endl;
 
       //for(vector<VID>::iterator iter = vertices.end(); iter!= vertices.begin(); iter--) {
-      for (RoadmapGraph<CfgType,WeightType>::VDI vi = rmp.m_pRoadmap->descriptor_end(); vi != rmp.m_pRoadmap->descriptor_begin(); --vi) {    
+      for (RoadmapGraph<CfgType,WeightType>::VDI vi = rmp.m_pRoadmap->descriptor_end(); vi != rmp.m_pRoadmap->descriptor_begin(); --vi) {
         //cout<<"k="<<k<<endl;
         if (vi != rmp.m_pRoadmap->descriptor_end()) {
           //cout<<"deleting vid="<<*iter<<endl;
@@ -950,7 +950,7 @@ class BandsStats : public MPStrategyMethod {
         /*myofstream<<ExpanderStatsClass->mpl<<", ";
 
 
-          for(int i=0; i<ExpanderStatsClass->mpl;i++){				 
+          for(int i=0; i<ExpanderStatsClass->mpl;i++){
           myofstream<< hop_graph_stats[i]<<", ";
           }*/
 
@@ -1064,14 +1064,14 @@ class BandsStats : public MPStrategyMethod {
           exit(-1);
         }
 
-        int count = 1;  
+        int count = 1;
         for (vector<double>::iterator itr = dist_list.begin(); itr != dist_list.end(); itr++) {
           myofstream << count << "\t" << *itr << endl;
           //cout << count << "\t" << *itr << endl;
           count++;
         }
 
-        count = 1;  
+        count = 1;
         for (vector<int>::iterator itr = valid_neighbor_count.begin(); itr != valid_neighbor_count.end(); itr++) {
           myofstream2 << count << "\t" << *itr << endl;
           //cout << count << "\t" << *itr << endl;
@@ -1083,10 +1083,10 @@ class BandsStats : public MPStrategyMethod {
       }
     }
 
-    virtual void PrintOptions(ostream& out_os) { }
+    virtual void PrintOptions(ostream& out_os) const {}
     virtual void operator()() { }
     virtual void Initialize(){}
-    virtual void Run() { 
+    virtual void Run() {
       cout << "BandsStats::BandsStats()" << endl;
 
       // do dist/num_neighbors work if flag is set from xml
@@ -1107,7 +1107,7 @@ class BandsStats : public MPStrategyMethod {
       //cout<<"printing all pairs"<<endl;
       printAllPairs(ideal_rmp, input_rmp);
 
-      exit(-1);	
+      exit(-1);
       //(*ExpanderStatsClass)();
     }
     virtual void Finalize(){}
@@ -1124,7 +1124,7 @@ class BandsStats : public MPStrategyMethod {
       for(RoadmapGraph<CfgType,WeightType>::VDI iter=rmp.m_pRoadmap->descriptor_begin(); iter<rmp.m_pRoadmap->descriptor_end(); iter++){
         nodes++;
         vector<VID> succ;
-        rmp.m_pRoadmap->get_successors(*iter, succ); 
+        rmp.m_pRoadmap->get_successors(*iter, succ);
         double max_for_node=0;
         for(vector<VID>::iterator iter2=succ.begin(); iter2<succ.end(); iter2++){
           RoadmapGraph<CfgType,WeightType>* pMap = rmp.m_pRoadmap;
@@ -1202,7 +1202,7 @@ class EdgeExpanderStats : public MPStrategyMethod {
       queries=2;
       outfile="outfile.stats";
       outfile = in_Node.stringXMLParameter(string("filename"), true, string(""),string("Filename"));
-     
+
       interval = in_Node.numberXMLParameter(string("interval"), true, 100, 1, 1000000, string("Printout Interval"));
       cout<<"interval="<<interval<<endl;
       mu=.2;
@@ -1212,7 +1212,7 @@ class EdgeExpanderStats : public MPStrategyMethod {
       epsilon = .9;
       epsilon = in_Node.numberXMLParameter("epsilon", false, double(0.0),double(0.0), double(5),"Epsilon paremeter for expander metrics");
       cout<<"Epsilon ="<<epsilon<<endl;
-      resolution = .1; 
+      resolution = .1;
       resolution = in_Node.numberXMLParameter("resolution", false, double(0.0),double(0.0), double(5),"Resolution");
       cout<<"resolution ="<<resolution<<endl;
       mpl=10;
@@ -1234,14 +1234,14 @@ class EdgeExpanderStats : public MPStrategyMethod {
       int scaleFreeMetric=0;
       for(vector<VID>::iterator iter = vertices.begin(); iter!= vertices.end(); iter++) {
         vector<VID> adj_verts;
-        
+
         rmp.m_pRoadmap->get_successors(*iter, adj_verts);
-        for(vector<VID>::iterator iter2 = adj_verts.begin(); iter2!= adj_verts.end(); iter2++) {    
+        for(vector<VID>::iterator iter2 = adj_verts.begin(); iter2!= adj_verts.end(); iter2++) {
 	   vector<VID> adj_verts2;
            rmp.m_pRoadmap->get_successors(*iter, adj_verts2);
            scaleFreeMetric+=adj_verts.size()*adj_verts2.size();
 	}
-	
+
       }
       return scaleFreeMetric;
     }
@@ -1264,7 +1264,7 @@ class EdgeExpanderStats : public MPStrategyMethod {
 	  //cout<<"in midd for j="<<j<<endl;
 	  VID walk_v = v;
 	  for(int k=0; k<t; k++){                          //random walk
-	    //cout<<"in inner for k="<<k<<endl;       
+	    //cout<<"in inner for k="<<k<<endl;
 	    vector<VID> succ;
 	    rmp.m_pRoadmap->get_successors(walk_v, succ);
 	    //cout<<"getting rand succ "<<succ.size()<<endl;
@@ -1274,9 +1274,9 @@ class EdgeExpanderStats : public MPStrategyMethod {
 	      walk_v=succ[ranSuccIndex];
 	      //cout<<"walk_v="<<walk_v<<endl;
 	    }
-	  }  
+	  }
 	  //cout<<"after loop"<<endl;
-	
+
 	  //cout<<"before if"<<endl;
 	  if(find(visited.begin(), visited.end(), walk_v)==visited.end()){
 	    visited.push_back(walk_v);
@@ -1346,14 +1346,14 @@ class EdgeExpanderStats : public MPStrategyMethod {
       visited.push_back(v);
       for(int i=1; i<mpl; i++){
 	vector<VID> tmp = visited;
-	for(vector<VID>::iterator iter=tmp.begin(); iter<tmp.end(); iter++){ 
-	  vector<VID> succ; 
-	  rmp.m_pRoadmap->get_successors(*iter, succ); 
+	for(vector<VID>::iterator iter=tmp.begin(); iter<tmp.end(); iter++){
+	  vector<VID> succ;
+	  rmp.m_pRoadmap->get_successors(*iter, succ);
 	  for(vector<VID>::iterator iter2=succ.begin(); iter2<succ.end(); iter2++){
 	    if(find(visited.begin(),visited.end(),*iter2)==visited.end()){
 	      visited.push_back(*iter2);
 	    }
-	  }	  
+	  }
 	}
 	hop_graph.push_back(visited.size()-1);  //not counting self
       }
@@ -1381,7 +1381,7 @@ class EdgeExpanderStats : public MPStrategyMethod {
       participation.resize(d*(d-1)/2,0);
       for(vector<VID>::iterator iter=vertices.begin(); iter<vertices.end(); iter++){
 	vector<VID> succ;
-	succ.reserve(d); 
+	succ.reserve(d);
 	rmp.m_pRoadmap->get_successors(*iter, succ);
 	int sum=0;
 	for(vector<VID>::iterator iter2=succ.begin(); iter2<succ.end(); iter2++){
@@ -1391,13 +1391,13 @@ class EdgeExpanderStats : public MPStrategyMethod {
 	  for(vector<VID>::iterator iter3=succ_neighbor.begin(); iter3<succ_neighbor.end(); iter3++){
 	    if(find(succ.begin(),succ.end(),*iter3)!=succ.end() && *iter2<*iter3) {sum++;}
 	  }
-	}    
+	}
 	participation[sum]++;
       }
       int return_size=0;
       for(size_t i=0; i<participation.size(); i++){
         if(participation[i]>0){
-	  return_size=i+1;            
+	  return_size=i+1;
         }
       }
       participation.resize(return_size);
@@ -1426,7 +1426,7 @@ class EdgeExpanderStats : public MPStrategyMethod {
 
 
 
-    
+
     void print_expansion_properties(Roadmap<CfgType,WeightType> &rmp, int _interval,ofstream *myofstream){
      // vector<VID> vertices(rmp.m_pRoadmap->begin(),rmp.m_pRoadmap->end());
       vector<VID> vertices;
@@ -1448,7 +1448,7 @@ class EdgeExpanderStats : public MPStrategyMethod {
 	  intervals.push_back((int)vertices.size()-queries);
 	  long sf= scaleFree(rmp,vertices);
 	  scaleFreeStats.push_back(sf);
-	  
+
 	  //vertex expansion
 	  vector< pair<size_t, VID> > ccstats;
 	  stapl::sequential::vector_property_map< GRAPH,size_t > cmap;
@@ -1470,7 +1470,7 @@ class EdgeExpanderStats : public MPStrategyMethod {
       //cout<<"triangle_participation "<<endl;
       vector<int> intervalsTriangle=intervals;
       while(!intervals.empty()){
-        *myofstream<<intervals.back()<<" "<<scaleFreeStats.back()<<" "; 
+        *myofstream<<intervals.back()<<" "<<scaleFreeStats.back()<<" ";
 	for(int i=1; i<mpl; i++){
 	  *myofstream<<hop_graph_stats.back()[i]<<" ";
 	}
@@ -1490,11 +1490,11 @@ class EdgeExpanderStats : public MPStrategyMethod {
 	triangleParticipation_stats.pop_back();
       }
     }
-    
-  virtual void PrintOptions(ostream& out_os) { }
+
+  virtual void PrintOptions(ostream& out_os) const {}
 
    virtual void Initialize(){}
-   virtual void Run(){    
+   virtual void Run(){
       cout<<"*************in operator()***********************"<<endl;
       if(files.size()==0){
          cout<<"no files"<<endl;
@@ -1519,7 +1519,7 @@ class EdgeExpanderStats : public MPStrategyMethod {
 
 };
 
- 
+
 
 
 class RTSContainer : public MPSMContainer {
@@ -1567,7 +1567,7 @@ class RoadmapTimingStats : public MPStrategyMethod {
       queries=2;
       outfile="outfile.stats";
       k=10;
-      outfile = in_Node.stringXMLParameter(string("outfile"), true, string(""),string("Outfile"));  
+      outfile = in_Node.stringXMLParameter(string("outfile"), true, string(""),string("Outfile"));
       cout<<"outfile="<<outfile<<endl;
 
       interval = in_Node.numberXMLParameter(string("interval"), true, 100, 1, 1000000, string("Printout Interval"));
@@ -1598,7 +1598,7 @@ class RoadmapTimingStats : public MPStrategyMethod {
       }
     }
 
-  
+
 
 
     void print_rmp_timing_stats(Roadmap<CfgType,WeightType> &rmp, int _interval){
@@ -1655,7 +1655,7 @@ class RoadmapTimingStats : public MPStrategyMethod {
       }
     }
 
-  virtual void PrintOptions(ostream& out_os) { }
+  virtual void PrintOptions(ostream& out_os) const {}
    virtual void Initialize(){}
    virtual void Run(){
       cout<<"*************in operator()***********************"<<endl;
@@ -1670,7 +1670,7 @@ class RoadmapTimingStats : public MPStrategyMethod {
         rmp.ReadRoadmapGRAPHONLY(iter->c_str());
         cout<<"timing stats for "<<iter->c_str()<<endl;
 	print_rmp_timing_stats(rmp,interval);
-        
+
       }
       cout<<"returning"<<endl;
   }

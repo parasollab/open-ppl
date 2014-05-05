@@ -27,22 +27,22 @@ class NeighborhoodConnector: public ConnectorMethod<MPTraits> {
     typedef typename MPProblemType::VID VID;
     typedef typename RoadmapType::GraphType GraphType;
 
-    NeighborhoodConnector(string _nfLabel = "", string _lpLabel = "", 
+    NeighborhoodConnector(string _nfLabel = "", string _lpLabel = "",
         bool _checkIfSameCC = false, bool _countFailures = false, size_t _fail = 5);
     NeighborhoodConnector(MPProblemType* _problem, XMLNodeReader& _node);
 
-    virtual void PrintOptions(ostream& _os);  
+    virtual void PrintOptions(ostream& _os) const;
     virtual void ParseXML(XMLNodeReader& _node);
 
     template<typename ColorMap, typename InputIterator1, typename InputIterator2, typename OutputIterator>
-      void Connect(RoadmapType* _rm, StatClass& _stats, ColorMap& _cmap, 
+      void Connect(RoadmapType* _rm, StatClass& _stats, ColorMap& _cmap,
           InputIterator1 _itr1First, InputIterator1 _itr1Last,
           InputIterator2 _itr2First, InputIterator2 _itr2Last, OutputIterator _collision) ;
 
   protected:
     template<typename ColorMap, typename InputIterator, typename OutputIterator>
       void ConnectNeighbors(
-          RoadmapType* _rm, StatClass& _stats, 
+          RoadmapType* _rm, StatClass& _stats,
           ColorMap& _cmap, VID _vid,
           InputIterator _closestFirst, InputIterator _closestLast,
           OutputIterator _collision);
@@ -54,18 +54,18 @@ class NeighborhoodConnector: public ConnectorMethod<MPTraits> {
 };
 
 template<class MPTraits>
-NeighborhoodConnector<MPTraits>::NeighborhoodConnector(string _nfLabel, string _lpLabel, 
-    bool _checkIfSameCC, bool _countFailures, size_t _fail) : 
-  ConnectorMethod<MPTraits>(_nfLabel, _lpLabel), 
+NeighborhoodConnector<MPTraits>::NeighborhoodConnector(string _nfLabel, string _lpLabel,
+    bool _checkIfSameCC, bool _countFailures, size_t _fail) :
+  ConnectorMethod<MPTraits>(_nfLabel, _lpLabel),
   m_checkIfSameCC(_checkIfSameCC),
   m_countFailures(_countFailures),
-  m_fail(_fail) { 
+  m_fail(_fail) {
     this->SetName("NeighborhoodConnector");
   }
 
-//Read from XML to get the parameters. 
+//Read from XML to get the parameters.
   template<class MPTraits>
-NeighborhoodConnector<MPTraits>::NeighborhoodConnector(MPProblemType* _problem, XMLNodeReader& _node) 
+NeighborhoodConnector<MPTraits>::NeighborhoodConnector(MPProblemType* _problem, XMLNodeReader& _node)
   : ConnectorMethod<MPTraits>(_problem, _node) {
     ParseXML(_node);
   }
@@ -73,7 +73,7 @@ NeighborhoodConnector<MPTraits>::NeighborhoodConnector(MPProblemType* _problem, 
 template<class MPTraits>
 void
 NeighborhoodConnector<MPTraits>::ParseXML(XMLNodeReader& _node){
-  this->SetName("NeighborhoodConnector"); 
+  this->SetName("NeighborhoodConnector");
   m_checkIfSameCC = _node.boolXMLParameter("checkIfSameCC", false, true, "If true, do not connect if edges are in the same CC");
   m_countFailures = _node.boolXMLParameter("countFailures", false, false, "if false, ignore failure count and just attempt k; if true, attempt k neighbors until too many failures detected");
   m_fail = _node.numberXMLParameter("fail", false, 5, 0, 10000, "amount of failed connections allowed before operation terminates");
@@ -82,7 +82,7 @@ NeighborhoodConnector<MPTraits>::ParseXML(XMLNodeReader& _node){
 
 template<class MPTraits>
 void
-NeighborhoodConnector<MPTraits>::PrintOptions(ostream& _os){
+NeighborhoodConnector<MPTraits>::PrintOptions(ostream& _os) const {
   ConnectorMethod<MPTraits>::PrintOptions(_os);
   _os << "\tfail = " << m_fail << endl;
   _os << "\tcountFailures = " << m_countFailures << endl;
@@ -96,22 +96,22 @@ NeighborhoodConnector<MPTraits>::Connect(RoadmapType* _rm, StatClass& _stats, Co
     InputIterator2 _itr2First, InputIterator2 _itr2Last, OutputIterator _collision){
 
   if(this->m_debug){
-    cout << endl; 
+    cout << endl;
     PrintOptions(cout);
   }
 
   NeighborhoodFinderPointer nfptr = this->GetMPProblem()->GetNeighborhoodFinder(this->m_nfLabel);
-  
+
   // the vertices in this iteration are the source for the connection operation
   for(InputIterator1 itr1 = _itr1First; itr1 != _itr1Last; ++itr1){
 
     // find cfg pointed to by itr1
     VID vid = _rm->GetGraph()->GetVID(itr1);
     CfgRef vCfg = _rm->GetGraph()->GetVertex(itr1);
-    
+
     if(this->m_debug)
-      cout << (itr1 - _itr1First) 
-        << "\tAttempting connections: VID = " 
+      cout << (itr1 - _itr1First)
+        << "\tAttempting connections: VID = "
         << vid << "  --> Cfg = " << vCfg << endl;
 
     //determine nearest neighbors
@@ -133,16 +133,15 @@ template<class MPTraits>
 template <typename ColorMap, typename InputIterator, typename OutputIterator>
 void
 NeighborhoodConnector<MPTraits>::ConnectNeighbors(
-    RoadmapType* _rm, StatClass& _stats, 
+    RoadmapType* _rm, StatClass& _stats,
     ColorMap& _cmap, VID _vid,
     InputIterator _closestFirst, InputIterator _closestLast,
     OutputIterator _collision){
 
   Environment* env = this->GetMPProblem()->GetEnvironment();
-  NeighborhoodFinderPointer nf = this->GetMPProblem()->GetNeighborhoodFinder(this->m_nfLabel);
   LocalPlannerPointer lp = this->GetMPProblem()->GetLocalPlanner(this->m_lpLabel);
   GraphType* map = _rm->GetGraph();
-  
+
   LPOutput<MPTraits> lpOutput;
   size_t failure = 0;
 
@@ -151,7 +150,7 @@ NeighborhoodConnector<MPTraits>::ConnectNeighbors(
 
     VID v2 = itr2->first;
 
-    if(this->m_debug) 
+    if(this->m_debug)
       cout << "\tfailures = " << failure
         << " | VID = " << v2
         << " | dist = " << itr2->second;
@@ -174,7 +173,7 @@ NeighborhoodConnector<MPTraits>::ConnectNeighbors(
 
     // if the edge already exists, so no need to call LP. Count as success.
     if(map->IsEdge(_vid, v2)){
-      if(this->m_debug) 
+      if(this->m_debug)
         cout << " | edge already exists in roadmap | skipping" << endl;
       continue;
     }
@@ -183,7 +182,7 @@ NeighborhoodConnector<MPTraits>::ConnectNeighbors(
       // if the nodes are in the same connected component count as success
       _cmap.reset();
       if(stapl::sequential::is_same_cc(*map, _cmap, _vid, v2)){
-        if(this->m_debug) 
+        if(this->m_debug)
           cout << " | nodes in the same connected component | skipping" << endl;
         continue;
       }
@@ -194,8 +193,7 @@ NeighborhoodConnector<MPTraits>::ConnectNeighbors(
     CfgRef c2 = map->GetVertex(v2);
 
     CfgType col;
-    bool connectable = lp->IsConnected(env, _stats, nf->GetDMMethod(),
-          c1, c2, col, &lpOutput, 
+    bool connectable = lp->IsConnected(c1, c2, col, &lpOutput,
           env->GetPositionRes(), env->GetOrientationRes(), true);
     if(col != CfgType())
       *_collision++ = col;
@@ -212,8 +210,8 @@ NeighborhoodConnector<MPTraits>::ConnectNeighbors(
       c1.IncStat("succConnectionAttempts", 1);
       c2.IncStat("succConnectionAttempts", 1);
       // if connection was made, add edge and record the successful connection
-      _rm->GetGraph()->AddEdge(_vid, v2, lpOutput.edge);
-    } 
+      _rm->GetGraph()->AddEdge(_vid, v2, lpOutput.m_edge);
+    }
     else {
       if(this->m_debug) cout << " | connection failed | failure incremented" << endl;
       failure++;

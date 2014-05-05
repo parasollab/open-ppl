@@ -9,15 +9,16 @@ template<class MPTraits>
 class RMSDDistance : public DistanceMetricMethod<MPTraits> {
   public:
     typedef typename MPTraits::CfgType CfgType;
+    typedef typename MPTraits::MPProblemType MPProblemType;
 
     RMSDDistance();
-    RMSDDistance(typename MPTraits::MPProblemType* _problem, XMLNodeReader& _node, bool _warn = true);
+    RMSDDistance(MPProblemType* _problem, XMLNodeReader& _node, bool _warn = true);
     virtual ~RMSDDistance();
 
-    virtual double Distance(Environment* _env, const CfgType& _c1, const CfgType& _c2);
+    virtual double Distance(const CfgType& _c1, const CfgType& _c2);
 
-  protected:
-    virtual vector<Vector3d> GetCoordinatesForRMSD(const CfgType& _c, Environment* _env);
+  private:
+    virtual vector<Vector3d> GetCoordinatesForRMSD(const CfgType& _c);
     double RMSD(vector<Vector3d> _x, vector<Vector3d> _y, int _dim);
 
   friend class SimilarStructureSampler<MPTraits>;
@@ -25,13 +26,13 @@ class RMSDDistance : public DistanceMetricMethod<MPTraits> {
 
 template<class MPTraits>
 RMSDDistance<MPTraits>::RMSDDistance() : DistanceMetricMethod<MPTraits>() {
-  this->m_name = "RMSD";
+  this->SetName("RMSD");
 }
 
 template<class MPTraits>
-RMSDDistance<MPTraits>::RMSDDistance(typename MPTraits::MPProblemType* _problem, XMLNodeReader& _node, bool _warn)
-  : DistanceMetricMethod<MPTraits>(_problem, _node, _warn) {
-  this->m_name = "RMSD";
+RMSDDistance<MPTraits>::RMSDDistance(MPProblemType* _problem, XMLNodeReader& _node,
+    bool _warn) : DistanceMetricMethod<MPTraits>(_problem, _node, _warn) {
+  this->SetName("RMSD");
 }
 
 template<class MPTraits>
@@ -40,19 +41,21 @@ RMSDDistance<MPTraits>::~RMSDDistance() {
 
 template<class MPTraits>
 vector<Vector3d>
-RMSDDistance<MPTraits>::GetCoordinatesForRMSD(const CfgType& _c, Environment* _env) {
-  _c.ConfigEnvironment(_env);
+RMSDDistance<MPTraits>::GetCoordinatesForRMSD(const CfgType& _c) {
+  Environment* env = this->GetMPProblem()->GetEnvironment();
+  _c.ConfigEnvironment(env);
   vector<Vector3d> coordinates;
-  for(int i=0; i< _env->GetMultiBody(_c.GetRobotIndex())->GetFreeBodyCount(); ++i)
-    coordinates.push_back(_env->GetMultiBody(_c.GetRobotIndex())->GetFreeBody(i)->WorldTransformation().translation()); 
+  for(int i=0; i< env->GetMultiBody(_c.GetRobotIndex())->GetFreeBodyCount(); ++i)
+    coordinates.push_back(env->GetMultiBody(_c.GetRobotIndex())->GetFreeBody(i)
+        ->WorldTransformation().translation());
   return coordinates;
 }
 
 template<class MPTraits>
 double
-RMSDDistance<MPTraits>::Distance(Environment* _env, const CfgType& _c1, const CfgType& _c2) {
-  vector<Vector3d> x = GetCoordinatesForRMSD(_c1, _env);
-  vector<Vector3d> y = GetCoordinatesForRMSD(_c2, _env);
+RMSDDistance<MPTraits>::Distance(const CfgType& _c1, const CfgType& _c2) {
+  vector<Vector3d> x = GetCoordinatesForRMSD(_c1);
+  vector<Vector3d> y = GetCoordinatesForRMSD(_c2);
   return RMSD(x,y,x.size());
 }
 
@@ -63,7 +66,7 @@ RMSDDistance<MPTraits>::RMSD(vector<Vector3d> _x, vector<Vector3d> _y, int _dim)
     cout << "Error in MyDistanceMetrics::RMSD, not enough data in vectors" << endl;
     exit(101);
   }
-  
+
   //rmsd = sqrt( sum_of[(U*xn - yn)^2]/N )
   //where U is the rotation that minimizes rmsd
   //reference: B.Kabsch '78. Acta Cryst. (1978) A34 page 827-828

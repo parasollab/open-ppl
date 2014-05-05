@@ -9,14 +9,18 @@ template<class MPTraits>
 class MinkowskiDistance : public DistanceMetricMethod<MPTraits> {
   public:
     typedef typename MPTraits::CfgType CfgType;
-    
-    MinkowskiDistance(double _r1 = 3, double _r2 = 3, double _r3 = 1.0/3, bool _normalize = false);
-    MinkowskiDistance(typename MPTraits::MPProblemType* _problem, XMLNodeReader& _node, bool _warn = true, bool _parse = true);
+    typedef typename MPTraits::MPProblemType MPProblemType;
+
+    MinkowskiDistance(double _r1 = 3, double _r2 = 3, double _r3 = 1.0/3,
+        bool _normalize = false);
+    MinkowskiDistance(MPProblemType* _problem, XMLNodeReader& _node,
+        bool _warn = true, bool _parse = true);
     virtual ~MinkowskiDistance();
-    
+
     virtual void PrintOptions(ostream& _os) const;
-    virtual double Distance(Environment* _env, const CfgType& _c1, const CfgType& _c2);
-    virtual void ScaleCfg(Environment* _env, double _length, CfgType& _o, CfgType& _c, bool _normalizeOrientation = true);
+
+    virtual double Distance(const CfgType& _c1, const CfgType& _c2);
+    virtual void ScaleCfg(double _length, CfgType& _c, const CfgType& _o = CfgType());
 
   protected:
     //default implementation
@@ -34,8 +38,8 @@ class MinkowskiDistance : public DistanceMetricMethod<MPTraits> {
         exit(1);
         /*vector<double> _v1 = _c1.GetData();
           vector<double> _v2 = _c2.GetData();
-          if(_v1.size() != _v2.size()) { 
-          cout << "ERROR in MinkowskiDistance::DifferenceCfgType, _c1 dofs (" << _v1.size() << ") != _c2 dofs (" << _v2.size() << ")\n"; 
+          if(_v1.size() != _v2.size()) {
+          cout << "ERROR in MinkowskiDistance::DifferenceCfgType, _c1 dofs (" << _v1.size() << ") != _c2 dofs (" << _v2.size() << ")\n";
           exit(-1);
           }
           if(_v1.size() == MPTraits::CfgTypeType::GetNumOfJoints()) {
@@ -57,7 +61,7 @@ class MinkowskiDistance : public DistanceMetricMethod<MPTraits> {
           }*/
       }
 
-    double PositionDistance(Environment* _env, const CfgType& _c);
+    double PositionDistance(const CfgType& _c);
     double OrientationDistance(const CfgType& _c);
 
     /**Power factors for Minkowski Distance **/
@@ -68,15 +72,17 @@ class MinkowskiDistance : public DistanceMetricMethod<MPTraits> {
 };
 
 template<class MPTraits>
-MinkowskiDistance<MPTraits>::MinkowskiDistance(double _r1, double _r2, double _r3, bool _normalize) 
+MinkowskiDistance<MPTraits>::MinkowskiDistance(double _r1, double _r2, double _r3, bool _normalize)
   : DistanceMetricMethod<MPTraits>(), m_r1(_r1), m_r2(_r2), m_r3(_r3), m_normalize(_normalize) {
-    this->m_name = "Minkowski";
+    this->SetName("Minkowski");
   }
 
 template<class MPTraits>
-MinkowskiDistance<MPTraits>::MinkowskiDistance(typename MPTraits::MPProblemType* _problem, XMLNodeReader& _node, bool _warn, bool _parse) 
-  : DistanceMetricMethod<MPTraits>(_problem, _node, false) {
-    this->m_name = "Minkowski";
+MinkowskiDistance<MPTraits>::MinkowskiDistance(MPProblemType* _problem,
+    XMLNodeReader& _node, bool _warn, bool _parse)
+  : DistanceMetricMethod<MPTraits>(_problem, _node, false),
+  m_r1(3), m_r2(3), m_r3(1./3.), m_normalize(false) {
+    this->SetName("Minkowski");
 
     if(_parse){
       m_r1 = _node.numberXMLParameter("r1", false, 3.0, 0.0, 1000.0, "r1");
@@ -90,48 +96,53 @@ MinkowskiDistance<MPTraits>::MinkowskiDistance(typename MPTraits::MPProblemType*
   }
 
 template<class MPTraits>
-MinkowskiDistance<MPTraits>::~MinkowskiDistance() {}
+MinkowskiDistance<MPTraits>::~MinkowskiDistance() {
+}
 
 template<class MPTraits>
 void
 MinkowskiDistance<MPTraits>::PrintOptions(ostream& _os) const {
   DistanceMetricMethod<MPTraits>::PrintOptions(_os);
-  _os << "r1=" << m_r1 << " r2=" << m_r2 << " r3=" << m_r3 << " normalize=" << m_normalize << endl;
+  _os << "\tr1 = " << m_r1 << endl;
+  _os << "\tr2 = " << m_r2 << endl;
+  _os << "\tr3 = " << m_r3 << endl;
+  _os << "\tnormalize = " << m_normalize << endl;
 }
 
 template<class MPTraits>
 double
-MinkowskiDistance<MPTraits>::Distance(Environment* _env, const CfgType& _c1, const CfgType& _c2) {
+MinkowskiDistance<MPTraits>::Distance(const CfgType& _c1, const CfgType& _c2) {
   CfgType diff = DifferenceCfg(_c1, _c2);
-  double pos = PositionDistance(_env, diff);
+  double pos = PositionDistance(diff);
   double orient = OrientationDistance(diff);
   return pow(pos+orient, m_r3);
 }
 
 template<class MPTraits>
 void
-MinkowskiDistance<MPTraits>::ScaleCfg(Environment* _env, double _length, CfgType& _o, CfgType& _c, bool _normalizeOrientation) {
-  double originalLength = this->Distance(_env, _o, _c);
+MinkowskiDistance<MPTraits>::ScaleCfg(double _length, CfgType& _c, const CfgType& _o) {
+  double originalLength = this->Distance(_o, _c);
   double diff = _length - originalLength;
   do {
-    _c *= _length/originalLength;
-    originalLength = this->Distance(_env, _o, _c);
+    _c = (_c - _o) * (_length / originalLength) + _o;
+    originalLength = this->Distance(_o, _c);
     diff = _length - originalLength;
   } while((diff > 0.1) || (diff < -0.1));
 }
 
 template<class MPTraits>
 double
-MinkowskiDistance<MPTraits>::PositionDistance(Environment* _env, const CfgType& _c) {
-  double diagonal = _env->GetBoundary()->GetMaxDist(m_r1, m_r3);
+MinkowskiDistance<MPTraits>::PositionDistance(const CfgType& _c) {
+  Environment* env = this->GetMPProblem()->GetEnvironment();
+  double diagonal = env->GetBoundary()->GetMaxDist(m_r1, m_r3);
   vector<double> p = _c.GetPosition();
   double pos = 0;
-  for(size_t i=0; i<p.size(); ++i) 
+  for(size_t i=0; i<p.size(); ++i)
     if(m_normalize)
       pos += pow(fabs(p[i])/diagonal, m_r1);
     else
       pos += pow(fabs(p[i]), m_r1);
-  return pos; 
+  return pos;
 }
 
 template<class MPTraits>
@@ -139,7 +150,7 @@ double
 MinkowskiDistance<MPTraits>::OrientationDistance(const CfgType& _c) {
   vector<double> o = _c.GetOrientation();
   double orient = 0;
-  for(size_t i=0; i<o.size(); ++i) 
+  for(size_t i=0; i<o.size(); ++i)
     orient += pow(fabs(o[i]), m_r2);
   return orient;
 }

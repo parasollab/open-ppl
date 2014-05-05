@@ -14,12 +14,12 @@ class CoverageMetric : public MetricMethod<MPTraits> {
     typedef typename MPProblemType::ConnectorPointer ConnectorPointer;
 
     CoverageMetric(const Set& _samples = Set(),
-        const vector<string>& _connectorLabels = vector<string>(), 
+        const vector<string>& _connectorLabels = vector<string>(),
         bool _computeAllCCs = false);
     CoverageMetric(MPProblemType* _problem, XMLNodeReader& _node, bool _computeAllCCs = false);
     virtual ~CoverageMetric();
 
-    virtual void PrintOptions(ostream& _os);
+    virtual void PrintOptions(ostream& _os) const;
 
     double operator()();
 
@@ -72,8 +72,8 @@ CoverageMetric<MPTraits, Set>::~CoverageMetric() {
 }
 
 template<class MPTraits, class Set>
-void 
-CoverageMetric<MPTraits, Set>::PrintOptions(ostream& _os) {
+void
+CoverageMetric<MPTraits, Set>::PrintOptions(ostream& _os) const {
   _os << "Percentage of connection" << endl;
   _os << "\tall_data = " << m_allData << endl;
   _os << "\tnode_connection_labels = ";
@@ -82,7 +82,7 @@ CoverageMetric<MPTraits, Set>::PrintOptions(ostream& _os) {
 }
 
 template<class MPTraits, class Set>
-double 
+double
 CoverageMetric<MPTraits, Set>::operator()() {
 
   static size_t numcalls = 0;

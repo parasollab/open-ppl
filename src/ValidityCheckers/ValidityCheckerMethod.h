@@ -11,22 +11,30 @@ class ValidityCheckerMethod : public MPBaseObject<MPTraits> {
     typedef typename MPTraits::CfgType CfgType;
 
     ValidityCheckerMethod() : MPBaseObject<MPTraits>(), m_validity(true) {}
-    ValidityCheckerMethod(typename MPTraits::MPProblemType* _problem, XMLNodeReader& _node) : MPBaseObject<MPTraits>(_problem, _node), m_validity(true){} 
+    ValidityCheckerMethod(typename MPTraits::MPProblemType* _problem, XMLNodeReader& _node) :
+      MPBaseObject<MPTraits>(_problem, _node), m_validity(true) {}
     virtual ~ValidityCheckerMethod(){}
 
-    virtual void PrintOptions(ostream& _os){
-      _os << this->GetName() << endl;
+    virtual void PrintOptions(ostream& _os) const {
+      _os << this->GetNameAndLabel() << endl;
     }
 
-    bool IsValid(CfgType& _cfg, Environment* _env, StatClass& _stats, 
-        CDInfo& _cdInfo, std::string* _callName) {
+    bool IsValid(CfgType& _cfg, CDInfo& _cdInfo, const string& _callName) {
       if(m_validity)
-        return IsValidImpl(_cfg, _env, _stats, _cdInfo, _callName);
+        return IsValidImpl(_cfg, _cdInfo, _callName);
       else
-        return !IsValidImpl(_cfg, _env, _stats, _cdInfo, _callName);
+        return !IsValidImpl(_cfg, _cdInfo, _callName);
     }
 
-    virtual bool IsInsideObstacle(const CfgType& _cfg, Environment* _env, CDInfo& _cdInfo){
+    bool IsValid(CfgType& _cfg, const string& _callName) {
+      CDInfo cdInfo;
+      if(m_validity)
+        return IsValidImpl(_cfg, cdInfo, _callName);
+      else
+        return !IsValidImpl(_cfg, cdInfo, _callName);
+    }
+
+    virtual bool IsInsideObstacle(const CfgType& _cfg){
       cerr << "error: IsInsideObstacle() not defined." << endl;
       exit(-1);
     }
@@ -35,8 +43,7 @@ class ValidityCheckerMethod : public MPBaseObject<MPTraits> {
     void ToggleValidity() { m_validity = !m_validity; }
 
   protected:
-    virtual bool IsValidImpl(CfgType& _cfg, Environment* _env, StatClass& _stats, 
-        CDInfo& _cdInfo, std::string* _callName) = 0; 
+    virtual bool IsValidImpl(CfgType& _cfg, CDInfo& _cdInfo, const string& _callName) =0;
 
     bool m_validity;
 };

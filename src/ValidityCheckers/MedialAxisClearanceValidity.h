@@ -17,16 +17,16 @@ class MedialAxisClearanceValidity : public ValidityCheckerMethod<MPTraits> {
 
     void ParseXML(XMLNodeReader& _node);
 
-    virtual void PrintOptions(ostream& _os);
+    virtual void PrintOptions(ostream& _os) const;
 
-    virtual bool IsInsideObstacle(const CfgType& _cfg, Environment* _env, CDInfo& _cdInfo);
+    virtual bool IsInsideObstacle(const CfgType& _cfg);
 
-    virtual bool IsValidImpl(CfgType& _cfg, Environment* _env, StatClass& _stats, CDInfo& _cdInfo, string* _callName);
+    virtual bool IsValidImpl(CfgType& _cfg, CDInfo& _cdInfo, const string& _callName);
 
     vector< pair<CfgType,CfgType> >& GetHistory();
     void ClearHistory();
 
-  private: 
+  private:
     MedialAxisUtility<MPTraits> m_medialAxisUtility;
     double m_clearance;
     vector< pair<CfgType,CfgType> > m_history;
@@ -55,7 +55,7 @@ MedialAxisClearanceValidity<MPTraits>::ParseXML(XMLNodeReader& _node){
 
 template<class MPTraits>
 void
-MedialAxisClearanceValidity<MPTraits>::PrintOptions(ostream& _os){
+MedialAxisClearanceValidity<MPTraits>::PrintOptions(ostream& _os) const {
   ValidityCheckerMethod<MPTraits>::PrintOptions(_os);
   _os << "\tMaximum distance from medial axis::" << m_clearance << endl;
   _os << "\tMedialAxisUtility::" << endl;
@@ -64,18 +64,22 @@ MedialAxisClearanceValidity<MPTraits>::PrintOptions(ostream& _os){
 
 
 template<class MPTraits>
-bool 
-MedialAxisClearanceValidity<MPTraits>::IsInsideObstacle(const CfgType& _cfg, Environment* _env, CDInfo& _cdInfo){
-  typename MPProblemType::ValidityCheckerPointer vcm = this->GetMPProblem()->GetValidityChecker(m_medialAxisUtility.GetValidityCheckerLabel());
-  return vcm->IsInsideObstacle(_cfg, _env, _cdInfo);
+bool
+MedialAxisClearanceValidity<MPTraits>::IsInsideObstacle(const CfgType& _cfg){
+  typename MPProblemType::ValidityCheckerPointer vcm = this->GetMPProblem()->
+    GetValidityChecker(m_medialAxisUtility.GetValidityCheckerLabel());
+  return vcm->IsInsideObstacle(_cfg);
 }
 
 template<class MPTraits>
-bool 
-MedialAxisClearanceValidity<MPTraits>::IsValidImpl(CfgType& _cfg, Environment* _env, StatClass& _stats, 
-    CDInfo& _cdInfo, string* _callName) {
-  typename MPProblemType::ValidityCheckerPointer vc = this->GetMPProblem()->GetValidityChecker(m_medialAxisUtility.GetValidityCheckerLabel());
-  bool isFree = vc->IsValid(_cfg, _env, _stats, _cdInfo, _callName);
+bool
+MedialAxisClearanceValidity<MPTraits>::IsValidImpl(CfgType& _cfg,
+    CDInfo& _cdInfo, const string& _callName) {
+  Environment* env = this->GetMPProblem()->GetEnvironment();
+
+  typename MPProblemType::ValidityCheckerPointer vc = this->GetMPProblem()->
+    GetValidityChecker(m_medialAxisUtility.GetValidityCheckerLabel());
+  bool isFree = vc->IsValid(_cfg, _cdInfo, _callName);
 
   if(!isFree){
     _cfg.SetLabel("VALID", !isFree);
@@ -84,7 +88,7 @@ MedialAxisClearanceValidity<MPTraits>::IsValidImpl(CfgType& _cfg, Environment* _
 
   CfgType origCfg = _cfg;
   CfgType tmpCfg = _cfg;
-  if(!m_medialAxisUtility.PushToMedialAxis(tmpCfg, _env->GetBoundary())) {
+  if(!m_medialAxisUtility.PushToMedialAxis(tmpCfg, env->GetBoundary())) {
     _cfg.SetLabel("VALID", false);
     return false;
   }
@@ -92,7 +96,7 @@ MedialAxisClearanceValidity<MPTraits>::IsValidImpl(CfgType& _cfg, Environment* _
   m_history.push_back(make_pair(origCfg, tmpCfg));
 
   string dmLabel = m_medialAxisUtility.GetDistanceMetricLabel();
-  double dist = this->GetMPProblem()->GetDistanceMetric(dmLabel)->Distance(_env, tmpCfg, _cfg);
+  double dist = this->GetMPProblem()->GetDistanceMetric(dmLabel)->Distance(tmpCfg, _cfg);
   bool result = dist < m_clearance;
 
   _cfg.SetLabel("VALID", result);
@@ -101,15 +105,15 @@ MedialAxisClearanceValidity<MPTraits>::IsValidImpl(CfgType& _cfg, Environment* _
 }
 
 template<class MPTraits>
-vector< pair<typename MPTraits::CfgType, typename MPTraits::CfgType> >& 
+vector< pair<typename MPTraits::CfgType, typename MPTraits::CfgType> >&
 MedialAxisClearanceValidity<MPTraits>::GetHistory() {
-  return m_history; 
+  return m_history;
 }
 
 template<class MPTraits>
-void 
-MedialAxisClearanceValidity<MPTraits>::ClearHistory() { 
-  m_history.clear(); 
+void
+MedialAxisClearanceValidity<MPTraits>::ClearHistory() {
+  m_history.clear();
 }
 
 #endif

@@ -28,7 +28,7 @@ class MedialAxisSampler : public SamplerMethod<MPTraits> {
       m_medialAxisUtility.PrintOptions(_os);
     }
 
-    virtual bool Sampler(Environment* _env, shared_ptr<Boundary> _bb, 
+    virtual bool Sampler(Environment* _env, shared_ptr<Boundary> _bb,
         StatClass& _stats, CfgType& _cfgIn, vector<CfgType>& _cfgOut, vector<CfgType>& _cfgCol) {
 
       string call = "MedialAxisSampler::sampler()";

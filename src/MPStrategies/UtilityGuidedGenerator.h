@@ -7,7 +7,7 @@ template <class MPTraits>
 struct ApproximateCSpaceModel {
   typedef typename MPTraits::CfgType CfgType;
   typedef typename MPTraits::MPProblemType::DistanceMetricPointer DistanceMetricPointer;
-  
+
   vector<pair<CfgType, double> > m_modelNodes;
   Environment* m_env;
   DistanceMetricPointer m_dm;
@@ -20,7 +20,7 @@ struct ApproximateCSpaceModel {
   }
 
   double FreeProbability(const CfgType& _c, int _k) {
-    sort(m_modelNodes.begin(), m_modelNodes.end(), 
+    sort(m_modelNodes.begin(), m_modelNodes.end(),
 	 DistanceCompareFirst<MPTraits, pair<CfgType,double> >(m_env, m_dm, _c));
     int size = min<int>(_k, m_modelNodes.size());
     if(size == 0)
@@ -44,16 +44,16 @@ class UtilityGuidedGenerator : public MPStrategyMethod<MPTraits> {
   typedef typename MPProblemType::VID VID;
   typedef typename MPProblemType::GraphType::GRAPH GRAPH;
   typedef typename MPProblemType::NeighborhoodFinderPointer NeighborhoodFinderPointer;
-  
-  UtilityGuidedGenerator(string _vcLabel = "", string _nfLabel = "", 
-        string _connector = "", vector<string> _evaluators = vector<string>(), 
-        double _componentDist = 0.5, double _tao = 0.01, 
+
+  UtilityGuidedGenerator(string _vcLabel = "", string _nfLabel = "",
+        string _connector = "", vector<string> _evaluators = vector<string>(),
+        double _componentDist = 0.5, double _tao = 0.01,
         int _kNeighbors = 10, int _kSamples = 5);
   UtilityGuidedGenerator(MPProblemType* _problem, XMLNodeReader& _node);
   virtual ~UtilityGuidedGenerator();
 
   virtual void ParseXML(XMLNodeReader& _node);
-  virtual void PrintOptions(ostream& _os);
+  virtual void PrintOptions(ostream& _os) const;
 
   virtual void Initialize();
   virtual void Run();
@@ -71,11 +71,11 @@ class UtilityGuidedGenerator : public MPStrategyMethod<MPTraits> {
 
 
 template <class MPTraits>
-UtilityGuidedGenerator<MPTraits>::UtilityGuidedGenerator(string _vcLabel, string _nfLabel, 
-        string _connector, vector<string> _evaluators, double _componentDist, double _tao, 
+UtilityGuidedGenerator<MPTraits>::UtilityGuidedGenerator(string _vcLabel, string _nfLabel,
+        string _connector, vector<string> _evaluators, double _componentDist, double _tao,
         int _kNeighbors, int _kSamples) :
-        m_vcLabel(_vcLabel), m_nfLabel(_nfLabel), m_connectorLabel(_connector), 
-        m_evaluatorLabels(_evaluators), m_componentDist(_componentDist), m_tao(_tao), 
+        m_vcLabel(_vcLabel), m_nfLabel(_nfLabel), m_connectorLabel(_connector),
+        m_evaluatorLabels(_evaluators), m_componentDist(_componentDist), m_tao(_tao),
         m_kNeighbors(_kNeighbors), m_kSamples(_kSamples) {
   this->SetName("UtilityGuidedGenerator");
 }
@@ -115,7 +115,7 @@ UtilityGuidedGenerator<MPTraits>::ParseXML(XMLNodeReader& _node) {
 
 template <class MPTraits>
 void
-UtilityGuidedGenerator<MPTraits>::PrintOptions(ostream& _os) {
+UtilityGuidedGenerator<MPTraits>::PrintOptions(ostream& _os) const {
   MPStrategyMethod<MPTraits>::PrintOptions(_os);
   _os << "\tValidity Checker: " << m_vcLabel << endl;
   _os << "\tNeighborhood Finder: " << m_nfLabel << endl;
@@ -138,7 +138,7 @@ UtilityGuidedGenerator<MPTraits>::Initialize() {
 }
 
 template <class MPTraits>
-void 
+void
 UtilityGuidedGenerator<MPTraits>::Run() {
   if(this->m_debug) cout << "\nRunning UtilityGuidedGenerator::" << endl;
 
@@ -147,16 +147,15 @@ UtilityGuidedGenerator<MPTraits>::Run() {
   RoadmapType* rmap = this->GetMPProblem()->GetRoadmap();
   Environment* env = this->GetMPProblem()->GetEnvironment();
   shared_ptr<Boundary> bb = env->GetBoundary();
-  
+
   DistanceMetricPointer dm = this->GetMPProblem()->GetNeighborhoodFinder(m_nfLabel)->GetDMMethod();
   ApproximateCSpaceModel<MPTraits> model(env, dm);
-  
+
   ValidityCheckerPointer vcm = this->GetMPProblem()->GetValidityChecker(m_vcLabel);
   string callee(this->GetNameAndLabel() + "::Run()");
-  CDInfo cdInfo;
 
   ConnectorPointer connector = this->GetMPProblem()->GetConnector(m_connectorLabel);
- 
+
 
   stats->StartClock("Map Generation");
 
@@ -164,7 +163,7 @@ UtilityGuidedGenerator<MPTraits>::Run() {
   while(!mapPassedEvaluation) {
 
     CfgType q;
-    
+
     //if roadmap empty, simply add a free random sample
     if(rmap->GetGraph()->get_num_vertices() < 1) {
       stats->StartClock("Total Sampling Time");
@@ -174,8 +173,8 @@ UtilityGuidedGenerator<MPTraits>::Run() {
         q.GetRandomCfg(env, bb);
         inBBX = env->InBounds(q, bb);
         if(inBBX) {
-          isValid = vcm->IsValid(q, env, *stats, cdInfo, &callee);
-          if(isValid) 
+          isValid = vcm->IsValid(q, callee);
+          if(isValid)
             stats->IncNodesGenerated(this->GetNameAndLabel());
         }
       }
@@ -184,7 +183,7 @@ UtilityGuidedGenerator<MPTraits>::Run() {
       rmap->GetGraph()->AddVertex(q);
       stats->StopClock("Total Sampling Time");
 
-    } 
+    }
     else {
       stats->StartClock("Total Sampling Time");
       //generate a entropy guided sample
@@ -201,23 +200,23 @@ UtilityGuidedGenerator<MPTraits>::Run() {
           if(this->m_debug) cout << "\tprobability greater, swapping to q_" << j << endl;
           q = qNew;
           qProbFree = qNewProbFree;
-        } 
+        }
         else
           if(this->m_debug) cout << "\tprobablity not greater, keeping q\n";
       }
       if(this->m_debug) cout << "q (" << qProbFree << ") = " << q << endl;
-  
+
       //add the sample to the model and roadmap (if free)
       stats->IncNodesAttempted(this->GetNameAndLabel());
       stats->StopClock("Total Sampling Time");
-      bool isColl = !env->InBounds(q, bb) || !vcm->IsValid(q, env, *stats, cdInfo, &callee);
+      bool isColl = !env->InBounds(q, bb) || !vcm->IsValid(q, callee);
       if(!isColl) {
         if(this->m_debug) cout << "valid, adding to roadmap and model\n";
         stats->IncNodesGenerated(this->GetNameAndLabel());
-        
+
         model.AddSample(q, 1);
         VID qvid = rmap->GetGraph()->AddVertex(q);
-        
+
         //connect sample
         vector<VID> v1(1, qvid);
         stapl::sequential::vector_property_map<GRAPH, size_t> cmap;
@@ -226,14 +225,14 @@ UtilityGuidedGenerator<MPTraits>::Run() {
         stats->StopClock("Total Connection Time");
         if(this->m_debug) cout << "connecting sample, roadmap now has " << rmap->GetGraph()->get_num_vertices() << " nodes and " << rmap->GetGraph()->get_num_edges() << " edges\n";
 
-      } 
+      }
       else {
         if(this->m_debug) cout << "invalid, adding to model only\n";
         model.AddSample(q, 0);
       }
       if(this->m_debug) cout << endl;
     }
-  
+
     mapPassedEvaluation = this->EvaluateMap(m_evaluatorLabels);
   }
 
@@ -253,7 +252,7 @@ UtilityGuidedGenerator<MPTraits>::Finalize() {
   ofstream osMap(str.c_str());
   this->GetMPProblem()->GetRoadmap()->Write(osMap, this->GetMPProblem()->GetEnvironment());
   osMap.close();
-  
+
   //output stats
   str = this->GetBaseFilename() + ".stat";
   ofstream  osStat(str.c_str());
@@ -262,7 +261,7 @@ UtilityGuidedGenerator<MPTraits>::Finalize() {
   stats->PrintAllStats(osStat, this->GetMPProblem()->GetRoadmap());
   stats->PrintClock("Map Generation", osStat);
   osStat.close();
-  
+
   if(this->m_debug) cout << "\nEnd Finalizing UtilityGuidedGenerator" << endl;
 }
 
@@ -275,23 +274,23 @@ GenerateEntropyGuidedSample() {
   shared_ptr<Boundary> bb = env->GetBoundary();
   NeighborhoodFinderPointer nf = this->GetMPProblem()->GetNeighborhoodFinder(m_nfLabel);
   DistanceMetricPointer dm = nf->GetDMMethod();
-  
+
   CfgType q1, q2;
-  
+
   stapl::sequential::vector_property_map<GRAPH, size_t > cmap;
   vector<pair<size_t, VID> > ccs;
   if(get_cc_stats(*rmap->GetGraph(), cmap, ccs) == 1) {
     int index = (int)floor((double)DRand()*(double)rmap->GetGraph()->get_num_vertices());
     q1 = (rmap->GetGraph()->begin() + index)->property();
     q2.GetRandomCfg(env, bb);
-    if(this->m_debug) 
+    if(this->m_debug)
       cout << "\t\tIn GenerateEntropyGuidedSample: only 1 cc, randomly selected vertex " << (rmap->GetGraph()->begin() + index)->descriptor() << " and a random sample\n";
-  } 
+  }
   else {
     //randomly select 2 ccs that are within a threshold m_componentDist of each other
-    if(this->m_debug) 
+    if(this->m_debug)
       cout << "\t\tIn GenerateEntropyGuidedSample: there are " << ccs.size() << " ccs, looking for a pair less than " << m_componentDist << " apart\n";
-    VID cc1Vid, cc2Vid, minCC1Vid, minCC2Vid;
+    VID cc1Vid, cc2Vid, minCC1Vid = -1, minCC2Vid = -1;
     vector<VID> cc1, cc2;
     double dist = 0, minDist = 0;
     int possibleCombos = 1;
@@ -301,25 +300,25 @@ GenerateEntropyGuidedSample() {
       cc1Vid = ccs[(int)floor((double)DRand()*(double)ccs.size())].second;
       do {
 	cc2Vid = ccs[(int)floor((double)DRand()*(double)ccs.size())].second;
-      } 
+      }
       while (cc1Vid == cc2Vid);
-      
+
       cmap.reset();
       get_cc(*rmap->GetGraph(), cmap, cc1Vid, cc1);
       cmap.reset();
       get_cc(*rmap->GetGraph(), cmap, cc2Vid, cc2);
-      
+
       vector<pair<pair<VID, VID>, double> > kp;
       nf->FindNeighborPairs(rmap, cc1.begin(), cc1.end(), cc2.begin(), cc2.end(), back_inserter(kp));
       dist = kp[0].second;
-      
+
       if(this->m_debug)
         cout << "\t\t\tdist between cc " << cc1Vid << " and " << cc2Vid << " is " << dist << endl;
       if(dist < minDist) {
         minCC1Vid = cc1Vid;
         minCC2Vid = cc2Vid;
       }
-    } 
+    }
     while (dist > m_componentDist && possibleCombos-- > 0);
     if(dist <= m_componentDist) {
       cc1Vid = minCC1Vid;

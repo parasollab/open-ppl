@@ -17,7 +17,7 @@ template <typename CFG> class RMSDDistance;
 
 template <class CFG>
 struct ActivityType {
-  virtual boost::dynamic_bitset<> Active() = 0; 
+  virtual boost::dynamic_bitset<> Active() = 0;
 };
 
 template <class CFG>
@@ -33,12 +33,12 @@ template <class CFG>
 struct ActivityNumber : public ActivityType<CFG> {
   const size_t m_jointCount;
   const size_t m_number;
-  
+
   ActivityNumber(const CFG& _cfg, size_t _number) : m_jointCount(_cfg.DOF()), m_number(min(_number, m_jointCount)) {}
 
   virtual boost::dynamic_bitset<> Active() {
     boost::dynamic_bitset<> bitset(m_jointCount);
-    while(bitset.count() < m_number) 
+    while(bitset.count() < m_number)
       bitset.set(LRand() % m_jointCount);
     return bitset;
   }
@@ -61,7 +61,7 @@ struct DistributionConstant : public DistributionType {
   DistributionConstant(double _value) : m_value(_value) {}
 
   virtual double Random() { return m_value; }
-  
+
   friend ostream& operator<<(ostream& _os, const DistributionConstant& _d);
   virtual ostream& Print(ostream& _os) const {
     _os << *this;
@@ -103,7 +103,7 @@ class SimilarStructureSampler : public SamplerMethod<MPTraits>
    typedef typename MPTraits::CfgType CfgType;
 
   string m_vcLabel;
-  
+
   shared_ptr<DistributionType> m_targetRangeDistribution;
   shared_ptr<DistributionType> m_subtargetDriftDistribution;
 
@@ -116,20 +116,30 @@ class SimilarStructureSampler : public SamplerMethod<MPTraits>
   bool m_saveInvalid;
   bool m_doAlignment;
   bool m_ignoreValidity;
- 
+
  public:
-  SimilarStructureSampler(string _vcLabel = "") : SamplerMethod<MPTraits>(), m_vcLabel(_vcLabel) {
+  SimilarStructureSampler(string _vcLabel = "") :
+    SamplerMethod<MPTraits>(), m_vcLabel(_vcLabel),
+    m_jointActivityFractionActive(0.0),
+    m_jointActivityNumberActive(0),
+    m_samplesPerSeed(1),
+    m_saveInvalid(false),
+    m_doAlignment(true),
+    m_ignoreValidity(false) {
     this->SetName("SimilarStructureSampler");
   }
 
-  SimilarStructureSampler(typename MPTraits::MPProblemType* _problem, XMLNodeReader& _node) : SamplerMethod<MPTraits>(_problem, _node) {
+  SimilarStructureSampler(typename MPTraits::MPProblemType* _problem, XMLNodeReader& _node) :
+    SamplerMethod<MPTraits>(_problem, _node),
+    m_jointActivityFractionActive(0.0),
+    m_jointActivityNumberActive(0) {
     this->SetName("SimilarStructureSampler");
     ParseXML(_node);
   }
 
   virtual ~SimilarStructureSampler() {
   }
- 
+
   void ParseXML(XMLNodeReader& _node) {
     m_vcLabel = _node.stringXMLParameter("vcLabel", true, "", "Validity Test Method");
 
@@ -199,21 +209,21 @@ class SimilarStructureSampler : public SamplerMethod<MPTraits>
       exit(-1);
     }
   }
-  
+
   virtual void PrintOptions(ostream& _out) const {
     SamplerMethod<MPTraits>::PrintOptions(_out);
     _out << "\tvcLabel = " << m_vcLabel << endl;
-    
+
     _out << "\ttargetRangeDistribution = "; m_targetRangeDistribution->Print(_out); _out << endl;
     _out << "\tsubtargetDriftDistribution = "; m_subtargetDriftDistribution->Print(_out); _out << endl;
-    
+
     _out << "\tjointActivity = " << m_jointActivityString;
     if(m_jointActivityString == "fraction")
       _out << "(" << m_jointActivityFractionActive << ")";
     if(m_jointActivityString == "number")
       _out << "(" << m_jointActivityNumberActive << ")";
     _out << endl;
-    
+
     _out << "\tsamplesPerSeed = " << m_samplesPerSeed << endl;
     _out << "\tsaveInvalid = " << m_saveInvalid << endl;
     _out << "\tdoAlignment = " << m_doAlignment << endl;
@@ -231,19 +241,19 @@ class SimilarStructureSampler : public SamplerMethod<MPTraits>
       if(m_jointActivityString == "number") {
         m_jointActivityNumberActive = floor(_citr->numberXMLParameter("number", true, 0, 1, 65536, "Number of Joints Active"));
         return true;
-      } 
+      }
       if(m_jointActivityString == "fraction") {
         m_jointActivityFractionActive = _citr->numberXMLParameter("fraction", true, 1.0, 0.0, 1.0, "Fraction of Joints Active");
         return true;
       }
-      
+
       _citr->warnUnknownNode();
       exit(-1);
     }
-    
+
     return false;
   }
- 
+
 
   // For a single joint, given a target rmsd change
   // and the maximum rmsd change possible on that joint,
@@ -254,7 +264,7 @@ class SimilarStructureSampler : public SamplerMethod<MPTraits>
   // account. It is based on the geometry of chords on the circular
   // path taken by atoms undergoing rotation about an axis.
   double TargetRotation(double _targetRMSD, double _fullRMSD) const {
-    if(_fullRMSD <= 0.0) 
+    if(_fullRMSD <= 0.0)
       return 0.0;
     _targetRMSD = min(max(0.0, _targetRMSD), _fullRMSD);
     return asin(_targetRMSD / _fullRMSD) / PI;
@@ -264,26 +274,26 @@ class SimilarStructureSampler : public SamplerMethod<MPTraits>
   // joint of each seed node of rotating that joint by 180 degrees.
   vector<double> HalfRotationEffects(const CfgType& _cfg, Environment* _env) {
     RMSDDistance<MPTraits> rmsd;
-    
-    const vector<Vector3d> original_coords = rmsd.GetCoordinatesForRMSD(_cfg, _env);
+
+    const vector<Vector3d> original_coords = rmsd.GetCoordinatesForRMSD(_cfg);
     const vector<double> original_joints = _cfg.GetData();
-    
+
     vector<double> altered_joints = original_joints;
-    
+
     vector<double> effects(_cfg.DOF());
     for(size_t j = _cfg.PosDOF(); j < _cfg.DOF(); ++j) {
       altered_joints[j] += 0.5;
-      altered_joints[j] -= floor(altered_joints[j]);     
+      altered_joints[j] -= floor(altered_joints[j]);
 
       CfgType altered_cfg;
       altered_cfg.SetData(altered_joints);
-      const vector<Vector3d> altered_coords = rmsd.GetCoordinatesForRMSD(altered_cfg, _env);
-      
-      if(m_doAlignment) { 
-        effects[j] = rmsd.RMSD(original_coords, altered_coords, original_coords.size()); 
+      const vector<Vector3d> altered_coords = rmsd.GetCoordinatesForRMSD(altered_cfg);
+
+      if(m_doAlignment) {
+        effects[j] = rmsd.RMSD(original_coords, altered_coords, original_coords.size());
       } else {
         double accumulator = 0.0;
-        for(size_t c = 0; c < original_coords.size(); ++c) { 
+        for(size_t c = 0; c < original_coords.size(); ++c) {
           accumulator += (original_coords[c] - altered_coords[c]).normsqr();
         }
         effects[j] = sqrt(accumulator/double(original_coords.size()));
@@ -327,7 +337,7 @@ class SimilarStructureSampler : public SamplerMethod<MPTraits>
     return return_cfg;
   }
 
-  virtual void InitializeJointActivity(CfgType _cfg, Environment* _env) {
+  virtual void InitializeJointActivity(const CfgType& _cfg, Environment* _env) {
     if(m_jointActivityString == "all") {
       m_jointActivity = shared_ptr<ActivityType<CfgType> >(new ActivityAll<CfgType>(_cfg));
     } else if(m_jointActivityString == "number") {
@@ -346,7 +356,7 @@ class SimilarStructureSampler : public SamplerMethod<MPTraits>
         StatClass& Stat, CfgType& _cfgIn, vector<CfgType>& _cfgOut,
         vector<CfgType>& _cfgCol) {
     const size_t cfgOutSize = _cfgOut.size();
-   
+
     typename MPTraits::MPProblemType::ValidityCheckerPointer vcm = this->GetMPProblem()->GetValidityChecker(m_vcLabel);
 
     const vector<CfgType> seed_nodes(1, _cfgIn);
@@ -354,9 +364,9 @@ class SimilarStructureSampler : public SamplerMethod<MPTraits>
       const CfgType original_cfg = seed_nodes[seed_index];
       if(this->m_debug)
         cout << "original_cfg:\t" << original_cfg << endl;
-      
+
       InitializeJointActivity(original_cfg, env);
-      
+
       const vector<double> effects = HalfRotationEffects(original_cfg, env);
       if(this->m_debug) {
         std::fstream log;
@@ -386,29 +396,32 @@ class SimilarStructureSampler : public SamplerMethod<MPTraits>
 
         RMSDDistance<MPTraits> rmsd;
         if(this->m_debug)
-          log << rmsd.Distance(env, original_cfg, similar_cfg) << "\t";
-        CDInfo cdInfo;string calle(this->GetName());calle+="::_BiasedSample()";
+          log << rmsd.Distance(original_cfg, similar_cfg) << "\t";
+        string callee(this->GetName());callee+="::_BiasedSample()";
         if(m_ignoreValidity) {
-           Stat.IncNodesGenerated(this->GetNameAndLabel()); 
+           Stat.IncNodesGenerated(this->GetNameAndLabel());
            _cfgOut.push_back(similar_cfg);
            if(this->m_debug)
              log << "1" << endl;
-        } else if(vcm->IsValid(similar_cfg, env, Stat, cdInfo, &calle)) {
-          Stat.IncNodesGenerated(this->GetNameAndLabel()); 
+        }
+        else if(vcm->IsValid(similar_cfg, callee)) {
+          Stat.IncNodesGenerated(this->GetNameAndLabel());
           _cfgOut.push_back(similar_cfg);
           if(this->m_debug)
             log << "1" << endl;
-        } else {
-          if(m_saveInvalid) 
+        }
+        else {
+          if(m_saveInvalid)
             _cfgCol.push_back(similar_cfg);
           if(this->m_debug)
-            log << "0" << endl; continue; 
+            log << "0" << endl;
+          continue;
         }
       }
       log.close();
     }
     return _cfgOut.size() > cfgOutSize;
-  } 
+  }
 
 };
 

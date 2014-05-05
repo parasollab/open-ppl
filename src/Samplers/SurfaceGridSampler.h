@@ -31,12 +31,12 @@
 
 template<class MPTraits>
 class SurfaceGridSampler : public SamplerMethod<MPTraits> {
-  
+
   private:
     std::string m_vcLabel;
     double m_dx; //Delta x
     double m_dz; //Delta y
-  
+
   public:
     typedef typename MPTraits::CfgType CfgType;
     typedef typename MPTraits::MPProblemType MPProblemType;
@@ -46,7 +46,7 @@ class SurfaceGridSampler : public SamplerMethod<MPTraits> {
     //Constructor
     SurfaceGridSampler(string _vcLabel="", double _dx=5.0, double _dz=5.0) : m_vcLabel(_vcLabel), m_dx(_dx), m_dz(_dz) {
       this->SetName("SurfaceGridSampler");
-    } 
+    }
 
     //Constructor
     SurfaceGridSampler(MPProblemType* _problem, XMLNodeReader& _node) : SamplerMethod<MPTraits>(_problem,_node) {
@@ -55,7 +55,7 @@ class SurfaceGridSampler : public SamplerMethod<MPTraits> {
     }
 
     ~SurfaceGridSampler() {}
-    
+
     //Reading XML node
     void ParseXML(XMLNodeReader& _node){
     m_vcLabel = _node.stringXMLParameter("vcLabel", true, "", "Validity Test Method");
@@ -69,17 +69,16 @@ class SurfaceGridSampler : public SamplerMethod<MPTraits> {
       _out<< "\tdx= " << m_dx << "\tdz= " << m_dz << endl;
     }
 
-    //Generates grid cfgs over each navigable surface 
-    virtual bool Sampler(Environment* _env, shared_ptr<Boundary> _bb, 
-        StatClass& _stats, CfgType& _cfgIn, vector<CfgType>& _cfgOut, 
-        vector<CfgType>& _cfgCol) { 
+    //Generates grid cfgs over each navigable surface
+    virtual bool Sampler(Environment* _env, shared_ptr<Boundary> _bb,
+        StatClass& _stats, CfgType& _cfgIn, vector<CfgType>& _cfgOut,
+        vector<CfgType>& _cfgCol) {
       string callee(this->GetName());
       callee += "::SampleImpl()";
       ValidityCheckerPointer vcp = this->GetMPProblem()->GetValidityChecker(m_vcLabel);
-      CDInfo cdInfo;
       int numSurfaces=  _env->GetNavigableSurfacesCount(); //Number of navigable surface
       for(int i=-1; i<numSurfaces; i++) {
-        //For the navigable surfaces not including the surface -1 (ground) 
+        //For the navigable surfaces not including the surface -1 (ground)
         if(i>=0){
           //Get navigable surface by number and get the polyhedron of that surface
           shared_ptr<MultiBody> surfi = _env->GetNavigableSurface((size_t) i);
@@ -96,21 +95,21 @@ class SurfaceGridSampler : public SamplerMethod<MPTraits> {
               //Get the height of the point defined before
               double tH = polyhedron.HeightAtPt(pt, isValSurf);
               //If there is a valid height fpr the point
-              if( isValSurf ){ 
+              if( isValSurf ){
                 CfgType tmp;
                 //set the surface cfg to add
                 tmp.SetSurfaceID(i);
                 tmp.SetPos(pt);
                 tmp.SetHeight(tH);
                 //Validate surface cfg
-                bool isValid = vcp->IsValid(tmp, _env, _stats, cdInfo, &callee);
+                bool isValid = vcp->IsValid(tmp, callee);
                 if(isValid){
                   //Add valid surface cfg
                   _cfgOut.push_back(tmp);
                 }else{
                   _cfgCol.push_back(tmp);
                 }
-              }  
+              }
             }
           }
         }
@@ -127,18 +126,18 @@ class SurfaceGridSampler : public SamplerMethod<MPTraits> {
               tmp.SetPos(pt);
               //Height is 0 for this points
               tmp.SetHeight(0);
-              bool isValid = vcp->IsValid(tmp, _env, _stats, cdInfo, &callee);
+              bool isValid = vcp->IsValid(tmp, callee);
               if(isValid){
                 _cfgOut.push_back(tmp);
               }else{
                 _cfgCol.push_back(tmp);
-              } 
-            } 
-          }          
+              }
+            }
+          }
         }
       }
       return true;
-    }	
+    }
 };
 
 #endif

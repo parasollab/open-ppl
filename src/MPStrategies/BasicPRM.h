@@ -28,7 +28,7 @@ class BasicPRM : public MPStrategyMethod<MPTraits> {
    virtual ~BasicPRM();
 
    virtual void ParseXML(XMLNodeReader& _node);
-   virtual void PrintOptions(ostream& _os);
+   virtual void PrintOptions(ostream& _os) const;
 
    virtual void Initialize();
    virtual void Run();
@@ -146,7 +146,7 @@ BasicPRM<MPTraits>::ParseXML(XMLNodeReader& _node) {
 
 template<class MPTraits>
 void
-BasicPRM<MPTraits>::PrintOptions(ostream& _os) {
+BasicPRM<MPTraits>::PrintOptions(ostream& _os) const {
   MPStrategyMethod<MPTraits>::PrintOptions(_os);
   _os << "\tValidity Checker: " << m_vcLabel << endl;
   _os << "\tInput Map Filename: " << m_inputMapFilename << endl;
@@ -159,8 +159,8 @@ BasicPRM<MPTraits>::PrintOptions(ostream& _os) {
     case MAP_EVALUATION: _os << "map evaluation\n"; break;
   }
 
-  typedef map<string, pair<int,int> >::iterator MIter;
-  typedef vector<string>::iterator StringIter;
+  typedef map<string, pair<int,int> >::const_iterator MIter;
+  typedef vector<string>::const_iterator StringIter;
   _os<<"\nSamplers\n";
   for(MIter mIter=m_samplerLabels.begin();
       mIter!=m_samplerLabels.end(); mIter++){
@@ -363,7 +363,6 @@ template<class MPTraits>
 template<typename OutputIterator>
 void
 BasicPRM<MPTraits>::GenerateNodes(OutputIterator _thisIterationOut){
-  CDInfo cdInfo;
   StatClass* pStatClass = this->GetMPProblem()->GetStatClass();
   string clockName = "Total Node Generation";
   if(this->m_recordKeep) pStatClass->StartClock(clockName);
@@ -408,10 +407,9 @@ BasicPRM<MPTraits>::GenerateNodes(OutputIterator _thisIterationOut){
       }
     }
     else{
-      if(!cit->IsLabel("VALID")){
-        !(this->GetMPProblem()->GetValidityChecker(m_vcLabel)->IsValid(
-              *cit, this->GetMPProblem()->GetEnvironment(), *(this->GetMPProblem()->GetStatClass()), cdInfo, &callee));
-      }
+      if(!cit->IsLabel("VALID"))
+        !(this->GetMPProblem()->GetValidityChecker(m_vcLabel)->IsValid(*cit, callee));
+
       if(cit->IsLabel("VALID") && cit->GetLabel("VALID")) {
         if(!this->GetMPProblem()->GetRoadmap()->GetGraph()->IsVertex(*cit)) {
           VID vid = this->GetMPProblem()->GetRoadmap()->GetGraph()->AddVertex(*cit);

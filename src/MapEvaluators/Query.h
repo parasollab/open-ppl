@@ -23,33 +23,34 @@ class Query : public MapEvaluatorMethod<MPTraits> {
     typedef typename MPProblemType::ConnectorPointer ConnectorPointer;
     typedef typename MPProblemType::LocalPlannerPointer LocalPlannerPointer;
     typedef typename MPProblemType::DistanceMetricPointer DistanceMetricPointer;
+    typedef typename MPProblemType::PathModifierPointer PathModifierPointer;
 
-    Query(bool _deleteNodes=false, string _searchAlg="astar", string _pathFile="Basic.path", string _smoothFile="Basic.smooth.path",
-    string _maSmoothFile="Basic.maSmooth.path", string _intermediateFile="", string lpLabel="", string _dmLabel="", string _malpLabel="",
-    bool _smooth=false, bool _maSmooth=false);
+    Query(bool _deleteNodes=false, string _searchAlg="astar", string _pathFile="Basic.path",
+    string _intermediateFile="", string _lpLabel="", string _dmLabel="",
+    string _pathModifierLabel="");
 
-    Query(string _queryFileName);
-    Query(CfgType _start, CfgType _goal);
+    Query(string _queryFileName, const vector<string>& _connLabels = vector<string>());
+    Query(const CfgType& _start, const CfgType& _goal);
     Query(MPProblemType* _problem, XMLNodeReader& _node, bool _warn = true);
+    Query(MPProblemType* _problem, CfgType _start, CfgType _goal, const vector<string>& _connectorLabels=vector<string>(),
+	  bool _deleteNodes=true, string _searchAlg="astar");
     virtual ~Query() { }
 
     void ParseXML(XMLNodeReader& _node);
-    virtual void PrintOptions(ostream& _os); 
+    virtual void PrintOptions(ostream& _os) const;
     vector<CfgType>& GetQuery() { return m_query; }
     vector<CfgType>& GetPath() { return m_path; }
+    vector<VID>& GetPathVIDs() { return m_pathVIDs; }
     void SetPathFile(string _filename) { m_pathFile = _filename; }
 
     // Reads a query and calls the other PerformQuery(), then calls Smooth() if desired
     virtual bool PerformQuery(RoadmapType* _rdmp);
 
     // Performs the real query work
-    virtual bool PerformQuery(CfgType _start, CfgType _goal, RoadmapType* _rdmp);
+    virtual bool PerformQuery(const CfgType& _start, const CfgType& _goal, RoadmapType* _rdmp);
 
-    // Smooths the query path by skipping intermediate nodes in the path
+    // Smooths the query path
     virtual void Smooth();
-
-    // Smooths the query path pushing it to the medial axis
-    virtual void MedialAxisSmooth();
 
     // Checks if a path is valid
     virtual bool CanRecreatePath(RoadmapType* _rdmp, vector<VID>& _attemptedPath, vector<CfgType>& _recreatedPath);
@@ -59,7 +60,7 @@ class Query : public MapEvaluatorMethod<MPTraits> {
 
     virtual void ReadQuery(string _filename);
 
-    virtual bool operator()(); 
+    virtual bool operator()();
 
   protected:
     enum GraphSearchAlg {DIJKSTRAS, ASTAR};
@@ -67,15 +68,11 @@ class Query : public MapEvaluatorMethod<MPTraits> {
     vector<CfgType> m_path;     // The path found
     string m_queryFile;         // Where to read in the query
     string m_pathFile;          // Where to write the initial unsmoothed path
-    string m_smoothFile;        // Where to write the smoothed path
-    string m_maSmoothFile;      // Where to write the medial-axis smoothed path
     string m_intermediateFile;  // Where to output the intermediate CfgTypes along the path if != ""
     string m_lpLabel;           // Local planner
     string m_dmLabel;           // Distance metric
-    string m_malpLabel;         // Medial axis local planner
     bool m_deleteNodes;         // Delete any added nodes?
-    bool m_smooth;              // Perform smoothing operation?
-    bool m_maSmooth;            // Perform medial axis smoothing operation?
+    string m_pathModifierLabel; // Path Modifier method
     GraphSearchAlg m_searchAlg; // Shortest-path graph search algorithm
     vector<string> m_nodeConnectionLabels;   // List of connection methods for query
 
@@ -83,7 +80,6 @@ class Query : public MapEvaluatorMethod<MPTraits> {
     //initialize variable defaults
     void Initialize();
     void SetSearchAlgViaString(string _alg);
-    void AddToPath(LPOutput<MPTraits>* _lpOutput, CfgType& _end);
 
     vector<VID> m_pathVIDs;     // Stores path nodes for easy reference during smoothing
     vector<VID> m_toBeDeleted;  // Nodes to be deleted if m_deleteNodes is enabled.
@@ -96,11 +92,11 @@ struct Heuristic {
   public:
     typedef typename MPTraits::CfgType CfgType;
     typedef typename MPTraits::WeightType WeightType;
-    
-    Heuristic(CfgType& _goal, double _posRes, double _oriRes) :
+
+    Heuristic(const CfgType& _goal, double _posRes, double _oriRes) :
       m_goal(_goal), m_posRes(_posRes), m_oriRes(_oriRes) { }
 
-    WeightType operator()(CfgType& _c1) {
+    WeightType operator()(const CfgType& _c1) {
       int tick;
       CfgType incr;
       incr.FindIncrement(_c1, m_goal, &tick, m_posRes, m_oriRes);
@@ -114,19 +110,20 @@ struct Heuristic {
 };
 
 template<class MPTraits>
-Query<MPTraits>::Query(bool _deleteNodes, string _searchAlg, string _pathFile, string _smoothFile, string _maSmoothFile,
-    string _intermediateFile, string _lpLabel, string _dmLabel, string _malpLabel, bool _smooth, bool _maSmooth) :
-  m_pathFile(_pathFile), m_smoothFile(_smoothFile), m_maSmoothFile(_maSmoothFile), m_intermediateFile(_intermediateFile),
-  m_lpLabel(_lpLabel), m_dmLabel(_dmLabel), m_malpLabel(_malpLabel), m_deleteNodes(_deleteNodes), m_smooth(_smooth),
-  m_maSmooth(_maSmooth){
-    this->SetName("Query");
-    SetSearchAlgViaString(_searchAlg);
+Query<MPTraits>::Query(bool _deleteNodes, string _searchAlg, string _pathFile,
+    string _intermediateFile, string _lpLabel, string _dmLabel,
+    string _pathModifierLabel) : m_pathFile(_pathFile),
+    m_intermediateFile(_intermediateFile), m_lpLabel(_lpLabel),
+    m_dmLabel(_dmLabel), m_deleteNodes(_deleteNodes),
+    m_pathModifierLabel(_pathModifierLabel) {
+  this->SetName("Query");
+  SetSearchAlgViaString(_searchAlg);
     m_clearanceUtility = ClearanceUtility<MPTraits>(this->GetMPProblem());
 }
 
 // Reads in query from a file
 template<class MPTraits>
-Query<MPTraits>::Query(string _queryFileName) {
+Query<MPTraits>::Query(string _queryFileName, const vector<string>& _connLabels) : m_nodeConnectionLabels(_connLabels) {
   Initialize();
   ReadQuery(_queryFileName);
   m_clearanceUtility = ClearanceUtility<MPTraits>(this->GetMPProblem());
@@ -134,7 +131,7 @@ Query<MPTraits>::Query(string _queryFileName) {
 
 // Uses start/goal to set up query
 template<class MPTraits>
-Query<MPTraits>::Query(CfgType _start, CfgType _goal) {
+Query<MPTraits>::Query(const CfgType& _start, const CfgType& _goal) {
   Initialize();
   m_query.push_back(_start);
   m_query.push_back(_goal);
@@ -153,22 +150,30 @@ Query<MPTraits>::Query(MPProblemType* _problem, XMLNodeReader& _node, bool _warn
     m_clearanceUtility = ClearanceUtility<MPTraits>(_problem, _node);
   }
 
+// Uses start/goal to set up query for an existing MPProblem
+template<class MPTraits>
+Query<MPTraits>::Query(MPProblemType* _problem, CfgType _start, CfgType _goal, const vector<string>& _connectorLabels, bool _deleteNodes, string _searchAlg) :
+  m_deleteNodes(_deleteNodes) {
+
+  SetSearchAlgViaString(_searchAlg);
+  m_nodeConnectionLabels=_connectorLabels;
+  m_query.push_back(_start);
+  m_query.push_back(_goal);
+  this->SetMPProblem(_problem);
+}
+
 template<class MPTraits>
 void
 Query<MPTraits>::ParseXML(XMLNodeReader& _node) {
   m_clearanceUtility = ClearanceUtility<MPTraits>(this->GetMPProblem(), _node);
   m_queryFile = _node.stringXMLParameter("queryFile", true, "", "Query filename");
   m_pathFile = _node.stringXMLParameter("pathFile", false, "", "Query output path filename");
-  m_smooth = _node.boolXMLParameter("smooth", false, false, "Whether or not to smooth the path");
-  m_maSmooth = _node.boolXMLParameter("maSmooth", false, false, "Whether or not to apply the medial axis smoothing to the path");
-  m_smoothFile = _node.stringXMLParameter("smoothFile", false, "", "Smoothed path filename");
-  m_maSmoothFile = _node.stringXMLParameter("maSmoothFile", false, "", "Medial axis smoothed path filename");
-  m_lpLabel = _node.stringXMLParameter("lpMethod", true, "", "Local planner method");
-  m_dmLabel = _node.stringXMLParameter("dmMethod", false, "", "Distance metric method");
-  m_malpLabel = _node.stringXMLParameter("malpMethod", m_maSmooth, "", "Medial axis local planner label needed by MedialAxisSmooth");
+  m_lpLabel = _node.stringXMLParameter("lpLabel", true, "", "Local planner method");
+  m_dmLabel = _node.stringXMLParameter("dmLabel", false, "", "Distance metric method");
   string searchAlg = _node.stringXMLParameter("graphSearchAlg", false, "dijkstras", "Graph search algorithm");
   m_intermediateFile = _node.stringXMLParameter("intermediateFiles", false, "", "Determines output location of intermediate nodes.");
   m_deleteNodes = _node.boolXMLParameter("deleteNodes", false, false, "Whether or not to delete start and goal from roadmap");
+  m_pathModifierLabel = _node.stringXMLParameter("pmLabel", false, "", "Path modifier method");
 
   for(XMLNodeReader::childiterator citr = _node.children_begin(); citr != _node.children_end(); ++citr) {
     if(citr->getName() == "NodeConnectionMethod") {
@@ -188,20 +193,17 @@ Query<MPTraits>::ParseXML(XMLNodeReader& _node) {
 
 template<class MPTraits>
 void
-Query<MPTraits>::PrintOptions(ostream& _os) {
+Query<MPTraits>::PrintOptions(ostream& _os) const {
   _os << this->GetNameAndLabel() << "::";
   _os << "\n\tquery file = \"" << m_queryFile << "\"";
   _os << "\n\tpath file = \"" << m_pathFile << "\"";
-  _os << "\n\tsmooth path file = \"" << m_smoothFile << "\"";
-  _os << "\n\tmedial axis smooth path file = \"" << m_maSmoothFile << "\"";
   _os << "\n\tintermediate file = \"" << m_intermediateFile << "\"";
   _os << "\n\tdistance metric = " << m_dmLabel;
   _os << "\n\tlocal planner = " << m_lpLabel;
-  _os << "\n\tmedial axis local planner = " << m_malpLabel;
   _os << "\n\tsearch alg = " << m_searchAlg;
-  _os << "\n\tsmooth = " << m_smooth;
-  _os << "\n\tmaSmooth = " << m_maSmooth;
   _os << "\n\tdeleteNodes = " << m_deleteNodes << endl;
+  if(m_pathModifierLabel != "")
+    _os << "\tpath modifier = \"" << m_pathModifierLabel << "\"" << endl;
 }
 
 // Runs the query
@@ -209,17 +211,10 @@ template<class MPTraits>
 bool
 Query<MPTraits>::operator()() {
 
-  RoadmapType* rdmp = this->GetMPProblem()->GetRoadmap();  
+  RoadmapType* rdmp = this->GetMPProblem()->GetRoadmap();
 
   // Perform query
   bool ans = PerformQuery(rdmp);
-
-  // Delete added nodes (such as start and goal) if desired
-  if(m_deleteNodes) {
-    for(typename vector<VID>::iterator it = m_toBeDeleted.begin(); it != m_toBeDeleted.end(); it++)
-      rdmp->GetGraph()->delete_vertex(*it);
-    m_toBeDeleted.clear();
-  }
 
   return ans;
 }
@@ -250,30 +245,33 @@ Query<MPTraits>::PerformQuery(RoadmapType* _rdmp) {
       if(this->m_debug)
         cout << endl << "*Q* In Query::PerformQuery(): didn't connect";
       return false;
-    } 
+    }
   }
 
-  if(m_pathFile == "") {
-    cerr << "Warning: no path file specified. Outputting path to \"Basic.path\"." << endl;
-    WritePath("Basic.path", m_path);
-  }
-  else{
+  if(m_pathFile != "") {
     WritePath(m_pathFile, m_path);
   }
-  if(m_smooth || m_maSmooth)
-    Smooth();
-  if(m_maSmooth)
-    MedialAxisSmooth();
+
+  // Path smoothing
+  Smooth();
+
+  // Delete added nodes (such as start and goal) if desired
+  if(m_deleteNodes) {
+    for(typename vector<VID>::iterator it = m_toBeDeleted.begin(); it != m_toBeDeleted.end(); it++)
+      _rdmp->GetGraph()->delete_vertex(*it);
+    m_toBeDeleted.clear();
+  }
+
   return true;
 }
 
 // Performs the query
 template<class MPTraits>
 bool
-Query<MPTraits>::PerformQuery(CfgType _start, CfgType _goal, RoadmapType* _rdmp) {
+Query<MPTraits>::PerformQuery(const CfgType& _start, const CfgType& _goal, RoadmapType* _rdmp) {
 
   if(this->m_debug)
-    cout << "*Q* Begin query" << endl;  
+    cout << "*Q* Begin query" << endl;
   VDComment("Begin Query");
 
   StatClass* stats = this->GetMPProblem()->GetStatClass();
@@ -396,10 +394,10 @@ Query<MPTraits>::PerformQuery(CfgType _start, CfgType _goal, RoadmapType* _rdmp)
       }
       if(this->m_recordKeep)
         stats->StopClock("Query Graph Search");
-#endif 
-      stats->m_pathClearance = m_clearanceUtility.PathClearance(shortestPath);
+#endif
+      stats->m_pathClearance = m_clearanceUtility.PathClearance(sVID, gVID);
       if(this->m_debug)
-        cout << "*Q* Start(" << shortestPath[1] << ") and Goal(" << shortestPath[shortestPath.size()-2] 
+        cout << "*Q* Start(" << shortestPath[1] << ") and Goal(" << shortestPath[shortestPath.size()-2]
           << ") seem connected to same ccIt[" << distance(ccsBegin, ccIt)+1  << "]!" << endl;
 
       // Attempt to recreate path
@@ -407,8 +405,7 @@ Query<MPTraits>::PerformQuery(CfgType _start, CfgType _goal, RoadmapType* _rdmp)
       if(CanRecreatePath(_rdmp, shortestPath, recreatedPath)) {
         connected = true;
         m_path.insert(m_path.end(), recreatedPath.begin(), recreatedPath.end());
-        if(m_smooth || m_maSmooth)
-          m_pathVIDs.insert(m_pathVIDs.end(),shortestPath.begin(),shortestPath.end());
+        m_pathVIDs.insert(m_pathVIDs.end(), shortestPath.begin(), shortestPath.end());
         break;
       }
       else if(this->m_debug)
@@ -445,280 +442,21 @@ Query<MPTraits>::PerformQuery(CfgType _start, CfgType _goal, RoadmapType* _rdmp)
  * When a query has many goals, the Smoothing operations do not take that into account.
  * i.e. A smoothed path is not likely to include all the goals in the final path
  * */
-
-// Shortens the path by skipping nodes with a greedy approach.
-// This function is also used by MedialAxisSmooth. However, it only prints the smoothed path if m_smooth is true.
+// Smooth the path
 template<class MPTraits>
 void
 Query<MPTraits>::Smooth() {
-  if(this->m_debug) cout << "\n*S* Executing Query::Smooth()" << endl;
-  if(!m_pathVIDs.empty()){
-    bool reconstruct, skip;
-    LocalPlannerPointer lp = this->GetMPProblem()->GetLocalPlanner(m_lpLabel);
-    Environment* env = this->GetMPProblem()->GetEnvironment();
-    StatClass* stats = this->GetMPProblem()->GetStatClass();
-    DistanceMetricPointer dm = this->GetMPProblem()->GetDistanceMetric(m_dmLabel);
-    GraphType* graph = this->GetMPProblem()->GetRoadmap()->GetGraph();
-    LPOutput<MPTraits> tmpOutput;
-    double posRes = env->GetPositionRes();
-    double oriRes = env->GetOrientationRes();
-
-    if(this->m_recordKeep) stats->StartClock("Path Smoother"); 
-    //This variable will store how many nodes were skipped
-    size_t skips = 0;
-
-    vector<VID> oldPathVIDs = m_pathVIDs;
-    m_pathVIDs.clear();
-    m_path.clear();
-    
-    //Save the first node in the path. (i.e. it can never be skipped)
-    m_pathVIDs.push_back(oldPathVIDs[0]);
-    if(m_smooth){
-      m_path.push_back(graph->GetVertex(oldPathVIDs[0]));
-    }
-
-    size_t n = oldPathVIDs.size();
-    size_t i = 0;   //i is the index of the start VID (configuration)
-    size_t j = n-1; //j is the index of the goal VID (configuration)
-    while(i<j){
-      if((i+1)==j){//If the vertices are adjacent, there are no nodes to skip
-        //Only reconstruct and save path if smoothing output is wanted.
-        if(m_smooth){
-          reconstruct = lp->IsConnected(env, *stats, dm, graph->GetVertex(oldPathVIDs[i]), graph->GetVertex(oldPathVIDs[j]), &tmpOutput, posRes, oriRes, true, true, true);
-          AddToPath(&tmpOutput, graph->GetVertex(oldPathVIDs[j]));
-          if(!reconstruct){ //If could not reconstruct, abort the output, but continue skipping nodes
-            cerr << "*S* Error. Could not reconstruct path in Query::Smooth()" << endl;
-            m_smooth = false;
-            if(m_path.empty()){
-              cerr << "*S*\tm_path is empty. Cannot write anything" << endl;
-            }
-            else{
-              cerr << "*S*\tWill output failed path to \"error.smooth.path\"" << endl;
-              WritePath("error.smooth.path", m_path);
-              m_path.clear();
-            }
-          }
-        }
-        m_pathVIDs.push_back(oldPathVIDs[j]);
-        i = j;
-        j = n-1;
-      }
-      else{
-        //Try to make a connection by skipping nodes betwen i and j
-        skip = lp->IsConnected(env, *stats, dm, graph->GetVertex(oldPathVIDs[i]), graph->GetVertex(oldPathVIDs[j]), &tmpOutput, posRes, oriRes, true, true);
-        if(skip){
-          if(m_smooth){
-            AddToPath(&tmpOutput, graph->GetVertex(oldPathVIDs[j]));
-          }
-          m_pathVIDs.push_back(oldPathVIDs[j]);
-          skips += (j-i-1);
-          i = j;
-          j = n-1;
-        }
-        else{
-          //Could not skip. Try the previous node.
-          --j;
-        }
-      }
-    }
-
-    if(this->m_debug){
-      if(skips==0){
-        cout << "*S* Could not skip any nodes" << endl;
-      }
-      else{
-        cout << "*S* Smoothing operation skipped " << skips;
-        if(skips==1){
-          cout << " node" << endl;
-        }
-        else{
-          cout << " nodes" << endl;
-        }
-      }
-    }
-    
-    //Output the path if it is wanted
-    if(m_smooth){
-      if(m_smoothFile==""){
-        cerr << "*S* Warning: no smooth path file specified. Outputting smoothed path to \"Basic.smooth.path\"." << endl;
-        WritePath("Basic.smooth.path", m_path);
-      }
-      else{
-        if(this->m_debug) cout << "*S* Writing smooth path into \"" << m_smoothFile << "\"" << endl;
-        WritePath(m_smoothFile, m_path);
-      }
-    }
-    if(this->m_recordKeep) stats->StopClock("Path Smoother"); 
+  if(m_pathModifierLabel != "") {
+    vector<CfgType> pathTmp;
+    this->GetMPProblem()->GetPathModifier(m_pathModifierLabel)->Modify(m_path, pathTmp);
+    m_path = pathTmp;
   }
-  else{
-    cerr << "*S* Error. m_pathVIDs in " << this->GetNameAndLabel() << " is empty. Aborting smoothing operation(s)." << endl;
-    m_maSmooth = false;
-  }
-}
-
-template<class MPTraits>
-void
-Query<MPTraits>::MedialAxisSmooth(){
-  //This function assumes that m_pathVIDs is not empty because the previous call to
-  //Smooth() should prevent the call of this function whenever it is empty
-  if(this->m_debug) cout << "\n*M* Executing Query::MedialAxisSmooth()" << endl;
-
-  LocalPlannerPointer maLP = this->GetMPProblem()->GetLocalPlanner(m_malpLabel);
-  bool result = maLP->GetName()=="MedialAxisLP";
-  if(result){
-    StatClass* stats = this->GetMPProblem()->GetStatClass();
-    GraphType* graph = this->GetMPProblem()->GetRoadmap()->GetGraph();
-    shared_ptr<Boundary> bBox = this->GetMPProblem()->GetEnvironment()->GetBoundary();
-    MedialAxisUtility<MPTraits> mau = dynamic_cast<MedialAxisLP<MPTraits>*>(maLP.get())->GetMedialAxisUtility();
-
-    if(this->m_recordKeep) stats->StartClock("Medial Axis Path Smoother"); 
-    size_t n = m_pathVIDs.size();
-
-    //Copy all the nodes from m_pathVIDs to avoid modifying them
-    vector<CfgType> pushedNodes;
-    size_t i;
-    for(i=0;i<n;++i){
-      pushedNodes.push_back(graph->GetVertex(m_pathVIDs[i]));
-    }
-
-    //Copying the start and goal nodes
-    CfgType& start = pushedNodes[0];
-    CfgType& goal = pushedNodes[n-1];
-
-    //Push all the nodes of the path
-    i = 0;
-    while(result && i<n){
-      result = mau.PushToMedialAxis(pushedNodes[i], bBox);
-      //Print a debug statement if succeeded.
-      if(this->m_debug && result)
-        cout << "*M* Node " << i << " successfully pushed" << endl;
-      ++i;
-    }
-    if(result){//If all the nodes were pushed correctly
-      //Create the variables used to connect the nodes
-      Environment* env = this->GetMPProblem()->GetEnvironment();
-      DistanceMetricPointer dm = this->GetMPProblem()->GetDistanceMetric(m_dmLabel);
-      LocalPlannerPointer envLP = this->GetMPProblem()->GetLocalPlanner(m_lpLabel);
-      LPOutput<MPTraits> tmpOutput;
-      double posRes = env->GetPositionRes();
-      double oriRes = env->GetOrientationRes();
-
-      //Make room for the path
-      m_path.clear();
-
-      //Connect the start configuration and its pushed version
-      result = envLP->IsConnected(env, *stats, dm, start, pushedNodes[0], &tmpOutput, posRes, oriRes, true, true, true);
-      if(result){
-        m_path.push_back(start);
-        AddToPath(&tmpOutput, pushedNodes[0]);
-        
-        //Connect the nodes that are already in the medial axis
-        i = 1;
-        while(result && i<n){
-          result = maLP->IsConnected(env, *stats, dm, pushedNodes[i-1], pushedNodes[i], &tmpOutput, posRes, oriRes, true, true, true);
-          if(result){
-            AddToPath(&tmpOutput, pushedNodes[i]);
-          }
-          else{ //Failure control measures (FCM)
-            if(this->m_debug) cout << "*M*\t" << maLP->GetNameAndLabel() << " failed to connect the pair of nodes (" << (i-1) << ", " << i << ")" << endl
-              << "*M*\tAttempting Failure Control Measures (FCM):" << endl;
-            //First FCM: Try with the other local planner
-            result = envLP->IsConnected(env, *stats, dm, pushedNodes[i-1], pushedNodes[i], &tmpOutput, posRes, oriRes, true, true, true);
-            if(result){
-              if(this->m_debug) cout << "*M*\t\tFCM1: " << envLP->GetNameAndLabel() << " succeeded" << endl;
-              AddToPath(&tmpOutput, pushedNodes[i]);
-            }
-            else{
-              if(this->m_debug) cout << "*M*\t\tFCM1: " << envLP->GetNameAndLabel() << " also failed" << endl;
-              //Second FCM: Connect the nodes in the medial axis to the original path and back
-              //This FCM should not fail, unless envLP is very badly chosen
-              //Copying the old configurations
-              CfgType oldCfg1 = graph->GetVertex(m_pathVIDs[i-1]);
-              CfgType oldCfg2 = graph->GetVertex(m_pathVIDs[i]);
-              result = envLP->IsConnected(env, *stats, dm, pushedNodes[i-1], oldCfg1, &tmpOutput, posRes, oriRes, true, true, true);
-              if(result){
-                if(this->m_debug) cout << "*M*\t\tFCM2: First connection established" << endl;
-                AddToPath(&tmpOutput, oldCfg1);
-                result = envLP->IsConnected(env, *stats, dm, oldCfg1, oldCfg2, &tmpOutput, posRes, oriRes, true, true, true);
-              }
-              if(result){
-                if(this->m_debug) cout << "*M*\t\tFCM2: Second connection established" << endl;
-                AddToPath(&tmpOutput, oldCfg2);
-                result = envLP->IsConnected(env, *stats, dm, oldCfg2, pushedNodes[i], &tmpOutput, posRes, oriRes, true, true, true);
-              }
-              if(result){
-                if(this->m_debug) cout << "*M*\t\tFCM2: Succeeded" << endl;
-                AddToPath(&tmpOutput, pushedNodes[i]);
-              }
-              else{
-                if(this->m_debug) cout << "*M*\t\tFCM2: Failed" << endl;
-              }
-            }
-          }
-          ++i;
-        }
-        if(result){//If all the intermediate connections succeeded
-          //Connect the goal configuration and its pushed version
-          result = envLP->IsConnected(env, *stats, dm, pushedNodes[n-1], goal, &tmpOutput, posRes, oriRes, true, true, true);
-          if(result){
-            //Add to path
-            AddToPath(&tmpOutput, goal);
-            /*TODO
-             * Remove Branches Algorithm (from m_path)
-             * */
-
-            //Write the path
-            if(m_maSmoothFile==""){
-              cerr << "*M* Warning: maSmoothFile was not specified. Outputting smoothed path to "
-                << "\"Basic.maSmooth.path\" instead." << endl;
-              WritePath("Basic.maSmooth.path", m_path);
-            }
-            else{
-              if(this->m_debug) cout << "*M* Writing medial axis smoothed path into \""
-                << m_maSmoothFile << "\"" << endl;
-              WritePath(m_maSmoothFile, m_path);
-            }
-          }
-        }
-        else{
-          //If this happens, another lpLabel should be used.
-          //vcLabel in malpLabel could be causing trouble too
-          if(this->m_debug) cout << "*M* \tSecond failure control measure also failed" << endl;
-        }
-      }
-      else{
-        //If this happens, another lpLabel should be used.
-        //A medial axis local planner is not a good choice when the start and goal are not on the medial axis.
-        if(this->m_debug) cout << "*M* Local Planner " << envLP->GetNameAndLabel() << " could not connect the start to its pushed version" << endl;
-      }
-    }
-    else{
-      if(this->m_debug) cout << "*M* Could not push the configuration in m_pathVIDs[" << (i-1) << "]" << endl;
-    }
-    if(this->m_recordKeep) stats->StopClock("Medial Axis Path Smoother");
-  }
-  else{
-    cerr << "*M* m_malpLabel = \"" << m_malpLabel << "\" in " << this->GetNameAndLabel()
-      << " needs to point to a MedialAxisLP. Will not execute MedialAxisSmooth()" << endl;
-  }
-}
-
-//Auxiliary function created to avoid checking emptiness everytime
-//Adds the path that is stored in lpOutput to m_path as well as the _end configuration
-template<class MPTraits>
-void
-Query<MPTraits>::AddToPath(LPOutput<MPTraits>* _lpOutput, CfgType& _end){
-  if(!_lpOutput->path.empty()){
-    m_path.insert(m_path.end(), _lpOutput->path.begin(), _lpOutput->path.end());
-  }
-  m_path.push_back(_end);
 }
 
 // Checks validity of path, recreates path if possible
 template<class MPTraits>
 bool
 Query<MPTraits>::CanRecreatePath(RoadmapType* _rdmp, vector<VID>& _attemptedPath, vector<CfgType>& _recreatedPath) {
-  StatClass* stats = this->GetMPProblem()->GetStatClass();
   _recreatedPath.push_back(_rdmp->GetGraph()->GetVertex(*(_attemptedPath.begin())));
   for(typename vector<VID>::iterator it = _attemptedPath.begin(); it+1 != _attemptedPath.end(); it++) {
     LPOutput<MPTraits> ci;
@@ -729,17 +467,16 @@ Query<MPTraits>::CanRecreatePath(RoadmapType* _rdmp, vector<VID>& _attemptedPath
     CfgType col;
 
     if(this->GetMPProblem()->GetLocalPlanner(m_lpLabel)->IsConnected(
-          this->GetMPProblem()->GetEnvironment(), *stats, this->GetMPProblem()->GetDistanceMetric(m_dmLabel),
           _rdmp->GetGraph()->GetVertex(*it), _rdmp->GetGraph()->GetVertex(*(it+1)),
           col, &ci, this->GetMPProblem()->GetEnvironment()->GetPositionRes(),
           this->GetMPProblem()->GetEnvironment()->GetOrientationRes(), true, true, true)) {
-      _recreatedPath.insert(_recreatedPath.end(), ci.path.begin(), ci.path.end());
+      _recreatedPath.insert(_recreatedPath.end(), ci.m_path.begin(), ci.m_path.end());
       _recreatedPath.push_back(_rdmp->GetGraph()->GetVertex(*(it+1)));
     }
     else {
-      cerr << "Error::When querying, invalid edge of graph was found between vid pair (" 
+      cerr << "Error::When querying, invalid edge of graph was found between vid pair ("
         << *it << ", " << *(it+1) << ")" << " outputting error path to \"error.path\" and exiting." << endl;
-      _recreatedPath.insert(_recreatedPath.end(), ci.path.begin(), ci.path.end());
+      _recreatedPath.insert(_recreatedPath.end(), ci.m_path.begin(), ci.m_path.end());
       _recreatedPath.push_back(col);
       WritePath("error.path", _recreatedPath);
       exit(1);
@@ -768,25 +505,20 @@ Query<MPTraits>::ReadQuery(string _filename) {
 
 //initialize variable defaults
 template<class MPTraits>
-void 
+void
 Query<MPTraits>::Initialize() {
   this->SetName("Query");
   m_searchAlg = ASTAR;
   m_pathFile = "Basic.path";
-  m_smoothFile = "Basic.smooth.path";
-  m_maSmoothFile = "Basic.maSmooth.path";
   m_intermediateFile = "";
   m_lpLabel = "";
   m_dmLabel = "";
-  m_malpLabel = "";
   m_deleteNodes = false;
-  m_smooth = false;
-  m_maSmooth = false;
 }
 
 template<class MPTraits>
 void
-Query<MPTraits>::SetSearchAlgViaString(string _alg){
+Query<MPTraits>::SetSearchAlgViaString(string _alg) {
   if(_alg == "dijkstras")
     m_searchAlg = DIJKSTRAS;
   else if(_alg == "astar")

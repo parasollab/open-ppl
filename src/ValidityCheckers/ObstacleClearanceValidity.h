@@ -14,9 +14,9 @@ class ObstacleClearanceValidity : public ValidityCheckerMethod<MPTraits> {
 
     virtual ~ObstacleClearanceValidity() { }
 
-    virtual void PrintOptions(ostream& _os);
+    virtual void PrintOptions(ostream& _os) const;
 
-    virtual bool IsValidImpl(CfgType& _cfg, Environment* _env, StatClass& _stats, CDInfo& _cdInfo, string* _callName);
+    virtual bool IsValidImpl(CfgType& _cfg, CDInfo& _cdInfo, const string& _callName);
 
   private:
     double m_obstClearance;
@@ -38,7 +38,7 @@ ObstacleClearanceValidity<MPTraits>::ObstacleClearanceValidity(typename MPTraits
 
 template<class MPTraits>
 void
-ObstacleClearanceValidity<MPTraits>::PrintOptions(ostream& _os){
+ObstacleClearanceValidity<MPTraits>::PrintOptions(ostream& _os) const {
   ValidityCheckerMethod<MPTraits>::PrintOptions(_os);
   _os << "\tRequired Clearance::" << m_obstClearance << endl;
   _os << "\tClearanceUtil::" << endl;
@@ -46,17 +46,18 @@ ObstacleClearanceValidity<MPTraits>::PrintOptions(ostream& _os){
 }
 
 template<class MPTraits>
-bool 
-ObstacleClearanceValidity<MPTraits>::IsValidImpl(CfgType& _cfg, Environment* _env, StatClass& _stats, CDInfo& _cdInfo, string* _callName) {
+bool
+ObstacleClearanceValidity<MPTraits>::IsValidImpl(CfgType& _cfg, CDInfo& _cdInfo, const string& _callName) {
+  Environment* env = this->GetMPProblem()->GetEnvironment();
 
-  shared_ptr<Boundary> bb = _env->GetBoundary();
+  shared_ptr<Boundary> b = env->GetBoundary();
   _cdInfo.ResetVars();
   _cdInfo.m_retAllInfo = true;
 
   CfgType cfg = _cfg;
   CfgType dummy;
 
-  bool valid = m_clearanceUtility.CollisionInfo(cfg, dummy, bb, _cdInfo);
+  bool valid = m_clearanceUtility.CollisionInfo(cfg, dummy, b, _cdInfo);
 
   if(this->m_debug){
     cout << "CFG::" << _cfg << endl;

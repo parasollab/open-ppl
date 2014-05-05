@@ -33,12 +33,12 @@ using namespace std;
 
 #ifdef _PARALLEL
 void stapl_main(int _argc, char* _argv[])
-#else 
+#else
 int main(int _argc, char** _argv)
 #endif
 {
 
-  if(_argc < 3 || !(string(_argv[1]) == "-f")){ 
+  if(_argc < 3 || !(string(_argv[1]) == "-f")){
     cerr << "Error: Incorrect usage. Usage: -f options.xml" << endl;
     exit(1);
   }

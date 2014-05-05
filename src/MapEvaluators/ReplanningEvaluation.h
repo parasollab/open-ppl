@@ -12,8 +12,8 @@ class ReplanningEvaluation : public LazyQuery<MPTraits> {
     typedef typename MPProblemType::GraphType GraphType;
     typedef typename MPProblemType::ValidityCheckerPointer ValidityCheckerPointer;
     typedef typename MPProblemType::VID VID;
-    typedef typename GraphType::vertex_iterator vertex_iterator;
-    typedef typename GraphType::adj_edge_iterator adj_edge_iterator;
+    typedef typename GraphType::vertex_iterator VertexIterator;
+    typedef typename GraphType::adj_edge_iterator AdjEdgeIterator;
 
     ReplanningEvaluation();
     ReplanningEvaluation(string _envFile, string _vcLabel, const char* _queryFileName = "") :
@@ -21,21 +21,21 @@ class ReplanningEvaluation : public LazyQuery<MPTraits> {
       this->SetName("ReplanningEvaluation");
     }
     ReplanningEvaluation(CfgType _start, CfgType _goal, string _vcLabel) :
-      m_envFile(""), LazyQuery<MPTraits>(_start, _goal, _vcLabel) { 
+      m_envFile(""), LazyQuery<MPTraits>(_start, _goal, _vcLabel) {
       this->SetName("ReplanningEvaluation");
     }
     ReplanningEvaluation(typename MPTraits::MPProblemType* _problem, XMLNodeReader& _node);
     virtual ~ReplanningEvaluation();
-    
-    virtual void PrintOptions(ostream& _os);
+
+    virtual void PrintOptions(ostream& _os) const;
 
     virtual bool operator()();
 
-    virtual bool CanRecreatePath(RoadmapType* _rdmp, 
+    virtual bool CanRecreatePath(RoadmapType* _rdmp,
       vector<VID>& _attemptedPath, vector<CfgType>& _recreatedPath);
 
   private:
-    void SetEnvironment();  
+    void SetEnvironment();
     void ResetValidity();
     void RemoveInvalidPortions();
     vector<VID> GetRoots();
@@ -53,7 +53,7 @@ ReplanningEvaluation<MPTraits>::ReplanningEvaluation() {
 
 template<class MPTraits>
 ReplanningEvaluation<MPTraits>::ReplanningEvaluation(typename MPTraits::MPProblemType* _problem, XMLNodeReader& _node)
-  : LazyQuery<MPTraits>(_problem, _node, false) {
+    : LazyQuery<MPTraits>(_problem, _node, false) {
   this->SetName("ReplanningEvaluation");
   m_envFile = _node.stringXMLParameter("envFile", true, "", "Environment filename");
 }
@@ -64,7 +64,7 @@ ReplanningEvaluation<MPTraits>::~ReplanningEvaluation() {
 
 template<class MPTraits>
 void
-ReplanningEvaluation<MPTraits>::PrintOptions(ostream& _os) {
+ReplanningEvaluation<MPTraits>::PrintOptions(ostream& _os) const {
   LazyQuery<MPTraits>::PrintOptions(_os);
   _os << "\n\tEnvironment = " << m_envFile <<endl;
 }
@@ -75,31 +75,31 @@ ReplanningEvaluation<MPTraits>::operator()() {
   StatClass* ReplanStatClass = this->GetMPProblem()->GetStatClass();
   string replanClockName = "Replan Evaluator  ";
   ReplanStatClass->StartClock(replanClockName);
-  
+
   static bool flag = false;
   if(flag == false){ //called first time
     SetEnvironment();
     ResetValidity();
     flag = true;
   }
-  
+
   bool ans = Query<MPTraits>::operator()();
-  
+
   ReplanStatClass->StopClock(replanClockName);
   return ans;
 }
 
 template<class MPTraits>
 bool
-ReplanningEvaluation<MPTraits>::CanRecreatePath(RoadmapType* _rdmp, 
-        vector<VID>& _attemptedPath, vector<CfgType>& _recreatedPath) {
+ReplanningEvaluation<MPTraits>::CanRecreatePath(RoadmapType* _rdmp,
+    vector<VID>& _attemptedPath, vector<CfgType>& _recreatedPath) {
   bool ans = LazyQuery<MPTraits>::CanRecreatePath(_rdmp, _attemptedPath, _recreatedPath);
   if(!ans) {
-    StatClass* RemoveStatClass = this->GetMPProblem()->GetStatClass();
+    StatClass* removeStats = this->GetMPProblem()->GetStatClass();
     string removeClockName = "Remove Invalid  ";
-    RemoveStatClass->StartClock(removeClockName);
+    removeStats->StartClock(removeClockName);
     RemoveInvalidPortions();
-    RemoveStatClass->StopClock(removeClockName);
+    removeStats->StopClock(removeClockName);
   }
   return ans;
 }
@@ -118,9 +118,9 @@ template<class MPTraits>
 void
 ReplanningEvaluation<MPTraits>::ResetValidity() {
   GraphType* g = this->GetMPProblem()->GetRoadmap()->GetGraph();
-  for(vertex_iterator vi = g->begin(); vi!=g->end(); vi++){
+  for(VertexIterator vi = g->begin(); vi!=g->end(); vi++){
     ((*vi).property()).SetLabel("VALID",false);
-    for(adj_edge_iterator ei =(*vi).begin(); ei!=(*vi).end(); ei++){
+    for(AdjEdgeIterator ei =(*vi).begin(); ei!=(*vi).end(); ei++){
       (*ei).property().SetChecked(MAX_INT);
     }
   }
@@ -136,7 +136,7 @@ ReplanningEvaluation<MPTraits>::RemoveInvalidPortions() {
   stapl::sequential::vector_property_map<GraphType, size_t> cmap;
   get_cc_stats(*g, cmap, ccs);
 
-  //Delete CCs other than the one containing roots 
+  //Delete CCs other than the one containing roots
   for(typename vector<pair<size_t, VID> >::iterator ccIt = ccs.begin(); ccIt != ccs.end(); ccIt++) {
     bool partOfRootCC = false;
     for(typename vector<VID>::iterator vecIt = vecRoots.begin(); vecIt!=vecRoots.end(); vecIt++) {
@@ -151,7 +151,7 @@ ReplanningEvaluation<MPTraits>::RemoveInvalidPortions() {
       get_cc(*g, cmap, ccIt->second, cciVIDs);
       for(typename vector<VID>::iterator vecit=cciVIDs.begin(); vecit!=cciVIDs.end(); vecit++) {
         g->delete_vertex(*vecit);
-      }  
+      }
     }
   }
 }
@@ -159,14 +159,14 @@ ReplanningEvaluation<MPTraits>::RemoveInvalidPortions() {
 template<class MPTraits>
 vector<typename ReplanningEvaluation<MPTraits>::VID>
 ReplanningEvaluation<MPTraits>::GetRoots() {
-  GraphType* g = this->GetMPProblem()->GetRoadmap()->GetGraph(); 
+  GraphType* g = this->GetMPProblem()->GetRoadmap()->GetGraph();
 
   vector<VID> vecRoot;
   for(typename vector<CfgType>::iterator cit1 = this->m_query.begin(), cit2 = cit1+1; cit2!=this->m_query.end(); cit1++, cit2++) {
     if(g->IsVertex(*cit1)) {
       VID qVID = g->GetVID(*cit1);
       vecRoot.push_back(qVID);
-    }  
+    }
   }
   return vecRoot;
 }

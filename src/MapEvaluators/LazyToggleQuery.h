@@ -19,27 +19,27 @@ class LazyToggleQuery : public LazyQuery<MPTraits> {
     typedef typename MPProblemType::VID VID;
 
     LazyToggleQuery(const char* _queryFileName = "", string _vcLabel = "") :
-      LazyQuery<MPTraits>(_queryFileName, _vcLabel) { this->SetName("LazyToggleQuery"); }
-    LazyToggleQuery(CfgType _start, CfgType _goal, string _vcLabel) :
-      LazyQuery<MPTraits>(_start, _goal, _vcLabel) { this->SetName("LazyToggleQuery"); }
+      LazyQuery<MPTraits>(_queryFileName, _vcLabel), m_iterative(true) { this->SetName("LazyToggleQuery"); }
+    LazyToggleQuery(const CfgType& _start, const CfgType& _goal, string _vcLabel) :
+      LazyQuery<MPTraits>(_start, _goal, _vcLabel), m_iterative(true) { this->SetName("LazyToggleQuery"); }
     LazyToggleQuery(MPProblemType* _problem, XMLNodeReader& _node, bool _warn = true);
     virtual ~LazyToggleQuery() {};
 
     void ParseXML(XMLNodeReader& _node);
-    virtual void PrintOptions(ostream& _os);
+    virtual void PrintOptions(ostream& _os) const;
 
     // Overrides PerformQuery in Query, calls Query::PerformQuery() and adds Toggle functionality
     virtual bool PerformQuery(CfgType _start, CfgType _goal, RoadmapType* _rdmp);
 
     // Overrides LazyQuery::ProcessInvalidNode, called in LazyQuery::CanRecreatePath()
-    virtual void ProcessInvalidNode(CfgType node);
+    virtual void ProcessInvalidNode(const CfgType& node);
 
   protected:
     string m_toggleConnect;   // Connection method for blocked nodes
     bool m_iterative;         // Process the queue in an iterative fashion?
 
   private:
-    deque<CfgType> q;             // A list of both free and blocked witness nodes
+    deque<CfgType> m_q;             // A list of both free and blocked witness nodes
 };
 
 template<class MPTraits>
@@ -65,7 +65,7 @@ LazyToggleQuery<MPTraits>::ParseXML(XMLNodeReader& _node) {
 
 template<class MPTraits>
 void
-LazyToggleQuery<MPTraits>::PrintOptions(ostream& _os) {
+LazyToggleQuery<MPTraits>::PrintOptions(ostream& _os) const {
   LazyQuery<MPTraits>::PrintOptions(_os);
   _os << "\ttoggleConnect = " << m_toggleConnect << endl;
   _os << "\titerative = " << m_iterative << endl;
@@ -74,10 +74,10 @@ LazyToggleQuery<MPTraits>::PrintOptions(ostream& _os) {
 // Overrides LazyQuery::ProcessInvalidNode, called in LazyQuery::CanRecreatePath()
 template<class MPTraits>
 void
-LazyToggleQuery<MPTraits>::ProcessInvalidNode(CfgType node) {
+LazyToggleQuery<MPTraits>::ProcessInvalidNode(const CfgType& node) {
   if(this->m_debug)
     cout << "*T* Pushing blocked node into queue: " << node << endl;
-  q.push_back(node);
+  m_q.push_back(node);
 }
 
 // Overrides PerformQuery in Query, calls Query::PerformQuery() and adds Toggle functionality
@@ -122,9 +122,9 @@ LazyToggleQuery<MPTraits>::PerformQuery(CfgType _start, CfgType _goal, RoadmapTy
     // Process the queue
     if(this->m_debug)
       cout << "*T* Processing the queue" << endl;
-    while(!q.empty()) {
-      CfgType node = q.front();
-      q.pop_front();
+    while(!m_q.empty()) {
+      CfgType node = m_q.front();
+      m_q.pop_front();
 
       if(node.GetLabel("VALID")) { // Lazy-connect
         VID newVID = _rdmp->GetGraph()->AddVertex(node);
@@ -148,15 +148,15 @@ LazyToggleQuery<MPTraits>::PerformQuery(CfgType _start, CfgType _goal, RoadmapTy
         VID newVID = bRdmp->GetGraph()->AddVertex(node);
         if(this->m_debug)
           cout << "*T* Adding a blocked node to roadmap: " << node << ", VID = " << newVID << endl;
-        size_t size = q.size();
+        size_t size = m_q.size();
         this->GetMPProblem()->GetValidityChecker(this->m_vcLabel)->ToggleValidity();
         if(m_iterative)
-          this->GetMPProblem()->GetConnector(m_toggleConnect)->Connect(bRdmp, *stats, cmap, newVID, front_inserter(q));
+          this->GetMPProblem()->GetConnector(m_toggleConnect)->Connect(bRdmp, *stats, cmap, newVID, front_inserter(m_q));
         else
-          this->GetMPProblem()->GetConnector(m_toggleConnect)->Connect(bRdmp, *stats, cmap, newVID, back_inserter(q));
+          this->GetMPProblem()->GetConnector(m_toggleConnect)->Connect(bRdmp, *stats, cmap, newVID, back_inserter(m_q));
         if(this->m_debug)
-          for(size_t i = 0; i < q.size()-size; i++)
-            cout << "*T* Pushing free node into queue: " << q[i] << endl;
+          for(size_t i = 0; i < m_q.size()-size; i++)
+            cout << "*T* Pushing free node into queue: " << m_q[i] << endl;
         this->GetMPProblem()->GetValidityChecker(this->m_vcLabel)->ToggleValidity();
       }
     }

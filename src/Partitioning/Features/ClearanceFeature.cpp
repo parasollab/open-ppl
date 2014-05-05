@@ -23,8 +23,6 @@ vector<double> ClearanceFeature::Collect(vector<VID>& vids) {
   vector<double> clearance;
 
   RoadmapGraph<CfgType, WeightType>* rdmp = GetMPProblem()->GetRoadmap()->m_pRoadmap;
-  StatClass* pStatClass = GetMPProblem()->GetStatClass();
-  Environment *env = GetMPProblem()->GetEnvironment();
   ValidityChecker::ValidityCheckerPointer vc=GetMPProblem()->GetValidityChecker()->GetMethod(m_vc);
 
   typedef vector<VID>::iterator VIT;
@@ -33,7 +31,7 @@ vector<double> ClearanceFeature::Collect(vector<VID>& vids) {
     _cdInfo.m_retAllInfo=true;
     CfgType cfg=rdmp->find_vertex(*vit)->property();
     string callee = "ClearanceFeature::Collect";
-    vc->IsValid(cfg, env, *pStatClass, _cdInfo, &callee);
+    vc->IsValid(cfg, _cdInfo, &callee);
     clearance.push_back(_cdInfo.m_minDist);
   }
 
