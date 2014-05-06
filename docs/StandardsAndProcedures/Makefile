@@ -1,4 +1,5 @@
 default:
-	latex standards; latex standards; dvips standards
+	pdflatex standards
+	pdflatex standards
 clean:
 	rm -f *.aux *.blg *.bbl *.dvi *.log *.ps *.pdf
