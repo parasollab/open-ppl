@@ -28,7 +28,7 @@ ExampleClass(int _v) : m_value(_v) {
 
 template<class T>
 void
-ExampleClass::
+ExampleClass<T>::
 MyFunction(int _v) {
   //do some fancy stuff
   m_value += _v;

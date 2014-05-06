@@ -156,7 +156,7 @@ necessary (i.e., no m\_pVariable for a pointer).
 \begin{lstlisting}
 class MyClass{
   public:
-    int myInt;
+    int m_myInt;
 }
 \end{lstlisting}
 
@@ -174,7 +174,7 @@ cased beginning with a capital letter and variables should be camel cased
 beginning with a lowercase letter.
 
 \begin{lstlisting}
-<MyXMLTag label="label" myXMLVarable="false"/>
+<MyXMLTag label="label" myXMLVariable="false"/>
 <MyXMLTagWithChildren label="label2">
   <Child method="label">
   <Child method="label2">
@@ -220,18 +220,18 @@ class MyClass {
 \end{lstlisting}
 
 Additionally, if the body of control flow structures is one line, curly braces
-are not required, and the body must appeat on a new line.
+are not required, and the body must appear on a new line.
 
 \begin{lstlisting}
 if(true)
-  doSomething();
+  DoSomething();
 \end{lstlisting}
 
 \subsection{Function Call/Declaration/Definition}
 Function calls or declarations which are "long" should be split between multiple
 lines when necessary to aid in reading the code.
 
-Definitions of functions should be outside the class, except in one-line
+Definitions of functions should be outside the class definition, except in one-line
 functions. Definitions shall be formatted with the template, return type, class
 name, and function name all on separate lines. The function parameters may span
 multiple lines if necessary.
@@ -241,7 +241,7 @@ multiple lines if necessary.
  */
 template<class MPTraits>
 ReturnType
-ClassName::
+ClassName<MPTraits>::
 FunctionName(parameter list which may span multiple lines) {
 }
 \end{lstlisting}
@@ -303,7 +303,7 @@ throw PMPLException("MyExceptionType", WHERE, "My error message");
 \subsection{STL and External Libraries}
 
 The STL and External Libraries, e.g, boost and CGAL should be used as much as
-possible, except when there is a good reason not too, e.g., efficiency.
+possible, except when there is a good reason not to, e.g., efficiency.
 
 \subsection{Statistics Tracking}
 
