@@ -2,7 +2,7 @@
  *
  *General Description
  * Configuration Data Class, it has all the interface needed
- * by other Motion Planning classes. 
+ * by other Motion Planning classes.
  */
 
 #ifndef CFG_H_
@@ -10,7 +10,7 @@
 
 #ifdef _PARALLEL
 #include "views/proxy.h"
-#endif 
+#endif
 #include <vector>
 #include <map>
 
@@ -65,7 +65,7 @@ class ClearanceInfo {
  *(like weighted sum, AlmostEqual.. ) are also provided.
  *This class also provides input/output functions to read/write instances of this class
  *to many kinds of file (formats).
- *Morevoer, tools for create primitives of PRM, like random generation of Cfg for 
+ *Morevoer, tools for create primitives of PRM, like random generation of Cfg for
  *a given Workspace, and connections between Cfgs are also provided.
  */
 class Cfg {
@@ -130,7 +130,7 @@ class Cfg {
 
     /// methods for Distance Metric.
     virtual vector<double> GetPosition() const;
-    virtual vector<double> GetOrientation() const;  
+    virtual vector<double> GetOrientation() const;
     virtual double Magnitude() const;
     virtual double PositionMagnitude() const;
     virtual double OrientationMagnitude() const;
@@ -147,7 +147,7 @@ class Cfg {
     //
     //
     //////////////////////////////////////////////////////////////////////////////////////////
-    /** 
+    /**
      * Configuration where workspace robot's EVERY VERTEX
      * is guaranteed to lie within the environment specified bounding box If
      * not, a cfg couldn't be found in the bbx, and the program will abort.
@@ -155,7 +155,7 @@ class Cfg {
      */
     virtual void GetRandomCfg(Environment* _env);
     virtual void GetRandomCfg(Environment* _env, shared_ptr<Boundary> _bb);
-    
+
     template<class DistanceMetricPointer>
       void GetRandomRay(double _incr, Environment* _env,  DistanceMetricPointer _dm, bool _norm=true);
 
@@ -171,13 +171,13 @@ class Cfg {
     /**create a new Cfg instance whose configuration is weighted summation of the
      *first and the second Cfg.
      *The summation is done in every dimension in CSpace.
-     *@param weight should between [0,1]. this weight is for the second Cfg. 
+     *@param weight should between [0,1]. this weight is for the second Cfg.
      * The weight for the first Cfg is (1-weight)
      */
-    virtual void WeightedSum(const Cfg&, const Cfg&, double _weight = 0.5);       
+    virtual void WeightedSum(const Cfg&, const Cfg&, double _weight = 0.5);
 
     virtual void GetPositionOrientationFrom2Cfg(const Cfg&, const Cfg&);
-    
+
     template<template<class> class ClearanceUtility, class MPTraits>
       double GetSmoothingValue(ClearanceUtility<MPTraits>& _clearanceUtils, shared_ptr<Boundary> _bb);
 
@@ -190,15 +190,15 @@ class Cfg {
     //I/O Helper functions
     virtual void Read(istream& _is);
     virtual void Write(ostream& _os) const;
-  
+
   protected:
     //Normalize the orientation to the range [-1, 1)
     virtual void NormalizeOrientation(int _index = -1);
-    
+
     //generates random configuration within C-space
     virtual void GetRandomCfgImpl(Environment* _env, shared_ptr<Boundary> bb);
 
-    vector<double> m_v;   
+    vector<double> m_v;
     size_t m_robotIndex; //which active body in the env this cfg refers to
 
     static size_t m_dof;
@@ -221,12 +221,12 @@ class Cfg {
     shared_ptr<Cfg> m_witnessCfg;
 
 #ifdef _PARALLEL
-    void define_type(stapl::typer& _t)  
+    void define_type(stapl::typer& _t)
     {
       _t.member(m_v);
       _t.member(m_labelMap);
       _t.member(m_statMap);
-      _t.member(m_robotIndex); 
+      _t.member(m_robotIndex);
     }
 #endif
 }; // class Cfg
@@ -261,7 +261,7 @@ Cfg::GetSmoothingValue(ClearanceUtility<MPTraits>& _clearanceUtils, shared_ptr<B
 #ifdef _PARALLEL
 namespace stapl {
   template <typename Accessor>
-    class proxy<Cfg, Accessor> 
+    class proxy<Cfg, Accessor>
     : public Accessor {
       private:
         friend class proxy_core_access;

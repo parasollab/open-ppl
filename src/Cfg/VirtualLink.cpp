@@ -1,5 +1,5 @@
 #include "math.h"
-#include <iostream> 
+#include <iostream>
 #include "VirtualLink.h"
 #include "MPUtils.h"
 
@@ -50,7 +50,7 @@ void Link::InitializeFromRange(double rmin, double rmax)
   convexity = 1;
   coord = pair<double, double>(0,0);
 
-  leftChild = NULL;  
+  leftChild = NULL;
   rightChild = NULL;
 
   reachableRange.min = rmin;
@@ -75,16 +75,16 @@ void Link::InitializeFromChildren(Link *c0, Link *c1)
 }
 
 void Link::UpdateARange(Link *parent, Link *sibling, bool bSampleConvex)
-{  
+{
   Range toReachRange;
   if(!bSampleConvex && parent->convexity == 0)
-  { //it's enforced to be a flat configuration  
+  { //it's enforced to be a flat configuration
     toReachRange = RangeMinus(parent->availableRange, sibling->availableRange);
   }
   else
   {
     toReachRange = RangeUnion(parent->availableRange, sibling->availableRange);
-  }  
+  }
   availableRange = RangeIntersection(availableRange, toReachRange);
 
 #ifdef XINYU_DEBUG
@@ -92,7 +92,7 @@ void Link::UpdateARange(Link *parent, Link *sibling, bool bSampleConvex)
   cout << "sibling->availableRange:" << sibling->availableRange << endl;
   cout << "toReachRange:" << toReachRange << endl;
   cout << "availableRange:" << availableRange << endl;
-#endif 
+#endif
 }
 
 double Link::SampleLength(bool bSampleConvex, double gama)
@@ -125,15 +125,15 @@ double Link::SampleLength(bool bSampleConvex, double gama)
   return length;
 }
 
-double Link::SampleLength(boost::variate_generator<boost::rand48&, 
-    boost::uniform_real<> 
-    >& rand) 
+double Link::SampleLength(boost::variate_generator<boost::rand48&,
+    boost::uniform_real<>
+    >& rand)
 {
   for(vector<FamilyInfo>::iterator itrF = families.begin(); itrF != families.end(); itrF++)
   {
-    if(itrF->parent != NULL) 
+    if(itrF->parent != NULL)
       UpdateARange(itrF->parent, itrF->sibling);
-    if(availableRange.Size() < -EPS_ZERO) 
+    if(availableRange.Size() < -EPS_ZERO)
     {
       cerr << "available Range is empty! " << endl;
       return -1;
@@ -166,7 +166,7 @@ int Link::ImportTreeLinkLength(const vector<double> &lengths, int index)
   if(rightChild)
     index = rightChild->ImportTreeLinkLength(lengths, index);
 
-  return index;  
+  return index;
 }
 
 void Link::ExportTreeLinkReachableRange(vector<Range>& ranges) const {
@@ -199,7 +199,7 @@ int Link::ImportTreeLinkAvailableRange(const vector<Range> &ranges, int index)
   if(rightChild)
     index = rightChild->ImportTreeLinkAvailableRange(ranges, index);
 
-  return index;  
+  return index;
 }
 
 void Link::ExportTreeLinkConvexity(vector<int> &convexities)
@@ -224,7 +224,7 @@ Link::ImportTreeLinkConvexity(const vector<int> &convexities, int index)
   if(rightChild)
     index = rightChild->ImportTreeLinkConvexity(convexities, index);
 
-  return index;  
+  return index;
 }
 
 void Link::ExportTreeLinkLength(vector<double> &lengths, vector<int> &convexities)
@@ -250,10 +250,10 @@ int Link::ImportTreeLinkLength(const vector<double> &lengths, const vector<int> 
   if(rightChild)
     index = rightChild->ImportTreeLinkLength(lengths, convexities, index);
 
-  return index;  
+  return index;
 }
 
-//Link* 
+//Link*
 void Link::FindRootPathways(Link *leaf, vector<Link*> &curPathway, vector<vector<Link*> > &pathwayEnsemble)
 {
   curPathway.push_back(leaf);
@@ -264,7 +264,7 @@ void Link::FindRootPathways(Link *leaf, vector<Link*> &curPathway, vector<vector
     for(size_t i=0; i<leaf->families.size(); ++i)
       FindRootPathways(leaf->families[i].parent, curPathway, pathwayEnsemble);
 
-  curPathway.pop_back();    
+  curPathway.pop_back();
 }
 
 bool Link::MatchPathways(const vector<vector<Link *> > &pathEnsembleLeft, const vector<vector<Link *> > &pathEnsembleRight,
@@ -311,7 +311,7 @@ double Link::CalculateJointAngle(Link *left, Link *right)
   double topJointAngle = CosineAngle(leftAncestors.back()->GetLength(), rightAncestors.back()->GetLength(), ancestor->GetLength());
   if (ancestor->leftChild == rightAncestors.back())
     topJointAngle *= -1;
-  if (ancestor->convexity < 0) 
+  if (ancestor->convexity < 0)
     topJointAngle *= -1;
 
   double leftAngle = 0;
@@ -382,8 +382,8 @@ bool Link::RecursiveSample(double l, bool bSampleConvex, double gama)
 
 bool Link::RecursiveSample(boost::variate_generator<boost::rand48&,
     boost::uniform_real<>
-    >& rand, 
-    double l) 
+    >& rand,
+    double l)
 {
   if(l < -EPS_ZERO)
   {
@@ -409,7 +409,7 @@ bool Link::RecursiveSample(boost::variate_generator<boost::rand48&,
 }
 
 inline bool Link::SetLength(double l)
-{  
+{
   if((l >= availableRange.min - EPS_ZERO) && (l <= availableRange.max + EPS_ZERO))
   {
     length = availableRange.min = availableRange.max = l;
@@ -453,14 +453,14 @@ void Link::ResetTree()
     rightChild->ResetTree();
 }
 
-bool Link::CanClose() 
+bool Link::CanClose()
 {
   if(!leftChild && !rightChild)
     return true;
   Range r = RangeUnion(leftChild->availableRange, rightChild->availableRange);
   if(availableRange.HasIntersection(r))
     return true;
-  else 
+  else
     return false;
 }
 
@@ -470,7 +470,7 @@ bool Link::CanRecursiveClose()
     return true;
   if(CanClose() && leftChild->CanRecursiveClose() && rightChild->CanRecursiveClose())
     return true;
-  else 
+  else
     return false;
 }
 
@@ -485,39 +485,39 @@ void Link::FindBreachesRecursive(list<Link*> &breaches)
 }
 
   void
-Link::InterpolateLinkLength(const vector<double> &start, 
-    const vector<double> &increment, 
-    vector<double> &intermediate, 
+Link::InterpolateLinkLength(const vector<double> &start,
+    const vector<double> &increment,
+    vector<double> &intermediate,
     int index)
 {
   intermediate.resize(start.size());
   for(size_t i=0; i<start.size(); ++i)
-    intermediate[i] = start[i] + increment[i]*index; 
+    intermediate[i] = start[i] + increment[i]*index;
 }
 
   void
-Link::InterpolateLinkLength(const vector<double> &start, 
-    const vector<double> &goal, 
-    vector<double> &intermediate, 
+Link::InterpolateLinkLength(const vector<double> &start,
+    const vector<double> &goal,
+    vector<double> &intermediate,
     int nSteps,
     int index)
 {
   intermediate.resize(start.size());
   for(size_t i=0; i<start.size(); ++i)
-    intermediate[i] = start[i] + (goal[i]-start[i])*index/nSteps; 
+    intermediate[i] = start[i] + (goal[i]-start[i])*index/nSteps;
 }
 
   void
-Link::FindIncrement(const vector<double> &start, 
-    const vector<double> &goal, 
-    vector<double> &increment, 
+Link::FindIncrement(const vector<double> &start,
+    const vector<double> &goal,
+    vector<double> &increment,
     int nSteps)
 {
   increment.resize(start.size());
   for(size_t i=0; i<start.size(); ++i)
   {
-    if(i<6) 
-      increment[i] = (goal[i] - start[i]) / nSteps; 
+    if(i<6)
+      increment[i] = (goal[i] - start[i]) / nSteps;
     else if(i>=start.size()-CfgType::GetNumOfJoints()){
 
       double a = start[i];
@@ -575,13 +575,13 @@ Link *BuildTree(int i, int j, vector<Link *>& baseLinks)
     int numLeftLinks = numLinks/2;
     Link *leftChild = BuildTree(i, i+numLeftLinks-1, baseLinks);
     Link *rightChild = BuildTree(i+numLeftLinks, j, baseLinks);
-    root = new Link(leftChild, rightChild);    
+    root = new Link(leftChild, rightChild);
   }
   else if (numLinks == 1)
   {
     root = baseLinks[i];
   }
-  else 
+  else
   {
     root = NULL;
   }
@@ -620,7 +620,7 @@ Range RangeUnion(const Range &r1, const Range &r2)
   {
     r3.min = r2.min - r1.max;
   }
-  else 
+  else
   {
     r3.min = 0;
   }

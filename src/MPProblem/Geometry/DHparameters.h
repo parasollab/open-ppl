@@ -2,15 +2,15 @@
  *Denavit-Hartenberg Parameters.
  *Following is description of DH Parameter.
  *The z vector of any link frame is on a joint axis.
- * - d is the algebraic distance along axis zi-1 to the point 
- *   where the common perpendicular intersects axis zi-1. 
- * - a is the length of the common perpendicular. 
- * - theta is the angle, about zi-1, that the common perpendicular makes with vector xi-1. 
- * - alpha is the angle, about xi, that vector zi makes with vector zi-1. 
+ * - d is the algebraic distance along axis zi-1 to the point
+ *   where the common perpendicular intersects axis zi-1.
+ * - a is the length of the common perpendicular.
+ * - theta is the angle, about zi-1, that the common perpendicular makes with vector xi-1.
+ * - alpha is the angle, about xi, that vector zi makes with vector zi-1.
  *here xi, zi is x and z direction of current link.
  *xi-1 and zi-1 is x and z direction of previous link.
  *
- *Denavit-Hartenberg Parameters are used to connection 
+ *Denavit-Hartenberg Parameters are used to connection
  */
 
 #ifndef DHparameters_h

@@ -87,7 +87,7 @@ MedialAxisPathModifier<MPTraits>::ModifyImpl(vector<CfgType>& _originalPath, vec
 
     if(malp) {
       result = true;
-      MedialAxisUtility<MPTraits>& mau = malp->GetMedialAxisUtility();  
+      MedialAxisUtility<MPTraits>& mau = malp->GetMedialAxisUtility();
 
       if(this->m_recordKeep)
         stats->StartClock("Medial Axis Path Smoother");

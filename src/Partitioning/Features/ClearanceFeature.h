@@ -31,7 +31,7 @@ class CSpaceClearanceFeature : public MPFeature {
 
 
     double ApproxCSpaceClearance(Environment* env, StatClass& Stats,
-        CDInfo& cdInfo, 
+        CDInfo& cdInfo,
         DistanceMetric* dm, int n,
         bool bComputePenetration,
         MPProblem* mp,

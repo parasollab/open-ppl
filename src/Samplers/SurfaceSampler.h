@@ -84,7 +84,7 @@ class SurfaceSampler : public SamplerMethod<MPTraits> {
       typedef map<string,double>::iterator NIT;
       map<string,double> localCopy = m_customSurfaceClearance;
       for(NIT nit=localCopy.begin(); nit!=localCopy.end(); nit++) {
-	 _out << "(" << nit->first << "," << nit->second << ") "; 
+	 _out << "(" << nit->first << "," << nit->second << ") ";
       }
       _out << " ]" << endl;
     }

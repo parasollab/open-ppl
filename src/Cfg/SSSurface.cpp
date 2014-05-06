@@ -137,7 +137,7 @@ void SSSurface::IncrementTowardsGoal(const Cfg& _goal, const Cfg& _increment){
   //acceleration etc, unless we set m_dof correctly at the start
 }
 
-void SSSurface::FindIncrement(const Cfg& _start, const Cfg& _goal, int* _nTicks, 
+void SSSurface::FindIncrement(const Cfg& _start, const Cfg& _goal, int* _nTicks,
     double _positionRes, double _orientationRes){
   CfgSurface::FindIncrement(_start, _goal, _nTicks, _positionRes, _orientationRes);
 }
@@ -324,7 +324,7 @@ void SSSurface::CapValues(){
   if (m_acceleration.norm() > m_maxAccel){
     m_acceleration = m_acceleration.normalize() * m_maxAccel;
   }
-  
+
   m_steeringAngle =  NormalizeTheta(m_steeringAngle);
   m_orientation[0] = NormalizeTheta(m_orientation[0]);
   m_orientation[1] = NormalizeTheta(m_orientation[1]);
@@ -361,7 +361,7 @@ SSSurface SSSurface::Update(double _dt){
   double vel=1.0;
   if (velocity < 0)
     vel = -1.0;
-  
+
   //assume cfgs loaded in to be facing down 0,-1 instead of 0, 0
   theta = NormalizeTheta(theta+PI/2.0);
   //theta = NormalizeTheta(theta+3*PI/2.0);
@@ -377,7 +377,7 @@ SSSurface SSSurface::Update(double _dt){
       theta = theta + (vel*_dt)/turningRadius;
     }
   }//end Euler integration
-  
+
   //undo rotation from before
   toReturn.SetRotY(NormalizeTheta(theta-PI/2.0));
   //toReturn.SetRotY(NormalizeTheta(theta-3*PI/2.0));

@@ -21,17 +21,17 @@ class Roadmap {
     typedef typename MPTraits::CfgType CfgType;
     typedef typename MPTraits::WeightType WeightType;
     typedef RoadmapGraph<CfgType, WeightType> GraphType;
-    typedef typename GraphType::vertex_descriptor VID;  
+    typedef typename GraphType::vertex_descriptor VID;
 
     Roadmap();
-    Roadmap(const Roadmap<MPTraits>& _rdmp);  
+    Roadmap(const Roadmap<MPTraits>& _rdmp);
     ~Roadmap();
-    
+
     //Read graph information from roadmap file.
     void Read(string _filename);
     void Write(ostream& _os, Environment* _env);
 
-    //Append nodes and edges from one roadmap (_rdmp) into 
+    //Append nodes and edges from one roadmap (_rdmp) into
     //another roadmap (to_rdmp)
     vector<VID> AppendRoadmap(const Roadmap<MPTraits>& _rdmp);
 
@@ -59,7 +59,7 @@ Roadmap<MPTraits>::~Roadmap(){
 }
 
 template <class MPTraits>
-void 
+void
 Roadmap<MPTraits>::Read(string _filename) {
 #ifndef _PARALLEL
   ifstream  ifs(_filename.c_str());
@@ -67,12 +67,12 @@ Roadmap<MPTraits>::Read(string _filename) {
     cerr << "Warning::Cannot open file " << _filename << " in Roadmap::Read." << endl;
     return;
   }
-  string tag; 
+  string tag;
   bool moreFile = true;
   size_t count = 0;
   while(moreFile && (ifs >> tag)) {
     count++;
-    if(tag.find("GRAPHSTART") != string::npos) 
+    if(tag.find("GRAPHSTART") != string::npos)
       moreFile = false;
   }
   ifs.close();
@@ -128,12 +128,12 @@ Roadmap<MPTraits>::AppendRoadmap(const Roadmap<MPTraits>& _rdmp) {
       singleEdge.first.second=(*ei).target();
       singleEdge.second = (*ei).property();
       edges.push_back(singleEdge); //put the edge into edges
-    } 
+    }
     for(eit = edges.begin(); eit < edges.end(); eit++) {
       if(!m_graph->IsEdge((*eit).first.first, (*eit).first.second)) { //add an edge if it is not yet in m_graph
         m_graph->AddEdge((*eit).first.first, (*eit).first.second, (*eit).second);
       }
-    } //endfor eit  
+    } //endfor eit
   } //endfor vit
   return toVIDs;
 }

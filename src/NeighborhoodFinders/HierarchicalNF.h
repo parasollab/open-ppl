@@ -50,9 +50,9 @@ class HierarchicalNF : public NeighborhoodFinderMethod<MPTraits> {
   private:
     string m_nfLabel;
     string m_nfLabel2;
-    vector<pair<VID, double> > m_closest; 
+    vector<pair<VID, double> > m_closest;
     vector<VID> ccVIDs;
-   
+
 };
 
 template<class MPTraits>
@@ -66,30 +66,30 @@ HierarchicalNF<MPTraits>::FindNeighbors(RoadmapType* _rmp, InputIterator _first,
   this->StartQueryTime();
 
   GraphType* graph = _rmp->GetGraph();
-  NeighborhoodFinderPointer nf = this->GetMPProblem()->GetNeighborhoodFinder(m_nfLabel); 
+  NeighborhoodFinderPointer nf = this->GetMPProblem()->GetNeighborhoodFinder(m_nfLabel);
   NeighborhoodFinderPointer nf2 = this->GetMPProblem()->GetNeighborhoodFinder(m_nfLabel2);
- 
-  
-  nf->FindNeighbors(_rmp, _first, _last, _cfg, back_inserter(m_closest));
-  
 
- 
+
+  nf->FindNeighbors(_rmp, _first, _last, _cfg, back_inserter(m_closest));
+
+
+
  typename vector<pair<VID, double> >::const_iterator ccIt;
     stapl::sequential::vector_property_map<GraphType, size_t> cmap;
     for(ccIt = m_closest.begin(); ccIt != m_closest.end(); ccIt++) {
       cmap.reset();
       ccVIDs.clear();
-    
+
     get_cc(*graph, cmap, ccIt->first, ccVIDs);
-    }  
- 
+    }
+
   nf2->FindNeighbors(_rmp,ccVIDs.begin(),ccVIDs.end(), _cfg, _out);
 
   if(this->m_debug){
     nf->PrintOptions(cout);
     nf2->PrintOptions(cout);
-   }  
-  
+   }
+
   this->EndQueryTime();
   this->EndTotalTime();
 

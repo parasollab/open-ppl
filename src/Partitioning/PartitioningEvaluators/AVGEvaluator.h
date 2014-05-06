@@ -4,7 +4,7 @@
 #include "PartitioningEvaluator.h"
 
 class AVGEvaluator : public PartitioningEvaluator{
- public: 
+ public:
    AVGEvaluator();
    AVGEvaluator(XMLNodeReader& in_Node, MPProblem* mp);
    virtual ~AVGEvaluator(){}

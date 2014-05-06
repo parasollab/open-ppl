@@ -1,10 +1,10 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <motion_planning>
   <VizmoDebug filename="Basic"/>
-  
+
   <MPProblem>
     <environment input_env="branchs.env">
-      <robot Cfg_name="Cfg_free_tree" num_joints="5" pos_dof="3" dofs="11"> 
+      <robot Cfg_name="Cfg_free_tree" num_joints="5" pos_dof="3" dofs="11">
         <boundary type="bbox" translational_scale="1">
           <parameter id="0" Label="x" type="translational" min="-30" max="30" />
           <parameter id="1" Label="y" type="translational" min="-40" max="40" />
@@ -15,9 +15,9 @@
 
     <distance_metrics>
        <euclidean Label="euclidean"/>
-    </distance_metrics>    
+    </distance_metrics>
 
-    <validity_test>    
+    <validity_test>
       <CollisionDetection Label="cd" method="RAPID" />
     </validity_test>
 
@@ -25,8 +25,8 @@
       <BruteForceNF Label="BFNF" dmMethod="euclidean"/>
     </NeighborhoodFinder>
   </MPProblem>
-  
-  <MPStrategy>  
+
+  <MPStrategy>
     <node_generation_methods>
       <UniformRandomSampler Label="UniformRandomFree" vcMethod="cd"/>
     </node_generation_methods>
@@ -50,7 +50,7 @@
     <MetricMethods>
       <NumNodesMetric Label="NumNodes" />
     </MetricMethods>
-    
+
     <MPStrategyMethod Controller="BasicPRM">
       <BasicPRM Label="BasicPRM" seed="1234567" filename="Basic" iterations="1" dm_method="euclidean">
         <node_generation_method Method="UniformRandomFree" Number="10"/>

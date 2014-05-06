@@ -98,7 +98,7 @@ SurfaceLP<MPTraits>::IsOnSpecifiedSurface(Environment* _env, CfgType& _c1, int _
     bool isValid = false;
     Point2d pt = _c1.GetPos();
     Vector3d v(pt[0],_c1.GetHeight(),pt[1]);
-    if( this->m_debug ) 
+    if( this->m_debug )
        cout << " pos: " << v << " sid: " << _sid << " body center: " << bodyCenter << " radius: " << bodyRadius << endl;
     if( (v-bodyCenter).norm() < 3*bodyRadius ) { //quick check on radius
       double tH = polyhedron.HeightAtPt(pt, isValid);
@@ -117,7 +117,7 @@ SurfaceLP<MPTraits>::IsOnSpecifiedSurface(Environment* _env, CfgType& _c1, int _
       }
     }
     else {
-       if( this->m_debug ) 
+       if( this->m_debug )
 	  cout  << " out of range completely? " << endl;
     }
 

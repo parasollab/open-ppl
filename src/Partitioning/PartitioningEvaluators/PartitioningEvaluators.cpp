@@ -14,11 +14,11 @@ PartitioningEvaluators::PartitioningEvaluators(XMLNodeReader& in_Node, MPProblem
    for(citr = in_Node.children_begin(); citr!=in_Node.children_end(); citr++){
       if(citr->getName()=="STDEvaluator"){
          STDEvaluator* se = new STDEvaluator(*citr, mp);
-         selected.push_back(se);      }  
+         selected.push_back(se);      }
       if(citr->getName()=="AVGEvaluator"){
          AVGEvaluator* ae = new AVGEvaluator(*citr, mp);
          selected.push_back(ae);
-      }  
+      }
       citr->warnUnrequestedAttributes();
    }
 }

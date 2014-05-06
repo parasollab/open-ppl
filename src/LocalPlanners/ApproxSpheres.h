@@ -6,12 +6,12 @@
 template <class MPTraits>
 class ApproxSpheres: public LocalPlannerMethod<MPTraits> {
   public:
-    
+
     typedef typename MPTraits::CfgType CfgType;
     typedef typename MPTraits::MPProblemType MPProblemType;
     typedef typename MPProblemType::DistanceMetricPointer DistanceMetricPointer;
 
-    ApproxSpheres(bool _saveIntermediates = false, 
+    ApproxSpheres(bool _saveIntermediates = false,
         const ClearanceUtility<MPTraits>& _c = ClearanceUtility<MPTraits>());
     ApproxSpheres(MPProblemType* _problem, XMLNodeReader& _node);
     virtual ~ApproxSpheres();
@@ -19,10 +19,10 @@ class ApproxSpheres: public LocalPlannerMethod<MPTraits> {
     virtual void PrintOptions(ostream& _os) const;
 
     virtual bool IsConnected(
-        const CfgType& _c1, const CfgType& _c2, CfgType& col, 
+        const CfgType& _c1, const CfgType& _c2, CfgType& col,
         LPOutput<MPTraits>* _lpOutput,
         double _posRes, double _oriRes,
-        bool _checkCollision=true, 
+        bool _checkCollision=true,
         bool _savePath=false, bool _saveFailedPath=false);
 
   protected:
@@ -31,7 +31,7 @@ class ApproxSpheres: public LocalPlannerMethod<MPTraits> {
 
 //Definitions for Constructors and Destructor
 template <class MPTraits>
-ApproxSpheres<MPTraits>::ApproxSpheres(bool _saveIntermediates, const ClearanceUtility<MPTraits>& _c) : 
+ApproxSpheres<MPTraits>::ApproxSpheres(bool _saveIntermediates, const ClearanceUtility<MPTraits>& _c) :
     LocalPlannerMethod<MPTraits>(_saveIntermediates), m_clearUtil(_c) {
   this->SetName("ApproxSpheres");
 }
@@ -60,10 +60,10 @@ ApproxSpheres<MPTraits>::PrintOptions(ostream& _os) const {
 template <class MPTraits>
 bool
 ApproxSpheres<MPTraits>::
-IsConnected(const CfgType& _c1, const CfgType& _c2, CfgType& col, 
+IsConnected(const CfgType& _c1, const CfgType& _c2, CfgType& col,
     LPOutput<MPTraits>* _lpOutput,
     double _posRes, double _oriRes,
-    bool _checkCollision, 
+    bool _checkCollision,
     bool _savePath, bool _saveFailedPath) {
 
   StatClass* _stats = this->GetMPProblem()->GetStatClass();
@@ -103,10 +103,10 @@ IsConnected(const CfgType& _c1, const CfgType& _c2, CfgType& col,
   if (c1Clearance + c2Clearance >= dist) {
     _stats->IncLPConnections(this->GetNameAndLabel());
     return true;
-  } 
+  }
   else {
     return false;
-  } 
+  }
 }
 
 #endif

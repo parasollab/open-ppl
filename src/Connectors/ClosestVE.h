@@ -322,7 +322,7 @@ ClosestVE<MPTraits>::Connect(RoadmapType* _rm, StatClass& _stats,
   typedef typename MPProblemType::RoadmapType RoadmapType;
   typedef typename RoadmapType::GraphType GraphType;
   typedef typename GraphType::VI VI;
-  
+
   DistanceMetricPointer dm = this->GetMPProblem()->GetNeighborhoodFinder(this->m_nfLabel)->GetDMMethod();
   Environment* env = this->GetMPProblem()->GetEnvironment();
   LocalPlannerPointer lp = this->GetMPProblem()->GetLocalPlanner(this->m_lpLabel);
@@ -339,12 +339,12 @@ ClosestVE<MPTraits>::Connect(RoadmapType* _rm, StatClass& _stats,
   }
 
   vector< pair<pair<VID,VID>,WeightType> > edges;
-   
+
   //Get all Vertices on the Graph
    vector< VID > vids;
 
   for(VI vit = _rm->GetGraph()->begin(); vit!=_rm->GetGraph()->end(); ++vit){
-    vids.push_back(_rm->GetGraph()->AddVertex(_rm->GetGraph()->GetVertex(vit))); 
+    vids.push_back(_rm->GetGraph()->AddVertex(_rm->GetGraph()->GetVertex(vit)));
   }
 
   typename GraphType::vertex_iterator vi;
@@ -368,7 +368,7 @@ ClosestVE<MPTraits>::Connect(RoadmapType* _rm, StatClass& _stats,
     // Find k closest cfgs in the roadmap
     VID curVID = _rm->GetGraph()->GetVID(v);
     vector<CfgVEType<MPTraits> > KP = FindKClosestPairs(_rm, curVID, _oldV1, _oldV2, edges);
-  
+
     // for each pair identified
     typename vector<CfgVEType<MPTraits> >::iterator kp;
     for (kp=KP.begin();kp<KP.end();++kp){

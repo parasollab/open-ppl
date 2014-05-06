@@ -74,7 +74,7 @@ class ToggleLP: public LocalPlannerMethod<MPTraits> {
 };
 
 template<class MPTraits>
-ToggleLP<MPTraits>::ToggleLP(const string& _vclabel, const string& _lpLabel, 
+ToggleLP<MPTraits>::ToggleLP(const string& _vclabel, const string& _lpLabel,
     const string& _dmLabel, int _maxIter, bool _saveIntermediates) :
   LocalPlannerMethod<MPTraits>(_saveIntermediates),
   m_vcLabel(_vclabel), m_lpLabel(_lpLabel), m_dmLabel(_dmLabel), m_maxIter(_maxIter) {

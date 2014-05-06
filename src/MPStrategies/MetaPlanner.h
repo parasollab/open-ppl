@@ -4,7 +4,7 @@
 /** @file MetaPlanner.h
  * @brief Metaplanner classes
  *
- * MetaPlanner implementation as in: 
+ * MetaPlanner implementation as in:
  * Marco Morales Proposal
  *
  * @author Marco Morales
@@ -16,7 +16,7 @@
 
 
 /**
- * Metaplanner interface class. 
+ * Metaplanner interface class.
  * It defines functions for creating roadmaps with a library of methods
  */
 
@@ -76,7 +76,7 @@ class CSpaceCharacterizer {
     lp_features.ReadCommandLine(input.LPstrings, input.numLPs, input.cdtype);
     gn_features.ReadCommandLine(input.GNstrings, input.numGNs);
     cm_features.ReadCommandLine(&input,&env);
-    
+
     addPartialEdge = input.addPartialEdge.GetValue();
     addAllEdges = input.addAllEdges.GetValue();
     environment_name = input.defaultFile.GetValue();
@@ -99,7 +99,7 @@ class CSpaceCharacterizer {
       vector <double> tmp_vector;
       new_vector.push_back(tmp_vector);
       CollisionConfiguration.push_back(new_vector);
-      
+
      for(int j = 0; j < gn_features.selected.size(); j++) {
        vector<CfgType> tmpCfgType;
        gn_features.selected[j]->m_vGeneratedCollisionConfiguration.push_back(tmpCfgType);
@@ -115,18 +115,18 @@ class CSpaceCharacterizer {
     vector<CFG> feature_nodes;
     gn_features.GenerateNodes(&(region->feature_roadmap),region->feature_stats,&cd,&dm,feature_nodes);
     NodeGenClock.StopClock();
-  
+
     // Connect feature roadmap nodes
     ConnectionClock.StartClock("Feature Node Connection");
-    cm_features.ConnectComponents(&(region->feature_roadmap), region->feature_stats, 
+    cm_features.ConnectComponents(&(region->feature_roadmap), region->feature_stats,
 				  &cd, &dm, &lp_features,
 				  addPartialEdge, addAllEdges);
     ConnectionClock.StopClock();
-  
+
     //save feature roadmap: check whether we can set its name
     string ftr_map_file = environment_name + "."+ region->region_tag + ".ftr.map";
     region->feature_roadmap.WriteRoadmap(&input,&cd,&dm,&lp_features,ftr_map_file.c_str());
-  
+
 
     //---------------------------
     // Compute Features
@@ -175,14 +175,14 @@ class MetaPlanner {
   //MetaPlanner(vector< CgraphGenerator > planners, cd,lp,gn,cm,dm);
   // planners to gather features, planners to make regional roadmaps, planners to integrate regions.
   MetaPlanner(Input& input, int i_maximum_tree_height, double i_epsilon, int i_characterization_samples,  int dofs, int pos_dofs, bool randomSeed);
-  ///Destructor.	
+  ///Destructor.
   ~MetaPlanner();
 /*   static vector<NodeGenerationMethod<CFG>*> GetDefault(); */
 
   void MakeGlobalRoadmap(/* Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats, */
 /* 			 CollisionDetection* cd,  */
 /* 			 DistanceMetric* dm, vector<CFG>& nodes */);
-  
+
   void MakeRegionRoadmap(MPRegion<CFG,WEIGHT>* region);
 
   void RunningStatsStart();
@@ -190,7 +190,7 @@ class MetaPlanner {
   void RunningStatsWrite(ostream& _os);
 
   void FeatureStatsInit();
-  
+
   void WriteRoadmap();
   int ReadCommandLine();
   void PrintUsage(ostream& _os);
@@ -208,7 +208,7 @@ class MetaPlanner {
  public:
   GenerateMapNodes<CFG> gn_map; //@todo replace by MPStrategy::m_pNodeGeneration
   Connector<CFG, WEIGHT> cm_map; //@todo replace by MPStrategy::m_pConnection
-  Connector<CFG, WEIGHT> cm_combine; 
+  Connector<CFG, WEIGHT> cm_combine;
   LocalPlanners<CFG, WEIGHT> lp_map; //@todo replace by MPStrategy::m_pLocalPlanners
   DistanceMetric     dm; //@todo replace by MPProblem::m_pProblem::...
 
@@ -249,10 +249,10 @@ class MetaPlanner {
 
 template <class CFG, class WEIGHT>
 MetaPlanner<CFG,WEIGHT>::
-MetaPlanner(Input& input, int i_maximum_tree_height, double i_epsilon, 
-	    int i_characterization_samples, int dofs, int pos_dofs, bool randomSeed=true) 
-  : env(dofs,pos_dofs,&input), maximum_tree_height(i_maximum_tree_height), 
-     epsilon(i_epsilon), 
+MetaPlanner(Input& input, int i_maximum_tree_height, double i_epsilon,
+	    int i_characterization_samples, int dofs, int pos_dofs, bool randomSeed=true)
+  : env(dofs,pos_dofs,&input), maximum_tree_height(i_maximum_tree_height),
+     epsilon(i_epsilon),
      characterizer(input, dm, cd, env, i_characterization_samples) {
 
   cout << "MetaPlanner(Input& input, bool randomSeed=true). TODO SOME" << endl;
@@ -272,7 +272,7 @@ MetaPlanner(Input& input, int i_maximum_tree_height, double i_epsilon,
   /** Instantiate roadmap object
    * it should only need info related to the graph, not the cd, dm, lp)
    */
-  
+
 /*   Roadmap<CFG, WEIGHT> rmap(&input,  &cd, &dm, &lp); */
 /*   input.Read(PMPL_EXIT); */
 /*   env.Get(&input); */
@@ -281,7 +281,7 @@ MetaPlanner(Input& input, int i_maximum_tree_height, double i_epsilon,
   cd.ReadCommandLine(input.CDstrings, input.numCDs);
   //vt.SetCD(cd);
   lp_map.ReadCommandLine(input.LPstrings, input.numLPs, input.cdtype);
-  dm.ReadCommandLine(input.DMstrings, input.numDMs);     
+  dm.ReadCommandLine(input.DMstrings, input.numDMs);
   gn_map.ReadCommandLine(input.GNstrings, input.numGNs);
   cm_map.ReadCommandLine(&input, &env);
   cm_combine.ReadCommandLine(&input,&env);
@@ -318,7 +318,7 @@ MakeGlobalRoadmap(/* Roadmap<CFG, WEIGHT>* _rm, Stat_Class& Stats, */
 /* 	      CollisionDetection* cd,  */
 /* 	      DistanceMetric* dm, vector<CFG>& nodes */) {
   cout << "MakeGlobalRoadmap() main function to create subdivision tree. TODO ALL" << endl;
-  
+
   //make a new environment region (be careful with the pointer
   MPRegion<CFG,WEIGHT> whole_problem(env, *(env.GetBoundary()), 0, NULL);
 
@@ -344,7 +344,7 @@ MakeRegionRoadmap(MPRegion<CFG,WEIGHT>* region) {
       vector <double> tmp_vector;
       new_vector.push_back(tmp_vector);
       CollisionConfiguration.push_back(new_vector);
-      
+
      for(int j = 0; j < gn_map.selected.size(); j++) {
        vector<CfgType> tmpCfgType;
        gn_map.selected[j]->m_vGeneratedCollisionConfiguration.push_back(tmpCfgType);
@@ -495,9 +495,9 @@ FeatureSensitiveMap(MPRegion<CFG,WEIGHT>* region, int tree_node_height, int maxi
 
   // test feasibility of subdivision
   cout << "\t if feasible_to_subdivide(region,region_characterization,parent_characterization,subdivision_limit,node_height,maximum_tree_height) then " << endl;
-  if (partitioner.isSubdivide(region,tree_node_height, maximum_tree_height)) {  
+  if (partitioner.isSubdivide(region,tree_node_height, maximum_tree_height)) {
     // Place boundaries
-    vector<BoundingBox> subregion_boundaries = partitioner.PlaceBoundaries(region, 
+    vector<BoundingBox> subregion_boundaries = partitioner.PlaceBoundaries(region,
 	   characterizer.gn_features.selected[0]->m_vGeneratedCollisionConfiguration);
 
     // Create new subregions with those boundaries
@@ -512,17 +512,17 @@ FeatureSensitiveMap(MPRegion<CFG,WEIGHT>* region, int tree_node_height, int maxi
       new_subregion->PrintValues(cout);
       subregions.push_back(new_subregion);
     }
-  
+
     // subregions is the result of partitioning
 
     cout << "\t\t for each region ri in subregions do " << endl;
-    
+
     typename vector< MPRegion<CFG,WEIGHT>* >::iterator itr;
     for (itr = subregions.begin(); itr < subregions.end(); itr++) {
       // map region ri
       cout << "\t\t\t FeatureSensitiveMap(ri, ...) " << endl;
       /**itr = */
-	FeatureSensitiveMap(*itr,tree_node_height+1, maximum_tree_height, 
+	FeatureSensitiveMap(*itr,tree_node_height+1, maximum_tree_height,
 			  epsilon);
     }
 
@@ -533,7 +533,7 @@ FeatureSensitiveMap(MPRegion<CFG,WEIGHT>* region, int tree_node_height, int maxi
     string map_file = environment_name + "." + region->region_tag + ".cmb.map";
     region->roadmap.WriteRoadmap(&input,&cd,&dm,&lp_map,map_file.c_str());
   } else {
-    
+
     // this region is a leave. Map it
     cout << "\t\t roadmap = MapRegion(region,region_characterization) " << endl;
     MakeRegionRoadmap(region);
