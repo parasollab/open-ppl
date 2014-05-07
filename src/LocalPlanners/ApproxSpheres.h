@@ -41,7 +41,7 @@ ApproxSpheres<MPTraits>::ApproxSpheres(MPProblemType* _problem, XMLNodeReader& _
   LocalPlannerMethod<MPTraits>(_problem, _node), m_clearUtil(_problem, _node) {
     this->SetName("ApproxSpheres");
     if(!m_clearUtil.GetExactClearance())
-        throw ParseException(WHERE, "Clearance Type for " + this->GetName() + " needs to be 'exact' ");
+        throw ParseException(WHERE, "Clearance Type for " + this->GetNameAndLabel() + " needs to be 'exact' ");
     _node.warnUnrequestedAttributes();
 }
 

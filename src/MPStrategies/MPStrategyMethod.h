@@ -60,7 +60,7 @@ MPStrategyMethod<MPTraits>::ParseXML(XMLNodeReader& _node){
 template<class MPTraits>
 void
 MPStrategyMethod<MPTraits>::PrintOptions(ostream& _os) const {
-  _os << this->GetName() << endl;
+  _os << this->GetNameAndLabel() << endl;
 }
 
 template<class MPTraits>
@@ -90,7 +90,7 @@ MPStrategyMethod<MPTraits>::EvaluateMap(vector<string> _evaluators) {
     for(vector<string>::iterator I = _evaluators.begin(); I != _evaluators.end(); ++I) {
       MapEvaluatorPointer evaluator = this->GetMPProblem()->GetMapEvaluator(*I);
       stringstream evaluatorClockName;
-      evaluatorClockName << clockName << "::" << evaluator->GetName();
+      evaluatorClockName << clockName << "::" << evaluator->GetNameAndLabel();
       stats->StartClock(evaluatorClockName.str());
       if(this->m_debug) cout << "\n\t";
       mapPassedEvaluation = evaluator->operator()();

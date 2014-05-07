@@ -121,9 +121,9 @@ MedialAxisLP<MPTraits>::PrintOptions(ostream& _os) const {
   LocalPlannerMethod<MPTraits>::PrintOptions(_os);
   m_medialAxisUtility.PrintOptions(_os);
   _os << "\tdm label : " << m_dmLabel
-      << "\n\tcd lp label : " << m_envLP.GetName()
-      << "\n\tmac lp label : " << m_macLP.GetName()
-      << "\n\tmac vc label : " << m_macVCM.GetName()
+      << "\n\tcd lp label : " << m_envLP.GetNameAndLabel()
+      << "\n\tmac lp label : " << m_macLP.GetNameAndLabel()
+      << "\n\tmac vc label : " << m_macVCM.GetNameAndLabel()
       << "\n\tmac epsilon = " << m_macEpsilon
       << "\n\tmax iter = " << m_maxIter
       << endl;

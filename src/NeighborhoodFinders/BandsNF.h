@@ -386,8 +386,10 @@ class Band : public MPBaseObject<MPTraits> {
     }
 
     virtual void PrintOptions(ostream& _os) const {
-      _os << this->GetName() << ":: TODO" << endl;
+      _os << this->GetNameAndLabel() << ":: TODO" << endl;
     }
+
+    string GetName() const {return this->m_name;}
 
     // given initial set V (_first --> _last), and CFG v1, return V_n.
     template<typename InputIterator>

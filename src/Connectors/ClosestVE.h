@@ -218,9 +218,8 @@ ClosestVE<MPTraits>::ParseXML(XMLNodeReader& _node) {
 template <class MPTraits>
 void
 ClosestVE<MPTraits>::PrintOptions(ostream& _os) const {
-  _os << " " << this->GetName() << "::  m_kClosest = ";
-  _os << m_kClosest;
-  _os << endl;
+  _os << this->GetNameAndLabel() << endl;
+  _os << "\tm_kClosest = " << m_kClosest << endl;
 }
 
 //----------------------------------------------------------------------
