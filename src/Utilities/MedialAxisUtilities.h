@@ -1020,12 +1020,19 @@ MedialAxisUtility<MPTraits>::FindInitialDirection(
   _prevInfo.m_retAllInfo = true;
 
   if(this->CollisionInfo(_cfg, _transCfg, _bb, _prevInfo)) {
+    //if(_prevInfo.m_minDist < this->GetMPProblem()->GetEnvironment()->GetPositionRes()) {
+    if(_prevInfo.m_minDist < numeric_limits<float>::epsilon()) {
+      if(this->m_debug) cout << "Start Cfg adjacent to obstacle" << endl;
+      return false;
+    }
+
     _transCfg = _cfg - _transCfg;
     double magnitude = 0;
     for(size_t i = 0; i < _transCfg.DOF(); ++i){
       magnitude += _transCfg[i] * _transCfg[i];
     }
     magnitude = sqrt(magnitude);
+
     for(size_t i = 0; i<_transCfg.DOF(); ++i){
       _transCfg[i] *= _posRes/magnitude;
       if(i > _transCfg.PosDOF() && _transCfg[i] > 0.5){
