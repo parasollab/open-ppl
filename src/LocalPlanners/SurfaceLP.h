@@ -73,7 +73,7 @@ SurfaceLP<MPTraits>::PrintOptions(ostream& _os) const {
 template<class MPTraits>
 bool
 SurfaceLP<MPTraits>::IsOnSpecifiedSurface(Environment* _env, CfgType& _c1, int _sid) {
-  string callee = this->GetName() + "-SurfaceLP::IsConnected";
+  string callee = this->GetNameAndLabel() + "-SurfaceLP::IsConnected";
   ValidityCheckerPointer vcm =
       this->GetMPProblem()->GetValidityChecker(StraightLine<MPTraits>::m_vcLabel);
   bool foundValidSurf = false;
@@ -154,7 +154,7 @@ SurfaceLP<MPTraits>::IsConnected(
   CfgType tick = _c1;
   CfgType incr;
   incr.FindIncrement(_c1, _c2, &nTicks, _positionRes, _orientationRes);
-  string callee = this->GetName() + "-SurfaceLP::IsConnected";
+  string callee = this->GetNameAndLabel() + "::IsConnected";
   CDInfo cdInfo;
 
   bool allOnValidSurface = true;

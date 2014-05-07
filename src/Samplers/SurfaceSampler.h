@@ -112,7 +112,7 @@ class SurfaceSampler : public SamplerMethod<MPTraits> {
     virtual bool Sampler(Environment* _env, shared_ptr<Boundary> _bb,
         StatClass& _stats, CfgType& _cfgIn, vector<CfgType>& _cfgOut,
         vector<CfgType>& _cfgCol) {
-      string callee(this->GetName());
+      string callee(this->GetNameAndLabel());
       callee += "::SampleImpl()";
       ValidityCheckerPointer vcp = this->GetMPProblem()->GetValidityChecker(m_vcLabel);
 
@@ -156,7 +156,7 @@ class SurfaceSampler : public SamplerMethod<MPTraits> {
 	  if(this->m_debug) cout<<"tmp::"<<tmp<<" sid: "<< tmp.GetSurfaceID() << endl;
 	  if(this->m_debug) cout<<"InBoundary::"<<inBBX<<endl;
 	  if(inBBX) {
-	    if(this->m_debug) cout << "vcp::name " << vcp->GetName() << endl;
+	    if(this->m_debug) cout << "vcp::name " << vcp->GetNameAndLabel() << endl;
 	    bool isValid = vcp->IsValid(tmp, callee);
 	    if(this->m_debug) cout << "IsValid::" << isValid << endl;
 	    if(isValid) {

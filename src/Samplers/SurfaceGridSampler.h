@@ -73,7 +73,7 @@ class SurfaceGridSampler : public SamplerMethod<MPTraits> {
     virtual bool Sampler(Environment* _env, shared_ptr<Boundary> _bb,
         StatClass& _stats, CfgType& _cfgIn, vector<CfgType>& _cfgOut,
         vector<CfgType>& _cfgCol) {
-      string callee(this->GetName());
+      string callee(this->GetNameAndLabel());
       callee += "::SampleImpl()";
       ValidityCheckerPointer vcp = this->GetMPProblem()->GetValidityChecker(m_vcLabel);
       int numSurfaces=  _env->GetNavigableSurfacesCount(); //Number of navigable surface
