@@ -1100,6 +1100,7 @@ MedialAxisUtility<MPTraits>::FindMedialAxisBorderExact(
       if(this->m_debug) cout << "TMP Cfg: " << tmpCfg;
       CfgType tmpTransCfg;
       if(this->CollisionInfo(tmpCfg, tmpTransCfg, _bb, tmpInfo)) {
+        if(!tmpCfg.GetLabel("VALID")) return false;
         Vector3d transDir = tmpInfo.m_objectPoint - _prevInfo.m_objectPoint;
         if(this->m_debug) cout << " obst: " << tmpInfo.m_nearestObstIndex;
         double tmpDist = 0.0;
