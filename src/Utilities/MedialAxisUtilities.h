@@ -342,7 +342,7 @@ ClearanceUtility<MPTraits>::ExactCollisionInfo(CfgType& _cfg, CfgType& _clrCfg, 
     if(i < _clrCfg.PosDOF()) {
       _clrCfg[i] = _cfg[i] + clrDir[i];
       stepDir[i] = clrDir[i];
-      factor += pow(clrDir[i], 2);
+      factor += clrDir[i]*clrDir[i];
     }
     else{
       _clrCfg[i] = _cfg[i];
@@ -446,7 +446,7 @@ ClearanceUtility<MPTraits>::ApproxCollisionInfo(CfgType& _cfg, CfgType& _clrCfg,
       double factor=0.0;
       for(size_t j=0; j<tmpDirection.DOF(); j++) {
         if(j < tmpDirection.PosDOF())
-          factor += pow(tmpDirection[j], 2);
+          factor += tmpDirection[j]*tmpDirection[j];
         else
           tmpDirection[j] = 0.0;
       }
@@ -1104,9 +1104,9 @@ MedialAxisUtility<MPTraits>::FindMedialAxisBorderExact(
         if(this->m_debug) cout << " obst: " << tmpInfo.m_nearestObstIndex;
         double tmpDist = 0.0;
         for(size_t i=0; i<_transCfg.PosDOF(); i++)
-          tmpDist += pow(transDir[i],2);
+          tmpDist += transDir[i]*transDir[i];
         tmpDist = sqrt(tmpDist);
-        if(tmpDist > robot->GetBoundingSphereRadius()*1.5/*2.0*/) { // TODO: might be better value
+        if(tmpDist > robot->GetBoundingSphereRadius() * (2.0 + numeric_limits<float>::epsilon()) ) { // TODO: might be better value
           if(this->m_debug) cout << "\n WP moved: " << tmpDist;
           witnessPointMoved=true;
         }
