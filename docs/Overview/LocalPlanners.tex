@@ -1,9 +1,42 @@
 \chapter{Local Planners}
 
+A Local Planner (\lp) is basically a validity checker for simple paths between
+two configurations. These planners are typically efficient, deterministic, and
+incomplete. We often use these to validate edges of our roadmaps. Paths are
+defined as polygonal chains $P = \{q_1, q_2, \ldots q_n\}$ through $\cspace$.
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Base Class
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{\texttt{LocalPlannerMethod}}
+
+\texttt{LocalPlannerMethod} has two main functions, $\CALL{IsConnected}$ and
+$\CALL{ReconstructPath}$.
+
+$\CALL{IsConnected}$ takes as input two configurations $c_1$, $c_2$, an
+\texttt{LPOutput}, validation resolutions, and optional booleans dictating
+whether to check collision and save the path. The function both returns true or
+false to validate the simple path between $c_1$ and $c_2$, but also populated
+the \texttt{LPOutput} structure with useful information. Usage is as follows:
+\begin{lstlisting}
+LocalPlannerPointer lp = this->GetMPProblem()->GetLocalPlanner(m_lpLabel);
+Environment* env = this->GetMPProblem()->GetEnvironment();
+CfgType c1, c2;
+LPOutput<MPTraits> lpOut;
+lp->IsConnected(c1, c2, &lpOut, env->GetPositionRes(), env->GetOrientationRes());
+\end{lstlisting}
+
+$\CALL{ReconstructPath}$ is used to reconstruct a specific polygonal chain from
+a \texttt{DefaultWeight} object's intermediate configurations. The function
+takes as input two configurations, a set of intermediate configurations, and
+validity resolutions. Usage is as follows:
+\begin{lstlisting}
+LocalPlannerPointer lp = this->GetMPProblem()->GetLocalPlanner(m_lpLabel);
+Environment* env = this->GetMPProblem()->GetEnvironment();
+CfgType c1, c2;
+vector<CfgType> intermediates;
+lp->IsConnected(c1, c2, intermediates, env->GetPositionRes(), env->GetOrientationRes());
+\end{lstlisting}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Derived Class
