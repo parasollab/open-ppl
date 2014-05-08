@@ -61,6 +61,8 @@ kmeans_lib: ${KMEANS_LIBFILE}
 
 objs: utils ${PMPL_OBJS}
 
+${PMPL_OBJS}: utils
+
 libs: utils ${PMPL_LIBFILE}
 
 ${PMPL_LIBFILE}: objs
