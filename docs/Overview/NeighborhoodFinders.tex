@@ -1,9 +1,39 @@
 \chapter{Neighborhood Finders}
 
+Neighborhood Finders (\nf) are a key component to most sampling-based motion
+planning algorithms. Essentially, given an input configuration they return a set
+of ``nearby'' configurations. This can be done in an approximate fashion or with
+an exact computation. These are used in \rrts\ to find the nearest node, and by
+\prms\ to determine a set of candidate edges for validation.
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Base Class
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{\texttt{NeighborhoodFinderMethod}}
+
+\texttt{NeighborhoodFinderMethod} has two important functions,
+$\CALL{FindNeighbors}$ and $\CALL{FindNeighborPairs}$.
+
+$\CALL{FindNeighbors}$ takes an input configuration and a set of candidate
+neighbors and returns the computed set of ``nearest'' neighbors. Usage:
+\begin{lstlisting}
+NeighborhoodFinderPointer nf = this->GetMPProblem()->GetNeighborhoodFinder(m_nfLabel);
+CfgType c;
+vector<pair<VID, double> > neighbors;
+nf->FindNeighbors(this->GetMPProblem()->GetRoadmap(), c, back_inserter(neighbors));
+\end{lstlisting}
+A roadmap must be specified as the set of candidate neighbors must be located
+within this graph.
+
+$\CALL{FindNeighborPairs}$ determines the ``closest'' pairs of configurations
+betweeen two sets of nodes located in a roadmap. Usage:
+\begin{lstlisting}
+NeighborhoodFinderPointer nf = this->GetMPProblem()->GetNeighborhoodFinder(m_nfLabel);
+vector<VID> c1, c2;
+vector<pair<pair<VID, VID>, double> > neighbors;
+nf->FindNeighbors(this->GetMPProblem()->GetRoadmap(), c1.begin(), c1.end(),
+c2.begin(), c2.end(), back_inserter(neighbors));
+\end{lstlisting}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Derived Class
