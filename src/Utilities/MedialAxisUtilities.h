@@ -1281,6 +1281,7 @@ MedialAxisUtility<MPTraits>::FindMedialAxisBorderApprox(
   _upperBound = fellOut ? _stepSize-1.0 : _stepSize;
   if(fellOut) {
     _lowerBound = _upperBound-1.0;
+    return false;
   }
   else {
     if(segCfgs.size() < (_stepSize - cbStepSize))
