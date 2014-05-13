@@ -5,16 +5,30 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Motion Planning Utilities - \texttt{MPUtils}}
 
+\texttt{MPUtils} is a general storage area of miscellaneous defines, and basic
+motion planning classes used in \pmpl. The main object here is
+\texttt{MPBaseObject} upon which all algorithmic abstractions extend themselves
+off of.
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Metric Utils
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Metric Utilities - \texttt{MetricUtils}}
 
+The metric utilities are a set of statistical analysis and statistics tracking
+utilities.
+
 %% Clock
 \subsection{\texttt{Clock}}
 
+\texttt{Clock}s are used as a timing method in \pmpl\ to time algorithm's
+runtime.
+
 %% Stat Class
 \subsection{\texttt{StatClass}}
+
+The \texttt{StatClass} is a storage hub of all statistics to be tracked in
+\pmpl, including timing, success/fail attempts, collision detection calls, etc.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% IO Utils
@@ -25,6 +39,10 @@
 %% PMPL Exceptions
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{\texttt{PMPLExceptions}}
+
+\texttt{PMPLExceptions} are objects which methods can throw for their various
+errors, These are all runtime errors and facilitate recovery for programs like
+Vizmo and aid users in identifying where and how errors occur.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Medial Axis Utilities
