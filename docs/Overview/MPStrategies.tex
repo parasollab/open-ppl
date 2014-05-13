@@ -1,9 +1,25 @@
 \chapter{Motion Planning Strategies}
 
+Motion Planning Strategies (\mps) essentially orchestrate creation of roadmaps
+for use to solve motion planning problems. They are the ``solvers'' or the
+algorithms to solve a problem, e.g., \prm\ or \rrt. They are not restricted to
+solving motion planning problems, but could be as simple as load a previously
+constructed roadmap and evaluate it, etc. These are what are ``executed'' when
+calling the \textit{pmpl} executable.
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Base Class
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{\texttt{MPStrategyMethod}}
+
+\texttt{MPStrategyMethod} has one main function, $\CALL{operator()}$, which
+performs preprocessing, processing, and postprocessing functionalities of the
+algorithms. Usage:
+\begin{lstlisting}
+MPStrategyPointer mps = this->GetMPProblem()->GetMPStrategy(m_mpsLabel);
+(*mps)(); //call as a function object
+mps->operator()(); //call with pointer notation
+\end{lstlisting}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Derived Class

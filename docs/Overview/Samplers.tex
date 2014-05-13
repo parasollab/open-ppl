@@ -23,7 +23,9 @@ output iterator like so:
 SamplerPointer s = this->GetMPProblem()->GetSampler(m_sLabel);
 int num, attempts;
 vector<CfgType> result;
-s->Sample(this->GetMPProblem()->GetEnvironment(), this->GetMPProblem()->GetStatClass(), num, attempts, back_inserter(result));
+s->Sample(this->GetMPProblem()->GetEnvironment(),
+          this->GetMPProblem()->GetStatClass(),
+          num, attempts, back_inserter(result));
 \end{lstlisting}
 The other form of $\CALL{Sample}$ sends a list of input configurations to apply
 the sampler rule to:
@@ -32,7 +34,9 @@ SamplerPointer s = this->GetMPProblem()->GetSampler(m_sLabel);
 vector<CfgType> input;
 int attempts;
 vector<CfgType> result;
-s->Sample(this->GetMPProblem()->GetEnvironment(), this->GetMPProblem()->GetStatClass(), input.begin(), input.end(), attempts, back_inserter(result));
+s->Sample(this->GetMPProblem()->GetEnvironment(),
+          this->GetMPProblem()->GetStatClass(),
+          input.begin(), input.end(), attempts, back_inserter(result));
 \end{lstlisting}
 There are other versions of this method with the option to return the failed
 attempts, specify the boundary used for sampling, etc.

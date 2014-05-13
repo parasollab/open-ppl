@@ -19,7 +19,9 @@ them. Usage:
 ConnectorPointer c = this->GetMPProblem()->GetConnector(m_cLabel);
 ColorMapType cm;
 vector<VID> c1, c2;
-c->Connect(this->GetMPProblem()->GetRoadmap(), this->GetMPProblem()->GetStatClass(), cmap, c1.begin(), c1.end(), c2.begin(), c2.end());
+c->Connect(this->GetMPProblem()->GetRoadmap(),
+           this->GetMPProblem()->GetStatClass(),
+           cmap, c1.begin(), c1.end(), c2.begin(), c2.end());
 \end{lstlisting}
 Where ColorMapType is the type of a color map for the underlying STAPL graph.
 

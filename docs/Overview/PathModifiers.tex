@@ -1,9 +1,22 @@
 \chapter{Path Modifiers}
 
+Path Modifiers (\pam) take an input path, or a series of configurations a
+resolution distance part, and attempt to make that path better. This might
+involve cutting out back tracking motions, applying local optimization
+techniques, or pushing the path to the medial axis.
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Base Class
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{\texttt{PathModifierMethod}}
+
+\texttt{PathModifierMethod} has one main method, \CALL{Modify}, which takes an
+input path and produces an output path. Usage:
+\begin{lstlisting}
+PathModifierPointer pm = this->GetMPProblem()->GetPathModifier(m_pmLabel);
+vector<CfgType> inputPath, outputPath;
+pm->Modify(inputPath, outputPath);
+\end{lstlisting}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Derived Class
