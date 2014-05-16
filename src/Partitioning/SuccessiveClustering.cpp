@@ -45,7 +45,7 @@ vector<Partition*> SuccessiveClustering::MakePartitions(Partition &p){
       parts=tmp;
    }
 
-   
+
 
    vector<Partition*> vp;
    for(PIT pit = parts.begin(); pit!=parts.end(); pit++){

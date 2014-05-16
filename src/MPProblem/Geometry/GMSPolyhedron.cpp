@@ -1,11 +1,14 @@
 #include "GMSPolyhedron.h"
-#include "Utilities/MPUtils.h"
+
 #include <fstream>
-#include <cstring>
+
 #include "MovieBYULoader.h"
 #include "ModelFactory.h"
-#include "ObjLoader.h"
 #include "ModelTool.h"
+#include "ObjLoader.h"
+
+#include "Utilities/IOUtils.h"
+#include "Utilities/MPUtils.h"
 
 using namespace std;
 
@@ -24,6 +27,36 @@ GMSPolygon::operator==(const GMSPolygon& _p) const{
   return (m_vertexList == _p.m_vertexList) &&
     (m_normal == _p.m_normal) &&
     (m_area == _p.m_area);
+}
+
+//Find a unique common vertex between the two polygons
+//return -1 if none exists
+int
+GMSPolygon::CommonVertex(const GMSPolygon& _p) {
+  for(size_t i = 0; i < m_vertexList.size(); ++i) {
+    for(size_t j = 0; j < m_vertexList.size(); ++j) {
+      if(m_vertexList[i] == _p.m_vertexList[j]) {
+        return m_vertexList[i];
+      }
+    }
+  }
+  return -1;
+}
+
+pair<int, int>
+GMSPolygon::CommonEdge(const GMSPolygon& _p) {
+  pair<int, int> edgeID(-1, -1);
+  for(size_t i = 0; i < m_vertexList.size(); ++i) {
+    for(size_t j = 0; j < m_vertexList.size(); ++j) {
+      if(m_vertexList[i] == _p.m_vertexList[j]) {
+        if(edgeID.first == -1)
+          edgeID.first = m_vertexList[i];
+        else
+          edgeID.second = m_vertexList[i];
+      }
+    }
+  }
+  return edgeID;
 }
 
 //End Polygon begin Polyhedron implementation
@@ -78,14 +111,8 @@ Vector3d
 GMSPolyhedron::Read(string _fileName){
   Vector3d com;	//com = Center of Mass
 
-  //---------------------------------------------------------------
-  // Get polyhedron file name and try to open the file
-  //---------------------------------------------------------------
-  ifstream _is(_fileName.c_str());
-  if (!_is) {
-    cout << "Can't open \"" << _fileName << "\"." << endl;
-    exit(1);
-  }
+  if(!FileExists(_fileName))
+    throw ParseException(WHERE, "Geometry file '" + _fileName + "' does not exist.");
 
   //---------------------------------------------------------------
   // Read polyhedron
@@ -95,7 +122,8 @@ GMSPolyhedron::Read(string _fileName){
   if(pos != string::npos)
     ext = _fileName.substr(pos+1);
   if (ext == "dat"){
-    com = Read(_is);
+    ifstream ifs(_fileName.c_str());
+    com = Read(ifs);
   }
   else if (ext == "g" || ext == "obj"){
     com = ReadModel(_fileName);
@@ -106,10 +134,6 @@ GMSPolyhedron::Read(string _fileName){
     exit(1);
   }
 
-  //---------------------------------------------------------------
-  // Close file
-  //---------------------------------------------------------------
-  _is.close();
   return com;
 }
 

@@ -7,7 +7,7 @@
 //#define ITERATIONS   50        // default for rrt iterations
 //#define SMALL_CC      5        // default for rrt smalcc size
 //#define O_CLEARANCE   1
-//#define CLEARANCE_FROM_NODE 4 
+//#define CLEARANCE_FROM_NODE 4
 
 
 template <class CFG, class WEIGHT>
@@ -17,7 +17,7 @@ class RRTcomponents: public RRTexpand<CFG,WEIGHT> {
   // Constructors and Destructor
   RRTcomponents();
   ~RRTcomponents();
- 
+
   //////////////////////
   // Access
   //void SetDefault();
@@ -26,10 +26,10 @@ class RRTcomponents: public RRTexpand<CFG,WEIGHT> {
   // I/O methods
   virtual ComponentConnectionMethod<CFG, WEIGHT>* CreateCopy();
   //////////////////////
-  // Core: Connection methods 
-  /**Copy vertices and all incident edges associated with "vids" 
+  // Core: Connection methods
+  /**Copy vertices and all incident edges associated with "vids"
    *from one roadmap to another.
-   *@param toMap Target, Cfgs in vids and incident edges in fromMap  
+   *@param toMap Target, Cfgs in vids and incident edges in fromMap
    *will be copied to this submap.
    *@param fromMap Source, edge information will be retrived from here.
    *@param vids Source, vertex information will be retrived from here.
@@ -61,7 +61,7 @@ class RRTcomponents: public RRTexpand<CFG,WEIGHT> {
 ///////////////////////////////////////////////////////////////////////////////
 //   Connection Method:  RRTcomponents
 template <class CFG, class WEIGHT>
-RRTcomponents<CFG,WEIGHT>::RRTcomponents():RRTexpand<CFG,WEIGHT>() { 
+RRTcomponents<CFG,WEIGHT>::RRTcomponents():RRTexpand<CFG,WEIGHT>() {
   element_name = "RRTcomponents"; //in ConnectCCs there is RRTcomponents
 
   SetDefault();
@@ -69,31 +69,31 @@ RRTcomponents<CFG,WEIGHT>::RRTcomponents():RRTexpand<CFG,WEIGHT>() {
 
 
 template <class CFG, class WEIGHT>
-RRTcomponents<CFG,WEIGHT>::~RRTcomponents() { 
+RRTcomponents<CFG,WEIGHT>::~RRTcomponents() {
 }
 
 
 template <class CFG, class WEIGHT>
-ComponentConnectionMethod<CFG,WEIGHT>* 
+ComponentConnectionMethod<CFG,WEIGHT>*
 RRTcomponents<CFG,WEIGHT>::
 CreateCopy() {
-  RRTcomponents<CFG,WEIGHT>* _copy = 
+  RRTcomponents<CFG,WEIGHT>* _copy =
            new RRTcomponents<CFG,WEIGHT>(*this);
   return _copy;
 }
 
 
 /*---------------------------------------------------------------
-Will order CCs by their distances from their center's of mass to 
+Will order CCs by their distances from their center's of mass to
 the largest CCs center of mass
 ---------------------------------------------------------------*/
 template <class CFG, class WEIGHT>
 void RRTcomponents<CFG,WEIGHT>::
 OrderCCByCloseness(Roadmap<CFG,WEIGHT> * rm,
 		   DistanceMetric * dm,
-		   vector< pair<int,VID> >& ccvec) {   
+		   vector< pair<int,VID> >& ccvec) {
 
-  Environment *env = rm->GetEnvironment();   
+  Environment *env = rm->GetEnvironment();
 
   vector< pair<int,VID> >::iterator cc2=ccvec.begin();
 
@@ -122,17 +122,17 @@ OrderCCByCloseness(Roadmap<CFG,WEIGHT> * rm,
 
     centervec[index].divide(centervec[index],i);
 
-    cc2++; i = 0; index++;     
+    cc2++; i = 0; index++;
     vidvec.clear();
     cmap.reset();
     get_cc(*(rm->m_pRoadmap), cmap, (*cc2).second ,vidvec);
   } //while cc2<ccvec.end()
-  vector<CFG> centvec; 
+  vector<CFG> centvec;
   for(i=1; i<centervec.size();i++) {
     centvec.push_back( centervec[i] );
-  }  
+  }
 
-  vector<pair<CFG,CFG> > kp= dm->FindKClosestPairs(env, centervec[0], centvec, 
+  vector<pair<CFG,CFG> > kp= dm->FindKClosestPairs(env, centervec[0], centvec,
 						   centervec.size()-1);
   vector< pair<int,VID> > ccvec_tmp;
   ccvec_tmp.push_back( *ccvec.begin() );
@@ -158,7 +158,7 @@ OrderCCByCloseness(Roadmap<CFG,WEIGHT> * rm,
 template <class CFG, class WEIGHT>
 void RRTcomponents<CFG,WEIGHT>::
 Connect(Roadmap<CFG, WEIGHT>* _rm, StatClass& Stats,
-	CollisionDetection* cd , 
+	CollisionDetection* cd ,
 	DistanceMetric * dm,
 	LocalPlanners<CFG,WEIGHT>* lp,
 	bool addPartialEdge,
@@ -184,7 +184,7 @@ Connect(Roadmap<CFG, WEIGHT>* _rm, StatClass& Stats,
 template <class CFG, class WEIGHT>
 void RRTcomponents<CFG,WEIGHT>::
 Connect(Roadmap<CFG, WEIGHT>* _rm, StatClass& Stats,
-	CollisionDetection* cd , 
+	CollisionDetection* cd ,
 	DistanceMetric * dm,
 	LocalPlanners<CFG,WEIGHT>* lp,
 	bool addPartialEdge,
@@ -197,7 +197,7 @@ Connect(Roadmap<CFG, WEIGHT>* _rm, StatClass& Stats,
        << ", oclearance = " << o_clearance
        << ", node_clearance = " << clearance_from_node
        <<"): " <<flush;
- 
+
   ///Modified for VC
 #if defined(_WIN32)
   using namespace std;
@@ -219,12 +219,12 @@ Connect(Roadmap<CFG, WEIGHT>* _rm, StatClass& Stats,
 
     //-- submap = vertices & edges of current (cc1) connected component
     Roadmap<CFG,WEIGHT> submap1;
-  
+
     vector<CFG> dummyU;
 
     vector< pair<int,VID> >::iterator cc2=cc1+1;
 
-    //DisplayCCStats(*(_rm->m_pRoadmap),0);  
+    //DisplayCCStats(*(_rm->m_pRoadmap),0);
 
     vector< pair<int,VID> >::iterator cctemp=ccvec.begin();
     int b =0;
@@ -241,7 +241,7 @@ Connect(Roadmap<CFG, WEIGHT>* _rm, StatClass& Stats,
 	  get_cc(*(_rm->m_pRoadmap), cmap, (*cctemp).second,cct);
 	  ModifyRoadMap(&submap3,_rm,cct);
 	  bool toConnect = FALSE;
-	  
+
 	  RRT(&submap3, Stats,
 	      iterations/2,
 	      stepFactor * _rm->GetEnvironment()->GetPositionRes(),
@@ -254,7 +254,7 @@ Connect(Roadmap<CFG, WEIGHT>* _rm, StatClass& Stats,
 	  ModifyRoadMap(_rm,&submap3,verts1);
 	  submap3.environment = NULL;
 	} //end if
-		
+
 	cctemp++; b++;
       } //cctemp<=ccvec.end()
 
@@ -274,7 +274,7 @@ Connect(Roadmap<CFG, WEIGHT>* _rm, StatClass& Stats,
       tmp_vec1.push_back(*startcciter);
       ccvec.swap( tmp_vec1  );
     }
-          
+
     OrderCCByCloseness(_rm,dm,ccvec);
 
     cc1= ccvec.begin();
@@ -310,7 +310,7 @@ Connect(Roadmap<CFG, WEIGHT>* _rm, StatClass& Stats,
       get_cc(*(_rm->m_pRoadmap),cmap, (*cc2).second,cct3);
       cmap.reset();
       if(cct3.size()>= smallcc)
-	while ( !is_same_cc(*(_rm->m_pRoadmap), cmap, cc1id,cc2id) 
+	while ( !is_same_cc(*(_rm->m_pRoadmap), cmap, cc1id,cc2id)
                 && !toConnect
 		&& (i<iterations) ) {
 	  U.clear();
@@ -318,24 +318,24 @@ Connect(Roadmap<CFG, WEIGHT>* _rm, StatClass& Stats,
           toConnect = FALSE;
 
 	  cmap.reset();
-	  while (!toConnect 
+	  while (!toConnect
 		 && (!is_same_cc(*(_rm->m_pRoadmap), cmap, cc1id,cc2id))
 		 && ( i <= iterations )) {
 
 
 	    U.clear();
 	    cmap.reset();
-	    i++; 
+	    i++;
 	    if ((i % 2 )== 0) {
-                
-	      toConnect = FALSE;            
+
+	      toConnect = FALSE;
 	      RRT(&submap1, Stats,
 		  1,
 		  stepFactor * _rm->GetEnvironment()->GetPositionRes(),
 		  o_clearance,clearance_from_node,
 		  U,cd,lp,dm,toConnect,TRUE,
 		  addPartialEdge, addAllEdges);
-	      
+
 	      toConnect = TRUE;
 	      RRT(&submap2, Stats,
 		  1,
@@ -352,7 +352,7 @@ Connect(Roadmap<CFG, WEIGHT>* _rm, StatClass& Stats,
 		  o_clearance,clearance_from_node,
 		  U,cd,lp,dm,toConnect,TRUE,
 		  addPartialEdge, addAllEdges);
-	      
+
 	      toConnect = TRUE;
 	      RRT(&submap1, Stats,
 		  1,
@@ -361,31 +361,31 @@ Connect(Roadmap<CFG, WEIGHT>* _rm, StatClass& Stats,
 		  U,cd,lp,dm,toConnect,TRUE,
 		  addPartialEdge, addAllEdges);
 	    }
-	    
+
 	  } //end while (!toConnect && ( i <= _cn.GetIterations() )
-	     
+
 	  vector<VID> vertsa;
 	  (&submap1)->m_pRoadmap->GetVerticesVID(vertsa);
 	  ModifyRoadMap(_rm,&submap1, vertsa);
 	  vector<VID> vertsb;  //not sure here if cc2 should be cc2 or vice versa
 	  (&submap2)->m_pRoadmap->GetVerticesVID(vertsb);
 	  ModifyRoadMap(_rm,&submap2, vertsb);
-		
+
 	  d++;
 	} //end while sameCC
-      cc2++; d=0; i=0; 
+      cc2++; d=0; i=0;
       submap2.environment = NULL;
       submap2.m_pRoadmap = NULL;
     } //end while cc2 != ccvec.end()
 
     submap1.environment = NULL;
-    submap1.m_pRoadmap = NULL;	  
-	  
-  } //endfor cc1 and cc1.next 
+    submap1.m_pRoadmap = NULL;
+
+  } //endfor cc1 and cc1.next
 
 
 
 
- 
+
 }
 #endif

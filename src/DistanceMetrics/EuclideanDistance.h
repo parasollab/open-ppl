@@ -9,20 +9,24 @@
 template<class MPTraits>
 class EuclideanDistance : public MinkowskiDistance<MPTraits> {
   public:
+    typedef typename MPTraits::MPProblemType MPProblemType;
+
     EuclideanDistance(bool _normalize = false);
-    EuclideanDistance(typename MPTraits::MPProblemType* _problem, XMLNodeReader& _node, bool _warn = true);
+    EuclideanDistance(MPProblemType* _problem, XMLNodeReader& _node, bool _warn = true);
     virtual ~EuclideanDistance();
 };
 
 template<class MPTraits>
-EuclideanDistance<MPTraits>::EuclideanDistance(bool _normalize) : MinkowskiDistance<MPTraits>(2, 2, 1.0/2, _normalize) {
-  this->m_name = "Euclidean";
-}
+EuclideanDistance<MPTraits>::EuclideanDistance(bool _normalize) :
+  MinkowskiDistance<MPTraits>(2, 2, 1.0/2, _normalize) {
+    this->SetName("Euclidean");
+  }
 
 template<class MPTraits>
-EuclideanDistance<MPTraits>::EuclideanDistance(typename MPTraits::MPProblemType* _problem, XMLNodeReader& _node, bool _warn) : 
+EuclideanDistance<MPTraits>::EuclideanDistance(MPProblemType* _problem,
+    XMLNodeReader& _node, bool _warn) :
   MinkowskiDistance<MPTraits>(_problem, _node, false, false) {
-    this->m_name = "Euclidean";
+    this->SetName("Euclidean");
 
     this->m_r1 = 2;
     this->m_r2 = 2;
@@ -34,6 +38,7 @@ EuclideanDistance<MPTraits>::EuclideanDistance(typename MPTraits::MPProblemType*
   }
 
 template<class MPTraits>
-EuclideanDistance<MPTraits>::~EuclideanDistance() {}
+EuclideanDistance<MPTraits>::~EuclideanDistance() {
+}
 
 #endif

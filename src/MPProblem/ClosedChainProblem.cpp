@@ -42,12 +42,12 @@ ClosedChainProblem::
 }
 
 void ClosedChainProblem::
-ParseXML(XMLNodeReader& in_Node) { 
+ParseXML(XMLNodeReader& in_Node) {
   in_Node.verifyName("MPProblem");
 
-  for(XMLNodeReader::childiterator citr = in_Node.children_begin(); citr!= in_Node.children_end(); ++citr) 
+  for(XMLNodeReader::childiterator citr = in_Node.children_begin(); citr!= in_Node.children_end(); ++citr)
     if(!this->ParseChild(citr)){
-      if(citr->getName() == "links_file") 
+      if(citr->getName() == "links_file")
       {
         string filename = citr->stringXMLParameter(string("filename"), true, string(""),string("Links File Name"));
 
@@ -65,7 +65,7 @@ ParseXML(XMLNodeReader& in_Node) {
         cerr << "Warning, attempting to use ClosedChainProblem with a non-reachable distance cfg type, exiting.\n";
         exit(-1);
 #endif
-      } else 
+      } else
         citr->warnUnknownNode();
     }
 }
@@ -132,20 +132,20 @@ bool ClosedChainProblem::ParseLoop(ifstream &fin)
 {
   int loopSize = 0;
   fin >> loopSize;
-  
+
   vector<int> loopLinksID;
   vector<Link *> loopLinks;
   for(int i=0; i<loopSize; ++i)
   {
     int linkID = -1;
-    fin >> linkID;      
+    fin >> linkID;
     loopLinksID.push_back(linkID);
     loopLinks.push_back(g_baseLinks[linkID]);
   }
-  cout << "Loop: "; 
+  cout << "Loop: ";
   copy(loopLinksID.begin(), loopLinksID.end(), ostream_iterator<int>(cout, " "));
-  cout << endl;    
-    
+  cout << endl;
+
   Link *newTree = BuildTree(0, loopLinks.size()-1, loopLinks);
   g_loopRoots.push_back(newTree);
 
@@ -168,11 +168,11 @@ bool ClosedChainProblem::ParseCfgJoints(ifstream &fin)
    jointLinkIDs.push_back(pair<int, int>(linkID1, linkID2));
    g_cfgJoints.push_back(pair<Link*, Link *>(g_baseLinks[linkID1], g_baseLinks[linkID2]));
  }
-      
+
  cout << "reading joints: " << endl;
  for(size_t i=0; i<jointLinkIDs.size(); ++i)
    cout << jointLinkIDs[i].first << "," << jointLinkIDs[i].second << endl;
-      
+
  return true;
 }
 
@@ -190,18 +190,18 @@ bool ClosedChainProblem::ParseEarJoints(ifstream &fin)
    fin >> linkID3;
    g_earJoints.push_back(triple<int, int, int>(linkID1, linkID2, linkID3));
  }
-      
+
  cout << "reading ear joints: " << endl;
  for(size_t i=0; i<g_earJoints.size(); ++i)
    cout << g_earJoints[i].first << "," << g_earJoints[i].second << "," << g_earJoints[i].third << endl;
-      
+
  return true;
 }
 
 
  void  ConfigEar(Environment*env, Link* ear_root, Link* loop_root, double base_link_angle);
- 
- 
+
+
 double
 ClosedChainProblem::MyCalculateJointAngle(Environment* env, Link* link1, Link* link2)
 {
@@ -209,7 +209,7 @@ ClosedChainProblem::MyCalculateJointAngle(Environment* env, Link* link1, Link* l
   {
     vector<int> actual_links;
     get_actual_links_of(*E, actual_links);
-    
+
     if(find(actual_links.begin(), actual_links.end(), link1->GetID()) != actual_links.end() &&
        find(actual_links.begin(), actual_links.end(), link2->GetID()) != actual_links.end())
     {
@@ -226,7 +226,7 @@ ClosedChainProblem::MyCalculateJointAngle(Environment* env, Link* link1, Link* l
   {
     vector<int> actual_links;
     get_actual_links_of(g_ear_roots[i], actual_links);
-    
+
     //assume ear link is link2
     if(find(actual_links.begin(), actual_links.end(), link2->GetID()) != actual_links.end())
     {
@@ -245,14 +245,14 @@ ClosedChainProblem::MyCalculateJointAngle(Environment* env, Link* link1, Link* l
 
 
   //cout << "\t\tcalling ConfigEar with ear_root = " << ear_root_link->GetID() << ", tree_root_link = " << tree_root_link->GetID() << ", and angle = " << angle << "\n";
-  ConfigEar(env, ear_root_link, tree_root_link, angle); 
+  ConfigEar(env, ear_root_link, tree_root_link, angle);
 
   //compute new angle
   //assume orientations of links now, later compute automatically from earJoints
-  
+
   GMSPolyhedron& link1_poly = env->GetMultiBody(env->GetRobotIndex())->GetFreeBody(link1->GetID())->GetWorldPolyhedron();
   Vector3d joint1; //end of link1_poly
-  for(int i=0; i<4; ++i) 
+  for(int i=0; i<4; ++i)
     joint1 = joint1 + link1_poly.m_vertexList[i];
   joint1 = joint1 / 4;
   //cout << "\t\tjoint1 = " << joint1 << endl;
@@ -260,7 +260,7 @@ ClosedChainProblem::MyCalculateJointAngle(Environment* env, Link* link1, Link* l
 /*
   GMSPolyhedron& link2_poly = env->GetMultiBody(env->GetRobotIndex())->GetFreeBody(link2->GetID())->GetWorldPolyhedron();
   Vector3d end_link2; //end of link2_poly
-  for(int i=0; i<4; ++i) 
+  for(int i=0; i<4; ++i)
     end_link2 = end_link2 + link2_poly.m_vertexList[i];
   end_link2 = end_link2 / 4;
   //cout << "\t\tend_link2 = " << end_link2 << endl;
@@ -277,7 +277,7 @@ ClosedChainProblem::MyCalculateJointAngle(Environment* env, Link* link1, Link* l
   int link3_id = actual_ear_links.back();
   GMSPolyhedron& link3_poly = env->GetMultiBody(env->GetRobotIndex())->GetFreeBody(link3_id)->GetWorldPolyhedron();
   Vector3d end_link3; //end of link3_poly
-  for(int i=0; i<4; ++i) 
+  for(int i=0; i<4; ++i)
     end_link3 = end_link3 + link3_poly.m_vertexList[i];
   end_link3 = end_link3 / 4;
   //cout << "\t\tend_link3 = " << end_link3 << endl;
@@ -297,7 +297,7 @@ ClosedChainProblem::MyCalculateJointAngle(Environment* env, Link* link1, Link* l
   //cout << "\t\tlink4_id = " << link4_id << endl;
   GMSPolyhedron& link4_poly = env->GetMultiBody(env->GetRobotIndex())->GetFreeBody(link4_id)->GetWorldPolyhedron();
   Vector3d joint2; //start of link4_poly
-  for(int i=4; i<8; ++i) 
+  for(int i=4; i<8; ++i)
     joint2 = joint2 + link4_poly.m_vertexList[i];
   joint2 = joint2 / 4;
   //cout << "\t\tjoint2 = " << joint2 << endl;
@@ -316,7 +316,7 @@ ClosedChainProblem::MyCalculateJointAngle(Environment* env, Link* link1, Link* l
   cout << "\tjoint2 = " << joint2 << endl;
   cout << "\tend_link3 = " << end_link3 << endl;
   */
-  
+
 
 
 
@@ -329,9 +329,9 @@ ClosedChainProblem::MyCalculateJointAngle(Environment* env, Link* link1, Link* l
     angle += TWO_PI;
   while(angle > TWO_PI)
     angle -= TWO_PI;
-  
-  ConfigEar(env, ear_root_link, tree_root_link, angle); 
-  
+
+  ConfigEar(env, ear_root_link, tree_root_link, angle);
+
   return angle;
 }
 
@@ -346,17 +346,17 @@ bool ClosedChainProblem::ParseLinksFile(const char* linksFileName)
   }
 
   int numLinks = 0;
-  
+
   char strData[256];
   fin >> strData;
   if(strcmp(strData, "numLinks") != 0)
     return false;
-  else 
+  else
     fin >> numLinks;
 
   for(int i=0; i<numLinks; ++i)
     g_baseLinks.push_back(NULL);
-    
+
   while(!fin.eof())
   {
     strData[0] = '\0';
@@ -365,7 +365,7 @@ bool ClosedChainProblem::ParseLinksFile(const char* linksFileName)
 
     if(strcmp(strData, "RealLink") == 0)
     {
-      if(!ParseRealLink(fin)) 
+      if(!ParseRealLink(fin))
         return false;
     }
     else if(strcmp(strData, "VirtualLink") == 0)
@@ -435,7 +435,7 @@ bool ClosedChainProblem::ParseLinksFile(const char* linksFileName)
     {
       cerr << "Error, parent link not found for ear " << i << "in loop " << i << endl;
       exit(-1);
-    } 
+    }
     else
     {
       g_ear_roots.push_back(parent);
@@ -538,7 +538,7 @@ void ClosedChainProblem::ConfigEar(Environment* env, Link* ear_root, vector<int>
   /*
   cout << "\n\nDEBUG::ConfigEar:\n";
   cout << "\tear_root = " << ear_root->GetID() << endl;
-  cout << "\tactual_ear_links = "; for_each(actual_ear_links.begin(), actual_ear_links.end(), cout << boost::lambda::_1 << " 
+  cout << "\tactual_ear_links = "; for_each(actual_ear_links.begin(), actual_ear_links.end(), cout << boost::lambda::_1 << "
 
 "); cout << endl;
   cout << "\tbase_link_id = " << base_link_id << endl;
@@ -550,10 +550,10 @@ void ClosedChainProblem::ConfigEar(Environment* env, Link* ear_root, vector<int>
   for(vector<pair<Link*, Link*> >::iterator J = g_cfgJoints.begin(); J != g_cfgJoints.end(); ++J)
     {
 
-      if((J->first->GetID() == base_link_id || find(actual_ear_links.begin(), actual_ear_links.end(), J->first->GetID()) != 
+      if((J->first->GetID() == base_link_id || find(actual_ear_links.begin(), actual_ear_links.end(), J->first->GetID()) !=
 
 	  actual_ear_links.end()) &&
-	 (J->second->GetID() == base_link_id || find(actual_ear_links.begin(), actual_ear_links.end(), J->second->GetID()) != 
+	 (J->second->GetID() == base_link_id || find(actual_ear_links.begin(), actual_ear_links.end(), J->second->GetID()) !=
 
 	  actual_ear_links.end()))
 	{

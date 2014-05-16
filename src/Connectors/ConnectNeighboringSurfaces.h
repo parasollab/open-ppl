@@ -91,7 +91,7 @@ void ConnectNeighboringSurfaces<MPTraits>::ParseXML(XMLNodeReader& _node){
 template<class MPTraits>
 void ConnectNeighboringSurfaces<MPTraits>::PrintOptions(ostream& _os) const {
   ConnectorMethod<MPTraits>::PrintOptions(_os);
-  _os << "    " << this->GetName() << "::  k = " << m_k << endl;
+  _os << "    " << this->GetNameAndLabel() << "::  k = " << m_k << endl;
   _os << "\tsurfacesToIgnore = [";
   for(size_t i=0; i < m_surfacesToIgnore.size(); i++) {
     _os << m_surfacesToIgnore[i];
@@ -261,9 +261,9 @@ ConnectNeighboringSurfaces<MPTraits>::Connect(RoadmapType* _rm, StatClass& _stat
 	  if(this->m_debug) cout << " sampleBtwSurfaces added nid2: " << vid2 << " pt: "<< queryPt << " surfID: " << qPtSurfID  << endl;
 
 	  LPOutput<MPTraits> lpOutput;
-	  lpOutput.edge.first.SetWeight(dist);
-	  lpOutput.edge.second.SetWeight(dist);
-	  _rm->GetGraph()->AddEdge(vid1, vid2, lpOutput.edge);
+	  lpOutput.m_edge.first.SetWeight(dist);
+	  lpOutput.m_edge.second.SetWeight(dist);
+	  _rm->GetGraph()->AddEdge(vid1, vid2, lpOutput.m_edge);
 
 	}//endif qPtOnSurf
 	else {

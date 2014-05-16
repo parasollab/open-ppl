@@ -78,19 +78,20 @@ class SparkPRM : public Strategy<MPTraits> {
     string m_nfVertexLabel; // Neighborhood finder for ConnectVertex step, k=1
     string m_vcLabel;       // Validity checker
     string m_ncLabel;       // Node connector
+    string m_eLabel;        // Extender Method
 
     bool m_rrtDebug;        // like m_debug but for the rrt stuff only. TODO: get rid of this (but imo reading the debug output is really hard)
 };
 
 template<class MPTraits, template<typename> class Strategy>
 SparkPRM<MPTraits, Strategy>::SparkPRM() {
-  this->m_name = this->GetName() + "WithRRT";
+  this->m_name += "WithRRT";
 }
 
 template<class MPTraits, template<typename> class Strategy>
 SparkPRM<MPTraits, Strategy>::SparkPRM(MPProblemType* _problem, XMLNodeReader& _node) :
   Strategy<MPTraits>(_problem, _node) {
-    this->m_name = this->GetName() + "WithRRT";
+    this->m_name += "WithRRT";
     ParseXML(_node);
   }
 
@@ -118,6 +119,7 @@ SparkPRM<MPTraits, Strategy>::ParseXML(XMLNodeReader& _node) {
   m_nfVertexLabel = _node.stringXMLParameter("nfVertexLabel", true, "Nearest", "Neighborhood Finder for ConnectVertex step, k=1");
   m_vcLabel = _node.stringXMLParameter("vcLabel", true, "", "Validity Test Method");
   m_ncLabel = _node.stringXMLParameter("ncLabel", true, "", "Node Connection Method");
+  m_eLabel = _node.stringXMLParameter("eLabel", true, "", "Extender Method");
 
   m_rrtDebug = _node.boolXMLParameter("rrtDebug", false, false, "Debug for RRT stuff");
 
@@ -146,6 +148,7 @@ SparkPRM<MPTraits, Strategy>::PrintOptions(ostream& _os) {
   _os << "\n\tnfVertexLabel = " << m_nfVertexLabel;
   _os << "\n\tvcLabel = " << m_vcLabel;
   _os << "\n\tncLabel = " << m_ncLabel;
+  _os << "\n\teLabel = " << m_eLabel;
   _os << "\n\trrtDebug = " << m_rrtDebug;
   _os << endl;
 }
@@ -616,7 +619,7 @@ SparkPRM<MPTraits, Strategy>::ExpandTree(CfgType& _dir, vector<VID>& _rrt, vecto
     VID isImportant = INVALID_VID;
     for(typename vector<VID>::iterator it = _important.begin(); it != _important.end(); it++) {
       CfgType _importantCfg = graph->GetVertex(*it);
-      if(dm->Distance(env, nearest, _importantCfg) <= 1.01*m_delta) {
+      if(dm->Distance(nearest, _importantCfg) <= 1.01*m_delta) {
         isImportant = *it;
         break;
       }
@@ -627,16 +630,17 @@ SparkPRM<MPTraits, Strategy>::ExpandTree(CfgType& _dir, vector<VID>& _rrt, vecto
   }
 
   // Expand the RRT
+  typename MPProblemType::ExtenderPointer e = this->GetMPProblem()->GetExtender(m_eLabel);
+  vector<CfgType> intermediates;
   stats->StartClock("RRT: ExpandTree: RRTExpand");
-  if(!RRTExpand<MPTraits>(this->GetMPProblem(), m_vcLabel, m_dmLabel, nearest, _dir, newCfg,
-        m_delta, weight, cdInfo, env->GetPositionRes(), env->GetOrientationRes())) {
+  if(!e->Extend(nearest, _dir, newCfg, intermediates)) {
     stats->StopClock("RRT: ExpandTree: RRTExpand");
     return recentVID;
   }
   stats->StopClock("RRT: ExpandTree: RRTExpand");
 
   // If expansion was successful, add new vertex to roadmap
-  if(dm->Distance(env, newCfg, nearest) >= m_minDist) {
+  if(dm->Distance(newCfg, nearest) >= m_minDist) {
     recentVID = graph->AddVertex(newCfg);
     _rrt.push_back(recentVID);
 

@@ -12,16 +12,16 @@
 #include "MPProblem/Geometry/MultiBody.h"
 #include "MPProblem/Environment.h"
 
-CfgSurface::CfgSurface() : 
+CfgSurface::CfgSurface() :
   m_pt(Point2d(0,0)), m_h(0), m_surfaceID(INVALID_SURFACE) {}
 
-CfgSurface::CfgSurface(double _x, double _y, double _h, int _sid) : 
+CfgSurface::CfgSurface(double _x, double _y, double _h, int _sid) :
   m_pt(Point2d(_x, _y)), m_h(_h), m_surfaceID(_sid) {}
 
-CfgSurface::CfgSurface(const Vector3d& _v) : 
+CfgSurface::CfgSurface(const Vector3d& _v) :
   m_pt(Point2d(_v[0], _v[2])), m_h(_v[1]), m_surfaceID(INVALID_SURFACE) {}
 
-CfgSurface::CfgSurface(const CfgSurface& _c) : 
+CfgSurface::CfgSurface(const CfgSurface& _c) :
   m_pt(_c.m_pt), m_h(_c.m_h), m_surfaceID(_c.m_surfaceID){
     m_labelMap = _c.m_labelMap;
     m_statMap = _c.m_statMap;
@@ -29,7 +29,7 @@ CfgSurface::CfgSurface(const CfgSurface& _c) :
     m_witnessCfg = _c.m_witnessCfg;
   }
 
-CfgSurface::CfgSurface(const Point2d& _p, double _h, int _sid) : 
+CfgSurface::CfgSurface(const Point2d& _p, double _h, int _sid) :
   m_pt(_p), m_h(_h), m_surfaceID(_sid) {}
 
 CfgSurface::CfgSurface(const Cfg& _c) :
@@ -179,8 +179,8 @@ CfgSurface::Read(istream& _is){
 void
 CfgSurface::Write(ostream& _os) const{
   _os << setw(4) << m_robotIndex << " "
-      << setw(4) << m_surfaceID << " " 
-      << setw(4) << m_pt[0] << " " 
+      << setw(4) << m_surfaceID << " "
+      << setw(4) << m_pt[0] << " "
       << setw(4) << m_h << " "
       << setw(4) << m_pt[1] << " ";
 
@@ -216,7 +216,7 @@ void
 CfgSurface::SetData(const vector<double>& _data) {
   if(_data.size() != m_dof) {
     cout << "\n\nERROR in CfgSurface::SetData, ";
-    cout << "DOF of data and Cfg are not equal " << _data.size() << "\t!=\t" << m_dof << endl; 
+    cout << "DOF of data and Cfg are not equal " << _data.size() << "\t!=\t" << m_dof << endl;
     exit(-1);
   }
   m_pt[0] = _data[0];

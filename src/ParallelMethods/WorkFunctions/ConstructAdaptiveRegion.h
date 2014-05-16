@@ -96,7 +96,6 @@ public:
     double  setup_timer=0.0, run_timer = 0.0;
     bt1.start();
     vector<VID> regionCand;
-    CDInfo cdInfo;
     string callee("InnerRegion");
 
     string sampler = _l0view.property().GetSamplerString();
@@ -119,13 +118,13 @@ public:
     //bb->Print(cout);
 
     ///Add region center and radius to rmap if valid
-    if(m_vcm->IsValid(cfg1, m_env, *(m_region->GetStatClass()), cdInfo, true, &callee)){
+    if(m_vcm->IsValid(cfg1, &callee)){
       VID cvid = m_region->GetRoadmap()->m_pRoadmap->add_vertex(cfg1);
       //PrintValue("Inner Region center vid: ", cvid);
       regionCand.push_back(cvid);
     }
 
-    if(m_vcm->IsValid(cfg2, m_env, *(m_region->GetStatClass()), cdInfo, true, &callee)){
+    if(m_vcm->IsValid(cfg2, &callee)){
       VID rvid = m_region->GetRoadmap()->m_pRoadmap->add_vertex(cfg2);
       //PrintValue("Inner Region radius vid: ", rvid);
       regionCand.push_back(rvid);

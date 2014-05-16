@@ -1,11 +1,23 @@
 #include "Body.h"
+
 #include <sstream>
+
+#include <CGAL/Quotient.h>
+#include <CGAL/MP_Float.h>
+#include <../src/CGAL/MP_Float.cpp>
+#include <CGAL/Exact_predicates_exact_constructions_kernel.h>
+#include <CGAL/algorithm.h>
+#include <CGAL/Polyhedron_3.h>
+#include <CGAL/convex_hull_3.h>
+
+string Body::m_modelDataDir;
 
 Body::Body(MultiBody* _owner) :
   m_multibody(_owner),
   m_isBase(false),
   m_baseType(Robot::PLANAR),
   m_baseMovementType(Robot::TRANSLATIONAL),
+  m_convexHullAvailable(false),
   m_centerOfMassAvailable(false), m_worldPolyhedronAvailable(false) {
     fill(m_boundingBox, m_boundingBox+6, 0);
   }
@@ -17,6 +29,7 @@ Body::Body(MultiBody* _owner, GMSPolyhedron& _polyhedron) :
   m_baseMovementType(Robot::TRANSLATIONAL),
   m_polyhedron(_polyhedron),
   m_worldPolyhedron(_polyhedron),
+  m_convexHullAvailable(false),
   m_centerOfMassAvailable(false),
   m_worldPolyhedronAvailable(false) {
     fill(m_boundingBox, m_boundingBox+6, 0);
@@ -31,6 +44,8 @@ Body::Body(const Body& _b) :
   m_baseMovementType(_b.m_baseMovementType),
   m_polyhedron(_b.m_polyhedron),
   m_worldPolyhedron(_b.m_worldPolyhedron),
+  m_convexHull(_b.m_convexHull),
+  m_convexHullAvailable(_b.m_convexHullAvailable),
   m_centerOfMassAvailable(_b.m_centerOfMassAvailable),
   m_centerOfMass(_b.m_centerOfMass),
   m_worldPolyhedronAvailable(_b.m_worldPolyhedronAvailable),
@@ -136,17 +151,12 @@ Body::ChangeWorldPolyhedron() {
 //  Read
 //===================================================================
 void
-Body::ReadBYU(istream& _is) {
-  m_polyhedron.ReadBYU(_is);
-  m_worldPolyhedron = m_polyhedron;
-  FindBoundingBox();
-}
+Body::Read() {
+  string filename = m_modelDataDir == "/" ? m_filename : m_modelDataDir + m_filename;
+  if(!FileExists(filename))
+    throw ParseException(WHERE, "Geometry file '" + filename + "' not found.");
 
-void
-Body::Read(string _fileName) {
-  SetFileName(_fileName);
-
-  m_polyhedron.Read(_fileName);
+  m_polyhedron.Read(filename);
   m_worldPolyhedron = m_polyhedron;
   GMSPolyhedron poly;
   poly = GetPolyhedron();
@@ -255,33 +265,28 @@ Body::IsAdjacent(shared_ptr<Body> _otherBody) {
 
 bool
 Body::IsWithinI(shared_ptr<Body> _otherBody, int _i){
-  if(*this == *(_otherBody.get()))
-    return true;
-  if(_i==0){
-    return false;
-  }
+  //Visit the recursive, flood-fill based helper function.
   return IsWithinIHelper(this,_otherBody.get(),_i,NULL);
 }
 
 bool
 Body::IsWithinIHelper(Body* _body1, Body* _body2, int _i, Body* _prevBody){
-  if(*_body1 == *_body2){
+  if(_body1 == _body2 || *_body1 == *_body2){
     return true;
   }
   if(_i==0){
     return false;
   }
+
   typedef vector<Connection>::iterator CIT;
-  for(CIT C = _body1->m_forwardConnection.begin(); C != _body1->m_forwardConnection.end(); ++C)
-    if(IsWithinIHelper(C->GetNextBody().get(), _body2, _i-1, _body1) )
+  for(CIT C = _body1->m_forwardConnection.begin(); C != _body1->m_forwardConnection.end(); ++C) {
+    Body* next = C->GetNextBody().get();
+    if(next != _prevBody && IsWithinIHelper(next, _body2, _i-1, _body1))
       return true;
+  }
   for(CIT C =_body1->m_backwardConnection.begin(); C != _body1->m_backwardConnection.end(); ++C) {
-    shared_ptr<Body> prev = C->GetPreviousBody();
-    for(CIT C2 = prev->m_forwardConnection.begin(); C2 != prev->m_forwardConnection.end(); ++C2){
-      if(*(C2->GetNextBody()) == *_body2)
-        return true;
-    }
-    if(IsWithinIHelper(C->GetPreviousBody().get(),_body2,_i-1, _body1) )
+    Body* prev = C->GetPreviousBody().get();
+    if(prev != _prevBody && IsWithinIHelper(prev, _body2, _i-1, _body1))
       return true;
   }
   return false;
@@ -447,3 +452,40 @@ Body::Link(const Connection& _c) {
   m_centerOfMassAvailable=false;
 }
 
+bool
+Body::IsConvexHullVertex(const Vector3d& _v) {
+  if(!m_convexHullAvailable)
+    ComputeConvexHull();
+
+  vector<Vector3d>::iterator vit;
+  for(vit = m_convexHull.m_vertexList.begin(); vit!= m_convexHull.m_vertexList.end(); ++vit)
+    if(_v == *vit)
+      return true;
+  return false;
+}
+
+void
+Body::ComputeConvexHull() {
+
+  typedef CGAL::Exact_predicates_exact_constructions_kernel  Kernel;
+  typedef CGAL::Polyhedron_3<Kernel>                         Polyhedron3;
+  typedef Kernel::Point_3                                    Point3;
+
+  //copy polyhedron points into vector
+  vector<Point3> points;
+  typedef vector<Vector3d>::iterator VIT;
+  for(VIT vit = m_polyhedron.m_vertexList.begin(); vit!= m_polyhedron.m_vertexList.end(); ++vit)
+    points.push_back(Point3((*vit)[0], (*vit)[1], (*vit)[2]));
+
+  //define polyhedron to hold convex hull
+  Polyhedron3 poly;
+
+  //compute convex hull of non-collinear points
+  CGAL::convex_hull_3(points.begin(), points.end(), poly);
+
+  //iterate through convex hull
+  for(Polyhedron3::Point_iterator vit = poly.points_begin(); vit != poly.points_end(); ++vit)
+    m_convexHull.m_vertexList.push_back(Vector3d(to_double((*vit)[0]), to_double((*vit)[1]), to_double((*vit)[2])));
+
+  m_convexHullAvailable = true;
+}

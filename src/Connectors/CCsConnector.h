@@ -99,7 +99,7 @@ CCsConnector<MPTraits>::Connect(RoadmapType* _rm, StatClass& _stats, ColorMap& _
   ///////////////////////////////////////////////////////////////////////////////////
   /// ConnectkCCs
   ///////////////////////////////////////////////////////////////////////////////////
-  size_t k = m_k ? m_k : ccs.size();
+  size_t k = m_k ? m_k : ccs.size()-1;
 
   if(this->m_debug)
     cout << "Connecting " << m_k << "-closest CCs" << endl;
@@ -149,7 +149,6 @@ CCsConnector<MPTraits>::ConnectCC(RoadmapType* _rm, StatClass& _stats,
   GraphType* rgraph = _rm->GetGraph();
   LPOutput<MPTraits> lpOutput;
   NeighborhoodFinderPointer nf = this->GetMPProblem()->GetNeighborhoodFinder(this->m_nfLabel);
-  DistanceMetricPointer dmm = nf->GetDMMethod();
   LocalPlannerPointer lp = this->GetMPProblem()->GetLocalPlanner(this->m_lpLabel);
 
   typedef vector<pair<pair<VID, VID>, double> > NeighborPairs;
@@ -165,17 +164,15 @@ CCsConnector<MPTraits>::ConnectCC(RoadmapType* _rm, StatClass& _stats,
     VID cc2Elem = npit->first.second;
 
     CfgType _col;
-    if (!lp->IsConnected(env, _stats, dmm,
-          rgraph->GetVertex(cc1Elem),
-          rgraph->GetVertex(cc2Elem),
+    if (!lp->IsConnected(rgraph->GetVertex(cc1Elem), rgraph->GetVertex(cc2Elem),
           _col, &lpOutput,
           env->GetPositionRes(), env->GetOrientationRes(), true)) {
-      rgraph->AddEdge(cc1Elem, cc2Elem, lpOutput.edge);
+      rgraph->AddEdge(cc1Elem, cc2Elem, lpOutput.m_edge);
       return;
     }
     else if(this->m_addPartialEdge) {
       typename vector<typename LPOutput<MPTraits>::LPSavedEdge>::iterator eit;
-      for(eit = lpOutput.savedEdge.begin(); eit != lpOutput.savedEdge.end(); eit++) {
+      for(eit = lpOutput.m_savedEdge.begin(); eit != lpOutput.m_savedEdge.end(); eit++) {
         CfgType tmp = eit->first.second;
         if(tmp != rgraph->GetVertex(cc1Elem)){
           VID tmpVID = rgraph->AddVertex(tmp);
@@ -195,7 +192,6 @@ CCsConnector<MPTraits>::ComputeAllPairsCCDist(RoadmapType* _rm,
     ColorMap& _cmap, vector<pair<size_t, VID> >& _ccs){
 
   GraphType* rgraph=_rm->GetGraph();
-  Environment* env = this->GetMPProblem()->GetEnvironment();
   DistanceMetricPointer dmm = this->GetMPProblem()->GetNeighborhoodFinder(this->m_nfLabel)->GetDMMethod();
 
   //compute com of ccs
@@ -214,7 +210,7 @@ CCsConnector<MPTraits>::ComputeAllPairsCCDist(RoadmapType* _rm,
     for(IT j = i; j != coms.end(); ++j)
       //dont track the CC distance if i and j are the same
       if(i != j){
-        double dist = dmm->Distance(env, i->second, j->second);
+        double dist = dmm->Distance(i->second, j->second);
         m_ccDist[i->first].push_back(make_pair(j->first, dist));
         m_ccDist[j->first].push_back(make_pair(i->first, dist));
       }
@@ -230,7 +226,7 @@ CCsConnector<MPTraits>::GetKCCs(size_t _k, VID _ccid, vector<VID>& _kCCID){
 
   //copy
   for(typename vector<pair<VID, double> >::iterator i=dis2CCs.begin(); i != dis2CCs.begin() + _k; ++i)
-    _kCCID.push_back(i->second);
+    _kCCID.push_back(i->first);
 }
 
 #endif

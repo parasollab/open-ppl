@@ -11,7 +11,7 @@ class MetricMethod : public MPBaseObject<MPTraits> {
     virtual ~MetricMethod(){}
 
     virtual void PrintOptions(ostream& _os) const {
-      _os << this->GetName() << endl;
+      _os << this->GetNameAndLabel() << endl;
     }
 
     virtual double operator()() = 0;

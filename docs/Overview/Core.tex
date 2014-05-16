@@ -1,0 +1,153 @@
+\chapter{Core PMPL Classes}
+
+This chapter explains some of the core concepts within PMPL, which are used
+throughout the library of planning abstractions and algorithms, but are
+consistent through all of them, e.g., $\cspace$, work space, code insights, etc.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Cfg Classes
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{\texttt{Cfg}}
+
+\texttt{Cfg} is the core class which defines a configuration, or a vector of
+values representing all the degrees of freedom of a robot. This is the
+abstraction of $\cspace$ essentially, and thus \texttt{Cfg} is a point or vector
+inside of $\cspace$. Most mathematical operations are defined over this class,
+reading, writing, accessing, random sampling, etc.
+
+%% Cfg Reach
+\subsection{\texttt{Cfg\_reach\_cc}}
+
+%% Cfg Reach Fixed
+\subsubsection{\texttt{Cfg\_reach\_cc\_fixed}}
+
+%% Virtual Link
+\subsubsection{\texttt{VirtualLink}}
+
+%% Cfg Surface
+\subsection{\texttt{CfgSurface}}
+
+%% SSSurface
+\subsubsection{\texttt{SSSurface}}
+
+%% SSSurface Mult
+\paragraph{\texttt{SSSurfaceMult}}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Weight Classes
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{\texttt{Weight}}
+
+\texttt{Weight} is the concept for what is stored on the graph edges.
+Essentially, edges are defined as polygonal chains through $\cspace$. They have
+two essential properties, a weight value representing some idea of distance
+between the two end points and a set of intermediate configurations along the
+polygonal chain not including the start and goal configurations.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% MPProblem Classes
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{\texttt{MPProblem}}
+
+The \texttt{MPProblem} is a central class to PMPL. It ``stores everything''. It
+is a hub of accessing all algorithmic abstractions, roadmaps, statistics
+classes, the environment, etc.
+
+%% Closed Chain Problem
+\subsection{\texttt{ClosedChainProblem}}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% MPTraits Classes
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{\texttt{MPTraits}}
+
+\texttt{MPTraits} is a type class which defines the motion planning universe. We
+construct our methods through a factory design pattern, and thus this states all
+available classes within an abstraction that you can use in the system.
+Essentially the important types are, the \texttt{CfgType} or the $\cspace$
+abstraction class, the \texttt{WeightType} or the edge type of the graph, and a
+type list for each algorithm abstraction --- here you only need to define what
+you need, as extraneous methods in the type class imply longer compile times.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Environment Classes
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{\texttt{Environment}}
+
+The \texttt{Environment} is essentially the work space of the motion planning
+problem. We define a workspace as a set of \texttt{MultiBody} which are
+essentially either robot or obstacle geometries and a \texttt{Boundary} to
+define the sampling/exploration region for the planner.
+
+%% Boundary
+\subsection{\texttt{Boundary}}
+
+%% Bounding Box
+\subsubsection{\texttt{BoundingBox}}
+
+%% Bounding Sphere
+\subsubsection{\texttt{BoundingSphere}}
+
+%% Robot
+\subsection{\texttt{Robot}}
+
+%% MultiBody
+\subsection{\texttt{MultiBody}}
+
+%% Body
+\subsubsection{\texttt{Body}}
+
+%% Fixed Body
+\paragraph{\texttt{FixedBody}}
+
+%% Free Body
+\paragraph{\texttt{FreeBody}}
+
+%% GMS Polyhedron
+\paragraph{\texttt{GMSPolyhedron}}
+
+%% Connection
+\subsubsection{\texttt{Connection}}
+
+%% DH Parameters
+\paragraph{\texttt{DHparameters}}
+
+%% Contact
+\subsection{\texttt{Contact}}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Roadmap Classes
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{\texttt{Roadmap}}
+
+The \texttt{Roadmap} is essentially the graph $G=(V, E)$ which is used to
+approximate the planning space used in sampling-based motion planning
+algorithms. $V$, or the set of vertices, are all of type \texttt{CfgType} and
+$E$, or the set of edges, are all of type \texttt{WeightType}.
+
+%% Roadmap Graph
+\subsection{\texttt{RoadmapGraph}}
+
+%% Roadmap VCS
+\subsubsection{\texttt{RoadmapVCS}}
+
+%% Roadmap Change Event
+\subsubsection{\texttt{RoadmapChangeEvent}}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Miscellaneous
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Miscellaneous Classes}
+
+%% Generate Partitions
+\subsection{\texttt{GeneratePartitions}}
+
+%% Is Closed Chain
+\subsection{\texttt{IsClosedChain}}
+
+%% Region Graph
+\subsection{\texttt{RegionGraph}}
+
+%% SRT Info
+\subsection{\texttt{SRTInfo}}
+

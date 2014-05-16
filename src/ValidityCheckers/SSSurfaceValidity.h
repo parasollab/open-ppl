@@ -28,7 +28,7 @@ class SSSurfaceValidity : public ValidityCheckerMethod<MPTraits> {
 
     virtual ~SSSurfaceValidity() {}
 
-    virtual bool IsValidImpl(CfgType& _cfg, Environment* _env, StatClass& _stats, CDInfo& _cdInfo, string* _callName);
+    virtual bool IsValidImpl(CfgType& _cfg, CDInfo& _cdInfo, const string& _callName);
 
   private:
     string m_vcLabel;
@@ -59,10 +59,10 @@ SSSurfaceValidity<MPTraits>::SSSurfaceValidity(typename MPTraits::MPProblemType*
 
 template<class MPTraits>
 bool
-SSSurfaceValidity<MPTraits>::IsValidImpl(CfgType& _cfg, Environment* _env, StatClass& _stats, CDInfo& _cdInfo, string* _callName){
+SSSurfaceValidity<MPTraits>::IsValidImpl(CfgType& _cfg, CDInfo& _cdInfo, const string& _callName){
   vector<TmpCfgType>& cfgs = _cfg.GetCfgs();
   for(typename vector<TmpCfgType>::iterator vecIter = cfgs.begin(); vecIter != cfgs.end(); ++vecIter){
-    bool result = m_prob.GetValidityChecker("temp")->IsValid(*vecIter, _env, _stats, _cdInfo, _callName);
+    bool result = m_prob.GetValidityChecker("temp")->IsValid(*vecIter, _cdInfo, _callName);
     if (!result){
       _cfg.SetLabel("VALID", false);
       return false;

@@ -6,6 +6,9 @@
 class BoundingBox :  public Boundary {
   public:
     BoundingBox();
+    BoundingBox(pair<double, double> _x,
+        pair<double, double> _y,
+        pair<double, double> _z = pair<double, double>(-numeric_limits<double>::max(), numeric_limits<double>::max()));
     BoundingBox(const BoundingBox& _bbx);
     ~BoundingBox() {}
 
@@ -13,18 +16,19 @@ class BoundingBox :  public Boundary {
 
     double GetMaxDist(double _r1 = 2.0, double _r2 = 0.5) const;
     pair<double, double> GetRange(size_t _i) const;
-    
+
     Point3d GetRandomPoint() const;
     bool InBoundary(const Vector3d& _p) const;
     double GetClearance(const Vector3d& _p) const;
+    int GetSideID(const vector<double>& _p) const;
     Vector3d GetClearancePoint(const Vector3d& _p) const;
     double GetClearance2DSurf(Point2d _pos, Point2d& _cdPt) const;
-    
+
     void ResetBoundary(vector<pair<double, double> >& _obstBBX, double _d);
-   
+
     void Read(istream& _is);
     void Write(ostream& _os) const;
-    
+
   private:
     pair<double, double> m_bbx[3];
 
@@ -40,7 +44,7 @@ class BoundingBox :  public Boundary {
 #ifdef _PARALLEL
 namespace stapl {
   template <typename Accessor>
-    class proxy<BoundingBox, Accessor> 
+    class proxy<BoundingBox, Accessor>
     : public Accessor {
       private:
         friend class proxy_core_access;

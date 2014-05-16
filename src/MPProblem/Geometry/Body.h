@@ -45,7 +45,7 @@ class Body {
 
     bool operator==(const Body& b) const;
     bool operator!=(const Body& b) const { return !(*this == b); }
-    void SetFileName(string _filename) { m_filename=_filename; }
+
     string GetFileName() { return m_filename; }
 
     ///Return transformation of this body in world coordinate.
@@ -102,13 +102,7 @@ class Body {
     void SetBase(Robot::Base _baseType) { m_baseType = _baseType; };
     void SetBaseMovement(Robot::BaseMovement _baseMovementType) { m_baseMovementType = _baseMovementType; };
 
-    void Read(string _fileName);
-
-    /**Read BYU format data from given inpustream.
-     *Call GMSPolyhedron::ReadBYU, calculate the bounding box, and then call buildCDstructure
-     *to create auxilary data structure for collision detection.
-     */
-    void ReadBYU(istream& _is);
+    void Read();
 
     virtual void Write(ostream& _os);
 
@@ -163,7 +157,14 @@ class Body {
      */
     void Link(const Connection& _c);
 
+    bool IsConvexHullVertex(const Vector3d& _v);
+
+    static string m_modelDataDir;
+
   protected:
+
+    void ComputeConvexHull();
+
     string m_filename;
     MultiBody* m_multibody;
     Transformation m_worldTransformation;
@@ -173,6 +174,8 @@ class Body {
 
     GMSPolyhedron m_polyhedron;
     GMSPolyhedron m_worldPolyhedron;
+    GMSPolyhedron m_convexHull;
+    bool m_convexHullAvailable;
     bool m_centerOfMassAvailable;
     Vector3d m_centerOfMass;
     bool m_worldPolyhedronAvailable;

@@ -2,7 +2,6 @@
 #define SRTSTRATEGY_H_
 
 #include "MPStrategyMethod.h"
-#include "Utilities/RRTExpand.h"
 
 template<class MPTraits>
 class SRTStrategy : public MPStrategyMethod<MPTraits> {
@@ -53,6 +52,7 @@ class SRTStrategy : public MPStrategyMethod<MPTraits> {
     string m_dmLabel;
     string m_nfLabel;
     string m_vcLabel;
+    string m_eLabel;
     double m_delta, m_minDist;
     size_t m_numSamples; //"k" random trees per iteration
     size_t m_numExpansions; //"m" expansion iterations per tree
@@ -100,6 +100,7 @@ SRTStrategy<MPTraits>::ParseXML(XMLNodeReader& _node) {
   m_nfLabel = _node.stringXMLParameter("nfLabel", true, "", "Neighborhood Finder");
   m_dmLabel = _node.stringXMLParameter("dmLabel",true,"","Distance Metric");
   m_lpLabel = _node.stringXMLParameter("lpLabel", true, "", "Local Planning Method");
+  m_eLabel = _node.stringXMLParameter("eLabel", true, "", "Extender Method");
 
   m_numSamples = _node.numberXMLParameter("samples", true, 100, 0, MAX_INT, "k random trees per iteration");
   m_numExpansions = _node.numberXMLParameter("expansions", true, 10, 0, MAX_INT, "m expansions per random tree");
@@ -123,6 +124,7 @@ SRTStrategy<MPTraits>::PrintOptions(ostream& _os) const {
   _os << "\tDistance Metric:: " << m_dmLabel << endl;
   _os << "\tValidity Checker:: " << m_vcLabel << endl;
   _os << "\tLocal Planner:: " << m_lpLabel << endl;
+  _os << "\tExtender:: " << m_eLabel << endl;
   _os << "\tEvaluators:: " << endl;
   typedef vector<string>::const_iterator SIT;
   for(SIT sit = m_evaluators.begin(); sit!=m_evaluators.end(); sit++)
@@ -236,9 +238,7 @@ SRTStrategy<MPTraits>::GenerateTrees() {
     CfgType tmp;
     do {
       tmp.GetRandomCfg(env);
-    } while(!(env->InBounds(tmp) &&
-          vcp->IsValid(tmp, env, *this->GetMPProblem()->GetStatClass(),
-            cdInfo, &callee)));
+    } while(!(env->InBounds(tmp) && vcp->IsValid(tmp, cdInfo, callee)));
 
     //create a new tree rooted at cfg
     VID v = this->GetMPProblem()->GetRoadmap()->GetGraph()->AddVertex(tmp);
@@ -391,11 +391,10 @@ SRTStrategy<MPTraits>::Connect(VID _t1, VID _t2) {
     CfgType& c2 = rdmp->GetGraph()->GetVertex(cit->first.second);
     CfgType col;
 
-    if(lpp->IsConnected(env, *this->GetMPProblem()->GetStatClass(), dmp,
-          c1, c2, col,
+    if(lpp->IsConnected(c1, c2, col,
           &lpOutput, env->GetPositionRes(), env->GetOrientationRes())) {
       //successful connection add graph edge
-      rdmp->GetGraph()->AddEdge(cit->first.first, cit->first.second, lpOutput.edge);
+      rdmp->GetGraph()->AddEdge(cit->first.first, cit->first.second, lpOutput.m_edge);
       return true;
     }
   }
@@ -466,9 +465,9 @@ SRTStrategy<MPTraits>::ExpandTree(VID _tree, CfgType& _dir) {
   CfgType newCfg;
   int weight;
 
-  if(!RRTExpand<MPTraits>(this->GetMPProblem(), m_vcLabel, m_dmLabel,
-        nearest, _dir, newCfg, m_delta,
-        weight, cdInfo, env->GetPositionRes(), env->GetOrientationRes())) {
+  typename MPProblemType::ExtenderPointer e = this->GetMPProblem()->GetExtender(m_eLabel);
+  vector<CfgType> intermediates;
+  if(!e->Extend(nearest, _dir, newCfg, intermediates)) {
     if(this->m_debug) cout << "RRT could not expand!" << endl;
     return recentVID;
   }
@@ -476,7 +475,7 @@ SRTStrategy<MPTraits>::ExpandTree(VID _tree, CfgType& _dir) {
   if(this->m_debug) cout << "RRT expanded to " << newCfg << endl;
 
   // If good to go, add to roadmap
-  if(dm->Distance(env, newCfg, nearest) >= m_minDist ) {
+  if(dm->Distance(newCfg, nearest) >= m_minDist ) {
     recentVID = g->AddVertex(newCfg);
     currentTree.second.push_back(recentVID);
 

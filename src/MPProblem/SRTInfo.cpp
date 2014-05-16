@@ -53,7 +53,7 @@ GetTree() const {
   return tree;
 }
 
-BoundingBox 
+BoundingBox
 SRTInfo::
 GetBoundingBox() const {
   return bb;
@@ -64,8 +64,8 @@ SRTInfo::
 GetData() const {
   return srt_info;
 }
-  
-void 
+
+void
 SRTInfo::
 SetBoundingBox(BoundingBox &bbox) {
   srt_info.first = bbox;
@@ -77,7 +77,7 @@ SetTree(std::pair<CfgType,std::vector<VID> > &m_ids) {
   tree = m_ids;
 }
 
-void 
+void
 SRTInfo::
 SetData(BoundingBox &m_bbox, std::pair<CfgType,std::vector<VID> > &m_ids) {
   SetBoundingBox(m_bbox);
@@ -90,7 +90,7 @@ SRTInfo::
 Print(ostream &os) const  {
   typedef std::vector<VID>::const_iterator itr;
   os << "[ " ;
-  os<< " -bbox "; 
+  os<< " -bbox ";
   bb.Print(os);
   os << "\n Candidate" << tree.first << "\n VIDs: ";
   for(itr vit = tree.second.begin(); vit!=tree.second.end(); vit++){

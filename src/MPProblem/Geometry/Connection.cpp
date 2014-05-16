@@ -36,11 +36,8 @@ Connection::GetJointTypeFromTag(const string _tag){
     return Connection::SPHERICAL;
   else if(_tag == "NONACTUATED")
     return Connection::NONACTUATED;
-  else {
-    cerr << "Error::Incorrect Joint Type Specified::" << _tag << endl;
-    cerr << "Choices are:: Revolute, Spherical or Nonactuated" << endl;
-    exit(1);
-  }
+  else
+    throw ParseException(WHERE, "Failed parsing joint type '" + _tag + "'. Options are: revolute, spherical, or nonactuated.");
 }
 
 string
@@ -66,15 +63,16 @@ operator<<(ostream& _os, const Connection& _c) {
 istream&
 operator>>(istream& _is, Connection& _c){
   //body indices
-  _c.m_bodyIndices.first = ReadField<int>(_is, "Previous Body Index");
-  _c.m_bodyIndices.second = ReadField<int>(_is, "Next Body Index");
+  _c.m_bodyIndices.first = ReadField<int>(_is, WHERE, "Failed reading previous body index.");
+  _c.m_bodyIndices.second = ReadField<int>(_is, WHERE, "Failed reading next body index.");
 
   //grab the shared_ptr to bodies
   _c.m_bodies[0] = _c.m_multibody->GetFreeBody(_c.m_bodyIndices.first);
   _c.m_bodies[1] = _c.m_multibody->GetFreeBody(_c.m_bodyIndices.second);
 
   //grab the joint type
-  string connectionTypeTag = ReadFieldString(_is, "Connection Type");
+  string connectionTypeTag = ReadFieldString(_is, WHERE,
+      "Failed reading connection type. Options are: revolute, spherical, or nonactuated.");
   _c.m_jointType = Connection::GetJointTypeFromTag(connectionTypeTag);
 
   //grab the joint limits for revolute and spherical joints
@@ -82,37 +80,33 @@ operator>>(istream& _is, Connection& _c){
     _c.m_jointLimits[0].first = _c.m_jointLimits[1].first = -1;
     _c.m_jointLimits[0].second = _c.m_jointLimits[1].second = 1;
     size_t numRange = _c.m_jointType == Connection::REVOLUTE ? 1 : 2;
-    for(size_t i = 0; i<numRange; i++){
+    for(size_t i = 0; i < numRange; i++){
       string tok;
       if(_is >> tok){
         size_t del = tok.find(":");
-        if(del == string::npos){
-          cerr << "Error::Reading joint range " << i << ". Should be delimited by ':'." << endl;
-          exit(1);
-        }
+        if(del == string::npos)
+          throw ParseException(WHERE, "Failed reading joint range. Should be delimited by ':'.");
+
         istringstream minv(tok.substr(0,del)), maxv(tok.substr(del+1, tok.length()));
-        if(!(minv>>_c.m_jointLimits[i].first && maxv>>_c.m_jointLimits[i].second)){
-          cerr << "Error::Reading joint range " << i << "." << endl;
-          exit(1);
-        }
+        if(!(minv >> _c.m_jointLimits[i].first && maxv >> _c.m_jointLimits[i].second))
+          throw ParseException(WHERE, "Failed reading joint range.");
       }
-      else if(numRange == 2 && i==1) { //error. only 1 token provided.
-        cerr << "Error::Reading spherical joint ranges. Only one provided." << endl;
-        exit(1);
-      }
+      else if(numRange == 2 && i==1) //error. only 1 token provided.
+        throw ParseException(WHERE, "Failed reading joint ranges. Only one provided.");
     }
   }
 
   //transformation to DHFrame
-  _c.m_transformationToDHFrame =
-    ReadField<Transformation>(_is, "Transformation to DH frame");
+  _c.m_transformationToDHFrame = ReadField<Transformation>(_is, WHERE,
+      "Failed reading transformation to DH frame.");
 
   //DH parameters
-  _c.m_dhParameters = ReadField<DHparameters>(_is, "DH Parameters");
+  _c.m_dhParameters = ReadField<DHparameters>(_is, WHERE,
+      "Failed reading DH parameters.");
 
   //transformation to next body
-  _c.m_transformationToBody2 =
-    ReadField<Transformation>(_is, "Transform to next body");
+  _c.m_transformationToBody2 = ReadField<Transformation>(_is, WHERE,
+      "Failed reading transformation to next body.");
 
   //make the connection
   _c.m_bodies[0]->Link(_c);

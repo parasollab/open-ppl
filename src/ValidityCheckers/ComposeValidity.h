@@ -26,8 +26,7 @@ class ComposeValidity : public ValidityCheckerMethod<MPTraits> {
     virtual ~ComposeValidity() {}
 
     virtual bool
-      IsValidImpl(CfgType& _cfg, Environment* _env, StatClass& _stats,
-          CDInfo& _cdInfo, string* _callName = NULL);
+      IsValidImpl(CfgType& _cfg, CDInfo& _cdInfo, const string& _callName);
 
   private:
     LogicalOperator m_logicalOperator;
@@ -72,14 +71,14 @@ ComposeValidity<MPTraits>::ComposeValidity(MPProblemType* _problem, XMLNodeReade
 
 template<class MPTraits>
 bool
-ComposeValidity<MPTraits>::IsValidImpl(CfgType& _cfg, Environment* _env, StatClass& _stats, CDInfo& _cdInfo, string* _callName) {
+ComposeValidity<MPTraits>::IsValidImpl(CfgType& _cfg, CDInfo& _cdInfo, const string& _callName) {
   vector<ValidityCheckerPointer> vcMethod;
   typedef typename vector<ValidityCheckerPointer>::iterator VCIterator;
   for(vector<string>::iterator it = m_label.begin(); it != m_label.end(); ++it) {
     vcMethod.push_back(this->GetMPProblem()->GetValidityChecker(*it));
   }
 
-  ValidityCheckerFunctor<MPTraits> comFunc(_cfg, _env, _stats, _cdInfo, _callName);
+  ValidityCheckerFunctor<MPTraits> comFunc(_cfg, _cdInfo, _callName);
 
   if (m_logicalOperator == AND) {
     Compose<VCIterator, logical_and<bool>, ValidityCheckerFunctor<MPTraits> > andRelation;

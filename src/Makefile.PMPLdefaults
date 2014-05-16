@@ -3,7 +3,7 @@ ifeq (${platform}, LINUX_32_gcc) 	#linux/gcc on 32 bit machine
 	UTILS_DEF = -DUSE_VCLIP -DUSE_RAPID -DUSE_PQP -DTIXML_USE_STL #-DUSE_SOLID
 	UTILS_INCL = ${VCLIP_INCL} ${RAPID_INCL} ${PQP_INCL} ${TINYXML_INCL} ${MATHTOOL_INCL} ${MODELLOADER_INCL}  #${SOLID_INCL}
 	UTILS_LIB = ${VCLIP_LIB} ${RAPID_LIB} ${PQP_LIB} ${TINYXML_LIB} ${MODELLOADER_LIB} ${KMEANS_LIB} #${SOLID_LIB}
-	
+
 	CD_LIBFILE = ${VCLIP_DIR}/lib/libvclip.a ${RAPID_DIR}/libRAPID.a ${PQP_DIR}/lib/libPQP.a #${SOLID_DIR}/lib/libsolid.a
 
 	BOOST_INCL = -isystem/usr/include
@@ -16,7 +16,7 @@ ifeq (${platform}, LINUX_gcc_mh) 	#linux/gcc on manhattan
 	UTILS_DEF =   -DUSE_RAPID -DUSE_PQP -DTIXML_USE_STL #-DUSE_SOLID
 	UTILS_INCL =   ${RAPID_INCL} ${PQP_INCL} ${TINYXML_INCL} ${MATHTOOL_INCL} ${MODELLOADER_INCL}  #${SOLID_INCL}
 	UTILS_LIB =   ${RAPID_LIB} ${PQP_LIB} ${TINYXML_LIB} ${MODELLOADER_LIB} ${KMEANS_LIB} #${SOLID_LIB}
-	
+
 	CD_LIBFILE =   ${RAPID_DIR}/libRAPID.a ${PQP_DIR}/lib/libPQP.a #${SOLID_DIR}/lib/libsolid.a
 
 	#use same boost as used in STAPL
@@ -30,11 +30,11 @@ ifeq (${platform}, LINUX_gcc_mh) 	#linux/gcc on manhattan
 endif
 
 ifeq (${platform}, LINUX_gcc) 	#linux/gcc on 64 bit machine
-	UTILS_DEF = -DUSE_RAPID -DUSE_PQP -DTIXML_USE_STL -DUSE_VCLIP# -DUSE_SOLID 
-	UTILS_INCL = ${RAPID_INCL} ${PQP_INCL} ${VCLIP_INCL} ${TINYXML_INCL} ${MATHTOOL_INCL} ${MODELLOADER_INCL}  #${SOLID_INCL} 
-	UTILS_LIB = ${RAPID_LIB} ${PQP_LIB} ${VCLIP_LIB} ${TINYXML_LIB} ${MODELLOADER_LIB} ${KMEANS_LIB} #${SOLID_LIB} 
-	
-	CD_LIBFILE = ${RAPID_DIR}/libRAPID.a ${PQP_DIR}/lib/libPQP.a ${VCLIP_DIR}/lib/libvclip.a #${SOLID_DIR}/lib/libsolid.a 
+	UTILS_DEF = -DUSE_RAPID -DUSE_PQP -DTIXML_USE_STL -DUSE_VCLIP# -DUSE_SOLID
+	UTILS_INCL = ${RAPID_INCL} ${PQP_INCL} ${VCLIP_INCL} ${TINYXML_INCL} ${MATHTOOL_INCL} ${MODELLOADER_INCL}  #${SOLID_INCL}
+	UTILS_LIB = ${RAPID_LIB} ${PQP_LIB} ${VCLIP_LIB} ${TINYXML_LIB} ${MODELLOADER_LIB} ${KMEANS_LIB} #${SOLID_LIB}
+
+	CD_LIBFILE = ${RAPID_DIR}/libRAPID.a ${PQP_DIR}/lib/libPQP.a ${VCLIP_DIR}/lib/libvclip.a #${SOLID_DIR}/lib/libsolid.a
 
 	ifeq (${parallel}, 1)
 	  BOOST_ROOT = /usr
@@ -90,7 +90,7 @@ ifeq (${platform}, AIX_64_gcc)	#aix/64-bit/gcc (e.g., hydra.tamu.edu)
 	BOOST_INCL = -I/scratch/shawnat/usr/include/boost-1_33_1
 
 	DEPS = -MMD -MF $*.d
-endif	
+endif
 
 ifeq (${platform}, AIX_64_xlC)	#aix/64-bit/native compiler (e.g., hydra.tamu.edu)
 	UTILS_DEF = -DUSE_RAPID -DUSE_PQP -DTIXML_USE_STL #-DUSE_SOLID
@@ -108,7 +108,7 @@ ifeq (${platform}, MACOS_gcc) 	#fink/gcc on 64 bit machine
 	UTILS_DEF = -DUSE_VCLIP -DUSE_RAPID -DUSE_PQP -DTIXML_USE_STL #-DUSE_SOLID
 	UTILS_INCL = ${VCLIP_INCL} ${RAPID_INCL} ${PQP_INCL} ${TINYXML_INCL} ${MATHTOOL_INCL} ${MODELLOADER_INCL}  #${SOLID_INCL}
 	UTILS_LIB = ${VCLIP_LIB} ${RAPID_LIB} ${PQP_LIB} ${TINYXML_LIB} ${MODELLOADER_LIB} ${KMEANS_LIB} #${SOLID_LIB}
-	
+
 	CD_LIBFILE = ${VCLIP_DIR}/lib/libvclip.a ${RAPID_DIR}/libRAPID.a ${PQP_DIR}/lib/libPQP.a #${SOLID_DIR}/lib/libsolid.a
 
 	BOOST_ROOT = /sw
@@ -170,7 +170,7 @@ ${PQP_DIR}/lib/libPQP.a:
 	cd ${PQP_DIR}; ${MAKE} platform=${platform} debug=${debug}
 
 SOLID_DIR = ${CD_DIR}/solid-3.5.6
-SOLID_LIB = -L${SOLID_DIR}/lib -lsolid 
+SOLID_LIB = -L${SOLID_DIR}/lib -lsolid
 SOLID_INCL = -I${SOLID_DIR}/include -I${SOLID_DIR}/src/convex
 ${SOLID_DIR}/lib/libsolid.a:
 	cd ${CD_DIR}; ${MAKE} solid
@@ -180,7 +180,7 @@ ${SOLID_DIR}/lib/libsolid.a:
 TINYXML_DIR = ${UTILS_DIR}/xml/tinyxml
 TINYXML_LIB = -L${TINYXML_DIR} -ltinyxml
 TINYXML_INCL = -I${TINYXML_DIR}
-${TINYXML_DIR}/libtinyxml.a: 
+${TINYXML_DIR}/libtinyxml.a:
 	cd ${TINYXML_DIR}; ${MAKE} platform=${platform} debug=${debug}
 
 XML_LIBFILE = ${TINYXML_DIR}/libtinyxml.a
@@ -193,7 +193,7 @@ MATHTOOL_INCL = -I${MATHTOOL_DIR}
 MODELLOADER_DIR = ${UTILS_DIR}/modelloader
 MODELLOADER_LIB = -L${MODELLOADER_DIR} -lmodloader
 MODELLOADER_INCL = -I${MODELLOADER_DIR}
-${MODELLOADER_DIR}/libmodloader.a: 
+${MODELLOADER_DIR}/libmodloader.a:
 	cd ${MODELLOADER_DIR}; ${MAKE} platform=${platform} debug=${debug}
 
 MODELLOADER_LIBFILE = ${MODELLOADER_DIR}/libmodloader.a
@@ -211,7 +211,7 @@ KMEANS_LIBFILE = ${KMEANS_DIR}/libkmeans.a
 # stapl macros
 #set parallel options
 ifeq (${parallel}, 0)
-	STAPL_INCL  = -I${STAPL_DIR} -I${STAPL_DIR}/include -I${STAPL_DIR}/stapl 
+	STAPL_INCL  = -I${STAPL_DIR} -I${STAPL_DIR}/include -I${STAPL_DIR}/stapl
 else
 	STAPL_INCL  = -I${STAPL_DIR} -I${STAPL_DIR}/include -I${STAPL_DIR}/stapl -I${STAPL_DIR}/tools  -I${STAPL_DIR}/tools/libstdc++/${STL_LIB}/ -I${STAPL_DIR}/tools/icl
         STAPL_DEF = -D_PARALLEL -D_STAPL -D_STAPL_MPI -D_PGRAPH -DDYNAMIC_GRAPH -DSTAPL_RUNTIME_ENABLE_NO_COMM_GUARD
@@ -220,7 +220,7 @@ endif
 
 #CGAL macros
 CGAL_INCL = -I${UTILS_DIR}/geom/CGAL-3.3.1/include
-CGAL_DEF = -DCGAL_NO_ASSERTIONS -DCGAL_NO_PRECONDITIONS
+CGAL_DEF = -DCGAL_NO_ASSERTIONS -DCGAL_NO_PRECONDITIONS -DCGAL_NO_POSTCONDITIONS
 
 #MPNN macros and targets
 MPNN_DIR = ${UTILS_DIR}/nearest_neighbors/MPNN
@@ -262,7 +262,7 @@ PMPL_OBJS = \
 	Cfg/Cfg.o \
         Utilities/MetricUtils.o \
         Utilities/IOUtils.o \
-        Utilities/MPUtils.o 
+        Utilities/MPUtils.o
 
 #ifeq (${ROBOT_DEF}, $(or PMPCfgSurface PMPSSSurfaceMult))
 ifneq ($(filter $(ROBOT_DEF), PMPSSSurfaceMult PMPCfgSurface),)

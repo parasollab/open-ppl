@@ -10,7 +10,7 @@ class PartitioningMethod : public MPBaseObject
 {
  public:
   typedef RoadmapGraph<CfgType, WeightType>::VID VID;
-  
+
   PartitioningMethod();
   PartitioningMethod(XMLNodeReader& in_Node, MPProblem * mp);
   virtual ~PartitioningMethod();
@@ -26,7 +26,7 @@ class PartitioningMethod : public MPBaseObject
 
   vector<pair<string, double> > GetFeatures(){return m_Features;}
   void SetFeatures(vector<pair<string, double> > f){m_Features = f;}
-  
+
  protected:
   string m_ClusteringDestination;
   vector<Partition*> m_Partitions;

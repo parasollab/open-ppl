@@ -57,8 +57,6 @@ CCDistanceMetric<MPTraits>::operator()() {
   RoadmapType* rmap = this->GetMPProblem()->GetRoadmap();
   GraphType* pMap = rmap->GetGraph();
 
-  Environment* pEnv = this->GetMPProblem()->GetEnvironment();
-
   //get ccs
   vector<pair<size_t, VID> > ccs;
   stapl::sequential::vector_property_map<GraphType, size_t > cmap;
@@ -84,7 +82,7 @@ CCDistanceMetric<MPTraits>::operator()() {
       get_cc(*pMap, cmap, ccj->second, ccjVids);
 
       vector<pair<VID, VID> > pairs;
-      distance.push_back(this->GetMPProblem()->GetDistanceMetric(m_dmLabel)->Distance(pEnv,
+      distance.push_back(this->GetMPProblem()->GetDistanceMetric(m_dmLabel)->Distance(
                                                                                  pMap->GetVertex(pairs[0].first),
                                                                                  pMap->GetVertex(pairs[0].second)));
     }

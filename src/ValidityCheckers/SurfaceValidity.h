@@ -18,7 +18,7 @@ class SurfaceValidity : public ValidityCheckerMethod<MPTraits> {
     virtual ~SurfaceValidity() {}
 
     virtual bool
-      IsValidImpl(CfgType& _cfg, Environment* _env, StatClass& _stats, CDInfo& _cdInfo, string* _callName);
+      IsValidImpl(CfgType& _cfg, CDInfo& _cdInfo, const string& _callName);
 
   private:
     string m_vcLabel;
@@ -41,25 +41,26 @@ SurfaceValidity<MPTraits>::SurfaceValidity(typename MPTraits::MPProblemType* _pr
 
 template<class MPTraits>
 bool
-SurfaceValidity<MPTraits>::IsValidImpl(CfgType& _cfg, Environment* _env, StatClass& _stats, CDInfo& _cdInfo, string* _callName){
+SurfaceValidity<MPTraits>::IsValidImpl(CfgType& _cfg, CDInfo& _cdInfo, const string& _callName){
+  Environment* env = this->GetMPProblem()->GetEnvironment();
 
   bool result = false;
   int sid = _cfg.GetSurfaceID();
   if( this->m_debug ) {
-     cout << " active bodies: " << _env->GetActiveBodyCount() << " usable bodies: " << _env->GetUsableMultiBodyCount() << endl;
+     cout << " active bodies: " << env->GetActiveBodyCount() << " usable bodies: " << env->GetUsableMultiBodyCount() << endl;
   }
   if( sid == -1 ) {
     //call default validity checker specified
-    result = this->GetMPProblem()->GetValidityChecker(m_vcLabel)->IsValid(_cfg, _env, _stats, _cdInfo, _callName);
+    result = this->GetMPProblem()->GetValidityChecker(m_vcLabel)->IsValid(_cfg, _cdInfo, _callName);
   }
   else {
     //do surface validity based on sid
     //check if on surface
     Point2d pt = _cfg.GetPos();
     double  h  = _cfg.GetHeight();
-    int numSurfaces = _env->GetNavigableSurfacesCount();
+    int numSurfaces = env->GetNavigableSurfacesCount();
     if( sid>=0 && sid < numSurfaces ) {
-      shared_ptr<MultiBody> surfaceBody = _env->GetNavigableSurface(sid);
+      shared_ptr<MultiBody> surfaceBody = env->GetNavigableSurface(sid);
       shared_ptr<FixedBody> fb = surfaceBody->GetFixedBody(0);
       GMSPolyhedron& polyhedron = fb->GetWorldPolyhedron();
       result = polyhedron.IsOnSurface(pt, h);

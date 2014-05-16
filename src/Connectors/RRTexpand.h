@@ -6,7 +6,7 @@
 #define ITERATIONS   50        // default for rrt iterations
 #define SMALL_CC      3        // default for rrt and connectCCs: smallcc size
 #define O_CLEARANCE   1
-#define CLEARANCE_FROM_NODE 1 
+#define CLEARANCE_FROM_NODE 1
 
 
 template <class CFG, class WEIGHT>
@@ -16,7 +16,7 @@ class RRTexpand: public ComponentConnectionMethod<CFG,WEIGHT> {
   // Constructors and Destructor
   RRTexpand();
   ~RRTexpand();
- 
+
   //////////////////////
   // Access
   void SetDefault();
@@ -26,24 +26,24 @@ class RRTexpand: public ComponentConnectionMethod<CFG,WEIGHT> {
 
   void ParseCommandLine(std::istringstream& is);
   virtual void PrintUsage(ostream& _os);
-  virtual void PrintValues(ostream& _os);   
+  virtual void PrintValues(ostream& _os);
   virtual ComponentConnectionMethod<CFG, WEIGHT>* CreateCopy();
   //////////////////////
-  // Core: Connection methods 
-  /**Copy vertices and all incident edges associated with "vids" 
+  // Core: Connection methods
+  /**Copy vertices and all incident edges associated with "vids"
    *from one roadmap to another.
-   *@param toMap Target, Cfgs in vids and incident edges in fromMap  
+   *@param toMap Target, Cfgs in vids and incident edges in fromMap
    *will be copied to this submap.
    *@param fromMap Source, edge information will be retrived from here.
    *@param vids Source, vertex information will be retrived from here.
    *Usually, in this list, elements are Cfgs in same connected component.
-   
-  static vector<VID> ModifyRoadMap(Roadmap<CFG, WEIGHT>* toMap, 
-			    Roadmap<CFG, WEIGHT>* fromMap, 
+
+  static vector<VID> ModifyRoadMap(Roadmap<CFG, WEIGHT>* toMap,
+			    Roadmap<CFG, WEIGHT>* fromMap,
 			    vector<VID> vids);
   */
   void RRT(Roadmap<CFG, WEIGHT>* rm, StatClass& Stats,
-	   int K, double deltaT, int o_clearance, 
+	   int K, double deltaT, int o_clearance,
 	   int clearance_from_node,vector<CFG>& U,
 	   CollisionDetection*, LocalPlanners<CFG,WEIGHT>*,
 	   DistanceMetric *,
@@ -64,9 +64,9 @@ class RRTexpand: public ComponentConnectionMethod<CFG,WEIGHT> {
 
   //////////////////////
   // Data
-  int iterations; 
-  int stepFactor;  
-  int smallcc; 
+  int iterations;
+  int stepFactor;
+  int smallcc;
   int o_clearance;
   int clearance_from_node;
 };
@@ -75,7 +75,7 @@ class RRTexpand: public ComponentConnectionMethod<CFG,WEIGHT> {
 ///////////////////////////////////////////////////////////////////////////////
 //   Connection Method:  RRTexpand
 template <class CFG, class WEIGHT>
-RRTexpand<CFG,WEIGHT>::RRTexpand():ComponentConnectionMethod<CFG,WEIGHT>() { 
+RRTexpand<CFG,WEIGHT>::RRTexpand():ComponentConnectionMethod<CFG,WEIGHT>() {
   this->element_name = "RRTexpand"; //in ConnectCCs there is RRTexpand
 
   SetDefault();
@@ -83,13 +83,13 @@ RRTexpand<CFG,WEIGHT>::RRTexpand():ComponentConnectionMethod<CFG,WEIGHT>() {
 
 
 template <class CFG, class WEIGHT>
-RRTexpand<CFG,WEIGHT>::~RRTexpand() { 
+RRTexpand<CFG,WEIGHT>::~RRTexpand() {
 }
 
 
 template <class CFG, class WEIGHT>
 void RRTexpand<CFG,WEIGHT>::
-ParseCommandLine(std::istringstream &is) { 
+ParseCommandLine(std::istringstream &is) {
   char c;
   SetDefault();
   try {
@@ -97,7 +97,7 @@ ParseCommandLine(std::istringstream &is) {
     while(c == ' ' || c == '\n') {
       is.get();
       c = is.peek();
-    }    
+    }
     if (c >= '0' && c <= '9') {
       if (is >> iterations) {
         if (iterations < 0)
@@ -107,37 +107,37 @@ ParseCommandLine(std::istringstream &is) {
         while(c == ' ' || c == '\n') {
           is.get();
           c = is.peek();
-        }    
-        if (c >= '0' && c <= '9') {      
+        }
+        if (c >= '0' && c <= '9') {
           if (is >> stepFactor) {
 	    if (stepFactor < 0)
 	      throw BadUsage();
-	
+
             c = is.peek();
             while(c == ' ' || c == '\n') {
               is.get();
               c = is.peek();
-            }    
+            }
             if (c >= '0' && c <= '9') {
 	      if (is >> smallcc) {
 	        if (smallcc < 0)
 	          throw BadUsage();
-	  
+
                 c = is.peek();
                 while(c == ' ' || c == '\n') {
                   is.get();
                   c = is.peek();
-                }    
+                }
                 if (c >= '0' && c <= '9') {
                   if (is >> o_clearance) {
 	            if (o_clearance < 0)
 	              throw BadUsage();
-	    
+
                     c = is.peek();
                     while(c == ' ' || c == '\n') {
                       is.get();
                       c = is.peek();
-                    }    
+                    }
                     if (c >= '0' && c <= '9') {
   	              if (is >> clearance_from_node) {
 	                if (clearance_from_node < 0)
@@ -174,7 +174,7 @@ void
 RRTexpand<CFG,WEIGHT>::
 PrintUsage(ostream& _os){
   _os.setf(ios::left,ios::adjustfield);
-  
+
   _os << "\n" << this->GetName() << " ";
   _os << "\tINT INT INT INT INT (iter:" << ITERATIONS
       << " factor:" << STEP_FACTOR
@@ -182,7 +182,7 @@ PrintUsage(ostream& _os){
       << " o_clr:" << O_CLEARANCE
       << " node_clr:" << CLEARANCE_FROM_NODE
       << ")";
-  _os << endl;  
+  _os << endl;
   _os.setf(ios::right,ios::adjustfield);
 }
 
@@ -194,7 +194,7 @@ PrintValues(ostream& _os){
   _os << "\n" << this->GetName() << " ";
   _os << "(iterations: " << iterations
       << ", stepFactor: " <<  stepFactor
-      << ", smallcc: " << smallcc 
+      << ", smallcc: " << smallcc
       << ", o_clearance " << o_clearance
       << ", clearance_from_node: "<< clearance_from_node<< ")";
   _os << endl;
@@ -202,10 +202,10 @@ PrintValues(ostream& _os){
 
 
 template <class CFG, class WEIGHT>
-ComponentConnectionMethod<CFG,WEIGHT>* 
+ComponentConnectionMethod<CFG,WEIGHT>*
 RRTexpand<CFG,WEIGHT>::
 CreateCopy() {
-  RRTexpand<CFG,WEIGHT>* _copy = 
+  RRTexpand<CFG,WEIGHT>* _copy =
            new RRTexpand<CFG,WEIGHT>(*this);
   return _copy;
 }
@@ -222,7 +222,7 @@ void RRTexpand<CFG,WEIGHT>::SetDefault() {
 
 
 /*---------------------------------------------------------------
-Copy vertices and all incident edges associated with "vids" 
+Copy vertices and all incident edges associated with "vids"
 from one roadmap to another
 ---------------------------------------------------------------
 template <class CFG, class WEIGHT>
@@ -235,27 +235,27 @@ ModifyRoadMap(Roadmap<CFG, WEIGHT>* toMap,
   int i;
 
   vector<VID> newVids;
-  
+
   //Add vertex
   for (i=0;i<vids.size();++i) {
     t=fromMap->m_pRoadmap->GetData(vids[i]);
-    
+
     newVids.push_back(toMap->m_pRoadmap->AddVertex(t));
   } //endfor i
 
 
   //-- get edges from _rm connected component and add to submap
   for (i=0;i<vids.size();++i) {
-    vector< pair<pair<VID,VID>,WEIGHT> > edges; 
+    vector< pair<pair<VID,VID>,WEIGHT> > edges;
     fromMap->m_pRoadmap->Get OutgoingEdges(vids[i], edges);
-    
+
     for (int j=0;j<edges.size();++j) {
       CFG t1=fromMap->m_pRoadmap->GetData(edges[j].first.first),
 	t2=fromMap->m_pRoadmap->GetData(edges[j].first.second);
-      
+
       toMap->m_pRoadmap->AddEdge(t1,t2, edges[j].second);
     } //endfor j
-    
+
   } //endfor i
 
 
@@ -264,7 +264,7 @@ ModifyRoadMap(Roadmap<CFG, WEIGHT>* toMap,
 */
 
 template<class CFG, class WEIGHT>
-void 
+void
 RRTexpand<CFG,WEIGHT>::
 RRT( Roadmap<CFG,WEIGHT> * rm, StatClass& Stats, int K, double deltaT,
      int o_clearance, int clearance_from_node, vector<CFG>&U,
@@ -285,7 +285,7 @@ RRT( Roadmap<CFG,WEIGHT> * rm, StatClass& Stats, int K, double deltaT,
 
       //find closest Cfg in map from random cfg.
       vector<  pair<CFG, CFG> > kp;
-      if (U.size()>0) 
+      if (U.size()>0)
         kp = dm->KClosest(env,U[0],verticesData,1);
       else
         kp = dm->KClosest(env,x_rand,verticesData,1);
@@ -304,7 +304,7 @@ RRT( Roadmap<CFG,WEIGHT> * rm, StatClass& Stats, int K, double deltaT,
 
              if (U.size() > 0)
                u = U[0];
-             else { 
+             else {
                     toConnect = FALSE;
 		    if(translate_or_not%2 == 0) {
 		      CFG tmp_cfg = x_rand;
@@ -323,7 +323,7 @@ RRT( Roadmap<CFG,WEIGHT> * rm, StatClass& Stats, int K, double deltaT,
 	   u = x_rand;
          }//endif connecting
 // Based on Marco's code which is based off Shawna's
-         bool collision=false; 
+         bool collision=false;
          CFG lastFreeConfiguration;
          CFG cfg = CFG(x_near); //Cfg of first collision
          double positionRes = env->GetPositionRes();
@@ -366,11 +366,11 @@ RRT( Roadmap<CFG,WEIGHT> * rm, StatClass& Stats, int K, double deltaT,
             if (toConnect && ( lastFreeConfiguration == u ) && connecting) {
                x_new = clearance_cfgs[clearance_cfgs.size()-1];
 	    }
-            else { 
+            else {
                attemptConnection = FALSE;
                toConnect = FALSE;
                x_new = lastFreeConfiguration;
-               } 
+               }
             }
          else {
             if (toConnect && ( lastFreeConfiguration == u )){
@@ -392,7 +392,7 @@ RRT( Roadmap<CFG,WEIGHT> * rm, StatClass& Stats, int K, double deltaT,
                 // add x_new and connecting edge to x_near into roadmap
                 //Cfg t=Cfg(x_new);
                 if (x_new == u && connecting && toConnect) {
-                   x_new = u; 
+                   x_new = u;
                    settoConnect = TRUE;
                    if (x_new.InBoundary(env) && attemptConnection
                        && !x_new.isCollision(env,Stats,cd,*this->cdInfo)
@@ -401,7 +401,7 @@ RRT( Roadmap<CFG,WEIGHT> * rm, StatClass& Stats, int K, double deltaT,
                          CFG t=CFG(x_new);
                          rm->m_pRoadmap->AddVertex(t);
                          rm->m_pRoadmap->AddEdge(x_near, x_new, lpOutput.edge);
-                       }   
+                       }
                    }
                 else { CFG t=CFG(x_new);
                    settoConnect = FALSE;
@@ -426,10 +426,10 @@ RRT( Roadmap<CFG,WEIGHT> * rm, StatClass& Stats, int K, double deltaT,
 
            }
          else {
-           toConnect = FALSE; 
-           }             
-      } //endif (kp.size()>0) 
-      else { 
+           toConnect = FALSE;
+           }
+      } //endif (kp.size()>0)
+      else {
 	     xnew.GetRandomCfg(env);
 	   }
 
@@ -440,7 +440,7 @@ RRT( Roadmap<CFG,WEIGHT> * rm, StatClass& Stats, int K, double deltaT,
 template <class CFG, class WEIGHT>
 void RRTexpand<CFG,WEIGHT>::
 Connect(Roadmap<CFG, WEIGHT>* _rm, StatClass& Stats,
-	CollisionDetection* cd , 
+	CollisionDetection* cd ,
 	DistanceMetric * dm,
 	LocalPlanners<CFG,WEIGHT>* lp,
 	bool addPartialEdge,
@@ -452,7 +452,7 @@ Connect(Roadmap<CFG, WEIGHT>* _rm, StatClass& Stats,
        << ", oclearance = " << o_clearance
        << ", node_clearance = " << clearance_from_node
        <<"): " <<flush;
- 
+
 ///Modified for VC
 #if defined(_WIN32)
 	using namespace std;
@@ -494,7 +494,7 @@ Connect(Roadmap<CFG, WEIGHT>* _rm, StatClass& Stats,
 template <class CFG, class WEIGHT>
 void RRTexpand<CFG,WEIGHT>::
 Connect(Roadmap<CFG, WEIGHT>* _rm, StatClass& Stats,
-	CollisionDetection* cd , 
+	CollisionDetection* cd ,
 	DistanceMetric * dm,
 	LocalPlanners<CFG,WEIGHT>* lp,
 	bool addPartialEdge,
@@ -507,7 +507,7 @@ Connect(Roadmap<CFG, WEIGHT>* _rm, StatClass& Stats,
        << ", oclearance = " << o_clearance
        << ", node_clearance = " << clearance_from_node
        <<"): " <<flush;
- 
+
   ///Modified for VC
 #if defined(_WIN32)
   using namespace std;

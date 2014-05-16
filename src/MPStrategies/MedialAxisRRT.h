@@ -52,7 +52,7 @@ MedialAxisRRT<MPTraits>::MedialAxisRRT(
 
 template<class MPTraits>
 MedialAxisRRT<MPTraits>::MedialAxisRRT(MPProblemType* _problem, XMLNodeReader& _node) :
-  BasicRRTStrategy<MPTraits>(_problem, _node, false), m_medialAxisUtility(_problem, _node){
+  BasicRRTStrategy<MPTraits>(_problem, _node, false, true), m_medialAxisUtility(_problem, _node){
     this->SetName("MedialAxisRRT");
     ParseXML(_node);
     _node.warnUnrequestedAttributes();
@@ -69,7 +69,6 @@ template<class MPTraits>
 typename MedialAxisRRT<MPTraits>::VID
 MedialAxisRRT<MPTraits>::ExpandTree(CfgType& _dir){
   // Setup MP Variables
-  Environment* env = this->GetMPProblem()->GetEnvironment();
   DistanceMetricPointer dm = this->GetMPProblem()->GetDistanceMetric(this->m_dm);
   NeighborhoodFinderPointer nf = this->GetMPProblem()->GetNeighborhoodFinder(this->m_nf);
   RoadmapType* rdmp = this->GetMPProblem()->GetRoadmap();
@@ -92,7 +91,7 @@ MedialAxisRRT<MPTraits>::ExpandTree(CfgType& _dir){
   VID recentVID = INVALID_VID;
   CfgType newCfg = intermediateNodes.back();
   intermediateNodes.pop_back();
-  double dist = dm->Distance(env, newCfg, nearest);
+  double dist = dm->Distance(newCfg, nearest);
   // If good to go, add to roadmap
   if(dist >= this->m_minDist) {
     recentVID = rdmp->GetGraph()->AddVertex(newCfg);
@@ -116,7 +115,6 @@ template<class MPTraits>
 bool
 MedialAxisRRT<MPTraits>::MedialAxisExtend(const CfgType& _start, const CfgType& _goal, vector<CfgType>& _innerNodes){
   //Setup
-  StatClass* stats = this->GetMPProblem()->GetStatClass();
   Environment* env = this->GetMPProblem()->GetEnvironment();
   DistanceMetricPointer dm = this->GetMPProblem()->GetDistanceMetric(this->m_dm);
   LocalPlannerPointer lp = this->GetMPProblem()->GetLocalPlanner(this->m_lp);
@@ -125,7 +123,7 @@ MedialAxisRRT<MPTraits>::MedialAxisExtend(const CfgType& _start, const CfgType& 
 
   string callee("MPUtility::MARRTExpand");
 
-  CfgType tick, curr = _start, origin;
+  CfgType tick, curr = _start;
   double positionRes = env->GetPositionRes();
   double orientationRes = env->GetOrientationRes();
   double pathLength = 0;
@@ -135,7 +133,7 @@ MedialAxisRRT<MPTraits>::MedialAxisExtend(const CfgType& _start, const CfgType& 
 
     //take a step at distance _extendDist
     CfgType incr = _goal - curr;
-    dm->ScaleCfg(env, m_extendDist, origin, incr);
+    dm->ScaleCfg(m_extendDist, incr);
     tick = curr + incr;
 
     //Push tick to the MA
@@ -166,8 +164,8 @@ MedialAxisRRT<MPTraits>::MedialAxisExtend(const CfgType& _start, const CfgType& 
     //We pushed to the MA and went somewhere, check visibility and update
     //structures
     CfgType col;
-    if(lp->IsConnected(env, *stats, dm, curr, tick, col, &lpOutput, positionRes, orientationRes)){
-      pathLength += lpOutput.edge.first.GetWeight();
+    if(lp->IsConnected(curr, tick, col, &lpOutput, positionRes, orientationRes)){
+      pathLength += lpOutput.m_edge.first.GetWeight();
       if(pathLength >= this->m_delta){
         if(this->m_debug) cout << "expanded past delta." << endl;
         if(_innerNodes.size() > 0){

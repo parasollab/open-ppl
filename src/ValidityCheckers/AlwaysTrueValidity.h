@@ -28,8 +28,7 @@ class AlwaysTrueValidity : public ValidityCheckerMethod<MPTraits> {
 
     virtual ~AlwaysTrueValidity(){}
 
-    virtual bool IsValidImpl(CfgType& _cfg, Environment* _env, StatClass& _stats,
-        CDInfo& _cdInfo, string* _callName){
+    virtual bool IsValidImpl(CfgType& _cfg, CDInfo& _cdInfo, const string& _callName){
       _cfg.SetLabel("Lazy", true);
       return true;
     }

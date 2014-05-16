@@ -153,7 +153,6 @@ UtilityGuidedGenerator<MPTraits>::Run() {
 
   ValidityCheckerPointer vcm = this->GetMPProblem()->GetValidityChecker(m_vcLabel);
   string callee(this->GetNameAndLabel() + "::Run()");
-  CDInfo cdInfo;
 
   ConnectorPointer connector = this->GetMPProblem()->GetConnector(m_connectorLabel);
 
@@ -174,7 +173,7 @@ UtilityGuidedGenerator<MPTraits>::Run() {
         q.GetRandomCfg(env, bb);
         inBBX = env->InBounds(q, bb);
         if(inBBX) {
-          isValid = vcm->IsValid(q, env, *stats, cdInfo, &callee);
+          isValid = vcm->IsValid(q, callee);
           if(isValid)
             stats->IncNodesGenerated(this->GetNameAndLabel());
         }
@@ -210,7 +209,7 @@ UtilityGuidedGenerator<MPTraits>::Run() {
       //add the sample to the model and roadmap (if free)
       stats->IncNodesAttempted(this->GetNameAndLabel());
       stats->StopClock("Total Sampling Time");
-      bool isColl = !env->InBounds(q, bb) || !vcm->IsValid(q, env, *stats, cdInfo, &callee);
+      bool isColl = !env->InBounds(q, bb) || !vcm->IsValid(q, callee);
       if(!isColl) {
         if(this->m_debug) cout << "valid, adding to roadmap and model\n";
         stats->IncNodesGenerated(this->GetNameAndLabel());

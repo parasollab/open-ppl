@@ -16,7 +16,7 @@ PQP::~PQP() {}
 
 bool
 PQP::IsInCollision(shared_ptr<MultiBody> _robot, shared_ptr<MultiBody> _obstacle,
-    StatClass& _stats, CDInfo& _cdInfo, std::string* _callName, int _ignoreIAdjacentMultibodies){        // changed string * to string*
+    StatClass& _stats, CDInfo& _cdInfo, const string& _callName, int _ignoreIAdjacentMultibodies){
    _stats.IncNumCollDetCalls(GetName(), _callName);
 
   if(_cdInfo.m_retAllInfo){
@@ -30,7 +30,7 @@ PQP::IsInCollision(shared_ptr<MultiBody> _robot, shared_ptr<MultiBody> _obstacle
     //for each part of robot
     for(int i=0 ; i < _robot->GetFreeBodyCount(); i++){
       shared_ptr<PQP_Model> rob = _robot->GetFreeBody(i)->GetPQPBody();
-      Transformation& t1 = _robot->GetFreeBody(i)->WorldTransformation();                   // Changed Transformation & to Transformation&
+      Transformation& t1 = _robot->GetFreeBody(i)->WorldTransformation();
 
       //for each part of obstacle
       for(int j=0; j < _obstacle->GetBodyCount(); j++){
@@ -168,7 +168,7 @@ PQPSolid::IsInsideObstacle(Vector3d _robotPt, shared_ptr<MultiBody> _obstacle){
 
 bool
 PQPSolid::IsInCollision(shared_ptr<MultiBody> _robot, shared_ptr<MultiBody> _obstacle,
-    StatClass& _stats, CDInfo& _cdInfo, std::string* _callName, int _ignoreIAdjacentMultibodies){
+    StatClass& _stats, CDInfo& _cdInfo, const string& _callName, int _ignoreIAdjacentMultibodies){
   _stats.IncNumCollDetCalls(GetName(), _callName);
 
   PQP_CollideResult result;

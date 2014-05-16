@@ -10,27 +10,27 @@
         </boundary>
       </robot>
     </environment>
-    
+
     <links_file filename="chain.tree" closed_chain="true"/>
-    
+
     <distance_metrics>
       <reachable Label="ReachableDistance"/>
-    </distance_metrics>    
-    
+    </distance_metrics>
+
     <validity_test>
       <CollisionDetection Label="cd" method="RAPID" />
     </validity_test>
-    
+
     <NeighborhoodFinder>
       <BFNF Label="BFNF" dm_method="ReachableDistance"/>
     </NeighborhoodFinder>
   </MPProblem>
-  
-  <MPStrategy iterations=1 gamma=0>  
+
+  <MPStrategy iterations=1 gamma=0>
     <node_generation_methods>
       <UniformRandomSampler Label="UniformRandomFree" vc_method="cd" />
     </node_generation_methods>
-    
+
     <connection_methods>
       <NeighborhoodConnection Label="Closest" nf="BFNF" k="5" CheckIfSameCC="false" lp_method="sl"/>
     </connection_methods>
@@ -38,14 +38,14 @@
     <lp_methods>
       <StraightLine Label="sl" length="0" binary_search="0" vc_method="cd"/>
     </lp_methods>
-    
+
     <MPStrategyMethod Controller="PRM1">
       <BasicPRM Label="PRM1" seed="1234567" filename="Basic" iterations="1">
         <node_generation_method Method="UniformRandomFree" Number="20"/>
         <node_connection_method Method="Closest"/>
       </BasicPRM>
     </MPStrategyMethod>
-    
+
   </MPStrategy>
 </motion_planning>
 

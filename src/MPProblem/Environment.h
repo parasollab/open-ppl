@@ -67,6 +67,9 @@ class Environment {
     //increased by a margin of _d + robotRadius
     void ResetBoundary(double _d, size_t _robotIndex);
 
+    //expand the boundary by a margin of _d + robotRadius
+    void ExpandBoundary(double _d, size_t _robotIndex);
+
     ///////////////////////////////////////////////////////////
     //MultiBodies
     ///////////////////////////////////////////////////////////
@@ -101,6 +104,7 @@ class Environment {
 
     void BuildCDstructure(cd_predefined cdtype);
 
+    void SetRobots(vector<Robot> _robots) { m_robots=_robots; }
   protected:
 
     void ReadBoundary(istream& _is);
@@ -120,6 +124,7 @@ class Environment {
     bool InWSpace(const Cfg& _cfg, shared_ptr<Boundary> _b);
 
     string m_filename; //which file did this environment come from
+    string m_modelDataDir; //directory where environment file is located
     bool m_saveDofs; //should we save the dof information to a file
 
     double m_positionRes; //positional resolution of movement

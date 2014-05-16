@@ -245,7 +245,6 @@ AdaptiveConnector<MPTraits>::ConnectNeighbors(
     OutputIterator _collision){
 
   Environment* env = this->GetMPProblem()->GetEnvironment();
-  NeighborhoodFinderPointer nf = this->GetMPProblem()->GetNeighborhoodFinder(this->m_lastUse);
   LocalPlannerPointer lp = this->GetMPProblem()->GetLocalPlanner(this->m_lpLabel);
   GraphType* map = _rm->GetGraph();
 
@@ -300,8 +299,7 @@ AdaptiveConnector<MPTraits>::ConnectNeighbors(
     CfgRef c2 = map->GetVertex(v2);
 
     CfgType col;
-    bool connectable = lp->IsConnected(env, _stats, nf->GetDMMethod(),
-          c1, c2, col, &lpOutput,
+    bool connectable = lp->IsConnected(c1, c2, col, &lpOutput,
           env->GetPositionRes(), env->GetOrientationRes(), true);
     if(col != CfgType())
       *_collision++ = col;
@@ -318,7 +316,7 @@ AdaptiveConnector<MPTraits>::ConnectNeighbors(
       c1.IncStat("succConnectionAttempts", 1);
       c2.IncStat("succConnectionAttempts", 1);
       // if connection was made, add edge and record the successful connection
-      _rm->GetGraph()->AddEdge(_vid, v2, lpOutput.edge);
+      _rm->GetGraph()->AddEdge(_vid, v2, lpOutput.m_edge);
     }
     else {
       if(this->m_debug) cout << " | connection failed | failure incremented" << endl;

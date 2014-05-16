@@ -103,12 +103,8 @@ LazyQuery<MPTraits>::PrintOptions(ostream& _os) const {
 template<class MPTraits>
 bool
 LazyQuery<MPTraits>::CanRecreatePath(RoadmapType* _rdmp, vector<VID>& _attemptedPath, vector<CfgType>& _recreatedPath) {
-
   ValidityCheckerPointer vcm = this->GetMPProblem()->GetValidityChecker(m_vcLabel);
-  Environment* env = this->GetMPProblem()->GetEnvironment();
-  StatClass& stats = *(this->GetMPProblem()->GetStatClass());
   string callee = "LazyQuery::CanRecreatePath()";
-  CDInfo cdInfo;
   vector<VID> neighbors;
   size_t size = _attemptedPath.size();
 
@@ -125,7 +121,7 @@ LazyQuery<MPTraits>::CanRecreatePath(RoadmapType* _rdmp, vector<VID>& _attempted
     CfgType node = _rdmp->GetGraph()->GetVertex(_attemptedPath[index]);
     if(node.IsLabel("VALID") && node.GetLabel("VALID"))
       continue;
-    if(!vcm->IsValid(node, env, stats, cdInfo, &callee)) {
+    if(!vcm->IsValid(node, callee)) {
       // Add invalid edges to list
       if(m_numEnhance && !node.IsLabel("Enhance")) {
         typename GraphType::vertex_reference v1 = *(_rdmp->GetGraph()->find_vertex(_attemptedPath[index]));
@@ -170,7 +166,6 @@ LazyQuery<MPTraits>::CanRecreatePath(RoadmapType* _rdmp, vector<VID>& _attempted
         continue;
 
       if(this->GetMPProblem()->GetLocalPlanner(this->m_lpLabel)->IsConnected(
-            this->GetMPProblem()->GetEnvironment(), stats, this->GetMPProblem()->GetDistanceMetric(this->m_dmLabel),
             _rdmp->GetGraph()->GetVertex(_attemptedPath[index]),
             _rdmp->GetGraph()->GetVertex(_attemptedPath[index+1]),
             witness, &ci, this->GetMPProblem()->GetEnvironment()->GetPositionRes() * *resIt,
@@ -206,12 +201,11 @@ LazyQuery<MPTraits>::CanRecreatePath(RoadmapType* _rdmp, vector<VID>& _attempted
   for(typename vector<VID>::iterator it = _attemptedPath.begin(); (it+1) != _attemptedPath.end(); it++) {
     LPOutput<MPTraits> lpOut;
     this->GetMPProblem()->GetLocalPlanner(this->m_lpLabel)->IsConnected(
-        this->GetMPProblem()->GetEnvironment(), stats, this->GetMPProblem()->GetDistanceMetric(this->m_dmLabel),
         _rdmp->GetGraph()->GetVertex(*it),
         _rdmp->GetGraph()->GetVertex(*(it+1)),
         &lpOut, this->GetMPProblem()->GetEnvironment()->GetPositionRes(),
         this->GetMPProblem()->GetEnvironment()->GetOrientationRes(), false, true, false);
-    _recreatedPath.insert(_recreatedPath.end(), lpOut.path.begin(), lpOut.path.end());
+    _recreatedPath.insert(_recreatedPath.end(), lpOut.m_path.begin(), lpOut.m_path.end());
     _recreatedPath.push_back(_rdmp->GetGraph()->GetVertex(*(it+1)));
   }
 

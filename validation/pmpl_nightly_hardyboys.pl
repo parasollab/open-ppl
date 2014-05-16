@@ -1,5 +1,5 @@
 #!/usr/bin/perl
- 
+
 use Getopt::Std;
 getopts('c:r:d:p:');
 
@@ -11,19 +11,19 @@ $ADMIN_MAILTO = "sthomas\@cs.tamu.edu";
 $workdir  = "/scratch/hardyboys/sthomas/pmpl_nightly";
 
 #
-# find out which platform is used 
+# find out which platform is used
 #
-if (!defined $opt_c || !(($opt_c eq "LINUX_64_gcc") || ($opt_c eq "LINUX_gcc"))) { 
-  die "must define compilation platform (-c LINUX_64_gcc | LINUX_gcc)"; 
+if (!defined $opt_c || !(($opt_c eq "LINUX_64_gcc") || ($opt_c eq "LINUX_gcc"))) {
+  die "must define compilation platform (-c LINUX_64_gcc | LINUX_gcc)";
 }
-if (!defined $opt_r || !(($opt_r eq "rigid") || ($opt_r eq "serial") || ($opt_r eq "reach"))) { 
-  die "must define robot type (-r rigid | serial | reach)"; 
+if (!defined $opt_r || !(($opt_r eq "rigid") || ($opt_r eq "serial") || ($opt_r eq "reach"))) {
+  die "must define robot type (-r rigid | serial | reach)";
 }
-if (!defined $opt_d || !(($opt_d eq "0") || ($opt_d eq "1"))) { 
-  die "must define debugging option (-d 0 | 1)"; 
+if (!defined $opt_d || !(($opt_d eq "0") || ($opt_d eq "1"))) {
+  die "must define debugging option (-d 0 | 1)";
 }
-if (!defined $opt_p || !(($opt_p eq "0") || ($opt_p eq "1"))) { 
-  die "must define parallel option (-p 0 | 1)"; 
+if (!defined $opt_p || !(($opt_p eq "0") || ($opt_p eq "1"))) {
+  die "must define parallel option (-p 0 | 1)";
 }
 $PLATFORM = $opt_c;
 $ROBOT = "-DPMPRigid";
@@ -34,15 +34,15 @@ $PARALLEL = $opt_p;
 
 #
 # setup shell variables
-# 
+#
 if ($opt_c eq "LINUX_64_gcc" && $opt_p eq "0") {
   $GCC_PATH = "/usr/lib64/ccache";
   $MYENV    = "/usr/local/bin:$GCC_PATH:/usr/bin:/usr/X11R6/bin";
 }
-else { 
-  die "no suitable combination found"; 
+else {
+  die "no suitable combination found";
 }
-$ENV{'PATH'} = $MYENV.":".$ENV{'PATH'}; 
+$ENV{'PATH'} = $MYENV.":".$ENV{'PATH'};
 
 #
 # figure out time and date
@@ -56,10 +56,10 @@ $year     = 1900 + $yearOffset;
 $fulldate = "$day-$month-$dayOfMonth-$year";
 
 #
-# check out code, compile and run tests 
+# check out code, compile and run tests
 #
 $pmpldir = "pmpl-$opt_c-$opt_r-$opt_d-$opt_p";
-chdir $workdir or die "Can't cd to $workdir $!\n";  
+chdir $workdir or die "Can't cd to $workdir $!\n";
 $OUTPUT = "platform = $PLATFORM / ROBOT_DEF = $ROBOT / debug = $DEBUG / parallel = $PARALLEL\n";
 $OUTPUT = $OUTPUT.`rm -rf $pmpldir 2>&1`;
 $OUTPUT = $OUTPUT.`svn --quiet checkout svn+ssh://parasol-svn.cs.tamu.edu/research/parasol-svn/svnrepository/pmpl/trunk $pmpldir 2>&1`;
@@ -103,7 +103,7 @@ close(OUT);
 #
 # send mail
 #
-open(MAIL, "|/usr/lib/sendmail -t"); 
+open(MAIL, "|/usr/lib/sendmail -t");
 print MAIL "To: $ADMIN_MAILTO\n";
 print MAIL "From: pmpl_nightly\@tamu.edu\n";
 print MAIL "Subject: PMPL nightly - hardyboys.cse.tamu.edu pmpl.$opt_c.$opt_r.debug$opt_d.parallel$opt_p\n";

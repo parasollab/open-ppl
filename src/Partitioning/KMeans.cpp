@@ -35,7 +35,7 @@ void KMeans::Cluster(vector<VID> &IdSet, vector< vector< VID > > &RetClusters, v
 
    //define necessary variables
    int numberFeatures=features.size();
-   int maxPts=10000;  	// max number nodes/itr requested	
+   int maxPts=10000;  	// max number nodes/itr requested
    int nPts=IdSet.size();
 
    KMterm  term(100, 0, 0, 0,              // run for 100 stages
@@ -45,7 +45,7 @@ void KMeans::Cluster(vector<VID> &IdSet, vector< vector< VID > > &RetClusters, v
                 0.50,                   // init. prob. of acceptance
                 10,                     // temp. run length
                 0.95);                  // temp. reduction factor
- 
+
    cout <<"START KMEANS" << endl << flush;
    cout <<"Number of Features: " << numberFeatures << " Training Set Size: " << IdSet.size() << endl << flush;
 
@@ -57,12 +57,12 @@ void KMeans::Cluster(vector<VID> &IdSet, vector< vector< VID > > &RetClusters, v
 
       if( IdSet.size() )
          RetClusters.push_back( IdSet );
-      
+
       return;
    }
 
    //gather the features and feature min/max values
-  
+
    KMdata dataPts(numberFeatures, maxPts);
    vector< pair<double,double> > FeatureMinMax(numberFeatures);
 
@@ -90,11 +90,11 @@ void KMeans::Cluster(vector<VID> &IdSet, vector< vector< VID > > &RetClusters, v
 
    //normalize the features
 
-   if( nPts > 1 ){ 
+   if( nPts > 1 ){
       for(int PtNdx = 0; PtNdx < nPts; PtNdx++){
          for(int featureNdx=0;featureNdx<numberFeatures;featureNdx++){
             dataPts[PtNdx][featureNdx]=m_Features[featureNdx].second*
-               (dataPts[PtNdx][featureNdx] - FeatureMinMax[featureNdx].first) / 
+               (dataPts[PtNdx][featureNdx] - FeatureMinMax[featureNdx].first) /
                (FeatureMinMax[featureNdx].second - FeatureMinMax[featureNdx].first );
          }
       }
@@ -115,7 +115,7 @@ void KMeans::Cluster(vector<VID> &IdSet, vector< vector< VID > > &RetClusters, v
          KMlocalLloyds kmLloyds(ctrs, term);         // repeated Lloyd's
          cout<<"execute"<<endl<<flush;
          ctrs = kmLloyds.execute();                  // execute
-         cout<<"after execute"<<endl<<flush;	
+         cout<<"after execute"<<endl<<flush;
          cout << "(Center Points:\n"<<flush;
          ctrs.print();
          cout << ")\n";
@@ -146,7 +146,7 @@ void KMeans::Cluster(vector<VID> &IdSet, vector< vector< VID > > &RetClusters, v
 
       //DO the final Kmeans iteration with the optimal number of clusters
 
-      max+=3; 
+      max+=3;
 
       cout<<"setPts()"<<endl<<flush;
       dataPts.setNPts(nPts);
@@ -164,15 +164,15 @@ void KMeans::Cluster(vector<VID> &IdSet, vector< vector< VID > > &RetClusters, v
       cout << ")\n";
       int NumCenters = ctrs.getK();
       cout<<"NumCenters::"<<NumCenters<<endl<<flush;
- 
+
       cout << "Average distortion: " <<  ctrs.getDist(false)/double(ctrs.getNPts()) << "\n" << flush;
-    
-      //assign node VIDs to the centers	
+
+      //assign node VIDs to the centers
 
       KMctrIdxArray closeCtr = new KMctrIdx[dataPts.getNPts()];
       double* sqDist = new double[dataPts.getNPts()];
       ctrs.getAssignments(closeCtr, sqDist);
-	
+
       int cluster=-1;
 	   RetClusters.clear();
       RetClusters = vector< vector< VID > >( NumCenters );
@@ -180,7 +180,7 @@ void KMeans::Cluster(vector<VID> &IdSet, vector< vector< VID > > &RetClusters, v
          cluster=closeCtr[i];
          RetClusters[cluster].push_back( IdSet[i] );
       }
-    
+
       delete [] closeCtr;
       delete [] sqDist;
    }

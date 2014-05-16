@@ -5,7 +5,6 @@
 
 class Environment;
 class StatClass;
-class CDInfo;
 
 template <class MPTraits>
 class UniformRandomSampler : public SamplerMethod<MPTraits> {
@@ -44,19 +43,18 @@ class UniformRandomSampler : public SamplerMethod<MPTraits> {
 
       string callee(this->GetNameAndLabel() + "::SampleImpl()");
       ValidityCheckerPointer vcm = this->GetMPProblem()->GetValidityChecker(m_vcLabel);
-      CDInfo cdInfo;
 
       if(this->m_debug)
         VDClearAll();
 
       _stats.IncNodesAttempted(this->GetNameAndLabel());
 
-      //Obtain a random configuration
+      //Obtain a random configuration within _bb
       CfgType tmp;
-      tmp.GetRandomCfg(_env,_bb);
+      tmp.GetRandomCfg(_env, _bb);
 
-      //Is configuration within boundary?
-      bool inBBX = _env->InBounds(tmp, _bb);
+      //Is configuration within environment boundary?
+      bool inBBX = _env->InBounds(tmp, _env->GetBoundary());
       if(this->m_debug){
         cout << "tmp::" << tmp << endl;
         cout << "InBoudary::" << inBBX << endl;
@@ -64,7 +62,7 @@ class UniformRandomSampler : public SamplerMethod<MPTraits> {
 
       //Good. Now determine validity.
       if(inBBX) {
-        bool isValid = vcm->IsValid(tmp, _env, _stats, cdInfo, &callee);
+        bool isValid = vcm->IsValid(tmp, callee);
         if(this->m_debug){
           cout << "IsValid::" << isValid << endl;
           VDAddTempCfg(tmp, isValid);
