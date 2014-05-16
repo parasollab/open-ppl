@@ -4,7 +4,7 @@
 #include "PartitioningEvaluator.h"
 
 class STDEvaluator : public PartitioningEvaluator{
- public: 
+ public:
    STDEvaluator();
    STDEvaluator(XMLNodeReader& in_Node, MPProblem* mp);
    virtual ~STDEvaluator(){}

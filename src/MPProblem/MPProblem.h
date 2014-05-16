@@ -40,6 +40,7 @@ class MPProblem
     virtual ~MPProblem();
 
     const string& GetBaseFilename() const {return m_baseFilename;}
+    void SetBaseFilename(const string& _s){m_baseFilename = _s;}
 
     Environment* GetEnvironment() {return m_environment;};
     void SetEnvironment(Environment* _e) {m_environment = _e;};
@@ -121,11 +122,11 @@ class MPProblem
 
     void SetMPProblem();
 
-    //solver label, random seed, baseFilename, yes/no vizmo debug
-    typedef boost::tuples::tuple<string, long, string, bool> Solver;
+    //solver, seed, baseName, vizmoDebugName
+    typedef boost::tuples::tuple<string, long, string, string> Solver;
     void AddSolver(const string& _label, long _seed,
-        const string& _baseFileName, bool _vizmoDebug) {
-      m_solvers.push_back(Solver(_label, _seed, _baseFileName, _vizmoDebug));
+        const string& _baseFileName, const string& _vizmoDebugName) {
+      m_solvers.push_back(Solver(_label, _seed, _baseFileName, _vizmoDebugName));
     }
     void Solve();
 
@@ -148,6 +149,8 @@ class MPProblem
     virtual void ParseXML(XMLNodeReader& _node, typename MPTraits::MPProblemType* _problem);
 
     vector<cd_predefined> GetSelectedCDTypes() const;
+
+    string m_baseFilename;
 
     Environment* m_environment;
     RoadmapType* m_roadmap, * m_blockRoadmap, * m_colRoadmap;
@@ -175,8 +178,6 @@ class MPProblem
     MPStrategySet* m_mpStrategies;
 
     vector<Solver> m_solvers;
-
-    string m_baseFilename;
 
   private:
     bool m_cdBuilt;
@@ -258,8 +259,6 @@ MPProblem<MPTraits>::Initialize(){
   m_metrics = new MetricSet(typename MPTraits::MetricMethodList(), "Metrics");
   m_mapEvaluators = new MapEvaluatorSet(typename MPTraits::MapEvaluatorMethodList(), "MapEvaluators");
   m_mpStrategies = new MPStrategySet(typename MPTraits::MPStrategyMethodList(), "MPStrategies");
-
-  m_baseFilename = "";
 
   m_cdBuilt = false;
 }
@@ -355,7 +354,10 @@ MPProblem<MPTraits>::ParseChild(XMLNodeReader::childiterator citr, typename MPTr
     oss << baseFilename << "." << seed;
     baseFilename = oss.str();
     bool vdOutput = citr->boolXMLParameter("vizmoDebug", false, false, "True yields VizmoDebug output for the solver.");
-    m_solvers.push_back(Solver(label, seed, baseFilename, vdOutput));
+    string vizmoDebugName = "";
+    if(vdOutput)
+        vizmoDebugName = baseFilename + ".vd";
+    m_solvers.push_back(Solver(label, seed, baseFilename, vizmoDebugName));
     return true;
   }
   else
@@ -443,20 +445,21 @@ MPProblem<MPTraits>::Solve() {
     m_colRoadmap = new RoadmapType();
     m_stats = new StatClass();
 
-    cout << "\n\nMPProblem is solving with MPStrategyMethod labeled " << sit->get<0>() << "." << endl;
-    SRand(sit->get<1>());
-    m_baseFilename = sit->get<2>();
-    m_stats->SetAuxDest(m_baseFilename);
-
     //initialize vizmo debug if there is a valid filename
-    if(sit->get<3>())
-      VDInit(m_baseFilename + ".vd");
+    if(sit->get<3>() != "")
+      VDInit(sit->get<3>());
 
     //call solver
+    cout << "\n\nMPProblem is solving with MPStrategyMethod labeled " << sit->get<0>() << " using seed " << sit->get<1>() << "." << endl;
+    SRand(sit->get<1>());
+
+    SetBaseFilename(sit->get<2>());
+    GetStatClass()->SetAuxDest(GetBaseFilename());
+
     GetMPStrategy(sit->get<0>())->operator()();
 
     //close vizmo debug if necessary
-    if(sit->get<3>())
+    if(sit->get<3>() != "")
       VDClose();
   }
 };

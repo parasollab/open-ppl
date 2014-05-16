@@ -27,9 +27,10 @@ class Query : public MapEvaluatorMethod<MPTraits> {
     typedef typename MPProblemType::PathModifierPointer PathModifierPointer;
 
     Query(bool _deleteNodes=false, string _searchAlg="astar",
-        string _lpLabel="", string _dmLabel="", string _pathModifierLabel = "",
-        bool _writePaths = true);
-    Query(string _queryFileName, bool _writePaths = true);
+        string _lpLabel="", string _dmLabel="",
+        string _pathModifierLabel="", bool _writePaths = true);
+
+    Query(string _queryFileName, const vector<string>& _connLabels = vector<string>(), bool _writePaths = true);
     Query(const CfgType& _start, const CfgType& _goal, bool _writePaths = true);
     Query(MPProblemType* _problem, XMLNodeReader& _node, bool _warn = true);
     Query(MPProblemType* _problem, CfgType _start, CfgType _goal, const vector<string>& _connectorLabels=vector<string>(),
@@ -118,7 +119,8 @@ Query<MPTraits>::Query(bool _deleteNodes, string _searchAlg,
 
 // Reads in query from a file
 template<class MPTraits>
-Query<MPTraits>::Query(string _queryFileName, bool _writePaths) : m_writePaths(_writePaths) {
+Query<MPTraits>::Query(string _queryFileName, const vector<string>& _connLabels, bool _writePaths) :
+  m_nodeConnectionLabels(_connLabels), m_writePaths(_writePaths) {
   Initialize();
   ReadQuery(_queryFileName);
 }

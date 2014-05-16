@@ -48,17 +48,17 @@ class CModel {
   void Init(Environment* _env, int K);
 
   void ConstructRegions( Environment* _env, DistanceMetric *dm,
-			 Stat_Class& Stats, CollisionDetection* cd, 
+			 Stat_Class& Stats, CollisionDetection* cd,
 			 CDInfo* cdInfo, int kclose);
 
 /*
-  double DistanceToClosestRegion( Environment* _env, DistanceMetric *dm, 
+  double DistanceToClosestRegion( Environment* _env, DistanceMetric *dm,
 				  CFG t );
 */
 
-  void LearnRegions(Environment* _env, DistanceMetric *dm, 
+  void LearnRegions(Environment* _env, DistanceMetric *dm,
 		    Stat_Class& Stats, CollisionDetection* cd,
-		    CDInfo* cdInfo, 
+		    CDInfo* cdInfo,
 		    double _LowEntropy, int _KSamples, int _Tries);
 
   void WriteRegionsToSpecFile(const char* filename = "regions.spec") const;
@@ -69,15 +69,15 @@ class CModel {
 
   template <class WEIGHT>
   void
-  WriteRegionsToMapFile(Roadmap<CFG,WEIGHT>* rm, Input* input, 
+  WriteRegionsToMapFile(Roadmap<CFG,WEIGHT>* rm, Input* input,
 			CollisionDetection* cd, DistanceMetric* dm,
 			LocalPlanners<CFG,WEIGHT>* lp, const char* _fname = "regions.map") const;
 
   void BuildRegionMap(Environment* env, DistanceMetric* dm);
 
-  VID ClosestFreeRegion(regionset_iterator first, 
+  VID ClosestFreeRegion(regionset_iterator first,
 			regionset_iterator last,
-			CFG qry_cfg, Environment* env, 
+			CFG qry_cfg, Environment* env,
 			DistanceMetric* dm) const;
   /*
   template <class WEIGHT>
@@ -85,7 +85,7 @@ class CModel {
 			    CollisionDetection* cd, CDInfo* cdInfo,
 			    DistanceMetric* dm, LocalPlanners<CFG,WEIGHT>* lp);
   */
-  void MergeRegions(Environment* env, Stat_Class& Stats, 
+  void MergeRegions(Environment* env, Stat_Class& Stats,
 		    CollisionDetection* cd, CDInfo* cdInfo, DistanceMetric* dm);
 
   /*
@@ -93,7 +93,7 @@ class CModel {
     SetVID(c, v, region, regions);
   }
   */
-  void SetVID(const CFG& c, VID v, CRegion<CFG>& region, 
+  void SetVID(const CFG& c, VID v, CRegion<CFG>& region,
 	      vector<CRegion<CFG> >& neighbors);
 
   // Initial Model nodes...may want to store if in collision
@@ -133,7 +133,7 @@ CModel<CFG>::
 Init(Environment* _env, int K) {
   int N = K;
   int num_coll = 0;
-  for(int i=0; i<N; ++i) { 
+  for(int i=0; i<N; ++i) {
     CFG tmp;
     tmp.GetRandomCfg(_env);
     model_nodes.push_back( tmp );
@@ -148,7 +148,7 @@ Init(Environment* _env, int K) {
 template <class CFG>
 double
 CModel<CFG>::
-DistanceToClosestRegion( Environment* _env, DistanceMetric *dm, 
+DistanceToClosestRegion( Environment* _env, DistanceMetric *dm,
 			 CFG t ) {
   double min_dist = 10000;
 
@@ -166,7 +166,7 @@ DistanceToClosestRegion( Environment* _env, DistanceMetric *dm,
 template <class CFG>
 void
 CModel<CFG>::
-ConstructRegions( Environment* _env, DistanceMetric *dm, 
+ConstructRegions( Environment* _env, DistanceMetric *dm,
 		  Stat_Class& Stats, CollisionDetection* cd,
 		  CDInfo* cdInfo, int kclose) {
   // for each model_node...check initial collision
@@ -184,7 +184,7 @@ ConstructRegions( Environment* _env, DistanceMetric *dm,
 
     // randomly selected unmarked node (will be center of current region)
     int id = lrand48() % model_nodes.size();
-    while( isMarked[id] ) 
+    while( isMarked[id] )
       id = lrand48() % model_nodes.size();// id=some unmarked node
     CFG tmp = model_nodes[id];
 
@@ -203,7 +203,7 @@ ConstructRegions( Environment* _env, DistanceMetric *dm,
       double dist = dm->Distance( _env, model_nodes[id],model_nodes[t_index] );
       //cout <<I<< " Distances: "<< dist << endl;
       CFG tnode = model_nodes[t_index];
-      bool isColl = isCollision[t_index]; 
+      bool isColl = isCollision[t_index];
       cregion.AddNode( tnode, isColl, dist );
       if( !isMarked[t_index] ) {
 	MarkedNodes++;
@@ -221,7 +221,7 @@ ConstructRegions( Environment* _env, DistanceMetric *dm,
 
 
 template <class CFG>
-void 
+void
 CModel<CFG>::
 WriteRegionsToSpecFile(const char* filename) const {
   ofstream outfile(filename);
@@ -233,9 +233,9 @@ WriteRegionsToSpecFile(const char* filename) const {
     for(int I=0; I<rs.size(); I++) {
       outfile << " region " << _ID << " "
 	      << rs[I].GetStringType() << " ";
-      
+
       CFG _center = rs[I].getCenter();
-      for(int J=0; J<_center.posDOF(); ++J) 
+      for(int J=0; J<_center.posDOF(); ++J)
 	outfile << _center.GetSingleParam(J) << " ";
       //outfile << rs[I].getRadius() << endl;
 
@@ -243,7 +243,7 @@ WriteRegionsToSpecFile(const char* filename) const {
       double d = dm.Distance(_center, rs[I].samples.begin()->node);
       for(sample_const_iterator S = rs[I].samples.begin()+1;
 	  S != rs[I].samples.end(); ++S)
-	d = max(d, dm.Distance(_center, S->node));      
+	d = max(d, dm.Distance(_center, S->node));
       outfile << d << endl;
       //outfile << "0.5" << endl;
     }
@@ -256,7 +256,7 @@ template <class CFG>
 template <class WEIGHT>
 void
 CModel<CFG>::
-WriteRegionsToMapFile(Roadmap<CFG,WEIGHT>* rm, Input* input, 
+WriteRegionsToMapFile(Roadmap<CFG,WEIGHT>* rm, Input* input,
 		      CollisionDetection* cd, DistanceMetric* dm,
 		      LocalPlanners<CFG,WEIGHT>* lp, const char* _fname) const {
 
@@ -272,7 +272,7 @@ WriteRegionsToMapFile(Roadmap<CFG,WEIGHT>* rm, Input* input,
 	VID centerVID = rm->m_pRoadmap->GetVID(center);
 	if(centerVID == INVALID_VID)
 	  centerVID = rm->m_pRoadmap->AddVertex(center);
-	for(sample_const_iterator S = R->data.m_RegionSet[i].samples.begin(); 
+	for(sample_const_iterator S = R->data.m_RegionSet[i].samples.begin();
 	    S != R->data.m_RegionSet[i].samples.end(); ++S) {
 	  //if(!S->isColl) {
 	    CFG node = S->node;
@@ -290,9 +290,9 @@ WriteRegionsToMapFile(Roadmap<CFG,WEIGHT>* rm, Input* input,
   for(regionset_const_iterator R = region_map.begin();
       R != region_map.end(); ++R)
     if(R->data.type == NARROW)
-      for(int i=0; i<R->data.m_RegionSet.size(); ++i) 
+      for(int i=0; i<R->data.m_RegionSet.size(); ++i)
 	for(sample_const_iterator S = R->data.m_RegionSet[i].samples.begin();
-	    S != R->data.m_RegionSet[i].samples.end(); ++S) 
+	    S != R->data.m_RegionSet[i].samples.end(); ++S)
 	  if(S->isColl) {
 	    CFG node = S->node;
 	    rm->m_pRoadmap->DeleteVertex(node);
@@ -310,7 +310,7 @@ WriteRegionsToMapFile(Roadmap<CFG,WEIGHT>* rm, Input* input,
 	VID centerVID = rm->m_pRoadmap->GetVID(center);
 	if(centerVID == INVALID_VID)
 	  centerVID = rm->m_pRoadmap->AddVertex(center);
-	for(sample_const_iterator S = R->data.m_RegionSet[i].samples.begin(); 
+	for(sample_const_iterator S = R->data.m_RegionSet[i].samples.begin();
 	    S != R->data.m_RegionSet[i].samples.end(); ++S) {
 	  //if(!S->isColl) {
 	    CFG node = S->node;
@@ -328,9 +328,9 @@ WriteRegionsToMapFile(Roadmap<CFG,WEIGHT>* rm, Input* input,
   for(regionset_const_iterator R = region_map.begin();
       R != region_map.end(); ++R)
     if(R->data.type == SURFACE)
-      for(int i=0; i<R->data.m_RegionSet.size(); ++i) 
+      for(int i=0; i<R->data.m_RegionSet.size(); ++i)
 	for(sample_const_iterator S = R->data.m_RegionSet[i].samples.begin();
-	    S != R->data.m_RegionSet[i].samples.end(); ++S) 
+	    S != R->data.m_RegionSet[i].samples.end(); ++S)
 	  if(S->isColl) {
 	    CFG node = S->node;
 	    rm->m_pRoadmap->DeleteVertex(node);
@@ -348,7 +348,7 @@ WriteRegionsToMapFile(Roadmap<CFG,WEIGHT>* rm, Input* input,
 	VID centerVID = rm->m_pRoadmap->GetVID(center);
 	if(centerVID == INVALID_VID)
 	  centerVID = rm->m_pRoadmap->AddVertex(center);
-	for(sample_const_iterator S = R->data.m_RegionSet[i].samples.begin(); 
+	for(sample_const_iterator S = R->data.m_RegionSet[i].samples.begin();
 	    S != R->data.m_RegionSet[i].samples.end(); ++S) {
 	  //if(!S->isColl) {
 	    CFG node = S->node;
@@ -366,11 +366,11 @@ WriteRegionsToMapFile(Roadmap<CFG,WEIGHT>* rm, Input* input,
   for(regionset_const_iterator R = region_map.begin();
       R != region_map.end(); ++R)
     if(R->data.type == FREE)
-      for(int i=0; i<R->data.m_RegionSet.size(); ++i) 
+      for(int i=0; i<R->data.m_RegionSet.size(); ++i)
 	for(sample_const_iterator S = R->data.m_RegionSet[i].samples.begin();
-	    S != R->data.m_RegionSet[i].samples.end(); ++S) 
+	    S != R->data.m_RegionSet[i].samples.end(); ++S)
 	  if(S->isColl) {
-	    CFG node = S->node; 
+	    CFG node = S->node;
 	    rm->m_pRoadmap->DeleteVertex(node);
 	  }
   rm->WriteRoadmap(input, cd, dm, lp, "free_free.map");
@@ -386,7 +386,7 @@ WriteRegionsToMapFile(Roadmap<CFG,WEIGHT>* rm, Input* input,
 	VID centerVID = rm->m_pRoadmap->GetVID(center);
 	if(centerVID == INVALID_VID)
 	  centerVID = rm->m_pRoadmap->AddVertex(center);
-	for(sample_const_iterator S = R->data.m_RegionSet[i].samples.begin(); 
+	for(sample_const_iterator S = R->data.m_RegionSet[i].samples.begin();
 	    S != R->data.m_RegionSet[i].samples.end(); ++S) {
 	  //if(!S->isColl) {
 	    CFG node = S->node;
@@ -413,7 +413,7 @@ WriteRegionsToMapFile(Roadmap<CFG,WEIGHT>* rm, Input* input,
 	VID centerVID = rm->m_pRoadmap->GetVID(center);
 	if(centerVID == INVALID_VID)
 	  centerVID = rm->m_pRoadmap->AddVertex(center);
-	for(sample_const_iterator S = R->data.m_RegionSet[i].samples.begin(); 
+	for(sample_const_iterator S = R->data.m_RegionSet[i].samples.begin();
 	    S != R->data.m_RegionSet[i].samples.end(); ++S) {
 	  //if(!S->isColl) {
 	    CFG node = S->node;
@@ -431,9 +431,9 @@ WriteRegionsToMapFile(Roadmap<CFG,WEIGHT>* rm, Input* input,
   for(regionset_const_iterator R = region_map.begin();
       R != region_map.end(); ++R)
     if(R->data.type == UNKNOWN)
-      for(int i=0; i<R->data.m_RegionSet.size(); ++i) 
+      for(int i=0; i<R->data.m_RegionSet.size(); ++i)
 	for(sample_const_iterator S = R->data.m_RegionSet[i].samples.begin();
-	    S != R->data.m_RegionSet[i].samples.end(); ++S) 
+	    S != R->data.m_RegionSet[i].samples.end(); ++S)
 	  if(S->isColl) {
 	    CFG node = S->node;
 	    rm->m_pRoadmap->DeleteVertex(node);
@@ -455,18 +455,18 @@ WriteRegionsToMapFile(Roadmap<CFG,WEIGHT>* rm, Input* input,
   for(int i=0; i<model_nodes.size(); ++i)
     if(isCollision[i])
       initial_coll.push_back(model_nodes[i]);
-    else 
+    else
       initial_free.push_back(model_nodes[i]);
 
   //INITIAL FREE SAMPLES
   rm->m_pRoadmap->EraseGraph();
-  for(typename vector<CFG>::iterator N = initial_free.begin(); N != initial_free.end(); ++N) 
+  for(typename vector<CFG>::iterator N = initial_free.begin(); N != initial_free.end(); ++N)
     rm->m_pRoadmap->AddVertex(*N);
   rm->WriteRoadmap(input, cd, dm, lp, "initial_free.map");
 
   //INITIAL BLOCKED_SAMPLES
   rm->m_pRoadmap->EraseGraph();
-  for(typename vector<CFG>::iterator N = initial_coll.begin(); N != initial_coll.end(); ++N) 
+  for(typename vector<CFG>::iterator N = initial_coll.begin(); N != initial_coll.end(); ++N)
     rm->m_pRoadmap->AddVertex(*N);
   rm->WriteRoadmap(input, cd, dm, lp, "initial_coll.map");
 
@@ -481,12 +481,12 @@ WriteRegionsToMapFile(Roadmap<CFG,WEIGHT>* rm, Input* input,
   }
 
   WEIGHT w;
-  for(regionset_const_iterator R = region_map.begin(); 
+  for(regionset_const_iterator R = region_map.begin();
       R != region_map.end(); ++R) {
     vector<VID> neighbors;
     region_map.GetAdjacentVertices(R->vid, neighbors);
-    for(vector<VID>::const_iterator N = neighbors.begin(); 
-	N != neighbors.end(); ++N) 
+    for(vector<VID>::const_iterator N = neighbors.begin();
+	N != neighbors.end(); ++N)
       rm->m_pRoadmap->AddEdge(R->vid, *N, w);
   }
 
@@ -496,10 +496,10 @@ WriteRegionsToMapFile(Roadmap<CFG,WEIGHT>* rm, Input* input,
 
 
 template <class CFG>
-void 
+void
 CModel<CFG>::
-//WriteRegionsPathToSpecFile(vector<int> selected_regions_index, 
-WriteRegionsPathToSpecFile(vector<pair< CRegionSet<CFG>, DoubleWeight> >& rp, 
+//WriteRegionsPathToSpecFile(vector<int> selected_regions_index,
+WriteRegionsPathToSpecFile(vector<pair< CRegionSet<CFG>, DoubleWeight> >& rp,
 			   const char* filename) {
   ofstream outfile( filename );
   cout << " writing region path file. " << endl;
@@ -523,16 +523,16 @@ WriteRegionsPathToSpecFile(vector<pair< CRegionSet<CFG>, DoubleWeight> >& rp,
 }
 
 template <class CFG>
-void 
+void
 CModel<CFG>::
-LearnRegions(Environment* _env, DistanceMetric *dm, 
-	     Stat_Class& Stats, CollisionDetection* cd, CDInfo* cdInfo, 
+LearnRegions(Environment* _env, DistanceMetric *dm,
+	     Stat_Class& Stats, CollisionDetection* cd, CDInfo* cdInfo,
 	     double _LowEntropy, int _KSamples, int _Tries) {
   LowEntropy = _LowEntropy;
   KSamples = _KSamples;
   Tries = _Tries;
   cout << " num regions: " << region_map.get_num_vertices() << endl;
-  cout << " Params: (LowEntropy,KSamples,Tries): " 
+  cout << " Params: (LowEntropy,KSamples,Tries): "
        << LowEntropy << ", " << KSamples << ", " << Tries << endl;
 
   for(regionset_iterator R = region_map.begin(); R != region_map.end(); ++R)
@@ -551,7 +551,7 @@ ClosestFreeRegion(regionset_iterator first, regionset_iterator last,
   bool free_found = false;
   VID closest_vid=-1;
   VID default_vid=-1;
-  for(regionset_iterator R = first; R != last; ++R) { 
+  for(regionset_iterator R = first; R != last; ++R) {
     //cout << "checking if " << qry_cfg << " is close to region id: " << R->data.ID << endl;
 
     //VID t_vid = cmodel.GetVID( *R );
@@ -559,8 +559,8 @@ ClosestFreeRegion(regionset_iterator first, regionset_iterator last,
     vector< CRegion<CFG> > & rs = R->data.m_RegionSet;
     for(int I=0; I<rs.size(); I++) {
       double t_dist = dm->Distance(env, rs[I].center, qry_cfg);
-      if( t_dist < dist && 
-	  (rs[I].type!=BLOCKED) ) { 
+      if( t_dist < dist &&
+	  (rs[I].type!=BLOCKED) ) {
 	//return_reg = R->data;
 	dist = t_dist;
 	free_found = true;
@@ -580,7 +580,7 @@ ClosestFreeRegion(regionset_iterator first, regionset_iterator last,
 	 << "--Something ugly will happen" << endl;
 
   }
-  
+
   return closest_vid;
 }
 
@@ -589,12 +589,12 @@ template <class CFG>
 template <class WEIGHT>
 void
 CModel<CFG>::
-ExtractRegionPath(Roadmap<CFG,WEIGHT>* rm, CFG s_cfg, CFG g_cfg, 
+ExtractRegionPath(Roadmap<CFG,WEIGHT>* rm, CFG s_cfg, CFG g_cfg,
 		  Stat_Class& Stats,
 		  CollisionDetection* cd, CDInfo* cdInfo,
 		  DistanceMetric* dm, LocalPlanners<CFG,WEIGHT>* lp ) {
   //This portion is now in EntroyPRM
-  
+
 }
 */
 
@@ -603,8 +603,8 @@ void
 CModel<CFG>::
 BuildRegionMap(Environment* env, DistanceMetric* dm) {
   //give varying weight based on region types
-  DoubleWeight w_default(1); 
-  DoubleWeight w_freeblocked( pow(region_map.get_num_vertices(), 4.0) ); 
+  DoubleWeight w_default(1);
+  DoubleWeight w_freeblocked( pow(region_map.get_num_vertices(), 4.0) );
   DoubleWeight w_blockedblocked( pow(region_map.get_num_vertices(), 10.0) );
   for(regionset_iterator R = region_map.begin(); R != region_map.end(); ++R) {
     //vector<regionset_const_iterator> neighbors;
@@ -629,14 +629,14 @@ BuildRegionMap(Environment* env, DistanceMetric* dm) {
 template <class CFG>
 void
 CModel<CFG>::
-MergeRegions(Environment* env, Stat_Class& Stats, 
-	     CollisionDetection* cd, CDInfo* cdInfo, DistanceMetric* dm) { 
+MergeRegions(Environment* env, Stat_Class& Stats,
+	     CollisionDetection* cd, CDInfo* cdInfo, DistanceMetric* dm) {
   //look at each region, check its neighbors
   //if neighbor is of the same type, and merged region is of the same type,
   //merge regions, update map, update region list
   //newstyle creates blobs
   //will probably be problems if region graph already made
-  cout << " Number of initial regions generated: " 
+  cout << " Number of initial regions generated: "
        << region_map.get_num_vertices() << endl;
 
   for(regionset_iterator I = region_map.begin(); I != region_map.end(); ++I) {
@@ -646,7 +646,7 @@ MergeRegions(Environment* env, Stat_Class& Stats,
     int cur_type = cur_reg.type;
     if( cur_type == BLOCKED ) continue; // no worries with these yet
     vector< CRegion<CFG> >& regions = cur_reg.m_RegionSet;
-    int J=0; 
+    int J=0;
     while( J < regions.size() ) {
       //for each single regionset...check
       vector<VID> vids_to_delete;
@@ -662,9 +662,9 @@ MergeRegions(Environment* env, Stat_Class& Stats,
 	if( next_reg.NumSubRegions() != 1 ) {
 	  cout << "Something weird happening in MergeRegions (numsub regions!=1)"<<endl;
 	}
-	
+
 	CRegion<CFG>& next_sub_reg = next_reg.m_RegionSet[0];
-	
+
 	if( regions[J].Overlaps( next_sub_reg, env, dm ) ) {
 
 	  //Add to sublist and remove from graph
@@ -684,7 +684,7 @@ MergeRegions(Environment* env, Stat_Class& Stats,
   }//end for main loop I
 
 
-  cout << " After merge. regions generated: " 
+  cout << " After merge. regions generated: "
        << region_map.get_num_vertices() << endl;
 
 }
@@ -697,8 +697,8 @@ MergeRegions(Environment* env, Stat_Class& Stats,
 template <class CFG>
 void
 CModel<CFG>::
-MergeRegions(Environment* env, Stat_Class& Stats, 
-	     CollisionDetection* cd, CDInfo* cdInfo, DistanceMetric* dm) { 
+MergeRegions(Environment* env, Stat_Class& Stats,
+	     CollisionDetection* cd, CDInfo* cdInfo, DistanceMetric* dm) {
  //look at each region, check its neighbors
  //if neighbor is of the same type, and merged region is of the same type,
  //merge regions, update map, update region list
@@ -714,14 +714,14 @@ MergeRegions(Environment* env, Stat_Class& Stats,
 
     vector<VID> neighbor_list;
     region_map.GetAdjacentVertices(Rvid, neighbor_list);
-    for(vector<VID>::const_iterator Nvid = neighbor_list.begin(); 
+    for(vector<VID>::const_iterator Nvid = neighbor_list.begin();
 	Nvid != neighbor_list.end(); ++Nvid) {
       CRegion<CFG>* N = region_map.GetReferenceofData(*Nvid);
 
       //if of the same type and haven't failed to merge before
       if((N->type == R->type) &&
 	 (find(unmergable_regions.begin(), unmergable_regions.end(),
-	       make_pair(min(R->ID,N->ID), max(R->ID,N->ID))) == 
+	       make_pair(min(R->ID,N->ID), max(R->ID,N->ID))) ==
 	  unmergable_regions.end())) {
         //create new merged region
         CRegion<CFG> merged;
@@ -741,37 +741,37 @@ MergeRegions(Environment* env, Stat_Class& Stats,
         merged.AddNode(center, center.isCollision(env, Stats, cd, *cdInfo), 0);
 
         //add all the nodes in each region to the merged one
-	for(sample_const_iterator S = R->samples.begin(); 
+	for(sample_const_iterator S = R->samples.begin();
 	    S != R->samples.end(); ++S)
-          merged.AddNode(S->node, S->isColl, 
+          merged.AddNode(S->node, S->isColl,
 			 dm->Distance(env, merged.center, S->node));
-	for(sample_const_iterator S = N->samples.begin(); 
-	    S != N->samples.end(); ++S) 
-	  merged.AddNode(S->node, S->isColl, 
+	for(sample_const_iterator S = N->samples.begin();
+	    S != N->samples.end(); ++S)
+	  merged.AddNode(S->node, S->isColl,
 			 dm->Distance(env, merged.center, S->node));
 
         //check for extra nodes in the neighbor list
 	vector<VID> inside;
-        for(vector<VID>::const_iterator N2vid = neighbor_list.begin(); 
+        for(vector<VID>::const_iterator N2vid = neighbor_list.begin();
 	    N2vid != neighbor_list.end(); ++N2vid)
           if((*Nvid != *N2vid) && (Rvid != *N2vid)) {
             CRegion<CFG>* N2 = region_map.GetReferenceofData(*N2vid);
 	    if(dm->Distance(env, merged.center, N2->center) <= merged.radius) {
-	      //make sure the inside region is the same as R, ow break 
+	      //make sure the inside region is the same as R, ow break
 	      if(N2->type != R->type) {
 		merged.type = N2->type;
-		break; 
+		break;
 	      }
 	      inside.push_back(*N2vid);
-              for(sample_const_iterator S = N2->samples.begin(); 
-		  S != N2->samples.end(); ++S) 
-		merged.AddNode(S->node, S->isColl, 
+              for(sample_const_iterator S = N2->samples.begin();
+		  S != N2->samples.end(); ++S)
+		merged.AddNode(S->node, S->isColl,
 			       dm->Distance(env, merged.center, S->node));
 	    } else {
-	      for(sample_const_iterator S = N2->samples.begin(); 
-		  S != N2->samples.end(); ++S) 
-		if(dm->Distance(env, merged.center, S->node) < merged.radius) 
-		  merged.AddNode(S->node, S->isColl, 
+	      for(sample_const_iterator S = N2->samples.begin();
+		  S != N2->samples.end(); ++S)
+		if(dm->Distance(env, merged.center, S->node) < merged.radius)
+		  merged.AddNode(S->node, S->isColl,
 				 dm->Distance(env, merged.center, S->node));
 	    }
           }
@@ -779,44 +779,44 @@ MergeRegions(Environment* env, Stat_Class& Stats,
 	//(make sure didn't find an inside region of a different type)
 	if(merged.type == R->type) {
 	  //remove any duplicates
-	  merged.samples.erase(unique(merged.samples.begin(), 
-				      merged.samples.end(), 
-				      equal_node<CFG>()), 
+	  merged.samples.erase(unique(merged.samples.begin(),
+				      merged.samples.end(),
+				      equal_node<CFG>()),
 			       merged.samples.end());
-	  
+
 	  //update merged region statistics
 	  merged.SetRegionStats();
-	  
+
 	  //reclassify new region
-	  merged.Classify(env, Stats, cd, cdInfo, dm, 
+	  merged.Classify(env, Stats, cd, cdInfo, dm,
 			  LowEntropy, KSamples, Tries);
 
           //if classification is the same, replace with merged region
 	  if(merged.type == R->type) {
 	    merged.ID = R->ID;
-	    
+
 	    region_map.DeleteVertex(Rvid);
-	    
+
 	    region_map.DeleteVertex(*Nvid);
 	    Q.erase(remove(Q.begin(), Q.end(), *Nvid), Q.end());
-	    
-	    for(typename vector<VID>::const_iterator I = inside.begin(); 
+
+	    for(typename vector<VID>::const_iterator I = inside.begin();
 		I != inside.end(); ++I) {
 	      region_map.DeleteVertex(*I);
 	      Q.erase(remove(Q.begin(), Q.end(), *I), Q.end());
 	    }
-	    
+
 	    VID mergedvid = region_map.AddVertex(merged);
-	    
+
 	    vector<region_const_iterator> new_neighbors;
 	    region_const_iterator B = region_map.begin();
 	    region_const_iterator E = region_map.end();
 	    merged.GetOverlappingRegionsReference(B, E,
 						  env, dm, new_neighbors);
-	    DoubleWeight w_default(1); 
-	    DoubleWeight w_freeblocked(pow(region_map.Get VertexCount(), 4.0)); 
+	    DoubleWeight w_default(1);
+	    DoubleWeight w_freeblocked(pow(region_map.Get VertexCount(), 4.0));
 	    DoubleWeight w_blockedblocked(pow(region_map.Get VertexCount(), 10.0));
-	    for(typename vector<region_const_iterator>::const_iterator new_N = new_neighbors.begin(); 
+	    for(typename vector<region_const_iterator>::const_iterator new_N = new_neighbors.begin();
 		new_N != new_neighbors.end(); ++new_N) {
 	      if((*new_N)->data.type == BLOCKED && merged.type == BLOCKED)
 		region_map.AddEdge(mergedvid, (*new_N)->vid, w_blockedblocked);
@@ -841,7 +841,7 @@ MergeRegions(Environment* env, Stat_Class& Stats,
   } //end while(!Q.empty())
 
   //for testing
-  cout << " Number of regions after merge: " 
+  cout << " Number of regions after merge: "
        << region_map.Get VertexCount() << endl;
   for(region_iterator R = region_map.begin(); R != region_map.end(); ++R)
     cout << " Region: " << R->data.ID << "\t size: " << R->data.size()
@@ -856,11 +856,11 @@ MergeRegions(Environment* env, Stat_Class& Stats,
 template <class CFG>
 void
 CModel<CFG>::
-SetVID(const CFG& c, VID v, CRegion<CFG>& region, 
+SetVID(const CFG& c, VID v, CRegion<CFG>& region,
        vector<CRegion<CFG> >& neighbors) {
   region.SetVID(c, v);
-  for(typename vector<CRegion<CFG> >::iterator N = neighbors.begin(); 
-      N != neighbors.end(); ++N) 
+  for(typename vector<CRegion<CFG> >::iterator N = neighbors.begin();
+      N != neighbors.end(); ++N)
     N->SetVID(c, v);
 }
 

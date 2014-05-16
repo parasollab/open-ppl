@@ -62,7 +62,7 @@ class GaussianSampler : public SamplerMethod<MPTraits>
           StatClass& _stats, CfgType& _cfgIn, vector<CfgType>& _cfgOut,
           vector<CfgType>& _cfgCol){
 
-        string callee(this->GetName() + "::SampleImpl()");
+        string callee(this->GetNameAndLabel() + "::SampleImpl()");
         ValidityCheckerPointer vc = this->GetMPProblem()->GetValidityChecker(m_vcLabel);
         DistanceMetricPointer dm = this->GetMPProblem()->GetDistanceMetric(m_dmLabel);
 

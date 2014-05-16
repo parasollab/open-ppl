@@ -4,7 +4,11 @@
 BoundingSphere::BoundingSphere() :
   m_center(0.0, 0.0, 0.0),
   m_radius(numeric_limits<double>::max()) {
-  }
+}
+
+BoundingSphere::BoundingSphere(const Vector3d& _center, double _radius) :
+  m_center(_center), m_radius(_radius) {
+}
 
 BoundingSphere::BoundingSphere(const BoundingSphere& _bs) :
   m_center(_bs.m_center),
@@ -49,6 +53,12 @@ double
 BoundingSphere::GetClearance(const Vector3d& _p) const {
   return m_radius - (_p - m_center).norm();
 }
+
+int
+BoundingSphere::GetSideID(const vector<double>& _p) const {
+  return -1;
+}
+
 
 Vector3d
 BoundingSphere::GetClearancePoint(const Vector3d& _p) const {

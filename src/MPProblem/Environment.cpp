@@ -70,13 +70,13 @@ Environment::Read(string _filename) {
   size_t multibodyCount = ReadField<size_t>(ifs, WHERE, "Failed reading number of multibodies.");
 
   //parse and construct each multibody
-  for (int m=0; m<multibodyCount && ifs; m++) {
+  for(size_t m = 0; m < multibodyCount && ifs; ++m) {
     shared_ptr<MultiBody> mb(new MultiBody());
     mb->Read(ifs);
 
-    if( mb->IsActive() )
+    if(mb->IsActive())
       m_activeBodies.push_back(mb);
-    else if (!mb->IsSurface())
+    else if(!mb->IsSurface())
       m_obstacleBodies.push_back(mb);
     else
       m_navigableSurfaces.push_back(mb);
@@ -214,6 +214,21 @@ Environment::ResetBoundary(double _d, size_t _robotIndex) {
   obstBBX[2].second = maxz;
 
   m_boundary->ResetBoundary(obstBBX, _d);
+}
+
+//expand the boundary by a margin of _d + robotRadius
+void
+Environment::ExpandBoundary(double _d, size_t _robotIndex) {
+
+  double robotRadius = GetMultiBody(_robotIndex)->GetBoundingSphereRadius();
+  _d += robotRadius;
+
+  vector<pair<double, double> > originBBX(3);
+  originBBX[0] = GetBoundary()->GetRange(0);
+  originBBX[1] = GetBoundary()->GetRange(1);
+  originBBX[2] = GetBoundary()->GetRange(2);
+
+  m_boundary->ResetBoundary(originBBX, _d);
 }
 
 shared_ptr<MultiBody>

@@ -27,7 +27,7 @@ class SamplerMethod : public MPBaseObject<MPTraits> {
     virtual ~SamplerMethod() { };
 
     virtual void PrintOptions(ostream& _os) const {
-      _os << this->GetName() << endl;
+      _os << this->GetNameAndLabel() << endl;
     }
 
     //implementation for InputIterator = vector<CfgType>::iterator and OutputIterator = back_insert_iterator<vector<CfgType> >

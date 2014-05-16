@@ -45,6 +45,7 @@ class ClearanceUtility : public MPBaseObject<MPTraits> {
     string GetDistanceMetricLabel() const {return m_dmLabel;}
     string GetValidityCheckerLabel() const {return m_vcLabel;}
     void SetValidityCheckerLabel(const string& _s) {m_vcLabel = _s;}
+    bool GetExactClearance() const {return m_exactClearance;}
 
     //*********************************************************************//
     // Calculate Collision Information                                     //
@@ -301,7 +302,7 @@ ClearanceUtility<MPTraits>::ExactCollisionInfo(CfgType& _cfg, CfgType& _clrCfg, 
   Environment* env = this->GetMPProblem()->GetEnvironment();
 
   // Setup Validity Checker
-  string callee = this->GetName() + "::ExactCollisionInfo";
+  string callee = this->GetNameAndLabel() + "::ExactCollisionInfo";
   ValidityCheckerPointer vcm = this->GetMPProblem()->GetValidityChecker(m_vcLabel);
   _cdInfo.ResetVars();
   _cdInfo.m_retAllInfo = true;
@@ -416,7 +417,7 @@ ClearanceUtility<MPTraits>::ApproxCollisionInfo(CfgType& _cfg, CfgType& _clrCfg,
     return false;
 
   // Initialization
-  string callee = this->GetName() + "::ApproxCollisionInfo";
+  string callee = this->GetNameAndLabel() + "::ApproxCollisionInfo";
   DistanceMetricPointer dm  = this->GetMPProblem()->GetDistanceMetric(m_dmLabel);
   ValidityCheckerPointer vcm = this->GetMPProblem()->GetValidityChecker(m_vcLabel);
   _cdInfo.ResetVars();
@@ -838,7 +839,7 @@ template<class MPTraits>
 bool
 MedialAxisUtility<MPTraits>::PushToMedialAxis(CfgType& _cfg, shared_ptr<Boundary> _bb){
   // Initialization
-  string callee = this->GetName() + "::PushToMedialAxis";
+  string callee = this->GetNameAndLabel() + "::PushToMedialAxis";
   if(this->m_debug)
     cout << endl << callee << endl << "Being Pushed: " << _cfg;
 
@@ -881,7 +882,7 @@ bool
 MedialAxisUtility<MPTraits>::PushFromInsideObstacle(CfgType& _cfg, shared_ptr<Boundary> _bb){
 
   // Initialization
-  string callee = this->GetName() + "::PushFromInsideObstacle";
+  string callee = this->GetNameAndLabel() + "::PushFromInsideObstacle";
   if(this->m_debug) cout << callee << endl << " CfgType: " << _cfg << endl;
 
   // Variables
@@ -920,7 +921,7 @@ template<class MPTraits>
 bool
 MedialAxisUtility<MPTraits>::PushCfgToMedialAxis(CfgType& _cfg, shared_ptr<Boundary> _bb){
   // Initialization
-  string callee = this->GetName() + "::PushCfgToMedialAxis";
+  string callee = this->GetNameAndLabel() + "::PushCfgToMedialAxis";
   if(this->m_debug) cout << callee << endl << "Cfg: " << _cfg << " eps: " << m_epsilon << endl;
 
   Environment* env = this->GetMPProblem()->GetEnvironment();
@@ -1463,7 +1464,7 @@ inline double distsqr
 //get clearance of the point
 template<class MPTraits>
 double
-  SurfaceMedialAxisUtility<MPTraits>::GetClearance2DSurf
+SurfaceMedialAxisUtility<MPTraits>::GetClearance2DSurf
 (shared_ptr<MultiBody> _mb, const Point2d& _pos, Point2d& _cdPt, double _clear)
 {
   double minDis=1e10;
@@ -1527,7 +1528,7 @@ double
 SurfaceMedialAxisUtility<MPTraits>::PushCfgToMedialAxis2DSurf
 (CfgType& _cfg, shared_ptr<Boundary> _bb, bool& _valid) {
 
-  string callee = this->GetName() + "::PushCfgToMedialAxis2DSurf";
+  string callee = this->GetNameAndLabel() + "::PushCfgToMedialAxis2DSurf";
 
   if(this->m_debug) cout << callee << endl << "Cfg: " << _cfg  << endl;
 

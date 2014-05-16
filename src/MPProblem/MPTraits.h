@@ -47,6 +47,7 @@
 #include "Samplers/SimilarStructureSampler.h"
 #include "Samplers/SurfaceGridSampler.h"
 #include "Samplers/SurfaceSampler.h"
+#include "Samplers/UniformMedialAxisSampler.h"
 #include "Samplers/UniformObstacleBasedSampler.h"
 #include "Samplers/UniformRandomSampler.h"
 
@@ -59,6 +60,7 @@
 #include "LocalPlanners/SurfaceLP.h"
 #include "LocalPlanners/ToggleLP.h"
 #include "LocalPlanners/TransformAtS.h"
+#include "LocalPlanners/ApproxSpheres.h"
 
 //extenders includes
 #include "Extenders/BasicExtender.h"
@@ -84,6 +86,7 @@
 #include "Connectors/NeighborhoodConnector.h"
 #include "Connectors/RewireConnector.h"
 #include "Connectors/CCExpansion.h"
+#include "Connectors/ClosestVE.h"
 
 //metric includes
 #include "Metrics/CCDistanceMetric.h"
@@ -195,6 +198,7 @@ struct MPTraits{
     MixSampler<MPTraits>,
     ObstacleBasedSampler<MPTraits>,
     SimilarStructureSampler<MPTraits>,
+    UniformMedialAxisSampler<MPTraits>,
     UniformObstacleBasedSampler<MPTraits>,
     UniformRandomSampler<MPTraits>
       > SamplerMethodList;
@@ -208,7 +212,8 @@ struct MPTraits{
     RotateAtS<MPTraits>,
     StraightLine<MPTraits>,
     ToggleLP<MPTraits>,
-    TransformAtS<MPTraits>
+    TransformAtS<MPTraits>,
+    ApproxSpheres<MPTraits>
     > LocalPlannerMethodList;
 
   //types of extenders avaible in our world
@@ -239,8 +244,8 @@ struct MPTraits{
     CCsConnector<MPTraits>,
     NeighborhoodConnector<MPTraits>,
     //PreferentialAttachment<MPTraits>,
-    RewireConnector<MPTraits>//,
-    //ClosestVE<MPTraits>
+    RewireConnector<MPTraits>,
+    ClosestVE<MPTraits>
       > ConnectorMethodList;
 
 #ifndef _PARALLEL

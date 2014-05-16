@@ -1,0 +1,121 @@
+\chapter{Validity Checkers}
+
+A Validity Checker (\vc) is defined as a black box unit which returns whether or
+not a configurations is within $\cfree$ or $\cobst$. This is most commonly
+defined as collision detection, but could be more widely seen as anything
+which defines $\cobst$, i.e., energy-feasible.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Base Class
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{\texttt{ValidityCheckerMethod}}
+
+The base class, \texttt{ValidityCheckerMethod}, has two important methods,
+$\CALL{IsValid}$ and $\CALL{IsInsideObstacle}$.
+
+$\CALL{IsValid}$ takes as input a configuration $c$ and a \texttt{CDInfo} and
+returns whether or not $c$ is within $\cfree$. It is called like the following:
+\begin{lstlisting}
+ValidityCheckerPointer vc = this->GetMPProblem()->GetValidityChecker(m_vcLabel);
+CfgType c;
+CDInfo cdInfo;
+string callee("StandardsDoc");
+bool valid = vc->IsValid(c, cdInfo, callee);
+\end{lstlisting}
+Where $callee$ is a string representing the calling function of
+$\CALL{IsValid}$.
+
+$\CALL{IsInsideObstacle}$ is meant mostly for medial axis related functions, but
+it takes as input a configuration $c$ and determines whether the robot
+configured at $c$ lies entirely within an obstacle. It is called like the
+following:
+\begin{lstlisting}
+ValidityCheckerPointer vc = this->GetMPProblem()->GetValidityChecker(m_vcLabel);
+CfgType c;
+bool valid = vc->IsInsideObstacle(c);
+\end{lstlisting}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Helper Classes
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Helper Classes}
+
+\subsection{\texttt{ValidityCheckerFunctor}}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Derived Class
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Derived Classes}
+
+%% Always True
+\subsection{\texttt{AlwaysTrueValidity}}
+
+%% Collision Detection
+\subsection{\texttt{CollisionDetectionValidity}}
+
+%% Compose
+\subsection{\texttt{ComposeValidity}}
+
+%% Medial Axis Clearance
+\subsection{\texttt{MedialAxisClearanceValidity}}
+
+%% Negate
+\subsection{\texttt{NegateValidity}}
+
+%% Node Clearance
+\subsection{\texttt{NodeClearanceValidity}}
+
+%% Obstacle Clearance
+\subsection{\texttt{ObstacleClearanceValidity}}
+
+%% SS Surface
+\subsection{\texttt{SSSurfaceValidity}}
+
+%% Surface
+\subsection{\texttt{SurfaceValidity}}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Base Class
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{\texttt{CollisionDetectionMethod}}
+
+Collision Detection (\cd) is an important compontent of a robotics library. It
+is one of the fundamental validity types in PMPL. It takes an input a
+configuration $c$ and returns whether or not the robot configured at $c$ is in
+collision with any obstacles. \texttt{CollisionDetectionMethod} is the core
+class of these geometric collision detection libraries. Mostly these serve as
+middleware to interface with the external libraries. \cd\ methods are not
+directly accessed but have two core functions, \CALL{IsInCollision} and
+\CALL{IsInsideObstacle}. \CALL{IsInCollision} takes as input a
+\texttt{MultiBody} for a robot and an obstacle and returns whether the robot and
+obstacle collide. \CALL{IsInsideObstacle} takes a configuration $c$ and
+determines whether the robot configured at $c$ lies entirely within a workspace
+obstacle.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Helper Classes
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Helper Classes}
+
+\subsection{\texttt{CDInfo}}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Derived Class
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Derived Classes}
+
+%% PQP
+\subsection{\texttt{PQPCollisionDetection}}
+
+%% RAPID
+\subsection{\texttt{RapidCollisionDetection}}
+
+%% SOLID
+\subsection{\texttt{SolidCollisionDetection}}
+
+%% Spheres
+\subsection{\texttt{SpheresCollisionDetection}}
+
+%% VCLIP
+\subsection{\texttt{VClipCollisionDetection}}
+

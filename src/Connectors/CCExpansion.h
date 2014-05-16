@@ -28,194 +28,193 @@
 #include "ConnectorMethod.h"
 #include "Extenders/BasicExtender.h"
 
-  //#########################//
-  // CCExpansion Method //
-  //#########################//
-  template <class MPTraits>
-  class CCExpansion: public ConnectorMethod<MPTraits> {
-    public:
-      ///////////////////////////////
-      /* Typedefs */
-      ///////////////////////////////
-      typedef typename MPTraits::CfgType CfgType;
-      typedef typename MPTraits::MPProblemType MPProblemType;
-      typedef typename MPProblemType::VID VID;
-      typedef typename MPProblemType::DistanceMetricPointer DistanceMetricPointer;
-      typedef typename MPProblemType::RoadmapType RoadmapType;
-      typedef typename RoadmapType::GraphType GraphType;
-      typedef typename vector<VID>::iterator VIDIT;
+//#########################//
+// CCExpansion Method //
+//#########################//
+template <class MPTraits>
+class CCExpansion: public ConnectorMethod<MPTraits> {
+  public:
+    ///////////////////////////////
+    /* Typedefs */
+    ///////////////////////////////
+    typedef typename MPTraits::CfgType CfgType;
+    typedef typename MPTraits::MPProblemType MPProblemType;
+    typedef typename MPProblemType::VID VID;
+    typedef typename MPProblemType::DistanceMetricPointer DistanceMetricPointer;
+    typedef typename MPProblemType::RoadmapType RoadmapType;
+    typedef typename RoadmapType::GraphType GraphType;
+    typedef typename vector<VID>::iterator VIDIT;
 
-      //////////////////////////////////
-      /* Constructors and Destructors */
-      //////////////////////////////////
-      CCExpansion(MPProblemType* _problem = NULL, string _lp = "", string _nf = "", string _vc = "");
-      CCExpansion(MPProblemType* _problem, XMLNodeReader& _node);
+    //////////////////////////////////
+    /* Constructors and Destructors */
+    //////////////////////////////////
+    CCExpansion(MPProblemType* _problem = NULL, string _lp = "", string _nf = "", string _vc = "");
+    CCExpansion(MPProblemType* _problem, XMLNodeReader& _node);
 
-      //////////////////////////////////////
-      /* Print Method */
-      //////////////////////////////////////
-      virtual void PrintOptions(ostream& _os) const;
+    //////////////////////////////////////
+    /* Print Method */
+    //////////////////////////////////////
+    virtual void PrintOptions(ostream& _os) const;
 
-      //////////////////////////////////////
-      /* XML Parser */
-      //////////////////////////////////////
-      virtual void ParseXML(XMLNodeReader& _node);
+    //////////////////////////////////////
+    /* XML Parser */
+    //////////////////////////////////////
+    virtual void ParseXML(XMLNodeReader& _node);
 
-      //////////////////////////////////////
-      /* Wrapper Connect() Method */
-      //////////////////////////////////////
-      template <class ColorMap, class InputIterator1, class InputIterator2, class OutputIterator>
-        void Connect(RoadmapType* _rm, StatClass& _stats,
-            ColorMap& _cmap, InputIterator1 _itr1First, InputIterator1 _itr1Last,
-            InputIterator2 _itr2First, InputIterator2 _itr2Last, OutputIterator _collision);
+    //////////////////////////////////////
+    /* Wrapper Connect() Method */
+    //////////////////////////////////////
+    template <class ColorMap, class InputIterator1, class InputIterator2, class OutputIterator>
+      void Connect(RoadmapType* _rm, StatClass& _stats,
+          ColorMap& _cmap, InputIterator1 _itr1First, InputIterator1 _itr1Last,
+          InputIterator2 _itr2First, InputIterator2 _itr2Last, OutputIterator _collision);
 
-    protected:
-      /////////////////////////////////////////////////////////////////////////////
-      /* Updated RDMP Methods */
-      /////////////////////////////////////////////////////////////////////////////
-      void UpdateRoadmap(RoadmapType* _rm, StatClass& _stats, CfgType& _prev, CfgType& _bump);
-      void UpdateRoadmap(RoadmapType* _rm, StatClass& _stats, CfgType& _prev, CfgType& _bumpPoint, CfgType& _curr);
+  protected:
+    /////////////////////////////////////////////////////////////////////////////
+    /* Updated RDMP Methods */
+    /////////////////////////////////////////////////////////////////////////////
+    void UpdateRoadmap(RoadmapType* _rm, StatClass& _stats, CfgType& _prev, CfgType& _bump);
+    void UpdateRoadmap(RoadmapType* _rm, StatClass& _stats, CfgType& _prev, CfgType& _bumpPoint, CfgType& _curr);
 
-      /////////////////////////////////////////////////////////////////////////////
-      /* Utility Methods */
-      /////////////////////////////////////////////////////////////////////////////
-      void TargetCCInfo(RoadmapType* _rm, vector<VID>& _curCC);
-      bool IsClear(RoadmapType* _rm, CfgType& bumpPoint);
-      void UnitVec(CfgType& _uA);
-      template <class ColorMap>
-        void PreExpansionSetup(RoadmapType* _rm, StatClass& _stats, ColorMap& _cmap, int _index, vector<VID>& _allCC);
-      template <class ColorMap>
-        void FindNearestCC(RoadmapType* _rm, ColorMap& _cmap, VID& _curCC, vector<VID>& _allCCs);
+    /////////////////////////////////////////////////////////////////////////////
+    /* Utility Methods */
+    /////////////////////////////////////////////////////////////////////////////
+    void TargetCCInfo(RoadmapType* _rm, vector<VID>& _curCC);
+    bool IsClear(RoadmapType* _rm, CfgType& bumpPoint);
+    void UnitVec(CfgType& _uA);
+    template <class ColorMap>
+      void PreExpansionSetup(RoadmapType* _rm, StatClass& _stats, ColorMap& _cmap, int _index, vector<VID>& _allCC);
+    template <class ColorMap>
+      void FindNearestCC(RoadmapType* _rm, ColorMap& _cmap, VID& _curCC, vector<VID>& _allCCs);
 
-      /////////////////////////////////////////////////////////////////////////////
-      /* Node Selection Methods */
-      /////////////////////////////////////////////////////////////////////////////
-      void FindDifficultNodes(RoadmapType* _rm, StatClass& _stats, vector<VID>& _cc1, int _k);
-      void SelectCandidates(RoadmapType* _rm, StatClass& _stats, vector<VID>& _curCC);
+    /////////////////////////////////////////////////////////////////////////////
+    /* Node Selection Methods */
+    /////////////////////////////////////////////////////////////////////////////
+    void FindDifficultNodes(RoadmapType* _rm, StatClass& _stats, vector<VID>& _cc1, int _k);
+    void SelectCandidates(RoadmapType* _rm, StatClass& _stats, vector<VID>& _curCC);
 
-      /////////////////////////////////////////////////////////////////////////////
-      /* CC Expansion Method Wrapper */
-      /////////////////////////////////////////////////////////////////////////////
-      void Expand(RoadmapType* _rm, StatClass& _stats, int _index);
+    /////////////////////////////////////////////////////////////////////////////
+    /* CC Expansion Method Wrapper */
+    /////////////////////////////////////////////////////////////////////////////
+    void Expand(RoadmapType* _rm, StatClass& _stats, int _index);
 
-      /////////////////////////////////////////////////////////////////////////////
-      /* CC Expansion Methods */
-      /////////////////////////////////////////////////////////////////////////////
-      void RandomExpand(RoadmapType* _rm, StatClass& _stats, int _index);
-      void ExpandFrom(RoadmapType* _rm, StatClass& _stats, int _index);
-      void ExpandTo(RoadmapType* _rm, StatClass& _stats, int _index);
-      void MedialAxisExpand(RoadmapType* _rm, StatClass& _stats, int _index);
-      void MedialRecurse(RoadmapType* _rm, StatClass& _stats, CfgType& _prev, CfgType& _dir, int _count);
+    /////////////////////////////////////////////////////////////////////////////
+    /* CC Expansion Methods */
+    /////////////////////////////////////////////////////////////////////////////
+    void RandomExpand(RoadmapType* _rm, StatClass& _stats, int _index);
+    void ExpandFrom(RoadmapType* _rm, StatClass& _stats, int _index);
+    void ExpandTo(RoadmapType* _rm, StatClass& _stats, int _index);
+    void MedialAxisExpand(RoadmapType* _rm, StatClass& _stats, int _index);
+    void MedialRecurse(RoadmapType* _rm, StatClass& _stats, CfgType& _prev, CfgType& _dir, int _count);
 
-      /////////////////////////////////////////////////////////////////////////////
-      /* Compute desired direction follow the tangent of the medial-axis */
-      /////////////////////////////////////////////////////////////////////////////
-      void GetMedialAxisRay(RoadmapType* _rm, CfgType& _prev, CfgType& _bumpPoint, CfgType& _curr, CfgType& _dir);
+    /////////////////////////////////////////////////////////////////////////////
+    /* Compute desired direction follow the tangent of the medial-axis */
+    /////////////////////////////////////////////////////////////////////////////
+    void GetMedialAxisRay(RoadmapType* _rm, CfgType& _prev, CfgType& _bumpPoint, CfgType& _curr, CfgType& _dir);
 
-      /////////////////////////////////////////////////////////////////////////////
-      /* End conditions checking method */
-      /////////////////////////////////////////////////////////////////////////////
-      bool WithinProximity(RoadmapType* _rm, CfgType& _bumpPoint, CfgType& _target);
+    /////////////////////////////////////////////////////////////////////////////
+    /* End conditions checking method */
+    /////////////////////////////////////////////////////////////////////////////
+    bool WithinProximity(RoadmapType* _rm, CfgType& _bumpPoint, CfgType& _target);
 
-      //////////
-      /* Data */
-      //////////
+    //////////
+    /* Data */
+    //////////
 
-      /// CC Expansion Method Names
-      enum ExpansionNames {m_RE, m_ET, m_EF, m_MAE};
+    /// CC Expansion Method Names
+    enum ExpansionNames {m_RE, m_ET, m_EF, m_MAE};
 
-      /// Node Selection Method Names
-      enum NodeSelections {m_R, m_F, m_D};
+    /// Node Selection Method Names
+    enum NodeSelections {m_R, m_F, m_D};
 
-      /// Medial Axis Utility
-      MedialAxisUtility<MPTraits> m_medialAxisUtility;
+    /// Medial Axis Utility
+    MedialAxisUtility<MPTraits> m_medialAxisUtility;
 
-      /// General Expansion variables
-      /* Number of best candidate expansion nodes */
-      int m_kNodes;
-      /* Maximum number of iterations per expansion chain */
-      int m_nIterations;
-      /* Maximum number of failed expansions */
-      int m_maxFailedExpansions;
-      /* Do we always use bump nodes? */
-      bool m_addIntermediate;
+    /// General Expansion variables
+    /* Number of best candidate expansion nodes */
+    int m_kNodes;
+    /* Maximum number of iterations per expansion chain */
+    int m_nIterations;
+    /* Maximum number of failed expansions */
+    int m_maxFailedExpansions;
+    /* Do we always use bump nodes? */
+    bool m_addIntermediate;
 
-      /// Target CC Information (Only for Biased Expansion)
-      /* Avg intra CC distance */
-      double m_avgIntraDistTarget;
+    /// Target CC Information (Only for Biased Expansion)
+    /* Avg intra CC distance */
+    double m_avgIntraDistTarget;
 
-      /// Expansion Gain Information
-      /* Minimum expansion distance per iteration */
-      double m_minStepDistance;
-      /* Maximum expansion distance per iteration */
-      double m_maxStepDistance;
+    /// Expansion Gain Information
+    /* Minimum expansion distance per iteration */
+    double m_minStepDistance;
+    /* Maximum expansion distance per iteration */
+    double m_maxStepDistance;
 
-      /// Connected component information
-      /* Approximate Centroid of Current CC */
-      CfgType m_srcCentroid;
-      /* Approximate Centroid of Target CC */
-      CfgType m_goalTargetNode;
+    /// Connected component information
+    /* Approximate Centroid of Current CC */
+    CfgType m_srcCentroid;
+    /* Approximate Centroid of Target CC */
+    CfgType m_goalTargetNode;
 
-      /// Expansion Information
-      /* Selected Methods */
-      ExpansionNames m_expansionMethod;
-      NodeSelections m_nodeSelectionOption;
-      /* VC and DM Labels */
-      string m_vcLabel, m_dmLabel, m_nfLabel;
+    /// Expansion Information
+    /* Selected Methods */
+    ExpansionNames m_expansionMethod;
+    NodeSelections m_nodeSelectionOption;
+    /* VC and DM Labels */
+    string m_vcLabel, m_dmLabel, m_nfLabel;
 
-      /// For keeping track of expansion chains
-      /* Vector containing expansion nodes */
-      vector<VID> m_expansionChains;
-      /* VID for all expansion nodes */
-      vector<VID> m_allExpansionNodes;
+    /// For keeping track of expansion chains
+    /* Vector containing expansion nodes */
+    vector<VID> m_expansionChains;
+    /* VID for all expansion nodes */
+    vector<VID> m_allExpansionNodes;
 
-  };
+};
 
-  ///////////////////////////////////////////////////////////////////////////////
-  //////////////////////////* Method Definitions *///////////////////////////////
-  ///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+//////////////////////////* Method Definitions *///////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
 
-  ///////////////////////////////////////////////////////////////////////////////
-  /* Constructor : Default */
-  ///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+/* Constructor : Default */
+///////////////////////////////////////////////////////////////////////////////
   template<class MPTraits>
-  CCExpansion<MPTraits>::CCExpansion(MPProblemType* _problem, string _lp, string _nf, string _vc)
-    : ConnectorMethod<MPTraits>(),m_medialAxisUtility() {
-      this->SetName("CCExpansion");
-      m_dmLabel = "";
-      m_vcLabel = _vc;
-      m_nfLabel = _nf;
+CCExpansion<MPTraits>::CCExpansion(MPProblemType* _problem, string _lp, string _nf, string _vc)
+  : ConnectorMethod<MPTraits>(),m_medialAxisUtility() {
+    this->SetName("CCExpansion");
+    m_dmLabel = "";
+    m_vcLabel = _vc;
+    m_nfLabel = _nf;
 
-      m_kNodes = 1;
-      m_nIterations = 1;
-      m_minStepDistance = 4.0;
-      m_maxStepDistance = 100.0;
+    m_kNodes = 1;
+    m_nIterations = 1;
+    m_minStepDistance = 4.0;
+    m_maxStepDistance = 100.0;
 
-      m_expansionMethod = m_RE;
-      m_nodeSelectionOption = m_R;
-    }
+    m_expansionMethod = m_RE;
+    m_nodeSelectionOption = m_R;
+  }
 
-  ///////////////////////////////////////////////////////////////////////////////
-  /* Constructor : XML Inputs */
-  ///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+/* Constructor : XML Inputs */
+///////////////////////////////////////////////////////////////////////////////
   template<class MPTraits>
-  CCExpansion<MPTraits>::CCExpansion(MPProblemType* _problem, XMLNodeReader& _node)
-    : ConnectorMethod<MPTraits>(_problem,_node), m_medialAxisUtility(_problem,_node){
-      this->SetName("CCExpansion");
-      ParseXML(_node);
-    }
+CCExpansion<MPTraits>::CCExpansion(MPProblemType* _problem, XMLNodeReader& _node)
+  : ConnectorMethod<MPTraits>(_problem,_node), m_medialAxisUtility(_problem,_node){
+    this->SetName("CCExpansion");
+    ParseXML(_node);
+  }
 
-  ///////////////////////////////////////////////////////////////////////////////
-  /* PrintOptions */
-  ///////////////////////////////////////////////////////////////////////////////
-  template <class MPTraits>
-  void
-  CCExpansion<MPTraits>::PrintOptions(ostream& _os) const {
-    /* Call parent-class PrintOptions(..) method */
-    ConnectorMethod<MPTraits>::PrintOptions(_os);
+///////////////////////////////////////////////////////////////////////////////
+/* PrintOptions */
+///////////////////////////////////////////////////////////////////////////////
+template <class MPTraits>
+void
+CCExpansion<MPTraits>::PrintOptions(ostream& _os) const {
+  /* Call parent-class PrintOptions(..) method */
+  ConnectorMethod<MPTraits>::PrintOptions(_os);
 
-    /* Print Data Members */
-  _os << "\nname = " << this->GetName();
+  /* Print Data Members */
   _os << "\nnode selection policy = " << m_nodeSelectionOption;
   _os << "\nexpansion method = " << m_expansionMethod;
   _os << "\nmax step distance = " << m_maxStepDistance;
@@ -250,13 +249,9 @@ CCExpansion<MPTraits>::ParseXML(XMLNodeReader& _node){
     m_nodeSelectionOption = m_F;
   else if(nodePolicy == "DIFFICULT")
     m_nodeSelectionOption = m_D;
-  else{
-    cout << "\nERROR in connector \"" << this->GetName() << "\""
-      << " with XML value for m_nodeSelectionOption \""
-      << nodePolicy << "\" undefined!" << endl
-      << "We only accept \"Random\", \"Farthest\", or \"Difficult\"." << endl;
-    exit(-1);
-  }
+  else
+    throw ParseException(WHERE, "nodeChoice \"" + nodePolicy +
+        "\" is undefined. Use one of \"Random\", \"Farthest\", or \"Difficult\".");
 
   string expansionBias = _node.stringXMLParameter("expansionMethod",true,"RandomExpand","Expansion Strategy");
   std::transform(expansionBias.begin(), expansionBias.end(), expansionBias.begin(), ::toupper);
@@ -266,14 +261,11 @@ CCExpansion<MPTraits>::ParseXML(XMLNodeReader& _node){
     m_expansionMethod = m_ET;
   else if(expansionBias == "EXPANDFROM")
     m_expansionMethod = m_EF;
-  else if(expansionBias == "MEDIALAXISEXPAND"){
+  else if(expansionBias == "MEDIALAXISEXPAND")
     m_expansionMethod = m_MAE;
-    cout << "\nERROR in connector \"" << this->GetName() << "\""
-      << " with XML value for m_expansionMethod \""
-      << expansionBias << "\" undefined!" << endl
-      << "We only accept \"RandomExpand\", \"ExpandTo\", \"ExpandFrom\", or \"MedialAxisExpand\"." << endl;
-    exit(-1);
-  }
+  else
+    throw ParseException(WHERE, "expansionMethod \"" + expansionBias +
+        "\" is undefined. Use one of \"RandomExpand\", \"ExpandTo\", \"ExpandFrom\", or \"MedialAxisExpand\".");
 }
 
 
@@ -856,7 +848,7 @@ CCExpansion<MPTraits>::IsClear(RoadmapType* _rm, CfgType& bumpPoint){
     bool test1 = (bb != bumpPoint); // Do not self compare!
     bool test2 = (dm->Distance(bumpPoint, bb) < m_minStepDistance);
     if(test1 && test2 && (++numFails > m_maxFailedExpansions))
-        return false;
+      return false;
   }
   return true;
 }

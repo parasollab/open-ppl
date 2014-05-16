@@ -168,7 +168,7 @@ StraightLine<MPTraits>::IsConnectedFunc(
   Environment* env = this->GetMPProblem()->GetEnvironment();
   ValidityCheckerPointer vc = this->GetMPProblem()->GetValidityChecker(m_vcLabel);
   StatClass* stats = this->GetMPProblem()->GetStatClass();
-  string callee = this->GetName() + "::IsConnectedSLSequential";
+  string callee = this->GetNameAndLabel() + "::IsConnectedSLSequential";
 
   stats->IncLPAttempts(this->GetNameAndLabel());
   int cdCounter = 0;
@@ -240,7 +240,7 @@ StraightLine<MPTraits>::IsConnectedSLSequential(
 #else
   incr.FindIncrement(_c1, _c2, &nTicks, _positionRes, _orientationRes);
 #endif
-  string callee = this->GetName() + "::IsConnectedSLSequential";
+  string callee = this->GetNameAndLabel() + "::IsConnectedSLSequential";
 
   int nIter = 0;
   for(int i = 1; i < nTicks; i++){ //don't need to check the ends, _c1 and _c2
@@ -289,7 +289,7 @@ StraightLine<MPTraits>::IsConnectedSLBinary(
     return IsConnectedSLSequential(_c1, _c2, _col, _lpOutput,
         _cdCounter, _positionRes, _orientationRes, _checkCollision, _savePath, _saveFailedPath);
 
-  string callee = this->GetName() + "::IsConnectedSLBinary";
+  string callee = this->GetNameAndLabel() + "::IsConnectedSLBinary";
 
   int nTicks;
   CfgType incr;

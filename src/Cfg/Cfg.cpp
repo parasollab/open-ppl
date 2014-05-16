@@ -237,14 +237,14 @@ Cfg::operator/=(double _d) {
 
 double&
 Cfg::operator[](size_t _dof) {
-  assert(_dof <= m_dof);
+  assert(_dof >= 0 && _dof <= m_dof);
   m_witnessCfg.reset();
   return m_v[_dof];
 }
 
 const double&
 Cfg::operator[](size_t _dof) const {
-  assert(_dof <= m_dof);
+  assert(_dof >= 0 && _dof <= m_dof);
   return m_v[_dof];
 }
 
@@ -487,11 +487,12 @@ Cfg::GetRandomCfg(Environment* _env, shared_ptr<Boundary> _bb) {
       return;
   }
 
-  // Print error message and some helpful (I hope!) statistics and exit...
-  cerr << "\n\nERROR: GetRandomCfg not able to find anything in boundary: "
-    << *_bb << ".\n       robot radius is "
+  // throw error message and some helpful statistics
+  ostringstream oss;
+  oss << "GetRandomCfg not able to find anything in boundary: "
+    << *_bb << ". Robot radius is "
     << _env->GetMultiBody(m_robotIndex)->GetBoundingSphereRadius() << ".";
-  exit(-1);
+  throw PMPLException("Boundary to small", WHERE, oss.str());
 }
 
 bool

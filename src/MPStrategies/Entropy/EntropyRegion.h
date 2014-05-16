@@ -10,7 +10,7 @@ static int ID_val = 0;
 template <class CFG>
 struct Sample {
   Sample() {}
-  Sample(const CFG& n, bool iC, double d, VID v = INVALID_VID) : 
+  Sample(const CFG& n, bool iC, double d, VID v = INVALID_VID) :
     node(n), isColl(iC), distance(d), vid(v) {}
   ~Sample() {}
 
@@ -47,7 +47,7 @@ class CRegion {
 
   bool operator==(const CRegion<CFG>& r) const { return ID == r.ID; }
   bool operator!=(const CRegion<CFG>& r) const { return ID != r.ID; }
-  
+
   void AddNode(CFG t, bool _iC, double _dist, VID v = INVALID_VID);
   void SetVID(const CFG& c, VID v);
 
@@ -71,7 +71,7 @@ class CRegion {
       cout << " can't set stats " << endl;
       return;
     }
-    
+
     center = samples[0].node; // set center to first node i.e. node with 0 dist
 
     if(!RadiusSet) {
@@ -81,7 +81,7 @@ class CRegion {
     }
     // check case where there was only one node added
     // make it small factor
-    if(samples.size() == 1) 
+    if(samples.size() == 1)
       radius = 0.6*acceptable_dist;
     acceptable_dist = radius;
 
@@ -89,7 +89,7 @@ class CRegion {
       NumCollisionNodes = 0;
       for(sample_const_iterator S = samples.begin(); S != samples.end(); ++S)
 	if(S->isColl)
-	  NumCollisionNodes++; 
+	  NumCollisionNodes++;
       NumFreeNodes = samples.size() - NumCollisionNodes;
     }
 
@@ -100,7 +100,7 @@ class CRegion {
     vector<CFG> return_nodes;
     if( free_pct > 1 ) free_pct = 1;
     if( free_pct < 0 ) return return_nodes;//free_pct = 0;
-    
+
     int return_num = int( free_pct * NumFreeNodes );
 
     int i=0;
@@ -112,7 +112,7 @@ class CRegion {
       }
       ++S;
     }
-    
+
     return return_nodes;
   };
 
@@ -137,7 +137,7 @@ class CRegion {
     return vids;
   }
 
-  void GetPercentFreeNodeAndVID(double free_pct, 
+  void GetPercentFreeNodeAndVID(double free_pct,
 				vector<CFG>& nodes, vector<VID>& vids) const {
     free_pct = min(free_pct, 1);
     if(free_pct <= 0)
@@ -182,7 +182,7 @@ class CRegion {
   template <class region_const_iterator>
   vector<CRegion<CFG> > GetOverlappingRegions(region_const_iterator first,
 					      region_const_iterator last,
-					      Environment* env, 
+					      Environment* env,
 					      DistanceMetric* dm) const;
   */
   /*
@@ -197,11 +197,11 @@ class CRegion {
   bool Overlaps(CRegion<CFG>& R, Environment* env, DistanceMetric* dm);
 
   void AddRegionSamples(Environment* _env, DistanceMetric* dm,
-                        Stat_Class& Stats, CollisionDetection* cd, 
+                        Stat_Class& Stats, CollisionDetection* cd,
 			CDInfo* cdInfo, int KSamples);
   void GenNearCFG(Environment* _env, DistanceMetric *dm, CFG& ret_cfg) const;
 
-  int Classify(Environment* env, Stat_Class& Stats, CollisionDetection* cd, 
+  int Classify(Environment* env, Stat_Class& Stats, CollisionDetection* cd,
 	       CDInfo* cdInfo, DistanceMetric* dm,
 	       double LowEntropy, int KSamples, int Tries);
 
@@ -215,7 +215,7 @@ class CRegion {
   double acceptable_dist;
   int type;
   int NumCollisionNodes, NumFreeNodes;
-  
+
   int ID;
   bool RadiusSet;
 };
@@ -230,7 +230,7 @@ template<class CFG>
 istream& operator>>(istream& is, CRegion<CFG>& r) {
   is >> r.ID;
   return is;
-} 
+}
 
 
 template <class CFG>
@@ -314,38 +314,38 @@ IsSufaceRegion(Environment* _env, DistanceMetric *dm,double LowEntropy) const {
 
   vector<double> free_center_data;
   vector<double> coll_center_data;
-  int num_free = 0; 
+  int num_free = 0;
   int num_coll = 0;
   for(sample_const_iterator S = samples.begin(); S != samples.end(); ++S) {
 
     const CFG& cfg = S->node;
     if(S->isColl) {
 
-      if( coll_center_data.size() == 0 ) 
+      if( coll_center_data.size() == 0 )
 	coll_center_data = cfg.GetData();
       else {
 	vector<double> cfg_data = cfg.GetData();
-	for(int J=0; J<coll_center_data.size(); J++) { 
+	for(int J=0; J<coll_center_data.size(); J++) {
 	  coll_center_data[J] += cfg_data[J];
 	}//end for J<coll_center_data
       }
-	
+
       num_coll++;
-      
+
     }//endif isColl[I]
     else {
 
-      if( free_center_data.size() == 0 ) 
+      if( free_center_data.size() == 0 )
 	free_center_data = cfg.GetData();
       else {
 	vector<double> cfg_data = cfg.GetData();
-	for(int J=0; J<free_center_data.size(); J++) { 
+	for(int J=0; J<free_center_data.size(); J++) {
 	  free_center_data[J] += cfg_data[J];
 	}//end for J<coll_center_data
       }
-	
+
       num_free++;
-      
+
     }//end else
 
 
@@ -369,7 +369,7 @@ IsSufaceRegion(Environment* _env, DistanceMetric *dm,double LowEntropy) const {
     }
   }//end for I<free_center_data.size()
 
-  //##  
+  //##
   // find radius for each subregion (free and coll)
   double free_radius = -1, coll_radius = -1;
   for(sample_const_iterator S = samples.begin(); S != samples.end(); ++S) {
@@ -381,7 +381,7 @@ IsSufaceRegion(Environment* _env, DistanceMetric *dm,double LowEntropy) const {
     }//endif isColl[I]
     else {
       double dist = dm->Distance( _env, cfg, free_center );
-      if( dist >= free_radius ) free_radius = dist;      
+      if( dist >= free_radius ) free_radius = dist;
     }//end else
 
   }//end for I<nodes.size()
@@ -399,13 +399,13 @@ IsSufaceRegion(Environment* _env, DistanceMetric *dm,double LowEntropy) const {
     if( dist_to_coll_center < coll_radius ) { // it's in count it in that reg.
       if(S->isColl) num_coll_in_coll++;
       else num_free_in_coll++;
-    }//end if dist_to_coll_center < coll_radius 
+    }//end if dist_to_coll_center < coll_radius
     // check free
     double dist_to_free_center = dm->Distance( _env, cfg, free_center );
     if( dist_to_free_center < free_radius ) { // it's in count it in that reg.
       if(S->isColl) num_coll_in_free++;
       else num_free_in_free++;
-    }//end if dist_to_coll_center < coll_radius 
+    }//end if dist_to_coll_center < coll_radius
     */
 
     //put the node in the region who's center is closest
@@ -419,7 +419,7 @@ IsSufaceRegion(Environment* _env, DistanceMetric *dm,double LowEntropy) const {
   }
 
   //if either region is empty, return false
-  if(((num_free_in_free + num_coll_in_free) == 0) || 
+  if(((num_free_in_free + num_coll_in_free) == 0) ||
      ((num_free_in_coll + num_coll_in_coll) == 0))
     return false;
 
@@ -456,12 +456,12 @@ IsSufaceRegion(Environment* _env, DistanceMetric *dm,double LowEntropy) const {
 /*
 template <class CFG>
 template <class region_const_iterator>
-vector<CRegion<CFG> > 
+vector<CRegion<CFG> >
 CRegion<CFG>::
 GetOverlappingRegions(region_const_iterator first, region_const_iterator last,
 		      Environment* env, DistanceMetric* dm) const {
   vector<CRegion<CFG> > overlapping;
-  for(region_const_iterator R = first; R != last; ++R) 
+  for(region_const_iterator R = first; R != last; ++R)
     if( (R->data.ID != ID) &&
         (dm->Distance(env, R->data.center, center) < (R->data.radius + radius)) )
       overlapping.push_back(R->data);
@@ -491,7 +491,7 @@ bool
 CRegion<CFG>::
 Overlaps(CRegion<CFG>& R, Environment* env, DistanceMetric* dm) {
 
-  if( dm->Distance(env, R.center, center) < (R.radius + radius) ) 
+  if( dm->Distance(env, R.center, center) < (R.radius + radius) )
     return true;
   else return false;
 
@@ -528,8 +528,8 @@ GenNearCFG(Environment* _env, DistanceMetric *dm, CFG& ret_cfg) const {
 
   /*
   cout << " start: " << center << endl
-       << " near : " << ret_cfg 
-       << " at dist: " << dm->Distance( _env, center, ret_cfg ) 
+       << " near : " << ret_cfg
+       << " at dist: " << dm->Distance( _env, center, ret_cfg )
        << endl << endl;
   */
 }
@@ -538,25 +538,25 @@ GenNearCFG(Environment* _env, DistanceMetric *dm, CFG& ret_cfg) const {
 template <class CFG>
 int
 CRegion<CFG>::
-Classify(Environment* env, Stat_Class& Stats, CollisionDetection* cd, 
+Classify(Environment* env, Stat_Class& Stats, CollisionDetection* cd,
 	 CDInfo* cdInfo, DistanceMetric* dm,
 	 double LowEntropy, int KSamples, int Tries) {
   //learn FREE/SURFACE
   for(int T=0; T<Tries; T++) {
     AddRegionSamples(env, dm, Stats, cd, cdInfo, KSamples);
-    SetRegionStats();        
+    SetRegionStats();
     if(entropy < LowEntropy) {
       type = FREE;
       return type;
     } else if(IsSufaceRegion(env, dm, LowEntropy)) {
-      type = SURFACE;  
+      type = SURFACE;
       return type;
     }
   }
-    
+
   //learn BLOCKED/NARROW
   AddRegionSamples(env, dm, Stats, cd, cdInfo, KSamples);
-  SetRegionStats();        
+  SetRegionStats();
   //if(entropy >= 1) //--- not sure if this works for all compilers
   if(NumFreeNodes == 0) {
     type = BLOCKED;

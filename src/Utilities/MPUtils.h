@@ -246,10 +246,10 @@ struct ComposeNegate {
 ///////////////////////////////////////////////////////////////////////////////
 
 ///////////////////////////////////////////////////////////////////////////////////////////
-//MethodSet defines basic method container class to derive from
-//  (for classes like DistanceMetric, LocalPlanner, NeighborhoodFinder, Sampler etc)
+//MethodSet defines basic method container class to hold methods
+//  (for classes like DistanceMetricMethod, LocalPlannerMethod, etc)
 //
-//derived class must specify the Method type and MethodTypeList
+//MethodTypeList must be defined within templated class of MPTraits
 //  e.g., NeighborhoodFinder: Method = NeighborhoodFinderMethod
 //                            MethodTypeList = boost::mpl::list<BruteForceNF,BandsNF,...>
 //  e.g., LocalPlanner: Method = LocalPlannerMethod
@@ -287,13 +287,13 @@ class MethodSet {
     bool AddMethod(typename MPTraits::MPProblemType* _problem, XMLNodeReader& _node, const string& _name) {
       if(m_universe.find(_name) != m_universe.end()) {
         MethodPointer e = m_universe[_name](_problem, _node);
-        return AddMethod(e, e->GetLabel());
+        return AddMethod(e, e->m_label);
       }
       return false;
     }
 
     bool AddMethod(MethodPointer _e, const string& _label) {
-      if(m_universe.find(_e->GetName()) != m_universe.end()) {
+      if(m_universe.find(_e->m_name) != m_universe.end()) {
         _e->SetLabel(_label);
         if(m_elements.empty())
           m_default = _label;
@@ -304,7 +304,7 @@ class MethodSet {
         return true;
       }
       else{
-        cerr << "Error. Method \"" << _e->GetName() << "\" is not contained within the motion planning universe. Exiting." << endl;
+        cerr << "Error. Method \"" << _e->m_name << "\" is not contained within the motion planning universe. Exiting." << endl;
         exit(1);
       }
     }
@@ -336,7 +336,7 @@ class MethodSet {
       size_t count = 0;
       _os << endl << m_name << " has these methods available::" << endl << endl;
       for(CMIT mit = Begin(); mit != End(); ++mit){
-        _os << ++count << ") \"" << mit->first << "\" (" << mit->second->GetName() << ")" << endl;
+        _os << ++count << ") \"" << mit->first << "\" (" << mit->second->m_name << ")" << endl;
         mit->second->PrintOptions(_os);
         _os << endl;
       }
@@ -357,7 +357,7 @@ class MethodSet {
     template <typename First, typename Last>
       void AddToUniverse(First, Last) {
         typename boost::mpl::deref<First>::type first;
-        m_universe[first.GetName()] = MethodFactory<MPTraits, typename boost::mpl::deref<First>::type>();
+        m_universe[first.m_name] = MethodFactory<MPTraits, typename boost::mpl::deref<First>::type>();
         AddToUniverse(typename boost::mpl::next<First>::type(), Last());
       }
 
@@ -401,25 +401,31 @@ class MPBaseObject {
 
     MPProblemType* GetMPProblem() const {return m_problem;}
     virtual void SetMPProblem(MPProblemType* _m){m_problem = _m;}
+
+    const string& GetBaseFilename() const {return m_problem->GetBaseFilename();}
+
     virtual void PrintOptions(ostream& _os) const {};
-    string GetLabel() const {return m_label;}
+
     void SetLabel(string _s) {m_label = _s;}
-    string GetName()  const {return m_name;}
-    void SetName (string _s) {m_name  = _s;}
+
     string GetNameAndLabel() const {return m_name + "::" + m_label;}
     bool GetDebug() const {return m_debug;}
     void SetDebug(bool _d) {m_debug = _d;}
-
-    const string& GetBaseFilename() const {return m_problem->GetBaseFilename();}
 
   private:
     MPProblemType* m_problem;
     string m_label;
 
   protected:
+    string GetLabel() const {return m_label;}
+
+    void SetName(string _s) {m_name  = _s;}
+
     string m_name;
     bool m_debug;
     bool m_recordKeep;
+
+    template<typename T, typename U> friend class MethodSet;
 };
 
 ///////////////////////////////////////////////////////////////////////////////

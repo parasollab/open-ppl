@@ -32,7 +32,7 @@ Rapid::IsInCollision(shared_ptr<MultiBody> _robot, shared_ptr<MultiBody> _obstac
         //GetBody() first returns fixed bodies, then free bodies.
         //When this body is the same as the one against which we are checking,
         // we know that we have compared with all fixed bodies and any already finished
-        // free bodies. In this case, we can stop checking; future free bodies will 
+        // free bodies. In this case, we can stop checking; future free bodies will
         // check themselves against this one.
         if(robotBody == obstBody)
           break;

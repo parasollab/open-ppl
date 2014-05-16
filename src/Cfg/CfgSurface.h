@@ -1,8 +1,8 @@
-// $Id: CfgSurface.h 
+// $Id: CfgSurface.h
 
 /**@file CfgSurface.h
  *A derived class from Cfg
- *implementation for a 3-dof rigidbody moving in a 3-D work space 
+ *implementation for a 3-dof rigidbody moving in a 3-D work space
  *but restricted to movement either on the default surface or or
  *valid surfaces
  *
@@ -42,7 +42,7 @@ class CfgSurface : public Cfg {
 
     ///Do nothing destructor
     virtual ~CfgSurface();
-    
+
     //assignment operator
     CfgSurface& operator=(const CfgSurface& _cfg);
 
@@ -130,14 +130,14 @@ class CfgSurface : public Cfg {
     virtual void FindIncrement(const Cfg& _start, const Cfg& _goal, int* _nTicks, double _positionRes, double _orientationRes);
     virtual void FindIncrement(const Cfg& _start, const Cfg& _goal, int _nTicks);
 
-    virtual void WeightedSum(const Cfg&, const Cfg&, double _weight = 0.5);       
+    virtual void WeightedSum(const Cfg&, const Cfg&, double _weight = 0.5);
 
     virtual void GetPositionOrientationFrom2Cfg(const Cfg&, const Cfg&);
 
     //I/O
     virtual void Read(istream& _is);
     virtual void Write(ostream& _os) const;
-  
+
   protected:
     ///Randomly generate a Cfg whose center positon is inside a given bounding box.
     virtual void GetRandomCfgImpl(Environment* env,shared_ptr<Boundary> bb);
@@ -152,11 +152,11 @@ class CfgSurface : public Cfg {
   protected:
     Point2d m_pt;
     double m_h;
-    int m_surfaceID; //surface id that this cfg is associated with 
+    int m_surfaceID; //surface id that this cfg is associated with
 
   public:
 #ifdef _PARALLEL
-    void define_type(stapl::typer &t)  
+    void define_type(stapl::typer &t)
     {
       Cfg::define_type(t);
     }
@@ -176,7 +176,7 @@ CfgSurface::GetRandomRay(double _incr, Environment* _env, DistanceMetricPointer 
   v = v.normalize();
   m_pt[0] = v[0]; //for now just create a ray in the plane (not so great for terrain)
   m_pt[2] = v[1];
-  m_h = 0.0; 
+  m_h = 0.0;
   //how to handle surface id?
   m_witnessCfg.reset();
 }

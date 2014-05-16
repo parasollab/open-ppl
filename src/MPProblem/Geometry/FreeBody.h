@@ -20,7 +20,7 @@ class FreeBody : public Body {
     //////////////////////////////////////////////////////////////////////////////////////////
 
     //Condtructor. Construct a FreeBody and set its owner as _owner.
-    //a free body can be a smaller component of a group.  
+    //a free body can be a smaller component of a group.
 
     FreeBody(MultiBody* _owner);
 
@@ -44,11 +44,11 @@ class FreeBody : public Body {
     //programer can use this to check if this object is free or fixed body.
     virtual int IsFixedBody(){return false;}
 
-    ///Call Body::GetWorldPolyhedron 
+    ///Call Body::GetWorldPolyhedron
     virtual GMSPolyhedron& GetWorldPolyhedron();
 
     /**Get world transforamtion of this free body.
-     *Transformation "this" body w.r.t the world frame in a 
+     *Transformation "this" body w.r.t the world frame in a
      *recursive manner; multiply the world transformation
      *of the previous body with the transformation from the
      *proximal joint to the center of gravity of "this" body

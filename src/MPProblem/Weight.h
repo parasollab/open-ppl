@@ -34,14 +34,15 @@ class DefaultWeight {
     virtual bool operator<(const DefaultWeight& _other) const ;
 
     // Read/Write values of datamember to given input/output stream.
-    template<class CfgType2>
-    friend ostream& operator<< (ostream& _os, const DefaultWeight<CfgType2>& _w);
-    template<class CfgType2>
-    friend istream& operator>> (istream& _is, DefaultWeight<CfgType2>& _w);
+    template<class C>
+      friend ostream& operator<<(ostream& _os, const DefaultWeight<C>& _w);
+    template<class C>
+      friend istream& operator>>(istream& _is, DefaultWeight<C>& _w);
 
     // Access Methods
     string GetLPLabel() const { return m_lpLabel; }
     void SetLPLabel(string _lpLabel){ m_lpLabel = _lpLabel; }
+    vector<CfgType>& GetIntermediates() { return m_intermediates; }
     const vector<CfgType>& GetIntermediates() const { return m_intermediates; }
     void SetIntermediates(vector<CfgType>& _intermediates){ m_intermediates = _intermediates;}
 
@@ -135,14 +136,13 @@ istream&
 operator>>(istream& _is, DefaultWeight<CfgType>& _w){
   size_t numIntermediates;
   _is >> numIntermediates;
-  CfgType c;
   _w.m_intermediates.clear();
+  CfgType tmp;
   for(size_t i = 0; i < numIntermediates; ++i) {
-    _is >> c;
-    _w.m_intermediates.push_back(c);
+    _is >> tmp;
+    _w.m_intermediates.push_back(tmp);
   }
-  _is >> _w.m_weight;
-  return _is;
+  return _is >> _w.m_weight;
 }
 
 template<class CfgType>

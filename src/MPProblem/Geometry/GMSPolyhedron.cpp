@@ -29,6 +29,36 @@ GMSPolygon::operator==(const GMSPolygon& _p) const{
     (m_area == _p.m_area);
 }
 
+//Find a unique common vertex between the two polygons
+//return -1 if none exists
+int
+GMSPolygon::CommonVertex(const GMSPolygon& _p) {
+  for(size_t i = 0; i < m_vertexList.size(); ++i) {
+    for(size_t j = 0; j < m_vertexList.size(); ++j) {
+      if(m_vertexList[i] == _p.m_vertexList[j]) {
+        return m_vertexList[i];
+      }
+    }
+  }
+  return -1;
+}
+
+pair<int, int>
+GMSPolygon::CommonEdge(const GMSPolygon& _p) {
+  pair<int, int> edgeID(-1, -1);
+  for(size_t i = 0; i < m_vertexList.size(); ++i) {
+    for(size_t j = 0; j < m_vertexList.size(); ++j) {
+      if(m_vertexList[i] == _p.m_vertexList[j]) {
+        if(edgeID.first == -1)
+          edgeID.first = m_vertexList[i];
+        else
+          edgeID.second = m_vertexList[i];
+      }
+    }
+  }
+  return edgeID;
+}
+
 //End Polygon begin Polyhedron implementation
 GMSPolyhedron::GMSPolyhedron(): m_area(0), m_maxRadius(0), m_minRadius(0), m_boundaryBuilt(false), m_force2DBoundary(false){
 }

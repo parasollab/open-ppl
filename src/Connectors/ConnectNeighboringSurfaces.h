@@ -91,7 +91,7 @@ void ConnectNeighboringSurfaces<MPTraits>::ParseXML(XMLNodeReader& _node){
 template<class MPTraits>
 void ConnectNeighboringSurfaces<MPTraits>::PrintOptions(ostream& _os) const {
   ConnectorMethod<MPTraits>::PrintOptions(_os);
-  _os << "    " << this->GetName() << "::  k = " << m_k << endl;
+  _os << "    " << this->GetNameAndLabel() << "::  k = " << m_k << endl;
   _os << "\tsurfacesToIgnore = [";
   for(size_t i=0; i < m_surfacesToIgnore.size(); i++) {
     _os << m_surfacesToIgnore[i];

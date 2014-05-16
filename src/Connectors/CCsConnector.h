@@ -99,7 +99,7 @@ CCsConnector<MPTraits>::Connect(RoadmapType* _rm, StatClass& _stats, ColorMap& _
   ///////////////////////////////////////////////////////////////////////////////////
   /// ConnectkCCs
   ///////////////////////////////////////////////////////////////////////////////////
-  size_t k = m_k ? m_k : ccs.size();
+  size_t k = m_k ? m_k : ccs.size()-1;
 
   if(this->m_debug)
     cout << "Connecting " << m_k << "-closest CCs" << endl;
@@ -226,7 +226,7 @@ CCsConnector<MPTraits>::GetKCCs(size_t _k, VID _ccid, vector<VID>& _kCCID){
 
   //copy
   for(typename vector<pair<VID, double> >::iterator i=dis2CCs.begin(); i != dis2CCs.begin() + _k; ++i)
-    _kCCID.push_back(i->second);
+    _kCCID.push_back(i->first);
 }
 
 #endif

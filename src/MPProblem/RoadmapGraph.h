@@ -134,7 +134,7 @@ RoadmapGraph<VERTEX,WEIGHT>::AddVertex(const VERTEX& _v) {
 #ifndef _PARALLEL
   CVI vi;
   if(IsVertex(_v, vi)){
-    cerr << "\nIn AddVertex: vertex already in graph, not added" << endl;
+    cerr << "\nIn AddVertex: vertex already in graph" << endl;
     return vi->descriptor();
   }
   VID vid = this->add_vertex(_v);

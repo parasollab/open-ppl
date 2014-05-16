@@ -1,0 +1,58 @@
+\chapter{Metrics}
+
+Metrics (\metr) compute some value over the roadmap, e.g., coverage,
+connectivity, number of nodes, number of edges, etc.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Base Class
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{\texttt{MetricMethod}}
+
+\texttt{MetricMethod} has one main function \CALL{operator()} which returns the
+value associated with the roadmap for that metric. Usage:
+\begin{lstlisting}
+MetricPointer m = this->GetMPProblem()->GetMetric(m_mLabel);
+double v = (*m)(); //call as function object
+double v2 = m->operator()(); //call with pointer notation
+\end{lstlisting}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Derived Class
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Derived Classes}
+
+%%CC Distance
+\subsection{\texttt{CCDistanceMetric}}
+
+%% Coverage Distance
+\subsection{\texttt{CoverageDistanceMetric}}
+
+%% Coverage
+\subsection{\texttt{CoverageMetric}}
+
+%% Connectivity
+\subsubsection{\texttt{ConnectivityMetric}}
+
+%% Diameter
+\subsection{\texttt{DiameterMetric}}
+
+%% Num Edges
+\subsection{\texttt{NumEdgesMetric}}
+
+%% Num Nodes
+\subsection{\texttt{NumNodesMetric}}
+
+%% Time
+\subsection{\texttt{TimeMetric}}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Helper Classes
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Helper Classes}
+
+%% Roadmap Set
+\subsection{\texttt{RoadmapSet}}
+
+%% Vector Set
+\subsection{\texttt{VectorSet}}
+

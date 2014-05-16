@@ -1,6 +1,6 @@
 This directory contains the validation scripts used to test the pmpl code.
 
-- pmpl_nightly_hardyboys.pl: 
+- pmpl_nightly_hardyboys.pl:
     this checks out a fresh copy of the code from svn, compiles, and runs any validation tests on hardyboys
     it outputs a log file to hardyboys:$outputdir
     it sends a confirmation email to $ADMIN_MAILTO when it completes

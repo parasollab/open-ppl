@@ -25,7 +25,7 @@ struct first_is : public unary_function<T, bool>
 {
   first_is(const F& f) : first(f) {}
   ~first_is() {}
-  bool operator()(const T& t) const 
+  bool operator()(const T& t) const
   {
     return first == t.first;
   }
@@ -45,7 +45,7 @@ class ClosedChainProblem:public MPProblem{
 
   ClosedChainProblem(XMLNodeReader& in_Node);
   ~ClosedChainProblem();
-  
+
   void ParseXML(XMLNodeReader& in_Node);
   bool ParseRealLink(ifstream &fin);
   bool ParseVirtualLink(ifstream &fin);
@@ -53,12 +53,12 @@ class ClosedChainProblem:public MPProblem{
   bool ParseCfgJoints(ifstream &fin);
   bool ParseEarJoints(ifstream &fin);
   bool ParseLinksFile(const char* linksFileName);
-  
+
   double MyCalculateJointAngle(Environment* env, Link* link1, Link* link2);
-  
+
   void PrintConfiguration(Environment* env, ostream & ofPath);
   void PrintEarJointCoords(Environment* env, Link* ear_root);
-  
+
   void ConfigBase(Environment* env, const vector<double>& v);
   void ConfigBase(Environment* env){ConfigBase(env, vector<double>(6, 0));}
   void ConfigEnvironment(Environment* env);

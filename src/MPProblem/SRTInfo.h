@@ -8,7 +8,7 @@
 #include "MPUtils.h"
 #include "MetricUtils.h"
 //#include "BasicDefns.h"
-//#include "OBPRMDef.h"   
+//#include "OBPRMDef.h"
 //#include "util.h"
 #include <utility>
 #include "RegionGraph.h"
@@ -27,7 +27,7 @@ class SRTInfo {
   SRTInfo(const SRTInfo &input_srtinfo);
   SRTInfo();
   virtual ~SRTInfo();
-  
+
   bool operator==(const SRTInfo& bb) const;
   friend ostream& operator<< (ostream&, const SRTInfo&);
   BoundingBox GetBoundingBox() const;
@@ -36,22 +36,22 @@ class SRTInfo {
   std::pair<CfgType,std::vector<VID> > GetTree() const;
   void SetTree(std::pair<CfgType,std::vector<VID> > &ids);
   void SetBoundingBox(BoundingBox &bbox);
-  
+
   /*void connectRegion(shared_ptr<ComponentConnectionMethod<CfgType,WeightType> > pCCon,
     Roadmap<CfgType,WeighType>* rm, BoundingBox& bb, Stat_Class& Stats,
     LocalPlanners<CfgType,WeightType>* lp,
     bool addPartialEdge, bool addAllEdges,
     vector<VID>& cc1);*/
-  
+
   const pair<BoundingBox, pair<CfgType,vector<VID> > > GetData() const;
   void SetData(BoundingBox &m_bbox, std::pair<CfgType,std::vector<VID> > &m_ids);
   void Print(ostream &os) const ;
 
  protected:
-  std::pair<BoundingBox, std::pair<CfgType,std::vector<VID> > > srt_info; 
+  std::pair<BoundingBox, std::pair<CfgType,std::vector<VID> > > srt_info;
   BoundingBox bb;
   pair<CfgType,vector<VID> > tree;
-  
+
  public:
 #ifdef _PARALLEL
   void define_type(stapl::typer &t) {
@@ -64,12 +64,12 @@ class SRTInfo {
 
 namespace stapl {
   template <typename Accessor>
-    class proxy<SRTInfo, Accessor> 
+    class proxy<SRTInfo, Accessor>
     : public Accessor {
   private:
     friend class proxy_core_access;
     typedef SRTInfo target_t;
-    
+
   public:
    typedef typename RoadmapGraph<CfgType,WeightType>::vertex_descriptor VID;
    explicit proxy(Accessor const& acc) : Accessor(acc) { }

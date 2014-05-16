@@ -6,6 +6,13 @@ BoundingBox::BoundingBox() {
     m_bbx[i] = make_pair(-numeric_limits<double>::max(), numeric_limits<double>::max());
 }
 
+BoundingBox::BoundingBox(pair<double, double> _x, pair<double, double> _y,
+    pair<double, double> _z) {
+  m_bbx[0] = _x;
+  m_bbx[1] = _y;
+  m_bbx[2] = _z;
+}
+
 BoundingBox::BoundingBox(const BoundingBox& _bbx) {
   copy(_bbx.m_bbx, _bbx.m_bbx + 2, m_bbx);
 }
@@ -64,6 +71,24 @@ BoundingBox::GetClearance(const Vector3d& _p) const {
       minClearance = clearance;
   }
   return minClearance;
+}
+
+int
+BoundingBox::GetSideID(const vector<double>& _p) const {
+  double minClearance = numeric_limits<double>::max();
+  int id, faceID;
+  for(size_t i = 0; i < _p.size(); ++i) {
+    if((_p[i] - m_bbx[i].first) < (m_bbx[i].second - _p[i]))
+      id = i;
+    else
+      id = i+3;
+    double clearance = min((_p[i] - m_bbx[i].first ), (m_bbx[i].second - _p[i]));
+    if (clearance < minClearance || i == 0) {
+      faceID = id;
+      minClearance = clearance;
+    }
+  }
+  return faceID;
 }
 
 Vector3d

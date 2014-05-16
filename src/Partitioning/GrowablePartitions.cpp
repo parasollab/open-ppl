@@ -110,7 +110,7 @@ int GrowablePartitions::FindClosestPartition(vector<pair<double, Partition*> > &
    Roadmap<CfgType, WeightType> *rdmp= GetMPProblem()->GetRoadmap();
    vector< pair<size_t,VID> > ccs;
    stapl::sequential::vector_property_map< RoadmapGraph<CfgType, WeightType>,size_t > cmap;
-   get_cc_stats(*(rdmp->m_pRoadmap),cmap,ccs);  
+   get_cc_stats(*(rdmp->m_pRoadmap),cmap,ccs);
 
    int indx=-1;
    for(PIT pit = vp.begin(); pit!=vp.end(); pit++){
@@ -122,7 +122,7 @@ int GrowablePartitions::FindClosestPartition(vector<pair<double, Partition*> > &
          }
       }
    }
-   
+
    vector<double> center = GetCenterOfPartition(p);
    double closestdistance = 100000000;
    int closeidx = -1;

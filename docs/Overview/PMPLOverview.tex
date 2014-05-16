@@ -1,0 +1,116 @@
+\documentclass{report}
+
+% margins
+\usepackage{fullpage}
+
+% figure packages and defines
+\usepackage{graphicx}
+\usepackage{subfigure}
+\graphicspath{{FIGS/}}
+
+% adds links in the pdf
+\usepackage{url}
+\usepackage{hyperref}
+
+% algorithm packages and defines
+\usepackage{algorithm}
+\usepackage[noend]{algorithmic}
+\newcommand{\algorithmicinput}{\textbf{Input:}}
+\newcommand{\algorithmicoutput}{\textbf{Output:}}
+\newcommand{\INPUT}{\item[\algorithmicinput]}
+\newcommand{\OUTPUT}{\item[\algorithmicoutput]}
+\newcommand{\CALL}[1]{\textsc{#1}}
+
+% motion planning defines
+\newcommand{\dof}{{\sc dof}}
+\newcommand{\dofs}{{\sc dof}s}
+
+\newcommand{\prm}{PRM}
+\newcommand{\prms}{PRMs}
+\newcommand{\maprm}{MAPRM}
+\newcommand{\obprm}{OBPRM}
+\newcommand{\uobprm}{UOBPRM}
+\newcommand{\prmstar}{PRM$^*$}
+\newcommand{\rrt}{RRT}
+\newcommand{\rrts}{RRTs}
+\newcommand{\rrtobst}{RRTObst}
+\newcommand{\obrrt}{OBRRT}
+\newcommand{\marrt}{MARRT}
+\newcommand{\rrtstar}{RRT$^*$}
+
+\newcommand{\malp}{MALP}
+\newcommand{\maps}{MAPS}
+
+\newcommand{\eclose}{$\epsilon$-close}
+\newcommand{\ecloseness}{$\epsilon$-closeness}
+
+\newcommand{\cspace}{\mathcal{C}_{space}}
+\newcommand{\cfree}{\mathcal{C}_{free}}
+\newcommand{\cobst}{\mathcal{C}_{obst}}
+\newcommand{\coboundary}{\partial \mathcal{C}_{obst}}
+
+\newcommand{\dm}{DM}   % Distance Metric
+\newcommand{\vc}{VC}   % Validity Checker
+\newcommand{\cd}{CD}   % Collision Detection
+\newcommand{\samp}{S}  % Sampler
+\newcommand{\nf}{NF}   % Neighborhood Finder
+\newcommand{\lp}{LP}   % Local Planner
+\newcommand{\conn}{C}  % Connector
+\newcommand{\metr}{M}  % Metric
+\newcommand{\me}{ME}   % Map Evaluator
+\newcommand{\exte}{E}  % Extender
+\newcommand{\pam}{PM}  % Path Modifier
+\newcommand{\mps}{MPS} % Motion Planning Strategy
+
+% C++ code
+\usepackage[usenames]{color}
+\usepackage{listings}
+\definecolor{LightGrey}{rgb}{0.9,0.9,1.0}
+\lstdefinestyle{C++}{language=C++, %
+  backgroundcolor=\color{LightGrey},
+  showstringspaces=false,
+  columns=fullflexible,
+  escapechar=@,
+  basicstyle=\sffamily,
+  moredelim=**[is][\color{white}]{~}{~},
+  literate={=>}{{$\Rightarrow\;$}}1 {->}{{$\rightarrow$}}1 %
+  {<-}{{$\leftarrow$}}1 {<:}{{$\subtype{}\ $}}1,
+}
+
+\title{Parasol Motion Planning Library (PMPL)}
+\author{}
+\date{}
+
+\begin{document}
+
+\setcounter{secnumdepth}{5}
+\setcounter{tocdepth}{5}
+\lstset{style=C++}
+
+\maketitle
+\thispagestyle{empty}
+
+\pagestyle{plain}
+\pagenumbering{roman}
+\addcontentsline{toc}{chapter}{Table of Contents}
+\tableofcontents
+
+\clearpage
+\pagenumbering{arabic}
+\include{Introduction}
+\include{Core}
+\include{DistanceMetrics}
+\include{ValidityCheckers}
+\include{Samplers}
+\include{NeighborhoodFinders}
+\include{LocalPlanners}
+\include{Connectors}
+\include{Extenders}
+\include{Metrics}
+\include{MapEvaluators}
+\include{MPStrategies}
+\include{PathModifiers}
+\include{RegionDecomposition}
+\include{ParallelMethods}
+
+\end{document}

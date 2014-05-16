@@ -45,19 +45,19 @@ $message  = "\n";
 #
 $errcode = max($errcode,
   &get_error_code("$outputdir/$fulldate/pmpl.LINUX_gcc.cfg.debug0.parallel0.out",
-    "Configuration: gcc 4.7.0 (platform=LINUX_gcc, robot=cfg, debug=0, parallel=0)"));
+    "Configuration: gcc 4.8.2 (platform=LINUX_gcc, robot=cfg, debug=0, parallel=0)"));
 $errcode = max($errcode,
   &get_error_code("$outputdir/$fulldate/pmpl.LINUX_gcc.cfg.debug1.parallel0.out",
-    "Configuration: gcc 4.7.0 (platform=LINUX_gcc, robot=cfg, debug=1, parallel=0)"));
+    "Configuration: gcc 4.8.2 (platform=LINUX_gcc, robot=cfg, debug=1, parallel=0)"));
 $errcode = max($errcode,
   &get_error_code("$outputdir/$fulldate/pmpl.LINUX_gcc.surface.debug0.parallel0.out",
-    "Configuration: gcc 4.7.0 (platform=LINUX_gcc, robot=surface, debug=0, parallel=0)"));
+    "Configuration: gcc 4.8.2 (platform=LINUX_gcc, robot=surface, debug=0, parallel=0)"));
 $errcode = max($errcode,
   &get_error_code("$outputdir/$fulldate/pmpl.LINUX_gcc.surface.debug1.parallel0.out",
-    "Configuration: gcc 4.7.0 (platform=LINUX_gcc, robot=surface, debug=1, parallel=0)"));
+    "Configuration: gcc 4.8.2 (platform=LINUX_gcc, robot=surface, debug=1, parallel=0)"));
 #$errcode = max($errcode,
-#  &get_error_code("$outputdir/$fulldate/pmpl.LINUX_64_gcc.reach.debug0.parallel0.out",
-#    "Configuration: gcc 4.7.0 (platform=LINUX_64_gcc, robot=reach, debug=0, parallel=0)"));
+#  &get_error_code("$outputdir/$fulldate/pmpl.LINUX_gcc.reach.debug0.parallel0.out",
+#    "Configuration: gcc 4.8.2 (platform=LINUX_gcc, robot=reach, debug=0, parallel=0)"));
 
 #
 # Send out e-mail

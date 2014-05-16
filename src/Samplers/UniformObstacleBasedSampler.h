@@ -57,6 +57,12 @@ class UniformObstacleBasedSampler : public SamplerMethod<MPTraits> {
       if(margin == 0){
         margin = _env->GetMultiBody(_cfgIn.GetRobotIndex())->GetMaxAxisRange();
       }
+
+      vector<pair<double, double> > origBoundary;
+      for(size_t i=0; i<3; i++) {
+        origBoundary.push_back(make_pair(_bb->GetRange(i).first, _bb->GetRange(i).second));
+      }
+
       _env->ResetBoundary(margin, _cfgIn.GetRobotIndex());
       shared_ptr<Boundary> bbNew = _env->GetBoundary();
 
@@ -99,10 +105,10 @@ class UniformObstacleBasedSampler : public SamplerMethod<MPTraits> {
       CfgType temp = cfg1;
 
       inter.FindIncrement(cfg1, cfg2, &nTicks, positionRes, orientationRes);
+      _env->GetBoundary()->ResetBoundary(origBoundary, 0);
       for(int i=1; i<nTicks; i++) {
         tick += inter;
         tickFree = (vc->IsValid(tick, callee)) && (!vc->IsInsideObstacle(tick));
-        _env->SetBoundary(_bb);
         if(m_useBoundary)
           tickFree = tickFree && _env->InBounds(tick, _bb);
 

@@ -1,0 +1,70 @@
+\chapter{Connectors}
+
+Connectors (\c) orchestrate the creation of edges within a sampling-based
+planner. More loosely, the combine a neighbor selection phase to determine
+candidate edges and validate these with a local planner. If a local planner
+succeeds then the edge is added to the roadmap. These algorithms vary in the
+ways they do this.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Base Class
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{\texttt{ConnectorMethod}}
+
+\texttt{ConnectorMethod} essentially has one important function,
+$\CALL{Connect}$ which can be called in a multitude of ways. In its basic forms
+it takes two sets of configurations and generates edges in the roadmap between
+them. Usage:
+\begin{lstlisting}
+ConnectorPointer c = this->GetMPProblem()->GetConnector(m_cLabel);
+ColorMapType cm;
+vector<VID> c1, c2;
+c->Connect(this->GetMPProblem()->GetRoadmap(),
+           this->GetMPProblem()->GetStatClass(),
+           cmap, c1.begin(), c1.end(), c2.begin(), c2.end());
+\end{lstlisting}
+Where ColorMapType is the type of a color map for the underlying STAPL graph.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Derived Class
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Derived Classes}
+
+%% Adaptive
+\subsection{\texttt{AdaptiveConnector}}
+
+%% CC Expansion
+\subsection{\texttt{CCExpansion}}
+
+%% CCs
+\subsection{\texttt{CCsConnector}}
+
+%% Closest VE
+\subsection{\texttt{ClosestVE}}
+
+%% Connect Neighboring Surfaces
+\subsection{\texttt{ConnectNeighboringSurfaces}}
+
+%% Neighborhood Connector
+\subsection{\texttt{NeighborhoodConnector}}
+
+%% Rewire
+\subsection{\texttt{RewireConnector}}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Old
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Old Classes}
+
+%% Preferential Attachment
+\subsection{\texttt{PreferentialAttachment}}
+
+%% RRT Components
+\subsection{\texttt{RRTcomponents}}
+
+%% RRT Expand
+\subsection{\texttt{RRTexpand}}
+
+%% Ray Tracer
+\subsection{\texttt{RayTracer}}
+
