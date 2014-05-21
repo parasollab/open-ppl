@@ -128,7 +128,9 @@ TogglePRMStrategy<MPTraits>::Run() {
 
     bool validMap;
     // Loop until map is sufficient, or queue is empty
-    while(!(validMap = this->EvaluateMap(m_evaluatorLabels)) && queue.size()) {
+//  while(!(validMap = this->EvaluateMap(m_evaluatorLabels)) && queue.size()) {
+    while(!(validMap = this->GetMPProblem()->GetRoadmap()->GetGraph()->get_num_vertices() +
+          this->GetMPProblem()->GetBlockRoadmap()->GetGraph()->get_num_vertices() > 999) && queue.size()) {
       pair<string, CfgType> p = queue.front();
       queue.pop_front();
       string validity = p.first;
