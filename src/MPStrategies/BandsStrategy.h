@@ -120,7 +120,7 @@ class BandsIncrementalRoadmap : public MPStrategyMethod {
       };
     virtual ~BandsIncrementalRoadmap() {}
 
-    virtual void PrintOptions(ostream& out_os) const {};
+    virtual void Print(ostream& out_os) const {};
 
     virtual void ParseXML(XMLNodeReader& in_Node) {
       cout << "BandsIncrementalRoadmap::ParseXML()" << endl;
@@ -1083,7 +1083,7 @@ class BandsStats : public MPStrategyMethod {
       }
     }
 
-    virtual void PrintOptions(ostream& out_os) const {}
+    virtual void Print(ostream& out_os) const {}
     virtual void operator()() { }
     virtual void Initialize(){}
     virtual void Run() {
@@ -1491,7 +1491,7 @@ class EdgeExpanderStats : public MPStrategyMethod {
       }
     }
 
-  virtual void PrintOptions(ostream& out_os) const {}
+  virtual void Print(ostream& out_os) const {}
 
    virtual void Initialize(){}
    virtual void Run(){
@@ -1655,7 +1655,7 @@ class RoadmapTimingStats : public MPStrategyMethod {
       }
     }
 
-  virtual void PrintOptions(ostream& out_os) const {}
+  virtual void Print(ostream& out_os) const {}
    virtual void Initialize(){}
    virtual void Run(){
       cout<<"*************in operator()***********************"<<endl;

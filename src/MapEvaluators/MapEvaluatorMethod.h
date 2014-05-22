@@ -11,7 +11,7 @@ class MapEvaluatorMethod : public MPBaseObject<MPTraits> {
       : MPBaseObject<MPTraits>(_problem, _node) {}
     virtual ~MapEvaluatorMethod() {}
 
-    virtual void PrintOptions(ostream& _os) const {
+    virtual void Print(ostream& _os) const {
       _os << this->GetNameAndLabel() << endl;
     }
 

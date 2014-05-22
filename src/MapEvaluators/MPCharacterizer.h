@@ -14,7 +14,7 @@ class NodeCharacterizerMethod : public MPBaseObject {
     virtual void ParseXML(XMLNodeReader& _inNode)=0;
     virtual void Characterize()=0;
     virtual void Characterize(VID) {};
-    virtual void PrintOptions(ostream& _out_os) const {}
+    virtual void Print(ostream& _out_os) const {}
 };
 
 
@@ -75,7 +75,7 @@ class CCExpandCharacterizer : public NodeCharacterizerMethod<CFG,WEIGHT> {
          (*(pGraph->find_vertex(_inVid))).property().SetLabel("CCOVERSAMPLE",true);
 
     };
-    virtual void PrintOptions(ostream& out_os) const {};
+    virtual void Print(ostream& out_os) const {};
   private:
     shared_ptr<DistanceMetricMethod> dm;
     string m_lp;
@@ -149,7 +149,7 @@ class LocalNodeInfoCharacterizer : public NodeCharacterizerMethod<CFG,WEIGHT> {
       delete rnf;
     };
 
-    virtual void PrintOptions(ostream& out_os) const {};
+    virtual void Print(ostream& out_os) const {};
   private:
     bool IsBridgeLike(CFG free_cfg,vector<CFG> vec_col) {
       DistanceMetric::DistanceMetricPointer dm = this->GetMPProblem()->GetDistanceMetric()->GetMethod(m_dmLabel);
@@ -208,7 +208,7 @@ public:
 
 
 
-  void PrintOptions(ostream& out_os) const {};
+  void Print(ostream& out_os) const {};
 
   NodeCharacterizerMethod<CFG,WEIGHT>* GetNodeCharacterizerMethod(string& in_strLabel) {
     typename vector<NodeCharacterizerMethod<CFG,WEIGHT>*>::iterator I;

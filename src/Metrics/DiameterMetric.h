@@ -17,7 +17,7 @@ class DiameterMetric : public MetricMethod<MPTraits> {
     DiameterMetric(MPProblemType* _problem, XMLNodeReader& _node);
     virtual ~DiameterMetric();
 
-    virtual void PrintOptions(ostream& _os) const;
+    virtual void Print(ostream& _os) const;
 
     double operator()();
 };
@@ -39,7 +39,7 @@ DiameterMetric<MPTraits>::~DiameterMetric() {
 
 template<class MPTraits>
 void
-DiameterMetric<MPTraits>::PrintOptions(ostream& _os) const {
+DiameterMetric<MPTraits>::Print(ostream& _os) const {
   _os << "CC diameter" << endl;
 }
 

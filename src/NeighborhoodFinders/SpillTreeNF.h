@@ -47,7 +47,7 @@ public:
   static const std::string GetClassName() {
     return "SpillTreeNF";
   }
-  virtual void PrintOptions(std::ostream& out_os) const {
+  virtual void Print(std::ostream& out_os) const {
     out_os << this->GetClassName() << ":: overlapDistance = " << overlapDistance << std::endl;
   }
 

@@ -23,9 +23,9 @@ class MedialAxisSampler : public SamplerMethod<MPTraits> {
 
     ~MedialAxisSampler() {}
 
-    virtual void PrintOptions(ostream& _os) const {
-      SamplerMethod<MPTraits>::PrintOptions(_os);
-      m_medialAxisUtility.PrintOptions(_os);
+    virtual void Print(ostream& _os) const {
+      SamplerMethod<MPTraits>::Print(_os);
+      m_medialAxisUtility.Print(_os);
     }
 
     virtual bool Sampler(Environment* _env, shared_ptr<Boundary> _bb,

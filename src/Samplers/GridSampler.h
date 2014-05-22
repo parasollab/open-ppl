@@ -63,8 +63,8 @@ class GridSampler : public SamplerMethod<MPTraits> {
   }
 
   // Prints options
-  virtual void PrintOptions(ostream& _os) const {
-    SamplerMethod<MPTraits>::PrintOptions(_os);
+  virtual void Print(ostream& _os) const {
+    SamplerMethod<MPTraits>::Print(_os);
     _os << "\tvcLabel = " << m_vcLabel << endl;
     _os << "\tuseBoundary = " << m_useBoundary << endl;
     _os << "\tnumPoints (index, points):" << endl;

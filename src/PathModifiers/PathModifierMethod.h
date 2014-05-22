@@ -20,7 +20,7 @@ class PathModifierMethod : public MPBaseObject<MPTraits> {
     PathModifierMethod(MPProblemType* _problem, XMLNodeReader& _node);
 
     virtual void ParseXML(XMLNodeReader& _node);
-    virtual void PrintOptions(ostream& _os) const;
+    virtual void Print(ostream& _os) const;
 
     virtual void Modify(vector<CfgType>& _originalPath, vector<CfgType>& _newPath);
 
@@ -62,7 +62,7 @@ PathModifierMethod<MPTraits>::ParseXML(XMLNodeReader& _node) {
 
 template<class MPTraits>
 void
-PathModifierMethod<MPTraits>::PrintOptions(ostream& _os) const {
+PathModifierMethod<MPTraits>::Print(ostream& _os) const {
   _os << this->GetNameAndLabel() << endl;
   _os << "\tpath file = \"" << m_pathFile << "\"" << endl;
 }

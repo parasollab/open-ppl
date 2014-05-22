@@ -17,7 +17,7 @@ class ShortcuttingPathModifier : public PathModifierMethod<MPTraits> {
     ShortcuttingPathModifier(MPProblemType* _problem, XMLNodeReader& _node);
 
     virtual void ParseXML(XMLNodeReader& _node);
-    virtual void PrintOptions(ostream& _os) const;
+    virtual void Print(ostream& _os) const;
 
     bool ModifyImpl(vector<CfgType>& _originalPath, vector<CfgType>& _newPath);
 
@@ -47,8 +47,8 @@ ShortcuttingPathModifier<MPTraits>::ParseXML(XMLNodeReader& _node) {
 
 template<class MPTraits>
 void
-ShortcuttingPathModifier<MPTraits>::PrintOptions(ostream& _os) const {
-  PathModifierMethod<MPTraits>::PrintOptions(_os);
+ShortcuttingPathModifier<MPTraits>::Print(ostream& _os) const {
+  PathModifierMethod<MPTraits>::Print(_os);
   _os << "\tdistance metric = \"" << m_dmLabel << "\"" << endl;
   _os << "\tlocal planner = \"" << m_lpLabel << "\"" << endl;
 }

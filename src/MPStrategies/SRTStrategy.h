@@ -28,7 +28,7 @@ class SRTStrategy : public MPStrategyMethod<MPTraits> {
     virtual void Run();
     virtual void Finalize();
 
-    virtual void PrintOptions(ostream& _os) const;
+    virtual void Print(ostream& _os) const;
 
   protected:
     //Helper functions
@@ -121,8 +121,8 @@ ParseXML(XMLNodeReader& _node) {
 template<class MPTraits>
 void
 SRTStrategy<MPTraits>::
-PrintOptions(ostream& _os) const {
-  _os << "SRTStrategy::PrintOptions" << endl;
+Print(ostream& _os) const {
+  _os << "SRTStrategy::Print" << endl;
   _os << "\tNeighborhood Finder:: " << m_nfLabel << endl;
   _os << "\tDistance Metric:: " << m_dmLabel << endl;
   _os << "\tValidity Checker:: " << m_vcLabel << endl;

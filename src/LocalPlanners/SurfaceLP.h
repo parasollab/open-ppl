@@ -27,7 +27,7 @@ class SurfaceLP : public StraightLine<MPTraits> {
     SurfaceLP(MPProblemType* _problem, XMLNodeReader& _node);
     virtual ~SurfaceLP();
 
-    virtual void PrintOptions(ostream& _os) const;
+    virtual void Print(ostream& _os) const;
 
     virtual bool IsConnected(
         const CfgType& _c1, const CfgType& _c2, CfgType& _col,
@@ -63,8 +63,8 @@ SurfaceLP<MPTraits>::~SurfaceLP() { }
 // Definitions for I/O and Access
 template<class MPTraits>
 void
-SurfaceLP<MPTraits>::PrintOptions(ostream& _os) const {
-  StraightLine<MPTraits>::PrintOptions(_os);
+SurfaceLP<MPTraits>::Print(ostream& _os) const {
+  StraightLine<MPTraits>::Print(_os);
   _os << "\tvc label : " << this->m_vcLabel
       << "\n\tacceptable height diff = " << m_acceptableHeightDiff
       << endl;

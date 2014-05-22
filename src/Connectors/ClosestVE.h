@@ -128,7 +128,7 @@ class ClosestVE: public ConnectorMethod<MPTraits> {
     // I/O methods
 
     virtual void ParseXML(XMLNodeReader& _node);
-    virtual void PrintOptions(ostream& _os) const;
+    virtual void Print(ostream& _os) const;
     //////////////////////
     // Core: Connection method
     /**Find k pairs of closest Cfgs from a given Cfg to Cfgs in a Cfg vector
@@ -217,7 +217,7 @@ ClosestVE<MPTraits>::ParseXML(XMLNodeReader& _node) {
 
 template <class MPTraits>
 void
-ClosestVE<MPTraits>::PrintOptions(ostream& _os) const {
+ClosestVE<MPTraits>::Print(ostream& _os) const {
   _os << this->GetNameAndLabel() << endl;
   _os << "\tm_kClosest = " << m_kClosest << endl;
 }

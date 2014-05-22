@@ -218,7 +218,7 @@ class ParallelSRTStrategy : public MPStrategyMethod {
 
     virtual ~ParallelSRTStrategy();
 
-    virtual void PrintOptions(ostream& out_os) const;
+    virtual void Print(ostream& out_os) const;
     virtual void Initialize(int in_RegionID);
     virtual double RRTDistance(SRTStrategy* srt, Environment* env, BoundingBox bb, CfgType c1, CfgType c2);
 

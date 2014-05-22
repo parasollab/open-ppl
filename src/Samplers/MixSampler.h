@@ -57,8 +57,8 @@ class MixSampler : public SamplerMethod<MPTraits> {
       }
     }
 
-    virtual void PrintOptions(ostream& _os) const {
-      SamplerMethod<MPTraits>::PrintOptions(_os);
+    virtual void Print(ostream& _os) const {
+      SamplerMethod<MPTraits>::Print(_os);
       for(vector<pair<string, double> >::const_iterator it = samplers.begin(); it != samplers.end(); it++)
         cout << "\tSampler = " << it->first << ", cumulative probability = " << it->second << endl;
     }

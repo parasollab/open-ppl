@@ -41,7 +41,7 @@ class BasicRRTStrategy : public MPStrategyMethod<MPTraits> {
     virtual void Initialize();
     virtual void Run();
     virtual void Finalize();
-    virtual void PrintOptions(ostream& _os) const;
+    virtual void Print(ostream& _os) const;
 
     void SetMPProblem(MPProblemType* _problem);
 
@@ -146,8 +146,8 @@ BasicRRTStrategy<MPTraits>::ParseXML(XMLNodeReader& _node, bool _child) {
 
 template<class MPTraits>
 void
-BasicRRTStrategy<MPTraits>::PrintOptions(ostream& _os) const {
-  _os << "BasicRRTStrategy::PrintOptions" << endl;
+BasicRRTStrategy<MPTraits>::Print(ostream& _os) const {
+  _os << "BasicRRTStrategy::Print" << endl;
   _os << "\tNeighborhood Finder:: " << m_nf << endl;
   _os << "\tDistance Metric:: " << m_dm << endl;
   _os << "\tValidity Checker:: " << m_vc << endl;

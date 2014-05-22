@@ -360,7 +360,7 @@ void AdaptiveSubdivisionMethod::Finalize(int _regionID){
 
 }
 
-void AdaptiveSubdivisionMethod::PrintOptions(ostream& _os) const {
-  _os << "AdaptiveSubdivisionMethod:: PrintOptions \n";
+void AdaptiveSubdivisionMethod::Print(ostream& _os) const {
+  _os << "AdaptiveSubdivisionMethod:: Print \n";
 }
 

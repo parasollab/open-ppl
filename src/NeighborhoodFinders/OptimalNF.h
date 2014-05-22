@@ -26,8 +26,8 @@ class OptimalNF : public NeighborhoodFinderMethod<MPTraits> {
         m_nfLabel = _node.stringXMLParameter("nfLabel", true, "", "Neighborhood Finder");
       }
 
-    virtual void PrintOptions(ostream& _os) const {
-      NeighborhoodFinderMethod<MPTraits>::PrintOptions(_os);
+    virtual void Print(ostream& _os) const {
+      NeighborhoodFinderMethod<MPTraits>::Print(_os);
       _os << "\tnfLabel: " << m_nfLabel << endl;
     }
 

@@ -28,7 +28,7 @@ class BasicPRM : public MPStrategyMethod<MPTraits> {
     virtual ~BasicPRM();
 
     virtual void ParseXML(XMLNodeReader& _node);
-    virtual void PrintOptions(ostream& _os) const;
+    virtual void Print(ostream& _os) const;
 
     virtual void Initialize();
     virtual void Run();
@@ -143,8 +143,8 @@ BasicPRM<MPTraits>::ParseXML(XMLNodeReader& _node) {
 
 template<class MPTraits>
 void
-BasicPRM<MPTraits>::PrintOptions(ostream& _os) const {
-  MPStrategyMethod<MPTraits>::PrintOptions(_os);
+BasicPRM<MPTraits>::Print(ostream& _os) const {
+  MPStrategyMethod<MPTraits>::Print(_os);
   _os << "\tValidity Checker: " << m_vcLabel << endl;
   _os << "\tInput Map Filename: " << m_inputMapFilename << endl;
   _os << "\tm_startAt: ";
@@ -366,7 +366,7 @@ BasicPRM<MPTraits>::GenerateNodes(OutputIterator _thisIterationOut){
   vector<CfgType> outNodes;
   for(NodeGenIter gIter = m_samplerLabels.begin(); gIter != m_samplerLabels.end(); ++gIter){
     SamplerPointer pNodeGenerator = this->GetMPProblem()->GetSampler(gIter->first);
-    if(this->m_debug) pNodeGenerator->PrintOptions(cout);
+    if(this->m_debug) pNodeGenerator->Print(cout);
     vector<CfgType> inNodes(gIter->second.first);
 
     //generate nodes for this node generator method

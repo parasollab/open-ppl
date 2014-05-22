@@ -21,7 +21,7 @@ class TogglePRMStrategy : public MPStrategyMethod<MPTraits> {
     virtual ~TogglePRMStrategy() { }
 
     virtual void ParseXML(XMLNodeReader& _node);
-    virtual void PrintOptions(ostream& _os) const;
+    virtual void Print(ostream& _os) const;
 
     virtual void Initialize();
     virtual void Run();
@@ -89,7 +89,7 @@ TogglePRMStrategy<MPTraits>::ParseXML(XMLNodeReader& _node) {
 
 template<class MPTraits>
 void
-TogglePRMStrategy<MPTraits>::PrintOptions(ostream& _os) const {
+TogglePRMStrategy<MPTraits>::Print(ostream& _os) const {
   using boost::lambda::_1;
   _os << "\nTogglePRMStrategy::ParseXML:\n";
   _os << "\tSamplers: ";

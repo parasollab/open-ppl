@@ -46,7 +46,7 @@ class Decomposer : private ElementSet<DecompositionMethod>, public MPBaseObject 
       return ElementSet<DecompositionMethod>::GetMethod(_label);
     }
 
-    virtual void PrintOptions(ostream& _os) const {}
+    virtual void Print(ostream& _os) const {}
 };
 
 #endif

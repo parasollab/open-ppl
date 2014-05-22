@@ -17,7 +17,7 @@ class MinkowskiDistance : public DistanceMetricMethod<MPTraits> {
         bool _warn = true, bool _parse = true);
     virtual ~MinkowskiDistance();
 
-    virtual void PrintOptions(ostream& _os) const;
+    virtual void Print(ostream& _os) const;
 
     virtual double Distance(const CfgType& _c1, const CfgType& _c2);
     virtual void ScaleCfg(double _length, CfgType& _c, const CfgType& _o = CfgType());
@@ -101,8 +101,8 @@ MinkowskiDistance<MPTraits>::~MinkowskiDistance() {
 
 template<class MPTraits>
 void
-MinkowskiDistance<MPTraits>::PrintOptions(ostream& _os) const {
-  DistanceMetricMethod<MPTraits>::PrintOptions(_os);
+MinkowskiDistance<MPTraits>::Print(ostream& _os) const {
+  DistanceMetricMethod<MPTraits>::Print(_os);
   _os << "\tr1 = " << m_r1 << endl;
   _os << "\tr2 = " << m_r2 << endl;
   _os << "\tr3 = " << m_r3 << endl;

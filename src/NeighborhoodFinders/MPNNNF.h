@@ -117,7 +117,7 @@ public:
   static const std::string GetClassName() {
     return "MPNNNF";
   }
-  virtual void PrintOptions(std::ostream& out_os) const {
+  virtual void Print(std::ostream& out_os) const {
     out_os << this->GetClassName() << ":: epsilon = " << m_epsilon << ", use_scaling = " << m_use_scaling << std::endl;
   }
 

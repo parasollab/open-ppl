@@ -26,7 +26,7 @@ class CCsConnector: public ConnectorMethod<MPTraits> {
     CCsConnector(string _nfLabel = "", string _lpLabel = "", size_t _k = 5);
     CCsConnector(MPProblemType* _problem, XMLNodeReader& _node);
 
-    virtual void PrintOptions(ostream& _os) const;
+    virtual void Print(ostream& _os) const;
 
     template <typename ColorMap, typename InputIterator1, typename InputIterator2, typename OutputIterator>
       void Connect(RoadmapType* _rm, StatClass& _stats, ColorMap& _cmap,
@@ -69,8 +69,8 @@ CCsConnector<MPTraits>::CCsConnector(MPProblemType* _problem, XMLNodeReader& _no
 
 template<class MPTraits>
 void
-CCsConnector<MPTraits>::PrintOptions(ostream& _os) const {
-  ConnectorMethod<MPTraits>::PrintOptions(_os);
+CCsConnector<MPTraits>::Print(ostream& _os) const {
+  ConnectorMethod<MPTraits>::Print(_os);
   _os << "\tk: " << m_k << endl;
 }
 
@@ -84,7 +84,7 @@ CCsConnector<MPTraits>::Connect(RoadmapType* _rm, StatClass& _stats, ColorMap& _
   GraphType* rgraph = _rm->GetGraph();
 
   if(this->m_debug){
-    PrintOptions(cout);
+    Print(cout);
     _stats.DisplayCCStats(cout, *rgraph);
     cout << endl;
   }

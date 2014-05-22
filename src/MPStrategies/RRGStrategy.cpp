@@ -13,12 +13,12 @@ RRGStrategy::RRGStrategy(XMLNodeReader& _node, MPProblem* _problem) :
 void
 RRGStrategy::ParseXML(XMLNodeReader& _node) {
   m_nc = _node.stringXMLParameter("connectionMethod",true,"","Node Connection Method");
-  if(m_debug) PrintOptions(cout);
+  if(m_debug) Print(cout);
 }
 
 void
-RRGStrategy::PrintOptions(ostream& _os) const {
-  BasicRRTStrategy::PrintOptions(_os);
+RRGStrategy::Print(ostream& _os) const {
+  BasicRRTStrategy::Print(_os);
   _os << "\tNode Connection:: " << m_nc << endl;
 }
 

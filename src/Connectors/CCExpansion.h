@@ -54,7 +54,7 @@ class CCExpansion: public ConnectorMethod<MPTraits> {
     //////////////////////////////////////
     /* Print Method */
     //////////////////////////////////////
-    virtual void PrintOptions(ostream& _os) const;
+    virtual void Print(ostream& _os) const;
 
     //////////////////////////////////////
     /* XML Parser */
@@ -206,13 +206,13 @@ CCExpansion<MPTraits>::CCExpansion(MPProblemType* _problem, XMLNodeReader& _node
   }
 
 ///////////////////////////////////////////////////////////////////////////////
-/* PrintOptions */
+/* Print */
 ///////////////////////////////////////////////////////////////////////////////
 template <class MPTraits>
 void
-CCExpansion<MPTraits>::PrintOptions(ostream& _os) const {
-  /* Call parent-class PrintOptions(..) method */
-  ConnectorMethod<MPTraits>::PrintOptions(_os);
+CCExpansion<MPTraits>::Print(ostream& _os) const {
+  /* Call parent-class Print(..) method */
+  ConnectorMethod<MPTraits>::Print(_os);
 
   /* Print Data Members */
   _os << "\nnode selection policy = " << m_nodeSelectionOption;

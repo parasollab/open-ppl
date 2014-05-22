@@ -31,7 +31,7 @@ class LazyQuery : public Query<MPTraits> {
     virtual ~LazyQuery() {};
 
     void ParseXML(XMLNodeReader& _node);
-    virtual void PrintOptions(ostream& _os) const;
+    virtual void Print(ostream& _os) const;
 
     // Checks validity of nodes and edges and deletes any invalid ones. Recreates path if valid
     virtual bool CanRecreatePath(RoadmapType* _rdmp, vector<VID>& _attemptedPath, vector<CfgType>& _recreatedPath);
@@ -88,8 +88,8 @@ LazyQuery<MPTraits>::ParseXML(XMLNodeReader& _node) {
 
 template<class MPTraits>
 void
-LazyQuery<MPTraits>::PrintOptions(ostream& _os) const {
-  Query<MPTraits>::PrintOptions(_os);
+LazyQuery<MPTraits>::Print(ostream& _os) const {
+  Query<MPTraits>::Print(_os);
   _os << "\tvc label = " << m_vcLabel;
   _os << "\n\tnumEnhance = " << m_numEnhance;
   _os << "\n\td = " << m_d;

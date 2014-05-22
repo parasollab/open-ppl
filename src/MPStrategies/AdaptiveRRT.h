@@ -51,7 +51,7 @@ class AdaptiveRRT : public BasicRRTStrategy<MPTraits> {
     virtual void Initialize();
 
     virtual void ParseXML(XMLNodeReader& _node);
-    virtual void PrintOptions(ostream& _os) const;
+    virtual void Print(ostream& _os) const;
 
   protected:
     // Helper functions
@@ -136,8 +136,8 @@ AdaptiveRRT<MPTraits>::ParseXML(XMLNodeReader& _node) {
 
 template<class MPTraits>
 void
-AdaptiveRRT<MPTraits>::PrintOptions(ostream& _os) const {
-  BasicRRTStrategy<MPTraits>::PrintOptions(_os);
+AdaptiveRRT<MPTraits>::Print(ostream& _os) const {
+  BasicRRTStrategy<MPTraits>::Print(_os);
   _os << "\tWallPenalty::" << m_wallPenalty << endl;
   _os << "\tGamma::" << m_gamma << endl;
   _os << "\tGrowthSets::" << endl;

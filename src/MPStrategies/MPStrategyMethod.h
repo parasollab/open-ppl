@@ -23,7 +23,7 @@ class MPStrategyMethod : public MPBaseObject<MPTraits> {
     virtual void Initialize()=0;
     virtual void Run()=0;
     virtual void Finalize()=0;
-    virtual void PrintOptions(ostream& _os) const;
+    virtual void Print(ostream& _os) const;
 
     string GetBaseFilename(){return m_baseFilename;}
     void SetBaseFilename(string _s){m_baseFilename = _s;}
@@ -63,7 +63,7 @@ MPStrategyMethod<MPTraits>::ParseXML(XMLNodeReader& _node){
 
 template<class MPTraits>
 void
-MPStrategyMethod<MPTraits>::PrintOptions(ostream& _os) const {
+MPStrategyMethod<MPTraits>::Print(ostream& _os) const {
   _os << this->GetNameAndLabel() << endl;
 }
 

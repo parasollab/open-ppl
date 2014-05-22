@@ -72,7 +72,7 @@ class NeighborhoodFinderMethod : public MPBaseObject<MPTraits> {
     NeighborhoodFinderMethod(string _dmLabel = "", bool _unconnected = false);
     NeighborhoodFinderMethod(MPProblemType* _problem, XMLNodeReader& _node, bool _requireDM = true);
 
-    virtual void PrintOptions(ostream& _os) const {
+    virtual void Print(ostream& _os) const {
       _os << this->GetNameAndLabel() << endl
         << "\tdmLabel: " << m_dmLabel << endl
         << "\tunconnected: " << m_unconnected << endl;

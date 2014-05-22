@@ -48,9 +48,9 @@ class UniformMedialAxisSampler : public SamplerMethod<MPTraits> {
       _node.warnUnrequestedAttributes();
     }
 
-    virtual void PrintOptions(ostream& _os) const {
-      SamplerMethod<MPTraits>::PrintOptions(_os);
-      m_clearanceUtility.PrintOptions(_os);
+    virtual void Print(ostream& _os) const {
+      SamplerMethod<MPTraits>::Print(_os);
+      m_clearanceUtility.Print(_os);
       _os << "\tvcLabel = " << m_vcLabel << endl;
       _os << "\tdmLabel = " << m_dmLabel << endl;
       _os << "\tlength = " << m_length << endl;

@@ -16,7 +16,7 @@ class NodeClearanceValidity : public ValidityCheckerMethod<MPTraits> {
     NodeClearanceValidity(MPProblemType* _problem, XMLNodeReader& _node);
     virtual ~NodeClearanceValidity();
 
-    virtual void PrintOptions(ostream& _os) const;
+    virtual void Print(ostream& _os) const;
 
     virtual bool IsValidImpl(CfgType& _cfg, CDInfo& _cdInfo, const string& _callName);
 
@@ -44,8 +44,8 @@ NodeClearanceValidity<MPTraits>::~NodeClearanceValidity() {}
 
 template <class MPTraits>
 void
-NodeClearanceValidity<MPTraits>::PrintOptions(ostream& _os) const {
-  ValidityCheckerMethod<MPTraits>::PrintOptions(_os);
+NodeClearanceValidity<MPTraits>::Print(ostream& _os) const {
+  ValidityCheckerMethod<MPTraits>::Print(_os);
   _os << "\tdelta::" << m_delta
     << "\tnfLabel::" << m_nfLabel << endl;
 }

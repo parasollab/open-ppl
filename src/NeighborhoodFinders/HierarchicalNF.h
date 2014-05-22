@@ -29,8 +29,8 @@ class HierarchicalNF : public NeighborhoodFinderMethod<MPTraits> {
         _node.warnUnrequestedAttributes();
       }
 
-    virtual void PrintOptions(ostream& _os) const {
-      NeighborhoodFinderMethod<MPTraits>::PrintOptions(_os);
+    virtual void Print(ostream& _os) const {
+      NeighborhoodFinderMethod<MPTraits>::Print(_os);
       _os  << "\tnfLabel: " << m_nfLabel << endl;
       _os  << "\tnfLabel2: " << m_nfLabel2 << endl;
     }
@@ -86,8 +86,8 @@ HierarchicalNF<MPTraits>::FindNeighbors(RoadmapType* _rmp, InputIterator _first,
   nf2->FindNeighbors(_rmp,ccVIDs.begin(),ccVIDs.end(), _cfg, _out);
 
   if(this->m_debug){
-    nf->PrintOptions(cout);
-    nf2->PrintOptions(cout);
+    nf->Print(cout);
+    nf2->Print(cout);
    }
 
   this->EndQueryTime();

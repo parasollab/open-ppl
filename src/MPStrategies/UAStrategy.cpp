@@ -141,21 +141,21 @@ void UAStrategy::Finalize(){
    cout<<"\nEnd Finalizing UAStrategy"<<endl;
 }
 
-void UAStrategy::PrintOptions(ostream& out_os) const {
+void UAStrategy::Print(ostream& out_os) const {
    out_os<<"UAStrategy Options:"<<endl;
    out_os<<"\tTraining Strategy:"<<m_TrainingStrategy<<endl;
-   GetMPProblem()->GetMPStrategy()->GetMPStrategyMethod(m_TrainingStrategy)->PrintOptions(out_os);
+   GetMPProblem()->GetMPStrategy()->GetMPStrategyMethod(m_TrainingStrategy)->Print(out_os);
    out_os<<"\tRegion Identifier:"<<m_PartitioningMethod<<endl;
    out_os<<"\tDistribution Feature:"<<m_DistributionFeature<<endl;
    out_os<<"\tRegion Strategies:"<<endl;
    for(vector<string>::iterator sit = m_RegionStrategies.begin(); sit!=m_RegionStrategies.end(); sit++){
       out_os<<"\t\tStrategy:"<<*sit<<endl;
-      GetMPProblem()->GetMPStrategy()->GetMPStrategyMethod(*sit)->PrintOptions(out_os);
+      GetMPProblem()->GetMPStrategy()->GetMPStrategyMethod(*sit)->Print(out_os);
    }
    out_os<<"\tEvaluators:"<<endl;
    for(vector<string>::iterator sit = m_EvaluatorLabels.begin(); sit!=m_EvaluatorLabels.end(); sit++){
       out_os<<"\t\tEvaluator:"<<*sit<<endl;
-      GetMPProblem()->GetMPStrategy()->GetMapEvaluator()->GetMethod(*sit)->PrintOptions(out_os);
+      GetMPProblem()->GetMPStrategy()->GetMapEvaluator()->GetMethod(*sit)->Print(out_os);
    }
    out_os<<endl;
 }

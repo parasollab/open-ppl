@@ -19,7 +19,7 @@ class CoverageMetric : public MetricMethod<MPTraits> {
     CoverageMetric(MPProblemType* _problem, XMLNodeReader& _node, bool _computeAllCCs = false);
     virtual ~CoverageMetric();
 
-    virtual void PrintOptions(ostream& _os) const;
+    virtual void Print(ostream& _os) const;
 
     double operator()();
 
@@ -73,7 +73,7 @@ CoverageMetric<MPTraits, Set>::~CoverageMetric() {
 
 template<class MPTraits, class Set>
 void
-CoverageMetric<MPTraits, Set>::PrintOptions(ostream& _os) const {
+CoverageMetric<MPTraits, Set>::Print(ostream& _os) const {
   _os << "Percentage of connection" << endl;
   _os << "\tall_data = " << m_allData << endl;
   _os << "\tnode_connection_labels = ";

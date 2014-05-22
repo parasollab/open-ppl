@@ -46,7 +46,7 @@ int main(int _argc, char** _argv)
   typedef MPTraits<PMPLCfgType> Traits;
   typedef Traits::MPProblemType MPProblemType;
   MPProblemType* problem = new MPProblemType(_argv[2]);
-  problem->PrintOptions(cout);
+  problem->Print(cout);
   problem->Solve();
 
   #ifndef _PARALLEL

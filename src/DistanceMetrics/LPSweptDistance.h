@@ -21,7 +21,7 @@ class LPSweptDistance : public DistanceMetricMethod<MPTraits> {
     LPSweptDistance(MPProblemType* _problem, XMLNodeReader& _node, bool _warn = true);
     virtual ~LPSweptDistance();
 
-    virtual void PrintOptions(ostream& _os) const;
+    virtual void Print(ostream& _os) const;
 
     virtual double Distance(const CfgType& _c1, const CfgType& _c2);
 
@@ -61,8 +61,8 @@ LPSweptDistance<MPTraits>::~LPSweptDistance() {
 
 template<class MPTraits>
 void
-LPSweptDistance<MPTraits>::PrintOptions(ostream& _os) const {
-  DistanceMetricMethod<MPTraits>::PrintOptions(_os);
+LPSweptDistance<MPTraits>::Print(ostream& _os) const {
+  DistanceMetricMethod<MPTraits>::Print(_os);
   _os << "\tpositionRes = " << m_positionRes << endl;
   _os << "\torientationRes = " << m_orientationRes << endl;
   _os << "\tuseBBox = " << m_useBBox << endl;

@@ -68,7 +68,7 @@
     //virtual ~ParallelRRTRoadmap::ParallelRRTRoadmap() {}
     ParallelSRTStrategy::~ParallelSRTStrategy() {}
 
-    void ParallelSRTStrategy::PrintOptions(ostream& out_os) const {
+    void ParallelSRTStrategy::Print(ostream& out_os) const {
       cout << "test printoption" << endl;
       }
     void ParallelSRTStrategy::Initialize(int in_RegionID){

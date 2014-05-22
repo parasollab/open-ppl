@@ -22,7 +22,7 @@ class SparkPRM : public Strategy<MPTraits> {
     SparkPRM(MPProblemType* _problem, XMLNodeReader& _node);
 
     virtual void ParseXML(XMLNodeReader& _node);
-    virtual void PrintOptions(ostream& _os);
+    virtual void Print(ostream& _os);
 
     // Performs a narrow passage test and then constructs an RRT if successful.
     // Returns true if start and goal connected.
@@ -132,7 +132,7 @@ ParseXML(XMLNodeReader& _node) {
 template<class MPTraits, template<typename> class Strategy>
 void
 SparkPRM<MPTraits, Strategy>::
-PrintOptions(ostream& _os) {
+Print(ostream& _os) {
   _os << this->GetNameAndLabel() << "::";
   _os << "\n\tmaxNPCCSize = " << m_maxNPCCSize;
   _os << "\n\tinitSamples = " << m_initSamples;

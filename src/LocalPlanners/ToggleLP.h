@@ -23,7 +23,7 @@ class ToggleLP: public LocalPlannerMethod<MPTraits> {
     virtual ~ToggleLP();
 
     void CalcStats(bool _var, bool _toggle);
-    virtual void PrintOptions(ostream& _os) const;
+    virtual void Print(ostream& _os) const;
 
     virtual bool IsConnected(
         const CfgType& _c1, const CfgType& _c2, CfgType& _col,
@@ -110,8 +110,8 @@ ToggleLP<MPTraits>::~ToggleLP() {
 
 template<class MPTraits>
 void
-ToggleLP<MPTraits>::PrintOptions(ostream& _os) const {
-  LocalPlannerMethod<MPTraits>::PrintOptions(_os);
+ToggleLP<MPTraits>::Print(ostream& _os) const {
+  LocalPlannerMethod<MPTraits>::Print(_os);
   _os << "\tmax iter =  " << m_maxIter
       << "\n\tvc label :  " << m_vcLabel
       << "\n\tlp label : " << m_lpLabel

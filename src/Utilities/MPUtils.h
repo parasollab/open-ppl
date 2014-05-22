@@ -333,12 +333,12 @@ class MethodSet {
       }
     }
 
-    void PrintOptions(ostream& _os) const {
+    void Print(ostream& _os) const {
       size_t count = 0;
       _os << endl << m_name << " has these methods available::" << endl << endl;
       for(CMIT mit = Begin(); mit != End(); ++mit){
         _os << ++count << ") \"" << mit->first << "\" (" << mit->second->m_name << ")" << endl;
-        mit->second->PrintOptions(_os);
+        mit->second->Print(_os);
         _os << endl;
       }
       _os << endl;
@@ -400,7 +400,7 @@ class MPBaseObject {
 
     MPProblemType* GetMPProblem() const {return m_problem;}
     virtual void SetMPProblem(MPProblemType* _m) {m_problem = _m;}
-    virtual void PrintOptions(ostream& _os) const {};
+    virtual void Print(ostream& _os) const {};
 
     void SetLabel(string _s) {m_label = _s;}
 

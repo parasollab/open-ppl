@@ -16,7 +16,7 @@ class CoverageDistanceMetric : public MetricMethod<MPTraits> {
     CoverageDistanceMetric(MPProblemType* _problem, XMLNodeReader& _node);
     virtual ~CoverageDistanceMetric();
 
-    virtual void PrintOptions(ostream& _os) const;
+    virtual void Print(ostream& _os) const;
 
     double operator()();
 
@@ -50,7 +50,7 @@ CoverageDistanceMetric<MPTraits, Set>::~CoverageDistanceMetric() {
 
 template<class MPTraits, class Set>
 void
-CoverageDistanceMetric<MPTraits, Set>::PrintOptions(ostream& _os) const {
+CoverageDistanceMetric<MPTraits, Set>::Print(ostream& _os) const {
   _os << "Distance Metric:" << m_dmLabel<< endl;
   _os << "Coverage set size:" << m_samples.size() << endl;
 }

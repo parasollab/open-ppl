@@ -45,7 +45,7 @@ class EntropyPRM {
   void ParseCommandLine(int argc, char **argv);
   void PrintUsage(ostream& _os);
   void PrintValues(ostream& _os);
-  void PrintOptions(ostream& out_os) const {};
+  void Print(ostream& out_os) const {};
 
   /**Basic Randomized (probabilistic) Node Generation.
    *This method generates NodeGenerationMethod::numNodes collision-free Cfgs

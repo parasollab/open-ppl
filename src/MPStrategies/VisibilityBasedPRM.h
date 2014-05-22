@@ -39,7 +39,7 @@ class VisibilityBasedPRM : public MPStrategyMethod<MPTraits> {
     VisibilityBasedPRM(MPProblemType* _problem, XMLNodeReader& _node);
 
     virtual void ParseXML(XMLNodeReader& _node);
-    virtual void PrintOptions(ostream& _os) const;
+    virtual void Print(ostream& _os) const;
 
     virtual void Initialize();
     virtual void Run();
@@ -96,7 +96,7 @@ VisibilityBasedPRM<MPTraits>::ParseXML(XMLNodeReader& _node) {
 
 template<class MPTraits>
 void
-VisibilityBasedPRM<MPTraits>::PrintOptions(ostream& _os) const {
+VisibilityBasedPRM<MPTraits>::Print(ostream& _os) const {
   _os << this->GetNameAndLabel()
       << "\n\tSampler: " << m_samplerLabel
       << "\n\tValidity Checker: " << m_vcLabel

@@ -264,7 +264,7 @@ class MPRegionComparerMethod: public MPBaseObject {
 
   virtual void Compare(int in_region_a, int in_region_b) = 0;
 
-  virtual void PrintOptions(ostream& out_os) const {
+  virtual void Print(ostream& out_os) const {
     out_os << "    " << GetLabel() << ":: ";
   }
 

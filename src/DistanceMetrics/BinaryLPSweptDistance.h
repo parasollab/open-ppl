@@ -13,7 +13,7 @@ class BinaryLPSweptDistance : public LPSweptDistance<MPTraits> {
     BinaryLPSweptDistance(MPProblemType* _problem, XMLNodeReader& _node, bool _warn = true);
     virtual ~BinaryLPSweptDistance();
 
-    virtual void PrintOptions(ostream& _os) const;
+    virtual void Print(ostream& _os) const;
 
     virtual double Distance(const Cfg& _c1, const Cfg& _c2);
 
@@ -47,8 +47,8 @@ BinaryLPSweptDistance<MPTraits>::~BinaryLPSweptDistance() {
 
 template<class MPTraits>
 void
-BinaryLPSweptDistance<MPTraits>::PrintOptions(ostream& _os) const {
-  LPSweptDistance<MPTraits>::PrintOptions(_os);
+BinaryLPSweptDistance<MPTraits>::Print(ostream& _os) const {
+  LPSweptDistance<MPTraits>::Print(_os);
   _os << "\ttolerance = " << m_tolerance << endl;
   _os << "\tmaxAttempts = " << m_maxAttempts << endl;
 }

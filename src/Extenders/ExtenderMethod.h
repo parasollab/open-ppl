@@ -13,7 +13,7 @@ class ExtenderMethod : public MPBaseObject<MPTraits> {
     ExtenderMethod();
     ExtenderMethod(MPProblemType* _problem, XMLNodeReader& _node);
 
-    virtual void PrintOptions(ostream& _os) const;
+    virtual void Print(ostream& _os) const;
 
     virtual bool Extend(const CfgType& _nearest, const CfgType& _dir,
         CfgType& _new, vector<CfgType>& _innerNodes) =0;
@@ -33,7 +33,7 @@ ExtenderMethod<MPTraits>::ExtenderMethod(MPProblemType* _problem, XMLNodeReader&
 
 template <class MPTraits>
 void
-ExtenderMethod<MPTraits>::PrintOptions(ostream& _os) const {
+ExtenderMethod<MPTraits>::Print(ostream& _os) const {
   _os << this->GetNameAndLabel() << endl;
 }
 

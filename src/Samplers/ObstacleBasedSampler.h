@@ -61,8 +61,8 @@ class ObstacleBasedSampler : public SamplerMethod<MPTraits> {
       }
     }
 
-    virtual void PrintOptions(ostream& _os) const {
-      SamplerMethod<MPTraits>::PrintOptions(_os);
+    virtual void Print(ostream& _os) const {
+      SamplerMethod<MPTraits>::Print(_os);
       _os << "\tnShellsFree = " << m_nShellsFree << endl;
       _os << "\tnShellsColl = " << m_nShellsColl << endl;
       _os << "\tstepSize = " << m_stepSize << endl;

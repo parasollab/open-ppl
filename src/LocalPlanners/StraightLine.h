@@ -27,7 +27,7 @@ class StraightLine : public LocalPlannerMethod<MPTraits> {
     StraightLine(MPProblemType* _problem, XMLNodeReader& _node);
     virtual ~StraightLine();
 
-    virtual void PrintOptions(ostream& _os) const;
+    virtual void Print(ostream& _os) const;
 
     /**
      * Check if two Cfgs could be connected by straight line.
@@ -117,8 +117,8 @@ StraightLine<MPTraits>::~StraightLine() { }
 
 template<class MPTraits>
 void
-StraightLine<MPTraits>::PrintOptions(ostream& _os) const {
-  LocalPlannerMethod<MPTraits>::PrintOptions(_os);
+StraightLine<MPTraits>::Print(ostream& _os) const {
+  LocalPlannerMethod<MPTraits>::Print(_os);
   _os << "\tbinary evaluation = " << (m_binaryEvaluation ? "true" : "false")
       << "\n\tvc label = " << m_vcLabel
       << endl;

@@ -48,8 +48,8 @@ class BridgeTestSampler : public SamplerMethod<MPTraits> {
       }
 
     //Display values of class variables at calling time
-    virtual void PrintOptions(ostream& _out) const {
-        SamplerMethod<MPTraits>::PrintOptions(_out);
+    virtual void Print(ostream& _out) const {
+        SamplerMethod<MPTraits>::Print(_out);
         _out << "\td = " << m_d << endl;
         _out << "\tuseBoundary = " << m_useBoundary << endl;
         _out << "\tvcLabel = " << m_vcLabel << endl;

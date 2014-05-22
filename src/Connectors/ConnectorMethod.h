@@ -50,7 +50,7 @@ class ConnectorMethod : public MPBaseObject<MPTraits> {
     ConnectorMethod(string _lpLabel = "", string _nfLabel = "");
     ConnectorMethod(MPProblemType* _problem, XMLNodeReader& _node);
 
-    virtual void PrintOptions(ostream& _os) const;
+    virtual void Print(ostream& _os) const;
 
     ////////////////////////////////////////////////////////////////////////////
     // Connection Methods
@@ -182,7 +182,7 @@ ConnectorMethod<MPTraits>::ConnectorMethod(MPProblemType* _problem, XMLNodeReade
 
 template<class MPTraits>
 void
-ConnectorMethod<MPTraits>::PrintOptions(ostream& _os) const {
+ConnectorMethod<MPTraits>::Print(ostream& _os) const {
   _os << "Name: " << this->GetNameAndLabel() << endl;
   _os << "\tnfLabel: " << m_nfLabel << endl;
   _os << "\tlpLabel: " << m_lpLabel << endl;

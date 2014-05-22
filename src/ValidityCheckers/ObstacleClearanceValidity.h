@@ -14,7 +14,7 @@ class ObstacleClearanceValidity : public ValidityCheckerMethod<MPTraits> {
 
     virtual ~ObstacleClearanceValidity() { }
 
-    virtual void PrintOptions(ostream& _os) const;
+    virtual void Print(ostream& _os) const;
 
     virtual bool IsValidImpl(CfgType& _cfg, CDInfo& _cdInfo, const string& _callName);
 
@@ -38,11 +38,11 @@ ObstacleClearanceValidity<MPTraits>::ObstacleClearanceValidity(typename MPTraits
 
 template<class MPTraits>
 void
-ObstacleClearanceValidity<MPTraits>::PrintOptions(ostream& _os) const {
-  ValidityCheckerMethod<MPTraits>::PrintOptions(_os);
+ObstacleClearanceValidity<MPTraits>::Print(ostream& _os) const {
+  ValidityCheckerMethod<MPTraits>::Print(_os);
   _os << "\tRequired Clearance::" << m_obstClearance << endl;
   _os << "\tClearanceUtil::" << endl;
-  m_clearanceUtility.PrintOptions(_os);
+  m_clearanceUtility.Print(_os);
 }
 
 template<class MPTraits>

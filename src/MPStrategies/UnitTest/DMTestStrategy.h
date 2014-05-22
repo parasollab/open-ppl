@@ -13,7 +13,7 @@ class DMTestStrategy : public MPStrategyMethod<MPTraits> {
     virtual ~DMTestStrategy();
 
     virtual void ParseXML(XMLNodeReader& _node);
-    virtual void PrintOptions(ostream& _out) const;
+    virtual void Print(ostream& _out) const;
 
     virtual void Initialize(){}
     virtual void Run();
@@ -59,7 +59,7 @@ ParseXML(XMLNodeReader& _node)
 
 template <class MPTraits>
 void
-DMTestStrategy<MPTraits>::PrintOptions(ostream& _out) const {
+DMTestStrategy<MPTraits>::Print(ostream& _out) const {
   _out << "DMTestStrategy ::  m_inputRoadmapFilename = \"" << m_inputRoadmapFilename
     << "\"\tm_dmMethod = " << m_dmMethod
     << "\tm_numToVerify = " << m_numToVerify << endl;
@@ -76,7 +76,7 @@ void
 DMTestStrategy<MPTraits>::
 Run()
 {
-  PrintOptions(cout);
+  Print(cout);
 
   if(m_inputRoadmapFilename == "") {
     m_rdmp = this->GetMPProblem()->GetRoadmap();
@@ -90,7 +90,7 @@ Run()
   stats->StartClock("Distance Metric");
 
   typename MPTraits::MPProblemType::DistanceMetricPointer dm = this->GetMPProblem()->GetDistanceMetric(m_dmMethod);
-  dm->PrintOptions(cout);
+  dm->Print(cout);
   cout << endl;
 
   size_t numVerified = 0;

@@ -13,7 +13,7 @@ class ConditionalEvaluator : public MapEvaluatorMethod<MPTraits> {
     ConditionalEvaluator(typename MPTraits::MPProblemType* _problem, XMLNodeReader& _node);
     virtual ~ConditionalEvaluator() {}
 
-    virtual void PrintOptions(ostream& _os) const;
+    virtual void Print(ostream& _os) const;
 
     virtual bool operator()();
 
@@ -56,8 +56,8 @@ ConditionalEvaluator<MPTraits>::ConditionalEvaluator(typename MPTraits::MPProble
 
 template<class MPTraits>
 void
-ConditionalEvaluator<MPTraits>::PrintOptions(ostream& _os) const {
-  MapEvaluatorMethod<MPTraits>::PrintOptions(_os);
+ConditionalEvaluator<MPTraits>::Print(ostream& _os) const {
+  MapEvaluatorMethod<MPTraits>::Print(_os);
   _os << "\tmetric method: " << m_metric << endl;
   _os << "\tvalue: " << m_value << endl;
   _os << "\toperator: ";

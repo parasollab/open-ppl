@@ -76,7 +76,7 @@ ParseXML(XMLNodeReader& in_Node)
 
 
 void
-HybridPRM::PrintOptions(ostream& out_os) const {
+HybridPRM::Print(ostream& out_os) const {
   using boost::lambda::_1;
 
   out_os << "HybridPRM::\n";
@@ -97,7 +97,7 @@ HybridPRM::PrintOptions(ostream& out_os) const {
 }
 
 void HybridPRM::Initialize(){
-   PrintOptions(cout);
+   Print(cout);
 
    //set up base_filename for output filese
   stringstream ssRandomSeed;

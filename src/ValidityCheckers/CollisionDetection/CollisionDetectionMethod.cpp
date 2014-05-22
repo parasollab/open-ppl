@@ -12,7 +12,7 @@ CollisionDetectionMethod::operator==(const CollisionDetectionMethod& _cd) const 
 }
 
 void
-CollisionDetectionMethod::PrintOptions(ostream& _os) const {
+CollisionDetectionMethod::Print(ostream& _os) const {
   _os << "\t" << m_name << " " << endl;
 }
 

@@ -24,7 +24,7 @@ class CollisionDetectionMethod {
 
     virtual bool operator==(const CollisionDetectionMethod& _cd) const;
 
-    virtual void PrintOptions(ostream& _os) const;
+    virtual void Print(ostream& _os) const;
 
     /**
      * Check if robot in given cfg is complete inside or outside obstacle.

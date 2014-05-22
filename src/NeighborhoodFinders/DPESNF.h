@@ -127,7 +127,7 @@ public:
   static const std::string GetClassName() {
     return "DPESNF";
   }
-  virtual void PrintOptions(std::ostream& out_os) const {
+  virtual void Print(std::ostream& out_os) const {
     out_os << this->GetClassName() << ":: m = " << m_m << "  l = " << m_l << std::endl;
   }
 

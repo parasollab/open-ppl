@@ -16,7 +16,7 @@ class DistanceMetricMethod  : public MPBaseObject<MPTraits> {
     DistanceMetricMethod(MPProblemType* _problem, XMLNodeReader& _node, bool _warn = true);
     virtual ~DistanceMetricMethod();
 
-    virtual void PrintOptions(ostream& _os) const;
+    virtual void Print(ostream& _os) const;
 
     virtual double Distance(const CfgType& _c1, const CfgType& _c2) = 0;
     virtual void ScaleCfg(double _length, CfgType& _c, const CfgType& _o = CfgType());
@@ -41,7 +41,7 @@ DistanceMetricMethod<MPTraits>::~DistanceMetricMethod() {
 
 template<class MPTraits>
 void
-DistanceMetricMethod<MPTraits>::PrintOptions(ostream& _os) const {
+DistanceMetricMethod<MPTraits>::Print(ostream& _os) const {
   _os << this->GetNameAndLabel() << endl;
 }
 

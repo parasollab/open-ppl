@@ -61,8 +61,8 @@ class SurfaceSampler : public SamplerMethod<MPTraits> {
 
     void ParseXML(XMLNodeReader& _node) {}
 
-    virtual void PrintOptions(ostream& _out) const {
-      SamplerMethod<MPTraits>::PrintOptions(_out);
+    virtual void Print(ostream& _out) const {
+      SamplerMethod<MPTraits>::Print(_out);
       _out << "\tm_vcLabel = " << m_vcLabel
 	<< "\tm_maxAttempts = " << m_maxAttempts
 	<< "\tm_closeDist = " << m_closeDist << endl;

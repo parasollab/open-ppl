@@ -31,8 +31,8 @@ class UniformRandomSampler : public SamplerMethod<MPTraits> {
       m_vcLabel = _node.stringXMLParameter("vcLabel", true, "", "Validity Test Method");
     }
 
-    virtual void PrintOptions(ostream& _out) const {
-      SamplerMethod<MPTraits>::PrintOptions(_out);
+    virtual void Print(ostream& _out) const {
+      SamplerMethod<MPTraits>::Print(_out);
       _out << "\tvcLabel = " << m_vcLabel << endl;
     }
 

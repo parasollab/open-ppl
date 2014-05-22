@@ -15,7 +15,7 @@ class ReachableDistance : public DistanceMetricMethod<MPTraits> {
     ReachableDistance(MPProblemType* _problem, XMLNodeReader& _node, bool _warn = true);
     virtual ~ReachableDistance();
 
-    virtual void PrintOptions(ostream& _os) const;
+    virtual void Print(ostream& _os) const;
 
     virtual double Distance(const CfgType& _c1, const CfgType& _c2);
 
@@ -52,8 +52,8 @@ ReachableDistance<MPTraits>::~ReachableDistance() {
 
 template<class MPTraits>
 void
-ReachableDistance<MPTraits>::PrintOptions(ostream& _os) const {
-  DistanceMetricMethod<MPTraits>::PrintOptions(_os);
+ReachableDistance<MPTraits>::Print(ostream& _os) const {
+  DistanceMetricMethod<MPTraits>::Print(_os);
   _os << "\ts1 = " << m_scale1 << endl;
   _os << "\ts2 = " << m_scale2 << endl;
 }

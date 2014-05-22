@@ -10,7 +10,7 @@ class MetricMethod : public MPBaseObject<MPTraits> {
     MetricMethod(typename MPTraits::MPProblemType* _problem, XMLNodeReader& _node) : MPBaseObject<MPTraits>(_problem, _node) {}
     virtual ~MetricMethod(){}
 
-    virtual void PrintOptions(ostream& _os) const {
+    virtual void Print(ostream& _os) const {
       _os << this->GetNameAndLabel() << endl;
     }
 

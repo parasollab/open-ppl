@@ -28,7 +28,7 @@ class AdaptiveSubdivisionMethod : public MPStrategyMethod {
     virtual void Initialize(int _regionID);
     virtual void Run(int _regionID);
     virtual void Finalize(int _regionID);
-    virtual void PrintOptions(ostream& _os) const;
+    virtual void Print(ostream& _os) const;
 
   private:
     vector<string> m_regionConnectionLabels;

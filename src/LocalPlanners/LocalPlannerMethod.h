@@ -29,7 +29,7 @@ class LocalPlannerMethod : public MPBaseObject<MPTraits> {
 
     virtual ~LocalPlannerMethod() {}
 
-    virtual void PrintOptions(ostream& _os) const;
+    virtual void Print(ostream& _os) const;
 
     virtual bool IsConnected(
         const CfgType& _c1, const CfgType& _c2, CfgType& _col,
@@ -77,7 +77,7 @@ LocalPlannerMethod<MPTraits>::ReconstructPath(
 
 template<class MPTraits>
 void
-LocalPlannerMethod<MPTraits>::PrintOptions(ostream& _os) const {
+LocalPlannerMethod<MPTraits>::Print(ostream& _os) const {
   _os << this->GetNameAndLabel()
       << "\n\tsave intermediates : " << m_saveIntermediates
       << endl;

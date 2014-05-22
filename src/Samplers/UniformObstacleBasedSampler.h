@@ -37,8 +37,8 @@ class UniformObstacleBasedSampler : public SamplerMethod<MPTraits> {
       _node.warnUnrequestedAttributes();
     }
 
-    virtual void PrintOptions(ostream& _os) const {
-      SamplerMethod<MPTraits>::PrintOptions(_os);
+    virtual void Print(ostream& _os) const {
+      SamplerMethod<MPTraits>::Print(_os);
       _os << "\tmargin = " << m_margin << endl;
       _os << "\tuseBoundary = " << m_useBoundary << endl;
       _os << "\tvcLabel = " << m_vcLabel << endl;

@@ -15,7 +15,7 @@ class NegateEvaluator : public MapEvaluatorMethod<MPTraits> {
     NegateEvaluator(MPProblemType* _problem, XMLNodeReader& _node);
     ~NegateEvaluator(){}
 
-    virtual void PrintOptions(ostream& _os) const;
+    virtual void Print(ostream& _os) const;
 
     virtual bool operator()();
 
@@ -37,7 +37,7 @@ NegateEvaluator<MPTraits>::NegateEvaluator(MPProblemType* _problem, XMLNodeReade
 
 template<class MPTraits>
 void
-NegateEvaluator<MPTraits>::PrintOptions(ostream& _os) const {
+NegateEvaluator<MPTraits>::Print(ostream& _os) const {
   _os << this->GetNameAndLabel() << endl << "evaluation method = " << m_evalLabel << endl;
 }
 

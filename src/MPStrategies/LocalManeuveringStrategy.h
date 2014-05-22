@@ -38,7 +38,7 @@ class LocalManeuveringStrategy : public MPStrategyMethod<MPTraits> {
     virtual void Initialize();
     virtual void Run();
     virtual void Finalize();
-    virtual void PrintOptions(ostream& _os) const;
+    virtual void Print(ostream& _os) const;
 
     struct CompareStartTimes {
       bool operator() (const pair<int,int>& _lhs, const pair<int,int>& _rhs) const{
@@ -354,7 +354,7 @@ LocalManeuveringStrategy<MPTraits>::LocalManeuveringStrategy(MPProblemPtr _probl
   MPStrategyMethod<MPTraits>(_problem, _node), m_currentIteration(0){
     ParseXML(_node);
     if (_warnXML) _node.warnUnrequestedAttributes();
-    if(this->m_debug && _warnXML) PrintOptions(cout);
+    if(this->m_debug && _warnXML) Print(cout);
     m_goal = -1;
     this->SetName("LocalManeuveringStrategy");
   }
@@ -452,8 +452,8 @@ LocalManeuveringStrategy<MPTraits>::ParseXML(XMLNodeReader& _node) {
 
 template<class MPTraits>
 void
-LocalManeuveringStrategy<MPTraits>::PrintOptions(ostream& _os) const {
-  _os << "LocalManeuveringStrategy::PrintOptions" << endl;
+LocalManeuveringStrategy<MPTraits>::Print(ostream& _os) const {
+  _os << "LocalManeuveringStrategy::Print" << endl;
   _os << "\tValidity Checker:: " << m_vc << endl;
   _os << "\tdelta:: " << m_delta << endl;
   _os << "\tnumber of roots:: " << m_numRoots << endl;
@@ -561,7 +561,7 @@ LocalManeuveringStrategy<MPTraits>::Initialize(){
 
   // Setup RRT Variables
   CfgType tmp, tmp2;
-  PrintOptions(cout);
+  Print(cout);
   if (this->m_debug)
     cout << "num robots: " << env->GetActiveBodyCount() << endl;
   cout << " validity checker name: " << vc->GetName() << endl;

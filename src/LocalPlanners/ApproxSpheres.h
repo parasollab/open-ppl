@@ -16,7 +16,7 @@ class ApproxSpheres: public LocalPlannerMethod<MPTraits> {
     ApproxSpheres(MPProblemType* _problem, XMLNodeReader& _node);
     virtual ~ApproxSpheres();
 
-    virtual void PrintOptions(ostream& _os) const;
+    virtual void Print(ostream& _os) const;
 
     virtual bool IsConnected(
         const CfgType& _c1, const CfgType& _c2, CfgType& col,
@@ -50,9 +50,9 @@ ApproxSpheres<MPTraits>::~ApproxSpheres() {}
 
 template<class MPTraits>
 void
-ApproxSpheres<MPTraits>::PrintOptions(ostream& _os) const {
-  LocalPlannerMethod<MPTraits>::PrintOptions(_os);
-  m_clearUtil.PrintOptions(_os);
+ApproxSpheres<MPTraits>::Print(ostream& _os) const {
+  LocalPlannerMethod<MPTraits>::Print(_os);
+  m_clearUtil.Print(_os);
   _os << "\n\tDistance Metric Label: " << m_clearUtil.GetDistanceMetricLabel()
       << " " << endl;
 }

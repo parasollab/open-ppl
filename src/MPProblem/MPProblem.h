@@ -115,7 +115,7 @@ class MPProblem
     MPStrategyPointer GetMPStrategy(const string& _l){return m_mpStrategies->GetMethod(_l);}
     void AddMPStrategy(MPStrategyPointer _mps, const string& _l){m_mpStrategies->AddMethod(_mps, _l);}
 
-    virtual void PrintOptions(ostream& _os) const;
+    virtual void Print(ostream& _os) const;
 
     void SetMPProblem();
 
@@ -386,20 +386,20 @@ MPProblem<MPTraits>::ToggleValidity(){
 
 template<class MPTraits>
 void
-MPProblem<MPTraits>::PrintOptions(ostream& _os) const {
+MPProblem<MPTraits>::Print(ostream& _os) const {
   _os << "MPProblem" << endl;
-  m_environment->PrintOptions(_os);
-  m_distanceMetrics->PrintOptions(_os);
-  m_validityCheckers->PrintOptions(_os);
-  m_neighborhoodFinders->PrintOptions(_os);
-  m_samplers->PrintOptions(_os);
-  m_localPlanners->PrintOptions(_os);
-  m_extenders->PrintOptions(_os);
-  m_pathModifiers->PrintOptions(_os);
-  m_connectors->PrintOptions(_os);
-  m_metrics->PrintOptions(_os);
-  m_mapEvaluators->PrintOptions(_os);
-  m_mpStrategies->PrintOptions(_os);
+  m_environment->Print(_os);
+  m_distanceMetrics->Print(_os);
+  m_validityCheckers->Print(_os);
+  m_neighborhoodFinders->Print(_os);
+  m_samplers->Print(_os);
+  m_localPlanners->Print(_os);
+  m_extenders->Print(_os);
+  m_pathModifiers->Print(_os);
+  m_connectors->Print(_os);
+  m_metrics->Print(_os);
+  m_mapEvaluators->Print(_os);
+  m_mpStrategies->Print(_os);
 }
 
 template<class MPTraits>

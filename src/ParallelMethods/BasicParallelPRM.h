@@ -119,7 +119,7 @@ class BasicParallelPRM : public MPStrategyMethod<MPTraits> {
 
     virtual ~BasicParallelPRM() {};
 
-    virtual void PrintOptions(ostream& _os) const;
+    virtual void Print(ostream& _os) const;
     virtual void ParseXML(XMLNodeReader& _inPNode);
 
     virtual void Initialize() {};
@@ -182,8 +182,8 @@ BasicParallelPRM<MPTraits>::ParseXML(XMLNodeReader& _node) {
 
 template<class MPTraits>
 void
-BasicParallelPRM<MPTraits>::PrintOptions(ostream& _os) const {
-  MPStrategyMethod<MPTraits>::PrintOptions(_os);
+BasicParallelPRM<MPTraits>::Print(ostream& _os) const {
+  MPStrategyMethod<MPTraits>::Print(_os);
   typedef vector<pair<string, int> >::iterator VIter;
   typedef vector<string>::iterator StringIter;
   _os<<"\nSamplers\n";

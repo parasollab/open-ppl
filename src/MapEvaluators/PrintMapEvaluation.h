@@ -12,7 +12,7 @@ class PrintMapEvaluation : public MapEvaluatorMethod<MPTraits> {
     PrintMapEvaluation(typename MPTraits::MPProblemType* _problem, XMLNodeReader& _node);
     virtual ~PrintMapEvaluation();
 
-    virtual void PrintOptions(ostream& _os) const;
+    virtual void Print(ostream& _os) const;
 
     virtual bool operator()();
 
@@ -44,7 +44,7 @@ PrintMapEvaluation<MPTraits>::~PrintMapEvaluation() {
 
 template<class MPTraits>
 void
-PrintMapEvaluation<MPTraits>::PrintOptions(ostream& _os) const {
+PrintMapEvaluation<MPTraits>::Print(ostream& _os) const {
   _os << this->GetNameAndLabel() << endl;
   _os << "\tbase filename = " << m_baseName << endl;
 }

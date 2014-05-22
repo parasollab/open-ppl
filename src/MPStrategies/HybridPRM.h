@@ -89,7 +89,7 @@ class HybridPRM : public MPStrategyMethod
   HybridPRM(XMLNodeReader& in_Node, MPProblem* in_pProblem);
   virtual ~HybridPRM();
 
-  virtual void PrintOptions(ostream& out_os) const;
+  virtual void Print(ostream& out_os) const;
   virtual void ParseXML(XMLNodeReader& in_Node);
 
    virtual void Initialize();

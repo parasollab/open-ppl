@@ -26,7 +26,7 @@ class SamplerMethod : public MPBaseObject<MPTraits> {
     SamplerMethod(typename MPTraits::MPProblemType* _problem, XMLNodeReader& _node) : MPBaseObject<MPTraits>(_problem, _node) {}
     virtual ~SamplerMethod() { };
 
-    virtual void PrintOptions(ostream& _os) const {
+    virtual void Print(ostream& _os) const {
       _os << this->GetNameAndLabel() << endl;
     }
 

@@ -41,7 +41,7 @@ class PreferentialAttachment: public ConnectionMethod<CFG,WEIGHT> {
     virtual ~PreferentialAttachment();
 
     ///Used in new MPProblem framework.
-    virtual void PrintOptions(ostream& _os) const;
+    virtual void Print(ostream& _os) const;
     virtual void ParseXML(XMLNodeReader& _node);
 
     //////////////////////
@@ -155,8 +155,8 @@ void PreferentialAttachment<CFG,WEIGHT>::ParseXML(XMLNodeReader& _node) {
 
 template <class CFG, class WEIGHT>
 void
-PreferentialAttachment<CFG, WEIGHT>::PrintOptions(ostream& _os) const {
-  ConnectionMethod<CFG,WEIGHT>::PrintOptions(_os);
+PreferentialAttachment<CFG, WEIGHT>::Print(ostream& _os) const {
+  ConnectionMethod<CFG,WEIGHT>::Print(_os);
   _os << "    " << this->GetName() << "::  k = ";
   _os << m_k << "  fail = " << m_fail ;
   _os << endl;

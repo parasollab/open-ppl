@@ -29,8 +29,8 @@ class HopLimitNF : public NeighborhoodFinderMethod<MPTraits> {
         _node.warnUnrequestedAttributes();
       }
 
-    virtual void PrintOptions(ostream& _os) const {
-      NeighborhoodFinderMethod<MPTraits>::PrintOptions(_os);
+    virtual void Print(ostream& _os) const {
+      NeighborhoodFinderMethod<MPTraits>::Print(_os);
       _os << "\th: " << m_h << endl
         << "\tnfLabel: " << m_nfLabel << endl;
     }
