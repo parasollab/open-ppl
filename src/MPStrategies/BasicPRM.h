@@ -5,54 +5,54 @@
 
 template<class MPTraits>
 class BasicPRM : public MPStrategyMethod<MPTraits> {
- public:
-   enum Start {NODE_GENERATION, NODE_CONNECTION, COMPONENT_CONNECTION, MAP_EVALUATION};
+  public:
+    enum Start {NODE_GENERATION, NODE_CONNECTION, COMPONENT_CONNECTION, MAP_EVALUATION};
 
-   typedef typename MPTraits::CfgType CfgType;
-   typedef typename MPTraits::MPProblemType MPProblemType;
-   typedef typename MPProblemType::RoadmapType RoadmapType;
-   typedef typename MPProblemType::GraphType GraphType;
-   typedef typename MPProblemType::VID VID;
-   typedef typename MPProblemType::SamplerPointer SamplerPointer;
-   typedef typename MPProblemType::ConnectorPointer ConnectorPointer;
-   typedef typename MPProblemType::MapEvaluatorPointer MapEvaluatorPointer;
+    typedef typename MPTraits::CfgType CfgType;
+    typedef typename MPTraits::MPProblemType MPProblemType;
+    typedef typename MPProblemType::RoadmapType RoadmapType;
+    typedef typename MPProblemType::GraphType GraphType;
+    typedef typename MPProblemType::VID VID;
+    typedef typename MPProblemType::SamplerPointer SamplerPointer;
+    typedef typename MPProblemType::ConnectorPointer ConnectorPointer;
+    typedef typename MPProblemType::MapEvaluatorPointer MapEvaluatorPointer;
 
-   BasicPRM(const map<string, pair<int, int> >& _samplerLabels = (map<string, pair<int, int> >()),
-       const vector<string>& _connectorLabels = vector<string>(),
-       const vector<string>& _componentConnectorLabels = vector<string>(),
-       const vector<string>& _evaluatorLabels = vector<string>(),
-       string _vcLabel = "",
-       string _inputMapFilename = "",
-       Start _startAt = NODE_GENERATION);
-   BasicPRM(typename MPTraits::MPProblemType* _problem, XMLNodeReader& _node);
-   virtual ~BasicPRM();
+    BasicPRM(const map<string, pair<int, int> >& _samplerLabels = map<string, pair<int, int> >(),
+        const vector<string>& _connectorLabels = vector<string>(),
+        const vector<string>& _componentConnectorLabels = vector<string>(),
+        const vector<string>& _evaluatorLabels = vector<string>(),
+        string _vcLabel = "",
+        string _inputMapFilename = "",
+        Start _startAt = NODE_GENERATION);
+    BasicPRM(typename MPTraits::MPProblemType* _problem, XMLNodeReader& _node);
+    virtual ~BasicPRM();
 
-   virtual void ParseXML(XMLNodeReader& _node);
-   virtual void PrintOptions(ostream& _os) const;
+    virtual void ParseXML(XMLNodeReader& _node);
+    virtual void PrintOptions(ostream& _os) const;
 
-   virtual void Initialize();
-   virtual void Run();
-   virtual void Finalize();
+    virtual void Initialize();
+    virtual void Run();
+    virtual void Finalize();
 
- protected:
-   //helper functions for operator()
-   template<class InputIterator>
-     void ConnectNodes(InputIterator _first, InputIterator _last);
-   void ConnectComponents();
+  protected:
+    //helper functions for operator()
+    template<class InputIterator>
+      void ConnectNodes(InputIterator _first, InputIterator _last);
+    void ConnectComponents();
 
-   //data
-   map<string, pair<int, int> > m_samplerLabels;
-   vector<string> m_connectorLabels;
-   vector<string> m_componentConnectorLabels;
-   vector<string> m_evaluatorLabels;
-   int m_currentIteration;
-   string m_vcLabel;
-   string m_inputMapFilename;
-   Start m_startAt;
+    //data
+    map<string, pair<int, int> > m_samplerLabels;
+    vector<string> m_connectorLabels;
+    vector<string> m_componentConnectorLabels;
+    vector<string> m_evaluatorLabels;
+    int m_currentIteration;
+    string m_vcLabel;
+    string m_inputMapFilename;
+    Start m_startAt;
 
- private:
-   template <typename OutputIterator>
-     void GenerateNodes(OutputIterator _thisIterationOut);
+  private:
+    template <typename OutputIterator>
+      void GenerateNodes(OutputIterator _thisIterationOut);
 };
 
 template<class MPTraits>
@@ -86,11 +86,11 @@ template<class MPTraits>
 void
 BasicPRM<MPTraits>::ParseXML(XMLNodeReader& _node) {
   m_inputMapFilename = _node.stringXMLParameter("inputMap", false, "",
-    "filename of roadmap to start from");
+      "filename of roadmap to start from");
   m_vcLabel = _node.stringXMLParameter("vcLabel", false, "", "Validity Checker in case Sampler does not verify validity of nodes.");
 
   string startAt = _node.stringXMLParameter("startAt", false, "node generation",
-"point of algorithm where to begin at: \"node generation\" (default), \"node connection\", \"component connection\", \"map evaluation\"");
+      "point of algorithm where to begin at: \"node generation\" (default), \"node connection\", \"component connection\", \"map evaluation\"");
   if(startAt == "node generation")
     m_startAt = NODE_GENERATION;
   else if(startAt == "node connection")
@@ -101,7 +101,7 @@ BasicPRM<MPTraits>::ParseXML(XMLNodeReader& _node) {
     m_startAt = MAP_EVALUATION;
   else  {
     cerr << "\n\ndo not understand m_startAt = \"" << startAt
-         << "\", choices are: 'node generation', 'node connection', 'component connection', and 'map evaluation', exiting.\n";
+      << "\", choices are: 'node generation', 'node connection', 'component connection', and 'map evaluation', exiting.\n";
     exit(-1);
   }
 
@@ -109,30 +109,30 @@ BasicPRM<MPTraits>::ParseXML(XMLNodeReader& _node) {
       cIter != _node.children_end(); ++cIter){
     if(cIter->getName() == "node_generation_method") {
       string generationMethod = cIter->stringXMLParameter("Method", true, "",
-        "Node Generation Method");
+          "Node Generation Method");
       int numPerIteration = cIter->numberXMLParameter("Number", true, 1, 0,
-        MAX_INT, "Number of samples");
+          MAX_INT, "Number of samples");
       int attemptsPerIteration = cIter->numberXMLParameter("Attempts", false,
-        1, 0, MAX_INT, "Number of attempts per sample");
+          1, 0, MAX_INT, "Number of attempts per sample");
       m_samplerLabels[generationMethod] = make_pair(numPerIteration,
-        attemptsPerIteration);
+          attemptsPerIteration);
       cIter->warnUnrequestedAttributes();
     }
     else if(cIter->getName() == "node_connection_method"){
       string connectMethod = cIter->stringXMLParameter("Method", true, "",
-        "Node Connection Method");
+          "Node Connection Method");
       m_connectorLabels.push_back(connectMethod);
       cIter->warnUnrequestedAttributes();
     }
     else if(cIter->getName() == "component_connection_method"){
       string connectMethod = cIter->stringXMLParameter("Method", true, "",
-        "Component Connection Method");
+          "Component Connection Method");
       m_componentConnectorLabels.push_back(connectMethod);
       cIter->warnUnrequestedAttributes();
     }
     else if(cIter->getName() == "evaluation_method"){
       string evalMethod = cIter->stringXMLParameter("Method", true, "",
-        "Evaluation Method");
+          "Evaluation Method");
       m_evaluatorLabels.push_back(evalMethod);
       cIter->warnUnrequestedAttributes();
     }
@@ -218,7 +218,7 @@ BasicPRM<MPTraits>::Run(){
 
   if(this->m_recordKeep) stats->StartClock("Map Generation");
 
-  bool mapPassedEvaluation = false;
+  bool mapPassedEvaluation = this->EvaluateMap(m_evaluatorLabels);
   while(!mapPassedEvaluation){
     m_currentIteration++;
     vector<VID> vids;
@@ -314,6 +314,13 @@ BasicPRM<MPTraits>::ConnectNodes(InputIterator _first, InputIterator _last) {
       if(this->m_debug) stats->PrintClock(connectorSubClockName, cout);
     }
   }
+
+  for(; _first != _last; _first++) {
+    VID vid = this->GetMPProblem()->GetRoadmap()->GetGraph()->GetVID(_first);
+    if(this->CheckNarrowPassageSample(vid))
+      break;
+  }
+
   if(this->m_recordKeep) {
     stats->StopClock(connectorClockName);
     if(this->m_debug) stats->PrintClock(connectorClockName, cout);
@@ -341,7 +348,7 @@ BasicPRM<MPTraits>::ConnectComponents() {
     if(this->m_debug){
       cmap.reset();
       cout << this->GetMPProblem()->GetRoadmap()->GetGraph()->get_num_edges() << " edges, "
-      << get_cc_count(*(this->GetMPProblem()->GetRoadmap()->GetGraph()), cmap) << " connected components"<< endl;
+        << get_cc_count(*(this->GetMPProblem()->GetRoadmap()->GetGraph()), cmap) << " connected components"<< endl;
       cout << "\t";
     }
     if(this->m_recordKeep) {

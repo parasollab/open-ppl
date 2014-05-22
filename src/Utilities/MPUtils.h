@@ -12,6 +12,7 @@
 #include "boost/mpl/begin.hpp"
 #include "boost/mpl/end.hpp"
 #include "boost/mpl/next_prior.hpp"
+#include "GraphAlgo.h"
 
 using boost::shared_ptr;
 
@@ -479,7 +480,7 @@ ClosestPtOnLineSegment(const CfgType& _current, const CfgType& _p1, const CfgTyp
 ///////////////////////////////////////////////////////////////////////////////
 //
 //
-// GetCentroid
+// Centroid Utils
 //
 //
 ///////////////////////////////////////////////////////////////////////////////
@@ -496,6 +497,24 @@ GetCentroid(RDMP<CFG, WEIGHT>* _graph, vector<typename RDMP<CFG, WEIGHT>::VID>& 
   }
   center /= _cc.size();
   return center;
+};
+
+template<template<class CFG, class WEIGHT> class RDMP, class CFG, class WEIGHT>
+void
+ComputeCCCentroidGraph(RDMP<CFG, WEIGHT>* _graph, RDMP<CFG, WEIGHT>* _centroidGraph) {
+  typedef typename RDMP<CFG, WEIGHT>::VID VID;
+  stapl::sequential::vector_property_map<RDMP<CFG, WEIGHT>, size_t> cmap;
+  vector<pair<size_t, VID> > allCCs;
+  vector<VID> cc;
+  RDMP<CFG, WEIGHT> centroids;
+  get_cc_stats(*_graph, cmap, allCCs);
+
+  for(size_t i = 0; i < allCCs.size(); i++) {
+    get_cc(*_graph, cmap, allCCs[i].second, cc);
+    CFG centroid = GetCentroid(_graph, cc);
+    centroid.SetStat("ccVID", allCCs[i].second);
+    _centroidGraph->AddVertex(centroid);
+  }
 };
 
 ///////////////////////////////////////////////////////////////////////////////

@@ -119,6 +119,8 @@
 #include "MPStrategies/LocalManeuveringStrategy.h"
 #include "MPStrategies/MedialAxisRRT.h"
 #include "MPStrategies/MultiStrategy.h"
+#include "MPStrategies/SparkPRM.h"
+#include "MPStrategies/SRTStrategy.h"
 #include "MPStrategies/TogglePRMStrategy.h"
 #include "MPStrategies/UnitTest/DMTestStrategy.h"
 #include "MPStrategies/UtilityGuidedGenerator.h"
@@ -289,6 +291,9 @@ struct MPTraits{
     EvaluateMapStrategy<MPTraits>,
     MedialAxisRRT<MPTraits>,
     MultiStrategy<MPTraits>,
+    SparkPRM<MPTraits, BasicPRM>,
+    SparkPRM<MPTraits, TogglePRMStrategy>,
+    SRTStrategy<MPTraits>,
     TogglePRMStrategy<MPTraits>,
     UtilityGuidedGenerator<MPTraits>,
     VisibilityBasedPRM<MPTraits>
