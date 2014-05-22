@@ -78,8 +78,7 @@ ShortcuttingPathModifier<MPTraits>::ModifyImpl(vector<CfgType>& _originalPath, v
     double posRes = env->GetPositionRes();
     double oriRes = env->GetOrientationRes();
 
-    if(this->m_recordKeep)
-      stats->StartClock("Path Modifier");
+    stats->StartClock("Path Modifier");
     //This variable will store how many nodes were skipped
     size_t skips = 0;
 
@@ -148,8 +147,7 @@ ShortcuttingPathModifier<MPTraits>::ModifyImpl(vector<CfgType>& _originalPath, v
       }
     }
 
-    if(this->m_recordKeep)
-      stats->StopClock("Path Modifier");
+    stats->StopClock("Path Modifier");
   }
   else{
     cerr << "*S* Error. originalPathVIDs in " << this->GetNameAndLabel()

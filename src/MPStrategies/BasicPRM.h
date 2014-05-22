@@ -216,7 +216,7 @@ BasicPRM<MPTraits>::Run(){
   //setup variables
   StatClass* stats = this->GetMPProblem()->GetStatClass();
 
-  if(this->m_recordKeep) stats->StartClock("Map Generation");
+  stats->StartClock("Map Generation");
 
   bool mapPassedEvaluation = this->EvaluateMap(m_evaluatorLabels);
   while(!mapPassedEvaluation){
@@ -246,12 +246,11 @@ BasicPRM<MPTraits>::Run(){
     m_startAt = NODE_GENERATION;
   }
 
-  if(this->m_recordKeep) {
-    stats->StopClock("Map Generation");
-    if(this->m_debug) stats->PrintClock("Map Generation", cout);
+  stats->StopClock("Map Generation");
+  if(this->m_debug) {
+    stats->PrintClock("Map Generation", cout);
+    cout<<"\nEnd Running BasicPRM::"<<endl;
   }
-
-  if(this->m_debug) cout<<"\nEnd Running BasicPRM::"<<endl;
 }
 
 template<class MPTraits>
@@ -288,7 +287,7 @@ void
 BasicPRM<MPTraits>::ConnectNodes(InputIterator _first, InputIterator _last) {
   StatClass* stats = this->GetMPProblem()->GetStatClass();
   string connectorClockName = "Total Node Connection";
-  if(this->m_recordKeep) stats->StartClock(connectorClockName);
+  stats->StartClock(connectorClockName);
   stapl::sequential::vector_property_map<typename GraphType::GRAPH,size_t > cmap;
 
   for(vector<string>::iterator nodeLabelIter = m_connectorLabels.begin();
@@ -297,7 +296,7 @@ BasicPRM<MPTraits>::ConnectNodes(InputIterator _first, InputIterator _last) {
     ConnectorPointer pConnection = this->GetMPProblem()->GetConnector(*nodeLabelIter);
 
     string connectorSubClockName = "Node Connection::" + pConnection->GetNameAndLabel();
-    if(this->m_recordKeep) stats->StartClock(connectorSubClockName);
+    stats->StartClock(connectorSubClockName);
 
     if(this->m_debug) cout << "\n\t";
     pConnection->Connect(this->GetMPProblem()->GetRoadmap(), *(this->GetMPProblem()->GetStatClass()), cmap, _first, _last);
@@ -309,10 +308,8 @@ BasicPRM<MPTraits>::ConnectNodes(InputIterator _first, InputIterator _last) {
       cout << "\t";
     }
 
-    if(this->m_recordKeep) {
-      stats->StopClock(connectorSubClockName);
-      if(this->m_debug) stats->PrintClock(connectorSubClockName, cout);
-    }
+    stats->StopClock(connectorSubClockName);
+    if(this->m_debug) stats->PrintClock(connectorSubClockName, cout);
   }
 
   for(; _first != _last; _first++) {
@@ -321,10 +318,8 @@ BasicPRM<MPTraits>::ConnectNodes(InputIterator _first, InputIterator _last) {
       break;
   }
 
-  if(this->m_recordKeep) {
-    stats->StopClock(connectorClockName);
-    if(this->m_debug) stats->PrintClock(connectorClockName, cout);
-  }
+  stats->StopClock(connectorClockName);
+  if(this->m_debug) stats->PrintClock(connectorClockName, cout);
 }
 
 template<class MPTraits>
@@ -332,7 +327,7 @@ void
 BasicPRM<MPTraits>::ConnectComponents() {
   StatClass* stats = this->GetMPProblem()->GetStatClass();
   string clockName = "Total Connect Components";
-  if(this->m_recordKeep) stats->StartClock(clockName);
+  stats->StartClock(clockName);
   stapl::sequential::vector_property_map<typename GraphType::GRAPH, size_t> cmap;
 
   for(vector<string>::iterator compConnLabelIter = m_componentConnectorLabels.begin();
@@ -340,7 +335,7 @@ BasicPRM<MPTraits>::ConnectComponents() {
     ConnectorPointer pConnection = this->GetMPProblem()->GetConnector(*compConnLabelIter);
 
     string connectorClockName = "Connect Component::" + pConnection->GetNameAndLabel();
-    if(this->m_recordKeep) stats->StartClock(connectorClockName);
+    stats->StartClock(connectorClockName);
 
     if(this->m_debug) cout << "\n\t";
     pConnection->Connect(this->GetMPProblem()->GetRoadmap(), *(this->GetMPProblem()->GetStatClass()), cmap);
@@ -351,15 +346,11 @@ BasicPRM<MPTraits>::ConnectComponents() {
         << get_cc_count(*(this->GetMPProblem()->GetRoadmap()->GetGraph()), cmap) << " connected components"<< endl;
       cout << "\t";
     }
-    if(this->m_recordKeep) {
-      stats->StopClock(connectorClockName);
-      if(this->m_debug) stats->PrintClock(connectorClockName, cout);
-    }
+    stats->StopClock(connectorClockName);
+    if(this->m_debug) stats->PrintClock(connectorClockName, cout);
   }
-  if(this->m_recordKeep) {
-    stats->StopClock(clockName);
-    if(this->m_debug) stats->PrintClock(clockName, cout);
-  }
+  stats->StopClock(clockName);
+  if(this->m_debug) stats->PrintClock(clockName, cout);
 }
 
 template<class MPTraits>
@@ -368,7 +359,7 @@ void
 BasicPRM<MPTraits>::GenerateNodes(OutputIterator _thisIterationOut){
   StatClass* pStatClass = this->GetMPProblem()->GetStatClass();
   string clockName = "Total Node Generation";
-  if(this->m_recordKeep) pStatClass->StartClock(clockName);
+  pStatClass->StartClock(clockName);
   string callee("BasicPRM::GenerateNodes");
 
   typedef map<string, pair<int, int> >::iterator NodeGenIter;
@@ -380,7 +371,7 @@ BasicPRM<MPTraits>::GenerateNodes(OutputIterator _thisIterationOut){
 
     //generate nodes for this node generator method
     string generatorClockName = "Sampler::" + gIter->first;
-    if(this->m_recordKeep) pStatClass->StartClock(generatorClockName);
+    pStatClass->StartClock(generatorClockName);
 
     if(this->m_debug) cout << "\n\t";
 
@@ -393,10 +384,8 @@ BasicPRM<MPTraits>::GenerateNodes(OutputIterator _thisIterationOut){
       cout << this->GetMPProblem()->GetRoadmap()->GetGraph()->get_num_vertices() << " vertices " << endl;
       cout << "\n\t";
     }
-    if(this->m_recordKeep) {
-      pStatClass->StopClock(generatorClockName);
-      if(this->m_debug) pStatClass->PrintClock(generatorClockName, cout);
-    }
+    pStatClass->StopClock(generatorClockName);
+    if(this->m_debug) pStatClass->PrintClock(generatorClockName, cout);
   }
 
   //add valid nodes to roadmap
@@ -422,9 +411,8 @@ BasicPRM<MPTraits>::GenerateNodes(OutputIterator _thisIterationOut){
       }
     }
   }
-  if(this->m_recordKeep) {
-    pStatClass->StopClock(clockName);
-    if(this->m_debug) pStatClass->PrintClock(clockName, cout);
-  }
+  pStatClass->StopClock(clockName);
+  if(this->m_debug) pStatClass->PrintClock(clockName, cout);
 }
+
 #endif

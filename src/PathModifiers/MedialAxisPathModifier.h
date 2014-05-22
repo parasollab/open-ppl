@@ -89,8 +89,7 @@ MedialAxisPathModifier<MPTraits>::ModifyImpl(vector<CfgType>& _originalPath, vec
       result = true;
       MedialAxisUtility<MPTraits>& mau = malp->GetMedialAxisUtility();
 
-      if(this->m_recordKeep)
-        stats->StartClock("Medial Axis Path Smoother");
+      stats->StartClock("Medial Axis Path Smoother");
       size_t n = pathVIDs.size();
 
       //Copy all the nodes from pathVIDs to avoid modifying them
@@ -208,7 +207,7 @@ MedialAxisPathModifier<MPTraits>::ModifyImpl(vector<CfgType>& _originalPath, vec
         if(this->m_debug)
           cout << "*M* Could not push the configuration in pathVIDs[" << (i-1) << "]" << endl;
       }
-      if(this->m_recordKeep) stats->StopClock("Medial Axis Path Smoother");
+      stats->StopClock("Medial Axis Path Smoother");
     }
     else{
       cerr << "*M* m_malpLabel = \"" << m_malpLabel << "\" in " << this->GetNameAndLabel()

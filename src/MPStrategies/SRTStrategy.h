@@ -175,8 +175,7 @@ Run() {
   // Setup MP Variables
   StatClass* stats = this->GetMPProblem()->GetStatClass();
 
-  if(this->m_recordKeep)
-    stats->StartClock("SRT Generation");
+  stats->StartClock("SRT Generation");
 
   int iteration = 1;
   do {
@@ -193,8 +192,7 @@ Run() {
     ConnectTrees(connectionCandidates);
   } while(!this->EvaluateMap(m_evaluators));
 
-  if(this->m_recordKeep)
-    stats->StopClock("SRT Generation");
+  stats->StopClock("SRT Generation");
   if(this->m_debug) {
     stats->PrintClock("SRT Generation", cout);
     cout<<"\nEnd Running SRTStrategy::" << endl;
@@ -473,7 +471,6 @@ SRTStrategy<MPTraits>::
 ExpandTree(VID _tree, CfgType& _dir) {
 
   // Setup MP Variables
-  Environment* env = this->GetMPProblem()->GetEnvironment();
   DistanceMetricPointer dm = this->GetMPProblem()->GetDistanceMetric(m_dmLabel);
   NeighborhoodFinderPointer nf = this->GetMPProblem()->GetNeighborhoodFinder(m_nfLabel);
   CDInfo cdInfo;
@@ -494,7 +491,7 @@ ExpandTree(VID _tree, CfgType& _dir) {
   CfgType& nearest = g->GetVertex(kClosest[0].first);
 
   CfgType newCfg;
-  int weight;
+  int weight = 0;
 
   typename MPProblemType::ExtenderPointer e = this->GetMPProblem()->GetExtender(m_eLabel);
   vector<CfgType> intermediates;

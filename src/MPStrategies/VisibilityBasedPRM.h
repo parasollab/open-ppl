@@ -117,7 +117,7 @@ VisibilityBasedPRM<MPTraits>::Run() {
   //Book keeping
   if(this->m_debug) cout << "\nRunning VisibilityBasedPRM::\n";
   StatClass* stats = this->GetMPProblem()->GetStatClass();
-  if(this->m_recordKeep) stats->StartClock("Map Generation");
+  stats->StartClock("Map Generation");
 
   int failedIterations = 0; //tracks consecutive failed attempts to create a guard
 
@@ -144,12 +144,11 @@ VisibilityBasedPRM<MPTraits>::Run() {
   }
 
   //Book keeping
-  if(this->m_recordKeep) {
-    stats->StopClock("Map Generation");
-    if(this->m_debug) {cout << endl; stats->PrintClock("Map Generation", cout);}
+  stats->StopClock("Map Generation");
+  if(this->m_debug) {
+    cout << endl; stats->PrintClock("Map Generation", cout);
+    cout << "\nFinished running VisibilityBasedPRM.\n";
   }
-
-  if(this->m_debug) cout << "\nFinished running VisibilityBasedPRM.\n";
 }
 
 

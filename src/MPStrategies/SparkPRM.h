@@ -619,14 +619,13 @@ SparkPRM<MPTraits, Strategy>::
 ExpandTree(CfgType& _dir, vector<VID>& _rrt, vector<VID>& _important) {
 
   StatClass* stats = this->GetMPProblem()->GetStatClass();
-  Environment* env = this->GetMPProblem()->GetEnvironment();
   GraphType* graph = this->GetMPProblem()->GetRoadmap()->GetGraph();
   DistanceMetricPointer dm = this->GetMPProblem()->GetDistanceMetric(m_dmLabel);
   NeighborhoodFinderPointer nf = this->GetMPProblem()->GetNeighborhoodFinder(m_nfLabel);
   VID recentVID = INVALID_VID;
   CDInfo cdInfo;
   CfgType nearest, newCfg;
-  int weight;
+  int weight = 0;
   vector<pair<VID, double> > kClosest;
   vector<CfgType> cfgs;
 

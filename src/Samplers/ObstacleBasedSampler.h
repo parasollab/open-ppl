@@ -87,8 +87,7 @@ class ObstacleBasedSampler : public SamplerMethod<MPTraits> {
           // If the shell is valid
           if(_env->InBounds(_cFree, _bb) &&
               vcm->IsValid(_cFree, callee)) {
-            if(this->m_recordKeep)
-              _stats.IncNodesGenerated(this->GetNameAndLabel());
+            _stats.IncNodesGenerated(this->GetNameAndLabel());
             // Add shell
             *_result = _cFree;
             _result++;
@@ -105,8 +104,7 @@ class ObstacleBasedSampler : public SamplerMethod<MPTraits> {
           // If the shell is valid
           if(_env->InBounds(_cColl, _bb) &&
               !vcm->IsValid(_cColl, callee)) {
-            if(this->m_recordKeep)
-              _stats.IncNodesGenerated(this->GetNameAndLabel());
+            _stats.IncNodesGenerated(this->GetNameAndLabel());
             // Add shell
             *_result = _cColl;
             _result++;
@@ -124,8 +122,7 @@ class ObstacleBasedSampler : public SamplerMethod<MPTraits> {
       ValidityCheckerPointer vcm = this->GetMPProblem()->GetValidityChecker(m_vcLabel);
       DistanceMetricPointer dm = this->GetMPProblem()->GetDistanceMetric(m_dmLabel);
 
-      if(this->m_recordKeep)
-        _stats.IncNodesAttempted(this->GetNameAndLabel());
+      _stats.IncNodesAttempted(this->GetNameAndLabel());
 
       // Old state
       CfgType c1 = ChooseASample(_cfgIn, _env, _bb);

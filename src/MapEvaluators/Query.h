@@ -273,8 +273,7 @@ Query<MPTraits>::PerformQuery(const CfgType& _start, const CfgType& _goal, Roadm
   LPOutput<MPTraits> sci, gci; // Connection info for start, goal nodes
   vector<pair<size_t, VID> > ccs;
   stapl::sequential::vector_property_map<GraphType, size_t> cmap;
-  if(this->m_recordKeep)
-    stats->IncGOStat("CC Operations");
+  stats->IncGOStat("CC Operations");
   get_cc_stats(*(_rdmp->GetGraph()), cmap, ccs);
   bool connected = false;
 
@@ -312,16 +311,14 @@ Query<MPTraits>::PerformQuery(const CfgType& _start, const CfgType& _goal, Roadm
 
     // Try to connect start to cc
     cmap.reset();
-    if(this->m_recordKeep)
-      stats->IncGOStat("CC Operations");
+    stats->IncGOStat("CC Operations");
     if(stapl::sequential::is_same_cc(*(_rdmp->GetGraph()), cmap, sVID, ccIt->second)) {
       if(this->m_debug)
         cout << "*Q* Start already connected to ccIt[" << distance(ccsBegin, ccIt)+1 << "]" << endl;
     }
     else {
       cmap.reset();
-      if(this->m_recordKeep)
-        stats->IncGOStat("CC Operations");
+      stats->IncGOStat("CC Operations");
       stapl::sequential::get_cc(*(_rdmp->GetGraph()), cmap, ccIt->second, cc);
       vector<VID> verticesList(1, sVID);
       if(this->m_debug)
@@ -336,8 +333,7 @@ Query<MPTraits>::PerformQuery(const CfgType& _start, const CfgType& _goal, Roadm
 
     // Try to connect goal to cc
     cmap.reset();
-    if(this->m_recordKeep)
-      stats->IncGOStat("CC Operations");
+    stats->IncGOStat("CC Operations");
     if(stapl::sequential::is_same_cc(*(_rdmp->GetGraph()), cmap, gVID, ccIt->second)) {
       if(this->m_debug)
         cout << "*Q* Goal already connected to ccIt[" << distance(ccsBegin, ccIt)+1 << "]" << endl;
@@ -345,8 +341,7 @@ Query<MPTraits>::PerformQuery(const CfgType& _start, const CfgType& _goal, Roadm
     else {
       if(cc.empty()) {
         cmap.reset();
-        if(this->m_recordKeep)
-          stats->IncGOStat("CC Operations");
+        stats->IncGOStat("CC Operations");
         stapl::sequential::get_cc(*(_rdmp->GetGraph()), cmap, ccIt->second, cc);
       }
       vector<VID> verticesList(1, gVID);
@@ -363,8 +358,7 @@ Query<MPTraits>::PerformQuery(const CfgType& _start, const CfgType& _goal, Roadm
     // Check if start and goal are connected to the same CC
     cmap.reset();
     while(stapl::sequential::is_same_cc(*(_rdmp->GetGraph()), cmap, sVID, gVID)) {
-      if(this->m_recordKeep)
-        stats->IncGOStat("CC Operations");
+      stats->IncGOStat("CC Operations");
       //get DSSP path
       shortestPath.clear();
       cmap.reset();
@@ -372,10 +366,8 @@ Query<MPTraits>::PerformQuery(const CfgType& _start, const CfgType& _goal, Roadm
 #ifndef _PARALLEL
       // Run a graph search
       graphSearchCount++;
-      if(this->m_recordKeep) {
-        stats->IncGOStat("Graph Search");
-        stats->StartClock("Query Graph Search");
-      }
+      stats->IncGOStat("Graph Search");
+      stats->StartClock("Query Graph Search");
       switch(m_searchAlg) {
         case DIJKSTRAS:
           find_path_dijkstra(*(_rdmp->GetGraph()), sVID, gVID, shortestPath, WeightType::MaxWeight());
@@ -386,8 +378,7 @@ Query<MPTraits>::PerformQuery(const CfgType& _start, const CfgType& _goal, Roadm
           astar(*(_rdmp->GetGraph()), sVID, gVID, shortestPath, heuristic);
           break;
       }
-      if(this->m_recordKeep)
-        stats->StopClock("Query Graph Search");
+      stats->StopClock("Query Graph Search");
 #endif
       if(this->m_debug)
         cout << "*Q* Start(" << shortestPath[1] << ") and Goal(" << shortestPath[shortestPath.size()-2]
@@ -405,8 +396,7 @@ Query<MPTraits>::PerformQuery(const CfgType& _start, const CfgType& _goal, Roadm
         cout << endl << "*Q* Failed to recreate path\n";
     }
 
-    if(this->m_recordKeep)
-      stats->IncGOStat("CC Operations");
+    stats->IncGOStat("CC Operations");
 
     if(connected) {
       if(m_intermediateFile != "") {

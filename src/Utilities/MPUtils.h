@@ -385,7 +385,7 @@ class MPBaseObject {
     typedef typename MPTraits::MPProblemType MPProblemType;
 
     MPBaseObject(MPProblemType* _problem = NULL, string _label = "", string _name = "", bool _debug = false) :
-      m_problem(_problem), m_label(_label), m_name(_name), m_debug(_debug), m_recordKeep(true) {};
+      m_problem(_problem), m_label(_label), m_name(_name), m_debug(_debug) {};
     MPBaseObject(MPProblemType* _problem, XMLNodeReader& _node, string _name="") :
       m_problem(_problem), m_name(_name) {
         ParseXML(_node);
@@ -396,12 +396,10 @@ class MPBaseObject {
       m_label = _node.stringXMLParameter("label", false, "", "Label Identifier");
       m_debug = _node.boolXMLParameter("debug", false, false,
           "Run-time debug on(true)/off(false)");
-      m_recordKeep = _node.boolXMLParameter("recordKeep", false, true,
-          "Keeping track of algorithmic statistics, on(true)/off(false)");
     };
 
     MPProblemType* GetMPProblem() const {return m_problem;}
-    virtual void SetMPProblem(MPProblemType* _m){m_problem = _m;}
+    virtual void SetMPProblem(MPProblemType* _m) {m_problem = _m;}
     virtual void PrintOptions(ostream& _os) const {};
 
     void SetLabel(string _s) {m_label = _s;}
@@ -421,7 +419,6 @@ class MPBaseObject {
 
     string m_name;
     bool m_debug;
-    bool m_recordKeep;
 
     template<typename T, typename U> friend class MethodSet;
 };

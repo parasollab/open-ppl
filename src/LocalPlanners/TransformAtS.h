@@ -221,11 +221,9 @@ TransformAtS<MPTraits>::IsConnectedOneWay(
     for(typename vector<CfgType>::iterator I = sequence.begin(); I != sequence.end() - 1; I++) {
       _lpOutput->m_intermediates.push_back(*(I + 1));
     }
-  if(this->m_recordKeep) {
-    if(connected)
-      stats->IncLPConnections(this->GetNameAndLabel());
-    stats->IncLPCollDetCalls(this->GetNameAndLabel(), cdCounter);
-  }
+  if(connected)
+    stats->IncLPConnections(this->GetNameAndLabel());
+  stats->IncLPCollDetCalls(this->GetNameAndLabel(), cdCounter);
 
   return connected;
 }

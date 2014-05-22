@@ -91,15 +91,14 @@ LazyToggleQuery<MPTraits>::PerformQuery(CfgType _start, CfgType _goal, RoadmapTy
   StatClass* stats = this->GetMPProblem()->GetStatClass();
   stapl::sequential::vector_property_map<GraphType, size_t> cmap;
   RoadmapType* bRdmp = this->GetMPProblem()->GetBlockRoadmap();
-  VID sVID, gVID = INVALID_VID;
+  VID sVID = INVALID_VID, gVID = INVALID_VID;
 
   // If not just started and start/goal aren't connected, go back and sample more
   if(_rdmp->GetGraph()->IsVertex(_start) && _rdmp->GetGraph()->IsVertex(_goal)) {
     sVID = _rdmp->GetGraph()->GetVID(_start);
     gVID = _rdmp->GetGraph()->GetVID(_goal);
     cmap.reset();
-    if(this->m_recordKeep)
-      stats->IncGOStat("CC Operations");
+    stats->IncGOStat("CC Operations");
     if(!stapl::sequential::is_same_cc(*(_rdmp->GetGraph()), cmap, sVID, gVID)) {
       if(this->m_debug)
         cout << "*T* After sampling, start and goal still not connected. Sampling again" << endl;
@@ -137,8 +136,7 @@ LazyToggleQuery<MPTraits>::PerformQuery(CfgType _start, CfgType _goal, RoadmapTy
         }
         if(m_iterative) {
           cmap.reset();
-          if(this->m_recordKeep)
-            stats->IncGOStat("CC Operations");
+          stats->IncGOStat("CC Operations");
           if(stapl::sequential::is_same_cc(*(_rdmp->GetGraph()), cmap, sVID, gVID))
             break;
         }
@@ -163,11 +161,10 @@ LazyToggleQuery<MPTraits>::PerformQuery(CfgType _start, CfgType _goal, RoadmapTy
 
     // Keep looping if the new lazy-connected nodes put start and goal in same CC
     cmap.reset();
-    if(this->m_recordKeep)
-      stats->IncGOStat("CC Operations");
-  } while(stapl::sequential::is_same_cc(*(_rdmp->GetGraph()), cmap, sVID, gVID));
-  if(this->m_recordKeep)
     stats->IncGOStat("CC Operations");
+  } while(stapl::sequential::is_same_cc(*(_rdmp->GetGraph()), cmap, sVID, gVID));
+
+  stats->IncGOStat("CC Operations");
 
   // Start and goal not connected anymore, go back to sampling
   if(this->m_debug)

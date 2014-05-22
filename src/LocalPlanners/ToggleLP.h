@@ -223,7 +223,7 @@ ToggleLP<MPTraits>::IsConnectedToggle(
   m_degeneracyReached = false;
   m_colHist.clear();
 
-  if(this->m_recordKeep) stats->IncLPStat("Toggle::TotalLP", 1);
+  stats->IncLPStat("Toggle::TotalLP");
 
   if(this->m_debug) {
     cout << "Total LP::" << stats->GetLPStat("Toggle::TotalLP") << endl
@@ -243,8 +243,7 @@ ToggleLP<MPTraits>::IsConnectedToggle(
   if(this->m_debug)
     cout << "col::" << _col << endl;
 
-  if(this->m_recordKeep)
-    stats->IncLPStat("Toggle::TotalCalls", 1);
+  stats->IncLPStat("Toggle::TotalCalls");
 
   CfgType temp = ChooseAlteredCfg<CfgType>(_c1, _c2);
   CfgType n = temp;
@@ -303,8 +302,7 @@ ToggleLP<MPTraits>::IsConnectedToggle(
       VDAddTempCfg(_col, false);
       VDAddTempCfg(n, isValid);
     }
-    if(this->m_recordKeep)
-      CalcStats(b1 && b2, true);
+    CalcStats(b1 && b2, true);
     return b1 && b2;
   }
   else{
@@ -318,8 +316,7 @@ ToggleLP<MPTraits>::IsConnectedToggle(
       VDAddTempCfg(_col, false);
       VDAddTempCfg(n, isValid);
     }
-    if(this->m_recordKeep)
-      CalcStats(b, false);
+    CalcStats(b, false);
     return b;
   }
 };
@@ -331,23 +328,23 @@ ToggleLP<MPTraits>::CalcStats(bool _val, bool _toggle) {
 
   if(_val) {
     if(_toggle)
-      stats->IncLPStat("Toggle::FreeSuccess", 1);
+      stats->IncLPStat("Toggle::FreeSuccess");
     else
-      stats->IncLPStat("Toggle::CollisionSuccess", 1);
+      stats->IncLPStat("Toggle::CollisionSuccess");
     stats->AddToHistory("Toggle::IterationSuccess", m_iterations);
   }
   else {
     if(_toggle)
-      stats->IncLPStat("Toggle::FreeFailure", 1);
+      stats->IncLPStat("Toggle::FreeFailure");
     else
-      stats->IncLPStat("Toggle::CollisionFailure", 1);
+      stats->IncLPStat("Toggle::CollisionFailure");
     stats->AddToHistory("Toggle::IterationFailure", m_iterations);
     if(m_degeneracyReached) {
-      stats->IncLPStat("Toggle::DegenerateFailure", 1);
+      stats->IncLPStat("Toggle::DegenerateFailure");
       stats->IncLPStat("Toggle::DegenerateFailureIter", m_iterations);
     }
     else {
-      stats->IncLPStat("Toggle::BlockingFailure", 1);
+      stats->IncLPStat("Toggle::BlockingFailure");
       stats->IncLPStat("Toggle::BlockingFailureIter", m_iterations);
     }
   }
