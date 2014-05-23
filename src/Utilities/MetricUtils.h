@@ -12,11 +12,14 @@
 
 using namespace std;
 
-/**Provide timing information.
- *This class is used to measure the running time between StartClock and
- *StopClock. Client side could provide clock name, when StopClock is called
- *the name will be print out, and running time as well.
- */
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup MetricUtils
+/// @brief Timing utility.
+///
+/// This class is used to measure the running time between @c StartClock and
+/// @c StopClock. Client side could provide clock name. Output functions are
+/// provided.
+////////////////////////////////////////////////////////////////////////////////
 class ClockClass {
   public:
 
@@ -54,6 +57,14 @@ class ClockClass {
     string m_clockName;
 };
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup MetricUtils
+/// @brief Statistics tracker.
+///
+/// The StatClass is a storage hub of all statistics to be tracked in PMPL,
+/// including but not limited to timing, success/fail attempts,
+/// collision detection calls.
+////////////////////////////////////////////////////////////////////////////////
 class StatClass {
 
   public:
@@ -682,8 +693,8 @@ StatClass::ComputeInterCCFeatures(MPProblemType* _problem, RoadmapType* _rdmp, s
 /**Output Connected Component information in graph _G.
  *This method will print out _maxCCprint number of Connected Component,
  *,and size and start vertex of each Connected Component.
- *@param _g the graph
- *@param _maxCCprint the number of connected components to print.
+ *_g the graph
+ *_maxCCprint the number of connected components to print.
  */
 template<class GraphType>
 void

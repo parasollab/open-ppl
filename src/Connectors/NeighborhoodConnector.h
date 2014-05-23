@@ -6,7 +6,7 @@
  *       -# for every node cfg2 in N and numFailures < m_fail
  *           -# test lp.IsConnected(cfg1, cfg2)
  *           -# if connected, add this edge to map, _rm.
- *       -#end for
+ *       -# end for
  *   -# end for,
  */
 

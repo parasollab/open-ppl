@@ -3,6 +3,20 @@
 
 #include "Utilities/MPUtils.h"
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup Metrics
+/// @brief Base algorithm abstraction for \ref Metrics.
+///
+/// MetricMethod has one main function, @c operator() which returns a value
+/// associated with the roadmap for that metric.
+///
+/// @usage
+/// @code
+/// MetricPointer m = this->GetMPProblem()->GetMetric(m_mLabel);
+/// double v = (*m)(); //call as function object
+/// double v2 = m->operator()(); //call with pointer notation
+/// @endcode
+////////////////////////////////////////////////////////////////////////////////
 template<class MPTraits>
 class MetricMethod : public MPBaseObject<MPTraits> {
   public:

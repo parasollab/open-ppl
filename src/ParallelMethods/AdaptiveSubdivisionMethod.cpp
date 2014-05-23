@@ -15,7 +15,7 @@ using namespace stapl;
 using namespace psbmp;
 
 
-/// Edge functor (relationship at outer level)::move to Hview file
+/// Edge functor (relationship at outer level):move to Hview file
 struct EF {
   typedef int value_type;
 

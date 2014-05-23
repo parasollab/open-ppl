@@ -4,6 +4,24 @@
 #include <string>
 #include <iostream>
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup Extenders
+/// @brief Base algorithm abstraction for \ref Extenders.
+///
+/// ExtenderMethod has one main method, @c Extend, to grow a simple path from a
+/// starting node in some input direction.
+/// @usage
+/// @code
+/// ExtenderPointer e = this->GetMPProblem()->GetExtender(m_eLabel);
+/// CfgType c, cDir, cNew;
+/// vector<CfgType> intermediates;
+/// e->Extend(c, cDir, cNew, intermediates);
+/// @endcode
+/// @c Extend returns a boolean of success/fail, fills @c cNew with the extended
+/// configuration, and fills @c intermediates with any intermediate
+/// configurations along the polygon chain of the expansion --- not all
+/// expansion methods go in straight lines through @cspace.
+////////////////////////////////////////////////////////////////////////////////
 template<class MPTraits>
 class ExtenderMethod : public MPBaseObject<MPTraits> {
   public:

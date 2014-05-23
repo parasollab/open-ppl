@@ -61,6 +61,38 @@ namespace pmpl_detail {
 // OTHER  - NF will find neighbors in some other way
 enum NFType {K, RADIUS, OPTIMAL, APPROX, OTHER};
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup NeighborhoodFinders
+/// @brief Base algorithm abstraction for \ref NeighborhoodFinders.
+///
+/// NeighborhoodFinderMethod has two important functions: @c FindNeighbors and
+/// @c FindNeighborPairs.
+///
+/// @c FindNeighbors takes an input configuration and a set of candidate
+/// neighbors and returns the computed set of "nearest" neighbors.
+///
+/// @usage
+/// @code
+/// NeighborhoodFinderPointer nf = this->GetMPProblem()->GetNeighborhoodFinder(m_nfLabel);
+/// CfgType c;
+/// vector<pair<VID, double> > neighbors;
+/// nf->FindNeighbors(this->GetMPProblem()->GetRoadmap(), c, back_inserter(neighbors));
+/// @endcode
+/// A roadmap must be specified as the set of candidate neighbors must be
+/// located within this graph.
+///
+/// @c FindNeighborPairs determines the "closest" pairs of configurations
+/// betweeen two sets of nodes located in a roadmap.
+///
+/// @usage
+/// @code
+/// NeighborhoodFinderPointer nf = this->GetMPProblem()->GetNeighborhoodFinder(m_nfLabel);
+/// vector<VID> c1, c2;
+/// vector<pair<pair<VID, VID>, double> > neighbors;
+/// nf->FindNeighbors(this->GetMPProblem()->GetRoadmap(), c1.begin(), c1.end(),
+/// c2.begin(), c2.end(), back_inserter(neighbors));
+/// @endcode
+////////////////////////////////////////////////////////////////////////////////
 template<class MPTraits>
 class NeighborhoodFinderMethod : public MPBaseObject<MPTraits> {
   public:

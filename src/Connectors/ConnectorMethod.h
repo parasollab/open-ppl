@@ -35,6 +35,26 @@ namespace pmpl_detail{
       };
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup Connectors
+/// @brief Base algorithm abstraction for \ref Connectors.
+///
+/// ConnectorMethod essentially has one important function, @c Connect which can
+/// be called in a multitude of ways. In its basic forms it takes two sets of
+/// configurations and generates edges in the roadmap between them.
+///
+/// @usage
+/// @code
+/// ConnectorPointer c = this->GetMPProblem()->GetConnector(m_cLabel);
+/// ColorMapType cm;
+/// vector<VID> c1, c2;
+/// c->Connect(this->GetMPProblem()->GetRoadmap(),
+///            this->GetMPProblem()->GetStatClass(),
+///            cmap, c1.begin(), c1.end(), c2.begin(), c2.end());
+/// @endcode
+/// Where ColorMapType is the type of a color map for the underlying STAPL
+/// graph.
+////////////////////////////////////////////////////////////////////////////////
 template<class MPTraits>
 #ifdef _PARALLEL
 class ConnectorMethod : public MPBaseObject<MPTraits>, public stapl::p_object {

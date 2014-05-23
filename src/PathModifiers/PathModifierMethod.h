@@ -1,12 +1,26 @@
 #ifndef PATHMODIFIERMETHOD_H_
 #define PATHMODIFIERMETHOD_H_
 
-#include	<string>
-#include	<iostream>
+#include <string>
+#include <iostream>
 
 #include "Utilities/MPUtils.h"
 #include "LocalPlanners/LPOutput.h"
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup PathModifiers
+/// @brief Base algorithm abstraction for \ref PathModifiers.
+///
+/// PathModifierMethod has one main method, @c Modify, which takes an input path
+/// and produces a valid output path.
+///
+/// @usage
+/// @code
+/// PathModifierPointer pm = this->GetMPProblem()->GetPathModifier(m_pmLabel);
+/// vector<CfgType> inputPath, outputPath;
+/// pm->Modify(inputPath, outputPath);
+/// @endcode
+////////////////////////////////////////////////////////////////////////////////
 template<class MPTraits>
 class PathModifierMethod : public MPBaseObject<MPTraits> {
   public:

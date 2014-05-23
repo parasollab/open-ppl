@@ -369,16 +369,17 @@ class MethodSet {
 
 
 
-///////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////
-//
-//
+////////////////////////////////////////////////////////////////////////////////
 // MPBaseObject
-//
-//
-///////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////
-
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup MotionPlanningUniverse
+/// @brief Base class of all algorithm abstractions in PMPL.
+///
+/// The MPBaseObject is an abstract class which all algorithm abstractions in
+/// PMPL extend themselves off of. It essentially composes a class name
+/// @c m_name, a unique label @c m_label, and provides access to the MPProblem.
+////////////////////////////////////////////////////////////////////////////////
 template<class MPTraits>
 class MPBaseObject {
   public:
@@ -409,16 +410,16 @@ class MPBaseObject {
     void SetDebug(bool _d) {m_debug = _d;}
 
   private:
-    MPProblemType* m_problem;
-    string m_label;
+    MPProblemType* m_problem; ///< Shared pointer to MPProblem object
+    string m_label; ///< Unique identifier of object
 
   protected:
     string GetLabel() const {return m_label;}
 
     void SetName(string _s) {m_name  = _s;}
 
-    string m_name;
-    bool m_debug;
+    string m_name; ///< Class name
+    bool m_debug; ///< Debug statements on or off
 
     template<typename T, typename U> friend class MethodSet;
 };

@@ -3,6 +3,20 @@
 
 #include "Utilities/MPUtils.h"
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup MapEvaluators
+/// @brief Base algorithm abstraction for \ref MapEvaluators.
+///
+/// MapEvaluatorMethod has one main function, @c operator(), which applies a
+/// boolean pass/fail evaluation to a roadmap.
+///
+/// @usage
+/// @code
+/// MapEvaluatorPointer me = this->GetMPProblem()->GetMapEvaluator(m_meLabel);
+/// bool passed = (*me)(); //call as a function object
+/// bool passed2 = me->operator()(); //call with pointer notation
+/// @endcode
+////////////////////////////////////////////////////////////////////////////////
 template<class MPTraits>
 class MapEvaluatorMethod : public MPBaseObject<MPTraits> {
   public:

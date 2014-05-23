@@ -210,15 +210,15 @@ class RegionCCConnector
         for(typename vector<pair<VID, size_t> >::iterator tIT = tCCs.begin(); tIT != tCCs.begin() + std::min(static_cast<int>(tCCs.size()), k); ++tIT) {
           static_array<std::vector<VID> > tArrayCand(get_num_locations());
           array_view<static_array<std::vector<VID> > > tcandView(tArrayCand);
-          ///NOTE : crashes at p>2
-          //\TODO : 1 replace rmView with native_view and use sequential ccstats
-          //2: call outside workfunction
-          //3: implement and use inverse property map
+          ///@note crashes at p>2
+          ///@todo 1: replace rmView with native_view and use sequential ccstats
+          ///      2: call outside workfunction
+          ///      3: implement and use inverse property map
 	  cc_stats(rmView, m_cmap,(*tIT).first,tcandView);
 	  tCand = map_reduce(locVec<MPTraits>(),mergeVec<MPTraits>(), tcandView);
 
           //NOW CONNECT
-          ///\TODO : Check whether to connect small or big CCs
+          ///@todo : Check whether to connect small or big CCs
 
           vector<CfgType> col;
 	  ncp->ConnectBigCC(m_problem->GetRoadmap(),*(m_problem->GetStatClass()),sCand, tCand, back_inserter(col));

@@ -1,6 +1,3 @@
-/* Traits class for CfgType and WeightType.
- */
-
 #ifndef MPTRAITS_H_
 #define MPTRAITS_H_
 
@@ -131,6 +128,19 @@
 #include "ParallelMethods/RegularSubdivisionMethod.h"
 #endif
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup MotionPlanningUniverse
+/// @brief Defines all available motion planning methods in the Motion Planning
+/// Universe.
+///
+/// MPTraits is a type class which defines the motion planning universe. We
+/// construct our methods through a factory design pattern, and thus this states
+/// all available classes within an abstraction that you can use in the system.
+/// Essentially the important types are, the CfgType or the @cspace abstraction
+/// class, the WeightType or the edge type of the graph, and a type list for
+/// each algorithm abstraction --- here you only need to define what you need,
+/// as extraneous methods in the type class imply longer compile times.
+////////////////////////////////////////////////////////////////////////////////
 template<class C, class W = DefaultWeight<C> >
 struct MPTraits{
   typedef C CfgType;

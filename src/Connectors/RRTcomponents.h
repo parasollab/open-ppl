@@ -29,10 +29,10 @@ class RRTcomponents: public RRTexpand<CFG,WEIGHT> {
   // Core: Connection methods
   /**Copy vertices and all incident edges associated with "vids"
    *from one roadmap to another.
-   *@param toMap Target, Cfgs in vids and incident edges in fromMap
+   *toMap Target, Cfgs in vids and incident edges in fromMap
    *will be copied to this submap.
-   *@param fromMap Source, edge information will be retrived from here.
-   *@param vids Source, vertex information will be retrived from here.
+   *fromMap Source, edge information will be retrived from here.
+   *vids Source, vertex information will be retrived from here.
    *Usually, in this list, elements are Cfgs in same connected component.
    */
 
@@ -50,11 +50,6 @@ class RRTcomponents: public RRTexpand<CFG,WEIGHT> {
 	       LocalPlanners<CFG,WEIGHT>* lp,
 	       bool addPartialEdge, bool addAllEdges,
 	       vector<VID>& vids1, vector<VID>& vids2);
-
- private:
-  //////////////////////
-  // Data
-  // data stored in RRTexpand base class
 };
 
 

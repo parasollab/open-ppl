@@ -13,6 +13,50 @@ template<class MPTraits> class MPProblem;
 template<class MPTraits> class NegateSampler;
 template<class MPTraits> class MixSampler;
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup Samplers
+/// @brief Base algorithm abstraction for \ref Samplers.
+///
+/// SamplerMethod has two sets of important functions. The first are the
+/// various public methods in the base class, @c Sample, and second is the
+/// private virtual function which the derived classes overload, @c Sampler.
+///
+/// @c Sample is called in various ways but they break down into two forms:
+/// desired number and input configurations. When specifying a desired number
+/// @c n of configurations the sampler attempts @c a attempts per desired
+/// sample. The output is placed on an output iterator.
+///
+/// @usage
+/// @code
+/// SamplerPointer s = this->GetMPProblem()->GetSampler(m_sLabel);
+/// int num, attempts;
+/// vector<CfgType> result;
+/// s->Sample(this->GetMPProblem()->GetEnvironment(),
+///           this->GetMPProblem()->GetStatClass(),
+///           num, attempts, back_inserter(result));
+/// @endcode
+///
+/// The other form of @c Sample sends a list of input configurations to apply
+/// the sampler rule to.
+///
+/// @usage
+/// @code
+/// SamplerPointer s = this->GetMPProblem()->GetSampler(m_sLabel);
+/// vector<CfgType> input;
+/// int attempts;
+/// vector<CfgType> result;
+/// s->Sample(this->GetMPProblem()->GetEnvironment(),
+///           this->GetMPProblem()->GetStatClass(),
+///           input.begin(), input.end(), attempts, back_inserter(result));
+/// @endcode
+///
+/// There are other versions of this method with the option to return the failed
+/// attempts, specify the boundary used for sampling, etc.
+///
+/// @c Sampler is the private virtual function responsible for taking as input
+/// a single input configuration and applying the sampler rule to generate one
+/// or more configurations.
+////////////////////////////////////////////////////////////////////////////////
 template<class MPTraits>
 #ifdef _PARALLEL
 class SamplerMethod : public MPBaseObject<MPTraits>, public stapl::p_object {

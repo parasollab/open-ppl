@@ -32,10 +32,10 @@ class RRTexpand: public ComponentConnectionMethod<CFG,WEIGHT> {
   // Core: Connection methods
   /**Copy vertices and all incident edges associated with "vids"
    *from one roadmap to another.
-   *@param toMap Target, Cfgs in vids and incident edges in fromMap
+   *toMap Target, Cfgs in vids and incident edges in fromMap
    *will be copied to this submap.
-   *@param fromMap Source, edge information will be retrived from here.
-   *@param vids Source, vertex information will be retrived from here.
+   *fromMap Source, edge information will be retrived from here.
+   *vids Source, vertex information will be retrived from here.
    *Usually, in this list, elements are Cfgs in same connected component.
 
   static vector<VID> ModifyRoadMap(Roadmap<CFG, WEIGHT>* toMap,

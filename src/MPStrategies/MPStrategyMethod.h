@@ -4,6 +4,21 @@
 #include "Utilities/MPUtils.h"
 #include "Utilities/MetricUtils.h"
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup MotionPlanningStrategies
+/// @brief Base algorithm abstraction for \ref MotionPlanningStrategies.
+///
+/// MPStrategyMethod has one main function, @c operator(), which
+/// performs preprocessing, processing, and postprocessing functionalities of
+/// the motion planning algorithm.
+///
+/// @usage
+/// @code
+/// MPStrategyPointer mps = this->GetMPProblem()->GetMPStrategy(m_mpsLabel);
+/// (*mps)(); //call as a function object
+/// mps->operator()(); //call with pointer notation
+/// @endcode
+////////////////////////////////////////////////////////////////////////////////
 template<class MPTraits>
 class MPStrategyMethod : public MPBaseObject<MPTraits> {
   public:

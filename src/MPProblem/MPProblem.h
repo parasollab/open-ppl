@@ -20,6 +20,14 @@
 
 #include "ValidityCheckers/CollisionDetectionValidity.h"
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup MotionPlanningUniverse
+/// @brief Central access hub of PMPL.
+///
+/// The MPProblem is a central class to PMPL. It "stores everything". It is a
+/// hub of accessing all algorithmic abstractions, roadmaps, statistics
+/// classes, the environment, etc.
+////////////////////////////////////////////////////////////////////////////////
 template<class MPTraits>
 #ifdef _PARALLEL
 class MPProblem : public stapl::p_object

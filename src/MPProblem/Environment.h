@@ -7,6 +7,15 @@
 #include "Utilities/MPUtils.h"
 #include "Graph.h"
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup Environments
+/// @brief Workspace for the motion planning problem.
+///
+/// The Environment is essentially the workspace of the motion planning problem.
+/// We define a workspace as a set of MultiBody which are essentially either
+/// robot or obstacle geometries and a Boundary to define the
+/// sampling/exploration region for the planner.
+////////////////////////////////////////////////////////////////////////////////
 class Environment {
   public:
 
