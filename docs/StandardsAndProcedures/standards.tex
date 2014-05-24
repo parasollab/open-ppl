@@ -9,16 +9,33 @@
 \usepackage[usenames]{color}
 \usepackage{listings}
 \definecolor{LightGrey}{rgb}{0.9,0.9,1.0}
+\definecolor{gray}{rgb}{0.4,0.4,0.4}
+\definecolor{darkblue}{rgb}{0.0,0.0,0.6}
+\definecolor{cyan}{rgb}{0.0,0.6,0.6}
 \lstdefinestyle{C++}{language=C++,%
+  identifierstyle=\color{black},
   backgroundcolor=\color{LightGrey},
   showstringspaces=false,
   columns=fullflexible,
-  escapechar=@,
   basicstyle=\sffamily,
+  commentstyle=\color{gray},
   moredelim=**[is][\color{white}]{~}{~},
   literate={=>}{{$\Rightarrow\;$}}1 {->}{{$\rightarrow{}$}}1 %
   {<-}{{$\leftarrow$}}1 {<:}{{$\subtype{}\ $}}1 {*}{{$^*$}}1 %
-  ,
+  {\{}{{$\{$}}1 {\}}{{$\}$}}1 {<}{{$<$}}1 {>}{{$>$}}1,
+}
+\lstdefinelanguage{XML}{
+  morestring=[b]",
+  morestring=[s]{>}{<},
+  morecomment=[s]{<?}{?>},
+  identifierstyle=\color{darkblue},
+}
+\lstdefinestyle{XML}{
+  language=XML,
+  backgroundcolor=\color{LightGrey},
+  showstringspaces=false,
+  columns=fullflexible,
+  basicstyle=\ttfamily,
 }
 
 \newcommand{\pmpl}{PMPL}
@@ -109,7 +126,7 @@ All types, being all classes, structs, typedefs, enums, etc, should begin
 with a capital letter and be in camel casing format (i.e., each successive word
 will be capitalized).
 
-\begin{lstlisting}
+\begin{lstlisting}[mathescape]
 class MyClass;
 struct MyStruct;
 typedef int MyInt;
@@ -130,7 +147,7 @@ Type& referenceName;
 Enum values should be named like types, i.e, camel casing beginning with a
 capital letter.
 
-\begin{lstlisting}
+\begin{lstlisting}[mathescape]
 enum MyEnum {Value1, Value2, Value3};
 \end{lstlisting}
 
@@ -155,8 +172,8 @@ All member variables should begin with an m\_. No type specification is
 necessary (i.e., no m\_pVariable for a pointer).
 
 
-\begin{lstlisting}
-class MyClass{
+\begin{lstlisting}[mathescape]
+class MyClass {
   public:
     int m_myInt;
 }
@@ -175,13 +192,15 @@ Similarly to the class and variable names, within the XML, tags should be camel
 cased beginning with a capital letter and variables should be camel cased
 beginning with a lowercase letter.
 
+\lstset{style=XML}
 \begin{lstlisting}
 <MyXMLTag label="label" myXMLVariable="false"/>
 <MyXMLTagWithChildren label="label2">
-  <Child method="label">
-  <Child method="label2">
+  <Child method="label"/>
+  <Child method="label2"/>
 </MyXMLTagWithChildren>
 \end{lstlisting}
+\lstset{style=C++}
 
 When loading labels for \pmpl\ methods, e.g., distance metrics, the variable
 name should be the \pmpl\ acronym for that component with Label. So for a
@@ -239,8 +258,6 @@ name, and function name all on separate lines. The function parameters may span
 multiple lines if necessary.
 
 \begin{lstlisting}
-/* Descriptive comment of function recommended but not enforced at this time
- */
 template<class MPTraits>
 ReturnType
 ClassName<MPTraits>::
@@ -259,13 +276,13 @@ of the form:
 
 \begin{lstlisting}
 if(m_debug)
-  cout << "My debug statement";
+  cout << ``My debug statement'';
 \end{lstlisting}
 
 \subsubsection{GetNameAndLabel()}
 
 This function returns a unique identifier to this class based on XML input.
-Returns m\_name + "::" + m\_label. This should be used in output and record
+Returns m\_name + ``::'' + m\_label. This should be used in output and record
 keeping.
 
 \begin{lstlisting}
@@ -299,7 +316,7 @@ like Vizmo and GroupBehaviors. Exception classes are located within
 location of the error. The PMPLException base is nicely formatted.
 
 \begin{lstlisting}
-throw PMPLException("MyExceptionType", WHERE, "My error message");
+throw PMPLException(``MyExceptionType'', WHERE, ``My error message'');
 \end{lstlisting}
 
 \subsection{STL and External Libraries}
@@ -330,8 +347,9 @@ them very obvious in the code, in order to facilitate commital code reviews.
 Note that the blank comment lines shown in these templates are required by
 Doxygen in order to introduce paragraphs.
 
-The Doxygen documentation will be compiled nightly and copied onto the
-parasol-webdev cite here:
+The Doxygen documentation will be compiled nightly and copied onto
+Nancy's group's intranet page on here:
+
 \url{https://parasol-webdev.cs.tamu.edu/groups/amatogroup/intranet/PMPLDocs}.
 
 \subsection{General Documentation Proceedures}
@@ -359,7 +377,7 @@ defects and restrictions of the class in the optional section provided. Note
 that the top/bottom commenting lines should extend to the 80th character across.
 
 \begin{lstlisting}[mathescape]
-////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
 /// $@$ingroup What group of classes does this belong to?
 /// $@$brief What information does this class abstract?
 /// $@$tparam name meaning of this template parameter (other than MPTraits)
@@ -376,7 +394,7 @@ that the top/bottom commenting lines should extend to the 80th character across.
 ///
 /// $@$bug another bug
 /// ...
-////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
 \end{lstlisting}
 
 \subsection{Function Documentation}
@@ -391,7 +409,7 @@ Doxygen comments should not include information on the implementation of the
 method.
 
 \begin{lstlisting}[mathescape]
-////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
 /// [optional $@$ingroup if this is a non-class function which group does it belong?]
 /// $@$brief What does this method do?
 /// $@$tparam name meaning of template parameter
@@ -405,7 +423,7 @@ method.
 /// int i = 0;
 /// MyFunc(i);
 /// $@$endcode
-////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
 \end{lstlisting}
 
 \subsubsection{Overloaded Functions}
@@ -415,12 +433,12 @@ function, then for the others put the following, with the same brief as the
 other overloaded functions and a short description of the differences.
 
 \begin{lstlisting}[mathescape]
-////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
 /// $@$brief Validate a simple path between two nodes
 ///
 /// $@$overload
 /// No witness to failure is returned.
-////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
 \end{lstlisting}
 
 \subsubsection{Inherited/derived Functions}
@@ -443,10 +461,10 @@ m_myVar; ///< Brief description after the member variable
 
 For global variables:
 \begin{lstlisting}[mathescape]
-////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
 /// $@$ingroup Which group does this variable belong?
 /// $@$brief Brief description of variable
-////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
 \end{lstlisting}
 
 Documentation of temporary variables is highly encouraged, but is up to the
