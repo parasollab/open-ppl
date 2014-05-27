@@ -141,8 +141,10 @@ class Body {
     ////////////////////////////////////////////////////////////////////////////////
     int ForwardConnectionCount() const {return m_forwardConnection.size();}
     int BackwardConnectionCount() const {return m_backwardConnection.size();}
-    void AddForwardConnection(const Connection& _connection) {m_forwardConnection.push_back(_connection);}
-    void AddBackwardConnection(const Connection& _connection) {m_backwardConnection.push_back(_connection);}
+    void AddForwardConnection(Connection& _connection) 
+      {m_forwardConnection.push_back(shared_ptr<Connection>(&_connection));}
+    void AddBackwardConnection(Connection& _connection) 
+      {m_backwardConnection.push_back(shared_ptr<Connection>(&_connection));}
     /**Link
      * Function: Link "this" body to the given other body by setting up a
      * connectionship between them using the given DH parameters and the
@@ -155,7 +157,7 @@ class Body {
      * Function: Link "this" body to the given body by using the given
      * connection.  Establish a forward and backward connectionship.
      */
-    void Link(const Connection& _c);
+    void Link(Connection& _c);
 
     bool IsConvexHullVertex(const Vector3d& _v);
 
@@ -183,8 +185,8 @@ class Body {
     GMSPolyhedron m_bbPolyhedron;
     GMSPolyhedron m_bbWorldPolyhedron;
 
-    vector<Connection> m_forwardConnection;
-    vector<Connection> m_backwardConnection;
+    vector<shared_ptr<Connection> > m_forwardConnection;
+    vector<shared_ptr<Connection> > m_backwardConnection;
 
 #ifdef USE_VCLIP
     shared_ptr<PolyTree> vclipBody;

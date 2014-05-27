@@ -122,7 +122,7 @@ Body::GetCenterOfMass(){
 Connection&
 Body::GetForwardConnection(size_t _index) {
   if (_index < m_forwardConnection.size())
-    return m_forwardConnection[_index];
+    return *m_forwardConnection[_index];
   else{
     cerr << "Error, in Body::GetForwardConnection: requesting connection outside of bounds\n\n";
     exit(-1);
@@ -132,7 +132,7 @@ Body::GetForwardConnection(size_t _index) {
 Connection&
 Body::GetBackwardConnection(size_t _index) {
   if (_index < m_backwardConnection.size())
-    return m_backwardConnection[_index];
+    return *m_backwardConnection[_index];
   else{
     cerr << "Error, in Body::GetBackwardConnection: requesting connection outside of bounds\n\n";
     exit(-1);
@@ -254,11 +254,12 @@ Body::FindBoundingBox(){
 
 bool
 Body::IsAdjacent(shared_ptr<Body> _otherBody) {
-  for(vector<Connection>::iterator C = m_forwardConnection.begin(); C != m_forwardConnection.end(); ++C)
-    if(C->GetNextBody() == _otherBody)
+  typedef vector<shared_ptr<Connection> >::iterator CIT;
+  for(CIT C = m_forwardConnection.begin(); C != m_forwardConnection.end(); ++C)
+    if((*C)->GetNextBody() == _otherBody)
       return true;
-  for(vector<Connection>::iterator C = m_backwardConnection.begin(); C != m_backwardConnection.end(); ++C)
-    if(C->GetPreviousBody() == _otherBody)
+  for(CIT C = m_backwardConnection.begin(); C != m_backwardConnection.end(); ++C)
+    if((*C)->GetPreviousBody() == _otherBody)
       return true;
   return(*this == *(_otherBody.get()));
 }
@@ -278,14 +279,14 @@ Body::IsWithinIHelper(Body* _body1, Body* _body2, int _i, Body* _prevBody){
     return false;
   }
 
-  typedef vector<Connection>::iterator CIT;
+  typedef vector<shared_ptr<Connection> >::iterator CIT;
   for(CIT C = _body1->m_forwardConnection.begin(); C != _body1->m_forwardConnection.end(); ++C) {
-    Body* next = C->GetNextBody().get();
+    Body* next = (*C)->GetNextBody().get();
     if(next != _prevBody && IsWithinIHelper(next, _body2, _i-1, _body1))
       return true;
   }
   for(CIT C =_body1->m_backwardConnection.begin(); C != _body1->m_backwardConnection.end(); ++C) {
-    Body* prev = C->GetPreviousBody().get();
+    Body* prev = (*C)->GetPreviousBody().get();
     if(prev != _prevBody && IsWithinIHelper(prev, _body2, _i-1, _body1))
       return true;
   }
@@ -445,7 +446,7 @@ Body::Link(const shared_ptr<Body>& _otherBody, const Transformation & _transform
 }
 
 void
-Body::Link(const Connection& _c) {
+Body::Link(Connection& _c) {
   AddForwardConnection(_c);
   _c.GetNextBody()->AddBackwardConnection(_c);
   m_worldPolyhedronAvailable=false;
