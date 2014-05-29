@@ -3,7 +3,6 @@ ifndef platform
   platform = LINUX_gcc
 endif
 
-
 # set default debug
 ifndef debug
   debug = 0

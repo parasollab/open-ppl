@@ -49,7 +49,9 @@ int main(int _argc, char** _argv)
   problem->Print(cout);
   problem->Solve();
 
-  #ifndef _PARALLEL
+  delete problem;
+
+#ifndef _PARALLEL
   return 0;
   #endif
 }

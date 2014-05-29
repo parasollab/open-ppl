@@ -238,8 +238,6 @@ MPProblem<MPTraits>::~MPProblem() {
   delete m_metrics;
   delete m_mapEvaluators;
   delete m_mpStrategies;
-
-  VDClose();
 }
 
 template<class MPTraits>

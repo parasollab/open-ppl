@@ -106,18 +106,18 @@ FreeBody::ComputeWorldTransformation(std::set<int, less<int> >& visited, bool _d
       return m_worldTransformation;
     }
 
-    Transformation dh = m_backwardConnection[0]->GetDHparameters().GetTransformation();
+    Transformation dh = m_backwardConnection[0].GetDHparameters().GetTransformation();
     m_worldTransformation =
-      ((FreeBody*)(m_backwardConnection[0]->GetPreviousBody().get()))->ComputeWorldTransformation(visited, _debug)
-      * m_backwardConnection[0]->GetTransformationToDHFrame()
+      ((FreeBody*)(m_backwardConnection[0].GetPreviousBody().get()))->ComputeWorldTransformation(visited, _debug)
+      * m_backwardConnection[0].GetTransformationToDHFrame()
       * dh
-      * m_backwardConnection[0]->GetTransformationToBody2();
+      * m_backwardConnection[0].GetTransformationToBody2();
     if(_debug) {
-      cout << "computing new transformation by:\n\tprior transformation: " << ((FreeBody*)(m_backwardConnection[0]->GetPreviousBody().get()))->ComputeWorldTransformation(visited, false) << endl;
-      cout << "\ttransformation to DH frame: " << m_backwardConnection[0]->GetTransformationToDHFrame() << endl;
-      cout << "\t\tdh from connection: " << m_backwardConnection[0]->GetDHparameters() << endl;
+      cout << "computing new transformation by:\n\tprior transformation: " << ((FreeBody*)(m_backwardConnection[0].GetPreviousBody().get()))->ComputeWorldTransformation(visited, false) << endl;
+      cout << "\ttransformation to DH frame: " << m_backwardConnection[0].GetTransformationToDHFrame() << endl;
+      cout << "\t\tdh from connection: " << m_backwardConnection[0].GetDHparameters() << endl;
       cout << "\tdh: " << dh << endl;
-      cout << "\ttransformation to body 2: " << m_backwardConnection[0]->GetTransformationToBody2() << endl;
+      cout << "\ttransformation to body 2: " << m_backwardConnection[0].GetTransformationToBody2() << endl;
       cout << "new transformation = " << m_worldTransformation << ", returning\n";
     }
 
