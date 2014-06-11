@@ -42,18 +42,6 @@ namespace pmpl_detail{
 /// ConnectorMethod essentially has one important function, @c Connect which can
 /// be called in a multitude of ways. In its basic forms it takes two sets of
 /// configurations and generates edges in the roadmap between them.
-///
-/// @usage
-/// @code
-/// ConnectorPointer c = this->GetMPProblem()->GetConnector(m_cLabel);
-/// ColorMapType cm;
-/// vector<VID> c1, c2;
-/// c->Connect(this->GetMPProblem()->GetRoadmap(),
-///            this->GetMPProblem()->GetStatClass(),
-///            cmap, c1.begin(), c1.end(), c2.begin(), c2.end());
-/// @endcode
-/// Where ColorMapType is the type of a color map for the underlying STAPL
-/// graph.
 ////////////////////////////////////////////////////////////////////////////////
 template<class MPTraits>
 #ifdef _PARALLEL
@@ -75,12 +63,26 @@ class ConnectorMethod : public MPBaseObject<MPTraits> {
     ////////////////////////////////////////////////////////////////////////////
     // Connection Methods
     ////////////////////////////////////////////////////////////////////////////
+
+    ////////////////////////////////////////////////////////////////////////////
+    /// @brief Generate edges between two sets of nodes
+    ///
+    /// @overload
+    /// Uses the entire roadmap as the first and second set of nodes and no
+    /// output of collision witnesses.
+    ////////////////////////////////////////////////////////////////////////////
     template<typename ColorMap>
       void Connect(RoadmapType* _rm, StatClass& _stats, ColorMap& _cmap){
         vector<CfgType> collision;
         Connect(_rm, _stats, _cmap, back_inserter(collision));
       }
 
+    ////////////////////////////////////////////////////////////////////////////
+    /// @brief Generate edges between two sets of nodes
+    ///
+    /// @overload
+    /// Uses the entire roadmap as the first and second set of nodes.
+    ////////////////////////////////////////////////////////////////////////////
     template<typename ColorMap, typename OutputIterator>
       void Connect(RoadmapType* _rm, StatClass& _stats, ColorMap& _cmap,
           OutputIterator _collision){
@@ -90,18 +92,39 @@ class ConnectorMethod : public MPBaseObject<MPTraits> {
             _collision);
       }
 
+    ////////////////////////////////////////////////////////////////////////////
+    /// @brief Generate edges between two sets of nodes
+    ///
+    /// @overload
+    /// Uses a single node as the first set of nodes, the entire roadmap as
+    /// second set of nodes, and no output of collision witnesses.
+    ////////////////////////////////////////////////////////////////////////////
     template<typename ColorMap>
       void Connect(RoadmapType* _rm, StatClass& _stats, ColorMap& _cmap, VID _vid){
         vector<CfgType> collision;
         Connect(_rm, _stats, _cmap, _vid, back_inserter(collision));
       }
 
+    ////////////////////////////////////////////////////////////////////////////
+    /// @brief Generate edges between two sets of nodes
+    ///
+    /// @overload
+    /// Uses a single node as the first set of nodes and the entire roadmap as
+    /// second set of nodes.
+    ////////////////////////////////////////////////////////////////////////////
     template<typename ColorMap, typename OutputIterator>
       void Connect(RoadmapType* _rm, StatClass& _stats, ColorMap& _cmap,
           VID _vid, OutputIterator _collision){
         Connect(_rm, _stats, _cmap, _vid, _rm->GetGraph()->begin(), _rm->GetGraph()->end(), _collision);
       }
 
+    ////////////////////////////////////////////////////////////////////////////
+    /// @brief Generate edges between two sets of nodes
+    ///
+    /// @overload
+    /// Uses entire roadmap as second set of nodes and no output of collision
+    /// witnesses.
+    ////////////////////////////////////////////////////////////////////////////
     template<typename ColorMap, typename InputIterator>
       void Connect(RoadmapType* _rm, StatClass& _stats, ColorMap& _cmap,
           InputIterator _itrFirst, InputIterator _itrLast){
@@ -109,6 +132,12 @@ class ConnectorMethod : public MPBaseObject<MPTraits> {
         Connect(_rm, _stats, _cmap, _itrFirst, _itrLast, back_inserter(collision));
       }
 
+    ////////////////////////////////////////////////////////////////////////////
+    /// @brief Generate edges between two sets of nodes
+    ///
+    /// @overload
+    /// Uses entire roadmap as second set of nodes.
+    ////////////////////////////////////////////////////////////////////////////
     template<typename ColorMap, typename InputIterator, typename OutputIterator>
       void Connect(RoadmapType* _rm, StatClass& _stats, ColorMap& _cmap,
           InputIterator _itrFirst, InputIterator _itrLast,
@@ -119,6 +148,13 @@ class ConnectorMethod : public MPBaseObject<MPTraits> {
             _collision);
       }
 
+    ////////////////////////////////////////////////////////////////////////////
+    /// @brief Generate edges between two sets of nodes
+    ///
+    /// @overload
+    /// Uses a single VID as the first set of nodes and no output of collision
+    /// witnesses.
+    ////////////////////////////////////////////////////////////////////////////
     template<typename ColorMap, typename InputIterator>
       void Connect(RoadmapType* _rm, StatClass& _stats, ColorMap& _cmap,
           VID _vid,
@@ -127,6 +163,12 @@ class ConnectorMethod : public MPBaseObject<MPTraits> {
         Connect(_rm, _stats, _cmap, _vid, _itrFirst, _itrLast, back_inserter(collision));
       }
 
+    ////////////////////////////////////////////////////////////////////////////
+    /// @brief Generate edges between two sets of nodes
+    ///
+    /// @overload
+    /// Uses a single VID as the first set of nodes.
+    ////////////////////////////////////////////////////////////////////////////
     template<typename ColorMap, typename InputIterator, typename OutputIterator>
       void Connect(RoadmapType* _rm, StatClass& _stats, ColorMap& _cmap,
           VID _vid,
@@ -136,6 +178,12 @@ class ConnectorMethod : public MPBaseObject<MPTraits> {
         Connect(_rm, _stats, _cmap, vids.begin(), vids.end(), _itrFirst, _itrLast, _collision);
       }
 
+    ////////////////////////////////////////////////////////////////////////////
+    /// @brief Generate edges between two sets of nodes
+    ///
+    /// @overload
+    /// No output of collision witnesses.
+    ////////////////////////////////////////////////////////////////////////////
     template<typename ColorMap, typename InputIterator1, typename InputIterator2>
       void Connect(RoadmapType* _rm, StatClass& _stats, ColorMap& _cmap,
           InputIterator1 _itr1First, InputIterator1 _itr1Last,
@@ -144,6 +192,31 @@ class ConnectorMethod : public MPBaseObject<MPTraits> {
         Connect(_rm, _stats, _cmap, _itr1First, _itr1Last, _itr2First, _itr2Last, back_inserter(collision));
       }
 
+    ////////////////////////////////////////////////////////////////////////////
+    /// @brief Generate edges between two sets of nodes
+    /// @param _rm The roadmap to generate edges in and where the input nodes
+    ///        are found
+    /// @param _stats The stat class inside the MPProblem
+    /// @param _cmap A color map over the underlying RoadmapGraph, used in CC
+    ///        computations
+    /// @param _itr1First Begin iterator of first set of VIDs
+    /// @param _itr1Last End iterator of first set of VIDs
+    /// @param _itr2First Begin iterator of second set of VIDs
+    /// @param _itr2Last End iterator of second set of VIDs
+    /// @param _collision Output iterator to store collision witnesses
+    ///
+    /// @usage
+    /// @code
+    /// ConnectorPointer c = this->GetMPProblem()->GetConnector(m_cLabel);
+    /// ColorMapType cm;
+    /// vector<VID> c1, c2;
+    /// vector<CfgType> col;
+    /// c->Connect(this->GetMPProblem()->GetRoadmap(),
+    ///            this->GetMPProblem()->GetStatClass(),
+    ///            cmap, c1.begin(), c1.end(), c2.begin(), c2.end(),
+    ///            back_inserter(col));
+    /// @endcode
+    ////////////////////////////////////////////////////////////////////////////
     template<typename ColorMap, typename InputIterator1, typename InputIterator2, typename OutputIterator>
       void Connect(RoadmapType* _rm, StatClass& _stats, ColorMap& _cmap,
           InputIterator1 _itr1First, InputIterator1 _itr1Last,
