@@ -71,27 +71,8 @@ enum NFType {K, RADIUS, OPTIMAL, APPROX, OTHER};
 /// @c FindNeighbors takes an input configuration and a set of candidate
 /// neighbors and returns the computed set of "nearest" neighbors.
 ///
-/// @usage
-/// @code
-/// NeighborhoodFinderPointer nf = this->GetMPProblem()->GetNeighborhoodFinder(m_nfLabel);
-/// CfgType c;
-/// vector<pair<VID, double> > neighbors;
-/// nf->FindNeighbors(this->GetMPProblem()->GetRoadmap(), c, back_inserter(neighbors));
-/// @endcode
-/// A roadmap must be specified as the set of candidate neighbors must be
-/// located within this graph.
-///
 /// @c FindNeighborPairs determines the "closest" pairs of configurations
 /// betweeen two sets of nodes located in a roadmap.
-///
-/// @usage
-/// @code
-/// NeighborhoodFinderPointer nf = this->GetMPProblem()->GetNeighborhoodFinder(m_nfLabel);
-/// vector<VID> c1, c2;
-/// vector<pair<pair<VID, VID>, double> > neighbors;
-/// nf->FindNeighbors(this->GetMPProblem()->GetRoadmap(), c1.begin(), c1.end(),
-/// c2.begin(), c2.end(), back_inserter(neighbors));
-/// @endcode
 ////////////////////////////////////////////////////////////////////////////////
 template<class MPTraits>
 class NeighborhoodFinderMethod : public MPBaseObject<MPTraits> {
@@ -128,12 +109,40 @@ class NeighborhoodFinderMethod : public MPBaseObject<MPTraits> {
     //   implemented in base classes
     ////////////////////////////////////////////////////////////////////////////////////
 
+    ////////////////////////////////////////////////////////////////////////////
+    /// @brief Finds "closest" neighbors in a set of nodes to an input configuration
+    ///
+    /// @overload
+    /// Uses the entire roadmap as set of nodes.
+    ////////////////////////////////////////////////////////////////////////////
     template<typename OutputIterator>
       OutputIterator FindNeighbors(RoadmapType* _rmp, const CfgType& _cfg, OutputIterator _out){
         m_fromRDMPVersion = true;
         return FindNeighbors(_rmp, _rmp->GetGraph()->begin(), _rmp->GetGraph()->end(), _cfg, _out);
       }
 
+    ////////////////////////////////////////////////////////////////////////////
+    /// @brief Finds "closest" neighbors in a set of nodes to an input configuration
+    /// @param _rmp The roadmap when input nodes are found
+    /// @param _first Begin iterator of the set of VIDs
+    /// @param _last End iterator of the set of VIDs
+    /// @param _cfg The query configuration to find neighbors of
+    /// @param _out Output iterator for neighbor set. Underlying data structure
+    ///        is of pair<VID, double> representing the neighbor and distance to
+    ///        _cfg
+    /// @return The final output iterator _out
+    ///
+    /// @usage
+    /// @code
+    /// NeighborhoodFinderPointer nf = this->GetMPProblem()->GetNeighborhoodFinder(m_nfLabel);
+    /// CfgType c;
+    /// vector<VID> nodes;
+    /// vector<pair<VID, double> > neighbors;
+    /// nf->FindNeighbors(this->GetMPProblem()->GetRoadmap(),
+    ///                   nodes.begin(), nodes.end(), c,
+    ///                   back_inserter(neighbors));
+    /// @endcode
+    ////////////////////////////////////////////////////////////////////////////
     template<typename InputIterator, typename OutputIterator>
       OutputIterator FindNeighbors(RoadmapType* _rmp,
           InputIterator _first, InputIterator _last, const CfgType& _cfg, OutputIterator _out){
@@ -144,8 +153,28 @@ class NeighborhoodFinderMethod : public MPBaseObject<MPTraits> {
         return _out;
       }
 
-    // FindNeighbors that operate over two ranges of VIDS.  K total pair<VID,VID> are returned that
-    // represent the _kclosest pairs of VIDs between the two ranges.
+    ////////////////////////////////////////////////////////////////////////////
+    /// @brief Finds "closest" pairs of neighbors between two set of nodes
+    /// @param _rmp The roadmap when input nodes are found
+    /// @param _first1 Begin iterator of the first set of VIDs
+    /// @param _last1 End iterator of the first set of VIDs
+    /// @param _first2 Begin iterator of the second set of VIDs
+    /// @param _last2 End iterator of the second set of VIDs
+    /// @param _out Output iterator for neighbor set. Underlying data structure
+    ///        is of pair<pair<VID,VID>, double> representing the neighbor pair
+    ///        and its corresponing distance
+    /// @return The final output iterator _out
+    ///
+    /// @usage
+    /// @code
+    /// NeighborhoodFinderPointer nf = this->GetMPProblem()->GetNeighborhoodFinder(m_nfLabel);
+    /// vector<VID> s1, s2;
+    /// vector<pair<pair<VID, VID>, double> > neighbors;
+    /// nf->FindNeighbors(this->GetMPProblem()->GetRoadmap(),
+    ///                   s1.begin(), s1.end(), s2.begin(), s2.end(),
+    ///                   back_inserter(neighbors));
+    /// @endcode
+    ////////////////////////////////////////////////////////////////////////////
     template<typename InputIterator, typename OutputIterator>
       OutputIterator FindNeighborPairs(RoadmapType* _rmp,
           InputIterator _first1, InputIterator _last1,
