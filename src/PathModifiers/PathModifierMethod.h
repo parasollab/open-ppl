@@ -13,13 +13,6 @@
 ///
 /// PathModifierMethod has one main method, @c Modify, which takes an input path
 /// and produces a valid output path.
-///
-/// @usage
-/// @code
-/// PathModifierPointer pm = this->GetMPProblem()->GetPathModifier(m_pmLabel);
-/// vector<CfgType> inputPath, outputPath;
-/// pm->Modify(inputPath, outputPath);
-/// @endcode
 ////////////////////////////////////////////////////////////////////////////////
 template<class MPTraits>
 class PathModifierMethod : public MPBaseObject<MPTraits> {
@@ -36,6 +29,19 @@ class PathModifierMethod : public MPBaseObject<MPTraits> {
     virtual void ParseXML(XMLNodeReader& _node);
     virtual void Print(ostream& _os) const;
 
+    ////////////////////////////////////////////////////////////////////////////
+    /// @brief Modifies the input path to a new valid path
+    /// @param _originalPath A path of configurations within a resolution
+    ///        distance of each other
+    /// @param _newPath An empty vector to place the resulting modified path
+    ///
+    /// @usage
+    /// @code
+    /// PathModifierPointer pm = this->GetMPProblem()->GetPathModifier(m_pmLabel);
+    /// vector<CfgType> inputPath, outputPath;
+    /// pm->Modify(inputPath, outputPath);
+    /// @endcode
+    ////////////////////////////////////////////////////////////////////////////
     virtual void Modify(vector<CfgType>& _originalPath, vector<CfgType>& _newPath);
 
   protected:

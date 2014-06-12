@@ -9,18 +9,8 @@
 /// @brief Base algorithm abstraction for \ref Extenders.
 ///
 /// ExtenderMethod has one main method, @c Extend, to grow a simple path from a
-/// starting node in some input direction.
-/// @usage
-/// @code
-/// ExtenderPointer e = this->GetMPProblem()->GetExtender(m_eLabel);
-/// CfgType c, cDir, cNew;
-/// vector<CfgType> intermediates;
-/// e->Extend(c, cDir, cNew, intermediates);
-/// @endcode
-/// @c Extend returns a boolean of success/fail, fills @c cNew with the extended
-/// configuration, and fills @c intermediates with any intermediate
-/// configurations along the polygon chain of the expansion --- not all
-/// expansion methods go in straight lines through @cspace.
+/// starting node in some input direction - note that not all expansion
+/// methods go in straight lines through @cspace.
 ////////////////////////////////////////////////////////////////////////////////
 template<class MPTraits>
 class ExtenderMethod : public MPBaseObject<MPTraits> {
@@ -33,6 +23,24 @@ class ExtenderMethod : public MPBaseObject<MPTraits> {
 
     virtual void Print(ostream& _os) const;
 
+    ////////////////////////////////////////////////////////////////////////////
+    /// @brief Extends a path from an input configuration towards a given
+    ///        direction
+    /// @param _nearest Initial configuration to grow from
+    /// @param _dir Direction configuration to grow to
+    /// @param _new Placeholder for resulting configuration
+    /// @param _innerNodes Placeholder for polygonal chain configurations for
+    ///        non-straight-line extention operations
+    /// @return Success/fail for extention operation
+    ///
+    /// @usage
+    /// @code
+    /// ExtenderPointer e = this->GetMPProblem()->GetExtender(m_eLabel);
+    /// CfgType c, cDir, cNew;
+    /// vector<CfgType> intermediates;
+    /// bool pass = e->Extend(c, cDir, cNew, intermediates);
+    /// @endcode
+    ////////////////////////////////////////////////////////////////////////////
     virtual bool Extend(const CfgType& _nearest, const CfgType& _dir,
         CfgType& _new, vector<CfgType>& _innerNodes) =0;
 };
