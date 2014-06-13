@@ -88,6 +88,10 @@ class Environment {
     size_t GetUsableMultiBodyCount() const {return m_usableMultiBodies.size();}
     size_t GetNavigableSurfacesCount() const {return m_navigableSurfaces.size();}
 
+    //Returns a pointer to ActiveBody according to this given index.
+    //If this index is out of the boundary of list, NULL will be returned.
+    shared_ptr<MultiBody> GetActiveBody(size_t _index) const;
+
     //Returns a pointer to MultiBody according to this given index.
     //If this index is out of the boundary of list, NULL will be returned.
     shared_ptr<MultiBody> GetMultiBody(size_t _index) const;
@@ -154,27 +158,5 @@ class Environment {
     vector<shared_ptr<MultiBody> > m_navigableSurfaces; //surfaces
 };
 
-inline
-shared_ptr<MultiBody>
-Environment::GetMultiBody(size_t _index) const {
-  if(_index < m_usableMultiBodies.size())
-    return m_usableMultiBodies[_index];
-  else {
-    cerr << "Error:Cannot access MultiBody with index " << _index
-      << ". Possible indices are [0, " << m_usableMultiBodies.size() << ")." << endl;
-    exit(1);
-  }
-}
-
-inline
-shared_ptr<MultiBody> Environment::GetNavigableSurface(size_t _index) const {
-  if(_index < m_navigableSurfaces.size())
-    return m_navigableSurfaces[_index];
-  else {
-    cerr << "Error:Cannot access NavigableSurface with index " << _index
-      << ". Possible indices are [0, " << m_navigableSurfaces.size() << ")." << endl;
-    exit(1);
-  }
-}
 
 #endif

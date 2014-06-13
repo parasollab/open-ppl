@@ -102,6 +102,9 @@ class Body {
     void SetBase(Robot::Base _baseType) { m_baseType = _baseType; };
     void SetBaseMovement(Robot::BaseMovement _baseMovementType) { m_baseMovementType = _baseMovementType; };
 
+    void SetLabel(const int _label) { m_label = _label; };
+    int GetLabel() { return m_label; };
+
     void Read();
 
     virtual void Write(ostream& _os);
@@ -169,6 +172,7 @@ class Body {
     MultiBody* m_multibody;
     Transformation m_worldTransformation;
     bool m_isBase;
+    int m_label;
     Robot::Base m_baseType;
     Robot::BaseMovement m_baseMovementType;
 
