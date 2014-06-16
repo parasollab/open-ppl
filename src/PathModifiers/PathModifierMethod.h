@@ -1,5 +1,5 @@
-#ifndef PATHMODIFIERMETHOD_H_
-#define PATHMODIFIERMETHOD_H_
+#ifndef PATH_MODIFIER_METHOD_H_
+#define PATH_MODIFIER_METHOD_H_
 
 #include <string>
 #include <iostream>
@@ -26,7 +26,6 @@ class PathModifierMethod : public MPBaseObject<MPTraits> {
     PathModifierMethod(const string _pathFile = "");
     PathModifierMethod(MPProblemType* _problem, XMLNodeReader& _node);
 
-    virtual void ParseXML(XMLNodeReader& _node);
     virtual void Print(ostream& _os) const;
 
     ////////////////////////////////////////////////////////////////////////////
@@ -45,46 +44,57 @@ class PathModifierMethod : public MPBaseObject<MPTraits> {
     virtual void Modify(vector<CfgType>& _originalPath, vector<CfgType>& _newPath);
 
   protected:
-    string m_pathFile;        // Where to write the smoothed path
-
+    ////////////////////////////////////////////////////////////////////////////
+    /// @brief Modifies the input path to a new valid path
+    /// @param _originalPath A path of configurations within a resolution
+    ///        distance of each other
+    /// @param _newPath An empty vector to place the resulting modified path
+    /// @return success/failed modification
+    ////////////////////////////////////////////////////////////////////////////
     virtual bool ModifyImpl(vector<CfgType>& _originalPath, vector<CfgType>& _newPath) =0;
 
-    // Helper methods
+    ////////////////////////////////////////////////////////////////////////////
+    /// @brief Appends local plan to path
+    /// @param _path Path to append local plan to
+    /// @param _lpOutput Local plan output
+    /// @param _end End Cfg of local plan
+    ////////////////////////////////////////////////////////////////////////////
     void AddToPath(vector<CfgType>& _path, LPOutput<MPTraits>* _lpOutput, CfgType& _end);
+
+    ////////////////////////////////////////////////////////////////////////////
+    /// @brief Extract path VIDs in roadmap from path
+    /// @param _path Path to extract VIDs from
+    /// @param _graph RoadmapGraph containing path nodes
+    /// @return Path VIDs
+    ////////////////////////////////////////////////////////////////////////////
     vector<VID> GetPathVIDs(vector<CfgType>& _path, GraphType* _graph);
 
   private:
+    ////////////////////////////////////////////////////////////////////////////
+    /// @brief Write path to file
+    /// @param _path Path
+    ////////////////////////////////////////////////////////////////////////////
     void OutputPath(vector<CfgType>& _path);
+
+    string m_pathFile; ///< Where to write the smoothed path
 };
 
-// Non-XML Constructor
 template<class MPTraits>
 PathModifierMethod<MPTraits>::PathModifierMethod(const string _pathFile) :
   MPBaseObject<MPTraits>(), m_pathFile(_pathFile) {
-    this->SetName("PathModifier");
-    m_pathFile = "";
   }
 
-// XML Constructor
 template<class MPTraits>
 PathModifierMethod<MPTraits>::PathModifierMethod(MPProblemType* _problem, XMLNodeReader& _node):
   MPBaseObject<MPTraits>(_problem, _node) {
-    this->SetName("PathModifier");
-    ParseXML(_node);
+    m_pathFile = _node.stringXMLParameter("pathFile", false, "", "Smoothed path filename");
   }
-
-template<class MPTraits>
-void
-PathModifierMethod<MPTraits>::ParseXML(XMLNodeReader& _node) {
-  m_pathFile = _node.stringXMLParameter("pathFile", false, "", "Smoothed path filename");
-  this->m_debug = _node.boolXMLParameter("debug", false, false, "Debug mode");
-}
 
 template<class MPTraits>
 void
 PathModifierMethod<MPTraits>::Print(ostream& _os) const {
-  _os << this->GetNameAndLabel() << endl;
-  _os << "\tpath file = \"" << m_pathFile << "\"" << endl;
+  MPBaseObject<MPTraits>::Print(_os);
+  _os << "\tpath file: \"" << m_pathFile << "\"" << endl;
 }
 
 template<class MPTraits>

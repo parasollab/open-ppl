@@ -1,5 +1,5 @@
-#ifndef CONNECTIONMETHOD_H_
-#define CONNECTIONMETHOD_H_
+#ifndef CONNECTION_METHOD_H_
+#define CONNECTION_METHOD_H_
 
 #include <boost/mpl/for_each.hpp>
 #include "Utilities/MPUtils.h"
@@ -232,28 +232,56 @@ class ConnectorMethod : public MPBaseObject<MPTraits> {
             );
       }
 
-    /////////////////////////////////////////////
-    // Utility Methods
     typedef pair<VID, VID> ConnectionAttempt;
+    typedef vector<pair<ConnectionAttempt, bool> > ConnectionAttempts;
+    typedef map<ConnectionAttempt, bool> ConnectionAttemptsCache;
+
+    ////////////////////////////////////////////////////////////////////////////
+    /// @brief Add connection attempt
+    /// @param _v1 Source VID
+    /// @param _v2 Target VID
+    /// @param _b Success/failed connection attempt
+    ///
+    /// Add connection attempt to both iteration and all time connection attempt
+    /// caches.
+    ////////////////////////////////////////////////////////////////////////////
     void AddConnectionAttempt(VID _v1, VID _v2, bool _b);
 
-    //Connection Attempts storage. Used for a single connection iteration
-    typedef vector<pair<ConnectionAttempt, bool> > ConnectionAttempts;
+    ////////////////////////////////////////////////////////////////////////////
+    /// @return Begin iterator of this iteration's attempts
+    ////////////////////////////////////////////////////////////////////////////
     typename ConnectionAttempts::const_iterator ConnectionAttemptsBegin() const { return m_attempts.begin(); }
+    ////////////////////////////////////////////////////////////////////////////
+    /// @return End iterator of this iteration's attempts
+    ////////////////////////////////////////////////////////////////////////////
     typename ConnectionAttempts::const_iterator ConnectionAttemptsEnd() const { return m_attempts.end(); }
-    void ClearConnectionAttempts() { m_attempts.clear(); }
 
-    //Connection attempt cache storage. Used for all time
-    typedef map<ConnectionAttempt, bool> ConnectionAttemptsCache;
+    ////////////////////////////////////////////////////////////////////////////
+    /// @brief Check if attempt is in cache
+    /// @param _v1 Source VID
+    /// @param _v2 Target VID
+    /// @return Yes/no attempt is cached
+    ////////////////////////////////////////////////////////////////////////////
     bool IsCached(VID _v1, VID _v2);
+    ////////////////////////////////////////////////////////////////////////////
+    /// @brief Check value of attempt in cache
+    /// @param _v1 Source VID
+    /// @param _v2 Target VID
+    /// @return Success/failed connection attempt
+    ////////////////////////////////////////////////////////////////////////////
     bool GetCached(VID _v1, VID _v2);
 
+    ////////////////////////////////////////////////////////////////////////////
+    /// @brief Clear this iteration's attempts cache
+    ////////////////////////////////////////////////////////////////////////////
+    void ClearConnectionAttempts() { m_attempts.clear(); }
+
   protected:
-    ConnectionAttempts m_attempts;
-    ConnectionAttemptsCache m_attemptsCache;
-    string  m_nfLabel;
-    string  m_lpLabel;
-    bool    m_addPartialEdge;
+    ConnectionAttempts m_attempts; ///< Single iteration connection attempts. Attempt is a pair<VID, VID> (edge) and bool (success/fail)
+    ConnectionAttemptsCache m_attemptsCache; ///< All time connection attempts. Attempt is a pair<VID, VID> (edge) and bool (success/fail)
+    string  m_nfLabel; ///< Neighborhood Finder
+    string  m_lpLabel; ///< Local Planner
+    bool    m_addPartialEdge; ///< If failed attempt add partially validated portion of edge?
 };
 
 template<class MPTraits>
@@ -276,7 +304,7 @@ ConnectorMethod<MPTraits>::ConnectorMethod(MPProblemType* _problem, XMLNodeReade
 template<class MPTraits>
 void
 ConnectorMethod<MPTraits>::Print(ostream& _os) const {
-  _os << "Name: " << this->GetNameAndLabel() << endl;
+  MPBaseObject<MPTraits>::Print(_os);
   _os << "\tnfLabel: " << m_nfLabel << endl;
   _os << "\tlpLabel: " << m_lpLabel << endl;
   _os << "\taddPartialEdge: " << m_addPartialEdge << endl;

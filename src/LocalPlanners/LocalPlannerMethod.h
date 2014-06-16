@@ -1,5 +1,5 @@
-#ifndef LOCALPLANNERMETHOD_H_
-#define LOCALPLANNERMETHOD_H_
+#ifndef LOCAL_PLANNER_METHOD_H_
+#define LOCAL_PLANNER_METHOD_H_
 
 #include "MPProblem/Environment.h"
 #include "Utilities/MetricUtils.h"

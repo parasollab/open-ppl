@@ -367,11 +367,10 @@ class MethodSet {
     map<string, MethodPointer> m_elements;
 };
 
-
-
 ////////////////////////////////////////////////////////////////////////////////
 // MPBaseObject
 ////////////////////////////////////////////////////////////////////////////////
+
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup MotionPlanningUniverse
 /// @brief Base class of all algorithm abstractions in PMPL.
@@ -383,45 +382,89 @@ class MethodSet {
 template<class MPTraits>
 class MPBaseObject {
   public:
+
     typedef typename MPTraits::MPProblemType MPProblemType;
 
     MPBaseObject(MPProblemType* _problem = NULL, string _label = "", string _name = "", bool _debug = false) :
-      m_problem(_problem), m_label(_label), m_name(_name), m_debug(_debug) {};
+      m_name(_name), m_debug(_debug), m_label(_label), m_problem(_problem) {};
     MPBaseObject(MPProblemType* _problem, XMLNodeReader& _node, string _name="") :
-      m_problem(_problem), m_name(_name) {
+      m_name(_name), m_problem(_problem) {
         ParseXML(_node);
       };
     virtual ~MPBaseObject() {}
 
+    ////////////////////////////////////////////////////////////////////////////
+    /// @brief Parse XML node
+    /// @param _node XML node
+    ///
+    /// Parse XML node. By default every MPBaseObject requires a label and
+    /// optionally loads a debug parameter.
+    ////////////////////////////////////////////////////////////////////////////
     virtual void ParseXML(XMLNodeReader& _node) {
-      m_label = _node.stringXMLParameter("label", false, "", "Label Identifier");
+      m_label = _node.stringXMLParameter("label", true, "", "Label Identifier");
       m_debug = _node.boolXMLParameter("debug", false, false,
           "Run-time debug on(true)/off(false)");
     };
 
-    MPProblemType* GetMPProblem() const {return m_problem;}
-    virtual void SetMPProblem(MPProblemType* _m) {m_problem = _m;}
-    virtual void Print(ostream& _os) const {};
+    ////////////////////////////////////////////////////////////////////////////
+    /// @brief Print values of object
+    /// @param _os ostream to print values to
+    ///
+    /// Print values of object to ostream. By default name and label are output.
+    ////////////////////////////////////////////////////////////////////////////
+    virtual void Print(ostream& _os) const {
+      _os << this->GetNameAndLabel() << endl;
+    };
 
+    ////////////////////////////////////////////////////////////////////////////
+    /// @return MPProblem object
+    ////////////////////////////////////////////////////////////////////////////
+    MPProblemType* GetMPProblem() const {return m_problem;}
+    ////////////////////////////////////////////////////////////////////////////
+    /// @param _m MPProblem object
+    ////////////////////////////////////////////////////////////////////////////
+    virtual void SetMPProblem(MPProblemType* _m) {m_problem = _m;}
+
+    ////////////////////////////////////////////////////////////////////////////
+    /// @brief Get unique string identifier to object
+    /// @return unique identifier "m_name::m_label"
+    ////////////////////////////////////////////////////////////////////////////
+    string GetNameAndLabel() const {return m_name + "::" + m_label;}
+    ////////////////////////////////////////////////////////////////////////////
+    /// @param _s label
+    ////////////////////////////////////////////////////////////////////////////
     void SetLabel(string _s) {m_label = _s;}
 
-    string GetNameAndLabel() const {return m_name + "::" + m_label;}
+    ////////////////////////////////////////////////////////////////////////////
+    /// @return debug value
+    ////////////////////////////////////////////////////////////////////////////
     bool GetDebug() const {return m_debug;}
+    ////////////////////////////////////////////////////////////////////////////
+    /// @param _d debug value
+    ////////////////////////////////////////////////////////////////////////////
     void SetDebug(bool _d) {m_debug = _d;}
 
-  private:
-    MPProblemType* m_problem; ///< Shared pointer to MPProblem object
-    string m_label; ///< Unique identifier of object
-
   protected:
+
+    ////////////////////////////////////////////////////////////////////////////
+    /// @return label
+    ////////////////////////////////////////////////////////////////////////////
     string GetLabel() const {return m_label;}
 
+    ////////////////////////////////////////////////////////////////////////////
+    /// @param _s class name
+    ////////////////////////////////////////////////////////////////////////////
     void SetName(string _s) {m_name  = _s;}
 
     string m_name; ///< Class name
     bool m_debug; ///< Debug statements on or off
 
     template<typename T, typename U> friend class MethodSet;
+
+  private:
+
+    string m_label; ///< Unique identifier of object
+    MPProblemType* m_problem; ///< Shared pointer to MPProblem object
 };
 
 ///////////////////////////////////////////////////////////////////////////////

@@ -1,5 +1,5 @@
-#ifndef METRICSMETHOD_H_
-#define METRICSMETHOD_H_
+#ifndef METRIC_METHOD_H_
+#define METRIC_METHOD_H_
 
 #include "Utilities/MPUtils.h"
 
@@ -13,13 +13,11 @@
 template<class MPTraits>
 class MetricMethod : public MPBaseObject<MPTraits> {
   public:
-    MetricMethod() {}
-    MetricMethod(typename MPTraits::MPProblemType* _problem, XMLNodeReader& _node) : MPBaseObject<MPTraits>(_problem, _node) {}
-    virtual ~MetricMethod(){}
 
-    virtual void Print(ostream& _os) const {
-      _os << this->GetNameAndLabel() << endl;
-    }
+    MetricMethod() {}
+    MetricMethod(typename MPTraits::MPProblemType* _problem, XMLNodeReader& _node)
+      : MPBaseObject<MPTraits>(_problem, _node) {}
+    virtual ~MetricMethod() {}
 
     ////////////////////////////////////////////////////////////////////////////
     /// @brief Compute a metric from a roadmap

@@ -1,8 +1,6 @@
 #ifndef DISTANCEMETRICMETHOD_H
 #define DISTANCEMETRICMETHOD_H
 
-const double MAX_DIST =  1e10;
-
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup DistanceMetrics
 /// @brief Base algorithm abstraction for \ref DistanceMetrics.
@@ -21,11 +19,9 @@ class DistanceMetricMethod  : public MPBaseObject<MPTraits> {
     typedef typename MPTraits::CfgType CfgType;
     typedef typename MPTraits::MPProblemType MPProblemType;
 
-    DistanceMetricMethod();
+    DistanceMetricMethod() {}
     DistanceMetricMethod(MPProblemType* _problem, XMLNodeReader& _node, bool _warn = true);
-    virtual ~DistanceMetricMethod();
-
-    virtual void Print(ostream& _os) const;
+    virtual ~DistanceMetricMethod() {}
 
     ////////////////////////////////////////////////////////////////////////////
     /// @brief Compute a distance between two configurations
@@ -61,26 +57,10 @@ class DistanceMetricMethod  : public MPBaseObject<MPTraits> {
 };
 
 template<class MPTraits>
-DistanceMetricMethod<MPTraits>::DistanceMetricMethod() {
-  this->SetName("DistanceMetricMethod");
-}
-
-template<class MPTraits>
 DistanceMetricMethod<MPTraits>::DistanceMetricMethod(MPProblemType* _problem,
     XMLNodeReader& _node, bool _warn) : MPBaseObject<MPTraits>(_problem, _node) {
-  this->SetName("DistanceMetricMethod");
   if(_warn)
     _node.warnUnrequestedAttributes();
-}
-
-template<class MPTraits>
-DistanceMetricMethod<MPTraits>::~DistanceMetricMethod() {
-}
-
-template<class MPTraits>
-void
-DistanceMetricMethod<MPTraits>::Print(ostream& _os) const {
-  _os << this->GetNameAndLabel() << endl;
 }
 
 template<class MPTraits>
