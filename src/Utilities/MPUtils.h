@@ -31,13 +31,8 @@ using namespace mathtool;
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 
-#define NULL_WT_INFO -999               ///< to pad weight fields for graph conversions
-#define INVALID_LP -999                 ///< invalid local planner id
-#define INVALID_RNGSEED -999            ///< invalid seed value for Random Number Generator
-#define MAX_INT  999999999
-#define INVALID_INT -999
-#define MAX_DBL  999999999.99999
-#define INVALID_DBL -999
+#define MAX_INT  numeric_limits<int>::max()
+#define MAX_DBL  numeric_limits<double>::max()
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////

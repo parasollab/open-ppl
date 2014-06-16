@@ -168,7 +168,7 @@ Query<MPTraits>::ParseXML(XMLNodeReader& _node) {
   string searchAlg = _node.stringXMLParameter("graphSearchAlg", false, "dijkstras", "Graph search algorithm");
   m_intermediateFile = _node.stringXMLParameter("intermediateFiles", false, "", "Determines output location of intermediate nodes.");
   m_deleteNodes = _node.boolXMLParameter("deleteNodes", false, false, "Whether or not to delete start and goal from roadmap");
-  m_fullRecreatePath = _node.boolXMLParameter("fullRecreatePath", true, true, "Whether or not to recreate path");
+  m_fullRecreatePath = _node.boolXMLParameter("fullRecreatePath", false, true, "Whether or not to recreate path");
   m_pathModifierLabel = _node.stringXMLParameter("pmLabel", false, "", "Path modifier method");
 
   for(XMLNodeReader::childiterator citr = _node.children_begin(); citr != _node.children_end(); ++citr) {

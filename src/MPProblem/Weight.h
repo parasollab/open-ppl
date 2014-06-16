@@ -97,7 +97,7 @@ DefaultWeight<CfgType>::~DefaultWeight(){}
 template<class CfgType>
 double
 DefaultWeight<CfgType>::InvalidWeight(){
-  return INVALID_DBL;
+  return -1;
 }
 
 template<class CfgType>
