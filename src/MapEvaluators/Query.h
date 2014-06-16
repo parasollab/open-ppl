@@ -115,7 +115,7 @@ Query<MPTraits>::Query(bool _deleteNodes, string _searchAlg, string _pathFile,
     string _pathModifierLabel, bool _fullRecreatePath) : m_pathFile(_pathFile),
     m_intermediateFile(_intermediateFile), m_lpLabel(_lpLabel),
     m_dmLabel(_dmLabel), m_deleteNodes(_deleteNodes),
-    m_pathModifierLabel(_pathModifierLabel), m_fullRecreatePath(_fullRecreatePath) {
+    m_fullRecreatePath(_fullRecreatePath), m_pathModifierLabel(_pathModifierLabel) {
   this->SetName("Query");
   SetSearchAlgViaString(_searchAlg);
 }

@@ -31,10 +31,6 @@ using namespace mathtool;
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 
-#define DEGTORAD (PI/180.0)
-#define RADTODEG (180.0/PI)
-
-
 #define NULL_WT_INFO -999               ///< to pad weight fields for graph conversions
 #define INVALID_LP -999                 ///< invalid local planner id
 #define INVALID_RNGSEED -999            ///< invalid seed value for Random Number Generator
