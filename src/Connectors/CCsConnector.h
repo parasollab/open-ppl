@@ -164,7 +164,9 @@ CCsConnector<MPTraits>::ConnectCC(RoadmapType* _rm, StatClass& _stats,
     VID cc2Elem = npit->first.second;
 
     CfgType _col;
-    if (!lp->IsConnected(rgraph->GetVertex(cc1Elem), rgraph->GetVertex(cc2Elem),
+    if (lp->IsConnected(
+          rgraph->GetVertex(cc1Elem),
+          rgraph->GetVertex(cc2Elem),
           _col, &lpOutput,
           env->GetPositionRes(), env->GetOrientationRes(), true)) {
       rgraph->AddEdge(cc1Elem, cc2Elem, lpOutput.m_edge);

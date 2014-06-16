@@ -562,9 +562,10 @@ LocalManeuveringStrategy<MPTraits>::Initialize(){
   // Setup RRT Variables
   CfgType tmp, tmp2;
   Print(cout);
-  if (this->m_debug)
+  if (this->m_debug) {
     cout << "num robots: " << env->GetActiveBodyCount() << endl;
-  cout << " validity checker name: " << vc->GetName() << endl;
+    cout << " validity checker name: " << vc->GetNameAndLabel() << endl;
+  }
   //tmp.SetNumCfgs( env->GetActiveBodyCount() );
 
   //the query file will first contain the starting positions, and then the goal positions
@@ -1003,9 +1004,10 @@ LocalManeuveringStrategy<MPTraits>::TryPlan(size_t& _startTick, size_t _cfgIndex
   current.SetReverse(_backwards);
   CompositeCfgType next = current;
 
-  if (this->m_debug)
+  if (this->m_debug) {
     cout << "Going to plan for " << _planSteps << " timesteps" << endl;
-  cout << " Validity checker: " << vc->GetName() << endl;
+    cout << " Validity checker: " << vc->GetNameAndLabel() << endl;
+  }
 
   ////////////////////////////////////////////////////////////////////////////
 
