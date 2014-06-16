@@ -1,8 +1,14 @@
-#ifndef _MAX_FLOW_EVALUATION_H
-#define _MAX_FLOW_EVALUATION_H
+#ifndef MAX_FLOW_EVALUATION_H_
+#define MAX_FLOW_EVALUATION_H_
 
 #include "GraphAlgo.h"
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup MapEvaluators
+/// @brief TODO.
+///
+/// TODO.
+////////////////////////////////////////////////////////////////////////////////
 template <class CFG, class WEIGHT, class CAPACITY>
 class MaxFlowEvaluation : public MapEvaluationMethod<CFG,WEIGHT> {
  public:

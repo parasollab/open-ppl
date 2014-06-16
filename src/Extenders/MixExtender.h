@@ -1,17 +1,12 @@
-/*
- * =============================================================================
- *
- *       Filename:  MixExtender.h
- *
- *    Description:  Randomly find an extender and apply it
- *
- * =============================================================================
- */
 #ifndef MIXEXTENDER_H_
 #define MIXEXTENDER_H_
 
 #include "ExtenderMethod.h"
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup Extenders
+/// @brief Randomly choose an extender from a set of extenders.
+////////////////////////////////////////////////////////////////////////////////
 template<class MPTraits>
 class MixExtender : public ExtenderMethod<MPTraits> {
   public:

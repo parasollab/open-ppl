@@ -1,24 +1,19 @@
-/*
- * =============================================================================
- *
- *       Filename:  TraceObstacle.h
- *
- *    Description:  Trace obstacle, Random/Same Orientation. In this way
- *                  of extending, the first colliding triangle is found after
- *                  extending by BasicExtenderRandomOrientation. An obstacle
- *                  vector is obtained from the first detected obstacle triangle
- *                  that caused the collision. The source configuration is
- *                  extended in that direction with a randomly generated
- *                  orientation. This is useful when growing in areas where
- *                  difficult movements are needed.
- *
- * =============================================================================
- */
 #ifndef TRACEOBSTACLE_H_
 #define TRACEOBSTACLE_H_
 
 #include "BasicExtender.h"
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup Extenders
+/// @brief Extend tangent to a workspace obstacle.
+///
+/// Trace workspace obstacle. In this way of extending, the first
+/// colliding triangle is found after extending by @c BasicExtender. An obstacle
+/// vector is obtained from the first detected obstacle triangle that caused the
+/// collision. The source configuration is extended in that direction with a
+/// randomly generated orientation. This is useful when growing in areas where
+/// difficult movements are needed.
+////////////////////////////////////////////////////////////////////////////////
 template<class MPTraits>
 class TraceObstacle : public BasicExtender<MPTraits> {
   public:

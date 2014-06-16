@@ -1,18 +1,16 @@
-/*
- * =============================================================================
- *
- *       Filename:  BasicExtender.h
- *
- *    Description:  This is the standard way of expanding a tree toward a random
- *                  configuration. In this extend method, xrand is set to xrand.
- *
- * =============================================================================
- */
 #ifndef BASICEXTENDER_H_
 #define BASICEXTENDER_H_
 
 #include "ExtenderMethod.h"
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup Extenders
+/// @brief Basic straight-line extension.
+///
+/// Extends in straight-line through @cspace from \f$q_{near}\f$ towards
+/// \f$q_{dir}\f$ until either \f$q_{dir}\f$ is reached, a distance of
+/// \f$\Delta q\f$ is extended, or @cobst is reached.
+////////////////////////////////////////////////////////////////////////////////
 template<class MPTraits>
 class BasicExtender : public ExtenderMethod<MPTraits> {
   public:

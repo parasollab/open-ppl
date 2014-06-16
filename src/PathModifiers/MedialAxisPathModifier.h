@@ -6,6 +6,12 @@
 #include "LocalPlanners/MedialAxisLP.h"
 #include "Utilities/MedialAxisUtilities.h"
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup PathModifiers
+/// @brief TODO.
+///
+/// TODO.
+////////////////////////////////////////////////////////////////////////////////
 template<class MPTraits>
 class MedialAxisPathModifier : public PathModifierMethod<MPTraits> {
   public:
