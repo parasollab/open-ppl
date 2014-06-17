@@ -36,7 +36,7 @@ class SurfaceSampler : public SamplerMethod<MPTraits> {
     typedef typename MPProblemType::ValidityCheckerPointer ValidityCheckerPointer;
 
     SurfaceSampler(string _vcLabel="", double _maxAttempts=500, double _closeDist=0.1, double _propForMA=0.0, double _propForObs=0.0, int _obsSampleAttemptsPerIter=10, double _maxObsClearance=20.0, double _minObsClearance=2.0, double _overallMinClearanceReq=0.5, double _samplingdensity=-1.0, string _surfacesStrToIgnore="")
-      : m_vcLabel(_vcLabel), m_maxAttempts(_maxAttempts), m_closeDist(_closeDist), m_propForMA(_propForMA), m_propForObs(_propForObs), m_obsSampleAttemptsPerIter(_obsSampleAttemptsPerIter), m_maxObsClearance(_maxObsClearance), m_minObsClearance(_minObsClearance), m_overallMinClearanceReq(_overallMinClearanceReq), m_DensityPercent(_samplingdensity), m_surfacesStrToIgnore(_surfacesStrToIgnore) {
+      : m_vcLabel(_vcLabel), m_maxAttempts(_maxAttempts), m_closeDist(_closeDist), m_propForMA(_propForMA), m_propForObs(_propForObs), m_obsSampleAttemptsPerIter(_obsSampleAttemptsPerIter), m_maxObsClearance(_maxObsClearance), m_minObsClearance(_minObsClearance), m_overallMinClearanceReq(_overallMinClearanceReq), m_surfacesStrToIgnore(_surfacesStrToIgnore), m_DensityPercent(_samplingdensity) {
       this->SetName("SurfaceSampler");
       m_surfacesToIgnore = GetTags(m_surfacesStrToIgnore,",");
       m_SampleByDensity=false;
@@ -84,7 +84,7 @@ class SurfaceSampler : public SamplerMethod<MPTraits> {
       _out << "\tminObsClearance = " << m_minObsClearance
         << "\tmaxObsClearance = " << m_maxObsClearance
 	<< "\toverallMinClearanceReq = " << m_overallMinClearanceReq << endl;
-      _out << "\tcloseDist = " << m_closeDist 
+      _out << "\tcloseDist = " << m_closeDist
         << "\tsamplingdensity = " << m_DensityPercent<< endl;
       _out << "\tsurfacesToIgnore = [";
       for(int i=0; i<(int)m_surfacesToIgnore.size();i++) {
@@ -172,7 +172,8 @@ class SurfaceSampler : public SamplerMethod<MPTraits> {
 	      Point2d pos2d = tmp.GetPos();
 	      double  h     = tmp.GetHeight();
 	      Point3d pos3d = Point3d(pos2d[0], h, pos2d[1]);
-	      bool isValid = vcp->IsValid(tmp, callee);
+	      //bool isValid = vcp->IsValid(tmp, callee);
+	      vcp->IsValid(tmp, callee);
 	      int closeIndex = -1;
 	      double distanceToNearestNode = DistToNearestOnSurf(tmp,cfgsOnSurface, closeIndex);
 	      double clearanceToBoundary = polyhedron.GetClearance(pos3d, cdPt, -1);
