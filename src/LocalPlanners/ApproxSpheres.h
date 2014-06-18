@@ -1,20 +1,19 @@
-#ifndef APPROXSPHERES_H
-#define APPROXSPHERES_H
+#ifndef APPROX_SPHERES_H
+#define APPROX_SPHERES_H
 
 #include "LocalPlannerMethod.h"
 
-template <class MPTraits>
+template<class MPTraits>
 class ApproxSpheres: public LocalPlannerMethod<MPTraits> {
   public:
-
     typedef typename MPTraits::CfgType CfgType;
     typedef typename MPTraits::MPProblemType MPProblemType;
     typedef typename MPProblemType::DistanceMetricPointer DistanceMetricPointer;
 
-    ApproxSpheres(bool _saveIntermediates = false,
+    ApproxSpheres(bool _saveIntermediates = "false",
         const ClearanceUtility<MPTraits>& _c = ClearanceUtility<MPTraits>());
+
     ApproxSpheres(MPProblemType* _problem, XMLNodeReader& _node);
-    virtual ~ApproxSpheres();
 
     virtual void Print(ostream& _os) const;
 
@@ -22,42 +21,44 @@ class ApproxSpheres: public LocalPlannerMethod<MPTraits> {
         const CfgType& _c1, const CfgType& _c2, CfgType& col,
         LPOutput<MPTraits>* _lpOutput,
         double _posRes, double _oriRes,
-        bool _checkCollision=true,
-        bool _savePath=false, bool _saveFailedPath=false);
+        bool _checkCollision,
+        bool _savePath, bool _saveFailedPath);
 
   protected:
     ClearanceUtility<MPTraits> m_clearUtil; //Clearance Utility
 };
 
 //Definitions for Constructors and Destructor
-template <class MPTraits>
-ApproxSpheres<MPTraits>::ApproxSpheres(bool _saveIntermediates, const ClearanceUtility<MPTraits>& _c) :
-    LocalPlannerMethod<MPTraits>(_saveIntermediates), m_clearUtil(_c) {
-  this->SetName("ApproxSpheres");
-}
+template<class MPTraits>
+ApproxSpheres<MPTraits>::
+ApproxSpheres(bool _saveIntermediates, const ClearanceUtility<MPTraits>& _c)
+  : LocalPlannerMethod<MPTraits>(_saveIntermediates), m_clearUtil(_c) {
+    this->SetName("ApproxSpheres");
+  }
 
-template <class MPTraits>
-ApproxSpheres<MPTraits>::ApproxSpheres(MPProblemType* _problem, XMLNodeReader& _node) :
-  LocalPlannerMethod<MPTraits>(_problem, _node), m_clearUtil(_problem, _node) {
+template<class MPTraits>
+ApproxSpheres<MPTraits>::
+ApproxSpheres(MPProblemType* _problem, XMLNodeReader& _node)
+  : LocalPlannerMethod<MPTraits>(_problem, _node),
+  m_clearUtil(_problem, _node) {
     this->SetName("ApproxSpheres");
     if(!m_clearUtil.GetExactClearance())
-        throw ParseException(WHERE, "Clearance Type for " + this->GetNameAndLabel() + " needs to be 'exact' ");
+      throw ParseException(WHERE, "Clearance Type for " + this->
+          GetNameAndLabel() + " needs to be 'exact' ");
     _node.warnUnrequestedAttributes();
-}
-
-template <class MPTraits>
-ApproxSpheres<MPTraits>::~ApproxSpheres() {}
+  }
 
 template<class MPTraits>
 void
-ApproxSpheres<MPTraits>::Print(ostream& _os) const {
+ApproxSpheres<MPTraits>::
+Print(ostream& _os) const {
   LocalPlannerMethod<MPTraits>::Print(_os);
   m_clearUtil.Print(_os);
   _os << "\n\tDistance Metric Label: " << m_clearUtil.GetDistanceMetricLabel()
-      << " " << endl;
+    << " " << endl;
 }
 
-template <class MPTraits>
+template<class MPTraits>
 bool
 ApproxSpheres<MPTraits>::
 IsConnected(const CfgType& _c1, const CfgType& _c2, CfgType& col,
@@ -65,9 +66,9 @@ IsConnected(const CfgType& _c1, const CfgType& _c2, CfgType& col,
     double _posRes, double _oriRes,
     bool _checkCollision,
     bool _savePath, bool _saveFailedPath) {
-
   StatClass* _stats = this->GetMPProblem()->GetStatClass();
-  DistanceMetricPointer _dm = this->GetMPProblem()->GetDistanceMetric(m_clearUtil.GetDistanceMetricLabel());
+  DistanceMetricPointer _dm = this->GetMPProblem()->
+    GetDistanceMetric(m_clearUtil.GetDistanceMetricLabel());
   Environment* _env = this->GetMPProblem()->GetEnvironment();
 
   //clear lpOutput
@@ -104,9 +105,8 @@ IsConnected(const CfgType& _c1, const CfgType& _c2, CfgType& col,
     _stats->IncLPConnections(this->GetNameAndLabel());
     return true;
   }
-  else {
+  else
     return false;
-  }
 }
 
 #endif
