@@ -11,25 +11,26 @@ class UniformObstacleBasedSampler : public SamplerMethod<MPTraits> {
     typedef typename MPProblemType::DistanceMetricPointer DistanceMetricPointer;
     typedef typename MPProblemType::ValidityCheckerPointer ValidityCheckerPointer;
 
-    UniformObstacleBasedSampler(Environment* _env = NULL, string _vcLabel =
-        "", string _dmLabel = "", double _margin = 0, bool _useBoundary = false);
+    UniformObstacleBasedSampler(Environment* _env = NULL, string _vcLabel = "",
+        string _dmLabel = "", double _margin = 0, bool _useBoundary = false);
 
     UniformObstacleBasedSampler(MPProblemType* _problem, XMLNodeReader& _node);
 
     void ParseXML(XMLNodeReader& _node);
     void Print(ostream& _os) const;
+
     virtual bool Sampler(Environment* _env, shared_ptr<Boundary> _bb, StatClass&
         _stats, CfgType& _cfgIn, vector<CfgType>& _cfgOut, vector<CfgType>& _cfgCol);
 
   private:
     double m_margin;
-    bool m_useboundary;
-    string m_vclabel, m_dmlabel;
+    bool m_useBoundary;
+    string m_vcLabel, m_dmLabel;
 };
 
-template<class mptraits>
-uniformobstaclebasedsampler<mptraits>::
-uniformobstaclebasedsampler(environment* _env, string _vclabel,
+template<class MPTraits>
+UniformObstacleBasedSampler<MPTraits>::
+UniformObstacleBasedSampler(Environment* _env, string _vcLabel,
     string _dmLabel, double _margin, bool _useBoundary)
   : m_margin(_margin), m_useBoundary(_useBoundary),
   m_vcLabel(_vcLabel), m_dmLabel(_dmLabel) {
