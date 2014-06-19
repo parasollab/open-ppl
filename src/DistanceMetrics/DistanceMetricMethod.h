@@ -1,5 +1,5 @@
-#ifndef DISTANCEMETRICMETHOD_H
-#define DISTANCEMETRICMETHOD_H
+#ifndef DISTANCE_METRIC_METHOD_H
+#define DISTANCE_METRIC_METHOD_H
 
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup DistanceMetrics
@@ -57,15 +57,17 @@ class DistanceMetricMethod  : public MPBaseObject<MPTraits> {
 };
 
 template<class MPTraits>
-DistanceMetricMethod<MPTraits>::DistanceMetricMethod(MPProblemType* _problem,
-    XMLNodeReader& _node, bool _warn) : MPBaseObject<MPTraits>(_problem, _node) {
+DistanceMetricMethod<MPTraits>::
+DistanceMetricMethod(MPProblemType* _problem, XMLNodeReader& _node, bool _warn)
+  : MPBaseObject<MPTraits>(_problem, _node) {
   if(_warn)
     _node.warnUnrequestedAttributes();
 }
 
 template<class MPTraits>
 void
-DistanceMetricMethod<MPTraits>::ScaleCfg(double _length, CfgType& _c, const CfgType& _o) {
+DistanceMetricMethod<MPTraits>::
+ScaleCfg(double _length, CfgType& _c, const CfgType& _o) {
   _length = fabs(_length); //a distance must be positive
   CfgType origin = _o;
   CfgType outsideCfg = _c;
@@ -73,7 +75,7 @@ DistanceMetricMethod<MPTraits>::ScaleCfg(double _length, CfgType& _c, const CfgT
   while(Distance(origin, outsideCfg) < 2*_length)
     for(size_t i=0; i<outsideCfg.DOF(); ++i)
       outsideCfg[i] *= 2.0;
-  // now, using binary search  find a configuration with the approximate length
+  // now, using binary search find a configuration with the approximate length
   CfgType aboveCfg = outsideCfg;
   CfgType belowCfg = origin;
   CfgType currentCfg = _c;

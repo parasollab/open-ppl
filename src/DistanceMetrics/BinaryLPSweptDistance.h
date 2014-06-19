@@ -1,5 +1,5 @@
-#ifndef BINARYLPSWEPTDISTANCE_H_
-#define BINARYLPSWEPTDISTANCE_H_
+#ifndef BINARY_LP_SWEPT_DISTANCE_H_
+#define BINARY_LP_SWEPT_DISTANCE_H_
 
 #include "LPSweptDistance.h"
 
@@ -11,7 +11,6 @@ class BinaryLPSweptDistance : public LPSweptDistance<MPTraits> {
     BinaryLPSweptDistance(string _lp = "", double _posRes = 0.1, double _oriRes = 0.1,
         double _tolerance = 0.01, int _maxAttempts = 100, bool _bbox = false);
     BinaryLPSweptDistance(MPProblemType* _problem, XMLNodeReader& _node, bool _warn = true);
-    virtual ~BinaryLPSweptDistance();
 
     virtual void Print(ostream& _os) const;
 
@@ -23,16 +22,18 @@ class BinaryLPSweptDistance : public LPSweptDistance<MPTraits> {
 };
 
 template<class MPTraits>
-BinaryLPSweptDistance<MPTraits>::BinaryLPSweptDistance(string _lp, double _posRes,
-    double _oriRes, double _tolerance, int _maxAttempts, bool _bbox) :
+BinaryLPSweptDistance<MPTraits>::
+BinaryLPSweptDistance(string _lp, double _posRes, double _oriRes,
+    double _tolerance, int _maxAttempts, bool _bbox) :
   LPSweptDistance<MPTraits>(_lp, _posRes, _oriRes, _bbox),
   m_tolerance(_tolerance), m_maxAttempts(_maxAttempts) {
     this->SetName("BinaryLPSwept");
-  }
+}
 
 template<class MPTraits>
-BinaryLPSweptDistance<MPTraits>::BinaryLPSweptDistance(MPProblemType* _problem,
-    XMLNodeReader& _node, bool _warn) : LPSweptDistance<MPTraits>(_problem, _node, false) {
+BinaryLPSweptDistance<MPTraits>::
+BinaryLPSweptDistance(MPProblemType* _problem, XMLNodeReader& _node, bool _warn)
+  : LPSweptDistance<MPTraits>(_problem, _node, false) {
   this->SetName("BinaryLPSwept");
   m_tolerance = _node.numberXMLParameter("tolerance", false, 0.01, 0.0, 1000.0, "tolerance");
   m_maxAttempts = _node.numberXMLParameter("maxAttempts", false, 10, 1, 100, "maximum depth of lp_swept distance search");
@@ -42,21 +43,18 @@ BinaryLPSweptDistance<MPTraits>::BinaryLPSweptDistance(MPProblemType* _problem,
 }
 
 template<class MPTraits>
-BinaryLPSweptDistance<MPTraits>::~BinaryLPSweptDistance() {
-}
-
-template<class MPTraits>
 void
-BinaryLPSweptDistance<MPTraits>::Print(ostream& _os) const {
+BinaryLPSweptDistance<MPTraits>::
+Print(ostream& _os) const {
   LPSweptDistance<MPTraits>::Print(_os);
   _os << "\ttolerance = " << m_tolerance << endl;
   _os << "\tmaxAttempts = " << m_maxAttempts << endl;
 }
 
-
 template<class MPTraits>
 double
-BinaryLPSweptDistance<MPTraits>::Distance(const Cfg& _c1, const Cfg& _c2) {
+BinaryLPSweptDistance<MPTraits>::
+Distance(const Cfg& _c1, const Cfg& _c2) {
   double positionResSave = this->m_positionRes;
   double orientationResSave = this->m_orientationRes;
 
@@ -93,4 +91,3 @@ BinaryLPSweptDistance<MPTraits>::Distance(const Cfg& _c1, const Cfg& _c2) {
 }
 
 #endif
-
