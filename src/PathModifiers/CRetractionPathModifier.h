@@ -191,7 +191,9 @@ CRetractionPathModifier<MPTraits>::ValidatePath(
       bool ci1 = m_clearanceUtility.CollisionInfo(q, clr1, boundary, cdInfo1);
       bool ci2 = m_clearanceUtility.CollisionInfo(_path[i], clr2, boundary, cdInfo2);
       bool ci3 = m_clearanceUtility.CollisionInfo(_path[i+1], clr3, boundary, cdInfo3);
-      if(ci1 && cdInfo1.m_minDist > cdInfo2.m_minDist || cdInfo1.m_minDist > cdInfo3.m_minDist)
+      if(ci1 &&
+          ((ci2 && cdInfo1.m_minDist > cdInfo2.m_minDist) ||
+           (ci3 && cdInfo1.m_minDist > cdInfo3.m_minDist)))
         _path2.push_back(q);
       else {
         _path2.push_back(_path[i]);

@@ -67,6 +67,11 @@ class MedialAxisLP : public LocalPlannerMethod<MPTraits> {
         LPOutput<MPTraits>* _lpOutput,
         double _posRes, double _oriRes);
 
+    void RemoveBranches(LPOutput<MPTraits>* _lpOutput);
+
+    void ReduceNoise(const CfgType& _c1, const CfgType& _c2,
+        LPOutput<MPTraits>* _lpOutput, double _posRes, double _oriRes);
+
     string m_controller;
 
     MedialAxisUtility<MPTraits> m_medialAxisUtility; //stores operations and
@@ -231,6 +236,12 @@ MedialAxisLP<MPTraits>::IsConnected(
   }
 
   if(connected) {
+    //first post-process solution
+    if(!m_medialAxisUtility.GetExactClearance())
+      ReduceNoise(_c1, _c2, _lpOutput, _positionRes, _orientationRes);
+    RemoveBranches(_lpOutput);
+
+    //second increment stats and save edge
     stats->IncLPConnections(this->GetNameAndLabel() );
     _lpOutput->m_edge.first.SetWeight(_lpOutput->m_path.size());
     _lpOutput->m_edge.second.SetWeight(_lpOutput->m_path.size());
@@ -526,10 +537,12 @@ MedialAxisLP<MPTraits>::IsConnectedIter(
 
     if(this->m_debug) VDAddTempEdge(prev, curr);
 
-    if(curr != _c2)
-      _lpOutput->m_intermediates.push_back(curr);
-
     copy(lpOutput.m_path.begin(), lpOutput.m_path.end(), back_inserter(_lpOutput->m_path));
+
+    if(curr != _c2) {
+      _lpOutput->m_path.push_back(curr);
+      _lpOutput->m_intermediates.push_back(curr);
+    }
 
   } while(iter++ < m_maxIter);
 
@@ -604,9 +617,11 @@ MedialAxisLP<MPTraits>::IsConnectedBin(
     //assemble path
     typedef typename map<double, pair<CfgType, LPOutput<MPTraits> > >::iterator PIT;
     for(PIT pit = path.begin(); pit != path.end(); ++pit) {
-      if(pit->second.first != _c2)
-        _lpOutput->m_intermediates.push_back(pit->second.first);
       copy(pit->second.second.m_path.begin(), pit->second.second.m_path.end(), back_inserter(_lpOutput->m_path));
+      if(pit->second.first != _c2) {
+        _lpOutput->m_path.push_back(pit->second.first);
+        _lpOutput->m_intermediates.push_back(pit->second.first);
+      }
     }
 
     return true;
@@ -656,6 +671,124 @@ MedialAxisLP<MPTraits>::ReconstructPath(
   delete lpOutput;
   delete dummyLPOutput;
   return path;
+}
+
+template<class MPTraits>
+void
+MedialAxisLP<MPTraits>::RemoveBranches(LPOutput<MPTraits>* _lpOutput) {
+
+  if(_lpOutput->m_path.empty())
+    return;
+
+  vector<CfgType> newPath, newIntermediates;
+
+  typedef typename MPProblemType::DistanceMetricPointer DistanceMetricPointer;
+
+  Environment* env = this->GetMPProblem()->GetEnvironment();
+  DistanceMetricPointer dm = this->GetMPProblem()->GetDistanceMetric(m_medialAxisUtility.GetDistanceMetricLabel());
+
+  //RemoveBranches Algorithm
+  //_path = {q_1, q_2, ..., q_m}
+  //for i = 1 -> m
+  //  _newPath = _newPath + {q_i}
+  //  j <- m
+  //  while(d(q_i, q_j) > resolution
+  //    j <- j - 1
+  //  i <- j
+  //return _newPath
+
+  double res = min(env->GetPositionRes(), env->GetOrientationRes());
+
+  typedef typename vector<CfgType>::iterator CIT;
+  for(CIT cit = _lpOutput->m_path.begin(); cit != _lpOutput->m_path.end(); ++cit) {
+    newPath.push_back(*cit);
+
+    //if *cit is an intermediate add to intermediates
+    typename vector<CfgType>::iterator f = find(_lpOutput->m_intermediates.begin(), _lpOutput->m_intermediates.end(), *cit);
+    if(f != _lpOutput->m_intermediates.end())
+      newIntermediates.push_back(*cit);
+
+    typedef typename vector<CfgType>::reverse_iterator RCIT;
+    RCIT rcit = _lpOutput->m_path.rbegin();
+    while(dm->Distance(*cit, *rcit) > res)
+      rcit++;
+
+    //when q_i != q_j, push q_j onto the new path to avoid skipping it in the loop
+    if(cit != rcit.base()-1) {
+      newPath.push_back(*rcit);
+
+      //add rcit as new intermediate
+      newIntermediates.push_back(*rcit);
+    }
+
+    cit = rcit.base()-1;
+  }
+  //the loop doesn't push the goal of the path, be sure to do it
+  newPath.push_back(_lpOutput->m_path.back());
+
+  //save new path and intermediate information
+  _lpOutput->m_path = newPath;
+  _lpOutput->m_intermediates = newIntermediates;
+}
+
+template<class MPTraits>
+void
+MedialAxisLP<MPTraits>::
+ReduceNoise(const CfgType& _c1, const CfgType& _c2,
+    LPOutput<MPTraits>* _lpOutput, double _posRes, double _oriRes) {
+
+  if(_lpOutput->m_intermediates.empty())
+    return;
+
+  //for each segment on polygonal chain
+  //  get midpoint between intermediates along path
+  //  test connection between previous and new intermediate
+  //  if(success)
+  //    add new intermediate
+  //  else
+  //    add old intermediate
+
+  LPOutput<MPTraits> lpOutput;
+
+  CfgType prev = _c1, col;
+  CfgType prevMid = (_c1 + _lpOutput->m_intermediates[0])/2;
+
+  vector<CfgType> newIntermediates(1, prevMid);
+
+  typedef typename vector<CfgType>::iterator CIT;
+  for(CIT cit1 = _lpOutput->m_intermediates.begin(), cit2 = cit1 + 1;
+      cit2 != _lpOutput->m_intermediates.end(); ++cit1, ++cit2) {
+
+    CfgType mid = (*cit1 + *cit2)/2;
+
+    if(m_envLP.IsConnected(prevMid, mid, col, &lpOutput, _posRes, _oriRes, true, true, true)) {
+      if(newIntermediates.back() != prevMid)
+        newIntermediates.push_back(prevMid);
+      newIntermediates.push_back(mid);
+    }
+    else {
+      newIntermediates.push_back(prev);
+    }
+
+    prevMid = mid;
+    prev = *cit1;
+  }
+
+  //check last goal
+  CfgType mid = (_c2 + _lpOutput->m_intermediates.back())/2;
+
+  if(m_envLP.IsConnected(prevMid, mid, col, &lpOutput, _posRes, _oriRes, true, true, true)) {
+    if(newIntermediates.back() != prevMid)
+      newIntermediates.push_back(prevMid);
+    newIntermediates.push_back(mid);
+  }
+  else {
+    newIntermediates.push_back(_lpOutput->m_intermediates.back());
+  }
+
+  //reconstruct new path
+  _lpOutput->m_path = ReconstructPath(_c1, _c2, newIntermediates, _posRes, _oriRes);
+  _lpOutput->m_intermediates = newIntermediates;
 }
 
 #endif
