@@ -57,7 +57,7 @@ ${PMPL_LIBFILE}: ${PMPL_OBJS}
 
 library: ${PMPL_LIBFILE}
 
-%: ${PMPL_LIBFILE} main_%.cpp
+%: main_%.cpp ${PMPL_LIBFILE}
 	${CXX} ${CXXFLAGS} ${OPTS} ${DEFS} ${INCL} $< ${LIBS} -o $@
 
 %.o: %.cpp
