@@ -57,8 +57,8 @@ ${PMPL_LIBFILE}: ${PMPL_OBJS}
 
 library: ${PMPL_LIBFILE}
 
-%: main_%.cpp ${PMPL_LIBFILE}
-	${CXX} ${CXXFLAGS} ${OPTS} ${DEFS} ${INCL} $< ${LIBS} -o $@
+pmpl: main.o ${PMPL_LIBFILE}
+	${CXX} ${CXXFLAGS} ${OPTS} $< ${LIBS} -o $@
 
 %.o: %.cpp
 	@${MAKE} -s check_platform
@@ -68,7 +68,7 @@ library: ${PMPL_LIBFILE}
 
 
 # clean targets
-CLEAN = ${PMPL_LIBFILE} pmpl
+CLEAN = ${PMPL_LIBFILE} main.o pmpl
 
 reallyclean:
 	@${MAKE} clean
