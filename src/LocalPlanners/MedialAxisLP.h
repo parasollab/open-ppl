@@ -514,7 +514,9 @@ MedialAxisLP<MPTraits>::IsConnectedIter(
     //Push to medial axis
     if(! m_medialAxisUtility.PushToMedialAxis(curr, this->GetMPProblem()->GetEnvironment()->GetBoundary())) {
       if(this->m_debug) cout << "Push failed. Return false." << endl;
-      return false;
+      //return false;
+      curr = prev;
+      continue;
     }
 
     if(this->m_debug) {
