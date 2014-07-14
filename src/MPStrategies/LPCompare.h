@@ -140,17 +140,15 @@ LPCompare<MPTraits>::CompareEdge(CfgType& _s, CfgType& _g, WeightType& _w1, Weig
 
   //collect paths
   typedef typename MPProblemType::LocalPlannerPointer LocalPlannerPointer;
-  vector<CfgType> p1(1, _s), p2(1, _s);
+  vector<CfgType> p1, p2;
 
   //path on edge 1
   LocalPlannerPointer lp1 = this->GetMPProblem()->GetLocalPlanner(m_lpLabel1);
   p1 = lp1->ReconstructPath(_s, _g, _w1.GetIntermediates(), posRes, oriRes);
-  p1.push_back(_g);
 
   //path on edge 2
   LocalPlannerPointer lp2 = this->GetMPProblem()->GetLocalPlanner(m_lpLabel2);
   p2 = lp2->ReconstructPath(_s, _g, _w2.GetIntermediates(), posRes, oriRes);
-  p2.push_back(_g);
 
   //compare distance between corresponding intermediates to get metrics
   q.get<0>() = ComparePaths(p1, p2);
@@ -172,7 +170,7 @@ LPCompare<MPTraits>::ComparePaths(vector<CfgType>& _p1, vector<CfgType>& _p2) {
 
   double dist = 0;
   for(size_t i = 0; i < _p1.size(); ++i) {
-    size_t j = double(i)/_p1.size()*_p2.size();
+    size_t j = _p1.size() == _p2.size() ? i : double(i)/_p1.size()*_p2.size();
     dist += dm->Distance(_p1[i], _p2[j]);
   }
 
@@ -186,19 +184,9 @@ LPCompare<MPTraits>::ComparePaths2(vector<CfgType>& _p1, vector<CfgType>& _p2) {
   typedef typename MPProblemType::DistanceMetricPointer DistanceMetricPointer;
   DistanceMetricPointer dm = this->GetMPProblem()->GetDistanceMetric(m_dmLabel);
 
-  double dist = 0;
-  for(size_t i = 0; i < _p1.size(); ++i) {
-    size_t j = double(i)/_p1.size()*_p2.size();
-    dist += dm->Distance(_p1[i], _p2[j]);
-  }
-  for(size_t i = 0; i < _p2.size(); ++i) {
-    size_t j = double(i)/_p2.size()*_p1.size();
-    dist += dm->Distance(_p2[i], _p1[j]);
-  }
-
-
-  dist /= (_p1.size() + _p2.size());
-  return dist;
+  double c1 = ComparePaths(_p1, _p2) * _p1.size();
+  double c2 = ComparePaths(_p2, _p1) * _p2.size();
+  return (c1+c2) / (_p1.size() + _p2.size());
 }
 
 #endif
