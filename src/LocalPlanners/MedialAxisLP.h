@@ -481,6 +481,8 @@ MedialAxisLP<MPTraits>::IsConnectedIter(
   LPOutput<MPTraits> lpOutput;
   int nticks;
   size_t iter = 0;
+  double r = m_r;
+  bool skip = false;
 
   do {
 
@@ -488,7 +490,7 @@ MedialAxisLP<MPTraits>::IsConnectedIter(
 
     //Find tick at resolution
     CfgType tick;
-    tick.FindIncrement(curr, _c2, &nticks, m_r*_posRes, m_r*_oriRes);
+    tick.FindIncrement(curr, _c2, &nticks, r*_posRes, r*_oriRes);
     curr += tick;
 
     //close enough to goal. Generate last segment of path and quit
@@ -516,8 +518,13 @@ MedialAxisLP<MPTraits>::IsConnectedIter(
       if(this->m_debug) cout << "Push failed. Return false." << endl;
       //return false;
       curr = prev;
+      r *= 2;
+      skip = true;
       continue;
     }
+
+    r = m_r;
+    skip = false;
 
     if(this->m_debug) {
       cout << "Pushed::" << curr << endl;
