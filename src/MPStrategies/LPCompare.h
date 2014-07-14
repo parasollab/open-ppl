@@ -174,7 +174,9 @@ LPCompare<MPTraits>::ComparePaths(vector<CfgType>& _p1, vector<CfgType>& _p2) {
     dist += dm->Distance(_p1[i], _p2[j]);
   }
 
-  dist /= _p1.size();
+  if(_p1.size())
+    dist /= _p1.size();
+
   return dist;
 }
 
@@ -186,7 +188,7 @@ LPCompare<MPTraits>::ComparePaths2(vector<CfgType>& _p1, vector<CfgType>& _p2) {
 
   double c1 = ComparePaths(_p1, _p2) * _p1.size();
   double c2 = ComparePaths(_p2, _p1) * _p2.size();
-  return (c1+c2) / (_p1.size() + _p2.size());
+  return _p1.size() + _p2.size() ? (c1+c2) / (_p1.size() + _p2.size()) : c1+c2;
 }
 
 #endif
