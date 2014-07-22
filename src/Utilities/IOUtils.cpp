@@ -284,6 +284,7 @@ void VDClose(){
   if(vdo!=NULL){
     vdo->close();
     delete vdo;
+    vdo = NULL;
   }
 }
 
