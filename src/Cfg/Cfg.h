@@ -244,7 +244,7 @@ Cfg::GetRandomRay(double _incr, Environment* _env,  DistanceMetricPointer _dm, b
     m_v.push_back(2.0*DRand() - 1.0);
 
   //scale to appropriate length
-  _dm->ScaleCfg(_incr, *this);
+  _dm->ScaleCfg(_incr, (typename DistanceMetricPointer::element_type::CfgType&)*this);
   if(_norm)
     NormalizeOrientation();
 }
