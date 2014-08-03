@@ -1,5 +1,5 @@
-#ifndef LPSWEPTDISTANCE_H_
-#define LPSWEPTDISTANCE_H_
+#ifndef LP_SWEPT_DISTANCE_H_
+#define LP_SWEPT_DISTANCE_H_
 
 #include "DistanceMetricMethod.h"
 #include "MPProblem/Environment.h"
@@ -7,6 +7,12 @@
 
 class StatClass;
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup DistanceMetrics
+/// @brief TODO.
+///
+/// TODO.
+////////////////////////////////////////////////////////////////////////////////
 template<class MPTraits>
 class LPSweptDistance : public DistanceMetricMethod<MPTraits> {
   public:
@@ -34,7 +40,8 @@ class LPSweptDistance : public DistanceMetricMethod<MPTraits> {
 };
 
 template<class MPTraits>
-LPSweptDistance<MPTraits>::LPSweptDistance(string _lpLabel, double _posRes,
+LPSweptDistance<MPTraits>::
+LPSweptDistance(string _lpLabel, double _posRes,
     double _oriRes, bool _bbox) :
   DistanceMetricMethod<MPTraits>(), m_lpLabel(_lpLabel), m_positionRes(_posRes),
   m_orientationRes(_oriRes), m_useBBox(_bbox) {
@@ -42,7 +49,8 @@ LPSweptDistance<MPTraits>::LPSweptDistance(string _lpLabel, double _posRes,
   }
 
 template<class MPTraits>
-LPSweptDistance<MPTraits>::LPSweptDistance(MPProblemType* _problem,
+LPSweptDistance<MPTraits>::
+LPSweptDistance(MPProblemType* _problem,
     XMLNodeReader& _node, bool _warn) :
   DistanceMetricMethod<MPTraits>(_problem, _node, false) {
     this->SetName("LPSwept");
@@ -56,12 +64,14 @@ LPSweptDistance<MPTraits>::LPSweptDistance(MPProblemType* _problem,
   }
 
 template<class MPTraits>
-LPSweptDistance<MPTraits>::~LPSweptDistance() {
+LPSweptDistance<MPTraits>::
+~LPSweptDistance() {
 }
 
 template<class MPTraits>
 void
-LPSweptDistance<MPTraits>::Print(ostream& _os) const {
+LPSweptDistance<MPTraits>::
+Print(ostream& _os) const {
   DistanceMetricMethod<MPTraits>::Print(_os);
   _os << "\tpositionRes = " << m_positionRes << endl;
   _os << "\torientationRes = " << m_orientationRes << endl;
@@ -70,7 +80,8 @@ LPSweptDistance<MPTraits>::Print(ostream& _os) const {
 
 template<class MPTraits>
 double
-LPSweptDistance<MPTraits>::Distance(const CfgType& _c1, const CfgType& _c2) {
+LPSweptDistance<MPTraits>::
+Distance(const CfgType& _c1, const CfgType& _c2) {
   if (_c1.GetRobotIndex() != _c2.GetRobotIndex()){
     cerr << "LPSweptDistance::Distance error - the cfgs reference different multibodies" << endl;
     exit(1);
@@ -112,7 +123,8 @@ LPSweptDistance<MPTraits>::Distance(const CfgType& _c1, const CfgType& _c2) {
 
 template<class MPTraits>
 double
-LPSweptDistance<MPTraits>::SweptDistance(const vector<GMSPolyhedron>& _poly1, const vector<GMSPolyhedron>& _poly2) {
+LPSweptDistance<MPTraits>::
+SweptDistance(const vector<GMSPolyhedron>& _poly1, const vector<GMSPolyhedron>& _poly2) {
   double d = 0;
   int count = 0;
   for(size_t b=0; b<_poly1.size(); ++b)

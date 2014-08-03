@@ -9,9 +9,9 @@
 #include "DistanceMetrics/EuclideanDistance.h"
 #include "DistanceMetrics/KnotTheoryDistance.h"
 #include "DistanceMetrics/LPSweptDistance.h"
-#include "DistanceMetrics/RMSDDistance.h"
 #include "DistanceMetrics/ManhattanDistance.h"
 #include "DistanceMetrics/ReachableDistance.h"
+#include "DistanceMetrics/RMSDDistance.h"
 #include "DistanceMetrics/ScaledEuclideanDistance.h"
 
 //validity checker includes

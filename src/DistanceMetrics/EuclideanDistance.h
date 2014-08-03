@@ -1,11 +1,16 @@
-//Euclidean Distance is Minkowski Distance where r1=r2=2, r3=0.5
-//This allows us to use Minkowski Distance to calculate Euclidean Distance
-
 #ifndef EUCLIDEAN_DISTANCE_H_
 #define EUCLIDEAN_DISTANCE_H_
 
 #include "MinkowskiDistance.h"
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup DistanceMetrics
+/// @brief TODO.
+///
+/// TODO.
+/// Euclidean Distance is Minkowski Distance where r1=r2=2, r3=0.5
+/// This allows us to use Minkowski Distance to calculate Euclidean Distance
+////////////////////////////////////////////////////////////////////////////////
 template<class MPTraits>
 class EuclideanDistance : public MinkowskiDistance<MPTraits> {
   public:

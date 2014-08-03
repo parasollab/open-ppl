@@ -1,10 +1,16 @@
-#ifndef RMSDDISTANCE_H_
-#define RMSDDISTANCE_H_
+#ifndef RMSD_DISTANCE_H_
+#define RMSD_DISTANCE_H_
 
 #include "DistanceMetricMethod.h"
 #include "MPProblem/Environment.h"
 template <class MPTraits> class SimilarStructureSampler;
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup DistanceMetrics
+/// @brief TODO.
+///
+/// TODO.
+////////////////////////////////////////////////////////////////////////////////
 template<class MPTraits>
 class RMSDDistance : public DistanceMetricMethod<MPTraits> {
   public:
@@ -25,23 +31,27 @@ class RMSDDistance : public DistanceMetricMethod<MPTraits> {
 };
 
 template<class MPTraits>
-RMSDDistance<MPTraits>::RMSDDistance() : DistanceMetricMethod<MPTraits>() {
+RMSDDistance<MPTraits>::
+RMSDDistance() : DistanceMetricMethod<MPTraits>() {
   this->SetName("RMSD");
 }
 
 template<class MPTraits>
-RMSDDistance<MPTraits>::RMSDDistance(MPProblemType* _problem, XMLNodeReader& _node,
-    bool _warn) : DistanceMetricMethod<MPTraits>(_problem, _node, _warn) {
-  this->SetName("RMSD");
-}
+RMSDDistance<MPTraits>::
+RMSDDistance(MPProblemType* _problem, XMLNodeReader& _node, bool _warn) :
+  DistanceMetricMethod<MPTraits>(_problem, _node, _warn) {
+    this->SetName("RMSD");
+  }
 
 template<class MPTraits>
-RMSDDistance<MPTraits>::~RMSDDistance() {
+RMSDDistance<MPTraits>::
+~RMSDDistance() {
 }
 
 template<class MPTraits>
 vector<Vector3d>
-RMSDDistance<MPTraits>::GetCoordinatesForRMSD(const CfgType& _c) {
+RMSDDistance<MPTraits>::
+GetCoordinatesForRMSD(const CfgType& _c) {
   Environment* env = this->GetMPProblem()->GetEnvironment();
   _c.ConfigEnvironment(env);
   vector<Vector3d> coordinates;
@@ -53,7 +63,8 @@ RMSDDistance<MPTraits>::GetCoordinatesForRMSD(const CfgType& _c) {
 
 template<class MPTraits>
 double
-RMSDDistance<MPTraits>::Distance(const CfgType& _c1, const CfgType& _c2) {
+RMSDDistance<MPTraits>::
+Distance(const CfgType& _c1, const CfgType& _c2) {
   vector<Vector3d> x = GetCoordinatesForRMSD(_c1);
   vector<Vector3d> y = GetCoordinatesForRMSD(_c2);
   return RMSD(x,y,x.size());
@@ -61,7 +72,8 @@ RMSDDistance<MPTraits>::Distance(const CfgType& _c1, const CfgType& _c2) {
 
 template<class MPTraits>
 double
-RMSDDistance<MPTraits>::RMSD(vector<Vector3d> _x, vector<Vector3d> _y, int _dim) {
+RMSDDistance<MPTraits>::
+RMSD(vector<Vector3d> _x, vector<Vector3d> _y, int _dim) {
   if((int)_x.size() < _dim || (int)_y.size() < _dim || _dim <= 0) {
     cout << "Error in MyDistanceMetrics::RMSD, not enough data in vectors" << endl;
     exit(101);
@@ -133,7 +145,8 @@ RMSDDistance<MPTraits>::RMSD(vector<Vector3d> _x, vector<Vector3d> _y, int _dim)
   double z1, z2, z3;
   if(q == 0) { // which means three identical roots,
     z1 = z2 = z3 = -a2/3;
-  } else { // q < 0
+  }
+  else { // q < 0
     double rootmq = sqrt(-q);
     double ceta = acos(-rr/q/rootmq);
     double cc3 = cos(ceta/3);      // = cos(ceta/3)

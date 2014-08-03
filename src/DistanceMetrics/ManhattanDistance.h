@@ -1,8 +1,14 @@
-#ifndef MANHATTANDISTANCE_H_
-#define MANHATTANDISTANCE_H_
+#ifndef MANHATTAN_DISTANCE_H_
+#define MANHATTAN_DISTANCE_H_
 
 #include "MinkowskiDistance.h"
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup DistanceMetrics
+/// @brief TODO.
+///
+/// TODO.
+////////////////////////////////////////////////////////////////////////////////
 template<class MPTraits>
 class ManhattanDistance : public MinkowskiDistance<MPTraits> {
   public:
@@ -14,14 +20,15 @@ class ManhattanDistance : public MinkowskiDistance<MPTraits> {
 };
 
 template<class MPTraits>
-ManhattanDistance<MPTraits>::ManhattanDistance(bool _normalize) :
-  MinkowskiDistance<MPTraits>(1, 1, 1, _normalize){
+ManhattanDistance<MPTraits>::
+ManhattanDistance(bool _normalize) :
+  MinkowskiDistance<MPTraits>(1, 1, 1, _normalize) {
   this->SetName("Manhattan");
 }
 
 template<class MPTraits>
-ManhattanDistance<MPTraits>::ManhattanDistance(MPProblemType* _problem,
-    XMLNodeReader& _node) :
+ManhattanDistance<MPTraits>::
+ManhattanDistance(MPProblemType* _problem,XMLNodeReader& _node) :
   MinkowskiDistance<MPTraits>(_problem, _node, false, false) {
     this->SetName("Manhattan");
 
@@ -34,7 +41,8 @@ ManhattanDistance<MPTraits>::ManhattanDistance(MPProblemType* _problem,
   }
 
 template<class MPTraits>
-ManhattanDistance<MPTraits>::~ManhattanDistance() {
+ManhattanDistance<MPTraits>::
+~ManhattanDistance() {
 }
 
 #endif

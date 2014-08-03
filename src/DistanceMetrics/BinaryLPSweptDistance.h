@@ -3,6 +3,12 @@
 
 #include "LPSweptDistance.h"
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup DistanceMetrics
+/// @brief TODO.
+///
+/// TODO.
+////////////////////////////////////////////////////////////////////////////////
 template <class MPTraits>
 class BinaryLPSweptDistance : public LPSweptDistance<MPTraits> {
   public:
@@ -63,21 +69,21 @@ Distance(const Cfg& _c1, const Cfg& _c2) {
   double newDist = 0.0;
   int matchCount = 1;
 
-  for (int i = 1; i < m_maxAttempts; i++) {
+  for(int i = 1; i < m_maxAttempts; i++) {
     this->m_positionRes = max(this->m_positionRes/2.0, env->GetPositionRes());
     this->m_orientationRes = max(this->m_orientationRes/2.0, env->GetOrientationRes());
 
     newDist = LPSweptDistance<MPTraits>::Distance(_c1, _c2);
 
-    if (newDist - oldDist < m_tolerance)
+    if(newDist - oldDist < m_tolerance)
       matchCount++;
     else
       matchCount = 1;
 
-    if (matchCount == 3)
+    if(matchCount == 3)
       break;
 
-    if (this->m_positionRes == env->GetPositionRes() &&
+    if(this->m_positionRes == env->GetPositionRes() &&
         this->m_orientationRes == env->GetOrientationRes())
       break;
 
