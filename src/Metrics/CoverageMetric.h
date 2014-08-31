@@ -46,7 +46,7 @@ CoverageMetric<MPTraits, Set>::CoverageMetric(MPProblemType* _problem, XMLNodeRe
 
     m_outFileName = _node.stringXMLParameter("outfilename", true, "", "filename for recording results");
 
-    output.open((m_outFileName+".coverage").c_str());
+    output.open((m_outFileName+".coverage").c_str(), std::ios_base::app);
 
     m_allData = _node.boolXMLParameter("computeAllCCs", false, _computeAllCCs, "flag when set to true computes coverage to all ccs, not just the first connectable cc");
 
