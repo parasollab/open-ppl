@@ -36,7 +36,7 @@ ConnectivityMetric<MPTraits, Set>::ConnectivityMetric(MPProblemType* _problem, X
   : CoverageMetric<MPTraits, Set>(_problem, _node, _computeAllCCs) {
     this->SetName("ConnectivityMetric" + Set::GetName());
 
-    output.open((this->m_outFileName+".connectivity").c_str());
+    output.open((this->m_outFileName+".connectivity").c_str(), std::ios_base::app);
 }
 
 template<class MPTraits, class Set>
