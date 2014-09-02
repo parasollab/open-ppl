@@ -22,7 +22,7 @@ class ConnectivityMetric : public CoverageMetric<MPTraits, Set> {
     double operator()();
 
   private:
-    ofstream output;
+    ofstream m_history;
 };
 
 template<class MPTraits, class Set>
@@ -35,8 +35,6 @@ template<class MPTraits, class Set>
 ConnectivityMetric<MPTraits, Set>::ConnectivityMetric(MPProblemType* _problem, XMLNodeReader& _node, bool _computeAllCCs)
   : CoverageMetric<MPTraits, Set>(_problem, _node, _computeAllCCs) {
     this->SetName("ConnectivityMetric" + Set::GetName());
-
-    output.open((this->m_outFileName+".connectivity").c_str(), std::ios_base::app);
 }
 
 template<class MPTraits, class Set>
@@ -55,6 +53,9 @@ ConnectivityMetric<MPTraits, Set>::operator()() {
   CoverageMetric<MPTraits, Set>::operator()(); // Call CoverageMetric first
 
   static size_t numcalls = 0;
+  if(numcalls == 0)
+    m_history.open((this->GetMPProblem()->GetBaseFilename() + ".connectivity").c_str());
+
   int numQueries = 0;
   size_t sz = this->m_connections.size();
 
@@ -72,7 +73,7 @@ ConnectivityMetric<MPTraits, Set>::operator()() {
   }
 
   double connectivityAmt = (double(numQueries))/(double(sz*(sz-1))/2.0);
-  output << numcalls++ << "\t" << connectivityAmt << endl;
+  m_history << numcalls++ << "\t" << connectivityAmt << endl;
 
   return connectivityAmt;
 }
