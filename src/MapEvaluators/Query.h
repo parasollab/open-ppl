@@ -516,6 +516,7 @@ Query<MPTraits>::Initialize() {
   m_lpLabel = "";
   m_dmLabel = "";
   m_deleteNodes = false;
+  m_fullRecreatePath = true;
 }
 
 template<class MPTraits>
