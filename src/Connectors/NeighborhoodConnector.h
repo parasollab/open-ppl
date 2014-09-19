@@ -110,7 +110,7 @@ NeighborhoodConnector<MPTraits>::Connect(RoadmapType* _rm, StatClass& _stats, Co
     CfgRef vCfg = _rm->GetGraph()->GetVertex(itr1);
 
     if(this->m_debug)
-      cout << (itr1 - _itr1First)
+      cout << distance(_itr1First, itr1)
         << "\tAttempting connections: VID = "
         << vid << "  --> Cfg = " << vCfg << endl;
 

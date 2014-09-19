@@ -31,6 +31,9 @@ template<class VERTEX, class WEIGHT>
 class RoadmapGraph : public
 #ifdef _PARALLEL
                      stapl::dynamic_graph<stapl::DIRECTED,stapl::NONMULTIEDGES,VERTEX,WEIGHT>
+#elif defined(VIZMO)
+                     stapl::sequential::graph<stapl::DIRECTED,stapl::NONMULTIEDGES,VERTEX,WEIGHT,
+                     stapl::sequential::adj_map_int<stapl::DIRECTED, stapl::NONMULTIEDGES,VERTEX,WEIGHT> >
 #else
                      stapl::sequential::graph<stapl::DIRECTED,stapl::NONMULTIEDGES,VERTEX,WEIGHT>
 #endif
@@ -38,6 +41,9 @@ class RoadmapGraph : public
   public:
 #ifdef _PARALLEL
     typedef stapl::dynamic_graph<stapl::DIRECTED,stapl::NONMULTIEDGES,VERTEX,WEIGHT> GRAPH;
+#elif defined(VIZMO)
+    typedef stapl::sequential::graph<stapl::DIRECTED,stapl::NONMULTIEDGES,VERTEX,WEIGHT,
+            stapl::sequential::adj_map_int<stapl::DIRECTED, stapl::NONMULTIEDGES,VERTEX,WEIGHT> > GRAPH;
 #else
     typedef stapl::sequential::graph<stapl::DIRECTED,stapl::NONMULTIEDGES,VERTEX,WEIGHT> GRAPH;
 #endif
