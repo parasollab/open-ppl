@@ -57,8 +57,8 @@ ${PMPL_LIBFILE}: ${PMPL_OBJS}
 
 library: ${PMPL_LIBFILE}
 
-pmpl: main.o ${PMPL_LIBFILE}
-	${CXX} ${CXXFLAGS} ${OPTS} $< ${LIBS} -o $@
+pmpl: ${PMPL_LIBFILE} main.o
+	${CXX} ${CXXFLAGS} ${OPTS} main.o ${LIBS} -o $@
 
 %.o: %.cpp
 	@${MAKE} -s check_platform
