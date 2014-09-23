@@ -57,7 +57,7 @@ class BasicRRTStrategy : public MPStrategyMethod<MPTraits> {
     virtual VID ExpandTree(CfgType& _dir);
     void ConnectTrees(VID _recentlyGrown);
     void ConnectNeighbors(VID _newVID, VID _nearVID);
-    void EvaluateGoals();
+    void EvaluateGoals(VID _newVID);
 
     vector<string> m_evaluators;
     string m_lp;
@@ -253,7 +253,7 @@ BasicRRTStrategy<MPTraits>::Run() {
       ConnectTrees(recent);
       //see if tree is connected to goals
       if(m_evaluateGoal)
-        EvaluateGoals();
+        EvaluateGoals(recent);
 
       //evaluate the roadmap
       bool evalMap = this->EvaluateMap(m_evaluators);
@@ -634,33 +634,30 @@ BasicRRTStrategy<MPTraits>::ConnectTrees(VID _recentlyGrown){
 
 template<class MPTraits>
 void
-BasicRRTStrategy<MPTraits>::EvaluateGoals(){
+BasicRRTStrategy<MPTraits>::EvaluateGoals(VID _newVID){
   // Setup MP Variables
   Environment* env = this->GetMPProblem()->GetEnvironment();
   DistanceMetricPointer dmp = this->GetMPProblem()->GetDistanceMetric(m_dm);
   LocalPlannerPointer lpp = this->GetMPProblem()->GetLocalPlanner(m_lp);
-  NeighborhoodFinderPointer nfp = this->GetMPProblem()->GetNeighborhoodFinder(m_nf);
-  RoadmapType* rdmp = this->GetMPProblem()->GetRoadmap();
+  GraphType* rdmp = this->GetMPProblem()->GetRoadmap()->GetGraph();
 
+  CfgType& qnew = rdmp->GetVertex(_newVID);
   LPOutput<MPTraits> lpOutput;
   // Check if goals have been found
   vector<size_t>::iterator i = m_goalsNotFound.begin();
   while(i != m_goalsNotFound.end()) {
-    vector<pair<VID, double> > closests;
-    nfp->FindNeighbors(rdmp, m_goals[*i], back_inserter(closests));
-    CfgType closest = rdmp->GetGraph()->GetVertex(closests[0].first);
-    double dist = dmp->Distance(m_goals[*i], closest);
+    double dist = dmp->Distance(m_goals[*i], qnew);
     if(this->m_debug) cout << "Distance to goal::" << dist << endl;
     CfgType col;
-    if(dist < m_delta && lpp->IsConnected(closest, m_goals[*i], col, &lpOutput,
+    if(dist < m_delta && lpp->IsConnected(qnew, m_goals[*i], col, &lpOutput,
           env->GetPositionRes(), env->GetOrientationRes(), true, false, false)){
       if(this->m_debug) cout << "Goal found::" << m_goals[*i] << endl;
       VID goalVID;
-      if(!(rdmp->GetGraph()->IsVertex( m_goals[*i])))
-        goalVID = rdmp->GetGraph()->AddVertex(m_goals[*i]);
+      if(!(rdmp->IsVertex( m_goals[*i])))
+        goalVID = rdmp->AddVertex(m_goals[*i]);
       else
-        goalVID = rdmp->GetGraph()->GetVID(m_goals[*i]);
-      rdmp->GetGraph()->AddEdge(closests[0].first, goalVID, lpOutput.m_edge);
+        goalVID = rdmp->GetVID(m_goals[*i]);
+      rdmp->AddEdge(_newVID, goalVID, lpOutput.m_edge);
       i = m_goalsNotFound.erase(i);
     }
     else
