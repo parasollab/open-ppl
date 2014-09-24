@@ -18,11 +18,11 @@ class SparkPRM : public Strategy<MPTraits> {
     typedef typename MPProblemType::ConnectorPointer ConnectorPointer;
     typedef typename GraphType::const_vertex_iterator CVI;
 
-    SparkPRM(size_t _maxNPCCSize = 1, size_t _initSamples = 0,
+    SparkPRM(size_t _maxNPCCSize = 3, size_t _initSamples = 30,
         size_t _maxRRTSize = 100, size_t _attemptRatio = 10, size_t _trimDepth = 0,
-        bool _checkImportant = true, bool _checkEdgeCases = false, bool _trimAll = true,
+        bool _checkImportant = true, bool _checkEdgeCases = true, bool _trimAll = true,
         bool _biasConnect = false, bool _checkStartGoal = true,
-        double _delta = 10, double _minDist = 0.01, double _growthFocus = 0.05,
+        double _delta = 10, double _minDist = 0.001, double _growthFocus = 0.05,
         string _dmLabel = "", string _nfLabel = "", string _nfVertexLabel = "",
         string _vcLabel = "", string _cLabel = "", string _eLabel = "",
         bool _rrtDebug = false);
