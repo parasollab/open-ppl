@@ -18,7 +18,14 @@ class SparkPRM : public Strategy<MPTraits> {
     typedef typename MPProblemType::ConnectorPointer ConnectorPointer;
     typedef typename GraphType::const_vertex_iterator CVI;
 
-    SparkPRM();
+    SparkPRM(size_t _maxNPCCSize = 1, size_t _initSamples = 0,
+        size_t _maxRRTSize = 100, size_t _attemptRatio = 10, size_t _trimDepth = 0,
+        bool _checkImportant = true, bool _checkEdgeCases = false, bool _trimAll = true,
+        bool _biasConnect = false, bool _checkStartGoal = true,
+        double _delta = 10, double _minDist = 0.01, double _growthFocus = 0.05,
+        string _dmLabel = "", string _nfLabel = "", string _nfVertexLabel = "",
+        string _vcLabel = "", string _cLabel = "", string _eLabel = "",
+        bool _rrtDebug = false);
     SparkPRM(MPProblemType* _problem, XMLNodeReader& _node);
 
     virtual void ParseXML(XMLNodeReader& _node);
@@ -85,9 +92,24 @@ class SparkPRM : public Strategy<MPTraits> {
 
 template<class MPTraits, template<typename> class Strategy>
 SparkPRM<MPTraits, Strategy>::
-SparkPRM() {
-  this->m_name += "WithRRT";
-}
+SparkPRM(size_t _maxNPCCSize, size_t _initSamples,
+    size_t _maxRRTSize, size_t _attemptRatio, size_t _trimDepth,
+    bool _checkImportant, bool _checkEdgeCases, bool _trimAll,
+    bool _biasConnect, bool _checkStartGoal,
+    double _delta, double _minDist, double _growthFocus,
+    string _dmLabel, string _nfLabel, string _nfVertexLabel,
+    string _vcLabel, string _cLabel, string _eLabel,
+    bool _rrtDebug) :
+  m_maxNPCCSize(_maxNPCCSize), m_initSamples(_initSamples),
+  m_maxRRTSize(_maxRRTSize), m_attemptRatio(_attemptRatio), m_trimDepth(_trimDepth),
+  m_checkImportant(_checkImportant), m_checkEdgeCases(_checkEdgeCases), m_trimAll(_trimAll),
+  m_biasConnect(_biasConnect), m_checkStartGoal(_checkStartGoal),
+  m_delta(_delta), m_minDist(_minDist), m_growthFocus(_growthFocus),
+  m_dmLabel(_dmLabel), m_nfLabel(_nfLabel), m_nfVertexLabel(_nfVertexLabel),
+  m_vcLabel(_vcLabel), m_cLabel(_cLabel), m_eLabel(_eLabel),
+  m_rrtDebug(_rrtDebug) {
+    this->m_name += "WithRRT";
+  }
 
 template<class MPTraits, template<typename> class Strategy>
 SparkPRM<MPTraits, Strategy>::
@@ -544,6 +566,18 @@ UpdateCentroids(RoadmapType* _centroidRdmp, vector<VID>& _notRRT, VID _root) {
   bool needUpdate = false;
 
   // Remove any CCs connected to the RRT
+#ifdef VIZMO
+  for(CVI it = centroidGraph->begin(); it != centroidGraph->end();) {
+    cMap.reset();
+    if(is_same_cc(*graph, cMap, _root, (VID)((CfgType)it->property()).GetStat("ccVID"))) {
+      centroidGraph->delete_vertex(it->descriptor());
+      it = centroidGraph->begin();
+      needUpdate = true;
+    }
+    else
+      it++;
+  }
+#else
   for(CVI it = centroidGraph->begin(); it != centroidGraph->end(); it++) {
     cMap.reset();
     if(is_same_cc(*graph, cMap, _root, (VID)((CfgType)it->property()).GetStat("ccVID"))) {
@@ -552,6 +586,7 @@ UpdateCentroids(RoadmapType* _centroidRdmp, vector<VID>& _notRRT, VID _root) {
       needUpdate = true;
     }
   }
+#endif
 
   // Reconstruct the notRRT list if needed
   if(needUpdate && !m_biasConnect) {
