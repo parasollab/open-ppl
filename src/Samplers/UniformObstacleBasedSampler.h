@@ -84,12 +84,10 @@ class UniformObstacleBasedSampler : public SamplerMethod<MPTraits> {
 
       //scale the distance between c1 and c2
       Vector3d c1, c2, dir;
-      c1[0] = cfg1[0];
-      c1[1] = cfg1[1];
-      c1[2] = cfg1[2];
-      c2[0] = cfg2[0];
-      c2[1] = cfg2[1];
-      c2[2] = cfg2[2];
+      for(size_t i = 0; i < CfgType::PosDOF(); ++i) {
+        c1[i] = cfg1[i];
+        c2[i] = cfg2[i];
+      }
       dir = c2 - c1;
       dist = sqrt(dir[0]*dir[0] + dir[1]*dir[1] + dir[2]*dir[2]);
       r = margin/dist;
