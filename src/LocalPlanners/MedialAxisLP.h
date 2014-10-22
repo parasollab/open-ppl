@@ -759,10 +759,10 @@ ReduceNoise(const CfgType& _c1, const CfgType& _c2,
 
   LPOutput<MPTraits> lpOutput;
 
-  CfgType prev = _c1, col;
+  CfgType col;
   CfgType prevMid = (_c1 + _lpOutput->m_intermediates[0])/2;
 
-  vector<CfgType> newIntermediates(1, prevMid);
+  vector<CfgType> newIntermediates;
 
   typedef typename vector<CfgType>::iterator CIT;
   for(CIT cit1 = _lpOutput->m_intermediates.begin(), cit2 = cit1 + 1;
@@ -771,29 +771,26 @@ ReduceNoise(const CfgType& _c1, const CfgType& _c2,
     CfgType mid = (*cit1 + *cit2)/2;
 
     if(m_envLP.IsConnected(prevMid, mid, col, &lpOutput, _posRes, _oriRes, true, true, true)) {
-      if(newIntermediates.back() != prevMid)
+      if(newIntermediates.empty() || newIntermediates.back() != prevMid)
         newIntermediates.push_back(prevMid);
       newIntermediates.push_back(mid);
     }
-    else {
-      newIntermediates.push_back(prev);
-    }
+    else
+      newIntermediates.push_back(*cit1);
 
     prevMid = mid;
-    prev = *cit1;
   }
 
   //check last goal
   CfgType mid = (_c2 + _lpOutput->m_intermediates.back())/2;
 
   if(m_envLP.IsConnected(prevMid, mid, col, &lpOutput, _posRes, _oriRes, true, true, true)) {
-    if(newIntermediates.back() != prevMid)
+    if(newIntermediates.empty() || newIntermediates.back() != prevMid)
       newIntermediates.push_back(prevMid);
     newIntermediates.push_back(mid);
   }
-  else {
+  else
     newIntermediates.push_back(_lpOutput->m_intermediates.back());
-  }
 
   //reconstruct new path
   _lpOutput->m_path = ReconstructPath(_c1, _c2, newIntermediates, _posRes, _oriRes);
