@@ -1,5 +1,5 @@
-#ifndef NEIGHBORHOODFINDERMETHOD_H_
-#define NEIGHBORHOODFINDERMETHOD_H_
+#ifndef NEIGHBORHOOD_FINDER_METHOD_H_
+#define NEIGHBORHOOD_FINDER_METHOD_H_
 
 #include <boost/mpl/list.hpp>
 #include <boost/mpl/for_each.hpp>
@@ -61,6 +61,19 @@ namespace pmpl_detail {
 // OTHER  - NF will find neighbors in some other way
 enum NFType {K, RADIUS, OPTIMAL, APPROX, OTHER};
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup NeighborhoodFinders
+/// @brief Base algorithm abstraction for \ref NeighborhoodFinders.
+///
+/// NeighborhoodFinderMethod has two important functions: @c FindNeighbors and
+/// @c FindNeighborPairs.
+///
+/// @c FindNeighbors takes an input configuration and a set of candidate
+/// neighbors and returns the computed set of "nearest" neighbors.
+///
+/// @c FindNeighborPairs determines the "closest" pairs of configurations
+/// betweeen two sets of nodes located in a roadmap.
+////////////////////////////////////////////////////////////////////////////////
 template<class MPTraits>
 class NeighborhoodFinderMethod : public MPBaseObject<MPTraits> {
   public:
@@ -72,21 +85,45 @@ class NeighborhoodFinderMethod : public MPBaseObject<MPTraits> {
     NeighborhoodFinderMethod(string _dmLabel = "", bool _unconnected = false);
     NeighborhoodFinderMethod(MPProblemType* _problem, XMLNodeReader& _node, bool _requireDM = true);
 
-    virtual void PrintOptions(ostream& _os) const {
-      _os << this->GetNameAndLabel() << endl
-        << "\tdmLabel: " << m_dmLabel << endl
+    virtual void Print(ostream& _os) const {
+      MPBaseObject<MPTraits>::Print(_os);
+      _os << "\tdmLabel: " << m_dmLabel << endl
         << "\tunconnected: " << m_unconnected << endl;
     }
 
+    ////////////////////////////////////////////////////////////////////////////
+    /// @return Type of neighborhood finder
+    ////////////////////////////////////////////////////////////////////////////
     NFType GetNFType() const {return m_nfType;}
+    ////////////////////////////////////////////////////////////////////////////
+    /// @return Number of closest neighbors to find
+    ////////////////////////////////////////////////////////////////////////////
     size_t& GetK() {return m_k;}
+    ////////////////////////////////////////////////////////////////////////////
+    /// @return Distance of farthest potential neighbor
+    ////////////////////////////////////////////////////////////////////////////
     double& GetRadius() {return m_radius;}
 
+    ////////////////////////////////////////////////////////////////////////////
+    /// @return Distance Metric for this neighborhood finder
+    ////////////////////////////////////////////////////////////////////////////
     virtual typename MPProblemType::DistanceMetricPointer GetDMMethod() const;
 
+    ////////////////////////////////////////////////////////////////////////////
+    /// @return Total time of neighborhood finding
+    ////////////////////////////////////////////////////////////////////////////
     double GetTotalTime() const;
+    ////////////////////////////////////////////////////////////////////////////
+    /// @return Time of neighborhood finding query
+    ////////////////////////////////////////////////////////////////////////////
     double GetQueryTime() const;
+    ////////////////////////////////////////////////////////////////////////////
+    /// @return Time of neighborhood finding construction
+    ////////////////////////////////////////////////////////////////////////////
     double GetConstructionTime() const;
+    ////////////////////////////////////////////////////////////////////////////
+    /// @return Number of neighborhood finding queries
+    ////////////////////////////////////////////////////////////////////////////
     size_t GetNumQueries() const;
 
     ////////////////////////////////////////////////////////////////////////////////////
@@ -96,12 +133,40 @@ class NeighborhoodFinderMethod : public MPBaseObject<MPTraits> {
     //   implemented in base classes
     ////////////////////////////////////////////////////////////////////////////////////
 
+    ////////////////////////////////////////////////////////////////////////////
+    /// @brief Finds "closest" neighbors in a set of nodes to an input configuration
+    ///
+    /// @overload
+    /// Uses the entire roadmap as set of nodes.
+    ////////////////////////////////////////////////////////////////////////////
     template<typename OutputIterator>
       OutputIterator FindNeighbors(RoadmapType* _rmp, const CfgType& _cfg, OutputIterator _out){
         m_fromRDMPVersion = true;
         return FindNeighbors(_rmp, _rmp->GetGraph()->begin(), _rmp->GetGraph()->end(), _cfg, _out);
       }
 
+    ////////////////////////////////////////////////////////////////////////////
+    /// @brief Finds "closest" neighbors in a set of nodes to an input configuration
+    /// @param _rmp The roadmap when input nodes are found
+    /// @param _first Begin iterator of the set of VIDs
+    /// @param _last End iterator of the set of VIDs
+    /// @param _cfg The query configuration to find neighbors of
+    /// @param _out Output iterator for neighbor set. Underlying data structure
+    ///        is of pair<VID, double> representing the neighbor and distance to
+    ///        _cfg
+    /// @return The final output iterator _out
+    ///
+    /// @usage
+    /// @code
+    /// NeighborhoodFinderPointer nf = this->GetMPProblem()->GetNeighborhoodFinder(m_nfLabel);
+    /// CfgType c;
+    /// vector<VID> nodes;
+    /// vector<pair<VID, double> > neighbors;
+    /// nf->FindNeighbors(this->GetMPProblem()->GetRoadmap(),
+    ///                   nodes.begin(), nodes.end(), c,
+    ///                   back_inserter(neighbors));
+    /// @endcode
+    ////////////////////////////////////////////////////////////////////////////
     template<typename InputIterator, typename OutputIterator>
       OutputIterator FindNeighbors(RoadmapType* _rmp,
           InputIterator _first, InputIterator _last, const CfgType& _cfg, OutputIterator _out){
@@ -112,8 +177,28 @@ class NeighborhoodFinderMethod : public MPBaseObject<MPTraits> {
         return _out;
       }
 
-    // FindNeighbors that operate over two ranges of VIDS.  K total pair<VID,VID> are returned that
-    // represent the _kclosest pairs of VIDs between the two ranges.
+    ////////////////////////////////////////////////////////////////////////////
+    /// @brief Finds "closest" pairs of neighbors between two set of nodes
+    /// @param _rmp The roadmap when input nodes are found
+    /// @param _first1 Begin iterator of the first set of VIDs
+    /// @param _last1 End iterator of the first set of VIDs
+    /// @param _first2 Begin iterator of the second set of VIDs
+    /// @param _last2 End iterator of the second set of VIDs
+    /// @param _out Output iterator for neighbor set. Underlying data structure
+    ///        is of pair<pair<VID,VID>, double> representing the neighbor pair
+    ///        and its corresponing distance
+    /// @return The final output iterator _out
+    ///
+    /// @usage
+    /// @code
+    /// NeighborhoodFinderPointer nf = this->GetMPProblem()->GetNeighborhoodFinder(m_nfLabel);
+    /// vector<VID> s1, s2;
+    /// vector<pair<pair<VID, VID>, double> > neighbors;
+    /// nf->FindNeighbors(this->GetMPProblem()->GetRoadmap(),
+    ///                   s1.begin(), s1.end(), s2.begin(), s2.end(),
+    ///                   back_inserter(neighbors));
+    /// @endcode
+    ////////////////////////////////////////////////////////////////////////////
     template<typename InputIterator, typename OutputIterator>
       OutputIterator FindNeighborPairs(RoadmapType* _rmp,
           InputIterator _first1, InputIterator _last1,
@@ -127,25 +212,51 @@ class NeighborhoodFinderMethod : public MPBaseObject<MPTraits> {
       }
 
   protected:
+    ////////////////////////////////////////////////////////////////////////////
+    /// @brief Checks that there is no direct edge to potential neighbor
+    /// @param _rmp Roadmap to find neighbor
+    /// @param _c Query configuration
+    /// @param _v Potential neighbor
+    /// @return Edge existance
+    ////////////////////////////////////////////////////////////////////////////
     bool CheckUnconnected(RoadmapType* _rmp, const CfgType& _c, VID _v);
 
+    ////////////////////////////////////////////////////////////////////////////
+    /// @brief Starts special timer for total neighborhood finding
+    ////////////////////////////////////////////////////////////////////////////
     void StartTotalTime();
+    ////////////////////////////////////////////////////////////////////////////
+    /// @brief Ends special timer for total neighborhood finding
+    ////////////////////////////////////////////////////////////////////////////
     void EndTotalTime();
+    ////////////////////////////////////////////////////////////////////////////
+    /// @brief Starts special timer for neighborhood finding query time
+    ////////////////////////////////////////////////////////////////////////////
     void StartQueryTime();
+    ////////////////////////////////////////////////////////////////////////////
+    /// @brief Ends special timer for neighborhood finding query time
+    ////////////////////////////////////////////////////////////////////////////
     void EndQueryTime();
+    ////////////////////////////////////////////////////////////////////////////
+    /// @brief Starts special timer for neighborhood finding construction time
+    ////////////////////////////////////////////////////////////////////////////
     void StartConstructionTime();
+    ////////////////////////////////////////////////////////////////////////////
+    /// @brief Ends special timer for neighborhood finding construction time
+    ////////////////////////////////////////////////////////////////////////////
     void EndConstructionTime();
+    ////////////////////////////////////////////////////////////////////////////
+    /// @brief Increment total number of neighborhood finding requests
+    ////////////////////////////////////////////////////////////////////////////
     void IncrementNumQueries();
 
-    //type of the neighbor finder.
-    //This is set by the derived methods.
-    NFType m_nfType;
-    size_t m_k;
-    double m_radius;
+    NFType m_nfType; ///< Type of neighborhood finder, e.g., radius or k based. Set by derived methods
+    size_t m_k; ///< How many closest neighbors to find
+    double m_radius; ///< Maximum distance of closest neighbors
 
-    string m_dmLabel;
-    bool m_unconnected;
-    bool m_fromRDMPVersion;
+    string m_dmLabel; ///< Distance Metric
+    bool m_unconnected; ///< Require neighbor to not have direct edge
+    bool m_fromRDMPVersion; ///< Finding neighbors from entire roadmap
 };
 
 template<class MPTraits>

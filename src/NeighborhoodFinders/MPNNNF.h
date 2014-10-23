@@ -2,180 +2,70 @@
 #define _MPNN_NEIGHBORHOOD_FINDER_H_
 
 #include "NeighborhoodFinderMethod.h"
-#include "MPProblem.h"
 #include "MPNNWrapper.h"
 
 #include <vector>
 #include <functional>
 using namespace std;
 
+////////////////////////////////////////////////////////////////////////////////////////
+template<class MPTraits>
+class MPNNNF : public NeighborhoodFinderMethod<MPTraits> {
+  public:
+    typedef typename MPTraits::CfgType CfgType;
+    typedef typename MPTraits::MPProblemType MPProblemType;
+    typedef typename MPProblemType::RoadmapType RoadmapType;
+    typedef typename MPProblemType::VID VID;
+    typedef typename MPProblemType::GraphType GraphType;
+    typedef typename GraphType::vertex_iterator VI;
+    typedef typename MPProblemType::DistanceMetricPointer DistanceMetricPointer;
 
-template<typename CFG, typename WEIGHT>
-class MPNNNF: public NeighborhoodFinderMethod {
+    MPNNNF(string _dmLabel = "", bool _unconnected = false, size_t _k = 5) :
+      NeighborhoodFinderMethod<MPTraits>(_dmLabel, _unconnected) {
+        this->SetName("MPNNNF");
+        this->m_nfType = K;
+        this->m_k = _k;
+	/////////////////////////////////////
+	//from orig
+	m_epsilon = 0.0;
+	m_use_scaling = 0;
+	m_use_rotational = 0;
+	m_max_points = 50000;
+	m_max_neighbors = 1000;
+	m_lastRdmpSize = -1;
 
-public:
-  typedef typename RoadmapGraph<CFG, WEIGHT>::VID VID;
+	/////////////////////////////////////
+      }
 
-  MPNNNF() {
+    MPNNNF(MPProblemType* _problem, XMLNodeReader& _node) :
+      NeighborhoodFinderMethod<MPTraits>(_problem, _node) {
+        this->SetName("MPNNNF");
+        this->m_nfType = K;
+        this->m_k = _node.numberXMLParameter("k", true, 5, 0, MAX_INT, "Number of neighbors to find");
+	m_lastRdmpSize = -1;
+      }
 
-    m_epsilon = 0.0;
-    m_use_scaling = 0;
-    m_use_rotational = 0;
-    m_max_points = 50000;
-    m_max_neighbors = 1000;
-
-    CFG temp;
-    int dim = temp.DOF();
-
-    // NOTE: everything after the 3rd DOF is rotational.
-    vector<int> topology(dim);
-    for (int i = 0; i < dim; i++) {
-      if (i < temp.PosDOF())
-        topology[i] = 1;
-      else
-        if (m_use_rotational)
-          topology[i] = 2;
-        else
-          topology[i] = 1;
+    virtual void Print(ostream& _os) const {
+      NeighborhoodFinderMethod<MPTraits>::Print(_os);
+      _os << "\tk: " << this->m_k << endl;
     }
 
-    kdtree = new MPNNWrapper(topology, m_max_points, m_max_neighbors, m_epsilon);
+    template<typename InputIterator, typename OutputIterator>
+      OutputIterator FindNeighbors(RoadmapType* _rmp,
+          InputIterator _first, InputIterator _last, const CfgType& _cfg, OutputIterator _out);
 
-    m_cur_roadmap_version = -1;
-  }
-
-  MPNNNF(XMLNodeReader& _node, MPProblem* _problem) :
-    NeighborhoodFinderMethod(_node, _problem) {
-
-
-    m_epsilon = _node.numberXMLParameter("epsilon", false, 0.0, 0.0, 100.0, "Epsilon value for MPNN");
-    m_use_scaling = _node.numberXMLParameter("use_scaling", true, 0, 0, 1, "Bounding-box scaling used on pos DOFs");
-    m_use_rotational = _node.numberXMLParameter("use_rotational", true, 0, 0, 1, "Use rotational-coordinate topology");
-    m_max_points = _node.numberXMLParameter("max_points", false, 50000, 0, 1000000, "Max points for MPNN");
-    m_max_neighbors = _node.numberXMLParameter("max_k", false, 1000, 0, 10000,"Max neighbors for MPNN");
-
-    CFG temp;
-    int dim = temp.DOF();
-    // NOTE: everything after the 3rd DOF is rotational.
-    vector<int> topology(dim);
-    for (size_t i = 0; i < topology.size(); i++) {
-      if (i < temp.PosDOF())
-        topology[i] = 1;
-      else
-        if (m_use_rotational)
-          topology[i] = 2;
-        else
-          topology[i] = 1;
-    }
-
-    kdtree = new MPNNWrapper(topology, m_max_points, m_max_neighbors, m_epsilon);
-
-    m_cur_roadmap_version = -1;
-
-    m_max_bbox_range = 0.0;
-    for(size_t i=0; i< temp.PosDOF(); ++i) {
-      std::pair<double,double> range = _problem->GetEnvironment()->GetBoundary()->GetRange(i);
-      double tmp_range = range.second-range.first;
-      if(tmp_range > m_max_bbox_range) m_max_bbox_range = tmp_range;
-    }
-
-  }
-
-  MPNNNF(shared_ptr<DistanceMetricMethod> _dmm, std::string _label) :
-    NeighborhoodFinderMethod(_dmm, _label) {
-
-    m_epsilon = 0.0;
-    m_use_scaling = 0;
-    m_use_rotational = 0;
-    m_max_points = 50000;
-    m_max_neighbors = 1000;
-
-    CFG temp;
-    int dim = temp.DOF();
-    // NOTE: everything after the 3rd DOF is rotational.
-    vector<int> topology(dim);
-    for (int i = 0; i < topology.size(); i++) {
-      if (i < temp.PosDOF())
-        topology[i] = 1;
-      else
-        if (m_use_rotational)
-          topology[i] = 2;
-        else
-          topology[i] = 1;
-    }
-
-    kdtree = new MPNNWrapper(topology, m_max_points, m_max_neighbors, m_epsilon);
-
-    m_cur_roadmap_version = -1;
-  }
-
-  virtual ~MPNNNF() {}
-
-  virtual const std::string GetName () const {
-    return MPNNNF::GetClassName();
-  }
-  static const std::string GetClassName() {
-    return "MPNNNF";
-  }
-  virtual void PrintOptions(std::ostream& out_os) const {
-    out_os << this->GetClassName() << ":: epsilon = " << m_epsilon << ", use_scaling = " << m_use_scaling << std::endl;
-  }
-
-  // this may end up being a private function used to create an internal
-  // CGAL kdtree that will be populated by a roadmap in the future
-  void
-  AddPoint(CFG _cfg, VID _v);
-
-
-  // Find the k closest to _v that is in the set represented by the iterators
-  // You should create a temporary tree based on the iterators to search
-  // not optimal, but should still do it...
-  template <typename InputIterator, typename OutputIterator>
-  OutputIterator
-  KClosest( Roadmap<CFG,WEIGHT>* _rmp,
-    InputIterator _input_first, InputIterator _input_last, VID _v, int k,
-    OutputIterator _out);
-
-
-  // Find the k closest to _v that is in the set represented by the iterators
-  // You should create a temporary tree based on the iterators to search
-  // not optimal, but should still do it...
-  template <typename InputIterator, typename OutputIterator>
-  OutputIterator
-  KClosest( Roadmap<CFG,WEIGHT>* _rmp,
-    InputIterator _input_first, InputIterator _input_last, CFG _cfg, int k,
-    OutputIterator _out);
-
-
-  // KClosest that operate over the internal kd-tree structure
-  //   to find the kclosest to a VID or CFG
-  //
-  // NOTE: These are the prefered methods for kClosest computations
-  template <typename OutputIterator>
-  OutputIterator
-  KClosest( Roadmap<CFG,WEIGHT>* _rmp,
-    VID _v, int k, OutputIterator _out);
-
-  template <typename OutputIterator>
-  OutputIterator
-  KClosest( Roadmap<CFG,WEIGHT>* _rmp,
-    CFG _cfg, int k, OutputIterator _out);
-
-
-  // KClosest that operate over two ranges of VIDS.  K total pair<VID,VID> are returned that
-  // represent the kclosest pairs of VIDs between the two ranges.
-  template <typename InputIterator, typename OutputIterator>
-  OutputIterator
-  KClosestPairs( Roadmap<CFG,WEIGHT>* _rmp,
-    InputIterator _in1_first, InputIterator _in1_last,
-    InputIterator _in2_first, InputIterator _in2_last,
-    int k, OutputIterator _out);
-
-
-  void
-  UpdateInternalModel( Roadmap<CFG,WEIGHT>* _rmp );
-
-private:
+    // KClosest that operate over two ranges of VIDS.  K total pair<VID,VID> are returned that
+    // represent the _kclosest pairs of VIDs between the two ranges.
+    template<typename InputIterator, typename OutputIterator>
+      OutputIterator FindNeighborPairs(RoadmapType* _rmp,
+          InputIterator _first1, InputIterator _last1,
+          InputIterator _first2, InputIterator _last2,
+          OutputIterator _out);
+  
+    void AddPoint(CfgType& _cfg, VID _v);
+    void UpdateInternalModel();
+  
+  
   int m_cur_roadmap_version; // used when updating internal model
   double m_epsilon; // measure of approximateness used by internal kd-tree
   int m_use_scaling;
@@ -183,281 +73,141 @@ private:
   double m_max_bbox_range;
   int m_max_points; // maximum number of points the internal kd-tree can store
   int m_max_neighbors; // maximum number of neighbors the internal kd-tree can find
+  int m_lastRdmpSize;
 
   MPNNWrapper *kdtree; // set up by the AddPoint function
 };
 
-
-template <typename CFG, typename WEIGHT>
+template <class MPTraits>
 void
-MPNNNF<CFG, WEIGHT>::AddPoint(CFG _cfg, VID _v)
-{
+MPNNNF<MPTraits>::AddPoint(CfgType& _cfg, VID _v) {
   kdtree->add_node(_cfg.GetData(), _v);
 }
 
+template<class MPTraits>
+void
+MPNNNF<MPTraits>::
+UpdateInternalModel()
+{
+  RoadmapType* _rmp = this->GetMPProblem()->GetRoadmap();
+  GraphType* g = _rmp->GetGraph();
+  int curRdmpSize = 0;
+  for(VI v=g->begin(); v!=g->end(); v++) curRdmpSize++;
+  if (curRdmpSize==m_lastRdmpSize)
+    return;
+  else m_lastRdmpSize = curRdmpSize; //continue to update model
 
-// Find the k closest to _v that is in the set represented by the iterators
-// You should create a temporary tree based on the iterators to search
-// not optimal, but should still do it...
-template <typename CFG, typename WEIGHT>
-template <typename InputIterator, typename OutputIterator>
-OutputIterator
-MPNNNF<CFG,WEIGHT>::
-KClosest( Roadmap<CFG,WEIGHT>* _rmp,
-    InputIterator _input_first, InputIterator _input_last, VID _v, int k,
-    OutputIterator _out) {
-  RoadmapGraph<CFG,WEIGHT>* pMap = _rmp->m_pRoadmap;
-  CFG _v_cfg = (*(pMap->find_vertex(_v))).property();
-
-  this->KClosest(_rmp, _input_first, _input_last, _v_cfg, k, _out);
-
-  return _out;
-}
-
-// Find the k closest to _v that is in the set represented by the iterators
-// You should create a temporary tree based on the iterators to search
-// not optimal, but should still do it...
-template <typename CFG, typename WEIGHT>
-template <typename InputIterator, typename OutputIterator>
-OutputIterator
-MPNNNF<CFG,WEIGHT>::
-KClosest( Roadmap<CFG,WEIGHT>* _rmp,
-  InputIterator _input_first, InputIterator _input_last, CFG _cfg, int k,
-  OutputIterator _out) {
-
-  IncrementNumQueries();
-  StartTotalTime();
-
-//cout << "Running KCloseset???" << endl << flush;
-  RoadmapGraph<CFG,WEIGHT>* pMap = _rmp->m_pRoadmap;
-  int dim = _cfg.DOF();
+  //create kdtree structure
+  CfgType temp;
+  int dim = temp.DOF();
 
   // NOTE: everything after the 3rd DOF is rotational.
   vector<int> topology(dim);
-  for (size_t i = 0; i < topology.size(); i++) {
-    if (i < 3)
-      topology[i] = 1;
-    else
-      if (m_use_rotational)
-        topology[i] = 2;
-      else
-        topology[i] = 1;
+  for (int i = 0; i < dim; i++) {
+     if (i < temp.PosDOF())
+	topology[i] = 1;
+     else
+	if (m_use_rotational)
+	   topology[i] = 2;
+	else
+	   topology[i] = 1;
   }
 
-  double m_epsilon = 0.0;
-  MPNNWrapper *localKdtree = new MPNNWrapper(topology, 20000, 1000, m_epsilon);
+  if(m_max_points<curRdmpSize) m_max_points = curRdmpSize;
 
-  // add configurations from iterator into local kdtree
-  InputIterator V1;
-  for (V1 = _input_first; V1 != _input_last; ++V1) {
-    CFG v1 = (*(pMap->find_vertex(*V1))).property();
-    if (m_use_scaling) {
-      v1.SetSingleParam(0, v1.GetSingleParam(0)/m_max_bbox_range * 2 * PI);
-      v1.SetSingleParam(1, v1.GetSingleParam(1)/m_max_bbox_range * 2 * PI);
-      v1.SetSingleParam(2, v1.GetSingleParam(2)/m_max_bbox_range * 2 * PI);
-    }
-    localKdtree->add_node(v1.GetData(), *V1);
+  kdtree = new MPNNWrapper(topology, m_max_points, m_max_neighbors, m_epsilon);
+
+  m_cur_roadmap_version = -1;
+
+  //set bound
+  MPProblemType* problem = this->GetMPProblem();
+  m_max_bbox_range = 0.0;
+  if( this->m_debug) {
+    cout << "setting bbox range: " << m_max_bbox_range << endl;
+    cout << " cur bounding box: " << endl;
   }
-
-  vector< pair<VID, double> > results(k, pair<VID, double>(-999, -999.9));
-
-  if (m_use_scaling) {
-    _cfg.SetSingleParam(0, _cfg.GetSingleParam(0)/m_max_bbox_range * 2 * PI);
-    _cfg.SetSingleParam(1, _cfg.GetSingleParam(1)/m_max_bbox_range * 2 * PI);
-    _cfg.SetSingleParam(2, _cfg.GetSingleParam(2)/m_max_bbox_range * 2 * PI);
+  if(problem->GetEnvironment()->GetBoundary() == NULL ) {
+     cout <<"env is null. " << endl;
+     exit(-1);
   }
-
-  StartQueryTime();
-  localKdtree->KClosest(_cfg.GetData(), k, results.begin());
-  EndQueryTime();
-
-  for (size_t i = 0; i < results.size(); i++) {
-    *_out = results[i].first;
-    //cout << results[i].second << " - VID = " << results[i].first << endl;
-    ++_out;
+  problem->GetEnvironment()->GetBoundary()->Write(cout);
+  for(size_t i=0; i< dim; ++i) {
+     std::pair<double,double> range = problem->GetEnvironment()->GetBoundary()->GetRange(i);
+     double tmp_range = range.second-range.first;
+     if(tmp_range > m_max_bbox_range) m_max_bbox_range = tmp_range;
   }
+  if( this->m_debug ) { cout << "-done! setting bbox range: " << m_max_bbox_range << endl; }
+   
+  if( this->m_debug ) { cout << "Updating internal model rdmp size " << curRdmpSize << endl; }
+  int vertexIndex=0;
+  for(VI v=g->begin(); v!=g->end(); v++,vertexIndex++) {
+     CfgType cfg = v->property();
+     this->AddPoint(cfg,v->descriptor());
+  }//endfor VI
 
-  localKdtree->MPNNWrapper::~MPNNWrapper();
+  if( this->m_debug ) { cout << "-done! Updating internal model rdmp size " << curRdmpSize << endl; }
 
-  EndTotalTime();
-  return _out;
 }
 
-
-// Find the kclosest to _v that is in the internal CGal kdtree
-// created by  the "AddPoint" function
-template <typename CFG, typename WEIGHT>
-template <typename OutputIterator>
-OutputIterator
-MPNNNF<CFG,WEIGHT>::
-KClosest( Roadmap<CFG,WEIGHT>* _rmp,
-  VID _v, int k, OutputIterator _out) {
-
-  RoadmapGraph<CFG,WEIGHT>* pMap = _rmp->m_pRoadmap;
-  CFG _cfg = (*(pMap->find_vertex(_v))).property();
-
-  this->KClosest(_rmp, _cfg, k, _out);
-  return _out;
-}
-
-
-// Find the kclosest to _cfg that is in the internal CGal kdtree
-// created by  the "AddPoint" function
-template <typename CFG, typename WEIGHT>
-template <typename OutputIterator>
-OutputIterator
-MPNNNF<CFG,WEIGHT>::
-KClosest( Roadmap<CFG,WEIGHT>* _rmp,
-  CFG _cfg, int k, OutputIterator _out) {
-  StartTotalTime();
-
-  StartConstructionTime();
-  this->UpdateInternalModel(_rmp);
-  EndConstructionTime();
-
-  IncrementNumQueries();
-  vector< pair<VID, double> > results(k, pair<VID, double>(-999, -999.9));
-
-  if (m_use_scaling) {
-    _cfg.SetSingleParam(0, _cfg.GetSingleParam(0)/m_max_bbox_range * 2 * PI);
-    _cfg.SetSingleParam(1, _cfg.GetSingleParam(1)/m_max_bbox_range * 2 * PI);
-    _cfg.SetSingleParam(2, _cfg.GetSingleParam(2)/m_max_bbox_range * 2 * PI);
-  }
-
-  StartQueryTime();
-//  cout << "Finding " << k << "-closest to point: " << _cfg << endl;
-  kdtree->KClosest(_cfg.GetData(), k, results.begin());
-  EndQueryTime();
-
-
-  for (size_t i = 0; i < results.size(); i++) {
-    *_out = results[i].first;
-    //cout << results[i].second << " - VID = " << results[i].first
-    //     << "\t\t" << _cfg << " to " << _rmp->m_pRoadmap->find_vertex(results[i].first).property() << endl;
-    ++_out;
-  }
-    EndTotalTime();
-
-	return _out;
-}
-
-// Find the k pairs that have the closest distance, where one VID must
-//   come from each set of input iterators.  The output should be as
-//   a pair<VID, VID>.
-template<typename CFG, typename WEIGHT>
+template<class MPTraits>
 template<typename InputIterator, typename OutputIterator>
 OutputIterator
-MPNNNF<CFG,WEIGHT>::
-KClosestPairs( Roadmap<CFG,WEIGHT>* _rmp,
-  InputIterator _in1_first, InputIterator _in1_last,
-  InputIterator _in2_first, InputIterator _in2_last,
-  int k, OutputIterator _out) {
+MPNNNF<MPTraits>::FindNeighbors(RoadmapType* _rmp, InputIterator _first, InputIterator _last,
+    const CfgType& _cfg, OutputIterator _out) {
 
-  // we will take an incremental approach here...
+  GraphType* map = _rmp->GetGraph();
+  DistanceMetricPointer dmm = this->GetMPProblem()->GetDistanceMetric(this->m_dmLabel);
 
-  // STEP 1:
-  // create local roadmap to hold [_in2_first ... _in2_last]
-  //
-  RoadmapGraph<CFG,WEIGHT>* pMap = _rmp->m_pRoadmap;
-  CFG dimCfg = (*(pMap->find_vertex(*_in1_first))).property();
-  int dim = dimCfg.DOF();
-
-  // NOTE: everything after the 3rd DOF is rotational.
-  vector<int> topology(dim);
-  for (size_t i = 0; i < topology.size(); i++) {
-    if (i < 3)
-      topology[i] = 1;
-    else
-      if (m_use_rotational)
-        topology[i] = 2;
-      else
-        topology[i] = 1;
+  if(!this->m_k) {
+    for(InputIterator it = _first; it != _last; ++it)
+      if(map->GetVertex(it) != _cfg)
+        *_out++ = make_pair(_rmp->GetGraph()->GetVID(it),
+            dmm->Distance(map->GetVertex(it), _cfg));
+    return _out;
   }
 
-  MPNNWrapper *localKdtree = new MPNNWrapper(topology, 50000, 1000, m_epsilon);
+  this->IncrementNumQueries();
+  this->StartTotalTime();
+  this->StartQueryTime();
+  
+  this->UpdateInternalModel();
+  vector< pair<VID, double> > closest;
+  kdtree->KClosest(_cfg.GetData(), this->m_k, back_inserter(closest));
 
-  InputIterator v_iter;
-  for (v_iter = _in2_first; v_iter != _in2_last; ++v_iter) {
-    CFG v_iter_cfg = (*(pMap->find_vertex(*v_iter))).property();
-    localKdtree->add_node(v_iter_cfg.GetData(), *v_iter);
-  }
-  //
 
-  // STEP 2:
-  // iterate through vids in _in1_first, calculating KClosest with respect
-  //   to the local kd tree... compile master list of results
-  //
-  vector< pair< pair<VID, VID>, double> > query_results;
-  //OutputIterator query_results;
+  this->EndQueryTime();
+  this->EndTotalTime();
 
-  for (v_iter = _in1_first; v_iter != _in1_last; ++v_iter) {
-    vector< pair<VID, double> > iter_results(k, pair<VID, double>(-999, -999.9));
-
-    CFG query_pt = (*(pMap->find_vertex(*v_iter))).property();
-    localKdtree->KClosest(query_pt.GetData(), k, iter_results.begin());
-
-    // push local results back to master list
-    typename vector< pair<VID, double> >::iterator iter;
-    for (iter = iter_results.begin(); iter != iter_results.end(); ++iter) {
-      pair< pair<VID, VID>, double> temp;
-      temp.first.first = *v_iter;
-      temp.first.second = (*iter).first;
-      temp.second = (*iter).second;
-      if (temp.second != -999.9) {
-        query_results.push_back(temp);
-      }
-    }
-  }
-
-  sort(query_results.begin(), query_results.end(), compare_second<pair<VID, VID>, double>());
-
-  typename vector< pair< pair<VID, VID>, double> >::iterator q_iter;
-  int count = 0;
-  for (q_iter = query_results.begin(); q_iter != query_results.end(); ++q_iter) {
-    if (count == k)
-      break;
-    (*_out) = (*q_iter).first;
-    ++_out;
-    count++;
-  }
-
-  return _out;
+  // Reverse order
+  return copy(closest.begin(), closest.end(), _out);
 }
 
-template<typename CFG, typename WEIGHT>
-void
-MPNNNF<CFG, WEIGHT>::
-UpdateInternalModel( Roadmap<CFG,WEIGHT>* _rmp )
-{
-  int new_version = _rmp->m_pRoadmap->roadmapVCS.get_version_number();
-  if (this->m_cur_roadmap_version == new_version)
-    return;
+template<class MPTraits>
+template<typename InputIterator, typename OutputIterator>
+OutputIterator
+MPNNNF<MPTraits>::FindNeighborPairs(RoadmapType* _rmp,
+    InputIterator _first1, InputIterator _last1,
+    InputIterator _first2, InputIterator _last2,
+    OutputIterator _out) {
 
-  //cout << "Updating internal model from version " << this->m_cur_roadmap_version << " to " << new_version << endl;
+  GraphType* map = _rmp->GetGraph();
+  DistanceMetricPointer dmm = this->GetMPProblem()->GetDistanceMetric(this->m_dmLabel);
 
-  typename RoadmapVCS<CFG, WEIGHT>::cce_iter start;
-  if (this->m_cur_roadmap_version == -1)
-    start = _rmp->m_pRoadmap->roadmapVCS.begin();
-  else
-    start = _rmp->m_pRoadmap->roadmapVCS.iter_at(m_cur_roadmap_version);
-
-  typename RoadmapVCS<CFG, WEIGHT>::cce_iter end = _rmp->m_pRoadmap->roadmapVCS.end();
-  typename RoadmapVCS<CFG, WEIGHT>::cce_iter iter;
-
-  for (iter = start; iter != end; iter++) {
-    if ((*iter).second.IsTypeAddVertex()) {
-      //cout << "Add vertex event found... VID = " << (*iter).second.GetAddVertexEvent()->GetVID() << endl;
-      CFG tmp = (*iter).second.GetAddVertexEvent()->GetCFG();
-      if (m_use_scaling) {
-        tmp.SetSingleParam(0, tmp.GetSingleParam(0)/m_max_bbox_range * 2 * PI);
-        tmp.SetSingleParam(1, tmp.GetSingleParam(1)/m_max_bbox_range * 2 * PI);
-        tmp.SetSingleParam(2, tmp.GetSingleParam(2)/m_max_bbox_range * 2 * PI);
-      }
-      this->AddPoint(tmp, (*iter).second.GetAddVertexEvent()->GetVID());
-    }
+  if(!this->m_k){
+    for(InputIterator i1 = _first1; i1!=_last1; ++i1)
+      for(InputIterator i2 = _first2; i2!=_last2; ++i2)
+        if(i1 != i2)
+          *_out++ = make_pair(
+              make_pair(map->GetVID(i1), map->GetVID(i2)),
+              dmm->Distance(map->GetVertex(i1), map->GetVertex(i2)));
+    return _out;
   }
-
-  m_cur_roadmap_version = new_version;
+  cout << " findneighborpairs not implemented for MPNNNF. " << endl;
+  exit(-1);
+  vector<pair<pair<VID, VID>, double> > closest;
+  return copy(closest.rbegin(), closest.rend(), _out);
 }
+////////////////////////////////////////////////////////////////////////////////////////
+
 
 #endif //end #ifndef _MPNN_NEIGHBORHOOD_FINDER_H_

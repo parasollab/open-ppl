@@ -57,17 +57,17 @@ class ClearanceInfo {
     void SetObstacleId(int _id) { m_obstacleId = _id;};
 };
 
-
-/**
- *This class provides storage, tools, and operators for representing configuration.
- *
- *Comparison, basic operations (+ - * / ), or more advanced operations
- *(like weighted sum, AlmostEqual.. ) are also provided.
- *This class also provides input/output functions to read/write instances of this class
- *to many kinds of file (formats).
- *Morevoer, tools for create primitives of PRM, like random generation of Cfg for
- *a given Workspace, and connections between Cfgs are also provided.
- */
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup Cfgs
+/// @brief Default @cspace configuration definition.
+///
+/// Cfg is the core class which defines a configuration, or a vector of values
+/// representing all the degrees of freedom of a robot. This is the abstraction
+/// of @cspace essentially, and thus Cfg is a point or vector inside of @cspace.
+/// Most mathematical operations are defined over this class, i.e.,
+/// @c operator+ and @c operator-, reading and writing to streams, accessing,
+/// random sampling, etc.
+////////////////////////////////////////////////////////////////////////////////
 class Cfg {
   public:
 
@@ -171,7 +171,7 @@ class Cfg {
     /**create a new Cfg instance whose configuration is weighted summation of the
      *first and the second Cfg.
      *The summation is done in every dimension in CSpace.
-     *@param weight should between [0,1]. this weight is for the second Cfg.
+     *weight should between [0,1]. this weight is for the second Cfg.
      * The weight for the first Cfg is (1-weight)
      */
     virtual void WeightedSum(const Cfg&, const Cfg&, double _weight = 0.5);
@@ -244,7 +244,7 @@ Cfg::GetRandomRay(double _incr, Environment* _env,  DistanceMetricPointer _dm, b
     m_v.push_back(2.0*DRand() - 1.0);
 
   //scale to appropriate length
-  _dm->ScaleCfg(_incr, *this);
+  _dm->ScaleCfg(_incr, (typename DistanceMetricPointer::element_type::CfgType&)*this);
   if(_norm)
     NormalizeOrientation();
 }

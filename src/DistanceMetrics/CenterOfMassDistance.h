@@ -1,8 +1,14 @@
-#ifndef CENTEROFMASSDISTANCE_H_
-#define CENTEROFMASSDISTANCE_H_
+#ifndef CENTER_OF_MASS_DISTANCE_H_
+#define CENTER_OF_MASS_DISTANCE_H_
 
 #include "DistanceMetricMethod.h"
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup DistanceMetrics
+/// @brief TODO.
+///
+/// TODO.
+////////////////////////////////////////////////////////////////////////////////
 template<class MPTraits>
 class CenterOfMassDistance : public DistanceMetricMethod<MPTraits> {
   public:
@@ -11,31 +17,27 @@ class CenterOfMassDistance : public DistanceMetricMethod<MPTraits> {
 
     CenterOfMassDistance();
     CenterOfMassDistance(MPProblemType* _problem, XMLNodeReader& _node);
-    virtual ~CenterOfMassDistance();
 
     virtual double Distance(const CfgType& _c1, const CfgType& _c2);
 };
 
 template<class MPTraits>
-CenterOfMassDistance<MPTraits>::CenterOfMassDistance() :
-  DistanceMetricMethod<MPTraits>() {
+CenterOfMassDistance<MPTraits>::
+CenterOfMassDistance() : DistanceMetricMethod<MPTraits>() {
   this->SetName("CenterOfMass");
 }
 
 template<class MPTraits>
-CenterOfMassDistance<MPTraits>::CenterOfMassDistance(
-    MPProblemType* _problem, XMLNodeReader& _node) :
+CenterOfMassDistance<MPTraits>::
+CenterOfMassDistance(MPProblemType* _problem, XMLNodeReader& _node) :
   DistanceMetricMethod<MPTraits>(_problem, _node, true) {
     this->SetName("CenterOfMass");
   }
 
 template<class MPTraits>
-CenterOfMassDistance<MPTraits>::~CenterOfMassDistance() {
-}
-
-template<class MPTraits>
 double
-CenterOfMassDistance<MPTraits>::Distance(const CfgType& _c1, const CfgType& _c2) {
+CenterOfMassDistance<MPTraits>::
+Distance(const CfgType& _c1, const CfgType& _c2) {
   Environment* env = this->GetMPProblem()->GetEnvironment();
   return (_c1.GetRobotCenterofMass(env) - _c2.GetRobotCenterofMass(env)).norm();
 }

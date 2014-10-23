@@ -6,6 +6,12 @@
 #include "LocalPlanners/MedialAxisLP.h"
 #include "Utilities/MedialAxisUtilities.h"
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup PathModifiers
+/// @brief TODO.
+///
+/// TODO.
+////////////////////////////////////////////////////////////////////////////////
 template<class MPTraits>
 class MedialAxisPathModifier : public PathModifierMethod<MPTraits> {
   public:
@@ -20,7 +26,7 @@ class MedialAxisPathModifier : public PathModifierMethod<MPTraits> {
         const string& _lpLabel = "", const string& _malpLabel = "");
     MedialAxisPathModifier(MPProblemType* _problem, XMLNodeReader& _node);
 
-    void PrintOptions(ostream& _os) const;
+    void Print(ostream& _os) const;
     void ParseXML(XMLNodeReader& _node);
 
     bool ModifyImpl(vector<CfgType>& _path, vector<CfgType>& _newPath);
@@ -58,8 +64,8 @@ MedialAxisPathModifier<MPTraits>::ParseXML(XMLNodeReader& _node) {
 
 template<class MPTraits>
 void
-MedialAxisPathModifier<MPTraits>::PrintOptions(ostream& _os) const {
-  PathModifierMethod<MPTraits>::PrintOptions(_os);
+MedialAxisPathModifier<MPTraits>::Print(ostream& _os) const {
+  PathModifierMethod<MPTraits>::Print(_os);
   _os << "\tpath modifier: \"" << m_pmLabel << "\"" << endl;
   _os << "\tlocal planner: \"" << m_lpLabel << "\"" << endl;
   _os << "\tmedial axis local planner: \"" << m_malpLabel << "\"" << endl;

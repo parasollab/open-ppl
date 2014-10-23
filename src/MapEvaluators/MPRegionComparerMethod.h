@@ -32,7 +32,12 @@ class compare_distance : public binary_function<const CFG, const CFG, bool>
   Environment* m_env;
 };
 
-
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup MapEvaluators
+/// @brief TODO.
+///
+/// TODO. Also TODO update templates.
+////////////////////////////////////////////////////////////////////////////////
 template <class CFG, class WEIGHT>
 class MPRegionComparerMethod: public MPBaseObject {
  private:
@@ -264,7 +269,7 @@ class MPRegionComparerMethod: public MPBaseObject {
 
   virtual void Compare(int in_region_a, int in_region_b) = 0;
 
-  virtual void PrintOptions(ostream& out_os) const {
+  virtual void Print(ostream& out_os) const {
     out_os << "    " << GetLabel() << ":: ";
   }
 

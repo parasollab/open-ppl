@@ -1,10 +1,16 @@
 #if (defined(PMPReachDistCC) || defined(PMPReachDistCCFixed))
 
-#ifndef REACHABLEDISTANCE_H_
-#define REACHABLEDISTANCE_H_
+#ifndef REACHABLE_DISTANCE_H_
+#define REACHABLE_DISTANCE_H_
 
 #include "DistanceMetricMethod.h"
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup DistanceMetrics
+/// @brief TODO.
+///
+/// TODO.
+////////////////////////////////////////////////////////////////////////////////
 template<class MPTraits>
 class ReachableDistance : public DistanceMetricMethod<MPTraits> {
   public:
@@ -15,7 +21,7 @@ class ReachableDistance : public DistanceMetricMethod<MPTraits> {
     ReachableDistance(MPProblemType* _problem, XMLNodeReader& _node, bool _warn = true);
     virtual ~ReachableDistance();
 
-    virtual void PrintOptions(ostream& _os) const;
+    virtual void Print(ostream& _os) const;
 
     virtual double Distance(const CfgType& _c1, const CfgType& _c2);
 
@@ -24,43 +30,48 @@ class ReachableDistance : public DistanceMetricMethod<MPTraits> {
 };
 
 template<class MPTraits>
-ReachableDistance<MPTraits>::ReachableDistance(double _s1, double _s2) :
+ReachableDistance<MPTraits>::
+ReachableDistance(double _s1, double _s2) :
   DistanceMetricMethod<MPTraits>(), m_scale1(_s1), m_scale2(_s2)  {
     this->SetName("Reachable");
   }
 
 template<class MPTraits>
-ReachableDistance<MPTraits>::ReachableDistance(MPProblemType* _problem, XMLNodeReader& _node,
-    bool _warn) : DistanceMetricMethod<MPTraits>(_problem, _node, false) {
-  this->SetName("Reachable");
+ReachableDistance<MPTraits>::
+ReachableDistance(MPProblemType* _problem, XMLNodeReader& _node, bool _warn) :
+  DistanceMetricMethod<MPTraits>(_problem, _node, false) {
+    this->SetName("Reachable");
 
-  m_scale1 = _node.numberXMLParameter("s1", false, 0.33, 0.0, 1.0, "position scale factor");
-  m_scale2 = _node.numberXMLParameter("s2", false, 0.33, 0.0, 1.0, "link lengths scale factor");
+    m_scale1 = _node.numberXMLParameter("s1", false, 0.33, 0.0, 1.0, "position scale factor");
+    m_scale2 = _node.numberXMLParameter("s2", false, 0.33, 0.0, 1.0, "link lengths scale factor");
 
-  if(m_scale1 + m_scale2 > 1.0) {
-    cerr << "\n\nERROR in ReachableDistance(): scale factor parameters must add up to less than or equal to 1: " << m_scale1 << " + " << m_scale2 << " = " << m_scale1 + m_scale2 << "\nexiting.\n";
-    exit(-1);
+    if(m_scale1 + m_scale2 > 1.0) {
+      cerr << "\n\nERROR in ReachableDistance(): scale factor parameters must add up to less than or equal to 1: " << m_scale1 << " + " << m_scale2 << " = " << m_scale1 + m_scale2 << "\nexiting.\n";
+      exit(-1);
+    }
+
+    if(_warn)
+      _node.warnUnrequestedAttributes();
   }
 
-  if(_warn)
-    _node.warnUnrequestedAttributes();
-}
-
 template<class MPTraits>
-ReachableDistance<MPTraits>::~ReachableDistance() {
+ReachableDistance<MPTraits>::
+~ReachableDistance() {
 }
 
 template<class MPTraits>
 void
-ReachableDistance<MPTraits>::PrintOptions(ostream& _os) const {
-  DistanceMetricMethod<MPTraits>::PrintOptions(_os);
+ReachableDistance<MPTraits>::
+Print(ostream& _os) const {
+  DistanceMetricMethod<MPTraits>::Print(_os);
   _os << "\ts1 = " << m_scale1 << endl;
   _os << "\ts2 = " << m_scale2 << endl;
 }
 
 template<class MPTraits>
 double
-ReachableDistance<MPTraits>::Distance(const CfgType& _c1, const CfgType& _c2) {
+ReachableDistance<MPTraits>::
+Distance(const CfgType& _c1, const CfgType& _c2) {
   Environment* env = this->GetMPProblem()->GetEnvironment();
   //get the position difference
   double dPosition = 0.0;

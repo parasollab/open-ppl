@@ -3,6 +3,12 @@
 
 #include "PathModifierMethod.h"
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup PathModifiers
+/// @brief TODO.
+///
+/// TODO.
+////////////////////////////////////////////////////////////////////////////////
 template<class MPTraits>
 class ResamplePathModifier : public PathModifierMethod<MPTraits> {
   public:
@@ -20,7 +26,7 @@ class ResamplePathModifier : public PathModifierMethod<MPTraits> {
     ResamplePathModifier(MPProblemType* _problem, XMLNodeReader& _node);
 
     virtual void ParseXML(XMLNodeReader& _node);
-    virtual void PrintOptions(ostream& _os) const;
+    virtual void Print(ostream& _os) const;
 
     bool ModifyImpl(vector<CfgType>& _originalPath, vector<CfgType>& _newPath);
 
@@ -76,14 +82,14 @@ ResamplePathModifier<MPTraits>::ParseXML(XMLNodeReader& _node) {
 
 template<class MPTraits>
 void
-ResamplePathModifier<MPTraits>::PrintOptions(ostream& _os) const {
-  PathModifierMethod<MPTraits>::PrintOptions(_os);
+ResamplePathModifier<MPTraits>::Print(ostream& _os) const {
+  PathModifierMethod<MPTraits>::Print(_os);
   _os << "\tdistance metric = \"" << m_dmLabel << "\"" << endl;
   _os << "\tlocal planner = \"" << m_lpLabel << "\"" << endl;
   _os << "\tnumber of resamples = " << m_numResamples << endl;
   if(m_typeName == "MAX_CLEARANCE") {
     _os << "\tclearance utils::" << endl;
-    m_clearanceUtils.PrintOptions(_os);
+    m_clearanceUtils.Print(_os);
   }
 }
 

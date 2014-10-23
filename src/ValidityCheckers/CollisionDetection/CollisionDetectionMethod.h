@@ -8,6 +8,19 @@ class StatClass;
 class Cfg;
 class CDInfo;
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup CollisionDetection
+/// @brief Base abstraction for \ref CollisionDetection.
+///
+/// CollisionDetectionMethod is base class for geometric collision detection
+/// methods. Mostly these serve as middleware to interface with external
+/// libraries. @cd methods are not directly accessed but have two core
+/// functions, @c IsInCollision and @c IsInsideObstacle. @c IsInCollision takes
+/// as input a MultiBody for a robot and an obstacle and returns whether the
+/// robot and obstacle collide. @c IsInsideObstacle takes a configuration @c c
+/// and determines whether the robot configured at @c c lies entirely within a
+/// workspace obstacle.
+////////////////////////////////////////////////////////////////////////////////
 class CollisionDetectionMethod {
   public:
     //Type Out: no collision sure; collision unsure.
@@ -24,7 +37,7 @@ class CollisionDetectionMethod {
 
     virtual bool operator==(const CollisionDetectionMethod& _cd) const;
 
-    virtual void PrintOptions(ostream& _os) const;
+    virtual void Print(ostream& _os) const;
 
     /**
      * Check if robot in given cfg is complete inside or outside obstacle.

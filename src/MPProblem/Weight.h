@@ -1,7 +1,3 @@
-/* Weight class used for edge weights.  Other weight classes should be
- * derived off of this class.
- */
-
 #ifndef WEIGHT_H_
 #define WEIGHT_H_
 
@@ -15,6 +11,18 @@ using namespace std;
 
 #include "Utilities/MPUtils.h"
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup Weights
+/// @brief Default weight class for roadmap edges. Defined as a value and a set
+/// of intermediate configurations.
+///
+/// Weight is the concept for what is stored on the graph edges. Essentially,
+/// edges are defined as polygonal chains \f$I={q_1, q_2, \ldots, q_n}\f$
+/// through @cspace. They have two essential properties, a weight value
+/// representing some idea of distance between the two end points of the edge
+/// and a set of intermediate configurations defining the polygonal chain (not
+/// including the start and goal configurations).
+////////////////////////////////////////////////////////////////////////////////
 template<class CfgType>
 class DefaultWeight {
   public:
@@ -95,7 +103,7 @@ DefaultWeight<CfgType>::~DefaultWeight(){}
 template<class CfgType>
 double
 DefaultWeight<CfgType>::InvalidWeight(){
-  return INVALID_DBL;
+  return -1;
 }
 
 template<class CfgType>

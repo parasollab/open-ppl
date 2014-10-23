@@ -3,6 +3,12 @@
 
 #include "PathModifierMethod.h"
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup PathModifiers
+/// @brief TODO.
+///
+/// TODO.
+////////////////////////////////////////////////////////////////////////////////
 template<class MPTraits>
 class ShortcuttingPathModifier : public PathModifierMethod<MPTraits> {
   public:
@@ -17,7 +23,7 @@ class ShortcuttingPathModifier : public PathModifierMethod<MPTraits> {
     ShortcuttingPathModifier(MPProblemType* _problem, XMLNodeReader& _node);
 
     virtual void ParseXML(XMLNodeReader& _node);
-    virtual void PrintOptions(ostream& _os) const;
+    virtual void Print(ostream& _os) const;
 
     bool ModifyImpl(vector<CfgType>& _path, vector<CfgType>& _newPath);
 
@@ -45,8 +51,8 @@ ShortcuttingPathModifier<MPTraits>::ParseXML(XMLNodeReader& _node) {
 
 template<class MPTraits>
 void
-ShortcuttingPathModifier<MPTraits>::PrintOptions(ostream& _os) const {
-  PathModifierMethod<MPTraits>::PrintOptions(_os);
+ShortcuttingPathModifier<MPTraits>::Print(ostream& _os) const {
+  PathModifierMethod<MPTraits>::Print(_os);
   _os << "\tlocal planner = \"" << m_lpLabel << "\"" << endl;
 }
 
@@ -76,8 +82,7 @@ ShortcuttingPathModifier<MPTraits>::ModifyImpl(vector<CfgType>& _path, vector<Cf
     double posRes = env->GetPositionRes();
     double oriRes = env->GetOrientationRes();
 
-    if(this->m_recordKeep)
-      stats->StartClock("Path Modifier");
+    stats->StartClock("Path Modifier");
     //This variable will store how many nodes were skipped
     size_t skips = 0;
 
@@ -147,8 +152,7 @@ ShortcuttingPathModifier<MPTraits>::ModifyImpl(vector<CfgType>& _path, vector<Cf
       }
     }
 
-    if(this->m_recordKeep)
-      stats->StopClock("Path Modifier");
+    stats->StopClock("Path Modifier");
 
     return true;
   }

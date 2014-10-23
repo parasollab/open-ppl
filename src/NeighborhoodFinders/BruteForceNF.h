@@ -27,8 +27,8 @@ class BruteForceNF : public NeighborhoodFinderMethod<MPTraits> {
         this->m_k = _node.numberXMLParameter("k", true, 5, 0, MAX_INT, "Number of neighbors to find");
       }
 
-    virtual void PrintOptions(ostream& _os) const {
-      NeighborhoodFinderMethod<MPTraits>::PrintOptions(_os);
+    virtual void Print(ostream& _os) const {
+      NeighborhoodFinderMethod<MPTraits>::Print(_os);
       _os << "\tk: " << this->m_k << endl;
     }
 

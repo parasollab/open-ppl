@@ -59,15 +59,15 @@ class CGALNF: public NeighborhoodFinderMethod {
         }
 
         if(this->m_debug)
-          PrintOptions(cout);
+          Print(cout);
       }
 
     virtual ~CGALNF() {
       delete m_tmpTree;
     }
 
-    virtual void PrintOptions(std::ostream& _os) const {
-      NeighborhoodFinderMethod::PrintOptions(_os);
+    virtual void Print(std::ostream& _os) const {
+      NeighborhoodFinderMethod::Print(_os);
       _os << "epsilon: " << m_epsilon << " "
         << "use_scaling: " << m_useScaling << " ";
     }

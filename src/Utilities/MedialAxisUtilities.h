@@ -40,7 +40,7 @@ class ClearanceUtility : public MPBaseObject<MPTraits> {
 
     void ParseXML(XMLNodeReader& _node);
 
-    virtual void PrintOptions(ostream& _os) const;
+    virtual void Print(ostream& _os) const;
 
     string GetDistanceMetricLabel() const {return m_dmLabel;}
     string GetValidityCheckerLabel() const {return m_vcLabel;}
@@ -113,7 +113,7 @@ class MedialAxisUtility : public ClearanceUtility<MPTraits> {
 
     double GetEpsilon() const {return m_epsilon;}
 
-    virtual void PrintOptions(ostream& _os) const;
+    virtual void Print(ostream& _os) const;
 
     //***********************************//
     // Main Push To Medial Axis Function //
@@ -245,7 +245,7 @@ ClearanceUtility<MPTraits>::ParseXML(XMLNodeReader& _node){
 
 template<class MPTraits>
 void
-ClearanceUtility<MPTraits>::PrintOptions(ostream& _os) const {
+ClearanceUtility<MPTraits>::Print(ostream& _os) const {
   _os << "\tvcLabel = " << m_vcLabel << endl;
   _os << "\tdmLabel = " << m_dmLabel << endl;
   _os << "\tpositional = " << m_positional << endl;
@@ -826,8 +826,8 @@ MedialAxisUtility<MPTraits>::ParseXML(XMLNodeReader& _node){
 
 template<class MPTraits>
 void
-MedialAxisUtility<MPTraits>::PrintOptions(ostream& _os) const {
-  ClearanceUtility<MPTraits>::PrintOptions(_os);
+MedialAxisUtility<MPTraits>::Print(ostream& _os) const {
+  ClearanceUtility<MPTraits>::Print(_os);
   _os << "\tepsilon::" << m_epsilon << endl;
   _os << "\thistory length::" << m_historyLength << endl;
 }

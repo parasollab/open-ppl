@@ -3,6 +3,12 @@
 
 #include "MapEvaluatorMethod.h"
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup MapEvaluators
+/// @brief TODO.
+///
+/// TODO.
+////////////////////////////////////////////////////////////////////////////////
 template<class MPTraits>
 class ReplanningEvaluation : public LazyQuery<MPTraits> {
   public:
@@ -27,7 +33,7 @@ class ReplanningEvaluation : public LazyQuery<MPTraits> {
     ReplanningEvaluation(typename MPTraits::MPProblemType* _problem, XMLNodeReader& _node);
     virtual ~ReplanningEvaluation();
 
-    virtual void PrintOptions(ostream& _os) const;
+    virtual void Print(ostream& _os) const;
 
     virtual bool operator()();
 
@@ -64,8 +70,8 @@ ReplanningEvaluation<MPTraits>::~ReplanningEvaluation() {
 
 template<class MPTraits>
 void
-ReplanningEvaluation<MPTraits>::PrintOptions(ostream& _os) const {
-  LazyQuery<MPTraits>::PrintOptions(_os);
+ReplanningEvaluation<MPTraits>::Print(ostream& _os) const {
+  LazyQuery<MPTraits>::Print(_os);
   _os << "\n\tEnvironment = " << m_envFile <<endl;
 }
 

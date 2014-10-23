@@ -76,7 +76,7 @@ BoundingBox::GetClearance(const Vector3d& _p) const {
 int
 BoundingBox::GetSideID(const vector<double>& _p) const {
   double minClearance = numeric_limits<double>::max();
-  int id, faceID;
+  int id, faceID = 0;
   for(size_t i = 0; i < _p.size(); ++i) {
     if((_p[i] - m_bbx[i].first) < (m_bbx[i].second - _p[i]))
       id = i;

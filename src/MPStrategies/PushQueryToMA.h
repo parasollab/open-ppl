@@ -17,7 +17,7 @@ class PushQueryToMA : public MPStrategyMethod<MPTraits> {
     virtual void Initialize();
     virtual void Run();
     virtual void Finalize();
-    virtual void PrintOptions(ostream& _os) const;
+    virtual void Print(ostream& _os) const;
 
   protected:
     string m_inQueryFile, m_outQueryFile;
@@ -44,10 +44,10 @@ PushQueryToMA<MPTraits>::PushQueryToMA(MPProblemType* _problem, XMLNodeReader& _
 
 template<class MPTraits>
 void
-PushQueryToMA<MPTraits>::PrintOptions(ostream& _os) const {
+PushQueryToMA<MPTraits>::Print(ostream& _os) const {
   _os << "In Query file: " << m_inQueryFile << endl;
   _os << "Out Query file: " << m_outQueryFile << endl;
-  m_medialAxisUtility.PrintOptions(_os);
+  m_medialAxisUtility.Print(_os);
 }
 
 //////////////////////

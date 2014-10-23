@@ -14,7 +14,7 @@ class EvaluateMapStrategy : public MPStrategyMethod<MPTraits> {
     EvaluateMapStrategy(MPProblemType* _problem, XMLNodeReader& _node);
     virtual ~EvaluateMapStrategy() {}
 
-    virtual void PrintOptions(ostream& _os) const;
+    virtual void Print(ostream& _os) const;
 
     virtual void ParseXML(XMLNodeReader& _node);
 
@@ -46,7 +46,7 @@ EvaluateMapStrategy<MPTraits>::EvaluateMapStrategy(MPProblemType* _problem, XMLN
 
 template<class MPTraits>
 void
-EvaluateMapStrategy<MPTraits>::PrintOptions(ostream& _os) const {
+EvaluateMapStrategy<MPTraits>::Print(ostream& _os) const {
   using boost::lambda::_1;
   _os << "EvaluateMapStrategy::";
   _os << "\n\tmap file = \"" << m_mapFileName << "\"";

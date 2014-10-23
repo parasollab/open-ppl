@@ -3,7 +3,6 @@ ifndef platform
   platform = LINUX_gcc
 endif
 
-
 # set default debug
 ifndef debug
   debug = 0
@@ -49,27 +48,17 @@ INCL =  ${PMPL_INCL} ${UTILS_INCL} ${STAPL_INCL} ${BOOST_INCL} ${CGAL_INCL} ${MP
 LIBS =  ${PMPL_LIB} ${UTILS_LIB} ${MPNN_LIB} ${STAPL_LIB}
 
 # targets
-default_target: libs
+default_target: library
 
-utils: stapl_lib cd_libs xml_libs nn_libs modelloader_lib kmeans_lib
-stapl_lib: ${STAPL_LIBFILE}
-cd_libs: ${CD_LIBFILE}
-xml_libs: ${XML_LIBFILE}
-nn_libs: ${MPNN_LIBFILE}
-modelloader_lib: ${MODELLOADER_LIBFILE}
-kmeans_lib: ${KMEANS_LIBFILE}
+${PMPL_OBJS}: ${STAPL_LIBFILE} ${CD_LIBFILE} ${XML_LIBFILE} ${MPNN_LIBFILE} ${MODELLOADER_LIBFILE} ${KMEANS_LIBFILE}
 
-objs: utils ${PMPL_OBJS}
-
-${PMPL_OBJS}: utils
-
-libs: utils ${PMPL_LIBFILE}
-
-${PMPL_LIBFILE}: objs
+${PMPL_LIBFILE}: ${PMPL_OBJS}
 	${AR} ${PMPL_LIBFILE} ${PMPL_OBJS}
 
-%: main_%.cpp libs
-	${CXX} ${CXXFLAGS} ${OPTS} ${DEFS} ${INCL} $< ${LIBS} -o $@
+library: ${PMPL_LIBFILE}
+
+pmpl: ${PMPL_LIBFILE} main.o
+	${CXX} ${CXXFLAGS} ${OPTS} main.o ${LIBS} -o $@
 
 %.o: %.cpp
 	@${MAKE} -s check_platform
@@ -79,11 +68,11 @@ ${PMPL_LIBFILE}: objs
 
 
 # clean targets
-CLEAN = pmpl
+CLEAN = ${PMPL_LIBFILE} main.o pmpl
 
 reallyclean:
 	@${MAKE} clean
-	rm -f *.a ${PMPL_OBJS} *.d
+	rm -f ${PMPL_OBJS} *.d
 	rm -f Dependencies
 	touch Dependencies
 

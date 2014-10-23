@@ -15,6 +15,7 @@ string Body::m_modelDataDir;
 Body::Body(MultiBody* _owner) :
   m_multibody(_owner),
   m_isBase(false),
+  m_label(0),
   m_baseType(Robot::PLANAR),
   m_baseMovementType(Robot::TRANSLATIONAL),
   m_convexHullAvailable(false),
@@ -25,6 +26,7 @@ Body::Body(MultiBody* _owner) :
 Body::Body(MultiBody* _owner, GMSPolyhedron& _polyhedron) :
   m_multibody(_owner),
   m_isBase(false),
+  m_label(0),
   m_baseType(Robot::PLANAR),
   m_baseMovementType(Robot::TRANSLATIONAL),
   m_polyhedron(_polyhedron),
@@ -40,6 +42,7 @@ Body::Body(const Body& _b) :
   m_multibody(_b.m_multibody),
   m_worldTransformation(_b.m_worldTransformation),
   m_isBase(_b.m_isBase),
+  m_label(_b.m_label),
   m_baseType(_b.m_baseType),
   m_baseMovementType(_b.m_baseMovementType),
   m_polyhedron(_b.m_polyhedron),

@@ -1,11 +1,16 @@
-//Euclidean Distance is Minkowski Distance where r1=r2=2, r3=0.5
-//This allows us to use Minkowski Distance to calculate Euclidean Distance
-
-#ifndef EUCLIDEANDISTANCE_H_
-#define EUCLIDEANDISTANCE_H_
+#ifndef EUCLIDEAN_DISTANCE_H_
+#define EUCLIDEAN_DISTANCE_H_
 
 #include "MinkowskiDistance.h"
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup DistanceMetrics
+/// @brief TODO.
+///
+/// TODO.
+/// Euclidean Distance is Minkowski Distance where r1=r2=2, r3=0.5
+/// This allows us to use Minkowski Distance to calculate Euclidean Distance
+////////////////////////////////////////////////////////////////////////////////
 template<class MPTraits>
 class EuclideanDistance : public MinkowskiDistance<MPTraits> {
   public:
@@ -13,18 +18,18 @@ class EuclideanDistance : public MinkowskiDistance<MPTraits> {
 
     EuclideanDistance(bool _normalize = false);
     EuclideanDistance(MPProblemType* _problem, XMLNodeReader& _node, bool _warn = true);
-    virtual ~EuclideanDistance();
 };
 
 template<class MPTraits>
-EuclideanDistance<MPTraits>::EuclideanDistance(bool _normalize) :
+EuclideanDistance<MPTraits>::
+EuclideanDistance(bool _normalize) :
   MinkowskiDistance<MPTraits>(2, 2, 1.0/2, _normalize) {
     this->SetName("Euclidean");
-  }
+}
 
 template<class MPTraits>
-EuclideanDistance<MPTraits>::EuclideanDistance(MPProblemType* _problem,
-    XMLNodeReader& _node, bool _warn) :
+EuclideanDistance<MPTraits>::
+EuclideanDistance(MPProblemType* _problem, XMLNodeReader& _node, bool _warn) :
   MinkowskiDistance<MPTraits>(_problem, _node, false, false) {
     this->SetName("Euclidean");
 
@@ -35,10 +40,6 @@ EuclideanDistance<MPTraits>::EuclideanDistance(MPProblemType* _problem,
 
     if(_warn)
       _node.warnUnrequestedAttributes();
-  }
-
-template<class MPTraits>
-EuclideanDistance<MPTraits>::~EuclideanDistance() {
 }
 
 #endif

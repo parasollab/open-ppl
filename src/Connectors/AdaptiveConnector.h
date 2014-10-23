@@ -20,7 +20,7 @@ class AdaptiveConnector: public ConnectorMethod<MPTraits> {
     AdaptiveConnector(const vector<string>& _neigborGenLabels = vector<string>(),string _lpLabel = "", bool _setUniform=false, double _percentageRandom=0.5,bool _fixedCost =false, bool _fixedReward=false,bool _checkIfSameCC = false, bool _countFailures = false, size_t _fail = 5);
     AdaptiveConnector(MPProblemType* _problem, XMLNodeReader& _node);
 
-    virtual void PrintOptions(ostream& _os) const;
+    virtual void Print(ostream& _os) const;
     virtual void ParseXML(XMLNodeReader& _node);
     virtual void Initialize();
 
@@ -122,8 +122,8 @@ AdaptiveConnector<MPTraits>::ParseXML(XMLNodeReader& _node){
 
 template<class MPTraits>
 void
-AdaptiveConnector<MPTraits>::PrintOptions(ostream& _os) const {
-  ConnectorMethod<MPTraits>::PrintOptions(_os);
+AdaptiveConnector<MPTraits>::Print(ostream& _os) const {
+  ConnectorMethod<MPTraits>::Print(_os);
   _os << "\tfail = " << m_fail << endl;
   _os << "\tcountFailures = " << m_countFailures << endl;
   _os << "\tpercentRandom = " << m_percentageRandom << endl;
@@ -170,7 +170,7 @@ AdaptiveConnector<MPTraits>::Connect(RoadmapType* _rm, StatClass& _stats, ColorM
 
   if(this->m_debug){
     cout << endl;
-    PrintOptions(cout);
+    Print(cout);
   }
 
   if(m_nfProbabilities.empty() || m_neigborGenLabels.size() != m_nfProbabilities.size())

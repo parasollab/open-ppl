@@ -17,7 +17,7 @@ class MedialAxisClearanceValidity : public ValidityCheckerMethod<MPTraits> {
 
     void ParseXML(XMLNodeReader& _node);
 
-    virtual void PrintOptions(ostream& _os) const;
+    virtual void Print(ostream& _os) const;
 
     virtual bool IsInsideObstacle(const CfgType& _cfg);
 
@@ -55,11 +55,11 @@ MedialAxisClearanceValidity<MPTraits>::ParseXML(XMLNodeReader& _node){
 
 template<class MPTraits>
 void
-MedialAxisClearanceValidity<MPTraits>::PrintOptions(ostream& _os) const {
-  ValidityCheckerMethod<MPTraits>::PrintOptions(_os);
+MedialAxisClearanceValidity<MPTraits>::Print(ostream& _os) const {
+  ValidityCheckerMethod<MPTraits>::Print(_os);
   _os << "\tMaximum distance from medial axis::" << m_clearance << endl;
   _os << "\tMedialAxisUtility::" << endl;
-  m_medialAxisUtility.PrintOptions(_os);
+  m_medialAxisUtility.Print(_os);
 }
 
 

@@ -1,9 +1,5 @@
-/* LocalPlannerMethod.h
- * This class is a base class for all local planner methods
- */
-
-#ifndef LOCALPLANNERMETHOD_H_
-#define LOCALPLANNERMETHOD_H_
+#ifndef LOCAL_PLANNER_METHOD_H_
+#define LOCAL_PLANNER_METHOD_H_
 
 #include "MPProblem/Environment.h"
 #include "Utilities/MetricUtils.h"
@@ -11,6 +7,24 @@
 
 template<class MPTraits> struct LPOutput;
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup LocalPlanners
+/// @brief Base algorithm abstraction for \ref LocalPlanners.
+///
+/// LocalPlannerMethod has two main functions: @c IsConnected and
+/// @c ReconstructPath.
+///
+/// @c IsConnected takes as input two configurations \f$c_1\f$, \f$c_2\f$, an
+/// LPOutput, validation resolutions, and optional booleans dictating whether to
+/// check collision and save the path. The function both returns true or false
+/// to validate the simple path between \f$c_1\f$ and \f$c_2\f$, but also
+/// populates the LPOutput structure with useful information.
+///
+/// @c ReconstructPath is used to reconstruct a specific polygonal chain from a
+/// WeightType object's intermediate configurations. The function takes as input
+/// two configurations, a set of intermediate configurations, and validity
+/// resolutions.
+////////////////////////////////////////////////////////////////////////////////
 template<class MPTraits>
 class LocalPlannerMethod : public MPBaseObject<MPTraits> {
   public:
@@ -29,26 +43,75 @@ class LocalPlannerMethod : public MPBaseObject<MPTraits> {
 
     virtual ~LocalPlannerMethod() {}
 
-    virtual void PrintOptions(ostream& _os) const;
+    virtual void Print(ostream& _os) const;
 
+    ////////////////////////////////////////////////////////////////////////////
+    /// @brief Validate a simple path between two nodes
+    ///
+    /// @overload
+    /// No witness to failure is returned.
+    ////////////////////////////////////////////////////////////////////////////
+    virtual bool IsConnected(const CfgType& _c1, const CfgType& _c2,
+        LPOutput<MPTraits>* _lpOutput, double _posRes, double _oriRes,
+        bool _checkCollision = true, bool _savePath = false,
+        bool _saveFailedPath = false);
+
+    ////////////////////////////////////////////////////////////////////////////
+    /// @brief Validate a simple path between two nodes
+    /// @param _c1 Configuration 1
+    /// @param _c2 Configuration 2
+    /// @param _col Witness configuration if failure
+    /// @param _lpOutput Weight and path computed from local plan
+    /// @param _posRes Positional DOF resolution
+    /// @param _oriRes Rotational DOF resolution
+    /// @param _checkCollision True if validity checking is performed
+    /// @param _savePath True if all configurations along path wish to be saved
+    /// @param _saveFailedPath True if when fail a partially computed path is
+    ///        put in _lpOutput
+    /// @return boolean success/fail value
+    ///
+    /// @usage
+    /// @code
+    /// LocalPlannerPointer lp = this->GetMPProblem()->GetLocalPlanner(m_lpLabel);
+    /// Environment* env = this->GetMPProblem()->GetEnvironment();
+    /// CfgType c1, c2, col;
+    /// LPOutput<MPTraits> lpOut;
+    /// lp->IsConnected(c1, c2, col, &lpOut, env->GetPositionRes(), env->GetOrientationRes());
+    /// @endcode
+    ////////////////////////////////////////////////////////////////////////////
     virtual bool IsConnected(
         const CfgType& _c1, const CfgType& _c2, CfgType& _col,
         LPOutput<MPTraits>* _lpOutput, double _posRes, double _oriRes,
         bool _checkCollision = true, bool _savePath = false,
         bool _saveFailedPath = false) = 0;
 
-    virtual bool IsConnected(const CfgType& _c1, const CfgType& _c2,
-        LPOutput<MPTraits>* _lpOutput, double _posRes, double _oriRes,
-        bool _checkCollision = true, bool _savePath = false,
-        bool _saveFailedPath = false);
-
+    ////////////////////////////////////////////////////////////////////////////
+    /// @brief Reconstruct a previously computed simple path between two nodes
+    /// @param _c1 Configuration 1
+    /// @param _c2 Configuration 2
+    /// @param _intermediates Intermediate configurations along simple path's
+    ///        polygonal chain
+    /// @param _posRes Positional DOF resolution
+    /// @param _oriRes Rotational DOF resolution
+    /// @return Configurations along path from _c1 to _c2 up to a resolution
+    ///         (_posRes, _oriRes)
+    ///
+    /// @usage
+    /// @code
+    /// LocalPlannerPointer lp = this->GetMPProblem()->GetLocalPlanner(m_lpLabel);
+    /// Environment* env = this->GetMPProblem()->GetEnvironment();
+    /// CfgType c1, c2;
+    /// vector<CfgType> intermediates;
+    /// lp->ReconstructPath(c1, c2, intermediates, env->GetPositionRes(), env->GetOrientationRes());
+    /// @endcode
+    ////////////////////////////////////////////////////////////////////////////
     virtual vector<CfgType> ReconstructPath(
         const CfgType& _c1, const CfgType& _c2,
         const vector<CfgType>& _intermediates,
         double _posRes, double _oriRes);
 
   protected:
-    bool m_saveIntermediates;
+    bool m_saveIntermediates; ///< True if the intermediates computed along the local plan be saved for the roadmap
 };
 
 template<class MPTraits>
@@ -77,7 +140,7 @@ LocalPlannerMethod<MPTraits>::ReconstructPath(
 
 template<class MPTraits>
 void
-LocalPlannerMethod<MPTraits>::PrintOptions(ostream& _os) const {
+LocalPlannerMethod<MPTraits>::Print(ostream& _os) const {
   _os << this->GetNameAndLabel()
       << "\n\tsave intermediates : " << m_saveIntermediates
       << endl;

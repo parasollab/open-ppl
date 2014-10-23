@@ -26,7 +26,7 @@ class MedialAxisLP : public LocalPlannerMethod<MPTraits> {
     MedialAxisLP(MPProblemType* _problem, XMLNodeReader& _node);
     virtual ~MedialAxisLP();
 
-    virtual void PrintOptions(ostream& _os) const;
+    virtual void Print(ostream& _os) const;
 
     MedialAxisUtility<MPTraits>& GetMedialAxisUtility() {
       return m_medialAxisUtility;
@@ -80,7 +80,7 @@ class MedialAxisLP : public LocalPlannerMethod<MPTraits> {
     size_t m_maxIter; //maximum depth of recursion
     double m_r; //factor of the resolution
 
-    MedialAxisClearanceValidity<MPTraits> m_macVCM;  //mac validity checker
+    MedialAxisClearanceValidity<MPTraits>* m_macVCM;  //mac validity checker
     StraightLine<MPTraits> m_envLP, m_macLP;     //straight line local planners
 
     bool m_macVCAdded;
@@ -130,26 +130,26 @@ MedialAxisLP<MPTraits>::Init() {
 
   //Construct a medial axis clearance validity
   m_macVCAdded = false;
-  m_macVCM = MedialAxisClearanceValidity<MPTraits>(m_medialAxisUtility, m_macEpsilon);
+  m_macVCM = new MedialAxisClearanceValidity<MPTraits>(m_medialAxisUtility, m_macEpsilon);
 
   //Local planner methods
   m_envLP = StraightLine<MPTraits>(m_medialAxisUtility.GetValidityCheckerLabel(), true);
   m_macLP = StraightLine<MPTraits>("MAC::" + this->GetNameAndLabel(), true);
 
   //make sure MPProblems point to the correct place
-  m_macVCM.SetMPProblem(this->GetMPProblem());
+  m_macVCM->SetMPProblem(this->GetMPProblem());
   m_envLP.SetMPProblem(this->GetMPProblem());
   m_macLP.SetMPProblem(this->GetMPProblem());
 }
 
 template<class MPTraits>
 void
-MedialAxisLP<MPTraits>::PrintOptions(ostream& _os) const {
-  LocalPlannerMethod<MPTraits>::PrintOptions(_os);
-  m_medialAxisUtility.PrintOptions(_os);
+MedialAxisLP<MPTraits>::Print(ostream& _os) const {
+  LocalPlannerMethod<MPTraits>::Print(_os);
+  m_medialAxisUtility.Print(_os);
   _os << "\tcdLPMethod = " << m_envLP.GetNameAndLabel() << endl
     << "\tmacLPMethod = " << m_macLP.GetNameAndLabel() << endl
-    << "\tmacVCMethod = " << m_macVCM.GetNameAndLabel() <<endl
+    << "\tmacVCMethod = " << m_macVCM->GetNameAndLabel() <<endl
     << "\tmacEpsilon = " << m_macEpsilon << endl
     << "\tmaxIter = " << m_maxIter << endl;
 }
@@ -167,7 +167,7 @@ MedialAxisLP<MPTraits>::IsConnected(
   if(!m_macVCAdded) {
     m_macVCAdded = true;
     this->GetMPProblem()->AddValidityChecker(
-        ValidityCheckerPointer(&m_macVCM),
+        ValidityCheckerPointer(m_macVCM),
         "MAC::" + this->GetNameAndLabel());
   }
 
@@ -392,7 +392,7 @@ MedialAxisLP<MPTraits>::EpsilonClosePath(
   maLPOutput.m_path.push_back(_c2);
 
   // Save pushed mid
-  vector<pair<CfgType,CfgType> > history = m_macVCM.GetHistory();
+  vector<pair<CfgType,CfgType> > history = m_macVCM->GetHistory();
 
   if(this->m_debug)
     cout << "Finding mid cfg, history size::" << history.size() << endl;
@@ -423,7 +423,7 @@ MedialAxisLP<MPTraits>::EpsilonClosePath(
       m_medialAxisUtility.PushToMedialAxis(_mid, env->GetBoundary());
     }
   }
-  m_macVCM.ClearHistory();
+  m_macVCM->ClearHistory();
 
   // If epsilon close, test at env res
   if(passed) {
@@ -482,7 +482,6 @@ MedialAxisLP<MPTraits>::IsConnectedIter(
   int nticks;
   size_t iter = 0;
   double r = m_r;
-  bool skip = false;
 
   do {
 
@@ -519,12 +518,10 @@ MedialAxisLP<MPTraits>::IsConnectedIter(
       //return false;
       curr = prev;
       r *= 2;
-      skip = true;
       continue;
     }
 
     r = m_r;
-    skip = false;
 
     if(this->m_debug) {
       cout << "Pushed::" << curr << endl;

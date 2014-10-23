@@ -33,7 +33,7 @@ class AStar : public LocalPlannerMethod<MPTraits> {
 
     virtual ~AStar();
 
-    virtual void PrintOptions(ostream& _os) const;
+    virtual void Print(ostream& _os) const;
 
     virtual bool IsConnected(
         const CfgType& _c1, const CfgType& _c2, CfgType& _col,
@@ -95,8 +95,8 @@ AStar<MPTraits>::~AStar() {}
 
 template <class MPTraits>
 void
-AStar<MPTraits>::PrintOptions(ostream& _os) const {
-  LocalPlannerMethod<MPTraits>::PrintOptions(_os);
+AStar<MPTraits>::Print(ostream& _os) const {
+  LocalPlannerMethod<MPTraits>::Print(_os);
   _os << "\tvc label : " << m_vcLabel
       << "\n\tmax tries = " << m_maxTries
       << "\n\tnum neighbors = " << m_numNeighbors
@@ -326,7 +326,7 @@ class AStarDistance : public AStar<MPTraits> {
 
     virtual ~AStarDistance();
 
-    virtual void PrintOptions(ostream& _os) const;
+    virtual void Print(ostream& _os) const;
 
     virtual size_t ChooseOptimalNeighbor(CfgType& _col,
         const CfgType& _c1, const CfgType& _c2, vector<CfgType>& _neighbors);
@@ -356,8 +356,8 @@ AStarDistance<MPTraits>::~AStarDistance() {}
 
 template <class MPTraits>
 void
-AStarDistance<MPTraits>::PrintOptions(ostream& _os) const {
-  AStar<MPTraits>::PrintOptions(_os);
+AStarDistance<MPTraits>::Print(ostream& _os) const {
+  AStar<MPTraits>::Print(_os);
   _os << "\tdm label : " << m_dmLabel << endl;
 }
 
@@ -398,7 +398,7 @@ class AStarClearance : public AStar<MPTraits> {
 
     virtual ~AStarClearance();
 
-    virtual void PrintOptions(ostream& _os) const;
+    virtual void Print(ostream& _os) const;
 
     virtual size_t ChooseOptimalNeighbor(CfgType& _col,
         const CfgType& _c1, const CfgType& _c2, vector<CfgType>& _neighbors);
@@ -427,9 +427,9 @@ AStarClearance<MPTraits>::~AStarClearance() {}
 
 template <class MPTraits>
 void
-AStarClearance<MPTraits>::PrintOptions(ostream& _os) const {
-  AStar<MPTraits>::PrintOptions(_os);
-  m_clearanceUtility.PrintOptions(_os);
+AStarClearance<MPTraits>::Print(ostream& _os) const {
+  AStar<MPTraits>::Print(_os);
+  m_clearanceUtility.Print(_os);
 }
 
 //find Cfg with largest clearance. ASTAR_CLEARANCE

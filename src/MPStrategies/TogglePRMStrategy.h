@@ -21,7 +21,7 @@ class TogglePRMStrategy : public MPStrategyMethod<MPTraits> {
     virtual ~TogglePRMStrategy() { }
 
     virtual void ParseXML(XMLNodeReader& _node);
-    virtual void PrintOptions(ostream& _os) const;
+    virtual void Print(ostream& _os) const;
 
     virtual void Initialize();
     virtual void Run();
@@ -84,12 +84,12 @@ TogglePRMStrategy<MPTraits>::ParseXML(XMLNodeReader& _node) {
     else
       citr->warnUnknownNode();
   }
-  _node.warnUnrequestedAttributes();
+  //_node.warnUnrequestedAttributes();
 }
 
 template<class MPTraits>
 void
-TogglePRMStrategy<MPTraits>::PrintOptions(ostream& _os) const {
+TogglePRMStrategy<MPTraits>::Print(ostream& _os) const {
   using boost::lambda::_1;
   _os << "\nTogglePRMStrategy::ParseXML:\n";
   _os << "\tSamplers: ";
@@ -141,6 +141,8 @@ TogglePRMStrategy<MPTraits>::Run() {
         VID vid = this->GetMPProblem()->GetRoadmap()->GetGraph()->AddVertex(cfg);
         allNodesVID.push_back(vid);
         Connect(make_pair("valid", vid), allNodesVID, queue);
+
+        this->CheckNarrowPassageSample(vid);
       }
       else { // Invalid, add to obstacle roadmap. Toggle validity while connecting
         VID vid = this->GetMPProblem()->GetBlockRoadmap()->GetGraph()->AddVertex(cfg);

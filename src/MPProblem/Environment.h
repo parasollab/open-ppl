@@ -7,6 +7,15 @@
 #include "Utilities/MPUtils.h"
 #include "Graph.h"
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup Environments
+/// @brief Workspace for the motion planning problem.
+///
+/// The Environment is essentially the workspace of the motion planning problem.
+/// We define a workspace as a set of MultiBody which are essentially either
+/// robot or obstacle geometries and a Boundary to define the
+/// sampling/exploration region for the planner.
+////////////////////////////////////////////////////////////////////////////////
 class Environment {
   public:
 
@@ -22,7 +31,7 @@ class Environment {
     const string& GetEnvFileName() const {return m_filename;}
 
     void Read(string _filename);
-    void PrintOptions(ostream& _os) const;
+    void Print(ostream& _os) const;
     void Write(ostream & _os);
 
     //////////////////////////////////////////////////////////
@@ -78,6 +87,10 @@ class Environment {
     size_t GetObstacleCount() const {return m_obstacleBodies.size();}
     size_t GetUsableMultiBodyCount() const {return m_usableMultiBodies.size();}
     size_t GetNavigableSurfacesCount() const {return m_navigableSurfaces.size();}
+
+    //Returns a pointer to ActiveBody according to this given index.
+    //If this index is out of the boundary of list, NULL will be returned.
+    shared_ptr<MultiBody> GetActiveBody(size_t _index) const;
 
     //Returns a pointer to MultiBody according to this given index.
     //If this index is out of the boundary of list, NULL will be returned.
@@ -145,27 +158,5 @@ class Environment {
     vector<shared_ptr<MultiBody> > m_navigableSurfaces; //surfaces
 };
 
-inline
-shared_ptr<MultiBody>
-Environment::GetMultiBody(size_t _index) const {
-  if(_index < m_usableMultiBodies.size())
-    return m_usableMultiBodies[_index];
-  else {
-    cerr << "Error:Cannot access MultiBody with index " << _index
-      << ". Possible indices are [0, " << m_usableMultiBodies.size() << ")." << endl;
-    exit(1);
-  }
-}
-
-inline
-shared_ptr<MultiBody> Environment::GetNavigableSurface(size_t _index) const {
-  if(_index < m_navigableSurfaces.size())
-    return m_navigableSurfaces[_index];
-  else {
-    cerr << "Error:Cannot access NavigableSurface with index " << _index
-      << ". Possible indices are [0, " << m_navigableSurfaces.size() << ")." << endl;
-    exit(1);
-  }
-}
 
 #endif

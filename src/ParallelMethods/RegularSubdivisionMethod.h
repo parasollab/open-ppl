@@ -44,7 +44,7 @@ class RegularSubdivisionMethod : public MPStrategyMethod<MPTraits>{
     virtual void Initialize(){ };
     virtual void Run();
     virtual void Finalize();
-    virtual void PrintOptions(ostream& _os) const;
+    virtual void Print(ostream& _os) const;
 
   private:
     vector<string> m_regionConnectionLabels;
@@ -139,8 +139,8 @@ void RegularSubdivisionMethod<MPTraits>::ParseXML(XMLNodeReader& _node){
 
 
 template<class MPTraits>
-void RegularSubdivisionMethod<MPTraits>::PrintOptions(ostream& _os) const {
-   _os << "RegularSubdivisionMethod:: PrintOptions \n";
+void RegularSubdivisionMethod<MPTraits>::Print(ostream& _os) const {
+   _os << "RegularSubdivisionMethod:: Print \n";
    _os << "\trows: " << m_row << endl;
    _os << "\tcols: " << m_col << endl;
    _os << "\tregion connector type: " << m_ccc << endl;

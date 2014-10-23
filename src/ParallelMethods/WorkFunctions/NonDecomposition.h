@@ -52,7 +52,7 @@ template<typename OutputIterator>
 void
 NonDecomposition<CFG>::
 Decompose(Environment* _env, BoundingBox &c_boundary,int n_partitions,OutputIterator _out, vector<BoundingBox>& vbox){
-	///@To do:same as DecomposeWS but fix parameter
+	///@todo same as DecomposeWS but fix parameter
 }
 
 template<typename CFG>

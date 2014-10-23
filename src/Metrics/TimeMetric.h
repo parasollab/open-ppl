@@ -4,6 +4,12 @@
 #include "MetricMethod.h"
 #include "Utilities/MetricUtils.h"
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup Metrics
+/// @brief TODO.
+///
+/// TODO.
+////////////////////////////////////////////////////////////////////////////////
 template<class MPTraits>
 class TimeMetric : public MetricMethod<MPTraits> {
   public:
@@ -12,7 +18,7 @@ class TimeMetric : public MetricMethod<MPTraits> {
     TimeMetric(typename MPTraits::MPProblemType* _problem, XMLNodeReader& _node);
     virtual ~TimeMetric();
 
-    virtual void PrintOptions(ostream& _os) const;
+    virtual void Print(ostream& _os) const;
 
     double operator()();
 
@@ -35,7 +41,7 @@ TimeMetric<MPTraits>::~TimeMetric() {
 
 template<class MPTraits>
 void
-TimeMetric<MPTraits>::PrintOptions(ostream& _os) const {
+TimeMetric<MPTraits>::Print(ostream& _os) const {
   _os << "Time allowed" << endl;
 }
 

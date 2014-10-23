@@ -210,8 +210,8 @@ class SimilarStructureSampler : public SamplerMethod<MPTraits>
     }
   }
 
-  virtual void PrintOptions(ostream& _out) const {
-    SamplerMethod<MPTraits>::PrintOptions(_out);
+  virtual void Print(ostream& _out) const {
+    SamplerMethod<MPTraits>::Print(_out);
     _out << "\tvcLabel = " << m_vcLabel << endl;
 
     _out << "\ttargetRangeDistribution = "; m_targetRangeDistribution->Print(_out); _out << endl;

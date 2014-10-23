@@ -15,7 +15,7 @@ using namespace stapl;
 using namespace psbmp;
 
 
-/// Edge functor (relationship at outer level)::move to Hview file
+/// Edge functor (relationship at outer level):move to Hview file
 struct EF {
   typedef int value_type;
 
@@ -360,7 +360,7 @@ void AdaptiveSubdivisionMethod::Finalize(int _regionID){
 
 }
 
-void AdaptiveSubdivisionMethod::PrintOptions(ostream& _os) const {
-  _os << "AdaptiveSubdivisionMethod:: PrintOptions \n";
+void AdaptiveSubdivisionMethod::Print(ostream& _os) const {
+  _os << "AdaptiveSubdivisionMethod:: Print \n";
 }
 

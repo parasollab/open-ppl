@@ -13,16 +13,16 @@
  *           -# using local planning functions in lp_set
  *              to connect cfg1 and cfg2
  *           -# if connected, add this edge to map, _rm.
- *       -#end for
+ *       -# end for
  *   -# end for
  *
- *@param info provides inforamtion other than connection, like
+ *info provides inforamtion other than connection, like
  *_collision dection, local planner, and distance metrics.
- *@param _cn provides information for specific node connection
+ *_cn provides information for specific node connection
  *paramters.
- *@param lp Local planner for connecting given 2 Cfgs.
+ *lp Local planner for connecting given 2 Cfgs.
  *
- *@see RoadmapGraph::AddEdge and LocalPlanners::IsConnected
+ *see RoadmapGraph::AddEdge and LocalPlanners::IsConnected
  */
 
 template <class CFG, class WEIGHT>
@@ -40,8 +40,8 @@ class PreferentialAttachment: public ConnectionMethod<CFG,WEIGHT> {
 
     virtual ~PreferentialAttachment();
 
-    ///Used in new MPProblem framework.
-    virtual void PrintOptions(ostream& _os) const;
+    //Used in new MPProblem framework.
+    virtual void Print(ostream& _os) const;
     virtual void ParseXML(XMLNodeReader& _node);
 
     //////////////////////
@@ -155,8 +155,8 @@ void PreferentialAttachment<CFG,WEIGHT>::ParseXML(XMLNodeReader& _node) {
 
 template <class CFG, class WEIGHT>
 void
-PreferentialAttachment<CFG, WEIGHT>::PrintOptions(ostream& _os) const {
-  ConnectionMethod<CFG,WEIGHT>::PrintOptions(_os);
+PreferentialAttachment<CFG, WEIGHT>::Print(ostream& _os) const {
+  ConnectionMethod<CFG,WEIGHT>::Print(_os);
   _os << "    " << this->GetName() << "::  k = ";
   _os << m_k << "  fail = " << m_fail ;
   _os << endl;

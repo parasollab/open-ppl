@@ -15,6 +15,16 @@
 #include <stapl/containers/graph/algorithms/graph_io.hpp>
 #endif
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup Roadmaps
+/// @brief Approximation of @cfree storing a graph and augmenting data
+/// structures for use by motion planning algorithms.
+///
+/// The Roadmap is essentially the graph $G=(V, E)$ which is used to approximate
+/// the planning space by sampling-based motion planning algorithms. \f$V\f$, or
+/// the set of vertices, are all of type CfgType and \f$E\f$, or the set of
+/// edges, are all of type WeightType.
+////////////////////////////////////////////////////////////////////////////////
 template <class MPTraits>
 class Roadmap {
   public:

@@ -33,7 +33,7 @@ class ConnectNeighboringSurfaces: public ConnectorMethod<MPTraits> {
 
     //////////////////////
     // Used in new MPProblem framework.
-    virtual void PrintOptions(ostream& _os) const;
+    virtual void Print(ostream& _os) const;
     virtual void ParseXML(XMLNodeReader& _node);
 
     //////////////////////
@@ -89,8 +89,8 @@ void ConnectNeighboringSurfaces<MPTraits>::ParseXML(XMLNodeReader& _node){
 
 ///////////////////////////////////////////////////////////////////////////////
 template<class MPTraits>
-void ConnectNeighboringSurfaces<MPTraits>::PrintOptions(ostream& _os) const {
-  ConnectorMethod<MPTraits>::PrintOptions(_os);
+void ConnectNeighboringSurfaces<MPTraits>::Print(ostream& _os) const {
+  ConnectorMethod<MPTraits>::Print(_os);
   _os << "    " << this->GetNameAndLabel() << "::  k = " << m_k << endl;
   _os << "\tsurfacesToIgnore = [";
   for(size_t i=0; i < m_surfacesToIgnore.size(); i++) {
@@ -116,7 +116,7 @@ ConnectNeighboringSurfaces<MPTraits>::Connect(RoadmapType* _rm, StatClass& _stat
     InputIterator1 _itr1First, InputIterator1 _itr1Last,
     InputIterator2 _itr2First, InputIterator2 _itr2Last, OutputIterator _collision){
 
-  if(this->m_debug){ cout << endl; PrintOptions(cout); }
+  if(this->m_debug){ cout << endl; Print(cout); }
   if(m_doneOnce) {
     if(this->m_debug){
       cout << " This connection need only be done once...BREAKING!" << endl;

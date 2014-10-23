@@ -385,7 +385,7 @@ class Band : public MPBaseObject<MPTraits> {
       }
     }
 
-    virtual void PrintOptions(ostream& _os) const {
+    virtual void Print(ostream& _os) const {
       _os << this->GetNameAndLabel() << ":: TODO" << endl;
     }
 
@@ -604,8 +604,8 @@ class BandsNF: public NeighborhoodFinderMethod<MPTraits> {
         }
       }
 
-    virtual void PrintOptions(std::ostream& _os) const {
-      NeighborhoodFinderMethod<MPTraits>::PrintOptions(_os);
+    virtual void Print(std::ostream& _os) const {
+      NeighborhoodFinderMethod<MPTraits>::Print(_os);
     }
 
     template<typename InputIterator, typename OutputIterator>

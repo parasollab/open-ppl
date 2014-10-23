@@ -9,7 +9,7 @@ class RRGStrategy : public BasicRRTStrategy {
     virtual ~RRGStrategy() {}
 
     virtual void ParseXML(XMLNodeReader& _node);
-    virtual void PrintOptions(ostream& _os) const;
+    virtual void Print(ostream& _os) const;
     virtual VID ExpandTree(CfgType& _dir);
 
   private:

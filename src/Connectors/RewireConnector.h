@@ -65,7 +65,7 @@ RewireConnector<MPTraits>::Connect(RoadmapType* _rm, StatClass& _stats, ColorMap
 
   if(this->m_debug){
     cout << endl;
-    this->PrintOptions(cout);
+    this->Print(cout);
   }
 
   NeighborhoodFinderPointer nfptr = this->GetMPProblem()->GetNeighborhoodFinder(this->m_nfLabel);

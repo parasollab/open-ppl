@@ -1,21 +1,16 @@
-/*
- * =============================================================================
- *
- *       Filename:  RandomObstacleVector.h
- *
- *    Description: Random obstacle vector. In this extend method,
- *                 x'rand = xnear + OV . In this case OV is a random obstacle
- *                 vector from all of the triangles in the environment. The
- *                 orientational degrees of freedom of x'rand are set randomly.
- *
- *
- * =============================================================================
- */
 #ifndef RANDOMOBSTACLEVECTOR_H_
 #define RANDOMOBSTACLEVECTOR_H_
 
 #include "BasicExtender.h"
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup Extenders
+/// @brief Extend in a direction based upon a random obstacle vector.
+///
+/// In this extend method, \f$q_{dir} = q_{near} + O\f$ where \f$O\f$ is a
+/// random obstacle vector from all of the triangles in the environment. The
+/// oriantation DOFs are set randomly.
+////////////////////////////////////////////////////////////////////////////////
 template<class MPTraits>
 class RandomObstacleVector : public BasicExtender<MPTraits> {
   public:

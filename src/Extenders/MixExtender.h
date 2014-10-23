@@ -1,17 +1,12 @@
-/*
- * =============================================================================
- *
- *       Filename:  MixExtender.h
- *
- *    Description:  Randomly find an extender and apply it
- *
- * =============================================================================
- */
 #ifndef MIXEXTENDER_H_
 #define MIXEXTENDER_H_
 
 #include "ExtenderMethod.h"
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup Extenders
+/// @brief Randomly choose an extender from a set of extenders.
+////////////////////////////////////////////////////////////////////////////////
 template<class MPTraits>
 class MixExtender : public ExtenderMethod<MPTraits> {
   public:
@@ -25,7 +20,7 @@ class MixExtender : public ExtenderMethod<MPTraits> {
     MixExtender(MPProblemType* _problem, XMLNodeReader& _node);
 
     void ParseXML(XMLNodeReader& _node);
-    virtual void PrintOptions(ostream& _os) const;
+    virtual void Print(ostream& _os) const;
 
     virtual bool Extend(const CfgType& _near, const CfgType& _dir,
         CfgType& _new, vector<CfgType>& _innerNodes);
@@ -89,8 +84,8 @@ MixExtender<MPTraits>::ParseXML(XMLNodeReader& _node) {
 
 template<class MPTraits>
 void
-MixExtender<MPTraits>::PrintOptions(ostream& _os) const {
-  ExtenderMethod<MPTraits>::PrintOptions(_os);
+MixExtender<MPTraits>::Print(ostream& _os) const {
+  ExtenderMethod<MPTraits>::Print(_os);
   _os << "\textender label : " << endl;
   for(ExpanderSet::const_iterator it = m_growSet.begin(); it != m_growSet.end(); it++)
     _os << "\t\t" << it->first << endl;

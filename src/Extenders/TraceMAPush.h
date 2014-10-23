@@ -1,21 +1,17 @@
-/*
- * =============================================================================
- *
- *       Filename:  TraceMAPush.h
- *
- *    Description:  Medial Axis Push. Same as in TraceObstacleRandomOrientation
- *                  but after the target configuration has been pushed in the
- *                  obstacle direction, it is then pushed toward the medial axis
- *                  of the configuration space. In this way xnear is extended
- *                  toward x'rand which is near the medial axis.
- *
- * =============================================================================
- */
 #ifndef TRACEMAPUSH_H_
 #define TRACEMAPUSH_H_
 
 #include "TraceObstacle.h"
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup Extenders
+/// @brief Extend tangent to a workspace obstacle and then push to the medial axis.
+///
+/// This performs the same as @c TraceObstacle but after the target
+/// configuration has been pushed in the obstacle direction, it is then pushed
+/// toward the medial axis of @cfree. In this way \f$q_{near}\f$ is extended
+/// toward a \f$q_{dir}\f$ which is near the medial axis.
+////////////////////////////////////////////////////////////////////////////////
 template<class MPTraits>
 class TraceMAPush : public TraceObstacle<MPTraits> {
   public:

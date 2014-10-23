@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////////////////////
-/**@file GeneratePartitions.h
+/**GeneratePartitions.h
   *This set of classes supports Partitioning of Bounding Box into pieces.
   *Generate Partitions from existing bounding box.
   *
@@ -1013,8 +1013,8 @@ class PartitionCSpaceRegion {
   void PrintDefaults(ostream& _os);
 
   /**Generate nodes according to those in selected vector.
-   *@param _rm New created nodes will be added to this roadmap if addNodes@Map=true.
-   *@param nodes New created nodes are stored here.
+   *_rm New created nodes will be added to this roadmap if addNodes in Map=true.
+   *nodes New created nodes are stored here.
    */
   template <class WEIGHT>
     vector<BoundingBox> PlaceBoundaries(MPRegion<CFG, WEIGHT> *region,

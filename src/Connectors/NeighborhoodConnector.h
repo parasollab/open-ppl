@@ -6,7 +6,7 @@
  *       -# for every node cfg2 in N and numFailures < m_fail
  *           -# test lp.IsConnected(cfg1, cfg2)
  *           -# if connected, add this edge to map, _rm.
- *       -#end for
+ *       -# end for
  *   -# end for,
  */
 
@@ -31,7 +31,7 @@ class NeighborhoodConnector: public ConnectorMethod<MPTraits> {
         bool _checkIfSameCC = false, bool _countFailures = false, size_t _fail = 5);
     NeighborhoodConnector(MPProblemType* _problem, XMLNodeReader& _node);
 
-    virtual void PrintOptions(ostream& _os) const;
+    virtual void Print(ostream& _os) const;
     virtual void ParseXML(XMLNodeReader& _node);
 
     template<typename ColorMap, typename InputIterator1, typename InputIterator2, typename OutputIterator>
@@ -82,8 +82,8 @@ NeighborhoodConnector<MPTraits>::ParseXML(XMLNodeReader& _node){
 
 template<class MPTraits>
 void
-NeighborhoodConnector<MPTraits>::PrintOptions(ostream& _os) const {
-  ConnectorMethod<MPTraits>::PrintOptions(_os);
+NeighborhoodConnector<MPTraits>::Print(ostream& _os) const {
+  ConnectorMethod<MPTraits>::Print(_os);
   _os << "\tfail = " << m_fail << endl;
   _os << "\tcountFailures = " << m_countFailures << endl;
 }
@@ -97,7 +97,7 @@ NeighborhoodConnector<MPTraits>::Connect(RoadmapType* _rm, StatClass& _stats, Co
 
   if(this->m_debug){
     cout << endl;
-    PrintOptions(cout);
+    Print(cout);
   }
 
   NeighborhoodFinderPointer nfptr = this->GetMPProblem()->GetNeighborhoodFinder(this->m_nfLabel);
@@ -110,7 +110,7 @@ NeighborhoodConnector<MPTraits>::Connect(RoadmapType* _rm, StatClass& _stats, Co
     CfgRef vCfg = _rm->GetGraph()->GetVertex(itr1);
 
     if(this->m_debug)
-      cout << (itr1 - _itr1First)
+      cout << distance(_itr1First, itr1)
         << "\tAttempting connections: VID = "
         << vid << "  --> Cfg = " << vCfg << endl;
 

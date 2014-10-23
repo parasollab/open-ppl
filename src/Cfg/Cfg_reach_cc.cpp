@@ -1062,6 +1062,3 @@ void ClosedChainStrategy::Solve(){
   //end move to solve function
 }
 */
-
-#endif
-

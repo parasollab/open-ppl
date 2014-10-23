@@ -3,6 +3,12 @@
 
 #include "MapEvaluatorMethod.h"
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup MapEvaluators
+/// @brief TODO.
+///
+/// TODO.
+////////////////////////////////////////////////////////////////////////////////
 template<class MPTraits>
 class ConditionalEvaluator : public MapEvaluatorMethod<MPTraits> {
   public:
@@ -13,7 +19,7 @@ class ConditionalEvaluator : public MapEvaluatorMethod<MPTraits> {
     ConditionalEvaluator(typename MPTraits::MPProblemType* _problem, XMLNodeReader& _node);
     virtual ~ConditionalEvaluator() {}
 
-    virtual void PrintOptions(ostream& _os) const;
+    virtual void Print(ostream& _os) const;
 
     virtual bool operator()();
 
@@ -56,8 +62,8 @@ ConditionalEvaluator<MPTraits>::ConditionalEvaluator(typename MPTraits::MPProble
 
 template<class MPTraits>
 void
-ConditionalEvaluator<MPTraits>::PrintOptions(ostream& _os) const {
-  MapEvaluatorMethod<MPTraits>::PrintOptions(_os);
+ConditionalEvaluator<MPTraits>::Print(ostream& _os) const {
+  MapEvaluatorMethod<MPTraits>::Print(_os);
   _os << "\tmetric method: " << m_metric << endl;
   _os << "\tvalue: " << m_value << endl;
   _os << "\toperator: ";
@@ -83,7 +89,7 @@ ConditionalEvaluator<MPTraits>::operator()() {
     case GEQ: return metricValue >= m_value;
     case MOD:
       static double prevVal=0.0;
-      if(floor(metricValue/m_value) != floor(prevVal/m_value)  && m_value>0){
+      if(prevVal == 0.0 || (floor(metricValue/m_value) != floor(prevVal/m_value) && m_value > 0)){
           prevVal = metricValue;
           return true;
       }

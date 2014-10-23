@@ -19,7 +19,7 @@ class TransformAtS : public StraightLine<MPTraits> {
     TransformAtS(MPProblemType* _problem, XMLNodeReader& _node);
     virtual ~TransformAtS();
 
-    virtual void PrintOptions(ostream& _os) const;
+    virtual void Print(ostream& _os) const;
 
     virtual bool IsConnected(
         const CfgType& _c1, const CfgType& _c2, CfgType& _col,
@@ -71,8 +71,8 @@ TransformAtS<MPTraits>::~TransformAtS() { }
 // Prints options
 template <class MPTraits>
 void
-TransformAtS<MPTraits>::PrintOptions(ostream& _os) const {
-  StraightLine<MPTraits>::PrintOptions(_os);
+TransformAtS<MPTraits>::Print(ostream& _os) const {
+  StraightLine<MPTraits>::Print(_os);
   _os << "\tbinary evaluation = " << this->m_binaryEvaluation
       << "\n\ts = " << m_sValue
       << endl;
@@ -221,11 +221,9 @@ TransformAtS<MPTraits>::IsConnectedOneWay(
     for(typename vector<CfgType>::iterator I = sequence.begin(); I != sequence.end() - 1; I++) {
       _lpOutput->m_intermediates.push_back(*(I + 1));
     }
-  if(this->m_recordKeep) {
-    if(connected)
-      stats->IncLPConnections(this->GetNameAndLabel());
-    stats->IncLPCollDetCalls(this->GetNameAndLabel(), cdCounter);
-  }
+  if(connected)
+    stats->IncLPConnections(this->GetNameAndLabel());
+  stats->IncLPCollDetCalls(this->GetNameAndLabel(), cdCounter);
 
   return connected;
 }

@@ -12,11 +12,14 @@
 
 using namespace std;
 
-/**Provide timing information.
- *This class is used to measure the running time between StartClock and
- *StopClock. Client side could provide clock name, when StopClock is called
- *the name will be print out, and running time as well.
- */
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup MetricUtils
+/// @brief Timing utility.
+///
+/// This class is used to measure the running time between @c StartClock and
+/// @c StopClock. Client side could provide clock name. Output functions are
+/// provided.
+////////////////////////////////////////////////////////////////////////////////
 class ClockClass {
   public:
 
@@ -54,6 +57,14 @@ class ClockClass {
     string m_clockName;
 };
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup MetricUtils
+/// @brief Statistics tracker.
+///
+/// The StatClass is a storage hub of all statistics to be tracked in PMPL,
+/// including but not limited to timing, success/fail attempts,
+/// collision detection calls.
+////////////////////////////////////////////////////////////////////////////////
 class StatClass {
 
   public:
@@ -102,6 +113,11 @@ class StatClass {
     int GetGOStat(string _s) {return m_goStats[_s];}
     void SetGOStat(string _s, int _v) {m_goStats[_s]=_v;}
     void IncGOStat(string _s, int _v = 1) {m_goStats[_s]+=_v;}
+
+    // RRT Statistics Accessors/Modifiers
+    int GetRRTStat(string _s) {return m_rrtStats[_s];}
+    void SetRRTStat(string _s, int _v) {m_rrtStats[_s]=_v;}
+    void IncRRTStat(string _s, int _v = 1) {m_rrtStats[_s]+=_v;}
 
     //Local Planner Statistics Accessors/Modifiers
     double GetLPStat(string _s){return m_lpStats[_s];}
@@ -179,7 +195,7 @@ class StatClass {
 
   private:
     //LP Statistics
-    map<string, int> m_goStats;
+    map<string, int> m_goStats, m_rrtStats;
     map<string, double> m_lpStats, m_nfStats;
     map<string, vector<double> > m_histories;
     string m_auxFileDest;
@@ -246,6 +262,19 @@ StatClass::PrintAllStats(ostream& _os, RoadmapType* _rmap, int _numCCs) {
         << setw(40) << gosit->second << endl;
     }
   }
+
+  // output for RRT statistics.
+  if(m_rrtStats.size()>0){
+    _os<<"\n\n RRT Statistics:\n\n";
+    _os<< setw(40) << "Statistic"
+      << setw(40) << "Value" << endl << endl;
+    typedef map<string, int>::iterator RRTSIT;
+    for(RRTSIT rrtsit=m_rrtStats.begin(); rrtsit!=m_rrtStats.end(); rrtsit++){
+      _os << setw(40) << rrtsit->first
+        << setw(40) << rrtsit->second << endl;
+    }
+  }
+
   //output for local planner statistics. Only output if map is populated
   if(m_lpStats.size()>0){
     _os<<"\n\n Local Planner Statistics:\n\n";
@@ -664,8 +693,8 @@ StatClass::ComputeInterCCFeatures(MPProblemType* _problem, RoadmapType* _rdmp, s
 /**Output Connected Component information in graph _G.
  *This method will print out _maxCCprint number of Connected Component,
  *,and size and start vertex of each Connected Component.
- *@param _g the graph
- *@param _maxCCprint the number of connected components to print.
+ *_g the graph
+ *_maxCCprint the number of connected components to print.
  */
 template<class GraphType>
 void

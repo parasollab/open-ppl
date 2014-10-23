@@ -90,7 +90,7 @@ Environment::Read(string _filename) {
 }
 
 void
-Environment::PrintOptions(ostream& _os) const {
+Environment::Print(ostream& _os) const {
   _os << "Environment" << endl;
   _os << "\tpositionRes::" << m_positionRes << endl;
   _os << "\torientationRes::" << m_orientationRes << endl;
@@ -494,4 +494,47 @@ Environment::InWSpace(const Cfg& _cfg, shared_ptr<Boundary> _b) {
     }
   }
   return true;
+}
+
+shared_ptr<MultiBody>
+Environment::
+GetActiveBody(size_t _index) const {
+  if(_index < m_activeBodies.size()) {
+    return m_activeBodies[_index];
+  } 
+  else {
+    ostringstream msg;
+    msg << "Error:Cannot access MultiBody with index " << _index 
+      << ". Possible indices are [0, " << m_activeBodies.size()
+      << ")." << endl;
+    throw PMPLException("Index Out Of Bound", WHERE, msg.str());
+  }
+}
+
+shared_ptr<MultiBody>
+Environment::
+GetMultiBody(size_t _index) const {
+  if(_index < m_usableMultiBodies.size())
+    return m_usableMultiBodies[_index];
+  else {
+    ostringstream msg;
+    msg << "Error:Cannot access MultiBody with index " << _index 
+      << ". Possible indices are [0, " << m_usableMultiBodies.size()
+      << ")." << endl;
+    throw PMPLException("Index Out Of Bound", WHERE, msg.str());
+  }
+}
+
+shared_ptr<MultiBody>
+Environment::
+GetNavigableSurface(size_t _index) const {
+  if(_index < m_navigableSurfaces.size())
+    return m_navigableSurfaces[_index];
+  else {
+    ostringstream msg;
+    msg << "Error:Cannot access MultiBody with index " << _index 
+      << ". Possible indices are [0, " << m_navigableSurfaces.size()
+      << ")." << endl;
+    throw PMPLException("Index Out Of Bound", WHERE, msg.str());
+  }
 }

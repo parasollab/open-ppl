@@ -12,6 +12,7 @@
 #include "boost/mpl/begin.hpp"
 #include "boost/mpl/end.hpp"
 #include "boost/mpl/next_prior.hpp"
+#include "GraphAlgo.h"
 
 using boost::shared_ptr;
 
@@ -21,35 +22,14 @@ using namespace mathtool;
 #include "IOUtils.h"
 
 ///////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////
-//
-//
 // Constants
-//
-//
-///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 
-#define DEGTORAD (PI/180.0)
-#define RADTODEG (180.0/PI)
-
-
-#define NULL_WT_INFO -999               ///< to pad weight fields for graph conversions
-#define INVALID_LP -999                 ///< invalid local planner id
-#define INVALID_RNGSEED -999            ///< invalid seed value for Random Number Generator
-#define MAX_INT  999999999
-#define INVALID_INT -999
-#define MAX_DBL  999999999.99999
-#define INVALID_DBL -999
+#define MAX_INT  numeric_limits<int>::max()
+#define MAX_DBL  numeric_limits<double>::max()
 
 ///////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////
-//
-//
 // Collision Detection
-//
-//
-///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 
 //Need to define at least one type of collision detection library
@@ -65,21 +45,21 @@ using namespace mathtool;
 #endif
 #endif
 
-/// Legal Types of Collision Detecters
+// Legal Types of Collision Detecters
 enum cd_predefined {
-  /// voronoi clip
+  // voronoi clip
 #ifdef USE_VCLIP
   VCLIP,
 #endif
-  /// Robust and Accurate Polygon Interference Detection
+  // Robust and Accurate Polygon Interference Detection
 #ifdef USE_RAPID
   RAPID,
 #endif
-  /// Proximity Query Package
+  // Proximity Query Package
 #ifdef USE_PQP
   PROXIMITYQUERYPACKAGE,
 #endif
-  /// SOLID
+  // SOLID
 #ifdef USE_SOLID
   SOLID,
 #endif
@@ -89,13 +69,7 @@ enum cd_predefined {
 };
 
 ///////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////
-//
-//
 // Random Number Generation
-//
-//
-///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 
 //return non-negative double-prevision floating-point values
@@ -127,13 +101,7 @@ long SRand(long _seed = 0x1234ABCD);
 long SRand(string _methodName, int _nextNodeIndex, long _base = 0x1234ABCD, bool _reset = false);
 
 ///////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////
-//
-//
 // Simple Utilities (Angular Distance and Compare Second)
-//
-//
-///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 
 /**Normalize a value into the range [-1,1)
@@ -164,13 +132,7 @@ class CompareSecondReverse {
 };
 
 ///////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////
-//
-//
 // Compose Functions
-//
-//
-///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 
 template <typename InputIterator, typename BinaryOperator, typename UnaryOperator>
@@ -236,13 +198,7 @@ struct ComposeNegate {
 };
 
 ///////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////
-//
-//
 // Containers
-//
-//
-///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 
 ///////////////////////////////////////////////////////////////////////////////////////////
@@ -332,12 +288,12 @@ class MethodSet {
       }
     }
 
-    void PrintOptions(ostream& _os) const {
+    void Print(ostream& _os) const {
       size_t count = 0;
       _os << endl << m_name << " has these methods available::" << endl << endl;
       for(CMIT mit = Begin(); mit != End(); ++mit){
         _os << ++count << ") \"" << mit->first << "\" (" << mit->second->m_name << ")" << endl;
-        mit->second->PrintOptions(_os);
+        mit->second->Print(_os);
         _os << endl;
       }
       _os << endl;
@@ -366,76 +322,113 @@ class MethodSet {
     map<string, MethodPointer> m_elements;
 };
 
-
-
-///////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////
-//
-//
+////////////////////////////////////////////////////////////////////////////////
 // MPBaseObject
-//
-//
-///////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup MotionPlanningUniverse
+/// @brief Base class of all algorithm abstractions in PMPL.
+///
+/// The MPBaseObject is an abstract class which all algorithm abstractions in
+/// PMPL extend themselves off of. It essentially composes a class name
+/// @c m_name, a unique label @c m_label, and provides access to the MPProblem.
+////////////////////////////////////////////////////////////////////////////////
 template<class MPTraits>
 class MPBaseObject {
   public:
+
     typedef typename MPTraits::MPProblemType MPProblemType;
 
     MPBaseObject(MPProblemType* _problem = NULL, string _label = "", string _name = "", bool _debug = false) :
-      m_problem(_problem), m_label(_label), m_name(_name), m_debug(_debug), m_recordKeep(true) {};
+      m_name(_name), m_debug(_debug), m_label(_label), m_problem(_problem) {};
     MPBaseObject(MPProblemType* _problem, XMLNodeReader& _node, string _name="") :
-      m_problem(_problem), m_name(_name) {
+      m_name(_name), m_problem(_problem) {
         ParseXML(_node);
       };
     virtual ~MPBaseObject() {}
 
+    ////////////////////////////////////////////////////////////////////////////
+    /// @brief Parse XML node
+    /// @param _node XML node
+    ///
+    /// Parse XML node. By default every MPBaseObject requires a label and
+    /// optionally loads a debug parameter.
+    ////////////////////////////////////////////////////////////////////////////
     virtual void ParseXML(XMLNodeReader& _node) {
-      m_label = _node.stringXMLParameter("label", false, "", "Label Identifier");
+      m_label = _node.stringXMLParameter("label", true, "", "Label Identifier");
       m_debug = _node.boolXMLParameter("debug", false, false,
           "Run-time debug on(true)/off(false)");
-      m_recordKeep = _node.boolXMLParameter("recordKeep", false, true,
-          "Keeping track of algorithmic statistics, on(true)/off(false)");
     };
 
-    MPProblemType* GetMPProblem() const {return m_problem;}
-    virtual void SetMPProblem(MPProblemType* _m){m_problem = _m;}
+    ////////////////////////////////////////////////////////////////////////////
+    /// @brief Print values of object
+    /// @param _os ostream to print values to
+    ///
+    /// Print values of object to ostream. By default name and label are output.
+    ////////////////////////////////////////////////////////////////////////////
+    virtual void Print(ostream& _os) const {
+      _os << this->GetNameAndLabel() << endl;
+    };
 
+    ////////////////////////////////////////////////////////////////////////////
+    /// @return MPProblem object
+    ////////////////////////////////////////////////////////////////////////////
+    MPProblemType* GetMPProblem() const {return m_problem;}
+    ////////////////////////////////////////////////////////////////////////////
+    /// @param _m MPProblem object
+    ////////////////////////////////////////////////////////////////////////////
+    virtual void SetMPProblem(MPProblemType* _m) {m_problem = _m;}
+
+    ////////////////////////////////////////////////////////////////////////////
+    /// @return Base filename string for all file outputs
+    ////////////////////////////////////////////////////////////////////////////
     const string& GetBaseFilename() const {return m_problem->GetBaseFilename();}
 
-    virtual void PrintOptions(ostream& _os) const {};
-
+    ////////////////////////////////////////////////////////////////////////////
+    /// @brief Get unique string identifier to object
+    /// @return unique identifier "m_name::m_label"
+    ////////////////////////////////////////////////////////////////////////////
+    string GetNameAndLabel() const {return m_name + "::" + m_label;}
+    ////////////////////////////////////////////////////////////////////////////
+    /// @param _s label
+    ////////////////////////////////////////////////////////////////////////////
     void SetLabel(string _s) {m_label = _s;}
 
-    string GetNameAndLabel() const {return m_name + "::" + m_label;}
+    ////////////////////////////////////////////////////////////////////////////
+    /// @return debug value
+    ////////////////////////////////////////////////////////////////////////////
     bool GetDebug() const {return m_debug;}
+    ////////////////////////////////////////////////////////////////////////////
+    /// @param _d debug value
+    ////////////////////////////////////////////////////////////////////////////
     void SetDebug(bool _d) {m_debug = _d;}
 
-  private:
-    MPProblemType* m_problem;
-    string m_label;
-
   protected:
+
+    ////////////////////////////////////////////////////////////////////////////
+    /// @return label
+    ////////////////////////////////////////////////////////////////////////////
     string GetLabel() const {return m_label;}
 
+    ////////////////////////////////////////////////////////////////////////////
+    /// @param _s class name
+    ////////////////////////////////////////////////////////////////////////////
     void SetName(string _s) {m_name  = _s;}
 
-    string m_name;
-    bool m_debug;
-    bool m_recordKeep;
+    string m_name; ///< Class name
+    bool m_debug; ///< Debug statements on or off
 
     template<typename T, typename U> friend class MethodSet;
+
+  private:
+
+    string m_label; ///< Unique identifier of object
+    MPProblemType* m_problem; ///< Shared pointer to MPProblem object
 };
 
 ///////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////
-//
-//
 // Cfg Utilities
-//
-//
-///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 
 template<class CfgType, class Environment>
@@ -446,7 +439,7 @@ IsWithinResolution(const CfgType& _cfg1, const CfgType& _cfg2, Environment* _env
     && diff->OrientationMagnitude() <= _env->GetOrientationRes();
 }
 
-/** pt1 & pt2 are two endpts of a line segment
+/* pt1 & pt2 are two endpts of a line segment
  * find the closest point to the current cfg on that line segment
  * it could be one of the two endpoints of course
  */
@@ -479,13 +472,7 @@ ClosestPtOnLineSegment(const CfgType& _current, const CfgType& _p1, const CfgTyp
 
 
 ///////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////
-//
-//
-// GetCentroid
-//
-//
-///////////////////////////////////////////////////////////////////////////////
+// Centroid Utils
 ///////////////////////////////////////////////////////////////////////////////
 
 template<template<class CFG, class WEIGHT> class RDMP, class CFG, class WEIGHT>
@@ -501,12 +488,26 @@ GetCentroid(RDMP<CFG, WEIGHT>* _graph, vector<typename RDMP<CFG, WEIGHT>::VID>& 
   return center;
 };
 
+template<template<class CFG, class WEIGHT> class RDMP, class CFG, class WEIGHT>
+void
+ComputeCCCentroidGraph(RDMP<CFG, WEIGHT>* _graph, RDMP<CFG, WEIGHT>* _centroidGraph) {
+  typedef typename RDMP<CFG, WEIGHT>::VID VID;
+  stapl::sequential::vector_property_map<RDMP<CFG, WEIGHT>, size_t> cmap;
+  vector<pair<size_t, VID> > allCCs;
+  vector<VID> cc;
+  RDMP<CFG, WEIGHT> centroids;
+  get_cc_stats(*_graph, cmap, allCCs);
+
+  for(size_t i = 0; i < allCCs.size(); i++) {
+    get_cc(*_graph, cmap, allCCs[i].second, cc);
+    CFG centroid = GetCentroid(_graph, cc);
+    centroid.SetStat("ccVID", allCCs[i].second);
+    _centroidGraph->AddVertex(centroid);
+  }
+};
+
 ///////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////
-//
 // Geometry Utils
-//
-///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 
 //----------------------------------------------------------------------------
@@ -522,7 +523,6 @@ bool PtInTriangle(const Point2d& _A, const Point2d& _B, const Point2d& _C, const
 bool PtInTriangle(const Point2d& _A, const Point2d& _B, const Point2d& _C, const Point2d & _P,
     double& _u, double& _v);
 
-
 //----------------------------------------------------------------------------
 // GetPtFromBarycentricCoords: given triange defined by _A,_B,_C, return the
 // point inside triangle defined by barycentric coords. _u,_v
@@ -533,7 +533,6 @@ Point3d GetPtFromBarycentricCoords(const Point3d& _A, const Point3d& _B, const P
 //NormalizeTheta: given a value, lock it into the range -PI to PI
 //----------------------------------------------------------------------------
 double NormalizeTheta(double _theta);
-
 
 template <class MPTraits, class P>
 struct DistanceCompareFirst : public binary_function<P, P, bool> {
@@ -548,10 +547,9 @@ struct DistanceCompareFirst : public binary_function<P, P, bool> {
   ~DistanceCompareFirst() {}
 
   bool operator()(const P& _p1, const P& _p2) const {
-    return (m_dm->Distance(m_cfg, _p1.first) < m_dm->Distance(m_cfg, _p2.first));
+    return m_dm->Distance(m_cfg, _p1.first) < m_dm->Distance(m_cfg, _p2.first);
   }
 };
-
 
 template <class P>
 struct PlusSecond : public binary_function<typename P::second_type,

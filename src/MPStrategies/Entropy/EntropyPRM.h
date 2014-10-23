@@ -18,22 +18,8 @@ template <class CFG>
 class EntropyPRM {
  public:
 
-  //////////////////////////////////////////////////////////////////////////////////////////
-  //
-  //
-  //    Constructors and Destructor
-  //
-  //
-  //////////////////////////////////////////////////////////////////////////////////////////
-  /**@name Constructors and Destructor*/
-  //@{
-
-  ///Default Constructor.
   EntropyPRM();
-  ///Destructor.
   ~EntropyPRM();
-
-  //@}
 
   //////////////////////
   // Access
@@ -45,16 +31,16 @@ class EntropyPRM {
   void ParseCommandLine(int argc, char **argv);
   void PrintUsage(ostream& _os);
   void PrintValues(ostream& _os);
-  void PrintOptions(ostream& out_os) const {};
+  void Print(ostream& out_os) const {};
 
   /**Basic Randomized (probabilistic) Node Generation.
    *This method generates NodeGenerationMethod::numNodes collision-free Cfgs
    *and insert there Cfgs to nodes.
-   *@param _env Used to get free Cfg.
-   *@param cd Used to get free Cfg
-   *@param nodes Used to store generated nodes.
-   *@see See Cfg::GetFreeRandomCfg to know how to generate "one" free Cfg.
-   *@note If INTERMEDIATE_FILES is defined WritePathConfigurations will be
+   *_env Used to get free Cfg.
+   *cd Used to get free Cfg
+   *nodes Used to store generated nodes.
+   *see See Cfg::GetFreeRandomCfg to know how to generate "one" free Cfg.
+   *note If INTERMEDIATE_FILES is defined WritePathConfigurations will be
    *called.
    */
   void GenerateNodes(Environment* _env, Stat_Class& Stats,

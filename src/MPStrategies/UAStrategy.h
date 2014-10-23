@@ -50,7 +50,7 @@ class UAStrategy : public MPStrategyMethod {
    virtual void Run();
    virtual void Finalize();
 
-   virtual void PrintOptions(ostream& out_os) const;
+   virtual void Print(ostream& out_os) const;
 
  protected:
    void IdentifyRegions();

@@ -3,6 +3,12 @@
 
 #include "PathModifierMethod.h"
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup PathModifiers
+/// @brief TODO.
+///
+/// TODO.
+////////////////////////////////////////////////////////////////////////////////
 template<class MPTraits>
 class CombinedPathModifier : public PathModifierMethod<MPTraits> {
   public:
@@ -14,7 +20,7 @@ class CombinedPathModifier : public PathModifierMethod<MPTraits> {
     CombinedPathModifier(MPProblemType* _problem, XMLNodeReader& _node);
 
     virtual void ParseXML(XMLNodeReader& _node);
-    virtual void PrintOptions(ostream& _os) const;
+    virtual void Print(ostream& _os) const;
 
     bool ModifyImpl(vector<CfgType>& _originalPath, vector<CfgType>& _newPath);
 
@@ -50,8 +56,8 @@ CombinedPathModifier<MPTraits>::ParseXML(XMLNodeReader& _node) {
 
 template<class MPTraits>
 void
-CombinedPathModifier<MPTraits>::PrintOptions(ostream& _os) const {
-  PathModifierMethod<MPTraits>::PrintOptions(_os);
+CombinedPathModifier<MPTraits>::Print(ostream& _os) const {
+  PathModifierMethod<MPTraits>::Print(_os);
   _os << "\tuse method(s) :" << endl;
   for (size_t i=0; i < m_pathModifierLabels.size() ; i++)
     _os << "\t" << m_pathModifierLabels[i] << endl;

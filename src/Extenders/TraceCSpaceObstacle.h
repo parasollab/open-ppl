@@ -1,25 +1,20 @@
-/*
- * =============================================================================
- *
- *       Filename:  TraceCSpaceObstacle.h
- *
- *    Description:  Trace C-space obstacle. In this growth method, we try to
- *                  find a vector parallel to a C-Space obstacle boundary. It is
- *                  not feasible to compute the actual C-Space boundary, so here
- *                  we approximate it. We first shoot a small number of rays
- *                  (our current results use two) within a gaussian distance d,
- *                  of each other, then find their collision configurations
- *                  xcol1 and xcol2. The C-obstacle vector is calculated as the
- *                  vector connecting the colliding configurations:
- *                  COV = xcol2 −xcol1 . In this way x'rand = xnear + COV.
- *
- * =============================================================================
- */
 #ifndef TRACECSPACEOBSTACLE_H_
 #define TRACECSPACEOBSTACLE_H_
 
 #include "BasicExtender.h"
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup Extenders
+/// @brief Extend in a direction tangent to @cobst.
+///
+/// Trace @cobst. In this growth method, we try to find a vector tangent to a
+/// @coboundary. It is not feasible to compute @coboundary, so here we
+/// approximate it. We first shoot a small number of rays (our current results
+/// use two) within a gaussian distance d, of each other, then find their
+/// collision configurations \f$q_1\f$ and \f$q_2\f$. The @cobst vector is
+/// calculated as the vector connecting the colliding configurations:
+/// \f$C = q_2 - q_1\f$. In this way \f$q_{dir} = q_{near} + C\f$.
+////////////////////////////////////////////////////////////////////////////////
 template<class MPTraits>
 class TraceCSpaceObstacle : public BasicExtender<MPTraits> {
   public:

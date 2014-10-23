@@ -4,6 +4,12 @@
 #include "MapEvaluatorMethod.h"
 #include "EvaluatorFunctor.h"
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup MapEvaluators
+/// @brief TODO.
+///
+/// TODO.
+////////////////////////////////////////////////////////////////////////////////
 template <class MPTraits>
 class ComposeEvaluator : public MapEvaluatorMethod<MPTraits> {
   public:
@@ -18,7 +24,7 @@ class ComposeEvaluator : public MapEvaluatorMethod<MPTraits> {
     ComposeEvaluator(MPProblemType* _problem, XMLNodeReader& _node);
     ~ComposeEvaluator() { }
 
-    virtual void PrintOptions(ostream& _os) const;
+    virtual void Print(ostream& _os) const;
 
     virtual bool operator()();
 
@@ -69,7 +75,7 @@ ComposeEvaluator<MPTraits>::ComposeEvaluator(MPProblemType* _problem, XMLNodeRea
 
 template<class MPTraits>
 void
-ComposeEvaluator<MPTraits>::PrintOptions(ostream& _os) const {
+ComposeEvaluator<MPTraits>::Print(ostream& _os) const {
   _os << this->GetNameAndLabel() << endl ;
   for(vector<string>::const_iterator it = m_evalLabels.begin(); it != m_evalLabels.end(); it++)
     _os << "\n\t evaluation method = \'" << *it << "\'";

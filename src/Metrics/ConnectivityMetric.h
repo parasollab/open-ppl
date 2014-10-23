@@ -3,6 +3,12 @@
 
 #include "CoverageMetric.h"
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup Metrics
+/// @brief TODO.
+///
+/// TODO.
+////////////////////////////////////////////////////////////////////////////////
 template<class MPTraits, class Set>
 class ConnectivityMetric : public CoverageMetric<MPTraits, Set> {
   public:
@@ -17,7 +23,7 @@ class ConnectivityMetric : public CoverageMetric<MPTraits, Set> {
 
     virtual ~ConnectivityMetric();
 
-    virtual void PrintOptions(ostream& _os) const;
+    virtual void Print(ostream& _os) const;
 
     double operator()();
 
@@ -43,7 +49,7 @@ ConnectivityMetric<MPTraits, Set>::~ConnectivityMetric() {
 
 template<class MPTraits, class Set>
 void
-ConnectivityMetric<MPTraits, Set>::PrintOptions(ostream& _os) const {
+ConnectivityMetric<MPTraits, Set>::Print(ostream& _os) const {
   _os << "Percentage of queries solved" << endl;
 }
 

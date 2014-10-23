@@ -63,8 +63,8 @@ class SurfaceGridSampler : public SamplerMethod<MPTraits> {
     m_dz = _node.numberXMLParameter("dz",true,1.0,0.1,20.0,"delta z");
     }
 
-    virtual void PrintOptions(ostream& _out) const {
-      SamplerMethod<MPTraits>::PrintOptions(_out);
+    virtual void Print(ostream& _out) const {
+      SamplerMethod<MPTraits>::Print(_out);
       _out<< "\tm_vcLabel= " << m_vcLabel << endl;
       _out<< "\tdx= " << m_dx << "\tdz= " << m_dz << endl;
     }

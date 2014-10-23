@@ -27,7 +27,7 @@ class MedialAxisExtender : public ExtenderMethod<MPTraits> {
     MedialAxisExtender(MPProblemType* _problem, XMLNodeReader& _node);
 
     void ParseXML(XMLNodeReader& _node);
-    virtual void PrintOptions(ostream& _os) const;
+    virtual void Print(ostream& _os) const;
 
     virtual bool Extend(const CfgType& _near, const CfgType& _dir,
         CfgType& _new, vector<CfgType>& _innerNodes);
@@ -68,9 +68,9 @@ MedialAxisExtender<MPTraits>::ParseXML(XMLNodeReader& _node) {
 
 template<class MPTraits>
 void
-MedialAxisExtender<MPTraits>::PrintOptions(ostream& _os) const {
-  ExtenderMethod<MPTraits>::PrintOptions(_os);
-  m_medialAxisUtility.PrintOptions(_os);
+MedialAxisExtender<MPTraits>::Print(ostream& _os) const {
+  ExtenderMethod<MPTraits>::Print(_os);
+  m_medialAxisUtility.Print(_os);
   _os << "\tdelta: " << m_delta << endl;
   _os << "\tmin dist: " << m_minDist << endl;
   _os << "\textend dist: " << m_extendDist << endl;

@@ -1,9 +1,16 @@
-#ifndef PATHMODIFIERMETHOD_H_
-#define PATHMODIFIERMETHOD_H_
+#ifndef PATH_MODIFIER_METHOD_H_
+#define PATH_MODIFIER_METHOD_H_
 
 #include "Utilities/MPUtils.h"
 #include "LocalPlanners/LPOutput.h"
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup PathModifiers
+/// @brief Base algorithm abstraction for \ref PathModifiers.
+///
+/// PathModifierMethod has one main method, @c Modify, which takes an input path
+/// and produces a valid output path.
+////////////////////////////////////////////////////////////////////////////////
 template<class MPTraits>
 class PathModifierMethod : public MPBaseObject<MPTraits> {
   public:
@@ -16,48 +23,77 @@ class PathModifierMethod : public MPBaseObject<MPTraits> {
     PathModifierMethod();
     PathModifierMethod(MPProblemType* _problem, XMLNodeReader& _node);
 
-    virtual void ParseXML(XMLNodeReader& _node);
-    virtual void PrintOptions(ostream& _os) const;
+    virtual void Print(ostream& _os) const;
 
-    virtual void Modify(vector<CfgType>& _path, vector<CfgType>& _newPath);
+    ////////////////////////////////////////////////////////////////////////////
+    /// @brief Modifies the input path to a new valid path
+    /// @param _originalPath A path of configurations within a resolution
+    ///        distance of each other
+    /// @param _newPath An empty vector to place the resulting modified path
+    ///
+    /// @usage
+    /// @code
+    /// PathModifierPointer pm = this->GetMPProblem()->GetPathModifier(m_pmLabel);
+    /// vector<CfgType> inputPath, outputPath;
+    /// pm->Modify(inputPath, outputPath);
+    /// @endcode
+    ////////////////////////////////////////////////////////////////////////////
+    virtual void Modify(vector<CfgType>& _originalPath, vector<CfgType>& _newPath);
 
   protected:
-
+    ////////////////////////////////////////////////////////////////////////////
+    /// @brief Modifies the input path to a new valid path
+    /// @param _originalPath A path of configurations within a resolution
+    ///        distance of each other
+    /// @param _newPath An empty vector to place the resulting modified path
+    /// @return success/failed modification
+    ////////////////////////////////////////////////////////////////////////////
     virtual bool ModifyImpl(vector<CfgType>& _path, vector<CfgType>& _newPath) = 0;
 
-    // Helper methods
+    ////////////////////////////////////////////////////////////////////////////
+    /// @brief Appends local plan to path
+    /// @param _path Path to append local plan to
+    /// @param _lpOutput Local plan output
+    /// @param _end End Cfg of local plan
+    ////////////////////////////////////////////////////////////////////////////
     void AddToPath(vector<CfgType>& _path, LPOutput<MPTraits>* _lpOutput, CfgType& _end);
 
+    ////////////////////////////////////////////////////////////////////////////
+    /// @brief Extract path VIDs in roadmap from path
+    /// @param _path Path to extract VIDs from
+    /// @param _graph RoadmapGraph containing path nodes
+    /// @return Path VIDs
+    ////////////////////////////////////////////////////////////////////////////
     vector<VID> GetPathVIDs(vector<CfgType>& _path, GraphType* _graph);
 
     void RemoveBranches(const string& _dmLabel, vector<CfgType>& _path, vector<CfgType>& _newPath);
+
+  private:
+    ////////////////////////////////////////////////////////////////////////////
+    /// @brief Write path to file
+    /// @param _path Path
+    ////////////////////////////////////////////////////////////////////////////
+    void OutputPath(vector<CfgType>& _path);
+
+    string m_pathFile; ///< Where to write the smoothed path
 };
 
-// Non-XML Constructor
 template<class MPTraits>
 PathModifierMethod<MPTraits>::PathModifierMethod() :
   MPBaseObject<MPTraits>() {
-    this->SetName("PathModifier");
   }
 
-// XML Constructor
 template<class MPTraits>
 PathModifierMethod<MPTraits>::PathModifierMethod(MPProblemType* _problem, XMLNodeReader& _node):
   MPBaseObject<MPTraits>(_problem, _node) {
-    this->SetName("PathModifier");
-    ParseXML(_node);
+    m_pathFile = _node.stringXMLParameter("pathFile", false, "", "Smoothed path filename");
   }
 
 template<class MPTraits>
 void
-PathModifierMethod<MPTraits>::ParseXML(XMLNodeReader& _node) {
-  this->m_debug = _node.boolXMLParameter("debug", false, false, "Debug mode");
-}
-
-template<class MPTraits>
-void
-PathModifierMethod<MPTraits>::PrintOptions(ostream& _os) const {
-  _os << this->GetNameAndLabel() << endl;
+PathModifierMethod<MPTraits>::Print(ostream& _os) const {
+  MPBaseObject<MPTraits>::Print(_os);
+  _os << "\tpath file: \"" << m_pathFile << "\"" << endl;
 }
 
 template<class MPTraits>

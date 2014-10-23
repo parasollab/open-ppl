@@ -24,7 +24,7 @@ class HierarchicalLP : public LocalPlannerMethod<MPTraits> {
 
     HierarchicalLP(MPProblemType* _problem, XMLNodeReader& _node);
 
-    virtual void PrintOptions(ostream& _os) const;
+    virtual void Print(ostream& _os) const;
 
     virtual bool IsConnected(
         const CfgType& _c1, const CfgType& _c2, CfgType& _col,
@@ -61,8 +61,8 @@ HierarchicalLP<MPTraits>::HierarchicalLP(MPProblemType* _problem, XMLNodeReader&
 
 template<class MPTraits>
 void
-HierarchicalLP<MPTraits>::PrintOptions(ostream& _os) const {
-  LocalPlannerMethod<MPTraits>::PrintOptions(_os);
+HierarchicalLP<MPTraits>::Print(ostream& _os) const {
+  LocalPlannerMethod<MPTraits>::Print(_os);
   _os << "\tlocal planner labels :";
   for(vector<string>::const_iterator it = m_lpLabels.begin(); it != m_lpLabels.end(); it++)
     _os << "\n\t\t" << *it;

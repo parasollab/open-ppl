@@ -53,7 +53,7 @@ ParseXML(XMLNodeReader& _node)
 {
   m_dmLabel = _node.stringXMLParameter("dmLabel", true, "", "distance metric label");
   _node.warnUnrequestedAttributes();
-  
+
   for(XMLNodeReader::childiterator I = _node.children_begin(); I != _node.children_end(); ++I) {
     if(I->getName() == "node_generation_method") {
       string generationMethod = I->stringXMLParameter("Method", true, "", "node generation method");
@@ -74,11 +74,11 @@ ClearanceTestStrategy<MPTraits>::PrintOptions(ostream& _out) const {
   _out << "ClearanceTestStrategy ::"
        << "\tdmLabel = \"" << m_dmLabel << "\""
        << "\n\tSamplers\n";
-  for(map<string, pair<int,int> >::const_iterator I = m_samplerLabels.begin(); I != m_samplerLabels.end(); ++I) 
+  for(map<string, pair<int,int> >::const_iterator I = m_samplerLabels.begin(); I != m_samplerLabels.end(); ++I)
     _out << "\t\t\"" << I->first << "\", " << I->second.first << " samples, " << I->second.second << " attempts\n";
   _out << "\tClearance Measurements\n";
   for(typename vector<ClearanceUtility<MPTraits> >::const_iterator I = m_clearanceUtilities.begin(); I != m_clearanceUtilities.end(); ++I) {
-    I->PrintOptions(_out);
+    I->Print(_out);
     _out << endl;
   }
   _out << endl;
@@ -106,7 +106,7 @@ Run()
     typename MPTraits::MPProblemType::SamplerPointer sampler = this->GetMPProblem()->GetSampler(S->first);
     vector<CfgType> inNodes(S->second.first);
     vector<CfgType> outNodes;
-    sampler->Sample(this->GetMPProblem()->GetEnvironment(), this->m_boundary, *(this->GetMPProblem()->GetStatClass()), 
+    sampler->Sample(this->GetMPProblem()->GetEnvironment(), this->m_boundary, *(this->GetMPProblem()->GetStatClass()),
       inNodes.begin(), inNodes.end(), S->second.second, back_inserter(outNodes));
     samples.insert(samples.end(), outNodes.begin(), outNodes.end());
     if(this->m_debug) cout << "\tgenerated " << outNodes.size() << " samples using method \"" << S-> first << "\"\n";
@@ -116,7 +116,7 @@ Run()
   //for each sample, compare baseline clearance and input clearance
   for(typename vector<CfgType>::iterator S = samples.begin(); S != samples.end(); ++S) {
     if(this->m_debug) cout << "computing clearances for cfg: " << *S << endl;
-    
+
     //compute baseline clearance
     double baselineClearance = MAX_INT;
     CfgType baselineWitness;
@@ -141,7 +141,7 @@ Run()
       }
       if(this->m_debug) cout << "\tapprox = " << approxClearance << "\twitness = " << approxWitness << endl;
       S->m_witnessCfg = shared_ptr<Cfg>(); //reset clearance calculation cache
-  
+
       //calculate difference
       if(this->m_debug) cout << "\tdifference = " << approxClearance - baselineClearance << "\tdistance = " << this->GetMPProblem()->GetDistanceMetric(m_dmLabel)->Distance(approxWitness, baselineWitness) << endl;
     }

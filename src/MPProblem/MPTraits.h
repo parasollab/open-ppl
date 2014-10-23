@@ -1,6 +1,3 @@
-/* Traits class for CfgType and WeightType.
- */
-
 #ifndef MPTRAITS_H_
 #define MPTRAITS_H_
 
@@ -12,9 +9,9 @@
 #include "DistanceMetrics/EuclideanDistance.h"
 #include "DistanceMetrics/KnotTheoryDistance.h"
 #include "DistanceMetrics/LPSweptDistance.h"
-#include "DistanceMetrics/RMSDDistance.h"
 #include "DistanceMetrics/ManhattanDistance.h"
 #include "DistanceMetrics/ReachableDistance.h"
+#include "DistanceMetrics/RMSDDistance.h"
 #include "DistanceMetrics/ScaledEuclideanDistance.h"
 
 //validity checker includes
@@ -123,6 +120,8 @@
 #include "MPStrategies/ModifyPath.h"
 #include "MPStrategies/MultiStrategy.h"
 #include "MPStrategies/PushQueryToMA.h"
+#include "MPStrategies/SparkPRM.h"
+#include "MPStrategies/SRTStrategy.h"
 #include "MPStrategies/TogglePRMStrategy.h"
 #include "MPStrategies/UnitTest/ClearanceTestStrategy.h"
 #include "MPStrategies/UnitTest/DMTestStrategy.h"
@@ -134,6 +133,19 @@
 #include "ParallelMethods/RegularSubdivisionMethod.h"
 #endif
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup MotionPlanningUniverse
+/// @brief Defines all available motion planning methods in the Motion Planning
+/// Universe.
+///
+/// MPTraits is a type class which defines the motion planning universe. We
+/// construct our methods through a factory design pattern, and thus this states
+/// all available classes within an abstraction that you can use in the system.
+/// Essentially the important types are, the CfgType or the @cspace abstraction
+/// class, the WeightType or the edge type of the graph, and a type list for
+/// each algorithm abstraction --- here you only need to define what you need,
+/// as extraneous methods in the type class imply longer compile times.
+////////////////////////////////////////////////////////////////////////////////
 template<class C, class W = DefaultWeight<C> >
 struct MPTraits{
   typedef C CfgType;
@@ -299,6 +311,9 @@ struct MPTraits{
     ModifyPath<MPTraits>,
     MultiStrategy<MPTraits>,
     PushQueryToMA<MPTraits>,
+    SparkPRM<MPTraits, BasicPRM>,
+    SparkPRM<MPTraits, TogglePRMStrategy>,
+    SRTStrategy<MPTraits>,
     TogglePRMStrategy<MPTraits>,
     UtilityGuidedGenerator<MPTraits>,
     VisibilityBasedPRM<MPTraits>

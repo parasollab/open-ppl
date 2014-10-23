@@ -9,17 +9,17 @@
  *This method not only creates edges, but creates new verteices
  *also. New vertices are always on the existing edges.
  *
- *@param info provides inforamtion other than connection, like
+ *info provides inforamtion other than connection, like
  *collision dection, local planner, and distance metrics.
- *@param _cn provides information for specific node connection
+ *_cn provides information for specific node connection
  *paramters.
- *@param lp Local planner for connecting given 2 Cfgs.
+ *lp Local planner for connecting given 2 Cfgs.
  *
- *@see ClosestVE for more information.
+ *see ClosestVE for more information.
  */
 
 /**Cfg VE Type.
- *@todo Not well documented. I don't know what this class for.
+ *Not well documented. I don't know what this class for.
  */
 template <class MPTraits>
 class CfgVEType {
@@ -30,38 +30,16 @@ class CfgVEType {
 
   public:
 
-    //////////////////////////////////////////////////////////////////////////////////////////
-    //
-    //
-    //    Constructors and Destructor
-    //
-    //
-    //////////////////////////////////////////////////////////////////////////////////////////
-    /**@name Constructors and Destructor*/
-    //@{
-
-    /**Default Constructor.
-    */
     CfgVEType();
     CfgVEType(VID _vid1, VID _vid2);
     CfgVEType(VID _vid1, VID _vid2, VID _endpt1, VID _endpt2, CfgType _cfgOnEdge);
     virtual ~CfgVEType();
 
-    //@}
-
-    //////////////////////////////////////////////////////////////////////////////////////////
-    //
-    //
-    //    Data
-    //
-    //
-    //////////////////////////////////////////////////////////////////////////////////////////
-
     bool        m_cfg2IsOnEdge;
     CfgType         m_cfgOnEdge;
     VID         m_vid1, m_vid2; // VIDs for cfgs belonging to a potential new edge
     VID         m_endpt1, m_endpt2; // VIDs for cfgs along existing edge
-}; //End of CfgVEType
+};
 
 // ------------------------------------------------------------------
 // CfgVEType is a private class used by ConnectMapNodes class
@@ -118,19 +96,13 @@ class ClosestVE: public ConnectorMethod<MPTraits> {
     typedef typename MPProblemType::LocalPlannerPointer LocalPlannerPointer;
 
   public:
-    //////////////////////
-    // Constructors and Destructor
     ClosestVE(string _lp = "", string _nf = "", MPProblemType* _problem = NULL);
     ClosestVE(MPProblemType* _problem, XMLNodeReader& _node);
     ~ClosestVE();
 
-    //////////////////////
-    // I/O methods
-
     virtual void ParseXML(XMLNodeReader& _node);
-    virtual void PrintOptions(ostream& _os) const;
-    //////////////////////
-    // Core: Connection method
+    virtual void Print(ostream& _os) const;
+
     /**Find k pairs of closest Cfgs from a given Cfg to Cfgs in a Cfg vector
      *or on the edges in edge vector.
      */
@@ -157,17 +129,15 @@ class ClosestVE: public ConnectorMethod<MPTraits> {
      *       -# end for
      *   -# end for
      *
-     *@note it is possilbe that c2 in algorithm is nor in roadmap, (i.e.
+     *it is possilbe that c2 in algorithm is nor in roadmap, (i.e.
      *created from edges), c2 will be added to roadmap and relavant edges
      *will be added too.
      *
-     *@param newV contains Cfgs. This method tries to connect these Cfgs to those
+     *newV contains Cfgs. This method tries to connect these Cfgs to those
      *contained in oldV.
-     *@param oldV contains Cfgs to be connected.
-     *@see RoadmapGraph::GetEdges
+     *oldV contains Cfgs to be connected.
+     *RoadmapGraph::GetEdges
      */
-    //@}
-
     template <typename ColorMap, typename InputIterator1, typename InputIterator2, typename OutputIterator>
     void Connect( RoadmapType* rm, StatClass& _stats,
         ColorMap& _cmap,
@@ -175,8 +145,6 @@ class ClosestVE: public ConnectorMethod<MPTraits> {
         InputIterator2 _newV1, InputIterator2 _newV2,
         OutputIterator _collision);
 
-    //////////////////////
-    // Data
     int m_kClosest;
 };
 
@@ -217,7 +185,7 @@ ClosestVE<MPTraits>::ParseXML(XMLNodeReader& _node) {
 
 template <class MPTraits>
 void
-ClosestVE<MPTraits>::PrintOptions(ostream& _os) const {
+ClosestVE<MPTraits>::Print(ostream& _os) const {
   _os << this->GetNameAndLabel() << endl;
   _os << "\tm_kClosest = " << m_kClosest << endl;
 }

@@ -1,26 +1,21 @@
-/*
- * =============================================================================
- *
- *       Filename:  RotationThenTranslation.h
- *
- *    Description:  Rotation followed by Extension. In this way of extending the
- *                  source configuration is first rotated to align with the
- *                  target configuration until it is aligned or there is
- *                  collision. It is then extended toward the target
- *                  configuration until collision or the target configuration,
- *                  xrand , is reached. This can be seen as growing with a
- *                  modified rotate-at-s local planner where s = 0. Growing
- *                  toward x'rand can be seen as extending from xnear to xrand1,
- *                  where xrand1 is only a change in orientation followed by a
- *                  transition from xrand1 to xrand.
- *
- * =============================================================================
- */
 #ifndef ROTATIONTHENTRANSLATION_H_
 #define ROTATIONTHENTRANSLATION_H_
 
 #include "BasicExtender.h"
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup Extenders
+/// @brief Extend all rotational DOF before extending all translational DOF.
+///
+/// Rotation followed by Extension. In this way of extending the source
+/// configuration is first rotated to align with the target configuration until
+/// it is aligned or there is collision. It is then extended toward the target
+/// configuration until collision or the target configuration is reached. This
+/// can be seen as growing with a modified rotate-at-s local planner where
+/// \f$s = 0\f$. Growing toward \f$q_{dir}\f$ can be seen as extending from
+/// \f$q_{near}\f$ to \f$q_{rand1}\f$ which is only a change in orientation
+/// followed by a translation from \f$q_{rand1}\f$ to \f$q_{rand}\f$.
+////////////////////////////////////////////////////////////////////////////////
 template<class MPTraits>
 class RotationThenTranslation : public BasicExtender<MPTraits> {
   public:

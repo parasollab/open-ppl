@@ -9,12 +9,6 @@ MPNNWrapper::~MPNNWrapper()
 
 MPNNWrapper::MPNNWrapper(vector<int> _topology, int maxPts, int maxNeighbors, double _epsilon)
 {
-  /*
-  cout << "MPNNWrapper::MPNNWrapper(";
-  for (int i = 0; i < _topology.size(); i++)
-    cout << _topology[i] << " ";
-  cout << ", " << maxPts << ", " << maxNeighbors << ", " << _epsilon << ")" << endl;
-  */
 
   dim = _topology.size();
   max_pts = maxPts;
@@ -42,7 +36,6 @@ MPNNWrapper::MPNNWrapper(vector<int> _topology, int maxPts, int maxNeighbors, do
     else
       scale[i] = 1.0;
 
-    //cout << "topology[" << i << "] = " << topology[i] << endl;
   }
 
   current_size = 0;
