@@ -22,6 +22,7 @@ class ModifyPath : public MPStrategyMethod<MPTraits> {
   protected:
     string m_inPathFile, m_outPathFile;
     string m_pmLabel;
+    ClearanceUtility<MPTraits> m_clearanceUtility;
 
     vector<CfgType> m_path, m_smoothPath;
 };
@@ -35,7 +36,7 @@ ModifyPath<MPTraits>::ModifyPath(const string& _inPathFile, const string& _outPa
 
 template<class MPTraits>
 ModifyPath<MPTraits>::ModifyPath(MPProblemType* _problem, XMLNodeReader& _node) :
-  MPStrategyMethod<MPTraits>(_problem, _node) {
+  MPStrategyMethod<MPTraits>(_problem, _node), m_clearanceUtility(_problem, _node) {
     this->SetName("ModifyPath");
     m_inPathFile = _node.stringXMLParameter("inFilename", true, "", "Path Filename");
     m_outPathFile = _node.stringXMLParameter("outFilename", true, "", "Path Filename");
@@ -85,7 +86,13 @@ ModifyPath<MPTraits>::Run() {
   if(this->m_debug) cout << "\nRunning ModifyPath::" << endl;
 
   //smooth the path
-  this->GetMPProblem()->GetPathModifier(m_pmLabel)->Modify(m_path, m_smoothPath);
+  StatClass* stats = this->GetMPProblem()->GetStatClass();
+  stats->StartClock(this->GetNameAndLabel());
+  if(m_pmLabel == "")
+    m_smoothPath = m_path;
+  else
+    this->GetMPProblem()->GetPathModifier(m_pmLabel)->Modify(m_path, m_smoothPath);
+  stats->StopClock(this->GetNameAndLabel());
 }
 
 /////////////////////
@@ -96,7 +103,25 @@ void
 ModifyPath<MPTraits>::Finalize() {
   if(this->m_debug) cout<<"\nFinalizing ModifyPath::"<<endl;
 
+  //output smoothed path
   WritePath(m_outPathFile, m_smoothPath);
+
+  //output stats
+  StatClass* stats = this->GetMPProblem()->GetStatClass();
+  string str = this->GetBaseFilename() + ".stat";
+  ofstream osStat(str.c_str(), std::ofstream::app);
+  osStat << "\n\nSmoothing Stats for " << this->GetNameAndLabel() << endl << endl;
+  //stats->PrintAllStats(osStat, this->GetMPProblem()->GetRoadmap());
+  stats->PrintClock(this->GetNameAndLabel(), osStat);
+  
+  ClearanceStats pathStats = m_clearanceUtility.PathClearance(m_smoothPath);
+  osStat << "PathAvgClr\t" << pathStats.m_avg << endl;
+  osStat << "PathMinClr\t" << pathStats.m_min << endl;
+  osStat << "PathMaxClr\t" << pathStats.m_max << endl;
+  osStat << "PathVarClr\t" << pathStats.m_var << endl;
+  osStat << "PathLength\t" << pathStats.m_pathLength << endl;
+
+  osStat.close();
 
   if(this->m_debug) cout<<"\nEnd Finalizing ModifyPath"<<endl;
 }
