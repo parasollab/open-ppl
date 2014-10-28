@@ -78,6 +78,7 @@ class ClearanceUtility : public MPBaseObject<MPTraits> {
     ClearanceStats RoadmapClearance();
 
     ClearanceStats PathClearance(vector<VID>& _path);
+    ClearanceStats PathClearance(vector<Cfg>& _path);
 
     double MinEdgeClearance(const CfgType& _c1, const CfgType& _c2, const WeightType& _weight);
   protected:
@@ -738,6 +739,72 @@ ClearanceUtility<MPTraits>::PathClearance(vector<VID>& _path){
 
   return stats;
 }
+
+template<class MPTraits>
+ClearanceStats
+ClearanceUtility<MPTraits>::PathClearance(vector<Cfg>& _path){
+  if(_path.empty())
+    return ClearanceStats();
+
+  GraphType* g = this->GetMPProblem()->GetRoadmap()->GetGraph();
+  DistanceMetricPointer dm = this->GetMPProblem()->GetDistanceMetric(m_dmLabel);
+
+  typedef typename GraphType::EI EI;
+  typedef typename GraphType::VI VI;
+  typedef typename GraphType::EID EID;
+  typedef typename GraphType::const_vertex_iterator CVI;
+
+  double pathLength = 0;
+  vector<double> clearanceVec;
+
+  typedef typename vector<Cfg>::iterator CIT;
+  for(CIT cit = _path.begin(); (cit+1)!=_path.end(); ++cit){
+    pathLength += dm->Distance(*cit, *(cit+1));
+    
+    WeightType weight;
+    //weight.SetLPLabel();
+    bool source_found = false;
+    CVI si;
+    for(si = g->begin(); si != g->end(); ++si)
+      if(si->property() == *cit) {
+        source_found = true;
+        break;
+      }
+    if(source_found) {
+      bool target_found = false;
+      CVI ti;
+      for(ti = g->begin(); ti != g->end(); ++ti)
+        if(ti->property() == *(cit+1)) {
+          target_found = true;
+          break;
+        }
+      if(target_found) {
+        VI vi;
+        EI ei;
+        EID ed(VID(si->descriptor()), VID(ti->descriptor()));
+        if(g->find_edge(ed, vi, ei)) 
+          weight = (*ei).property();
+      }
+    }
+    double currentClearance = MinEdgeClearance(*cit, *(cit+1), weight);
+    clearanceVec.push_back(currentClearance);
+  }
+
+  //min, max, avg, variance of graph edge variances
+  ClearanceStats stats;
+  stats.m_pathLength = pathLength;
+  stats.m_min = *min_element(clearanceVec.begin(), clearanceVec.end());
+  stats.m_max = *max_element(clearanceVec.begin(), clearanceVec.end());
+  stats.m_avg = accumulate(clearanceVec.begin(), clearanceVec.end(), 0.0) / (double)clearanceVec.size();
+  double varSum = 0;
+  for(vector<double>::iterator it = clearanceVec.begin(); it != clearanceVec.end(); it++){
+    varSum += sqr((*it) - stats.m_avg);
+  }
+  stats.m_var = varSum / (double)clearanceVec.size();
+
+  return stats;
+}
+
 
 template<class MPTraits>
 double
