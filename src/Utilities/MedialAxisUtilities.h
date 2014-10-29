@@ -1344,8 +1344,10 @@ MedialAxisUtility<MPTraits>::FindMedialAxisBorderApprox(
     VDAddTempCfg(_endingCfg, true);
   }
 
-  if(this->m_debug) cout << "\nCalculating Mid... _stepSize/cbStepSize: " << _stepSize << "/" << cbStepSize << endl;
-  if(fellOut) cout << "\n\nFellOut\n\n";
+  if(this->m_debug) {
+    cout << "\nCalculating Mid... _stepSize/cbStepSize: " << _stepSize << "/" << cbStepSize << endl;
+    if(fellOut) cout << "\n\nFellOut\n\n";
+  }
   _upperBound = fellOut ? _stepSize-1.0 : _stepSize;
   if(fellOut) {
     _lowerBound = _upperBound-1.0;
