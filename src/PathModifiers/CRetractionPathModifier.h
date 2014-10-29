@@ -93,7 +93,8 @@ CRetractionPathModifier<MPTraits>::ModifyImpl(vector<CfgType>& _path, vector<Cfg
   deque<double> avgs;
   size_t i = 0;
   while(i < m_maxIter && (avgs.size() < m_iter || fabs(avgs.front() - avgs.back()) > step/10)) {
-    cout << "CRetraction: Iteration: " << i++ << endl;
+    if(this->m_debug)
+      cout << "CRetraction: Iteration: " << i++ << endl;
     vector<CfgType> p2 = p1;
 
     CfgType dir;
@@ -117,7 +118,8 @@ CRetractionPathModifier<MPTraits>::ModifyImpl(vector<CfgType>& _path, vector<Cfg
         }
       }
     }
-    cout << j << " cfgs altered" << endl;
+    if(this->m_debug)
+      cout << j << " cfgs altered" << endl;
 
     vector<CfgType> p;
     ValidatePath(p1, p2, p);
