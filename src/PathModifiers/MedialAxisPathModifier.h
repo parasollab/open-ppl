@@ -127,8 +127,8 @@ MedialAxisPathModifier<MPTraits>::ModifyImpl(vector<CfgType>& _path, vector<CfgT
 
   for(CIT cit = pushed.begin(); cit != pushed.end(); ++cit) {
     if(!mau.PushToMedialAxis(*cit, boundary)) {
-      if(this->m_debug) cout << "Cfg: " << *cit << " failed to push." << endl;
-      return false;
+      if(this->m_debug) cout << "Cfg: " << *cit << " failed to push, keeping original cfg." << endl;
+      //return false; //if can't push, just leave alone (happens when already on medial axis)
     }
   }
 
@@ -211,6 +211,7 @@ MedialAxisPathModifier<MPTraits>::ModifyImpl(vector<CfgType>& _path, vector<CfgT
   vector<CfgType> fpath = _newPath;
   this->RemoveBranches(mau.GetDistanceMetricLabel(), fpath, _newPath);
 
+  if(this->m_debug) cout << "*M* Done, returing true\n";
   return true;
 }
 
