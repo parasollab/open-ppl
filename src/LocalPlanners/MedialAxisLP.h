@@ -104,7 +104,7 @@ MedialAxisLP<MPTraits>::MedialAxisLP(
 template<class MPTraits>
 MedialAxisLP<MPTraits>::MedialAxisLP(MPProblemType* _problem, XMLNodeReader& _node) :
   LocalPlannerMethod<MPTraits>(_problem, _node), m_medialAxisUtility(_problem, _node) {
-    m_medialAxisUtility.SetDebug(false);
+    //m_medialAxisUtility.SetDebug(false);
     m_controller = _node.stringXMLParameter("controller", true, "", "Which algorithm to run?");
     transform(m_controller.begin(), m_controller.end(), m_controller.begin(), ::toupper);
     m_maxIter = _node.numberXMLParameter("maxIter", true, 2, 1, MAX_INT, "Maximum Number of Iterations");
