@@ -2,6 +2,7 @@
 #define BASICPRM_H_
 
 #include "MPStrategyMethod.h"
+#include "Utilities/MedialAxisUtilities.h"
 
 template<class MPTraits>
 class BasicPRM : public MPStrategyMethod<MPTraits> {
@@ -50,6 +51,8 @@ class BasicPRM : public MPStrategyMethod<MPTraits> {
     string m_inputMapFilename;
     Start m_startAt;
 
+   ClearanceUtility<MPTraits> m_clearanceUtility;
+
   private:
     template <typename OutputIterator>
       void GenerateNodes(OutputIterator _thisIterationOut);
@@ -73,7 +76,7 @@ BasicPRM<MPTraits>::BasicPRM(const map<string, pair<int, int> >& _samplerLabels,
 template<class MPTraits>
 BasicPRM<MPTraits>::BasicPRM(typename MPTraits::MPProblemType* _problem, XMLNodeReader& _node) :
   MPStrategyMethod<MPTraits>(_problem, _node), m_currentIteration(0),
-  m_inputMapFilename(""), m_startAt(NODE_GENERATION){
+  m_inputMapFilename(""), m_startAt(NODE_GENERATION), m_clearanceUtility(_problem, _node){
     this->SetName("BasicPRM");
     ParseXML(_node);
   }
@@ -88,7 +91,6 @@ BasicPRM<MPTraits>::ParseXML(XMLNodeReader& _node) {
   m_inputMapFilename = _node.stringXMLParameter("inputMap", false, "",
       "filename of roadmap to start from");
   m_vcLabel = _node.stringXMLParameter("vcLabel", false, "", "Validity Checker in case Sampler does not verify validity of nodes.");
-
   string startAt = _node.stringXMLParameter("startAt", false, "node generation",
       "point of algorithm where to begin at: \"node generation\" (default), \"node connection\", \"component connection\", \"map evaluation\"");
   if(startAt == "node generation")
@@ -280,6 +282,15 @@ BasicPRM<MPTraits>::Finalize(){
   stats->PrintAllStats(osStat, this->GetMPProblem()->GetRoadmap());
   stats->PrintClock("Map Generation", osStat);
 
+  //print roadmap clearance stats
+  osStat << endl << endl;
+  cout << "Calculating Roadmap Clearance" << endl;
+  ClearanceStats cr = m_clearanceUtility.RoadmapClearance();
+  osStat
+    << "RoadmapAvgClr " << cr.m_avg << endl
+    << "RoadmapMinClr " << cr.m_min << endl
+    << "RoadmapMaxClr " << cr.m_max << endl
+    << "RoadmapVarClr " << cr.m_var << endl;
   osStat.close();
 
   if(this->m_debug) cout<<"\nEnd Finalizing BasicPRM"<<endl;
