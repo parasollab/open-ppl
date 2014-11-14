@@ -703,7 +703,6 @@ ClearanceUtility<MPTraits>::PathClearance(vector<VID>& _path){
     return ClearanceStats();
 
   GraphType* g = this->GetMPProblem()->GetRoadmap()->GetGraph();
-  Environment* env = this->GetMPProblem()->GetEnvironment();
   DistanceMetricPointer dm = this->GetMPProblem()->GetDistanceMetric(m_dmLabel);
 
   typedef typename GraphType::EI EI;
@@ -760,7 +759,7 @@ ClearanceUtility<MPTraits>::PathClearance(vector<Cfg>& _path){
   typedef typename vector<Cfg>::iterator CIT;
   for(CIT cit = _path.begin(); (cit+1)!=_path.end(); ++cit){
     pathLength += dm->Distance(*cit, *(cit+1));
-    
+
     WeightType weight;
     //weight.SetLPLabel();
     bool source_found = false;
@@ -782,7 +781,7 @@ ClearanceUtility<MPTraits>::PathClearance(vector<Cfg>& _path){
         VI vi;
         EI ei;
         EID ed(VID(si->descriptor()), VID(ti->descriptor()));
-        if(g->find_edge(ed, vi, ei)) 
+        if(g->find_edge(ed, vi, ei))
           weight = (*ei).property();
       }
     }

@@ -320,7 +320,7 @@ BasicRRTStrategy<MPTraits>::Finalize() {
 
   //print roadmap clearance stats
   osStat << endl << endl;
-  /*cout << "Calculating Roadmap Clearance" << endl;
+  cout << "Calculating Roadmap Clearance" << endl;
   ClearanceStats cr = m_clearanceUtility.RoadmapClearance();
   cout << "Calculating Path Clearance" << endl;
   ClearanceStats cp = m_clearanceUtility.PathClearance(path);
@@ -334,8 +334,6 @@ BasicRRTStrategy<MPTraits>::Finalize() {
     << "PathMaxClr    " << cp.m_max << endl
     << "PathVarClr    " << cp.m_var << endl
     << "PathLength    " << cp.m_pathLength << endl;
-*/
-
   osStat.close();
 
   if(this->m_debug) cout<<"\nEnd Finalizing BasicRRTStrategy"<<endl;
