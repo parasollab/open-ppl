@@ -54,7 +54,6 @@ TraceMAPush<MPTraits>::Extend(const CfgType& _near, const CfgType& _dir,
 
   // The target configuration is pushed in the obstacle direction
   TraceObstacle<MPTraits>::Extend(_near, _dir, innerCfg, _innerNodes);
-  _innerNodes.push_back(innerCfg);
 
   // The target cfg is pushed toward the medial axis of the configuration space
   if(this->m_debug)
