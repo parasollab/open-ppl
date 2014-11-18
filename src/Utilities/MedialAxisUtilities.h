@@ -631,7 +631,7 @@ ClearanceUtility<MPTraits>::ApproxCollisionInfo(CfgType& _cfg, CfgType& _clrCfg,
 
   // Finalizing search, keep mid as the low cfg if computing clearance and mid as the high cfg if computing penetration
   if(initValidity) { // Computing clerarance, so low is needed as long as its not the initial cfg
-    while(low == 0.0) {
+    while(low == 0.0 && high != low) {
       mid=(low+high)/2.0;
       CfgType middleCfg = rays[candidates[0].first].m_incr * mid + candidates[0].second;
 
