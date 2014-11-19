@@ -475,7 +475,7 @@ ClearanceUtility<MPTraits>::ApproxCollisionInfo(CfgType& _cfg, CfgType& _clrCfg,
   // Step out along each direction to determine the candidates
   vector<pair<size_t, CfgType> > candidates;
   bool stateChangedFlag = false;
-  size_t iterations = 0, maxIterations=10000; // Arbitrary TODO: Smarter maxIter number
+  size_t iterations = 0, maxIterations=100; // Arbitrary TODO: Smarter maxIter number
   if(this->m_debug) cout << "DEBUG:: stepping out along each direction to find candidates";
   while(!stateChangedFlag && iterations++ < maxIterations) {
     if(this->m_debug) cout << "\n\t" << iterations;
@@ -580,7 +580,7 @@ ClearanceUtility<MPTraits>::ApproxCollisionInfo(CfgType& _cfg, CfgType& _clrCfg,
   // Binary search on candidates to find the best result at specified resolution
   if(this->m_debug) cout << "DEBUG:: binary searching on candidates to find best result\n";
   double low=0.0, mid=0.5, high=1.0;
-  while(candidates.size() > 1 ||
+  while((candidates.size() > 1 && low != high) ||
         (candidates.size() == 1 &&
          dm->Distance((rays[candidates.front().first].m_incr * low + candidates.front().second), (rays[candidates.front().first].m_incr * high + candidates.front().second)) > m_approxResolution * env->GetPositionRes())) {
     mid = (low+high)/2.0;
