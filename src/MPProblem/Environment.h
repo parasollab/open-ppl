@@ -127,6 +127,7 @@ class Environment {
     //until PMPL is changed later to support multiple roadmaps for heterogeneous systems. That is, this function assumes
     //that if there is a multiagent sim going on, the agents are homogenous
     void BuildRobotStructure();
+    void SubBuildRobotStrucutre(size_t _index);
 
     //determine if _cfg is inside of the C-space defined by this workspace
     //boundary, and the joint limits of the robot

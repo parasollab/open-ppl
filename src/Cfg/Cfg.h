@@ -71,11 +71,12 @@ class ClearanceInfo {
 class Cfg {
   public:
 
-    Cfg();
+    Cfg(size_t _index = 0);
     Cfg(const Cfg& _other);
     virtual ~Cfg() {};
 
-    static void InitRobots(vector<Robot>& _robots, ostream& _os=std::cout);
+    // assume _index within the size of the vector.
+    static void InitRobots(vector<Robot>& _robots, size_t _index = 0, ostream& _os=std::cout);
 
     Cfg& operator=(const Cfg& _cfg);
     ///determines equality of this and other configuration
@@ -123,9 +124,10 @@ class Cfg {
     void IncStat(string _stat, double _value = 1.0);
 
     /// Return the number of degrees of freedom for the configuration class
-    static size_t DOF() {return m_dof;};
-    static size_t PosDOF() {return m_posdof;}
-    static size_t GetNumOfJoints() {return m_numJoints;}
+    size_t DOF() const {return m_dof[m_robotIndex];};
+    size_t PosDOF() const {return m_posdof[m_robotIndex];}
+    size_t GetNumOfJoints() const {return m_numJoints[m_robotIndex];}
+    static void SetSize(size_t _size);
     virtual const string GetName() const {return "Cfg";};
 
     /// methods for Distance Metric.
@@ -201,12 +203,14 @@ class Cfg {
     vector<double> m_v;
     size_t m_robotIndex; //which active body in the env this cfg refers to
 
-    static size_t m_dof;
-    static size_t m_posdof;
-    static size_t m_numJoints;
+    // Static member for cfg
+    // information is recorded in vector with a m_robotIndex as index
+    static vector<size_t> m_dof;
+    static vector<size_t> m_posdof;
+    static vector<size_t> m_numJoints;
 
     enum DofType {POS, ROT, JOINT};
-    static vector<DofType> m_dofTypes;
+    static vector<vector<DofType> > m_dofTypes;
     static vector<Robot> m_robots;
 
     /** TODO- there may still problem with (un)packing map
