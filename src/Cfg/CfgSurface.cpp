@@ -142,7 +142,7 @@ CfgSurface::operator/=(double _d) {
 double&
 CfgSurface::operator[](size_t _dof){
   m_witnessCfg.reset();
-  assert(_dof >= 0 && _dof <= m_dof);
+  assert(_dof >= 0 && _dof <= m_dof[m_robotIndex]);
   switch(_dof){
     case 0 : return m_pt[0];
     case 1 : return m_h;
@@ -155,7 +155,7 @@ CfgSurface::operator[](size_t _dof){
 
 const double&
 CfgSurface::operator[](size_t _dof) const {
-  assert(_dof >= 0 && _dof <= m_dof);
+  assert(_dof >= 0 && _dof <= m_dof[m_robotIndex]);
   switch(_dof){
     case 0 : return m_pt[0];
     case 1 : return m_h;
@@ -214,9 +214,9 @@ CfgSurface::GetData() const{
 
 void
 CfgSurface::SetData(const vector<double>& _data) {
-  if(_data.size() != m_dof) {
+  if(_data.size() != m_dof[m_robotIndex]) {
     cout << "\n\nERROR in CfgSurface::SetData, ";
-    cout << "DOF of data and Cfg are not equal " << _data.size() << "\t!=\t" << m_dof << endl;
+    cout << "DOF of data and Cfg are not equal " << _data.size() << "\t!=\t" << m_dof[m_robotIndex] << endl;
     exit(-1);
   }
   m_pt[0] = _data[0];
@@ -284,7 +284,7 @@ CfgSurface::GetResolutionCfg(Environment* _env) {
 
 void
 CfgSurface::IncrementTowardsGoal(const Cfg& _goal, const Cfg& _increment) {
-  for(size_t i = 0; i < m_dof; ++i) {
+  for(size_t i = 0; i < m_dof[m_robotIndex]; ++i) {
     //If the diff between _goal and c is smaller than _increment
     if(fabs(((const CfgSurface&)_goal)[i]-operator[](i)) < fabs(((const CfgSurface&)_increment)[i]))
       operator[](i) = ((const CfgSurface&)_goal)[i];
@@ -307,7 +307,7 @@ CfgSurface::FindIncrement(const Cfg& _start, const Cfg& _goal, int* _nTicks, dou
 void
 CfgSurface::FindIncrement(const Cfg& _start, const Cfg& _goal, int _nTicks){
   vector<double> incr;
-  for(size_t i = 0; i < m_dof; ++i) {
+  for(size_t i = 0; i < m_dof[m_robotIndex]; ++i) {
     incr.push_back((((const CfgSurface&)_goal)[i] - ((const CfgSurface&)_start)[i])/_nTicks);
   }
   SetData(incr);
@@ -316,7 +316,7 @@ CfgSurface::FindIncrement(const Cfg& _start, const Cfg& _goal, int _nTicks){
 void
 CfgSurface::WeightedSum(const Cfg& _first, const Cfg& _second, double _weight) {
   vector<double> v;
-  for(size_t i = 0; i < m_dof; ++i)
+  for(size_t i = 0; i < m_dof[m_robotIndex]; ++i)
     v.push_back(((const CfgSurface&)_first)[i]*(1.-_weight) + ((const CfgSurface&)_second)[i]*_weight);
   SetData(v);
   m_surfaceID = ((const CfgSurface&)_first).GetSurfaceID();
