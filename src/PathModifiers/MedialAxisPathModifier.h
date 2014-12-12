@@ -57,7 +57,7 @@ MedialAxisPathModifier<MPTraits>::MedialAxisPathModifier(MPProblemType* _problem
 template<class MPTraits>
 void
 MedialAxisPathModifier<MPTraits>::ParseXML(XMLNodeReader& _node) {
-  m_pmLabel = _node.stringXMLParameter("pmLabel", true, "", "Path Modifier method");
+  m_pmLabel = _node.stringXMLParameter("pmLabel", false, "NULL", "Path Modifier method");
   m_lpLabel = _node.stringXMLParameter("lpLabel", true, "", "Local planner method");
   m_malpLabel = _node.stringXMLParameter("malpLabel", true, "", "Medial axis local planner label needed by MedialAxisPathModifier");
 }
@@ -101,9 +101,13 @@ MedialAxisPathModifier<MPTraits>::ModifyImpl(vector<CfgType>& _path, vector<CfgT
 
   //smooth path
   vector<CfgType> path;
-  typedef typename MPProblemType::PathModifierPointer PathModifierPointer;
-  PathModifierPointer pm = this->GetMPProblem()->GetPathModifier(m_pmLabel);
-  pm->Modify(_path, path);
+  if(m_pmLabel != "NULL") {
+    typedef typename MPProblemType::PathModifierPointer PathModifierPointer;
+    PathModifierPointer pm = this->GetMPProblem()->GetPathModifier(m_pmLabel);
+    pm->Modify(_path, path);
+  }
+  else
+    path = _path;
 
   //Ensure path comes from the roadmap
   GraphType* graph = this->GetMPProblem()->GetRoadmap()->GetGraph();
