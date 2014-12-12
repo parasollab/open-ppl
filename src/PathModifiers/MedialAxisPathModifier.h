@@ -130,10 +130,13 @@ MedialAxisPathModifier<MPTraits>::ModifyImpl(vector<CfgType>& _path, vector<CfgT
   shared_ptr<Boundary> boundary = env->GetBoundary();
 
   for(CIT cit = pushed.begin(); cit != pushed.end(); ++cit) {
-    if(!mau.PushToMedialAxis(*cit, boundary)) {
-      if(this->m_debug) cout << "Cfg: " << *cit << " failed to push, keeping original cfg." << endl;
-      //return false; //if can't push, just leave alone (happens when already on medial axis)
-    }
+    size_t tries = mau.GetExactClearance() ? 100 : 0;
+    bool success = false;
+    do {
+      success = mau.PushToMedialAxis(*cit, boundary);
+    } while(!success && tries++ < 100);
+    if(!success && this->m_debug)
+      cout << "Cfg: " << *cit << " failed to push, keeping original cfg." << endl;
   }
 
   //Create the variables used to connect the nodes
@@ -156,7 +159,15 @@ MedialAxisPathModifier<MPTraits>::ModifyImpl(vector<CfgType>& _path, vector<CfgT
 
   //Connect the pushed configurations with MALP
   for(CIT cit1 = pushed.begin(), cit2 = cit1+1; cit2 != pushed.end(); ++cit1, ++cit2) {
-    if(malp->LocalPlannerMethod<MPTraits>::IsConnected(*cit1, *cit2, &tmpOutput, posRes, oriRes, true, true, true))
+    //do attempts for MALP
+    size_t tries = mau.GetExactClearance() ? 10 : 0;
+    bool success = false;
+    do {
+      success = malp->LocalPlannerMethod<MPTraits>::IsConnected(*cit1, *cit2, &tmpOutput, posRes, oriRes, true, true, true);
+    } while(!success && tries++ < 10);
+
+    //analyze MALP success
+    if(success)
       this->AddToPath(_newPath, &tmpOutput, *cit2);
     else {
       //Failure control measures
