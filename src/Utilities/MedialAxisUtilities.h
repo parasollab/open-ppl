@@ -672,8 +672,15 @@ ClearanceUtility<MPTraits>::ApproxCollisionInfo(CfgType& _cfg, CfgType& _clrCfg,
 //*********************************************************************//
 template<class MPTraits>
 ClearanceStats
-ClearanceUtility<MPTraits>::RoadmapClearance(){
+ClearanceUtility<MPTraits>::RoadmapClearance() {
+
   GraphType* g = this->GetMPProblem()->GetRoadmap()->GetGraph();
+
+  //TODO handle case of singleton nodes to be part of roadmap clearance
+  //computation.
+  if(g->get_num_edges() == 0)
+    return ClearanceStats();
+
   vector<double> clearanceVec;
 
   //loop over graph edges and calculate clearance
