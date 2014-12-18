@@ -157,6 +157,11 @@ RewireConnector<MPTraits>::ConnectNeighbors(RoadmapType* _rm, StatClass& _stats,
 
   double vidCost = GetShortestPath(root, _vid, _rm);
   for (RVIT rvit = _closest.rbegin(); rvit!=_closest.rend(); rvit++) {
+
+    //make sure not to reroute the root. Causes cycles.
+    if(rvit->first == root)
+      continue;
+
     VID neighbor = rvit->first;
     CfgType col;
     double neighborCost = GetShortestPath(root, neighbor, _rm);
