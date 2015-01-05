@@ -158,8 +158,18 @@ RewireConnector<MPTraits>::ConnectNeighbors(RoadmapType* _rm, StatClass& _stats,
   double vidCost = GetShortestPath(root, _vid, _rm);
   for (RVIT rvit = _closest.rbegin(); rvit!=_closest.rend(); rvit++) {
 
-    //make sure not to reroute the root. Causes cycles.
-    if(rvit->first == root)
+    //make sure not to not reroute to cause cycles
+    VID v = _vid;
+    bool cont = false;
+    while(_rm->GetGraph()->GetVertex(v).IsStat("Parent")){
+      v = _rm->GetGraph()->GetVertex(v).GetStat("Parent");
+      if(rvit->first == v) {
+        cont = true;
+        break;
+      }
+    }
+    //if(rvit->first == root)
+    if(cont)
       continue;
 
     VID neighbor = rvit->first;
