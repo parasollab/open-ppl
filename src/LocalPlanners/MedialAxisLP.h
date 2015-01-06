@@ -754,7 +754,6 @@ ReduceNoise(const CfgType& _c1, const CfgType& _c2,
   //  else
   //    add old intermediate
 
-  Environment* env = this->GetMPProblem()->GetEnvironment();
   LPOutput<MPTraits> lpOutput;
 
   CfgType col;
@@ -768,9 +767,7 @@ ReduceNoise(const CfgType& _c1, const CfgType& _c2,
 
     CfgType mid = (*cit1 + *cit2)/2;
 
-    if(env->InBounds(prevMid, env->GetBoundary()) &&
-        env->InBounds(mid, env->GetBoundary()) &&
-        m_envLP.IsConnected(prevMid, mid, col, &lpOutput, _posRes, _oriRes, true, true, true)) {
+    if(m_envLP.IsConnected(prevMid, mid, col, &lpOutput, _posRes, _oriRes, true, true, true)) {
       if(newIntermediates.empty() || newIntermediates.back() != prevMid)
         newIntermediates.push_back(prevMid);
       newIntermediates.push_back(mid);
@@ -784,9 +781,7 @@ ReduceNoise(const CfgType& _c1, const CfgType& _c2,
   //check last goal
   CfgType mid = (_c2 + _lpOutput->m_intermediates.back())/2;
 
-  if(env->InBounds(prevMid, env->GetBoundary()) &&
-      env->InBounds(mid, env->GetBoundary()) &&
-      m_envLP.IsConnected(prevMid, mid, col, &lpOutput, _posRes, _oriRes, true, true, true)) {
+  if(m_envLP.IsConnected(prevMid, mid, col, &lpOutput, _posRes, _oriRes, true, true, true)) {
     if(newIntermediates.empty() || newIntermediates.back() != prevMid)
       newIntermediates.push_back(prevMid);
     newIntermediates.push_back(mid);

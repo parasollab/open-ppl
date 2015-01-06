@@ -671,12 +671,12 @@ void
 Cfg::NormalizeOrientation(int _index) {
   if(_index == -1) {
     for(size_t i = 0; i < m_dof; ++i) {
-      if(m_dofTypes[i] != POS) {
+      if(m_dofTypes[i] == ROT) {
         m_v[i] = Normalize(m_v[i]);
       }
     }
   }
-  else if(m_dofTypes[_index] != POS) {  // orientation index
+  else if(m_dofTypes[_index] != ROT) {  // orientation index
     m_v[_index] = Normalize(m_v[_index]);
   }
 }
