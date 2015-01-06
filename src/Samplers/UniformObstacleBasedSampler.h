@@ -109,21 +109,21 @@ Sampler(Environment* _env, shared_ptr<Boundary> _bb, StatClass& _stats,
 
   CfgType cfg2;
   CfgType incr;
-  double dist, r;
 
   incr.GetRandomRay(margin, _env, dm);
   cfg2 = cfg1 + incr;
 
+  //TODO: Check GetRandomRay actually scales the correct distance.
   //scale the distance between c1 and c2
-  Vector3d c1, c2, dir;
+  /*Vector3d c1, c2, dir;
   for(size_t i = 0; i < CfgType::PosDOF(); ++i) {
     c1[i] = cfg1[i];
     c2[i] = cfg2[i];
   }
   dir = c2 - c1;
-  dist = dir.norm();
-  r = margin/dist;
-  cfg2 = cfg1 + incr*r;
+  double dist = dir.norm();
+  double r = margin/dist;
+  cfg2 = cfg1 + incr*r;*/
 
   CfgType inter;
   CfgType tick = cfg1;
