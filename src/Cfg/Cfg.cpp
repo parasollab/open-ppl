@@ -604,8 +604,8 @@ Cfg::FindIncrement(const Cfg& _start, const Cfg& _goal, int* _nTicks, double _po
   Cfg diff = _goal - _start;
 
   // adding two basically makes this a rough ceiling...
-  *_nTicks = floor(max(diff.PositionMagnitude()/_positionRes,
-        diff.OrientationMagnitude()/_orientationRes) + 0.5);
+  *_nTicks = max(1., floor(max(diff.PositionMagnitude()/_positionRes,
+        diff.OrientationMagnitude()/_orientationRes) + 0.5));
 
   this->FindIncrement(_start, _goal, *_nTicks);
 }
@@ -620,8 +620,10 @@ Cfg::FindIncrement(const Cfg& _start, const Cfg& _goal, int _nTicks) {
       double a = _start.m_v[i];
       double b = _goal.m_v[i];
       // normalize both a and b to [-1, 1)
-      a = Normalize(a);
-      b = Normalize(b);
+      //a = Normalize(a);
+      //b = Normalize(b);
+      if(_nTicks == 0)
+        throw PMPLException("Divide by 0", WHERE, "Divide by 0");
       incr.push_back((b-a)/_nTicks);
     }
     else if(m_dofTypes[i] == ROT) {
@@ -671,12 +673,12 @@ void
 Cfg::NormalizeOrientation(int _index) {
   if(_index == -1) {
     for(size_t i = 0; i < m_dof; ++i) {
-      if(m_dofTypes[i] != POS) {
+      if(m_dofTypes[i] == ROT) {
         m_v[i] = Normalize(m_v[i]);
       }
     }
   }
-  else if(m_dofTypes[_index] != POS) {  // orientation index
+  else if(m_dofTypes[_index] == ROT) {  // orientation index
     m_v[_index] = Normalize(m_v[_index]);
   }
 }
