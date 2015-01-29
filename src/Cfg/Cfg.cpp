@@ -20,16 +20,17 @@ ClearanceInfo::~ClearanceInfo() {
 }
 
 ////////////////////////////////////////////////////////////////////
-size_t Cfg::m_dof;
-size_t Cfg::m_posdof;
-size_t Cfg::m_numJoints;
-vector<Cfg::DofType> Cfg::m_dofTypes;
+vector<size_t> Cfg::m_dof;
+vector<size_t> Cfg::m_posdof;
+vector<size_t> Cfg::m_numJoints;
+vector<vector<Cfg::DofType> > Cfg::m_dofTypes;
 vector<Robot> Cfg::m_robots;
 
-Cfg::Cfg() {
+Cfg::Cfg(size_t _robotIndex) {
   m_v.clear();
-  m_v.resize(m_dof, 0.0);
-  m_robotIndex = 0;
+  m_robotIndex = _robotIndex;
+  if(m_dof.size() > 0)
+    m_v.resize(m_dof[m_robotIndex], 0.0);
   m_witnessCfg.reset();
 }
 
@@ -42,47 +43,54 @@ Cfg::Cfg(const Cfg& _other) :
   m_witnessCfg(_other.m_witnessCfg) {}
 
 void
-Cfg::InitRobots(vector<Robot>& _robots, ostream& _os) {
-  m_robots = _robots;
-  m_posdof = 0;
-  m_numJoints = 0;
-  m_dofTypes.clear();
+Cfg::SetSize(size_t _size) {
+  m_dof.resize(_size);
+  m_numJoints.resize(_size);
+  m_posdof.resize(_size);
+  m_dofTypes.resize(_size);
+}
 
+void
+Cfg::InitRobots(vector<Robot>& _robots, size_t _index, ostream& _os) {
+  m_robots = _robots;
   _os << "DoF List: " << endl;
 
   int dof=0;
+  size_t posdof = 0;
+  size_t numJoints = 0;
+  vector<DofType> dofTypes;
   for(vector<Robot>::iterator rit = m_robots.begin(); rit != m_robots.end(); rit++) {
 
     _os << "\tRobot with base index " << rit->m_bodyIndex;
     _os << " (" << rit->m_body->GetFileName() << "):" << endl;
 
     if(rit->m_base == Robot::PLANAR) {
-      m_dofTypes.push_back(POS);
-      m_dofTypes.push_back(POS);
-      m_posdof += 2;
+      dofTypes.push_back(POS);
+      dofTypes.push_back(POS);
+      posdof += 2;
 
       _os << "\t\t" << dof++ << ": X position" << endl;
       _os << "\t\t" << dof++ << ": Y position" << endl;
 
       if(rit->m_baseMovement == Robot::ROTATIONAL) {
-        m_dofTypes.push_back(ROT);
+        dofTypes.push_back(ROT);
 
         _os << "\t\t" << dof++ << ": Rotation about Z" << endl;
       }
     }
     if(rit->m_base == Robot::VOLUMETRIC) {
-      m_dofTypes.push_back(POS);
-      m_dofTypes.push_back(POS);
-      m_dofTypes.push_back(POS);
-      m_posdof += 3;
+      dofTypes.push_back(POS);
+      dofTypes.push_back(POS);
+      dofTypes.push_back(POS);
+      posdof += 3;
 
       _os << "\t\t" << dof++ << ": X position" << endl;
       _os << "\t\t" << dof++ << ": Y position" << endl;
       _os << "\t\t" << dof++ << ": Z position" << endl;
       if(rit->m_baseMovement == Robot::ROTATIONAL) {
-        m_dofTypes.push_back(ROT);
-        m_dofTypes.push_back(ROT);
-        m_dofTypes.push_back(ROT);
+        dofTypes.push_back(ROT);
+        dofTypes.push_back(ROT);
+        dofTypes.push_back(ROT);
 
         _os << "\t\t" << dof++ << ": Rotation about X" << endl;
         _os << "\t\t" << dof++ << ": Rotation about Y" << endl;
@@ -91,8 +99,8 @@ Cfg::InitRobots(vector<Robot>& _robots, ostream& _os) {
     }
     for(Robot::JointIT jit = rit->m_joints.begin(); jit != rit->m_joints.end(); jit++) {
       if((*jit)->GetConnectionType() == Connection::REVOLUTE) {
-        m_dofTypes.push_back(JOINT);
-        m_numJoints++;
+        dofTypes.push_back(JOINT);
+        numJoints++;
 
         _os << "\t\t" << dof++ << ": ";
         _os << "Rotational joint from body " << (*jit)->GetPreviousBodyIndex();
@@ -101,9 +109,9 @@ Cfg::InitRobots(vector<Robot>& _robots, ostream& _os) {
         _os << " (" << (*jit)->GetNextBody()->GetFileName() << ")" << endl;
       }
       else if((*jit)->GetConnectionType() == Connection::SPHERICAL) {
-        m_dofTypes.push_back(JOINT);
-        m_dofTypes.push_back(JOINT);
-        m_numJoints+=2;
+        dofTypes.push_back(JOINT);
+        dofTypes.push_back(JOINT);
+        numJoints+=2;
 
         _os << "\t\t" << dof++;
         _os << "/" << dof++ << ": ";
@@ -117,8 +125,10 @@ Cfg::InitRobots(vector<Robot>& _robots, ostream& _os) {
       }
     }
   }
-
-  m_dof = m_dofTypes.size();
+  m_dof[_index] = dofTypes.size();
+  m_numJoints[_index] = numJoints;
+  m_posdof[_index] = posdof;
+  m_dofTypes[_index] = dofTypes;
 }
 
 Cfg&
@@ -139,8 +149,8 @@ bool
 Cfg::operator==(const Cfg& _cfg) const {
   if (m_robotIndex != _cfg.m_robotIndex)
     return false;
-  for(size_t i = 0; i < m_dof; ++i) {
-    if(m_dofTypes[i] == POS || m_dofTypes[i] == JOINT) {
+  for(size_t i = 0; i < m_dof[m_robotIndex]; ++i) {
+    if(m_dofTypes[m_robotIndex][i] == POS || m_dofTypes[m_robotIndex][i] == JOINT) {
       if(abs(m_v[i] - _cfg[i]) > abs(min(m_v[i], _cfg[i]))*numeric_limits<double>::epsilon())
         return false;
     }
@@ -166,7 +176,7 @@ Cfg::operator+(const Cfg& _cfg) const {
 
 Cfg&
 Cfg::operator+=(const Cfg& _cfg) {
-  for(size_t i = 0; i < m_dof; ++i)
+  for(size_t i = 0; i < m_dof[m_robotIndex]; ++i)
     m_v[i] += _cfg[i];
   NormalizeOrientation();
   m_witnessCfg.reset();
@@ -182,8 +192,8 @@ Cfg::operator-(const Cfg& _cfg) const {
 
 Cfg&
 Cfg::operator-=(const Cfg& _cfg) {
-  for(size_t i = 0; i < m_dof; ++i) {
-    if(m_dofTypes[i] == POS || m_dofTypes[i] == JOINT)
+  for(size_t i = 0; i < m_dof[m_robotIndex]; ++i) {
+    if(m_dofTypes[m_robotIndex][i] == POS || m_dofTypes[m_robotIndex][i] == JOINT)
       m_v[i] -= _cfg[i];
     else
       m_v[i] = DirectedAngularDistance(m_v[i], _cfg.m_v[i]);
@@ -196,7 +206,7 @@ Cfg::operator-=(const Cfg& _cfg) {
 Cfg
 Cfg::operator-() const {
   Cfg result = *this;
-  for(size_t i = 0; i < m_dof; ++i)
+  for(size_t i = 0; i < m_dof[m_robotIndex]; ++i)
     result[i] = -result[i];
   result.NormalizeOrientation();
   result.m_witnessCfg.reset();
@@ -212,7 +222,7 @@ Cfg::operator*(double _d) const {
 
 Cfg&
 Cfg::operator*=(double _d) {
-  for(size_t i = 0; i < m_dof; ++i)
+  for(size_t i = 0; i < m_dof[m_robotIndex]; ++i)
     m_v[i] *= _d;
   NormalizeOrientation();
   m_witnessCfg.reset();
@@ -228,7 +238,7 @@ Cfg::operator/(double _d) const {
 
 Cfg&
 Cfg::operator/=(double _d) {
-  for(size_t i = 0; i < m_dof; ++i)
+  for(size_t i = 0; i < m_dof[m_robotIndex]; ++i)
     m_v[i] /= _d;
   NormalizeOrientation();
   m_witnessCfg.reset();
@@ -237,14 +247,14 @@ Cfg::operator/=(double _d) {
 
 double&
 Cfg::operator[](size_t _dof) {
-  assert(_dof >= 0 && _dof <= m_dof);
+  assert(_dof >= 0 && _dof <= m_dof[m_robotIndex]);
   m_witnessCfg.reset();
   return m_v[_dof];
 }
 
 const double&
 Cfg::operator[](size_t _dof) const {
-  assert(_dof >= 0 && _dof <= m_dof);
+  assert(_dof >= 0 && _dof <= m_dof[m_robotIndex]);
   return m_v[_dof];
 }
 
@@ -297,9 +307,9 @@ operator<<(ostream& _os, const Cfg& _cfg) {
 
 void
 Cfg::SetData(const vector<double>& _data) {
-  if(_data.size() != m_dof) {
+  if(_data.size() != m_dof[m_robotIndex]) {
     cout << "\n\nERROR in Cfg::SetData, ";
-    cout << "DOF of data and Cfg are not equal " << _data.size() << "\t!=\t" << m_dof << endl;
+    cout << "DOF of data and Cfg are not equal " << _data.size() << "\t!=\t" << m_dof[m_robotIndex] << endl;
     exit(-1);
   }
   m_v = _data;
@@ -367,8 +377,8 @@ Cfg::IncStat(string _stat, double _value) {
 vector<double>
 Cfg::GetPosition() const {
   vector<double> ret;
-  for(size_t i = 0; i < m_dof; ++i) {
-    if(m_dofTypes[i] == POS)
+  for(size_t i = 0; i < m_dof[m_robotIndex]; ++i) {
+    if(m_dofTypes[m_robotIndex][i] == POS)
       ret.push_back(m_v[i]);
   }
   return ret;
@@ -377,8 +387,8 @@ Cfg::GetPosition() const {
 vector<double>
 Cfg::GetOrientation() const {
   vector<double> ret;
-  for(size_t i = 0; i < m_dof; ++i) {
-    if(m_dofTypes[i] != POS)
+  for(size_t i = 0; i < m_dof[m_robotIndex]; ++i) {
+    if(m_dofTypes[m_robotIndex][i] != POS)
       ret.push_back(m_v[i]);
   }
   return ret;
@@ -387,7 +397,7 @@ Cfg::GetOrientation() const {
 double
 Cfg::Magnitude() const {
   double result = 0.0;
-  for(size_t i = 0; i < m_dof; ++i)
+  for(size_t i = 0; i < m_dof[m_robotIndex]; ++i)
     result += m_v[i]*m_v[i];
   return sqrt(result);
 }
@@ -395,8 +405,8 @@ Cfg::Magnitude() const {
 double
 Cfg::PositionMagnitude() const {
   double result = 0.0;
-  for(size_t i = 0; i < m_dof; ++i)
-    if(m_dofTypes[i] == POS)
+  for(size_t i = 0; i < m_dof[m_robotIndex]; ++i)
+    if(m_dofTypes[m_robotIndex][i] == POS)
       result += m_v[i]*m_v[i];
   return sqrt(result);
 }
@@ -404,8 +414,8 @@ Cfg::PositionMagnitude() const {
 double
 Cfg::OrientationMagnitude() const {
   double result = 0.0;
-  for(size_t i = 0; i < m_dof; ++i) {
-    if(m_dofTypes[i] != POS)
+  for(size_t i = 0; i < m_dof[m_robotIndex]; ++i) {
+    if(m_dofTypes[m_robotIndex][i] != POS)
       result += m_v[i]*m_v[i];
   }
   return sqrt(result);
@@ -556,8 +566,8 @@ Cfg::GetResolutionCfg(Environment* _env) {
   double posRes = _env->GetPositionRes();
   double oriRes = _env->GetOrientationRes();
 
-  for(size_t i = 0; i < m_dof; i++)
-    if(m_dofTypes[i] == POS)
+  for(size_t i = 0; i < m_dof[m_robotIndex]; i++)
+    if(m_dofTypes[m_robotIndex][i] == POS)
       m_v.push_back(posRes);
     else
       m_v.push_back(oriRes);
@@ -569,8 +579,8 @@ Cfg::GetResolutionCfg(Environment* _env) {
 void
 Cfg::IncrementTowardsGoal(const Cfg& _goal, const Cfg& _increment) {
   ///For Position
-  for(size_t i = 0; i < m_dof; ++i) {
-    if(m_dofTypes[i] == POS || m_dofTypes[i] == JOINT) {
+  for(size_t i = 0; i < m_dof[m_robotIndex]; ++i) {
+    if(m_dofTypes[m_robotIndex][i] == POS || m_dofTypes[m_robotIndex][i] == JOINT) {
       //If the diff between _goal and c is smaller than _increment
       if(fabs(_goal.m_v[i]-m_v[i]) < fabs(_increment.m_v[i]))
         m_v[i] = _goal.m_v[i];
@@ -580,8 +590,8 @@ Cfg::IncrementTowardsGoal(const Cfg& _goal, const Cfg& _increment) {
   }
 
   ///For Oirentation
-  for(size_t i = 0; i < m_dof; ++i) {
-    if(m_dofTypes[i] == ROT) {
+  for(size_t i = 0; i < m_dof[m_robotIndex]; ++i) {
+    if(m_dofTypes[m_robotIndex][i] == ROT) {
       if(m_v[i] != _goal.m_v[i]) {
         double orientationIncr = _increment.m_v[i];
         double tmp = DirectedAngularDistance(m_v[i], _goal.m_v[i]);
@@ -613,10 +623,10 @@ Cfg::FindIncrement(const Cfg& _start, const Cfg& _goal, int* _nTicks, double _po
 void
 Cfg::FindIncrement(const Cfg& _start, const Cfg& _goal, int _nTicks) {
   vector<double> incr;
-  for(size_t i = 0; i < m_dof; ++i) {
-    if(m_dofTypes[i] == POS)
+  for(size_t i = 0; i < m_dof[m_robotIndex]; ++i) {
+    if(m_dofTypes[m_robotIndex][i] == POS)
       incr.push_back((_goal.m_v[i] - _start.m_v[i])/_nTicks);
-    else if(m_dofTypes[i] == JOINT) {
+    else if(m_dofTypes[m_robotIndex][i] == JOINT) {
       double a = _start.m_v[i];
       double b = _goal.m_v[i];
       // normalize both a and b to [-1, 1)
@@ -626,7 +636,7 @@ Cfg::FindIncrement(const Cfg& _start, const Cfg& _goal, int _nTicks) {
         throw PMPLException("Divide by 0", WHERE, "Divide by 0");
       incr.push_back((b-a)/_nTicks);
     }
-    else if(m_dofTypes[i] == ROT) {
+    else if(m_dofTypes[m_robotIndex][i] == ROT) {
       incr.push_back(DirectedAngularDistance(_start.m_v[i], _goal.m_v[i])/_nTicks);
     }
   }
@@ -639,7 +649,7 @@ Cfg::FindIncrement(const Cfg& _start, const Cfg& _goal, int _nTicks) {
 void
 Cfg::WeightedSum(const Cfg& _first, const Cfg& _second, double _weight) {
   vector<double> v;
-  for(size_t i = 0; i < m_dof; ++i)
+  for(size_t i = 0; i < m_dof[m_robotIndex]; ++i)
     v.push_back(_first.m_v[i]*(1.-_weight) + _second.m_v[i]*_weight);
   m_v = v;
   NormalizeOrientation();
@@ -649,8 +659,8 @@ Cfg::WeightedSum(const Cfg& _first, const Cfg& _second, double _weight) {
 void
 Cfg::GetPositionOrientationFrom2Cfg(const Cfg& _c1, const Cfg& _c2) {
   vector<double> v;
-  for(size_t i = 0; i < m_dof; ++i) {
-    if(m_dofTypes[i] == POS)
+  for(size_t i = 0; i < m_dof[m_robotIndex]; ++i) {
+    if(m_dofTypes[m_robotIndex][i] == POS)
       v.push_back(_c1.m_v[i]);
     else
       v.push_back(_c2.m_v[i]);
@@ -672,13 +682,13 @@ Cfg::PolyApprox(Environment* _env) const {
 void
 Cfg::NormalizeOrientation(int _index) {
   if(_index == -1) {
-    for(size_t i = 0; i < m_dof; ++i) {
-      if(m_dofTypes[i] == ROT) {
+    for(size_t i = 0; i < m_dof[m_robotIndex]; ++i) {
+      if(m_dofTypes[m_robotIndex][i] == ROT) {
         m_v[i] = Normalize(m_v[i]);
       }
     }
   }
-  else if(m_dofTypes[_index] == ROT) {  // orientation index
+  else if(m_dofTypes[m_robotIndex][_index] == ROT) {  // orientation index
     m_v[_index] = Normalize(m_v[_index]);
   }
 }

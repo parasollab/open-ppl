@@ -2,7 +2,7 @@
 <MotionPlanning>
   <MPProblem>
 
-    <Environment input_env="narrow.env">
+    <Environment filename="narrow.env">
       <robot Cfg_name="Cfg_fixed_tree" num_joints="3" pos_dof="0" dofs="3">
         <boundary type="bbox" translational_scale="2">
           <parameter id="0" label="x" type="translational" min="-7" max="7" />
@@ -22,7 +22,7 @@
     </ValidityCheckers>
 
     <NeighborhoodFinders>
-      <BruteForceNF label="BFNF" dmLabel="euclidean"/>
+      <BruteForceNF label="BFNF" dmLabel="euclidean" k="5"/>
     </NeighborhoodFinders>
 
     <Samplers>
@@ -35,9 +35,9 @@
     </Samplers>
 
     <Connectors>
-      <NeighborhoodConnector label="Closest" nf="BFNF" k="10" CheckIfSameCC="true" lp_method="sl" unconnected="true"/>
-      <CCsConnector label="ConnectCCs" smallcc="5" kpairs="2" kclosest="0" nf="BFNF" lp_method="sl" dm_method="euclidean"/>
-      <NeighborhoodConnector label="ConnectFirst" nf="BFNF" k="5" CheckIfSameCC="false" lp_method="sl" unconnected="true"/>
+      <NeighborhoodConnector label="Closest" nfLabel="BFNF" k="10" CheckIfSameCC="true" lpLabel="sl" unconnected="true"/>
+      <CCsConnector label="ConnectCCs" smallcc="5" kpairs="2" kclosest="0" nfLabel="BFNF" lpLabel="sl" dm_method="euclidean" k="5"/>
+      <NeighborhoodConnector label="ConnectFirst" nfLabel="BFNF" k="5" CheckIfSameCC="false" lpLabel="sl" unconnected="true"/>
     </Connectors>
 
     <LocalPlanners>
@@ -46,7 +46,7 @@
 
     <MapEvaluators>
       <ConditionalEvaluator label="NodesEval" metric_method="NumNodes" value="100" operator=">=" />
-      <Query label="Query" queryFile="narrow.query" dmMethod="euclidean" pathFile="Basic.path" lpMethod="sl">
+      <Query label="Query" queryFile="narrow.query" dmMethod="euclidean" pathFile="Basic.path" lpLabel="sl">
         <node_connection_method Method="ConnectFirst"/>
       </Query>
       <PrintMapEvaluation label="PrintMap" base_name="Basic" />

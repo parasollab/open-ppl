@@ -326,8 +326,16 @@ Environment::BuildRobotStructure() {
     exit(1);
   }
 
-  size_t _robotIndex = 0; //assume homogenous flock
-  shared_ptr<MultiBody> robot = m_activeBodies[_robotIndex];
+  size_t size = m_activeBodies.size();
+  Cfg::SetSize(size);
+
+  for(size_t i=0; i < size; i++)
+    SubBuildRobotStrucutre(i);
+}
+
+void
+Environment::SubBuildRobotStrucutre(size_t _index) {
+  shared_ptr<MultiBody> robot = m_activeBodies[_index];
   int fixedBodyCount = robot->GetFixedBodyCount();
   int freeBodyCount = robot->GetFreeBodyCount();
   m_robotGraph = RobotGraph();
@@ -401,10 +409,10 @@ Environment::BuildRobotStructure() {
 
   if(m_saveDofs) {
     ofstream dofFile((m_filename+string(".dof")).c_str());
-    Cfg::InitRobots(m_robots, dofFile);
+    Cfg::InitRobots(m_robots, _index, dofFile);
   }
   else{
-    Cfg::InitRobots(m_robots);
+    Cfg::InitRobots(m_robots, _index);
   }
 }
 
@@ -501,10 +509,10 @@ Environment::
 GetActiveBody(size_t _index) const {
   if(_index < m_activeBodies.size()) {
     return m_activeBodies[_index];
-  } 
+  }
   else {
     ostringstream msg;
-    msg << "Error:Cannot access MultiBody with index " << _index 
+    msg << "Error:Cannot access MultiBody with index " << _index
       << ". Possible indices are [0, " << m_activeBodies.size()
       << ")." << endl;
     throw PMPLException("Index Out Of Bound", WHERE, msg.str());
@@ -518,7 +526,7 @@ GetMultiBody(size_t _index) const {
     return m_usableMultiBodies[_index];
   else {
     ostringstream msg;
-    msg << "Error:Cannot access MultiBody with index " << _index 
+    msg << "Error:Cannot access MultiBody with index " << _index
       << ". Possible indices are [0, " << m_usableMultiBodies.size()
       << ")." << endl;
     throw PMPLException("Index Out Of Bound", WHERE, msg.str());
@@ -532,7 +540,7 @@ GetNavigableSurface(size_t _index) const {
     return m_navigableSurfaces[_index];
   else {
     ostringstream msg;
-    msg << "Error:Cannot access MultiBody with index " << _index 
+    msg << "Error:Cannot access MultiBody with index " << _index
       << ". Possible indices are [0, " << m_navigableSurfaces.size()
       << ")." << endl;
     throw PMPLException("Index Out Of Bound", WHERE, msg.str());
