@@ -119,7 +119,16 @@ sub get_error_code {
     @log = <LOG>;
     close(LOG);
     foreach $i (@log) {
-      if (($i=~/failed/i) || (($i=~/error/i) && !($i=~/tinyxmlerror/) && !($i=~/-Werror/) && !($i=~/Makefile\.in/))) {  #last Makefile.in is a hack until solid makefile cleaned up or nightly scripts are working
+      if (
+        ($i=~/failed/i) ||
+        ($i=~/E210002/) ||          #svn errors
+        (($i=~/error/i) &&          #compile errors
+          !($i=~/tinyxmlerror/) &&  #excluding...
+          !($i=~/-Werror/) &&
+          !($i=~/Makefile\.in/))    #last Makefile.in is a hack until solid
+                                    #makefile cleaned up or nightly scripts are
+                                    #working
+      ) {
         if ($error_code<ERRORS) { $error_code = ERRORS; }
         $details = $details.$i;
       }
