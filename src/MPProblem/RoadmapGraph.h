@@ -62,6 +62,7 @@ class RoadmapGraph : public
     typedef typename GRAPH::vertex_iterator CVI;
     typedef typename GRAPH::vertex_property VP;
 #endif
+    typedef stapl::sequential::vector_property_map<GRAPH, size_t> ColorMap;
     typedef RoadmapChangeEvent<VERTEX, WEIGHT> ChangeEvent;
     typedef RoadmapVCS<VERTEX, WEIGHT> RoadmapVCSType;
 
@@ -111,6 +112,11 @@ class RoadmapGraph : public
     void AddEdge(VID _v1, VID _v2, const pair<WEIGHT,WEIGHT>& _w);
 
     bool IsEdge(VID _v1, VID _v2);
+
+    //////////////////////////////////
+    // CC Operations
+    //////////////////////////////////
+    size_t GetNumCCs();
 
     ///Temporarily wrapper for some graph methods
     ///Until full migration and change of names in STAPL is completed
@@ -256,6 +262,13 @@ RoadmapGraph<VERTEX,WEIGHT>::IsEdge(VID _v1, VID _v2) {
 #else
   return false;
 #endif
+}
+
+template<class VERTEX, class WEIGHT>
+size_t
+RoadmapGraph<VERTEX, WEIGHT>::GetNumCCs() {
+  ColorMap c;
+  return get_cc_count(*this, c);
 }
 
 #endif

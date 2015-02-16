@@ -58,12 +58,12 @@
 
     <MPStrategies>
       <!-- Basic PRM where num samples is based on Number -->
-      <BasicPRM label="BasicPRM1" seed="1234567" filename="Basic">
-        <node_generation_method Method="UniformRandomFree" Number="100" Attempts="10"/>
-        <node_connection_method Method="Closest"/>
-        <component_connection_method Method="ConnectCCs"/>
-        <evaluation_method Method="PrintMap"/>
-        <evaluation_method Method="NodesEval"/>
+      <BasicPRM label="BasicPRM1">
+        <Sampler method="UniformRandomFree" Number="100" Attempts="10"/>
+        <Connector method="Closest"/>
+        <ComponentConnector method="ConnectCCs"/>
+        <Evaluator method="PrintMap"/>
+        <Evaluator method="NodesEval"/>
       </BasicPRM>
     </MPStrategies>
 

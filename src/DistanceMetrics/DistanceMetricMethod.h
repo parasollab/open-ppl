@@ -1,6 +1,8 @@
 #ifndef DISTANCE_METRIC_METHOD_H
 #define DISTANCE_METRIC_METHOD_H
 
+#include "MPProblem/MPBaseObject.h"
+
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup DistanceMetrics
 /// @brief Base algorithm abstraction for \ref DistanceMetrics.

@@ -3,6 +3,7 @@
 
 #include <string>
 #include <iostream>
+#include "MPProblem/MPBaseObject.h"
 #include "Utilities/MetricUtils.h"
 #ifdef _PARALLEL
 #include "runtime.h"
