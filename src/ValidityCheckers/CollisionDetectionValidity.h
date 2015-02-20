@@ -108,7 +108,13 @@ CollisionDetectionValidity<MPTraits>::IsValidImpl(CfgType& _cfg, CDInfo& _cdInfo
   // after updating the environment(multibodies), Ask ENVIRONMENT
   // to check collision! (this is more natural)
 
+#ifdef PMPCfgMultiRobot
+  bool answerFromEnvironment = false;
+  for(size_t i = 0; i < CfgType::m_numRobot; ++i) 
+    answerFromEnvironment |= IsInCollision(_cdInfo, i, _callName);
+#else
   bool answerFromEnvironment = IsInCollision(_cdInfo, _cfg.GetRobotIndex(), _callName);
+#endif
 
   _cfg.SetLabel("VALID", !answerFromEnvironment);
   return !answerFromEnvironment;

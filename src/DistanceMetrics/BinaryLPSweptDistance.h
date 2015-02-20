@@ -13,6 +13,7 @@ template <class MPTraits>
 class BinaryLPSweptDistance : public LPSweptDistance<MPTraits> {
   public:
     typedef typename MPTraits::MPProblemType MPProblemType;
+    typedef typename MPTraits::CfgType CfgType;
 
     BinaryLPSweptDistance(string _lp = "", double _posRes = 0.1, double _oriRes = 0.1,
         double _tolerance = 0.01, int _maxAttempts = 100, bool _bbox = false);
@@ -20,7 +21,7 @@ class BinaryLPSweptDistance : public LPSweptDistance<MPTraits> {
 
     virtual void Print(ostream& _os) const;
 
-    virtual double Distance(const Cfg& _c1, const Cfg& _c2);
+    virtual double Distance(const CfgType& _c1, const CfgType& _c2);
 
   private:
     double m_tolerance;
@@ -60,7 +61,7 @@ Print(ostream& _os) const {
 template<class MPTraits>
 double
 BinaryLPSweptDistance<MPTraits>::
-Distance(const Cfg& _c1, const Cfg& _c2) {
+Distance(const CfgType& _c1, const CfgType& _c2) {
   double positionResSave = this->m_positionRes;
   double orientationResSave = this->m_orientationRes;
 

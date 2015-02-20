@@ -13,6 +13,9 @@
 #if (defined(PMPCfg))
 #include "Cfg/Cfg.h"
 typedef Cfg PMPLCfgType;
+#elif (defined(PMPCfgMultiRobot))
+#include "Cfg/CfgMultiRobot.h"
+typedef CfgMultiRobot PMPLCfgType;
 #elif (defined(PMPCfgSurface))
 #include "Cfg/CfgSurface.h"
 typedef CfgSurface PMPLCfgType;

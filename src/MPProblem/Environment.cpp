@@ -148,6 +148,15 @@ Environment::InBounds(const Cfg& _cfg, shared_ptr<Boundary> _b) {
   return false;
 }
 
+bool
+Environment::InBounds(const CfgMultiRobot& _cfg, shared_ptr<Boundary> _b) {
+  const vector<Cfg> c = _cfg.GetRobotsCollect();
+  for(size_t i = 0; i < c.size(); i++)
+    if(!InBounds(c[i], _b))
+      return false;
+  return true;
+}
+
 //access the possible range of values for the _i th DOF
 pair<double, double>
 Environment::GetRange(size_t _i, shared_ptr<Boundary> _b) {
@@ -328,6 +337,9 @@ Environment::BuildRobotStructure() {
 
   size_t size = m_activeBodies.size();
   Cfg::SetSize(size);
+#ifdef PMPCfgMultiRobot
+  CfgMultiRobot::m_numRobot = size;
+#endif
 
   for(size_t i=0; i < size; i++)
     SubBuildRobotStrucutre(i);

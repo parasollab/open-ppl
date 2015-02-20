@@ -24,7 +24,7 @@ vector<size_t> Cfg::m_dof;
 vector<size_t> Cfg::m_posdof;
 vector<size_t> Cfg::m_numJoints;
 vector<vector<Cfg::DofType> > Cfg::m_dofTypes;
-vector<Robot> Cfg::m_robots;
+vector<vector<Robot> > Cfg::m_robots;
 
 Cfg::Cfg(size_t _robotIndex) {
   m_v.clear();
@@ -48,18 +48,19 @@ Cfg::SetSize(size_t _size) {
   m_numJoints.resize(_size);
   m_posdof.resize(_size);
   m_dofTypes.resize(_size);
+  m_robots.resize(_size);
 }
 
 void
 Cfg::InitRobots(vector<Robot>& _robots, size_t _index, ostream& _os) {
-  m_robots = _robots;
+  m_robots[_index] = _robots;
   _os << "DoF List: " << endl;
 
   int dof=0;
   size_t posdof = 0;
   size_t numJoints = 0;
   vector<DofType> dofTypes;
-  for(vector<Robot>::iterator rit = m_robots.begin(); rit != m_robots.end(); rit++) {
+  for(vector<Robot>::iterator rit = m_robots[_index].begin(); rit != m_robots[_index].end(); rit++) {
 
     _os << "\tRobot with base index " << rit->m_bodyIndex;
     _os << " (" << rit->m_body->GetFileName() << "):" << endl;
@@ -422,10 +423,10 @@ Cfg::OrientationMagnitude() const {
 Vector3d
 Cfg::GetRobotCenterPosition() const {
   double x = 0, y = 0, z = 0;
-  int numRobots = m_robots.size();
+  int numRobots = m_robots[m_robotIndex].size();
   int index = 0;
   typedef vector<Robot>::iterator RIT;
-  for(RIT rit = m_robots.begin(); rit != m_robots.end(); rit++) {
+  for(RIT rit = m_robots[m_robotIndex].begin(); rit != m_robots[m_robotIndex].end(); rit++) {
     x += m_v[index];
     y += m_v[index + 1];
     if(rit->m_base == Robot::VOLUMETRIC)
@@ -448,7 +449,7 @@ Cfg::GetRobotCenterofMass(Environment* _env) const {
   int numbodies=0;
   shared_ptr<MultiBody> mb = _env->GetMultiBody(m_robotIndex);
   typedef vector<Robot>::iterator RIT;
-  for(RIT rit = m_robots.begin(); rit != m_robots.end(); rit++) {
+  for(RIT rit = m_robots[m_robotIndex].begin(); rit != m_robots[m_robotIndex].end(); rit++) {
     GMSPolyhedron poly = mb->GetFreeBody(rit->m_bodyIndex)->GetWorldPolyhedron();
     Vector3d polycom(0,0,0);
     for(vector<Vector3d>::const_iterator  vit = poly.m_vertexList.begin(); vit != poly.m_vertexList.end(); ++vit)
@@ -508,7 +509,7 @@ Cfg::ConfigEnvironment(Environment* _env) const {
   shared_ptr<MultiBody> mb = _env->GetMultiBody(m_robotIndex);
   int index = 0;
   typedef vector<Robot>::iterator RIT;
-  for(RIT rit = m_robots.begin(); rit != m_robots.end(); rit++) {
+  for(RIT rit = m_robots[m_robotIndex].begin(); rit != m_robots[m_robotIndex].end(); rit++) {
     int posIndex = index;
     double x = 0, y = 0, z = 0, alpha = 0, beta = 0, gamma = 0;
     if(rit->m_base != Robot::FIXED) {
@@ -695,7 +696,7 @@ Cfg::GetRandomCfgImpl(Environment* _env, shared_ptr<Boundary> _bb) {
   m_v.clear();
   size_t index = 0;
   typedef vector<Robot>::iterator RIT;
-  for(RIT rit = m_robots.begin(); rit != m_robots.end(); rit++) {
+  for(RIT rit = m_robots[m_robotIndex].begin(); rit != m_robots[m_robotIndex].end(); rit++) {
     if(rit->m_base == Robot::PLANAR || rit->m_base == Robot::VOLUMETRIC) {
       Point3d p = _bb->GetRandomPoint();
       size_t posDOF = rit->m_base == Robot::VOLUMETRIC ? 3 : 2;

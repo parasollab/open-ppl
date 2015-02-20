@@ -211,7 +211,7 @@ class Cfg {
 
     enum DofType {POS, ROT, JOINT};
     static vector<vector<DofType> > m_dofTypes;
-    static vector<Robot> m_robots;
+    static vector<vector<Robot> > m_robots;
 
     /** TODO- there may still problem with (un)packing map
      */
@@ -219,7 +219,8 @@ class Cfg {
     map<string,double> m_statMap;
 
   public:
-    static const vector<Robot>& GetRobots() { return m_robots; }
+    static const vector<vector<Robot> >& GetRobots() { return m_robots; }
+    static const vector<Robot>& GetRobots(size_t _index = 0) { return m_robots[_index]; }
 
     CDInfo m_clearanceInfo;
     shared_ptr<Cfg> m_witnessCfg;

@@ -6,6 +6,7 @@
 #include "MPProblem/Geometry/MultiBody.h"
 #include "Utilities/MPUtils.h"
 #include "Graph.h"
+#include "Cfg/CfgMultiRobot.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup Environments
@@ -67,6 +68,8 @@ class Environment {
     //robot at that configuration is inside of the workspace).
     bool InBounds(const Cfg& _cfg) {return InBounds(_cfg, m_boundary);}
     bool InBounds(const Cfg& _cfg, shared_ptr<Boundary> _b);
+    // FIXME this is a work around for CfgMultiRobot class InBounds check
+    bool InBounds(const CfgMultiRobot& _cfg, shared_ptr<Boundary> _b);
 
     //access the possible range of values for the _i th DOF
     pair<double, double> GetRange(size_t _i) {return GetRange(_i, m_boundary);}

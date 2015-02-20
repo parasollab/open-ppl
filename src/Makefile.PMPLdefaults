@@ -263,6 +263,7 @@ PMPL_OBJS = \
         Utilities/MetricUtils.o \
         Utilities/IOUtils.o \
         Utilities/MPUtils.o \
+	Cfg/CfgMultiRobot.o \
 	NeighborhoodFinders/MPNNWrapper.o
 
 #ifeq (${ROBOT_DEF}, $(or PMPCfgSurface PMPSSSurfaceMult))
