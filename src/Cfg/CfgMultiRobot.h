@@ -132,30 +132,6 @@ CfgMultiRobot::GetRandomRay(double _incr, Environment* _env,  DistanceMetricPoin
   for(size_t i = 0; i < m_robotsCollect.size(); ++i) {
     this->m_robotsCollect[i].GetRandomRay(_incr, _env, _dm, _norm);
   }
-  /*
-  for(typename vector<Cfg>::iterator I = m_robotsCollect.begin(); I != m_robotsCollect.end(); ++I) {
-    *I->GetRandomRay(_incr, _env, _dm, _norm);
-    *I.m_v.clear();
-    for(size_t i = 0; i < DOF(); ++i)
-      *I.m_v.push_back(2.0*DRand() - 1.0);
-
-    _dm->ScaleCfg(_incr, (typename DistanceMetricPointer::element_type::CfgType&)*this);
-    if(_norm)
-      NormalizaOrientation();
-  }
-  */
-
-  /*
-  //randomly sample params
-  m_v.clear();
-  for(size_t i = 0; i < DOF(); ++i)
-    m_v.push_back(2.0*DRand() - 1.0);
-
-  //scale to appropriate length
-  _dm->ScaleCfg(_incr, (typename DistanceMetricPointer::element_type::CfgType&)*this);
-  if(_norm)
-    NormalizeOrientation();
-    */
 }
 
 template<template<class> class ClearanceUtility, class MPTraits>
@@ -165,10 +141,6 @@ CfgMultiRobot::GetSmoothingValue(ClearanceUtility<MPTraits>& _clearanceUtils, sh
   for(size_t i = 0; i < m_robotsCollect.size(); ++i)
     result += this->m_robotsCollect[i].GetSmoothingValue(_clearanceUtils, _bb);
   return result;
-  /* CDInfo cdInfo; */
-  /* typename MPTraits::CfgType tmp; */
-  /* _clearanceUtils.CollisionInfo(*((typename MPTraits::CfgType*)this), tmp, _bb, cdInfo); */
-  /* return cdInfo.m_minDist; */
 }
 
 #endif

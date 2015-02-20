@@ -225,30 +225,24 @@ CfgMultiRobot::GetOrientation() const {
 double
 CfgMultiRobot::Magnitude() const {
   double result = 0.0;
-  for(ConstCIter cIter= m_robotsCollect.begin(); cIter != m_robotsCollect.end(); cIter++) {
-    double mag = cIter->Magnitude();
-    result += mag * mag;
-  }
+  for(ConstCIter cIter= m_robotsCollect.begin(); cIter != m_robotsCollect.end(); cIter++)
+    result += sqr(cIter->Magnitude());
   return sqrt(result);
 }
 
 double
 CfgMultiRobot::PositionMagnitude() const {
   double result = 0.0;
-  for(ConstCIter cIter= m_robotsCollect.begin(); cIter != m_robotsCollect.end(); cIter++) {
-    double mag = cIter->PositionMagnitude();
-    result += mag * mag;
-  }
+  for(ConstCIter cIter= m_robotsCollect.begin(); cIter != m_robotsCollect.end(); cIter++)
+    result += sqr(cIter->PositionMagnitude());
   return sqrt(result);
 }
 
 double
 CfgMultiRobot::OrientationMagnitude() const {
   double result = 0.0;
-  for(ConstCIter cIter= m_robotsCollect.begin(); cIter != m_robotsCollect.end(); cIter++) {
-    double mag = cIter->OrientationMagnitude();
-    result += mag * mag;
-  }
+  for(ConstCIter cIter= m_robotsCollect.begin(); cIter != m_robotsCollect.end(); cIter++)
+    result += sqr(cIter->OrientationMagnitude());
   return sqrt(result);
 }
 
