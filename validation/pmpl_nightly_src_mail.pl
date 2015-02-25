@@ -55,6 +55,12 @@ $errcode = max($errcode,
 $errcode = max($errcode,
   &get_error_code("$outputdir/$fulldate/pmpl.LINUX_gcc.surface.debug1.parallel0.out",
     "Configuration: gcc 4.8.2 (platform=LINUX_gcc, robot=surface, debug=1, parallel=0)"));
+$errcode = max($errcode,
+  &get_error_code("$outputdir/$fulldate/pmpl.LINUX_gcc.multi.debug0.parallel0.out",
+    "Configuration: gcc 4.8.2 (platform=LINUX_gcc, robot=multi, debug=0, parallel=0)"));
+$errcode = max($errcode,
+  &get_error_code("$outputdir/$fulldate/pmpl.LINUX_gcc.multi.debug1.parallel0.out",
+    "Configuration: gcc 4.8.2 (platform=LINUX_gcc, robot=multi, debug=1, parallel=0)"));
 #$errcode = max($errcode,
 #  &get_error_code("$outputdir/$fulldate/pmpl.LINUX_gcc.reach.debug0.parallel0.out",
 #    "Configuration: gcc 4.8.2 (platform=LINUX_gcc, robot=reach, debug=0, parallel=0)"));
