@@ -16,9 +16,6 @@
 #include "Cfg.h"
 #include <vector>
 
-#include "boost/shared_ptr.hpp"
-using boost::shared_ptr;
-
 #include "Utilities/MPUtils.h"
 
 /* template<class T> */

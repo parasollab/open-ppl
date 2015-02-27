@@ -8,15 +8,12 @@
 #ifndef CFG_H_
 #define CFG_H_
 
-#ifdef _PARALLEL
-#include "views/proxy.h"
-#endif
 #include <vector>
 #include <map>
 
-#include "boost/shared_ptr.hpp"
-#include "boost/serialization/map.hpp"
-using boost::shared_ptr;
+#ifdef _PARALLEL
+#include "views/proxy.h"
+#endif
 
 #include "Vector.h"
 
@@ -226,13 +223,25 @@ class Cfg {
     shared_ptr<Cfg> m_witnessCfg;
 
 #ifdef _PARALLEL
+    //parallel connected component
+    void active(bool _a) {m_active = _a;}
+    bool active() const {return m_active;}
+    void cc(size_t _c) {m_cc = _c;}
+    size_t cc() const {return m_cc;}
+
     void define_type(stapl::typer& _t)
     {
       _t.member(m_v);
       _t.member(m_labelMap);
       _t.member(m_statMap);
       _t.member(m_robotIndex);
+      _t.member(m_active);
+      _t.member(m_cc);
     }
+
+  private:
+    bool m_active;
+    size_t m_cc;
 #endif
 }; // class Cfg
 
@@ -287,10 +296,16 @@ namespace stapl {
         bool GetLabel(string _label) const { return Accessor::const_invoke(&target_t::GetLabel, _label);}
         bool IsLabel(string _label) const { return Accessor::const_invoke(&target_t::IsLabel, _label);}
         bool SetLabel(string _label) const { return Accessor::const_invoke(&target_t::SetLabel, _label);}
-        bool GetStat(string _stat) const { return Accessor::const_invoke(&target_t::GetStat, _stat);}
+        double GetStat(string _stat) const { return Accessor::const_invoke(&target_t::GetStat, _stat);}
         bool IsStat(string _stat) const { return Accessor::const_invoke(&target_t::IsStat, _stat);}
-        bool SetStat(string _stat) const { return Accessor::const_invoke(&target_t::SetStat, _stat);}
+        void SetStat(string _stat, double _val) const { return Accessor::const_invoke(&target_t::SetStat, _stat,_val);}
+        void IncStat(string _stat, double _val) const { return Accessor::const_invoke(&target_t::IncStat, _stat,_val);}
         static int GetNumOfJoints()  { return Accessor::const_invoke(&target_t::GetNumOfJoints);}
+        void active(bool _a) { return Accessor::invoke(&target_t::active, _a);}
+        bool active() const { return Accessor::const_invoke(&target_t::active);}
+        void cc(size_t _c) { return Accessor::invoke(&target_t::cc, _c);}
+        size_t cc() const { return Accessor::const_invoke(&target_t::cc);}
+
         // static void SetNumOfJoints(int _numOfJoints)  { return Accessor::const_invoke(&target_t::SetNumOfJoints, _numOfJoints);}
     }; //struct proxy
 }

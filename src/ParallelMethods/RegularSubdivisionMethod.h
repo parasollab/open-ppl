@@ -13,7 +13,6 @@
 #include "ParallelMethods/WorkFunctions/RegionMapConnect.h"
 
 
-
 template<class MPTraits>
 class RegularSubdivisionMethod : public MPStrategyMethod<MPTraits>{
   public:
@@ -52,7 +51,7 @@ class RegularSubdivisionMethod : public MPStrategyMethod<MPTraits>{
     vector<string> m_vecStrNodeConnectionLabels;
     vector<string> m_strategiesLabels;
     string m_nf, m_ccc, m_lp;
-    int m_row,m_col,m_runs, m_k1, m_k2;
+    size_t m_row,m_col,m_runs, m_k1, m_k2;
     double m_xEpsilon, m_yEpsilon, m_zEpsilon;
     CCsConnector<MPTraits>* m_ccConnector;
 };
@@ -146,8 +145,8 @@ void RegularSubdivisionMethod<MPTraits>::Print(ostream& _os) const {
    _os << "\tregion connector type: " << m_ccc << endl;
    _os << "\tregion k: " << m_k1 << endl;
 
-   typedef vector<pair<string, int> >::iterator VIter;
-   typedef vector<string>::iterator StringIter;
+   typedef vector<pair<string, int> >::const_iterator VIter;
+   typedef vector<string>::const_iterator StringIter;
 
    _os<<"\nSamplers\n";
    for(VIter vIter=m_vecStrNodeGenLabels.begin();
@@ -180,7 +179,10 @@ void RegularSubdivisionMethod<MPTraits>::Run() {
   GraphType* rmg = this->GetMPProblem()->GetRoadmap()->GetGraph();
   BasicDecomposition* decomposer = new BasicDecomposition();
 
-  m_ccConnector = new CCsConnector<MPTraits>(this->GetMPProblem(), m_lp,m_nf);
+  //m_ccConnector = new CCsConnector<MPTraits>(this->GetMPProblem(), m_lp,m_nf);
+  //MPProblem set?
+  m_ccConnector = new CCsConnector<MPTraits>(m_nf, m_lp);
+  
 
    ///TIMER STUFF
   stapl::counter<stapl::default_timer> t0;
@@ -189,33 +191,31 @@ void RegularSubdivisionMethod<MPTraits>::Run() {
   typedef vector<pair<string, int> >::iterator I;
   typedef vector<string>::iterator J;
   typedef CCsConnector<MPTraits>* CCP;
-  typedef std::tr1::tuple<CCP,string, int> ccConnectParam;
-  typedef std::tr1::tuple<ConnectorPointer,string, int> ncConnectParam;
-  typedef array< BoundingBox > arrayBbox;
+  typedef std::tuple<CCP,string, int> ccConnectParam;
+  typedef std::tuple<ConnectorPointer,string, int> ncConnectParam;
+  typedef stapl::array< BoundingBox > arrayBbox;
   typedef array_view <arrayBbox> viewBbox;
+  
 
-  int mesh_size = m_row * m_col;
+  size_t mesh_size = m_row * m_col;
   int num_samples;
-
+  CfgType cfg;
+  
   BoundingBox* bbox = dynamic_cast<BoundingBox*>(&*env->GetBoundary());
 
   arrayBbox pArrayBbox(mesh_size, *bbox);
 
   ///MAKE A MESH GRAPH
+  typedef graph_view<RRGraph> RRGraphView;
   RRGraph regularRegion;
-  stapl::generators::mesh<RRGraph> meshGraph(regularRegion,m_row, m_col);
-  meshGraph.add_vertices();
   rmi_fence();
-  meshGraph.add_edges();
+  RRGraphView regionView(regularRegion);
+  regionView = stapl::generators::make_mesh<RRGraphView>(regionView,m_row,m_col);
   rmi_fence();
-
-  graph_view<RRGraph> regionView(regularRegion);
-
-  rmi_fence();
-
+  
   ////DECOMPOSE SPACE TO REGIONS
   if( stapl::get_location_id() == 0){
-    decomposer->DecomposeWS(env,bbox, m_row, m_col,1, pArrayBbox.begin(), m_xEpsilon,m_yEpsilon, m_zEpsilon);
+    decomposer->DecomposeWS(env,cfg.PosDOF(), m_row, m_col,1, pArrayBbox.begin(), m_xEpsilon,m_yEpsilon, m_zEpsilon);
   }
   rmi_fence();
 
@@ -223,7 +223,8 @@ void RegularSubdivisionMethod<MPTraits>::Run() {
   rmi_fence();
 
   if (this->m_debug)  t0.start();
-  if(this->m_debug) PrintValue("Region graph size " , regularRegion.size());
+  //if(this->m_debug) PrintValue("Region graph size " , regularRegion.size());
+  if(this->m_debug) PrintValue("View size " , regionView.size());
 
 
   if (m_strategiesLabels.size() != 0){
@@ -252,7 +253,7 @@ void RegularSubdivisionMethod<MPTraits>::Run() {
     for(J itr1 = m_vecStrNodeConnectionLabels.begin(); itr1 != m_vecStrNodeConnectionLabels.end(); ++itr1){
       ConnectorPointer cp = this->GetMPProblem()->GetConnector(*itr1);
       NodeConnector<MPTraits> nodeCon(this->GetMPProblem(), cp);
-      new_algorithms::for_each(regionView,nodeCon);
+      stapl::for_each(regionView,nodeCon);
     }
   }
   rmi_fence();
@@ -272,18 +273,23 @@ void RegularSubdivisionMethod<MPTraits>::Run() {
   typedef graph_view<GraphType> view_type;
   view_type rmView(*rmg);
   rmi_fence();
-  typedef static_array<cc_color_property> property_storage_type;
+  /*typedef static_array<cc_color_property> property_storage_type;
+  typedef property_storage_type::size_type  size_type;
   typedef graph_external_property_map<view_type, cc_color_property, property_storage_type> property_map_type;
 
   ///TODO: proper fix by making cc_color_property derived from cfg class
   /// and then use internal_property_map
-  property_storage_type prop_storage(2*rmg->num_vertices());
+  size_type mapSz = 2*rmg->num_vertices();
+  //property_storage_type prop_storage(2*rmg->num_vertices());
+  property_storage_type prop_storage(mapSz);
   property_map_type     map(rmView, &prop_storage);
 
-  connected_components(rmView, map);
+  connected_components(rmView, map);*/
+  connected_components(rmView);
   rmi_fence();
-
-  std::vector<pair<VID,size_t> > ccVec1 = cc_stats(rmView,map);
+  //std::vector<pair<VID,size_t> > ccVec1;
+  //std::vector<pair<VID,size_t> > ccVec1 = cc_stats(rmView,map);
+  std::vector<pair<VID,size_t> > ccVec1 = cc_stats(rmView);
   rmi_fence();
 
   //TODO : Danger, potential to overide region VIDs for fine grained approach, so we check that fine grained is not set
@@ -301,17 +307,17 @@ void RegularSubdivisionMethod<MPTraits>::Run() {
     rmi_fence();
 
     ///CONNECT REGIONS ROADMAP
-       ccConnectParam conParam1 = std::tr1::make_tuple(m_ccConnector,m_ccc,m_k1);
+       ccConnectParam conParam1 = std::make_tuple(m_ccConnector,m_ccc,m_k1);
 
-    RegionCCConnector<RRGraph, Region<BoundingBox, MPTraits>, property_map_type, MPTraits> regionCCCon(this->GetMPProblem(), &regularRegion, map, conParam1);
-    new_algorithms::for_each(regionView,regionCCCon);
+    RegionCCConnector<RRGraph, Region<BoundingBox, MPTraits>, MPTraits> regionCCCon(this->GetMPProblem(), &regularRegion, conParam1);
+    stapl::for_each(regionView,regionCCCon);
   }else if(m_ccc== "random") {
     for(J itr2 = m_regionConnectionLabels.begin(); itr2 != m_regionConnectionLabels.end(); ++itr2) {
       ConnectorPointer ncp = this->GetMPProblem()->GetConnector(*itr2);
-      ncConnectParam conParam2 = std::tr1::make_tuple(ncp,m_ccc,m_k1);
+      ncConnectParam conParam2 = std::make_tuple(ncp,m_ccc,m_k1);
 
       RegionRandomConnector<RRGraph, Region<BoundingBox, MPTraits>, MPTraits > regionRandomCon(this->GetMPProblem(), &regularRegion, conParam2);
-      new_algorithms::for_each(regionView,regionRandomCon);
+      stapl::for_each(regionView,regionRandomCon);
     }
   }else {
 
@@ -324,22 +330,6 @@ void RegularSubdivisionMethod<MPTraits>::Run() {
   ///DEBUG
   if(this->m_debug) PrintOnce("RUN::roadmap graph edges after: ", rmg->num_edges());
   rmi_fence();
-
-  map.reset();
-  connected_components(rmView, map);
-  rmi_fence();
-  std::vector<pair<VID,size_t> > ccVec2 = cc_stats(rmView,map);
-  rmi_fence();
-
-  if(this->m_debug) PrintOnce("cc count after region con: ", ccVec2.size());
-  rmi_fence();
-
-  ///WRITE REGION GRAPH :: DEBUG
-  //TODO write_graph(regionView,"rgFile.out");
-
-  rmi_fence();
-
-  //bbox->Clear();
 }
 
 template<class MPTraits>

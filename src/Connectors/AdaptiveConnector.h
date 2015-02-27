@@ -1,7 +1,5 @@
-
-#ifndef ADAPTIVECONNECTOR_H
-#define ADAPTIVECONNECTOR_H
-
+#ifndef ADAPTIVE_CONNECTOR_H
+#define ADAPTIVE_CONNECTOR_H
 
 #include "ConnectorMethod.h"
 
@@ -183,8 +181,8 @@ AdaptiveConnector<MPTraits>::Connect(RoadmapType* _rm, StatClass& _stats, ColorM
      static unsigned long int prevConnectionCollision=0;
 
 
-    double  currAttempts =   _stats.m_lpInfo.begin()->second.get<0>();
-    double  currSuccess  =   _stats.m_lpInfo.begin()->second.get<1>();
+    double  currAttempts =   get<0>(_stats.m_lpInfo.begin()->second);
+    double  currSuccess  =   get<1>(_stats.m_lpInfo.begin()->second);
     unsigned long int  currCollision = _stats.GetIsCollTotal();
 
     double reward = 0;

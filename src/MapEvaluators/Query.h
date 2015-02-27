@@ -1,14 +1,14 @@
-// A map evaluator that runs a query. Stops running when query returns a valid path.
-// If no path is found, returns to sampling again.
-
 #ifndef QUERY_H_
 #define QUERY_H_
 
 #include "MapEvaluatorMethod.h"
+
 #include "LocalPlanners/LPOutput.h"
+#include "LocalPlanners/MedialAxisLP.h"
 #include "Utilities/MetricUtils.h"
 #include "Utilities/MedialAxisUtilities.h"
-#include "LocalPlanners/MedialAxisLP.h"
+
+#include <containers/sequential/graph/algorithms/astar.h>
 
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup MapEvaluators

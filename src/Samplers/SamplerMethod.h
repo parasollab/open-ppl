@@ -6,7 +6,7 @@
 #include "MPProblem/MPBaseObject.h"
 #include "Utilities/MetricUtils.h"
 #ifdef _PARALLEL
-#include "runtime.h"
+#include "runtime.hpp"
 #endif
 
 class Environment;

@@ -33,12 +33,12 @@ class CCsConnector: public ConnectorMethod<MPTraits> {
           InputIterator1 _itr1First, InputIterator1 _itr1Last,
           InputIterator2 _itr2First, InputIterator2 _itr2Last, OutputIterator _collision);
 
-  protected:
-
     template<typename OutputIterator>
       void ConnectCC(RoadmapType* _rm, StatClass& _stats,
           vector<VID>& _cc1Vec, vector<VID>& _cc2Vec,
           OutputIterator _collision);
+
+  protected:
 
     // compute all pair distance between ccs.
     // approximated using coms of ccs

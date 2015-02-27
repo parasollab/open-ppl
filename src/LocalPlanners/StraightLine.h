@@ -8,8 +8,10 @@
 #ifndef STRAIGHTLINE_H_
 #define STRAIGHTLINE_H_
 
-#include <deque>
 #include "LocalPlannerMethod.h"
+
+#include <deque>
+
 #include "LPOutput.h"
 #include "MPProblem/IsClosedChain.h"
 

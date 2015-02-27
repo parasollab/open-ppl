@@ -9,6 +9,7 @@
 #define GRID_SAMPLER_H_
 
 #include "SamplerMethod.h"
+
 #include <algorithm>
 
 template <class MPTraits>
@@ -77,8 +78,8 @@ ParseXML(XMLNodeReader& _node) {
       citr != _node.children_end(); citr++) {
     if(citr->getName() == "Dimension") {
       size_t points = citr->numberXMLParameter("points", true, 10, 0,
-          MAXINT, "Number of grid points, excluding min and max");
-      size_t index = citr->numberXMLParameter("index", true, 0, 0, MAXINT,
+          MAX_INT, "Number of grid points, excluding min and max");
+      size_t index = citr->numberXMLParameter("index", true, 0, 0, MAX_INT,
           "Index in bounding box");
       m_numPoints[index] = points;
 

@@ -25,6 +25,9 @@ class SampleWF {
       m_problem = _problem;
 
     }
+
+    typedef void result_type;
+
     void define_type(stapl::typer& _t) {
     }
 
@@ -69,6 +72,9 @@ class ConnectWF {
       m_nodeCon = _ncm;
       m_problem = _problem;
     }
+
+    typedef void result_type;
+
     void define_type(stapl::typer& _t) {
        _t.member(m_problem);
        _t.member(m_nodeCon);
@@ -184,8 +190,8 @@ template<class MPTraits>
 void
 BasicParallelPRM<MPTraits>::Print(ostream& _os) const {
   MPStrategyMethod<MPTraits>::Print(_os);
-  typedef vector<pair<string, int> >::iterator VIter;
-  typedef vector<string>::iterator StringIter;
+  typedef vector<pair<string, int> >::const_iterator VIter;
+  typedef vector<string>::const_iterator StringIter;
   _os<<"\nSamplers\n";
   for(VIter vIter=m_vecStrNodeGenLabels.begin();
       vIter!=m_vecStrNodeGenLabels.end(); vIter++){
@@ -247,7 +253,7 @@ BasicParallelPRM<MPTraits>::Run() {
 
       t2.start();
       ConnectWF<MPTraits> connWf(connector, this->GetMPProblem());
-      stapl::map_func(connWf, stapl::native_view(g_view), stapl::repeat_view(g_view));
+      stapl::map_func(connWf, stapl::native_view(g_view), stapl::make_repeat_view(g_view));
       connect_timer = t2.stop();
       if (this->m_debug) {
           cout<<"\n processor #["<<stapl::get_location_id()<<"] NodeConnection time  = "  << connect_timer << endl;

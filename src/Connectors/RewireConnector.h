@@ -92,7 +92,7 @@ template<typename OutputIterator>
 void
 RewireConnector<MPTraits>::ConnectNeighbors(RoadmapType* _rm, StatClass& _stats,
     VID _vid, vector<pair<VID, double> >& _closest, OutputIterator _collision) {
-
+ #ifndef _PARALLEL // proper fix will be to call parallel dijkstra if there is one
   Environment* env = this->GetMPProblem()->GetEnvironment();
   LPOutput<MPTraits> lpOutput, minlpOutput;
 
@@ -168,13 +168,16 @@ RewireConnector<MPTraits>::ConnectNeighbors(RoadmapType* _rm, StatClass& _stats,
       }
     }
   }
+  #endif
 }
 
 template<class MPTraits>
 double
 RewireConnector<MPTraits>::GetShortestPath(VID _root, VID _vid, RoadmapType* _rm) {
   vector<VID> shortest;
+#ifndef _PARALLEL
   stapl::sequential::find_path_dijkstra(*(_rm->GetGraph()), _root, _vid, shortest, GraphType::edge_property::MaxWeight());
+#endif
   double totalWeight = 0;
   if(shortest.size() > 0) {
     for(size_t i = 0; i < shortest.size() - 1; i++) {

@@ -38,6 +38,7 @@ class CCExpansion: public ConnectorMethod<MPTraits> {
     /* Typedefs */
     ///////////////////////////////
     typedef typename MPTraits::CfgType CfgType;
+    typedef typename MPTraits::CfgRef CfgRef;
     typedef typename MPTraits::MPProblemType MPProblemType;
     typedef typename MPProblemType::VID VID;
     typedef typename MPProblemType::DistanceMetricPointer DistanceMetricPointer;
@@ -607,7 +608,7 @@ CCExpansion<MPTraits>::FindDifficultNodes(RoadmapType* _rm, StatClass& _stats, v
   typedef typename vector<pair<VID,double> >::iterator PIDIT;
   PIDIT it2 = nodeWeights.begin();
   for(VIDIT it = _cc1.begin(); it != _cc1.end(); ++it){
-    CfgType& cfg = _rm->GetGraph()->GetVertex(*it);
+    CfgRef cfg = _rm->GetGraph()->GetVertex(*it);
     if(!cfg.IsStat("succConnectionAttempts") || !cfg.IsStat("totalConnectionAttempts")){
       *it2++ = pair<VID,double>(*it,0.0); // Node has never had an attempted connections
     }

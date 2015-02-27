@@ -1,9 +1,9 @@
+#include "MetricUtils.h"
+
 #include <iostream>
 #include <sys/time.h>
 #include <sys/resource.h>
 #include <unistd.h>
-#include "GraphAlgo.h"
-#include "MetricUtils.h"
 
 struct rusage buf;
 /////////////////////////////////////////////////////////////////////
@@ -102,7 +102,7 @@ StatClass::IncCfgIsColl(const string& _callName) {
 //----------------------------------------
 int
 StatClass::IncLPConnections(string _lpName, int _incr) {
-  return (m_lpInfo[_lpName].get<1>() += _incr);
+  return get<1>(m_lpInfo[_lpName]) += _incr;
 }
 
 //----------------------------------------
@@ -111,7 +111,7 @@ StatClass::IncLPConnections(string _lpName, int _incr) {
 //----------------------------------------
 int
 StatClass::IncLPAttempts(string _lpName, int _incr) {
-  return (m_lpInfo[_lpName].get<0>() += _incr);
+  return get<0>(m_lpInfo[_lpName]) += _incr;
 }
 
 //----------------------------------------
@@ -121,16 +121,16 @@ StatClass::IncLPAttempts(string _lpName, int _incr) {
 //----------------------------------------
 int
 StatClass::IncLPCollDetCalls(string _lpName, int _incr) {
-  return (m_lpInfo[_lpName].get<2>() += _incr);
+  return get<2>(m_lpInfo[_lpName]) += _incr;
 }
 
 void
 StatClass::PrintFeatures(ostream& _os) {
   unsigned long int connectionsAttempted = 0, connectionsMade = 0;
-  std::map<std::string, boost::tuple<unsigned long int,unsigned long int, unsigned long int> >::iterator sumIter;
-  for (sumIter=m_lpInfo.begin();sumIter!=m_lpInfo.end();sumIter++) {
-    connectionsAttempted += sumIter->second.get<0>();
-    connectionsMade += sumIter->second.get<1>();
+  std::map<std::string, tuple<unsigned long int,unsigned long int, unsigned long int> >::iterator sumIter;
+  for(sumIter=m_lpInfo.begin();sumIter!=m_lpInfo.end();sumIter++) {
+    connectionsAttempted += get<0>(sumIter->second);
+    connectionsMade += get<1>(sumIter->second);
   }
 
   _os << "General features:" << endl;

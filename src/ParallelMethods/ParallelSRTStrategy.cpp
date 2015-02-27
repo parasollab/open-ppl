@@ -137,7 +137,7 @@
       // RoadmapGraph
       RoadmapGraph<CfgType,WeightType> * rmg = region->GetRoadmap()->m_pRoadmap;
       NonDecomposition<CfgType>* decomposer = new NonDecomposition<CfgType>();
-      boost::shared_ptr<BoundingBox> bbox = pEnv->GetBoundingBox();
+      shared_ptr<BoundingBox> bbox = pEnv->GetBoundingBox();
       rg = region->GetSRTRegionGraph();
       int mesh_size = stapl::get_num_locations();
 cout << "testrun3" << endl;
@@ -223,7 +223,7 @@ cout << "testrun4" << endl;
 
 	  RegionGraph<SRTInfo,WeightType>* temp_rg = region->GetSRTRegionGraph();
 	  RegionGraph<SRTInfo,WeightType>::vertex_iterator vi_1, vi_2;
-	  boost::shared_ptr<BoundingBox> bbox = pEnv->GetBoundingBox();
+	  shared_ptr<BoundingBox> bbox = pEnv->GetBoundingBox();
           //BoundingBox bbx = bbox;
 
 

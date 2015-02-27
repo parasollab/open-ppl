@@ -10,12 +10,12 @@
 
 #ifdef _PARALLEL
 #include <containers/graph/dynamic_graph.hpp>
-#include "graph/view/graph_view_property_adaptor.h"
+//#include "graph/view/graph_view_property_adaptor.h"
+//#include <containers/graph/view/graph_view_property_adaptor.hpp>
 #else
-#include "Graph.h"
+#include "containers/sequential/graph/graph.h"
+#include <containers/sequential/graph/vertex_iterator_adaptor.h>
 #endif
-#include "GraphAlgo.h"
-#include "graph/vertex_iterator_adaptor.h"
 
 #include "RoadmapVCS.h"
 
@@ -58,11 +58,11 @@ class RoadmapGraph : public
     typedef typename GRAPH::vertex_property& VP;
     typedef stapl::sequential::vdata_iterator<VI> VPI;
     typedef stapl::sequential::const_vdata_iterator<VI> CVPI;
+    typedef stapl::sequential::vector_property_map<GRAPH, size_t> ColorMap;
 #else
     typedef typename GRAPH::vertex_iterator CVI;
     typedef typename GRAPH::vertex_property VP;
 #endif
-    typedef stapl::sequential::vector_property_map<GRAPH, size_t> ColorMap;
     typedef RoadmapChangeEvent<VERTEX, WEIGHT> ChangeEvent;
     typedef RoadmapVCS<VERTEX, WEIGHT> RoadmapVCSType;
 
@@ -116,7 +116,9 @@ class RoadmapGraph : public
     //////////////////////////////////
     // CC Operations
     //////////////////////////////////
+#ifndef _PARALLEL
     size_t GetNumCCs();
+#endif
 
     ///Temporarily wrapper for some graph methods
     ///Until full migration and change of names in STAPL is completed
@@ -264,11 +266,13 @@ RoadmapGraph<VERTEX,WEIGHT>::IsEdge(VID _v1, VID _v2) {
 #endif
 }
 
+#ifndef _PARALLEL
 template<class VERTEX, class WEIGHT>
 size_t
 RoadmapGraph<VERTEX, WEIGHT>::GetNumCCs() {
   ColorMap c;
   return get_cc_count(*this, c);
 }
+#endif
 
 #endif

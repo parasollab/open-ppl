@@ -1,13 +1,10 @@
 #include "Environment.h"
 
-#include "boost/pointer_cast.hpp"
-
-#include "GraphAlgo.h"
-
-#include "MPProblem/BoundingBox.h"
-#include "MPProblem/BoundingSphere.h"
+#include <containers/sequential/graph/algorithms/connected_components.h>
 
 #include "Cfg/Cfg.h"
+#include "MPProblem/BoundingBox.h"
+#include "MPProblem/BoundingSphere.h"
 
 #define ENV_RES_DEFAULT                    0.05
 
@@ -365,12 +362,12 @@ Environment::SubBuildRobotStrucutre(size_t _index) {
       shared_ptr<Body> forward = body->GetForwardConnection(j).GetNextBody();
       if (forward->IsFixedBody()) {
         //Quick hack to avoid programming ability to determine subclass
-        shared_ptr<FixedBody> castFixedBody = boost::dynamic_pointer_cast<FixedBody>(forward);
+        shared_ptr<FixedBody> castFixedBody = dynamic_pointer_cast<FixedBody>(forward);
         int nextIndex = robot->GetFixedBodyIndex(castFixedBody);
         m_robotGraph.add_edge(i, nextIndex);
       }
       else {
-        shared_ptr<FreeBody> castFreeBody = boost::dynamic_pointer_cast<FreeBody>(forward);
+        shared_ptr<FreeBody> castFreeBody = dynamic_pointer_cast<FreeBody>(forward);
         int nextIndex = robot->GetFreeBodyIndex(castFreeBody);
         m_robotGraph.add_edge(i, nextIndex);
       }

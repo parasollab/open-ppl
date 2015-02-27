@@ -35,11 +35,7 @@ class BoundingSphere : public Boundary {
   public:
     void define_type(stapl::typer &_t)
     {
-      _t.member(m_jointLimits);
-      _t.member(m_boundingSphere);
-      _t.member(m_posDOFs);
-      _t.member(m_DOFs);
-      _t.member(m_parType);
+      _t.member(m_radius);
     }
 #endif
 };
@@ -54,19 +50,12 @@ namespace stapl {
         typedef BoundingSphere target_t;
 
       public:
-        //enum parameter_type{TRANSLATIONAL,REVOLUTE,PRISMATIC};
         typedef target_t::parameter_type  parameter_type;
         explicit proxy(Accessor const& acc) : Accessor(acc) { }
         operator target_t() const { return Accessor::read(); }
         proxy const& operator=(proxy const& rhs) { Accessor::write(rhs); return *this; }
         proxy const& operator=(target_t const& rhs) { Accessor::write(rhs); return *this;}
         Point3d GetRandomPoint() const { return Accessor::const_invoke(&target_t::GetRandomPoint);}
-        parameter_type GetType(int _par) const { return Accessor::const_invoke(&target_t::GetType, _par);}
-    };
-
-  template<>
-    struct rmi_call_traits<Boundary> {
-      typedef callable_types_list<BoundingBox, BoundingSphere> polymorphic_callable;
     };
 }
 #endif

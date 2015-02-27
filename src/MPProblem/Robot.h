@@ -3,9 +3,7 @@
 
 #include <vector>
 #include <string>
-#include "boost/shared_ptr.hpp"
-using boost::shared_ptr;
-
+#include <memory>
 using namespace std;
 
 class Connection;
@@ -40,9 +38,9 @@ struct Robot {
     {
       _t.member(m_base);
       _t.member(m_baseMovement);
-      _t.member(m_joints);
+      //_t.member(m_joints);
       _t.member(m_bodyIndex);
-      _t.member(m_body);
+      //_t.member(m_body);
     }
 #endif
 };

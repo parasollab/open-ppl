@@ -1,12 +1,13 @@
 #ifndef ENVIRONMENT_H_
 #define ENVIRONMENT_H_
 
+#include "Cfg/CfgMultiRobot.h"
 #include "MPProblem/Boundary.h"
 #include "MPProblem/Robot.h"
 #include "MPProblem/Geometry/MultiBody.h"
 #include "Utilities/MPUtils.h"
-#include "Graph.h"
-#include "Cfg/CfgMultiRobot.h"
+
+#include <stapl/containers/sequential/graph/graph.h>
 
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup Environments

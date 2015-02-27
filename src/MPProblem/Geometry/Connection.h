@@ -10,9 +10,6 @@
 #ifndef Connection_h
 #define Connection_h
 
-#include <boost/shared_ptr.hpp>
-using boost::shared_ptr;
-
 #include <Transformation.h>
 using namespace mathtool;
 

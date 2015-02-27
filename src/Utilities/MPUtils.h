@@ -1,20 +1,19 @@
 #ifndef MPUTILS_H_
 #define MPUTILS_H_
 
+#include <functional>
+#include <iostream>
 #include <map>
+#include <memory>
 #include <string>
+using std::shared_ptr;
 
-#include <boost/function.hpp>
-#include "boost/shared_ptr.hpp"
-#include "boost/mpl/list.hpp"
-#include "boost/mpl/sort.hpp"
-#include "boost/type_traits/is_base_of.hpp"
-#include "boost/mpl/begin.hpp"
-#include "boost/mpl/end.hpp"
-#include "boost/mpl/next_prior.hpp"
-#include "GraphAlgo.h"
+#ifndef _PARALLEL
+#include <containers/sequential/graph/algorithms/connected_components.h>
+#endif
 
-using boost::shared_ptr;
+#include <boost/mpl/list.hpp>
+#include <boost/mpl/next_prior.hpp>
 
 #include "Vector.h"
 using namespace mathtool;
@@ -214,15 +213,15 @@ struct ComposeNegate {
 
 template<typename MPTraits, typename Method>
 struct MethodFactory {
-  boost::shared_ptr<Method> operator()(typename MPTraits::MPProblemType* _problem, XMLNodeReader& _node) const {
-    return boost::shared_ptr<Method>(new Method(_problem, _node));
+  shared_ptr<Method> operator()(typename MPTraits::MPProblemType* _problem, XMLNodeReader& _node) const {
+    return shared_ptr<Method>(new Method(_problem, _node));
   }
 };
 
 template<typename MPTraits, typename Method>
 class MethodSet {
   public:
-    typedef boost::shared_ptr<Method> MethodPointer;
+    typedef shared_ptr<Method> MethodPointer;
     typedef typename map<string, MethodPointer>::iterator MIT;
     typedef typename map<string, MethodPointer>::const_iterator CMIT;
 
@@ -305,7 +304,7 @@ class MethodSet {
     MIT End() { return m_elements.end(); }
 
   protected:
-    typedef boost::function<MethodPointer(typename MPTraits::MPProblemType*, XMLNodeReader&)> FactoryType;
+    typedef function<MethodPointer(typename MPTraits::MPProblemType*, XMLNodeReader&)> FactoryType;
 
     template <typename Last>
       void AddToUniverse(Last, Last){}
@@ -383,6 +382,7 @@ GetCentroid(RDMP<CFG, WEIGHT>* _graph, vector<typename RDMP<CFG, WEIGHT>::VID>& 
   return center;
 };
 
+#ifndef _PARALLEL
 template<template<class CFG, class WEIGHT> class RDMP, class CFG, class WEIGHT>
 void
 ComputeCCCentroidGraph(RDMP<CFG, WEIGHT>* _graph, RDMP<CFG, WEIGHT>* _centroidGraph) {
@@ -399,8 +399,9 @@ ComputeCCCentroidGraph(RDMP<CFG, WEIGHT>* _graph, RDMP<CFG, WEIGHT>* _centroidGr
     centroid.SetStat("ccVID", allCCs[i].second);
     _centroidGraph->AddVertex(centroid);
   }
-};
 
+};
+#endif
 ///////////////////////////////////////////////////////////////////////////////
 // Geometry Utils
 ///////////////////////////////////////////////////////////////////////////////

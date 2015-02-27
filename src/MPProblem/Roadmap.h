@@ -12,7 +12,9 @@
 #include "Environment.h"
 
 #ifdef _PARALLEL
-#include <stapl/containers/graph/algorithms/graph_io.hpp>
+#include <containers/graph/algorithms/graph_io.hpp>
+#else
+#include <containers/sequential/graph/algorithms/graph_input_output.h>
 #endif
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -113,7 +115,13 @@ Roadmap<MPTraits>::Write(ostream& _os, Environment* _env){
 #ifndef _PARALLEL
   stapl::sequential::write_graph(*m_graph, _os);         // writes verts & adj lists
 #else
-  stapl::write_graph(*m_graph, _os);
+  ///Below is the supposedly new interface in STAPL, need to revisit with STAPL team
+  //void write_PMPL_graph(GraphVw& g, std::string filename = "")
+    cerr << "ERROR::No map is written to file"<< endl;
+    cerr << "Reference this error on line "<< __LINE__ << " of file " << __FILE__ << endl;
+    exit(-1);
+  //stapl::(*m_graph,_os)
+  //stapl::write_graph(*m_graph, _os);
 #endif
 }
 

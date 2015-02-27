@@ -117,6 +117,8 @@ struct SetRegionCC{
 
   typedef typename MPTraits::MPProblemType MPProblemType;
   typedef typename MPProblemType::VID VID;
+  
+  typedef void result_type;
 
   template <typename RGView, typename CCView>
   void operator()(RGView _v1, CCView _v2) {
@@ -135,6 +137,8 @@ struct SetRegionCCVIDS{
   typedef typename MPTraits::MPProblemType MPProblemType;
   typedef typename MPProblemType::VID VID;
 
+  typedef void result_type;
+  
   template <typename RGView, typename CCView>
   void operator()(RGView _v1, CCView _v2) {
      std::vector<VID> ccVec;
@@ -146,7 +150,7 @@ struct SetRegionCCVIDS{
  }
 };
 
-template<typename RGType, typename RType, typename CMap, class MPTraits>
+template<typename RGType, typename RType, class MPTraits>
 class RegionCCConnector
 {
   private:
@@ -155,20 +159,21 @@ class RegionCCConnector
   typedef typename MPProblemType::VID VID;
   typedef typename MPProblemType::GraphType GraphType;
   typedef CCsConnector<MPTraits>* NCP;
-  typedef std::tr1::tuple<NCP,string, int> ConnectTuple;
+  typedef std::tuple<NCP,string, int> ConnectTuple;
 
   MPProblemType* m_problem;
   RGType* m_g;
-  CMap m_cmap;
   ConnectTuple m_ct;
 
   public:
 
-  RegionCCConnector(MPProblemType* _problem, RGType* _g,CMap _cmap, ConnectTuple _ct) :m_problem(_problem),m_g(_g), m_cmap(_cmap){
+  RegionCCConnector(MPProblemType* _problem, RGType* _g, ConnectTuple _ct) :m_problem(_problem),m_g(_g){
     ///Tuple needs explicit assignment? //copy failed
     m_ct = _ct;
   }
 
+  typedef void result_type;
+  
   void define_type(stapl::typer &_t)
   {
   }
@@ -178,9 +183,9 @@ class RegionCCConnector
   {
     /// CONNECTOR PARAMETERS
 
-    NCP ncp = std::tr1::get<0>(m_ct);             /// connection method pointer
-    string connectType = std::tr1::get<1>(m_ct); ///random,closest or largest
-    int  k = std::tr1::get<2>(m_ct);    ////k ccs or vids to attempt from each region
+    NCP ncp = std::get<0>(m_ct);             /// connection method pointer
+    string connectType = std::get<1>(m_ct); ///random,closest or largest
+    int  k = std::get<2>(m_ct);    ////k ccs or vids to attempt from each region
 
     typedef graph_view<GraphType>  view_type;
     view_type rmView(*(m_problem->GetRoadmap()->GetGraph()));
@@ -197,11 +202,11 @@ class RegionCCConnector
       sCand.clear();
       static_array<std::vector<VID> > sArrayCand(get_num_locations());
       array_view<static_array<std::vector<VID> > > scandView(sArrayCand);
-      cc_stats(rmView, m_cmap,(*sIT).first,scandView);
+      cc_stats(rmView,(*sIT).first,scandView);
       sCand = map_reduce(locVec<MPTraits>(),mergeVec<MPTraits>(), scandView);
 
 	 //TARGET REGIONS
-      for(typename regionView::adj_edge_iterator ei = edges.begin(); ei != edges.end(); ++ei){
+      for(typename regionView::adj_edge_iterator ei = _view.begin(); ei != _view.end(); ++ei){
         RType tRegion = (*(m_g->find_vertex((*ei).target()))).property();
         vector<pair<VID, size_t> > tCCs = tRegion.GetCCs();
         vector<VID> tCand;
@@ -214,14 +219,14 @@ class RegionCCConnector
           ///@todo 1: replace rmView with native_view and use sequential ccstats
           ///      2: call outside workfunction
           ///      3: implement and use inverse property map
-	  cc_stats(rmView, m_cmap,(*tIT).first,tcandView);
+	  cc_stats(rmView,(*tIT).first,tcandView);
 	  tCand = map_reduce(locVec<MPTraits>(),mergeVec<MPTraits>(), tcandView);
 
           //NOW CONNECT
           ///@todo : Check whether to connect small or big CCs
 
-          vector<CfgType> col;
-	  ncp->ConnectBigCC(m_problem->GetRoadmap(),*(m_problem->GetStatClass()),sCand, tCand, back_inserter(col));
+      vector<CfgType> col;
+	  ncp->ConnectCC(m_problem->GetRoadmap(),*(m_problem->GetStatClass()),sCand, tCand, back_inserter(col));
 
         }
     }
@@ -233,7 +238,7 @@ class RegionCCConnector
 
 
 template<typename RGType, typename RType, class MPTraits>
-class RegionRandomConnector
+class RegionRandomConnector 
 {
   private:
   typedef typename MPTraits::CfgType CfgType;
@@ -241,7 +246,7 @@ class RegionRandomConnector
   typedef typename MPProblemType::VID VID;
   typedef typename MPProblemType::GraphType GraphType;
   typedef typename MPProblemType::ConnectorPointer NCP;
-  typedef std::tr1::tuple<NCP,string, int> ConnectTuple;
+  typedef std::tuple<NCP,string, int> ConnectTuple;
 
   MPProblemType* m_problem;
   RGType* m_g;
@@ -253,6 +258,7 @@ class RegionRandomConnector
     m_ct = _ct;
   }
 
+  typedef void result_type;
 
   void define_type(stapl::typer &_t)
   {
@@ -262,12 +268,12 @@ class RegionRandomConnector
   void operator()(regionView _view) const
   {
     /// CONNECTOR PARAMETERS
-    NCP ncp = std::tr1::get<0>(m_ct);             /// connection method pointer
-    string connectType = std::tr1::get<1>(m_ct); ///random,closest or largest
-    int  k = std::tr1::get<2>(m_ct);    ////k ccs or vids to attempt from each region
+    NCP ncp = std::get<0>(m_ct);             /// connection method pointer
+    string connectType = std::get<1>(m_ct); ///random,closest or largest
+    int  k = std::get<2>(m_ct);    ////k ccs or vids to attempt from each region
 
     typedef typename regionView::adj_edges_type ADJV;
-    ADJV  edges = _view.edges();
+    //ADJV  edges = _view.edges();
 
      //Algo: Randomly pick vid(cfg) in source region and attempt connection with k-closest vid (cfg) in target region
       //SOURCE REGION
@@ -278,9 +284,10 @@ class RegionRandomConnector
       for(typename vector<VID>::iterator sVIT = sVids.begin(); sVIT != sVids.begin() + std::min(static_cast<int>(sVids.size()), k); ++sVIT) {
         sCand.push_back(*sVIT);
       }
-
+      
       //TARGET REGION
-      for(typename regionView::adj_edge_iterator ei = edges.begin(); ei != edges.end(); ++ei){
+      //for(typename regionView::adj_edge_iterator ei = edges.begin(); ei != edges.end(); ++ei){
+      for(typename regionView::adj_edge_iterator ei = _view.begin(); ei != _view.end(); ++ei){
         RType tRegion = (*(m_g->find_vertex((*ei).target()))).property();
        // vector<VID> tCand;
         vector<VID> tCand = tRegion.RegionVIDs();

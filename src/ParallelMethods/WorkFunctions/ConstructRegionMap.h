@@ -28,6 +28,7 @@ private:
 
 public:
   ConstructRoadmap(MPStrategyPointer _mpsm ): m_strategyMethod(_mpsm){ }
+  typedef void result_type;
   void define_type(stapl::typer& _t){
   }
   ConstructRoadmap(const ConstructRoadmap& _wf, std::size_t offset)  {}
@@ -45,8 +46,8 @@ public:
     vector<VID> dummy;
     Region<BoundingBox, MPTraits> bbInfo(boundary,dummy);
     _view.property() = bbInfo;
-    boundary->Print(cout);
-    cout << "\n\n" << endl;
+    //boundary->Print(cout);
+    //cout << "\n\n" << endl;
     m_strategyMethod->SetBoundary(boundary);
     //m_strategyMethod->SetBoundaryIndex(index);
     //add support to set num nodes in MPStrategy method
@@ -72,7 +73,7 @@ private:
   int m_attempts;
 
 public:
-
+  
   NodeGenerator(MPProblemType* _problem, NGM _ngm, int _num):
     m_attempts(_num){
     m_problem = _problem;
@@ -80,7 +81,9 @@ public:
    // m_vcm = _vcm;
 
   }
-
+  
+  typedef void result_type;
+  
   void define_type(stapl::typer& _t) {
   }
 
@@ -106,7 +109,7 @@ public:
       CfgType tmp = *vit;
       ///Add Valid Node Only
       //TODO: Pass validity checker label as string
-      if(m_problem->GetValidityChecker("cd1")->IsValid(tmp, &callee)) {
+      if(m_problem->GetValidityChecker("cd1")->IsValid(tmp, callee)) {
 
         VID vid = m_problem->GetRoadmap()->GetGraph()->add_vertex(tmp);
         regionVIDs.push_back(vid);
@@ -135,7 +138,9 @@ public:
     m_problem = _problem;
     m_ncp = _ncp;
   }
-
+  
+  typedef void result_type;
+  
   void define_type(stapl::typer& _t) {
   }
 

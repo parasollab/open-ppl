@@ -73,7 +73,7 @@ LazyQuery<MPTraits>::ParseXML(XMLNodeReader& _node) {
   m_d = _node.numberXMLParameter("d", false, 0.0, 0.0, MAX_DBL, "Gaussian d value for node enhancement");
   for(XMLNodeReader::childiterator citr = _node.children_begin(); citr != _node.children_end(); citr++) {
     if(citr->getName() == "Resolution") {
-      m_resolutions.push_back(citr->numberXMLParameter("mult", true, 1, 1, MAXINT, "Multiple of finest resolution checked"));
+      m_resolutions.push_back(citr->numberXMLParameter("mult", true, 1, 1, MAX_INT, "Multiple of finest resolution checked"));
       citr->warnUnrequestedAttributes();
     }
   }

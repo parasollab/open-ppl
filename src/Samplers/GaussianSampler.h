@@ -1,4 +1,4 @@
-#ifndef GAUSSIAN_SAMPLERi_H_
+#ifndef GAUSSIAN_SAMPLER_H_
 #define GAUSSIAN_SAMPLER_H_
 
 #include "SamplerMethod.h"

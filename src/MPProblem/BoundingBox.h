@@ -57,7 +57,6 @@ namespace stapl {
         proxy const& operator=(proxy const& rhs) { Accessor::write(rhs); return *this; }
         proxy const& operator=(target_t const& rhs) { Accessor::write(rhs); return *this;}
         Point3d GetRandomPoint() const { return Accessor::const_invoke(&target_t::GetRandomPoint);}
-        parameter_type GetType(int _par) const { return Accessor::const_invoke(&target_t::GetType, _par);}
     };
 }
 #endif

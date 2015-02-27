@@ -6,11 +6,10 @@
 #include <string>
 #include <iostream>
 #include <iomanip>
-#include "boost/tuple/tuple.hpp"
-#include "GraphAlgo.h"
-#include "MPProblem/Environment.h"
-
+#include <tuple>
 using namespace std;
+
+#include "MPProblem/Environment.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup MetricUtils
@@ -138,12 +137,13 @@ class StatClass {
     template<class GraphType>
       void DisplayCCStats(ostream& _os, GraphType&);
 
-    //m_lpInfo represents information about the Local Planners, referenced by name
-    //  m_lpInfo.first is the name of the Local Planner
-    //  m_lpInfo.second.get<0>() is the # of LP attempts
-    //  m_lpInfo.second.get<1>() is the # of LP connections (successes)
-    //  m_lpInfo.second.get<2>() is the # of LP collision detection calls
-    map<string, boost::tuple<unsigned long int, unsigned long int, unsigned long int> > m_lpInfo;
+    // m_lpInfo represents information about the Local Planners, referenced by
+    // name
+    // m_lpInfo.first is the name of the Local Planner
+    // m_lpInfo.second.get<0>() is the # of LP attempts
+    // m_lpInfo.second.get<1>() is the # of LP connections (successes)
+    // m_lpInfo.second.get<2>() is the # of LP collision detection calls
+    map<string, tuple<unsigned long int, unsigned long int, unsigned long int> > m_lpInfo;
     map<string, unsigned long int> m_collDetCountByName;
 
     map<string, ClockClass> m_clockMap;
@@ -243,12 +243,12 @@ StatClass::PrintAllStats(ostream& _os, RoadmapType* _rmap, int _numCCs) {
     <<setw(15) << "Connections"
     <<setw(15) << "Coll Det Calls" << endl;
 
-  std::map<string, boost::tuple<unsigned long int, unsigned long int, unsigned long int> >::const_iterator lpIter;
+  std::map<string, tuple<unsigned long int, unsigned long int, unsigned long int> >::const_iterator lpIter;
   for(lpIter = m_lpInfo.begin(); lpIter != m_lpInfo.end(); ++lpIter) {
     _os << setw(20) << lpIter->first;
-    _os << setw(15) << lpIter->second.get<0>();
-    _os << setw(15) << lpIter->second.get<1>();
-    _os << setw(15) << lpIter->second.get<2>() << endl;
+    _os << setw(15) << get<0>(lpIter->second);
+    _os << setw(15) << get<1>(lpIter->second);
+    _os << setw(15) << get<2>(lpIter->second) << endl;
   }
 
   //output for graph operation statistics.
@@ -400,10 +400,10 @@ PrintDataLine(ostream& _myostream, RoadmapType* _rmap, int _showColumnHeaders) {
   int sumAtt=0;
   int sumCD =0;
 
-  std::map<string, boost::tuple<unsigned long int, unsigned long int, unsigned long int> >::const_iterator iter1;
+  map<string, tuple<unsigned long int, unsigned long int, unsigned long int> >::const_iterator iter1;
   for(iter1 = m_lpInfo.begin(); iter1 != m_lpInfo.end(); ++iter1) {
-    sumAtt += iter1->second.get<0>();
-    sumCD += iter1->second.get<2>();
+    sumAtt += get<0>(iter1->second);
+    sumCD += get<2>(iter1->second);
   }
 
   _myostream << sumAtt << " ";
@@ -699,7 +699,7 @@ StatClass::ComputeInterCCFeatures(MPProblemType* _problem, RoadmapType* _rdmp, s
 template<class GraphType>
 void
 StatClass::DisplayCCStats(ostream& _os, GraphType& _g)  {
-
+  #ifndef _PARALLEL
   typedef typename GraphType::vertex_descriptor VID;
   stapl::sequential::vector_property_map<GraphType, size_t> cMap;
 
@@ -712,6 +712,9 @@ StatClass::DisplayCCStats(ostream& _os, GraphType& _g)  {
     _os << "\nCC[" << ccnum++ << "]: " << vi->first ;
     _os << " (vid=" << size_t(vi->second) << ")";
   }
+  #else
+    _os << "WARNING: CCs not computed, called sequential implementation of CC stats \n" ;
+  #endif
 }
 
 #endif

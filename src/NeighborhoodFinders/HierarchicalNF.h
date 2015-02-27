@@ -2,7 +2,8 @@
 #define HIERARCHICALNF_H_
 
 #include "NeighborhoodFinderMethod.h"
-//#include "graph/algorithms/count_hop_pairs.h"
+
+#include <containers/sequential/graph/algorithms/connected_components.h>
 
 template<class MPTraits>
 class HierarchicalNF : public NeighborhoodFinderMethod<MPTraits> {
