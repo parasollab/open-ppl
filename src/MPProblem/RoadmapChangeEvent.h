@@ -13,9 +13,9 @@
 #ifndef RoadmapChangeEvent_h
 #define RoadmapChangeEvent_h
 
-#include <vector>
 #include <iostream>
-
+#include <memory>
+#include <vector>
 using namespace std;
 
 template<typename CFG, typename WEIGHT>

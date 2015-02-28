@@ -15,6 +15,7 @@
 #else
 #include "containers/sequential/graph/graph.h"
 #include <containers/sequential/graph/vertex_iterator_adaptor.h>
+#include <containers/sequential/graph/algorithms/connected_components.h>
 #endif
 
 #include "RoadmapVCS.h"
