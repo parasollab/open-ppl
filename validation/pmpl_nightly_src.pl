@@ -1,6 +1,7 @@
 #!/usr/bin/perl
 
 use Getopt::Std;
+use Env::Modulecmd;
 getopts('c:r:d:p:');
 
 #
@@ -13,8 +14,8 @@ $workdir  = "/scratch/zenigata/jdenny/pmpl_nightly";
 #
 # find out which platform is used
 #
-if (!defined $opt_c || !(($opt_c eq "LINUX_gcc") || ($opt_c eq "LINUX_32_gcc"))) {
-  die "must define compilation platform (-c LINUX_gcc | LINUX_32_gcc)";
+if (!defined $opt_c || !($opt_c eq "LINUX_gcc")) {
+  die "must define compilation platform (-c LINUX_gcc)";
 }
 if (!defined $opt_r ||
   !(($opt_r eq "cfg") ||
@@ -40,14 +41,9 @@ $PARALLEL = $opt_p;
 #
 # setup shell variables
 #
-if ($opt_c eq "LINUX_gcc" && $opt_p eq "0") {
-  $GCC_PATH = "/usr/lib64/ccache";
-  $MYENV    = "/usr/local/bin:$GCC_PATH:/usr/bin:/usr/X11R6/bin";
+if ($PARALLEL eq "1") {
+  Env::Modulecmd::load(qw(stapl_dev/gcc));
 }
-else {
-  die "no suitable combination found";
-}
-$ENV{'PATH'} = $MYENV.":".$ENV{'PATH'};
 
 #
 # figure out time and date
@@ -69,25 +65,21 @@ $OUTPUT = "platform = $PLATFORM / ROBOT_DEF = $ROBOT / debug = $DEBUG / parallel
 $OUTPUT = $OUTPUT.`rm -rf $pmpldir 2>&1`;
 $OUTPUT = $OUTPUT.`svn --quiet checkout svn+ssh://parasol-svn.cs.tamu.edu/research/parasol-svn/svnrepository/pmpl/trunk $pmpldir 2>&1`;
 chdir "$workdir/$pmpldir/src";
-$ENV{'PWD'} = "$workdir/$pmpldir/src";
 $OUTPUT = $OUTPUT."Started at ".`date 2>&1`;
 $OUTPUT = $OUTPUT."g++ path: ".`which g++ 2>&1`;
 $OUTPUT = $OUTPUT."g++ details:\n".`g++ -c -v 2>&1`;
-$OUTPUT = $OUTPUT.`gmake platform=$PLATFORM ROBOT_DEF=$ROBOT debug=$DEBUG parallel=$PARALLEL reallyreallyclean 2>&1`;
-$OUTPUT = $OUTPUT.`gmake platform=$PLATFORM ROBOT_DEF=$ROBOT debug=$DEBUG parallel=$PARALLEL pmpl -j4 2>&1`;
+$OUTPUT = $OUTPUT.`make platform=$PLATFORM ROBOT_DEF=$ROBOT debug=$DEBUG parallel=$PARALLEL reallyreallyclean 2>&1`;
+$OUTPUT = $OUTPUT.`make platform=$PLATFORM ROBOT_DEF=$ROBOT debug=$DEBUG parallel=$PARALLEL pmpl -j4 2>&1`;
 if (-e "$workdir/$pmpldir/src/pmpl") {
   $OUTPUT = $OUTPUT."=====\nPassed: pmpl compilation\n=====\n";
 } else {
   $OUTPUT = $OUTPUT."=====\nFailed: pmpl compilation\n=====\n";
 }
-#$OUTPUT = $OUTPUT.`gmake test STAPL_BUILD_PARALLELISM=3 platform=$PLATFORM stl=$STL 2>&1`;
 $OUTPUT = $OUTPUT."Done at ".`date 2>&1`;
 
 #
 # output log to /tmp
 #
-$ENV{'PATH'} = '/usr/local/bin/:/usr/X11R6/bin/:'.$ENV{'PATH'};
-$ENV{'DISPLAY'} = '';
 
 if (!-e "$outputdir") {
   `mkdir $outputdir`;
