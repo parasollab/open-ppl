@@ -1,23 +1,23 @@
-/////////////////////////////////////////////////////////////////////
-//
-//  CfgMultiRobot.h
-//
-//  General Description
-//
-//  Created
-//
-//  Last Modified By:
-//
-/////////////////////////////////////////////////////////////////////
-
-#ifndef CfgMultiRobot_h
-#define CfgMultiRobot_h
+#ifndef CFG_MULTI_ROBOT_H
+#define CFG_MULTI_ROBOT_H
 
 #include "Cfg.h"
 #include <vector>
 
 #include "Utilities/MPUtils.h"
 
+///////////////////////////////////////////////////////////////////////////////
+/// @ingroup Cfg
+/// @brief CfgMultiRobot is a container class for controlling multiple cfg.
+///
+/// The CfgMultiRobot class is a container class that contains multiple cfg and
+/// propagate function call to its member cfgs. Since this class class is just a
+/// container, there is no actually data stored in CfgMultiRobot; instead, they
+/// are stored (operated) in member cfgs.
+///
+/// @todo template this class to not only Cfg, but more CfgType (CfgProtein, CfgSurface)
+///
+///////////////////////////////////////////////////////////////////////////////
 /* template<class T> */
 class CfgMultiRobot : public Cfg {
 public:
@@ -125,7 +125,8 @@ public:
 
 template<class DistanceMetricPointer>
 void
-CfgMultiRobot::GetRandomRay(double _incr, Environment* _env,  DistanceMetricPointer _dm, bool _norm){
+CfgMultiRobot::
+GetRandomRay(double _incr, Environment* _env,  DistanceMetricPointer _dm, bool _norm){
   for(size_t i = 0; i < m_robotsCollect.size(); ++i) {
     this->m_robotsCollect[i].GetRandomRay(_incr, _env, _dm, _norm);
   }
@@ -133,7 +134,8 @@ CfgMultiRobot::GetRandomRay(double _incr, Environment* _env,  DistanceMetricPoin
 
 template<template<class> class ClearanceUtility, class MPTraits>
 double
-CfgMultiRobot::GetSmoothingValue(ClearanceUtility<MPTraits>& _clearanceUtils, shared_ptr<Boundary> _bb){
+CfgMultiRobot::
+GetSmoothingValue(ClearanceUtility<MPTraits>& _clearanceUtils, shared_ptr<Boundary> _bb){
   double result = 0.0;
   for(size_t i = 0; i < m_robotsCollect.size(); ++i)
     result += this->m_robotsCollect[i].GetSmoothingValue(_clearanceUtils, _bb);
