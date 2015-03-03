@@ -41,8 +41,14 @@ $PARALLEL = $opt_p;
 #
 # setup shell variables
 #
+if ($PLATFORM eq "LINUX_gcc") {
+  $ENV{'PATH'} = "/usr/lib64/ccache:".$ENV{'PATH'};
+}
 if ($PARALLEL eq "1") {
   Env::Modulecmd::load(qw(stapl_dev/gcc));
+  $ENV{'PATH'} = "/usr/lib64/mpich/bin:".$ENV{'PATH'};
+  $ENV{'LD_LIBRARY_PATH'} = "/usr/local/boost/boost-1.56/lib64:".$ENV{'LD_LIBRARY_PATH'};
+  $ENV{'BOOST_ROOT'}="/usr/local/boost/boost-1.56";
 }
 
 #
@@ -68,6 +74,10 @@ chdir "$workdir/$pmpldir/src";
 $OUTPUT = $OUTPUT."Started at ".`date 2>&1`;
 $OUTPUT = $OUTPUT."g++ path: ".`which g++ 2>&1`;
 $OUTPUT = $OUTPUT."g++ details:\n".`g++ -c -v 2>&1`;
+if($PARALLEL eq "1") {
+  $OUTPUT = $OUTPUT."mpi:".`which mpic++ 2>&1`;
+  $OUTPUT = $OUTPUT."env:\n".`printenv 2>&1`;
+}
 $OUTPUT = $OUTPUT.`make platform=$PLATFORM ROBOT_DEF=$ROBOT debug=$DEBUG parallel=$PARALLEL reallyreallyclean 2>&1`;
 $OUTPUT = $OUTPUT.`make platform=$PLATFORM ROBOT_DEF=$ROBOT debug=$DEBUG parallel=$PARALLEL pmpl -j4 2>&1`;
 if (-e "$workdir/$pmpldir/src/pmpl") {
