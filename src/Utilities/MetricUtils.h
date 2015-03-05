@@ -6,17 +6,19 @@
 #include <string>
 #include <iostream>
 #include <iomanip>
-#include "boost/tuple/tuple.hpp"
-#include "GraphAlgo.h"
-#include "MPProblem/Environment.h"
-
+#include <tuple>
 using namespace std;
 
-/**Provide timing information.
- *This class is used to measure the running time between StartClock and 
- *StopClock. Client side could provide clock name, when StopClock is called 
- *the name will be print out, and running time as well.
- */
+#include "MPProblem/Environment.h"
+
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup MetricUtils
+/// @brief Timing utility.
+///
+/// This class is used to measure the running time between @c StartClock and
+/// @c StopClock. Client side could provide clock name. Output functions are
+/// provided.
+////////////////////////////////////////////////////////////////////////////////
 class ClockClass {
   public:
 
@@ -54,6 +56,14 @@ class ClockClass {
     string m_clockName;
 };
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup MetricUtils
+/// @brief Statistics tracker.
+///
+/// The StatClass is a storage hub of all statistics to be tracked in PMPL,
+/// including but not limited to timing, success/fail attempts,
+/// collision detection calls.
+////////////////////////////////////////////////////////////////////////////////
 class StatClass {
 
   public:
@@ -62,9 +72,9 @@ class StatClass {
 
     void ClearStats();
 
-    int IncNumCollDetCalls(string _cdName , string* _callName = NULL);
+    int IncNumCollDetCalls(string _cdName, const string& _callName);
     unsigned long int GetIsCollTotal() { return m_isCollTotal; }
-    void IncCfgIsColl(string* _callName = NULL);
+    void IncCfgIsColl(const string& _callName);
 
     int IncLPConnections(string _lpName , int _incr=1);
     int IncLPAttempts(string _lpName, int _incr=1 );
@@ -84,7 +94,7 @@ class StatClass {
 
     template<class MPProblemType, class RoadmapType>
       void ComputeInterCCFeatures(MPProblemType* _problem, RoadmapType* _rdmp, string _nfMethod, string _dmMethod);
-      
+
     void PrintFeatures(ostream& _os);
     int IncNodesGenerated(string _samplerName, int _incr=1);
     int IncNodesAttempted(string _samplerName, int _incr=1);
@@ -101,7 +111,12 @@ class StatClass {
     // Graph Operation Statistics Accessors/Modifiers
     int GetGOStat(string _s) {return m_goStats[_s];}
     void SetGOStat(string _s, int _v) {m_goStats[_s]=_v;}
-    void IncGOStat(string _s, double _v=1) {m_goStats[_s]+=_v;}
+    void IncGOStat(string _s, int _v=1) {m_goStats[_s]+=_v;}
+
+    // RRT Statistics Accessors/Modifiers
+    int GetRRTStat(string _s) {return m_rrtStats[_s];}
+    void SetRRTStat(string _s, int _v) {m_rrtStats[_s]=_v;}
+    void IncRRTStat(string _s, int _v=1) {m_rrtStats[_s]+=_v;}
 
     //Local Planner Statistics Accessors/Modifiers
     double GetLPStat(string _s){return m_lpStats[_s];}
@@ -120,14 +135,15 @@ class StatClass {
 
     //help
     template<class GraphType>
-      void DisplayCCStats(ostream& _os, GraphType&, int);
+      void DisplayCCStats(ostream& _os, GraphType&);
 
-    //m_lpInfo represents information about the Local Planners, referenced by name
-    //  m_lpInfo.first is the name of the Local Planner
-    //  m_lpInfo.second.get<0>() is the # of LP attempts
-    //  m_lpInfo.second.get<1>() is the # of LP connections (successes)
-    //  m_lpInfo.second.get<2>() is the # of LP collision detection calls
-    map<string, boost::tuple<unsigned long int, unsigned long int, unsigned long int> > m_lpInfo;
+    // m_lpInfo represents information about the Local Planners, referenced by
+    // name
+    // m_lpInfo.first is the name of the Local Planner
+    // m_lpInfo.second.get<0>() is the # of LP attempts
+    // m_lpInfo.second.get<1>() is the # of LP connections (successes)
+    // m_lpInfo.second.get<2>() is the # of LP collision detection calls
+    map<string, tuple<unsigned long int, unsigned long int, unsigned long int> > m_lpInfo;
     map<string, unsigned long int> m_collDetCountByName;
 
     map<string, ClockClass> m_clockMap;
@@ -138,7 +154,7 @@ class StatClass {
     unsigned long int m_isCollTotal;
 
     //features
-    
+
     //m_samplerInfo represents sampler nodes attempted and generated
     //  map<string, pair<int, int> > represents a mapping between the sampler name
     //  and first the # of attempted samples, then the number of generated samples
@@ -179,7 +195,7 @@ class StatClass {
 
   private:
     //LP Statistics
-    map<string, int> m_goStats;
+    map<string, int> m_goStats, m_rrtStats;
     map<string, double> m_lpStats, m_nfStats;
     map<string, vector<double> > m_histories;
     string m_auxFileDest;
@@ -206,15 +222,16 @@ StatClass::PrintAllStats(ostream& _os, RoadmapType* _rmap, int _numCCs) {
     _os << setw(40) << "Name" << setw(20) << "Attempts" << setw(20) << "Successes\n\n";
     map<string, pair<unsigned long int, unsigned long int> >::iterator nodeIter;
     for(nodeIter=m_samplerInfo.begin();nodeIter!=m_samplerInfo.end();nodeIter++) {
-      _os << setw(40) << nodeIter->first << setw(20) << nodeIter->second.first 
+      _os << setw(40) << nodeIter->first << setw(20) << nodeIter->second.first
         << setw(20) << nodeIter->second.second << endl;
       totalAttempts += nodeIter->second.first;
       totalGenerated += nodeIter->second.second;
     }//end for loop
 
-    _os << "  Total Sampler Attempts: " << totalAttempts << "\n  Total Succeeded: " 
-      << totalGenerated << "\n  Success %: "
-      << ((double)totalGenerated)/totalAttempts * 100.0 << endl;
+    if(totalAttempts > 0)
+      _os << "  Total Sampler Attempts: " << totalAttempts << "\n  Total Succeeded: "
+        << totalGenerated << "\n  Success %: "
+        << ((double)totalGenerated)/totalAttempts * 100.0 << endl;
   }//end check on attempted nodes generated
 
   size_t i;
@@ -226,12 +243,12 @@ StatClass::PrintAllStats(ostream& _os, RoadmapType* _rmap, int _numCCs) {
     <<setw(15) << "Connections"
     <<setw(15) << "Coll Det Calls" << endl;
 
-  std::map<string, boost::tuple<unsigned long int, unsigned long int, unsigned long int> >::const_iterator lpIter;
+  std::map<string, tuple<unsigned long int, unsigned long int, unsigned long int> >::const_iterator lpIter;
   for(lpIter = m_lpInfo.begin(); lpIter != m_lpInfo.end(); ++lpIter) {
     _os << setw(20) << lpIter->first;
-    _os << setw(15) << lpIter->second.get<0>();
-    _os << setw(15) << lpIter->second.get<1>();
-    _os << setw(15) << lpIter->second.get<2>() << endl;
+    _os << setw(15) << get<0>(lpIter->second);
+    _os << setw(15) << get<1>(lpIter->second);
+    _os << setw(15) << get<2>(lpIter->second) << endl;
   }
 
   //output for graph operation statistics.
@@ -245,6 +262,19 @@ StatClass::PrintAllStats(ostream& _os, RoadmapType* _rmap, int _numCCs) {
         << setw(40) << gosit->second << endl;
     }
   }
+
+  // output for RRT statistics.
+  if(m_rrtStats.size()>0){
+    _os<<"\n\n RRT Statistics:\n\n";
+    _os<< setw(40) << "Statistic"
+      << setw(40) << "Value" << endl << endl;
+    typedef map<string, int>::iterator RRTSIT;
+    for(RRTSIT rrtsit=m_rrtStats.begin(); rrtsit!=m_rrtStats.end(); rrtsit++){
+      _os << setw(40) << rrtsit->first
+        << setw(40) << rrtsit->second << endl;
+    }
+  }
+
   //output for local planner statistics. Only output if map is populated
   if(m_lpStats.size()>0){
     _os<<"\n\n Local Planner Statistics:\n\n";
@@ -288,24 +318,21 @@ StatClass::PrintAllStats(ostream& _os, RoadmapType* _rmap, int _numCCs) {
       _os << "Number of Collision Detection Calls: " << endl;
       for(i=0;i<MaxCD;i++)
       if (strcmp(CDNameList[i],"empty")!=0)
-      _os << setw(20) << CDNameList[i] 
+      _os << setw(20) << CDNameList[i]
       << setw(15) << NumCollDetCalls[i] << endl;
    */
 
   _os << endl;
 
-  if (_numCCs==ALL)    {DisplayCCStats(_os, *(_rmap->GetGraph()));      }
-  else if (_numCCs==0) {DisplayCCStats(_os, *(_rmap->GetGraph()),0);     }
-  else                {DisplayCCStats(_os, *(_rmap->GetGraph()),_numCCs);}
+  DisplayCCStats(_os, *_rmap->GetGraph());
 
-
-  ///Below removed b/c it counts Coll Detection too fine grained.  We have decided 
-  ///to only keep Total times Cfg::isCollision is called.  This makes the 'price' for a 
+  ///Below removed b/c it counts Coll Detection too fine grained.  We have decided
+  ///to only keep Total times Cfg::isCollision is called.  This makes the 'price' for a
   ///free node the same as a collision node.  Will be added back after collision detection
   ///counting is properly fixed     --Roger 9/17/2005
   /*
      _os << endl << endl << "Collision Detection Exact Counts:" << endl;
-     for (i=0, iter=CollDetCountByName.begin(); iter != CollDetCountByName.end(); iter++, i++) 
+     for (i=0, iter=CollDetCountByName.begin(); iter != CollDetCountByName.end(); iter++, i++)
      {
      total+=iter->second;
      _os << i << ") " << iter->second << " ";
@@ -365,18 +392,18 @@ PrintDataLine(ostream& _myostream, RoadmapType* _rmap, int _showColumnHeaders) {
     if (ccStats[i].first == 1) ++sumIsolatedNodes;
   _myostream << sumIsolatedNodes << " ";
 
-  int sumCDcalls=0; 
+  int sumCDcalls=0;
   for(map<string, unsigned long int>::const_iterator M = m_numCollDetCalls.begin(); M != m_numCollDetCalls.end(); ++M)
     sumCDcalls += M->second;
   _myostream << sumCDcalls << " ";
 
   int sumAtt=0;
   int sumCD =0;
-  
-  std::map<string, boost::tuple<unsigned long int, unsigned long int, unsigned long int> >::const_iterator iter1;
+
+  map<string, tuple<unsigned long int, unsigned long int, unsigned long int> >::const_iterator iter1;
   for(iter1 = m_lpInfo.begin(); iter1 != m_lpInfo.end(); ++iter1) {
-    sumAtt += iter1->second.get<0>();
-    sumCD += iter1->second.get<2>();
+    sumAtt += get<0>(iter1->second);
+    sumCD += get<2>(iter1->second);
   }
 
   _myostream << sumAtt << " ";
@@ -422,7 +449,7 @@ StatClass::ComputeIntraCCFeatures(RoadmapType* _rdmp, Environment* _env, Distanc
       cciCfgs.push_back((*(_rdmp->GetGraph()->find_vertex(*itr))).property());
 
     if (cciCfgs.size() > 1) {
-      //compute shortest, longest, mean, and std-dev (sigma) distances 
+      //compute shortest, longest, mean, and std-dev (sigma) distances
       //between nodes for cci
 
       double cciMinIntraCCDist = 0;
@@ -455,7 +482,7 @@ StatClass::ComputeIntraCCFeatures(RoadmapType* _rdmp, Environment* _env, Distanc
         cciSigmaIntraCCDist /= (nPairs-1);
       cciSigmaIntraCCDist = sqrt(cciSigmaIntraCCDist);
 
-      //compute shortest, longest, mean and std-dev (sigma) edge sizes 
+      //compute shortest, longest, mean and std-dev (sigma) edge sizes
       //in the component
       vector<pair<VID,VID> > cciEdges;
       cMap.reset();
@@ -549,11 +576,6 @@ StatClass::ComputeIntraCCFeatures(RoadmapType* _rdmp, Environment* _env, Distanc
     m_avgMeanIntraCCDistToCm /= ccs.size();
     m_avgSigmaIntraCCDistToCm /= ccs.size();
   }
-
-  CfgType tcfg;
-  double norm = _env->Getminmax_BodyAxisRange()*tcfg.DOF();
-  cout << "norm value = " << norm << endl;
-
 #endif
 }
 
@@ -665,46 +687,34 @@ StatClass::ComputeInterCCFeatures(MPProblemType* _problem, RoadmapType* _rdmp, s
   if (minCCDistanceBetweenClosestPairs.size() > 1)
     m_sigmaInterCCDist /= minCCDistanceBetweenClosestPairs.size() - 1;
   m_sigmaInterCCDist = sqrt(m_sigmaInterCCDist);
-
-  CfgType tcfg;
-  double norm = _problem->GetEnvironment()->Getminmax_BodyAxisRange()
-    *_problem->GetEnvironment()->GetBoundary()->GetDOFs();
-  cout << "norm value = " << norm << endl;
 #endif
 }
 
 /**Output Connected Component information in graph _G.
  *This method will print out _maxCCprint number of Connected Component,
  *,and size and start vertex of each Connected Component.
- *@param _g the graph
- *@param _maxCCprint the number of connected components to print.
+ *_g the graph
+ *_maxCCprint the number of connected components to print.
  */
 template<class GraphType>
 void
-StatClass::DisplayCCStats(ostream& _os, GraphType& _g, int _maxCCPrint=-1)  {
-
-  ///Modified for VC
-  //temporary ifdef because of color map and get_cc_stats, we need a pDisplayCCStats
-#ifndef _PARALLEL
-
+StatClass::DisplayCCStats(ostream& _os, GraphType& _g)  {
+  #ifndef _PARALLEL
   typedef typename GraphType::vertex_descriptor VID;
   stapl::sequential::vector_property_map<GraphType, size_t> cMap;
 
-  vector<pair<size_t, VID> > ccStats;
-  stapl::sequential::get_cc_stats(_g, cMap, ccStats);
-  if (_maxCCPrint == -1) {
-    _maxCCPrint = ccStats.size();
-  }
+  vector<pair<size_t, VID> > ccs;
+  stapl::sequential::get_cc_stats(_g, cMap, ccs);
 
-  int ccNum = 1;
-  _os << "\nThere are " << ccStats.size() << " connected components:";
-  for (typename vector< pair<size_t,VID> >::iterator vi = ccStats.begin(); vi != ccStats.end(); vi++) {
-    _os << "\nCC[" << ccNum << "]: " << vi->first ;
+  size_t ccnum = 0;
+  _os << "\nThere are " << ccs.size() << " connected components:";
+  for(typename vector<pair<size_t,VID> >::iterator vi = ccs.begin(); vi != ccs.end(); ++vi) {
+    _os << "\nCC[" << ccnum++ << "]: " << vi->first ;
     _os << " (vid=" << size_t(vi->second) << ")";
-    ccNum++;
-    if (ccNum > _maxCCPrint) return;
   }
-#endif
+  #else
+    _os << "WARNING: CCs not computed, called sequential implementation of CC stats \n" ;
+  #endif
 }
 
 #endif

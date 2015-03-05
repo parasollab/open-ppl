@@ -57,31 +57,31 @@ class CGALNF: public NeighborhoodFinderMethod {
           double tmpRange = range.second-range.first;
           if(tmpRange > m_maxBBXRange) m_maxBBXRange = tmpRange;
         }
-        
+
         if(this->m_debug)
-          PrintOptions(cout);
+          Print(cout);
       }
 
     virtual ~CGALNF() {
       delete m_tmpTree;
     }
 
-    virtual void PrintOptions(std::ostream& _os) const {
-      NeighborhoodFinderMethod::PrintOptions(_os);
+    virtual void Print(std::ostream& _os) const {
+      NeighborhoodFinderMethod::Print(_os);
       _os << "epsilon: " << m_epsilon << " "
         << "use_scaling: " << m_useScaling << " ";
     }
 
     template<typename RDMP, typename InputIterator, typename OutputIterator>
-      OutputIterator KClosest(RDMP* _rmp, 
+      OutputIterator KClosest(RDMP* _rmp,
           InputIterator _first, InputIterator _last, typename RDMP::CfgType _cfg, size_t _k, OutputIterator _out);
 
     // KClosest that operate over two ranges of VIDS.  K total pair<VID,VID> are returned that
     // represent the _kclosest pairs of VIDs between the two ranges.
     template<typename RDMP, typename InputIterator, typename OutputIterator>
       OutputIterator KClosestPairs(RDMP* _rmp,
-          InputIterator _first1, InputIterator _last1, 
-          InputIterator _first2, InputIterator _last2, 
+          InputIterator _first1, InputIterator _last1,
+          InputIterator _first2, InputIterator _last2,
           size_t _k, OutputIterator _out);
 
     template<typename RDMP, typename InputIterator>
@@ -100,25 +100,25 @@ class CGALNF: public NeighborhoodFinderMethod {
 
 // Returns all nodes within radius from _cfg
 template<typename RDMP, typename InputIterator, typename OutputIterator>
-OutputIterator 
-CGALNF::KClosest(RDMP* _roadmap, InputIterator _first, InputIterator _last, 
+OutputIterator
+CGALNF::KClosest(RDMP* _roadmap, InputIterator _first, InputIterator _last,
     typename RDMP::CfgType _cfg, size_t _k, OutputIterator _out) {
-  
+
   typedef typename RDMP::VID VID;
   typedef typename RDMP::CfgType CFG;
   typedef typename RDMP::RoadmapGraphType RoadmapGraphType;
   typedef typename pmpl_detail::GetCfg<RoadmapGraphType> GetCfg;
-  
+
   RoadmapGraphType* map = _roadmap->m_pRoadmap;
 
   StartTotalTime();
-  
+
   StartConstructionTime();
   UpdateInternalModel(_roadmap, _first, _last);
   EndConstructionTime();
 
   IncrementNumQueries();
-  
+
   size_t dim = _cfg.DOF();
 
   // insert scaled query (copy of original CFG)
@@ -149,7 +149,7 @@ CGALNF::KClosest(RDMP* _roadmap, InputIterator _first, InputIterator _last,
 
 // Returns all pairs within radius
 template<typename RDMP, typename InputIterator, typename OutputIterator>
-OutputIterator 
+OutputIterator
 CGALNF::KClosestPairs(RDMP* _roadmap,
     InputIterator _first1, InputIterator _last1,
     InputIterator _first2, InputIterator _last2,
@@ -160,13 +160,13 @@ CGALNF::KClosestPairs(RDMP* _roadmap,
 
 template<typename RDMP, typename InputIterator>
 void
-CGALNF::UpdateInternalModel(RDMP* _rmp, InputIterator _first, InputIterator _last){  
+CGALNF::UpdateInternalModel(RDMP* _rmp, InputIterator _first, InputIterator _last){
   typedef typename RDMP::VID VID;
   typedef typename RDMP::CfgType CFG;
   typedef typename RDMP::RoadmapGraphType RoadmapGraphType;
   typedef typename RoadmapGraphType::RoadmapVCSType RoadmapVCSType;
   typedef typename pmpl_detail::GetCfg<RoadmapGraphType> GetCfg;
-  
+
   RoadmapGraphType* map = _rmp->m_pRoadmap;
 
   int newVersion = map->roadmapVCS.get_version_number();
@@ -183,7 +183,7 @@ CGALNF::UpdateInternalModel(RDMP* _rmp, InputIterator _first, InputIterator _las
   typename RoadmapVCSType::cce_iter iter;
 
   size_t dim = CFG().DOF();
- 
+
   for (iter = start; iter != end; iter++) {
     if ((*iter).second.IsTypeAddVertex()) {
 
@@ -197,7 +197,7 @@ CGALNF::UpdateInternalModel(RDMP* _rmp, InputIterator _first, InputIterator _las
         cfgToAdd.SetSingleParam(1, cfgToAdd.GetSingleParam(1)/m_maxBBXRange);
         cfgToAdd.SetSingleParam(2, cfgToAdd.GetSingleParam(2)/m_maxBBXRange);
       }
-      
+
       m_tree.insert(PointD(vidToAdd, dim, cfgToAdd.GetData().begin(), cfgToAdd.GetData().end()));
     }
   }
@@ -219,7 +219,7 @@ CGALNF::UpdateInternalModel(RDMP* _rmp, InputIterator _first, InputIterator _las
     m_queryTree = &m_tree;
   }
 
-  m_curRoadmapVersion = newVersion;  
+  m_curRoadmapVersion = newVersion;
 }
 
 #endif //end ifndef _CGAL_NEIGHBORHOOD_FINDER_H_

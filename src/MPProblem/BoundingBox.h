@@ -2,50 +2,41 @@
 #define BOUNDINGBOX_H_
 
 #include "Boundary.h"
-//#include "MPUtils.h"
-
-class Environment;
 
 class BoundingBox :  public Boundary {
   public:
-    BoundingBox(int _DOFs = 0, int _posDOFs = 0);
-    BoundingBox(XMLNodeReader& _node);
-    BoundingBox(const BoundingBox& _bbox);
-    ~BoundingBox();
+    BoundingBox();
+    BoundingBox(pair<double, double> _x,
+        pair<double, double> _y,
+        pair<double, double> _z = pair<double, double>(-numeric_limits<double>::max(), numeric_limits<double>::max()));
+    BoundingBox(const BoundingBox& _bbx);
+    ~BoundingBox() {}
 
-    void Clear();
-    bool operator==(const Boundary& _bb) const;
+    bool operator==(const Boundary& _b) const;
 
-    void SetParameter(int _par, double _first, double _second);
-    std::vector<BoundingBox> Partition(int _par, double _point, double _epsilon);
+    double GetMaxDist(double _r1 = 2.0, double _r2 = 0.5) const;
+    pair<double, double> GetRange(size_t _i) const;
 
-    int FindSplitParameter(BoundingBox& _boundingBox);
+    Point3d GetRandomPoint() const;
+    bool InBoundary(const Vector3d& _p) const;
+    double GetClearance(const Vector3d& _p) const;
+    int GetSideID(const vector<double>& _p) const;
+    Vector3d GetClearancePoint(const Vector3d& _p) const;
+    double GetClearance2DSurf(Point2d _pos, Point2d& _cdPt) const;
 
-    BoundingBox GetCombination(BoundingBox& _boundingBox);
-    double GetClearance(Vector3D _point3d) const;
-    Point3d GetRandomPoint();
+    void ResetBoundary(vector<pair<double, double> >& _obstBBX, double _d);
 
-    void TranslationalScale(double _scaleFactor);
+    void Read(istream& _is);
+    void Write(ostream& _os) const;
 
+  private:
+    pair<double, double> m_bbx[3];
 
-    void Print(std::ostream& _os, char _rangeSep=':', char _parSep=';') const;
-
-    bool IfWrap(int _par);
-    bool IfEnoughRoom(int _par, double _room);
-    bool IfSatisfiesConstraints(Vector3D _point3d) const;
-    bool IfSatisfiesConstraints(vector<double> _cfg) const;
-    bool InBoundary(const Cfg& _cfg, Environment* _env);
-
-  public:
 #ifdef _PARALLEL
-
+  public:
     void define_type(stapl::typer &_t)
     {
-      _t.member(m_jointLimits);
-      _t.member(m_boundingBox);
-      _t.member(m_posDOFs);
-      _t.member(m_DOFs);
-      _t.member(m_parType);
+      _t.member(m_bbx);
     }
 #endif
 };
@@ -53,7 +44,7 @@ class BoundingBox :  public Boundary {
 #ifdef _PARALLEL
 namespace stapl {
   template <typename Accessor>
-    class proxy<BoundingBox, Accessor> 
+    class proxy<BoundingBox, Accessor>
     : public Accessor {
       private:
         friend class proxy_core_access;
@@ -66,7 +57,6 @@ namespace stapl {
         proxy const& operator=(proxy const& rhs) { Accessor::write(rhs); return *this; }
         proxy const& operator=(target_t const& rhs) { Accessor::write(rhs); return *this;}
         Point3d GetRandomPoint() const { return Accessor::const_invoke(&target_t::GetRandomPoint);}
-        parameter_type GetType(int _par) const { return Accessor::const_invoke(&target_t::GetType, _par);}
     };
 }
 #endif

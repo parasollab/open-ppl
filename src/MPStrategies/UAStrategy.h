@@ -43,14 +43,14 @@ class UAStrategy : public MPStrategyMethod {
    }
    UAStrategy(XMLNodeReader& in_Node, MPProblem* in_pProblem);
    virtual ~UAStrategy(){}
-   
+
    virtual void ParseXML(XMLNodeReader& in_Node);
-   
+
    virtual void Initialize();
    virtual void Run();
    virtual void Finalize();
 
-   virtual void PrintOptions(ostream& out_os);
+   virtual void Print(ostream& out_os) const;
 
  protected:
    void IdentifyRegions();

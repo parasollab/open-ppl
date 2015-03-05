@@ -1,61 +1,34 @@
 #ifndef MPUTILS_H_
 #define MPUTILS_H_
 
+#include <functional>
+#include <iostream>
 #include <map>
+#include <memory>
 #include <string>
+using std::shared_ptr;
 
-#include <boost/function.hpp>
-#include "boost/shared_ptr.hpp"
-#include "boost/mpl/list.hpp"
-#include "boost/mpl/sort.hpp"
-#include "boost/type_traits/is_base_of.hpp"
-#include "boost/mpl/begin.hpp"
-#include "boost/mpl/end.hpp"
-#include "boost/mpl/next_prior.hpp"
+#ifndef _PARALLEL
+#include <containers/sequential/graph/algorithms/connected_components.h>
+#endif
 
-using boost::shared_ptr;
+#include <boost/mpl/list.hpp>
+#include <boost/mpl/next_prior.hpp>
 
 #include "Vector.h"
-#include "Point.h"
 using namespace mathtool;
 
 #include "IOUtils.h"
-#include "ValidityCheckers/CollisionDetection/CDInfo.h"
-
-//forward declarations
-class StatClass;
 
 ///////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////
-//
-//
 // Constants
-//
-//
-///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 
-#define TWOPI           (PI*2.0)
-#define DEGTORAD (PI/180.0)
-#define RADTODEG (180.0/PI)
-
-
-#define NULL_WT_INFO -999               ///< to pad weight fields for graph conversions
-#define INVALID_LP -999                 ///< invalid local planner id
-#define INVALID_RNGSEED -999            ///< invalid seed value for Random Number Generator
-#define MAX_INT  999999999
-#define INVALID_INT -999
-#define MAX_DBL  999999999.99999
-#define INVALID_DBL -999
+#define MAX_INT  numeric_limits<int>::max()
+#define MAX_DBL  numeric_limits<double>::max()
 
 ///////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////
-//
-//
 // Collision Detection
-//
-//
-///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 
 //Need to define at least one type of collision detection library
@@ -71,21 +44,21 @@ class StatClass;
 #endif
 #endif
 
-/// Legal Types of Collision Detecters
+// Legal Types of Collision Detecters
 enum cd_predefined {
-  /// voronoi clip
+  // voronoi clip
 #ifdef USE_VCLIP
   VCLIP,
 #endif
-  /// Robust and Accurate Polygon Interference Detection
+  // Robust and Accurate Polygon Interference Detection
 #ifdef USE_RAPID
   RAPID,
 #endif
-  /// Proximity Query Package
+  // Proximity Query Package
 #ifdef USE_PQP
   PROXIMITYQUERYPACKAGE,
 #endif
-  /// SOLID
+  // SOLID
 #ifdef USE_SOLID
   SOLID,
 #endif
@@ -95,13 +68,7 @@ enum cd_predefined {
 };
 
 ///////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////
-//
-//
 // Random Number Generation
-//
-//
-///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 
 //return non-negative double-prevision floating-point values
@@ -133,9 +100,6 @@ long SRand(long _seed = 0x1234ABCD);
 long SRand(string _methodName, int _nextNodeIndex, long _base = 0x1234ABCD, bool _reset = false);
 
 ///////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////
-//
-//
 //     Region Expand Utilities
 //
 //
@@ -152,9 +116,6 @@ vector<double> GetCartesianCoordinates(vector<double> sphericalCoordinates);
 //
 //
 // Simple Utilities (Angular Distance and Compare Second)
-//
-//
-///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 
 /**Normalize a value into the range [-1,1)
@@ -175,14 +136,17 @@ class CompareSecond {
   }
 };
 
+/* Compare the second of a pair reversed */
+template <typename T, typename U>
+class CompareSecondReverse {
+ public:
+  bool operator()(const pair<T, U>& _a, const pair<T, U>& _b) const {
+    return _a.second > _b.second;
+  }
+};
+
 ///////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////
-//
-//
 // Compose Functions
-//
-//
-///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 
 template <typename InputIterator, typename BinaryOperator, typename UnaryOperator>
@@ -248,20 +212,14 @@ struct ComposeNegate {
 };
 
 ///////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////
-//
-//
 // Containers
-//
-//
-///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 
 ///////////////////////////////////////////////////////////////////////////////////////////
-//MethodSet defines basic method container class to derive from
-//  (for classes like DistanceMetric, LocalPlanner, NeighborhoodFinder, Sampler etc)
+//MethodSet defines basic method container class to hold methods
+//  (for classes like DistanceMetricMethod, LocalPlannerMethod, etc)
 //
-//derived class must specify the Method type and MethodTypeList
+//MethodTypeList must be defined within templated class of MPTraits
 //  e.g., NeighborhoodFinder: Method = NeighborhoodFinderMethod
 //                            MethodTypeList = boost::mpl::list<BruteForceNF,BandsNF,...>
 //  e.g., LocalPlanner: Method = LocalPlannerMethod
@@ -270,15 +228,15 @@ struct ComposeNegate {
 
 template<typename MPTraits, typename Method>
 struct MethodFactory {
-  boost::shared_ptr<Method> operator()(typename MPTraits::MPProblemType* _problem, XMLNodeReader& _node) const {
-    return boost::shared_ptr<Method>(new Method(_problem, _node));
+  shared_ptr<Method> operator()(typename MPTraits::MPProblemType* _problem, XMLNodeReader& _node) const {
+    return shared_ptr<Method>(new Method(_problem, _node));
   }
 };
 
 template<typename MPTraits, typename Method>
 class MethodSet {
   public:
-    typedef boost::shared_ptr<Method> MethodPointer;
+    typedef shared_ptr<Method> MethodPointer;
     typedef typename map<string, MethodPointer>::iterator MIT;
     typedef typename map<string, MethodPointer>::const_iterator CMIT;
 
@@ -299,13 +257,13 @@ class MethodSet {
     bool AddMethod(typename MPTraits::MPProblemType* _problem, XMLNodeReader& _node, const string& _name) {
       if(m_universe.find(_name) != m_universe.end()) {
         MethodPointer e = m_universe[_name](_problem, _node);
-        return AddMethod(e, e->GetLabel());
+        return AddMethod(e, e->m_label);
       }
       return false;
     }
 
     bool AddMethod(MethodPointer _e, const string& _label) {
-      if(m_universe.find(_e->GetName()) != m_universe.end()) {
+      if(m_universe.find(_e->m_name) != m_universe.end()) {
         _e->SetLabel(_label);
         if(m_elements.empty())
           m_default = _label;
@@ -316,7 +274,7 @@ class MethodSet {
         return true;
       }
       else{
-        cerr << "Error. Method \"" << _e->GetName() << "\" is not contained within the motion planning universe. Exiting." << endl;
+        cerr << "Error. Method \"" << _e->m_name << "\" is not contained within the motion planning universe. Exiting." << endl;
         exit(1);
       }
     }
@@ -344,12 +302,12 @@ class MethodSet {
       }
     }
 
-    void PrintOptions(ostream& _os) const {
+    void Print(ostream& _os) const {
       size_t count = 0;
       _os << endl << m_name << " has these methods available::" << endl << endl;
       for(CMIT mit = Begin(); mit != End(); ++mit){
-        _os << ++count << ") \"" << mit->first << "\" (" << mit->second->GetName() << ")" << endl;
-        mit->second->PrintOptions(_os);
+        _os << ++count << ") \"" << mit->first << "\" (" << mit->second->m_name << ")" << endl;
+        mit->second->Print(_os);
         _os << endl;
       }
       _os << endl;
@@ -361,7 +319,7 @@ class MethodSet {
     MIT End() { return m_elements.end(); }
 
   protected:
-    typedef boost::function<MethodPointer(typename MPTraits::MPProblemType*, XMLNodeReader&)> FactoryType;
+    typedef function<MethodPointer(typename MPTraits::MPProblemType*, XMLNodeReader&)> FactoryType;
 
     template <typename Last>
       void AddToUniverse(Last, Last){}
@@ -369,7 +327,7 @@ class MethodSet {
     template <typename First, typename Last>
       void AddToUniverse(First, Last) {
         typename boost::mpl::deref<First>::type first;
-        m_universe[first.GetName()] = MethodFactory<MPTraits, typename boost::mpl::deref<First>::type>();
+        m_universe[first.m_name] = MethodFactory<MPTraits, typename boost::mpl::deref<First>::type>();
         AddToUniverse(typename boost::mpl::next<First>::type(), Last());
       }
 
@@ -378,66 +336,8 @@ class MethodSet {
     map<string, MethodPointer> m_elements;
 };
 
-
-
 ///////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////
-//
-//
-// MPBaseObject
-//
-//
-///////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////
-
-template<class MPTraits>
-class MPBaseObject {
-  public:
-    typedef typename MPTraits::MPProblemType MPProblemType;
-    MPBaseObject(MPProblemType* _problem = NULL, string _label = "", string _name = "", bool _debug = false) :
-      m_problem(_problem), m_label(_label), m_name(_name), m_debug(_debug) {};
-    MPBaseObject(MPProblemType* _problem, XMLNodeReader& _node, string _name="") :
-      m_problem(_problem), m_label(""), m_name(_name), m_debug(false) {
-        ParseXML(_node);
-      };
-
-    virtual ~MPBaseObject() {}
-
-    virtual void ParseXML(XMLNodeReader& _node) {
-      m_label = _node.stringXMLParameter("label", false, "", "Label Identifier");
-      m_debug = _node.boolXMLParameter("debug", false, false, "Run-time debug on(true)/off(false)");
-      m_recordKeep = _node.boolXMLParameter("recordKeep", false, false, "Keeping track of algorithmic statistics, on(true)/off(false)");
-    };
-
-    MPProblemType* GetMPProblem() const {return m_problem;}
-    virtual void SetMPProblem(MPProblemType* _m){m_problem = _m;}
-    virtual void PrintOptions(ostream& _os) {};
-    string GetLabel() const {return m_label;}
-    void SetLabel(string _s) {m_label = _s;}
-    string GetName()  const {return m_name;}
-    void SetName (string _s) {m_name  = _s;}
-    string GetNameAndLabel() const {return m_name + "::" + m_label;}
-    bool GetDebug() const {return m_debug;}
-    void SetDebug(bool _d) {m_debug = _d;}
-
-  private:
-    MPProblemType* m_problem;
-    string m_label;
-
-  protected:
-    string m_name;
-    bool m_debug;
-    bool m_recordKeep;
-};
-
-///////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////
-//
-//
 // Cfg Utilities
-//
-//
-///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 
 template<class CfgType, class Environment>
@@ -448,7 +348,7 @@ IsWithinResolution(const CfgType& _cfg1, const CfgType& _cfg2, Environment* _env
     && diff->OrientationMagnitude() <= _env->GetOrientationRes();
 }
 
-/** pt1 & pt2 are two endpts of a line segment
+/* pt1 & pt2 are two endpts of a line segment
  * find the closest point to the current cfg on that line segment
  * it could be one of the two endpoints of course
  */
@@ -481,13 +381,7 @@ ClosestPtOnLineSegment(const CfgType& _current, const CfgType& _p1, const CfgTyp
 
 
 ///////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////
-//
-//
-// GetCentroid
-//
-//
-///////////////////////////////////////////////////////////////////////////////
+// Centroid Utils
 ///////////////////////////////////////////////////////////////////////////////
 
 template<template<class CFG, class WEIGHT> class RDMP, class CFG, class WEIGHT>
@@ -496,388 +390,35 @@ GetCentroid(RDMP<CFG, WEIGHT>* _graph, vector<typename RDMP<CFG, WEIGHT>::VID>& 
   CFG center;
   for(size_t i = 0; i < _cc.size(); i++) {
 
-    CFG cfg = _graph->GetCfg(_cc[i]);
+    CFG cfg = _graph->GetVertex(_cc[i]);
     center += cfg;
   }
   center /= _cc.size();
   return center;
 };
 
+#ifndef _PARALLEL
+template<template<class CFG, class WEIGHT> class RDMP, class CFG, class WEIGHT>
+void
+ComputeCCCentroidGraph(RDMP<CFG, WEIGHT>* _graph, RDMP<CFG, WEIGHT>* _centroidGraph) {
+  typedef typename RDMP<CFG, WEIGHT>::VID VID;
+  stapl::sequential::vector_property_map<RDMP<CFG, WEIGHT>, size_t> cmap;
+  vector<pair<size_t, VID> > allCCs;
+  vector<VID> cc;
+  RDMP<CFG, WEIGHT> centroids;
+  get_cc_stats(*_graph, cmap, allCCs);
 
-
-
-template<class CfgType, class Environment>
-CfgType
-SelectDirection(Environment* _env, CfgType dir){
-  if(dir == CfgType()){
-    dir.GetRandomCfg(_env);
-  }else{
-    CfgType r;
-    r.GetRandomCfg(_env);
-    dir.subtract(dir,r);
-  }
-  return dir;
-}
-
-// from cartesion to spherical
-template<class CfgType>
-vector<double>
-GetSphericalCoordinates(CfgType& _cfg) {
-  vector<double> coordinates(3);
-  double rho = 0;   // = sqrt(x^2 + y^2 + z^2)
-  double theta = 0; // = arctan(y/x)
-  double phi = 0;   // = arccos(z/rho)
-  // Getting cartesian coordinates
-  for (size_t j = 0; j < _cfg.PosDOF(); ++j) {
-    coordinates[j] = _cfg[j];
-    rho += pow(_cfg[j], 2.0);
-  }
-  // Coordinates = [X,Y,Z]
-  rho = sqrt(rho);
-  theta = atan2(coordinates[1],coordinates[0]);
-  phi = MAX_INT;
-  if(_cfg.PosDOF() == 3) {
-    phi = acos(coordinates[2] / rho);
-
+  for(size_t i = 0; i < allCCs.size(); i++) {
+    get_cc(*_graph, cmap, allCCs[i].second, cc);
+    CFG centroid = GetCentroid(_graph, cc);
+    centroid.SetStat("ccVID", allCCs[i].second);
+    _centroidGraph->AddVertex(centroid);
   }
 
-  // Lets make all angles positive for more accurate comparison between quadrants, since atan2 returns [-2/pi,2/pi]
-  while(theta < 0)
-    theta += TWOPI;
-  // from cartesian to polar
-  coordinates[0] = rho;
-  coordinates[1] = theta;
-  coordinates[2] = phi;
-
-  for (int i=_cfg.PosDOF(); i<_cfg.DOF(); i++)
-    coordinates.push_back(2*DRand()-1.0);
-
-  return coordinates;
-}
-
-
-// Gets the point that is in between the candidate and the neighbor
-template<class CfgType>
-CfgType GetMiddlePoint(CfgType _regionCand, CfgType _neighbor, double _radius) {
-  CfgType middlePoint;
-  middlePoint = _regionCand + _neighbor;
-  middlePoint = middlePoint/2;
-  // Getting middle point across the circumference between candidate and neighbor
-  vector<double> midPointCoordinates = GetSphericalCoordinates(middlePoint);
-  midPointCoordinates[0] = _radius;
-  midPointCoordinates = GetCartesianCoordinates(midPointCoordinates);
-
-  middlePoint.SetData(midPointCoordinates);
-  return middlePoint;
-
-}
-
-
-template<class CfgType>
-vector<CfgType>
-GetMiddlePoints(CfgType& _regionCand, vector<CfgType>& _neighbors, double _radius) {
-
-  vector<CfgType> middlePoints;
-  // Getting middle point across the circumference between candidate and neighbor
-  for (size_t i = 0; i < _neighbors.size(); ++i)
-    middlePoints.push_back(GetMiddlePoint(_regionCand, _neighbors[i], _radius));
-
-  return middlePoints;
-
-}
-
+};
+#endif
 ///////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////
-//
-//
-// Random Node within a region
-//
-//
-///////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////
-
-/*
- * Returns a random node within a region characterized by a region candidate
- * and its neighbors
- *
- * */
-
-template<class CfgType>
-CfgType
-SelectDirection(CfgType& _regionCand, vector<CfgType>& _neighbors, double _radius) {
-
-  SelectDirection(_regionCand, _neighbors, _radius, 0);
-}
-
-
-template<class CfgType>
-CfgType
-SelectDirection(CfgType& _regionCand, vector<CfgType>& _neighbors, double _radius, double _overlap) {
-  CfgType dir = CfgType();
-
-  // Store all the angles to get the max and min
-  vector<double> thetas;
-  vector<double> phis;
-
-  if (dir.PosDOF() > 0) {
-
-    vector<double> candCoordinates = GetSphericalCoordinates(_regionCand);
-    vector<CfgType> midPoints = GetMiddlePoints(_regionCand, _neighbors, _radius);
-    // TODO DEBUG only one neighbor, split region into halves
-    if (midPoints.size() == 1) {
-      CfgType point = -(midPoints[0]);
-      midPoints.push_back(point);
-    }
-
-    for (size_t i = 0; i < midPoints.size(); ++i) {
-      // [0] = Rho, [1] = Theta, [2] = Phi
-      vector<double> neighborCoordinates;
-      if(_neighbors.size() == 1)
-        neighborCoordinates = GetSphericalCoordinates(_neighbors[0]);
-      else
-        neighborCoordinates = GetSphericalCoordinates(_neighbors[i]);
-
-      vector<double> midPointCoordinates = GetSphericalCoordinates(midPoints[i]);
-      vector<double> increments(3);
-
-      // FIXME Increments not working, some angles are being shrinked
-      // instead of enlarged
-      increments[1] = (neighborCoordinates[1] - midPointCoordinates[1] ) * _overlap;
-      midPointCoordinates[1] += increments[1];
-      double increment = (neighborCoordinates[2] - midPointCoordinates[2]) * _overlap;
-      midPointCoordinates[2] += increment;
-
-      // We use this function to avoid pushing all angles and sorting them at the end
-      PushMinMax(thetas, midPointCoordinates[1]);
-      PushMinMax(phis, midPointCoordinates[2]);
-    }
-
-    // Is the range calculated correct? If cand theta is outside out [min,max] then fix the range to be [max-2PI, min]
-    while (thetas[0] > candCoordinates[1] ) {
-      double temp = thetas[0];
-      thetas[0] = thetas[1] - TWOPI;
-      thetas[1] = temp;
-    }
-    while (thetas[1] < candCoordinates[1]) {
-      double temp = thetas[1];
-      thetas[1] = thetas[0] + TWOPI;
-      thetas[0] = temp;
-    }
-    // Randomizing
-    // Rho = radius
-    vector<double> randCoordinates(3);
-    randCoordinates[0] = _radius  * sqrt(DRand());
-    randCoordinates[1] = (thetas[1] - thetas[0]) * DRand() + thetas[0];
-    randCoordinates[2] = MAX_INT;
-    if(_regionCand.PosDOF() == 3)
-      randCoordinates[2] = (phis[1] - phis[0]) * DRand() + phis[0];
-
-    randCoordinates = GetCartesianCoordinates(randCoordinates);
-
-    dir.SetData(randCoordinates);
-
-    // Randomizing Rotational DOFs
-    for (size_t i = dir.PosDOF(); i < dir.DOF(); i++)
-      dir[i] = (2*DRand()-1.0);
-
-    // TODO Fixed-Tree - I am not sure how to divide this space into regions.
-  }else {
-    for (size_t i=0; i < _regionCand.DOF(); i++) {
-      vector<double> minMax;
-      for (size_t j=0; j < _neighbors.size(); j++) {
-        PushMinMax(minMax, _neighbors[j][i]);
-      }
-      dir[i] = (minMax.back() - minMax.front()) * DRand() + minMax.front();
-    }
-  }
-
-  return dir;
-}
-
-///////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////
-//
-//
-// RRTExpand
-//
-//
-///////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////
-
-/*Basic utility for "growing" a RRT tree.  Assumed to be given a start node, and he goal node to grow towards.
-  Resulting node extended towards the goal is passed by reference and modified.  Returned boolean relays whether the
-  growth was succesful or not.
-
-  _mp -> Used to obtain information about the problem at hand
-  strVcmethod -> Used for VC calls
-  dm_label -> Used to extract DistanceMetricMethod pointer
-  start -> Location of Cfg on tree to grow from
-  dir -> Direction to grow towards
-  new_cfg -> New Cfg to be added to the tree; passed by reference
-  delta -> Maximum distance to grow
-  obsDist -> Distance away from object the new node neads to at least be
-  */
-
-template<class MPTraits>
-bool
-RRTExpand(typename MPTraits::MPProblemType* _mp,
-    string _vc, string _dm,
-    typename MPTraits::CfgType _start,
-    typename MPTraits::CfgType _dir,
-    typename MPTraits::CfgType& _newCfg,
-    double _delta, int& _weight, CDInfo& _cdInfo,
-    double _posRes, double _oriRes){
-
-  //Setup...primarily for collision checks that occur later on
-  StatClass* stats = _mp->GetStatClass();
-  Environment* env = _mp->GetEnvironment();
-  typename MPTraits::MPProblemType::DistanceMetricPointer dm = _mp->GetDistanceMetric(_dm);
-  typename MPTraits::MPProblemType::ValidityCheckerPointer vc = _mp->GetValidityChecker(_vc);
-  string callee("RRTUtility::RRTExpand");
-
-  typename vector<typename MPTraits::CfgType>::iterator startCIterator;
-  typename MPTraits::CfgType incr, tick = _start, previous = _start;
-  bool collision = false;
-  int nTicks, ticker = 0;
-
-  incr.FindIncrement(tick,_dir,&nTicks, _posRes, _oriRes);
-  _weight = nTicks;
-
-  //Move out from start towards dir, bounded by number of ticks allowed at a given resolution.  Delta + obsDist are
-  //given to the function, and are user defined.
-  while(!collision && dm->Distance(env,_start,tick) <= _delta && ticker <= nTicks) {
-    previous = tick;
-    tick += incr; //Increment tick
-    if(!(tick.InBoundary(env)) || !(vc->IsValid(tick, env, *stats, _cdInfo, &callee))){
-      collision = true; //Found a collision; return previous tick, as it is collision-free
-    }
-    ++ticker;
-  }
-  if(previous != _start){ //Did we go anywhere?
-    _newCfg = previous;//Last Cfg pushed back is the final tick allowed
-    return true;
-  }
-  //Didn't find a place to go :(
-  else
-    return false;
-}
-
-/*
- *  Expand for Blind RRT where three different values can be returned: OUTOFBOUNDARY, INVALID, VALID
- * */
-namespace ExpansionType {
-  enum Expansion {
-    IN_COLLISION,
-    NO_COLLISION,
-    NO_EXPANSION,
-  };
-
-  string GetExpansionTypeString(Expansion expansion);
-
-}
-
-/*
- * Blind RRT Expand
- * Expands up to delta distance or when reaching out of boundary. If a collision is
- * encountered, it records the last valid sample and keeps growing.
- */
-
-template<class MPTraits>
-ExpansionType::Expansion
-BlindRRTExpand(typename MPTraits::MPProblemType* _mp,
-    string _vc, string _dm,
-    typename MPTraits::CfgType _start,
-    typename MPTraits::CfgType _dir,
-    vector< pair<typename MPTraits::CfgType, int> >& _newCfgs, // pair = Cfg , weight. weight is the distance from the Cfg to the start Cfg
-    double _delta, CDInfo& _cdInfo,
-    double _posRes, double _oriRes){
-
-  //Setup...primarily for collision checks that occur later on
-  StatClass* stats = _mp->GetStatClass();
-  string callee("RRTUtility::BlindRRTExpand");
-  Environment* env = _mp->GetEnvironment();
-  typename MPTraits::MPProblemType::DistanceMetricPointer dm = _mp->GetDistanceMetric(_dm);
-  typename MPTraits::MPProblemType::ValidityCheckerPointer vc = _mp->GetValidityChecker(_vc);
-
-  typedef typename MPTraits::CfgType CfgType;
-  typename MPTraits::CfgType incr, tick = _start, previous = _start;
-  // if any collision is encountered, collision becomes true
-  bool collision=false, outOfBoundary=false;
-  // this tracks collision changes along the expansion
-  bool prevCollision = !vc->IsValid(_start, env, *stats, _cdInfo, &callee);
-  int nTicks, ticker = 0;
-  pair<CfgType, int> cfgWeight;
-  incr.FindIncrement(tick,_dir,&nTicks, _posRes, _oriRes);
-
-  //Move out from start towards dir, bounded by number of ticks allowed at a given resolution.  Delta + obsDist are
-  //given to the function, and are user defined.
-  while(!outOfBoundary && dm->Distance(env,_start,tick) <= _delta && ticker <= nTicks) {
-    previous = tick;
-    tick += incr; //Increment tick
-    ++ticker;
-
-    if(!(tick.InBoundary(env)) ) {
-      outOfBoundary = true; // Expansion is out of boundary, return previous tick
-    } else if (!(vc->IsValid(tick, env, *stats, _cdInfo, &callee))) {
-      collision = true; //Found a collision, activate flag
-      if(!prevCollision) {
-        // record the previous sample since it is valid
-        cfgWeight = make_pair(previous, ticker - 1); // previous is one tick behind
-        _newCfgs.push_back(cfgWeight);
-
-        // TODO do we really want to add in collision nodes???
-        /*
-        cfgWeight = make_pair(tick, ticker);
-        _newCfgs.push_back(cfgWeight);
-        */
-        prevCollision = true;
-      }
-    } else {
-
-      if(prevCollision) {
-
-        /*
-        // TODO do we really want to add in collision nodes???
-        cfgWeight = make_pair(previous, ticker - 1); // previous is one tick behind
-        _newCfgs.push_back(cfgWeight);
-        */
-
-        // record this sample since the previous was in collision
-        cfgWeight = make_pair(tick, ticker);
-        _newCfgs.push_back(cfgWeight);
-
-        prevCollision = false;
-      }
-    }
-  }
-  if(previous != _start){ //Did we go anywhere?
-
-    cfgWeight = make_pair(previous, ticker);
-    // TODO Cesar: previous might get added in the previous step
-    if(previous != _newCfgs.back().first)
-      _newCfgs.push_back(cfgWeight);//Last Cfg pushed back is the final tick allowed
-
-    if (collision) {    // encountered collision in the way
-      return ExpansionType::IN_COLLISION;
-
-    } else {            // No collision and not out of boundary
-      return ExpansionType::NO_COLLISION;
-    }
-
-  }
-  // Didn't find a place to go :(
-  else
-    return ExpansionType::NO_EXPANSION;
-}
-
-
-///////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////
-//
 // Geometry Utils
-//
-///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 
 //----------------------------------------------------------------------------
@@ -893,18 +434,42 @@ bool PtInTriangle(const Point2d& _A, const Point2d& _B, const Point2d& _C, const
 bool PtInTriangle(const Point2d& _A, const Point2d& _B, const Point2d& _C, const Point2d & _P,
     double& _u, double& _v);
 
-
 //----------------------------------------------------------------------------
 // GetPtFromBarycentricCoords: given triange defined by _A,_B,_C, return the
 // point inside triangle defined by barycentric coords. _u,_v
 //----------------------------------------------------------------------------
 Point3d GetPtFromBarycentricCoords(const Point3d& _A, const Point3d& _B, const Point3d& _C, double _u, double _v);
 
-
 //----------------------------------------------------------------------------
 //NormalizeTheta: given a value, lock it into the range -PI to PI
 //----------------------------------------------------------------------------
 double NormalizeTheta(double _theta);
+
+template <class MPTraits, class P>
+struct DistanceCompareFirst : public binary_function<P, P, bool> {
+  typedef typename MPTraits::MPProblemType::DistanceMetricPointer DistanceMetricPointer;
+
+  Environment* m_env;
+  DistanceMetricPointer m_dm;
+  const typename P::first_type& m_cfg;
+
+  DistanceCompareFirst(Environment* _e, DistanceMetricPointer _d, const typename P::first_type& _c) :
+    m_env(_e), m_dm(_d), m_cfg(_c) {}
+  ~DistanceCompareFirst() {}
+
+  bool operator()(const P& _p1, const P& _p2) const {
+    return m_dm->Distance(m_cfg, _p1.first) < m_dm->Distance(m_cfg, _p2.first);
+  }
+};
+
+template <class P>
+struct PlusSecond : public binary_function<typename P::second_type,
+					    P,
+					    typename P::second_type> {
+  typename P::second_type operator()(const typename P::second_type& p1, const P& p2) const {
+    return plus<typename P::second_type>()(p1, p2.second);
+  }
+};
 
 #endif
 

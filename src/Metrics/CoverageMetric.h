@@ -3,7 +3,13 @@
 
 #include "MetricMethod.h"
 
-template<class MPTraits>
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup Metrics
+/// @brief TODO.
+///
+/// TODO.
+////////////////////////////////////////////////////////////////////////////////
+template<class MPTraits, class Set>
 class CoverageMetric : public MetricMethod<MPTraits> {
   public:
     typedef typename MPTraits::CfgType CfgType;
@@ -13,44 +19,38 @@ class CoverageMetric : public MetricMethod<MPTraits> {
     typedef typename MPProblemType::GraphType GraphType;
     typedef typename MPProblemType::ConnectorPointer ConnectorPointer;
 
-    CoverageMetric(const vector<CfgType>& _samples=vector<CfgType>(), 
-        const vector<string>& _connectorLabels = vector<string>(), 
+    CoverageMetric(const Set& _samples = Set(),
+        const vector<string>& _connectorLabels = vector<string>(),
         bool _computeAllCCs = false);
     CoverageMetric(MPProblemType* _problem, XMLNodeReader& _node, bool _computeAllCCs = false);
     virtual ~CoverageMetric();
 
-    virtual void PrintOptions(ostream& _os);
+    virtual void Print(ostream& _os) const;
 
     double operator()();
 
   protected:
     //input
-    vector<CfgType> m_samples;
+    Set m_samples;
     vector<string> m_connectorLabels;
     bool m_allData;
-    string m_filename, m_outFileName;
+    string m_outFileName;
     vector<vector<VID> > m_connections;
     ofstream output;
 };
 
-template<class MPTraits>
-CoverageMetric<MPTraits>::CoverageMetric(const vector<CfgType>& _samples, const vector<string>& _connectorLabels, bool _computeAllCCs)
+template<class MPTraits, class Set>
+CoverageMetric<MPTraits, Set>::CoverageMetric(const Set& _samples, const vector<string>& _connectorLabels, bool _computeAllCCs)
   : m_samples(_samples), m_connectorLabels(_connectorLabels), m_allData(_computeAllCCs) {
-  this->SetName("CoverageMetric");
+  this->SetName("CoverageMetric" + Set::GetName());
 }
 
-template<class MPTraits>
-CoverageMetric<MPTraits>::CoverageMetric(MPProblemType* _problem, XMLNodeReader& _node, bool _computeAllCCs)
-  : MetricMethod<MPTraits>(_problem, _node) {
-    this->SetName("CoverageMetric");
+template<class MPTraits, class Set>
+CoverageMetric<MPTraits, Set>::CoverageMetric(MPProblemType* _problem, XMLNodeReader& _node, bool _computeAllCCs)
+  : MetricMethod<MPTraits>(_problem, _node), m_samples(_node) {
+    this->SetName("CoverageMetric" + Set::GetName());
 
-    m_filename = _node.stringXMLParameter("filename", true, "", "filename containing witness samples");
     m_outFileName = _node.stringXMLParameter("outfilename", true, "", "filename for recording results");
-    //read in samples
-    m_samples.clear();
-    ifstream is(m_filename.c_str());
-    copy(istream_iterator<CfgType>(is), istream_iterator<CfgType>(), back_insert_iterator<vector<CfgType> >(m_samples));
-    is.close();
 
     output.open((m_outFileName+".coverage").c_str());
 
@@ -73,24 +73,23 @@ CoverageMetric<MPTraits>::CoverageMetric(MPProblemType* _problem, XMLNodeReader&
     }
 }
 
-template<class MPTraits>
-CoverageMetric<MPTraits>::~CoverageMetric() {
+template<class MPTraits, class Set>
+CoverageMetric<MPTraits, Set>::~CoverageMetric() {
 }
 
-template<class MPTraits>
-void 
-CoverageMetric<MPTraits>::PrintOptions(ostream& _os) {
+template<class MPTraits, class Set>
+void
+CoverageMetric<MPTraits, Set>::Print(ostream& _os) const {
   _os << "Percentage of connection" << endl;
-  _os << "\twitness samples from \"" << m_filename << "\"\n";
   _os << "\tall_data = " << m_allData << endl;
   _os << "\tnode_connection_labels = ";
   copy(m_connectorLabels.begin(), m_connectorLabels.end(), ostream_iterator<string>(_os, " "));
   _os << endl;
 }
 
-template<class MPTraits>
-double 
-CoverageMetric<MPTraits>::operator()() {
+template<class MPTraits, class Set>
+double
+CoverageMetric<MPTraits, Set>::operator()() {
 
   static size_t numcalls = 0;
 
@@ -107,8 +106,9 @@ CoverageMetric<MPTraits>::operator()() {
   vector<VID> sampleList, cc;
   StatClass stats;
 
-  for(size_t i=0; i<m_samples.size(); ++i) {
-    VID sampleVID = rgraph->AddVertex(m_samples[i]);
+  int index = 0;
+  for(typename Set::Iterator i = m_samples.begin(); i != m_samples.end(); ++i) {
+    VID sampleVID = rgraph->AddVertex(*i);
     sampleList.clear();
     sampleList.push_back(sampleVID);
 
@@ -124,12 +124,13 @@ CoverageMetric<MPTraits>::operator()() {
       }
 
       if((rgraph->get_out_degree(sampleVID)) > degreeBefore) {
-        m_connections[i].push_back(ccit->second);
+        m_connections[index].push_back(ccit->second);
         if(!m_allData)
           break;
       }
     }
     rgraph->delete_vertex(sampleVID);
+    index++;
   }
   int numConnections = 0;
   for(size_t i=0; i<m_connections.size(); ++i) {

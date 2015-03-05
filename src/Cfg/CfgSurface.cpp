@@ -12,16 +12,16 @@
 #include "MPProblem/Geometry/MultiBody.h"
 #include "MPProblem/Environment.h"
 
-CfgSurface::CfgSurface() : 
+CfgSurface::CfgSurface() :
   m_pt(Point2d(0,0)), m_h(0), m_surfaceID(INVALID_SURFACE) {}
 
-CfgSurface::CfgSurface(double _x, double _y, double _h, int _sid) : 
+CfgSurface::CfgSurface(double _x, double _y, double _h, int _sid) :
   m_pt(Point2d(_x, _y)), m_h(_h), m_surfaceID(_sid) {}
 
-CfgSurface::CfgSurface(const Vector3d& _v) : 
+CfgSurface::CfgSurface(const Vector3d& _v) :
   m_pt(Point2d(_v[0], _v[2])), m_h(_v[1]), m_surfaceID(INVALID_SURFACE) {}
 
-CfgSurface::CfgSurface(const CfgSurface& _c) : 
+CfgSurface::CfgSurface(const CfgSurface& _c) :
   m_pt(_c.m_pt), m_h(_c.m_h), m_surfaceID(_c.m_surfaceID){
     m_labelMap = _c.m_labelMap;
     m_statMap = _c.m_statMap;
@@ -29,7 +29,7 @@ CfgSurface::CfgSurface(const CfgSurface& _c) :
     m_witnessCfg = _c.m_witnessCfg;
   }
 
-CfgSurface::CfgSurface(const Point2d& _p, double _h, int _sid) : 
+CfgSurface::CfgSurface(const Point2d& _p, double _h, int _sid) :
   m_pt(_p), m_h(_h), m_surfaceID(_sid) {}
 
 CfgSurface::CfgSurface(const Cfg& _c) :
@@ -142,7 +142,7 @@ CfgSurface::operator/=(double _d) {
 double&
 CfgSurface::operator[](size_t _dof){
   m_witnessCfg.reset();
-  assert(_dof >= 0 && _dof <= m_dof);
+  assert(_dof >= 0 && _dof <= m_dof[m_robotIndex]);
   switch(_dof){
     case 0 : return m_pt[0];
     case 1 : return m_h;
@@ -155,7 +155,7 @@ CfgSurface::operator[](size_t _dof){
 
 const double&
 CfgSurface::operator[](size_t _dof) const {
-  assert(_dof >= 0 && _dof <= m_dof);
+  assert(_dof >= 0 && _dof <= m_dof[m_robotIndex]);
   switch(_dof){
     case 0 : return m_pt[0];
     case 1 : return m_h;
@@ -180,7 +180,7 @@ void
 CfgSurface::Write(ostream& _os) const{
   _os << setw(4) << m_robotIndex << " "
       << setw(4) << m_surfaceID << " "
-      << setw(4) << m_pt[0] << " " 
+      << setw(4) << m_pt[0] << " "
       << setw(4) << m_h << " "
       << setw(4) << m_pt[1] << " ";
 
@@ -203,17 +203,6 @@ operator<<(ostream& _os, const CfgSurface& _cfg){
   return _os;
 }
 
-bool
-CfgSurface::InBoundary(Environment* _env, shared_ptr<Boundary> _bb) const {
-  Vector3D p(m_pt[0],m_h,m_pt[1]);
-  return _bb->IfSatisfiesConstraints(p);
-}
-
-bool
-CfgSurface::InBoundary(Environment* _env) const {
-  return this->InBoundary(_env,_env->GetBoundary());
-}
-
 vector<double>
 CfgSurface::GetData() const{
   vector<double> data(3);
@@ -225,9 +214,9 @@ CfgSurface::GetData() const{
 
 void
 CfgSurface::SetData(const vector<double>& _data) {
-  if(_data.size() != m_dof) {
+  if(_data.size() != m_dof[m_robotIndex]) {
     cout << "\n\nERROR in CfgSurface::SetData, ";
-    cout << "DOF of data and Cfg are not equal " << _data.size() << "\t!=\t" << m_dof << endl; 
+    cout << "DOF of data and Cfg are not equal " << _data.size() << "\t!=\t" << m_dof[m_robotIndex] << endl;
     exit(-1);
   }
   m_pt[0] = _data[0];
@@ -251,19 +240,19 @@ CfgSurface::PositionMagnitude() const {
   return Magnitude();
 }
 
-Vector3D
+Vector3d
 CfgSurface::GetRobotCenterPosition() const {
-  return Vector3D(m_pt[0], m_h, m_pt[1]);
+  return Vector3d(m_pt[0], m_h, m_pt[1]);
 }
 
-Vector3D
+Vector3d
 CfgSurface::GetRobotCenterofMass(Environment* _env) const {
   ConfigEnvironment(_env);
 
-  Vector3D com(0,0,0);
+  Vector3d com(0,0,0);
   GMSPolyhedron poly =
     _env->GetMultiBody(m_robotIndex)->GetFreeBody(0)->GetWorldPolyhedron();
-  for(vector<Vector3D>::const_iterator vit = poly.m_vertexList.begin(); vit
+  for(vector<Vector3d>::const_iterator vit = poly.m_vertexList.begin(); vit
       != poly.m_vertexList.end(); ++vit)
     com = com + (*vit);
   com = com / poly.m_vertexList.size();
@@ -275,11 +264,9 @@ bool CfgSurface::ConfigEnvironment(Environment* _env) const {
 
   // configure the robot according to current Cfg: joint parameters
   // (and base locations/orientations for free flying robots.)
-  Transformation T1 = Transformation(Orientation(Orientation::FixedXYZ, 
-        0, 
-        0, 
-        0),
-      Vector3D(m_pt[0], m_h, m_pt[1]));
+  Transformation T1 = Transformation(
+      Vector3d(m_pt[0], m_h, m_pt[1]),
+      Orientation());
   // update link i
   mb->GetFreeBody(0)->Configure(T1);
 
@@ -297,7 +284,7 @@ CfgSurface::GetResolutionCfg(Environment* _env) {
 
 void
 CfgSurface::IncrementTowardsGoal(const Cfg& _goal, const Cfg& _increment) {
-  for(size_t i = 0; i < m_dof; ++i) {
+  for(size_t i = 0; i < m_dof[m_robotIndex]; ++i) {
     //If the diff between _goal and c is smaller than _increment
     if(fabs(((const CfgSurface&)_goal)[i]-operator[](i)) < fabs(((const CfgSurface&)_increment)[i]))
       operator[](i) = ((const CfgSurface&)_goal)[i];
@@ -320,7 +307,7 @@ CfgSurface::FindIncrement(const Cfg& _start, const Cfg& _goal, int* _nTicks, dou
 void
 CfgSurface::FindIncrement(const Cfg& _start, const Cfg& _goal, int _nTicks){
   vector<double> incr;
-  for(size_t i = 0; i < m_dof; ++i) {
+  for(size_t i = 0; i < m_dof[m_robotIndex]; ++i) {
     incr.push_back((((const CfgSurface&)_goal)[i] - ((const CfgSurface&)_start)[i])/_nTicks);
   }
   SetData(incr);
@@ -329,7 +316,7 @@ CfgSurface::FindIncrement(const Cfg& _start, const Cfg& _goal, int _nTicks){
 void
 CfgSurface::WeightedSum(const Cfg& _first, const Cfg& _second, double _weight) {
   vector<double> v;
-  for(size_t i = 0; i < m_dof; ++i)
+  for(size_t i = 0; i < m_dof[m_robotIndex]; ++i)
     v.push_back(((const CfgSurface&)_first)[i]*(1.-_weight) + ((const CfgSurface&)_second)[i]*_weight);
   SetData(v);
   m_surfaceID = ((const CfgSurface&)_first).GetSurfaceID();
@@ -341,7 +328,7 @@ CfgSurface::GetPositionOrientationFrom2Cfg(const Cfg& _c1, const Cfg& _c2) {
 }
 
 void
-CfgSurface::GetRandomCfgImpl(Environment *_env, shared_ptr<Boundary> _bb) {
+CfgSurface::GetRandomCfgImpl(Environment* _env, shared_ptr<Boundary> _bb) {
   if( m_surfaceID == INVALID_SURFACE ) { // need to set appropriate surface id
     int rindex = _env->GetRandomNavigableSurfaceIndex();
     m_surfaceID = rindex;

@@ -3,10 +3,14 @@
 #include "SSSurface.h"
 #include "CfgSurface.h"
 
+#include "MPProblem/Geometry/MultiBody.h"
+#include "MPProblem/Environment.h"
+
 void
 SSSurface::InitDefaults(){
-  m_maxAccel = m_maxSpeed = 1.0;
-  m_maxSteeringAngle = PI/2.0;
+  m_maxAccel = 1.0;
+  m_maxSpeed = 5.0;
+  m_maxSteeringAngle = 0.22;//PI/2.0 was not working and previously default was this
   m_wheelbase = 1.0;
   m_steeringAngle = 0.0;
   m_velocity[0] = 0.0; m_velocity[1] = 1.0;
@@ -133,7 +137,7 @@ void SSSurface::IncrementTowardsGoal(const Cfg& _goal, const Cfg& _increment){
   //acceleration etc, unless we set m_dof correctly at the start
 }
 
-void SSSurface::FindIncrement(const Cfg& _start, const Cfg& _goal, int* _nTicks, 
+void SSSurface::FindIncrement(const Cfg& _start, const Cfg& _goal, int* _nTicks,
     double _positionRes, double _orientationRes){
   CfgSurface::FindIncrement(_start, _goal, _nTicks, _positionRes, _orientationRes);
 }
@@ -320,7 +324,7 @@ void SSSurface::CapValues(){
   if (m_acceleration.norm() > m_maxAccel){
     m_acceleration = m_acceleration.normalize() * m_maxAccel;
   }
-  
+
   m_steeringAngle =  NormalizeTheta(m_steeringAngle);
   m_orientation[0] = NormalizeTheta(m_orientation[0]);
   m_orientation[1] = NormalizeTheta(m_orientation[1]);
@@ -343,7 +347,6 @@ SSSurface SSSurface::Update(double _dt){
 
   int velocity = m_velocity.norm();
   double theta = m_orientation[1]; //rotation about vertical axis
- // velocity = max(1, velocity);
   velocity = m_maxSpeed;
   bool straightLine = true;
   double turningRadius = 0.0;
@@ -358,25 +361,42 @@ SSSurface SSSurface::Update(double _dt){
   double vel=1.0;
   if (velocity < 0)
     vel = -1.0;
-  
+
   //assume cfgs loaded in to be facing down 0,-1 instead of 0, 0
   theta = NormalizeTheta(theta+PI/2.0);
+  //theta = NormalizeTheta(theta+3*PI/2.0);
   Point2d pos = m_pt;
   for (int i=0; i<abs(velocity); ++i){
+  //for (int i=0; i<1; ++i){ //<--this step was only done once before!!!!!F
     //pos.set(pos[0] + vel*_dt*cos(theta), pos[1] + vel*_dt*sin(theta)); -- way it should be
 
     //way it actually is with the weird coordinates
-    pos.set(pos[0] - vel*_dt*cos(theta), pos[1] + vel*_dt*sin(theta));
+    pos(pos[0] - vel*_dt*cos(theta), pos[1] + vel*_dt*sin(theta));
 
     if (!straightLine){
       theta = theta + (vel*_dt)/turningRadius;
     }
   }//end Euler integration
-  
+
   //undo rotation from before
   toReturn.SetRotY(NormalizeTheta(theta-PI/2.0));
+  //toReturn.SetRotY(NormalizeTheta(theta-3*PI/2.0));
   toReturn.SetPos(pos);
 
   return toReturn;
 }
 
+/////////////////////////////////////////////////////////////
+bool SSSurface::ConfigEnvironment(Environment* _env) const {
+  shared_ptr<MultiBody> mb = _env->GetMultiBody(m_robotIndex);
+
+  // configure the robot according to current Cfg: joint parameters
+  // (and base locations/orientations for free flying robots.)
+  Transformation T1 = Transformation(
+      Vector3d(m_pt[0], m_h, m_pt[1]),
+      Orientation(EulerAngle(0, m_orientation[1], 0)));
+  // update link i
+  mb->GetFreeBody(0)->Configure(T1);
+
+  return true;
+}

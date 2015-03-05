@@ -20,12 +20,8 @@
 #include "MPProblem/Geometry/GMSPolyhedron.h"
 #include "MPProblem/Geometry/Connection.h"
 #include "MPProblem/Robot.h"
-#include "boost/shared_ptr.hpp"
-
-using boost::shared_ptr;
 
 class MultiBody;
-class Transformation;
 class DHparameters;
 
 /**class Body is a high level represented object in workspace.
@@ -46,9 +42,10 @@ class Body {
 
     bool operator==(const Body& b) const;
     bool operator!=(const Body& b) const { return !(*this == b); }
-    void SetFileName(string _filename) { m_filename=_filename; }
 
-    ///Return transformation of this body in world coordinate. 
+    string GetFileName() { return m_filename; }
+
+    ///Return transformation of this body in world coordinate.
     virtual Transformation& GetWorldTransformation() = 0;
 
     /**Return world transformation of this body.
@@ -57,7 +54,7 @@ class Body {
      */
     Transformation& WorldTransformation() {return m_worldTransformation;}
 
-    /**This function returns a Polyhedron whose vertices and normals are represented in 
+    /**This function returns a Polyhedron whose vertices and normals are represented in
      *world coordinate.
      */
     virtual GMSPolyhedron& GetWorldPolyhedron();
@@ -67,13 +64,13 @@ class Body {
 
     MultiBody* GetMultiBody() {return m_multibody;}
     double* GetBoundingBox() {return m_boundingBox;}
-    Vector3D GetCenterOfMass();
+    Vector3d GetCenterOfMass();
     Connection& GetForwardConnection(size_t _index);
     Connection& GetBackwardConnection(size_t _index);
 
     //Get methods used in collision detection
 #ifdef USE_VCLIP
-    shared_ptr<PolyTree> GetVClipBody() {return vclipBody;}  
+    shared_ptr<PolyTree> GetVClipBody() {return vclipBody;}
 #endif
 #ifdef USE_RAPID
     shared_ptr<RAPID_model> GetRapidBody() {return rapidBody;}
@@ -102,13 +99,10 @@ class Body {
     void SetBase(Robot::Base _baseType) { m_baseType = _baseType; };
     void SetBaseMovement(Robot::BaseMovement _baseMovementType) { m_baseMovementType = _baseMovementType; };
 
-    void Read(string _fileName);
+    void SetLabel(const int _label) { m_label = _label; };
+    int GetLabel() { return m_label; };
 
-    /**Read BYU format data from given inpustream. 
-     *Call GMSPolyhedron::ReadBYU, calculate the bounding box, and then call buildCDstructure
-     *to create auxilary data structure for collision detection.
-     */
-    void ReadBYU(istream& _is);
+    void Read();
 
     virtual void Write(ostream& _os);
 
@@ -125,9 +119,9 @@ class Body {
      *still an approximation.
      *
      *if GetCenterOfMass() is called for the first time,
-     *this function calculates it and set 'available' flag 
+     *this function calculates it and set 'available' flag
      */
-    void ComputeCenterOfMass();  
+    void ComputeCenterOfMass();
     void FindBoundingBox();
 
     //to check if two Body share same joint (adjacent) for a robot.
@@ -140,15 +134,15 @@ class Body {
     ///////////////////////////////////////////////////////////////////////////////
     void BuildCDStructure(cd_predefined _cdtype);
 #ifdef USE_SOLID
-    void UpdateVertexBase();  
+    void UpdateVertexBase();
 #endif
     ////////////////////////////////////////////////////////////////////////////////
     //    Connection methods
     ////////////////////////////////////////////////////////////////////////////////
     int ForwardConnectionCount() const {return m_forwardConnection.size();}
     int BackwardConnectionCount() const {return m_backwardConnection.size();}
-    void AddForwardConnection(Connection _connection) {m_forwardConnection.push_back(_connection);}
-    void AddBackwardConnection(Connection _connection) {m_backwardConnection.push_back(_connection);}
+    void AddForwardConnection(const Connection& _connection) {m_forwardConnection.push_back(_connection);}
+    void AddBackwardConnection(const Connection& _connection) {m_backwardConnection.push_back(_connection);}
     /**Link
      * Function: Link "this" body to the given other body by setting up a
      * connectionship between them using the given DH parameters and the
@@ -161,22 +155,32 @@ class Body {
      * Function: Link "this" body to the given body by using the given
      * connection.  Establish a forward and backward connectionship.
      */
-    void Link(Connection _c);
+    void Link(const Connection& _c);
+
+    bool IsConvexHullVertex(const Vector3d& _v);
+
+    static string m_modelDataDir;
 
   protected:
-    string m_filename;
-    MultiBody* m_multibody;                  
-    Transformation m_worldTransformation;     
-    bool m_isBase;                           
-    Robot::Base m_baseType;                  
-    Robot::BaseMovement m_baseMovementType;  
 
-    GMSPolyhedron m_polyhedron;               
-    GMSPolyhedron m_worldPolyhedron;          
-    bool m_centerOfMassAvailable;             
-    Vector3D m_centerOfMass;                  
+    void ComputeConvexHull();
+
+    string m_filename;
+    MultiBody* m_multibody;
+    Transformation m_worldTransformation;
+    bool m_isBase;
+    int m_label;
+    Robot::Base m_baseType;
+    Robot::BaseMovement m_baseMovementType;
+
+    GMSPolyhedron m_polyhedron;
+    GMSPolyhedron m_worldPolyhedron;
+    GMSPolyhedron m_convexHull;
+    bool m_convexHullAvailable;
+    bool m_centerOfMassAvailable;
+    Vector3d m_centerOfMass;
     bool m_worldPolyhedronAvailable;
-    double m_boundingBox[6];                  
+    double m_boundingBox[6];
     GMSPolyhedron m_bbPolyhedron;
     GMSPolyhedron m_bbWorldPolyhedron;
 
@@ -184,18 +188,18 @@ class Body {
     vector<Connection> m_backwardConnection;
 
 #ifdef USE_VCLIP
-    shared_ptr<PolyTree> vclipBody;   
+    shared_ptr<PolyTree> vclipBody;
 #endif
 #ifdef USE_RAPID
-    shared_ptr<RAPID_model> rapidBody; 
+    shared_ptr<RAPID_model> rapidBody;
 #endif
 #ifdef USE_PQP
     shared_ptr<PQP_Model> pqpBody;
 #endif
 #ifdef USE_SOLID
     shared_ptr<DT_ObjectHandle> solidBody;
-    DT_VertexBaseHandle base;			
-    MT_Point3* vertex;				
+    DT_VertexBaseHandle base;
+    MT_Point3* vertex;
 #endif
 
     friend class MultiBody; //Owner

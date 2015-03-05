@@ -1,165 +1,131 @@
-#include "VClipCollisionDetection.h"
-
 #ifdef USE_VCLIP
-VClip::
-VClip() : CollisionDetectionMethod() {
-  m_name = "VCLIP";
-  m_type = Exact;
-  m_cdtype = VCLIP;
-}
 
-VClip::
-~VClip() {
-}
+#include "VClipCollisionDetection.h"
+#include "CDInfo.h"
+#include "Utilities/MetricUtils.h"
+#include "MPProblem/Geometry/MultiBody.h"
+
+VClip::VClip() : CollisionDetectionMethod("VCLIP", Exact, VCLIP) {}
+
+VClip::~VClip() {}
 
 ClosestFeaturesHT closestFeaturesHT(3000);
 
 bool
-VClip::
-IsInCollision(shared_ptr<MultiBody> _robot, shared_ptr<MultiBody> _obstacle, 
-	      StatClass& _stats, CDInfo& _cdInfo, std::string *_callName, int _ignoreIAdjacentMultibodies) {
-  _stats.IncNumCollDetCalls(GetName(), _callName);
+VClip::IsInCollision(shared_ptr<MultiBody> _robot, shared_ptr<MultiBody> _obstacle,
+    StatClass& _stats, CDInfo& _cdInfo, const string& _callName, int _ignoreIAdjacentMultibodies) {
+  _stats.IncNumCollDetCalls(m_name, _callName);
+
+  if (_cdInfo.m_retAllInfo == true)
+    return FillCdInfo(_robot, _obstacle, _cdInfo, _ignoreIAdjacentMultibodies);
 
   Real dist;
-  VclipPose X12;
+  VClipPose x12; //VClip position
   Vect3 cp1, cp2;   // closest points between bodies, in local frame
-  // we're throwing this info away for now
-  
-  if (_cdInfo.m_retAllInfo == true) {
-    bool ret_val;
-    ret_val = IsInColl_AllInfo_vclip(_robot, _obstacle, _cdInfo, _ignoreIAdjacentMultibodies);
-    return ret_val;
-  }
-  
-  for(int i=0 ; i<_robot->GetFreeBodyCount(); i++) {
-    
+
+  for(int i=0 ; i < _robot->GetFreeBodyCount(); i++) {
+
     shared_ptr<PolyTree> rob = _robot->GetFreeBody(i)->GetVClipBody();
-    
-    for(int j=0; j<_obstacle->GetBodyCount(); j++) {
-      
+
+    for(int j=0; j < _obstacle->GetBodyCount(); j++) {
+
       // if robot check self collision, skip adjacent links.
       if(_robot == _obstacle &&
-	 _robot->GetFreeBody(i)->IsWithinI(_obstacle->GetBody(j),_ignoreIAdjacentMultibodies) ) {
-	continue;
-      }
-      
+          _robot->GetFreeBody(i)->IsWithinI(_obstacle->GetBody(j),_ignoreIAdjacentMultibodies) )
+        continue;
+
+
       shared_ptr<PolyTree> obst = _obstacle->GetBody(j)->GetVClipBody();
-      X12 = GetVClipPose(_robot->GetFreeBody(i)->WorldTransformation(),
-			 _obstacle->GetBody(j)->WorldTransformation());
-      dist = PolyTree::vclip(rob.get(),obst.get(),X12,closestFeaturesHT, cp1, cp2);
-      
-      if(dist <= 0.0) { // once was < 0.001 ????
-	return true;
-      }
-    } // end for j
-  } // end for i
-  
+      x12 = GetVClipPose(_robot->GetFreeBody(i)->WorldTransformation(),
+          _obstacle->GetBody(j)->WorldTransformation());
+      dist = PolyTree::vclip(rob.get(),obst.get(),x12,closestFeaturesHT, cp1, cp2);
+
+      if(dist <= 0.0)
+        return true;
+    }
+  }
+
   return false;
-} // end IsInCollision_vclip()
+}
 
 
-//////////////////////////////////////////////////////////////////////////
-// IsInColl_AllInfo_vclip
-// written by Brent, June 2000
-//
-// This function will fill in as much of _cdInfo as possible
-// w.r.t. the robot and obstacle sent
-// Notice each obstacle could change the results in _cdInfo
-// Trace back to general IsInCollision call to see how it all
-// gets updated correctly.
-//////////////////////////////////////////////////////////////////////////
+/* Get all collsion information for given MultiBody.
+ * Collision is checked in Body level between two MultiBodys,
+ * if any of Body from Robot collides with any of Body from obstacle,
+ * true will be returned.
+ *
+ * More information about collision between two object, such as the closet points between
+ * two object, closest distance... all of these information are stored in _cdInfo.
+ *
+ * each obstacle could change the results in _cdInfo
+ * Trace back to general IsInCollision call to see how it all
+ * gets updated correctly.
+ */
 bool
-VClip::
-IsInColl_AllInfo_vclip(shared_ptr<MultiBody> _robot, shared_ptr<MultiBody> _obstacle, 
-		       CDInfo& _cdInfo, int _ignoreIAdjacentMultibodies) {
-  Real dist, m_minDist_so_far;
-  VclipPose X12;
-  Vect3 cp1, cp2;   // closest points between bodies, in local frame
-  Vector3D robot_pt, obs_pt;
-  bool ret_val;
+VClip::FillCdInfo(shared_ptr<MultiBody> _robot, shared_ptr<MultiBody> _obstacle,
+    CDInfo& _cdInfo, int _ignoreIAdjacentMultibodies) {
+  Real dist, minCurrentDist;
+  VClipPose x12;
+  Vect3 cp1, cp2; //closest points between bodies, in local frame
+
+  bool isInCollision = false;
+
   _cdInfo.ResetVars();
   _cdInfo.m_retAllInfo = true;
-  
-  ret_val = false;
-  m_minDist_so_far = MaxDist;  // =  1e10 by CollisionDetection.h
-  
+
+  minCurrentDist = maxDist;  // =  1e10 by CollisionDetection.h
+
   for(int i=0; i<_robot->GetFreeBodyCount(); i++) {
     shared_ptr<PolyTree> rob = _robot->GetFreeBody(i)->GetVClipBody();
-    
+
     for(int j=0; j<_obstacle->GetBodyCount(); j++) {
-      
       // if robot check self collision, skip adjacent links.
       if(_robot == _obstacle &&
-	 _robot->GetFreeBody(i)->IsWithinI(_obstacle->GetBody(j),_ignoreIAdjacentMultibodies) ) {   
-	continue;
-      }
-      
+          _robot->GetFreeBody(i)->IsWithinI(_obstacle->GetBody(j),_ignoreIAdjacentMultibodies) )
+        continue;
+
+
       shared_ptr<PolyTree> obst = _obstacle->GetBody(j)->GetVClipBody();
-      X12 = GetVClipPose(_robot->GetFreeBody(i)->WorldTransformation(),
-			 _obstacle->GetBody(j)->WorldTransformation());
-      dist = PolyTree::vclip(rob.get(),obst.get(),X12,closestFeaturesHT, cp1, cp2);
+      x12 = GetVClipPose(_robot->GetFreeBody(i)->WorldTransformation(),
+          _obstacle->GetBody(j)->WorldTransformation());
+      dist = PolyTree::vclip(rob.get(),obst.get(),x12,closestFeaturesHT, cp1, cp2);
 
       if ( dist <= 0.0 ) {
-	if (dist < m_minDist_so_far)
-	  _cdInfo.m_collidingObstIndex = j;
-	ret_val = true;
+        if (dist < minCurrentDist)
+          _cdInfo.m_collidingObstIndex = j;
+        isInCollision = true;
       }
-      
-      if (dist < m_minDist_so_far) {
-	m_minDist_so_far = dist;
+
+      if (dist < minCurrentDist) {
+        minCurrentDist = dist;
         _cdInfo.m_nearestObstIndex = j;
-	_cdInfo.m_minDist = dist;
-	
-	// change a 3 elmt array to Vector3D class
-	robot_pt[0] = cp1[0];
-	robot_pt[1] = cp1[1];
-	robot_pt[2] = cp1[2];
-	
-	obs_pt[0] = cp2[0];
-	obs_pt[1] = cp2[1];
-	obs_pt[2] = cp2[2];
-	
-	//cout << "CD method, robot pt = " << robot_pt << endl;
-	//cout << "CD method, obs_pt = " << obs_pt << endl;
-	
-	// transform points to world coords
-	// using *_pt vars in case overloaded * was not done well.
-	_cdInfo.m_robotPoint = _robot->GetFreeBody(i)->WorldTransformation() * robot_pt;
-	_cdInfo.m_objectPoint = _obstacle->GetBody(j)->WorldTransformation() * obs_pt;
-	
+        _cdInfo.m_minDist = dist;
+
+        // change a 3 elmt array to Vector3d class
+        Vector3d robotPt(cp1[0], cp1[1], cp1[2]);
+        Vector3d obstPt(cp2[0], cp2[1], cp2[2]);
+
+        // transform points to world coords
+        _cdInfo.m_robotPoint = _robot->GetFreeBody(i)->WorldTransformation() * robotPt;
+        _cdInfo.m_objectPoint = _obstacle->GetBody(j)->WorldTransformation() * obstPt;
       }
-    } // end for j
-  } // end for i
-  
-  return ret_val;
-} // end IsInColl_AllInfo_vclip()
+    }
+  }
 
-
-VclipPose 
-VClip::
-GetVClipPose(const Transformation &myT, const Transformation &obstT) {	
-  Transformation diff = Transformation(obstT).Inverse() * myT;
-  
-  diff.m_orientation.ConvertType(Orientation::EulerXYZ);
-  
-  //------------------------------------------------
-  // here's where it really starts.
-  //------------------------------------------------
-  
-  Vect3 XYZ(diff.m_position.getX(),diff.m_position.getY(),diff.m_position.getZ());
-  
-  Quat RPY         (diff.m_orientation.alpha,Vect3::I);
-  RPY.postmult(Quat(diff.m_orientation.beta ,Vect3::J));
-  RPY.postmult(Quat(diff.m_orientation.gamma,Vect3::K));
-  
-  // the above is for EulerXYZ.
-  // For EulerZYX, or FixedXYZ, we should have the following instead,
-  // i.e. Rotation = Rz(alpha) * Ry(beta) * Rx(gamma)
-  // Quat RPY         (diff.m_orientation.alpha,Vect3::K);
-  // RPY.postmult(Quat(diff.m_orientation.beta ,Vect3::J));
-  // RPY.postmult(Quat(diff.m_orientation.gamma,Vect3::I));
-  
-  return VclipPose(RPY,XYZ);
+  return isInCollision;
 }
-#endif
 
+VClipPose
+VClip::GetVClipPose(const Transformation& _myT, const Transformation& _obstT) {
+  Transformation diff = (-_obstT) * _myT;
+  Quaternion q;
+  convertFromMatrix(q, diff.rotation().matrix());
+
+  Vect3 pos(diff.translation()[0], diff.translation()[1], diff.translation()[2]);
+
+  Quat rot(q.real(), q.imaginary()[0], q.imaginary()[1], q.imaginary()[2]);
+
+  return VClipPose(rot, pos);
+}
+
+#endif

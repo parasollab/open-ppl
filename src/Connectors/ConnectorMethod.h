@@ -1,18 +1,17 @@
-#ifndef CONNECTIONMETHOD_H_
-#define CONNECTIONMETHOD_H_
+#ifndef CONNECTION_METHOD_H_
+#define CONNECTION_METHOD_H_
 
 #include <boost/mpl/for_each.hpp>
 #include "Utilities/MPUtils.h"
 #include "Utilities/MetricUtils.h"
-#include "MPProblem/RoadmapGraph.h"
 
 namespace pmpl_detail{
   template<typename CM, typename RDMP, typename STATS, typename CMAP,
-    typename I, typename O>
+    typename I1, typename I2, typename O>
       struct VirtualConnect{
         public:
           VirtualConnect(CM* _v, RDMP* _r, STATS& _s, CMAP& _c,
-              I _i1f, I _i1l, I _i2f, I _i2l, O _o) : 
+              I1 _i1f, I1 _i1l, I2 _i2f, I2 _i2l, O _o) :
             m_memory(_v), m_rdmp(_r), m_stats(_s), m_cmap(_c), m_i1first(_i1f),
             m_i1last(_i1l), m_i2first(_i2f), m_i2last(_i2l), m_output(_o){
             }
@@ -21,7 +20,7 @@ namespace pmpl_detail{
             void operator()(T& _t) {
               T* tptr = dynamic_cast<T*>(m_memory);
               if(tptr != NULL){
-                tptr->Connect(m_rdmp, m_stats, m_cmap, m_i1first, m_i1last, 
+                tptr->Connect(m_rdmp, m_stats, m_cmap, m_i1first, m_i1last,
                     m_i2first, m_i2last, m_output);
               }
             }
@@ -29,12 +28,21 @@ namespace pmpl_detail{
           CM* m_memory;
           RDMP* m_rdmp;
           STATS& m_stats;
-          CMAP& m_cmap; 
-          I m_i1first, m_i1last, m_i2first, m_i2last;
+          CMAP& m_cmap;
+          I1 m_i1first, m_i1last;
+          I2 m_i2first, m_i2last;
           O m_output;
       };
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup Connectors
+/// @brief Base algorithm abstraction for \ref Connectors.
+///
+/// ConnectorMethod essentially has one important function, @c Connect which can
+/// be called in a multitude of ways. In its basic forms it takes two sets of
+/// configurations and generates edges in the roadmap between them.
+////////////////////////////////////////////////////////////////////////////////
 template<class MPTraits>
 #ifdef _PARALLEL
 class ConnectorMethod : public MPBaseObject<MPTraits>, public stapl::p_object {
@@ -45,86 +53,242 @@ class ConnectorMethod : public MPBaseObject<MPTraits> {
     typedef typename MPTraits::CfgType CfgType;
     typedef typename MPTraits::MPProblemType MPProblemType;
     typedef typename MPProblemType::RoadmapType RoadmapType;
-    typedef typename MPProblemType::VID VID; 
+    typedef typename MPProblemType::VID VID;
     typedef typename MPTraits::WeightType WeightType;
     #ifdef _PARALLEL
     typedef typename stapl::sequential::graph<stapl::DIRECTED, stapl::NONMULTIEDGES, CfgType,WeightType> SequentialGraphType;
     #endif
 
-    ConnectorMethod();
+    ConnectorMethod(string _lpLabel = "", string _nfLabel = "");
     ConnectorMethod(MPProblemType* _problem, XMLNodeReader& _node);
-    virtual ~ConnectorMethod(){}
 
-    /////////////////////////////////////////////
+    virtual void Print(ostream& _os) const;
+
+    ////////////////////////////////////////////////////////////////////////////
     // Connection Methods
+    ////////////////////////////////////////////////////////////////////////////
+
+    ////////////////////////////////////////////////////////////////////////////
+    /// @brief Generate edges between two sets of nodes
+    ///
+    /// @overload
+    /// Uses the entire roadmap as the first and second set of nodes and no
+    /// output of collision witnesses.
+    ////////////////////////////////////////////////////////////////////////////
     template<typename ColorMap>
       void Connect(RoadmapType* _rm, StatClass& _stats, ColorMap& _cmap){
         vector<CfgType> collision;
         Connect(_rm, _stats, _cmap, back_inserter(collision));
       }
 
+    ////////////////////////////////////////////////////////////////////////////
+    /// @brief Generate edges between two sets of nodes
+    ///
+    /// @overload
+    /// Uses the entire roadmap as the first and second set of nodes.
+    ////////////////////////////////////////////////////////////////////////////
     template<typename ColorMap, typename OutputIterator>
       void Connect(RoadmapType* _rm, StatClass& _stats, ColorMap& _cmap,
           OutputIterator _collision){
-        vector<VID> vertices;
-        _rm->GetGraph()->GetVerticesVID(vertices);
-        Connect(_rm, _stats, _cmap, vertices.begin(), vertices.end(), vertices.begin(), vertices.end(), _collision);
+        Connect(_rm, _stats, _cmap,
+            _rm->GetGraph()->begin(), _rm->GetGraph()->end(),
+            _rm->GetGraph()->begin(), _rm->GetGraph()->end(),
+            _collision);
       }
 
+    ////////////////////////////////////////////////////////////////////////////
+    /// @brief Generate edges between two sets of nodes
+    ///
+    /// @overload
+    /// Uses a single node as the first set of nodes, the entire roadmap as
+    /// second set of nodes, and no output of collision witnesses.
+    ////////////////////////////////////////////////////////////////////////////
+    template<typename ColorMap>
+      void Connect(RoadmapType* _rm, StatClass& _stats, ColorMap& _cmap, VID _vid){
+        vector<CfgType> collision;
+        Connect(_rm, _stats, _cmap, _vid, back_inserter(collision));
+      }
+
+    ////////////////////////////////////////////////////////////////////////////
+    /// @brief Generate edges between two sets of nodes
+    ///
+    /// @overload
+    /// Uses a single node as the first set of nodes and the entire roadmap as
+    /// second set of nodes.
+    ////////////////////////////////////////////////////////////////////////////
+    template<typename ColorMap, typename OutputIterator>
+      void Connect(RoadmapType* _rm, StatClass& _stats, ColorMap& _cmap,
+          VID _vid, OutputIterator _collision){
+        Connect(_rm, _stats, _cmap, _vid, _rm->GetGraph()->begin(), _rm->GetGraph()->end(), _collision);
+      }
+
+    ////////////////////////////////////////////////////////////////////////////
+    /// @brief Generate edges between two sets of nodes
+    ///
+    /// @overload
+    /// Uses entire roadmap as second set of nodes and no output of collision
+    /// witnesses.
+    ////////////////////////////////////////////////////////////////////////////
     template<typename ColorMap, typename InputIterator>
       void Connect(RoadmapType* _rm, StatClass& _stats, ColorMap& _cmap,
-          InputIterator _itr1First, InputIterator _itr1Last, 
-          InputIterator _itr2First, InputIterator _itr2Last){
+          InputIterator _itrFirst, InputIterator _itrLast){
+        vector<CfgType> collision;
+        Connect(_rm, _stats, _cmap, _itrFirst, _itrLast, back_inserter(collision));
+      }
+
+    ////////////////////////////////////////////////////////////////////////////
+    /// @brief Generate edges between two sets of nodes
+    ///
+    /// @overload
+    /// Uses entire roadmap as second set of nodes.
+    ////////////////////////////////////////////////////////////////////////////
+    template<typename ColorMap, typename InputIterator, typename OutputIterator>
+      void Connect(RoadmapType* _rm, StatClass& _stats, ColorMap& _cmap,
+          InputIterator _itrFirst, InputIterator _itrLast,
+          OutputIterator _collision){
+        Connect(_rm, _stats, _cmap,
+            _itrFirst, _itrLast,
+            _rm->GetGraph()->begin(), _rm->GetGraph()->end(),
+            _collision);
+      }
+
+    ////////////////////////////////////////////////////////////////////////////
+    /// @brief Generate edges between two sets of nodes
+    ///
+    /// @overload
+    /// Uses a single VID as the first set of nodes and no output of collision
+    /// witnesses.
+    ////////////////////////////////////////////////////////////////////////////
+    template<typename ColorMap, typename InputIterator>
+      void Connect(RoadmapType* _rm, StatClass& _stats, ColorMap& _cmap,
+          VID _vid,
+          InputIterator _itrFirst, InputIterator _itrLast){
+        vector<CfgType> collision;
+        Connect(_rm, _stats, _cmap, _vid, _itrFirst, _itrLast, back_inserter(collision));
+      }
+
+    ////////////////////////////////////////////////////////////////////////////
+    /// @brief Generate edges between two sets of nodes
+    ///
+    /// @overload
+    /// Uses a single VID as the first set of nodes.
+    ////////////////////////////////////////////////////////////////////////////
+    template<typename ColorMap, typename InputIterator, typename OutputIterator>
+      void Connect(RoadmapType* _rm, StatClass& _stats, ColorMap& _cmap,
+          VID _vid,
+          InputIterator _itrFirst, InputIterator _itrLast,
+          OutputIterator _collision){
+        vector<VID> vids(1, _vid);
+        Connect(_rm, _stats, _cmap, vids.begin(), vids.end(), _itrFirst, _itrLast, _collision);
+      }
+
+    ////////////////////////////////////////////////////////////////////////////
+    /// @brief Generate edges between two sets of nodes
+    ///
+    /// @overload
+    /// No output of collision witnesses.
+    ////////////////////////////////////////////////////////////////////////////
+    template<typename ColorMap, typename InputIterator1, typename InputIterator2>
+      void Connect(RoadmapType* _rm, StatClass& _stats, ColorMap& _cmap,
+          InputIterator1 _itr1First, InputIterator1 _itr1Last,
+          InputIterator2 _itr2First, InputIterator2 _itr2Last){
         vector<CfgType> collision;
         Connect(_rm, _stats, _cmap, _itr1First, _itr1Last, _itr2First, _itr2Last, back_inserter(collision));
       }
 
-    template<typename ColorMap, typename InputIterator, typename OutputIterator>
+    ////////////////////////////////////////////////////////////////////////////
+    /// @brief Generate edges between two sets of nodes
+    /// @param _rm The roadmap to generate edges in and where the input nodes
+    ///        are found
+    /// @param _stats The stat class inside the MPProblem
+    /// @param _cmap A color map over the underlying RoadmapGraph, used in CC
+    ///        computations
+    /// @param _itr1First Begin iterator of first set of VIDs
+    /// @param _itr1Last End iterator of first set of VIDs
+    /// @param _itr2First Begin iterator of second set of VIDs
+    /// @param _itr2Last End iterator of second set of VIDs
+    /// @param _collision Output iterator to store collision witnesses
+    ///
+    /// @usage
+    /// @code
+    /// ConnectorPointer c = this->GetMPProblem()->GetConnector(m_cLabel);
+    /// ColorMapType cm;
+    /// vector<VID> c1, c2;
+    /// vector<CfgType> col;
+    /// c->Connect(this->GetMPProblem()->GetRoadmap(),
+    ///            this->GetMPProblem()->GetStatClass(),
+    ///            cmap, c1.begin(), c1.end(), c2.begin(), c2.end(),
+    ///            back_inserter(col));
+    /// @endcode
+    ////////////////////////////////////////////////////////////////////////////
+    template<typename ColorMap, typename InputIterator1, typename InputIterator2, typename OutputIterator>
       void Connect(RoadmapType* _rm, StatClass& _stats, ColorMap& _cmap,
-          InputIterator _itr1First, InputIterator _itr1Last, 
-          InputIterator _itr2First, InputIterator _itr2Last, 
+          InputIterator1 _itr1First, InputIterator1 _itr1Last,
+          InputIterator2 _itr2First, InputIterator2 _itr2Last,
           OutputIterator _collision){
         typedef typename MPTraits::ConnectorMethodList MethodList;
-        boost::mpl::for_each<MethodList>(pmpl_detail::VirtualConnect<
+        boost::mpl::for_each<MethodList>(
+            pmpl_detail::VirtualConnect<
             ConnectorMethod<MPTraits>, RoadmapType, StatClass, ColorMap,
-            InputIterator, OutputIterator>(this, _rm, _stats, _cmap, _itr1First, _itr1Last,
-	      _itr2First, _itr2Last, _collision));
+            InputIterator1, InputIterator2, OutputIterator>(
+              this, _rm, _stats, _cmap, _itr1First, _itr1Last,
+              _itr2First, _itr2Last, _collision)
+            );
       }
 
+    typedef pair<VID, VID> ConnectionAttempt;
+    typedef vector<pair<ConnectionAttempt, bool> > ConnectionAttempts;
+    typedef map<ConnectionAttempt, bool> ConnectionAttemptsCache;
 
-    void SetPositionResolution(double _posRes) { m_connectionPosRes=_posRes; }
-    double GetPositionResolution() { return m_connectionPosRes; }
-    void SetOrientationResolution(double _oriRes) { m_connectionOriRes=_oriRes; }
-    double GetOrientationResolution() { return m_connectionOriRes; }
+    ////////////////////////////////////////////////////////////////////////////
+    /// @brief Add connection attempt
+    /// @param _v1 Source VID
+    /// @param _v2 Target VID
+    /// @param _b Success/failed connection attempt
+    ///
+    /// Add connection attempt to both iteration and all time connection attempt
+    /// caches.
+    ////////////////////////////////////////////////////////////////////////////
+    void AddConnectionAttempt(VID _v1, VID _v2, bool _b);
     #ifdef _PARALLEL
     void SetLocalGraph(SequentialGraphType* _localGraph) { m_localGraph = _localGraph;}
     void SetRemoteGraph(SequentialGraphType* _remoteGraph) { m_remoteGraph = _remoteGraph;}
     #endif
-    /////////////////////////////////////////////
-    // Utility Methods
-    typename vector<pair<pair<VID, VID>, bool> >::const_iterator ConnectionAttemptsBegin() const { return m_connectionAttempts.begin(); }
-    typename vector<pair<pair<VID, VID>, bool> >::const_iterator ConnectionAttemptsEnd() const { return m_connectionAttempts.end(); }
-    void ClearConnectionAttempts() { m_connectionAttempts.clear(); }
-    
-    virtual void PrintOptions(ostream& _os){
-      _os << "Name: " << this->GetName() << " ";
-      _os << "connPosRes: " << m_connectionPosRes << " ";
-      _os << "connOriRes: " << m_connectionOriRes << " ";
-      _os << "addPartialEdge: " << m_addPartialEdge << " ";
-      _os << "addAllEdges: " << m_addAllEdges << " ";
-      _os << "nf: " << m_nfMethod << " ";
-      _os << "lp: " << m_lpMethod << " ";
-    }
+    ////////////////////////////////////////////////////////////////////////////
+    /// @return Begin iterator of this iteration's attempts
+    ////////////////////////////////////////////////////////////////////////////
+    typename ConnectionAttempts::const_iterator ConnectionAttemptsBegin() const { return m_attempts.begin(); }
+    ////////////////////////////////////////////////////////////////////////////
+    /// @return End iterator of this iteration's attempts
+    ////////////////////////////////////////////////////////////////////////////
+    typename ConnectionAttempts::const_iterator ConnectionAttemptsEnd() const { return m_attempts.end(); }
+
+    ////////////////////////////////////////////////////////////////////////////
+    /// @brief Check if attempt is in cache
+    /// @param _v1 Source VID
+    /// @param _v2 Target VID
+    /// @return Yes/no attempt is cached
+    ////////////////////////////////////////////////////////////////////////////
+    bool IsCached(VID _v1, VID _v2);
+    ////////////////////////////////////////////////////////////////////////////
+    /// @brief Check value of attempt in cache
+    /// @param _v1 Source VID
+    /// @param _v2 Target VID
+    /// @return Success/failed connection attempt
+    ////////////////////////////////////////////////////////////////////////////
+    bool GetCached(VID _v1, VID _v2);
+
+    ////////////////////////////////////////////////////////////////////////////
+    /// @brief Clear this iteration's attempts cache
+    ////////////////////////////////////////////////////////////////////////////
+    void ClearConnectionAttempts() { m_attempts.clear(); }
 
   protected:
-    vector<pair<pair<VID, VID>, bool> > m_connectionAttempts;
-    CDInfo* m_cdInfo;
-    string  m_lpMethod;
-    string  m_nfMethod;
-    bool    m_addPartialEdge;
-    bool    m_addAllEdges; 
-    double  m_connectionPosRes;
-    double  m_connectionOriRes;
+    ConnectionAttempts m_attempts; ///< Single iteration connection attempts. Attempt is a pair<VID, VID> (edge) and bool (success/fail)
+    ConnectionAttemptsCache m_attemptsCache; ///< All time connection attempts. Attempt is a pair<VID, VID> (edge) and bool (success/fail)
+    string  m_nfLabel; ///< Neighborhood Finder
+    string  m_lpLabel; ///< Local Planner
+    bool    m_addPartialEdge; ///< If failed attempt add partially validated portion of edge?
     #ifdef _PARALLEL
     SequentialGraphType* m_localGraph;
     SequentialGraphType* m_remoteGraph;
@@ -132,25 +296,52 @@ class ConnectorMethod : public MPBaseObject<MPTraits> {
 };
 
 template<class MPTraits>
-ConnectorMethod<MPTraits>::ConnectorMethod(){
-  this->SetName("ConnectorMethod");
-  m_connectionPosRes = 0.05;
-  m_connectionOriRes = 0.05;
-  m_addPartialEdge = false;
-  m_addAllEdges = false;
+ConnectorMethod<MPTraits>::ConnectorMethod(string _nfLabel, string _lpLabel) :
+  m_nfLabel(_nfLabel), m_lpLabel(_lpLabel),
+  m_addPartialEdge(false) {
+    this->SetName("ConnectorMethod");
+    m_addPartialEdge = false;
 }
 
 template<class MPTraits>
-ConnectorMethod<MPTraits>::ConnectorMethod(MPProblemType* _problem, XMLNodeReader& _node) 
-  : MPBaseObject<MPTraits>(_problem, _node){
+ConnectorMethod<MPTraits>::ConnectorMethod(MPProblemType* _problem, XMLNodeReader& _node)
+  : MPBaseObject<MPTraits>(_problem, _node) {
     this->SetName("ConnectorMethod");
-    m_connectionPosRes = _problem->GetEnvironment()->GetPositionRes();
-    m_connectionOriRes = _problem->GetEnvironment()->GetOrientationRes();     
-    m_nfMethod = _node.stringXMLParameter("nf", true, "", "nf");
-    m_lpMethod = _node.stringXMLParameter("lp_method", true, "", "Local Planner");
     m_addPartialEdge = false;
-    m_addAllEdges = false;
-  }
+    m_nfLabel = _node.stringXMLParameter("nfLabel", true, "", "Neighborhood Finder");
+    m_lpLabel = _node.stringXMLParameter("lpLabel", true, "", "Local Planner");
+}
 
-#endif 
+template<class MPTraits>
+void
+ConnectorMethod<MPTraits>::Print(ostream& _os) const {
+  MPBaseObject<MPTraits>::Print(_os);
+  _os << "\tnfLabel: " << m_nfLabel << endl;
+  _os << "\tlpLabel: " << m_lpLabel << endl;
+  _os << "\taddPartialEdge: " << m_addPartialEdge << endl;
+}
+
+template<class MPTraits>
+void
+ConnectorMethod<MPTraits>::AddConnectionAttempt(VID _v1, VID _v2, bool _b){
+  ConnectionAttempt att(_v1, _v2);
+  m_attempts.push_back(make_pair(att, _b));
+  m_attemptsCache[att] = _b;
+}
+
+template<class MPTraits>
+bool
+ConnectorMethod<MPTraits>::IsCached(VID _v1, VID _v2) {
+  ConnectionAttempt att(_v1, _v2);
+  return m_attemptsCache.count(att) > 0;
+}
+
+template<class MPTraits>
+bool
+ConnectorMethod<MPTraits>::GetCached(VID _v1, VID _v2) {
+  ConnectionAttempt att(_v1, _v2);
+  return m_attemptsCache[att];
+}
+
+#endif
 

@@ -8,61 +8,61 @@ using namespace std;
 template<typename SPROXY, typename PIVOT, typename CMPPROXY, typename CMPPIVOT>
 class DPES{
 public:
-  
+
   //Default Constructor
   DPES() { };
-  
+
   DPES(const CMPPROXY& _compare_proxy, const CMPPIVOT& _compare_proxy_pivot) :
     m_distance_proxy(_compare_proxy), m_distance_pivot(_compare_proxy_pivot){
 
   }
   //Destructor
   //~DPES() { };
-    
+
   int AddNode(SPROXY v);
 	void CreatPivots(int m);
   void UpdateProjected();
   vector<double> UpdateProjected_s(SPROXY s);
   vector<double> UpdateProjected_s_PIVOT(PIVOT s);
   const size_t GetVS_Size() const { return VS.size(); }
-  
-  void Clear() {    
+
+  void Clear() {
    VS.clear();
    P.clear();
    S.clear();
   }
 
   template <typename OutputIterator>
-  OutputIterator 
-  KClosestSPROXY(SPROXY _cfg, 
-//           InputIterator _input_first, InputIterator _input_last, 
+  OutputIterator
+  KClosestSPROXY(SPROXY _cfg,
+//           InputIterator _input_first, InputIterator _input_last,
            OutputIterator _out, int k, int l);
 
-           
+
   template <typename OutputIterator>
-  OutputIterator 
-  KClosestPIVOT(PIVOT _cfg, 
-//           InputIterator _input_first, InputIterator _input_last, 
+  OutputIterator
+  KClosestPIVOT(PIVOT _cfg,
+//           InputIterator _input_first, InputIterator _input_last,
            OutputIterator _out, int k, int l);
-           
+
   template <typename OutputIterator>
-  OutputIterator 
-  KClosestBF_Euclidean(vector<double> _cfg, 
-//             InputIterator _input_first, InputIterator _input_last, 
+  OutputIterator
+  KClosestBF_Euclidean(vector<double> _cfg,
+//             InputIterator _input_first, InputIterator _input_last,
              OutputIterator _out, int k);
 
   template <typename InputIterator, typename OutputIterator>
-  OutputIterator 
-  KClosestBF_RMSD(SPROXY _cfg, 
-             InputIterator _input_first, InputIterator _input_last, 
-             OutputIterator _out, int k);           
+  OutputIterator
+  KClosestBF_RMSD(SPROXY _cfg,
+             InputIterator _input_first, InputIterator _input_last,
+             OutputIterator _out, int k);
 
   template <typename InputIterator, typename OutputIterator>
-  OutputIterator 
-  KClosestBF_RMSD_PIVOT(PIVOT _cfg, 
-             InputIterator _input_first, InputIterator _input_last, 
-             OutputIterator _out, int k); 
-private:	
+  OutputIterator
+  KClosestBF_RMSD_PIVOT(PIVOT _cfg,
+             InputIterator _input_first, InputIterator _input_last,
+             OutputIterator _out, int k);
+private:
   double Euclidean( const vector<double>& v1, const vector<double>& v2);
   CMPPROXY m_distance_proxy;
   CMPPIVOT m_distance_pivot;
@@ -82,10 +82,10 @@ AddNode(SPROXY v){
 }
 
 template<typename SPROXY, typename PIVOT, typename CMPPROXY, typename CMPPIVOT>
-void 
+void
 DPES<SPROXY,PIVOT,CMPPROXY,CMPPIVOT>::
 CreatPivots(int m){
-  
+
   int iRand;
   srand ( time(NULL) );
   iRand = rand() % S.size();
@@ -97,7 +97,7 @@ CreatPivots(int m){
   double max_value = MIN_DIST;
 
    for(int p = 1; p < m; ++p){
-     
+
      max_value = MIN_DIST;
      for(size_t ix = 0; ix != S.size(); ++ix){
        min_value = MAX_DIST;
@@ -105,15 +105,15 @@ CreatPivots(int m){
         for(size_t ixp = 0; ixp != P.size(); ++ixp)
           if( P[ixp] == S[ix])
             flag = true;
-        if(!flag){         
+        if(!flag){
           for(size_t ixp = 0; ixp != P.size(); ++ixp){
              min_value_current = m_distance_pivot(S[ix], P[ixp]);
           if(min_value_current < min_value){
-              min_value = min_value_current;        
-            }          
+              min_value = min_value_current;
+            }
           }
           if(min_value > max_value){
-            max_value = min_value;  
+            max_value = min_value;
             index = ix;
           }
         }
@@ -121,8 +121,8 @@ CreatPivots(int m){
      P.push_back(S[index]);
    }
 }
-  
-template<typename SPROXY, typename PIVOT, typename CMPPROXY, typename CMPPIVOT>  
+
+template<typename SPROXY, typename PIVOT, typename CMPPROXY, typename CMPPIVOT>
 void
 DPES<SPROXY,PIVOT,CMPPROXY,CMPPIVOT>::
 UpdateProjected(){
@@ -134,7 +134,7 @@ UpdateProjected(){
     v.push_back(dist);
     }
     VS.push_back(v);
-  }  
+  }
 }
 
 template<typename SPROXY, typename PIVOT, typename CMPPROXY, typename CMPPIVOT>
@@ -147,7 +147,7 @@ UpdateProjected_s(SPROXY s){
     dist = m_distance_pivot(s, P[ixp]);
     v.push_back(dist);
     }
-    return v;  
+    return v;
 }
 
 template<typename SPROXY, typename PIVOT, typename CMPPROXY, typename CMPPIVOT>
@@ -160,15 +160,15 @@ UpdateProjected_s_PIVOT(PIVOT s){
     dist = m_distance_pivot(s, P[ixp]);
     v.push_back(dist);
     }
-    return v;  
+    return v;
 }
 
 template<typename SPROXY, typename PIVOT, typename CMPPROXY, typename CMPPIVOT>
 template <typename OutputIterator>
 OutputIterator
 DPES<SPROXY,PIVOT,CMPPROXY,CMPPIVOT>::
-KClosestSPROXY(SPROXY _cfg, 
-//         InputIterator _input_first, InputIterator _input_last, 
+KClosestSPROXY(SPROXY _cfg,
+//         InputIterator _input_first, InputIterator _input_last,
          OutputIterator _out, int k, int l){
   vector<double> v = UpdateProjected_s(_cfg);
   vector< pair<int, double> > lclosest(l);
@@ -186,8 +186,8 @@ template<typename SPROXY, typename PIVOT, typename CMPPROXY, typename CMPPIVOT>
 template <typename OutputIterator>
 OutputIterator
 DPES<SPROXY,PIVOT,CMPPROXY,CMPPIVOT>::
-KClosestPIVOT(PIVOT _cfg, 
-//         InputIterator _input_first, InputIterator _input_last, 
+KClosestPIVOT(PIVOT _cfg,
+//         InputIterator _input_first, InputIterator _input_last,
          OutputIterator _out, int k, int l){
   vector<double> v = UpdateProjected_s_PIVOT(_cfg);
   vector< pair<int, double> > lclosest(l);
@@ -204,12 +204,12 @@ KClosestPIVOT(PIVOT _cfg,
 
 template<typename SPROXY, typename PIVOT, typename CMPPROXY, typename CMPPIVOT>
 template <typename OutputIterator>
-OutputIterator 
+OutputIterator
 DPES<SPROXY,PIVOT,CMPPROXY,CMPPIVOT>::
-KClosestBF_Euclidean(vector<double> _cfg, 
-//           InputIterator _input_first, InputIterator _input_last, 
+KClosestBF_Euclidean(vector<double> _cfg,
+//           InputIterator _input_first, InputIterator _input_last,
            OutputIterator _out, int k){
-             
+
   int max_index = 0;
   double max_value = MAX_DIST;
   vector< pair< int, double > > closest(k, make_pair(-999, max_value));
@@ -217,13 +217,13 @@ KClosestBF_Euclidean(vector<double> _cfg,
   // now go through all kp and find closest k
 //  InputIterator V1;
 //  int count = 0;
-//  for(V1 = _input_first; V1 != _input_last; ++V1) {    
+//  for(V1 = _input_first; V1 != _input_last; ++V1) {
   for(size_t V1 = 0; V1 != VS.size(); ++V1){
   if(VS[V1] == _cfg)
       continue; //don't connect same
 
     double dist = Euclidean(_cfg, VS[V1]);
-    if(dist < closest[max_index].second) { 
+    if(dist < closest[max_index].second) {
       closest[max_index] = make_pair(V1, dist);
       max_value = dist;
       for (size_t p = 0; p < closest.size(); ++p) {
@@ -242,19 +242,19 @@ KClosestBF_Euclidean(vector<double> _cfg,
         *_out = make_pair(closest[p].first, closest[p].second);
 //        cout << "\t\t\t l closest  " << (*_out).first << "\t" << closest[p].second << endl;
         ++_out;
-      }                   
- return _out; 
+      }
+ return _out;
 }
 
 
 template<typename SPROXY, typename PIVOT, typename CMPPROXY, typename CMPPIVOT>
 template <typename InputIterator, typename OutputIterator>
-OutputIterator 
+OutputIterator
 DPES<SPROXY,PIVOT,CMPPROXY,CMPPIVOT>::
-KClosestBF_RMSD(SPROXY _cfg, 
-           InputIterator _input_first, InputIterator _input_last, 
+KClosestBF_RMSD(SPROXY _cfg,
+           InputIterator _input_first, InputIterator _input_last,
            OutputIterator _out, int k){
-             
+
   int max_index = 0;
   double max_value = MAX_DIST;
   vector< pair< int, double > > closest(k, make_pair(-999, max_value));
@@ -264,16 +264,16 @@ KClosestBF_RMSD(SPROXY _cfg,
   int count = 0;
   for(V1 = _input_first; V1 != _input_last; ++V1) {
     ++count;
-    
+
     if(S[*V1] == _cfg)
       continue; //don't connect same
 
     double dist = m_distance_proxy(_cfg, S[*V1]);
-    
-    if(dist < closest[max_index].second) { 
+
+    if(dist < closest[max_index].second) {
       closest[max_index] = make_pair(*V1, dist);
       max_value = dist;
-  
+
       for (int p = 0; p < closest.size(); ++p) {
         if (max_value < closest[p].second) {
           max_value = closest[p].second;
@@ -282,9 +282,9 @@ KClosestBF_RMSD(SPROXY _cfg,
       }
     }
   }
- 
+
   sort(closest.begin(), closest.end(), compare_second<int, double>());
-    
+
   for (int p = 0; p < closest.size(); ++p)
       if (closest[p].first != -999)
       {
@@ -292,20 +292,20 @@ KClosestBF_RMSD(SPROXY _cfg,
 *_out = make_pair(closest[p].first, closest[p].second);
 //        cout << "\t\t\t" << *_out << "\t" << closest[p].second << endl;
         ++_out;
-      }                   
- return _out; 
+      }
+ return _out;
 }
 
 
 
 template<typename SPROXY, typename PIVOT, typename CMPPROXY, typename CMPPIVOT>
 template <typename InputIterator, typename OutputIterator>
-OutputIterator 
+OutputIterator
 DPES<SPROXY,PIVOT,CMPPROXY,CMPPIVOT>::
-KClosestBF_RMSD_PIVOT(PIVOT _cfg, 
-           InputIterator _input_first, InputIterator _input_last, 
+KClosestBF_RMSD_PIVOT(PIVOT _cfg,
+           InputIterator _input_first, InputIterator _input_last,
            OutputIterator _out, int k){
-             
+
   int max_index = 0;
   double max_value = MAX_DIST;
   vector< pair< int, double > > closest(k, make_pair(-999, max_value));
@@ -318,11 +318,11 @@ KClosestBF_RMSD_PIVOT(PIVOT _cfg,
       continue; //don't connect same
 
     double dist = m_distance_proxy(_cfg, S[*V1]);
-    
-    if(dist < closest[max_index].second) { 
+
+    if(dist < closest[max_index].second) {
       closest[max_index] = make_pair(*V1, dist);
       max_value = dist;
-  
+
       for (size_t p = 0; p < closest.size(); ++p) {
         if (max_value < closest[p].second) {
           max_value = closest[p].second;
@@ -331,9 +331,9 @@ KClosestBF_RMSD_PIVOT(PIVOT _cfg,
       }
     }
   }
- 
+
   sort(closest.begin(), closest.end(), compare_second<int, double>());
-    
+
     for (size_t p = 0; p < closest.size(); ++p)
       if (closest[p].first != -999)
       {
@@ -341,8 +341,8 @@ KClosestBF_RMSD_PIVOT(PIVOT _cfg,
 *_out = make_pair(closest[p].first, closest[p].second);
 //        cout << "\t\t\t" << *_out << "\t" << closest[p].second << endl;
         ++_out;
-      }                   
- return _out; 
+      }
+ return _out;
 }
 
 template<typename SPROXY, typename PIVOT, typename CMPPROXY, typename CMPPIVOT>
@@ -351,7 +351,7 @@ DPES<SPROXY,PIVOT,CMPPROXY,CMPPIVOT>::
 Euclidean( const vector<double>& v1, const vector<double>& v2){
   double diff, dist = 0.0;
   int d;
- 
+
   if(v1.size() != v2.size() ){
       cout << "Dimensons of points are not consistent when calculating Euclidean Distance"
            << endl;
@@ -362,8 +362,8 @@ Euclidean( const vector<double>& v1, const vector<double>& v2){
     for(int i = 0; i < d; ++i){
       diff = v1[i] - v2[i];
       dist += diff * diff;
-    }         
-    return sqrt(dist);     
+    }
+    return sqrt(dist);
   }
 }
 

@@ -31,13 +31,13 @@ vector<Partition*> PGMeansClustering::MakePartitions(Partition &p){
    return vp;
 };
 
-void PGMeansClustering::Cluster(vector<VID> &IdSet, vector< vector< VID > > &RetClusters, vector<vector<double> >& features){ 
-   
+void PGMeansClustering::Cluster(vector<VID> &IdSet, vector< vector< VID > > &RetClusters, vector<vector<double> >& features){
+
    cout <<"START PGMeans Clustering" << endl << flush;
-   cout <<"Number of Features: " << features.size() << " Training Set Size: " << IdSet.size() << endl << flush; 
+   cout <<"Number of Features: " << features.size() << " Training Set Size: " << IdSet.size() << endl << flush;
 
    //collect feature minumums and maximums
-   
+
    vector< pair<double,double> > FeatureMinMax(features.size());
 
    typedef vector<vector<double> >::iterator VIT;
@@ -58,7 +58,7 @@ void PGMeansClustering::Cluster(vector<VID> &IdSet, vector< vector< VID > > &Ret
 
       if( IdSet.size() )
          RetClusters.push_back( IdSet );
-      
+
       return;
    }
 
@@ -74,11 +74,11 @@ void PGMeansClustering::Cluster(vector<VID> &IdSet, vector< vector< VID > > &Ret
 	string tempFileName;
 	tempFileName = m_ClusteringDestination+"/SampleDataPoints.txt";
    outfile.open(tempFileName.c_str());
-   if( IdSet.size() > 1 ){ 
+   if( IdSet.size() > 1 ){
       for(size_t PtNdx = 0; PtNdx < IdSet.size(); PtNdx++){
          for(size_t featureNdx=0;featureNdx<features.size();featureNdx++){
             features[featureNdx][PtNdx]=m_Features[featureNdx].second*
-               (features[featureNdx][PtNdx] - FeatureMinMax[featureNdx].first) / 
+               (features[featureNdx][PtNdx] - FeatureMinMax[featureNdx].first) /
                (FeatureMinMax[featureNdx].second - FeatureMinMax[featureNdx].first );
             //Output the data to the textfile such that matlab can read it
             outfile<<features[featureNdx][PtNdx]<<" "<<flush;
@@ -129,7 +129,7 @@ void PGMeansClustering::Cluster(vector<VID> &IdSet, vector< vector< VID > > &Ret
          RetClusters[readData-1].push_back(i);
       }
       inFile.close();
-   }    
+   }
    else{
       cout << " No Points available to cluster " << endl << endl <<flush;
       exit(-2);

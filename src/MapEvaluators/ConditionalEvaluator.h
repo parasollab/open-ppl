@@ -3,29 +3,35 @@
 
 #include "MapEvaluatorMethod.h"
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup MapEvaluators
+/// @brief TODO.
+///
+/// TODO.
+////////////////////////////////////////////////////////////////////////////////
 template<class MPTraits>
 class ConditionalEvaluator : public MapEvaluatorMethod<MPTraits> {
   public:
 
-    enum RelationalOperator { LT , LEQ, GT, GEQ };
+    enum Operator { LT , LEQ, GT, GEQ, MOD };
 
-    ConditionalEvaluator(RelationalOperator _relationalOperator = LT, string _metric = "", double _value = 1.0);
+    ConditionalEvaluator(Operator _operator = LT, string _metric = "", double _value = 1.0);
     ConditionalEvaluator(typename MPTraits::MPProblemType* _problem, XMLNodeReader& _node);
     virtual ~ConditionalEvaluator() {}
 
-    virtual void PrintOptions(ostream& _os);
+    virtual void Print(ostream& _os) const;
 
     virtual bool operator()();
 
   protected:
-    RelationalOperator m_relationalOperator;
+    Operator m_operator;
     string m_metric;
     double m_value;
 };
 
 template<class MPTraits>
-ConditionalEvaluator<MPTraits>::ConditionalEvaluator(RelationalOperator _relationalOperator, string _metric, double _value)
-  : MapEvaluatorMethod<MPTraits>(), m_relationalOperator(_relationalOperator), m_metric(_metric), m_value(_value) {
+ConditionalEvaluator<MPTraits>::ConditionalEvaluator(Operator _operator, string _metric, double _value)
+  : MapEvaluatorMethod<MPTraits>(), m_operator(_operator), m_metric(_metric), m_value(_value) {
   this->SetName("ConditionalEvaluator");
 }
 
@@ -37,15 +43,17 @@ ConditionalEvaluator<MPTraits>::ConditionalEvaluator(typename MPTraits::MPProble
   m_metric = _node.stringXMLParameter("metric_method", true, "", "Metric Method");
   m_value = _node.numberXMLParameter("value", true, 1.0, 0.0, std::numeric_limits<double>::max(), "the value of the metric");
 
-  string relationalOperator = _node.stringXMLParameter("operator", true, "", "operator");
-  if (relationalOperator == "<")
-    m_relationalOperator = LT;
-  else if (relationalOperator == "<=")
-    m_relationalOperator = LEQ;
-  else if (relationalOperator == ">")
-    m_relationalOperator = GT;
-  else if (relationalOperator == ">=")
-    m_relationalOperator = GEQ;
+  string op = _node.stringXMLParameter("operator", true, "", "operator");
+  if (op == "<")
+    m_operator = LT;
+  else if (op == "<=")
+    m_operator = LEQ;
+  else if (op == ">")
+    m_operator = GT;
+  else if (op == ">=")
+    m_operator = GEQ;
+  else if (op == "%")
+    m_operator = MOD;
   else {
     cerr << "Error::Unknown relational operator label read in " << this->GetNameAndLabel() << ". Exiting." << endl;
     exit(1);
@@ -53,29 +61,40 @@ ConditionalEvaluator<MPTraits>::ConditionalEvaluator(typename MPTraits::MPProble
 }
 
 template<class MPTraits>
-void ConditionalEvaluator<MPTraits>::PrintOptions(ostream& _os) {
-  MapEvaluatorMethod<MPTraits>::PrintOptions(_os);
+void
+ConditionalEvaluator<MPTraits>::Print(ostream& _os) const {
+  MapEvaluatorMethod<MPTraits>::Print(_os);
   _os << "\tmetric method: " << m_metric << endl;
   _os << "\tvalue: " << m_value << endl;
   _os << "\toperator: ";
-  switch(m_relationalOperator){
+  switch(m_operator){
     case LT: cout << "<"; break;
     case LEQ: cout << "<="; break;
     case GT: cout << ">"; break;
     case GEQ: cout << ">="; break;
+    case MOD: cout << "%"; break;
   }
-  _os << endl; 
+  _os << endl;
 }
 
 template<class MPTraits>
-bool ConditionalEvaluator<MPTraits>::operator()() {
-  double metric_value = this->GetMPProblem()->GetMetric(m_metric)->operator()();
+bool
+ConditionalEvaluator<MPTraits>::operator()() {
+  double metricValue = this->GetMPProblem()->GetMetric(m_metric)->operator()();
 
-  switch(m_relationalOperator){
-    case LT: return metric_value < m_value;
-    case LEQ: return metric_value <= m_value;
-    case GT: return metric_value > m_value;
-    case GEQ: return metric_value >= m_value;
+  switch(m_operator){
+    case LT: return metricValue < m_value;
+    case LEQ: return metricValue <= m_value;
+    case GT: return metricValue > m_value;
+    case GEQ: return metricValue >= m_value;
+    case MOD:
+      static double prevVal=0.0;
+      if(prevVal == 0.0 || (floor(metricValue/m_value) != floor(prevVal/m_value) && m_value > 0)){
+          prevVal = metricValue;
+          return true;
+      }
+      prevVal = metricValue;
+      return false;
     default:
       cout << "unknown label is read" << endl;
       return false;

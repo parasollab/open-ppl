@@ -1,66 +1,65 @@
+#ifdef USE_RAPID
+
 #include "RapidCollisionDetection.h"
+#include "Utilities/MetricUtils.h"
+#include "MPProblem/Geometry/MultiBody.h"
+#include <RAPID.H>
 #include "CDInfo.h"
 
-#ifdef USE_RAPID
-Rapid::
-Rapid() : CollisionDetectionMethod() {
-  m_name = "RAPID";
-  m_type = Exact;
-  m_cdtype = RAPID;
-}
+Rapid::Rapid() : CollisionDetectionMethod("RAPID", Exact, RAPID) {}
 
-Rapid::
-~Rapid() {
-}
+Rapid::~Rapid() {}
 
 bool
-Rapid::
-IsInCollision(shared_ptr<MultiBody> _robot, shared_ptr<MultiBody> _obstacle, 
-	      StatClass& _stats, CDInfo& _cdInfo, std::string *_callName, int _ignoreIAdjacentMultibodies) {
-    _stats.IncNumCollDetCalls(GetName(), _callName);
-	
-    if (_cdInfo.m_retAllInfo == true) {
-	cout << endl;
-	cout << "Currently unable to return ALL info using RAPID cd." << endl;
-	cout << "Default/ing to minimal information." << endl;
-    }
+Rapid::IsInCollision(shared_ptr<MultiBody> _robot, shared_ptr<MultiBody> _obstacle,
+    StatClass& _stats, CDInfo& _cdInfo, const string& _callName, int _ignoreIAdjacentMultibodies) {
+  _stats.IncNumCollDetCalls(m_name, _callName);
 
-    for(int i=0 ; i<_robot->GetFreeBodyCount(); i++){
-      shared_ptr<RAPID_model> rob = _robot->GetFreeBody(i)->GetRapidBody();
-      
-      for(int j=0; j<_obstacle->GetBodyCount(); j++){
-	if(_robot == _obstacle &&
-	   _robot->GetFreeBody(i)->IsWithinI(_obstacle->GetBody(j),_ignoreIAdjacentMultibodies) ){
-	  continue;
-        }
-	
-	shared_ptr<RAPID_model> obst = _obstacle->GetBody(j)->GetRapidBody();
-	Transformation &t1 = _robot->GetFreeBody(i)->WorldTransformation();
-	Transformation &t2 = _obstacle->GetBody(j)->WorldTransformation();
-	t1.m_orientation.ConvertType(Orientation::Matrix);
-	t2.m_orientation.ConvertType(Orientation::Matrix);
-	double p1[3], p2[3];
-	for(int p=0; p<3; p++) {
-	  p1[p] = t1.m_position[p];
-	  p2[p] = t2.m_position[p];
-	}
-	if(RAPID_Collide(t1.m_orientation.matrix, p1, rob.get(),
-			 t2.m_orientation.matrix, p2, obst.get(), RAPID_FIRST_CONTACT)) {
-	  cout << "Error in CollisionDetection::RAPID_Collide, RAPID_ERR_COLLIDE_OUT_OF_MEMORY"
-	       << RAPID_Collide(t1.m_orientation.matrix, p1, rob.get(), t2.m_orientation.matrix, p2, obst.get(), RAPID_FIRST_CONTACT) << endl;
-	  exit(1);
-	}
-	if(RAPID_num_contacts) {
-	  _cdInfo.m_rapidContactID1 = RAPID_contact[0].id1;
-	  _cdInfo.m_rapidContactID2 = RAPID_contact[0].id2;
-	  return true;
-	}
-	
+  if (_cdInfo.m_retAllInfo) {
+    cerr << endl;
+    cerr << "Currently unable to return ALL info using RAPID cd." << endl;
+    cerr << "Defaulting to minimal information." << endl;
+  }
+
+  for(int i=0 ; i<_robot->GetFreeBodyCount(); i++){
+    shared_ptr<FreeBody> robotBody = _robot->GetFreeBody(i);
+    shared_ptr<RAPID_model> rob = robotBody->GetRapidBody();
+    Transformation& t1 = robotBody->WorldTransformation();
+
+    for(int j=0; j<_obstacle->GetBodyCount(); j++){
+      shared_ptr<Body> obstBody = _obstacle->GetBody(j);
+      if(_robot == _obstacle){
+        //GetBody() first returns fixed bodies, then free bodies.
+        //When this body is the same as the one against which we are checking,
+        // we know that we have compared with all fixed bodies and any already finished
+        // free bodies. In this case, we can stop checking; future free bodies will
+        // check themselves against this one.
+        if(robotBody == obstBody)
+          break;
+        //Also, if the two bodies are nearby links, don't compare them.
+        if(robotBody->IsWithinI(obstBody, _ignoreIAdjacentMultibodies))
+          continue;
+      }
+
+      shared_ptr<RAPID_model> obst = obstBody->GetRapidBody();
+      Transformation& t2 = obstBody->WorldTransformation();
+
+      if(RAPID_Collide(t1.rotation().matrix(), t1.translation(), rob.get(),
+            t2.rotation().matrix(), t2.translation(), obst.get(), RAPID_FIRST_CONTACT)) {
+        cerr << "Error in CollisionDetection::RAPID_Collide, RAPID_ERR_COLLIDE_OUT_OF_MEMORY" << endl;
+        exit(1);
+      }
+
+      if(RAPID_num_contacts) {
+        _cdInfo.m_rapidContactID1 = RAPID_contact[0].id1;
+        _cdInfo.m_rapidContactID2 = RAPID_contact[0].id2;
+        return true;
       }
     }
+  }
 
-    return false;
+  return false;
 }
-     
+
 #endif
 

@@ -15,7 +15,7 @@ class Partition
   Partition(Roadmap<CfgType,WeightType> *rdmp, vector<VID> vid):m_rdmp(rdmp), m_id(0), m_vvid(vid){}
   Partition(Partition & p);
   ~Partition();
-  
+
   Roadmap<CfgType,WeightType>* GetRoadmap() {return m_rdmp;}
   void SetRoadmap(Roadmap<CfgType,WeightType>  *rdmp){m_rdmp=rdmp;}
 
@@ -25,8 +25,8 @@ class Partition
   void SetID(int i){m_id=i;}
 
   vector<VID>& GetVID() {return m_vvid;}
-  void SetVID(vector<VID> vid){m_vvid=vid;}  
-  
+  void SetVID(vector<VID> vid){m_vvid=vid;}
+
   bool operator==(Partition &a){return m_vvid==a.GetVID();}
 
  private:

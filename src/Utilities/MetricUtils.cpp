@@ -1,9 +1,9 @@
+#include "MetricUtils.h"
+
 #include <iostream>
 #include <sys/time.h>
 #include <sys/resource.h>
 #include <unistd.h>
-#include "GraphAlgo.h"
-#include "MetricUtils.h"
 
 struct rusage buf;
 /////////////////////////////////////////////////////////////////////
@@ -77,30 +77,22 @@ StatClass::ClearStats() {
 // calls for the method by the name of CDName
 //----------------------------------------
 int
-StatClass::IncNumCollDetCalls(string _cdName, string* _callName) {
+StatClass::IncNumCollDetCalls(string _cdName, const string& _callName) {
   m_numCollDetCalls[_cdName]++;
-
   // If a caller's name was provided
   // then increment the verification counter
   // with that name.
-
-  if( _callName )
-  { m_collDetCountByName[*_callName]++; }
-
+  m_collDetCountByName[_callName]++;
   return m_numCollDetCalls[_cdName];
 }
 
 //----------------------------------------
 // Increment the number of Cfg::isCollision
-// calls 
-//---------------------------------------- 
+// calls
+//----------------------------------------
 void
-StatClass::IncCfgIsColl(string* _callName) {
-  if(_callName )
-    m_isCollByName[*_callName]++; 
-  else
-    m_isCollByName["UNKNOWN"]++; 
-
+StatClass::IncCfgIsColl(const string& _callName) {
+  m_isCollByName[_callName]++;
   m_isCollTotal++;
 }
 
@@ -110,7 +102,7 @@ StatClass::IncCfgIsColl(string* _callName) {
 //----------------------------------------
 int
 StatClass::IncLPConnections(string _lpName, int _incr) {
-  return (m_lpInfo[_lpName].get<1>() += _incr);
+  return get<1>(m_lpInfo[_lpName]) += _incr;
 }
 
 //----------------------------------------
@@ -119,7 +111,7 @@ StatClass::IncLPConnections(string _lpName, int _incr) {
 //----------------------------------------
 int
 StatClass::IncLPAttempts(string _lpName, int _incr) {
-  return (m_lpInfo[_lpName].get<0>() += _incr);
+  return get<0>(m_lpInfo[_lpName]) += _incr;
 }
 
 //----------------------------------------
@@ -129,16 +121,16 @@ StatClass::IncLPAttempts(string _lpName, int _incr) {
 //----------------------------------------
 int
 StatClass::IncLPCollDetCalls(string _lpName, int _incr) {
-  return (m_lpInfo[_lpName].get<2>() += _incr);
+  return get<2>(m_lpInfo[_lpName]) += _incr;
 }
 
 void
 StatClass::PrintFeatures(ostream& _os) {
   unsigned long int connectionsAttempted = 0, connectionsMade = 0;
-  std::map<std::string, boost::tuple<unsigned long int,unsigned long int, unsigned long int> >::iterator sumIter;
-  for (sumIter=m_lpInfo.begin();sumIter!=m_lpInfo.end();sumIter++) {
-    connectionsAttempted += sumIter->second.get<0>();
-    connectionsMade += sumIter->second.get<1>();
+  std::map<std::string, tuple<unsigned long int,unsigned long int, unsigned long int> >::iterator sumIter;
+  for(sumIter=m_lpInfo.begin();sumIter!=m_lpInfo.end();sumIter++) {
+    connectionsAttempted += get<0>(sumIter->second);
+    connectionsMade += get<1>(sumIter->second);
   }
 
   _os << "General features:" << endl;
@@ -149,7 +141,7 @@ StatClass::PrintFeatures(ostream& _os) {
 
   if (connectionsAttempted == 0)
     _os << 0.0 << endl;
-  else 
+  else
     _os << ((double)connectionsMade)/connectionsAttempted << endl;
 
   _os << "General features:" << endl;
@@ -195,40 +187,40 @@ StatClass::StartClock(string _name) {
       m_clockMap[_name].SetName(_name);
     m_clockMap[_name].StartClock();
   }
-  else  
-    cerr<<"Error::Attempting to start a non-existing clock"<< endl; 
+  else
+    cerr<<"Error::Attempting to start a non-existing clock"<< endl;
 }
 
 void
 StatClass::StopClock(string _name) {
   if(_name != "")
-    m_clockMap[_name].StopClock(); 
-  else 
-    cerr<<"Error::Attempting to stop a non-existing clock"<< _name << endl; 
+    m_clockMap[_name].StopClock();
+  else
+    cerr<<"Error::Attempting to stop a non-existing clock"<< _name << endl;
 }
 
-void 
+void
 StatClass::StopPrintClock(string _name, ostream& _os) {
   if(_name != "")
     m_clockMap[_name].StopPrintClock(_os);
-  else 
-    cerr<<"Error::Attempting to stop and print a non-existing clock"<< _name << endl; 
+  else
+    cerr<<"Error::Attempting to stop and print a non-existing clock"<< _name << endl;
 }
 
-void 
+void
 StatClass::PrintClock(string _name, ostream& _os) {
   if(_name !="")
     m_clockMap[_name].PrintClock(_os);
-  else 
-    cerr<<"Error::Attempting to print a non-existing clock"<< _name << endl; 
+  else
+    cerr<<"Error::Attempting to print a non-existing clock"<< _name << endl;
 }
 
 void
 StatClass::ClearClock(string _name) {
   if(_name != "")
     m_clockMap[_name].ClearClock();
-  else 
-    cerr<<"Error::Attempting to clear a non-existing clock"<< _name << endl; 
+  else
+    cerr<<"Error::Attempting to clear a non-existing clock"<< _name << endl;
 }
 
 double
@@ -236,17 +228,17 @@ StatClass::GetSeconds(string _name) {
   if(_name !="")
     return m_clockMap[_name].GetSeconds();
   else {
-    cerr<<"Attempting to GetSeconds for a non-existing clock:: "<< _name << endl; 
+    cerr<<"Attempting to GetSeconds for a non-existing clock:: "<< _name << endl;
     return 0;
   }
 }
 
-int 
+int
 StatClass::GetUSeconds(string _name) {
   if(_name != "")
     return m_clockMap[_name].GetUSeconds();
   else {
-    cerr<<"Attempting to GetUSeconds for a non-existing clock::"<< _name << endl; 
+    cerr<<"Attempting to GetUSeconds for a non-existing clock::"<< _name << endl;
     return 0;
   }
 }
@@ -273,7 +265,7 @@ ClockClass::ClockClass() {
 ClockClass::
 ~ClockClass() {}
 
-void 
+void
 ClockClass::SetName(string _name){
   m_clockName = _name;
 }

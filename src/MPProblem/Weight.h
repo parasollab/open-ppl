@@ -1,7 +1,3 @@
-/* Weight class used for edge weights.  Other weight classes should be
- * derived off of this class.
- */
-
 #ifndef WEIGHT_H_
 #define WEIGHT_H_
 
@@ -15,6 +11,18 @@ using namespace std;
 
 #include "Utilities/MPUtils.h"
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup Weights
+/// @brief Default weight class for roadmap edges. Defined as a value and a set
+/// of intermediate configurations.
+///
+/// Weight is the concept for what is stored on the graph edges. Essentially,
+/// edges are defined as polygonal chains \f$I={q_1, q_2, \ldots, q_n}\f$
+/// through @cspace. They have two essential properties, a weight value
+/// representing some idea of distance between the two end points of the edge
+/// and a set of intermediate configurations defining the polygonal chain (not
+/// including the start and goal configurations).
+////////////////////////////////////////////////////////////////////////////////
 template<class CfgType>
 class DefaultWeight {
   public:
@@ -34,14 +42,15 @@ class DefaultWeight {
     virtual bool operator<(const DefaultWeight& _other) const ;
 
     // Read/Write values of datamember to given input/output stream.
-    template<class CfgType2>
-    friend ostream& operator<< (ostream& _os, const DefaultWeight<CfgType2>& _w);
-    template<class CfgType2>
-    friend istream& operator>> (istream& _is, DefaultWeight<CfgType2>& _w);
+    template<class C>
+      friend ostream& operator<<(ostream& _os, const DefaultWeight<C>& _w);
+    template<class C>
+      friend istream& operator>>(istream& _is, DefaultWeight<C>& _w);
 
     // Access Methods
     string GetLPLabel() const { return m_lpLabel; }
     void SetLPLabel(string _lpLabel){ m_lpLabel = _lpLabel; }
+    vector<CfgType>& GetIntermediates() { return m_intermediates; }
     const vector<CfgType>& GetIntermediates() const { return m_intermediates; }
     void SetIntermediates(vector<CfgType>& _intermediates){ m_intermediates = _intermediates;}
 
@@ -71,7 +80,7 @@ class DefaultWeight {
   public:
     //changed local to member
 #ifdef _PARALLEL
-    void define_type(stapl::typer &t)  
+    void define_type(stapl::typer &t)
     {
       t.member(m_weight);
       t.member(m_lpLabel);
@@ -94,23 +103,23 @@ DefaultWeight<CfgType>::~DefaultWeight(){}
 template<class CfgType>
 double
 DefaultWeight<CfgType>::InvalidWeight(){
-  return INVALID_DBL;
+  return -1;
 }
 
 template<class CfgType>
-DefaultWeight<CfgType> 
+DefaultWeight<CfgType>
 DefaultWeight<CfgType>::MaxWeight(){
   return DefaultWeight<CfgType>("INVALID", MAX_WEIGHT);
 }
 
 template<class CfgType>
-bool 
+bool
 DefaultWeight<CfgType>::operator==(const DefaultWeight<CfgType>& _tmp) const{
   return ( (m_lpLabel==_tmp.GetLPLabel()) && (m_weight==_tmp.GetWeight()) );
 }
 
 template<class CfgType>
-const DefaultWeight<CfgType>& 
+const DefaultWeight<CfgType>&
 DefaultWeight<CfgType>::operator=(const DefaultWeight<CfgType>& _w){
   m_lpLabel = _w.GetLPLabel();
   m_weight = _w.GetWeight();
@@ -121,35 +130,37 @@ DefaultWeight<CfgType>::operator=(const DefaultWeight<CfgType>& _w){
 }
 
 template<class CfgType>
-ostream& 
+ostream&
 operator<<(ostream& _os, const DefaultWeight<CfgType>& _w){
-  /*_os << _w.m_intermediates.size() << " ";
-  for(vector<CfgType>::const_iterator cit = _w.m_intermediates.begin(); cit!= _w.m_intermediates.end(); cit++){
-    _os << *cit << " ";
+  _os << _w.m_intermediates.size() << " ";
+  for(typename vector<CfgType>::const_iterator cit = _w.m_intermediates.begin(); cit!= _w.m_intermediates.end(); cit++){
+    _os << *cit;
   }
-  */
-  //TODO::FIX::for now output 0 for number of intermediates, util vizmo gets updated. Then replace with the above code.
-  _os << "0 ";
-  _os << _w.m_weight;
-  return _os;
+  return _os << _w.m_weight;
 }
 
 template<class CfgType>
-istream& 
+istream&
 operator>>(istream& _is, DefaultWeight<CfgType>& _w){
-  int tmp;
-  _is >> tmp >> _w.m_weight;
-  return _is;
+  size_t numIntermediates;
+  _is >> numIntermediates;
+  _w.m_intermediates.clear();
+  CfgType tmp;
+  for(size_t i = 0; i < numIntermediates; ++i) {
+    _is >> tmp;
+    _w.m_intermediates.push_back(tmp);
+  }
+  return _is >> _w.m_weight;
 }
 
 template<class CfgType>
-DefaultWeight<CfgType> 
+DefaultWeight<CfgType>
 DefaultWeight<CfgType>::operator+(const DefaultWeight<CfgType>& _other) const {
   return DefaultWeight<CfgType>(m_lpLabel, m_weight+_other.m_weight);
 }
 
 template<class CfgType>
-bool 
+bool
 DefaultWeight<CfgType>::operator<(const DefaultWeight<CfgType>& _other) const {
   return m_weight < _other.m_weight;
 }

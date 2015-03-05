@@ -16,24 +16,28 @@ struct EmptyTraits{
   typedef MPProblem<EmptyTraits> MPProblemType;
 
   typedef boost::mpl::list<EuclideanDistance<EmptyTraits> > DistanceMetricMethodList;
-  
+
   typedef boost::mpl::list<
   CollisionDetectionValidity<EmptyTraits>,
-  SurfaceValidity<EmptyTraits> 
+  SurfaceValidity<EmptyTraits>
   > ValidityCheckerMethodList;
 
   typedef boost::mpl::list<> NeighborhoodFinderMethodList;
-  
+
   typedef boost::mpl::list<> SamplerMethodList;
-  
+
   typedef boost::mpl::list<> LocalPlannerMethodList;
 
+  typedef boost::mpl::list<> ExtenderMethodList;
+
+  typedef boost::mpl::list<> PathModifierMethodList;
+
   typedef boost::mpl::list<> ConnectorMethodList;
-  
+
   typedef boost::mpl::list<> MetricMethodList;
-  
+
   typedef boost::mpl::list<> MapEvaluatorMethodList;
-  
+
   typedef boost::mpl::list<> MPStrategyMethodList;
 };
 

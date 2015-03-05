@@ -2,30 +2,27 @@
  *
  *General Description
  * Configuration Data Class, it has all the interface needed
- * by other Motion Planning classes. 
+ * by other Motion Planning classes.
  */
 
 #ifndef CFG_H_
 #define CFG_H_
 
-#ifdef _PARALLEL
-#include "views/proxy.h"
-#endif 
 #include <vector>
 #include <map>
 
-#include "boost/shared_ptr.hpp"
-#include "boost/serialization/map.hpp"
-using boost::shared_ptr;
+#ifdef _PARALLEL
+#include "views/proxy.h"
+#endif
 
 #include "Vector.h"
 
 #include "MPProblem/Robot.h"
 #include "Utilities/MPUtils.h"
+#include "ValidityCheckers/CollisionDetection/CDInfo.h"
 
 class Cfg;
 class Environment;
-class CDInfo;
 class Boundary;
 
 /////////////////////////////////////////////////////////////////////////////////////////////
@@ -57,26 +54,26 @@ class ClearanceInfo {
     void SetObstacleId(int _id) { m_obstacleId = _id;};
 };
 
-
-/**
- *This class provides storage, tools, and operators for representing configuration.
- *
- *Comparasion, baisc operations (+ - * / ), or more advanced operations
- *(like weighted sum, AlmostEqual.. ) are also provided.
- *This class also provides input/output functions to read/write instances of this class
- *to many kinds of file (formats).
- *Morevoer, tools for create primitives of PRM, like random generation of Cfg for 
- *a given Workspace, and connections between Cfgs are also provided.
- */
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup Cfgs
+/// @brief Default @cspace configuration definition.
+///
+/// Cfg is the core class which defines a configuration, or a vector of values
+/// representing all the degrees of freedom of a robot. This is the abstraction
+/// of @cspace essentially, and thus Cfg is a point or vector inside of @cspace.
+/// Most mathematical operations are defined over this class, i.e.,
+/// @c operator+ and @c operator-, reading and writing to streams, accessing,
+/// random sampling, etc.
+////////////////////////////////////////////////////////////////////////////////
 class Cfg {
   public:
 
-    Cfg();
+    Cfg(size_t _index = 0);
     Cfg(const Cfg& _other);
     virtual ~Cfg() {};
 
-    static void InitRobots(vector<Robot>& _robots);
-    virtual vector<Robot> GetRobots(int){return vector<Robot>();};
+    // assume _index within the size of the vector.
+    static void InitRobots(vector<Robot>& _robots, size_t _index = 0, ostream& _os=std::cout);
 
     Cfg& operator=(const Cfg& _cfg);
     ///determines equality of this and other configuration
@@ -105,7 +102,7 @@ class Cfg {
     ///////////////////////////////////////////////////////////////////////////////////////////
     //
     //
-    //    Access Methods : Retrive and set related information of this class
+    //    Access Methods : Retrieve and set related information of this class
     //
     //
     //////////////////////////////////////////////////////////////////////////////////////////
@@ -120,29 +117,27 @@ class Cfg {
 
     double GetStat(string _stat);
     bool IsStat(string _stat);
-    void SetStat(string _stat, double _value);
+    void SetStat(string _stat, double _value = 0.0);
+    void IncStat(string _stat, double _value = 1.0);
 
     /// Return the number of degrees of freedom for the configuration class
-    static size_t DOF() {return m_dof;};
-    static size_t PosDOF() {return m_posdof;}
-    static size_t GetNumOfJoints() {return 0;}
+    size_t DOF() const {return m_dof[m_robotIndex];};
+    size_t PosDOF() const {return m_posdof[m_robotIndex];}
+    size_t GetNumOfJoints() const {return m_numJoints[m_robotIndex];}
+    static void SetSize(size_t _size);
     virtual const string GetName() const {return "Cfg";};
 
     /// methods for Distance Metric.
     virtual vector<double> GetPosition() const;
-    virtual vector<double> GetOrientation() const;  
+    virtual vector<double> GetOrientation() const;
     virtual double Magnitude() const;
     virtual double PositionMagnitude() const;
     virtual double OrientationMagnitude() const;
 
     //Calculate the center position and center of mass of the robot configures
     //at this Cfg
-    virtual Vector3D GetRobotCenterPosition() const;
-    virtual Vector3D GetRobotCenterofMass(Environment* _env) const;
-
-    //checks boundary constraints on Cfg
-    virtual bool InBoundary(Environment* _env) const;
-    virtual bool InBoundary(Environment* _env, shared_ptr<Boundary> _bb) const;
+    virtual Vector3d GetRobotCenterPosition() const;
+    virtual Vector3d GetRobotCenterofMass(Environment* _env) const;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     //
@@ -151,15 +146,15 @@ class Cfg {
     //
     //
     //////////////////////////////////////////////////////////////////////////////////////////
-    /** 
-     * Confguration where workspace robot's EVERY VERTEX
+    /**
+     * Configuration where workspace robot's EVERY VERTEX
      * is guaranteed to lie within the environment specified bounding box If
      * not, a cfg couldn't be found in the bbx, and the program will abort.
      * The function will try a predefined number of times
      */
     virtual void GetRandomCfg(Environment* _env);
     virtual void GetRandomCfg(Environment* _env, shared_ptr<Boundary> _bb);
-    
+
     template<class DistanceMetricPointer>
       void GetRandomRay(double _incr, Environment* _env,  DistanceMetricPointer _dm, bool _norm=true);
 
@@ -175,18 +170,18 @@ class Cfg {
     /**create a new Cfg instance whose configuration is weighted summation of the
      *first and the second Cfg.
      *The summation is done in every dimension in CSpace.
-     *@param weight should between [0,1]. this weight is for the second Cfg. 
+     *weight should between [0,1]. this weight is for the second Cfg.
      * The weight for the first Cfg is (1-weight)
      */
-    virtual void WeightedSum(const Cfg&, const Cfg&, double _weight = 0.5);       
+    virtual void WeightedSum(const Cfg&, const Cfg&, double _weight = 0.5);
 
     virtual void GetPositionOrientationFrom2Cfg(const Cfg&, const Cfg&);
-    
+
     template<template<class> class ClearanceUtility, class MPTraits>
       double GetSmoothingValue(ClearanceUtility<MPTraits>& _clearanceUtils, shared_ptr<Boundary> _bb);
 
     //polygonal approximation
-    vector<Vector3D> PolyApprox (Environment* _env) const;
+    vector<Vector3d> PolyApprox (Environment* _env) const;
 
     size_t GetRobotIndex() const {return m_robotIndex;}
     void SetRobotIndex(size_t _newIndex){m_robotIndex = _newIndex;}
@@ -194,23 +189,26 @@ class Cfg {
     //I/O Helper functions
     virtual void Read(istream& _is);
     virtual void Write(ostream& _os) const;
-  
+
   protected:
     //Normalize the orientation to the range [-1, 1)
     virtual void NormalizeOrientation(int _index = -1);
-    
-    //generates random configuration within C-space
-    virtual void GetRandomCfgImpl(Environment *_env, shared_ptr<Boundary> bb);
 
-    vector<double> m_v;   
+    //generates random configuration within C-space
+    virtual void GetRandomCfgImpl(Environment* _env, shared_ptr<Boundary> bb);
+
+    vector<double> m_v;
     size_t m_robotIndex; //which active body in the env this cfg refers to
 
-    static size_t m_dof;
-    static size_t m_posdof;
+    // Static member for cfg
+    // information is recorded in vector with a m_robotIndex as index
+    static vector<size_t> m_dof;
+    static vector<size_t> m_posdof;
+    static vector<size_t> m_numJoints;
 
     enum DofType {POS, ROT, JOINT};
-    static vector<DofType> m_dofTypes;
-    static vector<Robot> m_robots;
+    static vector<vector<DofType> > m_dofTypes;
+    static vector<vector<Robot> > m_robots;
 
     /** TODO- there may still problem with (un)packing map
      */
@@ -218,18 +216,32 @@ class Cfg {
     map<string,double> m_statMap;
 
   public:
+    static const vector<vector<Robot> >& GetRobots() { return m_robots; }
+    static const vector<Robot>& GetRobots(size_t _index = 0) { return m_robots[_index]; }
 
     CDInfo m_clearanceInfo;
     shared_ptr<Cfg> m_witnessCfg;
 
 #ifdef _PARALLEL
-    void define_type(stapl::typer &_t)  
+    //parallel connected component
+    void active(bool _a) {m_active = _a;}
+    bool active() const {return m_active;}
+    void cc(size_t _c) {m_cc = _c;}
+    size_t cc() const {return m_cc;}
+
+    void define_type(stapl::typer& _t)
     {
       _t.member(m_v);
       _t.member(m_labelMap);
       _t.member(m_statMap);
-      _t.member(m_robotIndex); 
+      _t.member(m_robotIndex);
+      _t.member(m_active);
+      _t.member(m_cc);
     }
+
+  private:
+    bool m_active;
+    size_t m_cc;
 #endif
 }; // class Cfg
 
@@ -246,8 +258,7 @@ Cfg::GetRandomRay(double _incr, Environment* _env,  DistanceMetricPointer _dm, b
     m_v.push_back(2.0*DRand() - 1.0);
 
   //scale to appropriate length
-  Cfg origin;
-  _dm->ScaleCfg(_env, _incr, origin, *this);
+  _dm->ScaleCfg(_incr, (typename DistanceMetricPointer::element_type::CfgType&)*this);
   if(_norm)
     NormalizeOrientation();
 }
@@ -264,7 +275,7 @@ Cfg::GetSmoothingValue(ClearanceUtility<MPTraits>& _clearanceUtils, shared_ptr<B
 #ifdef _PARALLEL
 namespace stapl {
   template <typename Accessor>
-    class proxy<Cfg, Accessor> 
+    class proxy<Cfg, Accessor>
     : public Accessor {
       private:
         friend class proxy_core_access;
@@ -285,10 +296,16 @@ namespace stapl {
         bool GetLabel(string _label) const { return Accessor::const_invoke(&target_t::GetLabel, _label);}
         bool IsLabel(string _label) const { return Accessor::const_invoke(&target_t::IsLabel, _label);}
         bool SetLabel(string _label) const { return Accessor::const_invoke(&target_t::SetLabel, _label);}
-        bool GetStat(string _stat) const { return Accessor::const_invoke(&target_t::GetStat, _stat);}
+        double GetStat(string _stat) const { return Accessor::const_invoke(&target_t::GetStat, _stat);}
         bool IsStat(string _stat) const { return Accessor::const_invoke(&target_t::IsStat, _stat);}
-        bool SetStat(string _stat) const { return Accessor::const_invoke(&target_t::SetStat, _stat);}
+        void SetStat(string _stat, double _val) const { return Accessor::const_invoke(&target_t::SetStat, _stat,_val);}
+        void IncStat(string _stat, double _val) const { return Accessor::const_invoke(&target_t::IncStat, _stat,_val);}
         static int GetNumOfJoints()  { return Accessor::const_invoke(&target_t::GetNumOfJoints);}
+        void active(bool _a) { return Accessor::invoke(&target_t::active, _a);}
+        bool active() const { return Accessor::const_invoke(&target_t::active);}
+        void cc(size_t _c) { return Accessor::invoke(&target_t::cc, _c);}
+        size_t cc() const { return Accessor::const_invoke(&target_t::cc);}
+
         // static void SetNumOfJoints(int _numOfJoints)  { return Accessor::const_invoke(&target_t::SetNumOfJoints, _numOfJoints);}
     }; //struct proxy
 }

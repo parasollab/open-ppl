@@ -36,7 +36,7 @@ operator>> (istream& _is, SSSurfaceMult& _cfg){
   return _is;
 }
 
-bool 
+bool
 SSSurfaceMult::ConfigEnvironment(Environment* _env) const{
   for(vector<SSSurface>::const_iterator cfgIter = m_cfgs.begin(); cfgIter != m_cfgs.end(); ++cfgIter){
     if (!cfgIter->ConfigEnvironment(_env))

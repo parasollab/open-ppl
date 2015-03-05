@@ -10,19 +10,19 @@ RRGStrategy::RRGStrategy(XMLNodeReader& _node, MPProblem* _problem) :
     _node.warnUnrequestedAttributes();
   }
 
-void 
+void
 RRGStrategy::ParseXML(XMLNodeReader& _node) {
   m_nc = _node.stringXMLParameter("connectionMethod",true,"","Node Connection Method");
-  if(m_debug) PrintOptions(cout);
+  if(m_debug) Print(cout);
 }
 
-void 
-RRGStrategy::PrintOptions(ostream& _os) {
-  BasicRRTStrategy::PrintOptions(_os);
+void
+RRGStrategy::Print(ostream& _os) const {
+  BasicRRTStrategy::Print(_os);
   _os << "\tNode Connection:: " << m_nc << endl;
 }
 
-MPStrategyMethod::VID 
+MPStrategyMethod::VID
 RRGStrategy::ExpandTree(CfgType& _dir) {
 
   VID vid = BasicRRTStrategy::ExpandTree(_dir);
@@ -34,13 +34,13 @@ RRGStrategy::ExpandTree(CfgType& _dir) {
 
     GetMPProblem()->GetRoadmap()->m_pRoadmap->GetVerticesVID(allVIDs);
     Connector<CfgType, WeightType>::ConnectionPointer pConnection;
-    pConnection = GetMPProblem()->GetMPStrategy()->GetConnector()->GetMethod(m_nc);    
+    pConnection = GetMPProblem()->GetMPStrategy()->GetConnector()->GetMethod(m_nc);
 
     // Calling Connect Method and connecting nodes
     stapl::sequential::vector_property_map< GRAPH,size_t > cmap;
-    pConnection->Connect(GetMPProblem()->GetRoadmap(), 
+    pConnection->Connect(GetMPProblem()->GetRoadmap(),
         *(GetMPProblem()->GetStatClass()), cmap,
-        currentVID.begin(), currentVID.end(), 
+        currentVID.begin(), currentVID.end(),
         allVIDs.begin(), allVIDs.end());
   }
   return vid;

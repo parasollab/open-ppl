@@ -35,7 +35,7 @@ void PartitionNode::RemoveChild(PartitionNode *p){
             m_Children.erase(it);
             return;
          }
-      } 
+      }
    }
 }
 
@@ -149,11 +149,11 @@ void PartitionTree::CreateTree(PartitioningMethod *pm, LeafPartitionNode* p, Int
       LeafPartitionNode* lpn = new LeafPartitionNode(ipn, *pit);
       AddNode(lpn);
    }
-   ReplaceNode(p,ipn);   
+   ReplaceNode(p,ipn);
 };
 
 inline void IntToStr(int myInt, string &myString) {
-	std::stringstream ss;          
+	std::stringstream ss;
 	ss << myInt;
 	ss >> myString;
 };
@@ -199,11 +199,11 @@ min, vector<vector<double> >& max){
       bboxes->push_back(bb);
    }
    string outputFilename = baseFileName+".map";
-   ofstream  myofstream(outputFilename.c_str());    
+   ofstream  myofstream(outputFilename.c_str());
    if (!myofstream) {
       cerr << "print_feature_maps::WriteRoadmapForVizmo: can't open outfile: " << endl;
       exit(-1);
-   } 
+   }
    eachRgn.WriteRoadmapForVizmo(myofstream, bboxes);
    myofstream.close();
    delete bboxes;

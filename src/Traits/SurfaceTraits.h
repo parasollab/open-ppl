@@ -1,0 +1,291 @@
+#ifndef SURFACE_TRAITS_H_
+#define SURFACE_TRAITS_H_
+
+#include "CfgTraits.h"
+
+#include "MPProblem/Weight.h"
+
+//distance metric includes
+#include "DistanceMetrics/BinaryLPSweptDistance.h"
+#include "DistanceMetrics/CenterOfMassDistance.h"
+#include "DistanceMetrics/EuclideanDistance.h"
+#include "DistanceMetrics/KnotTheoryDistance.h"
+#include "DistanceMetrics/LPSweptDistance.h"
+#include "DistanceMetrics/ManhattanDistance.h"
+#include "DistanceMetrics/ReachableDistance.h"
+#include "DistanceMetrics/RMSDDistance.h"
+#include "DistanceMetrics/ScaledEuclideanDistance.h"
+
+//validity checker includes
+#include "ValidityCheckers/AlwaysTrueValidity.h"
+#include "ValidityCheckers/CollisionDetectionValidity.h"
+#include "ValidityCheckers/ComposeValidity.h"
+#include "ValidityCheckers/MedialAxisClearanceValidity.h"
+#include "ValidityCheckers/NegateValidity.h"
+#include "ValidityCheckers/NodeClearanceValidity.h"
+#include "ValidityCheckers/ObstacleClearanceValidity.h"
+#include "ValidityCheckers/SurfaceValidity.h"
+#include "ValidityCheckers/SSSurfaceValidity.h"
+
+//neighborhood finder includes
+#include "NeighborhoodFinders/BandsNF.h"
+#include "NeighborhoodFinders/BruteForceNF.h"
+#include "NeighborhoodFinders/HierarchicalNF.h"
+#include "NeighborhoodFinders/HopLimitNF.h"
+#include "NeighborhoodFinders/OptimalNF.h"
+#include "NeighborhoodFinders/RadiusNF.h"
+#include "NeighborhoodFinders/RandomNF.h"
+
+//sampler includes
+#include "Samplers/BridgeTestSampler.h"
+#include "Samplers/GaussianSampler.h"
+#include "Samplers/GridSampler.h"
+#include "Samplers/MedialAxisSampler.h"
+#include "Samplers/MixSampler.h"
+#include "Samplers/ObstacleBasedSampler.h"
+#include "Samplers/SimilarStructureSampler.h"
+#include "Samplers/SurfaceGridSampler.h"
+#include "Samplers/SurfaceSampler.h"
+#include "Samplers/UniformMedialAxisSampler.h"
+#include "Samplers/UniformObstacleBasedSampler.h"
+#include "Samplers/UniformRandomSampler.h"
+
+//local planner includes
+#include "LocalPlanners/AStar.h"
+#include "LocalPlanners/HierarchicalLP.h"
+#include "LocalPlanners/MedialAxisLP.h"
+#include "LocalPlanners/RotateAtS.h"
+#include "LocalPlanners/StraightLine.h"
+#include "LocalPlanners/SurfaceLP.h"
+#include "LocalPlanners/ToggleLP.h"
+#include "LocalPlanners/TransformAtS.h"
+#include "LocalPlanners/ApproxSpheres.h"
+
+//extenders includes
+#include "Extenders/BasicExtender.h"
+#include "Extenders/MixExtender.h"
+#include "Extenders/RandomObstacleVector.h"
+#include "Extenders/RotationThenTranslation.h"
+#include "Extenders/TraceCSpaceObstacle.h"
+#include "Extenders/TraceMAPush.h"
+#include "Extenders/TraceObstacle.h"
+
+//path smoothing includes
+#include "PathModifiers/CombinedPathModifier.h"
+#include "PathModifiers/MedialAxisPathModifier.h"
+#include "PathModifiers/ResamplePathModifier.h"
+#include "PathModifiers/ShortcuttingPathModifier.h"
+
+//connector includes
+#include "Connectors/AdaptiveConnector.h"
+#include "Connectors/CCsConnector.h"
+#include "Connectors/ConnectNeighboringSurfaces.h"
+#include "Connectors/NeighborhoodConnector.h"
+#include "Connectors/RewireConnector.h"
+#include "Connectors/CCExpansion.h"
+#include "Connectors/ClosestVE.h"
+
+//metric includes
+#include "Metrics/CCDistanceMetric.h"
+#include "Metrics/ConnectivityMetric.h"
+#include "Metrics/CoverageDistanceMetric.h"
+#include "Metrics/CoverageMetric.h"
+#include "Metrics/DiameterMetric.h"
+#include "Metrics/NumEdgesMetric.h"
+#include "Metrics/NumNodesMetric.h"
+#include "Metrics/RoadmapSet.h"
+#include "Metrics/TimeMetric.h"
+#include "Metrics/VectorSet.h"
+
+//map evaluator includes
+#include "MapEvaluators/ComposeEvaluator.h"
+#include "MapEvaluators/ConditionalEvaluator.h"
+#include "MapEvaluators/LazyQuery.h"
+#include "MapEvaluators/LazyToggleQuery.h"
+#include "MapEvaluators/NegateEvaluator.h"
+#include "MapEvaluators/PrintMapEvaluation.h"
+#include "MapEvaluators/Query.h"
+#include "MapEvaluators/ReplanningEvaluation.h"
+#include "MapEvaluators/TrueEvaluation.h"
+
+//mp strategies includes
+#include "MPStrategies/AdaptiveRRT.h"
+#include "MPStrategies/BasicPRM.h"
+#include "MPStrategies/BasicRRTStrategy.h"
+#include "MPStrategies/EvaluateMapStrategy.h"
+#include "MPStrategies/LocalManeuveringStrategy.h"
+#include "MPStrategies/MedialAxisRRT.h"
+#include "MPStrategies/MultiStrategy.h"
+#include "MPStrategies/SparkPRM.h"
+#include "MPStrategies/SRTStrategy.h"
+#include "MPStrategies/TogglePRMStrategy.h"
+#include "MPStrategies/UnitTest/DMTestStrategy.h"
+#include "MPStrategies/UtilityGuidedGenerator.h"
+#include "MPStrategies/VisibilityBasedPRM.h"
+
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup MotionPlanningUniverse
+/// @brief Defines available methods in the Motion Planning Universe for
+/// SurfaceCfg template specialization
+///
+/// MPTraits is a type class which defines the motion planning universe. We
+/// construct our methods through a factory design pattern, and thus this states
+/// all available classes within an abstraction that you can use in the system.
+/// Essentially the important types are, the CfgType or the @cspace abstraction
+/// class, the WeightType or the edge type of the graph, and a type list for
+/// each algorithm abstraction --- here you only need to define what you need,
+/// as extraneous methods in the type class imply longer compile times.
+////////////////////////////////////////////////////////////////////////////////
+class CfgSurface;
+
+#ifdef PMPCfgSurface
+template<>
+struct MPTraits<CfgSurface, DefaultWeight<CfgSurface> > {
+  typedef CfgSurface CfgType;
+  typedef DefaultWeight<CfgType> WeightType;
+  typedef CfgSurface& CfgRef;
+
+  typedef MPProblem<MPTraits> MPProblemType;
+
+  //types of distance metrics available in our world
+  typedef boost::mpl::list<
+    EuclideanDistance<MPTraits>
+    > DistanceMetricMethodList;
+
+  //types of validity checkers available in our world
+  typedef boost::mpl::list<
+    CollisionDetectionValidity<MPTraits>,
+    SurfaceValidity<MPTraits>
+      > ValidityCheckerMethodList;
+
+  //types of neighborhood finders available in our world
+  typedef boost::mpl::list<
+    BruteForceNF<MPTraits>
+    > NeighborhoodFinderMethodList;
+
+  //types of samplers available in our world
+  typedef boost::mpl::list<
+    SurfaceSampler<MPTraits>,
+    SurfaceGridSampler<MPTraits>
+      > SamplerMethodList;
+
+  //types of local planners available in our world
+  typedef boost::mpl::list<
+    SurfaceLP<MPTraits>
+    > LocalPlannerMethodList;
+
+  //types of extenders avaible in our world
+  typedef boost::mpl::list<
+    BasicExtender<MPTraits>,
+    MixExtender<MPTraits>,
+    RandomObstacleVector<MPTraits>,
+    RotationThenTranslation<MPTraits>,
+    TraceCSpaceObstacle<MPTraits>,
+    TraceMAPush<MPTraits>,
+    TraceObstacle<MPTraits>
+      > ExtenderMethodList;
+
+  //types of path smoothing available in our world
+  typedef boost::mpl::list<
+    CombinedPathModifier<MPTraits>,
+    MedialAxisPathModifier<MPTraits>,
+    ResamplePathModifier<MPTraits>,
+    ShortcuttingPathModifier<MPTraits>
+      > PathModifierMethodList;
+
+  //types of connectors available in our world
+  typedef boost::mpl::list<
+    ConnectNeighboringSurfaces<MPTraits>,
+    NeighborhoodConnector<MPTraits>//,
+    > ConnectorMethodList;
+
+  //types of metrics available in our world
+  typedef boost::mpl::list<
+    NumNodesMetric<MPTraits>
+    > MetricMethodList;
+
+  //types of map evaluators available in our world
+  typedef boost::mpl::list<
+    ConditionalEvaluator<MPTraits>
+    > MapEvaluatorMethodList;
+
+  //types of motion planning strategies available in our world
+  typedef boost::mpl::list<
+    BasicPRM<MPTraits>
+    > MPStrategyMethodList;
+};
+#endif
+
+#ifdef PMPSSSurfaceMult
+class SSSurfaceMult;
+template<>
+struct CfgTraits<SSSurfaceMult, DefaultWeight<SSSurfaceMult> > {
+  typedef SSSurfaceMult CfgType;
+  typedef DefaultWeight<CfgType> WeightType;
+  typedef SSSurfaceMult& CfgRef;
+
+  typedef MPProblem<MPTraits> MPProblemType;
+
+  //types of distance metrics available in our world
+  typedef boost::mpl::list<
+    EuclideanDistance<MPTraits>
+    > DistanceMetricMethodList;
+
+  //types of validity checkers available in our world
+  typedef boost::mpl::list<
+    CollisionDetectionValidity<MPTraits>,
+    SSSurfaceValidity<MPTraits>
+      > ValidityCheckerMethodList;
+
+  //types of neighborhood finders available in our world
+  typedef boost::mpl::list<
+    BruteForceNF<MPTraits>
+    > NeighborhoodFinderMethodList;
+
+  //types of samplers available in our world
+  typedef boost::mpl::list<
+    > SamplerMethodList;
+
+  //types of local planners available in our world
+  typedef boost::mpl::list<
+    > LocalPlannerMethodList;
+
+  //types of extenders avaible in our world
+  typedef boost::mpl::list<
+    BasicExtender<MPTraits>,
+    MixExtender<MPTraits>,
+    RandomObstacleVector<MPTraits>,
+    RotationThenTranslation<MPTraits>,
+    TraceCSpaceObstacle<MPTraits>,
+    TraceMAPush<MPTraits>,
+    TraceObstacle<MPTraits>
+      > ExtenderMethodList;
+
+  //types of path smoothing available in our world
+  typedef boost::mpl::list<
+    CombinedPathModifier<MPTraits>
+    > PathModifierMethodList;
+
+  //types of connectors available in our world
+  typedef boost::mpl::list<
+    > ConnectorMethodList;
+
+  //types of metrics available in our world
+  typedef boost::mpl::list<
+    NumNodesMetric<MPTraits>
+    > MetricMethodList;
+
+  //types of map evaluators available in our world
+  typedef boost::mpl::list<
+    ConditionalEvaluator<MPTraits>
+    > MapEvaluatorMethodList;
+
+  //types of motion planning strategies available in our world
+  typedef boost::mpl::list<
+    BasicPRM<MPTraits>,
+    LocalManeuveringStrategy<MPTraits>
+      > MPStrategyMethodList;
+};
+#endif
+
+#endif

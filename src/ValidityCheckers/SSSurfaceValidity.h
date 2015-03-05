@@ -28,14 +28,12 @@ class SSSurfaceValidity : public ValidityCheckerMethod<MPTraits> {
 
     virtual ~SSSurfaceValidity() {}
 
-    virtual bool 
-      IsValidImpl(CfgType& _cfg, Environment* _env, StatClass& _stats, CDInfo& _cdInfo, string *_callName);
+    virtual bool IsValidImpl(CfgType& _cfg, CDInfo& _cdInfo, const string& _callName);
 
   private:
     string m_vcLabel;
     TmpProblemType m_prob;
-};//end SSSurfaceValidity class definition
-
+};
 
 template<class MPTraits>
 SSSurfaceValidity<MPTraits>::SSSurfaceValidity(string _vcLabel) : ValidityCheckerMethod<MPTraits>(){
@@ -47,9 +45,9 @@ SSSurfaceValidity<MPTraits>::SSSurfaceValidity(string _vcLabel) : ValidityChecke
   m_prob.SetMPProblem();
 }
 
-  template<class MPTraits>
-SSSurfaceValidity<MPTraits>::SSSurfaceValidity(typename MPTraits::MPProblemType* _problem, XMLNodeReader& _node) 
-  : ValidityCheckerMethod<MPTraits>(_problem, _node){
+template<class MPTraits>
+SSSurfaceValidity<MPTraits>::SSSurfaceValidity(typename MPTraits::MPProblemType* _problem, XMLNodeReader& _node)
+  : ValidityCheckerMethod<MPTraits>(_problem, _node) {
     _node.verifyName("SSSurfaceValidity");
     this->m_name = "SSSurfaceValidity";
     this->m_vcLabel = _node.stringXMLParameter("vc_method", true, "", "Validity Checker Method");
@@ -60,12 +58,11 @@ SSSurfaceValidity<MPTraits>::SSSurfaceValidity(typename MPTraits::MPProblemType*
   }
 
 template<class MPTraits>
-bool 
-SSSurfaceValidity<MPTraits>::IsValidImpl(CfgType& _cfg, Environment* _env, StatClass& _stats, CDInfo& _cdInfo, string *_callName){
-
+bool
+SSSurfaceValidity<MPTraits>::IsValidImpl(CfgType& _cfg, CDInfo& _cdInfo, const string& _callName){
   vector<TmpCfgType>& cfgs = _cfg.GetCfgs();
   for(typename vector<TmpCfgType>::iterator vecIter = cfgs.begin(); vecIter != cfgs.end(); ++vecIter){
-    bool result = m_prob.GetValidityChecker("temp")->IsValid(*vecIter, _env, _stats, _cdInfo, _callName);
+    bool result = m_prob.GetValidityChecker("temp")->IsValid(*vecIter, _cdInfo, _callName);
     if (!result){
       _cfg.SetLabel("VALID", false);
       return false;

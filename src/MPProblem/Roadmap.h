@@ -12,40 +12,47 @@
 #include "Environment.h"
 
 #ifdef _PARALLEL
-#include <stapl/containers/graph/algorithms/graph_io.hpp>
+#include <containers/graph/algorithms/graph_io.hpp>
+#else
+#include <containers/sequential/graph/algorithms/graph_input_output.h>
 #endif
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup Roadmaps
+/// @brief Approximation of @cfree storing a graph and augmenting data
+/// structures for use by motion planning algorithms.
+///
+/// The Roadmap is essentially the graph $G=(V, E)$ which is used to approximate
+/// the planning space by sampling-based motion planning algorithms. \f$V\f$, or
+/// the set of vertices, are all of type CfgType and \f$E\f$, or the set of
+/// edges, are all of type WeightType.
+////////////////////////////////////////////////////////////////////////////////
 template <class MPTraits>
 class Roadmap {
   public:
     typedef typename MPTraits::CfgType CfgType;
     typedef typename MPTraits::WeightType WeightType;
     typedef RoadmapGraph<CfgType, WeightType> GraphType;
-    typedef typename GraphType::vertex_descriptor VID;  
+    typedef typename GraphType::vertex_descriptor VID;
 
     Roadmap();
-    Roadmap(Roadmap<MPTraits>& _rdmp);  
+    Roadmap(const Roadmap<MPTraits>& _rdmp);
     ~Roadmap();
-    
+
     //Read graph information from roadmap file.
     void Read(string _filename);
-    void Write(ostream& _os, Environment* _env, 
-        const vector<shared_ptr<Boundary> >& _boundaries = vector<shared_ptr<Boundary> >());
+    void Write(ostream& _os, Environment* _env);
 
-    //Append nodes and edges from one roadmap (_rdmp) into 
+    //Append nodes and edges from one roadmap (_rdmp) into
     //another roadmap (to_rdmp)
-    vector<VID> AppendRoadmap(Roadmap<MPTraits>& _rdmp);
-
-    //access and set the LP cache
-    bool IsCached(VID _v1, VID _v2);
-    void SetCache(VID _v1, VID _v2, bool _b);
+    vector<VID> AppendRoadmap(const Roadmap<MPTraits>& _rdmp);
 
     //access the roadmap graph
-    GraphType* GetGraph(){return m_graph;}
+    GraphType* GetGraph() {return m_graph;}
+    const GraphType* GetGraph() const {return m_graph;}
     void SetGraph(GraphType* _graph) { m_graph = _graph; }
 
   private:
-    std::map<std::pair<VID,VID>, bool> m_lpCache; //cache of attempted edges
     GraphType* m_graph; //stapl graph
 };
 
@@ -54,19 +61,18 @@ Roadmap<MPTraits>::
 Roadmap() : m_graph(new GraphType()){}
 
 template <class MPTraits>
-Roadmap<MPTraits>::Roadmap(Roadmap<MPTraits>& _rdmp) : m_graph(new GraphType()) {
+Roadmap<MPTraits>::Roadmap(const Roadmap<MPTraits>& _rdmp) : m_graph(new GraphType()) {
   AppendRoadmap(_rdmp);
 }
 
 template <class MPTraits>
 Roadmap<MPTraits>::~Roadmap(){
-  if( m_graph != NULL ) 
-    delete m_graph;
+  delete m_graph;
   m_graph = NULL;
 }
 
 template <class MPTraits>
-void 
+void
 Roadmap<MPTraits>::Read(string _filename) {
 #ifndef _PARALLEL
   ifstream  ifs(_filename.c_str());
@@ -74,12 +80,12 @@ Roadmap<MPTraits>::Read(string _filename) {
     cerr << "Warning::Cannot open file " << _filename << " in Roadmap::Read." << endl;
     return;
   }
-  string tag; 
+  string tag;
   bool moreFile = true;
   size_t count = 0;
   while(moreFile && (ifs >> tag)) {
     count++;
-    if(tag.find("GRAPHSTART") != string::npos) 
+    if(tag.find("GRAPHSTART") != string::npos)
       moreFile = false;
   }
   ifs.close();
@@ -99,87 +105,56 @@ Roadmap<MPTraits>::Read(string _filename) {
 }
 
 template<class MPTraits>
-void 
-Roadmap<MPTraits>::Write(ostream& _os, Environment* _env, 
-    const vector<shared_ptr<Boundary> >& _boundaries) {
-  _os << "PMPL Roadmap Version 041805";
-  _os << endl << "#####PREAMBLESTART#####";
-  _os << endl << "../pmpl -f " << _env->GetEnvFileName() << " ";//commandLine;
-  _os << " -bbox "; _env->GetBoundary()->Print(_os, ',', ',');
-  if(!_boundaries.empty()) {
-    typedef vector<shared_ptr<Boundary> >::const_iterator BIT;
-    for(BIT bit = _boundaries.begin(); bit!=_boundaries.end(); bit++) {
-      _os << " -bbox "; (*bit)->Print(_os, ',', ',');
-    }
-  }
-  _os << endl << "#####PREAMBLESTOP#####";
+void
+Roadmap<MPTraits>::Write(ostream& _os, Environment* _env){
 
-  _os << endl << "#####ENVFILESTART#####";
+  _os << "#####ENVFILESTART#####";
   _os << endl << _env->GetEnvFileName();
   _os << endl << "#####ENVFILESTOP#####";
-  _os << endl;
-
-  _os << "#####LPSTART#####" << endl << "0" << endl << "#####LPSTOP#####" << endl;
-  _os << "#####CDSTART#####" << endl << "0" << endl << "#####CDSTOP#####" << endl;
-  _os << "#####DMSTART#####" << endl << "0" << endl << "#####DMSTOP#####" << endl;
-  _os << "#####RNGSEEDSTART#####" << endl << "0" << endl << "#####RNGSEEDSTOP#####" << endl;
   _os << endl;
 
 #ifndef _PARALLEL
   stapl::sequential::write_graph(*m_graph, _os);         // writes verts & adj lists
 #else
-  stapl::write_graph(*m_graph, _os);
+  ///Below is the supposedly new interface in STAPL, need to revisit with STAPL team
+  //void write_PMPL_graph(GraphVw& g, std::string filename = "")
+    cerr << "ERROR::No map is written to file"<< endl;
+    cerr << "Reference this error on line "<< __LINE__ << " of file " << __FILE__ << endl;
+    exit(-1);
+  //stapl::(*m_graph,_os)
+  //stapl::write_graph(*m_graph, _os);
 #endif
 }
 
 template <class MPTraits>
 vector<typename Roadmap<MPTraits>::VID>
-Roadmap<MPTraits>::AppendRoadmap(Roadmap<MPTraits>& _rdmp) {
-  vector<VID> fromVIDs, toVIDs;
-  _rdmp.m_graph->GetVerticesVID(fromVIDs); // get vertices
+Roadmap<MPTraits>::AppendRoadmap(const Roadmap<MPTraits>& _rdmp) {
+  vector<VID> toVIDs;
   typename vector<VID>::iterator vit;
   //copy vertices
-  for(vit = fromVIDs.begin(); vit < fromVIDs.end(); vit++) {
-    CfgType cfg = (*(_rdmp.m_graph->find_vertex(*vit))).property();
-    toVIDs.push_back(m_graph->AddVertex(cfg));
+  typedef typename GraphType::VI VI;
+  for(VI vit = _rdmp.m_graph->begin(); vit!=_rdmp.m_graph->end(); ++vit){
+    toVIDs.push_back(m_graph->AddVertex(m_graph->GetVertex(vit)));
   }
   vector<pair<pair<VID,VID>, WeightType> > edges;
   typename vector<pair<pair<VID,VID>, WeightType> >::iterator eit;
-  for(vit = fromVIDs.begin(); vit < fromVIDs.end(); vit++) {
+  for(VI vit = _rdmp.m_graph->begin(); vit!=_rdmp.m_graph->end(); ++vit) {
     edges.clear();
     //use iterator to traverse the adj edges and then put the data into edges
-    typename RoadmapGraph<CfgType, WeightType>::vertex_iterator vi = _rdmp.m_graph->find_vertex(*vit);
-    for(typename RoadmapGraph<CfgType, WeightType>::adj_edge_iterator ei =(*vi).begin(); ei!=(*vi).end(); ei++ ){
+    for(typename RoadmapGraph<CfgType, WeightType>::adj_edge_iterator ei =(*vit).begin(); ei!=(*vit).end(); ei++ ){
       pair<pair<VID,VID>, WeightType> singleEdge;
       singleEdge.first.first=(*ei).source();
       singleEdge.first.second=(*ei).target();
       singleEdge.second = (*ei).property();
       edges.push_back(singleEdge); //put the edge into edges
-    } 
+    }
     for(eit = edges.begin(); eit < edges.end(); eit++) {
       if(!m_graph->IsEdge((*eit).first.first, (*eit).first.second)) { //add an edge if it is not yet in m_graph
-        CfgType cfgA = (*(_rdmp.m_graph->find_vertex((*eit).first.first))).property();
-        CfgType cfgB = (*(_rdmp.m_graph->find_vertex((*eit).first.second))).property();
-        m_graph->AddEdge(cfgA, cfgB, (*eit).second);
+        m_graph->AddEdge((*eit).first.first, (*eit).first.second, (*eit).second);
       }
-    } //endfor eit  
+    } //endfor eit
   } //endfor vit
   return toVIDs;
-}
-
-template<class MPTraits>
-bool 
-Roadmap<MPTraits>::IsCached(VID _v1, VID _v2) {
-  if(m_lpCache.count(make_pair(min(_v1,_v2), max(_v1,_v2))) > 0)
-    return true;
-  else
-    return false;
-}
-
-template<class MPTraits>
-void
-Roadmap<MPTraits>::SetCache(VID _v1, VID _v2, bool _b) {
-  m_lpCache[make_pair(min(_v1,_v2),max(_v1,_v2))] = _b;
 }
 
 #endif

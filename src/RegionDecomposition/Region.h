@@ -23,10 +23,10 @@ class Region {
     Region();
     Region(const Region& _r);
     //second input: vector of pair (cc size, vid of cc representative)
-    Region(shared_ptr<BOUNDARY> _bbox, std::vector<pair<size_t, VID> >& _pairIds); 
-    Region(shared_ptr<BOUNDARY> _bbox, std::vector<VID>& _ids); 
+    Region(shared_ptr<BOUNDARY> _bbox, std::vector<pair<size_t, VID> >& _pairIds);
+    Region(shared_ptr<BOUNDARY> _bbox, std::vector<VID>& _ids);
     ~Region();
-    
+
     //////////////////////////
     //Accessors
     //////////////////////////
@@ -34,21 +34,21 @@ class Region {
     void SetBoundary(shared_ptr<BOUNDARY> _bb);
 
     pair<shared_ptr<BOUNDARY>, vector<pair<size_t, VID> > > GetRegionInfo() const;
-    
+
     //returns all the vids contained in the region
     std::vector<VID> GetAllVIDs() const;
     //returns the vid representatives from all the CCs within the region
-    std::vector<VID> GetCCVIDs() const; 
+    std::vector<VID> GetCCVIDs() const;
     //returns the vid of cc representative and size of cc for all CCs in the
     //region
-    std::vector<pair<VID, size_t> > GetCCs() const; 
+    std::vector<pair<VID, size_t> > GetCCs() const;
     void SetCCs(std::vector<pair<VID, size_t> > _ccs);
 
     std::vector<VID> RegionVIDs() const;
     void SetVIDs(std::vector<VID> _ids);
-    
+
     //number of valid nodes in a region, needed for region migration
-    size_t RegionWeight() const; 
+    size_t RegionWeight() const;
 
     void Print(ostream& _os) const ;
 
@@ -75,15 +75,15 @@ class Region {
 
 #ifdef _PARALLEL
 namespace stapl {
-  
+
   template <typename BoundaryType, class MPTraits, typename Accessor>
-    class proxy<Region<BoundaryType, MPTraits>, Accessor> 
+    class proxy<Region<BoundaryType, MPTraits>, Accessor>
     : public Accessor {
       private:
         friend class proxy_core_access;
         typedef Region<BoundaryType, MPTraits> m_targetT;
         typedef typename MPTraits::MPProblemType::VID VID;
-      
+
       public:
         explicit proxy(Accessor const& _acc) : Accessor(_acc) { }
         operator m_targetT() const { return Accessor::read(); }
@@ -136,13 +136,13 @@ Region<BOUNDARY, MPTraits>::Region(shared_ptr<BOUNDARY> _bbox, std::vector<VID>&
 }
 
 template<class BOUNDARY, class MPTraits>
-shared_ptr<BOUNDARY> 
+shared_ptr<BOUNDARY>
 Region<BOUNDARY, MPTraits>::GetBoundary() const{
   return m_bb;
 }
 
 template<class BOUNDARY, class MPTraits>
-std::vector<pair<typename MPTraits::MPProblemType::VID, size_t> > 
+std::vector<pair<typename MPTraits::MPProblemType::VID, size_t> >
 Region<BOUNDARY, MPTraits>::GetCCs() const{
   return m_ccs;
 }
@@ -187,19 +187,19 @@ std::vector<typename MPTraits::MPProblemType::VID>
 Region<BOUNDARY, MPTraits>::GetAllVIDs() const{
   vector<VID> allVIDs;
   return allVIDs;
-} 
+}
 
 template<class BOUNDARY, class MPTraits>
-bool 
+bool
 Region<BOUNDARY, MPTraits>::operator==(const Region& _a) const{
   return (m_bb == _a.m_bb) &&
     (m_ccs == _a.m_ccs) &&
     (m_vids == _a.m_vids);
-} 
+}
 
 /*
 template<class BOUNDARY>
-ostream& 
+ostream&
 operator<< (ostream& _os, const Region<BOUNDARY>& _r) {
   _r.Print(_os);
   return _os;
@@ -216,11 +216,11 @@ template<class BOUNDARY, class MPTraits>
 void
 Region<BOUNDARY, MPTraits>::Print(ostream& _os) const  {
   typedef typename std::vector<VID>::const_iterator itr;
-  _os << "  " << "Region Weight :" << m_vids.size() << " "; 
+  _os << "  " << "Region Weight :" << m_vids.size() << " ";
   _os << "Region VIDs: ";
   for(itr vit = m_vids.begin(); vit!=m_vids.end(); vit++){
     _os << "  " << *vit<< "";
   }
 }
 
-#endif 
+#endif

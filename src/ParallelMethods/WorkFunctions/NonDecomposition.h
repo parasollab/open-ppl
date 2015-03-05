@@ -16,29 +16,29 @@ class NonDecomposition {
  private:
   Environment* env;
   std::string strLabel;
-  int dims; 
-  int n_partitions; 
-  double epsilon; 
+  int dims;
+  int n_partitions;
+  double epsilon;
   int posdof;
   int dof;
-  
+
  public:
   NonDecomposition(BoundingBox &c_boundary, int m_partitions=2){
     n_partitions = m_partitions;
   }
   NonDecomposition() {};
   ~NonDecomposition() {}
-  
-  
+
+
   const char* Name() const { return "NonDecomposition"; }
-  
+
   void Print(ostream& os) const {
-    os << Name() 
-       << " (# of partition = " << n_partitions 
-       << ", overlap btw partition = " << epsilon 
+    os << Name()
+       << " (# of partition = " << n_partitions
+       << ", overlap btw partition = " << epsilon
        << ", # dims = " << dims << ")";
   }
-  
+
   template <typename OutputIterator>
     void
     Decompose( Environment* _env, BoundingBox &c_boundary,int n_partitions,OutputIterator _out,vector<BoundingBox>& vbox);
@@ -52,7 +52,7 @@ template<typename OutputIterator>
 void
 NonDecomposition<CFG>::
 Decompose(Environment* _env, BoundingBox &c_boundary,int n_partitions,OutputIterator _out, vector<BoundingBox>& vbox){
-	///@To do:same as DecomposeWS but fix parameter
+	///@todo same as DecomposeWS but fix parameter
 }
 
 template<typename CFG>

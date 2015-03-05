@@ -32,7 +32,7 @@ double GRand(bool _reset) {
       rsq = v1*v1 + v2*v2;
     } while (rsq >= 1.0 || rsq == 0.0);
     double fac = sqrt(-2.0*log(rsq)/rsq);
-    //Generates two gaussians and returns one and stores the other for another call 
+    //Generates two gaussians and returns one and stores the other for another call
     gset = v1*fac;
     hasNext = true;
     return v2*fac;
@@ -53,7 +53,7 @@ long SRand(long _seedVal){
   if(oldSeed != _seedVal) {
     oldSeed = _seedVal;
     return SRand("NONE", 0, _seedVal, true);
-  } 
+  }
   else
     return SRand("NONE", 0, _seedVal);
 }
@@ -70,7 +70,7 @@ long SRand(string _methodName, int _nextNodeIndex, long _base, bool _reset) {
       methodID += tmp*(i+1)*(i+2);
     }
     srand48(long (baseSeed * (_nextNodeIndex+1) + methodID));
-  } 
+  }
   else {
     srand48(baseSeed);
   }
@@ -90,7 +90,8 @@ long SRand(string _methodName, int _nextNodeIndex, long _base, bool _reset) {
 //normalize a number to [-1,1)
 double Normalize(double _a){
   _a = fmod(_a+1.0, 2.0);
-  if(_a < -1E-6)
+  //if(_a < -1E-6)
+  if(_a < 0.0)
     _a+=2.0;
   _a--;
   return _a;
@@ -102,11 +103,11 @@ double DirectedAngularDistance(double _a, double _b) {
   _a = Normalize(_a);
   _b = Normalize(_b);
 
-  if( _b - _a  > 1.0 ) 
+  if( _b - _a  > 1.0 )
     _a+=2.0;
   else if ( _a - _b > 1.0 )
     _b+=2.0;
-  
+
   return _b-_a;
 }
 
@@ -142,10 +143,13 @@ PtInTriangle(const Point2d& _A, const Point2d& _B, const Point2d& _C,const Point
 //   uses barycentric coordinates to compute this and return the uv-coords
 //   for potential usage later
 //----------------------------------------------------------------------------
-bool 
+bool
 PtInTriangle(const Point2d& _A, const Point2d& _B, const Point2d& _C,const Point2d& _P,
  double& _u, double& _v) {
-  // Compute vectors        
+
+  double epsilon = 0.0000001;
+
+  // Compute vectors
   Vector2d v0 = _C - _A;
   Vector2d v1 = _B - _A;
   Vector2d v2 = _P - _A;
@@ -158,12 +162,12 @@ PtInTriangle(const Point2d& _A, const Point2d& _B, const Point2d& _C,const Point
   double dot12 = v1*v2;
 
   // Compute barycentric coordinates
-  double invDenom = 1 / (dot00 * dot11 - dot01 * dot01);
+  double invDenom = 1. / (dot00 * dot11 - dot01 * dot01);
   _u = (dot11 * dot02 - dot01 * dot12) * invDenom;
   _v = (dot00 * dot12 - dot01 * dot02) * invDenom;
 
   // Check if point is in triangle
-  return (_u > 0) && (_v > 0) && (_u + _v < 1);
+  return (_u >= -epsilon) && (_v >= -epsilon) && (_u + _v < 1. + epsilon);
 }
 
 Point3d
@@ -173,56 +177,11 @@ GetPtFromBarycentricCoords(const Point3d& _A, const Point3d& _B, const Point3d& 
   return p;
 }
 
-
-///////////////////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////////////////
-
-
-// Maintains a vector of size 2 with Min at the front and Max at the end
-void PushMinMax(vector<double>& _vec, double _num) {
-  // Empty Case
-  if (_vec.size() == 0) 
-    _vec.push_back(_num);
-  // Only one
-  else if (_vec.size() == 1) {
-    if (_vec.front() < _num) 
-      _vec.push_back(_num);
-    else {
-      _vec.push_back(_vec.front());
-      _vec[0] = _num;
-    }
-  }
-  // Compare and update if necessary
-  else {
-    if (_num < _vec[0])
-      _vec[0] = _num;
-    else if (_num > _vec[1]) 
-      _vec[1] = _num;
-  }
+double NormalizeTheta(double _theta){
+  double val = _theta + PI;
+  if (val == 0)
+    return _theta;
+  else
+    return (val-TWOPI * floor(val/TWOPI) - PI);
 }
-
-
-// from spherical to cartesian
-vector<double>
-GetCartesianCoordinates(vector<double> sphericalCoordinates) {
-  vector<double> coordinates(2);
-  double rho = sphericalCoordinates[0];   
-  double theta = sphericalCoordinates[1];  
-  double phi = sphericalCoordinates[2];   
-  
-  // from cartesian to polar
-  coordinates[0] = rho * cos(theta) ;
-  coordinates[1] = rho * sin(theta) ;
-  
-  // 3D case
-  if(phi != MAX_INT) {
-    coordinates[0] *= sin(phi) ;
-    coordinates[1] *= sin(phi) ;
-    coordinates.push_back(rho * cos(phi));
-    for (int i=0; i<3; i++)
-      coordinates.push_back(2*DRand()-1.0);
-  }
-  return coordinates;
-}
-
 

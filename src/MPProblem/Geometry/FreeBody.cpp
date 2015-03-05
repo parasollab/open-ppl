@@ -22,7 +22,7 @@ FreeBody::~FreeBody() {
 //  GetWorldPolyhedron
 //===================================================================
 GMSPolyhedron&
-FreeBody::GetWorldPolyhedron() { 
+FreeBody::GetWorldPolyhedron() {
   // Perform a transformation w.r.t. the world frame, and put into the data field
   // of "this" body's instance
   // GetWorldTransformation();
@@ -37,10 +37,10 @@ FreeBody::GetWorldPolyhedron() {
 
 //===================================================================
 //  Configure
-//  
+//
 //  Function: Configure "this" body with the given transformation
 //
-//  For a single free body, there is only one transformation that need to be 
+//  For a single free body, there is only one transformation that need to be
 //  taken care of
 //===================================================================
 void
@@ -54,29 +54,29 @@ FreeBody::Configure(Transformation& _transformation){
 //===================================================================
 //  GetWorldTransformation
 //
-//  Function: Transformation "this" body w.r.t the world frame in a 
+//  Function: Transformation "this" body w.r.t the world frame in a
 //            recursive manner; multiply the world transformation
 //            of the previous body with the transformation from the
 //            proximal joint to the center of gravity of "this" body
 //            (Need a generalization for the connectionship, since
 //            currently it handles only one backward connection).
-//  
+//
 //  Output: The transformation transformed w.r.t the world frame
 //
 //  Refer to a seperate diagram for the transformation structure
 //
 //===================================================================
-Transformation& 
+Transformation&
 FreeBody::GetWorldTransformation(bool _debug) {
   std::set<int, less<int> > visited;
   return this->ComputeWorldTransformation(visited, _debug);
 }
 
-//this will search the vector of the set of all visited nodes, 
+//this will search the vector of the set of all visited nodes,
 //if "this" is not the last object in visited, then it will return
 //worldTransFormation.
 //else it will insert "this" into the set of visited.
-Transformation& 
+Transformation&
 FreeBody::ComputeWorldTransformation(std::set<int, less<int> >& visited, bool _debug) {
   m_centerOfMassAvailable=false;
   m_worldPolyhedronAvailable=false;//transformation changed
@@ -105,8 +105,8 @@ FreeBody::ComputeWorldTransformation(std::set<int, less<int> >& visited, bool _d
       }
       return m_worldTransformation;
     }
-      
-    Transformation dh(m_backwardConnection[0].GetDHparameters());
+
+    Transformation dh = m_backwardConnection[0].GetDHparameters().GetTransformation();
     m_worldTransformation =
       ((FreeBody*)(m_backwardConnection[0].GetPreviousBody().get()))->ComputeWorldTransformation(visited, _debug)
       * m_backwardConnection[0].GetTransformationToDHFrame()
@@ -127,28 +127,41 @@ FreeBody::ComputeWorldTransformation(std::set<int, less<int> >& visited, bool _d
 
 istream&
 operator>>(istream& _is, FreeBody& _fb){
-  _fb.m_filename = ReadFieldString(_is, "FreeBody filename (geometry file)", false);
-
-  VerifyFileExists(_fb.m_filename);
-  _fb.Read(_fb.m_filename);
+  _fb.m_filename = ReadFieldString(_is, WHERE,
+      "Failed reading geometry filename.", false);
+  _fb.Read();
 
   //Read for Base Type.  If Planar or Volumetric, read in two more strings
   //If Joint skip this stuff. If Fixed read in positions like an obstacle
-  string baseTag = ReadFieldString(_is, 
-      "Base Tag (Planar, Volumetric, Fixed, Joint");
+  string baseTag = ReadFieldString(_is, WHERE,
+      "Failed reading base tag. Options are: planar, volumetric, fixed, or joint.");
   _fb.m_baseType = Robot::GetBaseFromTag(baseTag);
 
+  switch(_fb.m_baseType) {
+    //if base is volumetric or planar we should parse the rotational type
+    case Robot::VOLUMETRIC:
+    case Robot::PLANAR:
+      {
+        _fb.m_isBase = true;
+        string baseMovementTag = ReadFieldString(_is, WHERE,
+            "Failed reading rotation tag. Options are: rotational or translational.");
+        _fb.m_baseMovementType = Robot::GetMovementFromTag(baseMovementTag);
+        break;
+      }
 
-  if(_fb.m_baseType == Robot::VOLUMETRIC ||_fb. m_baseType == Robot::PLANAR){
-    _fb.m_isBase = true;
-    string baseMovementTag = ReadFieldString(_is, 
-        "Rotation Tag (Rotational, Translational)");
-   _fb.m_baseMovementType = Robot::GetMovementFromTag(baseMovementTag);
-  }
-  else if(_fb.m_baseType == Robot::FIXED){
-    _fb.m_isBase = true;
-    _fb.m_worldTransformation = 
-      ReadField<Transformation>(_is, "FreeBody Transformation");
+      //if base if fixed we should read a transformation
+    case Robot::FIXED:
+      {
+        _fb.m_isBase = true;
+        _fb.m_worldTransformation =
+          ReadField<Transformation>(_is, WHERE,
+              "Failed reading fixed based transformation.");
+        break;
+      }
+
+      //if the base is a joint nothing additional is parsed
+    case Robot::JOINT:
+      break;
   }
 
   return _is;
@@ -157,14 +170,14 @@ operator>>(istream& _is, FreeBody& _fb){
 ostream&
 operator<<(ostream& _os, FreeBody& _fb){
   _os << _fb.m_filename << " ";
-  
+
   _os << Robot::GetTagFromBase(_fb.m_baseType) << " ";
 
   if(_fb.m_baseType == Robot::VOLUMETRIC || _fb.m_baseType == Robot::PLANAR){
-    _os << Robot::GetTagFromMovement(_fb.m_baseMovementType);   
+    _os << Robot::GetTagFromMovement(_fb.m_baseMovementType);
   }
   else if(_fb.m_baseType == Robot::FIXED){
-    _os << _fb.m_worldTransformation;   
+    _os << _fb.m_worldTransformation;
   }
 
   return _os;

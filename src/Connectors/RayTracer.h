@@ -39,7 +39,7 @@ class RayCSpace {
   bool collide(Environment *env, StatClass& Stats, CollisionDetection *cd,
 	       CDInfo& cdInfo, DistanceMetric *dm,
 	       double maxLength, int &cd_counts);//Check for collision in the environment
-  bool connectTarget (Environment *env, StatClass& Stats, 
+  bool connectTarget (Environment *env, StatClass& Stats,
 		      CollisionDetection *cd,
 		      CDInfo& cdInfo, DistanceMetric *dm,
 		      CFG &dir, int &cd_counts);
@@ -52,8 +52,8 @@ class RayCSpace {
   void writePathConfigurations(char output_file[80],
 			       vector<CFG> path, Environment *env);
   template <class WEIGHT>
-    void addRoadmapNodes(Roadmap<CFG,WEIGHT> &rdmp, StatClass& Stats, 
-			 LocalPlanners<CFG,WEIGHT> *lp, 
+    void addRoadmapNodes(Roadmap<CFG,WEIGHT> &rdmp, StatClass& Stats,
+			 LocalPlanners<CFG,WEIGHT> *lp,
 			 CollisionDetection *cd, DistanceMetric *dm);
   void setTargetVector(vector<CFG> *target_vector);
  private:
@@ -123,8 +123,8 @@ bool RayCSpace<CFG>::collide(Environment *env, StatClass& Stats,
 			     CollisionDetection *cd,
 			     CDInfo& cdInfo, DistanceMetric *dm,
 			     double maxLength, int &cd_counts) {
-  bool collision=false; 
-  
+  bool collision=false;
+
   CFG cfg = origin; //Cfg of first collision
   double positionRes = env->GetPositionRes();
   double orientationRes = env->GetOrientationRes();
@@ -144,7 +144,7 @@ bool RayCSpace<CFG>::collide(Environment *env, StatClass& Stats,
     lastFreeConfiguration = tick;
     tick.Increment(incr); //next configuration to check
     Callee= tick.GetName();
-    if( (tick.isCollision(env,Stats,cd,cdInfo,true,&tmpStr)) || 
+    if( (tick.isCollision(env,Stats,cd,cdInfo,true,&tmpStr)) ||
 	!(tick.InBoundary(env)) ) {
       collisionConfiguration = tick;
       collisionDistance = dm->Distance(env, cfg, tick);
@@ -183,8 +183,8 @@ bool RayCSpace<CFG>::connectTarget(Environment *env, StatClass& Stats,
 				   CollisionDetection *cd,
 				   CDInfo& cdInfo, DistanceMetric *dm,
 				   CFG &dir, int &cd_counts) {
-  bool collision=false; 
-  
+  bool collision=false;
+
   CFG cfg = origin; //Cfg of first collision
   double positionRes = env->GetPositionRes();
   double orientationRes = env->GetOrientationRes();
@@ -196,7 +196,7 @@ bool RayCSpace<CFG>::connectTarget(Environment *env, StatClass& Stats,
   CFG incr;
   incr.FindIncrement(cfg,dir,&n_ticks,positionRes,orientationRes);
   int tk = 0; // controls the number of ticks generated
-  
+
   std::string Callee, Method("-RayCSpace::connectTarget");
 
   std::string tmpStr = Callee+Method;
@@ -204,13 +204,13 @@ bool RayCSpace<CFG>::connectTarget(Environment *env, StatClass& Stats,
     lastFreeConfiguration = tick;
     tick.Increment(incr); //next configuration to check
     Callee = tick.GetName();
-    if( (tick.isCollision(env,Stats,cd,cdInfo,true,&tmpStr)) || 
+    if( (tick.isCollision(env,Stats,cd,cdInfo,true,&tmpStr)) ||
 	!(tick.InBoundary(env)) ) {
       tmpDist = dm->Distance(env, cfg, tick);//distance % the ticks
       collisionConfiguration = tick;
       collisionDistance = dm->Distance(env, cfg, tick);
-      collision = true; 
-    }    
+      collision = true;
+    }
     tk++;// increases the tick
   }
   if (collision) {
@@ -237,12 +237,12 @@ void RayCSpace<CFG>::writePath(Environment *env) {
 template <class CFG>
 void RayCSpace<CFG>::writePathConfigurations(char output_file[80],
 					vector<CFG> path, Environment *env ) {
-  FILE *fp;	
+  FILE *fp;
   if((fp = fopen(output_file,"w")) == NULL){
     printf("\n\t Can't open file %s \n",output_file);
     exit(1);
-  } 
-  //Cfg::print_preamble_to_file(env, fp, path.size());        
+  }
+  //Cfg::print_preamble_to_file(env, fp, path.size());
   fprintf(fp,"VIZMO_PATH_FILE   Path Version %d\n", PATHVER_20001125);
   fprintf(fp,"%d\n", 1);
   fprintf(fp,"%d \n", path.size());
@@ -254,7 +254,7 @@ void RayCSpace<CFG>::writePathConfigurations(char output_file[80],
       fprintf(fp,"%f ",tmp[j]);
     }
     if(i!=(path.size()-1))fprintf(fp,"\n");
-    
+
   }
   fprintf(fp,"\n");
   fclose(fp);
@@ -295,7 +295,7 @@ class RayTracer: public ConnectionMethod<CFG,WEIGHT> {
   //////////////////////
   // Constructors and Destructor
   RayTracer();
-  //RayTracer(Roadmap<CFG,WEIGHT>*, CollisionDetection*, 
+  //RayTracer(Roadmap<CFG,WEIGHT>*, CollisionDetection*,
   //			    DistanceMetric*, LocalPlanners<CFG,WEIGHT>*);
   ~RayTracer();
 
@@ -317,13 +317,13 @@ class RayTracer: public ConnectionMethod<CFG,WEIGHT> {
 
   void ParseCommandLine(std::istringstream& is);
   virtual void PrintUsage(ostream& _os);
-  virtual void PrintValues(ostream& _os); 
+  virtual void PrintValues(ostream& _os);
   virtual ConnectionMethod<CFG, WEIGHT>* CreateCopy();
   //////////////////////
-  // Core: Connection methods 
+  // Core: Connection methods
   void ConnectComponents();
-  void ConnectComponents(Roadmap<CFG, WEIGHT>*, StatClass& Stats, 
-			 CollisionDetection*, 
+  void ConnectComponents(Roadmap<CFG, WEIGHT>*, StatClass& Stats,
+			 CollisionDetection*,
 			 DistanceMetric *,
 			 LocalPlanners<CFG,WEIGHT>*,
 			 bool addPartialEdge,
@@ -366,7 +366,7 @@ class RayTracer: public ConnectionMethod<CFG,WEIGHT> {
   int max_ray_length; // Maximum length for each ray
   int rays_tested; // Number of rays tested so far
   bool all_explored; // True if all possible rays have been traced
-  enum BouncingMode {TARGET_ORIENTED, RANDOM, HEURISTIC, NORMAL}; 
+  enum BouncingMode {TARGET_ORIENTED, RANDOM, HEURISTIC, NORMAL};
   BouncingMode bouncing_policy; // Policy to shoot rays, possible values in setDirection
   int cd_counts;
 
@@ -375,15 +375,15 @@ class RayTracer: public ConnectionMethod<CFG,WEIGHT> {
 
 /////////////////////////////////////////////////////////////////////////////////   Connection Method:  RayTracer
 template <class CFG, class WEIGHT>
-RayTracer<CFG,WEIGHT>::RayTracer(): 
-  ConnectionMethod<CFG,WEIGHT>() { 
+RayTracer<CFG,WEIGHT>::RayTracer():
+  ConnectionMethod<CFG,WEIGHT>() {
   element_name = "RayTracer";
   SetDefault();
 }
 
 
 template <class CFG, class WEIGHT>
-RayTracer<CFG,WEIGHT>::~RayTracer() { 
+RayTracer<CFG,WEIGHT>::~RayTracer() {
   rdmp = NULL;
   cd = NULL;
   dm = NULL;
@@ -395,14 +395,14 @@ template <class CFG, class WEIGHT>
 void RayTracer<CFG,WEIGHT>::
 ParseCommandLine(std::istringstream& is) {
   char c;
-  SetDefault(); 
+  SetDefault();
   char str_rd[100]; //to parse strings
   int point = is.tellg();
   try {
     if (is >> RayTbouncingMode) {
-      if (strcmp(RayTbouncingMode,"targetOriented") && //RayTbouncingMode != string("targetOriented") && 
-          strcmp(RayTbouncingMode,"random") && //RayTbouncingMode != string("random") && 
-	  strcmp(RayTbouncingMode,"heuristic") && //RayTbouncingMode != string("heuristic") && 
+      if (strcmp(RayTbouncingMode,"targetOriented") && //RayTbouncingMode != string("targetOriented") &&
+          strcmp(RayTbouncingMode,"random") && //RayTbouncingMode != string("random") &&
+	  strcmp(RayTbouncingMode,"heuristic") && //RayTbouncingMode != string("heuristic") &&
 	  strcmp(RayTbouncingMode,"normal") ) { //RayTbouncingMode != string("normal")) {
 	//cout << "read: " << RayTbouncingMode << point << "\n";
 	is.seekg(point);
@@ -413,32 +413,32 @@ ParseCommandLine(std::istringstream& is) {
           while(c == ' ' || c == '\n') {
           is.get();
           c = is.peek();
-        }    
-        if (c >= '0' && c <= '9') {	
+        }
+        if (c >= '0' && c <= '9') {
 	  if (is >> RayTmaxRays) {
 	    if (RayTmaxRays < 1)
 	      throw BadUsage();
-	  
+
             c = is.peek();
             while(c == ' ' || c == '\n') {
               is.get();
               c = is.peek();
-            }    
+            }
             if (c >= '0' && c <= '9') {
 	      if (is >> RayTmaxBounces) {
 	        if (RayTmaxBounces < 1)
 	          throw BadUsage();
-	    
+
                 c = is.peek();
                 while(c == ' ' || c == '\n') {
                   is.get();
                   c = is.peek();
-                }    
+                }
                 if (c >= '0' && c <= '9') {
 	          if (is >> RayTmaxRayLength) {
 	            if (RayTmaxRayLength < 1)
 		      throw BadUsage();
-	      
+
 	            if (is >> str_rd) {
 		      if (!strcmp(str_rd,"largestToSmallest"))//if (str_rd == string("largestToSmallest"))
 		        SchedulingMode = LARGEST_TO_SMALLEST;
@@ -448,24 +448,24 @@ ParseCommandLine(std::istringstream& is) {
 		        SchedulingMode = CLOSEST_TO_FARTHEST;
 		      else if (!strcmp(str_rd,"farthestToClosest"))//else if (str_rd == string("farthestToClosest"))
 		        SchedulingMode = FARTHEST_TO_CLOSEST;
-		      else 
+		      else
 		        throw BadUsage();
-	      
+
                       c = is.peek();
                       while(c == ' ' || c == '\n') {
                         is.get();
                         c = is.peek();
-                      }    
+                      }
                       if (c >= '0' && c <= '9') {
 		        if (is >> ScheduleMaxSize) {
 		          if (ScheduleMaxSize < 1)
 		            throw BadUsage();
-		
+
                           c = is.peek();
                           while(c == ' ' || c == '\n') {
                             is.get();
                             c = is.peek();
-                          }    
+                          }
                           if (c >= '0' && c <= '9') {
 		            if (is >> SampleMaxSize) {
 		              if (SampleMaxSize < 1)
@@ -505,10 +505,10 @@ ParseCommandLine(std::istringstream& is) {
 
 
 template <class CFG, class WEIGHT>
-ConnectionMethod<CFG,WEIGHT>* 
+ConnectionMethod<CFG,WEIGHT>*
 RayTracer<CFG,WEIGHT>::
 CreateCopy() {
-  RayTracer<CFG,WEIGHT>* _copy = 
+  RayTracer<CFG,WEIGHT>* _copy =
            new RayTracer<CFG,WEIGHT>(*this);
   return _copy;
 }
@@ -519,10 +519,10 @@ void
 RayTracer<CFG,WEIGHT>::
 PrintUsage(ostream& _os){
   _os.setf(ios::left,ios::adjustfield);
-  
+
   _os << "\n" << GetName() << " ";
   _os << "\tSTRING \tINT \tINT \tINT \tSTRING \tINT \tINT (bouncingMode:targetOriented maxRays:1 maxBounces:10000 maxRayLength:10000 \tschedulingMode:largestToSmallest scheduleMaxSize:20 sampleMaxSize:10)";
-  _os << endl;  
+  _os << endl;
   _os.setf(ios::right,ios::adjustfield);
 }
 
@@ -533,8 +533,8 @@ RayTracer<CFG,WEIGHT>::
 PrintValues(ostream& _os){
   _os << "\n" << GetName() << " ";
   _os << "bouncingMode:targetOriented, maxRays: " << RayTmaxRays
-      << ", maxBounces: " << RayTmaxBounces 
-      << ", maxRayLength: " <<RayTmaxRayLength 
+      << ", maxBounces: " << RayTmaxBounces
+      << ", maxRayLength: " <<RayTmaxRayLength
       <<  "\n\tschedulingMode:largestToSmallest scheduleMaxSize: " << ScheduleMaxSize
       << ", sampleMaxSize: "<< SampleMaxSize << ")";
   _os << endl;
@@ -548,12 +548,12 @@ void RayTracer<CFG,WEIGHT>::SetDefault() {
   rays_tested = 0;
   //setOptions(string("targetOriented"), 1, 10000, 10000);
   setOptions("targetOriented", 1, 10000, 10000);
-  
+
   strcpy(RayTbouncingMode,"targetOriented");//string("targetOriented");
   RayTmaxRays = MAX_RAYS;
   RayTmaxBounces = MAX_BOUNCES;
   RayTmaxRayLength = MAX_RAY_LENGTH;
-  
+
   SchedulingMode = LARGEST_TO_SMALLEST;
   ScheduleMaxSize = 20;
   SampleMaxSize = 10;
@@ -570,7 +570,7 @@ void RayTracer<CFG,WEIGHT>::ConnectComponents() {
 template <class CFG, class WEIGHT>
 void RayTracer<CFG,WEIGHT>::
 ConnectComponents(Roadmap<CFG, WEIGHT>* _rm, StatClass& Stats,
-		  CollisionDetection* _cd , 
+		  CollisionDetection* _cd ,
 		  DistanceMetric * _dm,
 		  LocalPlanners<CFG,WEIGHT>* _lp,
 		  bool addPartialEdge,
@@ -594,9 +594,9 @@ ConnectComponents(Roadmap<CFG, WEIGHT>* _rm, StatClass& Stats,
   setOptions(RayTbouncingMode, RayTmaxRays, RayTmaxBounces, RayTmaxRayLength);
   connectCCs(SchedulingMode, ScheduleMaxSize, SampleMaxSize, Stats);
   rdmp = NULL;
-  cd = NULL; 
+  cd = NULL;
   dm = NULL;
-  lp = NULL; 
+  lp = NULL;
 }
 
 
@@ -647,7 +647,7 @@ void RayTracer<CFG,WEIGHT>::setTargetCfgs(vector<CFG> *target_cfgs) {
 // shot for the first time, a policy can be defined to select
 // how the direction is generated. In this first implementation
 // of the ray tracer I am going to shut rays in the direction
-// of the target and when a ray hits an object it is going to 
+// of the target and when a ray hits an object it is going to
 // bounce in a random direction from it (of course this has to
 // change if I want to have a coherent tracer).
 template <class CFG, class WEIGHT>
@@ -672,7 +672,7 @@ void RayTracer<CFG,WEIGHT>::setInitialDirection() {
   }
   all_explored = false;
   rays_tested = 0;
-  
+
 }
 
 
@@ -707,11 +707,11 @@ void RayTracer<CFG,WEIGHT>::connectCCs(SCHEDULING_MODE scheduling_mode, unsigned
   vector< pair<size_t,VID> > ccs; //list of CCs in the roadmap
   stapl::sequential::vector_property_map< GRAPH,size_t > cmap;
   get_cc_stats(*(rdmp->m_pRoadmap), cmap, ccs);//get the CCs
-  
-  bool path_found = false;
-  
 
-  
+  bool path_found = false;
+
+
+
   vector< pair<VID,VID> > cc_trl_schdl;
   cc_trl_schdl.clear();
 
@@ -731,7 +731,7 @@ void RayTracer<CFG,WEIGHT>::connectCCs(SCHEDULING_MODE scheduling_mode, unsigned
   case FARTHEST_TO_CLOSEST:
     rrtcomp->OrderCCByCloseness(rdmp, dm, ccs);
   case SMALLEST_TO_LARGEST:
-    for (cci = ccs.end()-1; cci > ccs.begin() && cc_trl_schdl.size() < schedule_max_size; --cci) 
+    for (cci = ccs.end()-1; cci > ccs.begin() && cc_trl_schdl.size() < schedule_max_size; --cci)
       for (ccj = cci-1; ccj >= ccs.begin() && cc_trl_schdl.size() < schedule_max_size; --ccj) {
 	cc_trl_schdl.push_back(pair<VID,VID>(cci->second, ccj->second));
       }
@@ -740,7 +740,7 @@ void RayTracer<CFG,WEIGHT>::connectCCs(SCHEDULING_MODE scheduling_mode, unsigned
     rrtcomp->OrderCCByCloseness(rdmp, dm, ccs);
   default:
   case LARGEST_TO_SMALLEST:
-    for (cci = ccs.begin(); cci+1 < ccs.end() && cc_trl_schdl.size() < schedule_max_size; ++cci) 
+    for (cci = ccs.begin(); cci+1 < ccs.end() && cc_trl_schdl.size() < schedule_max_size; ++cci)
       for (ccj = cci+1; ccj < ccs.end() && cc_trl_schdl.size() < schedule_max_size; ++ccj) {
 	cc_trl_schdl.push_back(pair<VID,VID>(cci->second, ccj->second));
       }
@@ -748,14 +748,14 @@ void RayTracer<CFG,WEIGHT>::connectCCs(SCHEDULING_MODE scheduling_mode, unsigned
   }
   //cout << "Size of schedule: " << cc_trl_schdl.size() << endl;
 
-  //trying to connect ccs in order defined by scheduling process  
+  //trying to connect ccs in order defined by scheduling process
   for (vector< pair<VID,VID> >::iterator cc_itrtr =cc_trl_schdl.begin(); cc_itrtr < cc_trl_schdl.end(); ++cc_itrtr) {
     cmap.reset();
     if (!is_same_cc(*(rdmp->m_pRoadmap),cmap, cc_itrtr->first, cc_itrtr->second)) {
-      
+
       Roadmap<CFG,WEIGHT> target_rdmp;
       target_rdmp.environment = rdmp->GetEnvironment();
-      
+
       vector<CFG> cci_cfgs;
       vector<VID> cci_cfgs_aux;
       CFG cci_tmp = (*(rdmp->m_pRoadmap->find_vertex(cc_itrtr->first))).property();
@@ -764,7 +764,7 @@ void RayTracer<CFG,WEIGHT>::connectCCs(SCHEDULING_MODE scheduling_mode, unsigned
       cci_cfgs = rdmp->m_pRoadmap->ConvertVIDs2Vertices(cci_cfgs_aux);
       vector<CFG> rep_cci_cfgs;
       getBoundaryCfgs(cci_cfgs, rep_cci_cfgs, sample_max_size);
-      
+
       vector<CFG> ccj_cfgs;
       vector<VID> ccj_cfgs_aux;
       CFG ccj_tmp = (*(rdmp->m_pRoadmap->find_vertex(cc_itrtr->second))).property();
@@ -772,10 +772,10 @@ void RayTracer<CFG,WEIGHT>::connectCCs(SCHEDULING_MODE scheduling_mode, unsigned
       get_cc(*(rdmp->m_pRoadmap), cmap, rdmp->m_pRoadmap->GetVID(ccj_tmp), ccj_cfgs_aux);
       ccj_cfgs = rdmp->m_pRoadmap->ConvertVIDs2Vertices(ccj_cfgs_aux);
       vector<CFG> rep_ccj_cfgs;
-      getBoundaryCfgs(ccj_cfgs, rep_ccj_cfgs, sample_max_size);      
-      
+      getBoundaryCfgs(ccj_cfgs, rep_ccj_cfgs, sample_max_size);
+
       connectCCs(cc_itrtr->first, rep_cci_cfgs, cc_itrtr->second, rep_ccj_cfgs, target_rdmp, Stats, try_backwards);
-      
+
       vector<VID> target_rdmp_vertices;
       target_rdmp.m_pRoadmap->GetVerticesVID(target_rdmp_vertices);
       rdmp->m_pRoadmap->MergeRoadMap(target_rdmp.m_pRoadmap, target_rdmp_vertices);
@@ -800,7 +800,7 @@ bool RayTracer<CFG,WEIGHT>::connectCCs(VID cci_id, vector<CFG> &rep_cci_cfgs, VI
   for (unsigned int i = 0; i < rep_cci_cfgs.size(); ++i) {
     Roadmap<CFG,WEIGHT> ray_rdmp;
     ray_rdmp.environment = rdmp->GetEnvironment();
-  
+
     if (findPath(rep_cci_cfgs[i],  rep_ccj_cfgs[0], &rep_ccj_cfgs, ray_rdmp, Stats)) {
       //cout << endl << "A path was found" << endl;
       vector<VID> ray_vertices;
@@ -843,7 +843,7 @@ bool RayTracer<CFG,WEIGHT>::connectCCs(VID cci_id, vector<CFG> &rep_cci_cfgs, VI
 }
 
 
-//  bool RayTracer::trace(CollisionDetection *cd, CDInfo& cdinfo, 
+//  bool RayTracer::trace(CollisionDetection *cd, CDInfo& cdinfo,
 //  		      DistanceMetric * dm) {
 template <class CFG, class WEIGHT>
 bool RayTracer<CFG,WEIGHT>::trace(Roadmap<CFG,WEIGHT> &ray_rdmp, StatClass& Stats) {
@@ -877,7 +877,7 @@ bool RayTracer<CFG,WEIGHT>::trace(Roadmap<CFG,WEIGHT> &ray_rdmp, StatClass& Stat
       path_found = false;
     }
   }
-  if (path_found) {    
+  if (path_found) {
     //ray.save(environment);
     //ray.addRoadmapNodes(ray_rdmp);
     //ray.writePath(environment);
@@ -898,9 +898,9 @@ template <class CFG, class WEIGHT>
 bool RayTracer<CFG,WEIGHT>::findPath(CFG &source, CFG &target, Roadmap<CFG,WEIGHT> &ray_rdmp, StatClass& Stats) {
   bool path_found = false;
   setSource(source);
-  setTarget(target);  
+  setTarget(target);
   setInitialDirection();
-  
+
   do {
     //Trace the ray
     //cout<< "Trying new direction for ray"<<endl;

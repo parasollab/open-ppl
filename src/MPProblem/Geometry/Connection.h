@@ -10,153 +10,75 @@
 #ifndef Connection_h
 #define Connection_h
 
-////////////////////////////////////////////////////////////////////////////////////////////
-//include OBPRM headers
+#include <Transformation.h>
+using namespace mathtool;
+
 #include "MPProblem/Geometry/DHparameters.h"
-#include "MPProblem/Geometry/Transformation.h"
 #include "MPProblem/Robot.h"
-#include "boost/shared_ptr.hpp"
-using boost::shared_ptr;
 
-
-/////////////////////////////////////////////////////////////////////
 class Body;
 class MultiBody;
 
-
 class Connection {
-public:
-  ///////////////////////////////////////////////////////////////////////////////////////////
-  //
-  //
-  //    Constructors and Destructor
-  //
-  //
-  //////////////////////////////////////////////////////////////////////////////////////////
+  public:
+    enum JointType {REVOLUTE, SPHERICAL, NONACTUATED}; //1dof vs 2dof rotational joints
 
-    //---------------------------------------------------------------
-    /**@name  Constructors and Destructor
-      *@todo The documentation of these function are not complete.
-      *I can't really understand what these parameters for.
-      */
-    //---------------------------------------------------------------
-    //@{
-    
-    /**Constructor with Body1 and Body2 (Body2 is optional).
-      *Get might be called to retrieve values for unset data member.
-      *@param _body1 One of this _body1's end joints is this connection.
-      *@param _body2 One of this _body2's start joints is this connection.
-      */
-    Connection(MultiBody* _owner);//_body1, const shared_ptr<Body>& _body2 = shared_ptr<Body>());  // Second argument is optional
-    Connection(const shared_ptr<Body>& _body1, const shared_ptr<Body>& _body2 = shared_ptr<Body>());  // Second argument is optional
-    
-    /**You need to provide all information for Constructor.
-      *@param _body1
-      *@param _body2
-      *@param _transformationToDHFrame Transform from frame of body1 to DH-Frame
-      *@param _dhparameters DHParameter
-      *@param _transformationToBody2 Transform from DH-Frame to frame of body1
-      **/
-    Connection(const shared_ptr<Body>& _body1, const shared_ptr<Body>& _body2, const Transformation & _transformationToBody2, 
-    const DHparameters & _dhparameters, const Transformation & _transformationToDHFrame);
-     
-    /**Destructor.
-      *call first body's RemoveForwardConnection and second's RemoveBackwardConnection
-      *@see Body::RemoveForwardConnection and Body::RemoveBackwardConnection
-      */
+    Connection(MultiBody* _owner);
+    Connection(const shared_ptr<Body>& _body1, const shared_ptr<Body>& _body2 = shared_ptr<Body>());
+    Connection(const shared_ptr<Body>& _body1, const shared_ptr<Body>& _body2,
+        const Transformation & _transformationToBody2,
+        const DHparameters & _dhparameters,
+        const Transformation & _transformationToDHFrame);
+
     virtual ~Connection();
 
-    //@}
-
-  ///////////////////////////////////////////////////////////////////////////////////////////
-  //
-  //
-  //    Access Methods
-  //
-  //
-  //////////////////////////////////////////////////////////////////////////////////////////
-
-    //---------------------------------------------------------------
-    /**@name  Access Methods*/
-    //---------------------------------------------------------------
-    //@{
-    
+    static JointType GetJointTypeFromTag(const string _tag);
+    static string GetTagFromJointType(const JointType& _jt);
     /**Check if a give body is the first body of this connection instance or not.
-      *@param _body A point to Body instance. Address is checked
-      * with the address of first body.
-      *@return True if _body is first body. Otherwise False is returned.
-      */
-    bool IsFirstBody(const shared_ptr<Body>& _body) const;
-    
-    /**Get Previouse Body. (i.e first body)
-      *@note only body[0] is returned.
-      **/
-    shared_ptr<Body> GetPreviousBody();    
-    
-    /**Get Next Body. (i.e second body)
-      *@note only body[1] is returned.
-      */
-    shared_ptr<Body> GetNextBody();
-    
-    /**Get the type of connection used in this Connection instance.
-      *@see ConnectionType
-      */
-    Robot::JointType GetConnectionType() const;
+     */
+    bool IsFirstBody(const shared_ptr<Body>& _body) const {return _body == m_bodies[0];}
 
-    ///Get a refecence of DHparameters used in this Connection instance.   
-    DHparameters & GetDHparameters();
-    
-    ///Get a refecence of transformation which is a transformation from body1 to body2. (Not sure)
-    Transformation & GetTransformationToBody2();
-    
-    ///Get a refecence of transformation which is a transformation from body1 to DHFrame of body2. (Not sure)
-    Transformation & GetTransformationToDHFrame();
-    
+    //connection index
+    size_t GetGlobalIndex() const {return m_globalIndex;}
 
-  ///////////////////////////////////////////////////////////////////////////////////////////
-  //
-  //
-  //    I/O
-  //
-  //
-  //////////////////////////////////////////////////////////////////////////////////////////
+    //connection type and limits
+    JointType GetConnectionType() const {return m_jointType;}
+    const pair<double, double>& GetJointLimits(int _i) const {return m_jointLimits[_i];}
+
+    //body indices
+    shared_ptr<Body> GetPreviousBody() const {return m_bodies[0];}
+    size_t GetPreviousBodyIndex() const {return m_bodyIndices.first;}
+    shared_ptr<Body> GetNextBody() const {return m_bodies[1];}
+    size_t GetNextBodyIndex() const {return m_bodyIndices.second;}
+
+    //Joint transformations
+    DHparameters& GetDHparameters() {return m_dhParameters;}
+    const DHparameters& GetDHparameters() const {return m_dhParameters;}
+    Transformation& GetTransformationToBody2() {return m_transformationToBody2;}
+    const Transformation& GetTransformationToBody2() const {return m_transformationToBody2;}
+    Transformation& GetTransformationToDHFrame() {return m_transformationToDHFrame;}
+    const Transformation& GetTransformationToDHFrame() const {return m_transformationToDHFrame;}
+
     friend ostream& operator<<(ostream& _os, const Connection& _c);
     friend istream& operator>>(istream& _is, Connection& _c);
 
-  bool operator==(const Connection& c) const;
+    bool operator==(const Connection& c) const;
 
-  friend class MultiBody;
+    friend class MultiBody;
 
-  ///////////////////////////////////////////////////////////////////////////////////////////
-  //
-  //
-  //    Protected data member and member methods
-  //
-  //
-  //////////////////////////////////////////////////////////////////////////////////////////
+  private:
+    MultiBody* m_multibody; // Owner of this Connection
+    shared_ptr<Body> m_bodies[2];
+    Transformation m_transformationToBody2;
+    Transformation m_transformationToDHFrame;
+    DHparameters m_dhParameters;
 
-protected:
+    size_t m_globalIndex;
+    JointType m_jointType;
+    pair<size_t, size_t> m_bodyIndices; //(previous body, next body)
+    pair<double, double> m_jointLimits[2]; //valid range within [-1,1)
 
-  ///////////////////////////////////////////////////////////////////////////////////////////
-  //
-  //
-  // PRIVATE METHOD and DATA MEMBERS
-  // NO DOCUMENTATION YET
-  //
-  //
-  //////////////////////////////////////////////////////////////////////////////////////////
-
-private:
-    //---------------------------------------------------------------
-    //  Data
-    //---------------------------------------------------------------
-    MultiBody* m_multibody;                  ///<Owner of this Connection
-    shared_ptr<Body> body[2];
-    Transformation transformationToBody2;
-    Transformation transformationToDHFrame;
-    DHparameters dhparameters;
-    Robot::JointType type;
-    size_t m_prevBodyIdx, m_nextBodyIdx;
+    static size_t m_globalCounter; //global counter for connection indices
 };
 
 #endif

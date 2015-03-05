@@ -19,8 +19,8 @@ class CRegionSet {
   bool operator==(const CRegionSet<CFG>& rs) const { return ID == rs.ID; }
   bool operator!=(const CRegionSet<CFG>& rs) const { return ID != rs.ID; }
   void SetRegionStats();
-  
-  int Classify(Environment* env, Stat_Class& Stats, CollisionDetection* cd, 
+
+  int Classify(Environment* env, Stat_Class& Stats, CollisionDetection* cd,
 	       CDInfo* cdInfo, DistanceMetric* dm,
 	       double LowEntropy, int KSamples, int Tries);
 
@@ -32,7 +32,7 @@ class CRegionSet {
 				 regionset_iterator last,
 				 Environment* env, DistanceMetric* dm,
 				 vector<regionset_iterator>& overlapping);
-  void GetPercentFreeNodeAndVID(double free_pct, 
+  void GetPercentFreeNodeAndVID(double free_pct,
 				vector<CFG>& nodes, vector<VID>& vids) const;
   void GetPercentBlockedNode(double pct, vector<CFG>& nodes) const;
   vector<VID> GetPercentFreeVIDs(double free_pct) const;
@@ -43,7 +43,7 @@ class CRegionSet {
   /*
   CRegion<CFG>& GetRegionReference(int i) {
     if( i<0 || i>=m_RegionSet.size() ) {
-      
+
     }
   }
   */
@@ -66,7 +66,7 @@ template<class CFG>
 istream& operator>>(istream& is, CRegionSet<CFG>& rs) {
   is >> rs.ID;
   return is;
-} 
+}
 template <class CFG>
 CRegionSet<CFG>::
 CRegionSet() {
@@ -115,7 +115,7 @@ CRegionSet<CFG>::
 }
 
 template <class CFG>
-void 
+void
 CRegionSet<CFG>::
 AddRegion(CRegion<CFG>& region) {
   CRegion<CFG> t_region = region;
@@ -126,14 +126,14 @@ AddRegion(CRegion<CFG>& region) {
 }
 
 template <class CFG>
-void 
+void
 CRegionSet<CFG>::
 SetRegionStats() {
 
   typename vector< CRegion<CFG> >::iterator rs;
   int I=0;
   int cur_type;
-  NumCollisionNodes = 0; 
+  NumCollisionNodes = 0;
   NumFreeNodes = 0;
   entropy = 0;
   for(rs=m_RegionSet.begin(); rs!=m_RegionSet.end(); ++rs,++I) {
@@ -155,19 +155,19 @@ SetRegionStats() {
 template <class CFG>
 int
 CRegionSet<CFG>::
-Classify(Environment* env, Stat_Class& Stats, CollisionDetection* cd, 
+Classify(Environment* env, Stat_Class& Stats, CollisionDetection* cd,
 	 CDInfo* cdInfo, DistanceMetric* dm,
 	 double LowEntropy, int KSamples, int Tries) {
 
-  NumCollisionNodes = 0; 
+  NumCollisionNodes = 0;
   NumFreeNodes = 0;
   entropy = 0;
   int cur_type;
   for(int I=0; I<m_RegionSet.size(); I++) {
 
-    m_RegionSet[I].Classify(env, Stats, cd, cdInfo, dm, 
+    m_RegionSet[I].Classify(env, Stats, cd, cdInfo, dm,
 			    LowEntropy, KSamples, Tries);
-    
+
     if( I==0 ) { cur_type = m_RegionSet[I].type; }
     else {
       if( m_RegionSet[I].type != cur_type ) {
@@ -178,7 +178,7 @@ Classify(Environment* env, Stat_Class& Stats, CollisionDetection* cd,
     NumFreeNodes += m_RegionSet[I].NumFreeNodes;
     entropy += m_RegionSet[I].entropy;
   }
-  
+
   entropy /= m_RegionSet.size();
   type = cur_type;
   return type;
@@ -195,7 +195,7 @@ GetOverlappingRegionsReference(regionset_iterator first,
   for(regionset_iterator R = first; R != last; ++R)
     if(R->data.ID != ID) {
       //check if overlaps ... they are blobs (no longer spheres)
-      
+
       bool overlaps = false;
       vector< CRegion<CFG> >& R_regions = R->data.m_RegionSet;
       for(int I=0; (I<R_regions.size()) && !overlaps; I++) {
@@ -217,13 +217,13 @@ GetOverlappingRegionsReference(regionset_iterator first,
 
 }
 template <class CFG>
-void 
+void
 CRegionSet<CFG>::
-GetPercentFreeNodeAndVID(double free_pct, 
+GetPercentFreeNodeAndVID(double free_pct,
 			 vector<CFG>& nodes, vector<VID>& vids) const {
 
   int min_nodes = int(free_pct*NumFreeNodes);
-  //cout << "pct_free: " << free_pct << " getting number of nodes: " << min_nodes 
+  //cout << "pct_free: " << free_pct << " getting number of nodes: " << min_nodes
   //     << " out of: " << NumFreeNodes << endl;
   int num_obtained = 0;
   for(int I=0; (I<m_RegionSet.size())&&(num_obtained<min_nodes); I++) {
@@ -257,7 +257,7 @@ CRegionSet<CFG>::
 GetPercentFreeVIDs(double free_pct) const {
   vector<VID> vids;
   int min_nodes = int(free_pct*NumFreeNodes);
-  //cout << "pct_free: " << free_pct << " getting number of nodes: " << min_nodes 
+  //cout << "pct_free: " << free_pct << " getting number of nodes: " << min_nodes
   //     << " out of: " << NumFreeNodes << endl;
   int num_obtained = 0;
   for(int I=0; (I<m_RegionSet.size())&&(num_obtained<min_nodes); I++) {
@@ -271,15 +271,15 @@ GetPercentFreeVIDs(double free_pct) const {
 
 
 //calling this funtion will differ slightly
-//because things in the same region set 
+//because things in the same region set
 //are not necessarily what was connected
 //in our previous region map (hope it will not ruin things)
 template <class CFG>
-void 
+void
 CRegionSet<CFG>::
 SetVID(const CFG& c, VID v) {
 
-  
+
   for(int I=0; I<m_RegionSet.size(); I++) {
     m_RegionSet[I].SetVID(c,v);
   }//end for I<m_RegionSet.size()

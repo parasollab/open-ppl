@@ -1,7 +1,9 @@
 #ifndef IsClosedChain_h
 #define IsClosedChain_h
 
-class Cfg_reach_cc;
+class Cfg_reach_cc {
+};
+
 #include "boost/type_traits/is_same.hpp"
 #include "boost/type_traits/is_base_of.hpp"
 #include "boost/mpl/or.hpp"

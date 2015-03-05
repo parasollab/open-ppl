@@ -1,38 +1,21 @@
-/**
-  * @file MultiBody.h
-  * @date 2/25/98
-  * @author Aaron Michalk
-  */
-////////////////////////////////////////////////////////////////////////////////////////////
-
-#ifndef MultiBody_h
-#define MultiBody_h
-
-////////////////////////////////////////////////////////////////////////////////////////////
-//include OBPRM headers
-#include "MPProblem/Geometry/FixedBody.h"
-#include "MPProblem/Geometry/FreeBody.h"
-#include "Graph.h"
-#include "MPProblem/Robot.h"
-
-///////////////////////////////////////////////////////////////////////////////////////////////////////
-class Environment;
-class Transformation;
-
-//////////////////////////////////////////////////////////////////////////////////////////////////////
-//typedef pair<stapl::VID,int> RANGE_TYPE;
-
-enum BodyType{ACTIVE, PASSIVE, SURFACE, INTERNAL};
-
-//////////////////////////////////////////////////////////////////////////////////////////////////////
 /**A MultiBody represent a Obstacle or a Robot in workspace.
   *MultiBody contain one or more Bodys, either Fixed or Free Bodys.
   *Many access methods are implemented to allow client access internal information
   *about MultiBody instance, like number of Bodys, Fixed and Free, Bounding box,
   *center of mass, surface area size, and bounding sphere radius.
-  *
-  *@see Body, FreeBody, and FixedBody
   */
+
+#ifndef MULTIBODY_H_
+#define MULTIBODY_H_
+
+#include "MPProblem/Geometry/FixedBody.h"
+#include "MPProblem/Geometry/FreeBody.h"
+#include "MPProblem/Robot.h"
+
+class Environment;
+
+enum BodyType{ACTIVE, PASSIVE, SURFACE, INTERNAL};
+
 class MultiBody {
 public:
 
@@ -52,16 +35,11 @@ public:
   //
   //
   //////////////////////////////////////////////////////////////////////////////////////////
-    /**@name Constructors and Destructor*/
-    //@{
-
     ///Constructor. Set _owner as the owner of this MultiBody instance.
     MultiBody();
 
     ///Destructor. Free memory allocated to all Bodys added to this multiBody.
     virtual ~MultiBody();
-
-    //@}
 
   ///////////////////////////////////////////////////////////////////////////////////////////
   //
@@ -71,15 +49,13 @@ public:
   //
   //////////////////////////////////////////////////////////////////////////////////////////
 
-    /**@name Access Methods. Use these method to acess or change internal state*/
-    //@{
-
     ///////////////////////////////////////////////////////////////////////////////////////////
     //
     //  Get/Set Free Body info
     //
     //////////////////////////////////////////////////////////////////////////////////////////
-    
+    void Initialize(string _modelFile, const Transformation& _where = Transformation(), BodyType _type=PASSIVE);
+
     void SetBodyType(BodyType _newType){m_bodyType = _newType;}
     BodyType GetBodyType() const{return m_bodyType;}
 
@@ -118,8 +94,8 @@ public:
     //
     //////////////////////////////////////////////////////////////////////////////////////////
 
-    /**Return a free body accroding to the given index.
-      *_index should in [0, GetFreeBodyCount()+GetFixedBodyCount())
+    /**Return a free body according to the given index.
+      *_index should be in [0, GetFreeBodyCount()+GetFixedBodyCount())
       *if _index is smaller than GetFixedBodyCount(), then fixed body will be returned.
       *if _index is larger than GetFixedBodyCount(), then free body with (_index-GetFixedBodyCount())
       *index will be returned.
@@ -151,29 +127,24 @@ public:
 
     /**to get center of mass, you don't need to additionally call the above: ComputeCenterOfMass
       *because GetCenterOfMass will check if it is necessary to call this method.
-      *@see ComputeCenterOfMass
       */
-    Vector3D GetCenterOfMass();
+    Vector3d GetCenterOfMass();
 
     /**Return Max Axis Range, which is computed during finding bounding box.
       *Max Axis Range is max distance in X, Y, or Z direction in bounding box.
-      *@see FindBoundingBox
       */
     double GetMaxAxisRange() const;
 
     /*Return bounding box of this multibody
-     *@see FindBoundingBox
      */
     const double * GetBoundingBox() const;
 
     /**Compute and return the maximum size of this multibody.
       *The maximum size is computed by (Radius of first link+ 2*Radius of second link+ ... )
-      *@see GMSPolyhedron::maxRadius
       */
     double GetBoundingSphereRadius() const;
 
     /**Compute and return the minimum size of the multibody.
-     *@see GMSPolyhedron::minRadius
      */
     double GetInsideSphereRadius() const;
 
@@ -184,30 +155,25 @@ public:
     //////////////////////////////////////////////////////////////////////////////////////////
 
     /**Get total area of fixed bodys in this instance. (computed in Get method)
-      *@see Get, GetFixAreas
       */
     double GetFixArea() const;
 
-    /**Get a list of areas of fixed bodys in this instance. 
+    /**Get a list of areas of fixed bodys in this instance.
       *(computed in Get method)
-      *@see Get, GetFixArea
       */
     vector<double> GetFixAreas() const;
 
     /**Get total area of free bodys in this instance. (computed in Get method)
-      *@see Get, GetFreeAreas
       */
     double GetFreeArea() const;
 
-    /**Get a list of areas of free bodys in this instance. 
+    /**Get a list of areas of free bodys in this instance.
       *(computed in Get method)
-      *@see Get, GetFreeArea
       */
     vector<double> GetFreeAreas() const;
 
-    /**Get total area of free bodys and fixed bodys in this instance. 
+    /**Get total area of free bodys and fixed bodys in this instance.
       *(computed in Get method)
-      *@see Get, GetFixArea, and GetFreeArea
       */
     double GetArea() const;
 
@@ -224,12 +190,9 @@ public:
     /**Get user input information.
       *Number of bodys (fixed and free), areas, bounding box, and center of mass are all computed
       *in here.
-      *@param _multibodyIndex index for the owner of this fixed body in input
-      *@see FreeBody::Read, FixedBody::Read, Connection, FreeBody::Link, Connection::Read,
-      *FixedBody::Link ,FindBoundingBox, and ComputeCenterOfMass
       */
-    virtual void Read(istream& is, bool _debug = false);
-    
+    void Read(istream& is, bool _debug = false);
+
     void buildCDstructure(cd_predefined cdtype);
 
     bool IsInternal() const;
@@ -240,8 +203,6 @@ public:
 
     bool IsPassive() const;
 
-    //@}
-
     ///////////////////////////////////////////////////////////////////////////////////////////
     //
     //
@@ -249,17 +210,11 @@ public:
     //
     //
     //////////////////////////////////////////////////////////////////////////////////////////
-    /**@name I/O Methods. Use these method to read in/write out internal state*/
-    //@{
-
     /**Write information about this MultiBody instance to outputstream.
      *First the tag "MultiBody was output, and then calls Fixed and (or) Free Bodys'
      *write and Connnection's write.
-     *@see FixedBody::Write, FreeBody::Write, and Connection::Write
      */
     void Write(ostream & _os);
-
-    //@}
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     //
@@ -268,19 +223,14 @@ public:
     //
     //
     //////////////////////////////////////////////////////////////////////////////////////////
-    /**@name Help Methods*/
-    //@{
 
     /**Configure the joint by the given amount of displacement.
-     *@param _dof Number of Freebody that is going to be reconfigured (moved)
-     *@param _s An array of displacement value. The length of _s is _dof.
      */
     void ConfigureJoint(double * _s, int _dof);
 
     /**if GetCenterOfMass() is called for the first time, then
      *ComputeCenterOfMass() is called automatically, and the
      *computed value is stored in this class for the next time.
-     *@see Body::ComputeCenterOfMass
      */
     void ComputeCenterOfMass();
 
@@ -294,7 +244,7 @@ public:
 #endif
 
     //polygonal approximation
-    void PolygonalApproximation(vector<Vector3D>& result);
+    void PolygonalApproximation(vector<Vector3d>& result);
 
     //@}
 
@@ -316,7 +266,7 @@ public:
     //
     //////////////////////////////////////////////////////////////////////////////////////////
 
-  protected:    
+  protected:
     // Area Stuff
     double fixArea;             ///< Area of FixedBodies
     double freeArea;            ///< Area of FreeBodies
@@ -337,6 +287,8 @@ public:
     ///  Data
     //-----------------------------------------------------------
 
+    string m_modelDataDir; //directory where environment file is stored
+
     //does the multibody contain more than one robot
     bool m_multirobot;
     bool CenterOfMassAvailable;
@@ -346,7 +298,7 @@ public:
     vector<shared_ptr<FixedBody> > fixedBody;
     vector<shared_ptr<FreeBody> > freeBody;
 
-    Vector3D CenterOfMass;
+    Vector3d CenterOfMass;
 
     double boundingBox[6];
     double maxAxisRange;

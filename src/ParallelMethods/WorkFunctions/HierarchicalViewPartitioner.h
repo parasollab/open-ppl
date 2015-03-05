@@ -14,25 +14,25 @@ struct BoundaryPartitioner {
   typedef array_view<descriptor_container_type>   descriptor_view_type;
   typedef stapl::array<BoundingBox>               boundary_container_type;
   typedef array_view<boundary_container_type>     boundary_view_type;
-  
+
   // typedef typename setdom_type::iterator dIT;
-  
+
   boundary_view_type m_boundary;
   //double cum_tm;
-  
+
  // public:
  //
   BoundaryPartitioner(boundary_view_type _bbs) {
     m_boundary = _bbs;
   }
-  
+
   void define_type(stapl::typer& t) {
     t.member(m_boundary);
   }
-  
+
   template<class GV>
   std::pair<view_type, descriptor_view_type> operator() (GV _g, size_t _lvl) const {
-    double cum_tm=0.0, pat_tm = 0.0; 
+    double cum_tm=0.0, pat_tm = 0.0;
     stapl::counter<stapl::default_timer> bt1;
     bt1.start();
     size_t id = get_location_id();
@@ -59,8 +59,8 @@ struct BoundaryPartitioner {
           // printf("loc %d: adding level0 id %d to level1 domain id %d.\n", (int)id, (int)((*vi).descriptor()), (int)i);
 	}
       }
-      ////DEBUG 
-    
+      ////DEBUG
+
       init_vec->operator[](i) = v;
 
       // debug:
@@ -81,12 +81,12 @@ struct BoundaryPartitioner {
     cum_tm += pat_tm;
     psbmp::PrintValue("HP = ", cum_tm);
     return make_pair(view_type(init_vec), dv);
-    
+
   }
 };
 
 struct IndexPartitioner {
-  
+
   typedef domset1D<size_t>                        setdom_type;
   typedef stapl::array<size_t>                    descriptor_container_type;
   typedef stapl::array<setdom_type>               set_container_type;
@@ -94,25 +94,25 @@ struct IndexPartitioner {
   typedef array_view<descriptor_container_type>   descriptor_view_type;
   typedef stapl::array<BoundingBox>               boundary_container_type;
   typedef array_view<boundary_container_type>     boundary_view_type;
-  
+
   boundary_view_type m_boundary;
   //double cum_tm;
 
   IndexPartitioner(boundary_view_type _bbs) {
-	  m_boundary = _bbs;   
+	  m_boundary = _bbs;
   }
-  
+
   void define_type(stapl::typer& t) {
     t.member(m_boundary);
   }
-  
+
   template<class GV>
   std::pair<view_type, descriptor_view_type> operator() (GV _g, size_t _lvl) const {
-    double cum_tm=0.0, pat_tm = 0.0; 
+    double cum_tm=0.0, pat_tm = 0.0;
     stapl::counter<stapl::default_timer> bt1;
     bt1.start();
     size_t id = get_location_id();
-    //size_t num_lcl_parts = pow(2, 2-lvl); // lvl 
+    //size_t num_lcl_parts = pow(2, 2-lvl); // lvl
     size_t lvl1_size = m_boundary.size();
     size_t num_lcl_parts = lvl1_size/get_num_locations();
     //size_t num_parts = num_lcl_parts*get_num_locations();
@@ -140,7 +140,7 @@ struct IndexPartitioner {
     // create partitions; must fence after this to synchronize!
     descriptor_view_type dv(descriptor_vec);
     rmi_fence();
-    
+
     pat_tm = bt1.stop();
     cum_tm += pat_tm;
     psbmp::PrintValue("HP = ", cum_tm);

@@ -1,73 +1,91 @@
-#ifndef RMSDDISTANCE_H_
-#define RMSDDISTANCE_H_
+#ifndef RMSD_DISTANCE_H_
+#define RMSD_DISTANCE_H_
 
 #include "DistanceMetricMethod.h"
 #include "MPProblem/Environment.h"
+template <class MPTraits> class SimilarStructureSampler;
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup DistanceMetrics
+/// @brief TODO.
+///
+/// TODO.
+////////////////////////////////////////////////////////////////////////////////
 template<class MPTraits>
 class RMSDDistance : public DistanceMetricMethod<MPTraits> {
   public:
     typedef typename MPTraits::CfgType CfgType;
+    typedef typename MPTraits::MPProblemType MPProblemType;
 
     RMSDDistance();
-    RMSDDistance(typename MPTraits::MPProblemType* _problem, XMLNodeReader& _node, bool _warn = true);
+    RMSDDistance(MPProblemType* _problem, XMLNodeReader& _node, bool _warn = true);
     virtual ~RMSDDistance();
 
-    virtual double Distance(Environment* _env, const CfgType& _c1, const CfgType& _c2);
+    virtual double Distance(const CfgType& _c1, const CfgType& _c2);
 
-  protected:
-    virtual vector<Vector3D> GetCoordinatesForRMSD(const CfgType& _c, Environment* _env);
-    double RMSD(vector<Vector3D> _x, vector<Vector3D> _y, int _dim);
+  private:
+    virtual vector<Vector3d> GetCoordinatesForRMSD(const CfgType& _c);
+    double RMSD(vector<Vector3d> _x, vector<Vector3d> _y, int _dim);
+
+  friend class SimilarStructureSampler<MPTraits>;
 };
 
 template<class MPTraits>
-RMSDDistance<MPTraits>::RMSDDistance() : DistanceMetricMethod<MPTraits>() {
-  this->m_name = "RMSD";
+RMSDDistance<MPTraits>::
+RMSDDistance() : DistanceMetricMethod<MPTraits>() {
+  this->SetName("RMSD");
 }
 
 template<class MPTraits>
-RMSDDistance<MPTraits>::RMSDDistance(typename MPTraits::MPProblemType* _problem, XMLNodeReader& _node, bool _warn)
-  : DistanceMetricMethod<MPTraits>(_problem, _node, _warn) {
-  this->m_name = "RMSD";
+RMSDDistance<MPTraits>::
+RMSDDistance(MPProblemType* _problem, XMLNodeReader& _node, bool _warn) :
+  DistanceMetricMethod<MPTraits>(_problem, _node, _warn) {
+    this->SetName("RMSD");
+  }
+
+template<class MPTraits>
+RMSDDistance<MPTraits>::
+~RMSDDistance() {
 }
 
 template<class MPTraits>
-RMSDDistance<MPTraits>::~RMSDDistance() {
-}
-
-template<class MPTraits>
-vector<Vector3D>
-RMSDDistance<MPTraits>::GetCoordinatesForRMSD(const CfgType& _c, Environment* _env) {
-  _c.ConfigEnvironment(_env);
-  vector<Vector3D> coordinates;
-  for(int i=0; i< _env->GetMultiBody(_c.GetRobotIndex())->GetFreeBodyCount(); ++i)
-    coordinates.push_back(_env->GetMultiBody(_c.GetRobotIndex())->GetFreeBody(i)->WorldTransformation().m_position); 
+vector<Vector3d>
+RMSDDistance<MPTraits>::
+GetCoordinatesForRMSD(const CfgType& _c) {
+  Environment* env = this->GetMPProblem()->GetEnvironment();
+  _c.ConfigEnvironment(env);
+  vector<Vector3d> coordinates;
+  for(int i=0; i< env->GetMultiBody(_c.GetRobotIndex())->GetFreeBodyCount(); ++i)
+    coordinates.push_back(env->GetMultiBody(_c.GetRobotIndex())->GetFreeBody(i)
+        ->WorldTransformation().translation());
   return coordinates;
 }
 
 template<class MPTraits>
 double
-RMSDDistance<MPTraits>::Distance(Environment* _env, const CfgType& _c1, const CfgType& _c2) {
-  vector<Vector3D> x = GetCoordinatesForRMSD(_c1, _env);
-  vector<Vector3D> y = GetCoordinatesForRMSD(_c2, _env);
+RMSDDistance<MPTraits>::
+Distance(const CfgType& _c1, const CfgType& _c2) {
+  vector<Vector3d> x = GetCoordinatesForRMSD(_c1);
+  vector<Vector3d> y = GetCoordinatesForRMSD(_c2);
   return RMSD(x,y,x.size());
 }
 
 template<class MPTraits>
 double
-RMSDDistance<MPTraits>::RMSD(vector<Vector3D> _x, vector<Vector3D> _y, int _dim) {
+RMSDDistance<MPTraits>::
+RMSD(vector<Vector3d> _x, vector<Vector3d> _y, int _dim) {
   if((int)_x.size() < _dim || (int)_y.size() < _dim || _dim <= 0) {
     cout << "Error in MyDistanceMetrics::RMSD, not enough data in vectors" << endl;
     exit(101);
   }
-  
+
   //rmsd = sqrt( sum_of[(U*xn - yn)^2]/N )
   //where U is the rotation that minimizes rmsd
   //reference: B.Kabsch '78. Acta Cryst. (1978) A34 page 827-828
 
   //first step, remove any translation between x and y.
   int n;
-  Vector3D sumx(0,0,0), sumy(0,0,0);
+  Vector3d sumx(0,0,0), sumy(0,0,0);
   for(n=0; n<_dim; ++n) {
     sumx = sumx + _x[n];
     sumy = sumy + _y[n];
@@ -94,18 +112,18 @@ RMSDDistance<MPTraits>::RMSD(vector<Vector3D> _x, vector<Vector3D> _y, int _dim)
   //                     e     f    a[2] };
   //Now, decide this parameters.
   //using a matrix here would be clearer, simply s = r.transpose()*R;
-  Vector3D col[3];
+  Vector3d col[3];
   double a[3], d, e, f;
   double detR; // determinant of r, we need its sign later.
   for(int i=0; i<3; ++i) {
-    col[i] = Vector3D(r[0][i], r[1][i], r[2][i]);
+    col[i] = Vector3d(r[0][i], r[1][i], r[2][i]);
     a[i] = col[i].normsqr();
   }
-  d = col[0].dotProduct(col[1]);
-  e = col[0].dotProduct(col[2]);
-  f = col[1].dotProduct(col[2]);
-  Vector3D col1X2 = col[1].crossProduct(col[2]);
-  detR = col[0].dotProduct(col1X2);
+  d = col[0]*col[1];
+  e = col[0]*col[2];
+  f = col[1]*col[2];
+  Vector3d col1X2 = col[1] % col[2];
+  detR = col[0]*col1X2;
 
   // now solve for the eigenvalues of the matrix, since we
   // know we have three non-negative eigenvalue, we can directly
@@ -127,7 +145,8 @@ RMSDDistance<MPTraits>::RMSD(vector<Vector3D> _x, vector<Vector3D> _y, int _dim)
   double z1, z2, z3;
   if(q == 0) { // which means three identical roots,
     z1 = z2 = z3 = -a2/3;
-  } else { // q < 0
+  }
+  else { // q < 0
     double rootmq = sqrt(-q);
     double ceta = acos(-rr/q/rootmq);
     double cc3 = cos(ceta/3);      // = cos(ceta/3)

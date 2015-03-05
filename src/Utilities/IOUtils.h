@@ -3,7 +3,7 @@
 
 #ifndef TIXML_USE_STL
 #define TIXML_USE_STL
-#endif 
+#endif
 
 #include <cctype>
 #include <string>
@@ -12,10 +12,11 @@
 #include <ostream>
 #include <fstream>
 #include <iostream>
+using namespace std;
 
 #include "tinyxml.h"
 
-using namespace std;
+#include "PMPLExceptions.h"
 
 class Environment;
 
@@ -31,17 +32,17 @@ class Environment;
 
 /* class XMLNode
    This is a wrapper class for XML handeling.  It is READONLY
-   and supports only trivial XML parsing.  Wrapping up TinyXML, 
+   and supports only trivial XML parsing.  Wrapping up TinyXML,
    it only supports TiXmlElements; this is because this is our
    only need for intput XML files.
-  
+
    If for some reason you really really need the underlying TiXMLNode,
    then make your class a friend of this one.  Adding the neccessary
    functionality here is a better solution!
-  
+
    \todo Testing for inproper int,float,double is still not good
    things like int=3.5 or double=0.6q are accepted but truncated.
-  
+
    Questions:  Should this ever terminate on fail?  or return -1?
 */
 class XMLNodeReader {
@@ -50,9 +51,9 @@ class XMLNodeReader {
   /////////////////////////////////////////////////////////////////////////////
 public:
   typedef vector<XMLNodeReader>::iterator childiterator;
-  
+
   // Constructor for XMLNodeReader
-  // param in_pnode the TiXmlNode this class wraps 
+  // param in_pnode the TiXmlNode this class wraps
   explicit XMLNodeReader(TiXmlNode* _node, const string& _filename );
 
   // This constructor takes as input a XML document and searches for a toplevel
@@ -60,7 +61,7 @@ public:
   //
   // param in_fileName The XML filename to parse
   // param in_desiredNode The top-level XML Node to return
-  explicit XMLNodeReader(const string& _filename, TiXmlDocument& _doc, 
+  explicit XMLNodeReader(const string& _filename, TiXmlDocument& _doc,
                             const string& _desiredNode);
 
 
@@ -72,7 +73,7 @@ public:
   // param in_childName Name of child queried
   bool hasChild(const string& _childName) const;
 
-  //WARNING: will terminate with msg if child doesn't exist, 
+  //WARNING: will terminate with msg if child doesn't exist,
   //so its better to check outside!
   XMLNodeReader getFirstChild(const string& _childName) ;
 
@@ -83,15 +84,15 @@ public:
 
 
   template<typename T>
-  T numberXMLParameter (const string& _name,
+  T numberXMLParameter(const string& _name,
                         bool _req,
                         const T& _default,
-                        const T& _min, 
-                        const T& _max, 
+                        const T& _min,
+                        const T& _max,
                         const string& _desc) {
     VerifyElement();
     m_reqAttributes.push_back(_name);
-    T toReturn;  
+    T toReturn = T();
     int qrReturn = m_node->ToElement()->QueryValueAttribute(_name,&toReturn);
     if(qrReturn == TIXML_WRONG_TYPE) {
       PrintAttrWrongType(_name,_desc);
@@ -113,16 +114,16 @@ public:
     return toReturn;
   }
 
-  string stringXMLParameter (const string& _name,
+  string stringXMLParameter(const string& _name,
                                   bool _req,
                                   const string& _default,
                                   const string& _desc);
 
   bool hasXMLParameter(const string& _name) ;
 
-  bool boolXMLParameter (const string& _name, bool _req,
+  bool boolXMLParameter(const string& _name, bool _req,
                          bool _default, const string& _desc);
-  // Will output a warning to the user that XML Node 
+  // Will output a warning to the user that XML Node
   // contains extra attributes.  This could be a sign
   // of a user typeof on an optional attribute.
   void warnUnrequestedAttributes();
@@ -158,12 +159,12 @@ public:
   void PrintAttrWrongType(const string& _name, const string& _desc) const ;
   void PrintAttrMissing(const string& _name, const string& _desc) const;
   template<typename T>
-  void PrintAttrInvalidBounds(const string& _name, const string& _desc, 
+  void PrintAttrInvalidBounds(const string& _name, const string& _desc,
                               const T& _min, const T& _max) const {
     cerr << "*************************************************************" << endl;
     cerr << "XML Error:: Invalid Attribute Range" << endl;
     cerr << "XML file:: " << m_xmlFilename << endl;
-    cerr << "Parent Node: " << getName() << ", Attribute: "; 
+    cerr << "Parent Node: " << getName() << ", Attribute: ";
     cerr << _name << endl;
     cerr << "Attribute Range: ["<< _min << ", " << _max << "]" << endl;
     cerr << "Attribute Description: " << _desc << endl;
@@ -183,7 +184,7 @@ public:
   //  Protected Data
   /////////////////////////////////////////////////////////////////////////////
   protected:
-  
+
 
   /////////////////////////////////////////////////////////////////////////////
   //  Private Data
@@ -288,9 +289,9 @@ void VDQuery(const CfgType& _cfg1, const CfgType& _cfg2){
 
 /**Write a list of Cfgs in a give path
  *to file with given filename.
- *note if file couldn't be opened, error message will be post 
+ *note if file couldn't be opened, error message will be post
  *and process will be terminated.
- */   
+ */
 template<class CfgType>
 void WritePath(string _outputFile, const vector<CfgType>& _path) {
   ofstream ofs(_outputFile.c_str());
@@ -317,56 +318,55 @@ void WritePath(string _outputFile, const vector<CfgType>& _path) {
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 
-//Make sure this file exists.
-void VerifyFileExists(const string _name);
+//determine if a file exists or not
+bool FileExists(const string& _filename, bool _err = true);
 
-/**Read data for element from input stream.
- *This method throws away comments starting from "#", and
- *find out read data for element.
- *
- *@param element An element which will read data from file.
- *@note type T should have istream>> overloading.
- *@note >> overloading should return 0 (NULL or false)
- *if data couldn't be read correctly.
- */
+//discard all commented lines util the next uncommented line is found
+void GoToNext(istream& _is);
 
-//The character to distinguish commnets.
-#define COMMENT_DELIMITER '#'
-//The maximum number of characters in each line.
-#define LINEMAX 256
+//is given char a start of command line? comments denoted with # character
+inline bool IsCommentLine(char _c) {return _c == '#';}
 
-template <class T> 
-T 
-ReadField(istream& _is, string _error) {
+//GetPathName from given filename
+string GetPathName(const string& _filename);
+
+//read type by eating all white space. If type cannot be read report the error
+//provided
+template <class T>
+T
+ReadField(istream& _is, const string& _where, const string& _error) {
   char c;
   string line;
-  T element;
-  while (_is.get(c)) {
-    if (c == '#') {
+  T element = T();
+  while(_is) {
+    c = _is.peek();
+    if(c == '#') {
       getline(_is, line);
     }
-    else if (!isspace(c)) {
-      _is.putback(c);
-      if (!(_is >> element)) {
-        cerr << "Error in Reading Field::" << _error << endl;
-        exit(1);
-      }
+    else if(!isspace(c)) {
+      if (!(_is >> element))
+        throw ParseException(_where, _error);
       else
         break;
     }
+    else
+      _is.get(c);
   }
-  if(_is.eof()){
-    cerr << "Error end of file reached in Reading Field::" << _error << endl;
-    exit(1);
-  }
+  if(_is.eof())
+    throw ParseException(_where, "End of file reached");
+
   return element;
 };
 
-string ReadFieldString(istream& _is, string _error, bool _toUpper = true);
+//read the string using above ReadField and tranform it to upper case
+string ReadFieldString(istream& _is, const string& _where, const string& _error, bool _toUpper = true);
+
+//optionally read a color from a comment line
+//Color4 GetColorFromComment(istream& _is);
 
 //----------------------------------------------------------------------------
 // GetTags: split string based on delimiter.
 //----------------------------------------------------------------------------
 vector<string> GetTags(string _stags, string _delim);
 
-#endif 
+#endif

@@ -33,7 +33,7 @@ class SSSurface : public CfgSurface {
     virtual ~SSSurface(){};
 
 #ifdef _PARALLEL
-    void define_type(stapl::typer &t)  
+    void define_type(stapl::typer &t)
     {
       Cfg::define_type(t);
     }
@@ -54,17 +54,14 @@ class SSSurface : public CfgSurface {
     template<class DistanceMetricPointer>
       void GetRandomRay(double _incr, Environment* _env, DistanceMetricPointer _dm, bool _norm=true);
 
-
-    virtual vector<Robot> GetRobots(int) {return vector<Robot>();}
-
     SSSurface& operator=(const SSSurface& _rhs);
-   // virtual void WeightedSum(const Cfg&, const Cfg&, double _weight = 0.5);       
+   // virtual void WeightedSum(const Cfg&, const Cfg&, double _weight = 0.5);
     ///////////////////////////////////////////////////////////////////////////////////////////
 
 
     ///Increase every value in this instance in each dimention by the value in _increment
     virtual void IncrementTowardsGoal(const Cfg& _goal, const Cfg& _increment);
-    virtual void FindIncrement(const Cfg& _start, const Cfg& _goal, int* _nTicks, 
+    virtual void FindIncrement(const Cfg& _start, const Cfg& _goal, int* _nTicks,
         double _positionRes, double _orientationRes);
     virtual void FindIncrement(const Cfg& _start, const Cfg& _goal, int _nTicks);
 
@@ -152,6 +149,10 @@ class SSSurface : public CfgSurface {
     //the system will increment itself to the next state, returning the next state.
     //The current state will remain intact
     SSSurface Update(double _dt);
+
+    ////////////////////////////////////////////////////////////
+    //this should have been implemented in the first plac3
+    bool ConfigEnvironment(Environment* _env) const;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     //

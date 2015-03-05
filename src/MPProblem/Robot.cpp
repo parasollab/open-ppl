@@ -1,14 +1,29 @@
 #include "Robot.h"
+
 #include <iostream>
 #include <cstdlib>
+#include <algorithm>
 
-Robot::Robot(Base _base, BaseMovement _baseMovement, 
-    JointMap _joints, int _bodyIndex) : 
-  m_base(_base), m_baseMovement(_baseMovement), 
-  m_joints(_joints), m_bodyIndex(_bodyIndex) {
+#include "Geometry/Connection.h"
+#include "Utilities/PMPLExceptions.h"
+
+class IsConnectionGloballyFirst {
+  public:
+    bool operator()(const shared_ptr<Connection>& _a, const shared_ptr<Connection>& _b) const {
+      return _a->GetGlobalIndex() < _b->GetGlobalIndex();
+    }
+} connectionComparator;
+
+Robot::Robot(Base _base, BaseMovement _baseMovement,
+    JointMap _joints, int _bodyIndex, const shared_ptr<Body>& _body) :
+  m_base(_base), m_baseMovement(_baseMovement),
+  m_joints(_joints), m_bodyIndex(_bodyIndex), m_body(_body) {
+    //always sort joint lists based on global indices
+    std::sort(m_joints.begin(), m_joints.end(), connectionComparator);
   }
 
-Robot::Base Robot::GetBaseFromTag(const string _tag){
+Robot::Base
+Robot::GetBaseFromTag(const string _tag){
   if(_tag == "PLANAR")
     return Robot::PLANAR;
   else if(_tag == "VOLUMETRIC")
@@ -17,37 +32,20 @@ Robot::Base Robot::GetBaseFromTag(const string _tag){
     return Robot::FIXED;
   else if(_tag == "JOINT")
     return Robot::JOINT;
-  else{
-    cerr << "Error::Incorrect Base Type Specified::" << _tag << endl;
-    cerr << "Choices are:: Planar, Volumetric, Fixed, or Joint" << endl;
-    exit(1);
-  }
+  else
+    throw ParseException(WHERE,
+        "Failed parsing robot base type '" + _tag + "'. Options are: planar, volumetric, fixed, or joint.");
 }
 
-Robot::BaseMovement Robot::GetMovementFromTag(const string _tag){
+Robot::BaseMovement
+Robot::GetMovementFromTag(const string _tag){
   if(_tag == "ROTATIONAL")
     return Robot::ROTATIONAL;
   else if (_tag == "TRANSLATIONAL")
     return Robot::TRANSLATIONAL;
-  else {
-    cerr << "Error::Incorrect Movement Type Specified::" << _tag << endl;
-    cerr << "Choices are:: Rotational or Translational" << endl;
-    exit(1);
-  }
-}
-
-Robot::JointType Robot::GetJointTypeFromTag(const string _tag){
-  if(_tag == "REVOLUTE")
-    return Robot::REVOLUTE;
-  else if (_tag == "SPHERICAL")
-    return Robot::SPHERICAL;
-  else if(_tag == "NONACTUATED")
-    return Robot::NONACTUATED;
-  else {
-    cerr << "Error::Incorrect Joint Type Specified::" << _tag << endl;
-    cerr << "Choices are:: Revolute, Spherical or Nonactuated" << endl;
-    exit(1);
-  }
+  else
+    throw ParseException(WHERE,
+        "Failed parsing robot movement type '" + _tag + "'. Options are: rotational or translational.");
 }
 
 //Begin section getTag
@@ -80,14 +78,3 @@ Robot::GetTagFromMovement(const Robot::BaseMovement& _bm){
   }
 }
 
-string
-Robot::GetTagFromJointType(const Robot::JointType& _jt){
-  switch(_jt){
-    case REVOLUTE:
-      return "REVOLUTE";
-    case SPHERICAL:
-      return "SPHERICAL";
-    default:
-      return "Unknown Joint Type";
-  }
-} 

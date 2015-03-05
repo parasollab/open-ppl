@@ -32,7 +32,7 @@ vector<Partition*> HierarchicalClustering::MakePartitions(Partition &p){
 };
 
 void HierarchicalClustering::Cluster(vector<VID> &IdSet, vector< vector< VID > > &RetClusters, vector<vector<double> >& features){
-   
+
    cout <<"START Hierarchical Clustering" << endl << flush;
    cout <<"Number of Features: " << features.size() << " Training Set Size: " << IdSet.size() << endl << flush;
 
@@ -58,7 +58,7 @@ void HierarchicalClustering::Cluster(vector<VID> &IdSet, vector< vector< VID > >
 
       if( IdSet.size() )
          RetClusters.push_back( IdSet );
-      
+
       return;
    }
 
@@ -74,11 +74,11 @@ void HierarchicalClustering::Cluster(vector<VID> &IdSet, vector< vector< VID > >
 	string tempFileName;
 	tempFileName = m_ClusteringDestination+"/SampleDataPoints.txt";
    outfile.open(tempFileName.c_str());
-   if( IdSet.size() > 1 ){ 
+   if( IdSet.size() > 1 ){
       for(size_t PtNdx = 0; PtNdx < IdSet.size(); PtNdx++){
          for(size_t featureNdx=0;featureNdx<features.size();featureNdx++){
             features[featureNdx][PtNdx]=m_Features[featureNdx].second*
-               (features[featureNdx][PtNdx] - FeatureMinMax[featureNdx].first) / 
+               (features[featureNdx][PtNdx] - FeatureMinMax[featureNdx].first) /
                (FeatureMinMax[featureNdx].second - FeatureMinMax[featureNdx].first );
             //Output the data to the textfile such that matlab can read it
             outfile<<features[featureNdx][PtNdx]<<" "<<flush;
@@ -129,7 +129,7 @@ void HierarchicalClustering::Cluster(vector<VID> &IdSet, vector< vector< VID > >
          RetClusters[readData-1].push_back(i);
       }
       inFile.close();
-   }    
+   }
    else{
       cout << " No Points available to cluster " << endl << endl <<flush;
       exit(-2);

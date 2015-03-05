@@ -1,8 +1,12 @@
 #ifndef GMSPOLYHEDRON_H_
 #define GMSPOLYHEDRON_H_
 
+#include <string>
+#include <iostream>
+#include <vector>
+using namespace std;
+
 #include "Vector.h"
-#include "Point.h"
 using namespace mathtool;
 
 class IModel;
@@ -22,8 +26,15 @@ class GMSPolygon {
 
     bool operator==(const GMSPolygon& _p) const;
 
+    //Find a common vertex between the two polygons
+    //return -1 if none exists
+    int CommonVertex(const GMSPolygon& _p);
+
+    //Find the common edge between two polygons
+    pair<int, int> CommonEdge(const GMSPolygon& _p);
+
     vector<int> m_vertexList; // A list of index, which points to vertex in Polyhedron
-    Vector3D m_normal; // The normal vector of this polygon 
+    Vector3d m_normal; // The normal vector of this polygon
     double m_area; // Size of this polygon
 };
 
@@ -53,20 +64,20 @@ class GMSPolyhedron {
      *file format body should request polyhedron to read. If format is not recognized
      *, exit will be called.
      */
-    Vector3D Read(string _fileName);
+    Vector3d Read(string _fileName);
 
     /// read GMS format and caluate maxRadius and minRadius
-    Vector3D Read(istream& _is);
+    Vector3d Read(istream& _is);
 
     /// read BYU format and caluate maxRadius and minRadius
-    Vector3D ReadBYU(istream& _is);
+    Vector3d ReadBYU(istream& _is);
 
     /// load vertices and triangles from the imodel which loads all types of models
-    void LoadFromIModel(IModel* _im, Vector3D& _com); 
+    void LoadFromIModel(IModel* _im, Vector3d& _com);
 
     /// read BYU/OBJ format and caluate maxRadius and minRadius
     /// calls model loader lib
-    Vector3D ReadModel(string _fileName);
+    Vector3d ReadModel(string _fileName);
 
     /// Write in "original" GMS format
     void Write(ostream& _os);
@@ -75,35 +86,35 @@ class GMSPolyhedron {
     void WriteBYU(ostream& _os);
 
     /// get a point on the surface of the polyhedron
-    Point3d GetRandPtOnSurface(); 
+    Point3d GetRandPtOnSurface();
 
-    vector<Vector3D>& GetVertexList() { return m_vertexList; }
+    vector<Vector3d>& GetVertexList() { return m_vertexList; }
     vector<GMSPolygon>& GetPolygonList() { return m_polygonList; }
 
     void BuildBoundary();
     void BuildBoundary2D();
-    vector< pair<int,int> >& GetBoundaryLines() { 
+    vector< pair<int,int> >& GetBoundaryLines() {
        BuildBoundary();
-       return m_boundaryLines; 
-    }; 
-    double GetClearance(Point3d pt, Point3d& closest, int numRays); 
-    double PushToMedialAxis(Point3d& pt); 
-    
+       return m_boundaryLines;
+    };
+    double GetClearance(Point3d pt, Point3d& closest, int numRays);
+    double PushToMedialAxis(Point3d& pt);
+
 
     /// is the specified point on the surface of the polyhedron
     bool IsOnSurface(Point2d& _pt, double _h);
-    double HeightAtPt(Point2d _pt, bool& _valid); 
+    double HeightAtPt(Point2d _pt, bool& _valid);
 
 
-    vector<Vector3D> m_vertexList; // 3D Vector stores vertex location info.
+    vector<Vector3d> m_vertexList; // 3D Vector stores vertex location info.
     vector<GMSPolygon> m_polygonList; // An array of GMSPolygon
 
     double m_area; //The summation of all area of polygons in this polyhedron.
     double m_maxRadius; // the maximum distance from a vertex to com.
     double m_minRadius; // the minimum distance from a vertex to com.
-    
+
     ///////////////////////////////////////////////////////////////////////////
-    vector< pair<int,int> > m_boundaryLines;//store the ids to vertices stored in surface model 
+    vector< pair<int,int> > m_boundaryLines;//store the ids to vertices stored in surface model
     bool m_boundaryBuilt;
     bool m_force2DBoundary;
 };

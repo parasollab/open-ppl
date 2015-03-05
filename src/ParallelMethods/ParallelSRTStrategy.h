@@ -13,14 +13,14 @@ class rmap_rrt_wf {
   SRTStrategy* strategyMethod;
   CP_type* candPairs;
   int regionId;
- 
+
  public:
   rmap_rrt_wf(MPR_type* _mpr, SRTStrategy* _mpsm, int _id, CP_type* pairs);
-    
+
   void define_type(stapl::typer &t);
 
   rmap_rrt_wf(const rmap_rrt_wf& _wf, std::size_t offset);
- 
+
   template<typename View, typename bbView>
     void operator()(const View& view,  bbView bb_view) const {
     int sample_size = view.size()/bb_view.size();
@@ -53,12 +53,12 @@ class region_rrt_con_wf {
   CCM_type pCCon;
   Environment* env;
   BoundingBox *bbox;
-  
+
  public:
   region_rrt_con_wf(MPR_type* _mpr, LP_type* _plp, CCM_type _ccm, Environment* _penv, BoundingBox& _bbox);
-  
-  void define_type(stapl::typer &t); 
-  template <typename PartitionedView> 
+
+  void define_type(stapl::typer &t);
+  template <typename PartitionedView>
     void operator()(PartitionedView v1) const {
 
 
@@ -68,15 +68,15 @@ class region_rrt_con_wf {
 
 
     stapl::counter<stapl::default_timer> t;
-    double wf_timer=0.0;      
+    double wf_timer=0.0;
     t.start();
 
 
     for(typename PartitionedView::iterator vit = v1.begin(); vit  != v1.end(); ++vit) {
-      
-      
+
+
       for(typename PartitionedView::adj_edge_iterator ei = (*vit).begin(); ei != (*vit).end(); ++ei){
-	
+
 	SRTInfo srt_s = (*(region->GetSRTRegionGraph()->find_vertex((*ei).source()))).property();
 	SRTInfo srt_t = (*(region->GetSRTRegionGraph()->find_vertex((*ei).target()))).property();
 
@@ -95,7 +95,7 @@ stapl::sequential::vector_property_map<RoadmapGraph<CfgType, WeightType>::GRAPH,
     wf_timer = t.stop();
     cout<<"\n processor #----->["<<stapl::get_location_id()<<"] rmap_rrt_con_wf time: " << wf_timer << endl;
 }
-  }  
+  }
 };
 
 
@@ -115,16 +115,16 @@ class region_rrt_edge_wf {
 
  public:
   region_rrt_edge_wf(MPR_type* _mpr, LP_type* _plp,// CCM_type _ccm,
-		     Environment* _penv, BoundingBox _bbox, 
+		     Environment* _penv, BoundingBox _bbox,
 		     DistanceMetric* _dm, string _dm_label,
 		     int _nc, int _nr);
- 
-  void define_type(stapl::typer &t); 
- 
+
+  void define_type(stapl::typer &t);
+
   template <typename PartitionedView, typename rmView, typename CFG, typename WEIGHT>
     void operator()(PartitionedView v1, rmView v2) const {
 
-    
+
     Environment* _env = const_cast<Environment*>(env);
     DistanceMetric* _dm = const_cast<DistanceMetric*>(dm);
     BoundingBox _bbox = bbox;
@@ -133,7 +133,7 @@ class region_rrt_edge_wf {
 
 
     stapl::counter<stapl::default_timer> t;
-    double wf_timer=0.0;      
+    double wf_timer=0.0;
     t.start();
 
 
@@ -142,16 +142,16 @@ class region_rrt_edge_wf {
       VID vid1 = (*vit).descriptor();
       vector<VID> nc_vid, nr_vid;
       vector<double> nc_dist, nr_dist;
-      
+
       for(typename PartitionedView::iterator vit2 = v1.begin(); vit2 != v1.end(); ++vit2) {
-	
-	
+
+
 	SRTInfo rrt2 = (*vit2).property();
 	VID vid2 = (*vit2).descriptor();
 
 	const CfgType c1 = rrt1.GetCandidate();
 	const CfgType c2 = rrt2.GetCandidate();
-	double dist = _dmm->Distance(_env, 
+	double dist = _dmm->Distance(_env,
         c1, c2);
 
 	if (dist > 0) {
@@ -174,62 +174,62 @@ class region_rrt_edge_wf {
 	  }
 	}
       }
-    }  
+    }
 
     wf_timer = t.stop();
     cout<<"\n processor #----->["<<stapl::get_location_id()<<"] rmap_rrt_wf time: " << wf_timer << endl;
 
-  }  
+  }
 };
 
 
 template<typename View, typename bbView>
-  void constructRRTRoadmap(View& view, bbView& bb_view, MPRegion<CfgType,WeightType>* _region, 
-			   SRTStrategy* _strategy, int in_regionID, 
+  void constructRRTRoadmap(View& view, bbView& bb_view, MPRegion<CfgType,WeightType>* _region,
+			   SRTStrategy* _strategy, int in_regionID,
 			   vector<pair<CfgType,vector<VID> > >* pairs) {
   rmap_rrt_wf wf(_region,_strategy,in_regionID,pairs);
   stapl::map_func(wf,stapl::balance_view(view,stapl::get_num_locations()),stapl::balance_view(bb_view,stapl::get_num_locations()));
 }
 
 template<typename PartitionedView>
-  void connectRRTRegion(PartitionedView& v1, MPRegion<CfgType,WeightType>* _region, 
-			LocalPlanners<CfgType, WeightType>* _lp,Connector<CfgType, 
-			WeightType>::ConnectionPointer _ccm, 
+  void connectRRTRegion(PartitionedView& v1, MPRegion<CfgType,WeightType>* _region,
+			LocalPlanners<CfgType, WeightType>* _lp,Connector<CfgType,
+			WeightType>::ConnectionPointer _ccm,
 			Environment * _env, BoundingBox& bbox) {
   region_rrt_con_wf wf(_region,_lp,_ccm,_env,bbox);
   stapl::map_func(wf, v1);
 }
 
 template<typename PartitionedView, typename rmView>
-  void determineRGEdges(PartitionedView& v1, rmView& v2, 
-			MPRegion<CfgType,WeightType>* _region, 
+  void determineRGEdges(PartitionedView& v1, rmView& v2,
+			MPRegion<CfgType,WeightType>* _region,
 			LocalPlanners<CfgType, WeightType>* _lp,
-			Environment * _env, BoundingBox& bbox, 
+			Environment * _env, BoundingBox& bbox,
 			DistanceMetric* dm, string dm_label,
 			int nc, int nr) {
   region_rrt_edge_wf wf(_region,_lp,_env,bbox,dm,dm_label, nc, nr);
   stapl::map_func(wf, v1,v2);
 }
 
-class ParallelSRTStrategy : public MPStrategyMethod { 
+class ParallelSRTStrategy : public MPStrategyMethod {
 
  public:
   ParallelSRTStrategy(XMLNodeReader& in_pNode, MPProblem* in_pProblem);
 
     virtual ~ParallelSRTStrategy();
-    
-    virtual void PrintOptions(ostream& out_os);
+
+    virtual void Print(ostream& out_os) const;
     virtual void Initialize(int in_RegionID);
     virtual double RRTDistance(SRTStrategy* srt, Environment* env, BoundingBox bb, CfgType c1, CfgType c2);
-    
+
     virtual void ParseXML(XMLNodeReader& in_pNode);
-    
+
     virtual void Run(int in_RegionID) ;
-    
+
     virtual void Finalize(int in_RegionID);
-    
+
  private:
-    
+
     vector<string> m_ComponentConnectionLabels;
     MPRegion<CfgType,WeightType>* region;
     RegionGraph<SRTInfo,WeightType>* rg;

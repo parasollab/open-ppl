@@ -10,14 +10,14 @@ class Cfg_reach_cc : public Cfg_free_tree {
   Cfg_reach_cc(const Vector6D& base, const vector<double>& len, const vector<int>& ori);
   Cfg_reach_cc(const Cfg&c);
   virtual ~Cfg_reach_cc();
-  
+
   #ifdef _PARALLEL
-    void define_type(stapl::typer &t)  
+    void define_type(stapl::typer &t)
     {
       Cfg_free_tree::define_type(t);
       t.member(link_lengths);
       t.member(link_orientations);
-      
+
     }
  #endif
 
@@ -31,23 +31,23 @@ class Cfg_reach_cc : public Cfg_free_tree {
   virtual void multiply(const Cfg&, double, bool _norm=true);
   virtual void divide(const Cfg&, double);
   virtual Cfg& operator=(const Cfg&);
-  virtual void WeightedSum(const Cfg&, const Cfg&, double weight = 0.5); 
+  virtual void WeightedSum(const Cfg&, const Cfg&, double weight = 0.5);
   virtual void c1_towards_c2(const Cfg& cfg1, const Cfg& cfg2, double d);
 
-  virtual bool isWithinResolution(const Cfg &c, 
-				  double positionRes, 
+  virtual bool isWithinResolution(const Cfg &c,
+				  double positionRes,
 				  double orientationRes) const;
 
   virtual bool ConfigEnvironment(Environment*) const;
 
   virtual void GetRandomCfgCenterOfMass(Environment* _env,shared_ptr<Boundary> _bb);
   virtual void GetRandomRay(double incr, Environment* env,shared_ptr <DistanceMetricMethod> dm, bool _norm=true);
-   virtual Vector3D GetRobotCenterofMass(Environment*) const;
-  
+   virtual Vector3d GetRobotCenterofMass(Environment*) const;
+
   virtual void Increment(const Cfg& _increment);
   virtual void IncrementTowardsGoal(const Cfg &goal, const Cfg &increment);
-  virtual void FindIncrement(const Cfg& _start, const Cfg& _goal, 
-			     int* n_ticks, 
+  virtual void FindIncrement(const Cfg& _start, const Cfg& _goal,
+			     int* n_ticks,
 			     double positionRes, double orientationRes, double rd_res = .05);
   virtual void FindIncrement(const Cfg& _start, const Cfg& _goal, int n_ticks);
 

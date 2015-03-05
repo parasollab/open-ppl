@@ -19,7 +19,7 @@ void CfgFeature::ParseXML(XMLNodeReader& in_Node){
 vector<double> CfgFeature::Collect(vector<VID>& vids){
    RoadmapGraph<CfgType, WeightType>* rdmp = GetMPProblem()->GetRoadmap()->m_pRoadmap;
    vector<double> data;
-   
+
    typedef vector<VID>::iterator VIT;
    for(VIT vit = vids.begin(); vit!=vids.end(); vit++){
       data.push_back(rdmp->find_vertex(*vit)->property().GetData()[m_index]);

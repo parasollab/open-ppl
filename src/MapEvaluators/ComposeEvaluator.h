@@ -4,6 +4,12 @@
 #include "MapEvaluatorMethod.h"
 #include "EvaluatorFunctor.h"
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup MapEvaluators
+/// @brief TODO.
+///
+/// TODO.
+////////////////////////////////////////////////////////////////////////////////
 template <class MPTraits>
 class ComposeEvaluator : public MapEvaluatorMethod<MPTraits> {
   public:
@@ -18,7 +24,7 @@ class ComposeEvaluator : public MapEvaluatorMethod<MPTraits> {
     ComposeEvaluator(MPProblemType* _problem, XMLNodeReader& _node);
     ~ComposeEvaluator() { }
 
-    virtual void PrintOptions(ostream& _os);
+    virtual void Print(ostream& _os) const;
 
     virtual bool operator()();
 
@@ -34,7 +40,7 @@ ComposeEvaluator<MPTraits>::ComposeEvaluator(LogicalOperator _logicalOperator, c
   }
 
 template<class MPTraits>
-ComposeEvaluator<MPTraits>::ComposeEvaluator(MPProblemType* _problem, XMLNodeReader& _node) 
+ComposeEvaluator<MPTraits>::ComposeEvaluator(MPProblemType* _problem, XMLNodeReader& _node)
   : MapEvaluatorMethod<MPTraits>(_problem, _node) {
     this->SetName("ComposeEvaluator");
 
@@ -68,15 +74,17 @@ ComposeEvaluator<MPTraits>::ComposeEvaluator(MPProblemType* _problem, XMLNodeRea
   }
 
 template<class MPTraits>
-void ComposeEvaluator<MPTraits>::PrintOptions(ostream& _os) {
-  _os << this->GetName() << "::" ;
-  for(vector<string>::iterator it = m_evalLabels.begin(); it != m_evalLabels.end(); it++)
+void
+ComposeEvaluator<MPTraits>::Print(ostream& _os) const {
+  _os << this->GetNameAndLabel() << endl ;
+  for(vector<string>::const_iterator it = m_evalLabels.begin(); it != m_evalLabels.end(); it++)
     _os << "\n\t evaluation method = \'" << *it << "\'";
   _os << "\n\t operator = " << m_logicalOperator << endl;
 }
 
 template<class MPTraits>
-bool ComposeEvaluator<MPTraits>::operator()() {
+bool
+ComposeEvaluator<MPTraits>::operator()() {
 
   vector<MapEvaluatorPointer> evalMethods;
   typedef typename vector<MapEvaluatorPointer>::iterator MEIterator;
@@ -90,10 +98,12 @@ bool ComposeEvaluator<MPTraits>::operator()() {
   if (m_logicalOperator == AND) {
     Compose<MEIterator, logical_and<bool>, EvalFunctor> comAnd;
     return comAnd(evalMethods.begin(), evalMethods.end(), logical_and<bool>(), comFunc);
-  } else if (m_logicalOperator == OR) {
+  }
+  else if (m_logicalOperator == OR) {
     Compose<MEIterator, logical_or<bool>, EvalFunctor> comOr;
     return comOr(evalMethods.begin(), evalMethods.end(), logical_or<bool>(), comFunc);
-  } else {
+  }
+  else {
     cerr << "Warning:: Compose Evaluator unknown operator is stated." << endl;
     return false;
   }

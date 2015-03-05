@@ -2,7 +2,7 @@
 #define PreferentialAttachment_h
 #include "ConnectionMethod.h"
 
-// Preferential attachment 
+// Preferential attachment
 
 /**Connect nodes in map to their k closest neighbors.
  *Following Algorithm is used:
@@ -13,16 +13,16 @@
  *           -# using local planning functions in lp_set
  *              to connect cfg1 and cfg2
  *           -# if connected, add this edge to map, _rm.
- *       -#end for
+ *       -# end for
  *   -# end for
  *
- *@param info provides inforamtion other than connection, like
+ *info provides inforamtion other than connection, like
  *_collision dection, local planner, and distance metrics.
- *@param _cn provides information for specific node connection 
+ *_cn provides information for specific node connection
  *paramters.
- *@param lp Local planner for connecting given 2 Cfgs.
+ *lp Local planner for connecting given 2 Cfgs.
  *
- *@see RoadmapGraph::AddEdge and LocalPlanners::IsConnected
+ *see RoadmapGraph::AddEdge and LocalPlanners::IsConnected
  */
 
 template <class CFG, class WEIGHT>
@@ -33,15 +33,15 @@ class PreferentialAttachment: public ConnectionMethod<CFG,WEIGHT> {
 
     //////////////////////
     // Constructors and Destructor
-    PreferentialAttachment(string _lp = "", string _nf = "", MPProblem* _problem = NULL); 
+    PreferentialAttachment(string _lp = "", string _nf = "", MPProblem* _problem = NULL);
     PreferentialAttachment(XMLNodeReader& _node, MPProblem* _problem);
     PreferentialAttachment(int _k); // constructor for preferential attachment
     PreferentialAttachment(int _k, int _m); // constructor for preferential attachment
 
     virtual ~PreferentialAttachment();
 
-    ///Used in new MPProblem framework.
-    virtual void PrintOptions(ostream& _os);  
+    //Used in new MPProblem framework.
+    virtual void Print(ostream& _os) const;
     virtual void ParseXML(XMLNodeReader& _node);
 
     //////////////////////
@@ -49,11 +49,11 @@ class PreferentialAttachment: public ConnectionMethod<CFG,WEIGHT> {
     template<typename ColorMap, typename InputIterator, typename OutputIterator>
       void Connect(Roadmap<CFG, WEIGHT>* _rm, StatClass& _stats,
           ColorMap& _cmap, InputIterator _itr1First, InputIterator _itr1Last,
-          InputIterator _itr2First, InputIterator _itr2Last, OutputIterator _collision); 
+          InputIterator _itr2First, InputIterator _itr2Last, OutputIterator _collision);
 
     template<typename ColorMap, typename InputIterator, typename OutputIterator>
-      void ConnectNeighbors(Roadmap<CFG, WEIGHT>* _rm, StatClass& _stats, 
-          ColorMap& _cmap, VID _vid, 
+      void ConnectNeighbors(Roadmap<CFG, WEIGHT>* _rm, StatClass& _stats,
+          ColorMap& _cmap, VID _vid,
           InputIterator _closestFirst, InputIterator _closestLast,
           OutputIterator _collision);
 
@@ -63,7 +63,7 @@ class PreferentialAttachment: public ConnectionMethod<CFG,WEIGHT> {
     // Probability function
     double PrefProb(Roadmap<CFG, WEIGHT>* _rm, VID _vid, int _n) {
       int candidate_degree = _rm->m_pRoadmap->get_degree(_vid);
-      int total_degree = _rm->m_pRoadmap->get_num_edges(); 
+      int total_degree = _rm->m_pRoadmap->get_num_edges();
       if (m_debug) cout << "PrefProb(" << _vid << ", " << _n << ") = " << 1 + candidate_degree << " / " << _n + total_degree << endl;
       return ((double)(1 + candidate_degree) / (double)(_n + total_degree));
     }
@@ -84,7 +84,7 @@ class PreferentialAttachment: public ConnectionMethod<CFG,WEIGHT> {
 
 template <class CFG, class WEIGHT>
 PreferentialAttachment<CFG,WEIGHT>::PreferentialAttachment(string _lp, string _nf, MPProblem* _problem){
-  this->SetName("PreferentialAttachment"); 
+  this->SetName("PreferentialAttachment");
   this->m_lpMethod = _lp;
   this->m_nfMethod = _nf;
   this->SetMPProblem(_problem);
@@ -94,9 +94,9 @@ PreferentialAttachment<CFG,WEIGHT>::PreferentialAttachment(string _lp, string _n
 }
 
 template <class CFG, class WEIGHT>
-PreferentialAttachment<CFG,WEIGHT>::PreferentialAttachment(XMLNodeReader& _node, MPProblem* _problem) : 
-  ConnectionMethod<CFG,WEIGHT>(_node, _problem) { 
-    this->SetName("PreferentialAttachment"); 
+PreferentialAttachment<CFG,WEIGHT>::PreferentialAttachment(XMLNodeReader& _node, MPProblem* _problem) :
+  ConnectionMethod<CFG,WEIGHT>(_node, _problem) {
+    this->SetName("PreferentialAttachment");
     m_k = KCLOSEST;
     m_fail = MFAILURE;
     ParseXML(_node);
@@ -106,9 +106,9 @@ PreferentialAttachment<CFG,WEIGHT>::PreferentialAttachment(XMLNodeReader& _node,
 //this is backward support for function call from other class
 //to be cleaned
 template <class CFG, class WEIGHT>
-PreferentialAttachment<CFG,WEIGHT>::PreferentialAttachment(int _k) : 
-  ConnectionMethod<CFG,WEIGHT>() { 
-    this->SetName("PreferentialAttachment"); 
+PreferentialAttachment<CFG,WEIGHT>::PreferentialAttachment(int _k) :
+  ConnectionMethod<CFG,WEIGHT>() {
+    this->SetName("PreferentialAttachment");
     m_k = _k;
     m_fail = _k;
     m_unconnected = false;
@@ -117,9 +117,9 @@ PreferentialAttachment<CFG,WEIGHT>::PreferentialAttachment(int _k) :
   }
 
 template <class CFG, class WEIGHT>
-PreferentialAttachment<CFG,WEIGHT>::PreferentialAttachment(int _k, int _m) : 
-  ConnectionMethod<CFG,WEIGHT>() { 
-    this->SetName("PreferentialAttachment"); 
+PreferentialAttachment<CFG,WEIGHT>::PreferentialAttachment(int _k, int _m) :
+  ConnectionMethod<CFG,WEIGHT>() {
+    this->SetName("PreferentialAttachment");
     m_k = _k;
     m_fail = _m;
     m_unconnected = false;
@@ -129,11 +129,11 @@ PreferentialAttachment<CFG,WEIGHT>::PreferentialAttachment(int _k, int _m) :
 
 
 template <class CFG, class WEIGHT>
-PreferentialAttachment<CFG,WEIGHT>::~PreferentialAttachment() { 
+PreferentialAttachment<CFG,WEIGHT>::~PreferentialAttachment() {
 }
 
 template <class CFG, class WEIGHT>
-void PreferentialAttachment<CFG,WEIGHT>::ParseXML(XMLNodeReader& _node) { 
+void PreferentialAttachment<CFG,WEIGHT>::ParseXML(XMLNodeReader& _node) {
   m_checkIfSameCC = _node.boolXMLParameter("CheckIfSameCC",false,true,"If true, do not connect if edges are in the same CC");
   m_k = _node.numberXMLParameter("k", true, 0, 0, 10000, "k-value (max neighbors to find). k = 0 --> all-pairs");
   m_fail = _node.numberXMLParameter("fail", false, 5, 0, 10000, "amount of failed connections allowed before operation terminates");
@@ -149,22 +149,21 @@ void PreferentialAttachment<CFG,WEIGHT>::ParseXML(XMLNodeReader& _node) {
     } else {
       citr->warnUnknownNode();
     }
-  }                                
+  }
 
 }
 
 template <class CFG, class WEIGHT>
 void
-PreferentialAttachment<CFG, WEIGHT>::
-PrintOptions(ostream& _os){
-  ConnectionMethod<CFG,WEIGHT>::PrintOptions(_os);
+PreferentialAttachment<CFG, WEIGHT>::Print(ostream& _os) const {
+  ConnectionMethod<CFG,WEIGHT>::Print(_os);
   _os << "    " << this->GetName() << "::  k = ";
   _os << m_k << "  fail = " << m_fail ;
   _os << endl;
 }
 
 /**
- * This function connects the nodes between the InputIterators to 
+ * This function connects the nodes between the InputIterators to
  * themselves, using the following algorithm:
  *
  * func Preferential-K (V, k)
@@ -184,9 +183,9 @@ PrintOptions(ostream& _os){
  */
 template <class CFG, class WEIGHT>
 template<typename ColorMap, typename InputIterator, typename OutputIterator>
-void PreferentialAttachment<CFG,WEIGHT>::Connect(Roadmap<CFG, WEIGHT>* _rm, StatClass& _stats, 
+void PreferentialAttachment<CFG,WEIGHT>::Connect(Roadmap<CFG, WEIGHT>* _rm, StatClass& _stats,
     ColorMap& _cmap, InputIterator _itr1First, InputIterator _itr1Last,
-    InputIterator _itr2First, InputIterator _itr2Last, OutputIterator _collision){   
+    InputIterator _itr2First, InputIterator _itr2Last, OutputIterator _collision){
 
   vector<VID> inputVertices(_itr2First, _itr2Last);
   for(InputIterator itr1 = _itr1First; itr1 != _itr1Last; ++itr1){
@@ -222,7 +221,7 @@ void PreferentialAttachment<CFG,WEIGHT>::Connect(Roadmap<CFG, WEIGHT>* _rm, Stat
             break;
           }
         }
-      }  
+      }
       _stats.StopClock("kClosest");
     }
   }
@@ -234,23 +233,23 @@ void PreferentialAttachment<CFG,WEIGHT>::Connect(Roadmap<CFG, WEIGHT>* _rm, Stat
 
 template <class CFG, class WEIGHT>
 template <typename ColorMap, typename InputIterator, typename OutputIterator>
-void PreferentialAttachment<CFG,WEIGHT>::ConnectNeighbors(Roadmap<CFG, WEIGHT>* _rm, StatClass& _stats, 
-    ColorMap& _cmap, VID _vid, 
-    InputIterator _closestFirst, InputIterator _closestLast, 
-    OutputIterator _collision){ 
+void PreferentialAttachment<CFG,WEIGHT>::ConnectNeighbors(Roadmap<CFG, WEIGHT>* _rm, StatClass& _stats,
+    ColorMap& _cmap, VID _vid,
+    InputIterator _closestFirst, InputIterator _closestLast,
+    OutputIterator _collision){
   LPOutput<CFG,WEIGHT> lpOutput;
   shared_ptr<DistanceMetricMethod> dm = this->GetMPProblem()->GetDistanceMetric()->GetMethod(m_dm);
 
   typedef RoadmapGraph<CFG, WEIGHT> RoadmapGraphType;
   typedef pmpl_detail::GetCfg<RoadmapGraphType> GetCfg;
-  
+
   // connect the found k-closest to the current iteration's CFG
   for(typename vector<VID>::iterator itr2 = _closestFirst; itr2!= _closestLast; ++itr2) {
 
     if (m_debug) cout << "\t(s,f) = (" << m_totalSuccess << "," << m_totalFailure << ")";
     if (m_debug) cout << " | VID = " << *itr2;
     if (m_debug) cout << " | dist = " << dm->Distance(_rm->GetEnvironment(),
-        GetCfg()(_rm->m_pRoadmap, _vid), 
+        GetCfg()(_rm->m_pRoadmap, _vid),
         GetCfg()(_rm->m_pRoadmap, itr2));
 
     // don't attempt an edge between the same nodes
@@ -302,9 +301,9 @@ void PreferentialAttachment<CFG,WEIGHT>::ConnectNeighbors(Roadmap<CFG, WEIGHT>* 
     CfgType _col;
     if(this->GetMPProblem()->GetMPStrategy()->GetLocalPlanners()->GetMethod(this->m_lpMethod)->
         IsConnected(_rm->GetEnvironment(), _stats, dm,
-          GetCfg()(_rm->m_pRoadmap, _vid), 
-          GetCfg()(_rm->m_pRoadmap, itr2), 
-          _col, &lpOutput, this->m_connectionPosRes, this->m_connectionOriRes, 
+          GetCfg()(_rm->m_pRoadmap, _vid),
+          GetCfg()(_rm->m_pRoadmap, itr2),
+          _col, &lpOutput, this->m_connectionPosRes, this->m_connectionOriRes,
           (!this->m_addAllEdges) )){
       // if connection was made, add edge and record the successful connection
       if (m_debug) cout << " | connection was successful";

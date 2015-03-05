@@ -1,54 +1,45 @@
 #ifndef DMTESTSTRATEGY_H_
 #define DMTESTSTRATEGY_H_
 
-
 #include "MPStrategies/MPStrategyMethod.h"
-/*
-#include "MPProblem/MPProblem.h"
-#include "Roadmap.h"
-*/
 
 template <class MPTraits>
-class DMTestStrategy : public MPStrategyMethod<MPTraits>
-{
- public:
-  typedef typename MPTraits::MPProblemType::RoadmapType RoadmapType;
+class DMTestStrategy : public MPStrategyMethod<MPTraits> {
+  public:
+    typedef typename MPTraits::MPProblemType::RoadmapType RoadmapType;
 
-  DMTestStrategy();
-  DMTestStrategy(typename MPTraits::MPProblemType* _problem, XMLNodeReader& _node);
-  virtual ~DMTestStrategy();
+    DMTestStrategy();
+    DMTestStrategy(typename MPTraits::MPProblemType* _problem, XMLNodeReader& _node);
+    virtual ~DMTestStrategy();
 
-  virtual void ParseXML(XMLNodeReader& _node);
-  virtual void PrintOptions(ostream& _out);
+    virtual void ParseXML(XMLNodeReader& _node);
+    virtual void Print(ostream& _out) const;
 
-  virtual void Initialize(){}
-  virtual void Run();
-  virtual void Finalize(){}
+    virtual void Initialize(){}
+    virtual void Run();
+    virtual void Finalize(){}
 
- private:
-  string m_inputRoadmapFilename;
-  RoadmapType* m_rdmp;
-  string m_dmMethod;
-  size_t m_numToVerify;
+  private:
+    string m_inputRoadmapFilename;
+    RoadmapType* m_rdmp;
+    string m_dmMethod;
+    size_t m_numToVerify;
 };
 
 
 template <class MPTraits>
-DMTestStrategy<MPTraits>::
-DMTestStrategy()
- : MPStrategyMethod<MPTraits>()
-{
-  this->SetName("DMTest");
-}
+DMTestStrategy<MPTraits>::DMTestStrategy() : MPStrategyMethod<MPTraits>(),
+  m_rdmp(NULL), m_numToVerify(0) {
+    this->SetName("DMTest");
+  }
 
 template <class MPTraits>
 DMTestStrategy<MPTraits>::
 DMTestStrategy(typename MPTraits::MPProblemType* _problem, XMLNodeReader& _node)
- : MPStrategyMethod<MPTraits>(_problem, _node)
-{
-  this->SetName("DMTest");
-  ParseXML(_node);
-}
+  : MPStrategyMethod<MPTraits>(_problem, _node), m_rdmp(NULL) {
+    this->SetName("DMTest");
+    ParseXML(_node);
+  }
 
 template <class MPTraits>
 DMTestStrategy<MPTraits>::
@@ -68,11 +59,9 @@ ParseXML(XMLNodeReader& _node)
 
 template <class MPTraits>
 void
-DMTestStrategy<MPTraits>::
-PrintOptions(ostream& _out)
-{
-  _out << "DMTestStrategy ::  m_inputRoadmapFilename = \"" << m_inputRoadmapFilename 
-    << "\"\tm_dmMethod = " << m_dmMethod 
+DMTestStrategy<MPTraits>::Print(ostream& _out) const {
+  _out << "DMTestStrategy ::  m_inputRoadmapFilename = \"" << m_inputRoadmapFilename
+    << "\"\tm_dmMethod = " << m_dmMethod
     << "\tm_numToVerify = " << m_numToVerify << endl;
 }
 
@@ -87,7 +76,7 @@ void
 DMTestStrategy<MPTraits>::
 Run()
 {
-  PrintOptions(cout);
+  Print(cout);
 
   if(m_inputRoadmapFilename == "") {
     m_rdmp = this->GetMPProblem()->GetRoadmap();
@@ -101,25 +90,27 @@ Run()
   stats->StartClock("Distance Metric");
 
   typename MPTraits::MPProblemType::DistanceMetricPointer dm = this->GetMPProblem()->GetDistanceMetric(m_dmMethod);
-  dm->PrintOptions(cout);
+  dm->Print(cout);
   cout << endl;
 
-  vector<typename MPTraits::CfgType> nodes;
-  m_rdmp->GetGraph()->GetVerticesData(nodes);
-
-  m_numToVerify = min(m_numToVerify, nodes.size());
-  for(size_t i=0; i<m_numToVerify; ++i) {
+  size_t numVerified = 0;
+  typedef typename RoadmapType::GraphType GraphType;
+  GraphType* g = m_rdmp->GetGraph();
+  for(typename GraphType::VI vi = g->begin();
+      numVerified < m_numToVerify && vi != g->end();
+      ++vi, ++numVerified){
     stats->StartClock("Iteration");
-    cout << "testing distances to node " << i << ": " << nodes[i] << endl;
+    cout << "testing distances to node: " << g->GetVertex(vi) << endl;
     vector<pair<size_t, double> > d;
-    for(typename vector<typename MPTraits::CfgType>::iterator N = nodes.begin(); N != nodes.end(); ++N) {
-      d.push_back(make_pair(distance(nodes.begin(), N), dm->Distance(this->GetMPProblem()->GetEnvironment(), nodes[i], *N)));
+    for(typename GraphType::VI vi2 = g->begin(); vi2!=g->end(); ++vi2){
+      d.push_back(make_pair(distance(g->begin(), vi2),
+            dm->Distance(g->GetVertex(vi), g->GetVertex(vi2))));
       cout << "\t" << d.back().second << endl;
     }
     cout << endl;
     sort(d.begin(), d.end(), less_second());
     cout << "sorted indices:";
-    for(vector<pair<size_t, double> >::const_iterator D = d.begin(); D != d.end(); ++D) 
+    for(vector<pair<size_t, double> >::const_iterator D = d.begin(); D != d.end(); ++D)
       cout << " " << D->first;
     cout << endl;
     stats->StopPrintClock("Iteration", cout);
@@ -129,18 +120,19 @@ Run()
   cout << ":" << stats->GetSeconds("Distance Metric") << " sec (ie, " << stats->GetUSeconds("Distance Metric") << " usec)";
   cout << endl;
 
-  if(nodes.size() > 1) {
-    typename MPTraits::CfgType origin(nodes[0]);
-    typename MPTraits::CfgType c(nodes[1]);
-    cout << "\nScale Cfg: 1/2x\n\torigin = " << origin << "\n\tc = " << c << "\n\tscaled distance = " << dm->Distance(this->GetMPProblem()->GetEnvironment(), nodes[0], nodes[1]) * 0.5 << endl;
-    dm->ScaleCfg(this->GetMPProblem()->GetEnvironment(), dm->Distance(this->GetMPProblem()->GetEnvironment(), nodes[0], nodes[1]) * 0.5, origin, c);
-    cout << "\n\tc' = " << c << "\n\tnew distance = " << dm->Distance(this->GetMPProblem()->GetEnvironment(), origin, c) << endl;
-    origin = nodes[0];
-    c = nodes[1];
-    cout << "\nScale Cfg: 2x\n\torigin = " << origin << "\n\tc = " << c << "\n\tscaled distance = " << dm->Distance(this->GetMPProblem()->GetEnvironment(), nodes[0], nodes[1]) * 2 << endl;
-    dm->ScaleCfg(this->GetMPProblem()->GetEnvironment(), dm->Distance(this->GetMPProblem()->GetEnvironment(), nodes[0], nodes[1]) * 2, origin, c);
-    cout << "\n\tc' = " << c << "\n\tnew distance = " << dm->Distance(this->GetMPProblem()->GetEnvironment(), origin, c) << endl;
+  if(g->get_num_vertices() > 1) {
+    typename GraphType::VI vi = g->begin(), vi2 = vi+1;
+    typename MPTraits::CfgRef origin = g->GetVertex(vi);
+    typename MPTraits::CfgType c = g->GetVertex(vi2);
+    double dist = dm->Distance(origin, c);
+    cout << "\nScale Cfg: 1/2x\n\torigin = " << origin << "\n\tc = " << c << "\n\tscaled distance = " << dist * 0.5 << endl;
+    dm->ScaleCfg(dist * 0.5, c, origin);
+    cout << "\n\tc' = " << c << "\n\tnew distance = " << dm->Distance(origin, c) << endl;
+    c = g->GetVertex(vi2);
+    cout << "\nScale Cfg: 2x\n\torigin = " << origin << "\n\tc = " << c << "\n\tscaled distance = " << dist * 2 << endl;
+    dm->ScaleCfg(dist * 2, c, origin);
+    cout << "\n\tc' = " << c << "\n\tnew distance = " << dm->Distance(origin, c) << endl;
   }
 }
- 
+
 #endif

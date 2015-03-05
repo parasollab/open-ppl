@@ -3,6 +3,12 @@
 
 #include "MetricMethod.h"
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup Metrics
+/// @brief TODO.
+///
+/// TODO.
+////////////////////////////////////////////////////////////////////////////////
 template<class MPTraits>
 class CCDistanceMetric : public MetricMethod<MPTraits> {
   public:
@@ -15,7 +21,7 @@ class CCDistanceMetric : public MetricMethod<MPTraits> {
     CCDistanceMetric(MPProblemType* _problem, XMLNodeReader& _node);
     virtual ~CCDistanceMetric();
 
-    virtual void PrintOptions(ostream& _os);
+    virtual void Print(ostream& _os) const;
 
     double operator()();
 
@@ -42,22 +48,20 @@ CCDistanceMetric<MPTraits>::~CCDistanceMetric() {
 }
 
 template<class MPTraits>
-void 
-CCDistanceMetric<MPTraits>::PrintOptions(ostream& _os) {
+void
+CCDistanceMetric<MPTraits>::Print(ostream& _os) const {
   _os << "CC distance" << endl;
   _os << "\tdistance metric = " << m_dmLabel << endl;
 }
 
 template<class MPTraits>
-double 
+double
 CCDistanceMetric<MPTraits>::operator()() {
 
   vector<double> distance;
   double ccDistance;
   RoadmapType* rmap = this->GetMPProblem()->GetRoadmap();
   GraphType* pMap = rmap->GetGraph();
-
-  Environment* pEnv = this->GetMPProblem()->GetEnvironment();
 
   //get ccs
   vector<pair<size_t, VID> > ccs;
@@ -84,9 +88,9 @@ CCDistanceMetric<MPTraits>::operator()() {
       get_cc(*pMap, cmap, ccj->second, ccjVids);
 
       vector<pair<VID, VID> > pairs;
-      distance.push_back(this->GetMPProblem()->GetDistanceMetric(m_dmLabel)->Distance(pEnv,
-                                                                                 pMap->GetCfg(pairs[0].first),
-                                                                                 pMap->GetCfg(pairs[0].second)));
+      distance.push_back(this->GetMPProblem()->GetDistanceMetric(m_dmLabel)->Distance(
+                                                                                 pMap->GetVertex(pairs[0].first),
+                                                                                 pMap->GetVertex(pairs[0].second)));
     }
   }
   ccDistance = *(distance.begin());

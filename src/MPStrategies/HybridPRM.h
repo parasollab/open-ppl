@@ -9,9 +9,9 @@
 
 
 struct Visibility
-{ 
+{
   int attempts, connections;
-  
+
   Visibility(int a = 0, int c = 0) : attempts(a), connections(c) {}
   ~Visibility() {}
 
@@ -62,7 +62,7 @@ public:
 };
 
 
-class HybridPRM : public MPStrategyMethod 
+class HybridPRM : public MPStrategyMethod
 {
  public:
   HybridPRM(HContainer cont) : MPStrategyMethod(cont.parent) {
@@ -89,7 +89,7 @@ class HybridPRM : public MPStrategyMethod
   HybridPRM(XMLNodeReader& in_Node, MPProblem* in_pProblem);
   virtual ~HybridPRM();
 
-  virtual void PrintOptions(ostream& out_os);
+  virtual void Print(ostream& out_os) const;
   virtual void ParseXML(XMLNodeReader& in_Node);
 
    virtual void Initialize();
@@ -99,15 +99,15 @@ class HybridPRM : public MPStrategyMethod
   void initialize_weights_probabilities_costs();
   void copy_learned_prob_to_prob_use();
   void print_weights_probabilities_costs(ostream& _out);
-  
+
   string select_next_sampling_method(bool learning);
-  
+
   double compute_visibility_reward(string next_node_gen, double visibility, double threshold, int prev_cc_count, int curr_cc_count, NodeTypeCounts& node_types);
-  
+
   bool in_learning_window(int totalSamples) const;
-  
+
   void reward_and_update_weights_probabilities(string _method, double _rew,unsigned long int _cost);
-  
+
   //pair<unsigned int, unsigned int> ConnectionsWitnessToRoadmap(vector < CfgType > & witness_cfgs, Roadmap< CfgType, WeightType > *rdmp, Stat_Class&);
   //bool CanConnectComponents(vector < CfgType > & cc_a, vector < CfgType > & cc_b, Stat_Class&);
 
@@ -122,14 +122,14 @@ class HybridPRM : public MPStrategyMethod
   vector<string> m_evaluator_labels;
 
   map<string,double> m_node_gen_weights;
-  
+
   map<string,double> m_node_gen_probabilities;
   map<string,double> m_node_gen_probabilities_uniform;
   map<string,double> m_node_gen_probabilities_use;
   map<string,double> m_node_gen_probabilities_no_cost;
-  
+
   map<string, unsigned long int> m_node_gen_costs;
-  
+
   map<string,int> m_node_gen_num_sampled;
   map<string,int> m_node_gen_num_oversampled;
 

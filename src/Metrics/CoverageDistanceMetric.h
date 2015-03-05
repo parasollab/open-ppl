@@ -3,89 +3,81 @@
 
 #include "MetricMethod.h"
 
-template<class MPTraits>
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup Metrics
+/// @brief TODO.
+///
+/// TODO.
+////////////////////////////////////////////////////////////////////////////////
+template<class MPTraits, class Set>
 class CoverageDistanceMetric : public MetricMethod<MPTraits> {
   public:
     typedef typename MPTraits::CfgType CfgType;
     typedef typename MPTraits::WeightType WeightType;
     typedef typename MPTraits::MPProblemType MPProblemType;
-    typedef typename RoadmapGraph<CfgType, WeightType>::VID VID;
     typedef typename MPProblemType::RoadmapType RoadmapType;
+    typedef typename RoadmapType::VID VID;
 
-    CoverageDistanceMetric(string _dmLabel = "", string _fileName = "");
+    CoverageDistanceMetric(const Set& _samples = Set(), string _dmLabel = "", string _outFileName = "");
     CoverageDistanceMetric(MPProblemType* _problem, XMLNodeReader& _node);
     virtual ~CoverageDistanceMetric();
 
-    virtual void PrintOptions(ostream& _os);
+    virtual void Print(ostream& _os) const;
 
     double operator()();
 
   protected:
     //input
-    vector<CfgType> m_samples;
+    Set m_samples;
     string m_dmLabel, m_outFileName;
     ofstream output;
 };
 
-template<class MPTraits>
-CoverageDistanceMetric<MPTraits>::CoverageDistanceMetric(string _dmLabel, string _fileName) {
-  this->SetName("CoverageDistanceMetric");
-  m_dmLabel = _dmLabel;
-
-  if(_fileName != ""){
-    typedef typename MPProblemType::RoadmapType RoadmapType;
-    RoadmapType* covRdmp = this->GetMPProblem()->GetRoadmap();
-    m_samples.clear();
-    covRdmp->Read(_fileName.c_str());
-    covRdmp->GetGraph()->GetVerticesData(m_samples);
+template<class MPTraits, class Set>
+CoverageDistanceMetric<MPTraits, Set>::CoverageDistanceMetric(
+    const Set& _samples, string _dmLabel, string _outFileName)
+  : m_samples(_samples), m_dmLabel(_dmLabel), m_outFileName(_outFileName) {
+    this->SetName("CoverageDistanceMetric" + Set::GetName());
   }
-}
 
-template<class MPTraits>
-CoverageDistanceMetric<MPTraits>::CoverageDistanceMetric(MPProblemType* _problem, XMLNodeReader& _node)
-  : MetricMethod<MPTraits>(_problem, _node) {
+template<class MPTraits, class Set>
+CoverageDistanceMetric<MPTraits, Set>::CoverageDistanceMetric(MPProblemType* _problem, XMLNodeReader& _node)
+  : MetricMethod<MPTraits>(_problem, _node), m_samples(_node) {
 
-  this->SetName("CoverageDistanceMetric");
-  string coveragefilename = _node.stringXMLParameter("filename", true, "", "roadmap filename containing witness samples");
+  this->SetName("CoverageDistanceMetric" + Set::GetName());
   m_outFileName = _node.stringXMLParameter("outfilename", true, "", "filename for recording results");
   m_dmLabel = _node.stringXMLParameter("dmLabel", false, "default", "Distance Metric Method");
   output.open((m_outFileName+".coverage").c_str());
-  //read in samples
-  RoadmapType* covRdmp = this->GetMPProblem()->GetRoadmap();
-  m_samples.clear();
-  covRdmp->Read(coveragefilename.c_str());
-  covRdmp->GetGraph()->GetVerticesData(m_samples);
 }
 
-template<class MPTraits>
-CoverageDistanceMetric<MPTraits>::~CoverageDistanceMetric() {
+template<class MPTraits, class Set>
+CoverageDistanceMetric<MPTraits, Set>::~CoverageDistanceMetric() {
 }
 
-template<class MPTraits>
+template<class MPTraits, class Set>
 void
-CoverageDistanceMetric<MPTraits>::PrintOptions(ostream& _os) {
+CoverageDistanceMetric<MPTraits, Set>::Print(ostream& _os) const {
   _os << "Distance Metric:" << m_dmLabel<< endl;
   _os << "Coverage set size:" << m_samples.size() << endl;
 }
 
-template<class MPTraits>
+template<class MPTraits, class Set>
 double
-CoverageDistanceMetric<MPTraits>::operator()() {
-  Environment* env = this->GetMPProblem()->GetEnvironment();
+CoverageDistanceMetric<MPTraits, Set>::operator()() {
   unsigned int i;
   vector <double> disVec;
   //from each sample in the coverage set, distance to the nearest nodes in the roadmap is calculated
-  for(typename vector<CfgType>::iterator cfgit = m_samples.begin(); cfgit!=m_samples.end(); ++cfgit){
-    double distance;
-    vector<VID> kClosest;
-    BruteForceNF<MPTraits> bfnf(this->GetMPProblem(), m_dmLabel, "__CoverageDistanceMetricNF");
-    bfnf.KClosest(this->GetMPProblem()->GetRoadmap(), this->GetMPProblem()->GetRoadmap()->GetGraph()->descriptor_begin(), 
-                  this->GetMPProblem()->GetRoadmap()->GetGraph()->descriptor_end(), *cfgit, 1, 
-                  back_insert_iterator<vector<VID> >(kClosest));
-    CfgType nearest = this->GetMPProblem()->GetRoadmap()->GetGraph()->GetCfg(kClosest[0]);
-    distance = this->GetMPProblem()->GetDistanceMetric(m_dmLabel)->Distance(env, *cfgit, nearest);
-    disVec.push_back(distance);
-  } 
+  for(typename Set::Iterator i = m_samples.begin(); i!=m_samples.end(); ++i){
+    vector<pair<VID, double> > kClosest;
+    BruteForceNF<MPTraits> bfnf(m_dmLabel, false, 1);
+    bfnf.SetMPProblem(this->GetMPProblem());
+    bfnf.SetLabel("__CoverageDistanceMetricNF");
+    RoadmapType* rdmp = this->GetMPProblem()->GetRoadmap();
+    bfnf.FindNeighbors(rdmp, rdmp->GetGraph()->begin(), rdmp->GetGraph()->end(), *i, back_inserter(kClosest));
+    CfgType nearest = this->GetMPProblem()->GetRoadmap()->GetGraph()->GetVertex(kClosest[0].first);
+    //distance = this->GetMPProblem()->GetDistanceMetric(m_dmLabel)->Distance(env, *i, nearest);
+    disVec.push_back(kClosest[0].second);
+  }
   //average of distance vector and standard deviation is calculated
   double avgSum = 0, stdDev = 0.0;
   for(i = 0; i<disVec.size(); i++){

@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////////////////////
-/**@file GeneratePartitions.h
+/**GeneratePartitions.h
   *This set of classes supports Partitioning of Bounding Box into pieces.
   *Generate Partitions from existing bounding box.
   *
@@ -39,7 +39,7 @@ class FSPartitioningMethod {
   virtual void PrintValues(ostream& _os) = 0;
   virtual FSPartitioningMethod<CFG>* CreateCopy() = 0;
 
-  virtual vector<BoundingBox>  PlaceBoundaries(Environment* _env, 
+  virtual vector<BoundingBox>  PlaceBoundaries(Environment* _env,
 					       StatClass& Stats,
 					       BoundingBox &c_boundary,
 					       vector<CFG>& free_nodes,
@@ -52,7 +52,7 @@ class FSPartitioningMethod {
   int n_partitions; //number of partitions per region, by default 2.
 
   double epsilon; //overlap to leave between partitions
-  double percentage_p; // 
+  double percentage_p; //
  protected:
   double bNormalizeRanges;
 };
@@ -102,10 +102,10 @@ class RandomPartitioning: public FSPartitioningMethod<CFG> {
   virtual void PrintValues(ostream& _os);
   virtual FSPartitioningMethod<CFG>* CreateCopy();
 
-  virtual vector<BoundingBox> PlaceBoundaries(Environment* _env, 
+  virtual vector<BoundingBox> PlaceBoundaries(Environment* _env,
 					      StatClass& Stats,
 					      BoundingBox &c_boundary,
-					      vector<CFG>& free_nodes, 
+					      vector<CFG>& free_nodes,
 					      vector<CFG>& coll_nodes);
 
 };
@@ -144,7 +144,7 @@ PrintUsage(ostream& _os) {
 }
 
 template <class CFG>
-void 
+void
 RandomPartitioning<CFG>::
 PrintValues(ostream& _os) {
   _os << "\n" << GetName() << " ";
@@ -175,7 +175,7 @@ PlaceBoundaries(Environment* _env, StatClass& Stats,
 /*   cout << "Subdivision Strategy: Basic (random)" << endl; */
 /*   //int dims = 3; */
 
-  double epsilon; 
+  double epsilon;
   int tries = this->dims*5;
   int partition_par;
   double partition_point;
@@ -226,7 +226,7 @@ class GapPartitioning: public FSPartitioningMethod<CFG> {
   virtual void PrintValues(ostream& _os);
   virtual FSPartitioningMethod<CFG>* CreateCopy();
 
-  virtual vector<BoundingBox> PlaceBoundaries(Environment* _env, 
+  virtual vector<BoundingBox> PlaceBoundaries(Environment* _env,
 					      StatClass& Stats,
 					      BoundingBox &c_boundary,
 					      vector<CFG>& free_nodes,
@@ -271,7 +271,7 @@ PrintUsage(ostream& _os) {
 }
 
 template <class CFG>
-void 
+void
 GapPartitioning<CFG>::
 PrintValues(ostream& _os) {
   _os << "\n" << GetName() << " ";
@@ -293,7 +293,7 @@ PlaceBoundaries(Environment* _env, StatClass& Stats,
 		vector<CFG>& free_nodes,
 		vector<CFG>& coll_nodes) {
   BoundingBox *boundingBox = _env->GetBoundary();
-  double r_radius = 
+  double r_radius =
     _env->GetMultiBody( _env->GetRobotIndex() )->GetBody(0)->GetPolyhedron().m_maxRadius;
 
 
@@ -301,7 +301,7 @@ PlaceBoundaries(Environment* _env, StatClass& Stats,
     this->dims = boundingBox->GetDOFs();
 
   /* [ 3 bounding boxes divided on the dimention with the largest
-       gap between values.  
+       gap between values.
         left box will be from start of dim to (gap start - eps).
         center box will be from (gap start - 2eps) to (gap start + gap + 2eps)
         right box will be from (gap start + gap + eps) to end of dim.
@@ -310,7 +310,7 @@ PlaceBoundaries(Environment* _env, StatClass& Stats,
 
   //cout << "Subdivision Strategy: Gap " << endl;
 
-  /*[ best_dim, gap_start, gap_width, i, cur_gap_start, cur_gap_width = 
+  /*[ best_dim, gap_start, gap_width, i, cur_gap_start, cur_gap_width =
       dimention on which to partition (with the largest gap),
       starting point for the largest gap (of all dim),
       width of the largest gap found (of all dim),
@@ -344,7 +344,7 @@ PlaceBoundaries(Environment* _env, StatClass& Stats,
 
 
       if( this->bNormalizeRanges ){
-        
+
 	// We are normalizing, so make the largest gap
 	// value a percentage of the total space for
 	// the current dimention (ie make the range 0.0 - 1.0)
@@ -392,17 +392,17 @@ PlaceBoundaries(Environment* _env, StatClass& Stats,
 
     // Dimention is ok if the width of the box is greater than 2 * robot
     //
-    bDimOk = ((boundingBox->GetRange(best_dim).second - boundingBox->GetRange(best_dim).first) > (2*r_radius)) 
+    bDimOk = ((boundingBox->GetRange(best_dim).second - boundingBox->GetRange(best_dim).first) > (2*r_radius))
                      ? true : false;
   }
 
-  
+
   // Print out the ndx of the best_dim's starting
   // boundry (in the bounding box vector)
   //
 
   //cout << " partition : " ;
-  
+
   int BoundNdx,
     CurBoxNdx,
     TotalBoxes= this->n_partitions;
@@ -492,12 +492,12 @@ PlaceBoundaries(Environment* _env, StatClass& Stats,
 
   // Verify the center box does not overlap existing boundries.
   //
-  if( cb[0] <= boundingBox->GetRange(best_dim).first ){ 
+  if( cb[0] <= boundingBox->GetRange(best_dim).first ){
     cb[0] = (gap_start - ((gap_start - lb[0]) * this->percentage_p ));
-  } 
-  if( cb[1] >= boundingBox->GetRange(best_dim).second ){ 
+  }
+  if( cb[1] >= boundingBox->GetRange(best_dim).second ){
     cb[1] = (gap_end   + ((rb[1] - gap_end ) * this->percentage_p ));
-  } 
+  }
 
   if( (best_dim >= 0) && (best_dim < 3) )
     {
@@ -552,7 +552,7 @@ PlaceBoundaries(Environment* _env, StatClass& Stats,
   vb.push_back(leftbox);
   vb.push_back(centerbox);
   vb.push_back(rightbox);
-  return vb; 
+  return vb;
 }
 
 
@@ -578,9 +578,9 @@ FindMaxGapForDim(int Dim, vector<CFG>& nodes, double &gap_width)
 
     // Loop through the dims until we find the requested..
     //
-    for( CurDim = 0, Dim_itr = NodeData.begin(); 
+    for( CurDim = 0, Dim_itr = NodeData.begin();
          CurDim < Dim && Dim_itr < NodeData.end(); CurDim++, ++Dim_itr ){ }
-    
+
     // if all is valid, save the value..
     //
     if( CurDim == Dim && Dim_itr != NodeData.end() )
@@ -588,7 +588,7 @@ FindMaxGapForDim(int Dim, vector<CFG>& nodes, double &gap_width)
       tmpset.push_back( *Dim_itr );
     }
   }
-  
+
   // Sort the vector of values (simple bubble sort)
   //
   for( itr = tmpset.begin(); itr < (tmpset.end()-1); ++itr )
@@ -617,7 +617,7 @@ FindMaxGapForDim(int Dim, vector<CFG>& nodes, double &gap_width)
     if( itr_2 < tmpset.end() )
     {
       curdist = fabs(*itr_2 - *itr);
-                                                                                
+
       if( curdist > hold_gap_width )
       {
         hold_gap_width = curdist;
@@ -646,10 +646,10 @@ class InformationGainPartitioning: public FSPartitioningMethod<CFG> {
   virtual void PrintValues(ostream& _os);
   virtual FSPartitioningMethod<CFG>* CreateCopy();
 
-  virtual vector<BoundingBox> PlaceBoundaries(Environment* _env, 
+  virtual vector<BoundingBox> PlaceBoundaries(Environment* _env,
 					      StatClass& Stats,
 					      BoundingBox &c_boundary,
-					      vector<CFG>& free_nodes, 
+					      vector<CFG>& free_nodes,
 					      vector<CFG>& coll_nodes);
 
   vector<double> ProjectToAxis( vector<CFG> nodes, int param );
@@ -697,7 +697,7 @@ PrintUsage(ostream& _os) {
 }
 
 template <class CFG>
-void 
+void
 InformationGainPartitioning<CFG>::
 PrintValues(ostream& _os) {
   _os << "\n" << GetName() << " ";
@@ -744,17 +744,17 @@ PlaceBoundaries(Environment* _env, StatClass& Stats,
   int partition_on_axis;
   double partition_point;
   double epsilon_save;
-  double r_radius = 
+  double r_radius =
     _env->GetMultiBody( _env->GetRobotIndex() )->GetBody(0)->GetPolyhedron().m_maxRadius;
   for(int i=0; i< ppoints_info_gain.size(); i++) {
-    if( i < 3 ) 
+    if( i < 3 )
       this->epsilon = r_radius;
     else
       this->epsilon = 0.15; //orientation angle...not sure what it should be
     bool attempt = true;
     double v1 = boundingBox->GetRange(i).first;
     double v2 = boundingBox->GetRange(i).second;
-    if( fabs( v1 - ppoints_info_gain[i].first)<2*this->epsilon || 
+    if( fabs( v1 - ppoints_info_gain[i].first)<2*this->epsilon ||
 	fabs( v2 - ppoints_info_gain[i].first)<2*this->epsilon )
       attempt = false;
     if (attempt)
@@ -768,11 +768,11 @@ PlaceBoundaries(Environment* _env, StatClass& Stats,
     }
   }//end for i<ppoints
 
-   
+
   vector< BoundingBox* > partitions;
-  
+
   if( !found ) {
-    // output error	
+    // output error
 
     partitions.push_back( boundingBox );
     this->DisplayDetails(p_type, boundingBox->GetDOFs(), this->dims, 1);
@@ -783,7 +783,7 @@ PlaceBoundaries(Environment* _env, StatClass& Stats,
     //int partition_on_axis =
     //Environment * env = _rm->GetEnvironment();
     //vector<double> ndboundingBox = env->GetNDBoundingBox(0);
-    r_radius = 
+    r_radius =
       _env->GetMultiBody( _env->GetRobotIndex() )->GetBody(0)->GetPolyhedron().m_maxRadius;
     int x;
     x = boundingBox->GetDOFs();
@@ -896,9 +896,9 @@ FindPartitionPoints( vector<double> proj_free, vector<double> proj_coll) {
 	  if( min_free < min_coll ) {
 	    partition_points.push_back( (max_free+min_coll)/2 );
 	  }
-	}	
+	}
       }
-      else { // state doesn't change increment i_free 
+      else { // state doesn't change increment i_free
 	i_free++;
 	min_free = next_free;
 	if( i_free == proj_free.size()-1) {
@@ -918,7 +918,7 @@ FindPartitionPoints( vector<double> proj_free, vector<double> proj_coll) {
 	  if( min_coll < max_free ) {
 	    partition_points.push_back( (max_free+min_coll)/2 );
 	  }
-	}	
+	}
       }
       else {
 	i_coll++;
@@ -931,7 +931,7 @@ FindPartitionPoints( vector<double> proj_free, vector<double> proj_coll) {
       }
     }
 
-  }//end while 
+  }//end while
   return partition_points;
 
 }
@@ -989,7 +989,7 @@ EvaluatePartitionPoint(vector<double> partition_points, vector<double> proj_free
     if( (e_lt + e_gt) < smallest_entropy ) {
       smallest_entropy = e_lt + e_gt;
       partition_point = partition_points[i];
-      
+
     }
   }
   information_gain -= smallest_entropy;
@@ -999,7 +999,7 @@ EvaluatePartitionPoint(vector<double> partition_points, vector<double> proj_free
 
 
 
-template <class CFG> 
+template <class CFG>
 class PartitionCSpaceRegion {
  public:
   PartitionCSpaceRegion();
@@ -1013,11 +1013,11 @@ class PartitionCSpaceRegion {
   void PrintDefaults(ostream& _os);
 
   /**Generate nodes according to those in selected vector.
-   *@param _rm New created nodes will be added to this roadmap if addNodes@Map=true.
-   *@param nodes New created nodes are stored here.
+   *_rm New created nodes will be added to this roadmap if addNodes in Map=true.
+   *nodes New created nodes are stored here.
    */
   template <class WEIGHT>
-    vector<BoundingBox> PlaceBoundaries(MPRegion<CFG, WEIGHT> *region, 
+    vector<BoundingBox> PlaceBoundaries(MPRegion<CFG, WEIGHT> *region,
 					vector< vector<CFG> >& nodes);
 
   template <class WEIGHT>
@@ -1058,7 +1058,7 @@ PartitionCSpaceRegion<CFG>::
 }
 
 template <class CFG>
-vector<FSPartitioningMethod<CFG>*> 
+vector<FSPartitioningMethod<CFG>*>
 PartitionCSpaceRegion<CFG>::
 GetDefault() {
   vector<FSPartitioningMethod<CFG>*> Default;
@@ -1070,7 +1070,7 @@ GetDefault() {
 
 /*
 template <class CFG>
-int 
+int
 PartitionCSpaceRegion<CFG>::
 ReadCommandLine(str_param<char *> &partitionType) {
   typename vector<FSPartitioningMethod<CFG>*>::iterator I;
@@ -1079,19 +1079,19 @@ ReadCommandLine(str_param<char *> &partitionType) {
     delete *I;
   selected.clear();
 
-    
-  
+
+
   typename vector<FSPartitioningMethod<CFG>*>::iterator itr;
 
-  
+
   if (partitionType.IsActivated()) {
     std::istringstream _myistream(partitionType.GetValue());
 
     int argc = 0;
     char* argv[50];
-    char cmdFields[50][100]; 
+    char cmdFields[50][100];
     while ( _myistream >> cmdFields[argc] ) {
-      argv[argc] = (char*)(&cmdFields[argc]); 
+      argv[argc] = (char*)(&cmdFields[argc]);
       ++argc;
     }
 
@@ -1110,7 +1110,7 @@ ReadCommandLine(str_param<char *> &partitionType) {
 	    do {
 	      cmd_argv[cmd_argc] = &(*(argv[cmd_begin+cmd_argc]));
 	      cmd_argc++;
-	      
+
 	      typename vector<FSPartitioningMethod<CFG>*>::iterator itr_names;
 	      is_method_name = false;
 	      for (itr_names = all.begin(); itr_names != all.end() &&cmd_begin+cmd_argc < argc; itr_names++)
@@ -1118,18 +1118,18 @@ ReadCommandLine(str_param<char *> &partitionType) {
 		  is_method_name = true;
 		  break;
 		}
-	    } while (! is_method_name && cmd_begin+cmd_argc < argc);	  
+	    } while (! is_method_name && cmd_begin+cmd_argc < argc);
 
 	    // .. use the parser of the matching method
 	    (*itr)->ParseCommandLine(cmd_argc, cmd_argv);
-	    // .., set their parameters	
+	    // .., set their parameters
 / * 	    (*itr)->cdInfo = &cdInfo; * /
-	    //  and push it back into the list of selected methods.	  
-	    selected.push_back((*itr)->CreateCopy());	 
+	    //  and push it back into the list of selected methods.
+	    selected.push_back((*itr)->CreateCopy());
 	    (*itr)->SetDefault();
 	    found = true;
 	    break;
-	  } 
+	  }
 	}
 	if(!found)
 	  break;
@@ -1140,10 +1140,10 @@ ReadCommandLine(str_param<char *> &partitionType) {
     } catch (BadUsage) {
       cerr << "Command line error" << endl;
       PrintUsage(cerr);
-      exit(-1); 
+      exit(-1);
     }
   }
-  
+
   //when there was no method selected, use the default
   if(selected.size() == 0) {
     selected = PartitionCSpaceRegion<CFG>::GetDefault();
@@ -1158,7 +1158,7 @@ ReadCommandLine(str_param<char *> &partitionType) {
 */
 
 template <class CFG>
-void 
+void
 PartitionCSpaceRegion<CFG>::
 PrintUsage(ostream& _os) {
   typename vector<FSPartitioningMethod<CFG>*>::iterator I;
@@ -1168,7 +1168,7 @@ PrintUsage(ostream& _os) {
 
 
 template <class CFG>
-void 
+void
 PartitionCSpaceRegion<CFG>::
 PrintValues(ostream& _os) {
   typename vector<FSPartitioningMethod<CFG>*>::iterator I;
@@ -1191,9 +1191,9 @@ PrintDefaults(ostream& _os) {
 
 template <class CFG>
 template <class WEIGHT>
-vector<BoundingBox> 
+vector<BoundingBox>
 PartitionCSpaceRegion<CFG>::
-PlaceBoundaries(MPRegion<CFG, WEIGHT>* region, 
+PlaceBoundaries(MPRegion<CFG, WEIGHT>* region,
 		vector< vector<CFG> >& nodes) {
 
   cout << "------Starting Partitions-------" << endl;
@@ -1206,16 +1206,16 @@ PlaceBoundaries(MPRegion<CFG, WEIGHT>* region,
   cout << " CCS1 (size) " << ccs1.size() << endl;
   vector<CFG> free_nodes;
   for(typename vector< pair<size_t,VID> >::iterator itr=ccs1.begin(); itr<ccs1.end(); itr++) {
-    //free_nodes.push_back( region->m_pRoadmap->find_vertex((*itr).second).property() ); 
+    //free_nodes.push_back( region->m_pRoadmap->find_vertex((*itr).second).property() );
     //vector<CFG> tCfg;
     vector<VID> tCfg;
     CFG cc1Cfg = (*(region->roadmap.m_pRoadmap->find_vertex((*itr).second))).property();
     cmap.reset();
     get_cc(*(region->roadmap.m_pRoadmap), cmap, cc1Cfg,tCfg);
-    for(typename vector<VID>::iterator itr2=tCfg.begin();itr2 != tCfg.end(); itr2++) 
+    for(typename vector<VID>::iterator itr2=tCfg.begin();itr2 != tCfg.end(); itr2++)
       (*(free_nodes.push_back( region->roadmap.m_pRoadmap->find_vertex(*itr2))).property() );
   }
-  
+
   vector<CFG> coll_nodes;
   for(int i=0; i< nodes.size(); i++) {
     for(int j=0; j< nodes[i].size(); j++) {
@@ -1230,7 +1230,7 @@ PlaceBoundaries(MPRegion<CFG, WEIGHT>* region,
     StatClass Stats;
     Stats.StartClock((*itr)->GetName());
     cout<<"\n  "; Stats.PrintClock((*itr)->GetName()); cout << " " << flush;
-    
+
     subregion_boundaries = (*itr)->PlaceBoundaries(region->roadmap.GetEnvironment(), region->feature_stats, *(region->GetBoundingBox()), free_nodes, coll_nodes);
     Stats.StopClock((*itr)->GetName());
     cout << Stats.GetSeconds((*itr)->GetName()) << " sec  \n" << flush;
@@ -1249,11 +1249,11 @@ PartitionCSpaceRegion<CFG>::isSubdivide(MPRegion<CFG, WEIGHT> *region, int tree_
   if (tree_node_height >= maximum_tree_height)
     return false;
 
-  // if a planner has been assigned already, stop 
+  // if a planner has been assigned already, stop
   if (false)
     return false;
-  
-  // if the class of this region is the same as the class of the parent (and class is not "nonhomogeneous", stop    
+
+  // if the class of this region is the same as the class of the parent (and class is not "nonhomogeneous", stop
   if (false)
     return false;
 

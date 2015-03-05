@@ -21,7 +21,7 @@ Cfg_reach_cc::
 Cfg_reach_cc() : Cfg_free_tree() {
 }
 
-Cfg_reach_cc::Cfg_reach_cc(const Vector6D& base, 
+Cfg_reach_cc::Cfg_reach_cc(const Vector6D& base,
     const vector<double>& len, const vector<int>& ori) :
   link_lengths(len), link_orientations(ori) {
     m_v.clear();
@@ -95,7 +95,7 @@ initialize_link_tree(const char* filename) {
   link_tree->PrintTree(cout);
 }
 
-Cfg& 
+Cfg&
 Cfg_reach_cc::
 operator=(const Cfg& _c) {
   link_lengths = ((Cfg_reach_cc&)_c).link_lengths;
@@ -103,7 +103,7 @@ operator=(const Cfg& _c) {
   return Cfg::operator=(_c);
 }
 
-void 
+void
 Cfg_reach_cc::
 add(const Cfg& c1, const Cfg& c2) {
 
@@ -144,15 +144,15 @@ add(const Cfg& c1, const Cfg& c2) {
     if(  ((Cfg_reach_cc&)c1).link_orientations[i] == ((Cfg_reach_cc&)c2).link_orientations[i] )
       link_orientations.push_back(  ( (Cfg_reach_cc&)c1).link_orientations[i] );
     else if ( ((Cfg_reach_cc&)c1).link_orientations[i]!=0)
-      link_orientations.push_back(  ( (Cfg_reach_cc&)c1).link_orientations[i] );   
-    else 
+      link_orientations.push_back(  ( (Cfg_reach_cc&)c1).link_orientations[i] );
+    else
       link_orientations.push_back(  ( (Cfg_reach_cc&)c2).link_orientations[i] );
   }
 
-  StoreData();  
+  StoreData();
 
 }
-void 
+void
 Cfg_reach_cc::
 subtract(const Cfg& c1, const Cfg& c2) {
   //cerr << "Warning, subtract not implemented yet\n";
@@ -196,10 +196,10 @@ subtract(const Cfg& c1, const Cfg& c2) {
    */
   link_orientations = ((Cfg_reach_cc&)c1).link_orientations;
 
-  StoreData();  
+  StoreData();
 }
 
-void 
+void
 Cfg_reach_cc::
 negative(const Cfg& c) {
   //cerr << "Warning, negative not implemented yet\n";
@@ -237,21 +237,21 @@ negative(const Cfg& c) {
   StoreData();
 }
 
-void 
+void
 Cfg_reach_cc::
 multiply(const Cfg&, double, bool _norm) {
   cerr << "Warning, multiply not implemented yet\n";
   exit(-1);
 }
 
-void 
+void
 Cfg_reach_cc::
 divide(const Cfg&, double) {
   cerr << "Warning, divide not implemented yet\n";
   exit(-1);
 }
 
-void 
+void
 Cfg_reach_cc::
 WeightedSum(const Cfg& c1, const Cfg& c2, double weight) {
   //check if the input weight parameter is between 0 and 1
@@ -273,7 +273,7 @@ WeightedSum(const Cfg& c1, const Cfg& c2, double weight) {
         cerr << "\tc1 = "; ((Cfg_reach_cc&)c1).print(cerr); cerr << endl;
         cerr << "\tc2 = "; ((Cfg_reach_cc&)c2).print(cerr); cerr << endl;
         exit(-1);
-      }  
+      }
     }
   }
 
@@ -310,17 +310,17 @@ WeightedSum(const Cfg& c1, const Cfg& c2, double weight) {
   StoreData();
 }
 
-void 
+void
 Cfg_reach_cc::
 c1_towards_c2(const Cfg& cfg1, const Cfg& cfg2, double d) {
   cerr << "Warning, c1_towards_c2 not implemented yet\n";
   exit(-1);
 }
 
-bool 
+bool
 Cfg_reach_cc::
-isWithinResolution(const Cfg &c, 
-    double positionRes, 
+isWithinResolution(const Cfg &c,
+    double positionRes,
     double orientationRes) const {
   //if orienation difference is 2 or -2, return false
   for(size_t i=0; i<link_orientations.size(); ++i)
@@ -332,7 +332,7 @@ isWithinResolution(const Cfg &c,
 }
 
 
-bool 
+bool
 Cfg_reach_cc::
 ConfigEnvironment(Environment* _env) const {
   Cfg_free_tree::ConfigEnvironment(_env);
@@ -345,7 +345,7 @@ ConfigEnvironment(Environment* _env) const {
   return true;
 }
 
-void 
+void
 Cfg_reach_cc::GetRandomCfgCenterOfMass(Environment* _env, shared_ptr<Boundary> _bb) {
   if(m_dof != m_numOfJoints) {
     Point3d p = _bb->GetRandomPoint();
@@ -414,18 +414,18 @@ GetRandomRay(double incr, Environment* env, shared_ptr<DistanceMetricMethod> dm,
 
   }
 
-  // dm->ScaleCfg(env, incr, origin, tick);
+  // dm->ScaleCfg(incr, tick, origin);
   *this=tick;
 
 }
 
 
-Vector3D Cfg_reach_cc::GetRobotCenterofMass(Environment* env) const {
+Vector3d Cfg_reach_cc::GetRobotCenterofMass(Environment* env) const {
  cerr << "Warning, GetRobotCenterofMass not implemented yet\n";
   exit(-1);
 }
 
-void 
+void
 Cfg_reach_cc::
 Increment(const Cfg& _increment) {
   //cout << "DEBUG::Cfg_reach_cc::Increment\n";
@@ -452,27 +452,27 @@ Increment(const Cfg& _increment) {
       m_v[i] += _v[i];
   transform(link_lengths.begin(), link_lengths.end(),
       ((Cfg_reach_cc&)_increment).link_lengths.begin(),
-      link_lengths.begin(), 
+      link_lengths.begin(),
       plus<double>());
   link_orientations = ((Cfg_reach_cc&)_increment).link_orientations;
 
   StoreData();
 }
 
-void 
+void
 Cfg_reach_cc::
 IncrementTowardsGoal(const Cfg &goal, const Cfg &increment) {
   cerr << "Warning, IncrementTowardsGoal not implemented yet\n";
   exit(-1);
 }
 
-void 
+void
 Cfg_reach_cc::
-FindIncrement(const Cfg& _start, const Cfg& _goal, int* n_ticks, 
+FindIncrement(const Cfg& _start, const Cfg& _goal, int* n_ticks,
     double positionRes, double orientationRes, double rd_res) {
   //length_diff = _start.link_lengths - _goal.link_lengths
   vector<double> length_diff;
-  transform(((Cfg_reach_cc&)_start).link_lengths.begin(), 
+  transform(((Cfg_reach_cc&)_start).link_lengths.begin(),
       ((Cfg_reach_cc&)_start).link_lengths.end(),
       ((Cfg_reach_cc&)_goal).link_lengths.begin(),
       back_insert_iterator<vector<double> >(length_diff),
@@ -493,7 +493,7 @@ FindIncrement(const Cfg& _start, const Cfg& _goal, int* n_ticks,
   FindIncrement(_start, _goal, *n_ticks);
 }
 
-void 
+void
 Cfg_reach_cc::
 FindIncrement(const Cfg& _start, const Cfg& _goal, int n_ticks) {
   vector<double> v_start = _start.GetData();
@@ -532,7 +532,7 @@ StoreData() {
   link_tree->ResetTree();
   link_tree->ImportTreeLinkLength(link_lengths, link_orientations, 0);
 
-  if(link_tree->CanRecursiveClose()) 
+  if(link_tree->CanRecursiveClose())
   {
     if(m_dof != m_numOfJoints)
       m_v.resize(6);
@@ -560,7 +560,7 @@ StoreData() {
 }
 
 
-bool 
+bool
 Cfg_reach_cc::
 GetIntermediate(const Cfg_reach_cc& c1,
     const Cfg_reach_cc& c2) {
@@ -569,7 +569,7 @@ GetIntermediate(const Cfg_reach_cc& c1,
   vector<Range> ranges;
   vector<double>::const_iterator L2 = c2.link_lengths.begin();
   for(vector<double>::const_iterator L1 = c1.link_lengths.begin();
-      L1 != c1.link_lengths.end(); ++L1, ++L2) 
+      L1 != c1.link_lengths.end(); ++L1, ++L2)
     ranges.push_back(Range(*L1, *L2));
   link_tree->ImportTreeLinkAvailableRange(ranges);
 
@@ -586,10 +586,10 @@ GetIntermediate(const Cfg_reach_cc& c1,
 
   //compute deterministic seed for local planning/sampling
   double len = 0.0;
-  for(size_t i=0; i<c1.link_lengths.size(); ++i) 
+  for(size_t i=0; i<c1.link_lengths.size(); ++i)
     len += c1.link_lengths[i]*(i+1)*(i+2) + c2.link_lengths[i]*(i+1)*(i+2);
   uint64_t seed = len +
-    accumulate(c1.link_orientations.begin(), c1.link_orientations.end(), 0) + 
+    accumulate(c1.link_orientations.begin(), c1.link_orientations.end(), 0) +
     accumulate(c2.link_orientations.begin(), c2.link_orientations.end(), 0);
   boost::rand48 generator(seed);
   boost::uniform_real<> distribution(0,1);
@@ -628,7 +628,7 @@ LengthDistance(const Cfg_reach_cc& c2) const {
 
 
   /*cout << "ranges:";
-    for(vector<Range>::const_iterator R = ranges.begin(); R != ranges.end(); ++R) 
+    for(vector<Range>::const_iterator R = ranges.begin(); R != ranges.end(); ++R)
     cout << " " << R->Size();
     cout << endl;*/
 
@@ -674,7 +674,7 @@ OrientationDistance(const Cfg_reach_cc& c2) const {
 
 ostream&
 Cfg_reach_cc::
-print(ostream& os) const 
+print(ostream& os) const
 {
   os << "\tv: ";
   copy(m_v.begin(), m_v.end(), ostream_iterator<double>(os, " "));
@@ -693,7 +693,7 @@ print(ostream& os) const
 
 ostream&
 Cfg_reach_cc::
-print_base(ostream& os) const 
+print_base(ostream& os) const
 {
   copy(m_v.begin(), m_v.begin()+6, ostream_iterator<double>(os, " "));
   return os;
@@ -701,7 +701,7 @@ print_base(ostream& os) const
 
 ostream&
 Cfg_reach_cc::
-print_len(ostream& os) const 
+print_len(ostream& os) const
 {
   copy(link_lengths.begin(), link_lengths.end(), ostream_iterator<double>(os, " "));
   return os;
@@ -709,7 +709,7 @@ print_len(ostream& os) const
 
 ostream&
 Cfg_reach_cc::
-print_ori(ostream& os) const 
+print_ori(ostream& os) const
 {
   copy(link_orientations.begin(), link_orientations.end(), ostream_iterator<int>(os, " "));
   return os;
@@ -743,7 +743,7 @@ void ClosedChainStrategy::Solve(){
   cout << "Sampling " << num_iterations << " configurations...\n";
   double sampling_time = 0.0, collision_time;
   int attempts = 0;
-  //MultiBody mb; 
+  //MultiBody mb;
   //boost::shared_ptr<MultiBody> subsetOfRobot;
   for(int count = 0; count < num_iterations; ++count){
     bool colliding = true;
@@ -753,24 +753,24 @@ void ClosedChainStrategy::Solve(){
         gamma = drand48();
       //cout << "\tgamma = " << gamma << "...\n";
 
-      //sample closed cfg  
-      bool bSampleSucceeded = false;  
-      Clock_Class GenClock;  
-      GenClock.StartClock("Node generation");  
-      while(!bSampleSucceeded)  
-      {  
+      //sample closed cfg
+      bool bSampleSucceeded = false;
+      Clock_Class GenClock;
+      GenClock.StartClock("Node generation");
+      while(!bSampleSucceeded)
+      {
         attempts++;
 
-        //re-initialize cfg  
-        for(size_t i=0; i<CCProblem->g_loopRoots.size(); ++i)  
-          CCProblem->g_loopRoots[i]->ResetTree();  
+        //re-initialize cfg
+        for(size_t i=0; i<CCProblem->g_loopRoots.size(); ++i)
+          CCProblem->g_loopRoots[i]->ResetTree();
         CCProblem->ConfigBase(CCProblem->GetEnvironment());
         //ConfigEnvironment(&env);
-         
-        bSampleSucceeded = true;  
-        for(size_t i=0; i< CCProblem->g_loopRoots.size(); ++i)  
-        {      
-          //sample closed loop 
+
+        bSampleSucceeded = true;
+        for(size_t i=0; i< CCProblem->g_loopRoots.size(); ++i)
+        {
+          //sample closed loop
 
           //set ear constraint
           double ear_length = 0;
@@ -785,7 +785,7 @@ void ClosedChainStrategy::Solve(){
             cout << "\tear_joint2: " << ear_joint2.first << "," << ear_joint2.second << "," << ear_joint2.third << endl;
             * //
 
-            Vector3D joint1, joint2;
+            Vector3d joint1, joint2;
             {
             //note, following assumes link orientated along x-axis for longest length
             //get world coords for joint1.second
@@ -793,13 +793,13 @@ void ClosedChainStrategy::Solve(){
             //cout << "\tjoint1_bbox1:\n";
             //for_each(joint1_bbox1.vertexList, joint1_bbox1.vertexList + joint1_bbox1.numVertices, cout << boost::lambda::constant("\t\t") << boost::lambda::_1 << "\n");
 
-            Vector3D joint1_bbox1_endpoint1;
+            Vector3d joint1_bbox1_endpoint1;
             for(int j=0; j<4; ++j)
               joint1_bbox1_endpoint1 = joint1_bbox1_endpoint1 + joint1_bbox1.vertexList[j];
             joint1_bbox1_endpoint1 = joint1_bbox1_endpoint1 / 4;
             //cout << "\tjoint1_bbox1_endpoint1: " << joint1_bbox1_endpoint1 << endl;
 
-            Vector3D joint1_bbox1_endpoint2;
+            Vector3d joint1_bbox1_endpoint2;
             for(int j=4; j<8; ++j)
               joint1_bbox1_endpoint2 = joint1_bbox1_endpoint2 + joint1_bbox1.vertexList[j];
             joint1_bbox1_endpoint2 = joint1_bbox1_endpoint2 / 4;
@@ -809,24 +809,24 @@ void ClosedChainStrategy::Solve(){
             GMSPolyhedron& joint1_bbox2 = CCProblem->GetEnvironment()->GetMultiBody(CCProblem->GetEnvironment()->GetRobotIndex())->GetFreeBody(ear_joint1.third)->GetWorldBoundingBox();
             //cout << "\tjoint1_bbox2:\n";
             //for_each(joint1_bbox2.vertexList, joint1_bbox2.vertexList + joint1_bbox2.numVertices, cout << boost::lambda::constant("\t\t") << boost::lambda::_1 << "\n");
-            
-            Vector3D joint1_bbox2_endpoint1;
+
+            Vector3d joint1_bbox2_endpoint1;
             for(int j=0; j<4; ++j)
               joint1_bbox2_endpoint1 = joint1_bbox2_endpoint1 + joint1_bbox2.vertexList[j];
             joint1_bbox2_endpoint1 = joint1_bbox2_endpoint1 / 4;
             //cout << "\tjoint1_bbox2_endpoint1: " << joint1_bbox2_endpoint1 << endl;
 
-            Vector3D joint1_bbox2_endpoint2;
+            Vector3d joint1_bbox2_endpoint2;
             for(int j=4; j<8; ++j)
               joint1_bbox2_endpoint2 = joint1_bbox2_endpoint2 + joint1_bbox2.vertexList[j];
             joint1_bbox2_endpoint2 = joint1_bbox2_endpoint2 / 4;
             //cout << "\tjoint1_bbox2_endpoint2: " << joint1_bbox2_endpoint2 << endl;
 
             //find intersection coord
-            Vector3D a = joint1_bbox1_endpoint1 - joint1_bbox2_endpoint1;
-            Vector3D b = joint1_bbox1_endpoint1 - joint1_bbox2_endpoint2;
-            Vector3D c = joint1_bbox1_endpoint2 - joint1_bbox2_endpoint1;
-            Vector3D d = joint1_bbox1_endpoint2 - joint1_bbox2_endpoint2;
+            Vector3d a = joint1_bbox1_endpoint1 - joint1_bbox2_endpoint1;
+            Vector3d b = joint1_bbox1_endpoint1 - joint1_bbox2_endpoint2;
+            Vector3d c = joint1_bbox1_endpoint2 - joint1_bbox2_endpoint1;
+            Vector3d d = joint1_bbox1_endpoint2 - joint1_bbox2_endpoint2;
             //cout << "\t\ta: " << a << "\tb: " << b << "\tc: " << c << "\td: " << d << endl;
 
             if(a.magnitude() <= b.magnitude() && a.magnitude() <= c.magnitude() && a.magnitude() <= d.magnitude())
@@ -847,14 +847,14 @@ void ClosedChainStrategy::Solve(){
 	      GMSPolyhedron& joint2_bbox1 = CCProblem->GetEnvironment()->GetMultiBody(CCProblem->GetEnvironment()->GetRobotIndex())->GetFreeBody(ear_joint2.second)->GetWorldBoundingBox();
             //cout << "\tjoint2_bbox1:\n";
             //for_each(joint2_bbox1.vertexList, joint2_bbox1.vertexList + joint2_bbox1.numVertices, cout << boost::lambda::constant("\t\t") << boost::lambda::_1 << "\n");
-            
-            Vector3D joint2_bbox1_endpoint1;
+
+            Vector3d joint2_bbox1_endpoint1;
             for(int j=0; j<4; ++j)
               joint2_bbox1_endpoint1 = joint2_bbox1_endpoint1 + joint2_bbox1.vertexList[j];
             joint2_bbox1_endpoint1 = joint2_bbox1_endpoint1 / 4;
             //cout << "\tjoint2_bbox1_endpoint1: " << joint2_bbox1_endpoint1 << endl;
 
-            Vector3D joint2_bbox1_endpoint2;
+            Vector3d joint2_bbox1_endpoint2;
             for(int j=4; j<8; ++j)
               joint2_bbox1_endpoint2 = joint2_bbox1_endpoint2 + joint2_bbox1.vertexList[j];
             joint2_bbox1_endpoint2 = joint2_bbox1_endpoint2 / 4;
@@ -864,24 +864,24 @@ void ClosedChainStrategy::Solve(){
             GMSPolyhedron& joint2_bbox2 = CCProblem->GetEnvironment()->GetMultiBody(CCProblem->GetEnvironment()->GetRobotIndex())->GetFreeBody(ear_joint2.third)->GetWorldBoundingBox();
             //cout << "\tjoint2_bbox2:\n";
             //for_each(joint2_bbox2.vertexList, joint2_bbox2.vertexList + joint2_bbox2.numVertices, cout << boost::lambda::constant("\t\t") << boost::lambda::_1 << "\n");
-            
-            Vector3D joint2_bbox2_endpoint1;
+
+            Vector3d joint2_bbox2_endpoint1;
             for(int j=0; j<4; ++j)
               joint2_bbox2_endpoint1 = joint2_bbox2_endpoint1 + joint2_bbox2.vertexList[j];
             joint2_bbox2_endpoint1 = joint2_bbox2_endpoint1 / 4;
             //cout << "\tjoint2_bbox2_endpoint1: " << joint2_bbox2_endpoint1 << endl;
 
-            Vector3D joint2_bbox2_endpoint2;
+            Vector3d joint2_bbox2_endpoint2;
             for(int j=4; j<8; ++j)
               joint2_bbox2_endpoint2 = joint2_bbox2_endpoint2 + joint2_bbox2.vertexList[j];
             joint2_bbox2_endpoint2 = joint2_bbox2_endpoint2 / 4;
             //cout << "\tjoint2_bbox2_endpoint2: " << joint2_bbox2_endpoint2 << endl;
 
             //find intersection coord
-            Vector3D a = joint2_bbox1_endpoint1 - joint2_bbox2_endpoint1;
-            Vector3D b = joint2_bbox1_endpoint1 - joint2_bbox2_endpoint2;
-            Vector3D c = joint2_bbox1_endpoint2 - joint2_bbox2_endpoint1;
-            Vector3D d = joint2_bbox1_endpoint2 - joint2_bbox2_endpoint2;
+            Vector3d a = joint2_bbox1_endpoint1 - joint2_bbox2_endpoint1;
+            Vector3d b = joint2_bbox1_endpoint1 - joint2_bbox2_endpoint2;
+            Vector3d c = joint2_bbox1_endpoint2 - joint2_bbox2_endpoint1;
+            Vector3d d = joint2_bbox1_endpoint2 - joint2_bbox2_endpoint2;
             //cout << "\t\ta: " << a << "\tb: " << b << "\tc: " << c << "\td: " << d << endl;
 
             if(a.magnitude() <= b.magnitude() && a.magnitude() <= c.magnitude() && a.magnitude() <= d.magnitude())
@@ -903,19 +903,19 @@ void ClosedChainStrategy::Solve(){
           //cout << "\tsetting length: " << ear_length << "\tfor link " << g_ear_roots[i]->GetID() << endl;
           //g_ear_roots[i]->SetAvailableRange(Range(ear_length, ear_length));
 
-          //cout << "Attempting to sample loop rooted at " << g_loopRoots[i]->GetID() << "...\n";  
-          //cout << "Attempting to sample loop rooted at " << g_ear_roots[i]->GetID() << "...\n";  
-          //if(!g_loopRoots[i]->RecursiveSample(0, true, gamma))  
+          //cout << "Attempting to sample loop rooted at " << g_loopRoots[i]->GetID() << "...\n";
+          //cout << "Attempting to sample loop rooted at " << g_ear_roots[i]->GetID() << "...\n";
+          //if(!g_loopRoots[i]->RecursiveSample(0, true, gamma))
           if(!CCProblem->g_ear_roots[i]->RecursiveSample(ear_length, true, gamma))
-          {  
-            cout << "\tCan't close loop " << i << "!\n";  
-            bSampleSucceeded = false;  
-            break;  
+          {
+            cout << "\tCan't close loop " << i << "!\n";
+            bSampleSucceeded = false;
+            break;
           } else {
             //ConfigEar(&env, g_loopRoots[i]);
             //cout << "configuring successfully sampled ear\n";
             CCProblem->ConfigEar(CCProblem->GetEnvironment(), CCProblem->g_ear_roots[i], CCProblem->g_loopRoots[i]);
-	  
+
             // *
             {
               for(int e=0; e<=i; ++e)
@@ -939,7 +939,7 @@ void ClosedChainStrategy::Solve(){
 	    //for(vector<int>::iterator iter = actual_ear_links.begin(); iter<actual_ear_links.end(); iter++){
 	    //cout<<"here "<<actual_ear_links.back()<<"_"<<<num_bodies<<endl;
 	    for(size_t l=0; l<actual_ear_links.back();  ++l){
-	   
+
 	      shared_ptr<FreeBody> freeBody = CCProblem->GetEnvironment()->GetMultiBody(CCProblem->GetEnvironment()->GetRobotIndex()).get()->GetFreeBody(l);
 	      subsetOfRobot.get()->AddBody(freeBody);
 	    }
@@ -949,13 +949,13 @@ void ClosedChainStrategy::Solve(){
 	    colliding = CCProblem->GetCollisionDetection()->IsInCollision(CCProblem->GetEnvironment(), Stats, _cdInfo, subsetOfRobot, true, &CallName);
 	    //colliding=false;//debugging code
             //reset num free bodies
-      
+
 	    // *
 	    if(i<CCProblem->g_loopRoots.size()-1){
 	      colliding=false;
 	    }
 	    * //
-	       
+
             //CCProblem->GetEnvironment()->GetMultiBody(CCProblem->GetEnvironment()->GetRobotIndex())->SetFreeBodyCount(num_bodies);
 
             CollisionClock.StopClock();
@@ -963,16 +963,16 @@ void ClosedChainStrategy::Solve(){
 	    //if(i<CCProblem->g_loopRoots.size()){
 	    //  colliding=false;//debugging code
 	    //}
-       
+
 
             if(colliding){
               bSampleSucceeded = false;
               break;
             }
-           
+
           }
 	  //cout<<"end for loop"<<endl;
-        }  
+        }
 	//cout<<"out for loop"<<endl;
       }
       //cout<<"sample succeded"<<endl;
@@ -983,32 +983,32 @@ void ClosedChainStrategy::Solve(){
         g_loopRoots[i]->ImportTreeLinkLength(input_lengths[count][i], input_convexities[count][i]);
       }
       * //
-    
-      //export lengths/convexities  
-      vector<vector<double> > lengths;  
-      vector<vector<int> >  convexities;  
-      for(size_t i=0; i<CCProblem->g_loopRoots.size(); ++i)  
-      {  
-        vector<double> l;  
-        vector<int> c;  
-        CCProblem->g_loopRoots[i]->ExportTreeLinkLength(l, c);  
-        lengths.push_back(l);  
-        convexities.push_back(c);  
+
+      //export lengths/convexities
+      vector<vector<double> > lengths;
+      vector<vector<int> >  convexities;
+      for(size_t i=0; i<CCProblem->g_loopRoots.size(); ++i)
+      {
+        vector<double> l;
+        vector<int> c;
+        CCProblem->g_loopRoots[i]->ExportTreeLinkLength(l, c);
+        lengths.push_back(l);
+        convexities.push_back(c);
       }
-      GenClock.StopClock();  
+      GenClock.StopClock();
       sampling_time += GenClock.GetClock_SEC();
 
-      //output sampled cfg  
+      //output sampled cfg
       // *
-      for(size_t i=0; i<g_loopRoots.size(); ++i)  
-      {  
-        cout << "Tree " << i << endl;  
-        cout << "length of tree "<< i <<  ":" << endl;  
-        copy(lengths[i].begin(), lengths[i].end(), ostream_iterator<double>(cout, " "));  
-        cout << endl;  
-        cout << "convexities of tree "<< i <<  ":" << endl;  
-        copy(convexities[i].begin(), convexities[i].end(), ostream_iterator<double>(cout, " "));  
-        cout << endl;  
+      for(size_t i=0; i<g_loopRoots.size(); ++i)
+      {
+        cout << "Tree " << i << endl;
+        cout << "length of tree "<< i <<  ":" << endl;
+        copy(lengths[i].begin(), lengths[i].end(), ostream_iterator<double>(cout, " "));
+        cout << endl;
+        cout << "convexities of tree "<< i <<  ":" << endl;
+        copy(convexities[i].begin(), convexities[i].end(), ostream_iterator<double>(cout, " "));
+        cout << endl;
       }
       PrintConfiguration(&env, cout); cout << endl;
       * //
@@ -1018,7 +1018,7 @@ void ClosedChainStrategy::Solve(){
       CollisionClock.StartClock("Collision check");
       //ConfigEnvironment(&env);
       string CallName = "RandomSample";
-     
+
       //colliding = CCProblem->GetCollisionDetection()->IsInCollision(CCProblem->GetEnvironment(), Stats, _cdInfo,  boost::shared_ptr<MultiBody>((MultiBody*)NULL), true, &CallName);
       //for(vector<int>::iterator iter = actual_ear_links.begin(); iter<actual_ear_links.end(); iter++){
       boost::shared_ptr<MultiBody> subsetOfRobot =  boost::shared_ptr<MultiBody>(new MultiBody());
@@ -1028,32 +1028,32 @@ void ClosedChainStrategy::Solve(){
 	subsetOfRobot.get()->AddBody(freeBody);
       }
       colliding = CCProblem->GetCollisionDetection()->IsInCollision(CCProblem->GetEnvironment(), Stats, _cdInfo, subsetOfRobot, true, &CallName);
-      
+
       colliding=false;
       CollisionClock.StopClock();
       collision_time += CollisionClock.GetClock_SEC();
-      
-       
+
+
     }
     // *
-    //output sampled cfg  
-    for(size_t i=0; i<g_loopRoots.size(); ++i)  
-    {  
-      vector<double> l;  
-      vector<int> c;  
-      g_loopRoots[i]->ExportTreeLinkLength(l, c);  
-      
-      cout << "Tree " << i << endl;  
-      cout << "length of tree "<< i <<  ":" << endl;  
-      copy(l.begin(), l.end(), ostream_iterator<double>(cout, " "));  
-      cout << endl;  
-      cout << "convexities of tree "<< i <<  ":" << endl;  
-      copy(c.begin(), c.end(), ostream_iterator<double>(cout, " "));  
-      cout << endl;  
+    //output sampled cfg
+    for(size_t i=0; i<g_loopRoots.size(); ++i)
+    {
+      vector<double> l;
+      vector<int> c;
+      g_loopRoots[i]->ExportTreeLinkLength(l, c);
+
+      cout << "Tree " << i << endl;
+      cout << "length of tree "<< i <<  ":" << endl;
+      copy(l.begin(), l.end(), ostream_iterator<double>(cout, " "));
+      cout << endl;
+      cout << "convexities of tree "<< i <<  ":" << endl;
+      copy(c.begin(), c.end(), ostream_iterator<double>(cout, " "));
+      cout << endl;
     }
     * //
     CCProblem->PrintConfiguration(CCProblem->GetEnvironment(), cout);
-	  
+
   }
   cout << "Total sampling time: " << sampling_time << endl;
   cout << "Total collision time: " << collision_time << endl;
@@ -1062,6 +1062,3 @@ void ClosedChainStrategy::Solve(){
   //end move to solve function
 }
 */
-
-#endif
-

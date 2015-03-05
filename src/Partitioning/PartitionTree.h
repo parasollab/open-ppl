@@ -3,13 +3,13 @@
 
 #include "Roadmap.h"
 #include "CfgTypes.h"
-#include "PartitioningMethod.h" 
+#include "PartitioningMethod.h"
 
 extern double g_UAS_avgRegionStd;
 
 typedef RoadmapGraph<CfgType, WeightType>::VID VID;
 
-//general PartitionNode class to handle basic node relations such 
+//general PartitionNode class to handle basic node relations such
 //as parents and children
 class PartitionNode {
  public:
@@ -20,7 +20,7 @@ class PartitionNode {
    PartitionNode(PartitionNode *parent, vector<PartitionNode*> children);
    PartitionNode(PartitionNode &p);
    virtual ~PartitionNode(){}
-  
+
    void RemoveChild(PartitionNode *p);
 
    PartitionNode* GetParent(){return m_Parent;}
@@ -41,8 +41,8 @@ class PartitionNode {
    vector<PartitionNode*> m_Children;
 };
 
-//a internal node class which stores no data but has access 
-//to all of its children to compose the data to create a 
+//a internal node class which stores no data but has access
+//to all of its children to compose the data to create a
 //partition at this level
 class InternalPartitionNode : public PartitionNode {
  public:
@@ -51,7 +51,7 @@ class InternalPartitionNode : public PartitionNode {
    InternalPartitionNode(PartitionNode* parent, vector<PartitionNode*> children);
    virtual ~InternalPartitionNode(){}
 
-   //composes a new partition from getRDMP, getBB, and getVIDS 
+   //composes a new partition from getRDMP, getBB, and getVIDS
    //instead of storing the partition at this level of the tree
    virtual Partition* GetPartition();
 
@@ -60,8 +60,8 @@ class InternalPartitionNode : public PartitionNode {
 
    //calls all childrens getBB method to compose one big bounding volume
    virtual BoundingBox GetBoundingBox();
-  
-   //calls all childrens getVIDs method to compose one collection of 
+
+   //calls all childrens getVIDs method to compose one collection of
    //VID for this level of the partitio
    virtual vector<VID>* GetVIDs();
 };
@@ -83,7 +83,7 @@ class LeafPartitionNode : public PartitionNode {
    Partition* m_Partition;//all leaf nodes contain their partition which stores all the basic information
 };
 
-//controls access to the Partitions, and provides some basic 
+//controls access to the Partitions, and provides some basic
 //functionality for the tree
 class PartitionTree{
  public:

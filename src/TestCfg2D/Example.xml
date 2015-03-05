@@ -1,41 +1,34 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <MotionPlanning>
   <MPProblem>
-    <Environment input_env="narrow.env">
-      <robot Cfg_name="Cfg_2D" num_joints="0" pos_dof="2" dofs="2"> 
-        <boundary type="bbox" translational_scale="1">
-          <parameter id="0" label="x" type="translational" min="-15" max="15" />
-          <parameter id="1" label="y" type="translational" min="-15" max="15" />
-        </boundary>
-      </robot>
-    </Environment>
+    <Environment filename="narrow.env"/>
 
     <DistanceMetrics>
       <Euclidean label="euclidean"/>
-    </DistanceMetrics> 
+    </DistanceMetrics>
 
-    <ValidityCheckers>    
+    <ValidityCheckers>
       <CollisionDetection label="cd" method="RAPID" />
     </ValidityCheckers>
-    
+
     <NeighborhoodFinders>
-      <BruteForceNF label="BFNF" dmLabel="euclidean"/>
+      <BruteForceNF label="BFNF" dmLabel="euclidean" k="5"/>
     </NeighborhoodFinders>
-    
+
     <Samplers>
       <UniformRandomSampler label="UniformRandom" vcLabel="cd"/>
     </Samplers>
-    
+
     <Connectors>
-      <NeighborhoodConnector label="Closest" nf="BFNF" k="5" CheckIfSameCC="false" lp_method="sl" unconnected="true"/>
+      <NeighborhoodConnector label="Closest" nfLabel="BFNF" checkIfSameCC="false" lpLabel="sl"/>
       <NeighborhoodConnector label="QueryClosest" nf="BFNF" k="1" CheckIfSameCC="false" lp_method="sl" unconnected="true"/>
       <RRTConnect label="RRTConnect" nf="BFNF" delta="1.9" minDist="0.1" iterations="10000" lp_method="sl" vcLabel="cd" />
     </Connectors>
-    
+
     <LocalPlanners>
       <StraightLine label="sl" binaryEvaluation="true" vcLabel="cd"/>
     </LocalPlanners>
-    
+
     <MapEvaluators>
       <Query label="Query" queryFile="narrow.query" pathFile="RRT.123456.path" dmMethod="euclidean" lpMethod="sl"
         smooth="false" smoothFile="smooth.path" debug="false">
@@ -50,37 +43,34 @@
         <Evaluator label="Query"/>
       </ComposeEvaluator>
     </MapEvaluators>
-    
+
     <Metrics>
       <NumNodesMetric label="NumNodes" />
     </Metrics>
-    
-    <MPStrategies>  
-   
-      <!-- Basic PRM where num samples is based on Number -->
-      <BasicPRM label="PRM">
-        <node_generation_method Method="UniformRandom" Number="2" Attempts="10"/>
-        <node_connection_method Method="RRTConnect"/>
-        <!--component_connection_method Method="ConnectCCs"/-->
-        <evaluation_method Method="NodesPRM"/>
+
+    <MPStrategies>
+      <BasicPRM label="BasicPRM">
+        <Sampler method="UniformRandom" number="10" attempts="10"/>
+        <Connector method="Closest"/>
+        <Evaluator method="NodesEval"/>
       </BasicPRM>
 
- 
-    
-      <BlindRRT label="BlindRRT" delta="2.0" minDist="0.1" CCconnection="ClosestNode" expansionType="All" 
+
+
+      <BlindRRT label="BlindRRT" delta="2.0" minDist="0.1" CCconnection="ClosestNode" expansionType="All"
         samplerLabel="UniformRandomFree" lpLabel="sl" dmLabel="euclidean" initialSamples="200"
         nfLabel="BFNF" vcLabel="cd" connectorLabel="RRTConnect" query="narrow.query" debug="false" evaluateGoal="false">
 
         <Evaluator label="Query"/>
       </BlindRRT>
-      
+
       <BasicRRTStrategy label="RRT" delta="2.0" minDist="0.1"
         numRoots="1" m="1" growthFocus="0.01" samplerLabel="UniformRandomFree" lpLabel="sl" dmLabel="euclidean"
         nfLabel="BFNF" vcLabel="cd" connectorLabel="kClosest" query="narrow.query" gtype="UNDIRECTED_TREE" debug="false" evaluateGoal="false">
         <Evaluator label="NodesPRM"/>
       </BasicRRTStrategy>
 
-    
+
     </MPStrategies>
 
     <Solver mpStrategyLabel="BlindRRT" seed="123456" baseFilename="BlindRRT"/>

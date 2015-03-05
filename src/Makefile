@@ -26,12 +26,13 @@ ifndef STAPL_DIR
 endif
 
 ifndef STL_LIB
-  STL_LIB = 4.7.2
+  STL_LIB = 4.8.2
 endif
 
 ifndef ROBOT_DEF
   # define robot type
   ROBOT_DEF = PMPCfg
+  #ROBOT_DEF = PMPCfgMultiRobot
   #ROBOT_DEF = PMPCfgSurface
   #ROBOT_DEF = PMPSSSurfaceMult
   #ROBOT_DEF = PMPReachDistCC
@@ -48,26 +49,23 @@ INCL =  ${PMPL_INCL} ${UTILS_INCL} ${STAPL_INCL} ${BOOST_INCL} ${CGAL_INCL} ${MP
 LIBS =  ${PMPL_LIB} ${UTILS_LIB} ${MPNN_LIB} ${STAPL_LIB}
 
 # targets
-default_target: libs
+default_target: library
 
-utils: stapl_lib cd_libs xml_libs nn_libs mathtool_lib modelloader_lib kmeans_lib
-stapl_lib: ${STAPL_LIBFILE}
-cd_libs: ${CD_LIBFILE}
-xml_libs: ${XML_LIBFILE}
-nn_libs: ${MPNN_LIBFILE}
-mathtool_lib: ${MATHTOOL_LIBFILE}
-modelloader_lib: ${MODELLOADER_LIBFILE}
-kmeans_lib: ${KMEANS_LIBFILE}
+${PMPL_OBJS}: ${STAPL_LIBFILE} ${CD_LIBFILE} ${XML_LIBFILE} ${MPNN_LIBFILE} ${MODELLOADER_LIBFILE} ${KMEANS_LIBFILE}
 
-objs: utils ${PMPL_OBJS}
-
-libs: utils ${PMPL_LIBFILE}
-
-${PMPL_LIBFILE}: objs
+${PMPL_LIBFILE}: ${PMPL_OBJS}
 	${AR} ${PMPL_LIBFILE} ${PMPL_OBJS}
 
-%: main_%.cpp libs
-	${CXX} ${CXXFLAGS} ${OPTS} ${DEFS} ${INCL} $< ${LIBS} -o $@
+library: ${PMPL_LIBFILE}
+
+ifeq (${parallel}, 1)
+  MAIN = parallel_main.o
+else
+  MAIN = main.o
+endif
+
+pmpl: ${PMPL_LIBFILE} ${MAIN}
+	${CXX} ${CXXFLAGS} ${OPTS} ${MAIN} ${LIBS} -o $@
 
 %.o: %.cpp
 	@${MAKE} -s check_platform
@@ -77,11 +75,11 @@ ${PMPL_LIBFILE}: objs
 
 
 # clean targets
-CLEAN = pmpl
+CLEAN = ${PMPL_LIBFILE} ${MAIN} pmpl
 
 reallyclean:
 	@${MAKE} clean
-	rm -f *.a ${PMPL_OBJS} *.d
+	rm -f ${PMPL_OBJS} *.d
 	rm -f Dependencies
 	touch Dependencies
 

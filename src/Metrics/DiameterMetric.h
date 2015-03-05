@@ -2,8 +2,14 @@
 #define DIAMETERMETRIC_H
 
 #include "MetricMethod.h"
-#include <graph/algorithms/diameter.h>
+#include "containers/sequential/graph/algorithms/diameter.h"
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup Metrics
+/// @brief TODO.
+///
+/// TODO.
+////////////////////////////////////////////////////////////////////////////////
 template<class MPTraits>
 class DiameterMetric : public MetricMethod<MPTraits> {
   public:
@@ -17,7 +23,7 @@ class DiameterMetric : public MetricMethod<MPTraits> {
     DiameterMetric(MPProblemType* _problem, XMLNodeReader& _node);
     virtual ~DiameterMetric();
 
-    virtual void PrintOptions(ostream& _os);
+    virtual void Print(ostream& _os) const;
 
     double operator()();
 };
@@ -38,13 +44,13 @@ DiameterMetric<MPTraits>::~DiameterMetric() {
 }
 
 template<class MPTraits>
-void 
-DiameterMetric<MPTraits>::PrintOptions(ostream& _os) {
+void
+DiameterMetric<MPTraits>::Print(ostream& _os) const {
   _os << "CC diameter" << endl;
 }
 
 template<class MPTraits>
-double 
+double
 DiameterMetric<MPTraits>::operator()() {
 
   //vector<double> prev_diameter, new_diameter;
@@ -77,11 +83,11 @@ DiameterMetric<MPTraits>::operator()() {
     get_cc(*rgraph, cmap, CC->second, ccVIDs);
     for(v = ccVIDs.begin(); v != ccVIDs.end(); ++v)
       ccData.push_back((*(rgraph->find_vertex(*v))).property());
-#ifndef _PARALLEL    
+#ifndef _PARALLEL
     // Beware- this diameter is hop count (weight =1), proper fix is needed
     diameter.push_back(stapl::sequential::diameter(*rgraph, CC->second));
 #else
-    // TODO: this is to be implemented by STAPL team 
+    // TODO: this is to be implemented by STAPL team
     // diameter.push_back(stapl::diameter(*rgraph, CC->second));
 #endif
   }
