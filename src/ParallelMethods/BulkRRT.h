@@ -272,7 +272,7 @@ void BulkRRT<MPTraits>::Run() {
     while(condition== 0){
 
       CfgType root;
-      /*root.GetRandomCfg(env);
+      root.GetRandomCfg(env);
 
       if (root.InBoundary(env) &&
         vc->IsValid(root, env, *stat, cdInfo, &callee)){
@@ -286,9 +286,9 @@ void BulkRRT<MPTraits>::Run() {
     pMap->add_vertex(root);
 
   }
-  
+
   //pMap->add_vertex(1,root);
-  
+
   PrintValue("ROOT " , root);
   stapl::rmi_fence();
 

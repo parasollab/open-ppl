@@ -6,7 +6,6 @@
 #define RADIALRRT_H_
 
 #include "ParallelMethods/ParallelSBMPHeader.h"
-#include "MPProblem/MPTraits.h"
 #include "MPProblem/RoadmapGraph.h"
 #include "MapReduceNF.h"
 #include "RadialUtils.h"

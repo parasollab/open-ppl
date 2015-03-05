@@ -1,17 +1,11 @@
-/////////////////////////
-//Class BlindRRT
-////////////////////////
-
-#ifndef BLINDRRT_H_
-#define BLINDRRT_H_
+#ifndef BLIND_RRT_H_
+#define BLIND_RRT_H_
 
 #include "MPStrategyMethod.h"
-#include <boost/pointer_cast.hpp>
-#include "graph/algorithms/count_hop_pairs.h"
+
+#include "MapEvaluators/Query.h"
 #include "Utilities/MPUtils.h"
 #include "ParallelMethods/WorkFunctions/RadialUtils.h"
-/*#include "IOUtils.h"
-#include "MetricUtils.h"*/
 
 template<class MPTraits>
 class BlindRRT : public MPStrategyMethod<MPTraits> {
@@ -57,7 +51,7 @@ class BlindRRT : public MPStrategyMethod<MPTraits> {
     bool m_evaluateGoal;
     vector<CfgType> m_goals, m_roots;
     vector<size_t> m_goalsNotFound;
-    // how are the CCs are being connected: Centroid, Node? 
+    // how are the CCs are being connected: Centroid, Node?
     string m_CCconnection;
     // Num of iters blind rrt is ran before engaging in CC connection
     size_t m_initialSamples;
@@ -95,7 +89,7 @@ BlindRRT<MPTraits>::ParseXML(XMLNodeReader& _node) {
       string evalMethod = citr->stringXMLParameter("label", true, "", "Evaluation Method");
       m_evaluators.push_back(evalMethod);
       citr->warnUnrequestedAttributes();
-    } 
+    }
     else
       citr->warnUnknownNode();
   }
@@ -144,12 +138,11 @@ BlindRRT<MPTraits>::PrintOptions(ostream& _os) {
 //Initialization Phase
 /////////////////////
 template<class MPTraits>
-void 
+void
 BlindRRT<MPTraits>::Initialize(){
   if(this->m_debug) cout<<"\nInitializing BlindRRT::"<<endl;
   SRand(time(NULL));
   // Setup MP variables
-  StatClass* stats = this->GetMPProblem()->GetStatClass();
   Environment* env = this->GetMPProblem()->GetEnvironment();
   CDInfo cdInfo;
   string callee = "BlindRRT::RRT";
@@ -160,11 +153,11 @@ BlindRRT<MPTraits>::Initialize(){
     typedef typename vector<CfgType>::iterator CIT;
     for(CIT cit1 = queryCfgs.begin(), cit2 = cit1+1; cit2!=queryCfgs.end(); cit1++, cit2++){
       if (!this->GetMPProblem()->GetValidityChecker(m_vc)->
-          IsValid(*cit1, env, *stats, cdInfo, &callee)){
+          IsValid(*cit1, cdInfo, callee)){
       } else {
       }
       if (!this->GetMPProblem()->GetValidityChecker(m_vc)->
-          IsValid(*cit2, env, *stats, cdInfo, &callee)){
+          IsValid(*cit2, cdInfo, callee)){
       } else {
       }
 
@@ -176,8 +169,8 @@ BlindRRT<MPTraits>::Initialize(){
   else{
     // Add root vertex/vertices
     tmp.GetRandomCfg(env);
-    if (tmp.InBoundary(env)
-        && this->GetMPProblem()->GetValidityChecker(m_vc)->IsValid(tmp, env, *stats, cdInfo, &callee)){
+    if (env->InBounds(tmp)
+        && this->GetMPProblem()->GetValidityChecker(m_vc)->IsValid(tmp, cdInfo, callee)){
       m_roots.push_back(tmp);
       m_goals.push_back(tmp);
       m_goalsNotFound.push_back(1);
@@ -189,7 +182,7 @@ BlindRRT<MPTraits>::Initialize(){
   }
 
 
-  m_radialUtils = RadialUtils<MPTraits> (this->GetMPProblem(), NULL, m_dm, m_vc, 
+  m_radialUtils = RadialUtils<MPTraits> (this->GetMPProblem(), NULL, m_dm, m_vc,
       m_nf, m_CCconnection, m_delta, m_minDist, m_numCCIters, this->m_debug);
 
   if(this->m_debug) cout<<"\nEnding Initializing BlindRRT"<<endl;
@@ -203,7 +196,6 @@ void
 BlindRRT<MPTraits>::Run() {
   if(this->m_debug) cout << "\nRunning BlindRRT::" << endl;
 
-  RoadmapType* rdmp = this->GetMPProblem()->GetRoadmap();
   // Setup MP Variables
   StatClass* stats = this->GetMPProblem()->GetStatClass();
 
@@ -211,12 +203,13 @@ BlindRRT<MPTraits>::Run() {
 
   bool mapPassedEvaluation = false;
   size_t samples = 0;
-  
-  
+
+
   vector<VID> branch;
   // branch is used in RadialUtils to track the VIDs
   // it is also used in parallel so it is the best way to adapt
-  rdmp->GetGraph()->GetVerticesVID(branch);
+  //RoadmapType* rdmp = this->GetMPProblem()->GetRoadmap();
+  //rdmp->GetGraph()->GetVerticesVID(branch);
 
   while(!mapPassedEvaluation && samples < m_initialSamples){
     CfgType dir = SelectDir();
@@ -242,7 +235,7 @@ BlindRRT<MPTraits>::Run() {
   stats->StopClock("BlindRRT Generation");
   if(this->m_debug) {
     stats->PrintClock("BlindRRT Generation", cout);
-    cout<<"\nEnd Running BlindRRT::" << endl;  
+    cout<<"\nEnd Running BlindRRT::" << endl;
   }
 }
 
@@ -264,7 +257,7 @@ BlindRRT<MPTraits>::Finalize() {
     str = this->GetBaseFilename() + ".path";
     m_query->SetPathFile(str);
     if(m_evaluateGoal){
-      if(m_query->PerformQuery(this->GetMPProblem()->GetRoadmap(), *stats)){
+      if(m_query->PerformQuery(this->GetMPProblem()->GetRoadmap())){
         if(this->m_debug) cout << "Query successful! Output written to " << str << "." << endl;
       }
       else{
@@ -303,7 +296,7 @@ BlindRRT<MPTraits>::EvaluateGoals(){
   // Check if goals have been found
   for(vector<size_t>::iterator i = m_goalsNotFound.begin(); i!=m_goalsNotFound.end(); i++){
     vector<VID> closests;
-    nfp->KClosest(this->GetMPProblem()->GetRoadmap(), m_goals[*i], 1, back_inserter(closests));     
+    nfp->KClosest(this->GetMPProblem()->GetRoadmap(), m_goals[*i], 1, back_inserter(closests));
     CfgType& closest = this->GetMPProblem()->GetRoadmap()->GetGraph()->GetCfg(closests[0]);
     double dist = dmp->Distance(env, m_goals[*i], closest);
     if(this->m_debug) cout << "Distance to goal::" << dist << endl;
@@ -322,7 +315,7 @@ BlindRRT<MPTraits>::EvaluateGoals(){
 
 
 template<class MPTraits>
-typename MPTraits::CfgType 
+typename MPTraits::CfgType
 BlindRRT<MPTraits>::SelectDir(){
   Environment* env = this->GetMPProblem()->GetEnvironment();
   CfgType dir;

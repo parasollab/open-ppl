@@ -6,7 +6,6 @@
 #define MapReduceNF_H_
 
 
-#include "MPProblem/MPTraits.h"
 #include "ParallelMethods/ParallelSBMPHeader.h"
 #include <stapl/containers/graph/views/graph_view.hpp>
 // needed for proxy of pair specialization in reduce wf
@@ -15,7 +14,7 @@
 using namespace psbmp;
 using namespace stapl;
 
-/*   
+/*
      typedef RoadmapGraph<CfgType,WeightType> rGraph;
      typedef rGraph::vertex_iterator rGraphIterator;
      typedef graph_view<rGraph>  gviewType;
@@ -31,7 +30,7 @@ class NFMapFunc {
     typedef typename MPProblemType::DistanceMetricPointer DistanceMetricPointer;
     typedef pair<VID, double> NFType;
     typedef pair<pair<VID,CfgType>, double> NFType2;
-    typedef vector<NFType2> NFResultType; 
+    typedef vector<NFType2> NFResultType;
     typedef CfgType RegionType;
     MPProblemType* m_problem;
     CfgType m_cfg;
@@ -41,13 +40,13 @@ class NFMapFunc {
 
   public:
   typedef NFResultType result_type;
-    NFMapFunc(MPProblemType* _problem=NULL, CfgType _cfg = CfgType(), size_t _k=0, bool _radial=false, string _dmLabel=""): 
+    NFMapFunc(MPProblemType* _problem=NULL, CfgType _cfg = CfgType(), size_t _k=0, bool _radial=false, string _dmLabel=""):
       m_problem(_problem),m_cfg(_cfg), m_k(_k),m_radial(_radial), m_dmLabel(_dmLabel){
       }
 
     void define_type(stapl::typer& _t) {
       _t.member(m_problem);
-      _t.member(m_cfg); 
+      _t.member(m_cfg);
       _t.member(m_k);
       _t.member(m_radial);
     }
@@ -70,7 +69,7 @@ class NFMapFunc {
     template<typename InputIterator>
       vector<NFType>
       FindNeighbors(Environment* _env, DistanceMetricPointer _dmm,
-          InputIterator _input_first, InputIterator _input_last, CfgType  _cfg, 
+          InputIterator _input_first, InputIterator _input_last, CfgType  _cfg,
           int k, bool radial=false) {
         int max_index = 0;
         double max_value = MAX_DIST;
@@ -87,7 +86,7 @@ class NFMapFunc {
 
           double dist = _dmm->Distance(_env, _cfg, v1);
 
-          if(dist < closest[max_index].second) { 
+          if(dist < closest[max_index].second) {
             VID tmp = (*V1).descriptor();
             closest[max_index] = make_pair(tmp, dist);
             max_value = dist;
@@ -110,7 +109,7 @@ class NFMapFunc {
     template<typename InputIterator>
       vector<NFType2>
       FindNeighbor(Environment* _env, DistanceMetricPointer _dmm,
-          InputIterator _input_first, InputIterator _input_last, CfgType  _cfg, 
+          InputIterator _input_first, InputIterator _input_last, CfgType  _cfg,
           int k) {
         int max_index = 0;
         double max_value = MAX_DIST;
@@ -130,7 +129,7 @@ class NFMapFunc {
 
           double dist = _dmm->Distance(_env, _cfg, v1);
           //cout << "dist : " << dist << endl;
-          if(dist < closest[max_index].second) { 
+          if(dist < closest[max_index].second) {
             VID tmp = (*V1).descriptor();
             //closest[max_index] = make_pair(tmp, dist);
 	    //cout << "id : " << tmp << endl;
@@ -178,4 +177,4 @@ struct NFReduceFunc {
     }
 };
 
-#endif 
+#endif

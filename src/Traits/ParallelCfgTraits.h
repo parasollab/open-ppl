@@ -102,7 +102,7 @@
 //#include "MapEvaluators/LazyToggleQuery.h"
 //#include "MapEvaluators/NegateEvaluator.h"
 //#include "MapEvaluators/PrintMapEvaluation.h"
-//#include "MapEvaluators/Query.h"
+#include "MapEvaluators/Query.h"
 //#include "MapEvaluators/ReplanningEvaluation.h"
 //#include "MapEvaluators/TrueEvaluation.h"
 
@@ -123,9 +123,9 @@
 //#include "MPStrategies/VisibilityBasedPRM.h"
 #include "MPStrategies/BlindRRT.h"
 #include "ParallelMethods/BasicParallelPRM.h"
-#include "ParallelMethods/BulkRRT.h"
-#include "ParallelMethods/RadialBlindRRT.h"
-#include "ParallelMethods/RadialSubdivisionRRT.h"
+//#include "ParallelMethods/BulkRRT.h"
+//#include "ParallelMethods/RadialBlindRRT.h"
+//#include "ParallelMethods/RadialSubdivisionRRT.h"
 #include "ParallelMethods/RegularSubdivisionMethod.h"
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -301,11 +301,12 @@ struct MPTraits {
     //TogglePRMStrategy<MPTraits>,
     //UtilityGuidedGenerator<MPTraits>,
     //VisibilityBasedPRM<MPTraits>
+
     BasicParallelPRM<MPTraits>,
     BlindRRT<MPTraits>,
-    BulkRRT<MPTraits>,
-    RadialBlindRRT<MPTraits>,
-    RadialSubdivisionRRT<MPTraits>,
+    //BulkRRT<MPTraits>,
+    //RadialBlindRRT<MPTraits>,
+    //RadialSubdivisionRRT<MPTraits>,
     RegularSubdivisionMethod<MPTraits>
     > MPStrategyMethodList;
 };
