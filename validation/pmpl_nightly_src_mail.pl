@@ -14,8 +14,6 @@ use List::Util qw(min max);
 $outputdir = "/tmp/pmpl_nightly_logs";
 $cron_machine = "zenigata.cse.tamu.edu";
 $MAILTO = "OBPRM\@listserv.tamu.edu";
-$ENV{'PATH'}    = '/usr/local/bin/:/usr/X11R6/bin/:'.$ENV{'PATH'};
-$ENV{'DISPLAY'} = '';
 
 #
 # figure out time and date
@@ -130,7 +128,7 @@ sub get_error_code {
     foreach $i (@log) {
       if (
         ($i=~/failed/i) ||
-        ($i=~/E210002/) ||          #svn errors
+        #($i=~/E210002/) ||          #svn errors
         (($i=~/error/i) &&          #compile errors
           !($i=~/tinyxmlerror/) &&  #excluding...
           !($i=~/-Werror/) &&
