@@ -5,11 +5,11 @@ endif
 
 # set default debug
 ifndef debug
-  debug = 0
+  debug = 1
 endif
 
 ifndef parallel
-  parallel = 1
+  parallel = 0
 endif
 
 # set directory paths

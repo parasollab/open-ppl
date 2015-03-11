@@ -182,7 +182,7 @@ BlindRRT<MPTraits>::Initialize(){
   }
 
 
-  m_radialUtils = RadialUtils<MPTraits> (this->GetMPProblem(), NULL, m_dm, m_vc,
+  m_radialUtils = RadialUtils<MPTraits>(this->GetMPProblem(), NULL, m_dm, m_vc,
       m_nf, m_CCconnection, m_delta, m_minDist, m_numCCIters, this->m_debug);
 
   if(this->m_debug) cout<<"\nEnding Initializing BlindRRT"<<endl;

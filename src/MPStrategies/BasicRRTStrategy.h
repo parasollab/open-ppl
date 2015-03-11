@@ -1,12 +1,7 @@
-/////////////////////////
-//Class BasicRRTStrategy
-////////////////////////
-
-#ifndef BASICRRTSTRATEGY_H_
-#define BASICRRTSTRATEGY_H_
+#ifndef BASIC_RRT_STRATEGY_H_
+#define BASIC_RRT_STRATEGY_H_
 
 #include "MPStrategyMethod.h"
-#include "Extenders/BasicExtender.h"
 
 template<class MPTraits>
 class BasicRRTStrategy : public MPStrategyMethod<MPTraits> {
@@ -489,8 +484,6 @@ BasicRRTStrategy<MPTraits>::ExpandTree(CfgType& _dir){
   StatClass* expandStatClass = this->GetMPProblem()->GetStatClass();
   string expandClockName = "RRTExpand time ";
   expandStatClass->StartClock(expandClockName);
-  bool expanded = RRTExpand<MPTraits>(this->GetMPProblem(), m_vc, m_dm, nearest, _dir, newCfg,
-      m_delta, weight, cdInfo, env->GetPositionRes(), env->GetOrientationRes());
 
   vector<CfgType> intermediateNodes;
   if(!this->GetMPProblem()->GetExtender(m_extenderLabel)->Extend(nearest, _dir, newCfg, intermediateNodes)) {

@@ -4,6 +4,7 @@
 #include <iostream>
 #include <stdlib.h>
 
+#ifdef _PARALLEL
 #include <runtime.hpp>
 #include <stapl/algorithms/algorithm.hpp>
 #include <stapl/containers/array/array.hpp>
@@ -17,5 +18,6 @@
 #include <stapl/views/repeated_view.hpp>
 
 #include "ParallelSBMPUtils.h"
+#endif
 
 #endif

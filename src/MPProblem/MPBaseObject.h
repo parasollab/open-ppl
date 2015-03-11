@@ -130,11 +130,11 @@ class MPBaseObject {
     ////////////////////////////////////////////////////////////////////////////
     /// @param _e label
     /// @return Extender pointer
-    ExtenderPointer GetExtender(const string& _e) {return m_problem->GetLocalPlanner(_e);}
+    ExtenderPointer GetExtender(const string& _e) {return m_problem->GetExtender(_e);}
     ////////////////////////////////////////////////////////////////////////////
     /// @param _pm label
     /// @return PathModifier pointer
-    PathModifierPointer GetPathModifier(const string& _pm) {return m_problem->GetLocalPlanner(_pm);}
+    PathModifierPointer GetPathModifier(const string& _pm) {return m_problem->GetPathModifier(_pm);}
     ////////////////////////////////////////////////////////////////////////////
     /// @param _c label
     /// @return Connector pointer

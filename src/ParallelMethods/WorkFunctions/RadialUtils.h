@@ -190,17 +190,25 @@ class RadialUtils {
   // or graph
   void AddEdge(VID _vid1, VID _vid2, int _weight, vector<pair<VID, VID> >& _pendingEdges, vector<int>& _pendingWeights) {
 
-    if((_vid1 == 0 || _vid2 == 0) && stapl::get_location_id() != 0) {
+    if((_vid1 == 0 || _vid2 == 0)
+#ifdef _PARALLEL
+        && stapl::get_location_id() != 0
+#endif
+        ) {
       _pendingEdges.push_back(make_pair(_vid1,_vid2));
       _pendingWeights.push_back(_weight);
       return;
     }
 
     WeightType weight("RRTExpand", _weight);
-    /// m_problem->GetRoadmap()->GetGraph()->AddEdge(_vid1, _vid2, weights);
+    // m_problem->GetRoadmap()->GetGraph()->AddEdge(_vid1, _vid2, weights);
     GraphType* globalTree = m_problem->GetRoadmap()->GetGraph();
+#ifdef _PARALLEL
     globalTree->add_edge_async(_vid1, _vid2, weight);
     globalTree->add_edge_async(_vid2, _vid1, weight);
+#else
+    globalTree->AddEdge(_vid1, _vid2, weight);
+#endif
     m_localTree->add_edge(_vid1, _vid2);
     m_localTree->add_edge(_vid2, _vid1);
   }
@@ -210,21 +218,7 @@ class RadialUtils {
   ////////////////////////////
   // Used when we want to see the results on vizmo
   void AddEdgeDebug(VID _vid1, VID _vid2, CfgType _cfg1, CfgType _cfg2, int _weight, vector<pair<VID, VID> >& _pendingEdges, vector<int>& _pendingWeights) {
-
-    if((_vid1 == 0 || _vid2 == 0) && stapl::get_location_id() != 0) {
-      _pendingEdges.push_back(make_pair(_vid1,_vid2));
-      _pendingWeights.push_back(_weight);
-      return;
-    }
-
-    WeightType weight("RRTExpand", _weight);
-    /// m_problem->GetRoadmap()->GetGraph()->AddEdge(_vid1, _vid2, weights);
-    GraphType* globalTree = m_problem->GetRoadmap()->GetGraph();
-    globalTree->add_edge_async(_vid1, _vid2, weight);
-    globalTree->add_edge_async(_vid2, _vid1, weight);
-    m_localTree->add_edge(_vid1, _vid2);
-    m_localTree->add_edge(_vid2, _vid1);
-
+    AddEdge(_vid1, _vid2, _weight, _pendingEdges, _pendingWeights);
     VDAddEdge(_cfg1, _cfg2);
   }
 
@@ -447,7 +441,9 @@ class RadialUtils {
 
       }
       // We got a pair of CCs, attempt to Connect them!
+#ifdef _PARALLEL
       pConnection->SetLocalGraph(m_localTree);
+#endif
       pConnection->Connect(rdmp, *stats, colorMap, cc1.begin(), cc1.end(), cc2.begin(), cc2.end()) ;
 
       iters++;

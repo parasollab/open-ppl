@@ -250,10 +250,6 @@ class ConnectorMethod : public MPBaseObject<MPTraits> {
     /// caches.
     ////////////////////////////////////////////////////////////////////////////
     void AddConnectionAttempt(VID _v1, VID _v2, bool _b);
-    #ifdef _PARALLEL
-    void SetLocalGraph(SequentialGraphType* _localGraph) { m_localGraph = _localGraph;}
-    void SetRemoteGraph(SequentialGraphType* _remoteGraph) { m_remoteGraph = _remoteGraph;}
-    #endif
     ////////////////////////////////////////////////////////////////////////////
     /// @return Begin iterator of this iteration's attempts
     ////////////////////////////////////////////////////////////////////////////
@@ -283,13 +279,19 @@ class ConnectorMethod : public MPBaseObject<MPTraits> {
     ////////////////////////////////////////////////////////////////////////////
     void ClearConnectionAttempts() { m_attempts.clear(); }
 
+    #ifdef _PARALLEL
+    void SetLocalGraph(SequentialGraphType* _localGraph) { m_localGraph = _localGraph;}
+    void SetRemoteGraph(SequentialGraphType* _remoteGraph) { m_remoteGraph = _remoteGraph;}
+    #endif
+
   protected:
     ConnectionAttempts m_attempts; ///< Single iteration connection attempts. Attempt is a pair<VID, VID> (edge) and bool (success/fail)
     ConnectionAttemptsCache m_attemptsCache; ///< All time connection attempts. Attempt is a pair<VID, VID> (edge) and bool (success/fail)
     string  m_nfLabel; ///< Neighborhood Finder
     string  m_lpLabel; ///< Local Planner
     bool    m_addPartialEdge; ///< If failed attempt add partially validated portion of edge?
-    #ifdef _PARALLEL
+
+#ifdef _PARALLEL
     SequentialGraphType* m_localGraph;
     SequentialGraphType* m_remoteGraph;
     #endif

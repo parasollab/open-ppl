@@ -21,8 +21,8 @@
 
     <Connectors>
       <NeighborhoodConnector label="Closest" nfLabel="BFNF" checkIfSameCC="false" lpLabel="sl"/>
-      <NeighborhoodConnector label="QueryClosest" nf="BFNF" k="1" CheckIfSameCC="false" lp_method="sl" unconnected="true"/>
-      <RRTConnect label="RRTConnect" nf="BFNF" delta="1.9" minDist="0.1" iterations="10000" lp_method="sl" vcLabel="cd" />
+      <NeighborhoodConnector label="QueryClosest" nfLabel="BFNF" k="1" checkIfSameCC="false" lpLabel="sl"/>
+      <RRTConnect label="RRTConnect" nfLabel="BFNF" delta="1.9" minDist="0.1" iterations="10000" lp_method="sl" vcLabel="cd" />
     </Connectors>
 
     <LocalPlanners>
@@ -55,12 +55,9 @@
         <Evaluator method="NodesEval"/>
       </BasicPRM>
 
-
-
       <BlindRRT label="BlindRRT" delta="2.0" minDist="0.1" CCconnection="ClosestNode" expansionType="All"
         samplerLabel="UniformRandomFree" lpLabel="sl" dmLabel="euclidean" initialSamples="200"
         nfLabel="BFNF" vcLabel="cd" connectorLabel="RRTConnect" query="narrow.query" debug="false" evaluateGoal="false">
-
         <Evaluator label="Query"/>
       </BlindRRT>
 
@@ -69,11 +66,10 @@
         nfLabel="BFNF" vcLabel="cd" connectorLabel="kClosest" query="narrow.query" gtype="UNDIRECTED_TREE" debug="false" evaluateGoal="false">
         <Evaluator label="NodesPRM"/>
       </BasicRRTStrategy>
-
-
     </MPStrategies>
 
     <Solver mpStrategyLabel="BlindRRT" seed="123456" baseFilename="BlindRRT"/>
+
   </MPProblem>
 </MotionPlanning>
 
