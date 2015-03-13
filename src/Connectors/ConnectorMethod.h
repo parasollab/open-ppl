@@ -55,9 +55,9 @@ class ConnectorMethod : public MPBaseObject<MPTraits> {
     typedef typename MPProblemType::RoadmapType RoadmapType;
     typedef typename MPProblemType::VID VID;
     typedef typename MPTraits::WeightType WeightType;
-    #ifdef _PARALLEL
+    //#ifdef _PARALLEL
     typedef typename stapl::sequential::graph<stapl::DIRECTED, stapl::NONMULTIEDGES, CfgType,WeightType> SequentialGraphType;
-    #endif
+    //#endif
 
     ConnectorMethod(string _lpLabel = "", string _nfLabel = "");
     ConnectorMethod(MPProblemType* _problem, XMLNodeReader& _node);
@@ -279,10 +279,10 @@ class ConnectorMethod : public MPBaseObject<MPTraits> {
     ////////////////////////////////////////////////////////////////////////////
     void ClearConnectionAttempts() { m_attempts.clear(); }
 
-    #ifdef _PARALLEL
+    //#ifdef _PARALLEL
     void SetLocalGraph(SequentialGraphType* _localGraph) { m_localGraph = _localGraph;}
     void SetRemoteGraph(SequentialGraphType* _remoteGraph) { m_remoteGraph = _remoteGraph;}
-    #endif
+    //#endif
 
   protected:
     ConnectionAttempts m_attempts; ///< Single iteration connection attempts. Attempt is a pair<VID, VID> (edge) and bool (success/fail)
@@ -291,10 +291,10 @@ class ConnectorMethod : public MPBaseObject<MPTraits> {
     string  m_lpLabel; ///< Local Planner
     bool    m_addPartialEdge; ///< If failed attempt add partially validated portion of edge?
 
-#ifdef _PARALLEL
+    //#ifdef _PARALLEL
     SequentialGraphType* m_localGraph;
     SequentialGraphType* m_remoteGraph;
-    #endif
+    //#endif
 };
 
 template<class MPTraits>

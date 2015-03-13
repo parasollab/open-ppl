@@ -22,15 +22,20 @@
     <Connectors>
       <NeighborhoodConnector label="Closest" nfLabel="BFNF" checkIfSameCC="false" lpLabel="sl"/>
       <NeighborhoodConnector label="QueryClosest" nfLabel="BFNF" k="1" checkIfSameCC="false" lpLabel="sl"/>
-      <RRTConnect label="RRTConnect" nfLabel="BFNF" delta="1.9" minDist="0.1" iterations="10000" lp_method="sl" vcLabel="cd" />
+      <RRTConnect label="RRTConnect" nfLabel="BFNF" minDist="0.0" iterations="10000" lpLabel="sl" eLabel="BERO" />
     </Connectors>
 
     <LocalPlanners>
       <StraightLine label="sl" binaryEvaluation="true" vcLabel="cd"/>
     </LocalPlanners>
 
-    <MapEvaluators>
-      <Query label="Query" queryFile="narrow.query" pathFile="RRT.123456.path" dmMethod="euclidean" lpMethod="sl"
+    <Extenders>
+      <BasicExtender label="BERO" debug="false"
+        dmLabel="euclidean" vcLabel="cd" delta="10.0" randomOrientation="true"/>
+    </Extenders>
+
+      <MapEvaluators>
+      <Query label="Query" queryFile="narrow.query" pathFile="RRT.123456.path" dmLabel="euclidean" lpLabel="sl"
         smooth="false" smoothFile="smooth.path" debug="false">
         <NodeConnectionMethod method="QueryClosest"/>
         <SmoothConnectionMethod method="AllToAll"/>
@@ -55,16 +60,16 @@
         <Evaluator method="NodesEval"/>
       </BasicPRM>
 
-      <BlindRRT label="BlindRRT" delta="2.0" minDist="0.1" CCconnection="ClosestNode" expansionType="All"
-        samplerLabel="UniformRandomFree" lpLabel="sl" dmLabel="euclidean" initialSamples="200"
-        nfLabel="BFNF" vcLabel="cd" connectorLabel="RRTConnect" query="narrow.query" debug="false" evaluateGoal="false">
-        <Evaluator label="Query"/>
+      <BlindRRT label="BlindRRT" delta="2.0" minDist="0.1" CCconnection="NodeToNode"
+        lpLabel="sl" dmLabel="euclidean" initialSamples="200" ccIters="100"
+        nfLabel="BFNF" vcLabel="cd" connectorLabel="RRTConnect" query="narrow.query" debug="true" evaluateGoal="true">
       </BlindRRT>
 
       <BasicRRTStrategy label="RRT" delta="2.0" minDist="0.1"
-        numRoots="1" m="1" growthFocus="0.01" samplerLabel="UniformRandomFree" lpLabel="sl" dmLabel="euclidean"
-        nfLabel="BFNF" vcLabel="cd" connectorLabel="kClosest" query="narrow.query" gtype="UNDIRECTED_TREE" debug="false" evaluateGoal="false">
-        <Evaluator label="NodesPRM"/>
+        numRoots="1" m="1" growthFocus="0.01" lpLabel="sl" dmLabel="euclidean"
+        nfLabel="BFNF" vcLabel="cd" connectorLabel="kClosest" query="narrow.query"
+        gtype="UNDIRECTED_TREE" debug="false" evaluateGoal="false"
+        extenderLabel="BEVO">
       </BasicRRTStrategy>
     </MPStrategies>
 

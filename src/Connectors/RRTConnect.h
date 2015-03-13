@@ -120,11 +120,15 @@ Connect(RoadmapType* _rm, StatClass& _stats, ColorMap& _cmap,
       // Since expand goes until collision or goal is detected, we shouldnt iterate.
       connected = ExpandTree(newCfg, newVID, treeB, interTreeVID, interTreeCfg, true);
 
+      if(connected)
+        cout << "Connected" << endl;
     }
 
     // Switching trees
     swap(treeA, treeB);
     iter++;
+
+    cout << iter << endl;
   }
 
 }
@@ -166,6 +170,8 @@ ExpandTree(CfgType& _dir, const VID& _dirVID,
     return connected;
   }
 
+  cout << "Expanded??" << endl;
+
   if(dm->Distance(_newCfg, nearest) >= m_minDist) {
     // if _newCfg = Dir, we reached goal
     if (_newCfg == _dir && _interTree)  {  // this expansion is between trees
@@ -174,26 +180,24 @@ ExpandTree(CfgType& _dir, const VID& _dirVID,
     }
     else {
       _newVID = rdmp->GetGraph()->AddVertex(_newCfg);
-#ifdef _PARALLEL
-      this->m_localGraph->AddVertex(_newVID, _newCfg);
+//#ifdef _PARALLEL
+      this->m_localGraph->add_vertex(_newVID, _newCfg);
       if(this->m_debug) VDAddNode(_newCfg);
-#endif
+//#endif
     }
 
-    pair<WeightType, WeightType> weights = make_pair(WeightType("RRTConnect", weight), WeightType("RRTConnect", weight));
-
-#ifndef _PARALLEL
-    rdmp->GetGraph()->AddEdge(kClosest[0].first, _newVID, weights);
-#else
     WeightType weightT("RRTExpand", weight);
+#ifndef _PARALLEL
+    rdmp->GetGraph()->AddEdge(kClosest[0].first, _newVID, make_pair(weightT, weightT));
+#else
     GraphType* globalTree = rdmp->GetGraph();
     globalTree->add_edge_async(kClosest[0].first, _newVID, weightT);
     globalTree->add_edge_async(_newVID, kClosest[0].first, weightT);
 
+#endif
     this->m_localGraph->add_edge(kClosest[0].first, _newVID);
     this->m_localGraph->add_edge(_newVID, kClosest[0].first);
     if(this->m_debug) VDAddEdge(nearest, _newCfg);
-#endif
     _targetTree->push_back(_newVID);
   }
 

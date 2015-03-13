@@ -103,6 +103,7 @@ BlindRRT<MPTraits>::ParseXML(XMLNodeReader& _node) {
   m_nc = _node.stringXMLParameter("connectorLabel",false,"","Node Connection Method");
   m_CCconnection = _node.stringXMLParameter("CCconnection",true,"","CC connection strategy");
   m_initialSamples = _node.numberXMLParameter("initialSamples", true, 0, 0, MAX_INT, "Initial Sample size");
+  m_numCCIters = _node.numberXMLParameter("ccIters", true, 0, 0, MAX_INT, "ccIterations");
   m_evaluateGoal = _node.boolXMLParameter("evaluateGoal", false, false, "");
 
   //optionally read in a query and create a Query object.
@@ -141,7 +142,6 @@ template<class MPTraits>
 void
 BlindRRT<MPTraits>::Initialize(){
   if(this->m_debug) cout<<"\nInitializing BlindRRT::"<<endl;
-  SRand(time(NULL));
   // Setup MP variables
   Environment* env = this->GetMPProblem()->GetEnvironment();
   CDInfo cdInfo;
@@ -206,6 +206,9 @@ BlindRRT<MPTraits>::Run() {
 
 
   vector<VID> branch;
+  for(auto i : *this->GetMPProblem()->GetRoadmap()->GetGraph())
+    branch.push_back(i.descriptor());
+
   // branch is used in RadialUtils to track the VIDs
   // it is also used in parallel so it is the best way to adapt
   //RoadmapType* rdmp = this->GetMPProblem()->GetRoadmap();
@@ -226,11 +229,28 @@ BlindRRT<MPTraits>::Run() {
       cout << "RRT FOUND ALL GOALS" << endl;
   }
 
+  {
+    ofstream osMap("AfterExpansion.map");
+    this->GetMPProblem()->GetRoadmap()->Write(osMap, this->GetMPProblem()->GetEnvironment());
+    osMap.close();
+  }
+
+
   // Did we exit because we found a goal, or because we met the number of nodes?
   if((m_evaluateGoal && m_goalsNotFound.size() !=0) || !m_evaluateGoal) {
     // Get VALID CCs
     m_radialUtils.RemoveInvalidNodes(branch);
+  {
+    ofstream osMap("AfterRemoveInvalid.map");
+    this->GetMPProblem()->GetRoadmap()->Write(osMap, this->GetMPProblem()->GetEnvironment());
+    osMap.close();
+  }
     m_radialUtils.ConnectCCs();
+  {
+    ofstream osMap("AfterConnection.map");
+    this->GetMPProblem()->GetRoadmap()->Write(osMap, this->GetMPProblem()->GetEnvironment());
+    osMap.close();
+  }
   }
   stats->StopClock("BlindRRT Generation");
   if(this->m_debug) {
