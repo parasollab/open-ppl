@@ -41,7 +41,7 @@ class Roadmap {
 
     //Read graph information from roadmap file.
     void Read(string _filename);
-    void Write(ostream& _os, Environment* _env);
+    void Write(const string& _os, Environment* _env);
 
     //Append nodes and edges from one roadmap (_rdmp) into
     //another roadmap (to_rdmp)
@@ -106,23 +106,19 @@ Roadmap<MPTraits>::Read(string _filename) {
 
 template<class MPTraits>
 void
-Roadmap<MPTraits>::Write(ostream& _os, Environment* _env){
+Roadmap<MPTraits>::Write(const string& _filename, Environment* _env){
 
-  _os << "#####ENVFILESTART#####";
-  _os << endl << _env->GetEnvFileName();
-  _os << endl << "#####ENVFILESTOP#####";
-  _os << endl;
+  ofstream ofs(_filename);
+  ofs << "#####ENVFILESTART#####" << endl
+    << _env->GetEnvFileName() << endl
+    << "#####ENVFILESTOP#####" << endl;
 
 #ifndef _PARALLEL
-  stapl::sequential::write_graph(*m_graph, _os);         // writes verts & adj lists
+  stapl::sequential::write_graph(*m_graph, ofs);         // writes verts & adj lists
 #else
-  ///Below is the supposedly new interface in STAPL, need to revisit with STAPL team
-  //void write_PMPL_graph(GraphVw& g, std::string filename = "")
-    cerr << "ERROR::No map is written to file"<< endl;
-    cerr << "Reference this error on line "<< __LINE__ << " of file " << __FILE__ << endl;
-    exit(-1);
-  //stapl::(*m_graph,_os)
-  //stapl::write_graph(*m_graph, _os);
+  ofs.close();
+  stapl::graph_view<GraphType> gv(*m_graph);
+  write_PMPL_graph(gv, _filename);
 #endif
 }
 

@@ -1,14 +1,8 @@
-//////////////////////////////////
-//HEADER RadialSubdivisionRRT.h
-/////////////////////////////////
-
-#ifndef RADIALSUBDIVISIONRRT_H_
-#define RADIALSUBDIVISIONRRT_H_
+#ifndef RADIAL_SUBDIVISION_RRT_H_
+#define RADIAL_SUBDIVISION_RRT_H_
 
 #include "ParallelSBMPHeader.h"
 #include "WorkFunctions/RadialRRT.h"
-
-//typedef typename stapl::graph<stapl::DIRECTED, stapl::NONMULTIEDGES, RadialRegion, WeightType> RadialRegionGraph;
 
 template<class MPTraits>
 class RadialSubdivisionRRT : public MPStrategyMethod<MPTraits> {
@@ -57,7 +51,7 @@ class RadialSubdivisionRRT : public MPStrategyMethod<MPTraits> {
   protected:
     size_t m_numRegions, m_numNeighbors,m_numNodes,m_runs,m_numAttempts;
     double m_radius, m_delta,m_minDist;
-    string m_vcLabel, m_dmLabel, m_nfLabel, m_connectorLabel;
+    string m_vcLabel, m_dmLabel, m_nfLabel, m_eLabel, m_connectorLabel;
     bool m_strictBranching;
     double m_overlap;
     MPProblemType* m_problem;
@@ -89,7 +83,8 @@ void RadialSubdivisionRRT<MPTraits>::ParseXML(XMLNodeReader& _node){
       m_radius = citr->numberXMLParameter("rayLength", true, 0.0, 0.0, MAX_DBL, "Random Ray Length");
       m_numNeighbors = citr->numberXMLParameter("numNeighbors", true,1,0, MAX_INT, "Number of Adjacent Regions");
       citr->warnUnrequestedAttributes();
-    }else if(citr->getName() == "rrt_constr") {
+    }
+    else if(citr->getName() == "rrt_constr") {
       m_numNodes = citr->numberXMLParameter("numNodes", true, 1, 0, MAX_INT, "Number of samples per region");
       m_delta = citr->numberXMLParameter("delta", true, 0.0, 0.0, MAX_DBL, "Delta Variable for ExtendTree method");
       m_minDist = citr->numberXMLParameter("minDist", true, 0.0, 0.0, MAX_DBL, "Minimum Distance to see if new node is too close to closet cfg");
@@ -97,23 +92,33 @@ void RadialSubdivisionRRT<MPTraits>::ParseXML(XMLNodeReader& _node){
       m_strictBranching = citr->boolXMLParameter("strictBranching", true, false, "if true, root only has 'regions' number of edges");
       m_overlap = citr->numberXMLParameter("overlap", false, 0.0, 0.0, 0.99, "percentage of the overlap of regions");
       citr->warnUnrequestedAttributes();
-    }else if(citr->getName() == "num_runs") {
+    }
+    else if(citr->getName() == "num_runs") {
       m_runs = citr->numberXMLParameter(string("nRuns"), true,
           int(1), int(0), MAX_INT, string("Runs number"));
       citr->warnUnrequestedAttributes();
-    }else if (citr->getName() == "vc_method") {
+    }
+    else if (citr->getName() == "vc_method") {
       m_vcLabel = citr->stringXMLParameter("vcm", true,"", "Validity Checker Method");
       citr->warnUnrequestedAttributes();
-    }else if(citr->getName() == "connectionMethod") {
+    }
+    else if(citr->getName() == "connectionMethod") {
       m_connectorLabel = citr->stringXMLParameter("Label", true, "", "Region connection method");
       citr->warnUnrequestedAttributes();
-    }else if(citr->getName() == "dm_method") {
+    }
+    else if(citr->getName() == "dm_method") {
       m_dmLabel = citr->stringXMLParameter("Method", true, "", "Distance Metric method");
       citr->warnUnrequestedAttributes();
-    }else if(citr->getName() == "nf_method") {
+    }
+    else if(citr->getName() == "nf_method") {
       m_nfLabel = citr->stringXMLParameter("Method", true, "", "Neighborhood Finder method");
       citr->warnUnrequestedAttributes();
-    }else {
+    }
+    else if(citr->getName() == "e_method") {
+      m_eLabel = citr->stringXMLParameter("Method", true, "", "Extender method");
+      citr->warnUnrequestedAttributes();
+    }
+    else {
       citr->warnUnknownNode();
     }
   }
@@ -128,13 +133,14 @@ void RadialSubdivisionRRT<MPTraits>::Initialize() {
 ///Compute approximate ray lenght from boundary if not given by user
 template<class MPTraits>
 double RadialSubdivisionRRT<MPTraits>::ComputeRandomRayLength(Boundary& _cBoundary) {
-  double xrange = (_cBoundary.GetRange(0).second - _cBoundary.GetRange(0).first);
-  double yrange = (_cBoundary.GetRange(1).second - _cBoundary.GetRange(1).first);
-  double zrange = 0.0;
-  if (_cBoundary.GetPosDOFs() > 2)
-    zrange = (_cBoundary.GetRange(2).second - _cBoundary.GetRange(2).first);
-  double branges[] = {xrange,yrange,zrange};
-  return ((5*(*max_element(branges,branges+_cBoundary.GetPosDOFs()))));
+  //double xrange = (_cBoundary.GetRange(0).second - _cBoundary.GetRange(0).first);
+  //double yrange = (_cBoundary.GetRange(1).second - _cBoundary.GetRange(1).first);
+  //double zrange = 0.0;
+  //if (_cBoundary.GetPosDOFs() > 2)
+  //  zrange = (_cBoundary.GetRange(2).second - _cBoundary.GetRange(2).first);
+  //double branges[] = {xrange,yrange,zrange};
+  //return ((5*(*max_element(branges,branges+_cBoundary.GetPosDOFs()))));
+  return 2*_cBoundary.GetMaxDist();
 }
 
 template<class MPTraits>
@@ -146,12 +152,13 @@ RadialSubdivisionRRT<MPTraits>::RegionVertex (graph_view<RadialRegionGraph> _reg
   CfgType point = _root;
   point.GetRandomRay(m_radius, env, dmm);
 
-  if (_root.PosDOF() == 2) {
+  if(_root.PosDOF() == 2) {
     RadialRegionVertex2D<MPTraits> wf(m_numRegions,point,m_radius);
-    new_algorithms::for_each(_regionView,wf);
-  } else {
+    stapl::for_each(_regionView, wf);
+  }
+  else {
     RadialRegionVertex<MPTraits> wf(_problem, _root, m_radius, m_dmLabel);
-    new_algorithms::for_each(_regionView,wf);
+    stapl::for_each(_regionView, wf);
   }
 }
 
@@ -159,7 +166,7 @@ template<class MPTraits>
 void
 RadialSubdivisionRRT<MPTraits>::RegionEdge(graph_view<RadialRegionGraph> _regionView, MPProblemType* _problem) {
   RadialRegionEdge<MPTraits> wf(_problem,m_numRegions > m_numNeighbors ? m_numNeighbors : m_numRegions-1, m_dmLabel);
-  map_func(wf,_regionView,repeat_view(_regionView));
+  map_func(wf, _regionView, make_repeat_view(_regionView));
 }
 
 template<class MPTraits>
@@ -167,10 +174,10 @@ void
 RadialSubdivisionRRT<MPTraits>::BuildRRT(graph_view<RadialRegionGraph> _regionView,
     MPProblemType* _problem, CfgType _root) {
   // no expansion type or CCconnection labels required
-  BuildRadialRRT<MPTraits> wf(_problem,m_numNodes,m_dmLabel,m_vcLabel,m_nfLabel,m_delta,m_minDist,
+  BuildRadialRRT<MPTraits> wf(_problem,m_numNodes,m_dmLabel,m_vcLabel,m_nfLabel,m_eLabel,m_delta,m_minDist,
       _root,m_numAttempts, m_overlap, m_strictBranching);
 
-  new_algorithms::for_each(_regionView,wf);
+  stapl::for_each(_regionView,wf);
 }
 
 template<class MPTraits>
@@ -181,7 +188,7 @@ RadialSubdivisionRRT<MPTraits>::ConnectRegions(graph_view<RadialRegionGraph> _re
   ConnectorPointer pConnection;
   pConnection = _problem->GetConnector(m_connectorLabel);
   ConnectRegion<MPTraits> wf(_problem, pConnection);
-  map_func(wf, _regionView, repeat_view(_regionView));
+  map_func(wf, _regionView, make_repeat_view(_regionView));
 }
 
 template<class MPTraits>
@@ -196,7 +203,6 @@ void RadialSubdivisionRRT<MPTraits>::Run() {
   cout << "RadialSubdivisionRRT:: Run()" << endl;
   //Set up variables
   MPProblemType* problem = this->GetMPProblem();
-  StatClass* regionStats = problem->GetStatClass();
   Environment* env = problem->GetEnvironment();
 
   ///If random ray length is not given, then compute approximate value from given boundary
@@ -311,7 +317,7 @@ void RadialSubdivisionRRT<MPTraits>::Run() {
   rmi_fence();
   ///DEBUG
   cout << "Write Region Graph " << endl;
-  write_graph(regionView, "radialRegion.out");
+  write_adj_list(regionView, "radialRegion.out");
 
   rmi_fence();
 
@@ -320,19 +326,9 @@ void RadialSubdivisionRRT<MPTraits>::Run() {
 
 template<class MPTraits>
 void RadialSubdivisionRRT<MPTraits>::Finalize(){
-  string str;
   stringstream basefname;
-  MPProblemType* problem = this->GetMPProblem();
-
   basefname << this->GetBaseFilename();// << ".p" << stapl::get_num_locations() << ".r" << m_numRegions;
-  ofstream osMap((basefname.str() + ".map").c_str());
-  if(!osMap){
-    cout << "RadialSubdivisionRRT::Finalize(): can't open outfile: ";
-    exit(-1);
-  }else{
-    problem->GetRoadmap()->Write(osMap, this->GetMPProblem()->GetEnvironment());
-    osMap.close();
-  }
+  this->GetMPProblem()->GetRoadmap()->Write(basefname.str() + ".map", this->GetMPProblem()->GetEnvironment());
   stapl::rmi_fence();
   cout << "location [" << stapl::get_location_id() <<"] ALL FINISHED" << endl;
 }

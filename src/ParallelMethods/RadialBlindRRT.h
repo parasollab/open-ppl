@@ -49,8 +49,7 @@ class RadialBlindRRT : public RadialSubdivisionRRT<MPTraits> {
 
     void ConnectRegions(graph_view<RadialRegionGraph> _regionView, MPProblemType* _problem);
 
-    //void DeleteInvalid(graph_view<RadialRegionGraph> _regionView);
-    void DeleteInvalid(graph_view<GraphType> _regionView);
+    void DeleteInvalid(graph_view<GraphType> _graphView);
 
   protected:
     string m_CCconnection;
@@ -102,7 +101,7 @@ RadialBlindRRT<MPTraits>::BuildRRT(graph_view<RadialRegionGraph> _regionView,
 
   //  MPStrategyPointer strategy = this->GetMPProblem()->GetMPStrategy("BlindRRT");
   //  BuildRadialBlindRRT<MPTraits> wf(strategy, _root, m_radius, m_strictBranching, m_overlap);
-  new_algorithms::for_each(_regionView,wf);
+  stapl::for_each(_regionView,wf);
 }
 
 template<class MPTraits>
@@ -113,28 +112,18 @@ RadialBlindRRT<MPTraits>::ConnectRegions(graph_view<RadialRegionGraph> _regionVi
   ConnectorPointer pConnection;
   pConnection = _problem->GetConnector("RegionRRTConnect");
   ConnectGlobalCCs<MPTraits> wf(_problem, pConnection, this->m_debug);
-  map_func(wf, _regionView, repeat_view(_regionView));
+  map_func(wf, _regionView, make_repeat_view(_regionView));
 }
 
 template<class MPTraits>
 void
-//RadialBlindRRT<MPTraits>::DeleteInvalid(graph_view<RadialRegionGraph> _regionView) {
-RadialBlindRRT<MPTraits>::DeleteInvalid(graph_view<GraphType> _regionView) {
+RadialBlindRRT<MPTraits>::DeleteInvalid(graph_view<GraphType> _graphView) {
   /// COMPUTE CCs AND SET REGION CCs
-  typedef static_array<cc_color_property> property_storage_type;
-  //typedef graph_external_property_map<graph_view<RadialRegionGraph>, cc_color_property, property_storage_type> property_map_type;
-  typedef graph_external_property_map<graph_view<GraphType>, cc_color_property, property_storage_type> property_map_type;
 
-  ///TODO: proper fix by making cc_color_property derived from cfg class
-  /// and then use internal_property_map
-  GraphType* pMap = this->GetMPProblem()->GetRoadmap()->GetGraph();
-  property_storage_type prop_storage(2*pMap->num_vertices());
-  property_map_type     map(_regionView, &prop_storage);
-
-  connected_components(_regionView, map);
+  connected_components(_graphView);
   rmi_fence();
 
-  vector<pair<VID,size_t> > ccs = cc_stats(_regionView,map);
+  vector<pair<VID,size_t> > ccs = cc_stats(_graphView);
   rmi_fence();
 
   VID rootCC = 0;
@@ -144,10 +133,17 @@ RadialBlindRRT<MPTraits>::DeleteInvalid(graph_view<GraphType> _regionView) {
 
   for(int i=0; i<ccs.size(); i++) {
     if(ccs[i].first != rootCC) {
-      cc = stapl::map_reduce(is_in_cc<VID, property_map_type>(ccs[i].first, map), concat_vector_wf<VID>(), _regionView);
+      typedef static_array<vector<VID>> CC;
+      CC cc(get_num_locations());
+      array_view<CC> ccView(cc);
+      cc_stats(_graphView, ccs[i].first, ccView);
+
+      map_func(DeleteCC<VID>(), ccView, make_repeat_view(_graphView));
+      //properly delete all elements in array
+      /*cc = stapl::map_reduce(is_in_cc<VID, property_map_type>(ccs[i].first, map), concat_vector_wf<VID>(), _regionView);
       for(int j=0; j<cc.size(); j++) {
         pMap->delete_vertex(cc[j]);
-      }
+      }*/
     }
   }
 }
@@ -216,7 +212,6 @@ void RadialBlindRRT<MPTraits>::Run() {
   PrintOnce("STEP 4 CONNECT REGIONS (s) : ", t4.value());
 
   t5.start();
-  //DeleteInvalid(regionView);
   DeleteInvalid(graphView);
   t5.stop();
   rmi_fence();
@@ -295,29 +290,22 @@ void RadialBlindRRT<MPTraits>::Run() {
 
 
 template<class MPTraits>
-void RadialBlindRRT<MPTraits>::Finalize(){
-  string str;
+void
+RadialBlindRRT<MPTraits>::
+Finalize() {
   stringstream basefname;
-  MPProblemType* problem = this->GetMPProblem();
-
   //basefname << this->GetBaseFilename() << ".N" << this->m_numNodes << ".R" << this->m_numRegions << ".p" << get_num_locations() ;
   basefname << this->GetBaseFilename() ;
-  ofstream osMap((basefname.str() + ".map").c_str());
-  if(!osMap){
-    cout << "RadialBlindRRT::Finalize(): can't open outfile: ";
-    exit(-1);
-  }else{
-    problem->GetRoadmap()->Write(osMap, this->GetMPProblem()->GetEnvironment());
-    osMap.close();
-  }
+  this->GetMPProblem()->GetRoadmap()->
+    Write(basefname.str() + ".map", this->GetMPProblem()->GetEnvironment());
   stapl::rmi_fence();
   cout << "location [" << stapl::get_location_id() <<"] ALL FINISHED" << endl;
 }
 
 template<class MPTraits>
-void RadialBlindRRT<MPTraits>::PrintOptions(ostream& _os){
-  if(this->m_debug) _os << "RadialBlindRRT:: PrintOptions \n";
+void
+RadialBlindRRT<MPTraits>::
+PrintOptions(ostream& _os) {
 }
-
 
 #endif

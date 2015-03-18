@@ -12,119 +12,334 @@
 
 using namespace psbmp;
 
+// Maintains a vector of size 2 with Min at the front and Max at the end
+void PushMinMax(vector<double>& _vec, double _num) {
+  // Empty Case
+  if (_vec.size() == 0)
+    _vec.push_back(_num);
+  // Only one
+  else if (_vec.size() == 1) {
+    if (_vec.front() < _num)
+      _vec.push_back(_num);
+    else {
+      _vec.push_back(_vec.front());
+      _vec[0] = _num;
+    }
+  }
+  // Compare and update if necessary
+  else {
+    if (_num < _vec[0])
+      _vec[0] = _num;
+    else if (_num > _vec[1])
+      _vec[1] = _num;
+  }
+}
+
+
+// from cartesion to spherical
+template<class CfgType>
+vector<double>
+GetSphericalCoordinates(CfgType& _cfg) {
+  vector<double> coordinates(3);
+  double rho = 0;   // = sqrt(x^2 + y^2 + z^2)
+  double theta = 0; // = arctan(y/x)
+  double phi = 0;   // = arccos(z/rho)
+  // Getting cartesian coordinates
+  for (size_t j = 0; j < _cfg.PosDOF(); ++j) {
+    coordinates[j] = _cfg[j];
+    rho += pow(_cfg[j], 2.0);
+  }
+  // Coordinates = [X,Y,Z]
+  rho = sqrt(rho);
+  theta = atan2(coordinates[1],coordinates[0]);
+  phi = MAX_INT;
+  if(_cfg.PosDOF() == 3) {
+    phi = acos(coordinates[2] / rho);
+
+  }
+
+  // Lets make all angles positive for more accurate comparison between quadrants, since atan2 returns [-2/pi,2/pi]
+  while(theta < 0)
+    theta += TWOPI;
+  // from cartesian to polar
+  coordinates[0] = rho;
+  coordinates[1] = theta;
+  coordinates[2] = phi;
+
+  for (int i=_cfg.PosDOF(); i<_cfg.DOF(); i++)
+    coordinates.push_back(2*DRand()-1.0);
+
+  return coordinates;
+}
+
+// from spherical to cartesian
+vector<double>
+GetCartesianCoordinates(vector<double> sphericalCoordinates) {
+  vector<double> coordinates(2);
+  double rho = sphericalCoordinates[0];
+  double theta = sphericalCoordinates[1];
+  double phi = sphericalCoordinates[2];
+
+  // from cartesian to polar
+  coordinates[0] = rho * cos(theta) ;
+  coordinates[1] = rho * sin(theta) ;
+
+  // 3D case
+  if(phi != MAX_INT) {
+    coordinates[0] *= sin(phi) ;
+    coordinates[1] *= sin(phi) ;
+    coordinates.push_back(rho * cos(phi));
+    for (int i=0; i<3; i++)
+      coordinates.push_back(2*DRand()-1.0);
+  }
+  return coordinates;
+}
+
+
+template<class CfgType, class Environment>
+CfgType
+SelectDirection(Environment* _env, CfgType dir){
+  if(dir == CfgType()){
+    dir.GetRandomCfg(_env);
+  }else{
+    CfgType r;
+    r.GetRandomCfg(_env);
+    dir.subtract(dir,r);
+  }
+  return dir;
+}
+
+template<class CfgType>
+CfgType
+SelectDirection(CfgType& _regionCand, vector<CfgType>& _neighbors, double _radius) {
+  SelectDirection(_regionCand, _neighbors, _radius, 0);
+}
+
+template<class CfgType>
+CfgType
+SelectDirection(CfgType& _regionCand, vector<CfgType>& _neighbors, double _radius, double _overlap) {
+  CfgType dir = CfgType();
+
+  // Store all the angles to get the max and min
+  vector<double> thetas;
+  vector<double> phis;
+
+  if (dir.PosDOF() > 0) {
+
+    vector<double> candCoordinates = GetSphericalCoordinates(_regionCand);
+    vector<CfgType> midPoints = GetMiddlePoints(_regionCand, _neighbors, _radius);
+    // TODO DEBUG only one neighbor, split region into halves
+    if (midPoints.size() == 1) {
+      CfgType point = -(midPoints[0]);
+      midPoints.push_back(point);
+    }
+
+    for (size_t i = 0; i < midPoints.size(); ++i) {
+      // [0] = Rho, [1] = Theta, [2] = Phi
+      vector<double> neighborCoordinates;
+      if(_neighbors.size() == 1)
+        neighborCoordinates = GetSphericalCoordinates(_neighbors[0]);
+      else
+        neighborCoordinates = GetSphericalCoordinates(_neighbors[i]);
+
+      vector<double> midPointCoordinates = GetSphericalCoordinates(midPoints[i]);
+      vector<double> increments(3);
+
+      // FIXME Increments not working, some angles are being shrinked
+      // instead of enlarged
+      increments[1] = (neighborCoordinates[1] - midPointCoordinates[1] ) * _overlap;
+      midPointCoordinates[1] += increments[1];
+      double increment = (neighborCoordinates[2] - midPointCoordinates[2]) * _overlap;
+      midPointCoordinates[2] += increment;
+
+      // We use this function to avoid pushing all angles and sorting them at the end
+      PushMinMax(thetas, midPointCoordinates[1]);
+      PushMinMax(phis, midPointCoordinates[2]);
+    }
+
+    // Is the range calculated correct? If cand theta is outside out [min,max] then fix the range to be [max-2PI, min]
+    while (thetas[0] > candCoordinates[1] ) {
+      double temp = thetas[0];
+      thetas[0] = thetas[1] - TWOPI;
+      thetas[1] = temp;
+    }
+    while (thetas[1] < candCoordinates[1]) {
+      double temp = thetas[1];
+      thetas[1] = thetas[0] + TWOPI;
+      thetas[0] = temp;
+    }
+    // Randomizing
+    // Rho = radius
+    vector<double> randCoordinates(3);
+    randCoordinates[0] = _radius  * sqrt(DRand());
+    randCoordinates[1] = (thetas[1] - thetas[0]) * DRand() + thetas[0];
+    randCoordinates[2] = MAX_INT;
+    if(_regionCand.PosDOF() == 3)
+      randCoordinates[2] = (phis[1] - phis[0]) * DRand() + phis[0];
+
+    randCoordinates = GetCartesianCoordinates(randCoordinates);
+
+    dir.SetData(randCoordinates);
+
+    // Randomizing Rotational DOFs
+    for (size_t i = dir.PosDOF(); i < dir.DOF(); i++)
+      dir[i] = (2*DRand()-1.0);
+
+    // TODO Fixed-Tree - I am not sure how to divide this space into regions.
+  }else {
+    for (size_t i=0; i < _regionCand.DOF(); i++) {
+      vector<double> minMax;
+      for (size_t j=0; j < _neighbors.size(); j++) {
+        PushMinMax(minMax, _neighbors[j][i]);
+      }
+      dir[i] = (minMax.back() - minMax.front()) * DRand() + minMax.front();
+    }
+  }
+
+  return dir;
+}
+
+// Gets the point that is in between the candidate and the neighbor
+template<class CfgType>
+CfgType GetMiddlePoint(CfgType _regionCand, CfgType _neighbor, double _radius) {
+  CfgType middlePoint;
+  middlePoint = _regionCand + _neighbor;
+  middlePoint = middlePoint/2;
+  // Getting middle point across the circumference between candidate and neighbor
+  vector<double> midPointCoordinates = GetSphericalCoordinates(middlePoint);
+  midPointCoordinates[0] = _radius;
+  midPointCoordinates = GetCartesianCoordinates(midPointCoordinates);
+
+  middlePoint.SetData(midPointCoordinates);
+  return middlePoint;
+
+}
+
+
+template<class CfgType>
+vector<CfgType>
+GetMiddlePoints(CfgType& _regionCand, vector<CfgType>& _neighbors, double _radius) {
+
+  vector<CfgType> middlePoints;
+  // Getting middle point across the circumference between candidate and neighbor
+  for (size_t i = 0; i < _neighbors.size(); ++i)
+    middlePoints.push_back(GetMiddlePoint(_regionCand, _neighbors[i], _radius));
+
+  return middlePoints;
+
+}
 
 ////TODO - Move to region class
-
 template<class MPTraits>
 class RadialRegion {
-  typedef typename MPTraits::MPProblemType MPProblemType;
-  typedef typename MPProblemType::VID VID;
-  typedef typename MPTraits::CfgType CfgType;
-  typedef typename MPProblemType::GraphType GraphType;
-  typedef CfgType RegionType;
-  typedef typename MPTraits:: WeightType WeightType;
-  typedef typename stapl::sequential::graph<stapl::DIRECTED, stapl::NONMULTIEDGES, CfgType,WeightType> LocalGraphType;
+  public:
+    typedef typename MPTraits::MPProblemType MPProblemType;
+    typedef typename MPProblemType::VID VID;
+    typedef typename MPTraits::CfgType CfgType;
+    typedef typename MPProblemType::GraphType GraphType;
+    typedef CfgType RegionType;
+    typedef typename MPTraits:: WeightType WeightType;
+    typedef typename stapl::sequential::graph<stapl::DIRECTED, stapl::NONMULTIEDGES, CfgType,WeightType> LocalGraphType;
+
+    RadialRegion(RegionType _data = RegionType()) : m_data(_data) {}
+    RadialRegion(const RadialRegion& _other)
+      : m_problem(_other.m_problem), m_data(_other.m_data),
+      m_neighbors(_other.m_neighbors), m_branch(_other.m_branch),
+      m_ccs(_other.m_ccs) {}
+
+    //friend ostream& operator<< (ostream&, const Cfg&);
+    friend ostream& operator<< (ostream& _os, const RadialRegion& _r) {
+      //  _r.Print(_s);
+      _os << " " << _r.m_data << " " << _r.m_weight << " " << _r.m_branch.size() << " ";
+      return _os;
+    }
+
+    /* void Print(ostream &os) const  {
+       os << "  "  << m_data << " ";
+       }*/
+
+    // Getters
+    vector<RegionType> GetNeighbors() { return m_neighbors; }
+    RegionType GetCandidate() { return m_data; }
+    vector<VID> GetBranch() { return  m_branch;}
+    WeightType GetWeight() { return  m_weight;}
+    vector<pair<size_t, VID> > GetCCs() { return m_ccs;  }
+    LocalGraphType GetLocalTree() { return m_localTree; }
+
+    // Setters
+    void SetCandidate(const RegionType& _data) { m_data= _data; }
+    void SetNeighbors(const vector<RegionType>& _neighbors) { m_neighbors= _neighbors; }
+    void SetBranch(const vector<VID>& _branch) {m_branch = _branch;}
+    void SetWeight(const WeightType _weight) {m_weight = _weight;}
+    void SetMPProblem(const MPProblemType* _problem) {m_problem = _problem;}
+    void SetCCs(const vector<pair<size_t, VID> >& _ccs) { m_ccs = _ccs; }
+    void SetLocalTree(const LocalGraphType _localTree) {m_localTree = _localTree;}
+
+    void AddToBranch(const vector<VID>& _branch) {
+      for(int i=0; i<_branch.size(); i++)
+        m_branch.push_back(_branch[i]);
+    }
+
+    void define_type(stapl::typer& _t) {
+      _t.member(m_data);
+      _t.member(m_neighbors);
+      _t.member(m_branch);
+      //_t.member(m_problem);
+      _t.member(m_ccs);
+      _t.member(m_localTree);
+    }
 
   protected:
-  MPProblemType* m_problem;
-  RegionType m_data;
-  vector<RegionType> m_neighbors;
-  vector<VID> m_branch;
-  WeightType  m_weight;
-  vector<pair<size_t, VID> > m_ccs;
-  LocalGraphType m_localTree;
-
-  public:
-  RadialRegion(RegionType _data=RegionType()) : m_data(_data) { }
-  RadialRegion(const RadialRegion& _other)
-    : m_data(_other.m_data),m_neighbors(_other.m_neighbors),m_branch(_other.m_branch),
-    m_problem(_other.m_problem), m_ccs(_other.m_ccs){ }
-
-  //friend ostream& operator<< (ostream&, const Cfg&);
-  friend ostream& operator<< (ostream& _os, const RadialRegion& _r) {
-    //  _r.Print(_s);
-    _os << " " << _r.m_data << " " << _r.m_weight << " " << _r.m_branch.size() << " ";
-    return _os;
-  }
-
-  /* void Print(ostream &os) const  {
-     os << "  "  << m_data << " ";
-     }*/
-
-  // Getters
-  vector<RegionType> GetNeighbors() { return m_neighbors; }
-  RegionType GetCandidate() { return m_data; }
-  vector<VID> GetBranch() { return  m_branch;}
-  WeightType GetWeight() { return  m_weight;}
-  vector<pair<size_t, VID> > GetCCs() { return m_ccs;  }
-  LocalGraphType GetLocalTree() { return m_localTree; }
-
-  // Setters
-  void SetCandidate(const RegionType& _data) { m_data= _data; }
-  void SetNeighbors(const vector<RegionType>& _neighbors) { m_neighbors= _neighbors; }
-  void SetBranch(const vector<VID>& _branch) {m_branch = _branch;}
-  void SetWeight(const WeightType _weight) {m_weight = _weight;}
-  void SetMPProblem(const MPProblemType* _problem) {m_problem = _problem;}
-  void SetCCs(const vector<pair<size_t, VID> >& _ccs) { m_ccs = _ccs; }
-  void SetLocalTree(const LocalGraphType _localTree) {m_localTree = _localTree;}
-
-  void AddToBranch(const vector<VID>& _branch) {
-    for(int i=0; i<_branch.size(); i++)
-      m_branch.push_back(_branch[i]);
-  }
-
-
-  void define_type(stapl::typer& _t) {
-    _t.member(m_data);
-    _t.member(m_neighbors);
-    _t.member(m_branch);
-    //_t.member(m_problem);
-    _t.member(m_ccs);
-    _t.member(m_localTree);
-  }
+    MPProblemType* m_problem;
+    RegionType m_data;
+    vector<RegionType> m_neighbors;
+    vector<VID> m_branch;
+    WeightType  m_weight;
+    vector<pair<size_t, VID> > m_ccs;
+    LocalGraphType m_localTree;
 
 };
 
 namespace stapl {
-  template <typename Accessor, class MPTraits>
-    class proxy<RadialRegion<MPTraits>, Accessor>
-    : public Accessor {
+template <typename Accessor, class MPTraits>
+  class proxy<RadialRegion<MPTraits>, Accessor>
+  : public Accessor {
 
-      private:
-        typedef typename MPTraits::CfgType CfgType;
-        typedef typename MPTraits::MPProblemType MPProblemType;
-        typedef typename MPProblemType::VID VID;
-        typedef typename MPProblemType::GraphType GraphType;
-        typedef typename MPTraits:: WeightType WeightType;
-        typedef typename stapl::sequential::graph<stapl::DIRECTED, stapl::NONMULTIEDGES, CfgType,WeightType> LocalGraphType;
-        typedef RadialRegion<MPTraits> target_t;
+    private:
+      typedef typename MPTraits::CfgType CfgType;
+      typedef typename MPTraits::MPProblemType MPProblemType;
+      typedef typename MPProblemType::VID VID;
+      typedef typename MPProblemType::GraphType GraphType;
+      typedef typename MPTraits:: WeightType WeightType;
+      typedef typename stapl::sequential::graph<stapl::DIRECTED, stapl::NONMULTIEDGES, CfgType,WeightType> LocalGraphType;
+      typedef RadialRegion<MPTraits> target_t;
 
-        friend class proxy_core_access;
+      friend class proxy_core_access;
 
-      public:
-        typedef CfgType RegionType;
-        explicit proxy(Accessor const& _acc) : Accessor(_acc) { }
-        operator target_t() const { return Accessor::read(); }
-        proxy const& operator=(proxy const& _rhs) { Accessor::write(_rhs); return *this; }
-        proxy const& operator=(target_t const& _rhs) { Accessor::write(_rhs); return *this;}
+    public:
+      typedef CfgType RegionType;
+      explicit proxy(Accessor const& _acc) : Accessor(_acc) { }
+      operator target_t() const { return Accessor::read(); }
+      proxy const& operator=(proxy const& _rhs) { Accessor::write(_rhs); return *this; }
+      proxy const& operator=(target_t const& _rhs) { Accessor::write(_rhs); return *this;}
 
-        RegionType GetCandidate() { return Accessor::invoke(&target_t::GetCandidate); }
-        vector<RegionType> GetNeighbors() { return Accessor::invoke(&target_t::GetNeighbors); }
-        vector<VID> GetBranch() { return Accessor::invoke(&target_t::GetBranch); }
-        vector<pair<size_t, VID> > GetCCs() { return Accessor::invoke(&target_t::GetCCs); }
-        WeightType GetWeight() { return Accessor::invoke(&target_t::GetWeight); }
-        LocalGraphType GetLocalTree() { return Accessor::invoke(&target_t::GetLocalTree); }
+      RegionType GetCandidate() { return Accessor::invoke(&target_t::GetCandidate); }
+      vector<RegionType> GetNeighbors() { return Accessor::invoke(&target_t::GetNeighbors); }
+      vector<VID> GetBranch() { return Accessor::invoke(&target_t::GetBranch); }
+      vector<pair<size_t, VID> > GetCCs() { return Accessor::invoke(&target_t::GetCCs); }
+      WeightType GetWeight() { return Accessor::invoke(&target_t::GetWeight); }
+      LocalGraphType GetLocalTree() { return Accessor::invoke(&target_t::GetLocalTree); }
 
-        void SetCandidate(const RegionType _data) { Accessor::invoke(&target_t::SetCandidate, _data); }
-        void SetNeighbors(const vector<RegionType> _neighbors) { Accessor::invoke(&target_t::SetNeighbors, _neighbors); }
-        void SetBranch(const vector<VID> _branch) { Accessor::invoke(&target_t::SetBranch, _branch); }
-        void SetWeight(const WeightType _weight) { Accessor::invoke(&target_t::SetWeight, _weight); }
-        void SetMPProblem(const MPProblemType* _problem) {Accessor::invoke(&target_t::SetMPProblem, _problem); }
-        void SetCCs(const vector<pair<size_t, VID> >& _ccs) { Accessor::invoke(&target_t::SetCCs, _ccs) ; }
-        void SetLocalTree(const LocalGraphType _localTree) {Accessor::invoke(&target_t::SetLocalTree, _localTree); }
+      void SetCandidate(const RegionType _data) { Accessor::invoke(&target_t::SetCandidate, _data); }
+      void SetNeighbors(const vector<RegionType> _neighbors) { Accessor::invoke(&target_t::SetNeighbors, _neighbors); }
+      void SetBranch(const vector<VID> _branch) { Accessor::invoke(&target_t::SetBranch, _branch); }
+      void SetWeight(const WeightType _weight) { Accessor::invoke(&target_t::SetWeight, _weight); }
+      void SetMPProblem(const MPProblemType* _problem) {Accessor::invoke(&target_t::SetMPProblem, _problem); }
+      void SetCCs(const vector<pair<size_t, VID> >& _ccs) { Accessor::invoke(&target_t::SetCCs, _ccs) ; }
+      void SetLocalTree(const LocalGraphType _localTree) {Accessor::invoke(&target_t::SetLocalTree, _localTree); }
 
-        void AddToBranch(const vector<VID> _branch) { Accessor::invoke(&target_t::AddToBranch, _branch); }
-    }; //struct proxy
+      void AddToBranch(const vector<VID> _branch) { Accessor::invoke(&target_t::AddToBranch, _branch); }
+  }; //struct proxy
 }
 
 template<class MPTraits>
@@ -142,6 +357,8 @@ class ConnectRegion {
     ConnectorPointer m_connector;
 
   public:
+    typedef void result_type;
+
     ConnectRegion(MPProblemType* _problem, ConnectorPointer _connector) :m_problem(_problem){
       m_connector = _connector;
     }
@@ -151,17 +368,17 @@ class ConnectRegion {
       _t.member(m_connector);
     }
 
-
     template<typename vertexView, typename repeatView>
-      void operator()(vertexView _view, repeatView& _gview)const {
+      result_type operator()(vertexView _view, repeatView& _gview)const {
 
-        typedef typename vertexView::adj_edges_type ADJV;
-        ADJV  edges = _view.edges();
+        //typedef typename vertexView::adj_edges_type ADJV;
+        //ADJV  edges = _view.edges();
         //SOURCE REGION
         vector<VID> sVids = _view.property().GetBranch();
         //TARGET REGION
 
-        for(typename vertexView::adj_edge_iterator ei = edges.begin(); ei != edges.end(); ++ei){
+        //for(typename vertexView::adj_edge_iterator ei = edges.begin(); ei != edges.end(); ++ei){
+        for(typename vertexView::adj_edge_iterator ei = _view.begin(); ei != _view.end(); ++ei){
           RadialRegion<MPTraits> tRegion = (*(_gview.find_vertex((*ei).target()))).property();
           vector<VID> tVids = tRegion.GetBranch();
 
@@ -179,7 +396,7 @@ class ConnectRegion {
 
 
 template<class MPTraits>
-class RadialRegionEdge{
+class RadialRegionEdge {
 
   private:
     typedef typename MPTraits::MPProblemType MPProblemType;
@@ -195,6 +412,8 @@ class RadialRegionEdge{
     string m_dmLabel;
 
   public:
+    typedef void result_type;
+
     typedef typename stapl::graph<stapl::DIRECTED, stapl::NONMULTIEDGES, RadialRegion<MPTraits>, WeightType> RadialRegionGraph;
     RadialRegionEdge(MPProblemType* _problem, size_t _k, string _dmLabel):
       m_problem(_problem), m_k(_k), m_dmLabel(_dmLabel) {
@@ -207,7 +426,7 @@ class RadialRegionEdge{
     }
 
     template <typename vertexView, typename repeatView>
-      void operator() (vertexView _v1, repeatView _v2) {
+      result_type operator() (vertexView _v1, repeatView _v2) {
         ///replace with call to NF
         DistanceMetricPointer dmm = m_problem->GetDistanceMetric(m_dmLabel);
         Environment* env = m_problem->GetEnvironment();
@@ -286,16 +505,11 @@ struct RadialRegionVertex{
 
 template<class MPTraits>
 struct RadialRegionVertex2D{
-  private:
-
-    // MPProblem* m_problem;
-    typedef typename MPTraits::CfgType CfgType;
-    CfgType m_basePoint;
-    double m_radius;
-    double m_numRegions;
   public:
+    typedef typename MPTraits::CfgType CfgType;
+
     RadialRegionVertex2D(size_t _numRegions, CfgType _basePoint=CfgType(), double _radius=MAX_DBL):
-      m_numRegions(_numRegions),m_basePoint(_basePoint),m_radius(_radius){
+      m_numRegions(_numRegions), m_basePoint(_basePoint), m_radius(_radius) {
       }
 
     void define_type(stapl::typer& _t){
@@ -307,7 +521,7 @@ struct RadialRegionVertex2D{
     /// Add point to region graph and have them evenly distributed
     template <typename View>
       void operator() (View _vw) const {
-        double alpha = (double)  2*3.141596/m_numRegions;
+        double alpha = (double)  TWOPI/m_numRegions;
         vector<double> pos = m_basePoint.GetPosition();
         const double xBase = m_basePoint[0];
         const double yBase = m_basePoint[1];
@@ -323,6 +537,11 @@ struct RadialRegionVertex2D{
 
       }
 
+  private:
+    // MPProblem* m_problem;
+    double m_numRegions;
+    CfgType m_basePoint;
+    double m_radius;
 };
 
 
@@ -386,6 +605,7 @@ class BuildRadialRRT {
     typedef typename MPProblemType::DistanceMetricPointer DistanceMetricPointer;
     typedef typename MPProblemType::ValidityCheckerPointer ValidityCheckerPointer;
     typedef typename MPProblemType::NeighborhoodFinderPointer NeighborhoodFinderPointer;
+    typedef typename MPProblemType::ExtenderPointer ExtenderPointer;
     typedef typename MPProblemType::ConnectorPointer ConnectorPointer;
     typedef stapl::counter<stapl::default_timer> STAPLTimer;
 
@@ -395,6 +615,7 @@ class BuildRadialRRT {
     string m_dm;
     string m_vcm;
     string m_nfm;
+    string m_eLabel;
     double m_delta;
     double m_minDist;
     CfgType m_root;
@@ -403,7 +624,7 @@ class BuildRadialRRT {
     double m_overlap;
 
   public:
-    BuildRadialRRT(MPProblemType* _problem, size_t _numNodes, string _dm, string _vcm, string _nfm,
+    BuildRadialRRT(MPProblemType* _problem, size_t _numNodes, string _dm, string _vcm, string _nfm, string _eLabel,
         double _delta, double _minDist, CfgType _root, size_t _numAttempts, const double _overlap, bool _strictBranching) {
 
       m_problem = _problem;
@@ -412,6 +633,7 @@ class BuildRadialRRT {
       m_delta = _delta;
       m_vcm = _vcm;
       m_nfm = _nfm;
+      m_eLabel = _eLabel;
       m_minDist = _minDist;
       m_root = _root;
       m_numAttempts = _numAttempts;
@@ -426,6 +648,7 @@ class BuildRadialRRT {
       _t.member(m_delta);
       _t.member(m_vcm);
       _t.member(m_nfm);
+      _t.member(m_eLabel);
       _t.member(m_minDist);
       _t.member(m_root);
       _t.member(m_numAttempts);
@@ -442,6 +665,7 @@ class BuildRadialRRT {
         ///Setup global variables
         DistanceMetricPointer dm = m_problem->GetDistanceMetric(m_dm);
         NeighborhoodFinderPointer nfp = m_problem->GetNeighborhoodFinder(m_nfm);
+        ExtenderPointer e = m_problem->GetExtender(m_eLabel);
         Environment* env = m_problem->GetEnvironment();
         GraphType* globalTree = m_problem->GetRoadmap()->GetGraph();
         vector<VID> branch;
@@ -454,7 +678,7 @@ class BuildRadialRRT {
           CfgType dir, nearest, newCfg;
           VID nearestVID;
 
-          double radius = dm->Distance(env, m_root, regionCand);
+          double radius = dm->Distance(m_root, regionCand);
           // No neighbors means only one region?
           if(neighbors.size() == 0)
             dir.GetRandomCfg(env);
@@ -464,35 +688,36 @@ class BuildRadialRRT {
           /*At the first iteration, root is the only node in the tree so no need to call kclosest
             This prevent everyone banging on location 0 for root, however, if statement (branching) will be
             called m_numNodes times, let's hope branch prediction is smart enough to optimize it*/
-          if(branch.size() == 0){
+          if(branch.empty()) {
             nearestVID = 0;
             nearest = m_root;
-          } else {
-            vector<VID> kClosest;
-            back_insert_iterator<vector<VID> > iterBegin(kClosest);
-
+          }
+          else {
             //Find closest from local tree
-            nfp->KClosest((m_problem->GetRoadmap()),branch.begin(),branch.end(), dir, 1, iterBegin);
-            nearestVID = kClosest[0];
+            vector<pair<VID, double>> kClosest;
+            nfp->FindNeighbors(m_problem->GetRoadmap(),
+                branch.begin(),branch.end(), dir, back_inserter(kClosest));
+            nearestVID = kClosest[0].first;
           }
           // TODO DEBUG: do not add to root twice for each branch, remember to delete
           if (m_strictBranching && branch.size() > 1 && nearestVID == 0) continue;
 
           if (nearestVID == 0) {
             nearest = m_root;
-          } else {
+          }
+          else {
             // Hack to make sure nearest is always local
             // nearest = (*(globalTree->find_vertex(nearestVID))).property();
             nearest =   (*(globalTree->distribution().container_manager().begin()->find_vertex(nearestVID))).property();
           }
 
           CDInfo cdInfo;
-          int weight;
+          int weight = 0;
           //If expansion succeeds add to global tree and a copy in local tree
 
-          if(RRTExpand<MPTraits>(m_problem,m_vcm, m_dm, nearest, dir, newCfg, m_delta, weight, cdInfo,
-                env->GetPositionRes(), env->GetOrientationRes())
-              && (dm->Distance(env, newCfg, nearest) >= m_minDist)) {
+          vector<CfgType> inner;
+          if(e->Extend(nearest, dir, newCfg, inner)
+              && (dm->Distance(newCfg, nearest) >= m_minDist)) {
 
             VID newVID = globalTree->add_vertex(newCfg);
             //TODO fix weight
@@ -535,7 +760,7 @@ class BuildRadialBlindRRT {
     typedef typename MPProblemType::NeighborhoodFinderPointer NeighborhoodFinderPointer;
     typedef typename MPProblemType::ConnectorPointer ConnectorPointer;
     typedef typename stapl::graph_view<typename GraphType::GRAPH> RoadmapViewType;
-    typedef typename stapl::part_native_view<RoadmapViewType>::view_type NativeViewType;
+    typedef typename stapl::result_of::native_view<RoadmapViewType>::type NativeViewType;
     typedef stapl::counter<stapl::default_timer> STAPLTimer;
     typedef typename stapl::sequential::map_property_map< typename GraphType::GRAPH ,size_t > ColorMap;
 
@@ -606,7 +831,6 @@ class BuildRadialBlindRRT {
         DistanceMetricPointer dm = m_problem->GetDistanceMetric(m_dm);
         NeighborhoodFinderPointer nfp = m_problem->GetNeighborhoodFinder(m_nf);
         Environment* env = m_problem->GetEnvironment();
-        StatClass* stats = m_problem->GetStatClass();
         GraphType* globalTree = m_problem->GetRoadmap()->GetGraph();
 
         // thes are used to keep work function small
@@ -628,7 +852,7 @@ class BuildRadialBlindRRT {
           CfgType dir, nearest, newCfg;
           VID nearestVID;
 
-          double radius = dm->Distance(env, m_root, regionCand);
+          double radius = dm->Distance(m_root, regionCand);
           // No neighbors means only one region?
           if(neighbors.size() == 0)
             dir.GetRandomCfg(env);
@@ -638,23 +862,25 @@ class BuildRadialBlindRRT {
           /*At the first iteration, root is the only node in the tree so no need to call kclosest
             This prevent everyone banging on location 0 for root, however, if statement (branching) will be
             called m_numNodes times, let's hope branch prediction is smart enough to optimize it*/
-          if(branch.size() == 0){
+          if(branch.empty()) {
             nearestVID = 0;
             nearest = m_root;
-          } else {
-            vector<VID> kClosest;
-            back_insert_iterator<vector<VID> > iterBegin(kClosest);
-
+          }
+          else {
             //Find closest from local tree
-            nfp->KClosest((m_problem->GetRoadmap()),branch.begin(),branch.end(), dir, 1, iterBegin);
-            nearestVID = kClosest[0];
+            vector<pair<VID, double>> kClosest;
+            nfp->FindNeighbors(m_problem->GetRoadmap(),
+                branch.begin(),branch.end(), dir, back_inserter(kClosest));
+            nearestVID = kClosest[0].first;
           }
           // TODO DEBUG: do not add to root twice for each branch, remember to delete
-          if (m_strictBranching && branch.size() > 0 && nearestVID == 0) continue;
+          if (m_strictBranching && branch.size() > 0 && nearestVID == 0)
+            continue;
 
-          if (nearestVID == 0) {
+          if(nearestVID == 0) {
             nearest = m_root;
-          } else {
+          }
+          else {
             // Hack to make sure nearest is always local
             // nearest = (*(globalTree->find_vertex(nearestVID))).property();
             nearest =   (*(globalTree->distribution().container_manager().begin()->find_vertex(nearestVID))).property();
@@ -663,24 +889,25 @@ class BuildRadialBlindRRT {
           //If expansion succeeds add to global tree and a copy in local t
           //expandTree.start();
           //int samplesMade = radialUtils.ExpandTree(nearestVID, nearest, dir, pendingEdges, pendingWeights, expansionClk, process);
-          int samplesMade = radialUtils.ExpandTree(branch, nearestVID, nearest, dir, pendingEdges, pendingWeights);
+          /*int samplesMade =*/
+          radialUtils.ExpandTree(branch, nearestVID, nearest, dir, pendingEdges, pendingWeights);
           //expandTree.stop();
 
           attempts++;
 
         }
-          radialUtils.RemoveInvalidNodes(branch);
-          radialUtils.ConnectCCs();
+        radialUtils.RemoveInvalidNodes(branch);
+        radialUtils.ConnectCCs();
 
         /*
 
-          for (int i=0; i<pendingEdges.size(); i++) {
-          WeightType weight ("RRTExpand", pendingWeights[i]);
-          globalTree->add_edge(pendingEdges[i].first, pendingEdges[i].second, weight );
-          globalTree->add_edge(pendingEdges[i].second, pendingEdges[i].first, weight );
-          }
+           for (int i=0; i<pendingEdges.size(); i++) {
+           WeightType weight ("RRTExpand", pendingWeights[i]);
+           globalTree->add_edge(pendingEdges[i].first, pendingEdges[i].second, weight );
+           globalTree->add_edge(pendingEdges[i].second, pendingEdges[i].first, weight );
+           }
 
-          */
+*/
 
         //t5.start();
         // setting CCs
@@ -812,7 +1039,7 @@ VID GetClosestCentroid(CfgType _centroid, vector<pair<size_t, VID> > _ccs, Color
     // TODO Cesar fix STAPL
     stapl::sequential::get_cc(globalTree,_colorMap,_ccs[i].second,cc);
     CfgType otherCentroid = GetCentroid(globalTree,cc);
-    double dist = dm->Distance(env, _centroid, otherCentroid);
+    double dist = dm->Distance(_centroid, otherCentroid);
     if (dist < currMinDist) {
       currMinDist = dist;
       currMinVID = _ccs[i].second;
@@ -869,6 +1096,8 @@ class ConnectGlobalCCs {
     bool m_debug;
 
   public:
+    typedef void result_type;
+
     ConnectGlobalCCs(MPProblemType* _problem, ConnectorPointer _connector, bool _debug = false) :m_problem(_problem){
       m_connector = _connector;
       m_debug = _debug;
@@ -882,19 +1111,18 @@ class ConnectGlobalCCs {
 
 
     template<typename vertexView, typename repeatView>
-      void operator()(vertexView _view, repeatView& _gview)const {
+      result_type operator()(vertexView _view, repeatView& _gview)const {
 
         CfgType col;
-        Environment* env = m_problem->GetEnvironment();
         StatClass* stats = m_problem->GetStatClass();
         LPOutput<MPTraits> lpOutput;
-        boost::shared_ptr<RegionRRTConnect<MPTraits> > rrtConnect (boost::dynamic_pointer_cast<RegionRRTConnect<MPTraits> >(m_connector));
+        shared_ptr<RegionRRTConnect<MPTraits> > rrtConnect(dynamic_pointer_cast<RegionRRTConnect<MPTraits> >(m_connector));
 
 
         DistanceMetricPointer dm = m_problem->GetDistanceMetric("");
         //edges are assumed to be directed
-        typedef typename vertexView::adj_edges_type ADJV;
-        ADJV  edges = _view.edges();
+        //typedef typename vertexView::adj_edges_type ADJV;
+        //ADJV  edges = _view.edges();
         size_t rgsize = _gview.size();
 
         //SOURCE REGION
@@ -911,7 +1139,8 @@ class ConnectGlobalCCs {
         if(m_debug) {
           cout << endl << "Setting LocalTree" << endl;
         }
-        for(typename vertexView::adj_edge_iterator ei = edges.begin(); ei != edges.end(); ++ei){
+        //for(typename vertexView::adj_edge_iterator ei = edges.begin(); ei != edges.end(); ++ei){
+        for(typename vertexView::adj_edge_iterator ei = _view.begin(); ei != _view.end(); ++ei){
           if((_view.descriptor()) == rgsize-1 && ((*ei).target()) == rgsize-2) continue; // remove one edge from edge list
 
           // fill up the queue with source CCs
@@ -977,10 +1206,11 @@ class ConnectGlobalCCs {
                 cout << "(C) Connecting: " << localCCVID << " - " << remoteCCVID << endl;
               }
 
-              if ( rrtConnect->IsConnect(m_problem->GetRoadmap(), *stats, colorMap, localCC.begin(), localCC.end(),
-                    remoteCC.begin(), remoteCC.end()) ) {
+              vector<CfgType> col;
+              if(rrtConnect->Connect(m_problem->GetRoadmap(), *stats, colorMap, localCC.begin(), localCC.end(),
+                    remoteCC.begin(), remoteCC.end(), back_inserter(col))) {
                 if (m_debug) cout << "Connected" << endl;
-                  break;
+                break;
               }
 
             }
@@ -1012,8 +1242,9 @@ class ConnectGlobalCCs {
                 cout << "(UC) Connecting: " << localCCVID << " - " << remoteCCVID << endl;
               }
 
-              if ( rrtConnect->IsConnect(m_problem->GetRoadmap(), *stats, colorMap, localCC.begin(), localCC.end(),
-                    remoteCC.begin(), remoteCC.end()) ) {
+              vector<CfgType> col;
+              if(rrtConnect->Connect(m_problem->GetRoadmap(), *stats, colorMap, localCC.begin(), localCC.end(),
+                    remoteCC.begin(), remoteCC.end(), back_inserter(col))) {
                 typename set<VID>::iterator tmp = it;
                 it++;
                 connectedCCs.insert(*tmp);
@@ -1025,13 +1256,8 @@ class ConnectGlobalCCs {
               }
             }
           }
-
-
-
-
         }
       }
-
 };
 
 
@@ -1064,14 +1290,14 @@ struct is_in_cc
   {}
 
   template<typename Vref>
-  result_type operator() (Vref v)
-  {
-    if(m_pmap.get(v).get_cc() == m_ccid)
-      return result_type(1,v.descriptor());
-    else
+    result_type operator() (Vref v)
+    {
+      if(m_pmap.get(v).get_cc() == m_ccid)
+        return result_type(1,v.descriptor());
+      else
+        return result_type();
       return result_type();
-    return result_type();
-  }
+    }
 
   void define_type(stapl::typer& t)
   {
@@ -1080,65 +1306,81 @@ struct is_in_cc
   }
 };
 
+template<typename VID>
+struct DeleteCC {
+  typedef void result_type;
+
+  DeleteCC(){}
+
+  template<typename RepeatView>
+    result_type operator()(const vector<VID>& v, RepeatView& _r) {
+      for(auto i : v)
+        _r.delete_vertex(i);
+    }
+
+  void define_type(stapl::typer& t) {
+  }
+};
+
 /*
 
-template<class MPTraits>
-class DeleteInvalidCCs {
-  private:
-    typedef typename MPTraits::MPProblemType MPProblemType;
-    typedef typename MPProblemType::ConnectorPointer ConnectorPointer;
-    typedef typename MPProblemType::LocalPlannerPointer LocalPlannerPointer;
-    typedef typename MPProblemType::DistanceMetricPointer DistanceMetricPointer;
-    typedef typename MPTraits::CfgType CfgType;
-    typedef typename MPProblemType::VID VID;
-    typedef typename MPTraits::WeightType WeightType;
-    typedef typename MPProblemType::GraphType GraphType;
-    typedef typename stapl::sequential::graph<stapl::DIRECTED, stapl::NONMULTIEDGES, CfgType,WeightType> LocalGraphType;
-    typedef typename stapl::sequential::map_property_map< typename GraphType::GRAPH ,size_t > ColorMap;
-    typedef pair<size_t, VID> CCType;
+   template<class MPTraits>
+   class DeleteInvalidCCs {
+   private:
+   typedef typename MPTraits::MPProblemType MPProblemType;
+   typedef typename MPProblemType::ConnectorPointer ConnectorPointer;
+   typedef typename MPProblemType::LocalPlannerPointer LocalPlannerPointer;
+   typedef typename MPProblemType::DistanceMetricPointer DistanceMetricPointer;
+   typedef typename MPTraits::CfgType CfgType;
+   typedef typename MPProblemType::VID VID;
+   typedef typename MPTraits::WeightType WeightType;
+   typedef typename MPProblemType::GraphType GraphType;
+   typedef typename stapl::sequential::graph<stapl::DIRECTED, stapl::NONMULTIEDGES, CfgType,WeightType> LocalGraphType;
+   typedef typename stapl::sequential::map_property_map< typename GraphType::GRAPH ,size_t > ColorMap;
+   typedef pair<size_t, VID> CCType;
 
-    MPProblemType* m_problem;
-    bool m_debug;
+   MPProblemType* m_problem;
+   bool m_debug;
 
-  public:
-    DeleteInvalidCCs(MPProblemType* _problem, bool _debug = false) :m_problem(_problem){
-      m_debug = _debug;
-    }
+   public:
+   DeleteInvalidCCs(MPProblemType* _problem, bool _debug = false) :m_problem(_problem){
+   m_debug = _debug;
+   }
 
-    void define_type(stapl::typer &_t){
-      _t.member(m_problem);
-      _t.member(m_debug);
-    }
+   void define_type(stapl::typer &_t){
+   _t.member(m_problem);
+   _t.member(m_debug);
+   }
 
 
-    template<typename View>
-      void operator()(View _view) const
-      {
+   template<typename View>
+   void operator()(View _view) const
+   {
 
-        LocalGraphType localTree = (_view.property().GetLocalTree());
-        GraphType* globalTree = m_problem->GetRoadmap()->GetGraph();
-        vector<CCType > ccs;
-        ColorMap colorMap;
-        colorMap.reset();
+   LocalGraphType localTree = (_view.property().GetLocalTree());
+   GraphType* globalTree = m_problem->GetRoadmap()->GetGraph();
+   vector<CCType > ccs;
+   ColorMap colorMap;
+   colorMap.reset();
 
-        stapl::sequential::get_cc_stats(localTree, colorMap, ccs);
+   stapl::sequential::get_cc_stats(localTree, colorMap, ccs);
 
-        vector<VID> cc;
-        vector<VID> toBeDeleted;
+   vector<VID> cc;
+   vector<VID> toBeDeleted;
 
-        for(int i=0; i<ccs.size(); i++) {
-          if(ccs[i].second != 0 || ccs[i].first == 1) {
-            colorMap.reset();
-            cc.clear();
-            stapl::sequential::get_cc(localTree,colorMap, ccs[i].second, cc);
-            for(int j=0; j<cc.size(); j++) {
-              globalTree->delete_vertex(cc[j]);
-            }
+   for(int i=0; i<ccs.size(); i++) {
+   if(ccs[i].second != 0 || ccs[i].first == 1) {
+   colorMap.reset();
+   cc.clear();
+   stapl::sequential::get_cc(localTree,colorMap, ccs[i].second, cc);
+   for(int j=0; j<cc.size(); j++) {
+   globalTree->delete_vertex(cc[j]);
+   }
 
-          }
-        }
+   }
+   }
 
-      }
-};
-*/
+   }
+   };
+   */
 #endif

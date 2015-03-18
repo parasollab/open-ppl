@@ -2,7 +2,7 @@
 <MotionPlanning>
   <MPProblem>
     <Environment input_env="narrow.env">
-      <robot Cfg_name="Cfg_2D" num_joints="0" pos_dof="2" dofs="2"> 
+      <robot Cfg_name="Cfg_2D" num_joints="0" pos_dof="2" dofs="2">
         <boundary type="bbox" translational_scale="1">
           <parameter id="0" label="x" type="translational" min="-50" max="50" />
           <parameter id="1" label="y" type="translational" min="-50" max="50" />
@@ -12,30 +12,30 @@
 
     <DistanceMetrics>
       <Euclidean label="euclidean"/>
-    </DistanceMetrics> 
+    </DistanceMetrics>
 
-    <ValidityCheckers>    
+    <ValidityCheckers>
       <CollisionDetection label="cd" method="RAPID" />
     </ValidityCheckers>
-    
+
     <NeighborhoodFinders>
       <BruteForceNF label="BFNF" dmLabel="euclidean"/>
     </NeighborhoodFinders>
-    
+
     <Samplers>
       <UniformRandomSampler label="UniformRandom" vcLabel="cd"/>
     </Samplers>
-    
+
     <Connectors>
       <NeighborhoodConnector label="Closest" nf="BFNF" k="5" CheckIfSameCC="false" lp_method="sl" unconnected="true"/>
       <RRTConnect label="RRTConnect" nf="BFNF" delta="1.9" minDist="0.1" iterations="15" lp_method="sl" vcLabel="cd" />
       <RegionConnector Label="RegionConnector" lp_method="sl" k="2" numIters="0" nf="BFNF" dmLabel="euclidean"/>
     </Connectors>
-    
+
     <LocalPlanners>
       <StraightLine label="sl" binaryEvaluation="true" vcLabel="cd"/>
     </LocalPlanners>
-    
+
     <MapEvaluators>
       <Query label="Query" queryFile="narrow.query" pathFile="RRT.123456.path" dmMethod="euclidean" lpMethod="sl"
         smooth="false" smoothFile="smooth.path" debug="false">
@@ -50,21 +50,21 @@
         <Evaluator label="Query"/>
       </ComposeEvaluator>
     </MapEvaluators>
-    
+
     <Metrics>
       <NumNodesMetric label="NumNodes" />
     </Metrics>
-    
-    <MPStrategies>  
-   
-    <!-- Parallel Radial RRT *********COMPILE UNDER PARALLEL OPTION **********--> 
+
+    <MPStrategies>
+
+    <!-- Parallel Radial RRT *********COMPILE UNDER PARALLEL OPTION **********-->
       <RadialBlindRRT label="RadialBlindRRT" filename="radialBlindRRT" debug="true" >
         <!-- the training samples (numTestSamples) should at most equal nmNodes -->
-	<region_constr numRegions = "2" rayLength= "50" numNeighbors = "1"/> 
+	<region_constr numRegions = "2" rayLength= "50" numNeighbors = "1"/>
 	<!-- numAttempts should at least equal numNodes-->
         <rrt_constr numNodes = "100" numAttempts = "20" delta= "4.0" numCCIters="25"
-          minDist = "0.05" strictBranching="true" expansionType="All" CCconnection="ClosestNode"  /> 
-	<vc_method vcm = "cd"/> 
+          minDist = "0.05" strictBranching="true" expansionType="All" CCconnection="ClosestNode"  />
+	<vc_method vcm = "cd"/>
 	<dm_method Method="euclidean"/>
 	<connectionMethod Label="RegionConnect"/>
         <nf_method Method="BFNF"/>
@@ -72,19 +72,19 @@
 
 
 
-        <!-- Parallel Strategiees and Methods *********COMPILE UNDER PARALLEL OPTION **********--> 
+        <!-- Parallel Strategiees and Methods *********COMPILE UNDER PARALLEL OPTION **********-->
       <BasicParallelPRM label="BasicParallelPRM" iterations="1" debug="true">
         <node_generation_method Method="UniformRandom" Number="10"/>
         <node_connection_method Method="Closest"/>
       </BasicParallelPRM>
-    
-      <BlindRRT label="BlindRRT" delta="2.0" minDist="0.1" CCconnection="ClosestNode" expansionType="First" 
+
+      <BlindRRT label="BlindRRT" delta="2.0" minDist="0.1" CCconnection="ClosestNode" expansionType="First"
         samplerLabel="UniformRandomFree" lpLabel="sl" dmLabel="euclidean" initialSamples="200"
         nfLabel="BFNF" vcLabel="cd" connectorLabel="RRTConnect" query="narrow.query" debug="false" evaluateGoal="true">
 
         <Evaluator label="NodesEval"/>
       </BlindRRT>
-    
+
     </MPStrategies>
 
     <Solver mpStrategyLabel="RadialBlindRRT" seed="123456" baseFilename="RadialBlindRRT"/>

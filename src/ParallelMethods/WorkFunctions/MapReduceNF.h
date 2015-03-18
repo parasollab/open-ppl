@@ -72,7 +72,7 @@ class NFMapFunc {
           InputIterator _input_first, InputIterator _input_last, CfgType  _cfg,
           int k, bool radial=false) {
         int max_index = 0;
-        double max_value = MAX_DIST;
+        double max_value = MAX_DBL;
 	cout << "FINDNEIGHBOR " << endl;
         vector< pair< VID, double > > closest(k, make_pair(-999, max_value));
         // now go through all kp and find closest k
@@ -84,7 +84,7 @@ class NFMapFunc {
           if(v1 == _cfg || v1 == CfgType() )
             continue; //don't connect same or invalid cfg
 
-          double dist = _dmm->Distance(_env, _cfg, v1);
+          double dist = _dmm->Distance(_cfg, v1);
 
           if(dist < closest[max_index].second) {
             VID tmp = (*V1).descriptor();
@@ -112,7 +112,7 @@ class NFMapFunc {
           InputIterator _input_first, InputIterator _input_last, CfgType  _cfg,
           int k) {
         int max_index = 0;
-        double max_value = MAX_DIST;
+        double max_value = MAX_DBL;
 	//cout << "k " << k << endl;
         //vector< pair< VID, double > > closest(k, make_pair(-999, max_value));
 	vector<NFType2> closest(k, make_pair(make_pair(-999,CfgType()), max_value));
@@ -127,7 +127,7 @@ class NFMapFunc {
 	  if(v1 == _cfg)
             continue; //don't connect same or invalid cfg
 
-          double dist = _dmm->Distance(_env, _cfg, v1);
+          double dist = _dmm->Distance(_cfg, v1);
           //cout << "dist : " << dist << endl;
           if(dist < closest[max_index].second) {
             VID tmp = (*V1).descriptor();

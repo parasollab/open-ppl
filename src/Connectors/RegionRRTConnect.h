@@ -1,14 +1,7 @@
-#ifndef REGIONRRTCONNECT_H
-#define REGIONRRTCONNECT_H
+#ifndef REGION_RRT_CONNECT_H_
+#define REGION_RRT_CONNECT_H_
 
 #include "ConnectorMethod.h"
-
-/* TODO Cesar Add Description
- *
- */
-
-#define KCLOSEST 5
-#define MFAILURE 5
 
 template<class MPTraits>
 class RegionRRTConnect: public ConnectorMethod<MPTraits> {
@@ -23,54 +16,36 @@ class RegionRRTConnect: public ConnectorMethod<MPTraits> {
     typedef typename MPProblemType::ValidityCheckerPointer ValidityCheckerPointer;
     typedef typename MPProblemType::NeighborhoodFinderPointer NeighborhoodFinderPointer;
     typedef typename MPProblemType::LocalPlannerPointer LocalPlannerPointer;
-    typedef typename MPProblemType::ConnectorPointer ConnectorPointer;
+    typedef typename MPProblemType::ExtenderPointer ExtenderPointer;
     typedef typename stapl::sequential::graph<stapl::DIRECTED, stapl::NONMULTIEDGES, CfgType,WeightType> SequentialGraphType;
     typedef typename vector<VID>::iterator VIDIT;
 
-    //////////////////////
-    // Constructors and Destructor
-    RegionRRTConnect(string _lp = "", string _nf = "",
-        int _k = KCLOSEST, int _m = MFAILURE,
-        bool _countFailures = false, bool _unconnected = false,
-        bool _random = false);
+    RegionRRTConnect(string _nf = "", string _lp = "", string _eLabel = "",
+        size_t _iterations = 100, double _minDist = 0);
     RegionRRTConnect(MPProblemType* _problem, XMLNodeReader& _node);
-    virtual ~RegionRRTConnect();
 
-    //////////////////////
-    // Used in new MPProblem framework.
-    virtual void PrintOptions(ostream& _os);
-    virtual void ParseXML(XMLNodeReader& _node);
+    virtual void Print(ostream& _os) const;
 
-    //////////////////////
-    // Core: Connection method
-    template<typename ColorMap, typename InputIterator>
-      bool IsConnect(RoadmapType* _rm, StatClass& _stats,
-          ColorMap& _cmap, InputIterator _itr1First, InputIterator _itr1Last,
-          InputIterator _itr2First, InputIterator _itr2Last) ;
+    template<typename ColorMap, typename InputIterator1, typename InputIterator2, typename OutputIterator>
+      bool Connect(RoadmapType* _rm, StatClass& _stats, ColorMap& _cmap,
+          InputIterator1 _itr1First, InputIterator1 _itr1Last,
+          InputIterator2 _itr2First, InputIterator2 _itr2Last,
+          OutputIterator _collision) ;
 
   protected:
 
     //////////////////////
     // Utility Method
-    bool ExpandTree(CfgType& _dir, vector<VID>* _targetTree, bool _isLocal, double _delta, VID& _newVID, CfgType& _newCfg);
-    bool ExpandTree(CfgType& _dir, const VID& _dirVID, vector<VID>* _targetTree, bool _isLocal, double _delta, VID& _newVID, CfgType& _newCfg, bool _interTree);
+    bool ExpandTree(CfgType& _dir, vector<VID>* _targetTree, bool _isLocal, VID& _newVID, CfgType& _newCfg);
+    bool ExpandTree(CfgType& _dir, const VID& _dirVID, vector<VID>* _targetTree, bool _isLocal, VID& _newVID, CfgType& _newCfg, bool _interTree);
 
     CfgType SelectDirection();
     void UpdateTrees();
 
   private:
-    //////////////////////
-    // Data
-    int m_totalSuccess;
-    int m_totalFailure;
-    int m_iterSuccess;
-    int m_iterFailure;
-    int m_iterations;
-    int m_fail;
-    bool m_countFailures;
-    double m_delta;
+    string m_eLabel;
+    size_t m_iterations;
     double m_minDist;
-    string m_vcLabel;
 
     vector<pair<VID, CfgType> > m_localPendingVIDs;
     vector<pair<VID, CfgType> > m_remotePendingVIDs;
@@ -79,54 +54,31 @@ class RegionRRTConnect: public ConnectorMethod<MPTraits> {
 
 };
 
-  template<class MPTraits>
-RegionRRTConnect<MPTraits>::RegionRRTConnect(string _lp, string _nf, int _iterations, int _fail,
-    bool _countFailures, bool _delta, bool _minDist)
-  : ConnectorMethod<MPTraits>(), m_iterations(_iterations), m_fail(_fail),
-  m_countFailures(_countFailures), m_delta(_delta),
-  m_minDist(_minDist){
+template<class MPTraits>
+RegionRRTConnect<MPTraits>::
+RegionRRTConnect(string _nf, string _lp, string _eLabel,
+    size_t _iterations, double _minDist) :
+  ConnectorMethod<MPTraits>(_nf, _lp), m_eLabel(_eLabel),
+  m_iterations(_iterations), m_minDist(_minDist) {
     this->SetName("RegionRRTConnect");
-    this->m_lpMethod = _lp;
-    this->m_nfMethod = _nf;
-  }
-
-  template<class MPTraits>
-RegionRRTConnect<MPTraits>::RegionRRTConnect(MPProblemType* _problem, XMLNodeReader& _node)
-  : ConnectorMethod<MPTraits>(_problem, _node) {
-    ParseXML(_node);
   }
 
 template<class MPTraits>
-RegionRRTConnect<MPTraits>::~RegionRRTConnect(){
-}
+RegionRRTConnect<MPTraits>::
+RegionRRTConnect(MPProblemType* _problem, XMLNodeReader& _node) :
+  ConnectorMethod<MPTraits>(_problem, _node) {
+    this->SetName("RegionRRTConnect");
+    m_iterations = _node.numberXMLParameter("iterations", true, 0, 0, MAX_INT, "Number of iterations that RRT Connect will perform");
+    m_eLabel = _node.stringXMLParameter("eLabel", true, "", "Extender Method");
+    m_minDist = _node.numberXMLParameter("minDist", false, 0.0, 0.0, MAX_DBL, "Minimum Distance");
+    _node.warnUnrequestedAttributes();
+  }
 
 template<class MPTraits>
 void
-RegionRRTConnect<MPTraits>::ParseXML(XMLNodeReader& _node){
-  this->SetName("RegionRRTConnect");
-  m_countFailures = _node.boolXMLParameter("count_failures", false, false, "if false, ignore failure count and just attempt k; if true, attempt k neighbors until too many failures detected");
-  m_iterations = _node.numberXMLParameter("iterations", true, 0, 0, MAX_INT, "Number of iterations that RRT Connect will perform");
-  m_fail = _node.numberXMLParameter("fail", false, m_iterations, 0, MAX_INT, "amount of failed connections allowed before operation terminates");
-  m_delta = _node.numberXMLParameter("delta", false, 1.0, 0.0, MAX_DBL, "Delta Distance");
-  m_minDist = _node.numberXMLParameter("minDist", false, 0.0, 0.0, MAX_DBL, "Minimum Distance");
-  m_vcLabel = _node.stringXMLParameter("vcLabel", true, "", "Validity Checker Method");
-  _node.warnUnrequestedAttributes();
-
-
-}
-
-template<class MPTraits>
-void
-RegionRRTConnect<MPTraits>::PrintOptions(ostream& _os){
-  ConnectorMethod<MPTraits>::PrintOptions(_os);
-  /*
-     _os << "    " << this->GetName() << "::  k = ";
-     _os << m_k << "  fail = " << m_fail ;
-     _os << "  count_failures = " << this->m_countFailures;
-     _os << "  unconnected = " << m_unconnected;
-     _os << "  random = " << m_random;
-     _os << endl;
-     */
+RegionRRTConnect<MPTraits>::
+Print(ostream& _os) const {
+  ConnectorMethod<MPTraits>::Print(_os);
 }
 
 /*
@@ -138,28 +90,23 @@ RegionRRTConnect<MPTraits>::PrintOptions(ostream& _os){
  *    switch Ta,Tb
  *    repeat
  * */
-
 template<class MPTraits>
-template<typename ColorMap, typename InputIterator>
+template<typename ColorMap, typename InputIterator1, typename InputIterator2, typename OutputIterator>
 bool
-RegionRRTConnect<MPTraits>::IsConnect(RoadmapType* _rm, StatClass& _stats,
-    ColorMap& _cmap, InputIterator _itr1First, InputIterator _itr1Last,
-    InputIterator _itr2First, InputIterator _itr2Last){
-
-  if(this->m_debug){
-    //cout << endl;
-    // PrintOptions(cout);
-  }
-
+RegionRRTConnect<MPTraits>::
+Connect(RoadmapType* _rm, StatClass& _stats, ColorMap& _cmap,
+    InputIterator1 _itr1First, InputIterator1 _itr1Last,
+    InputIterator2 _itr2First, InputIterator2 _itr2Last,
+    OutputIterator _collision) {
 
   // Ta = itr1, Tb = itr2
   map<VID, CfgType> existingNodes;
   vector<VID>* treeA = new vector<VID>();
   vector<VID>* treeB = new vector<VID>();
-  for(InputIterator it = _itr1First; it != _itr1Last; ++it) {
+  for(InputIterator1 it = _itr1First; it != _itr1Last; ++it) {
     treeA->push_back(*it);
   }
-  for(InputIterator it = _itr2First; it != _itr2Last; ++it) {
+  for(InputIterator2 it = _itr2First; it != _itr2Last; ++it) {
     treeB->push_back(*it);
   }
 
@@ -172,18 +119,15 @@ RegionRRTConnect<MPTraits>::IsConnect(RoadmapType* _rm, StatClass& _stats,
     // Expand in direction of Ta
     VID newVID, interTreeVID;
     CfgType newCfg, interTreeCfg;
-    ExpandTree(dir, treeA, isTreeALocal, m_delta, newVID, newCfg);
+    ExpandTree(dir, treeA, isTreeALocal, newVID, newCfg);
 
     if(newVID != INVALID_VID) {
 
-      m_totalSuccess++;
       //treeA->push_back(newVID);  we add VID to the tree in Expand
 
       // Since expand goes until collision or goal is detected, we shouldnt iterate.
-      connected = ExpandTree(newCfg, newVID, treeB, !isTreeALocal, MAX_DBL, interTreeVID, interTreeCfg, true);
+      connected = ExpandTree(newCfg, newVID, treeB, !isTreeALocal, interTreeVID, interTreeCfg, true);
 
-    } else {
-      m_totalFailure++;
     }
 
     // Switching trees
@@ -192,73 +136,58 @@ RegionRRTConnect<MPTraits>::IsConnect(RoadmapType* _rm, StatClass& _stats,
     iter++;
   }
 
+  return connected;
 }
 
 template<class MPTraits>
 bool
-RegionRRTConnect<MPTraits>::ExpandTree(CfgType& _dir, vector<VID>* _targetTree, bool _isLocal, double _delta, VID& _newVID, CfgType& _newCfg){
-
-  return ExpandTree(_dir, INVALID_VID, _targetTree, _isLocal, _delta, _newVID, _newCfg, false);
+RegionRRTConnect<MPTraits>::
+ExpandTree(CfgType& _dir, vector<VID>* _targetTree, bool _isLocal, VID& _newVID, CfgType& _newCfg) {
+  return ExpandTree(_dir, INVALID_VID, _targetTree, _isLocal, _newVID, _newCfg, false);
 }
 
 template<class MPTraits>
 bool
-RegionRRTConnect<MPTraits>::ExpandTree(CfgType& _dir, const VID& _dirVID, vector<VID>* _targetTree, bool _isLocal,
-    double _delta, VID& _newVID, CfgType& _newCfg, bool _interTree){
+RegionRRTConnect<MPTraits>::
+ExpandTree(CfgType& _dir, const VID& _dirVID, vector<VID>* _targetTree, bool _isLocal,
+    VID& _newVID, CfgType& _newCfg, bool _interTree){
   // Setup MP Variables
-  Environment* env = this->GetMPProblem()->GetEnvironment();
-  DistanceMetricPointer dm = this->GetMPProblem()->GetNeighborhoodFinder(this->m_nfMethod)->GetDMMethod();
-  NeighborhoodFinderPointer nf = this->GetMPProblem()->GetNeighborhoodFinder(this->m_nfMethod);
+  DistanceMetricPointer dm = this->GetMPProblem()->GetNeighborhoodFinder(this->m_nfLabel)->GetDMMethod();
+  NeighborhoodFinderPointer nf = this->GetMPProblem()->GetNeighborhoodFinder(this->m_nfLabel);
 
   // TODO Cesar fix cast
   //shared_ptr<FamilyLine> ptr(dynamic_pointer_cast<FamilyLine>(*i));
-  boost::shared_ptr<BruteForceNF<MPTraits> > bruteForceNF (boost::dynamic_pointer_cast<BruteForceNF<MPTraits> >(nf));
+  shared_ptr<BruteForceNF<MPTraits> > bruteForceNF(dynamic_pointer_cast<BruteForceNF<MPTraits> >(nf));
 
   RoadmapType* rdmp = this->GetMPProblem()->GetRoadmap();
   CDInfo  cdInfo;
   // Find closest Cfg in map
-  vector<VID> kClosest;
+  vector<pair<VID, double>> kClosest;
   vector<CfgType> cfgs;
 
-  StatClass* kcloseStatClass = this->GetMPProblem()->GetStatClass();
-  string kcloseClockName = "kclosest time ";
   SequentialGraphType* targetGraph = _isLocal ? this->m_localGraph : this->m_remoteGraph;
-
-  kcloseStatClass->StartClock(kcloseClockName);
   // Choose the closest node from the three
-  bruteForceNF->KClosest(targetGraph, _targetTree->begin(), _targetTree->end(), _dir, 1, back_inserter(kClosest));
-
-  kcloseStatClass->StopClock(kcloseClockName);
-
-  bool connected = false;
+  // TODO Use targetGraph instead of overall map
+  //bruteForceNF->FindNeighbors(targetGraph, _targetTree->begin(), _targetTree->end(), _dir, back_inserter(kClosest));
+  bruteForceNF->FindNeighbors(rdmp, _targetTree->begin(), _targetTree->end(), _dir, back_inserter(kClosest));
 
   _newVID = INVALID_VID;
-  CfgType nearest  =   (*(targetGraph->find_vertex(kClosest[0]))).property();
-//  const CfgType& nearest = rdmp->GetGraph()->GetCfg(kClosest[0]);
-  int weight;
+  CfgType nearest  =  (*(targetGraph->find_vertex(kClosest[0].first))).property();
+  int weight = 0;
 
-  StatClass* expandStatClass = this->GetMPProblem()->GetStatClass();
-  string expandClockName = "RegionRRTConnect time ";
-  expandStatClass->StartClock(expandClockName);
-
-  string dmLabel = this->GetMPProblem()->GetNeighborhoodFinder(this->m_nfMethod)->GetDMMethod()->GetLabel();
-
-  bool expanded = RRTExpand<MPTraits>(this->GetMPProblem(), m_vcLabel, dmLabel, nearest, _dir, _newCfg,
-      _delta, weight, cdInfo, env->GetPositionRes(), env->GetOrientationRes());
+  vector<CfgType> inner;
+  bool expanded = this->GetExtender(m_eLabel)->Extend(nearest, _dir, _newCfg, inner);
 
   if(!expanded) {
-    //if(this->m_debug) cout << "RRT could not expand!" << endl;
-    return connected;
+    return false;
   }
-  //if (this->m_debug) cout<<"RRT expanded"<<endl;
 
-  expandStatClass->StopClock(expandClockName);
-  if(dm->Distance(env, _newCfg, nearest) >= m_minDist) {
+  if(dm->Distance(_newCfg, nearest) >= m_minDist) {
     // if _newCfg = Dir, we reached goal
     if (_newCfg == _dir && _interTree)  {  // this expansion is between trees
       _newVID = _dirVID;
-      connected = true;
-    } else {
+    }
+    else {
 
       #ifndef _PARALLEL
       _newVID = rdmp->GetGraph()->AddVertex(_newCfg);
@@ -276,21 +205,19 @@ RegionRRTConnect<MPTraits>::ExpandTree(CfgType& _dir, const VID& _dirVID, vector
       #endif
     }
 
-
-
     pair<WeightType, WeightType> weights = make_pair(WeightType("RegionRRTConnect", weight), WeightType("RegionRRTConnect", weight));
 
     #ifndef _PARALLEL
-    rdmp->GetGraph()->AddEdge(kClosest[0], _newVID, weights);
+    rdmp->GetGraph()->AddEdge(kClosest[0].first, _newVID, weights);
     #else
     WeightType weightT("RRTExpand", weight);
     GraphType* globalTree = rdmp->GetGraph();
-    globalTree->add_edge_async(kClosest[0], _newVID, weightT);
-    globalTree->add_edge_async(_newVID, kClosest[0], weightT);
+    globalTree->add_edge_async(kClosest[0].first, _newVID, weightT);
+    globalTree->add_edge_async(_newVID, kClosest[0].first, weightT);
 
     if(_newVID != _dirVID) {
-      targetGraph->add_edge(kClosest[0],_newVID);
-      targetGraph->add_edge(_newVID, kClosest[0]);
+      targetGraph->add_edge(kClosest[0].first,_newVID);
+      targetGraph->add_edge(_newVID, kClosest[0].first);
     }
     /*
     if(_isLocal)
@@ -303,21 +230,20 @@ RegionRRTConnect<MPTraits>::ExpandTree(CfgType& _dir, const VID& _dirVID, vector
     _targetTree->push_back(_newVID);
   }
 
-  return connected;
+  return true;
 }
 
 
 template<class MPTraits>
 void
-RegionRRTConnect<MPTraits>::UpdateTrees(){
-
+RegionRRTConnect<MPTraits>::
+UpdateTrees() {
   for(int i=0; i<m_localPendingVIDs.size(); i++) {
       this->m_localGraph->add_vertex(m_localPendingVIDs[i].first,m_localPendingVIDs[i].second);
   }
   for(int i=0; i<m_remotePendingVIDs.size(); i++) {
       this->m_remoteGraph->add_vertex(m_remotePendingVIDs[i].first,m_remotePendingVIDs[i].second);
   }
-
   for(int i=0; i<m_localPendingEdges.size(); i++) {
       this->m_localGraph->add_edge(m_localPendingEdges[i].first,m_localPendingEdges[i].second);
       this->m_localGraph->add_edge(m_localPendingEdges[i].second,m_localPendingEdges[i].first);
@@ -326,19 +252,17 @@ RegionRRTConnect<MPTraits>::UpdateTrees(){
       this->m_remoteGraph->add_edge(m_remotePendingEdges[i].first,m_remotePendingEdges[i].second);
       this->m_remoteGraph->add_edge(m_remotePendingEdges[i].second,m_remotePendingEdges[i].first);
   }
-
 }
-
 
 template<class MPTraits>
 typename MPTraits::CfgType
-RegionRRTConnect<MPTraits>::SelectDirection(){
+RegionRRTConnect<MPTraits>::
+SelectDirection() {
   Environment* env = this->GetMPProblem()->GetEnvironment();
   CfgType dir;
   dir.GetRandomCfg(env);
   return dir;
 }
 
-///////////////////////////////////////////////////////////////////////////////
 #endif
 

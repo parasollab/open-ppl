@@ -79,7 +79,10 @@
 #include "Connectors/CCsConnector.h"
 #include "Connectors/ConnectNeighboringSurfaces.h"
 #include "Connectors/NeighborhoodConnector.h"
+#include "Connectors/RegionConnector.h"
+#include "Connectors/RegionRRTConnect.h"
 #include "Connectors/RewireConnector.h"
+#include "Connectors/RRTConnect.h"
 #include "Connectors/CCExpansion.h"
 #include "Connectors/ClosestVE.h"
 
@@ -124,8 +127,8 @@
 #include "MPStrategies/BlindRRT.h"
 #include "ParallelMethods/BasicParallelPRM.h"
 //#include "ParallelMethods/BulkRRT.h"
-//#include "ParallelMethods/RadialBlindRRT.h"
-//#include "ParallelMethods/RadialSubdivisionRRT.h"
+#include "ParallelMethods/RadialBlindRRT.h"
+#include "ParallelMethods/RadialSubdivisionRRT.h"
 #include "ParallelMethods/RegularSubdivisionMethod.h"
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -243,10 +246,13 @@ struct MPTraits {
     AdaptiveConnector<MPTraits>,
     CCExpansion<MPTraits>,
     CCsConnector<MPTraits>,
+    ClosestVE<MPTraits>,
     NeighborhoodConnector<MPTraits>,
     //PreferentialAttachment<MPTraits>,
+    RegionConnector<MPTraits>,
+    RegionRRTConnect<MPTraits>,
     RewireConnector<MPTraits>,
-    ClosestVE<MPTraits>
+    RRTConnect<MPTraits>
       > ConnectorMethodList;
 
   //typedef ConnectivityMetric<MPTraits, RoadmapSet<MPTraits> > ConnectivityMetricRoadmapSet;
@@ -305,8 +311,8 @@ struct MPTraits {
     BasicParallelPRM<MPTraits>,
     BlindRRT<MPTraits>,
     //BulkRRT<MPTraits>,
-    //RadialBlindRRT<MPTraits>,
-    //RadialSubdivisionRRT<MPTraits>,
+    RadialBlindRRT<MPTraits>,
+    RadialSubdivisionRRT<MPTraits>,
     RegularSubdivisionMethod<MPTraits>
     > MPStrategyMethodList;
 };

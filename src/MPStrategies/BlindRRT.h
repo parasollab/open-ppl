@@ -229,28 +229,11 @@ BlindRRT<MPTraits>::Run() {
       cout << "RRT FOUND ALL GOALS" << endl;
   }
 
-  {
-    ofstream osMap("AfterExpansion.map");
-    this->GetMPProblem()->GetRoadmap()->Write(osMap, this->GetMPProblem()->GetEnvironment());
-    osMap.close();
-  }
-
-
   // Did we exit because we found a goal, or because we met the number of nodes?
   if((m_evaluateGoal && m_goalsNotFound.size() !=0) || !m_evaluateGoal) {
     // Get VALID CCs
     m_radialUtils.RemoveInvalidNodes(branch);
-  {
-    ofstream osMap("AfterRemoveInvalid.map");
-    this->GetMPProblem()->GetRoadmap()->Write(osMap, this->GetMPProblem()->GetEnvironment());
-    osMap.close();
-  }
     m_radialUtils.ConnectCCs();
-  {
-    ofstream osMap("AfterConnection.map");
-    this->GetMPProblem()->GetRoadmap()->Write(osMap, this->GetMPProblem()->GetEnvironment());
-    osMap.close();
-  }
   }
   stats->StopClock("BlindRRT Generation");
   if(this->m_debug) {
@@ -272,6 +255,7 @@ BlindRRT<MPTraits>::Finalize() {
   StatClass* stats = this->GetMPProblem()->GetStatClass();
   string str;
 
+#ifndef _PARALLEL
   //perform query if query was given as input
   if(m_query != NULL){
     str = this->GetBaseFilename() + ".path";
@@ -285,12 +269,11 @@ BlindRRT<MPTraits>::Finalize() {
       }
     }
   }
+#endif
 
   //output final map
   str = this->GetBaseFilename() + ".map";
-  ofstream osMap(str.c_str());
-  this->GetMPProblem()->GetRoadmap()->Write(osMap, this->GetMPProblem()->GetEnvironment());
-  osMap.close();
+  this->GetMPProblem()->GetRoadmap()->Write(str, this->GetMPProblem()->GetEnvironment());
 
   //output stats
   str = this->GetBaseFilename() + ".stat";

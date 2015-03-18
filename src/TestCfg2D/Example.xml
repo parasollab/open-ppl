@@ -22,7 +22,8 @@
     <Connectors>
       <NeighborhoodConnector label="Closest" nfLabel="BFNF" checkIfSameCC="false" lpLabel="sl"/>
       <NeighborhoodConnector label="QueryClosest" nfLabel="BFNF" k="1" checkIfSameCC="false" lpLabel="sl"/>
-      <RRTConnect label="RRTConnect" nfLabel="BFNF" minDist="0.0" iterations="10000" lpLabel="sl" eLabel="BERO" />
+      <RegionConnector label="RegionConnector" nfLabel="BFNF" lpLabel="sl" k="2" numIters="4" dmLabel="euclidean"/>
+      <RRTConnect label="RRTConnect" nfLabel="BFNF" lpLabel="sl" eLabel="BERO" minDist="0.0" iterations="10000"/>
     </Connectors>
 
     <LocalPlanners>
@@ -60,17 +61,56 @@
         <Evaluator method="NodesEval"/>
       </BasicPRM>
 
-      <BlindRRT label="BlindRRT" delta="2.0" minDist="0.1" CCconnection="NodeToNode"
-        lpLabel="sl" dmLabel="euclidean" initialSamples="200" ccIters="100"
-        nfLabel="BFNF" vcLabel="cd" connectorLabel="RRTConnect" query="narrow.query" debug="true" evaluateGoal="true">
-      </BlindRRT>
-
       <BasicRRTStrategy label="RRT" delta="2.0" minDist="0.1"
         numRoots="1" m="1" growthFocus="0.01" lpLabel="sl" dmLabel="euclidean"
         nfLabel="BFNF" vcLabel="cd" connectorLabel="kClosest" query="narrow.query"
         gtype="UNDIRECTED_TREE" debug="false" evaluateGoal="false"
         extenderLabel="BEVO">
       </BasicRRTStrategy>
+
+      <BulkRRT label="BulkRRT" filename="bulk" debug="false">
+         <num_runs nRuns = "1"/>
+         <total_nodes totalNodes ="1000"/>
+         <k_nodes kNodes = "1"/>
+         <vc_method vcm = "cd"/>
+         <delta_var delta = "10.0"/>
+         <parallel_nf parallelNF = "false"/>
+         <evaluation_method Method="NodesEval"/>
+         <dm_method Method="euclidean"/>
+         <nf_method Method="BFNF"/>
+         <min_distance minDist ="1.0"/>
+	 <!--<query query = "narrow.query"/>-->
+      </BulkRRT>
+
+      <RadialSubdivisionRRT label="RadialSubdivisionRRT" filename="radialSubdivisionRRT" debug="false" >
+        <!-- the training samples (numTestSamples) should at most equal nmNodes -->
+	<region_constr numRegions = "2" rayLength= "50" numNeighbors = "1"/>
+	<!-- numAttempts should at least equal numNodes-->
+        <rrt_constr numNodes = "100" numAttempts = "20" delta= "4.0" minDist = "0.05" strictBranching="false" />
+	<vc_method vcm = "cd"/>
+	<dm_method Method="euclidean"/>
+	<connectionMethod Label="RegionConnector"/>
+        <nf_method Method="BFNF"/>
+        <e_method Method="BERO"/>
+      </RadialSubdivisionRRT>
+
+      <BlindRRT label="BlindRRT" delta="2.0" minDist="0.1" CCconnection="NodeToNode"
+        lpLabel="sl" dmLabel="euclidean" initialSamples="200" ccIters="100"
+        nfLabel="BFNF" vcLabel="cd" connectorLabel="RRTConnect" query="narrow.query" debug="true" evaluateGoal="true">
+      </BlindRRT>
+
+      <RadialBlindRRT label="RadialBlindRRT" filename="radialBlindRRT" debug="true" >
+        <!-- the training samples (numTestSamples) should at most equal nmNodes -->
+	<region_constr numRegions = "2" rayLength= "50" numNeighbors = "1"/>
+	<!-- numAttempts should at least equal numNodes-->
+        <rrt_constr numNodes = "100" numAttempts = "20" delta= "4.0" numCCIters="25"
+          minDist = "0.05" strictBranching="true" expansionType="All" CCconnection="ClosestNode"  />
+	<vc_method vcm = "cd"/>
+	<dm_method Method="euclidean"/>
+	<connectionMethod Label="RegionConnect"/>
+        <nf_method Method="BFNF"/>
+      </RadialBlindRRT>
+
     </MPStrategies>
 
     <Solver mpStrategyLabel="BlindRRT" seed="123456" baseFilename="BlindRRT"/>
