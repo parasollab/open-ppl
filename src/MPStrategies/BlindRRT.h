@@ -143,7 +143,7 @@ void
 BlindRRT<MPTraits>::Initialize(){
   if(this->m_debug) cout<<"\nInitializing BlindRRT::"<<endl;
   // Setup MP variables
-  Environment* env = this->GetMPProblem()->GetEnvironment();
+  Environment* env = this->GetEnvironment();
   CDInfo cdInfo;
   string callee = "BlindRRT::RRT";
   // Setup RRT Variables
@@ -152,11 +152,11 @@ BlindRRT<MPTraits>::Initialize(){
     vector<CfgType>& queryCfgs = m_query->GetQuery();
     typedef typename vector<CfgType>::iterator CIT;
     for(CIT cit1 = queryCfgs.begin(), cit2 = cit1+1; cit2!=queryCfgs.end(); cit1++, cit2++){
-      if (!this->GetMPProblem()->GetValidityChecker(m_vc)->
+      if (!this->GetValidityChecker(m_vc)->
           IsValid(*cit1, cdInfo, callee)){
       } else {
       }
-      if (!this->GetMPProblem()->GetValidityChecker(m_vc)->
+      if (!this->GetValidityChecker(m_vc)->
           IsValid(*cit2, cdInfo, callee)){
       } else {
       }
@@ -170,7 +170,7 @@ BlindRRT<MPTraits>::Initialize(){
     // Add root vertex/vertices
     tmp.GetRandomCfg(env);
     if (env->InBounds(tmp)
-        && this->GetMPProblem()->GetValidityChecker(m_vc)->IsValid(tmp, cdInfo, callee)){
+        && this->GetValidityChecker(m_vc)->IsValid(tmp, cdInfo, callee)){
       m_roots.push_back(tmp);
       m_goals.push_back(tmp);
       m_goalsNotFound.push_back(1);
@@ -178,7 +178,7 @@ BlindRRT<MPTraits>::Initialize(){
   }
 
   for(typename vector<CfgType>::iterator C = m_roots.begin(); C!=m_roots.end(); C++){
-    VID vid = this->GetMPProblem()->GetRoadmap()->GetGraph()->AddVertex(*C);
+    VID vid = this->GetRoadmap()->GetGraph()->AddVertex(*C);
   }
 
 
@@ -197,7 +197,7 @@ BlindRRT<MPTraits>::Run() {
   if(this->m_debug) cout << "\nRunning BlindRRT::" << endl;
 
   // Setup MP Variables
-  StatClass* stats = this->GetMPProblem()->GetStatClass();
+  StatClass* stats = this->GetStatClass();
 
   stats->StartClock("BlindRRT Generation");
 
@@ -206,12 +206,12 @@ BlindRRT<MPTraits>::Run() {
 
 
   vector<VID> branch;
-  for(auto i : *this->GetMPProblem()->GetRoadmap()->GetGraph())
+  for(auto i : *this->GetRoadmap()->GetGraph())
     branch.push_back(i.descriptor());
 
   // branch is used in RadialUtils to track the VIDs
   // it is also used in parallel so it is the best way to adapt
-  //RoadmapType* rdmp = this->GetMPProblem()->GetRoadmap();
+  //RoadmapType* rdmp = this->GetRoadmap();
   //rdmp->GetGraph()->GetVerticesVID(branch);
 
   while(!mapPassedEvaluation && samples < m_initialSamples){
@@ -252,7 +252,7 @@ BlindRRT<MPTraits>::Finalize() {
   if(this->m_debug) cout<<"\nFinalizing BlindRRT::"<<endl;
 
   //setup variables
-  StatClass* stats = this->GetMPProblem()->GetStatClass();
+  StatClass* stats = this->GetStatClass();
   string str;
 
 #ifndef _PARALLEL
@@ -261,7 +261,7 @@ BlindRRT<MPTraits>::Finalize() {
     str = this->GetBaseFilename() + ".path";
     m_query->SetPathFile(str);
     if(m_evaluateGoal){
-      if(m_query->PerformQuery(this->GetMPProblem()->GetRoadmap())){
+      if(m_query->PerformQuery(this->GetRoadmap())){
         if(this->m_debug) cout << "Query successful! Output written to " << str << "." << endl;
       }
       else{
@@ -273,13 +273,13 @@ BlindRRT<MPTraits>::Finalize() {
 
   //output final map
   str = this->GetBaseFilename() + ".map";
-  this->GetMPProblem()->GetRoadmap()->Write(str, this->GetMPProblem()->GetEnvironment());
+  this->GetRoadmap()->Write(str, this->GetEnvironment());
 
   //output stats
   str = this->GetBaseFilename() + ".stat";
   ofstream osStat(str.c_str());
   osStat << "NodeGen+Connection Stats" << endl;
-  stats->PrintAllStats(osStat, this->GetMPProblem()->GetRoadmap());
+  stats->PrintAllStats(osStat, this->GetRoadmap());
   stats->PrintClock("BlindRRT Generation", osStat);
   osStat.close();
 
@@ -290,26 +290,26 @@ template<class MPTraits>
 void
 BlindRRT<MPTraits>::EvaluateGoals(){
   // Setup MP Variables
-  StatClass* stats = this->GetMPProblem()->GetStatClass();
-  Environment* env = this->GetMPProblem()->GetEnvironment();
-  DistanceMetricPointer dmp = this->GetMPProblem()->GetDistanceMetric(m_dm);
-  LocalPlannerPointer lpp = this->GetMPProblem()->GetLocalPlanner(m_lp);
-  NeighborhoodFinderPointer nfp = this->GetMPProblem()->GetNeighborhoodFinder(m_nf);
+  StatClass* stats = this->GetStatClass();
+  Environment* env = this->GetEnvironment();
+  DistanceMetricPointer dmp = this->GetDistanceMetric(m_dm);
+  LocalPlannerPointer lpp = this->GetLocalPlanner(m_lp);
+  NeighborhoodFinderPointer nfp = this->GetNeighborhoodFinder(m_nf);
   LPOutput<MPTraits> lpOutput;
   // Check if goals have been found
   for(vector<size_t>::iterator i = m_goalsNotFound.begin(); i!=m_goalsNotFound.end(); i++){
     vector<VID> closests;
-    nfp->KClosest(this->GetMPProblem()->GetRoadmap(), m_goals[*i], 1, back_inserter(closests));
-    CfgType& closest = this->GetMPProblem()->GetRoadmap()->GetGraph()->GetCfg(closests[0]);
+    nfp->KClosest(this->GetRoadmap(), m_goals[*i], 1, back_inserter(closests));
+    CfgType& closest = this->GetRoadmap()->GetGraph()->GetCfg(closests[0]);
     double dist = dmp->Distance(env, m_goals[*i], closest);
     if(this->m_debug) cout << "Distance to goal::" << dist << endl;
     CfgType col;
     if(dist < m_delta && lpp->IsConnected(env, *stats, dmp, closest, m_goals[*i], col, &lpOutput,
           env->GetPositionRes(), env->GetOrientationRes(), true, false, false)){
       if(this->m_debug) cout << "Goal found::" << m_goals[*i] << endl;
-      if(!(this->GetMPProblem()->GetRoadmap()->GetGraph()->IsVertex( m_goals[*i])))
-        this->GetMPProblem()->GetRoadmap()->GetGraph()->AddVertex(m_goals[*i]);
-      this->GetMPProblem()->GetRoadmap()->GetGraph()->AddEdge(closest, m_goals[*i], lpOutput.edge);
+      if(!(this->GetRoadmap()->GetGraph()->IsVertex( m_goals[*i])))
+        this->GetRoadmap()->GetGraph()->AddVertex(m_goals[*i]);
+      this->GetRoadmap()->GetGraph()->AddEdge(closest, m_goals[*i], lpOutput.edge);
       m_goalsNotFound.erase(i);
       i--;
     }
@@ -320,7 +320,7 @@ BlindRRT<MPTraits>::EvaluateGoals(){
 template<class MPTraits>
 typename MPTraits::CfgType
 BlindRRT<MPTraits>::SelectDir(){
-  Environment* env = this->GetMPProblem()->GetEnvironment();
+  Environment* env = this->GetEnvironment();
   CfgType dir;
   dir.GetRandomCfg(env);
   return dir;

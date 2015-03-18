@@ -169,25 +169,16 @@ void
 TogglePRMStrategy<MPTraits>::Finalize() {
   if(this->m_debug) cout << "\nFinalizing TogglePRMStrategy::" << endl;
 
-  // Set up variables
-  StatClass* stats = this->GetMPProblem()->GetStatClass();
-
   // Output two final maps
-  string str = this->GetBaseFilename() + ".map";
-  ofstream osMap(str.c_str());
-  this->GetMPProblem()->GetRoadmap()->Write(osMap, this->GetMPProblem()->GetEnvironment());
-  osMap.close();
-
-  str = this->GetBaseFilename() + ".block.map";
-  ofstream osMap2(str.c_str());
-  this->GetMPProblem()->GetBlockRoadmap()->Write(osMap2, this->GetMPProblem()->GetEnvironment());
-  osMap2.close();
+  this->GetRoadmap()->Write(this->GetBaseFilename() + ".map", this->GetEnvironment());
+  this->GetBlockRoadmap()->Write(this->GetBaseFilename() + ".block.map", this->GetEnvironment());
 
   // Output stats
-  str = this->GetBaseFilename() + ".stat";
+  string str = this->GetBaseFilename() + ".stat";
   ofstream osStat(str.c_str());
   osStat << "Statistics" << endl;
-  stats->PrintAllStats(osStat, this->GetMPProblem()->GetRoadmap());
+  StatClass* stats = this->GetStatClass();
+  stats->PrintAllStats(osStat, this->GetRoadmap());
   stats->PrintClock("Map Generation", osStat);
   osStat.close();
 

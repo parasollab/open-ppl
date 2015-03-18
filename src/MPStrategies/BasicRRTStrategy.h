@@ -280,16 +280,12 @@ BasicRRTStrategy<MPTraits>::Finalize() {
 
   if(this->m_debug) cout<<"\nFinalizing BasicRRTStrategy::"<<endl;
 
-  //setup variables
-  StatClass* stats = this->GetMPProblem()->GetStatClass();
-  string str;
-
   //perform query if query was given as input
   if(m_query){
-    str = this->GetBaseFilename() + ".path";
+    string str = this->GetBaseFilename() + ".path";
     m_query->SetPathFile(str);
     if(m_evaluateGoal){
-      if(m_query->PerformQuery(this->GetMPProblem()->GetRoadmap())){
+      if(m_query->PerformQuery(this->GetRoadmap())){
         if(this->m_debug) cout << "Query successful! Output written to " << str << "." << endl;
       }
       else{
@@ -299,16 +295,14 @@ BasicRRTStrategy<MPTraits>::Finalize() {
   }
 
   //output final map
-  str = this->GetBaseFilename() + ".map";
-  ofstream osMap(str.c_str());
-  this->GetMPProblem()->GetRoadmap()->Write(osMap, this->GetMPProblem()->GetEnvironment());
-  osMap.close();
+  this->GetRoadmap()->Write(this->GetBaseFilename() + ".map", this->GetEnvironment());
 
   //output stats
-  str = this->GetBaseFilename() + ".stat";
+  string str = this->GetBaseFilename() + ".stat";
   ofstream  osStat(str.c_str());
   osStat << "NodeGen+Connection Stats" << endl;
-  stats->PrintAllStats(osStat, this->GetMPProblem()->GetRoadmap());
+  StatClass* stats = this->GetStatClass();
+  stats->PrintAllStats(osStat, this->GetRoadmap());
   stats->PrintClock("RRT Generation", osStat);
   osStat.close();
 

@@ -206,25 +206,18 @@ template<class MPTraits>
 void
 SRTStrategy<MPTraits>::
 Finalize() {
-
   if(this->m_debug)
     cout<<"\nFinalizing SRTStrategy::"<<endl;
 
-  //setup variables
-  StatClass* stats = this->GetMPProblem()->GetStatClass();
-  string str;
-
   //output final map
-  str = this->GetBaseFilename() + ".map";
-  ofstream osMap(str.c_str());
-  this->GetMPProblem()->GetRoadmap()->Write(osMap, this->GetMPProblem()->GetEnvironment());
-  osMap.close();
+  this->GetRoadmap()->Write(this->GetBaseFilename() + ".map", this->GetEnvironment());
 
   //output stats
-  str = this->GetBaseFilename() + ".stat";
+  StatClass* stats = this->GetStatClass();
+  string str = this->GetBaseFilename() + ".stat";
   ofstream  osStat(str.c_str());
   osStat << "NodeGen+Connection Stats" << endl;
-  stats->PrintAllStats(osStat, this->GetMPProblem()->GetRoadmap());
+  stats->PrintAllStats(osStat, this->GetRoadmap());
   stats->PrintClock("SRT Generation", osStat);
   osStat.close();
 

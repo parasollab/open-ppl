@@ -62,18 +62,14 @@ PrintMapEvaluation<MPTraits>::operator()() {
   int numEdges = this->GetMPProblem()->GetRoadmap()->GetGraph()->get_num_edges();
   ostringstream osName;
   osName << m_baseName << "." << numNodes << "." << numEdges << ".map";
-  ofstream osMap(osName.str().c_str());
-  this->GetMPProblem()->GetRoadmap()->Write(osMap, this->GetMPProblem()->GetEnvironment());
-  osMap.close();
+  this->GetMPProblem()->GetRoadmap()->Write(osName.str(), this->GetMPProblem()->GetEnvironment());
 
   int numCollNodes = this->GetMPProblem()->GetBlockRoadmap()->GetGraph()->get_num_vertices();
   int numCollEdges = this->GetMPProblem()->GetBlockRoadmap()->GetGraph()->get_num_edges();
   if(numCollNodes) {
     ostringstream osCollName;
     osCollName << m_baseName << "." << numCollNodes << "." << numCollEdges << ".block.map";
-    ofstream osCollMap(osCollName.str().c_str());
-    this->GetMPProblem()->GetBlockRoadmap()->Write(osCollMap, this->GetMPProblem()->GetEnvironment());
-    osCollMap.close();
+    this->GetMPProblem()->GetBlockRoadmap()->Write(osCollName.str(), this->GetMPProblem()->GetEnvironment());
   }
 
   return true;
