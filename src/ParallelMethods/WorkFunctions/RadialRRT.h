@@ -1277,35 +1277,6 @@ struct concat_vector_wf
     }
 };
 
-
-template<typename T, typename PropertyMap>
-struct is_in_cc
-{
-  typedef vector<T> result_type;
-  size_t m_ccid;
-  PropertyMap m_pmap;
-
-  is_in_cc(size_t ccid, PropertyMap pmap)
-    : m_ccid(ccid), m_pmap(pmap)
-  {}
-
-  template<typename Vref>
-    result_type operator() (Vref v)
-    {
-      if(m_pmap.get(v).get_cc() == m_ccid)
-        return result_type(1,v.descriptor());
-      else
-        return result_type();
-      return result_type();
-    }
-
-  void define_type(stapl::typer& t)
-  {
-    t.member(m_ccid);
-    t.member(m_pmap);
-  }
-};
-
 template<typename VID>
 struct DeleteCC {
   typedef void result_type;

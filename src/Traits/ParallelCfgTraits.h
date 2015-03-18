@@ -126,7 +126,7 @@
 //#include "MPStrategies/VisibilityBasedPRM.h"
 #include "MPStrategies/BlindRRT.h"
 #include "ParallelMethods/BasicParallelPRM.h"
-//#include "ParallelMethods/BulkRRT.h"
+#include "ParallelMethods/BulkRRT.h"
 #include "ParallelMethods/RadialBlindRRT.h"
 #include "ParallelMethods/RadialSubdivisionRRT.h"
 #include "ParallelMethods/RegularSubdivisionMethod.h"
@@ -310,7 +310,7 @@ struct MPTraits {
 
     BasicParallelPRM<MPTraits>,
     BlindRRT<MPTraits>,
-    //BulkRRT<MPTraits>,
+    BulkRRT<MPTraits>,
     RadialBlindRRT<MPTraits>,
     RadialSubdivisionRRT<MPTraits>,
     RegularSubdivisionMethod<MPTraits>

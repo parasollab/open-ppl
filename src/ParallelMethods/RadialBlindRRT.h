@@ -139,11 +139,6 @@ RadialBlindRRT<MPTraits>::DeleteInvalid(graph_view<GraphType> _graphView) {
       cc_stats(_graphView, ccs[i].first, ccView);
 
       map_func(DeleteCC<VID>(), ccView, make_repeat_view(_graphView));
-      //properly delete all elements in array
-      /*cc = stapl::map_reduce(is_in_cc<VID, property_map_type>(ccs[i].first, map), concat_vector_wf<VID>(), _regionView);
-      for(int j=0; j<cc.size(); j++) {
-        pMap->delete_vertex(cc[j]);
-      }*/
     }
   }
 }
