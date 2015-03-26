@@ -36,7 +36,11 @@ stapl::exit_code stapl_main(int _argc, char* _argv[]) {
   typedef MPTraits<PMPLCfgType> Traits;
   typedef Traits::MPProblemType MPProblemType;
   MPProblemType* problem = new MPProblemType(_argv[2]);
-  problem->Print(cout);
+
+  stapl::do_once([&](){
+    problem->Print(cout);
+    });
+  stapl::rmi_fence();
   problem->Solve();
 
   delete problem;

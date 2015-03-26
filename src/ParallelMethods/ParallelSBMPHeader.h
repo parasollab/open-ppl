@@ -14,6 +14,7 @@
 #include <stapl/containers/graph/generators/mesh.hpp>
 #include <stapl/containers/graph/views/graph_view.hpp>
 #include <stapl/containers/graph/views/property_maps.hpp>
+#include <stapl/skeletons/utility/tags.hpp>
 #include <stapl/views/list_view.hpp>
 #include <stapl/views/repeated_view.hpp>
 

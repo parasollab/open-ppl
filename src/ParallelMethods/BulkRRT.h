@@ -40,13 +40,14 @@ class BulkWF {
 
     template<typename View, typename GraphView>
       result_type operator()(const View& _view, GraphView& _gview){
+
         ///Setup global variables
         DistanceMetricPointer dmm = m_problem->GetDistanceMetric(m_dm);
         Environment* env = m_problem->GetEnvironment();
         NeighborhoodFinderPointer nf = m_problem->GetNeighborhoodFinder("BFNF");
         ExtenderPointer e = m_problem->GetExtender(m_eLabel);
 
-        for(typename View::iterator vit = _view.begin(); vit != _view.end(); ++vit){
+        for(typename View::iterator vit = _view.begin(); vit != _view.end(); ++vit) {
 
           CfgType newCfg, nearest, dir;
           VID nearestVID;
@@ -56,8 +57,14 @@ class BulkWF {
           //CfgType dir = SelectDirection(env);
           dir.GetRandomCfg(env);
 
-          NFMapFunc<MPTraits> nfMap;
-          NFResultType nfresult = nfMap.FindNeighbor(env, dmm, _gview.begin(), _gview.end(), dir, 1);
+          NFMapFunc<MPTraits> nfMap(m_problem, dir, 1, m_dm);
+          NFReduceFunc<MPTraits> nfReduce(1);
+          //NFResultType nfresult = nfMap.FindNeighbor(dmm, _gview.begin(), _gview.end(), dir, 1);
+          //nearestVID = nfresult[0].first.first;
+          //nearest = nfresult[0].first.second;
+
+          NFResultType nfresult = map_reduce<skeletons::tags::with_coarsened_wf>(nfMap, nfReduce, _gview);
+
           nearestVID = nfresult[0].first.first;
           nearest = nfresult[0].first.second;
 
@@ -208,11 +215,11 @@ void BulkRRT<MPTraits>::Run() {
   MPProblemType* m_problem = this->GetMPProblem();
 
   GraphType* pMap = m_problem->GetRoadmap()->GetGraph();
-  gviewType rmView(*pMap);
   CfgType root;
 
-
-  if(stapl::get_location_id() == 0){
+  ///TODO When Empty Base Container bug is fixed in STAPL do this to add root on
+  ///only one location. Until then, do code below comment section.
+  //if(stapl::get_location_id() == 0){
     //keep looping until a valid root node is made
     /*
        StatClass* stat = m_problem->GetStatClass();
@@ -235,10 +242,27 @@ void BulkRRT<MPTraits>::Run() {
 
        }
        }*/
-    pMap->add_vertex(root);
+  //  cout << "k: " << m_kNodes << endl;
+  //  pMap->add_vertex(root);
+  //}
+  ///temporary fix to Empty Base Container bug
+  stapl::array<VID> roots(get_num_locations());
+  size_t myID = get_location_id();
+  VID vid = pMap->add_vertex(root);
+  roots[myID] = vid;
+  PrintValue("VID ", vid);
+  PrintOnce("ROOT " , root);
+  stapl::rmi_fence();
+  if(myID < get_num_locations() - 1) {
+    pMap->add_edge_async(roots[myID], roots[myID + 1]);
+    pMap->add_edge_async(roots[myID + 1], roots[myID]);
+  }
+  else {
+    pMap->add_edge_async(roots[myID], roots[0]);
+    pMap->add_edge_async(roots[0], roots[myID]);
   }
 
-  PrintValue("ROOT " , root);
+
   stapl::rmi_fence();
 
   //WORK
@@ -247,20 +271,23 @@ void BulkRRT<MPTraits>::Run() {
   typedef stapl::array_view<vidArray> viewVidArray;
   stapl::counter<stapl::default_timer> t1;
   t1.start();
+
   bool mapPassedEvaluation = false;
   while(!mapPassedEvaluation){
     vidArray PA(m_kNodes*get_num_locations());
     viewVidArray v(PA);
+    gviewType rmView(*pMap);
     map_func(wf, balance_view(v,get_num_locations()), make_repeat_view(rmView));
     mapPassedEvaluation = this->EvaluateMap(m_evaluatorLabels);
   }
+
   stapl::rmi_fence(); //do I really need to fence?
 
   t1.stop();
 
   //STATS
   PrintOnce("TOTAL TIME: ", t1.value());
-  PrintOnce("Graph size: ", rmView.size());
+  PrintOnce("Graph size: ", pMap->get_num_vertices());
   stapl::rmi_fence();
 }
 

@@ -41,7 +41,7 @@
         <NodeConnectionMethod method="QueryClosest"/>
         <SmoothConnectionMethod method="AllToAll"/>
       </Query>
-      <ConditionalEvaluator label="NodesEval" metric_method="NumNodes" value="2000" operator=">=" />
+      <ConditionalEvaluator label="NodesEval" metric_method="NumNodes" value="200" operator=">=" />
       <ConditionalEvaluator label="NodesPRM" metric_method="NumNodes" value="1" operator=">=" />
       <ConditionalEvaluator label="RRTEval" metric_method="NumNodes" value="840" operator=">=" />
       <ComposeEvaluator label="QueryEval" operator="or">
@@ -68,17 +68,13 @@
         extenderLabel="BEVO">
       </BasicRRTStrategy>
 
-      <BulkRRT label="BulkRRT" filename="bulk" debug="false">
-         <num_runs nRuns = "1"/>
-         <total_nodes totalNodes ="1000"/>
+      <BulkRRT label="BulkRRT" filename="bulk" debug="true">
          <k_nodes kNodes = "1"/>
          <vc_method vcm = "cd"/>
-         <delta_var delta = "10.0"/>
-         <parallel_nf parallelNF = "false"/>
          <evaluation_method Method="NodesEval"/>
          <dm_method Method="euclidean"/>
          <nf_method Method="BFNF"/>
-         <min_distance minDist ="1.0"/>
+         <min_distance minDist ="0.1"/>
 	 <!--<query query = "narrow.query"/>-->
       </BulkRRT>
 
@@ -113,7 +109,10 @@
 
     </MPStrategies>
 
-    <Solver mpStrategyLabel="BlindRRT" seed="123456" baseFilename="BlindRRT"/>
+    <!--Solver mpStrategyLabel="BlindRRT" seed="123456" baseFilename="BlindRRT"/-->
+    <Solver mpStrategyLabel="BulkRRT" seed="123456" baseFilename="BulkRRT"/>
+    <!--Solver mpStrategyLabel="RadialBlindRRT" seed="123456" baseFilename="RadialBlindRRT"/-->
+    <!--Solver mpStrategyLabel="RadialSubdivisionRRT" seed="123456" baseFilename="RadialSubdivisionRRT"/-->
 
   </MPProblem>
 </MotionPlanning>
