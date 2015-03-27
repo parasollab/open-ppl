@@ -110,9 +110,9 @@
     </MPStrategies>
 
     <!--Solver mpStrategyLabel="BlindRRT" seed="123456" baseFilename="BlindRRT"/-->
-    <Solver mpStrategyLabel="BulkRRT" seed="123456" baseFilename="BulkRRT"/>
+    <!--Solver mpStrategyLabel="BulkRRT" seed="123456" baseFilename="BulkRRT"/-->
     <!--Solver mpStrategyLabel="RadialBlindRRT" seed="123456" baseFilename="RadialBlindRRT"/-->
-    <!--Solver mpStrategyLabel="RadialSubdivisionRRT" seed="123456" baseFilename="RadialSubdivisionRRT"/-->
+    <Solver mpStrategyLabel="RadialSubdivisionRRT" seed="123456" baseFilename="RadialSubdivisionRRT"/>
 
   </MPProblem>
 </MotionPlanning>

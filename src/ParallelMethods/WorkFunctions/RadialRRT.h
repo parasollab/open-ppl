@@ -237,11 +237,10 @@ class RadialRegion {
     typedef typename MPProblemType::VID VID;
     typedef typename MPTraits::CfgType CfgType;
     typedef typename MPProblemType::GraphType GraphType;
-    typedef CfgType RegionType;
     typedef typename MPTraits:: WeightType WeightType;
     typedef typename stapl::sequential::graph<stapl::DIRECTED, stapl::NONMULTIEDGES, CfgType,WeightType> LocalGraphType;
 
-    RadialRegion(RegionType _data = RegionType()) : m_data(_data) {}
+    RadialRegion(CfgType _data = CfgType()) : m_data(_data) {}
     RadialRegion(const RadialRegion& _other)
       : m_problem(_other.m_problem), m_data(_other.m_data),
       m_neighbors(_other.m_neighbors), m_branch(_other.m_branch),
@@ -259,16 +258,16 @@ class RadialRegion {
        }*/
 
     // Getters
-    vector<RegionType> GetNeighbors() { return m_neighbors; }
-    RegionType GetCandidate() { return m_data; }
+    vector<CfgType> GetNeighbors() { return m_neighbors; }
+    CfgType GetCandidate() { return m_data; }
     vector<VID> GetBranch() { return  m_branch;}
     WeightType GetWeight() { return  m_weight;}
     vector<pair<size_t, VID> > GetCCs() { return m_ccs;  }
     LocalGraphType GetLocalTree() { return m_localTree; }
 
     // Setters
-    void SetCandidate(const RegionType& _data) { m_data= _data; }
-    void SetNeighbors(const vector<RegionType>& _neighbors) { m_neighbors= _neighbors; }
+    void SetCandidate(const CfgType& _data) { m_data= _data; }
+    void SetNeighbors(const vector<CfgType>& _neighbors) { m_neighbors= _neighbors; }
     void SetBranch(const vector<VID>& _branch) {m_branch = _branch;}
     void SetWeight(const WeightType _weight) {m_weight = _weight;}
     void SetMPProblem(const MPProblemType* _problem) {m_problem = _problem;}
@@ -291,13 +290,12 @@ class RadialRegion {
 
   protected:
     MPProblemType* m_problem;
-    RegionType m_data;
-    vector<RegionType> m_neighbors;
+    CfgType m_data;
+    vector<CfgType> m_neighbors;
     vector<VID> m_branch;
     WeightType  m_weight;
     vector<pair<size_t, VID> > m_ccs;
     LocalGraphType m_localTree;
-
 };
 
 namespace stapl {
@@ -317,21 +315,20 @@ template <typename Accessor, class MPTraits>
       friend class proxy_core_access;
 
     public:
-      typedef CfgType RegionType;
       explicit proxy(Accessor const& _acc) : Accessor(_acc) { }
       operator target_t() const { return Accessor::read(); }
       proxy const& operator=(proxy const& _rhs) { Accessor::write(_rhs); return *this; }
       proxy const& operator=(target_t const& _rhs) { Accessor::write(_rhs); return *this;}
 
-      RegionType GetCandidate() { return Accessor::invoke(&target_t::GetCandidate); }
-      vector<RegionType> GetNeighbors() { return Accessor::invoke(&target_t::GetNeighbors); }
+      CfgType GetCandidate() { return Accessor::invoke(&target_t::GetCandidate); }
+      vector<CfgType> GetNeighbors() { return Accessor::invoke(&target_t::GetNeighbors); }
       vector<VID> GetBranch() { return Accessor::invoke(&target_t::GetBranch); }
       vector<pair<size_t, VID> > GetCCs() { return Accessor::invoke(&target_t::GetCCs); }
       WeightType GetWeight() { return Accessor::invoke(&target_t::GetWeight); }
       LocalGraphType GetLocalTree() { return Accessor::invoke(&target_t::GetLocalTree); }
 
-      void SetCandidate(const RegionType _data) { Accessor::invoke(&target_t::SetCandidate, _data); }
-      void SetNeighbors(const vector<RegionType> _neighbors) { Accessor::invoke(&target_t::SetNeighbors, _neighbors); }
+      void SetCandidate(const CfgType _data) { Accessor::invoke(&target_t::SetCandidate, _data); }
+      void SetNeighbors(const vector<CfgType> _neighbors) { Accessor::invoke(&target_t::SetNeighbors, _neighbors); }
       void SetBranch(const vector<VID> _branch) { Accessor::invoke(&target_t::SetBranch, _branch); }
       void SetWeight(const WeightType _weight) { Accessor::invoke(&target_t::SetWeight, _weight); }
       void SetMPProblem(const MPProblemType* _problem) {Accessor::invoke(&target_t::SetMPProblem, _problem); }
@@ -405,7 +402,8 @@ class RadialRegionEdge {
     typedef typename MPProblemType::VID VID;
     typedef typename MPProblemType::DistanceMetricPointer DistanceMetricPointer;
     typedef typename MPProblemType::NeighborhoodFinderPointer NeighborhoodFinderPointer;
-    typedef pair<VID, double> NFType;
+    typedef pair<pair<VID, CfgType>, double> NFType;
+    typedef vector<NFType> NFResultType;
 
     MPProblemType* m_problem;
     size_t  m_k;
@@ -414,7 +412,7 @@ class RadialRegionEdge {
   public:
     typedef void result_type;
 
-    typedef typename stapl::graph<stapl::DIRECTED, stapl::NONMULTIEDGES, RadialRegion<MPTraits>, WeightType> RadialRegionGraph;
+    typedef typename stapl::dynamic_graph<stapl::DIRECTED, stapl::NONMULTIEDGES, RadialRegion<MPTraits>, WeightType> RadialRegionGraph;
     RadialRegionEdge(MPProblemType* _problem, size_t _k, string _dmLabel):
       m_problem(_problem), m_k(_k), m_dmLabel(_dmLabel) {
       }
@@ -429,32 +427,23 @@ class RadialRegionEdge {
       result_type operator() (vertexView _v1, repeatView _v2) {
         ///replace with call to NF
         DistanceMetricPointer dmm = m_problem->GetDistanceMetric(m_dmLabel);
-        Environment* env = m_problem->GetEnvironment();
-        //NeighborhoodFinderPointer nfp = m_problem->GetNeighborhoodFinder(m_nf);
         CfgType cfg = _v1.property().GetCandidate();
         VID vid = _v1.descriptor();
         vector<CfgType> neighbors;
 
+        NFMapFuncRRRT<MPTraits> nfMap(m_problem, cfg, m_k, m_dmLabel);
+        NFReduceFuncRRRT<MPTraits> nfReduce(m_k);
+        NFResultType nfresult = map_reduce<skeletons::tags::with_coarsened_wf>(nfMap, nfReduce, _v2);
 
-        //NFMapFunc<MPTraits>  nfMapfnc(m_problem, cfg, m_k,true, m_dmLabel);
-
-        // vector< NFType > nfresult = map_reduce(is_coarse_wf(nfMapfnc), NFReduceFunc<MPTraits>(), _v2);
-
-        NFMapFunc<MPTraits> nfMap;
-        vector<NFType> nfresult = nfMap.FindNeighbors(env, dmm, _v2.begin(), _v2.end(), cfg, m_k);
         //Add Edge between v and its k closest
 
 
-        for(typename vector<pair<VID, double> >::iterator itr = nfresult.begin(); itr != nfresult.end(); ++itr)
-        {
-          // PrintValue("REDGE WF DIST : ", (*itr).second);
-          typename RadialRegionGraph::edge_descriptor ed1(vid, (*itr).first);
-          //typename RadialRegionGraph::edge_descriptor ed2((*itr).first, vid);
+        for(typename NFResultType::iterator itr = nfresult.begin(); itr != nfresult.end(); ++itr) {
+          typename RadialRegionGraph::edge_descriptor ed1(vid, (*itr).first.first);
+          //typename RadialRegionGraph::edge_descriptor ed2((*itr).first.first, vid);
           _v2.add_edge_async(ed1);
-          // _v2.add_edge_async(ed2);
-          ///TODO - replace by using tuple to get id, cfg and distance
-          CfgType neighbor = (*(_v2.find_vertex((*itr).first))).property().GetCandidate();
-          neighbors.push_back(neighbor);
+          //_v2.add_edge_async(ed2);
+          neighbors.push_back((*itr).first.second);
           // TODO Vizmo Debug
           //VDAddEdge(cfg,neighbor);
         }
@@ -508,7 +497,7 @@ struct RadialRegionVertex2D{
   public:
     typedef typename MPTraits::CfgType CfgType;
 
-    RadialRegionVertex2D(size_t _numRegions, CfgType _basePoint=CfgType(), double _radius=MAX_DBL):
+    RadialRegionVertex2D(size_t _numRegions, CfgType _basePoint, double _radius):
       m_numRegions(_numRegions), m_basePoint(_basePoint), m_radius(_radius) {
       }
 
@@ -519,10 +508,10 @@ struct RadialRegionVertex2D{
     }
 
     /// Add point to region graph and have them evenly distributed
+    typedef void result_type;
     template <typename View>
-      void operator() (View _vw) const {
-        double alpha = (double)  TWOPI/m_numRegions;
-        vector<double> pos = m_basePoint.GetPosition();
+      result_type operator() (View _vw) const {
+        double alpha = TWOPI/m_numRegions;
         const double xBase = m_basePoint[0];
         const double yBase = m_basePoint[1];
         double thetaBase = atan2(yBase,xBase);
@@ -570,9 +559,7 @@ struct RegionVertexByCCs{
     template <typename Region>
       void operator() (Region _region) const {
 
-
-        double alpha = (double)  2*3.141596/m_numRegions;
-        vector<double> pos = m_basePoint.GetPosition();
+        double alpha = TWOPI/m_numRegions;
         const double xBase = m_basePoint[0];
         const double yBase = m_basePoint[1];
         double thetaBase = atan2(yBase,xBase);
@@ -584,7 +571,6 @@ struct RegionVertexByCCs{
 
         _region.property().SetCandidate(regionCand);
         //VDAddNode(regionCand);
-
       }
 
 };
@@ -656,8 +642,9 @@ class BuildRadialRRT {
       _t.member(m_overlap);
     }
 
+    typedef void result_type;
     template<typename View>
-      void operator()(View _view) const {
+      result_type operator()(View _view) const {
 
         CfgType regionCand = _view.property().GetCandidate();
         vector<CfgType> neighbors = _view.property().GetNeighbors();

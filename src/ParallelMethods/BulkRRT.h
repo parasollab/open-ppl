@@ -54,17 +54,11 @@ class BulkWF {
           //int weight;
 
           //We want to find a random configuration to attempt expansion that way.
-          //CfgType dir = SelectDirection(env);
           dir.GetRandomCfg(env);
 
           NFMapFunc<MPTraits> nfMap(m_problem, dir, 1, m_dm);
           NFReduceFunc<MPTraits> nfReduce(1);
-          //NFResultType nfresult = nfMap.FindNeighbor(dmm, _gview.begin(), _gview.end(), dir, 1);
-          //nearestVID = nfresult[0].first.first;
-          //nearest = nfresult[0].first.second;
-
           NFResultType nfresult = map_reduce<skeletons::tags::with_coarsened_wf>(nfMap, nfReduce, _gview);
-
           nearestVID = nfresult[0].first.first;
           nearest = nfresult[0].first.second;
 
