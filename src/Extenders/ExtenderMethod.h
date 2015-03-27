@@ -28,20 +28,20 @@ class ExtenderMethod : public MPBaseObject<MPTraits> {
     /// @param _nearest Initial configuration to grow from
     /// @param _dir Direction configuration to grow to
     /// @param _new Placeholder for resulting configuration
-    /// @param _innerNodes Placeholder for polygonal chain configurations for
-    ///        non-straight-line extention operations
+    /// @param _lpOutput Placeholder for polygonal chain configurations for
+    ///        non-straight-line extention operations and associated weight
     /// @return Success/fail for extention operation
     ///
     /// @usage
     /// @code
-    /// ExtenderPointer e = this->GetMPProblem()->GetExtender(m_eLabel);
+    /// ExtenderPointer e = this->GetExtender(m_eLabel);
     /// CfgType c, cDir, cNew;
-    /// vector<CfgType> intermediates;
-    /// bool pass = e->Extend(c, cDir, cNew, intermediates);
+    //  LPOutput<MPTraits> lpOutput;
+    /// bool pass = e->Extend(c, cDir, cNew, lpOutput);
     /// @endcode
     ////////////////////////////////////////////////////////////////////////////
     virtual bool Extend(const CfgType& _nearest, const CfgType& _dir,
-        CfgType& _new, vector<CfgType>& _innerNodes) =0;
+        CfgType& _new, LPOutput<MPTraits>& _lpOutput) =0;
 };
 
 #endif

@@ -49,7 +49,8 @@ class CCExpansion: public ConnectorMethod<MPTraits> {
     //////////////////////////////////
     /* Constructors and Destructors */
     //////////////////////////////////
-    CCExpansion(MPProblemType* _problem = NULL, string _lp = "", string _nf = "", string _vc = "");
+    CCExpansion(MPProblemType* _problem = NULL, string _lp = "", 
+        string _nf = "", string _vc = "");
     CCExpansion(MPProblemType* _problem, XMLNodeReader& _node);
 
     //////////////////////////////////////
@@ -68,55 +69,65 @@ class CCExpansion: public ConnectorMethod<MPTraits> {
     template <class ColorMap, class InputIterator1, class InputIterator2, class OutputIterator>
       void Connect(RoadmapType* _rm, StatClass& _stats,
           ColorMap& _cmap, InputIterator1 _itr1First, InputIterator1 _itr1Last,
-          InputIterator2 _itr2First, InputIterator2 _itr2Last, OutputIterator _collision);
+          InputIterator2 _itr2First, InputIterator2 _itr2Last, 
+          OutputIterator _collision);
 
   protected:
-    /////////////////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////
     /* Updated RDMP Methods */
-    /////////////////////////////////////////////////////////////////////////////
-    void UpdateRoadmap(RoadmapType* _rm, StatClass& _stats, CfgType& _prev, CfgType& _bump);
-    void UpdateRoadmap(RoadmapType* _rm, StatClass& _stats, CfgType& _prev, CfgType& _bumpPoint, CfgType& _curr);
+    ////////////////////////////////////////////////////////////////////////////
+    void UpdateRoadmap(RoadmapType* _rm, StatClass& _stats, CfgType& _prev, 
+        CfgType& _bump);
+    void UpdateRoadmap(RoadmapType* _rm, StatClass& _stats, CfgType& _prev, 
+        CfgType& _bumpPoint, CfgType& _curr);
 
-    /////////////////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////
     /* Utility Methods */
-    /////////////////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////
     void TargetCCInfo(RoadmapType* _rm, vector<VID>& _curCC);
     bool IsClear(RoadmapType* _rm, CfgType& bumpPoint);
     void UnitVec(CfgType& _uA);
     template <class ColorMap>
-      void PreExpansionSetup(RoadmapType* _rm, StatClass& _stats, ColorMap& _cmap, int _index, vector<VID>& _allCC);
+      void PreExpansionSetup(RoadmapType* _rm, StatClass& _stats, 
+          ColorMap& _cmap, int _index, vector<VID>& _allCC);
     template <class ColorMap>
-      void FindNearestCC(RoadmapType* _rm, ColorMap& _cmap, VID& _curCC, vector<VID>& _allCCs);
+      void FindNearestCC(RoadmapType* _rm, ColorMap& _cmap, VID& _curCC, 
+          vector<VID>& _allCCs);
 
-    /////////////////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////
     /* Node Selection Methods */
-    /////////////////////////////////////////////////////////////////////////////
-    void FindDifficultNodes(RoadmapType* _rm, StatClass& _stats, vector<VID>& _cc1, int _k);
-    void SelectCandidates(RoadmapType* _rm, StatClass& _stats, vector<VID>& _curCC);
+    ////////////////////////////////////////////////////////////////////////////
+    void FindDifficultNodes(RoadmapType* _rm, StatClass& _stats, 
+        vector<VID>& _cc1, int _k);
+    void SelectCandidates(RoadmapType* _rm, StatClass& _stats, 
+        vector<VID>& _curCC);
 
-    /////////////////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////
     /* CC Expansion Method Wrapper */
-    /////////////////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////
     void Expand(RoadmapType* _rm, StatClass& _stats, int _index);
 
-    /////////////////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////
     /* CC Expansion Methods */
-    /////////////////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////
     void RandomExpand(RoadmapType* _rm, StatClass& _stats, int _index);
     void ExpandFrom(RoadmapType* _rm, StatClass& _stats, int _index);
     void ExpandTo(RoadmapType* _rm, StatClass& _stats, int _index);
     void MedialAxisExpand(RoadmapType* _rm, StatClass& _stats, int _index);
-    void MedialRecurse(RoadmapType* _rm, StatClass& _stats, CfgType& _prev, CfgType& _dir, int _count);
+    void MedialRecurse(RoadmapType* _rm, StatClass& _stats, CfgType& _prev, 
+        CfgType& _dir, int _count);
 
-    /////////////////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////
     /* Compute desired direction follow the tangent of the medial-axis */
-    /////////////////////////////////////////////////////////////////////////////
-    void GetMedialAxisRay(RoadmapType* _rm, CfgType& _prev, CfgType& _bumpPoint, CfgType& _curr, CfgType& _dir);
+    ////////////////////////////////////////////////////////////////////////////
+    void GetMedialAxisRay(RoadmapType* _rm, CfgType& _prev, CfgType& _bumpPoint,
+        CfgType& _curr, CfgType& _dir);
 
-    /////////////////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////
     /* End conditions checking method */
-    /////////////////////////////////////////////////////////////////////////////
-    bool WithinProximity(RoadmapType* _rm, CfgType& _bumpPoint, CfgType& _target);
+    ////////////////////////////////////////////////////////////////////////////
+    bool WithinProximity(RoadmapType* _rm, CfgType& _bumpPoint, 
+        CfgType& _target);
 
     //////////
     /* Data */
@@ -180,7 +191,8 @@ class CCExpansion: public ConnectorMethod<MPTraits> {
 /* Constructor : Default */
 ///////////////////////////////////////////////////////////////////////////////
   template<class MPTraits>
-CCExpansion<MPTraits>::CCExpansion(MPProblemType* _problem, string _lp, string _nf, string _vc)
+CCExpansion<MPTraits>::CCExpansion(MPProblemType* _problem, string _lp, 
+    string _nf, string _vc)
   : ConnectorMethod<MPTraits>(),m_medialAxisUtility() {
     this->SetName("CCExpansion");
     m_dmLabel = "";
@@ -200,8 +212,10 @@ CCExpansion<MPTraits>::CCExpansion(MPProblemType* _problem, string _lp, string _
 /* Constructor : XML Inputs */
 ///////////////////////////////////////////////////////////////////////////////
   template<class MPTraits>
-CCExpansion<MPTraits>::CCExpansion(MPProblemType* _problem, XMLNodeReader& _node)
-  : ConnectorMethod<MPTraits>(_problem,_node), m_medialAxisUtility(_problem,_node){
+CCExpansion<MPTraits>::CCExpansion(MPProblemType* _problem, 
+    XMLNodeReader& _node)
+  : ConnectorMethod<MPTraits>(_problem,_node), 
+      m_medialAxisUtility(_problem,_node){
     this->SetName("CCExpansion");
     ParseXML(_node);
   }
@@ -233,17 +247,27 @@ CCExpansion<MPTraits>::Print(ostream& _os) const {
 template <class MPTraits>
 void
 CCExpansion<MPTraits>::ParseXML(XMLNodeReader& _node){
-  m_kNodes = _node.numberXMLParameter("kNodes",true,5,0,1000,"Max number of expansion node candidates");
-  m_nIterations = _node.numberXMLParameter("nIter",true,1,0,1000,"Max number of expansion iterations");
-  m_maxStepDistance = _node.numberXMLParameter("maxStepDist",true,1.0,1.0,1000.0,"Max Distance traveled per iteration");
-  m_minStepDistance = _node.numberXMLParameter("minStepDist",true,0.0,0.0,1000.0,"Min Distance traveled per iteration");
-  m_maxFailedExpansions = _node.numberXMLParameter("maxFails",true,10,0,1000,"Max number of failed expansions");
-  m_addIntermediate = ((_node.stringXMLParameter("addIntermediate",true,"false","Always add intermediate nodes?") == "true") ? true : false);
-  m_dmLabel = _node.stringXMLParameter("dmLabel",true,"euclidean","VC for RRTExpand.");
-  m_vcLabel = _node.stringXMLParameter("vcLabel",true,"cd2","Distance Metric for RRTExpand.");
+  m_kNodes = _node.numberXMLParameter("kNodes",true,5,0,1000,
+      "Max number of expansion node candidates");
+  m_nIterations = _node.numberXMLParameter("nIter",true,1,0,1000,
+      "Max number of expansion iterations");
+  m_maxStepDistance = _node.numberXMLParameter("maxStepDist",true,1.0,1.0,
+      1000.0,"Max Distance traveled per iteration");
+  m_minStepDistance = _node.numberXMLParameter("minStepDist",true,0.0,0.0,
+      1000.0,"Min Distance traveled per iteration");
+  m_maxFailedExpansions = _node.numberXMLParameter("maxFails",true,10,0,1000,
+      "Max number of failed expansions");
+  m_addIntermediate = ((_node.stringXMLParameter("addIntermediate",true,"false",
+      "Always add intermediate nodes?") == "true") ? true : false);
+  m_dmLabel = _node.stringXMLParameter("dmLabel",true,"euclidean",
+      "VC for RRTExpand.");
+  m_vcLabel = _node.stringXMLParameter("vcLabel",true,"cd2",
+      "Distance Metric for RRTExpand.");
 
-  string nodePolicy = _node.stringXMLParameter("nodeChoice",true, "RANDOM","Choice of Expansion Nodes");
-  std::transform(nodePolicy.begin(), nodePolicy.end(), nodePolicy.begin(), ::toupper);
+  string nodePolicy = _node.stringXMLParameter("nodeChoice",true, "RANDOM",
+      "Choice of Expansion Nodes");
+  std::transform(nodePolicy.begin(), nodePolicy.end(), nodePolicy.begin(), 
+      ::toupper);
   if(nodePolicy == "RANDOM")
     m_nodeSelectionOption = m_R;
   else if(nodePolicy == "FARTHEST")
@@ -254,8 +278,10 @@ CCExpansion<MPTraits>::ParseXML(XMLNodeReader& _node){
     throw ParseException(WHERE, "nodeChoice \"" + nodePolicy +
         "\" is undefined. Use one of \"Random\", \"Farthest\", or \"Difficult\".");
 
-  string expansionBias = _node.stringXMLParameter("expansionMethod",true,"RandomExpand","Expansion Strategy");
-  std::transform(expansionBias.begin(), expansionBias.end(), expansionBias.begin(), ::toupper);
+  string expansionBias = _node.stringXMLParameter("expansionMethod",true,
+      "RandomExpand","Expansion Strategy");
+  std::transform(expansionBias.begin(), expansionBias.end(), 
+      expansionBias.begin(), ::toupper);
   if(expansionBias == "RANDOMEXPAND")
     m_expansionMethod = m_RE;
   else if(expansionBias == "EXPANDTO")
@@ -274,7 +300,8 @@ CCExpansion<MPTraits>::ParseXML(XMLNodeReader& _node){
 /* Connect Function */
 ///////////////////////////////////////////////////////////////////////////////
 template <class MPTraits>
-template<class ColorMap, class InputIterator1, class InputIterator2, class OutputIterator>
+template<class ColorMap, class InputIterator1, class InputIterator2, 
+    class OutputIterator>
 void
 CCExpansion<MPTraits>::Connect(RoadmapType* _rm, StatClass& _stats,
     ColorMap& _cmap,
@@ -291,12 +318,14 @@ CCExpansion<MPTraits>::Connect(RoadmapType* _rm, StatClass& _stats,
   if(tmp.size() <= 1 && m_expansionMethod == m_ET){
     if(this->m_debug){
       cout << "ExpansionMethod == ExpandTo" << endl;
-      cout << "However, only 1 CC exists ... Defaulting to RandomExpand." << endl;
+      cout << "However, only 1 CC exists ... Defaulting to RandomExpand." 
+           << endl;
     }
     m_expansionMethod = m_RE;
   }
 
-  // Pull the representative VIDs from the vector of pairs in order of largest -> smallest CCs
+  // Pull the representative VIDs from the vector of pairs in order of 
+  // largest -> smallest CCs
   vector<VID> allCCs;
   sort(tmp.begin(),tmp.end());
   typedef typename vector< pair<size_t,VID> >::reverse_iterator RIT;
@@ -318,7 +347,8 @@ CCExpansion<MPTraits>::Connect(RoadmapType* _rm, StatClass& _stats,
 template <class MPTraits>
 template <class ColorMap>
 void
-CCExpansion<MPTraits>::PreExpansionSetup(RoadmapType* _rm, StatClass& _stats, ColorMap& _cmap, int _index, vector<VID>& _allCC){
+CCExpansion<MPTraits>::PreExpansionSetup(RoadmapType* _rm, StatClass& _stats, 
+    ColorMap& _cmap, int _index, vector<VID>& _allCC){
   vector<VID> curCC;
   _cmap.reset();
   get_cc(*_rm->GetGraph(),_cmap,*(_allCC.begin()+_index),curCC);
@@ -356,12 +386,14 @@ CCExpansion<MPTraits>::Expand(RoadmapType* _rm, StatClass& _stats, int _index){
 /////////////////////////////////////////////////////////////////////////////
 template<class MPTraits>
 void
-CCExpansion<MPTraits>::RandomExpand(RoadmapType* _rm, StatClass& _stats, int _index){
+CCExpansion<MPTraits>::RandomExpand(RoadmapType* _rm, StatClass& _stats, 
+    int _index){
   bool good;
-  int weight = 0;
+  LPOutput<MPTraits> lpOutput;
   CDInfo cdInfo;
   CfgType prev, node, direction, bumpPoint;
-  DistanceMetricPointer dm = this->GetMPProblem()->GetNeighborhoodFinder(this->m_nfLabel)->GetDMMethod();
+  DistanceMetricPointer dm = 
+      this->GetNeighborhoodFinder(this->m_nfLabel)->GetDMMethod();
   BasicExtender<MPTraits> be(m_dmLabel, m_vcLabel);
   be.SetMPProblem(this->GetMPProblem());
 
@@ -373,18 +405,20 @@ CCExpansion<MPTraits>::RandomExpand(RoadmapType* _rm, StatClass& _stats, int _in
     // Produce a long distance random directional ray
 
     // Expand in a random direction
-    direction.GetRandomRay(m_maxStepDistance, this->GetMPProblem()->GetEnvironment(), dm);
-    good = be.Expand(prev, direction, bumpPoint, m_maxStepDistance, weight, cdInfo,
-        this->GetMPProblem()->GetEnvironment()->GetPositionRes(),
-        this->GetMPProblem()->GetEnvironment()->GetOrientationRes());
+    direction.GetRandomRay(m_maxStepDistance, 
+        this->GetEnvironment(), dm);
+    good = be.Expand(prev, direction, bumpPoint, m_maxStepDistance, lpOutput, 
+        cdInfo, this->GetEnvironment()->GetPositionRes(),
+        this->GetEnvironment()->GetOrientationRes());
     if(!good) return;
 
     /// PRODUCE SECOND DIRECTIONAL RAY ///////////////////////////
     // Expand in a second random direction
-    direction.GetRandomRay(m_minStepDistance, this->GetMPProblem()->GetEnvironment(), dm);
-    good = be.Expand(bumpPoint, direction, node, m_minStepDistance, weight, cdInfo,
-        this->GetMPProblem()->GetEnvironment()->GetPositionRes(),
-        this->GetMPProblem()->GetEnvironment()->GetOrientationRes());
+    direction.GetRandomRay(m_minStepDistance, 
+        this->GetEnvironment(), dm);
+    good = be.Expand(bumpPoint, direction, node, m_minStepDistance, lpOutput, 
+        cdInfo, this->GetEnvironment()->GetPositionRes(),
+        this->GetEnvironment()->GetOrientationRes());
     if(!good) return;
 
     // Update Roadmap
@@ -398,13 +432,15 @@ CCExpansion<MPTraits>::RandomExpand(RoadmapType* _rm, StatClass& _stats, int _in
 /////////////////////////////////////////////////////////////////////////////
 template <class MPTraits>
 void
-CCExpansion<MPTraits>::ExpandFrom(RoadmapType* _rm, StatClass& _stats, int _index){
+CCExpansion<MPTraits>::ExpandFrom(RoadmapType* _rm, StatClass& _stats, 
+    int _index){
   bool good;
-  int weight = 0;
+  LPOutput<MPTraits> lpOutput;
   CDInfo cdInfo;
   CfgType prev, node, direction, bumpPoint;
   CfgType away = m_srcCentroid;
-  DistanceMetricPointer dm = this->GetMPProblem()->GetNeighborhoodFinder(this->m_nfLabel)->GetDMMethod();
+  DistanceMetricPointer dm = 
+      this->GetNeighborhoodFinder(this->m_nfLabel)->GetDMMethod();
   BasicExtender<MPTraits> be(m_dmLabel, m_vcLabel);
   be.SetMPProblem(this->GetMPProblem());
 
@@ -415,7 +451,7 @@ CCExpansion<MPTraits>::ExpandFrom(RoadmapType* _rm, StatClass& _stats, int _inde
     // CC might contain 1 node, this will handle the initial expansion step
     // Else, produce ray aiming directly from centroid to expansion node
     if(away == CfgType()){
-      direction.GetRandomRay(m_maxStepDistance, this->GetMPProblem()->GetEnvironment(), dm);
+      direction.GetRandomRay(m_maxStepDistance, this->GetEnvironment(), dm);
     }
     else {
       direction = prev - away;
@@ -424,16 +460,16 @@ CCExpansion<MPTraits>::ExpandFrom(RoadmapType* _rm, StatClass& _stats, int _inde
     }
 
     // Produce first expansion ray away from the centroid
-    good = be.Expand(prev, direction, bumpPoint, m_maxStepDistance, weight, cdInfo,
-        this->GetMPProblem()->GetEnvironment()->GetPositionRes(),
-        this->GetMPProblem()->GetEnvironment()->GetOrientationRes());
+    good = be.Expand(prev, direction, bumpPoint, m_maxStepDistance, lpOutput, 
+        cdInfo, this->GetEnvironment()->GetPositionRes(),
+        this->GetEnvironment()->GetOrientationRes());
     if(!good) return;
 
     // Produce second expansion ray in a random direction
-    direction.GetRandomRay(m_minStepDistance, this->GetMPProblem()->GetEnvironment(), dm);
-    good = be.Expand(bumpPoint, direction, node, m_minStepDistance, weight, cdInfo,
-        this->GetMPProblem()->GetEnvironment()->GetPositionRes(),
-        this->GetMPProblem()->GetEnvironment()->GetOrientationRes());
+    direction.GetRandomRay(m_minStepDistance, this->GetEnvironment(), dm);
+    good = be.Expand(bumpPoint, direction, node, m_minStepDistance, lpOutput, 
+        cdInfo, this->GetEnvironment()->GetPositionRes(),
+        this->GetEnvironment()->GetOrientationRes());
     if(!good) return;
 
     // Update Roadmap
@@ -447,14 +483,16 @@ CCExpansion<MPTraits>::ExpandFrom(RoadmapType* _rm, StatClass& _stats, int _inde
 /////////////////////////////////////////////////////////////////////////////
 template<class MPTraits>
 void
-CCExpansion<MPTraits>::ExpandTo(RoadmapType* _rm, StatClass& _stats, int _index){
+CCExpansion<MPTraits>::ExpandTo(RoadmapType* _rm, StatClass& _stats, 
+    int _index){
 
   bool good;
-  int weight = 0;
+  LPOutput<MPTraits> lpOutput;
   CDInfo cdInfo;
   CfgType prev, node, direction, bumpPoint;
   CfgType target = m_goalTargetNode;
-  DistanceMetricPointer dm = this->GetMPProblem()->GetNeighborhoodFinder(this->m_nfLabel)->GetDMMethod();
+  DistanceMetricPointer dm = 
+      this->GetNeighborhoodFinder(this->m_nfLabel)->GetDMMethod();
   BasicExtender<MPTraits> be(m_dmLabel, m_vcLabel);
   be.SetMPProblem(this->GetMPProblem());
 
@@ -465,9 +503,9 @@ CCExpansion<MPTraits>::ExpandTo(RoadmapType* _rm, StatClass& _stats, int _index)
     // Produce first expansion ray to the target node
     double distanceToTarget = dm->Distance(prev, target);
     direction = target;
-    good = be.Expand(prev, direction, bumpPoint, distanceToTarget, weight, cdInfo,
-        this->GetMPProblem()->GetEnvironment()->GetPositionRes(),
-        this->GetMPProblem()->GetEnvironment()->GetOrientationRes());
+    good = be.Expand(prev, direction, bumpPoint, distanceToTarget, lpOutput, 
+        cdInfo, this->GetEnvironment()->GetPositionRes(),
+        this->GetEnvironment()->GetOrientationRes());
     if(!good) return;
 
     // Check 1: Are we within proximity to the target location?
@@ -477,10 +515,10 @@ CCExpansion<MPTraits>::ExpandTo(RoadmapType* _rm, StatClass& _stats, int _index)
     }
 
     // Produce second expansion ray in a random direction
-    direction.GetRandomRay(m_minStepDistance, this->GetMPProblem()->GetEnvironment(), dm);
-    good = be.Expand(bumpPoint, direction, node, m_maxStepDistance, weight, cdInfo,
-        this->GetMPProblem()->GetEnvironment()->GetPositionRes(),
-        this->GetMPProblem()->GetEnvironment()->GetOrientationRes());
+    direction.GetRandomRay(m_minStepDistance, this->GetEnvironment(), dm);
+    good = be.Expand(bumpPoint, direction, node, m_maxStepDistance, lpOutput, 
+        cdInfo, this->GetEnvironment()->GetPositionRes(),
+        this->GetEnvironment()->GetOrientationRes());
     if(!good) return;
 
     // Update Roadmap
@@ -494,33 +532,36 @@ CCExpansion<MPTraits>::ExpandTo(RoadmapType* _rm, StatClass& _stats, int _index)
 /////////////////////////////////////////////////////////////////////////////
 template <class MPTraits>
 void
-CCExpansion<MPTraits>::MedialAxisExpand(RoadmapType* _rm, StatClass& _stats, int _index){
-  int weight = 0;
+CCExpansion<MPTraits>::MedialAxisExpand(RoadmapType* _rm, StatClass& _stats, 
+    int _index){
+  LPOutput<MPTraits> lpOutput;
   CDInfo cdInfo;
   CfgType prev, bump1, bump2, dir1, dir2;
-  DistanceMetricPointer dm = this->GetMPProblem()->GetNeighborhoodFinder(this->m_nfLabel)->GetDMMethod();
+  DistanceMetricPointer dm = 
+      this->GetNeighborhoodFinder(this->m_nfLabel)->GetDMMethod();
   BasicExtender<MPTraits> be(m_dmLabel, m_vcLabel);
   be.SetMPProblem(this->GetMPProblem());
 
   /// Kick-Off Expansion history with a random ray
   prev = _rm->GetGraph()->GetVertex(m_expansionChains[_index]);
-  dir1.GetRandomRay(m_maxStepDistance, this->GetMPProblem()->GetEnvironment(), dm);
+  dir1.GetRandomRay(m_maxStepDistance, this->GetEnvironment(), dm);
   dir2 = -dir1;
 
   /// Perform initial expansion
-  bool expand1 = be.Expand(prev, dir1, bump1, m_maxStepDistance, weight, cdInfo,
-      this->GetMPProblem()->GetEnvironment()->GetPositionRes(),
-      this->GetMPProblem()->GetEnvironment()->GetOrientationRes());
-  bool expand2 = be.Expand(prev, dir2, bump2, m_maxStepDistance, weight, cdInfo,
-      this->GetMPProblem()->GetEnvironment()->GetPositionRes(),
-      this->GetMPProblem()->GetEnvironment()->GetOrientationRes());
+  bool expand1 = be.Expand(prev, dir1, bump1, m_maxStepDistance, lpOutput, 
+      cdInfo, this->GetEnvironment()->GetPositionRes(),
+      this->GetEnvironment()->GetOrientationRes());
+  bool expand2 = be.Expand(prev, dir2, bump2, m_maxStepDistance, lpOutput, 
+      cdInfo, this->GetEnvironment()->GetPositionRes(),
+      this->GetEnvironment()->GetOrientationRes());
 
   /// Expansion branch 1
   if(expand1){
     /// Record bump points
     CfgType mid1 = bump1;
     /// Push bump points to the medial axis
-    m_medialAxisUtility.PushToMedialAxis(mid1,this->GetMPProblem()->GetEnvironment()->GetBoundary());
+    m_medialAxisUtility.PushToMedialAxis(mid1,
+        this->GetEnvironment()->GetBoundary());
     /// Update Roadmap
     UpdateRoadmap(_rm,_stats,prev,bump1,mid1);
     /// Get approximate medial axis rays for the next iteration
@@ -534,7 +575,8 @@ CCExpansion<MPTraits>::MedialAxisExpand(RoadmapType* _rm, StatClass& _stats, int
     /// Record bump points
     CfgType mid2 = bump2;
     /// Push bump points to the medial axis
-    m_medialAxisUtility.PushToMedialAxis(mid2,this->GetMPProblem()->GetEnvironment()->GetBoundary());
+    m_medialAxisUtility.PushToMedialAxis(mid2,
+        this->GetEnvironment()->GetBoundary());
     /// Update Roadmap
     UpdateRoadmap(_rm,_stats,prev,bump2,mid2);
     /// Get approximate medial axis rays for the next iteration
@@ -548,15 +590,17 @@ CCExpansion<MPTraits>::MedialAxisExpand(RoadmapType* _rm, StatClass& _stats, int
 /* Recursive MedialAxisExpand Method */
 /////////////////////////////////////////////////////////////////////////////
 template <class MPTraits>
-void CCExpansion<MPTraits>::MedialRecurse(RoadmapType* _rm, StatClass& _stats, CfgType& _prev, CfgType& _dir, int _count){
+void CCExpansion<MPTraits>::MedialRecurse(RoadmapType* _rm, StatClass& _stats, 
+    CfgType& _prev, CfgType& _dir, int _count){
   /// If we have reached the max number of iterations, return.
   if(_count++ >= m_nIterations){
     return;
   }
 
-  int weight = 0;
+  LPOutput<MPTraits> lpOutput;
   CDInfo cdInfo;
-  DistanceMetricPointer dm = this->GetMPProblem()->GetNeighborhoodFinder(this->m_nfLabel)->GetDMMethod();
+  DistanceMetricPointer dm = 
+      this->GetNeighborhoodFinder(this->m_nfLabel)->GetDMMethod();
   BasicExtender<MPTraits> be(m_dmLabel, m_vcLabel);
   be.SetMPProblem(this->GetMPProblem());
 
@@ -566,18 +610,20 @@ void CCExpansion<MPTraits>::MedialRecurse(RoadmapType* _rm, StatClass& _stats, C
 
   /// Perform expansion
   CfgType bump1,bump2;
-  bool expand1 = be.Expand(_prev, dir1, bump1, m_maxStepDistance, weight, cdInfo,
-      this->GetMPProblem()->GetEnvironment()->GetPositionRes(),
-      this->GetMPProblem()->GetEnvironment()->GetOrientationRes());
-  bool expand2 = be.Expand(_prev, dir2, bump2, m_maxStepDistance, weight, cdInfo,
-      this->GetMPProblem()->GetEnvironment()->GetPositionRes(),
-      this->GetMPProblem()->GetEnvironment()->GetOrientationRes());
+  bool expand1 = be.Expand(_prev, dir1, bump1, m_maxStepDistance, lpOutput, 
+      cdInfo, this->GetEnvironment()->GetPositionRes(),
+      this->GetEnvironment()->GetOrientationRes());
+  bool expand2 = be.Expand(_prev, dir2, bump2, m_maxStepDistance, lpOutput, 
+      cdInfo, this->GetEnvironment()->GetPositionRes(),
+      this->GetEnvironment()->GetOrientationRes());
 
   /// Expansion branch 1
   if(expand1){
     CfgType mid1 = bump1;
-    m_medialAxisUtility.PushToMedialAxis(mid1,this->GetMPProblem()->GetEnvironment()->GetBoundary());
-    // Ignore the first medial expansion since we may still be near our initial expansion node.
+    m_medialAxisUtility.PushToMedialAxis(mid1,
+        this->GetEnvironment()->GetBoundary());
+    // Ignore the first medial expansion since we may still be near our initial 
+    // expansion node.
     if(_count <= 1 || IsClear(_rm, mid1)){
       UpdateRoadmap(_rm,_stats,_prev,bump1,mid1);
       GetMedialAxisRay(_rm,_prev,bump1,mid1,dir1);
@@ -588,8 +634,10 @@ void CCExpansion<MPTraits>::MedialRecurse(RoadmapType* _rm, StatClass& _stats, C
   /// Expansion branch 2
   if(expand2){
     CfgType mid2 = bump2;
-    m_medialAxisUtility.PushToMedialAxis(mid2,this->GetMPProblem()->GetEnvironment()->GetBoundary());
-    // Ignore the first medial expansion since we may still be near our initial expansion node.
+    m_medialAxisUtility.PushToMedialAxis(mid2,
+        this->GetEnvironment()->GetBoundary());
+    // Ignore the first medial expansion since we may still be near our initial 
+    // expansion node.
     if(_count <= 1 || IsClear(_rm, mid2)){
       UpdateRoadmap(_rm,_stats,_prev,bump2,mid2);
       GetMedialAxisRay(_rm,_prev,bump2,mid2,dir2);
@@ -603,20 +651,26 @@ void CCExpansion<MPTraits>::MedialRecurse(RoadmapType* _rm, StatClass& _stats, C
 ///////////////////////////////////////////////////////////////////////////////
 template <class MPTraits>
 void
-CCExpansion<MPTraits>::FindDifficultNodes(RoadmapType* _rm, StatClass& _stats, vector<VID>& _cc1, int _k){
+CCExpansion<MPTraits>::FindDifficultNodes(RoadmapType* _rm, StatClass& _stats, 
+    vector<VID>& _cc1, int _k){
   vector<pair<VID,double> > nodeWeights(_cc1.size());
   typedef typename vector<pair<VID,double> >::iterator PIDIT;
   PIDIT it2 = nodeWeights.begin();
   for(VIDIT it = _cc1.begin(); it != _cc1.end(); ++it){
     CfgRef cfg = _rm->GetGraph()->GetVertex(*it);
-    if(!cfg.IsStat("succConnectionAttempts") || !cfg.IsStat("totalConnectionAttempts")){
-      *it2++ = pair<VID,double>(*it,0.0); // Node has never had an attempted connections
+    if(!cfg.IsStat("succConnectionAttempts") || 
+        !cfg.IsStat("totalConnectionAttempts")){
+      *it2++ = pair<VID,double>(*it,0.0); // Node has never had an attempted 
+                                          // connections
     }
     else {
-      *it2++ = pair<VID,double>(*it,double(cfg.GetStat("succConnectionAttempts")/cfg.GetStat("totalConnectionAttempts")));
+      *it2++ = pair<VID,double>(*it,
+          double(cfg.GetStat("succConnectionAttempts")/
+          cfg.GetStat("totalConnectionAttempts")));
     }
   }
-  partial_sort(nodeWeights.begin(), nodeWeights.begin()+_k, nodeWeights.end(), CompareSecond<VID,double>());
+  partial_sort(nodeWeights.begin(), nodeWeights.begin()+_k, nodeWeights.end(), 
+      CompareSecond<VID,double>());
   vector<VID> difficultNodes(_k);
   for(size_t i = 0; i < difficultNodes.size(); ++i)
     difficultNodes[i] = nodeWeights[i].first;
@@ -629,10 +683,12 @@ CCExpansion<MPTraits>::FindDifficultNodes(RoadmapType* _rm, StatClass& _stats, v
 template<class MPTraits>
 template<class ColorMap>
 void
-CCExpansion<MPTraits>::FindNearestCC(RoadmapType* _rm, ColorMap& _cmap, VID& _curCC, vector<VID>& _allCCs){
+CCExpansion<MPTraits>::FindNearestCC(RoadmapType* _rm, ColorMap& _cmap, 
+    VID& _curCC, vector<VID>& _allCCs){
   vector<VID> ccvids;
   pair<VID,double> nearestCC(INVALID_VID, numeric_limits<double>::max());
-  DistanceMetricPointer dm = this->GetMPProblem()->GetNeighborhoodFinder(this->m_nfLabel)->GetDMMethod();
+  DistanceMetricPointer dm = 
+      this->GetNeighborhoodFinder(this->m_nfLabel)->GetDMMethod();
 
   for (VIDIT it = _allCCs.begin(); it != _allCCs.end(); ++it){
     // Avoid self-check
@@ -663,7 +719,8 @@ CCExpansion<MPTraits>::TargetCCInfo(RoadmapType* _rm, vector<VID>& _curCC){
 
   vector< pair<VID,double> > cc1Mod;
   m_avgIntraDistTarget = 0;
-  DistanceMetricPointer dm = this->GetMPProblem()->GetNeighborhoodFinder(this->m_nfLabel)->GetDMMethod();
+  DistanceMetricPointer dm = 
+      this->GetNeighborhoodFinder(this->m_nfLabel)->GetDMMethod();
 
   for(VIDIT it = _curCC.begin(); it != _curCC.end(); ++it){
     CfgType cfg = _rm->GetGraph()->GetVertex(*it);
@@ -680,8 +737,10 @@ CCExpansion<MPTraits>::TargetCCInfo(RoadmapType* _rm, vector<VID>& _curCC){
 /////////////////////////////////////////////////////////////////////////////
 template<class MPTraits>
 void
-CCExpansion<MPTraits>::SelectCandidates(RoadmapType* _rm, StatClass& _stats, vector<VID>& _curCC){
-  DistanceMetricPointer dm = this->GetMPProblem()->GetNeighborhoodFinder(this->m_nfLabel)->GetDMMethod();
+CCExpansion<MPTraits>::SelectCandidates(RoadmapType* _rm, StatClass& _stats, 
+    vector<VID>& _curCC){
+  DistanceMetricPointer dm = 
+      this->GetNeighborhoodFinder(this->m_nfLabel)->GetDMMethod();
   m_expansionChains.clear();
 
   // Find max possible number of candidate nodes
@@ -702,7 +761,8 @@ CCExpansion<MPTraits>::SelectCandidates(RoadmapType* _rm, StatClass& _stats, vec
       double dist = dm->Distance(cfg, m_srcCentroid);
       cc1Mod.push_back(make_pair(*it,dist));
     }
-    std::partial_sort(cc1Mod.begin(), cc1Mod.begin()+k, cc1Mod.end(), CompareSecondReverse<VID,double>());
+    std::partial_sort(cc1Mod.begin(), cc1Mod.begin()+k, cc1Mod.end(), 
+        CompareSecondReverse<VID,double>());
     for(int i = 0; i < k; ++i){
       m_expansionChains.push_back(cc1Mod[i].first);
     }
@@ -721,14 +781,16 @@ CCExpansion<MPTraits>::SelectCandidates(RoadmapType* _rm, StatClass& _stats, vec
 /////////////////////////////////////////////////////////////////////////////
 template <class MPTraits>
 void
-CCExpansion<MPTraits>::GetMedialAxisRay(RoadmapType* _rm, CfgType& _prev, CfgType& _bumpPoint, CfgType& _curr, CfgType& _dir){
+CCExpansion<MPTraits>::GetMedialAxisRay(RoadmapType* _rm, CfgType& _prev, 
+    CfgType& _bumpPoint, CfgType& _curr, CfgType& _dir){
 
-  DistanceMetricPointer dm = this->GetMPProblem()->GetNeighborhoodFinder(this->m_nfLabel)->GetDMMethod();
+  DistanceMetricPointer dm = 
+      this->GetNeighborhoodFinder(this->m_nfLabel)->GetDMMethod();
   CfgType uA = _bumpPoint - _prev;
   CfgType uB = _curr - _bumpPoint;
 
   if(uA == CfgType() || uB == CfgType()){
-    uA.GetRandomRay(m_maxStepDistance, this->GetMPProblem()->GetEnvironment(), dm);
+    uA.GetRandomRay(m_maxStepDistance, this->GetEnvironment(), dm);
     _dir = uA;
   }
 
@@ -765,8 +827,10 @@ CCExpansion<MPTraits>::GetMedialAxisRay(RoadmapType* _rm, CfgType& _prev, CfgTyp
 /////////////////////////////////////////////////////////////////////////////
 template <class MPTraits>
 bool
-CCExpansion<MPTraits>::WithinProximity(RoadmapType* _rm, CfgType& _bumpPoint, CfgType& _target){
-  DistanceMetricPointer dm = this->GetMPProblem()->GetNeighborhoodFinder(this->m_nfLabel)->GetDMMethod();
+CCExpansion<MPTraits>::WithinProximity(RoadmapType* _rm, CfgType& _bumpPoint, 
+    CfgType& _target){
+  DistanceMetricPointer dm = 
+      this->GetNeighborhoodFinder(this->m_nfLabel)->GetDMMethod();
   double dist = dm->Distance(_bumpPoint, _target);
   return ((dist < m_avgIntraDistTarget) ? true : false);
 }
@@ -776,11 +840,13 @@ CCExpansion<MPTraits>::WithinProximity(RoadmapType* _rm, CfgType& _bumpPoint, Cf
 /////////////////////////////////////////////////////////////////////////////
 template <class MPTraits>
 void
-CCExpansion<MPTraits>::UpdateRoadmap(RoadmapType* _rm, StatClass& _stats, CfgType& _prev, CfgType& _bump){
+CCExpansion<MPTraits>::UpdateRoadmap(RoadmapType* _rm, StatClass& _stats, 
+    CfgType& _prev, CfgType& _bump){
   VID node = _rm->GetGraph()->AddVertex(_bump);
   m_allExpansionNodes.push_back(node);
   LPOutput<MPTraits> lpOutput;
-  _rm->GetGraph()->AddEdge(_rm->GetGraph()->GetVID(_prev), _rm->GetGraph()->GetVID(_bump), lpOutput.m_edge);
+  _rm->GetGraph()->AddEdge(_rm->GetGraph()->GetVID(_prev), 
+      _rm->GetGraph()->GetVID(_bump), lpOutput.m_edge);
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -788,7 +854,8 @@ CCExpansion<MPTraits>::UpdateRoadmap(RoadmapType* _rm, StatClass& _stats, CfgTyp
 /////////////////////////////////////////////////////////////////////////////
 template <class MPTraits>
 void
-CCExpansion<MPTraits>::UpdateRoadmap(RoadmapType* _rm, StatClass& _stats, CfgType& _prev, CfgType& _bump, CfgType& _target){
+CCExpansion<MPTraits>::UpdateRoadmap(RoadmapType* _rm, StatClass& _stats, 
+    CfgType& _prev, CfgType& _bump, CfgType& _target){
 
   LPOutput<MPTraits> lpOutput;
   bool test = false;
@@ -796,26 +863,31 @@ CCExpansion<MPTraits>::UpdateRoadmap(RoadmapType* _rm, StatClass& _stats, CfgTyp
   // If adding intermediate, ignore lp call
   if(!m_addIntermediate){
     CfgType col;
-    DistanceMetricPointer dm = this->GetMPProblem()->GetNeighborhoodFinder(this->m_nfLabel)->GetDMMethod();
-    test = this->GetMPProblem()->GetLocalPlanner(this->m_lpLabel)->
+    DistanceMetricPointer dm = 
+        this->GetNeighborhoodFinder(this->m_nfLabel)->GetDMMethod();
+    test = this->GetLocalPlanner(this->m_lpLabel)->
       IsConnected(_prev, _target, col, &lpOutput,
-          this->GetMPProblem()->GetEnvironment()->GetPositionRes(),
-          this->GetMPProblem()->GetEnvironment()->GetOrientationRes(),
+          this->GetEnvironment()->GetPositionRes(),
+          this->GetEnvironment()->GetOrientationRes(),
           true);
   }
 
-  // If (test), ignore the bump point and connect prev to target, otherwise use bump point
+  // If (test), ignore the bump point and connect prev to target, otherwise 
+  // use bump point
   if(test){
     VID node = _rm->GetGraph()->AddVertex(_target);
     m_allExpansionNodes.push_back(node);
-    _rm->GetGraph()->AddEdge(_rm->GetGraph()->GetVID(_prev), _rm->GetGraph()->GetVID(_target), lpOutput.m_edge);
+    _rm->GetGraph()->AddEdge(_rm->GetGraph()->GetVID(_prev), 
+        _rm->GetGraph()->GetVID(_target), lpOutput.m_edge);
   }
   else {
     _rm->GetGraph()->AddVertex(_bump);
     VID node = _rm->GetGraph()->AddVertex(_target);
     m_allExpansionNodes.push_back(node);
-    _rm->GetGraph()->AddEdge(_rm->GetGraph()->GetVID(_prev), _rm->GetGraph()->GetVID(_bump), lpOutput.m_edge);
-    _rm->GetGraph()->AddEdge(_rm->GetGraph()->GetVID(_bump), _rm->GetGraph()->GetVID(_target), lpOutput.m_edge);
+    _rm->GetGraph()->AddEdge(_rm->GetGraph()->GetVID(_prev), 
+        _rm->GetGraph()->GetVID(_bump), lpOutput.m_edge);
+    _rm->GetGraph()->AddEdge(_rm->GetGraph()->GetVID(_bump), 
+        _rm->GetGraph()->GetVID(_target), lpOutput.m_edge);
   }
 }
 
@@ -841,10 +913,12 @@ CCExpansion<MPTraits>::IsClear(RoadmapType* _rm, CfgType& bumpPoint){
   if(m_maxFailedExpansions == 0)
     return true;
   int numFails = 0;
-  DistanceMetricPointer dm = this->GetMPProblem()->GetNeighborhoodFinder(this->m_nfLabel)->GetDMMethod();
+  DistanceMetricPointer dm = 
+      this->GetNeighborhoodFinder(this->m_nfLabel)->GetDMMethod();
 
   // Check to make sure that we are not expanding back into the chain
-  for(VIDIT it = m_allExpansionNodes.begin(); it != m_allExpansionNodes.end(); ++it){
+  for(VIDIT it = m_allExpansionNodes.begin(); it != m_allExpansionNodes.end(); 
+      ++it){
     CfgType bb = _rm->GetGraph()->GetVertex(*it);
     bool test1 = (bb != bumpPoint); // Do not self compare!
     bool test2 = (dm->Distance(bumpPoint, bb) < m_minStepDistance);

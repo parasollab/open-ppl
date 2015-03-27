@@ -23,7 +23,7 @@ class MixExtender : public ExtenderMethod<MPTraits> {
     virtual void Print(ostream& _os) const;
 
     virtual bool Extend(const CfgType& _near, const CfgType& _dir,
-        CfgType& _new, vector<CfgType>& _innerNodes);
+        CfgType& _new, LPOutput<MPTraits>& _lpOutput);
 
   private:
     ExpanderSet m_growSet;
@@ -36,7 +36,8 @@ MixExtender<MPTraits>::MixExtender() :
   }
 
 template<class MPTraits>
-MixExtender<MPTraits>::MixExtender(MPProblemType* _problem, XMLNodeReader& _node) :
+MixExtender<MPTraits>::MixExtender(MPProblemType* _problem, 
+    XMLNodeReader& _node) :
   ExtenderMethod<MPTraits>(_problem, _node) {
     this->SetName("MixExtender");
     ParseXML(_node);
@@ -46,10 +47,13 @@ template<class MPTraits>
 void
 MixExtender<MPTraits>::ParseXML(XMLNodeReader& _node) {
   // Get RRT Extender label and probability
-  for(XMLNodeReader::childiterator citr = _node.children_begin(); citr != _node.children_end(); ++citr){
+  for(XMLNodeReader::childiterator citr = _node.children_begin(); 
+      citr != _node.children_end(); ++citr){
     if(citr->getName() == "Extender"){
-      string label = citr->stringXMLParameter("label", true, "", "Extender label");
-      double probability = citr->numberXMLParameter("probability", true, 0.0, 0.0, 1.0, "Extender probability");
+      string label = citr->stringXMLParameter("label", true, "", 
+          "Extender label");
+      double probability = citr->numberXMLParameter("probability", true, 0.0, 
+          0.0, 1.0, "Extender probability");
       m_growSet.push_back(make_pair(label, make_pair(probability, 0)));
       citr->warnUnrequestedAttributes();
     }
@@ -63,22 +67,26 @@ MixExtender<MPTraits>::ParseXML(XMLNodeReader& _node) {
     total += it->second.first;
 
   double r = 0;
-  for(ExpanderSet::iterator it = m_growSet.begin(); it != m_growSet.end(); it++) {
+  for(ExpanderSet::iterator it = m_growSet.begin(); it != m_growSet.end(); 
+      it++) {
     it->second.first = it->second.first/total;
     it->second.second = r + it->second.first;
     r = it->second.second;
   }
 
   if(total == 0) {
-    cerr << "Error::ParseXML : total probability of growth method is null" << endl;
+    cerr << "Error::ParseXML : total probability of growth method is null" 
+         << endl;
     exit(1);
   }
 
   // Print
   if(this->m_debug) {
     cout << "Growth\nmehod\tprob\t\tprob norms" << endl;
-    for(ExpanderSet::iterator it = m_growSet.begin(); it != m_growSet.end(); it++)
-      cout << it->first << "\t" << it->second.first << "\t" << it->second.second << endl;
+    for(ExpanderSet::iterator it = m_growSet.begin(); it != m_growSet.end(); 
+        it++)
+      cout << it->first << "\t" << it->second.first << "\t" 
+           << it->second.second << endl;
   }
 }
 
@@ -87,22 +95,24 @@ void
 MixExtender<MPTraits>::Print(ostream& _os) const {
   ExtenderMethod<MPTraits>::Print(_os);
   _os << "\textender label : " << endl;
-  for(ExpanderSet::const_iterator it = m_growSet.begin(); it != m_growSet.end(); it++)
+  for(ExpanderSet::const_iterator it = m_growSet.begin(); 
+      it != m_growSet.end(); it++)
     _os << "\t\t" << it->first << endl;
  }
 
 template<class MPTraits>
 bool
 MixExtender<MPTraits>::Extend(const CfgType& _near, const CfgType& _dir,
-    CfgType& _new, vector<CfgType>& _innerNodes) {
+    CfgType& _new, LPOutput<MPTraits>& _lpOutput) {
   if(m_growSet.size() > 0) {
     double growthProb = DRand();
-    for(ExpanderSet::iterator it = m_growSet.begin(); it != m_growSet.end(); it++) {
+    for(ExpanderSet::iterator it = m_growSet.begin(); it != m_growSet.end(); 
+        it++) {
       if(growthProb < it->second.second) {
         if(this->m_debug)
           cout << " calling : " << it->first << endl;
-        return this->GetMPProblem()->GetExtender(it->first)
-          ->Extend(_near, _dir, _new, _innerNodes);
+        return this->GetExtender(it->first)
+          ->Extend(_near, _dir, _new, _lpOutput);
       }
     }
   }

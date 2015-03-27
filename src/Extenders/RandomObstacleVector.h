@@ -17,12 +17,13 @@ class RandomObstacleVector : public BasicExtender<MPTraits> {
     typedef typename MPTraits::CfgType CfgType;
     typedef typename MPTraits::MPProblemType MPProblemType;
 
-    RandomObstacleVector(const string& _dmLabel = "", const string& _vcLabel = "",
-        double _delta = 1.0, bool _randomOrientation = true);
+    RandomObstacleVector(const string& _dmLabel = "", 
+        const string& _vcLabel = "", double _delta = 1.0, 
+        bool _randomOrientation = true);
     RandomObstacleVector(MPProblemType* _problem, XMLNodeReader& _node);
 
     virtual bool Extend(const CfgType& _near, const CfgType& _dir,
-        CfgType& _new, vector<CfgType>& _innerNodes);
+        CfgType& _new, LPOutput<MPTraits>& _lpOutput);
 };
 
 template<class MPTraits>
@@ -33,17 +34,18 @@ RandomObstacleVector<MPTraits>::RandomObstacleVector(const string& _dmLabel,
   }
 
 template<class MPTraits>
-RandomObstacleVector<MPTraits>::RandomObstacleVector(MPProblemType* _problem, XMLNodeReader& _node) :
+RandomObstacleVector<MPTraits>::RandomObstacleVector(MPProblemType* _problem, 
+    XMLNodeReader& _node) :
   BasicExtender<MPTraits>(_problem, _node) {
     this->SetName("RandomObstacleVector");
   }
 
 template<class MPTraits>
 bool
-RandomObstacleVector<MPTraits>::Extend(const CfgType& _near, const CfgType& _dir,
-    CfgType& _new, vector<CfgType>& _innerNodes) {
+RandomObstacleVector<MPTraits>::Extend(const CfgType& _near, 
+    const CfgType& _dir, CfgType& _new, LPOutput<MPTraits>& _lpOutput) {
   // Setup MP Variables
-  Environment* env = this->GetMPProblem()->GetEnvironment();
+  Environment* env = this->GetEnvironment();
   //VECTOR SCALE - THIS WILL BE HARD CODED BUT SHOULD PROBABLY BE MADE AN OPTION
   double vecScale = 10.0;
 
@@ -71,7 +73,7 @@ RandomObstacleVector<MPTraits>::Extend(const CfgType& _near, const CfgType& _dir
       newDir[i] = _near[i] + obsVec[i];
 
     // Expand with the BasicExtender
-    return BasicExtender<MPTraits>::Extend(_near, newDir, _new, _innerNodes);
+    return BasicExtender<MPTraits>::Extend(_near, newDir, _new, _lpOutput);
   }
 
   return false;
