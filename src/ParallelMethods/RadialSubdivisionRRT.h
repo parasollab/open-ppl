@@ -208,7 +208,7 @@ Run() {
   if(m_radius <= 0.0) m_radius = ComputeRandomRayLength(*(env->GetBoundary()));
 
   RadialRegionGraph radialRegion;
-  radialRegion.add_vertex(CfgType());
+  radialRegion.add_vertex(RadialRegion<MPTraits>(CfgType()));
 
   RegionGraphView regionView(radialRegion);
   GraphType* pMap = problem->GetRoadmap()->GetGraph();

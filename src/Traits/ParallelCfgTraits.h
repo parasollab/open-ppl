@@ -117,12 +117,12 @@
 //#include "MPStrategies/UnitTest/DMTestStrategy.h"
 //#include "MPStrategies/UtilityGuidedGenerator.h"
 //#include "MPStrategies/VisibilityBasedPRM.h"
-//#include "MPStrategies/BlindRRT.h"
-//#include "ParallelMethods/BasicParallelPRM.h"
-//#include "ParallelMethods/BulkRRT.h"
-//#include "ParallelMethods/RadialBlindRRT.h"
+#include "MPStrategies/BlindRRT.h"
+#include "ParallelMethods/BasicParallelPRM.h"
+#include "ParallelMethods/BulkRRT.h"
+#include "ParallelMethods/RadialBlindRRT.h"
 #include "ParallelMethods/RadialSubdivisionRRT.h"
-//#include "ParallelMethods/RegularSubdivisionMethod.h"
+#include "ParallelMethods/RegularSubdivisionMethod.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup MotionPlanningUniverse
@@ -301,12 +301,12 @@ struct MPTraits {
     //UtilityGuidedGenerator<MPTraits>,
     //VisibilityBasedPRM<MPTraits>
 
-    //BasicParallelPRM<MPTraits>,
-    //BlindRRT<MPTraits>,
-    //BulkRRT<MPTraits>,
-    //RadialBlindRRT<MPTraits>,
-    RadialSubdivisionRRT<MPTraits>//,
-    //RegularSubdivisionMethod<MPTraits>
+    BasicParallelPRM<MPTraits>,
+    BlindRRT<MPTraits>,
+    BulkRRT<MPTraits>,
+    RadialBlindRRT<MPTraits>,
+    RadialSubdivisionRRT<MPTraits>,
+    RegularSubdivisionMethod<MPTraits>
     > MPStrategyMethodList;
 };
 

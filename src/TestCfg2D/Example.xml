@@ -24,6 +24,7 @@
       <NeighborhoodConnector label="QueryClosest" nfLabel="BFNF" k="1" checkIfSameCC="false" lpLabel="sl"/>
       <RegionConnector label="RegionConnector" nfLabel="BFNF" lpLabel="sl" k="2" numIters="4" dmLabel="euclidean"/>
       <RRTConnect label="RRTConnect" nfLabel="BFNF" lpLabel="sl" eLabel="BERO" minDist="0.0" iterations="10000"/>
+      <RegionRRTConnect label="RegionRRTConnect" nfLabel="BFNF" lpLabel="sl" eLabel="BERO" minDist="0.0" iterations="10000"/>
     </Connectors>
 
     <LocalPlanners>
@@ -95,15 +96,15 @@
         nfLabel="BFNF" vcLabel="cd" connectorLabel="RRTConnect" query="narrow.query" debug="true" evaluateGoal="true">
       </BlindRRT>
 
-      <RadialBlindRRT label="RadialBlindRRT" filename="radialBlindRRT" debug="true" >
+      <RadialBlindRRT label="RadialBlindRRT" filename="radialBlindRRT" debug="false" >
         <!-- the training samples (numTestSamples) should at most equal nmNodes -->
 	<region_constr numRegions = "2" rayLength= "50" numNeighbors = "1"/>
 	<!-- numAttempts should at least equal numNodes-->
         <rrt_constr numNodes = "100" numAttempts = "20" delta= "4.0" numCCIters="25"
-          minDist = "0.05" strictBranching="true" expansionType="All" CCconnection="ClosestNode"  />
+          minDist = "0.05" strictBranching="true" expansionType="All" CCconnection="NodeToNode"  />
 	<vc_method vcm = "cd"/>
 	<dm_method Method="euclidean"/>
-	<connectionMethod Label="RegionConnect"/>
+	<connectionMethod Label="RegionRRTConnect"/>
         <nf_method Method="BFNF"/>
       </RadialBlindRRT>
 
@@ -111,8 +112,8 @@
 
     <!--Solver mpStrategyLabel="BlindRRT" seed="123456" baseFilename="BlindRRT"/-->
     <!--Solver mpStrategyLabel="BulkRRT" seed="123456" baseFilename="BulkRRT"/-->
-    <!--Solver mpStrategyLabel="RadialBlindRRT" seed="123456" baseFilename="RadialBlindRRT"/-->
-    <Solver mpStrategyLabel="RadialSubdivisionRRT" seed="123456" baseFilename="RadialSubdivisionRRT"/>
+    <Solver mpStrategyLabel="RadialBlindRRT" seed="123456" baseFilename="RadialBlindRRT"/>
+    <!--Solver mpStrategyLabel="RadialSubdivisionRRT" seed="123456" baseFilename="RadialSubdivisionRRT"/-->
 
   </MPProblem>
 </MotionPlanning>

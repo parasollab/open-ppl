@@ -119,16 +119,11 @@ Connect(RoadmapType* _rm, StatClass& _stats, ColorMap& _cmap,
 
       // Since expand goes until collision or goal is detected, we shouldnt iterate.
       connected = ExpandTree(newCfg, newVID, treeB, interTreeVID, interTreeCfg, true);
-
-      if(connected)
-        cout << "Connected" << endl;
     }
 
     // Switching trees
     swap(treeA, treeB);
     iter++;
-
-    cout << iter << endl;
   }
 
 }
@@ -169,8 +164,6 @@ ExpandTree(CfgType& _dir, const VID& _dirVID,
   if(!expanded) {
     return connected;
   }
-
-  cout << "Expanded??" << endl;
 
   if(dm->Distance(_newCfg, nearest) >= m_minDist) {
     // if _newCfg = Dir, we reached goal

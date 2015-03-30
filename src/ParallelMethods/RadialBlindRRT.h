@@ -18,16 +18,12 @@ class RadialBlindRRT : public RadialSubdivisionRRT<MPTraits> {
     typedef typename MPTraits::WeightType WeightType;
     typedef typename MPProblemType::RoadmapType RoadmapType;
     typedef typename MPProblemType::GraphType GraphType;
-    typedef graph_view<typename GraphType::GRAPH>  GraphView;
+    typedef graph_view<GraphType>  GraphView;
     typedef typename MPProblemType::VID VID;
-    typedef typename MPProblemType::DistanceMetricPointer DistanceMetricPointer;
-    typedef typename MPProblemType::ValidityCheckerPointer ValidityCheckerPointer;
-    typedef typename MPProblemType::NeighborhoodFinderPointer NeighborhoodFinderPointer;
-    typedef typename MPProblemType::SamplerPointer SamplerPointer;
     typedef typename MPProblemType::ConnectorPointer ConnectorPointer;
-    typedef typename MPProblemType::MPStrategyPointer MPStrategyPointer;
-    typedef typename stapl::graph<stapl::DIRECTED, stapl::NONMULTIEDGES,
+    typedef typename stapl::dynamic_graph<stapl::DIRECTED, stapl::NONMULTIEDGES,
             RadialRegion<MPTraits>, WeightType> RadialRegionGraph;
+    typedef graph_view<RadialRegionGraph> RegionGraphView;
     typedef stapl::counter<stapl::default_timer> staplTimer;
     typedef typename stapl::sequential::map_property_map< typename GraphType::GRAPH ,size_t > ColorMap;
 
@@ -45,11 +41,11 @@ class RadialBlindRRT : public RadialSubdivisionRRT<MPTraits> {
 
     // Run Methods
 
-    void BuildRRT(graph_view<RadialRegionGraph> _regionView, MPProblemType* _problem, CfgType _root);
+    void BuildRRT(RegionGraphView _regionView, CfgType _root);
 
-    void ConnectRegions(graph_view<RadialRegionGraph> _regionView, MPProblemType* _problem);
+    void ConnectRegions(RegionGraphView _regionView);
 
-    void DeleteInvalid(graph_view<GraphType> _graphView);
+    void DeleteInvalid(GraphView _graphView);
 
   protected:
     string m_CCconnection;
@@ -57,23 +53,27 @@ class RadialBlindRRT : public RadialSubdivisionRRT<MPTraits> {
 };
 
 template<class MPTraits>
-RadialBlindRRT<MPTraits>::RadialBlindRRT(MPProblemType* _problem,
-    XMLNodeReader& _node) :
+RadialBlindRRT<MPTraits>::
+RadialBlindRRT(MPProblemType* _problem, XMLNodeReader& _node) :
   RadialSubdivisionRRT<MPTraits>(_problem, _node) {
     this->SetName("RadialBlindRRT");
     ParseXML(_node);
   }
 
 template<class MPTraits>
-RadialBlindRRT<MPTraits>::RadialBlindRRT() {
+RadialBlindRRT<MPTraits>::
+RadialBlindRRT() {
   this->SetName("RadialBlindRRT");
 }
 
 template<class MPTraits>
-RadialBlindRRT<MPTraits>::~RadialBlindRRT() { }
+RadialBlindRRT<MPTraits>::
+~RadialBlindRRT() { }
 
 template<class MPTraits>
-void RadialBlindRRT<MPTraits>::ParseXML(XMLNodeReader& _node){
+void
+RadialBlindRRT<MPTraits>::
+ParseXML(XMLNodeReader& _node) {
   XMLNodeReader::childiterator citr;
   for( citr = _node.children_begin(); citr!= _node.children_end(); ++citr) {
     if(citr->getName() == "rrt_constr") {
@@ -85,39 +85,39 @@ void RadialBlindRRT<MPTraits>::ParseXML(XMLNodeReader& _node){
 };
 
 template<class MPTraits>
-void RadialBlindRRT<MPTraits>::Initialize() {
+void
+RadialBlindRRT<MPTraits>::
+Initialize() {
   cout << "RadialBlindRRT::Initialize()" <<endl;
 }
 
 template<class MPTraits>
 void
-RadialBlindRRT<MPTraits>::BuildRRT(graph_view<RadialRegionGraph> _regionView,
-    MPProblemType* _problem, CfgType _root) {
+RadialBlindRRT<MPTraits>::
+BuildRRT(RegionGraphView _regionView, CfgType _root) {
   ///adding this for strong scaling, replace with m_numNodes if interested in weak scaling
   size_t nodesPerRegion = this->m_numNodes/stapl::get_num_locations();
-  BuildRadialBlindRRT<MPTraits> wf(_problem,nodesPerRegion,this->m_dmLabel,this->m_vcLabel,
-      this->m_nfLabel,m_CCconnection,this->m_delta,this->m_minDist,
-      _root,this->m_numAttempts,m_numCCIters,this->m_overlap, this->m_strictBranching, this->m_debug);
-
-  //  MPStrategyPointer strategy = this->GetMPProblem()->GetMPStrategy("BlindRRT");
-  //  BuildRadialBlindRRT<MPTraits> wf(strategy, _root, m_radius, m_strictBranching, m_overlap);
+  BuildRadialBlindRRT<MPTraits> wf(this->GetMPProblem(), nodesPerRegion,
+      this->m_dmLabel, this->m_vcLabel, this->m_nfLabel, m_CCconnection,
+      this->m_delta, this->m_minDist, _root, this->m_numAttempts, m_numCCIters,
+      this->m_overlap, this->m_strictBranching, this->m_debug);
   stapl::for_each(_regionView,wf);
 }
 
 template<class MPTraits>
 void
-RadialBlindRRT<MPTraits>::ConnectRegions(graph_view<RadialRegionGraph> _regionView,
-    MPProblemType* _problem) {
+RadialBlindRRT<MPTraits>::
+ConnectRegions(RegionGraphView _regionView) {
 
   ConnectorPointer pConnection;
-  pConnection = _problem->GetConnector("RegionRRTConnect");
-  ConnectGlobalCCs<MPTraits> wf(_problem, pConnection, this->m_debug);
+  pConnection = this->GetConnector("RegionRRTConnect");
+  ConnectGlobalCCs<MPTraits> wf(this->GetMPProblem(), pConnection, this->m_debug);
   map_func(wf, _regionView, make_repeat_view(_regionView));
 }
 
 template<class MPTraits>
 void
-RadialBlindRRT<MPTraits>::DeleteInvalid(graph_view<GraphType> _graphView) {
+RadialBlindRRT<MPTraits>::DeleteInvalid(GraphView _graphView) {
   /// COMPUTE CCs AND SET REGION CCs
 
   connected_components(_graphView);
@@ -144,7 +144,9 @@ RadialBlindRRT<MPTraits>::DeleteInvalid(graph_view<GraphType> _graphView) {
 }
 
 template<class MPTraits>
-void RadialBlindRRT<MPTraits>::Run() {
+void
+RadialBlindRRT<MPTraits>::
+Run() {
   cout << "RadialBlindRRT:: Run()" << endl;
   //Set up variables
   MPProblemType* problem = this->GetMPProblem();
@@ -153,11 +155,11 @@ void RadialBlindRRT<MPTraits>::Run() {
   ///If random ray length is not given, then compute approximate value from given boundary
   if(this->m_radius <= 0.0) this->m_radius = this->ComputeRandomRayLength(*(env->GetBoundary()));
 
-  RadialRegionGraph radialRegion(this->m_numRegions);
+  RadialRegionGraph radialRegion;
+  radialRegion.add_vertex(RadialRegion<MPTraits>(CfgType()));
 
-  graph_view<RadialRegionGraph> regionView(radialRegion);
+  RegionGraphView regionView(radialRegion);
   GraphType* pMap = problem->GetRoadmap()->GetGraph();
-  graph_view<GraphType> graphView(*pMap);
   rmi_fence();
 
   CfgType root;
@@ -179,7 +181,7 @@ void RadialBlindRRT<MPTraits>::Run() {
   //cout << "STEP 1: Randomly generate n points with  m_radius length from the center" << endl;
   t0.start();
   t1.start();
-  this->RegionVertex(regionView, problem, root);
+  this->RegionVertex(regionView, root);
   t1.stop();
   PrintOnce("STEP 1 REGION VERTEX (s) : ", t1.value());
 
@@ -187,26 +189,29 @@ void RadialBlindRRT<MPTraits>::Run() {
 
   ///For each vertex v find k closest to v in a map_reduce fashion
   t2.start();
-  if (regionView.size() >1) this->RegionEdge(regionView, problem);
+  if (regionView.size() >1)
+    this->RegionEdge(regionView);
   t2.stop();
   PrintOnce("STEP 2 REGION EDGE (s) : ", t2.value());
 
   rmi_fence();
 
   t3.start();
-  BuildRRT(regionView, problem, root);
+  BuildRRT(regionView, root);
   t3.stop();
   PrintOnce("STEP 3 BUILD RRT (s) : ", t3.value());
 
   rmi_fence();
 
   t4.start();
-  if(regionView.size() > 1) ConnectRegions(regionView, problem);
+  if(regionView.size() > 1)
+    ConnectRegions(regionView);
   t4.stop();
   rmi_fence();
   PrintOnce("STEP 4 CONNECT REGIONS (s) : ", t4.value());
 
   t5.start();
+  graph_view<GraphType> graphView(*pMap);
   DeleteInvalid(graphView);
   t5.stop();
   rmi_fence();
@@ -236,18 +241,7 @@ void RadialBlindRRT<MPTraits>::Run() {
      }
      */
   // pMap->delete_vertex(0);
-
   // }
-
-
-  /*PrintOnce("REGIONGRAPH VERTEX TIME: ", t1.value());
-    PrintOnce("REGIONGRAPH EDGE TIME: ", t2.value());
-    PrintOnce("BUILDRRT TIME: ", t3.value());
-    PrintOnce("REGIONCONNECT TIME: ", t4.value());
-    PrintOnce("REMOVE CYCLE TIME: ", t5.value());
-    PrintOnce("TOTAL TIME : ", t0.value());
-    PrintOnce("Tree size :" , pMap->size());
-    PrintOnce("Num of Edges after : ", pMap->num_edges());*/
 
   //STATS
   stapl::rmi_fence();
