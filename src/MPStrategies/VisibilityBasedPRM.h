@@ -157,18 +157,14 @@ void
 VisibilityBasedPRM<MPTraits>::Finalize() {
   if(this->m_debug) cout << "\nFinalizing VisibilityBasedPRM::\n";
 
-  //Setup variables
-  StatClass* stats = this->GetMPProblem()->GetStatClass();
-  string fileName;
-
   //Output .map file
-  fileName = this->GetBaseFilename() + ".map";
-  ofstream osMap(fileName.c_str());
-  this->GetMPProblem()->GetRoadmap()->Write(osMap, this->GetMPProblem()->GetEnvironment());
-  osMap.close();
+  this->GetMPProblem()->GetRoadmap()->Write(
+      this->GetBaseFilename() + ".map",
+      this->GetEnvironment());
 
   //Output .stat file
-  fileName = this->GetBaseFilename() + ".stat";
+  StatClass* stats = this->GetMPProblem()->GetStatClass();
+  string fileName = this->GetBaseFilename() + ".stat";
   ofstream osStat(fileName.c_str());
   osStat << "Visibility-Based PRM Stats\n";
   stats->PrintAllStats(osStat, this->GetMPProblem()->GetRoadmap());

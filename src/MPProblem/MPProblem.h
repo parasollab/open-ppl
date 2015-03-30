@@ -453,7 +453,11 @@ MPProblem<MPTraits>::Solve() {
     cout << "\n\nMPProblem is solving with MPStrategyMethod labeled "
       << get<0>(*sit)
       << " using seed " << get<1>(*sit) << "." << endl;
+#ifdef _PARALLEL
+    SRand(get<1>(*sit) + get_location_id());
+#else
     SRand(get<1>(*sit));
+#endif
     GetMPStrategy(get<0>(*sit))->SetBaseFilename(get<2>(*sit));
     GetMPStrategy(get<0>(*sit))->operator()();
 

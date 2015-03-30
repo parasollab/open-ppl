@@ -10,6 +10,8 @@
 
 #include "ConnectorMethod.h"
 
+#include <containers/sequential/graph/algorithms/connected_components.h>
+
 template <class MPTraits>
 class CCsConnector: public ConnectorMethod<MPTraits> {
   public:

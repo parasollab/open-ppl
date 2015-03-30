@@ -62,6 +62,10 @@ class DefaultWeight {
     void SetChecked(int _mult) { m_checkedMult = min(m_checkedMult, _mult); }
     int GetChecked() const { return m_checkedMult; }
 
+    string GetStat(string _stat);
+    bool IsStat(string _stat);
+    void SetStat(string _stat, string _value);
+
     // Data
   protected:
     string m_lpLabel;
@@ -70,6 +74,8 @@ class DefaultWeight {
 
     static double MAX_WEIGHT;
     int m_checkedMult;
+     
+    map<string,string> m_statMap;
 
   public:
     //changed local to member
@@ -119,6 +125,7 @@ DefaultWeight<CfgType>::operator=(const DefaultWeight<CfgType>& _w){
   m_weight = _w.GetWeight();
   m_intermediates = _w.GetIntermediates();
   m_checkedMult = _w.GetChecked();
+  m_statMap = _w.m_statMap;
   return *this;
 }
 
@@ -158,6 +165,33 @@ DefaultWeight<CfgType>::operator<(const DefaultWeight<CfgType>& _other) const {
   return m_weight < _other.m_weight;
 }
 
+template<class CfgType>
+string
+DefaultWeight<CfgType>::GetStat(string _stat) {
+  if(IsStat(_stat)) {
+    return m_statMap[_stat];
+  }
+  else {
+    cout << "DefaultWeight::GetStat -- I cannot find Stat =  " << _stat << endl;
+    exit(-1);
+  }
+}
 
+template<class CfgType>
+bool
+DefaultWeight<CfgType>::IsStat(string _stat) {
+  bool stat = false;
+  if(m_statMap.count(_stat) > 0)
+    stat = true;
+  else
+    stat = false;
+  return stat;
+}
+
+template<class CfgType>
+void
+DefaultWeight<CfgType>::SetStat(string _stat, string _value) {
+  m_statMap[_stat] = _value;
+}
 
 #endif

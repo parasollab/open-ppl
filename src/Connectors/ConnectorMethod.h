@@ -54,6 +54,9 @@ class ConnectorMethod : public MPBaseObject<MPTraits> {
     typedef typename MPTraits::MPProblemType MPProblemType;
     typedef typename MPProblemType::RoadmapType RoadmapType;
     typedef typename MPProblemType::VID VID;
+    ///Needed for BlindRRT
+    typedef typename MPTraits::WeightType WeightType;
+    typedef typename stapl::sequential::graph<stapl::DIRECTED, stapl::NONMULTIEDGES, CfgType, WeightType> SequentialGraphType;
 
     ConnectorMethod(string _lpLabel = "", string _nfLabel = "");
     ConnectorMethod(MPProblemType* _problem, XMLNodeReader& _node);
@@ -246,7 +249,6 @@ class ConnectorMethod : public MPBaseObject<MPTraits> {
     /// caches.
     ////////////////////////////////////////////////////////////////////////////
     void AddConnectionAttempt(VID _v1, VID _v2, bool _b);
-
     ////////////////////////////////////////////////////////////////////////////
     /// @return Begin iterator of this iteration's attempts
     ////////////////////////////////////////////////////////////////////////////
@@ -276,12 +278,20 @@ class ConnectorMethod : public MPBaseObject<MPTraits> {
     ////////////////////////////////////////////////////////////////////////////
     void ClearConnectionAttempts() { m_attempts.clear(); }
 
+    ///Needed for BlindRRT
+    void SetLocalGraph(SequentialGraphType* _localGraph) { m_localGraph = _localGraph;}
+    void SetRemoteGraph(SequentialGraphType* _remoteGraph) { m_remoteGraph = _remoteGraph;}
+
   protected:
     ConnectionAttempts m_attempts; ///< Single iteration connection attempts. Attempt is a pair<VID, VID> (edge) and bool (success/fail)
     ConnectionAttemptsCache m_attemptsCache; ///< All time connection attempts. Attempt is a pair<VID, VID> (edge) and bool (success/fail)
     string  m_nfLabel; ///< Neighborhood Finder
     string  m_lpLabel; ///< Local Planner
     bool    m_addPartialEdge; ///< If failed attempt add partially validated portion of edge?
+
+    ///Needed for BlindRRT
+    SequentialGraphType* m_localGraph;
+    SequentialGraphType* m_remoteGraph;
 };
 
 template<class MPTraits>

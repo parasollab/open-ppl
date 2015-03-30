@@ -285,19 +285,13 @@ Finalize() {
   if(this->m_debug)
     cout << this->GetNameAndLabel() << "::Finalize()" << endl;
 
-  //setup variables
-  StatClass* stats = this->GetStatClass();
-
-  string str;
-
   //output final map
-  str = this->GetBaseFilename() + ".map";
-  ofstream osMap(str.c_str());
-  this->GetRoadmap()->Write(osMap, this->GetEnvironment());
+  this->GetRoadmap()->Write(this->GetBaseFilename() + ".map", this->GetEnvironment());
 
   //output stats
-  str = this->GetBaseFilename() + ".stat";
+  string str = this->GetBaseFilename() + ".stat";
   ofstream  osStat(str.c_str());
+  StatClass* stats = this->GetStatClass();
   stats->PrintAllStats(osStat, this->GetRoadmap());
   stats->PrintClock("Map Generation", osStat);
 }

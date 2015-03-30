@@ -76,12 +76,13 @@
 
 //connector includes
 #include "Connectors/AdaptiveConnector.h"
+#include "Connectors/CCExpansion.h"
 #include "Connectors/CCsConnector.h"
+#include "Connectors/ClosestVE.h"
 #include "Connectors/ConnectNeighboringSurfaces.h"
 #include "Connectors/NeighborhoodConnector.h"
 #include "Connectors/RewireConnector.h"
-#include "Connectors/CCExpansion.h"
-#include "Connectors/ClosestVE.h"
+#include "Connectors/RRTConnect.h"
 
 //metric includes
 #include "Metrics/CCDistanceMetric.h"
@@ -110,6 +111,7 @@
 #include "MPStrategies/AdaptiveRRT.h"
 #include "MPStrategies/BasicPRM.h"
 #include "MPStrategies/BasicRRTStrategy.h"
+#include "MPStrategies/BlindRRT.h"
 #include "MPStrategies/EvaluateMapStrategy.h"
 #include "MPStrategies/LocalManeuveringStrategy.h"
 #include "MPStrategies/MedialAxisRRT.h"
@@ -235,10 +237,11 @@ struct MPTraits {
     AdaptiveConnector<MPTraits>,
     CCExpansion<MPTraits>,
     CCsConnector<MPTraits>,
+    ClosestVE<MPTraits>,
     NeighborhoodConnector<MPTraits>,
     //PreferentialAttachment<MPTraits>,
     RewireConnector<MPTraits>,
-    ClosestVE<MPTraits>
+    RRTConnect<MPTraits>
       > ConnectorMethodList;
 
   typedef ConnectivityMetric<MPTraits, RoadmapSet<MPTraits> > ConnectivityMetricRoadmapSet;
@@ -283,6 +286,7 @@ struct MPTraits {
     AdaptiveRRT<MPTraits>,
     BasicPRM<MPTraits>,
     BasicRRTStrategy<MPTraits>,
+    BlindRRT<MPTraits>,
     DMTestStrategy<MPTraits>,
     EvaluateMapStrategy<MPTraits>,
     MedialAxisRRT<MPTraits>,

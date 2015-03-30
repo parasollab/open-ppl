@@ -549,8 +549,8 @@ class RBand : public Band<MPTraits> {
         double min, max;
 
         if (this->m_usePercent) {
-          min = this->m_min * (_last - _first);
-          max = this->m_max * (_last - _first);
+          min = this->m_min * distance(_first, _last);
+          max = this->m_max * distance(_first, _last);
         } else {
           min = this->m_min;
           max = this->m_max;

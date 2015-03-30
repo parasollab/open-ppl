@@ -182,7 +182,7 @@ void RegularSubdivisionMethod<MPTraits>::Run() {
   //m_ccConnector = new CCsConnector<MPTraits>(this->GetMPProblem(), m_lp,m_nf);
   //MPProblem set?
   m_ccConnector = new CCsConnector<MPTraits>(m_nf, m_lp);
-  
+
 
    ///TIMER STUFF
   stapl::counter<stapl::default_timer> t0;
@@ -195,12 +195,12 @@ void RegularSubdivisionMethod<MPTraits>::Run() {
   typedef std::tuple<ConnectorPointer,string, int> ncConnectParam;
   typedef stapl::array< BoundingBox > arrayBbox;
   typedef array_view <arrayBbox> viewBbox;
-  
+
 
   size_t mesh_size = m_row * m_col;
   int num_samples;
   CfgType cfg;
-  
+
   BoundingBox* bbox = dynamic_cast<BoundingBox*>(&*env->GetBoundary());
 
   arrayBbox pArrayBbox(mesh_size, *bbox);
@@ -212,7 +212,7 @@ void RegularSubdivisionMethod<MPTraits>::Run() {
   RRGraphView regionView(regularRegion);
   regionView = stapl::generators::make_mesh<RRGraphView>(regionView,m_row,m_col);
   rmi_fence();
-  
+
   ////DECOMPOSE SPACE TO REGIONS
   if( stapl::get_location_id() == 0){
     decomposer->DecomposeWS(env,cfg.PosDOF(), m_row, m_col,1, pArrayBbox.begin(), m_xEpsilon,m_yEpsilon, m_zEpsilon);
@@ -334,18 +334,9 @@ void RegularSubdivisionMethod<MPTraits>::Run() {
 
 template<class MPTraits>
 void RegularSubdivisionMethod<MPTraits>::Finalize(){
-  ///Write graph here :: DEBUG
-  string str;
   stringstream basefname;
   basefname << this->GetBaseFilename() << ".p" << stapl::get_num_locations() << ".it" << m_runs;
-  ofstream osMap((basefname.str() + ".map").c_str());
-  if(!osMap){
-     cout << "RegularSubdivisionMethod::Finalize(): can't open outfile: ";
-     exit(-1);
-  }else{
-     this->GetMPProblem()->GetRoadmap()->Write(osMap, this->GetMPProblem()->GetEnvironment());
-     osMap.close();
-  }
+  this->GetMPProblem()->GetRoadmap()->Write(basefname.str() + ".map", this->GetMPProblem()->GetEnvironment());
   rmi_fence();
   cout << "location [" << get_location_id() <<"] ALL FINISHED" << endl;
 }

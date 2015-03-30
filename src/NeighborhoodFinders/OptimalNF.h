@@ -70,7 +70,7 @@ OptimalNF<MPTraits>::FindNeighbors(RoadmapType* _rmp, InputIterator _first, Inpu
 
   if(nfptr->GetNFType() == K) {
     // Calculate k
-    nfptr->GetK() = min<size_t>(ceil(2*2.71828*log(_rmp->GetGraph()->get_num_vertices())), _last-_first);  // Rounding up
+    nfptr->GetK() = min<size_t>(ceil(2*2.71828*log(_rmp->GetGraph()->get_num_vertices())), distance(_first, _last));  // Rounding up
     if (this->m_debug) cout << "Finding closest neighbors with k = " << nfptr->GetK() << endl;
   }
   else if(nfptr->GetNFType() == RADIUS) {

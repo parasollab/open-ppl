@@ -87,10 +87,10 @@ template<class MPTraits>
 void
 SRTStrategy<MPTraits>::
 ParseXML(XMLNodeReader& _node) {
-  for(XMLNodeReader::childiterator citr = _node.children_begin(); 
+  for(XMLNodeReader::childiterator citr = _node.children_begin();
       citr != _node.children_end(); ++citr) {
     if(citr->getName() == "Evaluator") {
-      string evalMethod = citr->stringXMLParameter("label", true, "", 
+      string evalMethod = citr->stringXMLParameter("label", true, "",
           "Evaluation Method");
       m_evaluators.push_back(evalMethod);
       citr->warnUnrequestedAttributes();
@@ -99,32 +99,32 @@ ParseXML(XMLNodeReader& _node) {
       citr->warnUnknownNode();
   }
 
-  m_delta = _node.numberXMLParameter("delta", false, 1.0, 0.0, MAX_DBL, 
+  m_delta = _node.numberXMLParameter("delta", false, 1.0, 0.0, MAX_DBL,
       "Delta Distance");
-  m_minDist = _node.numberXMLParameter("minDist", false, 0.0, 0.0, m_delta, 
+  m_minDist = _node.numberXMLParameter("minDist", false, 0.0, 0.0, m_delta,
       "Minimum Distance");
-  m_vcLabel = _node.stringXMLParameter("vcLabel", true, "", 
+  m_vcLabel = _node.stringXMLParameter("vcLabel", true, "",
       "Validity Test Method");
-  m_nfLabel = _node.stringXMLParameter("nfLabel", true, "", 
+  m_nfLabel = _node.stringXMLParameter("nfLabel", true, "",
       "Neighborhood Finder");
   m_dmLabel = _node.stringXMLParameter("dmLabel",true,"",
       "Distance Metric");
-  m_lpLabel = _node.stringXMLParameter("lpLabel", true, "", 
+  m_lpLabel = _node.stringXMLParameter("lpLabel", true, "",
       "Local Planning Method");
-  m_eLabel = _node.stringXMLParameter("eLabel", true, "", 
+  m_eLabel = _node.stringXMLParameter("eLabel", true, "",
       "Extender Method");
 
-  m_numSamples = _node.numberXMLParameter("samples", true, 100, 0, MAX_INT, 
+  m_numSamples = _node.numberXMLParameter("samples", true, 100, 0, MAX_INT,
       "k random trees per iteration");
   m_numExpansions = _node.numberXMLParameter("expansions", true, 10, 0, MAX_INT,
       "m expansions per random tree");
-  m_numCloseCent = _node.numberXMLParameter("closeCent", true, 10, 0, MAX_INT, 
+  m_numCloseCent = _node.numberXMLParameter("closeCent", true, 10, 0, MAX_INT,
       "n_c close centroids for edge attempts");
-  m_numRandCent = _node.numberXMLParameter("randCent", true, 10, 0, MAX_INT, 
+  m_numRandCent = _node.numberXMLParameter("randCent", true, 10, 0, MAX_INT,
       "n_r close centroids for edge attempts");
   m_numClosePairs = _node.numberXMLParameter("closePairs", true, 10, 0, MAX_INT,
       "n_p close pairs for connections");
-  m_numConnIter = _node.numberXMLParameter("connIter", true, 10, 0, MAX_INT, 
+  m_numConnIter = _node.numberXMLParameter("connIter", true, 10, 0, MAX_INT,
       "n_i iterations during tree connection");
 
   //optionally read in a query and create a Query object.
@@ -168,7 +168,7 @@ Initialize() {
     for(CIT cit = queryCfgs.begin(); cit != queryCfgs.end(); cit++){
       VID v = this->GetRoadmap()->GetGraph()->AddVertex(*cit);
       m_trees[v] = Tree(*cit, vector<VID>(1, v));
-      if(this->m_debug) 
+      if(this->m_debug)
         cout << "Adding Cfg::" << *cit << " from query." << endl;
     }
     delete m_query;
@@ -222,22 +222,15 @@ template<class MPTraits>
 void
 SRTStrategy<MPTraits>::
 Finalize() {
-
   if(this->m_debug)
     cout<<"\nFinalizing SRTStrategy::"<<endl;
 
-  //setup variables
-  StatClass* stats = this->GetStatClass();
-  string str;
-
   //output final map
-  str = this->GetBaseFilename() + ".map";
-  ofstream osMap(str.c_str());
-  this->GetRoadmap()->Write(osMap, this->GetEnvironment());
-  osMap.close();
+  this->GetRoadmap()->Write(this->GetBaseFilename() + ".map", this->GetEnvironment());
 
   //output stats
-  str = this->GetBaseFilename() + ".stat";
+  StatClass* stats = this->GetStatClass();
+  string str = this->GetBaseFilename() + ".stat";
   ofstream  osStat(str.c_str());
   osStat << "NodeGen+Connection Stats" << endl;
   stats->PrintAllStats(osStat, this->GetRoadmap());
@@ -367,7 +360,7 @@ ConnectTrees(vector<pair<VID, VID> >& _candPairs) {
     if(!stapl::sequential::is_same_cc(*g, cMap, pit->first, pit->second)) {
       //attempt k-closest pairs connection
       //then attempt RRT-connect upon failure
-      if(Connect(pit->first, pit->second) || RRTConnect(pit->first, 
+      if(Connect(pit->first, pit->second) || RRTConnect(pit->first,
           pit->second)) {
         if(this->m_debug)
           cout << "Successful connection." << endl;
@@ -384,7 +377,7 @@ ConnectTrees(vector<pair<VID, VID> >& _candPairs) {
     //merge the trees
     size_t s1 = m_trees[minV].second.size();
     size_t s2 = m_trees[maxV].second.size();
-    m_trees[minV].second.insert(m_trees[minV].second.end(), 
+    m_trees[minV].second.insert(m_trees[minV].second.end(),
         m_trees[maxV].second.begin(), m_trees[maxV].second.end());
     m_trees[minV].first = (m_trees[minV].first * s1 + m_trees[maxV].first * s2)/
         (s1+s2);
@@ -440,7 +433,7 @@ Connect(VID _t1, VID _t2) {
     if(lpp->IsConnected(c1, c2, col,
           &lpOutput, env->GetPositionRes(), env->GetOrientationRes())) {
       //successful connection add graph edge
-      rdmp->GetGraph()->AddEdge(cit->first.first, cit->first.second, 
+      rdmp->GetGraph()->AddEdge(cit->first.first, cit->first.second,
           lpOutput.m_edge);
       return true;
     }
@@ -535,7 +528,7 @@ ExpandTree(VID _tree, CfgType& _dir) {
     currentTree.first = (currentTree.first * (s-1) + newCfg) / s;
 
     //add edge
-    pair<WeightType, WeightType> weights = make_pair(WeightType("RRTExpand", 
+    pair<WeightType, WeightType> weights = make_pair(WeightType("RRTExpand",
         weight), WeightType("RRTExpand", weight));
     g->AddEdge(kClosest[0].first, recentVID, weights);
     g->GetVertex(recentVID).SetStat("Parent", kClosest[0].first);
