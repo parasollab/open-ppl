@@ -173,10 +173,9 @@ ExpandTree(CfgType& _dir, const VID& _dirVID, vector<VID>* _targetTree, bool _is
 
   _newVID = INVALID_VID;
   CfgType nearest  =  (*(targetGraph->find_vertex(kClosest[0].first))).property();
-  int weight = 0;
 
-  vector<CfgType> inner;
-  bool expanded = this->GetExtender(m_eLabel)->Extend(nearest, _dir, _newCfg, inner);
+  LPOutput<MPTraits> lpOut;
+  bool expanded = this->GetExtender(m_eLabel)->Extend(nearest, _dir, _newCfg, lpOut);
 
   if(!expanded) {
     return false;
@@ -205,15 +204,12 @@ ExpandTree(CfgType& _dir, const VID& _dirVID, vector<VID>* _targetTree, bool _is
       #endif
     }
 
-    pair<WeightType, WeightType> weights = make_pair(WeightType("RegionRRTConnect", weight), WeightType("RegionRRTConnect", weight));
-
     #ifndef _PARALLEL
-    rdmp->GetGraph()->AddEdge(kClosest[0].first, _newVID, weights);
+    rdmp->GetGraph()->AddEdge(kClosest[0].first, _newVID, lpOut.m_edge);
     #else
-    WeightType weightT("RRTExpand", weight);
     GraphType* globalTree = rdmp->GetGraph();
-    globalTree->add_edge_async(kClosest[0].first, _newVID, weightT);
-    globalTree->add_edge_async(_newVID, kClosest[0].first, weightT);
+    globalTree->add_edge_async(kClosest[0].first, _newVID, lpOut.m_edge.first);
+    globalTree->add_edge_async(_newVID, kClosest[0].first, lpOut.m_edge.second);
 
     if(_newVID != _dirVID) {
       targetGraph->add_edge(kClosest[0].first,_newVID);

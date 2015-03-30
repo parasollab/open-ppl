@@ -27,12 +27,14 @@ class BasicExtender : public ExtenderMethod<MPTraits> {
     virtual void Print(ostream& _os) const;
 
     virtual bool Extend(const CfgType& _near, const CfgType& _dir,
-        CfgType& _new, vector<CfgType>& _innerNodes);
+        CfgType& _new, LPOutput<MPTraits>& _lpOutput);
 
     bool Expand(const CfgType& _start, const CfgType& _dir, CfgType& _newCfg,
-        double _delta, int& _weight, double _posRes, double _oriRes);
+        double _delta, LPOutput<MPTraits>& _lpOutput, 
+        double _posRes, double _oriRes);
     bool Expand(const CfgType& _start, const CfgType& _dir, CfgType& _newCfg,
-        double _delta, int& _weight, CDInfo& _cdInfo, double _posRes, double _oriRes);
+        double _delta, LPOutput<MPTraits>& _lpOutput, CDInfo& _cdInfo, 
+        double _posRes, double _oriRes);
 
   protected:
     string m_dmLabel;
@@ -42,15 +44,16 @@ class BasicExtender : public ExtenderMethod<MPTraits> {
 };
 
 template<class MPTraits>
-BasicExtender<MPTraits>::BasicExtender(const string& _dmLabel, const string& _vcLabel,
-    double _delta, bool _randomOrientation) :
-  ExtenderMethod<MPTraits>(), m_dmLabel(_dmLabel), m_vcLabel(_vcLabel), m_delta(_delta),
-  m_randomOrientation(_randomOrientation) {
+BasicExtender<MPTraits>::BasicExtender(const string& _dmLabel, 
+    const string& _vcLabel, double _delta, bool _randomOrientation) :
+  ExtenderMethod<MPTraits>(), m_dmLabel(_dmLabel), m_vcLabel(_vcLabel), 
+  m_delta(_delta), m_randomOrientation(_randomOrientation) {
     this->SetName("BasicExtender");
   }
 
 template<class MPTraits>
-BasicExtender<MPTraits>::BasicExtender(MPProblemType* _problem, XMLNodeReader& _node) :
+BasicExtender<MPTraits>::BasicExtender(MPProblemType* _problem, 
+    XMLNodeReader& _node) :
   ExtenderMethod<MPTraits>(_problem, _node) {
     this->SetName("BasicExtender");
     ParseXML(_node);
@@ -59,10 +62,14 @@ BasicExtender<MPTraits>::BasicExtender(MPProblemType* _problem, XMLNodeReader& _
 template<class MPTraits>
 void
 BasicExtender<MPTraits>::ParseXML(XMLNodeReader& _node) {
-  m_dmLabel = _node.stringXMLParameter("dmLabel",true,"","Distance metric label");
-  m_vcLabel = _node.stringXMLParameter("vcLabel", true, "", "Validity checker label");
-  m_delta = _node.numberXMLParameter("delta", false, 1.0, 0.0, MAX_DBL, "Delta distance");
-  m_randomOrientation = _node.boolXMLParameter("randomOrientation", false, true, "Random orientation");
+  m_dmLabel = _node.stringXMLParameter("dmLabel",true,"",
+                                       "Distance metric label");
+  m_vcLabel = _node.stringXMLParameter("vcLabel", true, "", 
+                                       "Validity checker label");
+  m_delta = _node.numberXMLParameter("delta", false, 1.0, 0.0, MAX_DBL, 
+                                     "Delta distance");
+  m_randomOrientation = _node.boolXMLParameter("randomOrientation", false, 
+                                               true, "Random orientation");
 }
 
 template<class MPTraits>
@@ -79,11 +86,10 @@ BasicExtender<MPTraits>::Print(ostream& _os) const {
 template<class MPTraits>
 bool
 BasicExtender<MPTraits>::Extend(const CfgType& _near, const CfgType& _dir,
-    CfgType& _new, vector<CfgType>& _innerNodes) {
+    CfgType& _new, LPOutput<MPTraits>& _lpOutput) {
   // Setup MP Variables
-  Environment* env = this->GetMPProblem()->GetEnvironment();
+  Environment* env = this->GetEnvironment();
   CfgType newDir = _dir;
-  int weight;
 
   // Random/Same Orientation
   if(!m_randomOrientation)
@@ -93,7 +99,7 @@ BasicExtender<MPTraits>::Extend(const CfgType& _near, const CfgType& _dir,
   // Expand
   if(this->m_debug)
     cout << "expand" << endl;
-  return Expand(_near, newDir, _new, m_delta, weight,
+  return Expand(_near, newDir, _new, m_delta, _lpOutput,
       env->GetPositionRes(), env->GetOrientationRes());
 }
 
@@ -113,21 +119,24 @@ BasicExtender<MPTraits>::Extend(const CfgType& _near, const CfgType& _dir,
  */
 template<class MPTraits>
 bool
-BasicExtender<MPTraits>::Expand(const CfgType& _start, const CfgType& _dir, CfgType& _newCfg,
-    double _delta, int& _weight, double _posRes, double _oriRes) {
+BasicExtender<MPTraits>::Expand(const CfgType& _start, const CfgType& _dir, 
+    CfgType& _newCfg, double _delta, LPOutput<MPTraits>& _lpOutput, 
+    double _posRes, double _oriRes) {
   CDInfo cdInfo;
-  return Expand(_start, _dir, _newCfg, _delta, _weight, cdInfo, _posRes, _oriRes);
+  return Expand(_start, _dir, _newCfg, _delta, _lpOutput, cdInfo, _posRes, 
+                _oriRes);
 }
 
 template<class MPTraits>
 bool
-BasicExtender<MPTraits>::Expand(const CfgType& _start, const CfgType& _dir, CfgType& _newCfg,
-    double _delta, int& _weight, CDInfo& _cdInfo, double _posRes, double _oriRes) {
+BasicExtender<MPTraits>::Expand(const CfgType& _start, const CfgType& _dir, 
+    CfgType& _newCfg, double _delta, LPOutput<MPTraits>& _lpOutput, 
+    CDInfo& _cdInfo, double _posRes, double _oriRes) {
 
   //Setup...primarily for collision checks that occur later on
-  Environment* env = this->GetMPProblem()->GetEnvironment();
-  DistanceMetricPointer dm = this->GetMPProblem()->GetDistanceMetric(m_dmLabel);
-  ValidityCheckerPointer vc = this->GetMPProblem()->GetValidityChecker(m_vcLabel);
+  Environment* env = this->GetEnvironment();
+  DistanceMetricPointer dm = this->GetDistanceMetric(m_dmLabel);
+  ValidityCheckerPointer vc = this->GetValidityChecker(m_vcLabel);
   string callee("BasicExtender::Expand");
 
   typename vector<CfgType>::iterator startCIterator;
@@ -136,11 +145,13 @@ BasicExtender<MPTraits>::Expand(const CfgType& _start, const CfgType& _dir, CfgT
   int nTicks, ticker = 0;
 
   incr.FindIncrement(tick,_dir,&nTicks, _posRes, _oriRes);
-  _weight = nTicks;
+  _lpOutput.m_edge.first.SetWeight(nTicks);
+  _lpOutput.m_edge.second.SetWeight(nTicks);
 
   //Move out from start towards dir, bounded by number of ticks allowed at a
   //given resolution and the distance _delta: the maximum distance to grow
-  while(!collision && dm->Distance(_start, tick) <= _delta && ticker <= nTicks) {
+  while(!collision && dm->Distance(_start, tick) <= _delta && 
+        ticker <= nTicks) {
     previous = tick;
     tick += incr;
     if(!env->InBounds(tick) || !(vc->IsValid(tick, _cdInfo, callee)))

@@ -1,5 +1,7 @@
 #!/usr/bin/perl
 
+my $startRun = time();
+
 #
 # configuration
 #
@@ -21,13 +23,27 @@ $fulldate = "$day-$month-$dayOfMonth-$year";
 #
 # check out code, compile and run tests
 #
-$pmpldir = "pmpl-docs";
 chdir $workdir or die "Can't cd to $workdir $!\n";
-$OUTPUT = "Documentation\n";
-$OUTPUT = $OUTPUT.`rm -rf $pmpldir 2>&1`;
-$OUTPUT = $OUTPUT.`svn --quiet checkout svn+ssh://parasol-svn.cs.tamu.edu/research/parasol-svn/svnrepository/pmpl/trunk $pmpldir 2>&1`;
-$OUTPUT = $OUTPUT."Started at ".`date 2>&1`;
-chdir "$workdir/$pmpldir/docs";
+$pmpldir = "$fulldate";
+$OUTPUT = "$fulldate\nDocumentation\n";
+opendir(DIR, $workdir) or die $!;
+while(my $file = readdir(DIR)) {
+  if(!($file eq $pmpldir) && !($file eq ".") && !($file eq "..")) {
+    $OUTPUT = $OUTPUT."Removing directory $file\n".`rm -rf $file 2>&1`;
+  }
+}
+closedir(DIR);
+if(!-e "$pmpldir") {
+  $OUTPUT = $OUTPUT."Checking out repository.\n";
+  while(!-e "$pmpldir") {
+    $OUTPUT = $OUTPUT.`svn --quiet checkout svn+ssh://parasol-svn.cs.tamu.edu/research/parasol-svn/svnrepository/pmpl/trunk $pmpldir 2>&1`;
+  }
+}
+else {
+  $OUTPUT = $OUTPUT."Repository already checked out, continuing compilation.\n";
+}
+chdir "$pmpldir/docs";
+
 #standards doc
 chdir "StandardsAndProcedures";
 $OUTPUT = $OUTPUT.`make 2>&1`;
@@ -39,13 +55,19 @@ $OUTPUT = $OUTPUT.`make 2>&1`;
 $OUTPUT = $OUTPUT.`cp -r Internal Release /research/www/groups/amatogroup/intranet/PMPLDocs`;
 $OUTPUT = $OUTPUT.`chmod -R 775 /research/www/groups/amatogroup/intranet/PMPLDocs/Internal`;
 $OUTPUT = $OUTPUT.`chmod -R 775 /research/www/groups/amatogroup/intranet/PMPLDocs/Release`;
+
+#
+# Timing stats
+#
+my $endRun = time();
+my $runTime = $endRun - $startRun;
+$OUTPUT = $OUTPUT."\n\nTest took $runTime seconds.\n";
+
 $OUTPUT = $OUTPUT."Done at ".`date 2>&1`;
 
 #
 # output log to /tmp
 #
-$ENV{'DISPLAY'} = '';
-
 if (!-e "$outputdir") {
   `mkdir $outputdir`;
 }

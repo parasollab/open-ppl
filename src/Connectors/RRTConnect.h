@@ -156,10 +156,9 @@ ExpandTree(CfgType& _dir, const VID& _dirVID,
 
   _newVID = INVALID_VID;
   const CfgType& nearest = rdmp->GetGraph()->GetVertex(kClosest[0].first);
-  int weight = 0;
 
-  vector<CfgType> inner;
-  bool expanded = e->Extend(nearest, _dir, _newCfg, inner);
+  LPOutput<MPTraits> lpOut;
+  bool expanded = e->Extend(nearest, _dir, _newCfg, lpOut);
 
   if(!expanded) {
     return connected;
@@ -179,13 +178,12 @@ ExpandTree(CfgType& _dir, const VID& _dirVID,
 //#endif
     }
 
-    WeightType weightT("RRTExpand", weight);
 #ifndef _PARALLEL
-    rdmp->GetGraph()->AddEdge(kClosest[0].first, _newVID, make_pair(weightT, weightT));
+    rdmp->GetGraph()->AddEdge(kClosest[0].first, _newVID, lpOut.m_edge);
 #else
     GraphType* globalTree = rdmp->GetGraph();
-    globalTree->add_edge_async(kClosest[0].first, _newVID, weightT);
-    globalTree->add_edge_async(_newVID, kClosest[0].first, weightT);
+    globalTree->add_edge_async(kClosest[0].first, _newVID, lpOut.m_edge.first);
+    globalTree->add_edge_async(_newVID, kClosest[0].first, lpOut.m_edge.second);
 
 #endif
     this->m_localGraph->add_edge(kClosest[0].first, _newVID);

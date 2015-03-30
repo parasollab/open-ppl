@@ -698,19 +698,15 @@ class BuildRadialRRT {
             nearest =   (*(globalTree->distribution().container_manager().begin()->find_vertex(nearestVID))).property();
           }
 
-          CDInfo cdInfo;
-          int weight = 0;
           //If expansion succeeds add to global tree and a copy in local tree
 
-          vector<CfgType> inner;
-          if(e->Extend(nearest, dir, newCfg, inner)
+          LPOutput<MPTraits> lpOut;
+          if(e->Extend(nearest, dir, newCfg, lpOut)
               && (dm->Distance(newCfg, nearest) >= m_minDist)) {
 
             VID newVID = globalTree->add_vertex(newCfg);
-            //TODO fix weight
-            pair<WeightType, WeightType> weights = make_pair(WeightType("RRTExpand", weight), WeightType("RRTExpand", weight));
-            //globalTree->AddEdge(nearestVID, newVID,weights);
-            globalTree->add_edge_async(nearestVID, newVID,weights.first);
+            //globalTree->AddEdge(nearestVID, newVID, lpOut.m_edge);
+            globalTree->add_edge_async(nearestVID, newVID, lpOut.m_edge.first);
 
             // TODO Fix VIZMO DEBUG
             // if (this->m_debug) VDAddNode(newCfg);

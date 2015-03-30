@@ -87,9 +87,11 @@ template<class MPTraits>
 void
 SRTStrategy<MPTraits>::
 ParseXML(XMLNodeReader& _node) {
-  for(XMLNodeReader::childiterator citr = _node.children_begin(); citr != _node.children_end(); ++citr) {
+  for(XMLNodeReader::childiterator citr = _node.children_begin();
+      citr != _node.children_end(); ++citr) {
     if(citr->getName() == "Evaluator") {
-      string evalMethod = citr->stringXMLParameter("label", true, "", "Evaluation Method");
+      string evalMethod = citr->stringXMLParameter("label", true, "",
+          "Evaluation Method");
       m_evaluators.push_back(evalMethod);
       citr->warnUnrequestedAttributes();
     }
@@ -97,20 +99,33 @@ ParseXML(XMLNodeReader& _node) {
       citr->warnUnknownNode();
   }
 
-  m_delta = _node.numberXMLParameter("delta", false, 1.0, 0.0, MAX_DBL, "Delta Distance");
-  m_minDist = _node.numberXMLParameter("minDist", false, 0.0, 0.0, m_delta, "Minimum Distance");
-  m_vcLabel = _node.stringXMLParameter("vcLabel", true, "", "Validity Test Method");
-  m_nfLabel = _node.stringXMLParameter("nfLabel", true, "", "Neighborhood Finder");
-  m_dmLabel = _node.stringXMLParameter("dmLabel",true,"","Distance Metric");
-  m_lpLabel = _node.stringXMLParameter("lpLabel", true, "", "Local Planning Method");
-  m_eLabel = _node.stringXMLParameter("eLabel", true, "", "Extender Method");
+  m_delta = _node.numberXMLParameter("delta", false, 1.0, 0.0, MAX_DBL,
+      "Delta Distance");
+  m_minDist = _node.numberXMLParameter("minDist", false, 0.0, 0.0, m_delta,
+      "Minimum Distance");
+  m_vcLabel = _node.stringXMLParameter("vcLabel", true, "",
+      "Validity Test Method");
+  m_nfLabel = _node.stringXMLParameter("nfLabel", true, "",
+      "Neighborhood Finder");
+  m_dmLabel = _node.stringXMLParameter("dmLabel",true,"",
+      "Distance Metric");
+  m_lpLabel = _node.stringXMLParameter("lpLabel", true, "",
+      "Local Planning Method");
+  m_eLabel = _node.stringXMLParameter("eLabel", true, "",
+      "Extender Method");
 
-  m_numSamples = _node.numberXMLParameter("samples", true, 100, 0, MAX_INT, "k random trees per iteration");
-  m_numExpansions = _node.numberXMLParameter("expansions", true, 10, 0, MAX_INT, "m expansions per random tree");
-  m_numCloseCent = _node.numberXMLParameter("closeCent", true, 10, 0, MAX_INT, "n_c close centroids for edge attempts");
-  m_numRandCent = _node.numberXMLParameter("randCent", true, 10, 0, MAX_INT, "n_r close centroids for edge attempts");
-  m_numClosePairs = _node.numberXMLParameter("closePairs", true, 10, 0, MAX_INT, "n_p close pairs for connections");
-  m_numConnIter = _node.numberXMLParameter("connIter", true, 10, 0, MAX_INT, "n_i iterations during tree connection");
+  m_numSamples = _node.numberXMLParameter("samples", true, 100, 0, MAX_INT,
+      "k random trees per iteration");
+  m_numExpansions = _node.numberXMLParameter("expansions", true, 10, 0, MAX_INT,
+      "m expansions per random tree");
+  m_numCloseCent = _node.numberXMLParameter("closeCent", true, 10, 0, MAX_INT,
+      "n_c close centroids for edge attempts");
+  m_numRandCent = _node.numberXMLParameter("randCent", true, 10, 0, MAX_INT,
+      "n_r close centroids for edge attempts");
+  m_numClosePairs = _node.numberXMLParameter("closePairs", true, 10, 0, MAX_INT,
+      "n_p close pairs for connections");
+  m_numConnIter = _node.numberXMLParameter("connIter", true, 10, 0, MAX_INT,
+      "n_i iterations during tree connection");
 
   //optionally read in a query and create a Query object.
   string query = _node.stringXMLParameter("query", false, "", "Query Filename");
@@ -151,9 +166,10 @@ Initialize() {
     vector<CfgType>& queryCfgs = m_query->GetQuery();
     typedef typename vector<CfgType>::iterator CIT;
     for(CIT cit = queryCfgs.begin(); cit != queryCfgs.end(); cit++){
-      VID v = this->GetMPProblem()->GetRoadmap()->GetGraph()->AddVertex(*cit);
+      VID v = this->GetRoadmap()->GetGraph()->AddVertex(*cit);
       m_trees[v] = Tree(*cit, vector<VID>(1, v));
-      if(this->m_debug) cout << "Adding Cfg::" << *cit << " from query." << endl;
+      if(this->m_debug)
+        cout << "Adding Cfg::" << *cit << " from query." << endl;
     }
     delete m_query;
   }
@@ -173,7 +189,7 @@ Run() {
     cout << "\nRunning SRTStrategy" << endl;
 
   // Setup MP Variables
-  StatClass* stats = this->GetMPProblem()->GetStatClass();
+  StatClass* stats = this->GetStatClass();
 
   stats->StartClock("SRT Generation");
 
@@ -233,8 +249,8 @@ GenerateTrees() {
     cout << "\nBegin GenerateTrees" << endl;
 
   //set up MP variables
-  Environment* env = this->GetMPProblem()->GetEnvironment();
-  ValidityCheckerPointer vcp = this->GetMPProblem()->GetValidityChecker(m_vcLabel);
+  Environment* env = this->GetEnvironment();
+  ValidityCheckerPointer vcp = this->GetValidityChecker(m_vcLabel);
   CDInfo cdInfo;
 
   string callee = this->GetNameAndLabel() + "::GenerateTrees";
@@ -247,7 +263,7 @@ GenerateTrees() {
     } while(!(env->InBounds(tmp) && vcp->IsValid(tmp, cdInfo, callee)));
 
     //create a new tree rooted at cfg
-    VID v = this->GetMPProblem()->GetRoadmap()->GetGraph()->AddVertex(tmp);
+    VID v = this->GetRoadmap()->GetGraph()->AddVertex(tmp);
     m_trees[v] = Tree(tmp, vector<VID>(1, v));
   }
 
@@ -285,7 +301,7 @@ FindCandidateConnections(vector<pair<VID, VID> >& _candPairs) {
 
   _candPairs.clear();
 
-  NeighborhoodFinderPointer nf = this->GetMPProblem()->GetNeighborhoodFinder(m_nfLabel);
+  NeighborhoodFinderPointer nf = this->GetNeighborhoodFinder(m_nfLabel);
   typedef typename Trees::iterator TIT;
 
   vector<VID> reps;
@@ -310,7 +326,8 @@ FindCandidateConnections(vector<pair<VID, VID> >& _candPairs) {
 
     //find n_r random centroids
     random_shuffle(reps.begin(), reps.end());
-    cands.insert(reps.begin(), (m_numRandCent < m_trees.size()) ? reps.begin() + m_numRandCent : reps.end());
+    cands.insert(reps.begin(), (m_numRandCent < m_trees.size()) ? reps.begin() +
+        m_numRandCent : reps.end());
 
     //generate pairs for the tree
     typedef typename set<VID>::iterator VIT;
@@ -330,7 +347,7 @@ ConnectTrees(vector<pair<VID, VID> >& _candPairs) {
     cout << "\nBegin ConnectTrees" << endl;
 
   stapl::sequential::vector_property_map<typename GraphType::GRAPH, size_t> cMap;
-  GraphType* g = this->GetMPProblem()->GetRoadmap()->GetGraph();
+  GraphType* g = this->GetRoadmap()->GetGraph();
   vector<pair<VID, VID> > succPair;
 
   typedef typename vector<pair<VID, VID> >::iterator PIT;
@@ -343,7 +360,8 @@ ConnectTrees(vector<pair<VID, VID> >& _candPairs) {
     if(!stapl::sequential::is_same_cc(*g, cMap, pit->first, pit->second)) {
       //attempt k-closest pairs connection
       //then attempt RRT-connect upon failure
-      if(Connect(pit->first, pit->second) || RRTConnect(pit->first, pit->second)) {
+      if(Connect(pit->first, pit->second) || RRTConnect(pit->first,
+          pit->second)) {
         if(this->m_debug)
           cout << "Successful connection." << endl;
         succPair.push_back(*pit);
@@ -359,8 +377,10 @@ ConnectTrees(vector<pair<VID, VID> >& _candPairs) {
     //merge the trees
     size_t s1 = m_trees[minV].second.size();
     size_t s2 = m_trees[maxV].second.size();
-    m_trees[minV].second.insert(m_trees[minV].second.end(), m_trees[maxV].second.begin(), m_trees[maxV].second.end());
-    m_trees[minV].first = (m_trees[minV].first * s1 + m_trees[maxV].first * s2)/(s1+s2);
+    m_trees[minV].second.insert(m_trees[minV].second.end(),
+        m_trees[maxV].second.begin(), m_trees[maxV].second.end());
+    m_trees[minV].first = (m_trees[minV].first * s1 + m_trees[maxV].first * s2)/
+        (s1+s2);
 
     //redo succPair vals for rest of pairs
     for(PIT pit2 = pit; pit2 != succPair.end(); ++pit2) {
@@ -383,11 +403,11 @@ bool
 SRTStrategy<MPTraits>::
 Connect(VID _t1, VID _t2) {
 
-  Environment* env = this->GetMPProblem()->GetEnvironment();
-  RoadmapType* rdmp = this->GetMPProblem()->GetRoadmap();
-  DistanceMetricPointer dm = this->GetMPProblem()->GetDistanceMetric(m_dmLabel);
-  NeighborhoodFinderPointer nf = this->GetMPProblem()->GetNeighborhoodFinder(m_nfLabel);
-  LocalPlannerPointer lpp = this->GetMPProblem()->GetLocalPlanner(m_lpLabel);
+  Environment* env = this->GetEnvironment();
+  RoadmapType* rdmp = this->GetRoadmap();
+  DistanceMetricPointer dm = this->GetDistanceMetric(m_dmLabel);
+  NeighborhoodFinderPointer nf = this->GetNeighborhoodFinder(m_nfLabel);
+  LocalPlannerPointer lpp = this->GetLocalPlanner(m_lpLabel);
   LPOutput<MPTraits> lpOutput;
 
   Tree& t1 = m_trees[_t1];
@@ -413,7 +433,8 @@ Connect(VID _t1, VID _t2) {
     if(lpp->IsConnected(c1, c2, col,
           &lpOutput, env->GetPositionRes(), env->GetOrientationRes())) {
       //successful connection add graph edge
-      rdmp->GetGraph()->AddEdge(cit->first.first, cit->first.second, lpOutput.m_edge);
+      rdmp->GetGraph()->AddEdge(cit->first.first, cit->first.second,
+          lpOutput.m_edge);
       return true;
     }
   }
@@ -433,7 +454,7 @@ RRTConnect(VID _t1, VID _t2) {
     VID v = ExpandTree(_t1, dir);
     if(v != INVALID_VID) {
       //greedily extend t2 towards t1
-      CfgType qNew = this->GetMPProblem()->GetRoadmap()->GetGraph()->GetVertex(v);
+      CfgType qNew = this->GetRoadmap()->GetGraph()->GetVertex(v);
       VID v2 = v, v2repeated;
       do {
         v2repeated = v2;
@@ -452,7 +473,7 @@ template<class MPTraits>
 typename MPTraits::CfgType
 SRTStrategy<MPTraits>::
 SelectDirection(){
-  Environment* env = this->GetMPProblem()->GetEnvironment();
+  Environment* env = this->GetEnvironment();
   CfgType dir;
   dir.GetRandomCfg(env);
   return dir;
@@ -464,8 +485,8 @@ SRTStrategy<MPTraits>::
 ExpandTree(VID _tree, CfgType& _dir) {
 
   // Setup MP Variables
-  DistanceMetricPointer dm = this->GetMPProblem()->GetDistanceMetric(m_dmLabel);
-  NeighborhoodFinderPointer nf = this->GetMPProblem()->GetNeighborhoodFinder(m_nfLabel);
+  DistanceMetricPointer dm = this->GetDistanceMetric(m_dmLabel);
+  NeighborhoodFinderPointer nf = this->GetNeighborhoodFinder(m_nfLabel);
   CDInfo cdInfo;
 
   VID recentVID = INVALID_VID;
@@ -473,7 +494,7 @@ ExpandTree(VID _tree, CfgType& _dir) {
   vector<pair<VID, double> > kClosest;
   vector<CfgType> cfgs;
 
-  RoadmapType* rdmp = this->GetMPProblem()->GetRoadmap();
+  RoadmapType* rdmp = this->GetRoadmap();
   GraphType* g = rdmp->GetGraph();
   Tree& currentTree = m_trees[_tree];
 
@@ -486,9 +507,9 @@ ExpandTree(VID _tree, CfgType& _dir) {
   CfgType newCfg;
   int weight = 0;
 
-  typename MPProblemType::ExtenderPointer e = this->GetMPProblem()->GetExtender(m_eLabel);
-  vector<CfgType> intermediates;
-  if(!e->Extend(nearest, _dir, newCfg, intermediates)) {
+  typename MPProblemType::ExtenderPointer e = this->GetExtender(m_eLabel);
+  LPOutput<MPTraits> lpOutput;
+  if(!e->Extend(nearest, _dir, newCfg, lpOutput)) {
     if(this->m_debug)
       cout << "RRT could not expand!" << endl;
     return recentVID;
@@ -507,7 +528,8 @@ ExpandTree(VID _tree, CfgType& _dir) {
     currentTree.first = (currentTree.first * (s-1) + newCfg) / s;
 
     //add edge
-    pair<WeightType, WeightType> weights = make_pair(WeightType("RRTExpand", weight), WeightType("RRTExpand", weight));
+    pair<WeightType, WeightType> weights = make_pair(WeightType("RRTExpand",
+        weight), WeightType("RRTExpand", weight));
     g->AddEdge(kClosest[0].first, recentVID, weights);
     g->GetVertex(recentVID).SetStat("Parent", kClosest[0].first);
   }

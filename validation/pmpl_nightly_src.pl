@@ -4,6 +4,8 @@ use Getopt::Std;
 use Env::Modulecmd;
 getopts('c:r:d:p:');
 
+my $startRun = time();
+
 #
 # configuration
 #
@@ -63,14 +65,37 @@ $year     = 1900 + $yearOffset;
 $fulldate = "$day-$month-$dayOfMonth-$year";
 
 #
-# check out code, compile and run tests
+# start log file
 #
-$pmpldir = "pmpl-$opt_c-$opt_r-$opt_d-$opt_p";
+$OUTPUT = "$fulldate\nplatform = $PLATFORM / ROBOT_DEF = $ROBOT / debug = $DEBUG / parallel = $PARALLEL\n";
+
+#
+# go to working dir, remove old directories, and check out new copy
+# (if necessary)
+#
 chdir $workdir or die "Can't cd to $workdir $!\n";
-$OUTPUT = "platform = $PLATFORM / ROBOT_DEF = $ROBOT / debug = $DEBUG / parallel = $PARALLEL\n";
-$OUTPUT = $OUTPUT.`rm -rf $pmpldir 2>&1`;
-$OUTPUT = $OUTPUT.`svn --quiet checkout svn+ssh://parasol-svn.cs.tamu.edu/research/parasol-svn/svnrepository/pmpl/trunk $pmpldir 2>&1`;
-chdir "$workdir/$pmpldir/src";
+$pmpldir = "$fulldate";
+opendir(DIR, $workdir) or die $!;
+while(my $file = readdir(DIR)) {
+  if(!($file eq $pmpldir) && !($file eq ".") && !($file eq "..")) {
+    $OUTPUT = $OUTPUT."Removing directory $file\n".`rm -rf $file 2>&1`;
+  }
+}
+closedir(DIR);
+if(!-e "$pmpldir") {
+  $OUTPUT = $OUTPUT."Checking out repository.\n";
+  while(!-e "$pmpldir") {
+    $OUTPUT = $OUTPUT.`svn --quiet checkout svn+ssh://parasol-svn.cs.tamu.edu/research/parasol-svn/svnrepository/pmpl/trunk $pmpldir 2>&1`;
+  }
+}
+else {
+  $OUTPUT = $OUTPUT."Repository already checked out, continuing compilation.\n";
+}
+
+#
+# print system details
+#
+chdir "$pmpldir/src";
 $OUTPUT = $OUTPUT."Started at ".`date 2>&1`;
 $OUTPUT = $OUTPUT."g++ path: ".`which g++ 2>&1`;
 $OUTPUT = $OUTPUT."g++ details:\n".`g++ -c -v 2>&1`;
@@ -78,6 +103,10 @@ if($PARALLEL eq "1") {
   $OUTPUT = $OUTPUT."mpi:".`which mpic++ 2>&1`;
   $OUTPUT = $OUTPUT."env:\n".`printenv 2>&1`;
 }
+
+#
+#compile
+#
 $OUTPUT = $OUTPUT.`make platform=$PLATFORM ROBOT_DEF=$ROBOT debug=$DEBUG parallel=$PARALLEL reallyreallyclean 2>&1`;
 $OUTPUT = $OUTPUT.`make platform=$PLATFORM ROBOT_DEF=$ROBOT debug=$DEBUG parallel=$PARALLEL pmpl -j4 2>&1`;
 if (-e "$workdir/$pmpldir/src/pmpl") {
@@ -85,12 +114,19 @@ if (-e "$workdir/$pmpldir/src/pmpl") {
 } else {
   $OUTPUT = $OUTPUT."=====\nFailed: pmpl compilation\n=====\n";
 }
+
+#
+# Timing stats
+#
+my $endRun = time();
+my $runTime = $endRun - $startRun;
+$OUTPUT = $OUTPUT."\n\nTest took $runTime seconds.\n";
+
 $OUTPUT = $OUTPUT."Done at ".`date 2>&1`;
 
 #
 # output log to /tmp
 #
-
 if (!-e "$outputdir") {
   `mkdir $outputdir`;
 }
@@ -101,11 +137,6 @@ $outfile = "$outputdir/$fulldate/pmpl.$opt_c.$opt_r.debug$opt_d.parallel$opt_p.o
 open(OUT, ">$outfile" || die "error, could not open $outfile for reading: $!");
 print OUT $OUTPUT;
 close(OUT);
-
-#
-# copy the output to the webserver
-#
-#`cat $outfile | grep -v '[Pp]'assed'' > /research/www/groups/rwergergroup/intranet/stapl_perf/stapl_nightly/stapl.nightly.$opt_c.out`;
 
 #
 # send mail

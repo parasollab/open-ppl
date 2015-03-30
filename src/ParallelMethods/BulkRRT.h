@@ -62,15 +62,12 @@ class BulkWF {
           nearestVID = nfresult[0].first.first;
           nearest = nfresult[0].first.second;
 
-          vector<CfgType> inner;
+          LPOutput<MPTraits> lpOut;
           if(nearestVID != -999 &&
-              e->Extend(nearest, dir, newCfg, inner) &&
+              e->Extend(nearest, dir, newCfg, lpOut) &&
               dmm->Distance(newCfg, nearest) >= m_minDist)   {
 
             VID newVID = _gview.add_vertex(newCfg);
-
-            int tmpweight=2.0;
-            pair<WeightType, WeightType> weights = make_pair(WeightType("RRTExpand", tmpweight), WeightType("RRTExpand", tmpweight));
 
             typename GraphType::edge_descriptor ed1(nearestVID, newVID);
             typename GraphType::edge_descriptor ed2(newVID, nearestVID);
