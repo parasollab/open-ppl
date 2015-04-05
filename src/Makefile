@@ -79,8 +79,6 @@ else
   MAIN = main.o
 endif
 
-pmpl: ${PMPL_LIBFILE} ${MAIN}
-	${CXX} ${CXXFLAGS} ${OPTS} ${MAIN} ${LIBS} -o $@
 
 %.o: %.cpp
 	@${MAKE} -s check_platform
