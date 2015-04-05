@@ -43,6 +43,7 @@ class Connection {
 
     //connection type and limits
     JointType GetConnectionType() const {return m_jointType;}
+    void SetConnectionType(JointType _jt) {m_jointType=_jt;}
     const pair<double, double>& GetJointLimits(int _i) const {return m_jointLimits[_i];}
 
     //body indices

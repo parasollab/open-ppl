@@ -2,12 +2,15 @@
  * filename. Then solves based upon the problem.
  */
 
+
 #include "MPProblem/MPProblem.h"
 
 #if (defined(PMPReachDistCC) || defined(PMPReachDistCCFixed))
 #include "MPProblem/ClosedChainProblem.h"
 #include "MPStrategies/ClosedChainStrategy.h"
 #endif
+
+
 
 #ifdef PMPCfg
 #include "Cfg/Cfg.h"
@@ -37,6 +40,9 @@ typedef Cfg_reach_cc_fixed PMPLCfgType;
 #include "Traits/SurfaceTraits.h"
 typedef SSSurfaceMult PMPLCfgType;
 
+#elif (defined(PMPReachableVolume))
+#include "Cfg/CfgReachableVolume.h"
+typedef CfgReachableVolume PMPLCfgType;
 #else
 #error "Error, must define a RobotType for PMPL application"
 #endif

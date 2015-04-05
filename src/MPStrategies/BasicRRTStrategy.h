@@ -33,7 +33,7 @@ class BasicRRTStrategy : public MPStrategyMethod<MPTraits> {
 
     virtual ~BasicRRTStrategy();
 
-    virtual void ParseXML(XMLNodeReader& _node, bool _child = false);
+    virtual void ParseXML(XMLNodeReader& _node, bool _child = false, bool _warnXML=true);
 
     virtual void Initialize();
     virtual void Run();
@@ -96,7 +96,7 @@ BasicRRTStrategy<MPTraits>::BasicRRTStrategy(MPProblemType* _problem,
     XMLNodeReader& _node, bool _warnXML, bool _child) :
   MPStrategyMethod<MPTraits>(_problem, _node){
     this->SetName("BasicRRTStrategy");
-    ParseXML(_node, _child);
+    ParseXML(_node, _child,_warnXML);
     if (_warnXML) _node.warnUnrequestedAttributes();
   }
 
@@ -105,17 +105,19 @@ BasicRRTStrategy<MPTraits>::~BasicRRTStrategy(){ }
 
 template<class MPTraits>
 void
-BasicRRTStrategy<MPTraits>::ParseXML(XMLNodeReader& _node, bool _child) {
+BasicRRTStrategy<MPTraits>::ParseXML(XMLNodeReader& _node, bool _child, bool _warnXML) {
   for(XMLNodeReader::childiterator citr = _node.children_begin();
       citr != _node.children_end(); ++citr){
     if(citr->getName() == "Evaluator"){
       string evalMethod = citr->stringXMLParameter("label", true, "",
           "Evaluation Method");
       m_evaluators.push_back(evalMethod);
-      citr->warnUnrequestedAttributes();
+      if(_warnXML)
+        citr->warnUnrequestedAttributes();
     }
     else
-      citr->warnUnknownNode();
+      if(_warnXML)
+        citr->warnUnknownNode();
   }
 
   m_delta = _node.numberXMLParameter("delta", false, 1.0, 0.0, MAX_DBL,

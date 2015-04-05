@@ -109,6 +109,8 @@ class Cfg {
     ///Get internal storage of configuration
     const vector<double>& GetData() const {return m_v;};
     void SetData(const vector<double>& _data);
+    void SetJointData(const vector<double>& _data);
+
 
     //labeling of the Cfg and statistics
     bool GetLabel(string _label);
@@ -130,6 +132,12 @@ class Cfg {
     /// methods for Distance Metric.
     virtual vector<double> GetPosition() const;
     virtual vector<double> GetOrientation() const;
+ 
+    virtual vector<double> GetNonJoints() const;
+    virtual vector<double> GetJoints() const;
+    virtual vector<double> GetRotation() const;
+    void ResetRigidBodyCoordinates();
+
     virtual double Magnitude() const;
     virtual double PositionMagnitude() const;
     virtual double OrientationMagnitude() const;

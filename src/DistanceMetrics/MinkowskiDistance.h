@@ -27,6 +27,7 @@ class MinkowskiDistance : public DistanceMetricMethod<MPTraits> {
 
     virtual double Distance(const CfgType& _c1, const CfgType& _c2);
     virtual void ScaleCfg(double _length, CfgType& _c, const CfgType& _o = CfgType());
+    static double PositionDistance(Environment *_env, const CfgType& _c, double _r1, double _r3, bool _normalize);
 
   protected:
     //default implementation
@@ -144,18 +145,22 @@ ScaleCfg(double _length, CfgType& _c, const CfgType& _o) {
 
 template<class MPTraits>
 double
-MinkowskiDistance<MPTraits>::
-PositionDistance(const CfgType& _c) {
-  Environment* env = this->GetMPProblem()->GetEnvironment();
-  double diagonal = env->GetBoundary()->GetMaxDist(m_r1, m_r3);
+MinkowskiDistance<MPTraits>::PositionDistance(const CfgType& _c) {
+  return PositionDistance(this->GetMPProblem()->GetEnvironment(),_c,m_r1,m_r3,m_normalize);
+}
+
+template<class MPTraits>
+double
+MinkowskiDistance<MPTraits>::PositionDistance(Environment *_env, const CfgType& _c, double _r1, double _r3, bool _normalize) {
+  double diagonal = _env->GetBoundary()->GetMaxDist(_r1, _r3);
   vector<double> p = _c.GetPosition();
   double pos = 0;
-  for(size_t i=0; i<p.size(); ++i)
-    if(m_normalize)
-      pos += pow(fabs(p[i])/diagonal, m_r1);
+  for(size_t i=0; i<p.size(); ++i) 
+    if(_normalize)
+      pos += pow(fabs(p[i])/diagonal, _r1);
     else
-      pos += pow(fabs(p[i]), m_r1);
-  return pos;
+      pos += pow(fabs(p[i]), _r1);
+  return pos; 
 }
 
 template<class MPTraits>

@@ -257,6 +257,7 @@ PMPL_OBJS = \
 	ValidityCheckers/CollisionDetection/VClipCollisionDetection.o \
 	ValidityCheckers/CollisionDetection/SpheresCollisionDetection.o \
 	Cfg/Cfg.o \
+        Cfg/CfgReachableVolume.o \
 	Cfg/CfgMultiRobot.o \
         Utilities/MetricUtils.o \
         Utilities/IOUtils.o \
