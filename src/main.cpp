@@ -42,6 +42,7 @@ typedef SSSurfaceMult PMPLCfgType;
 
 #elif (defined(PMPReachableVolume))
 #include "Cfg/CfgReachableVolume.h"
+#include "Traits/ReachableVolumeTraits.h"
 typedef CfgReachableVolume PMPLCfgType;
 #else
 #error "Error, must define a RobotType for PMPL application"
