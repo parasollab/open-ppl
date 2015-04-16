@@ -296,10 +296,8 @@ void HybridPRM<MPTraits>::Finalize() {
   StatClass* stats = this->GetMPProblem()->GetStatClass();
 
   //output map
-  string outputFilename = this->GetBaseFilename() + ".map";
-  ofstream osMap(outputFilename.c_str());
-  this->GetMPProblem()->GetRoadmap()->Write(osMap, this->GetMPProblem()->GetEnvironment());
-  osMap.close();
+  this->GetRoadmap()->Write(this->GetBaseFilename() + ".map", this->GetEnvironment());
+
 
   //output stats
   stats->StopClock("Map Generation");
