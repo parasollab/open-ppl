@@ -113,6 +113,7 @@
 #include "MPStrategies/BasicRRTStrategy.h"
 #include "MPStrategies/BlindRRT.h"
 #include "MPStrategies/EvaluateMapStrategy.h"
+#include "MPStrategies/HybridPRM.h"
 #include "MPStrategies/LocalManeuveringStrategy.h"
 #include "MPStrategies/MedialAxisRRT.h"
 #include "MPStrategies/MultiStrategy.h"
@@ -289,6 +290,7 @@ struct MPTraits {
     BlindRRT<MPTraits>,
     DMTestStrategy<MPTraits>,
     EvaluateMapStrategy<MPTraits>,
+    HybridPRM<MPTraits>,
     MedialAxisRRT<MPTraits>,
     MultiStrategy<MPTraits>,
     SparkPRM<MPTraits, BasicPRM>,
