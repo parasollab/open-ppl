@@ -170,14 +170,16 @@ StatClass::PrintFeatures(ostream& _os) {
   _os << "\tsigmaCCSize: " << m_sigmaCCSize << endl;
 }
 
-int
-StatClass::IncNodesGenerated(string _samplerName, int _incr){
-  return (m_samplerInfo[_samplerName].second += _incr);
+void
+StatClass::
+IncNodesGenerated(string _samplerName, size_t _incr) {
+  m_samplerInfo[_samplerName].second += _incr;
 }
 
-int
-StatClass::IncNodesAttempted(string _samplerName, int _incr){
-  return (m_samplerInfo[_samplerName].first += _incr);
+void
+StatClass::
+IncNodesAttempted(string _samplerName, size_t _incr) {
+  m_samplerInfo[_samplerName].first += _incr;
 }
 
 void

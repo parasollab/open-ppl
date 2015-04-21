@@ -15,13 +15,10 @@ class MedialAxisSampler : public SamplerMethod<MPTraits> {
 
     MedialAxisSampler(MPProblemType* _problem, XMLNodeReader& _node);
 
-    virtual void
-      Print(ostream& _os) const;
+    virtual void Print(ostream& _os) const;
 
-    virtual bool
-      Sampler(Environment* _env, shared_ptr<Boundary> _bb,
-          StatClass& _stats, CfgType& _cfgIn,
-          vector<CfgType>& _cfgOut, vector<CfgType>& _cfgCol);
+    virtual bool Sampler(CfgType& _cfg, shared_ptr<Boundary> _boundary,
+          vector<CfgType>& _result, vector<CfgType>& _collision);
 
   private:
     MedialAxisUtility<MPTraits> m_medialAxisUtility;
@@ -54,24 +51,16 @@ Print(ostream& _os) const {
 template<class MPTraits>
 bool
 MedialAxisSampler<MPTraits>::
-Sampler(Environment* _env, shared_ptr<Boundary> _bb, StatClass& _stats,
-    CfgType& _cfgIn, vector<CfgType>& _cfgOut, vector<CfgType>& _cfgCol) {
+Sampler(CfgType& _cfg, shared_ptr<Boundary> _boundary,
+    vector<CfgType>& _result, vector<CfgType>& _collision) {
 
   string call = "MedialAxisSampler::sampler()";
   bool generated = false;
 
-  _stats.IncNodesAttempted(this->GetNameAndLabel());
-
-  // If just a new cfg, get a random CfgType
-  CfgType tmpCfg = _cfgIn;
-  if(tmpCfg == CfgType())
-    tmpCfg.GetRandomCfg(_env,_bb);
-
   // If pushed properly and the new CfgType is valid, increment generated
-  if(m_medialAxisUtility.PushToMedialAxis(tmpCfg, _bb)) {
-    _stats.IncNodesGenerated(this->GetNameAndLabel());
+  if(m_medialAxisUtility.PushToMedialAxis(_cfg, _boundary)) {
     generated = true;
-    _cfgOut.push_back(tmpCfg);
+    _result.push_back(_cfg);
   }
   return generated;
 }

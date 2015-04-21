@@ -309,16 +309,14 @@ Sample(OutputIterator _thisIterationOut) {
   stats->StartClock(clockName);
 
   //For each sampler generate nodes into samples
-  typedef map<string, pair<size_t, size_t> >::const_iterator SIT;
   vector<CfgType> samples;
-  for(SIT sit = m_samplerLabels.begin(); sit != m_samplerLabels.end(); ++sit) {
-    SamplerPointer s = this->GetSampler(sit->first);
+  for(auto sampler : m_samplerLabels) {
+    SamplerPointer s = this->GetSampler(sampler.first);
 
     stats->StartClock(s->GetNameAndLabel());
 
-    s->Sample(this->GetEnvironment(), this->m_boundary, *this->GetStatClass(),
-        sit->second.first,
-        sit->second.second, back_inserter(samples));
+    s->Sample(sampler.second.first, sampler.second.second,
+        this->m_boundary, back_inserter(samples));
 
     stats->StopClock(s->GetNameAndLabel());
   }
@@ -328,9 +326,8 @@ Sample(OutputIterator _thisIterationOut) {
 
   //add valid samples to roadmap
   GraphType* g = this->GetRoadmap()->GetGraph();
-  typedef typename vector<CfgType>::iterator CIT;
-  for(CIT cit=samples.begin(); cit != samples.end(); ++cit) {
-    VID vid = g->AddVertex(*cit);
+  for(auto sample: samples) {
+    VID vid = g->AddVertex(sample);
     *_thisIterationOut++ = vid;
   }
 

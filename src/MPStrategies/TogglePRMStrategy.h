@@ -190,52 +190,52 @@ template<class MPTraits>
 void
 TogglePRMStrategy<MPTraits>::GenerateNodes(deque<pair<string, CfgType> >& _queue) {
 
-  StatClass* stats = this->GetMPProblem()->GetStatClass();
+  StatClass* stats = this->GetStatClass();
   stringstream clockName;
   clockName << "Node Generation";
   stats->StartClock(clockName.str());
 
   // Go through list of samplers
   typedef map<string, pair<int,int> >::iterator SIT;
-  for(SIT sit = m_samplerLabels.begin(); sit != m_samplerLabels.end(); ++sit) {
-    typename MPProblemType::SamplerPointer smp = this->GetMPProblem()->GetSampler(sit->first);
+  for(auto sampler : m_samplerLabels) {
+    typename MPProblemType::SamplerPointer smp =
+      this->GetSampler(sampler.first);
     vector<CfgType> outNodes;
 
     string callee = "TogglePRM::GenerateNodes";
     // Generate nodes for this sampler
     stringstream samplerClockName;
-    samplerClockName << "Sampler::" << sit->first;
+    samplerClockName << "Sampler::" << sampler.first;
     stats->StartClock(samplerClockName.str());
 
-    smp->Sample(this->GetMPProblem()->GetEnvironment(), *stats, sit->second.first, sit->second.second,
+    smp->Sample(sampler.second.first, sampler.second.second, this->m_boundary,
         back_inserter(outNodes), back_inserter(outNodes));
 
     stats->StopClock(samplerClockName.str());
 
     if(this->m_debug) {
-      cout << "\n\t" << this->GetMPProblem()->GetRoadmap()->GetGraph()->get_num_vertices() << " vertices " << endl;
+      cout << "\n\t" << this->GetRoadmap()->GetGraph()->get_num_vertices() << " vertices " << endl;
       cout << "\n\t";
       stats->PrintClock(samplerClockName.str(), cout);
     }
 
     // Add nodes to queue
     typedef typename vector<CfgType>::iterator CIT;
-    for(CIT cit = outNodes.begin(); cit != outNodes.end(); ++cit) {
+    for(auto sample : outNodes) {
 
       // If not validated yet, determine validity
-      if(!(*cit).IsLabel("VALID"))
-        this->GetMPProblem()->GetValidityChecker(m_vcLabel)->IsValid(
-              *cit, callee);
+      if(!sample.IsLabel("VALID"))
+        this->GetValidityChecker(m_vcLabel)->IsValid(sample, callee);
 
       // Put nodes into queue, keeping track of validity
-      if((*cit).GetLabel("VALID")) {
+      if(sample.GetLabel("VALID")) {
         if(m_priority) // If desired, give valid nodes priority
-          _queue.push_front(make_pair("valid", *cit));
+          _queue.push_front(make_pair("valid", sample));
         else
-          _queue.push_back(make_pair("valid", *cit));
+          _queue.push_back(make_pair("valid", sample));
       }
       else
-        _queue.push_back(make_pair("invalid", *cit));
+        _queue.push_back(make_pair("invalid", sample));
     }
   }
   stats->StopClock(clockName.str());

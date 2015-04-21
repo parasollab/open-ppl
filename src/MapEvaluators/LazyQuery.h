@@ -225,7 +225,7 @@ LazyQuery<MPTraits>::CanRecreatePath(RoadmapType* _rdmp, vector<VID>& _attempted
 template<class MPTraits>
 void
 LazyQuery<MPTraits>::NodeEnhance(RoadmapType* _rdmp) {
-  StatClass& stats = *(this->GetMPProblem()->GetStatClass());
+  StatClass& stats = *(this->GetStatClass());
   if(!m_numEnhance || !m_edges.size())
     return;
 
@@ -237,12 +237,12 @@ LazyQuery<MPTraits>::NodeEnhance(RoadmapType* _rdmp) {
     size_t index = LRand() % m_edges.size(); // do I need a typecast?
     CfgType seed, incr, enhance;
     seed = (m_edges[index].first + m_edges[index].second)/2.0;
-    DistanceMetricPointer dm = this->GetMPProblem()->GetDistanceMetric(this->m_dmLabel);
-    incr.GetRandomRay(fabs(GaussianDistribution(fabs(m_d), fabs(m_d))), this->GetMPProblem()->GetEnvironment(), dm);
+    DistanceMetricPointer dm = this->GetDistanceMetric(this->m_dmLabel);
+    incr.GetRandomRay(fabs(GaussianDistribution(fabs(m_d), fabs(m_d))), dm);
     enhance = seed + incr;
     enhance.SetLabel("Enhance", true);
 
-    if(!this->GetMPProblem()->GetEnvironment()->InBounds(enhance))
+    if(!this->GetEnvironment()->InBounds(enhance))
       continue;
 
     // Add enhance to roadmap and connect

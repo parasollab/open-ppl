@@ -1,10 +1,9 @@
-// Samples by "snapping" random configurations to lattice points in a grid
-
 #ifndef MIX_SAMPLER_H_
 #define MIX_SAMPLER_H_
 
 #include "SamplerMethod.h"
 
+// Samples by "snapping" random configurations to lattice points in a grid
 template<class MPTraits>
 class MixSampler : public SamplerMethod<MPTraits> {
 
@@ -20,10 +19,8 @@ class MixSampler : public SamplerMethod<MPTraits> {
     virtual void Print(ostream& _os) const;
 
   protected:
-    // Attempts to sample, returns true if successful
-    virtual bool Sampler(Environment* _env, shared_ptr<Boundary> _bb,
-          StatClass& _stats, CfgType& _cfgIn,
-          vector<CfgType>& _cfgOut, vector<CfgType>& _cfgCol);
+    virtual bool Sampler(CfgType& _cfg, shared_ptr<Boundary> _boundary,
+        vector<CfgType>& _result, vector<CfgType>& _collision);
 
     vector<pair <string, double> > samplers; // Stores method label with cumulative probability
 };
@@ -82,26 +79,22 @@ void
 MixSampler<MPTraits>::
 Print(ostream& _os) const {
   SamplerMethod<MPTraits>::Print(_os);
-  for(vector<pair <string, double> >::const_iterator it = samplers.begin();
-      it != samplers.end(); it++)
-    cout << "\tSampler = " << it->first <<
-      ", cumulative probability = " << it->second << endl;
+  for(auto sampler : samplers)
+    cout << "\tSampler = " << sampler.first <<
+      ", cumulative probability = " << sampler.second << endl;
 }
 
 // Attempts to sample, returns true if successful
 template<class MPTraits>
 bool
 MixSampler<MPTraits>::
-Sampler(Environment* _env, shared_ptr<Boundary> _bb, StatClass& _stats,
-    CfgType& _cfgIn, vector<CfgType>& _cfgOut, vector<CfgType>& _cfgCol) {
+Sampler(CfgType& _cfg, shared_ptr<Boundary> _boundary,
+    vector<CfgType>& _result, vector<CfgType>& _collision) {
   double rand = DRand();
-  for(vector<pair <string, double> >::iterator it = samplers.begin();
-      it != samplers.end(); it++) {
-    if(rand < it->second) {
-      return this->GetMPProblem()->GetSampler(it->first)->
-        Sampler(_env, _bb, _stats, _cfgIn, _cfgOut, _cfgCol);
-    }
-  }
+  for(auto sampler : samplers)
+    if(rand < sampler.second)
+      return this->GetSampler(sampler.first)->
+        Sampler(_cfg, _boundary, _result, _collision);
   return false;
 }
 

@@ -482,9 +482,8 @@ struct RadialRegionVertex{
     template <typename View>
       void operator() (View _vw) const {
         DistanceMetricPointer dmm = m_problem->GetDistanceMetric(m_dmLabel);
-        Environment* env = m_problem->GetEnvironment();
         CfgType point = m_root;
-        point.GetRandomRay(m_radius, env, dmm);
+        point.GetRandomRay(m_radius, dmm);
         //point.GetRandomCfg(m_radius, m_radius);
         _vw.property().SetCandidate(point);
         //VDAddNode(point);

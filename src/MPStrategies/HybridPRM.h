@@ -37,16 +37,16 @@ class HybridPRM : public MPStrategyMethod<MPTraits> {
     typedef typename MPProblemType::SamplerPointer SamplerPointer;
     typedef typename MPProblemType::ConnectorPointer ConnectorPointer;
     typedef typename GraphType::vertex_descriptor VID;
-   
-    HybridPRM() { 
-     this->SetName("HybridPRM"); 
+
+    HybridPRM() {
+     this->SetName("HybridPRM");
      }
 
-    HybridPRM(string _samplerSelectionDistribution, 
-    bool _countCost, double _percentageRandom, bool _fixedCost, bool _resettingLearning, 
+    HybridPRM(string _samplerSelectionDistribution,
+    bool _countCost, double _percentageRandom, bool _fixedCost, bool _resettingLearning,
     int _binSize, const map<string, pair<int, int> >& _samplerLabels,
     const vector<string>& _connectorLabels, const vector<string>& _evaluatorLabels);
-     
+
     HybridPRM(typename MPTraits::MPProblemType* _problem, XMLNodeReader& _node);
     virtual ~HybridPRM() {}
 
@@ -83,15 +83,15 @@ class HybridPRM : public MPStrategyMethod<MPTraits> {
     map<string,int> m_nodeNumSampled;
     map<string,int> m_nodeNumOversampled;
 
-   
+
     double m_percentageRandom; //lambda
     double m_windowPercent;
     bool m_countCost;
     bool m_fixedCost;
     bool m_resettingLearning;
-    int  m_binSize;    
+    int  m_binSize;
     string m_samplerSelectionDistribution;
-   
+
 };
 
 ostream& operator<<(ostream& _os, const NodeTypeCounts& _nt){
@@ -100,15 +100,15 @@ ostream& operator<<(ostream& _os, const NodeTypeCounts& _nt){
 }
 
 template<class MPTraits>
-HybridPRM<MPTraits>::HybridPRM(string _samplerSelectionDistribution, 
-    bool _countCost, double _percentageRandom, bool _fixedCost, bool _resettingLearning,int _binSize, 
+HybridPRM<MPTraits>::HybridPRM(string _samplerSelectionDistribution,
+    bool _countCost, double _percentageRandom, bool _fixedCost, bool _resettingLearning,int _binSize,
     const map<string, pair<int, int> >& _samplerLabels,
     const vector<string>& _connectorLabels,
     const vector<string>& _evaluatorLabels)
   :m_samplerSelectionDistribution(_samplerSelectionDistribution), m_countCost(_countCost),
   m_percentageRandom(_percentageRandom), m_fixedCost(_fixedCost), m_resettingLearning(_resettingLearning),
   m_binSize(_binSize),m_samplerLabels(_samplerLabels),
-  m_connectorLabels(_connectorLabels), m_evaluatorLabels(_evaluatorLabels){ 
+  m_connectorLabels(_connectorLabels), m_evaluatorLabels(_evaluatorLabels){
   this->SetName("HybridPRM");
   }
 
@@ -138,8 +138,8 @@ void HybridPRM<MPTraits>::ParseXML(XMLNodeReader& _node){
       string evalMethod = citr->stringXMLParameter("Method", true, "", "Evaluation Method");
       m_evaluatorLabels.push_back(evalMethod);
       citr->warnUnrequestedAttributes();
-    }   
-   
+    }
+
     else
       citr->warnUnknownNode();
  }
@@ -170,7 +170,7 @@ HybridPRM<MPTraits>::Print(ostream& _os) const {
   _os << "\tsampler_selection_distribution = " << m_samplerSelectionDistribution << endl;
 
   _os << "\tnode_generation_methods: "; for_each(m_samplerLabels.begin(), m_samplerLabels.end(), _os << _1 << " "); _os << endl;
-  _os << "\tnode_connection_methods: "; for_each(m_connectorLabels.begin(), m_connectorLabels.end(), _os << _1 << " "); _os << endl;  
+  _os << "\tnode_connection_methods: "; for_each(m_connectorLabels.begin(), m_connectorLabels.end(), _os << _1 << " "); _os << endl;
   _os << "\tevaluator_methods: "; for_each(m_evaluatorLabels.begin(), m_evaluatorLabels.end(), _os << _1 << " "); _os << endl;
 
 }
@@ -188,14 +188,14 @@ void HybridPRM<MPTraits>::Initialize(){
 template<class MPTraits>
 void HybridPRM<MPTraits>::Run(){
   StatClass* stats = this->GetMPProblem()->GetStatClass();
-  int totalSamples = 0;  
+  int totalSamples = 0;
   bool mapPassedEvaluation = this->EvaluateMap(m_evaluatorLabels);
   map<VID, Visibility> visMap;
    NodeTypeCounts nodeTypes;
    stapl::sequential::vector_property_map<typename GraphType::GRAPH,size_t > cmap;
    stats->StartClock("Total Node Generation");
    while(!mapPassedEvaluation){
-    
+
     if(this->m_debug)
     PrintWeightsProbabilitiesCosts(cout);
 
@@ -204,12 +204,11 @@ void HybridPRM<MPTraits>::Run(){
       if(this->m_debug)
       cout << "selecting sampler \"" << nextNodeGen << "\"\n";
 
-      
+
       unsigned long int numcdbeforegen = stats->GetIsCollTotal();
-      vector<CfgType> vectorCfgs, in_nodes(1);
+      vector<CfgType> vectorCfgs;
       SamplerPointer pNodeGen = this->GetMPProblem()->GetSampler(nextNodeGen);
-      pNodeGen->Sample(this->GetMPProblem()->GetEnvironment(), *stats, in_nodes.begin(),
-	  in_nodes.end(), 1, back_inserter(vectorCfgs));
+      pNodeGen->Sample(1, 1, this->m_boundary, back_inserter(vectorCfgs));
       unsigned long int numcdaftergen = stats->GetIsCollTotal();
       for(typename vector<CfgType>::iterator C = vectorCfgs.begin(); C != vectorCfgs.end(); ++C)
       {
@@ -223,7 +222,7 @@ void HybridPRM<MPTraits>::Run(){
           vector<pair<pair<VID,VID>,bool> > connectionattempts;
     	  for(vector<string>::iterator itr = m_connectorLabels.begin(); itr != m_connectorLabels.end(); ++itr)
           {
-            vector<VID> newFreeVid(1, newVID);         
+            vector<VID> newFreeVid(1, newVID);
             ConnectorPointer connector = this->GetMPProblem()->GetConnector(*itr);
             connector->ClearConnectionAttempts();
             connector->Connect(
@@ -234,7 +233,7 @@ void HybridPRM<MPTraits>::Run(){
                 connector->ConnectionAttemptsEnd());
 
     	  }
-  
+
           for(typename vector<pair<pair<VID,VID>,bool> >::const_iterator CA = connectionattempts.begin(); CA != connectionattempts.end(); ++CA){
             visMap[CA->first.first].m_attempts++;
             visMap[CA->first.second].m_attempts++;
@@ -243,7 +242,7 @@ void HybridPRM<MPTraits>::Run(){
               visMap[CA->first.second].m_connections++;
             }
           }
-          
+
           unsigned long int cost = (double)(numcdaftergen - numcdbeforegen) / (double)vectorCfgs.size();
           if(this->m_debug){
 	  cout << "avg node gen cost = " << (double)(numcdaftergen - numcdbeforegen) / (double)vectorCfgs.size() << endl;
@@ -259,14 +258,14 @@ void HybridPRM<MPTraits>::Run(){
             PrintWeightsProbabilitiesCosts(cout);
 	    }
           }
-          else	 
+          else
           m_nodeNumSampled[nextNodeGen]++;
 
           ++totalSamples;
 	}
           if(totalSamples % m_binSize == 0) {
             if(m_samplerSelectionDistribution == "nowindow"){
-              CopyLearnedProbToProbUse();             
+              CopyLearnedProbToProbUse();
               PrintWeightsProbabilitiesCosts(cout);
             }
     	    if(m_resettingLearning){
@@ -281,13 +280,13 @@ void HybridPRM<MPTraits>::Run(){
     }
       	} while((totalSamples % m_binSize) > 0);
       	mapPassedEvaluation = this->EvaluateMap(m_evaluatorLabels);
-      
+
       }
-   
+
      stats->StopClock("Total Node Generation");
      if(this->m_debug) {
     stats->PrintClock("Total Node Generation", cout);
-   
+
   }
 }
 
@@ -361,10 +360,10 @@ PrintWeightsProbabilitiesCosts(ostream& _out) {
 template<class MPTraits>
 string
 HybridPRM<MPTraits>::
-SelectNextSamplingMethod(bool _learning) { 
+SelectNextSamplingMethod(bool _learning) {
   double proSum = 0;
   map<string, pair<double, double> > mapProRange;
-  
+
   if(this->m_debug)
     cout << "\nmethod\tprob\trange_min\trange_max\n";
   for(vector<string>::const_iterator NG = m_samplerLabels.begin(); NG != m_samplerLabels.end(); ++NG) {
@@ -381,9 +380,9 @@ SelectNextSamplingMethod(bool _learning) {
       upperBound = proSum + genProb;
     else
       upperBound = 1.0;
-    
+
     mapProRange[*NG] = make_pair(proSum, upperBound);
-    proSum += genProb; 
+    proSum += genProb;
  if(this->m_debug)
       cout << *NG << "\t" << genProb << "\t" << mapProRange[*NG].first << "\t" << mapProRange[*NG].second << endl;
   }
@@ -400,10 +399,10 @@ SelectNextSamplingMethod(bool _learning) {
     cout << "***\tHighest sampler after learning :: " << maxGen << endl;
     return maxGen;
   }
-  else {  
+  else {
     double randomNum = DRand();
     for(vector<string>::const_iterator NG = m_samplerLabels.begin(); NG != m_samplerLabels.end(); ++NG)
-      if(mapProRange[*NG].first <= randomNum && randomNum < mapProRange[*NG].second) { 
+      if(mapProRange[*NG].first <= randomNum && randomNum < mapProRange[*NG].second) {
         if(this->m_debug)
 	cout << "***   The next node generator is::  " << *NG << endl;
         return *NG;
@@ -432,7 +431,7 @@ ComputeVisibilityReward(string _nextNodeGen, double _visibility, double _thresho
     return 1.0;
   }
   else {
-    if(_visibility < _threshold) 
+    if(_visibility < _threshold)
       _nodeTypes.m_numExpand++;
     else {
       _nodeTypes.m_numOversample++;
@@ -446,7 +445,7 @@ ComputeVisibilityReward(string _nextNodeGen, double _visibility, double _thresho
 template<class MPTraits>
 bool
 HybridPRM<MPTraits>::
-InLearningWindow(int _totalSamples) const {  
+InLearningWindow(int _totalSamples) const {
   double d1 = _totalSamples % m_binSize;
   double d2 = double(m_binSize) * m_windowPercent;
   return d1 < d2;
@@ -470,27 +469,27 @@ RewardAndUpdateWeightsProbabilities(string _nodeSelected, double _reward, unsign
 
 
   if(this->m_debug)
-  cout << "mpr: " << m_percentageRandom << " K: " << K << endl; 
+  cout << "mpr: " << m_percentageRandom << " K: " << K << endl;
   for(vector<string>::const_iterator NG = m_samplerLabels.begin(); NG != m_samplerLabels.end(); ++NG){
-    double adjustedReward = 0.0; 
+    double adjustedReward = 0.0;
     double new_weight=0.0;
     if(*NG == _nodeSelected) {
-      adjustedReward = _reward / m_noCostProbability[*NG]; 
+      adjustedReward = _reward / m_noCostProbability[*NG];
     if(this->m_debug)
     cout << "mngw: " << m_nodeWeights[*NG] << " ar: " << adjustedReward << ": " << *NG <<endl;
-    new_weight = m_nodeWeights[*NG] * exp(double((m_percentageRandom) * adjustedReward / double(K))); 
+    new_weight = m_nodeWeights[*NG] * exp(double((m_percentageRandom) * adjustedReward / double(K)));
     m_nodeWeights[*NG] = new_weight;
   }
   }
 
- 
+
   double weightTotal = 0;
   for(vector<string>::const_iterator NG = m_samplerLabels.begin(); NG != m_samplerLabels.end(); ++NG)
-    weightTotal += m_nodeWeights[*NG];  
+    weightTotal += m_nodeWeights[*NG];
   for(vector<string>::const_iterator NG = m_samplerLabels.begin(); NG != m_samplerLabels.end(); ++NG) {
     m_noCostProbability[*NG] = (1 - m_percentageRandom) * (m_nodeWeights[*NG] / weightTotal) + (m_percentageRandom / K);
   }
- 
+
   double probNoCostTotal = 0;
   for(vector<string>::const_iterator NG = m_samplerLabels.begin(); NG != m_samplerLabels.end(); ++NG)
     probNoCostTotal += (m_noCostProbability[*NG] / double(m_nodeCosts[*NG]));

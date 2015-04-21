@@ -96,8 +96,8 @@ class StatClass {
       void ComputeInterCCFeatures(MPProblemType* _problem, RoadmapType* _rdmp, string _nfMethod, string _dmMethod);
 
     void PrintFeatures(ostream& _os);
-    int IncNodesGenerated(string _samplerName, int _incr=1);
-    int IncNodesAttempted(string _samplerName, int _incr=1);
+    void IncNodesGenerated(string _samplerName, size_t _incr=1);
+    void IncNodesAttempted(string _samplerName, size_t _incr=1);
 
     //Clock Accessors
     void ClearClock(string _name);

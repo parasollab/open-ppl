@@ -16,7 +16,7 @@ class CfgReachableVolume : public Cfg {
   ~CfgReachableVolume(){};
   virtual const string GetName() const;
 
- 
+
   void loadTreeFiles();
   virtual void GetRandomCfg(double R, double rStep){}
   virtual void GetRandomCfg(Environment* _env,shared_ptr<Boundary> _bb);
@@ -24,7 +24,7 @@ class CfgReachableVolume : public Cfg {
   vector<Robot> GetRobots(int _numJoints);
   vector<Robot> GetRobots(vector<Robot> &_robots, const Environment* _env);
    template<class DistanceMetricPointer>
-     void GetRandomRay(double _incr, Environment* _env,  DistanceMetricPointer _dm, bool _norm=true){}
+     void GetRandomRay(double _incr, DistanceMetricPointer _dm, bool _norm=true){}
 
  private:
   shared_ptr<vector<shared_ptr<ReachableVolumeRobot> > >  m_reachableVolumeRobots;  //an instance of m_reachableVolumeRobot for each robot

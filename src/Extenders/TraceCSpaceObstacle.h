@@ -22,7 +22,7 @@ class TraceCSpaceObstacle : public BasicExtender<MPTraits> {
     typedef typename MPTraits::MPProblemType MPProblemType;
     typedef typename MPProblemType::DistanceMetricPointer DistanceMetricPointer;
 
-    TraceCSpaceObstacle(const string& _dmLabel = "", 
+    TraceCSpaceObstacle(const string& _dmLabel = "",
         const string& _vcLabel = "", double _delta = 1.0);
     TraceCSpaceObstacle(MPProblemType* _problem, XMLNodeReader& _node);
 
@@ -38,7 +38,7 @@ TraceCSpaceObstacle<MPTraits>::TraceCSpaceObstacle(const string& _dmLabel,
   }
 
 template<class MPTraits>
-TraceCSpaceObstacle<MPTraits>::TraceCSpaceObstacle(MPProblemType* _problem, 
+TraceCSpaceObstacle<MPTraits>::TraceCSpaceObstacle(MPProblemType* _problem,
     XMLNodeReader& _node) :
   BasicExtender<MPTraits>(_problem, _node) {
     this->SetName("TraceCSpaceObstacle");
@@ -67,7 +67,7 @@ TraceCSpaceObstacle<MPTraits>::Extend(const CfgType& _near, const CfgType& _dir,
   if(this->m_debug)
     cout << "\texpand c2" << endl;
   rDir = _dir;
-  rDir.GetRandomRay(vecScale, env, dm);
+  rDir.GetRandomRay(vecScale, dm);
   if(this->Expand(_near, rDir, innerCfg, this->m_delta, _lpOutput,
       env->GetPositionRes(), env->GetOrientationRes()))
     return false;
@@ -76,10 +76,10 @@ TraceCSpaceObstacle<MPTraits>::Extend(const CfgType& _near, const CfgType& _dir,
   if(this->m_debug)
     cout << "\tsubstract c2 and c1 to get c-space vec" << endl;
   if(DRand() < 0.5)
-    cspaceDir = _lpOutput.m_intermediates.back() - 
+    cspaceDir = _lpOutput.m_intermediates.back() -
         _lpOutput.m_intermediates[_lpOutput.m_intermediates.size() - 2];
   else
-    cspaceDir = _lpOutput.m_intermediates[_lpOutput.m_intermediates.size() - 2] 
+    cspaceDir = _lpOutput.m_intermediates[_lpOutput.m_intermediates.size() - 2]
         - _lpOutput.m_intermediates.back();
   cspaceDir += _near;
   newNear = _near;

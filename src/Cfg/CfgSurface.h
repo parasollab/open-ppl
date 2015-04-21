@@ -118,7 +118,7 @@ class CfgSurface : public Cfg {
 
     ///Get a random vector whose magnitude is incr (note. the orienatation of of this Cfg is 0)
     template<class DistanceMetricPointer>
-      void GetRandomRay(double _incr, Environment* _env, DistanceMetricPointer _dm, bool _norm=true);
+      void GetRandomRay(double _incr, DistanceMetricPointer _dm, bool _norm=true);
 
     ///Move the (the first link of)  robot in enviroment to the given configuration.
     virtual bool ConfigEnvironment(Environment*) const;
@@ -169,7 +169,8 @@ istream& operator>> (istream& _is, Cfg& _cfg);
 
 template<class DistanceMetricPointer>
 void
-CfgSurface::GetRandomRay(double _incr, Environment* _env, DistanceMetricPointer _dm, bool _norm) {
+CfgSurface::
+GetRandomRay(double _incr, DistanceMetricPointer _dm, bool _norm) {
   //randomly sample params
   m_v.clear();
   Vector2d v(DRand(), DRand());

@@ -182,15 +182,13 @@ VisibilityBasedPRM<MPTraits>::GenerateNode(vector<CfgType>& _outNode) {
 
   SamplerPointer sampler = this->GetMPProblem()->GetSampler(m_samplerLabel);
   ValidityCheckerPointer vc = this->GetMPProblem()->GetValidityChecker(m_vcLabel);
-  Environment* env = this->GetMPProblem()->GetEnvironment();
-  StatClass* stats = this->GetMPProblem()->GetStatClass();
 
   string callee("VisibilityBasedPRM::GenerateNodes");
 
   do {
     //Sample one node
     do {
-      sampler->Sample(env, *stats, 1, 1, back_inserter(_outNode));
+      sampler->Sample(1, 1, this->m_boundary, back_inserter(_outNode));
     } while (_outNode.size() <= 0);
 
     //Check validity

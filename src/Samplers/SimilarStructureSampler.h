@@ -1,5 +1,5 @@
-#ifndef SIMILARSTRUCTURESAMPLER_H_
-#define SIMILARSTRUCTURESAMPLER_H_
+#ifndef SIMILAR_STRUCTURE_SAMPLER_H_
+#define SIMILAR_STRUCTURE_SAMPLER_H_
 
 //
 // Code adapted from Dr. Lydia Tapia's group at UNM
@@ -9,32 +9,29 @@
 #include "SamplerMethod.h"
 #include "boost/dynamic_bitset.hpp"
 
-class Environment;
-class StatClass;
-class CDInfo;
-template <typename CFG> class RMSDDistance;
+template<typename CfgType> class RMSDDistance;
 
 
-template <class CFG>
+template<class CfgType>
 struct ActivityType {
   virtual boost::dynamic_bitset<> Active() = 0;
 };
 
-template <class CFG>
-struct ActivityAll : public ActivityType<CFG> {
+template<class CfgType>
+struct ActivityAll : public ActivityType<CfgType> {
   const size_t m_jointCount;
 
-  ActivityAll(const CFG& _cfg) : m_jointCount(_cfg.DOF()) {}
+  ActivityAll(const CfgType& _cfg) : m_jointCount(_cfg.DOF()) {}
 
   virtual boost::dynamic_bitset<> Active() { return boost::dynamic_bitset<>(m_jointCount).set(); }
 };
 
-template <class CFG>
-struct ActivityNumber : public ActivityType<CFG> {
+template<class CfgType>
+struct ActivityNumber : public ActivityType<CfgType> {
   const size_t m_jointCount;
   const size_t m_number;
 
-  ActivityNumber(const CFG& _cfg, size_t _number) : m_jointCount(_cfg.DOF()), m_number(min(_number, m_jointCount)) {}
+  ActivityNumber(const CfgType& _cfg, size_t _number) : m_jointCount(_cfg.DOF()), m_number(min(_number, m_jointCount)) {}
 
   virtual boost::dynamic_bitset<> Active() {
     boost::dynamic_bitset<> bitset(m_jointCount);
@@ -44,9 +41,9 @@ struct ActivityNumber : public ActivityType<CFG> {
   }
 };
 
-template <class CFG>
-struct ActivityFraction : public ActivityNumber<CFG> {
-  ActivityFraction(const CFG& _cfg, double _fraction) : ActivityNumber<CFG>(_cfg, _fraction * _cfg.DOF()) {}
+template<class CfgType>
+struct ActivityFraction : public ActivityNumber<CfgType> {
+  ActivityFraction(const CfgType& _cfg, double _fraction) : ActivityNumber<CfgType>(_cfg, _fraction * _cfg.DOF()) {}
 };
 
 
@@ -96,9 +93,8 @@ struct DistributionGaussian : public DistributionType {
 };
 
 
-template <typename MPTraits>
-class SimilarStructureSampler : public SamplerMethod<MPTraits>
-{
+template<typename MPTraits>
+class SimilarStructureSampler : public SamplerMethod<MPTraits> {
  protected:
    typedef typename MPTraits::CfgType CfgType;
 
@@ -352,14 +348,14 @@ class SimilarStructureSampler : public SamplerMethod<MPTraits>
 
 
  public:
-  virtual bool Sampler(Environment* env, shared_ptr<Boundary> _bb,
-        StatClass& Stat, CfgType& _cfgIn, vector<CfgType>& _cfgOut,
-        vector<CfgType>& _cfgCol) {
-    const size_t cfgOutSize = _cfgOut.size();
+  virtual bool Sampler(CfgType& _cfg, shared_ptr<Boundary> _boundary,
+        vector<CfgType>& _result, vector<CfgType>& _collision) {
+    const size_t resultSize = _result.size();
 
-    typename MPTraits::MPProblemType::ValidityCheckerPointer vcm = this->GetMPProblem()->GetValidityChecker(m_vcLabel);
+    Environment* env = this->GetEnvironment();
+    typename MPTraits::MPProblemType::ValidityCheckerPointer vcm = this->GetValidityChecker(m_vcLabel);
 
-    const vector<CfgType> seed_nodes(1, _cfgIn);
+    const vector<CfgType> seed_nodes(1, _cfg);
     for(size_t seed_index = 0; seed_index < seed_nodes.size(); ++seed_index) {
       const CfgType original_cfg = seed_nodes[seed_index];
       if(this->m_debug)
@@ -392,27 +388,24 @@ class SimilarStructureSampler : public SamplerMethod<MPTraits>
         CfgType similar_cfg(SampleSimilar(original_cfg, effects, log));
         if(this->m_debug)
           cout << "\tsampled cfg:\t" << similar_cfg << endl;
-        Stat.IncNodesAttempted(this->GetNameAndLabel());
 
         RMSDDistance<MPTraits> rmsd;
         if(this->m_debug)
           log << rmsd.Distance(original_cfg, similar_cfg) << "\t";
         string callee(this->GetNameAndLabel());callee+="::_BiasedSample()";
         if(m_ignoreValidity) {
-           Stat.IncNodesGenerated(this->GetNameAndLabel());
-           _cfgOut.push_back(similar_cfg);
+           _result.push_back(similar_cfg);
            if(this->m_debug)
              log << "1" << endl;
         }
         else if(vcm->IsValid(similar_cfg, callee)) {
-          Stat.IncNodesGenerated(this->GetNameAndLabel());
-          _cfgOut.push_back(similar_cfg);
+          _result.push_back(similar_cfg);
           if(this->m_debug)
             log << "1" << endl;
         }
         else {
           if(m_saveInvalid)
-            _cfgCol.push_back(similar_cfg);
+            _collision.push_back(similar_cfg);
           if(this->m_debug)
             log << "0" << endl;
           continue;
@@ -420,7 +413,7 @@ class SimilarStructureSampler : public SamplerMethod<MPTraits>
       }
       log.close();
     }
-    return _cfgOut.size() > cfgOutSize;
+    return _result.size() > resultSize;
   }
 
 };

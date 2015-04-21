@@ -132,7 +132,7 @@ class Cfg {
     /// methods for Distance Metric.
     virtual vector<double> GetPosition() const;
     virtual vector<double> GetOrientation() const;
- 
+
     virtual vector<double> GetNonJoints() const;
     virtual vector<double> GetJoints() const;
     virtual vector<double> GetRotation() const;
@@ -164,7 +164,7 @@ class Cfg {
     virtual void GetRandomCfg(Environment* _env, shared_ptr<Boundary> _bb);
 
     template<class DistanceMetricPointer>
-      void GetRandomRay(double _incr, Environment* _env,  DistanceMetricPointer _dm, bool _norm=true);
+      void GetRandomRay(double _incr, DistanceMetricPointer _dm, bool _norm=true);
 
     virtual bool ConfigEnvironment(Environment* _env) const;
 
@@ -259,7 +259,8 @@ istream& operator>> (istream& _is, Cfg& _cfg);
 
 template<class DistanceMetricPointer>
 void
-Cfg::GetRandomRay(double _incr, Environment* _env,  DistanceMetricPointer _dm, bool _norm){
+Cfg::
+GetRandomRay(double _incr, DistanceMetricPointer _dm, bool _norm) {
   //randomly sample params
   m_v.clear();
   for(size_t i = 0; i < DOF(); ++i)

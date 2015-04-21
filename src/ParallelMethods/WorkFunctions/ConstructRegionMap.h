@@ -73,7 +73,7 @@ private:
   int m_attempts;
 
 public:
-  
+
   NodeGenerator(MPProblemType* _problem, NGM _ngm, int _num):
     m_attempts(_num){
     m_problem = _problem;
@@ -81,16 +81,16 @@ public:
    // m_vcm = _vcm;
 
   }
-  
+
   typedef void result_type;
-  
+
   void define_type(stapl::typer& _t) {
   }
 
   template <typename BBView, typename RGView>
   void operator()(BBView _v1, RGView _v2) const {
 
-    vector<CfgType> outNodes, colNodes;
+    vector<CfgType> outNodes;
     vector<VID> regionVIDs;
     string callee("Generator");
     BoundingBox bb = _v1;
@@ -99,9 +99,7 @@ public:
     //boundary->testPrint(2);
     ////Generate Node
 
-
-    StatClass* stat = m_problem->GetStatClass();
-    m_sp->Sample(m_problem->GetEnvironment(), boundary, *stat, m_attempts, 10, back_inserter(outNodes), back_inserter(colNodes));
+    m_sp->Sample(m_attempts, 10, boundary, back_inserter(outNodes));
 
     typedef typename vector<CfgType>::iterator VIT;
     for(VIT vit = outNodes.begin(); vit  != outNodes.end(); ++vit) {
@@ -138,9 +136,9 @@ public:
     m_problem = _problem;
     m_ncp = _ncp;
   }
-  
+
   typedef void result_type;
-  
+
   void define_type(stapl::typer& _t) {
   }
 

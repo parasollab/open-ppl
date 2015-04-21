@@ -143,11 +143,10 @@ void
 RadialSubdivisionRRT<MPTraits>::
 RegionVertex(RegionGraphView _regionView, CfgType _root) {
   DistanceMetricPointer dmm = this->GetDistanceMetric(m_dmLabel);
-  Environment* env = this->GetEnvironment();
 
   if(_root.PosDOF() == 2) {
     CfgType point;
-    point.GetRandomRay(m_radius, env, dmm);
+    point.GetRandomRay(m_radius, dmm);
     RadialRegionVertex2D<MPTraits> wf(m_numRegions, point, m_radius);
     stapl::for_each(_regionView, wf);
   }

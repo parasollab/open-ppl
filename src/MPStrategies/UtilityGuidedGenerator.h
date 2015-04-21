@@ -330,14 +330,14 @@ GenerateEntropyGuidedSample() {
       cout << "\t\t\tselected cc pair " << cc1Vid << " and " << cc2Vid << endl;
 
     //randomly select a node in each cc
-    q1 = (*(rmap->GetGraph()->find_vertex(cc1[(int)floor((double)DRand()*(double)cc1.size())]))).property();
-    q2 = (*(rmap->GetGraph()->find_vertex(cc2[(int)floor((double)DRand()*(double)cc2.size())]))).property();
+    q1 = rmap->GetGraph()->GetVertex(cc1[(int)floor(DRand()*cc1.size())]);
+    q2 = rmap->GetGraph()->GetVertex(cc2[(int)floor(DRand()*cc2.size())]);
   }
 
   //return perturbation of the midpoint between the two nodes
   CfgType qn = (q1 + q2)/2;
   CfgType ray = qn;
-  ray.GetRandomRay(DRand()*m_tao, env, dm);
+  ray.GetRandomRay(DRand()*m_tao, dm);
   return qn + ray;
 }
 

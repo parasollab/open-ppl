@@ -39,10 +39,8 @@ class SampleWF {
       int num_nodes = _view.size();
       vector<CfgType> outNodes;
       cout << "Num_Nodes::" << num_nodes << endl;
-      vector<CfgType> inNodes(num_nodes);
 
-      StatClass* stat = m_problem->GetStatClass();
-      m_nodeGen->Sample(m_problem->GetEnvironment(),*stat,inNodes.begin(),inNodes.end(), 100, back_inserter(outNodes));
+      m_nodeGen->Sample(num_nodes, 100, m_problem->GetEnvironment()->GetBoundary(), back_inserter(outNodes));
 
       cout << "Add to Graph" << endl;
       size_t j(0);
@@ -167,8 +165,8 @@ BasicParallelPRM<MPTraits>::ParseXML(XMLNodeReader& _node) {
   XMLNodeReader::childiterator citr;
   for( citr = _node.children_begin(); citr!= _node.children_end(); ++citr) {
     if(citr->getName() == "node_generation_method") {
-      string node_gen_method = citr->stringXMLParameter(string("Method"), true,
-        string(""), string("Node Generation Method"));
+      string node_gen_method = citr->stringXMLParameter("Method", true,
+        "", "Node Generation Method");
       int numPerIteration = citr->numberXMLParameter(string("Number"), true,
         int(1), int(0), MAX_INT, string("Number of samples"));
       m_vecStrNodeGenLabels.push_back(pair<string, int>(node_gen_method, numPerIteration));

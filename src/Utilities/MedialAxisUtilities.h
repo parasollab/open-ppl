@@ -424,7 +424,7 @@ ClearanceUtility<MPTraits>::ApproxCollisionInfo(CfgType& _cfg, CfgType& _clrCfg,
     CfgType tmp1 = _cfg;
     tick.push_back(tmp1);
     CfgType tmp2;
-    tmp2.GetRandomRay(posRes/maxRange, env, dm, false);
+    tmp2.GetRandomRay(posRes/maxRange, dm, false);
     if(m_positional) { // Use only positional dofs
       double factor=0.0;
       for(size_t j=0; j<tmp2.DOF(); j++) {

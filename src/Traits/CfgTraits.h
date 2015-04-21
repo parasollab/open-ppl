@@ -42,8 +42,6 @@
 #include "Samplers/MixSampler.h"
 #include "Samplers/ObstacleBasedSampler.h"
 #include "Samplers/SimilarStructureSampler.h"
-#include "Samplers/SurfaceGridSampler.h"
-#include "Samplers/SurfaceSampler.h"
 #include "Samplers/UniformMedialAxisSampler.h"
 #include "Samplers/UniformObstacleBasedSampler.h"
 #include "Samplers/UniformRandomSampler.h"

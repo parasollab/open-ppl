@@ -456,5 +456,20 @@ struct PlusSecond : public binary_function<typename P::second_type,
   }
 };
 
+///////////////////////////////////////////////////////////////////////////////
+// NullOutputIterator
+//
+// Used for discarding collision data for regular sampling/connecting classes
+///////////////////////////////////////////////////////////////////////////////
+struct NullOutputIterator : std::iterator<std::output_iterator_tag, NullOutputIterator> {
+  //no-op assignment
+  template<typename T>
+    void operator=(const T&) { }
+
+  NullOutputIterator& operator++() {return *this;}
+  NullOutputIterator operator++(int) {return *this;}
+  NullOutputIterator& operator*() {return *this;}
+};
+
 #endif
 

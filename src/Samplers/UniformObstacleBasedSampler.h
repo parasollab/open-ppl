@@ -11,16 +11,16 @@ class UniformObstacleBasedSampler : public SamplerMethod<MPTraits> {
     typedef typename MPProblemType::DistanceMetricPointer DistanceMetricPointer;
     typedef typename MPProblemType::ValidityCheckerPointer ValidityCheckerPointer;
 
-    UniformObstacleBasedSampler(Environment* _env = NULL, string _vcLabel = "",
-        string _dmLabel = "", double _margin = 0, bool _useBoundary = false);
+    UniformObstacleBasedSampler(string _vcLabel = "", string _dmLabel = "",
+        double _margin = 0, bool _useBoundary = false);
 
     UniformObstacleBasedSampler(MPProblemType* _problem, XMLNodeReader& _node);
 
     void ParseXML(XMLNodeReader& _node);
     void Print(ostream& _os) const;
 
-    virtual bool Sampler(Environment* _env, shared_ptr<Boundary> _bb, StatClass&
-        _stats, CfgType& _cfgIn, vector<CfgType>& _cfgOut, vector<CfgType>& _cfgCol);
+    virtual bool Sampler(CfgType& _cfg, shared_ptr<Boundary> _boundary,
+        vector<CfgType>& _result, vector<CfgType>& _collision);
 
   private:
     double m_margin;
@@ -30,9 +30,9 @@ class UniformObstacleBasedSampler : public SamplerMethod<MPTraits> {
 
 template<class MPTraits>
 UniformObstacleBasedSampler<MPTraits>::
-UniformObstacleBasedSampler(Environment* _env, string _vcLabel,
-    string _dmLabel, double _margin, bool _useBoundary)
-  : m_margin(_margin), m_useBoundary(_useBoundary),
+UniformObstacleBasedSampler(string _vcLabel, string _dmLabel,
+    double _margin, bool _useBoundary) :
+  m_margin(_margin), m_useBoundary(_useBoundary),
   m_vcLabel(_vcLabel), m_dmLabel(_dmLabel) {
     this->SetName("UniformObstacleBasedSampler");
   }
@@ -75,35 +75,31 @@ Print(ostream& _os) const {
 template<class MPTraits>
 bool
 UniformObstacleBasedSampler<MPTraits>::
-Sampler(Environment* _env, shared_ptr<Boundary> _bb, StatClass& _stats,
-    CfgType& _cfgIn, vector<CfgType>& _cfgOut, vector<CfgType>& _cfgCol) {
+Sampler(CfgType& _cfg, shared_ptr<Boundary> _boundary,
+    vector<CfgType>& _result, vector<CfgType>& _collision) {
+  Environment* env = this->GetEnvironment();
   string callee(this->GetNameAndLabel() + "::SampleImpl()");
-  ValidityCheckerPointer vc = this->GetMPProblem()->GetValidityChecker(m_vcLabel);
-  DistanceMetricPointer dm = this->GetMPProblem()->GetDistanceMetric(m_dmLabel);
+  ValidityCheckerPointer vc = this->GetValidityChecker(m_vcLabel);
+  DistanceMetricPointer dm = this->GetDistanceMetric(m_dmLabel);
 
   bool generated = false;
   int attempts = 0;
   bool cfg1Free;
   double margin = m_margin;
   if(margin == 0){
-    margin = _env->GetMultiBody(_cfgIn.GetRobotIndex())->GetMaxAxisRange();
+    margin = env->GetMultiBody(_cfg.GetRobotIndex())->GetMaxAxisRange();
   }
 
   vector<pair<double, double> > origBoundary;
-  for(size_t i=0; i<3; i++) {
-    origBoundary.push_back(make_pair(_bb->GetRange(i).first,
-          _bb->GetRange(i).second));
-  }
+  for(size_t i=0; i<3; i++)
+    origBoundary.push_back(_boundary->GetRange(i));
 
-  _env->ResetBoundary(margin, _cfgIn.GetRobotIndex());
-  shared_ptr<Boundary> bbNew = _env->GetBoundary();
+  env->ResetBoundary(margin, _cfg.GetRobotIndex());
+  shared_ptr<Boundary> boundaryNew = env->GetBoundary();
 
-  _stats.IncNodesAttempted(this->GetNameAndLabel());
   attempts++;
   //Generate first cfg
-  CfgType cfg1 = _cfgIn;
-  if(cfg1 == CfgType())
-    cfg1.GetRandomCfg(_env, bbNew);
+  CfgType& cfg1 = _cfg;
 
   cfg1Free = (vc->IsValid(cfg1, callee)) && (!vc->IsInsideObstacle(cfg1));
 
@@ -111,7 +107,7 @@ Sampler(Environment* _env, shared_ptr<Boundary> _bb, StatClass& _stats,
   CfgType incr;
   double dist, r;
 
-  incr.GetRandomRay(margin, _env, dm);
+  incr.GetRandomRay(margin, dm);
   cfg2 = cfg1 + incr;
 
   //scale the distance between c1 and c2
@@ -130,34 +126,33 @@ Sampler(Environment* _env, shared_ptr<Boundary> _bb, StatClass& _stats,
   CfgType inter;
   CfgType tick = cfg1;
   int nTicks;
-  double positionRes = _env->GetPositionRes();
-  double orientationRes = _env->GetOrientationRes();
+  double positionRes = env->GetPositionRes();
+  double orientationRes = env->GetOrientationRes();
   bool tempFree = cfg1Free;
   bool tickFree;
   CfgType temp = cfg1;
 
   inter.FindIncrement(cfg1, cfg2, &nTicks, positionRes, orientationRes);
-  _env->GetBoundary()->ResetBoundary(origBoundary, 0);
+  env->GetBoundary()->ResetBoundary(origBoundary, 0);
   for(int i=1; i<nTicks; i++) {
     tick += inter;
     tickFree = (vc->IsValid(tick, callee)) && (!vc->IsInsideObstacle(tick));
     if(m_useBoundary)
-      tickFree = tickFree && _env->InBounds(tick, _bb);
+      tickFree = tickFree && env->InBounds(tick, _boundary);
 
     if(tempFree == tickFree) {
       tempFree = tickFree;
       temp = tick;
     }
     else {	//tempFree != tickFree
-      _stats.IncNodesGenerated(this->GetNameAndLabel());
       generated = true;
-      if(tempFree && _env->InBounds(temp, _bb)) {
-        _cfgOut.push_back(temp);
+      if(tempFree && env->InBounds(temp, _boundary)) {
+        _result.push_back(temp);
         tempFree = tickFree;
         temp = tick;
       }
-      else if(tickFree && _env->InBounds(tick, _bb)) {       //tickFree
-        _cfgOut.push_back(tick);
+      else if(tickFree && env->InBounds(tick, _boundary)) {       //tickFree
+        _result.push_back(tick);
         tempFree = tickFree;
         temp = tick;
       }
