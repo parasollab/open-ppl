@@ -30,8 +30,9 @@ template<class MPTraits> class MixSampler;
 /// @code
 /// SamplerPointer s = this->GetMPProblem()->GetSampler(m_sLabel);
 /// size_t num, attempts;
+/// shared_ptr<Boundary> bounds;
 /// vector<CfgType> result;
-/// s->Sample(num, attempts, back_inserter(result));
+/// s->Sample(num, attempts, bounds, back_inserter(result));
 /// @endcode
 ///
 /// The other form of @c Sample sends a list of input configurations to apply
@@ -42,12 +43,13 @@ template<class MPTraits> class MixSampler;
 /// SamplerPointer s = this->GetMPProblem()->GetSampler(m_sLabel);
 /// vector<CfgType> input;
 /// size_t attempts;
+/// shared_ptr<Boundary> bounds;
 /// vector<CfgType> result;
-/// s->Sample(input.begin(), input.end(), attempts, back_inserter(result));
+/// s->Sample(input.begin(), input.end(), attempts, bounds, back_inserter(result));
 /// @endcode
 ///
 /// There are other versions of this method with the option to return the failed
-/// attempts, specify the boundary used for sampling, etc.
+/// attempts.
 ///
 /// @c Sampler is the private virtual function responsible for taking as input
 /// a single input configuration and applying the sampler rule to generate one
