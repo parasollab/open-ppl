@@ -351,14 +351,13 @@ Connect(InputIterator _first, InputIterator _last, const vector<string>& _labels
   string clockName = "Total Connection";
   stats->StartClock(clockName);
 
-  typename GraphType::ColorMap cmap;
   typedef vector<string>::const_iterator SIT;
   for(SIT sit = _labels.begin(); sit != _labels.end(); ++sit){
     ConnectorPointer c = this->GetConnector(*sit);
 
     stats->StartClock(c->GetNameAndLabel());
 
-    c->Connect(this->GetRoadmap(), *this->GetStatClass(), cmap, _first, _last);
+    c->Connect(this->GetRoadmap(), _first, _last);
 
     stats->StopClock(c->GetNameAndLabel());
   }
@@ -366,7 +365,6 @@ Connect(InputIterator _first, InputIterator _last, const vector<string>& _labels
   stats->StopClock(clockName);
   if(this->m_debug) {
     GraphType* g = this->GetRoadmap()->GetGraph();
-    cmap.reset();
     cout << this->GetNameAndLabel() << " has "
       << g->get_num_edges() << " edges and "
       << g->GetNumCCs() << " connected components. Time: " << endl;

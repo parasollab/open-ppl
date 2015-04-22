@@ -5,15 +5,16 @@
  * Configuration, and Weight will be some weight class.
  */
 
-#ifndef ROADMAPGRAPH_H_
-#define ROADMAPGRAPH_H_
+#ifndef ROADMAP_GRAPH_H_
+#define ROADMAP_GRAPH_H_
 
 #ifdef _PARALLEL
 #include <containers/graph/dynamic_graph.hpp>
 //#include "graph/view/graph_view_property_adaptor.h"
 //#include <containers/graph/view/graph_view_property_adaptor.hpp>
+#include <containers/sequential/graph/algorithms/connected_components.h>
 #else
-#include "containers/sequential/graph/graph.h"
+#include <containers/sequential/graph/graph.h>
 #include <containers/sequential/graph/vertex_iterator_adaptor.h>
 #include <containers/sequential/graph/algorithms/connected_components.h>
 #endif
@@ -63,6 +64,7 @@ class RoadmapGraph : public
 #else
     typedef typename GRAPH::vertex_iterator CVI;
     typedef typename GRAPH::vertex_property VP;
+    typedef stapl::sequential::vector_property_map<GRAPH, size_t> ColorMap;
 #endif
     typedef RoadmapChangeEvent<VERTEX, WEIGHT> ChangeEvent;
     typedef RoadmapVCS<VERTEX, WEIGHT> RoadmapVCSType;

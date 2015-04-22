@@ -26,11 +26,12 @@ class RegionRRTConnect: public ConnectorMethod<MPTraits> {
 
     virtual void Print(ostream& _os) const;
 
-    template<typename ColorMap, typename InputIterator1, typename InputIterator2, typename OutputIterator>
-      bool Connect(RoadmapType* _rm, StatClass& _stats, ColorMap& _cmap,
-          InputIterator1 _itr1First, InputIterator1 _itr1Last,
-          InputIterator2 _itr2First, InputIterator2 _itr2Last,
-          OutputIterator _collision) ;
+    template<typename InputIterator1, typename InputIterator2,
+      typename OutputIterator>
+        bool Connect(RoadmapType* _rm,
+            InputIterator1 _itr1First, InputIterator1 _itr1Last,
+            InputIterator2 _itr2First, InputIterator2 _itr2Last,
+            OutputIterator _collision);
 
   protected:
 
@@ -91,10 +92,10 @@ Print(ostream& _os) const {
  *    repeat
  * */
 template<class MPTraits>
-template<typename ColorMap, typename InputIterator1, typename InputIterator2, typename OutputIterator>
+template<typename InputIterator1, typename InputIterator2, typename OutputIterator>
 bool
 RegionRRTConnect<MPTraits>::
-Connect(RoadmapType* _rm, StatClass& _stats, ColorMap& _cmap,
+Connect(RoadmapType* _rm,
     InputIterator1 _itr1First, InputIterator1 _itr1Last,
     InputIterator2 _itr2First, InputIterator2 _itr2Last,
     OutputIterator _collision) {

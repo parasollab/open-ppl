@@ -380,10 +380,8 @@ class ConnectRegion {
           vector<VID> tVids = tRegion.GetBranch();
 
           /// NOW CONNECT
-          ColorMap colorMap;
-          m_connector->Connect(m_problem->GetRoadmap(),*(m_problem->GetStatClass()), colorMap,
-              sVids.begin(),sVids.end(),
-              tVids.begin(),tVids.end());
+          m_connector->Connect(m_problem->GetRoadmap(),
+              sVids.begin(),sVids.end(), tVids.begin(),tVids.end());
 
         }
       }
@@ -1096,7 +1094,6 @@ class ConnectGlobalCCs {
       result_type operator()(vertexView _view, repeatView& _gview)const {
 
         CfgType col;
-        StatClass* stats = m_problem->GetStatClass();
         LPOutput<MPTraits> lpOutput;
         shared_ptr<RegionRRTConnect<MPTraits> > rrtConnect(dynamic_pointer_cast<RegionRRTConnect<MPTraits> >(m_connector));
 
@@ -1189,8 +1186,10 @@ class ConnectGlobalCCs {
               }
 
               vector<CfgType> col;
-              if(rrtConnect->Connect(m_problem->GetRoadmap(), *stats, colorMap, localCC.begin(), localCC.end(),
-                    remoteCC.begin(), remoteCC.end(), back_inserter(col))) {
+              if(rrtConnect->Connect(m_problem->GetRoadmap(),
+                    localCC.begin(), localCC.end(),
+                    remoteCC.begin(), remoteCC.end(),
+                    back_inserter(col))) {
                 if (m_debug) cout << "Connected" << endl;
                 break;
               }
@@ -1225,8 +1224,10 @@ class ConnectGlobalCCs {
               }
 
               vector<CfgType> col;
-              if(rrtConnect->Connect(m_problem->GetRoadmap(), *stats, colorMap, localCC.begin(), localCC.end(),
-                    remoteCC.begin(), remoteCC.end(), back_inserter(col))) {
+              if(rrtConnect->Connect(m_problem->GetRoadmap(),
+                    localCC.begin(), localCC.end(),
+                    remoteCC.begin(), remoteCC.end(),
+                    back_inserter(col))) {
                 typename set<VID>::iterator tmp = it;
                 it++;
                 connectedCCs.insert(*tmp);

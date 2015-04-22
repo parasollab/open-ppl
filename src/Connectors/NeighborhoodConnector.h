@@ -10,8 +10,8 @@
  *   -# end for,
  */
 
-#ifndef NEIGHBORHOODCONNECTOR_H
-#define NEIGHBORHOODCONNECTOR_H
+#ifndef NEIGHBORHOOD_CONNECTOR_H
+#define NEIGHBORHOOD_CONNECTOR_H
 
 #include "ConnectorMethod.h"
 
@@ -34,17 +34,18 @@ class NeighborhoodConnector: public ConnectorMethod<MPTraits> {
     virtual void Print(ostream& _os) const;
     virtual void ParseXML(XMLNodeReader& _node);
 
-    template<typename ColorMap, typename InputIterator1, typename InputIterator2, typename OutputIterator>
-      void Connect(RoadmapType* _rm, StatClass& _stats, ColorMap& _cmap,
-          InputIterator1 _itr1First, InputIterator1 _itr1Last,
-          InputIterator2 _itr2First, InputIterator2 _itr2Last, OutputIterator _collision) ;
+    template<typename InputIterator1, typename InputIterator2,
+      typename OutputIterator>
+        void Connect(RoadmapType* _rm,
+            InputIterator1 _itr1First, InputIterator1 _itr1Last,
+            InputIterator2 _itr2First, InputIterator2 _itr2Last,
+            OutputIterator _collision) ;
 
   protected:
-    template<typename ColorMap, typename InputIterator, typename OutputIterator>
+    template<typename InputIterator, typename OutputIterator>
       void ConnectNeighbors(
-          RoadmapType* _rm, StatClass& _stats,
-          ColorMap& _cmap, VID _vid,
-          InputIterator _closestFirst, InputIterator _closestLast,
+          RoadmapType* _rm, VID _vid,
+          InputIterator _first, InputIterator _last,
           OutputIterator _collision);
 
   private:
@@ -89,18 +90,15 @@ NeighborhoodConnector<MPTraits>::Print(ostream& _os) const {
 }
 
 template<class MPTraits>
-template<typename ColorMap, typename InputIterator1, typename InputIterator2, typename OutputIterator>
+template<typename InputIterator1, typename InputIterator2, typename OutputIterator>
 void
-NeighborhoodConnector<MPTraits>::Connect(RoadmapType* _rm, StatClass& _stats, ColorMap& _cmap,
+NeighborhoodConnector<MPTraits>::
+Connect(RoadmapType* _rm,
     InputIterator1 _itr1First, InputIterator1 _itr1Last,
-    InputIterator2 _itr2First, InputIterator2 _itr2Last, OutputIterator _collision){
+    InputIterator2 _itr2First, InputIterator2 _itr2Last,
+    OutputIterator _collision) {
 
-  if(this->m_debug){
-    cout << endl;
-    Print(cout);
-  }
-
-  NeighborhoodFinderPointer nfptr = this->GetMPProblem()->GetNeighborhoodFinder(this->m_nfLabel);
+  NeighborhoodFinderPointer nfptr = this->GetNeighborhoodFinder(this->m_nfLabel);
 
   // the vertices in this iteration are the source for the connection operation
   for(InputIterator1 itr1 = _itr1First; itr1 != _itr1Last; ++itr1){
@@ -125,18 +123,17 @@ NeighborhoodConnector<MPTraits>::Connect(RoadmapType* _rm, StatClass& _stats, Co
     }
 
     //test connections through LP
-    ConnectNeighbors(_rm, _stats, _cmap, vid, closest.begin(), closest.end(), _collision);
+    ConnectNeighbors(_rm, vid, closest.begin(), closest.end(), _collision);
   }
 }
 
 template<class MPTraits>
-template <typename ColorMap, typename InputIterator, typename OutputIterator>
+template<typename InputIterator, typename OutputIterator>
 void
-NeighborhoodConnector<MPTraits>::ConnectNeighbors(
-    RoadmapType* _rm, StatClass& _stats,
-    ColorMap& _cmap, VID _vid,
-    InputIterator _closestFirst, InputIterator _closestLast,
-    OutputIterator _collision){
+NeighborhoodConnector<MPTraits>::
+ConnectNeighbors(RoadmapType* _rm,VID _vid,
+    InputIterator _first, InputIterator _last,
+    OutputIterator _collision) {
 
   Environment* env = this->GetMPProblem()->GetEnvironment();
   LocalPlannerPointer lp = this->GetMPProblem()->GetLocalPlanner(this->m_lpLabel);
@@ -146,7 +143,7 @@ NeighborhoodConnector<MPTraits>::ConnectNeighbors(
   size_t failure = 0;
 
   // connect the found k-closest to the current iteration's CfgType
-  for(InputIterator itr2 = _closestFirst; itr2 != _closestLast; ++itr2){
+  for(InputIterator itr2 = _first; itr2 != _last; ++itr2){
 
     VID v2 = itr2->first;
 
@@ -180,8 +177,8 @@ NeighborhoodConnector<MPTraits>::ConnectNeighbors(
 
     if(m_checkIfSameCC){
       // if the nodes are in the same connected component count as success
-      _cmap.reset();
-      if(stapl::sequential::is_same_cc(*map, _cmap, _vid, v2)){
+      typename GraphType::ColorMap colorMap;
+      if(stapl::sequential::is_same_cc(*map, colorMap, _vid, v2)){
         if(this->m_debug)
           cout << " | nodes in the same connected component | skipping" << endl;
         continue;

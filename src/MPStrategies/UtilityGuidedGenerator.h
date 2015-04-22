@@ -218,10 +218,8 @@ UtilityGuidedGenerator<MPTraits>::Run() {
         VID qvid = rmap->GetGraph()->AddVertex(q);
 
         //connect sample
-        vector<VID> v1(1, qvid);
-        stapl::sequential::vector_property_map<GRAPH, size_t> cmap;
         stats->StartClock("Total Connection Time");
-        connector->Connect(rmap, *stats, cmap, v1.begin(), v1.end());
+        connector->Connect(rmap, qvid);
         stats->StopClock("Total Connection Time");
         if(this->m_debug) cout << "connecting sample, roadmap now has " << rmap->GetGraph()->get_num_vertices() << " nodes and " << rmap->GetGraph()->get_num_edges() << " edges\n";
 

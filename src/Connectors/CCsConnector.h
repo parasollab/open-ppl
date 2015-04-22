@@ -5,14 +5,14 @@
  * When connecting the CCs, we only attempt neighboring pairs of nodes.
  */
 
-#ifndef CCSCONNECTOR_H_
-#define CCSCONNECTOR_H_
+#ifndef CCS_CONNECTOR_H_
+#define CCS_CONNECTOR_H_
 
 #include "ConnectorMethod.h"
 
 #include <containers/sequential/graph/algorithms/connected_components.h>
 
-template <class MPTraits>
+template<class MPTraits>
 class CCsConnector: public ConnectorMethod<MPTraits> {
   public:
 
@@ -30,13 +30,15 @@ class CCsConnector: public ConnectorMethod<MPTraits> {
 
     virtual void Print(ostream& _os) const;
 
-    template <typename ColorMap, typename InputIterator1, typename InputIterator2, typename OutputIterator>
-      void Connect(RoadmapType* _rm, StatClass& _stats, ColorMap& _cmap,
-          InputIterator1 _itr1First, InputIterator1 _itr1Last,
-          InputIterator2 _itr2First, InputIterator2 _itr2Last, OutputIterator _collision);
+    template<typename InputIterator1, typename InputIterator2,
+      typename OutputIterator>
+        void Connect(RoadmapType* _rm,
+            InputIterator1 _itr1First, InputIterator1 _itr1Last,
+            InputIterator2 _itr2First, InputIterator2 _itr2Last,
+            OutputIterator _collision);
 
     template<typename OutputIterator>
-      void ConnectCC(RoadmapType* _rm, StatClass& _stats,
+      void ConnectCC(RoadmapType* _rm,
           vector<VID>& _cc1Vec, vector<VID>& _cc2Vec,
           OutputIterator _collision);
 
@@ -44,8 +46,7 @@ class CCsConnector: public ConnectorMethod<MPTraits> {
 
     // compute all pair distance between ccs.
     // approximated using coms of ccs
-    template<typename ColorMap>
-      void ComputeAllPairsCCDist(RoadmapType* _rm, ColorMap& _cmap, vector<pair<size_t, VID> >& _ccs);
+    void ComputeAllPairsCCDist(RoadmapType* _rm, vector<pair<size_t, VID> >& _ccs);
 
     //get k closest pairs
     void GetKCCs(size_t _k, VID _ccid, vector<VID>& _kCCID);
@@ -77,24 +78,25 @@ CCsConnector<MPTraits>::Print(ostream& _os) const {
 }
 
 template<class MPTraits>
-template<typename ColorMap, typename InputIterator1, typename InputIterator2, typename OutputIterator>
+template<typename InputIterator1, typename InputIterator2, typename OutputIterator>
 void
-CCsConnector<MPTraits>::Connect(RoadmapType* _rm, StatClass& _stats, ColorMap& _cmap,
+CCsConnector<MPTraits>::
+Connect(RoadmapType* _rm,
     InputIterator1 _itr1First, InputIterator1 _itr1Last,
-    InputIterator2 _itr2First, InputIterator2 _itr2Last, OutputIterator _collision) {
+    InputIterator2 _itr2First, InputIterator2 _itr2Last,
+    OutputIterator _collision) {
 
   GraphType* rgraph = _rm->GetGraph();
 
   if(this->m_debug){
-    Print(cout);
-    _stats.DisplayCCStats(cout, *rgraph);
+    this->GetStatClass()->DisplayCCStats(cout, *rgraph);
     cout << endl;
   }
 
   vector<pair<size_t,VID> > ccs;
 
-  _cmap.reset();
-  get_cc_stats(*rgraph, _cmap, ccs);
+  typename GraphType::ColorMap colorMap;
+  get_cc_stats(*rgraph, colorMap, ccs);
 
   if(ccs.size() <= 1) return;
 
@@ -106,7 +108,7 @@ CCsConnector<MPTraits>::Connect(RoadmapType* _rm, StatClass& _stats, ColorMap& _
   if(this->m_debug)
     cout << "Connecting " << m_k << "-closest CCs" << endl;
 
-  ComputeAllPairsCCDist(_rm, _cmap, ccs);
+  ComputeAllPairsCCDist(_rm, ccs);
 
   typedef typename vector<pair<size_t, VID> >::iterator CCIT;
   for(CCIT itr1 = ccs.begin(); itr1 != ccs.end(); ++itr1) {
@@ -120,15 +122,15 @@ CCsConnector<MPTraits>::Connect(RoadmapType* _rm, StatClass& _stats, ColorMap& _
 
       //even though this might be inefficient, double check to make sure the CCs
       //are different
-      if(!stapl::sequential::is_same_cc(*rgraph, _cmap, itr1->second, *itr2)) {
+      if(!stapl::sequential::is_same_cc(*rgraph, colorMap, itr1->second, *itr2)) {
 
         vector<VID> cc1, cc2;
 
-        get_cc(*rgraph, _cmap, itr1->second, cc1);
-        get_cc(*rgraph, _cmap, *itr2, cc2);
+        get_cc(*rgraph, colorMap, itr1->second, cc1);
+        get_cc(*rgraph, colorMap, *itr2, cc2);
 
-        ConnectCC(_rm, _stats, cc1, cc2, _collision);
-        _cmap.reset();
+        ConnectCC(_rm, cc1, cc2, _collision);
+        colorMap.reset();
       }
       if(this->m_debug)
         cout << " ...done\n";
@@ -136,7 +138,7 @@ CCsConnector<MPTraits>::Connect(RoadmapType* _rm, StatClass& _stats, ColorMap& _
   }
 
   if(this->m_debug) {
-    _stats.DisplayCCStats(cout, *(rgraph));
+    this->GetStatClass()->DisplayCCStats(cout, *rgraph);
     cout << endl;
   }
 }
@@ -144,14 +146,14 @@ CCsConnector<MPTraits>::Connect(RoadmapType* _rm, StatClass& _stats, ColorMap& _
 template<class MPTraits>
 template<typename OutputIterator>
 void
-CCsConnector<MPTraits>::ConnectCC(RoadmapType* _rm, StatClass& _stats,
+CCsConnector<MPTraits>::ConnectCC(RoadmapType* _rm,
     vector<VID>& _cc1Vec, vector<VID>& _cc2Vec, OutputIterator _collision) {
 
-  Environment* env = this->GetMPProblem()->GetEnvironment();
+  Environment* env = this->GetEnvironment();
   GraphType* rgraph = _rm->GetGraph();
   LPOutput<MPTraits> lpOutput;
-  NeighborhoodFinderPointer nf = this->GetMPProblem()->GetNeighborhoodFinder(this->m_nfLabel);
-  LocalPlannerPointer lp = this->GetMPProblem()->GetLocalPlanner(this->m_lpLabel);
+  NeighborhoodFinderPointer nf = this->GetNeighborhoodFinder(this->m_nfLabel);
+  LocalPlannerPointer lp = this->GetLocalPlanner(this->m_lpLabel);
 
   typedef vector<pair<pair<VID, VID>, double> > NeighborPairs;
   typedef typename NeighborPairs::iterator NPIT;
@@ -190,20 +192,20 @@ CCsConnector<MPTraits>::ConnectCC(RoadmapType* _rm, StatClass& _stats,
 }
 
 template<class MPTraits>
-template<typename ColorMap>
 void
-CCsConnector<MPTraits>::ComputeAllPairsCCDist(RoadmapType* _rm,
-    ColorMap& _cmap, vector<pair<size_t, VID> >& _ccs){
+CCsConnector<MPTraits>::
+ComputeAllPairsCCDist(RoadmapType* _rm, vector<pair<size_t, VID> >& _ccs) {
 
   GraphType* rgraph=_rm->GetGraph();
   DistanceMetricPointer dmm = this->GetMPProblem()->GetNeighborhoodFinder(this->m_nfLabel)->GetDMMethod();
+  typename GraphType::ColorMap colorMap;
 
   //compute com of ccs
   map<VID, CfgType> coms;
   typedef typename vector<pair<size_t, VID> >::iterator CCIT;
   for(CCIT cc = _ccs.begin(); cc != _ccs.end(); ++cc){
     vector<VID> ccvids;
-    get_cc(*rgraph, _cmap, cc->second, ccvids);
+    get_cc(*rgraph, colorMap, cc->second, ccvids);
     coms[cc->second] = GetCentroid(rgraph, ccvids);
   }
 

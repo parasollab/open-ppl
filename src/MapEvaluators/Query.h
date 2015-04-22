@@ -294,8 +294,8 @@ Query<MPTraits>::PerformQuery(const CfgType& _start, const CfgType& _goal, Roadm
   if(m_nodeConnectionLabels.empty())
     m_nodeConnectionLabels.push_back("");
 
-  for(vector<string>::iterator it = m_nodeConnectionLabels.begin(); it != m_nodeConnectionLabels.end(); it++)
-    connectionMethods.push_back(this->GetMPProblem()->GetConnector(*it));
+  for(auto label : m_nodeConnectionLabels)
+    connectionMethods.push_back(this->GetConnector(label));
 
   // Add start and goal to roadmap (if not already there)
   VID sVID, gVID;
@@ -329,15 +329,11 @@ Query<MPTraits>::PerformQuery(const CfgType& _start, const CfgType& _goal, Roadm
       cmap.reset();
       stats->IncGOStat("CC Operations");
       stapl::sequential::get_cc(*(_rdmp->GetGraph()), cmap, ccIt->second, cc);
-      vector<VID> verticesList(1, sVID);
       if(this->m_debug)
         cout << "*Q* Connecting start to ccIt[" << distance(ccsBegin, ccIt)+1 << "]" << endl;
 
-      for(typename vector<ConnectorPointer>::iterator
-          itr = connectionMethods.begin(); itr != connectionMethods.end(); itr++) {
-        cmap.reset();
-        (*itr)->Connect(_rdmp, *stats, cmap, verticesList.begin(), verticesList.end(), cc.begin(), cc.end());
-      }
+      for(auto connector : connectionMethods)
+        connector->Connect(_rdmp, sVID, cc.begin(), cc.end());
     }
 
     // Try to connect goal to cc
@@ -353,15 +349,11 @@ Query<MPTraits>::PerformQuery(const CfgType& _start, const CfgType& _goal, Roadm
         stats->IncGOStat("CC Operations");
         stapl::sequential::get_cc(*(_rdmp->GetGraph()), cmap, ccIt->second, cc);
       }
-      vector<VID> verticesList(1, gVID);
       if(this->m_debug)
         cout << "*Q* Connecting goal to ccIt[" << distance(ccsBegin, ccIt)+1 << "]" << endl;
 
-      for(typename vector<ConnectorPointer>::iterator
-          itr = connectionMethods.begin(); itr != connectionMethods.end(); itr++) {
-        cmap.reset();
-        (*itr)->Connect(_rdmp, *stats, cmap, verticesList.begin(), verticesList.end(), cc.begin(), cc.end());
-      }
+      for(auto connector : connectionMethods)
+        connector->Connect(_rdmp, gVID, cc.begin(), cc.end());
     }
 
     // Check if start and goal are connected to the same CC

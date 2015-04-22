@@ -38,10 +38,12 @@ class ConnectNeighboringSurfaces: public ConnectorMethod<MPTraits> {
 
     //////////////////////
     // Core: Connection method
-    template<typename ColorMap, typename InputIterator1, typename InputIterator2, typename OutputIterator>
-      void Connect(RoadmapType* _rm, StatClass& _stats, ColorMap& _cmap,
-          InputIterator1 _itr1First, InputIterator1 _itr1Last,
-          InputIterator2 _itr2First, InputIterator2 _itr2Last, OutputIterator _collision) ;
+    template<typename InputIterator1, typename InputIterator2,
+      typename OutputIterator>
+        void Connect(RoadmapType* _rm,
+            InputIterator1 _itr1First, InputIterator1 _itr1Last,
+            InputIterator2 _itr2First, InputIterator2 _itr2Last,
+            OutputIterator _collision);
 
   private:
     //////////////////////
@@ -110,13 +112,14 @@ void ConnectNeighboringSurfaces<MPTraits>::Print(ostream& _os) const {
 //
 ///////////////////////////////////////////////////////////////////////////////
 template<class MPTraits>
-template<typename ColorMap, typename InputIterator1, typename InputIterator2, typename OutputIterator>
+template<typename InputIterator1, typename InputIterator2, typename OutputIterator>
 void
-ConnectNeighboringSurfaces<MPTraits>::Connect(RoadmapType* _rm, StatClass& _stats, ColorMap& _cmap,
+ConnectNeighboringSurfaces<MPTraits>::
+Connect(RoadmapType* _rm,
     InputIterator1 _itr1First, InputIterator1 _itr1Last,
-    InputIterator2 _itr2First, InputIterator2 _itr2Last, OutputIterator _collision){
+    InputIterator2 _itr2First, InputIterator2 _itr2Last,
+    OutputIterator _collision) {
 
-  if(this->m_debug){ cout << endl; Print(cout); }
   if(m_doneOnce) {
     if(this->m_debug){
       cout << " This connection need only be done once...BREAKING!" << endl;
@@ -129,7 +132,7 @@ ConnectNeighboringSurfaces<MPTraits>::Connect(RoadmapType* _rm, StatClass& _stat
 
   m_totalSuccess = m_totalFailure = 0;
 
-  Environment* env = this->GetMPProblem()->GetEnvironment();
+  Environment* env = this->GetEnvironment();
   int numSurfaces =  env->GetNavigableSurfacesCount();
   for(int i=0; i<numSurfaces; i++) {
     int id = i;
@@ -278,7 +281,7 @@ ConnectNeighboringSurfaces<MPTraits>::Connect(RoadmapType* _rm, StatClass& _stat
 
 
     if(this->m_debug) {
-      cout << "*** kClosest Time = " << _stats.GetSeconds("kClosest") << endl;
+      cout << "*** kClosest Time = " << this->GetStatClass()->GetSeconds("kClosest") << endl;
       cout << "*** m_totalSuccess = " << m_totalSuccess << endl;
       cout << "*** m_totalFailure = " << m_totalFailure << endl;
     }

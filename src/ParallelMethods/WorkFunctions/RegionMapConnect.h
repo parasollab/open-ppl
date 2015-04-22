@@ -117,7 +117,7 @@ struct SetRegionCC{
 
   typedef typename MPTraits::MPProblemType MPProblemType;
   typedef typename MPProblemType::VID VID;
-  
+
   typedef void result_type;
 
   template <typename RGView, typename CCView>
@@ -138,7 +138,7 @@ struct SetRegionCCVIDS{
   typedef typename MPProblemType::VID VID;
 
   typedef void result_type;
-  
+
   template <typename RGView, typename CCView>
   void operator()(RGView _v1, CCView _v2) {
      std::vector<VID> ccVec;
@@ -173,7 +173,7 @@ class RegionCCConnector
   }
 
   typedef void result_type;
-  
+
   void define_type(stapl::typer &_t)
   {
   }
@@ -226,7 +226,7 @@ class RegionCCConnector
           ///@todo : Check whether to connect small or big CCs
 
       vector<CfgType> col;
-	  ncp->ConnectCC(m_problem->GetRoadmap(),*(m_problem->GetStatClass()),sCand, tCand, back_inserter(col));
+	  ncp->ConnectCC(m_problem->GetRoadmap(), sCand, tCand, back_inserter(col));
 
         }
     }
@@ -238,7 +238,7 @@ class RegionCCConnector
 
 
 template<typename RGType, typename RType, class MPTraits>
-class RegionRandomConnector 
+class RegionRandomConnector
 {
   private:
   typedef typename MPTraits::CfgType CfgType;
@@ -284,7 +284,7 @@ class RegionRandomConnector
       for(typename vector<VID>::iterator sVIT = sVids.begin(); sVIT != sVids.begin() + std::min(static_cast<int>(sVids.size()), k); ++sVIT) {
         sCand.push_back(*sVIT);
       }
-      
+
       //TARGET REGION
       //for(typename regionView::adj_edge_iterator ei = edges.begin(); ei != edges.end(); ++ei){
       for(typename regionView::adj_edge_iterator ei = _view.begin(); ei != _view.end(); ++ei){
@@ -298,10 +298,9 @@ class RegionRandomConnector
        // }
 
       /// NOW CONNECT
-      stapl::sequential::vector_property_map<typename GraphType::GRAPH,size_t > cmap;
-      ncp->Connect(m_problem->GetRoadmap(),*(m_problem->GetStatClass()), cmap,
-	         sCand.begin(),sCand.end(),
-	         tCand.begin(),tCand.end());
+        ncp->Connect(m_problem->GetRoadmap(),
+            sCand.begin(),sCand.end(),
+            tCand.begin(),tCand.end());
      // PrintValue("RANDOM - source size : ", sCand.size());
      // PrintValue("RANDOM - target size : ", tCand.size());
      // ncp->ConnectSmallCC(m_region->GetRoadmap(),*(m_region->GetStatClass()),sCand, tCand, col.begin());

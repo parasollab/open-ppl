@@ -144,20 +144,11 @@ public:
 
   template<typename regionView>
   void operator()(regionView _view) const {
-
     vector<VID> regionVIDs = _view.property().RegionVIDs();
 
-    //PrintValue("CONNECTOR-vid size:  ", regionVIDs.size());
-    for(typename vector<VID>::iterator vit = regionVIDs.begin(); vit != regionVIDs.end(); ++vit){
-      //PrintValue("CONNECTOR VID = " , *vit);
-    }
-
-    StatClass* stat = m_problem->GetStatClass();
-
-    // temporary fix for Parallel code to compile
-    stapl::sequential::vector_property_map<typename GraphType::GRAPH,size_t > cmap;
-    m_ncp->Connect(m_problem->GetRoadmap(), *stat, cmap,
-	         regionVIDs.begin(), regionVIDs.end(), regionVIDs.begin(), regionVIDs.end() );
+    m_ncp->Connect(m_problem->GetRoadmap(),
+        regionVIDs.begin(), regionVIDs.end(),
+        regionVIDs.begin(), regionVIDs.end());
   }
 };
 

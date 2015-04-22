@@ -437,7 +437,6 @@ ConnectCCs() {
         "Did not set LocalTree using native view.");
 
   //Setup MP variables
-  StatClass* stats = m_problem->GetStatClass();
   RoadmapType* rdmp = m_problem->GetRoadmap();
   ValidityCheckerPointer vc = m_problem->GetValidityChecker(m_vc);
   DistanceMetricPointer dm = m_problem->GetDistanceMetric(m_dm);
@@ -517,7 +516,7 @@ ConnectCCs() {
 //#ifdef _PARALLEL
     pConnection->SetLocalGraph(m_localTree);
 //#endif
-    pConnection->Connect(rdmp, *stats, colorMap, cc1.begin(), cc1.end(), cc2.begin(), cc2.end()) ;
+    pConnection->Connect(rdmp, cc1.begin(), cc1.end(), cc2.begin(), cc2.end()) ;
 
     iters++;
     colorMap.reset();

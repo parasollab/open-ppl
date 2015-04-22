@@ -225,13 +225,11 @@ LazyQuery<MPTraits>::CanRecreatePath(RoadmapType* _rdmp, vector<VID>& _attempted
 template<class MPTraits>
 void
 LazyQuery<MPTraits>::NodeEnhance(RoadmapType* _rdmp) {
-  StatClass& stats = *(this->GetStatClass());
   if(!m_numEnhance || !m_edges.size())
     return;
 
   if(this->m_debug)
     cout << "*E* In LazyQuery::NodeEnhance. Generated these VIDs:";
-  stapl::sequential::vector_property_map<GraphType, size_t> cmap;
 
   for(int i = 0; i < m_numEnhance; i++) {
     size_t index = LRand() % m_edges.size(); // do I need a typecast?
@@ -247,11 +245,8 @@ LazyQuery<MPTraits>::NodeEnhance(RoadmapType* _rdmp) {
 
     // Add enhance to roadmap and connect
     VID newVID = _rdmp->GetGraph()->AddVertex(enhance);
-    for(vector<string>::iterator label = this->m_nodeConnectionLabels.begin();
-            label != this->m_nodeConnectionLabels.end(); label++) {
-      cmap.reset();
-      this->GetMPProblem()->GetConnector(*label)->Connect(_rdmp, stats, cmap, newVID);
-    }
+    for(auto label : this->m_nodeConnectionLabels)
+      this->GetConnector(label)->Connect(_rdmp, newVID);
     if(this->m_debug)
       cout << " " << newVID;
   }

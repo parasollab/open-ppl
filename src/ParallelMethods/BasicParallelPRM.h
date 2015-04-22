@@ -95,11 +95,8 @@ class ConnectWF {
 	v2.push_back((*vit2).descriptor());
       }
 
-      stapl::sequential::vector_property_map<typename GraphType::GRAPH, size_t> cmap;
-      cmap.reset();
-      //vector<VID> dummyVec;
       m_nodeCon->Connect(m_problem->GetRoadmap(),
-        *(m_problem->GetStatClass()), cmap, v1.begin(),v1.end(), v2.begin(), v2.end());
+          v1.begin(),v1.end(), v2.begin(), v2.end());
     }
 };
 

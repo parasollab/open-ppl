@@ -120,7 +120,8 @@ CoverageMetric<MPTraits, Set>::operator()() {
       size_t degreeBefore = rgraph->get_out_degree(sampleVID);
 
       for(vector<string>::iterator sit = m_connectorLabels.begin(); sit != m_connectorLabels.end(); ++sit) {
-        this->GetMPProblem()->GetConnector(*sit)->Connect(rmap, stats, cmap, sampleList.begin(), sampleList.end(), cc.begin(), cc.end());
+        this->GetConnector(*sit)->Connect(rmap,
+            sampleList.begin(), sampleList.end(), cc.begin(), cc.end());
       }
 
       if((rgraph->get_out_degree(sampleVID)) > degreeBefore) {

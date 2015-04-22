@@ -22,16 +22,16 @@ class AdaptiveConnector: public ConnectorMethod<MPTraits> {
     virtual void ParseXML(XMLNodeReader& _node);
     virtual void Initialize();
 
-    template<typename ColorMap, typename InputIterator1, typename InputIterator2, typename OutputIterator>
-      void Connect(RoadmapType* _rm, StatClass& _stats, ColorMap& _cmap,
+    template<typename InputIterator1, typename InputIterator2,
+      typename OutputIterator>
+      void Connect(RoadmapType* _rm,
           InputIterator1 _itr1First, InputIterator1 _itr1Last,
-          InputIterator2 _itr2First, InputIterator2 _itr2Last, OutputIterator _collision) ;
+          InputIterator2 _itr2First, InputIterator2 _itr2Last,
+          OutputIterator _collision);
 
   protected:
-    template<typename ColorMap, typename InputIterator, typename OutputIterator>
-      void ConnectNeighbors(
-          RoadmapType* _rm, StatClass& _stats,
-          ColorMap& _cmap, VID _vid,
+    template<typename InputIterator, typename OutputIterator>
+      void ConnectNeighbors(RoadmapType* _rm, VID _vid,
           InputIterator _closestFirst, InputIterator _closestLast,
           OutputIterator _collision);
 
@@ -160,16 +160,13 @@ Initialize() {
 }
 
 template<class MPTraits>
-template<typename ColorMap, typename InputIterator1, typename InputIterator2, typename OutputIterator>
+template<typename InputIterator1, typename InputIterator2, typename OutputIterator>
 void
-AdaptiveConnector<MPTraits>::Connect(RoadmapType* _rm, StatClass& _stats, ColorMap& _cmap,
+AdaptiveConnector<MPTraits>::
+Connect(RoadmapType* _rm,
     InputIterator1 _itr1First, InputIterator1 _itr1Last,
-    InputIterator2 _itr2First, InputIterator2 _itr2Last, OutputIterator _collision){
-
-  if(this->m_debug){
-    cout << endl;
-    Print(cout);
-  }
+    InputIterator2 _itr2First, InputIterator2 _itr2Last,
+    OutputIterator _collision) {
 
   if(m_nfProbabilities.empty() || m_neigborGenLabels.size() != m_nfProbabilities.size())
     Initialize();
@@ -181,9 +178,9 @@ AdaptiveConnector<MPTraits>::Connect(RoadmapType* _rm, StatClass& _stats, ColorM
      static unsigned long int prevConnectionCollision=0;
 
 
-    double  currAttempts =   get<0>(_stats.m_lpInfo.begin()->second);
-    double  currSuccess  =   get<1>(_stats.m_lpInfo.begin()->second);
-    unsigned long int  currCollision = _stats.GetIsCollTotal();
+    double  currAttempts =   get<0>(this->GetStatClass()->m_lpInfo.begin()->second);
+    double  currSuccess  =   get<1>(this->GetStatClass()->m_lpInfo.begin()->second);
+    unsigned long int  currCollision = this->GetStatClass()->GetIsCollTotal();
 
     double reward = 0;
     unsigned long int cost=0;
@@ -229,18 +226,17 @@ AdaptiveConnector<MPTraits>::Connect(RoadmapType* _rm, StatClass& _stats, ColorM
     }
 
     //test connections through LP
-    ConnectNeighbors(_rm, _stats, _cmap, vid, closest.begin(), closest.end(), _collision);
+    ConnectNeighbors(_rm, vid, closest.begin(), closest.end(), _collision);
   }
 }
 
 template<class MPTraits>
-template <typename ColorMap, typename InputIterator, typename OutputIterator>
+template<typename InputIterator, typename OutputIterator>
 void
-AdaptiveConnector<MPTraits>::ConnectNeighbors(
-    RoadmapType* _rm, StatClass& _stats,
-    ColorMap& _cmap, VID _vid,
+AdaptiveConnector<MPTraits>::
+ConnectNeighbors(RoadmapType* _rm, VID _vid,
     InputIterator _closestFirst, InputIterator _closestLast,
-    OutputIterator _collision){
+    OutputIterator _collision) {
 
   Environment* env = this->GetMPProblem()->GetEnvironment();
   LocalPlannerPointer lp = this->GetMPProblem()->GetLocalPlanner(this->m_lpLabel);
@@ -284,8 +280,8 @@ AdaptiveConnector<MPTraits>::ConnectNeighbors(
 
     if(m_checkIfSameCC){
       // if the nodes are in the same connected component count as success
-      _cmap.reset();
-      if(stapl::sequential::is_same_cc(*map, _cmap, _vid, v2)){
+      typename GraphType::ColorMap colorMap;
+      if(stapl::sequential::is_same_cc(*map, colorMap, _vid, v2)){
         if(this->m_debug)
           cout << " | nodes in the same connected component | skipping" << endl;
         continue;

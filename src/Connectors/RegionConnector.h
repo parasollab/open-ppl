@@ -24,14 +24,15 @@ class RegionConnector : public ConnectorMethod<MPTraits> {
     bool CheckEdge(VID _vid1, VID _vid2, RoadmapType* _rm);
 
     // Connection Methods
-    template<typename ColorMap, typename InputIterator1, typename InputIterator2, typename OutputIterator>
-      void Connect(RoadmapType* _rm, StatClass& _stats, ColorMap& _cmap,
-          InputIterator1 _itr1First, InputIterator1 _itr1Last,
-          InputIterator2 _itr2First, InputIterator2 _itr2Last,
-          OutputIterator _collision);
+    template<typename InputIterator1, typename InputIterator2,
+      typename OutputIterator>
+        void Connect(RoadmapType* _rm,
+            InputIterator1 _itr1First, InputIterator1 _itr1Last,
+            InputIterator2 _itr2First, InputIterator2 _itr2Last,
+            OutputIterator _collision);
 
   protected:
-    template <typename OutputIterator>
+    template<typename OutputIterator>
       void ConnectNeighbors(RoadmapType* _rm, VID _vid,
           vector<pair<VID, double>>& _closest, OutputIterator _collision);
 
@@ -67,15 +68,15 @@ Print(ostream& _os) const {
 // 3. the K-closest nodes of nodes found in step 2 from region 1 are obtained
 // 4. Connections are attempted from those two groups
 template<class MPTraits>
-template<typename ColorMap, typename InputIterator1, typename InputIterator2, typename OutputIterator>
+template<typename InputIterator1, typename InputIterator2, typename OutputIterator>
 void
 RegionConnector<MPTraits>::
-Connect(RoadmapType* _rm, StatClass& _stats, ColorMap& _cmap,
+Connect(RoadmapType* _rm,
     InputIterator1 _itr1First, InputIterator1 _itr1Last,
     InputIterator2 _itr2First, InputIterator2 _itr2Last,
     OutputIterator _collision) {
 
-  for (size_t iter = 0; iter < m_iters; iter++) {
+  for(size_t iter = 0; iter < m_iters; iter++) {
     // 1. A random node from region 1 is chosen
     InputIterator1 randNode =  _itr1First;
 
@@ -87,7 +88,7 @@ Connect(RoadmapType* _rm, StatClass& _stats, ColorMap& _cmap,
     vector<pair<VID, double>> closestRegion2;
     CfgType cfg = _rm->GetGraph()->GetVertex(randNode);
 
-    NeighborhoodFinderPointer nfptr = this->GetMPProblem()->GetNeighborhoodFinder(this->m_nfLabel);
+    NeighborhoodFinderPointer nfptr = this->GetNeighborhoodFinder(this->m_nfLabel);
     nfptr->FindNeighbors(_rm, _itr2First, _itr2Last, cfg, back_inserter(closestRegion2));
 
     // 3. the closest node from region 1 of nodes found in step 2 are obtained

@@ -252,7 +252,6 @@ TogglePRMStrategy<MPTraits>::Connect(pair<string, VID> _vid,
   stringstream clockName;
   clockName << "Node Connection";
   stats->StartClock(clockName.str());
-  stapl::sequential::vector_property_map<typename MPProblemType::GraphType, size_t> cmap;
 
   // Grab correct set of connectors depending on vertex validity
   vector<string> connectorLabels = (_vid.first=="valid" ? m_connectorLabels : m_colConnectorLabels);
@@ -270,12 +269,11 @@ TogglePRMStrategy<MPTraits>::Connect(pair<string, VID> _vid,
     vector<VID> nodesVID;
     nodesVID.push_back(_vid.second);
     vector<CfgType> collision, valid;
-    cmap.reset();
 
     // Connect vertex using the connector
     connector->Connect(
         _vid.first=="valid" ? this->GetMPProblem()->GetRoadmap() : this->GetMPProblem()->GetBlockRoadmap(),
-        *stats, cmap, nodesVID.begin(), nodesVID.end(), _allvids.begin(), _allvids.end(), back_inserter(collision));
+        nodesVID.begin(), nodesVID.end(), _allvids.begin(), _allvids.end(), back_inserter(collision));
 
     if(this->m_debug) {
       cout << "\n\nCollision Nodes from connecting: " << collision.size() << endl;
@@ -296,16 +294,14 @@ TogglePRMStrategy<MPTraits>::Connect(pair<string, VID> _vid,
       else if(this->m_debug)
         cerr << "In TogglePRMStrategy::Connect(), collision not yet validated?! (Shouldn't happen)" << endl;
     }
-    cmap.reset();
 
     stats->StopClock(connectorClockName.str());
     if(this->m_debug) {
       cout << "Freemap: " << this->GetMPProblem()->GetRoadmap()->GetGraph()->get_num_edges() << " edges, "
-        << get_cc_count(*(this->GetMPProblem()->GetRoadmap()->GetGraph()), cmap) << " connected components" << endl;
+        << this->GetRoadmap()->GetGraph()->GetNumCCs() << " connected components" << endl;
       cout << "\t";
-      cmap.reset();
       cout << "Blockmap: " << this->GetMPProblem()->GetBlockRoadmap()->GetGraph()->get_num_edges() << " edges, "
-        << get_cc_count(*(this->GetMPProblem()->GetBlockRoadmap()->GetGraph()), cmap) << " connected components" << endl;
+        << this->GetBlockRoadmap()->GetGraph()->GetNumCCs() << " connected components" << endl;
       cout << "\t";
       stats->PrintClock(connectorClockName.str(), cout);
     }

@@ -135,11 +135,8 @@ LazyToggleQuery<MPTraits>::PerformQuery(CfgType _start, CfgType _goal, RoadmapTy
         VID newVID = _rdmp->GetGraph()->AddVertex(node);
         if(this->m_debug)
           cout << "*T* Adding a free node to roadmap: " << node << ", VID = " << newVID << endl;
-        for(vector<string>::iterator label = this->m_nodeConnectionLabels.begin();
-            label != this->m_nodeConnectionLabels.end(); label++) {
-          cmap.reset();
-          this->GetMPProblem()->GetConnector(*label)->Connect(_rdmp, *stats, cmap, newVID);
-        }
+        for(auto label : this->m_nodeConnectionLabels)
+          this->GetConnector(label)->Connect(_rdmp, newVID);
         if(m_iterative) {
           cmap.reset();
           stats->IncGOStat("CC Operations");
@@ -153,15 +150,15 @@ LazyToggleQuery<MPTraits>::PerformQuery(CfgType _start, CfgType _goal, RoadmapTy
         if(this->m_debug)
           cout << "*T* Adding a blocked node to roadmap: " << node << ", VID = " << newVID << endl;
         size_t size = m_q.size();
-        this->GetMPProblem()->GetValidityChecker(this->m_vcLabel)->ToggleValidity();
+        this->GetValidityChecker(this->m_vcLabel)->ToggleValidity();
         if(m_iterative)
-          this->GetMPProblem()->GetConnector(m_toggleConnect)->Connect(bRdmp, *stats, cmap, newVID, front_inserter(m_q));
+          this->GetConnector(m_toggleConnect)->Connect(bRdmp, newVID, front_inserter(m_q));
         else
-          this->GetMPProblem()->GetConnector(m_toggleConnect)->Connect(bRdmp, *stats, cmap, newVID, back_inserter(m_q));
+          this->GetConnector(m_toggleConnect)->Connect(bRdmp, newVID, back_inserter(m_q));
         if(this->m_debug)
           for(size_t i = 0; i < m_q.size()-size; i++)
             cout << "*T* Pushing free node into queue: " << m_q[i] << endl;
-        this->GetMPProblem()->GetValidityChecker(this->m_vcLabel)->ToggleValidity();
+        this->GetValidityChecker(this->m_vcLabel)->ToggleValidity();
       }
     }
 

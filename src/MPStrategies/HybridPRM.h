@@ -199,7 +199,7 @@ void HybridPRM<MPTraits>::Run(){
     if(this->m_debug)
     PrintWeightsProbabilitiesCosts(cout);
 
-    do{
+    do {
       string nextNodeGen = SelectNextSamplingMethod(InLearningWindow(totalSamples));
       if(this->m_debug)
       cout << "selecting sampler \"" << nextNodeGen << "\"\n";
@@ -210,36 +210,30 @@ void HybridPRM<MPTraits>::Run(){
       SamplerPointer pNodeGen = this->GetMPProblem()->GetSampler(nextNodeGen);
       pNodeGen->Sample(1, 1, this->m_boundary, back_inserter(vectorCfgs));
       unsigned long int numcdaftergen = stats->GetIsCollTotal();
-      for(typename vector<CfgType>::iterator C = vectorCfgs.begin(); C != vectorCfgs.end(); ++C)
-      {
-        if(C->IsLabel("VALID") && C->GetLabel("VALID"))
-        {
+      for(typename vector<CfgType>::iterator C = vectorCfgs.begin(); C != vectorCfgs.end(); ++C) {
+        if(C->IsLabel("VALID") && C->GetLabel("VALID")) {
           cmap.reset();
           int nNumPrevCCs = get_cc_count(*(this->GetMPProblem()->GetRoadmap()->GetGraph()), cmap);
 
           //add node to roadmap
           VID newVID = this->GetMPProblem()->GetRoadmap()->GetGraph()->AddVertex(*C);
           vector<pair<pair<VID,VID>,bool> > connectionattempts;
-    	  for(vector<string>::iterator itr = m_connectorLabels.begin(); itr != m_connectorLabels.end(); ++itr)
-          {
-            vector<VID> newFreeVid(1, newVID);
-            ConnectorPointer connector = this->GetMPProblem()->GetConnector(*itr);
+    	  for(auto label : m_connectorLabels) {
+            ConnectorPointer connector = this->GetConnector(label);
             connector->ClearConnectionAttempts();
-            connector->Connect(
-	      this->GetMPProblem()->GetRoadmap(), *stats, cmap,
-	      newFreeVid.begin(), newFreeVid.end());
+            connector->Connect(this->GetRoadmap(), newVID);
             connectionattempts.insert(connectionattempts.end(),
                 connector->ConnectionAttemptsBegin(),
                 connector->ConnectionAttemptsEnd());
 
     	  }
 
-          for(typename vector<pair<pair<VID,VID>,bool> >::const_iterator CA = connectionattempts.begin(); CA != connectionattempts.end(); ++CA){
-            visMap[CA->first.first].m_attempts++;
-            visMap[CA->first.second].m_attempts++;
-            if(CA->second){
-              visMap[CA->first.first].m_connections++;
-              visMap[CA->first.second].m_connections++;
+          for(auto attempt : connectionattempts) {
+            visMap[attempt.first.first].m_attempts++;
+            visMap[attempt.first.second].m_attempts++;
+            if(attempt.second){
+              visMap[attempt.first.first].m_connections++;
+              visMap[attempt.first.second].m_connections++;
             }
           }
 

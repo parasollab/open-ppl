@@ -458,14 +458,12 @@ ConnectNeighbors(VID _newVID) {
     vector<VID> currentVID(1, _newVID);
 
     ConnectorPointer c = this->GetConnector(m_nc);
-    stapl::sequential::vector_property_map<GraphType, size_t> cmap;
 
     StatClass* stats = this->GetStatClass();
     string conClock = "Total Connection time ";
     stats->StartClock(conClock);
 
     c->Connect(this->GetRoadmap(),
-        *stats, cmap,
         currentVID.begin(), currentVID.end(),
         m_currentTree->begin(), m_currentTree->end());
 
