@@ -2,6 +2,9 @@
 #define MEDIALAXISUTILITY_H_
 
 #include "MPUtils.h"
+
+#include <deque>
+
 #include "MetricUtils.h"
 #include "LocalPlanners/StraightLine.h"
 #include "ValidityCheckers/CollisionDetection/CDInfo.h"
@@ -320,7 +323,7 @@ ClearanceUtility<MPTraits>::ExactCollisionInfo(CfgType& _cfg, CfgType& _clrCfg, 
   // If not using the bbx, done
   if(m_useBBX){
     // CfgType is now know as good, get BBX and ROBOT info
-    boost::shared_ptr<MultiBody> robot = env->GetMultiBody(_cfg.GetRobotIndex());
+    shared_ptr<MultiBody> robot = env->GetMultiBody(_cfg.GetRobotIndex());
 
     // Find closest point between robot and bbx, set if less than min dist from obstacles
     for(int m=0; m < robot->GetFreeBodyCount(); ++m) {
@@ -442,7 +445,7 @@ ClearanceUtility<MPTraits>::ApproxCollisionInfo(CfgType& _cfg, CfgType& _clrCfg,
   double posRes = env->GetPositionRes();
   for(size_t i=0; i<numRays; ++i) {
     CfgType tmpDirection;
-    tmpDirection.GetRandomRay(m_approxStepSize * env->GetPositionRes(), env, dm, false);
+    tmpDirection.GetRandomRay(m_approxStepSize * env->GetPositionRes(), dm, false);
     if(this->m_debug) cout << "DEBUG:: tmpDirection " << i << " is " << tmpDirection << endl;
     if(m_positional) { // Use only positional dofs
       double factor=0.0;

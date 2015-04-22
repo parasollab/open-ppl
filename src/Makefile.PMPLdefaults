@@ -23,8 +23,9 @@ ifeq (${platform}, LINUX_gcc_mh) 	#linux/gcc on manhattan
 	BOOST_ROOT = /usr/local
 	BOOST_INCL = -I$(BOOST_ROOT)/include
 	Boost_LIBRARY_DIRS = $(BOOST_ROOT)/lib
-	#Boost_LIBRARIES = -L$(Boost_LIBRARY_DIRS) -l$(shell ls $(Boost_LIBRARY_DIRS) | grep -m 1 -e boost_thread | sed 's/lib//g' | sed 's/\.so//g' | sed 's/\.a//g') -l$(shell ls $(Boost_LIBRARY_DIRS) | grep -m 1 -e boost_date_time | sed 's/lib//g' | sed 's/\.so//g' | sed 's/\.a//g')
+	Boost_LIBRARIES = -L$(Boost_LIBRARY_DIRS) -l$(shell ls $(Boost_LIBRARY_DIRS) | grep -m 1 -e boost_thread | sed 's/lib//g' | sed 's/\.so//g' | sed 's/\.a//g') -l$(shell ls $(Boost_LIBRARY_DIRS) | grep -m 1 -e boost_date_time | sed 's/lib//g' | sed 's/\.so//g' | sed 's/\.a//g')
 	BOOST_LIB = -L$(Boost_LIBRARY_DIRS) -l$(shell ls $(Boost_LIBRARY_DIRS) | grep -m 1 -e boost_thread | sed 's/lib//g' | sed 's/\.so//g' | sed 's/\.a//g') -l$(shell ls $(Boost_LIBRARY_DIRS) | grep -m 1 -e boost_serialization | sed 's/lib//g' | sed 's/\.so//g' | sed 's/\.a//g') -l$(shell ls $(Boost_LIBRARY_DIRS) | grep -m 1 -e boost_date_time | sed 's/lib//g' | sed 's/\.so//g' | sed 's/\.a//g')
+
 
 	DEPS = -MMD -MF $*.d
 endif
@@ -37,13 +38,10 @@ ifeq (${platform}, LINUX_gcc) 	#linux/gcc on 64 bit machine
 	CD_LIBFILE = ${RAPID_DIR}/libRAPID.a ${PQP_DIR}/lib/libPQP.a ${VCLIP_DIR}/lib/libvclip.a #${SOLID_DIR}/lib/libsolid.a
 
 	ifeq (${parallel}, 1)
-	  BOOST_ROOT = /usr
 	  BOOST_INCL = -I$(BOOST_ROOT)/include
 	  Boost_LIBRARY_DIRS = $(BOOST_ROOT)/lib64
-	  BOOST_LIB = -L$(Boost_LIBRARY_DIRS) -l$(shell ls $(Boost_LIBRARY_DIRS) | grep -m 1 -e boost_serialization | sed 's/lib//g' | sed 's/\.so//g' | sed 's/\.a//g')
+	  BOOST_LIB = -L$(Boost_LIBRARY_DIRS) -l$(shell ls $(Boost_LIBRARY_DIRS) | grep -e boost_serialization | head -n 1 | sed 's/lib//g' | sed 's/\.so//g' | sed 's/\.a//g') -l$(shell ls $(Boost_LIBRARY_DIRS) | grep -e boost_thread | head -n 1 | sed 's/lib//g' | sed 's/\.so//g' | sed 's/\.a//g') -l$(shell ls $(Boost_LIBRARY_DIRS) | grep -e boost_system | head -n 1 | sed 's/lib//g' | sed 's/\.so//g' | sed 's/\.a//g')
 	else
-	  BOOST_ROOT = /usr
-	  BOOST_INCL = -I$(BOOST_ROOT)/include
 	  Boost_LIBRARY_DIRS = $(BOOST_ROOT)/lib64
 	  BOOST_LIB = -L$(Boost_LIBRARY_DIRS) -l$(shell ls $(Boost_LIBRARY_DIRS) | grep -m 1 -e boost_thread | sed 's/lib//g' | sed 's/\.so//g' | sed 's/\.a//g') -l$(shell ls $(Boost_LIBRARY_DIRS) | grep -m 1 -e boost_serialization | sed 's/lib//g' | sed 's/\.so//g' | sed 's/\.a//g') -l$(shell ls $(Boost_LIBRARY_DIRS) | grep -m 1 -e boost_date_time | sed 's/lib//g' | sed 's/\.so//g' | sed 's/\.a//g')
 	endif
@@ -211,10 +209,10 @@ KMEANS_LIBFILE = ${KMEANS_DIR}/libkmeans.a
 # stapl macros
 #set parallel options
 ifeq (${parallel}, 0)
-	STAPL_INCL  = -I${STAPL_DIR} -I${STAPL_DIR}/include -I${STAPL_DIR}/stapl
+	STAPL_INCL  = -I${STAPL_DIR} -I${STAPL_DIR}/stapl
 else
-	STAPL_INCL  = -I${STAPL_DIR} -I${STAPL_DIR}/include -I${STAPL_DIR}/stapl -I${STAPL_DIR}/tools  -I${STAPL_DIR}/tools/libstdc++/${STL_LIB}/ -I${STAPL_DIR}/tools/icl
-        STAPL_DEF = -D_PARALLEL -D_STAPL -D_STAPL_MPI -D_PGRAPH -DDYNAMIC_GRAPH -DSTAPL_RUNTIME_ENABLE_NO_COMM_GUARD
+	STAPL_INCL  = -I${STAPL_DIR} -I${STAPL_DIR}/stapl -I${STAPL_DIR}/tools  -I${STAPL_DIR}/tools/libstdc++/${STL_LIB}/ -I${STAPL_DIR}/tools/icl
+	STAPL_DEF = -D_PARALLEL -D_STAPL -D_STAPL_MPI -D_PGRAPH -DDYNAMIC_GRAPH -DSTAPL_RUNTIME_ENABLE_NO_COMM_GUARD -DBOOST_RESULT_OF_USE_TR1
         STAPL_LIB = ${STAPL_DIR}/lib/libstapl.a ${STAPL_DIR}/lib/libstapl_rt.a -lrt $(BOOST_LIB)
 endif
 
@@ -251,7 +249,6 @@ PMPL_OBJS = \
 	MPProblem/Boundary.o \
         MPProblem/BoundingBox.o \
         MPProblem/BoundingSphere.o \
-	Samplers/SimilarStructureSampler.o \
 	ValidityCheckers/CollisionDetection/CDInfo.o \
 	ValidityCheckers/CollisionDetection/CollisionDetectionMethod.o \
 	ValidityCheckers/CollisionDetection/RapidCollisionDetection.o \
@@ -260,12 +257,14 @@ PMPL_OBJS = \
 	ValidityCheckers/CollisionDetection/VClipCollisionDetection.o \
 	ValidityCheckers/CollisionDetection/SpheresCollisionDetection.o \
 	Cfg/Cfg.o \
+        Cfg/CfgReachableVolume.o \
+	Cfg/CfgMultiRobot.o \
         Utilities/MetricUtils.o \
         Utilities/IOUtils.o \
         Utilities/MPUtils.o \
+	Samplers/SimilarStructureSampler.o \
 	NeighborhoodFinders/MPNNWrapper.o
 
-#ifeq (${ROBOT_DEF}, $(or PMPCfgSurface PMPSSSurfaceMult))
 ifneq ($(filter $(ROBOT_DEF), PMPSSSurfaceMult PMPCfgSurface),)
   	PMPL_OBJS += Cfg/CfgSurface.o \
                Cfg/SSSurface.o \

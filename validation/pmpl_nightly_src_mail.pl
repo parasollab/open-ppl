@@ -14,8 +14,6 @@ use List::Util qw(min max);
 $outputdir = "/tmp/pmpl_nightly_logs";
 $cron_machine = "zenigata.cse.tamu.edu";
 $MAILTO = "OBPRM\@listserv.tamu.edu";
-$ENV{'PATH'}    = '/usr/local/bin/:/usr/X11R6/bin/:'.$ENV{'PATH'};
-$ENV{'DISPLAY'} = '';
 
 #
 # figure out time and date
@@ -50,14 +48,29 @@ $errcode = max($errcode,
   &get_error_code("$outputdir/$fulldate/pmpl.LINUX_gcc.cfg.debug1.parallel0.out",
     "Configuration: gcc 4.8.2 (platform=LINUX_gcc, robot=cfg, debug=1, parallel=0)"));
 $errcode = max($errcode,
+  &get_error_code("$outputdir/$fulldate/pmpl.LINUX_gcc.multi.debug0.parallel0.out",
+    "Configuration: gcc 4.8.2 (platform=LINUX_gcc, robot=multi, debug=0, parallel=0)"));
+$errcode = max($errcode,
+  &get_error_code("$outputdir/$fulldate/pmpl.LINUX_gcc.multi.debug1.parallel0.out",
+    "Configuration: gcc 4.8.2 (platform=LINUX_gcc, robot=multi, debug=1, parallel=0)"));
+$errcode = max($errcode,
+  &get_error_code("$outputdir/$fulldate/pmpl.LINUX_gcc.reach.debug0.parallel0.out",
+    "Configuration: gcc 4.8.2 (platform=LINUX_gcc, robot=reach, debug=0, parallel=0)"));
+$errcode = max($errcode,
+  &get_error_code("$outputdir/$fulldate/pmpl.LINUX_gcc.reach.debug1.parallel0.out",
+    "Configuration: gcc 4.8.2 (platform=LINUX_gcc, robot=reach, debug=1, parallel=0)"));
+$errcode = max($errcode,
   &get_error_code("$outputdir/$fulldate/pmpl.LINUX_gcc.surface.debug0.parallel0.out",
     "Configuration: gcc 4.8.2 (platform=LINUX_gcc, robot=surface, debug=0, parallel=0)"));
 $errcode = max($errcode,
   &get_error_code("$outputdir/$fulldate/pmpl.LINUX_gcc.surface.debug1.parallel0.out",
     "Configuration: gcc 4.8.2 (platform=LINUX_gcc, robot=surface, debug=1, parallel=0)"));
-#$errcode = max($errcode,
-#  &get_error_code("$outputdir/$fulldate/pmpl.LINUX_gcc.reach.debug0.parallel0.out",
-#    "Configuration: gcc 4.8.2 (platform=LINUX_gcc, robot=reach, debug=0, parallel=0)"));
+$errcode = max($errcode,
+  &get_error_code("$outputdir/$fulldate/pmpl.LINUX_gcc.cfg.debug0.parallel1.out",
+    "Configuration: gcc 4.8.2 (platform=LINUX_gcc, robot=cfg, debug=0, parallel=1)"));
+$errcode = max($errcode,
+  &get_error_code("$outputdir/$fulldate/pmpl.LINUX_gcc.cfg.debug1.parallel1.out",
+    "Configuration: gcc 4.8.2 (platform=LINUX_gcc, robot=cfg, debug=1, parallel=1)"));
 
 #
 # Send out e-mail
@@ -119,7 +132,16 @@ sub get_error_code {
     @log = <LOG>;
     close(LOG);
     foreach $i (@log) {
-      if (($i=~/failed/i) || (($i=~/error/i) && !($i=~/tinyxmlerror/) && !($i=~/-Werror/) && !($i=~/Makefile\.in/))) {  #last Makefile.in is a hack until solid makefile cleaned up or nightly scripts are working
+      if (
+        ($i=~/failed/i) ||
+        #($i=~/E210002/) ||          #svn errors
+        (($i=~/error/i) &&          #compile errors
+          !($i=~/tinyxmlerror/) &&  #excluding...
+          !($i=~/-Werror/) &&
+          !($i=~/Makefile\.in/))    #last Makefile.in is a hack until solid
+                                    #makefile cleaned up or nightly scripts are
+                                    #working
+      ) {
         if ($error_code<ERRORS) { $error_code = ERRORS; }
         $details = $details.$i;
       }

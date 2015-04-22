@@ -102,45 +102,42 @@ Run()
 
   //generate samples
   vector<CfgType> samples;
-  for(map<string, pair<int, int> >::const_iterator S = m_samplerLabels.begin(); S != m_samplerLabels.end(); ++S) {
-    typename MPTraits::MPProblemType::SamplerPointer sampler = this->GetMPProblem()->GetSampler(S->first);
-    vector<CfgType> inNodes(S->second.first);
-    vector<CfgType> outNodes;
-    sampler->Sample(this->GetMPProblem()->GetEnvironment(), this->m_boundary, *(this->GetMPProblem()->GetStatClass()),
-      inNodes.begin(), inNodes.end(), S->second.second, back_inserter(outNodes));
-    samples.insert(samples.end(), outNodes.begin(), outNodes.end());
-    if(this->m_debug) cout << "\tgenerated " << outNodes.size() << " samples using method \"" << S-> first << "\"\n";
+  for(auto sampler : m_samplerLabels) {
+    typename MPTraits::MPProblemType::SamplerPointer s = this->GetSampler(sampler.first);
+    s->Sample(sampler.second.first, sampler.second.second,
+        this->m_boundary, back_inserter(samples));
   }
-  if(this->m_debug) cout << "\tgenerated " << samples.size() << " samples total\n";
+  if(this->m_debug)
+    cout << "\tgenerated " << samples.size() << " samples total" << endl;
 
   //for each sample, compare baseline clearance and input clearance
-  for(typename vector<CfgType>::iterator S = samples.begin(); S != samples.end(); ++S) {
-    if(this->m_debug) cout << "computing clearances for cfg: " << *S << endl;
+  for(auto sample : samples) {
+    if(this->m_debug) cout << "computing clearances for cfg: " << sample << endl;
 
     //compute baseline clearance
     double baselineClearance = MAX_INT;
     CfgType baselineWitness;
     CDInfo baselineInfo;
-    if(m_clearanceUtilities.front().CollisionInfo(*S, baselineWitness, this->m_boundary, baselineInfo)) {
+    if(m_clearanceUtilities.front().CollisionInfo(sample, baselineWitness, this->m_boundary, baselineInfo)) {
       baselineClearance = baselineInfo.m_minDist;
     } else {
-      cerr << "Error, could not compute baseline collision information for cfg: " << *S << endl;
+      cerr << "Error, could not compute baseline collision information for cfg: " << sample << endl;
     }
     if(this->m_debug) cout << "\tbaseline = " << baselineClearance << "\twitness = " << baselineWitness << endl;
-    S->m_witnessCfg = shared_ptr<Cfg>(); //reset clearance calculation cache
+    sample.m_witnessCfg = shared_ptr<Cfg>(); //reset clearance calculation cache
 
     for(typename vector<ClearanceUtility<MPTraits> >::iterator C = m_clearanceUtilities.begin()+1; C != m_clearanceUtilities.end(); ++C) {
       //compute input clearance
       double approxClearance = MAX_INT;
       CfgType approxWitness;
       CDInfo approxInfo;
-      if(C->CollisionInfo(*S, approxWitness, this->m_boundary, approxInfo)) {
+      if(C->CollisionInfo(sample, approxWitness, this->m_boundary, approxInfo)) {
         approxClearance = approxInfo.m_minDist;
       } else {
-        cerr << "Error, could not compute approx collision information for cfg: " << *S << endl;
+        cerr << "Error, could not compute approx collision information for cfg: " << sample << endl;
       }
       if(this->m_debug) cout << "\tapprox = " << approxClearance << "\twitness = " << approxWitness << endl;
-      S->m_witnessCfg = shared_ptr<Cfg>(); //reset clearance calculation cache
+      sample.m_witnessCfg = shared_ptr<Cfg>(); //reset clearance calculation cache
 
       //calculate difference
       if(this->m_debug) cout << "\tdifference = " << approxClearance - baselineClearance << "\tdistance = " << this->GetMPProblem()->GetDistanceMetric(m_dmLabel)->Distance(approxWitness, baselineWitness) << endl;

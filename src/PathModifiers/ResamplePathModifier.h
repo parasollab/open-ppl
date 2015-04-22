@@ -224,7 +224,7 @@ ResamplePathModifier<MPTraits>::FindNeighbors(CfgType& _previous, CfgType& _curr
 
   for(size_t k=0; k < _maxAttempts && numOfSamples > 0; ++k) {
     CfgType r, c;
-    r.GetRandomRay(m_stepSize, env, dm);
+    r.GetRandomRay(m_stepSize, dm);
     c = r + _current;
     newConfigurationWeight = c.GetSmoothingValue(m_clearanceUtils, m_boundary);
     if((newConfigurationWeight > oldConfigurationWeight && m_typeName == "MAX_CLEARANCE") ||

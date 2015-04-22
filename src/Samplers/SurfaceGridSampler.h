@@ -1,3 +1,10 @@
+#ifndef SURFACE_GRID_SAMPLER_H_
+#define SURFACE_GRID_SAMPLER_H_
+
+#ifdef PMPCfgSurface
+
+#include "SamplerMethod.h"
+
 /*
  * SurfaceGridSampler.h
  * Grid Sampling in the surface.
@@ -20,15 +27,6 @@
  *      if o is valid
  *        add p to graph
  * */
-
-#ifndef SURFACEGRIDSAMPLER_H_
-#define SURFACEGRIDSAMPLER_H_
-
-#ifdef PMPCfgSurface
-
-#include "SamplerMethod.h"
-
-
 template<class MPTraits>
 class SurfaceGridSampler : public SamplerMethod<MPTraits> {
 
@@ -70,18 +68,18 @@ class SurfaceGridSampler : public SamplerMethod<MPTraits> {
     }
 
     //Generates grid cfgs over each navigable surface
-    virtual bool Sampler(Environment* _env, shared_ptr<Boundary> _bb,
-        StatClass& _stats, CfgType& _cfgIn, vector<CfgType>& _cfgOut,
-        vector<CfgType>& _cfgCol) {
+    virtual bool Sampler(CfgType& _cfg, shared_ptr<Boundary> _boundary,
+        vector<CfgType>& _result, vector<CfgType>& _collision) {
+      Environment* env = this->GetEnvironment();
       string callee(this->GetNameAndLabel());
       callee += "::SampleImpl()";
-      ValidityCheckerPointer vcp = this->GetMPProblem()->GetValidityChecker(m_vcLabel);
-      int numSurfaces=  _env->GetNavigableSurfacesCount(); //Number of navigable surface
+      ValidityCheckerPointer vcp = this->GetValidityChecker(m_vcLabel);
+      int numSurfaces=  env->GetNavigableSurfacesCount(); //Number of navigable surface
       for(int i=-1; i<numSurfaces; i++) {
         //For the navigable surfaces not including the surface -1 (ground)
         if(i>=0){
           //Get navigable surface by number and get the polyhedron of that surface
-          shared_ptr<MultiBody> surfi = _env->GetNavigableSurface((size_t) i);
+          shared_ptr<MultiBody> surfi = env->GetNavigableSurface((size_t) i);
           shared_ptr<FixedBody> fb = surfi->GetFixedBody(0);
           GMSPolyhedron& polyhedron = fb->GetWorldPolyhedron();
           //Obtain the bondaries of the surface
@@ -105,9 +103,9 @@ class SurfaceGridSampler : public SamplerMethod<MPTraits> {
                 bool isValid = vcp->IsValid(tmp, callee);
                 if(isValid){
                   //Add valid surface cfg
-                  _cfgOut.push_back(tmp);
+                  _result.push_back(tmp);
                 }else{
-                  _cfgCol.push_back(tmp);
+                  _collision.push_back(tmp);
                 }
               }
             }
@@ -116,8 +114,8 @@ class SurfaceGridSampler : public SamplerMethod<MPTraits> {
         //Ground grid sampling
         else if(i==-1){
           //Get environment boundaries for axis x and z
-          pair<double, double> dxx = _env->GetRange(0, _bb);
-          pair<double, double> dxz = _env->GetRange(2, _bb);
+          pair<double, double> dxx = env->GetRange(0, _boundary);
+          pair<double, double> dxz = env->GetRange(2, _boundary);
           for(double itdx=dxx.first; itdx<dxx.second; itdx+=m_dx){
             for(double itdz=dxz.first; itdz<dxz.second; itdz+=m_dz){
               Point2d pt(itdx,itdz);
@@ -128,9 +126,9 @@ class SurfaceGridSampler : public SamplerMethod<MPTraits> {
               tmp.SetHeight(0);
               bool isValid = vcp->IsValid(tmp, callee);
               if(isValid){
-                _cfgOut.push_back(tmp);
+                _result.push_back(tmp);
               }else{
-                _cfgCol.push_back(tmp);
+                _collision.push_back(tmp);
               }
             }
           }
@@ -142,5 +140,3 @@ class SurfaceGridSampler : public SamplerMethod<MPTraits> {
 
 #endif
 #endif
-
-

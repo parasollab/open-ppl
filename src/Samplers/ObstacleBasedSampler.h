@@ -6,10 +6,6 @@
 
 #include "SamplerMethod.h"
 
-class Environment;
-class StatClass;
-class CDInfo;
-
 template <typename MPTraits>
 class ObstacleBasedSampler : public SamplerMethod<MPTraits> {
   public:
@@ -18,8 +14,8 @@ class ObstacleBasedSampler : public SamplerMethod<MPTraits> {
     typedef typename MPProblemType::DistanceMetricPointer DistanceMetricPointer;
     typedef typename MPProblemType::ValidityCheckerPointer ValidityCheckerPointer;
 
-    ObstacleBasedSampler(Environment* _env = NULL, string _vcLabel = "",
-        string _dmLabel = "", int _free = 1, int _coll = 0, double _step = 0,
+    ObstacleBasedSampler(string _vcLabel = "", string _dmLabel = "",
+        int _free = 1, int _coll = 0, double _step = 0,
         bool _useBBX = true, string _pointSelection = "cspace");
 
     ObstacleBasedSampler(MPProblemType* _problem, XMLNodeReader& _node);
@@ -29,14 +25,12 @@ class ObstacleBasedSampler : public SamplerMethod<MPTraits> {
     virtual void Print(ostream& _os) const;
 
     // Generates and adds shells to their containers
-    template<typename OutputIterator>
-    OutputIterator GenerateShells(Environment* _env, shared_ptr<Boundary> _bb,
-        StatClass& _stats, CfgType& _cFree, CfgType& _cColl,
-        CfgType& _incr, OutputIterator _result);
+    void GenerateShells(shared_ptr<Boundary> _boundary,
+        CfgType& _cFree, CfgType& _cColl, CfgType& _incr,
+        vector<CfgType>& _result, vector<CfgType>& _collision);
 
-    virtual bool Sampler(Environment* _env, shared_ptr<Boundary> _bb,
-        StatClass& _stats, CfgType& _cfgIn, vector<CfgType>& _cfgOut,
-        vector<CfgType>& _cfgCol);
+    virtual bool Sampler(CfgType& _cfg, shared_ptr<Boundary> _boundary,
+        vector<CfgType>& _result, vector<CfgType>& _collision);
 
     ////////////////////////////////////////////////////////////////
     // The following was added after unification with WOBPRM code //
@@ -61,8 +55,7 @@ class ObstacleBasedSampler : public SamplerMethod<MPTraits> {
     CfgType ChooseExtremeVertex(shared_ptr<MultiBody> _mBody, bool _isFreeBody);
 
     // Checks m_pointSelection and returns an appropriate CfgType
-    virtual CfgType ChooseASample(CfgType& _cfgIn, Environment* _env,
-        shared_ptr<Boundary> _bb);
+    virtual CfgType ChooseASample(CfgType& _cfg);
 
   private:
     // Returns a CfgType with the coordinates specified in the vector and no rotation
@@ -80,23 +73,18 @@ class ObstacleBasedSampler : public SamplerMethod<MPTraits> {
 
 template<class MPTraits>
 ObstacleBasedSampler<MPTraits>::
-ObstacleBasedSampler(Environment* _env, string _vcLabel, string _dmLabel,
-    int _free, int _coll, double _step, bool _useBBX, string _pointSelection)
-  : m_vcLabel(_vcLabel), m_dmLabel(_dmLabel), m_nShellsFree(_free),
+ObstacleBasedSampler(string _vcLabel, string _dmLabel,
+    int _free, int _coll, double _step, bool _useBBX, string _pointSelection) :
+  m_vcLabel(_vcLabel), m_dmLabel(_dmLabel), m_nShellsFree(_free),
   m_nShellsColl(_coll), m_stepSize(_step), m_useBBX(_useBBX),
   m_pointSelection(_pointSelection) {
     this->SetName("ObstacleBasedSampler");
-    // If the step size is unreasonable, set it to the minimum
-    if(m_stepSize <= 0.0) {
-      if(_env)
-        m_stepSize = min(_env->GetPositionRes(), _env->GetOrientationRes());
-    }
   }
 
 template<class MPTraits>
 ObstacleBasedSampler<MPTraits>::
-ObstacleBasedSampler(MPProblemType* _problem, XMLNodeReader& _node)
-  : SamplerMethod<MPTraits>(_problem, _node) {
+ObstacleBasedSampler(MPProblemType* _problem, XMLNodeReader& _node) :
+  SamplerMethod<MPTraits>(_problem, _node) {
     this->SetName("ObstacleBasedSampler");
     ParseXML(_node);
     Environment* env = _problem->GetEnvironment();
@@ -154,28 +142,24 @@ Print(ostream& _os) const {
 
 // Generates and adds shells to their containers
 template<class MPTraits>
-template<typename OutputIterator>
-OutputIterator
+void
 ObstacleBasedSampler<MPTraits>::
-GenerateShells(Environment* _env, shared_ptr<Boundary> _bb, StatClass& _stats,
-    CfgType& _cFree, CfgType& _cColl, CfgType& _incr, OutputIterator _result) {
+GenerateShells(shared_ptr<Boundary> _boundary,
+    CfgType& _cFree, CfgType& _cColl, CfgType& _incr,
+    vector<CfgType>& _result, vector<CfgType>& _collision) {
 
+  Environment* env = this->GetEnvironment();
   string callee = this->GetNameAndLabel() + "::GenerateShells()";
-  ValidityCheckerPointer vcm = this->GetMPProblem()->
-    GetValidityChecker(m_vcLabel);
+  ValidityCheckerPointer vcm = this->GetValidityChecker(m_vcLabel);
   if(this->m_debug)
     cout << "nShellsColl = " << m_nShellsColl << endl;
 
   // Add free shells
   for(int i = 0; i < m_nShellsFree; i++) {
     // If the shell is valid
-    if(_env->InBounds(_cFree, _bb) &&
-        vcm->IsValid(_cFree, callee)) {
-      _stats.IncNodesGenerated(this->GetNameAndLabel());
-      // Add shell
-      *_result = _cFree;
-      _result++;
-    }
+    if(env->InBounds(_cFree, _boundary) &&
+        vcm->IsValid(_cFree, callee))
+      _result.push_back(_cFree);
     // Get next shell
     _cFree += _incr;
   }
@@ -186,33 +170,33 @@ GenerateShells(Environment* _env, shared_ptr<Boundary> _bb, StatClass& _stats,
   // Add collision shells
   for(int i = 0; i < m_nShellsColl; i++) {
     // If the shell is valid
-    if(_env->InBounds(_cColl, _bb) &&
-        !vcm->IsValid(_cColl, callee)) {
-      _stats.IncNodesGenerated(this->GetNameAndLabel());
-      // Add shell
-      *_result = _cColl;
-      _result++;
-    }
+    if(env->InBounds(_cColl, _boundary) &&
+        !vcm->IsValid(_cColl, callee))
+      _collision.push_back(_cColl);
     // Get next shell
     _cColl += _incr;
   }
-  return _result;
 }
 
 template<class MPTraits>
 bool
 ObstacleBasedSampler<MPTraits>::
-Sampler(Environment* _env, shared_ptr<Boundary> _bb, StatClass& _stats,
-    CfgType& _cfgIn, vector<CfgType>& _cfgOut, vector<CfgType>& _cfgCol) {
-  string callee = this->GetNameAndLabel() + "::Sampler()";
-  ValidityCheckerPointer vcm = this->GetMPProblem()->GetValidityChecker(m_vcLabel);
-  DistanceMetricPointer dm = this->GetMPProblem()->GetDistanceMetric(m_dmLabel);
+Sampler(CfgType& _cfg, shared_ptr<Boundary> _boundary,
+    vector<CfgType>& _result, vector<CfgType>& _collision) {
 
-  _stats.IncNodesAttempted(this->GetNameAndLabel());
+  Environment* env = this->GetEnvironment();
+  // If the step size is unreasonable, set it to the minimum
+  if(m_stepSize <= 0.0) {
+    m_stepSize = min(env->GetPositionRes(), env->GetOrientationRes());
+  }
+
+  string callee = this->GetNameAndLabel() + "::Sampler()";
+  ValidityCheckerPointer vcm = this->GetValidityChecker(m_vcLabel);
+  DistanceMetricPointer dm = this->GetDistanceMetric(m_dmLabel);
 
   // Old state
-  CfgType c1 = ChooseASample(_cfgIn, _env, _bb);
-  bool c1BBox = _env->InBounds(c1, _bb);
+  CfgType c1 = ChooseASample(_cfg);
+  bool c1BBox = env->InBounds(c1, _boundary);
   bool c1Free = vcm->IsValid(c1, callee);
 
   // New state
@@ -222,7 +206,7 @@ Sampler(Environment* _env, shared_ptr<Boundary> _bb, StatClass& _stats,
 
   // Create a random ray
   CfgType r;
-  r.GetRandomRay(m_stepSize, _env, dm);
+  r.GetRandomRay(m_stepSize, dm);
   if(r == CfgType()) {
     if(this->m_debug)
       cerr << "Random ray in OBPRM Sampler is 0-valued!\
@@ -237,7 +221,7 @@ Sampler(Environment* _env, shared_ptr<Boundary> _bb, StatClass& _stats,
     c1Free = c2Free;
     // Update new state
     c2 += r;
-    c2BBox = _env->InBounds(c2, _bb);
+    c2BBox = env->InBounds(c2, _boundary);
     c2Free = vcm->IsValid(c2, callee);
   }
   // If new state is in BBox (there must be a validity change)
@@ -246,15 +230,13 @@ Sampler(Environment* _env, shared_ptr<Boundary> _bb, StatClass& _stats,
       // Reverse direction of r
       r = -r;
       // Process configurations
-      GenerateShells(_env, _bb, _stats, c1, c2, r,
-          back_insert_iterator<vector<CfgType> >(_cfgOut));
-      _cfgCol.push_back(c2);
+      GenerateShells(_boundary, c1, c2, r, _result, _collision);
+      _collision.push_back(c2);
     }
     else { // New state (c2) is free
       // Process configurations
-      GenerateShells(_env, _bb, _stats, c2, c1, r,
-          back_insert_iterator<vector<CfgType> >(_cfgOut));
-      _cfgCol.push_back(c1);
+      GenerateShells(_boundary, c2, c1, r, _result, _collision);
+      _collision.push_back(c1);
     }
     return true;
   }
@@ -262,9 +244,8 @@ Sampler(Environment* _env, shared_ptr<Boundary> _bb, StatClass& _stats,
     // Reverse direction of r
     r = -r;
     // Process configurations
-    GenerateShells(_env, _bb, _stats, c1, c2, r,
-        back_insert_iterator<vector<CfgType> >(_cfgOut));
-    _cfgCol.push_back(c2);
+    GenerateShells(_boundary, c1, c2, r, _result, _collision);
+    _collision.push_back(c2);
     return true;
   }
   return false;
@@ -375,19 +356,15 @@ ChooseExtremeVertex(shared_ptr<MultiBody> _mBody, bool _isFreeBody) {
 template<class MPTraits>
 typename ObstacleBasedSampler<MPTraits>::CfgType
 ObstacleBasedSampler<MPTraits>::
-ChooseASample(CfgType& _cfgIn, Environment* _env, shared_ptr<Boundary> _bb) {
+ChooseASample(CfgType& _cfg) {
   shared_ptr<MultiBody> mBody;
   if(m_pointSelection != "cspace") {
-    mBody = _env->GetRandomObstacle();
+    mBody = this->GetEnvironment()->GetRandomObstacle();
   }
 
   // cspace is for Configuration space (This is for unifying OBPRM and WOBPRM)
-  if(m_pointSelection == "cspace") {
-    if(_cfgIn == CfgType())
-      // Get random configuration inside bounding box
-      _cfgIn.GetRandomCfg(_env, _bb);
-    return _cfgIn;
-  }
+  if(m_pointSelection == "cspace")
+    return _cfg;
   else if(m_pointSelection == "cM")
     return ChooseCenterOfMass(mBody);
   else if(m_pointSelection == "rV")

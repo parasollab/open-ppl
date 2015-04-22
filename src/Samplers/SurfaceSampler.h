@@ -1,11 +1,10 @@
-#ifndef SURFACESAMPLER_H_
-#define SURFACESAMPLER_H_
+#ifndef SURFACE_SAMPLER_H_
+#define SURFACE_SAMPLER_H_
 
 #ifdef PMPCfgSurface
 
 #include "SamplerMethod.h"
 #include "Utilities/MedialAxisUtilities.h"
-
 
 template <class MPTraits>
 class SurfaceSampler : public SamplerMethod<MPTraits> {
@@ -123,14 +122,14 @@ class SurfaceSampler : public SamplerMethod<MPTraits> {
       return closeD;
     }
 
-    virtual bool Sampler(Environment* _env, shared_ptr<Boundary> _bb,
-        StatClass& _stats, CfgType& _cfgIn, vector<CfgType>& _cfgOut,
-        vector<CfgType>& _cfgCol) {
+    virtual bool Sampler(CfgType& _cfgIn, shared_ptr<Boundary> _boundary,
+        vector<CfgType>& _result, vector<CfgType>& _collision) {
+      Environment* env = this->GetEnvironment();
       string callee(this->GetNameAndLabel());
       callee += "::SampleImpl()";
-      ValidityCheckerPointer vcp = this->GetMPProblem()->GetValidityChecker(m_vcLabel);
+      ValidityCheckerPointer vcp = this->GetValidityChecker(m_vcLabel);
 
-      int numSurfaces =  _env->GetNavigableSurfacesCount();
+      int numSurfaces =  env->GetNavigableSurfacesCount();
       int attempts = 0;
       SurfaceMedialAxisUtility<MPTraits> mau(this->GetMPProblem(), m_vcLabel, "Euclidean");
       //mau.SetDebug(true);
@@ -140,10 +139,10 @@ class SurfaceSampler : public SamplerMethod<MPTraits> {
 	if( i==-1 ) thisSurfaceSampleByDensity = false;
 	cout << " Sampling for surface: " << i << " density sampling: " << thisSurfaceSampleByDensity << endl;
 	if( this->m_debug) cout << " Sampling for surface: " << i << endl;
-	if( this->m_debug) cout << " num usable multibodies: " << _env->GetUsableMultiBodyCount() << " active bodies: " << _env->GetActiveBodyCount() << endl;
+	if( this->m_debug) cout << " num usable multibodies: " << env->GetUsableMultiBodyCount() << " active bodies: " << env->GetActiveBodyCount() << endl;
 	string iSurfName="BASE";
 	if( i>=0 )
-	   iSurfName=_env->GetNavigableSurface((size_t) i)->GetLabel();
+	   iSurfName=env->GetNavigableSurface((size_t) i)->GetLabel();
 	if( find(m_surfacesToIgnore.begin(),m_surfacesToIgnore.end(), iSurfName) != m_surfacesToIgnore.end() ) continue;
 	map<string,double>::iterator nit = m_customSurfaceClearance.find(iSurfName);
 
@@ -156,7 +155,7 @@ class SurfaceSampler : public SamplerMethod<MPTraits> {
 	vector<double> cfgsAreaRepresented;
 
 	if( thisSurfaceSampleByDensity ) { //sample by density
-	  shared_ptr<MultiBody> surfi = _env->GetNavigableSurface((size_t) i);
+	  shared_ptr<MultiBody> surfi = env->GetNavigableSurface((size_t) i);
 	  shared_ptr<FixedBody> fb = surfi->GetFixedBody(0);
 	  GMSPolyhedron& polyhedron = fb->GetWorldPolyhedron();
 	  double surfaceArea = polyhedron.m_area;
@@ -167,7 +166,7 @@ class SurfaceSampler : public SamplerMethod<MPTraits> {
             for(int t=0; t<m_maxAttempts && density<m_DensityPercent; t++) {
 	      CfgType tmp;
 	      tmp.SetSurfaceID(i);
-	      tmp.GetRandomCfg(_env,_bb);
+	      tmp.GetRandomCfg(env,_boundary);
 	      Point3d cdPt;
 	      Point2d pos2d = tmp.GetPos();
 	      double  h     = tmp.GetHeight();
@@ -187,7 +186,7 @@ class SurfaceSampler : public SamplerMethod<MPTraits> {
 		//this is a valid node because clearance is large enough
 		//add node
 		nodeClearance = thisSurfaceClearance; //cap the area at this iterations clear
-		_cfgOut.push_back(tmp);
+		_result.push_back(tmp);
 		cfgsOnSurface.push_back(tmp);
 		cfgsAreaRepresented.push_back(nodeClearance);
 		curAreaCovered+=PI*nodeClearance*nodeClearance;
@@ -210,13 +209,12 @@ class SurfaceSampler : public SamplerMethod<MPTraits> {
 	  if(this->m_debug) VDClearAll();
 	  do {
 	    bool validFound=false;
-	    _stats.IncNodesAttempted(this->GetNameAndLabel());
 	    attempts++;
 	    CfgType tmp;
 	    tmp.SetSurfaceID(i);
-	    tmp.GetRandomCfg(_env,_bb);
+	    tmp.GetRandomCfg(env,_boundary);
 	    double clear = MAX_DBL;
-	    bool inBBX = _env->InBounds(tmp, _bb);
+	    bool inBBX = env->InBounds(tmp, _boundary);
 	    if(this->m_debug) cout<<"tmp::"<<tmp<<" sid: "<< tmp.GetSurfaceID() << endl;
 	    if(this->m_debug) cout<<"InBoundary::"<<inBBX<<endl;
 	    if(inBBX) {
@@ -227,22 +225,22 @@ class SurfaceSampler : public SamplerMethod<MPTraits> {
 		if( i==-1 ) {
 		  if(iterForMA>attempts)  {
 		    bool stillValid = false;
-		    clear=mau.PushCfgToMedialAxis2DSurf(tmp, _bb, stillValid);
+		    clear=mau.PushCfgToMedialAxis2DSurf(tmp, _boundary, stillValid);
 		    validFound=true;
 		    if(this->m_debug) cout << " adding MA sample surf=-1" << endl;
 		  }
 		  else if(iterForObs>attempts) {
 		    Point2d cdPt;
-		    clear = mau.GetClearance2DSurf(_env, tmp.GetPos(), cdPt);
+		    clear = mau.GetClearance2DSurf(env, tmp.GetPos(), cdPt);
 		    int j=0;
 		    isValid=false;
 		    while( (!isValid ||
 			  (clear>m_maxObsClearance) ||
 			  (clear<m_minObsClearance)) &&
 			(j<m_obsSampleAttemptsPerIter) ) {
-		      tmp.GetRandomCfg(_env,_bb);
+		      tmp.GetRandomCfg(env,_boundary);
 		      isValid = vcp->IsValid(tmp, callee);
-		      clear = mau.GetClearance2DSurf(_env, tmp.GetPos(), cdPt);
+		      clear = mau.GetClearance2DSurf(env, tmp.GetPos(), cdPt);
 		      j++;
 		    }
 
@@ -258,7 +256,7 @@ class SurfaceSampler : public SamplerMethod<MPTraits> {
 		  else {
 		    validFound=true; //this is the random case (which should be true)
 		    Point2d cdPt;
-		    clear = mau.GetClearance2DSurf(_env, tmp.GetPos(), cdPt);
+		    clear = mau.GetClearance2DSurf(env, tmp.GetPos(), cdPt);
 		    if(this->m_debug) cout << " adding random sample surf=-1" << endl;
 		  }
 		}
@@ -269,7 +267,7 @@ class SurfaceSampler : public SamplerMethod<MPTraits> {
 		  double  h     = tmp.GetHeight();
 		  Point3d pos3d(pos2d[0], h, pos2d[1]);
 		  //push to medial axis - call
-		  shared_ptr<MultiBody> surfi = _env->GetNavigableSurface((size_t) i);
+		  shared_ptr<MultiBody> surfi = env->GetNavigableSurface((size_t) i);
 		  shared_ptr<FixedBody> fb = surfi->GetFixedBody(0);
 		  GMSPolyhedron& polyhedron = fb->GetWorldPolyhedron();
 
@@ -294,7 +292,7 @@ class SurfaceSampler : public SamplerMethod<MPTraits> {
 		    validFound = false;
 		    for(int j=0; j<m_obsSampleAttemptsPerIter; j++) {
 		      if( j!= 0 ) {
-			tmp.GetRandomCfg(_env,_bb);
+			tmp.GetRandomCfg(env,_boundary);
 		      }
 		      Point3d cdPt;
 		      Point2d pos2d = tmp.GetPos();
@@ -344,15 +342,15 @@ class SurfaceSampler : public SamplerMethod<MPTraits> {
 		int closeIndex = 0;
 		double d = DistToNearestOnSurf(tmp,cfgsOnSurface, closeIndex);
 		if( stillValid && validFound && (d>thisSurfaceClearance) && (clear>m_overallMinClearanceReq) ) {
-		  //if(this->m_debug) cout << "validFoundIndex::"<<_cfgOut.size()<<" cfg: "<<tmp << " closestNodeDist: " << d << " clear: " << clear <<endl;
-		  _cfgOut.push_back(tmp);
+		  //if(this->m_debug) cout << "validFoundIndex::"<<_result.size()<<" cfg: "<<tmp << " closestNodeDist: " << d << " clear: " << clear <<endl;
+		  _result.push_back(tmp);
 		  cfgsOnSurface.push_back(tmp);
 		}
 		else {
 		  //if(this->m_debug) cout << "validFound but maybe too close cfg: "<< tmp << " dist: " << d << " of closeDist: " << m_closeDist << " or min clearance not right: " << clear << " of " << m_overallMinClearanceReq << " or pushed to collision: " << stillValid << " validFound: " << validFound <<endl;
 		}
 	      } else {
-		_cfgCol.push_back(tmp);
+		_collision.push_back(tmp);
 	      }
 	    }
 
@@ -361,7 +359,7 @@ class SurfaceSampler : public SamplerMethod<MPTraits> {
 	}
       }//for i in surfaces
       if(this->m_debug) cout << "Maximum attempts reached." << endl;
-      if(this->m_debug) cout << "SurfaceSampler:: done with sampling loop: size of cfgOut: " << _cfgOut.size() << endl;
+      if(this->m_debug) cout << "SurfaceSampler:: done with sampling loop: size of result: " << _result.size() << endl;
       return true;
     }
 

@@ -66,6 +66,10 @@ class DefaultWeight {
     double GetClearance() const {return m_clearance;}
     void SetClearance(double _c){m_hasClearance=true; m_clearance = _c;}
 
+    string GetStat(string _stat);
+    bool IsStat(string _stat);
+    void SetStat(string _stat, string _value);
+
     // Data
   protected:
     string m_lpLabel;
@@ -76,6 +80,8 @@ class DefaultWeight {
     int m_checkedMult;
     bool m_hasClearance;
     double m_clearance;
+
+    map<string,string> m_statMap;
 
   public:
     //changed local to member
@@ -127,6 +133,7 @@ DefaultWeight<CfgType>::operator=(const DefaultWeight<CfgType>& _w){
   m_checkedMult = _w.GetChecked();
   m_hasClearance = _w.HasClearance();
   m_clearance = _w.GetClearance();
+  m_statMap = _w.m_statMap;
   return *this;
 }
 
@@ -165,6 +172,33 @@ DefaultWeight<CfgType>::operator<(const DefaultWeight<CfgType>& _other) const {
   return m_weight < _other.m_weight;
 }
 
+template<class CfgType>
+string
+DefaultWeight<CfgType>::GetStat(string _stat) {
+  if(IsStat(_stat)) {
+    return m_statMap[_stat];
+  }
+  else {
+    cout << "DefaultWeight::GetStat -- I cannot find Stat =  " << _stat << endl;
+    exit(-1);
+  }
+}
 
+template<class CfgType>
+bool
+DefaultWeight<CfgType>::IsStat(string _stat) {
+  bool stat = false;
+  if(m_statMap.count(_stat) > 0)
+    stat = true;
+  else
+    stat = false;
+  return stat;
+}
+
+template<class CfgType>
+void
+DefaultWeight<CfgType>::SetStat(string _stat, string _value) {
+  m_statMap[_stat] = _value;
+}
 
 #endif

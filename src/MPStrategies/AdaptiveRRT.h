@@ -60,7 +60,8 @@ class AdaptiveRRT : public BasicRRTStrategy<MPTraits> {
     void UpdateCost(double _cost, string _s, GrowthSet& _gs);
     void RewardGrowthMethod(double _r, string _s, GrowthSet& _gs);
     VID UpdateTree(VID _nearest, CfgType& _new, CfgType& _dir);
-    VID UpdateTree(CfgType& _newCfg, VID _nearVID, bool _againstWall, double _ratio);
+    VID UpdateTree(CfgType& _newCfg, VID _nearVID, bool _againstWall, 
+        double _ratio);
 
 
   private:
@@ -83,12 +84,14 @@ class AdaptiveRRT : public BasicRRTStrategy<MPTraits> {
 template<class MPTraits>
 AdaptiveRRT<MPTraits>::AdaptiveRRT(double _wallPenalty, double _gamma,
     const GrowthSets& _growthSets, CostMethod _c) :
-  m_wallPenalty(_wallPenalty), m_gamma(_gamma), m_growthSets(_growthSets), m_costMethod(_c) {
+  m_wallPenalty(_wallPenalty), m_gamma(_gamma), m_growthSets(_growthSets), 
+  m_costMethod(_c) {
     this->SetName("AdaptiveRRT");
   }
 
 template<class MPTraits>
-AdaptiveRRT<MPTraits>::AdaptiveRRT(MPProblemType* _problem, XMLNodeReader& _node) :
+AdaptiveRRT<MPTraits>::AdaptiveRRT(MPProblemType* _problem, 
+    XMLNodeReader& _node) :
   BasicRRTStrategy<MPTraits>(_problem, _node, false, true){
     this->SetName("AdaptiveRRT");
     ParseXML(_node);
@@ -98,13 +101,17 @@ AdaptiveRRT<MPTraits>::AdaptiveRRT(MPProblemType* _problem, XMLNodeReader& _node
 template<class MPTraits>
 void
 AdaptiveRRT<MPTraits>::ParseXML(XMLNodeReader& _node) {
-  for(XMLNodeReader::childiterator citr = _node.children_begin(); citr != _node.children_end(); ++citr){
+  for(XMLNodeReader::childiterator citr = _node.children_begin(); 
+      citr != _node.children_end(); ++citr){
     if(citr->getName() == "GrowthSet"){
-      double threshold = citr->numberXMLParameter("threshold", true, 0.0, 0.0, 1.0, "Threshold of visibility for selecting GrowthSet");
+      double threshold = citr->numberXMLParameter("threshold", true, 0.0, 0.0, 
+          1.0, "Threshold of visibility for selecting GrowthSet");
       GrowthSet growthSet;
-      for(XMLNodeReader::childiterator citr2 = citr->children_begin(); citr2 != citr->children_end(); ++citr2){
+      for(XMLNodeReader::childiterator citr2 = citr->children_begin(); 
+          citr2 != citr->children_end(); ++citr2){
         if(citr2->getName() == "Extender"){
-          string label = citr2->stringXMLParameter("label", true, "", "Extender strategy");
+          string label = citr2->stringXMLParameter("label", true, "", 
+              "Extender strategy");
           growthSet[label] = make_pair(make_pair(0, 0), 1.0);
           citr2->warnUnrequestedAttributes();
         }
@@ -117,10 +124,14 @@ AdaptiveRRT<MPTraits>::ParseXML(XMLNodeReader& _node) {
       citr->warnUnknownNode();
   }
 
-  m_wallPenalty = _node.numberXMLParameter("wallPenalty", false, 0.5, 0.0, 1.0, "Initial visibility for nodes agains C-obst");
-  m_gamma = _node.numberXMLParameter("gamma", true, 0.5, 0.0, 1.0, "Gamma for adaptivity formulas");
-  string costMethod = _node.stringXMLParameter("cost", true, "fixed", "Cost method");
-  transform(costMethod.begin(), costMethod.end(), costMethod.begin(), ::tolower);
+  m_wallPenalty = _node.numberXMLParameter("wallPenalty", false, 0.5, 0.0, 1.0, 
+      "Initial visibility for nodes agains C-obst");
+  m_gamma = _node.numberXMLParameter("gamma", true, 0.5, 0.0, 1.0, 
+      "Gamma for adaptivity formulas");
+  string costMethod = _node.stringXMLParameter("cost", true, "fixed", 
+      "Cost method");
+  transform(costMethod.begin(), costMethod.end(), costMethod.begin(), 
+      ::tolower);
 
   if(costMethod == "fixed")
     m_costMethod = FIXED;
@@ -129,7 +140,8 @@ AdaptiveRRT<MPTraits>::ParseXML(XMLNodeReader& _node) {
   else if(costMethod == "cycles")
     m_costMethod = CYCLES;
   else{
-    cerr << "Error::Unknown cost method in Adaptive RRT::" << costMethod << endl;
+    cerr << "Error::Unknown cost method in Adaptive RRT::" << costMethod 
+         << endl;
     exit(1);
   }
 }
@@ -162,7 +174,7 @@ AdaptiveRRT<MPTraits>::Initialize(){
   BasicRRTStrategy<MPTraits>::Initialize();
 
   //for each root of the graph, make sure to initialize variables.
-  GraphType* rdmp = this->GetMPProblem()->GetRoadmap()->GetGraph();
+  GraphType* rdmp = this->GetRoadmap()->GetGraph();
   for(typename GraphType::VI v = rdmp->begin(); v!=rdmp->end(); v++){
     v->property().SetStat("Parent", 0);
     v->property().SetStat("Success", 1);
@@ -176,16 +188,17 @@ typename AdaptiveRRT<MPTraits>::VID
 AdaptiveRRT<MPTraits>::ExpandTree(CfgType& _dir){
 
   // Setup MP Variables
-  DistanceMetricPointer dm = this->GetMPProblem()->GetDistanceMetric(this->m_dm);
+  DistanceMetricPointer dm = this->GetDistanceMetric(this->m_dm);
   VID recentVID = INVALID_VID;
 
   //get the expand node from the roadmap
-  NeighborhoodFinderPointer nf = this->GetMPProblem()->GetNeighborhoodFinder(this->m_nf);
+  NeighborhoodFinderPointer nf = this->GetNeighborhoodFinder(this->m_nf);
   vector<pair<VID, double> > kClosest;
-  nf->FindNeighbors(this->GetMPProblem()->GetRoadmap(),
+  nf->FindNeighbors(this->GetRoadmap(),
       this->m_currentTree->begin(), this->m_currentTree->end(),
       _dir, back_inserter(kClosest));
-  CfgType& nearest = this->GetMPProblem()->GetRoadmap()->GetGraph()->GetVertex(kClosest[0].first);
+  CfgType& nearest = 
+      this->GetRoadmap()->GetGraph()->GetVertex(kClosest[0].first);
 
   //get visibility of near node to decide which growth method to do
   double visibility = GetVisibility(nearest);
@@ -216,9 +229,9 @@ AdaptiveRRT<MPTraits>::ExpandTree(CfgType& _dir){
   uint64_t start = GetCycles();
 
   CfgType newCfg;
-  vector<CfgType> intermediateNodes;
-  bool verifiedValid = this->GetMPProblem()->GetExtender(gm)
-    ->Extend(nearest, _dir, newCfg, intermediateNodes);
+  LPOutput<MPTraits> lpOutput;
+  bool verifiedValid = this->GetExtender(gm)
+    ->Extend(nearest, _dir, newCfg, lpOutput);
 
   //end timing from cycles
   uint64_t end = GetCycles();
@@ -230,7 +243,9 @@ AdaptiveRRT<MPTraits>::ExpandTree(CfgType& _dir){
 
   //expansion Failed Penalize nearest with 0
   if(!verifiedValid) {
-    if(this->m_debug) cout << "Growth Failed on::" << nearest << ", with visibility::" << visibility << endl;
+    if(this->m_debug) 
+      cout << "Growth Failed on::" << nearest << ", with visibility::" 
+           << visibility << endl;
     nearest.IncStat("Fail");
     AvgVisibility(nearest, 0);
 
@@ -281,7 +296,8 @@ AdaptiveRRT<MPTraits>::ExpandTree(CfgType& _dir){
 template<class MPTraits>
 string
 AdaptiveRRT<MPTraits>::SelectGrowthMethod(GrowthSet& _gs){
-  if(this->m_debug) cout << ":::::Selecting Growth Method:::::" << endl;
+  if(this->m_debug) 
+    cout << ":::::Selecting Growth Method:::::" << endl;
   map<string, double> pistars, pis;
   double spc = 0.0;
   //compute p_i*/c_i and the sum over all growth methods
@@ -290,7 +306,8 @@ AdaptiveRRT<MPTraits>::SelectGrowthMethod(GrowthSet& _gs){
       cout << "Method::" << gsit->first
         << "::Cost::" << GetCost(gsit->first, _gs)
         << "::Weight::" << gsit->second.second << endl;
-    double pistar = CostInsensitiveProb(gsit->first, _gs)/GetCost(gsit->first, _gs);
+    double pistar = CostInsensitiveProb(gsit->first, _gs)/GetCost(gsit->first, 
+        _gs);
     pistars[gsit->first] = pistar;
     spc += pistar;
   }
@@ -303,11 +320,13 @@ AdaptiveRRT<MPTraits>::SelectGrowthMethod(GrowthSet& _gs){
         << "::Prob::" << pis[gsit->first] << endl;
   }
 
-  if(this->m_debug) cout << endl << endl;
+  if(this->m_debug) 
+    cout << endl << endl;
 
   //select method based upon probability
   double r = DRand(), cumm = 0.0;
-  for(map<string, double>::const_iterator mit = pis.begin(); mit!=pis.end(); ++mit){
+  for(map<string, double>::const_iterator mit = pis.begin(); mit!=pis.end(); 
+      ++mit){
     cumm += mit->second;
     if(r <= cumm) {
       if(this->m_debug) {
@@ -339,10 +358,12 @@ AdaptiveRRT<MPTraits>::UpdateCost(double _cost, string _s, GrowthSet& _gs){
 template<class MPTraits>
 void
 AdaptiveRRT<MPTraits>::RewardGrowthMethod(double _r, string _s, GrowthSet& _gs){
-  if(this->m_debug) cout << "Reward::" << _s << "::" << _r << endl;
+  if(this->m_debug) 
+    cout << "Reward::" << _s << "::" << _r << endl;
   //factor is e^(g * x_i' / K) where g is gamma, x_i' = x_i/p_i* where x_i is
   //the reward r, and K is the number of growth methods
-  double factor = exp(m_gamma * (_r/CostInsensitiveProb(_s, _gs)) / double(_gs.size()));
+  double factor = exp(m_gamma * (_r/CostInsensitiveProb(_s, _gs)) / 
+      double(_gs.size()));
   //update the weight on growth method _s
   _gs[_s].second *= factor;
 }
@@ -351,23 +372,26 @@ AdaptiveRRT<MPTraits>::RewardGrowthMethod(double _r, string _s, GrowthSet& _gs){
 //type.
 template<class MPTraits>
 typename AdaptiveRRT<MPTraits>::VID
-AdaptiveRRT<MPTraits>::UpdateTree(VID _expandNode, CfgType& _newCfg, CfgType& _dir){
-  DistanceMetricPointer dm = this->GetMPProblem()->GetDistanceMetric(this->m_dm);
+AdaptiveRRT<MPTraits>::UpdateTree(VID _expandNode, CfgType& _newCfg, 
+    CfgType& _dir){
+  DistanceMetricPointer dm = this->GetDistanceMetric(this->m_dm);
 
-  CfgType& nearest = this->GetMPProblem()->GetRoadmap()->GetGraph()->GetVertex(_expandNode);
+  CfgType& nearest = this->GetRoadmap()->GetGraph()->GetVertex(_expandNode);
 
   double visibility = GetVisibility(nearest);
   double distToNear = dm->Distance(nearest, _newCfg);
-  //if expansion did not reach at least m_delta * visibility and q_new is not q_rand
-  //Then it will be a partial expansion
+  //if expansion did not reach at least m_delta * visibility and q_new is not 
+  //q_rand. Then it will be a partial expansion
   bool partial = distToNear < this->m_delta && _newCfg != _dir;
   double ratio = distToNear / this->m_delta;
 
   VID returnVID = UpdateTree(_newCfg, _expandNode, partial, ratio);
 
   if(this->m_debug){
-    cout << "near vid::" << _expandNode << "\tvisibility::" << visibility << endl;
-    cout << "new vid::" << returnVID << "\tvisibility::" << GetVisibility(_newCfg) << endl;
+    cout << "near vid::" << _expandNode << "\tvisibility::" << visibility 
+         << endl;
+    cout << "new vid::" << returnVID << "\tvisibility::" 
+         << GetVisibility(_newCfg) << endl;
     cout << "expansionRatio::" << ratio << endl;
   }
 
@@ -377,20 +401,24 @@ AdaptiveRRT<MPTraits>::UpdateTree(VID _expandNode, CfgType& _newCfg, CfgType& _d
 //add node to tree, and update visibility
 template<class MPTraits>
 typename AdaptiveRRT<MPTraits>::VID
-AdaptiveRRT<MPTraits>::UpdateTree(CfgType& _newCfg, VID _nearVID, bool _againstWall, double _ratio){
-  GraphType* rdmp = this->GetMPProblem()->GetRoadmap()->GetGraph();
+AdaptiveRRT<MPTraits>::UpdateTree(CfgType& _newCfg, VID _nearVID, 
+    bool _againstWall, double _ratio){
+  GraphType* rdmp = this->GetRoadmap()->GetGraph();
 
   //add the vertex to the graph
   VID newVID = rdmp->AddVertex(_newCfg);
 
   //calculate edge weight and add edge
   CfgType& parentcfg = rdmp->GetVertex(_nearVID);
-  if(this->m_debug) cout << "parentcfg::" << parentcfg << endl;
+  if(this->m_debug) 
+    cout << "parentcfg::" << parentcfg << endl;
   int weight;
   CfgType incr;
-  Environment* env = this->GetMPProblem()->GetEnvironment();
-  incr.FindIncrement(parentcfg, _newCfg, &weight, env->GetPositionRes(), env->GetOrientationRes());
-  pair<WeightType, WeightType> weights = make_pair(WeightType("RRTExpand", weight), WeightType("RRTExpand", weight));
+  Environment* env = this->GetEnvironment();
+  incr.FindIncrement(parentcfg, _newCfg, &weight, env->GetPositionRes(), 
+      env->GetOrientationRes());
+  pair<WeightType, WeightType> weights = make_pair(WeightType("RRTExpand", 
+      weight), WeightType("RRTExpand", weight));
   rdmp->AddEdge(_nearVID, newVID, weights);
 
   //update the visibility at the new node and near node
@@ -406,7 +434,8 @@ AdaptiveRRT<MPTraits>::UpdateTree(CfgType& _newCfg, VID _nearVID, bool _againstW
   //newCfg inherits half of parents visibility and half of the ratio currently
   //parent is updated with ratio (mostly 1 in this case)
   else{
-    newcfg.SetStat("Visibility", (_ratio + parentcfg.GetStat("Visibility"))/2.0);
+    newcfg.SetStat("Visibility", (_ratio + parentcfg.GetStat("Visibility"))/
+        2.0);
     AvgVisibility(parentcfg, _ratio);
   }
 
@@ -427,7 +456,8 @@ AdaptiveRRT<MPTraits>::AvgVisibility(CfgType& _cfg, double _val){
   double success = _cfg.GetStat("Success");
   double fail = _cfg.GetStat("Fail");
   double total = success+fail;
-  _cfg.SetStat("Visibility", (_cfg.GetStat("Visibility")*(total-1) + _val)/total);
+  _cfg.SetStat("Visibility", (_cfg.GetStat("Visibility")*(total-1) + _val)/
+      total);
 }
 
 //Visibility is stored with the cfg. Isolate definition of visibility to this

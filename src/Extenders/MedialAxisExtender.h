@@ -1,18 +1,16 @@
-/*
- * =============================================================================
- *
- *       Filename:  MedialAxisExtender.h
- *
- *    Description:  Restricts expansion of a tree on/near the medial axis of the
- *    free space.
- *
- * =============================================================================
- */
-#ifndef MEDIALAXISEXTENDER_H_
-#define MEDIALAXISEXTENDER_H_
+#ifndef MEDIAL_AXIS_EXTENDER_H_
+#define MEDIAL_AXIS_EXTENDER_H_
 
 #include "ExtenderMethod.h"
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup Extenders
+/// @brief Extends along medial axis of @cfree.
+///
+/// Extend along the medial axis of @cfree from \f$q_{near}\f$ towards
+/// \f$q_{dir}\f$ until either \f$q_{dir}\f$ is reached, a distance of
+/// \f$\Delta q\f$ is extended, or no progress is made.
+////////////////////////////////////////////////////////////////////////////////
 template<class MPTraits>
 class MedialAxisExtender : public ExtenderMethod<MPTraits> {
   public:
@@ -30,7 +28,7 @@ class MedialAxisExtender : public ExtenderMethod<MPTraits> {
     virtual void Print(ostream& _os) const;
 
     virtual bool Extend(const CfgType& _near, const CfgType& _dir,
-        CfgType& _new, vector<CfgType>& _innerNodes);
+        CfgType& _new, LPOutput<MPTraits>& _lpOutput);
 
   private:
     MedialAxisUtility<MPTraits> m_medialAxisUtility;
@@ -81,7 +79,7 @@ MedialAxisExtender<MPTraits>::Print(ostream& _os) const {
 template<class MPTraits>
 bool
 MedialAxisExtender<MPTraits>::Extend(const CfgType& _near, const CfgType& _dir,
-    CfgType& _new, vector<CfgType>& _innerNodes) {
+    CfgType& _new, LPOutput<MPTraits>& _lpOutput) {
   //Setup
   Environment* env = this->GetMPProblem()->GetEnvironment();
   DistanceMetricPointer dm = this->GetMPProblem()->GetDistanceMetric(m_medialAxisUtility.GetDistanceMetricLabel());
@@ -101,9 +99,9 @@ MedialAxisExtender<MPTraits>::Extend(const CfgType& _near, const CfgType& _dir,
   do {
     curr = tick;
     length += dist;
-    _innerNodes.push_back(curr);
+    _lpOutput.m_intermediates.push_back(curr);
 
-    if(_innerNodes.size() > m_maxIntermediates)
+    if(_lpOutput.m_intermediates.size() > m_maxIntermediates)
       break;
     //take a step at distance _extendDist
     CfgType incr = _dir - curr;
@@ -143,12 +141,12 @@ MedialAxisExtender<MPTraits>::Extend(const CfgType& _near, const CfgType& _dir,
       && length + dist <= m_delta
       );
 
-  _innerNodes.erase(_innerNodes.begin());
-  if(_innerNodes.empty())
+  _lpOutput.m_intermediates.erase(_lpOutput.m_intermediates.begin());
+  if(_lpOutput.m_intermediates.empty())
     return false;
   else {
-    _new = _innerNodes.back();
-    _innerNodes.pop_back();
+    _new = _lpOutput.m_intermediates.back();
+    _lpOutput.m_intermediates.pop_back();
     return true;
   }
 }

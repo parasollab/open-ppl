@@ -28,6 +28,7 @@ private:
 
 public:
   ConstructRoadmap(MPStrategyPointer _mpsm ): m_strategyMethod(_mpsm){ }
+  typedef void result_type;
   void define_type(stapl::typer& _t){
   }
   ConstructRoadmap(const ConstructRoadmap& _wf, std::size_t offset)  {}
@@ -45,8 +46,8 @@ public:
     vector<VID> dummy;
     Region<BoundingBox, MPTraits> bbInfo(boundary,dummy);
     _view.property() = bbInfo;
-    boundary->Print(cout);
-    cout << "\n\n" << endl;
+    //boundary->Print(cout);
+    //cout << "\n\n" << endl;
     m_strategyMethod->SetBoundary(boundary);
     //m_strategyMethod->SetBoundaryIndex(index);
     //add support to set num nodes in MPStrategy method
@@ -81,13 +82,15 @@ public:
 
   }
 
+  typedef void result_type;
+
   void define_type(stapl::typer& _t) {
   }
 
   template <typename BBView, typename RGView>
   void operator()(BBView _v1, RGView _v2) const {
 
-    vector<CfgType> outNodes, colNodes;
+    vector<CfgType> outNodes;
     vector<VID> regionVIDs;
     string callee("Generator");
     BoundingBox bb = _v1;
@@ -96,9 +99,7 @@ public:
     //boundary->testPrint(2);
     ////Generate Node
 
-
-    StatClass* stat = m_problem->GetStatClass();
-    m_sp->Sample(m_problem->GetEnvironment(), boundary, *stat, m_attempts, 10, back_inserter(outNodes), back_inserter(colNodes));
+    m_sp->Sample(m_attempts, 10, boundary, back_inserter(outNodes));
 
     typedef typename vector<CfgType>::iterator VIT;
     for(VIT vit = outNodes.begin(); vit  != outNodes.end(); ++vit) {
@@ -106,7 +107,7 @@ public:
       CfgType tmp = *vit;
       ///Add Valid Node Only
       //TODO: Pass validity checker label as string
-      if(m_problem->GetValidityChecker("cd1")->IsValid(tmp, &callee)) {
+      if(m_problem->GetValidityChecker("cd1")->IsValid(tmp, callee)) {
 
         VID vid = m_problem->GetRoadmap()->GetGraph()->add_vertex(tmp);
         regionVIDs.push_back(vid);
@@ -136,25 +137,18 @@ public:
     m_ncp = _ncp;
   }
 
+  typedef void result_type;
+
   void define_type(stapl::typer& _t) {
   }
 
   template<typename regionView>
   void operator()(regionView _view) const {
-
     vector<VID> regionVIDs = _view.property().RegionVIDs();
 
-    //PrintValue("CONNECTOR-vid size:  ", regionVIDs.size());
-    for(typename vector<VID>::iterator vit = regionVIDs.begin(); vit != regionVIDs.end(); ++vit){
-      //PrintValue("CONNECTOR VID = " , *vit);
-    }
-
-    StatClass* stat = m_problem->GetStatClass();
-
-    // temporary fix for Parallel code to compile
-    stapl::sequential::vector_property_map<typename GraphType::GRAPH,size_t > cmap;
-    m_ncp->Connect(m_problem->GetRoadmap(), *stat, cmap,
-	         regionVIDs.begin(), regionVIDs.end(), regionVIDs.begin(), regionVIDs.end() );
+    m_ncp->Connect(m_problem->GetRoadmap(),
+        regionVIDs.begin(), regionVIDs.end(),
+        regionVIDs.begin(), regionVIDs.end());
   }
 };
 

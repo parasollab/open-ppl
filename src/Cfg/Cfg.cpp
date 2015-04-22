@@ -24,7 +24,7 @@ vector<size_t> Cfg::m_dof;
 vector<size_t> Cfg::m_posdof;
 vector<size_t> Cfg::m_numJoints;
 vector<vector<Cfg::DofType> > Cfg::m_dofTypes;
-vector<Robot> Cfg::m_robots;
+vector<vector<Robot> > Cfg::m_robots;
 
 Cfg::Cfg(size_t _robotIndex) {
   m_v.clear();
@@ -48,18 +48,19 @@ Cfg::SetSize(size_t _size) {
   m_numJoints.resize(_size);
   m_posdof.resize(_size);
   m_dofTypes.resize(_size);
+  m_robots.resize(_size);
 }
 
 void
 Cfg::InitRobots(vector<Robot>& _robots, size_t _index, ostream& _os) {
-  m_robots = _robots;
+  m_robots[_index] = _robots;
   _os << "DoF List: " << endl;
 
   int dof=0;
   size_t posdof = 0;
   size_t numJoints = 0;
   vector<DofType> dofTypes;
-  for(vector<Robot>::iterator rit = m_robots.begin(); rit != m_robots.end(); rit++) {
+  for(vector<Robot>::iterator rit = m_robots[_index].begin(); rit != m_robots[_index].end(); rit++) {
 
     _os << "\tRobot with base index " << rit->m_bodyIndex;
     _os << " (" << rit->m_body->GetFileName() << "):" << endl;
@@ -316,6 +317,38 @@ Cfg::SetData(const vector<double>& _data) {
   m_witnessCfg.reset();
 }
 
+//sets joint angle coordinates to be coordinates from _data + leaves other the same
+void
+Cfg::SetJointData(const vector<double>& _data) {
+  /*
+  if(_data.size() != m_dof) {
+  cout << "\n\nERROR in Cfg::SetData, ";
+  cout << "DOF of data and Cfg are not equal " << _data.size() << "\t!=\t" << m_dof << endl;
+    exit(-1);
+  }
+  */
+
+  
+  unsigned int j=0;
+  for(size_t i = 0; i < m_dof[m_robotIndex]; ++i) {
+    if(m_dofTypes[m_robotIndex][i] == JOINT){
+      if(j>=_data.size()){
+        cout << "\n\nERROR in Cfg::SetJointData, ";
+        cout << "DOF of data:"<<_data.size()<<" not equal to number of joints"<< endl;
+        exit(-1);
+      }
+
+      m_v[i]=_data[j];
+      j++;
+    } 
+  }
+  
+  //m_v = _data;
+  m_witnessCfg.reset();
+  
+}
+
+
 bool
 Cfg::GetLabel(string _label) {
   if(IsLabel(_label)) {
@@ -394,6 +427,47 @@ Cfg::GetOrientation() const {
   return ret;
 }
 
+///////////////////////////////////
+vector<double>
+Cfg::GetNonJoints() const {
+  vector<double> ret;
+  for(size_t i = 0; i < m_dof[m_robotIndex]; ++i) {
+    if(m_dofTypes[m_robotIndex][i] != JOINT)
+      ret.push_back(m_v[i]);
+  }
+  return ret;
+}
+
+vector<double>
+Cfg::GetJoints() const {
+  vector<double> ret;
+  for(size_t i = 0; i < m_dof[m_robotIndex]; ++i) {
+    if(m_dofTypes[m_robotIndex][i] == JOINT)
+      ret.push_back(m_v[i]);
+  }
+  return ret;
+}
+
+vector<double>
+Cfg::GetRotation() const {
+  vector<double> ret;
+  for(size_t i = 0; i < m_dof[m_robotIndex]; ++i) {
+    if(m_dofTypes[m_robotIndex][i] == ROT)
+      ret.push_back(m_v[i]);
+  }
+  return ret;
+}
+
+void
+Cfg::ResetRigidBodyCoordinates() {
+  for(size_t i = 0; i < m_dof[m_robotIndex]; ++i) {
+    if(m_dofTypes[m_robotIndex][i] != JOINT)
+      m_v[i]=0;
+  }
+}
+///////////////////////////////////
+
+
 double
 Cfg::Magnitude() const {
   double result = 0.0;
@@ -424,10 +498,10 @@ Cfg::OrientationMagnitude() const {
 Vector3d
 Cfg::GetRobotCenterPosition() const {
   double x = 0, y = 0, z = 0;
-  int numRobots = m_robots.size();
+  int numRobots = m_robots[m_robotIndex].size();
   int index = 0;
   typedef vector<Robot>::iterator RIT;
-  for(RIT rit = m_robots.begin(); rit != m_robots.end(); rit++) {
+  for(RIT rit = m_robots[m_robotIndex].begin(); rit != m_robots[m_robotIndex].end(); rit++) {
     x += m_v[index];
     y += m_v[index + 1];
     if(rit->m_base == Robot::VOLUMETRIC)
@@ -450,7 +524,7 @@ Cfg::GetRobotCenterofMass(Environment* _env) const {
   int numbodies=0;
   shared_ptr<MultiBody> mb = _env->GetMultiBody(m_robotIndex);
   typedef vector<Robot>::iterator RIT;
-  for(RIT rit = m_robots.begin(); rit != m_robots.end(); rit++) {
+  for(RIT rit = m_robots[m_robotIndex].begin(); rit != m_robots[m_robotIndex].end(); rit++) {
     GMSPolyhedron poly = mb->GetFreeBody(rit->m_bodyIndex)->GetWorldPolyhedron();
     Vector3d polycom(0,0,0);
     for(vector<Vector3d>::const_iterator  vit = poly.m_vertexList.begin(); vit != poly.m_vertexList.end(); ++vit)
@@ -510,7 +584,7 @@ Cfg::ConfigEnvironment(Environment* _env) const {
   shared_ptr<MultiBody> mb = _env->GetMultiBody(m_robotIndex);
   int index = 0;
   typedef vector<Robot>::iterator RIT;
-  for(RIT rit = m_robots.begin(); rit != m_robots.end(); rit++) {
+  for(RIT rit = m_robots[m_robotIndex].begin(); rit != m_robots[m_robotIndex].end(); rit++) {
     int posIndex = index;
     double x = 0, y = 0, z = 0, alpha = 0, beta = 0, gamma = 0;
     if(rit->m_base != Robot::FIXED) {
@@ -699,7 +773,7 @@ Cfg::GetRandomCfgImpl(Environment* _env, shared_ptr<Boundary> _bb) {
   m_v.clear();
   size_t index = 0;
   typedef vector<Robot>::iterator RIT;
-  for(RIT rit = m_robots.begin(); rit != m_robots.end(); rit++) {
+  for(RIT rit = m_robots[m_robotIndex].begin(); rit != m_robots[m_robotIndex].end(); rit++) {
     if(rit->m_base == Robot::PLANAR || rit->m_base == Robot::VOLUMETRIC) {
       Point3d p = _bb->GetRandomPoint();
       size_t posDOF = rit->m_base == Robot::VOLUMETRIC ? 3 : 2;

@@ -98,7 +98,7 @@ CRetractionPathModifier<MPTraits>::ModifyImpl(vector<CfgType>& _path, vector<Cfg
     vector<CfgType> p2 = p1;
 
     CfgType dir;
-    dir.GetRandomRay(step, env, dm);
+    dir.GetRandomRay(step, dm);
 
     int j = 0;
     typedef typename vector<CfgType>::iterator CIT;

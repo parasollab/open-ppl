@@ -12,7 +12,9 @@
 #include "Environment.h"
 
 #ifdef _PARALLEL
-#include <stapl/containers/graph/algorithms/graph_io.hpp>
+#include <containers/graph/algorithms/graph_io.hpp>
+#else
+#include <containers/sequential/graph/algorithms/graph_input_output.h>
 #endif
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -39,7 +41,7 @@ class Roadmap {
 
     //Read graph information from roadmap file.
     void Read(string _filename);
-    void Write(ostream& _os, Environment* _env);
+    void Write(const string& _os, Environment* _env);
 
     //Append nodes and edges from one roadmap (_rdmp) into
     //another roadmap (to_rdmp)
@@ -48,6 +50,7 @@ class Roadmap {
     //access the roadmap graph
     GraphType* GetGraph() {return m_graph;}
     const GraphType* GetGraph() const {return m_graph;}
+    void SetGraph(GraphType* _graph) { m_graph = _graph; }
 
   private:
     GraphType* m_graph; //stapl graph
@@ -103,17 +106,19 @@ Roadmap<MPTraits>::Read(string _filename) {
 
 template<class MPTraits>
 void
-Roadmap<MPTraits>::Write(ostream& _os, Environment* _env){
+Roadmap<MPTraits>::Write(const string& _filename, Environment* _env){
 
-  _os << "#####ENVFILESTART#####";
-  _os << endl << _env->GetEnvFileName();
-  _os << endl << "#####ENVFILESTOP#####";
-  _os << endl;
+  ofstream ofs(_filename);
+  ofs << "#####ENVFILESTART#####" << endl
+    << _env->GetEnvFileName() << endl
+    << "#####ENVFILESTOP#####" << endl;
 
 #ifndef _PARALLEL
-  stapl::sequential::write_graph(*m_graph, _os);         // writes verts & adj lists
+  stapl::sequential::write_graph(*m_graph, ofs);         // writes verts & adj lists
 #else
-  stapl::write_graph(*m_graph, _os);
+  ofs.close();
+  stapl::graph_view<GraphType> gv(*m_graph);
+  write_PMPL_graph(gv, _filename);
 #endif
 }
 

@@ -12,8 +12,7 @@ class UniformMedialAxisSampler : public SamplerMethod<MPTraits> {
     typedef typename MPProblemType::DistanceMetricPointer DistanceMetricPointer;
     typedef typename MPProblemType::ValidityCheckerPointer ValidityCheckerPointer;
 
-    UniformMedialAxisSampler(Environment* _env = NULL,
-        string _vcLabel = "", string _dmLabel = "",
+    UniformMedialAxisSampler(string _vcLabel = "", string _dmLabel = "",
         double _length = 0, double _stepSize = 0, bool _useBoundary = false,
         const ClearanceUtility<MPTraits>& _clearanceUtility = ClearanceUtility<MPTraits>());
 
@@ -21,25 +20,24 @@ class UniformMedialAxisSampler : public SamplerMethod<MPTraits> {
 
     virtual void ParseXML(XMLNodeReader& _node);
     virtual void Print(ostream& _os) const;
-    virtual bool Sampler(Environment* _env, shared_ptr<Boundary> _bb,
-        StatClass& _stats, CfgType& _cfgIn,
-        vector<CfgType>& _cfgOut, vector<CfgType>& _cfgCol);
+
+    virtual bool Sampler(CfgType& _cfg, shared_ptr<Boundary> _boundary,
+        vector<CfgType>& _result, vector<CfgType>& _collision);
 
   protected:
 
-    bool CheckMedialAxisCrossing(Environment* _env,
-        const CfgType& _c1, int _w1,
+    bool CheckMedialAxisCrossing(const CfgType& _c1, int _w1,
         const CfgType& _c2, int _w2);
 
-    int FindVertex(Environment* _env, int _witness, const CfgType& _c);
-    int FindTriangle(Environment* _env, int _witness, const CfgType& _c);
-    bool CheckVertVert(Environment* _env, int _w, int _v1, int _v2);
-    bool CheckTriTri(Environment* _env, int _w, int _t1, int _t2);
-    bool CheckVertTri(Environment* _env, int _w, int _v, int _t);
+    int FindVertex(int _witness, const CfgType& _c);
+    int FindTriangle(int _witness, const CfgType& _c);
+    bool CheckVertVert(int _w, int _v1, int _v2);
+    bool CheckTriTri(int _w, int _t1, int _t2);
+    bool CheckVertTri(int _w, int _v, int _t);
 
-    bool BinarySearch(Environment* _env, shared_ptr<Boundary> _bb, StatClass& _stats,
+    bool BinarySearch(shared_ptr<Boundary> _boundary,
         const CfgType& _c1, int _w1, const CfgType& _c2, int _w2,
-        vector<CfgType>& _cfgOut);
+        vector<CfgType>& _result);
 
   private:
     double m_length;
@@ -51,11 +49,10 @@ class UniformMedialAxisSampler : public SamplerMethod<MPTraits> {
 
 template<class MPTraits>
 UniformMedialAxisSampler<MPTraits>::
-UniformMedialAxisSampler(Environment* _env,
-    string _vcLabel, string _dmLabel,
+UniformMedialAxisSampler(string _vcLabel, string _dmLabel,
     double _length, double _stepSize, bool _useBoundary,
-    const ClearanceUtility<MPTraits>& _clearanceUtility)
-  : m_length(_length), m_stepSize(_stepSize), m_useBoundary(_useBoundary),
+    const ClearanceUtility<MPTraits>& _clearanceUtility) :
+  m_length(_length), m_stepSize(_stepSize), m_useBoundary(_useBoundary),
   m_vcLabel(_vcLabel), m_dmLabel(_dmLabel),
   m_clearanceUtility(_clearanceUtility) {
     this->SetName("UniformMedialAxisSampler");
@@ -104,16 +101,12 @@ Print(ostream& _os) const {
 template<class MPTraits>
 bool
 UniformMedialAxisSampler<MPTraits>::
-Sampler(Environment* _env, shared_ptr<Boundary> _bb,
-    StatClass& _stats, CfgType& _cfgIn,
-    vector<CfgType>& _cfgOut, vector<CfgType>& _cfgCol) {
+Sampler(CfgType& _cfg, shared_ptr<Boundary> _boundary,
+    vector<CfgType>& _result, vector<CfgType>& _collision) {
 
-  _stats.IncNodesAttempted(this->GetNameAndLabel());
-
-  ValidityCheckerPointer vc = this->GetMPProblem()->
-    GetValidityChecker(m_vcLabel);
-  DistanceMetricPointer dm = this->GetMPProblem()->
-    GetDistanceMetric(m_dmLabel);
+  Environment* env = this->GetEnvironment();
+  ValidityCheckerPointer vc = this->GetValidityChecker(m_vcLabel);
+  DistanceMetricPointer dm = this->GetDistanceMetric(m_dmLabel);
 
   string callee(this->GetNameAndLabel() + "::SampleImpl()");
   CDInfo cdInfo;
@@ -121,29 +114,27 @@ Sampler(Environment* _env, shared_ptr<Boundary> _bb,
   bool generated = false;
   int cfg1Witness;
 
-  double length = m_length ? m_length : _env->
-    GetMultiBody(_cfgIn.GetRobotIndex())->GetMaxAxisRange();
+  double length = m_length ? m_length : env->
+    GetMultiBody(_cfg.GetRobotIndex())->GetMaxAxisRange();
 
   //extend boundary
-  _env->ExpandBoundary(length, _cfgIn.GetRobotIndex());
+  env->ExpandBoundary(length, _cfg.GetRobotIndex());
 
   //Generate first cfg
-  CfgType cfg1 = _cfgIn;
-  if(cfg1 == CfgType())
-    cfg1.GetRandomCfg(_env, _bb);
+  CfgType& cfg1 = _cfg;
 
   //restore boundary
-  _env->ExpandBoundary(-length - 2*_env->GetMultiBody(_cfgIn.GetRobotIndex())->
-      GetBoundingSphereRadius(), _cfgIn.GetRobotIndex());
+  env->ExpandBoundary(-length - 2*env->GetMultiBody(_cfg.GetRobotIndex())->
+      GetBoundingSphereRadius(), _cfg.GetRobotIndex());
 
   CfgType tmp;
-  m_clearanceUtility.CollisionInfo(cfg1, tmp, _bb, cfg1.m_clearanceInfo);
+  m_clearanceUtility.CollisionInfo(cfg1, tmp, _boundary, cfg1.m_clearanceInfo);
   cfg1Witness = cfg1.m_clearanceInfo.m_nearestObstIndex;
 
   CfgType cfg2;
   CfgType incr;
 
-  incr.GetRandomRay(length, _env, dm);
+  incr.GetRandomRay(length, dm);
   cfg2 = cfg1 + incr;
 
   CfgType tick = cfg1, temp = cfg1;
@@ -152,20 +143,19 @@ Sampler(Environment* _env, shared_ptr<Boundary> _bb,
   int nTicks;
   CfgType inter;
   inter.FindIncrement(cfg1, cfg2, &nTicks,
-      m_stepSize * _env->GetPositionRes(), m_stepSize * _env->
-      GetOrientationRes());
+      m_stepSize * env->GetPositionRes(),
+      m_stepSize * env->GetOrientationRes());
 
   for(int i=1; i<nTicks; ++i) {
 
     tick += inter;
-    m_clearanceUtility.CollisionInfo(tick, tmp, _bb, tick.m_clearanceInfo);
+    m_clearanceUtility.CollisionInfo(tick, tmp, _boundary, tick.m_clearanceInfo);
     tickWitness = tick.m_clearanceInfo.m_nearestObstIndex;
 
-    bool crossed = CheckMedialAxisCrossing(_env, temp, tempWitness,
+    bool crossed = CheckMedialAxisCrossing(temp, tempWitness,
         tick, tickWitness);
     if(crossed) {
-      if(BinarySearch(_env, _bb, _stats, temp, tempWitness, tick,
-            tickWitness, _cfgOut)) {
+      if(BinarySearch(_boundary, temp, tempWitness, tick, tickWitness, _result)) {
         generated = true;
       }
     }
@@ -180,17 +170,17 @@ Sampler(Environment* _env, shared_ptr<Boundary> _bb,
 template<class MPTraits>
 bool
 UniformMedialAxisSampler<MPTraits>::
-CheckMedialAxisCrossing(Environment* _env,
-    const CfgType& _c1, int _w1,
+CheckMedialAxisCrossing(const CfgType& _c1, int _w1,
     const CfgType& _c2, int _w2) {
 
+  Environment* env = this->GetEnvironment();
   //The closest obstacle is the same, check if the triangles which the
   //witness points belong to are adjacent and form a concave face
   if(_w1 == _w2) {
     //Check if the witness points are on the bounding box
     if(_w1 == -1) {
-      int side1 = _env->GetBoundary()->GetSideID(_c1.GetData());
-      int side2 = _env->GetBoundary()->GetSideID(_c2.GetData());
+      int side1 = env->GetBoundary()->GetSideID(_c1.GetData());
+      int side2 = env->GetBoundary()->GetSideID(_c2.GetData());
       if(side1 == side2)
         return false;
       else
@@ -199,33 +189,33 @@ CheckMedialAxisCrossing(Environment* _env,
 
     //Find the triangles which the witness points belong to first
     //assume obstacle multibodies have 1 body
-    int tempID = FindVertex(_env, _w1, _c1);
+    int tempID = FindVertex(_w1, _c1);
     if(tempID == 1) {
-      tempID = FindTriangle(_env, _w1, _c1);
+      tempID = FindTriangle(_w1, _c1);
       assert(tempID != -1); //triangle id should be found! error!
     }
-    int tickID = FindVertex(_env, _w2, _c2);
+    int tickID = FindVertex(_w2, _c2);
     if(tickID == 1) {
-      tickID = FindTriangle(_env, _w2, _c2);
+      tickID = FindTriangle(_w2, _c2);
       assert(tickID != -1); //triangle id should be found! error!
     }
 
     if(tempID != tickID) {
       //vertex-vertex
       if(tempID < 0 && tickID < 0) {
-        return CheckVertVert(_env, _w1, -(tempID+1), -(tickID+1));
+        return CheckVertVert(_w1, -(tempID+1), -(tickID+1));
       }
       //tiangle-triangle
       else if(tempID >=0 && tickID >= 0) {
-        bool tt = CheckTriTri(_env, _w1, tempID, tickID);
+        bool tt = CheckTriTri(_w1, tempID, tickID);
         return tt;
       }
       //triangle-vertex
       else {
         if(tempID < 0)
-          return CheckVertTri(_env, _w1, -(tempID+1), tickID);
+          return CheckVertTri(_w1, -(tempID+1), tickID);
         else
-          return CheckVertTri(_env, _w1, -(tickID+1), tempID);
+          return CheckVertTri(_w1, -(tickID+1), tempID);
       }
     }
     //triangle id didn't change - no medial axis crossing
@@ -242,14 +232,15 @@ CheckMedialAxisCrossing(Environment* _env,
 template<class MPTraits>
 int
 UniformMedialAxisSampler<MPTraits>::
-FindVertex(Environment* _env, int _witness, const CfgType& _c) {
-  StatClass* stat = this->GetMPProblem()->GetStatClass();
+FindVertex(int _witness, const CfgType& _c) {
+  Environment* env = this->GetEnvironment();
+  StatClass* stat = this->GetStatClass();
   stat->StartClock("FindVertex");
   //Find the vertex which the witness points belong to first
   //assume obstacle multibodies have 1 body
-  GMSPolyhedron& polyhedron = _env->GetMultiBody(_witness)->
+  GMSPolyhedron& polyhedron = env->GetMultiBody(_witness)->
     GetBody(0)->GetPolyhedron();
-  const Transformation& t = _env->GetMultiBody(_witness)->
+  const Transformation& t = env->GetMultiBody(_witness)->
     GetBody(0)->WorldTransformation();
 
   Vector3d witnessPoint = -t * _c.m_clearanceInfo.m_objectPoint;
@@ -268,14 +259,15 @@ FindVertex(Environment* _env, int _witness, const CfgType& _c) {
 template<class MPTraits>
 int
 UniformMedialAxisSampler<MPTraits>::
-FindTriangle(Environment* _env, int _witness, const CfgType& _c) {
-  StatClass* stat = this->GetMPProblem()->GetStatClass();
+FindTriangle(int _witness, const CfgType& _c) {
+  Environment* env = this->GetEnvironment();
+  StatClass* stat = this->GetStatClass();
   stat->StartClock("FindTriangle");
   //Find the triangles which the witness points belong to first
   //assume obstacle multibodies have 1 body
-  GMSPolyhedron& polyhedron = _env->GetMultiBody(_witness)->
+  GMSPolyhedron& polyhedron = env->GetMultiBody(_witness)->
     GetBody(0)->GetPolyhedron();
-  const Transformation& t = _env->GetMultiBody(_witness)->
+  const Transformation& t = env->GetMultiBody(_witness)->
     GetBody(0)->WorldTransformation();
 
   Vector3d witnessPoint = -t * _c.m_clearanceInfo.m_objectPoint;
@@ -334,8 +326,9 @@ FindTriangle(Environment* _env, int _witness, const CfgType& _c) {
 template<class MPTraits>
 bool
 UniformMedialAxisSampler<MPTraits>::
-CheckVertVert(Environment* _env, int _w, int _v1, int _v2) {
-  GMSPolyhedron& polyhedron = _env->GetMultiBody(_w)->GetBody(0)->GetPolyhedron();
+CheckVertVert(int _w, int _v1, int _v2) {
+  Environment* env = this->GetEnvironment();
+  GMSPolyhedron& polyhedron = env->GetMultiBody(_w)->GetBody(0)->GetPolyhedron();
   vector<GMSPolygon>& polygons = polyhedron.m_polygonList;
 
   typedef vector<GMSPolygon>::iterator PIT;
@@ -352,9 +345,10 @@ CheckVertVert(Environment* _env, int _w, int _v1, int _v2) {
 template<class MPTraits>
 bool
 UniformMedialAxisSampler<MPTraits>::
-CheckTriTri(Environment* _env, int _w, int _t1, int _t2) {
+CheckTriTri(int _w, int _t1, int _t2) {
+  Environment* env = this->GetEnvironment();
   //Check if two triangles are adjacent to each other
-  GMSPolyhedron& polyhedron = _env->GetMultiBody(_w)->
+  GMSPolyhedron& polyhedron = env->GetMultiBody(_w)->
     GetBody(0)->GetPolyhedron();
 
   //test if there is a common edge (v0, v1) between the triangles
@@ -402,7 +396,7 @@ CheckTriTri(Environment* _env, int _w, int _t1, int _t2) {
   int vert = polyhedron.m_polygonList[_t1].
     CommonVertex(polyhedron.m_polygonList[_t2]);
   if(vert != -1) {
-    return !_env->GetMultiBody(_w)->GetBody(0)->
+    return !env->GetMultiBody(_w)->GetBody(0)->
       IsConvexHullVertex(polyhedron.m_vertexList[vert]);
   }
   //no common edge or vertex, triangles are not adjacent
@@ -414,9 +408,10 @@ CheckTriTri(Environment* _env, int _w, int _t1, int _t2) {
 template<class MPTraits>
 bool
 UniformMedialAxisSampler<MPTraits>::
-CheckVertTri(Environment* _env, int _w, int _v, int _t) {
+CheckVertTri(int _w, int _v, int _t) {
+  Environment* env = this->GetEnvironment();
   //Check if vertex belongs to triangle, thus are adjacent
-  GMSPolyhedron& polyhedron = _env->GetMultiBody(_w)->
+  GMSPolyhedron& polyhedron = env->GetMultiBody(_w)->
     GetBody(0)->GetPolyhedron();
   Vector3d& vert = polyhedron.m_vertexList[_v];
   GMSPolygon& poly = polyhedron.m_polygonList[_t];
@@ -432,27 +427,28 @@ CheckVertTri(Environment* _env, int _w, int _v, int _t) {
 template<class MPTraits>
 bool
 UniformMedialAxisSampler<MPTraits>::
-BinarySearch(Environment* _env, shared_ptr<Boundary> _bb, StatClass& _stats,
+BinarySearch(shared_ptr<Boundary> _boundary,
     const CfgType& _c1, int _w1, const CfgType& _c2, int _w2,
-    vector<CfgType>& _cfgOut) {
+    vector<CfgType>& _result) {
 
+  Environment* env = this->GetEnvironment();
   CfgType left = _c1, right = _c2;
   //grab initial IDs
   int leftOI = _w1, rightOI = _w2;
   int leftID = leftOI, rightID = rightOI;
   if(_w1 == -1)  //the witness point is on the bounding box
-    leftID = _bb->GetSideID(_c1.GetData());
+    leftID = _boundary->GetSideID(_c1.GetData());
   if(_w2 == -1)  //the witness point is on the bounding box
-    rightID = _bb->GetSideID(_c2.GetData());
+    rightID = _boundary->GetSideID(_c2.GetData());
   if((_w1 == _w2) && (_w1 != -1)) {
-    leftID = FindVertex(_env, leftOI, left);
+    leftID = FindVertex(leftOI, left);
     if(leftID == 1) {
-      leftID = FindTriangle(_env, leftOI, left);
+      leftID = FindTriangle(leftOI, left);
       assert(leftID != -1); //triangle id should be found! error!
     }
-    rightID = FindVertex(_env, rightOI, right);
+    rightID = FindVertex(rightOI, right);
     if(rightID == 1) {
-      rightID = FindTriangle(_env, rightOI, right);
+      rightID = FindTriangle(rightOI, right);
       assert(rightID != -1); //triangle id should be found! error!
     }
   }
@@ -461,8 +457,8 @@ BinarySearch(Environment* _env, shared_ptr<Boundary> _bb, StatClass& _stats,
   //environment resolution
   CfgType incr;
   int nTicks;
-  incr.FindIncrement(left, right, &nTicks, _env->GetPositionRes(),
-      _env->GetOrientationRes());
+  incr.FindIncrement(left, right, &nTicks,
+      env->GetPositionRes(), env->GetOrientationRes());
 
   while(nTicks > 1) {
     //compute midpoint
@@ -470,17 +466,17 @@ BinarySearch(Environment* _env, shared_ptr<Boundary> _bb, StatClass& _stats,
 
     //grab witness id
     CfgType tmp;
-    m_clearanceUtility.CollisionInfo(mid, tmp, _bb, mid.m_clearanceInfo);
+    m_clearanceUtility.CollisionInfo(mid, tmp, _boundary, mid.m_clearanceInfo);
     int midOI = mid.m_clearanceInfo.m_nearestObstIndex;
 
     //discovered new obstacle index, need to recurse on each side
     if(midOI != leftOI && midOI != rightOI) {
       bool l = false;
-      if(CheckMedialAxisCrossing(_env, left, leftOI, mid, midOI))
-        l = BinarySearch(_env, _bb, _stats, left, leftOI, mid, midOI, _cfgOut);
+      if(CheckMedialAxisCrossing(left, leftOI, mid, midOI))
+        l = BinarySearch(_boundary, left, leftOI, mid, midOI, _result);
       bool r = false;
-      if(CheckMedialAxisCrossing(_env, mid, midOI, right, rightOI))
-        r = BinarySearch(_env, _bb, _stats, mid, midOI, right, rightOI, _cfgOut);
+      if(CheckMedialAxisCrossing(mid, midOI, right, rightOI))
+        r = BinarySearch(_boundary, mid, midOI, right, rightOI, _result);
       if(l || r)
         return true;
       else
@@ -490,11 +486,11 @@ BinarySearch(Environment* _env, shared_ptr<Boundary> _bb, StatClass& _stats,
     //find triangle id
     int midID = midOI;
     if(midOI == -1)  //witness point is on the bounding box
-      midID = _bb->GetSideID(mid.GetData());
+      midID = _boundary->GetSideID(mid.GetData());
     if((_w1 == _w2) && (_w1 != -1)) {
-      midID = FindVertex(_env, midOI, mid);
+      midID = FindVertex(midOI, mid);
       if(midID == 1) {
-        midID = FindTriangle(_env, midOI, mid);
+        midID = FindTriangle(midOI, mid);
         assert(midID != -1); //triangle id should be found! error!
       }
     }
@@ -514,11 +510,11 @@ BinarySearch(Environment* _env, shared_ptr<Boundary> _bb, StatClass& _stats,
     //middle has completely different midpoint, recurse on each half
     else {
       bool l = false;
-      if(CheckMedialAxisCrossing(_env, left, leftOI, mid, midOI))
-        l = BinarySearch(_env, _bb, _stats, left, leftOI, mid, midOI, _cfgOut);
+      if(CheckMedialAxisCrossing(left, leftOI, mid, midOI))
+        l = BinarySearch(_boundary, left, leftOI, mid, midOI, _result);
       bool r = false;
-      if(CheckMedialAxisCrossing(_env, mid, midOI, right, rightOI))
-        r = BinarySearch(_env, _bb, _stats, mid, midOI, right, rightOI, _cfgOut);
+      if(CheckMedialAxisCrossing(mid, midOI, right, rightOI))
+        r = BinarySearch(_boundary, mid, midOI, right, rightOI, _result);
       if(l || r)
         return true;
       else
@@ -526,8 +522,8 @@ BinarySearch(Environment* _env, shared_ptr<Boundary> _bb, StatClass& _stats,
     }
 
     //set nticks
-    incr.FindIncrement(left, right, &nTicks, _env->GetPositionRes(),
-        _env->GetOrientationRes());
+    incr.FindIncrement(left, right, &nTicks,
+        env->GetPositionRes(), env->GetOrientationRes());
   }
 
   //keep witness with higher clearance
@@ -538,13 +534,12 @@ BinarySearch(Environment* _env, shared_ptr<Boundary> _bb, StatClass& _stats,
     ValidityCheckerPointer vc = this->GetMPProblem()->GetValidityChecker(m_vcLabel);
     CDInfo cdInfo;
     string callee = this->GetNameAndLabel() + "::BinS";
-    bool cfgFree = _env->InBounds(higher)
+    bool cfgFree = env->InBounds(higher)
       && vc->IsValid(higher, cdInfo, callee)
       && !vc->IsInsideObstacle(higher);
 
     if(cfgFree) {
-      _stats.IncNodesGenerated(this->GetNameAndLabel());
-      _cfgOut.push_back(higher);
+      _result.push_back(higher);
       return true;
     }
   }

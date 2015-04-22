@@ -171,25 +171,16 @@ void
 TogglePRMStrategy<MPTraits>::Finalize() {
   if(this->m_debug) cout << "\nFinalizing TogglePRMStrategy::" << endl;
 
-  // Set up variables
-  StatClass* stats = this->GetMPProblem()->GetStatClass();
-
   // Output two final maps
-  string str = this->GetBaseFilename() + ".map";
-  ofstream osMap(str.c_str());
-  this->GetMPProblem()->GetRoadmap()->Write(osMap, this->GetMPProblem()->GetEnvironment());
-  osMap.close();
-
-  str = this->GetBaseFilename() + ".block.map";
-  ofstream osMap2(str.c_str());
-  this->GetMPProblem()->GetBlockRoadmap()->Write(osMap2, this->GetMPProblem()->GetEnvironment());
-  osMap2.close();
+  this->GetRoadmap()->Write(this->GetBaseFilename() + ".map", this->GetEnvironment());
+  this->GetBlockRoadmap()->Write(this->GetBaseFilename() + ".block.map", this->GetEnvironment());
 
   // Output stats
-  str = this->GetBaseFilename() + ".stat";
+  string str = this->GetBaseFilename() + ".stat";
   ofstream osStat(str.c_str());
   osStat << "Statistics" << endl;
-  stats->PrintAllStats(osStat, this->GetMPProblem()->GetRoadmap());
+  StatClass* stats = this->GetStatClass();
+  stats->PrintAllStats(osStat, this->GetRoadmap());
   stats->PrintClock("Map Generation", osStat);
   osStat.close();
 
@@ -201,52 +192,52 @@ template<class MPTraits>
 void
 TogglePRMStrategy<MPTraits>::GenerateNodes(deque<pair<string, CfgType> >& _queue) {
 
-  StatClass* stats = this->GetMPProblem()->GetStatClass();
+  StatClass* stats = this->GetStatClass();
   stringstream clockName;
   clockName << "Node Generation";
   stats->StartClock(clockName.str());
 
   // Go through list of samplers
   typedef map<string, pair<int,int> >::iterator SIT;
-  for(SIT sit = m_samplerLabels.begin(); sit != m_samplerLabels.end(); ++sit) {
-    typename MPProblemType::SamplerPointer smp = this->GetMPProblem()->GetSampler(sit->first);
+  for(auto sampler : m_samplerLabels) {
+    typename MPProblemType::SamplerPointer smp =
+      this->GetSampler(sampler.first);
     vector<CfgType> outNodes;
 
     string callee = "TogglePRM::GenerateNodes";
     // Generate nodes for this sampler
     stringstream samplerClockName;
-    samplerClockName << "Sampler::" << sit->first;
+    samplerClockName << "Sampler::" << sampler.first;
     stats->StartClock(samplerClockName.str());
 
-    smp->Sample(this->GetMPProblem()->GetEnvironment(), *stats, sit->second.first, sit->second.second,
+    smp->Sample(sampler.second.first, sampler.second.second, this->m_boundary,
         back_inserter(outNodes), back_inserter(outNodes));
 
     stats->StopClock(samplerClockName.str());
 
     if(this->m_debug) {
-      cout << "\n\t" << this->GetMPProblem()->GetRoadmap()->GetGraph()->get_num_vertices() << " vertices " << endl;
+      cout << "\n\t" << this->GetRoadmap()->GetGraph()->get_num_vertices() << " vertices " << endl;
       cout << "\n\t";
       stats->PrintClock(samplerClockName.str(), cout);
     }
 
     // Add nodes to queue
     typedef typename vector<CfgType>::iterator CIT;
-    for(CIT cit = outNodes.begin(); cit != outNodes.end(); ++cit) {
+    for(auto sample : outNodes) {
 
       // If not validated yet, determine validity
-      if(!(*cit).IsLabel("VALID"))
-        this->GetMPProblem()->GetValidityChecker(m_vcLabel)->IsValid(
-              *cit, callee);
+      if(!sample.IsLabel("VALID"))
+        this->GetValidityChecker(m_vcLabel)->IsValid(sample, callee);
 
       // Put nodes into queue, keeping track of validity
-      if((*cit).GetLabel("VALID")) {
+      if(sample.GetLabel("VALID")) {
         if(m_priority) // If desired, give valid nodes priority
-          _queue.push_front(make_pair("valid", *cit));
+          _queue.push_front(make_pair("valid", sample));
         else
-          _queue.push_back(make_pair("valid", *cit));
+          _queue.push_back(make_pair("valid", sample));
       }
       else
-        _queue.push_back(make_pair("invalid", *cit));
+        _queue.push_back(make_pair("invalid", sample));
     }
   }
   stats->StopClock(clockName.str());
@@ -263,7 +254,6 @@ TogglePRMStrategy<MPTraits>::Connect(pair<string, VID> _vid,
   stringstream clockName;
   clockName << "Node Connection";
   stats->StartClock(clockName.str());
-  stapl::sequential::vector_property_map<typename MPProblemType::GraphType, size_t> cmap;
 
   // Grab correct set of connectors depending on vertex validity
   vector<string> connectorLabels = (_vid.first=="valid" ? m_connectorLabels : m_colConnectorLabels);
@@ -281,12 +271,11 @@ TogglePRMStrategy<MPTraits>::Connect(pair<string, VID> _vid,
     vector<VID> nodesVID;
     nodesVID.push_back(_vid.second);
     vector<CfgType> collision, valid;
-    cmap.reset();
 
     // Connect vertex using the connector
     connector->Connect(
         _vid.first=="valid" ? this->GetMPProblem()->GetRoadmap() : this->GetMPProblem()->GetBlockRoadmap(),
-        *stats, cmap, nodesVID.begin(), nodesVID.end(), _allvids.begin(), _allvids.end(), back_inserter(collision));
+        nodesVID.begin(), nodesVID.end(), _allvids.begin(), _allvids.end(), back_inserter(collision));
 
     if(this->m_debug) {
       cout << "\n\nCollision Nodes from connecting: " << collision.size() << endl;
@@ -307,16 +296,14 @@ TogglePRMStrategy<MPTraits>::Connect(pair<string, VID> _vid,
       else if(this->m_debug)
         cerr << "In TogglePRMStrategy::Connect(), collision not yet validated?! (Shouldn't happen)" << endl;
     }
-    cmap.reset();
 
     stats->StopClock(connectorClockName.str());
     if(this->m_debug) {
       cout << "Freemap: " << this->GetMPProblem()->GetRoadmap()->GetGraph()->get_num_edges() << " edges, "
-        << get_cc_count(*(this->GetMPProblem()->GetRoadmap()->GetGraph()), cmap) << " connected components" << endl;
+        << this->GetRoadmap()->GetGraph()->GetNumCCs() << " connected components" << endl;
       cout << "\t";
-      cmap.reset();
       cout << "Blockmap: " << this->GetMPProblem()->GetBlockRoadmap()->GetGraph()->get_num_edges() << " edges, "
-        << get_cc_count(*(this->GetMPProblem()->GetBlockRoadmap()->GetGraph()), cmap) << " connected components" << endl;
+        << this->GetBlockRoadmap()->GetGraph()->GetNumCCs() << " connected components" << endl;
       cout << "\t";
       stats->PrintClock(connectorClockName.str(), cout);
     }

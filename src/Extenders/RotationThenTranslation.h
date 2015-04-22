@@ -22,12 +22,12 @@ class RotationThenTranslation : public BasicExtender<MPTraits> {
     typedef typename MPTraits::CfgType CfgType;
     typedef typename MPTraits::MPProblemType MPProblemType;
 
-    RotationThenTranslation(const string& _dmLabel = "", const string& _vcLabel = "",
-        double _delta = 1.0);
+    RotationThenTranslation(const string& _dmLabel = "", 
+        const string& _vcLabel = "", double _delta = 1.0);
     RotationThenTranslation(MPProblemType* _problem, XMLNodeReader& _node);
 
     virtual bool Extend(const CfgType& _near, const CfgType& _dir,
-        CfgType& _new, vector<CfgType>& _innerNodes);
+        CfgType& _new, LPOutput<MPTraits>& _lpOutput);
 };
 
 template<class MPTraits>
@@ -45,12 +45,11 @@ RotationThenTranslation<MPTraits>::RotationThenTranslation(MPProblemType* _probl
 
 template<class MPTraits>
 bool
-RotationThenTranslation<MPTraits>::Extend(const CfgType& _near, const CfgType& _dir,
-    CfgType& _new, vector<CfgType>& _innerNodes) {
+RotationThenTranslation<MPTraits>::Extend(const CfgType& _near, 
+    const CfgType& _dir, CfgType& _new, LPOutput<MPTraits>& _lpOutput) {
   // Setup MP Variables
-  Environment* env = this->GetMPProblem()->GetEnvironment();
+  Environment* env = this->GetEnvironment();
   CfgType innerCfg, newDir, newPos;
-  int weight;
 
   // Rotate component
   if(this->m_debug)
@@ -59,9 +58,9 @@ RotationThenTranslation<MPTraits>::Extend(const CfgType& _near, const CfgType& _
   for(size_t i = 0; i < _dir.PosDOF(); i++)
     newDir[i] = _near[i];
 
-  if(this->Expand(_near, newDir, innerCfg, this->m_delta, weight,
+  if(this->Expand(_near, newDir, innerCfg, this->m_delta, _lpOutput,
       env->GetPositionRes(), env->GetOrientationRes())) {
-    _innerNodes.push_back(innerCfg);
+    _lpOutput.m_intermediates.push_back(innerCfg);
 
     // Translate component
     if(this->m_debug)
@@ -70,8 +69,14 @@ RotationThenTranslation<MPTraits>::Extend(const CfgType& _near, const CfgType& _
     for(size_t i = 0; i < newPos.PosDOF(); i++)
       newPos[i] = _dir[i];
 
-    return this->Expand(innerCfg, newPos, _new, this->m_delta, weight,
-        env->GetPositionRes(), env->GetOrientationRes());
+    LPOutput<MPTraits> newLPOutput;
+    bool result = this->Expand(innerCfg, newPos, _new, this->m_delta, 
+        newLPOutput, env->GetPositionRes(), env->GetOrientationRes());
+    _lpOutput.m_edge.first.SetWeight(_lpOutput.m_edge.first.GetWeight() + 
+        newLPOutput.m_edge.first.GetWeight());
+    _lpOutput.m_edge.second.SetWeight(_lpOutput.m_edge.second.GetWeight() + 
+        newLPOutput.m_edge.second.GetWeight());
+    return result;
   }
 
   return false;

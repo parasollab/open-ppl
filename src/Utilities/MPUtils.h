@@ -1,20 +1,19 @@
 #ifndef MPUTILS_H_
 #define MPUTILS_H_
 
+#include <functional>
+#include <iostream>
 #include <map>
+#include <memory>
 #include <string>
+using std::shared_ptr;
 
-#include <boost/function.hpp>
-#include "boost/shared_ptr.hpp"
-#include "boost/mpl/list.hpp"
-#include "boost/mpl/sort.hpp"
-#include "boost/type_traits/is_base_of.hpp"
-#include "boost/mpl/begin.hpp"
-#include "boost/mpl/end.hpp"
-#include "boost/mpl/next_prior.hpp"
-#include "GraphAlgo.h"
+#ifndef _PARALLEL
+#include <containers/sequential/graph/algorithms/connected_components.h>
+#endif
 
-using boost::shared_ptr;
+#include <boost/mpl/list.hpp>
+#include <boost/mpl/next_prior.hpp>
 
 #include "Vector.h"
 using namespace mathtool;
@@ -214,15 +213,15 @@ struct ComposeNegate {
 
 template<typename MPTraits, typename Method>
 struct MethodFactory {
-  boost::shared_ptr<Method> operator()(typename MPTraits::MPProblemType* _problem, XMLNodeReader& _node) const {
-    return boost::shared_ptr<Method>(new Method(_problem, _node));
+  shared_ptr<Method> operator()(typename MPTraits::MPProblemType* _problem, XMLNodeReader& _node) const {
+    return shared_ptr<Method>(new Method(_problem, _node));
   }
 };
 
 template<typename MPTraits, typename Method>
 class MethodSet {
   public:
-    typedef boost::shared_ptr<Method> MethodPointer;
+    typedef shared_ptr<Method> MethodPointer;
     typedef typename map<string, MethodPointer>::iterator MIT;
     typedef typename map<string, MethodPointer>::const_iterator CMIT;
 
@@ -305,7 +304,7 @@ class MethodSet {
     MIT End() { return m_elements.end(); }
 
   protected:
-    typedef boost::function<MethodPointer(typename MPTraits::MPProblemType*, XMLNodeReader&)> FactoryType;
+    typedef function<MethodPointer(typename MPTraits::MPProblemType*, XMLNodeReader&)> FactoryType;
 
     template <typename Last>
       void AddToUniverse(Last, Last){}
@@ -320,111 +319,6 @@ class MethodSet {
     string m_default, m_name;
     map<string, FactoryType> m_universe;
     map<string, MethodPointer> m_elements;
-};
-
-////////////////////////////////////////////////////////////////////////////////
-// MPBaseObject
-////////////////////////////////////////////////////////////////////////////////
-
-////////////////////////////////////////////////////////////////////////////////
-/// @ingroup MotionPlanningUniverse
-/// @brief Base class of all algorithm abstractions in PMPL.
-///
-/// The MPBaseObject is an abstract class which all algorithm abstractions in
-/// PMPL extend themselves off of. It essentially composes a class name
-/// @c m_name, a unique label @c m_label, and provides access to the MPProblem.
-////////////////////////////////////////////////////////////////////////////////
-template<class MPTraits>
-class MPBaseObject {
-  public:
-
-    typedef typename MPTraits::MPProblemType MPProblemType;
-
-    MPBaseObject(MPProblemType* _problem = NULL, string _label = "", string _name = "", bool _debug = false) :
-      m_name(_name), m_debug(_debug), m_label(_label), m_problem(_problem) {};
-    MPBaseObject(MPProblemType* _problem, XMLNodeReader& _node, string _name="") :
-      m_name(_name), m_problem(_problem) {
-        ParseXML(_node);
-      };
-    virtual ~MPBaseObject() {}
-
-    ////////////////////////////////////////////////////////////////////////////
-    /// @brief Parse XML node
-    /// @param _node XML node
-    ///
-    /// Parse XML node. By default every MPBaseObject requires a label and
-    /// optionally loads a debug parameter.
-    ////////////////////////////////////////////////////////////////////////////
-    virtual void ParseXML(XMLNodeReader& _node) {
-      m_label = _node.stringXMLParameter("label", true, "", "Label Identifier");
-      m_debug = _node.boolXMLParameter("debug", false, false,
-          "Run-time debug on(true)/off(false)");
-    };
-
-    ////////////////////////////////////////////////////////////////////////////
-    /// @brief Print values of object
-    /// @param _os ostream to print values to
-    ///
-    /// Print values of object to ostream. By default name and label are output.
-    ////////////////////////////////////////////////////////////////////////////
-    virtual void Print(ostream& _os) const {
-      _os << this->GetNameAndLabel() << endl;
-    };
-
-    ////////////////////////////////////////////////////////////////////////////
-    /// @return MPProblem object
-    ////////////////////////////////////////////////////////////////////////////
-    MPProblemType* GetMPProblem() const {return m_problem;}
-    ////////////////////////////////////////////////////////////////////////////
-    /// @param _m MPProblem object
-    ////////////////////////////////////////////////////////////////////////////
-    virtual void SetMPProblem(MPProblemType* _m) {m_problem = _m;}
-
-    ////////////////////////////////////////////////////////////////////////////
-    /// @return Base filename string for all file outputs
-    ////////////////////////////////////////////////////////////////////////////
-    const string& GetBaseFilename() const {return m_problem->GetBaseFilename();}
-
-    ////////////////////////////////////////////////////////////////////////////
-    /// @brief Get unique string identifier to object
-    /// @return unique identifier "m_name::m_label"
-    ////////////////////////////////////////////////////////////////////////////
-    string GetNameAndLabel() const {return m_name + "::" + m_label;}
-    ////////////////////////////////////////////////////////////////////////////
-    /// @param _s label
-    ////////////////////////////////////////////////////////////////////////////
-    void SetLabel(string _s) {m_label = _s;}
-
-    ////////////////////////////////////////////////////////////////////////////
-    /// @return debug value
-    ////////////////////////////////////////////////////////////////////////////
-    bool GetDebug() const {return m_debug;}
-    ////////////////////////////////////////////////////////////////////////////
-    /// @param _d debug value
-    ////////////////////////////////////////////////////////////////////////////
-    void SetDebug(bool _d) {m_debug = _d;}
-
-  protected:
-
-    ////////////////////////////////////////////////////////////////////////////
-    /// @return label
-    ////////////////////////////////////////////////////////////////////////////
-    string GetLabel() const {return m_label;}
-
-    ////////////////////////////////////////////////////////////////////////////
-    /// @param _s class name
-    ////////////////////////////////////////////////////////////////////////////
-    void SetName(string _s) {m_name  = _s;}
-
-    string m_name; ///< Class name
-    bool m_debug; ///< Debug statements on or off
-
-    template<typename T, typename U> friend class MethodSet;
-
-  private:
-
-    string m_label; ///< Unique identifier of object
-    MPProblemType* m_problem; ///< Shared pointer to MPProblem object
 };
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -488,6 +382,7 @@ GetCentroid(RDMP<CFG, WEIGHT>* _graph, vector<typename RDMP<CFG, WEIGHT>::VID>& 
   return center;
 };
 
+#ifndef _PARALLEL
 template<template<class CFG, class WEIGHT> class RDMP, class CFG, class WEIGHT>
 void
 ComputeCCCentroidGraph(RDMP<CFG, WEIGHT>* _graph, RDMP<CFG, WEIGHT>* _centroidGraph) {
@@ -504,8 +399,9 @@ ComputeCCCentroidGraph(RDMP<CFG, WEIGHT>* _graph, RDMP<CFG, WEIGHT>* _centroidGr
     centroid.SetStat("ccVID", allCCs[i].second);
     _centroidGraph->AddVertex(centroid);
   }
-};
 
+};
+#endif
 ///////////////////////////////////////////////////////////////////////////////
 // Geometry Utils
 ///////////////////////////////////////////////////////////////////////////////
@@ -558,6 +454,21 @@ struct PlusSecond : public binary_function<typename P::second_type,
   typename P::second_type operator()(const typename P::second_type& p1, const P& p2) const {
     return plus<typename P::second_type>()(p1, p2.second);
   }
+};
+
+///////////////////////////////////////////////////////////////////////////////
+// NullOutputIterator
+//
+// Used for discarding collision data for regular sampling/connecting classes
+///////////////////////////////////////////////////////////////////////////////
+struct NullOutputIterator : std::iterator<std::output_iterator_tag, NullOutputIterator> {
+  //no-op assignment
+  template<typename T>
+    void operator=(const T&) { }
+
+  NullOutputIterator& operator++() {return *this;}
+  NullOutputIterator operator++(int) {return *this;}
+  NullOutputIterator& operator*() {return *this;}
 };
 
 #endif

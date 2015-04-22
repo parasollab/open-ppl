@@ -10,7 +10,6 @@
 
 #include "MPProblem/Geometry/FixedBody.h"
 #include "MPProblem/Geometry/FreeBody.h"
-#include "Graph.h"
 #include "MPProblem/Robot.h"
 
 class Environment;

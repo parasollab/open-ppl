@@ -2,7 +2,7 @@
  * filename. Then solves based upon the problem.
  */
 
-#include "MPProblem/MPTraits.h"
+
 #include "MPProblem/MPProblem.h"
 
 #if (defined(PMPReachDistCC) || defined(PMPReachDistCCFixed))
@@ -10,35 +10,49 @@
 #include "MPStrategies/ClosedChainStrategy.h"
 #endif
 
-#if (defined(PMPCfg))
+
+
+#ifdef PMPCfg
 #include "Cfg/Cfg.h"
+#include "Traits/CfgTraits.h"
 typedef Cfg PMPLCfgType;
+
+#elif (defined(PMPCfgMultiRobot))
+#include "Cfg/CfgMultiRobot.h"
+#include "Traits/CfgTraits.h"
+typedef CfgMultiRobot PMPLCfgType;
+
 #elif (defined(PMPCfgSurface))
 #include "Cfg/CfgSurface.h"
+#include "Traits/SurfaceTraits.h"
 typedef CfgSurface PMPLCfgType;
+
 #elif (defined(PMPReachDistCC))
 #include "Cfg/Cfg_reach_cc.h"
 typedef Cfg_reach_cc PMPLCfgType;
+
 #elif (defined(PMPReachDistCCFixed))
 #include "Cfg/Cfg_reach_cc_fixed.h"
 typedef Cfg_reach_cc_fixed PMPLCfgType;
+
 #elif (defined(PMPSSSurfaceMult))
 #include "Cfg/SSSurfaceMult.h"
+#include "Traits/SurfaceTraits.h"
 typedef SSSurfaceMult PMPLCfgType;
+
+#elif (defined(PMPReachableVolume))
+#include "Cfg/CfgReachableVolume.h"
+#include "Traits/ReachableVolumeTraits.h"
+typedef CfgReachableVolume PMPLCfgType;
 #else
 #error "Error, must define a RobotType for PMPL application"
 #endif
 
 using namespace std;
 
-#ifdef _PARALLEL
-void stapl_main(int _argc, char* _argv[])
-#else
-int main(int _argc, char** _argv)
-#endif
-{
+int main(int _argc, char** _argv) {
 
-  if(_argc < 3 || !(string(_argv[1]) == "-f")){
+  if(_argc < 3 || !(string(_argv[1]) == "-f")) {
     cerr << "Error: Incorrect usage. Usage: -f options.xml" << endl;
     exit(1);
   }
@@ -51,9 +65,7 @@ int main(int _argc, char** _argv)
 
   delete problem;
 
-#ifndef _PARALLEL
   return 0;
-  #endif
 }
 
 

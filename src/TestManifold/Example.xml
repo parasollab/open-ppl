@@ -38,9 +38,9 @@
 
     <MPStrategies>
       <BasicPRM label="BasicPRM">
-        <node_generation_method Method="UniformRandom" Number="10" Attempts="10"/>
-        <node_connection_method Method="Closest"/>
-        <evaluation_method Method="NodesEval"/>
+        <Sampler method="UniformRandom" number="10" attempts="10"/>
+        <Connector method="Closest"/>
+        <Evaluator method="NodesEval"/>
       </BasicPRM>
       <ClearanceTest label="ClearanceTest" dmLabel="euclidean" debug="true">
         <node_generation_method Method="UniformRandom" Number="5" Attempts="100"/>

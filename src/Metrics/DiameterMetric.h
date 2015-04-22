@@ -2,7 +2,7 @@
 #define DIAMETERMETRIC_H
 
 #include "MetricMethod.h"
-#include <graph/algorithms/diameter.h>
+#include "containers/sequential/graph/algorithms/diameter.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup Metrics

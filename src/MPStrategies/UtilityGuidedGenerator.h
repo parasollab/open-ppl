@@ -218,10 +218,8 @@ UtilityGuidedGenerator<MPTraits>::Run() {
         VID qvid = rmap->GetGraph()->AddVertex(q);
 
         //connect sample
-        vector<VID> v1(1, qvid);
-        stapl::sequential::vector_property_map<GRAPH, size_t> cmap;
         stats->StartClock("Total Connection Time");
-        connector->Connect(rmap, *stats, cmap, v1.begin(), v1.end());
+        connector->Connect(rmap, qvid);
         stats->StopClock("Total Connection Time");
         if(this->m_debug) cout << "connecting sample, roadmap now has " << rmap->GetGraph()->get_num_vertices() << " nodes and " << rmap->GetGraph()->get_num_edges() << " edges\n";
 
@@ -248,17 +246,14 @@ UtilityGuidedGenerator<MPTraits>::Finalize() {
   if(this->m_debug) cout<<"\nFinalizing UtilityGuidedGenerator::"<<endl;
 
   //output final map
-  string str = this->GetBaseFilename() + ".map";
-  ofstream osMap(str.c_str());
-  this->GetMPProblem()->GetRoadmap()->Write(osMap, this->GetMPProblem()->GetEnvironment());
-  osMap.close();
+  this->GetRoadmap()->Write(this->GetBaseFilename() + ".map", this->GetEnvironment());
 
   //output stats
-  str = this->GetBaseFilename() + ".stat";
+  string str = this->GetBaseFilename() + ".stat";
   ofstream  osStat(str.c_str());
   osStat << "NodeGen+Connection Stats" << endl;
-  StatClass* stats = this->GetMPProblem()->GetStatClass();
-  stats->PrintAllStats(osStat, this->GetMPProblem()->GetRoadmap());
+  StatClass* stats = this->GetStatClass();
+  stats->PrintAllStats(osStat, this->GetRoadmap());
   stats->PrintClock("Map Generation", osStat);
   osStat.close();
 
@@ -333,14 +328,14 @@ GenerateEntropyGuidedSample() {
       cout << "\t\t\tselected cc pair " << cc1Vid << " and " << cc2Vid << endl;
 
     //randomly select a node in each cc
-    q1 = (*(rmap->GetGraph()->find_vertex(cc1[(int)floor((double)DRand()*(double)cc1.size())]))).property();
-    q2 = (*(rmap->GetGraph()->find_vertex(cc2[(int)floor((double)DRand()*(double)cc2.size())]))).property();
+    q1 = rmap->GetGraph()->GetVertex(cc1[(int)floor(DRand()*cc1.size())]);
+    q2 = rmap->GetGraph()->GetVertex(cc2[(int)floor(DRand()*cc2.size())]);
   }
 
   //return perturbation of the midpoint between the two nodes
   CfgType qn = (q1 + q2)/2;
   CfgType ray = qn;
-  ray.GetRandomRay(DRand()*m_tao, env, dm);
+  ray.GetRandomRay(DRand()*m_tao, dm);
   return qn + ray;
 }
 

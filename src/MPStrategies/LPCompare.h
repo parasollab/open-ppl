@@ -1,8 +1,5 @@
-#ifndef LPCOMPARE_H_
-#define LPCOMPARE_H_
-
-#include "boost/tuple/tuple.hpp"
-using boost::tuple;
+#ifndef LP_COMPARE_H_
+#define LP_COMPARE_H_
 
 #include "MPStrategyMethod.h"
 
@@ -89,9 +86,9 @@ LPCompare<MPTraits>::Run() {
           g1->GetVertex((*ei1).source()),
           g1->GetVertex((*ei1).target()),
           w1, w2);
-      m_q1 += q.get<0>();
-      m_q2 += q.get<1>();
-      m_q3 += q.get<2>();
+      m_q1 += get<0>(q);
+      m_q2 += get<1>(q);
+      m_q3 += get<2>(q);
     }
     else {
       //not an edge
@@ -114,7 +111,7 @@ template<class MPTraits>
 void
 LPCompare<MPTraits>::Finalize() {
   //setup variables
-  StatClass* stats = this->GetMPProblem()->GetStatClass();
+  StatClass* stats = this->GetStatClass();
 
   string str;
 
@@ -122,7 +119,7 @@ LPCompare<MPTraits>::Finalize() {
   str = this->GetBaseFilename() + ".stat";
   ofstream  osStat(str.c_str());
   osStat << "NodeGen+Connection Stats" << endl;
-  stats->PrintAllStats(osStat, this->GetMPProblem()->GetRoadmap());
+  stats->PrintAllStats(osStat, this->GetRoadmap());
   osStat << "LPSimilarity: " << m_q1 << " " << m_q2 << " " << m_q3 << endl;
   osStat << "NumSimilar: " << m_numSimilar << endl;
   osStat << "NumOnlyInR1: " << m_numOnlyInR1 << endl;
@@ -132,7 +129,7 @@ LPCompare<MPTraits>::Finalize() {
 template<class MPTraits>
 tuple<double, double, double>
 LPCompare<MPTraits>::CompareEdge(CfgType& _s, CfgType& _g, WeightType& _w1, WeightType& _w2) {
-  Environment* env = this->GetMPProblem()->GetEnvironment();
+  Environment* env = this->GetEnvironment();
   double posRes = env->GetPositionRes();
   double oriRes = env->GetOrientationRes();
 
@@ -143,17 +140,17 @@ LPCompare<MPTraits>::CompareEdge(CfgType& _s, CfgType& _g, WeightType& _w1, Weig
   vector<CfgType> p1, p2;
 
   //path on edge 1
-  LocalPlannerPointer lp1 = this->GetMPProblem()->GetLocalPlanner(m_lpLabel1);
+  LocalPlannerPointer lp1 = this->GetLocalPlanner(m_lpLabel1);
   p1 = lp1->ReconstructPath(_s, _g, _w1.GetIntermediates(), posRes, oriRes);
 
   //path on edge 2
-  LocalPlannerPointer lp2 = this->GetMPProblem()->GetLocalPlanner(m_lpLabel2);
+  LocalPlannerPointer lp2 = this->GetLocalPlanner(m_lpLabel2);
   p2 = lp2->ReconstructPath(_s, _g, _w2.GetIntermediates(), posRes, oriRes);
 
   //compare distance between corresponding intermediates to get metrics
-  q.get<0>() = ComparePaths(p1, p2);
-  q.get<1>() = ComparePaths(p2, p1);
-  q.get<2>() = ComparePaths2(p1, p2);
+  get<0>(q) = ComparePaths(p1, p2);
+  get<1>(q) = ComparePaths(p2, p1);
+  get<2>(q) = ComparePaths2(p1, p2);
 
   return q;
 }
@@ -162,7 +159,7 @@ template<class MPTraits>
 double
 LPCompare<MPTraits>::ComparePaths(vector<CfgType>& _p1, vector<CfgType>& _p2) {
   typedef typename MPProblemType::DistanceMetricPointer DistanceMetricPointer;
-  DistanceMetricPointer dm = this->GetMPProblem()->GetDistanceMetric(m_dmLabel);
+  DistanceMetricPointer dm = this->GetDistanceMetric(m_dmLabel);
 
   //for each cfg in p1
   //  find corresponding cfg in p2
@@ -184,7 +181,7 @@ template<class MPTraits>
 double
 LPCompare<MPTraits>::ComparePaths2(vector<CfgType>& _p1, vector<CfgType>& _p2) {
   typedef typename MPProblemType::DistanceMetricPointer DistanceMetricPointer;
-  DistanceMetricPointer dm = this->GetMPProblem()->GetDistanceMetric(m_dmLabel);
+  DistanceMetricPointer dm = this->GetDistanceMetric(m_dmLabel);
 
   double c1 = ComparePaths(_p1, _p2) * _p1.size();
   double c2 = ComparePaths(_p2, _p1) * _p2.size();

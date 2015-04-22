@@ -25,7 +25,7 @@ class TraceObstacle : public BasicExtender<MPTraits> {
     TraceObstacle(MPProblemType* _problem, XMLNodeReader& _node);
 
     virtual bool Extend(const CfgType& _near, const CfgType& _dir,
-        CfgType& _new, vector<CfgType>& _innerNodes);
+        CfgType& _new, LPOutput<MPTraits>& _lpOutput);
 };
 
 template<class MPTraits>
@@ -36,7 +36,8 @@ TraceObstacle<MPTraits>::TraceObstacle(const string& _dmLabel,
   }
 
 template<class MPTraits>
-TraceObstacle<MPTraits>::TraceObstacle(MPProblemType* _problem, XMLNodeReader& _node) :
+TraceObstacle<MPTraits>::TraceObstacle(MPProblemType* _problem, 
+    XMLNodeReader& _node) :
   BasicExtender<MPTraits>(_problem, _node) {
     this->SetName("TraceObstacle");
   }
@@ -44,17 +45,16 @@ TraceObstacle<MPTraits>::TraceObstacle(MPProblemType* _problem, XMLNodeReader& _
 template<class MPTraits>
 bool
 TraceObstacle<MPTraits>::Extend(const CfgType& _near, const CfgType& _dir,
-    CfgType& _new, vector<CfgType>& _innerNodes) {
+    CfgType& _new, LPOutput<MPTraits>& _lpOutput) {
   // Setup MP Variables
-  Environment* env = this->GetMPProblem()->GetEnvironment();
+  Environment* env = this->GetEnvironment();
   CfgType newDir;
   CDInfo cdInfo;
-  int weight;
   //VECTOR SCALE - THIS WILL BE HARD CODED BUT SHOULD PROBABLY BE MADE AN OPTION
   double vecScale = 10.0;
 
   // Expand to find a colliding triangle
-  this->Expand(_near, _dir, _new, this->m_delta, weight, cdInfo,
+  this->Expand(_near, _dir, _new, this->m_delta, _lpOutput, cdInfo,
     env->GetPositionRes(), env->GetOrientationRes());
 
   // Get an obstacle vector from the colliding triangle
@@ -64,7 +64,8 @@ TraceObstacle<MPTraits>::Extend(const CfgType& _near, const CfgType& _dir,
     cIndex = (LRand() % (env->GetUsableMultiBodyCount()-1)) + 1;
     obsContactIndex = -1;
   }
-  GMSPolyhedron& poly = env->GetMultiBody(cIndex)->GetFixedBody(0)->GetWorldPolyhedron();
+  GMSPolyhedron& poly = 
+      env->GetMultiBody(cIndex)->GetFixedBody(0)->GetWorldPolyhedron();
   vector<Vector3d>& vertexList    = poly.m_vertexList;
   vector<GMSPolygon>& polygonList = poly.m_polygonList;
 
@@ -87,7 +88,7 @@ TraceObstacle<MPTraits>::Extend(const CfgType& _near, const CfgType& _dir,
     newDir[i] = _near[i] + obsVec[i];
 
   // Expand with Random or Same Orientation
-  return BasicExtender<MPTraits>::Extend(_near, newDir, _new, _innerNodes);
+  return BasicExtender<MPTraits>::Extend(_near, newDir, _new, _lpOutput);
 }
 
 #endif

@@ -157,18 +157,14 @@ void
 VisibilityBasedPRM<MPTraits>::Finalize() {
   if(this->m_debug) cout << "\nFinalizing VisibilityBasedPRM::\n";
 
-  //Setup variables
-  StatClass* stats = this->GetMPProblem()->GetStatClass();
-  string fileName;
-
   //Output .map file
-  fileName = this->GetBaseFilename() + ".map";
-  ofstream osMap(fileName.c_str());
-  this->GetMPProblem()->GetRoadmap()->Write(osMap, this->GetMPProblem()->GetEnvironment());
-  osMap.close();
+  this->GetMPProblem()->GetRoadmap()->Write(
+      this->GetBaseFilename() + ".map",
+      this->GetEnvironment());
 
   //Output .stat file
-  fileName = this->GetBaseFilename() + ".stat";
+  StatClass* stats = this->GetMPProblem()->GetStatClass();
+  string fileName = this->GetBaseFilename() + ".stat";
   ofstream osStat(fileName.c_str());
   osStat << "Visibility-Based PRM Stats\n";
   stats->PrintAllStats(osStat, this->GetMPProblem()->GetRoadmap());
@@ -186,15 +182,13 @@ VisibilityBasedPRM<MPTraits>::GenerateNode(vector<CfgType>& _outNode) {
 
   SamplerPointer sampler = this->GetMPProblem()->GetSampler(m_samplerLabel);
   ValidityCheckerPointer vc = this->GetMPProblem()->GetValidityChecker(m_vcLabel);
-  Environment* env = this->GetMPProblem()->GetEnvironment();
-  StatClass* stats = this->GetMPProblem()->GetStatClass();
 
   string callee("VisibilityBasedPRM::GenerateNodes");
 
   do {
     //Sample one node
     do {
-      sampler->Sample(env, *stats, 1, 1, back_inserter(_outNode));
+      sampler->Sample(1, 1, this->m_boundary, back_inserter(_outNode));
     } while (_outNode.size() <= 0);
 
     //Check validity

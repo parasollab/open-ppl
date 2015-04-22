@@ -8,15 +8,12 @@
 #ifndef CFG_H_
 #define CFG_H_
 
-#ifdef _PARALLEL
-#include "views/proxy.h"
-#endif
 #include <vector>
 #include <map>
 
-#include "boost/shared_ptr.hpp"
-#include "boost/serialization/map.hpp"
-using boost::shared_ptr;
+#ifdef _PARALLEL
+#include "views/proxy.h"
+#endif
 
 #include "Vector.h"
 
@@ -112,6 +109,8 @@ class Cfg {
     ///Get internal storage of configuration
     const vector<double>& GetData() const {return m_v;};
     void SetData(const vector<double>& _data);
+    void SetJointData(const vector<double>& _data);
+
 
     //labeling of the Cfg and statistics
     bool GetLabel(string _label);
@@ -133,6 +132,12 @@ class Cfg {
     /// methods for Distance Metric.
     virtual vector<double> GetPosition() const;
     virtual vector<double> GetOrientation() const;
+
+    virtual vector<double> GetNonJoints() const;
+    virtual vector<double> GetJoints() const;
+    virtual vector<double> GetRotation() const;
+    void ResetRigidBodyCoordinates();
+
     virtual double Magnitude() const;
     virtual double PositionMagnitude() const;
     virtual double OrientationMagnitude() const;
@@ -159,7 +164,7 @@ class Cfg {
     virtual void GetRandomCfg(Environment* _env, shared_ptr<Boundary> _bb);
 
     template<class DistanceMetricPointer>
-      void GetRandomRay(double _incr, Environment* _env,  DistanceMetricPointer _dm, bool _norm=true);
+      void GetRandomRay(double _incr, DistanceMetricPointer _dm, bool _norm=true);
 
     virtual bool ConfigEnvironment(Environment* _env) const;
 
@@ -211,7 +216,7 @@ class Cfg {
 
     enum DofType {POS, ROT, JOINT};
     static vector<vector<DofType> > m_dofTypes;
-    static vector<Robot> m_robots;
+    static vector<vector<Robot> > m_robots;
 
     /** TODO- there may still problem with (un)packing map
      */
@@ -219,19 +224,32 @@ class Cfg {
     map<string,double> m_statMap;
 
   public:
-    static const vector<Robot>& GetRobots() { return m_robots; }
+    static const vector<vector<Robot> >& GetRobots() { return m_robots; }
+    static const vector<Robot>& GetRobots(size_t _index = 0) { return m_robots[_index]; }
 
     CDInfo m_clearanceInfo;
     shared_ptr<Cfg> m_witnessCfg;
 
 #ifdef _PARALLEL
+    //parallel connected component
+    void active(bool _a) {m_active = _a;}
+    bool active() const {return m_active;}
+    void cc(size_t _c) {m_cc = _c;}
+    size_t cc() const {return m_cc;}
+
     void define_type(stapl::typer& _t)
     {
       _t.member(m_v);
       _t.member(m_labelMap);
       _t.member(m_statMap);
       _t.member(m_robotIndex);
+      _t.member(m_active);
+      _t.member(m_cc);
     }
+
+  private:
+    bool m_active;
+    size_t m_cc;
 #endif
 }; // class Cfg
 
@@ -241,7 +259,8 @@ istream& operator>> (istream& _is, Cfg& _cfg);
 
 template<class DistanceMetricPointer>
 void
-Cfg::GetRandomRay(double _incr, Environment* _env,  DistanceMetricPointer _dm, bool _norm){
+Cfg::
+GetRandomRay(double _incr, DistanceMetricPointer _dm, bool _norm) {
   //randomly sample params
   m_v.clear();
   for(size_t i = 0; i < DOF(); ++i)
@@ -286,10 +305,16 @@ namespace stapl {
         bool GetLabel(string _label) const { return Accessor::const_invoke(&target_t::GetLabel, _label);}
         bool IsLabel(string _label) const { return Accessor::const_invoke(&target_t::IsLabel, _label);}
         bool SetLabel(string _label) const { return Accessor::const_invoke(&target_t::SetLabel, _label);}
-        bool GetStat(string _stat) const { return Accessor::const_invoke(&target_t::GetStat, _stat);}
+        double GetStat(string _stat) const { return Accessor::const_invoke(&target_t::GetStat, _stat);}
         bool IsStat(string _stat) const { return Accessor::const_invoke(&target_t::IsStat, _stat);}
-        bool SetStat(string _stat) const { return Accessor::const_invoke(&target_t::SetStat, _stat);}
+        void SetStat(string _stat, double _val) const { return Accessor::const_invoke(&target_t::SetStat, _stat,_val);}
+        void IncStat(string _stat, double _val) const { return Accessor::const_invoke(&target_t::IncStat, _stat,_val);}
         static int GetNumOfJoints()  { return Accessor::const_invoke(&target_t::GetNumOfJoints);}
+        void active(bool _a) { return Accessor::invoke(&target_t::active, _a);}
+        bool active() const { return Accessor::const_invoke(&target_t::active);}
+        void cc(size_t _c) { return Accessor::invoke(&target_t::cc, _c);}
+        size_t cc() const { return Accessor::const_invoke(&target_t::cc);}
+
         // static void SetNumOfJoints(int _numOfJoints)  { return Accessor::const_invoke(&target_t::SetNumOfJoints, _numOfJoints);}
     }; //struct proxy
 }

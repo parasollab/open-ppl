@@ -355,7 +355,7 @@ class Band : public MPBaseObject<MPTraits> {
       m_dmLabel = _node.stringXMLParameter("dmLabel", true, "default", "Distance Metric Method");
 
       m_min = _node.numberXMLParameter("min", false, 0.0, 0.0, 100000.0, "min");
-      m_max = _node.numberXMLParameter("max", false, DBL_MAX, 0.0, DBL_MAX, "max");
+      m_max = _node.numberXMLParameter("max", false, MAX_DBL, 0.0, MAX_DBL, "max");
       m_usePercent = _node.boolXMLParameter("usePercent", false, false,
           "treat min and max as a percentage of the total number of vertices in the roadmap");
 
@@ -549,8 +549,8 @@ class RBand : public Band<MPTraits> {
         double min, max;
 
         if (this->m_usePercent) {
-          min = this->m_min * (_last - _first);
-          max = this->m_max * (_last - _first);
+          min = this->m_min * distance(_first, _last);
+          max = this->m_max * distance(_first, _last);
         } else {
           min = this->m_min;
           max = this->m_max;

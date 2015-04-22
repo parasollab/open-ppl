@@ -3,9 +3,6 @@
 
 #include "SamplerMethod.h"
 
-class Environment;
-class StatClass;
-
 template <class MPTraits>
 class UniformRandomSampler : public SamplerMethod<MPTraits> {
   public:
@@ -14,17 +11,13 @@ class UniformRandomSampler : public SamplerMethod<MPTraits> {
     typedef typename MPProblemType::ValidityCheckerPointer ValidityCheckerPointer;
 
     UniformRandomSampler(string _vcLabel = "");
-
     UniformRandomSampler(MPProblemType* _problem, XMLNodeReader& _node);
 
-    void ParseXML(XMLNodeReader& _node);
-
-    virtual void Print(ostream& _out) const;
+    virtual void Print(ostream& _os) const;
 
   protected:
-    virtual bool Sampler(Environment* _env, shared_ptr<Boundary> _bb,
-        StatClass& _stats, CfgType& _cfgIn, vector<CfgType>& _cfgOut,
-        vector<CfgType>& _cfgCol);
+    virtual bool Sampler(CfgType& _cfg, shared_ptr<Boundary> _boundary,
+        vector<CfgType>& _result, vector<CfgType>& _collision);
 
   private:
     string m_vcLabel;
@@ -41,56 +34,43 @@ UniformRandomSampler<MPTraits>::
 UniformRandomSampler(MPProblemType* _problem, XMLNodeReader& _node) :
   SamplerMethod<MPTraits>(_problem, _node) {
     this->SetName("UniformRandomSampler");
-    ParseXML(_node);
+    m_vcLabel = _node.stringXMLParameter("vcLabel", true, "", "Validity Test Method");
   }
 
 template<class MPTraits>
 void
 UniformRandomSampler<MPTraits>::
-ParseXML(XMLNodeReader& _node) {
-  m_vcLabel = _node.stringXMLParameter("vcLabel", true, "", "Validity Test Method");
-}
-
-template<class MPTraits>
-void
-UniformRandomSampler<MPTraits>::
-Print(ostream& _out) const {
-  SamplerMethod<MPTraits>::Print(_out);
-  _out << "\tvcLabel = " << m_vcLabel << endl;
+Print(ostream& _os) const {
+  SamplerMethod<MPTraits>::Print(_os);
+  _os << "\tvcLabel = " << m_vcLabel << endl;
 }
 
 template<class MPTraits>
 bool
 UniformRandomSampler<MPTraits>::
-Sampler(Environment* _env, shared_ptr<Boundary> _bb,
-    StatClass& _stats, CfgType& _cfgIn, vector<CfgType>& _cfgOut,
-    vector<CfgType>& _cfgCol) {
+Sampler(CfgType& _cfg, shared_ptr<Boundary> _boundary,
+    vector<CfgType>& _result, vector<CfgType>& _collision) {
 
   string callee(this->GetNameAndLabel() + "::SampleImpl()");
-  ValidityCheckerPointer vcm = this->GetMPProblem()->GetValidityChecker(m_vcLabel);
+  Environment* env = this->GetEnvironment();
+  ValidityCheckerPointer vcm = this->GetValidityChecker(m_vcLabel);
 
   if(this->m_debug)
     VDClearAll();
 
-  _stats.IncNodesAttempted(this->GetNameAndLabel());
-
-  //Obtain a random configuration within _bb
-  CfgType tmp;
-  tmp.GetRandomCfg(_env, _bb);
-
   //Is configuration within environment boundary?
-  bool inBBX = _env->InBounds(tmp, _env->GetBoundary());
+  bool inBBX = env->InBounds(_cfg);
   if(this->m_debug){
-    cout << "tmp::" << tmp << endl;
+    cout << "_cfg::" << _cfg << endl;
     cout << "InBoudary::" << inBBX << endl;
   }
 
   //Good. Now determine validity.
   if(inBBX) {
-    bool isValid = vcm->IsValid(tmp, callee);
+    bool isValid = vcm->IsValid(_cfg, callee);
     if(this->m_debug){
       cout << "IsValid::" << isValid << endl;
-      VDAddTempCfg(tmp, isValid);
+      VDAddTempCfg(_cfg, isValid);
       if(isValid)
         VDComment("UniformSampling::Cfg valid");
       else
@@ -98,22 +78,21 @@ Sampler(Environment* _env, shared_ptr<Boundary> _bb,
     }
     //Record valid node and confirm successful generation.
     if(isValid) {
-      _stats.IncNodesGenerated(this->GetNameAndLabel());
       if(this->m_debug)
-        cout << "Generated::" << tmp << endl;
-      _cfgOut.push_back(tmp);
+        cout << "Generated::" << _cfg << endl;
+      _result.push_back(_cfg);
       return true;
     }
     //Otherwise, unsuccessful.
     else {
-      _cfgCol.push_back(tmp);
+      _collision.push_back(_cfg);
       return false;
     }
   }
   //Sampled outside of boundary
   else if(this->m_debug){
     cout << "Attempt outside of boundary" << endl;
-    VDAddTempCfg(tmp, false);
+    VDAddTempCfg(_cfg, false);
     VDComment("UniformSampling::Cfg outside of boundary");
   }
   return false;

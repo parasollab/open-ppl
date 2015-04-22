@@ -3,6 +3,8 @@
 
 #include "LocalPlannerMethod.h"
 
+#include <containers/sequential/graph/algorithms/dijkstra.h>
+
 template<class MPTraits>
 class ToggleLP: public LocalPlannerMethod<MPTraits> {
   public:
@@ -126,13 +128,14 @@ ToggleLP<MPTraits>::IsConnected(
     LPOutput<MPTraits>* _lpOutput,
     double _positionRes, double _orientationRes,
     bool _checkCollision, bool _savePath, bool _saveFailedPath) {
+#ifndef _PARALLEL
+
   StatClass* stats = this->GetMPProblem()->GetStatClass();
 
   //Note : Initialize connected to false to avoid compiler warning in parallel
   //code.  If I am wrong please correct
   bool connected = false;
   //To do : fix me-Dijkstra doesn't compile with pGraph!!!!!!
-#ifndef _PARALLEL
   //clear lpOutput
   _lpOutput->Clear();
   m_pathGraph.clear();
@@ -160,10 +163,11 @@ ToggleLP<MPTraits>::IsConnected(
   }
 
   stats->IncLPCollDetCalls(this->GetNameAndLabel(), cdCounter);
+  return connected;
 #else
   stapl_assert(false, "ToggleLP calling Dijkstra on pGraph");
+  return false;
 #endif
-  return connected;
 }
 
 // Default for non closed chains - alters midpoint to a distance delta away on a
@@ -184,7 +188,7 @@ ToggleLP<MPTraits>::ChooseAlteredCfg(
   do{
     CfgType incr;
     double dist = dm->Distance(_c1, _c2) * sqrt(2.0)/2.0;
-    incr.GetRandomRay(dist, env, dm);
+    incr.GetRandomRay(dist, dm);
     temp = incr + mid;
   } while(!env->InBounds(temp) && attempts++ < 10);
   if(attempts == 10){

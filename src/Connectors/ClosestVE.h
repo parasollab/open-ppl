@@ -53,24 +53,27 @@ class CfgVEType {
 // are stored as a vector.
 // ------------------------------------------------------------------
 
-template <class MPTraits>
-CfgVEType<MPTraits>::CfgVEType(){
+template<class MPTraits>
+CfgVEType<MPTraits>::
+CfgVEType() {
   m_vid1 = INVALID_VID;
   m_vid2 = INVALID_VID;
   m_cfgOnEdge = CfgType();
   m_cfg2IsOnEdge = false;
 }
 
-template <class MPTraits>
-CfgVEType<MPTraits>::CfgVEType(VID _vid1, VID _vid2){
+template<class MPTraits>
+CfgVEType<MPTraits>::
+CfgVEType(VID _vid1, VID _vid2){
   m_vid1 = _vid1;
   m_vid2 = _vid2;
   m_cfgOnEdge = CfgType();
   m_cfg2IsOnEdge = false;
 }
 
-template <class MPTraits>
-CfgVEType<MPTraits>::CfgVEType(VID _vid1, VID _vid2, VID _endpt1, VID _endpt2, CfgType _cfgOnEdge){
+template<class MPTraits>
+CfgVEType<MPTraits>::
+CfgVEType(VID _vid1, VID _vid2, VID _endpt1, VID _endpt2, CfgType _cfgOnEdge){
   m_vid1 = _vid1;
   m_vid2 = _vid2;
   m_endpt1 = _endpt1;
@@ -80,11 +83,12 @@ CfgVEType<MPTraits>::CfgVEType(VID _vid1, VID _vid2, VID _endpt1, VID _endpt2, C
 }
 
 template<class MPTraits>
-CfgVEType<MPTraits>::~CfgVEType() {}
+CfgVEType<MPTraits>::
+~CfgVEType() {}
 
 #define KCLOSESTVE 5
 
-template <class MPTraits>
+template<class MPTraits>
 class ClosestVE: public ConnectorMethod<MPTraits> {
   private:
     typedef typename MPTraits::MPProblemType MPProblemType;
@@ -138,12 +142,12 @@ class ClosestVE: public ConnectorMethod<MPTraits> {
      *oldV contains Cfgs to be connected.
      *RoadmapGraph::GetEdges
      */
-    template <typename ColorMap, typename InputIterator1, typename InputIterator2, typename OutputIterator>
-    void Connect( RoadmapType* rm, StatClass& _stats,
-        ColorMap& _cmap,
-        InputIterator1 _oldV1, InputIterator1 _oldV2,
-        InputIterator2 _newV1, InputIterator2 _newV2,
-        OutputIterator _collision);
+    template<typename InputIterator1, typename InputIterator2,
+      typename OutputIterator>
+        void Connect(RoadmapType* rm,
+            InputIterator1 _itr1First, InputIterator1 _itr1Last,
+            InputIterator2 _itr2First, InputIterator2 _itr2Last,
+            OutputIterator _collision);
 
     int m_kClosest;
 };
@@ -277,13 +281,13 @@ ClosestVE<MPTraits>::FindKClosestPairs(RoadmapType* _rm,
 
 /////////////////////////////////////////////////////////////////////////////
 
-template <class MPTraits>
-template <typename ColorMap, typename InputIterator, typename InputIterator2, typename OutputIterator>
+template<class MPTraits>
+template<typename InputIterator, typename InputIterator2, typename OutputIterator>
 void
-ClosestVE<MPTraits>::Connect(RoadmapType* _rm, StatClass& _stats,
-    ColorMap& _cmap,
-    InputIterator _oldV1, InputIterator _oldV2,
-    InputIterator2 _newV1, InputIterator2 _newV2,
+ClosestVE<MPTraits>::
+Connect(RoadmapType* _rm,
+    InputIterator _itr1First, InputIterator _itr1Last,
+    InputIterator2 _itr2First, InputIterator2 _itr2Last,
     OutputIterator _collision){
 
   typedef typename MPProblemType::RoadmapType RoadmapType;
@@ -331,19 +335,18 @@ ClosestVE<MPTraits>::Connect(RoadmapType* _rm, StatClass& _stats,
 
   // for each "real" cfg in roadmap
   LPOutput<MPTraits> lpOutput;
-  for (InputIterator2 v = _newV1; v != _newV2; ++v) {
+  for (InputIterator2 v = _itr2First; v != _itr2Last; ++v) {
     // Find k closest cfgs in the roadmap
     VID curVID = _rm->GetGraph()->GetVID(v);
-    vector<CfgVEType<MPTraits> > KP = FindKClosestPairs(_rm, curVID, _oldV1, _oldV2, edges);
+    vector<CfgVEType<MPTraits> > KP = FindKClosestPairs(_rm, curVID, _itr1First, _itr1Last, edges);
 
     // for each pair identified
     typename vector<CfgVEType<MPTraits> >::iterator kp;
     for (kp=KP.begin();kp<KP.end();++kp){
       if(kp->m_vid1 != INVALID_VID || kp->m_vid2 != INVALID_VID){
-        _cmap.reset();
-        if(stapl::sequential::is_same_cc(*(_rm->GetGraph()), _cmap, kp->m_vid1, kp->m_vid2)){
+        typename GraphType::ColorMap colorMap;
+        if(stapl::sequential::is_same_cc(*_rm->GetGraph(), colorMap, kp->m_vid1, kp->m_vid2))
           continue;
-        }
       }
 
       CfgType cfg1 = _rm->GetGraph()->GetVertex(kp->m_vid1);

@@ -26,16 +26,18 @@ ifndef STAPL_DIR
 endif
 
 ifndef STL_LIB
-  STL_LIB = 4.6.2
+  STL_LIB = 4.8.2
 endif
 
 ifndef ROBOT_DEF
   # define robot type
   ROBOT_DEF = PMPCfg
+  #ROBOT_DEF = PMPCfgMultiRobot
   #ROBOT_DEF = PMPCfgSurface
   #ROBOT_DEF = PMPSSSurfaceMult
   #ROBOT_DEF = PMPReachDistCC
   #ROBOT_DEF = PMPReachDistCCFixed
+  #ROBOT_DEF = PMPReachableVolume
 endif
 
 # include makefile defaults
@@ -57,8 +59,14 @@ ${PMPL_LIBFILE}: ${PMPL_OBJS}
 
 library: ${PMPL_LIBFILE}
 
-pmpl: ${PMPL_LIBFILE} main.o
-	${CXX} ${CXXFLAGS} ${OPTS} main.o ${LIBS} -o $@
+ifeq (${parallel}, 1)
+  MAIN = parallel_main.o
+else
+  MAIN = main.o
+endif
+
+pmpl: ${PMPL_LIBFILE} ${MAIN}
+	${CXX} ${CXXFLAGS} ${OPTS} ${MAIN} ${LIBS} -o $@
 
 %.o: %.cpp
 	@${MAKE} -s check_platform
@@ -68,7 +76,7 @@ pmpl: ${PMPL_LIBFILE} main.o
 
 
 # clean targets
-CLEAN = ${PMPL_LIBFILE} main.o pmpl
+CLEAN = ${PMPL_LIBFILE} ${MAIN} pmpl
 
 reallyclean:
 	@${MAKE} clean

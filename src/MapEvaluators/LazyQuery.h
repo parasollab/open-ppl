@@ -73,7 +73,7 @@ LazyQuery<MPTraits>::ParseXML(XMLNodeReader& _node) {
   m_d = _node.numberXMLParameter("d", false, 0.0, 0.0, MAX_DBL, "Gaussian d value for node enhancement");
   for(XMLNodeReader::childiterator citr = _node.children_begin(); citr != _node.children_end(); citr++) {
     if(citr->getName() == "Resolution") {
-      m_resolutions.push_back(citr->numberXMLParameter("mult", true, 1, 1, MAXINT, "Multiple of finest resolution checked"));
+      m_resolutions.push_back(citr->numberXMLParameter("mult", true, 1, 1, MAX_INT, "Multiple of finest resolution checked"));
       citr->warnUnrequestedAttributes();
     }
   }
@@ -225,33 +225,28 @@ LazyQuery<MPTraits>::CanRecreatePath(RoadmapType* _rdmp, vector<VID>& _attempted
 template<class MPTraits>
 void
 LazyQuery<MPTraits>::NodeEnhance(RoadmapType* _rdmp) {
-  StatClass& stats = *(this->GetMPProblem()->GetStatClass());
   if(!m_numEnhance || !m_edges.size())
     return;
 
   if(this->m_debug)
     cout << "*E* In LazyQuery::NodeEnhance. Generated these VIDs:";
-  stapl::sequential::vector_property_map<GraphType, size_t> cmap;
 
   for(int i = 0; i < m_numEnhance; i++) {
     size_t index = LRand() % m_edges.size(); // do I need a typecast?
     CfgType seed, incr, enhance;
     seed = (m_edges[index].first + m_edges[index].second)/2.0;
-    DistanceMetricPointer dm = this->GetMPProblem()->GetDistanceMetric(this->m_dmLabel);
-    incr.GetRandomRay(fabs(GaussianDistribution(fabs(m_d), fabs(m_d))), this->GetMPProblem()->GetEnvironment(), dm);
+    DistanceMetricPointer dm = this->GetDistanceMetric(this->m_dmLabel);
+    incr.GetRandomRay(fabs(GaussianDistribution(fabs(m_d), fabs(m_d))), dm);
     enhance = seed + incr;
     enhance.SetLabel("Enhance", true);
 
-    if(!this->GetMPProblem()->GetEnvironment()->InBounds(enhance))
+    if(!this->GetEnvironment()->InBounds(enhance))
       continue;
 
     // Add enhance to roadmap and connect
     VID newVID = _rdmp->GetGraph()->AddVertex(enhance);
-    for(vector<string>::iterator label = this->m_nodeConnectionLabels.begin();
-            label != this->m_nodeConnectionLabels.end(); label++) {
-      cmap.reset();
-      this->GetMPProblem()->GetConnector(*label)->Connect(_rdmp, stats, cmap, newVID);
-    }
+    for(auto label : this->m_nodeConnectionLabels)
+      this->GetConnector(label)->Connect(_rdmp, newVID);
     if(this->m_debug)
       cout << " " << newVID;
   }

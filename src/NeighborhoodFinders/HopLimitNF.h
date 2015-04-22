@@ -2,7 +2,8 @@
 #define HOPLIMITNF_H_
 
 #include "NeighborhoodFinderMethod.h"
-#include "graph/algorithms/count_hop_pairs.h"
+
+#include <containers/sequential/graph/algorithms/count_hop_pairs.h>
 
 template<class MPTraits>
 class HopLimitNF : public NeighborhoodFinderMethod<MPTraits> {
@@ -57,7 +58,7 @@ template<typename InputIterator, typename OutputIterator>
 OutputIterator
 HopLimitNF<MPTraits>::FindNeighbors(RoadmapType* _rmp, InputIterator _first, InputIterator _last,
     const CfgType& _cfg, OutputIterator _out) {
-
+  #ifndef _PARALLEL // proper fix will be to call parallel versions of graph algorithms called here
   this->IncrementNumQueries();
   this->StartTotalTime();
   this->StartQueryTime();
@@ -80,7 +81,7 @@ HopLimitNF<MPTraits>::FindNeighbors(RoadmapType* _rmp, InputIterator _first, Inp
 
   this->EndQueryTime();
   this->EndTotalTime();
-
+  #endif
   return _out;
 }
 

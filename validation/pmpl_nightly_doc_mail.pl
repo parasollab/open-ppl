@@ -15,8 +15,6 @@ $outputdir = "/tmp/pmpl_nightly_logs";
 $cron_machine = "zenigata.cse.tamu.edu";
 #$MAILTO = "OBPRM\@listserv.tamu.edu";
 $MAILTO = "jdenny\@cse.tamu.edu";
-$ENV{'PATH'}    = '/usr/local/bin/:/usr/X11R6/bin/:'.$ENV{'PATH'};
-$ENV{'DISPLAY'} = '';
 
 #
 # figure out time and date

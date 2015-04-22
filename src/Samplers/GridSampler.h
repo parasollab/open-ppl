@@ -1,16 +1,15 @@
-/*
- * GridSampler.h
- * This samplers generates randomly a cfg c. Then for the dimensions stablished in the xml file
- * it generates a grid of points changing the values of c's dimensions and validate them.
- *
- */
-
 #ifndef GRID_SAMPLER_H_
 #define GRID_SAMPLER_H_
 
 #include "SamplerMethod.h"
+
 #include <algorithm>
 
+/*
+ * GridSampler.h
+ * This samplers generates randomly a cfg c. Then for the dimensions stablished in the xml file
+ * it generates a grid of points changing the values of c's dimensions and validate them.
+ */
 template <class MPTraits>
 class GridSampler : public SamplerMethod<MPTraits> {
 
@@ -20,7 +19,7 @@ class GridSampler : public SamplerMethod<MPTraits> {
     typedef typename MPProblemType::ValidityCheckerPointer ValidityCheckerPointer;
 
     GridSampler(string _vcm = "",
-        map<size_t, size_t> _numPoints = (map<size_t, size_t>()),
+        map<size_t, size_t> _numPoints = map<size_t, size_t>(),
         bool _useBoundary  = true);
 
     GridSampler(MPProblemType* _problem, XMLNodeReader& _node);
@@ -32,18 +31,15 @@ class GridSampler : public SamplerMethod<MPTraits> {
     virtual void Print(ostream& _os) const;
 
     // Attempts to sample, bool value is not working, it just return true at the end.
-    virtual bool Sampler(Environment* _env,
-        shared_ptr<Boundary> _bb, StatClass& _stats,
-        CfgType& _cfgIn, vector<CfgType>& _cfgOut,
-        vector<CfgType>& _cfgCol);
+    virtual bool Sampler(CfgType& _cfg, shared_ptr<Boundary> _boundary,
+        vector<CfgType>& _result, vector<CfgType>& _collision);
 
   private:
     void GetCoordLocation(int _iter, size_t _totalCell,
         map<size_t,size_t>& _coords, map<size_t,int> tempSize);
 
     void GetRealLocation(map<size_t,double>& _locations,
-        map<size_t,size_t> _coordinates,
-        Environment*  _env, shared_ptr<Boundary>  _bb);
+        map<size_t,size_t> _coordinates, shared_ptr<Boundary>  _boundary);
 
     string m_vcLabel; // Validity checker method
     map<size_t, size_t> m_numPoints; // Map of dimension to number of grid points
@@ -77,8 +73,8 @@ ParseXML(XMLNodeReader& _node) {
       citr != _node.children_end(); citr++) {
     if(citr->getName() == "Dimension") {
       size_t points = citr->numberXMLParameter("points", true, 10, 0,
-          MAXINT, "Number of grid points, excluding min and max");
-      size_t index = citr->numberXMLParameter("index", true, 0, 0, MAXINT,
+          MAX_INT, "Number of grid points, excluding min and max");
+      size_t index = citr->numberXMLParameter("index", true, 0, 0, MAX_INT,
           "Index in bounding box");
       m_numPoints[index] = points;
 
@@ -115,57 +111,46 @@ Print(ostream& _os) const {
 template<class MPTraits>
 bool
 GridSampler<MPTraits>::
-Sampler(Environment* _env, shared_ptr<Boundary> _bb, StatClass& _stats,
-    CfgType& _cfgIn, vector<CfgType>& _cfgOut, vector<CfgType>& _cfgCol) {
+Sampler(CfgType& _cfg, shared_ptr<Boundary> _boundary,
+    vector<CfgType>& _result, vector<CfgType>& _collision) {
 
   string callee = this->GetNameAndLabel() + "::Sampler()";
-  ValidityCheckerPointer vc = this->GetMPProblem()->
-    GetValidityChecker(m_vcLabel);
-
-  // Set tmp to _cfgIn or a random configuration
-  CfgType tmp = _cfgIn;
-  if(tmp == CfgType())
-    tmp.GetRandomCfg(_env,_bb);
+  ValidityCheckerPointer vc = this->GetValidityChecker(m_vcLabel);
 
   //Calculate total number of cfg to be created
   size_t totalCell = 1;
-  for(map<size_t, size_t>::iterator it = m_numPoints.begin();
-      it != m_numPoints.end(); it++) {
-    totalCell = totalCell* it->second;
+  for(auto num : m_numPoints) {
+    totalCell = totalCell * num.second;
   }
   //Generate all the points in the grid for the asked dimensions
-  for(size_t iter=0; iter<totalCell; iter++) {
+  for(size_t i = 0; i < totalCell; ++i) {
     map<size_t,size_t> coordinates;
     map<size_t,int> tempSize;
     int dimSize = 1;
     //Get the cummulative sizes of the dimensions required.
     //Multiply the size of the n first dimensions and each time use one more dim.
-    for(map<size_t, size_t>::iterator it = m_numPoints.begin();
-        it != m_numPoints.end(); it++) {
-      int index = it->first;
-      int sizee = it->second;
+    for(auto num : m_numPoints) {
+      int index = num.first;
+      int sizee = num.second;
       dimSize = dimSize * sizee;
       tempSize[index] = dimSize;
     }
     //Returns coordinates in the grid as int value (uses m_numPoints)
-    GetCoordLocation(iter,totalCell,coordinates,tempSize);
+    GetCoordLocation(i, totalCell, coordinates, tempSize);
 
-    //Turn the grid's coordinates into real values (uses m_numPoints, _env, _bb)
+    //Turn the grid's coordinates into real values (uses m_numPoints, _boundary)
     map<size_t,double> locations;
-    GetRealLocation(locations,coordinates, _env, _bb);
+    GetRealLocation(locations, coordinates, _boundary);
 
     //Update the DoF values of the point generated.
-    for (map<size_t, double>::iterator it = locations.begin();
-        it != locations.end(); it++) {
-      int index = it->first;
-      double sizee = it->second;
-      tmp[index] = sizee;
-    }
+    for(auto location : locations)
+      _cfg[location.first] = location.second;
 
-    // Is tmp a valid configuration?
-    if(_env->InBounds(tmp, _bb) && vc->IsValid(tmp, callee)) {
+    // Is _cfg a valid configuration?
+    if(this->GetEnvironment()->InBounds(_cfg, _boundary) &&
+        vc->IsValid(_cfg, callee)) {
       // Yes (sampler successful)
-      _cfgOut.push_back(tmp);
+      _result.push_back(_cfg);
     }
   }
   return true;
@@ -227,25 +212,22 @@ template<class MPTraits>
 void
 GridSampler<MPTraits>::
 GetRealLocation(map<size_t,double>& _locations, map<size_t,size_t> _coordinates,
-    Environment*  _env, shared_ptr<Boundary>  _bb) {
+    shared_ptr<Boundary>  _boundary) {
 
-  for(map<size_t, size_t>::iterator it = m_numPoints.begin();
-      it != m_numPoints.end(); it++) {
-    int index = it->first;
-    int numPoints = it->second;
+  for(auto num : m_numPoints) {
+    int index = num.first;
+    int numPoints = num.second;
 
     // Get bounding box min and max (for this dimension)
-    pair<double, double> range = _env->GetRange(index, _bb);
+    pair<double, double> range = this->GetEnvironment()->GetRange(index, _boundary);
 
     // Resolution of grid
     double auxPoints = (double) numPoints;
     double delta;
-    if(numPoints == 0) {
+    if(numPoints == 0)
       delta = (range.second - range.first);
-    }
-    else {
+    else
       delta = (range.second - range.first) / auxPoints;
-    }
 
     // Get the real place in the workspace .
     double coor = (double) _coordinates[index];

@@ -128,7 +128,7 @@ PQPSolid::BuildPQPSegment(PQP_REAL _dX, PQP_REAL _dY, PQP_REAL _dZ) const{
   if( _dY==0 && _dZ==0 && _dX==0 )
      cerr << "! CollisionDetection::BuildPQPRay Warning : All are [0]" << endl;
 
-  static PQP_REAL tinyV = ((double)1e-20)/LONG_MAX;
+  static PQP_REAL tinyV = ((double)1e-20)/numeric_limits<long>::max();
   static PQP_REAL picoV = tinyV/2;
   PQP_REAL p1[3] = { tinyV, tinyV, tinyV };
   PQP_REAL p2[3] = { picoV, picoV, picoV };

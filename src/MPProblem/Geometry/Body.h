@@ -20,9 +20,6 @@
 #include "MPProblem/Geometry/GMSPolyhedron.h"
 #include "MPProblem/Geometry/Connection.h"
 #include "MPProblem/Robot.h"
-#include "boost/shared_ptr.hpp"
-
-using boost::shared_ptr;
 
 class MultiBody;
 class DHparameters;

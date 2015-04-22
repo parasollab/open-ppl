@@ -19,15 +19,17 @@ class RewireConnector : public ConnectorMethod<MPTraits> {
     RewireConnector(string _nfLabel = "", string _lpLabel = "");
     RewireConnector(MPProblemType* _problem, XMLNodeReader& _node);
 
-    template<typename ColorMap, typename InputIterator1, typename InputIterator2, typename OutputIterator>
-      void Connect(RoadmapType* _rm, StatClass& _stats, ColorMap& cmap,
-          InputIterator1 _itr1First, InputIterator1 _itr1Last,
-          InputIterator2 _itr2First, InputIterator2 _itr2Last, OutputIterator _collision);
+    template<typename InputIterator1, typename InputIterator2,
+      typename OutputIterator>
+        void Connect(RoadmapType* _rm,
+            InputIterator1 _itr1First, InputIterator1 _itr1Last,
+            InputIterator2 _itr2First, InputIterator2 _itr2Last,
+            OutputIterator _collision);
 
   private:
     template<typename OutputIterator>
-      void ConnectNeighbors (RoadmapType* _rm, StatClass& _stats,
-          VID _vid, vector<pair<VID, double> >& _closest, OutputIterator _collision);
+      void ConnectNeighbors(RoadmapType* _rm, VID _vid,
+          vector<pair<VID, double> >& _closest, OutputIterator _collision);
 
     double GetDistance(VID _vid1, VID _vid2, RoadmapType* _rm);
     double GetShortestPath(VID _root, VID _vid, RoadmapType* _rm);
@@ -55,20 +57,16 @@ RewireConnector<MPTraits>::RewireConnector(MPProblemType* _problem, XMLNodeReade
   }
 
 template<class MPTraits>
-template<typename ColorMap, typename InputIterator1, typename InputIterator2, typename OutputIterator>
+template<typename InputIterator1, typename InputIterator2, typename OutputIterator>
 void
-RewireConnector<MPTraits>::Connect(RoadmapType* _rm, StatClass& _stats, ColorMap& _cmap,
+RewireConnector<MPTraits>::
+Connect(RoadmapType* _rm,
     InputIterator1 _itr1First, InputIterator1 _itr1Last,
     InputIterator2 _itr2First, InputIterator2 _itr2Last,
     OutputIterator _collision) {
 
 
-  if(this->m_debug){
-    cout << endl;
-    this->Print(cout);
-  }
-
-  NeighborhoodFinderPointer nfptr = this->GetMPProblem()->GetNeighborhoodFinder(this->m_nfLabel);
+  NeighborhoodFinderPointer nfptr = this->GetNeighborhoodFinder(this->m_nfLabel);
 
   // the vertices in this iteration are the source for the connection operation
   for(InputIterator1 itr1 = _itr1First; itr1 != _itr1Last; ++itr1){
@@ -93,17 +91,18 @@ RewireConnector<MPTraits>::Connect(RoadmapType* _rm, StatClass& _stats, ColorMap
     }
 
     //test connections through LP
-    ConnectNeighbors(_rm, _stats, vid, closest, _collision);
+    ConnectNeighbors(_rm, vid, closest, _collision);
   }
 }
 
 template<class MPTraits>
 template<typename OutputIterator>
 void
-RewireConnector<MPTraits>::ConnectNeighbors(RoadmapType* _rm, StatClass& _stats,
-    VID _vid, vector<pair<VID, double> >& _closest, OutputIterator _collision) {
-
-  Environment* env = this->GetMPProblem()->GetEnvironment();
+RewireConnector<MPTraits>::
+ConnectNeighbors(RoadmapType* _rm, VID _vid,
+    vector<pair<VID, double> >& _closest, OutputIterator _collision) {
+ #ifndef _PARALLEL // proper fix will be to call parallel dijkstra if there is one
+  Environment* env = this->GetEnvironment();
   LPOutput<MPTraits> lpOutput, minlpOutput;
 
   typename GraphType::vertex_iterator vi = _rm->GetGraph()->find_vertex(_vid);
@@ -178,10 +177,12 @@ RewireConnector<MPTraits>::ConnectNeighbors(RoadmapType* _rm, StatClass& _stats,
     double neighborDist = GetDistance(neighbor, _vid, _rm);
     if((m_distanceBased && vidCost + neighborDist < neighborCost) ||
         (!m_distanceBased && min(vidCost, neighborDist) > neighborCost)){
-      if(this->GetMPProblem()->GetLocalPlanner(this->m_lpLabel)->
+      bool connectable = this->GetLocalPlanner(this->m_lpLabel)->
           IsConnected(_rm->GetGraph()->GetVertex(_vid),
             _rm->GetGraph()->GetVertex(neighbor),
-            col, &lpOutput, env->GetPositionRes(), env->GetOrientationRes(), true)) {
+            col, &lpOutput, env->GetPositionRes(), env->GetOrientationRes(), true);
+      this->AddConnectionAttempt(_vid, neighbor, connectable);
+      if(connectable) {
         // Getting the parent
         vi = _rm->GetGraph()->find_vertex(neighbor);
         ei = (*vi).begin();
@@ -204,6 +205,7 @@ RewireConnector<MPTraits>::ConnectNeighbors(RoadmapType* _rm, StatClass& _stats,
       }
     }
   }
+  #endif
 }
 
 template<class MPTraits>

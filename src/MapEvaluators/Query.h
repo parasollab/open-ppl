@@ -1,14 +1,14 @@
-// A map evaluator that runs a query. Stops running when query returns a valid path.
-// If no path is found, returns to sampling again.
-
 #ifndef QUERY_H_
 #define QUERY_H_
 
 #include "MapEvaluatorMethod.h"
+
 #include "LocalPlanners/LPOutput.h"
+#include "LocalPlanners/MedialAxisLP.h"
 #include "Utilities/MetricUtils.h"
 #include "Utilities/MedialAxisUtilities.h"
-#include "LocalPlanners/MedialAxisLP.h"
+
+#include <containers/sequential/graph/algorithms/astar.h>
 
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup MapEvaluators
@@ -48,6 +48,7 @@ class Query : public MapEvaluatorMethod<MPTraits> {
     vector<CfgType>& GetQuery() { return m_query; }
     vector<CfgType>& GetPath() { return m_path; }
     vector<VID>& GetPathVIDs() { return m_pathVIDs; }
+    void SetWritePath(bool _b) {m_writePaths = _b;}
 
     // Reads a query and calls the other PerformQuery(), then calls Smooth() if desired
     virtual bool PerformQuery(RoadmapType* _rdmp);
@@ -291,8 +292,8 @@ Query<MPTraits>::PerformQuery(const CfgType& _start, const CfgType& _goal, Roadm
   if(m_nodeConnectionLabels.empty())
     m_nodeConnectionLabels.push_back("");
 
-  for(vector<string>::iterator it = m_nodeConnectionLabels.begin(); it != m_nodeConnectionLabels.end(); it++)
-    connectionMethods.push_back(this->GetMPProblem()->GetConnector(*it));
+  for(auto label : m_nodeConnectionLabels)
+    connectionMethods.push_back(this->GetConnector(label));
 
   // Add start and goal to roadmap (if not already there)
   VID sVID, gVID;
@@ -326,15 +327,11 @@ Query<MPTraits>::PerformQuery(const CfgType& _start, const CfgType& _goal, Roadm
       cmap.reset();
       stats->IncGOStat("CC Operations");
       stapl::sequential::get_cc(*(_rdmp->GetGraph()), cmap, ccIt->second, cc);
-      vector<VID> verticesList(1, sVID);
       if(this->m_debug)
         cout << "*Q* Connecting start to ccIt[" << distance(ccsBegin, ccIt)+1 << "]" << endl;
 
-      for(typename vector<ConnectorPointer>::iterator
-          itr = connectionMethods.begin(); itr != connectionMethods.end(); itr++) {
-        cmap.reset();
-        (*itr)->Connect(_rdmp, *stats, cmap, verticesList.begin(), verticesList.end(), cc.begin(), cc.end());
-      }
+      for(auto connector : connectionMethods)
+        connector->Connect(_rdmp, sVID, cc.begin(), cc.end());
     }
 
     // Try to connect goal to cc
@@ -350,15 +347,11 @@ Query<MPTraits>::PerformQuery(const CfgType& _start, const CfgType& _goal, Roadm
         stats->IncGOStat("CC Operations");
         stapl::sequential::get_cc(*(_rdmp->GetGraph()), cmap, ccIt->second, cc);
       }
-      vector<VID> verticesList(1, gVID);
       if(this->m_debug)
         cout << "*Q* Connecting goal to ccIt[" << distance(ccsBegin, ccIt)+1 << "]" << endl;
 
-      for(typename vector<ConnectorPointer>::iterator
-          itr = connectionMethods.begin(); itr != connectionMethods.end(); itr++) {
-        cmap.reset();
-        (*itr)->Connect(_rdmp, *stats, cmap, verticesList.begin(), verticesList.end(), cc.begin(), cc.end());
-      }
+      for(auto connector : connectionMethods)
+        connector->Connect(_rdmp, gVID, cc.begin(), cc.end());
     }
 
     // Check if start and goal are connected to the same CC
@@ -458,6 +451,9 @@ bool
 Query<MPTraits>::CanRecreatePath(RoadmapType* _rdmp, vector<VID>& _attemptedPath, vector<CfgType>& _recreatedPath) {
   Environment* env = this->GetMPProblem()->GetEnvironment();
   _recreatedPath.push_back(_rdmp->GetGraph()->GetVertex(*(_attemptedPath.begin())));
+#ifdef _PARALLEL
+  return true;
+#else
   for(typename vector<VID>::iterator it = _attemptedPath.begin(); it+1 != _attemptedPath.end(); it++) {
     LPOutput<MPTraits> ci;
     typename GraphType::vertex_iterator vi;
@@ -510,6 +506,7 @@ Query<MPTraits>::CanRecreatePath(RoadmapType* _rdmp, vector<VID>& _attemptedPath
     }*/
   }
   return true;
+#endif
 }
 
 // Reads query CfgTypes from file

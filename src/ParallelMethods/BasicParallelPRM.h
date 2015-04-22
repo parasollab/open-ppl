@@ -25,6 +25,9 @@ class SampleWF {
       m_problem = _problem;
 
     }
+
+    typedef void result_type;
+
     void define_type(stapl::typer& _t) {
     }
 
@@ -36,10 +39,8 @@ class SampleWF {
       int num_nodes = _view.size();
       vector<CfgType> outNodes;
       cout << "Num_Nodes::" << num_nodes << endl;
-      vector<CfgType> inNodes(num_nodes);
 
-      StatClass* stat = m_problem->GetStatClass();
-      m_nodeGen->Sample(m_problem->GetEnvironment(),*stat,inNodes.begin(),inNodes.end(), 100, back_inserter(outNodes));
+      m_nodeGen->Sample(num_nodes, 100, m_problem->GetEnvironment()->GetBoundary(), back_inserter(outNodes));
 
       cout << "Add to Graph" << endl;
       size_t j(0);
@@ -69,6 +70,9 @@ class ConnectWF {
       m_nodeCon = _ncm;
       m_problem = _problem;
     }
+
+    typedef void result_type;
+
     void define_type(stapl::typer& _t) {
        _t.member(m_problem);
        _t.member(m_nodeCon);
@@ -91,11 +95,8 @@ class ConnectWF {
 	v2.push_back((*vit2).descriptor());
       }
 
-      stapl::sequential::vector_property_map<typename GraphType::GRAPH, size_t> cmap;
-      cmap.reset();
-      //vector<VID> dummyVec;
       m_nodeCon->Connect(m_problem->GetRoadmap(),
-        *(m_problem->GetStatClass()), cmap, v1.begin(),v1.end(), v2.begin(), v2.end());
+          v1.begin(),v1.end(), v2.begin(), v2.end());
     }
 };
 
@@ -161,8 +162,8 @@ BasicParallelPRM<MPTraits>::ParseXML(XMLNodeReader& _node) {
   XMLNodeReader::childiterator citr;
   for( citr = _node.children_begin(); citr!= _node.children_end(); ++citr) {
     if(citr->getName() == "node_generation_method") {
-      string node_gen_method = citr->stringXMLParameter(string("Method"), true,
-        string(""), string("Node Generation Method"));
+      string node_gen_method = citr->stringXMLParameter("Method", true,
+        "", "Node Generation Method");
       int numPerIteration = citr->numberXMLParameter(string("Number"), true,
         int(1), int(0), MAX_INT, string("Number of samples"));
       m_vecStrNodeGenLabels.push_back(pair<string, int>(node_gen_method, numPerIteration));
@@ -184,8 +185,8 @@ template<class MPTraits>
 void
 BasicParallelPRM<MPTraits>::Print(ostream& _os) const {
   MPStrategyMethod<MPTraits>::Print(_os);
-  typedef vector<pair<string, int> >::iterator VIter;
-  typedef vector<string>::iterator StringIter;
+  typedef vector<pair<string, int> >::const_iterator VIter;
+  typedef vector<string>::const_iterator StringIter;
   _os<<"\nSamplers\n";
   for(VIter vIter=m_vecStrNodeGenLabels.begin();
       vIter!=m_vecStrNodeGenLabels.end(); vIter++){
@@ -247,7 +248,7 @@ BasicParallelPRM<MPTraits>::Run() {
 
       t2.start();
       ConnectWF<MPTraits> connWf(connector, this->GetMPProblem());
-      stapl::map_func(connWf, stapl::native_view(g_view), stapl::repeat_view(g_view));
+      stapl::map_func(connWf, stapl::native_view(g_view), stapl::make_repeat_view(g_view));
       connect_timer = t2.stop();
       if (this->m_debug) {
           cout<<"\n processor #["<<stapl::get_location_id()<<"] NodeConnection time  = "  << connect_timer << endl;
@@ -265,17 +266,10 @@ BasicParallelPRM<MPTraits>::Finalize() {
   // Write roadmap to file
   //---------------------------
   stapl::rmi_fence();
-  string str = this->GetBaseFilename() + ".map";
-  ofstream osMap(str.c_str());
-  if(!osMap) {
 
-     cerr << "ERROR::Can't open outfile. "<< endl;
-     cerr << "Reference this error on line "<< __LINE__ << " of file " << __FILE__ << endl;
-     exit(-1);
-  }else {
-     this->GetMPProblem()->GetRoadmap()->Write(osMap, this->GetMPProblem()->GetEnvironment());
-     osMap.close();
-  }
+  string str = this->GetBaseFilename() + ".map";
+  this->GetMPProblem()->GetRoadmap()->Write(str, this->GetMPProblem()->GetEnvironment());
+
   stapl::rmi_fence();
   if (this->m_debug) cout << "!!ALL FINISHED!!"<< endl;
 }

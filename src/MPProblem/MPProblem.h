@@ -131,7 +131,7 @@ class MPProblem
     void SetMPProblem();
 
     //solver, seed, baseName, vizmoDebugName
-    typedef boost::tuples::tuple<string, long, string, string> Solver;
+    typedef tuple<string, long, string, string> Solver;
     void AddSolver(const string& _label, long _seed,
         const string& _baseFileName, const string& _vizmoDebugName) {
       m_solvers.push_back(Solver(_label, _seed, _baseFileName, _vizmoDebugName));
@@ -452,20 +452,26 @@ MPProblem<MPTraits>::Solve() {
     m_stats = new StatClass();
 
     //initialize vizmo debug if there is a valid filename
-    if(sit->get<3>() != "")
-      VDInit(sit->get<3>());
+    string vdfilename = get<3>(*sit);
+    if(vdfilename != "")
+      VDInit(vdfilename);
 
     //call solver
-    cout << "\n\nMPProblem is solving with MPStrategyMethod labeled " << sit->get<0>() << " using seed " << sit->get<1>() << "." << endl;
-    SRand(sit->get<1>());
+    cout << "\n\nMPProblem is solving with MPStrategyMethod labeled "
+      << get<0>(*sit)
+      << " using seed " << get<1>(*sit) << "." << endl;
+#ifdef _PARALLEL
+    SRand(get<1>(*sit) + get_location_id());
+#else
+    SRand(get<1>(*sit));
+#endif
+    SetBaseFilename(get<2>(*sit));
+    m_stats->SetAuxDest(GetBaseFilename());
 
-    SetBaseFilename(sit->get<2>());
-    GetStatClass()->SetAuxDest(GetBaseFilename());
-
-    GetMPStrategy(sit->get<0>())->operator()();
+    GetMPStrategy(get<0>(*sit))->operator()();
 
     //close vizmo debug if necessary
-    if(sit->get<3>() != "")
+    if(vdfilename != "")
       VDClose();
   }
 };

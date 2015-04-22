@@ -23,7 +23,7 @@ class TraceMAPush : public TraceObstacle<MPTraits> {
     TraceMAPush(MPProblemType* _problem, XMLNodeReader& _node);
 
     virtual bool Extend(const CfgType& _near, const CfgType& _dir,
-        CfgType& _new, vector<CfgType>& _innerNodes);
+        CfgType& _new, LPOutput<MPTraits>& _lpOutput);
 
   private:
     MedialAxisUtility<MPTraits> m_medialAxisUtility;
@@ -37,7 +37,8 @@ TraceMAPush<MPTraits>::TraceMAPush(const string& _dmLabel,
 }
 
 template<class MPTraits>
-TraceMAPush<MPTraits>::TraceMAPush(MPProblemType* _problem, XMLNodeReader& _node) :
+TraceMAPush<MPTraits>::TraceMAPush(MPProblemType* _problem,
+    XMLNodeReader& _node) :
   TraceObstacle<MPTraits>(_problem, _node),
   m_medialAxisUtility(_problem, _node) {
     this->SetName("TraceMAPush");
@@ -46,23 +47,29 @@ TraceMAPush<MPTraits>::TraceMAPush(MPProblemType* _problem, XMLNodeReader& _node
 template<class MPTraits>
 bool
 TraceMAPush<MPTraits>::Extend(const CfgType& _near, const CfgType& _dir,
-    CfgType& _new, vector<CfgType>& _innerNodes) {
+    CfgType& _new, LPOutput<MPTraits>& _lpOutput) {
   // Setup MP Variables
-  Environment* env = this->GetMPProblem()->GetEnvironment();
+  Environment* env = this->GetEnvironment();
   CfgType innerCfg;
-  int weight;
 
   // The target configuration is pushed in the obstacle direction
-  TraceObstacle<MPTraits>::Extend(_near, _dir, innerCfg, _innerNodes);
+  TraceObstacle<MPTraits>::Extend(_near, _dir, innerCfg, _lpOutput);
+  _lpOutput.m_intermediates.push_back(innerCfg);
 
   // The target cfg is pushed toward the medial axis of the configuration space
   if(this->m_debug)
     cout << "pushed toward the medial axis" << endl;
   if(m_medialAxisUtility.PushToMedialAxis(innerCfg,
-      this->GetMPProblem()->GetEnvironment()->GetBoundary()))
-    return this->Expand(_near, innerCfg, _new, this->m_delta, weight,
-        env->GetPositionRes(), env->GetOrientationRes());
-  else
+      this->GetEnvironment()->GetBoundary())) {
+    LPOutput<MPTraits> newLPOutput;
+    bool result = this->Expand(_near, innerCfg, _new, this->m_delta,
+        newLPOutput, env->GetPositionRes(), env->GetOrientationRes());
+    _lpOutput.m_edge.first.SetWeight(_lpOutput.m_edge.first.GetWeight() +
+        newLPOutput.m_edge.first.GetWeight());
+    _lpOutput.m_edge.second.SetWeight(_lpOutput.m_edge.second.GetWeight() +
+        newLPOutput.m_edge.second.GetWeight());
+    return result;
+  } else
     return false;
 }
 
