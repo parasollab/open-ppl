@@ -35,7 +35,7 @@ if (!defined $opt_p || !(($opt_p eq "0") || ($opt_p eq "1"))) {
 $PLATFORM = $opt_c;
 $ROBOT = "PMPCfg";
 if($opt_r eq "surface") { $ROBOT = "PMPCfgSurface"; }
-if($opt_r eq "reach") { $ROBOT = "PMPReachDistCC"; }
+if($opt_r eq "reach") { $ROBOT = "PMPReachableVolume"; }
 if($opt_r eq "multi") { $ROBOT = "PMPCfgMultiRobot"; }
 $DEBUG = $opt_d;
 $PARALLEL = $opt_p;
