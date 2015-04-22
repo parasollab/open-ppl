@@ -84,7 +84,7 @@ public:
     virtual void GetRandomCfg(Environment* _env, shared_ptr<Boundary> _bb);
 
     template<class DistanceMetricPointer>
-      void GetRandomRay(double _incr, Environment* _env,  DistanceMetricPointer _dm, bool _norm=true);
+      void GetRandomRay(double _incr, DistanceMetricPointer _dm, bool _norm=true);
 
     virtual bool ConfigEnvironment(Environment* _env) const;
 
@@ -126,10 +126,9 @@ public:
 template<class DistanceMetricPointer>
 void
 CfgMultiRobot::
-GetRandomRay(double _incr, Environment* _env,  DistanceMetricPointer _dm, bool _norm){
-  for(size_t i = 0; i < m_robotsCollect.size(); ++i) {
-    this->m_robotsCollect[i].GetRandomRay(_incr, _env, _dm, _norm);
-  }
+GetRandomRay(double _incr, DistanceMetricPointer _dm, bool _norm) {
+  for(auto robot : m_robotsCollect)
+    robot.GetRandomRay(_incr, _dm, _norm);
 }
 
 template<template<class> class ClearanceUtility, class MPTraits>
