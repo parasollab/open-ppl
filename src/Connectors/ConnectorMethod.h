@@ -77,7 +77,7 @@ class ConnectorMethod : public MPBaseObject<MPTraits>
       void Connect(RoadmapType* _rm,
           OutputIterator _collision = OutputIterator()) {
         GraphType* g = _rm->GetGraph();
-        Connect(g->begin(), g->end(), g->begin(), g->end(), _collision);
+        Connect(_rm, g->begin(), g->end(), g->begin(), g->end(), _collision);
       }
 
 
