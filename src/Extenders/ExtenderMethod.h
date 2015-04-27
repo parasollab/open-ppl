@@ -1,9 +1,6 @@
 #ifndef EXTENDER_METHOD_H_
 #define EXTENDER_METHOD_H_
 
-#include <string>
-#include <iostream>
-
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup Extenders
 /// @brief Base algorithm abstraction for \ref Extenders.
@@ -36,7 +33,7 @@ class ExtenderMethod : public MPBaseObject<MPTraits> {
     /// @code
     /// ExtenderPointer e = this->GetExtender(m_eLabel);
     /// CfgType c, cDir, cNew;
-    //  LPOutput<MPTraits> lpOutput;
+    /// LPOutput<MPTraits> lpOutput;
     /// bool pass = e->Extend(c, cDir, cNew, lpOutput);
     /// @endcode
     ////////////////////////////////////////////////////////////////////////////

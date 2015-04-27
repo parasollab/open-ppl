@@ -1,5 +1,5 @@
-#ifndef MPSTRATEGYMETHOD_H_
-#define MPSTRATEGYMETHOD_H_
+#ifndef MP_STRATEGY_METHOD_H_
+#define MP_STRATEGY_METHOD_H_
 
 #include "Utilities/MPUtils.h"
 #include "Utilities/MetricUtils.h"
@@ -14,7 +14,7 @@
 ///
 /// @usage
 /// @code
-/// MPStrategyPointer mps = this->GetMPProblem()->GetMPStrategy(m_mpsLabel);
+/// MPStrategyPointer mps = this->GetMPStrategy(m_mpsLabel);
 /// (*mps)(); //call as a function object
 /// mps->operator()(); //call with pointer notation
 /// @endcode
@@ -31,8 +31,6 @@ class MPStrategyMethod : public MPBaseObject<MPTraits> {
     MPStrategyMethod(MPProblemType* _problem, XMLNodeReader& _node);
     virtual ~MPStrategyMethod();
 
-    virtual void ParseXML(XMLNodeReader& _node);
-
     void operator()();
 
     virtual void Initialize()=0;
@@ -40,53 +38,46 @@ class MPStrategyMethod : public MPBaseObject<MPTraits> {
     virtual void Finalize()=0;
     virtual void Print(ostream& _os) const;
 
-    string GetBaseFilename(){return m_baseFilename;}
-    void SetBaseFilename(string _s){m_baseFilename = _s;}
     void SetBoundary(shared_ptr<Boundary> bb){m_boundary=bb;};
 
-    bool EvaluateMap(vector<string> _evaluators);
+    bool EvaluateMap(const vector<string>& _evaluators);
 
     // Virtual method used in PRMWithRRTStrategy
     virtual bool CheckNarrowPassageSample(VID _vid) { return false; }
 
   protected:
     shared_ptr<Boundary> m_boundary;
-
-  private:
-    string m_baseFilename;
 };
 
 template<class MPTraits>
-MPStrategyMethod<MPTraits>::MPStrategyMethod() {
+MPStrategyMethod<MPTraits>::
+MPStrategyMethod() {
 }
 
 template<class MPTraits>
-MPStrategyMethod<MPTraits>::MPStrategyMethod(MPProblemType* _problem, XMLNodeReader& _node) : MPBaseObject<MPTraits>(_problem, _node) {
-  ParseXML(_node);
-  if(m_boundary==NULL)
-    m_boundary = this->GetMPProblem()->GetEnvironment()->GetBoundary();
-}
+MPStrategyMethod<MPTraits>::
+MPStrategyMethod(MPProblemType* _problem, XMLNodeReader& _node) :
+  MPBaseObject<MPTraits>(_problem, _node) {
+    if(m_boundary==NULL)
+      m_boundary = this->GetEnvironment()->GetBoundary();
+  }
 
 template<class MPTraits>
-MPStrategyMethod<MPTraits>::~MPStrategyMethod() {
+MPStrategyMethod<MPTraits>::
+~MPStrategyMethod() {
 }
 
 template<class MPTraits>
 void
-MPStrategyMethod<MPTraits>::ParseXML(XMLNodeReader& _node){
-};
-
-template<class MPTraits>
-void
-MPStrategyMethod<MPTraits>::Print(ostream& _os) const {
+MPStrategyMethod<MPTraits>::
+Print(ostream& _os) const {
   _os << this->GetNameAndLabel() << endl;
 }
 
 template<class MPTraits>
 void
-MPStrategyMethod<MPTraits>::operator()(){
-  this->GetMPProblem()->GetStatClass()->SetAuxDest(GetBaseFilename());
-
+MPStrategyMethod<MPTraits>::
+operator()() {
   Initialize();
   Run();
   Finalize();
@@ -94,42 +85,40 @@ MPStrategyMethod<MPTraits>::operator()(){
 
 template<class MPTraits>
 bool
-MPStrategyMethod<MPTraits>::EvaluateMap(vector<string> _evaluators) {
-  if(_evaluators.empty()) {
+MPStrategyMethod<MPTraits>::
+EvaluateMap(const vector<string>& _evaluators) {
+  if(_evaluators.empty())
     return true;
-  }
   else {
-    StatClass* stats = this->GetMPProblem()->GetStatClass();
+    StatClass* stats = this->GetStatClass();
 
-    bool mapPassedEvaluation = false;
+    bool passed = true;
     string clockName = this->GetNameAndLabel() + "::EvaluateMap()";
     stats->StartClock(clockName);
-    mapPassedEvaluation = true;
 
-    for(vector<string>::iterator I = _evaluators.begin(); I != _evaluators.end(); ++I) {
-      MapEvaluatorPointer evaluator = this->GetMPProblem()->GetMapEvaluator(*I);
-      stringstream evaluatorClockName;
-      evaluatorClockName << clockName << "::" << evaluator->GetNameAndLabel();
-      stats->StartClock(evaluatorClockName.str());
-      if(this->m_debug) cout << "\n\t";
-      mapPassedEvaluation = evaluator->operator()();
-      if(this->m_debug) cout << "\t";
-      stats->StopClock(evaluatorClockName.str());
-      if(this->m_debug){
-        stats->PrintClock(evaluatorClockName.str(), cout);
+    for(auto eval : _evaluators) {
+      MapEvaluatorPointer evaluator = this->GetMapEvaluator(eval);
+      const string& evalName = evaluator->GetNameAndLabel();
+
+      stats->StartClock(evalName);
+      passed = evaluator->operator()();
+      stats->StopClock(evalName);
+
+      if(this->m_debug) {
+        stats->PrintClock(evaluator->GetNameAndLabel(), cout);
+        cout << evalName
+          << (passed ? "  (Passed)" : "  (Failed)") << endl;
       }
-      if(mapPassedEvaluation){
-        if(this->m_debug) cout << "\t  (passed)\n";
-      }
-      else{
-        if(this->m_debug) cout << "\t  (failed)\n";
-      }
-      if(!mapPassedEvaluation)
+
+      if(!passed)
         break;
     }
+
     stats->StopClock(clockName);
-    if(this->m_debug) stats->PrintClock(clockName, cout);
-    return mapPassedEvaluation;
+    if(this->m_debug)
+      stats->PrintClock(clockName, cout);
+
+    return passed;
   }
 }
 

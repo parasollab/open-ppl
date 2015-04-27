@@ -47,6 +47,9 @@ class MPProblem
     MPProblem(XMLNodeReader& _node, typename MPTraits::MPProblemType* _problem, bool _parse = true);
     virtual ~MPProblem();
 
+    const string& GetBaseFilename() const {return m_baseFilename;}
+    void SetBaseFilename(const string& _s){m_baseFilename = _s;}
+
     Environment* GetEnvironment() {return m_environment;};
     void SetEnvironment(Environment* _e) {m_environment = _e;};
 
@@ -154,6 +157,8 @@ class MPProblem
     virtual void ParseXML(XMLNodeReader& _node, typename MPTraits::MPProblemType* _problem);
 
     vector<cd_predefined> GetSelectedCDTypes() const;
+
+    string m_baseFilename;
 
     Environment* m_environment;
     RoadmapType* m_roadmap, * m_blockRoadmap, * m_colRoadmap;
@@ -296,7 +301,8 @@ MPProblem<MPTraits>::ReadXMLFile(const string& _filename, typename MPTraits::MPP
 
 template<class MPTraits>
 bool
-MPProblem<MPTraits>::ParseChild(XMLNodeReader::childiterator citr, typename MPTraits::MPProblemType* _problem) {
+MPProblem<MPTraits>::
+ParseChild(XMLNodeReader::childiterator citr, typename MPTraits::MPProblemType* _problem) {
   if(citr->getName() == "Environment") {
     m_environment = new Environment(*citr);
     return true;
@@ -346,17 +352,21 @@ MPProblem<MPTraits>::ParseChild(XMLNodeReader::childiterator citr, typename MPTr
     return true;
   }
   else if(citr->getName() == "Solver") {
-    string m_label = citr->stringXMLParameter("mpStrategyLabel", true, "", "The strategy pointed to by this label will be used to solve the problem");
-    long m_seed = citr->numberXMLParameter("seed", true, 1, 0, MAX_INT, "The random number generator seed for the solver.");
-    string m_baseFilename = citr->stringXMLParameter("baseFilename", true, "", "BaseFilename for the solver.");
+    string label = citr->stringXMLParameter("mpStrategyLabel", true, "",
+        "The strategy pointed to by this label will be used to solve the problem");
+    long seed = citr->numberXMLParameter("seed", true, 1, 0, MAX_INT,
+        "The random number generator seed for the solver.");
+    string baseFilename = citr->stringXMLParameter("baseFilename", true, "",
+        "BaseFilename for the solver.");
     ostringstream oss;
-    oss << m_baseFilename << "." << m_seed;
-    m_baseFilename = oss.str();
-    bool m_vdOutput = citr->boolXMLParameter("vizmoDebug", false, false, "True yields VizmoDebug output for the solver.");
-    string m_vizmoDebugName = "";
-    if(m_vdOutput)
-        m_vizmoDebugName = m_baseFilename + ".vd";
-    m_solvers.push_back(Solver(m_label, m_seed, m_baseFilename, m_vizmoDebugName));
+    oss << baseFilename << "." << seed;
+    baseFilename = oss.str();
+    bool vdOutput = citr->boolXMLParameter("vizmoDebug", false, false,
+        "True yields VizmoDebug output for the solver.");
+    string vizmoDebugName = "";
+    if(vdOutput)
+        vizmoDebugName = baseFilename + ".vd";
+    m_solvers.push_back(Solver(label, seed, baseFilename, vizmoDebugName));
     return true;
   }
   else
@@ -458,7 +468,9 @@ MPProblem<MPTraits>::Solve() {
 #else
     SRand(get<1>(*sit));
 #endif
-    GetMPStrategy(get<0>(*sit))->SetBaseFilename(get<2>(*sit));
+    SetBaseFilename(get<2>(*sit));
+    m_stats->SetAuxDest(GetBaseFilename());
+
     GetMPStrategy(get<0>(*sit))->operator()();
 
     //close vizmo debug if necessary
@@ -469,16 +481,14 @@ MPProblem<MPTraits>::Solve() {
 
 template<class MPTraits>
 void
-MPProblem<MPTraits>::BuildCDStructures(){
-  if(m_environment != NULL){
-    vector<cd_predefined> cdtypes = GetSelectedCDTypes();
-    for(vector<cd_predefined>::iterator C = cdtypes.begin(); C != cdtypes.end(); ++C)
-      m_environment->BuildCDstructure(*C);
-  }
-  else{
-    cerr << "Error::Cannot BuildCDStructures. Must define an environment. Exiting." << endl;
-    exit(1);
-  }
+MPProblem<MPTraits>::
+BuildCDStructures() {
+  if(m_environment != NULL)
+    for(auto cd : GetSelectedCDTypes())
+      m_environment->BuildCDstructure(cd);
+  else
+    throw RunTimeException(WHERE,
+        "Cannot Build CD Structures. Must define an Environment.");
   m_cdBuilt = true;
 }
 
@@ -487,8 +497,10 @@ vector<cd_predefined>
 MPProblem<MPTraits>::GetSelectedCDTypes() const{
   vector<cd_predefined> cdTypes;
   typedef typename ValidityCheckerSet::MIT MIT;
-  for(MIT mit = m_validityCheckers->Begin(); mit != m_validityCheckers->End(); ++mit)
-    if(CollisionDetectionValidity<MPTraits>* method = dynamic_cast<CollisionDetectionValidity<MPTraits>*>(mit->second.get()))
+  for(MIT mit = m_validityCheckers->Begin();
+      mit != m_validityCheckers->End(); ++mit)
+    if(CollisionDetectionValidity<MPTraits>* method =
+        dynamic_cast<CollisionDetectionValidity<MPTraits>*>(mit->second.get()))
       cdTypes.push_back(method->GetCDType());
   return cdTypes;
 }

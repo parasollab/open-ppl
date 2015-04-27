@@ -1,5 +1,5 @@
-#ifndef TRACEMAPUSH_H_
-#define TRACEMAPUSH_H_
+#ifndef TRACE_MA_PUSH_H_
+#define TRACE_MA_PUSH_H_
 
 #include "TraceObstacle.h"
 
@@ -30,15 +30,16 @@ class TraceMAPush : public TraceObstacle<MPTraits> {
 };
 
 template<class MPTraits>
-TraceMAPush<MPTraits>::TraceMAPush(const string& _dmLabel,
+TraceMAPush<MPTraits>::
+TraceMAPush(const string& _dmLabel,
     const string& _vcLabel, double _delta) :
   TraceObstacle<MPTraits>(_dmLabel, _vcLabel, _delta) {
-  this->SetName("TraceMAPush");
-}
+    this->SetName("TraceMAPush");
+  }
 
 template<class MPTraits>
-TraceMAPush<MPTraits>::TraceMAPush(MPProblemType* _problem, 
-    XMLNodeReader& _node) :
+TraceMAPush<MPTraits>::
+TraceMAPush(MPProblemType* _problem, XMLNodeReader& _node) :
   TraceObstacle<MPTraits>(_problem, _node),
   m_medialAxisUtility(_problem, _node) {
     this->SetName("TraceMAPush");
@@ -46,7 +47,8 @@ TraceMAPush<MPTraits>::TraceMAPush(MPProblemType* _problem,
 
 template<class MPTraits>
 bool
-TraceMAPush<MPTraits>::Extend(const CfgType& _near, const CfgType& _dir,
+TraceMAPush<MPTraits>::
+Extend(const CfgType& _near, const CfgType& _dir,
     CfgType& _new, LPOutput<MPTraits>& _lpOutput) {
   // Setup MP Variables
   Environment* env = this->GetEnvironment();
@@ -62,11 +64,11 @@ TraceMAPush<MPTraits>::Extend(const CfgType& _near, const CfgType& _dir,
   if(m_medialAxisUtility.PushToMedialAxis(innerCfg,
       this->GetEnvironment()->GetBoundary())) {
     LPOutput<MPTraits> newLPOutput;
-    bool result = this->Expand(_near, innerCfg, _new, this->m_delta, 
+    bool result = this->Expand(_near, innerCfg, _new, this->m_delta,
         newLPOutput, env->GetPositionRes(), env->GetOrientationRes());
-    _lpOutput.m_edge.first.SetWeight(_lpOutput.m_edge.first.GetWeight() + 
+    _lpOutput.m_edge.first.SetWeight(_lpOutput.m_edge.first.GetWeight() +
         newLPOutput.m_edge.first.GetWeight());
-    _lpOutput.m_edge.second.SetWeight(_lpOutput.m_edge.second.GetWeight() + 
+    _lpOutput.m_edge.second.SetWeight(_lpOutput.m_edge.second.GetWeight() +
         newLPOutput.m_edge.second.GetWeight());
     return result;
   } else

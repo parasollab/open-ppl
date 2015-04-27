@@ -46,4 +46,10 @@ class WriteException : public PMPLException {
       PMPLException("Write Exception", _where, _message) {}
 };
 
+class RunTimeException : public PMPLException {
+  public:
+    RunTimeException(const string& _where, const string& _message) :
+      PMPLException("Runtime Exception", _where, _message) {}
+};
+
 #endif

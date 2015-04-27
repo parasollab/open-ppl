@@ -28,7 +28,7 @@ class ConnectivityMetric : public CoverageMetric<MPTraits, Set> {
     double operator()();
 
   private:
-    ofstream output;
+    ofstream m_history;
 };
 
 template<class MPTraits, class Set>
@@ -41,8 +41,6 @@ template<class MPTraits, class Set>
 ConnectivityMetric<MPTraits, Set>::ConnectivityMetric(MPProblemType* _problem, XMLNodeReader& _node, bool _computeAllCCs)
   : CoverageMetric<MPTraits, Set>(_problem, _node, _computeAllCCs) {
     this->SetName("ConnectivityMetric" + Set::GetName());
-
-    output.open((this->m_outFileName+".connectivity").c_str());
 }
 
 template<class MPTraits, class Set>
@@ -61,6 +59,10 @@ ConnectivityMetric<MPTraits, Set>::operator()() {
   CoverageMetric<MPTraits, Set>::operator()(); // Call CoverageMetric first
 
   static size_t numcalls = 0;
+  if(numcalls == 0)
+    m_history.open(
+        (this->GetMPProblem()->GetBaseFilename() + ".connectivity").c_str());
+
   int numQueries = 0;
   size_t sz = this->m_connections.size();
 
@@ -69,16 +71,17 @@ ConnectivityMetric<MPTraits, Set>::operator()() {
   for(size_t i=0; i<sz; ++i) {
     for(size_t j=i+1; j<sz; ++j) {
       vector<VID> intersection;
-      set_intersection(this->m_connections[i].begin(), this->m_connections[i].end(),
-                       this->m_connections[j].begin(), this->m_connections[j].end(),
-                       back_insert_iterator<vector<VID> >(intersection));
+      set_intersection(
+          this->m_connections[i].begin(), this->m_connections[i].end(),
+          this->m_connections[j].begin(), this->m_connections[j].end(),
+          back_insert_iterator<vector<VID> >(intersection));
       if(!(intersection.empty()))
         numQueries++;
     }
   }
 
   double connectivityAmt = (double(numQueries))/(double(sz*(sz-1))/2.0);
-  output << numcalls++ << "\t" << connectivityAmt << endl;
+  m_history << numcalls++ << "\t" << connectivityAmt << endl;
 
   return connectivityAmt;
 }

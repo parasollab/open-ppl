@@ -66,11 +66,11 @@ TraceCSpaceObstacle<MPTraits>::Extend(const CfgType& _near, const CfgType& _dir,
   // expand to c2
   if(this->m_debug)
     cout << "\texpand c2" << endl;
-  rDir = _dir;
   rDir.GetRandomRay(vecScale, dm);
-  if(this->Expand(_near, rDir, innerCfg, this->m_delta, _lpOutput,
+  if(!this->Expand(_near, rDir, innerCfg, this->m_delta, _lpOutput,
       env->GetPositionRes(), env->GetOrientationRes()))
     return false;
+  _lpOutput.m_intermediates.push_back(innerCfg);
 
   // subtract newCfg2 and newCfg1 to get cspace vec
   if(this->m_debug)

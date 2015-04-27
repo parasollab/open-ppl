@@ -21,6 +21,7 @@ class Query : public MapEvaluatorMethod<MPTraits> {
 
   public:
     typedef typename MPTraits::CfgType CfgType;
+    typedef typename MPTraits::CfgRef CfgRef;
     typedef typename MPTraits::WeightType WeightType;
     typedef typename MPTraits::MPProblemType MPProblemType;
     typedef typename MPProblemType::RoadmapType RoadmapType;
@@ -31,15 +32,18 @@ class Query : public MapEvaluatorMethod<MPTraits> {
     typedef typename MPProblemType::DistanceMetricPointer DistanceMetricPointer;
     typedef typename MPProblemType::PathModifierPointer PathModifierPointer;
 
-    Query(bool _deleteNodes=false, string _searchAlg="astar", string _pathFile="Basic.path",
-    string _intermediateFile="", string _lpLabel="", string _dmLabel="",
-    string _pathModifierLabel="", bool _fullRecreatePath=true);
-
-    Query(string _queryFileName, const vector<string>& _connLabels = vector<string>());
-    Query(const CfgType& _start, const CfgType& _goal);
+    Query(bool _deleteNodes=false, string _searchAlg="astar",
+        string _lpLabel="", string _dmLabel="",
+        string _pathModifierLabel="", bool _fullRecreatePath=true);
+    Query(string _queryFileName,
+        const vector<string>& _connLabels = vector<string>(),
+        bool _writePaths = true);
+    Query(const CfgType& _start, const CfgType& _goal, bool _writePaths = true);
     Query(MPProblemType* _problem, XMLNodeReader& _node, bool _warn = true);
-    Query(MPProblemType* _problem, CfgType _start, CfgType _goal, const vector<string>& _connectorLabels=vector<string>(),
-	  bool _deleteNodes=true, string _searchAlg="astar", bool _fullRecreatePath=false);
+    Query(MPProblemType* _problem, CfgType _start, CfgType _goal,
+        const vector<string>& _connectorLabels=vector<string>(),
+        bool _deleteNodes=true, string _searchAlg="astar",
+        bool _fullRecreatePath=false);
     virtual ~Query() { }
 
     void ParseXML(XMLNodeReader& _node);
@@ -47,7 +51,7 @@ class Query : public MapEvaluatorMethod<MPTraits> {
     vector<CfgType>& GetQuery() { return m_query; }
     vector<CfgType>& GetPath() { return m_path; }
     vector<VID>& GetPathVIDs() { return m_pathVIDs; }
-    void SetPathFile(string _filename) { m_pathFile = _filename; }
+    void SetWritePath(bool _b) {m_writePaths = _b;}
 
     // Reads a query and calls the other PerformQuery(), then calls Smooth() if desired
     virtual bool PerformQuery(RoadmapType* _rdmp);
@@ -73,8 +77,6 @@ class Query : public MapEvaluatorMethod<MPTraits> {
     vector<CfgType> m_query;    // Holds the start and goal CfgTypes
     vector<CfgType> m_path;     // The path found
     string m_queryFile;         // Where to read in the query
-    string m_pathFile;          // Where to write the initial unsmoothed path
-    string m_intermediateFile;  // Where to output the intermediate CfgTypes along the path if != ""
     string m_lpLabel;           // Local planner
     string m_dmLabel;           // Distance metric
     bool m_deleteNodes;         // Delete any added nodes?
@@ -82,6 +84,7 @@ class Query : public MapEvaluatorMethod<MPTraits> {
     string m_pathModifierLabel; // Path Modifier method
     GraphSearchAlg m_searchAlg; // Shortest-path graph search algorithm
     vector<string> m_nodeConnectionLabels;   // List of connection methods for query
+    bool m_writePaths;          // Should the path files be output?
 
   private:
     //initialize variable defaults
@@ -116,66 +119,76 @@ struct Heuristic {
 };
 
 template<class MPTraits>
-Query<MPTraits>::Query(bool _deleteNodes, string _searchAlg, string _pathFile,
-    string _intermediateFile, string _lpLabel, string _dmLabel,
-    string _pathModifierLabel, bool _fullRecreatePath) : m_pathFile(_pathFile),
-    m_intermediateFile(_intermediateFile), m_lpLabel(_lpLabel),
-    m_dmLabel(_dmLabel), m_deleteNodes(_deleteNodes),
-    m_fullRecreatePath(_fullRecreatePath), m_pathModifierLabel(_pathModifierLabel) {
-  this->SetName("Query");
-  SetSearchAlgViaString(_searchAlg);
-}
+Query<MPTraits>::
+Query(bool _deleteNodes, string _searchAlg,
+    string _lpLabel, string _dmLabel,
+    string _pathModifierLabel, bool _fullRecreatePath) :
+  m_lpLabel(_lpLabel), m_dmLabel(_dmLabel), m_deleteNodes(_deleteNodes),
+  m_fullRecreatePath(_fullRecreatePath),
+  m_pathModifierLabel(_pathModifierLabel), m_writePaths(false) {
+    this->SetName("Query");
+    SetSearchAlgViaString(_searchAlg);
+  }
 
 // Reads in query from a file
 template<class MPTraits>
-Query<MPTraits>::Query(string _queryFileName, const vector<string>& _connLabels) : m_nodeConnectionLabels(_connLabels) {
-  Initialize();
-  ReadQuery(_queryFileName);
-}
+Query<MPTraits>::
+Query(string _queryFileName, const vector<string>& _connLabels,
+    bool _writePaths) :
+  m_nodeConnectionLabels(_connLabels), m_writePaths(_writePaths) {
+    Initialize();
+    ReadQuery(_queryFileName);
+  }
 
 // Uses start/goal to set up query
 template<class MPTraits>
-Query<MPTraits>::Query(const CfgType& _start, const CfgType& _goal) {
-  Initialize();
-  m_query.push_back(_start);
-  m_query.push_back(_goal);
-}
+Query<MPTraits>::
+Query(const CfgType& _start, const CfgType& _goal, bool _writePaths) :
+  m_writePaths(_writePaths) {
+    Initialize();
+    m_query.push_back(_start);
+    m_query.push_back(_goal);
+  }
 
 // Constructor with XML
 template<class MPTraits>
-Query<MPTraits>::Query(MPProblemType* _problem, XMLNodeReader& _node, bool _warn) :
-    MapEvaluatorMethod<MPTraits>(_problem, _node) {
-  Initialize();
-  ParseXML(_node);
-  if(_warn)
-    _node.warnUnrequestedAttributes();
-  ReadQuery(m_queryFile);
-}
+Query<MPTraits>::
+Query(MPProblemType* _problem, XMLNodeReader& _node, bool _warn) :
+  MapEvaluatorMethod<MPTraits>(_problem, _node) {
+    Initialize();
+    ParseXML(_node);
+    if(_warn)
+      _node.warnUnrequestedAttributes();
+    ReadQuery(m_queryFile);
+  }
 
 // Uses start/goal to set up query for an existing MPProblem
 template<class MPTraits>
-Query<MPTraits>::Query(MPProblemType* _problem, CfgType _start, CfgType _goal, const vector<string>& _connectorLabels, bool _deleteNodes, string _searchAlg, bool _fullRecreatePath) :
+Query<MPTraits>::
+Query(MPProblemType* _problem, CfgType _start, CfgType _goal,
+    const vector<string>& _connectorLabels, bool _deleteNodes,
+    string _searchAlg, bool _fullRecreatePath) :
   m_deleteNodes(_deleteNodes), m_fullRecreatePath(_fullRecreatePath) {
 
-  SetSearchAlgViaString(_searchAlg);
-  m_nodeConnectionLabels=_connectorLabels;
-  m_query.push_back(_start);
-  m_query.push_back(_goal);
-  this->SetMPProblem(_problem);
-}
+    SetSearchAlgViaString(_searchAlg);
+    m_nodeConnectionLabels=_connectorLabels;
+    m_query.push_back(_start);
+    m_query.push_back(_goal);
+    this->SetMPProblem(_problem);
+  }
 
 template<class MPTraits>
 void
-Query<MPTraits>::ParseXML(XMLNodeReader& _node) {
+Query<MPTraits>::
+ParseXML(XMLNodeReader& _node) {
   m_queryFile = _node.stringXMLParameter("queryFile", true, "", "Query filename");
-  m_pathFile = _node.stringXMLParameter("pathFile", false, "", "Query output path filename");
   m_lpLabel = _node.stringXMLParameter("lpLabel", true, "", "Local planner method");
   m_dmLabel = _node.stringXMLParameter("dmLabel", false, "", "Distance metric method");
   string searchAlg = _node.stringXMLParameter("graphSearchAlg", false, "dijkstras", "Graph search algorithm");
-  m_intermediateFile = _node.stringXMLParameter("intermediateFiles", false, "", "Determines output location of intermediate nodes.");
   m_deleteNodes = _node.boolXMLParameter("deleteNodes", false, false, "Whether or not to delete start and goal from roadmap");
   m_fullRecreatePath = _node.boolXMLParameter("fullRecreatePath", false, true, "Whether or not to recreate path");
   m_pathModifierLabel = _node.stringXMLParameter("pmLabel", false, "", "Path modifier method");
+  m_writePaths = _node.boolXMLParameter("writePaths", false, true, "Write path output to file?");
 
   for(XMLNodeReader::childiterator citr = _node.children_begin(); citr != _node.children_end(); ++citr) {
     if(citr->getName() == "NodeConnectionMethod") {
@@ -198,8 +211,6 @@ void
 Query<MPTraits>::Print(ostream& _os) const {
   _os << this->GetNameAndLabel() << "::";
   _os << "\n\tquery file = \"" << m_queryFile << "\"";
-  _os << "\n\tpath file = \"" << m_pathFile << "\"";
-  _os << "\n\tintermediate file = \"" << m_intermediateFile << "\"";
   _os << "\n\tdistance metric = " << m_dmLabel;
   _os << "\n\tlocal planner = " << m_lpLabel;
   _os << "\n\tsearch alg = " << m_searchAlg;
@@ -207,6 +218,7 @@ Query<MPTraits>::Print(ostream& _os) const {
   _os << "\n\tfullRecreatePath = " << m_fullRecreatePath << endl;
   if(m_pathModifierLabel != "")
     _os << "\tpath modifier = \"" << m_pathModifierLabel << "\"" << endl;
+  _os << "\n\twritePaths = " << m_writePaths << endl;
 }
 
 // Runs the query
@@ -214,7 +226,7 @@ template<class MPTraits>
 bool
 Query<MPTraits>::operator()() {
 
-  RoadmapType* rdmp = this->GetMPProblem()->GetRoadmap();
+  RoadmapType* rdmp = this->GetRoadmap();
 
   // Perform query
   bool ans = PerformQuery(rdmp);
@@ -251,9 +263,8 @@ Query<MPTraits>::PerformQuery(RoadmapType* _rdmp) {
     }
   }
 
-  if(m_pathFile != "") {
-    WritePath(m_pathFile, m_path);
-  }
+  if(m_writePaths)
+    WritePath(this->GetBaseFilename() + ".full.path", m_path);
 
   // Path smoothing
   Smooth();
@@ -273,11 +284,12 @@ template<class MPTraits>
 bool
 Query<MPTraits>::PerformQuery(const CfgType& _start, const CfgType& _goal, RoadmapType* _rdmp) {
 
+
   if(this->m_debug)
     cout << "*Q* Begin query" << endl;
   VDComment("Begin Query");
 
-  StatClass* stats = this->GetMPProblem()->GetStatClass();
+  StatClass* stats = this->GetStatClass();
   static int graphSearchCount = 0;
   LPOutput<MPTraits> sci, gci; // Connection info for start, goal nodes
   vector<pair<size_t, VID> > ccs;
@@ -374,9 +386,9 @@ Query<MPTraits>::PerformQuery(const CfgType& _start, const CfgType& _goal, Roadm
           find_path_dijkstra(*(_rdmp->GetGraph()), sVID, gVID, shortestPath, WeightType::MaxWeight());
           break;
         case ASTAR:
-          //Heuristic<MPTraits> heuristic(_goal, this->GetMPProblem()->GetEnvironment()->GetOrientationRes(),
-          //    this->GetMPProblem()->GetEnvironment()->GetPositionRes());
-          Heuristic<MPTraits> heuristic(_goal, this->GetMPProblem()->GetEnvironment()->GetPositionRes(), this->GetMPProblem()->GetEnvironment()->GetOrientationRes());
+          Heuristic<MPTraits> heuristic(_goal,
+              this->GetEnvironment()->GetPositionRes(),
+              this->GetEnvironment()->GetOrientationRes());
           astar(*(_rdmp->GetGraph()), sVID, gVID, shortestPath, heuristic);
           break;
       }
@@ -399,21 +411,21 @@ Query<MPTraits>::PerformQuery(const CfgType& _start, const CfgType& _goal, Roadm
           cout << endl << "*Q* Failed to recreate path\n";
       }
       else {
-	connected = true;
+        connected = true;
         m_pathVIDs.insert(m_pathVIDs.end(), shortestPath.begin(), shortestPath.end());
-	break;
+        break;
       }
     }
 
     stats->IncGOStat("CC Operations");
 
     if(connected) {
-      if(m_intermediateFile != "") {
+      if(m_writePaths) {
         // Print out all start, all graph nodes, and goal; no "ticks" from local planners
         vector<CfgType> mapCfgs;
         for(typename vector<VID>::iterator it = shortestPath.begin(); it != shortestPath.end(); it++)
           mapCfgs.push_back(_rdmp->GetGraph()->GetVertex(*it));
-        WritePath(m_intermediateFile, mapCfgs);
+        WritePath(this->GetBaseFilename() + ".rdmp.path", mapCfgs);
       }
       break;
     }
@@ -440,44 +452,61 @@ void
 Query<MPTraits>::Smooth() {
   if(m_pathModifierLabel != "") {
     vector<CfgType> pathTmp;
-    this->GetMPProblem()->GetPathModifier(m_pathModifierLabel)->Modify(m_path, pathTmp);
+    this->GetPathModifier(m_pathModifierLabel)->Modify(m_path, pathTmp);
     m_path = pathTmp;
+    if(m_writePaths)
+      WritePath(this->GetBaseFilename() + ".smooth.path", m_path);
   }
 }
 
 // Checks validity of path, recreates path if possible
 template<class MPTraits>
 bool
-Query<MPTraits>::CanRecreatePath(RoadmapType* _rdmp, vector<VID>& _attemptedPath, vector<CfgType>& _recreatedPath) {
-  _recreatedPath.push_back(_rdmp->GetGraph()->GetVertex(*(_attemptedPath.begin())));
+Query<MPTraits>::
+CanRecreatePath(RoadmapType* _rdmp, vector<VID>& _attemptedPath,
+    vector<CfgType>& _recreatedPath) {
+  Environment* env = this->GetEnvironment();
+  _recreatedPath.push_back(
+      _rdmp->GetGraph()->GetVertex(*_attemptedPath.begin()));
 #ifdef _PARALLEL
   return true;
 #else
-  for(typename vector<VID>::iterator it = _attemptedPath.begin(); it+1 != _attemptedPath.end(); it++) {
+  for(typename vector<VID>::iterator it = _attemptedPath.begin();
+      it+1 != _attemptedPath.end(); it++) {
     LPOutput<MPTraits> ci;
     typename GraphType::vertex_iterator vi;
     typename GraphType::adj_edge_iterator ei;
     typename GraphType::edge_descriptor ed(*it, *(it+1));
     _rdmp->GetGraph()->find_edge(ed, vi, ei);
     CfgType col;
+    CfgRef c1 = _rdmp->GetGraph()->GetVertex(*it);
+    CfgRef c2 = _rdmp->GetGraph()->GetVertex(*(it+1));
+    WeightType& weight = (*ei).property();
+    vector<CfgType> intermediates = weight.GetIntermediates();
 
-    if(this->GetMPProblem()->GetLocalPlanner(m_lpLabel)->IsConnected(
-          _rdmp->GetGraph()->GetVertex(*it), _rdmp->GetGraph()->GetVertex(*(it+1)),
-          col, &ci, this->GetMPProblem()->GetEnvironment()->GetPositionRes(),
-          this->GetMPProblem()->GetEnvironment()->GetOrientationRes(), true, true, true)) {
-      _recreatedPath.insert(_recreatedPath.end(), ci.m_path.begin(), ci.m_path.end());
-      _recreatedPath.push_back(_rdmp->GetGraph()->GetVertex(*(it+1)));
+    if(weight.GetLPLabel() != "RRTExpand"){
+      vector<CfgType> edge = this->GetLocalPlanner(weight.GetLPLabel())->
+        ReconstructPath(c1, c2, intermediates,
+            env->GetPositionRes(), env->GetOrientationRes());
+      _recreatedPath.insert(_recreatedPath.end(), edge.begin(), edge.end());
     }
-    else {
-      cerr << "Error::When querying, invalid edge of graph was found between vid pair ("
-        << *it << ", " << *(it+1) << ")" << " outputting error path to \"error.path\" and exiting." << endl;
-      _recreatedPath.insert(_recreatedPath.end(), ci.m_path.begin(), ci.m_path.end());
-      _recreatedPath.push_back(col);
-      if( m_fullRecreatePath ) {
-        WritePath("error.path", _recreatedPath);
-        exit(1);
+    else{
+      StraightLine<MPTraits> sl;
+      sl.SetMPProblem(this->GetMPProblem());
+      intermediates.insert(intermediates.begin(), c1);
+      intermediates.push_back(c2);
+      typedef typename vector<CfgType>::iterator CIT;
+      for(CIT cit = intermediates.begin();
+          cit+1 != intermediates.end(); ++cit) {
+        StatClass dummyStats;
+        LPOutput<MPTraits> lpOutput;
+        CfgType col;
+        vector<CfgType> edge = sl.ReconstructPath(*cit, *(cit+1), intermediates,
+            env->GetPositionRes(), env->GetOrientationRes());
+        _recreatedPath.insert(_recreatedPath.end(), edge.begin(), edge.end());
       }
     }
+    _recreatedPath.push_back(c2);
   }
   return true;
 #endif
@@ -507,8 +536,6 @@ void
 Query<MPTraits>::Initialize() {
   this->SetName("Query");
   m_searchAlg = ASTAR;
-  m_pathFile = "Basic.path";
-  m_intermediateFile = "";
   m_lpLabel = "";
   m_dmLabel = "";
   m_deleteNodes = false;

@@ -34,9 +34,8 @@ class CoverageMetric : public MetricMethod<MPTraits> {
     Set m_samples;
     vector<string> m_connectorLabels;
     bool m_allData;
-    string m_outFileName;
     vector<vector<VID> > m_connections;
-    ofstream output;
+    ofstream m_history;
 };
 
 template<class MPTraits, class Set>
@@ -49,10 +48,6 @@ template<class MPTraits, class Set>
 CoverageMetric<MPTraits, Set>::CoverageMetric(MPProblemType* _problem, XMLNodeReader& _node, bool _computeAllCCs)
   : MetricMethod<MPTraits>(_problem, _node), m_samples(_node) {
     this->SetName("CoverageMetric" + Set::GetName());
-
-    m_outFileName = _node.stringXMLParameter("outfilename", true, "", "filename for recording results");
-
-    output.open((m_outFileName+".coverage").c_str());
 
     m_allData = _node.boolXMLParameter("computeAllCCs", false, _computeAllCCs, "flag when set to true computes coverage to all ccs, not just the first connectable cc");
 
@@ -92,6 +87,9 @@ double
 CoverageMetric<MPTraits, Set>::operator()() {
 
   static size_t numcalls = 0;
+  if(numcalls == 0)
+    m_history.open(
+        (this->GetMPProblem()->GetBaseFilename() + ".coverage").c_str());
 
   RoadmapType* rmap = this->GetMPProblem()->GetRoadmap();
   GraphType* rgraph = rmap->GetGraph();
@@ -140,7 +138,7 @@ CoverageMetric<MPTraits, Set>::operator()() {
   }
 
   double coverageAmt = ((double)numConnections)/((double)m_connections.size());
-  output << numcalls++ << "\t" << coverageAmt << endl;
+  m_history << numcalls++ << "\t" << coverageAmt << endl;
 
   return coverageAmt;
 }

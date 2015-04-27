@@ -151,13 +151,21 @@ Cfg::operator==(const Cfg& _cfg) const {
   if (m_robotIndex != _cfg.m_robotIndex)
     return false;
   for(size_t i = 0; i < m_dof[m_robotIndex]; ++i) {
-    if(m_dofTypes[m_robotIndex][i] == POS || m_dofTypes[m_robotIndex][i] == JOINT) {
-      if(fabs(m_v[i]-_cfg[i]) > 10.0 * numeric_limits<float>::epsilon())
-        return false;
-    }
-    else {
-      if(fabs(DirectedAngularDistance(m_v[i], _cfg[i])) > 10.0 * numeric_limits<float>::epsilon())
-        return false;
+    double eps = Epsilon(m_v[i], _cfg[i]);
+    switch(m_dofTypes[m_robotIndex][i]) {
+      //regular types map to manifold R thus have no "wrap around"
+      case POS:
+      case JOINT:
+        if(abs(m_v[i] - _cfg[i]) > eps)
+          return false;
+        break;
+      //rotational types map to manifold S thus have a "wrap around"
+      case ROT:
+        if(abs(DirectedAngularDistance(m_v[i], _cfg[i])) > eps)
+          return false;
+        break;
+      default:
+        throw RunTimeException(WHERE, "Unknown joint type found");
     }
   }
   return true;
@@ -282,8 +290,10 @@ void
 Cfg::Write(ostream& _os) const{
   //write out robot index, and then dofs
   _os << setw(4) << m_robotIndex << ' ';
+  _os << scientific << setprecision(17);
   for(vector<double>::const_iterator i = m_v.begin(); i != m_v.end(); ++i)
-    _os << setw(4) << *i << ' ';
+    _os << setw(25) << *i << ' ';
+  _os.unsetf(ios_base::floatfield);
   if (_os.fail()) {
     cerr << "Cfg::Write error - failed to write to file" << endl;
     exit(1);
@@ -326,7 +336,7 @@ Cfg::SetJointData(const vector<double>& _data) {
   }
   */
 
-  
+
   unsigned int j=0;
   for(size_t i = 0; i < m_dof[m_robotIndex]; ++i) {
     if(m_dofTypes[m_robotIndex][i] == JOINT){
@@ -338,12 +348,12 @@ Cfg::SetJointData(const vector<double>& _data) {
 
       m_v[i]=_data[j];
       j++;
-    } 
+    }
   }
-  
+
   //m_v = _data;
   m_witnessCfg.reset();
-  
+
 }
 
 
@@ -686,8 +696,8 @@ Cfg::FindIncrement(const Cfg& _start, const Cfg& _goal, int* _nTicks, double _po
   Cfg diff = _goal - _start;
 
   // adding two basically makes this a rough ceiling...
-  *_nTicks = floor(max(diff.PositionMagnitude()/_positionRes,
-        diff.OrientationMagnitude()/_orientationRes) + 0.5);
+  *_nTicks = max(1., floor(max(diff.PositionMagnitude()/_positionRes,
+        diff.OrientationMagnitude()/_orientationRes) + 0.5));
 
   this->FindIncrement(_start, _goal, *_nTicks);
 }
@@ -701,9 +711,8 @@ Cfg::FindIncrement(const Cfg& _start, const Cfg& _goal, int _nTicks) {
     else if(m_dofTypes[m_robotIndex][i] == JOINT) {
       double a = _start.m_v[i];
       double b = _goal.m_v[i];
-      // normalize both a and b to [-1, 1)
-      a = Normalize(a);
-      b = Normalize(b);
+      if(_nTicks == 0)
+        throw PMPLException("Divide by 0", WHERE, "Divide by 0");
       incr.push_back((b-a)/_nTicks);
     }
     else if(m_dofTypes[m_robotIndex][i] == ROT) {
@@ -753,12 +762,12 @@ void
 Cfg::NormalizeOrientation(int _index) {
   if(_index == -1) {
     for(size_t i = 0; i < m_dof[m_robotIndex]; ++i) {
-      if(m_dofTypes[m_robotIndex][i] != POS) {
+      if(m_dofTypes[m_robotIndex][i] == ROT) {
         m_v[i] = Normalize(m_v[i]);
       }
     }
   }
-  else if(m_dofTypes[m_robotIndex][_index] != POS) {  // orientation index
+  else if(m_dofTypes[m_robotIndex][_index] == ROT) {  // orientation index
     m_v[_index] = Normalize(m_v[_index]);
   }
 }

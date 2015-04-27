@@ -59,6 +59,7 @@
 
 //extenders includes
 #include "Extenders/BasicExtender.h"
+#include "Extenders/MedialAxisExtender.h"
 #include "Extenders/MixExtender.h"
 #include "Extenders/RandomObstacleVector.h"
 #include "Extenders/RotationThenTranslation.h"
@@ -68,6 +69,7 @@
 
 //path smoothing includes
 #include "PathModifiers/CombinedPathModifier.h"
+#include "PathModifiers/CRetractionPathModifier.h"
 #include "PathModifiers/MedialAxisPathModifier.h"
 #include "PathModifiers/ResamplePathModifier.h"
 #include "PathModifiers/ShortcuttingPathModifier.h"
@@ -113,11 +115,14 @@
 #include "MPStrategies/EvaluateMapStrategy.h"
 #include "MPStrategies/HybridPRM.h"
 #include "MPStrategies/LocalManeuveringStrategy.h"
-#include "MPStrategies/MedialAxisRRT.h"
+#include "MPStrategies/LPCompare.h"
+#include "MPStrategies/ModifyPath.h"
 #include "MPStrategies/MultiStrategy.h"
+#include "MPStrategies/PushQueryToMA.h"
 #include "MPStrategies/SparkPRM.h"
 #include "MPStrategies/SRTStrategy.h"
 #include "MPStrategies/TogglePRMStrategy.h"
+#include "MPStrategies/UnitTest/ClearanceTestStrategy.h"
 #include "MPStrategies/UnitTest/DMTestStrategy.h"
 #include "MPStrategies/UtilityGuidedGenerator.h"
 #include "MPStrategies/VisibilityBasedPRM.h"
@@ -213,6 +218,7 @@ struct MPTraits {
   //types of extenders avaible in our world
   typedef boost::mpl::list<
     BasicExtender<MPTraits>,
+    MedialAxisExtender<MPTraits>,
     MixExtender<MPTraits>,
     RandomObstacleVector<MPTraits>,
     RotationThenTranslation<MPTraits>,
@@ -222,8 +228,8 @@ struct MPTraits {
       > ExtenderMethodList;
 
   //types of path smoothing available in our world
-
   typedef boost::mpl::list<
+    CRetractionPathModifier<MPTraits>,
     CombinedPathModifier<MPTraits>,
     MedialAxisPathModifier<MPTraits>,
     ResamplePathModifier<MPTraits>,
@@ -286,11 +292,14 @@ struct MPTraits {
     BasicPRM<MPTraits>,
     BasicRRTStrategy<MPTraits>,
     BlindRRT<MPTraits>,
+    ClearanceTestStrategy<MPTraits>,
     DMTestStrategy<MPTraits>,
     EvaluateMapStrategy<MPTraits>,
     HybridPRM<MPTraits>,
-    MedialAxisRRT<MPTraits>,
+    LPCompare<MPTraits>,
+    ModifyPath<MPTraits>,
     MultiStrategy<MPTraits>,
+    PushQueryToMA<MPTraits>,
     SparkPRM<MPTraits, BasicPRM>,
     SparkPRM<MPTraits, TogglePRMStrategy>,
     SRTStrategy<MPTraits>,

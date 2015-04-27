@@ -73,7 +73,7 @@ VClip::FillCdInfo(shared_ptr<MultiBody> _robot, shared_ptr<MultiBody> _obstacle,
   _cdInfo.ResetVars();
   _cdInfo.m_retAllInfo = true;
 
-  minCurrentDist = maxDist;  // =  1e10 by CollisionDetection.h
+  minCurrentDist = MAX_DBL;
 
   for(int i=0; i<_robot->GetFreeBodyCount(); i++) {
     shared_ptr<PolyTree> rob = _robot->GetFreeBody(i)->GetVClipBody();

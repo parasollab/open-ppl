@@ -162,6 +162,10 @@ class MPBaseObject {
     /// @param _s class name
     void SetName(const string& _s) {m_name  = _s;}
 
+    ////////////////////////////////////////////////////////////////////////////
+    /// @return base file name from MPProblem
+    const string& GetBaseFilename() const {return m_problem->GetBaseFilename();}
+
     string m_name; ///< Class name
     bool m_debug; ///< Debug statements on or off
 

@@ -22,33 +22,33 @@ class MedialAxisPathModifier : public PathModifierMethod<MPTraits> {
     typedef typename MPProblemType::LocalPlannerPointer LocalPlannerPointer;
     typedef typename MPProblemType::DistanceMetricPointer DistanceMetricPointer;
 
-    MedialAxisPathModifier(const string  _lpLabel = "",
-        const string _malpLabel = "");
+    MedialAxisPathModifier(const string& _pmLabel = "",
+        const string& _lpLabel = "", const string& _malpLabel = "");
     MedialAxisPathModifier(MPProblemType* _problem, XMLNodeReader& _node);
 
     void Print(ostream& _os) const;
     void ParseXML(XMLNodeReader& _node);
 
-    bool ModifyImpl(vector<CfgType>& _originalPath, vector<CfgType>& _newPath);
+    bool ModifyImpl(vector<CfgType>& _path, vector<CfgType>& _newPath);
 
   private:
+    string m_pmLabel;
     string m_lpLabel;
     string m_malpLabel;
-
 };
 
-// Non-XML Constructor
 template<class MPTraits>
-MedialAxisPathModifier<MPTraits>::MedialAxisPathModifier(
-    const string  _lpLabel, const string _malpLabel) :
-  PathModifierMethod<MPTraits>(), m_lpLabel(_lpLabel),
+MedialAxisPathModifier<MPTraits>::
+MedialAxisPathModifier(const string& _pmLabel, const string& _lpLabel,
+    const string& _malpLabel) :
+  PathModifierMethod<MPTraits>(), m_pmLabel(_pmLabel), m_lpLabel(_lpLabel),
   m_malpLabel(_malpLabel) {
     this->SetName("MedialAxisPathModifier");
   }
 
-// XML Constructor
 template<class MPTraits>
-MedialAxisPathModifier<MPTraits>::MedialAxisPathModifier(MPProblemType* _problem, XMLNodeReader& _node) :
+MedialAxisPathModifier<MPTraits>::
+MedialAxisPathModifier(MPProblemType* _problem, XMLNodeReader& _node) :
   PathModifierMethod<MPTraits>(_problem, _node) {
     this->SetName("MedialAxisPathModifier");
     ParseXML(_node);
@@ -56,174 +56,199 @@ MedialAxisPathModifier<MPTraits>::MedialAxisPathModifier(MPProblemType* _problem
 
 template<class MPTraits>
 void
-MedialAxisPathModifier<MPTraits>::ParseXML(XMLNodeReader& _node) {
-  m_lpLabel = _node.stringXMLParameter("lpLabel", true, "", "Local planner method");
-  m_malpLabel = _node.stringXMLParameter("malpLabel", true, "", "Medial axis local planner label needed by MedialAxisPathModifier");
+MedialAxisPathModifier<MPTraits>::
+ParseXML(XMLNodeReader& _node) {
+  m_pmLabel = _node.stringXMLParameter("pmLabel", false, "NULL",
+      "Path Modifier method");
+  m_lpLabel = _node.stringXMLParameter("lpLabel", true, "",
+      "Local planner method");
+  m_malpLabel = _node.stringXMLParameter("malpLabel", true, "",
+      "Medial axis local planner label needed by MedialAxisPathModifier");
 }
 
 template<class MPTraits>
 void
-MedialAxisPathModifier<MPTraits>::Print(ostream& _os) const {
+MedialAxisPathModifier<MPTraits>::
+Print(ostream& _os) const {
   PathModifierMethod<MPTraits>::Print(_os);
-  _os << "\tlocal planner = \"" << m_lpLabel << "\"" << endl;
-  _os << "\tmedial axis local planner = \"" << m_malpLabel << "\"" << endl;
+  _os << "\tpath modifier: \"" << m_pmLabel << "\"" << endl;
+  _os << "\tlocal planner: \"" << m_lpLabel << "\"" << endl;
+  _os << "\tmedial axis local planner: \"" << m_malpLabel << "\"" << endl;
 }
 
 
 template<class MPTraits>
 bool
-MedialAxisPathModifier<MPTraits>::ModifyImpl(vector<CfgType>& _originalPath, vector<CfgType>& _newPath) {
-  if(this->m_debug) cout << "\n*M* Executing MedialAxisPathModifier::Modifier" << endl;
+MedialAxisPathModifier<MPTraits>::
+ModifyImpl(vector<CfgType>& _path, vector<CfgType>& _newPath) {
+  //MAPS Algorithm
+  //Input: _path
+  //Ouput: _newPath
+  //
+  //_path' <- pm->ModifyImpl(_path)
+  //for all q_i' in _path'
+  //  q_i' <- PushToMedialAxis(q_i')
+  //_newPath <- emptyset
+  //for all (q_i', q_i+1') in _path'
+  //  _newPath <- _newPath + MALP(q_i', q_i+1')
+  //_newPath <- P(q_1, q_1') + _newPath + P(q_m, q_m')
+  //_newPath <- RemoveBranches(_newPath)
+  //return _newPath
 
-  GraphType* graph = this->GetMPProblem()->GetRoadmap()->GetGraph();
+  if(this->m_debug)
+    cout << "\n*M* Executing MedialAxisPathModifier::Modifier" << endl;
 
-  vector<VID> pathVIDs = this->GetPathVIDs(_originalPath, graph);
+  //Ensure malp is proper type
+  MedialAxisLP<MPTraits>* malp = dynamic_cast<MedialAxisLP<MPTraits>*>(
+      this->GetLocalPlanner(m_malpLabel).get());
+  if(!malp)
+    throw RunTimeException(WHERE,
+        "m_malpLabel: \"" + m_malpLabel + "\" in " + this->GetNameAndLabel() +
+        " needs to point to a MedialAxisLP.");
 
-  bool result = false;
+  //smooth path
+  vector<CfgType> path;
+  if(m_pmLabel != "NULL") {
+    typedef typename MPProblemType::PathModifierPointer PathModifierPointer;
+    PathModifierPointer pm = this->GetPathModifier(m_pmLabel);
+    pm->Modify(_path, path);
+  }
+  else
+    path = _path;
 
-  if(!pathVIDs.empty()) { //Suppose to be checked by the previous call of PathShortcuting::Modifier()
-    LocalPlannerPointer lp = this->GetMPProblem()->GetLocalPlanner(this->m_lpLabel);
-    Environment* env = this->GetMPProblem()->GetEnvironment();
-    StatClass* stats = this->GetMPProblem()->GetStatClass();
-    LPOutput<MPTraits> tmpOutput;
+  //Ensure path comes from the roadmap
+  GraphType* graph = this->GetRoadmap()->GetGraph();
+  vector<VID> pathVIDs = this->GetPathVIDs(path, graph);
+  if(pathVIDs.empty())
+    throw PMPLException("Path Modification", WHERE,
+        "pathVIDs in " + this->GetNameAndLabel() + " is empty.");
 
-    MedialAxisLP<MPTraits>* malp = dynamic_cast<MedialAxisLP<MPTraits>*>(
-        this->GetMPProblem()->GetLocalPlanner(m_malpLabel).get());
-    shared_ptr<Boundary> bBox = this->GetMPProblem()->GetEnvironment()->GetBoundary();
+  typedef typename vector<VID>::iterator VIT;
+  typedef typename vector<CfgType>::iterator CIT;
 
-    if(malp) {
-      result = true;
-      MedialAxisUtility<MPTraits>& mau = malp->GetMedialAxisUtility();
+  //Get Cfgs from pathVIDs
+  vector<CfgType> pushed;
+  for(VIT vit = pathVIDs.begin(); vit != pathVIDs.end(); ++vit)
+    pushed.push_back(graph->GetVertex(*vit));
 
-      stats->StartClock("Medial Axis Path Smoother");
-      size_t n = pathVIDs.size();
+  //Push all the nodes of the path
+  MedialAxisUtility<MPTraits>& mau = malp->GetMedialAxisUtility();
+  Environment* env = this->GetEnvironment();
+  shared_ptr<Boundary> boundary = env->GetBoundary();
 
-      //Copy all the nodes from pathVIDs to avoid modifying them
-      vector<CfgType> pushedNodes;
-      size_t i;
-      for(i = 0; i < n; ++i)
-        pushedNodes.push_back(graph->GetVertex(pathVIDs[i]));
+  for(CIT cit = pushed.begin(); cit != pushed.end(); ++cit) {
+    size_t tries = mau.GetExactClearance() ? 100 : 0;
+    bool success = false;
+    do {
+      success = mau.PushToMedialAxis(*cit, boundary);
+    } while(!success && tries++ < 100);
+    if(!success && this->m_debug)
+      cout << "Cfg: " << *cit
+        << " failed to push, keeping original cfg." << endl;
+  }
 
-      //Copying the start and goal nodes
-      CfgType& start = pushedNodes[0];
-      CfgType& goal = pushedNodes[n-1];
+  //Create the variables used to connect the nodes
+  LocalPlannerPointer lp = this->GetLocalPlanner(this->m_lpLabel);
+  LPOutput<MPTraits> tmpOutput;
+  double posRes = env->GetPositionRes();
+  double oriRes = env->GetOrientationRes();
 
-      //Push all the nodes of the path
-      i = 0;
-      while(result && i < n) {
-        result = mau.PushToMedialAxis(pushedNodes[i], bBox);
-        //Print a debug statement if succeeded.
-        if(this->m_debug && result)
-          cout << "*M* Node " << i << " successfully pushed" << endl;
-        ++i;
-      }
-      if(result) {//If all the nodes were pushed correctly
-        //Create the variables used to connect the nodes
-        double posRes = env->GetPositionRes();
-        double oriRes = env->GetOrientationRes();
+  //Make room for the path
+  _newPath.clear();
 
-        //Make room for the path
-        _newPath.clear();
+  //Connect the start configuration and its pushed version
+  if(!lp->IsConnected(_path.front(), pushed.front(), &tmpOutput,
+        posRes, oriRes, true, true, true)) {
+    if(this->m_debug)
+      cout << "Local Planner " << lp->GetNameAndLabel()
+        << " could not connect the start to its pushed version" << endl;
+    return false;
+  }
+  _newPath.push_back(_path.front());
+  this->AddToPath(_newPath, &tmpOutput, pushed.front());
 
-        //Connect the start configuration and its pushed version
-        result = lp->IsConnected(start, pushedNodes[0], &tmpOutput, posRes, oriRes, true, true, true);
-        if(result) {
-          _newPath.push_back(start);
-          this->AddToPath(_newPath, &(tmpOutput), pushedNodes[0]);
+  //Connect the pushed configurations with MALP
+  for(CIT cit1 = pushed.begin(), cit2 = cit1+1;
+      cit2 != pushed.end(); ++cit1, ++cit2) {
+    //do attempts for MALP
+    size_t tries = mau.GetExactClearance() ? 10 : 0;
+    bool success = false;
+    do {
+      success = malp->LocalPlannerMethod<MPTraits>::IsConnected(*cit1, *cit2,
+          &tmpOutput, posRes, oriRes, true, true, true);
+    } while(!success && tries++ < 10);
 
-          //Connect the nodes that are already in the medial axis
-          i = 1;
-          while(result && i < n) {
-            result = malp->LocalPlannerMethod<MPTraits>::IsConnected(pushedNodes[i-1], pushedNodes[i], &tmpOutput, posRes, oriRes, true, true, true);
-            if(result) {
-              this->AddToPath(_newPath, &tmpOutput, pushedNodes[i]);
-            }
-            else{ //Failure control measures (FCM)
-              if(this->m_debug)
-                cout << "*M*\t" << malp->GetNameAndLabel() << " failed to connect the pair of nodes (" << (i-1) << ", " << i << ")" << endl
-                << "*M*\tAttempting Failure Control Measures (FCM):" << endl;
-              //First FCM: Try with the other local planner
-              result = lp->IsConnected(pushedNodes[i-1], pushedNodes[i], &tmpOutput, posRes, oriRes, true, true, true);
-              if(result) {
-                if(this->m_debug)
-                  cout << "*M*\t\tFCM1: " << lp->GetNameAndLabel() << " succeeded" << endl;
-                this->AddToPath(_newPath, &(tmpOutput), pushedNodes[i]);
-              }
-              else{
-                if(this->m_debug)
-                  cout << "*M*\t\tFCM1: " << lp->GetNameAndLabel() << " also failed" << endl;
-                //Second FCM: Connect the nodes in the medial axis to the original path and back
-                //This FCM should not fail, unless envLP is very badly chosen
-                //Copying the old configurations
-                CfgType oldCfg1 = graph->GetVertex(pathVIDs[i-1]);
-                CfgType oldCfg2 = graph->GetVertex(pathVIDs[i]);
-                result = lp->IsConnected(pushedNodes[i-1], oldCfg1, &tmpOutput, posRes, oriRes, true, true, true);
-                if(result) {
-                  if(this->m_debug)
-                    cout << "*M*\t\tFCM2: First connection established" << endl;
-                  this->AddToPath(_newPath, &(tmpOutput), oldCfg1);
-                  result = lp->IsConnected(oldCfg1, oldCfg2, &tmpOutput, posRes, oriRes, true, true, true);
-                }
-                if(result) {
-                  if(this->m_debug)
-                    cout << "*M*\t\tFCM2: Second connection established" << endl;
-                  this->AddToPath(_newPath, &(tmpOutput), oldCfg2);
-                  result = lp->IsConnected(oldCfg2, pushedNodes[i], &tmpOutput, posRes, oriRes, true, true, true);
-                }
-                if(result) {
-                  if(this->m_debug)
-                    cout << "*M*\t\tFCM2: Succeeded" << endl;
-                  this->AddToPath(_newPath, &(tmpOutput), pushedNodes[i]);
-                }
-                else{
-                  if(this->m_debug)
-                    cout << "*M*\t\tFCM2: Failed" << endl;
-                }
-              }
-            }
-            ++i;
-          }
-          if(result) {//If all the intermediate connections succeeded
-            //Connect the goal configuration and its pushed version
-            result = lp->IsConnected(pushedNodes[n-1], goal, &tmpOutput, posRes, oriRes, true, true, true);
-            if(result) {
-              //Add to path
-              this->AddToPath(_newPath, &tmpOutput, goal);
-              /*TODO
-               * Remove Branches Algorithm (from _newPath)
-               * */
-            }
-          }
-          else{
-            //If this happens, another lpLabel should be used.
-            //vcLabel in malpLabel could be causing trouble too
-            if(this->m_debug)
-              cout << "*M* \tSecond failure control measure also failed" << endl;
-          }
-        }
-        else{
-          //If this happens, another lpLabel should be used.
-          //A medial axis local planner is not a good choice when the start and goal are not on the medial axis.
-          if(this->m_debug)
-            cout << "*M* Local Planner " << lp->GetNameAndLabel()
-            << " could not connect the start to its pushed version" << endl;
-        }
-      }
-      else{
+    //analyze MALP success
+    if(success)
+      this->AddToPath(_newPath, &tmpOutput, *cit2);
+    else {
+      //Failure control measures
+      if(this->m_debug)
+        cout << malp->GetNameAndLabel()
+          << " failed to connect the pair of nodes (" << *cit1 << ", "
+          << *cit2 << ")" << endl;
+
+      //First FCM: Try with the other local planner
+      if(lp->IsConnected(*cit1, *cit2, &tmpOutput,
+            posRes, oriRes, true, true, true))
+        this->AddToPath(_newPath, &tmpOutput, *cit2);
+      else {
         if(this->m_debug)
-          cout << "*M* Could not push the configuration in pathVIDs[" << (i-1) << "]" << endl;
+          cout << "FCM1: " << lp->GetNameAndLabel() << " failed" << endl;
+
+        //Second FCM: Connect the nodes in the medial axis to the original path
+        //and back. This FCM should not fail, unless envLP is very badly chosen
+        //Copying the old configurations
+        int i = cit1 - pushed.begin();
+        CfgType oldCfg1 = graph->GetVertex(pathVIDs[i]);
+        CfgType oldCfg2 = graph->GetVertex(pathVIDs[i+1]);
+
+        if(lp->IsConnected(*cit1, oldCfg1, &tmpOutput,
+              posRes, oriRes, true, true, true)) {
+          this->AddToPath(_newPath, &tmpOutput, oldCfg1);
+          if(lp->IsConnected(oldCfg1, oldCfg2, &tmpOutput,
+                posRes, oriRes, true, true, true)) {
+            this->AddToPath(_newPath, &tmpOutput, oldCfg2);
+            if(lp->IsConnected(oldCfg2, *cit2, &tmpOutput,
+                  posRes, oriRes, true, true, true))
+              this->AddToPath(_newPath, &tmpOutput, *cit2);
+            else {
+              if(this->m_debug)
+                cout << "*M*\t\tFCM2: Failed" << endl;
+              return false;
+            }
+          }
+          else {
+            if(this->m_debug)
+              cout << "*M*\t\tFCM2: Failed" << endl;
+            return false;
+          }
+        }
+        else {
+          if(this->m_debug)
+            cout << "*M*\t\tFCM2: Failed" << endl;
+          return false;
+        }
       }
-      stats->StopClock("Medial Axis Path Smoother");
-    }
-    else{
-      cerr << "*M* m_malpLabel = \"" << m_malpLabel << "\" in " << this->GetNameAndLabel()
-        << " needs to point to a MedialAxisLP. Will not execute MedialAxisSmooth()." << endl;
     }
   }
-  else{
-    cerr << "*M* Error. pathVIDs in " << this->GetNameAndLabel() << " is empty. Aborting smoothing operation(s)." << endl;
+
+  //Connect the goal configuration and its pushed version
+  if(!lp->IsConnected(pushed.back(), _path.back(), &tmpOutput,
+        posRes, oriRes, true, true, true)) {
+    if(this->m_debug)
+      cout << "Local Planner " << lp->GetNameAndLabel()
+        << " could not connect the goal to its pushed version" << endl;
+    return false;
   }
-  return !result;
+  this->AddToPath(_newPath, &tmpOutput, _path.back());
+
+  vector<CfgType> fpath = _newPath;
+  this->RemoveBranches(mau.GetDistanceMetricLabel(), fpath, _newPath);
+
+  if(this->m_debug)
+    cout << "*M* Done, returing true\n";
+  return true;
 }
 
 #endif

@@ -258,15 +258,13 @@ BlindRRT<MPTraits>::Finalize() {
 #ifndef _PARALLEL
   //perform query if query was given as input
   if(m_query != NULL){
-    str = this->GetBaseFilename() + ".path";
-    m_query->SetPathFile(str);
     if(m_evaluateGoal){
       if(m_query->PerformQuery(this->GetRoadmap())){
-        if(this->m_debug) cout << "Query successful! Output written to " << str << "." << endl;
+        if(this->m_debug)
+          cout << "Query successful!." << endl;
       }
-      else{
-        if(this->m_debug) cout << "Query unsuccessful." << endl;
-      }
+      else if(this->m_debug)
+        cout << "Query unsuccessful." << endl;
     }
   }
 #endif

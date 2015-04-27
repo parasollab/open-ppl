@@ -93,15 +93,17 @@ BoundingBox::GetSideID(const vector<double>& _p) const {
 
 Vector3d
 BoundingBox::GetClearancePoint(const Vector3d& _p) const {
-  Vector3d clrP = _p;
+  Vector3d clrP;
   double minClearance = numeric_limits<double>::max();
   for (int i = 0; i < 3; ++i) {
     if(_p[i] - m_bbx[i].first < minClearance){
       minClearance = _p[i] - m_bbx[i].first;
+      clrP = _p;
       clrP[i] = m_bbx[i].first;
     }
     if(m_bbx[i].second - _p[i] < minClearance){
       minClearance = m_bbx[i].second - _p[i];
+      clrP = _p;
       clrP[i] = m_bbx[i].second;
     }
   }

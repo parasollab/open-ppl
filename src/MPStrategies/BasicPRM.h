@@ -1,5 +1,5 @@
-#ifndef BASICPRM_H_
-#define BASICPRM_H_
+#ifndef BASIC_PRM_H_
+#define BASIC_PRM_H_
 
 #include "MPStrategyMethod.h"
 
@@ -97,7 +97,7 @@ template<class MPTraits>
 BasicPRM<MPTraits>::
 BasicPRM(typename MPTraits::MPProblemType* _problem, XMLNodeReader& _node) :
   MPStrategyMethod<MPTraits>(_problem, _node), m_currentIteration(0),
-  m_inputMapFilename(""), m_startAt(Sampling){
+  m_inputMapFilename(""), m_startAt(Sampling) {
     this->SetName("BasicPRM");
     ParseXML(_node);
   }
@@ -108,7 +108,6 @@ BasicPRM<MPTraits>::
 ParseXML(XMLNodeReader& _node) {
   m_inputMapFilename = _node.stringXMLParameter("inputMap", false, "",
       "filename of roadmap to start from");
-
   string startAt = _node.stringXMLParameter("startAt", false, "sampling",
       "point of algorithm where to begin at: \
       \"sampling\" (default), \"connecting\", \
@@ -282,9 +281,6 @@ template<class MPTraits>
 void
 BasicPRM<MPTraits>::
 Finalize() {
-  if(this->m_debug)
-    cout << this->GetNameAndLabel() << "::Finalize()" << endl;
-
   //output final map
   this->GetRoadmap()->Write(this->GetBaseFilename() + ".map", this->GetEnvironment());
 

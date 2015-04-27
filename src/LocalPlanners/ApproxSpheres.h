@@ -10,7 +10,7 @@ class ApproxSpheres: public LocalPlannerMethod<MPTraits> {
     typedef typename MPTraits::MPProblemType MPProblemType;
     typedef typename MPProblemType::DistanceMetricPointer DistanceMetricPointer;
 
-    ApproxSpheres(bool _saveIntermediates = "false",
+    ApproxSpheres(bool _saveIntermediates = false,
         const ClearanceUtility<MPTraits>& _c = ClearanceUtility<MPTraits>());
 
     ApproxSpheres(MPProblemType* _problem, XMLNodeReader& _node);
@@ -21,8 +21,8 @@ class ApproxSpheres: public LocalPlannerMethod<MPTraits> {
         const CfgType& _c1, const CfgType& _c2, CfgType& col,
         LPOutput<MPTraits>* _lpOutput,
         double _posRes, double _oriRes,
-        bool _checkCollision,
-        bool _savePath, bool _saveFailedPath);
+        bool _checkCollision = true,
+        bool _savePath = false, bool _saveFailedPath = false);
 
   protected:
     ClearanceUtility<MPTraits> m_clearUtil; //Clearance Utility
@@ -43,8 +43,8 @@ ApproxSpheres(MPProblemType* _problem, XMLNodeReader& _node)
   m_clearUtil(_problem, _node) {
     this->SetName("ApproxSpheres");
     if(!m_clearUtil.GetExactClearance())
-      throw ParseException(WHERE, "Clearance Type for " + this->
-          GetNameAndLabel() + " needs to be 'exact' ");
+      throw ParseException(WHERE, "Clearance Type for " +
+          this->GetNameAndLabel() + " needs to be 'exact' ");
     _node.warnUnrequestedAttributes();
   }
 
@@ -66,10 +66,10 @@ IsConnected(const CfgType& _c1, const CfgType& _c2, CfgType& col,
     double _posRes, double _oriRes,
     bool _checkCollision,
     bool _savePath, bool _saveFailedPath) {
-  StatClass* _stats = this->GetMPProblem()->GetStatClass();
-  DistanceMetricPointer _dm = this->GetMPProblem()->
-    GetDistanceMetric(m_clearUtil.GetDistanceMetricLabel());
-  Environment* _env = this->GetMPProblem()->GetEnvironment();
+  StatClass* _stats = this->GetStatClass();
+  DistanceMetricPointer _dm =
+    this->GetDistanceMetric(m_clearUtil.GetDistanceMetricLabel());
+  Environment* _env = this->GetEnvironment();
 
   //clear lpOutput
   _lpOutput->Clear();

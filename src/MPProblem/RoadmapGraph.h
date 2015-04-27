@@ -70,7 +70,6 @@ class RoadmapGraph : public
     typedef RoadmapVCS<VERTEX, WEIGHT> RoadmapVCSType;
 
     RoadmapGraph() {}
-    ~RoadmapGraph() {}
 
     //////////////////////////////////
     // Adding & accessing vertices
@@ -115,6 +114,7 @@ class RoadmapGraph : public
     void AddEdge(VID _v1, VID _v2, const pair<WEIGHT,WEIGHT>& _w);
 
     bool IsEdge(VID _v1, VID _v2);
+    bool IsEdge(VID _v1, VID _v2, EI& _ei);
 
     //////////////////////////////////
     // CC Operations
@@ -137,6 +137,7 @@ class RoadmapGraph : public
     }
 #endif
 
+  private:
     RoadmapVCSType m_roadmapVCS;
 };
 
@@ -259,11 +260,17 @@ RoadmapGraph<VERTEX,WEIGHT>::AddEdge(VID _v1, VID _v2, const pair<WEIGHT,WEIGHT>
 template<class VERTEX, class WEIGHT>
 bool
 RoadmapGraph<VERTEX,WEIGHT>::IsEdge(VID _v1, VID _v2) {
+  EI ei;
+  return IsEdge(_v1, _v2, ei);
+}
+
+template<class VERTEX, class WEIGHT>
+bool
+RoadmapGraph<VERTEX,WEIGHT>::
+IsEdge(VID _v1, VID _v2, EI& _ei) {
 #ifndef _PARALLEL //rm guard after find_edge is implemented for pgraph
-  typename RoadmapGraph<VERTEX, WEIGHT>::VI vi;
-  typename RoadmapGraph<VERTEX, WEIGHT>::EI ei;
-  typename RoadmapGraph<VERTEX, WEIGHT>::EID ed(_v1, _v2);
-  return this->find_edge(ed, vi, ei);
+  VI vi;
+  return this->find_edge(EID(_v1, _v2), vi, _ei);
 #else
   return false;
 #endif

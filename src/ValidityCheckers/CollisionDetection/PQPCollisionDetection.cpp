@@ -21,7 +21,7 @@ PQP::IsInCollision(shared_ptr<MultiBody> _robot, shared_ptr<MultiBody> _obstacle
 
   if(_cdInfo.m_retAllInfo){
     PQP_DistanceResult res;
-    double minDistSoFar = maxDist;
+    double minDistSoFar = MAX_DBL;
     _cdInfo.ResetVars();
     _cdInfo.m_retAllInfo = true;
     Vector3d robotPt, obsPt;
@@ -175,7 +175,7 @@ PQPSolid::IsInCollision(shared_ptr<MultiBody> _robot, shared_ptr<MultiBody> _obs
 
   if (_cdInfo.m_retAllInfo == true){
     PQP_DistanceResult res;
-    double minDistSoFar = maxDist;
+    double minDistSoFar = MAX_DBL;
     Vector3d robotPt, obsPt;
     bool retVal=false;
 

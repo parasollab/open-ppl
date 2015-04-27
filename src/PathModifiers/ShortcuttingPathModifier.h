@@ -19,43 +19,45 @@ class ShortcuttingPathModifier : public PathModifierMethod<MPTraits> {
     typedef typename MPProblemType::LocalPlannerPointer LocalPlannerPointer;
     typedef typename MPProblemType::DistanceMetricPointer DistanceMetricPointer;
 
-    ShortcuttingPathModifier(const string _dmLabel = "", const string _lpLabel = "");
+    ShortcuttingPathModifier(const string& _dmLabel = "",
+        const string& _lpLabel = "");
     ShortcuttingPathModifier(MPProblemType* _problem, XMLNodeReader& _node);
 
     virtual void ParseXML(XMLNodeReader& _node);
     virtual void Print(ostream& _os) const;
 
-    bool ModifyImpl(vector<CfgType>& _originalPath, vector<CfgType>& _newPath);
+    bool ModifyImpl(vector<CfgType>& _path, vector<CfgType>& _newPath);
 
   private:
-    string m_dmLabel;           // Distance metric
-    string m_lpLabel;           // Local planner
+    string m_lpLabel; // Local planner
 };
 
 template<class MPTraits>
-ShortcuttingPathModifier<MPTraits>::ShortcuttingPathModifier(const string _dmLabel, const string _lpLabel) :
-  PathModifierMethod<MPTraits>(), m_dmLabel(_dmLabel), m_lpLabel(_lpLabel) {
+ShortcuttingPathModifier<MPTraits>::
+ShortcuttingPathModifier(const string& _dmLabel, const string& _lpLabel) :
+  PathModifierMethod<MPTraits>(), m_lpLabel(_lpLabel) {
     this->SetName("ShortcuttingPathModifier");
   }
 
 template<class MPTraits>
-ShortcuttingPathModifier<MPTraits>::ShortcuttingPathModifier(MPProblemType* _problem, XMLNodeReader& _node) :
+ShortcuttingPathModifier<MPTraits>::
+ShortcuttingPathModifier(MPProblemType* _problem, XMLNodeReader& _node) :
   PathModifierMethod<MPTraits>(_problem, _node) {
     this->SetName("ShortcuttingPathModifier");
   }
 
 template<class MPTraits>
 void
-ShortcuttingPathModifier<MPTraits>::ParseXML(XMLNodeReader& _node) {
-  m_dmLabel = _node.stringXMLParameter("dmLabel", false, "", "Distance metric method");
+ShortcuttingPathModifier<MPTraits>::
+ParseXML(XMLNodeReader& _node) {
   m_lpLabel = _node.stringXMLParameter("lpLabel", true, "", "Local planner method");
 }
 
 template<class MPTraits>
 void
-ShortcuttingPathModifier<MPTraits>::Print(ostream& _os) const {
+ShortcuttingPathModifier<MPTraits>::
+Print(ostream& _os) const {
   PathModifierMethod<MPTraits>::Print(_os);
-  _os << "\tdistance metric = \"" << m_dmLabel << "\"" << endl;
   _os << "\tlocal planner = \"" << m_lpLabel << "\"" << endl;
 }
 
@@ -63,21 +65,23 @@ ShortcuttingPathModifier<MPTraits>::Print(ostream& _os) const {
 // This function is also supposed to be used before MedialAxisSmooth.
 template<class MPTraits>
 bool
-ShortcuttingPathModifier<MPTraits>::ModifyImpl(vector<CfgType>& _originalPath, vector<CfgType>& _newPath) {
+ShortcuttingPathModifier<MPTraits>::
+ModifyImpl(vector<CfgType>& _path, vector<CfgType>& _newPath) {
+
   if(this->m_debug) cout << "\n*S* Executing ShortcuttingPathModifier::Modifier" << endl;
 
-  GraphType* graph = this->GetMPProblem()->GetRoadmap()->GetGraph();
+  GraphType* graph = this->GetRoadmap()->GetGraph();
 
-  vector<VID> originalPathVIDs = this->GetPathVIDs(_originalPath, graph);
+  vector<VID> originalPathVIDs = this->GetPathVIDs(_path, graph);
 
-  bool smoothFileOutput=false;
+  bool smoothFileOutput = false;
 
   if(!originalPathVIDs.empty()) {
-    smoothFileOutput=true;
+    smoothFileOutput = true;
 
-    LocalPlannerPointer lp = this->GetMPProblem()->GetLocalPlanner(m_lpLabel);
-    Environment* env = this->GetMPProblem()->GetEnvironment();
-    StatClass* stats = this->GetMPProblem()->GetStatClass();
+    LocalPlannerPointer lp = this->GetLocalPlanner(m_lpLabel);
+    Environment* env = this->GetEnvironment();
+    StatClass* stats = this->GetStatClass();
     LPOutput<MPTraits> tmpOutput;
 
     bool reconstruct, skip;
@@ -104,9 +108,13 @@ ShortcuttingPathModifier<MPTraits>::ModifyImpl(vector<CfgType>& _originalPath, v
         //Only reconstruct and save path if smoothing output is wanted.
         if(smoothFileOutput) {
           reconstruct = lp->IsConnected(graph->GetVertex(originalPathVIDs[i]),
-              graph->GetVertex(originalPathVIDs[j]), &tmpOutput, posRes, oriRes, true, true, true);
-          this->AddToPath(_newPath, &tmpOutput, graph->GetVertex(originalPathVIDs[j]));
-          if(!reconstruct) { //If could not reconstruct, abort the output, but continue skipping nodes
+              graph->GetVertex(originalPathVIDs[j]), &tmpOutput,
+              posRes, oriRes, true, true, true);
+          this->AddToPath(_newPath, &tmpOutput,
+              graph->GetVertex(originalPathVIDs[j]));
+          //If could not reconstruct, abort the output,
+          //but continue skipping nodes
+          if(!reconstruct) {
             cerr << "*S* Error. Could not reconstruct path in ShortcuttingPathModifier::Modifier()" << endl;
             smoothFileOutput = false;
             if(_newPath.empty())
@@ -116,25 +124,28 @@ ShortcuttingPathModifier<MPTraits>::ModifyImpl(vector<CfgType>& _originalPath, v
               WritePath("error.smooth.path", _newPath);
               _newPath.clear();
             }
+            return false;
           }
         }
         newPathVIDs.push_back(originalPathVIDs[j]);
         i = j;
         j = n-1;
       }
-      else{
+      else {
         //Try to make a connection by skipping nodes betwen i and j
         skip = lp->IsConnected(graph->GetVertex(originalPathVIDs[i]),
-            graph->GetVertex(originalPathVIDs[j]), &tmpOutput, posRes, oriRes, true, true);
+            graph->GetVertex(originalPathVIDs[j]), &tmpOutput,
+            posRes, oriRes, true, true);
         if(skip) {
           if(smoothFileOutput)
-            this->AddToPath(_newPath, &tmpOutput, graph->GetVertex(originalPathVIDs[j]));
+            this->AddToPath(_newPath, &tmpOutput,
+                graph->GetVertex(originalPathVIDs[j]));
           newPathVIDs.push_back(originalPathVIDs[j]);
           skips += (j-i-1);
           i = j;
           j = n-1;
         }
-        else{
+        else {
           //Could not skip. Try the previous node.
           --j;
         }
@@ -154,12 +165,14 @@ ShortcuttingPathModifier<MPTraits>::ModifyImpl(vector<CfgType>& _originalPath, v
     }
 
     stats->StopClock("Path Modifier");
+
+    return true;
   }
   else{
     cerr << "*S* Error. originalPathVIDs in " << this->GetNameAndLabel()
       << " is empty. Aborting smoothing operation(s)." << endl;
+    return false;
   }
-  return !smoothFileOutput;
 }
 
 #endif

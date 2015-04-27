@@ -10,9 +10,8 @@ class MedialAxisSampler : public SamplerMethod<MPTraits> {
     typedef typename MPTraits::CfgType CfgType;
     typedef typename MPTraits::MPProblemType MPProblemType;
 
-    MedialAxisSampler(const MedialAxisUtility<MPTraits>&
-        _medialAxisUtility = MedialAxisUtility<MPTraits>());
-
+    MedialAxisSampler(const MedialAxisUtility<MPTraits>& _medialAxisUtility =
+        MedialAxisUtility<MPTraits>());
     MedialAxisSampler(MPProblemType* _problem, XMLNodeReader& _node);
 
     virtual void Print(ostream& _os) const;

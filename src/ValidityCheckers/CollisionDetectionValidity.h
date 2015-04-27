@@ -110,7 +110,7 @@ CollisionDetectionValidity<MPTraits>::IsValidImpl(CfgType& _cfg, CDInfo& _cdInfo
 
 #ifdef PMPCfgMultiRobot
   bool answerFromEnvironment = false;
-  for(size_t i = 0; i < CfgType::m_numRobot; ++i) 
+  for(size_t i = 0; i < CfgType::m_numRobot; ++i)
     answerFromEnvironment |= IsInCollision(_cdInfo, i, _callName);
 #else
   bool answerFromEnvironment = IsInCollision(_cdInfo, _cfg.GetRobotIndex(), _callName);
@@ -179,7 +179,7 @@ CollisionDetectionValidity<MPTraits>::IsInCollision(CDInfo& _cdInfo,
           if (_cdInfo.m_retAllInfo) {
             // set stuff to indicate odd happenning
             _cdInfo.m_collidingObstIndex = -1;
-            _cdInfo.m_minDist = maxDist;
+            _cdInfo.m_minDist = MAX_DBL;
             _cdInfo.m_nearestObstIndex = -1;
             _cdInfo.m_robotPoint[0] = _cdInfo.m_robotPoint[1] = _cdInfo.m_robotPoint[2] = 0;
             _cdInfo.m_objectPoint[0] = _cdInfo.m_objectPoint[1] = _cdInfo.m_objectPoint[2] = 0;

@@ -64,6 +64,7 @@ ifeq (${parallel}, 1)
 else
   MAIN = main.o
 endif
+${MAIN}: ${PMPL_LIBFILE}
 
 pmpl: ${PMPL_LIBFILE} ${MAIN}
 	${CXX} ${CXXFLAGS} ${OPTS} ${MAIN} ${LIBS} -o $@

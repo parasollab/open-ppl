@@ -62,6 +62,10 @@ class DefaultWeight {
     void SetChecked(int _mult) { m_checkedMult = min(m_checkedMult, _mult); }
     int GetChecked() const { return m_checkedMult; }
 
+    bool HasClearance() const {return m_hasClearance;}
+    double GetClearance() const {return m_clearance;}
+    void SetClearance(double _c){m_hasClearance=true; m_clearance = _c;}
+
     string GetStat(string _stat);
     bool IsStat(string _stat);
     void SetStat(string _stat, string _value);
@@ -74,7 +78,9 @@ class DefaultWeight {
 
     static double MAX_WEIGHT;
     int m_checkedMult;
-     
+    bool m_hasClearance;
+    double m_clearance;
+
     map<string,string> m_statMap;
 
   public:
@@ -93,55 +99,65 @@ template<class CfgType>
 double DefaultWeight<CfgType>::MAX_WEIGHT = numeric_limits<double>::max();
 
 template<class CfgType>
-DefaultWeight<CfgType>::DefaultWeight(string _lpLabel, double _w, const vector<CfgType>& _intermediates):
-  m_lpLabel(_lpLabel), m_weight(_w), m_intermediates(_intermediates), m_checkedMult(numeric_limits<int>::max()){
+DefaultWeight<CfgType>::
+DefaultWeight(string _lpLabel, double _w,
+    const vector<CfgType>& _intermediates) :
+  m_lpLabel(_lpLabel), m_weight(_w), m_intermediates(_intermediates),
+  m_checkedMult(numeric_limits<int>::max()), m_hasClearance(false) {
   }
 
 template<class CfgType>
-DefaultWeight<CfgType>::~DefaultWeight(){}
+DefaultWeight<CfgType>::
+~DefaultWeight() {
+}
 
 template<class CfgType>
 double
-DefaultWeight<CfgType>::InvalidWeight(){
+DefaultWeight<CfgType>::
+InvalidWeight() {
   return -1;
 }
 
 template<class CfgType>
 DefaultWeight<CfgType>
-DefaultWeight<CfgType>::MaxWeight(){
+DefaultWeight<CfgType>::
+MaxWeight() {
   return DefaultWeight<CfgType>("INVALID", MAX_WEIGHT);
 }
 
 template<class CfgType>
 bool
-DefaultWeight<CfgType>::operator==(const DefaultWeight<CfgType>& _tmp) const{
+DefaultWeight<CfgType>::
+operator==(const DefaultWeight<CfgType>& _tmp) const {
   return ( (m_lpLabel==_tmp.GetLPLabel()) && (m_weight==_tmp.GetWeight()) );
 }
 
 template<class CfgType>
 const DefaultWeight<CfgType>&
-DefaultWeight<CfgType>::operator=(const DefaultWeight<CfgType>& _w){
+DefaultWeight<CfgType>::
+operator=(const DefaultWeight<CfgType>& _w) {
   m_lpLabel = _w.GetLPLabel();
   m_weight = _w.GetWeight();
   m_intermediates = _w.GetIntermediates();
   m_checkedMult = _w.GetChecked();
+  m_hasClearance = _w.HasClearance();
+  m_clearance = _w.GetClearance();
   m_statMap = _w.m_statMap;
   return *this;
 }
 
 template<class CfgType>
 ostream&
-operator<<(ostream& _os, const DefaultWeight<CfgType>& _w){
+operator<<(ostream& _os, const DefaultWeight<CfgType>& _w) {
   _os << _w.m_intermediates.size() << " ";
-  for(typename vector<CfgType>::const_iterator cit = _w.m_intermediates.begin(); cit!= _w.m_intermediates.end(); cit++){
-    _os << *cit;
-  }
+  for(auto cfg : _w.m_intermediates)
+    _os << cfg;
   return _os << _w.m_weight;
 }
 
 template<class CfgType>
 istream&
-operator>>(istream& _is, DefaultWeight<CfgType>& _w){
+operator>>(istream& _is, DefaultWeight<CfgType>& _w) {
   size_t numIntermediates;
   _is >> numIntermediates;
   _w.m_intermediates.clear();
@@ -155,42 +171,39 @@ operator>>(istream& _is, DefaultWeight<CfgType>& _w){
 
 template<class CfgType>
 DefaultWeight<CfgType>
-DefaultWeight<CfgType>::operator+(const DefaultWeight<CfgType>& _other) const {
+DefaultWeight<CfgType>::
+operator+(const DefaultWeight<CfgType>& _other) const {
   return DefaultWeight<CfgType>(m_lpLabel, m_weight+_other.m_weight);
 }
 
 template<class CfgType>
 bool
-DefaultWeight<CfgType>::operator<(const DefaultWeight<CfgType>& _other) const {
+DefaultWeight<CfgType>::
+operator<(const DefaultWeight<CfgType>& _other) const {
   return m_weight < _other.m_weight;
 }
 
 template<class CfgType>
 string
-DefaultWeight<CfgType>::GetStat(string _stat) {
-  if(IsStat(_stat)) {
+DefaultWeight<CfgType>::
+GetStat(string _stat) {
+  if(IsStat(_stat))
     return m_statMap[_stat];
-  }
-  else {
-    cout << "DefaultWeight::GetStat -- I cannot find Stat =  " << _stat << endl;
-    exit(-1);
-  }
+  else
+    throw RunTimeException(WHERE, "Cannot find Stat '" + _stat + "'.");
 }
 
 template<class CfgType>
 bool
-DefaultWeight<CfgType>::IsStat(string _stat) {
-  bool stat = false;
-  if(m_statMap.count(_stat) > 0)
-    stat = true;
-  else
-    stat = false;
-  return stat;
+DefaultWeight<CfgType>::
+IsStat(string _stat) {
+  return m_statMap.count(_stat) > 0;
 }
 
 template<class CfgType>
 void
-DefaultWeight<CfgType>::SetStat(string _stat, string _value) {
+DefaultWeight<CfgType>::
+SetStat(string _stat, string _value) {
   m_statMap[_stat] = _value;
 }
 

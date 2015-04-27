@@ -27,6 +27,14 @@ using namespace mathtool;
 #define MAX_INT  numeric_limits<int>::max()
 #define MAX_DBL  numeric_limits<double>::max()
 
+//Variable resolution epsilon for doubles and float. This number is based upon
+//the resolution of the smaller value between _t1 and _t2.
+template<typename T>
+const T
+Epsilon(const T& _t1, const T& _t2) {
+  return abs(min(_t1, _t2))*numeric_limits<T>::epsilon();
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 // Collision Detection
 ///////////////////////////////////////////////////////////////////////////////
