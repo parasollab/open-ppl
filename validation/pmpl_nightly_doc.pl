@@ -52,9 +52,10 @@ $OUTPUT = $OUTPUT.`chmod 664 /research/www/groups/amatogroup/intranet/PMPLDocs/s
 #doxygen
 chdir "../Doxygen";
 $OUTPUT = $OUTPUT.`make 2>&1`;
+$OUTPUT = $OUTPUT.`rm -rf /research/www/groups/amatogroup/intranet/PMPLDocs/Internal`;
+$OUTPUT = $OUTPUT.`rm -rf /research/www/groups/amatogroup/intranet/PMPLDocs/Release`;
 $OUTPUT = $OUTPUT.`cp -r Internal Release /research/www/groups/amatogroup/intranet/PMPLDocs`;
-$OUTPUT = $OUTPUT.`chmod -R 775 /research/www/groups/amatogroup/intranet/PMPLDocs/Internal`;
-$OUTPUT = $OUTPUT.`chmod -R 775 /research/www/groups/amatogroup/intranet/PMPLDocs/Release`;
+$OUTPUT = $OUTPUT.`update-www -r /research/www/groups/amatogroup/intranet/PMPLDocs`;
 
 #
 # Timing stats
