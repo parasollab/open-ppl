@@ -6,60 +6,24 @@
 #include "MPProblem/Weight.h"
 
 //distance metric includes
-#include "DistanceMetrics/BinaryLPSweptDistance.h"
-#include "DistanceMetrics/CenterOfMassDistance.h"
 #include "DistanceMetrics/EuclideanDistance.h"
-#include "DistanceMetrics/KnotTheoryDistance.h"
-#include "DistanceMetrics/LPSweptDistance.h"
-#include "DistanceMetrics/ManhattanDistance.h"
-#include "DistanceMetrics/ReachableDistance.h"
-#include "DistanceMetrics/RMSDDistance.h"
-#include "DistanceMetrics/ScaledEuclideanDistance.h"
 
 //validity checker includes
-#include "ValidityCheckers/AlwaysTrueValidity.h"
 #include "ValidityCheckers/CollisionDetectionValidity.h"
-#include "ValidityCheckers/ComposeValidity.h"
-#include "ValidityCheckers/MedialAxisClearanceValidity.h"
-#include "ValidityCheckers/NegateValidity.h"
-#include "ValidityCheckers/NodeClearanceValidity.h"
-#include "ValidityCheckers/ObstacleClearanceValidity.h"
 #include "ValidityCheckers/SurfaceValidity.h"
 #include "ValidityCheckers/SSSurfaceValidity.h"
 
 //neighborhood finder includes
-#include "NeighborhoodFinders/BandsNF.h"
 #include "NeighborhoodFinders/BruteForceNF.h"
-#include "NeighborhoodFinders/HierarchicalNF.h"
-#include "NeighborhoodFinders/HopLimitNF.h"
-#include "NeighborhoodFinders/OptimalNF.h"
-#include "NeighborhoodFinders/RadiusNF.h"
-#include "NeighborhoodFinders/RandomNF.h"
 
 //sampler includes
-#include "Samplers/BridgeTestSampler.h"
-#include "Samplers/GaussianSampler.h"
-#include "Samplers/GridSampler.h"
-#include "Samplers/MedialAxisSampler.h"
-#include "Samplers/MixSampler.h"
-#include "Samplers/ObstacleBasedSampler.h"
-#include "Samplers/SimilarStructureSampler.h"
 #include "Samplers/SurfaceGridSampler.h"
 #include "Samplers/SurfaceSampler.h"
-#include "Samplers/UniformMedialAxisSampler.h"
-#include "Samplers/UniformObstacleBasedSampler.h"
 #include "Samplers/UniformRandomSampler.h"
 
 //local planner includes
-#include "LocalPlanners/AStar.h"
-#include "LocalPlanners/HierarchicalLP.h"
-#include "LocalPlanners/MedialAxisLP.h"
-#include "LocalPlanners/RotateAtS.h"
 #include "LocalPlanners/StraightLine.h"
 #include "LocalPlanners/SurfaceLP.h"
-#include "LocalPlanners/ToggleLP.h"
-#include "LocalPlanners/TransformAtS.h"
-#include "LocalPlanners/ApproxSpheres.h"
 
 //extenders includes
 #include "Extenders/BasicExtender.h"
@@ -77,51 +41,19 @@
 #include "PathModifiers/ShortcuttingPathModifier.h"
 
 //connector includes
-#include "Connectors/AdaptiveConnector.h"
-#include "Connectors/CCsConnector.h"
 #include "Connectors/ConnectNeighboringSurfaces.h"
 #include "Connectors/NeighborhoodConnector.h"
-#include "Connectors/RewireConnector.h"
-#include "Connectors/CCExpansion.h"
-#include "Connectors/ClosestVE.h"
 
 //metric includes
-#include "Metrics/CCDistanceMetric.h"
-#include "Metrics/ConnectivityMetric.h"
-#include "Metrics/CoverageDistanceMetric.h"
-#include "Metrics/CoverageMetric.h"
-#include "Metrics/DiameterMetric.h"
-#include "Metrics/NumEdgesMetric.h"
 #include "Metrics/NumNodesMetric.h"
-#include "Metrics/RoadmapSet.h"
-#include "Metrics/TimeMetric.h"
-#include "Metrics/VectorSet.h"
 
 //map evaluator includes
-#include "MapEvaluators/ComposeEvaluator.h"
 #include "MapEvaluators/ConditionalEvaluator.h"
-#include "MapEvaluators/LazyQuery.h"
-#include "MapEvaluators/LazyToggleQuery.h"
-#include "MapEvaluators/NegateEvaluator.h"
-#include "MapEvaluators/PrintMapEvaluation.h"
 #include "MapEvaluators/Query.h"
-#include "MapEvaluators/ReplanningEvaluation.h"
-#include "MapEvaluators/TrueEvaluation.h"
 
 //mp strategies includes
-#include "MPStrategies/AdaptiveRRT.h"
 #include "MPStrategies/BasicPRM.h"
-#include "MPStrategies/BasicRRTStrategy.h"
-#include "MPStrategies/EvaluateMapStrategy.h"
 #include "MPStrategies/LocalManeuveringStrategy.h"
-#include "MPStrategies/MedialAxisRRT.h"
-#include "MPStrategies/MultiStrategy.h"
-#include "MPStrategies/SparkPRM.h"
-#include "MPStrategies/SRTStrategy.h"
-#include "MPStrategies/TogglePRMStrategy.h"
-#include "MPStrategies/UnitTest/DMTestStrategy.h"
-#include "MPStrategies/UtilityGuidedGenerator.h"
-#include "MPStrategies/VisibilityBasedPRM.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup MotionPlanningUniverse
