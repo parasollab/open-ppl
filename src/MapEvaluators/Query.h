@@ -465,12 +465,12 @@ bool
 Query<MPTraits>::
 CanRecreatePath(RoadmapType* _rdmp, vector<VID>& _attemptedPath,
     vector<CfgType>& _recreatedPath) {
-  Environment* env = this->GetEnvironment();
   _recreatedPath.push_back(
       _rdmp->GetGraph()->GetVertex(*_attemptedPath.begin()));
 #ifdef _PARALLEL
   return true;
 #else
+  Environment* env = this->GetEnvironment();
   for(typename vector<VID>::iterator it = _attemptedPath.begin();
       it+1 != _attemptedPath.end(); it++) {
     LPOutput<MPTraits> ci;

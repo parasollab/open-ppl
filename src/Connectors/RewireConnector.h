@@ -1,7 +1,8 @@
-#ifndef REWIRECONNECTOR_H_
-#define REWIRECONNECTOR_H_
+#ifndef REWIRE_CONNECTOR_H_
+#define REWIRE_CONNECTOR_H_
 
 #include "ConnectorMethod.h"
+#include "Utilities/MedialAxisUtilities.h"
 
 template<typename MPTraits>
 class RewireConnector : public ConnectorMethod<MPTraits> {
