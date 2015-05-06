@@ -150,7 +150,7 @@ class XMLNode {
     void BuildChildVector();
 
     ////////////////////////////////////////////////////////////////////////////
-    /// @brief Private constructor for use within ::BuildChildVector
+    /// @brief Private constructor for use within BuildChildVector
     /// @param _node New TiXMLNode
     /// @param _filename XML filename
     /// @param _doc TiXmlDocument from tree's root node

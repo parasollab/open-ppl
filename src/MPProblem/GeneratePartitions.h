@@ -17,7 +17,7 @@
 
 //////////////////////////////////////////////////////////////////////////////////////////
 class Body;
-template <class CFG, class WEIGHT> class Roadmap;
+//template <class CFG, class WEIGHT> class Roadmap;
 
 template <class CFG, class WEIGHT> class MPRegion;
 

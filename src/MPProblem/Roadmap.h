@@ -18,7 +18,7 @@
 #endif
 
 ////////////////////////////////////////////////////////////////////////////////
-/// @ingroup Roadmaps
+/// @ingroup Roadmap
 /// @brief Approximation of @cfree storing a graph and augmenting data
 /// structures for use by motion planning algorithms.
 ///
@@ -27,7 +27,7 @@
 /// the set of vertices, are all of type CfgType and \f$E\f$, or the set of
 /// edges, are all of type WeightType.
 ////////////////////////////////////////////////////////////////////////////////
-template <class MPTraits>
+template<class MPTraits>
 class Roadmap {
   public:
     typedef typename MPTraits::CfgType CfgType;
@@ -36,7 +36,7 @@ class Roadmap {
     typedef typename GraphType::vertex_descriptor VID;
 
     Roadmap();
-    Roadmap(const Roadmap<MPTraits>& _rdmp);
+    Roadmap(const Roadmap& _rdmp);
     ~Roadmap();
 
     //Read graph information from roadmap file.
@@ -45,7 +45,7 @@ class Roadmap {
 
     //Append nodes and edges from one roadmap (_rdmp) into
     //another roadmap (to_rdmp)
-    vector<VID> AppendRoadmap(const Roadmap<MPTraits>& _rdmp);
+    vector<VID> AppendRoadmap(const Roadmap& _rdmp);
 
     //access the roadmap graph
     GraphType* GetGraph() {return m_graph;}
@@ -53,19 +53,20 @@ class Roadmap {
     void SetGraph(GraphType* _graph) { m_graph = _graph; }
 
   private:
-    GraphType* m_graph; //stapl graph
+    GraphType* m_graph;
 };
 
-template <class MPTraits>
+template<class MPTraits>
 Roadmap<MPTraits>::
 Roadmap() : m_graph(new GraphType()){}
 
-template <class MPTraits>
-Roadmap<MPTraits>::Roadmap(const Roadmap<MPTraits>& _rdmp) : m_graph(new GraphType()) {
+template<class MPTraits>
+Roadmap<MPTraits>::
+Roadmap(const Roadmap& _rdmp) : m_graph(new GraphType()) {
   AppendRoadmap(_rdmp);
 }
 
-template <class MPTraits>
+template<class MPTraits>
 Roadmap<MPTraits>::~Roadmap(){
   delete m_graph;
   m_graph = NULL;
@@ -124,7 +125,7 @@ Roadmap<MPTraits>::Write(const string& _filename, Environment* _env){
 
 template <class MPTraits>
 vector<typename Roadmap<MPTraits>::VID>
-Roadmap<MPTraits>::AppendRoadmap(const Roadmap<MPTraits>& _rdmp) {
+Roadmap<MPTraits>::AppendRoadmap(const Roadmap& _rdmp) {
   vector<VID> toVIDs;
   typename vector<VID>::iterator vit;
   //copy vertices
