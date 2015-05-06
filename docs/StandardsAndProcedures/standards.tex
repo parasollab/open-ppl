@@ -226,6 +226,12 @@ All tab characters should be represented by 2 spaces (easy to make default in
 all editors, vim is recommended). There should be no trailing white space at the
 end of lines (this causes unnecessary conflicts with in SVN).
 
+\subsection{Line length}
+All lines of code should be a reasonable length for code clarity. 80 characters
+is an expected line limit. Though this is not a strictly enforced standard,
+please try to adhere as best as possible to accomodate those working on smaller
+screens.
+
 \subsection{Curly Braces}
 Curly braces used in control flow, function definitions, or class definitions
 should be placed on the same line as the statement. It is recommended that a
@@ -423,6 +429,46 @@ method.
 /// int i = 0;
 /// MyFunc(i);
 /// $@$endcode
+\end{lstlisting}
+
+For void functions with no parameters the following shorthand can be used (as
+long as it fits nicely on one line):
+\begin{lstlisting}[mathescape]
+void Foo(); ///< My brief description
+\end{lstlisting}
+
+
+\subsubsection{Member Function Groups}
+
+This is optional, but if you would like to group members in your class together
+based upon common functionality, this is acceptable and encouraged. An example,
+would be grouping constructors, different types of computations, or different
+sections of accessors. If this is desired, the following standard is enforced:
+
+\begin{lstlisting}[mathescape]
+///////////////////////////////////////////////////////////////////////////////
+/// $@$name My Group Name
+/// $@${
+
+void Foo1();
+void Foo2();
+$\ldots$
+void FooN();
+
+/// $@$}
+///////////////////////////////////////////////////////////////////////////////
+\end{lstlisting}
+
+Also, grouping functions for common documentation is accepted, and is noted like
+this:
+
+\begin{lstlisting}[mathescape]
+///////////////////////////////////////////////////////////////////////////////
+/// $@${
+/// Common documentation
+void Foo1();
+void Foo2();
+/// $@$}
 ///////////////////////////////////////////////////////////////////////////////
 \end{lstlisting}
 
@@ -438,7 +484,6 @@ other overloaded functions and a short description of the differences.
 ///
 /// $@$overload
 /// No witness to failure is returned.
-///////////////////////////////////////////////////////////////////////////////
 \end{lstlisting}
 
 \subsubsection{Inherited/derived Functions}
