@@ -7,10 +7,10 @@
 /// @defgroup Core Core
 /// The core components of PMPL shared by all its algorithmic abstractions are:
 /// - \ref MotionPlanningUniverse - MPProblem and MPTraits
-/// - \ref Environments - The workspace of the motion planning problem
+/// - \ref Environment - The workspace of the motion planning problem
 /// - \ref Cfgs - Configurations and @cspace
 /// - \ref Weights - Simple paths and edges of the roadmap
-/// - \ref Roadmaps - The roadmap used by sampling-based planning algorithms
+/// - \ref Roadmap - The roadmap used by sampling-based planning algorithms
 /// - \ref Utilities - Utility classes and functions
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -85,7 +85,7 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup Core
-/// @defgroup Roadmaps Roadmaps
+/// @defgroup Roadmap Roadmap
 /// @brief The roadmap used by sampling-based planning algorithms.
 ///
 /// A Roadmap is essentially a graph \f$G=(V, E)\f$ which is used to
