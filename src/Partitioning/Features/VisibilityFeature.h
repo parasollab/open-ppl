@@ -11,10 +11,10 @@ class VisibilityFeature : public MPFeature {
  public:
    VisibilityFeature();
    VisibilityFeature(int _k, string _nf, string _dm);
-   VisibilityFeature(XMLNodeReader& in_Node, MPProblem* mp);
+   VisibilityFeature(XMLNode& in_Node, MPProblem* mp);
    virtual ~VisibilityFeature(){}
 
-   virtual void ParseXML(XMLNodeReader& in_Node);
+   virtual void ParseXML(XMLNode& in_Node);
 
    virtual vector<double> Collect(vector<VID>& vids);
 

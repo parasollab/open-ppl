@@ -47,13 +47,13 @@ class MPRegionComparerMethod: public MPBaseObject {
   typedef typename RoadmapGraph<CFG, WEIGHT>::VID VID;
   MPRegionComparerMethod(MPProblem * _m_pProblem, vector<CFG> _m_witness_cfgs, shared_ptr<DistanceMetricMethod> _dm) :
     m_pProblem(_m_pProblem), m_witness_cfgs(_m_witness_cfgs), dm(_dm) {}
-    MPRegionComparerMethod(XMLNodeReader& in_Node, MPProblem* in_pProblem) :
+    MPRegionComparerMethod(XMLNode& in_Node, MPProblem* in_pProblem) :
     MPBaseObject(in_Node, in_pProblem) {
     m_pProblem = in_pProblem;
 
-    string filename = in_Node.stringXMLParameter("witness_file",false,"","Witness Filename");
-    string dm_label = in_Node.stringXMLParameter("dm_method", false, "default", "Distance Metric Method");
-    string m_lp     = in_Node.stringXMLParameter("lp_method", true, "", "Local Planner Method");
+    string filename = in_Node.Read("witness_file",false,"","Witness Filename");
+    string dm_label = in_Node.Read("dm_method", false, "default", "Distance Metric Method");
+    string m_lp     = in_Node.Read("lp_method", true, "", "Local Planner Method");
     dm = in_pProblem->GetDistanceMetric()->GetMethod(dm_label);
 
     if (filename.length() > 0) {
@@ -284,11 +284,8 @@ class ConnectableComponentComparer : public MPRegionComparerMethod<CFG,WEIGHT>
 {
 public:
 
-  ConnectableComponentComparer(XMLNodeReader& in_Node, MPProblem* in_pProblem) :
+  ConnectableComponentComparer(XMLNode& in_Node, MPProblem* in_pProblem) :
     MPRegionComparerMethod<CFG,WEIGHT> (in_Node, in_pProblem) {
-
-    in_Node.verifyName(string("ConnectableComponentComparer"));
-
   }
 
 
@@ -315,11 +312,8 @@ template <class CFG, class WEIGHT>
 class RandomConnectComparer : public MPRegionComparerMethod< CFG, WEIGHT >
 {
 public:
-  RandomConnectComparer(XMLNodeReader& in_Node, MPProblem* in_pProblem) :
+  RandomConnectComparer(XMLNode& in_Node, MPProblem* in_pProblem) :
     MPRegionComparerMethod<CFG,WEIGHT> (in_Node, in_pProblem) {
-
-    in_Node.verifyName(string("RandomConnectComparer"));
-
   }
 
   virtual void Compare(int in_region_a, int in_region_b) {
@@ -353,11 +347,8 @@ class RegionCoverageComparer : public MPRegionComparerMethod< CFG, WEIGHT >
 {
 public:
   typedef typename RoadmapGraph<CFG, WEIGHT>::VID VID;
-  RegionCoverageComparer(XMLNodeReader& in_Node, MPProblem* in_pProblem) :
+  RegionCoverageComparer(XMLNode& in_Node, MPProblem* in_pProblem) :
     MPRegionComparerMethod<CFG,WEIGHT> (in_Node, in_pProblem) {
-
-    in_Node.verifyName(string("RegionCoverageComparer"));
-
   }
 
   virtual void Compare(int in_region_a, int in_region_b) {
@@ -441,11 +432,8 @@ class RegionSimilarity : public MPRegionComparerMethod< CFG, WEIGHT >
 {
 public:
   typedef typename RoadmapGraph<CFG, WEIGHT>::VID VID;
-  RegionSimilarity(XMLNodeReader& in_Node, MPProblem* in_pProblem) :
+  RegionSimilarity(XMLNode& in_Node, MPProblem* in_pProblem) :
     MPRegionComparerMethod<CFG,WEIGHT> (in_Node, in_pProblem) {
-
-    in_Node.verifyName(string("RegionSimilarity"));
-
   }
 
   virtual void Compare(int in_region_a, int in_region_b) {

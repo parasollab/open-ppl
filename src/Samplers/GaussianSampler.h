@@ -14,9 +14,9 @@ class GaussianSampler : public SamplerMethod<MPTraits> {
     GaussianSampler(string _vcLabel = "", string _dmLabel = "",
         double _d = 0.5, bool _useBoundary = false);
 
-    GaussianSampler(MPProblemType* _problem, XMLNodeReader& _node);
+    GaussianSampler(MPProblemType* _problem, XMLNode& _node);
 
-    void ParseXML(XMLNodeReader& _node);
+    void ParseXML(XMLNode& _node);
 
     virtual void Print(ostream& _os) const;
 
@@ -40,7 +40,7 @@ GaussianSampler(string _vcLabel, string _dmLabel,
 
 template<class MPTraits>
 GaussianSampler<MPTraits>::
-GaussianSampler(MPProblemType* _problem, XMLNodeReader& _node)
+GaussianSampler(MPProblemType* _problem, XMLNode& _node)
   : SamplerMethod<MPTraits>(_problem, _node) {
     this->SetName("GaussianSampler");
     ParseXML(_node);
@@ -49,15 +49,12 @@ GaussianSampler(MPProblemType* _problem, XMLNodeReader& _node)
 template<class MPTraits>
 void
 GaussianSampler<MPTraits>::
-ParseXML(XMLNodeReader& _node) {
-  m_d = _node.numberXMLParameter("d", true, 0.0, 0.0, MAX_DBL, "Gaussian D value");
-  m_useBoundary = _node.boolXMLParameter("useBBX", true, false,
+ParseXML(XMLNode& _node) {
+  m_d = _node.Read("d", true, 0.0, 0.0, MAX_DBL, "Gaussian D value");
+  m_useBoundary = _node.Read("useBBX", true, false,
       "Use bounding box as obstacle");
-  m_vcLabel = _node.stringXMLParameter("vcLabel", true, "", "Validity Test Method");
-  m_dmLabel =_node.stringXMLParameter("dmLabel", true, "default",
-      "Distance Metric Method");
-
-  _node.warnUnrequestedAttributes();
+  m_vcLabel = _node.Read("vcLabel", true, "", "Validity Test Method");
+  m_dmLabel =_node.Read("dmLabel", true, "default", "Distance Metric Method");
 }
 
 //Display values of class variables at calling time

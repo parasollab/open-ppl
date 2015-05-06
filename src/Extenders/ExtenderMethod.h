@@ -16,7 +16,7 @@ class ExtenderMethod : public MPBaseObject<MPTraits> {
     typedef typename MPTraits::MPProblemType MPProblemType;
 
     ExtenderMethod() {}
-    ExtenderMethod(MPProblemType* _problem, XMLNodeReader& _node)
+    ExtenderMethod(MPProblemType* _problem, XMLNode& _node)
       : MPBaseObject<MPTraits>(_problem, _node) {}
 
     ////////////////////////////////////////////////////////////////////////////

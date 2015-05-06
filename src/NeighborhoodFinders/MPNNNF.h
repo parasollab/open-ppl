@@ -37,11 +37,11 @@ class MPNNNF : public NeighborhoodFinderMethod<MPTraits> {
 	/////////////////////////////////////
       }
 
-    MPNNNF(MPProblemType* _problem, XMLNodeReader& _node) :
+    MPNNNF(MPProblemType* _problem, XMLNode& _node) :
       NeighborhoodFinderMethod<MPTraits>(_problem, _node) {
         this->SetName("MPNNNF");
         this->m_nfType = K;
-        this->m_k = _node.numberXMLParameter("k", true, 5, 0, MAX_INT, "Number of neighbors to find");
+        this->m_k = _node.Read("k", true, 5, 0, MAX_INT, "Number of neighbors to find");
 	m_lastRdmpSize = -1;
       }
 

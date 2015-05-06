@@ -5,7 +5,7 @@
 
 GrowablePartitions::GrowablePartitions():PartitioningMethod(){};
 
-GrowablePartitions::GrowablePartitions(XMLNodeReader& in_Node, MPProblem* in_pProblem) : PartitioningMethod(in_Node, in_pProblem){
+GrowablePartitions::GrowablePartitions(XMLNode& in_Node, MPProblem* in_pProblem) : PartitioningMethod(in_Node, in_pProblem){
   this->SetName("growable");
    ParseXML(in_Node);
 };

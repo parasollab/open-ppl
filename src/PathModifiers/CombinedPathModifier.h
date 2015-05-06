@@ -17,9 +17,9 @@ class CombinedPathModifier : public PathModifierMethod<MPTraits> {
     typedef typename MPProblemType::PathModifierPointer PathModifierPointer;
 
     CombinedPathModifier(const vector<string>& _pathModifierLabels = vector<string>());
-    CombinedPathModifier(MPProblemType* _problem, XMLNodeReader& _node);
+    CombinedPathModifier(MPProblemType* _problem, XMLNode& _node);
 
-    virtual void ParseXML(XMLNodeReader& _node);
+    virtual void ParseXML(XMLNode& _node);
     virtual void Print(ostream& _os) const;
 
     bool ModifyImpl(vector<CfgType>& _originalPath, vector<CfgType>& _newPath);
@@ -28,16 +28,16 @@ class CombinedPathModifier : public PathModifierMethod<MPTraits> {
     vector<string> m_pathModifierLabels;
 };
 
-// Non-XML Constructor
 template<class MPTraits>
-CombinedPathModifier<MPTraits>::CombinedPathModifier(const vector<string>& _pathModifierLabels) :
+CombinedPathModifier<MPTraits>::
+CombinedPathModifier(const vector<string>& _pathModifierLabels) :
   PathModifierMethod<MPTraits>(), m_pathModifierLabels(_pathModifierLabels) {
     this->SetName("CombinedPathModifier");
   }
 
-// XML Constructor
 template<class MPTraits>
-CombinedPathModifier<MPTraits>::CombinedPathModifier(MPProblemType* _problem, XMLNodeReader& _node) :
+CombinedPathModifier<MPTraits>::
+CombinedPathModifier(MPProblemType* _problem, XMLNode& _node) :
   PathModifierMethod<MPTraits>(_problem, _node) {
     this->SetName("CombinedPathModifier");
     ParseXML(_node);
@@ -45,13 +45,11 @@ CombinedPathModifier<MPTraits>::CombinedPathModifier(MPProblemType* _problem, XM
 
 template<class MPTraits>
 void
-CombinedPathModifier<MPTraits>::ParseXML(XMLNodeReader& _node) {
-  for(XMLNodeReader::childiterator citr = _node.children_begin(); citr != _node.children_end(); ++citr) {
-    if(citr->getName() == "Modifier") {
-      m_pathModifierLabels.push_back(citr->stringXMLParameter("label", true, "", "Path modifier label"));
-      citr->warnUnrequestedAttributes();
-    }
-  }
+CombinedPathModifier<MPTraits>::
+ParseXML(XMLNode& _node) {
+  for(auto& child : _node)
+    if(child.Name() == "Modifier")
+      m_pathModifierLabels.push_back(child.Read("label", true, "", "Path modifier label"));
 }
 
 template<class MPTraits>

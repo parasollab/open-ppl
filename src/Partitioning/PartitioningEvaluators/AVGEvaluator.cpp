@@ -5,12 +5,12 @@
 
 AVGEvaluator::AVGEvaluator():PartitioningEvaluator(){}
 
-AVGEvaluator::AVGEvaluator(XMLNodeReader& in_Node, MPProblem* mp):PartitioningEvaluator(in_Node, mp){
+AVGEvaluator::AVGEvaluator(XMLNode& in_Node, MPProblem* mp):PartitioningEvaluator(in_Node, mp){
    ParseXML(in_Node);
 }
 
-void AVGEvaluator::ParseXML(XMLNodeReader& in_Node){
-   SetFeature(in_Node.stringXMLParameter("Feature", true, "", "Feature Name"));
+void AVGEvaluator::ParseXML(XMLNode& in_Node){
+   SetFeature(in_Node.Read("Feature", true, "", "Feature Name"));
    in_Node.warnUnrequestedAttributes();
 }
 

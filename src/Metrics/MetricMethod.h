@@ -15,7 +15,7 @@ class MetricMethod : public MPBaseObject<MPTraits> {
   public:
 
     MetricMethod() {}
-    MetricMethod(typename MPTraits::MPProblemType* _problem, XMLNodeReader& _node)
+    MetricMethod(typename MPTraits::MPProblemType* _problem, XMLNode& _node)
       : MPBaseObject<MPTraits>(_problem, _node) {}
     virtual ~MetricMethod() {}
 

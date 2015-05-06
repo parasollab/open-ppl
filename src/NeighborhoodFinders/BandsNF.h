@@ -1,5 +1,5 @@
-#ifndef BANDSNF_H_
-#define BANDSNF_H_
+#ifndef BANDS_NF_H_
+#define BANDS_NF_H_
 
 #include "NeighborhoodFinderMethod.h"
 #include "MPProblem/MPProblem.h"
@@ -350,19 +350,19 @@ class Band : public MPBaseObject<MPTraits> {
       this->SetName("Band");
     }
 
-    Band(MPProblemType* _problem, XMLNodeReader& _node): MPBaseObject<MPTraits>(_problem, _node) {
+    Band(MPProblemType* _problem, XMLNode& _node): MPBaseObject<MPTraits>(_problem, _node) {
       this->SetName("Band");
-      m_dmLabel = _node.stringXMLParameter("dmLabel", true, "default", "Distance Metric Method");
+      m_dmLabel = _node.Read("dmLabel", true, "default", "Distance Metric Method");
 
-      m_min = _node.numberXMLParameter("min", false, 0.0, 0.0, 100000.0, "min");
-      m_max = _node.numberXMLParameter("max", false, MAX_DBL, 0.0, MAX_DBL, "max");
-      m_usePercent = _node.boolXMLParameter("usePercent", false, false,
+      m_min = _node.Read("min", false, 0.0, 0.0, 100000.0, "min");
+      m_max = _node.Read("max", false, MAX_DBL, 0.0, MAX_DBL, "max");
+      m_usePercent = _node.Read("usePercent", false, false,
           "treat min and max as a percentage of the total number of vertices in the roadmap");
 
-      double alpha = _node.numberXMLParameter("alpha", false, 1.0, 0.0, 100.0, "alpha");
+      double alpha = _node.Read("alpha", false, 1.0, 0.0, 100.0, "alpha");
 
-      string policy = _node.stringXMLParameter("policy", true, "closest", "selection policy");
-      size_t k = _node.numberXMLParameter("k", true, 1, 0, 10000, "k");
+      string policy = _node.Read("policy", true, "closest", "selection policy");
+      size_t k = _node.Read("k", true, 1, 0, 10000, "k");
 
       if (policy == "closest") {
         m_policy = new ClosestPolicy(k, m_debug);
@@ -453,7 +453,7 @@ class DBand : public Band<MPTraits> {
     typedef typename MPProblemType::RoadmapType RoadmapType;
     typedef typename MPProblemType::VID VID;
 
-    DBand(XMLNodeReader& _node, MPProblemType* _problem) : Band<MPTraits>(_problem, _node){
+    DBand(XMLNode& _node, MPProblemType* _problem) : Band<MPTraits>(_problem, _node){
       this->SetName("DBand");
     }
 
@@ -517,7 +517,7 @@ class RBand : public Band<MPTraits> {
     typedef typename MPProblemType::RoadmapType RoadmapType;
     typedef typename MPProblemType::VID VID;
 
-    RBand(XMLNodeReader& _node, MPProblemType* _problem) : Band<MPTraits> (_problem, _node) {
+    RBand(XMLNode& _node, MPProblemType* _problem) : Band<MPTraits> (_problem, _node) {
       this->SetName("RBand");
     }
 
@@ -588,17 +588,16 @@ class BandsNF: public NeighborhoodFinderMethod<MPTraits> {
         this->SetName("BandsNF");
       }
 
-    BandsNF(MPProblemType* _problem, XMLNodeReader& _node) :
+    BandsNF(MPProblemType* _problem, XMLNode& _node) :
       NeighborhoodFinderMethod<MPTraits>(_problem, _node) {
         this->SetName("BandsNF");
-        XMLNodeReader::childiterator citr;
-        for(citr = _node.children_begin(); citr!= _node.children_end(); ++citr) {
-          if (citr->getName() == "DBand") {
-            Band<MPTraits>* dband = new DBand<MPTraits>(*citr, _problem);
+        for(auto& child : _node) {
+          if (child.Name() == "DBand") {
+            Band<MPTraits>* dband = new DBand<MPTraits>(child, _problem);
             this->m_bands.push_back(dband);
           }
-          else if(citr->getName() == "RBand") {
-            Band<MPTraits>* rband = new RBand<MPTraits>(*citr, _problem);
+          else if(child.Name() == "RBand") {
+            Band<MPTraits>* rband = new RBand<MPTraits>(child, _problem);
             this->m_bands.push_back(rband);
           }
         }

@@ -31,14 +31,14 @@ class RegularSubdivisionMethod : public MPStrategyMethod<MPTraits>{
 
     //non-xml/empty constructor
     RegularSubdivisionMethod(const vector<pair<string, int> >& _vecStrNodeGenLabels = vector<pair<string, int> >(),
-       const vector<string>& _vecStrNodeConnectionLabels = vector<string>(),
-       const vector<string>& _strategiesLabels = vector<string>(),
-       string _ccc= "", int _row = 0, int _col = 0);
+        const vector<string>& _vecStrNodeConnectionLabels = vector<string>(),
+        const vector<string>& _strategiesLabels = vector<string>(),
+        string _ccc= "", int _row = 0, int _col = 0);
 
-    RegularSubdivisionMethod(typename MPTraits::MPProblemType* _problem, XMLNodeReader& _node);
+    RegularSubdivisionMethod(typename MPTraits::MPProblemType* _problem, XMLNode& _node);
     virtual ~RegularSubdivisionMethod(){ };
 
-    virtual void ParseXML(XMLNodeReader& _node);
+    virtual void ParseXML(XMLNode& _node);
 
     virtual void Initialize(){ };
     virtual void Run();
@@ -57,81 +57,70 @@ class RegularSubdivisionMethod : public MPStrategyMethod<MPTraits>{
 };
 
 template<class MPTraits>
-RegularSubdivisionMethod<MPTraits>::RegularSubdivisionMethod(const vector<pair<string, int> >& _vecStrNodeGenLabels,
-  const vector<string>& _vecStrNodeConnectionLabels, const vector<string>& _strategiesLabels,
-  string _ccc, int _row, int _col)
-  :m_vecStrNodeGenLabels(_vecStrNodeGenLabels), m_vecStrNodeConnectionLabels(_vecStrNodeConnectionLabels),
-   m_strategiesLabels(_strategiesLabels),m_ccc(_ccc), m_row(_row), m_col(_col){
-  this->SetName("RegularSubdivisionMethod");
-}
+RegularSubdivisionMethod<MPTraits>::
+RegularSubdivisionMethod(const vector<pair<string, int> >& _vecStrNodeGenLabels,
+    const vector<string>& _vecStrNodeConnectionLabels, const vector<string>& _strategiesLabels,
+    string _ccc, int _row, int _col) :
+  m_vecStrNodeGenLabels(_vecStrNodeGenLabels), m_vecStrNodeConnectionLabels(_vecStrNodeConnectionLabels),
+  m_strategiesLabels(_strategiesLabels),m_ccc(_ccc), m_row(_row), m_col(_col){
+    this->SetName("RegularSubdivisionMethod");
+  }
 
 template<class MPTraits>
-RegularSubdivisionMethod<MPTraits>::RegularSubdivisionMethod(typename MPTraits::MPProblemType* _problem, XMLNodeReader& _node) : MPStrategyMethod<MPTraits>(_problem,_node) {
+RegularSubdivisionMethod<MPTraits>::
+RegularSubdivisionMethod(typename MPTraits::MPProblemType* _problem,
+    XMLNode& _node) : MPStrategyMethod<MPTraits>(_problem,_node) {
   ParseXML(_node);
   this->SetName("RegularSubdivisionMethod");
 }
 
-
-//RegularSubdivisionMethod::~RegularSubdivisionMethod() { }
 template<class MPTraits>
-void RegularSubdivisionMethod<MPTraits>::ParseXML(XMLNodeReader& _node){
-  XMLNodeReader::childiterator citr;
-  for( citr = _node.children_begin(); citr!= _node.children_end(); ++citr) {
-    if(citr->getName() == "sequential_strategy") {
-      string strategy_string = citr->stringXMLParameter(string("Strategy"), true,
-        string(""), string("Sequential Strategy"));
-      m_strategiesLabels.push_back(strategy_string);
-      citr->warnUnrequestedAttributes();
-    }else if(citr->getName() == "node_generation_method") {
-      string node_gen_method = citr->stringXMLParameter(string("Method"), true,
-        string(""), string("Node Generation Method"));
-      int numPerIteration = citr->numberXMLParameter(string("Number"), true,
-        int(1), int(0), MAX_INT, string("Number of samples"));
-      m_vecStrNodeGenLabels.push_back(pair<string, int>(node_gen_method, numPerIteration));
-      citr->warnUnrequestedAttributes();
-    }else if(citr->getName() == "node_connection_method") {
-      string connect_method = citr->stringXMLParameter(string("Method"), true,
-        string(""), string("Node Connection Method"));
-      m_vecStrNodeConnectionLabels.push_back(connect_method);
-      citr->warnUnrequestedAttributes();
-    }else if(citr->getName() == "region_connection_method"){
-      string connectRegionMethod = citr->stringXMLParameter(string("Method"), true,
-        string(""), string("Region Connection Method"));
-      m_regionConnectionLabels.push_back(connectRegionMethod);
-      citr->warnUnrequestedAttributes();
-    }else if(citr->getName() == "num_row") {
-      m_row = citr->numberXMLParameter(string("nRow"), true,
-        int(1), int(1), MAX_INT, string("number of partition on x"));
-      citr->warnUnrequestedAttributes();
-    }else if(citr->getName() == "n_col") {
-      m_col = citr->numberXMLParameter(string("nCol"), true,
-        int(1), int(1), MAX_INT, string("number of partition on y"));
-      citr->warnUnrequestedAttributes();
-    }else if(citr->getName() == "num_runs") {
-      m_runs = citr->numberXMLParameter(string("nRuns"), true,
-        int(1), int(0), MAX_INT, string("Runs number"));
-      citr->warnUnrequestedAttributes();
-    }else if(citr->getName() == "overlap") {
+void
+RegularSubdivisionMethod<MPTraits>::
+ParseXML(XMLNode& _node) {
+  for(auto& child : _node) {
+    if(child.Name() == "sequential_strategy")
+      m_strategiesLabels.push_back(child.Read("Strategy", true, "",
+            "Sequential Strategy"));
+    else if(child.Name() == "node_generation_method") {
+      string node_gen_method = child.Read("Method", true, "",
+          "Node Generation Method");
+      int numPerIteration = child.Read("Number", true, 1, 0, MAX_INT,
+          "Number of samples");
+      m_vecStrNodeGenLabels.push_back(
+          make_pair(node_gen_method, numPerIteration));
+    }
+    else if(child.Name() == "node_connection_method")
+      m_vecStrNodeConnectionLabels.push_back(
+          child.Read("Method", true, "", "Node Connection Method"));
+    else if(child.Name() == "region_connection_method")
+      m_regionConnectionLabels.push_back(
+          child.Read("Method", true, "", "Region Connection Method"));
+    else if(child.Name() == "num_row")
+      m_row = child.Read("nRow", true, 1, 1, MAX_INT,
+          "number of partition on x");
+    else if(child.Name() == "n_col")
+      m_col = child.Read("nCol", true, 1, 1, MAX_INT,
+          "number of partition on y");
+    else if(child.Name() == "num_runs")
+      m_runs = child.Read("nRuns", true, 1, 0, MAX_INT, "Runs number");
+    else if(child.Name() == "overlap") {
       // All 3 epsilon values are doubles between 0.0 to 1.0 with default value 0.0.
-      m_xEpsilon = citr->numberXMLParameter("xeps", true, 0.0, 0.0, 1.0, "x overlap percentage");
-      m_yEpsilon = citr->numberXMLParameter("yeps", true, 0.0, 0.0, 1.0, "y overlap percentage");
-      m_zEpsilon = citr->numberXMLParameter("zeps", true, 0.0, 0.0, 1.0, "z overlap percentage");
-      citr->warnUnrequestedAttributes();
-    }else if(citr->getName() == "region_connect_k") {
-      m_k1 = citr->numberXMLParameter("k1", true,
-        1, 0, MAX_INT, "K Largest CC from source region");
-      m_k2 = citr->numberXMLParameter("k2", true,
-	1, 0, MAX_INT, "K Largest CC from target region");
-      m_nf = citr->stringXMLParameter("nf", true,
-	"", "Neighborhood Finder for Region Connect");
-      m_lp = citr->stringXMLParameter("lp", true,
-        "", "Local Planner for Region Connect");
-      m_ccc = citr->stringXMLParameter("type", true,
-	"", "CC connection strategy option");
-
-      citr->warnUnrequestedAttributes();
-    } else {
-      citr->warnUnknownNode();
+      m_xEpsilon = child.Read("xeps", true, 0.0, 0.0, 1.0, "x overlap percentage");
+      m_yEpsilon = child.Read("yeps", true, 0.0, 0.0, 1.0, "y overlap percentage");
+      m_zEpsilon = child.Read("zeps", true, 0.0, 0.0, 1.0, "z overlap percentage");
+    }
+    else if(child.Name() == "region_connect_k") {
+      m_k1 = child.Read("k1", true,
+          1, 0, MAX_INT, "K Largest CC from source region");
+      m_k2 = child.Read("k2", true,
+          1, 0, MAX_INT, "K Largest CC from target region");
+      m_nf = child.Read("nf", true,
+          "", "Neighborhood Finder for Region Connect");
+      m_lp = child.Read("lp", true,
+          "", "Local Planner for Region Connect");
+      m_ccc = child.Read("type", true,
+          "", "CC connection strategy option");
     }
   }
 };
@@ -139,36 +128,36 @@ void RegularSubdivisionMethod<MPTraits>::ParseXML(XMLNodeReader& _node){
 
 template<class MPTraits>
 void RegularSubdivisionMethod<MPTraits>::Print(ostream& _os) const {
-   _os << "RegularSubdivisionMethod:: Print \n";
-   _os << "\trows: " << m_row << endl;
-   _os << "\tcols: " << m_col << endl;
-   _os << "\tregion connector type: " << m_ccc << endl;
-   _os << "\tregion k: " << m_k1 << endl;
+  _os << "RegularSubdivisionMethod:: Print \n";
+  _os << "\trows: " << m_row << endl;
+  _os << "\tcols: " << m_col << endl;
+  _os << "\tregion connector type: " << m_ccc << endl;
+  _os << "\tregion k: " << m_k1 << endl;
 
-   typedef vector<pair<string, int> >::const_iterator VIter;
-   typedef vector<string>::const_iterator StringIter;
+  typedef vector<pair<string, int> >::const_iterator VIter;
+  typedef vector<string>::const_iterator StringIter;
 
-   _os<<"\nSamplers\n";
-   for(VIter vIter=m_vecStrNodeGenLabels.begin();
+  _os<<"\nSamplers\n";
+  for(VIter vIter=m_vecStrNodeGenLabels.begin();
       vIter!=m_vecStrNodeGenLabels.end(); vIter++){
     _os<<"\t"<<vIter->first<<"\tNumber:"<<vIter->second;
-   }
+  }
 
-   _os<<"\nNodeConnectors\n";
-   for(StringIter sIter=m_vecStrNodeConnectionLabels.begin(); sIter!=m_vecStrNodeConnectionLabels.end(); sIter++){
-     _os<<"\t"<<*sIter;
-   }
+  _os<<"\nNodeConnectors\n";
+  for(StringIter sIter=m_vecStrNodeConnectionLabels.begin(); sIter!=m_vecStrNodeConnectionLabels.end(); sIter++){
+    _os<<"\t"<<*sIter;
+  }
 
-   _os<<"\nSequential Strategy\n";
-   for(StringIter sIter=m_strategiesLabels.begin(); sIter!=m_strategiesLabels.end(); sIter++){
-     _os<<"\t"<<*sIter;
-   }
+  _os<<"\nSequential Strategy\n";
+  for(StringIter sIter=m_strategiesLabels.begin(); sIter!=m_strategiesLabels.end(); sIter++){
+    _os<<"\t"<<*sIter;
+  }
 
 
 }
 /*void RegularSubdivisionMethod::Initialize() {
   cout << "RegularSubdivisionMethod::Initialize()" <<endl;
-}*/
+  }*/
 
 template<class MPTraits>
 void RegularSubdivisionMethod<MPTraits>::Run() {
@@ -184,7 +173,7 @@ void RegularSubdivisionMethod<MPTraits>::Run() {
   m_ccConnector = new CCsConnector<MPTraits>(m_nf, m_lp);
 
 
-   ///TIMER STUFF
+  ///TIMER STUFF
   stapl::counter<stapl::default_timer> t0;
   double constr_tm=0.0;
 
@@ -231,10 +220,10 @@ void RegularSubdivisionMethod<MPTraits>::Run() {
 
     ///CONSTRUCT REGION MAP---COARSE GRAINED -- takes the whole sequential strategy
     for(J itr1 = m_strategiesLabels.begin(); itr1 != m_strategiesLabels.end(); ++itr1) {
-    if(this->m_debug) PrintValue("View size " , regionView.size());
-    MPStrategyPointer strategy = this->GetMPProblem()->GetMPStrategy(*itr1);
-    ConstructRoadmap<MPTraits> constrRegionMap(strategy);
-    map_func(constrRegionMap, regionView,arrView);
+      if(this->m_debug) PrintValue("View size " , regionView.size());
+      MPStrategyPointer strategy = this->GetMPProblem()->GetMPStrategy(*itr1);
+      ConstructRoadmap<MPTraits> constrRegionMap(strategy);
+      map_func(constrRegionMap, regionView,arrView);
     }
   }else {
 
@@ -274,8 +263,8 @@ void RegularSubdivisionMethod<MPTraits>::Run() {
   view_type rmView(*rmg);
   rmi_fence();
   /*typedef static_array<cc_color_property> property_storage_type;
-  typedef property_storage_type::size_type  size_type;
-  typedef graph_external_property_map<view_type, cc_color_property, property_storage_type> property_map_type;
+    typedef property_storage_type::size_type  size_type;
+    typedef graph_external_property_map<view_type, cc_color_property, property_storage_type> property_map_type;
 
   ///TODO: proper fix by making cc_color_property derived from cfg class
   /// and then use internal_property_map
@@ -307,7 +296,7 @@ void RegularSubdivisionMethod<MPTraits>::Run() {
     rmi_fence();
 
     ///CONNECT REGIONS ROADMAP
-       ccConnectParam conParam1 = std::make_tuple(m_ccConnector,m_ccc,m_k1);
+    ccConnectParam conParam1 = std::make_tuple(m_ccConnector,m_ccc,m_k1);
 
     RegionCCConnector<RRGraph, Region<BoundingBox, MPTraits>, MPTraits> regionCCCon(this->GetMPProblem(), &regularRegion, conParam1);
     stapl::for_each(regionView,regionCCCon);

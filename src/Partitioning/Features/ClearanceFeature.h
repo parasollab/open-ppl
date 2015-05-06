@@ -8,10 +8,10 @@ class ClearanceFeature : public MPFeature {
   public:
     ClearanceFeature();
     ClearanceFeature(string _vc);
-    ClearanceFeature(XMLNodeReader& in_Node, MPProblem* in_PProblem);
+    ClearanceFeature(XMLNode& in_Node, MPProblem* in_PProblem);
     virtual ~ClearanceFeature(){}
 
-    virtual void ParseXML(XMLNodeReader& in_Node);
+    virtual void ParseXML(XMLNode& in_Node);
 
     virtual vector<double> Collect(vector<VID>& vids);
   private:
@@ -22,10 +22,10 @@ class CSpaceClearanceFeature : public MPFeature {
   public:
     CSpaceClearanceFeature();
     CSpaceClearanceFeature(string vc, string dm);
-    CSpaceClearanceFeature(XMLNodeReader& in_Node, MPProblem* in_PProblem);
+    CSpaceClearanceFeature(XMLNode& in_Node, MPProblem* in_PProblem);
     virtual ~CSpaceClearanceFeature(){}
 
-    virtual void ParseXML(XMLNodeReader& in_Node);
+    virtual void ParseXML(XMLNode& in_Node);
 
     virtual vector<double> Collect(vector<VID>& vids);
 

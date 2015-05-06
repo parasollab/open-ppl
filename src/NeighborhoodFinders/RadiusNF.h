@@ -22,12 +22,11 @@ class RadiusNF: public NeighborhoodFinderMethod<MPTraits> {
         this->m_radius = _r;
       }
 
-    RadiusNF(MPProblemType* _problem, XMLNodeReader& _node) :
+    RadiusNF(MPProblemType* _problem, XMLNode& _node) :
       NeighborhoodFinderMethod<MPTraits>(_problem, _node) {
         this->SetName("RadiusNF");
         this->m_nfType = RADIUS;
-        this->m_radius = _node.numberXMLParameter("radius", true, 0.5, 0.0, MAX_DBL, "Radius");
-        _node.warnUnrequestedAttributes();
+        this->m_radius = _node.Read("radius", true, 0.5, 0.0, MAX_DBL, "Radius");
       }
 
     virtual void Print(ostream& _os) const {

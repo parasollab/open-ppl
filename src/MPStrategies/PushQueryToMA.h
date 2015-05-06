@@ -14,7 +14,7 @@ class PushQueryToMA : public MPStrategyMethod<MPTraits> {
         const string& _outQueryFile = "",
         const MedialAxisUtility<MPTraits>& _medialAxisUtility =
         MedialAxisUtility<MPTraits>());
-    PushQueryToMA(MPProblemType* _problem, XMLNodeReader& _node);
+    PushQueryToMA(MPProblemType* _problem, XMLNode& _node);
 
     virtual void Initialize();
     virtual void Run();
@@ -39,15 +39,12 @@ PushQueryToMA(const string& _inQueryFile, const string& _outQueryFile,
 
 template<class MPTraits>
 PushQueryToMA<MPTraits>::
-PushQueryToMA(MPProblemType* _problem, XMLNodeReader& _node) :
+PushQueryToMA(MPProblemType* _problem, XMLNode& _node) :
   MPStrategyMethod<MPTraits>(_problem, _node),
   m_medialAxisUtility(_problem, _node) {
     this->SetName("PushQueryToMA");
-    m_inQueryFile = _node.stringXMLParameter("inFilename", true, "",
-        "Query Filename");
-    m_outQueryFile = _node.stringXMLParameter("outFilename", true, "",
-        "Query Filename");
-    _node.warnUnrequestedAttributes();
+    m_inQueryFile = _node.Read("inFilename", true, "", "Query Filename");
+    m_outQueryFile = _node.Read("outFilename", true, "", "Query Filename");
   }
 
 template<class MPTraits>
@@ -77,7 +74,7 @@ template<class MPTraits>
 void
 PushQueryToMA<MPTraits>::
 Run() {
-  for(auto cfg : m_query)
+  for(auto&  cfg : m_query)
     if(!m_medialAxisUtility.PushToMedialAxis(
           cfg, this->GetEnvironment()->GetBoundary()))
       throw RunTimeException(WHERE, "Cannot push to MA.");
@@ -88,7 +85,7 @@ void
 PushQueryToMA<MPTraits>::
 Finalize() {
   ofstream ofs(m_outQueryFile.c_str());
-  for(auto cfg : m_query)
+  for(auto&  cfg : m_query)
     ofs << cfg << endl;
 }
 

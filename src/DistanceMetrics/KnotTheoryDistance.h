@@ -18,7 +18,7 @@ class KnotTheoryDistance : public DistanceMetricMethod<MPTraits> {
     typedef typename MPTraits::MPProblemType MPProblemType;
 
     KnotTheoryDistance();
-    KnotTheoryDistance(MPProblemType* _problem, XMLNodeReader& _node);
+    KnotTheoryDistance(MPProblemType* _problem, XMLNode& _node);
     virtual ~KnotTheoryDistance();
 
     virtual double Distance(const CfgType& _c1, const CfgType& _c2);
@@ -36,7 +36,7 @@ KnotTheoryDistance() : DistanceMetricMethod<MPTraits>() {
 
 template<class MPTraits>
 KnotTheoryDistance<MPTraits>::
-KnotTheoryDistance(MPProblemType* _problem, XMLNodeReader& _node) :
+KnotTheoryDistance(MPProblemType* _problem, XMLNode& _node) :
   DistanceMetricMethod<MPTraits>(_problem, _node) {
     this->SetName("KnotTheory");
   }

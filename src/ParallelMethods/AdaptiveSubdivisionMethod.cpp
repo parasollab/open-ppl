@@ -37,82 +37,82 @@ struct EF {
 };
 
 
-AdaptiveSubdivisionMethod::AdaptiveSubdivisionMethod(XMLNodeReader& _node, MPProblem* _problem) : MPStrategyMethod(_node, _problem) {
+AdaptiveSubdivisionMethod::AdaptiveSubdivisionMethod(XMLNode& _node, MPProblem* _problem) : MPStrategyMethod(_node, _problem) {
   ParseXML(_node);
 }
 
 AdaptiveSubdivisionMethod::~AdaptiveSubdivisionMethod() { }
 
-void AdaptiveSubdivisionMethod::ParseXML(XMLNodeReader& _node){
-  XMLNodeReader::childiterator citr;
+void AdaptiveSubdivisionMethod::ParseXML(XMLNode& _node){
+  XMLNode::childiterator citr;
   for( citr = _node.children_begin(); citr!= _node.children_end(); ++citr) {
     if(citr->getName() == "sequential_strategy") {
-      string strategy_string = citr->stringXMLParameter(string("Strategy"), true,
+      string strategy_string = citr->Read(string("Strategy"), true,
         string(""), string("Sequential Strategy"));
       m_strategiesLabels.push_back(strategy_string);
-      m_useOuterBB = citr->boolXMLParameter("useOuterBB", false, false, "if true, use outer boundary for region map constr");
+      m_useOuterBB = citr->Read("useOuterBB", false, false, "if true, use outer boundary for region map constr");
       citr->warnUnrequestedAttributes();
 
     }else if(citr->getName() == "adaptive_region_constr") {
-      string node_gen_method = citr->stringXMLParameter(string("Sampler"), true,
+      string node_gen_method = citr->Read(string("Sampler"), true,
         string(""), string("Node Generation Method"));
-      int numPerIteration = citr->numberXMLParameter(string("Number"), true,
+      int numPerIteration = citr->Read(string("Number"), true,
         int(1), int(0), MAX_INT, string("Number of initial training  samples"));
       m_vecStrNodeGenLabels.push_back(pair<string, int>(node_gen_method, numPerIteration));
-      m_dmm = citr->stringXMLParameter("DMM", true,
+      m_dmm = citr->Read("DMM", true,
         "", "Distance metric for region construction");
-      m_vcm = citr->stringXMLParameter("VCM", true,
+      m_vcm = citr->Read("VCM", true,
 	"", "Validity checker method for region construction");
-      m_tk = citr->numberXMLParameter("KClosest", true,
+      m_tk = citr->Read("KClosest", true,
         1, 0, MAX_INT, "training k closest to select in each region");
-      m_tr = citr->numberXMLParameter("Radius", true,
+      m_tr = citr->Read("Radius", true,
 	0.0, 0.0, 9999.0, "training radius for region construction");
       citr->warnUnrequestedAttributes();
 
     }else if(citr->getName() == "region_classifier") {
-      double ratio = citr->numberXMLParameter("Ratio", true, 0.0, 0.0, 1.0, "Ratio of invalid to total nodes");
-      int tries = citr->numberXMLParameter(string("Tries"), true,
+      double ratio = citr->Read("Ratio", true, 0.0, 0.0, 1.0, "Ratio of invalid to total nodes");
+      int tries = citr->Read(string("Tries"), true,
         int(1), int(0), MAX_INT, string("Number of tries"));
-      int samples = citr->numberXMLParameter(string("Samples"), true,
+      int samples = citr->Read(string("Samples"), true,
         int(1), int(0), MAX_INT, string("Number of additional samples for classification"));
       m_classifierParam = std::tr1::make_tuple(ratio,tries,samples);
       citr->warnUnrequestedAttributes();
 
     }else if(citr->getName() == "region_connection_method"){
-      string connectRegionMethod = citr->stringXMLParameter(string("Method"), true,
+      string connectRegionMethod = citr->Read(string("Method"), true,
         string(""), string("Region Connection Method"));
       m_regionConnectionLabels.push_back(connectRegionMethod);
 
-      m_k1 = citr->numberXMLParameter("K1", true,
+      m_k1 = citr->Read("K1", true,
         1, 0, MAX_INT, "K Largest CC from source region");
-      m_k2 = citr->numberXMLParameter("K2", true,
+      m_k2 = citr->Read("K2", true,
 	1, 0, MAX_INT, "K Largest CC from target region");
-      m_nf = citr->stringXMLParameter("NF", true,
+      m_nf = citr->Read("NF", true,
 	"", "Neighborhood Finder for Region Connect");
-      m_lp = citr->stringXMLParameter("LP", true,
+      m_lp = citr->Read("LP", true,
 	"", "Local Planner for Region Connect");
-      m_ccc = citr->stringXMLParameter("Type", true,
+      m_ccc = citr->Read("Type", true,
 	"", "CC connection strategy option");
 
       citr->warnUnrequestedAttributes();
 
     }else if(citr->getName() == "num_row") {
-      m_meshRow = citr->numberXMLParameter(string("Row"), true,
+      m_meshRow = citr->Read(string("Row"), true,
 	int(1), int(1), MAX_INT, string("number of partition on x"));
       citr->warnUnrequestedAttributes();
     }else if(citr->getName() == "n_col") {
-      m_meshCol = citr->numberXMLParameter(string("Col"), true,
+      m_meshCol = citr->Read(string("Col"), true,
 	int(1), int(1), MAX_INT, string("number of partition on y"));
       citr->warnUnrequestedAttributes();
     }else if(citr->getName() == "num_runs") {
-      n_runs = citr->numberXMLParameter(string("Runs"), true,
+      n_runs = citr->Read(string("Runs"), true,
 	int(1), int(0), MAX_INT, string("number of runs"));
       citr->warnUnrequestedAttributes();
     }else if(citr->getName() == "overlap") {
       // All 3 epsilon values are doubles between 0.0 to 1.0 with default value 0.0.
-      m_xEpsilon = citr->numberXMLParameter("Xeps", true, 0.0, 0.0, 1.0, "x overlap percentage");
-      m_yEpsilon = citr->numberXMLParameter("Yeps", true, 0.0, 0.0, 1.0, "y overlap percentage");
-      m_zEpsilon = citr->numberXMLParameter("Zeps", true, 0.0, 0.0, 1.0, "z overlap percentage");
+      m_xEpsilon = citr->Read("Xeps", true, 0.0, 0.0, 1.0, "x overlap percentage");
+      m_yEpsilon = citr->Read("Yeps", true, 0.0, 0.0, 1.0, "y overlap percentage");
+      m_zEpsilon = citr->Read("Zeps", true, 0.0, 0.0, 1.0, "z overlap percentage");
       citr->warnUnrequestedAttributes();
 
     }else {

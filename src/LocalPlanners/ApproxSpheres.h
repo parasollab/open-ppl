@@ -13,7 +13,7 @@ class ApproxSpheres: public LocalPlannerMethod<MPTraits> {
     ApproxSpheres(bool _saveIntermediates = false,
         const ClearanceUtility<MPTraits>& _c = ClearanceUtility<MPTraits>());
 
-    ApproxSpheres(MPProblemType* _problem, XMLNodeReader& _node);
+    ApproxSpheres(MPProblemType* _problem, XMLNode& _node);
 
     virtual void Print(ostream& _os) const;
 
@@ -31,21 +31,20 @@ class ApproxSpheres: public LocalPlannerMethod<MPTraits> {
 //Definitions for Constructors and Destructor
 template<class MPTraits>
 ApproxSpheres<MPTraits>::
-ApproxSpheres(bool _saveIntermediates, const ClearanceUtility<MPTraits>& _c)
-  : LocalPlannerMethod<MPTraits>(_saveIntermediates), m_clearUtil(_c) {
+ApproxSpheres(bool _saveIntermediates, const ClearanceUtility<MPTraits>& _c) :
+  LocalPlannerMethod<MPTraits>(_saveIntermediates), m_clearUtil(_c) {
     this->SetName("ApproxSpheres");
   }
 
 template<class MPTraits>
 ApproxSpheres<MPTraits>::
-ApproxSpheres(MPProblemType* _problem, XMLNodeReader& _node)
-  : LocalPlannerMethod<MPTraits>(_problem, _node),
+ApproxSpheres(MPProblemType* _problem, XMLNode& _node) :
+  LocalPlannerMethod<MPTraits>(_problem, _node),
   m_clearUtil(_problem, _node) {
     this->SetName("ApproxSpheres");
     if(!m_clearUtil.GetExactClearance())
-      throw ParseException(WHERE, "Clearance Type for " +
-          this->GetNameAndLabel() + " needs to be 'exact' ");
-    _node.warnUnrequestedAttributes();
+      throw ParseException(_node.Where(),
+          "Clearance type needs to be 'exact'.");
   }
 
 template<class MPTraits>

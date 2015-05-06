@@ -24,7 +24,7 @@ class LPSweptDistance : public DistanceMetricMethod<MPTraits> {
 
     LPSweptDistance(string _lpLabel="", double _positionRes = 0.1,
         double _orientationRes = 0.1, bool _bbox = false);
-    LPSweptDistance(MPProblemType* _problem, XMLNodeReader& _node, bool _warn = true);
+    LPSweptDistance(MPProblemType* _problem, XMLNode& _node);
     virtual ~LPSweptDistance();
 
     virtual void Print(ostream& _os) const;
@@ -50,17 +50,13 @@ LPSweptDistance(string _lpLabel, double _posRes,
 
 template<class MPTraits>
 LPSweptDistance<MPTraits>::
-LPSweptDistance(MPProblemType* _problem,
-    XMLNodeReader& _node, bool _warn) :
-  DistanceMetricMethod<MPTraits>(_problem, _node, false) {
+LPSweptDistance(MPProblemType* _problem, XMLNode& _node) :
+  DistanceMetricMethod<MPTraits>(_problem, _node) {
     this->SetName("LPSwept");
-    m_positionRes = _node.numberXMLParameter("posRes", false, _problem->GetEnvironment()->GetPositionRes(), 0.0, 1000.0, "position resolution");
-    m_orientationRes = _node.numberXMLParameter("oriRes", false, _problem->GetEnvironment()->GetOrientationRes(), 0.0, 1000.0, "orientation resolution");
-    m_useBBox = _node.boolXMLParameter("useBBox", false, false, "use bbox instead of robot vertices");
-    m_lpLabel = _node.stringXMLParameter("lpLabel", true, "", "Local Planner");
-
-    if(_warn)
-      _node.warnUnrequestedAttributes();
+    m_positionRes = _node.Read("posRes", false, _problem->GetEnvironment()->GetPositionRes(), 0.0, 1000.0, "position resolution");
+    m_orientationRes = _node.Read("oriRes", false, _problem->GetEnvironment()->GetOrientationRes(), 0.0, 1000.0, "orientation resolution");
+    m_useBBox = _node.Read("useBBox", false, false, "use bbox instead of robot vertices");
+    m_lpLabel = _node.Read("lpLabel", true, "", "Local Planner");
   }
 
 template<class MPTraits>

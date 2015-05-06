@@ -28,11 +28,11 @@ class RadialBlindRRT : public RadialSubdivisionRRT<MPTraits> {
     typedef typename stapl::sequential::map_property_map< typename GraphType::GRAPH ,size_t > ColorMap;
 
 
-    RadialBlindRRT(MPProblemType* _problem, XMLNodeReader& _node);
+    RadialBlindRRT(MPProblemType* _problem, XMLNode& _node);
     RadialBlindRRT();
     virtual ~RadialBlindRRT();
 
-    virtual void ParseXML(XMLNodeReader& _node);
+    virtual void ParseXML(XMLNode& _node);
 
     virtual void Initialize();
     virtual void Run();
@@ -54,7 +54,7 @@ class RadialBlindRRT : public RadialSubdivisionRRT<MPTraits> {
 
 template<class MPTraits>
 RadialBlindRRT<MPTraits>::
-RadialBlindRRT(MPProblemType* _problem, XMLNodeReader& _node) :
+RadialBlindRRT(MPProblemType* _problem, XMLNode& _node) :
   RadialSubdivisionRRT<MPTraits>(_problem, _node) {
     this->SetName("RadialBlindRRT");
     ParseXML(_node);
@@ -73,13 +73,13 @@ RadialBlindRRT<MPTraits>::
 template<class MPTraits>
 void
 RadialBlindRRT<MPTraits>::
-ParseXML(XMLNodeReader& _node) {
-  XMLNodeReader::childiterator citr;
-  for( citr = _node.children_begin(); citr!= _node.children_end(); ++citr) {
-    if(citr->getName() == "rrt_constr") {
-      m_CCconnection = citr->stringXMLParameter("CCconnection",true,"","CC connection strategy");
-      m_numCCIters = citr->numberXMLParameter("numCCIters", true, 1, 0, MAX_INT, "Number of iteration for the local CC connection");
-      citr->warnUnrequestedAttributes();
+ParseXML(XMLNode& _node) {
+  for(auto& child : _node) {
+    if(child.Name() == "rrt_constr") {
+      m_CCconnection = child.Read("CCconnection", true, "",
+          "CC connection strategy");
+      m_numCCIters = child.Read("numCCIters", true, 1, 0, MAX_INT,
+          "Number of iteration for the local CC connection");
     }
   }
 };

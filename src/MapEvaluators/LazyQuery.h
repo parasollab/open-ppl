@@ -2,8 +2,8 @@
 // then checks for validity in the query phase
 // and deletes nodes and edges found to be invalid
 
-#ifndef LAZYQUERY_H_
-#define LAZYQUERY_H_
+#ifndef LAZY_QUERY_H_
+#define LAZY_QUERY_H_
 
 #include "Query.h"
 #include <functional>
@@ -33,10 +33,10 @@ class LazyQuery : public Query<MPTraits> {
       Query<MPTraits>(_queryFileName), m_vcLabel(_vcLabel), m_numEnhance(0), m_d(0) { this->SetName("LazyQuery"); }
     LazyQuery(const CfgType& _start, const CfgType& _goal, string _vcLabel) :
       Query<MPTraits>(_start, _goal), m_vcLabel(_vcLabel), m_numEnhance(0), m_d(0) { this->SetName("LazyQuery"); }
-    LazyQuery(MPProblemType* _problem, XMLNodeReader& _node, bool _warn = true);
+    LazyQuery(MPProblemType* _problem, XMLNode& _node);
     virtual ~LazyQuery() {};
 
-    void ParseXML(XMLNodeReader& _node);
+    void ParseXML(XMLNode& _node);
     virtual void Print(ostream& _os) const;
 
     // Checks validity of nodes and edges and deletes any invalid ones. Recreates path if valid
@@ -57,26 +57,25 @@ class LazyQuery : public Query<MPTraits> {
 };
 
 template<class MPTraits>
-LazyQuery<MPTraits>::LazyQuery(MPProblemType* _problem, XMLNodeReader& _node, bool _warn) :
-    Query<MPTraits>(_problem, _node, false) {
+LazyQuery<MPTraits>::
+LazyQuery(MPProblemType* _problem, XMLNode& _node) :
+    Query<MPTraits>(_problem, _node) {
   this->SetName("LazyQuery");
   ParseXML(_node);
-  if(_warn)
-    _node.warnUnrequestedAttributes();
 }
 
 template<class MPTraits>
 void
-LazyQuery<MPTraits>::ParseXML(XMLNodeReader& _node) {
-  m_vcLabel = _node.stringXMLParameter("vcMethod", false, "default", "Validity checker method");
-  m_numEnhance = _node.numberXMLParameter("numEnhance", false, 0, 0, MAX_INT, "Number of nodes to generate in node enhancement");
-  m_d = _node.numberXMLParameter("d", false, 0.0, 0.0, MAX_DBL, "Gaussian d value for node enhancement");
-  for(XMLNodeReader::childiterator citr = _node.children_begin(); citr != _node.children_end(); citr++) {
-    if(citr->getName() == "Resolution") {
-      m_resolutions.push_back(citr->numberXMLParameter("mult", true, 1, 1, MAX_INT, "Multiple of finest resolution checked"));
-      citr->warnUnrequestedAttributes();
-    }
-  }
+LazyQuery<MPTraits>::
+ParseXML(XMLNode& _node) {
+  m_vcLabel = _node.Read("vcMethod", false, "default", "Validity checker method");
+  m_numEnhance = _node.Read("numEnhance", false, 0, 0, MAX_INT, "Number of nodes to generate in node enhancement");
+  m_d = _node.Read("d", false, 0.0, 0.0, MAX_DBL, "Gaussian d value for node enhancement");
+  for(auto& child : _node)
+    if(child.Name() == "Resolution")
+      m_resolutions.push_back(
+          child.Read("mult", true, 1, 1, MAX_INT,
+            "Multiple of finest resolution checked"));
 
   // Sort resolutions in decreasing order, ensure that '1' is included
   if(m_resolutions.empty())
@@ -94,7 +93,8 @@ LazyQuery<MPTraits>::ParseXML(XMLNodeReader& _node) {
 
 template<class MPTraits>
 void
-LazyQuery<MPTraits>::Print(ostream& _os) const {
+LazyQuery<MPTraits>::
+Print(ostream& _os) const {
   Query<MPTraits>::Print(_os);
   _os << "\tvc label = " << m_vcLabel;
   _os << "\n\tnumEnhance = " << m_numEnhance;
@@ -245,7 +245,7 @@ LazyQuery<MPTraits>::NodeEnhance(RoadmapType* _rdmp) {
 
     // Add enhance to roadmap and connect
     VID newVID = _rdmp->GetGraph()->AddVertex(enhance);
-    for(auto label : this->m_nodeConnectionLabels)
+    for(auto&  label : this->m_nodeConnectionLabels)
       this->GetConnector(label)->Connect(_rdmp, newVID);
     if(this->m_debug)
       cout << " " << newVID;

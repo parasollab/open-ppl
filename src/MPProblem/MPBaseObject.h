@@ -28,7 +28,7 @@ class MPBaseObject {
 
     MPBaseObject(MPProblemType* _problem = NULL, const string& _label = "", const string& _name = "", bool _debug = false) :
       m_name(_name), m_debug(_debug), m_label(_label), m_problem(_problem) {};
-    MPBaseObject(MPProblemType* _problem, XMLNodeReader& _node, const string& _name="") :
+    MPBaseObject(MPProblemType* _problem, XMLNode& _node, const string& _name="") :
       m_name(_name), m_problem(_problem) {
         ParseXML(_node);
       };
@@ -40,9 +40,9 @@ class MPBaseObject {
     ///
     /// Parse XML node. By default every MPBaseObject requires a label and
     /// optionally loads a debug parameter.
-    virtual void ParseXML(XMLNodeReader& _node) {
-      m_label = _node.stringXMLParameter("label", true, "", "Label Identifier");
-      m_debug = _node.boolXMLParameter("debug", false, false,
+    virtual void ParseXML(XMLNode& _node) {
+      m_label = _node.Read("label", true, "", "Label Identifier");
+      m_debug = _node.Read("debug", false, false,
           "Run-time debug on(true)/off(false)");
     };
 

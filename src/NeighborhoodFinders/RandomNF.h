@@ -20,11 +20,11 @@ class RandomNF : public NeighborhoodFinderMethod<MPTraits> {
         this->m_k = _k;
       }
 
-    RandomNF(MPProblemType* _problem, XMLNodeReader& _node):
+    RandomNF(MPProblemType* _problem, XMLNode& _node):
       NeighborhoodFinderMethod<MPTraits>(_problem,_node) {
         this->SetName("RandomNF");
         this->m_nfType = K;
-        this->m_k = _node.numberXMLParameter("k", true, 5, 0, MAX_INT, "Number of neighbors to find");
+        this->m_k = _node.Read("k", true, 5, 0, MAX_INT, "Number of neighbors to find");
       }
 
     virtual void Print(ostream& _os) const {

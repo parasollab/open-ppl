@@ -57,8 +57,8 @@
 //fin class region_rrt_edge_wf
 
 //debut class ParallelRRTRoadmap
-  //ParallelRRTRoadmap::ParallelRRTRoadmap(XMLNodeReader& in_pNode, MPProblem* in_pProblem) :
-   ParallelSRTStrategy::ParallelSRTStrategy(XMLNodeReader& in_pNode, MPProblem* in_pProblem) :
+  //ParallelRRTRoadmap::ParallelRRTRoadmap(XMLNode& in_pNode, MPProblem* in_pProblem) :
+   ParallelSRTStrategy::ParallelSRTStrategy(XMLNode& in_pNode, MPProblem* in_pProblem) :
     MPStrategyMethod(in_pNode,in_pProblem) {
     //LOG_DEBUG_MSG("ParallelRRTRoadmap::ParallelRRTRoadmap()");
     ParseXML(in_pNode);
@@ -77,34 +77,34 @@
     double ParallelSRTStrategy::RRTDistance(SRTStrategy* srt, Environment* env, BoundingBox bb, CfgType c1, CfgType c2) {
     }
 
-    void ParallelSRTStrategy::ParseXML(XMLNodeReader& in_pNode) {
+    void ParallelSRTStrategy::ParseXML(XMLNode& in_pNode) {
       //LOG_DEBUG_MSG("ParallelRRTRoadmap::ParseXML()");
      cout << "test parallel srt" << endl;
-      XMLNodeReader::childiterator citr;
+      XMLNode::childiterator citr;
       for( citr = in_pNode.children_begin(); citr!= in_pNode.children_end(); ++citr) {
 	if (citr->getName() == "sequential_strategy") {
-	  string strategy_string = citr->stringXMLParameter(string("Strategy"), true,
+	  string strategy_string = citr->Read(string("Strategy"), true,
 							    string(""), string("Sequential Strategy"));
 	  m_strategiesLabels.push_back(strategy_string);
 	  citr->warnUnrequestedAttributes();
 	} else if (citr->getName() == "component_connection_method"){
-	  string connectCCMethod = citr->stringXMLParameter(string("Method"), true,
+	  string connectCCMethod = citr->Read(string("Method"), true,
 							    string(""), string("Component Connection Method"));
 	  m_ComponentConnectionLabels.push_back(connectCCMethod);
 	  citr->warnUnrequestedAttributes();
 	} else if(citr->getName()=="dm_label") {
-	  dm_label = citr->stringXMLParameter(string("Method"),true,string(""),string("Distance Metric"));
+	  dm_label = citr->Read(string("Method"),true,string(""),string("Distance Metric"));
 	  citr->warnUnrequestedAttributes();
 	} else if(citr->getName()=="nc") {
-	  nc = citr->numberXMLParameter(string("Number"), true,
+	  nc = citr->Read(string("Number"), true,
 					int(1), int(0), MAX_INT, string("Number of close candidates for SRTRegion"));
 	  citr->warnUnrequestedAttributes();
 	} else if(citr->getName()=="nr") {
-	  nr = citr->numberXMLParameter(string("Number"), true,
+	  nr = citr->Read(string("Number"), true,
 					int(1), int(0), MAX_INT, string("Number of random candidates for SRTRegion"));
 	  citr->warnUnrequestedAttributes();
 	} else if(citr->getName() == "num_runs") {
-	  n_runs = citr->numberXMLParameter(string("nRuns"), true,
+	  n_runs = citr->Read(string("nRuns"), true,
 					    int(1), int(0), MAX_INT, string("Runs number"));
 	  citr->warnUnrequestedAttributes();
 	} else {

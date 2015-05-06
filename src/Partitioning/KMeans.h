@@ -7,7 +7,7 @@ class KMeans : public PartitioningMethod
 {
  public:
   KMeans();
-  KMeans(XMLNodeReader& in_Node, MPProblem * in_pProblem);
+  KMeans(XMLNode& in_Node, MPProblem * in_pProblem);
   ~KMeans();
 
   virtual vector<Partition*> MakePartitions(Partition &p);

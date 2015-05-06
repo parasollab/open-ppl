@@ -16,7 +16,7 @@ class ScaledEuclideanDistance : public EuclideanDistance<MPTraits> {
     typedef typename MPTraits::MPProblemType MPProblemType;
 
     ScaledEuclideanDistance(double _scale = 0.5, bool _normalize = false);
-    ScaledEuclideanDistance(MPProblemType* _problem, XMLNodeReader& _node);
+    ScaledEuclideanDistance(MPProblemType* _problem, XMLNode& _node);
     virtual ~ScaledEuclideanDistance();
 
     virtual void Print(ostream& _os) const;
@@ -29,20 +29,18 @@ class ScaledEuclideanDistance : public EuclideanDistance<MPTraits> {
 
 template<class MPTraits>
 ScaledEuclideanDistance<MPTraits>::
-ScaledEuclideanDistance(double _scale,
-    bool _normalize) : EuclideanDistance<MPTraits>(_normalize), m_scale(0.5) {
-  this->SetName("ScaledEuclidean");
-}
+ScaledEuclideanDistance(double _scale, bool _normalize) :
+  EuclideanDistance<MPTraits>(_normalize), m_scale(0.5) {
+    this->SetName("ScaledEuclidean");
+  }
 
 template<class MPTraits>
 ScaledEuclideanDistance<MPTraits>::
-ScaledEuclideanDistance(MPProblemType* _problem,
-    XMLNodeReader& _node) : EuclideanDistance<MPTraits>(_problem, _node, false) {
-  this->SetName("ScaledEuclidean");
-  m_scale = _node.numberXMLParameter("scale", false, 0.5, 0.0, 1.0, "scale factor");
-
-  _node.warnUnrequestedAttributes();
-}
+ScaledEuclideanDistance(MPProblemType* _problem, XMLNode& _node) :
+  EuclideanDistance<MPTraits>(_problem, _node) {
+    this->SetName("ScaledEuclidean");
+    m_scale = _node.Read("scale", false, 0.5, 0.0, 1.0, "scale factor");
+  }
 
 template<class MPTraits>
 ScaledEuclideanDistance<MPTraits>::

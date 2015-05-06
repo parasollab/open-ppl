@@ -11,7 +11,7 @@ class UniformRandomSampler : public SamplerMethod<MPTraits> {
     typedef typename MPProblemType::ValidityCheckerPointer ValidityCheckerPointer;
 
     UniformRandomSampler(string _vcLabel = "");
-    UniformRandomSampler(MPProblemType* _problem, XMLNodeReader& _node);
+    UniformRandomSampler(MPProblemType* _problem, XMLNode& _node);
 
     virtual void Print(ostream& _os) const;
 
@@ -31,10 +31,10 @@ UniformRandomSampler(string _vcLabel) : m_vcLabel(_vcLabel) {
 
 template<class MPTraits>
 UniformRandomSampler<MPTraits>::
-UniformRandomSampler(MPProblemType* _problem, XMLNodeReader& _node) :
+UniformRandomSampler(MPProblemType* _problem, XMLNode& _node) :
   SamplerMethod<MPTraits>(_problem, _node) {
     this->SetName("UniformRandomSampler");
-    m_vcLabel = _node.stringXMLParameter("vcLabel", true, "", "Validity Test Method");
+    m_vcLabel = _node.Read("vcLabel", true, "", "Validity Test Method");
   }
 
 template<class MPTraits>

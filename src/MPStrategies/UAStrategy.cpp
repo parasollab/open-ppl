@@ -4,31 +4,31 @@
 #include "Partition.h"
 #include "MPFeature.h"
 
-UAStrategy::UAStrategy(XMLNodeReader& in_Node, MPProblem* in_pProblem):MPStrategyMethod(in_Node, in_pProblem), m_CurrentIteration(0){
+UAStrategy::UAStrategy(XMLNode& in_Node, MPProblem* in_pProblem):MPStrategyMethod(in_Node, in_pProblem), m_CurrentIteration(0){
   ParseXML(in_Node);
 }
 
-void UAStrategy::ParseXML(XMLNodeReader& in_Node){
-   XMLNodeReader::childiterator citr;
+void UAStrategy::ParseXML(XMLNode& in_Node){
+   XMLNode::childiterator citr;
    for(citr = in_Node.children_begin(); citr!=in_Node.children_end(); citr++){
       if(citr->getName()=="training_strategy"){
-         m_TrainingStrategy = citr->stringXMLParameter("Strategy", true, "", "Training Roadmap Creator");
+         m_TrainingStrategy = citr->Read("Strategy", true, "", "Training Roadmap Creator");
       }
       else if(citr->getName()=="region_strategy"){
-         string rs = citr->stringXMLParameter("Strategy", true, "", "Region Roadmap augmentor");
+         string rs = citr->Read("Strategy", true, "", "Region Roadmap augmentor");
          m_RegionStrategies.push_back(rs);
       }
       else if(citr->getName()=="region_identifier"){
-         m_PartitioningMethod = citr->stringXMLParameter("Method", true, "", "Region Identification Method");
+         m_PartitioningMethod = citr->Read("Method", true, "", "Region Identification Method");
       }
       else if(citr->getName()=="overlap_method"){
-         m_OverlapMethod = citr->stringXMLParameter("Method", false, "default", "Forced Overlap Method");
+         m_OverlapMethod = citr->Read("Method", false, "default", "Forced Overlap Method");
       }
       else if(citr->getName()=="distribution_feature"){
-         m_DistributionFeature = citr->stringXMLParameter("Feature", true, "", "Probability Distribution Feature");
+         m_DistributionFeature = citr->Read("Feature", true, "", "Probability Distribution Feature");
       }
       else if(citr->getName()=="evaluation_method"){
-         string eval = citr->stringXMLParameter("Method", true, "", "Evaluation Method");
+         string eval = citr->Read("Method", true, "", "Evaluation Method");
          m_EvaluatorLabels.push_back(eval);
       }
       else

@@ -189,20 +189,20 @@ class ReachableVolumeRRT : public BasicRRTStrategy<MPTraits> {
   }
 
  
-  ReachableVolumeRRT(MPProblemType* _problem, XMLNodeReader& _node, bool _warnXML=true):BasicRRTStrategy<MPTraits>(_problem, _node, false){    
+  ReachableVolumeRRT(MPProblemType* _problem, XMLNode& _node, bool _warnXML=true):BasicRRTStrategy<MPTraits>(_problem, _node, false){    
     ParseXMLRVRRT(_node);
   }
   
-  void ParseXMLRVRRT(XMLNodeReader& _node){  
-    this->m_deltaRV = _node.numberXMLParameter("deltaRV", false, .1, (double)0, (double)1000, "RV space delta value");
-    this->m_S = _node.numberXMLParameter("s", false, .1, (double)0, (double)1, "Scaling Factor");
-    this->m_S_rot = _node.numberXMLParameter("s_rot", false, .1, (double)0, (double)1, "Rotational Scaling Factor");
-    this->m_treeStructure = _node.stringXMLParameter("treeStructure", false, "EndEffectorFirst", "Structure of reachable volume tree");
-    this->m_perturbDir = _node.stringXMLParameter("perturbDir", false, "WorkspaceDir", "Policy for selecting direction of perturbation");
-    this->m_repositionPolicy = _node.stringXMLParameter("repositionPolicy", false, "Random", "Policy for repositioning children that are outside of reachable volume");
-    this->m_jointPerturbMethod = _node.stringXMLParameter("jointPerturbMethod", false, "OneRandomJoint", "Method for perturbing joints");
+  void ParseXMLRVRRT(XMLNode& _node){  
+    this->m_deltaRV = _node.Read("deltaRV", false, .1, (double)0, (double)1000, "RV space delta value");
+    this->m_S = _node.Read("s", false, .1, (double)0, (double)1, "Scaling Factor");
+    this->m_S_rot = _node.Read("s_rot", false, .1, (double)0, (double)1, "Rotational Scaling Factor");
+    this->m_treeStructure = _node.Read("treeStructure", false, "EndEffectorFirst", "Structure of reachable volume tree");
+    this->m_perturbDir = _node.Read("perturbDir", false, "WorkspaceDir", "Policy for selecting direction of perturbation");
+    this->m_repositionPolicy = _node.Read("repositionPolicy", false, "Random", "Policy for repositioning children that are outside of reachable volume");
+    this->m_jointPerturbMethod = _node.Read("jointPerturbMethod", false, "OneRandomJoint", "Method for perturbing joints");
     if(!init){
-      g_reachableVolumeRobotsRVRRT.loadTree(_node.stringXMLParameter("chainFile", false, "Chain.tree", "Chain file name").c_str(),this->m_treeStructure);
+      g_reachableVolumeRobotsRVRRT.loadTree(_node.Read("chainFile", false, "Chain.tree", "Chain file name").c_str(),this->m_treeStructure);
       init=true;
     }
   }

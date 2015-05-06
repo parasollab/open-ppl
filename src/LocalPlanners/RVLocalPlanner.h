@@ -29,7 +29,7 @@ class RVLocalPlanner: public LocalPlannerMethod<MPTraits> {
     double m_S;
 
     RVLocalPlanner(string _vcLabel = "", bool _evalation = false);
-    RVLocalPlanner(MPProblemType* _problem, XMLNodeReader& _node);
+    RVLocalPlanner(MPProblemType* _problem, XMLNode& _node);
     virtual ~RVLocalPlanner();
 
     virtual void PrintOptions(ostream& _os);
@@ -188,14 +188,14 @@ RVLocalPlanner<MPTraits>::RVLocalPlanner(string _vcLabel, bool _evalation) :
 
 
 template<class MPTraits>
-RVLocalPlanner<MPTraits>::RVLocalPlanner(MPProblemType* _problem, XMLNodeReader& _node) :
+RVLocalPlanner<MPTraits>::RVLocalPlanner(MPProblemType* _problem, XMLNode& _node) :
   LocalPlannerMethod<MPTraits>(_problem, _node) {
     this->SetName("RVLocalPlanner");
-    m_vcLabel = _node.stringXMLParameter("vcLabel", true, "", "Validity Test Method");
-    m_treeStructure = _node.stringXMLParameter("treeStructure", false, "EndEffectorFirst", "Structure of reachable volume tree");
-    this->m_repositionPolicy = _node.stringXMLParameter("repositionPolicy", false, "Random", "Policy for repositioning children that are outside of reachable volume");
-    m_rvres=_node.numberXMLParameter("rvres", false, .05, (double)0, (double)1000, "Resolution for reachable volume stepping");
-    m_S = _node.numberXMLParameter("S", false, .5, 0.0, 1.0, "S, the scaling factor used by RV distance metric d=S*TranslationalDistance + (1-S)*RVDistance");
+    m_vcLabel = _node.Read("vcLabel", true, "", "Validity Test Method");
+    m_treeStructure = _node.Read("treeStructure", false, "EndEffectorFirst", "Structure of reachable volume tree");
+    this->m_repositionPolicy = _node.Read("repositionPolicy", false, "Random", "Policy for repositioning children that are outside of reachable volume");
+    m_rvres=_node.Read("rvres", false, .05, (double)0, (double)1000, "Resolution for reachable volume stepping");
+    m_S = _node.Read("S", false, .5, 0.0, 1.0, "S, the scaling factor used by RV distance metric d=S*TranslationalDistance + (1-S)*RVDistance");
 				  
     m_rvr.loadTree("Chain.tree",m_treeStructure);
   }

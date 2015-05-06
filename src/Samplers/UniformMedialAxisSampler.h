@@ -16,9 +16,9 @@ class UniformMedialAxisSampler : public SamplerMethod<MPTraits> {
         double _length = 0, double _stepSize = 0, bool _useBoundary = false,
         const ClearanceUtility<MPTraits>& _clearanceUtility = ClearanceUtility<MPTraits>());
 
-    UniformMedialAxisSampler(MPProblemType* _problem, XMLNodeReader& _node);
+    UniformMedialAxisSampler(MPProblemType* _problem, XMLNode& _node);
 
-    virtual void ParseXML(XMLNodeReader& _node);
+    virtual void ParseXML(XMLNode& _node);
     virtual void Print(ostream& _os) const;
 
     virtual bool Sampler(CfgType& _cfg, shared_ptr<Boundary> _boundary,
@@ -60,7 +60,7 @@ UniformMedialAxisSampler(string _vcLabel, string _dmLabel,
 
 template<class MPTraits>
 UniformMedialAxisSampler<MPTraits>::
-UniformMedialAxisSampler(MPProblemType* _problem, XMLNodeReader& _node)
+UniformMedialAxisSampler(MPProblemType* _problem, XMLNode& _node)
   : SamplerMethod<MPTraits>(_problem, _node),
   m_clearanceUtility(_problem, _node) {
     this->SetName("UniformMedialAxisSampler");
@@ -70,19 +70,15 @@ UniformMedialAxisSampler(MPProblemType* _problem, XMLNodeReader& _node)
 template<class MPTraits>
 void
 UniformMedialAxisSampler<MPTraits>::
-ParseXML(XMLNodeReader& _node) {
-  m_vcLabel = _node.stringXMLParameter("vcLabel", true, "",
-      "Validity Test Method");
-  m_dmLabel =_node.stringXMLParameter("dmLabel", true, "default",
-      "Distance Metric Method");
-  m_length = _node.numberXMLParameter("d", true, 0.0, 0.0, MAX_DBL,
+ParseXML(XMLNode& _node) {
+  m_vcLabel = _node.Read("vcLabel", true, "", "Validity Test Method");
+  m_dmLabel =_node.Read("dmLabel", true, "default", "Distance Metric Method");
+  m_length = _node.Read("d", true, 0.0, 0.0, MAX_DBL,
       "generate line segment with length d");
-  m_stepSize = _node.numberXMLParameter("t", false, 1, 0, MAX_INT,
+  m_stepSize = _node.Read("t", false, 1, 0, MAX_INT,
       "the step size t, as a factor of the resolution");
-  m_useBoundary = _node.boolXMLParameter("useBBX", true, false,
+  m_useBoundary = _node.Read("useBBX", true, false,
       "Use bounding box as obstacle");
-
-  _node.warnUnrequestedAttributes();
 }
 
 template<class MPTraits>

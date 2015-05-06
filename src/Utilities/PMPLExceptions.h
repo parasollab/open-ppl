@@ -9,7 +9,7 @@ using namespace std;
 template<typename X, typename Y, typename Z>
 string WhereAt(X x, Y y, Z z) {
   ostringstream oss;
-  oss << "\n\tFile: " << x << "\n\tFunction: " << y << "\n\tLine: " << z;
+  oss << "File: " << x << "\n\tFunction: " << y << "\n\tLine: " << z;
   return oss.str();
 };
 
@@ -28,7 +28,7 @@ class PMPLException : public runtime_error {
     PMPLException(const string& _type, const string& _where, const string& _message) :
       runtime_error(
           "\nError:\n\t" + _type +
-          "\nWhere:" + _where +
+          "\nWhere:\n\t" + _where +
           "\nWhy:\n\t" + _message +
           "\n") {
       }

@@ -16,7 +16,7 @@ class RegionConnector : public ConnectorMethod<MPTraits> {
 
     // Constructors
     RegionConnector(string _nfLabel = "", string _lpLabel = "", size_t _iters = 10);
-    RegionConnector(MPProblemType* _problem, XMLNodeReader& _node);
+    RegionConnector(MPProblemType* _problem, XMLNode& _node);
 
     // Utility Methods and Typedefs
     virtual void Print(ostream& _os) const;
@@ -49,11 +49,11 @@ RegionConnector(string _nfLabel, string _lpLabel, size_t _iters) :
 
 template<class MPTraits>
 RegionConnector<MPTraits>::
-RegionConnector(MPProblemType* _problem, XMLNodeReader& _node) :
+RegionConnector(MPProblemType* _problem, XMLNode& _node) :
   ConnectorMethod<MPTraits>(_problem, _node)  {
     this->SetName("RegionConnector");
-    m_iters = _node.numberXMLParameter("numIters", true, 1, 0, MAX_INT, "number of times to execute the region connection");
-    _node.warnUnrequestedAttributes();
+    m_iters = _node.Read("numIters", true, 1, 0, MAX_INT,
+        "number of times to execute the region connection");
   }
 
 template<class MPTraits>

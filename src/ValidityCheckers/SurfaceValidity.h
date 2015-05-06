@@ -13,7 +13,7 @@ class SurfaceValidity : public ValidityCheckerMethod<MPTraits> {
     typedef typename MPTraits::CfgType CfgType;
 
     SurfaceValidity(string _vcLabel="");
-    SurfaceValidity(typename MPTraits::MPProblemType* _problem, XMLNodeReader& _node) ;
+    SurfaceValidity(typename MPTraits::MPProblemType* _problem, XMLNode& _node) ;
 
     virtual ~SurfaceValidity() {}
 
@@ -32,11 +32,10 @@ SurfaceValidity<MPTraits>::SurfaceValidity(string _vcLabel) : ValidityCheckerMet
 }
 
 template<class MPTraits>
-SurfaceValidity<MPTraits>::SurfaceValidity(typename MPTraits::MPProblemType* _problem, XMLNodeReader& _node)
+SurfaceValidity<MPTraits>::SurfaceValidity(typename MPTraits::MPProblemType* _problem, XMLNode& _node)
   : ValidityCheckerMethod<MPTraits>(_problem, _node){
-    _node.verifyName("SurfaceValidity");
     this->m_name = "SurfaceValidity";
-    this->m_vcLabel = _node.stringXMLParameter("vc_method", true, "", "Validity Checker Method");
+    this->m_vcLabel = _node.Read("vc_method", true, "", "Validity Checker Method");
   }
 
 template<class MPTraits>

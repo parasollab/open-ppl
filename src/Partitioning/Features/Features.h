@@ -6,10 +6,10 @@
 class Features: public MPBaseObject{
   public:
     Features();
-    Features(XMLNodeReader& in_Node, MPProblem* mp);
+    Features(XMLNode& in_Node, MPProblem* mp);
     ~Features(){}
 
-    virtual void ParseXML(XMLNodeReader& in_Node);
+    virtual void ParseXML(XMLNode& in_Node);
 
     MPFeature* GetFeature(string s);
 

@@ -12,10 +12,10 @@ class PartitioningMethod : public MPBaseObject
   typedef RoadmapGraph<CfgType, WeightType>::VID VID;
 
   PartitioningMethod();
-  PartitioningMethod(XMLNodeReader& in_Node, MPProblem * mp);
+  PartitioningMethod(XMLNode& in_Node, MPProblem * mp);
   virtual ~PartitioningMethod();
 
-  virtual void ParseXML(XMLNodeReader& in_Node);
+  virtual void ParseXML(XMLNode& in_Node);
 
   virtual vector<Partition*> MakePartitions(Partition &p)=0;
 

@@ -36,9 +36,9 @@ class VisibilityBasedPRM : public MPStrategyMethod<MPTraits> {
     VisibilityBasedPRM(const string _sampler = "",
         const string _vc = "", const string _lp = "",
         const int _maxFailedIterations = 10);
-    VisibilityBasedPRM(MPProblemType* _problem, XMLNodeReader& _node);
+    VisibilityBasedPRM(MPProblemType* _problem, XMLNode& _node);
 
-    virtual void ParseXML(XMLNodeReader& _node);
+    virtual void ParseXML(XMLNode& _node);
     virtual void Print(ostream& _os) const;
 
     virtual void Initialize();
@@ -75,7 +75,7 @@ VisibilityBasedPRM<MPTraits>::VisibilityBasedPRM(
 
 template<class MPTraits>
 VisibilityBasedPRM<MPTraits>::VisibilityBasedPRM(
-    MPProblemType* _problem, XMLNodeReader& _node) :
+    MPProblemType* _problem, XMLNode& _node) :
     MPStrategyMethod<MPTraits>(_problem, _node) {
   this->SetName("VisibilityBasedPRM");
   ParseXML(_node);
@@ -84,12 +84,12 @@ VisibilityBasedPRM<MPTraits>::VisibilityBasedPRM(
 
 template<class MPTraits>
 void
-VisibilityBasedPRM<MPTraits>::ParseXML(XMLNodeReader& _node) {
-  m_samplerLabel = _node.stringXMLParameter("sampler", true, "",
+VisibilityBasedPRM<MPTraits>::ParseXML(XMLNode& _node) {
+  m_samplerLabel = _node.Read("sampler", true, "",
       "Node Sampler Method");
-  m_vcLabel = _node.stringXMLParameter("vcLabel", true, "", "Validity Checker");
-  m_lpLabel = _node.stringXMLParameter("lpLabel", true, "sl", "Local Planner");
-  m_maxFailedIterations = _node.numberXMLParameter("maxFailedIterations", true, 10, 1,
+  m_vcLabel = _node.Read("vcLabel", true, "", "Validity Checker");
+  m_lpLabel = _node.Read("lpLabel", true, "sl", "Local Planner");
+  m_maxFailedIterations = _node.Read("maxFailedIterations", true, 10, 1,
       MAX_INT, "Maximum consecutive failed iterations");
 }
 

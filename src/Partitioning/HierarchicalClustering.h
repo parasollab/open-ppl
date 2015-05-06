@@ -7,7 +7,7 @@ class HierarchicalClustering : public PartitioningMethod
 {
  public:
    HierarchicalClustering();
-   HierarchicalClustering(XMLNodeReader& in_Node, MPProblem * in_pProblem);
+   HierarchicalClustering(XMLNode& in_Node, MPProblem * in_pProblem);
    ~HierarchicalClustering();
 
    virtual vector<Partition*> MakePartitions(Partition &p);

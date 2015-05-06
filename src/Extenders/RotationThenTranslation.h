@@ -24,7 +24,7 @@ class RotationThenTranslation : public BasicExtender<MPTraits> {
 
     RotationThenTranslation(const string& _dmLabel = "", 
         const string& _vcLabel = "", double _delta = 1.0);
-    RotationThenTranslation(MPProblemType* _problem, XMLNodeReader& _node);
+    RotationThenTranslation(MPProblemType* _problem, XMLNode& _node);
 
     virtual bool Extend(const CfgType& _near, const CfgType& _dir,
         CfgType& _new, LPOutput<MPTraits>& _lpOutput);
@@ -38,7 +38,7 @@ RotationThenTranslation<MPTraits>::RotationThenTranslation(const string& _dmLabe
   }
 
 template<class MPTraits>
-RotationThenTranslation<MPTraits>::RotationThenTranslation(MPProblemType* _problem, XMLNodeReader& _node) :
+RotationThenTranslation<MPTraits>::RotationThenTranslation(MPProblemType* _problem, XMLNode& _node) :
   BasicExtender<MPTraits>(_problem, _node) {
     this->SetName("RotationThenTranslation");
   }

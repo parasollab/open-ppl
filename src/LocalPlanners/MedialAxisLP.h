@@ -4,8 +4,8 @@
  * the medial axis.
  */
 
-#ifndef MEDIALAXISLP_H_
-#define MEDIALAXISLP_H_
+#ifndef MEDIAL_AXIS_LP_H_
+#define MEDIAL_AXIS_LP_H_
 
 #include "LocalPlannerMethod.h"
 #include "StraightLine.h"
@@ -25,7 +25,7 @@ class MedialAxisLP : public LocalPlannerMethod<MPTraits> {
 
     MedialAxisLP(MedialAxisUtility<MPTraits> _medialAxisUtility = MedialAxisUtility<MPTraits>(),
         double _macEpsilon = 0.01, size_t _maxIter = 2);
-    MedialAxisLP(MPProblemType* _problem, XMLNodeReader& _node);
+    MedialAxisLP(MPProblemType* _problem, XMLNode& _node);
     virtual ~MedialAxisLP();
 
     virtual void Print(ostream& _os) const;
@@ -105,31 +105,30 @@ MedialAxisLP(MedialAxisUtility<MPTraits> _medialAxisUtility,
 
 template<class MPTraits>
 MedialAxisLP<MPTraits>::
-MedialAxisLP(MPProblemType* _problem, XMLNodeReader& _node) :
+MedialAxisLP(MPProblemType* _problem, XMLNode& _node) :
   LocalPlannerMethod<MPTraits>(_problem, _node),
   m_medialAxisUtility(_problem, _node) {
-    //m_medialAxisUtility.SetDebug(false);
-    string controller = _node.stringXMLParameter("controller", true, "",
+    string controller = _node.Read("controller", true, "",
         "Which algorithm to run?");
     transform(controller.begin(), controller.end(),
         controller.begin(), ::toupper);
-    m_maxIter = _node.numberXMLParameter("maxIter", true, 2, 1, MAX_INT,
+    m_maxIter = _node.Read("maxIter", true, 2, 1, MAX_INT,
         "Maximum Number of Iterations");
     if(controller == "RECURSIVE") {
       m_controller = Controller::Recursive;
-      m_macEpsilon = _node.numberXMLParameter("macEpsilon", true, 0.1, 0.0,
+      m_macEpsilon = _node.Read("macEpsilon", true, 0.1, 0.0,
           MAX_DBL, "Epsilon-Close to the MA");
     }
     else if(controller == "ITERATIVE" || controller == "BINARY") {
       m_controller = controller == "ITERATIVE" ?
         Controller::Iterative : Controller::Binary;
-      m_resFactor = _node.numberXMLParameter("resFactor", true, 1.0, 0.0,
+      m_resFactor = _node.Read("resFactor", true, 1.0, 0.0,
           MAX_DBL, "Resolution for Iter and Bin");
     }
     else
-      throw ParseException(WHERE, "Unknown controller '" + controller +
+      throw ParseException(_node.Where(),
+          "Unknown controller '" + controller +
           "'. Choices are 'RECURSIVE', 'ITERATIVE', or 'BINARY'.");
-    _node.warnUnrequestedAttributes();
     Init();
   }
 
@@ -678,7 +677,7 @@ IsConnectedBin(const CfgType& _c1, const CfgType& _c2, CfgType& _col,
 
     //assemble path
     typedef typename PathMap::iterator PIT;
-    for(auto p : path) {
+    for(auto&  p : path) {
       copy(p.second.second.m_path.begin(), p.second.second.m_path.end(),
           back_inserter(_lpOutput->m_path));
       if(p.second.first != _c2) {

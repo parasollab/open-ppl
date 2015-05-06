@@ -16,7 +16,7 @@ class ConditionalEvaluator : public MapEvaluatorMethod<MPTraits> {
     enum Operator { LT , LEQ, GT, GEQ, MOD };
 
     ConditionalEvaluator(Operator _operator = LT, string _metric = "", double _value = 1.0);
-    ConditionalEvaluator(typename MPTraits::MPProblemType* _problem, XMLNodeReader& _node);
+    ConditionalEvaluator(typename MPTraits::MPProblemType* _problem, XMLNode& _node);
     virtual ~ConditionalEvaluator() {}
 
     virtual void Print(ostream& _os) const;
@@ -36,14 +36,14 @@ ConditionalEvaluator<MPTraits>::ConditionalEvaluator(Operator _operator, string 
 }
 
 template<class MPTraits>
-ConditionalEvaluator<MPTraits>::ConditionalEvaluator(typename MPTraits::MPProblemType* _problem, XMLNodeReader& _node)
+ConditionalEvaluator<MPTraits>::ConditionalEvaluator(typename MPTraits::MPProblemType* _problem, XMLNode& _node)
   : MapEvaluatorMethod<MPTraits>(_problem, _node) {
   this->SetName("ConditionalEvaluator");
 
-  m_metric = _node.stringXMLParameter("metric_method", true, "", "Metric Method");
-  m_value = _node.numberXMLParameter("value", true, 1.0, 0.0, std::numeric_limits<double>::max(), "the value of the metric");
+  m_metric = _node.Read("metric_method", true, "", "Metric Method");
+  m_value = _node.Read("value", true, 1.0, 0.0, std::numeric_limits<double>::max(), "the value of the metric");
 
-  string op = _node.stringXMLParameter("operator", true, "", "operator");
+  string op = _node.Read("operator", true, "", "operator");
   if (op == "<")
     m_operator = LT;
   else if (op == "<=")

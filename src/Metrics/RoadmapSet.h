@@ -21,8 +21,8 @@ class RoadmapSet {
     RoadmapSet(const RoadmapType& _roadmap) :
       m_roadmap(_roadmap) {}
 
-    RoadmapSet(XMLNodeReader& _node) {
-      string filename = _node.stringXMLParameter("filename", true, "", "filename containing witness samples");
+    RoadmapSet(XMLNode& _node) {
+      string filename = _node.Read("filename", true, "", "filename containing witness samples");
       m_roadmap.Read(filename.c_str());
     }
 

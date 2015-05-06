@@ -39,9 +39,9 @@ class ClearanceUtility : public MPBaseObject<MPTraits> {
         double _approxStepSize = MAX_DBL, double _approxResolution = MAX_DBL,
         bool _useBBX = true, bool _positional = true, bool _debug = false);
 
-    ClearanceUtility(MPProblemType* _problem, XMLNodeReader& _node);
+    ClearanceUtility(MPProblemType* _problem, XMLNode& _node);
 
-    void ParseXML(XMLNodeReader& _node);
+    void ParseXML(XMLNode& _node);
 
     virtual void Print(ostream& _os) const;
 
@@ -114,9 +114,9 @@ class MedialAxisUtility : public ClearanceUtility<MPTraits> {
         bool _useBBX = true, bool _positional = true, bool _debug = false,
         double _epsilon = 0.1, size_t _historyLength = 5);
 
-    MedialAxisUtility(MPProblemType* _problem, XMLNodeReader& _node);
+    MedialAxisUtility(MPProblemType* _problem, XMLNode& _node);
 
-    void ParseXML(XMLNodeReader& _node);
+    void ParseXML(XMLNode& _node);
 
     double GetEpsilon() const {return m_epsilon;}
 
@@ -227,7 +227,7 @@ ClearanceUtility(MPProblemType* _problem,
 
 template<class MPTraits>
 ClearanceUtility<MPTraits>::
-ClearanceUtility(MPProblemType* _problem, XMLNodeReader& _node):
+ClearanceUtility(MPProblemType* _problem, XMLNode& _node):
   MPBaseObject<MPTraits>(_problem, _node){
     this->m_name = "ClearanceUtility";
     ParseXML(_node);
@@ -236,35 +236,34 @@ ClearanceUtility(MPProblemType* _problem, XMLNodeReader& _node):
 template<class MPTraits>
 void
 ClearanceUtility<MPTraits>::
-ParseXML(XMLNodeReader& _node){
-  m_vcLabel = _node.stringXMLParameter("vcLabel", true, "",
-      "Validity Test Method");
-  m_dmLabel = _node.stringXMLParameter("dmLabel", true, "", "Distance metric");
+ParseXML(XMLNode& _node){
+  m_vcLabel = _node.Read("vcLabel", true, "", "Validity Test Method");
+  m_dmLabel = _node.Read("dmLabel", true, "", "Distance metric");
 
   //clearance and penetration types
-  string clearanceType = _node.stringXMLParameter("clearanceType", true, "",
+  string clearanceType = _node.Read("clearanceType", true, "",
       "Clearance Computation (exact or approx)");
   m_exactClearance = clearanceType.compare("exact")==0;
-  string penetrationType = _node.stringXMLParameter("penetrationType",true, "",
+  string penetrationType = _node.Read("penetrationType",true, "",
       "Penetration Computation (exact or approx)");
   m_exactPenetration = penetrationType.compare("exact")==0;
 
   //if approximate calculations require number of rays to be defined
   double minStepSize = 1. / this->GetEnvironment()->GetBoundary()->GetMaxDist();
-  m_approxStepSize = _node.numberXMLParameter("stepSize", false,
+  m_approxStepSize = _node.Read("stepSize", false,
       minStepSize, minStepSize, MAX_DBL,
       "Step size for initial approximate computations as multiple of environment resolution");
-  m_approxResolution = _node.numberXMLParameter("resolution", false,
+  m_approxResolution = _node.Read("resolution", false,
       minStepSize, minStepSize, MAX_DBL,
       "Resolution for final approximate computations as multiple of environment resolution");
-  m_clearanceRays = _node.numberXMLParameter("clearanceRays",
+  m_clearanceRays = _node.Read("clearanceRays",
       !m_exactClearance, 10, 1, 1000, "Number of Clearance Rays");
-  m_penetrationRays = _node.numberXMLParameter("penetrationRays",
+  m_penetrationRays = _node.Read("penetrationRays",
       !m_exactPenetration, 10, 1, 1000, "Number of Penetration Rays");
 
-  m_useBBX = _node.boolXMLParameter("useBBX", false, true,
+  m_useBBX = _node.Read("useBBX", false, true,
       "Use the Bounding Box as an Obstacle");
-  m_positional = _node.boolXMLParameter("positional", false, true,
+  m_positional = _node.Read("positional", false, true,
       "Use only positional DOFs");
 }
 
@@ -504,11 +503,11 @@ ApproxCollisionInfo(CfgType& _cfg, CfgType& _clrCfg,
   if(this->m_debug) {
     cout << "DEBUG:: rays initialized\n";
     cout << "DEBUG:: \ttick are:\n\t\t";
-    for(auto ray : rays)
+    for(auto&  ray : rays)
       cout << ray.m_tick << "\n\t\t";
     cout << endl;
     cout << "DEBUG:: \tincr are:\n\t\t";
-    for(auto ray : rays)
+    for(auto&  ray : rays)
       cout << ray.m_incr << "\n\t\t";
     cout << endl;
   }
@@ -549,7 +548,7 @@ ApproxCollisionInfo(CfgType& _cfg, CfgType& _clrCfg,
   if(this->m_debug) {
     cout << "\nDEBUG:: done stepping out along rays\n";
     cout << "   found " << candidates.size() << " candidates:\n";
-    for(auto cand : candidates) {
+    for(auto&  cand : candidates) {
       cout << "\t" << cand.first << ": " << cand.second;
 
       CDInfo tmpInfo;
@@ -567,7 +566,7 @@ ApproxCollisionInfo(CfgType& _cfg, CfgType& _clrCfg,
   if(this->m_debug)
     cout << "DEBUG:: checking for spurious candidates and removing them\n";
   vector<bool> remove;
-  for(auto cand : candidates) {
+  for(auto&  cand : candidates) {
     if(this->m_debug)
       cout << "\t" << cand.first;
     CDInfo tmpInfo;
@@ -608,7 +607,7 @@ ApproxCollisionInfo(CfgType& _cfg, CfgType& _clrCfg,
 
   if(this->m_debug) {
     cout << "   found " << candidates.size() << " candidates:\n";
-    for(auto cand : candidates) {
+    for(auto&  cand : candidates) {
       cout << "\t" << cand.first << ": " << cand.second;
 
       CDInfo tmpInfo;
@@ -642,7 +641,7 @@ ApproxCollisionInfo(CfgType& _cfg, CfgType& _clrCfg,
     bool foundStateChange = false;
     if(this->m_debug)
       cout << "   mid = " << mid << "\t";
-    for(auto cand : candidates) {
+    for(auto&  cand : candidates) {
       CfgType middleCfg = rays[cand.first].m_incr * mid + cand.second;
       CDInfo tmpInfo;
       bool midInside = vcm->IsInsideObstacle(middleCfg);
@@ -769,7 +768,7 @@ RoadmapClearance() {
   stats.m_avg = accumulate(clearanceVec.begin(), clearanceVec.end(), 0.0) /
     clearanceVec.size();
   double varSum = 0;
-  for(auto i : clearanceVec)
+  for(auto&  i : clearanceVec)
     varSum += sqr(i - stats.m_avg);
   stats.m_var = varSum / clearanceVec.size();
 
@@ -813,7 +812,7 @@ PathClearance(vector<VID>& _path) {
   stats.m_avg = accumulate(clearanceVec.begin(), clearanceVec.end(), 0.0) /
     clearanceVec.size();
   double varSum = 0;
-  for(auto i : clearanceVec)
+  for(auto&  i : clearanceVec)
     varSum += sqr(i - stats.m_avg);
   stats.m_var = varSum / clearanceVec.size();
 
@@ -879,7 +878,7 @@ PathClearance(vector<Cfg>& _path) {
   stats.m_avg = accumulate(clearanceVec.begin(), clearanceVec.end(), 0.0) /
     clearanceVec.size();
   double varSum = 0;
-  for(auto i : clearanceVec)
+  for(auto&  i : clearanceVec)
     varSum += sqr(i - stats.m_avg);
   stats.m_var = varSum / clearanceVec.size();
 
@@ -963,7 +962,7 @@ MedialAxisUtility(MPProblemType* _problem,
 
 template<class MPTraits>
 MedialAxisUtility<MPTraits>::
-MedialAxisUtility(MPProblemType* _problem, XMLNodeReader& _node):
+MedialAxisUtility(MPProblemType* _problem, XMLNode& _node):
   ClearanceUtility<MPTraits>(_problem, _node) {
     this->m_name = "MedialAxisUtility";
     ParseXML(_node);
@@ -972,10 +971,10 @@ MedialAxisUtility(MPProblemType* _problem, XMLNodeReader& _node):
 template<class MPTraits>
 void
 MedialAxisUtility<MPTraits>::
-ParseXML(XMLNodeReader& _node) {
-  m_epsilon = _node.numberXMLParameter("epsilon", false, 0.1, 0.0, 1.0,
+ParseXML(XMLNode& _node) {
+  m_epsilon = _node.Read("epsilon", false, 0.1, 0.0, 1.0,
       "Epsilon-Close to the MA (fraction of the resolution)");
-  m_historyLength = _node.numberXMLParameter("historyLength", false, 5, 3, 100,
+  m_historyLength = _node.Read("historyLength", false, 5, 3, 100,
       "History Length");
 }
 

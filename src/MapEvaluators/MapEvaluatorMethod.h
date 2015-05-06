@@ -15,7 +15,7 @@ class MapEvaluatorMethod : public MPBaseObject<MPTraits> {
   public:
 
     MapEvaluatorMethod() {}
-    MapEvaluatorMethod(typename MPTraits::MPProblemType* _problem, XMLNodeReader& _node)
+    MapEvaluatorMethod(typename MPTraits::MPProblemType* _problem, XMLNode& _node)
       : MPBaseObject<MPTraits>(_problem, _node) {}
     virtual ~MapEvaluatorMethod() {}
 

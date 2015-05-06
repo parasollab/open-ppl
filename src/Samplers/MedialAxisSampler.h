@@ -12,7 +12,7 @@ class MedialAxisSampler : public SamplerMethod<MPTraits> {
 
     MedialAxisSampler(const MedialAxisUtility<MPTraits>& _medialAxisUtility =
         MedialAxisUtility<MPTraits>());
-    MedialAxisSampler(MPProblemType* _problem, XMLNodeReader& _node);
+    MedialAxisSampler(MPProblemType* _problem, XMLNode& _node);
 
     virtual void Print(ostream& _os) const;
 
@@ -32,11 +32,10 @@ MedialAxisSampler(const MedialAxisUtility<MPTraits>& _medialAxisUtility):
 
 template<class MPTraits>
 MedialAxisSampler<MPTraits>::
-MedialAxisSampler(MPProblemType* _problem, XMLNodeReader& _node):
+MedialAxisSampler(MPProblemType* _problem, XMLNode& _node):
   SamplerMethod<MPTraits>(_problem, _node),
   m_medialAxisUtility(_problem, _node) {
     this->SetName("MedialAxisSampler");
-    _node.warnUnrequestedAttributes();
   }
 
 template<class MPTraits>

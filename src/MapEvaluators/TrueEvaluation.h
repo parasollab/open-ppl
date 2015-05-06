@@ -14,7 +14,7 @@ class TrueEvaluation : public MapEvaluatorMethod<MPTraits> {
   public:
 
     TrueEvaluation();
-    TrueEvaluation(typename MPTraits::MPProblemType* _problem, XMLNodeReader& _node);
+    TrueEvaluation(typename MPTraits::MPProblemType* _problem, XMLNode& _node);
     virtual ~TrueEvaluation();
 
     virtual void Print(ostream& _os) const;
@@ -29,7 +29,7 @@ TrueEvaluation<MPTraits>::TrueEvaluation() {
 }
 
 template<class MPTraits>
-TrueEvaluation<MPTraits>::TrueEvaluation(typename MPTraits::MPProblemType* _problem, XMLNodeReader& _node)
+TrueEvaluation<MPTraits>::TrueEvaluation(typename MPTraits::MPProblemType* _problem, XMLNode& _node)
   : MapEvaluatorMethod<MPTraits>(_problem, _node) {
     this->SetName("TrueEvaluation");
 }

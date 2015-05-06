@@ -47,10 +47,10 @@ class HybridPRM : public MPStrategyMethod<MPTraits> {
     int _binSize, const map<string, pair<int, int> >& _samplerLabels,
     const vector<string>& _connectorLabels, const vector<string>& _evaluatorLabels);
 
-    HybridPRM(typename MPTraits::MPProblemType* _problem, XMLNodeReader& _node);
+    HybridPRM(typename MPTraits::MPProblemType* _problem, XMLNode& _node);
     virtual ~HybridPRM() {}
 
-    virtual void ParseXML(XMLNodeReader& _node);
+    virtual void ParseXML(XMLNode& _node);
     virtual void Print(ostream& _os) const;
 
     virtual void Initialize();
@@ -100,12 +100,13 @@ ostream& operator<<(ostream& _os, const NodeTypeCounts& _nt){
 }
 
 template<class MPTraits>
-HybridPRM<MPTraits>::HybridPRM(string _samplerSelectionDistribution,
+HybridPRM<MPTraits>::
+HybridPRM(string _samplerSelectionDistribution,
     bool _countCost, double _percentageRandom, bool _fixedCost, bool _resettingLearning,int _binSize,
     const map<string, pair<int, int> >& _samplerLabels,
     const vector<string>& _connectorLabels,
-    const vector<string>& _evaluatorLabels)
-  :m_samplerSelectionDistribution(_samplerSelectionDistribution), m_countCost(_countCost),
+    const vector<string>& _evaluatorLabels) :
+  m_samplerSelectionDistribution(_samplerSelectionDistribution), m_countCost(_countCost),
   m_percentageRandom(_percentageRandom), m_fixedCost(_fixedCost), m_resettingLearning(_resettingLearning),
   m_binSize(_binSize),m_samplerLabels(_samplerLabels),
   m_connectorLabels(_connectorLabels), m_evaluatorLabels(_evaluatorLabels){
@@ -113,44 +114,37 @@ HybridPRM<MPTraits>::HybridPRM(string _samplerSelectionDistribution,
   }
 
 template<class MPTraits>
-HybridPRM<MPTraits>::HybridPRM(typename MPTraits::MPProblemType* _problem, XMLNodeReader& _node) :
+HybridPRM<MPTraits>::
+HybridPRM(typename MPTraits::MPProblemType* _problem, XMLNode& _node) :
   MPStrategyMethod<MPTraits>(_problem, _node){
     this->SetName("HybridPRM");
     ParseXML(_node);
   }
 
 template<class MPTraits>
-void HybridPRM<MPTraits>::ParseXML(XMLNodeReader& _node){
-  for(XMLNodeReader::childiterator citr = _node.children_begin(); citr!= _node.children_end(); ++citr){
-    if(citr->getName() == "node_generation_method"){
-      string generationMethod = citr->stringXMLParameter("Method",true,"","Method");
+void HybridPRM<MPTraits>::
+ParseXML(XMLNode& _node) {
+  for(auto& child : _node) {
+    if(child.Name() == "node_generation_method"){
+      string generationMethod = child.Read("Method",true,"","Method");
       m_samplerLabels.push_back(generationMethod);
-      int initialCost = citr->numberXMLParameter("initialCost",false,1,1,MAX_INT,"initialCost");
+      int initialCost = child.Read("initialCost",false,1,1,MAX_INT,"initialCost");
       m_nodeCosts[generationMethod] = initialCost;
-      citr->warnUnrequestedAttributes();
     }
-    else if(citr->getName() == "node_connection_method") {
-      string connectMethod = citr->stringXMLParameter("Method",true,"","Method");
-      m_connectorLabels.push_back(connectMethod);
-      citr->warnUnrequestedAttributes();
-    }
-    else if(citr->getName() == "evaluation_method"){
-      string evalMethod = citr->stringXMLParameter("Method", true, "", "Evaluation Method");
-      m_evaluatorLabels.push_back(evalMethod);
-      citr->warnUnrequestedAttributes();
-    }
-
-    else
-      citr->warnUnknownNode();
+    else if(child.Name() == "node_connection_method")
+      m_connectorLabels.push_back(child.Read("Method",true,"","Method"));
+    else if(child.Name() == "evaluation_method")
+      m_evaluatorLabels.push_back(
+          child.Read("Method", true, "", "Evaluation Method"));
  }
 
-  m_percentageRandom = _node.numberXMLParameter("percent_random", true, 0.5, 0.0, 1.0, "percent_random");
-  m_binSize = _node.numberXMLParameter("bin_size", true, 5, 1, MAX_INT, "bin_size");
-  m_windowPercent = _node.numberXMLParameter("window_percent", true, 0.5, 0.0, 1.0, "window_percent");
-  m_countCost = _node.boolXMLParameter("Count_Cost", true, true, "Count_Cost");
-  m_fixedCost = _node.boolXMLParameter("fixed_cost", true, false, "fixed_cost");
-  m_resettingLearning = _node.boolXMLParameter("resetting_learning", true, false, "resetting_learning");
-  m_samplerSelectionDistribution = _node.stringXMLParameter("sampler_selection_distribution", false, "", "sampler_selection_distribution");
+  m_percentageRandom = _node.Read("percent_random", true, 0.5, 0.0, 1.0, "percent_random");
+  m_binSize = _node.Read("bin_size", true, 5, 1, MAX_INT, "bin_size");
+  m_windowPercent = _node.Read("window_percent", true, 0.5, 0.0, 1.0, "window_percent");
+  m_countCost = _node.Read("Count_Cost", true, true, "Count_Cost");
+  m_fixedCost = _node.Read("fixed_cost", true, false, "fixed_cost");
+  m_resettingLearning = _node.Read("resetting_learning", true, false, "resetting_learning");
+  m_samplerSelectionDistribution = _node.Read("sampler_selection_distribution", false, "", "sampler_selection_distribution");
   if (m_samplerSelectionDistribution == "nowindow")
     m_windowPercent = 1.0; // 100% of the time learning
 }
@@ -158,8 +152,6 @@ void HybridPRM<MPTraits>::ParseXML(XMLNodeReader& _node){
 template<class MPTraits>
 void
 HybridPRM<MPTraits>::Print(ostream& _os) const {
-  using boost::lambda::_1;
-
   _os << "HybridPRM<MPTraits>::\n";
   _os << "\tpercent_random = " << m_percentageRandom << endl;
   _os << "\tbin_size = " << m_binSize << endl;
@@ -169,9 +161,15 @@ HybridPRM<MPTraits>::Print(ostream& _os) const {
   _os << "\tresetting_learning = " << m_resettingLearning << endl;
   _os << "\tsampler_selection_distribution = " << m_samplerSelectionDistribution << endl;
 
-  _os << "\tnode_generation_methods: "; for_each(m_samplerLabels.begin(), m_samplerLabels.end(), _os << _1 << " "); _os << endl;
-  _os << "\tnode_connection_methods: "; for_each(m_connectorLabels.begin(), m_connectorLabels.end(), _os << _1 << " "); _os << endl;
-  _os << "\tevaluator_methods: "; for_each(m_evaluatorLabels.begin(), m_evaluatorLabels.end(), _os << _1 << " "); _os << endl;
+  _os << "\tnode_generation_methods: ";
+  for(auto&  l : m_samplerLabels)
+    _os << l << " ";
+  _os << "\n\tnode_connection_methods: ";
+  for(auto&  l : m_connectorLabels)
+    _os << l << " ";
+  _os << "\n\tevaluator_methods: ";
+  for(auto&  l : m_evaluatorLabels)
+    _os << l << " ";
 
 }
 
@@ -218,7 +216,7 @@ void HybridPRM<MPTraits>::Run(){
           //add node to roadmap
           VID newVID = this->GetMPProblem()->GetRoadmap()->GetGraph()->AddVertex(*C);
           vector<pair<pair<VID,VID>,bool> > connectionattempts;
-    	  for(auto label : m_connectorLabels) {
+    	  for(auto&  label : m_connectorLabels) {
             ConnectorPointer connector = this->GetConnector(label);
             connector->ClearConnectionAttempts();
             connector->Connect(this->GetRoadmap(), newVID);
@@ -228,7 +226,7 @@ void HybridPRM<MPTraits>::Run(){
 
     	  }
 
-          for(auto attempt : connectionattempts) {
+          for(auto&  attempt : connectionattempts) {
             visMap[attempt.first.first].m_attempts++;
             visMap[attempt.first.second].m_attempts++;
             if(attempt.second){

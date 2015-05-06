@@ -248,7 +248,7 @@ RadialUtils(MPProblemType* _problem, LocalTreeType* _localTree, string _dm, stri
   if (_localTree == NULL) {
     //m_localTree = m_problem->GetRoadmap()->GetGraph();
     m_localTree = new LocalTreeType();
-    for(auto i : *m_problem->GetRoadmap()->GetGraph()) {
+    for(auto  i : *m_problem->GetRoadmap()->GetGraph()) {
       m_localTree->add_vertex(i.descriptor(), i.property());
     }
   }
@@ -538,7 +538,7 @@ RemoveInvalidNodes(vector<VID>& _allVIDs) {
   RoadmapType* rdmp = m_problem->GetRoadmap();
   ValidityCheckerPointer vc = m_problem->GetValidityChecker(m_vc);
 
-  for(auto i : _allVIDs) {
+  for(auto&  i : _allVIDs) {
     VID vid = i;
     CfgType cfg = (*(m_localTree->find_vertex(vid))).property();
 
@@ -658,7 +658,7 @@ GetClosest(VID _ccVID, vector<CCType> _ccs, string _criteria) const {
   colorMap.reset();
   stapl::sequential::get_cc(*m_localTree,colorMap,_ccVID,sourceCC);
 
-  for (int i=0; i<_ccs.size(); i++) {
+  for(int i=0; i<_ccs.size(); i++) {
     if(_ccs[i].second == _ccVID)
       continue;
 
@@ -696,7 +696,7 @@ typename RadialUtils<MPTraits>::CfgType
 RadialUtils<MPTraits>::
 GetCentroid(vector<VID>& _cc) const {
   CfgType center;
-  for(auto i : _cc) {
+  for(auto&  i : _cc) {
     CfgType cfg = (*(m_localTree->find_vertex(i))).property();
     center += cfg;
   }

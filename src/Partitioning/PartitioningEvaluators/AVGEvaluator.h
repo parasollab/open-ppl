@@ -6,10 +6,10 @@
 class AVGEvaluator : public PartitioningEvaluator{
  public:
    AVGEvaluator();
-   AVGEvaluator(XMLNodeReader& in_Node, MPProblem* mp);
+   AVGEvaluator(XMLNode& in_Node, MPProblem* mp);
    virtual ~AVGEvaluator(){}
 
-   virtual void ParseXML(XMLNodeReader& in_Node);
+   virtual void ParseXML(XMLNode& in_Node);
 
    virtual vector<double> Evaluate(vector<Partition*> part);
 };

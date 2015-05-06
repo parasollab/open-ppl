@@ -1,5 +1,5 @@
-#ifndef MULTISTRATEGY_H_
-#define MULTISTRATEGY_H_
+#ifndef MULTI_STRATEGY_H_
+#define MULTI_STRATEGY_H_
 
 #include "MPStrategyMethod.h"
 
@@ -7,9 +7,9 @@ template<class MPTraits>
 class MultiStrategy : public MPStrategyMethod<MPTraits> {
   public:
     MultiStrategy<MPTraits>();
-    MultiStrategy(typename MPTraits::MPProblemType* _problem, XMLNodeReader& _node);
+    MultiStrategy(typename MPTraits::MPProblemType* _problem, XMLNode& _node);
 
-    virtual void ParseXML(XMLNodeReader& _node);
+    virtual void ParseXML(XMLNode& _node);
     virtual void Initialize();
     virtual void Run();
     virtual void Finalize();
@@ -25,25 +25,19 @@ MultiStrategy<MPTraits>::MultiStrategy() {
 }
 
 template<class MPTraits>
-MultiStrategy<MPTraits>::MultiStrategy(typename MPTraits::MPProblemType* _problem, XMLNodeReader& _node) :
+MultiStrategy<MPTraits>::MultiStrategy(typename MPTraits::MPProblemType* _problem, XMLNode& _node) :
   MPStrategyMethod<MPTraits>(_problem, _node) {
     this->SetName("MultiStrategy");
     ParseXML(_node);
   }
 
 template<class MPTraits>
-void MultiStrategy<MPTraits>::ParseXML(XMLNodeReader& _node) {
-  if(this->m_debug) cout<<"Parsing XML File"<<endl;
-  for(XMLNodeReader::childiterator cIter = _node.children_begin();
-      cIter != _node.children_end(); ++cIter){
-    if(cIter->getName() == "MPStrategy") {
-        m_labels.push_back(cIter->stringXMLParameter("method", true, "",
-          "MPStrategy to be used"));
-      cIter->warnUnrequestedAttributes();
-    }
-    else
-      cIter->warnUnknownNode();
-  }
+void
+MultiStrategy<MPTraits>::
+ParseXML(XMLNode& _node) {
+  for(auto& child : _node)
+    if(child.Name() == "MPStrategy")
+        m_labels.push_back(child.Read("method", true, "", "MPStrategy"));
 }
 
 template<class MPTraits>

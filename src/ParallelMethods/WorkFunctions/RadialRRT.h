@@ -1268,7 +1268,7 @@ struct DeleteCC {
 
   template<typename RepeatView>
     result_type operator()(const vector<VID>& v, RepeatView& _r) {
-      for(auto i : v)
+      for(auto&  i : v)
         _r.delete_vertex(i);
     }
 

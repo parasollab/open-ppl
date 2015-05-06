@@ -12,7 +12,7 @@ class LPCompare : public MPStrategyMethod<MPTraits> {
     typedef typename MPProblemType::RoadmapType::GraphType GraphType;
 
     LPCompare<MPTraits>();
-    LPCompare(MPProblemType* _problem, XMLNodeReader& _node);
+    LPCompare(MPProblemType* _problem, XMLNode& _node);
 
     virtual void Initialize();
     virtual void Run();
@@ -40,14 +40,14 @@ LPCompare() {
 
 template<class MPTraits>
 LPCompare<MPTraits>::
-LPCompare(typename MPTraits::MPProblemType* _problem, XMLNodeReader& _node) :
+LPCompare(typename MPTraits::MPProblemType* _problem, XMLNode& _node) :
   MPStrategyMethod<MPTraits>(_problem, _node) {
     this->SetName("LPCompare");
-    m_rdmp1in = _node.stringXMLParameter("rdmp1", true, "", "Roadmap file 1");
-    m_rdmp2in = _node.stringXMLParameter("rdmp2", true, "", "Roadmap file 2");
-    m_lpLabel1 = _node.stringXMLParameter("lpLabel1", true, "", "LP 1");
-    m_lpLabel2 = _node.stringXMLParameter("lpLabel2", true, "", "LP 2");
-    m_dmLabel = _node.stringXMLParameter("dmLabel", true, "", "DM");
+    m_rdmp1in = _node.Read("rdmp1", true, "", "Roadmap file 1");
+    m_rdmp2in = _node.Read("rdmp2", true, "", "Roadmap file 2");
+    m_lpLabel1 = _node.Read("lpLabel1", true, "", "LP 1");
+    m_lpLabel2 = _node.Read("lpLabel2", true, "", "LP 2");
+    m_dmLabel = _node.Read("dmLabel", true, "", "DM");
   }
 
 template<class MPTraits>

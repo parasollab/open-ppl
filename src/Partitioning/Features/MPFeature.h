@@ -9,10 +9,10 @@ typedef RoadmapGraph<CfgType,WeightType>::VID VID;
 class MPFeature : public MPBaseObject {
   public:
     MPFeature():MPBaseObject(){}
-    MPFeature(XMLNodeReader& in_Node, MPProblem* mp):MPBaseObject(in_Node, mp){}
+    MPFeature(XMLNode& in_Node, MPProblem* mp):MPBaseObject(in_Node, mp){}
     virtual ~MPFeature(){}
 
-    virtual void ParseXML(XMLNodeReader& in_Node){}
+    virtual void ParseXML(XMLNode& in_Node){}
 
     virtual vector<double> Collect(vector<VID>& vids)=0;
 };

@@ -16,7 +16,7 @@ class TransformAtS : public StraightLine<MPTraits> {
 
     TransformAtS(double _s = 0.5, const string& _vcLabel = "", bool _evalation = false,
         bool _saveIntermediates = false);
-    TransformAtS(MPProblemType* _problem, XMLNodeReader& _node);
+    TransformAtS(MPProblemType* _problem, XMLNode& _node);
     virtual ~TransformAtS();
 
     virtual void Print(ostream& _os) const;
@@ -57,12 +57,10 @@ TransformAtS<MPTraits>::TransformAtS(double _s, const string& _vcLabel,
 }
 
 template <class MPTraits>
-TransformAtS<MPTraits>::TransformAtS(MPProblemType* _problem, XMLNodeReader& _node) :
+TransformAtS<MPTraits>::TransformAtS(MPProblemType* _problem, XMLNode& _node) :
     StraightLine<MPTraits>(_problem, _node) {
   this->SetName("TransformAtS");
-  m_sValue = _node.numberXMLParameter("s", true, 0.5, 0.0, 1.0, "Transform at s value");
-
-  _node.warnUnrequestedAttributes();
+  m_sValue = _node.Read("s", true, 0.5, 0.0, 1.0, "Transform at s value");
 }
 
 template <class MPTraits>

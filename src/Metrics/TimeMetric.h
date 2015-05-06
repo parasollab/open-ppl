@@ -15,7 +15,7 @@ class TimeMetric : public MetricMethod<MPTraits> {
   public:
 
     TimeMetric();
-    TimeMetric(typename MPTraits::MPProblemType* _problem, XMLNodeReader& _node);
+    TimeMetric(typename MPTraits::MPProblemType* _problem, XMLNode& _node);
     virtual ~TimeMetric();
 
     virtual void Print(ostream& _os) const;
@@ -30,7 +30,7 @@ TimeMetric<MPTraits>::TimeMetric() {
 }
 
 template<class MPTraits>
-TimeMetric<MPTraits>::TimeMetric(typename MPTraits::MPProblemType* _problem, XMLNodeReader& _node)
+TimeMetric<MPTraits>::TimeMetric(typename MPTraits::MPProblemType* _problem, XMLNode& _node)
   : MetricMethod<MPTraits>(_problem, _node) {
     this->SetName("TimeMetric");
 }

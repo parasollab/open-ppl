@@ -22,7 +22,7 @@ class HierarchicalLP : public LocalPlannerMethod<MPTraits> {
 
     HierarchicalLP(const vector<string>& _lpLabels = vector<string>(), bool _saveIntermediates = false);
 
-    HierarchicalLP(MPProblemType* _problem, XMLNodeReader& _node);
+    HierarchicalLP(MPProblemType* _problem, XMLNode& _node);
 
     virtual void Print(ostream& _os) const;
 
@@ -38,26 +38,22 @@ class HierarchicalLP : public LocalPlannerMethod<MPTraits> {
 };
 
 template<class MPTraits>
-HierarchicalLP<MPTraits>::HierarchicalLP(const vector<string>& _lpLabels, bool _saveIntermediates) :
-    LocalPlannerMethod<MPTraits>(_saveIntermediates), m_lpLabels(_lpLabels) {
-  this->SetName("HierarchicalLP");
-}
+HierarchicalLP<MPTraits>::
+HierarchicalLP(const vector<string>& _lpLabels, bool _saveIntermediates) :
+  LocalPlannerMethod<MPTraits>(_saveIntermediates), m_lpLabels(_lpLabels) {
+    this->SetName("HierarchicalLP");
+  }
 
 template<class MPTraits>
-HierarchicalLP<MPTraits>::HierarchicalLP(MPProblemType* _problem, XMLNodeReader& _node) :
-    LocalPlannerMethod<MPTraits>(_problem, _node){
-  this->SetName("HierarchicalLP");
-  XMLNodeReader::childiterator citr;
-  for(citr = _node.children_begin(); citr != _node.children_end(); ++ citr) {
-    if(citr->getName() == "LocalPlanner"){
-      string methodLabel = citr->stringXMLParameter("method",true, "",
-          "method");
-      m_lpLabels.push_back(methodLabel);
-    }
-    else
-      citr->warnUnknownNode();
+HierarchicalLP<MPTraits>::
+HierarchicalLP(MPProblemType* _problem, XMLNode& _node) :
+  LocalPlannerMethod<MPTraits>(_problem, _node){
+    this->SetName("HierarchicalLP");
+    for(auto& child : _node)
+      if(child.Name() == "LocalPlanner")
+        m_lpLabels.push_back(
+            child.Read("method",true, "", "method"));
   }
-}
 
 template<class MPTraits>
 void

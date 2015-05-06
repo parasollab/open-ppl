@@ -19,7 +19,7 @@ class RotateAtS : public TransformAtS<MPTraits> {
 
     RotateAtS(double _s = 0.5, const string& _vcLabel = "", bool _evalation = false,
         bool _saveIntermediates = false);
-    RotateAtS(MPProblemType* _problem, XMLNodeReader& _node);
+    RotateAtS(MPProblemType* _problem, XMLNode& _node);
     virtual ~RotateAtS();
 
   protected:
@@ -32,18 +32,19 @@ class RotateAtS : public TransformAtS<MPTraits> {
 };
 
 template<class MPTraits>
-RotateAtS<MPTraits>::RotateAtS(double _s, const string& _vcLabel,
+RotateAtS<MPTraits>::
+RotateAtS(double _s, const string& _vcLabel,
     bool _evalation, bool _saveIntermediates) :
   TransformAtS<MPTraits>(_s, _vcLabel, _evalation, _saveIntermediates) {
-  this->SetName("RotateAtS");
-}
+    this->SetName("RotateAtS");
+  }
 
 template<class MPTraits>
-RotateAtS<MPTraits>::RotateAtS(MPProblemType* _problem, XMLNodeReader& _node):
-    TransformAtS<MPTraits>(_problem, _node) {
-  this->SetName("RotateAtS");
-  _node.warnUnrequestedAttributes();
-}
+RotateAtS<MPTraits>::
+RotateAtS(MPProblemType* _problem, XMLNode& _node):
+  TransformAtS<MPTraits>(_problem, _node) {
+    this->SetName("RotateAtS");
+  }
 
 template<class MPTraits>
 RotateAtS<MPTraits>::~RotateAtS() {}

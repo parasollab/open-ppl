@@ -27,13 +27,13 @@ class LocalManeuveringStrategy : public MPStrategyMethod<MPTraits> {
     typedef typename vector<CfgType>::iterator CfgIter;
     typedef typename MPTraits::CfgType::CompositeCfgType CompositeCfgType;
 
-    LocalManeuveringStrategy(MPProblemPtr _problem, XMLNodeReader& _node, bool _warnXML=true);
+    LocalManeuveringStrategy(MPProblemPtr _problem, XMLNode& _node, bool _warnXML=true);
     LocalManeuveringStrategy();
     virtual ~LocalManeuveringStrategy();
 
     typedef vector< pair<Point2d,double> > Path3D;
 
-    virtual void ParseXML(XMLNodeReader& _node);
+    virtual void ParseXML(XMLNode& _node);
 
     virtual void Initialize();
     virtual void Run();
@@ -350,7 +350,7 @@ LocalManeuveringStrategy<MPTraits>::LocalManeuveringStrategy() :
 }
 
 template<class MPTraits>
-LocalManeuveringStrategy<MPTraits>::LocalManeuveringStrategy(MPProblemPtr _problem, XMLNodeReader& _node, bool _warnXML) :
+LocalManeuveringStrategy<MPTraits>::LocalManeuveringStrategy(MPProblemPtr _problem, XMLNode& _node, bool _warnXML) :
   MPStrategyMethod<MPTraits>(_problem, _node), m_currentIteration(0){
     ParseXML(_node);
     if (_warnXML) _node.warnUnrequestedAttributes();
@@ -366,87 +366,87 @@ LocalManeuveringStrategy<MPTraits>::~LocalManeuveringStrategy() {
 
 template<class MPTraits>
 void
-LocalManeuveringStrategy<MPTraits>::ParseXML(XMLNodeReader& _node) {
+LocalManeuveringStrategy<MPTraits>::ParseXML(XMLNode& _node) {
 
-  m_delta = _node.numberXMLParameter("delta", false, 0.05, 0.0, 1.0, "Delta Distance");
-  m_maxNumTicks = _node.numberXMLParameter("maxnumticks", false, 1, 0, MAX_INT, "Max. Number of Ticks");
-  m_maxNumIter = _node.numberXMLParameter("maxnumiter", false, 10000, 0, MAX_INT, "Max. Number of Iterations");
-  m_numRoots = _node.numberXMLParameter("numRoots", false, 5, 1, MAX_INT, "Number of Roots");
-  m_vc = _node.stringXMLParameter("vc", true, "", "Validity Test Method");
-  m_query = _node.stringXMLParameter("query", false, "", "Query Filename");
-  m_path = _node.stringXMLParameter("path", false, "", "Output Path Filename");
-  m_gbPath = _node.stringXMLParameter("gbpath", false, "", "Output GBPath Filename");
-  m_goalReachDistance =  _node.numberXMLParameter("goalreachdistance", false, 1.0, 0.0, 1000.0,  "Distance tolerance to goal");
-  m_goalReachOrientation = _node.numberXMLParameter("goalreachorientation", false, 0.34, 0.0, 1.51, "Orientation tolerance for goal");
-  m_guidePathSubGoal =  _node.numberXMLParameter("guidepathsubgoal", false, 0, 0, MAX_INT, "Index in guide path file considered goal");
-  m_guidePathFile = _node.stringXMLParameter("guidepath", false, "", "Guide Path Filename");
-  m_planType = _node.stringXMLParameter("plantype",false,"PullOut","Type of parking lot planning to do.");
+  m_delta = _node.Read("delta", false, 0.05, 0.0, 1.0, "Delta Distance");
+  m_maxNumTicks = _node.Read("maxnumticks", false, 1, 0, MAX_INT, "Max. Number of Ticks");
+  m_maxNumIter = _node.Read("maxnumiter", false, 10000, 0, MAX_INT, "Max. Number of Iterations");
+  m_numRoots = _node.Read("numRoots", false, 5, 1, MAX_INT, "Number of Roots");
+  m_vc = _node.Read("vc", true, "", "Validity Test Method");
+  m_query = _node.Read("query", false, "", "Query Filename");
+  m_path = _node.Read("path", false, "", "Output Path Filename");
+  m_gbPath = _node.Read("gbpath", false, "", "Output GBPath Filename");
+  m_goalReachDistance =  _node.Read("goalreachdistance", false, 1.0, 0.0, 1000.0,  "Distance tolerance to goal");
+  m_goalReachOrientation = _node.Read("goalreachorientation", false, 0.34, 0.0, 1.51, "Orientation tolerance for goal");
+  m_guidePathSubGoal =  _node.Read("guidepathsubgoal", false, 0, 0, MAX_INT, "Index in guide path file considered goal");
+  m_guidePathFile = _node.Read("guidepath", false, "", "Guide Path Filename");
+  m_planType = _node.Read("plantype",false,"PullOut","Type of parking lot planning to do.");
 
   //parameterize the behaviors
-  m_maxStartTime = _node.numberXMLParameter("maxStartTime", false, 50, 0, 100000, "When randomizing start times, \
+  m_maxStartTime = _node.Read("maxStartTime", false, 50, 0, 100000, "When randomizing start times, \
       this value is the maximum timestep at which an agent may begin planning.");
-  m_forwardPullOutDistMin = _node.numberXMLParameter("forwardPullOutDistMin",false,1.25,0.0,10000.0,"For forward \
+  m_forwardPullOutDistMin = _node.Read("forwardPullOutDistMin",false,1.25,0.0,10000.0,"For forward \
       pullout, how many units at minimum to initially move straight forward");
-  m_forwardPullOutDistMax  = _node.numberXMLParameter("forwardPullOutDistMax",false,6.0,0.0,10000.0,"For \
+  m_forwardPullOutDistMax  = _node.Read("forwardPullOutDistMax",false,6.0,0.0,10000.0,"For \
       forward pullout, how many units at most to initially move straight forward");
-  m_forwardReqAngle  = _node.numberXMLParameter("forwardReqAngle",false,0.52536,0.0,1.5707,"For \
+  m_forwardReqAngle  = _node.Read("forwardReqAngle",false,0.52536,0.0,1.5707,"For \
       forward pullout, tolerance in facing the goal to still be considered 'forward'");
-  m_forwardPullOutTurnDistMin = _node.numberXMLParameter("forwardPullOutTurnDistMin",false,10.0,0.0,1000.0,"For forward \
+  m_forwardPullOutTurnDistMin = _node.Read("forwardPullOutTurnDistMin",false,10.0,0.0,1000.0,"For forward \
       pullout, how far along a turning arc at minimum to turn");
-  m_forwardPullOutTurnDistMax  = _node.numberXMLParameter("forwardPullOutTurnDistMax",false,22.5,0.0,1000.0,"For \
+  m_forwardPullOutTurnDistMax  = _node.Read("forwardPullOutTurnDistMax",false,22.5,0.0,1000.0,"For \
       forward pullout, how far along a turning arc at most to turn");
-  m_forwardPullOutSteerMin = _node.numberXMLParameter("forwardPullOutSteerMin",false,0.10,0.0,0.22,"For forward \
+  m_forwardPullOutSteerMin = _node.Read("forwardPullOutSteerMin",false,0.10,0.0,0.22,"For forward \
       pullout, minimum absolute steering angle when turning");
-  m_forwardPullOutSteerMax = _node.numberXMLParameter("forwardPullOutSteerMax",false,0.15,0.0,0.22,"For forward \
+  m_forwardPullOutSteerMax = _node.Read("forwardPullOutSteerMax",false,0.15,0.0,0.22,"For forward \
       pullout, maximum absolute steering angle when turning");
 
-  m_backPullOutDistMin = _node.numberXMLParameter("backPullOutDistMin",false,3.75,0.0,10000.0,"For reverse \
+  m_backPullOutDistMin = _node.Read("backPullOutDistMin",false,3.75,0.0,10000.0,"For reverse \
       pullout, how far to initally move straight back at minimum");
-  m_backPullOutDistMax = _node.numberXMLParameter("backPullOutDistMax",false,8.75,0.0,10000.0,"For reverse \
+  m_backPullOutDistMax = _node.Read("backPullOutDistMax",false,8.75,0.0,10000.0,"For reverse \
       pullout, how far to initially move straight back at most");
-  m_backPullOutTurnDistMin = _node.numberXMLParameter("backPullOutTurnDistMin",false,10.0,0.0,10000.0,"For reverse \
+  m_backPullOutTurnDistMin = _node.Read("backPullOutTurnDistMin",false,10.0,0.0,10000.0,"For reverse \
       pullout, how far along a turning arc at minimum to travel");
-  m_backPullOutTurnDistMax = _node.numberXMLParameter("backPullOutTurnDistMax",false,15.0,0.0,10000.0,"For reverse \
+  m_backPullOutTurnDistMax = _node.Read("backPullOutTurnDistMax",false,15.0,0.0,10000.0,"For reverse \
       pullout, how far along a turning arc at most to travel");
-  m_backTowardGoalDistMin = _node.numberXMLParameter("backTowardGoalDistMin",false,0.25, 0.0,100000.0,"For reverse \
+  m_backTowardGoalDistMin = _node.Read("backTowardGoalDistMin",false,0.25, 0.0,100000.0,"For reverse \
       pullout, how far to travel forward, at minimum, toward a goal after backing and turning");
-  m_backTowardGoalDistMax = _node.numberXMLParameter("backTowardGoalDistMax",false,7.75, 0.0,100000.0,"For reverse \
+  m_backTowardGoalDistMax = _node.Read("backTowardGoalDistMax",false,7.75, 0.0,100000.0,"For reverse \
       pullout, how far to travel forward, at most, toward a goal after backing and turning");
-  m_backPullOutTurnSteerMin = _node.numberXMLParameter("backPullOutTurnSteerMin",false,0.05,0.0,0.22,"For reverse pullout, \
+  m_backPullOutTurnSteerMin = _node.Read("backPullOutTurnSteerMin",false,0.05,0.0,0.22,"For reverse pullout, \
       minimum absolute steering angle at for turning while reversing");
-  m_backPullOutTurnSteerMax = _node.numberXMLParameter("backPullOutTurnSteerMax",false,0.20,0.0,0.22,"For reverse pullout, \
+  m_backPullOutTurnSteerMax = _node.Read("backPullOutTurnSteerMax",false,0.20,0.0,0.22,"For reverse pullout, \
       maximum absolute steering angle at for turning while reversing");
 
 
-  m_deadlock1RightTurnFreq = _node.numberXMLParameter("deadlock1RightTurnFreq",false,0.75,0.0,1.0,"For deadlock1 \
+  m_deadlock1RightTurnFreq = _node.Read("deadlock1RightTurnFreq",false,0.75,0.0,1.0,"For deadlock1 \
       resolution, how often to attempt a right hand turn to get around other agents");
-  m_deadlock1TurnDistMin = _node.numberXMLParameter("deadlock1TurnDistMin",false,3.75,0.0,100000.0,"For deadlock1 \
+  m_deadlock1TurnDistMin = _node.Read("deadlock1TurnDistMin",false,3.75,0.0,100000.0,"For deadlock1 \
       resolution, how far along an arc to initially turn, at min");
-  m_deadlock1TurnDistMax = _node.numberXMLParameter("deadlock1TurnDistMax",false,7.50,0.0,100000.0,"For deadlock1 \
+  m_deadlock1TurnDistMax = _node.Read("deadlock1TurnDistMax",false,7.50,0.0,100000.0,"For deadlock1 \
       resolution, how far along an arc to intially turn, at most");
-  m_deadlock1TowardGoalDistMin = _node.numberXMLParameter("deadlock1TowardGoalDistMin",false,2.5,0.0,100000.0,"For \
+  m_deadlock1TowardGoalDistMin = _node.Read("deadlock1TowardGoalDistMin",false,2.5,0.0,100000.0,"For \
       deadlock1 resolution, how far to travel forward after turning, at min");
-  m_deadlock1TowardGoalDistMax = _node.numberXMLParameter("deadlock1TowardGoalDistMax",false,12.25,0.0,100000.0,"For \
+  m_deadlock1TowardGoalDistMax = _node.Read("deadlock1TowardGoalDistMax",false,12.25,0.0,100000.0,"For \
       deadlock1 resolution, how far to travel forward after turning, at most");
-  m_deadlock1TurnSteerMin = _node.numberXMLParameter("deadlock1TurnSteerMin",false,0.05,0.0,0.22,"For \
+  m_deadlock1TurnSteerMin = _node.Read("deadlock1TurnSteerMin",false,0.05,0.0,0.22,"For \
       deadlock1 resolution, minimum absolute steering angle for the turn.");
-  m_deadlock1TurnSteerMax = _node.numberXMLParameter("deadlock1TurnSteerMax",false,0.20,0.0,0.22,"For \
+  m_deadlock1TurnSteerMax = _node.Read("deadlock1TurnSteerMax",false,0.20,0.0,0.22,"For \
       deadlock1 resolution, maximum absolute steering angle for the turn.");
 
-  m_deadlock2DistMin = _node.numberXMLParameter("deadlock2DistMin",false,12.5,0.0,100000.0,"For deadlock2 \
+  m_deadlock2DistMin = _node.Read("deadlock2DistMin",false,12.5,0.0,100000.0,"For deadlock2 \
       resolution, how far at minimum to plan toward a goal");
-  m_deadlock2DistMax = _node.numberXMLParameter("deadlock2DistMax",false,22.5,0.0,100000.0,"For deadlock2 \
+  m_deadlock2DistMax = _node.Read("deadlock2DistMax",false,22.5,0.0,100000.0,"For deadlock2 \
       resolution, how far at most to plan toward a goal");
-  m_deadlock2Divisor = _node.numberXMLParameter("deadlock2Divisor",false,0.5,0.0,5.0,"For deadlock2 \
+  m_deadlock2Divisor = _node.Read("deadlock2Divisor",false,0.5,0.0,5.0,"For deadlock2 \
       resolution, maximum amount to divide agent's max steering angle by");
 
-  m_pullInForwardProbability = _node.numberXMLParameter("pullInForwardProbability",false,0.75,0.0,1.0,"For \
+  m_pullInForwardProbability = _node.Read("pullInForwardProbability",false,0.75,0.0,1.0,"For \
       pulling into a parking space, probability agent will attempt to pull in forward (not back in).");
 
-  m_pullInNormalBackwardProbability = _node.numberXMLParameter("pullInNormalBackwardProbability",false,0.5,0.0,1.0,"For \
+  m_pullInNormalBackwardProbability = _node.Read("pullInNormalBackwardProbability",false,0.5,0.0,1.0,"For \
       pulling into a parking space, if agent decides to back in, probability it will go straight forward and \
       then back into the space in one shot versus turning in the opposite direction of the space and then backing in");
-  m_pullInSteerMin = _node.numberXMLParameter("pullInSteerMin", false, 0.10, 0.0, 0.22, "For pulling into a parking \
+  m_pullInSteerMin = _node.Read("pullInSteerMin", false, 0.10, 0.0, 0.22, "For pulling into a parking \
       spot, we may turn at our maximum or randomly choose to turn at a value less than that. This is the minimum.");
 }//end ParseXML
 

@@ -39,14 +39,14 @@ class Query : public MapEvaluatorMethod<MPTraits> {
         const vector<string>& _connLabels = vector<string>(),
         bool _writePaths = true);
     Query(const CfgType& _start, const CfgType& _goal, bool _writePaths = true);
-    Query(MPProblemType* _problem, XMLNodeReader& _node, bool _warn = true);
+    Query(MPProblemType* _problem, XMLNode& _node);
     Query(MPProblemType* _problem, CfgType _start, CfgType _goal,
         const vector<string>& _connectorLabels=vector<string>(),
         bool _deleteNodes=true, string _searchAlg="astar",
         bool _fullRecreatePath=false);
     virtual ~Query() { }
 
-    void ParseXML(XMLNodeReader& _node);
+    void ParseXML(XMLNode& _node);
     virtual void Print(ostream& _os) const;
     vector<CfgType>& GetQuery() { return m_query; }
     vector<CfgType>& GetPath() { return m_path; }
@@ -89,7 +89,7 @@ class Query : public MapEvaluatorMethod<MPTraits> {
   private:
     //initialize variable defaults
     void Initialize();
-    void SetSearchAlgViaString(string _alg);
+    void SetSearchAlgViaString(string _alg, string _where);
 
     vector<VID> m_pathVIDs;     // Stores path nodes for easy reference during smoothing
     vector<VID> m_toBeDeleted;  // Nodes to be deleted if m_deleteNodes is enabled.
@@ -127,7 +127,7 @@ Query(bool _deleteNodes, string _searchAlg,
   m_fullRecreatePath(_fullRecreatePath),
   m_pathModifierLabel(_pathModifierLabel), m_writePaths(false) {
     this->SetName("Query");
-    SetSearchAlgViaString(_searchAlg);
+    SetSearchAlgViaString(_searchAlg, WHERE);
   }
 
 // Reads in query from a file
@@ -153,12 +153,10 @@ Query(const CfgType& _start, const CfgType& _goal, bool _writePaths) :
 // Constructor with XML
 template<class MPTraits>
 Query<MPTraits>::
-Query(MPProblemType* _problem, XMLNodeReader& _node, bool _warn) :
+Query(MPProblemType* _problem, XMLNode& _node) :
   MapEvaluatorMethod<MPTraits>(_problem, _node) {
     Initialize();
     ParseXML(_node);
-    if(_warn)
-      _node.warnUnrequestedAttributes();
     ReadQuery(m_queryFile);
   }
 
@@ -170,7 +168,7 @@ Query(MPProblemType* _problem, CfgType _start, CfgType _goal,
     string _searchAlg, bool _fullRecreatePath) :
   m_deleteNodes(_deleteNodes), m_fullRecreatePath(_fullRecreatePath) {
 
-    SetSearchAlgViaString(_searchAlg);
+    SetSearchAlgViaString(_searchAlg, WHERE);
     m_nodeConnectionLabels=_connectorLabels;
     m_query.push_back(_start);
     m_query.push_back(_goal);
@@ -180,30 +178,27 @@ Query(MPProblemType* _problem, CfgType _start, CfgType _goal,
 template<class MPTraits>
 void
 Query<MPTraits>::
-ParseXML(XMLNodeReader& _node) {
-  m_queryFile = _node.stringXMLParameter("queryFile", true, "", "Query filename");
-  m_lpLabel = _node.stringXMLParameter("lpLabel", true, "", "Local planner method");
-  m_dmLabel = _node.stringXMLParameter("dmLabel", false, "", "Distance metric method");
-  string searchAlg = _node.stringXMLParameter("graphSearchAlg", false, "dijkstras", "Graph search algorithm");
-  m_deleteNodes = _node.boolXMLParameter("deleteNodes", false, false, "Whether or not to delete start and goal from roadmap");
-  m_fullRecreatePath = _node.boolXMLParameter("fullRecreatePath", false, true, "Whether or not to recreate path");
-  m_pathModifierLabel = _node.stringXMLParameter("pmLabel", false, "", "Path modifier method");
-  m_writePaths = _node.boolXMLParameter("writePaths", false, true, "Write path output to file?");
+ParseXML(XMLNode& _node) {
+  m_queryFile = _node.Read("queryFile", true, "", "Query filename");
+  m_lpLabel = _node.Read("lpLabel", true, "", "Local planner method");
+  m_dmLabel = _node.Read("dmLabel", false, "", "Distance metric method");
+  string searchAlg = _node.Read("graphSearchAlg", false, "dijkstras", "Graph search algorithm");
+  m_deleteNodes = _node.Read("deleteNodes", false, false, "Whether or not to delete start and goal from roadmap");
+  m_fullRecreatePath = _node.Read("fullRecreatePath", false, true, "Whether or not to recreate path");
+  m_pathModifierLabel = _node.Read("pmLabel", false, "", "Path modifier method");
+  m_writePaths = _node.Read("writePaths", false, true, "Write path output to file?");
 
-  for(XMLNodeReader::childiterator citr = _node.children_begin(); citr != _node.children_end(); ++citr) {
-    if(citr->getName() == "NodeConnectionMethod") {
-      m_nodeConnectionLabels.push_back(citr->stringXMLParameter("method", true, "", "Node connection method"));
-      citr->warnUnrequestedAttributes();
-    }
-  }
+  for(auto& child : _node)
+    if(child.Name() == "NodeConnectionMethod")
+      m_nodeConnectionLabels.push_back(
+          child.Read("method", true, "", "Node connection method"));
 
-  if(m_nodeConnectionLabels.empty()) {
-    cerr << "\n\nWARNING:: in Query XML constructor:: no node connection methods specified. Default will be used." << endl;
-  }
+  if(m_nodeConnectionLabels.empty())
+    throw ParseException(_node.Where(), "Must specify at least one connector.");
 
   // Ignore case for graph search algorithm
   transform(searchAlg.begin(), searchAlg.end(), searchAlg.begin(), ::tolower);
-  SetSearchAlgViaString(searchAlg);
+  SetSearchAlgViaString(searchAlg, _node.Where());
 }
 
 template<class MPTraits>
@@ -306,7 +301,7 @@ Query<MPTraits>::PerformQuery(const CfgType& _start, const CfgType& _goal, Roadm
   if(m_nodeConnectionLabels.empty())
     m_nodeConnectionLabels.push_back("");
 
-  for(auto label : m_nodeConnectionLabels)
+  for(auto&  label : m_nodeConnectionLabels)
     connectionMethods.push_back(this->GetConnector(label));
 
   // Add start and goal to roadmap (if not already there)
@@ -344,7 +339,7 @@ Query<MPTraits>::PerformQuery(const CfgType& _start, const CfgType& _goal, Roadm
       if(this->m_debug)
         cout << "*Q* Connecting start to ccIt[" << distance(ccsBegin, ccIt)+1 << "]" << endl;
 
-      for(auto connector : connectionMethods)
+      for(auto&  connector : connectionMethods)
         connector->Connect(_rdmp, sVID, cc.begin(), cc.end());
     }
 
@@ -364,7 +359,7 @@ Query<MPTraits>::PerformQuery(const CfgType& _start, const CfgType& _goal, Roadm
       if(this->m_debug)
         cout << "*Q* Connecting goal to ccIt[" << distance(ccsBegin, ccIt)+1 << "]" << endl;
 
-      for(auto connector : connectionMethods)
+      for(auto&  connector : connectionMethods)
         connector->Connect(_rdmp, gVID, cc.begin(), cc.end());
     }
 
@@ -544,15 +539,15 @@ Query<MPTraits>::Initialize() {
 
 template<class MPTraits>
 void
-Query<MPTraits>::SetSearchAlgViaString(string _alg) {
+Query<MPTraits>::
+SetSearchAlgViaString(string _alg, string _where) {
   if(_alg == "dijkstras")
     m_searchAlg = DIJKSTRAS;
   else if(_alg == "astar")
     m_searchAlg = ASTAR;
-  else {
-    cout << "Error: invalid graphSearchAlg; valid choices are: \"dijkstras\", \"astar\". Exiting." << endl;
-    exit(1);
-  }
+  else
+    throw ParseException(_where, "InValid graphSearchAlg '" + _alg +
+        "'. Choices are 'dijkstras' or 'astar'.");
 }
 
 #endif

@@ -10,12 +10,12 @@ ClearanceFeature::ClearanceFeature():MPFeature(){}
 
 ClearanceFeature::ClearanceFeature(string _vc):MPFeature(), m_vc(_vc) {}
 
-ClearanceFeature::ClearanceFeature(XMLNodeReader& in_Node, MPProblem* in_pProblem):MPFeature(in_Node, in_pProblem){
+ClearanceFeature::ClearanceFeature(XMLNode& in_Node, MPProblem* in_pProblem):MPFeature(in_Node, in_pProblem){
   ParseXML(in_Node);
 }
 
-void ClearanceFeature::ParseXML(XMLNodeReader& in_Node){
-  m_vc = in_Node.stringXMLParameter("vc_method", true, "", "CD Library");
+void ClearanceFeature::ParseXML(XMLNode& in_Node){
+  m_vc = in_Node.Read("vc_method", true, "", "CD Library");
   in_Node.warnUnrequestedAttributes();
 }
 
@@ -42,13 +42,13 @@ CSpaceClearanceFeature::CSpaceClearanceFeature():MPFeature(){}
 
 CSpaceClearanceFeature::CSpaceClearanceFeature(string vc, string dm) : MPFeature(), m_vc(vc), m_dm(dm) {};
 
-CSpaceClearanceFeature::CSpaceClearanceFeature(XMLNodeReader& in_Node, MPProblem* in_pProblem):MPFeature(in_Node, in_pProblem){
+CSpaceClearanceFeature::CSpaceClearanceFeature(XMLNode& in_Node, MPProblem* in_pProblem):MPFeature(in_Node, in_pProblem){
   ParseXML(in_Node);
 }
 
-void CSpaceClearanceFeature::ParseXML(XMLNodeReader& in_Node){
-  m_vc = in_Node.stringXMLParameter("vc_method", true, "", "CD Library");
-  m_dm = in_Node.stringXMLParameter("distance_metric", true, "", "Distance Metric");
+void CSpaceClearanceFeature::ParseXML(XMLNode& in_Node){
+  m_vc = in_Node.Read("vc_method", true, "", "CD Library");
+  m_dm = in_Node.Read("distance_metric", true, "", "Distance Metric");
   in_Node.warnUnrequestedAttributes();
 }
 

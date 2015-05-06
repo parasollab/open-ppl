@@ -41,10 +41,10 @@ class UAStrategy : public MPStrategyMethod {
       m_hold = cont.m_hold;
       m_CurrentIteration = cont.m_CurrentIteration;
    }
-   UAStrategy(XMLNodeReader& in_Node, MPProblem* in_pProblem);
+   UAStrategy(XMLNode& in_Node, MPProblem* in_pProblem);
    virtual ~UAStrategy(){}
 
-   virtual void ParseXML(XMLNodeReader& in_Node);
+   virtual void ParseXML(XMLNode& in_Node);
 
    virtual void Initialize();
    virtual void Run();

@@ -21,13 +21,12 @@ class HopLimitNF : public NeighborhoodFinderMethod<MPTraits> {
         this->m_nfType = OTHER;
       }
 
-    HopLimitNF(MPProblemType* _problem, XMLNodeReader& _node) :
+    HopLimitNF(MPProblemType* _problem, XMLNode& _node) :
       NeighborhoodFinderMethod<MPTraits>(_problem, _node) {
         this->SetName("HopLimitNF");
         this->m_nfType = OTHER;
-        m_h = _node.numberXMLParameter("hoplimit", true, MAX_INT, 1, MAX_INT, "Hop Limit");
-        m_nfLabel = _node.stringXMLParameter("nfLabel", true, "default", "Neighbor Finder Method");
-        _node.warnUnrequestedAttributes();
+        m_h = _node.Read("hoplimit", true, MAX_INT, 1, MAX_INT, "Hop Limit");
+        m_nfLabel = _node.Read("nfLabel", true, "default", "Neighbor Finder Method");
       }
 
     virtual void Print(ostream& _os) const {

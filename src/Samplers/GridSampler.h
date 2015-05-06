@@ -22,10 +22,10 @@ class GridSampler : public SamplerMethod<MPTraits> {
         map<size_t, size_t> _numPoints = map<size_t, size_t>(),
         bool _useBoundary  = true);
 
-    GridSampler(MPProblemType* _problem, XMLNodeReader& _node);
+    GridSampler(MPProblemType* _problem, XMLNode& _node);
 
     // Reads XML
-    void ParseXML(XMLNodeReader& _node);
+    void ParseXML(XMLNode& _node);
 
     // Prints options
     virtual void Print(ostream& _os) const;
@@ -56,7 +56,7 @@ GridSampler(string _vcm, map<size_t, size_t> _numPoints, bool _useBoundary)
 
 template<class MPTraits>
 GridSampler<MPTraits>::
-GridSampler(MPProblemType* _problem, XMLNodeReader& _node) :
+GridSampler(MPProblemType* _problem, XMLNode& _node) :
   SamplerMethod<MPTraits>(_problem, _node) {
     this->SetName("GridSampler");
     ParseXML(_node);
@@ -66,31 +66,22 @@ GridSampler(MPProblemType* _problem, XMLNodeReader& _node) :
 template<class MPTraits>
 void
 GridSampler<MPTraits>::
-ParseXML(XMLNodeReader& _node) {
+ParseXML(XMLNode& _node) {
 
   // Read grid data and store in m_numPoints
-  for(XMLNodeReader::childiterator citr =_node.children_begin();
-      citr != _node.children_end(); citr++) {
-    if(citr->getName() == "Dimension") {
-      size_t points = citr->numberXMLParameter("points", true, 10, 0,
+  for(auto& child : _node) {
+    if(child.Name() == "Dimension") {
+      size_t points = child.Read("points", true, 10, 0,
           MAX_INT, "Number of grid points, excluding min and max");
-      size_t index = citr->numberXMLParameter("index", true, 0, 0, MAX_INT,
+      size_t index = child.Read("index", true, 0, 0, MAX_INT,
           "Index in bounding box");
       m_numPoints[index] = points;
-
-      citr->warnUnrequestedAttributes();
     }
-    else
-      citr->warnUnknownNode();
   }
 
-  // Read data to m_vcLabel and m_useBBX
-  m_vcLabel = _node.stringXMLParameter("vcLabel", true, "",
-      "Validity test method");
-  m_useBoundary = _node.boolXMLParameter("useBBX", true, false,
+  m_vcLabel = _node.Read("vcLabel", true, "", "Validity test method");
+  m_useBoundary = _node.Read("useBBX", true, false,
       "Use bounding box as obstacle");
-
-  _node.warnUnrequestedAttributes();
 }
 
 // Prints options
@@ -102,9 +93,8 @@ Print(ostream& _os) const {
   _os << "\tvcLabel = " << m_vcLabel << endl;
   _os << "\tuseBoundary = " << m_useBoundary << endl;
   _os << "\tnumPoints (index, points):" << endl;
-  for(map<size_t, size_t>::const_iterator it = m_numPoints.begin();
-      it != m_numPoints.end(); it++)
-    _os << "\t\t" << it->first << ", " << it->second << endl;
+  for(auto& dim : m_numPoints)
+    _os << "\t\t" << dim.first << ", " << dim.second << endl;
 }
 
 // Attempts to sample, bool value is not working, it just return true at the end.
@@ -119,7 +109,7 @@ Sampler(CfgType& _cfg, shared_ptr<Boundary> _boundary,
 
   //Calculate total number of cfg to be created
   size_t totalCell = 1;
-  for(auto num : m_numPoints) {
+  for(auto&  num : m_numPoints) {
     totalCell = totalCell * num.second;
   }
   //Generate all the points in the grid for the asked dimensions
@@ -129,7 +119,7 @@ Sampler(CfgType& _cfg, shared_ptr<Boundary> _boundary,
     int dimSize = 1;
     //Get the cummulative sizes of the dimensions required.
     //Multiply the size of the n first dimensions and each time use one more dim.
-    for(auto num : m_numPoints) {
+    for(auto&  num : m_numPoints) {
       int index = num.first;
       int sizee = num.second;
       dimSize = dimSize * sizee;
@@ -143,7 +133,7 @@ Sampler(CfgType& _cfg, shared_ptr<Boundary> _boundary,
     GetRealLocation(locations, coordinates, _boundary);
 
     //Update the DoF values of the point generated.
-    for(auto location : locations)
+    for(auto&  location : locations)
       _cfg[location.first] = location.second;
 
     // Is _cfg a valid configuration?
@@ -214,7 +204,7 @@ GridSampler<MPTraits>::
 GetRealLocation(map<size_t,double>& _locations, map<size_t,size_t> _coordinates,
     shared_ptr<Boundary>  _boundary) {
 
-  for(auto num : m_numPoints) {
+  for(auto&  num : m_numPoints) {
     int index = num.first;
     int numPoints = num.second;
 

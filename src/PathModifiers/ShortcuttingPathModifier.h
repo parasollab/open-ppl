@@ -21,9 +21,9 @@ class ShortcuttingPathModifier : public PathModifierMethod<MPTraits> {
 
     ShortcuttingPathModifier(const string& _dmLabel = "",
         const string& _lpLabel = "");
-    ShortcuttingPathModifier(MPProblemType* _problem, XMLNodeReader& _node);
+    ShortcuttingPathModifier(MPProblemType* _problem, XMLNode& _node);
 
-    virtual void ParseXML(XMLNodeReader& _node);
+    virtual void ParseXML(XMLNode& _node);
     virtual void Print(ostream& _os) const;
 
     bool ModifyImpl(vector<CfgType>& _path, vector<CfgType>& _newPath);
@@ -41,16 +41,17 @@ ShortcuttingPathModifier(const string& _dmLabel, const string& _lpLabel) :
 
 template<class MPTraits>
 ShortcuttingPathModifier<MPTraits>::
-ShortcuttingPathModifier(MPProblemType* _problem, XMLNodeReader& _node) :
+ShortcuttingPathModifier(MPProblemType* _problem, XMLNode& _node) :
   PathModifierMethod<MPTraits>(_problem, _node) {
     this->SetName("ShortcuttingPathModifier");
+    ParseXML(_node);
   }
 
 template<class MPTraits>
 void
 ShortcuttingPathModifier<MPTraits>::
-ParseXML(XMLNodeReader& _node) {
-  m_lpLabel = _node.stringXMLParameter("lpLabel", true, "", "Local planner method");
+ParseXML(XMLNode& _node) {
+  m_lpLabel = _node.Read("lpLabel", true, "", "Local planner method");
 }
 
 template<class MPTraits>

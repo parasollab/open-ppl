@@ -17,7 +17,7 @@ class EuclideanDistance : public MinkowskiDistance<MPTraits> {
     typedef typename MPTraits::MPProblemType MPProblemType;
 
     EuclideanDistance(bool _normalize = false);
-    EuclideanDistance(MPProblemType* _problem, XMLNodeReader& _node, bool _warn = true);
+    EuclideanDistance(MPProblemType* _problem, XMLNode& _node);
 };
 
 template<class MPTraits>
@@ -29,17 +29,15 @@ EuclideanDistance(bool _normalize) :
 
 template<class MPTraits>
 EuclideanDistance<MPTraits>::
-EuclideanDistance(MPProblemType* _problem, XMLNodeReader& _node, bool _warn) :
-  MinkowskiDistance<MPTraits>(_problem, _node, false, false) {
+EuclideanDistance(MPProblemType* _problem, XMLNode& _node) :
+  MinkowskiDistance<MPTraits>(_problem, _node, false) {
     this->SetName("Euclidean");
 
     this->m_r1 = 2;
     this->m_r2 = 2;
     this->m_r3 = 1.0/2;
-    this->m_normalize = _node.boolXMLParameter("normalize", false, false, "flag if position dof should be normalized by environment diagonal");
-
-    if(_warn)
-      _node.warnUnrequestedAttributes();
+    this->m_normalize = _node.Read("normalize", false, false,
+        "flag if position dof should be normalized by environment diagonal");
 }
 
 #endif

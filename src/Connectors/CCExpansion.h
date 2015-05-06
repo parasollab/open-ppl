@@ -51,7 +51,7 @@ class CCExpansion: public ConnectorMethod<MPTraits> {
     //////////////////////////////////
     CCExpansion(MPProblemType* _problem = NULL, string _lp = "",
         string _nf = "", string _vc = "");
-    CCExpansion(MPProblemType* _problem, XMLNodeReader& _node);
+    CCExpansion(MPProblemType* _problem, XMLNode& _node);
 
     //////////////////////////////////////
     /* Print Method */
@@ -61,7 +61,7 @@ class CCExpansion: public ConnectorMethod<MPTraits> {
     //////////////////////////////////////
     /* XML Parser */
     //////////////////////////////////////
-    virtual void ParseXML(XMLNodeReader& _node);
+    virtual void ParseXML(XMLNode& _node);
 
     //////////////////////////////////////
     /* Wrapper Connect() Method */
@@ -207,7 +207,7 @@ CCExpansion(MPProblemType* _problem, string _lp, string _nf, string _vc) :
 ///////////////////////////////////////////////////////////////////////////////
 template<class MPTraits>
 CCExpansion<MPTraits>::
-CCExpansion(MPProblemType* _problem, XMLNodeReader& _node) :
+CCExpansion(MPProblemType* _problem, XMLNode& _node) :
   ConnectorMethod<MPTraits>(_problem,_node),
   m_medialAxisUtility(_problem,_node){
     this->SetName("CCExpansion");
@@ -242,25 +242,25 @@ Print(ostream& _os) const {
 template <class MPTraits>
 void
 CCExpansion<MPTraits>::
-ParseXML(XMLNodeReader& _node){
-  m_kNodes = _node.numberXMLParameter("kNodes",true,5,0,1000,
+ParseXML(XMLNode& _node){
+  m_kNodes = _node.Read("kNodes",true,5,0,1000,
       "Max number of expansion node candidates");
-  m_nIterations = _node.numberXMLParameter("nIter",true,1,0,1000,
+  m_nIterations = _node.Read("nIter",true,1,0,1000,
       "Max number of expansion iterations");
-  m_maxStepDistance = _node.numberXMLParameter("maxStepDist",true,1.0,1.0,
+  m_maxStepDistance = _node.Read("maxStepDist",true,1.0,1.0,
       1000.0,"Max Distance traveled per iteration");
-  m_minStepDistance = _node.numberXMLParameter("minStepDist",true,0.0,0.0,
+  m_minStepDistance = _node.Read("minStepDist",true,0.0,0.0,
       1000.0,"Min Distance traveled per iteration");
-  m_maxFailedExpansions = _node.numberXMLParameter("maxFails",true,10,0,1000,
+  m_maxFailedExpansions = _node.Read("maxFails",true,10,0,1000,
       "Max number of failed expansions");
-  m_addIntermediate = ((_node.stringXMLParameter("addIntermediate",true,"false",
+  m_addIntermediate = ((_node.Read("addIntermediate",true,"false",
           "Always add intermediate nodes?") == "true") ? true : false);
-  m_dmLabel = _node.stringXMLParameter("dmLabel",true,"euclidean",
+  m_dmLabel = _node.Read("dmLabel",true,"euclidean",
       "VC for RRTExpand.");
-  m_vcLabel = _node.stringXMLParameter("vcLabel",true,"cd2",
+  m_vcLabel = _node.Read("vcLabel",true,"cd2",
       "Distance Metric for RRTExpand.");
 
-  string nodePolicy = _node.stringXMLParameter("nodeChoice",true, "RANDOM",
+  string nodePolicy = _node.Read("nodeChoice",true, "RANDOM",
       "Choice of Expansion Nodes");
   std::transform(nodePolicy.begin(), nodePolicy.end(), nodePolicy.begin(),
       ::toupper);
@@ -271,10 +271,10 @@ ParseXML(XMLNodeReader& _node){
   else if(nodePolicy == "DIFFICULT")
     m_nodeSelectionOption = m_D;
   else
-    throw ParseException(WHERE, "nodeChoice \"" + nodePolicy +
+    throw ParseException(_node.Where(), "nodeChoice \"" + nodePolicy +
         "\" is undefined. Use one of \"Random\", \"Farthest\", or \"Difficult\".");
 
-  string expansionBias = _node.stringXMLParameter("expansionMethod",true,
+  string expansionBias = _node.Read("expansionMethod",true,
       "RandomExpand","Expansion Strategy");
   std::transform(expansionBias.begin(), expansionBias.end(),
       expansionBias.begin(), ::toupper);
@@ -287,7 +287,7 @@ ParseXML(XMLNodeReader& _node){
   else if(expansionBias == "MEDIALAXISEXPAND")
     m_expansionMethod = m_MAE;
   else
-    throw ParseException(WHERE, "expansionMethod \"" + expansionBias +
+    throw ParseException(_node.Where(), "expansionMethod \"" + expansionBias +
         "\" is undefined. Use one of \"RandomExpand\", \"ExpandTo\", \"ExpandFrom\", or \"MedialAxisExpand\".");
 }
 

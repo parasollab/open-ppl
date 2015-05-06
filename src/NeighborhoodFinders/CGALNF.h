@@ -43,11 +43,11 @@ class CGALNF: public NeighborhoodFinderMethod {
         SetName("CGALNF");
       }
 
-    CGALNF(XMLNodeReader& _node, MPProblem* _problem) :
+    CGALNF(XMLNode& _node, MPProblem* _problem) :
       NeighborhoodFinderMethod(_node, _problem), m_tmpTree(NULL) {
         SetName("CGALNF");
-        m_epsilon = _node.numberXMLParameter("epsilon", false, 0.0, 0.0, 100.0, "Epsilon value for CGAL");
-        m_useScaling = _node.boolXMLParameter("useScaling", false, false, "Bounding-box scaling used on pos DOFs");
+        m_epsilon = _node.Read("epsilon", false, 0.0, 0.0, 100.0, "Epsilon value for CGAL");
+        m_useScaling = _node.Read("useScaling", false, false, "Bounding-box scaling used on pos DOFs");
         m_curRoadmapVersion = -1;
 
         shared_ptr<Boundary> b = _problem->GetEnvironment()->GetBoundary();

@@ -26,7 +26,7 @@ class CCsConnector: public ConnectorMethod<MPTraits> {
     typedef typename MPProblemType::LocalPlannerPointer LocalPlannerPointer;
 
     CCsConnector(string _nfLabel = "", string _lpLabel = "", size_t _k = 5);
-    CCsConnector(MPProblemType* _problem, XMLNodeReader& _node);
+    CCsConnector(MPProblemType* _problem, XMLNode& _node);
 
     virtual void Print(ostream& _os) const;
 
@@ -64,10 +64,10 @@ CCsConnector<MPTraits>::CCsConnector(string _nfLabel, string _lpLabel, size_t _k
   }
 
 template<class MPTraits>
-CCsConnector<MPTraits>::CCsConnector(MPProblemType* _problem, XMLNodeReader& _node)
+CCsConnector<MPTraits>::CCsConnector(MPProblemType* _problem, XMLNode& _node)
   : ConnectorMethod<MPTraits>(_problem, _node) {
     this->SetName("CCsConnector");
-    m_k = _node.numberXMLParameter("k", true, 5,0,1000, "k closest CCs");
+    m_k = _node.Read("k", true, 5, 0, 1000, "k closest CCs");
   }
 
 template<class MPTraits>

@@ -7,10 +7,10 @@ class SuccessiveClustering : public PartitioningMethod
 {
  public:
   SuccessiveClustering();
-  SuccessiveClustering(XMLNodeReader& in_Node, MPProblem * in_pProblem);
+  SuccessiveClustering(XMLNode& in_Node, MPProblem * in_pProblem);
   ~SuccessiveClustering();
 
-  virtual void ParseXML(XMLNodeReader& in_Node);
+  virtual void ParseXML(XMLNode& in_Node);
 
   virtual vector<Partition*> MakePartitions(Partition &p);
 

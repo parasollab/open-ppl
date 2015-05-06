@@ -20,7 +20,7 @@ class TraceMAPush : public TraceObstacle<MPTraits> {
 
     TraceMAPush(const string& _dmLabel = "", const string& _vcLabel = "",
         double _delta = 1.0);
-    TraceMAPush(MPProblemType* _problem, XMLNodeReader& _node);
+    TraceMAPush(MPProblemType* _problem, XMLNode& _node);
 
     virtual bool Extend(const CfgType& _near, const CfgType& _dir,
         CfgType& _new, LPOutput<MPTraits>& _lpOutput);
@@ -39,7 +39,7 @@ TraceMAPush(const string& _dmLabel,
 
 template<class MPTraits>
 TraceMAPush<MPTraits>::
-TraceMAPush(MPProblemType* _problem, XMLNodeReader& _node) :
+TraceMAPush(MPProblemType* _problem, XMLNode& _node) :
   TraceObstacle<MPTraits>(_problem, _node),
   m_medialAxisUtility(_problem, _node) {
     this->SetName("TraceMAPush");

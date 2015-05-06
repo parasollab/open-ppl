@@ -1,5 +1,5 @@
-#ifndef IOUTILS_H_
-#define IOUTILS_H_
+#ifndef IO_UTILS_H_
+#define IO_UTILS_H_
 
 #ifndef TIXML_USE_STL
 #define TIXML_USE_STL
@@ -8,6 +8,7 @@
 #include <cctype>
 #include <string>
 #include <vector>
+#include <unordered_set>
 #include <algorithm>
 #include <ostream>
 #include <fstream>
@@ -18,184 +19,259 @@ using namespace std;
 
 #include "PMPLExceptions.h"
 
-class Environment;
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup Utilities
+/// @brief Wrapper class for XML handeling
+///
+/// This is a wrapper class for XML handeling.  It is READONLY and supports only
+/// trivial XML parsing.  Wrapping up TinyXML, it only supports TiXmlElements;
+/// this is because this is our only need for intput XML files - for now.
+////////////////////////////////////////////////////////////////////////////////
+class XMLNode {
+  public:
+    typedef vector<XMLNode>::iterator iterator;
 
-///////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////
-//
-//
-//  XML Wrapper
-//
-//
-///////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////
+    /// @param _filename XML Filename
+    /// @param _desiredNode Desired XML Node to make root of tree
+    ///
+    /// Will throw ParseException when \p _desiredNode cannot be found of
+    /// \p _filename is poorly formed input
+    XMLNode(const string& _filename, const string& _desiredNode);
 
-/* class XMLNode
-   This is a wrapper class for XML handeling.  It is READONLY
-   and supports only trivial XML parsing.  Wrapping up TinyXML,
-   it only supports TiXmlElements; this is because this is our
-   only need for intput XML files.
+    ////////////////////////////////////////////////////////////////////////////
+    /// @return Name of XMLNode
+    const string& Name() const {return m_node->ValueStr();}
+    ////////////////////////////////////////////////////////////////////////////
+    /// @return Name of XML file
+    const string& Filename() const {return m_filename;}
 
-   If for some reason you really really need the underlying TiXMLNode,
-   then make your class a friend of this one.  Adding the neccessary
-   functionality here is a better solution!
+    ////////////////////////////////////////////////////////////////////////////
+    /// @return Iterator to first child
+    iterator begin();
+    ////////////////////////////////////////////////////////////////////////////
+    /// @return Iterator to end of children
+    iterator end();
 
-   \todo Testing for inproper int,float,double is still not good
-   things like int=3.5 or double=0.6q are accepted but truncated.
+    ////////////////////////////////////////////////////////////////////////////
+    /// @brief Read XML attribute
+    /// @tparam T Type of attribute
+    /// @param _name Name of attribute
+    /// @param _req Is attribute required
+    /// @param _default Default value of attribute
+    /// @param _min Minimum valud of attribute
+    /// @param _max Maximum valud of attribute
+    /// @param _desc Description of attribute
+    /// @return Value of attribute
+    ///
+    /// Reads XML attribute value with \p _name. If _req is specified and no
+    /// attribute is given, \p _default is returned, otherwise input value is
+    /// required to be in the range [\p _min, \p _max]. Otherwise, an error is
+    /// reported and \p _desc is shown to the user.
+    template<typename T>
+      T Read(const string& _name,
+          bool _req,
+          const T& _default,
+          const T& _min,
+          const T& _max,
+          const string& _desc);
 
-   Questions:  Should this ever terminate on fail?  or return -1?
-*/
-class XMLNodeReader {
-  /////////////////////////////////////////////////////////////////////////////
-  //  Public Methods
-  /////////////////////////////////////////////////////////////////////////////
-public:
-  typedef vector<XMLNodeReader>::iterator childiterator;
+    ////////////////////////////////////////////////////////////////////////////
+    /// @brief Read XML boolean attribute
+    /// @param _name Name of attribute
+    /// @param _req Is attribute required
+    /// @param _default Default value of attribute
+    /// @param _desc Description of attribute
+    /// @return Value of attribute
+    ///
+    /// Reads XML attribute value with \p _name. If _req is specified and no
+    /// attribute is given, \p _default is returned. Otherwise, an error is
+    /// reported and \p _desc is shown to the user.
+    bool Read(const string& _name,
+        bool _req,
+        bool _default,
+        const string& _desc);
 
-  // Constructor for XMLNodeReader
-  // param in_pnode the TiXmlNode this class wraps
-  explicit XMLNodeReader(TiXmlNode* _node, const string& _filename );
-
-  // This constructor takes as input a XML document and searches for a toplevel
-  // node by the name of in_desiredNode
-  //
-  // param in_fileName The XML filename to parse
-  // param in_desiredNode The top-level XML Node to return
-  explicit XMLNodeReader(const string& _filename, TiXmlDocument& _doc,
-                            const string& _desiredNode);
-
-
-  //Accessing Methods//
-  string getName() const;
-
-  // Returns true if XMLNode has a specific child
-  //
-  // param in_childName Name of child queried
-  bool hasChild(const string& _childName) const;
-
-  //WARNING: will terminate with msg if child doesn't exist,
-  //so its better to check outside!
-  XMLNodeReader getFirstChild(const string& _childName) ;
-
-
-  childiterator children_begin();
-
-  childiterator children_end();
-
-
-  template<typename T>
-  T numberXMLParameter(const string& _name,
-                        bool _req,
-                        const T& _default,
-                        const T& _min,
-                        const T& _max,
-                        const string& _desc) {
-    VerifyElement();
-    m_reqAttributes.push_back(_name);
-    T toReturn = T();
-    int qrReturn = m_node->ToElement()->QueryValueAttribute(_name,&toReturn);
-    if(qrReturn == TIXML_WRONG_TYPE) {
-      PrintAttrWrongType(_name,_desc);
-      exit(-1);
-    } else if(qrReturn == TIXML_NO_ATTRIBUTE && _req == true) {
-      PrintAttrMissing(_name, _desc);
-      exit(-1);
-    } else if(qrReturn == TIXML_NO_ATTRIBUTE && _req == false) {
-      toReturn = _default; //defaulting value b/c not found in XML file
-    } else if(qrReturn == TIXML_SUCCESS) {
-      if(toReturn < _min || toReturn > _max) {
-        PrintAttrInvalidBounds(_name, _desc, _min, _max);
-        exit(-1);
-      }
-    } else {
-       cerr << "num_XML_param::numberXMLParameter Logic Error!" << endl;
+    ////////////////////////////////////////////////////////////////////////////
+    /// @brief Read XML string attribute
+    /// @return Value of attribute
+    ///
+    /// Calls string version of function to avoid confusion with bool -> const
+    /// char* conversion in compile.
+    string Read(const string& _name,
+        bool _req,
+        const char* _default,
+        const string& _desc) {
+      return Read(_name, _req, string(_default), _desc);
     }
 
-    return toReturn;
-  }
+    ////////////////////////////////////////////////////////////////////////////
+    /// @brief Read XML string attribute
+    /// @param _name Name of attribute
+    /// @param _req Is attribute required
+    /// @param _default Default value of attribute
+    /// @param _desc Description of attribute
+    /// @return Value of attribute
+    ///
+    /// Reads XML attribute value with \p _name. If _req is specified and no
+    /// attribute is given, \p _default is returned. Otherwise, an error is
+    /// reported and \p _desc is shown to the user.
+    string Read(const string& _name,
+        bool _req,
+        const string& _default,
+        const string& _desc);
 
-  string stringXMLParameter(const string& _name,
-                                  bool _req,
-                                  const string& _default,
-                                  const string& _desc);
+    ////////////////////////////////////////////////////////////////////////////
+    /// @brief Report warnings for XML tree rooted at this node
+    /// @param _warningsAsErrors True will throw exceptions for warnings
+    ///
+    /// To be called after parsing phase. This will report warnings throughout
+    /// entire XML document. Should only be called on root XML node. Warnings to
+    /// be reported:
+    ///   - unknown/unparsed nodes
+    ///   - unrequested attribues
+    void WarnAll(bool _warningsAsErrors = false);
 
-  bool hasXMLParameter(const string& _name) ;
+    ////////////////////////////////////////////////////////////////////////////
+    /// @brief Generate string describing where the node is
+    /// @return String representing where node is
+    ///
+    /// To be used with PMPLExceptions, specifically ParseException. Gives
+    /// string with filename, row (line number), and column of XMLNode.
+    string Where() const;
 
-  bool boolXMLParameter(const string& _name, bool _req,
-                         bool _default, const string& _desc);
-  // Will output a warning to the user that XML Node
-  // contains extra attributes.  This could be a sign
-  // of a user typeof on an optional attribute.
-  void warnUnrequestedAttributes();
-
-  void warnUnknownNode() ;
-  //Verify this node is what is expected, will terminate on fail
-  void verifyName(const string& _name);
-
-  ostream& operator<< (ostream& _out) {
-    _out << *(this->m_node);
-    return _out;
-  }
-
-  bool operator==(const XMLNodeReader& _node) const {
-    return (m_node == _node.m_node) &&
-           (m_childBuilt == _node.m_childBuilt) &&
-           (m_children == _node.m_children) &&
-           (m_reqAttributes == _node.m_reqAttributes);
-  }
-
-  /////////////////////////////////////////////////////////////////////////////
-  //  Private Methods
-  /////////////////////////////////////////////////////////////////////////////
   private:
-  // Returns true if the XMLNode is an element.  Used for error checking,
-  // Elements are may carry attributes.
-  bool IsElement() const {
-    return (m_node->Type() == TiXmlNode::ELEMENT) ? true : false;
-  }
+    ////////////////////////////////////////////////////////////////////////////
+    /// @brief Generate XMLNodes for all children
+    ///
+    /// Builds the internal vector of children, used when iterating over
+    /// the children. This vector is only built with ELEMENT type nodes.
+    void BuildChildVector();
 
-  void VerifyElement() const ;
+    ////////////////////////////////////////////////////////////////////////////
+    /// @brief Private constructor for use within ::BuildChildVector
+    /// @param _node New TiXMLNode
+    /// @param _filename XML filename
+    /// @param _doc TiXmlDocument from tree's root node
+    XMLNode(TiXmlNode* _node, const string& _filename, TiXmlDocument* _doc);
 
-  void PrintAttrWrongType(const string& _name, const string& _desc) const ;
-  void PrintAttrMissing(const string& _name, const string& _desc) const;
-  template<typename T>
-  void PrintAttrInvalidBounds(const string& _name, const string& _desc,
-                              const T& _min, const T& _max) const {
-    cerr << "*************************************************************" << endl;
-    cerr << "XML Error:: Invalid Attribute Range" << endl;
-    cerr << "XML file:: " << m_xmlFilename << endl;
-    cerr << "Parent Node: " << getName() << ", Attribute: ";
-    cerr << _name << endl;
-    cerr << "Attribute Range: ["<< _min << ", " << _max << "]" << endl;
-    cerr << "Attribute Description: " << _desc << endl;
-    cerr << *m_node << endl;
-    cerr << "*************************************************************" << endl;
-  }
+    ////////////////////////////////////////////////////////////////////////////
+    /// @brief Return error report for attribute being the wrong type
+    /// @param _name Name of attribute
+    /// @param _desc Description of attribute
+    /// @return Error report
+    string AttrWrongType(const string& _name, const string& _desc) const;
 
-  void PrintMissingRequestedChild(const string& _childName);
-  // Builds the internal vector of children, used when iterating over
-  // the children.  This vector is only build with ELEMENT type nodes
-  void BuildChildVector();
+    ////////////////////////////////////////////////////////////////////////////
+    /// @brief Return error report for missing attribute
+    /// @param _name Name of attribute
+    /// @param _desc Description of attribute
+    /// @return Error report
+    string AttrMissing(const string& _name, const string& _desc) const;
 
-  friend ostream& operator<< (ostream& _out, const XMLNodeReader& _node);
+    ////////////////////////////////////////////////////////////////////////////
+    /// @brief Return error report for attribute being in an invalid range
+    /// @tparam T Type of attribute
+    /// @param _name Name of attribute
+    /// @param _desc Description of attribute
+    /// @param _min Minimum value of attribute
+    /// @param _max Maximum value of attribute
+    /// @return Error report
+    template<typename T>
+      string AttrInvalidBounds(const string& _name, const string& _desc,
+          const T& _min, const T& _max) const;
 
-  bool HasRequestedAttr(string _name);
-  /////////////////////////////////////////////////////////////////////////////
-  //  Protected Data
-  /////////////////////////////////////////////////////////////////////////////
-  protected:
+    ////////////////////////////////////////////////////////////////////////////
+    /// @brief Recursive function computing whether nodes have been accessed
+    void ComputeAccessed();
 
+    ////////////////////////////////////////////////////////////////////////////
+    /// @brief Recursive function reporting all unknown/unparsed nodes and
+    ///        unrequested attributes
+    /// @param[out] _anyWarnings Initially should be false, and stores whether
+    ///                          any warnings have been reported
+    void WarnAllRec(bool& _anyWarnings);
 
-  /////////////////////////////////////////////////////////////////////////////
-  //  Private Data
-  /////////////////////////////////////////////////////////////////////////////
-  private:
-  TiXmlNode* m_node;
-  bool m_childBuilt;
-  vector<XMLNodeReader> m_children;
-  vector<string> m_reqAttributes;
-  string m_xmlFilename;
+    ////////////////////////////////////////////////////////////////////////////
+    /// @brief Report unknown node warning to cerr
+    void WarnUnknownNode();
+
+    ////////////////////////////////////////////////////////////////////////////
+    /// @brief Report unrequested attributes to cerr
+    bool WarnUnrequestedAttributes();
+
+    ////////////////////////////////////////////////////////////////////////////
+    /// @brief Generate string describing where the node is
+    /// @param _f Filename
+    /// @param _l Line number
+    /// @param _c Column number
+    /// @param _name Report name of node
+    /// @return String representing where node is
+    ///
+    /// To be used with PMPLExceptions, specifically ParseException. Gives
+    /// string with filename, name, row (line number), and column of XMLNode.
+    string Where(const string& _f, int _l, int _c, bool _name = true) const;
+
+    TiXmlNode* m_node;          ///< TiXmlNode
+    bool m_childBuilt;          ///< Have children been parsed into nodes?
+    bool m_accessed;            ///< Has this node been accessed or not?
+    vector<XMLNode> m_children; ///< Children of node
+    unordered_set<string>
+      m_reqAttributes;          ///< Attributes which have been requested
+    string m_filename;          ///< XML Filename
+    TiXmlDocument* m_doc;       ///< Overall TiXmlDocument
 };
+
+template<typename T>
+T
+XMLNode::
+Read(const string& _name,
+    bool _req,
+    const T& _default,
+    const T& _min,
+    const T& _max,
+    const string& _desc) {
+  m_accessed = true;
+  m_reqAttributes.insert(_name);
+  T toReturn;
+  int qr = m_node->ToElement()->QueryValueAttribute(_name, &toReturn);
+  switch(qr) {
+    case TIXML_WRONG_TYPE:
+      throw ParseException(Where(), AttrWrongType(_name, _desc));
+      break;
+    case TIXML_NO_ATTRIBUTE:
+      {
+        if(_req)
+          throw ParseException(Where(), AttrMissing(_name, _desc));
+        else
+          toReturn = _default;
+        break;
+      }
+    case TIXML_SUCCESS:
+      {
+        if(toReturn < _min || toReturn > _max)
+          throw ParseException(Where(),
+              AttrInvalidBounds(_name, _desc, _min, _max));
+        break;
+      }
+    default:
+      throw RunTimeException(WHERE, "Logic shouldn't be able to reach this.");
+  }
+
+  return toReturn;
+}
+
+template<typename T>
+string
+XMLNode::
+AttrInvalidBounds(const string& _name, const string& _desc,
+    const T& _min, const T& _max) const {
+  ostringstream oss;
+  oss << "Invalid attribute range on '" << _name << "'." << endl;
+  oss << "\tAttribute description: " << _desc << "." << endl;
+  oss << "\tValid range: ["<< _min << ", " << _max << "].";
+  return oss.str();
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////

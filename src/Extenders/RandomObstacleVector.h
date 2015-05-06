@@ -20,7 +20,7 @@ class RandomObstacleVector : public BasicExtender<MPTraits> {
     RandomObstacleVector(const string& _dmLabel = "", 
         const string& _vcLabel = "", double _delta = 1.0, 
         bool _randomOrientation = true);
-    RandomObstacleVector(MPProblemType* _problem, XMLNodeReader& _node);
+    RandomObstacleVector(MPProblemType* _problem, XMLNode& _node);
 
     virtual bool Extend(const CfgType& _near, const CfgType& _dir,
         CfgType& _new, LPOutput<MPTraits>& _lpOutput);
@@ -35,7 +35,7 @@ RandomObstacleVector<MPTraits>::RandomObstacleVector(const string& _dmLabel,
 
 template<class MPTraits>
 RandomObstacleVector<MPTraits>::RandomObstacleVector(MPProblemType* _problem, 
-    XMLNodeReader& _node) :
+    XMLNode& _node) :
   BasicExtender<MPTraits>(_problem, _node) {
     this->SetName("RandomObstacleVector");
   }

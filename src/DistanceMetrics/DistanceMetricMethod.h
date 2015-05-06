@@ -22,7 +22,7 @@ class DistanceMetricMethod  : public MPBaseObject<MPTraits> {
     typedef typename MPTraits::MPProblemType MPProblemType;
 
     DistanceMetricMethod() {}
-    DistanceMetricMethod(MPProblemType* _problem, XMLNodeReader& _node, bool _warn = true);
+    DistanceMetricMethod(MPProblemType* _problem, XMLNode& _node);
     virtual ~DistanceMetricMethod() {}
 
     ////////////////////////////////////////////////////////////////////////////
@@ -60,10 +60,8 @@ class DistanceMetricMethod  : public MPBaseObject<MPTraits> {
 
 template<class MPTraits>
 DistanceMetricMethod<MPTraits>::
-DistanceMetricMethod(MPProblemType* _problem, XMLNodeReader& _node, bool _warn)
+DistanceMetricMethod(MPProblemType* _problem, XMLNode& _node)
   : MPBaseObject<MPTraits>(_problem, _node) {
-  if(_warn)
-    _node.warnUnrequestedAttributes();
 }
 
 template<class MPTraits>

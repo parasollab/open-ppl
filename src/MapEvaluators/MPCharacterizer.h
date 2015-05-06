@@ -13,11 +13,11 @@ template<typename CFG,typename WEIGHT>
 class NodeCharacterizerMethod : public MPBaseObject {
   public:
   typedef typename RoadmapGraph<CFG, WEIGHT>::VID VID;
-    NodeCharacterizerMethod(XMLNodeReader& _inNode, MPProblem* _inpProblem) :
+    NodeCharacterizerMethod(XMLNode& _inNode, MPProblem* _inpProblem) :
       MPBaseObject(_inNode,_inpProblem) { };
     NodeCharacterizerMethod() {};
     virtual ~NodeCharacterizerMethod() {}
-    virtual void ParseXML(XMLNodeReader& _inNode)=0;
+    virtual void ParseXML(XMLNode& _inNode)=0;
     virtual void Characterize()=0;
     virtual void Characterize(VID) {};
     virtual void Print(ostream& _out_os) const {}
@@ -32,16 +32,16 @@ class CCExpandCharacterizer : public NodeCharacterizerMethod<CFG,WEIGHT> {
 
     CCExpandCharacterizer(shared_ptr<DistanceMetricMethod> _dm) : dm(_dm) {}
 
-    CCExpandCharacterizer(XMLNodeReader& _inNode, MPProblem* _inpProblem) :
+    CCExpandCharacterizer(XMLNode& _inNode, MPProblem* _inpProblem) :
       NodeCharacterizerMethod<CFG,WEIGHT>(_inNode,_inpProblem) {
       ParseXML(_inNode);
-      string dm_label =_inNode.stringXMLParameter(string("dm_method"), false,
+      string dm_label =_inNode.Read(string("dm_method"), false,
                                     string("default"), string("Distance Metric Method"));
-      m_lp = _inNode.stringXMLParameter(string("lp_method"), false, string("default"), string("Local Planner"));
+      m_lp = _inNode.Read(string("lp_method"), false, string("default"), string("Local Planner"));
       dm = _inpProblem->GetDistanceMetric()->GetMethod(dm_label);
     };
 
-    virtual void ParseXML(XMLNodeReader& _inNode) { };
+    virtual void ParseXML(XMLNode& _inNode) { };
 
     virtual void Characterize() {
       cout << "CCExpandCharacterizer::Characterize() Not implemented" << endl;
@@ -94,18 +94,18 @@ class LocalNodeInfoCharacterizer : public NodeCharacterizerMethod<CFG,WEIGHT> {
   public:
     typedef typename RoadmapGraph<CFG, WEIGHT>::VID VID;
     LocalNodeInfoCharacterizer(string _dm, double dRadius) : NodeCharacterizerMethod<CFG,WEIGHT>(), m_dmLabel(_dm), m_dRadius(dRadius)  {}
-    LocalNodeInfoCharacterizer(XMLNodeReader& _inNode, MPProblem* _inpProblem) :
+    LocalNodeInfoCharacterizer(XMLNode& _inNode, MPProblem* _inpProblem) :
       NodeCharacterizerMethod<CFG,WEIGHT>(_inNode,_inpProblem) {
 
       m_dRadius = 0;
       ParseXML(_inNode);
-      m_dmLabel =_inNode.stringXMLParameter(string("dm_method"), false,
+      m_dmLabel =_inNode.Read(string("dm_method"), false,
                                     string("default"), string("Distance Metric Method"));
     };
 
-    virtual void ParseXML(XMLNodeReader& _inNode) {
+    virtual void ParseXML(XMLNode& _inNode) {
 
-      m_dRadius = _inNode.numberXMLParameter(string("radius"),true,double(0.5),
+      m_dRadius = _inNode.Read(string("radius"),true,double(0.5),
                                           double(0.0),double(1000.0),
                                           string("Radius Value"));
 
@@ -186,14 +186,14 @@ template<typename CFG, typename WEIGHT>
 class MPCharacterizer : public MPBaseObject {
 public:
   MPCharacterizer(vector< NodeCharacterizerMethod<CFG,WEIGHT>* > all) : all_NodeCharacterizerMethod(all) {};
-  MPCharacterizer(XMLNodeReader& _inNode, MPProblem* _inpProblem) :
+  MPCharacterizer(XMLNode& _inNode, MPProblem* _inpProblem) :
       MPBaseObject(_inNode, _inpProblem) {
     ParseXML(_inNode);
   }
 
-  void ParseXML(XMLNodeReader& _inNode) {
+  void ParseXML(XMLNode& _inNode) {
 
-    XMLNodeReader::childiterator citr;
+    XMLNode::childiterator citr;
     for(citr = _inNode.children_begin(); citr!= _inNode.children_end(); ++citr) {
       if(citr->getName() == "LocalNodeInfoCharacterizer") {
         LocalNodeInfoCharacterizer<CFG,WEIGHT>* localnodeinfo =

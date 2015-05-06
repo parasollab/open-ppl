@@ -24,7 +24,7 @@ class TraceCSpaceObstacle : public BasicExtender<MPTraits> {
 
     TraceCSpaceObstacle(const string& _dmLabel = "",
         const string& _vcLabel = "", double _delta = 1.0);
-    TraceCSpaceObstacle(MPProblemType* _problem, XMLNodeReader& _node);
+    TraceCSpaceObstacle(MPProblemType* _problem, XMLNode& _node);
 
     virtual bool Extend(const CfgType& _near, const CfgType& _dir,
         CfgType& _new, LPOutput<MPTraits>& _lpOutput);
@@ -39,7 +39,7 @@ TraceCSpaceObstacle<MPTraits>::TraceCSpaceObstacle(const string& _dmLabel,
 
 template<class MPTraits>
 TraceCSpaceObstacle<MPTraits>::TraceCSpaceObstacle(MPProblemType* _problem,
-    XMLNodeReader& _node) :
+    XMLNode& _node) :
   BasicExtender<MPTraits>(_problem, _node) {
     this->SetName("TraceCSpaceObstacle");
   }

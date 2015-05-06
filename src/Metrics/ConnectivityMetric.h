@@ -19,7 +19,7 @@ class ConnectivityMetric : public CoverageMetric<MPTraits, Set> {
     ConnectivityMetric(const Set& _samples = Set(),
         const vector<string>& _connectorLabels = vector<string>(),
         bool _computeAllCCs = false);
-    ConnectivityMetric(MPProblemType* _problem, XMLNodeReader& _node, bool _computeAllCCs = false);
+    ConnectivityMetric(MPProblemType* _problem, XMLNode& _node, bool _computeAllCCs = false);
 
     virtual ~ConnectivityMetric();
 
@@ -38,7 +38,7 @@ ConnectivityMetric<MPTraits, Set>::ConnectivityMetric(const Set& _samples, const
 }
 
 template<class MPTraits, class Set>
-ConnectivityMetric<MPTraits, Set>::ConnectivityMetric(MPProblemType* _problem, XMLNodeReader& _node, bool _computeAllCCs)
+ConnectivityMetric<MPTraits, Set>::ConnectivityMetric(MPProblemType* _problem, XMLNode& _node, bool _computeAllCCs)
   : CoverageMetric<MPTraits, Set>(_problem, _node, _computeAllCCs) {
     this->SetName("ConnectivityMetric" + Set::GetName());
 }

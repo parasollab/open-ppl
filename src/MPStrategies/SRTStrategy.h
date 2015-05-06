@@ -20,9 +20,9 @@ class SRTStrategy : public MPStrategyMethod<MPTraits> {
 
     //Non-XML constructor sets all private variables
     SRTStrategy();
-    SRTStrategy(MPProblemType* _problem, XMLNodeReader& _node);
+    SRTStrategy(MPProblemType* _problem, XMLNode& _node);
 
-    virtual void ParseXML(XMLNodeReader& _node);
+    virtual void ParseXML(XMLNode& _node);
 
     virtual void Initialize();
     virtual void Run();
@@ -76,59 +76,45 @@ SRTStrategy() {
 
 template<class MPTraits>
 SRTStrategy<MPTraits>::
-SRTStrategy(MPProblemType* _problem, XMLNodeReader& _node) :
+SRTStrategy(MPProblemType* _problem, XMLNode& _node) :
   MPStrategyMethod<MPTraits>(_problem, _node), m_query(NULL) {
     this->SetName("SRTStrategy");
     ParseXML(_node);
-    _node.warnUnrequestedAttributes();
   }
 
 template<class MPTraits>
 void
 SRTStrategy<MPTraits>::
-ParseXML(XMLNodeReader& _node) {
-  for(XMLNodeReader::childiterator citr = _node.children_begin();
-      citr != _node.children_end(); ++citr) {
-    if(citr->getName() == "Evaluator") {
-      string evalMethod = citr->stringXMLParameter("label", true, "",
-          "Evaluation Method");
-      m_evaluators.push_back(evalMethod);
-      citr->warnUnrequestedAttributes();
-    }
-    else
-      citr->warnUnknownNode();
-  }
+ParseXML(XMLNode& _node) {
+  for(auto& child : _node)
+    if(child.Name() == "Evaluator")
+      m_evaluators.push_back(
+          child.Read("label", true, "", "Evaluation Method"));
 
-  m_delta = _node.numberXMLParameter("delta", false, 1.0, 0.0, MAX_DBL,
-      "Delta Distance");
-  m_minDist = _node.numberXMLParameter("minDist", false, 0.0, 0.0, m_delta,
+  m_delta = _node.Read("delta", false, 1.0, 0.0, MAX_DBL, "Delta Distance");
+  m_minDist = _node.Read("minDist", false, 0.0, 0.0, m_delta,
       "Minimum Distance");
-  m_vcLabel = _node.stringXMLParameter("vcLabel", true, "",
-      "Validity Test Method");
-  m_nfLabel = _node.stringXMLParameter("nfLabel", true, "",
-      "Neighborhood Finder");
-  m_dmLabel = _node.stringXMLParameter("dmLabel",true,"",
-      "Distance Metric");
-  m_lpLabel = _node.stringXMLParameter("lpLabel", true, "",
-      "Local Planning Method");
-  m_eLabel = _node.stringXMLParameter("eLabel", true, "",
-      "Extender Method");
+  m_vcLabel = _node.Read("vcLabel", true, "", "Validity Test Method");
+  m_nfLabel = _node.Read("nfLabel", true, "", "Neighborhood Finder");
+  m_dmLabel = _node.Read("dmLabel",true,"", "Distance Metric");
+  m_lpLabel = _node.Read("lpLabel", true, "", "Local Planning Method");
+  m_eLabel = _node.Read("eLabel", true, "", "Extender Method");
 
-  m_numSamples = _node.numberXMLParameter("samples", true, 100, 0, MAX_INT,
+  m_numSamples = _node.Read("samples", true, 100, 0, MAX_INT,
       "k random trees per iteration");
-  m_numExpansions = _node.numberXMLParameter("expansions", true, 10, 0, MAX_INT,
+  m_numExpansions = _node.Read("expansions", true, 10, 0, MAX_INT,
       "m expansions per random tree");
-  m_numCloseCent = _node.numberXMLParameter("closeCent", true, 10, 0, MAX_INT,
+  m_numCloseCent = _node.Read("closeCent", true, 10, 0, MAX_INT,
       "n_c close centroids for edge attempts");
-  m_numRandCent = _node.numberXMLParameter("randCent", true, 10, 0, MAX_INT,
+  m_numRandCent = _node.Read("randCent", true, 10, 0, MAX_INT,
       "n_r close centroids for edge attempts");
-  m_numClosePairs = _node.numberXMLParameter("closePairs", true, 10, 0, MAX_INT,
+  m_numClosePairs = _node.Read("closePairs", true, 10, 0, MAX_INT,
       "n_p close pairs for connections");
-  m_numConnIter = _node.numberXMLParameter("connIter", true, 10, 0, MAX_INT,
+  m_numConnIter = _node.Read("connIter", true, 10, 0, MAX_INT,
       "n_i iterations during tree connection");
 
   //optionally read in a query and create a Query object.
-  string query = _node.stringXMLParameter("query", false, "", "Query Filename");
+  string query = _node.Read("query", false, "", "Query Filename");
   if(!query.empty())
     m_query = new Query<MPTraits>(query);
 }

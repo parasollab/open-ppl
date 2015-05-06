@@ -15,8 +15,8 @@ PartitioningMethods::PartitioningMethods() : MPBaseObject(){
    all.push_back(new SuccessiveClustering());
 };
 
-PartitioningMethods::PartitioningMethods(XMLNodeReader& in_Node, MPProblem* in_pProblem) : MPBaseObject(in_Node, in_pProblem){
-  XMLNodeReader::childiterator citr;
+PartitioningMethods::PartitioningMethods(XMLNode& in_Node, MPProblem* in_pProblem) : MPBaseObject(in_Node, in_pProblem){
+  XMLNode::childiterator citr;
   for(citr = in_Node.children_begin(); citr!=in_Node.children_end(); citr++){
     if(citr->getName()=="Kmeans"){
       KMeans* km = new KMeans(*citr, in_pProblem);

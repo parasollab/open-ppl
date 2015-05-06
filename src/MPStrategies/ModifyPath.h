@@ -11,7 +11,7 @@ class ModifyPath : public MPStrategyMethod<MPTraits> {
 
     ModifyPath(const string& _pathFile = "", const string& _mapFile = "",
         const string& _pmLabel = "");
-    ModifyPath(MPProblemType* _problem, XMLNodeReader& _node);
+    ModifyPath(MPProblemType* _problem, XMLNode& _node);
 
     virtual void Initialize();
     virtual void Run();
@@ -36,16 +36,12 @@ ModifyPath(const string& _pathFile, const string& _mapFile,
 
 template<class MPTraits>
 ModifyPath<MPTraits>::
-ModifyPath(MPProblemType* _problem, XMLNodeReader& _node) :
+ModifyPath(MPProblemType* _problem, XMLNode& _node) :
   MPStrategyMethod<MPTraits>(_problem, _node) {
     this->SetName("ModifyPath");
-    m_pathFile = _node.stringXMLParameter("pathFile", true, "",
-        "Path Filename");
-    m_mapFile = _node.stringXMLParameter("mapFile", false, "",
-        "Map Filename");
-    m_pmLabel = _node.stringXMLParameter("pmLabel", true, "",
-        "Path modifier label");
-    _node.warnUnrequestedAttributes();
+    m_pathFile = _node.Read("pathFile", true, "", "Path Filename");
+    m_mapFile = _node.Read("mapFile", false, "", "Map Filename");
+    m_pmLabel = _node.Read("pmLabel", true, "", "Path modifier label");
   }
 
 template<class MPTraits>

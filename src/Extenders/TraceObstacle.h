@@ -22,7 +22,7 @@ class TraceObstacle : public BasicExtender<MPTraits> {
 
     TraceObstacle(const string& _dmLabel = "", const string& _vcLabel = "",
         double _delta = 1.0, bool _randomOrientation = true);
-    TraceObstacle(MPProblemType* _problem, XMLNodeReader& _node);
+    TraceObstacle(MPProblemType* _problem, XMLNode& _node);
 
     virtual bool Extend(const CfgType& _near, const CfgType& _dir,
         CfgType& _new, LPOutput<MPTraits>& _lpOutput);
@@ -37,7 +37,7 @@ TraceObstacle<MPTraits>::TraceObstacle(const string& _dmLabel,
 
 template<class MPTraits>
 TraceObstacle<MPTraits>::TraceObstacle(MPProblemType* _problem, 
-    XMLNodeReader& _node) :
+    XMLNode& _node) :
   BasicExtender<MPTraits>(_problem, _node) {
     this->SetName("TraceObstacle");
   }

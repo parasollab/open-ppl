@@ -18,11 +18,11 @@ class SpillTreeNF: public NeighborhoodFinderMethod {
 public:
   typedef typename RoadmapGraph<CFG, WEIGHT>::VID VID;
 
-  SpillTreeNF(XMLNodeReader& _node, MPProblem* _problem) :
+  SpillTreeNF(XMLNode& _node, MPProblem* _problem) :
     NeighborhoodFinderMethod(_node, _problem) {
 
 
-    overlapDistance = _node.numberXMLParameter("overlapDistance", false, 0.0, 0.0, 100.0, "overlap distance for spilltree");
+    overlapDistance = _node.Read("overlapDistance", false, 0.0, 0.0, 100.0, "overlap distance for spilltree");
     m_cur_roadmap_version = -1;
     spillTreeNotCreated=true;
     //spillTree<CFG, WEIGHT> sTree(5000,.1,.6,true,false);

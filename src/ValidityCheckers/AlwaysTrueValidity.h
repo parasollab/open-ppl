@@ -20,9 +20,8 @@ class AlwaysTrueValidity : public ValidityCheckerMethod<MPTraits> {
       this->m_name = "AlwaysTrueValidity";
     }
 
-    AlwaysTrueValidity(typename MPTraits::MPProblemType* _problem, XMLNodeReader& _node)
+    AlwaysTrueValidity(typename MPTraits::MPProblemType* _problem, XMLNode& _node)
       : ValidityCheckerMethod<MPTraits>(_problem, _node){
-        _node.verifyName("AlwaysTrueValidity");
         this->m_name = "AlwaysTrueValidity";
       }
 

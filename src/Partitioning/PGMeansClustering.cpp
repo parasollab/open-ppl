@@ -6,7 +6,7 @@
 PGMeansClustering::PGMeansClustering():PartitioningMethod(){
 };
 
-PGMeansClustering::PGMeansClustering(XMLNodeReader& in_Node, MPProblem* in_pProblem):PartitioningMethod(in_Node, in_pProblem){
+PGMeansClustering::PGMeansClustering(XMLNode& in_Node, MPProblem* in_pProblem):PartitioningMethod(in_Node, in_pProblem){
   this->SetName("PGMeansClustering");
    ParseXML(in_Node);
 };

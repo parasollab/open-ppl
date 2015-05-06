@@ -17,7 +17,7 @@ class BinaryLPSweptDistance : public LPSweptDistance<MPTraits> {
 
     BinaryLPSweptDistance(string _lp = "", double _posRes = 0.1, double _oriRes = 0.1,
         double _tolerance = 0.01, int _maxAttempts = 100, bool _bbox = false);
-    BinaryLPSweptDistance(MPProblemType* _problem, XMLNodeReader& _node, bool _warn = true);
+    BinaryLPSweptDistance(MPProblemType* _problem, XMLNode& _node);
 
     virtual void Print(ostream& _os) const;
 
@@ -35,19 +35,16 @@ BinaryLPSweptDistance(string _lp, double _posRes, double _oriRes,
   LPSweptDistance<MPTraits>(_lp, _posRes, _oriRes, _bbox),
   m_tolerance(_tolerance), m_maxAttempts(_maxAttempts) {
     this->SetName("BinaryLPSwept");
-}
+  }
 
 template<class MPTraits>
 BinaryLPSweptDistance<MPTraits>::
-BinaryLPSweptDistance(MPProblemType* _problem, XMLNodeReader& _node, bool _warn)
-  : LPSweptDistance<MPTraits>(_problem, _node, false) {
-  this->SetName("BinaryLPSwept");
-  m_tolerance = _node.numberXMLParameter("tolerance", false, 0.01, 0.0, 1000.0, "tolerance");
-  m_maxAttempts = _node.numberXMLParameter("maxAttempts", false, 10, 1, 100, "maximum depth of lp_swept distance search");
-
-  if(_warn)
-    _node.warnUnrequestedAttributes();
-}
+BinaryLPSweptDistance(MPProblemType* _problem, XMLNode& _node) :
+  LPSweptDistance<MPTraits>(_problem, _node) {
+    this->SetName("BinaryLPSwept");
+    m_tolerance = _node.Read("tolerance", false, 0.01, 0.0, 1000.0, "tolerance");
+    m_maxAttempts = _node.Read("maxAttempts", false, 10, 1, 100, "maximum depth of lp_swept distance search");
+  }
 
 template<class MPTraits>
 void

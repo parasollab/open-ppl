@@ -20,7 +20,7 @@ class RRTConnect: public ConnectorMethod<MPTraits> {
 
     RRTConnect(string _nfLabel = "", string _lpLabel = "",
         size_t _iterations = 100, double _minDist = 0.0);
-    RRTConnect(MPProblemType* _problem, XMLNodeReader& _node);
+    RRTConnect(MPProblemType* _problem, XMLNode& _node);
 
     virtual void Print(ostream& _os);
 
@@ -54,20 +54,22 @@ RRTConnect(string _nfLabel, string _lpLabel, size_t _iterations, double _minDist
 
 template<class MPTraits>
 RRTConnect<MPTraits>::
-RRTConnect(MPProblemType* _problem, XMLNodeReader& _node)
+RRTConnect(MPProblemType* _problem, XMLNode& _node)
   : ConnectorMethod<MPTraits>(_problem, _node) {
     this->SetName("RRTConnect");
 
     //parse xml
-    m_iterations = _node.numberXMLParameter("iterations", true, 0, 0, MAX_INT, "Number of iterations that RRT Connect will perform");
-    m_minDist = _node.numberXMLParameter("minDist", false, 0.0, 0.0, MAX_DBL, "Minimum Distance");
-    m_eLabel = _node.stringXMLParameter("eLabel", true, "", "Expander Method");
-    _node.warnUnrequestedAttributes();
+    m_iterations = _node.Read("iterations", true, 0, 0, MAX_INT,
+        "Number of iterations that RRT Connect will perform");
+    m_minDist = _node.Read("minDist", false, 0.0, 0.0, MAX_DBL,
+        "Minimum Distance");
+    m_eLabel = _node.Read("eLabel", true, "", "Expander Method");
   }
 
 template<class MPTraits>
 void
-RRTConnect<MPTraits>::Print(ostream& _os){
+RRTConnect<MPTraits>::
+Print(ostream& _os) {
   ConnectorMethod<MPTraits>::Print(_os);
 }
 

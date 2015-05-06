@@ -14,9 +14,9 @@ class BridgeTestSampler : public SamplerMethod<MPTraits> {
     BridgeTestSampler(string _vcLabel = "", string _dmLabel = "",
         double _d = 0.5, bool _useBoundary = false);
 
-    BridgeTestSampler(MPProblemType* _problem, XMLNodeReader& _node);
+    BridgeTestSampler(MPProblemType* _problem, XMLNode& _node);
 
-    void ParseXML(XMLNodeReader& _node);
+    void ParseXML(XMLNode& _node);
 
     virtual void Print(ostream& _os) const;
 
@@ -40,7 +40,7 @@ BridgeTestSampler(string _vcLabel, string _dmLabel,
 
 template<class MPTraits>
 BridgeTestSampler<MPTraits>::
-BridgeTestSampler(MPProblemType* _problem, XMLNodeReader& _node) :
+BridgeTestSampler(MPProblemType* _problem, XMLNode& _node) :
   SamplerMethod<MPTraits>(_problem, _node) {
     this->SetName("BridgeTestSampler");
     ParseXML(_node);
@@ -49,16 +49,12 @@ BridgeTestSampler(MPProblemType* _problem, XMLNodeReader& _node) :
 template<class MPTraits>
 void
 BridgeTestSampler<MPTraits>::
-ParseXML(XMLNodeReader& _node) {
-  m_d = _node.numberXMLParameter("d",true, 0.0, 0.0,100.0,"bridge_d");
-  m_useBoundary = _node.boolXMLParameter("useBBX", false, true,
+ParseXML(XMLNode& _node) {
+  m_d = _node.Read("d", true, 0.0, 0.0, 100.0, "bridge_d");
+  m_useBoundary = _node.Read("useBBX", false, true,
       "Use the Boundary as an Obstacle");
-  m_vcLabel = _node.stringXMLParameter("vcLabel", true, "",
-      "Validity Test Method");
-  m_dmLabel = _node.stringXMLParameter("dmLabel", true, "default",
-      "Distance Metric Method");
-
-  _node.warnUnrequestedAttributes();
+  m_vcLabel = _node.Read("vcLabel", true, "", "Validity Test Method");
+  m_dmLabel = _node.Read("dmLabel", true, "default", "Distance Metric Method");
 }
 
 //Display values of class variables at calling time

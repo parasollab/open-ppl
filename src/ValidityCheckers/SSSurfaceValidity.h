@@ -24,7 +24,7 @@ class SSSurfaceValidity : public ValidityCheckerMethod<MPTraits> {
     typedef typename CfgType::TraitsType TmpTraitsType;
 
     SSSurfaceValidity(string _vcLabel="");
-    SSSurfaceValidity(typename MPTraits::MPProblemType* _problem, XMLNodeReader& _node) ;
+    SSSurfaceValidity(typename MPTraits::MPProblemType* _problem, XMLNode& _node) ;
 
     virtual ~SSSurfaceValidity() {}
 
@@ -46,11 +46,10 @@ SSSurfaceValidity<MPTraits>::SSSurfaceValidity(string _vcLabel) : ValidityChecke
 }
 
 template<class MPTraits>
-SSSurfaceValidity<MPTraits>::SSSurfaceValidity(typename MPTraits::MPProblemType* _problem, XMLNodeReader& _node)
+SSSurfaceValidity<MPTraits>::SSSurfaceValidity(typename MPTraits::MPProblemType* _problem, XMLNode& _node)
   : ValidityCheckerMethod<MPTraits>(_problem, _node) {
-    _node.verifyName("SSSurfaceValidity");
     this->m_name = "SSSurfaceValidity";
-    this->m_vcLabel = _node.stringXMLParameter("vc_method", true, "", "Validity Checker Method");
+    this->m_vcLabel = _node.Read("vc_method", true, "", "Validity Checker Method");
 
     m_prob.AddValidityChecker(typename TmpProblemType::ValidityCheckerPointer(new SurfaceValidity<TmpTraitsType>(m_vcLabel)), "temp");
     m_prob.AddValidityChecker(typename TmpProblemType::ValidityCheckerPointer(new CollisionDetectionValidity<TmpTraitsType>(new Rapid())), "cd1");

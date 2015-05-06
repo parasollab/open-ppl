@@ -57,13 +57,20 @@ int main(int _argc, char** _argv) {
     exit(1);
   }
 
-  typedef MPTraits<PMPLCfgType> Traits;
-  typedef Traits::MPProblemType MPProblemType;
-  MPProblemType* problem = new MPProblemType(_argv[2]);
-  problem->Print(cout);
-  problem->Solve();
+  try {
+    typedef MPTraits<PMPLCfgType> Traits;
+    typedef Traits::MPProblemType MPProblemType;
+    MPProblemType* problem = new MPProblemType(_argv[2]);
+    problem->Solve();
 
-  delete problem;
+    delete problem;
+  }
+  catch(const std::runtime_error& e) {
+    cout << endl << e.what() << endl;
+  }
+  catch(...) {
+    cout << "Unknown error." << endl;
+  }
 
   return 0;
 }

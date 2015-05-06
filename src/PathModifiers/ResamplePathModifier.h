@@ -23,9 +23,9 @@ class ResamplePathModifier : public PathModifierMethod<MPTraits> {
     ResamplePathModifier(const string _dmLabel = "", const string _lpLabel = "",
         const size_t _numResamples = 0, const double _stepSize = -1,
         const double _userValue = -1, const string _typeName = "");
-    ResamplePathModifier(MPProblemType* _problem, XMLNodeReader& _node);
+    ResamplePathModifier(MPProblemType* _problem, XMLNode& _node);
 
-    virtual void ParseXML(XMLNodeReader& _node);
+    virtual void ParseXML(XMLNode& _node);
     virtual void Print(ostream& _os) const;
 
     bool ModifyImpl(vector<CfgType>& _originalPath, vector<CfgType>& _newPath);
@@ -60,7 +60,7 @@ ResamplePathModifier<MPTraits>::ResamplePathModifier(const string _dmLabel,
 
 // XML Constructor
 template<class MPTraits>
-ResamplePathModifier<MPTraits>::ResamplePathModifier(MPProblemType* _problem, XMLNodeReader& _node) :
+ResamplePathModifier<MPTraits>::ResamplePathModifier(MPProblemType* _problem, XMLNode& _node) :
   PathModifierMethod<MPTraits>(_problem, _node) {
     this->SetName("ResamplePathModifier");
     ParseXML(_node);
@@ -68,13 +68,13 @@ ResamplePathModifier<MPTraits>::ResamplePathModifier(MPProblemType* _problem, XM
 
 template<class MPTraits>
 void
-ResamplePathModifier<MPTraits>::ParseXML(XMLNodeReader& _node) {
-  m_dmLabel = _node.stringXMLParameter("dmLabel", false, "", "Distance metric method");
-  m_lpLabel = _node.stringXMLParameter("lpLabel", true, "", "Local planner method");
-  m_numResamples = _node.numberXMLParameter("numResamples", false, 5, 1, MAX_INT, "number of samples to generate in each resample attempt");
-  m_stepSize= _node.numberXMLParameter("stepSize", false, 0.0, 0.0, MAX_DBL, "distance of a resampled node from existing one");
-  m_userValue= _node.numberXMLParameter("userValue", false, 0.3, 0.0, MAX_DBL, "distance of a resampled node from existing one");
-  m_typeName = _node.stringXMLParameter("typeName", true, "", "type of the CFG task");
+ResamplePathModifier<MPTraits>::ParseXML(XMLNode& _node) {
+  m_dmLabel = _node.Read("dmLabel", false, "", "Distance metric method");
+  m_lpLabel = _node.Read("lpLabel", true, "", "Local planner method");
+  m_numResamples = _node.Read("numResamples", false, 5, 1, MAX_INT, "number of samples to generate in each resample attempt");
+  m_stepSize= _node.Read("stepSize", false, 0.0, 0.0, MAX_DBL, "distance of a resampled node from existing one");
+  m_userValue= _node.Read("userValue", false, 0.3, 0.0, MAX_DBL, "distance of a resampled node from existing one");
+  m_typeName = _node.Read("typeName", true, "", "type of the CFG task");
 
   if(m_typeName == "MAX_CLEARANCE")
     m_clearanceUtils = ClearanceUtility<MPTraits>(this->GetMPProblem(), _node);

@@ -95,7 +95,7 @@ class PartitionTree{
    void WritePartitions(MPProblem* pMPProblem, string base, vector<vector<double> >& min,
    vector<vector<double> >& max);
 
-   //auto creates a tree into internal PartitionNode and leaf nodes for use
+   //auto&  creates a tree into internal PartitionNode and leaf nodes for use
    void CreateTree(PartitioningMethod *pm, LeafPartitionNode* p, InternalPartitionNode* ipn);
 
    vector<PartitionNode*> GetNodes(){return m_pNodes;}

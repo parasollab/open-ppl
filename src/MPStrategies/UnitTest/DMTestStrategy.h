@@ -9,10 +9,10 @@ class DMTestStrategy : public MPStrategyMethod<MPTraits> {
     typedef typename MPTraits::MPProblemType::RoadmapType RoadmapType;
 
     DMTestStrategy();
-    DMTestStrategy(typename MPTraits::MPProblemType* _problem, XMLNodeReader& _node);
+    DMTestStrategy(typename MPTraits::MPProblemType* _problem, XMLNode& _node);
     virtual ~DMTestStrategy();
 
-    virtual void ParseXML(XMLNodeReader& _node);
+    virtual void ParseXML(XMLNode& _node);
     virtual void Print(ostream& _out) const;
 
     virtual void Initialize(){}
@@ -35,7 +35,7 @@ DMTestStrategy<MPTraits>::DMTestStrategy() : MPStrategyMethod<MPTraits>(),
 
 template <class MPTraits>
 DMTestStrategy<MPTraits>::
-DMTestStrategy(typename MPTraits::MPProblemType* _problem, XMLNodeReader& _node)
+DMTestStrategy(typename MPTraits::MPProblemType* _problem, XMLNode& _node)
   : MPStrategyMethod<MPTraits>(_problem, _node), m_rdmp(NULL) {
     this->SetName("DMTest");
     ParseXML(_node);
@@ -43,18 +43,15 @@ DMTestStrategy(typename MPTraits::MPProblemType* _problem, XMLNodeReader& _node)
 
 template <class MPTraits>
 DMTestStrategy<MPTraits>::
-~DMTestStrategy()
-{}
+~DMTestStrategy() {}
 
 template <class MPTraits>
 void
 DMTestStrategy<MPTraits>::
-ParseXML(XMLNodeReader& _node)
-{
-  m_inputRoadmapFilename = _node.stringXMLParameter("input_roadmap", false, "", "filename of input roadmap, if none provded, uses current one from MPProblem");
-  m_dmMethod = _node.stringXMLParameter("dm_method", true, "", "distance metric label");
-  m_numToVerify = _node.numberXMLParameter("num_to_verify", false, MAX_INT, 0, MAX_INT, "number of nodes to verify distances");
-  _node.warnUnrequestedAttributes();
+ParseXML(XMLNode& _node) {
+  m_inputRoadmapFilename = _node.Read("input_roadmap", false, "", "filename of input roadmap, if none provded, uses current one from MPProblem");
+  m_dmMethod = _node.Read("dm_method", true, "", "distance metric label");
+  m_numToVerify = _node.Read("num_to_verify", false, MAX_INT, 0, MAX_INT, "number of nodes to verify distances");
 }
 
 template <class MPTraits>

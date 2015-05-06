@@ -15,7 +15,7 @@ class ManhattanDistance : public MinkowskiDistance<MPTraits> {
     typedef typename MPTraits::MPProblemType MPProblemType;
 
     ManhattanDistance(bool _normalize = false);
-    ManhattanDistance(MPProblemType* _problem, XMLNodeReader& _node);
+    ManhattanDistance(MPProblemType* _problem, XMLNode& _node);
     virtual ~ManhattanDistance();
 };
 
@@ -28,16 +28,15 @@ ManhattanDistance(bool _normalize) :
 
 template<class MPTraits>
 ManhattanDistance<MPTraits>::
-ManhattanDistance(MPProblemType* _problem,XMLNodeReader& _node) :
-  MinkowskiDistance<MPTraits>(_problem, _node, false, false) {
+ManhattanDistance(MPProblemType* _problem, XMLNode& _node) :
+  MinkowskiDistance<MPTraits>(_problem, _node, false) {
     this->SetName("Manhattan");
 
     this->m_r1 = 1;
     this->m_r2 = 1;
     this->m_r3 = 1;
-    this->m_normalize = _node.boolXMLParameter("normalize", false, false, "flag if position dof should be normalized by environment diagonal");
-
-    _node.warnUnrequestedAttributes();
+    this->m_normalize = _node.Read("normalize", false, false,
+        "flag if position dof should be normalized by environment diagonal");
   }
 
 template<class MPTraits>

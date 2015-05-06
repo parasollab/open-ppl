@@ -18,7 +18,7 @@ class RewireConnector : public ConnectorMethod<MPTraits> {
     typedef typename MPProblemType::NeighborhoodFinderPointer NeighborhoodFinderPointer;
 
     RewireConnector(string _nfLabel = "", string _lpLabel = "");
-    RewireConnector(MPProblemType* _problem, XMLNodeReader& _node);
+    RewireConnector(MPProblemType* _problem, XMLNode& _node);
 
     template<typename InputIterator1, typename InputIterator2,
       typename OutputIterator>
@@ -48,15 +48,13 @@ RewireConnector(string _nfLabel, string _lpLabel) :
 
 template<class MPTraits>
 RewireConnector<MPTraits>::
-RewireConnector(MPProblemType* _problem, XMLNodeReader& _node) :
+RewireConnector(MPProblemType* _problem, XMLNode& _node) :
   ConnectorMethod<MPTraits>(_problem, _node) {
     this->SetName("RewireConnector");
-    m_distanceBased = _node.boolXMLParameter("distanceBased", false, true,
+    m_distanceBased = _node.Read("distanceBased", false, true,
         "Optimization criteria: True - path length; False - path clearance.");
-    if(!m_distanceBased){
+    if(!m_distanceBased)
       m_clearanceUtility = ClearanceUtility<MPTraits>(_problem, _node);
-    }
-    _node.warnUnrequestedAttributes();
   }
 
 template<class MPTraits>
@@ -89,7 +87,7 @@ Connect(RoadmapType* _rm,
 
     if(this->m_debug){
       cout << "Neighbors | ";
-      for(auto neighbor : closest)
+      for(auto&  neighbor : closest)
         cout << neighbor.first << " ";
     }
 

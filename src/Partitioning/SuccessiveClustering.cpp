@@ -6,23 +6,23 @@
 SuccessiveClustering::SuccessiveClustering():PartitioningMethod(){
 };
 
-SuccessiveClustering::SuccessiveClustering(XMLNodeReader& in_Node, MPProblem* in_pProblem):PartitioningMethod(in_Node, in_pProblem){
+SuccessiveClustering::SuccessiveClustering(XMLNode& in_Node, MPProblem* in_pProblem):PartitioningMethod(in_Node, in_pProblem){
   this->SetName("successive");
    ParseXML(in_Node);
 };
 
 SuccessiveClustering::~SuccessiveClustering(){};
 
-void SuccessiveClustering::ParseXML(XMLNodeReader& in_Node){
-   XMLNodeReader::childiterator citr;
+void SuccessiveClustering::ParseXML(XMLNode& in_Node){
+   XMLNode::childiterator citr;
    for(citr = in_Node.children_begin(); citr!=in_Node.children_end(); citr++){
       if(citr->getName()=="PartitioningMethod"){
-         string name = citr->stringXMLParameter(string("Method"), true, string(""), string("Partitioning Method"));
+         string name = citr->Read(string("Method"), true, string(""), string("Partitioning Method"));
          m_PartitioningMethods.push_back(name);
       }
    }
-   //SetLabel(in_Node.stringXMLParameter(string("Label"), true, string(""), string("PartitioningMethod Label")));
-   SetClusteringDestination(in_Node.stringXMLParameter(string("destination"), true, string(""), string("PartitioningMethod Destination")));
+   //SetLabel(in_Node.Read(string("Label"), true, string(""), string("PartitioningMethod Label")));
+   SetClusteringDestination(in_Node.Read(string("destination"), true, string(""), string("PartitioningMethod Destination")));
    in_Node.warnUnrequestedAttributes();
 }
 

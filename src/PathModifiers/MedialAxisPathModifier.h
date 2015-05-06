@@ -24,10 +24,10 @@ class MedialAxisPathModifier : public PathModifierMethod<MPTraits> {
 
     MedialAxisPathModifier(const string& _pmLabel = "",
         const string& _lpLabel = "", const string& _malpLabel = "");
-    MedialAxisPathModifier(MPProblemType* _problem, XMLNodeReader& _node);
+    MedialAxisPathModifier(MPProblemType* _problem, XMLNode& _node);
 
     void Print(ostream& _os) const;
-    void ParseXML(XMLNodeReader& _node);
+    void ParseXML(XMLNode& _node);
 
     bool ModifyImpl(vector<CfgType>& _path, vector<CfgType>& _newPath);
 
@@ -48,7 +48,7 @@ MedialAxisPathModifier(const string& _pmLabel, const string& _lpLabel,
 
 template<class MPTraits>
 MedialAxisPathModifier<MPTraits>::
-MedialAxisPathModifier(MPProblemType* _problem, XMLNodeReader& _node) :
+MedialAxisPathModifier(MPProblemType* _problem, XMLNode& _node) :
   PathModifierMethod<MPTraits>(_problem, _node) {
     this->SetName("MedialAxisPathModifier");
     ParseXML(_node);
@@ -57,12 +57,10 @@ MedialAxisPathModifier(MPProblemType* _problem, XMLNodeReader& _node) :
 template<class MPTraits>
 void
 MedialAxisPathModifier<MPTraits>::
-ParseXML(XMLNodeReader& _node) {
-  m_pmLabel = _node.stringXMLParameter("pmLabel", false, "NULL",
-      "Path Modifier method");
-  m_lpLabel = _node.stringXMLParameter("lpLabel", true, "",
-      "Local planner method");
-  m_malpLabel = _node.stringXMLParameter("malpLabel", true, "",
+ParseXML(XMLNode& _node) {
+  m_pmLabel = _node.Read("pmLabel", false, "NULL", "Path Modifier method");
+  m_lpLabel = _node.Read("lpLabel", true, "", "Local planner method");
+  m_malpLabel = _node.Read("malpLabel", true, "",
       "Medial axis local planner label needed by MedialAxisPathModifier");
 }
 

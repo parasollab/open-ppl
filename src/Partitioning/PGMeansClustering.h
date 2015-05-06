@@ -7,7 +7,7 @@ class PGMeansClustering : public PartitioningMethod
 {
  public:
    PGMeansClustering();
-   PGMeansClustering(XMLNodeReader& in_Node, MPProblem * in_pProblem);
+   PGMeansClustering(XMLNode& in_Node, MPProblem * in_pProblem);
    ~PGMeansClustering();
 
    virtual vector<Partition*> MakePartitions(Partition &p);

@@ -10,13 +10,13 @@ Features::Features():MPBaseObject(){
    all.push_back(new ClearanceFeature());
 }
 
-Features::Features(XMLNodeReader& in_Node, MPProblem* mp): MPBaseObject(in_Node, mp){
+Features::Features(XMLNode& in_Node, MPProblem* mp): MPBaseObject(in_Node, mp){
   ParseXML(in_Node);
 }
 
-void Features::ParseXML(XMLNodeReader& in_Node){
+void Features::ParseXML(XMLNode& in_Node){
    //read from the xml and push onto selected
-   XMLNodeReader::childiterator citr;
+   XMLNode::childiterator citr;
    for(citr = in_Node.children_begin(); citr!=in_Node.children_end(); citr++){
       if(citr->getName()=="CfgFeature"){
          CfgFeature* cf = new CfgFeature(*citr, GetMPProblem());

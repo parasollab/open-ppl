@@ -14,7 +14,7 @@ class NumEdgesMetric : public MetricMethod<MPTraits> {
       this->SetName("NumEdgesMetric");
     }
 
-    NumEdgesMetric(typename MPTraits::MPProblemType* _problem, XMLNodeReader& _node) : MetricMethod<MPTraits>(_problem, _node) {
+    NumEdgesMetric(typename MPTraits::MPProblemType* _problem, XMLNode& _node) : MetricMethod<MPTraits>(_problem, _node) {
       this->SetName("NumEdgesMetric");
     }
 

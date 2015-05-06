@@ -11,7 +11,7 @@ class PartitioningMethod;
 class PartitioningMethods : public MPBaseObject {
  public:
    PartitioningMethods();
-   PartitioningMethods(XMLNodeReader& in_Node, MPProblem* in_pProblem);
+   PartitioningMethods(XMLNode& in_Node, MPProblem* in_pProblem);
 
    PartitioningMethod* GetPartitioningMethod(string s);
 

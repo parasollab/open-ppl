@@ -731,8 +731,8 @@ void ClosedChainStrategy::Solve(){
   /////
   // From ClosedChainStrategy::ParseXML, setps up relevant variables
   is_gamma_random=false;
-  num_iterations  = in_Node.numberXMLParameter("iterations", false, int(10), int(1), int(100000), "number of iterations");
-  gamma = in_Node.numberXMLParameter("gamma", false, double(0.0), double(0.0), double(1.0), "gamma used by reachable code");
+  num_iterations  = in_Node.Read("iterations", false, int(10), int(1), int(100000), "number of iterations");
+  gamma = in_Node.Read("gamma", false, double(0.0), double(0.0), double(1.0), "gamma used by reachable code");
 #if (defined(PMPReachDistCC) || defined(PMPReachDistCCFixed))
   CfgType::gamma = gamma;
 #endif

@@ -28,7 +28,7 @@ class MPStrategyMethod : public MPBaseObject<MPTraits> {
     typedef typename MPProblemType::VID VID;
 
     MPStrategyMethod();
-    MPStrategyMethod(MPProblemType* _problem, XMLNodeReader& _node);
+    MPStrategyMethod(MPProblemType* _problem, XMLNode& _node);
     virtual ~MPStrategyMethod();
 
     void operator()();
@@ -56,7 +56,7 @@ MPStrategyMethod() {
 
 template<class MPTraits>
 MPStrategyMethod<MPTraits>::
-MPStrategyMethod(MPProblemType* _problem, XMLNodeReader& _node) :
+MPStrategyMethod(MPProblemType* _problem, XMLNode& _node) :
   MPBaseObject<MPTraits>(_problem, _node) {
     if(m_boundary==NULL)
       m_boundary = this->GetEnvironment()->GetBoundary();
@@ -96,7 +96,7 @@ EvaluateMap(const vector<string>& _evaluators) {
     string clockName = this->GetNameAndLabel() + "::EvaluateMap()";
     stats->StartClock(clockName);
 
-    for(auto eval : _evaluators) {
+    for(auto&  eval : _evaluators) {
       MapEvaluatorPointer evaluator = this->GetMapEvaluator(eval);
       const string& evalName = evaluator->GetNameAndLabel();
 

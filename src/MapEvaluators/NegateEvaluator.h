@@ -18,7 +18,7 @@ class NegateEvaluator : public MapEvaluatorMethod<MPTraits> {
     typedef typename MPProblemType::MapEvaluatorPointer MapEvaluatorPointer;
 
     NegateEvaluator(string _label = "");
-    NegateEvaluator(MPProblemType* _problem, XMLNodeReader& _node);
+    NegateEvaluator(MPProblemType* _problem, XMLNode& _node);
     ~NegateEvaluator(){}
 
     virtual void Print(ostream& _os) const;
@@ -35,10 +35,10 @@ NegateEvaluator<MPTraits>::NegateEvaluator(string _label) : m_evalLabel(_label){
 }
 
 template<class MPTraits>
-NegateEvaluator<MPTraits>::NegateEvaluator(MPProblemType* _problem, XMLNodeReader& _node) :
+NegateEvaluator<MPTraits>::NegateEvaluator(MPProblemType* _problem, XMLNode& _node) :
     MapEvaluatorMethod<MPTraits>(_problem, _node) {
   this->SetName("NegateEvaluator");
-  m_evalLabel = _node.stringXMLParameter("evalLabel", true, "", "Evaluator Label");
+  m_evalLabel = _node.Read("evalLabel", true, "", "Evaluator Label");
 }
 
 template<class MPTraits>

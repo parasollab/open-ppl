@@ -18,7 +18,7 @@ class RMSDDistance : public DistanceMetricMethod<MPTraits> {
     typedef typename MPTraits::MPProblemType MPProblemType;
 
     RMSDDistance();
-    RMSDDistance(MPProblemType* _problem, XMLNodeReader& _node, bool _warn = true);
+    RMSDDistance(MPProblemType* _problem, XMLNode& _node);
     virtual ~RMSDDistance();
 
     virtual double Distance(const CfgType& _c1, const CfgType& _c2);
@@ -38,8 +38,8 @@ RMSDDistance() : DistanceMetricMethod<MPTraits>() {
 
 template<class MPTraits>
 RMSDDistance<MPTraits>::
-RMSDDistance(MPProblemType* _problem, XMLNodeReader& _node, bool _warn) :
-  DistanceMetricMethod<MPTraits>(_problem, _node, _warn) {
+RMSDDistance(MPProblemType* _problem, XMLNode& _node) :
+  DistanceMetricMethod<MPTraits>(_problem, _node) {
     this->SetName("RMSD");
   }
 

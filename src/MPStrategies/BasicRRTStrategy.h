@@ -30,12 +30,12 @@ class BasicRRTStrategy : public MPStrategyMethod<MPTraits> {
         const CfgType& _goal=CfgType(), size_t _numRoots=1,
         size_t _numDirections=1, size_t _maxTrial = 3, bool _growGoals=false);
 
-    BasicRRTStrategy(MPProblemType* _problem, XMLNodeReader& _node,
-        bool _warnXML = true, bool _child = false);
+    BasicRRTStrategy(MPProblemType* _problem, XMLNode& _node,
+        bool _child = false);
 
     virtual ~BasicRRTStrategy();
 
-    virtual void ParseXML(XMLNodeReader& _node, bool _child = false, bool _warnXML=true);
+    virtual void ParseXML(XMLNode& _node, bool _child = false);
 
     virtual void Initialize();
     virtual void Run();
@@ -96,14 +96,11 @@ BasicRRTStrategy(string _lp, string _dm, string _nf, string _vc, string _nc,
 
 template<class MPTraits>
 BasicRRTStrategy<MPTraits>::
-BasicRRTStrategy(MPProblemType* _problem, XMLNodeReader& _node,
-    bool _warnXML, bool _child) :
+BasicRRTStrategy(MPProblemType* _problem, XMLNode& _node, bool _child) :
   MPStrategyMethod<MPTraits>(_problem, _node),
   m_query((Query<MPTraits>*)NULL) {
     this->SetName("BasicRRTStrategy");
-    ParseXML(_node, _child,_warnXML);
-    if(_warnXML)
-      _node.warnUnrequestedAttributes();
+    ParseXML(_node, _child);
   }
 
 template<class MPTraits>
@@ -114,50 +111,41 @@ BasicRRTStrategy<MPTraits>::
 template<class MPTraits>
 void
 BasicRRTStrategy<MPTraits>::
-ParseXML(XMLNodeReader& _node, bool _child, bool _warnXML) {
-  for(XMLNodeReader::childiterator citr = _node.children_begin();
-      citr != _node.children_end(); ++citr){
-    if(citr->getName() == "Evaluator"){
-      string evalMethod = citr->stringXMLParameter("label", true, "",
-          "Evaluation Method");
-      m_evaluators.push_back(evalMethod);
-      if(_warnXML)
-        citr->warnUnrequestedAttributes();
-    }
-    else
-      if(_warnXML)
-        citr->warnUnknownNode();
-  }
+ParseXML(XMLNode& _node, bool _child) {
+  for(auto& child : _node)
+    if(child.Name() == "Evaluator")
+      m_evaluators.push_back(
+          child.Read("label", true, "", "Evaluation Method"));
 
-  m_delta = _node.numberXMLParameter("delta", false, 1.0, 0.0, MAX_DBL,
+  m_delta = _node.Read("delta", false, 1.0, 0.0, MAX_DBL,
       "Delta Distance");
-  m_minDist = _node.numberXMLParameter("minDist", false, 0.0, 0.0, m_delta,
+  m_minDist = _node.Read("minDist", false, 0.0, 0.0, m_delta,
       "Minimum Distance");
-  m_numRoots = _node.numberXMLParameter("numRoots", false, 1, 0, MAX_INT,
+  m_numRoots = _node.Read("numRoots", false, 1, 0, MAX_INT,
       "Number of Roots");
-  m_growthFocus = _node.numberXMLParameter("growthFocus", false, 0.0, 0.0, 1.0,
+  m_growthFocus = _node.Read("growthFocus", false, 0.0, 0.0, 1.0,
       "#GeneratedTowardsGoal/#Generated");
-  m_vc = _node.stringXMLParameter("vcLabel", true, "", "Validity Test Method");
-  m_nf = _node.stringXMLParameter("nfLabel", true, "", "Neighborhood Finder");
-  m_dm = _node.stringXMLParameter("dmLabel",true,"","Distance Metric");
-  m_lp = _node.stringXMLParameter("lpLabel", true, "", "Local Planning Method");
-  m_numDirections = _node.numberXMLParameter("m", false, 1, 1, 1000,
+  m_vc = _node.Read("vcLabel", true, "", "Validity Test Method");
+  m_nf = _node.Read("nfLabel", true, "", "Neighborhood Finder");
+  m_dm = _node.Read("dmLabel",true,"","Distance Metric");
+  m_lp = _node.Read("lpLabel", true, "", "Local Planning Method");
+  m_numDirections = _node.Read("m", false, 1, 1, 1000,
       "Number of directions to extend");
-  m_nc = _node.stringXMLParameter("connectorLabel", false, "",
+  m_nc = _node.Read("connectorLabel", false, "",
       "Node Connection Method");
-  m_gt = _node.stringXMLParameter("gtype", true, "",
+  m_gt = _node.Read("gtype", true, "",
       "Graph type dir/undirected tree/graph");
   if(!_child)
-    m_extenderLabel = _node.stringXMLParameter("extenderLabel", true, "",
+    m_extenderLabel = _node.Read("extenderLabel", true, "",
         "Extender label");
-  m_evaluateGoal = _node.boolXMLParameter("evaluateGoal", false, false, "");
-  m_growGoals = _node.boolXMLParameter("growGoals", false, false,
+  m_evaluateGoal = _node.Read("evaluateGoal", false, false, "");
+  m_growGoals = _node.Read("growGoals", false, false,
       "Determines whether or not we grow a tree from the goal");
-  m_maxTrial = _node.numberXMLParameter("trial", false, 3, 1, 1000,
+  m_maxTrial = _node.Read("trial", false, 3, 1, 1000,
       "Number of trials to get a dispersed direction");
 
   //optionally read in a query and create a Query object.
-  string query = _node.stringXMLParameter("query", false, "", "Query Filename");
+  string query = _node.Read("query", false, "", "Query Filename");
   if(query != "") {
     m_query = shared_ptr<Query<MPTraits>>(new Query<MPTraits>(query));
     m_query->SetMPProblem(this->GetMPProblem());
@@ -180,7 +168,7 @@ Print(ostream& _os) const {
   _os << "\tEvaluate Goal:: " << m_evaluateGoal << endl;
   _os << "\tEvaluators:: " << endl;
   _os << "\tGrow Goals:: " << m_growGoals << endl;
-  for(auto s : m_evaluators)
+  for(auto&  s : m_evaluators)
     _os << "\t\t" << s << endl;
   _os << "\tdelta:: " << m_delta << endl;
   _os << "\tminimum distance:: " << m_minDist << endl;
@@ -208,7 +196,7 @@ Initialize(){
     vector<CfgType>& queryCfgs = m_query->GetQuery();
     typedef typename vector<CfgType>::iterator CIT;
     if(m_growGoals) {
-      for(auto cfg : queryCfgs) {
+      for(auto&  cfg : queryCfgs) {
         VID add = this->GetRoadmap()->GetGraph()->AddVertex(cfg);
         m_trees.push_back(vector<VID>(1, add));
       }
@@ -242,7 +230,7 @@ Initialize(){
     if(!m_trees.empty()) {
       cout << "\tthey are:\n";
       size_t t = 0;
-      for(auto tree : m_trees) {
+      for(auto&  tree : m_trees) {
         cout << "tree " << t++ << " has " << tree.size() << " vertices";
         if(!tree.empty()) {
           cout << " with root " << *tree.begin() << ":\n";
@@ -410,7 +398,7 @@ SelectDispersedDirection(VID _v) {
 
     //do for all the expanded directions
     double minAngle = MAX_DBL;
-    for(auto cfg : x) {
+    for(auto&  cfg : x) {
       CfgType difCfg2 = cfg - c1;
       difCfg2 = difCfg2/difCfg2.Magnitude();
       double res=0;
@@ -440,7 +428,7 @@ SelectNeighbors(VID _v) {
   GraphType* g = this->GetRoadmap()->GetGraph();
   typename GraphType::vertex_iterator vi = g->find_vertex(_v);
   vector<CfgType> vec;
-  for(auto e : *vi)
+  for(const auto&  e : *vi)
     vec.push_back(g->GetVertex(e.target()));
   return vec;
 }
@@ -488,7 +476,7 @@ ExpandTree(CfgType& _dir) {
   size_t numRoadmapVertex  = g->get_num_vertices();
 
   size_t treeSize = 0;
-  for(auto tree : m_trees)
+  for(auto&  tree : m_trees)
     treeSize += tree.size();
 
   bool fixTree = false;
@@ -509,7 +497,7 @@ ExpandTree(CfgType& _dir) {
     stapl::sequential::vector_property_map<GraphType, size_t> cmap;
     get_cc_stats(*g, cmap, ccs);
     vector<VID> ccVIDs;
-    for(auto cc : ccs) {
+    for(auto&  cc : ccs) {
       cmap.reset();
       ccVIDs.clear();
       get_cc(*g, cmap, cc.second, ccVIDs);
@@ -578,14 +566,14 @@ ExpandTree(CfgType& _dir) {
     if(std::string::npos != m_gt.find("GRAPH")) {
       if(this->m_debug) {
         cout << "tree roots:\n";
-        for(auto tree : m_trees)
+        for(auto&  tree : m_trees)
           cout << "\t" << tree.front() << " (" << tree.size() << ")\n";
         cout << "connecting neighbors...\n";
       }
       ConnectNeighbors(recentVID);
       if(this->m_debug) {
         cout << "tree roots:\n";
-        for(auto tree : m_trees)
+        for(auto&  tree : m_trees)
           cout << "\t" << tree.front() << " (" << tree.size() << ")\n";
       }
     }
@@ -627,7 +615,7 @@ ExpandTree(CfgType& _dir) {
         if(std::string::npos!=m_gt.find("GRAPH")){
           if(this->m_debug) {
             cout << "tree roots:\n";
-            for(auto tree : m_trees)
+            for(auto&  tree : m_trees)
               cout << "\t" << tree.front() << " (" << tree.size() << ")\n";
           }
           string conClockName = "Connection time ";
@@ -638,7 +626,7 @@ ExpandTree(CfgType& _dir) {
           stats->StopClock(conClockName);
           if(this->m_debug) {
             cout << "tree roots:\n";
-            for(auto tree : m_trees)
+            for(auto&  tree : m_trees)
               cout << "\t" << tree.front() << " (" << tree.size() << ")\n";
           }
         }
@@ -753,13 +741,13 @@ ConnectTrees(VID _recentlyGrown) {
     if(std::string::npos != m_gt.find("GRAPH")) {
       if(this->m_debug) {
         cout << "tree roots:\n";
-        for(auto tree : m_trees)
+        for(auto&  tree : m_trees)
           cout << "\t" << tree.front() << " (" << tree.size() << ")\n";
       }
       ConnectNeighbors(newVID);
       if(this->m_debug) {
         cout << "tree roots:\n";
-        for(auto tree : m_trees)
+        for(auto&  tree : m_trees)
           cout << "\t" << tree.front() << " (" << tree.size() << ")\n";
       }
     }

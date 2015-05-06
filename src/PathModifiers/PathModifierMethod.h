@@ -21,7 +21,7 @@ class PathModifierMethod : public MPBaseObject<MPTraits> {
     typedef typename MPProblemType::VID VID;
 
     PathModifierMethod();
-    PathModifierMethod(MPProblemType* _problem, XMLNodeReader& _node);
+    PathModifierMethod(MPProblemType* _problem, XMLNode& _node);
 
     virtual void Print(ostream& _os) const;
 
@@ -90,10 +90,9 @@ PathModifierMethod() :
 
 template<class MPTraits>
 PathModifierMethod<MPTraits>::
-PathModifierMethod(MPProblemType* _problem, XMLNodeReader& _node) :
+PathModifierMethod(MPProblemType* _problem, XMLNode& _node) :
   MPBaseObject<MPTraits>(_problem, _node) {
-    m_pathFile = _node.stringXMLParameter("pathFile", false, "",
-        "Smoothed path filename");
+    m_pathFile = _node.Read("pathFile", false, "", "Smoothed path filename");
   }
 
 template<class MPTraits>
@@ -131,7 +130,7 @@ vector<typename MPTraits::MPProblemType::VID>
 PathModifierMethod<MPTraits>::
 GetPathVIDs(vector<CfgType>& _path, GraphType* _graph) {
   vector<VID> pathVIDs;
-  for(auto cfg : _path) {
+  for(auto&  cfg : _path) {
     VID v = _graph->GetVID(cfg);
     if(v != INVALID_VID)
       pathVIDs.push_back(v);

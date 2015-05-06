@@ -4,15 +4,15 @@
 #include "MPStrategy.h"
 
 
-RRGStrategy::RRGStrategy(XMLNodeReader& _node, MPProblem* _problem) :
+RRGStrategy::RRGStrategy(XMLNode& _node, MPProblem* _problem) :
   BasicRRTStrategy(_node, _problem, false){
     ParseXML(_node);
     _node.warnUnrequestedAttributes();
   }
 
 void
-RRGStrategy::ParseXML(XMLNodeReader& _node) {
-  m_nc = _node.stringXMLParameter("connectionMethod",true,"","Node Connection Method");
+RRGStrategy::ParseXML(XMLNode& _node) {
+  m_nc = _node.Read("connectionMethod",true,"","Node Connection Method");
   if(m_debug) Print(cout);
 }
 

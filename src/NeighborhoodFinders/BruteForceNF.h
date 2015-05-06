@@ -20,11 +20,11 @@ class BruteForceNF : public NeighborhoodFinderMethod<MPTraits> {
         this->m_k = _k;
       }
 
-    BruteForceNF(MPProblemType* _problem, XMLNodeReader& _node) :
+    BruteForceNF(MPProblemType* _problem, XMLNode& _node) :
       NeighborhoodFinderMethod<MPTraits>(_problem, _node) {
         this->SetName("BruteForceNF");
         this->m_nfType = K;
-        this->m_k = _node.numberXMLParameter("k", true, 5, 0, MAX_INT, "Number of neighbors to find");
+        this->m_k = _node.Read("k", true, 5, 0, MAX_INT, "Number of neighbors to find");
       }
 
     virtual void Print(ostream& _os) const {

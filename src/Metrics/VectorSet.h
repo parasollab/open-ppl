@@ -20,9 +20,9 @@ class VectorSet {
 
     VectorSet(vector<CfgType>& _cfgs) : m_cfgs(_cfgs) {}
 
-    VectorSet(XMLNodeReader& _node) {
+    VectorSet(XMLNode& _node) {
       //reads in a list of cfgs from a file
-      string filename = _node.stringXMLParameter("filename", true, "", "filename containing witness samples");
+      string filename = _node.Read("filename", true, "", "filename containing witness samples");
       ifstream is(filename.c_str());
       copy(istream_iterator<CfgType>(is), istream_iterator<CfgType>(),
           back_insert_iterator<vector<CfgType> >(m_cfgs));

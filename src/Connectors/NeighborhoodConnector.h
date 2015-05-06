@@ -29,10 +29,10 @@ class NeighborhoodConnector: public ConnectorMethod<MPTraits> {
 
     NeighborhoodConnector(string _nfLabel = "", string _lpLabel = "",
         bool _checkIfSameCC = false, bool _countFailures = false, size_t _fail = 5);
-    NeighborhoodConnector(MPProblemType* _problem, XMLNodeReader& _node);
+    NeighborhoodConnector(MPProblemType* _problem, XMLNode& _node);
 
     virtual void Print(ostream& _os) const;
-    virtual void ParseXML(XMLNodeReader& _node);
+    virtual void ParseXML(XMLNode& _node);
 
     template<typename InputIterator1, typename InputIterator2,
       typename OutputIterator>
@@ -55,7 +55,8 @@ class NeighborhoodConnector: public ConnectorMethod<MPTraits> {
 };
 
 template<class MPTraits>
-NeighborhoodConnector<MPTraits>::NeighborhoodConnector(string _nfLabel, string _lpLabel,
+NeighborhoodConnector<MPTraits>::
+NeighborhoodConnector(string _nfLabel, string _lpLabel,
     bool _checkIfSameCC, bool _countFailures, size_t _fail) :
   ConnectorMethod<MPTraits>(_nfLabel, _lpLabel),
   m_checkIfSameCC(_checkIfSameCC),
@@ -65,20 +66,21 @@ NeighborhoodConnector<MPTraits>::NeighborhoodConnector(string _nfLabel, string _
   }
 
 //Read from XML to get the parameters.
-  template<class MPTraits>
-NeighborhoodConnector<MPTraits>::NeighborhoodConnector(MPProblemType* _problem, XMLNodeReader& _node)
-  : ConnectorMethod<MPTraits>(_problem, _node) {
+template<class MPTraits>
+NeighborhoodConnector<MPTraits>::
+NeighborhoodConnector(MPProblemType* _problem, XMLNode& _node) :
+  ConnectorMethod<MPTraits>(_problem, _node) {
     ParseXML(_node);
   }
 
 template<class MPTraits>
 void
-NeighborhoodConnector<MPTraits>::ParseXML(XMLNodeReader& _node){
+NeighborhoodConnector<MPTraits>::
+ParseXML(XMLNode& _node){
   this->SetName("NeighborhoodConnector");
-  m_checkIfSameCC = _node.boolXMLParameter("checkIfSameCC", false, true, "If true, do not connect if edges are in the same CC");
-  m_countFailures = _node.boolXMLParameter("countFailures", false, false, "if false, ignore failure count and just attempt k; if true, attempt k neighbors until too many failures detected");
-  m_fail = _node.numberXMLParameter("fail", false, 5, 0, 10000, "amount of failed connections allowed before operation terminates");
-  _node.warnUnrequestedAttributes();
+  m_checkIfSameCC = _node.Read("checkIfSameCC", false, true, "If true, do not connect if edges are in the same CC");
+  m_countFailures = _node.Read("countFailures", false, false, "if false, ignore failure count and just attempt k; if true, attempt k neighbors until too many failures detected");
+  m_fail = _node.Read("fail", false, 5, 0, 10000, "amount of failed connections allowed before operation terminates");
 }
 
 template<class MPTraits>

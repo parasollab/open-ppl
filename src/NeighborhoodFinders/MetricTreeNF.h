@@ -18,9 +18,9 @@ class MetricTreeNF: public NeighborhoodFinderMethod {
 public:
   typedef typename RoadmapGraph<CFG, WEIGHT>::VID VID;
 
-  MetricTreeNF(XMLNodeReader& _node, MPProblem* _problem) :
+  MetricTreeNF(XMLNode& _node, MPProblem* _problem) :
     NeighborhoodFinderMethod(_node,_problem) {
-    m_epsilon = _node.numberXMLParameter("epsilon", false, 0.0, 0.0, 100.0, "Epsilon value for CGAL");
+    m_epsilon = _node.Read("epsilon", false, 0.0, 0.0, 100.0, "Epsilon value for CGAL");
     m_cur_roadmap_version = -1;
     spillTreeNotCreated=true;
   }

@@ -29,7 +29,7 @@ class AStar : public LocalPlannerMethod<MPTraits> {
     AStar(const string& _vcLabel = "", size_t _maxTries = 0,
         size_t _numNeighbors = 0, size_t _histLength = 5, bool _saveIntermediates = false);
 
-    AStar(MPProblemType* _problem, XMLNodeReader& _node);
+    AStar(MPProblemType* _problem, XMLNode& _node);
 
     virtual ~AStar();
 
@@ -80,13 +80,13 @@ AStar<MPTraits>::AStar(const string& _vcLabel,
 }
 
 template <class MPTraits>
-AStar<MPTraits>::AStar(MPProblemType* _problem, XMLNodeReader& _node) :
+AStar<MPTraits>::AStar(MPProblemType* _problem, XMLNode& _node) :
   LocalPlannerMethod<MPTraits>(_problem, _node) {
   this->SetName("AStar");
-  m_vcLabel = _node.stringXMLParameter("vcLabel", true, "", "Validity Test Label");
-  m_maxTries = _node.numberXMLParameter("maxTries", true, 0, 0, MAX_INT, "n tries");
-  m_numNeighbors = _node.numberXMLParameter("numNeighbors", true, 0, 0, MAX_INT, "n neighbors");
-  m_histLength = _node.numberXMLParameter("histLength", false, 5, 0, MAX_INT,
+  m_vcLabel = _node.Read("vcLabel", true, "", "Validity Test Label");
+  m_maxTries = _node.Read("maxTries", true, 0, 0, MAX_INT, "n tries");
+  m_numNeighbors = _node.Read("numNeighbors", true, 0, 0, MAX_INT, "n neighbors");
+  m_histLength = _node.Read("histLength", false, 5, 0, MAX_INT,
       "history length for detecting cycles");
 }
 
@@ -322,7 +322,7 @@ class AStarDistance : public AStar<MPTraits> {
     AStarDistance(const string& _vcLabel = "", const string& _dmLabel = "",
         size_t _maxTries = 0, size_t _numNeighbors = 0, size_t _histLength = 5);
 
-    AStarDistance(MPProblemType* _problem, XMLNodeReader& _node);
+    AStarDistance(MPProblemType* _problem, XMLNode& _node);
 
     virtual ~AStarDistance();
 
@@ -336,20 +336,21 @@ class AStarDistance : public AStar<MPTraits> {
 };
 
 template <class MPTraits>
-AStarDistance<MPTraits>::AStarDistance(const string& _vcLabel, const string& _dmLabel,
+AStarDistance<MPTraits>::
+AStarDistance(const string& _vcLabel, const string& _dmLabel,
     size_t _maxTries, size_t _numNeighbors, size_t _histLength) :
-    AStar<MPTraits>(_vcLabel, _maxTries, _numNeighbors, _histLength),
-    m_dmLabel(_dmLabel) {
-  this->SetName("AStarDistance");
-}
+  AStar<MPTraits>(_vcLabel, _maxTries, _numNeighbors, _histLength),
+  m_dmLabel(_dmLabel) {
+    this->SetName("AStarDistance");
+  }
 
 template <class MPTraits>
-AStarDistance<MPTraits>::AStarDistance(MPProblemType* _problem, XMLNodeReader& _node) :
-    AStar<MPTraits>(_problem, _node) {
-  this->SetName("AStarDistance");
-  m_dmLabel = _node.stringXMLParameter("dmLabel", true, "", "Distance Metric Label");
-  _node.warnUnrequestedAttributes();
-}
+AStarDistance<MPTraits>::
+AStarDistance(MPProblemType* _problem, XMLNode& _node) :
+  AStar<MPTraits>(_problem, _node) {
+    this->SetName("AStarDistance");
+    m_dmLabel = _node.Read("dmLabel", true, "", "Distance Metric Label");
+  }
 
 template <class MPTraits>
 AStarDistance<MPTraits>::~AStarDistance() {}
@@ -394,7 +395,7 @@ class AStarClearance : public AStar<MPTraits> {
         size_t _maxTries = 0, size_t _numNeighbors = 0, size_t _histLength = 5,
         const ClearanceUtility<MPTraits>& _c = ClearanceUtility<MPTraits>());
 
-    AStarClearance(MPProblemType* _problem, XMLNodeReader& _node);
+    AStarClearance(MPProblemType* _problem, XMLNode& _node);
 
     virtual ~AStarClearance();
 
@@ -408,19 +409,20 @@ class AStarClearance : public AStar<MPTraits> {
 };
 
 template <class MPTraits>
-AStarClearance<MPTraits>::AStarClearance(const string& _vcLabel,
+AStarClearance<MPTraits>::
+AStarClearance(const string& _vcLabel,
     size_t _maxTries, size_t _numNeighbors, size_t _histLength,
     const ClearanceUtility<MPTraits>& _c) :
-    AStar<MPTraits>(_vcLabel, _maxTries, _numNeighbors, _histLength), m_clearanceUtility(_c) {
-  this->SetName("AStarClearance");
-}
+  AStar<MPTraits>(_vcLabel, _maxTries, _numNeighbors, _histLength), m_clearanceUtility(_c) {
+    this->SetName("AStarClearance");
+  }
 
 template <class MPTraits>
-AStarClearance<MPTraits>::AStarClearance(MPProblemType* _problem, XMLNodeReader& _node) :
-    AStar<MPTraits>(_problem, _node), m_clearanceUtility(_problem, _node) {
-  this->SetName("AStarClearance");
-  _node.warnUnrequestedAttributes();
-}
+AStarClearance<MPTraits>::
+AStarClearance(MPProblemType* _problem, XMLNode& _node) :
+  AStar<MPTraits>(_problem, _node), m_clearanceUtility(_problem, _node) {
+    this->SetName("AStarClearance");
+  }
 
 template <class MPTraits>
 AStarClearance<MPTraits>::~AStarClearance() {}

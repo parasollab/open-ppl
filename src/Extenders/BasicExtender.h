@@ -21,9 +21,9 @@ class BasicExtender : public ExtenderMethod<MPTraits> {
 
     BasicExtender(const string& _dmLabel = "", const string& _vcLabel = "",
         double _delta = 1.0, bool _randomOrientation = true);
-    BasicExtender(MPProblemType* _problem, XMLNodeReader& _node);
+    BasicExtender(MPProblemType* _problem, XMLNode& _node);
 
-    void ParseXML(XMLNodeReader& _node);
+    void ParseXML(XMLNode& _node);
     virtual void Print(ostream& _os) const;
 
     virtual bool Extend(const CfgType& _near, const CfgType& _dir,
@@ -53,7 +53,7 @@ BasicExtender<MPTraits>::BasicExtender(const string& _dmLabel,
 
 template<class MPTraits>
 BasicExtender<MPTraits>::BasicExtender(MPProblemType* _problem, 
-    XMLNodeReader& _node) :
+    XMLNode& _node) :
   ExtenderMethod<MPTraits>(_problem, _node) {
     this->SetName("BasicExtender");
     ParseXML(_node);
@@ -61,14 +61,14 @@ BasicExtender<MPTraits>::BasicExtender(MPProblemType* _problem,
 
 template<class MPTraits>
 void
-BasicExtender<MPTraits>::ParseXML(XMLNodeReader& _node) {
-  m_dmLabel = _node.stringXMLParameter("dmLabel",true,"",
+BasicExtender<MPTraits>::ParseXML(XMLNode& _node) {
+  m_dmLabel = _node.Read("dmLabel",true,"",
                                        "Distance metric label");
-  m_vcLabel = _node.stringXMLParameter("vcLabel", true, "", 
+  m_vcLabel = _node.Read("vcLabel", true, "", 
                                        "Validity checker label");
-  m_delta = _node.numberXMLParameter("delta", false, 1.0, 0.0, MAX_DBL, 
+  m_delta = _node.Read("delta", false, 1.0, 0.0, MAX_DBL, 
                                      "Delta distance");
-  m_randomOrientation = _node.boolXMLParameter("randomOrientation", false, 
+  m_randomOrientation = _node.Read("randomOrientation", false, 
                                                true, "Random orientation");
 }
 

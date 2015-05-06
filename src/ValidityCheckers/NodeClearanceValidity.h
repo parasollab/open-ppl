@@ -13,7 +13,7 @@ class NodeClearanceValidity : public ValidityCheckerMethod<MPTraits> {
     typedef typename MPProblemType::VID VID;
 
     NodeClearanceValidity(double _delta = 1.0, string _nfLabel = "");
-    NodeClearanceValidity(MPProblemType* _problem, XMLNodeReader& _node);
+    NodeClearanceValidity(MPProblemType* _problem, XMLNode& _node);
     virtual ~NodeClearanceValidity();
 
     virtual void Print(ostream& _os) const;
@@ -32,11 +32,11 @@ NodeClearanceValidity<MPTraits>::NodeClearanceValidity(double _delta, string _nf
   }
 
 template <class MPTraits>
-NodeClearanceValidity<MPTraits>::NodeClearanceValidity(MPProblemType* _problem, XMLNodeReader& _node):
+NodeClearanceValidity<MPTraits>::NodeClearanceValidity(MPProblemType* _problem, XMLNode& _node):
   ValidityCheckerMethod<MPTraits>(_problem, _node) {
     this->m_name = "NodeClearanceValidity";
-    m_delta = _node.numberXMLParameter("delta", true, 1.0, 0.0, MAX_DBL, "Clearance from every other node");
-    m_nfLabel = _node.stringXMLParameter("nfLabel", true, "", "Neighborhood Finder to be used");
+    m_delta = _node.Read("delta", true, 1.0, 0.0, MAX_DBL, "Clearance from every other node");
+    m_nfLabel = _node.Read("nfLabel", true, "", "Neighborhood Finder to be used");
   }
 
 template <class MPTraits>

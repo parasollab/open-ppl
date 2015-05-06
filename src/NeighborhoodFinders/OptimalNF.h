@@ -19,11 +19,11 @@ class OptimalNF : public NeighborhoodFinderMethod<MPTraits> {
         this->m_nfType = OPTIMAL;
       }
 
-    OptimalNF(MPProblemType* _problem, XMLNodeReader& _node) :
+    OptimalNF(MPProblemType* _problem, XMLNode& _node) :
       NeighborhoodFinderMethod<MPTraits>(_problem, _node, false) {
         this->SetName("OptimalNF");
         this->m_nfType = OPTIMAL;
-        m_nfLabel = _node.stringXMLParameter("nfLabel", true, "", "Neighborhood Finder");
+        m_nfLabel = _node.Read("nfLabel", true, "", "Neighborhood Finder");
       }
 
     virtual void Print(ostream& _os) const {

@@ -1,5 +1,5 @@
-#ifndef MIXEXTENDER_H_
-#define MIXEXTENDER_H_
+#ifndef MIX_EXTENDER_H_
+#define MIX_EXTENDER_H_
 
 #include "ExtenderMethod.h"
 
@@ -17,9 +17,9 @@ class MixExtender : public ExtenderMethod<MPTraits> {
     typedef typename MPTraits::MPProblemType MPProblemType;
 
     MixExtender();
-    MixExtender(MPProblemType* _problem, XMLNodeReader& _node);
+    MixExtender(MPProblemType* _problem, XMLNode& _node);
 
-    void ParseXML(XMLNodeReader& _node);
+    void ParseXML(XMLNode& _node);
     virtual void Print(ostream& _os) const;
 
     virtual bool Extend(const CfgType& _near, const CfgType& _dir,
@@ -30,14 +30,15 @@ class MixExtender : public ExtenderMethod<MPTraits> {
 };
 
 template<class MPTraits>
-MixExtender<MPTraits>::MixExtender() :
+MixExtender<MPTraits>::
+MixExtender() :
   ExtenderMethod<MPTraits>() {
     this->SetName("MixExtender");
   }
 
 template<class MPTraits>
-MixExtender<MPTraits>::MixExtender(MPProblemType* _problem, 
-    XMLNodeReader& _node) :
+MixExtender<MPTraits>::
+MixExtender(MPProblemType* _problem, XMLNode& _node) :
   ExtenderMethod<MPTraits>(_problem, _node) {
     this->SetName("MixExtender");
     ParseXML(_node);
@@ -45,48 +46,41 @@ MixExtender<MPTraits>::MixExtender(MPProblemType* _problem,
 
 template<class MPTraits>
 void
-MixExtender<MPTraits>::ParseXML(XMLNodeReader& _node) {
+MixExtender<MPTraits>::
+ParseXML(XMLNode& _node) {
   // Get RRT Extender label and probability
-  for(XMLNodeReader::childiterator citr = _node.children_begin(); 
-      citr != _node.children_end(); ++citr){
-    if(citr->getName() == "Extender"){
-      string label = citr->stringXMLParameter("label", true, "", 
+  for(auto& child : _node) {
+    if(child.Name() == "Extender"){
+      string label = child.Read("label", true, "",
           "Extender label");
-      double probability = citr->numberXMLParameter("probability", true, 0.0, 
+      double probability = child.Read("probability", true, 0.0,
           0.0, 1.0, "Extender probability");
       m_growSet.push_back(make_pair(label, make_pair(probability, 0)));
-      citr->warnUnrequestedAttributes();
     }
-    else
-      citr->warnUnknownNode();
   }
 
   // Normalize probabilities
   double total = 0;
-  for(ExpanderSet::iterator it = m_growSet.begin(); it != m_growSet.end(); it++)
-    total += it->second.first;
+  for(auto& exp : m_growSet)
+    total += exp.second.first;
 
   double r = 0;
-  for(ExpanderSet::iterator it = m_growSet.begin(); it != m_growSet.end(); 
-      it++) {
-    it->second.first = it->second.first/total;
-    it->second.second = r + it->second.first;
-    r = it->second.second;
+  for(auto& exp : m_growSet) {
+    exp.second.first = exp.second.first/total;
+    exp.second.second = r + exp.second.first;
+    r = exp.second.second;
   }
 
-  if(total == 0) {
-    cerr << "Error::ParseXML : total probability of growth method is null" 
-         << endl;
-    exit(1);
-  }
+  if(total == 0)
+    throw ParseException(_node.Where(), "Total probability of growth methods"
+        " is 0.");
 
   // Print
   if(this->m_debug) {
     cout << "Growth\nmehod\tprob\t\tprob norms" << endl;
-    for(ExpanderSet::iterator it = m_growSet.begin(); it != m_growSet.end(); 
-        it++)
-      cout << it->first << "\t" << it->second.first << "\t" 
-           << it->second.second << endl;
+    for(auto& exp : m_growSet)
+      cout << exp.first << "\t" << exp.second.first << "\t"
+           << exp.second.second << endl;
   }
 }
 
@@ -95,7 +89,7 @@ void
 MixExtender<MPTraits>::Print(ostream& _os) const {
   ExtenderMethod<MPTraits>::Print(_os);
   _os << "\textender label : " << endl;
-  for(ExpanderSet::const_iterator it = m_growSet.begin(); 
+  for(ExpanderSet::const_iterator it = m_growSet.begin();
       it != m_growSet.end(); it++)
     _os << "\t\t" << it->first << endl;
  }
@@ -106,7 +100,7 @@ MixExtender<MPTraits>::Extend(const CfgType& _near, const CfgType& _dir,
     CfgType& _new, LPOutput<MPTraits>& _lpOutput) {
   if(m_growSet.size() > 0) {
     double growthProb = DRand();
-    for(ExpanderSet::iterator it = m_growSet.begin(); it != m_growSet.end(); 
+    for(ExpanderSet::iterator it = m_growSet.begin(); it != m_growSet.end();
         it++) {
       if(growthProb < it->second.second) {
         if(this->m_debug)

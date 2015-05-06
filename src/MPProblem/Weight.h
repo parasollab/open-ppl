@@ -150,7 +150,7 @@ template<class CfgType>
 ostream&
 operator<<(ostream& _os, const DefaultWeight<CfgType>& _w) {
   _os << _w.m_intermediates.size() << " ";
-  for(auto cfg : _w.m_intermediates)
+  for(auto&  cfg : _w.m_intermediates)
     _os << cfg;
   return _os << _w.m_weight;
 }

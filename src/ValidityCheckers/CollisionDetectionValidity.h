@@ -18,7 +18,7 @@ class CollisionDetectionValidity : public ValidityCheckerMethod<MPTraits> {
 
     CollisionDetectionValidity();
     CollisionDetectionValidity(CollisionDetectionMethod* _cdMethod, bool _ignoreSelfCollision = false, int _ignoreIAdjacentLinks = 1);
-    CollisionDetectionValidity(typename MPTraits::MPProblemType* _problem, XMLNodeReader& _node);
+    CollisionDetectionValidity(typename MPTraits::MPProblemType* _problem, XMLNode& _node);
     virtual ~CollisionDetectionValidity();
 
     virtual bool IsValidImpl(CfgType& _cfg, CDInfo& _cdInfo, const string& _callName);
@@ -52,14 +52,14 @@ CollisionDetectionValidity<MPTraits>::CollisionDetectionValidity(CollisionDetect
   }
 
 template<class MPTraits>
-CollisionDetectionValidity<MPTraits>::CollisionDetectionValidity(typename MPTraits::MPProblemType* _problem, XMLNodeReader& _node)
+CollisionDetectionValidity<MPTraits>::CollisionDetectionValidity(typename MPTraits::MPProblemType* _problem, XMLNode& _node)
   : ValidityCheckerMethod<MPTraits>(_problem, _node) {
     this->m_name = "CollisionDetection";
 
-    m_ignoreSelfCollision = _node.boolXMLParameter("ignoreSelfCollision", false, false, "Check for self collision");
-    m_ignoreIAdjacentLinks  = _node.numberXMLParameter("ignoreIAdjacentLinks", false, 1, 0, MAX_INT, "number of links to ignore for linkages");
+    m_ignoreSelfCollision = _node.Read("ignoreSelfCollision", false, false, "Check for self collision");
+    m_ignoreIAdjacentLinks  = _node.Read("ignoreIAdjacentLinks", false, 1, 0, MAX_INT, "number of links to ignore for linkages");
 
-    string cdLabel = _node.stringXMLParameter("method",true,"","method");
+    string cdLabel = _node.Read("method",true,"","method");
 
     if (cdLabel == "BoundingSpheres")
       m_cdMethod = new BoundingSpheres();

@@ -5,7 +5,7 @@
 #include "ValidityChecker.h"
 
 ClosedChainProblem::
-ClosedChainProblem(XMLNodeReader& in_Node) : MPProblem(in_Node, false)
+ClosedChainProblem(XMLNode& in_Node) : MPProblem(in_Node, false)
 {
   ParseXML(in_Node);
 
@@ -42,18 +42,17 @@ ClosedChainProblem::
 }
 
 void ClosedChainProblem::
-ParseXML(XMLNodeReader& in_Node) {
-  in_Node.verifyName("MPProblem");
+ParseXML(XMLNode& in_Node) {
 
-  for(XMLNodeReader::childiterator citr = in_Node.children_begin(); citr!= in_Node.children_end(); ++citr)
+  for(XMLNode::childiterator citr = in_Node.children_begin(); citr!= in_Node.children_end(); ++citr)
     if(!this->ParseChild(citr)){
       if(citr->getName() == "links_file")
       {
-        string filename = citr->stringXMLParameter(string("filename"), true, string(""),string("Links File Name"));
+        string filename = citr->Read(string("filename"), true, string(""),string("Links File Name"));
 
 #if (defined(PMPReachDistCC) || defined(PMPReachDistCCFixed))
-        bool is_closed_chain = citr->boolXMLParameter("closed_chain", true, true, "Flag if tree represents a closed chain or not");
-        double rdres = citr->numberXMLParameter("rdres", false, 0.05, 0.0, 1000.0, "resolution for interpolating in reachable distance space");
+        bool is_closed_chain = citr->Read("closed_chain", true, true, "Flag if tree represents a closed chain or not");
+        double rdres = citr->Read("rdres", false, 0.05, 0.0, 1000.0, "resolution for interpolating in reachable distance space");
         cout<<"filename="<<filename<<endl;
         cout<<"parsing file"<<endl;
         //ParseLinksFile(filename.c_str());

@@ -15,10 +15,10 @@ class ClearanceTestStrategy : public MPStrategyMethod<MPTraits> {
         vector<ClearanceUtility<MPTraits> >(),
         string _dmLabel = "");
     ClearanceTestStrategy(typename MPTraits::MPProblemType* _problem,
-        XMLNodeReader& _node);
+        XMLNode& _node);
     virtual ~ClearanceTestStrategy();
 
-    virtual void ParseXML(XMLNodeReader& _node);
+    virtual void ParseXML(XMLNode& _node);
     virtual void Print(ostream& _os) const;
 
     virtual void Initialize(){}
@@ -45,7 +45,7 @@ ClearanceTestStrategy(const map<string, pair<size_t, size_t> >& _samplerLabels,
 template <class MPTraits>
 ClearanceTestStrategy<MPTraits>::
 ClearanceTestStrategy(typename MPTraits::MPProblemType* _problem,
-    XMLNodeReader& _node) : MPStrategyMethod<MPTraits>(_problem, _node) {
+    XMLNode& _node) : MPStrategyMethod<MPTraits>(_problem, _node) {
   this->SetName("ClearanceTest");
   ParseXML(_node);
 }
@@ -58,36 +58,30 @@ ClearanceTestStrategy<MPTraits>::
 template <class MPTraits>
 void
 ClearanceTestStrategy<MPTraits>::
-ParseXML(XMLNodeReader& _node) {
-  m_dmLabel = _node.stringXMLParameter("dmLabel", true, "",
-      "distance metric label");
-  _node.warnUnrequestedAttributes();
+ParseXML(XMLNode& _node) {
+  m_dmLabel = _node.Read("dmLabel", true, "", "distance metric label");
 
-  for(XMLNodeReader::childiterator citr = _node.children_begin();
-      citr != _node.children_end(); ++citr) {
-    if(citr->getName() == "Sampler") {
-      string generationMethod = citr->stringXMLParameter("label", true, "",
+  for(auto& child : _node) {
+    if(child.Name() == "Sampler") {
+      string generationMethod = child.Read("label", true, "",
           "sampler method label");
-      size_t numberSamples = citr->numberXMLParameter("number", false, 1, 0,
+      size_t numberSamples = child.Read("number", false, 1, 0,
           MAX_INT, "number of samples");
-      size_t numberAttempts = citr->numberXMLParameter("attempts", false, 100,
+      size_t numberAttempts = child.Read("attempts", false, 100,
           1, MAX_INT, "number of attempts");
       m_samplerLabels[generationMethod] =
         make_pair(numberSamples, numberAttempts);
-      citr->warnUnrequestedAttributes();
     }
-    else if(citr->getName() == "Clearance") {
+    else if(child.Name() == "Clearance") {
       m_clearanceUtilities.push_back(
-          ClearanceUtility<MPTraits>(this->GetMPProblem(), *citr));
+          ClearanceUtility<MPTraits>(this->GetMPProblem(), child));
     }
-    else
-      citr->warnUnknownNode();
   }
 
   if(m_clearanceUtilities.size() < 2)
-    throw ParseException(WHERE, "Must specify at least two clearance \
-        measurement settings. The first as a baseline and the remaining to \
-        compare to it.");
+    throw ParseException(_node.Where(), "Must specify at least two clearance"
+        "measurement settings. The first as a baseline and the remaining to"
+        "compare to it.");
 }
 
 template <class MPTraits>
@@ -97,12 +91,12 @@ Print(ostream& _os) const {
   _os << "ClearanceTestStrategy ::"
     << "\tdmLabel = \"" << m_dmLabel << "\""
     << "\n\tSamplers\n";
-  for(auto sampler : m_samplerLabels)
+  for(auto&  sampler : m_samplerLabels)
     _os << "\t\t\"" << sampler.first << "\", "
       << sampler.second.first << " samples, "
       << sampler.second.second << " attempts\n";
   _os << "\tClearance Measurements\n";
-  for(auto cu : m_clearanceUtilities) {
+  for(auto&  cu : m_clearanceUtilities) {
     cu.Print(_os);
     _os << endl;
   }
@@ -119,7 +113,7 @@ Run() {
 
   //generate samples
   vector<CfgType> samples;
-  for(auto sampler : m_samplerLabels) {
+  for(auto&  sampler : m_samplerLabels) {
     typename MPTraits::MPProblemType::SamplerPointer s =
       this->GetSampler(sampler.first);
     s->Sample(sampler.second.first, sampler.second.second,
@@ -129,7 +123,7 @@ Run() {
     cout << "\tgenerated " << samples.size() << " samples total" << endl;
 
   //for each sample, compare baseline clearance and input clearance
-  for(auto sample : samples) {
+  for(auto&  sample : samples) {
     if(this->m_debug)
       cout << "computing clearances for cfg: " << sample << endl;
 

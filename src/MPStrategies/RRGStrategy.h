@@ -5,10 +5,10 @@
 
 class RRGStrategy : public BasicRRTStrategy {
   public:
-    RRGStrategy(XMLNodeReader& _node, MPProblem* _problem);
+    RRGStrategy(XMLNode& _node, MPProblem* _problem);
     virtual ~RRGStrategy() {}
 
-    virtual void ParseXML(XMLNodeReader& _node);
+    virtual void ParseXML(XMLNode& _node);
     virtual void Print(ostream& _os) const;
     virtual VID ExpandTree(CfgType& _dir);
 

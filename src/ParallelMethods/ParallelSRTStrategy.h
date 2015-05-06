@@ -214,7 +214,7 @@ template<typename PartitionedView, typename rmView>
 class ParallelSRTStrategy : public MPStrategyMethod {
 
  public:
-  ParallelSRTStrategy(XMLNodeReader& in_pNode, MPProblem* in_pProblem);
+  ParallelSRTStrategy(XMLNode& in_pNode, MPProblem* in_pProblem);
 
     virtual ~ParallelSRTStrategy();
 
@@ -222,7 +222,7 @@ class ParallelSRTStrategy : public MPStrategyMethod {
     virtual void Initialize(int in_RegionID);
     virtual double RRTDistance(SRTStrategy* srt, Environment* env, BoundingBox bb, CfgType c1, CfgType c2);
 
-    virtual void ParseXML(XMLNodeReader& in_pNode);
+    virtual void ParseXML(XMLNode& in_pNode);
 
     virtual void Run(int in_RegionID) ;
 

@@ -23,9 +23,9 @@ class MedialAxisExtender : public ExtenderMethod<MPTraits> {
         MedialAxisUtility<MPTraits>(),
         double _delta = 1.0, double _minDist = 0.001, double _extendDist = 0.5,
         size_t _maxIntermediates = 10, const string& _lpLabel = "");
-    MedialAxisExtender(MPProblemType* _problem, XMLNodeReader& _node);
+    MedialAxisExtender(MPProblemType* _problem, XMLNode& _node);
 
-    void ParseXML(XMLNodeReader& _node);
+    void ParseXML(XMLNode& _node);
     virtual void Print(ostream& _os) const;
 
     virtual bool Extend(const CfgType& _near, const CfgType& _dir,
@@ -51,7 +51,7 @@ MedialAxisExtender(const MedialAxisUtility<MPTraits>& _medialAxisUtility,
 
 template<class MPTraits>
 MedialAxisExtender<MPTraits>::
-MedialAxisExtender(MPProblemType* _problem, XMLNodeReader& _node) :
+MedialAxisExtender(MPProblemType* _problem, XMLNode& _node) :
   ExtenderMethod<MPTraits>(_problem, _node),
   m_medialAxisUtility(_problem, _node) {
     this->SetName("MedialAxisExtender");
@@ -61,16 +61,14 @@ MedialAxisExtender(MPProblemType* _problem, XMLNodeReader& _node) :
 template<class MPTraits>
 void
 MedialAxisExtender<MPTraits>::
-ParseXML(XMLNodeReader& _node) {
-  m_delta = _node.numberXMLParameter("delta", false, 1.0, 0.0, MAX_DBL,
-      "Delta distance");
-  m_minDist = _node.numberXMLParameter("minDist", true, 0.001, 0.0, MAX_DBL,
+ParseXML(XMLNode& _node) {
+  m_delta = _node.Read("delta", false, 1.0, 0.0, MAX_DBL, "Delta distance");
+  m_minDist = _node.Read("minDist", true, 0.001, 0.0, MAX_DBL,
       "Minimum expansion between each step");
-  m_extendDist = _node.numberXMLParameter("extendDist", true, 0.5, 0.0, MAX_DBL,
-      "Step size");
-  m_maxIntermediates = _node.numberXMLParameter("maxIntermediates", false,
-      10, 1, MAX_INT, "Maximum number of intermediates on an edge");
-  m_lpLabel = _node.stringXMLParameter("lpLabel", true, "",
+  m_extendDist = _node.Read("extendDist", true, 0.5, 0.0, MAX_DBL, "Step size");
+  m_maxIntermediates = _node.Read("maxIntermediates", false, 10, 1, MAX_INT,
+      "Maximum number of intermediates on an edge");
+  m_lpLabel = _node.Read("lpLabel", true, "",
       "Local Planner between intermediates");
 }
 

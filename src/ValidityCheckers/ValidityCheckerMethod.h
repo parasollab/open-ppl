@@ -25,7 +25,7 @@ class ValidityCheckerMethod : public MPBaseObject<MPTraits> {
     typedef typename MPTraits::CfgType CfgType;
 
     ValidityCheckerMethod() : MPBaseObject<MPTraits>(), m_validity(true) {}
-    ValidityCheckerMethod(typename MPTraits::MPProblemType* _problem, XMLNodeReader& _node) :
+    ValidityCheckerMethod(typename MPTraits::MPProblemType* _problem, XMLNode& _node) :
       MPBaseObject<MPTraits>(_problem, _node), m_validity(true) {}
     virtual ~ValidityCheckerMethod(){}
 

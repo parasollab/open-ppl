@@ -35,9 +35,9 @@ class LocalPlannerMethod : public MPBaseObject<MPTraits> {
     LocalPlannerMethod(bool _saveIntermediates = false) :
         m_saveIntermediates(_saveIntermediates) {}
 
-    LocalPlannerMethod(MPProblemType* _problem, XMLNodeReader& _node) :
+    LocalPlannerMethod(MPProblemType* _problem, XMLNode& _node) :
         MPBaseObject<MPTraits>(_problem, _node) {
-      m_saveIntermediates = _node.boolXMLParameter("saveIntermediates", false,
+      m_saveIntermediates = _node.Read("saveIntermediates", false,
           false, "Save intermediate nodes");
     }
 

@@ -28,13 +28,13 @@ class ConnectNeighboringSurfaces: public ConnectorMethod<MPTraits> {
     // Constructors and Destructor
     ConnectNeighboringSurfaces(string _nf = "", string _lp = "",
         int _k = KATTEMPTS, string _surfacesStrToIgnore="");
-    ConnectNeighboringSurfaces(MPProblemType* _problem, XMLNodeReader& _node);
+    ConnectNeighboringSurfaces(MPProblemType* _problem, XMLNode& _node);
     virtual ~ConnectNeighboringSurfaces();
 
     //////////////////////
     // Used in new MPProblem framework.
     virtual void Print(ostream& _os) const;
-    virtual void ParseXML(XMLNodeReader& _node);
+    virtual void ParseXML(XMLNode& _node);
 
     //////////////////////
     // Core: Connection method
@@ -59,8 +59,9 @@ class ConnectNeighboringSurfaces: public ConnectorMethod<MPTraits> {
 
 ///////////////////////////////////////////////////////////////////////////////
 template<class MPTraits>
-ConnectNeighboringSurfaces<MPTraits>::ConnectNeighboringSurfaces(string _nf, string _lp, int _k, string _surfacesStrToIgnore)
-  : ConnectorMethod<MPTraits>(_nf, _lp), m_k(_k), m_surfacesStrToIgnore(_surfacesStrToIgnore) {
+ConnectNeighboringSurfaces<MPTraits>::
+ConnectNeighboringSurfaces(string _nf, string _lp, int _k, string _surfacesStrToIgnore) :
+  ConnectorMethod<MPTraits>(_nf, _lp), m_k(_k), m_surfacesStrToIgnore(_surfacesStrToIgnore) {
     this->SetName("ConnectNeighboringSurfaces");
     m_doneOnce = false;
     m_surfacesToIgnore = GetTags(m_surfacesStrToIgnore,",");
@@ -68,8 +69,9 @@ ConnectNeighboringSurfaces<MPTraits>::ConnectNeighboringSurfaces(string _nf, str
 
 ///////////////////////////////////////////////////////////////////////////////
 template<class MPTraits>
-ConnectNeighboringSurfaces<MPTraits>::ConnectNeighboringSurfaces(MPProblemType* _problem, XMLNodeReader& _node)
-  : ConnectorMethod<MPTraits>(_problem, _node),
+ConnectNeighboringSurfaces<MPTraits>::
+ConnectNeighboringSurfaces(MPProblemType* _problem, XMLNode& _node) :
+  ConnectorMethod<MPTraits>(_problem, _node),
   m_k(KATTEMPTS), m_doneOnce(false) {
     ParseXML(_node);
     m_surfacesToIgnore = GetTags(m_surfacesStrToIgnore,",");
@@ -77,16 +79,17 @@ ConnectNeighboringSurfaces<MPTraits>::ConnectNeighboringSurfaces(MPProblemType* 
 
 ///////////////////////////////////////////////////////////////////////////////
 template<class MPTraits>
-ConnectNeighboringSurfaces<MPTraits>::~ConnectNeighboringSurfaces(){
+ConnectNeighboringSurfaces<MPTraits>::
+~ConnectNeighboringSurfaces(){
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 template<class MPTraits>
-void ConnectNeighboringSurfaces<MPTraits>::ParseXML(XMLNodeReader& _node){
+void ConnectNeighboringSurfaces<MPTraits>::
+ParseXML(XMLNode& _node){
   this->SetName("ConnectNeighboringSurfaces");
-  m_k = _node.numberXMLParameter("k", true, 0, 0, 10000, "k-value (max neighbors to find). k = 0 --> all-pairs");
-  m_surfacesStrToIgnore = _node.stringXMLParameter("surfacesToIgnore", false, "", "surfaces to ignore (separated by , only [no spaces])");
-  _node.warnUnrequestedAttributes();
+  m_k = _node.Read("k", true, 0, 0, 10000, "k-value (max neighbors to find). k = 0 --> all-pairs");
+  m_surfacesStrToIgnore = _node.Read("surfacesToIgnore", false, "", "surfaces to ignore (separated by , only [no spaces])");
 }
 
 ///////////////////////////////////////////////////////////////////////////////

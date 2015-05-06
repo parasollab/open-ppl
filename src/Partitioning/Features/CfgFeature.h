@@ -7,10 +7,10 @@ class CfgFeature : public MPFeature {
  public:
    CfgFeature();
    CfgFeature(int index);
-   CfgFeature(XMLNodeReader& in_Node, MPProblem* in_pProblem);
+   CfgFeature(XMLNode& in_Node, MPProblem* in_pProblem);
    virtual ~CfgFeature(){}
 
-   virtual void ParseXML(XMLNodeReader& in_Node);
+   virtual void ParseXML(XMLNode& in_Node);
 
    virtual vector<double> Collect(vector<VID>& vids);
 

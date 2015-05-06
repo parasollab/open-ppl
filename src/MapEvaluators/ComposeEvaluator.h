@@ -21,7 +21,7 @@ class ComposeEvaluator : public MapEvaluatorMethod<MPTraits> {
     ComposeEvaluator(LogicalOperator _logicalOperator = AND,
         const vector<string>& _evalLabels = vector<string>());
 
-    ComposeEvaluator(MPProblemType* _problem, XMLNodeReader& _node);
+    ComposeEvaluator(MPProblemType* _problem, XMLNode& _node);
     ~ComposeEvaluator() { }
 
     virtual void Print(ostream& _os) const;
@@ -34,57 +34,52 @@ class ComposeEvaluator : public MapEvaluatorMethod<MPTraits> {
 };
 
 template<class MPTraits>
-ComposeEvaluator<MPTraits>::ComposeEvaluator(LogicalOperator _logicalOperator, const vector<string>& _evalLabels)
-  : MapEvaluatorMethod<MPTraits>(), m_logicalOperator(_logicalOperator), m_evalLabels(_evalLabels) {
+ComposeEvaluator<MPTraits>::
+ComposeEvaluator(LogicalOperator _logicalOperator,
+    const vector<string>& _evalLabels) : MapEvaluatorMethod<MPTraits>(),
+  m_logicalOperator(_logicalOperator), m_evalLabels(_evalLabels) {
     this->SetName("ComposeEvaluator");
   }
 
 template<class MPTraits>
-ComposeEvaluator<MPTraits>::ComposeEvaluator(MPProblemType* _problem, XMLNodeReader& _node)
-  : MapEvaluatorMethod<MPTraits>(_problem, _node) {
+ComposeEvaluator<MPTraits>::
+ComposeEvaluator(MPProblemType* _problem, XMLNode& _node) :
+  MapEvaluatorMethod<MPTraits>(_problem, _node) {
     this->SetName("ComposeEvaluator");
 
-    string logicalOperator = _node.stringXMLParameter("operator",true,"","operator");
-    if (logicalOperator == "AND" || logicalOperator == "and") {
+    string logicalOperator = _node.Read("operator", true, "", "operator");
+
+    if (logicalOperator == "AND" || logicalOperator == "and")
       m_logicalOperator = AND;
-    }
-    else if (logicalOperator == "OR" || logicalOperator == "or") {
+    else if (logicalOperator == "OR" || logicalOperator == "or")
       m_logicalOperator = OR;
-    }
-    else {
-      cerr << "unknown logical operator label is read " << endl;
-      exit(-1);
-    }
+    else
+      throw ParseException(_node.Where(),
+          "Operator '" + logicalOperator + "' is unknown.");
 
-    XMLNodeReader::childiterator citr;
-    for (citr = _node.children_begin(); citr != _node.children_end(); ++citr) {
-      if (citr->getName() == "Evaluator") {
-        string methodLabel = citr->stringXMLParameter("label", true, "", "method");
-        m_evalLabels.push_back(methodLabel);
-      }
-      else {
-        citr->warnUnknownNode();
-      }
-    }
+    for(auto& child : _node)
+      if(child.Name() == "Evaluator")
+        m_evalLabels.push_back(child.Read("label", true, "", "method"));
 
-    if(m_evalLabels.size() < 2){
-      cerr << "Error:: ComposeEvaluator should specify at least 2 evaluator labels in the XML" << endl;
-      exit(1);
-    }
+    if(m_evalLabels.size() < 2)
+      throw ParseException(_node.Where(),
+          "Must specify at least two evaluators.");
   }
 
 template<class MPTraits>
 void
-ComposeEvaluator<MPTraits>::Print(ostream& _os) const {
+ComposeEvaluator<MPTraits>::
+Print(ostream& _os) const {
   _os << this->GetNameAndLabel() << endl ;
-  for(vector<string>::const_iterator it = m_evalLabels.begin(); it != m_evalLabels.end(); it++)
-    _os << "\n\t evaluation method = \'" << *it << "\'";
+  for(auto& l : m_evalLabels)
+    _os << "\n\t evaluation method = \'" << l << "\'";
   _os << "\n\t operator = " << m_logicalOperator << endl;
 }
 
 template<class MPTraits>
 bool
-ComposeEvaluator<MPTraits>::operator()() {
+ComposeEvaluator<MPTraits>::
+operator()() {
 
   vector<MapEvaluatorPointer> evalMethods;
   typedef typename vector<MapEvaluatorPointer>::iterator MEIterator;

@@ -23,10 +23,10 @@ class BlindRRT : public MPStrategyMethod<MPTraits> {
     typedef typename MPProblemType::ConnectorPointer ConnectorPointer;
 
     BlindRRT();
-    BlindRRT(MPProblemType* _problem, XMLNodeReader& _node, bool _warnXML = true);
+    BlindRRT(MPProblemType* _problem, XMLNode& _node);
     virtual ~BlindRRT();
 
-    virtual void ParseXML(XMLNodeReader& _node);
+    virtual void ParseXML(XMLNode& _node);
 
     virtual void Initialize();
     virtual void Run();
@@ -62,52 +62,50 @@ class BlindRRT : public MPStrategyMethod<MPTraits> {
 };
 
 template<class MPTraits>
-BlindRRT<MPTraits>::BlindRRT(): m_query(NULL){
+BlindRRT<MPTraits>::
+BlindRRT() : m_query(NULL) {
   this->SetName("BlindRRT");
 }
 
 
 template<class MPTraits>
-BlindRRT<MPTraits>::BlindRRT(MPProblemType* _problem, XMLNodeReader& _node, bool _warnXML) :
+BlindRRT<MPTraits>::
+BlindRRT(MPProblemType* _problem, XMLNode& _node) :
   MPStrategyMethod<MPTraits>(_problem, _node), m_query(NULL){
     this->SetName("BlindRRT");
     ParseXML(_node);
-    if (_warnXML) _node.warnUnrequestedAttributes();
   }
 
 template<class MPTraits>
-BlindRRT<MPTraits>::~BlindRRT(){
+BlindRRT<MPTraits>::
+~BlindRRT() {
   if(m_query != NULL)
     delete m_query;
 }
 
 template<class MPTraits>
 void
-BlindRRT<MPTraits>::ParseXML(XMLNodeReader& _node) {
-  for(XMLNodeReader::childiterator citr = _node.children_begin(); citr != _node.children_end(); ++citr){
-    if(citr->getName() == "Evaluator"){
-      string evalMethod = citr->stringXMLParameter("label", true, "", "Evaluation Method");
-      m_evaluators.push_back(evalMethod);
-      citr->warnUnrequestedAttributes();
-    }
-    else
-      citr->warnUnknownNode();
-  }
+BlindRRT<MPTraits>::
+ParseXML(XMLNode& _node) {
+  for(auto& child : _node)
+    if(child.Name() == "Evaluator")
+      m_evaluators.push_back(
+          child.Read("label", true, "", "Evaluation Method"));
 
-  m_delta = _node.numberXMLParameter("delta", false, 1.0, 0.0, MAX_DBL, "Delta Distance");
-  m_minDist = _node.numberXMLParameter("minDist", false, 0.0, 0.0, MAX_DBL, "Minimum Distance");
-  m_vc = _node.stringXMLParameter("vcLabel", true, "", "Validity Test Method");
-  m_nf = _node.stringXMLParameter("nfLabel", true, "", "Neighborhood Finder");
-  m_dm = _node.stringXMLParameter("dmLabel",true,"","Distance Metric");
-  m_lp = _node.stringXMLParameter("lpLabel", true, "", "Local Planning Method");
-  m_nc = _node.stringXMLParameter("connectorLabel",false,"","Node Connection Method");
-  m_CCconnection = _node.stringXMLParameter("CCconnection",true,"","CC connection strategy");
-  m_initialSamples = _node.numberXMLParameter("initialSamples", true, 0, 0, MAX_INT, "Initial Sample size");
-  m_numCCIters = _node.numberXMLParameter("ccIters", true, 0, 0, MAX_INT, "ccIterations");
-  m_evaluateGoal = _node.boolXMLParameter("evaluateGoal", false, false, "");
+  m_delta = _node.Read("delta", false, 1.0, 0.0, MAX_DBL, "Delta Distance");
+  m_minDist = _node.Read("minDist", false, 0.0, 0.0, MAX_DBL, "Minimum Distance");
+  m_vc = _node.Read("vcLabel", true, "", "Validity Test Method");
+  m_nf = _node.Read("nfLabel", true, "", "Neighborhood Finder");
+  m_dm = _node.Read("dmLabel",true,"","Distance Metric");
+  m_lp = _node.Read("lpLabel", true, "", "Local Planning Method");
+  m_nc = _node.Read("connectorLabel",false,"","Node Connection Method");
+  m_CCconnection = _node.Read("CCconnection",true,"","CC connection strategy");
+  m_initialSamples = _node.Read("initialSamples", true, 0, 0, MAX_INT, "Initial Sample size");
+  m_numCCIters = _node.Read("ccIters", true, 0, 0, MAX_INT, "ccIterations");
+  m_evaluateGoal = _node.Read("evaluateGoal", false, false, "");
 
   //optionally read in a query and create a Query object.
-  string query = _node.stringXMLParameter("query", false, "", "Query Filename");
+  string query = _node.Read("query", false, "", "Query Filename");
   if(query != ""){
     m_query = new Query<MPTraits>(query);
     m_query->SetMPProblem(this->GetMPProblem());
@@ -206,7 +204,7 @@ BlindRRT<MPTraits>::Run() {
 
 
   vector<VID> branch;
-  for(auto i : *this->GetRoadmap()->GetGraph())
+  for(const auto&  i : *this->GetRoadmap()->GetGraph())
     branch.push_back(i.descriptor());
 
   // branch is used in RadialUtils to track the VIDs

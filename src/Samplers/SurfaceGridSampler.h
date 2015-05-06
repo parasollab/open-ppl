@@ -47,7 +47,7 @@ class SurfaceGridSampler : public SamplerMethod<MPTraits> {
     }
 
     //Constructor
-    SurfaceGridSampler(MPProblemType* _problem, XMLNodeReader& _node) : SamplerMethod<MPTraits>(_problem,_node) {
+    SurfaceGridSampler(MPProblemType* _problem, XMLNode& _node) : SamplerMethod<MPTraits>(_problem,_node) {
       this->SetName("SurfaceGridSampler");
       ParseXML(_node);
     }
@@ -55,10 +55,10 @@ class SurfaceGridSampler : public SamplerMethod<MPTraits> {
     ~SurfaceGridSampler() {}
 
     //Reading XML node
-    void ParseXML(XMLNodeReader& _node){
-    m_vcLabel = _node.stringXMLParameter("vcLabel", true, "", "Validity Test Method");
-    m_dx = _node.numberXMLParameter("dx",true,1.0,0.1,20.0,"delta x");
-    m_dz = _node.numberXMLParameter("dz",true,1.0,0.1,20.0,"delta z");
+    void ParseXML(XMLNode& _node){
+    m_vcLabel = _node.Read("vcLabel", true, "", "Validity Test Method");
+    m_dx = _node.Read("dx",true,1.0,0.1,20.0,"delta x");
+    m_dz = _node.Read("dz",true,1.0,0.1,20.0,"delta z");
     }
 
     virtual void Print(ostream& _out) const {

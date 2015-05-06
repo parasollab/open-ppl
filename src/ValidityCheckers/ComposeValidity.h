@@ -5,8 +5,8 @@
 //checker methods.
 /////////////////////////////////////////////
 
-#ifndef COMPOSEVALIDITY_H
-#define COMPOSEVALIDITY_H
+#ifndef COMPOSE_VALIDITY_H
+#define COMPOSE_VALIDITY_H
 
 #include "ValidityCheckerMethod.h"
 #include "ValidityCheckerFunctor.h"
@@ -18,15 +18,15 @@ class ComposeValidity : public ValidityCheckerMethod<MPTraits> {
     typedef typename MPTraits::MPProblemType MPProblemType;
     typedef typename MPProblemType::ValidityCheckerPointer ValidityCheckerPointer;
 
-    enum LogicalOperator { AND, OR };
+    enum LogicalOperator {AND, OR};
 
     ComposeValidity(LogicalOperator _logicalOperator = AND,
         const vector<string>& _vcLabel = vector<string>());
-    ComposeValidity(MPProblemType* _problem, XMLNodeReader& _node);
+    ComposeValidity(MPProblemType* _problem, XMLNode& _node);
     virtual ~ComposeValidity() {}
 
-    virtual bool
-      IsValidImpl(CfgType& _cfg, CDInfo& _cdInfo, const string& _callName);
+    virtual bool IsValidImpl(CfgType& _cfg, CDInfo& _cdInfo,
+        const string& _callName);
 
   private:
     LogicalOperator m_logicalOperator;
@@ -34,39 +34,31 @@ class ComposeValidity : public ValidityCheckerMethod<MPTraits> {
 };
 
 template<class MPTraits>
-ComposeValidity<MPTraits>::ComposeValidity(LogicalOperator _operator,
-    const vector<string>& _vcLabel) :
+ComposeValidity<MPTraits>::
+ComposeValidity(LogicalOperator _operator, const vector<string>& _vcLabel) :
   ValidityCheckerMethod<MPTraits>(), m_logicalOperator(_operator), m_label(_vcLabel) {
     this->m_name = "ComposeValidity";
   }
 
 template<class MPTraits>
-ComposeValidity<MPTraits>::ComposeValidity(MPProblemType* _problem, XMLNodeReader& _node) :
+ComposeValidity<MPTraits>::
+ComposeValidity(MPProblemType* _problem, XMLNode& _node) :
   ValidityCheckerMethod<MPTraits>(_problem, _node) {
-    _node.verifyName("ComposeValidity");
     this->m_name = "ComposeValidity";
 
-    string logicalOperator = _node.stringXMLParameter("operator", true, "", "operator");
-    if(logicalOperator == "AND" || logicalOperator == "and") {
+    string logicalOperator = _node.Read("operator", true, "", "operator");
+    if(logicalOperator == "AND" || logicalOperator == "and")
       m_logicalOperator = AND;
-    }
-    else if(logicalOperator == "OR" || logicalOperator == "or") {
+    else if(logicalOperator == "OR" || logicalOperator == "or")
       m_logicalOperator = OR;
-    }
-    else {
-      cout << "unknown logical operator label is read " << endl;
-      exit(-1);
-    }
+    else
+      throw ParseException(_node.Where(),
+          "Unknown operator '" + logicalOperator + "'.");
 
-    for(XMLNodeReader::childiterator citr = _node.children_begin(); citr != _node.children_end(); ++citr) {
-      if(citr->getName() == "ValidityChecker") {
-        string methodLabel = citr->stringXMLParameter("label", true, "", "validity checker method");
-        m_label.push_back(methodLabel);
-      }
-      else {
-        citr->warnUnknownNode();
-      }
-    }
+    for(auto& child : _node)
+      if(child.Name() == "ValidityChecker")
+        m_label.push_back(
+            child.Read("label", true, "", "validity checker method"));
   }
 
 template<class MPTraits>

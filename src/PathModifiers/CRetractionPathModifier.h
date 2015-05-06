@@ -19,7 +19,7 @@ class CRetractionPathModifier : public PathModifierMethod<MPTraits> {
 
     CRetractionPathModifier(size_t _iter = 10,
         const ClearanceUtility<MPTraits>& _cu = ClearanceUtility<MPTraits>());
-    CRetractionPathModifier(MPProblemType* _problem, XMLNodeReader& _node);
+    CRetractionPathModifier(MPProblemType* _problem, XMLNode& _node);
 
     void Print(ostream& _os) const;
 
@@ -43,13 +43,12 @@ CRetractionPathModifier(size_t _iter,
 
 template<class MPTraits>
 CRetractionPathModifier<MPTraits>::
-CRetractionPathModifier(MPProblemType* _problem, XMLNodeReader& _node) :
+CRetractionPathModifier(MPProblemType* _problem, XMLNode& _node) :
   PathModifierMethod<MPTraits>(_problem, _node),
   m_clearanceUtility(_problem, _node) {
     this->SetName("CRetractionPathModifier");
-    m_iter = _node.numberXMLParameter("iter", true, 10, 0, MAX_INT,
-        "Loop iterations");
-    m_maxIter = _node.numberXMLParameter("maxIter", false, 1000, 0, MAX_INT,
+    m_iter = _node.Read("iter", true, 10, 0, MAX_INT, "Loop iterations");
+    m_maxIter = _node.Read("maxIter", false, 1000, 0, MAX_INT,
         "Max loop iterations");
   }
 

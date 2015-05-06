@@ -17,10 +17,10 @@ class TogglePRMStrategy : public MPStrategyMethod<MPTraits> {
     typedef typename MPProblemType::VID VID;
 
     TogglePRMStrategy();
-    TogglePRMStrategy(MPProblemType* _problem, XMLNodeReader& _node);
+    TogglePRMStrategy(MPProblemType* _problem, XMLNode& _node);
     virtual ~TogglePRMStrategy() { }
 
-    virtual void ParseXML(XMLNodeReader& _node);
+    virtual void ParseXML(XMLNode& _node);
     virtual void Print(ostream& _os) const;
 
     virtual void Initialize();
@@ -46,7 +46,7 @@ TogglePRMStrategy<MPTraits>::TogglePRMStrategy() : m_priority(false) {
 }
 
 template<class MPTraits>
-TogglePRMStrategy<MPTraits>::TogglePRMStrategy(MPProblemType* _problem, XMLNodeReader& _node) :
+TogglePRMStrategy<MPTraits>::TogglePRMStrategy(MPProblemType* _problem, XMLNode& _node) :
 MPStrategyMethod<MPTraits>(_problem, _node), m_priority(false) {
   this->m_name = "TogglePRMStrategy";
   ParseXML(_node);
@@ -54,37 +54,27 @@ MPStrategyMethod<MPTraits>(_problem, _node), m_priority(false) {
 
 template<class MPTraits>
 void
-TogglePRMStrategy<MPTraits>::ParseXML(XMLNodeReader& _node) {
-  m_vcLabel = _node.stringXMLParameter("vcLabel", false, "", "Validity checker method");
-  m_priority = _node.boolXMLParameter("priority", false, false, "Whether or not to give priority to valid nodes");
+TogglePRMStrategy<MPTraits>::ParseXML(XMLNode& _node) {
+  m_vcLabel = _node.Read("vcLabel", false, "", "Validity checker method");
+  m_priority = _node.Read("priority", false, false, "Whether or not to give priority to valid nodes");
 
-  for(XMLNodeReader::childiterator citr = _node.children_begin(); citr != _node.children_end(); ++citr) {
-    if(citr->getName() == "Sampler") {
-      string generationMethod = citr->stringXMLParameter("methodLabel", true, "", "Node connection method");
-      int numPerIter = citr->numberXMLParameter("number", true, 1, 0, MAX_INT, "Number of samples");
-      int attemptsPerIter = citr->numberXMLParameter("attempts", false, 1, 0, MAX_INT, "Number of attempts");
+  for(auto& child : _node) {
+    if(child.Name() == "Sampler") {
+      string generationMethod = child.Read("methodLabel", true, "", "Node connection method");
+      int numPerIter = child.Read("number", true, 1, 0, MAX_INT, "Number of samples");
+      int attemptsPerIter = child.Read("attempts", false, 1, 0, MAX_INT, "Number of attempts");
       m_samplerLabels[generationMethod] = make_pair(numPerIter, attemptsPerIter);
-      citr->warnUnrequestedAttributes();
     }
-    else if(citr->getName() == "Connector") {
-      string connectMethod = citr->stringXMLParameter("methodLabel", true, "", "Node connection method");
-      m_connectorLabels.push_back(connectMethod);
-      citr->warnUnrequestedAttributes();
-    }
-    else if(citr->getName() == "ColConnector") {
-      string connectMethod = citr->stringXMLParameter("methodLabel", true, "", "Node connection method");
-      m_colConnectorLabels.push_back(connectMethod);
-      citr->warnUnrequestedAttributes();
-    }
-    else if(citr->getName() == "Evaluator") {
-      string evalMethod = citr->stringXMLParameter("methodLabel", true, "", "Evaluation method");
-      m_evaluatorLabels.push_back(evalMethod);
-      citr->warnUnrequestedAttributes();
-    }
-    else
-      citr->warnUnknownNode();
+    else if(child.Name() == "Connector")
+      m_connectorLabels.push_back(
+          child.Read("methodLabel", true, "", "Node connection method"));
+    else if(child.Name() == "ColConnector")
+      m_colConnectorLabels.push_back(
+          child.Read("methodLabel", true, "", "Node connection method"));
+    else if(child.Name() == "Evaluator")
+      m_evaluatorLabels.push_back(
+          child.Read("methodLabel", true, "", "Evaluation method"));
   }
-  //_node.warnUnrequestedAttributes();
 }
 
 template<class MPTraits>
@@ -197,7 +187,7 @@ TogglePRMStrategy<MPTraits>::GenerateNodes(deque<pair<string, CfgType> >& _queue
 
   // Go through list of samplers
   typedef map<string, pair<int,int> >::iterator SIT;
-  for(auto sampler : m_samplerLabels) {
+  for(auto&  sampler : m_samplerLabels) {
     typename MPProblemType::SamplerPointer smp =
       this->GetSampler(sampler.first);
     vector<CfgType> outNodes;
@@ -221,7 +211,7 @@ TogglePRMStrategy<MPTraits>::GenerateNodes(deque<pair<string, CfgType> >& _queue
 
     // Add nodes to queue
     typedef typename vector<CfgType>::iterator CIT;
-    for(auto sample : outNodes) {
+    for(auto&  sample : outNodes) {
 
       // If not validated yet, determine validity
       if(!sample.IsLabel("VALID"))

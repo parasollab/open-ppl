@@ -50,19 +50,19 @@ class SurfaceSampler : public SamplerMethod<MPTraits> {
 
 
 
-    SurfaceSampler(MPProblemType* _problem, XMLNodeReader& _node) : SamplerMethod<MPTraits>(_problem,_node) {
+    SurfaceSampler(MPProblemType* _problem, XMLNode& _node) : SamplerMethod<MPTraits>(_problem,_node) {
       this->SetName("SurfaceSampler");
       ParseXML(_node);
-      m_vcLabel = _node.stringXMLParameter("vcMethod", true, "", "Validity Test Method");
-      m_maxAttempts = _node.numberXMLParameter("attempts",true, 500, 1,MAX_INT,"max attempts per surface");
-      m_closeDist   = _node.numberXMLParameter("closeDist",false, 0.1, 0.0,MAX_DBL,"close distance to others");
-      m_propForMA   = _node.numberXMLParameter("propForMA",false, 0.0, 0.0,1.0,"proportion [0..1] to push sample to medial axis");
-      m_propForObs  = _node.numberXMLParameter("propForObs",false, 0.0, 0.0,1.0,"proportion [0..1] to generate sample near obs");
-      m_obsSampleAttemptsPerIter = _node.numberXMLParameter("obsSampleAttempts",false, 20, 1,MAX_INT,"max attempts per surface to try obstacle samples");
-      m_minObsClearance  = _node.numberXMLParameter("minObsClearance",false, 2.0, 0.0,MAX_DBL,"minimum obstacle clearance (when generating obs samples)");
-      m_maxObsClearance  = _node.numberXMLParameter("maxObsClearance",false, 20.0, 0.0,MAX_DBL,"minimum obstacle clearance (when generating obs samples)");
-      m_overallMinClearanceReq  = _node.numberXMLParameter("overallMinClearanceReq",false, 0.5, 0.0,MAX_DBL,"minimum clearance required from all samplers");
-      m_surfacesStrToIgnore = _node.stringXMLParameter("surfacesToIgnore", false, "", "surfaces to ignore (separated by , only [no spaces])");
+      m_vcLabel = _node.Read("vcMethod", true, "", "Validity Test Method");
+      m_maxAttempts = _node.Read("attempts",true, 500, 1,MAX_INT,"max attempts per surface");
+      m_closeDist   = _node.Read("closeDist",false, 0.1, 0.0,MAX_DBL,"close distance to others");
+      m_propForMA   = _node.Read("propForMA",false, 0.0, 0.0,1.0,"proportion [0..1] to push sample to medial axis");
+      m_propForObs  = _node.Read("propForObs",false, 0.0, 0.0,1.0,"proportion [0..1] to generate sample near obs");
+      m_obsSampleAttemptsPerIter = _node.Read("obsSampleAttempts",false, 20, 1,MAX_INT,"max attempts per surface to try obstacle samples");
+      m_minObsClearance  = _node.Read("minObsClearance",false, 2.0, 0.0,MAX_DBL,"minimum obstacle clearance (when generating obs samples)");
+      m_maxObsClearance  = _node.Read("maxObsClearance",false, 20.0, 0.0,MAX_DBL,"minimum obstacle clearance (when generating obs samples)");
+      m_overallMinClearanceReq  = _node.Read("overallMinClearanceReq",false, 0.5, 0.0,MAX_DBL,"minimum clearance required from all samplers");
+      m_surfacesStrToIgnore = _node.Read("surfacesToIgnore", false, "", "surfaces to ignore (separated by , only [no spaces])");
 
 
       m_surfacesToIgnore = GetTags(m_surfacesStrToIgnore,",");
@@ -70,7 +70,7 @@ class SurfaceSampler : public SamplerMethod<MPTraits> {
 
     ~SurfaceSampler() {}
 
-    void ParseXML(XMLNodeReader& _node) {}
+    void ParseXML(XMLNode& _node) {}
 
     virtual void Print(ostream& _out) const {
       SamplerMethod<MPTraits>::Print(_out);

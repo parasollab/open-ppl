@@ -20,7 +20,7 @@ class DiameterMetric : public MetricMethod<MPTraits> {
     typedef typename MPProblemType::GraphType GraphType;
 
     DiameterMetric();
-    DiameterMetric(MPProblemType* _problem, XMLNodeReader& _node);
+    DiameterMetric(MPProblemType* _problem, XMLNode& _node);
     virtual ~DiameterMetric();
 
     virtual void Print(ostream& _os) const;
@@ -34,7 +34,7 @@ DiameterMetric<MPTraits>::DiameterMetric() {
 }
 
 template<class MPTraits>
-DiameterMetric<MPTraits>::DiameterMetric(MPProblemType* _problem, XMLNodeReader& _node)
+DiameterMetric<MPTraits>::DiameterMetric(MPProblemType* _problem, XMLNode& _node)
   : MetricMethod<MPTraits>(_problem, _node) {
     this->SetName("DiameterMetric");
 }

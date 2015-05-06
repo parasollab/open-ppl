@@ -59,7 +59,7 @@ class ConnectorMethod : public MPBaseObject<MPTraits>
     typedef typename stapl::sequential::graph<stapl::DIRECTED, stapl::NONMULTIEDGES, CfgType, WeightType> SequentialGraphType;
 
     ConnectorMethod(string _lpLabel = "", string _nfLabel = "");
-    ConnectorMethod(MPProblemType* _problem, XMLNodeReader& _node);
+    ConnectorMethod(MPProblemType* _problem, XMLNode& _node);
 
     virtual void Print(ostream& _os) const;
 
@@ -234,12 +234,12 @@ ConnectorMethod<MPTraits>::ConnectorMethod(string _nfLabel, string _lpLabel) :
   }
 
   template<class MPTraits>
-ConnectorMethod<MPTraits>::ConnectorMethod(MPProblemType* _problem, XMLNodeReader& _node)
+ConnectorMethod<MPTraits>::ConnectorMethod(MPProblemType* _problem, XMLNode& _node)
   : MPBaseObject<MPTraits>(_problem, _node) {
     this->SetName("ConnectorMethod");
     m_addPartialEdge = false;
-    m_nfLabel = _node.stringXMLParameter("nfLabel", true, "", "Neighborhood Finder");
-    m_lpLabel = _node.stringXMLParameter("lpLabel", true, "", "Local Planner");
+    m_nfLabel = _node.Read("nfLabel", true, "", "Neighborhood Finder");
+    m_lpLabel = _node.Read("lpLabel", true, "", "Local Planner");
   }
 
 template<class MPTraits>

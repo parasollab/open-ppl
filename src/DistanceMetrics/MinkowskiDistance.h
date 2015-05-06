@@ -19,8 +19,8 @@ class MinkowskiDistance : public DistanceMetricMethod<MPTraits> {
 
     MinkowskiDistance(double _r1 = 3, double _r2 = 3, double _r3 = 1.0/3,
         bool _normalize = false);
-    MinkowskiDistance(MPProblemType* _problem, XMLNodeReader& _node,
-        bool _warn = true, bool _parse = true);
+    MinkowskiDistance(MPProblemType* _problem, XMLNode& _node,
+        bool _parse = true);
     virtual ~MinkowskiDistance();
 
     virtual void Print(ostream& _os) const;
@@ -87,21 +87,17 @@ MinkowskiDistance(double _r1, double _r2, double _r3, bool _normalize)
 
 template<class MPTraits>
 MinkowskiDistance<MPTraits>::
-MinkowskiDistance(MPProblemType* _problem,
-    XMLNodeReader& _node, bool _warn, bool _parse)
-  : DistanceMetricMethod<MPTraits>(_problem, _node, false),
+MinkowskiDistance(MPProblemType* _problem, XMLNode& _node, bool _parse) :
+  DistanceMetricMethod<MPTraits>(_problem, _node),
   m_r1(3), m_r2(3), m_r3(1./3.), m_normalize(false) {
     this->SetName("Minkowski");
 
-    if(_parse){
-      m_r1 = _node.numberXMLParameter("r1", false, 3.0, 0.0, 1000.0, "r1");
-      m_r2 = _node.numberXMLParameter("r2", false, 3.0, 0.0, 1000.0, "r2");
-      m_r3 = _node.numberXMLParameter("r3", false, 1.0/3.0, 0.0, 1000.0, "r3");
-      m_normalize = _node.boolXMLParameter("normalize", false, false, "flag if position dof should be normalized by environment diagonal");
+    if(_parse) {
+      m_r1 = _node.Read<double>("r1", false, 3.0, 0.0, MAX_DBL, "r1");
+      m_r2 = _node.Read("r2", false, 3.0, 0.0, MAX_DBL, "r2");
+      m_r3 = _node.Read("r3", false, 1.0/3.0, 0.0, MAX_DBL, "r3");
+      m_normalize = _node.Read("normalize", false, false, "flag if position dof should be normalized by environment diagonal");
     }
-
-    if(_warn)
-      _node.warnUnrequestedAttributes();
   }
 
 template<class MPTraits>
@@ -146,7 +142,7 @@ ScaleCfg(double _length, CfgType& _c, const CfgType& _o) {
 template<class MPTraits>
 double
 MinkowskiDistance<MPTraits>::PositionDistance(const CfgType& _c) {
-  return PositionDistance(this->GetMPProblem()->GetEnvironment(),_c,m_r1,m_r3,m_normalize);
+  return PositionDistance(this->GetEnvironment(),_c,m_r1,m_r3,m_normalize);
 }
 
 template<class MPTraits>
@@ -155,12 +151,12 @@ MinkowskiDistance<MPTraits>::PositionDistance(Environment *_env, const CfgType& 
   double diagonal = _env->GetBoundary()->GetMaxDist(_r1, _r3);
   vector<double> p = _c.GetPosition();
   double pos = 0;
-  for(size_t i=0; i<p.size(); ++i) 
+  for(size_t i=0; i<p.size(); ++i)
     if(_normalize)
       pos += pow(fabs(p[i])/diagonal, _r1);
     else
       pos += pow(fabs(p[i]), _r1);
-  return pos; 
+  return pos;
 }
 
 template<class MPTraits>

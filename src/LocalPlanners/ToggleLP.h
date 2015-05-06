@@ -20,7 +20,7 @@ class ToggleLP: public LocalPlannerMethod<MPTraits> {
     ToggleLP(const string& _vcLabel = "", const string& _lpLabel = "",
         const string& _dmLabel = "",
         int _maxIter = 0, bool _saveIntermediates = false);
-    ToggleLP(MPProblemType* _problem, XMLNodeReader& _node);
+    ToggleLP(MPProblemType* _problem, XMLNode& _node);
     void InitVars();
     virtual ~ToggleLP();
 
@@ -76,7 +76,8 @@ class ToggleLP: public LocalPlannerMethod<MPTraits> {
 };
 
 template<class MPTraits>
-ToggleLP<MPTraits>::ToggleLP(const string& _vclabel, const string& _lpLabel,
+ToggleLP<MPTraits>::
+ToggleLP(const string& _vclabel, const string& _lpLabel,
     const string& _dmLabel, int _maxIter, bool _saveIntermediates) :
   LocalPlannerMethod<MPTraits>(_saveIntermediates),
   m_vcLabel(_vclabel), m_lpLabel(_lpLabel), m_dmLabel(_dmLabel), m_maxIter(_maxIter) {
@@ -84,17 +85,16 @@ ToggleLP<MPTraits>::ToggleLP(const string& _vclabel, const string& _lpLabel,
 }
 
 template<class MPTraits>
-ToggleLP<MPTraits>::ToggleLP(MPProblemType* _problem, XMLNodeReader& _node) :
+ToggleLP<MPTraits>::
+ToggleLP(MPProblemType* _problem, XMLNode& _node) :
     LocalPlannerMethod<MPTraits>(_problem, _node) {
   InitVars();
 
-  m_vcLabel = _node.stringXMLParameter("vcLabel", true, "", "Validity Test Label");
-  m_lpLabel = _node.stringXMLParameter("lpLabel", true, "", "Local Planner Label");
-  m_dmLabel = _node.stringXMLParameter("dmLabel", true, "", "Distance Metric Label");
-  m_maxIter = _node.numberXMLParameter("maxIter", false, 10, 0, MAX_INT,
+  m_vcLabel = _node.Read("vcLabel", true, "", "Validity Test Label");
+  m_lpLabel = _node.Read("lpLabel", true, "", "Local Planner Label");
+  m_dmLabel = _node.Read("dmLabel", true, "", "Distance Metric Label");
+  m_maxIter = _node.Read("maxIter", false, 10, 0, MAX_INT,
       "Maximum number of m_iterations");
-
-  _node.warnUnrequestedAttributes();
 }
 
 template<class MPTraits>

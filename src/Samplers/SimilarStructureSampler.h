@@ -125,7 +125,7 @@ class SimilarStructureSampler : public SamplerMethod<MPTraits> {
     this->SetName("SimilarStructureSampler");
   }
 
-  SimilarStructureSampler(typename MPTraits::MPProblemType* _problem, XMLNodeReader& _node) :
+  SimilarStructureSampler(typename MPTraits::MPProblemType* _problem, XMLNode& _node) :
     SamplerMethod<MPTraits>(_problem, _node),
     m_jointActivityFractionActive(0.0),
     m_jointActivityNumberActive(0) {
@@ -136,57 +136,55 @@ class SimilarStructureSampler : public SamplerMethod<MPTraits> {
   virtual ~SimilarStructureSampler() {
   }
 
-  void ParseXML(XMLNodeReader& _node) {
-    m_vcLabel = _node.stringXMLParameter("vcLabel", true, "", "Validity Test Method");
+  void ParseXML(XMLNode& _node) {
+    m_vcLabel = _node.Read("vcLabel", true, "", "Validity Test Method");
 
-    m_samplesPerSeed = floor(_node.numberXMLParameter("SamplesPerSeed", true, 1, 0, 32767, "Samples per Seed"));
-    m_saveInvalid = _node.boolXMLParameter("SaveInvalid", false, false, "Should invalid nodes be added to the collisions output iterator?");
-    m_doAlignment = _node.boolXMLParameter("DoAlignment", false, true, "Perform alignment when calculating half-rotation effects?");
-    m_ignoreValidity = _node.boolXMLParameter("IgnoreValidity", false, false, "Perform alignment when calculating half-rotation effects?");
+    m_samplesPerSeed = floor(_node.Read("SamplesPerSeed", true, 1, 0, 32767, "Samples per Seed"));
+    m_saveInvalid = _node.Read("SaveInvalid", false, false, "Should invalid nodes be added to the collisions output iterator?");
+    m_doAlignment = _node.Read("DoAlignment", false, true, "Perform alignment when calculating half-rotation effects?");
+    m_ignoreValidity = _node.Read("IgnoreValidity", false, false, "Perform alignment when calculating half-rotation effects?");
 
     m_jointActivityString = "";
     m_targetRangeDistribution = shared_ptr<DistributionType>();
     m_subtargetDriftDistribution = shared_ptr<DistributionType>();
 
-    for(XMLNodeReader::childiterator citr = _node.children_begin(); citr != _node.children_end(); ++citr) {
-      if(!ParseJointActivity(citr)) {
+    for(auto& child : _node) {
+      if(!ParseJointActivity(child)) {
 
         //read target range string
-        if(citr->getName() == "TargetRangeDistribution") {
-          string type = citr->stringXMLParameter("type", true, "", "type of target range distribution: constant, uniform, gaussian");
+        if(child.Name() == "TargetRangeDistribution") {
+          string type = child.Read("type", true, "", "type of target range distribution: constant, uniform, gaussian");
           if(type == "constant") {
-            const double value = citr->numberXMLParameter("value", true, 0.0, -MAX_DBL, MAX_DBL, "Value");
+            const double value = child.Read("value", true, 0.0, -MAX_DBL, MAX_DBL, "Value");
             m_targetRangeDistribution = shared_ptr<DistributionType>(new DistributionConstant(value));
-          } else  if(type == "uniform") {
-            const double low = citr->numberXMLParameter("min", true, 0.0, -MAX_DBL, MAX_DBL, "Min");
-            const double high = citr->numberXMLParameter("max", true, 0.0, -MAX_DBL, MAX_DBL, "Max");
-            m_targetRangeDistribution = shared_ptr<DistributionType>(new DistributionUniform(low,high));
-          } else if(type == "gaussian") {
-            const double mean = citr->numberXMLParameter("mean", true, 0.0, -MAX_DBL, MAX_DBL, "Mean");
-            const double std = citr->numberXMLParameter("std", true, 0.0, -MAX_DBL, MAX_DBL, "Std");
-            m_targetRangeDistribution = shared_ptr<DistributionType>(new DistributionGaussian(mean,std));
-          } else {
-            citr->warnUnknownNode();
-            exit(-1);
           }
-
-        } else if(citr->getName() == "SubtargetDriftDistribution") {
+          else  if(type == "uniform") {
+            const double low = child.Read("min", true, 0.0, -MAX_DBL, MAX_DBL, "Min");
+            const double high = child.Read("max", true, 0.0, -MAX_DBL, MAX_DBL, "Max");
+            m_targetRangeDistribution = shared_ptr<DistributionType>(new DistributionUniform(low,high));
+          }
+          else if(type == "gaussian") {
+            const double mean = child.Read("mean", true, 0.0, -MAX_DBL, MAX_DBL, "Mean");
+            const double std = child.Read("std", true, 0.0, -MAX_DBL, MAX_DBL, "Std");
+            m_targetRangeDistribution = shared_ptr<DistributionType>(new DistributionGaussian(mean,std));
+          }
+        }
+        else if(child.Name() == "SubtargetDriftDistribution") {
           //read subtarget drift string
-          string type = citr->stringXMLParameter("type", true, "", "type of target range distribution: constant, uniform, gaussian");
+          string type = child.Read("type", true, "", "type of target range distribution: constant, uniform, gaussian");
           if(type == "constant") {
-            const double value = citr->numberXMLParameter("value", true, 0.0, -MAX_DBL, MAX_DBL, "Value");
+            const double value = child.Read("value", true, 0.0, -MAX_DBL, MAX_DBL, "Value");
             m_subtargetDriftDistribution = shared_ptr<DistributionType>(new DistributionConstant(value));
-          } else if(type == "uniform") {
-            const double low = citr->numberXMLParameter("min", true, 0.0, -MAX_DBL, MAX_DBL, "Min");
-            const double high = citr->numberXMLParameter("max", true, 0.0, -MAX_DBL, MAX_DBL, "Max");
+          }
+          else if(type == "uniform") {
+            const double low = child.Read("min", true, 0.0, -MAX_DBL, MAX_DBL, "Min");
+            const double high = child.Read("max", true, 0.0, -MAX_DBL, MAX_DBL, "Max");
             m_subtargetDriftDistribution = shared_ptr<DistributionType>(new DistributionUniform(low,high));
-          } else if(type == "gaussian") {
-            const double mean = citr->numberXMLParameter("mean", true, 0.0, -MAX_DBL, MAX_DBL, "Mean");
-            const double std = citr->numberXMLParameter("std", true, 0.0, -MAX_DBL, MAX_DBL, "Std");
+          }
+          else if(type == "gaussian") {
+            const double mean = child.Read("mean", true, 0.0, -MAX_DBL, MAX_DBL, "Mean");
+            const double std = child.Read("std", true, 0.0, -MAX_DBL, MAX_DBL, "Std");
             m_subtargetDriftDistribution = shared_ptr<DistributionType>(new DistributionGaussian(mean,std));
-          } else {
-            citr->warnUnknownNode();
-            exit(-1);
           }
         }
       }
@@ -228,23 +226,20 @@ class SimilarStructureSampler : public SamplerMethod<MPTraits> {
 
  protected:
 
-  virtual bool ParseJointActivity(XMLNodeReader::childiterator _citr) {
-    if(_citr->getName() == "JointActivity") {
-      m_jointActivityString = _citr->stringXMLParameter("type", false, "all", "which joints are active: all, number, fraction");
+  virtual bool ParseJointActivity(XMLNode& _node) {
+    if(_node.Name() == "JointActivity") {
+      m_jointActivityString = _node.Read("type", false, "all", "which joints are active: all, number, fraction");
 
       if(m_jointActivityString == "all")
         return true;
       if(m_jointActivityString == "number") {
-        m_jointActivityNumberActive = floor(_citr->numberXMLParameter("number", true, 0, 1, 65536, "Number of Joints Active"));
+        m_jointActivityNumberActive = floor(_node.Read("number", true, 0, 1, 65536, "Number of Joints Active"));
         return true;
       }
       if(m_jointActivityString == "fraction") {
-        m_jointActivityFractionActive = _citr->numberXMLParameter("fraction", true, 1.0, 0.0, 1.0, "Fraction of Joints Active");
+        m_jointActivityFractionActive = _node.Read("fraction", true, 1.0, 0.0, 1.0, "Fraction of Joints Active");
         return true;
       }
-
-      _citr->warnUnknownNode();
-      exit(-1);
     }
 
     return false;

@@ -114,7 +114,7 @@ class BandsIncrementalRoadmap : public MPStrategyMethod {
       dm = cont.dm;
 
     }
-    BandsIncrementalRoadmap(XMLNodeReader& in_Node, MPProblem* in_pProblem) :
+    BandsIncrementalRoadmap(XMLNode& in_Node, MPProblem* in_pProblem) :
       MPStrategyMethod(in_Node,in_pProblem) {
         ParseXML(in_Node);
       };
@@ -122,36 +122,36 @@ class BandsIncrementalRoadmap : public MPStrategyMethod {
 
     virtual void Print(ostream& out_os) const {};
 
-    virtual void ParseXML(XMLNodeReader& in_Node) {
+    virtual void ParseXML(XMLNode& in_Node) {
       cout << "BandsIncrementalRoadmap::ParseXML()" << endl;
       //SRand(getSeed());
-      XMLNodeReader::childiterator citr;
+      XMLNode::childiterator citr;
       for(citr = in_Node.children_begin(); citr!= in_Node.children_end(); ++citr) {
         if(citr->getName() == "node_generation_method") {
-          string node_gen_method = citr->stringXMLParameter(string("Method"),true,
+          string node_gen_method = citr->Read(string("Method"),true,
               string(""),string("Node Generation Method"));
           m_vecStrNodeGenLabels.push_back(node_gen_method);
           citr->warnUnrequestedAttributes();
         } else if(citr->getName() == "node_connection_method") {
-          string connect_method = citr->stringXMLParameter(string("Method"),true,
+          string connect_method = citr->Read(string("Method"),true,
               string(""),string("Node Connection Method"));
           m_vecStrNodeConnectionLabels.push_back(connect_method);
           citr->warnUnrequestedAttributes();
         } else if(citr->getName() == "component_connection_method") {
-          string connect_method = citr->stringXMLParameter(string("Method"),true,
+          string connect_method = citr->Read(string("Method"),true,
               string(""),string("CC Connection Method"));
           m_vecStrComponentConnectionLabels.push_back(connect_method);
           citr->warnUnrequestedAttributes();
         } else if(citr->getName() == "lp_method") {
-          m_strLocalPlannerLabel = citr->stringXMLParameter(string("Method"),true,
+          m_strLocalPlannerLabel = citr->Read(string("Method"),true,
               string(""),string("Local Planner Method"));
           citr->warnUnrequestedAttributes();
         } else if (citr->getName() == "step_size") {
-          m_stepSize = citr->numberXMLParameter(string("step_size"), true,
+          m_stepSize = citr->Read(string("step_size"), true,
               int(100),int(0),int(MAX_INT),
               string("Iteration step size"));
         } else if(citr->getName() == "NeighborhoodFinder") {
-          string nf_method = citr->stringXMLParameter(string("Method"),true,
+          string nf_method = citr->Read(string("Method"),true,
               string(""),string("NeighborhoodFinder Method"));
           m_NF = GetMPProblem()->GetNeighborhoodFinder()->GetMethod(nf_method);
           citr->warnUnrequestedAttributes();
@@ -160,15 +160,15 @@ class BandsIncrementalRoadmap : public MPStrategyMethod {
         }
       }
 
-      m_queryFilename = in_Node.stringXMLParameter("query_filename", true, "", "Query Filename");
-      m_posRes = in_Node.numberXMLParameter(string("pos_res"), false, 0.0, 0.0, 10.0,
+      m_queryFilename = in_Node.Read("query_filename", true, "", "Query Filename");
+      m_posRes = in_Node.Read(string("pos_res"), false, 0.0, 0.0, 10.0,
           string("positional resolution"));
-      //    m_nfStats = in_Node.stringXMLParameter("nf_stat", true, "", "NF for stat output");
-      resize_bbox = in_Node.boolXMLParameter(string("resize_bbox"), false, false,
+      //    m_nfStats = in_Node.Read("nf_stat", true, "", "NF for stat output");
+      resize_bbox = in_Node.Read(string("resize_bbox"), false, false,
           string("if true, bounding box size will be doubled"));
 
-      m_numNodes = in_Node.numberXMLParameter(string("num_samples"), true, 1,0,MAX_INT, "Number of Samples");
-      m_iterations = in_Node.numberXMLParameter("iterations", true, 1,0,MAX_INT, "Number of Iterations");
+      m_numNodes = in_Node.Read(string("num_samples"), true, 1,0,MAX_INT, "Number of Samples");
+      m_iterations = in_Node.Read("iterations", true, 1,0,MAX_INT, "Number of Iterations");
 
       //--------------------------
       //Reading in witness queries
@@ -596,22 +596,22 @@ class BandsStats : public MPStrategyMethod {
 
 
     }
-    BandsStats(XMLNodeReader& in_Node, MPProblem* problem) : MPStrategyMethod(in_Node, problem){
+    BandsStats(XMLNode& in_Node, MPProblem* problem) : MPStrategyMethod(in_Node, problem){
       ParseXML(in_Node);
       ExpanderStatsClass = new EdgeExpanderStats(in_Node, problem);
     }
 
-    void ParseXML(XMLNodeReader& in_Node) {
+    void ParseXML(XMLNode& in_Node) {
       cout << "BandsStats::ParseXML()" << endl;
 
-      input_map_filename = in_Node.stringXMLParameter(string("input_map_filename"), true, string(""),string("input .map filename"));
-      ideal_map_filename = in_Node.stringXMLParameter(string("ideal_map_filename"), true, string(""),string("all-pairs .map filename"));
-      interval = in_Node.numberXMLParameter(string("interval"), false, 100, 1, 1000000, string("interval for stats"));
-      k = in_Node.numberXMLParameter(string("k"), true, 0, 0, 10000, string("k-value for calculation"));
-      dist = in_Node.numberXMLParameter(string("dist"), true, 0.0, 0.0, 1000.0, string("dist for calculation"));
-      out_filename_dist = in_Node.stringXMLParameter(string("out_filename_dist"), true, string(""),string("output filename - dist of k-th closest node"));
-      out_filename_num_neighbors = in_Node.stringXMLParameter(string("out_filename_num_neighbors"), true, string(""),string("output filename - num neighbors inside dist"));
-      compute_dist_neighbor = in_Node.boolXMLParameter(string("compute_dist_neighbor"), false, false,
+      input_map_filename = in_Node.Read(string("input_map_filename"), true, string(""),string("input .map filename"));
+      ideal_map_filename = in_Node.Read(string("ideal_map_filename"), true, string(""),string("all-pairs .map filename"));
+      interval = in_Node.Read(string("interval"), false, 100, 1, 1000000, string("interval for stats"));
+      k = in_Node.Read(string("k"), true, 0, 0, 10000, string("k-value for calculation"));
+      dist = in_Node.Read(string("dist"), true, 0.0, 0.0, 1000.0, string("dist for calculation"));
+      out_filename_dist = in_Node.Read(string("out_filename_dist"), true, string(""),string("output filename - dist of k-th closest node"));
+      out_filename_num_neighbors = in_Node.Read(string("out_filename_num_neighbors"), true, string(""),string("output filename - num neighbors inside dist"));
+      compute_dist_neighbor = in_Node.Read(string("compute_dist_neighbor"), false, false,
           string("if true, the function to compute distance and num of neighbors will be called"));
     }
 
@@ -1192,36 +1192,36 @@ class EdgeExpanderStats : public MPStrategyMethod {
     mu = cont.mu;
 
 }
-    EdgeExpanderStats(XMLNodeReader& in_Node, MPProblem* problem) : MPStrategyMethod(in_Node, problem){
+    EdgeExpanderStats(XMLNode& in_Node, MPProblem* problem) : MPStrategyMethod(in_Node, problem){
       ParseXML(in_Node);
     }
 
-    void ParseXML(XMLNodeReader& in_Node) {
+    void ParseXML(XMLNode& in_Node) {
       cout << "edgeExpanderStats::ParseXML()" << endl;
       interval = 100;
       queries=2;
       outfile="outfile.stats";
-      outfile = in_Node.stringXMLParameter(string("filename"), true, string(""),string("Filename"));
+      outfile = in_Node.Read(string("filename"), true, string(""),string("Filename"));
 
-      interval = in_Node.numberXMLParameter(string("interval"), true, 100, 1, 1000000, string("Printout Interval"));
+      interval = in_Node.Read(string("interval"), true, 100, 1, 1000000, string("Printout Interval"));
       cout<<"interval="<<interval<<endl;
       mu=.2;
 
-      mu = in_Node.numberXMLParameter("mu", false, double(0.0),double(0.0), double(0.5),"Mu paremeter for expander metrics");
+      mu = in_Node.Read("mu", false, double(0.0),double(0.0), double(0.5),"Mu paremeter for expander metrics");
       cout<<"Mu ="<<mu<<endl;
       epsilon = .9;
-      epsilon = in_Node.numberXMLParameter("epsilon", false, double(0.0),double(0.0), double(5),"Epsilon paremeter for expander metrics");
+      epsilon = in_Node.Read("epsilon", false, double(0.0),double(0.0), double(5),"Epsilon paremeter for expander metrics");
       cout<<"Epsilon ="<<epsilon<<endl;
       resolution = .1;
-      resolution = in_Node.numberXMLParameter("resolution", false, double(0.0),double(0.0), double(5),"Resolution");
+      resolution = in_Node.Read("resolution", false, double(0.0),double(0.0), double(5),"Resolution");
       cout<<"resolution ="<<resolution<<endl;
       mpl=10;
-      mpl = in_Node.numberXMLParameter("max_path_length", false, int(0),int(0), int(1000),"max path length");
+      mpl = in_Node.Read("max_path_length", false, int(0),int(0), int(1000),"max path length");
       cout<<"max_path_length ="<<mpl<<endl;
-      XMLNodeReader::childiterator citr;
+      XMLNode::childiterator citr;
       for(citr = in_Node.children_begin(); citr!= in_Node.children_end(); ++citr){
         if(citr->getName() == "file"){
-          string filename = citr->stringXMLParameter(string("filename"), true, string(""),string("Node Compare Method"));
+          string filename = citr->Read(string("filename"), true, string(""),string("Node Compare Method"));
           cout<<"filename="<<filename<<endl;
           files.push_back(filename);
         } else{
@@ -1557,39 +1557,39 @@ class RoadmapTimingStats : public MPStrategyMethod {
       k = cont.k;
       getOnlyAt = cont.getOnlyAt;
 }
-    RoadmapTimingStats(XMLNodeReader& in_Node, MPProblem* problem) : MPStrategyMethod(in_Node, problem){
+    RoadmapTimingStats(XMLNode& in_Node, MPProblem* problem) : MPStrategyMethod(in_Node, problem){
       ParseXML(in_Node);
     }
 
-    void ParseXML(XMLNodeReader& in_Node) {
+    void ParseXML(XMLNode& in_Node) {
       cout << "TimingStats::ParseXML()" << endl;
       interval = 100;
       queries=2;
       outfile="outfile.stats";
       k=10;
-      outfile = in_Node.stringXMLParameter(string("outfile"), true, string(""),string("Outfile"));
+      outfile = in_Node.Read(string("outfile"), true, string(""),string("Outfile"));
       cout<<"outfile="<<outfile<<endl;
 
-      interval = in_Node.numberXMLParameter(string("interval"), true, 100, 1, 1000000, string("Printout Interval"));
+      interval = in_Node.Read(string("interval"), true, 100, 1, 1000000, string("Printout Interval"));
       cout<<"interval="<<interval<<endl;
 
-      queries = in_Node.numberXMLParameter(string("queries"), true, 100, 1, 1000000, string("queries"));
+      queries = in_Node.Read(string("queries"), true, 100, 1, 1000000, string("queries"));
       cout<<"queries="<<queries<<endl;
 
-      k = in_Node.numberXMLParameter(string("k"), true, 100, 1, 1000000, string("l"));
+      k = in_Node.Read(string("k"), true, 100, 1, 1000000, string("l"));
       cout<<"k="<<k<<endl;
 
-      getOnlyAt = in_Node.numberXMLParameter(string("getOnlyAt"), true, 100, -1, 1000000, string("getOnlyAt"));
+      getOnlyAt = in_Node.Read(string("getOnlyAt"), true, 100, -1, 1000000, string("getOnlyAt"));
       cout<<"getOnlyAt="<<getOnlyAt<<endl;
 
-      XMLNodeReader::childiterator citr;
+      XMLNode::childiterator citr;
       for(citr = in_Node.children_begin(); citr!= in_Node.children_end(); ++citr){
         if(citr->getName() == "file"){
-          string filename = citr->stringXMLParameter(string("filename"), true, string(""),string("File Name"));
+          string filename = citr->Read(string("filename"), true, string(""),string("File Name"));
           cout<<"filename="<<filename<<endl;
           files.push_back(filename);
         }else if(citr->getName() == "nnMethod"){
-          string method_name = citr->stringXMLParameter(string("method_name"), true, string(""),string("Method Name"));
+          string method_name = citr->Read(string("method_name"), true, string(""),string("Method Name"));
           cout<<"method_name="<<method_name<<endl;
           method_names.push_back(method_name);
         } else{

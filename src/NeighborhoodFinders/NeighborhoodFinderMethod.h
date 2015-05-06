@@ -83,7 +83,7 @@ class NeighborhoodFinderMethod : public MPBaseObject<MPTraits> {
     typedef typename MPProblemType::VID VID;
 
     NeighborhoodFinderMethod(string _dmLabel = "", bool _unconnected = false);
-    NeighborhoodFinderMethod(MPProblemType* _problem, XMLNodeReader& _node, bool _requireDM = true);
+    NeighborhoodFinderMethod(MPProblemType* _problem, XMLNode& _node, bool _requireDM = true);
 
     virtual void Print(ostream& _os) const {
       MPBaseObject<MPTraits>::Print(_os);
@@ -266,12 +266,12 @@ NeighborhoodFinderMethod<MPTraits>::NeighborhoodFinderMethod(string _dmLabel, bo
   m_dmLabel(_dmLabel), m_unconnected(_unconnected), m_fromRDMPVersion(false) {}
 
 template<class MPTraits>
-NeighborhoodFinderMethod<MPTraits>::NeighborhoodFinderMethod(MPProblemType* _problem, XMLNodeReader& _node, bool _requireDM)
+NeighborhoodFinderMethod<MPTraits>::NeighborhoodFinderMethod(MPProblemType* _problem, XMLNode& _node, bool _requireDM)
   : MPBaseObject<MPTraits>(_problem, _node),
   m_nfType(OTHER), m_k(0), m_radius(0),
   m_fromRDMPVersion(false){
-    m_dmLabel = _node.stringXMLParameter("dmLabel", _requireDM, "", "Distance Metric Method");
-    m_unconnected = _node.boolXMLParameter("unconnected", false, false, "Require neighbors to be non adjacent to the query configuration");
+    m_dmLabel = _node.Read("dmLabel", _requireDM, "", "Distance Metric Method");
+    m_unconnected = _node.Read("unconnected", false, false, "Require neighbors to be non adjacent to the query configuration");
   }
 
 template<class MPTraits>

@@ -11,8 +11,7 @@ class RVDistance : public MinkowskiDistance<MPTraits> {
   public:
     typedef typename MPTraits::CfgType CfgType;
     RVDistance(bool _normalize = false);
-    RVDistance(typename MPTraits::MPProblemType* _problem, XMLNodeReader& _node, bool _warn = true);    
-    //virtual double Distance(Environment* _env, const CfgType& _c1, const CfgType& _c2);
+    RVDistance(typename MPTraits::MPProblemType* _problem, XMLNode& _node);
     virtual double Distance(const CfgType& _c1, const CfgType& _c2);
     virtual ~RVDistance();
     double RotationalDistance(const CfgType& _c);
@@ -26,28 +25,31 @@ class RVDistance : public MinkowskiDistance<MPTraits> {
 };
 
 template<class MPTraits>
-RVDistance<MPTraits>::RVDistance(bool _normalize) : MinkowskiDistance<MPTraits>(2, 2, 1.0/2, _normalize) {
-  this->m_name = "ReachableVolume";
-}
+RVDistance<MPTraits>::
+RVDistance(bool _normalize) :
+  MinkowskiDistance<MPTraits>(2, 2, 1.0/2, _normalize) {
+    this->m_name = "ReachableVolume";
+  }
 
 template<class MPTraits>
-RVDistance<MPTraits>::RVDistance(typename MPTraits::MPProblemType* _problem, XMLNodeReader& _node, bool _warn) : 
-  MinkowskiDistance<MPTraits>(_problem, _node, false, false) {
+RVDistance<MPTraits>::
+RVDistance(typename MPTraits::MPProblemType* _problem, XMLNode& _node) :
+  MinkowskiDistance<MPTraits>(_problem, _node, false) {
     this->m_name = "ReachableVolume";
     /*
-    this->m_r1 = 2;
-    this->m_r2 = 2;
-    this->m_r3 = 1.0/2;
-    */
+       this->m_r1 = 2;
+       this->m_r2 = 2;
+       this->m_r3 = 1.0/2;
+       */
     this->m_r1 = 1;
     this->m_r2 = 1;
     this->m_r3 = 1;
-    this->m_normalize = _node.boolXMLParameter("normalize", false, true, "flag if position dof should be normalized by environment diagonal");
-    m_S = _node.numberXMLParameter("S", false, .5, 0.0, 1.0, "S, the scaling factor used by RV distance metric d=S*TranslationalDistance + (1-S)*RVDistance");
-    m_S_rot = _node.numberXMLParameter("S_rot", false, .5, 0.0, 1.0, "S_rot, the rotational scaling factor");
-
-    if(_warn)
-      _node.warnUnrequestedAttributes();
+    this->m_normalize = _node.Read("normalize", false, true,
+        "flag if position dof should be normalized by environment diagonal");
+    m_S = _node.Read("S", false, .5, 0.0, 1.0,
+        "S, the scaling factor used by RV distance metric d=S*TranslationalDistance + (1-S)*RVDistance");
+    m_S_rot = _node.Read("S_rot", false, .5, 0.0, 1.0,
+        "S_rot, the rotational scaling factor");
   }
 
 template<class MPTraits>
@@ -82,7 +84,7 @@ RVDistance<MPTraits>::InternalDistance(Environment* _env, CfgType _c1, CfgType _
   shared_ptr<vector<Vector3d> > joints2 = shared_ptr<vector<Vector3d> >(new vector<Vector3d>);
   _env->GetMultiBody(_c2.GetRobotIndex())->PolygonalApproximation(*joints2);
 
-  
+
   //compute sum of distances
   double d=0;
   for(size_t i=0; i<joints1->size(); ++i){
@@ -91,7 +93,7 @@ RVDistance<MPTraits>::InternalDistance(Environment* _env, CfgType _c1, CfgType _
     d+=ReachableVolume::distance((*joints1)[i],(*joints2)[i]);
   }
   if(_debug)
-    cout<<"internal distance = "<<d<<endl; 
+    cout<<"internal distance = "<<d<<endl;
   return d;
 }
 
@@ -108,7 +110,7 @@ RVDistance<MPTraits>::Distance(const CfgType& _c1, const CfgType& _c2) {
   CfgType diff = _c1 - _c2;//this->DifferenceCfg(_c1, _c2);
   if(m_debug){
     cout<<"diff= "<<diff<<endl;
-  } 
+  }
   //double pos = this->PositionDistance(_env, diff);
   double pos = this->PositionDistance(diff);
   double rot = this->RotationalDistance(diff);

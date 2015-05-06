@@ -1,9 +1,5 @@
-///////////////////////////
-//Header BasicParallelPRM
-//////////////////////////
-
-#ifndef BASICPARALLELPRM_H_
-#define BASICPARALLELPRM_H_
+#ifndef BASIC_PARALLEL_PRM_H_
+#define BASIC_PARALLEL_PRM_H_
 
 #include "ParallelSBMPHeader.h"
 
@@ -23,7 +19,6 @@ class SampleWF {
     SampleWF(SamplerPointer _ngm, MPProblemType* _problem) {
       m_nodeGen = _ngm;
       m_problem = _problem;
-
     }
 
     typedef void result_type;
@@ -116,12 +111,12 @@ class BasicParallelPRM : public MPStrategyMethod<MPTraits> {
        const vector<string>& _vecStrNodeConnectionLabels = vector<string>(),
        string _nodeGen = "", int _numIterations = 0, int _numSamples = 0);
 
-    BasicParallelPRM(typename MPTraits::MPProblemType* _problem, XMLNodeReader& _node);
+    BasicParallelPRM(typename MPTraits::MPProblemType* _problem, XMLNode& _node);
 
     virtual ~BasicParallelPRM() {};
 
     virtual void Print(ostream& _os) const;
-    virtual void ParseXML(XMLNodeReader& _inPNode);
+    virtual void ParseXML(XMLNode& _inPNode);
 
     virtual void Initialize() {};
     virtual void Run();
@@ -144,7 +139,7 @@ BasicParallelPRM<MPTraits>::BasicParallelPRM(const vector<pair<string, int> >& _
 }
 
 template<class MPTraits>
-BasicParallelPRM<MPTraits>::BasicParallelPRM(typename MPTraits::MPProblemType* _problem, XMLNodeReader& _node):
+BasicParallelPRM<MPTraits>::BasicParallelPRM(typename MPTraits::MPProblemType* _problem, XMLNode& _node):
   MPStrategyMethod<MPTraits>(_problem, _node){
   if (this->m_debug) cout << "BasicParallelPRM::BasicParallelPRM" << endl;
   ParseXML(_node);
@@ -154,31 +149,24 @@ BasicParallelPRM<MPTraits>::BasicParallelPRM(typename MPTraits::MPProblemType* _
 
 template<class MPTraits>
 void
-BasicParallelPRM<MPTraits>::ParseXML(XMLNodeReader& _node) {
-  if (this->m_debug) cout << "BasicParallelPRM::ParseXML" << endl;
+BasicParallelPRM<MPTraits>::
+ParseXML(XMLNode& _node) {
+  m_numIterations = _node.Read("iterations", true, 1, 0, MAX_INT,
+      "iterations of strategy");
 
-  m_numIterations = _node.numberXMLParameter("iterations", true, int(1), int(0), MAX_INT, "iterations of strategy");
-
-  XMLNodeReader::childiterator citr;
-  for( citr = _node.children_begin(); citr!= _node.children_end(); ++citr) {
-    if(citr->getName() == "node_generation_method") {
-      string node_gen_method = citr->stringXMLParameter("Method", true,
-        "", "Node Generation Method");
-      int numPerIteration = citr->numberXMLParameter(string("Number"), true,
-        int(1), int(0), MAX_INT, string("Number of samples"));
-      m_vecStrNodeGenLabels.push_back(pair<string, int>(node_gen_method, numPerIteration));
-      citr->warnUnrequestedAttributes();
-    } else if(citr->getName() == "node_connection_method") {
-      string connect_method = citr->stringXMLParameter(string("Method"), true,
-        string(""), string("Node Connection Method"));
-      m_vecStrNodeConnectionLabels.push_back(connect_method);
-      citr->warnUnrequestedAttributes();
-    } else {
-      citr->warnUnknownNode();
+  for(auto& child : _node) {
+    if(child.Name() == "node_generation_method") {
+      string node_gen_method = child.Read("Method", true, "",
+          "Node Generation Method");
+      int numPerIteration = child.Read("Number", true, 1, 0, MAX_INT,
+          "Number of samples");
+      m_vecStrNodeGenLabels.push_back(
+          make_pair(node_gen_method, numPerIteration));
     }
+    else if(child.Name() == "node_connection_method")
+      m_vecStrNodeConnectionLabels.push_back(
+          child.Read("Method", true, "", "Node Connection Method"));
   }
-
-  if (this->m_debug) cout << "BasicParallelPRM::ParseXML()" << endl;
 }
 
 template<class MPTraits>

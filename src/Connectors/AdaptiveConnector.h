@@ -16,10 +16,10 @@ class AdaptiveConnector: public ConnectorMethod<MPTraits> {
     typedef typename RoadmapType::GraphType GraphType;
 
     AdaptiveConnector(const vector<string>& _neigborGenLabels = vector<string>(),string _lpLabel = "", bool _setUniform=false, double _percentageRandom=0.5,bool _fixedCost =false, bool _fixedReward=false,bool _checkIfSameCC = false, bool _countFailures = false, size_t _fail = 5);
-    AdaptiveConnector(MPProblemType* _problem, XMLNodeReader& _node);
+    AdaptiveConnector(MPProblemType* _problem, XMLNode& _node);
 
     virtual void Print(ostream& _os) const;
-    virtual void ParseXML(XMLNodeReader& _node);
+    virtual void ParseXML(XMLNode& _node);
     virtual void Initialize();
 
     template<typename InputIterator1, typename InputIterator2,
@@ -61,11 +61,11 @@ class AdaptiveConnector: public ConnectorMethod<MPTraits> {
     string m_lastUse;
 };
 
-
-
 template<class MPTraits>
-AdaptiveConnector<MPTraits>::AdaptiveConnector(const vector<string>& _neigborGenLabels,
-string _lpLabel , bool _setUniform, double _percentageRandom, bool _fixedCost, bool _fixedReward,bool _checkIfSameCC, bool _countFailures, size_t _fail) :
+AdaptiveConnector<MPTraits>::
+AdaptiveConnector(const vector<string>& _neigborGenLabels, string _lpLabel,
+    bool _setUniform, double _percentageRandom, bool _fixedCost,
+    bool _fixedReward,bool _checkIfSameCC, bool _countFailures, size_t _fail) :
   ConnectorMethod<MPTraits>("",_lpLabel),
   m_neigborGenLabels(_neigborGenLabels),
   m_setUniform(_setUniform),
@@ -74,48 +74,42 @@ string _lpLabel , bool _setUniform, double _percentageRandom, bool _fixedCost, b
   m_fixedReward(_fixedReward),
   m_checkIfSameCC(_checkIfSameCC),
   m_countFailures(_countFailures),
-  m_fail(_fail)
-  {
+  m_fail(_fail) {
     this->SetName("AdaptiveConnector");
   }
 
 template<class MPTraits>
-AdaptiveConnector<MPTraits>::AdaptiveConnector(MPProblemType* _problem, XMLNodeReader& _node)
-  : ConnectorMethod<MPTraits>(_problem, _node) {
+AdaptiveConnector<MPTraits>::
+AdaptiveConnector(MPProblemType* _problem, XMLNode& _node) :
+  ConnectorMethod<MPTraits>(_problem, _node) {
+    this->SetName("AdaptiveConnector");
     ParseXML(_node);
-}
+  }
 
 template<class MPTraits>
 void
-AdaptiveConnector<MPTraits>::ParseXML(XMLNodeReader& _node){
-  this->SetName("AdaptiveConnector");
-  m_checkIfSameCC = _node.boolXMLParameter("checkIfSameCC", false, true, "If true, do not connect if edges are in the same CC");
-  m_countFailures = _node.boolXMLParameter("countFailures", false, false, "if false, ignore failure count and just attempt k; if true, attempt k neighbors until too many failures detected");
-  m_fail = _node.numberXMLParameter("fail", false, 5, 0, 10000, "amount of failed connections allowed before operation terminates");
-  m_percentageRandom = _node.numberXMLParameter("percentRandom", true, 0.5, 0.0, 1.0, "percent that a learned one is chosen");
-  m_setUniform = _node.boolXMLParameter("uniformProbability", false, false, "give all connection methods the same probability of getting chosen");
-  m_fixedCost = _node.boolXMLParameter("fixedCost", true, false, "set a fixed cost");
-  m_fixedReward = _node.boolXMLParameter("fixedReward", true, false, "set a fixed reward");
+AdaptiveConnector<MPTraits>::ParseXML(XMLNode& _node){
+  m_checkIfSameCC = _node.Read("checkIfSameCC", false, true, "If true, do not connect if edges are in the same CC");
+  m_countFailures = _node.Read("countFailures", false, false, "if false, ignore failure count and just attempt k; if true, attempt k neighbors until too many failures detected");
+  m_fail = _node.Read("fail", false, 5, 0, 10000, "amount of failed connections allowed before operation terminates");
+  m_percentageRandom = _node.Read("percentRandom", true, 0.5, 0.0, 1.0, "percent that a learned one is chosen");
+  m_setUniform = _node.Read("uniformProbability", false, false, "give all connection methods the same probability of getting chosen");
+  m_fixedCost = _node.Read("fixedCost", true, false, "set a fixed cost");
+  m_fixedReward = _node.Read("fixedReward", true, false, "set a fixed reward");
 
-  for(XMLNodeReader::childiterator citr = _node.children_begin(); citr!= _node.children_end(); ++citr){
-    if(citr->getName() == "NeighborFinder"){
-      string nodeNfMethod = citr->stringXMLParameter("Method",true,"","Method");
+  for(auto& child : _node) {
+    if(child.Name() == "NeighborFinder"){
+      string nodeNfMethod = child.Read("Method",true,"","Method");
       m_neigborGenLabels.push_back(nodeNfMethod);
-      int initialCost = citr->numberXMLParameter("initialCost",false,1,1,MAX_INT,"initialCost at the start of the learn phase");
+      int initialCost = child.Read("initialCost",false,1,1,MAX_INT,"initialCost at the start of the learn phase");
       m_nfCosts[nodeNfMethod] = initialCost;
-      double initialWeight = citr->numberXMLParameter("initialWeight",false,1,1,MAX_INT,"initialWeight at the start of the learn phase");
+      double initialWeight = child.Read("initialWeight",false,1,1,MAX_INT,"initialWeight at the start of the learn phase");
       m_nfWeights[nodeNfMethod] = initialWeight;
-      citr->warnUnrequestedAttributes();
     }
-
   }
 
-  if (_node.stringXMLParameter("nfLabel",true, "", "Neighborhood Finder" )!=""){
-      cout<<"Neighbor Finder not needed for nfLabel Exiting!!"<<endl;
-      exit(1);
-  }
-
-  _node.warnUnrequestedAttributes();
+  if(_node.Read("nfLabel", true, "", "Neighborhood Finder") != "")
+    throw ParseException(_node.Where(), "nfLabel should be specified as ''.");
 }
 
 template<class MPTraits>

@@ -43,8 +43,8 @@ class MPProblem
     MPProblem();
     MPProblem(const string& _filename);
     MPProblem(const string& _filename, typename MPTraits::MPProblemType* _problem);
-    MPProblem(XMLNodeReader& _node, bool _parse = true);
-    MPProblem(XMLNodeReader& _node, typename MPTraits::MPProblemType* _problem, bool _parse = true);
+    MPProblem(XMLNode& _node, bool _parse = true);
+    MPProblem(XMLNode& _node, typename MPTraits::MPProblemType* _problem, bool _parse = true);
     virtual ~MPProblem();
 
     const string& GetBaseFilename() const {return m_baseFilename;}
@@ -153,8 +153,8 @@ class MPProblem
   protected:
     virtual void Initialize();
     void ReadXMLFile(const string& _filename, typename MPTraits::MPProblemType* _problem);
-    bool ParseChild(XMLNodeReader::childiterator citr, typename MPTraits::MPProblemType* _problem);
-    virtual void ParseXML(XMLNodeReader& _node, typename MPTraits::MPProblemType* _problem);
+    bool ParseChild(XMLNode& _node, typename MPTraits::MPProblemType* _problem);
+    virtual void ParseXML(XMLNode& _node, typename MPTraits::MPProblemType* _problem);
 
     vector<cd_predefined> GetSelectedCDTypes() const;
 
@@ -192,26 +192,30 @@ class MPProblem
 };
 
 template<class MPTraits>
-MPProblem<MPTraits>::MPProblem() {
+MPProblem<MPTraits>::
+MPProblem() {
   Initialize();
 };
 
 template<class MPTraits>
-MPProblem<MPTraits>::MPProblem(const string& _filename) {
+MPProblem<MPTraits>::
+MPProblem(const string& _filename) {
   Initialize();
 
   ReadXMLFile(_filename, this);
 }
 
 template<class MPTraits>
-MPProblem<MPTraits>::MPProblem(const string& _filename, typename MPTraits::MPProblemType* _problem) {
+MPProblem<MPTraits>::
+MPProblem(const string& _filename, typename MPTraits::MPProblemType* _problem) {
   Initialize();
 
   ReadXMLFile(_filename, _problem);
 }
 
 template<class MPTraits>
-MPProblem<MPTraits>::MPProblem(XMLNodeReader& _node, bool _parse) {
+MPProblem<MPTraits>::
+MPProblem(XMLNode& _node, bool _parse) {
   Initialize();
 
   if(_parse)
@@ -219,7 +223,8 @@ MPProblem<MPTraits>::MPProblem(XMLNodeReader& _node, bool _parse) {
 }
 
 template<class MPTraits>
-MPProblem<MPTraits>::MPProblem(XMLNodeReader& _node, typename MPTraits::MPProblemType* _problem, bool _parse) {
+MPProblem<MPTraits>::
+MPProblem(XMLNode& _node, typename MPTraits::MPProblemType* _problem, bool _parse) {
   Initialize();
 
   if(_parse)
@@ -227,7 +232,8 @@ MPProblem<MPTraits>::MPProblem(XMLNodeReader& _node, typename MPTraits::MPProble
 }
 
 template<class MPTraits>
-MPProblem<MPTraits>::~MPProblem() {
+MPProblem<MPTraits>::
+~MPProblem() {
   delete m_roadmap;
   delete m_blockRoadmap;
   delete m_colRoadmap;
@@ -247,7 +253,8 @@ MPProblem<MPTraits>::~MPProblem() {
 
 template<class MPTraits>
 void
-MPProblem<MPTraits>::Initialize(){
+MPProblem<MPTraits>::
+Initialize() {
   m_environment = NULL;
   m_roadmap = new RoadmapType();
   m_blockRoadmap = new RoadmapType();
@@ -271,97 +278,101 @@ MPProblem<MPTraits>::Initialize(){
 
 template<class MPTraits>
 void
-MPProblem<MPTraits>::ReadXMLFile(const string& _filename, typename MPTraits::MPProblemType* _problem) {
-  TiXmlDocument doc(_filename);
-  bool loadOkay = doc.LoadFile();
+MPProblem<MPTraits>::
+ReadXMLFile(const string& _filename, typename MPTraits::MPProblemType* _problem) {
 
-  if (!loadOkay){
-    cerr << "Error::Could not load test file " << _filename << ". XMLError=" << doc.ErrorDesc() << ". Exiting." << endl;
-    exit(1);
-  }
-
-  XMLNodeReader mpNode(_filename, doc, "MotionPlanning");
+  XMLNode mpNode(_filename, "MotionPlanning");
 
   //Iterate over child nodes in search of MPProblem node within MotionPlanning
   //MotionPlanning should be removed in the future
   bool found = false;
-  for(XMLNodeReader::childiterator citr = mpNode.children_begin(); citr != mpNode.children_end(); ++citr){
-    if(citr->getName() == "MPProblem"){
-      ParseXML(*citr, _problem);
+  for(auto& child : mpNode) {
+    if(child.Name() == "MPProblem"){
+      ParseXML(child, _problem);
       found = true;
       break;
     }
   }
 
-  if(!found){
-    cerr << "Error::Cannot find MPProblem XML node. Exiting." << endl;
-    exit(1);
-  }
+  if(!found)
+    throw ParseException(_filename, "Cannot find MPProblem XML node.");
+
+  bool warnings = mpNode.Read("warnings", false, false, "Report warnings");
+  bool warningsAsErrors = false;
+  if(warnings)
+    warningsAsErrors = mpNode.Read("warningsAsErrors", false, false,
+        "XML warnings considered errors");
+  bool print = mpNode.Read("print", false, false, "Print all XML input");
+
+  if(warnings)
+    mpNode.WarnAll(warningsAsErrors);
+  if(print)
+    Print(cout);
 }
 
 template<class MPTraits>
 bool
 MPProblem<MPTraits>::
-ParseChild(XMLNodeReader::childiterator citr, typename MPTraits::MPProblemType* _problem) {
-  if(citr->getName() == "Environment") {
-    m_environment = new Environment(*citr);
+ParseChild(XMLNode& _node, typename MPTraits::MPProblemType* _problem) {
+  if(_node.Name() == "Environment") {
+    m_environment = new Environment(_node);
     return true;
   }
-  else if(citr->getName() == "DistanceMetrics") {
-    m_distanceMetrics->ParseXML(_problem, *citr);
+  else if(_node.Name() == "DistanceMetrics") {
+    m_distanceMetrics->ParseXML(_problem, _node);
     return true;
   }
-  else if(citr->getName() == "ValidityCheckers") {
-    m_validityCheckers->ParseXML(_problem, *citr);
+  else if(_node.Name() == "ValidityCheckers") {
+    m_validityCheckers->ParseXML(_problem, _node);
     return true;
   }
-  else if(citr->getName() == "NeighborhoodFinders") {
-    m_neighborhoodFinders->ParseXML(_problem, *citr);
+  else if(_node.Name() == "NeighborhoodFinders") {
+    m_neighborhoodFinders->ParseXML(_problem, _node);
     return true;
   }
-  else if(citr->getName() == "Samplers") {
-    m_samplers->ParseXML(_problem, *citr);
+  else if(_node.Name() == "Samplers") {
+    m_samplers->ParseXML(_problem, _node);
     return true;
   }
-  else if(citr->getName() == "LocalPlanners") {
-    m_localPlanners->ParseXML(_problem, *citr);
+  else if(_node.Name() == "LocalPlanners") {
+    m_localPlanners->ParseXML(_problem, _node);
     return true;
   }
-  else if(citr->getName() == "Extenders") {
-    m_extenders->ParseXML(_problem, *citr);
+  else if(_node.Name() == "Extenders") {
+    m_extenders->ParseXML(_problem, _node);
     return true;
   }
-  else if(citr->getName() == "PathModifiers") {
-    m_pathModifiers->ParseXML(_problem, *citr);
+  else if(_node.Name() == "PathModifiers") {
+    m_pathModifiers->ParseXML(_problem, _node);
     return true;
   }
-  else if(citr->getName() == "Connectors") {
-    m_connectors->ParseXML(_problem, *citr);
+  else if(_node.Name() == "Connectors") {
+    m_connectors->ParseXML(_problem, _node);
     return true;
   }
-  else if(citr->getName() == "Metrics") {
-    m_metrics->ParseXML(_problem, *citr);
+  else if(_node.Name() == "Metrics") {
+    m_metrics->ParseXML(_problem, _node);
     return true;
   }
-  else if(citr->getName() == "MapEvaluators") {
-    m_mapEvaluators->ParseXML(_problem, *citr);
+  else if(_node.Name() == "MapEvaluators") {
+    m_mapEvaluators->ParseXML(_problem, _node);
     return true;
   }
-  else if(citr->getName() == "MPStrategies") {
-    m_mpStrategies->ParseXML(_problem, *citr);
+  else if(_node.Name() == "MPStrategies") {
+    m_mpStrategies->ParseXML(_problem, _node);
     return true;
   }
-  else if(citr->getName() == "Solver") {
-    string label = citr->stringXMLParameter("mpStrategyLabel", true, "",
+  else if(_node.Name() == "Solver") {
+    string label = _node.Read("mpStrategyLabel", true, "",
         "The strategy pointed to by this label will be used to solve the problem");
-    long seed = citr->numberXMLParameter("seed", true, 1, 0, MAX_INT,
+    long seed = _node.Read("seed", true, 1, 0, MAX_INT,
         "The random number generator seed for the solver.");
-    string baseFilename = citr->stringXMLParameter("baseFilename", true, "",
+    string baseFilename = _node.Read("baseFilename", true, "",
         "BaseFilename for the solver.");
     ostringstream oss;
     oss << baseFilename << "." << seed;
     baseFilename = oss.str();
-    bool vdOutput = citr->boolXMLParameter("vizmoDebug", false, false,
+    bool vdOutput = _node.Read("vizmoDebug", false, false,
         "True yields VizmoDebug output for the solver.");
     string vizmoDebugName = "";
     if(vdOutput)
@@ -375,29 +386,23 @@ ParseChild(XMLNodeReader::childiterator citr, typename MPTraits::MPProblemType* 
 
 template<class MPTraits>
 void
-MPProblem<MPTraits>::ParseXML(XMLNodeReader& _node, typename MPTraits::MPProblemType* _problem) {
-  _node.verifyName("MPProblem");
+MPProblem<MPTraits>::ParseXML(XMLNode& _node, typename MPTraits::MPProblemType* _problem) {
 
-  for(XMLNodeReader::childiterator citr = _node.children_begin(); citr!= _node.children_end(); ++citr) {
-    if(!ParseChild(citr, _problem))
-      citr->warnUnknownNode();
-  }
+  for(auto& child : _node)
+    ParseChild(child, _problem);
 
   BuildCDStructures();
 
-  if(m_solvers.empty()){
-    cerr << "Error::Must define a solver within the XML. Exiting." << endl;
-    exit(1);
-  }
+  if(m_solvers.empty())
+    throw ParseException(_node.Where(),
+        "Must define at least one solver in MPProblem.");
 }
 
 template<class MPTraits>
 void
-MPProblem<MPTraits>::ToggleValidity(){
-  typedef typename ValidityCheckerSet::MIT MIT;
-  for(MIT mit = m_validityCheckers->Begin(); mit!= m_validityCheckers->End(); ++mit){
-    mit->second->ToggleValidity();
-  }
+MPProblem<MPTraits>::ToggleValidity() {
+  for(auto& vc : *m_validityCheckers)
+    vc.second->ToggleValidity();
 }
 
 template<class MPTraits>
@@ -484,7 +489,7 @@ void
 MPProblem<MPTraits>::
 BuildCDStructures() {
   if(m_environment != NULL)
-    for(auto cd : GetSelectedCDTypes())
+    for(auto&  cd : GetSelectedCDTypes())
       m_environment->BuildCDstructure(cd);
   else
     throw RunTimeException(WHERE,
@@ -496,11 +501,9 @@ template<class MPTraits>
 vector<cd_predefined>
 MPProblem<MPTraits>::GetSelectedCDTypes() const{
   vector<cd_predefined> cdTypes;
-  typedef typename ValidityCheckerSet::MIT MIT;
-  for(MIT mit = m_validityCheckers->Begin();
-      mit != m_validityCheckers->End(); ++mit)
+  for(auto& vc : *m_validityCheckers)
     if(CollisionDetectionValidity<MPTraits>* method =
-        dynamic_cast<CollisionDetectionValidity<MPTraits>*>(mit->second.get()))
+        dynamic_cast<CollisionDetectionValidity<MPTraits>*>(vc.second.get()))
       cdTypes.push_back(method->GetCDType());
   return cdTypes;
 }

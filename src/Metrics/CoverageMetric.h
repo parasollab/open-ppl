@@ -1,5 +1,5 @@
-#ifndef COVERAGEMETRIC_H
-#define COVERAGEMETRIC_H
+#ifndef COVERAGE_METRIC_H
+#define COVERAGE_METRIC_H
 
 #include "MetricMethod.h"
 
@@ -22,7 +22,7 @@ class CoverageMetric : public MetricMethod<MPTraits> {
     CoverageMetric(const Set& _samples = Set(),
         const vector<string>& _connectorLabels = vector<string>(),
         bool _computeAllCCs = false);
-    CoverageMetric(MPProblemType* _problem, XMLNodeReader& _node, bool _computeAllCCs = false);
+    CoverageMetric(MPProblemType* _problem, XMLNode& _node, bool _computeAllCCs = false);
     virtual ~CoverageMetric();
 
     virtual void Print(ostream& _os) const;
@@ -39,42 +39,43 @@ class CoverageMetric : public MetricMethod<MPTraits> {
 };
 
 template<class MPTraits, class Set>
-CoverageMetric<MPTraits, Set>::CoverageMetric(const Set& _samples, const vector<string>& _connectorLabels, bool _computeAllCCs)
-  : m_samples(_samples), m_connectorLabels(_connectorLabels), m_allData(_computeAllCCs) {
-  this->SetName("CoverageMetric" + Set::GetName());
-}
+CoverageMetric<MPTraits, Set>::
+CoverageMetric(const Set& _samples, const vector<string>& _connectorLabels,
+    bool _computeAllCCs) : m_samples(_samples),
+  m_connectorLabels(_connectorLabels), m_allData(_computeAllCCs) {
+    this->SetName("CoverageMetric" + Set::GetName());
+  }
 
 template<class MPTraits, class Set>
-CoverageMetric<MPTraits, Set>::CoverageMetric(MPProblemType* _problem, XMLNodeReader& _node, bool _computeAllCCs)
-  : MetricMethod<MPTraits>(_problem, _node), m_samples(_node) {
+CoverageMetric<MPTraits, Set>::CoverageMetric(MPProblemType* _problem,
+    XMLNode& _node, bool _computeAllCCs) :
+  MetricMethod<MPTraits>(_problem, _node), m_samples(_node) {
     this->SetName("CoverageMetric" + Set::GetName());
 
-    m_allData = _node.boolXMLParameter("computeAllCCs", false, _computeAllCCs, "flag when set to true computes coverage to all ccs, not just the first connectable cc");
+    m_allData = _node.Read("computeAllCCs", false, _computeAllCCs,
+        "Flag when set to true computes coverage to all ccs, "
+        "not just the first connectable cc");
 
     m_connectorLabels.clear();
-    for(XMLNodeReader::childiterator i = _node.children_begin(); i != _node.children_end(); ++i) {
-      if(i->getName() == "Connector") {
-        m_connectorLabels.push_back(i->stringXMLParameter("label", true, "", "connection method label"));
-        i->warnUnrequestedAttributes();
-      }
-      else {
-        i->warnUnknownNode();
-        exit(-1);
-      }
-    }
-    if(m_connectorLabels.empty()) {
-      cerr << "CoverageMetric: you must specify at lease one node connection method.\n";
-      exit(-1);
-    }
-}
+    for(auto& child : _node)
+      if(child.Name() == "Connector")
+        m_connectorLabels.push_back(
+            child.Read("label", true, "", "connection method label"));
+
+    if(m_connectorLabels.empty())
+      throw ParseException(_node.Where(),
+          "Please specify at least one node connection method.");
+  }
 
 template<class MPTraits, class Set>
-CoverageMetric<MPTraits, Set>::~CoverageMetric() {
+CoverageMetric<MPTraits, Set>::
+~CoverageMetric() {
 }
 
 template<class MPTraits, class Set>
 void
-CoverageMetric<MPTraits, Set>::Print(ostream& _os) const {
+CoverageMetric<MPTraits, Set>::
+Print(ostream& _os) const {
   _os << "Percentage of connection" << endl;
   _os << "\tall_data = " << m_allData << endl;
   _os << "\tnode_connection_labels = ";

@@ -24,11 +24,11 @@ class RadialSubdivisionRRT : public MPStrategyMethod<MPTraits> {
     typedef graph_view<RadialRegionGraph> RegionGraphView;
     typedef stapl::counter<stapl::default_timer> staplTimer;
 
-    RadialSubdivisionRRT(MPProblemType* _problem, XMLNodeReader& _node);
+    RadialSubdivisionRRT(MPProblemType* _problem, XMLNode& _node);
     RadialSubdivisionRRT();
     virtual ~RadialSubdivisionRRT();
 
-    virtual void ParseXML(XMLNodeReader& _node);
+    virtual void ParseXML(XMLNode& _node);
 
     virtual void Initialize();
     virtual void Run();
@@ -60,7 +60,7 @@ class RadialSubdivisionRRT : public MPStrategyMethod<MPTraits> {
 template<class MPTraits>
 RadialSubdivisionRRT<MPTraits>::
 RadialSubdivisionRRT(MPProblemType* _problem,
-    XMLNodeReader& _node) :
+    XMLNode& _node) :
   MPStrategyMethod<MPTraits>(_problem, _node) {
     this->SetName("RadialSubdivisionRRT");
     ParseXML(_node);
@@ -77,52 +77,36 @@ RadialSubdivisionRRT<MPTraits>::
 ~RadialSubdivisionRRT() { }
 
 template<class MPTraits>
-void RadialSubdivisionRRT<MPTraits>::ParseXML(XMLNodeReader& _node){
-  XMLNodeReader::childiterator citr;
-  for( citr = _node.children_begin(); citr!= _node.children_end(); ++citr) {
-    if(citr->getName() == "region_constr") {
-      m_numRegions = citr->numberXMLParameter("numRegions", true, 1, 0, MAX_INT, "Number of Regions");
-      m_radius = citr->numberXMLParameter("rayLength", true, 0.0, 0.0, MAX_DBL, "Random Ray Length");
-      m_numNeighbors = citr->numberXMLParameter("numNeighbors", true,1,0, MAX_INT, "Number of Adjacent Regions");
-      citr->warnUnrequestedAttributes();
+void
+RadialSubdivisionRRT<MPTraits>::
+ParseXML(XMLNode& _node) {
+  for(auto& child : _node) {
+    if(child.Name() == "region_constr") {
+      m_numRegions = child.Read("numRegions", true, 1, 0, MAX_INT, "Number of Regions");
+      m_radius = child.Read("rayLength", true, 0.0, 0.0, MAX_DBL, "Random Ray Length");
+      m_numNeighbors = child.Read("numNeighbors", true,1,0, MAX_INT, "Number of Adjacent Regions");
     }
-    else if(citr->getName() == "rrt_constr") {
-      m_numNodes = citr->numberXMLParameter("numNodes", true, 1, 0, MAX_INT, "Number of samples per region");
-      m_delta = citr->numberXMLParameter("delta", true, 0.0, 0.0, MAX_DBL, "Delta Variable for ExtendTree method");
-      m_minDist = citr->numberXMLParameter("minDist", true, 0.0, 0.0, MAX_DBL, "Minimum Distance to see if new node is too close to closet cfg");
-      m_numAttempts = citr->numberXMLParameter("numAttempts", true, 1, 0, MAX_INT,  "Number of samples to attempt per region");
-      m_strictBranching = citr->boolXMLParameter("strictBranching", true, false, "if true, root only has 'regions' number of edges");
-      m_overlap = citr->numberXMLParameter("overlap", false, 0.0, 0.0, 0.99, "percentage of the overlap of regions");
-      citr->warnUnrequestedAttributes();
+    else if(child.Name() == "rrt_constr") {
+      m_numNodes = child.Read("numNodes", true, 1, 0, MAX_INT, "Number of samples per region");
+      m_delta = child.Read("delta", true, 0.0, 0.0, MAX_DBL, "Delta Variable for ExtendTree method");
+      m_minDist = child.Read("minDist", true, 0.0, 0.0, MAX_DBL, "Minimum Distance to see if new node is too close to closet cfg");
+      m_numAttempts = child.Read("numAttempts", true, 1, 0, MAX_INT,  "Number of samples to attempt per region");
+      m_strictBranching = child.Read("strictBranching", true, false, "if true, root only has 'regions' number of edges");
+      m_overlap = child.Read("overlap", false, 0.0, 0.0, 0.99, "percentage of the overlap of regions");
     }
-    else if(citr->getName() == "num_runs") {
-      m_runs = citr->numberXMLParameter(string("nRuns"), true,
-          int(1), int(0), MAX_INT, string("Runs number"));
-      citr->warnUnrequestedAttributes();
-    }
-    else if (citr->getName() == "vc_method") {
-      m_vcLabel = citr->stringXMLParameter("vcm", true,"", "Validity Checker Method");
-      citr->warnUnrequestedAttributes();
-    }
-    else if(citr->getName() == "connectionMethod") {
-      m_connectorLabel = citr->stringXMLParameter("Label", true, "", "Region connection method");
-      citr->warnUnrequestedAttributes();
-    }
-    else if(citr->getName() == "dm_method") {
-      m_dmLabel = citr->stringXMLParameter("Method", true, "", "Distance Metric method");
-      citr->warnUnrequestedAttributes();
-    }
-    else if(citr->getName() == "nf_method") {
-      m_nfLabel = citr->stringXMLParameter("Method", true, "", "Neighborhood Finder method");
-      citr->warnUnrequestedAttributes();
-    }
-    else if(citr->getName() == "e_method") {
-      m_eLabel = citr->stringXMLParameter("Method", true, "", "Extender method");
-      citr->warnUnrequestedAttributes();
-    }
-    else {
-      citr->warnUnknownNode();
-    }
+    else if(child.Name() == "num_runs")
+      m_runs = child.Read("nRuns", true, 1, 0, MAX_INT, "Runs number");
+    else if (child.Name() == "vc_method")
+      m_vcLabel = child.Read("vcm", true,"", "Validity Checker Method");
+    else if(child.Name() == "connectionMethod")
+      m_connectorLabel = child.Read("Label", true, "",
+          "Region connection method");
+    else if(child.Name() == "dm_method")
+      m_dmLabel = child.Read("Method", true, "", "Distance Metric method");
+    else if(child.Name() == "nf_method")
+      m_nfLabel = child.Read("Method", true, "", "Neighborhood Finder method");
+    else if(child.Name() == "e_method")
+      m_eLabel = child.Read("Method", true, "", "Extender method");
   }
 };
 

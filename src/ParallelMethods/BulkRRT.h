@@ -100,11 +100,11 @@ class BulkRRT : public MPStrategyMethod<MPTraits> {
     typedef typename MPProblemType::VID VID;
     typedef graph_view<GraphType>  gviewType;
 
-    BulkRRT(typename MPTraits::MPProblemType* _problem, XMLNodeReader& _node);
+    BulkRRT(typename MPTraits::MPProblemType* _problem, XMLNode& _node);
     BulkRRT();
     virtual ~BulkRRT();
 
-    virtual void ParseXML(XMLNodeReader& _node);
+    virtual void ParseXML(XMLNode& _node);
 
     virtual void Initialize();
     virtual void Run();
@@ -130,64 +130,50 @@ BulkRRT() {
 
 template<class MPTraits>
 BulkRRT<MPTraits>::
-BulkRRT(typename MPTraits::MPProblemType* _problem, XMLNodeReader& _node) :
+BulkRRT(typename MPTraits::MPProblemType* _problem, XMLNode& _node) :
   MPStrategyMethod<MPTraits>(_problem, _node) {
     ParseXML(_node);
     this->SetName("BulkRRT");
   }
 
 template<class MPTraits>
-BulkRRT<MPTraits>::~BulkRRT() {
+BulkRRT<MPTraits>::
+~BulkRRT() {
   /*if(m_query != NULL)
     delete m_query;*/
 }
 
 template<class MPTraits>
-void BulkRRT<MPTraits>::ParseXML(XMLNodeReader& _node){
-  XMLNodeReader::childiterator citr;
-  for( citr = _node.children_begin(); citr!= _node.children_end(); ++citr) {
-    if(citr->getName() == "k_nodes") {
-      m_kNodes = citr->numberXMLParameter(string("kNodes"), true,
-          int(1), int(0), MAX_INT, string("Number of new nodes made before upgrading tree"));
-      citr->warnUnrequestedAttributes();
+void
+BulkRRT<MPTraits>::
+ParseXML(XMLNode& _node) {
+  for(auto& child : _node) {
+    if(child.Name() == "k_nodes")
+      m_kNodes = child.Read("kNodes", true, 1, 0, MAX_INT,
+          "Number of new nodes made before upgrading tree");
+    else if(child.Name() == "vc_method")
+      m_vcMethod = child.Read("vcm", true, "", "Validity Checker Method");
+    else if(child.Name() == "dm_method")
+      m_dm = child.Read("Method", true, "", "Distance Metric method");
+    else if(child.Name() == "e_method")
+      m_eLabel = child.Read("Method", true, "", "Extender method");
+    else if(child.Name() == "min_distance")
+      m_minDist = child.Read("minDist", true, 0.0, 0.0, MAX_DBL,
+          "Minimum Distance to see if new node is too close to closet cfg");
+    else if(child.Name() == "evaluation_method")
+      m_evaluatorLabels.push_back(child.Read("Method", true, "",
+          "Evaluation Method"));
+    /*
+    else if(child.Name() == "query") {
+      //optionally read in a query and create a Query object.
+      string query = child.Read("query", false, "", "Query Filename");
+      if(query != ""){
+        m_query = new Query<MPTraits>(query);
+        m_query->SetMPProblem(this->GetMPProblem());
+        m_query->SetDebug(this->m_debug);
+      }
     }
-    else if(citr->getName() == "vc_method") {
-      m_vcMethod = citr->stringXMLParameter("vcm", true,
-          "", "Validity Checker Method");
-      citr->warnUnrequestedAttributes();
-    }
-    else if(citr->getName() == "dm_method") {
-      m_dm = citr->stringXMLParameter("Method", true,
-          "", "Distance Metric method");
-      citr->warnUnrequestedAttributes();
-    }
-    else if(citr->getName() == "e_method") {
-      m_eLabel = citr->stringXMLParameter("Method", true,
-          "", "Distance Metric method");
-      citr->warnUnrequestedAttributes();
-    }
-    else if(citr->getName() == "min_distance") {
-      m_minDist = citr->numberXMLParameter("minDist", true, 0.0, 0.0, MAX_DBL, "Minimum Distance to see if new node is too close to closet cfg");
-      citr->warnUnrequestedAttributes();
-    }
-    else if(citr->getName() == "evaluation_method"){
-      string evalMethod = citr->stringXMLParameter("Method", true, "",
-          "Evaluation Method");
-      m_evaluatorLabels.push_back(evalMethod);
-      citr->warnUnrequestedAttributes();
-    }
-    /*else if(citr->getName() == "query"){
-    //optionally read in a query and create a Query object.
-    string query = citr->stringXMLParameter("query", false, "", "Query Filename");
-    if(query != ""){
-    m_query = new Query<MPTraits>(query);
-    m_query->SetMPProblem(this->GetMPProblem());
-    m_query->SetDebug(this->m_debug);
-    citr->warnUnrequestedAttributes();
-    }*/
-    else {
-      citr->warnUnknownNode();
-    }
+    */
 
   }
 };

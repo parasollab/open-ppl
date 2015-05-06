@@ -18,7 +18,7 @@ class CCDistanceMetric : public MetricMethod<MPTraits> {
     typedef typename MPProblemType::GraphType GraphType;
 
     CCDistanceMetric(string _dm="");
-    CCDistanceMetric(MPProblemType* _problem, XMLNodeReader& _node);
+    CCDistanceMetric(MPProblemType* _problem, XMLNode& _node);
     virtual ~CCDistanceMetric();
 
     virtual void Print(ostream& _os) const;
@@ -36,11 +36,11 @@ CCDistanceMetric<MPTraits>::CCDistanceMetric(string _dm)
 }
 
 template<class MPTraits>
-CCDistanceMetric<MPTraits>::CCDistanceMetric(MPProblemType* _problem, XMLNodeReader& _node)
+CCDistanceMetric<MPTraits>::CCDistanceMetric(MPProblemType* _problem, XMLNode& _node)
   : MetricMethod<MPTraits>(_problem, _node) {
     this->SetName("CCDistanceMetric");
 
-    m_dmLabel = _node.stringXMLParameter("dmLabel", true, "", "distance metric method");
+    m_dmLabel = _node.Read("dmLabel", true, "", "distance metric method");
 }
 
 template<class MPTraits>

@@ -66,7 +66,7 @@ class SamplerMethod : public MPBaseObject<MPTraits> {
     typedef typename MPTraits::MPProblemType MPProblemType;
 
     SamplerMethod();
-    SamplerMethod(MPProblemType* _problem, XMLNodeReader& _node);
+    SamplerMethod(MPProblemType* _problem, XMLNode& _node);
     virtual ~SamplerMethod();
 
     virtual void Print(ostream& _os) const;
@@ -98,7 +98,7 @@ SamplerMethod() : MPBaseObject<MPTraits>() {
 
 template<class MPTraits>
 SamplerMethod<MPTraits>::
-SamplerMethod(MPProblemType* _problem, XMLNodeReader& _node) :
+SamplerMethod(MPProblemType* _problem, XMLNode& _node) :
   MPBaseObject<MPTraits>(_problem, _node) {
   }
 

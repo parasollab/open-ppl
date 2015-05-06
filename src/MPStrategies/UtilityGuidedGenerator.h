@@ -49,10 +49,10 @@ class UtilityGuidedGenerator : public MPStrategyMethod<MPTraits> {
         string _connector = "", vector<string> _evaluators = vector<string>(),
         double _componentDist = 0.5, double _tao = 0.01,
         int _kNeighbors = 10, int _kSamples = 5);
-  UtilityGuidedGenerator(MPProblemType* _problem, XMLNodeReader& _node);
+  UtilityGuidedGenerator(MPProblemType* _problem, XMLNode& _node);
   virtual ~UtilityGuidedGenerator();
 
-  virtual void ParseXML(XMLNodeReader& _node);
+  virtual void ParseXML(XMLNode& _node);
   virtual void Print(ostream& _os) const;
 
   virtual void Initialize();
@@ -81,7 +81,7 @@ UtilityGuidedGenerator<MPTraits>::UtilityGuidedGenerator(string _vcLabel, string
 }
 
 template <class MPTraits>
-UtilityGuidedGenerator<MPTraits>::UtilityGuidedGenerator(MPProblemType* _problem, XMLNodeReader& _node) :
+UtilityGuidedGenerator<MPTraits>::UtilityGuidedGenerator(MPProblemType* _problem, XMLNode& _node) :
         MPStrategyMethod<MPTraits>(_problem, _node) {
   this->SetName("UtilityGuidedGenerator");
   ParseXML(_node);
@@ -92,25 +92,20 @@ UtilityGuidedGenerator<MPTraits>::~UtilityGuidedGenerator(){}
 
 template<class MPTraits>
 void
-UtilityGuidedGenerator<MPTraits>::ParseXML(XMLNodeReader& _node) {
-  m_vcLabel = _node.stringXMLParameter("vcLabel", true, "", "Validity Checker to verify validity of nodes.");
-  m_nfLabel = _node.stringXMLParameter("nfLabel", true, "", "Neighborhood Finder used in approximate c-space model.");
-  m_connectorLabel = _node.stringXMLParameter("connectorLabel", true, "", "Node Connector used for connecting nodes. ");
+UtilityGuidedGenerator<MPTraits>::ParseXML(XMLNode& _node) {
+  m_vcLabel = _node.Read("vcLabel", true, "", "Validity Checker to verify validity of nodes.");
+  m_nfLabel = _node.Read("nfLabel", true, "", "Neighborhood Finder used in approximate c-space model.");
+  m_connectorLabel = _node.Read("connectorLabel", true, "", "Node Connector used for connecting nodes. ");
 
-  m_componentDist = _node.numberXMLParameter("componentDist", false, 0.5, 0.0, MAX_DBL, "distance threshold between ccs");
-  m_tao = _node.numberXMLParameter("tao", false, 0.01, 0.0, MAX_DBL, "perturb amount");
-  m_kNeighbors = _node.numberXMLParameter("kneighbors", false, 10, 0, MAX_INT, "number of neighbors to look at when determining the probability a sample is free");
-  m_kSamples = _node.numberXMLParameter("ksamples", false, 5, 0, MAX_INT, "number of samples to select from during each round");
+  m_componentDist = _node.Read("componentDist", false, 0.5, 0.0, MAX_DBL, "distance threshold between ccs");
+  m_tao = _node.Read("tao", false, 0.01, 0.0, MAX_DBL, "perturb amount");
+  m_kNeighbors = _node.Read("kneighbors", false, 10, 0, MAX_INT, "number of neighbors to look at when determining the probability a sample is free");
+  m_kSamples = _node.Read("ksamples", false, 5, 0, MAX_INT, "number of samples to select from during each round");
 
-  for(XMLNodeReader::childiterator cIter = _node.children_begin(); cIter != _node.children_end(); ++cIter) {
-    if(cIter->getName() == "Evaluator") {
-      string evalMethod = cIter->stringXMLParameter("label", true, "", "Evaluation Method");
-      m_evaluatorLabels.push_back(evalMethod);
-      cIter->warnUnrequestedAttributes();
-    }
-    else
-      cIter->warnUnknownNode();
-  }
+  for(auto& child : _node)
+    if(child.Name() == "Evaluator")
+      m_evaluatorLabels.push_back(
+          child.Read("label", true, "", "Evaluation Method"));
 }
 
 template <class MPTraits>
@@ -125,8 +120,8 @@ UtilityGuidedGenerator<MPTraits>::Print(ostream& _os) const {
   _os << "\tKSamples: " << m_kSamples << endl;
   _os << "\tNode Connector: " << m_connectorLabel << endl;
   _os << "\tEvaluators\n";
-  for(vector<string>::const_iterator E = m_evaluatorLabels.begin(); E != m_evaluatorLabels.end(); ++E)
-    _os << "\t" << *E;
+  for(auto& l : m_evaluatorLabels)
+    _os << "\t" << l;
   _os << endl;
 }
 

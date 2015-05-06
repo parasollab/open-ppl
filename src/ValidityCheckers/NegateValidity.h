@@ -12,7 +12,7 @@ class NegateValidity : public ValidityCheckerMethod<MPTraits> {
     typedef typename MPProblemType::ValidityCheckerPointer ValidityCheckerPointer;
 
     NegateValidity(string _label = "");
-    NegateValidity(MPProblemType* _problem, XMLNodeReader& _node);
+    NegateValidity(MPProblemType* _problem, XMLNode& _node);
     virtual ~NegateValidity() { }
 
     virtual bool
@@ -29,11 +29,10 @@ NegateValidity<MPTraits>::NegateValidity(string _label) :
   }
 
 template<class MPTraits>
-NegateValidity<MPTraits>::NegateValidity(MPProblemType* _problem, XMLNodeReader& _node) :
+NegateValidity<MPTraits>::NegateValidity(MPProblemType* _problem, XMLNode& _node) :
   ValidityCheckerMethod<MPTraits>(_problem, _node) {
-    _node.verifyName("NegateValidity");
     this->m_name = "NegateValidity";
-    m_vcLabel = _node.stringXMLParameter("vcLabel", true, "", "validity checker method");
+    m_vcLabel = _node.Read("vcLabel", true, "", "validity checker method");
   }
 
 template<class MPTraits>

@@ -1,7 +1,7 @@
 // A mix of Toggle PRM and Lazy PRM
 
-#ifndef LAZYTOGGLEQUERY_H_
-#define LAZYTOGGLEQUERY_H_
+#ifndef LAZY_TOGGLE_QUERY_H_
+#define LAZY_TOGGLE_QUERY_H_
 
 #include "LazyQuery.h"
 #include <deque>
@@ -28,10 +28,10 @@ class LazyToggleQuery : public LazyQuery<MPTraits> {
       LazyQuery<MPTraits>(_queryFileName, _vcLabel), m_iterative(true) { this->SetName("LazyToggleQuery"); }
     LazyToggleQuery(const CfgType& _start, const CfgType& _goal, string _vcLabel) :
       LazyQuery<MPTraits>(_start, _goal, _vcLabel), m_iterative(true) { this->SetName("LazyToggleQuery"); }
-    LazyToggleQuery(MPProblemType* _problem, XMLNodeReader& _node, bool _warn = true);
+    LazyToggleQuery(MPProblemType* _problem, XMLNode& _node);
     virtual ~LazyToggleQuery() {};
 
-    void ParseXML(XMLNodeReader& _node);
+    void ParseXML(XMLNode& _node);
     virtual void Print(ostream& _os) const;
 
     // Overrides PerformQuery in Query, calls Query::PerformQuery() and adds Toggle functionality
@@ -49,24 +49,23 @@ class LazyToggleQuery : public LazyQuery<MPTraits> {
 };
 
 template<class MPTraits>
-LazyToggleQuery<MPTraits>::LazyToggleQuery(MPProblemType* _problem, XMLNodeReader& _node, bool _warn) :
-    LazyQuery<MPTraits>(_problem, _node, false) {
+LazyToggleQuery<MPTraits>::
+LazyToggleQuery(MPProblemType* _problem, XMLNode& _node) :
+    LazyQuery<MPTraits>(_problem, _node) {
   this->SetName("LazyToggleQuery");
   ParseXML(_node);
-  if(_warn)
-    _node.warnUnrequestedAttributes();
 }
 
 template<class MPTraits>
 void
-LazyToggleQuery<MPTraits>::ParseXML(XMLNodeReader& _node) {
-  m_iterative = _node.boolXMLParameter("iterative", false, true, "Process queue in either iterative or grouped method");
-  for(XMLNodeReader::childiterator citr = _node.children_begin(); citr != _node.children_end(); citr++) {
-    if(citr->getName() == "ToggleConnectionMethod") {
-      m_toggleConnect = citr->stringXMLParameter("method", true, "ToggleConnect", "Toggle connection method");
-      citr->warnUnrequestedAttributes();
-    }
-  }
+LazyToggleQuery<MPTraits>::
+ParseXML(XMLNode& _node) {
+  m_iterative = _node.Read("iterative", false, true,
+      "Process queue in either iterative or grouped method");
+  for(auto& child : _node)
+    if(child.Name() == "ToggleConnectionMethod")
+      m_toggleConnect = child.Read("method", true, "ToggleConnect",
+          "Toggle connection method");
 }
 
 template<class MPTraits>
@@ -135,7 +134,7 @@ LazyToggleQuery<MPTraits>::PerformQuery(CfgType _start, CfgType _goal, RoadmapTy
         VID newVID = _rdmp->GetGraph()->AddVertex(node);
         if(this->m_debug)
           cout << "*T* Adding a free node to roadmap: " << node << ", VID = " << newVID << endl;
-        for(auto label : this->m_nodeConnectionLabels)
+        for(auto&  label : this->m_nodeConnectionLabels)
           this->GetConnector(label)->Connect(_rdmp, newVID);
         if(m_iterative) {
           cmap.reset();

@@ -79,7 +79,6 @@
 #include "Connectors/CCExpansion.h"
 #include "Connectors/CCsConnector.h"
 #include "Connectors/ClosestVE.h"
-#include "Connectors/ConnectNeighboringSurfaces.h"
 #include "Connectors/NeighborhoodConnector.h"
 #include "Connectors/RewireConnector.h"
 #include "Connectors/RRTConnect.h"

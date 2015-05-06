@@ -22,7 +22,7 @@ class Environment {
   public:
 
     Environment();
-    Environment(XMLNodeReader& _node);
+    Environment(XMLNode& _node);
     virtual ~Environment();
 
     ///////////////////////////////////////////////////
@@ -53,7 +53,7 @@ class Environment {
     double GetRDRes() const {return m_rdRes;}
 #endif
 
-    //ComputeResolution, if _posRes is <0, auto compute
+    //ComputeResolution, if _posRes is <0, auto&  compute
     //the resolutions based on min_max body spans.
     void ComputeResolution(double _positionResFactor = 0.05);
 

@@ -103,12 +103,12 @@ typedef DPES<VID_DPES_proxy<CFG,WEIGHT>,
 typedef typename RoadmapGraph<CFG, WEIGHT>::VID VID;
 
 public:
-  DPESNF(XMLNodeReader& _node, MPProblem* _problem) :
+  DPESNF(XMLNode& _node, MPProblem* _problem) :
     NeighborhoodFinderMethod(_node, _problem), m_dprox(NULL), m_dpes(NULL) {
 
 
-    m_m = _node.numberXMLParameter("m", false, 3, 1, 6, "m value for DPES");
-    m_l = _node.numberXMLParameter("l", false, 50, 5, 1000, "l value for DPES");
+    m_m = _node.Read("m", false, 3, 1, 6, "m value for DPES");
+    m_l = _node.Read("l", false, 50, 5, 1000, "l value for DPES");
     m_cur_roadmap_version= -1;
   }
 

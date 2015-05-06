@@ -16,7 +16,7 @@ class CenterOfMassDistance : public DistanceMetricMethod<MPTraits> {
     typedef typename MPTraits::MPProblemType MPProblemType;
 
     CenterOfMassDistance();
-    CenterOfMassDistance(MPProblemType* _problem, XMLNodeReader& _node);
+    CenterOfMassDistance(MPProblemType* _problem, XMLNode& _node);
 
     virtual double Distance(const CfgType& _c1, const CfgType& _c2);
 };
@@ -29,8 +29,8 @@ CenterOfMassDistance() : DistanceMetricMethod<MPTraits>() {
 
 template<class MPTraits>
 CenterOfMassDistance<MPTraits>::
-CenterOfMassDistance(MPProblemType* _problem, XMLNodeReader& _node) :
-  DistanceMetricMethod<MPTraits>(_problem, _node, true) {
+CenterOfMassDistance(MPProblemType* _problem, XMLNode& _node) :
+  DistanceMetricMethod<MPTraits>(_problem, _node) {
     this->SetName("CenterOfMass");
   }
 

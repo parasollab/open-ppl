@@ -20,6 +20,8 @@ using namespace mathtool;
 
 #include "IOUtils.h"
 
+class Environment;
+
 ///////////////////////////////////////////////////////////////////////////////
 // Constants
 ///////////////////////////////////////////////////////////////////////////////
@@ -221,7 +223,7 @@ struct ComposeNegate {
 
 template<typename MPTraits, typename Method>
 struct MethodFactory {
-  shared_ptr<Method> operator()(typename MPTraits::MPProblemType* _problem, XMLNodeReader& _node) const {
+  shared_ptr<Method> operator()(typename MPTraits::MPProblemType* _problem, XMLNode& _node) const {
     return shared_ptr<Method>(new Method(_problem, _node));
   }
 };
@@ -230,32 +232,25 @@ template<typename MPTraits, typename Method>
 class MethodSet {
   public:
     typedef shared_ptr<Method> MethodPointer;
-    typedef typename map<string, MethodPointer>::iterator MIT;
-    typedef typename map<string, MethodPointer>::const_iterator CMIT;
 
     template<typename MethodTypeList>
       MethodSet(const MethodTypeList& _etl, const string& _name) : m_default(""), m_name(_name) {
         AddToUniverse(typename boost::mpl::begin<MethodTypeList>::type(), typename boost::mpl::end<MethodTypeList>::type());
       }
 
-    void ParseXML(typename MPTraits::MPProblemType* _problem, XMLNodeReader& _node){
-      XMLNodeReader::childiterator citr;
-      for(citr = _node.children_begin(); citr!= _node.children_end(); ++citr) {
-        if (!AddMethod(_problem, *citr, citr->getName())){
-          citr->warnUnknownNode();
-        }
+    void ParseXML(typename MPTraits::MPProblemType* _problem, XMLNode& _node){
+      for(auto& child : _node)
+        AddMethod(_problem, child);
+    }
+
+    void AddMethod(typename MPTraits::MPProblemType* _problem, XMLNode& _node) {
+      if(m_universe.find(_node.Name()) != m_universe.end()) {
+        MethodPointer e = m_universe[_node.Name()](_problem, _node);
+        AddMethod(e, e->m_label);
       }
     }
 
-    bool AddMethod(typename MPTraits::MPProblemType* _problem, XMLNodeReader& _node, const string& _name) {
-      if(m_universe.find(_name) != m_universe.end()) {
-        MethodPointer e = m_universe[_name](_problem, _node);
-        return AddMethod(e, e->m_label);
-      }
-      return false;
-    }
-
-    bool AddMethod(MethodPointer _e, const string& _label) {
+    void AddMethod(MethodPointer _e, const string& _label) {
       if(m_universe.find(_e->m_name) != m_universe.end()) {
         _e->SetLabel(_label);
         if(m_elements.empty())
@@ -264,12 +259,10 @@ class MethodSet {
           m_elements[_label] = _e;
         else
           cerr << "\nWarning, method list already has a pointer associated with \"" << _label << "\", not added\n";
-        return true;
       }
-      else{
-        cerr << "Error. Method \"" << _e->m_name << "\" is not contained within the motion planning universe. Exiting." << endl;
-        exit(1);
-      }
+      else
+        throw ParseException(WHERE, "Method '" + _e->m_name +
+            "' is not contained within the motion planning universe.");
     }
 
     MethodPointer GetMethod(const string& _label) {
@@ -279,40 +272,44 @@ class MethodSet {
       else
         element = m_elements[_label];
       if(element.get() == NULL) {
-        cerr << "\n\tError, requesting element with name \"" << _label << "\" which does not exist in " << m_name << ".\n";
-        for(CMIT mit = Begin(); mit != End(); ++mit)
-          if(mit->second.get() != NULL)
-            cerr << " \"" << mit->first << "\"";
-        cerr << "\n\texiting.\n";
-        exit(-1);
+        ostringstream oss;
+        oss << "Element '" << _label
+          << "' does not exist in " << m_name << ". Choices are: ";
+        for(auto& elem : m_elements)
+          if(!elem.second.get())
+            oss << " '" << elem.first << "',";
+        string err = oss.str();
+        err.pop_back();
+        throw RunTimeException(WHERE, err);
       }
       return element;
     }
 
-    void SetMPProblem(typename MPTraits::MPProblemType* _problem){
-      for(MIT mit = m_elements.begin(); mit!=m_elements.end(); mit++){
-        mit->second->SetMPProblem(_problem);
-      }
+    void SetMPProblem(typename MPTraits::MPProblemType* _problem) {
+      for(auto&  elem : m_elements)
+        elem.second->SetMPProblem(_problem);
     }
 
     void Print(ostream& _os) const {
       size_t count = 0;
       _os << endl << m_name << " has these methods available::" << endl << endl;
-      for(CMIT mit = Begin(); mit != End(); ++mit){
-        _os << ++count << ") \"" << mit->first << "\" (" << mit->second->m_name << ")" << endl;
-        mit->second->Print(_os);
+      for(auto& elem : m_elements) {
+        _os << ++count << ") \"" << elem.first << "\" (" << elem.second->m_name << ")" << endl;
+        elem.second->Print(_os);
         _os << endl;
       }
       _os << endl;
     }
 
-    CMIT Begin() const { return m_elements.begin(); }
-    CMIT End() const { return m_elements.end(); }
-    MIT Begin() { return m_elements.begin(); }
-    MIT End() { return m_elements.end(); }
+    typedef typename map<string, MethodPointer>::iterator MIT;
+    typedef typename map<string, MethodPointer>::const_iterator CMIT;
+    MIT begin() {return m_elements.begin();}
+    MIT end() {return m_elements.end();}
+    CMIT begin() const {return m_elements.begin();}
+    CMIT end() const {return m_elements.end();}
 
   protected:
-    typedef function<MethodPointer(typename MPTraits::MPProblemType*, XMLNodeReader&)> FactoryType;
+    typedef function<MethodPointer(typename MPTraits::MPProblemType*, XMLNode&)> FactoryType;
 
     template <typename Last>
       void AddToUniverse(Last, Last){}

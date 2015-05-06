@@ -10,7 +10,7 @@ class ObstacleClearanceValidity : public ValidityCheckerMethod<MPTraits> {
     typedef typename MPTraits::CfgType CfgType;
 
     ObstacleClearanceValidity(double _obstClearance = 1.0, const ClearanceUtility<MPTraits>& _c = ClearanceUtility<MPTraits>());
-    ObstacleClearanceValidity(typename MPTraits::MPProblemType* _problem, XMLNodeReader& _node);
+    ObstacleClearanceValidity(typename MPTraits::MPProblemType* _problem, XMLNode& _node);
 
     virtual ~ObstacleClearanceValidity() { }
 
@@ -30,10 +30,10 @@ ObstacleClearanceValidity<MPTraits>::ObstacleClearanceValidity(double _obstClear
   }
 
 template<class MPTraits>
-ObstacleClearanceValidity<MPTraits>::ObstacleClearanceValidity(typename MPTraits::MPProblemType* _problem, XMLNodeReader& _node) :
+ObstacleClearanceValidity<MPTraits>::ObstacleClearanceValidity(typename MPTraits::MPProblemType* _problem, XMLNode& _node) :
   ValidityCheckerMethod<MPTraits>(_problem, _node), m_clearanceUtility(_problem, _node) {
     this->m_name = "ObstacleClearance";
-    m_obstClearance = _node.numberXMLParameter("obstClearance", true, 1.0, -MAX_DBL, MAX_DBL, "Required clearance from obstacles");
+    m_obstClearance = _node.Read("obstClearance", true, 1.0, -MAX_DBL, MAX_DBL, "Required clearance from obstacles");
   }
 
 template<class MPTraits>

@@ -9,7 +9,7 @@ class Partition;
 class PartitioningEvaluators : public MPBaseObject{
  public:
    PartitioningEvaluators();
-   PartitioningEvaluators(XMLNodeReader& in_Node, MPProblem* mp);
+   PartitioningEvaluators(XMLNode& in_Node, MPProblem* mp);
    ~PartitioningEvaluators(){};
 
    PartitioningEvaluator* GetEvaluator(string s);

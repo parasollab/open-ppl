@@ -16,16 +16,15 @@ Environment::Environment() :
   m_rdRes(ENV_RES_DEFAULT) {
   }
 
-Environment::Environment(XMLNodeReader& _node) {
-  _node.verifyName("Environment");
+Environment::Environment(XMLNode& _node) {
 
-  m_filename = _node.stringXMLParameter("filename", true, "", "env filename");
-  m_saveDofs = _node.boolXMLParameter("saveDofs", false, false, "save DoF flag");
-  m_positionRes = _node.numberXMLParameter("positionRes", false, -1.0, 0.0, MAX_DBL, "position resolution");
-  double positionResFactor = _node.numberXMLParameter("positionResFactor", false, 0.05, 0.0, MAX_DBL, "position resolution factor");
-  m_orientationRes = _node.numberXMLParameter("orientationRes", false, 0.05, 0.0, MAX_DBL, "orientation resolution");
+  m_filename = _node.Read("filename", true, "", "env filename");
+  m_saveDofs = _node.Read("saveDofs", false, false, "save DoF flag");
+  m_positionRes = _node.Read("positionRes", false, -1.0, 0.0, MAX_DBL, "position resolution");
+  double positionResFactor = _node.Read("positionResFactor", false, 0.05, 0.0, MAX_DBL, "position resolution factor");
+  m_orientationRes = _node.Read("orientationRes", false, 0.05, 0.0, MAX_DBL, "orientation resolution");
 #if (defined(PMPReachDistCC) || defined(PMPReachDistCCFixed))
-  m_rdRes = _node.numberXMLParameter("rdRes", false, .005, .00001, MAX_DBL, "reachable distance resolution");
+  m_rdRes = _node.Read("rdRes", false, .005, .00001, MAX_DBL, "reachable distance resolution");
 #else
   m_rdRes = ENV_RES_DEFAULT;
 #endif
@@ -104,7 +103,7 @@ Environment::Write(ostream & _os) {
     m_usableMultiBodies[i]->Write(_os);
 }
 
-//ComputeResolution, if _posRes is <0, auto compute
+//ComputeResolution, if _posRes is <0, auto&  compute
 //the resolutions based on min_max body spans.
 void
 Environment::ComputeResolution(double _positionResFactor) {

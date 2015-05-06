@@ -32,10 +32,10 @@ class BasicPRM : public MPStrategyMethod<MPTraits> {
         const vector<string>& _evaluatorLabels = vector<string>(),
         string _inputMapFilename = "",
         Start _startAt = Sampling);
-    BasicPRM(typename MPTraits::MPProblemType* _problem, XMLNodeReader& _node);
+    BasicPRM(typename MPTraits::MPProblemType* _problem, XMLNode& _node);
     virtual ~BasicPRM() {}
 
-    virtual void ParseXML(XMLNodeReader& _node);
+    virtual void ParseXML(XMLNode& _node);
     virtual void Print(ostream& _os) const;
 
     virtual void Initialize();
@@ -44,14 +44,14 @@ class BasicPRM : public MPStrategyMethod<MPTraits> {
 
   protected:
     ////////////////////////////////////////////////////////////////////////////
-    /// @breif Sample and add configurations to the roadmap.
+    /// @brief Sample and add configurations to the roadmap.
     /// @tparam OutputIterator Output iterator on data structure of VIDs
     /// @param[out] _thisIterationOut Data structure of VIDs of added nodes.
     template <typename OutputIterator>
       void Sample(OutputIterator _thisIterationOut);
 
     ////////////////////////////////////////////////////////////////////////////
-    /// @breif Connect nodes and CCs of the roadmap
+    /// @brief Connect nodes and CCs of the roadmap
     /// @tparam InputIterator Iterator on data structure of VIDs/graph nodes
     /// @param _first Begin iterator over VIDs/graph nodes
     /// @param _last End iterator over VIDs/graph nodes
@@ -61,7 +61,7 @@ class BasicPRM : public MPStrategyMethod<MPTraits> {
           const vector<string>& _labels);
 
     ////////////////////////////////////////////////////////////////////////////
-    /// @breif Iterate over range and check nodes to be within narrow passage
+    /// @brief Iterate over range and check nodes to be within narrow passage
     /// @tparam InputIterator Iterator on data structure of VIDs
     /// @param _first Begin iterator over VIDs
     /// @param _last End iterator over VIDs
@@ -95,7 +95,7 @@ BasicPRM(
 
 template<class MPTraits>
 BasicPRM<MPTraits>::
-BasicPRM(typename MPTraits::MPProblemType* _problem, XMLNodeReader& _node) :
+BasicPRM(typename MPTraits::MPProblemType* _problem, XMLNode& _node) :
   MPStrategyMethod<MPTraits>(_problem, _node), m_currentIteration(0),
   m_inputMapFilename(""), m_startAt(Sampling) {
     this->SetName("BasicPRM");
@@ -105,10 +105,10 @@ BasicPRM(typename MPTraits::MPProblemType* _problem, XMLNodeReader& _node) :
 template<class MPTraits>
 void
 BasicPRM<MPTraits>::
-ParseXML(XMLNodeReader& _node) {
-  m_inputMapFilename = _node.stringXMLParameter("inputMap", false, "",
+ParseXML(XMLNode& _node) {
+  m_inputMapFilename = _node.Read("inputMap", false, "",
       "filename of roadmap to start from");
-  string startAt = _node.stringXMLParameter("startAt", false, "sampling",
+  string startAt = _node.Read("startAt", false, "sampling",
       "point of algorithm where to begin at: \
       \"sampling\" (default), \"connecting\", \
       \"connectingcomponents\", \"evaluating\"");
@@ -123,34 +123,27 @@ ParseXML(XMLNodeReader& _node) {
   else  {
     string message = "Start at is '" + startAt +
       "'. Choices are 'sampling', 'connecting', 'connectingComponents', 'evaluating'.";
-    throw ParseException(WHERE, message);
+    throw ParseException(_node.Where(), message);
   }
 
-  typedef XMLNodeReader::childiterator CIT;
-  for(CIT cit = _node.children_begin(); cit != _node.children_end(); ++cit) {
-    if(cit->getName() == "Sampler") {
-      string s = cit->stringXMLParameter("method", true, "", "Sampler Label");
-      size_t num = cit->numberXMLParameter("number", true,
+  for(auto& child : _node) {
+    if(child.Name() == "Sampler") {
+      string s = child.Read("method", true, "", "Sampler Label");
+      size_t num = child.Read("number", true,
           1, 0, MAX_INT, "Number of samples");
-      size_t attempts = cit->numberXMLParameter("attempts", false,
+      size_t attempts = child.Read("attempts", false,
           1, 0, MAX_INT, "Number of attempts per sample");
       m_samplerLabels[s] = make_pair(num, attempts);
     }
-    else if(cit->getName() == "Connector"){
-      string c = cit->stringXMLParameter("method", true, "", "Connector Label");
-      m_connectorLabels.push_back(c);
-    }
-    else if(cit->getName() == "ComponentConnector"){
-      string c = cit->stringXMLParameter("method", true, "", "Component Connector Label");
-      m_componentConnectorLabels.push_back(c);
-    }
-    else if(cit->getName() == "Evaluator"){
-      string e = cit->stringXMLParameter("method", true, "", "Evaluator Label");
-      m_evaluatorLabels.push_back(e);
-    }
-    else
-      cit->warnUnknownNode();
-    cit->warnUnrequestedAttributes();
+    else if(child.Name() == "Connector")
+      m_connectorLabels.push_back(
+          child.Read("method", true, "", "Connector Label"));
+    else if(child.Name() == "ComponentConnector")
+      m_componentConnectorLabels.push_back(
+          child.Read("method", true, "", "Component Connector Label"));
+    else if(child.Name() == "Evaluator")
+      m_evaluatorLabels.push_back(
+          child.Read("method", true, "", "Evaluator Label"));
   }
 }
 
@@ -306,7 +299,7 @@ Sample(OutputIterator _thisIterationOut) {
 
   //For each sampler generate nodes into samples
   vector<CfgType> samples;
-  for(auto sampler : m_samplerLabels) {
+  for(auto&  sampler : m_samplerLabels) {
     SamplerPointer s = this->GetSampler(sampler.first);
 
     stats->StartClock(s->GetNameAndLabel());
@@ -322,7 +315,7 @@ Sample(OutputIterator _thisIterationOut) {
 
   //add valid samples to roadmap
   GraphType* g = this->GetRoadmap()->GetGraph();
-  for(auto sample: samples) {
+  for(auto&  sample: samples) {
     VID vid = g->AddVertex(sample);
     *_thisIterationOut++ = vid;
   }

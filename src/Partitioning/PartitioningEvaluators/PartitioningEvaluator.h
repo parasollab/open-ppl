@@ -6,10 +6,10 @@
 class PartitioningEvaluator : public MPBaseObject{
  public:
    PartitioningEvaluator():MPBaseObject(){}
-   PartitioningEvaluator(XMLNodeReader& in_Node, MPProblem* mp):MPBaseObject(in_Node, mp){}
+   PartitioningEvaluator(XMLNode& in_Node, MPProblem* mp):MPBaseObject(in_Node, mp){}
    virtual ~PartitioningEvaluator(){}
 
-   virtual void ParseXML(XMLNodeReader& in_Node)=0;
+   virtual void ParseXML(XMLNode& in_Node)=0;
 
    virtual vector<double> Evaluate(vector<Partition*> part)=0;
 

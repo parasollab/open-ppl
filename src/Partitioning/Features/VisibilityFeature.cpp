@@ -9,16 +9,16 @@ VisibilityFeature::VisibilityFeature():MPFeature(){
 
 VisibilityFeature::VisibilityFeature(int _k, string _nf, string _dm)  : MPFeature(), k(_k), nfLabel(_nf), dmLabel(_dm) {}
 
-VisibilityFeature::VisibilityFeature(XMLNodeReader& in_Node, MPProblem* mp):MPFeature(in_Node, mp){
+VisibilityFeature::VisibilityFeature(XMLNode& in_Node, MPProblem* mp):MPFeature(in_Node, mp){
    ParseXML(in_Node);
 }
 
-void VisibilityFeature::ParseXML(XMLNodeReader& in_Node){
-   //SetLabel(in_Node.stringXMLParameter(string("Label"), true, string(""), string("Feature Value")));
-   k = in_Node.numberXMLParameter(string("k"), true, 0, 0, MAX_INT, string("k value"));
-   nfLabel=in_Node.stringXMLParameter(string("nf_method"),true,string(""),string("Neighborhood Finder Method"));
-   dmLabel=in_Node.stringXMLParameter(string("dm_method"),false,string("default"),string("Neighborhood Finder Method"));
-   m_lpLabel = in_Node.stringXMLParameter(string("lp_method"),false,string("default"),string("Local Planner Method"));
+void VisibilityFeature::ParseXML(XMLNode& in_Node){
+   //SetLabel(in_Node.Read(string("Label"), true, string(""), string("Feature Value")));
+   k = in_Node.Read(string("k"), true, 0, 0, MAX_INT, string("k value"));
+   nfLabel=in_Node.Read(string("nf_method"),true,string(""),string("Neighborhood Finder Method"));
+   dmLabel=in_Node.Read(string("dm_method"),false,string("default"),string("Neighborhood Finder Method"));
+   m_lpLabel = in_Node.Read(string("lp_method"),false,string("default"),string("Local Planner Method"));
    in_Node.warnUnrequestedAttributes();
 }
 

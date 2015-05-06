@@ -101,10 +101,10 @@ class ClosestVE: public ConnectorMethod<MPTraits> {
 
   public:
     ClosestVE(string _lp = "", string _nf = "", MPProblemType* _problem = NULL);
-    ClosestVE(MPProblemType* _problem, XMLNodeReader& _node);
+    ClosestVE(MPProblemType* _problem, XMLNode& _node);
     ~ClosestVE();
 
-    virtual void ParseXML(XMLNodeReader& _node);
+    virtual void ParseXML(XMLNode& _node);
     virtual void Print(ostream& _os) const;
 
     /**Find k pairs of closest Cfgs from a given Cfg to Cfgs in a Cfg vector
@@ -165,7 +165,7 @@ ClosestVE<MPTraits>::ClosestVE(string _lp, string _nf, MPProblemType* _problem) 
 /////////////////////////////////////////////////////////////////////////////
 
 template <class MPTraits>
-ClosestVE<MPTraits>::ClosestVE(MPProblemType* _problem, XMLNodeReader& _node) :
+ClosestVE<MPTraits>::ClosestVE(MPProblemType* _problem, XMLNode& _node) :
   ConnectorMethod<MPTraits>(_problem, _node) {
     this->SetName("ClosestVE");
     m_kClosest = KCLOSESTVE;
@@ -181,8 +181,8 @@ ClosestVE<MPTraits>::~ClosestVE() {
 
 template <class MPTraits>
 void
-ClosestVE<MPTraits>::ParseXML(XMLNodeReader& _node) {
-  m_kClosest = _node.numberXMLParameter("kClosest", true, 5,1,1000, "K Closest Connections");
+ClosestVE<MPTraits>::ParseXML(XMLNode& _node) {
+  m_kClosest = _node.Read("kClosest", true, 5,1,1000, "K Closest Connections");
 }
 
 /////////////////////////////////////////////////////////////////////////////

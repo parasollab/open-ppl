@@ -18,7 +18,7 @@ class ReachableDistance : public DistanceMetricMethod<MPTraits> {
     typedef typename MPTraits::MPProblemType MPProblemType;
 
     ReachableDistance(double _s1 = 0.33, double _s2 = 0.33);
-    ReachableDistance(MPProblemType* _problem, XMLNodeReader& _node, bool _warn = true);
+    ReachableDistance(MPProblemType* _problem, XMLNode& _node, bool _warn = true);
     virtual ~ReachableDistance();
 
     virtual void Print(ostream& _os) const;
@@ -38,12 +38,12 @@ ReachableDistance(double _s1, double _s2) :
 
 template<class MPTraits>
 ReachableDistance<MPTraits>::
-ReachableDistance(MPProblemType* _problem, XMLNodeReader& _node, bool _warn) :
+ReachableDistance(MPProblemType* _problem, XMLNode& _node, bool _warn) :
   DistanceMetricMethod<MPTraits>(_problem, _node, false) {
     this->SetName("Reachable");
 
-    m_scale1 = _node.numberXMLParameter("s1", false, 0.33, 0.0, 1.0, "position scale factor");
-    m_scale2 = _node.numberXMLParameter("s2", false, 0.33, 0.0, 1.0, "link lengths scale factor");
+    m_scale1 = _node.Read("s1", false, 0.33, 0.0, 1.0, "position scale factor");
+    m_scale2 = _node.Read("s2", false, 0.33, 0.0, 1.0, "link lengths scale factor");
 
     if(m_scale1 + m_scale2 > 1.0) {
       cerr << "\n\nERROR in ReachableDistance(): scale factor parameters must add up to less than or equal to 1: " << m_scale1 << " + " << m_scale2 << " = " << m_scale1 + m_scale2 << "\nexiting.\n";

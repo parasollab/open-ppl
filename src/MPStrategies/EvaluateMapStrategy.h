@@ -1,8 +1,7 @@
-#ifndef EVALUATEMAPSTRATEGY_H_
-#define EVALUATEMAPSTRATEGY_H_
+#ifndef EVALUATE_MAP_STRATEGY_H_
+#define EVALUATE_MAP_STRATEGY_H_
 
 #include "MPStrategies/MPStrategyMethod.h"
-#include "boost/lambda/lambda.hpp"
 
 template<class MPTraits>
 class EvaluateMapStrategy : public MPStrategyMethod<MPTraits> {
@@ -11,12 +10,12 @@ class EvaluateMapStrategy : public MPStrategyMethod<MPTraits> {
 
     EvaluateMapStrategy(string _mapFileName = "",
         const vector<string>& _evaluatorLabels = vector<string>());
-    EvaluateMapStrategy(MPProblemType* _problem, XMLNodeReader& _node);
+    EvaluateMapStrategy(MPProblemType* _problem, XMLNode& _node);
     virtual ~EvaluateMapStrategy() {}
 
     virtual void Print(ostream& _os) const;
 
-    virtual void ParseXML(XMLNodeReader& _node);
+    virtual void ParseXML(XMLNode& _node);
 
     virtual void Initialize();
     virtual void Run();
@@ -28,8 +27,8 @@ class EvaluateMapStrategy : public MPStrategyMethod<MPTraits> {
 };
 
 template<class MPTraits>
-EvaluateMapStrategy<MPTraits>::EvaluateMapStrategy(
-    string _mapFileName,
+EvaluateMapStrategy<MPTraits>::
+EvaluateMapStrategy(string _mapFileName,
     const vector<string>& _evaluatorLabels) :
   m_mapFileName(_mapFileName),
   m_evaluatorLabels(_evaluatorLabels) {
@@ -37,8 +36,9 @@ EvaluateMapStrategy<MPTraits>::EvaluateMapStrategy(
   }
 
 template<class MPTraits>
-EvaluateMapStrategy<MPTraits>::EvaluateMapStrategy(MPProblemType* _problem, XMLNodeReader& _node)
-  : MPStrategyMethod<MPTraits>(_problem, _node) {
+EvaluateMapStrategy<MPTraits>::
+EvaluateMapStrategy(MPProblemType* _problem, XMLNode& _node) :
+  MPStrategyMethod<MPTraits>(_problem, _node) {
     this->SetName("EvaluateMapStrategy");
     ParseXML(_node);
   }
@@ -46,38 +46,34 @@ EvaluateMapStrategy<MPTraits>::EvaluateMapStrategy(MPProblemType* _problem, XMLN
 
 template<class MPTraits>
 void
-EvaluateMapStrategy<MPTraits>::Print(ostream& _os) const {
-  using boost::lambda::_1;
+EvaluateMapStrategy<MPTraits>::
+Print(ostream& _os) const {
   _os << "EvaluateMapStrategy::";
   _os << "\n\tmap file = \"" << m_mapFileName << "\"";
   _os << "\tevaluators: ";
-  for_each(m_evaluatorLabels.begin(), m_evaluatorLabels.end(), cout << _1 << " ");
+  for(auto&  l : m_evaluatorLabels)
+      cout << l << " ";
 }
 
 
 template<class MPTraits>
 void
-EvaluateMapStrategy<MPTraits>::ParseXML(XMLNodeReader& _node) {
+EvaluateMapStrategy<MPTraits>::
+ParseXML(XMLNode& _node) {
+  m_mapFileName = _node.Read("mapFilename", true, "", "Map Filename");
 
-  m_mapFileName = _node.stringXMLParameter("mapFilename", true, "", "Map Filename");
-
-  for(XMLNodeReader::childiterator citr = _node.children_begin(); citr!= _node.children_end(); ++citr)
-    if(citr->getName() == "Evaluator") {
-      string method = citr->stringXMLParameter("label", true, "", "Map Evaluation Method");
+  for(auto& child : _node)
+    if(child.Name() == "Evaluator") {
+      string method = child.Read("label", true, "", "Map Evaluation Method");
       m_evaluatorLabels.push_back(method);
-      citr->warnUnrequestedAttributes();
     }
-    else {
-      citr->warnUnknownNode();
-    }
-
-  _node.warnUnrequestedAttributes();
 }
 
 template<class MPTraits>
 void
-EvaluateMapStrategy<MPTraits>::Initialize() {
-  this->GetMPProblem()->GetRoadmap()->Read(m_mapFileName.c_str());
+EvaluateMapStrategy<MPTraits>::
+Initialize() {
+  this->GetRoadmap()->Read(m_mapFileName.c_str());
 }
 
 template<class MPTraits>

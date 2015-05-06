@@ -6,7 +6,7 @@
 HierarchicalClustering::HierarchicalClustering():PartitioningMethod(){
 };
 
-HierarchicalClustering::HierarchicalClustering(XMLNodeReader& in_Node, MPProblem* in_pProblem):PartitioningMethod(in_Node, in_pProblem){
+HierarchicalClustering::HierarchicalClustering(XMLNode& in_Node, MPProblem* in_pProblem):PartitioningMethod(in_Node, in_pProblem){
   this->SetName("HierarchicalClustering");
    ParseXML(in_Node);
 };

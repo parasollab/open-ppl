@@ -14,9 +14,9 @@ class UniformObstacleBasedSampler : public SamplerMethod<MPTraits> {
     UniformObstacleBasedSampler(string _vcLabel = "", string _dmLabel = "",
         double _margin = 0, bool _useBoundary = false);
 
-    UniformObstacleBasedSampler(MPProblemType* _problem, XMLNodeReader& _node);
+    UniformObstacleBasedSampler(MPProblemType* _problem, XMLNode& _node);
 
-    void ParseXML(XMLNodeReader& _node);
+    void ParseXML(XMLNode& _node);
     void Print(ostream& _os) const;
 
     virtual bool Sampler(CfgType& _cfg, shared_ptr<Boundary> _boundary,
@@ -39,7 +39,7 @@ UniformObstacleBasedSampler(string _vcLabel, string _dmLabel,
 
 template<class MPTraits>
 UniformObstacleBasedSampler<MPTraits>::
-UniformObstacleBasedSampler(MPProblemType* _problem, XMLNodeReader& _node) :
+UniformObstacleBasedSampler(MPProblemType* _problem, XMLNode& _node) :
   SamplerMethod<MPTraits>(_problem, _node) {
     this->SetName("UniformObstacleBasedSampler");
     ParseXML(_node);
@@ -48,17 +48,13 @@ UniformObstacleBasedSampler(MPProblemType* _problem, XMLNodeReader& _node) :
 template<class MPTraits>
 void
 UniformObstacleBasedSampler<MPTraits>::
-ParseXML(XMLNodeReader& _node) {
-  m_margin = _node.numberXMLParameter("d", true, 0.0, 0.0, MAX_DBL,
+ParseXML(XMLNode& _node) {
+  m_margin = _node.Read("d", true, 0.0, 0.0, MAX_DBL,
       "set the bounding box whose margin is d away from obstacles");
-  m_useBoundary = _node.boolXMLParameter("useBBX", true, false,
+  m_useBoundary = _node.Read("useBBX", true, false,
       "Use bounding box as obstacle");
-  m_vcLabel = _node.stringXMLParameter("vcLabel", true, "",
-      "Validity Test Method");
-  m_dmLabel =_node.stringXMLParameter("dmLabel", true, "default",
-      "Distance Metric Method");
-
-  _node.warnUnrequestedAttributes();
+  m_vcLabel = _node.Read("vcLabel", true, "", "Validity Test Method");
+  m_dmLabel =_node.Read("dmLabel", true, "default", "Distance Metric Method");
 }
 
 template<class MPTraits>

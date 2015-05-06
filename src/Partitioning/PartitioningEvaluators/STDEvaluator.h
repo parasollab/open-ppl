@@ -6,10 +6,10 @@
 class STDEvaluator : public PartitioningEvaluator{
  public:
    STDEvaluator();
-   STDEvaluator(XMLNodeReader& in_Node, MPProblem* mp);
+   STDEvaluator(XMLNode& in_Node, MPProblem* mp);
    virtual ~STDEvaluator(){}
 
-   virtual void ParseXML(XMLNodeReader& in_Node);
+   virtual void ParseXML(XMLNode& in_Node);
 
    virtual vector<double> Evaluate(vector<Partition*> part);
 };

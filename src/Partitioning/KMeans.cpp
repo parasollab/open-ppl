@@ -6,7 +6,7 @@
 
 KMeans::KMeans():PartitioningMethod(){};
 
-KMeans::KMeans(XMLNodeReader& in_Node, MPProblem* in_pProblem):PartitioningMethod(in_Node, in_pProblem){
+KMeans::KMeans(XMLNode& in_Node, MPProblem* in_pProblem):PartitioningMethod(in_Node, in_pProblem){
   this->SetName("kmeans");
    ParseXML(in_Node);
 };

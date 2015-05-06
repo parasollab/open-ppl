@@ -30,10 +30,10 @@ class Decomposer : private ElementSet<DecompositionMethod>, public MPBaseObject 
     Decomposer() : ElementSet<DecompositionMethod>(pmpl_detail::DecomposerMethodList()) {}
 
     template <typename MethodList>
-      Decomposer(XMLNodeReader& _node, MPProblem* _problem, MethodList const&)
+      Decomposer(XMLNode& _node, MPProblem* _problem, MethodList const&)
       : ElementSet<DecompositionMethod>(MethodList()), MPBaseObject(_problem){}
 
-    Decomposer(XMLNodeReader& _node, MPProblem* _problem)
+    Decomposer(XMLNode& _node, MPProblem* _problem)
       : ElementSet<DecompositionMethod<CFG> >(pmpl_detail::DecompositionMethodList()),
       MPBaseObject(_problem) {}
 

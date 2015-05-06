@@ -7,7 +7,7 @@ class GrowablePartitions: public PartitioningMethod
 {
  public:
   GrowablePartitions();
-  GrowablePartitions(XMLNodeReader& in_Node, MPProblem  *m);
+  GrowablePartitions(XMLNode& in_Node, MPProblem  *m);
   ~GrowablePartitions();
 
   virtual vector<Partition*> MakePartitions(Partition &p);

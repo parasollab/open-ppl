@@ -34,7 +34,7 @@ class PreferentialAttachment: public ConnectionMethod<CFG,WEIGHT> {
     //////////////////////
     // Constructors and Destructor
     PreferentialAttachment(string _lp = "", string _nf = "", MPProblem* _problem = NULL);
-    PreferentialAttachment(XMLNodeReader& _node, MPProblem* _problem);
+    PreferentialAttachment(XMLNode& _node, MPProblem* _problem);
     PreferentialAttachment(int _k); // constructor for preferential attachment
     PreferentialAttachment(int _k, int _m); // constructor for preferential attachment
 
@@ -42,7 +42,7 @@ class PreferentialAttachment: public ConnectionMethod<CFG,WEIGHT> {
 
     //Used in new MPProblem framework.
     virtual void Print(ostream& _os) const;
-    virtual void ParseXML(XMLNodeReader& _node);
+    virtual void ParseXML(XMLNode& _node);
 
     //////////////////////
     // Core: Connection method
@@ -94,7 +94,7 @@ PreferentialAttachment<CFG,WEIGHT>::PreferentialAttachment(string _lp, string _n
 }
 
 template <class CFG, class WEIGHT>
-PreferentialAttachment<CFG,WEIGHT>::PreferentialAttachment(XMLNodeReader& _node, MPProblem* _problem) :
+PreferentialAttachment<CFG,WEIGHT>::PreferentialAttachment(XMLNode& _node, MPProblem* _problem) :
   ConnectionMethod<CFG,WEIGHT>(_node, _problem) {
     this->SetName("PreferentialAttachment");
     m_k = KCLOSEST;
@@ -133,16 +133,16 @@ PreferentialAttachment<CFG,WEIGHT>::~PreferentialAttachment() {
 }
 
 template <class CFG, class WEIGHT>
-void PreferentialAttachment<CFG,WEIGHT>::ParseXML(XMLNodeReader& _node) {
-  m_checkIfSameCC = _node.boolXMLParameter("CheckIfSameCC",false,true,"If true, do not connect if edges are in the same CC");
-  m_k = _node.numberXMLParameter("k", true, 0, 0, 10000, "k-value (max neighbors to find). k = 0 --> all-pairs");
-  m_fail = _node.numberXMLParameter("fail", false, 5, 0, 10000, "amount of failed connections allowed before operation terminates");
-  m_unconnected = _node.boolXMLParameter("unconnected", false, false, "if true, do not count existing connections towards k");
-  m_random = _node.boolXMLParameter("random", false, false, "if true, find k random configurations from destination vector");
-  m_debug = _node.boolXMLParameter("debug", false, false, "");
-  m_dm =_node.stringXMLParameter("dm_method", false, "default", "Distance Metric Method");
+void PreferentialAttachment<CFG,WEIGHT>::ParseXML(XMLNode& _node) {
+  m_checkIfSameCC = _node.Read("CheckIfSameCC",false,true,"If true, do not connect if edges are in the same CC");
+  m_k = _node.Read("k", true, 0, 0, 10000, "k-value (max neighbors to find). k = 0 --> all-pairs");
+  m_fail = _node.Read("fail", false, 5, 0, 10000, "amount of failed connections allowed before operation terminates");
+  m_unconnected = _node.Read("unconnected", false, false, "if true, do not count existing connections towards k");
+  m_random = _node.Read("random", false, false, "if true, find k random configurations from destination vector");
+  m_debug = _node.Read("debug", false, false, "");
+  m_dm =_node.Read("dm_method", false, "default", "Distance Metric Method");
 
-  XMLNodeReader::childiterator citr;
+  XMLNode::childiterator citr;
   for(citr = _node.children_begin(); citr!= _node.children_end(); ++citr) {
     if(citr->getName() == "Shell") {
       //m_shells.push_back(new Shell<CFG, WEIGHT>(*citr, GetMPProblem()));

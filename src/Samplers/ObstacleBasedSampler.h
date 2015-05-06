@@ -18,9 +18,9 @@ class ObstacleBasedSampler : public SamplerMethod<MPTraits> {
         int _free = 1, int _coll = 0, double _step = 0,
         bool _useBBX = true, string _pointSelection = "cspace");
 
-    ObstacleBasedSampler(MPProblemType* _problem, XMLNodeReader& _node);
+    ObstacleBasedSampler(MPProblemType* _problem, XMLNode& _node);
 
-    void ParseXML(XMLNodeReader& _node);
+    void ParseXML(XMLNode& _node);
 
     virtual void Print(ostream& _os) const;
 
@@ -83,7 +83,7 @@ ObstacleBasedSampler(string _vcLabel, string _dmLabel,
 
 template<class MPTraits>
 ObstacleBasedSampler<MPTraits>::
-ObstacleBasedSampler(MPProblemType* _problem, XMLNodeReader& _node) :
+ObstacleBasedSampler(MPProblemType* _problem, XMLNode& _node) :
   SamplerMethod<MPTraits>(_problem, _node) {
     this->SetName("ObstacleBasedSampler");
     ParseXML(_node);
@@ -96,34 +96,31 @@ ObstacleBasedSampler(MPProblemType* _problem, XMLNodeReader& _node) :
 template<class MPTraits>
 void
 ObstacleBasedSampler<MPTraits>::
-ParseXML(XMLNodeReader& _node) {
-  m_useBBX = _node.boolXMLParameter("useBBX", true, false,
+ParseXML(XMLNode& _node) {
+  m_useBBX = _node.Read("useBBX", true, false,
       "Use bounding box as obstacle");
-  m_vcLabel = _node.stringXMLParameter("vcLabel", true, "",
-      "Validity test method");
-  m_dmLabel =_node.stringXMLParameter("dmLabel", true, "default",
-      "Distance metric method");
-  m_pointSelection = _node.stringXMLParameter("pointSelection", false,
+  m_vcLabel = _node.Read("vcLabel", true, "", "Validity test method");
+  m_dmLabel =_node.Read("dmLabel", true, "default", "Distance metric method");
+  m_pointSelection = _node.Read("pointSelection", false,
       "cspace", "Point selection strategy");
-  m_nShellsColl = _node.numberXMLParameter("nShellsColl", true, 3, 0, 10,
+  m_nShellsColl = _node.Read("nShellsColl", true, 3, 0, 10,
       "Number of collision shells");
-  m_nShellsFree = _node.numberXMLParameter("nShellsFree", true, 3, 0, 10,
+  m_nShellsFree = _node.Read("nShellsFree", true, 3, 0, 10,
       "Number of free shells");
-  m_stepSize = _node.numberXMLParameter("stepSize", true, 0.0, 0.0, 10.0,
-      "Step size used in increment of cfg position towards or away from obstacles");
-  _node.warnUnrequestedAttributes();
+  m_stepSize = _node.Read("stepSize", true, 0.0, 0.0, 10.0,
+      "Step size used in increment of cfg position towards or away from"
+      "obstacles");
 
   // Check if the read point_selection is valid
   if(m_pointSelection != "cspace" && m_pointSelection != "cM" &&
       m_pointSelection != "rV" && m_pointSelection != "rT" &&
       m_pointSelection != "rW" && m_pointSelection != "eV" &&
       m_pointSelection != "rV_rT" && m_pointSelection != "rV_rW" &&
-      m_pointSelection != "all") {
-
-    throw ParseException(WHERE, "Select a valid point selection type first.\
-      cspace, cM, rV ,rT, rW, eV, rV_rT, rV_rW, and all are valid selection types.\
-      Exiting.");
-  }
+      m_pointSelection != "all")
+    throw ParseException(_node.Where(),
+        "Invalid point selection type '" + m_pointSelection + "'."
+        "Choices are: 'cspace', 'cM', 'rV', 'rT', 'rW', 'eV', 'rV_rT', 'rV_rW',"
+        " and 'all'.");
 }
 
 template<class MPTraits>

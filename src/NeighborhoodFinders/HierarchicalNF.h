@@ -21,13 +21,12 @@ class HierarchicalNF : public NeighborhoodFinderMethod<MPTraits> {
         this->m_nfType = OTHER;
       }
 
-    HierarchicalNF(MPProblemType* _problem, XMLNodeReader& _node) :
+    HierarchicalNF(MPProblemType* _problem, XMLNode& _node) :
       NeighborhoodFinderMethod<MPTraits>(_problem, _node) {
         this->SetName("HierarchicalNF");
         this->m_nfType = OTHER;
-        m_nfLabel = _node.stringXMLParameter("nfLabel", true, "default", "Neighbor Finder Method1");
-	m_nfLabel2 = _node.stringXMLParameter("nfLabel2", true, "default", "Neighbor Finder Method2");
-        _node.warnUnrequestedAttributes();
+        m_nfLabel = _node.Read("nfLabel", true, "default", "Neighbor Finder Method1");
+	m_nfLabel2 = _node.Read("nfLabel2", true, "default", "Neighbor Finder Method2");
       }
 
     virtual void Print(ostream& _os) const {

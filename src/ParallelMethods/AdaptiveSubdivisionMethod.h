@@ -12,7 +12,7 @@ typedef typename stapl::dynamic_graph<stapl::DIRECTED, stapl::NONMULTIEDGES, Ada
 typedef typename RGraph::vertex_descriptor PVID;
 typedef typename RGraph::vertex_iterator PVI;
 
-class XMLNodeReader;
+class XMLNode;
 class MPProblem;
 template<class CFG, class WEIGHT> class MPRegion;
 template<class CFG, class WEIGHT> class ConnectCCs;
@@ -20,10 +20,10 @@ template<class CFG, class WEIGHT> class ConnectCCs;
 
 class AdaptiveSubdivisionMethod : public MPStrategyMethod {
   public:
-    AdaptiveSubdivisionMethod(XMLNodeReader& _node, MPProblem* _problem);
+    AdaptiveSubdivisionMethod(XMLNode& _node, MPProblem* _problem);
     virtual ~AdaptiveSubdivisionMethod();
 
-    virtual void ParseXML(XMLNodeReader& _node);
+    virtual void ParseXML(XMLNode& _node);
 
     virtual void Initialize(int _regionID);
     virtual void Run(int _regionID);

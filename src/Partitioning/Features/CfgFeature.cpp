@@ -7,12 +7,12 @@ CfgFeature::CfgFeature():MPFeature(){
 
 CfgFeature::CfgFeature(int index = 0) : MPFeature(), m_index(index) {}
 
-CfgFeature::CfgFeature(XMLNodeReader& in_Node, MPProblem* in_pProblem):MPFeature(in_Node, in_pProblem){
+CfgFeature::CfgFeature(XMLNode& in_Node, MPProblem* in_pProblem):MPFeature(in_Node, in_pProblem){
    ParseXML(in_Node);
 }
 
-void CfgFeature::ParseXML(XMLNodeReader& in_Node){
-   m_index = in_Node.numberXMLParameter("index", true, 0, 0, MAX_INT, "index");
+void CfgFeature::ParseXML(XMLNode& in_Node){
+   m_index = in_Node.Read("index", true, 0, 0, MAX_INT, "index");
    in_Node.warnUnrequestedAttributes();
 }
 

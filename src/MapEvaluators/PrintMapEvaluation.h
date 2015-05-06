@@ -15,7 +15,7 @@ class PrintMapEvaluation : public MapEvaluatorMethod<MPTraits> {
 
     PrintMapEvaluation();
     PrintMapEvaluation(string _baseName);
-    PrintMapEvaluation(typename MPTraits::MPProblemType* _problem, XMLNodeReader& _node);
+    PrintMapEvaluation(typename MPTraits::MPProblemType* _problem, XMLNode& _node);
     virtual ~PrintMapEvaluation();
 
     virtual void Print(ostream& _os) const;
@@ -38,10 +38,10 @@ PrintMapEvaluation<MPTraits>::PrintMapEvaluation(string _baseName)
 }
 
 template<class MPTraits>
-PrintMapEvaluation<MPTraits>::PrintMapEvaluation(typename MPTraits::MPProblemType* _problem, XMLNodeReader& _node)
+PrintMapEvaluation<MPTraits>::PrintMapEvaluation(typename MPTraits::MPProblemType* _problem, XMLNode& _node)
   : MapEvaluatorMethod<MPTraits>(_problem, _node) {
   this->SetName("PrintMapEvaluation");
-  m_baseName = _node.stringXMLParameter("base_name", true, "", "base filename for map output");
+  m_baseName = _node.Read("base_name", true, "", "base filename for map output");
 }
 
 template<class MPTraits>

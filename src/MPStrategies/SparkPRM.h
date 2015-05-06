@@ -27,9 +27,9 @@ class SparkPRM : public Strategy<MPTraits> {
         string _dmLabel = "", string _nfLabel = "", string _nfVertexLabel = "",
         string _vcLabel = "", string _cLabel = "", string _eLabel = "",
         bool _rrtDebug = false);
-    SparkPRM(MPProblemType* _problem, XMLNodeReader& _node);
+    SparkPRM(MPProblemType* _problem, XMLNode& _node);
 
-    virtual void ParseXML(XMLNodeReader& _node);
+    virtual void ParseXML(XMLNode& _node);
     virtual void Print(ostream& _os);
 
     // Performs a narrow passage test and then constructs an RRT if successful.
@@ -129,7 +129,7 @@ SparkPRM(size_t _maxNPCCSize, size_t _initSamples,
 
 template<class MPTraits, template<typename> class Strategy>
 SparkPRM<MPTraits, Strategy>::
-SparkPRM(MPProblemType* _problem, XMLNodeReader& _node) :
+SparkPRM(MPProblemType* _problem, XMLNode& _node) :
   Strategy<MPTraits>(_problem, _node) {
     this->m_name += "WithRRT";
     ParseXML(_node);
@@ -138,51 +138,44 @@ SparkPRM(MPProblemType* _problem, XMLNodeReader& _node) :
 template<class MPTraits, template<typename> class Strategy>
 void
 SparkPRM<MPTraits, Strategy>::
-ParseXML(XMLNodeReader& _node) {
+ParseXML(XMLNode& _node) {
 
-  m_maxNPCCSize = _node.numberXMLParameter("maxNPCCSize", false, 1, 0, MAX_INT,
+  m_maxNPCCSize = _node.Read("maxNPCCSize", false, 1, 0, MAX_INT,
       "Maximum size of a CC within a narrow passage");
-  m_initSamples = _node.numberXMLParameter("initSamples", false, 50, 0, MAX_INT,
+  m_initSamples = _node.Read("initSamples", false, 50, 0, MAX_INT,
       "Initial samples before RRT strategy starts");
-  m_maxRRTSize = _node.numberXMLParameter("maxRRTSize", false, 100, 0, MAX_INT,
+  m_maxRRTSize = _node.Read("maxRRTSize", false, 100, 0, MAX_INT,
       "Maximum number of vertices in an RRT");
-  m_attemptRatio = _node.numberXMLParameter("attemptRatio", false, 10, 1,
+  m_attemptRatio = _node.Read("attemptRatio", false, 10, 1,
       MAX_INT, "Maximum number of attempts per node");
-  m_trimDepth = _node.numberXMLParameter("trimDepth", false, 0, 0, MAX_INT,
+  m_trimDepth = _node.Read("trimDepth", false, 0, 0, MAX_INT,
       "The depth at which the RRT is trimmed");
 
-  m_checkImportant = _node.boolXMLParameter("checkImportant", false, true,
+  m_checkImportant = _node.Read("checkImportant", false, true,
       "Check for connection to Important nodes?");
-  m_checkEdgeCases = _node.boolXMLParameter("checkEdgeCases", false, true,
+  m_checkEdgeCases = _node.Read("checkEdgeCases", false, true,
       "Check for edge cases?");
-  m_trimAll = _node.boolXMLParameter("trimAll", false, true,
+  m_trimAll = _node.Read("trimAll", false, true,
       "Trim the RRTs thatonly connect to one CC?");
-  m_biasConnect = _node.boolXMLParameter("biasConnect", false, false,
+  m_biasConnect = _node.Read("biasConnect", false, false,
       "Connect RRT vertices only to the closest CC?");
-  m_checkStartGoal = _node.boolXMLParameter("checkStartGoal", false, true,
+  m_checkStartGoal = _node.Read("checkStartGoal", false, true,
       "Build RRTs from the start and goal?");
 
-  m_delta = _node.numberXMLParameter("delta", false, 1.0, 0.0, MAX_DBL,
-      "Delta Distance");
-  m_minDist = _node.numberXMLParameter("minDist", false, 0.0, 0.0, MAX_DBL,
+  m_delta = _node.Read("delta", false, 1.0, 0.0, MAX_DBL, "Delta Distance");
+  m_minDist = _node.Read("minDist", false, 0.0, 0.0, MAX_DBL,
       "Minimum Distance");
-  m_growthFocus = _node.numberXMLParameter("growthFocus", false, 0.0, 0.0, 1.0,
+  m_growthFocus = _node.Read("growthFocus", false, 0.0, 0.0, 1.0,
       "#GeneratedTowardsGoal/#Generated");
-  m_dmLabel = _node.stringXMLParameter("dmLabel", true, "", "Distance Metric");
-  m_nfLabel = _node.stringXMLParameter("nfLabel", true, "",
-      "Neighborhood Finder");
-  m_nfVertexLabel = _node.stringXMLParameter("nfVertexLabel", true, "Nearest",
+  m_dmLabel = _node.Read("dmLabel", true, "", "Distance Metric");
+  m_nfLabel = _node.Read("nfLabel", true, "", "Neighborhood Finder");
+  m_nfVertexLabel = _node.Read("nfVertexLabel", true, "Nearest",
       "Neighborhood Finder for ConnectVertex step, k=1");
-  m_vcLabel = _node.stringXMLParameter("vcLabel", true, "",
-      "Validity Test Method");
-  m_cLabel = _node.stringXMLParameter("cLabel", true, "",
-      "Node Connection Method");
-  m_eLabel = _node.stringXMLParameter("eLabel", true, "", "Extender Method");
+  m_vcLabel = _node.Read("vcLabel", true, "", "Validity Test Method");
+  m_cLabel = _node.Read("cLabel", true, "", "Node Connection Method");
+  m_eLabel = _node.Read("eLabel", true, "", "Extender Method");
 
-  m_rrtDebug = _node.boolXMLParameter("rrtDebug", false, false,
-      "Debug for RRT stuff");
-
-  _node.warnUnrequestedAttributes();
+  m_rrtDebug = _node.Read("rrtDebug", false, false, "Debug for RRT stuff");
 }
 
 template<class MPTraits, template<typename> class Strategy>

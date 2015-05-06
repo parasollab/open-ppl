@@ -22,7 +22,7 @@ class RegionRRTConnect: public ConnectorMethod<MPTraits> {
 
     RegionRRTConnect(string _nf = "", string _lp = "", string _eLabel = "",
         size_t _iterations = 100, double _minDist = 0);
-    RegionRRTConnect(MPProblemType* _problem, XMLNodeReader& _node);
+    RegionRRTConnect(MPProblemType* _problem, XMLNode& _node);
 
     virtual void Print(ostream& _os) const;
 
@@ -66,13 +66,14 @@ RegionRRTConnect(string _nf, string _lp, string _eLabel,
 
 template<class MPTraits>
 RegionRRTConnect<MPTraits>::
-RegionRRTConnect(MPProblemType* _problem, XMLNodeReader& _node) :
+RegionRRTConnect(MPProblemType* _problem, XMLNode& _node) :
   ConnectorMethod<MPTraits>(_problem, _node) {
     this->SetName("RegionRRTConnect");
-    m_iterations = _node.numberXMLParameter("iterations", true, 0, 0, MAX_INT, "Number of iterations that RRT Connect will perform");
-    m_eLabel = _node.stringXMLParameter("eLabel", true, "", "Extender Method");
-    m_minDist = _node.numberXMLParameter("minDist", false, 0.0, 0.0, MAX_DBL, "Minimum Distance");
-    _node.warnUnrequestedAttributes();
+    m_iterations = _node.Read("iterations", true, 0, 0, MAX_INT,
+        "Number of iterations that RRT Connect will perform");
+    m_eLabel = _node.Read("eLabel", true, "", "Extender Method");
+    m_minDist = _node.Read("minDist", false, 0.0, 0.0, MAX_DBL,
+        "Minimum Distance");
   }
 
 template<class MPTraits>

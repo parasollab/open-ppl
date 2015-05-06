@@ -24,7 +24,7 @@ class SurfaceLP : public StraightLine<MPTraits> {
 
     SurfaceLP(double _acceptableHeightDiff=1, const string& _vcLabel = "", bool _evalation = false,
         bool _saveIntermediates = false);
-    SurfaceLP(MPProblemType* _problem, XMLNodeReader& _node);
+    SurfaceLP(MPProblemType* _problem, XMLNode& _node);
     virtual ~SurfaceLP();
 
     virtual void Print(ostream& _os) const;
@@ -50,9 +50,8 @@ SurfaceLP<MPTraits>::SurfaceLP(double _acceptableHeightDiff, const string& _vcLa
 }
 
 template<class MPTraits>
-SurfaceLP<MPTraits>::SurfaceLP(MPProblemType* _problem, XMLNodeReader& _node) :
+SurfaceLP<MPTraits>::SurfaceLP(MPProblemType* _problem, XMLNode& _node) :
     StraightLine<MPTraits>(_problem, _node) {
-  _node.verifyName("SurfaceLP");
   this->SetName("SurfaceLP");
   m_acceptableHeightDiff = 0.75;
 }

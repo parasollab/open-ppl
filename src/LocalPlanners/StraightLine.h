@@ -26,7 +26,7 @@ class StraightLine : public LocalPlannerMethod<MPTraits> {
 
     StraightLine(const string& _vcLabel = "", bool _evalation = false,
         bool _saveIntermediates = false);
-    StraightLine(MPProblemType* _problem, XMLNodeReader& _node);
+    StraightLine(MPProblemType* _problem, XMLNode& _node);
     virtual ~StraightLine();
 
     virtual void Print(ostream& _os) const;
@@ -105,12 +105,12 @@ StraightLine<MPTraits>::StraightLine(const string& _vcLabel, bool _evalation,
 }
 
 template<class MPTraits>
-StraightLine<MPTraits>::StraightLine(MPProblemType* _problem, XMLNodeReader& _node) :
+StraightLine<MPTraits>::StraightLine(MPProblemType* _problem, XMLNode& _node) :
     LocalPlannerMethod<MPTraits>(_problem, _node) {
   this->SetName("StraightLine");
-  m_binaryEvaluation = _node.boolXMLParameter("binaryEvaluation", false, false,
+  m_binaryEvaluation = _node.Read("binaryEvaluation", false, false,
       "binary evalution along the edge");
-  m_vcLabel = _node.stringXMLParameter("vcLabel", true, "",
+  m_vcLabel = _node.Read("vcLabel", true, "",
       "Validity Test Label");
 }
 

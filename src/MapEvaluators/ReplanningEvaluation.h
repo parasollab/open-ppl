@@ -30,7 +30,7 @@ class ReplanningEvaluation : public LazyQuery<MPTraits> {
       m_envFile(""), LazyQuery<MPTraits>(_start, _goal, _vcLabel) {
       this->SetName("ReplanningEvaluation");
     }
-    ReplanningEvaluation(typename MPTraits::MPProblemType* _problem, XMLNodeReader& _node);
+    ReplanningEvaluation(typename MPTraits::MPProblemType* _problem, XMLNode& _node);
     virtual ~ReplanningEvaluation();
 
     virtual void Print(ostream& _os) const;
@@ -52,16 +52,18 @@ class ReplanningEvaluation : public LazyQuery<MPTraits> {
 
 
 template<class MPTraits>
-ReplanningEvaluation<MPTraits>::ReplanningEvaluation() {
+ReplanningEvaluation<MPTraits>::
+ReplanningEvaluation() {
   this->SetName("ReplanningEvaluation");
   m_envFile = "";
 }
 
 template<class MPTraits>
-ReplanningEvaluation<MPTraits>::ReplanningEvaluation(typename MPTraits::MPProblemType* _problem, XMLNodeReader& _node)
-    : LazyQuery<MPTraits>(_problem, _node, false) {
+ReplanningEvaluation<MPTraits>::
+ReplanningEvaluation(typename MPTraits::MPProblemType* _problem,
+    XMLNode& _node) : LazyQuery<MPTraits>(_problem, _node) {
   this->SetName("ReplanningEvaluation");
-  m_envFile = _node.stringXMLParameter("envFile", true, "", "Environment filename");
+  m_envFile = _node.Read("envFile", true, "", "Environment filename");
 }
 
 template<class MPTraits>
