@@ -6,7 +6,7 @@
 #include "MPProblem/BoundingBox.h"
 #include "MPProblem/BoundingSphere.h"
 
-#define ENV_RES_DEFAULT                    0.05
+#define ENV_RES_DEFAULT 0.05
 
 Environment::Environment() :
   m_filename(""),
@@ -39,12 +39,11 @@ void
 Environment::Read(string _filename) {
 
   if(!FileExists(_filename))
-    throw ParseException(WHERE, "Environment file '" + _filename + "' does not exist.");
+    throw ParseException(_filename, "File does not exist");
 
   m_filename = _filename;
   size_t sl = m_filename.rfind('/');
   m_modelDataDir = m_filename.substr(0, sl == string::npos ? 0 : sl);
-  cout << "m_modelDataDir::" << m_modelDataDir << endl;
   Body::m_modelDataDir = m_modelDataDir + "/";
 
   m_activeBodies.clear();
@@ -53,22 +52,26 @@ Environment::Read(string _filename) {
   m_navigableSurfaces.clear();
 
   // open file
-  ifstream ifs(_filename.c_str());
+  //ifstream ifs(_filename.c_str());
+  CountingStreamBuffer cbs(_filename);
+  istream ifs(&cbs);
 
   //read boundary
-  ReadBoundary(ifs);
+  ReadBoundary(ifs, cbs);
 
   //read number of multibodies
-  string mbds = ReadFieldString(ifs, WHERE, "Failed reading multibodies tag.");
+  string mbds = ReadFieldString(ifs, cbs, "Failed reading multibodies tag.");
   if(mbds != "MULTIBODIES")
-    throw ParseException(WHERE, "Failed reading multibodies tag. Should read 'Multibodies'. Read '" + mbds + "'.");
+    throw ParseException(cbs.Where(),
+        "Unknown multibodies tag '" + mbds + "'. Should read 'Multibodies'.");
 
-  size_t multibodyCount = ReadField<size_t>(ifs, WHERE, "Failed reading number of multibodies.");
+  size_t multibodyCount = ReadField<size_t>(ifs, cbs,
+      "Failed reading number of multibodies.");
 
   //parse and construct each multibody
   for(size_t m = 0; m < multibodyCount && ifs; ++m) {
     shared_ptr<MultiBody> mb(new MultiBody());
-    mb->Read(ifs);
+    mb->Read(ifs, cbs);
 
     if(mb->IsActive())
       m_activeBodies.push_back(mb);
@@ -79,9 +82,9 @@ Environment::Read(string _filename) {
   }
 
   m_usableMultiBodies = m_activeBodies;
-  copy(m_obstacleBodies.begin(), m_obstacleBodies.end(), back_inserter(m_usableMultiBodies));
+  copy(m_obstacleBodies.begin(), m_obstacleBodies.end(),
+      back_inserter(m_usableMultiBodies));
 
-  ifs.close();
   BuildRobotStructure();
 }
 
@@ -302,22 +305,24 @@ Environment::BuildCDstructure(cd_predefined cdtype) {
 }
 
 void
-Environment::ReadBoundary(istream& _is) {
-  string bndry = ReadFieldString(_is, WHERE, "Failed reading boundary tag.");
+Environment::
+ReadBoundary(istream& _is, CountingStreamBuffer& _cbs) {
+  string bndry = ReadFieldString(_is, _cbs, "Failed reading boundary tag.");
   if(bndry != "BOUNDARY")
-    throw ParseException(WHERE, "Failed reading boundary tag. Should read 'Boundary'. Read '" + bndry + "'.");
+    throw ParseException(_cbs.Where(),
+        "Unknown boundary tag '" + bndry + "'. Should read 'Boundary'.");
 
-  string btype = ReadFieldString(_is, WHERE, "Failed reading boundary type. Options are: box or sphere.");
+  string btype = ReadFieldString(_is, _cbs,
+      "Failed reading boundary type. Options are: box or sphere.");
   if(btype == "BOX")
     m_boundary = shared_ptr<BoundingBox>(new BoundingBox());
   else if(btype == "SPHERE")
     m_boundary = shared_ptr<BoundingSphere>(new BoundingSphere());
   else
-    throw ParseException(WHERE, "Failed reading boundary type '" + btype + "'. Options are: box or sphere.");
+    throw ParseException(_cbs.Where(), "Unknown boundary type '" + btype +
+        "'. Options are: box or sphere.");
 
-  m_boundary->Read(_is);
-
-  cout << "Boundary::" << *m_boundary << endl;
+  m_boundary->Read(_is, _cbs);
 }
 
 //BuildRobotStructure, builds a robot graph which determines DOFs for a given robot
@@ -347,19 +352,19 @@ Environment::SubBuildRobotStrucutre(size_t _index) {
   int fixedBodyCount = robot->GetFixedBodyCount();
   int freeBodyCount = robot->GetFreeBodyCount();
   m_robotGraph = RobotGraph();
-  for (int i = 0; i < fixedBodyCount; i++) {
+  for(int i = 0; i < fixedBodyCount; i++) {
     m_robotGraph.add_vertex(i);
   }
-  for (int i = 0; i < freeBodyCount; i++) {
+  for(int i = 0; i < freeBodyCount; i++) {
     m_robotGraph.add_vertex(i + fixedBodyCount); //Need to account for FixedBodies added above
   }
   //Total amount of bodies in environment: free + fixed
-  for (int i = 0; i < freeBodyCount + fixedBodyCount; i++) {
+  for(int i = 0; i < freeBodyCount + fixedBodyCount; i++) {
     shared_ptr<Body> body = robot->GetBody(i);
     //For each body, find forward connections and connect them
-    for (int j = 0; j < body->ForwardConnectionCount(); j++) {
+    for(int j = 0; j < body->ForwardConnectionCount(); j++) {
       shared_ptr<Body> forward = body->GetForwardConnection(j).GetNextBody();
-      if (forward->IsFixedBody()) {
+      if(forward->IsFixedBody()) {
         //Quick hack to avoid programming ability to determine subclass
         shared_ptr<FixedBody> castFixedBody = dynamic_pointer_cast<FixedBody>(forward);
         int nextIndex = robot->GetFixedBodyIndex(castFixedBody);

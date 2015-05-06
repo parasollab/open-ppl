@@ -1,55 +1,45 @@
-//FixedBody.h
-/* Class FreeBody is a stationary Body in workspace.
- * This class provide more specifice methods for manipulate fixed object. */
-
-#ifndef FIXEDBODY_H_
-#define FIXEDBODY_H_
+#ifndef FIXED_BODY_H_
+#define FIXED_BODY_H_
 
 #include "Body.h"
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup Environment
+/// @brief Stationary Body in workspace
+////////////////////////////////////////////////////////////////////////////////
 class FixedBody : public Body {
   public:
 
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    //
-    //
-    //    Constructors and Destructor
-    //
-    //
-    //////////////////////////////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////
+    /// @name Constructors
+    /// @{
+    ////////////////////////////////////////////////////////////////////////////
+    /// @param _owner Owner of this body
+    /// @param _filename Filename
     FixedBody(MultiBody* _owner, const string& _filename = "");
-    FixedBody(MultiBody* _owner, GMSPolyhedron& _polyhedron);
 
-    virtual ~FixedBody();
+    ////////////////////////////////////////////////////////////////////////////
+    /// @param _owner Owner of this body
+    /// @param _polyhedron Geometry of body
+    FixedBody(MultiBody* _owner, GMSPolyhedron& _polyhedron) __attribute__ ((deprecated)) ;
 
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    //
-    //
-    //    Access Methods
-    //
-    //
-    //////////////////////////////////////////////////////////////////////////////////////////
+    FixedBody(const FixedBody&) = delete;
+    FixedBody& operator=(const FixedBody&) = delete;
+    /// @}
+    ////////////////////////////////////////////////////////////////////////////
 
-    virtual int IsFixedBody(){return true;}
+    virtual bool IsFixedBody() const { return true; }
 
-    /**This function returns a Polyhedron whose vertices and normals are represented in
-     *world coordinate.
-     */
-    virtual GMSPolyhedron& GetWorldPolyhedron();
-
-    ///Return transformation of this body in world coordinate
     virtual Transformation& GetWorldTransformation();
 
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    //
-    //
-    //    I/O
-    //
-    //
-    //////////////////////////////////////////////////////////////////////////////////////////
+    using Body::Read;
+    ////////////////////////////////////////////////////////////////////////////
+    /// @brief Parse
+    /// @param _is Stream
+    /// @param _cbs Counting stream buffer
+    void Read(istream& _is, CountingStreamBuffer& _cbs);
 
     friend ostream& operator<<(ostream& _os, const FixedBody& _fb);
-    friend istream& operator>>(istream& _is, FixedBody& _fb);
 };
 
 #endif

@@ -26,8 +26,8 @@ struct Robot {
   Robot(Base _base, BaseMovement _baseMovement,
       JointMap _joints, int _bodyIndex, const shared_ptr<Body>& _body);
 
-  static Base GetBaseFromTag(const string _tag);
-  static BaseMovement GetMovementFromTag(const string _tag);
+  static Base GetBaseFromTag(const string& _tag, const string& _where);
+  static BaseMovement GetMovementFromTag(const string& _tag, const string& _where);
 
   static string GetTagFromBase(const Base& _b);
   static string GetTagFromMovement(const BaseMovement& _bm);

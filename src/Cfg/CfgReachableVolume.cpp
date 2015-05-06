@@ -8,12 +8,12 @@
 
 shared_ptr<vector<shared_ptr<ReachableVolumeRobot> > > g_reachableVolumeRobots;
 
-CfgReachableVolume::CfgReachableVolume() 
+CfgReachableVolume::CfgReachableVolume()
   : Cfg() {
   if(g_reachableVolumeRobots){
     m_reachableVolumeRobots=g_reachableVolumeRobots;
   }else{
-    m_reachableVolumeRobots = shared_ptr<vector<shared_ptr<ReachableVolumeRobot> > >(new vector<shared_ptr<ReachableVolumeRobot> >); 
+    m_reachableVolumeRobots = shared_ptr<vector<shared_ptr<ReachableVolumeRobot> > >(new vector<shared_ptr<ReachableVolumeRobot> >);
     for(int i=0; i<1; i++){
       m_reachableVolumeRobots->push_back(shared_ptr<ReachableVolumeRobot>(new ReachableVolumeRobot()));
       m_reachableVolumeRobots->back()->loadTree();
@@ -49,7 +49,7 @@ const string CfgReachableVolume::GetName() const {
 void CfgReachableVolume::GetRandomCfg(Environment* _env){
   GetRandomCfg(_env,_env->GetBoundary());
 }
- 
+
 void CfgReachableVolume::GetRandomCfg(Environment* _env, shared_ptr<Boundary> _bb){
   m_v.clear();
   for(unsigned int i=0; i<m_robots.size(); i++){
@@ -65,12 +65,12 @@ void CfgReachableVolume::GetRandomCfg(Environment* _env, shared_ptr<Boundary> _b
         size_t posDOF = m_robots[i][0].m_base == Robot::VOLUMETRIC ? 3 : 2;
         for(size_t j = 0; j < posDOF; j++){
 	  (*m_reachableVolumeRobots)[i]->m_baseJointPos[j]=p[j];
-          m_v.push_back(p[j]); 
+          m_v.push_back(p[j]);
         }
         if(m_robots[i][0].m_baseMovement == Robot::ROTATIONAL) {
           size_t oriDOF = m_robots[i][0].m_base == Robot::VOLUMETRIC ? 3 : 1;
           for(size_t i = 0; i < oriDOF; i++) {
-	    m_v.push_back(DRand());	  
+	    m_v.push_back(DRand());
           }
         }
       }
@@ -78,12 +78,12 @@ void CfgReachableVolume::GetRandomCfg(Environment* _env, shared_ptr<Boundary> _b
     shared_ptr<vector<double> > internalCfg = (*m_reachableVolumeRobots)[i]->getInternalCFGCoordinates();
     if(m_robots[i][0].m_base == Robot::PLANAR)
       (*internalCfg)[1]=DRand();
-    m_v.insert(m_v.end(),internalCfg->begin(),internalCfg->end());    
+    m_v.insert(m_v.end(),internalCfg->begin(),internalCfg->end());
 
   }
-    
+
   if((*m_reachableVolumeRobots)[0]->m_debug){
-    cout<<"cfg ="<<endl;    
+    cout<<"cfg ="<<endl;
     for(unsigned int i =0; i<m_v.size(); i++){
       cout<<m_v[i]<<endl;
     }
@@ -109,7 +109,7 @@ void CfgReachableVolume::GetRandomCfg(Environment* _env, shared_ptr<Boundary> _b
   */
 }
 
-
+/*
 //function not used by current version of the code
 vector<Robot> CfgReachableVolume::GetRobots(vector<Robot> &_robots, const Environment* _env) {
   m_numOfJoints = 0;
@@ -143,7 +143,7 @@ vector<Robot> CfgReachableVolume::GetRobots(vector<Robot> &_robots, const Enviro
 	  joints.push_back(c);
 	}
       }
-    } 
+    }
     size_t _robotIndex = 0;  //assuming robot index = 0;
     size_t _robotBaseIndex = 0;  //assuming robot base index = 0;
     robots.push_back(Robot(_robots[j].m_base, _robots[j].m_baseMovement, joints, 0,_env->GetActiveBody(_robotIndex)->GetFreeBody(_robotBaseIndex)));   //assumes base is 0
@@ -159,4 +159,5 @@ vector<Robot> CfgReachableVolume::GetRobots(int _numJoints) {
   vector<Robot> robots;
   return robots;
 }
+*/
 #endif

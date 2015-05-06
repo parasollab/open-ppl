@@ -1,33 +1,28 @@
 #include "BoundingBox.h"
+
 #include "Utilities/MPUtils.h"
 
-BoundingBox::BoundingBox() {
-  for(int i = 0; i < 3; ++i)
-    m_bbx[i] = make_pair(-numeric_limits<double>::max(), numeric_limits<double>::max());
+BoundingBox::
+BoundingBox() {
+  for(size_t i = 0; i < 3; ++i)
+    m_bbx[i] = make_pair(-numeric_limits<double>::max(),
+        numeric_limits<double>::max());
 }
 
-BoundingBox::BoundingBox(pair<double, double> _x, pair<double, double> _y,
+BoundingBox::
+BoundingBox(pair<double, double> _x, pair<double, double> _y,
     pair<double, double> _z) {
   m_bbx[0] = _x;
   m_bbx[1] = _y;
   m_bbx[2] = _z;
 }
 
-BoundingBox::BoundingBox(const BoundingBox& _bbx) {
-  copy(_bbx.m_bbx, _bbx.m_bbx + 2, m_bbx);
-}
-
-bool
-BoundingBox::operator==(const Boundary& _b) const {
-  const BoundingBox* bbx = dynamic_cast<const BoundingBox*>(&_b);
-  return bbx && m_bbx == bbx->m_bbx;
-}
-
 double
-BoundingBox::GetMaxDist(double _r1, double _r2) const{
+BoundingBox::
+GetMaxDist(double _r1, double _r2) const {
   double maxdist = 0;
-  for(int i = 0; i<3; ++i){
-    if(m_bbx[i].second != numeric_limits<double>::max()){
+  for(size_t i = 0; i < 3; ++i) {
+    if(m_bbx[i].second != numeric_limits<double>::max()) {
       double diff = m_bbx[i].second - m_bbx[i].first;
       maxdist += pow(diff, _r1);
     }
@@ -36,36 +31,37 @@ BoundingBox::GetMaxDist(double _r1, double _r2) const{
 }
 
 pair<double, double>
-BoundingBox::GetRange(size_t _i) const {
-  if(_i > 2){
-    cerr << "Error::BoundingBox::GetRange::Invalid access to dimension " << _i << "." << endl;
-    exit(1);
-  }
+BoundingBox::
+GetRange(size_t _i) const {
+  if(_i > 2)
+    throw RunTimeException(WHERE,
+        "Invalid access to dimension '" + ::to_string(_i) + "'.");
   return m_bbx[_i];
 }
 
 Point3d
-BoundingBox::GetRandomPoint() const {
+BoundingBox::
+GetRandomPoint() const {
   Point3d p;
-
-  for(int i=0; i<3; ++i)
+  for(size_t i = 0; i < 3; ++i)
     p[i] = m_bbx[i].first + (m_bbx[i].second - m_bbx[i].first)*DRand();
-
   return p;
 }
 
 bool
-BoundingBox::InBoundary(const Vector3d& _p) const {
-  for(int i = 0; i < 3; ++i)
+BoundingBox::
+InBoundary(const Vector3d& _p) const {
+  for(size_t i = 0; i < 3; ++i)
     if( _p[i] < m_bbx[i].first || _p[i] > m_bbx[i].second)
       return false;
   return true;
 }
 
 double
-BoundingBox::GetClearance(const Vector3d& _p) const {
+BoundingBox::
+GetClearance(const Vector3d& _p) const {
   double minClearance = numeric_limits<double>::max();
-  for (int i = 0; i < 3; ++i) {
+  for(size_t i = 0; i < 3; ++i) {
     double clearance = min((_p[i] - m_bbx[i].first ), (m_bbx[i].second - _p[i]));
     if (clearance < minClearance || i == 0)
       minClearance = clearance;
@@ -74,7 +70,8 @@ BoundingBox::GetClearance(const Vector3d& _p) const {
 }
 
 int
-BoundingBox::GetSideID(const vector<double>& _p) const {
+BoundingBox::
+GetSideID(const vector<double>& _p) const {
   double minClearance = numeric_limits<double>::max();
   int id, faceID = 0;
   for(size_t i = 0; i < _p.size(); ++i) {
@@ -92,10 +89,11 @@ BoundingBox::GetSideID(const vector<double>& _p) const {
 }
 
 Vector3d
-BoundingBox::GetClearancePoint(const Vector3d& _p) const {
+BoundingBox::
+GetClearancePoint(const Vector3d& _p) const {
   Vector3d clrP;
   double minClearance = numeric_limits<double>::max();
-  for (int i = 0; i < 3; ++i) {
+  for(size_t i = 0; i < 3; ++i) {
     if(_p[i] - m_bbx[i].first < minClearance){
       minClearance = _p[i] - m_bbx[i].first;
       clrP = _p;
@@ -111,7 +109,8 @@ BoundingBox::GetClearancePoint(const Vector3d& _p) const {
 }
 
 double
-BoundingBox::GetClearance2DSurf(Point2d _pos, Point2d& _cdPt) const {
+BoundingBox::
+GetClearance2DSurf(Point2d _pos, Point2d& _cdPt) const {
   double minDist=1e10;
   double cbbx[6]={m_bbx[0].first,m_bbx[0].second,
     m_bbx[1].first,m_bbx[1].second,
@@ -141,40 +140,49 @@ BoundingBox::GetClearance2DSurf(Point2d _pos, Point2d& _cdPt) const {
 }
 
 void
-BoundingBox::ResetBoundary(vector<pair<double, double> >& _obstBBX, double _d){
-  for(int i = 0; i<3; ++i){
+BoundingBox::
+ResetBoundary(vector<pair<double, double> >& _obstBBX, double _d){
+  for(size_t i = 0; i<3; ++i){
     m_bbx[i].first = _obstBBX[i].first - _d;
     m_bbx[i].second = _obstBBX[i].second + _d;
   }
 }
 
 void
-BoundingBox::Read(istream& _is){
+BoundingBox::
+Read(istream& _is, CountingStreamBuffer& _cbs) {
   m_bbx[0].first = m_bbx[1].first = m_bbx[2].first = -numeric_limits<double>::max();
   m_bbx[0].second = m_bbx[1].second = m_bbx[2].second = numeric_limits<double>::max();
 
   //read next three tokens
+  string where = _cbs.Where();
   string line;
   getline(_is, line);
   istringstream iss(line);
-  for(size_t i = 0; i<3; ++i) {
+  for(size_t i = 0; i < 3; ++i) {
     string tok;
     if(iss >> tok){
       size_t del = tok.find(":");
       if(del == string::npos)
-        throw ParseException(WHERE, "Failed reading bounding box range. Should be delimited by ':'.");
+        throw ParseException(where,
+            "Failed reading bounding box range " + ::to_string(i+1) +
+            ". Should be delimited by ':'.");
 
-      istringstream minv(tok.substr(0,del)), maxv(tok.substr(del+1, tok.length()));
-      if(!(minv>>m_bbx[i].first && maxv>>m_bbx[i].second))
-        throw ParseException(WHERE, "Failed reading bounding box range.");
+      istringstream minv(tok.substr(0,del)),
+                    maxv(tok.substr(del+1, tok.length()));
+      if(!(minv >> m_bbx[i].first && maxv >> m_bbx[i].second))
+        throw ParseException(where,
+            "Failed reading bounding box range " + ::to_string(i+1) + ".");
     }
     else if(i<2) //error. only 1 token provided.
-      throw ParseException(WHERE, "Failed reading bounding box ranges. Only one provided.");
+      throw ParseException(where,
+          "Failed reading bounding box ranges. Only one provided.");
   }
 }
 
 void
-BoundingBox::Write(ostream& _os) const {
+BoundingBox::
+Write(ostream& _os) const {
   _os << "[ ";
   _os << m_bbx[0].first << ':' << m_bbx[0].second << " ; ";
   _os << m_bbx[1].first << ':' << m_bbx[1].second;

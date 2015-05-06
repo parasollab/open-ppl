@@ -1,5 +1,5 @@
-#ifndef BOUNDINGBOX_H_
-#define BOUNDINGBOX_H_
+#ifndef BOUNDING_BOX_H_
+#define BOUNDING_BOX_H_
 
 #include "Boundary.h"
 
@@ -8,11 +8,9 @@ class BoundingBox :  public Boundary {
     BoundingBox();
     BoundingBox(pair<double, double> _x,
         pair<double, double> _y,
-        pair<double, double> _z = pair<double, double>(-numeric_limits<double>::max(), numeric_limits<double>::max()));
-    BoundingBox(const BoundingBox& _bbx);
+        pair<double, double> _z = pair<double, double>(
+          -numeric_limits<double>::max(), numeric_limits<double>::max()));
     ~BoundingBox() {}
-
-    bool operator==(const Boundary& _b) const;
 
     double GetMaxDist(double _r1 = 2.0, double _r2 = 0.5) const;
     pair<double, double> GetRange(size_t _i) const;
@@ -26,7 +24,7 @@ class BoundingBox :  public Boundary {
 
     void ResetBoundary(vector<pair<double, double> >& _obstBBX, double _d);
 
-    void Read(istream& _is);
+    void Read(istream& _is, CountingStreamBuffer& _cbs);
     void Write(ostream& _os) const;
 
   private:
@@ -51,7 +49,6 @@ namespace stapl {
         typedef BoundingBox target_t;
 
       public:
-        typedef target_t::parameter_type  parameter_type;
         explicit proxy(Accessor const& acc) : Accessor(acc) { }
         operator target_t() const { return Accessor::read(); }
         proxy const& operator=(proxy const& rhs) { Accessor::write(rhs); return *this; }
@@ -61,4 +58,4 @@ namespace stapl {
 }
 #endif
 
-#endif /*BOUNDINGBOX_H_*/
+#endif

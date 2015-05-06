@@ -127,17 +127,17 @@ void MultiBody::Initialize(string _modelFile, const Transformation& _where, Body
 
   if (IsPassive()){
     //create a fixed body
-    FixedBody fix(this, _modelFile);
-    fix.Read();
+    shared_ptr<FixedBody> fix(new FixedBody(this, _modelFile));
+    fix->Read();
 
     Transformation worldTransform(_where);
-    fix.PutWorldTransformation(worldTransform);
+    fix->PutWorldTransformation(worldTransform);
 
     //add fixed body to multibody
     AddBody(fix);
     //calculating area for multibody
-    fixAreas.push_back(fix.GetPolyhedron().m_area);
-    fixArea = fix.GetPolyhedron().m_area;
+    fixAreas.push_back(fix->GetPolyhedron().m_area);
+    fixArea = fix->GetPolyhedron().m_area;
 
     freeArea = 0;
     area = fixArea + freeArea;
@@ -172,7 +172,7 @@ int MultiBody::GetFreeBodyCount() const
 //-------------------------------------------------------------------
 int MultiBody::GetFreeBodyIndex(const FreeBody& _b) const {
   for(size_t i=0; i<freeBody.size(); ++i)
-    if(_b == *freeBody[i].get())
+    if(&_b == freeBody[i].get())
       return i;
   return -1;
 }
@@ -186,10 +186,6 @@ int MultiBody::GetFreeBodyIndex(const shared_ptr<FreeBody>& _b) const {
 //===================================================================
 //  AddBody
 //===================================================================
-void MultiBody::AddBody(const FreeBody& _body)
-{
-  AddBody(shared_ptr<FreeBody>(new FreeBody(_body)));
-}
 void MultiBody::AddBody(const shared_ptr<FreeBody>& _body)
 {
   freeBody.push_back(_body);
@@ -221,7 +217,7 @@ int MultiBody::GetFixedBodyCount() const
 int MultiBody::GetFixedBodyIndex(const FixedBody& _b) const
 {
   for(size_t i=0; i<fixedBody.size(); ++i)
-    if(_b == *fixedBody[i].get())
+    if(&_b == fixedBody[i].get())
       return i;
   return -1;
 }
@@ -236,10 +232,6 @@ int MultiBody::GetFixedBodyIndex(const shared_ptr<FixedBody>& _b) const
 //===================================================================
 //  AddBody
 //===================================================================
-void MultiBody::AddBody(const FixedBody& _body)
-{
-  AddBody(shared_ptr<FixedBody>(new FixedBody(_body)));
-}
 void MultiBody::AddBody(const shared_ptr<FixedBody>& _body)
 {
   fixedBody.push_back(_body);
@@ -454,11 +446,11 @@ void MultiBody::CalculateArea()
 //  Read
 //===================================================================
 void
-MultiBody::Read(istream& _is, bool _debug) {
-  if(_debug) cout << "In MultiBody::Read" << endl;
-
-  string multibodyType = ReadFieldString(_is, WHERE,
-      "Failed reading multibody type. Options are: active, passive, internal, or surface.");
+MultiBody::
+Read(istream& _is, CountingStreamBuffer& _cbs) {
+  string multibodyType = ReadFieldString(_is, _cbs,
+      "Failed reading multibody type."
+      " Options are: active, passive, internal, or surface.");
   //need to update to use enum like Body and Connections
   if(multibodyType == "PASSIVE")
     m_bodyType = PASSIVE;
@@ -469,62 +461,59 @@ MultiBody::Read(istream& _is, bool _debug) {
   else if(multibodyType == "INTERNAL")
     m_bodyType = INTERNAL;
   else
-    throw ParseException(WHERE, "Failed reading multibody type. Options are: active, passive, internal, or surface.");
+    throw ParseException(_cbs.Where(),
+        "Unknown MultiBody type '" + multibodyType + "'."
+        " Options are: 'active', 'passive', 'internal', or 'surface'.");
 
   double fixSum = 0;
   double freeSum = 0;
 
-  if(IsActive()){
+  if(IsActive()) {
 
-    if(_debug) cout << "Reading Active Body" << endl;
-
-    size_t bodyCount = ReadField<size_t>(_is, WHERE, "Failed reading body count.");
+    size_t bodyCount = ReadField<size_t>(_is, _cbs,
+        "Failed reading body count.");
 
     for(size_t i=0; i < bodyCount && _is; ++i) {
       //read the free body
-      FreeBody free(this);
-      _is >> free;
-      if(_debug)
-        cout << free << endl;
+      shared_ptr<FreeBody> free(new FreeBody(this));
+      free->Read(_is, _cbs);
 
       //calculate areas on geometry
-      freeAreas.push_back(free.GetPolyhedron().m_area);
-      freeSum += free.GetPolyhedron().m_area;
+      freeAreas.push_back(free->GetPolyhedron().m_area);
+      freeSum += free->GetPolyhedron().m_area;
 
       //add object to multibody
       AddBody(free);
     }
 
     //get connection info
-    string connectionTag = ReadFieldString(_is, WHERE, "Failed reading connections tag.");
+    string connectionTag = ReadFieldString(_is, _cbs,
+        "Failed reading connections tag.");
     if(connectionTag != "CONNECTIONS")
-      throw ParseException(WHERE, "Failed reading connections tag. Should read 'Connections'. Read '" + connectionTag + "'.");
-    size_t connectionCount = ReadField<size_t>(_is, WHERE, "Failed reading number of connections.");
+      throw ParseException(_cbs.Where(),
+          "Unknwon connections tag '" + connectionTag + "'."
+          " Should read 'Connections'.");
+    size_t connectionCount = ReadField<size_t>(_is, _cbs,
+        "Failed reading number of connections.");
 
-    for(size_t i=0; i<connectionCount && _is; i++) {
+    for(size_t i = 0; i < connectionCount; ++i) {
       //add connection info to multibody connection map
       shared_ptr<Connection> c(new Connection(this));
       jointMap.push_back(c);
-      _is >> *jointMap.back();
-      if(_debug)
-        cout << c << endl;
-    } //endfor i
+      jointMap.back()->Read(_is, _cbs);
+    }
   }
   else{ //Passive, Surface, Internal
     if(IsSurface())
-      m_label = ReadFieldString(_is, WHERE, "Failed reading surface tag.");
-
-    if(_debug) cout << "Reading Other Body" << endl;
+      m_label = ReadFieldString(_is, _cbs, "Failed reading surface tag.");
 
     //all are same type, namely fixed body
-    FixedBody fix(this);
-    _is >> fix;
-    if(_debug)
-      cout << fix << endl;
+    shared_ptr<FixedBody> fix(new FixedBody(this));
+    fix->Read(_is, _cbs);
 
     //calculating area for multibody
-    fixAreas.push_back(fix.GetPolyhedron().m_area);
-    fixSum += fix.GetPolyhedron().m_area;
+    fixAreas.push_back(fix->GetPolyhedron().m_area);
+    fixSum += fix->GetPolyhedron().m_area;
 
     //add fixed body to multibody
     AddBody(fix);
@@ -695,36 +684,8 @@ void MultiBody::FindBoundingBox() {
 }
 
 
-//===================================================================
-//  operator==
-//===================================================================
-bool MultiBody::operator==(const MultiBody& mb) const
-{
-  if(fixedBody.size() != mb.fixedBody.size())
-    return false;
-  for(size_t i=0; i < fixedBody.size(); ++i)
-    if(*(fixedBody[i]) != *(mb.fixedBody[i]))
-      return false;
-
-  if(freeBody.size() != mb.freeBody.size())
-    return false;
-  for(size_t i=0; i < freeBody.size(); ++i)
-    if(*(freeBody[i]) != *(mb.freeBody[i]))
-      return false;
-
-  return (m_bodyType == mb.m_bodyType) &&
-    (CenterOfMass == mb.CenterOfMass) &&
-    (boundingBox[0] == mb.boundingBox[0]) &&
-    (boundingBox[1] == mb.boundingBox[1]) &&
-    (boundingBox[2] == mb.boundingBox[2]) &&
-    (boundingBox[3] == mb.boundingBox[3]) &&
-    (boundingBox[4] == mb.boundingBox[4]) &&
-    (boundingBox[5] == mb.boundingBox[5]) &&
-    (maxAxisRange == mb.maxAxisRange);
-}
-
 #ifdef USE_SOLID
-void MultiBody::UpdateVertexBase(){
+void MultiBody::UpdateVertexBase() {
   for(vector<shared_ptr<FixedBody> >::iterator I = fixedBody.begin(); I != fixedBody.end(); ++I)
     (*I)->UpdateVertexBase();
   for(vector<shared_ptr<FreeBody> >::iterator I = freeBody.begin(); I != freeBody.end(); ++I)

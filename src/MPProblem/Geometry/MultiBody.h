@@ -1,12 +1,5 @@
-/**A MultiBody represent a Obstacle or a Robot in workspace.
-  *MultiBody contain one or more Bodys, either Fixed or Free Bodys.
-  *Many access methods are implemented to allow client access internal information
-  *about MultiBody instance, like number of Bodys, Fixed and Free, Bounding box,
-  *center of mass, surface area size, and bounding sphere radius.
-  */
-
-#ifndef MULTIBODY_H_
-#define MULTIBODY_H_
+#ifndef MULTI_BODY_H_
+#define MULTI_BODY_H_
 
 #include "MPProblem/Geometry/FixedBody.h"
 #include "MPProblem/Geometry/FreeBody.h"
@@ -16,6 +9,16 @@ class Environment;
 
 enum BodyType{ACTIVE, PASSIVE, SURFACE, INTERNAL};
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup Environment
+/// @brief A collection of geometries in workspace reprenting, e.g., robots
+///
+/// A MultiBody represent a Obstacle or a Robot in workspace. MultiBody contain
+/// one or more Body s, either FixedBody s or FreeBody s. Many access methods
+/// are implemented to allow client access internal information about MultiBody
+/// instance, like number of Body s, Fixed and Free, Bounding box, center of
+/// mass, surface area size, bounding sphere radius, etc.
+////////////////////////////////////////////////////////////////////////////////
 class MultiBody {
 public:
 
@@ -37,6 +40,9 @@ public:
   //////////////////////////////////////////////////////////////////////////////////////////
     ///Constructor. Set _owner as the owner of this MultiBody instance.
     MultiBody();
+
+    MultiBody(const MultiBody&) = delete;
+    MultiBody& operator=(const MultiBody&) = delete;
 
     ///Destructor. Free memory allocated to all Bodys added to this multiBody.
     virtual ~MultiBody();
@@ -67,7 +73,6 @@ public:
     int GetFreeBodyIndex(const FreeBody& _b) const;
     int GetFreeBodyIndex(const shared_ptr<FreeBody>& _b) const;
     ///Add a Free Body
-    void AddBody(const FreeBody& _body);
     void AddBody(const shared_ptr<FreeBody>& _body);
 
 
@@ -85,7 +90,6 @@ public:
     int GetFixedBodyIndex(const FixedBody& _b) const;
     int GetFixedBodyIndex(const shared_ptr<FixedBody>& _b) const;
     ///Add a Fixed Body
-    void AddBody(const FixedBody& _body);
     void AddBody(const shared_ptr<FixedBody>& _body);
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -191,7 +195,7 @@ public:
       *Number of bodys (fixed and free), areas, bounding box, and center of mass are all computed
       *in here.
       */
-    void Read(istream& is, bool _debug = false);
+    void Read(istream& is, CountingStreamBuffer& _cbs);
 
     void buildCDstructure(cd_predefined cdtype);
 
@@ -246,12 +250,7 @@ public:
     //polygonal approximation
     void PolygonalApproximation(vector<Vector3d>& result);
 
-    //@}
-
     void PolygonalApproximation();
-
-    bool operator==(const MultiBody& mb) const;
-    bool operator!=(const MultiBody& mb) const { return !(*this == mb); }
 
     Robot::JointMap& GetJointMap() {return jointMap;}
     void SetMultirobot(bool _m){m_multirobot = _m;}
@@ -283,10 +282,6 @@ public:
     //////////////////////////////////////////////////////////////////////////////////////////
 
   private:
-    //-----------------------------------------------------------
-    ///  Data
-    //-----------------------------------------------------------
-
     string m_modelDataDir; //directory where environment file is stored
 
     //does the multibody contain more than one robot

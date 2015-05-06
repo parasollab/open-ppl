@@ -1,35 +1,27 @@
 #include "FixedBody.h"
 
-//===================================================================
-//  Constructors and Destructor
-//===================================================================
-FixedBody::FixedBody(MultiBody* _owner, const string& _filename) :
+FixedBody::
+FixedBody(MultiBody* _owner, const string& _filename) :
   Body(_owner) {
     m_filename = _filename;
+  }
+
+FixedBody::
+FixedBody(MultiBody* _owner, GMSPolyhedron& _polyhedron) :
+  Body(_owner, _polyhedron) {
+  }
+
+void
+FixedBody::
+Read(istream& _is, CountingStreamBuffer& _cbs) {
+  m_filename = ReadFieldString(_is, _cbs,
+      "Failed reading geometry filename.", false);
+  Read();
+
+  m_worldTransformation = ReadField<Transformation>(_is, _cbs,
+      "Failed reading fixed body transformation.");
 }
 
-FixedBody::FixedBody(MultiBody* _owner, GMSPolyhedron& _polyhedron) :
-  Body(_owner, _polyhedron){
-}
-
-FixedBody::~FixedBody() {
-}
-
-//===================================================================
-//  GetWorldPolyhedron
-//
-//  Need a mechanism to distinguish between an obstacle and an object
-//===================================================================
-GMSPolyhedron&
-FixedBody::GetWorldPolyhedron() {
-  GetWorldTransformation();
-  m_worldPolyhedron = Body::GetWorldPolyhedron();
-  return m_worldPolyhedron;
-}
-
-//===================================================================
-//  GetWorldTransformation
-//===================================================================
 Transformation&
 FixedBody::GetWorldTransformation() {
   return m_worldTransformation;
@@ -40,12 +32,3 @@ operator<<(ostream& _os, const FixedBody& _fb){
   return _os << _fb.m_filename << " " << _fb.m_worldTransformation;
 }
 
-istream&
-operator>>(istream& _is, FixedBody& _fb){
-  _fb.m_filename = ReadFieldString(_is, WHERE,
-      "Failed reading geometry filename.", false);
-  _fb.Read();
-  _fb.m_worldTransformation = ReadField<Transformation>(_is, WHERE,
-      "Failed reading fixed body transformation.");
-  return _is;
-}

@@ -10,7 +10,7 @@
 #include <stapl/containers/sequential/graph/graph.h>
 
 ////////////////////////////////////////////////////////////////////////////////
-/// @ingroup Environments
+/// @ingroup Environment
 /// @brief Workspace for the motion planning problem.
 ///
 /// The Environment is essentially the workspace of the motion planning problem.
@@ -124,7 +124,7 @@ class Environment {
     void SetRobots(vector<Robot> _robots) { m_robots=_robots; }
   protected:
 
-    void ReadBoundary(istream& _is);
+    void ReadBoundary(istream& _is, CountingStreamBuffer& _cbs);
 
     //BuildRobotStructure, builds a robot graph which determines DOFs for a given robot
     //In an environment with multiple active bodies, for now this function will assume they all have the same DOFs

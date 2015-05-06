@@ -7,7 +7,6 @@ class BoundingSphere : public Boundary {
   public:
     BoundingSphere();
     BoundingSphere(const Vector3d& _center, double _radius);
-    BoundingSphere(const BoundingSphere& _bs);
     ~BoundingSphere() {}
 
     bool operator==(const Boundary& _b) const;
@@ -24,7 +23,7 @@ class BoundingSphere : public Boundary {
 
     void ResetBoundary(vector<pair<double, double> >& _obstBBX, double _d);
 
-    void Read(istream& _is);
+    void Read(istream& _is, CountingStreamBuffer& _cbs);
     void Write(ostream& _os) const;
 
   private:
@@ -33,8 +32,7 @@ class BoundingSphere : public Boundary {
 
 #ifdef _PARALLEL
   public:
-    void define_type(stapl::typer &_t)
-    {
+    void define_type(stapl::typer& _t) {
       _t.member(m_radius);
     }
 #endif
@@ -50,7 +48,6 @@ namespace stapl {
         typedef BoundingSphere target_t;
 
       public:
-        typedef target_t::parameter_type  parameter_type;
         explicit proxy(Accessor const& acc) : Accessor(acc) { }
         operator target_t() const { return Accessor::read(); }
         proxy const& operator=(proxy const& rhs) { Accessor::write(rhs); return *this; }
@@ -60,4 +57,4 @@ namespace stapl {
 }
 #endif
 
-#endif /*BOUNDINGSPHERE_H_*/
+#endif

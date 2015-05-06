@@ -283,18 +283,102 @@ void VDClearComments(){
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 
-//determine if a file exists or not
-bool
-FileExists(const string& _filename, bool _err) {
-  ifstream ifs(_filename.c_str());
-  if(!ifs.good()) {
-    if(_err) cerr << "File (" << _filename << ") not found";
-    return false;
+CountingStreamBuffer::
+CountingStreamBuffer(string _filename) :
+  m_filename(_filename),
+  m_fileStream(_filename),
+  m_streamBuffer(m_fileStream.rdbuf()),
+  m_line(1), m_prevLine(1),
+  m_column(0), m_prevColumn(static_cast<size_t>(-1)),
+  m_filePos(0) {
   }
+
+string
+CountingStreamBuffer::
+Where() const {
+  ostringstream oss;
+  oss << "File: " << m_filename
+    << "\n\tLine: " << m_line
+    << "\n\tColumn: " << m_column;
+  return oss.str();
+}
+
+streambuf::int_type
+CountingStreamBuffer::
+uflow() {
+  int_type rc = m_streamBuffer->sbumpc();
+
+  m_prevLine = m_line;
+  if(traits_type::eq_int_type(rc, traits_type::to_int_type('\n'))) {
+    ++m_line;
+    m_prevColumn = m_column + 1;
+    m_column = static_cast<size_t>(-1);
+  }
+
+  ++m_column;
+  ++m_filePos;
+  return rc;
+}
+
+streambuf::int_type
+CountingStreamBuffer::
+pbackfail(streambuf::int_type _c) {
+  if(traits_type::eq_int_type(_c, traits_type::to_int_type('\n'))) {
+    --m_line;
+    m_prevLine = m_line;
+    m_column = m_prevColumn;
+    m_prevColumn = 0;
+  }
+
+  --m_column;
+  --m_filePos;
+
+  if(_c != traits_type::eof())
+    return m_streamBuffer->sputbackc(traits_type::to_char_type(_c));
+  else
+    return m_streamBuffer->sungetc();
+}
+
+ios::pos_type
+CountingStreamBuffer::
+seekoff(ios::off_type _pos, ios_base::seekdir _dir, ios_base::openmode _mode) {
+  if(_dir == ios_base::beg && _pos == static_cast<ios::off_type>(0)) {
+    m_prevLine = 1;
+    m_line = 1;
+    m_column = 0;
+    m_prevColumn = static_cast<size_t>(-1);
+    m_filePos = 0;
+
+    return m_streamBuffer->pubseekoff(_pos, _dir, _mode);
+  }
+  else
+    return streambuf::seekoff(_pos, _dir, _mode);
+}
+
+ios::pos_type
+CountingStreamBuffer::
+seekpos(ios::pos_type _pos, ios_base::openmode _mode) {
+  if(_pos == static_cast<ios::pos_type>(0)) {
+    m_prevLine = 1;
+    m_line = 1;
+    m_column = 0;
+    m_prevColumn = static_cast<size_t>(-1);
+    m_filePos = 0;
+
+    return m_streamBuffer->pubseekpos(_pos, _mode);
+  }
+  else
+    return streambuf::seekpos(_pos, _mode);
+}
+
+bool
+FileExists(const string& _filename) {
+  ifstream ifs(_filename.c_str());
+  if(!ifs.good())
+    return false;
   return true;
 }
 
-//discard all commented lines util the next uncommented line is found
 void
 GoToNext(istream& _is) {
   string line;
@@ -311,23 +395,21 @@ GoToNext(istream& _is) {
   }
 }
 
-//GetPathName from given filename
 string
 GetPathName(const string& _filename) {
   size_t pos = _filename.rfind('/');
   return pos == string::npos ? "" : _filename.substr(0, pos+1);
 }
 
-//read the string using above ReadField and tranform it to upper case
 string
-ReadFieldString(istream& _is, const string& _where, const string& _error, bool _toUpper) {
-  string s = ReadField<string>(_is, _where, _error);
+ReadFieldString(istream& _is, CountingStreamBuffer& _cbs,
+    const string& _desc, bool _toUpper) {
+  string s = ReadField<string>(_is, _cbs, _desc);
   if(_toUpper)
     transform(s.begin(), s.end(), s.begin(), ::toupper);
   return s;
 }
 
-//optionally read a color from a comment line
 /*Color4
   GetColorFromComment(istream& _is) {
   string line;

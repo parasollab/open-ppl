@@ -1,87 +1,66 @@
-/* Class FreeBody is a movable Body in workspace.
- * This class provide more specific methods for manipulate movable object.
- */
-
-#ifndef FreeBody_h
-#define FreeBody_h
+#ifndef FREE_BODY_H
+#define FREE_BODY_H
 
 #include "Body.h"
 #include <set>
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup Environment
+/// @brief Movable Body in workspace
+///
+/// Movable Body (i.e., one piece of geometry) in the workspace. Provides for
+/// computing transformations so that it can be validated.
+////////////////////////////////////////////////////////////////////////////////
 class FreeBody : public Body {
   public:
 
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    //
-    //
-    //    Constructors and Destructor
-    //
-    //
-    //////////////////////////////////////////////////////////////////////////////////////////
-
-    //Condtructor. Construct a FreeBody and set its owner as _owner.
-    //a free body can be a smaller component of a group.
-
+    ////////////////////////////////////////////////////////////////////////////
+    /// @name Constructors
+    /// @{
+    ////////////////////////////////////////////////////////////////////////////
+    /// @param _owner Owner of this body
     FreeBody(MultiBody* _owner);
 
-    /**Constructor. Set owner and geometric information of this instance of FreeBody.
-     *@see Body::Body(MultiBody * , GMSPolyhedron & )
-     */
+    ////////////////////////////////////////////////////////////////////////////
+    /// @param _owner Owner of this body
+    /// @param _polyhedron Geometry of body
     FreeBody(MultiBody* _owner, GMSPolyhedron& _polyhedron);
 
-    virtual ~FreeBody();
+    FreeBody(const FreeBody&) = delete;
+    FreeBody& operator=(const FreeBody&) = delete;
+    /// @}
+    ////////////////////////////////////////////////////////////////////////////
 
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    //
-    //
-    //    Access Methods
-    //
-    //
-    //////////////////////////////////////////////////////////////////////////////////////////
-    //These following virtual functions can be overridden in inheriting classes
-    //by a function with the same signature.
+    virtual bool IsFixedBody() const { return false; }
 
-    //programer can use this to check if this object is free or fixed body.
-    virtual int IsFixedBody(){return false;}
+    virtual Transformation& GetWorldTransformation();
 
-    ///Call Body::GetWorldPolyhedron
-    virtual GMSPolyhedron& GetWorldPolyhedron();
-
-    /**Get world transforamtion of this free body.
-     *Transformation "this" body w.r.t the world frame in a
-     *recursive manner; multiply the world transformation
-     *of the previous body with the transformation from the
-     *proximal joint to the center of gravity of "this" body
-     *(Need a generalization for the connectionship, since
-     *currently it handles only one backward connection).
-     */
-    virtual Transformation& GetWorldTransformation() { return GetWorldTransformation(false); }
-    virtual Transformation& GetWorldTransformation(bool _debug);
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    //
-    //
-    //    I/O
-    //
-    //
-    //////////////////////////////////////////////////////////////////////////////////////////
-    friend istream& operator>>(istream& _is, FreeBody& _fb);
-    friend ostream& operator<<(ostream& _os, FreeBody& _fb);
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    //
-    //
-    //    Helpers
-    //
-    //
-    //////////////////////////////////////////////////////////////////////////////////////////
-
-    ///Configure "this" body with the given transformation
+    ////////////////////////////////////////////////////////////////////////////
+    /// @brief Set transformation of body
+    /// @param _transformation Transformation
     void Configure(Transformation& _transformation);
 
-    Transformation& ComputeWorldTransformation(std::set<int, less<int> >& visited, bool _debug = false);
+    using Body::Read;
+    ////////////////////////////////////////////////////////////////////////////
+    /// @brief Parse
+    /// @param _is Stream
+    /// @param _cbs Counting stream buffer
+    void Read(istream& _is, CountingStreamBuffer& _cbs);
 
+    friend ostream& operator<<(ostream& _os, FreeBody& _fb);
+
+  private:
+    ////////////////////////////////////////////////////////////////////////////
+    /// @brief Compute transformation of this body wrt the world frame
+    /// @param visited Stores which bodies have been visited
+    /// @return Transformation
+    ///
+    /// Compute transformation "this" body w.r.t the world frame in a recursive
+    /// manner; multiply the world transformation of the previous body with the
+    /// transformation from the proximal joint to the center of gravity of
+    /// "this" body (Need a generalization for the connectionship, since
+    /// currently it handles only one backward connection).
+    Transformation& ComputeWorldTransformation(std::set<int>& visited);
 };
 
 #endif

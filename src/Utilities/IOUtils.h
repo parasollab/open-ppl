@@ -13,6 +13,7 @@
 #include <ostream>
 #include <fstream>
 #include <iostream>
+#include <streambuf>
 using namespace std;
 
 #include "tinyxml.h"
@@ -394,34 +395,126 @@ void WritePath(string _outputFile, const vector<CfgType>& _path) {
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 
-//determine if a file exists or not
-bool FileExists(const string& _filename, bool _err = true);
+class CountingStreamBuffer : public streambuf {
+  public:
 
-//discard all commented lines util the next uncommented line is found
+    ////////////////////////////////////////////////////////////////////////////
+    /// @brief Constructor
+    /// @param _filename Filename
+    CountingStreamBuffer(string _filename);
+
+    ////////////////////////////////////////////////////////////////////////////
+    /// @return Current line number
+    size_t LineNumber() const { return m_line; }
+
+    ////////////////////////////////////////////////////////////////////////////
+    /// @return Line number of previously read character
+    size_t PrevLineNumber() const { return m_prevLine; }
+
+    ////////////////////////////////////////////////////////////////////////////
+    /// @return Current column
+    size_t Column() const { return m_column; }
+
+    ////////////////////////////////////////////////////////////////////////////
+    /// @return Current file position
+    streamsize FilePos() const { return m_filePos; }
+
+    ////////////////////////////////////////////////////////////////////////////
+    /// @return String describing current file position
+    string Where() const;
+
+  protected:
+    //Disallow copy and assignment
+    CountingStreamBuffer(const CountingStreamBuffer&);
+    CountingStreamBuffer& operator=(const CountingStreamBuffer&);
+
+    ////////////////////////////////////////////////////////////////////////////
+    /// @brief Extract next character from stream without advancing read
+    ///        position
+    /// @return Next character or EOF
+    streambuf::int_type underflow() { return m_streamBuffer->sgetc(); }
+
+    ////////////////////////////////////////////////////////////////////////////
+    /// @brief Extract next character from stream
+    /// @return Next character of EOF
+    streambuf::int_type uflow();
+
+    ////////////////////////////////////////////////////////////////////////////
+    /// @brief Put back last character
+    /// @param _c Character
+    /// @return Value of character put back or EOF
+    streambuf::int_type pbackfail(streambuf::int_type _c);
+
+    ////////////////////////////////////////////////////////////////////////////
+    /// @brief Change position by offset according to dir and mode
+    /// @param _pos Position
+    /// @param _dir Direction
+    /// @param _mode Mode
+    /// @return Position
+    virtual ios::pos_type seekoff(ios::off_type _pos, ios_base::seekdir _dir,
+        ios_base::openmode _mode);
+
+    ////////////////////////////////////////////////////////////////////////////
+    /// @brief Change to specified position according to mode
+    /// @param _pos Position
+    /// @param _mode Mode
+    /// @return Position
+    virtual ios::pos_type seekpos(ios::pos_type _pos, ios_base::openmode _mode);
+
+  private:
+    string m_filename;         ///< Filename
+    ifstream m_fileStream;     ///< Hosted file stream
+    streambuf* m_streamBuffer; ///< Hosted streambuffer
+    size_t m_line;             ///< Current line number
+    size_t m_prevLine;         ///< Line number of last read character
+    size_t m_column;           ///< Current column
+    size_t m_prevColumn;       ///< Previous column
+    streamsize m_filePos;      ///< File position
+};
+
+////////////////////////////////////////////////////////////////////////////////
+/// @brief Determine if a file exists or not
+/// @param _filename Filename
+/// @return Exists
+bool FileExists(const string& _filename);
+
+////////////////////////////////////////////////////////////////////////////////
+/// @brief Discard all commented lines util the next uncommented line is found
+/// @param _is Stream
 void GoToNext(istream& _is);
 
-//is given char a start of command line? comments denoted with # character
+////////////////////////////////////////////////////////////////////////////////
+/// @brief Determines if character starts a comment ('#')
+/// @param _c Character in question
+/// @return Comment or not, that is the question
 inline bool IsCommentLine(char _c) {return _c == '#';}
 
-//GetPathName from given filename
+////////////////////////////////////////////////////////////////////////////////
+/// @brief Get directory path from filename
+/// @param _filename Filename
+/// @return Directory
 string GetPathName(const string& _filename);
 
-//read type by eating all white space. If type cannot be read report the error
-//provided
-template <class T>
+////////////////////////////////////////////////////////////////////////////////
+/// @brief Read data from stream
+/// @tparam T Data type
+/// @param _is Stream
+/// @param _cbs Counting stream buffer
+/// @param _desc String describing field
+/// @return Data
+template<typename T>
 T
-ReadField(istream& _is, const string& _where, const string& _error) {
+ReadField(istream& _is, CountingStreamBuffer& _cbs, const string& _desc) {
   char c;
   string line;
   T element = T();
   while(_is) {
     c = _is.peek();
-    if(c == '#') {
+    if(c == '#')
       getline(_is, line);
-    }
     else if(!isspace(c)) {
       if (!(_is >> element))
-        throw ParseException(_where, _error);
+        throw ParseException(_cbs.Where(), _desc);
       else
         break;
     }
@@ -429,16 +522,28 @@ ReadField(istream& _is, const string& _where, const string& _error) {
       _is.get(c);
   }
   if(_is.eof())
-    throw ParseException(_where, "End of file reached");
+    throw ParseException(_cbs.Where(), _desc + " End of file reached.");
 
   return element;
 };
 
-//read the string using above ReadField and tranform it to upper case
-string ReadFieldString(istream& _is, const string& _where, const string& _error, bool _toUpper = true);
+////////////////////////////////////////////////////////////////////////////////
+/// @brief Read string from stream
+/// @param _is Stream
+/// @param _cbs Counting stream buffer
+/// @param _desc String describing field
+/// @param _toUpper True means convert string to all upper case
+/// @return Data string
+string ReadFieldString(istream& _is, CountingStreamBuffer& _cbs,
+    const string& _desc, bool _toUpper = true);
 
-//optionally read a color from a comment line
-//Color4 GetColorFromComment(istream& _is);
+/*
+////////////////////////////////////////////////////////////////////////////////
+/// @brief Read color from a comment line
+/// @param _is Stream
+/// @return Color
+Color4 GetColorFromComment(istream& _is);
+*/
 
 //----------------------------------------------------------------------------
 // GetTags: split string based on delimiter.

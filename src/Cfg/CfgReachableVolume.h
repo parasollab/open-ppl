@@ -21,8 +21,8 @@ class CfgReachableVolume : public Cfg {
   virtual void GetRandomCfg(double R, double rStep){}
   virtual void GetRandomCfg(Environment* _env,shared_ptr<Boundary> _bb);
   virtual void GetRandomCfg(Environment* _env);
-  vector<Robot> GetRobots(int _numJoints);
-  vector<Robot> GetRobots(vector<Robot> &_robots, const Environment* _env);
+  //vector<Robot> GetRobots(int _numJoints);
+  //vector<Robot> GetRobots(vector<Robot> &_robots, const Environment* _env);
    template<class DistanceMetricPointer>
      void GetRandomRay(double _incr, DistanceMetricPointer _dm, bool _norm=true){}
 

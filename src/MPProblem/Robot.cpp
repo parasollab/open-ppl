@@ -23,7 +23,8 @@ Robot::Robot(Base _base, BaseMovement _baseMovement,
   }
 
 Robot::Base
-Robot::GetBaseFromTag(const string _tag){
+Robot::
+GetBaseFromTag(const string& _tag, const string& _where) {
   if(_tag == "PLANAR")
     return Robot::PLANAR;
   else if(_tag == "VOLUMETRIC")
@@ -33,22 +34,22 @@ Robot::GetBaseFromTag(const string _tag){
   else if(_tag == "JOINT")
     return Robot::JOINT;
   else
-    throw ParseException(WHERE,
-        "Failed parsing robot base type '" + _tag + "'. Options are: planar, volumetric, fixed, or joint.");
+    throw ParseException(_where,
+        "Unknown base type '" + _tag + "'."
+        " Options are: 'planar', 'volumetric', 'fixed', or 'joint'.");
 }
 
 Robot::BaseMovement
-Robot::GetMovementFromTag(const string _tag){
+Robot::GetMovementFromTag(const string& _tag, const string& _where) {
   if(_tag == "ROTATIONAL")
     return Robot::ROTATIONAL;
   else if (_tag == "TRANSLATIONAL")
     return Robot::TRANSLATIONAL;
   else
-    throw ParseException(WHERE,
-        "Failed parsing robot movement type '" + _tag + "'. Options are: rotational or translational.");
+    throw ParseException(_where,
+        "Unknown movement type '" + _tag + "'."
+        " Options are: 'rotational' or 'translational'.");
 }
-
-//Begin section getTag
 
 string
 Robot::GetTagFromBase(const Robot::Base& _b){
