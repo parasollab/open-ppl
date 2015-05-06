@@ -187,6 +187,22 @@ All function parameters should begin with an \_.
 int MyFunction(int _a, int _b);
 \end{lstlisting}
 
+\subsubsection{Naming Exceptions}
+
+The following cases are exempt from naming conventions for language specific
+reasons.
+
+\begin{itemize}
+
+  \item Functions defining iterators, namely, \texttt{begin()}, \texttt{end()},
+    and the iterator typedef. This is for compatability with \texttt{auto}
+    keyword for range based for loops.
+
+  \item In classes which extend part of the STL, the methods which override an
+    STL class's member function must be named against our standard, obviously.
+
+\end{itemize}
+
 \subsection{XML}
 Similarly to the class and variable names, within the XML, tags should be camel
 cased beginning with a capital letter and variables should be camel cased
