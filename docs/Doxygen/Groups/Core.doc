@@ -30,7 +30,7 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup Core
-/// @defgroup Environments Environments
+/// @defgroup Environment Environment
 /// @brief The workspace of the motion planning problem.
 ///
 /// The Environment is essentially the workspace of the motion planning problem.
