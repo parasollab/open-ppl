@@ -1,20 +1,24 @@
-/**Connect nodes in map to their neighbors.
- *Following Algorithm is used:
- *   -# for evry node, cfg1, in roadmap
- *       -# find neighbors N for cfg1
- *       -# lp is a local planner
- *       -# for every node cfg2 in N and numFailures < m_fail
- *           -# test lp.IsConnected(cfg1, cfg2)
- *           -# if connected, add this edge to map, _rm.
- *       -# end for
- *   -# end for,
- */
-
 #ifndef NEIGHBORHOOD_CONNECTOR_H
 #define NEIGHBORHOOD_CONNECTOR_H
 
 #include "ConnectorMethod.h"
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup Connectors
+/// @brief Connect nearby neighbors together.
+/// @tparam MPTraits Motion planning universe
+///
+///
+/// Connect nodes in map to their neighbors. The following algorithm is used:
+/// -# for evry node, cfg1, in roadmap
+///     -# find neighbors N for cfg1
+///     -# lp is a local planner
+///     -# for every node cfg2 in N and numFailures < m_fail
+///         -# test lp.IsConnected(cfg1, cfg2)
+///         -# if connected, add this edge to map, _rm.
+///     -# end for
+/// -# end for
+////////////////////////////////////////////////////////////////////////////////
 template<class MPTraits>
 class NeighborhoodConnector: public ConnectorMethod<MPTraits> {
   public:

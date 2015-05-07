@@ -1,10 +1,3 @@
-/* CCsConnector
- *
- * Try to connect different connected components of the roadmap.
- * We try to connect k-closest pairs of connected components.
- * When connecting the CCs, we only attempt neighboring pairs of nodes.
- */
-
 #ifndef CCS_CONNECTOR_H_
 #define CCS_CONNECTOR_H_
 
@@ -12,6 +5,15 @@
 
 #include <containers/sequential/graph/algorithms/connected_components.h>
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup Connectors
+/// @brief Attempt connection between nearby CCs
+/// @tparam MPTraits Motion planning universe
+///
+/// Attempts connection between different connected components of the roadmap.
+/// We try to connect k-closest pairs of connected components.
+/// When connecting the CCs, we only attempt neighboring pairs of nodes.
+////////////////////////////////////////////////////////////////////////////////
 template<class MPTraits>
 class CCsConnector: public ConnectorMethod<MPTraits> {
   public:

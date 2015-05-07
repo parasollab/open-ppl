@@ -6,6 +6,21 @@
 #include "Utilities/MetricUtils.h"
 
 namespace pmpl_detail{
+
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup Connectors
+/// @brief Facilitate function calls for general connection methods.
+/// @tparam CM Connector method derived class type
+/// @tparam RDMP Roadmap type
+/// @tparam I1 Input iterator 1 type
+/// @tparam I2 Input iterator 2 type
+/// @tparam O Output iterator tyep
+///
+/// Facilitates simulation of pure virtualism of template functions in C++,
+/// which is explicitly disallowed for the language. Essentially iterates over a
+/// type list and attempts dynamic casts to that type to find appropriate
+/// derived class.
+////////////////////////////////////////////////////////////////////////////////
 template<typename CM, typename RDMP, typename I1, typename I2, typename O>
   struct VirtualConnect{
     public:
@@ -31,11 +46,13 @@ template<typename CM, typename RDMP, typename I1, typename I2, typename O>
       I2 m_i2first, m_i2last;
       O m_output;
   };
+
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup Connectors
 /// @brief Base algorithm abstraction for \ref Connectors.
+/// @tparam MPTraits Motion planning universe
 ///
 /// ConnectorMethod essentially has one important function, @c Connect which can
 /// be called in a multitude of ways. In its basic forms it takes two sets of

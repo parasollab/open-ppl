@@ -1,20 +1,23 @@
 #ifndef CONNECTNEIGHBORINGSURFACES_H
 #define CONNECTNEIGHBORINGSURFACES_H
 
-//#ifdef PMPCfgSurface
-
 #include "ConnectorMethod.h"
 
 #define CLOSEDIST 0.4
 #define KATTEMPTS 3
 
-//Connect between surfaces
-//for each s in surfaces
-//   make sure boundary is built
-//   for each other surface s' in surfaces
-//      go through boundary lines, generate regular samples
-//           and see if it's on that surface
-
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup Connectors
+/// @brief Connect between surfaces
+/// @tparam MPTraits Motion planning universe
+///
+/// Connect between surfaces
+/// for each s in surfaces
+///    make sure boundary is built
+///    for each other surface s' in surfaces
+///       go through boundary lines, generate regular samples
+///            and see if it's on that surface
+////////////////////////////////////////////////////////////////////////////////
 template <class MPTraits>
 class ConnectNeighboringSurfaces: public ConnectorMethod<MPTraits> {
   public:
@@ -291,5 +294,3 @@ Connect(RoadmapType* _rm,
   }
 
 #endif
-//#endif
-

@@ -4,6 +4,13 @@
 #include "ConnectorMethod.h"
 #include "Utilities/MedialAxisUtilities.h"
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup Connectors
+/// @brief TODO
+/// @tparam MPTraits Motion planning universe
+///
+/// TODO
+////////////////////////////////////////////////////////////////////////////////
 template<typename MPTraits>
 class RewireConnector : public ConnectorMethod<MPTraits> {
   public:

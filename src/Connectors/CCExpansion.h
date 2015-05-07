@@ -1,36 +1,35 @@
-/*
- * -- General Overview --
- *
- * The CCExpansion class provides a framework for expanding CCs by
- * applying our expansion policies to each CC separately. The user should
- * specify their node selection policy, expansion bias, and number of
- * expansion nodes per component.
- *
- * -- Summary of Methods --
- *
- * Node Selection Policies
- * 1. Random: Expand from a random set of nodes from each CC.
- * 2. Farthest: Expand from the set of nodes farthest from their CC's centroid.
- * 3. Difficult: Make use of environmental clues to expand nodes that are more
- *               likely to be in difficult areas, narrow passages for example.
- *
- * Expansion Biases
- * 1. RandomExpand: Expand in random directions.
- * 2. ExpandFrom: Expand away from the source CC's centroid.
- * 3. ExpandTo: Expand to the nearest other CC's centroid.
- * 4. MedialAxisExpand: Expand along tangents to the medial-axis.
- *
-*/
-
-#ifndef CCEXPANSION_H_
-#define CCEXPANSION_H_
+#ifndef CC_EXPANSION_H_
+#define CC_EXPANSION_H_
 
 #include "ConnectorMethod.h"
 #include "Extenders/BasicExtender.h"
 
-//#########################//
-// CCExpansion Method //
-//#########################//
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup Connectors
+/// @brief Expand CCs out in attempt for better roadmap connectivity.
+/// @tparam MPTraits Motion planning universe
+///
+/// -- General Overview --
+///
+/// The CCExpansion class provides a framework for expanding CCs by
+/// applying our expansion policies to each CC separately. The user should
+/// specify their node selection policy, expansion bias, and number of
+/// expansion nodes per component.
+///
+/// -- Summary of Methods --
+///
+/// Node Selection Policies
+/// 1. Random: Expand from a random set of nodes from each CC.
+/// 2. Farthest: Expand from the set of nodes farthest from their CC's centroid.
+/// 3. Difficult: Make use of environmental clues to expand nodes that are more
+///               likely to be in difficult areas, narrow passages for example.
+///
+/// Expansion Biases
+/// 1. RandomExpand: Expand in random directions.
+/// 2. ExpandFrom: Expand away from the source CC's centroid.
+/// 3. ExpandTo: Expand to the nearest other CC's centroid.
+/// 4. MedialAxisExpand: Expand along tangents to the medial-axis.
+////////////////////////////////////////////////////////////////////////////////
 template <class MPTraits>
 class CCExpansion: public ConnectorMethod<MPTraits> {
   public:

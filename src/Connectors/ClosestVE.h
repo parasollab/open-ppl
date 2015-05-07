@@ -1,26 +1,21 @@
-#ifndef CLOSESTVE_H
-#define CLOSESTVE_H
+#ifndef CLOSEST_VE_H
+#define CLOSEST_VE_H
 
 #include "ConnectorMethod.h"
 
-/**Connect nodes in map to their k closest neighbors, which
- *could be vertex or point on edges in roadmap.
- *
- *This method not only creates edges, but creates new verteices
- *also. New vertices are always on the existing edges.
- *
- *info provides inforamtion other than connection, like
- *collision dection, local planner, and distance metrics.
- *_cn provides information for specific node connection
- *paramters.
- *lp Local planner for connecting given 2 Cfgs.
- *
- *see ClosestVE for more information.
- */
-
-/**Cfg VE Type.
- *Not well documented. I don't know what this class for.
- */
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup Connectors
+/// @brief Information on vertex or edge connection
+/// @tparam MPTraits Motion planning universe
+///
+/// CfgVEType is a class used to store information about connecting to what may
+/// be either another configuration or a new configuration along an edge of the
+/// map.
+///
+/// In order to keep the same structure (for sorting by distance) and yet not
+/// allocate space for endpoints when they are not needed (ie, connecting to
+/// another existing map node - aka,Cfg), endpoints are stored as a vector.
+////////////////////////////////////////////////////////////////////////////////
 template <class MPTraits>
 class CfgVEType {
   private:
@@ -40,18 +35,6 @@ class CfgVEType {
     VID         m_vid1, m_vid2; // VIDs for cfgs belonging to a potential new edge
     VID         m_endpt1, m_endpt2; // VIDs for cfgs along existing edge
 };
-
-// ------------------------------------------------------------------
-// CfgVEType is a private class used by ConnectMapNodes class
-// to store information about connecting to what may either be
-// another Cfg _OR_ a new Cfg generated in the "middle" of an existing
-// edge in the map.
-//
-// In order to keep the same structure (for sorting by distance) and
-// yet not allocate space for endpoints when they are not needed
-// (ie, connecting to another existing map node--aka,Cfg), endpoints
-// are stored as a vector.
-// ------------------------------------------------------------------
 
 template<class MPTraits>
 CfgVEType<MPTraits>::
@@ -88,6 +71,15 @@ CfgVEType<MPTraits>::
 
 #define KCLOSESTVE 5
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup Connectors
+/// @brief Connect nodes to other close vertices or point on edges in roadmap.
+/// @tparam MPTraits Motion planning universe
+///
+/// Connect nodes in map to their k closest neighbors, which could be vertex or
+/// point on edges in roadmap. This method not only creates edges, but creates
+/// new verteices also. New vertices are always on the existing edges.
+////////////////////////////////////////////////////////////////////////////////
 template<class MPTraits>
 class ClosestVE: public ConnectorMethod<MPTraits> {
   private:
