@@ -27,7 +27,7 @@ class PathModifierMethod : public MPBaseObject<MPTraits> {
 
     ////////////////////////////////////////////////////////////////////////////
     /// @brief Modifies the input path to a new valid path
-    /// @param _originalPath A path of configurations within a resolution
+    /// @param _path A path of configurations within a resolution
     ///        distance of each other
     /// @param _newPath An empty vector to place the resulting modified path
     ///
@@ -37,18 +37,16 @@ class PathModifierMethod : public MPBaseObject<MPTraits> {
     /// vector<CfgType> inputPath, outputPath;
     /// pm->Modify(inputPath, outputPath);
     /// @endcode
-    ////////////////////////////////////////////////////////////////////////////
-    virtual void Modify(vector<CfgType>& _originalPath,
+    virtual void Modify(vector<CfgType>& _path,
         vector<CfgType>& _newPath);
 
   protected:
     ////////////////////////////////////////////////////////////////////////////
     /// @brief Modifies the input path to a new valid path
-    /// @param _originalPath A path of configurations within a resolution
+    /// @param _path A path of configurations within a resolution
     ///        distance of each other
     /// @param _newPath An empty vector to place the resulting modified path
-    /// @return success/failed modification
-    ////////////////////////////////////////////////////////////////////////////
+    /// @return Success/failed modification
     virtual bool ModifyImpl(vector<CfgType>& _path,
         vector<CfgType>& _newPath) = 0;
 
@@ -57,7 +55,6 @@ class PathModifierMethod : public MPBaseObject<MPTraits> {
     /// @param _path Path to append local plan to
     /// @param _lpOutput Local plan output
     /// @param _end End Cfg of local plan
-    ////////////////////////////////////////////////////////////////////////////
     void AddToPath(vector<CfgType>& _path, LPOutput<MPTraits>* _lpOutput,
         CfgType& _end);
 
@@ -66,7 +63,6 @@ class PathModifierMethod : public MPBaseObject<MPTraits> {
     /// @param _path Path to extract VIDs from
     /// @param _graph RoadmapGraph containing path nodes
     /// @return Path VIDs
-    ////////////////////////////////////////////////////////////////////////////
     vector<VID> GetPathVIDs(vector<CfgType>& _path, GraphType* _graph);
 
     void RemoveBranches(const string& _dmLabel, vector<CfgType>& _path,
@@ -76,7 +72,6 @@ class PathModifierMethod : public MPBaseObject<MPTraits> {
     ////////////////////////////////////////////////////////////////////////////
     /// @brief Write path to file
     /// @param _path Path
-    ////////////////////////////////////////////////////////////////////////////
     void OutputPath(vector<CfgType>& _path);
 
     string m_pathFile; ///< Where to write the smoothed path

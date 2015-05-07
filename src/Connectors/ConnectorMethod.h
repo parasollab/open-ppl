@@ -72,7 +72,6 @@ class ConnectorMethod : public MPBaseObject<MPTraits>
     ///
     /// @overload
     /// Uses the entire roadmap as the first and second set of nodes.
-    ////////////////////////////////////////////////////////////////////////////
     template<typename OutputIterator = NullOutputIterator>
       void Connect(RoadmapType* _rm,
           OutputIterator _collision = OutputIterator()) {
@@ -87,7 +86,6 @@ class ConnectorMethod : public MPBaseObject<MPTraits>
     /// @overload
     /// Uses a single node as the first set of nodes and the entire roadmap as
     /// second set of nodes.
-    ////////////////////////////////////////////////////////////////////////////
     template<typename OutputIterator = NullOutputIterator>
       void Connect(RoadmapType* _rm, VID _vid,
           OutputIterator _collision = OutputIterator()) {
@@ -100,7 +98,6 @@ class ConnectorMethod : public MPBaseObject<MPTraits>
     ///
     /// @overload
     /// Uses entire roadmap as second set of nodes.
-    ////////////////////////////////////////////////////////////////////////////
     template<typename InputIterator,
       typename OutputIterator = NullOutputIterator>
         void Connect(RoadmapType* _rm,
@@ -115,7 +112,6 @@ class ConnectorMethod : public MPBaseObject<MPTraits>
     ///
     /// @overload
     /// Uses a single VID as the first set of nodes.
-    ////////////////////////////////////////////////////////////////////////////
     template<typename InputIterator,
       typename OutputIterator = NullOutputIterator>
       void Connect(RoadmapType* _rm, VID _vid,
@@ -127,11 +123,11 @@ class ConnectorMethod : public MPBaseObject<MPTraits>
 
     ////////////////////////////////////////////////////////////////////////////
     /// @brief Generate edges between two sets of nodes
+    /// @tparam InputIterator1 Iterator type of first set
+    /// @tparam InputIterator2 Iterator type of second set
+    /// @tparam OutputIterator Iterator type of output for collision nodes
     /// @param _rm The roadmap to generate edges in and where the input nodes
     ///        are found
-    /// @param _stats The stat class inside the MPProblem
-    /// @param _cmap A color map over the underlying RoadmapGraph, used in CC
-    ///        computations
     /// @param _itr1First Begin iterator of first set of VIDs
     /// @param _itr1Last End iterator of first set of VIDs
     /// @param _itr2First Begin iterator of second set of VIDs
@@ -149,7 +145,6 @@ class ConnectorMethod : public MPBaseObject<MPTraits>
     ///            cmap, c1.begin(), c1.end(), c2.begin(), c2.end(),
     ///            back_inserter(col));
     /// @endcode
-    ////////////////////////////////////////////////////////////////////////////
     template<typename InputIterator1, typename InputIterator2,
       typename OutputIterator = NullOutputIterator>
       void Connect(RoadmapType* _rm,

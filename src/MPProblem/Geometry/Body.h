@@ -39,6 +39,7 @@ class Body {
     ////////////////////////////////////////////////////////////////////////////
     /// @name Constructors
     /// @{
+
     ////////////////////////////////////////////////////////////////////////////
     /// @param _owner Owner of this body
     Body(MultiBody* _owner);
@@ -47,10 +48,11 @@ class Body {
     /// @param _polyhedron Geometry of body
     Body(MultiBody* _owner, GMSPolyhedron& _polyhedron);
 
-    Body(const Body&) = delete;
-    Body& operator=(const Body&) = delete;
+    Body(const Body& _other) = delete;
+    Body& operator=(const Body& _other) = delete;
 
     virtual ~Body();
+
     /// @}
     ////////////////////////////////////////////////////////////////////////////
 
