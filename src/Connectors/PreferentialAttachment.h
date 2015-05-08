@@ -1,30 +1,16 @@
 #ifndef PreferentialAttachment_h
 #define PreferentialAttachment_h
+
 #include "ConnectionMethod.h"
 
-// Preferential attachment
-
-/**Connect nodes in map to their k closest neighbors.
- *Following Algorithm is used:
- *   -# for evry node, cfg1, in roadmap
- *       -# find k closet neighbors for cfg1
- *       -# lp_set is a local planner set defined in info.lpsetid
- *       -# for every node, cfg2, in k-closest neighbor list for cfg1
- *           -# using local planning functions in lp_set
- *              to connect cfg1 and cfg2
- *           -# if connected, add this edge to map, _rm.
- *       -# end for
- *   -# end for
- *
- *info provides inforamtion other than connection, like
- *_collision dection, local planner, and distance metrics.
- *_cn provides information for specific node connection
- *paramters.
- *lp Local planner for connecting given 2 Cfgs.
- *
- *see RoadmapGraph::AddEdge and LocalPlanners::IsConnected
- */
-
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup Connectors
+/// @ingroup DeadCode
+/// @brief TODO Dead Code
+///
+/// TODO
+/// @todo Dead code. Figure out what to do with this.
+////////////////////////////////////////////////////////////////////////////////
 template <class CFG, class WEIGHT>
 class PreferentialAttachment: public ConnectionMethod<CFG,WEIGHT> {
   public:

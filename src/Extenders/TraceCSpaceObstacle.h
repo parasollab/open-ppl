@@ -6,6 +6,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup Extenders
 /// @brief Extend in a direction tangent to @cobst.
+/// @tparam MPTraits Motion planning universe
 ///
 /// Trace @cobst. In this growth method, we try to find a vector tangent to a
 /// @coboundary. It is not feasible to compute @coboundary, so here we

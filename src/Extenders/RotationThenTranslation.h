@@ -6,6 +6,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup Extenders
 /// @brief Extend all rotational DOF before extending all translational DOF.
+/// @tparam MPTraits Motion planning universe
 ///
 /// Rotation followed by Extension. In this way of extending the source
 /// configuration is first rotated to align with the target configuration until
@@ -22,7 +23,7 @@ class RotationThenTranslation : public BasicExtender<MPTraits> {
     typedef typename MPTraits::CfgType CfgType;
     typedef typename MPTraits::MPProblemType MPProblemType;
 
-    RotationThenTranslation(const string& _dmLabel = "", 
+    RotationThenTranslation(const string& _dmLabel = "",
         const string& _vcLabel = "", double _delta = 1.0);
     RotationThenTranslation(MPProblemType* _problem, XMLNode& _node);
 
@@ -45,7 +46,7 @@ RotationThenTranslation<MPTraits>::RotationThenTranslation(MPProblemType* _probl
 
 template<class MPTraits>
 bool
-RotationThenTranslation<MPTraits>::Extend(const CfgType& _near, 
+RotationThenTranslation<MPTraits>::Extend(const CfgType& _near,
     const CfgType& _dir, CfgType& _new, LPOutput<MPTraits>& _lpOutput) {
   // Setup MP Variables
   Environment* env = this->GetEnvironment();
@@ -70,11 +71,11 @@ RotationThenTranslation<MPTraits>::Extend(const CfgType& _near,
       newPos[i] = _dir[i];
 
     LPOutput<MPTraits> newLPOutput;
-    bool result = this->Expand(innerCfg, newPos, _new, this->m_delta, 
+    bool result = this->Expand(innerCfg, newPos, _new, this->m_delta,
         newLPOutput, env->GetPositionRes(), env->GetOrientationRes());
-    _lpOutput.m_edge.first.SetWeight(_lpOutput.m_edge.first.GetWeight() + 
+    _lpOutput.m_edge.first.SetWeight(_lpOutput.m_edge.first.GetWeight() +
         newLPOutput.m_edge.first.GetWeight());
-    _lpOutput.m_edge.second.SetWeight(_lpOutput.m_edge.second.GetWeight() + 
+    _lpOutput.m_edge.second.SetWeight(_lpOutput.m_edge.second.GetWeight() +
         newLPOutput.m_edge.second.GetWeight());
     return result;
   }

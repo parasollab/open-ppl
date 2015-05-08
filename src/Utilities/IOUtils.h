@@ -21,7 +21,7 @@ using namespace std;
 #include "PMPLExceptions.h"
 
 ////////////////////////////////////////////////////////////////////////////////
-/// @ingroup Utilities
+/// @ingroup IOUtils
 /// @brief Wrapper class for XML handeling
 ///
 /// This is a wrapper class for XML handeling.  It is READONLY and supports only
@@ -286,10 +286,19 @@ AttrInvalidBounds(const string& _name, const string& _desc,
 
 extern ofstream* vdo;
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup IOUtils
+/// @brief TODO
 void VDInit(string _filename);
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup IOUtils
+/// @brief TODO
 void VDClose();
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup IOUtils
+/// @brief TODO
 template<class CfgType>
 void VDAddNode(const CfgType& _cfg){
   if(vdo!=NULL){
@@ -297,6 +306,9 @@ void VDAddNode(const CfgType& _cfg){
   }
 };
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup IOUtils
+/// @brief TODO
 template<class CfgType>
 void VDRemoveNode(const CfgType& _cfg){
   if(vdo!=NULL){
@@ -304,6 +316,9 @@ void VDRemoveNode(const CfgType& _cfg){
   }
 };
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup IOUtils
+/// @brief TODO
 template<class CfgType>
 void VDAddEdge(const CfgType& _cfg1, const CfgType& _cfg2){
   if(vdo!=NULL){
@@ -311,6 +326,9 @@ void VDAddEdge(const CfgType& _cfg1, const CfgType& _cfg2){
   }
 };
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup IOUtils
+/// @brief TODO
 template<class CfgType>
 void VDRemoveEdge(const CfgType& _cfg1, const CfgType& _cfg2){
   if(vdo!=NULL){
@@ -318,6 +336,9 @@ void VDRemoveEdge(const CfgType& _cfg1, const CfgType& _cfg2){
   }
 };
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup IOUtils
+/// @brief TODO
 template<class CfgType>
 void VDAddTempCfg(const CfgType& _cfg, bool _valid){
   if(vdo!=NULL){
@@ -325,6 +346,9 @@ void VDAddTempCfg(const CfgType& _cfg, bool _valid){
   }
 };
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup IOUtils
+/// @brief TODO
 template<class CfgType>
 void VDAddTempRay(const CfgType& _cfg){
   if(vdo!=NULL){
@@ -332,6 +356,9 @@ void VDAddTempRay(const CfgType& _cfg){
   }
 };
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup IOUtils
+/// @brief TODO
 template<class CfgType>
 void VDAddTempEdge(const CfgType& _cfg1, const CfgType& _cfg2){
   if(vdo!=NULL){
@@ -339,14 +366,29 @@ void VDAddTempEdge(const CfgType& _cfg1, const CfgType& _cfg2){
   }
 };
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup IOUtils
+/// @brief TODO
 void VDComment(string _s);
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup IOUtils
+/// @brief TODO
 void VDClearAll();
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup IOUtils
+/// @brief TODO
 void VDClearLastTemp();
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup IOUtils
+/// @brief TODO
 void VDClearComments();
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup IOUtils
+/// @brief TODO
 template<class CfgType>
 void VDQuery(const CfgType& _cfg1, const CfgType& _cfg2){
   if(vdo!=NULL){
@@ -364,11 +406,13 @@ void VDQuery(const CfgType& _cfg1, const CfgType& _cfg2){
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 
-/**Write a list of Cfgs in a give path
- *to file with given filename.
- *note if file couldn't be opened, error message will be post
- *and process will be terminated.
- */
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup IOUtils
+/// @brief TODO
+///
+/// Write a list of Cfgs in a give path to file with given filename. Note if
+/// file couldn't be opened, error message will be post and process will be
+/// terminated.
 template<class CfgType>
 void WritePath(string _outputFile, const vector<CfgType>& _path) {
   ofstream ofs(_outputFile.c_str());
@@ -395,6 +439,12 @@ void WritePath(string _outputFile, const vector<CfgType>& _path) {
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup IOUtils
+/// @brief TODO
+///
+/// TODO
+////////////////////////////////////////////////////////////////////////////////
 class CountingStreamBuffer : public streambuf {
   public:
 
@@ -545,9 +595,9 @@ string ReadFieldString(istream& _is, CountingStreamBuffer& _cbs,
 Color4 GetColorFromComment(istream& _is);
 */
 
-//----------------------------------------------------------------------------
-// GetTags: split string based on delimiter.
-//----------------------------------------------------------------------------
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup IOUtils
+/// @brief Split string based on delimiter.
 vector<string> GetTags(string _stags, string _delim);
 
 #endif

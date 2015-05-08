@@ -1,11 +1,16 @@
-
-
 #ifndef RVDISTANCE_H_
 #define RVDISTANCE_H_
 
 #include "MinkowskiDistance.h"
 #include "ReachableVolumeUtil/ReachableVolume.h"
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup DistanceMetrics
+/// @brief TODO.
+/// @tparam MPTraits Motion planning universe
+///
+/// TODO.
+////////////////////////////////////////////////////////////////////////////////
 template<class MPTraits>
 class RVDistance : public MinkowskiDistance<MPTraits> {
   public:

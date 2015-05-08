@@ -1,14 +1,3 @@
-/**
- * AdaptiveRRT.h
- *
- * Description: AdaptiveRRT employs structural filtering to the RRT paradigm by
- * providing a two-level cost-adaptive strategy to select the RRT growth method.
- * First using the "visibility" of a node the method selects a set of RRT
- * methods to choose from based on some probability distribution. This
- * probability distribution is updated based upon the success/fail of the growth
- * and its cost.
- */
-
 #ifndef ADAPTIVE_RRT_H_
 #define ADAPTIVE_RRT_H_
 
@@ -23,6 +12,18 @@ static inline uint64_t GetCycles(){
 
 #include "BasicRRTStrategy.h"
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup MotionPlanningStrategies
+/// @brief Adaptively select growth methods in RRT
+/// @tparam MPTraits Motion planning universe
+///
+/// AdaptiveRRT employs structural filtering to the RRT paradigm by providing a
+/// two-level cost-adaptive strategy to select the RRT growth method. First,
+/// it uses the "visibility" of a node the method selects a set of RRT methods
+/// to choose from based on some probability distribution. This probability
+/// distribution is updated based upon the success/fail of the growth and its
+/// cost.
+////////////////////////////////////////////////////////////////////////////////
 template<class MPTraits>
 class AdaptiveRRT : public BasicRRTStrategy<MPTraits> {
   public:

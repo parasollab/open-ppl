@@ -9,8 +9,14 @@ extern double g_UAS_avgRegionStd;
 
 typedef RoadmapGraph<CfgType, WeightType>::VID VID;
 
-//general PartitionNode class to handle basic node relations such
-//as parents and children
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup RegionDecomposition
+/// @ingroup DeadCode
+/// @brief TODO Dead Code
+///
+/// TODO
+/// @todo Dead code. Figure out what to do with this.
+////////////////////////////////////////////////////////////////////////////////
 class PartitionNode {
  public:
 
@@ -41,9 +47,14 @@ class PartitionNode {
    vector<PartitionNode*> m_Children;
 };
 
-//a internal node class which stores no data but has access
-//to all of its children to compose the data to create a
-//partition at this level
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup RegionDecomposition
+/// @ingroup DeadCode
+/// @brief TODO Dead Code
+///
+/// TODO
+/// @todo Dead code. Figure out what to do with this.
+////////////////////////////////////////////////////////////////////////////////
 class InternalPartitionNode : public PartitionNode {
  public:
    InternalPartitionNode();
@@ -66,7 +77,14 @@ class InternalPartitionNode : public PartitionNode {
    virtual vector<VID>* GetVIDs();
 };
 
-//holds the partition and controls access to the partition
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup RegionDecomposition
+/// @ingroup DeadCode
+/// @brief TODO Dead Code
+///
+/// TODO
+/// @todo Dead code. Figure out what to do with this.
+////////////////////////////////////////////////////////////////////////////////
 class LeafPartitionNode : public PartitionNode {
  public:
    LeafPartitionNode();
@@ -83,8 +101,14 @@ class LeafPartitionNode : public PartitionNode {
    Partition* m_Partition;//all leaf nodes contain their partition which stores all the basic information
 };
 
-//controls access to the Partitions, and provides some basic
-//functionality for the tree
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup RegionDecomposition
+/// @ingroup DeadCode
+/// @brief TODO Dead Code
+///
+/// TODO
+/// @todo Dead code. Figure out what to do with this.
+////////////////////////////////////////////////////////////////////////////////
 class PartitionTree{
  public:
    PartitionTree(){}

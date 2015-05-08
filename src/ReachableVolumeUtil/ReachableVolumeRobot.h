@@ -7,6 +7,12 @@
 #include "queue"
 class ReachableVolumeLinkage;
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup ReachableUtils
+/// @brief TODO
+///
+/// TODO
+////////////////////////////////////////////////////////////////////////////////
 class ReachableVolumeRobot{
 
  public:
@@ -18,7 +24,7 @@ class ReachableVolumeRobot{
   vector<int> m_earParentLinks;
   map<int,shared_ptr<ReachableVolumeJoint> > m_RVSpaceJointConstraints;
   Vector3d m_baseJointPos;
-  bool m_fixed; 
+  bool m_fixed;
 
   ReachableVolumeRobot(int _nAttempts = 10000){
     m_nAttempts = _nAttempts;
@@ -40,7 +46,7 @@ class ReachableVolumeRobot{
   //assumptions made about tree file
   //ear joints are listed with link of ear chain first, followed by link it attaches to in parent chain
   //ear joints are ordered be ear link (in ascending order)
-  //assumes that there is only one loop 
+  //assumes that there is only one loop
   //if there is a loop it assumes the loop is formed by the first chain (i.e. the chain that corosponds to m_RVLinkages[0]
   //loop must be specified before ears
   //_treeStructure denotes the structure of the tree that will be built.  Current options are "EndEffectorFirst", "RootFirst" and "Balanced"
@@ -67,7 +73,7 @@ class ReachableVolumeRobot{
     }
     if(strcmp(strData, "Fixed") == 0) {
       m_fixed=true;
-    }else{      
+    }else{
       m_fixed=false;
     }
     vector<pair<double, double> > linkLengths;
@@ -108,7 +114,7 @@ class ReachableVolumeRobot{
     int lastEar=0;
     int nextJointID=1;
 
-    
+
     while(ifs >> strData){
       if(strcmp(strData, "Loop") == 0){
 	if(m_debug) cout<<"Loop encountered"<<endl;
@@ -123,14 +129,14 @@ class ReachableVolumeRobot{
 	  int l_ear,l_base,l_other;
 	  ifs>>l_ear>>l_base>>l_other;
 	  if(m_debug) cout<<"read ear "<<l_ear<<endl;
-	  m_earLinks.push_back(l_ear);	  
+	  m_earLinks.push_back(l_ear);
 	  m_earParentLinks.push_back(l_base);
 
 	  vector<shared_ptr<ReachableVolumeJoint> > rvJoints;
 
-	  shared_ptr<ReachableVolumeLinkage> rv = 
+	  shared_ptr<ReachableVolumeLinkage> rv =
 	    shared_ptr<ReachableVolumeLinkage>(new ReachableVolumeLinkage(new vector<pair<double,double> >(linkLengths.begin() + lastEar, linkLengths.begin() + l_ear ), &m_RVSpaceJointConstraints, m_nAttempts, loop));
-	  
+
 	  rv->m_baseJointID=nextJointID;
 	  nextJointID=l_ear+1;
 	  if(m_debug) cout<<"adding subchain of length"<<rv->m_linkLengths->size()<<endl;
@@ -173,11 +179,11 @@ class ReachableVolumeRobot{
     shared_ptr<ReachableVolumeLinkage> rv(new ReachableVolumeLinkage(links_for_linkage, &m_RVSpaceJointConstraints, m_nAttempts, loop));
     rv->m_baseJointID=nextJointID;
     if(m_debug) cout<<"adding final subchain of length"<<rv->m_linkLengths->size()<<endl;
-    m_RVLinkages.push_back(rv);							
+    m_RVLinkages.push_back(rv);
     m_RVLinkages.front()->setReachableVolumes(m_earParentLinks, m_RVLinkages, _treeStructure);
   }
-  
-  
+
+
 
 
   void getEarAngles(shared_ptr<ReachableVolumeLinkage> &_rvNode, double &_theta, double &_psi){
@@ -206,7 +212,7 @@ class ReachableVolumeRobot{
       for(vector<shared_ptr<ReachableVolumeJointTreeNode> >::iterator i = childrenQueue.front()->m_children.begin(); i!=childrenQueue.front()->m_children.end(); i++){
         childrenQueue.push(*i);
       }
-      
+
       childrenQueue.pop();
     }
     //(*_sample)[0]=(0,0,0);
@@ -275,7 +281,7 @@ class ReachableVolumeRobot{
     return _sample;
   }
 
-  
+
   shared_ptr<vector<double> > getInternalCFGCoordinates(){
     shared_ptr<deque<Vector3d> > sample(new deque<Vector3d>(m_nLinks+1));
     computeReachableVolumeSample(sample);
@@ -284,7 +290,7 @@ class ReachableVolumeRobot{
 
 
   inline vector<double> *convertToJointAngleSample(const vector<Vector3d> &_sample){
-    vector<double> *cfg_data = new vector<double>; 
+    vector<double> *cfg_data = new vector<double>;
     int linkageRoot;
     vector<Vector3d>::const_iterator front;
     vector<Vector3d>::const_iterator back;
@@ -355,7 +361,7 @@ class ReachableVolumeRobot{
     int nextFromSample=0;
     for(unsigned int i=0; i<=m_earParentLinks.size(); i++){
       if(i!=0){
-	linkageRoot = m_earParentLinks[i-1]+1;    
+	linkageRoot = m_earParentLinks[i-1]+1;
 	back = front + m_RVLinkages[i]->m_linkLengths->size();
 	subset->clear();
         for(unsigned int k=0; k<m_RVLinkages[i]->m_linkLengths->size(); k++){
@@ -363,7 +369,7 @@ class ReachableVolumeRobot{
           nextFromSample++;
         }
       }else{
-	front = sample->begin();     
+	front = sample->begin();
 	back = front + m_RVLinkages[i]->m_linkLengths->size();
 	refVectorLinkage=refVectorRobot;
 	subset->clear();
@@ -382,7 +388,7 @@ class ReachableVolumeRobot{
       }
       shared_ptr<vector<double> > cfg_data_linkage = m_RVLinkages[i]->getInternalCFGCoordinates(subset,refVectorLinkage);
       if(m_RVLinkages[i]->m_loop){
-	//angle between last and first link in loop.  
+	//angle between last and first link in loop.
 	//not used while computing body positions so setting them to 0 (should go back and set them to values for angles later)
 	cfg_data_linkage->push_back(0);
 	cfg_data_linkage->push_back(0);
@@ -398,7 +404,7 @@ class ReachableVolumeRobot{
   }
 
   shared_ptr<vector<shared_ptr<ReachableVolumeJoint> > > computeReachableVolumesAllPoints(){
-    vector<shared_ptr<ReachableVolumeJoint> > rv_joints;  
+    vector<shared_ptr<ReachableVolumeJoint> > rv_joints;
     shared_ptr<vector<shared_ptr<ReachableVolumeJoint> > > rv_joint_robot(new vector<shared_ptr<ReachableVolumeJoint> >);  //reachable volumes to be returned
     bool changed = true;
     int jointID=0;
@@ -421,7 +427,7 @@ class ReachableVolumeRobot{
       changed = false;
       int jointID=0;
       for(unsigned int j=0; j<m_RVLinkages.size(); j++){
-	shared_ptr<ReachableVolumeLinkage> rvl = m_RVLinkages[j];      
+	shared_ptr<ReachableVolumeLinkage> rvl = m_RVLinkages[j];
 	int iterations = rvl->m_linkLengths->size();
 	if(j==0) iterations++;
 	for(int i=0; i<iterations; i++){
@@ -434,7 +440,7 @@ class ReachableVolumeRobot{
 	    }
 	    delete tmp;
 	  }
-		  
+
 	  if(i+1!=iterations){
             double first = (*(rvl->m_linkLengths))[i+1].first;
             double second = (*(rvl->m_linkLengths))[i+1].second;
@@ -444,7 +450,7 @@ class ReachableVolumeRobot{
             }
             delete tmp;
 	  }
-	
+
 	  //check for linkages rooted at
 	  vector<shared_ptr<ReachableVolumeLinkage> > *linkagesRootedAt = ReachableVolumeLinkage::getLinkagesRootedAt(m_earParentLinks, m_RVLinkages, jointID);
 	  for(unsigned int k=0; k<linkagesRootedAt->size(); k++){
@@ -462,7 +468,7 @@ class ReachableVolumeRobot{
               changed=true;
             }
             delete tmp;
-	  }									    
+	  }
 	  if(m_debug){
             cout<<endl<<"Constraint "<<jointID<<endl;
             (*rv_joint_robot)[jointID]->print();
@@ -470,7 +476,7 @@ class ReachableVolumeRobot{
           }
 	  jointID++;
 	}
-	  
+
 	if(rvl->m_loop){
 	  if((*rv_joint_robot)[rvl->m_baseJointID-1]->addConstraint((*rv_joint_robot)[rvl->m_baseJointID+iterations-2])){
 	    changed = true;
@@ -539,7 +545,7 @@ class ReachableVolumeRobot{
     }
   }
 
- 
+
   //Petrurb _node then check if decendants of joint are still fesiable (and resample if they are not)
   //note that _node and _perturbTowards are workspace coordinates not rvspace coordinates
   bool perturbJoint(vector<Vector3d> &_node, const int _jointID, const Vector3d &_perturbTowards, double _delta, string _repositionPolicy = "Random"){
@@ -585,7 +591,7 @@ class ReachableVolumeRobot{
   }
 
 
- 
+
 
   bool resampleIfOutOfRv(vector<Vector3d> &_sample, shared_ptr<ReachableVolumeJointTreeNode> &_rvjJointId, string _repositionPolicy="Random"){
     if(_rvjJointId->m_jointID==-1)

@@ -7,6 +7,13 @@
 #include "Utilities/MPUtils.h"
 #include "ParallelMethods/WorkFunctions/RadialUtils.h"
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup MotionPlanningStrategies
+/// @brief TODO
+/// @tparam MPTraits Motion planning universe
+///
+/// TODO
+////////////////////////////////////////////////////////////////////////////////
 template<class MPTraits>
 class BlindRRT : public MPStrategyMethod<MPTraits> {
   public:

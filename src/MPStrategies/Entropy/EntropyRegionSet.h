@@ -4,6 +4,14 @@
 #include "EntropyRegion.h"
 static int RegionSetID_val = 0;
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup MotionPlanningStrategyUtils
+/// @ingroup DeadCode
+/// @brief TODO Dead Code
+///
+/// TODO
+/// @todo Dead code. Figure out what to do with this.
+////////////////////////////////////////////////////////////////////////////////
 template <class CFG>
 class CRegionSet {
  public:

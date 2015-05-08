@@ -3,6 +3,14 @@
 
 #include "PartitioningMethod.h"
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup RegionDecomposition
+/// @ingroup DeadCode
+/// @brief TODO Dead Code
+///
+/// TODO
+/// @todo Dead code. Figure out what to do with this.
+////////////////////////////////////////////////////////////////////////////////
 class HierarchicalClustering : public PartitioningMethod
 {
  public:

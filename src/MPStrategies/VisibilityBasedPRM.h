@@ -1,25 +1,26 @@
-/*
- *  This method constructs a roadmap based on visibility:
- *
- *  Nodes are sampled one at a time, and will be classified as either guards
- *    or connections.
- *  If the new node is not visible to any guard, it becomes a guard.  Guards map
- *    the visibilty of the environment.  They can be connected by connection
- *    nodes to form connected components, but no guard is visible to another
- *    guard.
- *  If the new node is visible from two or more guard CCs, it becomes a
- *    connection.  It will be connected to one visible guard node in each CC.
- *    Those CCs will then be merged into a single CC through the connection
- *    node.
- *  If the new node is visible from only one guard set, it is discarded.
- *
- */
 #ifndef VISIBILITYBASEDPRM_H_
 #define VISIBILITYBASEDPRM_H_
 
 #include "MPStrategyMethod.h"
 #include "Utilities/IOUtils.h"
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup MotionPlanningStrategies
+/// @brief Constructs roadmap based upon visibility
+/// @tparam MPTraits Motion planning universe
+///
+///  Nodes are sampled one at a time, and will be classified as either guards
+///    or connections.
+///  If the new node is not visible to any guard, it becomes a guard.  Guards map
+///    the visibilty of the environment.  They can be connected by connection
+///    nodes to form connected components, but no guard is visible to another
+///    guard.
+///  If the new node is visible from two or more guard CCs, it becomes a
+///    connection.  It will be connected to one visible guard node in each CC.
+///    Those CCs will then be merged into a single CC through the connection
+///    node.
+///  If the new node is visible from only one guard set, it is discarded.
+////////////////////////////////////////////////////////////////////////////////
 template<class MPTraits>
 class VisibilityBasedPRM : public MPStrategyMethod<MPTraits> {
   public:

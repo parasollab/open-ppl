@@ -15,10 +15,12 @@ using namespace std;
 #define TWO_PI  6.2831853072
 
 ////////////////////////////////////////////////////////////////////////////////
-/// @ingroup ReachableCfgs
-/// @brief TODO
+/// @ingroup ReachableUtils
+/// @ingroup DeadCode
+/// @brief TODO Dead Code
 ///
 /// TODO
+/// @todo Dead code. Figure out what to do with this.
 ////////////////////////////////////////////////////////////////////////////////
 struct Range
 {
@@ -50,10 +52,11 @@ class Link;
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// @ingroup ReachableCfgs
+/// @ingroup ReachableUtils
 /// @brief TODO
 ///
 /// TODO
+/// @todo Dead code. Figure out what to do with this.
 ////////////////////////////////////////////////////////////////////////////////
 struct FamilyInfo
 {
@@ -65,10 +68,11 @@ struct FamilyInfo
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// @ingroup ReachableCfgs
+/// @ingroup ReachableUtils
 /// @brief TODO
 ///
 /// TODO
+/// @todo Dead code. Figure out what to do with this.
 ////////////////////////////////////////////////////////////////////////////////
 class Link
 {
@@ -181,13 +185,49 @@ public:
 };
 
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup ReachableUtils
+/// @brief TODO
+///
+/// TODO
+/// @todo Dead code. Figure out what to do with this.
 Link *BuildTree(int i, int j, vector<Link*>& baseLinks );
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup ReachableUtils
+/// @brief TODO
+///
+/// TODO
+/// @todo Dead code. Figure out what to do with this.
 double CosineAngle(double a, double b, double c);
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup ReachableUtils
+/// @brief TODO
+///
+/// TODO
+/// @todo Dead code. Figure out what to do with this.
 Range RangeIntersection(const Range &r1, const Range &r2);
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup ReachableUtils
+/// @brief TODO
+///
+/// TODO
+/// @todo Dead code. Figure out what to do with this.
 Range RangeUnion(const Range &r1, const Range &r2);
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup ReachableUtils
+/// @brief TODO
+///
+/// TODO
+/// @todo Dead code. Figure out what to do with this.
 Range RangePlus(const Range &r1, const Range &r2);
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup ReachableUtils
+/// @brief TODO
+///
+/// TODO
+/// @todo Dead code. Figure out what to do with this.
 Range RangeMinus(const Range &r1, const Range &r2);
 
 #endif

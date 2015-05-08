@@ -3,6 +3,13 @@
 
 #include "MPStrategies/MPStrategyMethod.h"
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup MotionPlanningStrategies
+/// @brief TODO
+/// @tparam MPTraits Motion planning universe
+///
+/// TODO
+////////////////////////////////////////////////////////////////////////////////
 template<class MPTraits>
 class EvaluateMapStrategy : public MPStrategyMethod<MPTraits> {
   public:

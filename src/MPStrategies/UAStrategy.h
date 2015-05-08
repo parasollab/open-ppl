@@ -9,6 +9,14 @@
 class PartitionTree;
 class Partition;
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup MotionPlanningStrategyUtils
+/// @ingroup DeadCode
+/// @brief TODO Dead Code
+///
+/// TODO
+/// @todo Dead code. Figure out what to do with this.
+////////////////////////////////////////////////////////////////////////////////
 class UASContainer : public MPSMContainer {
   public:
     UASContainer (MPSMContainer cont = MPSMContainer()) : MPSMContainer(cont), parent(cont) {} //Container for more readabble MPStrategyMethod constructor
@@ -26,6 +34,14 @@ class UASContainer : public MPSMContainer {
 
 };
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup MotionPlanningStrategies
+/// @ingroup DeadCode
+/// @brief TODO Dead Code
+///
+/// TODO
+/// @todo Dead code. Figure out what to do with this.
+////////////////////////////////////////////////////////////////////////////////
 class UAStrategy : public MPStrategyMethod {
  public:
    UAStrategy(UASContainer cont) : MPStrategyMethod(cont) {

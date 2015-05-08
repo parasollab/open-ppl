@@ -5,10 +5,11 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup MapEvaluators
-/// @brief TODO.
-/// @tparam MPTraits Motion planning universe
+/// @ingroup DeadCode
+/// @brief TODO Dead Code
 ///
-/// TODO.
+/// TODO
+/// @todo Dead code. Figure out what to do with this.
 ////////////////////////////////////////////////////////////////////////////////
 template <class CFG, class WEIGHT, class CAPACITY>
 class MaxFlowEvaluation : public MapEvaluationMethod<CFG,WEIGHT> {

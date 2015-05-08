@@ -18,6 +18,14 @@ template<class CFG, class WEIGHT> class MPRegion;
 template<class CFG, class WEIGHT> class ConnectCCs;
 
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup ParallelMethods
+/// @ingroup DeadCode
+/// @brief TODO Dead Code
+///
+/// TODO
+/// @todo Dead code. Figure out what to do with this.
+////////////////////////////////////////////////////////////////////////////////
 class AdaptiveSubdivisionMethod : public MPStrategyMethod {
   public:
     AdaptiveSubdivisionMethod(XMLNode& _node, MPProblem* _problem);

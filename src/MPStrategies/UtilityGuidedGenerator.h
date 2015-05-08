@@ -3,6 +3,13 @@
 
 #include "MPStrategyMethod.h"
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup MotionPlanningStrategyUtils
+/// @brief TODO
+/// @tparam MPTraits Motion planning universe
+///
+/// TODO
+////////////////////////////////////////////////////////////////////////////////
 template <class MPTraits>
 struct ApproximateCSpaceModel {
   typedef typename MPTraits::CfgType CfgType;
@@ -31,7 +38,13 @@ struct ApproximateCSpaceModel {
   }
 };
 
-
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup MotionPlanningStrategies
+/// @brief TODO
+/// @tparam MPTraits Motion planning universe
+///
+/// TODO
+////////////////////////////////////////////////////////////////////////////////
 template <class MPTraits>
 class UtilityGuidedGenerator : public MPStrategyMethod<MPTraits> {
  public:

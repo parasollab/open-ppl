@@ -26,6 +26,14 @@ enum SCHEDULING_MODE {LARGEST_TO_SMALLEST, SMALLEST_TO_LARGEST, CLOSEST_TO_FARTH
 #include "DistanceMetrics.h"
 #include "LocalPlanners.h"
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup Connectors
+/// @ingroup DeadCode
+/// @brief TODO Dead Code
+///
+/// TODO
+/// @todo Dead code. Figure out what to do with this.
+////////////////////////////////////////////////////////////////////////////////
 template <class CFG>
 class RayCSpace {
  public:
@@ -289,6 +297,14 @@ void RayCSpace<CFG>::setTargetVector(vector<CFG> *target_vector) {
 #define MAX_BOUNCES 10000
 #define MAX_RAY_LENGTH 10000
 #define MAX_RAYS 1
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup Connectors
+/// @ingroup DeadCode
+/// @brief TODO Dead Code
+///
+/// TODO
+/// @todo Dead code. Figure out what to do with this.
+////////////////////////////////////////////////////////////////////////////////
 template <class CFG, class WEIGHT>
 class RayTracer: public ConnectionMethod<CFG,WEIGHT> {
  public:

@@ -3,6 +3,14 @@
 
 #include "Partition.h"
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup RegionDecomposition
+/// @ingroup DeadCode
+/// @brief TODO Dead Code
+///
+/// TODO
+/// @todo Dead code. Figure out what to do with this.
+////////////////////////////////////////////////////////////////////////////////
 class PartitioningEvaluator : public MPBaseObject{
  public:
    PartitioningEvaluator():MPBaseObject(){}

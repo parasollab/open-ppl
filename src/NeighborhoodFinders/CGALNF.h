@@ -18,9 +18,11 @@ typedef CGAL::Cartesian_d<double> K;
 
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup NeighborhoodFinderUtils
-/// @brief TODO
+/// @ingroup DeadCode
+/// @brief TODO Dead Code
 ///
 /// TODO
+/// @todo Dead code. Figure out what to do with this.
 ////////////////////////////////////////////////////////////////////////////////
 class PMPLPointD : public K::Point_d {
   public:
@@ -44,10 +46,11 @@ typedef PMPLPointD PointD;
 
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup NeighborhoodFinders
-/// @brief TODO
-/// @tparam MPTraits Motion planning universe
+/// @ingroup DeadCode
+/// @brief TODO Dead Code
 ///
 /// TODO
+/// @todo Dead code. Figure out what to do with this.
 ////////////////////////////////////////////////////////////////////////////////
 class CGALNF: public NeighborhoodFinderMethod {
   public:

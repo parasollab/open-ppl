@@ -675,6 +675,7 @@ INPUT                  = Overview.doc \
                          Groups/Core.doc \
                          Groups/AlgorithmAbstractions.doc \
                          Groups/ParallelMethods.doc \
+                         Groups/DeadCode.doc \
                          ../../src/ \
                          ../../utils/mathtool \
                          ../../utils/modelloader

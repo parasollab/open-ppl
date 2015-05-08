@@ -14,13 +14,12 @@
 using namespace psbmp;
 using namespace stapl;
 
-/*
-     typedef RoadmapGraph<CfgType,WeightType> rGraph;
-     typedef rGraph::vertex_iterator rGraphIterator;
-     typedef graph_view<rGraph>  gviewType;
-     typedef pair<VID, double> NFType;
-     */
-
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup ParallelMethods
+/// @brief TODO
+///
+/// TODO
+////////////////////////////////////////////////////////////////////////////////
 template<class MPTraits>
 class NFMapFunc {
   private:
@@ -98,6 +97,12 @@ class NFMapFunc {
       }
 };
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup ParallelMethods
+/// @brief TODO
+///
+/// TODO
+////////////////////////////////////////////////////////////////////////////////
 template<class MPTraits>
 struct NFReduceFunc {
   typedef typename MPTraits::MPProblemType MPProblemType;
@@ -138,6 +143,12 @@ struct NFReduceFunc {
   size_t m_k;
 };
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup ParallelMethods
+/// @brief TODO
+///
+/// TODO
+////////////////////////////////////////////////////////////////////////////////
 template<class MPTraits>
 class NFMapFuncRRRT {
   private:
@@ -215,6 +226,12 @@ class NFMapFuncRRRT {
       }
 };
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup ParallelMethods
+/// @brief TODO
+///
+/// TODO
+////////////////////////////////////////////////////////////////////////////////
 template<class MPTraits>
 struct NFReduceFuncRRRT {
   typedef typename MPTraits::MPProblemType MPProblemType;

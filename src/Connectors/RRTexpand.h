@@ -9,6 +9,14 @@
 #define CLEARANCE_FROM_NODE 1
 
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup Connectors
+/// @ingroup DeadCode
+/// @brief TODO Dead Code
+///
+/// TODO
+/// @todo Dead code. Figure out what to do with this.
+////////////////////////////////////////////////////////////////////////////////
 template <class CFG, class WEIGHT>
 class RRTexpand: public ComponentConnectionMethod<CFG,WEIGHT> {
  public:

@@ -6,6 +6,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup Extenders
 /// @brief Extend tangent to a workspace obstacle and then push to the medial axis.
+/// @tparam MPTraits Motion planning universe
 ///
 /// This performs the same as @c TraceObstacle but after the target
 /// configuration has been pushed in the obstacle direction, it is then pushed

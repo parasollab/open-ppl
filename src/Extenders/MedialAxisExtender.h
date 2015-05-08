@@ -6,6 +6,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup Extenders
 /// @brief Extends along medial axis of @cfree.
+/// @tparam MPTraits Motion planning universe
 ///
 /// Extend along the medial axis of @cfree from \f$q_{near}\f$ towards
 /// \f$q_{dir}\f$ until either \f$q_{dir}\f$ is reached, a distance of

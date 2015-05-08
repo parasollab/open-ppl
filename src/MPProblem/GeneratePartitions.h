@@ -1,12 +1,3 @@
-////////////////////////////////////////////////////////////////////////////////////////
-/**GeneratePartitions.h
-  *This set of classes supports Partitioning of Bounding Box into pieces.
-  *Generate Partitions from existing bounding box.
-  *
-  * Marco Morales, Sam Rodriguez
-  */
-//////////////////////////////////////////////////////////////////////////////////////////
-
 #ifndef PARTITIONSCHEMA_H
 #define PARTITIONSCHEMA_H
 
@@ -24,6 +15,14 @@ template <class CFG, class WEIGHT> class MPRegion;
 
 class BoundingBox;
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup RegionDecomposition
+/// @ingroup DeadCode
+/// @brief TODO Dead Code
+///
+/// TODO
+/// @todo Dead code. Figure out what to do with this.
+////////////////////////////////////////////////////////////////////////////////
 template <class CFG>
 class FSPartitioningMethod {
  public:
@@ -84,11 +83,14 @@ DisplayDetails( string Strategy, int BoxSize, int DOF, int NumPartition) {
   cout << "Subregions: " << NumPartition << endl;
 }
 
-
-
-
-
-
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup RegionDecomposition
+/// @ingroup DeadCode
+/// @brief TODO Dead Code
+///
+/// TODO
+/// @todo Dead code. Figure out what to do with this.
+////////////////////////////////////////////////////////////////////////////////
 template <class CFG>
 class RandomPartitioning: public FSPartitioningMethod<CFG> {
  public:
@@ -213,6 +215,14 @@ PlaceBoundaries(Environment* _env, StatClass& Stats,
 }
 
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup RegionDecomposition
+/// @ingroup DeadCode
+/// @brief TODO Dead Code
+///
+/// TODO
+/// @todo Dead code. Figure out what to do with this.
+////////////////////////////////////////////////////////////////////////////////
 template <class CFG>
 class GapPartitioning: public FSPartitioningMethod<CFG> {
  public:
@@ -630,9 +640,14 @@ FindMaxGapForDim(int Dim, vector<CFG>& nodes, double &gap_width)
   return( gap_start );
 }
 
-
-
-
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup RegionDecomposition
+/// @ingroup DeadCode
+/// @brief TODO Dead Code
+///
+/// TODO
+/// @todo Dead code. Figure out what to do with this.
+////////////////////////////////////////////////////////////////////////////////
 template <class CFG>
 class InformationGainPartitioning: public FSPartitioningMethod<CFG> {
  public:
@@ -997,8 +1012,14 @@ EvaluatePartitionPoint(vector<double> partition_points, vector<double> proj_free
   return result;
 }
 
-
-
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup RegionDecomposition
+/// @ingroup DeadCode
+/// @brief TODO Dead Code
+///
+/// TODO
+/// @todo Dead code. Figure out what to do with this.
+////////////////////////////////////////////////////////////////////////////////
 template <class CFG>
 class PartitionCSpaceRegion {
  public:

@@ -4,6 +4,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup Extenders
 /// @brief Base algorithm abstraction for \ref Extenders.
+/// @tparam MPTraits Motion planning universe
 ///
 /// ExtenderMethod has one main method, @c Extend, to grow a simple path from a
 /// starting node in some input direction - note that not all expansion

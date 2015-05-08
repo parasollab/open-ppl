@@ -1,7 +1,3 @@
-//////////////////////////////////
-//HEADER RadialBlindRRT.h
-/////////////////////////////////
-
 #ifndef RADIALBLINDRRT_H_
 #define RADIALBLINDRRT_H_
 
@@ -10,6 +6,13 @@
 #include "RadialSubdivisionRRT.h"
 
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup ParallelMethods
+/// @brief TODO
+/// @tparam MPTraits Motion planning universe
+///
+/// TODO
+////////////////////////////////////////////////////////////////////////////////
 template<class MPTraits>
 class RadialBlindRRT : public RadialSubdivisionRRT<MPTraits> {
   public:

@@ -5,6 +5,14 @@
 #include "NonDecomposition.h"
 using namespace std;
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup ParallelMethods
+/// @ingroup DeadCode
+/// @brief TODO Dead Code
+///
+/// TODO
+/// @todo Dead code. Figure out what to do with this.
+////////////////////////////////////////////////////////////////////////////////
 class rmap_rrt_wf {
  private:
   typedef MPRegion<CfgType,WeightType>  MPR_type;
@@ -43,6 +51,14 @@ class rmap_rrt_wf {
   }
 };
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup ParallelMethods
+/// @ingroup DeadCode
+/// @brief TODO Dead Code
+///
+/// TODO
+/// @todo Dead code. Figure out what to do with this.
+////////////////////////////////////////////////////////////////////////////////
 class region_rrt_con_wf {
  private:
   typedef MPRegion<CfgType,WeightType>  MPR_type;
@@ -99,6 +115,14 @@ stapl::sequential::vector_property_map<RoadmapGraph<CfgType, WeightType>::GRAPH,
 };
 
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup ParallelMethods
+/// @ingroup DeadCode
+/// @brief TODO Dead Code
+///
+/// TODO
+/// @todo Dead code. Figure out what to do with this.
+////////////////////////////////////////////////////////////////////////////////
 class region_rrt_edge_wf {
  private:
   typedef MPRegion<CfgType,WeightType> MPR_type;
@@ -183,6 +207,12 @@ class region_rrt_edge_wf {
 };
 
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup DeadCode
+/// @brief TODO Dead Code
+///
+/// TODO
+/// @todo Dead code. Figure out what to do with this.
 template<typename View, typename bbView>
   void constructRRTRoadmap(View& view, bbView& bb_view, MPRegion<CfgType,WeightType>* _region,
 			   SRTStrategy* _strategy, int in_regionID,
@@ -191,6 +221,12 @@ template<typename View, typename bbView>
   stapl::map_func(wf,stapl::balance_view(view,stapl::get_num_locations()),stapl::balance_view(bb_view,stapl::get_num_locations()));
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup DeadCode
+/// @brief TODO Dead Code
+///
+/// TODO
+/// @todo Dead code. Figure out what to do with this.
 template<typename PartitionedView>
   void connectRRTRegion(PartitionedView& v1, MPRegion<CfgType,WeightType>* _region,
 			LocalPlanners<CfgType, WeightType>* _lp,Connector<CfgType,
@@ -200,6 +236,12 @@ template<typename PartitionedView>
   stapl::map_func(wf, v1);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup DeadCode
+/// @brief TODO Dead Code
+///
+/// TODO
+/// @todo Dead code. Figure out what to do with this.
 template<typename PartitionedView, typename rmView>
   void determineRGEdges(PartitionedView& v1, rmView& v2,
 			MPRegion<CfgType,WeightType>* _region,
@@ -211,6 +253,14 @@ template<typename PartitionedView, typename rmView>
   stapl::map_func(wf, v1,v2);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup ParallelMethods
+/// @ingroup DeadCode
+/// @brief TODO Dead Code
+///
+/// TODO
+/// @todo Dead code. Figure out what to do with this.
+////////////////////////////////////////////////////////////////////////////////
 class ParallelSRTStrategy : public MPStrategyMethod {
 
  public:

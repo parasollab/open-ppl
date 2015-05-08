@@ -10,15 +10,21 @@ using namespace std;
 using namespace stapl;
 using namespace psbmp;
 
-
-
-
-
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup ParallelMethods
+/// @brief TODO
+///
+/// TODO
 template <class T>
 struct RegionCCSort : public std::binary_function<T, T, bool> {
   bool operator()(T x, T y) { return x.second > y.second; }
 };
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup ParallelMethods
+/// @brief TODO
+///
+/// TODO
 ///DEGUG
 struct size_wf {
   typedef size_t result_type;
@@ -32,6 +38,11 @@ struct size_wf {
   }
 };
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup ParallelMethods
+/// @brief TODO
+///
+/// TODO
 template<class MPTraits>
 struct locVec {
 
@@ -45,6 +56,11 @@ struct locVec {
   }
 };
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup ParallelMethods
+/// @brief TODO
+///
+/// TODO
 template<class MPTraits>
 struct mergeVec {
 
@@ -64,10 +80,14 @@ struct mergeVec {
   }
 };
 
-/**
- * Custom vertex property that implements coloring should extend Cfg class
-   for internal coloring
- */
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup ParallelMethods
+/// @brief TODO
+///
+/// TODO
+///
+/// Custom vertex property that implements coloring should extend Cfg class
+/// for internal coloring
  struct cc_color_property {
   size_t color, cc;
   cc_color_property() : color(0), cc(0) { }
@@ -111,7 +131,13 @@ public:
 };
 };
 
-//TODO: Combine the two set cc workfunctions
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup ParallelMethods
+/// @brief TODO
+///
+/// TODO
+/// TODO: Combine the two set cc workfunctions
+////////////////////////////////////////////////////////////////////////////////
 template<class MPTraits>
 struct SetRegionCC{
 
@@ -131,6 +157,12 @@ struct SetRegionCC{
  }
 };
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup ParallelMethods
+/// @brief TODO
+///
+/// TODO
+////////////////////////////////////////////////////////////////////////////////
 template<class MPTraits>
 struct SetRegionCCVIDS{
 
@@ -150,6 +182,12 @@ struct SetRegionCCVIDS{
  }
 };
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup ParallelMethods
+/// @brief TODO
+///
+/// TODO
+////////////////////////////////////////////////////////////////////////////////
 template<typename RGType, typename RType, class MPTraits>
 class RegionCCConnector
 {
@@ -237,6 +275,12 @@ class RegionCCConnector
 };
 
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup ParallelMethods
+/// @brief TODO
+///
+/// TODO
+////////////////////////////////////////////////////////////////////////////////
 template<typename RGType, typename RType, class MPTraits>
 class RegionRandomConnector
 {

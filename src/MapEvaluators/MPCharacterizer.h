@@ -5,9 +5,11 @@ class MPProblem;
 
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup MapEvaluators
-/// @brief TODO.
+/// @ingroup DeadCode
+/// @brief TODO Dead Code
 ///
-/// TODO. Also TODO update templates.
+/// TODO
+/// @todo Dead code. Figure out what to do with this.
 ////////////////////////////////////////////////////////////////////////////////
 template<typename CFG,typename WEIGHT>
 class NodeCharacterizerMethod : public MPBaseObject {
@@ -24,6 +26,14 @@ class NodeCharacterizerMethod : public MPBaseObject {
 };
 
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup MapEvaluators
+/// @ingroup DeadCode
+/// @brief TODO Dead Code
+///
+/// TODO
+/// @todo Dead code. Figure out what to do with this.
+////////////////////////////////////////////////////////////////////////////////
 template<typename CFG,typename WEIGHT>
 class CCExpandCharacterizer : public NodeCharacterizerMethod<CFG,WEIGHT> {
   public:
@@ -89,6 +99,14 @@ class CCExpandCharacterizer : public NodeCharacterizerMethod<CFG,WEIGHT> {
 
 
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup MapEvaluators
+/// @ingroup DeadCode
+/// @brief TODO Dead Code
+///
+/// TODO
+/// @todo Dead code. Figure out what to do with this.
+////////////////////////////////////////////////////////////////////////////////
 template<typename CFG,typename WEIGHT>
 class LocalNodeInfoCharacterizer : public NodeCharacterizerMethod<CFG,WEIGHT> {
   public:
@@ -182,6 +200,14 @@ class LocalNodeInfoCharacterizer : public NodeCharacterizerMethod<CFG,WEIGHT> {
 
 
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup MapEvaluators
+/// @ingroup DeadCode
+/// @brief TODO Dead Code
+///
+/// TODO
+/// @todo Dead code. Figure out what to do with this.
+////////////////////////////////////////////////////////////////////////////////
 template<typename CFG, typename WEIGHT>
 class MPCharacterizer : public MPBaseObject {
 public:

@@ -4,8 +4,15 @@
 #include "ParallelSBMPHeader.h"
 #include "WorkFunctions/RadialRRT.h"
 
-///TODO check correctness of region creation (uniformly divided regions)
-///TODO Resurrect remove_cycles somehow
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup ParallelMethods
+/// @brief TODO
+/// @tparam MPTraits Motion planning universe
+///
+/// TODO
+/// TODO check correctness of region creation (uniformly divided regions)
+/// TODO Resurrect remove_cycles somehow
+////////////////////////////////////////////////////////////////////////////////
 template<class MPTraits>
 class RadialSubdivisionRRT : public MPStrategyMethod<MPTraits> {
   public:

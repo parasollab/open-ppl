@@ -16,6 +16,14 @@ namespace pmpl_detail {
       > DecompositionMethodList;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup RegionDecomposition
+/// @ingroup DeadCode
+/// @brief TODO Dead Code
+///
+/// TODO
+/// @todo Dead code. Figure out what to do with this.
+////////////////////////////////////////////////////////////////////////////////
 template <class CFG>
 class Decomposer : private ElementSet<DecompositionMethod>, public MPBaseObject {
   public:

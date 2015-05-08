@@ -16,6 +16,14 @@ using namespace psbmp;
 using namespace stapl;
 using namespace std;
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup ParallelMethods
+/// @ingroup DeadCode
+/// @brief TODO Dead Code
+///
+/// TODO
+/// @todo Dead code. Figure out what to do with this.
+////////////////////////////////////////////////////////////////////////////////
 class ConstructAdaptiveRegion {
 
 private:
@@ -64,6 +72,14 @@ public:
   }
 };
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup ParallelMethods
+/// @ingroup DeadCode
+/// @brief TODO Dead Code
+///
+/// TODO
+/// @todo Dead code. Figure out what to do with this.
+////////////////////////////////////////////////////////////////////////////////
 class ConstructInnerRegionMap {
 private:
   typedef MPRegion<CfgType,WeightType>  MPR;
@@ -152,6 +168,14 @@ public:
   }
 };
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup ParallelMethods
+/// @ingroup DeadCode
+/// @brief TODO Dead Code
+///
+/// TODO
+/// @todo Dead code. Figure out what to do with this.
+////////////////////////////////////////////////////////////////////////////////
 class ConstructOuterRegion {
 private:
   typedef MPRegion<CfgType,WeightType>  MPR;

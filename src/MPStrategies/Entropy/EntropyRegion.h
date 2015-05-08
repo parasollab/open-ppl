@@ -7,6 +7,14 @@ enum rtype { UNKNOWN=-1, FREE=0, TRANSITION=1, SURFACE=2, NARROW=4, BLOCKED=3};
 
 static int ID_val = 0;
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup MotionPlanningStrategyUtils
+/// @ingroup DeadCode
+/// @brief TODO Dead Code
+///
+/// TODO
+/// @todo Dead code. Figure out what to do with this.
+////////////////////////////////////////////////////////////////////////////////
 template <class CFG>
 struct Sample {
   Sample() {}
@@ -20,6 +28,14 @@ struct Sample {
   VID vid;
 };
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup MotionPlanningStrategyUtils
+/// @ingroup DeadCode
+/// @brief TODO Dead Code
+///
+/// TODO
+/// @todo Dead code. Figure out what to do with this.
+////////////////////////////////////////////////////////////////////////////////
 template <class CFG>
 struct less_distance : public binary_function<Sample<CFG>, Sample<CFG>, bool> {
   bool operator()(const Sample<CFG>& s1, const Sample<CFG>& s2) const {
@@ -27,6 +43,14 @@ struct less_distance : public binary_function<Sample<CFG>, Sample<CFG>, bool> {
   }
 };
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup MotionPlanningStrategyUtils
+/// @ingroup DeadCode
+/// @brief TODO Dead Code
+///
+/// TODO
+/// @todo Dead code. Figure out what to do with this.
+////////////////////////////////////////////////////////////////////////////////
 template <class CFG>
 struct equal_node : public binary_function<Sample<CFG>, Sample<CFG>, bool> {
   bool operator()(const Sample<CFG>& s1, const Sample<CFG>& s2) const {
@@ -34,6 +58,14 @@ struct equal_node : public binary_function<Sample<CFG>, Sample<CFG>, bool> {
   }
 };
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup MotionPlanningStrategyUtils
+/// @ingroup DeadCode
+/// @brief TODO Dead Code
+///
+/// TODO
+/// @todo Dead code. Figure out what to do with this.
+////////////////////////////////////////////////////////////////////////////////
 template <class CFG>
 class CRegion {
  public:

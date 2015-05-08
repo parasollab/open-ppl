@@ -12,9 +12,11 @@ class Environment;
 
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup NeighborhoodFinderUtils
-/// @brief TODO
+/// @ingroup DeadCode
+/// @brief TODO Dead Code
 ///
 /// TODO
+/// @todo Dead code. Figure out what to do with this.
 ////////////////////////////////////////////////////////////////////////////////
 template<typename CFGTYPE, typename WEIGHT>
 class vertexDistance{
@@ -32,9 +34,11 @@ public:
 
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup NeighborhoodFinderUtils
-/// @brief TODO
+/// @ingroup DeadCode
+/// @brief TODO Dead Code
 ///
 /// TODO
+/// @todo Dead code. Figure out what to do with this.
 ////////////////////////////////////////////////////////////////////////////////
 template<typename CFGTYPE, typename WEIGHT>
 class spillTreeNode{
@@ -72,9 +76,11 @@ class spillTreeNode{
 
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup NeighborhoodFinderUtils
-/// @brief TODO
+/// @ingroup DeadCode
+/// @brief TODO Dead Code
 ///
 /// TODO
+/// @todo Dead code. Figure out what to do with this.
 ////////////////////////////////////////////////////////////////////////////////
 template<typename CFGTYPE, typename WEIGHT>
 class spillTree{

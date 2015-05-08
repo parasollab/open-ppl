@@ -5,7 +5,14 @@
 #include "Roadmap.h"
 #include "CfgTypes.h"
 
-//define what a partition is
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup RegionDecomposition
+/// @ingroup DeadCode
+/// @brief TODO Dead Code
+///
+/// TODO
+/// @todo Dead code. Figure out what to do with this.
+////////////////////////////////////////////////////////////////////////////////
 class Partition
 {
  public:

@@ -12,9 +12,11 @@ using namespace std;
 
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup NeighborhoodFinderUtils
-/// @brief TODO
+/// @ingroup DeadCode
+/// @brief TODO Dead Code
 ///
 /// TODO
+/// @todo Dead code. Figure out what to do with this.
 ////////////////////////////////////////////////////////////////////////////////
 template<typename CFG, typename WEIGHT>
 class VID_DPES_proxy{
@@ -41,9 +43,11 @@ private:
 
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup NeighborhoodFinderUtils
-/// @brief TODO
+/// @ingroup DeadCode
+/// @brief TODO Dead Code
 ///
 /// TODO
+/// @todo Dead code. Figure out what to do with this.
 ////////////////////////////////////////////////////////////////////////////////
 template<typename CFG, typename WEIGHT>
 class CFG_DPES_Pivot_proxy{
@@ -69,9 +73,11 @@ private:
 
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup NeighborhoodFinderUtils
-/// @brief TODO
+/// @ingroup DeadCode
+/// @brief TODO Dead Code
 ///
 /// TODO
+/// @todo Dead code. Figure out what to do with this.
 ////////////////////////////////////////////////////////////////////////////////
 template<typename CFG, typename WEIGHT>
 class DistanceMetric_DPES_proxy {
@@ -109,9 +115,11 @@ private:
 
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup NeighborhoodFinders
-/// @brief TODO
+/// @ingroup DeadCode
+/// @brief TODO Dead Code
 ///
 /// TODO
+/// @todo Dead code. Figure out what to do with this.
 ////////////////////////////////////////////////////////////////////////////////
 template<typename CFG, typename WEIGHT>
 class DPESNF: public NeighborhoodFinderMethod {

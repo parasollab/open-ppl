@@ -1,25 +1,6 @@
 #ifndef MetaPlanner_h
 #define MetaPlanner_h
 
-/** @file MetaPlanner.h
- * @brief Metaplanner classes
- *
- * MetaPlanner implementation as in:
- * Marco Morales Proposal
- *
- * @author Marco Morales
- * @date 7/27/04
- * classes:
- *  MetaPlanner	abstract class (only interface)
- *  FeatureSensitive derived from MetaPlanner
- */
-
-
-/**
- * Metaplanner interface class.
- * It defines functions for creating roadmaps with a library of methods
- */
-
 #include<sys/time.h>
 
 #include "Roadmap.h"
@@ -32,42 +13,16 @@
 
 #include "GeneratePartitions.h"
 
-
 #include "MPRegion.h"
 
-//namespace mp {
-
-class ValidityTest {
- public:
-  ValidityTest() {
-    cout << " ValidityTest(). TODO ALL (make it virtual class) " << endl;
-  }
-  ~ValidityTest() {
-    cout << " ~ValidityTest(). TODO ALL " << endl;
-  }
-  void SetCD(CollisionDetection new_cd) {
-    cd = new_cd;
-  }
- private:
-  CollisionDetection cd;
-};
-
-
-class RoadmapFeature {
- public:
-  RoadmapFeature(){
-    cout << " RoadmapFeature(). TODO ALL " << endl;
-  }
-  ~RoadmapFeature(){
-    cout << " ~RoadmapFeature(). TODO ALL " << endl;
-  }
- private:
-  string name;
-  string value;
-  string type;
-};
-
-
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup MotionPlanningStrategyUtils
+/// @ingroup DeadCode
+/// @brief TODO Dead Code
+///
+/// TODO
+/// @todo Dead code. Figure out what to do with this.
+////////////////////////////////////////////////////////////////////////////////
 template<class CFG, class WEIGHT>
 class CSpaceCharacterizer {
  public:
@@ -147,7 +102,7 @@ class CSpaceCharacterizer {
   Connector<CFG,WEIGHT> cm_features;
   LocalPlanners<CFG,WEIGHT> lp_features;
   DistanceMetric &dm;
-  CollisionDetection &cd; /*ValidityTest &vt*/
+  CollisionDetection &cd;
   Environment &env;
 
   bool addPartialEdge, addAllEdges;
@@ -164,11 +119,14 @@ class CSpaceCharacterizer {
  string environment_name;
 };
 
-
-
-
-
-
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup MotionPlanningStrategies
+/// @ingroup DeadCode
+/// @brief TODO Dead Code
+///
+/// TODO
+/// @todo Dead code. Figure out what to do with this.
+////////////////////////////////////////////////////////////////////////////////
 template <class CFG, class WEIGHT>
 class MetaPlanner {
  public:
@@ -214,7 +172,6 @@ class MetaPlanner {
 
   bool addPartialEdge, addAllEdges; //@todo replace by MPStrategy::... (which will be moved to Connector
 
-  //ValidityTest vt;
   CollisionDetection cd; //@todo replace by MPProblem::m_pProblem::...
   Environment env;
 
@@ -483,8 +440,6 @@ PrintDefaults(ostream& _os) {
 /*   _os << "\n\n"; */
 /* } */
 
-//}
-
 template <class CFG, class WEIGHT>
 void MetaPlanner<CFG,WEIGHT>::
 FeatureSensitiveMap(MPRegion<CFG,WEIGHT>* region, int tree_node_height, int maximum_tree_height, double epsilon) {
@@ -545,16 +500,4 @@ FeatureSensitiveMap(MPRegion<CFG,WEIGHT>* region, int tree_node_height, int maxi
   cout << "\t\t return region " << endl;
 }
 
-
-
-
-
-
-
-
-
-
-
 #endif
-
-

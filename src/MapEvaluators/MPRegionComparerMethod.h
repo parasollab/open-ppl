@@ -9,6 +9,14 @@ class MPProblem;
 #include "MPStrategy.h"
 #include "DistanceMetrics.h"
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup MapEvaluators
+/// @ingroup DeadCode
+/// @brief TODO Dead Code
+///
+/// TODO
+/// @todo Dead code. Figure out what to do with this.
+////////////////////////////////////////////////////////////////////////////////
 template <class CFG>
 class compare_distance : public binary_function<const CFG, const CFG, bool>
 {
@@ -34,9 +42,11 @@ class compare_distance : public binary_function<const CFG, const CFG, bool>
 
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup MapEvaluators
-/// @brief TODO.
+/// @ingroup DeadCode
+/// @brief TODO Dead Code
 ///
-/// TODO. Also TODO update templates.
+/// TODO
+/// @todo Dead code. Figure out what to do with this.
 ////////////////////////////////////////////////////////////////////////////////
 template <class CFG, class WEIGHT>
 class MPRegionComparerMethod: public MPBaseObject {
@@ -279,6 +289,14 @@ class MPRegionComparerMethod: public MPBaseObject {
 };
 
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup MapEvaluators
+/// @ingroup DeadCode
+/// @brief TODO Dead Code
+///
+/// TODO
+/// @todo Dead code. Figure out what to do with this.
+////////////////////////////////////////////////////////////////////////////////
 template <class CFG, class WEIGHT>
 class ConnectableComponentComparer : public MPRegionComparerMethod<CFG,WEIGHT>
 {
@@ -308,6 +326,14 @@ private:
 };
 
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup MapEvaluators
+/// @ingroup DeadCode
+/// @brief TODO Dead Code
+///
+/// TODO
+/// @todo Dead code. Figure out what to do with this.
+////////////////////////////////////////////////////////////////////////////////
 template <class CFG, class WEIGHT>
 class RandomConnectComparer : public MPRegionComparerMethod< CFG, WEIGHT >
 {
@@ -342,6 +368,14 @@ private:
 };
 
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup MapEvaluators
+/// @ingroup DeadCode
+/// @brief TODO Dead Code
+///
+/// TODO
+/// @todo Dead code. Figure out what to do with this.
+////////////////////////////////////////////////////////////////////////////////
 template <class CFG, class WEIGHT>
 class RegionCoverageComparer : public MPRegionComparerMethod< CFG, WEIGHT >
 {
@@ -427,6 +461,14 @@ private:
 };
 
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup MapEvaluators
+/// @ingroup DeadCode
+/// @brief TODO Dead Code
+///
+/// TODO
+/// @todo Dead code. Figure out what to do with this.
+////////////////////////////////////////////////////////////////////////////////
 template <class CFG, class WEIGHT>
 class RegionSimilarity : public MPRegionComparerMethod< CFG, WEIGHT >
 {

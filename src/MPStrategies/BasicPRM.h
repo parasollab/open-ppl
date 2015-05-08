@@ -6,6 +6,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup MotionPlanningStrategies
 /// @brief Basic PRM approach
+/// @tparam MPTraits Motion planning universe
 ///
 /// BasicPRM essentially combines samplers and connectors to iteratively
 /// construct a roadmap until planning is "done"

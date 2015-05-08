@@ -7,23 +7,26 @@
 /// @defgroup AlgorithmAbstractions Algorithm Abstractions
 /// The algorithm abstractions in PMPL are:
 /// - \ref DistanceMetrics - Compute distances between two configurations
-/// - \ref ValidityCheckers - Determine if a configuration is in @cfree or @cobst
+/// - \ref ValidityCheckers - Determine if a configuration is in @cfree or
+///        @cobst
 /// - \ref Samplers - Generate configurations in @cspace (usually @cfree)
 /// - \ref NeighborhoodFinders - Determine nearest neighbors within a roadmap
 /// - \ref LocalPlanners - Validate simple, often deterministic paths, between
-///   configurations
+///        configurations
 /// - \ref Extenders - Step configurations toward a direction until an end
-///   condition is met, e.g., a distance \f$\Delta q\f$ is reached
+///        condition is met, e.g., a distance \f$\Delta q\f$ is reached
 /// - \ref Connectors - Generate edges of a roadmap, usually a combination of a
-///   neighborhood finder and a local planner
+///        neighborhood finder and a local planner
 /// - \ref Metrics - Determine a value/property from a roadmap
-/// - \ref MapEvaluators - Determine is a roadmap passes an evaluation test, e.g.,
-///   can solve an example query
+/// - \ref MapEvaluators - Determine is a roadmap passes an evaluation test,
+///        e.g., can solve an example query
 /// - \ref PathModifiers - Smooth/modify an input path to produce a new valid
-///   path
+///        path.
+/// - \ref RegionDecomposition - Region framework to split space for divide and
+///        conquer methods
 /// - \ref MotionPlanningStrategies - Loosely, construct a roadmap, but more
-///   generally are anything executable by PMPL, e.g., solve this problem or
-///   smooth this path
+///        generally are anything executable by PMPL, e.g., solve this problem
+///        or smooth this path
 ////////////////////////////////////////////////////////////////////////////////
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -174,6 +177,16 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup AlgorithmAbstractions
+/// @defgroup RegionDecomposition Region Decomposition
+/// @brief Region framework to split space for divide and conquer methods
+///
+/// Region decomposition involves splitting the space for use in divide and
+/// conquer strategies. This group contains all classes which support regions
+/// and algorithms for decomposing them.
+////////////////////////////////////////////////////////////////////////////////
+
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup AlgorithmAbstractions
 /// @defgroup MotionPlanningStrategies Motion Planning Strategies
 /// @brief Motion Planning Strategies (@mps) loosely, construct a roadmap, but
 /// more generally are anything executable by PMPL, e.g., solve this problem or
@@ -186,5 +199,12 @@
 /// load a previously constructed roadmap and evaluate it, etc. These are
 /// "executed" by PMPL.
 /// The base method can be found in MPStrategyMethod.h.
+////////////////////////////////////////////////////////////////////////////////
+
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup MotionPlanningStrategies
+/// @ingroup Utilities
+/// @defgroup MotionPlanningStrategyUtils Motion Planning Stategy Utilities
+/// @brief External data structures to help neighborhood finding algorithms.
 ////////////////////////////////////////////////////////////////////////////////
 

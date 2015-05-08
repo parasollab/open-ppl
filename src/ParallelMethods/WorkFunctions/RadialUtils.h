@@ -17,11 +17,15 @@ enum Expansion {
 };
 }
 
-/*
- * Blind RRT Expand
- * Expands up to delta distance or when reaching out of boundary. If a collision is
- * encountered, it records the last valid sample and keeps growing.
- */
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup ParallelMethods
+/// @brief TODO
+///
+/// TODO
+///
+/// Blind RRT Expand
+/// Expands up to delta distance or when reaching out of boundary. If a collision is
+/// encountered, it records the last valid sample and keeps growing.
 template<class MPTraits>
 ExpansionType::Expansion
 BlindRRTExpand(typename MPTraits::MPProblemType* _mp,
@@ -110,6 +114,12 @@ BlindRRTExpand(typename MPTraits::MPProblemType* _mp,
     return ExpansionType::NO_EXPANSION;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup ParallelMethods
+/// @brief TODO
+///
+/// TODO
+////////////////////////////////////////////////////////////////////////////////
 template<class MPTraits>
 class RadialUtils {
 

@@ -29,8 +29,12 @@ class Environment;
 #define MAX_INT  numeric_limits<int>::max()
 #define MAX_DBL  numeric_limits<double>::max()
 
-//Variable resolution epsilon for doubles and float. This number is based upon
-//the resolution of the smaller value between _t1 and _t2.
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup Utilities
+/// @brief TODO
+///
+/// Variable resolution epsilon for doubles and float. This number is based upon
+/// the resolution of the smaller value between _t1 and _t2.
 template<typename T>
 const T
 Epsilon(const T& _t1, const T& _t2) {
@@ -81,48 +85,85 @@ enum cd_predefined {
 // Random Number Generation
 ///////////////////////////////////////////////////////////////////////////////
 
-//return non-negative double-prevision floating-point values
-//uniformly distributed over the interval [0.0, 1.0)
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup Utilities
+/// @brief TODO
+///
+/// Return non-negative double-prevision floating-point values uniformly
+/// distributed over the interval [0.0, 1.0)
 double DRand();
 
-//return non-negative long integers uniformly distributed over the interval [0, 2**31)
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup Utilities
+/// @brief TODO
+///
+/// return non-negative long integers uniformly distributed over the interval [0, 2**31)
 long LRand();
 
-//return signed long integers uniformly distributed over the interval [-2**31, 2**31)
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup Utilities
+/// @brief TODO
+///
+/// return signed long integers uniformly distributed over the interval [-2**31, 2**31)
 long MRand();
 
-// normally(gaussian) distributed random number generator.
-// when reset is 1, it reset the internal static variable and return 0.0
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup Utilities
+/// @brief TODO
+///
+/// normally(gaussian) distributed random number generator.
+/// when reset is 1, it reset the internal static variable and return 0.0
 double GRand(bool _reset = false);
 
-//Same as GRand, but one can specify the mean and stdev of the distribution
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup Utilities
+/// @brief TODO
+///
+/// Same as GRand, but one can specify the mean and stdev of the distribution
 double GaussianDistribution(double _mean, double _stdev);
 
-/* use seedval as the seed
-*/
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup Utilities
+/// @brief TODO
+///
+/// use seedval as the seed
 long SRand(long _seed = 0x1234ABCD);
 
-/* "baseSeed" is a static variable in this function
-   we use baseSeed, methodName and nextNodeIndex to generate a deterministic seed,
-   then call seed48()
-   when reset is 1, baseSeed will be reset
-   */
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup Utilities
+/// @brief TODO
+///
+/// "baseSeed" is a static variable in this function
+/// we use baseSeed, methodName and nextNodeIndex to generate a deterministic seed,
+/// then call seed48()
+/// when reset is 1, baseSeed will be reset
 long SRand(string _methodName, int _nextNodeIndex, long _base = 0x1234ABCD, bool _reset = false);
 
 ///////////////////////////////////////////////////////////////////////////////
 // Simple Utilities (Angular Distance and Compare Second)
 ///////////////////////////////////////////////////////////////////////////////
 
-/**Normalize a value into the range [-1,1)
- */
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup Utilities
+/// @brief TODO
+///
+/// Normalize a value into the range [-1,1)
 double Normalize(double _a);
 
-/**Calculate the minimum DIRECTED angular distance
- *between two angles normalized to 1.0
- */
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup Utilities
+/// @brief TODO
+///
+/// Calculate the minimum DIRECTED angular distan between two angles normalized
+/// to 1.0.
 double DirectedAngularDistance(double _a, double _b);
 
-/* Compare the second of a pair */
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup Utilities
+/// @brief Compare the second of a pair
+/// @tparam T Type 1 of pair
+/// @tparam U Type 2 of pair
+////////////////////////////////////////////////////////////////////////////////
 template <typename T, typename U>
 class CompareSecond {
  public:
@@ -131,7 +172,12 @@ class CompareSecond {
   }
 };
 
-/* Compare the second of a pair reversed */
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup Utilities
+/// @brief Compare the second of a pair reversed
+/// @tparam T Type 1 of pair
+/// @tparam U Type 2 of pair
+////////////////////////////////////////////////////////////////////////////////
 template <typename T, typename U>
 class CompareSecondReverse {
  public:
@@ -144,6 +190,12 @@ class CompareSecondReverse {
 // Compose Functions
 ///////////////////////////////////////////////////////////////////////////////
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup Utilities
+/// @brief TODO
+///
+/// TODO
+////////////////////////////////////////////////////////////////////////////////
 template <typename InputIterator, typename BinaryOperator, typename UnaryOperator>
 struct Compose {
   bool operator()(InputIterator _first, InputIterator _last,
@@ -159,6 +211,12 @@ struct Compose {
   }
 };
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup Utilities
+/// @brief TODO
+///
+/// TODO
+////////////////////////////////////////////////////////////////////////////////
 template <typename InputIterator, typename UnaryOperator>
 struct Compose<InputIterator, logical_and<bool>, UnaryOperator> {
   bool operator()(InputIterator _first, InputIterator _last,
@@ -179,6 +237,12 @@ struct Compose<InputIterator, logical_and<bool>, UnaryOperator> {
   }
 };
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup Utilities
+/// @brief TODO
+///
+/// TODO
+////////////////////////////////////////////////////////////////////////////////
 template <typename InputIterator, typename UnaryOperator>
 struct Compose<InputIterator, logical_or<bool>, UnaryOperator> {
   bool operator()(InputIterator _first, InputIterator _last,
@@ -199,6 +263,12 @@ struct Compose<InputIterator, logical_or<bool>, UnaryOperator> {
   }
 };
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup Utilities
+/// @brief TODO
+///
+/// TODO
+////////////////////////////////////////////////////////////////////////////////
 template <typename InputIterator, typename UnaryOperator>
 struct ComposeNegate {
   bool operator()(InputIterator _it, UnaryOperator _op) {
@@ -221,6 +291,12 @@ struct ComposeNegate {
 //                      MethodTypeList = boost::mpl::list<Straightline,RotateAtS,...>
 ///////////////////////////////////////////////////////////////////////////////////////////
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup Utilities
+/// @brief TODO
+///
+/// TODO
+////////////////////////////////////////////////////////////////////////////////
 template<typename MPTraits, typename Method>
 struct MethodFactory {
   shared_ptr<Method> operator()(typename MPTraits::MPProblemType* _problem, XMLNode& _node) const {
@@ -228,6 +304,12 @@ struct MethodFactory {
   }
 };
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup Utilities
+/// @brief TODO
+///
+/// TODO
+////////////////////////////////////////////////////////////////////////////////
 template<typename MPTraits, typename Method>
 class MethodSet {
   public:
@@ -330,6 +412,11 @@ class MethodSet {
 // Cfg Utilities
 ///////////////////////////////////////////////////////////////////////////////
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup Utilities
+/// @brief TODO
+///
+/// TODO
 template<class CfgType, class Environment>
 bool
 IsWithinResolution(const CfgType& _cfg1, const CfgType& _cfg2, Environment* _env) {
@@ -338,10 +425,13 @@ IsWithinResolution(const CfgType& _cfg1, const CfgType& _cfg2, Environment* _env
     && diff->OrientationMagnitude() <= _env->GetOrientationRes();
 }
 
-/* pt1 & pt2 are two endpts of a line segment
- * find the closest point to the current cfg on that line segment
- * it could be one of the two endpoints of course
- */
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup Utilities
+/// @brief TODO
+///
+/// pt1 & pt2 are two endpts of a line segment
+/// find the closest point to the current cfg on that line segment
+/// it could be one of the two endpoints of course
 template<class CfgType>
 CfgType
 ClosestPtOnLineSegment(const CfgType& _current, const CfgType& _p1, const CfgType& _p2) {
@@ -374,6 +464,11 @@ ClosestPtOnLineSegment(const CfgType& _current, const CfgType& _p1, const CfgTyp
 // Centroid Utils
 ///////////////////////////////////////////////////////////////////////////////
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup Utilities
+/// @brief TODO
+///
+/// TODO
 template<template<class CFG, class WEIGHT> class RDMP, class CFG, class WEIGHT>
 CFG
 GetCentroid(RDMP<CFG, WEIGHT>* _graph, vector<typename RDMP<CFG, WEIGHT>::VID>& _cc){
@@ -388,6 +483,11 @@ GetCentroid(RDMP<CFG, WEIGHT>* _graph, vector<typename RDMP<CFG, WEIGHT>::VID>& 
 };
 
 #ifndef _PARALLEL
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup Utilities
+/// @brief TODO
+///
+/// TODO
 template<template<class CFG, class WEIGHT> class RDMP, class CFG, class WEIGHT>
 void
 ComputeCCCentroidGraph(RDMP<CFG, WEIGHT>* _graph, RDMP<CFG, WEIGHT>* _centroidGraph) {
@@ -407,34 +507,49 @@ ComputeCCCentroidGraph(RDMP<CFG, WEIGHT>* _graph, RDMP<CFG, WEIGHT>* _centroidGr
 
 };
 #endif
+
 ///////////////////////////////////////////////////////////////////////////////
 // Geometry Utils
 ///////////////////////////////////////////////////////////////////////////////
 
-//----------------------------------------------------------------------------
-//PtInTriangle: determine if point _P is in triange defined by (_A,_B,_C)
-//----------------------------------------------------------------------------
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup Utilities
+/// @brief TODO
+///
+/// PtInTriangle: determine if point _P is in triange defined by (_A,_B,_C)
 bool PtInTriangle(const Point2d& _A, const Point2d& _B, const Point2d& _C, const Point2d & _P);
 
-//----------------------------------------------------------------------------
-// CHECKS IF 2D POINT P IS IN TRIANGLE ABC. RETURNS 1 IF IN, 0 IF OUT
-//   uses barycentric coordinated to compute this and return the uv-coords
-//   for potential usage later
-//----------------------------------------------------------------------------
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup Utilities
+/// @brief TODO
+///
+/// CHECKS IF 2D POINT P IS IN TRIANGLE ABC. RETURNS 1 IF IN, 0 IF OUT
+///   uses barycentric coordinated to compute this and return the uv-coords
+///   for potential usage later
 bool PtInTriangle(const Point2d& _A, const Point2d& _B, const Point2d& _C, const Point2d & _P,
     double& _u, double& _v);
 
-//----------------------------------------------------------------------------
-// GetPtFromBarycentricCoords: given triange defined by _A,_B,_C, return the
-// point inside triangle defined by barycentric coords. _u,_v
-//----------------------------------------------------------------------------
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup Utilities
+/// @brief TODO
+///
+/// GetPtFromBarycentricCoords: given triange defined by _A,_B,_C, return the
+/// point inside triangle defined by barycentric coords. _u,_v
 Point3d GetPtFromBarycentricCoords(const Point3d& _A, const Point3d& _B, const Point3d& _C, double _u, double _v);
 
-//----------------------------------------------------------------------------
-//NormalizeTheta: given a value, lock it into the range -PI to PI
-//----------------------------------------------------------------------------
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup Utilities
+/// @brief TODO
+///
+/// NormalizeTheta: given a value, lock it into the range -PI to PI
 double NormalizeTheta(double _theta);
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup Utilities
+/// @brief TODO
+///
+/// TODO
+////////////////////////////////////////////////////////////////////////////////
 template <class MPTraits, class P>
 struct DistanceCompareFirst : public binary_function<P, P, bool> {
   typedef typename MPTraits::MPProblemType::DistanceMetricPointer DistanceMetricPointer;
@@ -452,6 +567,12 @@ struct DistanceCompareFirst : public binary_function<P, P, bool> {
   }
 };
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup Utilities
+/// @brief TODO
+///
+/// TODO
+////////////////////////////////////////////////////////////////////////////////
 template <class P>
 struct PlusSecond : public binary_function<typename P::second_type,
 					    P,
@@ -461,11 +582,11 @@ struct PlusSecond : public binary_function<typename P::second_type,
   }
 };
 
-///////////////////////////////////////////////////////////////////////////////
-// NullOutputIterator
-//
-// Used for discarding collision data for regular sampling/connecting classes
-///////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup Utilities
+/// @brief Used for discarding collision data for regular sampling/connecting
+///        classes
+////////////////////////////////////////////////////////////////////////////////
 struct NullOutputIterator : std::iterator<std::output_iterator_tag, NullOutputIterator> {
   //no-op assignment
   template<typename T>

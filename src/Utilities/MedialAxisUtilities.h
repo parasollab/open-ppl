@@ -9,6 +9,12 @@
 #include "LocalPlanners/StraightLine.h"
 #include "ValidityCheckers/CollisionDetection/CDInfo.h"
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup Utilities
+/// @brief TODO
+///
+/// TODO
+////////////////////////////////////////////////////////////////////////////////
 struct ClearanceStats{
   double m_avg;
   double m_min;
@@ -19,7 +25,14 @@ struct ClearanceStats{
   ClearanceStats() : m_avg(0), m_min(0), m_max(0), m_var(0), m_pathLength(0) {}
 };
 
-//used to encapsulate all the fields and functions necessary for clearance and penetration calculations
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup Utilities
+/// @brief TODO
+/// @tparam MPTraits Motion planning universe
+///
+/// Used to encapsulate all the fields and functions necessary for clearance and
+/// penetration calculations
+////////////////////////////////////////////////////////////////////////////////
 template<class MPTraits>
 class ClearanceUtility : public MPBaseObject<MPTraits> {
   public:
@@ -99,6 +112,13 @@ class ClearanceUtility : public MPBaseObject<MPTraits> {
     bool m_positional;         //use only positional dofs
 };
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup Utilities
+/// @brief TODO
+/// @tparam MPTraits Motion planning universe
+///
+/// TODO
+////////////////////////////////////////////////////////////////////////////////
 template<class MPTraits>
 class MedialAxisUtility : public ClearanceUtility<MPTraits> {
   public:
@@ -161,7 +181,13 @@ class MedialAxisUtility : public ClearanceUtility<MPTraits> {
     size_t m_historyLength;
 };
 
-//#ifdef PMPCfgSurface
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup Utilities
+/// @brief TODO
+/// @tparam MPTraits Motion planning universe
+///
+/// TODO
+////////////////////////////////////////////////////////////////////////////////
 template<class MPTraits>
 class SurfaceMedialAxisUtility : public MedialAxisUtility<MPTraits> {
   public:

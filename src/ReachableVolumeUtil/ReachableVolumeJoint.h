@@ -2,6 +2,12 @@
 #define Reachable_Voleme_Joint_h
 #include "ReachableVolume.h"
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup ReachableUtils
+/// @brief TODO
+///
+/// TODO
+////////////////////////////////////////////////////////////////////////////////
 class ReachableVolumeJoint{
  private:
   static const bool m_debug = false;
@@ -28,7 +34,7 @@ class ReachableVolumeJoint{
   }
 
   ReachableVolumeJoint(double _rmax, double _rmin, int _nLinks=1){
-    m_nLinks = _nLinks; 
+    m_nLinks = _nLinks;
     m_reachableVolumesJoint=shared_ptr<vector<shared_ptr<ReachableVolume> > >(new vector<shared_ptr<ReachableVolume> >);
     ReachableVolume *tmp = new ReachableVolume(_rmax, _rmin, _nLinks);
     shared_ptr<ReachableVolume> ptr = shared_ptr<ReachableVolume>(tmp);
@@ -83,17 +89,17 @@ class ReachableVolumeJoint{
 
       if(_constraint->isEqual(**i)){
 	reachableVolumesJointNew->push_back(*i);
-	addConstraint = false;  
+	addConstraint = false;
 	continue;
       }
       if(!(*i)->isContained(*_constraint))
 	reachableVolumesJointNew->push_back(*i);
       if(_constraint->isContained(**i)){
-	addConstraint = false;  
-      }                
+	addConstraint = false;
+      }
     }
     if(m_debug) cout<<"after add constraints"<<endl;
-   
+
     m_reachableVolumesJoint=shared_ptr<vector<shared_ptr<ReachableVolume> > >(reachableVolumesJointNew);
     if(addConstraint){
       if(m_debug) cout<<"New Constraint Added"<<endl;
@@ -157,7 +163,7 @@ class ReachableVolumeJoint{
    rotatedPoint[0]=r*cos(theta+rotateAngle);
    rotatedPoint[1]=r*sin(theta+rotateAngle);
    return rotatedPoint;
- }	
+ }
 
   //rotates coordinate frame about origin by given inclination and rotation
   //takes a point p in old coordinate frame
@@ -302,7 +308,7 @@ class ReachableVolumeJoint{
     revurnValue[2]=-1;
     //return NULL;
     return revurnValue;
-    
+
   }
 
   //constructs an axis aligned bb around the intersection of all constraints
@@ -338,7 +344,7 @@ class ReachableVolumeJoint{
     for(int i=0; i<m_nAttempts; i++){
       Vector3d v;
       v[0]=llCorner[0]+(float)rand()/(float)RAND_MAX*(urCorner[0]-llCorner[0]);
-      v[1]=llCorner[1]+(float)rand()/(float)RAND_MAX*(urCorner[1]-llCorner[1]);      
+      v[1]=llCorner[1]+(float)rand()/(float)RAND_MAX*(urCorner[1]-llCorner[1]);
       v[2]=llCorner[2]+(float)rand()/(float)RAND_MAX*(urCorner[2]-llCorner[2]);
       bool inReachableVolumes=true;
       for(vector<shared_ptr<ReachableVolume> >::iterator iter=m_reachableVolumesJoint->begin(); iter!=m_reachableVolumesJoint->end(); iter++){
@@ -375,7 +381,7 @@ class ReachableVolumeJoint{
     for(vector<shared_ptr<ReachableVolume> >::iterator i = m_reachableVolumesJoint->begin(); i!=m_reachableVolumesJoint->end();i++){
       if((*i)->m_rmax==0){
 	for(vector<shared_ptr<ReachableVolume> >::iterator j = m_reachableVolumesJoint->begin(); j!=m_reachableVolumesJoint->end();j++){
-	  if(!(*j)->IsInReachableVolumeBase((*i)->m_base)){ 
+	  if(!(*j)->IsInReachableVolumeBase((*i)->m_base)){
 	    //return NULL;
 	    Vector3d revurnValue;
 	    revurnValue[0]=-1;
@@ -386,14 +392,14 @@ class ReachableVolumeJoint{
 	  }
 	}
 	return (*i)->m_base;
-      } 
+      }
     }
     if(m_reachableVolumesJoint->size()==1){
       if(m_debug) cout<<"Encountered joint with 1 constraint"<<endl;
       return (*m_reachableVolumesJoint)[0]->GetPointInReachableVolume()+(*m_reachableVolumesJoint)[0]->m_base;
-    } 
+    }
     if(m_reachableVolumesJoint->size()==2){
-      if(m_debug) cout<<"Encountered joint with 2 constraints"<<endl;								       
+      if(m_debug) cout<<"Encountered joint with 2 constraints"<<endl;
       if((*m_reachableVolumesJoint)[0]->m_rmin ==(*m_reachableVolumesJoint)[0]->m_rmax && (*m_reachableVolumesJoint)[1]->m_rmin == (*m_reachableVolumesJoint)[1]->m_rmax){
 	jointPos = intersection_rmax((*m_reachableVolumesJoint)[1], (*m_reachableVolumesJoint)[0], m_nAttempts);
       }else if((*m_reachableVolumesJoint)[0]->m_rmin ==(*m_reachableVolumesJoint)[0]->m_rmax){
@@ -490,6 +496,12 @@ class ReachableVolumeJoint{
 
 };
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup ReachableUtils
+/// @brief TODO
+///
+/// TODO
+////////////////////////////////////////////////////////////////////////////////
 class ReachableVolumeJointTreeNode : public ReachableVolumeJoint {
  public:
   ReachableVolumeJointTreeNode *m_parent;
@@ -525,7 +537,7 @@ class ReachableVolumeJointTreeNode : public ReachableVolumeJoint {
     : ReachableVolumeJoint(_r1, _r2){
     //everything done in ReachableVolumeJoint consructor
   }
-    
+
   ReachableVolumeJointTreeNode* mkSum(double _min, double _max){
     ReachableVolumeJointTreeNode *rvj = new ReachableVolumeJointTreeNode();
     for(vector<shared_ptr<ReachableVolume> >::iterator i = this->m_reachableVolumesJoint->begin(); i<this->m_reachableVolumesJoint->end(); i++){
@@ -542,7 +554,7 @@ class ReachableVolumeJointTreeNode : public ReachableVolumeJoint {
     rvj->m_nLinks=this->m_nLinks;
     return rvj;
   }
-    
+
 };
 
 #endif

@@ -14,6 +14,12 @@ ReachableVolumeRobot g_reachableVolumeRobotsRVRRT;
 bool init=false;
 
 // note, we may note need node sample if stored in rvr
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup MotionPlanningStrategyUtils
+/// @brief TODO
+///
+/// TODO
+////////////////////////////////////////////////////////////////////////////////
 class PerturbJoints{
  public:
   shared_ptr<vector<Vector3D> > operator()(ReachableVolumeRobot &_rvr,  vector<Vector3D> *_node, vector<Vector3D> *_perturbTowards, double _delta, string _perturbDir = "WorkspaceDir", string _repositionPolicy = "Random"){
@@ -22,6 +28,12 @@ class PerturbJoints{
   }
 };
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup MotionPlanningStrategyUtils
+/// @brief TODO
+///
+/// TODO
+////////////////////////////////////////////////////////////////////////////////
 //Randomly select a joint from _node and perturb it by epsilon in directorn of that joint in _perturbTowards
 class PerturbOneRandomJoint : public PerturbJoints{
  public:
@@ -31,18 +43,18 @@ class PerturbOneRandomJoint : public PerturbJoints{
     //perturb node and check if still in rv
     //recursivly resample if node not in rv
     //return sample
-    
+
     vector<Vector3D> *newNode= new vector<Vector3D>(_node->begin(),_node->end());
 
     for(int i=0; i<=_rvr.m_nAttempts; i++){
       int jointId = 1 + rand() % (_node->size()-2);
       Vector3D perturbTowards;
       if(_perturbDir.compare("WorkspaceDir")==0){
-	perturbTowards=(*_perturbTowards)[jointId];  
+	perturbTowards=(*_perturbTowards)[jointId];
       }else if(_perturbDir.compare("RVSpaceDir")==0){
         perturbTowards=(*_perturbTowards)[jointId]-(*_perturbTowards)[0]+(*_node)[0];  //position of joint if it were in rv space of _node
       }else{
-        perturbTowards=(*_perturbTowards)[jointId]; 
+        perturbTowards=(*_perturbTowards)[jointId];
       }
 
       if(_rvr.perturbJoint(*newNode, jointId, (*_perturbTowards)[jointId],_delta,_repositionPolicy)){
@@ -56,6 +68,12 @@ class PerturbOneRandomJoint : public PerturbJoints{
 };
 
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup MotionPlanningStrategyUtils
+/// @brief TODO
+///
+/// TODO
+////////////////////////////////////////////////////////////////////////////////
 //Randomly select a joint that is closest
 class PerturbClosestJoint : public PerturbJoints{
  public:
@@ -65,7 +83,7 @@ class PerturbClosestJoint : public PerturbJoints{
     //perturb node and check if still in rv
     //recursivly resample if node not in rv
     //return sample
-    
+
     vector<Vector3D> *newNode = new vector<Vector3D>(_node->begin(),_node->end());
     int jointId=1;
     double d = ReachableVolume::distance((*_perturbTowards)[0],(*_node)[0]);
@@ -76,14 +94,14 @@ class PerturbClosestJoint : public PerturbJoints{
 	jointId=j;
       }
     }
-    
+
     Vector3D perturbTowards;
     if(_perturbDir.compare("WorkspaceDir")==0){
-      perturbTowards=(*_perturbTowards)[jointId];  
+      perturbTowards=(*_perturbTowards)[jointId];
     }else if(_perturbDir.compare("RVSpaceDir")==0){
       perturbTowards=(*_perturbTowards)[jointId]-(*_perturbTowards)[0]+(*_node)[0];  //position of joint if it were in rv space of _node
     }else{
-      perturbTowards=(*_perturbTowards)[jointId]; 
+      perturbTowards=(*_perturbTowards)[jointId];
     }
 
     if(_rvr.perturbJoint(*newNode, jointId, (*_perturbTowards)[jointId],_delta,_repositionPolicy)){
@@ -96,6 +114,12 @@ class PerturbClosestJoint : public PerturbJoints{
 };
 
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup MotionPlanningStrategyUtils
+/// @brief TODO
+///
+/// TODO
+////////////////////////////////////////////////////////////////////////////////
 //Selects most distant joint
 class PerturbMostDistantJoint : public PerturbJoints{
  public:
@@ -132,13 +156,17 @@ class PerturbMostDistantJoint : public PerturbJoints{
 
     delete(newNode);
     return new vector<Vector3D>;
-  
+
   }
 };
 
-
-
-
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup MotionPlanningStrategies
+/// @brief TODO
+/// @tparam MPTraits Motion planning universe
+///
+/// TODO
+////////////////////////////////////////////////////////////////////////////////
 template<class MPTraits>
 class ReachableVolumeRRT : public BasicRRTStrategy<MPTraits> {
  public:
@@ -158,7 +186,7 @@ class ReachableVolumeRRT : public BasicRRTStrategy<MPTraits> {
     double m_deltaRV;
     double m_S;
     double m_S_rot;
-    
+
     string m_treeStructure;
     string m_jointPerturbMethod;
     string m_perturbDir;
@@ -167,7 +195,7 @@ class ReachableVolumeRRT : public BasicRRTStrategy<MPTraits> {
 
 
   virtual void Run();
- 
+
   ReachableVolumeRRT():BasicRRTStrategy<MPTraits>(){
     if(!init){
       g_reachableVolumeRobotsRVRRT.loadTree("Chain.tree",m_treeStructure);
@@ -188,12 +216,12 @@ class ReachableVolumeRRT : public BasicRRTStrategy<MPTraits> {
     this->SetName("ReachableVolumeRRT");
   }
 
- 
-  ReachableVolumeRRT(MPProblemType* _problem, XMLNode& _node, bool _warnXML=true):BasicRRTStrategy<MPTraits>(_problem, _node, false){    
+
+  ReachableVolumeRRT(MPProblemType* _problem, XMLNode& _node, bool _warnXML=true):BasicRRTStrategy<MPTraits>(_problem, _node, false){
     ParseXMLRVRRT(_node);
   }
-  
-  void ParseXMLRVRRT(XMLNode& _node){  
+
+  void ParseXMLRVRRT(XMLNode& _node){
     this->m_deltaRV = _node.Read("deltaRV", false, .1, (double)0, (double)1000, "RV space delta value");
     this->m_S = _node.Read("s", false, .1, (double)0, (double)1, "Scaling Factor");
     this->m_S_rot = _node.Read("s_rot", false, .1, (double)0, (double)1, "Rotational Scaling Factor");
@@ -211,7 +239,7 @@ class ReachableVolumeRRT : public BasicRRTStrategy<MPTraits> {
 
 shared_ptr<vector<Vector3D> > convertToJointPositions(CfgType _cfg){
   shared_ptr<vector<Vector3D> > joints = shared_ptr<vector<Vector3D> >(new vector<Vector3D>);
-  _cfg.ConfigEnvironment(this->GetMPProblem()->GetEnvironment());  
+  _cfg.ConfigEnvironment(this->GetMPProblem()->GetEnvironment());
   this->GetMPProblem()->GetEnvironment()->GetMultiBody(_cfg.GetRobotIndex())->PolygonalApproximation(*joints);
   for(unsigned int i=1; i<joints->size();i++){
     (*joints)[i]=(*joints)[i]-(*joints)[0];
@@ -264,7 +292,7 @@ void PrintOptions(ostream& _os) {
 template<class MPTraits>
 void
 ReachableVolumeRRT<MPTraits>::Run() {
- 
+
   Environment* env = this->GetMPProblem()->GetEnvironment();
   NeighborhoodFinderPointer nfp = this->GetMPProblem()->GetNeighborhoodFinder(this->m_nf);
 
@@ -272,7 +300,7 @@ ReachableVolumeRRT<MPTraits>::Run() {
   if(this->m_debug) cout << "\nRunning RVRRTStrategy::" << endl;
 
   // Setup MP Variables
-  
+
   StatClass* stats = this->GetMPProblem()->GetStatClass();
 
   stats->StartClock("RRT Generation");
@@ -284,11 +312,11 @@ ReachableVolumeRRT<MPTraits>::Run() {
   typename GraphType::iterator nn;
   int nGoalsNotFound=this->m_trees.size();
   while(!mapPassedEvaluation){
-    //get dir - need both rv cfg (for perturbation) and regular cfg (for dm) 
+    //get dir - need both rv cfg (for perturbation) and regular cfg (for dm)
     dir.GetRandomCfg(this->GetMPProblem()->GetEnvironment());
-    if(this->m_debug) cout<<"dir = "<<dir<<endl; 
+    if(this->m_debug) cout<<"dir = "<<dir<<endl;
     VID nnVid;
-    CfgType nn;    
+    CfgType nn;
     minDist=-1;
     //find nearest neibhbor to ran
     for(typename GraphType::VI i = this->GetMPProblem()->GetRoadmap()->GetGraph()->begin();  i!=this->GetMPProblem()->GetRoadmap()->GetGraph()->end(); i++){
@@ -299,8 +327,8 @@ ReachableVolumeRRT<MPTraits>::Run() {
 	nn=current;
 	nnVid = (*i).descriptor();
       }
- 
-    }        
+
+    }
     shared_ptr<vector<Vector3D> > dirJoints = convertToJointPositions(dir);
     typename map<VID, shared_ptr<vector<Vector3D> > >::iterator nnIter=m_rvCfgs.find(nnVid);
     shared_ptr<vector<Vector3D> > nnRvSample;
@@ -310,13 +338,13 @@ ReachableVolumeRRT<MPTraits>::Run() {
       nnRvSample=convertToJointPositions(nn);
       m_rvCfgs[nnVid]=nnRvSample;
     }
-  
+
     vector<Vector3D> tmp = *nnRvSample;
-  
+
     vector<Vector3D> *newNode;
     double deltaRV = m_deltaRV;
     double deltaTrans = 0;
-   
+
     if(!g_reachableVolumeRobotsRVRRT.m_fixed){
       //set delta and deltaTR using m_S
       CfgType diff=DifferenceCfg(dir, nn);
@@ -356,7 +384,7 @@ ReachableVolumeRRT<MPTraits>::Run() {
     //deal with translational coordinates
     //push rotational + translational coordinates by delta in dir of random node
     vector<double> cfgData(6);
-    
+
     if(g_reachableVolumeRobotsRVRRT.m_fixed){
       //fixed base, all nodes should have the same base pos
       cfgData[0]=nn.GetData()[0];
@@ -375,7 +403,7 @@ ReachableVolumeRRT<MPTraits>::Run() {
       cfgData[1]=nn.GetData()[1] + deltaTrans*(dir.GetData()[1]-nn.GetData()[1])/d_trans;
       cfgData[2]=nn.GetData()[2] + deltaTrans*(dir.GetData()[2]-nn.GetData()[2])/d_trans;
 
-      
+
       //compute rotational coordinates that are delta_trans away from nn in direction of dir
       double d_rot = sqrt((dir.GetData()[3]-nn.GetData()[3])*(dir.GetData()[3]-nn.GetData()[3])
                             +(dir.GetData()[4]-nn.GetData()[4])*(dir.GetData()[4]-nn.GetData()[4])
@@ -424,21 +452,21 @@ ReachableVolumeRRT<MPTraits>::Run() {
 	for(vector<size_t>::iterator i = this->m_goalsNotFound.begin(); i!=this->m_goalsNotFound.end(); i++){
 	  vector<pair<VID, double> > closest;
 	  bool connectToGoal = this->GetMPProblem()->GetLocalPlanner(this->m_lp)->
-	    IsConnected(nn, newNodeCfg, &lpOutput, this->GetMPProblem()->GetEnvironment()->GetPositionRes(), this->GetMPProblem()->GetEnvironment()->GetOrientationRes(),true,false,false); 
-	   
+	    IsConnected(nn, newNodeCfg, &lpOutput, this->GetMPProblem()->GetEnvironment()->GetPositionRes(), this->GetMPProblem()->GetEnvironment()->GetOrientationRes(),true,false,false);
+
 	  if(connectToGoal){
 	    this->m_goalsNotFound.erase(i);
             nGoalsNotFound--;
 	    stats->StopClock("RRT Generation");
 	    return;
-          }	  
+          }
 	}
-      }      
-    }    
+      }
+    }
 
-   
+
     bool evalMap = this->EvaluateMap(this->m_evaluators);
-   
+
     if(!this->m_growGoals){
       if(nGoalsNotFound<=0){
 	mapPassedEvaluation=true;
@@ -452,15 +480,15 @@ ReachableVolumeRRT<MPTraits>::Run() {
 	mapPassedEvaluation=true;
       }
     }
-   
+
     stats->StopClock("RRT Generation");
     if(this->m_debug) {
       stats->PrintClock("RRT Generation", cout);
       cout<<"\nEnd Running BasicRRTStrategy::" << endl;
     }
-    
+
   }
-  
+
 }
 
 #endif

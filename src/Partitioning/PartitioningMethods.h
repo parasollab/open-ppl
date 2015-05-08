@@ -1,6 +1,3 @@
-/*This file contains the class for loading and storing PartitioningMethods.
- */
-
 #ifndef PARTITIONINGMETHODS_H_
 #define PARTITIONINGMETHODS_H_
 
@@ -8,6 +5,14 @@
 
 class PartitioningMethod;
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup RegionDecomposition
+/// @ingroup DeadCode
+/// @brief TODO Dead Code
+///
+/// TODO
+/// @todo Dead code. Figure out what to do with this.
+////////////////////////////////////////////////////////////////////////////////
 class PartitioningMethods : public MPBaseObject {
  public:
    PartitioningMethods();

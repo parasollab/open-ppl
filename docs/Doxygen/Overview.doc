@@ -23,6 +23,7 @@
  *   planning methods, e.g., Distance Metrics, Local Planners, etc
  *
  * - \ref ParallelMethods - Parallel components of PMPL
+ * - \ref DeadCode - Code not supported by PMPL (for now).
  *
  * A reasonable understanding of Configuration Space, vector math, and C++ and
  * the STL will greatly ease the learning curve for PMPL.

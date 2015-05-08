@@ -14,9 +14,11 @@ using namespace std;
 
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup NeighborhoodFinders
-/// @brief TODO
+/// @ingroup DeadCode
+/// @brief TODO Dead Code
 ///
 /// TODO
+/// @todo Dead code. Figure out what to do with this.
 ////////////////////////////////////////////////////////////////////////////////
 template<typename CFG, typename WEIGHT>
 class MetricTreeNF: public NeighborhoodFinderMethod {

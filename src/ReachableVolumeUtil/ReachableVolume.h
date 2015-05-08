@@ -10,6 +10,12 @@
 
 
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup ReachableUtils
+/// @brief TODO
+///
+/// TODO
+////////////////////////////////////////////////////////////////////////////////
 class ReachableVolume : public BaseReachableVolume {
 public:
   string type;
@@ -76,7 +82,7 @@ public:
     return (dist >= m_rmin && dist <= m_rmax);
   }
 
-  
+
   //Returns true if _point is in the reachable volume stored in this class
   bool IsInReachableVolumeBase(const Vector3d& _point){
     double dist = distance(m_base, _point);
@@ -98,7 +104,7 @@ public:
 
   /*  Moved to base class
   //_r, _psi, and _theta are the position of the point with respect to the base of the chain
-  //r = distance from origin, _psi = rotation in x y plane, _theta = inclination in z direction 
+  //r = distance from origin, _psi = rotation in x y plane, _theta = inclination in z direction
   //Returns the Euclidean coordinates of this point
   //The point returned is a point in the linkage's reachable volume space (where the origin is located at the base of the chain)
   inline static Vector3d convertRadialToEuclidean(double _r, double _psi, double _theta){

@@ -1,14 +1,17 @@
-//holds info for reachable volume
-//Computes reachable volume from linkages
-//Include function for getting random sample from volume
-//include function for testing if sample is within reachable volume
 #ifndef Base_Reachable_Voleme_h
 #define Base_Reachable_Voleme_h
+
 #include <boost/shared_ptr.hpp>
-//#include "MultiBody.h"
 
-
-
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup ReachableUtils
+/// @brief TODO
+///
+/// holds info for reachable volume
+/// Computes reachable volume from linkages
+/// Include function for getting random sample from volume
+/// include function for testing if sample is within reachable volume
+////////////////////////////////////////////////////////////////////////////////
 class BaseReachableVolume{
 public:
   string type;
@@ -72,7 +75,7 @@ public:
   //is in reachable volume of point (0,0,0)
   bool IsInReachableVolume(const Vector3d& _point);
 
-  
+
   //Returns true if _point is in the reachable volume stored in this class
   //in in reachable volume of base
   //if point - base in reachable volume
@@ -82,7 +85,7 @@ public:
   bool IsInEpsOfReachableVolumeBase(const Vector3d& _point, double _eps);
 
   //_r, _psi, and _theta are the position of the point with respect to the base of the chain
-  //r = distance from origin, _psi = rotation in x y plane, _theta = inclination in z direction 
+  //r = distance from origin, _psi = rotation in x y plane, _theta = inclination in z direction
   //Returns the Euclidean coordinates of this point
   //The point returned is a point in the linkage's reachable volume space (where the origin is located at the base of the chain)
   inline static Vector3d convertRadialToEuclidean(double _r, double _psi, double _theta){

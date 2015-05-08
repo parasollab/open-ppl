@@ -7,9 +7,11 @@ using namespace std;
 
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup NeighborhoodFinderUtils
-/// @brief TODO
+/// @ingroup DeadCode
+/// @brief TODO Dead Code
 ///
 /// TODO
+/// @todo Dead code. Figure out what to do with this.
 ////////////////////////////////////////////////////////////////////////////////
 template<typename SPROXY, typename PIVOT, typename CMPPROXY, typename CMPPIVOT>
 class DPES{

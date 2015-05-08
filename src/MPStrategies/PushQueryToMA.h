@@ -2,8 +2,14 @@
 #define PUSH_QUERY_TO_MA_H_
 
 #include "MPStrategyMethod.h"
-#include "Extenders/BasicExtender.h"
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup MotionPlanningStrategies
+/// @brief TODO
+/// @tparam MPTraits Motion planning universe
+///
+/// TODO
+////////////////////////////////////////////////////////////////////////////////
 template<class MPTraits>
 class PushQueryToMA : public MPStrategyMethod<MPTraits> {
   public:

@@ -7,9 +7,11 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup DistanceMetrics
-/// @brief TODO.
+/// @ingroup DeadCode
+/// @brief TODO Dead Code
 ///
-/// TODO.
+/// TODO
+/// @todo Dead code. Figure out what to do with this.
 ////////////////////////////////////////////////////////////////////////////////
 template<class MPTraits>
 class ReachableDistance : public DistanceMetricMethod<MPTraits> {

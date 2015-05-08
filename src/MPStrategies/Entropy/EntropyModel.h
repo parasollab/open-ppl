@@ -5,6 +5,14 @@
 #include "EntropyRegion.h"
 #include <string>
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup MotionPlanningStrategyUtils
+/// @ingroup DeadCode
+/// @brief TODO Dead Code
+///
+/// TODO
+/// @todo Dead code. Figure out what to do with this.
+////////////////////////////////////////////////////////////////////////////////
 class DoubleWeight {
  public:
   DoubleWeight() {}
@@ -28,6 +36,14 @@ istream& operator>>(istream& is, DoubleWeight& dw) {
 }
 
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup MotionPlanningStrategyUtils
+/// @ingroup DeadCode
+/// @brief TODO Dead Code
+///
+/// TODO
+/// @todo Dead code. Figure out what to do with this.
+////////////////////////////////////////////////////////////////////////////////
 template <class CFG>
 class CModel {
  public:

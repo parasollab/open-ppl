@@ -1,8 +1,13 @@
-// Spark PRM: constructs RRTs within narrow passages to quickly plan through them
-
 #ifndef SPARK_PRM_H_
 #define SPARK_PRM_H_
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup MotionPlanningStrategies
+/// @brief Constructs RRTs within narrow passages to quickly plan through them.
+/// @tparam MPTraits Motion planning universe
+///
+/// Constructs RRTs within narrow passages to quickly plan through them.
+////////////////////////////////////////////////////////////////////////////////
 template<class MPTraits, template<typename> class Strategy>
 class SparkPRM : public Strategy<MPTraits> {
 

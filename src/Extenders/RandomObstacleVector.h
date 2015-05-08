@@ -6,6 +6,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup Extenders
 /// @brief Extend in a direction based upon a random obstacle vector.
+/// @tparam MPTraits Motion planning universe
 ///
 /// In this extend method, \f$q_{dir} = q_{near} + O\f$ where \f$O\f$ is a
 /// random obstacle vector from all of the triangles in the environment. The
@@ -17,8 +18,8 @@ class RandomObstacleVector : public BasicExtender<MPTraits> {
     typedef typename MPTraits::CfgType CfgType;
     typedef typename MPTraits::MPProblemType MPProblemType;
 
-    RandomObstacleVector(const string& _dmLabel = "", 
-        const string& _vcLabel = "", double _delta = 1.0, 
+    RandomObstacleVector(const string& _dmLabel = "",
+        const string& _vcLabel = "", double _delta = 1.0,
         bool _randomOrientation = true);
     RandomObstacleVector(MPProblemType* _problem, XMLNode& _node);
 
@@ -34,7 +35,7 @@ RandomObstacleVector<MPTraits>::RandomObstacleVector(const string& _dmLabel,
   }
 
 template<class MPTraits>
-RandomObstacleVector<MPTraits>::RandomObstacleVector(MPProblemType* _problem, 
+RandomObstacleVector<MPTraits>::RandomObstacleVector(MPProblemType* _problem,
     XMLNode& _node) :
   BasicExtender<MPTraits>(_problem, _node) {
     this->SetName("RandomObstacleVector");
@@ -42,7 +43,7 @@ RandomObstacleVector<MPTraits>::RandomObstacleVector(MPProblemType* _problem,
 
 template<class MPTraits>
 bool
-RandomObstacleVector<MPTraits>::Extend(const CfgType& _near, 
+RandomObstacleVector<MPTraits>::Extend(const CfgType& _near,
     const CfgType& _dir, CfgType& _new, LPOutput<MPTraits>& _lpOutput) {
   // Setup MP Variables
   Environment* env = this->GetEnvironment();

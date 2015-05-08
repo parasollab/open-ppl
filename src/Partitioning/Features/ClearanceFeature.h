@@ -4,6 +4,14 @@
 #include "MPFeature.h"
 #include "DistanceMetrics.h"
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup RegionDecomposition
+/// @ingroup DeadCode
+/// @brief TODO Dead Code
+///
+/// TODO
+/// @todo Dead code. Figure out what to do with this.
+////////////////////////////////////////////////////////////////////////////////
 class ClearanceFeature : public MPFeature {
   public:
     ClearanceFeature();
@@ -18,6 +26,14 @@ class ClearanceFeature : public MPFeature {
     string m_vc;
 };
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup RegionDecomposition
+/// @ingroup DeadCode
+/// @brief TODO Dead Code
+///
+/// TODO
+/// @todo Dead code. Figure out what to do with this.
+////////////////////////////////////////////////////////////////////////////////
 class CSpaceClearanceFeature : public MPFeature {
   public:
     CSpaceClearanceFeature();

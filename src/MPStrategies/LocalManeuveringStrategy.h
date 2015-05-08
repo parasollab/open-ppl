@@ -3,16 +3,21 @@
 
 #ifdef PMPSSSurfaceMult
 
-
-//a strategy for a car that needs to exit a parking space
-//this is based on Reed-Shepp curves, which is basically concatenating circles to achieve a stabilized
-//trajectory. This version is modified with some randomization to plan for obstacles in the env
-
 #include "Utilities/IOUtils.h"
 #include "Utilities/MetricUtils.h"
 #include "MPStrategyMethod.h"
 #include "Cfg/SSSurfaceMult.h"
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup MotionPlanningStrategies
+/// @brief TODO
+/// @tparam MPTraits Motion planning universe
+///
+/// A strategy for a car that needs to exit a parking space this is based on
+/// Reed-Shepp curves, which is basically concatenating circles to achieve a
+/// stabilized trajectory. This version is modified with some randomization to
+/// plan for obstacles in the env.
+////////////////////////////////////////////////////////////////////////////////
 template<class MPTraits>
 class LocalManeuveringStrategy : public MPStrategyMethod<MPTraits> {
   public:

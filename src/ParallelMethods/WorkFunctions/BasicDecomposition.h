@@ -1,6 +1,3 @@
-////////////////////////////
-//HEADER BasicDecompostion.h
-////////////////////////////
 #ifndef BASICDECOMPOSITION_H_
 #define BASICDECOMPOSITION_H_
 
@@ -11,6 +8,12 @@ class Environment;
 class Body;
 class BoundingBox;
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup ParallelMethods
+/// @brief TODO
+///
+/// TODO
+////////////////////////////////////////////////////////////////////////////////
 class BasicDecomposition {
 public:
 
@@ -52,7 +55,7 @@ DecomposeWS(Environment* _env, size_t _wsdim, size_t _nx, size_t _ny, size_t _nz
   double ymin,ymax;
   double zmin=0.0,zmax=0.0;
   //BoundingBox tmp(_cBoundary->GetDOFs(), _cBoundary->GetPosDOFs());
-  
+
   for(unsigned int i = 0; i < _nx; ++i){
     //xmin = _cBoundary->GetRange(0).first + xwidth*i;
     xmin = _env->GetRange(0).first + xwidth*i;

@@ -6,6 +6,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup DistanceMetrics
 /// @brief Base algorithm abstraction for \ref DistanceMetrics.
+/// @tparam MPTraits Motion planning universe
 ///
 /// DistanceMetricMethod has two important methods: @c Distance and @c ScaleCfg.
 ///

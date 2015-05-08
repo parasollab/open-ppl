@@ -1,5 +1,3 @@
-// Toggle PRM. Constructs a free roadmap and an obstacle roadmap and uses
-// witnesses to aid construction of the two roadmaps.
 
 #ifndef TOGGLEPRMSTRATEGY_H_
 #define TOGGLEPRMSTRATEGY_H_
@@ -8,6 +6,14 @@
 #include "Utilities/MetricUtils.h"
 #include "boost/lambda/lambda.hpp"
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup MotionPlanningStrategies
+/// @brief Toggle PRM builds two roadmaps, one free and one obstacle
+/// @tparam MPTraits Motion planning universe
+///
+/// Toggle PRM. Constructs a free roadmap and an obstacle roadmap and uses
+/// witnesses to aid construction of the two roadmaps.
+////////////////////////////////////////////////////////////////////////////////
 template<class MPTraits>
 class TogglePRMStrategy : public MPStrategyMethod<MPTraits> {
 

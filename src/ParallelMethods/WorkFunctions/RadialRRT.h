@@ -1,7 +1,3 @@
-//////////////////////////////////
-//HEADER RadialRRT.h
-/////////////////////////////////
-
 #ifndef RADIALRRT_H_
 #define RADIALRRT_H_
 
@@ -12,7 +8,12 @@
 
 using namespace psbmp;
 
-// Maintains a vector of size 2 with Min at the front and Max at the end
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup ParallelMethods
+/// @brief TODO
+///
+/// TODO
+/// Maintains a vector of size 2 with Min at the front and Max at the end
 void PushMinMax(vector<double>& _vec, double _num) {
   // Empty Case
   if (_vec.size() == 0)
@@ -36,7 +37,12 @@ void PushMinMax(vector<double>& _vec, double _num) {
 }
 
 
-// from cartesion to spherical
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup ParallelMethods
+/// @brief TODO
+///
+/// TODO
+/// from cartesion to spherical
 template<class CfgType>
 vector<double>
 GetSphericalCoordinates(CfgType& _cfg) {
@@ -72,7 +78,12 @@ GetSphericalCoordinates(CfgType& _cfg) {
   return coordinates;
 }
 
-// from spherical to cartesian
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup ParallelMethods
+/// @brief TODO
+///
+/// TODO
+/// from spherical to cartesian
 vector<double>
 GetCartesianCoordinates(vector<double> sphericalCoordinates) {
   vector<double> coordinates(2);
@@ -96,6 +107,11 @@ GetCartesianCoordinates(vector<double> sphericalCoordinates) {
 }
 
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup ParallelMethods
+/// @brief TODO
+///
+/// TODO
 template<class CfgType, class Environment>
 CfgType
 SelectDirection(Environment* _env, CfgType dir){
@@ -109,12 +125,22 @@ SelectDirection(Environment* _env, CfgType dir){
   return dir;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup ParallelMethods
+/// @brief TODO
+///
+/// TODO
 template<class CfgType>
 CfgType
 SelectDirection(CfgType& _regionCand, vector<CfgType>& _neighbors, double _radius) {
   SelectDirection(_regionCand, _neighbors, _radius, 0);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup ParallelMethods
+/// @brief TODO
+///
+/// TODO
 template<class CfgType>
 CfgType
 SelectDirection(CfgType& _regionCand, vector<CfgType>& _neighbors, double _radius, double _overlap) {
@@ -199,7 +225,12 @@ SelectDirection(CfgType& _regionCand, vector<CfgType>& _neighbors, double _radiu
   return dir;
 }
 
-// Gets the point that is in between the candidate and the neighbor
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup ParallelMethods
+/// @brief TODO
+///
+/// TODO
+/// Gets the point that is in between the candidate and the neighbor
 template<class CfgType>
 CfgType GetMiddlePoint(CfgType _regionCand, CfgType _neighbor, double _radius) {
   CfgType middlePoint;
@@ -216,6 +247,11 @@ CfgType GetMiddlePoint(CfgType _regionCand, CfgType _neighbor, double _radius) {
 }
 
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup ParallelMethods
+/// @brief TODO
+///
+/// TODO
 template<class CfgType>
 vector<CfgType>
 GetMiddlePoints(CfgType& _regionCand, vector<CfgType>& _neighbors, double _radius) {
@@ -229,7 +265,13 @@ GetMiddlePoints(CfgType& _regionCand, vector<CfgType>& _neighbors, double _radiu
 
 }
 
-////TODO - Move to region class
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup ParallelMethods
+/// @brief TODO
+///
+/// TODO
+/// @todo - Move to region class
+////////////////////////////////////////////////////////////////////////////////
 template<class MPTraits>
 class RadialRegion {
   public:
@@ -339,6 +381,12 @@ template <typename Accessor, class MPTraits>
   }; //struct proxy
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup ParallelMethods
+/// @brief TODO
+///
+/// TODO
+////////////////////////////////////////////////////////////////////////////////
 template<class MPTraits>
 class ConnectRegion {
   private:
@@ -390,6 +438,12 @@ class ConnectRegion {
 
 
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup ParallelMethods
+/// @brief TODO
+///
+/// TODO
+////////////////////////////////////////////////////////////////////////////////
 template<class MPTraits>
 class RadialRegionEdge {
 
@@ -452,6 +506,12 @@ class RadialRegionEdge {
 };
 
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup ParallelMethods
+/// @brief TODO
+///
+/// TODO
+////////////////////////////////////////////////////////////////////////////////
 template<class MPTraits>
 struct RadialRegionVertex{
   private:
@@ -489,6 +549,12 @@ struct RadialRegionVertex{
 
 };
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup ParallelMethods
+/// @brief TODO
+///
+/// TODO
+////////////////////////////////////////////////////////////////////////////////
 template<class MPTraits>
 struct RadialRegionVertex2D{
   public:
@@ -532,6 +598,12 @@ struct RadialRegionVertex2D{
 
 
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup ParallelMethods
+/// @brief TODO
+///
+/// TODO
+////////////////////////////////////////////////////////////////////////////////
 template<class MPTraits>
 struct RegionVertexByCCs{
   private:
@@ -574,6 +646,12 @@ struct RegionVertexByCCs{
 
 
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup ParallelMethods
+/// @brief TODO
+///
+/// TODO
+////////////////////////////////////////////////////////////////////////////////
 template<class MPTraits>
 class BuildRadialRRT {
 
@@ -724,6 +802,12 @@ class BuildRadialRRT {
 
 
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup ParallelMethods
+/// @brief TODO
+///
+/// TODO
+////////////////////////////////////////////////////////////////////////////////
 template<class MPTraits>
 class BuildRadialBlindRRT {
 
@@ -1032,6 +1116,12 @@ VID GetClosestCentroid(CfgType _centroid, vector<pair<size_t, VID> > _ccs, Color
 
 };*/
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup ParallelMethods
+/// @brief TODO
+///
+/// TODO
+////////////////////////////////////////////////////////////////////////////////
 template<typename VID>
 struct RegionCCs {
   typedef  vector<pair<size_t, VID> > result_type;
@@ -1041,6 +1131,12 @@ struct RegionCCs {
     }
 };
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup ParallelMethods
+/// @brief TODO
+///
+/// TODO
+////////////////////////////////////////////////////////////////////////////////
 template<typename MPTraits>
 struct RegionLocalTree {
   typedef typename MPTraits::MPProblemType MPProblemType;
@@ -1056,6 +1152,12 @@ struct RegionLocalTree {
 };
 
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup ParallelMethods
+/// @brief TODO
+///
+/// TODO
+////////////////////////////////////////////////////////////////////////////////
 template<class MPTraits>
 class ConnectGlobalCCs {
   private:
@@ -1245,6 +1347,12 @@ class ConnectGlobalCCs {
 
 
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup ParallelMethods
+/// @brief TODO
+///
+/// TODO
+////////////////////////////////////////////////////////////////////////////////
 // t = vertex descr
 template<typename T>
 struct concat_vector_wf
@@ -1260,6 +1368,12 @@ struct concat_vector_wf
     }
 };
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup ParallelMethods
+/// @brief TODO
+///
+/// TODO
+////////////////////////////////////////////////////////////////////////////////
 template<typename VID>
 struct DeleteCC {
   typedef void result_type;

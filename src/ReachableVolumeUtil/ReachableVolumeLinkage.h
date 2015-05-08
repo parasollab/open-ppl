@@ -12,6 +12,12 @@ double abs(double n)
 }
 */
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup ReachableUtils
+/// @brief TODO
+///
+/// TODO
+////////////////////////////////////////////////////////////////////////////////
 class ReachableVolumeLinkage{
  private:
   Vector3d m_linkageRoot;  //root of linkage
@@ -26,13 +32,13 @@ class ReachableVolumeLinkage{
   static const bool m_debug = false;
 
   //_nAttempts is the number of samples attempted before it fails
-  ReachableVolumeLinkage(const char* filename, map<int,shared_ptr<ReachableVolumeJoint> > *_RVSpaceJointConstraints, int _nAttempts = 10000, bool _loop=false){  
+  ReachableVolumeLinkage(const char* filename, map<int,shared_ptr<ReachableVolumeJoint> > *_RVSpaceJointConstraints, int _nAttempts = 10000, bool _loop=false){
     m_loop=_loop;
     m_nAttempts=_nAttempts;
     m_RVSpaceJointConstraints=_RVSpaceJointConstraints;
   }
 
-  ReachableVolumeLinkage(vector<pair<double, double> >* _linkLengths, map<int,shared_ptr<ReachableVolumeJoint> > *_RVSpaceJointConstraints, int _nAttempts = 10000, bool _loop=false){  
+  ReachableVolumeLinkage(vector<pair<double, double> >* _linkLengths, map<int,shared_ptr<ReachableVolumeJoint> > *_RVSpaceJointConstraints, int _nAttempts = 10000, bool _loop=false){
     m_loop=_loop;
     m_nAttempts=_nAttempts;
     m_linkLengths=shared_ptr<vector<pair<double, double> > >(_linkLengths);  //-------could be costly to copy, consider using prt
@@ -40,14 +46,14 @@ class ReachableVolumeLinkage{
   }
 
 
-  
+
 
   //assumes that the first element of m_reachableVolumes has been set
   //computes tree of reachable volumes until we have one reachable volume that is the reachable volume of the entire linkage
   //stores tree of reachable volumes in m_reachableVolumes (where each element of m_reachableVolumes is one lever of the tree)
   void setReachableVolumes(shared_ptr<vector<pair<double, double> > > _linkLengths, vector<int> &_earParentLinks, vector<shared_ptr<ReachableVolumeLinkage> > &_RVLinkages, string _treeStructure = "EndEffectorFirst"){
     m_linkLengths = _linkLengths;
-    setReachableVolumes(_earParentLinks, _RVLinkages, _treeStructure); 
+    setReachableVolumes(_earParentLinks, _RVLinkages, _treeStructure);
   }
 
 
@@ -90,12 +96,12 @@ class ReachableVolumeLinkage{
 	rvj->m_children.push_back((*treeLevel)[i]);
         rvj->m_children.push_back((*treeLevel)[i+1]);
 	(*treeLevel)[i]->m_parent=rvj;
-        (*treeLevel)[i+1]->m_parent=rvj;       
+        (*treeLevel)[i+1]->m_parent=rvj;
 	(*treeLevel)[i+1]->m_ReachableVolumeToParent=shared_ptr<ReachableVolume>(new ReachableVolume(0,0,0));
         (*treeLevel)[i]->m_ReachableVolumeToParent=(*treeLevel)[i]->m_reachableVolumesJoint->front();
 	rvj->m_jointID=(*treeLevel)[i+1]->m_jointID;
 	(*treeLevel)[i+1]->m_jointID=-1;
-         
+
         nextLevel->push_back(shared_ptr<ReachableVolumeJointTreeNode>(rvj));
         //still need to address linkages rooted at joint
         //current setup won't work for trees
@@ -135,14 +141,14 @@ class ReachableVolumeLinkage{
     int size=m_linkLengths->size();
     if(m_loop)
       size--;
-    
+
    //create top level of tree by creating a reachable volume for each link in m_linkageLengths
-  
+
     ReachableVolumeJointTreeNode* current;
     int nIter;
-    if(_forward){ 
-      current = new ReachableVolumeJointTreeNode();    
-      current->m_ReachableVolumeToParent=shared_ptr<ReachableVolume>(new ReachableVolume(0, 0,1)); 
+    if(_forward){
+      current = new ReachableVolumeJointTreeNode();
+      current->m_ReachableVolumeToParent=shared_ptr<ReachableVolume>(new ReachableVolume(0, 0,1));
       current->m_reachableVolumesJoint->push_back(shared_ptr<ReachableVolume>(new ReachableVolume(0, 0,1)));
       current->m_jointID=m_baseJointID-1;
       nIter=size;
@@ -150,7 +156,7 @@ class ReachableVolumeLinkage{
       current=new ReachableVolumeJointTreeNode;
       current->m_ReachableVolumeToParent=shared_ptr<ReachableVolume>(new ReachableVolume((*m_linkLengths)[size-1].first, (*m_linkLengths)[size-1].second,1));
       current->m_jointID=size+m_baseJointID-1;
-      map<int, shared_ptr<ReachableVolumeJoint> >::iterator iter=m_RVSpaceJointConstraints->find(current->m_jointID);	    
+      map<int, shared_ptr<ReachableVolumeJoint> >::iterator iter=m_RVSpaceJointConstraints->find(current->m_jointID);
       if(iter!=m_RVSpaceJointConstraints->end())
 	current->m_reachableVolumesJoint=iter->second->m_reachableVolumesJoint;
       if(m_loop){
@@ -179,19 +185,19 @@ class ReachableVolumeLinkage{
 	  jointID=size-i;
 	  linkID=size-i;
 	}
-       
+
 	ReachableVolumeJointTreeNode *tmp = new ReachableVolumeJointTreeNode();
 
 	//add any problems specified joint constraints for joint (constraints set in .tree file)
-	map<int, shared_ptr<ReachableVolumeJoint> >::iterator iter=m_RVSpaceJointConstraints->find(jointID);	    
+	map<int, shared_ptr<ReachableVolumeJoint> >::iterator iter=m_RVSpaceJointConstraints->find(jointID);
 	if(iter!=m_RVSpaceJointConstraints->end()){
 	  tmp->m_reachableVolumesJoint=iter->second->m_reachableVolumesJoint;
 	}
 
 	//add constraint from parent (i.e. mk sum of reachable volume of parent and reachable volume of link connecting joint to parent)
 	tmp->addConstraint(current->mkSum((*m_linkLengths)[linkID].first, (*m_linkLengths)[linkID].second)->m_reachableVolumesJoint);  				    current->m_parent=tmp;    //parent = joint from last itteration
-  
-	//find any links rooted and current and set their reachable volumes     				   
+
+	//find any links rooted and current and set their reachable volumes
 	vector<shared_ptr<ReachableVolumeLinkage> > *childLinks = getLinkagesRootedAt(_earParentLinks, _RVLinkages, jointID+m_baseJointID-1);
 	for(vector<shared_ptr<ReachableVolumeLinkage> >::iterator iter = childLinks->begin(); iter!=childLinks->end(); iter++){
 	  (*iter)->setReachableVolumesLinear(_earParentLinks, _RVLinkages,false);
@@ -211,14 +217,14 @@ class ReachableVolumeLinkage{
       m_root=shared_ptr<ReachableVolumeJointTreeNode>(current);
       if(m_loop&&_forward){
 	m_root->addConstraint(shared_ptr<ReachableVolume>(new ReachableVolume(m_linkLengths->back().first, m_linkLengths->back().second)));
-      }   
+      }
   }
 
 
 
 
- 
- 
+
+
 
 
  //returns angle offset between line(p1,p2) and line(p3,p2) in radians
@@ -262,12 +268,12 @@ class ReachableVolumeLinkage{
     + (unit_axis[0]*unit_axis[2] * (1-cos(_theta)) + unit_axis[1] * sin (_theta)) * _v[2];
 
   r[1] = (unit_axis[1]*unit_axis[0] * (1-cos(_theta)) + unit_axis[2] * sin (_theta)) * _v[0]
-    + (cos(_theta)+pow(unit_axis[1],2)*(1-cos(_theta))) * _v[1] 
+    + (cos(_theta)+pow(unit_axis[1],2)*(1-cos(_theta))) * _v[1]
     + (unit_axis[1]*unit_axis[2] * (1-cos(_theta)) - unit_axis[0] * sin (_theta)) * _v[2];
 
   r[2] = (unit_axis[2]*unit_axis[0] * (1-cos(_theta)) - unit_axis[1] * sin (_theta)) * _v[0]
     + (unit_axis[2]*unit_axis[1] * (1-cos(_theta)) + unit_axis[0] * sin (_theta)) * _v[1]
-    + (cos(_theta)+pow(unit_axis[2],2)*(1-cos(_theta))) * _v[2]; 
+    + (cos(_theta)+pow(unit_axis[2],2)*(1-cos(_theta))) * _v[2];
 
   return r;
 }
@@ -285,7 +291,7 @@ class ReachableVolumeLinkage{
     _theta=-_theta;
   return rotateVectorAboutAxis(_v, normal,_theta);
  }
-	
+
 
  static inline double getPsiAngleWRTUp_new(const Vector3d &_p1, const Vector3d &_p2, const Vector3d &_p3){
    //set origin to be at _p2
@@ -324,7 +330,7 @@ class ReachableVolumeLinkage{
  static inline double getPsiAngleWRTUp(const Vector3d &p1, const Vector3d &p2, const Vector3d &p3, double theta){
    double d = ReachableVolume::distance(p3,p2);
    Vector3d u = (p2-p1)/ReachableVolume::distance(p2,p1);
-   Vector3d pCircle = u*d*cos(theta)+p2;  //Center of circle containing joint positions for p3 with articulated angle = theta 
+   Vector3d pCircle = u*d*cos(theta)+p2;  //Center of circle containing joint positions for p3 with articulated angle = theta
    Vector3d pTop; //point on circle in upward direction
    double dXY=sqrt(pow(p1[0]-p2[0],2)+pow(p1[1]-p2[1],2));
    if(dXY==0){
@@ -472,7 +478,7 @@ class ReachableVolumeLinkage{
    double yaw = atan2(firstNode[1],firstNode[0]);
    while(yaw<0)
      yaw +=2*PI;
-   return yaw; 
+   return yaw;
  }
 
 
@@ -483,7 +489,7 @@ class ReachableVolumeLinkage{
    double yaw = atan2(firstNode[1],firstNode[0]);
    while(yaw<0)
      yaw +=2*PI;
-   return yaw; 
+   return yaw;
  }
 };
 

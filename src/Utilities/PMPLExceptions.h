@@ -6,6 +6,17 @@
 #include <stdexcept>
 using namespace std;
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup Exceptions
+/// @brief Describe where in code an error occurs.
+/// @tparam X Filename type
+/// @tparam Y Function name type
+/// @tparam Z Line type
+/// @param x Filename
+/// @param y Function name
+/// @param z Line number
+/// @return String describing when in code something occurs
+////////////////////////////////////////////////////////////////////////////////
 template<typename X, typename Y, typename Z>
 string WhereAt(X x, Y y, Z z) {
   ostringstream oss;
@@ -34,18 +45,30 @@ class PMPLException : public runtime_error {
       }
 };
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup Exceptions
+/// @brief Parse exceptions
+////////////////////////////////////////////////////////////////////////////////
 class ParseException : public PMPLException {
   public:
     ParseException(const string& _where, const string& _message) :
       PMPLException("Parse Exception", _where, _message) {}
 };
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup Exceptions
+/// @brief Write exceptions
+////////////////////////////////////////////////////////////////////////////////
 class WriteException : public PMPLException {
   public:
     WriteException(const string& _where, const string& _message) :
       PMPLException("Write Exception", _where, _message) {}
 };
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup Exceptions
+/// @brief Run time exceptions
+////////////////////////////////////////////////////////////////////////////////
 class RunTimeException : public PMPLException {
   public:
     RunTimeException(const string& _where, const string& _message) :

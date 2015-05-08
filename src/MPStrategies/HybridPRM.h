@@ -1,9 +1,14 @@
 #ifndef HYBRID_PRM_H_
 #define HYBRID_PRM_H_
 
-
 #include "MPStrategyMethod.h"
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup MotionPlanningStrategyUtils
+/// @brief TODO
+///
+/// TODO
+////////////////////////////////////////////////////////////////////////////////
 struct Visibility {
     int m_attempts, m_connections;
 
@@ -18,7 +23,12 @@ struct Visibility {
       }
 };
 
-
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup MotionPlanningStrategyUtils
+/// @brief TODO
+///
+/// TODO
+////////////////////////////////////////////////////////////////////////////////
 struct NodeTypeCounts {
     int m_numCreate, m_numMerge, m_numExpand, m_numOversample;
 
@@ -28,6 +38,13 @@ struct NodeTypeCounts {
     friend ostream& operator<<(ostream& _os, const NodeTypeCounts& _nt);
 };
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup MotionPlanningStrategies
+/// @brief TODO
+/// @tparam MPTraits Motion planning universe
+///
+/// TODO
+////////////////////////////////////////////////////////////////////////////////
 template<class MPTraits>
 class HybridPRM : public MPStrategyMethod<MPTraits> {
   public:

@@ -1,7 +1,3 @@
-//////////////////////////////////
-//HEADER RegularSubdivisionMethod.h
-/////////////////////////////////
-
 #ifndef REGULARSUBDIVISIONMETHOD_H_
 #define REGULARSUBDIVISIONMETHOD_H_
 
@@ -13,6 +9,13 @@
 #include "ParallelMethods/WorkFunctions/RegionMapConnect.h"
 
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup ParallelMethods
+/// @brief TODO
+/// @tparam MPTraits Motion planning universe
+///
+/// TODO
+////////////////////////////////////////////////////////////////////////////////
 template<class MPTraits>
 class RegularSubdivisionMethod : public MPStrategyMethod<MPTraits>{
   public:

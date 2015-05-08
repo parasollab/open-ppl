@@ -6,7 +6,7 @@
 
 //convention:
 //Origin located at the base joint of the robot
-//y axis is the axis of the base joint 
+//y axis is the axis of the base joint
 //  for rotational joints, rotation base joint is about y axis
 //  for planar joints, motion of base joint is in xy plane
 //DRV formed by rotating DRV_xy about y axis
@@ -18,7 +18,13 @@
 #include "ReachableVolumeJoint.h"
 
 class ReachableVolumeJoint;
-//segment of boarder of DRV_xy
+
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup ReachableUtils
+/// @brief TODO
+///
+/// segment of boarder of DRV_xy
+////////////////////////////////////////////////////////////////////////////////
 class Segment_DRV_xy{
  public:
   bool m_Top;  //is the segment part of the top or bottom of DRV_xy
@@ -38,7 +44,7 @@ class Segment_DRV_xy{
 
   bool Below(Vector2d _p){
     if(distance(_p,m_center)<m_d) return true;
-    return false;    
+    return false;
   }
 
 
@@ -46,7 +52,7 @@ class Segment_DRV_xy{
     if(m_Top){
       return Below(_p);
     }else{
-      return !Below(_p);      
+      return !Below(_p);
     }
   }
 
@@ -114,11 +120,17 @@ class Segment_DRV_xy{
     p2[1]=(b+d)/2+(d-b)*(r0*r0-r1*r1)/(2*D*D)+2*(a-c)*delta/(D*D);
 
     //need to impliment
-    return false; 
+    return false;
   }
 
 };
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup ReachableUtils
+/// @brief TODO
+///
+/// TODO
+////////////////////////////////////////////////////////////////////////////////
 class DRV_xy{
   //Holds geometric information for intersection of DRV with xy plane
   //starts with first bottom segment and goes in counter clockwise direction ending with last top secment
@@ -338,6 +350,12 @@ class DRV_xy{
   }
 };
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup ReachableUtils
+/// @brief TODO
+///
+/// TODO
+////////////////////////////////////////////////////////////////////////////////
 class DirectedReachableVolume : public BaseReachableVolume{
   //represents DRV
   //equivalent to DRV_yx rotated about xy plane
@@ -415,7 +433,7 @@ public:
     return m_drv_xy.isInDRV_xy(x, _point[1]);
   }
 
-  
+
   //Returns true if _point is in the reachable volume stored in this class
   bool IsInReachableVolumeBase(const Vector3d& _point){
     double dist = distance(m_base, _point);
@@ -438,7 +456,7 @@ public:
 
   /*  Moved to base class
   //_r, _psi, and _theta are the position of the point with respect to the base of the chain
-  //r = distance from origin, _psi = rotation in x y plane, _theta = inclination in z direction 
+  //r = distance from origin, _psi = rotation in x y plane, _theta = inclination in z direction
   //Returns the Euclidean coordinates of this point
   //The point returned is a point in the linkage's reachable volume space (where the origin is located at the base of the chain)
   inline static Vector3d convertRadialToEuclidean(double _r, double _psi, double _theta){

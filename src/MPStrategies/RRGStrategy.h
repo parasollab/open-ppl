@@ -3,6 +3,14 @@
 
 #include "BasicRRTStrategy.h"
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup MotionPlanningStrategies
+/// @ingroup DeadCode
+/// @brief TODO Dead Code
+///
+/// TODO
+/// @todo Dead code. Figure out what to do with this.
+////////////////////////////////////////////////////////////////////////////////
 class RRGStrategy : public BasicRRTStrategy {
   public:
     RRGStrategy(XMLNode& _node, MPProblem* _problem);

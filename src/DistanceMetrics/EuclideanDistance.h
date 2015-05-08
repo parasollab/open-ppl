@@ -6,8 +6,8 @@
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup DistanceMetrics
 /// @brief TODO.
+/// @tparam MPTraits Motion planning universe
 ///
-/// TODO.
 /// Euclidean Distance is Minkowski Distance where r1=r2=2, r3=0.5
 /// This allows us to use Minkowski Distance to calculate Euclidean Distance
 ////////////////////////////////////////////////////////////////////////////////

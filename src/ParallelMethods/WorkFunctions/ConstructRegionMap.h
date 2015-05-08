@@ -1,21 +1,20 @@
-/////////////////////////////
-//HEADER ConstructRegionMap.h
-/////////////////////////////
 #ifndef CONSTRUCTREGIONMAP_H_
 #define CONSTRUCTREGIONMAP_H_
 
 #include "ParallelMethods/ParallelSBMPHeader.h"
 #include "MPProblem/BoundingBox.h"
 
-//typedef typename stapl::dynamic_graph<stapl::DIRECTED, stapl::NONMULTIEDGES, Region<BoundingBox>, WeightType> RRGraph;
-//typedef RoadmapGraph<CfgType, WeightType>::VID VID;
-
 using namespace psbmp;
 using namespace stapl;
 
-
-/// General Framework for roadmap construction, calls MPStrategy method (i.e. BasicPRM, Basic RRT) directly
-/// to be called if region migration is not needed
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup ParallelMethods
+/// @brief TODO
+///
+/// General Framework for roadmap construction, calls MPStrategy method (i.e.
+/// BasicPRM, Basic RRT) directly to be called if region migration is not
+/// needed.
+////////////////////////////////////////////////////////////////////////////////
 template<class MPTraits>
 class ConstructRoadmap {
 
@@ -57,6 +56,12 @@ public:
   }
 };
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup ParallelMethods
+/// @brief TODO
+///
+/// TODO
+////////////////////////////////////////////////////////////////////////////////
 template<class MPTraits>
 class NodeGenerator {
 
@@ -118,6 +123,12 @@ public:
   }
 };
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup ParallelMethods
+/// @brief TODO
+///
+/// TODO
+////////////////////////////////////////////////////////////////////////////////
 template<class MPTraits>
 class NodeConnector {
 private:

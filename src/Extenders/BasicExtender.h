@@ -6,6 +6,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup Extenders
 /// @brief Basic straight-line extension.
+/// @tparam MPTraits Motion planning universe
 ///
 /// Extends in straight-line through @cspace from \f$q_{near}\f$ towards
 /// \f$q_{dir}\f$ until either \f$q_{dir}\f$ is reached, a distance of
@@ -30,10 +31,10 @@ class BasicExtender : public ExtenderMethod<MPTraits> {
         CfgType& _new, LPOutput<MPTraits>& _lpOutput);
 
     bool Expand(const CfgType& _start, const CfgType& _dir, CfgType& _newCfg,
-        double _delta, LPOutput<MPTraits>& _lpOutput, 
+        double _delta, LPOutput<MPTraits>& _lpOutput,
         double _posRes, double _oriRes);
     bool Expand(const CfgType& _start, const CfgType& _dir, CfgType& _newCfg,
-        double _delta, LPOutput<MPTraits>& _lpOutput, CDInfo& _cdInfo, 
+        double _delta, LPOutput<MPTraits>& _lpOutput, CDInfo& _cdInfo,
         double _posRes, double _oriRes);
 
   protected:
@@ -44,15 +45,15 @@ class BasicExtender : public ExtenderMethod<MPTraits> {
 };
 
 template<class MPTraits>
-BasicExtender<MPTraits>::BasicExtender(const string& _dmLabel, 
+BasicExtender<MPTraits>::BasicExtender(const string& _dmLabel,
     const string& _vcLabel, double _delta, bool _randomOrientation) :
-  ExtenderMethod<MPTraits>(), m_dmLabel(_dmLabel), m_vcLabel(_vcLabel), 
+  ExtenderMethod<MPTraits>(), m_dmLabel(_dmLabel), m_vcLabel(_vcLabel),
   m_delta(_delta), m_randomOrientation(_randomOrientation) {
     this->SetName("BasicExtender");
   }
 
 template<class MPTraits>
-BasicExtender<MPTraits>::BasicExtender(MPProblemType* _problem, 
+BasicExtender<MPTraits>::BasicExtender(MPProblemType* _problem,
     XMLNode& _node) :
   ExtenderMethod<MPTraits>(_problem, _node) {
     this->SetName("BasicExtender");
@@ -64,11 +65,11 @@ void
 BasicExtender<MPTraits>::ParseXML(XMLNode& _node) {
   m_dmLabel = _node.Read("dmLabel",true,"",
                                        "Distance metric label");
-  m_vcLabel = _node.Read("vcLabel", true, "", 
+  m_vcLabel = _node.Read("vcLabel", true, "",
                                        "Validity checker label");
-  m_delta = _node.Read("delta", false, 1.0, 0.0, MAX_DBL, 
+  m_delta = _node.Read("delta", false, 1.0, 0.0, MAX_DBL,
                                      "Delta distance");
-  m_randomOrientation = _node.Read("randomOrientation", false, 
+  m_randomOrientation = _node.Read("randomOrientation", false,
                                                true, "Random orientation");
 }
 
@@ -119,18 +120,18 @@ BasicExtender<MPTraits>::Extend(const CfgType& _near, const CfgType& _dir,
  */
 template<class MPTraits>
 bool
-BasicExtender<MPTraits>::Expand(const CfgType& _start, const CfgType& _dir, 
-    CfgType& _newCfg, double _delta, LPOutput<MPTraits>& _lpOutput, 
+BasicExtender<MPTraits>::Expand(const CfgType& _start, const CfgType& _dir,
+    CfgType& _newCfg, double _delta, LPOutput<MPTraits>& _lpOutput,
     double _posRes, double _oriRes) {
   CDInfo cdInfo;
-  return Expand(_start, _dir, _newCfg, _delta, _lpOutput, cdInfo, _posRes, 
+  return Expand(_start, _dir, _newCfg, _delta, _lpOutput, cdInfo, _posRes,
                 _oriRes);
 }
 
 template<class MPTraits>
 bool
-BasicExtender<MPTraits>::Expand(const CfgType& _start, const CfgType& _dir, 
-    CfgType& _newCfg, double _delta, LPOutput<MPTraits>& _lpOutput, 
+BasicExtender<MPTraits>::Expand(const CfgType& _start, const CfgType& _dir,
+    CfgType& _newCfg, double _delta, LPOutput<MPTraits>& _lpOutput,
     CDInfo& _cdInfo, double _posRes, double _oriRes) {
 
   //Setup...primarily for collision checks that occur later on
@@ -150,7 +151,7 @@ BasicExtender<MPTraits>::Expand(const CfgType& _start, const CfgType& _dir,
 
   //Move out from start towards dir, bounded by number of ticks allowed at a
   //given resolution and the distance _delta: the maximum distance to grow
-  while(!collision && dm->Distance(_start, tick) <= _delta && 
+  while(!collision && dm->Distance(_start, tick) <= _delta &&
         ticker <= nTicks) {
     previous = tick;
     tick += incr;
