@@ -6,6 +6,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup Metrics
 /// @brief Base algorithm abstraction for \ref Metrics.
+/// @tparam MPTraits Motion planning universe
 ///
 /// MetricMethod has one main function, @c operator() which returns a value
 /// associated with the roadmap for that metric.
