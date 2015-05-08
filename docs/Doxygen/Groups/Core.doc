@@ -36,7 +36,7 @@
 /// The Environment is essentially the workspace of the motion planning problem.
 /// We define a workspace as a set of MultiBody which are essentially either
 /// robots or obstacle geometries and a Boundary to define the
-/// sampling/exploration region for the planner. Defined in Environment.h.
+/// sampling/exploration region for the planner.
 ////////////////////////////////////////////////////////////////////////////////
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -47,8 +47,7 @@
 /// Various configuration types defining the valid operations on @cspace
 /// and points and vectors thereof, e.g., @c operator+ for adding a directional
 /// vector to a point configuration. It is important to remember that @cspace is
-/// d-Dimensional, and points and vectors all behave exactly the same. Defined
-/// in Cfg.h.
+/// d-Dimensional, and points and vectors all behave exactly the same.
 ////////////////////////////////////////////////////////////////////////////////
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -57,19 +56,18 @@
 /// @brief Configuration Space on surfaces.
 ///
 /// Various configuration types which are bound to surfaces. These are
-/// primarily used by the Group Behaviors code base. Defined in CfgSurface.h.
+/// primarily used by the Group Behaviors code base.
 ////////////////////////////////////////////////////////////////////////////////
 
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup Cfgs
-/// @defgroup ReachableDistanceCfgs Reachable Distance Configuration Types
-/// @brief Reachable Distance Space (RD-space).
+/// @defgroup ReachableCfgs Reachable Distance/Volume Configuration Types
+/// @brief Reachable Distance/Volumn Space (RD/V-space).
 ///
 /// Various configuration types which are related to articulated linkages
 /// and closed chain robotic systems. Reachable Distance is a theoretical
 /// foundation for sampling configurations from Reachable Distance Space
-/// (RD-space). These configuration classes represent this concept. Defined in
-/// Cfg_reach_cc.h.
+/// (RD-space). These configuration classes represent this concept.
 ////////////////////////////////////////////////////////////////////////////////
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -80,7 +78,7 @@
 /// Simple paths are defined as a sequence of intermediate nodes
 /// \f$I={q_1, q_2, \ldots, q_n}\f$ and a real value representing the length or
 /// cost of the transition between the source and goal vertex (not included in
-/// the Weight). Defined in DefaultWeight.h.
+/// the Weight).
 ////////////////////////////////////////////////////////////////////////////////
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -92,7 +90,6 @@
 /// approximate a planning space (either @cfree or @cobst) commonly used by
 /// sampling-based motion planning algorithms. \f$V\f$, or the set of vertices,
 /// are all \ref Cfgs and \f$E\f$, or the set of edges, are all \ref Weights.
-/// Defined in Roadmap.h.
 ////////////////////////////////////////////////////////////////////////////////
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -110,8 +107,7 @@
 /// @brief Utility classes and functions related to Motion Planning.
 ///
 /// The utility components of PMPL common to motion planning. These include
-/// random number generation, geometric utilites, method sets, etc. Defined in
-/// MPUtils.h
+/// random number generation, geometric utilites, method sets, etc.
 ////////////////////////////////////////////////////////////////////////////////
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -120,7 +116,6 @@
 /// @brief Utility classes and functions related to statistics.
 ///
 /// The utility components of PMPL related to timing and statistics tracking.
-/// Defined in MetricUtils.h.
 ////////////////////////////////////////////////////////////////////////////////
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -129,7 +124,7 @@
 /// @brief Utility classes and functions related to file input and output.
 ///
 /// The utility components of PMPL common to file input and output, such as XML
-/// file parsing, path output, etc. Defined in IOUtils.h.
+/// file parsing, path output, etc.
 ////////////////////////////////////////////////////////////////////////////////
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -138,6 +133,6 @@
 /// @brief PMPL's runtime exceptions.
 ///
 /// PMPL provides support for various types of exceptions from input/output
-/// errors, to runtime errors, etc. Defined in PMPLExceptions.h
+/// errors, to runtime errors, etc.
 ////////////////////////////////////////////////////////////////////////////////
 
