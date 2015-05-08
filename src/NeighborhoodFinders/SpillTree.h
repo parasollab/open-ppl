@@ -1,22 +1,21 @@
-
-
 #ifndef _ST_SPILL_TREE_CLASS_H_
 #define _ST_SPILL_TREE_CLASS_H_
 
-
-
-
 #include "Graph.h"
-//#include <list>
 #include <vector>
 #include "CGAL/Cartesian_d.h"
 #include <CGAL/constructions_d.h>
 using namespace std;
 
-
 class Input;
 class Environment;
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup NeighborhoodFinderUtils
+/// @brief TODO
+///
+/// TODO
+////////////////////////////////////////////////////////////////////////////////
 template<typename CFGTYPE, typename WEIGHT>
 class vertexDistance{
 public:
@@ -31,7 +30,12 @@ public:
   }
 };
 
-
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup NeighborhoodFinderUtils
+/// @brief TODO
+///
+/// TODO
+////////////////////////////////////////////////////////////////////////////////
 template<typename CFGTYPE, typename WEIGHT>
 class spillTreeNode{
 
@@ -66,6 +70,12 @@ class spillTreeNode{
 };
 
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup NeighborhoodFinderUtils
+/// @brief TODO
+///
+/// TODO
+////////////////////////////////////////////////////////////////////////////////
 template<typename CFGTYPE, typename WEIGHT>
 class spillTree{
 

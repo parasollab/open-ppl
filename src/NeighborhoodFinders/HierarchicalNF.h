@@ -5,6 +5,13 @@
 
 #include <containers/sequential/graph/algorithms/connected_components.h>
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup NeighborhoodFinders
+/// @brief TODO
+/// @tparam MPTraits Motion planning universe
+///
+/// TODO
+////////////////////////////////////////////////////////////////////////////////
 template<class MPTraits>
 class HierarchicalNF : public NeighborhoodFinderMethod<MPTraits> {
   public:

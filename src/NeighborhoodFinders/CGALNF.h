@@ -16,6 +16,12 @@ using namespace std;
 
 typedef CGAL::Cartesian_d<double> K;
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup NeighborhoodFinderUtils
+/// @brief TODO
+///
+/// TODO
+////////////////////////////////////////////////////////////////////////////////
 class PMPLPointD : public K::Point_d {
   public:
     template<typename InputIterator>
@@ -36,6 +42,13 @@ typedef CGAL::Orthogonal_k_neighbor_search<TreeTraits> NeighborSearch;
 typedef NeighborSearch::Tree Tree;
 typedef PMPLPointD PointD;
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup NeighborhoodFinders
+/// @brief TODO
+/// @tparam MPTraits Motion planning universe
+///
+/// TODO
+////////////////////////////////////////////////////////////////////////////////
 class CGALNF: public NeighborhoodFinderMethod {
   public:
     CGALNF(string _dmm = "", double _epsilon = 0.0, bool _useScaling = false, string _label = "", MPProblem* _mp = NULL) :

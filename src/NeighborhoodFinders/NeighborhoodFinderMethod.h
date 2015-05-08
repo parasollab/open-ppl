@@ -6,52 +6,69 @@
 #include "Utilities/MPUtils.h"
 #include "MPProblem/RoadmapGraph.h"
 
-//these methods allow for dynamic dispatch for the templated functions within
-//these neighborhood finder classes
 namespace pmpl_detail {
 
-  template<typename NF, typename RDMP, typename I, typename CFG, typename O>
-    struct VirtualFindNeighbors{
-      public:
-        VirtualFindNeighbors(NF* _v, RDMP* _r, I _f, I _l, const CFG& _c, O _o) :
-          m_memory(_v), m_rdmp(_r), m_first(_f), m_last(_l), m_cfg(_c), m_output(_o){
-          }
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup NeighborhoodFinderUtils
+/// @brief Dynamic dispatch for template member functions of neighborhood
+///        finders.
+/// @tparam NF NeighborhoodFinderMethod type
+/// @tparam RDMP Roadmap type
+/// @tparam I Input iterator type
+/// @tparam CFG Configuration type
+/// @tparam O Output iterator type
+////////////////////////////////////////////////////////////////////////////////
+template<typename NF, typename RDMP, typename I, typename CFG, typename O>
+  struct VirtualFindNeighbors{
+    public:
+      VirtualFindNeighbors(NF* _v, RDMP* _r, I _f, I _l, const CFG& _c, O _o) :
+        m_memory(_v), m_rdmp(_r), m_first(_f), m_last(_l), m_cfg(_c), m_output(_o){
+        }
 
-        template<typename T>
-          void operator()(T& _t) {
-            T* tptr = dynamic_cast<T*>(m_memory);
-            if(tptr != NULL){
-              tptr->FindNeighbors(m_rdmp, m_first, m_last, m_cfg, m_output);
-            }
+      template<typename T>
+        void operator()(T& _t) {
+          T* tptr = dynamic_cast<T*>(m_memory);
+          if(tptr != NULL){
+            tptr->FindNeighbors(m_rdmp, m_first, m_last, m_cfg, m_output);
           }
-      private:
-        NF* m_memory;
-        RDMP* m_rdmp;
-        I m_first, m_last;
-        const CFG& m_cfg;
-        O m_output;
-    };
+        }
+    private:
+      NF* m_memory;
+      RDMP* m_rdmp;
+      I m_first, m_last;
+      const CFG& m_cfg;
+      O m_output;
+  };
 
-  template<typename NF, typename RDMP, typename I, typename O>
-    struct VirtualFindNeighborPairs{
-      public:
-        VirtualFindNeighborPairs(NF* _v, RDMP* _r, I _f1, I _l1, I _f2, I _l2, O _o) :
-          m_memory(_v), m_rdmp(_r), m_first1(_f1), m_last1(_l1), m_first2(_f2), m_last2(_l2), m_output(_o){
-          }
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup NeighborhoodFinderUtils
+/// @brief Dynamic dispatch for template member functions of neighborhood
+///        finders.
+/// @tparam NF NeighborhoodFinderMethod type
+/// @tparam RDMP Roadmap type
+/// @tparam I Input iterator type
+/// @tparam O Output iterator type
+////////////////////////////////////////////////////////////////////////////////
+template<typename NF, typename RDMP, typename I, typename O>
+  struct VirtualFindNeighborPairs{
+    public:
+      VirtualFindNeighborPairs(NF* _v, RDMP* _r, I _f1, I _l1, I _f2, I _l2, O _o) :
+        m_memory(_v), m_rdmp(_r), m_first1(_f1), m_last1(_l1), m_first2(_f2), m_last2(_l2), m_output(_o){
+        }
 
-        template<typename T>
-          void operator()(T& _t) {
-            T* tptr = dynamic_cast<T*>(m_memory);
-            if(tptr != NULL){
-              tptr->FindNeighborPairs(m_rdmp, m_first1, m_last1, m_first2, m_last2, m_output);
-            }
+      template<typename T>
+        void operator()(T& _t) {
+          T* tptr = dynamic_cast<T*>(m_memory);
+          if(tptr != NULL){
+            tptr->FindNeighborPairs(m_rdmp, m_first1, m_last1, m_first2, m_last2, m_output);
           }
-      private:
-        NF* m_memory;
-        RDMP* m_rdmp;
-        I m_first1, m_last1, m_first2, m_last2;
-        O m_output;
-    };
+        }
+    private:
+      NF* m_memory;
+      RDMP* m_rdmp;
+      I m_first1, m_last1, m_first2, m_last2;
+      O m_output;
+  };
 }
 
 // K      - NF will find k-closest neighbors

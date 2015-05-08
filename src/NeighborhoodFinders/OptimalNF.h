@@ -3,6 +3,13 @@
 
 #include "NeighborhoodFinderMethod.h"
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup NeighborhoodFinders
+/// @brief TODO
+/// @tparam MPTraits Motion planning universe
+///
+/// TODO
+////////////////////////////////////////////////////////////////////////////////
 template<class MPTraits>
 class OptimalNF : public NeighborhoodFinderMethod<MPTraits> {
   public:

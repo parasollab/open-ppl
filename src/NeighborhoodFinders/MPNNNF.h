@@ -8,7 +8,12 @@
 #include <functional>
 using namespace std;
 
-////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup NeighborhoodFinders
+/// @brief TODO
+///
+/// TODO
+////////////////////////////////////////////////////////////////////////////////
 template<class MPTraits>
 class MPNNNF : public NeighborhoodFinderMethod<MPTraits> {
   public:
@@ -61,11 +66,11 @@ class MPNNNF : public NeighborhoodFinderMethod<MPTraits> {
           InputIterator _first1, InputIterator _last1,
           InputIterator _first2, InputIterator _last2,
           OutputIterator _out);
-  
+
     void AddPoint(CfgType& _cfg, VID _v);
     void UpdateInternalModel();
-  
-  
+
+
   int m_cur_roadmap_version; // used when updating internal model
   double m_epsilon; // measure of approximateness used by internal kd-tree
   int m_use_scaling;
@@ -137,7 +142,7 @@ UpdateInternalModel()
      if(tmp_range > m_max_bbox_range) m_max_bbox_range = tmp_range;
   }
   if( this->m_debug ) { cout << "-done! setting bbox range: " << m_max_bbox_range << endl; }
-   
+
   if( this->m_debug ) { cout << "Updating internal model rdmp size " << curRdmpSize << endl; }
   int vertexIndex=0;
   for(VI v=g->begin(); v!=g->end(); v++,vertexIndex++) {
@@ -169,7 +174,7 @@ MPNNNF<MPTraits>::FindNeighbors(RoadmapType* _rmp, InputIterator _first, InputIt
   this->IncrementNumQueries();
   this->StartTotalTime();
   this->StartQueryTime();
-  
+
   this->UpdateInternalModel();
   vector< pair<VID, double> > closest;
   kdtree->KClosest(_cfg.GetData(), this->m_k, back_inserter(closest));

@@ -5,6 +5,13 @@
 
 #include <containers/sequential/graph/algorithms/count_hop_pairs.h>
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup NeighborhoodFinders
+/// @brief TODO
+/// @tparam MPTraits Motion planning universe
+///
+/// TODO
+////////////////////////////////////////////////////////////////////////////////
 template<class MPTraits>
 class HopLimitNF : public NeighborhoodFinderMethod<MPTraits> {
   public:

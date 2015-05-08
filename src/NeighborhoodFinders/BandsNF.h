@@ -15,36 +15,51 @@ class RankWeightedRandomPolicy;
 class DistanceWeightedRandomPolicy;
 
 namespace pmpl_detail { //hide NeighborhoodFinderMethodList in pmpl_detail namespace
-  typedef boost::mpl::list<
-    ClosestPolicy,
-    RandomPolicy,
-    PreferentialPolicy,
-    RankWeightedRandomPolicy,
-    DistanceWeightedRandomPolicy
+typedef boost::mpl::list<
+  ClosestPolicy,
+  RandomPolicy,
+  PreferentialPolicy,
+  RankWeightedRandomPolicy,
+  DistanceWeightedRandomPolicy
     > PolicyList;
 
-  template<typename P, typename RDMP, typename I, typename O>
-      struct VirtualSelectNeighbors{
-        public:
-          VirtualSelectNeighbors(P* _v, RDMP* _r, I _f, I _l, O _o) :
-            m_memory(_v), m_rdmp(_r), m_first(_f), m_last(_l), m_output(_o){}
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup NeighborhoodFinderUtils
+/// @brief TODO
+/// @tparam P Policy type
+/// @tparam RDMP Roadamp type
+/// @tparam I Input iterator type
+/// @tparam O Output iterator type
+///
+/// TODO
+////////////////////////////////////////////////////////////////////////////////
+template<typename P, typename RDMP, typename I, typename O>
+  struct VirtualSelectNeighbors{
+    public:
+      VirtualSelectNeighbors(P* _v, RDMP* _r, I _f, I _l, O _o) :
+        m_memory(_v), m_rdmp(_r), m_first(_f), m_last(_l), m_output(_o){}
 
-          template<typename T>
-            void operator()(T& _t) {
-              T* tptr = dynamic_cast<T*>(m_memory);
-              if(tptr != NULL){
-                tptr->SelectNeighbors(m_rdmp, m_first, m_last, m_output);
-              }
-            }
-        private:
-          P* m_memory;
-          RDMP* m_rdmp;
-          I m_first, m_last;
-          O m_output;
-      };
+      template<typename T>
+        void operator()(T& _t) {
+          T* tptr = dynamic_cast<T*>(m_memory);
+          if(tptr != NULL){
+            tptr->SelectNeighbors(m_rdmp, m_first, m_last, m_output);
+          }
+        }
+    private:
+      P* m_memory;
+      RDMP* m_rdmp;
+      I m_first, m_last;
+      O m_output;
+  };
 }
 
-/////// Policy definitions
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup NeighborhoodFinderUtils
+/// @brief TODO
+///
+/// TODO
+////////////////////////////////////////////////////////////////////////////////
 class Policy {
   public:
     Policy(size_t _k = 0, bool _debug = false) : m_k(_k), m_debug(_debug) {}
@@ -62,6 +77,12 @@ class Policy {
     bool m_debug;
 };
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup NeighborhoodFinderUtils
+/// @brief TODO
+///
+/// TODO
+////////////////////////////////////////////////////////////////////////////////
 class ClosestPolicy : public Policy {
   public:
     ClosestPolicy(size_t _k = 0, bool _debug = false) : Policy(_k, _debug) { }
@@ -98,6 +119,12 @@ class ClosestPolicy : public Policy {
 
 };
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup NeighborhoodFinderUtils
+/// @brief TODO
+///
+/// TODO
+////////////////////////////////////////////////////////////////////////////////
 class RandomPolicy : public Policy {
   public:
     RandomPolicy(size_t _k = 0, bool _debug = false) : Policy(_k, _debug) { }
@@ -140,6 +167,12 @@ class RandomPolicy : public Policy {
 
 };
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup NeighborhoodFinderUtils
+/// @brief TODO
+///
+/// TODO
+////////////////////////////////////////////////////////////////////////////////
 class PreferentialPolicy : public Policy {
   public:
     PreferentialPolicy(size_t _k = 0, bool _debug = false) : Policy(_k, _debug) {}
@@ -209,6 +242,12 @@ class PreferentialPolicy : public Policy {
       }
 };
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup NeighborhoodFinderUtils
+/// @brief TODO
+///
+/// TODO
+////////////////////////////////////////////////////////////////////////////////
 class RankWeightedRandomPolicy : public Policy {
   public:
     RankWeightedRandomPolicy(size_t _k = 0, double _alpha = 0.0, bool _debug = false) : Policy(_k, _debug) { m_alpha = _alpha; }
@@ -270,6 +309,12 @@ class RankWeightedRandomPolicy : public Policy {
     double m_alpha;
 };
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup NeighborhoodFinderUtils
+/// @brief TODO
+///
+/// TODO
+////////////////////////////////////////////////////////////////////////////////
 class DistanceWeightedRandomPolicy : public Policy {
   public:
     DistanceWeightedRandomPolicy(size_t _k = 0, double _alpha = 0, bool _debug = false) : Policy(_k, _debug) { m_alpha = _alpha; }
@@ -335,7 +380,13 @@ class DistanceWeightedRandomPolicy : public Policy {
 };
 
 
-/////// Band definitions
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup NeighborhoodFinderUtils
+/// @brief TODO
+/// @tparam MPTraits Motion planning universe
+///
+/// TODO
+////////////////////////////////////////////////////////////////////////////////
 template<class MPTraits>
 class Band : public MPBaseObject<MPTraits> {
   public:
@@ -445,6 +496,13 @@ class Band : public MPBaseObject<MPTraits> {
     Policy* m_policy;
 };
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup NeighborhoodFinderUtils
+/// @brief TODO
+/// @tparam MPTraits Motion planning universe
+///
+/// TODO
+////////////////////////////////////////////////////////////////////////////////
 template<class MPTraits>
 class DBand : public Band<MPTraits> {
   public:
@@ -508,7 +566,13 @@ class DBand : public Band<MPTraits> {
       }
 };
 
-
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup NeighborhoodFinderUtils
+/// @brief TODO
+/// @tparam MPTraits Motion planning universe
+///
+/// TODO
+////////////////////////////////////////////////////////////////////////////////
 template<class MPTraits>
 class RBand : public Band<MPTraits> {
   public:
@@ -574,7 +638,13 @@ class RBand : public Band<MPTraits> {
       }
 };
 
-
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup NeighborhoodFinders
+/// @brief TODO
+/// @tparam MPTraits Motion planning universe
+///
+/// TODO
+////////////////////////////////////////////////////////////////////////////////
 template<class MPTraits>
 class BandsNF: public NeighborhoodFinderMethod<MPTraits> {
   public:

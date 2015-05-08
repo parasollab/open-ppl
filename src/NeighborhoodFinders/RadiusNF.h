@@ -1,10 +1,13 @@
-// Finds all neighbors within a certain radius
-
 #ifndef RADIUSNF_H_
 #define RADIUSNF_H_
 
 #include "NeighborhoodFinderMethod.h"
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup NeighborhoodFinders
+/// @brief Find neighbors within a certain radius.
+/// @tparam MPTraits Motion planning universe
+////////////////////////////////////////////////////////////////////////////////
 template<class MPTraits>
 class RadiusNF: public NeighborhoodFinderMethod<MPTraits> {
   public:

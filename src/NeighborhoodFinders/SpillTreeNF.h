@@ -1,4 +1,3 @@
-
 #ifndef SPILLTREENF_H_
 #define SPILLTREENF_H_
 
@@ -12,7 +11,12 @@
 #include <functional>
 using namespace std;
 
-
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup NeighborhoodFinders
+/// @brief TODO
+///
+/// TODO
+////////////////////////////////////////////////////////////////////////////////
 template<typename CFG, typename WEIGHT>
 class SpillTreeNF: public NeighborhoodFinderMethod {
 public:
