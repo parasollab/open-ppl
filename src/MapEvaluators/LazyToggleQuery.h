@@ -1,5 +1,3 @@
-// A mix of Toggle PRM and Lazy PRM
-
 #ifndef LAZY_TOGGLE_QUERY_H_
 #define LAZY_TOGGLE_QUERY_H_
 
@@ -10,7 +8,8 @@ using namespace std;
 
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup MapEvaluators
-/// @brief TODO.
+/// @brief A mix of Toggle @prm and Lazy @prm
+/// @tparam MPTraits Motion planning universe
 ///
 /// TODO.
 ////////////////////////////////////////////////////////////////////////////////

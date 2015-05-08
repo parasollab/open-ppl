@@ -1,7 +1,3 @@
-// First assumes all nodes and edges are valid,
-// then checks for validity in the query phase
-// and deletes nodes and edges found to be invalid
-
 #ifndef LAZY_QUERY_H_
 #define LAZY_QUERY_H_
 
@@ -13,9 +9,11 @@ using namespace std;
 
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup MapEvaluators
-/// @brief TODO.
+/// @brief Lazy @prm, extract path, validate, and repeat
+/// @tparam MPTraits Motion planning universe
 ///
-/// TODO.
+/// First assumes all nodes and edges are valid, then checks for validity in the
+/// query phase and deletes nodes and edges found to be invalid.
 ////////////////////////////////////////////////////////////////////////////////
 template<class MPTraits>
 class LazyQuery : public Query<MPTraits> {

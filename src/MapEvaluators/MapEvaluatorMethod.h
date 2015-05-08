@@ -6,6 +6,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup MapEvaluators
 /// @brief Base algorithm abstraction for \ref MapEvaluators.
+/// @tparam MPTraits Motion planning universe
 ///
 /// MapEvaluatorMethod has one main function, @c operator(), which applies a
 /// boolean pass/fail evaluation to a roadmap.
