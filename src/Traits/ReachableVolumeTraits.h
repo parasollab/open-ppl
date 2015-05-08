@@ -92,7 +92,10 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup MotionPlanningUniverse
-/// @brief Defines available methods in the Motion Planning Universe for Cfg
+/// @brief Defines available methods in the Motion Planning Universe for
+///        ReachableVolumeCfg
+/// @tparam C Cfg type
+/// @tparam W Weight type
 ///
 /// MPTraits is a type class which defines the motion planning universe. We
 /// construct our methods through a factory design pattern, and thus this states
@@ -232,7 +235,7 @@ struct MPTraits {
 
   //types of motion planning strategies available in our world
   typedef boost::mpl::list<
-    BasicPRM<MPTraits>,   
+    BasicPRM<MPTraits>,
     BasicRRTStrategy<MPTraits>,
     ReachableVolumeRRT<MPTraits>
       > MPStrategyMethodList;

@@ -14,7 +14,8 @@ using namespace std;
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup Weights
 /// @brief Default weight class for roadmap edges. Defined as a value and a set
-/// of intermediate configurations.
+///        of intermediate configurations.
+/// @tparam CfgType Cfg type
 ///
 /// Weight is the concept for what is stored on the graph edges. Essentially,
 /// edges are defined as polygonal chains \f$I={q_1, q_2, \ldots, q_n}\f$

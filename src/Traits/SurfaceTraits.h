@@ -58,7 +58,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup MotionPlanningUniverse
 /// @brief Defines available methods in the Motion Planning Universe for
-/// SurfaceCfg template specialization
+///        SurfaceCfg template specialization
 ///
 /// MPTraits is a type class which defines the motion planning universe. We
 /// construct our methods through a factory design pattern, and thus this states
