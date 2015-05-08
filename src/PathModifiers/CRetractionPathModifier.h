@@ -1,5 +1,3 @@
-/* This method represents algorithm 7, C-Retraction from Geraerts and Overmars,
- * "Creating High-quality Paths for Motion Planning," IJRR 2007.
  */
 
 #ifndef C_RETRACTION_PATH_MODIFIER_H_
@@ -7,6 +5,17 @@
 
 #include "PathModifierMethod.h"
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup PathModifiers
+/// @brief Retract path to higher clearance.
+/// @tparam MPTraits Motion planning universe
+///
+/// This method represents algorithm 7, C-Retraction from Geraerts and Overmars,
+/// "Creating High-quality Paths for Motion Planning," IJRR 2007. Essentially it
+/// optimizes clearance based upon picking nearby neighbors to path
+/// configurations, and modifying the path based on if the random configurations
+/// have better clearance.
+////////////////////////////////////////////////////////////////////////////////
 template<class MPTraits>
 class CRetractionPathModifier : public PathModifierMethod<MPTraits> {
   public:

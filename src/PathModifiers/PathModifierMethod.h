@@ -7,6 +7,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup PathModifiers
 /// @brief Base algorithm abstraction for \ref PathModifiers.
+/// @tparam MPTraits Motion planning universe
 ///
 /// PathModifierMethod has one main method, @c Modify, which takes an input path
 /// and produces a valid output path.
