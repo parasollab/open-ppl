@@ -6,8 +6,8 @@
 
 #include "Utilities/MPUtils.h"
 
-///////////////////////////////////////////////////////////////////////////////
-/// @ingroup Cfg
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup Cfgs
 /// @brief CfgMultiRobot is a container class for controlling multiple cfg.
 ///
 /// The CfgMultiRobot class is a container class that contains multiple cfg and
@@ -15,9 +15,9 @@
 /// container, there is no actually data stored in CfgMultiRobot; instead, they
 /// are stored (operated) in member cfgs.
 ///
-/// @todo template this class to not only Cfg, but more CfgType (CfgProtein, CfgSurface)
-///
-///////////////////////////////////////////////////////////////////////////////
+/// @todo template this class to not only Cfg, but more CfgType (CfgProtein,
+///       CfgSurface)
+////////////////////////////////////////////////////////////////////////////////
 /* template<class T> */
 class CfgMultiRobot : public Cfg {
 public:

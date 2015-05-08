@@ -1,16 +1,15 @@
+#ifndef SS_SURFACE_H_
+#define SS_SURFACE_H_
 
-#ifndef SSSURFACE_H_
-#define SSSURFACE_H_
-
-////////////////////////////////////////////////////////////////////////////////////////////
 #include "CfgSurface.h"
 
-////////////////////////////////////////////////////////////////////////////////////////////
-/**
- *A derived class from CfgSurface that uses state space and dynamics properties
- * For now, these will approximate a Reeds-Shepp style car
- */
-
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup SurfaceCfgs
+/// @brief State based configuration restricted to be on a surface
+///
+/// A derived class from CfgSurface that uses state space and dynamics
+/// properties. For now, these will approximate a Reeds-Shepp style car.
+////////////////////////////////////////////////////////////////////////////////
 class SSSurface : public CfgSurface {
   public:
 

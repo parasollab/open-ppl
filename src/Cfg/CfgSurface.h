@@ -1,16 +1,5 @@
-// $Id: CfgSurface.h
-
-/**@file CfgSurface.h
- *A derived class from Cfg
- *implementation for a 3-dof rigidbody moving in a 3-D work space
- *but restricted to movement either on the default surface or or
- *valid surfaces
- *
- */
-////////////////////////////////////////////////////////////////////////////////////////////
-
-#ifndef CFGSURFACE_H_
-#define CFGSURFACE_H_
+#ifndef CFG_SURFACE_H_
+#define CFG_SURFACE_H_
 
 #include "Cfg.h"
 
@@ -20,16 +9,18 @@ using namespace mathtool;
 #define INVALID_SURFACE -999
 #define BASE_SURFACE -1
 
-////////////////////////////////////////////////////////////////////////////////////////////
 class GMSPolyhedron;
 
-////////////////////////////////////////////////////////////////////////////////////////////
-/**
- *A derived class from Cfg. It provides some specific
- *implementation for a 3-dof rigid-body moving ON a 3-D work space.
- *positional compontents are xz and height component is y.
- *Will be used in conjunction with group behaviors code.
- */
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup SurfaceCfgs
+/// @brief Configurations restricted to be on a surface
+///
+/// A derived class from Cfg. It provides some specific implementation for a
+/// 3-@dof rigid-body moving ON a \f$3D\f$ work space restricted on either the
+/// default surface or other valid surfaces. Positional compontents are \f$x\f$
+/// and \f$z\f$ and the height component is \f$y\f$. Will be used in conjunction
+/// with group behaviors code.
+////////////////////////////////////////////////////////////////////////////////
 class CfgSurface : public Cfg {
   public:
 
