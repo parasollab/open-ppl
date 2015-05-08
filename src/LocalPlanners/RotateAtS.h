@@ -1,15 +1,18 @@
-/**
- * RotateAtS.h
- * This class defines the rotate at s local planner, which performs
- * a translation to the location "s" percent along the straight line
- * path, change all orientation DoFs, then translate to the goal
- */
-
-#ifndef ROTATEATS_H_
-#define ROTATEATS_H_
+#ifndef ROTATE_AT_S_H_
+#define ROTATE_AT_S_H_
 
 #include "TransformAtS.h"
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup LocalPlanners
+/// @brief Translate to \f$s\f$ along straight-line, rotate all, then finish
+///        translation.
+/// @tparam MPTraits Motion planning universe
+///
+/// The rotate at s local planner performs a translation to the location "s"
+/// percent along the straight line path, change all orientation DoFs, then
+/// translate to the goal.
+////////////////////////////////////////////////////////////////////////////////
 template<class MPTraits>
 class RotateAtS : public TransformAtS<MPTraits> {
   public:

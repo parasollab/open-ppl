@@ -1,19 +1,20 @@
-/**
- * RVLocalPlanner.h
- *
- */
+#ifndef RV_LOCAL_PLANNER_H_
+#define RV_LOCAL_PLANNER_H_
 
-#ifndef RVLOCALPLANNER_H_
-#define RVLOCALPLANNER_H_
-
-#include <deque>
-#include <queue>  
+#include <queue>
 #include "LocalPlannerMethod.h"
 #include "LPOutput.h"
 #include "MPProblem/IsClosedChain.h"
 #include "ReachableVolumeUtil/ReachableVolumeRobot.h"
 #include "DistanceMetrics/RVDistance.h"
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup LocalPlanners
+/// @brief TODO
+/// @tparam MPTraits Motion planning universe
+///
+/// TODO
+////////////////////////////////////////////////////////////////////////////////
 template <class MPTraits>
 class RVLocalPlanner: public LocalPlannerMethod<MPTraits> {
   public:
@@ -34,7 +35,7 @@ class RVLocalPlanner: public LocalPlannerMethod<MPTraits> {
 
     virtual void PrintOptions(ostream& _os);
 
-    string GetName(){return "RVLocalPlanner";};  
+    string GetName(){return "RVLocalPlanner";};
 
     /**
      * Check if two Cfgs can be connected.
@@ -44,8 +45,8 @@ class RVLocalPlanner: public LocalPlannerMethod<MPTraits> {
         const CfgType& _c1, const CfgType& _c2, CfgType& _col,
         LPOutput<MPTraits>* _lpOutput, double _posRes, double _oriRes,
         bool _checkCollision = true, bool _savePath = false,
-        bool _saveFailedPath = false){      
-      
+        bool _saveFailedPath = false){
+
       Environment* env = this->GetMPProblem()->GetEnvironment();
       ValidityCheckerPointer vcm = this->GetMPProblem()->GetValidityChecker(m_vcLabel);
       string callee = this->GetName() + "::IsConnectedRV";
@@ -53,7 +54,7 @@ class RVLocalPlanner: public LocalPlannerMethod<MPTraits> {
       CfgType tick;
       int nTicks=0;
       int tick_num=0;
- 
+
       tick = _c1;
       vector<double> incriment;
       if(!m_rvr.m_fixed){
@@ -83,18 +84,18 @@ class RVLocalPlanner: public LocalPlannerMethod<MPTraits> {
           }
 	}
       }
-    
+
       //use rv perturbation to step through each joint position
       //get joint positions of _c1
       vector<Vector3d> joints2;
       CfgType c2Copy = _c2;
-      c2Copy.ResetRigidBodyCoordinates();      
+      c2Copy.ResetRigidBodyCoordinates();
       c2Copy.ConfigEnvironment(env);
       env->GetMultiBody(c2Copy.GetRobotIndex())->PolygonalApproximation(joints2);
       queue<shared_ptr<ReachableVolumeJointTreeNode> > joints;
       joints.push(m_rvr.m_RVLinkages.front()->m_root);
       while(!joints.empty()){
-	//step through front 
+	//step through front
 	bool stop=false;
 	int jid=joints.front()->m_jointID;
 	if(jid==0 || jid==1){
@@ -117,7 +118,7 @@ class RVLocalPlanner: public LocalPlannerMethod<MPTraits> {
 	    stop=true;
 	    rvRes=d_joints;
 	  }
-	  m_rvr.perturbJoint(jointsTick, jid, joints2[jid],rvRes,m_repositionPolicy);  
+	  m_rvr.perturbJoint(jointsTick, jid, joints2[jid],rvRes,m_repositionPolicy);
 
 	  vector<Vector3d> newNode;
 	  newNode.resize(jointsTick.size());
@@ -166,7 +167,7 @@ class RVLocalPlanner: public LocalPlannerMethod<MPTraits> {
       }
       return true;
     }
-    
+
 
 
     template<typename EnableCfg>
@@ -179,7 +180,7 @@ class RVLocalPlanner: public LocalPlannerMethod<MPTraits> {
 };
 
 template<class MPTraits>
-RVLocalPlanner<MPTraits>::RVLocalPlanner(string _vcLabel, bool _evalation) : 
+RVLocalPlanner<MPTraits>::RVLocalPlanner(string _vcLabel, bool _evalation) :
   LocalPlannerMethod<MPTraits>(), m_vcLabel(_vcLabel) {
     this->SetName("RVLocalPlanner");
     m_rvr.loadTree("Chain.tree",m_treeStructure);
@@ -196,7 +197,7 @@ RVLocalPlanner<MPTraits>::RVLocalPlanner(MPProblemType* _problem, XMLNode& _node
     this->m_repositionPolicy = _node.Read("repositionPolicy", false, "Random", "Policy for repositioning children that are outside of reachable volume");
     m_rvres=_node.Read("rvres", false, .05, (double)0, (double)1000, "Resolution for reachable volume stepping");
     m_S = _node.Read("S", false, .5, 0.0, 1.0, "S, the scaling factor used by RV distance metric d=S*TranslationalDistance + (1-S)*RVDistance");
-				  
+
     m_rvr.loadTree("Chain.tree",m_treeStructure);
   }
 

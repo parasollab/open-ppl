@@ -1,16 +1,18 @@
-/**
-* HierarchicalLP.h
-*
-* This class perfoms Hierarchical Local Planner which tries to apply Local Planners
-* one by one till one of them works or all of them fail.
-*/
-
-#ifndef HIERARCHICALLP_H_
-#define HIERARCHICALLP_H_
+#ifndef HIERARCHICAL_LP_H_
+#define HIERARCHICAL_LP_H_
 
 #include "LocalPlannerMethod.h"
 #include "LPOutput.h"
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup LocalPlanners
+/// @brief Apply a sequence of local planners until one succeeds, or all fail.
+/// @tparam MPTraits Motion planning universe
+///
+/// Hierarchical local planning applies a sequence of local planners until one
+/// succeeds or they all fail. It will return the information of the successful
+/// local plan.
+////////////////////////////////////////////////////////////////////////////////
 template <class MPTraits>
 class HierarchicalLP : public LocalPlannerMethod<MPTraits> {
   public:

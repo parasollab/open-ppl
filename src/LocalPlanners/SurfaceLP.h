@@ -1,18 +1,19 @@
-/**
- * SurfaceLP.h
- * This class defines the surface local planner which performs
- * connections between configurations and handles checking between
- * validity between CFGs on any kind of surface.
- */
-
-#ifndef SURFACELP_H_
-#define SURFACELP_H_
+#ifndef SURFACE_LP_H_
+#define SURFACE_LP_H_
 
 #ifdef PMPCfgSurface
 #include "Cfg/CfgSurface.h"
 
 #include "StraightLine.h"
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup LocalPlanners
+/// @brief Validate paths between configurations on different surfaces
+/// @tparam MPTraits Motion planning universe
+///
+/// The surface local planner performs connections between configurations and
+/// handles checking between validity between CFGs on any kind of surface.
+////////////////////////////////////////////////////////////////////////////////
 template <class MPTraits>
 class SurfaceLP : public StraightLine<MPTraits> {
   public:

@@ -1,11 +1,17 @@
-// Translates to the location "s" percent along the straight line path,
-// change all orientation DoFs one by one, then translate to the goal
-
-#ifndef TRANSFORMATS_H_
-#define TRANSFORMATS_H_
+#ifndef TRANSFORM_AT_S_H_
+#define TRANSFORM_AT_S_H_
 
 #include "StraightLine.h"
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup LocalPlanners
+/// @brief Translates to \f$s\f$ along the path, then changes orientation and
+///        joint @dofs one by one, then translates to goal.
+/// @tparam MPTraits Motion planning universe
+///
+/// Translates to the location \f$s\f$ percent along the straight line path,
+/// changes all orientation DoFs one by one, then translates to the goal.
+////////////////////////////////////////////////////////////////////////////////
 template<class MPTraits>
 class TransformAtS : public StraightLine<MPTraits> {
   public:

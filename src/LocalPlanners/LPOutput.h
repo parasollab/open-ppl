@@ -1,6 +1,15 @@
-#ifndef LPOUTPUT_H_
-#define LPOUTPUT_H_
+#ifndef LP_OUTPUT_H_
+#define LP_OUTPUT_H_
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup LocalPlanners
+/// @brief Computed information from a local plan
+/// @tparam MPTraits Motion planning universe
+///
+/// This struct stores all information available from local plan computations.
+/// Namely, it stores intermediates along edges (not straight line), the path
+/// generated, and the edge weights to be added to the RoadmapGraph.
+////////////////////////////////////////////////////////////////////////////////
 template<class MPTraits>
 struct LPOutput {
   typedef typename MPTraits::CfgType CfgType;

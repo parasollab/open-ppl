@@ -14,7 +14,7 @@ class StatClass;
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup MotionPlanningUniverse
 /// @brief Base class of all algorithm abstractions in PMPL.
-/// @tparam MPTraits Motion planning Universe
+/// @tparam MPTraits Motion planning universe
 ///
 /// The MPBaseObject is an abstract class which all algorithm abstractions in
 /// PMPL extend themselves off of. It essentially composes a class name

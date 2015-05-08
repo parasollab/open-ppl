@@ -1,14 +1,3 @@
-/**
- * AStar.h
- * Performs AStar Like Local planning, basic algorithm:
- *
- * while(goal not reached or tries < maxTries){
- *   find neighbors;
- *   step towards optimal neighbors;
- * }
- * if(goal reached) return connected;
- */
-
 #ifndef ASTAR_H_
 #define ASTAR_H_
 
@@ -17,6 +6,21 @@
 #include "Utilities/MedialAxisUtilities.h"
 #include "ValidityCheckers/CollisionDetection/CDInfo.h"
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup LocalPlanners
+/// @brief A* like local planning (not true A*) which steps towards optimal
+///        neighbors when it cannot progress to the goal.
+/// @tparam MPTraits Motion planning universe
+///
+/// Abstract class for A* like local planning. This steps towards the goal until
+/// it cannot, then it chooses an optimal neighbor. The algorithm is as follows:
+///
+/// while(goal not reached or tries < maxTries){
+///   find neighbors;
+///   step towards optimal neighbors;
+/// }
+/// if(goal reached) return connected;
+////////////////////////////////////////////////////////////////////////////////
 template <class MPTraits>
 class AStar : public LocalPlannerMethod<MPTraits> {
   public:
@@ -311,9 +315,13 @@ AStar<MPTraits>::FindNeighbors(
   return ret;
 }
 
-//////////////////////////////////////////////////////////////////
-// AStarDistance
-//////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup LocalPlanners
+/// @brief A* like local planning which optimizes distance.
+/// @tparam MPTraits Motion planning universe
+///
+/// Specialized A* like algorithm for distance based optimization.
+////////////////////////////////////////////////////////////////////////////////
 template <class MPTraits>
 class AStarDistance : public AStar<MPTraits> {
   public:
@@ -383,9 +391,13 @@ AStarDistance<MPTraits>::ChooseOptimalNeighbor(CfgType& _col,
   return retPosition;
 }
 
-//////////////////////////////////////////////////////////////////
-// AStarClearance
-//////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup LocalPlanners
+/// @brief A* like local planning which optimizes clearance.
+/// @tparam MPTraits Motion planning universe
+///
+/// Specialized A* like algorithm for clearance based optimization.
+////////////////////////////////////////////////////////////////////////////////
 template <class MPTraits>
 class AStarClearance : public AStar<MPTraits> {
   public:
@@ -459,4 +471,5 @@ AStarClearance<MPTraits>::ChooseOptimalNeighbor(CfgType& _col,
   }
   return retPosition;
 }
+
 #endif

@@ -10,6 +10,7 @@ template<class MPTraits> struct LPOutput;
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup LocalPlanners
 /// @brief Base algorithm abstraction for \ref LocalPlanners.
+/// @tparam MPTraits Motion planning universe
 ///
 /// LocalPlannerMethod has two main functions: @c IsConnected and
 /// @c ReconstructPath.
@@ -50,7 +51,6 @@ class LocalPlannerMethod : public MPBaseObject<MPTraits> {
     ///
     /// @overload
     /// No witness to failure is returned.
-    ////////////////////////////////////////////////////////////////////////////
     virtual bool IsConnected(const CfgType& _c1, const CfgType& _c2,
         LPOutput<MPTraits>* _lpOutput, double _posRes, double _oriRes,
         bool _checkCollision = true, bool _savePath = false,
@@ -78,7 +78,6 @@ class LocalPlannerMethod : public MPBaseObject<MPTraits> {
     /// LPOutput<MPTraits> lpOut;
     /// lp->IsConnected(c1, c2, col, &lpOut, env->GetPositionRes(), env->GetOrientationRes());
     /// @endcode
-    ////////////////////////////////////////////////////////////////////////////
     virtual bool IsConnected(
         const CfgType& _c1, const CfgType& _c2, CfgType& _col,
         LPOutput<MPTraits>* _lpOutput, double _posRes, double _oriRes,
@@ -104,14 +103,14 @@ class LocalPlannerMethod : public MPBaseObject<MPTraits> {
     /// vector<CfgType> intermediates;
     /// lp->ReconstructPath(c1, c2, intermediates, env->GetPositionRes(), env->GetOrientationRes());
     /// @endcode
-    ////////////////////////////////////////////////////////////////////////////
     virtual vector<CfgType> ReconstructPath(
         const CfgType& _c1, const CfgType& _c2,
         const vector<CfgType>& _intermediates,
         double _posRes, double _oriRes);
 
   protected:
-    bool m_saveIntermediates; ///< True if the intermediates computed along the local plan be saved for the roadmap
+    bool m_saveIntermediates; ///< True if the intermediates computed along the
+                              ///< local plan be saved for the roadmap
 };
 
 template<class MPTraits>

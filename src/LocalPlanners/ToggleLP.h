@@ -1,10 +1,17 @@
-#ifndef TOGGLELP_H_
-#define TOGGLELP_H_
+#ifndef TOGGLE_LP_H_
+#define TOGGLE_LP_H_
 
 #include "LocalPlannerMethod.h"
 
 #include <containers/sequential/graph/algorithms/dijkstra.h>
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup LocalPlanners
+/// @brief TODO
+/// @tparam MPTraits Motion planning universe
+///
+/// TODO
+////////////////////////////////////////////////////////////////////////////////
 template<class MPTraits>
 class ToggleLP: public LocalPlannerMethod<MPTraits> {
   public:

@@ -1,9 +1,3 @@
-/* MedialAxisLP.h
- * This class defines the medial axis local planner which performs a
- * push of the pathway connecting 2 medial axis configurations along
- * the medial axis.
- */
-
 #ifndef MEDIAL_AXIS_LP_H_
 #define MEDIAL_AXIS_LP_H_
 
@@ -11,6 +5,20 @@
 #include "StraightLine.h"
 #include "ValidityCheckers/MedialAxisClearanceValidity.h"
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup LocalPlanners
+/// @brief Plan along the medial axis between two medial axis configurations
+/// @tparam MPTraits Motion planning universe
+///
+/// This class defines the medial axis local planner which performs a
+/// push of the pathway connecting two medial axis configurations along
+/// the medial axis. This algorithm provides three methods of medial axis path
+/// generation:
+///   - recursive - push midpoint to medial axis, and validate
+///     epsilon-closeness,
+///   - iterative - step along medial axis, and
+///   - binary - push midpoint to medial axis upto resolution
+////////////////////////////////////////////////////////////////////////////////
 template<class MPTraits>
 class MedialAxisLP : public LocalPlannerMethod<MPTraits> {
   public:

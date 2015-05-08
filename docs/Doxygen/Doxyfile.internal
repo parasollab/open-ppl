@@ -194,7 +194,7 @@ TAB_SIZE               = 2
 # You can put \n's in the value part of an alias to insert newlines.
 
 ALIASES                = "dof=@c DOF" \
-                         "dof=@c DOFs" \
+                         "dofs=@c DOFs" \
                          "cspace=\f$\mathcal{C}_{space}\f$" \
                          "cfree=\f$\mathcal{C}_{free}\f$" \
                          "cobst=\f$\mathcal{C}_{obst}\f$" \

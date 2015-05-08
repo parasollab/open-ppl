@@ -1,12 +1,5 @@
-/**
- * StraightLine.h
- *
- * This class performs straight line local planning which is used by a variety
- * of computations, including other local planners.
- */
-
-#ifndef STRAIGHTLINE_H_
-#define STRAIGHTLINE_H_
+#ifndef STRAIGHT_LINE_H_
+#define STRAIGHT_LINE_H_
 
 #include "LocalPlannerMethod.h"
 
@@ -15,6 +8,14 @@
 #include "LPOutput.h"
 #include "MPProblem/IsClosedChain.h"
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup LocalPlanners
+/// @brief Validate straight-line path between two configurations
+/// @tparam MPTraits Motion planning universe
+///
+/// This local planner validates straight line paths which is a direct linear
+/// interpolation between two configurations in @cfree.
+////////////////////////////////////////////////////////////////////////////////
 template <class MPTraits>
 class StraightLine : public LocalPlannerMethod<MPTraits> {
   public:
