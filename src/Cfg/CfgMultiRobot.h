@@ -127,7 +127,7 @@ template<class DistanceMetricPointer>
 void
 CfgMultiRobot::
 GetRandomRay(double _incr, DistanceMetricPointer _dm, bool _norm) {
-  for(auto&  robot : m_robotsCollect)
+  for(auto& robot : m_robotsCollect)
     robot.GetRandomRay(_incr, _dm, _norm);
 }
 
