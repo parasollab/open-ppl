@@ -11,6 +11,13 @@
 #include "ValidityCheckers/CollisionDetection/SolidCollisionDetection.h"
 #include "ValidityCheckers/CollisionDetection/SpheresCollisionDetection.h"
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup ValidityCheckers
+/// @brief TODO
+/// @tparam MPTraits Motion planning universe
+///
+/// TODO
+////////////////////////////////////////////////////////////////////////////////
 template<class MPTraits>
 class CollisionDetectionValidity : public ValidityCheckerMethod<MPTraits> {
   public:

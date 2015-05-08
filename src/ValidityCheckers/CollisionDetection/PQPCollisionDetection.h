@@ -5,6 +5,12 @@
 #include "CollisionDetectionMethod.h"
 #include <PQP.h>
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup CollisionDetection
+/// @brief TODO
+///
+/// TODO
+////////////////////////////////////////////////////////////////////////////////
 class PQP : public CollisionDetectionMethod {
   public:
     PQP();
@@ -14,6 +20,12 @@ class PQP : public CollisionDetectionMethod {
         StatClass& _stats, CDInfo& _cdInfo, const string& _callName, int _ignoreIAdjacentMultibodies=1);
 };
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup CollisionDetection
+/// @brief TODO
+///
+/// TODO
+////////////////////////////////////////////////////////////////////////////////
 class PQPSolid : public PQP {
   public:
     PQPSolid() : PQP(){m_name = "PQP_SOLID";}

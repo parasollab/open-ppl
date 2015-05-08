@@ -11,6 +11,12 @@ typedef VclipPose VClipPose; //typedef allows our naming convention on VClip obj
 #include <Transformation.h>
 using namespace mathtool;
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup CollisionDetection
+/// @brief TODO
+///
+/// TODO
+////////////////////////////////////////////////////////////////////////////////
 class VClip : public CollisionDetectionMethod {
   public:
     VClip();

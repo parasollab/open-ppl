@@ -1,6 +1,13 @@
 #ifndef VALIDITYCHECKERFUNCTOR_H
 #define VALIDITYCHECKERFUNCTOR_H
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup ValidityCheckers
+/// @brief TODO
+/// @tparam MPTraits Motion planning universe
+///
+/// TODO
+////////////////////////////////////////////////////////////////////////////////
 template<class MPTraits>
 class ValidityCheckerFunctor {
   public:

@@ -4,6 +4,13 @@
 #include "ValidityCheckerMethod.h"
 #include "ValidityCheckerFunctor.h"
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup ValidityCheckers
+/// @brief TODO
+/// @tparam MPTraits Motion planning universe
+///
+/// TODO
+////////////////////////////////////////////////////////////////////////////////
 template<class MPTraits>
 class NegateValidity : public ValidityCheckerMethod<MPTraits> {
   public:

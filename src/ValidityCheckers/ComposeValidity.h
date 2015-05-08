@@ -1,16 +1,14 @@
-//////////////////////////////////////////////
-//ComposeValidity.h
-//
-//This class composes one or more validity
-//checker methods.
-/////////////////////////////////////////////
-
 #ifndef COMPOSE_VALIDITY_H
 #define COMPOSE_VALIDITY_H
 
 #include "ValidityCheckerMethod.h"
 #include "ValidityCheckerFunctor.h"
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup ValidityCheckers
+/// @brief Apply boolean expressions on results of multiple ValidityChecker s.
+/// @tparam MPTraits Motion planning universe
+////////////////////////////////////////////////////////////////////////////////
 template<class MPTraits>
 class ComposeValidity : public ValidityCheckerMethod<MPTraits> {
   public:

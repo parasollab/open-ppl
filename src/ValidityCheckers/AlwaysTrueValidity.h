@@ -1,16 +1,13 @@
-//////////////////////////////////
-// AlwaysTrueValidity
-//
-// This code defines the validity
-// of the configuration as 'always
-// true.'
-//////////////////////////////////
-
 #ifndef ALWAYSTRUEVALIDITY_H
 #define ALWAYSTRUEVALIDITY_H
 
 #include "ValidityCheckerMethod.h"
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup ValidityCheckers
+/// @brief Always return a configuration is valid.
+/// @tparam MPTraits Motion planning universe
+////////////////////////////////////////////////////////////////////////////////
 template<class MPTraits>
 class AlwaysTrueValidity : public ValidityCheckerMethod<MPTraits> {
   public:

@@ -7,6 +7,13 @@
 #include "Utilities/MetricUtils.h"
 #include "ValidityCheckerMethod.h"
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup ValidityCheckers
+/// @brief TODO
+/// @tparam MPTraits Motion planning universe
+///
+/// TODO
+////////////////////////////////////////////////////////////////////////////////
 template<class MPTraits>
 class SurfaceValidity : public ValidityCheckerMethod<MPTraits> {
   public:
