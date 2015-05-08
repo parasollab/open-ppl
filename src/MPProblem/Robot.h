@@ -9,6 +9,12 @@ using namespace std;
 class Connection;
 class Body;
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup Environment
+/// @brief TODO
+///
+/// TODO
+////////////////////////////////////////////////////////////////////////////////
 struct Robot {
   enum Base {PLANAR, VOLUMETRIC, FIXED, JOINT}; //2D plane vs 3D
   enum BaseMovement {ROTATIONAL, TRANSLATIONAL}; //rotation+translation, just translation, no movement

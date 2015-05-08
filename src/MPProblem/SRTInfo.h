@@ -1,25 +1,19 @@
-#ifndef _SRTINFO_H_
-#define _SRTINFO_H_
-
-///////////////////////////////////////////////////////////////////////////
-// Class primarily designed to hold vertex data for regional graph for SRTs
-///////////////////////////////////////////////////////////////////////////
+#ifndef SRTINFO_H_
+#define SRTINFO_H_
 
 #include "MPUtils.h"
 #include "MetricUtils.h"
-//#include "BasicDefns.h"
-//#include "OBPRMDef.h"
-//#include "util.h"
 #include <utility>
 #include "RegionGraph.h"
 #include "Boundary.h"
 #include "CfgTypes.h"
 
-
-//#include "Roadmap_pgraph_wrapper.h"
-
-//using namespace stapl;
-//template <class CFG, class WEIGHT>
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup ParallelMethods
+/// @brief TODO
+///
+/// TODO
+////////////////////////////////////////////////////////////////////////////////
 class SRTInfo {
  public:
   typedef typename RoadmapGraph<CfgType,WeightType>::vertex_descriptor VID;
@@ -81,4 +75,4 @@ namespace stapl {
   }; //struct proxy
 }
 
-#endif /*_SRTINFO_H_*/
+#endif

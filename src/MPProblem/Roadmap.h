@@ -1,10 +1,3 @@
-/* Roadmap
- *
- * This is the main class which contains data and methods for accessing the
- * graph and external data structures about changing roadmaps, such as
- * SpillTrees, local planner cache, etc.
- */
-
 #ifndef ROADMAP_H_
 #define ROADMAP_H_
 
@@ -20,7 +13,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup Roadmap
 /// @brief Approximation of @cfree storing a graph and augmenting data
-/// structures for use by motion planning algorithms.
+///        structures for use by motion planning algorithms.
 ///
 /// The Roadmap is essentially the graph $G=(V, E)$ which is used to approximate
 /// the planning space by sampling-based motion planning algorithms. \f$V\f$, or

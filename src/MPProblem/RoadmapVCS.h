@@ -1,25 +1,18 @@
-/////////////////////////////////////////////////////////////////////
-/**@file RoadmapVCS.h
-  *
-  * General Description
-  *    This class represents a set of events concerning adding,
-  *    removing, and editing RoadmapGraph information.
-  *
-  * @date 4/17/08
-  * @author Bryan Boyd
-  */
-/////////////////////////////////////////////////////////////////////
-
 #ifndef RoadmapVCS_h
 #define RoadmapVCS_h
 
 #include "RoadmapChangeEvent.h"
 
 #include <vector>
-//#include <pair>
-
 using namespace std;
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup Roadmap
+/// @brief Roadmap event version tracker
+///
+/// This class is like a version control system for roadmaps. It aids in
+/// tracking changes to the roadmap.
+////////////////////////////////////////////////////////////////////////////////
 template<typename CFG, typename WEIGHT>
 class RoadmapVCS {
 

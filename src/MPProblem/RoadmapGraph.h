@@ -1,10 +1,3 @@
-/** General Description
- *
- * This templated class represents the graph used for storing the roadmap in
- * PMPL. It derives off of a STAPL graph. Vertex will usually be some
- * Configuration, and Weight will be some weight class.
- */
-
 #ifndef ROADMAP_GRAPH_H_
 #define ROADMAP_GRAPH_H_
 
@@ -29,6 +22,12 @@
 #define INVALID_EID (std::numeric_limits<size_t>::max())
 #endif
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup Roadmap
+/// @brief Graph data structure.
+/// @tparam VERTEX Configuration type
+/// @tparam WEIGHT Weight type
+////////////////////////////////////////////////////////////////////////////////
 template<class VERTEX, class WEIGHT>
 class RoadmapGraph : public
 #ifdef _PARALLEL

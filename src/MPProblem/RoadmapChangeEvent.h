@@ -1,15 +1,3 @@
-/////////////////////////////////////////////////////////////////////
-/**@file RoadmapChangeEvent.h
-  *
-  * General Description
-  *    This class represents a set of events concerning adding,
-  *    removing, and editing RoadmapGraph information.
-  *
-  * @date 4/22/08
-  * @author Bryan Boyd
-  */
-/////////////////////////////////////////////////////////////////////
-
 #ifndef RoadmapChangeEvent_h
 #define RoadmapChangeEvent_h
 
@@ -18,6 +6,15 @@
 #include <vector>
 using namespace std;
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup Roadmap
+/// @brief Stores types events concerning roadmap changes.
+/// @tparam CFG Configuration type
+/// @tparam WEIGHT Weight type
+///
+/// This class represents a set of events concerning adding, removing, and
+/// editing RoadmapGraph information.
+////////////////////////////////////////////////////////////////////////////////
 template<typename CFG, typename WEIGHT>
 class RoadmapChangeEvent {
 

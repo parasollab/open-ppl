@@ -8,6 +8,12 @@ class Cfg_reach_cc {
 #include "boost/type_traits/is_base_of.hpp"
 #include "boost/mpl/or.hpp"
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup Utilities
+/// @brief TODO
+///
+/// TODO
+////////////////////////////////////////////////////////////////////////////////
 template <typename T>
 struct IsClosedChain : boost::mpl::or_<
                                        boost::is_same<Cfg_reach_cc, T>,
