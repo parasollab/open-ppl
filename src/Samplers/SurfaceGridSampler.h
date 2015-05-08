@@ -5,28 +5,29 @@
 
 #include "SamplerMethod.h"
 
-/*
- * SurfaceGridSampler.h
- * Grid Sampling in the surface.
- *
- * numSurf<-GetNavigableSurfaceCount()
- * for i:-1 to numSurf
- *   if i>=0
- *     poli= getSurfacePolyhedron
- *     bounds <- poli.bounds
- *     for x:boundsMinx to boundsMaxx
- *        for z:boundsMinz to boundsMaxz
- *           p<-point3d(x,getH(x,z),z)
- *           if o is valid
- *              add p to graph
- *  if i==-1
- *    bounds <- env.bounds
- *    for x:boundsMinx to boundsMaxx
- *    for z:boundsMinz to boundsMaxz
- *      p<-point3d(x,0,z)
- *      if o is valid
- *        add p to graph
- * */
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup Samplers
+/// @brief Sample surface configurations on a grid throughout the surfaces
+/// @tparam MPTraits Motion planning universe
+///
+/// numSurf<-GetNavigableSurfaceCount()
+/// for i:-1 to numSurf
+///   if i>=0
+///     poli= getSurfacePolyhedron
+///     bounds <- poli.bounds
+///     for x:boundsMinx to boundsMaxx
+///        for z:boundsMinz to boundsMaxz
+///           p<-point3d(x,getH(x,z),z)
+///           if o is valid
+///              add p to graph
+///  if i==-1
+///    bounds <- env.bounds
+///    for x:boundsMinx to boundsMaxx
+///    for z:boundsMinz to boundsMaxz
+///      p<-point3d(x,0,z)
+///      if o is valid
+///        add p to graph
+////////////////////////////////////////////////////////////////////////////////
 template<class MPTraits>
 class SurfaceGridSampler : public SamplerMethod<MPTraits> {
 

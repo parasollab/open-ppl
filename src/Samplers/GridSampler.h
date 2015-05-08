@@ -5,11 +5,15 @@
 
 #include <algorithm>
 
-/*
- * GridSampler.h
- * This samplers generates randomly a cfg c. Then for the dimensions stablished in the xml file
- * it generates a grid of points changing the values of c's dimensions and validate them.
- */
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup Samplers
+/// @brief Generate configurations along a grid through @cspace.
+/// @tparam MPTraits Motion planning universe
+///
+/// This samplers generates randomly a cfg \f$c\f$. Then for the dimensions
+/// established in the xml file it generates a grid of points changing the
+/// values of \f$c\f$s dimensions and validate them.
+////////////////////////////////////////////////////////////////////////////////
 template <class MPTraits>
 class GridSampler : public SamplerMethod<MPTraits> {
 

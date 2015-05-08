@@ -3,6 +3,13 @@
 
 #include "SamplerMethod.h"
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup Samplers
+/// @brief TODO
+/// @tparam MPTraits Motion planning universe
+///
+/// TODO
+////////////////////////////////////////////////////////////////////////////////
 // Samples by "snapping" random configurations to lattice points in a grid
 template<class MPTraits>
 class MixSampler : public SamplerMethod<MPTraits> {

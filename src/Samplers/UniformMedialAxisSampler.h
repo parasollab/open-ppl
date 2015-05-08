@@ -4,6 +4,13 @@
 #include "SamplerMethod.h"
 #include "Utilities/MedialAxisUtilities.h"
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup Samplers
+/// @brief TODO
+/// @tparam MPTraits Motion planning universe
+///
+/// TODO
+////////////////////////////////////////////////////////////////////////////////
 template<typename MPTraits>
 class UniformMedialAxisSampler : public SamplerMethod<MPTraits> {
   public:

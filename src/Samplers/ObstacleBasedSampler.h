@@ -1,11 +1,16 @@
-// OBPRM samples by pushing random configurations along a random ray
-// until they change validity, keeping the best free configuration
-
 #ifndef OBSTACLE_BASED_SAMPLER_H_
 #define OBSTACLE_BASED_SAMPLER_H_
 
 #include "SamplerMethod.h"
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup Samplers
+/// @brief Obstacle-based sampling
+/// @tparam MPTraits Motion planning universe
+///
+/// OBPRM samples by pushing random configurations along a random ray until they
+/// change validity, keeping the best free configuration.
+////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
 class ObstacleBasedSampler : public SamplerMethod<MPTraits> {
   public:

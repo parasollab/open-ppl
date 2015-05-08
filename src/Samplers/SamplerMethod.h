@@ -16,6 +16,7 @@ template<class MPTraits> class MixSampler;
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup Samplers
 /// @brief Base algorithm abstraction for \ref Samplers.
+/// @tparam MPTraits Motion planning universe
 ///
 /// SamplerMethod has two sets of important functions. The first are the
 /// various public methods in the base class, @c Sample, and second is the

@@ -3,6 +3,13 @@
 
 #include "SamplerMethod.h"
 
+////////////////////////////////////////////////////////////////////////////////
+/// @ingroup Samplers
+/// @brief TODO
+/// @tparam MPTraits Motion planning universe
+///
+/// TODO
+////////////////////////////////////////////////////////////////////////////////
 template<typename MPTraits>
 class UniformObstacleBasedSampler : public SamplerMethod<MPTraits> {
   public:
