@@ -3,11 +3,13 @@
 
 #include "MPProblem/Geometry/FixedBody.h"
 #include "MPProblem/Geometry/FreeBody.h"
-#include "MPProblem/Robot.h"
 
+class Boundary;
 class Environment;
 
-enum BodyType{ACTIVE, PASSIVE, SURFACE, INTERNAL};
+enum DofType {POS, ROT, JOINT};
+
+enum BodyType {ACTIVE, PASSIVE, SURFACE, INTERNAL};
 
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup Environment
@@ -20,24 +22,22 @@ enum BodyType{ACTIVE, PASSIVE, SURFACE, INTERNAL};
 /// mass, surface area size, bounding sphere radius, etc.
 ////////////////////////////////////////////////////////////////////////////////
 class MultiBody {
-public:
+  public:
+
+    typedef shared_ptr<Connection> Joint;
+    typedef vector<Joint> JointMap;
+    typedef JointMap::iterator JointIT;
 
     //-----------------------------------------------------------
     //  Static Methods
     //-----------------------------------------------------------
 
     /**@todo Check this!! ComputePUMAInverseKinematics ??
-     */
-    static void ComputePUMAInverseKinematics(Transformation & _t, double _a2, double _d3, double _a3, double _d4, double theta[8][6]);
+    */
+    static void ComputePUMAInverseKinematics(Transformation & _t,
+        double _a2, double _d3, double _a3, double _d4, double _theta[8][6]);
 
 
-  ///////////////////////////////////////////////////////////////////////////////////////////
-  //
-  //
-  //    Constructors and Destructor
-  //
-  //
-  //////////////////////////////////////////////////////////////////////////////////////////
     ///Constructor. Set _owner as the owner of this MultiBody instance.
     MultiBody();
 
@@ -47,20 +47,22 @@ public:
     ///Destructor. Free memory allocated to all Bodys added to this multiBody.
     virtual ~MultiBody();
 
-  ///////////////////////////////////////////////////////////////////////////////////////////
-  //
-  //
-  //    Access Methods
-  //
-  //
-  //////////////////////////////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    //
+    //
+    //    Access Methods
+    //
+    //
+    //////////////////////////////////////////////////////////////////////////////////////////
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     //
     //  Get/Set Free Body info
     //
     //////////////////////////////////////////////////////////////////////////////////////////
-    void Initialize(string _modelFile, const Transformation& _where = Transformation(), BodyType _type=PASSIVE);
+    void Initialize(string _modelFile,
+        const Transformation& _where = Transformation(),
+        BodyType _type=PASSIVE);
 
     void SetBodyType(BodyType _newType){m_bodyType = _newType;}
     BodyType GetBodyType() const{return m_bodyType;}
@@ -84,11 +86,6 @@ public:
 
     ///Return a fixed body accroding to the given index. the index should be in [0,GetFixedBodyCount())
     shared_ptr<FixedBody> GetFixedBody(int _index) const;
-    ///Number of fixed body in this mutilbody.
-    int GetFixedBodyCount() const;
-    ///Search index for given FixedBody, _b, if _b is not in this multibody, -1 is returned.
-    int GetFixedBodyIndex(const FixedBody& _b) const;
-    int GetFixedBodyIndex(const shared_ptr<FixedBody>& _b) const;
     ///Add a Fixed Body
     void AddBody(const shared_ptr<FixedBody>& _body);
 
@@ -98,12 +95,13 @@ public:
     //
     //////////////////////////////////////////////////////////////////////////////////////////
 
+    int GetBodyIndex(shared_ptr<Body>& _body) const;
     /**Return a free body according to the given index.
-      *_index should be in [0, GetFreeBodyCount()+GetFixedBodyCount())
-      *if _index is smaller than GetFixedBodyCount(), then fixed body will be returned.
-      *if _index is larger than GetFixedBodyCount(), then free body with (_index-GetFixedBodyCount())
-      *index will be returned.
-      */
+     *_index should be in [0, GetFreeBodyCount()+GetFixedBodyCount())
+     *if _index is smaller than GetFixedBodyCount(), then fixed body will be returned.
+     *if _index is larger than GetFixedBodyCount(), then free body with (_index-GetFixedBodyCount())
+     *index will be returned.
+     */
     shared_ptr<Body> GetBody(int _index) const; // new
     ///return GetFreeBodyCount()+GetFixedBodyCount()
     int GetBodyCount() const; // new
@@ -117,9 +115,9 @@ public:
     int GetNumberOfLinks() const;
 
     /**Determine if the MultiBody at hand is a manipulator.
-      *If there is no free body attached to it,
-      *it is considered to be a manipulator
-      */
+     *If there is no free body attached to it,
+     *it is considered to be a manipulator
+     */
     bool IsManipulator() const;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -130,72 +128,35 @@ public:
 
 
     /**to get center of mass, you don't need to additionally call the above: ComputeCenterOfMass
-      *because GetCenterOfMass will check if it is necessary to call this method.
-      */
+     *because GetCenterOfMass will check if it is necessary to call this method.
+     */
     Vector3d GetCenterOfMass();
 
     /**Return Max Axis Range, which is computed during finding bounding box.
-      *Max Axis Range is max distance in X, Y, or Z direction in bounding box.
-      */
+     *Max Axis Range is max distance in X, Y, or Z direction in bounding box.
+     */
     double GetMaxAxisRange() const;
 
     /*Return bounding box of this multibody
-     */
+    */
     const double * GetBoundingBox() const;
 
     /**Compute and return the maximum size of this multibody.
-      *The maximum size is computed by (Radius of first link+ 2*Radius of second link+ ... )
-      */
+     *The maximum size is computed by (Radius of first link+ 2*Radius of second link+ ... )
+     */
     double GetBoundingSphereRadius() const;
 
     /**Compute and return the minimum size of the multibody.
-     */
+    */
     double GetInsideSphereRadius() const;
 
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    //
-    //  Get/Set Area info.
-    //
-    //////////////////////////////////////////////////////////////////////////////////////////
-
-    /**Get total area of fixed bodys in this instance. (computed in Get method)
-      */
-    double GetFixArea() const;
-
-    /**Get a list of areas of fixed bodys in this instance.
-      *(computed in Get method)
-      */
-    vector<double> GetFixAreas() const;
-
-    /**Get total area of free bodys in this instance. (computed in Get method)
-      */
-    double GetFreeArea() const;
-
-    /**Get a list of areas of free bodys in this instance.
-      *(computed in Get method)
-      */
-    vector<double> GetFreeAreas() const;
-
-    /**Get total area of free bodys and fixed bodys in this instance.
-      *(computed in Get method)
-      */
-    double GetArea() const;
-
-    /**Set area variables
-     */
-    void CalculateArea();
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    //
-    //  Get/Set Area info.
-    //
-    //////////////////////////////////////////////////////////////////////////////////////////
-
     /**Get user input information.
-      *Number of bodys (fixed and free), areas, bounding box, and center of mass are all computed
-      *in here.
-      */
+     *Number of bodys (fixed and free), areas, bounding box, and center of mass are all computed
+     *in here.
+     */
     void Read(istream& is, CountingStreamBuffer& _cbs);
+
+    void InitializeDOFs(ostream* _os = NULL);
 
     void buildCDstructure(cd_predefined cdtype);
 
@@ -207,29 +168,14 @@ public:
 
     bool IsPassive() const;
 
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    //
-    //
-    //    I/O
-    //
-    //
-    //////////////////////////////////////////////////////////////////////////////////////////
     /**Write information about this MultiBody instance to outputstream.
      *First the tag "MultiBody was output, and then calls Fixed and (or) Free Bodys'
      *write and Connnection's write.
      */
     void Write(ostream & _os);
 
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    //
-    //
-    //    Helpers
-    //
-    //
-    //////////////////////////////////////////////////////////////////////////////////////////
-
     /**Configure the joint by the given amount of displacement.
-     */
+    */
     void ConfigureJoint(double * _s, int _dof);
 
     /**if GetCenterOfMass() is called for the first time, then
@@ -239,7 +185,7 @@ public:
     void ComputeCenterOfMass();
 
     /**Calculate bounding box by FreeBodys and FixedBodys in this instance.
-     *maxAxisRange is its byproduct...
+     *m_maxAxisRange is its byproduct...
      */
     void FindBoundingBox();
 
@@ -252,41 +198,32 @@ public:
 
     void PolygonalApproximation();
 
-    Robot::JointMap& GetJointMap() {return jointMap;}
-    void SetMultirobot(bool _m){m_multirobot = _m;}
-
+    JointMap& GetJointMap() {return m_joints;}
+    size_t NumJoints() const {return m_joints.size();}
     string GetLabel() { return m_label; }
     void SetLabel(string _label) { m_label = _label; }
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    //
-    //
-    //    Protected data member and member methods
-    //
-    //
-    //////////////////////////////////////////////////////////////////////////////////////////
 
-  protected:
-    // Area Stuff
-    double fixArea;             ///< Area of FixedBodies
-    double freeArea;            ///< Area of FreeBodies
-    double area;                ///< Total Area of Bodies
-    vector<double> fixAreas;    ///< Vector of Areas of FixedBodies
-    vector<double> freeAreas;   ///< Vector of Areas of FreeBodies
 
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    //
-    //
-    //    Private data member and member methods
-    //
-    //
-    //////////////////////////////////////////////////////////////////////////////////////////
+    size_t m_baseIndex; //free body index for base
+    shared_ptr<Body> m_baseBody;
+    Body::Base m_baseType;
+    Body::BaseMovement m_baseMovement;
+
+    JointMap m_joints;
+
+    const vector<DofType>& GetDOFTypes() const {return m_dofTypes;}
+    size_t DOF() const {return m_dofTypes.size();}
+    size_t PosDOF() const;
+
+    void Configure(const vector<double>& _v);
+    vector<double> GetRandomCfg(shared_ptr<Boundary>& _boundary);
 
   private:
+
     string m_modelDataDir; //directory where environment file is stored
 
     //does the multibody contain more than one robot
-    bool m_multirobot;
-    bool CenterOfMassAvailable;
+    bool m_comAvailable;
 
     BodyType m_bodyType; //ACTIVE, PASSIVE, SURFACE, INTERNAL
 
@@ -295,12 +232,11 @@ public:
 
     Vector3d CenterOfMass;
 
-    double boundingBox[6];
-    double maxAxisRange;
-
-    Robot::JointMap jointMap;
+    double m_boundingBox[6];
+    double m_maxAxisRange;
 
     string m_label;
+    vector<DofType> m_dofTypes;
 };
 
 #endif

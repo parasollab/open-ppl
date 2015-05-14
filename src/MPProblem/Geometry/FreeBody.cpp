@@ -24,24 +24,24 @@ Read(istream& _is, CountingStreamBuffer& _cbs) {
   //If Joint skip this stuff. If Fixed read in positions like an obstacle
   string baseTag = ReadFieldString(_is, _cbs, "Failed reading base tag."
       " Options are: planar, volumetric, fixed, or joint.");
-  m_baseType = Robot::GetBaseFromTag(baseTag, _cbs.Where());
+  m_baseType = GetBaseFromTag(baseTag, _cbs.Where());
 
   switch(m_baseType) {
     //if base is volumetric or planar we should parse the rotational type
-    case Robot::VOLUMETRIC:
-    case Robot::PLANAR:
+    case VOLUMETRIC:
+    case PLANAR:
       {
         m_isBase = true;
         string baseMovementTag = ReadFieldString(_is, _cbs,
             "Failed reading rotation tag."
             " Options are: rotational or translational.");
         m_baseMovementType =
-          Robot::GetMovementFromTag(baseMovementTag, _cbs.Where());
+          GetMovementFromTag(baseMovementTag, _cbs.Where());
         break;
       }
 
     //if base if fixed we should read a transformation
-    case Robot::FIXED:
+    case FIXED:
       {
         m_isBase = true;
         m_worldTransformation =
@@ -51,7 +51,7 @@ Read(istream& _is, CountingStreamBuffer& _cbs) {
       }
 
     //if the base is a joint nothing additional is parsed
-    case Robot::JOINT:
+    case JOINT:
       break;
   }
 }
@@ -105,14 +105,12 @@ ostream&
 operator<<(ostream& _os, FreeBody& _fb){
   _os << _fb.m_filename << " ";
 
-  _os << Robot::GetTagFromBase(_fb.m_baseType) << " ";
+  _os << Body::GetTagFromBase(_fb.m_baseType) << " ";
 
-  if(_fb.m_baseType == Robot::VOLUMETRIC || _fb.m_baseType == Robot::PLANAR){
-    _os << Robot::GetTagFromMovement(_fb.m_baseMovementType);
-  }
-  else if(_fb.m_baseType == Robot::FIXED){
+  if(_fb.m_baseType == Body::VOLUMETRIC || _fb.m_baseType == Body::PLANAR)
+    _os << Body::GetTagFromMovement(_fb.m_baseMovementType);
+  else if(_fb.m_baseType == Body::FIXED)
     _os << _fb.m_worldTransformation;
-  }
 
   return _os;
 }

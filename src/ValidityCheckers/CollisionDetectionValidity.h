@@ -104,13 +104,9 @@ CollisionDetectionValidity<MPTraits>::~CollisionDetectionValidity() {
 template<class MPTraits>
 bool
 CollisionDetectionValidity<MPTraits>::IsValidImpl(CfgType& _cfg, CDInfo& _cdInfo, const string& _callName) {
-  Environment* env = this->GetMPProblem()->GetEnvironment();
-  this->GetMPProblem()->GetStatClass()->IncCfgIsColl(_callName);
+  this->GetStatClass()->IncCfgIsColl(_callName);
 
-  if(!_cfg.ConfigEnvironment(env)) {
-    _cfg.SetLabel("VALID", false);
-    return false;
-  }
+  _cfg.ConfigEnvironment();
 
   // after updating the environment(multibodies), Ask ENVIRONMENT
   // to check collision! (this is more natural)

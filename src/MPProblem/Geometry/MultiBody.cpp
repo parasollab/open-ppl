@@ -2,130 +2,125 @@
 
 #include <numeric>
 
-//#include "Transformation.h"
-//using namespace mathtool;
+#include "Cfg/Cfg.h"
+#include "MPProblem/Boundary.h"
 
-#define MAXCONTACT  10
-
-//===================================================================
-//  ComputePUMAInverseKinematics
-//===================================================================
-void MultiBody::ComputePUMAInverseKinematics(Transformation & _t, double _a2, double _d3, double _a3, double _d4, double theta[8][6])
-{
-    //---------------------------------------------------------------
-    //  Compute theta1
-    //---------------------------------------------------------------
-    const Vector3d& pos = _t.translation();
-    double root = sqrt(pos[0]*pos[0] + pos[1]*pos[1] - _d3*_d3);
-    theta[0][0] = atan2(pos[1], pos[0]) - atan2(_d3, root);
-    theta[4][0] = atan2(pos[1], pos[0]) - atan2(_d3, root);
-    int i;
-    for (i=1; i < 4; i++) {
-        theta[i][0] = theta[0][0];
-        theta[i+4][0] = theta[0][0];
-    }
-    //---------------------------------------------------------------
-    //  Compute theta3
-    //---------------------------------------------------------------
-    double K = (pos.normsqr() - _a2*_a2 - _a3*_a3 - _d3*_d3 - _d4*_d4)/(2*_a2);
-    theta[0][2] = atan2(_a3, _d4) - atan2(K,  sqrt(_a3*_a3 + _d4*_d4 - K*K));
-    theta[1][2] = theta[0][2];
-    theta[2][2] = atan2(_a3, _d4) - atan2(K, -sqrt(_a3*_a3 + _d4*_d4 - K*K));
-    theta[3][2] = theta[1][2];
-    theta[4][2] = theta[0][2];
-    theta[5][2] = theta[0][2];
-    theta[6][2] = theta[1][2];
-    theta[7][2] = theta[1][2];
-    //---------------------------------------------------------------
-    //  Compute theta2
-    //---------------------------------------------------------------
-    double s1, c1, s3, c3;
-    for (i=0; i < 8; i += 2) {
-        s1 = sin(theta[i][0]);
-        c1 = cos(theta[i][0]);
-        s3 = sin(theta[i][2]);
-        c3 = cos(theta[i][2]);
-        theta[i][1] = atan2((-_a3 - _a2*c3)*pos[2] - (c1*pos[0] + s1*pos[1])*(_d4 - _a2*s3),
-                              (_a2*s3 - _d4)*pos[2] - (_a3 + _a2*c3)*(c1*pos[0] + s1*pos[1]))
-                        - theta[i][2];
-        theta[i+1][1] = theta[i][1];
-    }
-    //---------------------------------------------------------------
-    //  Compute theta4
-    //---------------------------------------------------------------
-    double r13 = _t.rotation().matrix()[0][2];
-    double r23 = _t.rotation().matrix()[1][2];
-    double r33 = _t.rotation().matrix()[2][2];
-    double s23, c23;
-    for (i=0; i < 8; i += 2) {
-        s1 = sin(theta[i][0]);
-        c1 = cos(theta[i][0]);
-        s23 = sin(theta[i][1] + theta[i][2]);
-        c23 = cos(theta[i][1] + theta[i][2]);
-        theta[i][3] = atan2(-r13*s1 + r23*c1,
-                            -(r13*c1 + r23*s1)*c23 + r33*s23);
-        theta[i+1][3] = theta[i][3] + 180.0;
-    }
-    //---------------------------------------------------------------
-    //  Compute theta5
-    //---------------------------------------------------------------
-    double s4, c4;
-    for (i=0; i < 8; i += 2) {
-        s1 = sin(theta[i][0]);
-        c1 = cos(theta[i][0]);
-        s23 = sin(theta[i][1] + theta[i][2]);
-        c23 = cos(theta[i][1] + theta[i][2]);
-        s4 = sin(theta[i][3]);
-        c4 = cos(theta[i][3]);
-        theta[i][4] = atan2(-r13*(c1*c23*c4 + s1*s4) - r23*(s1*c23*c4 - c1*s4) + r33*(s23*c4),
-                            -(r13*c1 + r23*s1)*s23 - r33*c23);
-        theta[i+1][4] = -theta[i][4];
-    }
-    //---------------------------------------------------------------
-    //  Compute theta6
-    //---------------------------------------------------------------
-    double s5, c5;
-    double r11 = _t.rotation().matrix()[0][0];
-    double r21 = _t.rotation().matrix()[1][0];
-    double r31 = _t.rotation().matrix()[2][0];
-    for (i=0; i < 8; i += 2) {
-        s1 = sin(theta[i][0]);
-        c1 = cos(theta[i][0]);
-        s23 = sin(theta[i][1] + theta[i][2]);
-        c23 = cos(theta[i][1] + theta[i][2]);
-        s4 = sin(theta[i][3]);
-        c4 = cos(theta[i][3]);
-        s5 = sin(theta[i][4]);
-        c5 = cos(theta[i][4]);
-        theta[i][5] = atan2(-r11*(c1*c23*s4 - s1*c4) - r21*(s1*c23*s4 + c1*c4) + r31*s23*s4,
-                            r11*((c1*c23*c4 + s1*s4)*c5 - c1*s23*s5) + r21*((s1*c23*c4 - c1*s4)*c5 - s1*s23*s5) - r31*(s23*c4*c5 + c23*s5));
-        theta[i+1][5] = theta[i][5] + 180.0;
-    }
+void
+MultiBody::
+ComputePUMAInverseKinematics(Transformation & _t,
+    double _a2, double _d3, double _a3, double _d4, double _theta[8][6]) {
+  //---------------------------------------------------------------
+  //  Compute theta1
+  //---------------------------------------------------------------
+  const Vector3d& pos = _t.translation();
+  double root = sqrt(pos[0]*pos[0] + pos[1]*pos[1] - _d3*_d3);
+  _theta[0][0] = atan2(pos[1], pos[0]) - atan2(_d3, root);
+  _theta[4][0] = atan2(pos[1], pos[0]) - atan2(_d3, root);
+  for(size_t i = 1; i < 4; i++) {
+    _theta[i][0] = _theta[0][0];
+    _theta[i+4][0] = _theta[0][0];
+  }
+  //---------------------------------------------------------------
+  //  Compute theta3
+  //---------------------------------------------------------------
+  double K = (pos.normsqr() - _a2*_a2 - _a3*_a3 - _d3*_d3 - _d4*_d4)/(2*_a2);
+  _theta[0][2] = atan2(_a3, _d4) - atan2(K,  sqrt(_a3*_a3 + _d4*_d4 - K*K));
+  _theta[1][2] = _theta[0][2];
+  _theta[2][2] = atan2(_a3, _d4) - atan2(K, -sqrt(_a3*_a3 + _d4*_d4 - K*K));
+  _theta[3][2] = _theta[1][2];
+  _theta[4][2] = _theta[0][2];
+  _theta[5][2] = _theta[0][2];
+  _theta[6][2] = _theta[1][2];
+  _theta[7][2] = _theta[1][2];
+  //---------------------------------------------------------------
+  //  Compute theta2
+  //---------------------------------------------------------------
+  double s1, c1, s3, c3;
+  for(size_t i = 0; i < 8; i += 2) {
+    s1 = sin(_theta[i][0]);
+    c1 = cos(_theta[i][0]);
+    s3 = sin(_theta[i][2]);
+    c3 = cos(_theta[i][2]);
+    _theta[i][1] = atan2((-_a3 - _a2*c3)*pos[2] - (c1*pos[0] + s1*pos[1])*(_d4 - _a2*s3),
+        (_a2*s3 - _d4)*pos[2] - (_a3 + _a2*c3)*(c1*pos[0] + s1*pos[1]))
+      - _theta[i][2];
+    _theta[i+1][1] = _theta[i][1];
+  }
+  //---------------------------------------------------------------
+  //  Compute theta4
+  //---------------------------------------------------------------
+  double r13 = _t.rotation().matrix()[0][2];
+  double r23 = _t.rotation().matrix()[1][2];
+  double r33 = _t.rotation().matrix()[2][2];
+  double s23, c23;
+  for(size_t i = 0; i < 8; i += 2) {
+    s1 = sin(_theta[i][0]);
+    c1 = cos(_theta[i][0]);
+    s23 = sin(_theta[i][1] + _theta[i][2]);
+    c23 = cos(_theta[i][1] + _theta[i][2]);
+    _theta[i][3] = atan2(-r13*s1 + r23*c1,
+        -(r13*c1 + r23*s1)*c23 + r33*s23);
+    _theta[i+1][3] = _theta[i][3] + 180.0;
+  }
+  //---------------------------------------------------------------
+  //  Compute theta5
+  //---------------------------------------------------------------
+  double s4, c4;
+  for(size_t i = 0; i < 8; i += 2) {
+    s1 = sin(_theta[i][0]);
+    c1 = cos(_theta[i][0]);
+    s23 = sin(_theta[i][1] + _theta[i][2]);
+    c23 = cos(_theta[i][1] + _theta[i][2]);
+    s4 = sin(_theta[i][3]);
+    c4 = cos(_theta[i][3]);
+    _theta[i][4] = atan2(-r13*(c1*c23*c4 + s1*s4) - r23*(s1*c23*c4 - c1*s4) + r33*(s23*c4),
+        -(r13*c1 + r23*s1)*s23 - r33*c23);
+    _theta[i+1][4] = -_theta[i][4];
+  }
+  //---------------------------------------------------------------
+  //  Compute theta6
+  //---------------------------------------------------------------
+  double s5, c5;
+  double r11 = _t.rotation().matrix()[0][0];
+  double r21 = _t.rotation().matrix()[1][0];
+  double r31 = _t.rotation().matrix()[2][0];
+  for(size_t i = 0; i < 8; i += 2) {
+    s1 = sin(_theta[i][0]);
+    c1 = cos(_theta[i][0]);
+    s23 = sin(_theta[i][1] + _theta[i][2]);
+    c23 = cos(_theta[i][1] + _theta[i][2]);
+    s4 = sin(_theta[i][3]);
+    c4 = cos(_theta[i][3]);
+    s5 = sin(_theta[i][4]);
+    c5 = cos(_theta[i][4]);
+    _theta[i][5] = atan2(-r11*(c1*c23*s4 - s1*c4) - r21*(s1*c23*s4 + c1*c4) + r31*s23*s4,
+        r11*((c1*c23*c4 + s1*s4)*c5 - c1*s23*s5) + r21*((s1*c23*c4 - c1*s4)*c5 - s1*s23*s5) - r31*(s23*c4*c5 + c23*s5));
+    _theta[i+1][5] = _theta[i][5] + 180.0;
+  }
 }
 
 
-//===================================================================
-//  Constructors and Destructor
-//===================================================================
-MultiBody::MultiBody()
-  : fixArea(0), freeArea(0), area(0), m_multirobot(false),
-  CenterOfMassAvailable(false), m_bodyType(PASSIVE),
-  maxAxisRange(0) {
-    fill(boundingBox, boundingBox+6, 0);
-}
-
-MultiBody::~MultiBody()
-{}
-
-void MultiBody::Initialize(string _modelFile, const Transformation& _where, BodyType _type){
-  m_bodyType = _type;
-
-  if (IsActive() || IsSurface()){
-    cerr << "MultiBody::Initialize not yet implemented for active or surface multibodies" << endl;
-    exit(1);
+MultiBody::
+MultiBody() :
+  m_comAvailable(false), m_bodyType(PASSIVE),
+  m_maxAxisRange(0) {
+    fill(m_boundingBox, m_boundingBox+6, 0);
   }
 
-  if (IsPassive()){
+MultiBody::
+~MultiBody() {
+}
+
+void
+MultiBody::
+Initialize(string _modelFile, const Transformation& _where, BodyType _type) {
+  m_bodyType = _type;
+
+  if(IsActive() || IsSurface())
+    throw RunTimeException(WHERE,
+        "Function not implemented for active or surface MultiBodys");
+
+  if(IsPassive() || IsInternal()) {
     //create a fixed body
     shared_ptr<FixedBody> fix(new FixedBody(this, _modelFile));
     fix->Read();
@@ -135,12 +130,6 @@ void MultiBody::Initialize(string _modelFile, const Transformation& _where, Body
 
     //add fixed body to multibody
     AddBody(fix);
-    //calculating area for multibody
-    fixAreas.push_back(fix->GetPolyhedron().m_area);
-    fixArea = fix->GetPolyhedron().m_area;
-
-    freeArea = 0;
-    area = fixArea + freeArea;
 
     FindBoundingBox();
     ComputeCenterOfMass();
@@ -201,32 +190,6 @@ shared_ptr<FixedBody> MultiBody::GetFixedBody(int _index) const
     return fixedBody[_index];
   else
     return shared_ptr<FixedBody>();
-}
-
-//-------------------------------------------------------------------
-//  GetFixedBodyCount
-//-------------------------------------------------------------------
-int MultiBody::GetFixedBodyCount() const
-{
-  return fixedBody.size();
-}
-
-//-------------------------------------------------------------------
-//  GetFixedBodyIndex
-//-------------------------------------------------------------------
-int MultiBody::GetFixedBodyIndex(const FixedBody& _b) const
-{
-  for(size_t i=0; i<fixedBody.size(); ++i)
-    if(&_b == fixedBody[i].get())
-      return i;
-  return -1;
-}
-int MultiBody::GetFixedBodyIndex(const shared_ptr<FixedBody>& _b) const
-{
-  for(size_t i=0; i<fixedBody.size(); ++i)
-    if(_b == fixedBody[i])
-      return i;
-  return -1;
 }
 
 //===================================================================
@@ -325,7 +288,7 @@ bool MultiBody::IsManipulator() const
 //-------------------------------------------------------------------
 Vector3d MultiBody::GetCenterOfMass()
 {
-  if(!CenterOfMassAvailable)
+  if(!m_comAvailable)
     ComputeCenterOfMass();
   return CenterOfMass;
 }
@@ -335,7 +298,7 @@ Vector3d MultiBody::GetCenterOfMass()
 //===================================================================
 double MultiBody::GetMaxAxisRange() const
 {
-  return maxAxisRange;
+  return m_maxAxisRange;
 }
 
 //===================================================================
@@ -343,7 +306,7 @@ double MultiBody::GetMaxAxisRange() const
 //===================================================================
 const double * MultiBody::GetBoundingBox() const
 {
-  return boundingBox;
+  return m_boundingBox;
 }
 
 //===================================================================
@@ -352,8 +315,6 @@ const double * MultiBody::GetBoundingBox() const
 //===================================================================
 double MultiBody::GetBoundingSphereRadius() const
 {
-  if(m_multirobot)
-    return MAX_DBL;
   double result = GetBody(0)->GetPolyhedron().m_maxRadius;
   for(int i=1; i<GetBodyCount(); ++i)
     result += GetBody(i)->GetPolyhedron().m_maxRadius * 2.0;
@@ -374,73 +335,12 @@ double MultiBody::GetInsideSphereRadius() const
 }
 
 
-//===================================================================
-//	Area Methods
-//===================================================================
-
-
-//===================================================================
-//  GetFixArea
-//===================================================================
-double MultiBody::GetFixArea() const
-{
-  return fixArea;
-}
-
-//===================================================================
-//  GetFixAreas
-//===================================================================
-vector<double> MultiBody::GetFixAreas() const
-{
-  return fixAreas;
-}
-
-//===================================================================
-//  GetFreeArea
-//===================================================================
-double MultiBody::GetFreeArea() const
-{
-  return freeArea;
-}
-
-//===================================================================
-//  GetFreeAreas
-//===================================================================
-vector<double> MultiBody::GetFreeAreas() const
-{
-  return freeAreas;
-}
-
-//===================================================================
-//  GetArea
-//===================================================================
-double MultiBody::GetArea() const
-{
-  return area;
-}
-
-//===================================================================
-// CalculateArea
-//===================================================================
-void MultiBody::CalculateArea()
-{
-  fixArea = freeArea = 0;
-
-  for(vector<shared_ptr<FixedBody> >::iterator I = fixedBody.begin(); I != fixedBody.end(); ++I)
-  {
-    fixAreas.push_back((*I)->GetPolyhedron().m_area);
-    fixArea += (*I)->GetPolyhedron().m_area;
-  }
-
-  for(vector<shared_ptr<FreeBody> >::iterator I = freeBody.begin(); I != freeBody.end(); ++I)
-  {
-    freeAreas.push_back((*I)->GetPolyhedron().m_area);
-    freeArea += (*I)->GetPolyhedron().m_area;
-  }
-
-  area = fixArea + freeArea;
-}
-
+class IsConnectionGloballyFirst {
+  public:
+    bool operator()(const shared_ptr<Connection>& _a, const shared_ptr<Connection>& _b) const {
+      return _a->GetGlobalIndex() < _b->GetGlobalIndex();
+    }
+} connectionComparator;
 
 //===================================================================
 //  Read
@@ -465,10 +365,9 @@ Read(istream& _is, CountingStreamBuffer& _cbs) {
         "Unknown MultiBody type '" + multibodyType + "'."
         " Options are: 'active', 'passive', 'internal', or 'surface'.");
 
-  double fixSum = 0;
-  double freeSum = 0;
-
   if(IsActive()) {
+
+    m_baseIndex = -1;
 
     size_t bodyCount = ReadField<size_t>(_is, _cbs,
         "Failed reading body count.");
@@ -478,13 +377,19 @@ Read(istream& _is, CountingStreamBuffer& _cbs) {
       shared_ptr<FreeBody> free(new FreeBody(this));
       free->Read(_is, _cbs);
 
-      //calculate areas on geometry
-      freeAreas.push_back(free->GetPolyhedron().m_area);
-      freeSum += free->GetPolyhedron().m_area;
-
       //add object to multibody
       AddBody(free);
+
+      if(free->IsBase() && m_baseIndex == size_t(-1)) {
+        m_baseIndex = i;
+        m_baseBody = free;
+        m_baseType = free->GetBase();
+        m_baseMovement = free->GetBaseMovement();
+      }
     }
+
+    if(m_baseIndex == size_t(-1))
+      throw ParseException(_cbs.Where(), "Active body has no base.");
 
     //get connection info
     string connectionTag = ReadFieldString(_is, _cbs,
@@ -499,9 +404,11 @@ Read(istream& _is, CountingStreamBuffer& _cbs) {
     for(size_t i = 0; i < connectionCount; ++i) {
       //add connection info to multibody connection map
       shared_ptr<Connection> c(new Connection(this));
-      jointMap.push_back(c);
-      jointMap.back()->Read(_is, _cbs);
+      m_joints.push_back(c);
+      m_joints.back()->Read(_is, _cbs);
     }
+    sort(m_joints.begin(), m_joints.end(), connectionComparator);
+
   }
   else{ //Passive, Surface, Internal
     if(IsSurface())
@@ -511,22 +418,98 @@ Read(istream& _is, CountingStreamBuffer& _cbs) {
     shared_ptr<FixedBody> fix(new FixedBody(this));
     fix->Read(_is, _cbs);
 
-    //calculating area for multibody
-    fixAreas.push_back(fix->GetPolyhedron().m_area);
-    fixSum += fix->GetPolyhedron().m_area;
-
     //add fixed body to multibody
     AddBody(fix);
   }
-
-  fixArea = fixSum;
-  freeArea = freeSum;
-  area = fixArea + freeArea;
 
   FindBoundingBox();
   ComputeCenterOfMass();
 }
 
+void
+MultiBody::
+InitializeDOFs(ostream* _os) {
+
+  size_t dof = 0;
+
+  if(_os) {
+    *_os << "DoF List: " << endl;
+    *_os << "\tRobot with base index " << m_baseIndex;
+    *_os << " (" << m_baseBody->GetFileName() << "):" << endl;
+  }
+
+  if(m_baseType == Body::PLANAR) {
+    m_dofTypes.push_back(POS);
+    m_dofTypes.push_back(POS);
+
+    if(_os) {
+      *_os << "\t\t" << dof++ << ": X position" << endl;
+      *_os << "\t\t" << dof++ << ": Y position" << endl;
+    }
+
+    if(m_baseMovement == Body::ROTATIONAL) {
+      m_dofTypes.push_back(ROT);
+
+      if(_os)
+        *_os << "\t\t" << dof++ << ": Rotation about Z" << endl;
+    }
+  }
+  if(m_baseType == Body::VOLUMETRIC) {
+    m_dofTypes.push_back(POS);
+    m_dofTypes.push_back(POS);
+    m_dofTypes.push_back(POS);
+
+    if(_os) {
+      *_os << "\t\t" << dof++ << ": X position" << endl;
+      *_os << "\t\t" << dof++ << ": Y position" << endl;
+      *_os << "\t\t" << dof++ << ": Z position" << endl;
+    }
+    if(m_baseMovement == Body::ROTATIONAL) {
+      m_dofTypes.push_back(ROT);
+      m_dofTypes.push_back(ROT);
+      m_dofTypes.push_back(ROT);
+
+      if(_os) {
+        *_os << "\t\t" << dof++ << ": Rotation about X" << endl;
+        *_os << "\t\t" << dof++ << ": Rotation about Y" << endl;
+        *_os << "\t\t" << dof++ << ": Rotation about Z" << endl;
+      }
+    }
+  }
+
+  for(auto& joint : m_joints) {
+    switch(joint->GetConnectionType()) {
+      case Connection::REVOLUTE:
+        m_dofTypes.push_back(JOINT);
+
+        if(_os) {
+          *_os << "\t\t" << dof++ << ": ";
+          *_os << "Rotational joint from body " << joint->GetPreviousBodyIndex();
+          *_os << " (" << joint->GetPreviousBody()->GetFileName() << ")";
+          *_os << " to body " << joint->GetNextBodyIndex();
+          *_os << " (" << joint->GetNextBody()->GetFileName() << ")" << endl;
+        }
+        break;
+
+      case Connection::SPHERICAL:
+        m_dofTypes.push_back(JOINT);
+        m_dofTypes.push_back(JOINT);
+
+        if(_os) {
+          *_os << "\t\t" << dof++;
+          *_os << "/" << dof++ << ": ";
+          *_os << "Spherical joint from body " << joint->GetPreviousBodyIndex();
+          *_os << " (" << joint->GetPreviousBody()->GetFileName() << ")";
+          *_os << " to body " << joint->GetNextBodyIndex();
+          *_os << " (" << joint->GetNextBody()->GetFileName() << ")" << endl;
+        }
+        break;
+
+      case Connection::NONACTUATED:
+        break;
+    }
+  }
+}
 
 void MultiBody::buildCDstructure(cd_predefined cdtype)
 {
@@ -617,7 +600,7 @@ void MultiBody::ComputeCenterOfMass()
     for(vector<shared_ptr<FixedBody> >::iterator I = fixedBody.begin(); I != fixedBody.end(); ++I)
       sum = sum + (*I)->GetCenterOfMass();
     CenterOfMass = sum / (freeBody.size() + fixedBody.size());
-    CenterOfMassAvailable = true;
+    m_comAvailable = true;
   }
 }
 
@@ -671,16 +654,16 @@ void MultiBody::FindBoundingBox() {
 
   ///////////////////////////////////////////////////////////
   //Pack
-  boundingBox[0] = minx; boundingBox[1] = maxx;
-  boundingBox[2] = miny; boundingBox[3] = maxy;
-  boundingBox[4] = minz; boundingBox[5] = maxz;
+  m_boundingBox[0] = minx; m_boundingBox[1] = maxx;
+  m_boundingBox[2] = miny; m_boundingBox[3] = maxy;
+  m_boundingBox[4] = minz; m_boundingBox[5] = maxz;
 
   ///////////////////////////////////////////////////////////
-  // Find maxAxisRange
+  // Find m_maxAxisRange
   double rangex = maxx - minx;
   double rangey = maxy - miny;
   double rangez = maxz - minz;
-  maxAxisRange = max(rangex, max(rangey,rangez));
+  m_maxAxisRange = max(rangex, max(rangey,rangez));
 }
 
 
@@ -815,26 +798,124 @@ void MultiBody::PolygonalApproximation(vector<Vector3d>& result) {
   }
 }
 
-//Tests type of MultiBody (active, passive, etc.)
-
-//Internal = fake obstacle (passive, and used for vizmo)
 bool
-MultiBody::IsInternal() const{
+MultiBody::
+IsInternal() const{
   return m_bodyType == INTERNAL;
 }
 
 bool
-MultiBody::IsSurface() const {
+MultiBody::
+IsSurface() const {
   return m_bodyType == SURFACE;
 }
 
 bool
-MultiBody::IsActive() const{
+MultiBody::
+IsActive() const{
   return m_bodyType == ACTIVE;
 }
 
 bool
-MultiBody::IsPassive() const{
+MultiBody::
+IsPassive() const{
   return m_bodyType == PASSIVE;
 }
 
+size_t
+MultiBody::
+PosDOF() const {
+  switch(m_baseType) {
+    case Body::PLANAR:
+      return 2;
+    case Body::VOLUMETRIC:
+      return 3;
+    default:
+      return 0;
+  }
+}
+
+void
+MultiBody::
+Configure(const vector<double>& _v) {
+  int index = 0;
+  int posIndex = index;
+  double x = 0, y = 0, z = 0, alpha = 0, beta = 0, gamma = 0;
+  if(m_baseType != Body::FIXED) {
+    x = _v[posIndex];
+    y = _v[posIndex + 1];
+    index += 2;
+    if(m_baseType == Body::VOLUMETRIC) {
+      index++;
+      z = _v[posIndex + 2];
+    }
+    if(m_baseMovement == Body::ROTATIONAL) {
+      if(m_baseType == Body::PLANAR) {
+        index++;
+        gamma = _v[posIndex + 2];
+      }
+      else {
+        index += 3;
+        alpha = _v[posIndex + 3];
+        beta = _v[posIndex + 4];
+        gamma = _v[posIndex + 5];
+      }
+    }
+    // configure the robot according to current Cfg: joint parameters
+    // (and base locations/orientations for free flying robots.)
+    Transformation t1(Vector3d(x, y, z), Orientation(EulerAngle(gamma*PI, beta*PI, alpha*PI)));
+    // update link i
+    GetFreeBody(m_baseIndex)->Configure(t1);
+  }
+  typedef MultiBody::JointMap::iterator MIT;
+  for(auto& joint : m_joints) {
+    if(joint->GetConnectionType() != Connection::NONACTUATED) {
+      size_t second = joint->GetNextBodyIndex();
+      GetFreeBody(second)->GetBackwardConnection(0).GetDHparameters().m_theta = _v[index]*PI;
+      index++;
+      if(joint->GetConnectionType() == Connection::SPHERICAL) {
+        GetFreeBody(second)->GetBackwardConnection(0).GetDHparameters().m_alpha = _v[index]*PI;
+        index++;
+      }
+    }
+  }  // config the robot
+  for(auto& body : freeBody) {
+    if(body->ForwardConnectionCount() == 0)  // tree tips: leaves.
+      body->GetWorldTransformation();
+  }
+}
+
+//generates random configuration within C-space
+vector<double>
+MultiBody::
+GetRandomCfg(shared_ptr<Boundary>& _bounds) {
+  vector<double> v;
+  v.reserve(DOF());
+  if(m_baseType == Body::PLANAR || m_baseType == Body::VOLUMETRIC) {
+    Point3d p = _bounds->GetRandomPoint();
+    size_t posDOF = m_baseType == Body::VOLUMETRIC ? 3 : 2;
+    for(size_t i = 0; i < posDOF; i++)
+      v.push_back(p[i]);
+    if(m_baseMovement == Body::ROTATIONAL) {
+      size_t oriDOF = m_baseType == Body::VOLUMETRIC ? 3 : 1;
+      for(size_t i = 0; i < oriDOF; i++)
+        v.push_back(2.0*DRand()-1.0);
+    }
+  }
+  for(auto& joint : m_joints) {
+    if(joint->GetConnectionType() == Connection::REVOLUTE) {
+      pair<double, double> r = joint->GetJointLimits(0);
+      double t = DRand()*(r.second-r.first)+r.first;
+      v.push_back(t);
+    }
+    else if(joint->GetConnectionType() == Connection::SPHERICAL) {
+      pair<double, double> r = joint->GetJointLimits(0);
+      double t = DRand()*(r.second-r.first)+r.first;
+      r = joint->GetJointLimits(1);
+      double a = DRand()*(r.second-r.first)+r.first;
+      v.push_back(t);
+      v.push_back(a);
+    }
+  }
+  return v;
+}

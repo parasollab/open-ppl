@@ -16,8 +16,8 @@ Body::Body(MultiBody* _owner) :
   m_multibody(_owner),
   m_isBase(false),
   m_label(0),
-  m_baseType(Robot::PLANAR),
-  m_baseMovementType(Robot::TRANSLATIONAL),
+  m_baseType(PLANAR),
+  m_baseMovementType(TRANSLATIONAL),
   m_convexHullAvailable(false),
   m_centerOfMassAvailable(false), m_worldPolyhedronAvailable(false) {
     fill(m_boundingBox, m_boundingBox+6, 0);
@@ -27,8 +27,8 @@ Body::Body(MultiBody* _owner, GMSPolyhedron& _polyhedron) :
   m_multibody(_owner),
   m_isBase(false),
   m_label(0),
-  m_baseType(Robot::PLANAR),
-  m_baseMovementType(Robot::TRANSLATIONAL),
+  m_baseType(PLANAR),
+  m_baseMovementType(TRANSLATIONAL),
   m_polyhedron(_polyhedron),
   m_worldPolyhedron(_polyhedron),
   m_convexHullAvailable(false),
@@ -454,4 +454,64 @@ Body::ComputeConvexHull() {
     m_convexHull.m_vertexList.push_back(Vector3d(to_double((*vit)[0]), to_double((*vit)[1]), to_double((*vit)[2])));
 
   m_convexHullAvailable = true;
+}
+
+Body::Base
+Body::
+GetBaseFromTag(const string& _tag, const string& _where) {
+  if(_tag == "PLANAR")
+    return PLANAR;
+  else if(_tag == "VOLUMETRIC")
+    return VOLUMETRIC;
+  else if(_tag == "FIXED")
+    return FIXED;
+  else if(_tag == "JOINT")
+    return JOINT;
+  else
+    throw ParseException(_where,
+        "Unknown base type '" + _tag + "'."
+        " Options are: 'planar', 'volumetric', 'fixed', or 'joint'.");
+}
+
+Body::BaseMovement
+Body::
+GetMovementFromTag(const string& _tag, const string& _where) {
+  if(_tag == "ROTATIONAL")
+    return ROTATIONAL;
+  else if (_tag == "TRANSLATIONAL")
+    return TRANSLATIONAL;
+  else
+    throw ParseException(_where,
+        "Unknown movement type '" + _tag + "'."
+        " Options are: 'rotational' or 'translational'.");
+}
+
+string
+Body::
+GetTagFromBase(const Base& _b) {
+  switch(_b) {
+    case PLANAR:
+      return "PLANAR";
+    case VOLUMETRIC:
+      return "VOLUMETRIC";
+    case FIXED:
+      return "FIXED";
+    case JOINT:
+      return "JOINT";
+    default:
+      return "Unknown Base Type";
+  }
+}
+
+string
+Body::
+GetTagFromMovement(const BaseMovement& _bm) {
+  switch(_bm){
+    case ROTATIONAL:
+      return "ROTATIONAL";
+    case TRANSLATIONAL:
+      return "TRANSLATIONAL";
+    default:
+      return "Unknown Base Movement";
+  }
 }

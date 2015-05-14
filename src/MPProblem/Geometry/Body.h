@@ -19,7 +19,6 @@
 #include "Utilities/MPUtils.h"
 #include "MPProblem/Geometry/GMSPolyhedron.h"
 #include "MPProblem/Geometry/Connection.h"
-#include "MPProblem/Robot.h"
 
 class MultiBody;
 class DHparameters;
@@ -36,6 +35,10 @@ class DHparameters;
 ////////////////////////////////////////////////////////////////////////////////
 class Body {
   public:
+
+    enum Base {PLANAR, VOLUMETRIC, FIXED, JOINT}; //2D plane vs 3D
+    enum BaseMovement {ROTATIONAL, TRANSLATIONAL}; //rotation+translation, just translation, no movement
+
     ////////////////////////////////////////////////////////////////////////////
     /// @name Constructors
     /// @{
@@ -55,6 +58,12 @@ class Body {
 
     /// @}
     ////////////////////////////////////////////////////////////////////////////
+
+    static Base GetBaseFromTag(const string& _tag, const string& _where);
+    static BaseMovement GetMovementFromTag(const string& _tag, const string& _where);
+
+    static string GetTagFromBase(const Base& _b);
+    static string GetTagFromMovement(const BaseMovement& _bm);
 
     string GetFileName() { return m_filename; }
 
@@ -139,16 +148,16 @@ class Body {
     bool IsBase() { return m_isBase; };
     ////////////////////////////////////////////////////////////////////////////
     /// @return Base type of body
-    Robot::Base GetBase() { return m_baseType; };
+    Base GetBase() { return m_baseType; };
     ////////////////////////////////////////////////////////////////////////////
     /// @return Base movement type of body
-    Robot::BaseMovement GetBaseMovement() { return m_baseMovementType; };
+    BaseMovement GetBaseMovement() { return m_baseMovementType; };
     ////////////////////////////////////////////////////////////////////////////
     /// @param _baseType Type of base of this body
-    void SetBase(Robot::Base _baseType) { m_baseType = _baseType; };
+    void SetBase(Base _baseType) { m_baseType = _baseType; };
     ////////////////////////////////////////////////////////////////////////////
     /// @param _baseMovementType Type of movement of the base of this body
-    void SetBaseMovement(Robot::BaseMovement _baseMovementType) { m_baseMovementType = _baseMovementType; };
+    void SetBaseMovement(BaseMovement _baseMovementType) { m_baseMovementType = _baseMovementType; };
 
     ////////////////////////////////////////////////////////////////////////////
     /// @return Label of body
@@ -257,8 +266,8 @@ class Body {
     Transformation m_worldTransformation;    ///< World Transformation
     bool m_isBase;                           ///< Base or Joint
     int m_label;                             ///< Body ID
-    Robot::Base m_baseType;                  ///< Base type
-    Robot::BaseMovement m_baseMovementType;  ///< Base movement
+    Base m_baseType;                         ///< Base type
+    BaseMovement m_baseMovementType;         ///< Base movement
 
     GMSPolyhedron m_polyhedron;              ///< Model in model coordinates
     GMSPolyhedron m_worldPolyhedron;         ///< Model in world coordinates

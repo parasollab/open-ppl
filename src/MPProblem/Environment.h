@@ -3,11 +3,8 @@
 
 #include "Cfg/CfgMultiRobot.h"
 #include "MPProblem/Boundary.h"
-#include "MPProblem/Robot.h"
 #include "MPProblem/Geometry/MultiBody.h"
 #include "Utilities/MPUtils.h"
-
-#include <stapl/containers/sequential/graph/graph.h>
 
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup Environment
@@ -34,7 +31,7 @@ class Environment {
 
     void Read(string _filename);
     void Print(ostream& _os) const;
-    void Write(ostream & _os);
+    void Write(ostream& _os);
 
     //////////////////////////////////////////////////////////
     //Resolution
@@ -122,7 +119,6 @@ class Environment {
 
     void BuildCDstructure(cd_predefined cdtype);
 
-    void SetRobots(vector<Robot> _robots) { m_robots=_robots; }
   protected:
 
     void ReadBoundary(istream& _is, CountingStreamBuffer& _cbs);
@@ -132,7 +128,7 @@ class Environment {
     //until PMPL is changed later to support multiple roadmaps for heterogeneous systems. That is, this function assumes
     //that if there is a multiagent sim going on, the agents are homogenous
     void BuildRobotStructure();
-    void SubBuildRobotStrucutre(size_t _index);
+    //void SubBuildRobotStrucutre(size_t _index);
 
     //determine if _cfg is inside of the C-space defined by this workspace
     //boundary, and the joint limits of the robot
@@ -150,18 +146,12 @@ class Environment {
     double m_orientationRes; //rotational resolution of movement
     double m_rdRes; //resolution for movement in RD space
 
-    //Robot Graph (for single Active Multibody instance. Used for automatically
-    //determining C-space
-    typedef stapl::sequential::graph<stapl::UNDIRECTED, stapl::NONMULTIEDGES, size_t> RobotGraph;
-    RobotGraph m_robotGraph;
-    vector<Robot> m_robots; //computed set of robots in C-space for a single active body
-
     shared_ptr<Boundary> m_boundary; //boundary of the workspace
 
-    vector<shared_ptr<MultiBody> > m_activeBodies; //robots
-    vector<shared_ptr<MultiBody> > m_obstacleBodies; //all other multibodies
-    vector<shared_ptr<MultiBody> > m_usableMultiBodies; //obstacles and robot (for collision detection)
-    vector<shared_ptr<MultiBody> > m_navigableSurfaces; //surfaces
+    vector<shared_ptr<MultiBody>> m_activeBodies; //robots
+    vector<shared_ptr<MultiBody>> m_obstacleBodies; //all other multibodies
+    vector<shared_ptr<MultiBody>> m_usableMultiBodies; //obstacles and robot (for collision detection)
+    vector<shared_ptr<MultiBody>> m_navigableSurfaces; //surfaces
 };
 
 

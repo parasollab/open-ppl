@@ -1,11 +1,13 @@
 #ifndef CONNECTION_H
 #define CONNECTION_H
 
+#include <memory>
+using namespace std;
+
 #include <Transformation.h>
 using namespace mathtool;
 
 #include "MPProblem/Geometry/DHparameters.h"
-#include "MPProblem/Robot.h"
 #include "Utilities/IOUtils.h"
 
 class Body;
@@ -30,6 +32,7 @@ class Connection {
     ////////////////////////////////////////////////////////////////////////////
     /// @name Constructors
     /// @{
+
     ////////////////////////////////////////////////////////////////////////////
     /// @param _owner MultiBody who owns this Connection
     Connection(MultiBody* _owner);
@@ -43,6 +46,7 @@ class Connection {
         const Transformation& _transformationToBody2,
         const DHparameters& _dhparameters,
         const Transformation& _transformationToDHFrame);
+
     /// @}
     ////////////////////////////////////////////////////////////////////////////
 

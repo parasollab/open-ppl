@@ -85,7 +85,26 @@ Environment::Read(string _filename) {
   copy(m_obstacleBodies.begin(), m_obstacleBodies.end(),
       back_inserter(m_usableMultiBodies));
 
-  BuildRobotStructure();
+  if(m_activeBodies.empty())
+    throw ParseException(cbs.Where(),
+        "No active multibodies in the environment.");
+
+  size_t size = m_activeBodies.size();
+  Cfg::SetSize(size);
+#ifdef PMPCfgMultiRobot
+  CfgMultiRobot::m_numRobot = size;
+#endif
+  for(size_t i = 0; i < size; ++i) {
+    if(m_saveDofs) {
+      ofstream dofFile(m_filename + "." +
+          ::to_string(i) + ".dof");
+      m_activeBodies[i]->InitializeDOFs(&dofFile);
+    }
+    else
+      m_activeBodies[i]->InitializeDOFs();
+
+    Cfg::InitRobots(m_activeBodies[i], i);
+  }
 }
 
 void
@@ -156,40 +175,10 @@ Environment::InBounds(const CfgMultiRobot& _cfg, shared_ptr<Boundary> _b) {
   return true;
 }
 
-//access the possible range of values for the _i th DOF
+//access the possible range of values for the _i th DOF for boundary
 pair<double, double>
 Environment::GetRange(size_t _i, shared_ptr<Boundary> _b) {
-  size_t index = 0;
-  typedef vector<Robot>::iterator RIT;
-  for(RIT rit = m_robots.begin(); rit != m_robots.end(); rit++) {
-    if(rit->m_base != Robot::FIXED) {
-      if(_i == index++) return _b->GetRange(0);
-      if(_i == index++) return _b->GetRange(1);
-      if(rit->m_base == Robot::VOLUMETRIC) {
-        if(_i == index++) return _b->GetRange(2);
-      }
-      if(rit->m_baseMovement == Robot::ROTATIONAL) {
-        if(rit->m_base == Robot::PLANAR) {
-          if(_i == index++) return make_pair(-1, 1);
-        }
-        else {
-          if(_i == index++) return make_pair(-1, 1);
-          if(_i == index++) return make_pair(-1, 1);
-          if(_i == index++) return make_pair(-1, 1);
-        }
-      }
-    }
-    typedef Robot::JointMap::iterator MIT;
-    for(MIT mit = rit->m_joints.begin(); mit != rit->m_joints.end(); mit++) {
-      if((*mit)->GetConnectionType() != Connection::NONACTUATED) {
-        if(_i == index++) return (*mit)->GetJointLimits(0);
-        if((*mit)->GetConnectionType() == Connection::SPHERICAL) {
-          if(_i == index++) return (*mit)->GetJointLimits(1);
-        }
-      }
-    }
-  }
-  return make_pair(0,0);
+  return _b->GetRange(_i);
 }
 
 //reset the boundary to the minimum bounding box surrounding the obstacles
@@ -331,122 +320,29 @@ ReadBoundary(istream& _is, CountingStreamBuffer& _cbs) {
 //that if there is a multiagent sim going on, the agents are homogenous
 void
 Environment::BuildRobotStructure() {
-  if (m_activeBodies.empty()) {
-    cerr << "Error! No robots present in the environment!" << endl;
-    exit(1);
-  }
-
-  size_t size = m_activeBodies.size();
-  Cfg::SetSize(size);
-#ifdef PMPCfgMultiRobot
-  CfgMultiRobot::m_numRobot = size;
-#endif
-
-  for(size_t i=0; i < size; i++)
-    SubBuildRobotStrucutre(i);
-}
-
-void
-Environment::SubBuildRobotStrucutre(size_t _index) {
-  shared_ptr<MultiBody> robot = m_activeBodies[_index];
-  int fixedBodyCount = robot->GetFixedBodyCount();
-  int freeBodyCount = robot->GetFreeBodyCount();
-  m_robotGraph = RobotGraph();
-  for(int i = 0; i < fixedBodyCount; i++) {
-    m_robotGraph.add_vertex(i);
-  }
-  for(int i = 0; i < freeBodyCount; i++) {
-    m_robotGraph.add_vertex(i + fixedBodyCount); //Need to account for FixedBodies added above
-  }
-  //Total amount of bodies in environment: free + fixed
-  for(int i = 0; i < freeBodyCount + fixedBodyCount; i++) {
-    shared_ptr<Body> body = robot->GetBody(i);
-    //For each body, find forward connections and connect them
-    for(int j = 0; j < body->ForwardConnectionCount(); j++) {
-      shared_ptr<Body> forward = body->GetForwardConnection(j).GetNextBody();
-      if(forward->IsFixedBody()) {
-        //Quick hack to avoid programming ability to determine subclass
-        shared_ptr<FixedBody> castFixedBody = dynamic_pointer_cast<FixedBody>(forward);
-        int nextIndex = robot->GetFixedBodyIndex(castFixedBody);
-        m_robotGraph.add_edge(i, nextIndex);
-      }
-      else {
-        shared_ptr<FreeBody> castFreeBody = dynamic_pointer_cast<FreeBody>(forward);
-        int nextIndex = robot->GetFreeBodyIndex(castFreeBody);
-        m_robotGraph.add_edge(i, nextIndex);
-      }
-    }
-  }
-
-  //Robot ID typedef
-  typedef RobotGraph::vertex_descriptor RID;
-  vector<pair<size_t, RID> > ccs;
-  stapl::sequential::vector_property_map<RobotGraph, size_t> cmap;
-  //Initialize CC information
-  get_cc_stats(m_robotGraph, cmap, ccs);
-  if(ccs.size()>1)
-    robot->SetMultirobot(true);
-  m_robots.clear();
-  for(size_t i = 0; i < ccs.size(); i++) {
-    cmap.reset();
-    vector<RID> cc;
-    //Find CCs, construct robot objects
-    get_cc(m_robotGraph, cmap, ccs[i].second, cc);
-    size_t baseIndx = -1;
-    for(size_t j = 0; j<cc.size(); j++) {
-      size_t index = m_robotGraph.find_vertex(cc[j])->property();
-      if(robot->GetFreeBody(index)->IsBase()) {
-        baseIndx = index;
-        break;
-      }
-    }
-    if(baseIndx == size_t(-1)) {
-      cerr << "Each robot must have at least one base. Please fix .env file." << endl;
-      exit(1);
-    }
-
-    Robot::Base bt = robot->GetFreeBody(baseIndx)->GetBase();
-    Robot::BaseMovement bm = robot->GetFreeBody(baseIndx)->GetBaseMovement();
-    Robot::JointMap jm;
-    for(size_t j = 0; j<cc.size(); j++) {
-      size_t index = m_robotGraph.find_vertex(cc[j])->property();
-      typedef Robot::JointMap::iterator MIT;
-      for(MIT mit = robot->GetJointMap().begin(); mit!=robot->GetJointMap().end(); mit++) {
-        if((*mit)->GetPreviousBodyIndex() == index) {
-          jm.push_back(*mit);
-        }
-      }
-    }
-    m_robots.push_back(Robot(bt, bm, jm, baseIndx, robot->GetFreeBody(baseIndx)));
-  }
-
-  if(m_saveDofs) {
-    ofstream dofFile((m_filename+string(".dof")).c_str());
-    Cfg::InitRobots(m_robots, _index, dofFile);
-  }
-  else{
-    Cfg::InitRobots(m_robots, _index);
-  }
 }
 
 bool
 Environment::InCSpace(const Cfg& _cfg, shared_ptr<Boundary> _b) {
+  size_t activeBodyIndex = _cfg.GetRobotIndex();
   size_t index = 0;
-  typedef vector<Robot>::iterator RIT;
-  for(RIT rit = m_robots.begin(); rit != m_robots.end(); rit++) {
-    if(rit->m_base != Robot::FIXED) {
+  shared_ptr<MultiBody>& rit = m_activeBodies[activeBodyIndex];
+  //typedef vector<Robot>::iterator RIT;
+  //for(RIT rit = m_activeBodies[activeBodyIndex]->m_robots.begin();
+  //    rit != m_activeBodies[activeBodyIndex]->m_robots.end(); rit++) {
+    if(rit->m_baseType != Body::FIXED) {
       Vector3d p;
       p[0] = _cfg[index];
       p[1] = _cfg[index+1];
       index+=2;
-      if(rit->m_base == Robot::VOLUMETRIC) {
+      if(rit->m_baseType == Body::VOLUMETRIC) {
         p[2] = _cfg[index];
         index++;
       }
       if(!_b->InBoundary(p))
         return false;
-      if(rit->m_baseMovement == Robot::ROTATIONAL) {
-        if(rit->m_base == Robot::PLANAR) {
+      if(rit->m_baseMovement == Body::ROTATIONAL) {
+        if(rit->m_baseType == Body::PLANAR) {
           if(fabs(_cfg[index]) > 1)
             return false;
           index++;
@@ -460,7 +356,7 @@ Environment::InCSpace(const Cfg& _cfg, shared_ptr<Boundary> _b) {
         }
       }
     }
-    typedef Robot::JointMap::iterator MIT;
+    typedef MultiBody::JointMap::iterator MIT;
     for(MIT mit = rit->m_joints.begin(); mit != rit->m_joints.end(); mit++) {
       if((*mit)->GetConnectionType() != Connection::NONACTUATED) {
         if(_cfg[index] < (*mit)->GetJointLimits(0).first || _cfg[index] > (*mit)->GetJointLimits(0).second)
@@ -473,7 +369,7 @@ Environment::InCSpace(const Cfg& _cfg, shared_ptr<Boundary> _b) {
         }
       }
     }
-  }
+  //}
   return true;
 }
 
@@ -484,7 +380,7 @@ Environment::InWSpace(const Cfg& _cfg, shared_ptr<Boundary> _b) {
 
   if(_b->GetClearance(_cfg.GetRobotCenterPosition()) < robot->GetBoundingSphereRadius()) { //faster, loose check
     // Robot is close to wall, have a strict check.
-    _cfg.ConfigEnvironment(this); // Config the robot in the environment.
+    _cfg.ConfigEnvironment(); // Config the robot in the environment.
 
     //check each part of the robot multibody for being inside of the boundary
     for(int m=0; m<robot->GetFreeBodyCount(); ++m) {

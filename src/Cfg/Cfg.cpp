@@ -10,7 +10,6 @@
 /////////////////////////////////////////////////////////////////////
 
 #include "Cfg.h"
-#include "MPProblem/Geometry/MultiBody.h"
 #include "MPProblem/Environment.h"
 #include "Utilities/MetricUtils.h"
 
@@ -23,8 +22,8 @@ ClearanceInfo::~ClearanceInfo() {
 vector<size_t> Cfg::m_dof;
 vector<size_t> Cfg::m_posdof;
 vector<size_t> Cfg::m_numJoints;
-vector<vector<Cfg::DofType> > Cfg::m_dofTypes;
-vector<vector<Robot> > Cfg::m_robots;
+vector<vector<DofType>> Cfg::m_dofTypes;
+vector<shared_ptr<MultiBody>> Cfg::m_robots;
 
 Cfg::Cfg(size_t _robotIndex) {
   m_v.clear();
@@ -52,84 +51,12 @@ Cfg::SetSize(size_t _size) {
 }
 
 void
-Cfg::InitRobots(vector<Robot>& _robots, size_t _index, ostream& _os) {
+Cfg::InitRobots(shared_ptr<MultiBody>& _robots, size_t _index) {
   m_robots[_index] = _robots;
-  _os << "DoF List: " << endl;
-
-  int dof=0;
-  size_t posdof = 0;
-  size_t numJoints = 0;
-  vector<DofType> dofTypes;
-  for(vector<Robot>::iterator rit = m_robots[_index].begin(); rit != m_robots[_index].end(); rit++) {
-
-    _os << "\tRobot with base index " << rit->m_bodyIndex;
-    _os << " (" << rit->m_body->GetFileName() << "):" << endl;
-
-    if(rit->m_base == Robot::PLANAR) {
-      dofTypes.push_back(POS);
-      dofTypes.push_back(POS);
-      posdof += 2;
-
-      _os << "\t\t" << dof++ << ": X position" << endl;
-      _os << "\t\t" << dof++ << ": Y position" << endl;
-
-      if(rit->m_baseMovement == Robot::ROTATIONAL) {
-        dofTypes.push_back(ROT);
-
-        _os << "\t\t" << dof++ << ": Rotation about Z" << endl;
-      }
-    }
-    if(rit->m_base == Robot::VOLUMETRIC) {
-      dofTypes.push_back(POS);
-      dofTypes.push_back(POS);
-      dofTypes.push_back(POS);
-      posdof += 3;
-
-      _os << "\t\t" << dof++ << ": X position" << endl;
-      _os << "\t\t" << dof++ << ": Y position" << endl;
-      _os << "\t\t" << dof++ << ": Z position" << endl;
-      if(rit->m_baseMovement == Robot::ROTATIONAL) {
-        dofTypes.push_back(ROT);
-        dofTypes.push_back(ROT);
-        dofTypes.push_back(ROT);
-
-        _os << "\t\t" << dof++ << ": Rotation about X" << endl;
-        _os << "\t\t" << dof++ << ": Rotation about Y" << endl;
-        _os << "\t\t" << dof++ << ": Rotation about Z" << endl;
-      }
-    }
-    for(Robot::JointIT jit = rit->m_joints.begin(); jit != rit->m_joints.end(); jit++) {
-      if((*jit)->GetConnectionType() == Connection::REVOLUTE) {
-        dofTypes.push_back(JOINT);
-        numJoints++;
-
-        _os << "\t\t" << dof++ << ": ";
-        _os << "Rotational joint from body " << (*jit)->GetPreviousBodyIndex();
-        _os << " (" << (*jit)->GetPreviousBody()->GetFileName() << ")";
-        _os << " to body " << (*jit)->GetNextBodyIndex();
-        _os << " (" << (*jit)->GetNextBody()->GetFileName() << ")" << endl;
-      }
-      else if((*jit)->GetConnectionType() == Connection::SPHERICAL) {
-        dofTypes.push_back(JOINT);
-        dofTypes.push_back(JOINT);
-        numJoints+=2;
-
-        _os << "\t\t" << dof++;
-        _os << "/" << dof++ << ": ";
-        _os << "Spherical joint from body " << (*jit)->GetPreviousBodyIndex();
-        _os << " (" << (*jit)->GetPreviousBody()->GetFileName() << ")";
-        _os << " to body " << (*jit)->GetNextBodyIndex();
-        _os << " (" << (*jit)->GetNextBody()->GetFileName() << ")" << endl;
-      }
-      else if((*jit)->GetConnectionType() == Connection::NONACTUATED) {
-        //skip, do nothing
-      }
-    }
-  }
-  m_dof[_index] = dofTypes.size();
-  m_numJoints[_index] = numJoints;
-  m_posdof[_index] = posdof;
-  m_dofTypes[_index] = dofTypes;
+  m_dof[_index] = _robots->DOF();
+  m_numJoints[_index] = _robots->NumJoints();
+  m_posdof[_index] = _robots->PosDOF();
+  m_dofTypes[_index] = _robots->GetDOFTypes();
 }
 
 Cfg&
@@ -505,62 +432,25 @@ Cfg::OrientationMagnitude() const {
 
 Vector3d
 Cfg::GetRobotCenterPosition() const {
-  double x = 0, y = 0, z = 0;
-  int numRobots = m_robots[m_robotIndex].size();
-  int index = 0;
-  typedef vector<Robot>::iterator RIT;
-  for(RIT rit = m_robots[m_robotIndex].begin(); rit != m_robots[m_robotIndex].end(); rit++) {
-    x += m_v[index];
-    y += m_v[index + 1];
-    if(rit->m_base == Robot::VOLUMETRIC)
-      z += m_v[index + 2];
-    index += 2;
-    if(rit->m_base == Robot::VOLUMETRIC)
-      index += 1;
-    index += rit->m_joints.size();
-  }
-
-  return Vector3d(x/numRobots, y/numRobots, z/numRobots);
+  Vector3d v;
+  for(size_t i = 0; i < 3 && i < DOF(); i++)
+    if(m_dofTypes[m_robotIndex][i] == POS)
+      v[i] = m_v[i];
+  return v;
 }
 
 Vector3d
-Cfg::GetRobotCenterofMass(Environment* _env) const {
-  ConfigEnvironment(_env);
-
-  typedef vector<Robot>::iterator RIT;
-  Vector3d com(0,0,0);
-  int numbodies=0;
-  shared_ptr<MultiBody> mb = _env->GetMultiBody(m_robotIndex);
-  typedef vector<Robot>::iterator RIT;
-  for(RIT rit = m_robots[m_robotIndex].begin(); rit != m_robots[m_robotIndex].end(); rit++) {
-    GMSPolyhedron poly = mb->GetFreeBody(rit->m_bodyIndex)->GetWorldPolyhedron();
-    Vector3d polycom(0,0,0);
-    for(vector<Vector3d>::const_iterator  vit = poly.m_vertexList.begin(); vit != poly.m_vertexList.end(); ++vit)
-      polycom = polycom + (*vit);
-    polycom = polycom / poly.m_vertexList.size();
-    com = com + polycom;
-    numbodies++;
-
-    for(Robot::JointIT i = rit->m_joints.begin(); i != rit->m_joints.end(); ++i) {
-      GMSPolyhedron poly1 = mb->GetFreeBody((*i)->GetNextBodyIndex())->GetWorldPolyhedron();
-      Vector3d polycom1(0,0,0);
-      for(vector<Vector3d>::const_iterator vit1 = poly1.m_vertexList.begin(); vit1 != poly1.m_vertexList.end(); ++vit1)
-        polycom1 = polycom1 + (*vit1);
-      polycom1 = polycom1 / poly1.m_vertexList.size();
-      com = com + polycom1;
-      numbodies++;
-
-    }
-  }
-
-  com = com/numbodies;
-  return com;
+Cfg::
+GetRobotCenterofMass() const {
+  ConfigEnvironment();
+  return m_robots[m_robotIndex]->GetCenterOfMass();
 }
 
 // generates random configuration where workspace robot's EVERY VERTEX
 // is guaranteed to lie within the environment specified bounding box
 void
-Cfg::GetRandomCfg(Environment* _env) {
+Cfg::
+GetRandomCfg(Environment* _env) {
   GetRandomCfg(_env, _env->GetBoundary());
 }
 
@@ -587,59 +477,10 @@ Cfg::GetRandomCfg(Environment* _env, shared_ptr<Boundary> _bb) {
   throw PMPLException("Boundary to small", WHERE, oss.str());
 }
 
-bool
-Cfg::ConfigEnvironment(Environment* _env) const {
-  shared_ptr<MultiBody> mb = _env->GetMultiBody(m_robotIndex);
-  int index = 0;
-  typedef vector<Robot>::iterator RIT;
-  for(RIT rit = m_robots[m_robotIndex].begin(); rit != m_robots[m_robotIndex].end(); rit++) {
-    int posIndex = index;
-    double x = 0, y = 0, z = 0, alpha = 0, beta = 0, gamma = 0;
-    if(rit->m_base != Robot::FIXED) {
-      x = m_v[posIndex];
-      y = m_v[posIndex + 1];
-      index += 2;
-      if(rit->m_base == Robot::VOLUMETRIC) {
-        index++;
-        z = m_v[posIndex + 2];
-      }
-      if(rit->m_baseMovement == Robot::ROTATIONAL) {
-        if(rit->m_base == Robot::PLANAR) {
-          index++;
-          gamma = m_v[posIndex + 2];
-        }
-        else {
-          index += 3;
-          alpha = m_v[posIndex + 3];
-          beta = m_v[posIndex + 4];
-          gamma = m_v[posIndex + 5];
-        }
-      }
-      // configure the robot according to current Cfg: joint parameters
-      // (and base locations/orientations for free flying robots.)
-      Transformation t1(Vector3d(x, y, z), Orientation(EulerAngle(gamma*PI, beta*PI, alpha*PI)));
-      // update link i
-      mb->GetFreeBody(rit->m_bodyIndex)->Configure(t1);
-    }
-    typedef Robot::JointMap::iterator MIT;
-    for(MIT mit = rit->m_joints.begin(); mit != rit->m_joints.end(); mit++) {
-      if((*mit)->GetConnectionType() != Connection::NONACTUATED) {
-        size_t second = (*mit)->GetNextBodyIndex();
-        mb->GetFreeBody(second)->GetBackwardConnection(0).GetDHparameters().m_theta = m_v[index]*PI;
-        index++;
-        if((*mit)->GetConnectionType() == Connection::SPHERICAL) {
-          mb->GetFreeBody(second)->GetBackwardConnection(0).GetDHparameters().m_alpha = m_v[index]*PI;
-          index++;
-        }
-      }
-    }  // config the robot
-  }
-  for(int i = 0; i < mb->GetFreeBodyCount(); i++) {
-    shared_ptr<FreeBody> afb = mb->GetFreeBody(i);
-    if(afb->ForwardConnectionCount() == 0)  // tree tips: leaves.
-      afb->GetWorldTransformation();
-  }
-  return true;
+void
+Cfg::
+ConfigEnvironment() const {
+  m_robots[m_robotIndex]->Configure(m_v);
 }
 
 void
@@ -750,10 +591,10 @@ Cfg::GetPositionOrientationFrom2Cfg(const Cfg& _c1, const Cfg& _c2) {
 }
 
 vector<Vector3d>
-Cfg::PolyApprox(Environment* _env) const {
+Cfg::PolyApprox() const {
   vector<Vector3d> result;
-  ConfigEnvironment(_env);
-  _env->GetMultiBody(m_robotIndex)->PolygonalApproximation(result);
+  ConfigEnvironment();
+  m_robots[m_robotIndex]->PolygonalApproximation(result);
   return result;
 }
 
@@ -774,41 +615,8 @@ Cfg::NormalizeOrientation(int _index) {
 
 //generates random configuration within C-space
 void
-Cfg::GetRandomCfgImpl(Environment* _env, shared_ptr<Boundary> _bb) {
-  m_v.clear();
-  size_t index = 0;
-  typedef vector<Robot>::iterator RIT;
-  for(RIT rit = m_robots[m_robotIndex].begin(); rit != m_robots[m_robotIndex].end(); rit++) {
-    if(rit->m_base == Robot::PLANAR || rit->m_base == Robot::VOLUMETRIC) {
-      Point3d p = _bb->GetRandomPoint();
-      size_t posDOF = rit->m_base == Robot::VOLUMETRIC ? 3 : 2;
-      for(size_t i = 0; i < posDOF; i++) {
-        m_v.push_back(p[i]);
-      }
-      if(rit->m_baseMovement == Robot::ROTATIONAL) {
-        size_t oriDOF = rit->m_base == Robot::VOLUMETRIC ? 3 : 1;
-        for(size_t i = 0; i < oriDOF; i++) {
-          m_v.push_back(2.0*DRand()-1.0);
-        }
-      }
-    }
-    for(Robot::JointIT i = rit->m_joints.begin(); i != rit->m_joints.end(); ++i) {
-      if((*i)->GetConnectionType() == Connection::REVOLUTE) {
-        pair<double, double> r = (*i)->GetJointLimits(0);
-        double t = DRand()*(r.second-r.first)+r.first;
-        m_v.push_back(t);
-        index++;
-      }
-      else if((*i)->GetConnectionType() == Connection::SPHERICAL) {
-        pair<double, double> r = (*i)->GetJointLimits(0);
-        double t = DRand()*(r.second-r.first)+r.first;
-        r = (*i)->GetJointLimits(1);
-        double a = DRand()*(r.second-r.first)+r.first;
-        m_v.push_back(t);
-        m_v.push_back(a);
-        index++;
-      }
-    }
-  }
+Cfg::
+GetRandomCfgImpl(Environment* _env, shared_ptr<Boundary> _bb) {
+  m_v = m_robots[m_robotIndex]->GetRandomCfg(_bb);
   m_witnessCfg.reset();
 }
