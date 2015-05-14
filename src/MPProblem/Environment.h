@@ -70,10 +70,6 @@ class Environment {
     bool InBounds(const CfgMultiRobot& _cfg) {return InBounds(_cfg, m_boundary);}
     bool InBounds(const CfgMultiRobot& _cfg, shared_ptr<Boundary> _b);
 
-    //access the possible range of values for the _i th DOF
-    pair<double, double> GetRange(size_t _i) {return GetRange(_i, m_boundary);}
-    pair<double, double> GetRange(size_t _i, shared_ptr<Boundary> _b);
-
     //reset the boundary to the minimum bounding box surrounding the obstacles
     //increased by a margin of _d + robotRadius
     void ResetBoundary(double _d, size_t _robotIndex);
@@ -123,13 +119,6 @@ class Environment {
 
     void ReadBoundary(istream& _is, CountingStreamBuffer& _cbs);
 
-    //BuildRobotStructure, builds a robot graph which determines DOFs for a given robot
-    //In an environment with multiple active bodies, for now this function will assume they all have the same DOFs
-    //until PMPL is changed later to support multiple roadmaps for heterogeneous systems. That is, this function assumes
-    //that if there is a multiagent sim going on, the agents are homogenous
-    void BuildRobotStructure();
-    //void SubBuildRobotStrucutre(size_t _index);
-
     //determine if _cfg is inside of the C-space defined by this workspace
     //boundary, and the joint limits of the robot
     bool InCSpace(const Cfg& _cfg, shared_ptr<Boundary> _b);
@@ -138,20 +127,20 @@ class Environment {
     //boundary _b
     bool InWSpace(const Cfg& _cfg, shared_ptr<Boundary> _b);
 
-    string m_filename; //which file did this environment come from
-    string m_modelDataDir; //directory where environment file is located
-    bool m_saveDofs; //should we save the dof information to a file
+    string m_filename;     ///< Which file did this environment come from
+    string m_modelDataDir; ///< Directory where environment file is located
+    bool m_saveDofs;       ///< Should we save the dof information to a file
 
-    double m_positionRes; //positional resolution of movement
-    double m_orientationRes; //rotational resolution of movement
-    double m_rdRes; //resolution for movement in RD space
+    double m_positionRes;    ///< Positional resolution of movement
+    double m_orientationRes; ///< Rotational resolution of movement
+    double m_rdRes;          ///< Resolution for movement in RD space
 
-    shared_ptr<Boundary> m_boundary; //boundary of the workspace
+    shared_ptr<Boundary> m_boundary; ///< Boundary of the workspace
 
-    vector<shared_ptr<MultiBody>> m_activeBodies; //robots
-    vector<shared_ptr<MultiBody>> m_obstacleBodies; //all other multibodies
-    vector<shared_ptr<MultiBody>> m_usableMultiBodies; //obstacles and robot (for collision detection)
-    vector<shared_ptr<MultiBody>> m_navigableSurfaces; //surfaces
+    vector<shared_ptr<MultiBody>> m_activeBodies;      ///< Robots
+    vector<shared_ptr<MultiBody>> m_navigableSurfaces; ///< Surfaces
+    vector<shared_ptr<MultiBody>> m_obstacleBodies;    ///< Other multibodies
+    vector<shared_ptr<MultiBody>> m_usableMultiBodies; ///< All multibodies
 };
 
 

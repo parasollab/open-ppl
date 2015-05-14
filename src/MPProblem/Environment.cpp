@@ -175,12 +175,6 @@ Environment::InBounds(const CfgMultiRobot& _cfg, shared_ptr<Boundary> _b) {
   return true;
 }
 
-//access the possible range of values for the _i th DOF for boundary
-pair<double, double>
-Environment::GetRange(size_t _i, shared_ptr<Boundary> _b) {
-  return _b->GetRange(_i);
-}
-
 //reset the boundary to the minimum bounding box surrounding the obstacles
 //increased by a margin of _d + robotRadius
 void
@@ -312,14 +306,6 @@ ReadBoundary(istream& _is, CountingStreamBuffer& _cbs) {
         "'. Options are: box or sphere.");
 
   m_boundary->Read(_is, _cbs);
-}
-
-//BuildRobotStructure, builds a robot graph which determines DOFs for a given robot
-//In an environment with multiple active bodies, for now this function will assume they all have the same DOFs
-//until PMPL is changed later to support multiple roadmaps for heterogeneous systems. That is, this function assumes
-//that if there is a multiagent sim going on, the agents are homogenous
-void
-Environment::BuildRobotStructure() {
 }
 
 bool

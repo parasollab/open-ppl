@@ -115,8 +115,8 @@ class SurfaceGridSampler : public SamplerMethod<MPTraits> {
         //Ground grid sampling
         else if(i==-1){
           //Get environment boundaries for axis x and z
-          pair<double, double> dxx = env->GetRange(0, _boundary);
-          pair<double, double> dxz = env->GetRange(2, _boundary);
+          pair<double, double> dxx = _boundary->GetRange(0);
+          pair<double, double> dxz = _boundary->GetRange(2);
           for(double itdx=dxx.first; itdx<dxx.second; itdx+=m_dx){
             for(double itdz=dxz.first; itdz<dxz.second; itdz+=m_dz){
               Point2d pt(itdx,itdz);
