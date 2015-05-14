@@ -1705,7 +1705,6 @@ SurfaceMedialAxisUtility<MPTraits>::GetClearance2DSurf
 {
   double minDis=1e10;
   if(this->m_debug) cout << " GetClearance2DSurf (start call) (mb,pos,cdPt, clear)" << endl;
-  if(this->m_debug) cout << " getting world transformation. num fixed bodies: " << _mb->GetFixedBodyCount() << endl;
   Transformation& trans = _mb->GetFixedBody(0)->WorldTransformation();
   //check roughly <- this optimization should be added!!!
   Vector3d mbCenter = _mb->GetFixedBody(0)->GetCenterOfMass();
