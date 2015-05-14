@@ -90,7 +90,7 @@ class RVLocalPlanner: public LocalPlannerMethod<MPTraits> {
       vector<Vector3d> joints2;
       CfgType c2Copy = _c2;
       c2Copy.ResetRigidBodyCoordinates();
-      c2Copy.ConfigEnvironment(env);
+      c2Copy.ConfigEnvironment();
       env->GetMultiBody(c2Copy.GetRobotIndex())->PolygonalApproximation(joints2);
       queue<shared_ptr<ReachableVolumeJointTreeNode> > joints;
       joints.push(m_rvr.m_RVLinkages.front()->m_root);
@@ -109,7 +109,7 @@ class RVLocalPlanner: public LocalPlannerMethod<MPTraits> {
 	while(!stop){
 	  CfgType tickCopy=tick;
 	  tickCopy.ResetRigidBodyCoordinates();
-	  tickCopy.ConfigEnvironment(env);
+	  tickCopy.ConfigEnvironment();
 	  vector<Vector3d> jointsTick;
 	  env->GetMultiBody(tickCopy.GetRobotIndex())->PolygonalApproximation(jointsTick);
 	  double d_joints=ReachableVolume::distance(jointsTick[jid],joints2[jid]);
@@ -134,7 +134,7 @@ class RVLocalPlanner: public LocalPlannerMethod<MPTraits> {
 
 	  tick.SetJointData(*jointAngleCfg);
 	  delete(jointAngleCfg);
-	  tick.ConfigEnvironment(env);
+	  tick.ConfigEnvironment();
 	  if(!env->InBounds(tick) || !vcm->IsValid(tick, cdInfo, callee)) {
 	    return false;
 	  }

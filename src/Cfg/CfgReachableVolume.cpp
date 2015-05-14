@@ -55,20 +55,20 @@ void CfgReachableVolume::GetRandomCfg(Environment* _env, shared_ptr<Boundary> _b
   for(unsigned int i=0; i<m_robots.size(); i++){
     vector<double> cfg_data_robot;
     //whoever decided to make m_robots a vector of vectors is going to need to change this to correctly fit that format
-    if(m_robots[i][0].m_base == Robot::FIXED || (*m_reachableVolumeRobots)[i]->m_fixed){
+    if(m_robots[i]->m_baseType == Body::FIXED || (*m_reachableVolumeRobots)[i]->m_fixed){
       for(int j=0; j<6;j++){
         m_v.push_back(0);
       }
     }else{
-      if(m_robots[i][0].m_base == Robot::PLANAR || m_robots[i][0].m_base == Robot::VOLUMETRIC) {
+      if(m_robots[i]->m_baseType == Body::PLANAR || m_robots[i]->m_baseType == Body::VOLUMETRIC) {
         Point3d p=_bb->GetRandomPoint();
-        size_t posDOF = m_robots[i][0].m_base == Robot::VOLUMETRIC ? 3 : 2;
+        size_t posDOF = m_robots[i]->m_baseType == Body::VOLUMETRIC ? 3 : 2;
         for(size_t j = 0; j < posDOF; j++){
 	  (*m_reachableVolumeRobots)[i]->m_baseJointPos[j]=p[j];
           m_v.push_back(p[j]);
         }
-        if(m_robots[i][0].m_baseMovement == Robot::ROTATIONAL) {
-          size_t oriDOF = m_robots[i][0].m_base == Robot::VOLUMETRIC ? 3 : 1;
+        if(m_robots[i]->m_baseMovement == Body::ROTATIONAL) {
+          size_t oriDOF = m_robots[i]->m_baseType == Body::VOLUMETRIC ? 3 : 1;
           for(size_t i = 0; i < oriDOF; i++) {
 	    m_v.push_back(DRand());
           }
@@ -76,7 +76,7 @@ void CfgReachableVolume::GetRandomCfg(Environment* _env, shared_ptr<Boundary> _b
       }
     }
     shared_ptr<vector<double> > internalCfg = (*m_reachableVolumeRobots)[i]->getInternalCFGCoordinates();
-    if(m_robots[i][0].m_base == Robot::PLANAR)
+    if(m_robots[i]->m_baseType == Body::PLANAR)
       (*internalCfg)[1]=DRand();
     m_v.insert(m_v.end(),internalCfg->begin(),internalCfg->end());
 
@@ -88,7 +88,7 @@ void CfgReachableVolume::GetRandomCfg(Environment* _env, shared_ptr<Boundary> _b
       cout<<m_v[i]<<endl;
     }
     Cfg::SetData(m_v);
-    ConfigEnvironment(_env);
+    ConfigEnvironment();
     /*
     _env->GetMultiBody(_env->GetRobotIndex())->PolygonalApproximation(joints);
     cout<<"************"<<endl<<"Printing Joints"<<endl;
