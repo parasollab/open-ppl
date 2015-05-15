@@ -1,3 +1,8 @@
+ifndef Script
+  Script = tests.sh
+  #Script = parallelTests.sh
+endif
+
 ifndef Test
   Test = CfgTests
   #Test = ParallelCfgTests
@@ -5,7 +10,7 @@ ifndef Test
 endif
 
 test:
-	./tests.sh ${Test}
+	${Script} ${Test}
 
 clean:
 	rm -f Scratch/*

@@ -9,7 +9,7 @@ ifndef debug
 endif
 
 ifndef parallel
-  parallel = 1
+  parallel = 0
 endif
 
 # set directory paths
