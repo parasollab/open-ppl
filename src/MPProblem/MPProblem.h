@@ -4,6 +4,7 @@
 #include "Utilities/MPUtils.h"
 #include "Utilities/MetricUtils.h"
 #include "MPProblem/Environment.h"
+#include "MPProblem/MPProblemBase.h"
 #include "MPProblem/Roadmap.h"
 
 #include "DistanceMetrics/DistanceMetricMethod.h"
@@ -30,9 +31,9 @@
 ////////////////////////////////////////////////////////////////////////////////
 template<class MPTraits>
 #ifdef _PARALLEL
-class MPProblem : public stapl::p_object
+class MPProblem : public stapl::p_object, public MPProblemBase
 #else
-class MPProblem
+class MPProblem : public MPProblemBase
 #endif
 {
   public:
@@ -130,11 +131,11 @@ class MPProblem
 
     void SetMPProblem();
 
-    //solver, seed, baseName, vizmoDebugName
-    typedef tuple<string, long, string, string> Solver;
+    //solver, seed, baseName, vizmoDebug
+    typedef tuple<string, long, string, bool> Solver;
     void AddSolver(const string& _label, long _seed,
-        const string& _baseFileName, const string& _vizmoDebugName) {
-      m_solvers.push_back(Solver(_label, _seed, _baseFileName, _vizmoDebugName));
+        const string& _baseFileName, bool _vizmoDebug = false) {
+      m_solvers.push_back(Solver(_label, _seed, _baseFileName, _vizmoDebug));
     }
     void Solve();
 
@@ -174,7 +175,8 @@ class MPProblem
     ConnectorSet* m_connectors;
     MetricSet* m_metrics;
     MapEvaluatorSet* m_mapEvaluators;
-//    //Characterization and Filtering
+
+////Characterization and Filtering
 //#ifndef _PARALLEL
 //    MPCharacterizer<CfgType, WeightType>* m_pCharacterizer;
 //
@@ -201,6 +203,8 @@ template<class MPTraits>
 MPProblem<MPTraits>::
 MPProblem(const string& _filename) {
   Initialize();
+  size_t sl = _filename.rfind("/");
+  m_filePath =  _filename.substr(0, sl == string::npos ? 0 : sl+1);
 
   ReadXMLFile(_filename, this);
 }
@@ -209,6 +213,8 @@ template<class MPTraits>
 MPProblem<MPTraits>::
 MPProblem(const string& _filename, typename MPTraits::MPProblemType* _problem) {
   Initialize();
+  size_t sl = _filename.rfind("/");
+  m_filePath = _filename.substr(0, sl == string::npos ? 0 : sl+1);
 
   ReadXMLFile(_filename, _problem);
 }
@@ -374,10 +380,7 @@ ParseChild(XMLNode& _node, typename MPTraits::MPProblemType* _problem) {
     baseFilename = oss.str();
     bool vdOutput = _node.Read("vizmoDebug", false, false,
         "True yields VizmoDebug output for the solver.");
-    string vizmoDebugName = "";
-    if(vdOutput)
-        vizmoDebugName = baseFilename + ".vd";
-    m_solvers.push_back(Solver(label, seed, baseFilename, vizmoDebugName));
+    m_solvers.push_back(Solver(label, seed, baseFilename, vdOutput));
     return true;
   }
   else
@@ -459,11 +462,6 @@ MPProblem<MPTraits>::Solve() {
     m_colRoadmap = new RoadmapType();
     m_stats = new StatClass();
 
-    //initialize vizmo debug if there is a valid filename
-    string vdfilename = get<3>(*sit);
-    if(vdfilename != "")
-      VDInit(vdfilename);
-
     //call solver
     cout << "\n\nMPProblem is solving with MPStrategyMethod labeled "
       << get<0>(*sit)
@@ -473,13 +471,17 @@ MPProblem<MPTraits>::Solve() {
 #else
     SRand(get<1>(*sit));
 #endif
-    SetBaseFilename(get<2>(*sit));
+    SetBaseFilename(GetPath(get<2>(*sit)));
     m_stats->SetAuxDest(GetBaseFilename());
+
+    //initialize vizmo debug if there is a valid filename
+    if(get<3>(*sit))
+        VDInit(m_baseFilename + ".vd");
 
     GetMPStrategy(get<0>(*sit))->operator()();
 
     //close vizmo debug if necessary
-    if(vdfilename != "")
+    if(get<3>(*sit))
       VDClose();
   }
 };

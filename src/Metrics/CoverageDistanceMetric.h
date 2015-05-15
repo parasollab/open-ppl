@@ -71,8 +71,7 @@ operator()() {
 
   static size_t numcalls = 0;
   if(numcalls == 0)
-    m_history.open(
-        (this->GetBaseFilename() + ".coverage").c_str());
+    m_history.open(this->GetBaseFilename() + ".coverage");
 
   unsigned int i;
   vector <double> disVec;
