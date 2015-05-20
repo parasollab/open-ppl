@@ -17,8 +17,8 @@ class PQP : public CollisionDetectionMethod {
     virtual ~PQP();
 
     virtual bool IsInCollision(shared_ptr<ActiveMultiBody> _robot,
-        shared_ptr<MultiBody> _obstacle, StatClass& _stats, CDInfo& _cdInfo,
-        const string& _callName, size_t _ignoreIAdjacentMultibodies=1);
+        shared_ptr<MultiBody> _obstacle, CDInfo& _cdInfo,
+        size_t _ignoreIAdjacentMultibodies);
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -32,8 +32,8 @@ class PQPSolid : public PQP {
     PQPSolid() : PQP() {m_name = "PQP_SOLID";}
 
     virtual bool IsInCollision(shared_ptr<ActiveMultiBody> _robot,
-        shared_ptr<MultiBody> _obstacle, StatClass& _stats, CDInfo& _cdInfo,
-        const string& _callName, size_t ignoreIAdjacentMultibodies = 1);
+        shared_ptr<MultiBody> _obstacle, CDInfo& _cdInfo,
+        size_t ignoreIAdjacentMultibodies);
 
     virtual bool IsInsideObstacle(const Cfg& _cfg, Environment* _env);
     virtual bool IsInsideObstacle(Vector3d _robotPt, shared_ptr<MultiBody> _obstacle);

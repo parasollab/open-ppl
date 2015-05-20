@@ -5,7 +5,6 @@
 #include "MPProblem/Environment.h"
 #include "MPProblem/Geometry/ActiveMultiBody.h"
 #include "MPProblem/Geometry/FreeBody.h"
-#include "Utilities/MetricUtils.h"
 
 #ifdef USE_PQP
 
@@ -19,10 +18,8 @@ PQP::~PQP() {
 bool
 PQP::
 IsInCollision(shared_ptr<ActiveMultiBody> _robot,
-    shared_ptr<MultiBody> _obstacle, StatClass& _stats, CDInfo& _cdInfo,
-    const string& _callName, size_t _ignoreIAdjacentMultibodies) {
-
-   _stats.IncNumCollDetCalls(GetName(), _callName);
+    shared_ptr<MultiBody> _obstacle, CDInfo& _cdInfo,
+    size_t _ignoreIAdjacentMultibodies) {
 
   if(_cdInfo.m_retAllInfo) {
     PQP_DistanceResult res;
@@ -174,10 +171,8 @@ PQPSolid::IsInsideObstacle(Vector3d _robotPt, shared_ptr<MultiBody> _obstacle){
 bool
 PQPSolid::
 IsInCollision(shared_ptr<ActiveMultiBody> _robot,
-    shared_ptr<MultiBody> _obstacle, StatClass& _stats, CDInfo& _cdInfo,
-    const string& _callName, size_t _ignoreIAdjacentMultibodies) {
-
-  _stats.IncNumCollDetCalls(GetName(), _callName);
+    shared_ptr<MultiBody> _obstacle, CDInfo& _cdInfo,
+    size_t _ignoreIAdjacentMultibodies) {
 
   PQP_CollideResult result;
 

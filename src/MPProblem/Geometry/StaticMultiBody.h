@@ -23,8 +23,6 @@ class StaticMultiBody : public MultiBody {
     StaticMultiBody(const StaticMultiBody&) = delete;
     StaticMultiBody& operator=(const StaticMultiBody&) = delete;
 
-    //virtual ~StaticMultiBody();
-
     ///Return a fixed body accroding to the given index. the index should be in [0,GetFixedBodyCount())
     shared_ptr<FixedBody> GetFixedBody(size_t _index) const;
     ///Add a Fixed Body

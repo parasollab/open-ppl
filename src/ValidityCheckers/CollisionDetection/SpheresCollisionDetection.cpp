@@ -12,10 +12,8 @@ BoundingSpheres() :
 bool
 BoundingSpheres::
 IsInCollision(shared_ptr<ActiveMultiBody> _robot,
-    shared_ptr<MultiBody> _obstacle, StatClass& _stats, CDInfo& _cdInfo,
-    const string& _callName, size_t _ignoreIAdjacentMultibodies) {
-
-  _stats.IncNumCollDetCalls(GetName(), _callName );
+    shared_ptr<MultiBody> _obstacle, CDInfo& _cdInfo,
+    size_t _ignoreIAdjacentMultibodies) {
 
   Vector3d robotCom = _robot->GetCenterOfMass();
   Vector3d obstCom  = _obstacle->GetCenterOfMass();
@@ -47,10 +45,8 @@ InsideSpheres() :
 bool
 InsideSpheres::
 IsInCollision(shared_ptr<ActiveMultiBody> _robot,
-    shared_ptr<MultiBody> _obstacle, StatClass& _stats, CDInfo& _cdInfo,
-    const string& _callName, size_t _ignoreIAdjacentMultibodies) {
-
-  _stats.IncNumCollDetCalls(GetName(),_callName );
+    shared_ptr<MultiBody> _obstacle, CDInfo& _cdInfo,
+    size_t _ignoreIAdjacentMultibodies) {
 
   Vector3d robotCom = _robot->GetCenterOfMass();
   Vector3d obstCom  = _obstacle->GetCenterOfMass();

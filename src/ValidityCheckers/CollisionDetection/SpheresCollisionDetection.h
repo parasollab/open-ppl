@@ -14,8 +14,8 @@ class BoundingSpheres : public CollisionDetectionMethod {
     BoundingSpheres();
 
     virtual bool IsInCollision(shared_ptr<ActiveMultiBody> _robot,
-        shared_ptr<MultiBody> _obstacle, StatClass& _stats, CDInfo& _cdInfo,
-        const string& _callName, size_t _ignoreIAdjacentMultibodies = 1);
+        shared_ptr<MultiBody> _obstacle, CDInfo& _cdInfo,
+        size_t _ignoreIAdjacentMultibodies);
 };
 
 
@@ -30,8 +30,8 @@ class InsideSpheres : public CollisionDetectionMethod {
     InsideSpheres();
 
     virtual bool IsInCollision(shared_ptr<ActiveMultiBody> _robot,
-        shared_ptr<MultiBody> _obstacle, StatClass& _stats, CDInfo& _cdInfo,
-        const string& _callName, size_t _ignoreIAdjacentMultibodies = 1);
+        shared_ptr<MultiBody> _obstacle, CDInfo& _cdInfo,
+        size_t _ignoreIAdjacentMultibodies);
 };
 
 #endif

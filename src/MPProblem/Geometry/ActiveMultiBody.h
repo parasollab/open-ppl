@@ -29,8 +29,6 @@ class ActiveMultiBody : public MultiBody {
     ActiveMultiBody(const ActiveMultiBody&) = delete;
     ActiveMultiBody& operator=(const ActiveMultiBody&) = delete;
 
-    //virtual ~ActiveMultiBody();
-
     ///Return a free body accroding to the given index. the index should be in [0,GetFreeBodyCount())
     shared_ptr<FreeBody> GetFreeBody(size_t _index) const;
     ///Number of free body in this mutilbody.

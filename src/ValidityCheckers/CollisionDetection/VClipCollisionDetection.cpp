@@ -5,7 +5,6 @@
 #include "CDInfo.h"
 #include "MPProblem/Geometry/ActiveMultiBody.h"
 #include "MPProblem/Geometry/FreeBody.h"
-#include "Utilities/MetricUtils.h"
 
 VClip::
 VClip() : CollisionDetectionMethod("VCLIP", CDType::Exact, VCLIP) {}
@@ -15,10 +14,8 @@ ClosestFeaturesHT closestFeaturesHT(3000);
 bool
 VClip::
 IsInCollision(shared_ptr<ActiveMultiBody> _robot,
-    shared_ptr<MultiBody> _obstacle, StatClass& _stats, CDInfo& _cdInfo,
-    const string& _callName, size_t _ignoreIAdjacentMultibodies) {
-
-  _stats.IncNumCollDetCalls(m_name, _callName);
+    shared_ptr<MultiBody> _obstacle, CDInfo& _cdInfo,
+    size_t _ignoreIAdjacentMultibodies) {
 
   if (_cdInfo.m_retAllInfo == true)
     return FillCdInfo(_robot, _obstacle, _cdInfo, _ignoreIAdjacentMultibodies);

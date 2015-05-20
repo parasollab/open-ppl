@@ -7,7 +7,6 @@
 #include "CDInfo.h"
 #include "MPProblem/Geometry/ActiveMultiBody.h"
 #include "MPProblem/Geometry/FreeBody.h"
-#include "Utilities/MetricUtils.h"
 
 Rapid::
 Rapid() : CollisionDetectionMethod("RAPID", CDType::Exact, RAPID) {
@@ -16,10 +15,8 @@ Rapid() : CollisionDetectionMethod("RAPID", CDType::Exact, RAPID) {
 bool
 Rapid::
 IsInCollision(shared_ptr<ActiveMultiBody> _robot,
-    shared_ptr<MultiBody> _obstacle, StatClass& _stats, CDInfo& _cdInfo,
-    const string& _callName, size_t _ignoreIAdjacentMultibodies) {
-
-  _stats.IncNumCollDetCalls(m_name, _callName);
+    shared_ptr<MultiBody> _obstacle, CDInfo& _cdInfo,
+    size_t _ignoreIAdjacentMultibodies) {
 
   if(_cdInfo.m_retAllInfo) {
     cerr << endl;

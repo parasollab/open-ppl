@@ -4,10 +4,9 @@
 #include "Utilities/MPUtils.h"
 
 class ActiveMultiBody;
-class MultiBody;
-class StatClass;
-class Cfg;
 class CDInfo;
+class Cfg;
+class MultiBody;
 
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup CollisionDetection
@@ -37,8 +36,6 @@ class CollisionDetectionMethod {
     CDType GetType() const {return m_type;}
     cd_predefined GetCDType() const {return m_cdType;}
 
-    virtual bool operator==(const CollisionDetectionMethod& _cd) const;
-
     virtual void Print(ostream& _os) const;
 
     /**
@@ -54,8 +51,8 @@ class CollisionDetectionMethod {
     /**Check collision between MultiBody of robot and obstacle.
     */
     virtual bool IsInCollision(shared_ptr<ActiveMultiBody> _rob,
-        shared_ptr<MultiBody> _obstacle, StatClass& _Stats, CDInfo& _cdInfo,
-        const string& _callName, size_t _ignoreIAdjacentMultibodies = 1) = 0;
+        shared_ptr<MultiBody> _obstacle, CDInfo& _cdInfo,
+        size_t _ignoreIAdjacentMultibodies) = 0;
 
   protected:
     string m_name;

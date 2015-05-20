@@ -206,14 +206,16 @@ CollisionDetectionValidity<MPTraits>::IsInCollision(CDInfo& _cdInfo,
 
 template<class MPTraits>
 bool
-CollisionDetectionValidity<MPTraits>::IsInCollision(CDInfo& _cdInfo,
-    shared_ptr<ActiveMultiBody> _rob, shared_ptr<MultiBody> _obst, const string& _callName) {
-  StatClass* stats = this->GetMPProblem()->GetStatClass();
+CollisionDetectionValidity<MPTraits>::
+IsInCollision(CDInfo& _cdInfo, shared_ptr<ActiveMultiBody> _rob,
+    shared_ptr<MultiBody> _obst, const string& _callName) {
+
+  this->GetStatClass()->IncNumCollDetCalls(m_cdMethod->GetName(), _callName);
 
   CollisionDetectionMethod::CDType tp = m_cdMethod->GetType();
 
-  bool collision = m_cdMethod->IsInCollision(_rob, _obst,
-      *stats,  _cdInfo, _callName, m_ignoreIAdjacentLinks);
+  bool collision = m_cdMethod->IsInCollision(_rob, _obst, _cdInfo,
+      m_ignoreIAdjacentLinks);
 
   switch(tp) {
     case CollisionDetectionMethod::CDType::Out:
