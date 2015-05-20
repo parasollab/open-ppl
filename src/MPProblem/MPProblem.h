@@ -144,11 +144,11 @@ class MPProblem
     //_modelFileName: a string specifying the path to the .obj file to be added as an obstacle
     //_where: 6 dofs for obstacle placement: (x, y, z, rotation about X, rotation about Y, rotation about Z)
     //return value: the obstacle's index in the Environment's m_otherMultiBodies on success, -1 on failure
-    int AddObstacle(string _modelFileName, const Transformation& _where);
+    //int AddObstacle(string _modelFileName, const Transformation& _where);
 
     //RemoveObstacleAt
     //a wrapper call to remove a multibody from the environment
-    void RemoveObstacleAt(size_t _index);
+    //void RemoveObstacleAt(size_t _index);
 
   protected:
     virtual void Initialize();
@@ -508,7 +508,7 @@ MPProblem<MPTraits>::GetSelectedCDTypes() const{
   return cdTypes;
 }
 
-template<class MPTraits>
+/*template<class MPTraits>
 int
 MPProblem<MPTraits>::AddObstacle(string _modelFileName, const Transformation& _where){
   if(m_environment != NULL){
@@ -520,9 +520,9 @@ MPProblem<MPTraits>::AddObstacle(string _modelFileName, const Transformation& _w
     cerr << "MPProblem::AddObstacle Warning: Attempted to add obstacle to a NULL environment" << endl;
     return -1;
   }
-}
+}*/
 
-template<class MPTraits>
+/*template<class MPTraits>
 void
 MPProblem<MPTraits>::RemoveObstacleAt(size_t _index){
   if(m_environment != NULL){
@@ -531,6 +531,6 @@ MPProblem<MPTraits>::RemoveObstacleAt(size_t _index){
   else{
     cerr << "MPProblem::RemoveObstacleAt Warning: Attempted to remove an obstacle from a NULL environment" << endl;
   }
-}
+}*/
 
 #endif

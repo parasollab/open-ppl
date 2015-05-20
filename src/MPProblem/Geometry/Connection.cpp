@@ -1,6 +1,8 @@
 #include "Connection.h"
 
-#include "MultiBody.h"
+#include "ActiveMultiBody.h"
+#include "Body.h"
+#include "FreeBody.h"
 
 size_t Connection::m_globalCounter = 0;
 
@@ -62,8 +64,8 @@ Read(istream& _is, CountingStreamBuffer& _cbs) {
       "Failed reading next body index.");
 
   //grab the shared_ptr to bodies
-  m_bodies[0] = m_multibody->GetFreeBody(m_bodyIndices.first);
-  m_bodies[1] = m_multibody->GetFreeBody(m_bodyIndices.second);
+  m_bodies[0] = ((ActiveMultiBody*)m_multibody)->GetFreeBody(m_bodyIndices.first);
+  m_bodies[1] = ((ActiveMultiBody*)m_multibody)->GetFreeBody(m_bodyIndices.second);
 
   //grab the joint type
   string connectionTypeTag = ReadFieldString(_is, _cbs,

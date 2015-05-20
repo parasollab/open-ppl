@@ -10,13 +10,13 @@
 
 #include "Vector.h"
 
-#include "MPProblem/Geometry/MultiBody.h"
 #include "Utilities/MPUtils.h"
 #include "ValidityCheckers/CollisionDetection/CDInfo.h"
 
+enum class DofType;
 class Cfg;
 class Environment;
-class MultiBody;
+class ActiveMultiBody;
 class Boundary;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -66,7 +66,7 @@ class Cfg {
     virtual ~Cfg() {};
 
     // assume _index within the size of the vector.
-    static void InitRobots(shared_ptr<MultiBody>& _robot, size_t _index);
+    static void InitRobots(shared_ptr<ActiveMultiBody>& _robot, size_t _index);
 
     Cfg& operator=(const Cfg& _cfg);
     ///determines equality of this and other configuration
@@ -208,7 +208,7 @@ class Cfg {
     static vector<size_t> m_numJoints;
 
     static vector<vector<DofType> > m_dofTypes;
-    static vector<shared_ptr<MultiBody>> m_robots;
+    static vector<shared_ptr<ActiveMultiBody>> m_robots;
 
     /** TODO- there may still problem with (un)packing map
      */
@@ -216,8 +216,8 @@ class Cfg {
     map<string,double> m_statMap;
 
   public:
-    static const vector<shared_ptr<MultiBody>>& GetRobots() { return m_robots; }
-    static const shared_ptr<MultiBody>& GetRobot(size_t _index = 0) { return m_robots[_index]; }
+    static const vector<shared_ptr<ActiveMultiBody>>& GetRobots() { return m_robots; }
+    static const shared_ptr<ActiveMultiBody>& GetRobot(size_t _index = 0) { return m_robots[_index]; }
 
     CDInfo m_clearanceInfo;
     shared_ptr<Cfg> m_witnessCfg;

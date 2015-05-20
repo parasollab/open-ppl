@@ -1,5 +1,5 @@
-#ifndef SPHERESCOLLISIONDETECTION_H
-#define SPHERESCOLLISIONDETECTION_H
+#ifndef SPHERES_COLLISION_DETECTION_H_
+#define SPHERES_COLLISION_DETECTION_H_
 
 #include "CollisionDetectionMethod.h"
 
@@ -12,10 +12,10 @@
 class BoundingSpheres : public CollisionDetectionMethod {
   public:
     BoundingSpheres();
-    virtual ~BoundingSpheres();
 
-    virtual bool IsInCollision(shared_ptr<MultiBody> _robot, shared_ptr<MultiBody> _obstacle,
-        StatClass& _stats, CDInfo& _cdInfo, const string& _callName, int _ignoreIAdjacentMultibodies=1);
+    virtual bool IsInCollision(shared_ptr<ActiveMultiBody> _robot,
+        shared_ptr<MultiBody> _obstacle, StatClass& _stats, CDInfo& _cdInfo,
+        const string& _callName, size_t _ignoreIAdjacentMultibodies = 1);
 };
 
 
@@ -28,10 +28,10 @@ class BoundingSpheres : public CollisionDetectionMethod {
 class InsideSpheres : public CollisionDetectionMethod {
   public:
     InsideSpheres();
-    virtual ~InsideSpheres();
 
-    virtual bool IsInCollision(shared_ptr<MultiBody> _robot, shared_ptr<MultiBody> _obstacle,
-        StatClass& _stats, CDInfo& _cdInfo, const string& _callName, int _ignoreIAdjacentMultibodies=1);
+    virtual bool IsInCollision(shared_ptr<ActiveMultiBody> _robot,
+        shared_ptr<MultiBody> _obstacle, StatClass& _stats, CDInfo& _cdInfo,
+        const string& _callName, size_t _ignoreIAdjacentMultibodies = 1);
 };
 
 #endif

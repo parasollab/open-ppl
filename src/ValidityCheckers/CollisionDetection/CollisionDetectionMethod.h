@@ -3,6 +3,7 @@
 
 #include "Utilities/MPUtils.h"
 
+class ActiveMultiBody;
 class MultiBody;
 class StatClass;
 class Cfg;
@@ -26,9 +27,10 @@ class CollisionDetectionMethod {
     //Type Out: no collision sure; collision unsure.
     //Type In: no collision unsure; collision sure.
     //Type Exact: no collision sure; collision sure.
-    enum CDType {Out, In, Exact};
+    enum class CDType {Out, In, Exact};
 
-    CollisionDetectionMethod(string _name = "CD_USER1", CDType _type = Out, cd_predefined _cdType = CD_USER1);
+    CollisionDetectionMethod(string _name = "CD_USER1",
+        CDType _type = CDType::Out, cd_predefined _cdType = CD_USER1);
     virtual ~CollisionDetectionMethod();
 
     string GetName() const {return m_name;}
@@ -51,9 +53,9 @@ class CollisionDetectionMethod {
 
     /**Check collision between MultiBody of robot and obstacle.
     */
-    virtual bool IsInCollision(shared_ptr<MultiBody> _rob,
+    virtual bool IsInCollision(shared_ptr<ActiveMultiBody> _rob,
         shared_ptr<MultiBody> _obstacle, StatClass& _Stats, CDInfo& _cdInfo,
-        const string& _callName, int _ignoreIAdjacentMultibodies = 1) = 0;
+        const string& _callName, size_t _ignoreIAdjacentMultibodies = 1) = 0;
 
   protected:
     string m_name;

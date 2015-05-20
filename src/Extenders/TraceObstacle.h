@@ -3,6 +3,9 @@
 
 #include "BasicExtender.h"
 
+#include "MPProblem/Geometry/FixedBody.h"
+#include "MPProblem/Geometry/StaticMultiBody.h"
+
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup Extenders
 /// @brief Extend tangent to a workspace obstacle.
@@ -66,7 +69,7 @@ TraceObstacle<MPTraits>::Extend(const CfgType& _near, const CfgType& _dir,
     obsContactIndex = -1;
   }
   GMSPolyhedron& poly =
-      env->GetMultiBody(cIndex)->GetFixedBody(0)->GetWorldPolyhedron();
+      env->GetStaticBody(cIndex)->GetFixedBody(0)->GetWorldPolyhedron();
   vector<Vector3d>& vertexList    = poly.m_vertexList;
   vector<GMSPolygon>& polygonList = poly.m_polygonList;
 

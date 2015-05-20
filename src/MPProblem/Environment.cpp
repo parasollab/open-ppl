@@ -1,10 +1,11 @@
 #include "Environment.h"
 
-#include <containers/sequential/graph/algorithms/connected_components.h>
-
 #include "Cfg/Cfg.h"
 #include "MPProblem/BoundingBox.h"
 #include "MPProblem/BoundingSphere.h"
+#include "MPProblem/Geometry/ActiveMultiBody.h"
+#include "MPProblem/Geometry/FreeBody.h"
+#include "MPProblem/Geometry/StaticMultiBody.h"
 
 #define ENV_RES_DEFAULT 0.05
 
@@ -70,24 +71,52 @@ Environment::Read(string _filename) {
 
   //parse and construct each multibody
   for(size_t m = 0; m < multibodyCount && ifs; ++m) {
-    shared_ptr<MultiBody> mb(new MultiBody());
-    mb->Read(ifs, cbs);
 
-    if(mb->IsActive())
-      m_activeBodies.push_back(mb);
-    else if(!mb->IsSurface())
-      m_obstacleBodies.push_back(mb);
-    else
-      m_navigableSurfaces.push_back(mb);
+    string multibodyType = ReadFieldString(ifs, cbs,
+        "Failed reading multibody type."
+        " Options are: active, passive, internal, or surface.");
+
+    MultiBody::BodyType bodyType =
+      MultiBody::GetBodyTypeFromTag(multibodyType, cbs.Where());
+
+    switch(bodyType) {
+      case MultiBody::BodyType::Active:
+        {
+          shared_ptr<ActiveMultiBody> mb(new ActiveMultiBody());
+          mb->SetBodyType(bodyType);
+          mb->Read(ifs, cbs);
+          m_activeBodies.push_back(mb);
+          break;
+        }
+      case MultiBody::BodyType::Internal:
+      case MultiBody::BodyType::Passive:
+        {
+          shared_ptr<StaticMultiBody> mb(new StaticMultiBody());
+          mb->SetBodyType(bodyType);
+          mb->Read(ifs, cbs);
+          m_obstacleBodies.push_back(mb);
+          break;
+        }
+      case MultiBody::BodyType::Surface:
+        {
+          shared_ptr<StaticMultiBody> mb(new StaticMultiBody());
+          mb->SetBodyType(bodyType);
+          mb->Read(ifs, cbs);
+          m_navigableSurfaces.push_back(mb);
+          break;
+        }
+    }
   }
-
-  m_usableMultiBodies = m_activeBodies;
-  copy(m_obstacleBodies.begin(), m_obstacleBodies.end(),
-      back_inserter(m_usableMultiBodies));
 
   if(m_activeBodies.empty())
     throw ParseException(cbs.Where(),
         "No active multibodies in the environment.");
+
+  m_usableMultiBodies.clear();
+  copy(m_activeBodies.begin(), m_activeBodies.end(),
+      back_inserter(m_usableMultiBodies));
+  copy(m_obstacleBodies.begin(), m_obstacleBodies.end(),
+      back_inserter(m_usableMultiBodies));
 
   size_t size = m_activeBodies.size();
   Cfg::SetSize(size);
@@ -245,6 +274,7 @@ Environment::GetRandomNavigableSurfaceIndex() {
   return rindex;
 }
 
+/*
 int
 Environment::AddObstacle(string _modelFileName, const Transformation& _where, const vector<cd_predefined>& _cdTypes) {
   shared_ptr<MultiBody> mb(new MultiBody());
@@ -277,14 +307,15 @@ void Environment::RemoveObstacleAt(size_t position) {
     cerr << "Environment::RemoveObstacleAt Warning: unable to remove obst at position " << position << endl;
   }
 }
+*/
 
 void
-Environment::BuildCDstructure(cd_predefined cdtype) {
-  for(vector<shared_ptr<MultiBody> >::iterator M = m_activeBodies.begin(); M != m_activeBodies.end(); ++M)
-    (*M)->buildCDstructure(cdtype);
-
-  for(vector<shared_ptr<MultiBody> >::iterator M = m_obstacleBodies.begin(); M != m_obstacleBodies.end(); ++M)
-    (*M)->buildCDstructure(cdtype);
+Environment::
+BuildCDstructure(cd_predefined _cdtype) {
+  for(auto& body : m_activeBodies)
+    body->BuildCDStructure(_cdtype);
+  for(auto& body : m_obstacleBodies)
+    body->BuildCDStructure(_cdtype);
 }
 
 void
@@ -309,10 +340,11 @@ ReadBoundary(istream& _is, CountingStreamBuffer& _cbs) {
 }
 
 bool
-Environment::InCSpace(const Cfg& _cfg, shared_ptr<Boundary> _b) {
+Environment::
+InCSpace(const Cfg& _cfg, shared_ptr<Boundary> _b) {
   size_t activeBodyIndex = _cfg.GetRobotIndex();
   size_t index = 0;
-  shared_ptr<MultiBody>& rit = m_activeBodies[activeBodyIndex];
+  shared_ptr<ActiveMultiBody>& rit = m_activeBodies[activeBodyIndex];
   //typedef vector<Robot>::iterator RIT;
   //for(RIT rit = m_activeBodies[activeBodyIndex]->m_robots.begin();
   //    rit != m_activeBodies[activeBodyIndex]->m_robots.end(); rit++) {
@@ -342,14 +374,14 @@ Environment::InCSpace(const Cfg& _cfg, shared_ptr<Boundary> _b) {
         }
       }
     }
-    typedef MultiBody::JointMap::iterator MIT;
-    for(MIT mit = rit->m_joints.begin(); mit != rit->m_joints.end(); mit++) {
-      if((*mit)->GetConnectionType() != Connection::NONACTUATED) {
-        if(_cfg[index] < (*mit)->GetJointLimits(0).first || _cfg[index] > (*mit)->GetJointLimits(0).second)
+    typedef ActiveMultiBody::JointMap::iterator MIT;
+    for(auto& joint : rit->m_joints) {
+      if(joint->GetConnectionType() != Connection::NONACTUATED) {
+        if(_cfg[index] < joint->GetJointLimits(0).first || _cfg[index] > joint->GetJointLimits(0).second)
           return false;
         index++;
-        if((*mit)->GetConnectionType() == Connection::SPHERICAL) {
-          if(_cfg[index] < (*mit)->GetJointLimits(1).first || _cfg[index] > (*mit)->GetJointLimits(1).second)
+        if(joint->GetConnectionType() == Connection::SPHERICAL) {
+          if(_cfg[index] < joint->GetJointLimits(1).first || _cfg[index] > joint->GetJointLimits(1).second)
             return false;
           index++;
         }
@@ -360,16 +392,17 @@ Environment::InCSpace(const Cfg& _cfg, shared_ptr<Boundary> _b) {
 }
 
 bool
-Environment::InWSpace(const Cfg& _cfg, shared_ptr<Boundary> _b) {
+Environment::
+InWSpace(const Cfg& _cfg, shared_ptr<Boundary> _b) {
 
-  shared_ptr<MultiBody> robot = GetMultiBody(_cfg.GetRobotIndex());
+  shared_ptr<ActiveMultiBody> robot = m_activeBodies[_cfg.GetRobotIndex()];
 
   if(_b->GetClearance(_cfg.GetRobotCenterPosition()) < robot->GetBoundingSphereRadius()) { //faster, loose check
     // Robot is close to wall, have a strict check.
     _cfg.ConfigEnvironment(); // Config the robot in the environment.
 
     //check each part of the robot multibody for being inside of the boundary
-    for(int m=0; m<robot->GetFreeBodyCount(); ++m) {
+    for(size_t m = 0; m < robot->GetFreeBodyCount(); ++m) {
 
       typedef vector<Vector3d>::const_iterator VIT;
 
@@ -399,45 +432,38 @@ Environment::InWSpace(const Cfg& _cfg, shared_ptr<Boundary> _b) {
   return true;
 }
 
-shared_ptr<MultiBody>
+shared_ptr<ActiveMultiBody>
 Environment::
 GetActiveBody(size_t _index) const {
-  if(_index < m_activeBodies.size()) {
-    return m_activeBodies[_index];
-  }
-  else {
-    ostringstream msg;
-    msg << "Error:Cannot access MultiBody with index " << _index
-      << ". Possible indices are [0, " << m_activeBodies.size()
-      << ")." << endl;
-    throw PMPLException("Index Out Of Bound", WHERE, msg.str());
-  }
+  if(_index < 0 || _index >= m_activeBodies.size())
+    throw RunTimeException(WHERE,
+        "Cannot access ActiveBody '" + ::to_string(_index) + "'.");
+  return m_activeBodies[_index];
+}
+
+shared_ptr<StaticMultiBody>
+Environment::
+GetStaticBody(size_t _index) const {
+  if(_index < 0 || _index >= m_obstacleBodies.size())
+    throw RunTimeException(WHERE,
+        "Cannot access StaticBody '" + ::to_string(_index) + "'.");
+  return m_obstacleBodies[_index];
 }
 
 shared_ptr<MultiBody>
 Environment::
 GetMultiBody(size_t _index) const {
-  if(_index < m_usableMultiBodies.size())
-    return m_usableMultiBodies[_index];
-  else {
-    ostringstream msg;
-    msg << "Error:Cannot access MultiBody with index " << _index
-      << ". Possible indices are [0, " << m_usableMultiBodies.size()
-      << ")." << endl;
-    throw PMPLException("Index Out Of Bound", WHERE, msg.str());
-  }
+  if(_index < 0 || _index >= m_usableMultiBodies.size())
+    throw RunTimeException(WHERE,
+        "Cannot access MultiBody '" + ::to_string(_index) + "'.");
+  return m_usableMultiBodies[_index];
 }
 
-shared_ptr<MultiBody>
+shared_ptr<StaticMultiBody>
 Environment::
 GetNavigableSurface(size_t _index) const {
-  if(_index < m_navigableSurfaces.size())
-    return m_navigableSurfaces[_index];
-  else {
-    ostringstream msg;
-    msg << "Error:Cannot access MultiBody with index " << _index
-      << ". Possible indices are [0, " << m_navigableSurfaces.size()
-      << ")." << endl;
-    throw PMPLException("Index Out Of Bound", WHERE, msg.str());
-  }
+  if(_index < 0 || _index >= m_navigableSurfaces.size())
+    throw RunTimeException(WHERE,
+        "Cannot access Navigable Surface '" + ::to_string(_index) + "'.");
+  return m_navigableSurfaces[_index];
 }

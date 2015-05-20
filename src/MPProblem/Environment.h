@@ -3,8 +3,12 @@
 
 #include "Cfg/CfgMultiRobot.h"
 #include "MPProblem/Boundary.h"
-#include "MPProblem/Geometry/MultiBody.h"
+//#include "MPProblem/Geometry/MultiBody.h"
 #include "Utilities/MPUtils.h"
+
+class ActiveMultiBody;
+class MultiBody;
+class StaticMultiBody;
 
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup Environment
@@ -88,7 +92,11 @@ class Environment {
 
     //Returns a pointer to ActiveBody according to this given index.
     //If this index is out of the boundary of list, NULL will be returned.
-    shared_ptr<MultiBody> GetActiveBody(size_t _index) const;
+    shared_ptr<ActiveMultiBody> GetActiveBody(size_t _index) const;
+
+    //Returns a pointer to StaticBody according to this given index.
+    //If this index is out of the boundary of list, NULL will be returned.
+    shared_ptr<StaticMultiBody> GetStaticBody(size_t _index) const;
 
     //Returns a pointer to MultiBody according to this given index.
     //If this index is out of the boundary of list, NULL will be returned.
@@ -96,7 +104,7 @@ class Environment {
 
     //Return a pointer to MultiBody in m_navigableSurfaces given index.
     //If this index is out of the boundary of list, NULL will be returned.
-    shared_ptr<MultiBody> GetNavigableSurface(size_t _index) const;
+    shared_ptr<StaticMultiBody> GetNavigableSurface(size_t _index) const;
 
     shared_ptr<MultiBody> GetRandomObstacle() const;
     size_t GetRandomNavigableSurfaceIndex();
@@ -107,13 +115,13 @@ class Environment {
     //_where: a 6 dof vector specifying position and orientation of the geometry:
     //      (x, y, z, rotation about X, rotation about Y, rotation about Z)
     //return value: obstacle's index in m_obstacleBodies on success, -1 otherwise
-    int AddObstacle(string _modelFileName, const Transformation& _where, const vector<cd_predefined>& _cdTypes);
+    //int AddObstacle(string _modelFileName, const Transformation& _where, const vector<cd_predefined>& _cdTypes);
 
     //RemoveObstacleAt
     //Removes multibody stored at position given in m_obstacleBodies
-    void RemoveObstacleAt(size_t position);
+    //void RemoveObstacleAt(size_t position);
 
-    void BuildCDstructure(cd_predefined cdtype);
+    void BuildCDstructure(cd_predefined _cdtype);
 
   protected:
 
@@ -137,10 +145,12 @@ class Environment {
 
     shared_ptr<Boundary> m_boundary; ///< Boundary of the workspace
 
-    vector<shared_ptr<MultiBody>> m_activeBodies;      ///< Robots
-    vector<shared_ptr<MultiBody>> m_navigableSurfaces; ///< Surfaces
-    vector<shared_ptr<MultiBody>> m_obstacleBodies;    ///< Other multibodies
-    vector<shared_ptr<MultiBody>> m_usableMultiBodies; ///< All multibodies
+    vector<shared_ptr<ActiveMultiBody>> m_activeBodies; ///< Robots
+    vector<shared_ptr<StaticMultiBody>>
+      m_navigableSurfaces;                              ///< Surfaces
+    vector<shared_ptr<StaticMultiBody>>
+      m_obstacleBodies;                                 ///< Other multibodies
+    vector<shared_ptr<MultiBody>> m_usableMultiBodies;  ///< All multibodies
 };
 
 

@@ -1,6 +1,6 @@
 #include "FreeBody.h"
 
-#include "MultiBody.h"
+#include "ActiveMultiBody.h"
 
 FreeBody::
 FreeBody(MultiBody* _owner) : Body(_owner) {
@@ -77,11 +77,12 @@ ComputeWorldTransformation(set<int>& _visited) {
   m_centerOfMassAvailable = false;
   m_worldPolyhedronAvailable = false;
 
-  if(_visited.find(m_multibody->GetFreeBodyIndex(*this)) != _visited.end()) {
+  ActiveMultiBody* multibody = dynamic_cast<ActiveMultiBody*>(m_multibody);
+  if(_visited.find(multibody->GetFreeBodyIndex(*this)) != _visited.end()) {
     return m_worldTransformation;
   }
   else {
-    _visited.insert(m_multibody->GetFreeBodyIndex(*this));
+    _visited.insert(multibody->GetFreeBodyIndex(*this));
 
     //for the case when the base is a freebody.
     if(m_backwardConnection.empty())

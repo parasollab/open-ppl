@@ -14,7 +14,6 @@
 class Rapid: public CollisionDetectionMethod {
   public:
     Rapid();
-    virtual ~Rapid();
 
     /* Using RAPID to check collision between two MultiBodys.
      * Collision is checked in Body level between two MultiBodys,
@@ -29,8 +28,9 @@ class Rapid: public CollisionDetectionMethod {
      *
      * collision between two ajacent links will be ignored.
      */
-    virtual bool IsInCollision(shared_ptr<MultiBody> _robot, shared_ptr<MultiBody> _obstacle,
-        StatClass& _stats, CDInfo& _cdInfo, const string& _callName, int _ignoreIAdjacentMultibodies = 1);
+    virtual bool IsInCollision(shared_ptr<ActiveMultiBody> _robot,
+        shared_ptr<MultiBody> _obstacle, StatClass& _stats, CDInfo& _cdInfo,
+        const string& _callName, size_t _ignoreIAdjacentMultibodies = 1);
 };
 
 #endif

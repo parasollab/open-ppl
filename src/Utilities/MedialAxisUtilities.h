@@ -376,7 +376,7 @@ ExactCollisionInfo(CfgType& _cfg, CfgType& _clrCfg,
   // If not using the bbx, done
   if(m_useBBX){
     // CfgType is now know as good, get BBX and ROBOT info
-    shared_ptr<MultiBody> robot = env->GetMultiBody(_cfg.GetRobotIndex());
+    shared_ptr<ActiveMultiBody> robot = env->GetActiveBody(_cfg.GetRobotIndex());
 
     // Find closest point between robot and bbx, set if less than min dist from obstacles
     for(int m=0; m < robot->GetFreeBodyCount(); ++m) {

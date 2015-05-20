@@ -20,7 +20,6 @@ using namespace mathtool;
 class VClip : public CollisionDetectionMethod {
   public:
     VClip();
-    virtual ~VClip();
 
     /* Using VCLIP to check collision between two MultiBodys.
      * Collision is checked in Body level between two MultiBodys,
@@ -29,8 +28,9 @@ class VClip : public CollisionDetectionMethod {
      *
      * collision between two ajacent links will be ignore.
      */
-    virtual bool IsInCollision(shared_ptr<MultiBody> _robot, shared_ptr<MultiBody> _obstacle,
-        StatClass& _stats, CDInfo& _cdInfo, const string& _callName, int _ignoreIAdjacentMultibodies = 1);
+    virtual bool IsInCollision(shared_ptr<ActiveMultiBody> _robot,
+        shared_ptr<MultiBody> _obstacle, StatClass& _stats, CDInfo& _cdInfo,
+        const string& _callName, size_t _ignoreIAdjacentMultibodies = 1);
 
   protected:
     VClipPose GetVClipPose(const Transformation&, const Transformation&);
@@ -47,8 +47,9 @@ class VClip : public CollisionDetectionMethod {
      * Trace back to general IsInCollision call to see how it all
      * gets updated correctly.
      */
-    bool FillCdInfo(shared_ptr<MultiBody> _robot, shared_ptr<MultiBody> _obstacle,
-        CDInfo& _cdInfo, int _ignoreIAdjacentMultibodies=1);
+    bool FillCdInfo(shared_ptr<ActiveMultiBody> _robot,
+        shared_ptr<MultiBody> _obstacle, CDInfo& _cdInfo,
+        size_t _ignoreIAdjacentMultibodies = 1);
 };
 
 #endif

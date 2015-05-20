@@ -236,14 +236,16 @@ PMPL_INCL = \
 	-I${PMPL_DIR} \
 
 PMPL_OBJS = \
-	MPProblem/Geometry/FreeBody.o \
-	MPProblem/Geometry/FixedBody.o \
+	MPProblem/Geometry/ActiveMultiBody.o \
+	MPProblem/Geometry/Body.o \
 	MPProblem/Geometry/Connection.o \
 	MPProblem/Geometry/Contact.o \
 	MPProblem/Geometry/DHparameters.o \
+	MPProblem/Geometry/FixedBody.o \
+	MPProblem/Geometry/FreeBody.o \
 	MPProblem/Geometry/GMSPolyhedron.o \
-	MPProblem/Geometry/Body.o \
 	MPProblem/Geometry/MultiBody.o \
+	MPProblem/Geometry/StaticMultiBody.o \
 	MPProblem/Environment.o \
 	MPProblem/Boundary.o \
         MPProblem/BoundingBox.o \

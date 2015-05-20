@@ -1,19 +1,23 @@
 #ifdef USE_VCLIP
 
 #include "VClipCollisionDetection.h"
+
 #include "CDInfo.h"
+#include "MPProblem/Geometry/ActiveMultiBody.h"
+#include "MPProblem/Geometry/FreeBody.h"
 #include "Utilities/MetricUtils.h"
-#include "MPProblem/Geometry/MultiBody.h"
 
-VClip::VClip() : CollisionDetectionMethod("VCLIP", Exact, VCLIP) {}
-
-VClip::~VClip() {}
+VClip::
+VClip() : CollisionDetectionMethod("VCLIP", CDType::Exact, VCLIP) {}
 
 ClosestFeaturesHT closestFeaturesHT(3000);
 
 bool
-VClip::IsInCollision(shared_ptr<MultiBody> _robot, shared_ptr<MultiBody> _obstacle,
-    StatClass& _stats, CDInfo& _cdInfo, const string& _callName, int _ignoreIAdjacentMultibodies) {
+VClip::
+IsInCollision(shared_ptr<ActiveMultiBody> _robot,
+    shared_ptr<MultiBody> _obstacle, StatClass& _stats, CDInfo& _cdInfo,
+    const string& _callName, size_t _ignoreIAdjacentMultibodies) {
+
   _stats.IncNumCollDetCalls(m_name, _callName);
 
   if (_cdInfo.m_retAllInfo == true)
@@ -23,15 +27,16 @@ VClip::IsInCollision(shared_ptr<MultiBody> _robot, shared_ptr<MultiBody> _obstac
   VClipPose x12; //VClip position
   Vect3 cp1, cp2;   // closest points between bodies, in local frame
 
-  for(int i=0 ; i < _robot->GetFreeBodyCount(); i++) {
+  for(size_t i = 0; i < _robot->GetFreeBodyCount(); ++i) {
 
     shared_ptr<PolyTree> rob = _robot->GetFreeBody(i)->GetVClipBody();
 
-    for(int j=0; j < _obstacle->GetBodyCount(); j++) {
+    for(size_t j = 0; j < _obstacle->GetBodyCount(); ++j) {
 
       // if robot check self collision, skip adjacent links.
       if(_robot == _obstacle &&
-          _robot->GetFreeBody(i)->IsWithinI(_obstacle->GetBody(j),_ignoreIAdjacentMultibodies) )
+          _robot->GetFreeBody(i)->IsWithinI(
+            _obstacle->GetBody(j), _ignoreIAdjacentMultibodies))
         continue;
 
 
@@ -62,8 +67,10 @@ VClip::IsInCollision(shared_ptr<MultiBody> _robot, shared_ptr<MultiBody> _obstac
  * gets updated correctly.
  */
 bool
-VClip::FillCdInfo(shared_ptr<MultiBody> _robot, shared_ptr<MultiBody> _obstacle,
-    CDInfo& _cdInfo, int _ignoreIAdjacentMultibodies) {
+VClip::
+FillCdInfo(shared_ptr<ActiveMultiBody> _robot,
+    shared_ptr<MultiBody> _obstacle, CDInfo& _cdInfo,
+    size_t _ignoreIAdjacentMultibodies) {
   Real dist, minCurrentDist;
   VClipPose x12;
   Vect3 cp1, cp2; //closest points between bodies, in local frame
@@ -75,10 +82,10 @@ VClip::FillCdInfo(shared_ptr<MultiBody> _robot, shared_ptr<MultiBody> _obstacle,
 
   minCurrentDist = MAX_DBL;
 
-  for(int i=0; i<_robot->GetFreeBodyCount(); i++) {
+  for(size_t i = 0; i < _robot->GetFreeBodyCount(); ++i) {
     shared_ptr<PolyTree> rob = _robot->GetFreeBody(i)->GetVClipBody();
 
-    for(int j=0; j<_obstacle->GetBodyCount(); j++) {
+    for(size_t j = 0; j < _obstacle->GetBodyCount(); ++j) {
       // if robot check self collision, skip adjacent links.
       if(_robot == _obstacle &&
           _robot->GetFreeBody(i)->IsWithinI(_obstacle->GetBody(j),_ignoreIAdjacentMultibodies) )

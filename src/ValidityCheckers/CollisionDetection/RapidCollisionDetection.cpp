@@ -1,32 +1,38 @@
 #ifdef USE_RAPID
 
 #include "RapidCollisionDetection.h"
-#include "Utilities/MetricUtils.h"
-#include "MPProblem/Geometry/MultiBody.h"
+
 #include <RAPID.H>
+
 #include "CDInfo.h"
+#include "MPProblem/Geometry/ActiveMultiBody.h"
+#include "MPProblem/Geometry/FreeBody.h"
+#include "Utilities/MetricUtils.h"
 
-Rapid::Rapid() : CollisionDetectionMethod("RAPID", Exact, RAPID) {}
-
-Rapid::~Rapid() {}
+Rapid::
+Rapid() : CollisionDetectionMethod("RAPID", CDType::Exact, RAPID) {
+}
 
 bool
-Rapid::IsInCollision(shared_ptr<MultiBody> _robot, shared_ptr<MultiBody> _obstacle,
-    StatClass& _stats, CDInfo& _cdInfo, const string& _callName, int _ignoreIAdjacentMultibodies) {
+Rapid::
+IsInCollision(shared_ptr<ActiveMultiBody> _robot,
+    shared_ptr<MultiBody> _obstacle, StatClass& _stats, CDInfo& _cdInfo,
+    const string& _callName, size_t _ignoreIAdjacentMultibodies) {
+
   _stats.IncNumCollDetCalls(m_name, _callName);
 
-  if (_cdInfo.m_retAllInfo) {
+  if(_cdInfo.m_retAllInfo) {
     cerr << endl;
     cerr << "Currently unable to return ALL info using RAPID cd." << endl;
     cerr << "Defaulting to minimal information." << endl;
   }
 
-  for(int i=0 ; i<_robot->GetFreeBodyCount(); i++){
+  for(size_t i = 0; i < _robot->GetFreeBodyCount(); i++) {
     shared_ptr<FreeBody> robotBody = _robot->GetFreeBody(i);
     shared_ptr<RAPID_model> rob = robotBody->GetRapidBody();
     Transformation& t1 = robotBody->WorldTransformation();
 
-    for(int j=0; j<_obstacle->GetBodyCount(); j++){
+    for(size_t j = 0; j < _obstacle->GetBodyCount(); j++) {
       shared_ptr<Body> obstBody = _obstacle->GetBody(j);
       if(_robot == _obstacle){
         //GetBody() first returns fixed bodies, then free bodies.
@@ -44,11 +50,11 @@ Rapid::IsInCollision(shared_ptr<MultiBody> _robot, shared_ptr<MultiBody> _obstac
       shared_ptr<RAPID_model> obst = obstBody->GetRapidBody();
       Transformation& t2 = obstBody->WorldTransformation();
 
-      if(RAPID_Collide(t1.rotation().matrix(), t1.translation(), rob.get(),
-            t2.rotation().matrix(), t2.translation(), obst.get(), RAPID_FIRST_CONTACT)) {
-        cerr << "Error in CollisionDetection::RAPID_Collide, RAPID_ERR_COLLIDE_OUT_OF_MEMORY" << endl;
-        exit(1);
-      }
+      if(RAPID_Collide(
+            t1.rotation().matrix(), t1.translation(), rob.get(),
+            t2.rotation().matrix(), t2.translation(), obst.get(),
+            RAPID_FIRST_CONTACT))
+        throw RunTimeException(WHERE, "RAPID_ERR_COLLIDE_OUT_OF_MEMORY");
 
       if(RAPID_num_contacts) {
         _cdInfo.m_rapidContactID1 = RAPID_contact[0].id1;
@@ -62,4 +68,3 @@ Rapid::IsInCollision(shared_ptr<MultiBody> _robot, shared_ptr<MultiBody> _obstac
 }
 
 #endif
-

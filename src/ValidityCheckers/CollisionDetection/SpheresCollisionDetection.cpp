@@ -1,20 +1,20 @@
 #include "SpheresCollisionDetection.h"
+
+#include "MPProblem/Geometry/ActiveMultiBody.h"
+#include "MPProblem/Geometry/FreeBody.h"
 #include "Utilities/MetricUtils.h"
-#include "MPProblem/Geometry/MultiBody.h"
 
-BoundingSpheres::BoundingSpheres() : CollisionDetectionMethod() {
-  m_name = "boundingSpheres";
-  m_type = Out;
-  m_cdType = BOUNDING_SPHERES;
-}
-
-
-BoundingSpheres::~BoundingSpheres() {
-}
+BoundingSpheres::
+BoundingSpheres() :
+  CollisionDetectionMethod("BoundingSpheres", CDType::Out, BOUNDING_SPHERES) {
+  }
 
 bool
-BoundingSpheres::IsInCollision(shared_ptr<MultiBody> _robot, shared_ptr<MultiBody> _obstacle,
-    StatClass& _stats, CDInfo& _cdInfo, const string& _callName, int _ignoreIAdjacentMultibodies) {
+BoundingSpheres::
+IsInCollision(shared_ptr<ActiveMultiBody> _robot,
+    shared_ptr<MultiBody> _obstacle, StatClass& _stats, CDInfo& _cdInfo,
+    const string& _callName, size_t _ignoreIAdjacentMultibodies) {
+
   _stats.IncNumCollDetCalls(GetName(), _callName );
 
   Vector3d robotCom = _robot->GetCenterOfMass();
@@ -22,8 +22,8 @@ BoundingSpheres::IsInCollision(shared_ptr<MultiBody> _robot, shared_ptr<MultiBod
 
   if(_robot->GetFreeBodyCount())
     robotCom = _robot->GetFreeBody(0)->GetWorldTransformation() * robotCom;
-  if(_obstacle->GetFreeBodyCount())
-    obstCom  = _obstacle->GetFreeBody(0)->GetWorldTransformation() * obstCom;
+  if(_obstacle->GetBodyCount())
+    obstCom  = _obstacle->GetBody(0)->GetWorldTransformation() * obstCom;
 
   double robotRadius = _robot->GetBoundingSphereRadius();
   double obstRadius  = _obstacle->GetBoundingSphereRadius();
@@ -39,19 +39,17 @@ BoundingSpheres::IsInCollision(shared_ptr<MultiBody> _robot, shared_ptr<MultiBod
 //////////
 
 
-InsideSpheres::InsideSpheres() : CollisionDetectionMethod() {
-  m_name = "insideSpheres";
-  m_type = In;
-  m_cdType = INSIDE_SPHERES;
-}
-
-
-InsideSpheres::~InsideSpheres() {
-}
+InsideSpheres::
+InsideSpheres() :
+  CollisionDetectionMethod("InsideSpheres", CDType::In, INSIDE_SPHERES) {
+  }
 
 bool
-InsideSpheres::IsInCollision(shared_ptr<MultiBody> _robot, shared_ptr<MultiBody> _obstacle,
-    StatClass& _stats, CDInfo& _cdInfo, const string& _callName, int _ignoreIAdjacentMultibodies) {
+InsideSpheres::
+IsInCollision(shared_ptr<ActiveMultiBody> _robot,
+    shared_ptr<MultiBody> _obstacle, StatClass& _stats, CDInfo& _cdInfo,
+    const string& _callName, size_t _ignoreIAdjacentMultibodies) {
+
   _stats.IncNumCollDetCalls(GetName(),_callName );
 
   Vector3d robotCom = _robot->GetCenterOfMass();
@@ -59,8 +57,8 @@ InsideSpheres::IsInCollision(shared_ptr<MultiBody> _robot, shared_ptr<MultiBody>
 
   if(_robot->GetFreeBodyCount())
     robotCom = _robot->GetFreeBody(0)->GetWorldTransformation() * robotCom;
-  if(_obstacle->GetFreeBodyCount())
-    obstCom  = _obstacle->GetFreeBody(0)->GetWorldTransformation() * obstCom;
+  if(_obstacle->GetBodyCount())
+    obstCom  = _obstacle->GetBody(0)->GetWorldTransformation() * obstCom;
 
   double robotRadius = _robot->GetInsideSphereRadius();
   double obstRadius  = _obstacle->GetInsideSphereRadius();
