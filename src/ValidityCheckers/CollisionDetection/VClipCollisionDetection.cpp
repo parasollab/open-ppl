@@ -7,9 +7,27 @@
 #include "MPProblem/Geometry/FreeBody.h"
 
 VClip::
-VClip() : CollisionDetectionMethod("VCLIP", CDType::Exact, VCLIP) {}
+VClip() : CollisionDetectionMethod("VCLIP", CDType::Exact) {}
 
 ClosestFeaturesHT closestFeaturesHT(3000);
+
+void
+VClip::
+Build(Body* _body) {
+  GMSPolyhedron& poly = _body->GetPolyhedron();
+  Polyhedron* vpoly = new Polyhedron;
+  for(size_t v = 0 ; v < poly.m_vertexList.size() ; v++){
+    vpoly->addVertex("",
+        Vect3(poly.m_vertexList[v][0],
+          poly.m_vertexList[v][1],
+          poly.m_vertexList[v][2]
+          ));
+  }
+  vpoly->buildHull();
+  shared_ptr<PolyTree> vclipBody(new PolyTree);
+  vclipBody->setPoly(vpoly);
+  _body->SetVClipBody(vclipBody);
+}
 
 bool
 VClip::

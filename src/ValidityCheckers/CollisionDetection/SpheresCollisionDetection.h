@@ -13,6 +13,8 @@ class BoundingSpheres : public CollisionDetectionMethod {
   public:
     BoundingSpheres();
 
+    virtual void Build(Body* _body) {};
+
     virtual bool IsInCollision(shared_ptr<ActiveMultiBody> _robot,
         shared_ptr<MultiBody> _obstacle, CDInfo& _cdInfo,
         size_t _ignoreIAdjacentMultibodies);
@@ -28,6 +30,8 @@ class BoundingSpheres : public CollisionDetectionMethod {
 class InsideSpheres : public CollisionDetectionMethod {
   public:
     InsideSpheres();
+
+    virtual void Build(Body* _body) {};
 
     virtual bool IsInCollision(shared_ptr<ActiveMultiBody> _robot,
         shared_ptr<MultiBody> _obstacle, CDInfo& _cdInfo,

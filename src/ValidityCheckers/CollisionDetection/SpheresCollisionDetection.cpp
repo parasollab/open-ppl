@@ -5,8 +5,7 @@
 #include "Utilities/MetricUtils.h"
 
 BoundingSpheres::
-BoundingSpheres() :
-  CollisionDetectionMethod("BoundingSpheres", CDType::Out, BOUNDING_SPHERES) {
+BoundingSpheres() : CollisionDetectionMethod("BoundingSpheres", CDType::Out) {
   }
 
 bool
@@ -38,8 +37,7 @@ IsInCollision(shared_ptr<ActiveMultiBody> _robot,
 
 
 InsideSpheres::
-InsideSpheres() :
-  CollisionDetectionMethod("InsideSpheres", CDType::In, INSIDE_SPHERES) {
+InsideSpheres() : CollisionDetectionMethod("InsideSpheres", CDType::In) {
   }
 
 bool

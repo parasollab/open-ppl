@@ -1,8 +1,10 @@
 #include "CollisionDetectionMethod.h"
 
+#include "Utilities/PMPLExceptions.h"
+
 CollisionDetectionMethod::
-CollisionDetectionMethod(string _name, CDType _type, cd_predefined _cdType) :
-  m_name(_name), m_type(_type), m_cdType(_cdType) {
+CollisionDetectionMethod(const string& _name, CDType _type) :
+  m_name(_name), m_type(_type) {
   }
 
 CollisionDetectionMethod::

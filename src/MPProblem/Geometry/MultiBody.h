@@ -82,7 +82,7 @@ class MultiBody {
     */
     double GetInsideSphereRadius() const;
 
-    void BuildCDStructure(cd_predefined _cdtype);
+    void BuildCDStructure(CollisionDetectionMethod* _cdMethod);
 
     bool IsInternal() const;
 

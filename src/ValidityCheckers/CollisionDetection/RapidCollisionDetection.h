@@ -15,6 +15,8 @@ class Rapid: public CollisionDetectionMethod {
   public:
     Rapid();
 
+    virtual void Build(Body* _body);
+
     /* Using RAPID to check collision between two MultiBodys.
      * Collision is checked in Body level between two MultiBodys,
      * if any of Body from Robot collides with any of Body from obstacle,

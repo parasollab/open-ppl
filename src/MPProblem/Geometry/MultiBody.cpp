@@ -116,9 +116,11 @@ GetInsideSphereRadius() const {
 }
 
 
-void MultiBody::BuildCDStructure(cd_predefined _cdtype) {
+void
+MultiBody::
+BuildCDStructure(CollisionDetectionMethod* _cdMethod) {
   for(auto& body : m_bodies)
-    body->BuildCDStructure(_cdtype);
+    body->BuildCDStructure(_cdMethod);
 }
 
 //===================================================================

@@ -17,11 +17,12 @@
 #endif
 
 #include "Utilities/MPUtils.h"
-#include "MPProblem/Geometry/GMSPolyhedron.h"
 #include "MPProblem/Geometry/Connection.h"
+#include "MPProblem/Geometry/GMSPolyhedron.h"
 
-class MultiBody;
+class CollisionDetectionMethod;
 class DHparameters;
+class MultiBody;
 
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup Environment
@@ -114,21 +115,25 @@ class Body {
     ////////////////////////////////////////////////////////////////////////////
     /// @return VClip model
     shared_ptr<PolyTree> GetVClipBody() {return vclipBody;}
+    void SetVClipBody(const shared_ptr<PolyTree>& _vclipBody) {vclipBody = _vclipBody;}
 #endif
 #ifdef USE_RAPID
     ////////////////////////////////////////////////////////////////////////////
     /// @return RAPID model
     shared_ptr<RAPID_model> GetRapidBody() {return rapidBody;}
+    void SetRapidBody(const shared_ptr<RAPID_model>& _rapidBody) {rapidBody = _rapidBody;}
 #endif
 #ifdef USE_PQP
     ////////////////////////////////////////////////////////////////////////////
     /// @return PQP model
     shared_ptr<PQP_Model> GetPQPBody() {return pqpBody;}
+    void SetPQPBody(const shared_ptr<PQP_Model>& _pqpBody) {pqpBody = _pqpBody;}
 #endif
 #ifdef USE_SOLID
     ////////////////////////////////////////////////////////////////////////////
     /// @return Solid model
     shared_ptr<DT_ObjectHandle> GetSolidBody() {return solidBody;}
+    void SetSolidBody(const shared_ptr<DT_ObjectHandle>& _solidBody) {solidBody = _solidBody;}
     ////////////////////////////////////////////////////////////////////////////
     /// @brief Special function for SOLID
     void UpdateVertexBase();
@@ -216,7 +221,7 @@ class Body {
 
     ////////////////////////////////////////////////////////////////////////////
     /// @brief Build appropriate collision detection models
-    void BuildCDStructure(cd_predefined _cdtype);
+    void BuildCDStructure(CollisionDetectionMethod* _cdMethod);
 
     ////////////////////////////////////////////////////////////////////////////
     /// @return Number of forward Connection

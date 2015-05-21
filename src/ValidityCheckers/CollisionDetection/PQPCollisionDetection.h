@@ -2,8 +2,14 @@
 #define PQPCOLLISIONDETECTION_H_
 
 #ifdef USE_PQP
-#include "CollisionDetectionMethod.h"
 #include <PQP.h>
+
+#include <Vector.h>
+using namespace mathtool;
+
+#include "CollisionDetectionMethod.h"
+
+class Environment;
 
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup CollisionDetection
@@ -15,6 +21,8 @@ class PQP : public CollisionDetectionMethod {
   public:
     PQP();
     virtual ~PQP();
+
+    virtual void Build(Body* _body);
 
     virtual bool IsInCollision(shared_ptr<ActiveMultiBody> _robot,
         shared_ptr<MultiBody> _obstacle, CDInfo& _cdInfo,

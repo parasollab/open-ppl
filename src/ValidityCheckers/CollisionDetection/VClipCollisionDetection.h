@@ -21,6 +21,8 @@ class VClip : public CollisionDetectionMethod {
   public:
     VClip();
 
+    virtual void Build(Body* _body);
+
     /* Using VCLIP to check collision between two MultiBodys.
      * Collision is checked in Body level between two MultiBodys,
      * if any of Body from Robot collides with any of Body from obstacle,

@@ -156,8 +156,6 @@ class MPProblem
     bool ParseChild(XMLNode& _node, typename MPTraits::MPProblemType* _problem);
     virtual void ParseXML(XMLNode& _node, typename MPTraits::MPProblemType* _problem);
 
-    vector<cd_predefined> GetSelectedCDTypes() const;
-
     string m_baseFilename;
 
     Environment* m_environment;
@@ -489,23 +487,14 @@ void
 MPProblem<MPTraits>::
 BuildCDStructures() {
   if(m_environment != NULL)
-    for(auto&  cd : GetSelectedCDTypes())
-      m_environment->BuildCDstructure(cd);
+    for(auto& vc : *m_validityCheckers)
+      if(shared_ptr<CollisionDetectionValidity<MPTraits>> method =
+          dynamic_pointer_cast<CollisionDetectionValidity<MPTraits>>(vc.second))
+        m_environment->BuildCDStructure(method->GetCDMethod());
   else
     throw RunTimeException(WHERE,
         "Cannot Build CD Structures. Must define an Environment.");
   m_cdBuilt = true;
-}
-
-template<class MPTraits>
-vector<cd_predefined>
-MPProblem<MPTraits>::GetSelectedCDTypes() const{
-  vector<cd_predefined> cdTypes;
-  for(auto& vc : *m_validityCheckers)
-    if(CollisionDetectionValidity<MPTraits>* method =
-        dynamic_cast<CollisionDetectionValidity<MPTraits>*>(vc.second.get()))
-      cdTypes.push_back(method->GetCDType());
-  return cdTypes;
 }
 
 /*template<class MPTraits>

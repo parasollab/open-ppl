@@ -7,6 +7,7 @@
 #include "Utilities/MPUtils.h"
 
 class ActiveMultiBody;
+class CollisionDetectionMethod;
 class MultiBody;
 class StaticMultiBody;
 
@@ -121,7 +122,7 @@ class Environment {
     //Removes multibody stored at position given in m_obstacleBodies
     //void RemoveObstacleAt(size_t position);
 
-    void BuildCDstructure(cd_predefined _cdtype);
+    void BuildCDStructure(CollisionDetectionMethod* _cdMethod);
 
   protected:
 

@@ -16,10 +16,12 @@
 class Solid : public CollisionDetectionMethod {
   public:
     Solid();
-    virtual ~Solid();
 
-    virtual bool IsInCollision(shared_ptr<MultiBody> _robot, shared_ptr<MultiBody> _obstacle,
-        StatClass& _stats, CDInfo& _cdInfo, const string& _callName, int _ignoreIAdjacentMultibodies=1);
+    virtual void Build(Body* _body);
+
+    virtual bool IsInCollision(shared_ptr<ActiveMultiBody> _robot,
+        shared_ptr<MultiBody> _obstacle, CDInfo& _cdInfo,
+        size_t _ignoreIAdjacentMultibodies);
 
 };
 #endif

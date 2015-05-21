@@ -311,11 +311,11 @@ void Environment::RemoveObstacleAt(size_t position) {
 
 void
 Environment::
-BuildCDstructure(cd_predefined _cdtype) {
+BuildCDStructure(CollisionDetectionMethod* _cdMethod) {
   for(auto& body : m_activeBodies)
-    body->BuildCDStructure(_cdtype);
+    body->BuildCDStructure(_cdMethod);
   for(auto& body : m_obstacleBodies)
-    body->BuildCDStructure(_cdtype);
+    body->BuildCDStructure(_cdMethod);
 }
 
 void

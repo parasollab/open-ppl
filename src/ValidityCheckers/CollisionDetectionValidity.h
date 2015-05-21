@@ -32,7 +32,7 @@ class CollisionDetectionValidity : public ValidityCheckerMethod<MPTraits> {
     virtual bool IsValidImpl(CfgType& _cfg, CDInfo& _cdInfo, const string& _callName);
     virtual bool IsInsideObstacle(const CfgType& _cfg);
 
-    cd_predefined GetCDType() const { return m_cdMethod->GetCDType(); }
+    CollisionDetectionMethod* GetCDMethod() const {return m_cdMethod;}
 
   private:
     bool IsInCollision(CDInfo& _cdInfo, shared_ptr<ActiveMultiBody> _rob,
@@ -239,8 +239,7 @@ CollisionDetectionValidity<MPTraits>::IsInsideObstacle(const CfgType& _cfg) {
   Environment* env = this->GetMPProblem()->GetEnvironment();
   return PQPSolid().IsInsideObstacle(_cfg, env);
 #else
-  cerr << "Recompile with PQP to use CollisionDetectionValidity::IsInsideObstacle" << endl;
-  exit(1);
+  throw RunTimeException(WHERE, "Not implemented. Use PQP instead.");
 #endif
 }
 

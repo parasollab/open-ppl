@@ -10,6 +10,8 @@
 #include <CGAL/Polyhedron_3.h>
 #include <CGAL/convex_hull_3.h>
 
+#include "ValidityCheckers/CollisionDetection/CollisionDetectionMethod.h"
+
 string Body::m_modelDataDir;
 
 Body::Body(MultiBody* _owner) :
@@ -262,123 +264,9 @@ Body::IsWithinIHelper(Body* _body1, Body* _body2, int _i, Body* _prevBody){
 // Collision Detection Methods
 // /////////////////////////////////
 void
-Body::BuildCDStructure(cd_predefined _cdtype) {
-#ifdef USE_VCLIP
-  if (_cdtype == VCLIP) {
-    GMSPolyhedron poly = GetPolyhedron();
-    Polyhedron* vpoly = new Polyhedron;
-    for(size_t v = 0 ; v < poly.m_vertexList.size() ; v++){
-      vpoly->addVertex("",
-          Vect3(poly.m_vertexList[v][0],
-            poly.m_vertexList[v][1],
-            poly.m_vertexList[v][2]
-            ));
-    }
-    vpoly->buildHull();
-    vclipBody = shared_ptr<PolyTree>(new PolyTree);
-    vclipBody->setPoly(vpoly);
-  }
-  else
-#endif
-#ifdef USE_RAPID
-    if (_cdtype == RAPID){
-      GMSPolyhedron poly = GetPolyhedron();
-      rapidBody = shared_ptr<RAPID_model>(new RAPID_model);
-      rapidBody->BeginModel();
-      for(size_t q=0; q < poly.m_polygonList.size(); q++) {
-        int vertexNum[3];
-        double point[3][3];
-        for(int i=0; i<3; i++) {
-          vertexNum[i] = poly.m_polygonList[q].m_vertexList[i];
-          Vector3d &tmp = poly.m_vertexList[vertexNum[i]];
-          for(int j=0; j<3; j++)
-            point[i][j] = tmp[j];
-        }
-        rapidBody->AddTri(point[0], point[1], point[2], q);
-      }
-      rapidBody->EndModel();
-    }
-    else
-#endif
-#ifdef USE_PQP
-      if (_cdtype == PROXIMITYQUERYPACKAGE){
-        GMSPolyhedron poly = GetPolyhedron();
-        pqpBody = shared_ptr<PQP_Model>(new PQP_Model);
-        pqpBody->BeginModel();
-        for(size_t q=0; q < poly.m_polygonList.size(); q++) {
-          int vertexNum[3];
-          double point[3][3];
-          for(int i=0; i<3; i++) {
-            vertexNum[i] = poly.m_polygonList[q].m_vertexList[i];
-            Vector3d &tmp = poly.m_vertexList[vertexNum[i]];
-            for(int j=0; j<3; j++)
-              point[i][j] = tmp[j];
-          }
-          pqpBody->AddTri(point[0], point[1], point[2], q);
-        }
-        pqpBody->EndModel();
-      }
-      else
-#endif
-#ifdef USE_SOLID
-        if (_cdtype == SOLID){
-          GMSPolyhedron poly = GetWorldPolyhedron();
-          vertex = new MT_Point3[3*poly.m_polygonList.size()];
-          for(size_t q=0; q < poly.m_polygonList.size(); q++) {
-            int vertexNum[3];
-            float point[3][3];
-            for(int i=0; i<3; i++) {
-              vertexNum[i] = poly.m_polygonList[q].m_vertexList[i];
-              Vector3d tmp = poly.m_vertexList[vertexNum[i]];
-              for(int j=0; j<3; j++)
-                vertex[3*q+i][j] = tmp[j];
-            }
-          }
-          base = DT_NewVertexBase(vertex[0],sizeof(vertex[0]));
-          DT_ShapeHandle shape = DT_NewComplexShape(base);
-          for(size_t q=0; q < poly.m_polygonList.size(); q++) {
-            int vertexNum[3];
-            float point[3][3];
-            for(int i=0; i<3; i++) {
-              vertexNum[i] = poly.m_polygonList[q].m_vertexList[i];
-              Vector3d tmp = poly.m_vertexList[vertexNum[i]];
-              for(int j=0; j<3; j++)
-                point[i][j] = tmp[j];
-            }
-            DT_Begin();
-            DT_VertexIndex(3*q+0);
-            DT_VertexIndex(3*q+1);
-            DT_VertexIndex(3*q+2);
-            DT_End();
-          }
-          DT_EndComplexShape();
-          DT_ObjectHandle object = DT_CreateObject(NULL,shape);
-          solidBody = shared_ptr<DT_ObjectHandle>(new DT_ObjectHandle(object));
-        }
-        else
-#endif
-        {
-#ifndef NO_CD_USE
-          cerr <<"\n\n\tERROR: all other cd type's undefined\n\n";
-          cerr <<"\n  you gave me <" << _cdtype << ">";
-#endif
-
-#ifdef USE_VCLIP
-          cerr <<"\n\nbut VCLIP = " << VCLIP;
-#endif
-#ifdef USE_RAPID
-          cerr <<"\n\nbut RAPID = " << RAPID;
-#endif
-#ifdef USE_PQP
-          cerr <<"\n\nbut PQP = " << PROXIMITYQUERYPACKAGE;
-#endif
-#ifdef USE_SOLID
-          cerr <<"\n\nbut SOLID = " << SOLID;
-#endif
-#ifndef NO_CD_USE
-          exit(-1);
-#endif
-        }
+Body::
+BuildCDStructure(CollisionDetectionMethod* _cdMethod) {
+  _cdMethod->Build(this);
 }
 
 #ifdef USE_SOLID
