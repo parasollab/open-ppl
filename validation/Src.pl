@@ -136,9 +136,7 @@ if(-e "$workdir/$pmpldir/src/pmpl") {
   if($PARALLEL eq "1") {
     $SCRIPT = "parallelTests.sh"
   }
-  $OUTPUT = $OUTPUT."\n\nHello???\n\n".`pwd`;
   $OUTPUT = $OUTPUT.`make Script=$SCRIPT Test=$TEST test 2>&1`;
-  $OUTPUT = $OUTPUT."\n\nHello???\n\n";
 }
 
 #
