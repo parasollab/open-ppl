@@ -5,6 +5,7 @@
 #include "Cfg/Cfg.h"
 #include "MPProblem/BoundingBox.h"
 #include "MPProblem/BoundingSphere.h"
+#include "MPProblem/MPProblemBase.h"
 
 #define ENV_RES_DEFAULT 0.05
 
@@ -28,7 +29,7 @@ Environment::Environment(XMLNode& _node) {
 #else
   m_rdRes = ENV_RES_DEFAULT;
 #endif
-
+  m_filename = MPProblemBase::GetPath(m_filename);
   Read(m_filename);
   ComputeResolution(positionResFactor);
 }

@@ -91,8 +91,7 @@ CoverageMetric<MPTraits, Set>::operator()() {
 
   static size_t numcalls = 0;
   if(numcalls == 0)
-    m_history.open(
-        (this->GetMPProblem()->GetBaseFilename() + ".coverage").c_str());
+    m_history.open(this->GetBaseFilename() + ".coverage");
 
   RoadmapType* rmap = this->GetMPProblem()->GetRoadmap();
   GraphType* rgraph = rmap->GetGraph();

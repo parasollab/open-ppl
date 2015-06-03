@@ -1,0 +1,51 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<MotionPlanning>
+  <MPProblem>
+    <Environment filename="building2.env"/>
+
+    <DistanceMetrics>
+      <Euclidean label="Euclidean"/>
+    </DistanceMetrics>
+
+    <ValidityCheckers>
+      <CollisionDetection label="cd1" method="RAPID" />
+      <SurfaceValidity label="sv" vc_method="cd1"/>
+    </ValidityCheckers>
+
+    <NeighborhoodFinders>
+      <BruteForceNF label="BruteForceNF" dmLabel="Euclidean" k="10"/>
+    </NeighborhoodFinders>
+
+    <Samplers>
+      <UniformRandomSampler label="UniformRandomFree" vcLabel="cd1"/>
+      <SurfaceGridSampler label="SurfaceGridSampler" vcLabel="cd1" dx="5" dz="5" />
+    </Samplers>
+
+    <LocalPlanners>
+      <SurfaceLP label="surfacelp" length="0" binary_search="0" vcLabel="sv"/>
+    </LocalPlanners>
+
+    <Connectors>
+      <NeighborhoodConnector label="Closest" nfLabel="BruteForceNF" k="10" CheckIfSameCC="false" lpLabel="surfacelp" unconnected="true"/>
+    </Connectors>
+
+    <Metrics>
+      <NumNodesMetric label="NumNodes"/>
+    </Metrics>
+
+    <MapEvaluators>
+      <ConditionalEvaluator label="NodesEval" metric_method="NumNodes" value="100" operator=">=" />
+    </MapEvaluators>
+
+    <MPStrategies>
+      <BasicPRM label="BasicPRM1" seed="142857" filename="Basic" iterations="2" num_samples="2" dm_method="Euclidean">
+        <node_generation_method Method="SurfaceGridSampler" Number="10" Attempts="2"/>
+        <node_connection_method Method="Closest"/>
+        <evaluation_method Method="NodesEval"/>
+      </BasicPRM>
+  </MPStrategies>
+
+  <Solver mpStrategyLabel="BasicPRM1" seed="857142" baseFilename="Basic" vizmoDebug="true"/>
+  </MPProblem>
+
+</MotionPlanning>

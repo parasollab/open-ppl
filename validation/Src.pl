@@ -12,6 +12,7 @@ my $startRun = time();
 $outputdir = "/tmp/pmpl_nightly_logs";
 $ADMIN_MAILTO = "jdenny\@cs.tamu.edu";
 $workdir  = "/scratch/zenigata/jdenny/pmpl_nightly";
+$REPO = "svn+ssh://parasol-svn.cs.tamu.edu/research/parasol-svn/svnrepository/pmpl/trunk";
 
 #
 # find out which platform is used
@@ -85,7 +86,7 @@ closedir(DIR);
 if(!-e "$pmpldir") {
   $OUTPUT = $OUTPUT."Checking out repository.\n";
   while(!-e "$pmpldir") {
-    $OUTPUT = $OUTPUT.`svn --quiet checkout svn+ssh://parasol-svn.cs.tamu.edu/research/parasol-svn/svnrepository/pmpl/trunk $pmpldir 2>&1`;
+    $OUTPUT = $OUTPUT.`svn --quiet checkout $REPO $pmpldir 2>&1`;
   }
 }
 else {
@@ -109,10 +110,35 @@ if($PARALLEL eq "1") {
 #
 $OUTPUT = $OUTPUT.`make platform=$PLATFORM ROBOT_DEF=$ROBOT debug=$DEBUG parallel=$PARALLEL reallyreallyclean 2>&1`;
 $OUTPUT = $OUTPUT.`make platform=$PLATFORM ROBOT_DEF=$ROBOT debug=$DEBUG parallel=$PARALLEL pmpl -j4 2>&1`;
-if (-e "$workdir/$pmpldir/src/pmpl") {
+if(-e "$workdir/$pmpldir/src/pmpl") {
   $OUTPUT = $OUTPUT."=====\nPassed: pmpl compilation\n=====\n";
-} else {
+}
+else {
   $OUTPUT = $OUTPUT."=====\nFailed: pmpl compilation\n=====\n";
+}
+
+#
+#tests
+#
+if(-e "$workdir/$pmpldir/src/pmpl") {
+  chdir "Test";
+  $SCRIPT = "tests.sh";
+  $TEST = "CfgTests";
+  if($ROBOT eq "PMPCfgMultiRobot") {
+    $TEST = "MultiRobotTests";
+  };
+  if($ROBOT eq "PMPCfgSurface") {
+    $TEST = "SurfaceTests";
+  };
+  if($ROBOT eq "PMPReachableVolume") {
+    $TEST = "ReachableVolumeTests";
+  };
+  if($PARALLEL eq "1") {
+    $SCRIPT = "parallelTests.sh"
+  }
+  $OUTPUT = $OUTPUT."\n\nHello???\n\n".`pwd`;
+  $OUTPUT = $OUTPUT.`make Script=$SCRIPT Test=$TEST test 2>&1`;
+  $OUTPUT = $OUTPUT."\n\nHello???\n\n";
 }
 
 #

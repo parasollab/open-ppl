@@ -50,29 +50,29 @@ typedef CfgReachableVolume PMPLCfgType;
 
 using namespace std;
 
-int main(int _argc, char** _argv) {
-
-  if(_argc < 3 || !(string(_argv[1]) == "-f")) {
-    cerr << "Error: Incorrect usage. Usage: -f options.xml" << endl;
-    exit(1);
-  }
+int
+main(int _argc, char** _argv) {
 
   try {
+    if(_argc < 3 || string(_argv[1]) != "-f")
+      throw ParseException(WHERE, "Incorrect usage. Usage: -f options.xml");
+
     typedef MPTraits<PMPLCfgType> Traits;
     typedef Traits::MPProblemType MPProblemType;
     MPProblemType* problem = new MPProblemType(_argv[2]);
     problem->Solve();
 
     delete problem;
+
+    return 0;
   }
   catch(const std::runtime_error& e) {
-    cout << endl << e.what() << endl;
+    cerr << endl << e.what() << endl;
+    return 1;
   }
   catch(...) {
-    cout << "Unknown error." << endl;
+    cerr << "Unknown error." << endl;
+    return 1;
   }
-
-  return 0;
 }
-
 

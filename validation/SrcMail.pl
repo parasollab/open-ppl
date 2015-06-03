@@ -13,7 +13,7 @@ use List::Util qw(min max);
 #
 $outputdir = "/tmp/pmpl_nightly_logs";
 $cron_machine = "zenigata.cse.tamu.edu";
-$MAILTO = "OBPRM\@listserv.tamu.edu";
+$MAILTO = "obprm\@listserv.tamu.edu";
 
 #
 # figure out time and date
@@ -126,15 +126,20 @@ sub get_error_code {
   my $error_code = SUCCESS;
   my $details = '';
   my $passed_tests = '';
+  my $failed_tests = '';
 
   if (-e "$OUT") {
     open(LOG, $OUT);
     @log = <LOG>;
     close(LOG);
     foreach $i (@log) {
-      if (
+      if ($i=~/Error:/i) { #test errors
+        if ($error_code<ERRORS) { $error_code = ERRORS; }
+        $failed_tests = $failed_tests.$i;
+      }
+      elsif (
         ($i=~/failed/i) ||
-        #($i=~/E210002/) ||          #svn errors
+        #($i=~/E210002/) ||         #svn errors
         (($i=~/error/i) &&          #compile errors
           !($i=~/tinyxmlerror/) &&  #excluding...
           !($i=~/-Werror/) &&
@@ -153,29 +158,35 @@ sub get_error_code {
         $passed_tests = $passed_tests.$i;
       }
     }
-  } else {
+  }
+  else {
     $error_code = INCOMPLETE;
   }
 
-  if($errcode == SUCCESS) {
+  if($error_code == SUCCESS) {
+    $message = $message."################################################################################\n";
     $message = $message.$config." passed\n";
   }
-  elsif($errcode == WARNINGS){
+  elsif($error_code == WARNINGS){
+    $message = $message."################################################################################\n";
     $message = $message.$config." had warnings\n";
   }
-  elsif($errcode == ERRORS){
+  elsif($error_code == ERRORS){
+    $message = $message."################################################################################\n";
     $message = $message.$config." had errors\n";
   }
-  elsif($errcode == INCOMPLETE){
+  elsif($error_code == INCOMPLETE){
+    $message = $message."################################################################################\n";
     $message = $message.$config." did not complete successfully tonight\n";
   }
-  if (!($passed_tests eq '')) {
-    $message = $message."===== Passed Tests =====\n".$passed_tests."===== Passed Tests =====\n\n";
-  }
   if (!($details eq '')) {
-    $message = $message."===== Errors and Warnings =====\n".$details."===== Errors and Warnings =====\n\n";
+    $message = $message."\n===== Errors =====\n".$details."\n\n";
   }
-  $message = $message."\n";
+  if (!($failed_tests eq '')) {
+    $message = $message."\n===== Failed Tests =====\n".$failed_tests."\n\n";
+  }
+  $message = $message."################################################################################\n";
+  $message = $message."\n\n";
 
   $error_code; #return value;
 }

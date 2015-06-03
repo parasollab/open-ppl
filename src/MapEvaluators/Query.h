@@ -513,6 +513,7 @@ template<class MPTraits>
 void
 Query<MPTraits>::ReadQuery(string _filename) {
   CfgType tempCfg;
+  _filename = MPProblemType::GetPath(_filename);
   ifstream in(_filename.c_str());
   if(!in) {
     cout << endl << "In ReadQuery: can't open infile: " << _filename << endl;
