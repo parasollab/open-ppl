@@ -5,7 +5,7 @@
 
 #include "ValidityCheckerMethod.h"
 #include "MPProblem/Environment.h"
-#include "SurfaceValidity.h"
+#include "ValidityCheckers/SurfaceValidity.h"
 #include "ValidityCheckers/ValidityCheckerMethod.h"
 #include "ValidityCheckers/CollisionDetection/CDInfo.h"
 #include "ValidityCheckers/CollisionDetection/CollisionDetectionMethod.h"

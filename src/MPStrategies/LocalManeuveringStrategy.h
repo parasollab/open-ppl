@@ -358,7 +358,7 @@ template<class MPTraits>
 LocalManeuveringStrategy<MPTraits>::LocalManeuveringStrategy(MPProblemPtr _problem, XMLNode& _node, bool _warnXML) :
   MPStrategyMethod<MPTraits>(_problem, _node), m_currentIteration(0){
     ParseXML(_node);
-    if (_warnXML) _node.warnUnrequestedAttributes();
+    //if (_warnXML) _node.warnUnrequestedAttributes();
     if(this->m_debug && _warnXML) Print(cout);
     m_goal = -1;
     this->SetName("LocalManeuveringStrategy");

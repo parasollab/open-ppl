@@ -1,4 +1,4 @@
-#include "SSSurfaceMult.h"
+#include "Cfg/SSSurfaceMult.h"
 #ifdef PMPSSSurfaceMult
 
 SSSurfaceMult::SSSurfaceMult(){}

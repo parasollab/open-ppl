@@ -5,7 +5,7 @@
 
 #include "MPProblem/Environment.h"
 #include "Utilities/MetricUtils.h"
-#include "ValidityCheckerMethod.h"
+#include "ValidityCheckers/ValidityCheckerMethod.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup ValidityCheckers
