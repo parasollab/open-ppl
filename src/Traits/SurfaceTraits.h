@@ -70,9 +70,11 @@
 /// each algorithm abstraction --- here you only need to define what you need,
 /// as extraneous methods in the type class imply longer compile times.
 ////////////////////////////////////////////////////////////////////////////////
-class CfgSurface;
 
 #if(defined(PMPCfgSurface) || defined(PMPSSSurfaceMult))
+class CfgSurface;
+
+#ifdef PMPCfgSurface
 
 template<>
 struct MPTraits<CfgSurface, DefaultWeight<CfgSurface> > {
@@ -152,6 +154,10 @@ struct MPTraits<CfgSurface, DefaultWeight<CfgSurface> > {
     > MPStrategyMethodList;
 };
 
+#endif
+
+#ifdef PMPSSSurfaceMult
+
 class SSSurfaceMult;
 template<>
 struct MPTraits<SSSurfaceMult, DefaultWeight<SSSurfaceMult> > {
@@ -222,6 +228,9 @@ struct MPTraits<SSSurfaceMult, DefaultWeight<SSSurfaceMult> > {
     LocalManeuveringStrategy<MPTraits>
       > MPStrategyMethodList;
 };
+
+#endif 
+
 #endif
 
 #endif
