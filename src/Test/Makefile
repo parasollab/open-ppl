@@ -10,7 +10,7 @@ ifndef Test
 endif
 
 test:
-	${Script} ${Test}
+	./${Script} ${Test}
 
 clean:
 	rm -f Scratch/*
