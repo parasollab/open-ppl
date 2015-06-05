@@ -1,5 +1,11 @@
 #!/bin/bash
 
+executable="../pmpl"
+if [ ! -z "$2" ]  && [ $2 == "1" ]; then #&& $2 eq "1" ]; then
+  executable="mpirun -np 4 ../pmpl"
+fi
+echo "Executable: ${executable}"
+
 #Each line of the input file encodes a test xml
 while read p; do
   #first token is the test xml
@@ -7,7 +13,7 @@ while read p; do
   input=${tokens[0]}
   base=`basename $input .xml`
   #ensure the program runs successfully
-  if ../pmpl -f XMLs/$input >& Scratch/$base.pmpl; then
+  if ${executable} -f XMLs/$input >& Scratch/$base.pmpl; then
     #Every other token is a file to actually diff. If no files are stated, then
     #report suceess
     num=`expr ${#tokens[@]} - 1`

@@ -134,7 +134,7 @@ if(-e "$workdir/$pmpldir/src/pmpl") {
     $TEST = "ReachableVolumeTests";
   };
   if($PARALLEL eq "1") {
-    $SCRIPT = "parallelTests.sh"
+    $TEST = "ParallelCfgTests.sh"
   }
   $OUTPUT = $OUTPUT.`make Script=$SCRIPT Test=$TEST test 2>&1`;
 }
