@@ -1,6 +1,5 @@
-ifndef Script
-  Script = tests.sh
-  #Script = parallelTests.sh
+ifndef parallel
+  parallel = 0
 endif
 
 ifndef Test
@@ -10,7 +9,7 @@ ifndef Test
 endif
 
 test:
-	./${Script} ${Test}
+	./test.sh ${Test} ${parallel}
 
 clean:
 	rm -f Scratch/*

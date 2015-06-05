@@ -122,7 +122,6 @@ else {
 #
 if(-e "$workdir/$pmpldir/src/pmpl") {
   chdir "Test";
-  $SCRIPT = "tests.sh";
   $TEST = "CfgTests";
   if($ROBOT eq "PMPCfgMultiRobot") {
     $TEST = "MultiRobotTests";
@@ -136,7 +135,7 @@ if(-e "$workdir/$pmpldir/src/pmpl") {
   if($PARALLEL eq "1") {
     $TEST = "ParallelCfgTests.sh"
   }
-  $OUTPUT = $OUTPUT.`make Script=$SCRIPT Test=$TEST test 2>&1`;
+  $OUTPUT = $OUTPUT.`make Test=$TEST parallel=$PARALLEL test 2>&1`;
 }
 
 #
