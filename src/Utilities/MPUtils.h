@@ -38,7 +38,7 @@ class Environment;
 template<typename T>
 const T
 Epsilon(const T& _t1, const T& _t2) {
-  return abs(min(_t1, _t2))*numeric_limits<T>::epsilon();
+  return abs(min(_t1, _t2))*10*numeric_limits<T>::epsilon();
 }
 
 ///////////////////////////////////////////////////////////////////////////////

@@ -9,7 +9,7 @@ ifndef Test
 endif
 
 test:
-	./test.sh ${Test} ${parallel}
+	./tests.sh ${Test} ${parallel}
 
 clean:
 	rm -f Scratch/*
