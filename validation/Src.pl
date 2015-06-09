@@ -52,6 +52,7 @@ if ($PARALLEL eq "1") {
   $ENV{'PATH'} = "/usr/lib64/mpich/bin:".$ENV{'PATH'};
   $ENV{'LD_LIBRARY_PATH'} = "/usr/local/boost/boost-1.56/lib64:".$ENV{'LD_LIBRARY_PATH'};
   $ENV{'BOOST_ROOT'}="/usr/local/boost/boost-1.56";
+  $ENV{'STAPL_NUM_THREADS'} = 1;
 }
 
 #
@@ -133,7 +134,7 @@ if(-e "$workdir/$pmpldir/src/pmpl") {
     $TEST = "ReachableVolumeTests";
   };
   if($PARALLEL eq "1") {
-    $TEST = "ParallelCfgTests.sh"
+    $TEST = "ParallelCfgTests"
   }
   $OUTPUT = $OUTPUT.`make Test=$TEST parallel=$PARALLEL test 2>&1`;
 }
