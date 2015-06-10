@@ -45,7 +45,7 @@ SampleWF<MPTraits>::
 operator()(const View& _view) const {
   cout << "Entered sample wf" << endl;
 
-  int numNodes = _view.size();
+  size_t numNodes = _view.size();
   vector<CfgType> outNodes;
 
   cout << "Num_Nodes::" << numNodes << endl;
@@ -140,7 +140,7 @@ class BasicParallelPRM : public MPStrategyMethod<MPTraits> {
     typedef typename MPProblemType::ConnectorPointer ConnectorPointer;
     typedef typename MPProblemType::MapEvaluatorPointer MapEvaluatorPointer;
 
-    BasicParallelPRM(const vector<pair<string, int> >& _samplerLabels = vector<pair<string, int> >(),
+    BasicParallelPRM(const vector<pair<string, size_t> >& _samplerLabels = vector<pair<string, size_t> >(),
         const vector<string>& _connectorLabels = vector<string>(),
         const vector<string>& _evaluatorLabels = vector<string>());
 
@@ -156,14 +156,14 @@ class BasicParallelPRM : public MPStrategyMethod<MPTraits> {
     virtual void Finalize();
 
   private:
-    vector<pair<string, int> > m_samplerLabels;
+    vector<pair<string, size_t> > m_samplerLabels;
     vector<string> m_connectorLabels;
     vector<string> m_evaluatorLabels;
 };
 
 template<class MPTraits>
 BasicParallelPRM<MPTraits>::
-BasicParallelPRM(const vector<pair<string, int> >& _samplerLabels,
+BasicParallelPRM(const vector<pair<string, size_t> >& _samplerLabels,
     const vector<string>& _connectorLabels,
     const vector<string>& _evaluatorLabels) :
   m_samplerLabels(_samplerLabels),
@@ -186,22 +186,20 @@ void
 BasicParallelPRM<MPTraits>::
 ParseXML(XMLNode& _node) {
   for(auto& child : _node) {
-    if(child.Name() == "node_generation_method") {
-      string node_gen_method = child.Read("Method", true, "",
+    if(child.Name() == "Sampler") {
+      string node_gen_method = child.Read("method", true, "",
           "Node Generation Method");
-      int numPerIteration = child.Read("Number", true, 1, 0, MAX_INT,
+      size_t numPerIteration = child.Read("number", true, 1, 0, MAX_INT,
           "Number of samples");
       m_samplerLabels.push_back(
           make_pair(node_gen_method, numPerIteration));
     }
-    else if(child.Name() == "node_connection_method") {
+    else if(child.Name() == "Connector")
       m_connectorLabels.push_back(
-          child.Read("Method", true, "", "Node Connection Method"));
-    }
-    else if(child.Name() == "Evaluator") {
-      string e = child.Read("method", "true", "", "Evaluator Label");
-      m_evaluatorLabels.push_back(e);
-    }
+          child.Read("method", true, "", "Node Connection Method"));
+    else if(child.Name() == "Evaluator")
+      m_evaluatorLabels.push_back(
+          child.Read("method", "true", "", "Evaluator Label"));
   }
 }
 
@@ -210,24 +208,18 @@ void
 BasicParallelPRM<MPTraits>::
 Print(ostream& _os) const {
   MPStrategyMethod<MPTraits>::Print(_os);
-  typedef vector<pair<string, int> >::const_iterator VIter;
-  typedef vector<string>::const_iterator StringIter;
 
-  _os<<"\nSamplers\n";
-
+  _os << "\nSamplers\n";
   for(auto& label : m_samplerLabels)
     _os << "\t" << label.first << "\tNumber:" << label.second;
 
-  _os<<"\nNodeConnectors\n";
-
-  for(auto& label : m_connectorLabels) {
+  _os << "\nNodeConnectors\n";
+  for(auto& label : m_connectorLabels)
     _os << "\t" << label;
-  }
 
   _os << "\nMapEvaluators\n";
-  for(auto& label : m_evaluatorLabels) {
+  for(auto& label : m_evaluatorLabels)
     _os << "\t" << label;
-  }
 }
 
 template<class MPTraits>
@@ -235,9 +227,8 @@ void
 BasicParallelPRM<MPTraits>::
 Initialize() {
   // Reload map evaluators
-  typedef vector<string>::const_iterator SIT;
-  for(auto& sit : m_evaluatorLabels) {
-    MapEvaluatorPointer evaluator = this->GetMapEvaluator(sit);
+  for(auto& label : m_evaluatorLabels) {
+    MapEvaluatorPointer evaluator = this->GetMapEvaluator(label);
     if(evaluator->HasState())
       evaluator->operator()();
   }
@@ -251,19 +242,12 @@ Run() {
 
   stapl::counter<stapl::default_timer> t1,t2;
 
-  double sample_timer=0.0, connect_timer=0.0 ;
-
-  // Now, lets do this the correct way using a map evaluator
+  double samplerTimer = 0.0, connectorTimer = 0.0;
 
   bool done = this->EvaluateMap(m_evaluatorLabels);
   while(!done) {
 
-    typedef vector<pair<string, int> >::iterator I;
-
-    //---------------------------
     // Generate roadmap nodes
-    //---------------------------
-
     cout << "Generation Phase" << endl;
     for(auto& sampler : m_samplerLabels) {
       SamplerPointer nodeGen = this->GetSampler(sampler.first);
@@ -275,17 +259,16 @@ Run() {
       t1.start();
       SampleWF<MPTraits> sampleWf(nodeGen, this->GetMPProblem());
       stapl::map_func(sampleWf,stapl::balance_view(v,stapl::get_num_locations()));
-      sample_timer = t1.stop();
+      samplerTimer = t1.stop();
 
       if (this->m_debug)
         cout << "\n processor #----->[" << stapl::get_location_id() <<
-          "] NodeGeneration time  = "  << sample_timer << endl;
+          "] NodeGeneration time  = "  << samplerTimer << endl;
     }
     stapl::rmi_fence();
 
     // Connect roadmap nodes
     cout << "Connecting Phase" << endl;
-    typedef vector<string>::iterator J;
     for(auto& connectorLabel : m_connectorLabels) {
       if (this->m_debug)
         cout << "BasicParallelPRM::graph size " << rmg->size() << endl;
@@ -297,17 +280,16 @@ Run() {
       t2.start();
       ConnectWF<MPTraits> connWf(connector, this->GetMPProblem());
       stapl::map_func(connWf, stapl::native_view(view), stapl::make_repeat_view(view));
-      connect_timer = t2.stop();
+      connectorTimer = t2.stop();
       if (this->m_debug) {
         cout << "\n processor #[" << stapl::get_location_id() <<
-          "] NodeConnection time  = " << connect_timer << endl;
+          "] NodeConnection time  = " << connectorTimer << endl;
       }
     }
 
     stapl::rmi_fence();
 
     // Re-evaluate the roadmap
-    cout << "Try to evaluate the map" << endl << flush;
     done = this->EvaluateMap(m_evaluatorLabels);
   }
 }
@@ -317,7 +299,7 @@ void
 BasicParallelPRM<MPTraits>::
 Finalize() {
   if(this->m_debug)
-    cout << "BasicParallelPRM::Finalize()";
+    cout << "BasicParallelPRM::Finalize()" << endl;
 
   stapl::rmi_fence();
 
