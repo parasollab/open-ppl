@@ -3,7 +3,8 @@
 #include "SSSurface.h"
 #include "CfgSurface.h"
 
-#include "MPProblem/Geometry/MultiBody.h"
+#include "MPProblem/Geometry/ActiveMultiBody.h"
+#include "MPProblem/Geometry/FreeBody.h"
 #include "MPProblem/Environment.h"
 
 void
@@ -388,7 +389,7 @@ SSSurface SSSurface::Update(double _dt){
 
 /////////////////////////////////////////////////////////////
 bool SSSurface::ConfigEnvironment(Environment* _env) const {
-  shared_ptr<MultiBody> mb = _env->GetMultiBody(m_robotIndex);
+  shared_ptr<ActiveMultiBody> mb = _env->GetActiveBody(m_robotIndex);
 
   // configure the robot according to current Cfg: joint parameters
   // (and base locations/orientations for free flying robots.)

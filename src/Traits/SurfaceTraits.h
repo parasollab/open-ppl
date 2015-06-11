@@ -15,6 +15,7 @@
 
 //neighborhood finder includes
 #include "NeighborhoodFinders/BruteForceNF.h"
+#include "NeighborhoodFinders/MPNNNF.h"
 
 //sampler includes
 #include "Samplers/SurfaceGridSampler.h"
@@ -41,6 +42,7 @@
 #include "PathModifiers/ShortcuttingPathModifier.h"
 
 //connector includes
+#include "Connectors/CCsConnector.h"
 #include "Connectors/ConnectNeighboringSurfaces.h"
 #include "Connectors/NeighborhoodConnector.h"
 
@@ -68,9 +70,12 @@
 /// each algorithm abstraction --- here you only need to define what you need,
 /// as extraneous methods in the type class imply longer compile times.
 ////////////////////////////////////////////////////////////////////////////////
+
+#if(defined(PMPCfgSurface) || defined(PMPSSSurfaceMult))
 class CfgSurface;
 
 #ifdef PMPCfgSurface
+
 template<>
 struct MPTraits<CfgSurface, DefaultWeight<CfgSurface> > {
   typedef CfgSurface CfgType;
@@ -92,7 +97,8 @@ struct MPTraits<CfgSurface, DefaultWeight<CfgSurface> > {
 
   //types of neighborhood finders available in our world
   typedef boost::mpl::list<
-    BruteForceNF<MPTraits>
+    BruteForceNF<MPTraits>,
+    MPNNNF<MPTraits>
     > NeighborhoodFinderMethodList;
 
   //types of samplers available in our world
@@ -128,7 +134,8 @@ struct MPTraits<CfgSurface, DefaultWeight<CfgSurface> > {
   //types of connectors available in our world
   typedef boost::mpl::list<
     ConnectNeighboringSurfaces<MPTraits>,
-    NeighborhoodConnector<MPTraits>//,
+    NeighborhoodConnector<MPTraits>,
+    CCsConnector<MPTraits>
     > ConnectorMethodList;
 
   //types of metrics available in our world
@@ -146,16 +153,18 @@ struct MPTraits<CfgSurface, DefaultWeight<CfgSurface> > {
     BasicPRM<MPTraits>
     > MPStrategyMethodList;
 };
+
 #endif
 
 #ifdef PMPSSSurfaceMult
+
 class SSSurfaceMult;
 template<>
-struct CfgTraits<SSSurfaceMult, DefaultWeight<SSSurfaceMult> > {
+struct MPTraits<SSSurfaceMult, DefaultWeight<SSSurfaceMult> > {
   typedef SSSurfaceMult CfgType;
   typedef DefaultWeight<CfgType> WeightType;
   typedef SSSurfaceMult& CfgRef;
-
+  //switching MPTraits with CfgTraits
   typedef MPProblem<MPTraits> MPProblemType;
 
   //types of distance metrics available in our world
@@ -166,6 +175,7 @@ struct CfgTraits<SSSurfaceMult, DefaultWeight<SSSurfaceMult> > {
   //types of validity checkers available in our world
   typedef boost::mpl::list<
     CollisionDetectionValidity<MPTraits>,
+    SurfaceValidity<MPTraits>,
     SSSurfaceValidity<MPTraits>
       > ValidityCheckerMethodList;
 
@@ -218,6 +228,9 @@ struct CfgTraits<SSSurfaceMult, DefaultWeight<SSSurfaceMult> > {
     LocalManeuveringStrategy<MPTraits>
       > MPStrategyMethodList;
 };
+
+#endif 
+
 #endif
 
 #endif

@@ -111,7 +111,7 @@ class HybridPRM : public MPStrategyMethod<MPTraits> {
 
 };
 
-ostream& operator<<(ostream& _os, const NodeTypeCounts& _nt){
+inline ostream& operator<<(ostream& _os, const NodeTypeCounts& _nt){
   _os << ":" << _nt.m_numCreate << ":" << _nt.m_numMerge << ":" << _nt.m_numExpand << ":" << _nt.m_numOversample;
   return _os;
 }

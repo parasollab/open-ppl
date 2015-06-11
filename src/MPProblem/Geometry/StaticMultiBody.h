@@ -7,13 +7,10 @@ class FixedBody;
 
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup Environment
-/// @brief A collection of geometries in workspace reprenting, e.g., robots
+/// @brief A collection of geometries in workspace reprenting obstacles
 ///
-/// A MultiBody represent a Obstacle or a Robot in workspace. MultiBody contain
-/// one or more Body s, either FixedBody s or FreeBody s. Many access methods
-/// are implemented to allow client access internal information about MultiBody
-/// instance, like number of Body s, Fixed and Free, Bounding box, center of
-/// mass, surface area size, bounding sphere radius, etc.
+/// StaticMultiBody stores obstacles. Currently only a single obstacle is
+/// supported in PMPL per StaticMultiBody.
 ////////////////////////////////////////////////////////////////////////////////
 class StaticMultiBody : public MultiBody {
   public:
@@ -30,11 +27,9 @@ class StaticMultiBody : public MultiBody {
 
     virtual void Read(istream& is, CountingStreamBuffer& _cbs);
     virtual void Write(ostream & _os);
-  private:
 
-    vector<shared_ptr<FixedBody> > fixedBody;
-
-    string m_surfaceLabel;
+  protected:
+    vector<shared_ptr<FixedBody>> fixedBody;
 };
 
 #endif

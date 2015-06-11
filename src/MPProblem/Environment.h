@@ -9,6 +9,7 @@ class ActiveMultiBody;
 class CollisionDetectionMethod;
 class MultiBody;
 class StaticMultiBody;
+class SurfaceMultiBody;
 
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup Environment
@@ -174,7 +175,7 @@ class Environment {
     ////////////////////////////////////////////////////////////////////////////
     /// @param _index Requested multibody
     /// @return Pointer to surface multibody
-    shared_ptr<StaticMultiBody> GetNavigableSurface(size_t _index) const;
+    shared_ptr<SurfaceMultiBody> GetNavigableSurface(size_t _index) const;
 
     ////////////////////////////////////////////////////////////////////////////
     /// @return Pointer to random static multibody
@@ -248,7 +249,7 @@ class Environment {
     shared_ptr<Boundary> m_boundary; ///< Boundary of the workspace
 
     vector<shared_ptr<ActiveMultiBody>> m_activeBodies; ///< Robots
-    vector<shared_ptr<StaticMultiBody>>
+    vector<shared_ptr<SurfaceMultiBody>>
       m_navigableSurfaces;                              ///< Surfaces
     vector<shared_ptr<StaticMultiBody>>
       m_obstacleBodies;                                 ///< Other multibodies

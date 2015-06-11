@@ -4,8 +4,10 @@
 #if(defined(PMPCfgSurface) || defined(PMPSSSurfaceMult))
 
 #include "MPProblem/Environment.h"
+#include "MPProblem/Geometry/FixedBody.h"
+#include "MPProblem/Geometry/SurfaceMultiBody.h"
 #include "Utilities/MetricUtils.h"
-#include "ValidityCheckerMethod.h"
+#include "ValidityCheckers/ValidityCheckerMethod.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup ValidityCheckers
@@ -66,7 +68,7 @@ SurfaceValidity<MPTraits>::IsValidImpl(CfgType& _cfg, CDInfo& _cdInfo, const str
     double  h  = _cfg.GetHeight();
     int numSurfaces = env->GetNavigableSurfacesCount();
     if( sid>=0 && sid < numSurfaces ) {
-      shared_ptr<MultiBody> surfaceBody = env->GetNavigableSurface(sid);
+      shared_ptr<SurfaceMultiBody> surfaceBody = env->GetNavigableSurface(sid);
       shared_ptr<FixedBody> fb = surfaceBody->GetFixedBody(0);
       GMSPolyhedron& polyhedron = fb->GetWorldPolyhedron();
       result = polyhedron.IsOnSurface(pt, h);

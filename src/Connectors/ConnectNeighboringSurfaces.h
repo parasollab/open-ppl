@@ -3,6 +3,8 @@
 
 #include "ConnectorMethod.h"
 
+#include "MPProblem/Geometry/SurfaceMultiBody.h"
+
 #define CLOSEDIST 0.4
 #define KATTEMPTS 3
 
@@ -142,7 +144,7 @@ Connect(RoadmapType* _rm,
   int numSurfaces =  env->GetNavigableSurfacesCount();
   for(int i=0; i<numSurfaces; i++) {
     int id = i;
-    shared_ptr<MultiBody> mbSurf1 = env->GetNavigableSurface(i);
+    shared_ptr<SurfaceMultiBody> mbSurf1 = env->GetNavigableSurface(i);
     string iSurfName="BASE";
     if( i>=0 )
       iSurfName=mbSurf1->GetLabel();;
@@ -213,7 +215,7 @@ Connect(RoadmapType* _rm,
 	//loop over all surfaces
 	for(int j=0; j<numSurfaces && !qPtOnSurf; j++) {
 	  if(i==j) continue;//skip same surface..obvi
-	  shared_ptr<MultiBody> mbSurf2 = env->GetNavigableSurface(j);
+	  shared_ptr<SurfaceMultiBody> mbSurf2 = env->GetNavigableSurface(j);
 	  string iSurfName2=mbSurf2->GetLabel();
 	  if(i>=0)
 	     iSurfName2=mbSurf2->GetLabel();;

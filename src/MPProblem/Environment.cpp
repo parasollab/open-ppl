@@ -3,9 +3,11 @@
 #include "Cfg/Cfg.h"
 #include "MPProblem/BoundingBox.h"
 #include "MPProblem/BoundingSphere.h"
+#include "MPProblem/MPProblemBase.h"
 #include "MPProblem/Geometry/ActiveMultiBody.h"
 #include "MPProblem/Geometry/FreeBody.h"
 #include "MPProblem/Geometry/StaticMultiBody.h"
+#include "MPProblem/Geometry/SurfaceMultiBody.h"
 
 #define ENV_RES_DEFAULT 0.05
 
@@ -31,7 +33,7 @@ Environment(XMLNode& _node) {
 #else
   m_rdRes = ENV_RES_DEFAULT;
 #endif
-
+  m_filename = MPProblemBase::GetPath(m_filename);
   Read(m_filename);
 }
 
@@ -102,7 +104,7 @@ Read(string _filename) {
         }
       case MultiBody::BodyType::Surface:
         {
-          shared_ptr<StaticMultiBody> mb(new StaticMultiBody());
+          shared_ptr<SurfaceMultiBody> mb(new SurfaceMultiBody());
           mb->SetBodyType(bodyType);
           mb->Read(ifs, cbs);
           m_navigableSurfaces.push_back(mb);
@@ -251,7 +253,7 @@ GetMultiBody(size_t _index) const {
   return m_usableMultiBodies[_index];
 }
 
-shared_ptr<StaticMultiBody>
+shared_ptr<SurfaceMultiBody>
 Environment::
 GetNavigableSurface(size_t _index) const {
   if(_index < 0 || _index >= m_navigableSurfaces.size())

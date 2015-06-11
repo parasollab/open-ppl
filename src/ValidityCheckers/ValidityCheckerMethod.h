@@ -4,7 +4,7 @@
 #include <string>
 #include "Utilities/MPUtils.h"
 #include "ValidityCheckers/CollisionDetection/CDInfo.h"
-
+#include "MPProblem/MPBaseObject.h"
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup ValidityCheckers
 /// @brief Base algorithm abstraction for \ref ValidityCheckers.

@@ -6,6 +6,9 @@
 
 #include "StraightLine.h"
 
+#include "MPProblem/Geometry/FixedBody.h"
+#include "MPProblem/Geometry/SurfaceMultiBody.h"
+
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup LocalPlanners
 /// @brief Validate paths between configurations on different surfaces
@@ -89,7 +92,7 @@ SurfaceLP<MPTraits>::IsOnSpecifiedSurface(Environment* _env, CfgType& _c1, int _
   else {
     ////////////////////////////////////////////////////////////////////////
     //from 0--numSurfaces-1, check height
-    shared_ptr<MultiBody> surfaceBody = _env->GetNavigableSurface(_sid);
+    shared_ptr<SurfaceMultiBody> surfaceBody = _env->GetNavigableSurface(_sid);
     shared_ptr<FixedBody> fixedBody = surfaceBody->GetFixedBody(0);
     Vector3d bodyCenter = fixedBody->GetCenterOfMass();
     GMSPolyhedron& polyhedron = fixedBody->GetWorldPolyhedron();

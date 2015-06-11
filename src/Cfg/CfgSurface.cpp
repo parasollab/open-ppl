@@ -9,7 +9,11 @@
 /////////////////////////////////////////////////////////////////////
 
 #include "CfgSurface.h"
-#include "MPProblem/Geometry/MultiBody.h"
+
+#include "MPProblem/Geometry/ActiveMultiBody.h"
+#include "MPProblem/Geometry/FixedBody.h"
+#include "MPProblem/Geometry/FreeBody.h"
+#include "MPProblem/Geometry/SurfaceMultiBody.h"
 #include "MPProblem/Environment.h"
 
 CfgSurface::CfgSurface() :
@@ -262,7 +266,7 @@ CfgSurface::GetRobotCenterofMass() const {
 void
 CfgSurface::
 ConfigEnvironment() const {
-  shared_ptr<MultiBody> mb = m_robots[m_robotIndex];
+  shared_ptr<ActiveMultiBody> mb = m_robots[m_robotIndex];
 
   // configure the robot according to current Cfg: joint parameters
   // (and base locations/orientations for free flying robots.)
@@ -342,7 +346,7 @@ CfgSurface::GetRandomCfgImpl(Environment* _env, shared_ptr<Boundary> _bb) {
   }
   else { //surface id points to something valid
     //////////////////////////////////////////////////////////////////////////////
-    shared_ptr<MultiBody> surface_body = _env->GetNavigableSurface(m_surfaceID);
+    shared_ptr<SurfaceMultiBody> surface_body = _env->GetNavigableSurface(m_surfaceID);
     shared_ptr<FixedBody> fb = surface_body->GetFixedBody(0);
     GMSPolyhedron& polyhedron = fb->GetWorldPolyhedron();
     Point3d surfPt3d = polyhedron.GetRandPtOnSurface();

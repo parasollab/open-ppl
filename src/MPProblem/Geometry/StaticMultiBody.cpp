@@ -25,8 +25,6 @@ AddBody(const shared_ptr<FixedBody>& _body) {
 void
 StaticMultiBody::
 Read(istream& _is, CountingStreamBuffer& _cbs) {
-  if(IsSurface())
-    m_surfaceLabel = ReadFieldString(_is, _cbs, "Failed reading surface tag.");
 
   //all are same type, namely fixed body
   shared_ptr<FixedBody> fix(new FixedBody(this));
@@ -43,8 +41,6 @@ void
 StaticMultiBody::
 Write(ostream & _os) {
   _os << GetTagFromBodyType(GetBodyType()) << endl;
-  if(IsSurface())
-    _os << m_surfaceLabel << endl;
   for(auto& body : fixedBody)
     _os << *body << endl;
 }

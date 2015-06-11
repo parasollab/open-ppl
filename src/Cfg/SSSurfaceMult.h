@@ -2,7 +2,7 @@
 #define SSSURFACEMULT_H_
 
 #ifdef PMPSSSurfaceMult
-#include "SSSurface.h"
+#include "Cfg/SSSurface.h"
 #include "ValidityCheckers/SurfaceValidity.h"
 #include "ValidityCheckers/CollisionDetectionValidity.h"
 #include "DistanceMetrics/EuclideanDistance.h"
@@ -18,6 +18,7 @@
 struct EmptyTraits{
   typedef SSSurface CfgType;
   typedef DefaultWeight<SSSurface> WeightType;
+  typedef SSSurface& CfgRef;
 
   typedef MPProblem<EmptyTraits> MPProblemType;
 

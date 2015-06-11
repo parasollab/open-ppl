@@ -17,7 +17,7 @@
 /// TODO
 ////////////////////////////////////////////////////////////////////////////////
 template<class MPTraits>
-class RegularSubdivisionMethod : public MPStrategyMethod<MPTraits>{
+class RegularSubdivisionMethod : public MPStrategyMethod<MPTraits> {
   public:
     typedef typename MPTraits::CfgType CfgType;
     typedef typename MPTraits::WeightType WeightType;
@@ -28,12 +28,16 @@ class RegularSubdivisionMethod : public MPStrategyMethod<MPTraits>{
     typedef typename MPProblemType::SamplerPointer SamplerPointer;
     typedef typename MPProblemType::ConnectorPointer ConnectorPointer;
 
-    typedef typename stapl::dynamic_graph<stapl::DIRECTED, stapl::NONMULTIEDGES, Region<BoundingBox,MPTraits>, WeightType> RRGraph;
+    typedef typename stapl::dynamic_graph<
+      stapl::DIRECTED, stapl::NONMULTIEDGES,
+      Region<BoundingBox,MPTraits>, WeightType
+        > RRGraph;
     typedef typename RRGraph::vertex_descriptor RVID;
     typedef typename RRGraph::vertex_iterator RVI;
 
     //non-xml/empty constructor
-    RegularSubdivisionMethod(const vector<pair<string, int> >& _vecStrNodeGenLabels = vector<pair<string, int> >(),
+    RegularSubdivisionMethod(const vector<pair<string, int> >&
+        _vecStrNodeGenLabels = vector<pair<string, int> >(),
         const vector<string>& _vecStrNodeConnectionLabels = vector<string>(),
         const vector<string>& _strategiesLabels = vector<string>(),
         string _ccc= "", int _row = 0, int _col = 0);
@@ -65,9 +69,9 @@ RegularSubdivisionMethod(const vector<pair<string, int> >& _vecStrNodeGenLabels,
     const vector<string>& _vecStrNodeConnectionLabels, const vector<string>& _strategiesLabels,
     string _ccc, int _row, int _col) :
   m_vecStrNodeGenLabels(_vecStrNodeGenLabels), m_vecStrNodeConnectionLabels(_vecStrNodeConnectionLabels),
-  m_strategiesLabels(_strategiesLabels),m_ccc(_ccc), m_row(_row), m_col(_col){
+  m_strategiesLabels(_strategiesLabels), m_ccc(_ccc), m_row(_row), m_col(_col){
     this->SetName("RegularSubdivisionMethod");
-  }
+}
 
 template<class MPTraits>
 RegularSubdivisionMethod<MPTraits>::
@@ -130,7 +134,9 @@ ParseXML(XMLNode& _node) {
 
 
 template<class MPTraits>
-void RegularSubdivisionMethod<MPTraits>::Print(ostream& _os) const {
+void
+RegularSubdivisionMethod<MPTraits>::
+Print(ostream& _os) const {
   _os << "RegularSubdivisionMethod:: Print \n";
   _os << "\trows: " << m_row << endl;
   _os << "\tcols: " << m_col << endl;
@@ -155,26 +161,19 @@ void RegularSubdivisionMethod<MPTraits>::Print(ostream& _os) const {
   for(StringIter sIter=m_strategiesLabels.begin(); sIter!=m_strategiesLabels.end(); sIter++){
     _os<<"\t"<<*sIter;
   }
-
-
 }
-/*void RegularSubdivisionMethod::Initialize() {
-  cout << "RegularSubdivisionMethod::Initialize()" <<endl;
-  }*/
 
 template<class MPTraits>
-void RegularSubdivisionMethod<MPTraits>::Run() {
-
+void
+RegularSubdivisionMethod<MPTraits>::
+Run() {
   cout << "RegularSubdivisionMethod:: Run()" << endl;
 
   Environment* env = this->GetMPProblem()->GetEnvironment();
   GraphType* rmg = this->GetMPProblem()->GetRoadmap()->GetGraph();
   BasicDecomposition* decomposer = new BasicDecomposition();
 
-  //m_ccConnector = new CCsConnector<MPTraits>(this->GetMPProblem(), m_lp,m_nf);
-  //MPProblem set?
   m_ccConnector = new CCsConnector<MPTraits>(m_nf, m_lp);
-
 
   ///TIMER STUFF
   stapl::counter<stapl::default_timer> t0;
@@ -187,7 +186,6 @@ void RegularSubdivisionMethod<MPTraits>::Run() {
   typedef std::tuple<ConnectorPointer,string, int> ncConnectParam;
   typedef stapl::array< BoundingBox > arrayBbox;
   typedef array_view <arrayBbox> viewBbox;
-
 
   size_t mesh_size = m_row * m_col;
   int num_samples;
@@ -214,24 +212,22 @@ void RegularSubdivisionMethod<MPTraits>::Run() {
   viewBbox arrView(pArrayBbox);
   rmi_fence();
 
-  if (this->m_debug)  t0.start();
-  //if(this->m_debug) PrintValue("Region graph size " , regularRegion.size());
-  if(this->m_debug) PrintValue("View size " , regionView.size());
+  if (this->m_debug)
+    t0.start();
 
+  if(this->m_debug)
+    PrintValue("View size " , regionView.size());
 
-  if (m_strategiesLabels.size() != 0){
-
-    ///CONSTRUCT REGION MAP---COARSE GRAINED -- takes the whole sequential strategy
+  if (m_strategiesLabels.size() != 0) {
     for(J itr1 = m_strategiesLabels.begin(); itr1 != m_strategiesLabels.end(); ++itr1) {
       if(this->m_debug) PrintValue("View size " , regionView.size());
       MPStrategyPointer strategy = this->GetMPProblem()->GetMPStrategy(*itr1);
       ConstructRoadmap<MPTraits> constrRegionMap(strategy);
       map_func(constrRegionMap, regionView,arrView);
     }
-  }else {
+  }
+  else {
 
-    ///CONSTRUCT REGION MAP --- FINE GRAINED-- node gen first then connect
-    ////GENERATE NODES IN REGIONS
     for(I itr = m_vecStrNodeGenLabels.begin(); itr != m_vecStrNodeGenLabels.end(); ++itr){
       num_samples = itr->second;
       SamplerPointer sp = this->GetMPProblem()->GetSampler(itr->first);
@@ -239,10 +235,8 @@ void RegularSubdivisionMethod<MPTraits>::Run() {
       map_func(nodeGen,arrView,regionView);
     }
 
-    ///REDISTRIBUTE/MIGRATE - based on RegionVIDs and RegionWeight()
-
-    ///CONNECT NODES IN REGIONS
-    for(J itr1 = m_vecStrNodeConnectionLabels.begin(); itr1 != m_vecStrNodeConnectionLabels.end(); ++itr1){
+    for(J itr1 = m_vecStrNodeConnectionLabels.begin();
+        itr1 != m_vecStrNodeConnectionLabels.end(); ++itr1) {
       ConnectorPointer cp = this->GetMPProblem()->GetConnector(*itr1);
       NodeConnector<MPTraits> nodeCon(this->GetMPProblem(), cp);
       stapl::for_each(regionView,nodeCon);
@@ -250,10 +244,10 @@ void RegularSubdivisionMethod<MPTraits>::Run() {
   }
   rmi_fence();
 
-  ///DEBUG
-  if(this->m_debug){
+  if (this->m_debug) {
     constr_tm = t0.stop();
     PrintValue("CNSTR : " , constr_tm);
+
     PrintOnce("RUN::# of regions ", regularRegion.num_vertices());
     PrintOnce("RUN::# of region edges: ", regularRegion.num_edges());
     PrintOnce("RUN::roadmap graph size ", rmg->num_vertices());
@@ -285,15 +279,18 @@ void RegularSubdivisionMethod<MPTraits>::Run() {
   rmi_fence();
 
   //TODO : Danger, potential to overide region VIDs for fine grained approach, so we check that fine grained is not set
-  if (m_strategiesLabels.size() != 0 && (m_vecStrNodeGenLabels.size() ==0 || m_vecStrNodeConnectionLabels.size() ==0)){
+  if (m_strategiesLabels.size() != 0 && (m_vecStrNodeGenLabels.size() == 0
+        || m_vecStrNodeConnectionLabels.size() ==0)) {
     array_view<std::vector<pair<VID,size_t> > > ccView1(ccVec1);
     map_func(SetRegionCCVIDS<MPTraits>(), regionView, balance_view(ccView1,regionView.size()));
     rmi_fence();
   }
 
-  if(this->m_debug) PrintOnce("cc count before region con:", ccVec1.size());
+  if(this->m_debug)
+    ///DEBUG
+    PrintOnce("cc count before region con:", ccVec1.size());
   rmi_fence();
-  if(m_ccc == "largest"){
+  if(m_ccc == "largest") {
     array_view<std::vector<pair<VID,size_t> > > ccView1(ccVec1);
     map_func(SetRegionCC<MPTraits>(), regionView, balance_view(ccView1,regionView.size()));
     rmi_fence();
@@ -303,35 +300,36 @@ void RegularSubdivisionMethod<MPTraits>::Run() {
 
     RegionCCConnector<RRGraph, Region<BoundingBox, MPTraits>, MPTraits> regionCCCon(this->GetMPProblem(), &regularRegion, conParam1);
     stapl::for_each(regionView,regionCCCon);
-  }else if(m_ccc== "random") {
+  }
+  else if(m_ccc== "random") {
     for(J itr2 = m_regionConnectionLabels.begin(); itr2 != m_regionConnectionLabels.end(); ++itr2) {
       ConnectorPointer ncp = this->GetMPProblem()->GetConnector(*itr2);
       ncConnectParam conParam2 = std::make_tuple(ncp,m_ccc,m_k1);
 
-      RegionRandomConnector<RRGraph, Region<BoundingBox, MPTraits>, MPTraits > regionRandomCon(this->GetMPProblem(), &regularRegion, conParam2);
+      RegionRandomConnector<RRGraph, Region<BoundingBox, MPTraits>, MPTraits >
+        regionRandomCon(this->GetMPProblem(), &regularRegion, conParam2);
       stapl::for_each(regionView,regionRandomCon);
     }
-  }else {
-
+  }
+  else {
     cerr << "ERROR::Please choose an existing k_closest_cc connection type "<< endl;
     cerr << "Reference this error on line "<< __LINE__ << " of file " << __FILE__ << endl;
     exit(-1);
-
   }
 
   ///DEBUG
-  if(this->m_debug) PrintOnce("RUN::roadmap graph edges after: ", rmg->num_edges());
+  if(this->m_debug)
+    PrintOnce("RUN::roadmap graph edges after: ", rmg->num_edges());
   rmi_fence();
 }
 
 template<class MPTraits>
-void RegularSubdivisionMethod<MPTraits>::Finalize(){
+void RegularSubdivisionMethod<MPTraits>::Finalize() {
   stringstream basefname;
   basefname << this->GetBaseFilename() << ".p" << stapl::get_num_locations() << ".it" << m_runs;
   this->GetMPProblem()->GetRoadmap()->Write(basefname.str() + ".map", this->GetMPProblem()->GetEnvironment());
   rmi_fence();
   cout << "location [" << get_location_id() <<"] ALL FINISHED" << endl;
 }
-
 
 #endif

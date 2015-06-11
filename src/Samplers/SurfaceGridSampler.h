@@ -5,6 +5,8 @@
 
 #include "SamplerMethod.h"
 
+#include "MPProblem/Geometry/SurfaceMultiBody.h"
+
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup Samplers
 /// @brief Sample surface configurations on a grid throughout the surfaces
@@ -80,7 +82,7 @@ class SurfaceGridSampler : public SamplerMethod<MPTraits> {
         //For the navigable surfaces not including the surface -1 (ground)
         if(i>=0){
           //Get navigable surface by number and get the polyhedron of that surface
-          shared_ptr<MultiBody> surfi = env->GetNavigableSurface((size_t) i);
+          shared_ptr<SurfaceMultiBody> surfi = env->GetNavigableSurface((size_t) i);
           shared_ptr<FixedBody> fb = surfi->GetFixedBody(0);
           GMSPolyhedron& polyhedron = fb->GetWorldPolyhedron();
           //Obtain the bondaries of the surface
