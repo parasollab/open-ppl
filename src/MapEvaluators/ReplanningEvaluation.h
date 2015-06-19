@@ -117,10 +117,8 @@ template<class MPTraits>
 void
 ReplanningEvaluation<MPTraits>::SetEnvironment() {
   Environment* env = this->GetMPProblem()->GetEnvironment();
-  if(this->m_debug) cout<<"#oldobs:"<<env->GetUsableMultiBodyCount()<<endl;
   env->Read(m_envFile.c_str() );
   this->GetMPProblem()->BuildCDStructures();
-  if(this->m_debug) cout<<"#newobs:"<<env->GetUsableMultiBodyCount()<<endl;
 }
 
 template<class MPTraits>

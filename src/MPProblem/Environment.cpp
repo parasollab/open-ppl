@@ -54,7 +54,6 @@ Read(string _filename) {
 
   m_activeBodies.clear();
   m_obstacleBodies.clear();
-  m_usableMultiBodies.clear();
   m_navigableSurfaces.clear();
 
   // open file
@@ -117,12 +116,6 @@ Read(string _filename) {
     throw ParseException(cbs.Where(),
         "No active multibodies in the environment.");
 
-  m_usableMultiBodies.clear();
-  copy(m_activeBodies.begin(), m_activeBodies.end(),
-      back_inserter(m_usableMultiBodies));
-  copy(m_obstacleBodies.begin(), m_obstacleBodies.end(),
-      back_inserter(m_usableMultiBodies));
-
   size_t size = m_activeBodies.size();
   Cfg::SetSize(size);
 #ifdef PMPCfgMultiRobot
@@ -160,9 +153,6 @@ Print(ostream& _os) const {
 void
 Environment::
 Write(ostream & _os) {
-  _os << m_usableMultiBodies.size() << endl;
-  for (size_t i=0; i < m_usableMultiBodies.size(); i++)
-    m_usableMultiBodies[i]->Write(_os);
 }
 
 bool
@@ -244,15 +234,6 @@ GetStaticBody(size_t _index) const {
   return m_obstacleBodies[_index];
 }
 
-shared_ptr<MultiBody>
-Environment::
-GetMultiBody(size_t _index) const {
-  if(_index < 0 || _index >= m_usableMultiBodies.size())
-    throw RunTimeException(WHERE,
-        "Cannot access MultiBody '" + ::to_string(_index) + "'.");
-  return m_usableMultiBodies[_index];
-}
-
 shared_ptr<SurfaceMultiBody>
 Environment::
 GetNavigableSurface(size_t _index) const {
@@ -292,7 +273,6 @@ const vector<cd_predefined>& _cdTypes) {
     mb->buildCDstructure(*cdIter);
 
   m_obstacleBodies.push_back(mb);
-  m_usableMultiBodies.push_back(mb);
 
   return m_obstacleBodies.size()-1;
 }
@@ -304,13 +284,6 @@ RemoveObstacleAt(size_t position) {
     shared_ptr<MultiBody> mb = m_obstacleBodies.at(position);
 
     m_obstacleBodies.erase(m_obstacleBodies.begin()+position);
-    //try to find mb in usableMultiBodies
-    vector<shared_ptr<MultiBody> >::iterator vecIter;
-    for(vecIter = m_usableMultiBodies.end()-1;
-        vecIter != m_usableMultiBodies.begin()-1 && !(*vecIter==mb); --vecIter);
-
-    if(*vecIter == mb)
-      m_usableMultiBodies.erase(vecIter);
   }
   else
     cerr << "Environment::RemoveObstacleAt Warning: unable to remove obst at position " << position << endl;

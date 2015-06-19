@@ -1120,7 +1120,7 @@ PushCfgToMedialAxis(CfgType& _cfg, shared_ptr<Boundary> _bb) {
 
   Environment* env = this->GetEnvironment();
   ValidityCheckerPointer vcm = this->GetValidityChecker(this->m_vcLabel);
-  shared_ptr<MultiBody> robot = env->GetMultiBody(_cfg.GetRobotIndex());
+  shared_ptr<ActiveMultiBody> robot = env->GetActiveBody(_cfg.GetRobotIndex());
 
   CDInfo tmpInfo;
   tmpInfo.ResetVars();
@@ -1261,7 +1261,7 @@ FindMedialAxisBorderExact(
     CfgType& _startCfg, CfgType& _endingCfg,
     double& _upperBound, double& _lowerBound, double& _stepSize) {
   Environment* env = this->GetEnvironment();
-  shared_ptr<MultiBody> robot = env->GetMultiBody(_cfg.GetRobotIndex());
+  shared_ptr<ActiveMultiBody> robot = env->GetActiveBody(_cfg.GetRobotIndex());
   ValidityCheckerPointer vcm = this->GetValidityChecker(this->m_vcLabel);
 
   CDInfo tmpInfo;

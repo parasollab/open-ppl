@@ -65,7 +65,7 @@ TraceObstacle<MPTraits>::Extend(const CfgType& _near, const CfgType& _dir,
   int cIndex = cdInfo.m_collidingObstIndex;
   int obsContactIndex = cdInfo.m_rapidContactID2;
   if( cIndex == -1 ) {
-    cIndex = (LRand() % (env->GetUsableMultiBodyCount()-1)) + 1;
+    cIndex = LRand() % env->GetObstacleCount();
     obsContactIndex = -1;
   }
   GMSPolyhedron& poly =

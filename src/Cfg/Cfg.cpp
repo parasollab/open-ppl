@@ -475,7 +475,7 @@ Cfg::GetRandomCfg(Environment* _env, shared_ptr<Boundary> _bb) {
   ostringstream oss;
   oss << "GetRandomCfg not able to find anything in boundary: "
     << *_bb << ". Robot radius is "
-    << _env->GetMultiBody(m_robotIndex)->GetBoundingSphereRadius() << ".";
+    << m_robots[m_robotIndex]->GetBoundingSphereRadius() << ".";
   throw PMPLException("Boundary to small", WHERE, oss.str());
 }
 

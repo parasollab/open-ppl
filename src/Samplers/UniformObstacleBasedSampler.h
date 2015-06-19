@@ -90,7 +90,7 @@ Sampler(CfgType& _cfg, shared_ptr<Boundary> _boundary,
   bool cfg1Free;
   double margin = m_margin;
   if(margin == 0){
-    margin = env->GetMultiBody(_cfg.GetRobotIndex())->GetMaxAxisRange();
+    margin = env->GetActiveBody(_cfg.GetRobotIndex())->GetMaxAxisRange();
   }
 
   vector<pair<double, double> > origBoundary;

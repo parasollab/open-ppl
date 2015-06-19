@@ -5,6 +5,7 @@
 #include "MPProblem/Environment.h"
 #include "MPProblem/Geometry/ActiveMultiBody.h"
 #include "MPProblem/Geometry/FreeBody.h"
+#include "MPProblem/Geometry/StaticMultiBody.h"
 
 #ifdef USE_PQP
 
@@ -83,13 +84,9 @@ IsInCollision(shared_ptr<ActiveMultiBody> _robot,
           minDistSoFar=res.Distance();
           _cdInfo.m_minDist = minDistSoFar;
 
-          // change a 3 elmt array to Vector3d class
-          for(int k=0; k < 3; k++) {
-            robotPt[k] = res.P1()[k];
-            obsPt[k] = res.P2()[k];
-          }
+          robotPt = res.P1();
+          obsPt = res.P2();
           // transform points to world coords
-          // using *_pt vars in case overloaded * was not done well.
           _cdInfo.m_robotPoint = _robot->GetFreeBody(i)->WorldTransformation() * robotPt;
           _cdInfo.m_objectPoint = _obstacle->GetBody(j)->WorldTransformation() * obsPt;
         }
@@ -129,13 +126,13 @@ IsInCollision(shared_ptr<ActiveMultiBody> _robot,
 
 bool
 PQPSolid::IsInsideObstacle(const Cfg& _cfg, Environment* _env){
-  size_t nMulti = _env->GetUsableMultiBodyCount();
-  size_t robot = _cfg.GetRobotIndex();
+  size_t nMulti = _env->GetObstacleCount();
 
   Vector3d robotPt(_cfg.GetData()[0], _cfg.GetData()[1], _cfg.GetData()[2]);
 
-  for(size_t i=0; i < nMulti; i++ )
-    if(i != robot && IsInsideObstacle(robotPt, _env->GetMultiBody(i)))
+  for(size_t i = 0; i < nMulti; ++i)
+    //if(IsInsideObstacle(robotPt, static_pointer_cast<MultiBody>(_env->GetStaticBody(i))))
+    if(IsInsideObstacle(robotPt, _env->GetStaticBody(i)))
       return true;
   return false;
 }
@@ -166,7 +163,8 @@ PQPSolid::BuildPQPSegment(PQP_REAL _dX, PQP_REAL _dY, PQP_REAL _dZ) const{
 
 
 bool
-PQPSolid::IsInsideObstacle(Vector3d _robotPt, shared_ptr<MultiBody> _obstacle){
+PQPSolid::
+IsInsideObstacle(Vector3d _robotPt, shared_ptr<MultiBody> _obstacle) {
   static PQP_Model* mPRay = BuildPQPSegment(1e10,0,0);
   assert(mPRay != NULL);
 
@@ -183,7 +181,7 @@ PQPSolid::IsInsideObstacle(Vector3d _robotPt, shared_ptr<MultiBody> _obstacle){
 
     if(result.NumPairs() % 2 == 1)
       return true;
-  }//end of each part of obs
+  }
 
   return false;
 }
@@ -234,20 +232,16 @@ IsInCollision(shared_ptr<ActiveMultiBody> _robot,
           minDistSoFar=res.Distance();
           _cdInfo.m_minDist = minDistSoFar;
 
-          // change a 3 elmt array to Vector3d class
-          for(int k=0;k < 3;k++){
-            robotPt[k] = res.P1()[k];
-            obsPt[k] = res.P2()[k];
-          }
-
+          robotPt = res.P1();
+          obsPt = res.P2();
           // transform points to world coords
-          // using *_pt vars in case overloaded * was not done well.
           _cdInfo.m_robotPoint = _robot->GetFreeBody(i)->WorldTransformation() * robotPt;
           _cdInfo.m_objectPoint = _obstacle->GetBody(j)->WorldTransformation() * obsPt;
         }
       }//end of each part of obs
 
-      if(retVal == false && _robot != _obstacle && IsInsideObstacle(_robot->GetFreeBody(i)->GetWorldPolyhedron().m_vertexList[0], _obstacle))
+      if(retVal == false && _robot != _obstacle &&
+          IsInsideObstacle(_robot->GetFreeBody(i)->GetWorldPolyhedron().m_vertexList[0], _obstacle))
         retVal = true;
     }//end of each part of robot
     return retVal;
@@ -276,7 +270,8 @@ IsInCollision(shared_ptr<ActiveMultiBody> _robot,
           return true;
       }
 
-      if(_robot != _obstacle && IsInsideObstacle(_robot->GetFreeBody(i)->GetWorldPolyhedron().m_vertexList[0], _obstacle))
+      if(_robot != _obstacle &&
+          IsInsideObstacle(_robot->GetFreeBody(i)->GetWorldPolyhedron().m_vertexList[0], _obstacle))
         return true;
     }
     return false;

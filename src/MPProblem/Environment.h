@@ -154,9 +154,6 @@ class Environment {
     /// @return Number of Static MultiBodies
     size_t GetObstacleCount() const {return m_obstacleBodies.size();}
     ////////////////////////////////////////////////////////////////////////////
-    /// @return Number of total MultiBodies
-    size_t GetUsableMultiBodyCount() const {return m_usableMultiBodies.size();}
-    ////////////////////////////////////////////////////////////////////////////
     /// @return Number of Surface MultiBodies
     size_t GetNavigableSurfacesCount() const {return m_navigableSurfaces.size();}
 
@@ -168,10 +165,6 @@ class Environment {
     /// @param _index Requested multibody
     /// @return Pointer to static multibody
     shared_ptr<StaticMultiBody> GetStaticBody(size_t _index) const;
-    ////////////////////////////////////////////////////////////////////////////
-    /// @param _index Requested multibody
-    /// @return Pointer to multibody
-    shared_ptr<MultiBody> GetMultiBody(size_t _index) const;
     ////////////////////////////////////////////////////////////////////////////
     /// @param _index Requested multibody
     /// @return Pointer to surface multibody
@@ -253,7 +246,7 @@ class Environment {
       m_navigableSurfaces;                              ///< Surfaces
     vector<shared_ptr<StaticMultiBody>>
       m_obstacleBodies;                                 ///< Other multibodies
-    vector<shared_ptr<MultiBody>> m_usableMultiBodies;  ///< All multibodies
+    //vector<shared_ptr<MultiBody>> m_usableMultiBodies;  ///< All multibodies
 };
 
 
