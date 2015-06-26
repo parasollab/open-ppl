@@ -283,7 +283,6 @@ Finalize() {
   ofstream  osStat(str.c_str());
   StatClass* stats = this->GetStatClass();
   stats->PrintAllStats(osStat, this->GetRoadmap());
-  stats->PrintClock("Map Generation", osStat);
 }
 
 template<class MPTraits>
