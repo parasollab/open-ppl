@@ -246,7 +246,6 @@ class Environment {
       m_navigableSurfaces;                              ///< Surfaces
     vector<shared_ptr<StaticMultiBody>>
       m_obstacleBodies;                                 ///< Other multibodies
-    //vector<shared_ptr<MultiBody>> m_usableMultiBodies;  ///< All multibodies
 };
 
 

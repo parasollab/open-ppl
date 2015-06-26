@@ -103,6 +103,12 @@ class Body {
     /// @return Center of mass of body
     Vector3d GetCenterOfMass();
     ////////////////////////////////////////////////////////////////////////////
+    /// @return Bounding sphere radius
+    double GetBoundingSphereRadius() const;
+    ////////////////////////////////////////////////////////////////////////////
+    /// @return Inside sphere radius
+    double GetInsideSphereRadius() const;
+    ////////////////////////////////////////////////////////////////////////////
     /// @param _index Index of desired forward Connection
     /// @return Requested forward Connection
     Connection& GetForwardConnection(size_t _index);

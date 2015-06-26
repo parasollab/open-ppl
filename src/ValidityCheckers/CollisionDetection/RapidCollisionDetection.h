@@ -30,9 +30,8 @@ class Rapid: public CollisionDetectionMethod {
      *
      * collision between two ajacent links will be ignored.
      */
-    virtual bool IsInCollision(shared_ptr<ActiveMultiBody> _robot,
-        shared_ptr<MultiBody> _obstacle, CDInfo& _cdInfo,
-        size_t _ignoreIAdjacentMultibodies);
+    virtual bool IsInCollision(shared_ptr<Body> _body1,
+        shared_ptr<Body> _body2, CDInfo& _cdInfo);
 };
 
 #endif

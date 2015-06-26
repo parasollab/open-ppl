@@ -2,14 +2,14 @@
 #include <limits>
 
 CDInfo::
-CDInfo() {
-  ResetVars();
+CDInfo(bool _retAllInfo) {
+  ResetVars(_retAllInfo);
 }
 
 void
 CDInfo::
-ResetVars() {
-  m_retAllInfo = false;
+ResetVars(bool _retAllInfo) {
+  m_retAllInfo = _retAllInfo;
   m_collidingObstIndex = -1;
   m_nearestObstIndex = -1;
   m_minDist = std::numeric_limits<double>::max();
@@ -17,5 +17,11 @@ ResetVars() {
   m_objectPoint(0, 0, 0);
   m_rapidContactID1 = -1;
   m_rapidContactID2 = -1;
+}
+
+bool
+CDInfo::
+operator<(const CDInfo& _cdInfo) {
+  return m_minDist < _cdInfo.m_minDist;
 }
 

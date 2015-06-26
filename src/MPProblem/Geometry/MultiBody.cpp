@@ -100,9 +100,9 @@ const double * MultiBody::GetBoundingBox() const
 double
 MultiBody::
 GetBoundingSphereRadius() const {
-  double radius = 0;
-  for(auto& body : m_bodies)
-    radius += body->GetPolyhedron().m_maxRadius * 2.0;
+  double radius = m_bodies[0]->GetPolyhedron().m_maxRadius;
+  for(size_t i = 1; i < m_bodies.size(); ++i)
+    radius += m_bodies[i]->GetPolyhedron().m_maxRadius * 2.0;
   return radius;
 }
 

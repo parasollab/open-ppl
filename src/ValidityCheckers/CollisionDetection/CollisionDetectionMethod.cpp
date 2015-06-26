@@ -1,5 +1,6 @@
 #include "CollisionDetectionMethod.h"
 
+#include "MPProblem/Geometry/Body.h"
 #include "Utilities/PMPLExceptions.h"
 
 CollisionDetectionMethod::
@@ -19,7 +20,7 @@ Print(ostream& _os) const {
 
 bool
 CollisionDetectionMethod::
-IsInsideObstacle(const Cfg& _cfg) {
+IsInsideObstacle(const Vector3d& _pt, shared_ptr<Body> _body) {
   throw RunTimeException(WHERE, "Not implemented.");
 }
 

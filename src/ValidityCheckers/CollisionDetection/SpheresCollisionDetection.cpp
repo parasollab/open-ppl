@@ -1,7 +1,6 @@
 #include "SpheresCollisionDetection.h"
 
-#include "MPProblem/Geometry/ActiveMultiBody.h"
-#include "MPProblem/Geometry/FreeBody.h"
+#include "MPProblem/Geometry/Body.h"
 #include "Utilities/MetricUtils.h"
 
 BoundingSpheres::
@@ -10,31 +9,19 @@ BoundingSpheres() : CollisionDetectionMethod("BoundingSpheres", CDType::Out) {
 
 bool
 BoundingSpheres::
-IsInCollision(shared_ptr<ActiveMultiBody> _robot,
-    shared_ptr<MultiBody> _obstacle, CDInfo& _cdInfo,
-    size_t _ignoreIAdjacentMultibodies) {
+IsInCollision(shared_ptr<Body> _body1, shared_ptr<Body> _body2,
+    CDInfo& _cdInfo) {
 
-  Vector3d robotCom = _robot->GetCenterOfMass();
-  Vector3d obstCom  = _obstacle->GetCenterOfMass();
+  Vector3d body1Com = _body1->GetWorldTransformation() * _body1->GetCenterOfMass();
+  Vector3d body2Com = _body2->GetWorldTransformation() * _body2->GetCenterOfMass();
 
-  if(_robot->GetFreeBodyCount())
-    robotCom = _robot->GetFreeBody(0)->GetWorldTransformation() * robotCom;
-  if(_obstacle->GetBodyCount())
-    obstCom  = _obstacle->GetBody(0)->GetWorldTransformation() * obstCom;
+  double body1Radius = _body1->GetBoundingSphereRadius();
+  double body2Radius = _body2->GetBoundingSphereRadius();
 
-  double robotRadius = _robot->GetBoundingSphereRadius();
-  double obstRadius  = _obstacle->GetBoundingSphereRadius();
+  double dist = (body1Com - body2Com).norm();
 
-  double dist = sqrt(sqr(robotCom[0] - obstCom[0]) +
-      sqr(robotCom[1] - obstCom[1]) +
-      sqr(robotCom[2] - obstCom[2]));
-
-  return dist <= robotRadius + obstRadius;
+  return dist <= body1Radius + body2Radius;
 }
-
-
-//////////
-
 
 InsideSpheres::
 InsideSpheres() : CollisionDetectionMethod("InsideSpheres", CDType::In) {
@@ -42,25 +29,16 @@ InsideSpheres() : CollisionDetectionMethod("InsideSpheres", CDType::In) {
 
 bool
 InsideSpheres::
-IsInCollision(shared_ptr<ActiveMultiBody> _robot,
-    shared_ptr<MultiBody> _obstacle, CDInfo& _cdInfo,
-    size_t _ignoreIAdjacentMultibodies) {
+IsInCollision(shared_ptr<Body> _body1, shared_ptr<Body> _body2,
+    CDInfo& _cdInfo) {
 
-  Vector3d robotCom = _robot->GetCenterOfMass();
-  Vector3d obstCom  = _obstacle->GetCenterOfMass();
+  Vector3d body1Com = _body1->GetWorldTransformation() * _body1->GetCenterOfMass();
+  Vector3d body2Com = _body2->GetWorldTransformation() * _body2->GetCenterOfMass();
 
-  if(_robot->GetFreeBodyCount())
-    robotCom = _robot->GetFreeBody(0)->GetWorldTransformation() * robotCom;
-  if(_obstacle->GetBodyCount())
-    obstCom  = _obstacle->GetBody(0)->GetWorldTransformation() * obstCom;
+  double body1Radius = _body1->GetInsideSphereRadius();
+  double body2Radius = _body2->GetInsideSphereRadius();
 
-  double robotRadius = _robot->GetInsideSphereRadius();
-  double obstRadius  = _obstacle->GetInsideSphereRadius();
+  double dist = (body1Com - body2Com).norm();
 
-  double dist = sqrt(sqr(robotCom[0] - obstCom[0]) +
-      sqr(robotCom[1] - obstCom[1]) +
-      sqr(robotCom[2] - obstCom[2]));
-
-  return dist <= robotRadius + obstRadius;
+  return dist <= body1Radius + body2Radius;
 }
-

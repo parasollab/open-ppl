@@ -87,6 +87,18 @@ Body::GetCenterOfMass(){
   return m_centerOfMass;
 }
 
+double
+Body::
+GetBoundingSphereRadius() const {
+  return m_polyhedron.m_maxRadius;
+}
+
+double
+Body::
+GetInsideSphereRadius() const {
+  return m_polyhedron.m_minRadius;
+}
+
 Connection&
 Body::GetForwardConnection(size_t _index) {
   if (_index < m_forwardConnection.size())

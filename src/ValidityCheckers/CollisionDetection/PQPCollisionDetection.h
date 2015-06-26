@@ -1,15 +1,10 @@
-#ifndef PQPCOLLISIONDETECTION_H_
-#define PQPCOLLISIONDETECTION_H_
+#ifndef PQP_COLLISION_DETECTION_H_
+#define PQP_COLLISION_DETECTION_H_
 
 #ifdef USE_PQP
 #include <PQP.h>
 
-#include <Vector.h>
-using namespace mathtool;
-
 #include "CollisionDetectionMethod.h"
-
-class Environment;
 
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup CollisionDetection
@@ -24,9 +19,8 @@ class PQP : public CollisionDetectionMethod {
 
     virtual void Build(Body* _body);
 
-    virtual bool IsInCollision(shared_ptr<ActiveMultiBody> _robot,
-        shared_ptr<MultiBody> _obstacle, CDInfo& _cdInfo,
-        size_t _ignoreIAdjacentMultibodies);
+    virtual bool IsInCollision(shared_ptr<Body> _body1,
+        shared_ptr<Body> _body2, CDInfo& _cdInfo);
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -39,15 +33,15 @@ class PQPSolid : public PQP {
   public:
     PQPSolid() : PQP() {m_name = "PQP_SOLID";}
 
-    virtual bool IsInCollision(shared_ptr<ActiveMultiBody> _robot,
-        shared_ptr<MultiBody> _obstacle, CDInfo& _cdInfo,
-        size_t ignoreIAdjacentMultibodies);
+    virtual bool IsInCollision(shared_ptr<Body> _body1,
+        shared_ptr<Body> _body2, CDInfo& _cdInfo);
 
-    virtual bool IsInsideObstacle(const Cfg& _cfg, Environment* _env);
-    virtual bool IsInsideObstacle(Vector3d _robotPt, shared_ptr<MultiBody> _obstacle);
+    virtual bool IsInsideObstacle(const Vector3d& _pt, shared_ptr<Body> _body);
 
+  private:
     PQP_Model* BuildPQPSegment(PQP_REAL _dX, PQP_REAL _dY, PQP_REAL _dZ) const;
 };
+
 #endif
 
 #endif

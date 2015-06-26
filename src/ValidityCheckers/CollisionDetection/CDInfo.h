@@ -9,9 +9,11 @@
 ///        obstacles.
 ////////////////////////////////////////////////////////////////////////////////
 struct CDInfo {
-  CDInfo();
+  CDInfo(bool _retAllInfo = false);
 
-  void ResetVars();
+  void ResetVars(bool _retAllInfo = false);
+
+  bool operator<(const CDInfo& _cdInfo);
 
   bool m_retAllInfo;                ///< If this instance contains all
                                     ///< (following) information.

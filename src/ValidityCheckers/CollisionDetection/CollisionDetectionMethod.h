@@ -1,10 +1,13 @@
-#ifndef COLLISION_DETECTION_METHOD_H
-#define COLLISION_DETECTION_METHOD_H
+#ifndef COLLISION_DETECTION_METHOD_H_
+#define COLLISION_DETECTION_METHOD_H_
 
 #include <iostream>
 #include <memory>
 #include <string>
 using namespace std;
+
+#include "Vector.h"
+using namespace mathtool;
 
 class Body;
 class ActiveMultiBody;
@@ -51,13 +54,12 @@ class CollisionDetectionMethod {
      * return true, if robot is completely contained inside any obs.
      * otherwise, false will be returned.
      */
-    virtual bool IsInsideObstacle(const Cfg& _cfg);
+    virtual bool IsInsideObstacle(const Vector3d& _pt, shared_ptr<Body> _body);
 
-    /**Check collision between MultiBody of robot and obstacle.
+    /**Check collision between two bodies
     */
-    virtual bool IsInCollision(shared_ptr<ActiveMultiBody> _rob,
-        shared_ptr<MultiBody> _obstacle, CDInfo& _cdInfo,
-        size_t _ignoreIAdjacentMultibodies) = 0;
+    virtual bool IsInCollision(shared_ptr<Body> _body1,
+        shared_ptr<Body> _body2, CDInfo& _cdInfo) = 0;
 
   protected:
     string m_name;
