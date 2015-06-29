@@ -1,14 +1,14 @@
-#ifdef USE_VCLIP
-
 #include "VClipCollisionDetection.h"
+
+#ifdef USE_VCLIP
 
 #include "CDInfo.h"
 #include "MPProblem/Geometry/Body.h"
 
+ClosestFeaturesHT closestFeaturesHT(3000);
+
 VClip::
 VClip() : CollisionDetectionMethod("VCLIP", CDType::Exact) {}
-
-ClosestFeaturesHT closestFeaturesHT(3000);
 
 void
 VClip::

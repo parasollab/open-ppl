@@ -1,5 +1,5 @@
-#ifndef RAPIDCOLLISIONDETECTION_H_
-#define RAPIDCOLLISIONDETECTION_H_
+#ifndef RAPID_COLLISION_DETECTION_H_
+#define RAPID_COLLISION_DETECTION_H_
 
 #ifdef USE_RAPID
 
@@ -7,9 +7,11 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup CollisionDetection
-/// @brief TODO
+/// @brief RAPID collision detection middleware
 ///
-/// TODO
+/// RAPID is typically used to simply and quickly determine collision between
+/// two objects, but cannot compute any distance information. The contacts
+/// found, i.e., triangle IDs are stored in CDInfo.
 ////////////////////////////////////////////////////////////////////////////////
 class Rapid: public CollisionDetectionMethod {
   public:
@@ -17,19 +19,6 @@ class Rapid: public CollisionDetectionMethod {
 
     virtual void Build(Body* _body);
 
-    /* Using RAPID to check collision between two MultiBodys.
-     * Collision is checked in Body level between two MultiBodys,
-     * if any of Body from Robot collides with any of Body from obstacle,
-     * true will be returned.
-     *
-     * This method doesn't support "Return all info", if
-     * _cdInfo.ret_all_info is true, then error message will be post.
-     *
-     * if RAPID_Collide, the RAPID method, return false, process will
-     * be terminated.
-     *
-     * collision between two ajacent links will be ignored.
-     */
     virtual bool IsInCollision(shared_ptr<Body> _body1,
         shared_ptr<Body> _body2, CDInfo& _cdInfo);
 };

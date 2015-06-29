@@ -1,15 +1,16 @@
 #include "PQPCollisionDetection.h"
 
+#ifdef USE_PQP
+
 #include "CDInfo.h"
 #include "MPProblem/Geometry/Body.h"
-
-#ifdef USE_PQP
 
 PQP::
 PQP() : CollisionDetectionMethod("PQP", CDType::Exact) {
 }
 
-PQP::~PQP() {
+PQP::
+~PQP() {
 }
 
 void
@@ -18,13 +19,13 @@ Build(Body* _body) {
   GMSPolyhedron& poly = _body->GetPolyhedron();
   shared_ptr<PQP_Model> pqpBody(new PQP_Model);
   pqpBody->BeginModel();
-  for(size_t q=0; q < poly.m_polygonList.size(); q++) {
+  for(size_t q = 0; q < poly.m_polygonList.size(); q++) {
     int vertexNum[3];
     double point[3][3];
-    for(int i=0; i<3; i++) {
+    for(int i = 0; i < 3; i++) {
       vertexNum[i] = poly.m_polygonList[q].m_vertexList[i];
-      Vector3d &tmp = poly.m_vertexList[vertexNum[i]];
-      for(int j=0; j<3; j++)
+      Vector3d& tmp = poly.m_vertexList[vertexNum[i]];
+      for(int j = 0; j < 3; j++)
         point[i][j] = tmp[j];
     }
     pqpBody->AddTri(point[0], point[1], point[2], q);
@@ -82,7 +83,7 @@ IsInCollision(shared_ptr<Body> _body1, shared_ptr<Body> _body2,
 bool
 PQPSolid::
 IsInsideObstacle(const Vector3d& _pt, shared_ptr<Body> _body) {
-  static PQP_Model* mPRay = BuildPQPSegment(1e10, 0, 0);
+  static PQP_Model* ray = BuildPQPSegment(1e10, 0, 0);
 
   PQP_REAL t[3] = {_pt[0], _pt[1], _pt[2]};
   static PQP_REAL r[3][3] = {{1, 0, 0}, {0, 1, 0}, {0, 0, 1}};
@@ -91,30 +92,31 @@ IsInsideObstacle(const Vector3d& _pt, shared_ptr<Body> _body) {
   Transformation& t2 = _body->WorldTransformation();
 
   PQP_CollideResult result;
-  PQP_Collide(&result, r, t, mPRay, t2.rotation().matrix(), t2.translation(), body.get());
+  PQP_Collide(&result, r, t, ray,
+      t2.rotation().matrix(), t2.translation(), body.get());
 
   return result.NumPairs() % 2 == 1;
 }
 
 PQP_Model*
-PQPSolid::BuildPQPSegment(PQP_REAL _dX, PQP_REAL _dY, PQP_REAL _dZ) const {
+PQPSolid::BuildPQPSegment(PQP_REAL _x, PQP_REAL _y, PQP_REAL _z) const {
   //build a narrow triangle.
-  PQP_Model* pRay = new PQP_Model();
+  PQP_Model* ray = new PQP_Model();
 
-  if(_dY == 0 && _dZ == 0 && _dX == 0)
+  if(_x == 0 && _y == 0 && _z == 0)
      cerr << "! CollisionDetection::BuildPQPRay Warning : All are [0]" << endl;
 
-  static PQP_REAL tinyV = ((double)1e-20)/numeric_limits<long>::max();
+  static PQP_REAL tinyV = 1e-20/numeric_limits<long>::max();
   static PQP_REAL picoV = tinyV/2;
-  PQP_REAL p1[3] = { tinyV, tinyV, tinyV };
-  PQP_REAL p2[3] = { picoV, picoV, picoV };
-  PQP_REAL p3[3] = { _dX, _dY, _dZ};
+  static PQP_REAL p1[3] = { tinyV, tinyV, tinyV };
+  static PQP_REAL p2[3] = { picoV, picoV, picoV };
+  PQP_REAL p3[3] = { _x, _y, _z};
 
-  pRay->BeginModel();
-  pRay->AddTri(p1, p2, p3, 0);
-  pRay->EndModel();
+  ray->BeginModel();
+  ray->AddTri(p1, p2, p3, 0);
+  ray->EndModel();
 
-  return pRay;
+  return ray;
 }
 
 #endif

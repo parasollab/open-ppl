@@ -1,6 +1,6 @@
-#ifdef USE_RAPID
-
 #include "RapidCollisionDetection.h"
+
+#ifdef USE_RAPID
 
 #include <RAPID.H>
 
@@ -17,13 +17,13 @@ Build(Body* _body) {
   GMSPolyhedron& poly = _body->GetPolyhedron();
   shared_ptr<RAPID_model> rapidBody(new RAPID_model);
   rapidBody->BeginModel();
-  for(size_t q=0; q < poly.m_polygonList.size(); q++) {
+  for(size_t q = 0; q < poly.m_polygonList.size(); q++) {
     int vertexNum[3];
     double point[3][3];
-    for(int i=0; i<3; i++) {
+    for(int i = 0; i < 3; i++) {
       vertexNum[i] = poly.m_polygonList[q].m_vertexList[i];
-      Vector3d &tmp = poly.m_vertexList[vertexNum[i]];
-      for(int j=0; j<3; j++)
+      Vector3d& tmp = poly.m_vertexList[vertexNum[i]];
+      for(int j = 0; j < 3; j++)
         point[i][j] = tmp[j];
     }
     rapidBody->AddTri(point[0], point[1], point[2], q);

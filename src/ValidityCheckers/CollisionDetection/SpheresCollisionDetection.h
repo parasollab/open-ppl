@@ -5,9 +5,10 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup CollisionDetection
-/// @brief TODO
+/// @brief Collision detection using bounding spheres only.
 ///
-/// TODO
+/// Collision detection using bounding spheres. This implies that collisions
+/// will be unsure, but no collision is certain.
 ////////////////////////////////////////////////////////////////////////////////
 class BoundingSpheres : public CollisionDetectionMethod {
   public:
@@ -19,12 +20,12 @@ class BoundingSpheres : public CollisionDetectionMethod {
         shared_ptr<Body> _body2, CDInfo& _cdInfo);
 };
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup CollisionDetection
-/// @brief TODO
+/// @brief Collision detection using inscribed spheres only.
 ///
-/// TODO
+/// Collision detection using inscribed spheres only. This implies that
+/// collisions will be sure, but no collision is uncertain.
 ////////////////////////////////////////////////////////////////////////////////
 class InsideSpheres : public CollisionDetectionMethod {
   public:

@@ -1,4 +1,5 @@
 #include "CDInfo.h"
+
 #include <limits>
 
 CDInfo::
@@ -24,4 +25,3 @@ CDInfo::
 operator<(const CDInfo& _cdInfo) {
   return m_minDist < _cdInfo.m_minDist;
 }
-

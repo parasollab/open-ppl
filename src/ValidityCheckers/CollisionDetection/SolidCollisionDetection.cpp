@@ -2,9 +2,8 @@
 
 #ifdef USE_SOLID
 
-Solid::Solid() : CollisionDetectionMethod() {
-  m_name = "SOLID";
-  m_type = Exact;
+Solid::
+Solid() : CollisionDetectionMethod("SOLID", Exact) {
 }
 
 void
@@ -41,14 +40,15 @@ Build(Body* _body) {
   }
   DT_EndComplexShape();
   DT_ObjectHandle object = DT_CreateObject(NULL,shape);
-  _body->SetSolidBody(shared_ptr<DT_ObjectHandle>(new DT_ObjectHandle(object));
+  _body->SetSolidBody(shared_ptr<DT_ObjectHandle>(new DT_ObjectHandle(object)));
 }
 
 bool
-Solid::IsInCollision(shared_ptr<ActiveMultiBody> _robot,
-    shared_ptr<MultiBody> _obstacle, CDInfo& _cdInfo,
-    size_t _ignoreIAdjacentMultibodies) {
+Solid::
+IsInCollision(shared_ptr<Body> _body1, shared_ptr<Body> _body2,
+    CDInfo& _cdInfo) {
 
+  /// @todo dead code + need to update to new framework.
   _robot->UpdateVertexBase();
 
   if(_cdInfo.ret_all_info == false){
@@ -146,13 +146,12 @@ Solid::IsInCollision(shared_ptr<ActiveMultiBody> _robot,
             _cdInfo.object_point = _obstacle->GetBody(j)->WorldTransformation() * Vector3d(cp2[0],cp2[1],cp2[2]);
           }
         }
-
-      } // end for j
-    } // end for i
+      }
+    }
 
     return retVal;
-  }// _cdInfo.ret_all_info = true
+  }
 
-} // end IsInCollision_solid()
+}
 
 #endif

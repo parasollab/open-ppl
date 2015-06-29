@@ -1,11 +1,10 @@
 #include "SpheresCollisionDetection.h"
 
 #include "MPProblem/Geometry/Body.h"
-#include "Utilities/MetricUtils.h"
 
 BoundingSpheres::
 BoundingSpheres() : CollisionDetectionMethod("BoundingSpheres", CDType::Out) {
-  }
+}
 
 bool
 BoundingSpheres::
@@ -25,7 +24,7 @@ IsInCollision(shared_ptr<Body> _body1, shared_ptr<Body> _body2,
 
 InsideSpheres::
 InsideSpheres() : CollisionDetectionMethod("InsideSpheres", CDType::In) {
-  }
+}
 
 bool
 InsideSpheres::

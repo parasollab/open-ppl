@@ -1,21 +1,23 @@
-#ifndef VCLIPCOLLISIONDETECTION_H_
-#define VCLIPCOLLISIONDETECTION_H_
+#ifndef VCLIP_COLLISION_DETECTION_H_
+#define VCLIP_COLLISION_DETECTION_H_
 
 #ifdef USE_VCLIP
 
 #include "CollisionDetectionMethod.h"
 
 #include <vclip.h>
-typedef VclipPose VClipPose; //typedef allows our naming convention on VClip objects.
+typedef VclipPose VClipPose;
 
 #include <Transformation.h>
 using namespace mathtool;
 
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup CollisionDetection
-/// @brief TODO
+/// @brief VClip collision detection middleware
 ///
-/// TODO
+/// VClip collision detection can be used to compute distances between convex
+/// obstacles only, i.e., it can compute clearance for certain types of
+/// obstacles.
 ////////////////////////////////////////////////////////////////////////////////
 class VClip : public CollisionDetectionMethod {
   public:
@@ -23,18 +25,15 @@ class VClip : public CollisionDetectionMethod {
 
     virtual void Build(Body* _body);
 
-    /* Using VCLIP to check collision between two MultiBodys.
-     * Collision is checked in Body level between two MultiBodys,
-     * if any of Body from Robot collides with any of Body from obstacle,
-     * true will be returned.
-     *
-     * collision between two ajacent links will be ignore.
-     */
     virtual bool IsInCollision(shared_ptr<Body> _body1,
         shared_ptr<Body> _body2, CDInfo& _cdInfo);
 
   protected:
-    VClipPose GetVClipPose(const Transformation&, const Transformation&);
+    ////////////////////////////////////////////////////////////////////////////
+    /// @brief Computes VClip pose information from PMPL transforms
+    /// @param _t1 Transform 1
+    /// @param _t2 Transform 2
+    VClipPose GetVClipPose(const Transformation& _t1, const Transformation& _t2);
 };
 
 #endif

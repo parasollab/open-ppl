@@ -9,10 +9,19 @@
 ///        obstacles.
 ////////////////////////////////////////////////////////////////////////////////
 struct CDInfo {
+
+  //////////////////////////////////////////////////////////////////////////////
+  /// @param _retAllInfo Compute distance information if possible
   CDInfo(bool _retAllInfo = false);
 
+  //////////////////////////////////////////////////////////////////////////////
+  /// @brief Resets all data to default information
+  /// @param _retAllInfo Compute distance information if possible
   void ResetVars(bool _retAllInfo = false);
 
+  //////////////////////////////////////////////////////////////////////////////
+  /// @param _cdInfo Other CDInfo
+  /// @return Is minimum distance less than other's minimum distance
   bool operator<(const CDInfo& _cdInfo);
 
   bool m_retAllInfo;                ///< If this instance contains all
