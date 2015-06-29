@@ -1,6 +1,9 @@
 #ifndef ENVIRONMENT_H_
 #define ENVIRONMENT_H_
 
+#include "Transformation.h"
+using namespace mathtool;
+
 #include "Cfg/CfgMultiRobot.h"
 #include "MPProblem/Boundary.h"
 #include "Utilities/MPUtils.h"
@@ -181,15 +184,16 @@ class Environment {
     /// @brief Add Obstacle to environment
     /// @param _modelFileName path to .obj file that specifies obstacle geometry
     /// @param _where a 6 dof vector specifying position and orientation
-    /// @param _cdTypes OLD
+    /// @param _cdMethods CD methods to build CD models for
     /// @return Obstacle's index in m_obstacleBodies on success, -1 otherwise
-    //int AddObstacle(string _modelFileName, const Transformation& _where,
-    //    const vector<cd_predefined>& _cdTypes);
+    size_t AddObstacle(const string& _modelFileName,
+        const Transformation& _where,
+        const vector<CollisionDetectionMethod*>& _cdMethods);
 
     ////////////////////////////////////////////////////////////////////////////
     /// @brief Remove obstacle from environment
-    /// @param position Index in m_obstacleBodies to be removed
-    //void RemoveObstacleAt(size_t position);
+    /// @param _position Index in m_obstacleBodies to be removed
+    void RemoveObstacleAt(size_t _position);
 
     ////////////////////////////////////////////////////////////////////////////
     /// @brief Build collision detection models for external libraries
@@ -247,6 +251,5 @@ class Environment {
     vector<shared_ptr<StaticMultiBody>>
       m_obstacleBodies;                                 ///< Other multibodies
 };
-
 
 #endif

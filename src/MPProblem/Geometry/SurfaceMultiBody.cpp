@@ -27,6 +27,6 @@ SurfaceMultiBody::
 Write(ostream & _os) {
   _os << GetTagFromBodyType(GetBodyType()) << endl;
   _os << m_surfaceLabel << endl;
-  for(auto& body : fixedBody)
+  for(auto& body : m_fixedBody)
     _os << *body << endl;
 }

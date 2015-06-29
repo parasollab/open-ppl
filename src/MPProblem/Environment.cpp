@@ -9,15 +9,13 @@
 #include "MPProblem/Geometry/StaticMultiBody.h"
 #include "MPProblem/Geometry/SurfaceMultiBody.h"
 
-#define ENV_RES_DEFAULT 0.05
-
 Environment::
 Environment() :
   m_filename(""),
   m_saveDofs(false),
-  m_positionRes(ENV_RES_DEFAULT),
-  m_orientationRes(ENV_RES_DEFAULT),
-  m_rdRes(ENV_RES_DEFAULT) {
+  m_positionRes(0.05),
+  m_orientationRes(0.05),
+  m_rdRes(0.05) {
   }
 
 Environment::
@@ -25,13 +23,17 @@ Environment(XMLNode& _node) {
 
   m_filename = _node.Read("filename", true, "", "env filename");
   m_saveDofs = _node.Read("saveDofs", false, false, "save DoF flag");
-  m_positionRes = _node.Read("positionRes", false, -1.0, 0.0, MAX_DBL, "position resolution");
-  m_positionResFactor = _node.Read("positionResFactor", false, 0.05, 0.0, MAX_DBL, "position resolution factor");
-  m_orientationRes = _node.Read("orientationRes", false, 0.05, 0.0, MAX_DBL, "orientation resolution");
+  m_positionRes = _node.Read("positionRes", false, -1.0, 0.0, MAX_DBL,
+      "position resolution");
+  m_positionResFactor = _node.Read("positionResFactor", false,
+      0.05, 0.0, MAX_DBL, "position resolution factor");
+  m_orientationRes = _node.Read("orientationRes", false, 0.05, 0.0, MAX_DBL,
+      "orientation resolution");
 #if (defined(PMPReachDistCC) || defined(PMPReachDistCCFixed))
-  m_rdRes = _node.Read("rdRes", false, .005, .00001, MAX_DBL, "reachable distance resolution");
+  m_rdRes = _node.Read("rdRes", false, .005, .00001, MAX_DBL,
+      "reachable distance resolution");
 #else
-  m_rdRes = ENV_RES_DEFAULT;
+  m_rdRes = 0.05;
 #endif
   m_filename = MPProblemBase::GetPath(m_filename);
   Read(m_filename);
@@ -57,7 +59,6 @@ Read(string _filename) {
   m_navigableSurfaces.clear();
 
   // open file
-  //ifstream ifs(_filename.c_str());
   CountingStreamBuffer cbs(_filename);
   istream ifs(&cbs);
 
@@ -123,8 +124,7 @@ Read(string _filename) {
 #endif
   for(size_t i = 0; i < size; ++i) {
     if(m_saveDofs) {
-      ofstream dofFile(m_filename + "." +
-          ::to_string(i) + ".dof");
+      ofstream dofFile(m_filename + "." + ::to_string(i) + ".dof");
       m_activeBodies[i]->InitializeDOFs(&dofFile);
     }
     else
@@ -148,7 +148,6 @@ Print(ostream& _os) const {
   _os << "\tboundary::" << *m_boundary << endl;
 }
 
-////////////////////////////////////////////////////////////////////////////////
 /// @todo This will not output a readable env format.
 void
 Environment::
@@ -254,23 +253,22 @@ GetRandomObstacle() const {
 }
 
 ssize_t
-Environment::GetRandomNavigableSurfaceIndex() {
+Environment::
+GetRandomNavigableSurfaceIndex() {
   size_t numSurfaces = GetNavigableSurfacesCount();
   ssize_t rindex = LRand() % (numSurfaces+1) - 1;
   return rindex;
 }
 
-/*
-int
+size_t
 Environment::
-AddObstacle(string _modelFileName, const Transformation& _where,
-const vector<cd_predefined>& _cdTypes) {
-  shared_ptr<MultiBody> mb(new MultiBody());
-
+AddObstacle(const string& _modelFileName, const Transformation& _where,
+    const vector<CollisionDetectionMethod*>& _cdMethods) {
+  shared_ptr<StaticMultiBody> mb(new StaticMultiBody());
   mb->Initialize(_modelFileName, _where);
 
-  for(vector<cd_predefined>::const_iterator cdIter = _cdTypes.begin(); cdIter != _cdTypes.end(); ++cdIter)
-    mb->buildCDstructure(*cdIter);
+  for(const auto& cd : _cdMethods)
+    mb->BuildCDStructure(cd);
 
   m_obstacleBodies.push_back(mb);
 
@@ -280,15 +278,12 @@ const vector<cd_predefined>& _cdTypes) {
 void
 Environment::
 RemoveObstacleAt(size_t position) {
-  if (position < m_obstacleBodies.size()) {
-    shared_ptr<MultiBody> mb = m_obstacleBodies.at(position);
-
+  if(position < m_obstacleBodies.size())
     m_obstacleBodies.erase(m_obstacleBodies.begin()+position);
-  }
   else
-    cerr << "Environment::RemoveObstacleAt Warning: unable to remove obst at position " << position << endl;
+    cerr << "Environment::RemoveObstacleAt Warning: unable to remove obst at "
+      "position " << position << endl;
 }
-*/
 
 void
 Environment::

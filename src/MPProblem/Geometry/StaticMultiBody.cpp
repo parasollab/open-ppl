@@ -6,11 +6,26 @@ StaticMultiBody::
 StaticMultiBody() : MultiBody() {
 }
 
+void
+StaticMultiBody::
+Initialize(const string& _modelFileName, const Transformation& _where) {
+  shared_ptr<FixedBody> fix(new FixedBody(this, _modelFileName));
+  fix->Read();
+
+  Transformation worldTransform(_where);
+  fix->PutWorldTransformation(worldTransform);
+
+  AddBody(fix);
+
+  FindBoundingBox();
+  ComputeCenterOfMass();
+}
+
 shared_ptr<FixedBody>
 StaticMultiBody::
 GetFixedBody(size_t _index) const {
-  if(_index < fixedBody.size())
-    return fixedBody[_index];
+  if(_index < m_fixedBody.size())
+    return m_fixedBody[_index];
   else
     return shared_ptr<FixedBody>();
 }
@@ -18,7 +33,7 @@ GetFixedBody(size_t _index) const {
 void
 StaticMultiBody::
 AddBody(const shared_ptr<FixedBody>& _body) {
-  fixedBody.push_back(_body);
+  m_fixedBody.push_back(_body);
   MultiBody::AddBody(_body);
 }
 
@@ -41,6 +56,6 @@ void
 StaticMultiBody::
 Write(ostream & _os) {
   _os << GetTagFromBodyType(GetBodyType()) << endl;
-  for(auto& body : fixedBody)
+  for(auto& body : m_fixedBody)
     _os << *body << endl;
 }
