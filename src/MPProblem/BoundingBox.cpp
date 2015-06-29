@@ -178,6 +178,52 @@ Read(istream& _is, CountingStreamBuffer& _cbs) {
       throw ParseException(where,
           "Failed reading bounding box ranges. Only one provided.");
   }
+
+  //////////////////////////////////////////////////////////////////////////////
+  /* NEW Input when VIZMO gets updated
+
+  //check for first [
+  string tok;
+  char sep;
+  if(!(_is >> sep && sep == '['))
+    throw ParseException(_cbs.Where(),
+        "Failed reading bounding box. Missing '['.");
+
+  //read min:max 0
+  if(!(_is >> m_bbx[0].first >> sep >> m_bbx[0].second) && sep != ':')
+    throw ParseException(_cbs.Where(), "Failed reading bounding box range 0.");
+
+  //read ;
+  if(!(_is >> sep && sep == ';'))
+    throw ParseException(_cbs.Where(), "Failed reading separator ';'.");
+
+  //read min:max 1
+  if(!(_is >> m_bbx[1].first >> sep >> m_bbx[1].second) && sep != ':')
+    throw ParseException(_cbs.Where(), "Failed reading bounding box range 1.");
+
+  //eat white space until next char
+  while(_is) {
+    char c = _is.peek();
+    if(isspace(c))
+      _is.get(c);
+    else
+      break;
+  }
+
+  if(_is >> sep && sep == ';') {
+    //read min:max 2
+    if(!(_is >> m_bbx[2].first >> sep >> m_bbx[2].second) && sep != ':')
+      throw ParseException(_cbs.Where(),
+          "Failed reading bounding box range 2.");
+
+    if(!(_is >> sep && sep == ']'))
+      throw ParseException(_cbs.Where(),
+          "Failed reading bounding box. Missing ']'.");
+  }
+  else if(sep != ']')
+    throw ParseException(_cbs.Where(), "Failed reading bounding box.");
+  */
+  //////////////////////////////////////////////////////////////////////////////
 }
 
 void

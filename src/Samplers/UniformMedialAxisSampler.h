@@ -117,8 +117,8 @@ Sampler(CfgType& _cfg, shared_ptr<Boundary> _boundary,
   bool generated = false;
   int cfg1Witness;
 
-  double length = m_length ? m_length : env->
-    GetActiveBody(_cfg.GetRobotIndex())->GetMaxAxisRange();
+  double length = m_length ? m_length :
+    env->GetRobot(_cfg.GetRobotIndex())->GetMaxAxisRange();
 
   //extend boundary
   env->ExpandBoundary(length, _cfg.GetRobotIndex());
@@ -127,7 +127,7 @@ Sampler(CfgType& _cfg, shared_ptr<Boundary> _boundary,
   CfgType& cfg1 = _cfg;
 
   //restore boundary
-  env->ExpandBoundary(-length - 2*env->GetActiveBody(_cfg.GetRobotIndex())->
+  env->ExpandBoundary(-length - 2*env->GetRobot(_cfg.GetRobotIndex())->
       GetBoundingSphereRadius(), _cfg.GetRobotIndex());
 
   CfgType tmp;
@@ -241,9 +241,9 @@ FindVertex(int _witness, const CfgType& _c) {
   stat->StartClock("FindVertex");
   //Find the vertex which the witness points belong to first
   //assume obstacle multibodies have 1 body
-  GMSPolyhedron& polyhedron = env->GetStaticBody(_witness)->
+  GMSPolyhedron& polyhedron = env->GetObstacle(_witness)->
     GetBody(0)->GetPolyhedron();
-  const Transformation& t = env->GetStaticBody(_witness)->
+  const Transformation& t = env->GetObstacle(_witness)->
     GetBody(0)->WorldTransformation();
 
   Vector3d witnessPoint = -t * _c.m_clearanceInfo.m_objectPoint;
@@ -268,9 +268,9 @@ FindTriangle(int _witness, const CfgType& _c) {
   stat->StartClock("FindTriangle");
   //Find the triangles which the witness points belong to first
   //assume obstacle multibodies have 1 body
-  GMSPolyhedron& polyhedron = env->GetStaticBody(_witness)->
+  GMSPolyhedron& polyhedron = env->GetObstacle(_witness)->
     GetBody(0)->GetPolyhedron();
-  const Transformation& t = env->GetStaticBody(_witness)->
+  const Transformation& t = env->GetObstacle(_witness)->
     GetBody(0)->WorldTransformation();
 
   Vector3d witnessPoint = -t * _c.m_clearanceInfo.m_objectPoint;
@@ -331,7 +331,7 @@ bool
 UniformMedialAxisSampler<MPTraits>::
 CheckVertVert(int _w, int _v1, int _v2) {
   Environment* env = this->GetEnvironment();
-  GMSPolyhedron& polyhedron = env->GetStaticBody(_w)->GetBody(0)->GetPolyhedron();
+  GMSPolyhedron& polyhedron = env->GetObstacle(_w)->GetBody(0)->GetPolyhedron();
   vector<GMSPolygon>& polygons = polyhedron.m_polygonList;
 
   typedef vector<GMSPolygon>::iterator PIT;
@@ -351,7 +351,7 @@ UniformMedialAxisSampler<MPTraits>::
 CheckTriTri(int _w, int _t1, int _t2) {
   Environment* env = this->GetEnvironment();
   //Check if two triangles are adjacent to each other
-  GMSPolyhedron& polyhedron = env->GetStaticBody(_w)->
+  GMSPolyhedron& polyhedron = env->GetObstacle(_w)->
     GetBody(0)->GetPolyhedron();
 
   //test if there is a common edge (v0, v1) between the triangles
@@ -399,7 +399,7 @@ CheckTriTri(int _w, int _t1, int _t2) {
   int vert = polyhedron.m_polygonList[_t1].
     CommonVertex(polyhedron.m_polygonList[_t2]);
   if(vert != -1) {
-    return !env->GetStaticBody(_w)->GetBody(0)->
+    return !env->GetObstacle(_w)->GetBody(0)->
       IsConvexHullVertex(polyhedron.m_vertexList[vert]);
   }
   //no common edge or vertex, triangles are not adjacent
@@ -414,7 +414,7 @@ UniformMedialAxisSampler<MPTraits>::
 CheckVertTri(int _w, int _v, int _t) {
   Environment* env = this->GetEnvironment();
   //Check if vertex belongs to triangle, thus are adjacent
-  GMSPolyhedron& polyhedron = env->GetStaticBody(_w)->
+  GMSPolyhedron& polyhedron = env->GetObstacle(_w)->
     GetBody(0)->GetPolyhedron();
   Vector3d& vert = polyhedron.m_vertexList[_v];
   GMSPolygon& poly = polyhedron.m_polygonList[_t];

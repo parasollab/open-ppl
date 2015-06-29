@@ -46,9 +46,9 @@ Connection::
 GetTagFromJointType(const Connection::JointType& _jt){
   switch(_jt){
     case REVOLUTE:
-      return "REVOLUTE";
+      return "Revolute";
     case SPHERICAL:
-      return "SPHERICAL";
+      return "Spherical";
     default:
       return "Unknown Joint Type";
   }

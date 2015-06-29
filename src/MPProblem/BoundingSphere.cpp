@@ -90,11 +90,37 @@ Read(istream& _is, CountingStreamBuffer& _cbs) {
       "Failed reading center point of bounding sphere.");
   m_radius = ReadField<double>(_is, _cbs,
       "Failed reading radius of bounding sphere.");
+
+  //////////////////////////////////////////////////////////////////////////////
+  /* NEW Input when VIZMO gets updated
+
+  //check for first [
+  string tok;
+  if(!(_is >> tok && tok == "["))
+    throw ParseException(_cbs.Where(),
+        "Failed reading bounding sphere. Missing '['.");
+
+  m_center = ReadField<Vector3d>(_is, _cbs,
+      "Failed reading center point of bounding sphere.");
+
+  //read comma
+  if(!(_is >> tok && tok == ";"))
+    throw ParseException(_cbs.Where(), "Failed reading bounding box. "
+        "Missing ';' separator between dimensions.");
+
+  m_radius = ReadField<double>(_is, _cbs,
+      "Failed reading radius of bounding sphere.");
+
+  //check for ending ]
+  if(!(_is >> tok && tok == "]"))
+    throw ParseException(_cbs.Where(), "Failed reading bounding sphere. Missing ']'.");
+  */
+  //////////////////////////////////////////////////////////////////////////////
 }
 
 void
 BoundingSphere::
 Write(ostream& _os) const {
-  _os << "[ " << m_center << " " << m_radius << " ]";
+  _os << "[ " << m_center << " ; " << m_radius << " ]";
 }
 

@@ -152,33 +152,33 @@ class Environment {
     /// @{
     ////////////////////////////////////////////////////////////////////////////
     /// @return Number of Active MultiBodies
-    size_t GetActiveBodyCount() const {return m_activeBodies.size();}
+    size_t NumRobots() const {return m_robots.size();}
     ////////////////////////////////////////////////////////////////////////////
     /// @return Number of Static MultiBodies
-    size_t GetObstacleCount() const {return m_obstacleBodies.size();}
+    size_t NumObstacles() const {return m_obstacles.size();}
     ////////////////////////////////////////////////////////////////////////////
     /// @return Number of Surface MultiBodies
-    size_t GetNavigableSurfacesCount() const {return m_navigableSurfaces.size();}
+    size_t NumSurfaces() const {return m_surfaces.size();}
 
     ////////////////////////////////////////////////////////////////////////////
     /// @param _index Requested multibody
     /// @return Pointer to active multibody
-    shared_ptr<ActiveMultiBody> GetActiveBody(size_t _index) const;
+    shared_ptr<ActiveMultiBody> GetRobot(size_t _index) const;
     ////////////////////////////////////////////////////////////////////////////
     /// @param _index Requested multibody
     /// @return Pointer to static multibody
-    shared_ptr<StaticMultiBody> GetStaticBody(size_t _index) const;
+    shared_ptr<StaticMultiBody> GetObstacle(size_t _index) const;
     ////////////////////////////////////////////////////////////////////////////
     /// @param _index Requested multibody
     /// @return Pointer to surface multibody
-    shared_ptr<SurfaceMultiBody> GetNavigableSurface(size_t _index) const;
+    shared_ptr<SurfaceMultiBody> GetSurface(size_t _index) const;
 
     ////////////////////////////////////////////////////////////////////////////
     /// @return Pointer to random static multibody
-    shared_ptr<MultiBody> GetRandomObstacle() const;
+    shared_ptr<StaticMultiBody> GetRandomObstacle() const;
     ////////////////////////////////////////////////////////////////////////////
     /// @return Index to random navigable surface. -1 means base surface.
-    ssize_t GetRandomNavigableSurfaceIndex();
+    ssize_t GetRandomSurfaceIndex();
 
     ////////////////////////////////////////////////////////////////////////////
     /// @brief Add Obstacle to environment
@@ -193,7 +193,7 @@ class Environment {
     ////////////////////////////////////////////////////////////////////////////
     /// @brief Remove obstacle from environment
     /// @param _position Index in m_obstacleBodies to be removed
-    void RemoveObstacleAt(size_t _position);
+    void RemoveObstacle(size_t _position);
 
     ////////////////////////////////////////////////////////////////////////////
     /// @brief Build collision detection models for external libraries
@@ -209,6 +209,10 @@ class Environment {
     /// @param _is Input stream
     /// @param _cbs Counting stream buffer for accurate error reporting
     void ReadBoundary(istream& _is, CountingStreamBuffer& _cbs);
+    ////////////////////////////////////////////////////////////////////////////
+    /// @brief Write boundary information
+    /// @param _os Output stream
+    void WriteBoundary(ostream& _os);
 
     ////////////////////////////////////////////////////////////////////////////
     /// @brief Automatically compute resolutions
@@ -245,11 +249,9 @@ class Environment {
 
     shared_ptr<Boundary> m_boundary; ///< Boundary of the workspace
 
-    vector<shared_ptr<ActiveMultiBody>> m_activeBodies; ///< Robots
-    vector<shared_ptr<SurfaceMultiBody>>
-      m_navigableSurfaces;                              ///< Surfaces
-    vector<shared_ptr<StaticMultiBody>>
-      m_obstacleBodies;                                 ///< Other multibodies
+    vector<shared_ptr<ActiveMultiBody>> m_robots;    ///< Robots
+    vector<shared_ptr<StaticMultiBody>> m_obstacles; ///< Other multibodies
+    vector<shared_ptr<SurfaceMultiBody>> m_surfaces; ///< Surfaces
 };
 
 #endif

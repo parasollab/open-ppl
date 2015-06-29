@@ -391,13 +391,13 @@ Body::
 GetTagFromBase(const Base& _b) {
   switch(_b) {
     case PLANAR:
-      return "PLANAR";
+      return "Planar";
     case VOLUMETRIC:
-      return "VOLUMETRIC";
+      return "Volumetric";
     case FIXED:
-      return "FIXED";
+      return "Fixed";
     case JOINT:
-      return "JOINT";
+      return "Joint";
     default:
       return "Unknown Base Type";
   }
@@ -408,9 +408,9 @@ Body::
 GetTagFromMovement(const BaseMovement& _bm) {
   switch(_bm){
     case ROTATIONAL:
-      return "ROTATIONAL";
+      return "Rotational";
     case TRANSLATIONAL:
-      return "TRANSLATIONAL";
+      return "Translational";
     default:
       return "Unknown Base Movement";
   }

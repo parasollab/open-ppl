@@ -65,11 +65,11 @@ TraceObstacle<MPTraits>::Extend(const CfgType& _near, const CfgType& _dir,
   int cIndex = cdInfo.m_collidingObstIndex;
   int obsContactIndex = cdInfo.m_rapidContactID2;
   if( cIndex == -1 ) {
-    cIndex = LRand() % env->GetObstacleCount();
+    cIndex = LRand() % env->NumObstacles();
     obsContactIndex = -1;
   }
   GMSPolyhedron& poly =
-      env->GetStaticBody(cIndex)->GetFixedBody(0)->GetWorldPolyhedron();
+      env->GetObstacle(cIndex)->GetFixedBody(0)->GetWorldPolyhedron();
   vector<Vector3d>& vertexList    = poly.m_vertexList;
   vector<GMSPolygon>& polygonList = poly.m_polygonList;
 

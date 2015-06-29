@@ -54,9 +54,9 @@ Read(string _filename) {
   m_modelDataDir = m_filename.substr(0, sl == string::npos ? 0 : sl);
   Body::m_modelDataDir = m_modelDataDir + "/";
 
-  m_activeBodies.clear();
-  m_obstacleBodies.clear();
-  m_navigableSurfaces.clear();
+  m_robots.clear();
+  m_obstacles.clear();
+  m_surfaces.clear();
 
   // open file
   CountingStreamBuffer cbs(_filename);
@@ -90,7 +90,7 @@ Read(string _filename) {
           shared_ptr<ActiveMultiBody> mb(new ActiveMultiBody());
           mb->SetBodyType(bodyType);
           mb->Read(ifs, cbs);
-          m_activeBodies.push_back(mb);
+          m_robots.push_back(mb);
           break;
         }
       case MultiBody::BodyType::Internal:
@@ -99,7 +99,7 @@ Read(string _filename) {
           shared_ptr<StaticMultiBody> mb(new StaticMultiBody());
           mb->SetBodyType(bodyType);
           mb->Read(ifs, cbs);
-          m_obstacleBodies.push_back(mb);
+          m_obstacles.push_back(mb);
           break;
         }
       case MultiBody::BodyType::Surface:
@@ -107,17 +107,17 @@ Read(string _filename) {
           shared_ptr<SurfaceMultiBody> mb(new SurfaceMultiBody());
           mb->SetBodyType(bodyType);
           mb->Read(ifs, cbs);
-          m_navigableSurfaces.push_back(mb);
+          m_surfaces.push_back(mb);
           break;
         }
     }
   }
 
-  if(m_activeBodies.empty())
+  if(m_robots.empty())
     throw ParseException(cbs.Where(),
         "No active multibodies in the environment.");
 
-  size_t size = m_activeBodies.size();
+  size_t size = m_robots.size();
   Cfg::SetSize(size);
 #ifdef PMPCfgMultiRobot
   CfgMultiRobot::m_numRobot = size;
@@ -125,12 +125,12 @@ Read(string _filename) {
   for(size_t i = 0; i < size; ++i) {
     if(m_saveDofs) {
       ofstream dofFile(m_filename + "." + ::to_string(i) + ".dof");
-      m_activeBodies[i]->InitializeDOFs(&dofFile);
+      m_robots[i]->InitializeDOFs(&dofFile);
     }
     else
-      m_activeBodies[i]->InitializeDOFs();
+      m_robots[i]->InitializeDOFs();
 
-    Cfg::InitRobots(m_activeBodies[i], i);
+    Cfg::InitRobots(m_robots[i], i);
   }
 
   ComputeResolution();
@@ -148,10 +148,26 @@ Print(ostream& _os) const {
   _os << "\tboundary::" << *m_boundary << endl;
 }
 
-/// @todo This will not output a readable env format.
 void
 Environment::
 Write(ostream & _os) {
+  WriteBoundary(_os);
+  _os << endl << endl
+    << "MultiBodies" << endl
+    << m_robots.size() + m_obstacles.size() + m_surfaces.size()
+    << endl << endl;
+  for(const auto& body : m_robots) {
+    body->Write(_os);
+    _os << endl;
+  }
+  for(const auto& body : m_obstacles) {
+    body->Write(_os);
+    _os << endl;
+  }
+  for(const auto& body : m_surfaces) {
+    body->Write(_os);
+    _os << endl;
+  }
 }
 
 bool
@@ -181,10 +197,10 @@ ResetBoundary(double _d, size_t _robotIndex) {
   minx = miny = minz = numeric_limits<double>::max();
   maxx = maxy = maxz = -numeric_limits<double>::max();
 
-  double robotRadius = GetActiveBody(_robotIndex)->GetBoundingSphereRadius();
+  double robotRadius = m_robots[_robotIndex]->GetBoundingSphereRadius();
   _d += robotRadius;
 
-  for(auto& body : m_obstacleBodies) {
+  for(auto& body : m_obstacles) {
     body->FindBoundingBox();
     const double* tmp = body->GetBoundingBox();
     minx = min(minx, tmp[0]);  maxx = max(maxx, tmp[1]);
@@ -204,7 +220,7 @@ void
 Environment::
 ExpandBoundary(double _d, size_t _robotIndex) {
 
-  double robotRadius = GetActiveBody(_robotIndex)->GetBoundingSphereRadius();
+  double robotRadius = m_robots[_robotIndex]->GetBoundingSphereRadius();
   _d += robotRadius;
 
   vector<pair<double, double> > originBBX(3);
@@ -217,47 +233,45 @@ ExpandBoundary(double _d, size_t _robotIndex) {
 
 shared_ptr<ActiveMultiBody>
 Environment::
-GetActiveBody(size_t _index) const {
-  if(_index < 0 || _index >= m_activeBodies.size())
+GetRobot(size_t _index) const {
+  if(_index < 0 || _index >= m_robots.size())
     throw RunTimeException(WHERE,
         "Cannot access ActiveBody '" + ::to_string(_index) + "'.");
-  return m_activeBodies[_index];
+  return m_robots[_index];
 }
 
 shared_ptr<StaticMultiBody>
 Environment::
-GetStaticBody(size_t _index) const {
-  if(_index < 0 || _index >= m_obstacleBodies.size())
+GetObstacle(size_t _index) const {
+  if(_index < 0 || _index >= m_obstacles.size())
     throw RunTimeException(WHERE,
         "Cannot access StaticBody '" + ::to_string(_index) + "'.");
-  return m_obstacleBodies[_index];
+  return m_obstacles[_index];
 }
 
 shared_ptr<SurfaceMultiBody>
 Environment::
-GetNavigableSurface(size_t _index) const {
-  if(_index < 0 || _index >= m_navigableSurfaces.size())
+GetSurface(size_t _index) const {
+  if(_index < 0 || _index >= m_surfaces.size())
     throw RunTimeException(WHERE,
         "Cannot access Navigable Surface '" + ::to_string(_index) + "'.");
-  return m_navigableSurfaces[_index];
+  return m_surfaces[_index];
 }
 
-shared_ptr<MultiBody>
+shared_ptr<StaticMultiBody>
 Environment::
 GetRandomObstacle() const {
-  if(m_obstacleBodies.empty())
+  if(m_obstacles.empty())
     throw RunTimeException(WHERE, "No static multibodies to select from.");
 
-  size_t rIndex = LRand() % m_obstacleBodies.size();
-  return m_obstacleBodies[rIndex];
+  size_t rIndex = LRand() % m_obstacles.size();
+  return m_obstacles[rIndex];
 }
 
 ssize_t
 Environment::
-GetRandomNavigableSurfaceIndex() {
-  size_t numSurfaces = GetNavigableSurfacesCount();
-  ssize_t rindex = LRand() % (numSurfaces+1) - 1;
-  return rindex;
+GetRandomSurfaceIndex() {
+  return LRand() % (m_surfaces.size() + 1) - 1;
 }
 
 size_t
@@ -270,16 +284,16 @@ AddObstacle(const string& _modelFileName, const Transformation& _where,
   for(const auto& cd : _cdMethods)
     mb->BuildCDStructure(cd);
 
-  m_obstacleBodies.push_back(mb);
+  m_obstacles.push_back(mb);
 
-  return m_obstacleBodies.size()-1;
+  return m_obstacles.size()-1;
 }
 
 void
 Environment::
-RemoveObstacleAt(size_t position) {
-  if(position < m_obstacleBodies.size())
-    m_obstacleBodies.erase(m_obstacleBodies.begin()+position);
+RemoveObstacle(size_t position) {
+  if(position < m_obstacles.size())
+    m_obstacles.erase(m_obstacles.begin()+position);
   else
     cerr << "Environment::RemoveObstacleAt Warning: unable to remove obst at "
       "position " << position << endl;
@@ -288,9 +302,9 @@ RemoveObstacleAt(size_t position) {
 void
 Environment::
 BuildCDStructure(CollisionDetectionMethod* _cdMethod) {
-  for(auto& body : m_activeBodies)
+  for(auto& body : m_robots)
     body->BuildCDStructure(_cdMethod);
-  for(auto& body : m_obstacleBodies)
+  for(auto& body : m_obstacles)
     body->BuildCDStructure(_cdMethod);
 }
 
@@ -317,14 +331,21 @@ ReadBoundary(istream& _is, CountingStreamBuffer& _cbs) {
 
 void
 Environment::
+WriteBoundary(ostream& _os) {
+  _os << "Boundary " << m_boundary->Type() << " ";
+  m_boundary->Write(_os);
+}
+
+void
+Environment::
 ComputeResolution() {
   double bodiesMinSpan = numeric_limits<double>::max();
-  for(auto& body : m_activeBodies) {
+  for(auto& body : m_robots) {
     body->FindBoundingBox();
     bodiesMinSpan = min(bodiesMinSpan, body->GetMaxAxisRange());
   }
 
-  for(auto& body : m_obstacleBodies) {
+  for(auto& body : m_obstacles) {
     body->FindBoundingBox();
     bodiesMinSpan = min(bodiesMinSpan, body->GetMaxAxisRange());
   }
@@ -344,10 +365,10 @@ Environment::
 InCSpace(const Cfg& _cfg, shared_ptr<Boundary> _b) {
   size_t activeBodyIndex = _cfg.GetRobotIndex();
   size_t index = 0;
-  shared_ptr<ActiveMultiBody>& rit = m_activeBodies[activeBodyIndex];
+  shared_ptr<ActiveMultiBody>& rit = m_robots[activeBodyIndex];
   //typedef vector<Robot>::iterator RIT;
-  //for(RIT rit = m_activeBodies[activeBodyIndex]->m_robots.begin();
-  //    rit != m_activeBodies[activeBodyIndex]->m_robots.end(); rit++) {
+  //for(RIT rit = m_robots[activeBodyIndex]->m_robots.begin();
+  //    rit != m_robots[activeBodyIndex]->m_robots.end(); rit++) {
     if(rit->m_baseType != Body::FIXED) {
       Vector3d p;
       p[0] = _cfg[index];
@@ -395,7 +416,7 @@ bool
 Environment::
 InWSpace(const Cfg& _cfg, shared_ptr<Boundary> _b) {
 
-  shared_ptr<ActiveMultiBody> robot = m_activeBodies[_cfg.GetRobotIndex()];
+  shared_ptr<ActiveMultiBody> robot = m_robots[_cfg.GetRobotIndex()];
 
   if(_b->GetClearance(_cfg.GetRobotCenterPosition()) < robot->GetBoundingSphereRadius()) { //faster, loose check
     // Robot is close to wall, have a strict check.

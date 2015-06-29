@@ -153,7 +153,7 @@ class MPProblem : public MPProblemBase
     ////////////////////////////////////////////////////////////////////////////
     /// @brief Remove obstacle from Environment
     /// @param _index Index of obstacle in Environment
-    void RemoveObstacleAt(size_t _index);
+    void RemoveObstacle(size_t _index);
 
   protected:
     virtual void Initialize();
@@ -525,9 +525,9 @@ AddObstacle(const string& _modelFileName, const Transformation& _where) {
 template<class MPTraits>
 void
 MPProblem<MPTraits>::
-RemoveObstacleAt(size_t _index) {
+RemoveObstacle(size_t _index) {
   if(m_environment)
-    m_environment->RemoveObstacleAt(_index);
+    m_environment->RemoveObstacle(_index);
   else
     cerr << "MPProblem::RemoveObstacleAt Warning: Attempted to remove an "
       "obstacle from a NULL environment" << endl;

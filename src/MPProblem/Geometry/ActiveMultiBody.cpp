@@ -445,11 +445,11 @@ Read(istream& _is, CountingStreamBuffer& _cbs) {
 void
 ActiveMultiBody::
 Write(ostream & _os) {
-  _os << "ACTIVE" << endl;
+  _os << GetTagFromBodyType(GetBodyType()) << endl;
   _os << freeBody.size() << endl;
   for(auto& body : freeBody)
     _os << *body << endl;
-  _os << "Connection" << endl;
+  _os << "Connections" << endl;
   size_t numConnection = 0;
   for(auto& body : freeBody)
     numConnection += body->ForwardConnectionCount();

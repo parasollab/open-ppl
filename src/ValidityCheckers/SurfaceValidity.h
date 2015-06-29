@@ -55,7 +55,7 @@ SurfaceValidity<MPTraits>::IsValidImpl(CfgType& _cfg, CDInfo& _cdInfo, const str
   bool result = false;
   int sid = _cfg.GetSurfaceID();
   if( this->m_debug ) {
-     cout << " active bodies: " << env->GetActiveBodyCount() << " usable bodies: " << env->GetUsableMultiBodyCount() << endl;
+     cout << " active bodies: " << env->GetRobotCount() << " usable bodies: " << env->GetUsableMultiBodyCount() << endl;
   }
   if( sid == -1 ) {
     //call default validity checker specified

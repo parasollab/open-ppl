@@ -148,7 +148,7 @@ class SurfaceSampler : public SamplerMethod<MPTraits> {
 	if( i==-1 ) thisSurfaceSampleByDensity = false;
 	cout << " Sampling for surface: " << i << " density sampling: " << thisSurfaceSampleByDensity << endl;
 	if( this->m_debug) cout << " Sampling for surface: " << i << endl;
-	if( this->m_debug) cout << " num usable multibodies: " << env->GetUsableMultiBodyCount() << " active bodies: " << env->GetActiveBodyCount() << endl;
+	if( this->m_debug) cout << " num usable multibodies: " << env->GetUsableMultiBodyCount() << " active bodies: " << env->GetRobotCount() << endl;
 	string iSurfName="BASE";
 	if( i>=0 )
 	   iSurfName=env->GetNavigableSurface((size_t) i)->GetLabel();

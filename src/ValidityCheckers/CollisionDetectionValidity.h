@@ -184,7 +184,7 @@ CollisionDetectionValidity<MPTraits>::IsInCollision(CDInfo& _cdInfo,
 
   //get robot
   Environment* env = this->GetEnvironment();
-  shared_ptr<ActiveMultiBody> robot = env->GetActiveBody(_robotIndex);
+  shared_ptr<ActiveMultiBody> robot = env->GetRobot(_robotIndex);
 
   //check self collision
   if(!m_ignoreSelfCollision && robot->GetBodyCount() > 1 &&
@@ -194,11 +194,11 @@ CollisionDetectionValidity<MPTraits>::IsInCollision(CDInfo& _cdInfo,
   }
 
   //check obstacle collisions
-  size_t numObst = env->GetObstacleCount();
+  size_t numObst = env->NumObstacles();
   for(size_t i = 0; i < numObst; ++i) {
     CDInfo cdInfo(_cdInfo.m_retAllInfo);
     bool coll = IsInObstCollision(
-        cdInfo, robot, env->GetStaticBody(i), _callName);
+        cdInfo, robot, env->GetObstacle(i), _callName);
 
     //make sure to store closest obstacle information
     if(cdInfo < _cdInfo) {
@@ -305,13 +305,13 @@ bool
 CollisionDetectionValidity<MPTraits>::
 IsInsideObstacle(const CfgType& _cfg) {
   Environment* env = this->GetEnvironment();
-  size_t nMulti = env->GetObstacleCount();
+  size_t nMulti = env->NumObstacles();
 
   Vector3d robotPt(_cfg.GetData()[0], _cfg.GetData()[1], _cfg.GetData()[2]);
 
   for(size_t i = 0; i < nMulti; ++i)
     if(m_cdMethod->IsInsideObstacle(
-          robotPt, env->GetStaticBody(i)->GetBody(0)))
+          robotPt, env->GetObstacle(i)->GetBody(0)))
       return true;
   return false;
 }
