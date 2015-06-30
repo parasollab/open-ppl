@@ -77,12 +77,12 @@ class SurfaceGridSampler : public SamplerMethod<MPTraits> {
       string callee(this->GetNameAndLabel());
       callee += "::SampleImpl()";
       ValidityCheckerPointer vcp = this->GetValidityChecker(m_vcLabel);
-      int numSurfaces=  env->GetNavigableSurfacesCount(); //Number of navigable surface
+      int numSurfaces=  env->NumSurfaces(); //Number of navigable surface
       for(int i=-1; i<numSurfaces; i++) {
         //For the navigable surfaces not including the surface -1 (ground)
         if(i>=0){
           //Get navigable surface by number and get the polyhedron of that surface
-          shared_ptr<SurfaceMultiBody> surfi = env->GetNavigableSurface((size_t) i);
+          shared_ptr<SurfaceMultiBody> surfi = env->GetSurface((size_t) i);
           shared_ptr<FixedBody> fb = surfi->GetFixedBody(0);
           GMSPolyhedron& polyhedron = fb->GetWorldPolyhedron();
           //Obtain the bondaries of the surface

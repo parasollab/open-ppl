@@ -138,7 +138,7 @@ class SurfaceSampler : public SamplerMethod<MPTraits> {
       callee += "::SampleImpl()";
       ValidityCheckerPointer vcp = this->GetValidityChecker(m_vcLabel);
 
-      int numSurfaces =  env->GetNavigableSurfacesCount();
+      int numSurfaces =  env->NumSurfaces();
       int attempts = 0;
       SurfaceMedialAxisUtility<MPTraits> mau(this->GetMPProblem(), m_vcLabel, "Euclidean");
       //mau.SetDebug(true);
@@ -148,10 +148,10 @@ class SurfaceSampler : public SamplerMethod<MPTraits> {
 	if( i==-1 ) thisSurfaceSampleByDensity = false;
 	cout << " Sampling for surface: " << i << " density sampling: " << thisSurfaceSampleByDensity << endl;
 	if( this->m_debug) cout << " Sampling for surface: " << i << endl;
-	if( this->m_debug) cout << " num usable multibodies: " << env->GetUsableMultiBodyCount() << " active bodies: " << env->GetRobotCount() << endl;
+	if( this->m_debug) cout << " active bodies: " << env->NumRobots() << endl;
 	string iSurfName="BASE";
 	if( i>=0 )
-	   iSurfName=env->GetNavigableSurface((size_t) i)->GetLabel();
+	   iSurfName=env->GetSurface((size_t) i)->GetLabel();
 	if( find(m_surfacesToIgnore.begin(),m_surfacesToIgnore.end(), iSurfName) != m_surfacesToIgnore.end() ) continue;
 	map<string,double>::iterator nit = m_customSurfaceClearance.find(iSurfName);
 
@@ -164,7 +164,7 @@ class SurfaceSampler : public SamplerMethod<MPTraits> {
 	vector<double> cfgsAreaRepresented;
 
 	if( thisSurfaceSampleByDensity ) { //sample by density
-	  shared_ptr<SurfaceMultiBody> surfi = env->GetNavigableSurface((size_t) i);
+	  shared_ptr<SurfaceMultiBody> surfi = env->GetSurface((size_t) i);
 	  shared_ptr<FixedBody> fb = surfi->GetFixedBody(0);
 	  GMSPolyhedron& polyhedron = fb->GetWorldPolyhedron();
 	  double surfaceArea = polyhedron.m_area;
@@ -276,7 +276,7 @@ class SurfaceSampler : public SamplerMethod<MPTraits> {
 		  double  h     = tmp.GetHeight();
 		  Point3d pos3d(pos2d[0], h, pos2d[1]);
 		  //push to medial axis - call
-		  shared_ptr<SurfaceMultiBody> surfi = env->GetNavigableSurface((size_t) i);
+		  shared_ptr<SurfaceMultiBody> surfi = env->GetSurface((size_t) i);
 		  shared_ptr<FixedBody> fb = surfi->GetFixedBody(0);
 		  GMSPolyhedron& polyhedron = fb->GetWorldPolyhedron();
 

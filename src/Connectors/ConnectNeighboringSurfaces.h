@@ -141,10 +141,10 @@ Connect(RoadmapType* _rm,
   m_totalSuccess = m_totalFailure = 0;
 
   Environment* env = this->GetEnvironment();
-  int numSurfaces =  env->GetNavigableSurfacesCount();
+  int numSurfaces =  env->NumSurfaces();
   for(int i=0; i<numSurfaces; i++) {
     int id = i;
-    shared_ptr<SurfaceMultiBody> mbSurf1 = env->GetNavigableSurface(i);
+    shared_ptr<SurfaceMultiBody> mbSurf1 = env->GetSurface(i);
     string iSurfName="BASE";
     if( i>=0 )
       iSurfName=mbSurf1->GetLabel();;
@@ -215,7 +215,7 @@ Connect(RoadmapType* _rm,
 	//loop over all surfaces
 	for(int j=0; j<numSurfaces && !qPtOnSurf; j++) {
 	  if(i==j) continue;//skip same surface..obvi
-	  shared_ptr<SurfaceMultiBody> mbSurf2 = env->GetNavigableSurface(j);
+	  shared_ptr<SurfaceMultiBody> mbSurf2 = env->GetSurface(j);
 	  string iSurfName2=mbSurf2->GetLabel();
 	  if(i>=0)
 	     iSurfName2=mbSurf2->GetLabel();;

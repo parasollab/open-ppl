@@ -1746,12 +1746,11 @@ double
 SurfaceMedialAxisUtility<MPTraits>::
 GetClearance2DSurf(Environment* _env, const Point2d& _pos, Point2d& _cdPt) {
   if(this->m_debug) cout << "MedialAxisUtility::GetClearance2DSurf" <<endl;
-  if(this->m_debug) cout << "num multibodies: " << _env->GetUsableMultiBodyCount() << endl;
 
   double minDist=_env->GetBoundary()->GetClearance2DSurf(_pos,_cdPt);
 
-  for(size_t i=0; i<_env->GetNavigableSurfacesCount(); i++) {
-    shared_ptr<SurfaceMultiBody> mb = _env->GetNavigableSurface(i);
+  for(size_t i=0; i<_env->NumSurfaces(); i++) {
+    shared_ptr<SurfaceMultiBody> mb = _env->GetSurface(i);
     //find clearance
     Point2d c;
     double dist = GetClearance2DSurf(mb,_pos,c,minDist);

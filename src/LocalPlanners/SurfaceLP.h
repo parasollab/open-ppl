@@ -92,7 +92,7 @@ SurfaceLP<MPTraits>::IsOnSpecifiedSurface(Environment* _env, CfgType& _c1, int _
   else {
     ////////////////////////////////////////////////////////////////////////
     //from 0--numSurfaces-1, check height
-    shared_ptr<SurfaceMultiBody> surfaceBody = _env->GetNavigableSurface(_sid);
+    shared_ptr<SurfaceMultiBody> surfaceBody = _env->GetSurface(_sid);
     shared_ptr<FixedBody> fixedBody = surfaceBody->GetFixedBody(0);
     Vector3d bodyCenter = fixedBody->GetCenterOfMass();
     GMSPolyhedron& polyhedron = fixedBody->GetWorldPolyhedron();
@@ -178,7 +178,7 @@ SurfaceLP<MPTraits>::IsConnected(
        if( this->m_debug ) cout << "\t tick: " << i << " on surface: " << tick.GetSurfaceID() << endl;
     }
     else {
-      for(int sid = BASE_SURFACE; sid < (int)env->GetNavigableSurfacesCount() &&
+      for(int sid = BASE_SURFACE; sid < (int)env->NumSurfaces() &&
           !foundValidSurfForTick; sid++) {
 	CfgType tmpTick = tick;
 	tmpTick.SetSurfaceID(sid);//set SurfaceID to test if 2D collision is okay

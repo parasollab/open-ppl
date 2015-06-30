@@ -334,7 +334,7 @@ CfgSurface::GetPositionOrientationFrom2Cfg(const Cfg& _c1, const Cfg& _c2) {
 void
 CfgSurface::GetRandomCfgImpl(Environment* _env, shared_ptr<Boundary> _bb) {
   if( m_surfaceID == INVALID_SURFACE ) { // need to set appropriate surface id
-    int rindex = _env->GetRandomNavigableSurfaceIndex();
+    int rindex = _env->GetRandomSurfaceIndex();
     m_surfaceID = rindex;
   }
 
@@ -346,7 +346,7 @@ CfgSurface::GetRandomCfgImpl(Environment* _env, shared_ptr<Boundary> _bb) {
   }
   else { //surface id points to something valid
     //////////////////////////////////////////////////////////////////////////////
-    shared_ptr<SurfaceMultiBody> surface_body = _env->GetNavigableSurface(m_surfaceID);
+    shared_ptr<SurfaceMultiBody> surface_body = _env->GetSurface(m_surfaceID);
     shared_ptr<FixedBody> fb = surface_body->GetFixedBody(0);
     GMSPolyhedron& polyhedron = fb->GetWorldPolyhedron();
     Point3d surfPt3d = polyhedron.GetRandPtOnSurface();
