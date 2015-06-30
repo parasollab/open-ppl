@@ -6,84 +6,136 @@
 class Boundary;
 class FreeBody;
 
-enum class DofType {Positional, Rotational, Joint};
+////////////////////////////////////////////////////////////////////////////////
+/// @brief Type of free movement
+////////////////////////////////////////////////////////////////////////////////
+enum class DofType {
+  Positional, ///< Translational motion R = [min, max]
+  Rotational, ///< Rotational motion in S = [-1, 1]
+  Joint       ///< Rotational motion in R = [min, max]
+};
 
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup Environment
-/// @brief A collection of geometries in workspace reprenting, e.g., robots
+/// @brief A collection of geometries in workspace reprenting robots
 ///
-/// A MultiBody represent a Obstacle or a Robot in workspace. MultiBody contain
-/// one or more Body s, either FixedBody s or FreeBody s. Many access methods
-/// are implemented to allow client access internal information about MultiBody
-/// instance, like number of Body s, Fixed and Free, Bounding box, center of
-/// mass, surface area size, bounding sphere radius, etc.
+/// A MultiBody representing a Robot in workspace.
 ////////////////////////////////////////////////////////////////////////////////
 class ActiveMultiBody : public MultiBody {
   public:
-    typedef shared_ptr<Connection> Joint;
-    typedef vector<Joint> JointMap;
-    typedef JointMap::iterator JointIT;
+    typedef shared_ptr<Connection> Joint; ///< Joint of robot
+
+    ////////////////////////////////////////////////////////////////////////////
+    /// @name Contructors
+    /// @{
 
     ActiveMultiBody();
 
-    ActiveMultiBody(const ActiveMultiBody&) = delete;
-    ActiveMultiBody& operator=(const ActiveMultiBody&) = delete;
+    ActiveMultiBody(const ActiveMultiBody&) = delete;            ///< No copy
+    ActiveMultiBody& operator=(const ActiveMultiBody&) = delete; ///< No assign
 
-    ///Return a free body accroding to the given index. the index should be in [0,GetFreeBodyCount())
-    shared_ptr<FreeBody> GetFreeBody(size_t _index) const;
-    ///Number of free body in this mutilbody.
-    size_t GetFreeBodyCount() const;
-    ///Search index for given FreeBody, _b, if _b is not in this multibody, -1 is returned.
+    /// @}
+    ////////////////////////////////////////////////////////////////////////////
+
+    ////////////////////////////////////////////////////////////////////////////
+    /// @name Bodies
+    /// @{
+
+    ////////////////////////////////////////////////////////////////////////////
+    /// @return Number of free body
+    size_t NumFreeBody() const;
+
+    ////////////////////////////////////////////////////////////////////////////
+    /// @param _b Body to find
+    /// @return Index for given FreeBody, -1 if it is not found
     size_t GetFreeBodyIndex(const FreeBody& _b) const;
-    size_t GetFreeBodyIndex(const shared_ptr<FreeBody>& _b) const;
-    ///Add a Free Body
-    void AddBody(const shared_ptr<FreeBody>& _body);
 
-    shared_ptr<Body> GetFirstBody() const;
+    ////////////////////////////////////////////////////////////////////////////
+    /// @return Free body accroding to the given index
+    shared_ptr<FreeBody> GetFreeBody(size_t _index) const;
 
-    ///Get number of of links in "this" MultiBody by checking forward connection.
-    size_t GetNumberOfLinks() const;
+    /// @}
+    ////////////////////////////////////////////////////////////////////////////
 
-    /**Determine if the MultiBody at hand is a manipulator.
-     *If there is no free body attached to it,
-     *it is considered to be a manipulator
-     */
-    bool IsManipulator() const;
+    ////////////////////////////////////////////////////////////////////////////
+    /// @name Robot Information
+    /// @{
 
+    ////////////////////////////////////////////////////////////////////////////
+    /// @brief Initialize DOFTypes of robot
+    /// @param _os If not null, DOF type information will be output here as well
     void InitializeDOFs(ostream* _os = NULL);
 
-    //polygonal approximation
-    void PolygonalApproximation(vector<Vector3d>& result);
+    ////////////////////////////////////////////////////////////////////////////
+    /// @return Base type
+    Body::Base GetBaseType() const {return m_baseType;}
+    ////////////////////////////////////////////////////////////////////////////
+    /// @return Base movement type
+    Body::BaseMovement GetBaseMovementType() const {return m_baseMovement;}
 
-    /**Configure the joint by the given amount of displacement.
-    */
-    void ConfigureJoint(double * _s, size_t _dof);
-
-    JointMap& GetJointMap() {return m_joints;}
+    ////////////////////////////////////////////////////////////////////////////
+    /// @return Number of Connection in this multibody
     size_t NumJoints() const {return m_joints.size();}
+    ////////////////////////////////////////////////////////////////////////////
+    /// @return All Connection for this multibody
+    const vector<Joint>& GetJoints() const {return m_joints;}
 
-    size_t m_baseIndex; //free body index for base
-    shared_ptr<Body> m_baseBody;
-    Body::Base m_baseType;
-    Body::BaseMovement m_baseMovement;
-
-    JointMap m_joints;
-
+    ////////////////////////////////////////////////////////////////////////////
+    /// @return DOF type information of robot
     const vector<DofType>& GetDOFTypes() const {return m_dofTypes;}
+    ////////////////////////////////////////////////////////////////////////////
+    /// @return Number of DOF for this robot
     size_t DOF() const {return m_dofTypes.size();}
+    ////////////////////////////////////////////////////////////////////////////
+    /// @return Number of positional DOF for this robot
     size_t PosDOF() const;
 
+    /// @}
+    ////////////////////////////////////////////////////////////////////////////
+
+    ////////////////////////////////////////////////////////////////////////////
+    /// @name Configuration Methods
+    /// @{
+
+    ////////////////////////////////////////////////////////////////////////////
+    /// @brief Place robot in _v
+    /// @param _v Configuration DOF parameters
     void Configure(const vector<double>& _v);
+
+    ////////////////////////////////////////////////////////////////////////////
+    /// @brief Sample random configuration in boundary
+    /// @param _boundary Boundary
     vector<double> GetRandomCfg(shared_ptr<Boundary>& _boundary);
 
-    virtual void Read(istream& is, CountingStreamBuffer& _cbs);
-    virtual void Write(ostream & _os);
+    ////////////////////////////////////////////////////////////////////////////
+    /// @param[out] result Polygonal Approximation
+    void PolygonalApproximation(vector<Vector3d>& _result);
+
+    /// @}
+    ////////////////////////////////////////////////////////////////////////////
+
+    ////////////////////////////////////////////////////////////////////////////
+    /// @name I/O
+    /// @{
+
+    virtual void Read(istream& _is, CountingStreamBuffer& _cbs);
+    virtual void Write(ostream& _os);
+
+    /// @}
+    ////////////////////////////////////////////////////////////////////////////
 
   private:
+    ////////////////////////////////////////////////////////////////////////////
+    /// @param _body Body to add
+    void AddBody(const shared_ptr<FreeBody>& _body);
 
-    vector<shared_ptr<FreeBody> > freeBody;
-    vector<DofType> m_dofTypes;
-
+    vector<shared_ptr<FreeBody>> m_freeBody; ///< All free body
+    vector<DofType> m_dofTypes;              ///< DOF type of robot motions
+    size_t m_baseIndex;                      ///< Free body index for base
+    shared_ptr<FreeBody> m_baseBody;         ///< Body of base
+    Body::Base m_baseType;                   ///< Type of base
+    Body::BaseMovement m_baseMovement;       ///< Type of movement for base
+    vector<Joint> m_joints;                  ///< All Connections
 };
 
 #endif

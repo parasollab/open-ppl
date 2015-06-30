@@ -2,31 +2,27 @@
 
 #include <numeric>
 
-#include "Cfg/Cfg.h"
-#include "MPProblem/Boundary.h"
-
 MultiBody::
 MultiBody() :
-  m_comAvailable(false), m_bodyType(BodyType::Passive),
-  m_maxAxisRange(0) {
-    fill(m_boundingBox, m_boundingBox+6, 0);
+  m_multiBodyType(MultiBodyType::Passive),
+  m_radius(0), m_maxAxisRange(0) {
   }
 
 MultiBody::
 ~MultiBody() {
 }
 
-MultiBody::BodyType
+MultiBody::MultiBodyType
 MultiBody::
-GetBodyTypeFromTag(const string& _tag, const string& _where) {
+GetMultiBodyTypeFromTag(const string& _tag, const string& _where) {
   if(_tag == "PASSIVE")
-    return BodyType::Passive;
+    return MultiBodyType::Passive;
   else if(_tag == "ACTIVE")
-    return BodyType::Active;
+    return MultiBodyType::Active;
   else if(_tag == "SURFACE")
-    return BodyType::Surface;
+    return MultiBodyType::Surface;
   else if(_tag == "INTERNAL")
-    return BodyType::Internal;
+    return MultiBodyType::Internal;
   else
     throw ParseException(_where,
         "Unknown MultiBody type '" + _tag + "'."
@@ -34,87 +30,21 @@ GetBodyTypeFromTag(const string& _tag, const string& _where) {
 }
 
 string
-MultiBody::GetTagFromBodyType(const BodyType& _b) {
+MultiBody::
+GetTagFromMultiBodyType(const MultiBodyType& _b) {
   switch(_b) {
-    case BodyType::Active:
+    case MultiBodyType::Active:
       return "Active";
-    case BodyType::Passive:
+    case MultiBodyType::Passive:
       return "Passive";
-    case BodyType::Internal:
+    case MultiBodyType::Internal:
       return "Internal";
-    case BodyType::Surface:
+    case MultiBodyType::Surface:
       return "Surface";
     default:
       return "Unknown Base Type";
   }
 }
-
-shared_ptr<Body>
-MultiBody::
-GetBody(size_t _index) const {
-  if(_index < 0 || _index >= m_bodies.size())
-    throw RunTimeException(WHERE,
-        "Cannot access Body '" + ::to_string(_index) + "'.");
-  return m_bodies[_index];
-}
-
-size_t
-MultiBody::
-GetBodyCount() const {
-  return m_bodies.size();
-}
-
-void
-MultiBody::
-AddBody(const shared_ptr<Body>& _body) {
-  m_bodies.push_back(_body);
-}
-
-
-//-------------------------------------------------------------------
-//  GetCenterOfMass
-//-------------------------------------------------------------------
-Vector3d MultiBody::GetCenterOfMass()
-{
-  if(!m_comAvailable)
-    ComputeCenterOfMass();
-  return CenterOfMass;
-}
-
-//===================================================================
-//  GetMaxAxisRange
-//===================================================================
-double MultiBody::GetMaxAxisRange() const
-{
-  return m_maxAxisRange;
-}
-
-//===================================================================
-//  GetBoundingBox
-//===================================================================
-const double * MultiBody::GetBoundingBox() const
-{
-  return m_boundingBox;
-}
-
-double
-MultiBody::
-GetBoundingSphereRadius() const {
-  double radius = m_bodies[0]->GetPolyhedron().m_maxRadius;
-  for(size_t i = 1; i < m_bodies.size(); ++i)
-    radius += m_bodies[i]->GetPolyhedron().m_maxRadius * 2.0;
-  return radius;
-}
-
-double
-MultiBody::
-GetInsideSphereRadius() const {
-  double radius = numeric_limits<double>::lowest();
-  for(auto& body : m_bodies)
-    radius = max(body->GetPolyhedron().m_minRadius, radius);
-  return radius;
-}
-
 
 void
 MultiBody::
@@ -123,29 +53,22 @@ BuildCDStructure(CollisionDetectionMethod* _cdMethod) {
     body->BuildCDStructure(_cdMethod);
 }
 
-//===================================================================
-//  ComputeCenterOfMass
-//
-//  The degree of approximation in calculating center of mass is
-//  the same as in Body.cpp. To be more accurate, we need to
-//  modify this function to consider the mass of each body.
-//
-//===================================================================
 void
 MultiBody::
-ComputeCenterOfMass() {
-  Vector3d sum;
-  for(auto& body : m_bodies)
-    sum += body->GetCenterOfMass();
-  CenterOfMass = sum / m_bodies.size();
-  m_comAvailable = true;
+AddBody(const shared_ptr<Body>& _body) {
+  m_bodies.push_back(_body);
 }
 
+void
+MultiBody::
+FindMultiBodyInfo() {
+  // Find COM
+  m_com(0, 0, 0);
+  for(auto& body : m_bodies)
+    m_com += body->GetCenterOfMass();
+  m_com /= m_bodies.size();
 
-//===================================================================
-//  FindBoundingBox
-//===================================================================
-void MultiBody::FindBoundingBox() {
+  //Find Bounding box
   double minx, miny, minz, maxx, maxy, maxz;
   minx = miny = minz = numeric_limits<double>::max();
   maxx = maxy = maxz = numeric_limits<double>::lowest();
@@ -158,52 +81,19 @@ void MultiBody::FindBoundingBox() {
     minz = min(minz, tmp[4]); maxz = max(maxz, tmp[5]);
   }
 
-  ///////////////////////////////////////////////////////////
-  //Pack
   m_boundingBox[0] = minx; m_boundingBox[1] = maxx;
   m_boundingBox[2] = miny; m_boundingBox[3] = maxy;
   m_boundingBox[4] = minz; m_boundingBox[5] = maxz;
 
-  ///////////////////////////////////////////////////////////
-  // Find m_maxAxisRange
+  // Find max axis range
   double rangex = maxx - minx;
   double rangey = maxy - miny;
   double rangez = maxz - minz;
   m_maxAxisRange = max(rangex, max(rangey,rangez));
-}
 
-
-#ifdef USE_SOLID
-void MultiBody::UpdateVertexBase() {
-  for(vector<shared_ptr<FixedBody> >::iterator I = fixedBody.begin(); I != fixedBody.end(); ++I)
-    (*I)->UpdateVertexBase();
-  for(vector<shared_ptr<FreeBody> >::iterator I = freeBody.begin(); I != freeBody.end(); ++I)
-    (*I)->UpdateVertexBase();
-}
-#endif
-
-
-bool
-MultiBody::
-IsInternal() const{
-  return m_bodyType == BodyType::Internal;
-}
-
-bool
-MultiBody::
-IsSurface() const {
-  return m_bodyType == BodyType::Surface;
-}
-
-bool
-MultiBody::
-IsActive() const{
-  return m_bodyType == BodyType::Active;
-}
-
-bool
-MultiBody::
-IsPassive() const{
-  return m_bodyType == BodyType::Passive;
+  // Find bounding radius
+  m_radius = m_bodies[0]->GetPolyhedron().m_maxRadius;
+  for(size_t i = 1; i < m_bodies.size(); ++i)
+    m_radius += m_bodies[i]->GetPolyhedron().m_maxRadius * 2.0;
 }
 

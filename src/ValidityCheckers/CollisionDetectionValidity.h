@@ -5,6 +5,8 @@
 
 #include "MPProblem/Environment.h"
 #include "MPProblem/Geometry/ActiveMultiBody.h"
+#include "MPProblem/Geometry/FixedBody.h"
+#include "MPProblem/Geometry/FreeBody.h"
 #include "MPProblem/Geometry/StaticMultiBody.h"
 
 #include "Utilities/MetricUtils.h"
@@ -187,7 +189,7 @@ CollisionDetectionValidity<MPTraits>::IsInCollision(CDInfo& _cdInfo,
   shared_ptr<ActiveMultiBody> robot = env->GetRobot(_robotIndex);
 
   //check self collision
-  if(!m_ignoreSelfCollision && robot->GetBodyCount() > 1 &&
+  if(!m_ignoreSelfCollision && robot->NumFreeBody() > 1 &&
       IsInSelfCollision(_cdInfo, robot, _callName)) {
     _cdInfo.m_collidingObstIndex = -1;
     return true;
@@ -251,11 +253,11 @@ IsInSelfCollision(CDInfo& _cdInfo, shared_ptr<ActiveMultiBody> _rob,
 
   CollisionDetectionMethod::CDType tp = m_cdMethod->GetType();
 
-  size_t numBody = _rob->GetBodyCount();
+  size_t numBody = _rob->NumFreeBody();
   for(size_t i = 0; i < numBody - 1; ++i) {
     for(size_t j = i+1; j < numBody; ++j) {
-      shared_ptr<Body> body1 = _rob->GetBody(i);
-      shared_ptr<Body> body2 = _rob->GetBody(j);
+      shared_ptr<Body> body1 = _rob->GetFreeBody(i);
+      shared_ptr<Body> body2 = _rob->GetFreeBody(j);
 
       if(body1->IsWithinI(body2, m_ignoreIAdjacentLinks))
         continue;
@@ -279,12 +281,12 @@ IsInObstCollision(CDInfo& _cdInfo, shared_ptr<ActiveMultiBody> _rob,
   CollisionDetectionMethod::CDType tp = m_cdMethod->GetType();
 
   bool collision = false;
-  size_t numBody = _rob->GetBodyCount();
-  shared_ptr<Body> obst = _obst->GetBody(0);
+  size_t numBody = _rob->NumFreeBody();
+  shared_ptr<Body> obst = _obst->GetFixedBody(0);
 
   for(size_t i = 0; i < numBody; ++i) {
     CDInfo cdInfo(_cdInfo.m_retAllInfo);
-    bool coll = m_cdMethod->IsInCollision(_rob->GetBody(i), obst, cdInfo);
+    bool coll = m_cdMethod->IsInCollision(_rob->GetFreeBody(i), obst, cdInfo);
 
     //retain minimum distance information
     if(cdInfo < _cdInfo)
@@ -311,7 +313,7 @@ IsInsideObstacle(const CfgType& _cfg) {
 
   for(size_t i = 0; i < nMulti; ++i)
     if(m_cdMethod->IsInsideObstacle(
-          robotPt, env->GetObstacle(i)->GetBody(0)))
+          robotPt, env->GetObstacle(i)->GetFixedBody(0)))
       return true;
   return false;
 }

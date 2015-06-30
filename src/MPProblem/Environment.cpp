@@ -81,31 +81,28 @@ Read(string _filename) {
         "Failed reading multibody type."
         " Options are: active, passive, internal, or surface.");
 
-    MultiBody::BodyType bodyType =
-      MultiBody::GetBodyTypeFromTag(multibodyType, cbs.Where());
+    MultiBody::MultiBodyType bodyType =
+      MultiBody::GetMultiBodyTypeFromTag(multibodyType, cbs.Where());
 
     switch(bodyType) {
-      case MultiBody::BodyType::Active:
+      case MultiBody::MultiBodyType::Active:
         {
           shared_ptr<ActiveMultiBody> mb(new ActiveMultiBody());
-          mb->SetBodyType(bodyType);
           mb->Read(ifs, cbs);
           m_robots.push_back(mb);
           break;
         }
-      case MultiBody::BodyType::Internal:
-      case MultiBody::BodyType::Passive:
+      case MultiBody::MultiBodyType::Internal:
+      case MultiBody::MultiBodyType::Passive:
         {
-          shared_ptr<StaticMultiBody> mb(new StaticMultiBody());
-          mb->SetBodyType(bodyType);
+          shared_ptr<StaticMultiBody> mb(new StaticMultiBody(bodyType));
           mb->Read(ifs, cbs);
           m_obstacles.push_back(mb);
           break;
         }
-      case MultiBody::BodyType::Surface:
+      case MultiBody::MultiBodyType::Surface:
         {
           shared_ptr<SurfaceMultiBody> mb(new SurfaceMultiBody());
-          mb->SetBodyType(bodyType);
           mb->Read(ifs, cbs);
           m_surfaces.push_back(mb);
           break;
@@ -201,7 +198,6 @@ ResetBoundary(double _d, size_t _robotIndex) {
   _d += robotRadius;
 
   for(auto& body : m_obstacles) {
-    body->FindBoundingBox();
     const double* tmp = body->GetBoundingBox();
     minx = min(minx, tmp[0]);  maxx = max(maxx, tmp[1]);
     miny = min(miny, tmp[2]);  maxy = max(maxy, tmp[3]);
@@ -278,7 +274,8 @@ size_t
 Environment::
 AddObstacle(const string& _modelFileName, const Transformation& _where,
     const vector<CollisionDetectionMethod*>& _cdMethods) {
-  shared_ptr<StaticMultiBody> mb(new StaticMultiBody());
+  shared_ptr<StaticMultiBody> mb(
+      new StaticMultiBody(MultiBody::MultiBodyType::Passive));
   mb->Initialize(_modelFileName, _where);
 
   for(const auto& cd : _cdMethods)
@@ -341,12 +338,10 @@ Environment::
 ComputeResolution() {
   double bodiesMinSpan = numeric_limits<double>::max();
   for(auto& body : m_robots) {
-    body->FindBoundingBox();
     bodiesMinSpan = min(bodiesMinSpan, body->GetMaxAxisRange());
   }
 
   for(auto& body : m_obstacles) {
-    body->FindBoundingBox();
     bodiesMinSpan = min(bodiesMinSpan, body->GetMaxAxisRange());
   }
 
@@ -366,49 +361,44 @@ InCSpace(const Cfg& _cfg, shared_ptr<Boundary> _b) {
   size_t activeBodyIndex = _cfg.GetRobotIndex();
   size_t index = 0;
   shared_ptr<ActiveMultiBody>& rit = m_robots[activeBodyIndex];
-  //typedef vector<Robot>::iterator RIT;
-  //for(RIT rit = m_robots[activeBodyIndex]->m_robots.begin();
-  //    rit != m_robots[activeBodyIndex]->m_robots.end(); rit++) {
-    if(rit->m_baseType != Body::FIXED) {
-      Vector3d p;
-      p[0] = _cfg[index];
-      p[1] = _cfg[index+1];
-      index+=2;
-      if(rit->m_baseType == Body::VOLUMETRIC) {
-        p[2] = _cfg[index];
+  if(rit->GetBaseType() != Body::FIXED) {
+    Vector3d p;
+    p[0] = _cfg[index];
+    p[1] = _cfg[index+1];
+    index+=2;
+    if(rit->GetBaseType() == Body::VOLUMETRIC) {
+      p[2] = _cfg[index];
+      index++;
+    }
+    if(!_b->InBoundary(p))
+      return false;
+    if(rit->GetBaseMovementType() == Body::ROTATIONAL) {
+      if(rit->GetBaseType() == Body::PLANAR) {
+        if(fabs(_cfg[index]) > 1)
+          return false;
         index++;
       }
-      if(!_b->InBoundary(p))
-        return false;
-      if(rit->m_baseMovement == Body::ROTATIONAL) {
-        if(rit->m_baseType == Body::PLANAR) {
+      else {
+        for(size_t i = 0; i<3; ++i) {
           if(fabs(_cfg[index]) > 1)
             return false;
           index++;
         }
-        else {
-          for(size_t i = 0; i<3; ++i) {
-            if(fabs(_cfg[index]) > 1)
-              return false;
-            index++;
-          }
-        }
       }
     }
-    typedef ActiveMultiBody::JointMap::iterator MIT;
-    for(auto& joint : rit->m_joints) {
-      if(joint->GetConnectionType() != Connection::NONACTUATED) {
-        if(_cfg[index] < joint->GetJointLimits(0).first || _cfg[index] > joint->GetJointLimits(0).second)
+  }
+  for(auto& joint : rit->GetJoints()) {
+    if(joint->GetConnectionType() != Connection::NONACTUATED) {
+      if(_cfg[index] < joint->GetJointLimits(0).first || _cfg[index] > joint->GetJointLimits(0).second)
+        return false;
+      index++;
+      if(joint->GetConnectionType() == Connection::SPHERICAL) {
+        if(_cfg[index] < joint->GetJointLimits(1).first || _cfg[index] > joint->GetJointLimits(1).second)
           return false;
         index++;
-        if(joint->GetConnectionType() == Connection::SPHERICAL) {
-          if(_cfg[index] < joint->GetJointLimits(1).first || _cfg[index] > joint->GetJointLimits(1).second)
-            return false;
-          index++;
-        }
       }
     }
-  //}
+  }
   return true;
 }
 
@@ -423,7 +413,7 @@ InWSpace(const Cfg& _cfg, shared_ptr<Boundary> _b) {
     _cfg.ConfigEnvironment(); // Config the robot in the environment.
 
     //check each part of the robot multibody for being inside of the boundary
-    for(size_t m = 0; m < robot->GetFreeBodyCount(); ++m) {
+    for(size_t m = 0; m < robot->NumFreeBody(); ++m) {
 
       typedef vector<Vector3d>::const_iterator VIT;
 

@@ -3,7 +3,8 @@
 #include "FixedBody.h"
 
 StaticMultiBody::
-StaticMultiBody() : MultiBody() {
+StaticMultiBody(MultiBodyType _m) : MultiBody() {
+  m_multiBodyType = _m;
 }
 
 void
@@ -17,8 +18,7 @@ Initialize(const string& _modelFileName, const Transformation& _where) {
 
   AddBody(fix);
 
-  FindBoundingBox();
-  ComputeCenterOfMass();
+  FindMultiBodyInfo();
 }
 
 shared_ptr<FixedBody>
@@ -27,7 +27,8 @@ GetFixedBody(size_t _index) const {
   if(_index < m_fixedBody.size())
     return m_fixedBody[_index];
   else
-    return shared_ptr<FixedBody>();
+    throw RunTimeException(WHERE,
+        "Cannot access FixedBody(" + ::to_string(_index) + ").");
 }
 
 void
@@ -40,22 +41,18 @@ AddBody(const shared_ptr<FixedBody>& _body) {
 void
 StaticMultiBody::
 Read(istream& _is, CountingStreamBuffer& _cbs) {
-
-  //all are same type, namely fixed body
   shared_ptr<FixedBody> fix(new FixedBody(this));
   fix->Read(_is, _cbs);
 
-  //add fixed body to multibody
   AddBody(fix);
 
-  FindBoundingBox();
-  ComputeCenterOfMass();
+  FindMultiBodyInfo();
 }
 
 void
 StaticMultiBody::
 Write(ostream & _os) {
-  _os << GetTagFromBodyType(GetBodyType()) << endl;
+  _os << GetTagFromMultiBodyType(m_multiBodyType) << endl;
   for(auto& body : m_fixedBody)
     _os << *body << endl;
 }

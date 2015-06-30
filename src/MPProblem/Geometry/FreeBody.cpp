@@ -100,6 +100,7 @@ ComputeWorldTransformation(set<int>& _visited) {
 
     return m_worldTransformation;
   }
+  //return m_worldTransformation;
 }
 
 ostream&

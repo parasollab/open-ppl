@@ -15,16 +15,18 @@ class SurfaceMultiBody : public StaticMultiBody {
 
     SurfaceMultiBody();
 
-    SurfaceMultiBody(const SurfaceMultiBody&) = delete;
-    SurfaceMultiBody& operator=(const SurfaceMultiBody&) = delete;
+    SurfaceMultiBody(const SurfaceMultiBody&) = delete;            ///< No copy
+    SurfaceMultiBody& operator=(const SurfaceMultiBody&) = delete; ///< No assign
 
+    ////////////////////////////////////////////////////////////////////////////
+    /// @return Surface's label
     const string& GetLabel() const {return m_surfaceLabel;}
 
-    virtual void Read(istream& is, CountingStreamBuffer& _cbs);
-    virtual void Write(ostream & _os);
+    virtual void Read(istream& _is, CountingStreamBuffer& _cbs);
+    virtual void Write(ostream& _os);
 
   private:
-    string m_surfaceLabel;
+    string m_surfaceLabel; ///< Unique label for surface
 };
 
 #endif

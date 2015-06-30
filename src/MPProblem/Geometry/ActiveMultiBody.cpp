@@ -5,79 +5,32 @@
 
 ActiveMultiBody::
 ActiveMultiBody() : MultiBody() {
-}
-
-shared_ptr<FreeBody>
-ActiveMultiBody::
-GetFreeBody(size_t _index) const {
-  if(_index < freeBody.size())
-    return freeBody[_index];
-  else
-    return shared_ptr<FreeBody>();
+  m_multiBodyType = MultiBodyType::Active;
 }
 
 size_t
 ActiveMultiBody::
-GetFreeBodyCount() const {
-  return freeBody.size();
+NumFreeBody() const {
+  return m_freeBody.size();
 }
 
 size_t
 ActiveMultiBody::
 GetFreeBodyIndex(const FreeBody& _b) const {
-  for(size_t i=0; i<freeBody.size(); ++i)
-    if(&_b == freeBody[i].get())
+  for(size_t i=0; i<m_freeBody.size(); ++i)
+    if(&_b == m_freeBody[i].get())
       return i;
   return -1;
 }
 
-size_t
+shared_ptr<FreeBody>
 ActiveMultiBody::
-GetFreeBodyIndex(const shared_ptr<FreeBody>& _b) const {
-  for(size_t i=0; i<freeBody.size(); ++i)
-    if(_b == freeBody[i])
-      return i;
-  return -1;
-}
-
-void
-ActiveMultiBody::
-AddBody(const shared_ptr<FreeBody>& _body) {
-  freeBody.push_back(_body);
-  MultiBody::AddBody(_body);
-}
-
-shared_ptr<Body>
-ActiveMultiBody::GetFirstBody() const {
-  //  I assume that the first body in the list is the anchor body.
-  //  That is, all other bodies in the MultiBody are linked sequentially
-  //  in a "forward" direction (with possible branches) from this anchor.
-  if(!freeBody.empty())
-    return freeBody.front();
+GetFreeBody(size_t _index) const {
+  if(_index < m_freeBody.size())
+    return m_freeBody[_index];
   else
-    return shared_ptr<Body>();
-}
-
-size_t
-ActiveMultiBody::
-GetNumberOfLinks() const {
-  shared_ptr<Body> bb = GetFirstBody();
-  if(bb == shared_ptr<Body>())
-    return 0;
-
-  shared_ptr<Body> b = bb;
-  int i = 1;
-  while (b->ForwardConnectionCount() > 0) {
-    b = b->GetForwardConnection(0).GetNextBody();
-    i++;
-  }
-  return i-1;
-}
-
-bool
-ActiveMultiBody::
-IsManipulator() const {
-  return !freeBody.empty();
+    throw RunTimeException(WHERE,
+        "Cannot access FixedBody(" + ::to_string(_index) + ").");
 }
 
 void
@@ -165,134 +118,6 @@ InitializeDOFs(ostream* _os) {
   }
 }
 
-void
-ActiveMultiBody::
-ConfigureJoint(double * _s, size_t _dof) {
-  for(size_t i = 0; i < _dof; ++i)
-    freeBody[i]->GetForwardConnection(0).GetDHparameters().m_theta = _s[i];
-}
-
-struct vertex_index_distance {
-  size_t first_index, second_index;
-  double distance;
-
-  vertex_index_distance(size_t i1 = MAX_INT, size_t i2 = MAX_INT, double d = MAX_INT) : first_index(i1), second_index(i2), distance(d) {}
-  ~vertex_index_distance() {}
-
-  bool operator<(const vertex_index_distance& v) const { return distance < v.distance; }
-};
-
-struct first_index_equals : public unary_function<vertex_index_distance, bool> {
-  size_t index;
-
-  first_index_equals(size_t i) : index(i) {}
-  ~first_index_equals() {}
-
-  bool operator()(const vertex_index_distance& v) const { return v.first_index == index; }
-};
-
-struct second_index_equals : public unary_function<vertex_index_distance, bool> {
-  size_t index;
-
-  second_index_equals(size_t i) : index(i) {}
-  ~second_index_equals() {}
-
-  bool operator()(const vertex_index_distance& v) const { return v.second_index == index; }
-};
-
-void
-ActiveMultiBody::
-PolygonalApproximation(vector<Vector3d>& result) {
-  result.clear();
-
-  int nfree = GetFreeBodyCount();
-
-  if(nfree == 1)
-  {
-    //rigid body, return the line between the first 4 vertices and the second 4 vertices of the world bounding box
-    GMSPolyhedron bbox = this->GetFreeBody(0)->GetWorldBoundingBox();
-
-    Vector3d joint(0, 0, 0);
-    for(size_t i = 0; i<4; ++i)
-      joint = joint + bbox.m_vertexList[i];
-    joint = joint / 4;
-    result.push_back(joint);
-
-    joint = Vector3d(0, 0, 0);
-    for(size_t i = 4; i<8; ++i)
-      joint = joint + bbox.m_vertexList[i];
-    joint = joint / 4;
-    result.push_back(joint);
-  }
-  else
-  {
-    if(nfree > 0)
-    {
-      for(int i=0; i<nfree-1; i++)
-      {
-        GMSPolyhedron first_bbox = this->GetFreeBody(i)->GetWorldBoundingBox();
-        GMSPolyhedron second_bbox = this->GetFreeBody(i)->GetForwardConnection(0).GetNextBody()->GetWorldBoundingBox();
-
-        //find the four closest pairs of points between first_bbox and second_bbox
-        vector<Vector3d> first_vertices = first_bbox.m_vertexList;
-        vector<Vector3d> second_vertices = second_bbox.m_vertexList;
-        vector<vertex_index_distance> closest_distances;
-        for(int num=0; num<4; ++num)
-        {
-          vector<vertex_index_distance> distances;
-          for(size_t j=0; j<first_vertices.size(); ++j)
-            for(size_t k=0; k<second_vertices.size(); ++k)
-              distances.push_back(vertex_index_distance(j, k, (first_vertices[j] - second_vertices[k]).norm()));
-          vector<vertex_index_distance>::const_iterator min = min_element(distances.begin(), distances.end());
-          closest_distances.push_back(*min);
-          //mark vertices as used by setting to MAX_INT and -MAX_INT
-          first_vertices[min->first_index] = Vector3d(MAX_INT, MAX_INT, MAX_INT);
-          second_vertices[min->second_index] = Vector3d(-MAX_INT, -MAX_INT, -MAX_INT);
-        }
-
-        //first body in linkage, add the endpoint of linkage 1 that is not closest to linkage 2
-        if(i == 0)
-        {
-          Vector3d other_joint(0, 0, 0);
-          int num = 0;
-          for(size_t k = 0; num<4 && k<first_bbox.m_vertexList.size(); ++k)
-            if(find_if(closest_distances.begin(), closest_distances.end(), first_index_equals(k)) == closest_distances.end())
-            {
-              other_joint = other_joint + first_bbox.m_vertexList[k];
-              num++;
-            }
-          other_joint = other_joint / num;
-          result.push_back(other_joint);
-        }
-
-        //compute the joint as the closest 4 vertices from linkage 1 and linkage 2
-        Vector3d joint(0, 0, 0);
-        for(size_t k = 0; k<4; ++k)
-          joint = joint + first_bbox.m_vertexList[closest_distances[k].first_index];
-        for(size_t k = 0; k<4; ++k)
-          joint = joint + second_bbox.m_vertexList[closest_distances[k].second_index];
-        joint = joint / 8;
-        result.push_back(joint);
-
-        //last body in linkage, add endpoint of linkage 2 that is not closest to linkage 1
-        if(i == nfree-2)
-        {
-          Vector3d other_joint(0, 0, 0);
-          int num = 0;
-          for(size_t k = 0; num<4 && k<second_bbox.m_vertexList.size(); ++k)
-            if(find_if(closest_distances.begin(), closest_distances.end(), second_index_equals(k)) == closest_distances.end())
-            {
-              other_joint = other_joint + second_bbox.m_vertexList[k];
-              num++;
-            }
-          other_joint = other_joint / num;
-
-          result.push_back(other_joint);
-        }
-      }
-    }
-  }
-}
 size_t
 ActiveMultiBody::
 PosDOF() const {
@@ -335,27 +160,22 @@ Configure(const vector<double>& _v) {
     // configure the robot according to current Cfg: joint parameters
     // (and base locations/orientations for free flying robots.)
     Transformation t1(Vector3d(x, y, z), Orientation(EulerAngle(gamma*PI, beta*PI, alpha*PI)));
-    // update link i
-    GetFreeBody(m_baseIndex)->Configure(t1);
+    m_baseBody->Configure(t1);
   }
   for(auto& joint : m_joints) {
     if(joint->GetConnectionType() != Connection::NONACTUATED) {
       size_t second = joint->GetNextBodyIndex();
-      GetFreeBody(second)->GetBackwardConnection(0).GetDHparameters().m_theta = _v[index]*PI;
-      index++;
-      if(joint->GetConnectionType() == Connection::SPHERICAL) {
-        GetFreeBody(second)->GetBackwardConnection(0).GetDHparameters().m_alpha = _v[index]*PI;
-        index++;
-      }
+      GetFreeBody(second)->GetBackwardConnection(0).GetDHparameters().m_theta = _v[index++]*PI;
+      if(joint->GetConnectionType() == Connection::SPHERICAL)
+        GetFreeBody(second)->GetBackwardConnection(0).GetDHparameters().m_alpha = _v[index++]*PI;
     }
-  }  // config the robot
-  for(auto& body : freeBody) {
+  }
+  // configure the robot
+  for(auto& body : m_freeBody)
     if(body->ForwardConnectionCount() == 0)  // tree tips: leaves.
       body->GetWorldTransformation();
-  }
 }
 
-//generates random configuration within C-space
 vector<double>
 ActiveMultiBody::
 GetRandomCfg(shared_ptr<Boundary>& _bounds) {
@@ -392,12 +212,104 @@ GetRandomCfg(shared_ptr<Boundary>& _bounds) {
 
 void
 ActiveMultiBody::
+PolygonalApproximation(vector<Vector3d>& _result) {
+  _result.clear();
+
+  size_t nfree = NumFreeBody();
+
+  //If rigid body then return the line between the first 4 vertices and the
+  //second 4 vertices of the world bounding box
+  if(nfree == 1) {
+    GMSPolyhedron& bbox = GetFreeBody(0)->GetWorldBoundingBox();
+
+    Vector3d joint;
+    for(size_t i = 0; i < 4; ++i)
+      joint += bbox.m_vertexList[i];
+    joint /= 4;
+    _result.push_back(joint);
+
+    joint(0, 0, 0);
+    for(size_t i = 4; i < 8; ++i)
+      joint += bbox.m_vertexList[i];
+    joint /= 4;
+    _result.push_back(joint);
+  }
+  else {
+    for(size_t i = 0; i < nfree-1; ++i) {
+      GMSPolyhedron& bbox1 = GetFreeBody(i)->GetWorldBoundingBox();
+      GMSPolyhedron& bbox2 = GetFreeBody(i)->GetForwardConnection(0).GetNextBody()->GetWorldBoundingBox();
+
+      //find the four closest pairs of points between bbox1 and bbox2
+      vector<Vector3d>& vertices1 = bbox1.m_vertexList;
+      vector<Vector3d>& vertices2 = bbox2.m_vertexList;
+      typedef tuple<size_t, size_t, double> VertexIndexDistance;
+      vector<VertexIndexDistance> closestDists;
+      for(int num = 0; num < 4; ++num) {
+        vector<VertexIndexDistance> distances;
+        for(size_t j=0; j < vertices1.size(); ++j)
+          for(size_t k=0; k < vertices2.size(); ++k)
+            distances.push_back(VertexIndexDistance(j, k, (vertices1[j] - vertices2[k]).norm()));
+        closestDists.push_back(*min_element(distances.begin(), distances.end(),
+            [](const VertexIndexDistance& _v1, const VertexIndexDistance& _v2) {
+            return get<2>(_v1) < get<2>(_v2);
+            }));
+      }
+
+      //if first body in linkage then
+      //add the endpoint of linkage 1 that is not closest to linkage 2
+      if(i == 0) {
+        Vector3d otherJoint;
+        int num = 0;
+        for(size_t k = 0; num < 4 && k < bbox1.m_vertexList.size(); ++k)
+          if(find_if(closestDists.begin(), closestDists.end(),
+                [&](const VertexIndexDistance& _v) {
+                return get<0>(_v) == k;
+                }) == closestDists.end()) {
+            otherJoint += bbox1.m_vertexList[k];
+            num++;
+          }
+        otherJoint /= num;
+        _result.push_back(otherJoint);
+      }
+
+      //compute the joint as the closest 4 vertices from linkage 1 and linkage 2
+      Vector3d joint;
+      for(size_t k = 0; k < 4; ++k) {
+        joint += bbox1.m_vertexList[get<0>(closestDists[k])];
+        joint += bbox2.m_vertexList[get<1>(closestDists[k])];
+      }
+      joint /= 8;
+      _result.push_back(joint);
+
+      //if last body in linkage then
+      //add endpoint of linkage 2 that is not closest to linkage 1
+      if(i == nfree - 2) {
+        Vector3d otherJoint;
+        int num = 0;
+        for(size_t k = 0; num < 4 && k < bbox2.m_vertexList.size(); ++k)
+          if(find_if(closestDists.begin(), closestDists.end(),
+                [&](const VertexIndexDistance& _v) {
+                return get<1>(_v) == k;
+                }) == closestDists.end()) {
+            otherJoint += bbox2.m_vertexList[k];
+            num++;
+          }
+        otherJoint = otherJoint / num;
+
+        _result.push_back(otherJoint);
+      }
+    }
+  }
+}
+
+void
+ActiveMultiBody::
 Read(istream& _is, CountingStreamBuffer& _cbs) {
-  m_baseIndex = -1;
 
   size_t bodyCount = ReadField<size_t>(_is, _cbs,
       "Failed reading body count.");
 
+  m_baseIndex = -1;
   for(size_t i=0; i < bodyCount && _is; ++i) {
     //read the free body
     shared_ptr<FreeBody> free(new FreeBody(this));
@@ -438,23 +350,29 @@ Read(istream& _is, CountingStreamBuffer& _cbs) {
       return _a->GetGlobalIndex() < _b->GetGlobalIndex();
       });
 
-  FindBoundingBox();
-  ComputeCenterOfMass();
+  FindMultiBodyInfo();
 }
 
 void
 ActiveMultiBody::
 Write(ostream & _os) {
-  _os << GetTagFromBodyType(GetBodyType()) << endl;
-  _os << freeBody.size() << endl;
-  for(auto& body : freeBody)
+  _os << GetTagFromMultiBodyType(m_multiBodyType) << endl;
+  _os << m_freeBody.size() << endl;
+  for(auto& body : m_freeBody)
     _os << *body << endl;
   _os << "Connections" << endl;
   size_t numConnection = 0;
-  for(auto& body : freeBody)
+  for(auto& body : m_freeBody)
     numConnection += body->ForwardConnectionCount();
   _os << numConnection << endl;
-  for(auto& body : freeBody)
+  for(auto& body : m_freeBody)
     for(int j=0; j < body->ForwardConnectionCount(); j++)
       _os << body->GetForwardConnection(j);
+}
+
+void
+ActiveMultiBody::
+AddBody(const shared_ptr<FreeBody>& _body) {
+  m_freeBody.push_back(_body);
+  MultiBody::AddBody(_body);
 }

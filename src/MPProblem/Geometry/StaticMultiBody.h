@@ -15,9 +15,11 @@ class FixedBody;
 class StaticMultiBody : public MultiBody {
   public:
 
-    StaticMultiBody();
+    ////////////////////////////////////////////////////////////////////////////
+    /// @param _m MultiBody type
+    StaticMultiBody(MultiBodyType _m);
 
-    StaticMultiBody(const StaticMultiBody&) = delete; ///< No copy
+    StaticMultiBody(const StaticMultiBody&) = delete;            ///< No copy
     StaticMultiBody& operator=(const StaticMultiBody&) = delete; ///< No assign
 
     ////////////////////////////////////////////////////////////////////////////
@@ -26,16 +28,18 @@ class StaticMultiBody : public MultiBody {
     /// @param _where a 6 dof vector specifying position and orientation
     void Initialize(const string& _modelFileName, const Transformation& _where);
 
-    ///Return a fixed body accroding to the given index. the index should be in [0,GetFixedBodyCount())
+    ////////////////////////////////////////////////////////////////////////////
+    /// @return Fixed body accroding to the given index
     shared_ptr<FixedBody> GetFixedBody(size_t _index) const;
-    ///Add a Fixed Body
+    ////////////////////////////////////////////////////////////////////////////
+    /// @param _body Fixed Body to add
     void AddBody(const shared_ptr<FixedBody>& _body);
 
-    virtual void Read(istream& is, CountingStreamBuffer& _cbs);
-    virtual void Write(ostream & _os);
+    virtual void Read(istream& _is, CountingStreamBuffer& _cbs);
+    virtual void Write(ostream& _os);
 
   protected:
-    vector<shared_ptr<FixedBody>> m_fixedBody; ///< All fixed body in instance
+    vector<shared_ptr<FixedBody>> m_fixedBody; ///< All fixed body
 };
 
 #endif

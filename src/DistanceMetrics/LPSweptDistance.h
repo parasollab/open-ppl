@@ -97,7 +97,7 @@ Distance(const CfgType& _c1, const CfgType& _c2) {
   double d = 0;
   vector<GMSPolyhedron> poly2;
   int robot = _c1.GetRobotIndex();
-  int bodyCount = env->GetRobot(robot)->GetFreeBodyCount();
+  int bodyCount = env->GetRobot(robot)->NumFreeBody();
   cfgs.begin()->ConfigEnvironment();
   for(int b=0; b<bodyCount; ++b)
     if(m_useBBox)
