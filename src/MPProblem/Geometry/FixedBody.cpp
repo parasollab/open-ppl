@@ -6,11 +6,6 @@ FixedBody(MultiBody* _owner, const string& _filename) :
     m_filename = _filename;
   }
 
-FixedBody::
-FixedBody(MultiBody* _owner, GMSPolyhedron& _polyhedron) :
-  Body(_owner, _polyhedron) {
-  }
-
 void
 FixedBody::
 Read(istream& _is, CountingStreamBuffer& _cbs) {

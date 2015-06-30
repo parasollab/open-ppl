@@ -45,7 +45,7 @@ InitializeDOFs(ostream* _os) {
     *_os << " (" << m_baseBody->GetFileName() << "):" << endl;
   }
 
-  if(m_baseType == Body::PLANAR) {
+  if(m_baseType == FreeBody::BodyType::Planar) {
     m_dofTypes.push_back(DofType::Positional);
     m_dofTypes.push_back(DofType::Positional);
 
@@ -54,14 +54,14 @@ InitializeDOFs(ostream* _os) {
       *_os << "\t\t" << dof++ << ": Y position" << endl;
     }
 
-    if(m_baseMovement == Body::ROTATIONAL) {
+    if(m_baseMovement == FreeBody::MovementType::Rotational) {
       m_dofTypes.push_back(DofType::Rotational);
 
       if(_os)
         *_os << "\t\t" << dof++ << ": Rotation about Z" << endl;
     }
   }
-  if(m_baseType == Body::VOLUMETRIC) {
+  if(m_baseType == FreeBody::BodyType::Volumetric) {
     m_dofTypes.push_back(DofType::Positional);
     m_dofTypes.push_back(DofType::Positional);
     m_dofTypes.push_back(DofType::Positional);
@@ -71,7 +71,7 @@ InitializeDOFs(ostream* _os) {
       *_os << "\t\t" << dof++ << ": Y position" << endl;
       *_os << "\t\t" << dof++ << ": Z position" << endl;
     }
-    if(m_baseMovement == Body::ROTATIONAL) {
+    if(m_baseMovement == FreeBody::MovementType::Rotational) {
       m_dofTypes.push_back(DofType::Rotational);
       m_dofTypes.push_back(DofType::Rotational);
       m_dofTypes.push_back(DofType::Rotational);
@@ -86,7 +86,7 @@ InitializeDOFs(ostream* _os) {
 
   for(auto& joint : m_joints) {
     switch(joint->GetConnectionType()) {
-      case Connection::REVOLUTE:
+      case Connection::JointType::Revolute:
         m_dofTypes.push_back(DofType::Joint);
 
         if(_os) {
@@ -98,7 +98,7 @@ InitializeDOFs(ostream* _os) {
         }
         break;
 
-      case Connection::SPHERICAL:
+      case Connection::JointType::Spherical:
         m_dofTypes.push_back(DofType::Joint);
         m_dofTypes.push_back(DofType::Joint);
 
@@ -112,7 +112,7 @@ InitializeDOFs(ostream* _os) {
         }
         break;
 
-      case Connection::NONACTUATED:
+      case Connection::JointType::NonActuated:
         break;
     }
   }
@@ -122,9 +122,9 @@ size_t
 ActiveMultiBody::
 PosDOF() const {
   switch(m_baseType) {
-    case Body::PLANAR:
+    case FreeBody::BodyType::Planar:
       return 2;
-    case Body::VOLUMETRIC:
+    case FreeBody::BodyType::Volumetric:
       return 3;
     default:
       return 0;
@@ -137,16 +137,16 @@ Configure(const vector<double>& _v) {
   int index = 0;
   int posIndex = index;
   double x = 0, y = 0, z = 0, alpha = 0, beta = 0, gamma = 0;
-  if(m_baseType != Body::FIXED) {
+  if(m_baseType != FreeBody::BodyType::Fixed) {
     x = _v[posIndex];
     y = _v[posIndex + 1];
     index += 2;
-    if(m_baseType == Body::VOLUMETRIC) {
+    if(m_baseType == FreeBody::BodyType::Volumetric) {
       index++;
       z = _v[posIndex + 2];
     }
-    if(m_baseMovement == Body::ROTATIONAL) {
-      if(m_baseType == Body::PLANAR) {
+    if(m_baseMovement == FreeBody::MovementType::Rotational) {
+      if(m_baseType == FreeBody::BodyType::Planar) {
         index++;
         gamma = _v[posIndex + 2];
       }
@@ -163,10 +163,10 @@ Configure(const vector<double>& _v) {
     m_baseBody->Configure(t1);
   }
   for(auto& joint : m_joints) {
-    if(joint->GetConnectionType() != Connection::NONACTUATED) {
+    if(joint->GetConnectionType() != Connection::JointType::NonActuated) {
       size_t second = joint->GetNextBodyIndex();
       GetFreeBody(second)->GetBackwardConnection(0).GetDHparameters().m_theta = _v[index++]*PI;
-      if(joint->GetConnectionType() == Connection::SPHERICAL)
+      if(joint->GetConnectionType() == Connection::JointType::Spherical)
         GetFreeBody(second)->GetBackwardConnection(0).GetDHparameters().m_alpha = _v[index++]*PI;
     }
   }
@@ -181,24 +181,25 @@ ActiveMultiBody::
 GetRandomCfg(shared_ptr<Boundary>& _bounds) {
   vector<double> v;
   v.reserve(DOF());
-  if(m_baseType == Body::PLANAR || m_baseType == Body::VOLUMETRIC) {
+  if(m_baseType == FreeBody::BodyType::Planar ||
+      m_baseType == FreeBody::BodyType::Volumetric) {
     Point3d p = _bounds->GetRandomPoint();
-    size_t posDOF = m_baseType == Body::VOLUMETRIC ? 3 : 2;
+    size_t posDOF = m_baseType == FreeBody::BodyType::Volumetric ? 3 : 2;
     for(size_t i = 0; i < posDOF; i++)
       v.push_back(p[i]);
-    if(m_baseMovement == Body::ROTATIONAL) {
-      size_t oriDOF = m_baseType == Body::VOLUMETRIC ? 3 : 1;
+    if(m_baseMovement == FreeBody::MovementType::Rotational) {
+      size_t oriDOF = m_baseType == FreeBody::BodyType::Volumetric ? 3 : 1;
       for(size_t i = 0; i < oriDOF; i++)
         v.push_back(2.0*DRand()-1.0);
     }
   }
   for(auto& joint : m_joints) {
-    if(joint->GetConnectionType() == Connection::REVOLUTE) {
+    if(joint->GetConnectionType() == Connection::JointType::Revolute) {
       pair<double, double> r = joint->GetJointLimits(0);
       double t = DRand()*(r.second-r.first)+r.first;
       v.push_back(t);
     }
-    else if(joint->GetConnectionType() == Connection::SPHERICAL) {
+    else if(joint->GetConnectionType() == Connection::JointType::Spherical) {
       pair<double, double> r = joint->GetJointLimits(0);
       double t = DRand()*(r.second-r.first)+r.first;
       r = joint->GetJointLimits(1);
@@ -208,6 +209,53 @@ GetRandomCfg(shared_ptr<Boundary>& _bounds) {
     }
   }
   return v;
+}
+
+bool
+ActiveMultiBody::
+InCSpace(const vector<double>& _cfg, shared_ptr<Boundary>& _b) {
+  size_t index = 0;
+  if(m_baseType != FreeBody::BodyType::Fixed) {
+    Vector3d p;
+    p[0] = _cfg[index];
+    p[1] = _cfg[index+1];
+    index+=2;
+    if(m_baseType == FreeBody::BodyType::Volumetric) {
+      p[2] = _cfg[index];
+      index++;
+    }
+    if(!_b->InBoundary(p))
+      return false;
+    if(m_baseMovement == FreeBody::MovementType::Rotational) {
+      if(m_baseType == FreeBody::BodyType::Planar) {
+        if(fabs(_cfg[index]) > 1)
+          return false;
+        index++;
+      }
+      else {
+        for(size_t i = 0; i<3; ++i) {
+          if(fabs(_cfg[index]) > 1)
+            return false;
+          index++;
+        }
+      }
+    }
+  }
+  for(auto& joint : m_joints) {
+    if(joint->GetConnectionType() != Connection::JointType::NonActuated) {
+      if(_cfg[index] < joint->GetJointLimits(0).first ||
+          _cfg[index] > joint->GetJointLimits(0).second)
+        return false;
+      index++;
+      if(joint->GetConnectionType() == Connection::JointType::Spherical) {
+        if(_cfg[index] < joint->GetJointLimits(1).first ||
+            _cfg[index] > joint->GetJointLimits(1).second)
+          return false;
+        index++;
+      }
+    }
+  }
+  return true;
 }
 
 void
@@ -250,9 +298,9 @@ PolygonalApproximation(vector<Vector3d>& _result) {
           for(size_t k=0; k < vertices2.size(); ++k)
             distances.push_back(VertexIndexDistance(j, k, (vertices1[j] - vertices2[k]).norm()));
         closestDists.push_back(*min_element(distances.begin(), distances.end(),
-            [](const VertexIndexDistance& _v1, const VertexIndexDistance& _v2) {
-            return get<2>(_v1) < get<2>(_v2);
-            }));
+              [](const VertexIndexDistance& _v1, const VertexIndexDistance& _v2) {
+              return get<2>(_v1) < get<2>(_v2);
+              }));
       }
 
       //if first body in linkage then
@@ -321,8 +369,8 @@ Read(istream& _is, CountingStreamBuffer& _cbs) {
     if(free->IsBase() && m_baseIndex == size_t(-1)) {
       m_baseIndex = i;
       m_baseBody = free;
-      m_baseType = free->GetBase();
-      m_baseMovement = free->GetBaseMovement();
+      m_baseType = free->GetBodyType();
+      m_baseMovement = free->GetMovementType();
     }
   }
 
@@ -366,7 +414,7 @@ Write(ostream & _os) {
     numConnection += body->ForwardConnectionCount();
   _os << numConnection << endl;
   for(auto& body : m_freeBody)
-    for(int j=0; j < body->ForwardConnectionCount(); j++)
+    for(size_t j = 0; j < body->ForwardConnectionCount(); j++)
       _os << body->GetForwardConnection(j);
 }
 

@@ -6,7 +6,6 @@
 #include "MPProblem/Environment.h"
 #include "MPProblem/Geometry/ActiveMultiBody.h"
 #include "MPProblem/Geometry/FixedBody.h"
-#include "MPProblem/Geometry/FreeBody.h"
 #include "MPProblem/Geometry/StaticMultiBody.h"
 
 #include "Utilities/MetricUtils.h"
@@ -256,8 +255,8 @@ IsInSelfCollision(CDInfo& _cdInfo, shared_ptr<ActiveMultiBody> _rob,
   size_t numBody = _rob->NumFreeBody();
   for(size_t i = 0; i < numBody - 1; ++i) {
     for(size_t j = i+1; j < numBody; ++j) {
-      shared_ptr<Body> body1 = _rob->GetFreeBody(i);
-      shared_ptr<Body> body2 = _rob->GetFreeBody(j);
+      shared_ptr<FreeBody> body1 = _rob->GetFreeBody(i);
+      shared_ptr<FreeBody> body2 = _rob->GetFreeBody(j);
 
       if(body1->IsWithinI(body2, m_ignoreIAdjacentLinks))
         continue;

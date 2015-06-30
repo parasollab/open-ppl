@@ -13,22 +13,17 @@ class FixedBody : public Body {
     ////////////////////////////////////////////////////////////////////////////
     /// @name Constructors
     /// @{
+
     ////////////////////////////////////////////////////////////////////////////
     /// @param _owner Owner of this body
     /// @param _filename Filename
     FixedBody(MultiBody* _owner, const string& _filename = "");
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// @param _owner Owner of this body
-    /// @param _polyhedron Geometry of body
-    FixedBody(MultiBody* _owner, GMSPolyhedron& _polyhedron) __attribute__ ((deprecated)) ;
+    FixedBody(const FixedBody&) = delete;            ///< No copy
+    FixedBody& operator=(const FixedBody&) = delete; ///< No assign
 
-    FixedBody(const FixedBody&) = delete;
-    FixedBody& operator=(const FixedBody&) = delete;
     /// @}
     ////////////////////////////////////////////////////////////////////////////
-
-    virtual bool IsFixedBody() const { return true; }
 
     virtual Transformation& GetWorldTransformation();
 

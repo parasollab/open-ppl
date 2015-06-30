@@ -37,9 +37,6 @@ class MultiBody;
 class Body {
   public:
 
-    enum Base {PLANAR, VOLUMETRIC, FIXED, JOINT}; //2D plane vs 3D
-    enum BaseMovement {ROTATIONAL, TRANSLATIONAL}; //rotation+translation, just translation, no movement
-
     ////////////////////////////////////////////////////////////////////////////
     /// @name Constructors
     /// @{
@@ -47,10 +44,6 @@ class Body {
     ////////////////////////////////////////////////////////////////////////////
     /// @param _owner Owner of this body
     Body(MultiBody* _owner);
-    ////////////////////////////////////////////////////////////////////////////
-    /// @param _owner Owner of this body
-    /// @param _polyhedron Geometry of body
-    Body(MultiBody* _owner, GMSPolyhedron& _polyhedron);
 
     Body(const Body& _other) = delete;
     Body& operator=(const Body& _other) = delete;
@@ -59,12 +52,6 @@ class Body {
 
     /// @}
     ////////////////////////////////////////////////////////////////////////////
-
-    static Base GetBaseFromTag(const string& _tag, const string& _where);
-    static BaseMovement GetMovementFromTag(const string& _tag, const string& _where);
-
-    static string GetTagFromBase(const Base& _b);
-    static string GetTagFromMovement(const BaseMovement& _bm);
 
     string GetFileName() { return m_filename; }
 
@@ -108,42 +95,6 @@ class Body {
     ////////////////////////////////////////////////////////////////////////////
     /// @return Inside sphere radius
     double GetInsideSphereRadius() const;
-    ////////////////////////////////////////////////////////////////////////////
-    /// @param _index Index of desired forward Connection
-    /// @return Requested forward Connection
-    Connection& GetForwardConnection(size_t _index);
-    ////////////////////////////////////////////////////////////////////////////
-    /// @param _index Index of desired backward Connection
-    /// @return Requested backward Connection
-    Connection& GetBackwardConnection(size_t _index);
-
-#ifdef USE_VCLIP
-    ////////////////////////////////////////////////////////////////////////////
-    /// @return VClip model
-    shared_ptr<PolyTree> GetVClipBody() {return vclipBody;}
-    void SetVClipBody(const shared_ptr<PolyTree>& _vclipBody) {vclipBody = _vclipBody;}
-#endif
-#ifdef USE_RAPID
-    ////////////////////////////////////////////////////////////////////////////
-    /// @return RAPID model
-    shared_ptr<RAPID_model> GetRapidBody() {return rapidBody;}
-    void SetRapidBody(const shared_ptr<RAPID_model>& _rapidBody) {rapidBody = _rapidBody;}
-#endif
-#ifdef USE_PQP
-    ////////////////////////////////////////////////////////////////////////////
-    /// @return PQP model
-    shared_ptr<PQP_Model> GetPQPBody() {return pqpBody;}
-    void SetPQPBody(const shared_ptr<PQP_Model>& _pqpBody) {pqpBody = _pqpBody;}
-#endif
-#ifdef USE_SOLID
-    ////////////////////////////////////////////////////////////////////////////
-    /// @return Solid model
-    shared_ptr<DT_ObjectHandle> GetSolidBody() {return solidBody;}
-    void SetSolidBody(const shared_ptr<DT_ObjectHandle>& _solidBody) {solidBody = _solidBody;}
-    ////////////////////////////////////////////////////////////////////////////
-    /// @brief Special function for SOLID
-    void UpdateVertexBase();
-#endif
 
     ////////////////////////////////////////////////////////////////////////////
     /// @param _worldTransformation Transformation w.r.t. world frame
@@ -152,26 +103,6 @@ class Body {
     ////////////////////////////////////////////////////////////////////////////
     /// @brief Set the world polyhedron based upon world tranfromation
     void ChangeWorldPolyhedron();
-
-    ////////////////////////////////////////////////////////////////////////////
-    /// @return Is this body fixed?
-    virtual bool IsFixedBody() const = 0;
-
-    ////////////////////////////////////////////////////////////////////////////
-    /// @return Is this body a base?
-    bool IsBase() { return m_isBase; };
-    ////////////////////////////////////////////////////////////////////////////
-    /// @return Base type of body
-    Base GetBase() { return m_baseType; };
-    ////////////////////////////////////////////////////////////////////////////
-    /// @return Base movement type of body
-    BaseMovement GetBaseMovement() { return m_baseMovementType; };
-    ////////////////////////////////////////////////////////////////////////////
-    /// @param _baseType Type of base of this body
-    void SetBase(Base _baseType) { m_baseType = _baseType; };
-    ////////////////////////////////////////////////////////////////////////////
-    /// @param _baseMovementType Type of movement of the base of this body
-    void SetBaseMovement(BaseMovement _baseMovementType) { m_baseMovementType = _baseMovementType; };
 
     ////////////////////////////////////////////////////////////////////////////
     /// @return Label of body
@@ -206,56 +137,8 @@ class Body {
     void FindBoundingBox();
 
     ////////////////////////////////////////////////////////////////////////////
-    /// @brief Determines if two bodies share the same joint
-    /// @param _otherBody Second body
-    /// @return True if adjacent
-    bool IsAdjacent(shared_ptr<Body> _otherBody);
-    ////////////////////////////////////////////////////////////////////////////
-    /// @brief Determines if two bodies are within \p _i joints of each other
-    /// @param _otherBody Second body
-    /// @param _i Number of joints
-    /// @return True if within \p _i joints
-    bool IsWithinI(shared_ptr<Body> _otherBody, int _i);
-    ////////////////////////////////////////////////////////////////////////////
-    /// @brief Determines if two bodies are within \p _i joints of each other
-    /// @param _body1 First Body
-    /// @param _body2 Second Body
-    /// @param _i Number of joints
-    /// @param _prevBody Previous Body
-    /// @return True if within \p _i joints
-    bool IsWithinIHelper(Body* _body1, Body* _body2, int _i,Body* _prevBody);
-
-    ////////////////////////////////////////////////////////////////////////////
     /// @brief Build appropriate collision detection models
     void BuildCDStructure(CollisionDetectionMethod* _cdMethod);
-
-    ////////////////////////////////////////////////////////////////////////////
-    /// @return Number of forward Connection
-    int ForwardConnectionCount() const {return m_forwardConnection.size();}
-    ////////////////////////////////////////////////////////////////////////////
-    /// @return Number of backward Connection
-    int BackwardConnectionCount() const {return m_backwardConnection.size();}
-    ////////////////////////////////////////////////////////////////////////////
-    /// @param _connection Connection to add as forward Connection
-    void AddForwardConnection(const Connection& _connection) {m_forwardConnection.push_back(_connection);}
-    ////////////////////////////////////////////////////////////////////////////
-    /// @param _connection Connection to add as backward Connection
-    void AddBackwardConnection(const Connection& _connection) {m_backwardConnection.push_back(_connection);}
-
-    ////////////////////////////////////////////////////////////////////////////
-    /// @brief Link two Body, i.e., add a Connection between them
-    /// @param _otherBody Second body
-    /// @param _transformationToBody2 Transformation to second body
-    /// @param _dhparameters DH frame description
-    /// @param _transformationToDHFrame Transformation to DH frame
-    void Link(const shared_ptr<Body>& _otherBody,
-        const Transformation& _transformationToBody2,
-        const DHparameters& _dhparameters,
-        const Transformation& _transformationToDHFrame);
-    ////////////////////////////////////////////////////////////////////////////
-    /// @brief Link two Body, i.e., add a Connection between them
-    /// @param _c Connection description
-    void Link(const Connection& _c);
 
     ////////////////////////////////////////////////////////////////////////////
     /// @param _v Vertex
@@ -263,6 +146,42 @@ class Body {
     bool IsConvexHullVertex(const Vector3d& _v);
 
     static string m_modelDataDir; ///< Directory of geometry files
+
+#ifdef USE_VCLIP
+    ////////////////////////////////////////////////////////////////////////////
+    /// @return VClip model
+    shared_ptr<PolyTree> GetVClipBody() {return vclipBody;}
+    ////////////////////////////////////////////////////////////////////////////
+    /// @param _vclipBody VClip model
+    void SetVClipBody(const shared_ptr<PolyTree>& _vclipBody) {vclipBody = _vclipBody;}
+#endif
+#ifdef USE_RAPID
+    ////////////////////////////////////////////////////////////////////////////
+    /// @return RAPID model
+    shared_ptr<RAPID_model> GetRapidBody() {return rapidBody;}
+    ////////////////////////////////////////////////////////////////////////////
+    /// @param _rapidBody Rapid model
+    void SetRapidBody(const shared_ptr<RAPID_model>& _rapidBody) {rapidBody = _rapidBody;}
+#endif
+#ifdef USE_PQP
+    ////////////////////////////////////////////////////////////////////////////
+    /// @return PQP model
+    shared_ptr<PQP_Model> GetPQPBody() {return pqpBody;}
+    ////////////////////////////////////////////////////////////////////////////
+    /// @param _pqpBody PQP model
+    void SetPQPBody(const shared_ptr<PQP_Model>& _pqpBody) {pqpBody = _pqpBody;}
+#endif
+#ifdef USE_SOLID
+    ////////////////////////////////////////////////////////////////////////////
+    /// @return Solid model
+    shared_ptr<DT_ObjectHandle> GetSolidBody() {return solidBody;}
+    ////////////////////////////////////////////////////////////////////////////
+    /// @param _solidBody Solid model
+    void SetSolidBody(const shared_ptr<DT_ObjectHandle>& _solidBody) {solidBody = _solidBody;}
+    ////////////////////////////////////////////////////////////////////////////
+    /// @brief Special function for SOLID
+    void UpdateVertexBase();
+#endif
 
   protected:
 
@@ -273,10 +192,7 @@ class Body {
     string m_filename;                       ///< Geometry filename
     MultiBody* m_multibody;                  ///< Owner of Body
     Transformation m_worldTransformation;    ///< World Transformation
-    bool m_isBase;                           ///< Base or Joint
     int m_label;                             ///< Body ID
-    Base m_baseType;                         ///< Base type
-    BaseMovement m_baseMovementType;         ///< Base movement
 
     GMSPolyhedron m_polyhedron;              ///< Model in model coordinates
     GMSPolyhedron m_worldPolyhedron;         ///< Model in world coordinates
@@ -288,9 +204,6 @@ class Body {
     double m_boundingBox[6];                 ///< Bounding box
     GMSPolyhedron m_bbPolyhedron;            ///< Bounding polyhedron
     GMSPolyhedron m_bbWorldPolyhedron;       ///< Bounding polyhedron in world
-
-    vector<Connection> m_forwardConnection;  ///< Forward Connection s
-    vector<Connection> m_backwardConnection; ///< Backward Connection s
 
 #ifdef USE_VCLIP
     shared_ptr<PolyTree> vclipBody;          ///< VClip model

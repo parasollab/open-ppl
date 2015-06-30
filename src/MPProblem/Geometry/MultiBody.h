@@ -45,7 +45,7 @@ class MultiBody {
     /// @{
 
     static MultiBodyType GetMultiBodyTypeFromTag(const string& _tag, const string& _where);
-    static string GetTagFromMultiBodyType(const MultiBodyType& _b);
+    static string GetTagFromMultiBodyType(MultiBodyType _b);
 
     ////////////////////////////////////////////////////////////////////////////
     /// @return Center of mass

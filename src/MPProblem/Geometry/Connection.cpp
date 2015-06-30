@@ -1,18 +1,18 @@
 #include "Connection.h"
 
 #include "ActiveMultiBody.h"
-#include "Body.h"
+#include "FreeBody.h"
 #include "FreeBody.h"
 
 size_t Connection::m_globalCounter = 0;
 
 Connection::
-Connection(MultiBody* _owner) : m_multibody(_owner), m_jointType(NONACTUATED) {
+Connection(MultiBody* _owner) : m_multibody(_owner), m_jointType(JointType::NonActuated) {
   m_globalIndex = m_globalCounter++;
 }
 
 Connection::
-Connection(const shared_ptr<Body>& _body1, const shared_ptr<Body>& _body2,
+Connection(const shared_ptr<FreeBody>& _body1, const shared_ptr<FreeBody>& _body2,
     const Transformation& _transformationToBody2,
     const DHparameters& _dhparameters,
     const Transformation& _transformationToDHFrame) :
@@ -20,7 +20,7 @@ Connection(const shared_ptr<Body>& _body1, const shared_ptr<Body>& _body2,
   m_transformationToBody2(_transformationToBody2),
   m_transformationToDHFrame(_transformationToDHFrame),
   m_dhParameters(_dhparameters),
-  m_jointType(NONACTUATED) {
+  m_jointType(JointType::NonActuated) {
     m_globalIndex = m_globalCounter++;
     m_bodies[0] = _body1;
     m_bodies[1] = _body2;
@@ -30,11 +30,11 @@ Connection::JointType
 Connection::
 GetJointTypeFromTag(const string& _tag, const string& _where) {
   if(_tag == "REVOLUTE")
-    return Connection::REVOLUTE;
+    return JointType::Revolute;
   else if (_tag == "SPHERICAL")
-    return Connection::SPHERICAL;
+    return JointType::Spherical;
   else if(_tag == "NONACTUATED")
-    return Connection::NONACTUATED;
+    return JointType::NonActuated;
   else
     throw ParseException(_where,
         "Unknown joint type '" + _tag + "'."
@@ -43,11 +43,11 @@ GetJointTypeFromTag(const string& _tag, const string& _where) {
 
 string
 Connection::
-GetTagFromJointType(const Connection::JointType& _jt){
+GetTagFromJointType(JointType _jt){
   switch(_jt){
-    case REVOLUTE:
+    case JointType::Revolute:
       return "Revolute";
-    case SPHERICAL:
+    case JointType::Spherical:
       return "Spherical";
     default:
       return "Unknown Joint Type";
@@ -74,11 +74,11 @@ Read(istream& _is, CountingStreamBuffer& _cbs) {
   m_jointType = GetJointTypeFromTag(connectionTypeTag, _cbs.Where());
 
   //grab the joint limits for revolute and spherical joints
-  if(m_jointType == Connection::REVOLUTE ||
-      m_jointType == Connection::SPHERICAL) {
+  if(m_jointType == JointType::Revolute ||
+      m_jointType == JointType::Spherical) {
     m_jointLimits[0].first = m_jointLimits[1].first = -1;
     m_jointLimits[0].second = m_jointLimits[1].second = 1;
-    size_t numRange = m_jointType == Connection::REVOLUTE ? 1 : 2;
+    size_t numRange = m_jointType == JointType::Revolute ? 1 : 2;
     for(size_t i = 0; i < numRange; i++){
       string tok;
       if(_is >> tok){

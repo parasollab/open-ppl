@@ -14,55 +14,23 @@
 
 string Body::m_modelDataDir;
 
-Body::Body(MultiBody* _owner) :
+Body::
+Body(MultiBody* _owner) :
   m_multibody(_owner),
-  m_isBase(false),
   m_label(0),
-  m_baseType(PLANAR),
-  m_baseMovementType(TRANSLATIONAL),
   m_convexHullAvailable(false),
   m_centerOfMassAvailable(false), m_worldPolyhedronAvailable(false) {
     fill(m_boundingBox, m_boundingBox+6, 0);
   }
 
-Body::Body(MultiBody* _owner, GMSPolyhedron& _polyhedron) :
-  m_multibody(_owner),
-  m_isBase(false),
-  m_label(0),
-  m_baseType(PLANAR),
-  m_baseMovementType(TRANSLATIONAL),
-  m_polyhedron(_polyhedron),
-  m_worldPolyhedron(_polyhedron),
-  m_convexHullAvailable(false),
-  m_centerOfMassAvailable(false),
-  m_worldPolyhedronAvailable(false) {
-    fill(m_boundingBox, m_boundingBox+6, 0);
-  }
-
-Body::~Body() {
-   m_multibody=NULL;
+Body::
+~Body() {
+   m_multibody = NULL;
 }
 
-/*bool
-Body::operator==(const Body& _b) const {
-  return (m_worldTransformation == _b.m_worldTransformation) &&
-    (m_polyhedron == _b.m_polyhedron) &&
-    (m_worldPolyhedron == _b.m_worldPolyhedron) &&
-    (m_centerOfMass == _b.m_centerOfMass) &&
-    (m_boundingBox[0] == _b.m_boundingBox[0]) &&
-    (m_boundingBox[1] == _b.m_boundingBox[1]) &&
-    (m_boundingBox[2] == _b.m_boundingBox[2]) &&
-    (m_boundingBox[3] == _b.m_boundingBox[3]) &&
-    (m_boundingBox[4] == _b.m_boundingBox[4]) &&
-    (m_boundingBox[5] == _b.m_boundingBox[5]) &&
-    (m_bbPolyhedron == _b.m_bbPolyhedron) &&
-    (m_bbWorldPolyhedron == _b.m_bbWorldPolyhedron) &&
-    (m_forwardConnection == _b.m_forwardConnection) &&
-    (m_backwardConnection == _b.m_backwardConnection);
-}*/
-
 GMSPolyhedron&
-Body::GetWorldPolyhedron() {
+Body::
+GetWorldPolyhedron() {
   if(!m_worldPolyhedronAvailable) {
     for(size_t i=0; i<m_polyhedron.m_vertexList.size(); ++i)
       m_worldPolyhedron.m_vertexList[i] = m_worldTransformation * m_polyhedron.m_vertexList[i];
@@ -74,14 +42,16 @@ Body::GetWorldPolyhedron() {
 }
 
 GMSPolyhedron&
-Body::GetWorldBoundingBox() {
+Body::
+GetWorldBoundingBox() {
   for(size_t i=0; i<m_bbPolyhedron.m_vertexList.size(); ++i)
     m_bbWorldPolyhedron.m_vertexList[i] = m_worldTransformation * m_bbPolyhedron.m_vertexList[i];
   return m_bbWorldPolyhedron;
 }
 
 Vector3d
-Body::GetCenterOfMass(){
+Body::
+GetCenterOfMass() {
   if(!m_centerOfMassAvailable)
     ComputeCenterOfMass();
   return m_centerOfMass;
@@ -99,26 +69,6 @@ GetInsideSphereRadius() const {
   return m_polyhedron.m_minRadius;
 }
 
-Connection&
-Body::GetForwardConnection(size_t _index) {
-  if (_index < m_forwardConnection.size())
-    return m_forwardConnection[_index];
-  else{
-    cerr << "Error, in Body::GetForwardConnection: requesting connection outside of bounds\n\n";
-    exit(-1);
-  }
-}
-
-Connection&
-Body::GetBackwardConnection(size_t _index) {
-  if (_index < m_backwardConnection.size())
-    return m_backwardConnection[_index];
-  else{
-    cerr << "Error, in Body::GetBackwardConnection: requesting connection outside of bounds\n\n";
-    exit(-1);
-  }
-}
-
 void
 Body::ChangeWorldPolyhedron() {
   for(size_t i=0; i<m_polyhedron.m_vertexList.size(); i++)  // Transform the vertices
@@ -127,9 +77,6 @@ Body::ChangeWorldPolyhedron() {
     m_worldPolyhedron.m_polygonList[i].m_normal = m_worldTransformation.rotation() * m_polyhedron.m_polygonList[i].m_normal;
 }
 
-//===================================================================
-//  Read
-//===================================================================
 void
 Body::Read() {
   string filename = m_modelDataDir == "/" ? m_filename : m_modelDataDir + m_filename;
@@ -233,48 +180,6 @@ Body::FindBoundingBox(){
   m_boundingBox[4] = minz; m_boundingBox[5] = maxz;
 }
 
-bool
-Body::IsAdjacent(shared_ptr<Body> _otherBody) {
-  for(vector<Connection>::iterator C = m_forwardConnection.begin(); C != m_forwardConnection.end(); ++C)
-    if(C->GetNextBody() == _otherBody)
-      return true;
-  for(vector<Connection>::iterator C = m_backwardConnection.begin(); C != m_backwardConnection.end(); ++C)
-    if(C->GetPreviousBody() == _otherBody)
-      return true;
-  return this == _otherBody.get();
-}
-
-bool
-Body::IsWithinI(shared_ptr<Body> _otherBody, int _i){
-  //Visit the recursive, flood-fill based helper function.
-  return IsWithinIHelper(this,_otherBody.get(),_i,NULL);
-}
-
-bool
-Body::IsWithinIHelper(Body* _body1, Body* _body2, int _i, Body* _prevBody){
-  if(_body1 == _body2)
-    return true;
-
-  if(_i == 0)
-    return false;
-
-  typedef vector<Connection>::iterator CIT;
-  for(CIT C = _body1->m_forwardConnection.begin(); C != _body1->m_forwardConnection.end(); ++C) {
-    Body* next = C->GetNextBody().get();
-    if(next != _prevBody && IsWithinIHelper(next, _body2, _i-1, _body1))
-      return true;
-  }
-  for(CIT C =_body1->m_backwardConnection.begin(); C != _body1->m_backwardConnection.end(); ++C) {
-    Body* prev = C->GetPreviousBody().get();
-    if(prev != _prevBody && IsWithinIHelper(prev, _body2, _i-1, _body1))
-      return true;
-  }
-  return false;
-}
-
-////////////////////////////////////////
-// Collision Detection Methods
-// /////////////////////////////////
 void
 Body::
 BuildCDStructure(CollisionDetectionMethod* _cdMethod) {
@@ -299,27 +204,9 @@ Body::UpdateVertexBase(){
 }
 #endif
 
-///////////////////////////////////////////////////////////////////////////////
-//  Connection Methods
-///////////////////////////////////////////////////////////////////////////////
-void
-Body::Link(const shared_ptr<Body>& _otherBody, const Transformation & _transformationToBody2, const
-    DHparameters &_dhparameters, const Transformation & _transformationToDHFrame) {
-  Connection c(shared_ptr<Body>(this), _otherBody, _transformationToBody2,
-      _dhparameters, _transformationToDHFrame);
-  Link(c);
-}
-
-void
-Body::Link(const Connection& _c) {
-  AddForwardConnection(_c);
-  _c.GetNextBody()->AddBackwardConnection(_c);
-  m_worldPolyhedronAvailable=false;
-  m_centerOfMassAvailable=false;
-}
-
 bool
-Body::IsConvexHullVertex(const Vector3d& _v) {
+Body::
+IsConvexHullVertex(const Vector3d& _v) {
   if(!m_convexHullAvailable)
     ComputeConvexHull();
 
@@ -331,7 +218,8 @@ Body::IsConvexHullVertex(const Vector3d& _v) {
 }
 
 void
-Body::ComputeConvexHull() {
+Body::
+ComputeConvexHull() {
 
   typedef CGAL::Exact_predicates_exact_constructions_kernel  Kernel;
   typedef CGAL::Polyhedron_3<Kernel>                         Polyhedron3;
@@ -354,64 +242,4 @@ Body::ComputeConvexHull() {
     m_convexHull.m_vertexList.push_back(Vector3d(to_double((*vit)[0]), to_double((*vit)[1]), to_double((*vit)[2])));
 
   m_convexHullAvailable = true;
-}
-
-Body::Base
-Body::
-GetBaseFromTag(const string& _tag, const string& _where) {
-  if(_tag == "PLANAR")
-    return PLANAR;
-  else if(_tag == "VOLUMETRIC")
-    return VOLUMETRIC;
-  else if(_tag == "FIXED")
-    return FIXED;
-  else if(_tag == "JOINT")
-    return JOINT;
-  else
-    throw ParseException(_where,
-        "Unknown base type '" + _tag + "'."
-        " Options are: 'planar', 'volumetric', 'fixed', or 'joint'.");
-}
-
-Body::BaseMovement
-Body::
-GetMovementFromTag(const string& _tag, const string& _where) {
-  if(_tag == "ROTATIONAL")
-    return ROTATIONAL;
-  else if (_tag == "TRANSLATIONAL")
-    return TRANSLATIONAL;
-  else
-    throw ParseException(_where,
-        "Unknown movement type '" + _tag + "'."
-        " Options are: 'rotational' or 'translational'.");
-}
-
-string
-Body::
-GetTagFromBase(const Base& _b) {
-  switch(_b) {
-    case PLANAR:
-      return "Planar";
-    case VOLUMETRIC:
-      return "Volumetric";
-    case FIXED:
-      return "Fixed";
-    case JOINT:
-      return "Joint";
-    default:
-      return "Unknown Base Type";
-  }
-}
-
-string
-Body::
-GetTagFromMovement(const BaseMovement& _bm) {
-  switch(_bm){
-    case ROTATIONAL:
-      return "Rotational";
-    case TRANSLATIONAL:
-      return "Translational";
-    default:
-      return "Unknown Base Movement";
-  }
 }

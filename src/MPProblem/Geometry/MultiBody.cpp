@@ -31,7 +31,7 @@ GetMultiBodyTypeFromTag(const string& _tag, const string& _where) {
 
 string
 MultiBody::
-GetTagFromMultiBodyType(const MultiBodyType& _b) {
+GetTagFromMultiBodyType(MultiBodyType _b) {
   switch(_b) {
     case MultiBodyType::Active:
       return "Active";

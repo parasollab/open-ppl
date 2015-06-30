@@ -1,10 +1,10 @@
 #ifndef ACTIVE_MULTI_BODY_H_
 #define ACTIVE_MULTI_BODY_H_
 
+#include "FreeBody.h"
 #include "MultiBody.h"
 
 class Boundary;
-class FreeBody;
 
 ////////////////////////////////////////////////////////////////////////////////
 /// @brief Type of free movement
@@ -67,18 +67,15 @@ class ActiveMultiBody : public MultiBody {
     void InitializeDOFs(ostream* _os = NULL);
 
     ////////////////////////////////////////////////////////////////////////////
-    /// @return Base type
-    Body::Base GetBaseType() const {return m_baseType;}
+    /// @return Base Body type
+    FreeBody::BodyType GetBaseType() const {return m_baseType;}
     ////////////////////////////////////////////////////////////////////////////
     /// @return Base movement type
-    Body::BaseMovement GetBaseMovementType() const {return m_baseMovement;}
+    FreeBody::MovementType GetBaseMovementType() const {return m_baseMovement;}
 
     ////////////////////////////////////////////////////////////////////////////
     /// @return Number of Connection in this multibody
     size_t NumJoints() const {return m_joints.size();}
-    ////////////////////////////////////////////////////////////////////////////
-    /// @return All Connection for this multibody
-    const vector<Joint>& GetJoints() const {return m_joints;}
 
     ////////////////////////////////////////////////////////////////////////////
     /// @return DOF type information of robot
@@ -108,6 +105,12 @@ class ActiveMultiBody : public MultiBody {
     vector<double> GetRandomCfg(shared_ptr<Boundary>& _boundary);
 
     ////////////////////////////////////////////////////////////////////////////
+    /// @param _cfg Configuration dofs
+    /// @param _boundary Workspace bounds
+    /// @return True if @p _cfg is inside physical robot constraints
+    bool InCSpace(const vector<double>& _cfg, shared_ptr<Boundary>& _b);
+
+    ////////////////////////////////////////////////////////////////////////////
     /// @param[out] result Polygonal Approximation
     void PolygonalApproximation(vector<Vector3d>& _result);
 
@@ -133,8 +136,8 @@ class ActiveMultiBody : public MultiBody {
     vector<DofType> m_dofTypes;              ///< DOF type of robot motions
     size_t m_baseIndex;                      ///< Free body index for base
     shared_ptr<FreeBody> m_baseBody;         ///< Body of base
-    Body::Base m_baseType;                   ///< Type of base
-    Body::BaseMovement m_baseMovement;       ///< Type of movement for base
+    FreeBody::BodyType m_baseType;           ///< Type of base
+    FreeBody::MovementType m_baseMovement;   ///< Type of movement for base
     vector<Joint> m_joints;                  ///< All Connections
 };
 

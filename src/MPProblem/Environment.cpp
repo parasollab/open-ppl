@@ -359,47 +359,7 @@ bool
 Environment::
 InCSpace(const Cfg& _cfg, shared_ptr<Boundary> _b) {
   size_t activeBodyIndex = _cfg.GetRobotIndex();
-  size_t index = 0;
-  shared_ptr<ActiveMultiBody>& rit = m_robots[activeBodyIndex];
-  if(rit->GetBaseType() != Body::FIXED) {
-    Vector3d p;
-    p[0] = _cfg[index];
-    p[1] = _cfg[index+1];
-    index+=2;
-    if(rit->GetBaseType() == Body::VOLUMETRIC) {
-      p[2] = _cfg[index];
-      index++;
-    }
-    if(!_b->InBoundary(p))
-      return false;
-    if(rit->GetBaseMovementType() == Body::ROTATIONAL) {
-      if(rit->GetBaseType() == Body::PLANAR) {
-        if(fabs(_cfg[index]) > 1)
-          return false;
-        index++;
-      }
-      else {
-        for(size_t i = 0; i<3; ++i) {
-          if(fabs(_cfg[index]) > 1)
-            return false;
-          index++;
-        }
-      }
-    }
-  }
-  for(auto& joint : rit->GetJoints()) {
-    if(joint->GetConnectionType() != Connection::NONACTUATED) {
-      if(_cfg[index] < joint->GetJointLimits(0).first || _cfg[index] > joint->GetJointLimits(0).second)
-        return false;
-      index++;
-      if(joint->GetConnectionType() == Connection::SPHERICAL) {
-        if(_cfg[index] < joint->GetJointLimits(1).first || _cfg[index] > joint->GetJointLimits(1).second)
-          return false;
-        index++;
-      }
-    }
-  }
-  return true;
+  return m_robots[activeBodyIndex]->InCSpace(_cfg.GetData(), _b);
 }
 
 bool
