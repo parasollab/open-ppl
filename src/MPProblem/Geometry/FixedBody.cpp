@@ -26,4 +26,3 @@ ostream&
 operator<<(ostream& _os, const FixedBody& _fb){
   return _os << _fb.m_filename << " " << _fb.m_worldTransformation;
 }
-

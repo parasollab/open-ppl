@@ -7,7 +7,7 @@ using namespace std;
 #include <Transformation.h>
 using namespace mathtool;
 
-#include "MPProblem/Geometry/DHparameters.h"
+#include "MPProblem/Geometry/DHParameters.h"
 #include "Utilities/IOUtils.h"
 
 class FreeBody;
@@ -44,16 +44,6 @@ class Connection {
     ////////////////////////////////////////////////////////////////////////////
     /// @param _owner MultiBody who owns this Connection
     Connection(MultiBody* _owner);
-    ////////////////////////////////////////////////////////////////////////////
-    /// @param _body1 First FreeBody
-    /// @param _body2 Second FreeBody
-    /// @param _transformationToBody2 Transformation to second FreeBody
-    /// @param _dhparameters DHFrame description
-    /// @param _transformationToDHFrame Transformation to DHFrame
-    Connection(const shared_ptr<FreeBody>& _body1, const shared_ptr<FreeBody>& _body2,
-        const Transformation& _transformationToBody2,
-        const DHparameters& _dhparameters,
-        const Transformation& _transformationToDHFrame);
 
     /// @}
     ////////////////////////////////////////////////////////////////////////////
@@ -72,6 +62,7 @@ class Connection {
     ////////////////////////////////////////////////////////////////////////////
     /// @name Joint Information
     /// @{
+
     ////////////////////////////////////////////////////////////////////////////
     /// @return Global connection index
     size_t GetGlobalIndex() const {return m_globalIndex;}
@@ -80,13 +71,15 @@ class Connection {
     JointType GetConnectionType() const {return m_jointType;}
     ////////////////////////////////////////////////////////////////////////////
     /// @return Connection type
-    const pair<double, double>& GetJointLimits(int _i) const {return m_jointLimits[_i];}
+    const pair<double, double>& GetJointLimits(size_t _i) const {return m_jointLimits[_i];}
+
     /// @}
     ////////////////////////////////////////////////////////////////////////////
 
     ////////////////////////////////////////////////////////////////////////////
     /// @name FreeBody information
     /// @{
+
     ////////////////////////////////////////////////////////////////////////////
     /// @return Pointer to first FreeBody
     shared_ptr<FreeBody> GetPreviousBody() const {return m_bodies[0];}
@@ -99,46 +92,56 @@ class Connection {
     ////////////////////////////////////////////////////////////////////////////
     /// @return Index of second FreeBody
     size_t GetNextBodyIndex() const {return m_bodyIndices.second;}
+
     /// @}
     ////////////////////////////////////////////////////////////////////////////
 
     ////////////////////////////////////////////////////////////////////////////
     /// @name Transformation information
     /// @{
+
     ////////////////////////////////////////////////////////////////////////////
     /// @return DH frame description
-    DHparameters& GetDHparameters() {return m_dhParameters;}
-    const DHparameters& GetDHparameters() const {return m_dhParameters;}
+    DHParameters& GetDHParameters() {return m_dhParameters;}
+    ////////////////////////////////////////////////////////////////////////////
+    /// @return DH frame description
+    const DHParameters& GetDHParameters() const {return m_dhParameters;}
     ////////////////////////////////////////////////////////////////////////////
     /// @return Transformation to second body
     Transformation& GetTransformationToBody2() {return m_transformationToBody2;}
+    ////////////////////////////////////////////////////////////////////////////
+    /// @return Transformation to second body
     const Transformation& GetTransformationToBody2() const {return m_transformationToBody2;}
     ////////////////////////////////////////////////////////////////////////////
     /// @return Transformation to DH frame
     Transformation& GetTransformationToDHFrame() {return m_transformationToDHFrame;}
+    ////////////////////////////////////////////////////////////////////////////
+    /// @return Transformation to DH frame
     const Transformation& GetTransformationToDHFrame() const {return m_transformationToDHFrame;}
+
     /// @}
     ////////////////////////////////////////////////////////////////////////////
 
     ////////////////////////////////////////////////////////////////////////////
     /// @name I/O
     /// @{
+
     ////////////////////////////////////////////////////////////////////////////
-    /// @brief Parse
     /// @param _is Stream
     /// @param _cbs Counting stream buffer
     void Read(istream& _is, CountingStreamBuffer& _cbs);
 
     friend ostream& operator<<(ostream& _os, const Connection& _c);
+
     /// @}
     ////////////////////////////////////////////////////////////////////////////
 
   private:
     MultiBody* m_multibody;                   ///< Owner of this Connection
-    shared_ptr<FreeBody> m_bodies[2];             ///< (previous body, next body)
+    shared_ptr<FreeBody> m_bodies[2];         ///< (previous body, next body)
     Transformation m_transformationToBody2;   ///< Transform to second body
     Transformation m_transformationToDHFrame; ///< Transform to DH frame
-    DHparameters m_dhParameters;              ///< DH frame description
+    DHParameters m_dhParameters;              ///< DH frame description
 
     size_t m_globalIndex;                     ///< Global ID
     JointType m_jointType;                    ///< Type of connection

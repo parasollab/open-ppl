@@ -46,11 +46,6 @@ class ActiveMultiBody : public MultiBody {
     size_t NumFreeBody() const;
 
     ////////////////////////////////////////////////////////////////////////////
-    /// @param _b Body to find
-    /// @return Index for given FreeBody, -1 if it is not found
-    size_t GetFreeBodyIndex(const FreeBody& _b) const;
-
-    ////////////////////////////////////////////////////////////////////////////
     /// @return Free body accroding to the given index
     shared_ptr<FreeBody> GetFreeBody(size_t _index) const;
 
@@ -106,12 +101,12 @@ class ActiveMultiBody : public MultiBody {
 
     ////////////////////////////////////////////////////////////////////////////
     /// @param _cfg Configuration dofs
-    /// @param _boundary Workspace bounds
+    /// @param _b Workspace bounds
     /// @return True if @p _cfg is inside physical robot constraints
     bool InCSpace(const vector<double>& _cfg, shared_ptr<Boundary>& _b);
 
     ////////////////////////////////////////////////////////////////////////////
-    /// @param[out] result Polygonal Approximation
+    /// @param[out] _result Polygonal Approximation
     void PolygonalApproximation(vector<Vector3d>& _result);
 
     /// @}

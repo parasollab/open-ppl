@@ -74,7 +74,6 @@ FindMultiBodyInfo() {
   maxx = maxy = maxz = numeric_limits<double>::lowest();
 
   for(auto& body : m_bodies) {
-    body->FindBoundingBox();
     double* tmp = body->GetBoundingBox();
     minx = min(minx, tmp[0]); maxx = max(maxx, tmp[1]);
     miny = min(miny, tmp[2]); maxy = max(maxy, tmp[3]);

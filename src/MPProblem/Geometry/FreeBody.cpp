@@ -1,14 +1,11 @@
 #include "FreeBody.h"
 
-#include "ActiveMultiBody.h"
-
 FreeBody::
-FreeBody(MultiBody* _owner) : Body(_owner),
-  m_isBase(false),
+FreeBody(MultiBody* _owner, size_t _index) : Body(_owner),
+  m_index(_index),
   m_bodyType(BodyType::Planar),
   m_movementType(MovementType::Translational) {
   }
-
 
 FreeBody::BodyType
 FreeBody::
@@ -73,88 +70,55 @@ GetTagFromMovementType(MovementType _bm) {
 Connection&
 FreeBody::
 GetForwardConnection(size_t _index) {
-  if (_index < m_forwardConnection.size())
-    return m_forwardConnection[_index];
-  else{
-    cerr << "Error, in FreeBody::GetForwardConnection: requesting connection outside of bounds\n\n";
-    exit(-1);
-  }
+  if(_index < m_forwardConnections.size())
+    return m_forwardConnections[_index];
+  else
+    throw RunTimeException(WHERE,
+        "Cannot access forward connection '" + ::to_string(_index) + "'.");
 }
 
 Connection&
 FreeBody::
 GetBackwardConnection(size_t _index) {
-  if (_index < m_backwardConnection.size())
-    return m_backwardConnection[_index];
-  else{
-    cerr << "Error, in FreeBody::GetBackwardConnection: requesting connection outside of bounds\n\n";
-    exit(-1);
-  }
+  if (_index < m_backwardConnections.size())
+    return m_backwardConnections[_index];
+  else
+    throw RunTimeException(WHERE,
+        "Cannot access backward connection '" + ::to_string(_index) + "'.");
 }
 
 bool
-FreeBody::IsAdjacent(shared_ptr<FreeBody> _otherBody) {
-  for(vector<Connection>::iterator C = m_forwardConnection.begin(); C != m_forwardConnection.end(); ++C)
-    if(C->GetNextBody() == _otherBody)
+FreeBody::
+IsAdjacent(shared_ptr<FreeBody> _otherBody) const {
+  for(const auto& c : m_forwardConnections)
+    if(c.GetNextBody() == _otherBody)
       return true;
-  for(vector<Connection>::iterator C = m_backwardConnection.begin(); C != m_backwardConnection.end(); ++C)
-    if(C->GetPreviousBody() == _otherBody)
+  for(const auto& c : m_backwardConnections)
+    if(c.GetPreviousBody() == _otherBody)
       return true;
   return this == _otherBody.get();
 }
 
 bool
-FreeBody::IsWithinI(shared_ptr<FreeBody> _otherBody, int _i){
-  return IsWithinIHelper(this, _otherBody.get(), _i, NULL);
-}
-
-bool
-FreeBody::IsWithinIHelper(FreeBody* _body1, FreeBody* _body2, int _i, FreeBody* _prevBody){
-  if(_body1 == _body2)
-    return true;
-
-  if(_i == 0)
-    return false;
-
-  typedef vector<Connection>::iterator CIT;
-  for(CIT C = _body1->m_forwardConnection.begin(); C != _body1->m_forwardConnection.end(); ++C) {
-    FreeBody* next = C->GetNextBody().get();
-    if(next != _prevBody && IsWithinIHelper(next, _body2, _i-1, _body1))
-      return true;
-  }
-  for(CIT C =_body1->m_backwardConnection.begin(); C != _body1->m_backwardConnection.end(); ++C) {
-    FreeBody* prev = C->GetPreviousBody().get();
-    if(prev != _prevBody && IsWithinIHelper(prev, _body2, _i-1, _body1))
-      return true;
-  }
-  return false;
-}
-
-void
 FreeBody::
-Link(const shared_ptr<FreeBody>& _otherBody,
-    const Transformation& _transformationToBody2,
-    const DHparameters& _dhparameters,
-    const Transformation& _transformationToDHFrame) {
-  Connection c(shared_ptr<FreeBody>(this), _otherBody, _transformationToBody2,
-      _dhparameters, _transformationToDHFrame);
-  Link(c);
+IsWithinI(shared_ptr<FreeBody> _otherBody, size_t _i) const {
+  return IsWithinI(this, _otherBody.get(), _i, NULL);
 }
 
 void
 FreeBody::
 Link(const Connection& _c) {
-  AddForwardConnection(_c);
-  _c.GetNextBody()->AddBackwardConnection(_c);
-  m_worldPolyhedronAvailable=false;
-  m_centerOfMassAvailable=false;
+  m_forwardConnections.push_back(_c);
+  _c.GetNextBody()->m_backwardConnections.push_back(_c);
+  m_worldPolyhedronAvailable = false;
+  m_centerOfMassAvailable = false;
 }
 
 Transformation&
 FreeBody::
 GetWorldTransformation() {
-  set<int> visited;
-  return this->ComputeWorldTransformation(visited);
+  set<size_t> visited;
+  return ComputeWorldTransformation(visited);
 }
 
 void
@@ -185,7 +149,6 @@ Read(istream& _is, CountingStreamBuffer& _cbs) {
     case BodyType::Volumetric:
     case BodyType::Planar:
       {
-        m_isBase = true;
         string baseMovementTag = ReadFieldString(_is, _cbs,
             "Failed reading rotation tag."
             " Options are: rotational or translational.");
@@ -197,7 +160,6 @@ Read(istream& _is, CountingStreamBuffer& _cbs) {
       //if base if fixed we should read a transformation
     case BodyType::Fixed:
       {
-        m_isBase = true;
         m_worldTransformation =
           ReadField<Transformation>(_is, _cbs,
               "Failed reading fixed based transformation.");
@@ -208,38 +170,6 @@ Read(istream& _is, CountingStreamBuffer& _cbs) {
     case BodyType::Joint:
       break;
   }
-}
-
-Transformation&
-FreeBody::
-ComputeWorldTransformation(set<int>& _visited) {
-  m_centerOfMassAvailable = false;
-  m_worldPolyhedronAvailable = false;
-
-  ActiveMultiBody* multibody = dynamic_cast<ActiveMultiBody*>(m_multibody);
-  if(_visited.find(multibody->GetFreeBodyIndex(*this)) != _visited.end()) {
-    return m_worldTransformation;
-  }
-  else {
-    _visited.insert(multibody->GetFreeBodyIndex(*this));
-
-    //for the case when the base is a freebody.
-    if(m_backwardConnection.empty())
-      return m_worldTransformation;
-
-    Connection& back = m_backwardConnection[0];
-    Transformation dh =
-      back.GetDHparameters().GetTransformation();
-    m_worldTransformation =
-      ((FreeBody*)(back.GetPreviousBody().get()))->
-      ComputeWorldTransformation(_visited)
-      * back.GetTransformationToDHFrame()
-      * dh
-      * back.GetTransformationToBody2();
-
-    return m_worldTransformation;
-  }
-  //return m_worldTransformation;
 }
 
 ostream&
@@ -262,3 +192,52 @@ operator<<(ostream& _os, FreeBody& _fb){
   return _os;
 }
 
+bool
+FreeBody::
+IsWithinI(const FreeBody* const _body1, const FreeBody* const _body2, size_t _i,
+    const FreeBody* const _prevBody) const {
+  if(_body1 == _body2)
+    return true;
+
+  if(_i == 0)
+    return false;
+
+  for(const auto& c : m_forwardConnections) {
+    FreeBody* next = c.GetNextBody().get();
+    if(next != _prevBody && IsWithinI(next, _body2, _i-1, _body1))
+      return true;
+  }
+  for(const auto& c : m_backwardConnections) {
+    FreeBody* prev = c.GetPreviousBody().get();
+    if(prev != _prevBody && IsWithinI(prev, _body2, _i-1, _body1))
+      return true;
+  }
+  return false;
+}
+
+Transformation&
+FreeBody::
+ComputeWorldTransformation(set<size_t>& _visited) {
+  m_centerOfMassAvailable = false;
+  m_worldPolyhedronAvailable = false;
+
+  if(_visited.find(m_index) != _visited.end()) {
+    return m_worldTransformation;
+  }
+  else {
+    _visited.insert(m_index);
+
+    if(m_backwardConnections.empty())
+      return m_worldTransformation;
+
+    Connection& back = m_backwardConnections[0];
+    Transformation dh = back.GetDHParameters().GetTransformation();
+    m_worldTransformation =
+      back.GetPreviousBody()->ComputeWorldTransformation(_visited) *
+      back.GetTransformationToDHFrame() *
+      dh *
+      back.GetTransformationToBody2();
+
+    return m_worldTransformation;
+  }
+}

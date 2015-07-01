@@ -67,7 +67,7 @@ class ObstacleBasedSampler : public SamplerMethod<MPTraits> {
     CfgType GetCfgWithParams(Vector3d& _v);
 
     // Returns an appropriate polygon: for a robot, the _mBody frame; for an obstacle, the world frame
-    GMSPolyhedron GetPolyhedron(shared_ptr<StaticMultiBody>& _mBody, bool _isFreeBody);
+    GMSPolyhedron& GetPolyhedron(shared_ptr<StaticMultiBody>& _mBody, bool _isFreeBody);
 
     string m_vcLabel, m_dmLabel; // Validity checker method, distance metric method
     int m_nShellsFree, m_nShellsColl; // Number of free and collision shells
@@ -271,7 +271,7 @@ template<class MPTraits>
 typename ObstacleBasedSampler<MPTraits>::CfgType
 ObstacleBasedSampler<MPTraits>::
 ChooseRandomVertex(shared_ptr<StaticMultiBody> _mBody, bool _isFreeBody) {
-  GMSPolyhedron polyhedron = GetPolyhedron(_mBody, _isFreeBody);
+  GMSPolyhedron& polyhedron = GetPolyhedron(_mBody, _isFreeBody);
   Vector3d x = polyhedron.m_vertexList[(int)(DRand()*polyhedron.m_vertexList.size())];
   return GetCfgWithParams(x);
 }
@@ -298,7 +298,7 @@ template<class MPTraits>
 typename ObstacleBasedSampler<MPTraits>::CfgType
 ObstacleBasedSampler<MPTraits>::
 ChooseRandomWeightedTriangle(shared_ptr<StaticMultiBody> _mBody, bool _isFreeBody) {
-  GMSPolyhedron polyhedron = GetPolyhedron(_mBody, _isFreeBody);
+  GMSPolyhedron& polyhedron = GetPolyhedron(_mBody, _isFreeBody);
   // A random fraction of the area
   double targetArea = _mBody->GetFixedBody(0)->GetPolyhedron().m_area * DRand();
   double sum = 0.0;
@@ -323,7 +323,7 @@ template<class MPTraits>
 typename ObstacleBasedSampler<MPTraits>::CfgType
 ObstacleBasedSampler<MPTraits>::
 ChooseRandomTriangle(shared_ptr<StaticMultiBody> _mBody, bool _isFreeBody) {
-  GMSPolyhedron polyhedron = GetPolyhedron(_mBody, _isFreeBody);
+  GMSPolyhedron& polyhedron = GetPolyhedron(_mBody, _isFreeBody);
 
   // Choose a random triangle
   GMSPolygon *poly = &polyhedron.m_polygonList[(int)(DRand()*polyhedron.m_polygonList.size())];
@@ -340,7 +340,7 @@ template<class MPTraits>
 typename ObstacleBasedSampler<MPTraits>::CfgType
 ObstacleBasedSampler<MPTraits>::
 ChooseExtremeVertex(shared_ptr<StaticMultiBody> _mBody, bool _isFreeBody) {
-  GMSPolyhedron polyhedron = GetPolyhedron(_mBody, _isFreeBody);
+  GMSPolyhedron& polyhedron = GetPolyhedron(_mBody, _isFreeBody);
   int xyz = LRand() % 3; // 0: x, 1: y, 2: z
   int minMax = LRand() % 2; // 0: min, 1: max
   int x = 0; // Index of extreme value
@@ -429,7 +429,7 @@ GetCfgWithParams(Vector3d& _v) {
 
 // Returns an appropriate polygon: for a robot, the _mBody frame; for an obstacle, the world frame
 template<class MPTraits>
-GMSPolyhedron
+GMSPolyhedron&
 ObstacleBasedSampler<MPTraits>::
 GetPolyhedron(shared_ptr<StaticMultiBody>& _mBody, bool _isFreeBody) {
   return _mBody->GetFixedBody(0)->GetWorldPolyhedron();

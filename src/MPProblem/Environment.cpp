@@ -380,10 +380,10 @@ InWSpace(const Cfg& _cfg, shared_ptr<Boundary> _b) {
       Transformation& worldTransformation = robot->GetFreeBody(m)->WorldTransformation();
 
       //first check just the boundary of the polyhedron
-      GMSPolyhedron &bbPoly = robot->GetFreeBody(m)->GetBoundingBoxPolyhedron();
+      GMSPolyhedron& bbPoly = robot->GetFreeBody(m)->GetBoundingBoxPolyhedron();
       bool bcheck = true;
-      for(VIT v = bbPoly.m_vertexList.begin(); v != bbPoly.m_vertexList.end(); ++v) {
-        if(!_b->InBoundary(worldTransformation * (*v))) {
+      for(const auto& v : bbPoly.m_vertexList) {
+        if(!_b->InBoundary(worldTransformation * v)) {
           bcheck = false;
           break;
         }
@@ -394,9 +394,9 @@ InWSpace(const Cfg& _cfg, shared_ptr<Boundary> _b) {
         continue;
 
       //the boundary intersected. Now check the geometry itself.
-      GMSPolyhedron &poly = robot->GetFreeBody(m)->GetPolyhedron();
-      for(VIT v = poly.m_vertexList.begin(); v != poly.m_vertexList.end(); ++v)
-        if(!_b->InBoundary(worldTransformation * (*v)))
+      GMSPolyhedron& poly = robot->GetFreeBody(m)->GetPolyhedron();
+      for(const auto& v : poly.m_vertexList)
+        if(!_b->InBoundary(worldTransformation * v))
           return false;
     }
   }

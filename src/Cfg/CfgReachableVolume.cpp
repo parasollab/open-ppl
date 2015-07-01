@@ -49,15 +49,15 @@ void CfgReachableVolume::GetRandomCfg(Environment* _env){
 
 void CfgReachableVolume::GetRandomCfg(Environment* _env, shared_ptr<Boundary> _bb){
   m_v.clear();
-  for(unsigned int i=0; i<m_robots.size(); i++){
+  for(size_t i = 0; i < m_robots.size(); ++i) {
     vector<double> cfg_data_robot;
     //whoever decided to make m_robots a vector of vectors is going to need to change this to correctly fit that format
     if(m_robots[i]->GetBaseType() == FreeBody::BodyType::Fixed ||
         (*m_reachableVolumeRobots)[i]->m_fixed){
-      for(int j=0; j<6;j++){
+      for(int j=0; j<6;j++)
         m_v.push_back(0);
-      }
-    }else{
+    }
+    else {
       if(m_robots[i]->GetBaseType() == FreeBody::BodyType::Planar ||
           m_robots[i]->GetBaseType() == FreeBody::BodyType::Volumetric) {
         Point3d p=_bb->GetRandomPoint();
@@ -77,15 +77,13 @@ void CfgReachableVolume::GetRandomCfg(Environment* _env, shared_ptr<Boundary> _b
     shared_ptr<vector<double> > internalCfg = (*m_reachableVolumeRobots)[i]->getInternalCFGCoordinates();
     if(m_robots[i]->GetBaseType() == FreeBody::BodyType::Planar)
       (*internalCfg)[1]=DRand();
-    m_v.insert(m_v.end(),internalCfg->begin(),internalCfg->end());
-
+    m_v.insert(m_v.end(), internalCfg->begin(), internalCfg->end());
   }
 
-  if((*m_reachableVolumeRobots)[0]->m_debug){
+  if((*m_reachableVolumeRobots)[0]->m_debug) {
     cout<<"cfg ="<<endl;
-    for(unsigned int i =0; i<m_v.size(); i++){
+    for(size_t i = 0; i < m_v.size(); i++)
       cout<<m_v[i]<<endl;
-    }
     Cfg::SetData(m_v);
     ConfigEnvironment();
     /*

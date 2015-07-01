@@ -71,7 +71,7 @@ class MultiBody {
     /// @{
 
     ////////////////////////////////////////////////////////////////////////////
-    /// @param _cdMethods CD Methods to prepare for collision
+    /// @param _cdMethod CD Method to prepare for collision
     void BuildCDStructure(CollisionDetectionMethod* _cdMethod);
 
     /// @}
@@ -87,7 +87,7 @@ class MultiBody {
     /// @param _cbs Counting stream buffer
     virtual void Read(istream& _is, CountingStreamBuffer& _cbs) = 0;
     ////////////////////////////////////////////////////////////////////////////
-    /// @param Output stream
+    /// @param _os Output stream
     virtual void Write(ostream & _os) = 0;
 
     /// @}

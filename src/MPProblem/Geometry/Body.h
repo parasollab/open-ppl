@@ -16,12 +16,13 @@
 #include "DT_Polytope.h"
 #endif
 
+#include "Transformation.h"
+using namespace mathtool;
+
 #include "Utilities/MPUtils.h"
-#include "MPProblem/Geometry/Connection.h"
 #include "MPProblem/Geometry/GMSPolyhedron.h"
 
 class CollisionDetectionMethod;
-class DHparameters;
 class MultiBody;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -31,8 +32,7 @@ class MultiBody;
 /// Body is a high level representation of a workspace object.
 /// Body s essentially encapsulate the geometry of the body (including boundary
 /// information), collision detection models, and contain methods to modify
-/// transformations of them. If this Body instance is a link in articulated
-/// MultiBody, then Connection information is also provided.
+/// transformations of them.
 ////////////////////////////////////////////////////////////////////////////////
 class Body {
   public:
@@ -45,15 +45,78 @@ class Body {
     /// @param _owner Owner of this body
     Body(MultiBody* _owner);
 
-    Body(const Body& _other) = delete;
-    Body& operator=(const Body& _other) = delete;
+    Body(const Body& _other) = delete;            ///< No copy
+    Body& operator=(const Body& _other) = delete; ///< No assign
 
     virtual ~Body();
 
     /// @}
     ////////////////////////////////////////////////////////////////////////////
 
-    string GetFileName() { return m_filename; }
+    ////////////////////////////////////////////////////////////////////////////
+    /// @name Body Information
+    /// @{
+
+    ////////////////////////////////////////////////////////////////////////////
+    /// @return Owner of this body
+    MultiBody* GetMultiBody() {return m_multibody;}
+
+    ////////////////////////////////////////////////////////////////////////////
+    /// @return Filename of Body
+    const string& GetFileName() const { return m_filename; }
+
+    ////////////////////////////////////////////////////////////////////////////
+    /// @return Label of body
+    int GetLabel() { return m_label; };
+    ////////////////////////////////////////////////////////////////////////////
+    /// @param _label New label for this body
+    void SetLabel(const int _label) { m_label = _label; };
+
+    ////////////////////////////////////////////////////////////////////////////
+    /// @return Center of mass of body
+    Vector3d GetCenterOfMass();
+    ////////////////////////////////////////////////////////////////////////////
+    /// @return Bounding sphere radius
+    double GetBoundingSphereRadius() const;
+    ////////////////////////////////////////////////////////////////////////////
+    /// @return Inside sphere radius
+    double GetInsideSphereRadius() const;
+
+    /// @}
+    ////////////////////////////////////////////////////////////////////////////
+
+    ////////////////////////////////////////////////////////////////////////////
+    /// @name Model
+    /// @{
+
+    ////////////////////////////////////////////////////////////////////////////
+    /// @return Polyhedron in model coordinates
+    GMSPolyhedron& GetPolyhedron() {return m_polyhedron;}
+    ////////////////////////////////////////////////////////////////////////////
+    /// @return Polyhedron in world coordinates
+    GMSPolyhedron& GetWorldPolyhedron();
+    ////////////////////////////////////////////////////////////////////////////
+    /// @return BoundingBox in model coordinates
+    GMSPolyhedron& GetBoundingBoxPolyhedron() {return m_bbPolyhedron;}
+    ////////////////////////////////////////////////////////////////////////////
+    /// @return Bounding box in world coordinates
+    GMSPolyhedron& GetWorldBoundingBox();
+
+    ////////////////////////////////////////////////////////////////////////////
+    /// @return Bounding box
+    double* GetBoundingBox() {return m_boundingBox;}
+
+    ////////////////////////////////////////////////////////////////////////////
+    /// @param _v Vertex
+    /// @return True if \p _v is a convex hull vertex of Body
+    bool IsConvexHullVertex(const Vector3d& _v);
+
+    /// @}
+    ////////////////////////////////////////////////////////////////////////////
+
+    ////////////////////////////////////////////////////////////////////////////
+    /// @name Transformation
+    /// @{
 
     ////////////////////////////////////////////////////////////////////////////
     /// @return Transformation of this body w.r.t. the world frame
@@ -68,84 +131,19 @@ class Body {
     Transformation& WorldTransformation() {return m_worldTransformation;}
 
     ////////////////////////////////////////////////////////////////////////////
-    /// @return Polyhedron in world coordinates
-    GMSPolyhedron& GetWorldPolyhedron();
-    ////////////////////////////////////////////////////////////////////////////
-    /// @return Bounding box in world coordinates
-    GMSPolyhedron& GetWorldBoundingBox();
-    ////////////////////////////////////////////////////////////////////////////
-    /// @return Polyhedron in model coordinates
-    GMSPolyhedron& GetPolyhedron() {return m_polyhedron;}
-    ////////////////////////////////////////////////////////////////////////////
-    /// @return BoundingBox in model coordinates
-    GMSPolyhedron& GetBoundingBoxPolyhedron() {return m_bbPolyhedron;}
-
-    ////////////////////////////////////////////////////////////////////////////
-    /// @return Owner of this body
-    MultiBody* GetMultiBody() {return m_multibody;}
-    ////////////////////////////////////////////////////////////////////////////
-    /// @return Boinding box
-    double* GetBoundingBox() {return m_boundingBox;}
-    ////////////////////////////////////////////////////////////////////////////
-    /// @return Center of mass of body
-    Vector3d GetCenterOfMass();
-    ////////////////////////////////////////////////////////////////////////////
-    /// @return Bounding sphere radius
-    double GetBoundingSphereRadius() const;
-    ////////////////////////////////////////////////////////////////////////////
-    /// @return Inside sphere radius
-    double GetInsideSphereRadius() const;
-
-    ////////////////////////////////////////////////////////////////////////////
     /// @param _worldTransformation Transformation w.r.t. world frame
-    void PutWorldTransformation(Transformation& _worldTransformation){m_worldTransformation = _worldTransformation;}
+    void PutWorldTransformation(Transformation& _worldTransformation);
+
+    /// @}
+    ////////////////////////////////////////////////////////////////////////////
 
     ////////////////////////////////////////////////////////////////////////////
-    /// @brief Set the world polyhedron based upon world tranfromation
-    void ChangeWorldPolyhedron();
-
-    ////////////////////////////////////////////////////////////////////////////
-    /// @return Label of body
-    int GetLabel() { return m_label; };
-    ////////////////////////////////////////////////////////////////////////////
-    /// @param _label New label for this body
-    void SetLabel(const int _label) { m_label = _label; };
-
-    ////////////////////////////////////////////////////////////////////////////
-    /// @brief Read geometry information from file
-    void Read();
-
-    ////////////////////////////////////////////////////////////////////////////
-    /// @brief Output information of body
-    /// @param _os Output stream
-    void Write(ostream& _os);
-
-    ////////////////////////////////////////////////////////////////////////////
-    /// @brief Calculate center of mass in world coordinates
-    ///
-    /// This function is automatically calld by GetCenterOfMass() if it has
-    /// never been computed. After computing it, this function will not be
-    /// called again: rigid body. This way of computing center of mass is
-    /// physically not true. This assumes that each vertex carries the same
-    /// mass, and edges are weightless. To be more accurate, we need to be
-    /// modify this to consider the length of edges, which is still an
-    /// approximation.
-    void ComputeCenterOfMass();
-
-    ////////////////////////////////////////////////////////////////////////////
-    /// @brief Determind bounding box
-    void FindBoundingBox();
+    /// @name Collision Detection Models
+    /// @{
 
     ////////////////////////////////////////////////////////////////////////////
     /// @brief Build appropriate collision detection models
     void BuildCDStructure(CollisionDetectionMethod* _cdMethod);
-
-    ////////////////////////////////////////////////////////////////////////////
-    /// @param _v Vertex
-    /// @return True if \p _v is a convex hull vertex of Body
-    bool IsConvexHullVertex(const Vector3d& _v);
-
-    static string m_modelDataDir; ///< Directory of geometry files
 
 #ifdef USE_VCLIP
     ////////////////////////////////////////////////////////////////////////////
@@ -183,27 +181,67 @@ class Body {
     void UpdateVertexBase();
 #endif
 
+    /// @}
+    ////////////////////////////////////////////////////////////////////////////
+
+    ////////////////////////////////////////////////////////////////////////////
+    /// @name I/O
+    /// @{
+
+    ////////////////////////////////////////////////////////////////////////////
+    /// @brief Read geometry information from file
+    void Read();
+
+    ////////////////////////////////////////////////////////////////////////////
+    /// @brief Output information of body
+    /// @param _os Output stream
+    //void Write(ostream& _os);
+
+    static string m_modelDataDir; ///< Directory of geometry files
+
+    /// @}
+    ////////////////////////////////////////////////////////////////////////////
+
   protected:
+
+    ////////////////////////////////////////////////////////////////////////////
+    /// @brief Calculate center of mass in world coordinates
+    ///
+    /// This function is automatically calld by GetCenterOfMass() if it has
+    /// never been computed. After computing it, this function will not be
+    /// called again: rigid body. This way of computing center of mass is
+    /// physically not true. This assumes that each vertex carries the same
+    /// mass, and edges are weightless. To be more accurate, we need to be
+    /// modify this to consider the length of edges, which is still an
+    /// approximation.
+    void ComputeCenterOfMass();
+
+    ////////////////////////////////////////////////////////////////////////////
+    /// @brief Determine bounding box
+    void FindBoundingBox();
 
     ////////////////////////////////////////////////////////////////////////////
     /// @brief Compute convex hull of body
     void ComputeConvexHull();
 
-    string m_filename;                       ///< Geometry filename
     MultiBody* m_multibody;                  ///< Owner of Body
-    Transformation m_worldTransformation;    ///< World Transformation
+    string m_filename;                       ///< Geometry filename
     int m_label;                             ///< Body ID
+    Transformation m_worldTransformation;    ///< World Transformation
 
     GMSPolyhedron m_polyhedron;              ///< Model in model coordinates
-    GMSPolyhedron m_worldPolyhedron;         ///< Model in world coordinates
-    GMSPolyhedron m_convexHull;              ///< Convex hull of model
-    bool m_convexHullAvailable;              ///< Is convex hull computed
-    bool m_centerOfMassAvailable;            ///< Is center of mass computed
-    Vector3d m_centerOfMass;                 ///< Center of mass
     bool m_worldPolyhedronAvailable;         ///< Is world polyhedron available
-    double m_boundingBox[6];                 ///< Bounding box
+    GMSPolyhedron m_worldPolyhedron;         ///< Model in world coordinates
     GMSPolyhedron m_bbPolyhedron;            ///< Bounding polyhedron
     GMSPolyhedron m_bbWorldPolyhedron;       ///< Bounding polyhedron in world
+
+    bool m_convexHullAvailable;              ///< Is convex hull computed
+    GMSPolyhedron m_convexHull;              ///< Convex hull of model
+
+    bool m_centerOfMassAvailable;            ///< Is center of mass computed
+    Vector3d m_centerOfMass;                 ///< Center of mass
+
+    double m_boundingBox[6];                 ///< Bounding box
 
 #ifdef USE_VCLIP
     shared_ptr<PolyTree> vclipBody;          ///< VClip model

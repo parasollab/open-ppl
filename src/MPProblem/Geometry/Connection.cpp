@@ -2,7 +2,6 @@
 
 #include "ActiveMultiBody.h"
 #include "FreeBody.h"
-#include "FreeBody.h"
 
 size_t Connection::m_globalCounter = 0;
 
@@ -10,21 +9,6 @@ Connection::
 Connection(MultiBody* _owner) : m_multibody(_owner), m_jointType(JointType::NonActuated) {
   m_globalIndex = m_globalCounter++;
 }
-
-Connection::
-Connection(const shared_ptr<FreeBody>& _body1, const shared_ptr<FreeBody>& _body2,
-    const Transformation& _transformationToBody2,
-    const DHparameters& _dhparameters,
-    const Transformation& _transformationToDHFrame) :
-  m_multibody(NULL),
-  m_transformationToBody2(_transformationToBody2),
-  m_transformationToDHFrame(_transformationToDHFrame),
-  m_dhParameters(_dhparameters),
-  m_jointType(JointType::NonActuated) {
-    m_globalIndex = m_globalCounter++;
-    m_bodies[0] = _body1;
-    m_bodies[1] = _body2;
-  }
 
 Connection::JointType
 Connection::
@@ -104,7 +88,7 @@ Read(istream& _is, CountingStreamBuffer& _cbs) {
       "Failed reading transformation to DH frame.");
 
   //DH parameters
-  m_dhParameters = ReadField<DHparameters>(_is, _cbs,
+  m_dhParameters = ReadField<DHParameters>(_is, _cbs,
       "Failed reading DH parameters.");
 
   //transformation to next body
@@ -122,4 +106,3 @@ operator<<(ostream& _os, const Connection& _c) {
     << _c.m_transformationToDHFrame << " " << _c.m_dhParameters << " "
     << _c.m_transformationToBody2;
 }
-

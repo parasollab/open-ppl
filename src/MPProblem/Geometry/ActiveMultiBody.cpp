@@ -14,15 +14,6 @@ NumFreeBody() const {
   return m_freeBody.size();
 }
 
-size_t
-ActiveMultiBody::
-GetFreeBodyIndex(const FreeBody& _b) const {
-  for(size_t i=0; i<m_freeBody.size(); ++i)
-    if(&_b == m_freeBody[i].get())
-      return i;
-  return -1;
-}
-
 shared_ptr<FreeBody>
 ActiveMultiBody::
 GetFreeBody(size_t _index) const {
@@ -165,9 +156,9 @@ Configure(const vector<double>& _v) {
   for(auto& joint : m_joints) {
     if(joint->GetConnectionType() != Connection::JointType::NonActuated) {
       size_t second = joint->GetNextBodyIndex();
-      GetFreeBody(second)->GetBackwardConnection(0).GetDHparameters().m_theta = _v[index++]*PI;
+      GetFreeBody(second)->GetBackwardConnection(0).GetDHParameters().m_theta = _v[index++]*PI;
       if(joint->GetConnectionType() == Connection::JointType::Spherical)
-        GetFreeBody(second)->GetBackwardConnection(0).GetDHparameters().m_alpha = _v[index++]*PI;
+        GetFreeBody(second)->GetBackwardConnection(0).GetDHParameters().m_alpha = _v[index++]*PI;
     }
   }
   // configure the robot
@@ -360,7 +351,7 @@ Read(istream& _is, CountingStreamBuffer& _cbs) {
   m_baseIndex = -1;
   for(size_t i=0; i < bodyCount && _is; ++i) {
     //read the free body
-    shared_ptr<FreeBody> free(new FreeBody(this));
+    shared_ptr<FreeBody> free(new FreeBody(this, i));
     free->Read(_is, _cbs);
 
     //add object to multibody
