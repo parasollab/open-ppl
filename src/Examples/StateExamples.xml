@@ -1,0 +1,123 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<MotionPlanning warnings="true" warningsAsErrors="true" print="false">
+  <MPProblem>
+
+    <!-- Example input, resolution defaults computed automatically. Can set
+         through environment.-->
+    <!--Environment filename=2D/2d.env" positionRes="0.10"
+         positionResFactor="0.2" orientationRes="0.20"/-->
+    <Environment filename="2D/2d.env" saveDofs="false"/>
+
+    <DistanceMetrics>
+      <Euclidean label="euclidean"/>
+    </DistanceMetrics>
+
+    <ValidityCheckers>
+      <CollisionDetection label="cd1" method="RAPID"/>
+      <CollisionDetection label="cd2" method="PQP"/>
+      <CollisionDetection label="cd3" method="VCLIP"/>
+      <CollisionDetection label="cd4" method="PQP_SOLID"/>
+      <AlwaysTrueValidity label="alwaysTrue"/>
+    </ValidityCheckers>
+
+    <NeighborhoodFinders>
+      <BruteForceNF label="BFNF" dmLabel="euclidean" unconnected="false" k="10"/>
+      <BruteForceNF label="Nearest" dmLabel="euclidean" unconnected="false" k="1"/>
+      <OptimalNF label="OptimalK" nfLabel="BFNF"/>
+      <RadiusNF label="RadiusNF" dmLabel="euclidean" radius="5"/>
+      <RandomNF label="RandomNF" dmLabel="euclidean" k="5"/>
+    </NeighborhoodFinders>
+
+    <Samplers>
+      <UniformRandomSampler label="UniformRandom" vcLabel="alwaysTrue"/>
+      <UniformRandomSampler label="UniformRandomFree" vcLabel="cd1"/>
+      <ObstacleBasedSampler label="OBPRM" vcLabel="cd1" useBBX="false" pointSelection="cspace"
+        dmLabel="euclidean" stepSize="0.0" nShellsColl="0" nShellsFree="1" debug="false"/>
+      <GaussianSampler label="Gauss" vcLabel="cd1" d="0.2" dmLabel="euclidean" useBBX="false"/>
+      <BridgeTestSampler label="Bridge" vcLabel="cd1" d="0.2" dmLabel="euclidean" useBBX="true"/>
+      <MedialAxisSampler label="MAPRM" vcLabel="cd2" dmLabel="euclidean"
+        clearanceType="exact" penetrationType="exact"
+        useBBX="true" debug="false" positional="true"
+        epsilon="0.01" historyLength="100"/>
+      <GridSampler label="Grid" vcLabel="cd1" useBBX="true">
+        <Dimension index="0" points="10"/>
+        <Dimension index="1" points="5"/>
+        <Dimension index="2" points="5"/>
+      </GridSampler>
+      <MixSampler label="MixSampler">
+        <Sampler label="UniformRandomFree" p="0.8"/>
+        <Sampler label="UniformRandom" p="0.2"/>
+      </MixSampler>
+      <UniformObstacleBasedSampler label="UOBPRM" vcLabel="cd1" useBBX="false" dmLabel="euclidean" d="0.02" />
+      <UniformMedialAxisSampler label="UMAPRM" vcLabel="cd4" useBBX="true" dmLabel="euclidean" d="2.00" t="10"
+        clearanceType="exact" penetrationType="exact" debug="false" positional="true"/>
+    </Samplers>
+
+    <LocalPlanners>
+      <StraightLine label="sl" binaryEvaluation="true" vcLabel="cd1"/>
+    </LocalPlanners>
+
+    <Extenders>
+      <BasicExtender label="BERO" debug="false"
+        dmLabel="euclidean" vcLabel="cd1" delta="1.0"/>
+    </Extenders>
+
+   <PathModifiers>
+      <ShortcuttingPathModifier label="ShortcuttingPathModifier" lpLabel="sl"
+        debug="false"/>
+    </PathModifiers>
+
+    <Connectors>
+      <CCsConnector label="ConnectCCs" nfLabel="BFNF" lpLabel="sl" k="5"/>
+      <NeighborhoodConnector label="Closest" nfLabel="BFNF" lpLabel="sl" checkIfSameCC="false" debug="false"/>
+      <RewireConnector label="OptimalRewire" nfLabel="OptimalK" lpLabel="sl"/>
+    </Connectors>
+
+    <Metrics>
+      <NumNodesMetric label="NumNodes"/>
+      <NumEdgesMetric label="NumEdges"/>
+      <TimeMetric label="TimeInSec"/>
+    </Metrics>
+
+    <MapEvaluators>
+      <Query label="Query" queryFile="2D/2d.query" dmLabel="euclidean"
+        lpLabel="sl" debug="false" pmLabel="ShortcuttingPathModifier">
+        <NodeConnectionMethod method="Closest"/>
+      </Query>
+      <PrintMapEvaluation label="PrintMap" base_name="Basic"/>
+      <ConditionalEvaluator label="NodesEval" metric_method="NumNodes" value="100" operator=">="/>
+      <ConditionalEvaluator label="EdgesEval" metric_method="NumEdges" value="1000" operator=">"/>
+      <ComposeEvaluator label="Com1" operator="or">
+        <Evaluator label="NodesEval"/>
+        <Evaluator label="Query"/>
+      </ComposeEvaluator>
+    </MapEvaluators>
+
+    <MPStrategies>
+
+      <!-- BasicRRT -->
+      <BasicRRTStrategy label="BasicRRT" delta="10.0" minDist="0.001"
+        numRoots="1" m="1" growthFocus="0.01" lpLabel="sl" dmLabel="euclidean"
+        nfLabel="Nearest" vcLabel="cd1" connectorLabel="Closest"
+        query="2D/2d.query" gtype="UNDIRECTED_TREE" debug="false"
+        evaluateGoal="true" growGoals = "true" extenderLabel="BERO">
+        <Evaluator label="NodesEval"/>
+      </BasicRRTStrategy>
+
+      <!-- RRT* -->
+      <!-- The connector needs to be OptimalRewire for RRT* -->
+      <BasicRRTStrategy label="RRTstar" delta="10.0" minDist="0.001"
+        numRoots="1" m="1" growthFocus="0.01" lpLabel="sl" dmLabel="euclidean"
+        nfLabel="Nearest" vcLabel="cd1" query="2D/2d.query" extenderLabel="BERO"
+        connectorLabel="OptimalRewire" gtype="UNDIRECTED_GRAPH">
+        <Evaluator label="NodesEval"/>
+      </BasicRRTStrategy>
+
+    </MPStrategies>
+
+    <Solver mpStrategyLabel="BasicRRT" seed="12345678"  baseFilename="Basic" vizmoDebug="true"/>
+    <!-- MPProblem allows multiple solvers to be specified and executed. -->
+    <!--Solver mpStrategyLabel="BasicPRM2" seed="12345678" baseFilename="Basic2" vizmoDebug="true"/-->
+
+  </MPProblem>
+</MotionPlanning>

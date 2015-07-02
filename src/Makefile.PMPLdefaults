@@ -267,12 +267,17 @@ PMPL_OBJS = \
 	NeighborhoodFinders/MPNNWrapper.o
 
 ifneq ($(filter $(ROBOT_DEF), PMPSSSurfaceMult PMPCfgSurface),)
-  	PMPL_OBJS += Cfg/CfgSurface.o \
-               Cfg/SSSurface.o \
-               Cfg/SSSurfaceMult.o
-else
+  PMPL_OBJS += Cfg/CfgSurface.o \
+	       Cfg/SSSurface.o \
+	       Cfg/SSSurfaceMult.o
+  else
   ifeq (${ROBOT_DEF}, $(or PMPReachDistCC PMPReachDistCCFixed))
   PMPL_OBJS += Cfg/Cfg_reach_cc.o \
 	       Cfg/Cfg_reach_cc_fixed.o
+  else
+  ifeq (${ROBOT_DEF}, $(or PMPState))
+  PMPL_OBJS += Cfg/State.o \
+	       Edges/StateEdge.o
   endif
+endif
 endif
