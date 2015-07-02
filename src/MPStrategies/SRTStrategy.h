@@ -32,7 +32,7 @@ class SRTStrategy : public MPStrategyMethod<MPTraits> {
     virtual void ParseXML(XMLNode& _node);
 
     virtual void Initialize();
-    virtual void Run();
+    virtual void Iterate();
     virtual void Finalize();
 
     virtual void Print(ostream& _os) const;
@@ -54,7 +54,6 @@ class SRTStrategy : public MPStrategyMethod<MPTraits> {
     CfgType SelectDirection();
     virtual VID ExpandTree(VID _tree, CfgType& _dir);
 
-    vector<string> m_evaluators;
     string m_lpLabel;
     string m_dmLabel;
     string m_nfLabel;
@@ -67,6 +66,7 @@ class SRTStrategy : public MPStrategyMethod<MPTraits> {
     size_t m_numRandCent; //"n_r" random centroids
     size_t m_numClosePairs; //"n_p" closest pairs
     size_t m_numConnIter; //"n_i" tree connection iterations
+    size_t m_iteration;   ///< Number of iterations so far.
 
     typedef pair<CfgType, vector<VID> > Tree; //centroid, tree pair
     typedef map<VID, Tree> Trees; //node representative, tree mapping
@@ -77,17 +77,17 @@ class SRTStrategy : public MPStrategyMethod<MPTraits> {
 
 template<class MPTraits>
 SRTStrategy<MPTraits>::
-SRTStrategy() {
+SRTStrategy() : m_iteration(0) {
   this->SetName("SRTStrategy");
 }
 
 template<class MPTraits>
 SRTStrategy<MPTraits>::
 SRTStrategy(MPProblemType* _problem, XMLNode& _node) :
-  MPStrategyMethod<MPTraits>(_problem, _node), m_query(NULL) {
-    this->SetName("SRTStrategy");
-    ParseXML(_node);
-  }
+    MPStrategyMethod<MPTraits>(_problem, _node), m_iteration(0), m_query(NULL) {
+  this->SetName("SRTStrategy");
+  ParseXML(_node);
+}
 
 template<class MPTraits>
 void
@@ -95,7 +95,7 @@ SRTStrategy<MPTraits>::
 ParseXML(XMLNode& _node) {
   for(auto& child : _node)
     if(child.Name() == "Evaluator")
-      m_evaluators.push_back(
+      this->m_meLabels.push_back(
           child.Read("label", true, "", "Evaluation Method"));
 
   m_delta = _node.Read("delta", false, 1.0, 0.0, MAX_DBL, "Delta Distance");
@@ -137,16 +137,13 @@ Print(ostream& _os) const {
   _os << "\tLocal Planner:: " << m_lpLabel << endl;
   _os << "\tExtender:: " << m_eLabel << endl;
   _os << "\tEvaluators:: " << endl;
-  typedef vector<string>::const_iterator SIT;
-  for(SIT sit = m_evaluators.begin(); sit!=m_evaluators.end(); sit++)
-    _os << "\t\t" << *sit << endl;
+  for(const auto& label: this->m_meLabels)
+    _os << "\t\t" << label << endl;
   _os << "\tdelta:: " << m_delta << endl;
   _os << "\tminimum distance:: " << m_minDist << endl;
 }
 
-//////////////////////
-//Initialization Phase
-/////////////////////
+
 template<class MPTraits>
 void
 SRTStrategy<MPTraits>::
@@ -171,46 +168,25 @@ Initialize() {
     cout<<"\nEnding Initializing SRTStrategy"<<endl;
 }
 
-////////////////
-//Run/Start Phase
-////////////////
+
 template<class MPTraits>
 void
 SRTStrategy<MPTraits>::
-Run() {
-  if(this->m_debug)
-    cout << "\nRunning SRTStrategy" << endl;
+Iterate() {
+  cout << "Starting iteration " << ++m_iteration << endl;
+  //grow "k" randomly placed trees for "m" iterations
+  GenerateTrees();
+  ExpandTrees();
 
-  // Setup MP Variables
-  StatClass* stats = this->GetStatClass();
+  //determine edge candidates
+  vector<pair<VID, VID> > connectionCandidates;
+  FindCandidateConnections(connectionCandidates);
 
-  stats->StartClock("SRT Generation");
-
-  int iteration = 1;
-  do {
-    cout << "Starting iteration " << iteration++ << endl;
-    //grow "k" randomly placed trees for "m" iterations
-    GenerateTrees();
-    ExpandTrees();
-
-    //determine edge candidates
-    vector<pair<VID, VID> > connectionCandidates;
-    FindCandidateConnections(connectionCandidates);
-
-    //attempt edge candidates
-    ConnectTrees(connectionCandidates);
-  } while(!this->EvaluateMap(m_evaluators));
-
-  stats->StopClock("SRT Generation");
-  if(this->m_debug) {
-    stats->PrintClock("SRT Generation", cout);
-    cout<<"\nEnd Running SRTStrategy::" << endl;
-  }
+  //attempt edge candidates
+  ConnectTrees(connectionCandidates);
 }
 
-/////////////////////
-//Finalization phase
-////////////////////
+
 template<class MPTraits>
 void
 SRTStrategy<MPTraits>::

@@ -12,7 +12,7 @@
 /// @brief TODO
 /// @tparam MPTraits Motion planning universe
 ///
-/// TODO
+/// \todo Configure for pausible execution.
 ////////////////////////////////////////////////////////////////////////////////
 template<class MPTraits>
 class BlindRRT : public MPStrategyMethod<MPTraits> {
@@ -47,7 +47,6 @@ class BlindRRT : public MPStrategyMethod<MPTraits> {
 
     void EvaluateGoals();
 
-    vector<string> m_evaluators;
     string m_lp;
     string m_dm;
     string m_nf;
@@ -96,7 +95,7 @@ BlindRRT<MPTraits>::
 ParseXML(XMLNode& _node) {
   for(auto& child : _node)
     if(child.Name() == "Evaluator")
-      m_evaluators.push_back(
+      this->m_meLabels.push_back(
           child.Read("label", true, "", "Evaluation Method"));
 
   m_delta = _node.Read("delta", false, 1.0, 0.0, MAX_DBL, "Delta Distance");
@@ -123,7 +122,6 @@ ParseXML(XMLNode& _node) {
 template<class MPTraits>
 void
 BlindRRT<MPTraits>::PrintOptions(ostream& _os) {
-  typedef vector<string>::iterator SIT;
   _os << "BlindRRT::PrintOptions" << endl;
   _os << "\tNeighorhood Finder:: " << m_nf << endl;
   _os << "\tDistance Metric:: " << m_dm << endl;
@@ -134,8 +132,8 @@ BlindRRT<MPTraits>::PrintOptions(ostream& _os) {
   _os << "\tInitial Samples:: " << m_initialSamples << endl;
   _os << "\tEvaluate Goal:: " << m_evaluateGoal << endl;
   _os << "\tEvaluators:: " << endl;
-  for(SIT sit = m_evaluators.begin(); sit!=m_evaluators.end(); sit++)
-    _os << "\t\t" << *sit << endl;
+  for(const auto& label : this->m_meLabels)
+    _os << "\t\t" << label << endl;
   _os << "\tdelta:: " << m_delta << endl;
   _os << "\tminimum distance:: " << m_minDist << endl;
 }
@@ -227,7 +225,7 @@ BlindRRT<MPTraits>::Run() {
     // there can be more than one samples made in one expansion
     samples += samplesMade;
 
-    bool evalMap = this->EvaluateMap(m_evaluators);
+    bool evalMap = this->EvaluateMap();
     mapPassedEvaluation = evalMap && ((m_evaluateGoal && m_goalsNotFound.size()==0) || !m_evaluateGoal);
 
     if( m_goalsNotFound.size()==0 && this->m_debug)

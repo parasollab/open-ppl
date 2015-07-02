@@ -166,6 +166,8 @@ class PerturbMostDistantJoint : public PerturbJoints{
 /// @tparam MPTraits Motion planning universe
 ///
 /// TODO
+///
+/// \todo Configure for pausible execution.
 ////////////////////////////////////////////////////////////////////////////////
 template<class MPTraits>
 class ReachableVolumeRRT : public BasicRRTStrategy<MPTraits> {
@@ -265,8 +267,8 @@ void PrintOptions(ostream& _os) {
   _os << "\tEvaluate Goal:: " << m_evaluateGoal << endl;
   _os << "\tEvaluators:: " << endl;
   _os << "\tGrow Goals:: " << m_growGoals << endl;
-  for(SIT sit = m_evaluators.begin(); sit!=m_evaluators.end(); sit++)
-    _os << "\t\t" << *sit << endl;
+  for(const auto& label : m_meLabels)
+    _os << "\t\t" << label << endl;
   _os << "\tdelta:: " << m_delta << endl;
   _os << "\tminimum distance:: " << m_minDist << endl;
   _os << "\tnumber of roots:: " << m_numRoots << endl;
@@ -465,7 +467,7 @@ ReachableVolumeRRT<MPTraits>::Run() {
     }
 
 
-    bool evalMap = this->EvaluateMap(this->m_evaluators);
+    bool evalMap = this->EvaluateMap();
 
     if(!this->m_growGoals){
       if(nGoalsNotFound<=0){

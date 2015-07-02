@@ -44,6 +44,8 @@ struct NodeTypeCounts {
 /// @tparam MPTraits Motion planning universe
 ///
 /// TODO
+///
+/// \todo Configure for pausible execution.
 ////////////////////////////////////////////////////////////////////////////////
 template<class MPTraits>
 class HybridPRM : public MPStrategyMethod<MPTraits> {
@@ -89,7 +91,6 @@ class HybridPRM : public MPStrategyMethod<MPTraits> {
   protected:
     vector<string> m_samplerLabels;
     vector<string> m_connectorLabels;
-    vector<string> m_evaluatorLabels;
 
     map<string,double> m_nodeWeights;
     map<string,double> m_nodeProbability;
@@ -119,24 +120,27 @@ inline ostream& operator<<(ostream& _os, const NodeTypeCounts& _nt){
 template<class MPTraits>
 HybridPRM<MPTraits>::
 HybridPRM(string _samplerSelectionDistribution,
-    bool _countCost, double _percentageRandom, bool _fixedCost, bool _resettingLearning,int _binSize,
-    const map<string, pair<int, int> >& _samplerLabels,
+    bool _countCost, double _percentageRandom, bool _fixedCost,
+    bool _resettingLearning, int _binSize,
+    const map<string, pair<int, int>>& _samplerLabels,
     const vector<string>& _connectorLabels,
     const vector<string>& _evaluatorLabels) :
-  m_samplerSelectionDistribution(_samplerSelectionDistribution), m_countCost(_countCost),
-  m_percentageRandom(_percentageRandom), m_fixedCost(_fixedCost), m_resettingLearning(_resettingLearning),
-  m_binSize(_binSize),m_samplerLabels(_samplerLabels),
-  m_connectorLabels(_connectorLabels), m_evaluatorLabels(_evaluatorLabels){
+    m_samplerSelectionDistribution(_samplerSelectionDistribution),
+    m_countCost(_countCost), m_percentageRandom(_percentageRandom),
+    m_fixedCost(_fixedCost), m_resettingLearning(_resettingLearning),
+    m_binSize(_binSize), m_samplerLabels(_samplerLabels),
+    m_connectorLabels(_connectorLabels) {
+  this->m_meLabels = _evaluatorLabels;
   this->SetName("HybridPRM");
-  }
+}
 
 template<class MPTraits>
 HybridPRM<MPTraits>::
 HybridPRM(typename MPTraits::MPProblemType* _problem, XMLNode& _node) :
-  MPStrategyMethod<MPTraits>(_problem, _node){
-    this->SetName("HybridPRM");
-    ParseXML(_node);
-  }
+    MPStrategyMethod<MPTraits>(_problem, _node) {
+  this->SetName("HybridPRM");
+  ParseXML(_node);
+}
 
 template<class MPTraits>
 void HybridPRM<MPTraits>::
@@ -151,7 +155,7 @@ ParseXML(XMLNode& _node) {
     else if(child.Name() == "node_connection_method")
       m_connectorLabels.push_back(child.Read("Method",true,"","Method"));
     else if(child.Name() == "evaluation_method")
-      m_evaluatorLabels.push_back(
+      this->m_meLabels.push_back(
           child.Read("Method", true, "", "Evaluation Method"));
  }
 
@@ -185,7 +189,7 @@ HybridPRM<MPTraits>::Print(ostream& _os) const {
   for(auto&  l : m_connectorLabels)
     _os << l << " ";
   _os << "\n\tevaluator_methods: ";
-  for(auto&  l : m_evaluatorLabels)
+  for(auto&  l : this->m_meLabels)
     _os << l << " ";
 
 }
@@ -204,7 +208,7 @@ template<class MPTraits>
 void HybridPRM<MPTraits>::Run(){
   StatClass* stats = this->GetMPProblem()->GetStatClass();
   int totalSamples = 0;
-  bool mapPassedEvaluation = this->EvaluateMap(m_evaluatorLabels);
+  bool mapPassedEvaluation = this->EvaluateMap();
   map<VID, Visibility> visMap;
    NodeTypeCounts nodeTypes;
    stapl::sequential::vector_property_map<typename GraphType::GRAPH,size_t > cmap;
@@ -288,7 +292,7 @@ void HybridPRM<MPTraits>::Run(){
 
     }
       	} while((totalSamples % m_binSize) > 0);
-      	mapPassedEvaluation = this->EvaluateMap(m_evaluatorLabels);
+      	mapPassedEvaluation = this->EvaluateMap();
 
       }
 

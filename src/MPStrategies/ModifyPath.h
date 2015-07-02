@@ -9,6 +9,8 @@
 /// @tparam MPTraits Motion planning universe
 ///
 /// TODO
+///
+/// \internal This strategy is configured for pausible execution.
 ////////////////////////////////////////////////////////////////////////////////
 template<class MPTraits>
 class ModifyPath : public MPStrategyMethod<MPTraits> {
@@ -21,7 +23,7 @@ class ModifyPath : public MPStrategyMethod<MPTraits> {
     ModifyPath(MPProblemType* _problem, XMLNode& _node);
 
     virtual void Initialize();
-    virtual void Run();
+    virtual void Iterate();
     virtual void Finalize();
     virtual void Print(ostream& _os) const;
 
@@ -89,7 +91,7 @@ Initialize() {
 template<class MPTraits>
 void
 ModifyPath<MPTraits>::
-Run() {
+Iterate() {
   //smooth the path
   StatClass* stats = this->GetStatClass();
   stats->StartClock(this->GetNameAndLabel());

@@ -124,7 +124,6 @@ class BulkRRT : public MPStrategyMethod<MPTraits> {
 
 
   private:
-    vector<string> m_evaluatorLabels;
     //Query<MPTraits>* m_query;
     string m_eLabel;
     int m_kNodes;
@@ -172,7 +171,7 @@ ParseXML(XMLNode& _node) {
       m_minDist = child.Read("minDist", true, 0.0, 0.0, MAX_DBL,
           "Minimum Distance to see if new node is too close to closet cfg");
     else if(child.Name() == "evaluation_method")
-      m_evaluatorLabels.push_back(child.Read("Method", true, "",
+      this->m_meLabels.push_back(child.Read("Method", true, "",
           "Evaluation Method"));
     /*
     else if(child.Name() == "query") {
@@ -266,7 +265,7 @@ void BulkRRT<MPTraits>::Run() {
     viewVidArray v(PA);
     gviewType rmView(*pMap);
     map_func(wf, balance_view(v,get_num_locations()), make_repeat_view(rmView));
-    mapPassedEvaluation = this->EvaluateMap(m_evaluatorLabels);
+    mapPassedEvaluation = this->EvaluateMap();
   }
 
   stapl::rmi_fence(); //do I really need to fence?

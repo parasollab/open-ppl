@@ -7,6 +7,8 @@
 /// @tparam MPTraits Motion planning universe
 ///
 /// Constructs RRTs within narrow passages to quickly plan through them.
+///
+/// \internal This strategy is configured for pausible execution.
 ////////////////////////////////////////////////////////////////////////////////
 template<class MPTraits, template<typename> class Strategy>
 class SparkPRM : public Strategy<MPTraits> {

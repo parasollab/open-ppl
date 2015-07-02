@@ -9,6 +9,8 @@
 /// @tparam MPTraits Motion planning universe
 ///
 /// TODO
+///
+/// \internal This strategy is configured for pausible execution.
 ////////////////////////////////////////////////////////////////////////////////
 template<class MPTraits>
 class BasicRRTStrategy : public MPStrategyMethod<MPTraits> {
@@ -45,7 +47,8 @@ class BasicRRTStrategy : public MPStrategyMethod<MPTraits> {
     virtual void ParseXML(XMLNode& _node, bool _child = false);
 
     virtual void Initialize();
-    virtual void Run();
+    virtual bool EvaluateMap();
+    virtual void Iterate();
     virtual void Finalize();
     virtual void Print(ostream& _os) const;
 
@@ -65,7 +68,6 @@ class BasicRRTStrategy : public MPStrategyMethod<MPTraits> {
     void ConnectNeighbors(VID _newVID);
     void EvaluateGoals(VID _newVID);
 
-    vector<string> m_evaluators;
     string m_lp;
     string m_dm;
     string m_nf;
@@ -92,23 +94,23 @@ BasicRRTStrategy(string _lp, string _dm, string _nf, string _vc, string _nc,
     double _delta, double _minDist, double _growthFocus, bool _evaluateGoal,
     const CfgType& _start, const CfgType& _goal, size_t _numRoots,
     size_t _numDirections, size_t _maxTrial, bool _growGoals) :
-  m_evaluators(_evaluators), m_lp(_lp), m_dm(_dm), m_nf(_nf), m_vc(_vc),
-  m_query(new Query<MPTraits>(_start, _goal)), m_nc(_nc), m_gt(_gt),
-  m_extenderLabel(_extenderLabel), m_delta(_delta), m_minDist(_minDist),
-  m_growthFocus(_growthFocus), m_evaluateGoal(_evaluateGoal),
-  m_numRoots(_numRoots), m_numDirections(_numDirections), m_maxTrial(_maxTrial),
-  m_growGoals(_growGoals) {
-    this->SetName("BasicRRTStrategy");
-  }
+    m_lp(_lp), m_dm(_dm), m_nf(_nf), m_vc(_vc),
+    m_query(new Query<MPTraits>(_start, _goal)), m_nc(_nc), m_gt(_gt),
+    m_extenderLabel(_extenderLabel), m_delta(_delta), m_minDist(_minDist),
+    m_growthFocus(_growthFocus), m_evaluateGoal(_evaluateGoal),
+    m_numRoots(_numRoots), m_numDirections(_numDirections), m_maxTrial(_maxTrial),
+    m_growGoals(_growGoals) {
+  this->m_meLabels = _evaluators;
+  this->SetName("BasicRRTStrategy");
+}
 
 template<class MPTraits>
 BasicRRTStrategy<MPTraits>::
 BasicRRTStrategy(MPProblemType* _problem, XMLNode& _node, bool _child) :
-  MPStrategyMethod<MPTraits>(_problem, _node),
-  m_query((Query<MPTraits>*)NULL) {
-    this->SetName("BasicRRTStrategy");
-    ParseXML(_node, _child);
-  }
+    MPStrategyMethod<MPTraits>(_problem, _node), m_query((Query<MPTraits>*)NULL) {
+  this->SetName("BasicRRTStrategy");
+  ParseXML(_node, _child);
+}
 
 template<class MPTraits>
 BasicRRTStrategy<MPTraits>::
@@ -121,7 +123,7 @@ BasicRRTStrategy<MPTraits>::
 ParseXML(XMLNode& _node, bool _child) {
   for(auto& child : _node)
     if(child.Name() == "Evaluator")
-      m_evaluators.push_back(
+      this->m_meLabels.push_back(
           child.Read("label", true, "", "Evaluation Method"));
 
   m_delta = _node.Read("delta", false, 1.0, 0.0, MAX_DBL,
@@ -175,7 +177,7 @@ Print(ostream& _os) const {
   _os << "\tEvaluate Goal:: " << m_evaluateGoal << endl;
   _os << "\tEvaluators:: " << endl;
   _os << "\tGrow Goals:: " << m_growGoals << endl;
-  for(auto&  s : m_evaluators)
+  for(auto&  s : this->m_meLabels)
     _os << "\t\t" << s << endl;
   _os << "\tdelta:: " << m_delta << endl;
   _os << "\tminimum distance:: " << m_minDist << endl;
@@ -261,72 +263,64 @@ Initialize(){
     cout<<"\nEnding Initializing BasicRRTStrategy"<<endl;
 }
 
-////////////////
-//Run/Start Phase
-////////////////
+
+template<class MPTraits>
+bool
+BasicRRTStrategy<MPTraits>::
+EvaluateMap() {
+  //evaluate the roadmap
+  bool evalMap = MPStrategyMethod<MPTraits>::EvaluateMap();
+  bool oneTree = m_trees.size() == 1;
+  bool mapPassedEvaluation;
+  if(!m_growGoals) {
+    bool foundAllGoals = m_goalsNotFound.size() == 0;
+    bool evalGoals = !m_evaluateGoal || foundAllGoals;
+    mapPassedEvaluation = oneTree && evalMap && evalGoals;
+    if(this->m_debug && foundAllGoals)
+      cout << "RRT FOUND ALL GOALS" << endl;
+  }
+  else
+    mapPassedEvaluation = evalMap && oneTree;
+  return mapPassedEvaluation;
+}
+
+
 template<class MPTraits>
 void
 BasicRRTStrategy<MPTraits>::
-Run() {
-  if(this->m_debug)
-    cout << "\nRunning BasicRRTStrategy::" << endl;
-
-  // Setup MP Variables
-  StatClass* stats = this->GetStatClass();
-
-  stats->StartClock("RRT Generation");
-
+Iterate() {
+  // Find my growth direction. Default is to randomly select node or bias
+  // towards a goal
   CfgType dir;
-  bool mapPassedEvaluation = false;
-  while(!mapPassedEvaluation) {
-    //find my growth direction. Default is too randomly select node or bias
-    //towards a goal
-    double randomRatio = DRand();
-    if(randomRatio < m_growthFocus) {
-      dir = GoalBiasedDirection();
-      if(this->m_debug)
-        cout << "goal biased direction selected: " << dir << endl;
-    }
-    else {
-      dir = this->SelectDirection();
-      if(this->m_debug)
-        cout << "random direction selected: " << dir << endl;
-    }
-
-    // Randomize Current Tree
-    m_currentTree = m_trees.begin() + LRand()%m_trees.size();
+  double randomRatio = DRand();
+  if(randomRatio < m_growthFocus) {
+    dir = GoalBiasedDirection();
     if(this->m_debug)
-      cout << "m_trees.size() = " << m_trees.size()
-        << ", currentTree = " << distance(m_trees.begin(), m_currentTree) << endl;
-
-    VID recent = this->ExpandTree(dir);
-    if(recent != INVALID_VID) {
-
-      //connect various trees together
-      ConnectTrees(recent);
-      //see if tree is connected to goals
-      if(m_evaluateGoal)
-        EvaluateGoals(recent);
-
-      //evaluate the roadmap
-      bool evalMap = this->EvaluateMap(m_evaluators);
-      if(!m_growGoals) {
-        mapPassedEvaluation = m_trees.size()==1 && evalMap &&
-          ((m_evaluateGoal && m_goalsNotFound.size()==0) || !m_evaluateGoal);
-        if(this->m_debug && m_goalsNotFound.size()==0)
-          cout << "RRT FOUND ALL GOALS" << endl;
-      }
-      else
-        mapPassedEvaluation = evalMap && m_trees.size()==1;
-    }
+      cout << "goal biased direction selected: " << dir << endl;
+  }
+  else {
+    dir = this->SelectDirection();
+    if(this->m_debug)
+      cout << "random direction selected: " << dir << endl;
   }
 
-  stats->StopClock("RRT Generation");
-  if(this->m_debug) {
-    stats->PrintClock("RRT Generation", cout);
-    cout<<"\nEnd Running BasicRRTStrategy::" << endl;
+  // Randomize Current Tree
+  m_currentTree = m_trees.begin() + LRand()%m_trees.size();
+  if(this->m_debug)
+    cout << "m_trees.size() = " << m_trees.size() << ", currentTree = "
+         << distance(m_trees.begin(), m_currentTree) << endl;
+
+  VID recent = this->ExpandTree(dir);
+  if(recent != INVALID_VID) {
+
+    //connect various trees together
+    ConnectTrees(recent);
+    //see if tree is connected to goals
+    if(m_evaluateGoal)
+      EvaluateGoals(recent);
   }
 }
+
 
 /////////////////////
 //Finalization phase
@@ -552,11 +546,10 @@ ExpandTree(CfgType& _dir) {
   }
 
   static size_t expansions = 0;
-  cout << "Expansion:: " << ++expansions << "\tto " << newCfg << endl;
 
   if(this->m_debug)
-    cout << "RRT from " << nearVID
-      << " expanded to " << newCfg << endl;
+    cout << "Expansion::" << ++expansions
+         << "\tfrom " << nearVID << " to " << newCfg << endl;
 
   // If good to go, add to roadmap
   if(dist >= m_minDist ) {

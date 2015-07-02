@@ -23,6 +23,8 @@ static inline uint64_t GetCycles(){
 /// to choose from based on some probability distribution. This probability
 /// distribution is updated based upon the success/fail of the growth and its
 /// cost.
+///
+/// \internal This strategy is configured for pausible execution.
 ////////////////////////////////////////////////////////////////////////////////
 template<class MPTraits>
 class AdaptiveRRT : public BasicRRTStrategy<MPTraits> {

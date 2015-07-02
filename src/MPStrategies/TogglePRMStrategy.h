@@ -13,6 +13,8 @@
 ///
 /// Toggle PRM. Constructs a free roadmap and an obstacle roadmap and uses
 /// witnesses to aid construction of the two roadmaps.
+///
+/// \todo Configure for pausible execution.
 ////////////////////////////////////////////////////////////////////////////////
 template<class MPTraits>
 class TogglePRMStrategy : public MPStrategyMethod<MPTraits> {
@@ -41,7 +43,6 @@ class TogglePRMStrategy : public MPStrategyMethod<MPTraits> {
     map<string, pair<int,int> > m_samplerLabels;  // Maps sampler labels to pair<samples, attempts>
     vector<string> m_connectorLabels;             // Connector for free roadmap
     vector<string> m_colConnectorLabels;          // Connector for obstacle roadmap
-    vector<string> m_evaluatorLabels;             // Evaluators
     string m_vcLabel;                             // Validity checker
     bool m_priority;                              // Give priority to valid nodes in the queue?
 };
@@ -78,7 +79,7 @@ TogglePRMStrategy<MPTraits>::ParseXML(XMLNode& _node) {
       m_colConnectorLabels.push_back(
           child.Read("methodLabel", true, "", "Node connection method"));
     else if(child.Name() == "Evaluator")
-      m_evaluatorLabels.push_back(
+      this->m_meLabels.push_back(
           child.Read("methodLabel", true, "", "Evaluation method"));
   }
 }
@@ -96,7 +97,7 @@ TogglePRMStrategy<MPTraits>::Print(ostream& _os) const {
   _os << "\n\tColConnectors: ";
   for_each(m_colConnectorLabels.begin(), m_colConnectorLabels.end(), _os << _1 << " ");
   _os << "\n\tEvaluators: ";
-  for_each(m_evaluatorLabels.begin(), m_evaluatorLabels.end(), _os << _1 << " ");
+  for_each(this->m_meLabels.begin(), this->m_meLabels.end(), _os << _1 << " ");
   _os << "\n\tvcLabel: " << m_vcLabel;
   _os << "\n\tpriority: " << m_priority << endl;
 }
@@ -119,12 +120,12 @@ TogglePRMStrategy<MPTraits>::Run() {
   stats->StartClock("Map Generation");
 
   // Loop until map is sufficient for evaluators
-  while(!this->EvaluateMap(m_evaluatorLabels)) {
+  while(!this->EvaluateMap()) {
     GenerateNodes(queue);
 
     bool validMap;
     // Loop until map is sufficient, or queue is empty
-    while(!(validMap = this->EvaluateMap(m_evaluatorLabels)) && queue.size()) {
+    while(!(validMap = this->EvaluateMap()) && queue.size()) {
       pair<string, CfgType> p = queue.front();
       queue.pop_front();
       string validity = p.first;

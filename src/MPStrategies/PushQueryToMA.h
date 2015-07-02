@@ -9,6 +9,8 @@
 /// @tparam MPTraits Motion planning universe
 ///
 /// TODO
+///
+/// \internal This strategy is configured for pausible execution.
 ////////////////////////////////////////////////////////////////////////////////
 template<class MPTraits>
 class PushQueryToMA : public MPStrategyMethod<MPTraits> {
@@ -23,7 +25,7 @@ class PushQueryToMA : public MPStrategyMethod<MPTraits> {
     PushQueryToMA(MPProblemType* _problem, XMLNode& _node);
 
     virtual void Initialize();
-    virtual void Run();
+    virtual void Iterate();
     virtual void Finalize();
     virtual void Print(ostream& _os) const;
 
@@ -79,8 +81,8 @@ Initialize() {
 template<class MPTraits>
 void
 PushQueryToMA<MPTraits>::
-Run() {
-  for(auto&  cfg : m_query)
+Iterate() {
+  for(auto& cfg : m_query)
     if(!m_medialAxisUtility.PushToMedialAxis(
           cfg, this->GetEnvironment()->GetBoundary()))
       throw RunTimeException(WHERE, "Cannot push to MA.");
