@@ -32,7 +32,7 @@
 #include "LocalPlanners/StraightLine.h"
 
 //extenders includes
-#include "Extenders/BasicExtender.h"
+#include "Extenders/KinodynamicExtender.h"
 
 //path smoothing includes
 #include "PathModifiers/ShortcuttingPathModifier.h"
@@ -114,7 +114,7 @@ struct StateTraits {
 
   //types of extenders avaible in our world
   typedef boost::mpl::list<
-    BasicExtender<StateTraits>
+    KinodynamicExtender<StateTraits>
       > ExtenderMethodList;
 
   //types of path smoothing available in our world
