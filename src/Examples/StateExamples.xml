@@ -80,10 +80,6 @@
     </Metrics>
 
     <MapEvaluators>
-      <Query label="Query" queryFile="2D/2d.query" dmLabel="euclidean"
-        lpLabel="sl" debug="false" pmLabel="ShortcuttingPathModifier">
-        <NodeConnectionMethod method="Closest"/>
-      </Query>
       <PrintMapEvaluation label="PrintMap" base_name="Basic"/>
       <ConditionalEvaluator label="NodesEval" metric_method="NumNodes" value="100" operator=">="/>
       <ConditionalEvaluator label="EdgesEval" metric_method="NumEdges" value="1000" operator=">"/>
@@ -95,27 +91,17 @@
 
     <MPStrategies>
 
-      <!-- BasicRRT -->
-      <BasicRRTStrategy label="BasicRRT" delta="10.0" minDist="0.001"
-        numRoots="1" m="1" growthFocus="0.01" lpLabel="sl" dmLabel="euclidean"
-        nfLabel="Nearest" vcLabel="cd1" connectorLabel="Closest"
-        query="2D/2d.query" gtype="UNDIRECTED_TREE" debug="false"
-        evaluateGoal="true" growGoals = "true" extenderLabel="BERO">
-        <Evaluator label="NodesEval"/>
-      </BasicRRTStrategy>
-
-      <!-- RRT* -->
-      <!-- The connector needs to be OptimalRewire for RRT* -->
-      <BasicRRTStrategy label="RRTstar" delta="10.0" minDist="0.001"
-        numRoots="1" m="1" growthFocus="0.01" lpLabel="sl" dmLabel="euclidean"
-        nfLabel="Nearest" vcLabel="cd1" query="2D/2d.query" extenderLabel="BERO"
-        connectorLabel="OptimalRewire" gtype="UNDIRECTED_GRAPH">
-        <Evaluator label="NodesEval"/>
-      </BasicRRTStrategy>
+      <!-- KinodynamicRRT -->
+      <KinodynamicRRTStrategy label="KRRT" growthFocus="0.00" minDist="0.001"
+        evaluateGoal="true" goalDist="0.5" query="2D/2d.query"
+        dmLabel="euclidean" nfLabel="Nearest" vcLabel="cd1" extenderLabel="BERO"
+        debug="false">
+        <!--Evaluator label="NodesEval"/-->
+      </KinodynamicRRTStrategy>
 
     </MPStrategies>
 
-    <Solver mpStrategyLabel="BasicRRT" seed="12345678"  baseFilename="Basic" vizmoDebug="true"/>
+    <Solver mpStrategyLabel="KRRT" seed="12345678"  baseFilename="Basic" vizmoDebug="true"/>
     <!-- MPProblem allows multiple solvers to be specified and executed. -->
     <!--Solver mpStrategyLabel="BasicPRM2" seed="12345678" baseFilename="Basic2" vizmoDebug="true"/-->
 

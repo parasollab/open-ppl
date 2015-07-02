@@ -51,10 +51,9 @@
 #include "MapEvaluators/ComposeEvaluator.h"
 #include "MapEvaluators/ConditionalEvaluator.h"
 #include "MapEvaluators/PrintMapEvaluation.h"
-#include "MapEvaluators/Query.h"
 
 //mp strategies includes
-#include "MPStrategies/BasicRRTStrategy.h"
+#include "MPStrategies/KinodynamicRRTStrategy.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup MotionPlanningUniverse
@@ -143,13 +142,12 @@ struct StateTraits {
   typedef boost::mpl::list<
     ComposeEvaluator<StateTraits>,
     ConditionalEvaluator<StateTraits>,
-    PrintMapEvaluation<StateTraits>,
-    Query<StateTraits>
+    PrintMapEvaluation<StateTraits>
       > MapEvaluatorMethodList;
 
   //types of motion planning strategies available in our world
   typedef boost::mpl::list<
-    BasicRRTStrategy<StateTraits>
+    KinodynamicRRTStrategy<StateTraits>
       > MPStrategyMethodList;
 };
 
