@@ -277,7 +277,8 @@ ifneq ($(filter $(ROBOT_DEF), PMPSSSurfaceMult PMPCfgSurface),)
   else
   ifeq (${ROBOT_DEF}, $(or PMPState))
   PMPL_OBJS += Cfg/State.o \
-	       Edges/StateEdge.o
+	       Edges/StateEdge.o \
+	       MPProblem/Geometry/Control.o
   endif
 endif
 endif

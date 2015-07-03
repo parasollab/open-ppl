@@ -1,13 +1,14 @@
 #ifndef MULTI_BODY_H_
 #define MULTI_BODY_H_
 
+#include "MPProblem/Geometry/Control.h"
 #include "MPProblem/Geometry/FixedBody.h"
 #include "MPProblem/Geometry/FreeBody.h"
 #include "MPProblem/Robot.h"
 
 class Environment;
 
-enum BodyType{ACTIVE, PASSIVE, SURFACE, INTERNAL};
+enum BodyType{ACTIVE, NONHOLONOMIC, PASSIVE, SURFACE, INTERNAL};
 
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup Environment
@@ -205,6 +206,8 @@ public:
 
     bool IsActive() const;
 
+    bool IsNonHolonomic() const;
+
     bool IsPassive() const;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -301,6 +304,10 @@ public:
     Robot::JointMap jointMap;
 
     string m_label;
+
+    vector<shared_ptr<Control>> m_controls;
+    double m_maxLinearVel;
+    double m_maxAngularVel;
 };
 
 #endif

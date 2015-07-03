@@ -74,7 +74,7 @@ Environment::Read(string _filename) {
     shared_ptr<MultiBody> mb(new MultiBody());
     mb->Read(ifs, cbs);
 
-    if(mb->IsActive())
+    if(mb->IsActive() || mb->IsNonHolonomic())
       m_activeBodies.push_back(mb);
     else if(!mb->IsSurface())
       m_obstacleBodies.push_back(mb);

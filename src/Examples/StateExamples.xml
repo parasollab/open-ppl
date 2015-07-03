@@ -4,9 +4,7 @@
 
     <!-- Example input, resolution defaults computed automatically. Can set
          through environment.-->
-    <!--Environment filename=2D/2d.env" positionRes="0.10"
-         positionResFactor="0.2" orientationRes="0.20"/-->
-    <Environment filename="2D/2d.env" saveDofs="false"/>
+    <Environment filename="3DState/3d.env" saveDofs="false"/>
 
     <DistanceMetrics>
       <Euclidean label="euclidean"/>
@@ -59,7 +57,7 @@
 
     <Extenders>
       <KinodynamicExtender label="KE"
-        dmLabel="euclidean" vcLabel="cd1" delta="1.0"/>
+        dmLabel="euclidean" vcLabel="cd1" delta="5.0"/>
     </Extenders>
 
    <PathModifiers>
@@ -93,7 +91,7 @@
 
       <!-- KinodynamicRRT -->
       <KinodynamicRRTStrategy label="KRRT" growthFocus="0.00" minDist="0.001"
-        evaluateGoal="true" goalDist="0.5" query="2D/2d.query"
+        evaluateGoal="true" goalDist="1.2" query="3D/3d.query"
         dmLabel="euclidean" nfLabel="Nearest" vcLabel="cd1" extenderLabel="KE"
         debug="false">
         <!--Evaluator label="NodesEval"/-->

@@ -456,6 +456,8 @@ Read(istream& _is, CountingStreamBuffer& _cbs) {
     m_bodyType = PASSIVE;
   else if(multibodyType == "ACTIVE")
     m_bodyType = ACTIVE;
+  else if(multibodyType == "NONHOLONOMIC")
+    m_bodyType = NONHOLONOMIC;
   else if(multibodyType == "SURFACE")
     m_bodyType = SURFACE;
   else if(multibodyType == "INTERNAL")
@@ -468,7 +470,7 @@ Read(istream& _is, CountingStreamBuffer& _cbs) {
   double fixSum = 0;
   double freeSum = 0;
 
-  if(IsActive()) {
+  if(IsActive() || IsNonHolonomic()) {
 
     size_t bodyCount = ReadField<size_t>(_is, _cbs,
         "Failed reading body count.");
@@ -501,6 +503,45 @@ Read(istream& _is, CountingStreamBuffer& _cbs) {
       shared_ptr<Connection> c(new Connection(this));
       jointMap.push_back(c);
       jointMap.back()->Read(_is, _cbs);
+    }
+
+    if(IsNonHolonomic()) {
+      //first read velocity bounds
+      string velocityBoundsTag = ReadFieldString(_is, _cbs,
+          "Failed reading velocity bounds tag.");
+      if(velocityBoundsTag != "VELOCITYBOUNDS")
+        throw ParseException(_cbs.Where(),
+            "Unknwon controls tag '" + velocityBoundsTag + "'."
+            " Should read 'VelocityBounds'.");
+
+      m_maxLinearVel = ReadField<double>(_is, _cbs,
+          "Failed reading maximum linear velocity");
+      m_maxAngularVel = ReadField<double>(_is, _cbs,
+          "Failed reading maximum angular velocity");
+
+      cout << "Velocity bounds" << endl
+        << m_maxLinearVel << " " << m_maxAngularVel << endl;
+
+      //read available controls
+      string controlsTag = ReadFieldString(_is, _cbs,
+          "Failed reading controls tag.");
+      if(controlsTag != "CONTROLS")
+        throw ParseException(_cbs.Where(),
+            "Unknwon controls tag '" + controlsTag + "'."
+            " Should read 'Controls'.");
+      size_t controlsCount = ReadField<size_t>(_is, _cbs,
+          "Failed reading number of controls.");
+
+      //finish empty line of count
+      string tmp;
+      getline(_is, tmp);
+
+      for(size_t i = 0; i < controlsCount; ++i) {
+        shared_ptr<Control> c(new Control(this));
+        m_controls.push_back(c);
+        m_controls.back()->Read(_is, _cbs);
+        cout << "Read control: " << *m_controls.back() << endl;
+      }
     }
   }
   else{ //Passive, Surface, Internal
@@ -831,6 +872,11 @@ MultiBody::IsSurface() const {
 bool
 MultiBody::IsActive() const{
   return m_bodyType == ACTIVE;
+}
+
+bool
+MultiBody::IsNonHolonomic() const{
+  return m_bodyType == NONHOLONOMIC;
 }
 
 bool
