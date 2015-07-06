@@ -236,34 +236,34 @@ PMPL_INCL = \
 	-I${PMPL_DIR} \
 
 PMPL_OBJS = \
-	MPProblem/Geometry/ActiveMultiBody.o \
-	MPProblem/Geometry/Body.o \
-	MPProblem/Geometry/Connection.o \
-	MPProblem/Geometry/DHParameters.o \
-	MPProblem/Geometry/FixedBody.o \
-	MPProblem/Geometry/FreeBody.o \
-	MPProblem/Geometry/GMSPolyhedron.o \
-	MPProblem/Geometry/MultiBody.o \
-	MPProblem/Geometry/StaticMultiBody.o \
-	MPProblem/Geometry/SurfaceMultiBody.o \
-	MPProblem/Environment.o \
-	MPProblem/Boundary.o \
-        MPProblem/BoundingBox.o \
-        MPProblem/BoundingSphere.o \
+	Cfg/Cfg.o \
+	Environment/ActiveMultiBody.o \
+	Environment/Body.o \
+	Environment/Boundary.o \
+        Environment/BoundingBox.o \
+        Environment/BoundingSphere.o \
+	Environment/Connection.o \
+	Environment/DHParameters.o \
+	Environment/Environment.o \
+	Environment/FixedBody.o \
+	Environment/FreeBody.o \
+	Environment/GMSPolyhedron.o \
+	Environment/MultiBody.o \
+	Environment/StaticMultiBody.o \
+	Environment/SurfaceMultiBody.o \
 	MPProblem/MPProblemBase.o \
+	NeighborhoodFinders/MPNNWrapper.o \
+	Samplers/SimilarStructureSampler.o \
+        Utilities/IOUtils.o \
+        Utilities/MetricUtils.o \
+        Utilities/MPUtils.o \
 	ValidityCheckers/CollisionDetection/CDInfo.o \
 	ValidityCheckers/CollisionDetection/CollisionDetectionMethod.o \
 	ValidityCheckers/CollisionDetection/RapidCollisionDetection.o \
 	ValidityCheckers/CollisionDetection/PQPCollisionDetection.o \
 	ValidityCheckers/CollisionDetection/SolidCollisionDetection.o \
-	ValidityCheckers/CollisionDetection/VClipCollisionDetection.o \
 	ValidityCheckers/CollisionDetection/SpheresCollisionDetection.o \
-	Cfg/Cfg.o \
-        Utilities/MetricUtils.o \
-        Utilities/IOUtils.o \
-        Utilities/MPUtils.o \
-	Samplers/SimilarStructureSampler.o \
-	NeighborhoodFinders/MPNNWrapper.o
+	ValidityCheckers/CollisionDetection/VClipCollisionDetection.o
 
 ifeq (${ROBOT_DEF}, PMPCfgMultiRobot)
   PMPL_OBJS += Cfg/CfgMultiRobot.o

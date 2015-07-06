@@ -19,8 +19,8 @@
 #include "Transformation.h"
 using namespace mathtool;
 
+#include "GMSPolyhedron.h"
 #include "Utilities/MPUtils.h"
-#include "MPProblem/Geometry/GMSPolyhedron.h"
 
 class CollisionDetectionMethod;
 class MultiBody;

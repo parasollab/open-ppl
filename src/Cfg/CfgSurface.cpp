@@ -10,11 +10,11 @@
 
 #include "CfgSurface.h"
 
-#include "MPProblem/Geometry/ActiveMultiBody.h"
-#include "MPProblem/Geometry/FixedBody.h"
-#include "MPProblem/Geometry/FreeBody.h"
-#include "MPProblem/Geometry/SurfaceMultiBody.h"
-#include "MPProblem/Environment.h"
+#include "Environment/ActiveMultiBody.h"
+#include "Environment/Environment.h"
+#include "Environment/FixedBody.h"
+#include "Environment/FreeBody.h"
+#include "Environment/SurfaceMultiBody.h"
 
 CfgSurface::CfgSurface() :
   m_pt(Point2d(0,0)), m_h(0), m_surfaceID(INVALID_SURFACE) {}

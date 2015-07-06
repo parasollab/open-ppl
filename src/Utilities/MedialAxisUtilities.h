@@ -6,9 +6,9 @@
 #include <deque>
 
 #include "MetricUtils.h"
+#include "Environment/FixedBody.h"
+#include "Environment/SurfaceMultiBody.h"
 #include "LocalPlanners/StraightLine.h"
-#include "MPProblem/Geometry/FixedBody.h"
-#include "MPProblem/Geometry/SurfaceMultiBody.h"
 #include "ValidityCheckers/CollisionDetection/CDInfo.h"
 
 ////////////////////////////////////////////////////////////////////////////////

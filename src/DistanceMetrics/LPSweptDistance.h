@@ -3,9 +3,9 @@
 
 #include "DistanceMetricMethod.h"
 
+#include "Environment/Environment.h"
+#include "Environment/FreeBody.h"
 #include "LocalPlanners/LPOutput.h"
-#include "MPProblem/Environment.h"
-#include "MPProblem/Geometry/FreeBody.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup DistanceMetrics

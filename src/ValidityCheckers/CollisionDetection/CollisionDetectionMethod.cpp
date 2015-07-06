@@ -1,6 +1,6 @@
 #include "CollisionDetectionMethod.h"
 
-#include "MPProblem/Geometry/Body.h"
+#include "Environment/Body.h"
 #include "Utilities/PMPLExceptions.h"
 
 CollisionDetectionMethod::

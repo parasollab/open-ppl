@@ -2,8 +2,9 @@
 #define MINKOWSKI_DISTANCE_H_
 
 #include "DistanceMetricMethod.h"
+
+#include "Environment/Environment.h"
 #include "MPProblem/IsClosedChain.h"
-#include "MPProblem/Environment.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup DistanceMetrics

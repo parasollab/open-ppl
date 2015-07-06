@@ -7,7 +7,7 @@ using namespace std;
 #include <Transformation.h>
 using namespace mathtool;
 
-#include "MPProblem/Geometry/DHParameters.h"
+#include "DHParameters.h"
 #include "Utilities/IOUtils.h"
 
 class FreeBody;

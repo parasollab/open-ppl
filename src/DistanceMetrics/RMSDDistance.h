@@ -2,7 +2,9 @@
 #define RMSD_DISTANCE_H_
 
 #include "DistanceMetricMethod.h"
-#include "MPProblem/Environment.h"
+
+#include "Environment/Environment.h"
+
 template <class MPTraits> class SimilarStructureSampler;
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -3,9 +3,9 @@
 #include "SSSurface.h"
 #include "CfgSurface.h"
 
-#include "MPProblem/Geometry/ActiveMultiBody.h"
-#include "MPProblem/Geometry/FreeBody.h"
-#include "MPProblem/Environment.h"
+#include "Environment/ActiveMultiBody.h"
+#include "Environment/Environment.h"
+#include "Environment/FreeBody.h"
 
 void
 SSSurface::InitDefaults(){

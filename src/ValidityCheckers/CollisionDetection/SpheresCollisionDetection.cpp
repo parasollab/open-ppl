@@ -1,6 +1,6 @@
 #include "SpheresCollisionDetection.h"
 
-#include "MPProblem/Geometry/Body.h"
+#include "Environment/Body.h"
 
 BoundingSpheres::
 BoundingSpheres() : CollisionDetectionMethod("BoundingSpheres", CDType::Out) {

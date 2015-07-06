@@ -3,8 +3,8 @@
 
 #include "BasicExtender.h"
 
-#include "MPProblem/Geometry/FixedBody.h"
-#include "MPProblem/Geometry/StaticMultiBody.h"
+#include "Environment/FixedBody.h"
+#include "Environment/StaticMultiBody.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup Extenders

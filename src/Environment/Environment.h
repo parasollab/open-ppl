@@ -4,8 +4,8 @@
 #include "Transformation.h"
 using namespace mathtool;
 
+#include "Boundary.h"
 #include "Cfg/CfgMultiRobot.h"
-#include "MPProblem/Boundary.h"
 #include "Utilities/MPUtils.h"
 
 class ActiveMultiBody;

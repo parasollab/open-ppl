@@ -11,8 +11,8 @@
 
 #include "Cfg.h"
 
-#include "MPProblem/Environment.h"
-#include "MPProblem/Geometry/ActiveMultiBody.h"
+#include "Environment/ActiveMultiBody.h"
+#include "Environment/Environment.h"
 #include "Utilities/MetricUtils.h"
 
 ClearanceInfo::~ClearanceInfo() {

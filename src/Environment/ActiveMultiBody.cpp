@@ -1,7 +1,7 @@
 #include "ActiveMultiBody.h"
 
-#include "MPProblem/Boundary.h"
-#include "MPProblem/Geometry/FreeBody.h"
+#include "Boundary.h"
+#include "FreeBody.h"
 
 ActiveMultiBody::
 ActiveMultiBody() : MultiBody() {

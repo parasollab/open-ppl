@@ -1,7 +1,7 @@
 #ifndef MULTI_BODY_H_
 #define MULTI_BODY_H_
 
-#include "MPProblem/Geometry/Body.h"
+#include "Body.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup Environment

@@ -3,7 +3,7 @@
 
 #include "ConnectorMethod.h"
 
-#include "MPProblem/Geometry/SurfaceMultiBody.h"
+#include "Environment/SurfaceMultiBody.h"
 
 #define CLOSEDIST 0.4
 #define KATTEMPTS 3

@@ -5,7 +5,7 @@
 #include <RAPID.H>
 
 #include "CDInfo.h"
-#include "MPProblem/Geometry/Body.h"
+#include "Environment/Body.h"
 
 Rapid::
 Rapid() : CollisionDetectionMethod("RAPID", CDType::Exact) {

@@ -1,13 +1,13 @@
 #include "Environment.h"
 
+#include "ActiveMultiBody.h"
+#include "BoundingBox.h"
+#include "BoundingSphere.h"
+#include "FreeBody.h"
+#include "StaticMultiBody.h"
+#include "SurfaceMultiBody.h"
 #include "Cfg/Cfg.h"
-#include "MPProblem/BoundingBox.h"
-#include "MPProblem/BoundingSphere.h"
 #include "MPProblem/MPProblemBase.h"
-#include "MPProblem/Geometry/ActiveMultiBody.h"
-#include "MPProblem/Geometry/FreeBody.h"
-#include "MPProblem/Geometry/StaticMultiBody.h"
-#include "MPProblem/Geometry/SurfaceMultiBody.h"
 
 Environment::
 Environment() :

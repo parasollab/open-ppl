@@ -3,7 +3,7 @@
 #ifdef USE_VCLIP
 
 #include "CDInfo.h"
-#include "MPProblem/Geometry/Body.h"
+#include "Environment/Body.h"
 
 ClosestFeaturesHT closestFeaturesHT(3000);
 

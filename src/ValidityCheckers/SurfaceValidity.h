@@ -3,9 +3,9 @@
 
 #if(defined(PMPCfgSurface) || defined(PMPSSSurfaceMult))
 
-#include "MPProblem/Environment.h"
-#include "MPProblem/Geometry/FixedBody.h"
-#include "MPProblem/Geometry/SurfaceMultiBody.h"
+#include "Environment/Environment.h"
+#include "Environment/FixedBody.h"
+#include "Environment/SurfaceMultiBody.h"
 #include "Utilities/MetricUtils.h"
 #include "ValidityCheckers/ValidityCheckerMethod.h"
 

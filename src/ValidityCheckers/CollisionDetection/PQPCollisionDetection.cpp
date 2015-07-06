@@ -3,7 +3,7 @@
 #ifdef USE_PQP
 
 #include "CDInfo.h"
-#include "MPProblem/Geometry/Body.h"
+#include "Environment/Body.h"
 
 PQP::
 PQP() : CollisionDetectionMethod("PQP", CDType::Exact) {
