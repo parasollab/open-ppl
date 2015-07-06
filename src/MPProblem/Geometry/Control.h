@@ -10,6 +10,8 @@ class Control {
 
     Control(MultiBody* _owner);
 
+    const vector<double>& GetControl() const {return m_control;}
+
     void Read(istream& _is, CountingStreamBuffer& _cbs);
 
     friend ostream& operator<<(ostream& _os, const Control& _c);

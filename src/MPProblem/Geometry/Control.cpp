@@ -1,12 +1,13 @@
 #include "Control.h"
 
 Control::
-Control(MultiBody* _owner) : m_owner(_owner) {
+Control(MultiBody* _owner) : m_owner(_owner), m_control(6, 0) {
 }
 
 void
 Control::
 Read(istream& _is, CountingStreamBuffer& _cbs) {
+  m_control.clear();
   string control;
   getline(_is, control);
   istringstream iss(control);

@@ -268,6 +268,8 @@ public:
     //
     //////////////////////////////////////////////////////////////////////////////////////////
 
+    vector<double> GetRandomControl() const;
+
   protected:
     // Area Stuff
     double fixArea;             ///< Area of FixedBodies

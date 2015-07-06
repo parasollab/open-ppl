@@ -536,12 +536,16 @@ Read(istream& _is, CountingStreamBuffer& _cbs) {
       string tmp;
       getline(_is, tmp);
 
+      m_controls.push_back(shared_ptr<Control>(new Control(this)));
       for(size_t i = 0; i < controlsCount; ++i) {
         shared_ptr<Control> c(new Control(this));
         m_controls.push_back(c);
         m_controls.back()->Read(_is, _cbs);
         cout << "Read control: " << *m_controls.back() << endl;
       }
+
+      cout << "Moment: " << endl;
+      cout << freeBody[0]->GetMoment() << endl;
     }
   }
   else{ //Passive, Surface, Internal
@@ -884,3 +888,8 @@ MultiBody::IsPassive() const{
   return m_bodyType == PASSIVE;
 }
 
+vector<double>
+MultiBody::GetRandomControl() const {
+  size_t index = rand() % m_controls.size();
+  return m_controls[index]->GetControl();
+}

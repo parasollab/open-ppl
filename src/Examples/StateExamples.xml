@@ -4,7 +4,7 @@
 
     <!-- Example input, resolution defaults computed automatically. Can set
          through environment.-->
-    <Environment filename="3DState/3d.env" saveDofs="false"/>
+    <Environment filename="3DState/3d.env" timeRes="0.05"/>
 
     <DistanceMetrics>
       <Euclidean label="euclidean"/>
@@ -56,8 +56,14 @@
     </LocalPlanners>
 
     <Extenders>
-      <KinodynamicExtender label="KE"
-        dmLabel="euclidean" vcLabel="cd1" delta="5.0"/>
+      <KinodynamicExtender label="FixedBest" dmLabel="euclidean" vcLabel="cd1"
+        delta="30.0" fixed="true" best="true"/>
+      <KinodynamicExtender label="FixedRandom" dmLabel="euclidean" vcLabel="cd1"
+        delta="30.0" fixed="true" best="false"/>
+      <KinodynamicExtender label="VaryBest" dmLabel="euclidean" vcLabel="cd1"
+        delta="30.0" fixed="false" best="true"/>
+      <KinodynamicExtender label="VaryRandom" dmLabel="euclidean" vcLabel="cd1"
+        delta="30.0" fixed="false" best="false"/>
     </Extenders>
 
    <PathModifiers>
@@ -79,7 +85,7 @@
 
     <MapEvaluators>
       <PrintMapEvaluation label="PrintMap" base_name="Basic"/>
-      <ConditionalEvaluator label="NodesEval" metric_method="NumNodes" value="100" operator=">="/>
+      <ConditionalEvaluator label="NodesEval" metric_method="NumNodes" value="1000" operator=">="/>
       <ConditionalEvaluator label="EdgesEval" metric_method="NumEdges" value="1000" operator=">"/>
       <ComposeEvaluator label="Com1" operator="or">
         <Evaluator label="NodesEval"/>
@@ -90,16 +96,24 @@
     <MPStrategies>
 
       <!-- KinodynamicRRT -->
-      <KinodynamicRRTStrategy label="KRRT" growthFocus="0.00" minDist="0.001"
-        evaluateGoal="true" goalDist="1.2" query="3D/3d.query"
-        dmLabel="euclidean" nfLabel="Nearest" vcLabel="cd1" extenderLabel="KE"
-        debug="false">
+      <KinodynamicRRTStrategy label="KRRTQuery" growthFocus="0.05" minDist="0.001"
+        evaluateGoal="true" goalDist="5" query="3DState/3d.query"
+        dmLabel="euclidean" nfLabel="Nearest" vcLabel="cd1"
+        extenderLabel="FixedRandom" debug="false">
         <!--Evaluator label="NodesEval"/-->
+      </KinodynamicRRTStrategy>
+
+      <!-- KinodynamicRRT -->
+      <KinodynamicRRTStrategy label="KRRTNodes" growthFocus="0.05" minDist="0.001"
+        evaluateGoal="false" query="3DState/3d.query"
+        dmLabel="euclidean" nfLabel="Nearest" vcLabel="cd1"
+        extenderLabel="FixedRandom" debug="false">
+        <Evaluator label="NodesEval"/>
       </KinodynamicRRTStrategy>
 
     </MPStrategies>
 
-    <Solver mpStrategyLabel="KRRT" seed="12345678"  baseFilename="KRRT" vizmoDebug="true"/>
+    <Solver mpStrategyLabel="KRRTQuery" seed="12345678"  baseFilename="KRRT" vizmoDebug="true"/>
 
   </MPProblem>
 </MotionPlanning>

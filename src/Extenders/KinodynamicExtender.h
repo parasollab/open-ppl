@@ -33,7 +33,11 @@ class KinodynamicExtender : public ExtenderMethod<MPTraits> {
   protected:
     string m_dmLabel;
     string m_vcLabel;
-    double m_delta;
+    double m_delta;   ///< Time step
+    bool m_fixed;     ///< True is fixed step at m_delta
+                      ///< false is varyiable time-step in (0, m_delta)
+    bool m_best;      ///< True is best control selection
+                      ///< false is random control selection
 };
 
 template<class MPTraits>
@@ -57,7 +61,12 @@ void
 KinodynamicExtender<MPTraits>::ParseXML(XMLNode& _node) {
   m_dmLabel = _node.Read("dmLabel",true,"", "Distance metric label");
   m_vcLabel = _node.Read("vcLabel", true, "", "Validity checker label");
-  m_delta = _node.Read("delta", false, 1.0, 0.0, MAX_DBL, "Delta distance");
+
+  m_delta = _node.Read("delta", true, 10.0, 0.0, MAX_DBL,
+      "Delta Time as multiple of environment resolution");
+  m_fixed = _node.Read("fixed", true, true,
+      "Fixed time-step or variable time-step.");
+  m_best = _node.Read("best", true, false, "Best control or random control.");
 }
 
 template<class MPTraits>
@@ -71,43 +80,55 @@ KinodynamicExtender<MPTraits>::Print(ostream& _os) const {
 
 template<class MPTraits>
 bool
-KinodynamicExtender<MPTraits>::Extend(const StateType& _near, const StateType& _dir,
-    StateType& _new, LPOutput<MPTraits>& _lpOutput) {
+KinodynamicExtender<MPTraits>::
+Extend(const StateType& _near, const StateType& _dir, StateType& _new,
+    LPOutput<MPTraits>& _lpOutput) {
 
   //Setup...primarily for collision checks that occur later on
   Environment* env = this->GetEnvironment();
+  shared_ptr<MultiBody> robot = env->GetActiveBody(0);
   DistanceMetricPointer dm = this->GetDistanceMetric(m_dmLabel);
   ValidityCheckerPointer vc = this->GetValidityChecker(m_vcLabel);
   string callee("KinodynamicExtender::Expand");
 
-  StateType incr, tick = _near, previous = _near;
-  bool collision = false;
-  int nTicks, ticker = 0;
-
-  incr.FindIncrement(tick, _dir, &nTicks,
-      env->GetPositionRes(), env->GetOrientationRes());
-
-  _lpOutput.m_edge.first.SetWeight(nTicks);
-  _lpOutput.m_edge.second.SetWeight(nTicks);
-
-  //Move out from start towards dir, bounded by number of ticks allowed at a
-  //given resolution and the distance m_delta: the maximum distance to grow
-  while(!collision && dm->Distance(_near, tick) <= m_delta &&
-        ticker <= nTicks) {
-    previous = tick;
-    tick += incr;
-    if(!env->InBounds(tick) || !(vc->IsValid(tick, callee)))
-      collision = true; //return previous tick, as it is collision-free
-    ++ticker;
+  double dt;
+  size_t nTicks;
+  if(m_fixed) {
+    nTicks = floor(m_delta + 0.5); //round up nTicks
+    dt = m_delta*env->GetTimeRes() / nTicks;
   }
-  if(previous != _near) {
-    _new = previous;//Last Cfg pushed back is the final tick allowed
-    return true;
+  else {
+    throw RunTimeException(WHERE, "Variable time-step not yet implemented");
   }
-  else{
-    if(this->m_debug)
-      cout << "Could not expand !" << endl;
-    return false;
+
+  if(m_best) {
+    throw RunTimeException(WHERE, "Best control is not yet implemented");
+  }
+  else {
+    StateType tick = _near;
+    size_t ticker = 0;
+
+    bool collision = false;
+    vector<double> control = robot->GetRandomControl();
+    while(!collision && ticker < nTicks) {
+      tick = tick.Apply(env, control, dt);
+      if(!env->InBounds(tick) || !vc->IsValid(tick, callee))
+        collision = true; //return previous tick, as it is collision-free
+      ++ticker;
+      _lpOutput.m_intermediates.push_back(tick);
+    }
+    if(!collision) {
+      _new = tick;
+
+      _lpOutput.m_edge.first.SetWeight(nTicks);
+      _lpOutput.m_edge.second.SetWeight(nTicks);
+      _lpOutput.m_edge.first.SetControl(control);
+
+      _lpOutput.AddIntermediatesToWeights(true);
+      return true;
+    }
+    else
+      return false;
   }
 }
 

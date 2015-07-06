@@ -160,6 +160,7 @@ Body::Read() {
   m_bbPolyhedron.m_vertexList[7] = Vector3d(maxx,maxy,maxz);
 
   FindBoundingBox();
+  ComputeMomentOfInertia();
 }
 
 void
@@ -176,7 +177,7 @@ Body::Write(ostream& _os) {
 void
 Body::ComputeCenterOfMass(){
   GMSPolyhedron poly = GetWorldPolyhedron();
-  if (poly.m_vertexList.empty()) {
+  if(poly.m_vertexList.empty()) {
     cout << "\nERROR: No Vertices to take Body::centerOfMass from...\n";
   }
   else{
@@ -187,6 +188,33 @@ Body::ComputeCenterOfMass(){
     m_centerOfMass = sum/poly.m_vertexList.size();
     m_centerOfMassAvailable = true;
   }
+}
+
+void
+Body::
+ComputeMomentOfInertia() {
+  Vector3d centerOfMass = GetCenterOfMass();
+  GMSPolyhedron& poly = GetWorldPolyhedron();
+  vector<Vector3d>& vert = poly.m_vertexList;
+
+  float massPerTriangle = 1.0/poly.m_polygonList.size();
+  for(const auto& polygon : poly.m_polygonList) {
+
+    Vector3d com = (vert[polygon.m_vertexList[0]] +
+        vert[polygon.m_vertexList[1]] +
+        vert[polygon.m_vertexList[2]])/3.0;
+    Vector3d r = centerOfMass - com;
+    m_moment[0][0] += massPerTriangle * (r[1]*r[1] + r[2]*r[2]);
+    m_moment[0][1] += massPerTriangle * -r[0] * r[1];
+    m_moment[0][2] += massPerTriangle * -r[0] * r[2];
+    m_moment[1][0] += massPerTriangle * -r[1] * r[0];
+    m_moment[1][1] += massPerTriangle * (r[0]*r[0] + r[2]*r[2]);
+    m_moment[1][2] += massPerTriangle * -r[1] * r[2];
+    m_moment[2][0] += massPerTriangle * -r[0] * r[2];
+    m_moment[2][1] += massPerTriangle * -r[1] * r[2];
+    m_moment[2][2] += massPerTriangle * (r[0]*r[0] + r[1]*r[1]);
+  }
+  m_moment = inverse(m_moment);
 }
 
 void

@@ -106,9 +106,7 @@ ParseXML(XMLNode& _node) {
       m_evaluators.push_back(
           child.Read("label", true, "", "Evaluation Method"));
 
-  m_goalDist = _node.Read("goalDist", false, 1.0, 0.0, MAX_DBL,
-      "Delta Distance");
-  m_minDist = _node.Read("minDist", false, 0.0, 0.0, m_goalDist,
+  m_minDist = _node.Read("minDist", false, 0.0, 0.0, MAX_DBL,
       "Minimum Distance");
   m_growthFocus = _node.Read("growthFocus", false, 0.0, 0.0, 1.0,
       "#GeneratedTowardsGoal/#Generated");
@@ -117,10 +115,12 @@ ParseXML(XMLNode& _node) {
   m_dm = _node.Read("dmLabel",true,"","Distance Metric");
   m_extenderLabel = _node.Read("extenderLabel", true, "",
       "Extender label");
-  m_evaluateGoal = _node.Read("evaluateGoal", false, false, "");
-
   //optionally read in a query and create a Query object.
   string query = _node.Read("query", false, "", "Query Filename");
+  m_evaluateGoal = _node.Read("evaluateGoal", !query.empty(), false, "");
+  m_goalDist = _node.Read("goalDist", m_evaluateGoal, 1.0, 0.0, MAX_DBL,
+      "Delta Distance");
+
   if(query != "") {
     m_query = shared_ptr<Query<MPTraits>>(new Query<MPTraits>(query));
     m_query->SetMPProblem(this->GetMPProblem());
@@ -342,7 +342,7 @@ ExpandTree(StateType& _dir) {
       << " expanded to " << newCfg << endl;
 
   // If good to go, add to roadmap
-  if(dist >= m_minDist ) {
+  if(dist >= m_minDist) {
     recentVID = g->AddVertex(newCfg);
     g->GetVertex(recentVID).SetStat("Parent", neighbors[0].first);
     g->AddEdge(nearVID, recentVID, lpOutput.m_edge);
@@ -371,6 +371,7 @@ EvaluateGoals(VID _newVID) {
     if(this->m_debug)
       cout << "Distance to goal::" << dist << endl;
 
+    cout << "dist: " << dist << endl;
     if(dist < m_goalDist) {
       if(this->m_debug)
         cout << "Goal found::" << m_goals[*i] << endl;

@@ -93,6 +93,9 @@ class Body {
     /// @return Center of mass of body
     Vector3d GetCenterOfMass();
     ////////////////////////////////////////////////////////////////////////////
+    /// @return Moment of Inertia of body
+    const Matrix3x3& GetMoment() {return m_moment;}
+    ////////////////////////////////////////////////////////////////////////////
     /// @param _index Index of desired forward Connection
     /// @return Requested forward Connection
     Connection& GetForwardConnection(size_t _index);
@@ -177,6 +180,10 @@ class Body {
     /// modify this to consider the length of edges, which is still an
     /// approximation.
     void ComputeCenterOfMass();
+
+    ////////////////////////////////////////////////////////////////////////////
+    /// @brief Approximate moment of inertia
+    void ComputeMomentOfInertia();
 
     ////////////////////////////////////////////////////////////////////////////
     /// @brief Determind bounding box
@@ -288,6 +295,8 @@ class Body {
     DT_VertexBaseHandle base;                ///< Solid base
     MT_Point3* vertex;                       ///< Solid set of vertices
 #endif
+
+    Matrix3x3 m_moment;
 };
 
 #endif

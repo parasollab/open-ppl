@@ -478,6 +478,12 @@ CanRecreatePath(RoadmapType* _rdmp, vector<VID>& _attemptedPath,
     CfgRef c1 = _rdmp->GetGraph()->GetVertex(*it);
     CfgRef c2 = _rdmp->GetGraph()->GetVertex(*(it+1));
     WeightType& weight = (*ei).property();
+    cout << "Vertex: " << c1 << endl;
+    const vector<double>& control = weight.GetControl();
+    cout << "Control: ";
+    for(const auto& v : control)
+      cout << v << " ";
+    cout << endl << "To: " << c2 << endl;
     vector<CfgType> intermediates = weight.GetIntermediates();
 
     if(weight.GetLPLabel() != "RRTExpand"){

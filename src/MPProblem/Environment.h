@@ -53,6 +53,9 @@ class Environment {
     double GetRDRes() const {return m_rdRes;}
 #endif
 
+    double GetTimeRes() const {return m_timeRes;}
+    void SetTimeRes(const double _timeRes) {m_timeRes = _timeRes;}
+
     //ComputeResolution, if _posRes is <0, auto&  compute
     //the resolutions based on min_max body spans.
     void ComputeResolution(double _positionResFactor = 0.05);
@@ -149,6 +152,7 @@ class Environment {
     double m_positionRes; //positional resolution of movement
     double m_orientationRes; //rotational resolution of movement
     double m_rdRes; //resolution for movement in RD space
+    double m_timeRes; ///< Time resolution for integration of motion
 
     //Robot Graph (for single Active Multibody instance. Used for automatically
     //determining C-space

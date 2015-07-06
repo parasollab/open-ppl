@@ -14,7 +14,8 @@ Environment::Environment() :
   m_saveDofs(false),
   m_positionRes(ENV_RES_DEFAULT),
   m_orientationRes(ENV_RES_DEFAULT),
-  m_rdRes(ENV_RES_DEFAULT) {
+  m_rdRes(ENV_RES_DEFAULT),
+  m_timeRes(0.01) {
   }
 
 Environment::Environment(XMLNode& _node) {
@@ -29,6 +30,7 @@ Environment::Environment(XMLNode& _node) {
 #else
   m_rdRes = ENV_RES_DEFAULT;
 #endif
+  m_timeRes = _node.Read("timeRes", false, 0.01, 0.01, MAX_DBL, "Time resolution");
   m_filename = MPProblemBase::GetPath(m_filename);
   Read(m_filename);
   ComputeResolution(positionResFactor);
