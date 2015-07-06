@@ -111,7 +111,7 @@ State::Apply(Environment* _env, const vector<double>& _u, double _dt) {
   //cout << "x1: " << x1 << endl;
   State x2 = F(_env, *this + x1 * (_dt / 2.0), force, torque);
   //cout << "x2: " << x2 << endl;
-  State x3 = F(_env, *this + x2 * (_dt / 2.0), force, torque);
+  State x3 = F(_env, *this + x2 * _dt, force, torque);
   //cout << "x3: " << x3 << endl;
   return *this + (x0 + x1 * 2 + x2 * 2 + x3) * (_dt / 6.0);
 }
