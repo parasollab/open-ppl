@@ -18,7 +18,8 @@ Body(MultiBody* _owner) :
   m_label(0),
   m_worldPolyhedronAvailable(false),
   m_convexHullAvailable(false),
-  m_centerOfMassAvailable(false) {
+  m_centerOfMassAvailable(false),
+  m_mass(1.0) {
     fill(m_boundingBox, m_boundingBox+6, 0);
   }
 
@@ -176,7 +177,7 @@ ComputeMomentOfInertia() {
   GMSPolyhedron& poly = GetWorldPolyhedron();
   vector<Vector3d>& vert = poly.m_vertexList;
 
-  float massPerTriangle = 1.0/poly.m_polygonList.size();
+  float massPerTriangle = m_mass/poly.m_polygonList.size();
   for(const auto& polygon : poly.m_polygonList) {
 
     Vector3d com = (vert[polygon.m_vertexList[0]] +

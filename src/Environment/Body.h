@@ -76,8 +76,11 @@ class Body {
     /// @return Center of mass of body
     Vector3d GetCenterOfMass();
     ////////////////////////////////////////////////////////////////////////////
+    /// @return Mass of body
+    const double GetMass() const {return m_mass;}
+    ////////////////////////////////////////////////////////////////////////////
     /// @return Moment of Inertia of body
-    const Matrix3x3& GetMoment() {return m_moment;}
+    const Matrix3x3& GetMoment() const {return m_moment;}
     ////////////////////////////////////////////////////////////////////////////
     /// @return Bounding sphere radius
     double GetBoundingSphereRadius() const;
@@ -248,6 +251,7 @@ class Body {
     bool m_centerOfMassAvailable;            ///< Is center of mass computed
     Vector3d m_centerOfMass;                 ///< Center of mass
 
+    double m_mass;                           ///< Mass of Body
     Matrix3x3 m_moment;                      ///< Moment of Inertia
 
     double m_boundingBox[6];                 ///< Bounding box

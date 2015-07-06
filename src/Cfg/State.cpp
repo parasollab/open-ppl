@@ -153,6 +153,7 @@ State
 State::
 F(Environment* _env, const State& _s,
     const Vector3d& _force, const Vector3d& _torque) {
+  shared_ptr<FreeBody> body =_env->GetRobot(_s.m_robotIndex)->GetFreeBody(0);
   State xdot;
   xdot.m_v = _s.m_vel;
 
@@ -172,10 +173,10 @@ F(Environment* _env, const State& _s,
   Vector3d force = r * _force;
   Vector3d torque = r * _torque;
   for(size_t i = 0; i < m_posdof[_s.m_robotIndex]; ++i)
-    xdot.m_vel[i] = force[i] / 1.0;
+    xdot.m_vel[i] = force[i] / body->GetMass();
 
   Matrix3x3 rt = r.transpose();
-  Vector3d wdot = r * _env->GetRobot(_s.m_robotIndex)->GetFreeBody(0)->GetMoment() * rt * torque;
+  Vector3d wdot = r * body->GetMoment() * rt * torque;
   xdot.m_vel[3] = wdot[0];
   xdot.m_vel[4] = wdot[1];
   xdot.m_vel[5] = wdot[2];
