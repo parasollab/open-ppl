@@ -1,8 +1,8 @@
 #ifndef CONSTRUCTREGIONMAP_H_
 #define CONSTRUCTREGIONMAP_H_
 
+#include "Environment/BoundingBox.h"
 #include "ParallelMethods/ParallelSBMPHeader.h"
-#include "MPProblem/BoundingBox.h"
 
 using namespace psbmp;
 using namespace stapl;
@@ -22,14 +22,14 @@ class ConstructRoadmap {
     typedef typename MPTraits::MPProblemType MPProblemType;
     typedef typename MPProblemType::VID VID;
     typedef typename MPProblemType::MPStrategyPointer MPStrategyPointer;
-    
+
     ConstructRoadmap(MPStrategyPointer _mpsm ): m_strategyMethod(_mpsm){ }
     ConstructRoadmap(const ConstructRoadmap& _wf, std::size_t _offset)  {}
     void define_type(stapl::typer& _t){ }
 
     template<typename View, typename bbView>
     void operator()(View _view,  bbView _bbview) const;
-    
+
   private:
     MPStrategyPointer m_strategyMethod;
 };
@@ -63,7 +63,7 @@ class NodeGenerator {
     typedef typename MPProblemType::VID VID;
     typedef typename MPProblemType::SamplerPointer NGM;
     typedef void result_type;
-    
+
     NodeGenerator(MPProblemType* _problem, NGM _ngm, int _num): m_attempts(_num) {
       m_problem = _problem;
       m_sp = _ngm;
@@ -73,7 +73,7 @@ class NodeGenerator {
     }
 
     template <typename BBView, typename RGView>
-      void operator()(BBView _v1, RGView _v2) const; 
+      void operator()(BBView _v1, RGView _v2) const;
 
   private:
     MPProblemType* m_problem;
@@ -124,7 +124,7 @@ class NodeConnector {
     typedef typename MPProblemType::GraphType GraphType;
     typedef typename MPProblemType::ConnectorPointer NCP;
     typedef void result_type;
-    
+
     NodeConnector(MPProblemType* _problem, NCP _ncp) {
       m_problem = _problem;
       m_ncp = _ncp;
