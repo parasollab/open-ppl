@@ -10,12 +10,13 @@
 
 #include "Vector.h"
 
-#include "MPProblem/Robot.h"
 #include "Utilities/MPUtils.h"
 #include "ValidityCheckers/CollisionDetection/CDInfo.h"
 
+enum class DofType;
 class Cfg;
 class Environment;
+class ActiveMultiBody;
 class Boundary;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -65,7 +66,7 @@ class Cfg {
     virtual ~Cfg() {};
 
     // assume _index within the size of the vector.
-    static void InitRobots(vector<Robot>& _robots, size_t _index = 0, ostream& _os=std::cout);
+    static void InitRobots(shared_ptr<ActiveMultiBody>& _robot, size_t _index);
 
     Cfg& operator=(const Cfg& _cfg);
     ///determines equality of this and other configuration
@@ -137,7 +138,7 @@ class Cfg {
     //Calculate the center position and center of mass of the robot configures
     //at this Cfg
     virtual Vector3d GetRobotCenterPosition() const;
-    virtual Vector3d GetRobotCenterofMass(Environment* _env) const;
+    virtual Vector3d GetRobotCenterofMass() const;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     //
@@ -158,7 +159,7 @@ class Cfg {
     template<class DistanceMetricPointer>
       void GetRandomRay(double _incr, DistanceMetricPointer _dm, bool _norm=true);
 
-    virtual bool ConfigEnvironment(Environment* _env) const;
+    virtual void ConfigEnvironment() const;
 
     void GetResolutionCfg(Environment*);
 
@@ -181,7 +182,7 @@ class Cfg {
       double GetSmoothingValue(ClearanceUtility<MPTraits>& _clearanceUtils, shared_ptr<Boundary> _bb);
 
     //polygonal approximation
-    vector<Vector3d> PolyApprox (Environment* _env) const;
+    vector<Vector3d> PolyApprox() const;
 
     size_t GetRobotIndex() const {return m_robotIndex;}
     void SetRobotIndex(size_t _newIndex){m_robotIndex = _newIndex;}
@@ -206,9 +207,8 @@ class Cfg {
     static vector<size_t> m_posdof;
     static vector<size_t> m_numJoints;
 
-    enum DofType {POS, ROT, JOINT};
     static vector<vector<DofType> > m_dofTypes;
-    static vector<vector<Robot> > m_robots;
+    static vector<shared_ptr<ActiveMultiBody>> m_robots;
 
     /** TODO- there may still problem with (un)packing map
      */
@@ -216,8 +216,8 @@ class Cfg {
     map<string,double> m_statMap;
 
   public:
-    static const vector<vector<Robot> >& GetRobots() { return m_robots; }
-    static const vector<Robot>& GetRobots(size_t _index = 0) { return m_robots[_index]; }
+    static const vector<shared_ptr<ActiveMultiBody>>& GetRobots() { return m_robots; }
+    static const shared_ptr<ActiveMultiBody>& GetRobot(size_t _index = 0) { return m_robots[_index]; }
 
     CDInfo m_clearanceInfo;
     shared_ptr<Cfg> m_witnessCfg;

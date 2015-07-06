@@ -71,7 +71,7 @@ public:
     //Calculate the center position and center of mass of the robot configures
     //at this Cfg
     virtual Vector3d GetRobotCenterPosition() const;
-    virtual Vector3d GetRobotCenterofMass(Environment* _env) const;
+    virtual Vector3d GetRobotCenterofMass() const;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     //
@@ -86,7 +86,7 @@ public:
     template<class DistanceMetricPointer>
       void GetRandomRay(double _incr, DistanceMetricPointer _dm, bool _norm=true);
 
-    virtual bool ConfigEnvironment(Environment* _env) const;
+    virtual void ConfigEnvironment() const;
 
     void GetResolutionCfg(Environment*);
 

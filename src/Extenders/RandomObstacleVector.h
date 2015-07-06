@@ -3,6 +3,9 @@
 
 #include "BasicExtender.h"
 
+#include "Environment/FixedBody.h"
+#include "Environment/StaticMultiBody.h"
+
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup Extenders
 /// @brief Extend in a direction based upon a random obstacle vector.
@@ -51,10 +54,10 @@ RandomObstacleVector<MPTraits>::Extend(const CfgType& _near,
   double vecScale = 10.0;
 
   // Get an obstacle vector from env
-  int numBodies = env->GetUsableMultiBodyCount();
+  int numBodies = env->NumObstacles();
   if( numBodies > 1 ) {//this growth method only works with obstacles (need 2 multibodies)
     int randIndex = (LRand() % (numBodies-1)) + 1;
-    GMSPolyhedron& poly = env->GetMultiBody(randIndex)->GetFixedBody(0)->GetWorldPolyhedron();
+    GMSPolyhedron& poly = env->GetObstacle(randIndex)->GetFixedBody(0)->GetWorldPolyhedron();
     vector<Vector3d>& vertexList    = poly.m_vertexList;
     vector<GMSPolygon>& polygonList = poly.m_polygonList;
 

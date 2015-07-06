@@ -1,9 +1,11 @@
-#ifndef SOLIDCOLLISIONDETECTION_H
-#define SOLIDCOLLISIONDETECTION_H
+#ifndef SOLID_COLLISION_DETECTION_H_
+#define SOLID_COLLISION_DETECTION_H_
 
 #ifdef USE_SOLID
-#include "CollisionDetectionMethod.h"
+
 #include <SOLID.h>
+
+#include "CollisionDetectionMethod.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup CollisionDetection
@@ -16,11 +18,11 @@
 class Solid : public CollisionDetectionMethod {
   public:
     Solid();
-    virtual ~Solid();
 
-    virtual bool IsInCollision(shared_ptr<MultiBody> _robot, shared_ptr<MultiBody> _obstacle,
-        StatClass& _stats, CDInfo& _cdInfo, const string& _callName, int _ignoreIAdjacentMultibodies=1);
+    virtual void Build(Body* _body);
 
+    virtual bool IsInCollision(shared_ptr<Body> _body1,
+        shared_ptr<Body> _body2, CDInfo& _cdInfo);
 };
 #endif
 

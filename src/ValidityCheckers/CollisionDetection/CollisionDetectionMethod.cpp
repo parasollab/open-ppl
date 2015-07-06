@@ -1,24 +1,26 @@
 #include "CollisionDetectionMethod.h"
 
-CollisionDetectionMethod::CollisionDetectionMethod(string _name, CDType _type, cd_predefined _cdType) :
-  m_name(_name), m_type(_type), m_cdType(_cdType) {
+#include "Environment/Body.h"
+#include "Utilities/PMPLExceptions.h"
+
+CollisionDetectionMethod::
+CollisionDetectionMethod(const string& _name, CDType _type) :
+  m_name(_name), m_type(_type) {
   }
 
-CollisionDetectionMethod::~CollisionDetectionMethod() {}
-
-bool
-CollisionDetectionMethod::operator==(const CollisionDetectionMethod& _cd) const {
-  return m_name == _cd.m_name;
+CollisionDetectionMethod::
+~CollisionDetectionMethod() {
 }
 
 void
-CollisionDetectionMethod::Print(ostream& _os) const {
+CollisionDetectionMethod::
+Print(ostream& _os) const {
   _os << "\t" << m_name << " " << endl;
 }
 
 bool
-CollisionDetectionMethod::IsInsideObstacle(const Cfg& _cfg) {
-  cerr << "IsInsideObstacle: Not implemeneted yet" << endl;
-  exit(1);
+CollisionDetectionMethod::
+IsInsideObstacle(const Vector3d& _pt, shared_ptr<Body> _body) {
+  throw RunTimeException(WHERE, "Not implemented.");
 }
 

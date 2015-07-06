@@ -3,6 +3,8 @@
 
 #include "ExtenderMethod.h"
 
+#include "Environment/NonHolonomicMultiBody.h"
+
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup Extenders
 /// @brief Basic straight-line extension.
@@ -86,7 +88,7 @@ Extend(const StateType& _near, const StateType& _dir, StateType& _new,
 
   //Setup...primarily for collision checks that occur later on
   Environment* env = this->GetEnvironment();
-  shared_ptr<MultiBody> robot = env->GetActiveBody(0);
+  shared_ptr<NonHolonomicMultiBody> robot = dynamic_pointer_cast<NonHolonomicMultiBody>(env->GetRobot(0));
   DistanceMetricPointer dm = this->GetDistanceMetric(m_dmLabel);
   ValidityCheckerPointer vc = this->GetValidityChecker(m_vcLabel);
   string callee("KinodynamicExtender::Expand");

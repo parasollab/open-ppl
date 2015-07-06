@@ -166,6 +166,8 @@ class PerturbMostDistantJoint : public PerturbJoints{
 /// @tparam MPTraits Motion planning universe
 ///
 /// TODO
+///
+/// \todo Configure for pausible execution.
 ////////////////////////////////////////////////////////////////////////////////
 template<class MPTraits>
 class ReachableVolumeRRT : public BasicRRTStrategy<MPTraits> {
@@ -239,8 +241,8 @@ class ReachableVolumeRRT : public BasicRRTStrategy<MPTraits> {
 
 shared_ptr<vector<Vector3D> > convertToJointPositions(CfgType _cfg){
   shared_ptr<vector<Vector3D> > joints = shared_ptr<vector<Vector3D> >(new vector<Vector3D>);
-  _cfg.ConfigEnvironment(this->GetMPProblem()->GetEnvironment());
-  this->GetMPProblem()->GetEnvironment()->GetMultiBody(_cfg.GetRobotIndex())->PolygonalApproximation(*joints);
+  _cfg.ConfigEnvironment();
+  this->GetEnvironment()->GetRobot(_cfg.GetRobotIndex())->PolygonalApproximation(*joints);
   for(unsigned int i=1; i<joints->size();i++){
     (*joints)[i]=(*joints)[i]-(*joints)[0];
   }
@@ -265,8 +267,8 @@ void PrintOptions(ostream& _os) {
   _os << "\tEvaluate Goal:: " << m_evaluateGoal << endl;
   _os << "\tEvaluators:: " << endl;
   _os << "\tGrow Goals:: " << m_growGoals << endl;
-  for(SIT sit = m_evaluators.begin(); sit!=m_evaluators.end(); sit++)
-    _os << "\t\t" << *sit << endl;
+  for(const auto& label : m_meLabels)
+    _os << "\t\t" << label << endl;
   _os << "\tdelta:: " << m_delta << endl;
   _os << "\tminimum distance:: " << m_minDist << endl;
   _os << "\tnumber of roots:: " << m_numRoots << endl;
@@ -465,7 +467,7 @@ ReachableVolumeRRT<MPTraits>::Run() {
     }
 
 
-    bool evalMap = this->EvaluateMap(this->m_evaluators);
+    bool evalMap = this->EvaluateMap();
 
     if(!this->m_growGoals){
       if(nGoalsNotFound<=0){

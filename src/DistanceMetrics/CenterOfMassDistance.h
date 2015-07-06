@@ -39,8 +39,7 @@ template<class MPTraits>
 double
 CenterOfMassDistance<MPTraits>::
 Distance(const CfgType& _c1, const CfgType& _c2) {
-  Environment* env = this->GetMPProblem()->GetEnvironment();
-  return (_c1.GetRobotCenterofMass(env) - _c2.GetRobotCenterofMass(env)).norm();
+  return (_c1.GetRobotCenterofMass() - _c2.GetRobotCenterofMass()).norm();
 }
 
 #endif

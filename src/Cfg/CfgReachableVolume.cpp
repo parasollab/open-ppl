@@ -1,10 +1,8 @@
-#ifndef CfgReachableVolume_c
-#define CfgReachableVolume_c
-
-#include "MPProblem/Geometry/MultiBody.h"
-#include "MPProblem/Environment.h"
-#include "ReachableVolumeUtil/ReachableVolumeRobot.h"
 #include "CfgReachableVolume.h"
+
+#include "Environment/ActiveMultiBody.h"
+#include "Environment/Environment.h"
+#include "ReachableVolumeUtil/ReachableVolumeRobot.h"
 
 shared_ptr<vector<shared_ptr<ReachableVolumeRobot> > > g_reachableVolumeRobots;
 
@@ -52,23 +50,25 @@ void CfgReachableVolume::GetRandomCfg(Environment* _env){
 
 void CfgReachableVolume::GetRandomCfg(Environment* _env, shared_ptr<Boundary> _bb){
   m_v.clear();
-  for(unsigned int i=0; i<m_robots.size(); i++){
+  for(size_t i = 0; i < m_robots.size(); ++i) {
     vector<double> cfg_data_robot;
     //whoever decided to make m_robots a vector of vectors is going to need to change this to correctly fit that format
-    if(m_robots[i][0].m_base == Robot::FIXED || (*m_reachableVolumeRobots)[i]->m_fixed){
-      for(int j=0; j<6;j++){
+    if(m_robots[i]->GetBaseType() == FreeBody::BodyType::Fixed ||
+        (*m_reachableVolumeRobots)[i]->m_fixed){
+      for(int j=0; j<6;j++)
         m_v.push_back(0);
-      }
-    }else{
-      if(m_robots[i][0].m_base == Robot::PLANAR || m_robots[i][0].m_base == Robot::VOLUMETRIC) {
+    }
+    else {
+      if(m_robots[i]->GetBaseType() == FreeBody::BodyType::Planar ||
+          m_robots[i]->GetBaseType() == FreeBody::BodyType::Volumetric) {
         Point3d p=_bb->GetRandomPoint();
-        size_t posDOF = m_robots[i][0].m_base == Robot::VOLUMETRIC ? 3 : 2;
+        size_t posDOF = m_robots[i]->GetBaseType() == FreeBody::BodyType::Volumetric ? 3 : 2;
         for(size_t j = 0; j < posDOF; j++){
 	  (*m_reachableVolumeRobots)[i]->m_baseJointPos[j]=p[j];
           m_v.push_back(p[j]);
         }
-        if(m_robots[i][0].m_baseMovement == Robot::ROTATIONAL) {
-          size_t oriDOF = m_robots[i][0].m_base == Robot::VOLUMETRIC ? 3 : 1;
+        if(m_robots[i]->GetBaseMovementType() == FreeBody::MovementType::Rotational) {
+          size_t oriDOF = m_robots[i]->GetBaseType() == FreeBody::BodyType::Volumetric ? 3 : 1;
           for(size_t i = 0; i < oriDOF; i++) {
 	    m_v.push_back(DRand());
           }
@@ -76,19 +76,17 @@ void CfgReachableVolume::GetRandomCfg(Environment* _env, shared_ptr<Boundary> _b
       }
     }
     shared_ptr<vector<double> > internalCfg = (*m_reachableVolumeRobots)[i]->getInternalCFGCoordinates();
-    if(m_robots[i][0].m_base == Robot::PLANAR)
+    if(m_robots[i]->GetBaseType() == FreeBody::BodyType::Planar)
       (*internalCfg)[1]=DRand();
-    m_v.insert(m_v.end(),internalCfg->begin(),internalCfg->end());
-
+    m_v.insert(m_v.end(), internalCfg->begin(), internalCfg->end());
   }
 
-  if((*m_reachableVolumeRobots)[0]->m_debug){
+  if((*m_reachableVolumeRobots)[0]->m_debug) {
     cout<<"cfg ="<<endl;
-    for(unsigned int i =0; i<m_v.size(); i++){
+    for(size_t i = 0; i < m_v.size(); i++)
       cout<<m_v[i]<<endl;
-    }
     Cfg::SetData(m_v);
-    ConfigEnvironment(_env);
+    ConfigEnvironment();
     /*
     _env->GetMultiBody(_env->GetRobotIndex())->PolygonalApproximation(joints);
     cout<<"************"<<endl<<"Printing Joints"<<endl;
@@ -160,4 +158,3 @@ vector<Robot> CfgReachableVolume::GetRobots(int _numJoints) {
   return robots;
 }
 */
-#endif

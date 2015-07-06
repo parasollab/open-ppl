@@ -6,11 +6,6 @@ FixedBody(MultiBody* _owner, const string& _filename) :
     m_filename = _filename;
   }
 
-FixedBody::
-FixedBody(MultiBody* _owner, GMSPolyhedron& _polyhedron) :
-  Body(_owner, _polyhedron) {
-  }
-
 void
 FixedBody::
 Read(istream& _is, CountingStreamBuffer& _cbs) {
@@ -31,4 +26,3 @@ ostream&
 operator<<(ostream& _os, const FixedBody& _fb){
   return _os << _fb.m_filename << " " << _fb.m_worldTransformation;
 }
-

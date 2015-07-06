@@ -41,23 +41,23 @@ class ObstacleBasedSampler : public SamplerMethod<MPTraits> {
     // The following was added after unification with WOBPRM code //
     ////////////////////////////////////////////////////////////////
 
-    // Returns a CfgType at the center of mass of the MultiBody
-    CfgType ChooseCenterOfMass(shared_ptr<MultiBody> _mBody);
+    // Returns a CfgType at the center of mass of the StaticMultiBody
+    CfgType ChooseCenterOfMass(shared_ptr<StaticMultiBody> _mBody);
 
-    // Returns a CfgType at a random vertex of the MultiBody
-    CfgType ChooseRandomVertex(shared_ptr<MultiBody> _mBody, bool _isFreeBody);
+    // Returns a CfgType at a random vertex of the StaticMultiBody
+    CfgType ChooseRandomVertex(shared_ptr<StaticMultiBody> _mBody, bool _isFreeBody);
 
     // Returns a point inside the triangle determined by the vectors
     Vector3d ChoosePointOnTriangle(Vector3d _p, Vector3d _q, Vector3d _r);
 
-    // Chooses a random point on a random triangle (weighted by area) in the MultiBody
-    CfgType ChooseRandomWeightedTriangle(shared_ptr<MultiBody> _mBody, bool _isFreeBody);
+    // Chooses a random point on a random triangle (weighted by area) in the StaticMultiBody
+    CfgType ChooseRandomWeightedTriangle(shared_ptr<StaticMultiBody> _mBody, bool _isFreeBody);
 
-    // Chooses a random point in a random triangle in the MultiBody
-    CfgType ChooseRandomTriangle(shared_ptr<MultiBody> _mBody, bool _isFreeBody);
+    // Chooses a random point in a random triangle in the StaticMultiBody
+    CfgType ChooseRandomTriangle(shared_ptr<StaticMultiBody> _mBody, bool _isFreeBody);
 
-    // Chooses a random extreme vertex of the MultiBody
-    CfgType ChooseExtremeVertex(shared_ptr<MultiBody> _mBody, bool _isFreeBody);
+    // Chooses a random extreme vertex of the StaticMultiBody
+    CfgType ChooseExtremeVertex(shared_ptr<StaticMultiBody> _mBody, bool _isFreeBody);
 
     // Checks m_pointSelection and returns an appropriate CfgType
     virtual CfgType ChooseASample(CfgType& _cfg);
@@ -67,7 +67,7 @@ class ObstacleBasedSampler : public SamplerMethod<MPTraits> {
     CfgType GetCfgWithParams(Vector3d& _v);
 
     // Returns an appropriate polygon: for a robot, the _mBody frame; for an obstacle, the world frame
-    GMSPolyhedron GetPolyhedron(shared_ptr<MultiBody>& _mBody, bool _isFreeBody);
+    GMSPolyhedron& GetPolyhedron(shared_ptr<StaticMultiBody>& _mBody, bool _isFreeBody);
 
     string m_vcLabel, m_dmLabel; // Validity checker method, distance metric method
     int m_nShellsFree, m_nShellsColl; // Number of free and collision shells
@@ -257,21 +257,21 @@ Sampler(CfgType& _cfg, shared_ptr<Boundary> _boundary,
 // The following was added after unification with WOBPRM code //
 // ////////////////////////////////////////////////////////////////
 
-// Returns a CfgType at the center of mass of the MultiBody
+// Returns a CfgType at the center of mass of the StaticMultiBody
 template<class MPTraits>
 typename ObstacleBasedSampler<MPTraits>::CfgType
 ObstacleBasedSampler<MPTraits>::
-ChooseCenterOfMass(shared_ptr<MultiBody> _mBody) {
+ChooseCenterOfMass(shared_ptr<StaticMultiBody> _mBody) {
   Vector3d x = _mBody->GetCenterOfMass();
   return GetCfgWithParams(x);
 }
 
-// Returns a CfgType at a random vertex of the MultiBody
+// Returns a CfgType at a random vertex of the StaticMultiBody
 template<class MPTraits>
 typename ObstacleBasedSampler<MPTraits>::CfgType
 ObstacleBasedSampler<MPTraits>::
-ChooseRandomVertex(shared_ptr<MultiBody> _mBody, bool _isFreeBody) {
-  GMSPolyhedron polyhedron = GetPolyhedron(_mBody, _isFreeBody);
+ChooseRandomVertex(shared_ptr<StaticMultiBody> _mBody, bool _isFreeBody) {
+  GMSPolyhedron& polyhedron = GetPolyhedron(_mBody, _isFreeBody);
   Vector3d x = polyhedron.m_vertexList[(int)(DRand()*polyhedron.m_vertexList.size())];
   return GetCfgWithParams(x);
 }
@@ -293,21 +293,21 @@ ChoosePointOnTriangle(Vector3d _p, Vector3d _q, Vector3d _r) {
   return (_p + u*s + v*t);
 }
 
-// Chooses a random point on a random triangle (weighted by area) in the MultiBody
+// Chooses a random point on a random triangle (weighted by area) in the StaticMultiBody
 template<class MPTraits>
 typename ObstacleBasedSampler<MPTraits>::CfgType
 ObstacleBasedSampler<MPTraits>::
-ChooseRandomWeightedTriangle(shared_ptr<MultiBody> _mBody, bool _isFreeBody) {
-  GMSPolyhedron polyhedron = GetPolyhedron(_mBody, _isFreeBody);
+ChooseRandomWeightedTriangle(shared_ptr<StaticMultiBody> _mBody, bool _isFreeBody) {
+  GMSPolyhedron& polyhedron = GetPolyhedron(_mBody, _isFreeBody);
   // A random fraction of the area
-  double targetArea = _mBody->GetBody(0)->GetPolyhedron().m_area * DRand();
+  double targetArea = _mBody->GetFixedBody(0)->GetPolyhedron().m_area * DRand();
   double sum = 0.0;
   int index;
 
   // Choose index as the triangle that first makes sum > targetArea
   for(index = -1; sum <= targetArea; index++)
-    sum += _mBody->GetBody(0)->GetPolyhedron().m_polygonList[index + 1].m_area;
-  // Choose the triangle of the MultiBody with that index
+    sum += _mBody->GetFixedBody(0)->GetPolyhedron().m_polygonList[index + 1].m_area;
+  // Choose the triangle of the StaticMultiBody with that index
   GMSPolygon *poly = &polyhedron.m_polygonList[index];
   // Choose a random point in that triangle
   Vector3d p = polyhedron.m_vertexList[poly->m_vertexList[0]];
@@ -318,12 +318,12 @@ ChooseRandomWeightedTriangle(shared_ptr<MultiBody> _mBody, bool _isFreeBody) {
   return GetCfgWithParams(x);
 }
 
-// Chooses a random point in a random triangle in the MultiBody
+// Chooses a random point in a random triangle in the StaticMultiBody
 template<class MPTraits>
 typename ObstacleBasedSampler<MPTraits>::CfgType
 ObstacleBasedSampler<MPTraits>::
-ChooseRandomTriangle(shared_ptr<MultiBody> _mBody, bool _isFreeBody) {
-  GMSPolyhedron polyhedron = GetPolyhedron(_mBody, _isFreeBody);
+ChooseRandomTriangle(shared_ptr<StaticMultiBody> _mBody, bool _isFreeBody) {
+  GMSPolyhedron& polyhedron = GetPolyhedron(_mBody, _isFreeBody);
 
   // Choose a random triangle
   GMSPolygon *poly = &polyhedron.m_polygonList[(int)(DRand()*polyhedron.m_polygonList.size())];
@@ -335,12 +335,12 @@ ChooseRandomTriangle(shared_ptr<MultiBody> _mBody, bool _isFreeBody) {
   return GetCfgWithParams(x);
 }
 
-// Chooses a random extreme vertex of the MultiBody
+// Chooses a random extreme vertex of the StaticMultiBody
 template<class MPTraits>
 typename ObstacleBasedSampler<MPTraits>::CfgType
 ObstacleBasedSampler<MPTraits>::
-ChooseExtremeVertex(shared_ptr<MultiBody> _mBody, bool _isFreeBody) {
-  GMSPolyhedron polyhedron = GetPolyhedron(_mBody, _isFreeBody);
+ChooseExtremeVertex(shared_ptr<StaticMultiBody> _mBody, bool _isFreeBody) {
+  GMSPolyhedron& polyhedron = GetPolyhedron(_mBody, _isFreeBody);
   int xyz = LRand() % 3; // 0: x, 1: y, 2: z
   int minMax = LRand() % 2; // 0: min, 1: max
   int x = 0; // Index of extreme value
@@ -359,7 +359,7 @@ template<class MPTraits>
 typename ObstacleBasedSampler<MPTraits>::CfgType
 ObstacleBasedSampler<MPTraits>::
 ChooseASample(CfgType& _cfg) {
-  shared_ptr<MultiBody> mBody;
+  shared_ptr<StaticMultiBody> mBody;
   if(m_pointSelection != "cspace") {
     mBody = this->GetEnvironment()->GetRandomObstacle();
   }
@@ -429,13 +429,10 @@ GetCfgWithParams(Vector3d& _v) {
 
 // Returns an appropriate polygon: for a robot, the _mBody frame; for an obstacle, the world frame
 template<class MPTraits>
-GMSPolyhedron
+GMSPolyhedron&
 ObstacleBasedSampler<MPTraits>::
-GetPolyhedron(shared_ptr<MultiBody>& _mBody, bool _isFreeBody) {
-  if(_isFreeBody)
-    return _mBody->GetBody(0)->GetPolyhedron();
-  else
-    return _mBody->GetBody(0)->GetWorldPolyhedron();
+GetPolyhedron(shared_ptr<StaticMultiBody>& _mBody, bool _isFreeBody) {
+  return _mBody->GetFixedBody(0)->GetWorldPolyhedron();
 }
 
 #endif

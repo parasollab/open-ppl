@@ -1,5 +1,5 @@
-#ifndef DH_parameters_h
-#define DH_parameters_h
+#ifndef DH_PARAMETERS_H_
+#define DH_PARAMETERS_H_
 
 #include <iostream>
 #include <fstream>
@@ -26,23 +26,33 @@ using namespace mathtool;
 /// \f$x_{i-1}\f$ and \f$z_{i-1}\f$ is \f$x\f$ and \f$z\f$ direction of previous
 /// link.
 ////////////////////////////////////////////////////////////////////////////////
-class DHparameters {
+class DHParameters {
   public:
-    DHparameters(double _alpha = 0.0, double _a = 0.0, double _d = 0.0, double _theta = 0.0);
+    ////////////////////////////////////////////////////////////////////////////
+    /// @param _alpha Alpha
+    /// @param _a A
+    /// @param _d D
+    /// @param _theta Theta
+    DHParameters(double _alpha = 0.0, double _a = 0.0,
+        double _d = 0.0, double _theta = 0.0);
 
-    ///Read alpha, a, d, and theta one by one from _is.
-    friend istream& operator>>(istream&, DHparameters&);
-    ///Output alpha, a, d, and theta one by one to _os.
-    friend ostream& operator<<(ostream&, const DHparameters&);
+    ////////////////////////////////////////////////////////////////////////////
+    /// @param _is Input stream
+    /// @param _d DHParameters
+    friend istream& operator>>(istream& _is, DHParameters& _d);
+    ////////////////////////////////////////////////////////////////////////////
+    /// @param _os Output stream
+    /// @param _d DHParameters
+    friend ostream& operator<<(ostream& _os, const DHParameters& _d);
 
-    bool operator==(const DHparameters& dh) const;
-
+    ////////////////////////////////////////////////////////////////////////////
+    /// @return Transformation for DH frame
     Transformation GetTransformation() const;
 
-    double m_alpha;   ///<Angle between two x axis
-    double m_a;       ///<distance between two z axis
-    double m_d;       ///<algebraic distance along z axis
-    double m_theta;   ///<Angle between two z axis
+    double m_alpha;   ///< Angle between two x axis
+    double m_a;       ///< Distance between two z axis
+    double m_d;       ///< Algebraic distance along z axis
+    double m_theta;   ///< Angle between two z axis
 };
 
 #endif

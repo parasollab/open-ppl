@@ -2,7 +2,9 @@
 #define RMSD_DISTANCE_H_
 
 #include "DistanceMetricMethod.h"
-#include "MPProblem/Environment.h"
+
+#include "Environment/Environment.h"
+
 template <class MPTraits> class SimilarStructureSampler;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -54,10 +56,10 @@ vector<Vector3d>
 RMSDDistance<MPTraits>::
 GetCoordinatesForRMSD(const CfgType& _c) {
   Environment* env = this->GetMPProblem()->GetEnvironment();
-  _c.ConfigEnvironment(env);
+  _c.ConfigEnvironment();
   vector<Vector3d> coordinates;
-  for(int i=0; i< env->GetMultiBody(_c.GetRobotIndex())->GetFreeBodyCount(); ++i)
-    coordinates.push_back(env->GetMultiBody(_c.GetRobotIndex())->GetFreeBody(i)
+  for(int i=0; i< env->GetRobot(_c.GetRobotIndex())->NumFreeBody(); ++i)
+    coordinates.push_back(env->GetRobot(_c.GetRobotIndex())->GetFreeBody(i)
         ->WorldTransformation().translation());
   return coordinates;
 }

@@ -18,6 +18,8 @@ class BoundingBox :  public Boundary {
           -numeric_limits<double>::max(), numeric_limits<double>::max()));
     ~BoundingBox() {}
 
+    string Type() const {return "Box";}
+
     double GetMaxDist(double _r1 = 2.0, double _r2 = 0.5) const;
     pair<double, double> GetRange(size_t _i) const;
 

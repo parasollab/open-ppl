@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<MotionPlanning>
+<MotionPlanning warnings="true" warningsAsErrors="true">
   <MPProblem>
 
     <Environment filename="building2.env"/>
@@ -25,18 +25,16 @@
     </Samplers>
 
     <LocalPlanners>
-      <SurfaceLP label="surfacelp" length="0" binary_search="0" vcLabel="sv"/>
+      <SurfaceLP label="surfacelp" vcLabel="sv"/>
     </LocalPlanners>
 
     <Connectors>
-      <ConnectNeighboringSurfaces label="SurfaceConnect" nfLabel="BFNF" k="10" CheckIfSameCC="false" lpLabel="surfacelp" debug="false"/>
-      <NeighborhoodConnector label="Closest" nfLabel="BFNF" CheckIfSameCC="false" lpLabel="surfacelp" debug="false"/>
+      <ConnectNeighboringSurfaces label="SurfaceConnect" nfLabel="BFNF" k="10" lpLabel="surfacelp" debug="false"/>
+      <NeighborhoodConnector label="Closest" nfLabel="BFNF" checkIfSameCC="false" lpLabel="surfacelp" debug="false"/>
     </Connectors>
 
     <Metrics>
       <NumNodesMetric label="NumNodes"/>
-      <NumEdgesMetric label="NumEdges"/>
-      <TimeMetric label="TimeInSec"/>
     </Metrics>
 
     <MapEvaluators>
@@ -47,17 +45,12 @@
 
     <MPStrategies>
 
-      <BasicPRM label="BasicPRM1" startAt="node connection">
-        <!--<node_generation_method Method="UniformRandomFree" Number="10" Attempts="10"/>-->
-        <node_generation_method Method="SurfaceRandomFree" Number="1" Attempts="4000"/>
-        <node_connection_method Method="SurfaceConnect"/>
-        <node_connection_method Method="Closest"/>
-        <!--component_connection_method Method="ConnectCCs"/-->
-        <evaluation_method Method="NodesEval"/>
+      <BasicPRM label="BasicPRM1" startAt="connecting">
+        <Sampler method="SurfaceRandomFree" number="1" attempts="4000"/>
+        <Connector method="SurfaceConnect"/>
+        <Connector method="Closest"/>
+        <Evaluator method="NodesEval"/>
       </BasicPRM>
-
-
-
 
     </MPStrategies>
 

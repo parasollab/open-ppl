@@ -1,8 +1,8 @@
 #ifndef REGION_H_
 #define REGION_H_
 
+#include "Environment/BoundingBox.h"
 #include "MPProblem/Roadmap.h"
-#include "MPProblem/BoundingBox.h"
 
 
 ////////////////////////////////////////////////////////////////////////////////

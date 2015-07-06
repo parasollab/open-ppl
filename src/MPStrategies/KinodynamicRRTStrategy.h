@@ -57,7 +57,6 @@ class KinodynamicRRTStrategy : public MPStrategyMethod<MPTraits> {
     virtual VID ExpandTree(StateType& _dir);
     void EvaluateGoals(VID _newVID);
 
-    vector<string> m_evaluators;
     string m_dm;
     string m_nf;
     string m_vc;
@@ -76,11 +75,12 @@ KinodynamicRRTStrategy(string _dm, string _nf, string _vc,
     string _extenderLabel, vector<string> _evaluators,
     double _goalDist, double _minDist, double _growthFocus, bool _evaluateGoal,
     const StateType& _start, const StateType& _goal) :
-  m_evaluators(_evaluators), m_dm(_dm), m_nf(_nf), m_vc(_vc),
+  m_dm(_dm), m_nf(_nf), m_vc(_vc),
   m_query(new Query<MPTraits>(_start, _goal)),
   m_extenderLabel(_extenderLabel), m_goalDist(_goalDist), m_minDist(_minDist),
   m_growthFocus(_growthFocus), m_evaluateGoal(_evaluateGoal) {
     this->SetName("KinodynamicRRTStrategy");
+    this->m_meLabels = _evaluators;
   }
 
 template<class MPTraits>
@@ -103,7 +103,7 @@ KinodynamicRRTStrategy<MPTraits>::
 ParseXML(XMLNode& _node) {
   for(auto& child : _node)
     if(child.Name() == "Evaluator")
-      m_evaluators.push_back(
+      this->m_meLabels.push_back(
           child.Read("label", true, "", "Evaluation Method"));
 
   m_minDist = _node.Read("minDist", false, 0.0, 0.0, MAX_DBL,
@@ -139,7 +139,7 @@ Print(ostream& _os) const {
   _os << "\tExtender:: " << m_extenderLabel << endl;
   _os << "\tEvaluate Goal:: " << m_evaluateGoal << endl;
   _os << "\tEvaluators:: " << endl;
-  for(auto&  s : m_evaluators)
+  for(auto&  s : this->m_meLabels)
     _os << "\t\t" << s << endl;
   _os << "\tgoalDist:: " << m_goalDist << endl;
   _os << "\tminimum distance:: " << m_minDist << endl;
@@ -213,7 +213,7 @@ Run() {
         EvaluateGoals(recent);
 
       //evaluate the roadmap
-      bool evalMap = this->EvaluateMap(m_evaluators);
+      bool evalMap = this->EvaluateMap();
       mapPassedEvaluation = evalMap &&
         ((m_evaluateGoal && m_goalsNotFound.empty()) || !m_evaluateGoal);
       if(this->m_debug && m_goalsNotFound.empty())

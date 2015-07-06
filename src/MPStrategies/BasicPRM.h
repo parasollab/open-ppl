@@ -10,6 +10,8 @@
 ///
 /// BasicPRM essentially combines samplers and connectors to iteratively
 /// construct a roadmap until planning is "done"
+///
+/// \internal This strategy is configured for pausible execution.
 ////////////////////////////////////////////////////////////////////////////////
 template<class MPTraits>
 class BasicPRM : public MPStrategyMethod<MPTraits> {
@@ -40,7 +42,7 @@ class BasicPRM : public MPStrategyMethod<MPTraits> {
     virtual void Print(ostream& _os) const;
 
     virtual void Initialize();
-    virtual void Run();
+    virtual void Iterate();
     virtual void Finalize();
 
   protected:
@@ -72,7 +74,6 @@ class BasicPRM : public MPStrategyMethod<MPTraits> {
     map<string, pair<size_t, size_t> > m_samplerLabels; ///< Sampler labels with number and attempts of sampler
     vector<string> m_connectorLabels; ///< Connector labels for node-to-node
     vector<string> m_componentConnectorLabels; ///< Connector labels for cc-to-cc
-    vector<string> m_evaluatorLabels; ///< Evaluator labels
     size_t m_currentIteration; ///< Current iteration of while-loop of Run function
     string m_inputMapFilename; ///< Input roadmap to initialize map
     Start m_startAt; ///< When inputting a roadmap, specifies where in algorithm to start
@@ -80,28 +81,27 @@ class BasicPRM : public MPStrategyMethod<MPTraits> {
 
 template<class MPTraits>
 BasicPRM<MPTraits>::
-BasicPRM(
-    const map<string, pair<size_t, size_t> >& _samplerLabels,
+BasicPRM(const map<string, pair<size_t, size_t> >& _samplerLabels,
     const vector<string>& _connectorLabels,
     const vector<string>& _componentConnectorLabels,
     const vector<string>& _evaluatorLabels,
-    string _inputMapFilename,
-    Start _startAt)
-  : m_samplerLabels(_samplerLabels),
-  m_connectorLabels(_connectorLabels), m_componentConnectorLabels(_componentConnectorLabels),
-  m_evaluatorLabels(_evaluatorLabels), m_currentIteration(0),
-  m_inputMapFilename(_inputMapFilename), m_startAt(_startAt){
-    this->SetName("BasicPRM");
-  }
+    string _inputMapFilename, Start _startAt) :
+    m_samplerLabels(_samplerLabels), m_connectorLabels(_connectorLabels),
+    m_componentConnectorLabels(_componentConnectorLabels),
+    m_currentIteration(0), m_inputMapFilename(_inputMapFilename),
+    m_startAt(_startAt) {
+  this->m_meLabels = _evaluatorLabels;
+  this->SetName("BasicPRM");
+}
 
 template<class MPTraits>
 BasicPRM<MPTraits>::
 BasicPRM(typename MPTraits::MPProblemType* _problem, XMLNode& _node) :
-  MPStrategyMethod<MPTraits>(_problem, _node), m_currentIteration(0),
-  m_inputMapFilename(""), m_startAt(Sampling) {
-    this->SetName("BasicPRM");
-    ParseXML(_node);
-  }
+    MPStrategyMethod<MPTraits>(_problem, _node), m_currentIteration(0),
+    m_inputMapFilename(""), m_startAt(Sampling) {
+  this->SetName("BasicPRM");
+  ParseXML(_node);
+}
 
 template<class MPTraits>
 void
@@ -143,7 +143,7 @@ ParseXML(XMLNode& _node) {
       m_componentConnectorLabels.push_back(
           child.Read("method", true, "", "Component Connector Label"));
     else if(child.Name() == "Evaluator")
-      m_evaluatorLabels.push_back(
+      this->m_meLabels.push_back(
           child.Read("method", true, "", "Evaluator Label"));
   }
 }
@@ -156,7 +156,7 @@ Print(ostream& _os) const {
   _os << "\tInput Map: " << m_inputMapFilename << endl;
 
   _os << "\tStart At: ";
-  switch(m_startAt){
+  switch(m_startAt) {
     case Sampling: _os << "sampling"; break;
     case Connecting: _os << "connecting"; break;
     case ConnectingComponents: _os << "connectingcomponents"; break;
@@ -164,26 +164,24 @@ Print(ostream& _os) const {
   }
   cout << endl;
 
-  typedef map<string, pair<size_t, size_t> >::const_iterator MIT;
   _os << "\tSamplers" << endl;
-  for(MIT mit = m_samplerLabels.begin(); mit != m_samplerLabels.end(); ++mit)
-    _os << "\t\t" << mit->first
-      << "\tNumber:" << mit->second.first
-      << "\tAttempts:" << mit->second.second
-      << endl;
+  for(const auto& label : m_samplerLabels)
+    _os << "\t\t" << label.first
+        << "\tNumber:"   << label.second.first
+        << "\tAttempts:" << label.second.second
+        << endl;
 
-  typedef vector<string>::const_iterator SIT;
   _os << "\tConnectors" << endl;
-  for(SIT sit = m_connectorLabels.begin(); sit != m_connectorLabels.end(); ++sit)
-    _os << "\t\t" << *sit << endl;
+  for(const auto& label : m_connectorLabels)
+    _os << "\t\t" << label << endl;
 
   _os << "\tComponentConnectors" << endl;
-  for(SIT sit = m_componentConnectorLabels.begin(); sit != m_componentConnectorLabels.end(); ++sit)
-    _os << "\t\t" << *sit << endl;
+  for(const auto& label : m_componentConnectorLabels)
+    _os << "\t\t" << label << endl;
 
   _os<<"\tMapEvaluators" << endl;
-  for(SIT sit = m_evaluatorLabels.begin(); sit != m_evaluatorLabels.end(); ++sit)
-    _os << "\t\t" << *sit << endl;
+  for(const auto& label : this->m_meLabels)
+    _os << "\t\t" << label << endl;
 }
 
 template<class MPTraits>
@@ -206,69 +204,56 @@ Initialize() {
       VDAddNode(g->GetVertex(vi));
     if(this->m_debug) {
       cout << "Roadmap has " << g->get_num_vertices() << " nodes and "
-        << g->get_num_edges() << " edges." << endl;
+           << g->get_num_edges() << " edges." << endl;
       cout << "Resetting map evaluator states." << endl;
     }
 
-    typedef vector<string>::const_iterator SIT;
-    for(SIT sit = m_evaluatorLabels.begin(); sit != m_evaluatorLabels.end(); ++sit) {
-      MapEvaluatorPointer evaluator = this->GetMapEvaluator(*sit);
+    for(const auto& label: this->m_meLabels) {
+      MapEvaluatorPointer evaluator = this->GetMapEvaluator(label);
       if(evaluator->HasState())
         evaluator->operator()();
     }
   }
 }
 
+
 template<class MPTraits>
 void
 BasicPRM<MPTraits>::
-Run(){
+Iterate() {
+  m_currentIteration++;
+  vector<VID> vids;
 
-  if(this->m_debug)
-    cout << this->GetNameAndLabel() << "::Run()"<<endl;
+  switch(m_startAt) {
 
-  this->GetStatClass()->StartClock(this->GetNameAndLabel());
+    case Sampling:
+      Sample(back_inserter(vids));
 
-  bool done = this->EvaluateMap(m_evaluatorLabels);
-  while(!done) {
-    m_currentIteration++;
-    vector<VID> vids;
-
-    switch(m_startAt) {
-
-      case Sampling:
-        Sample(back_inserter(vids));
-
-      case Connecting:
-        {
-          if(m_startAt == Connecting){
-            GraphType* g = this->GetRoadmap()->GetGraph();
-            Connect(g->begin(), g->end(), m_connectorLabels);
-            //For spark prm to grow RRT at difficult nodes
-            CheckNarrowPassageSamples(g->begin(), g->end());
-          }
-          else {
-            Connect(vids.begin(), vids.end(), m_connectorLabels);
-            //For spark prm to grow RRT at difficult nodes
-            CheckNarrowPassageSamples(vids.begin(), vids.end());
-          }
-        }
-
-      case ConnectingComponents:
-        {
+    case Connecting:
+      {
+        if(m_startAt == Connecting) {
           GraphType* g = this->GetRoadmap()->GetGraph();
-          Connect(g->begin(), g->end(), m_componentConnectorLabels);
+          Connect(g->begin(), g->end(), m_connectorLabels);
+          //For spark prm to grow RRT at difficult nodes
+          CheckNarrowPassageSamples(g->begin(), g->end());
         }
+        else {
+          Connect(vids.begin(), vids.end(), m_connectorLabels);
+          //For spark prm to grow RRT at difficult nodes
+          CheckNarrowPassageSamples(vids.begin(), vids.end());
+        }
+      }
 
-      case Evaluating:
-        done = this->EvaluateMap(m_evaluatorLabels);
-    }
-    m_startAt = Sampling;
+    case ConnectingComponents:
+      {
+        GraphType* g = this->GetRoadmap()->GetGraph();
+        Connect(g->begin(), g->end(), m_componentConnectorLabels);
+      }
+
+    default:
+      break;
   }
-
-  this->GetStatClass()->StopClock(this->GetNameAndLabel());
-  if(this->m_debug)
-    this->GetStatClass()->PrintClock(this->GetNameAndLabel(), cout);
+  m_startAt = Sampling;
 }
 
 template<class MPTraits>
@@ -276,7 +261,8 @@ void
 BasicPRM<MPTraits>::
 Finalize() {
   //output final map
-  this->GetRoadmap()->Write(this->GetBaseFilename() + ".map", this->GetEnvironment());
+  this->GetRoadmap()->Write(this->GetBaseFilename() + ".map",
+      this->GetEnvironment());
 
   //output stats
   string str = this->GetBaseFilename() + ".stat";

@@ -3,7 +3,6 @@
 
 #include "MPStrategies/MPStrategyMethod.h"
 #include "RegionDecomposition/Region.h"
-#include "MPProblem/BoundingBox.h"
 #include "ParallelMethods/WorkFunctions/BasicDecomposition.h"
 #include "ParallelMethods/WorkFunctions/ConstructRegionMap.h"
 #include "ParallelMethods/WorkFunctions/RegionMapConnect.h"

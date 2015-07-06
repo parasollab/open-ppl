@@ -12,8 +12,8 @@
 
 #include "CfgMultiRobot.h"
 
-#include "MPProblem/Geometry/MultiBody.h"
-#include "MPProblem/Environment.h"
+#include "Environment/Environment.h"
+#include "Environment/MultiBody.h"
 #include "Utilities/MetricUtils.h"
 
 size_t CfgMultiRobot::m_numRobot;
@@ -276,20 +276,18 @@ GetRobotCenterPosition() const {
 //come back again
 Vector3d
 CfgMultiRobot::
-GetRobotCenterofMass(Environment* _env) const {
+GetRobotCenterofMass() const {
   Vector3d com;
   for(size_t i = 0; i < m_robotsCollect.size(); ++i)
-    com += this->m_robotsCollect[i].GetRobotCenterofMass(_env);
+    com += this->m_robotsCollect[i].GetRobotCenterofMass();
   return com/m_robotsCollect.size();
 }
 
-bool
+void
 CfgMultiRobot::
-ConfigEnvironment(Environment* _env) const {
-  bool result = true;
+ConfigEnvironment() const {
   for(ConstCIter cIter= m_robotsCollect.begin(); cIter != m_robotsCollect.end(); cIter++)
-    result &= cIter->ConfigEnvironment(_env);
-  return result;
+    cIter->ConfigEnvironment();
 }
 
 void
@@ -347,7 +345,7 @@ CfgMultiRobot::
 PolyApprox(Environment* _env) const {
   throw PMPLException("Not Implemented", WHERE, "Not Implemented");
   /* vector<Vector3d> result; */
-  /* ConfigEnvironment(_env); */
+  /* ConfigEnvironment(); */
   /* _env->GetMultiBody(m_robotIndex)->PolygonalApproximation(result); */
   /* return result; */
 }

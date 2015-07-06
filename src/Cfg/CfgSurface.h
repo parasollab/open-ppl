@@ -97,7 +97,7 @@ class CfgSurface : public Cfg {
 
     ///The center position is get from param, c, configuration. (The position part of c)
     virtual Vector3d GetRobotCenterPosition() const;
-    virtual Vector3d GetRobotCenterofMass(Environment*) const;
+    virtual Vector3d GetRobotCenterofMass() const;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     //
@@ -112,7 +112,7 @@ class CfgSurface : public Cfg {
       void GetRandomRay(double _incr, DistanceMetricPointer _dm, bool _norm=true);
 
     ///Move the (the first link of)  robot in enviroment to the given configuration.
-    virtual bool ConfigEnvironment(Environment*) const;
+    virtual void ConfigEnvironment() const;
 
     void GetResolutionCfg(Environment*);
 

@@ -9,6 +9,8 @@
 /// @tparam MPTraits Motion planning universe
 ///
 /// TODO
+///
+/// \internal This strategy is configured for pausible execution.
 ////////////////////////////////////////////////////////////////////////////////
 template<class MPTraits>
 class LPCompare : public MPStrategyMethod<MPTraits> {
@@ -22,7 +24,7 @@ class LPCompare : public MPStrategyMethod<MPTraits> {
     LPCompare(MPProblemType* _problem, XMLNode& _node);
 
     virtual void Initialize();
-    virtual void Run();
+    virtual void Iterate();
     virtual void Finalize();
 
   private:
@@ -71,7 +73,7 @@ Initialize() {
 template<class MPTraits>
 void
 LPCompare<MPTraits>::
-Run() {
+Iterate() {
   GraphType* g1 = m_rdmp1->GetGraph();
   GraphType* g2 = m_rdmp2->GetGraph();
 

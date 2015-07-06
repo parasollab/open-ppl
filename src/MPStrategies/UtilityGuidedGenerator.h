@@ -44,6 +44,8 @@ struct ApproximateCSpaceModel {
 /// @tparam MPTraits Motion planning universe
 ///
 /// TODO
+///
+/// \todo Configure for pausible execution.
 ////////////////////////////////////////////////////////////////////////////////
 template <class MPTraits>
 class UtilityGuidedGenerator : public MPStrategyMethod<MPTraits> {
@@ -77,19 +79,20 @@ class UtilityGuidedGenerator : public MPStrategyMethod<MPTraits> {
 
   //data
   string m_vcLabel, m_nfLabel, m_connectorLabel;
-  vector<string> m_evaluatorLabels;
   double m_componentDist, m_tao;
   int m_kNeighbors, m_kSamples;
 };
 
 
 template <class MPTraits>
-UtilityGuidedGenerator<MPTraits>::UtilityGuidedGenerator(string _vcLabel, string _nfLabel,
-        string _connector, vector<string> _evaluators, double _componentDist, double _tao,
-        int _kNeighbors, int _kSamples) :
-        m_vcLabel(_vcLabel), m_nfLabel(_nfLabel), m_connectorLabel(_connector),
-        m_evaluatorLabels(_evaluators), m_componentDist(_componentDist), m_tao(_tao),
-        m_kNeighbors(_kNeighbors), m_kSamples(_kSamples) {
+UtilityGuidedGenerator<MPTraits>::
+UtilityGuidedGenerator(string _vcLabel, string _nfLabel, string _connector,
+    vector<string> _evaluators, double _componentDist, double _tao,
+    int _kNeighbors, int _kSamples) :
+    m_vcLabel(_vcLabel), m_nfLabel(_nfLabel), m_connectorLabel(_connector),
+    m_componentDist(_componentDist), m_tao(_tao),
+    m_kNeighbors(_kNeighbors), m_kSamples(_kSamples) {
+  this->m_meLabels = _evaluators;
   this->SetName("UtilityGuidedGenerator");
 }
 
@@ -117,7 +120,7 @@ UtilityGuidedGenerator<MPTraits>::ParseXML(XMLNode& _node) {
 
   for(auto& child : _node)
     if(child.Name() == "Evaluator")
-      m_evaluatorLabels.push_back(
+      this->m_meLabels.push_back(
           child.Read("label", true, "", "Evaluation Method"));
 }
 
@@ -133,7 +136,7 @@ UtilityGuidedGenerator<MPTraits>::Print(ostream& _os) const {
   _os << "\tKSamples: " << m_kSamples << endl;
   _os << "\tNode Connector: " << m_connectorLabel << endl;
   _os << "\tEvaluators\n";
-  for(auto& l : m_evaluatorLabels)
+  for(auto& l : this->m_meLabels)
     _os << "\t" << l;
   _os << endl;
 }
@@ -239,7 +242,7 @@ UtilityGuidedGenerator<MPTraits>::Run() {
       if(this->m_debug) cout << endl;
     }
 
-    mapPassedEvaluation = this->EvaluateMap(m_evaluatorLabels);
+    mapPassedEvaluation = this->EvaluateMap();
   }
 
   stats->StopClock("Map Generation");

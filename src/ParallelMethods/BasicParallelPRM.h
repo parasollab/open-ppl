@@ -158,7 +158,6 @@ class BasicParallelPRM : public MPStrategyMethod<MPTraits> {
   private:
     vector<pair<string, size_t> > m_samplerLabels;
     vector<string> m_connectorLabels;
-    vector<string> m_evaluatorLabels;
 };
 
 template<class MPTraits>
@@ -166,19 +165,18 @@ BasicParallelPRM<MPTraits>::
 BasicParallelPRM(const vector<pair<string, size_t> >& _samplerLabels,
     const vector<string>& _connectorLabels,
     const vector<string>& _evaluatorLabels) :
-  m_samplerLabels(_samplerLabels),
-  m_connectorLabels(_connectorLabels),
-  m_evaluatorLabels(_evaluatorLabels) {
-    this->SetName("BasicParallelPRM");
-  }
+    m_samplerLabels(_samplerLabels), m_connectorLabels(_connectorLabels) {
+  this->m_meLabels = _evaluatorLabels;
+  this->SetName("BasicParallelPRM");
+}
 
 template<class MPTraits>
 BasicParallelPRM<MPTraits>::
 BasicParallelPRM(MPProblemType* _problem, XMLNode& _node) :
-  MPStrategyMethod<MPTraits>(_problem, _node) {
-    this->SetName("BasicParallelPRM");
-    ParseXML(_node);
-  }
+    MPStrategyMethod<MPTraits>(_problem, _node) {
+  this->SetName("BasicParallelPRM");
+  ParseXML(_node);
+}
 
 
 template<class MPTraits>
@@ -198,7 +196,7 @@ ParseXML(XMLNode& _node) {
       m_connectorLabels.push_back(
           child.Read("method", true, "", "Node Connection Method"));
     else if(child.Name() == "Evaluator")
-      m_evaluatorLabels.push_back(
+      this->m_meLabels.push_back(
           child.Read("method", "true", "", "Evaluator Label"));
   }
 }
@@ -218,7 +216,7 @@ Print(ostream& _os) const {
     _os << "\t" << label;
 
   _os << "\nMapEvaluators\n";
-  for(auto& label : m_evaluatorLabels)
+  for(auto& label : this->m_meLabels)
     _os << "\t" << label;
 }
 
@@ -227,7 +225,7 @@ void
 BasicParallelPRM<MPTraits>::
 Initialize() {
   // Reload map evaluators
-  for(auto& label : m_evaluatorLabels) {
+  for(auto& label : this->m_meLabels) {
     MapEvaluatorPointer evaluator = this->GetMapEvaluator(label);
     if(evaluator->HasState())
       evaluator->operator()();
@@ -244,7 +242,7 @@ Run() {
 
   double samplerTimer = 0.0, connectorTimer = 0.0;
 
-  bool done = this->EvaluateMap(m_evaluatorLabels);
+  bool done = this->EvaluateMap();
   while(!done) {
 
     // Generate roadmap nodes
@@ -290,7 +288,7 @@ Run() {
     stapl::rmi_fence();
 
     // Re-evaluate the roadmap
-    done = this->EvaluateMap(m_evaluatorLabels);
+    done = this->EvaluateMap();
   }
 }
 

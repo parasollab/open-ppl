@@ -1,11 +1,15 @@
-#ifndef COLLISIONDETECTIONMETHOD_H
-#define COLLISIONDETECTIONMETHOD_H
+#ifndef COLLISION_DETECTION_METHOD_H_
+#define COLLISION_DETECTION_METHOD_H_
 
-#include "Utilities/MPUtils.h"
+#include <iostream>
+#include <memory>
+#include <string>
+using namespace std;
 
-class MultiBody;
-class StatClass;
-class Cfg;
+#include "Vector.h"
+using namespace mathtool;
+
+class Body;
 class CDInfo;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -16,49 +20,64 @@ class CDInfo;
 /// methods. Mostly these serve as middleware to interface with external
 /// libraries. @cd methods are not directly accessed but have two core
 /// functions, @c IsInCollision and @c IsInsideObstacle. @c IsInCollision takes
-/// as input a MultiBody for a robot and an obstacle and returns whether the
-/// robot and obstacle collide. @c IsInsideObstacle takes a configuration @c c
-/// and determines whether the robot configured at @c c lies entirely within a
-/// workspace obstacle.
+/// as input two @c Body and determine if they collide. @c IsInsideObstacle
+/// takes a point and a @c Body to determine if the point is inside of the body.
 ////////////////////////////////////////////////////////////////////////////////
 class CollisionDetectionMethod {
   public:
-    //Type Out: no collision sure; collision unsure.
-    //Type In: no collision unsure; collision sure.
-    //Type Exact: no collision sure; collision sure.
-    enum CDType {Out, In, Exact};
 
-    CollisionDetectionMethod(string _name = "CD_USER1", CDType _type = Out, cd_predefined _cdType = CD_USER1);
+    ////////////////////////////////////////////////////////////////////////////
+    /// @brief Type of collision detection computation
+    ////////////////////////////////////////////////////////////////////////////
+    enum class CDType {
+      Out,  ///< No collision sure; collision unsure.
+      In,   ///< No collision unsure; collision sure.
+      Exact ///< No collision sure; collision sure.
+    };
+
+    ////////////////////////////////////////////////////////////////////////////
+    /// @param _name Name of CD Method
+    /// @param _type Type of CD computation
+    CollisionDetectionMethod(const string& _name = "CD_USER1",
+        CDType _type = CDType::Out);
     virtual ~CollisionDetectionMethod();
 
-    string GetName() const {return m_name;}
+    ////////////////////////////////////////////////////////////////////////////
+    /// @return Name of CD Method
+    const string& GetName() const {return m_name;}
+    ////////////////////////////////////////////////////////////////////////////
+    /// @return Type of CD computation
     CDType GetType() const {return m_type;}
-    cd_predefined GetCDType() const {return m_cdType;}
 
-    virtual bool operator==(const CollisionDetectionMethod& _cd) const;
-
+    ////////////////////////////////////////////////////////////////////////////
+    /// @brief Output class information
+    /// @param _os Output stream
     virtual void Print(ostream& _os) const;
 
-    /**
-     * Check if robot in given cfg is complete inside or outside obstacle.
-     *
-     * The precondition is that robot is collision free
-     * in this given cfg. (i.e no intersections among boundaries of robot and obs)
-     * return true, if robot is completely contained inside any obs.
-     * otherwise, false will be returned.
-     */
-    virtual bool IsInsideObstacle(const Cfg& _cfg);
+    ////////////////////////////////////////////////////////////////////////////
+    /// @brief Build representation for CD library
+    /// @param _body Body to build representation of
+    virtual void Build(Body* _body) = 0;
 
-    /**Check collision between MultiBody of robot and obstacle.
-    */
-    virtual bool IsInCollision(shared_ptr<MultiBody> _rob,
-        shared_ptr<MultiBody> _obstacle, StatClass& _Stats, CDInfo& _cdInfo,
-        const string& _callName, int _ignoreIAdjacentMultibodies = 1) = 0;
+    ////////////////////////////////////////////////////////////////////////////
+    /// @brief Check if two Body are in collision
+    /// @param _body1 First Body
+    /// @param _body2 Second Body
+    /// @param[out] _cdInfo CDInfo for output of collision computation
+    /// @return Collision or not
+    virtual bool IsInCollision(shared_ptr<Body> _body1,
+        shared_ptr<Body> _body2, CDInfo& _cdInfo) = 0;
+
+    ////////////////////////////////////////////////////////////////////////////
+    /// @brief Check if point is inside of Body
+    /// @param _pt Point
+    /// @param _body Body
+    /// @return Inside or not
+    virtual bool IsInsideObstacle(const Vector3d& _pt, shared_ptr<Body> _body);
 
   protected:
-    string m_name;
-    CDType m_type; ///<Out, In, or Exact. Used to classify CD functions.
-    cd_predefined m_cdType;
+    string m_name; ///< Name of CD method
+    CDType m_type; ///< Type of CD computation
 };
 
 #endif

@@ -3,7 +3,9 @@
 
 #if(defined(PMPCfgSurface) || defined(PMPSSSurfaceMult))
 
-#include "MPProblem/Environment.h"
+#include "Environment/Environment.h"
+#include "Environment/FixedBody.h"
+#include "Environment/SurfaceMultiBody.h"
 #include "Utilities/MetricUtils.h"
 #include "ValidityCheckers/ValidityCheckerMethod.h"
 
@@ -52,9 +54,8 @@ SurfaceValidity<MPTraits>::IsValidImpl(CfgType& _cfg, CDInfo& _cdInfo, const str
 
   bool result = false;
   int sid = _cfg.GetSurfaceID();
-  if( this->m_debug ) {
-     cout << " active bodies: " << env->GetActiveBodyCount() << " usable bodies: " << env->GetUsableMultiBodyCount() << endl;
-  }
+  if( this->m_debug )
+     cout << " active bodies: " << env->NumRobots() << endl;
   if( sid == -1 ) {
     //call default validity checker specified
     result = this->GetMPProblem()->GetValidityChecker(m_vcLabel)->IsValid(_cfg, _cdInfo, _callName);
@@ -64,9 +65,9 @@ SurfaceValidity<MPTraits>::IsValidImpl(CfgType& _cfg, CDInfo& _cdInfo, const str
     //check if on surface
     Point2d pt = _cfg.GetPos();
     double  h  = _cfg.GetHeight();
-    int numSurfaces = env->GetNavigableSurfacesCount();
+    int numSurfaces = env->NumSurfaces();
     if( sid>=0 && sid < numSurfaces ) {
-      shared_ptr<MultiBody> surfaceBody = env->GetNavigableSurface(sid);
+      shared_ptr<SurfaceMultiBody> surfaceBody = env->GetSurface(sid);
       shared_ptr<FixedBody> fb = surfaceBody->GetFixedBody(0);
       GMSPolyhedron& polyhedron = fb->GetWorldPolyhedron();
       result = polyhedron.IsOnSurface(pt, h);

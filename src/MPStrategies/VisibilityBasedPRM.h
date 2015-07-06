@@ -1,5 +1,5 @@
-#ifndef VISIBILITYBASEDPRM_H_
-#define VISIBILITYBASEDPRM_H_
+#ifndef VISIBILITY_BASED_PRM_H_
+#define VISIBILITY_BASED_PRM_H_
 
 #include "MPStrategyMethod.h"
 #include "Utilities/IOUtils.h"
@@ -20,10 +20,14 @@
 ///    Those CCs will then be merged into a single CC through the connection
 ///    node.
 ///  If the new node is visible from only one guard set, it is discarded.
+///
+/// \internal This strategy is configured for pausible execution.
 ////////////////////////////////////////////////////////////////////////////////
 template<class MPTraits>
 class VisibilityBasedPRM : public MPStrategyMethod<MPTraits> {
+
   public:
+
     typedef typename MPTraits::CfgType CfgType;
     typedef typename MPTraits::WeightType WeightType;
     typedef typename MPTraits::MPProblemType MPProblemType;
@@ -36,22 +40,25 @@ class VisibilityBasedPRM : public MPStrategyMethod<MPTraits> {
 
     VisibilityBasedPRM(const string _sampler = "",
         const string _vc = "", const string _lp = "",
-        const int _maxFailedIterations = 10);
+        const size_t _maxFailedIterations = 10);
     VisibilityBasedPRM(MPProblemType* _problem, XMLNode& _node);
 
     virtual void ParseXML(XMLNode& _node);
     virtual void Print(ostream& _os) const;
 
-    virtual void Initialize();
-    virtual void Run();
+    virtual void Initialize() {}
+    virtual void Iterate();
+    virtual bool EvaluateMap();
     virtual void Finalize();
 
   protected:
+
     //Input parameters
     string m_samplerLabel;
     string m_vcLabel;
     string m_lpLabel;
-    int m_maxFailedIterations;
+    size_t m_maxFailedIterations; ///< Number of attempts allowed per guard.
+    size_t m_failedIterations;    ///< Tracks consecutive failed attempts.
 
     //Local data
     vector<vector<CfgType> > m_guards;
@@ -63,21 +70,19 @@ class VisibilityBasedPRM : public MPStrategyMethod<MPTraits> {
 
 
 template<class MPTraits>
-VisibilityBasedPRM<MPTraits>::VisibilityBasedPRM(
-    const string _sampler,
-    const string _vc, const string _lp,
-    const int _maxFailedIterations) :
-    m_samplerLabel(_sampler),
-    m_vcLabel(_vc), m_lpLabel(_lp),
-    m_maxFailedIterations(_maxFailedIterations) {
+VisibilityBasedPRM<MPTraits>::
+VisibilityBasedPRM(const string _sampler, const string _vc, const string _lp,
+    const size_t _maxFailedIterations) : m_samplerLabel(_sampler),
+    m_vcLabel(_vc), m_lpLabel(_lp), m_maxFailedIterations(_maxFailedIterations),
+    m_failedIterations(0) {
   this->SetName("VisibilityBasedPRM");
 }
 
 
 template<class MPTraits>
-VisibilityBasedPRM<MPTraits>::VisibilityBasedPRM(
-    MPProblemType* _problem, XMLNode& _node) :
-    MPStrategyMethod<MPTraits>(_problem, _node) {
+VisibilityBasedPRM<MPTraits>::
+VisibilityBasedPRM(MPProblemType* _problem, XMLNode& _node) :
+    MPStrategyMethod<MPTraits>(_problem, _node), m_failedIterations(0) {
   this->SetName("VisibilityBasedPRM");
   ParseXML(_node);
 }
@@ -85,9 +90,9 @@ VisibilityBasedPRM<MPTraits>::VisibilityBasedPRM(
 
 template<class MPTraits>
 void
-VisibilityBasedPRM<MPTraits>::ParseXML(XMLNode& _node) {
-  m_samplerLabel = _node.Read("sampler", true, "",
-      "Node Sampler Method");
+VisibilityBasedPRM<MPTraits>::
+ParseXML(XMLNode& _node) {
+  m_samplerLabel = _node.Read("sampler", true, "", "Node Sampler Method");
   m_vcLabel = _node.Read("vcLabel", true, "", "Validity Checker");
   m_lpLabel = _node.Read("lpLabel", true, "sl", "Local Planner");
   m_maxFailedIterations = _node.Read("maxFailedIterations", true, 10, 1,
@@ -97,7 +102,8 @@ VisibilityBasedPRM<MPTraits>::ParseXML(XMLNode& _node) {
 
 template<class MPTraits>
 void
-VisibilityBasedPRM<MPTraits>::Print(ostream& _os) const {
+VisibilityBasedPRM<MPTraits>::
+Print(ostream& _os) const {
   _os << this->GetNameAndLabel()
       << "\n\tSampler: " << m_samplerLabel
       << "\n\tValidity Checker: " << m_vcLabel
@@ -109,58 +115,47 @@ VisibilityBasedPRM<MPTraits>::Print(ostream& _os) const {
 
 template<class MPTraits>
 void
-VisibilityBasedPRM<MPTraits>::Initialize() { }
+VisibilityBasedPRM<MPTraits>::
+Iterate() {
+  if(this->m_debug)
+    cout << "\nCreating node, currently "
+         << this->GetMPProblem()->GetRoadmap()->GetGraph()->get_num_vertices()
+         << " nodes and " << m_guards.size() << " guard sets.";
+
+  //Sample one node
+  vector<CfgType> tempNode;
+  GenerateNode(tempNode);
+
+  //Iterate over guard subsets and try to connect tempNode to one node in each
+  //subset
+  bool guardCreated = ConnectVisibleGuardSets(tempNode);
+
+  //Update m_failedIterations
+  if(guardCreated) m_failedIterations = 0;
+  else m_failedIterations++;
+
+  if(this->m_debug)
+    cout << "\n\tFailed Iterations = " << m_failedIterations;
+}
 
 
 template<class MPTraits>
-void
-VisibilityBasedPRM<MPTraits>::Run() {
-  //Book keeping
-  if(this->m_debug) cout << "\nRunning VisibilityBasedPRM::\n";
-  StatClass* stats = this->GetMPProblem()->GetStatClass();
-  stats->StartClock("Map Generation");
-
-  int failedIterations = 0; //tracks consecutive failed attempts to create a guard
-
-  //Create map
-  while(failedIterations < m_maxFailedIterations) {
-
-    if(this->m_debug)
-      cout << "\nCreating node, currently "
-           << this->GetMPProblem()->GetRoadmap()->GetGraph()->get_num_vertices()
-           << " nodes and " << m_guards.size() << " guard sets.";
-
-    //Sample one node
-    vector<CfgType> tempNode;
-    GenerateNode(tempNode);
-
-    //Iterate over guard subsets: try to connect tempNode to one node in each subset
-    bool guardCreated = ConnectVisibleGuardSets(tempNode);
-
-    //Update failedIterations
-    if(guardCreated) failedIterations = 0;
-    else failedIterations++;
-
-    if(this->m_debug) cout << "\n\tfailedIterations = " << failedIterations;
-  }
-
-  //Book keeping
-  stats->StopClock("Map Generation");
-  if(this->m_debug) {
-    cout << endl; stats->PrintClock("Map Generation", cout);
-    cout << "\nFinished running VisibilityBasedPRM.\n";
-  }
+bool
+VisibilityBasedPRM<MPTraits>::
+EvaluateMap() {
+  return m_failedIterations < m_maxFailedIterations;
 }
 
 
 template<class MPTraits>
 void
-VisibilityBasedPRM<MPTraits>::Finalize() {
-  if(this->m_debug) cout << "\nFinalizing VisibilityBasedPRM::\n";
+VisibilityBasedPRM<MPTraits>::
+Finalize() {
+  if(this->m_debug)
+    cout << "\nFinalizing VisibilityBasedPRM::\n";
 
   //Output .map file
-  this->GetMPProblem()->GetRoadmap()->Write(
-      this->GetBaseFilename() + ".map",
+  this->GetRoadmap()->Write(this->GetBaseFilename() + ".map",
       this->GetEnvironment());
 
   //Output .stat file
@@ -173,14 +168,15 @@ VisibilityBasedPRM<MPTraits>::Finalize() {
   osStat << "\nNumber of connected guard components: " << m_guards.size();
   osStat.close();
 
-  if(this->m_debug) cout << "\nFinished finalizing VisibilityBasedPRM.\n";
+  if(this->m_debug)
+    cout << "\nFinished finalizing VisibilityBasedPRM.\n";
 }
 
 
 template<class MPTraits>
 void
-VisibilityBasedPRM<MPTraits>::GenerateNode(vector<CfgType>& _outNode) {
-
+VisibilityBasedPRM<MPTraits>::
+GenerateNode(vector<CfgType>& _outNode) {
   SamplerPointer sampler = this->GetMPProblem()->GetSampler(m_samplerLabel);
   ValidityCheckerPointer vc = this->GetMPProblem()->GetValidityChecker(m_vcLabel);
 
@@ -206,7 +202,8 @@ VisibilityBasedPRM<MPTraits>::GenerateNode(vector<CfgType>& _outNode) {
 
 template<class MPTraits>
 bool
-VisibilityBasedPRM<MPTraits>::ConnectVisibleGuardSets(vector<CfgType>& _outNode) {
+VisibilityBasedPRM<MPTraits>::
+ConnectVisibleGuardSets(vector<CfgType>& _outNode) {
   LocalPlannerPointer lp = this->GetMPProblem()->GetLocalPlanner(m_lpLabel);
   GraphType* g = this->GetMPProblem()->GetRoadmap()->GetGraph();
   Environment* env = this->GetMPProblem()->GetEnvironment();
@@ -226,7 +223,8 @@ VisibilityBasedPRM<MPTraits>::ConnectVisibleGuardSets(vector<CfgType>& _outNode)
   for(GIT git = m_guards.begin(); git != m_guards.end(); git++) {
     for(CIT cit = git->begin(); cit != git->end(); cit++) {
 
-      if(this->m_debug) cout << "\n\tAttempting connection to node " << g->GetVID(*cit);
+      if(this->m_debug)
+        cout << "\n\tAttempting connection to node " << g->GetVID(*cit);
 
       //Attempt connection to current guard node *cit
       if(lp->IsConnected(_outNode[0], *cit, col, &lpOutput,
@@ -272,7 +270,8 @@ VisibilityBasedPRM<MPTraits>::ConnectVisibleGuardSets(vector<CfgType>& _outNode)
     }
 
     if(this->m_debug)
-      cout << "\n\tNode is connector joining " << visibleGuardSets.size() << " guard sets.";
+      cout << "\n\tNode is connector joining " << visibleGuardSets.size()
+           << " guard sets.";
   }
 
   //_outNode[0] is a guard iff visibleGuardSets.size() == 0
@@ -280,7 +279,8 @@ VisibilityBasedPRM<MPTraits>::ConnectVisibleGuardSets(vector<CfgType>& _outNode)
   if(visibleGuardSets.size() == 0) {
     g->AddVertex(_outNode[0]);
     m_guards.push_back(_outNode);
-    if(this->m_debug) cout << "\n\tNode is a guard, adding a new guard set.";
+    if(this->m_debug)
+      cout << "\n\tNode is a guard, adding a new guard set.";
     return true;
   }
 

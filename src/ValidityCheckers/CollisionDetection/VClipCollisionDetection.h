@@ -1,54 +1,39 @@
-#ifndef VCLIPCOLLISIONDETECTION_H_
-#define VCLIPCOLLISIONDETECTION_H_
+#ifndef VCLIP_COLLISION_DETECTION_H_
+#define VCLIP_COLLISION_DETECTION_H_
 
 #ifdef USE_VCLIP
 
 #include "CollisionDetectionMethod.h"
 
 #include <vclip.h>
-typedef VclipPose VClipPose; //typedef allows our naming convention on VClip objects.
+typedef VclipPose VClipPose;
 
 #include <Transformation.h>
 using namespace mathtool;
 
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup CollisionDetection
-/// @brief TODO
+/// @brief VClip collision detection middleware
 ///
-/// TODO
+/// VClip collision detection can be used to compute distances between convex
+/// obstacles only, i.e., it can compute clearance for certain types of
+/// obstacles.
 ////////////////////////////////////////////////////////////////////////////////
 class VClip : public CollisionDetectionMethod {
   public:
     VClip();
-    virtual ~VClip();
 
-    /* Using VCLIP to check collision between two MultiBodys.
-     * Collision is checked in Body level between two MultiBodys,
-     * if any of Body from Robot collides with any of Body from obstacle,
-     * true will be returned.
-     *
-     * collision between two ajacent links will be ignore.
-     */
-    virtual bool IsInCollision(shared_ptr<MultiBody> _robot, shared_ptr<MultiBody> _obstacle,
-        StatClass& _stats, CDInfo& _cdInfo, const string& _callName, int _ignoreIAdjacentMultibodies = 1);
+    virtual void Build(Body* _body);
+
+    virtual bool IsInCollision(shared_ptr<Body> _body1,
+        shared_ptr<Body> _body2, CDInfo& _cdInfo);
 
   protected:
-    VClipPose GetVClipPose(const Transformation&, const Transformation&);
-
-    /* Get all collsion information for given MultiBody.
-     * Collision is checked in Body level between two MultiBodys,
-     * if any of Body from Robot collides with any of Body from obstacle,
-     * true will be returned.
-     *
-     * More information about collision between two object, such as the closet points between
-     * two object, closest distance... all of these information are stored in _cdInfo.
-     *
-     * each obstacle could change the results in _cdInfo
-     * Trace back to general IsInCollision call to see how it all
-     * gets updated correctly.
-     */
-    bool FillCdInfo(shared_ptr<MultiBody> _robot, shared_ptr<MultiBody> _obstacle,
-        CDInfo& _cdInfo, int _ignoreIAdjacentMultibodies=1);
+    ////////////////////////////////////////////////////////////////////////////
+    /// @brief Computes VClip pose information from PMPL transforms
+    /// @param _t1 Transform 1
+    /// @param _t2 Transform 2
+    VClipPose GetVClipPose(const Transformation& _t1, const Transformation& _t2);
 };
 
 #endif

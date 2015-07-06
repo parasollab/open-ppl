@@ -1,32 +1,36 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<MotionPlanning>
+<MotionPlanning warnings="true" warningsAsErrors="true">
   <MPProblem>
+
     <Environment filename="building2.env"/>
 
     <DistanceMetrics>
-      <Euclidean label="Euclidean"/>
+      <Euclidean label="euclidean"/>
+      <!--<scaledEuclidean label= "scaledEuclidean" scale ="0.5"/>-->
     </DistanceMetrics>
 
     <ValidityCheckers>
-      <CollisionDetection label="cd1" method="RAPID" />
-      <SurfaceValidity label="sv" vc_method="cd1"/>
+      <CollisionDetection label="cd1" method="RAPID"/>
+      <CollisionDetection label="cd2" method="PQP"/>
+      <!--<NodeClearanceValidity label="nc" delta="8.0" dmMethod="euclidean" nfMethod="BFNF"/>-->
+      <SurfaceValidity label="sv" vc_method="cd2"/>
     </ValidityCheckers>
 
     <NeighborhoodFinders>
-      <BruteForceNF label="BruteForceNF" dmLabel="Euclidean" k="10"/>
+      <BruteForceNF label="BFNF" k="10" dmLabel="euclidean"/>
     </NeighborhoodFinders>
 
     <Samplers>
-      <UniformRandomSampler label="UniformRandomFree" vcLabel="cd1"/>
-      <SurfaceGridSampler label="SurfaceGridSampler" vcLabel="cd1" dx="5" dz="5" />
+      <SurfaceSampler label="SurfaceRandomFree" vcMethod="sv" debug="false" attempts="2500" closeDist="1.0"/>
     </Samplers>
 
     <LocalPlanners>
-      <SurfaceLP label="surfacelp" length="0" binary_search="0" vcLabel="sv"/>
+      <SurfaceLP label="surfacelp" vcLabel="sv"/>
     </LocalPlanners>
 
     <Connectors>
-      <NeighborhoodConnector label="Closest" nfLabel="BruteForceNF" k="10" CheckIfSameCC="false" lpLabel="surfacelp" unconnected="true"/>
+      <ConnectNeighboringSurfaces label="SurfaceConnect" nfLabel="BFNF" k="10" lpLabel="surfacelp" debug="false"/>
+      <NeighborhoodConnector label="Closest" nfLabel="BFNF" checkIfSameCC="false" lpLabel="surfacelp" debug="false"/>
     </Connectors>
 
     <Metrics>
@@ -34,18 +38,23 @@
     </Metrics>
 
     <MapEvaluators>
-      <ConditionalEvaluator label="NodesEval" metric_method="NumNodes" value="100" operator=">=" />
+      <ConditionalEvaluator label="NodesEval" metric_method="NumNodes" value="200" operator=">=" />
+      <ConditionalEvaluator label="EdgesEval" metric_method="NumEdges" value="1000" operator=">" />
     </MapEvaluators>
 
+
     <MPStrategies>
-      <BasicPRM label="BasicPRM1" seed="142857" filename="Basic" iterations="2" num_samples="2" dm_method="Euclidean">
-        <node_generation_method Method="SurfaceGridSampler" Number="10" Attempts="2"/>
-        <node_connection_method Method="Closest"/>
-        <evaluation_method Method="NodesEval"/>
+
+      <BasicPRM label="BasicPRM1" startAt="connecting">
+        <Sampler method="SurfaceRandomFree" number="1" attempts="4000"/>
+        <Connector method="SurfaceConnect"/>
+        <Connector method="Closest"/>
+        <Evaluator method="NodesEval"/>
       </BasicPRM>
-  </MPStrategies>
 
-  <Solver mpStrategyLabel="BasicPRM1" seed="857142" baseFilename="Basic" vizmoDebug="true"/>
+    </MPStrategies>
+
+    <Solver mpStrategyLabel="BasicPRM1" seed="1234567" baseFilename="Basic" vizmoDebug="false"/>
+
   </MPProblem>
-
 </MotionPlanning>
