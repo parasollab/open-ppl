@@ -89,9 +89,8 @@ Sampler(CfgType& _cfg, shared_ptr<Boundary> _boundary,
   int attempts = 0;
   bool cfg1Free;
   double margin = m_margin;
-  if(margin == 0){
-    margin = env->GetMultiBody(_cfg.GetRobotIndex())->GetMaxAxisRange();
-  }
+  if(margin == 0)
+    margin = env->GetRobot(_cfg.GetRobotIndex())->GetMaxAxisRange();
 
   vector<pair<double, double> > origBoundary;
   for(size_t i=0; i<3; i++)

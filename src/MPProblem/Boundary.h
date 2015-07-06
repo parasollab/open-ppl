@@ -17,6 +17,8 @@ class Boundary {
     Boundary() {}
     virtual ~Boundary() {}
 
+    virtual string Type() const = 0;
+
     virtual double GetMaxDist(double _r1 = 2.0, double _r2 = 0.5) const = 0;
     virtual pair<double, double> GetRange(size_t _i) const = 0;
 

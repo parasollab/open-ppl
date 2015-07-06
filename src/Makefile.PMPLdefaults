@@ -236,15 +236,16 @@ PMPL_INCL = \
 	-I${PMPL_DIR} \
 
 PMPL_OBJS = \
-	MPProblem/Geometry/FreeBody.o \
-	MPProblem/Geometry/FixedBody.o \
-	MPProblem/Geometry/Connection.o \
-	MPProblem/Geometry/Contact.o \
-	MPProblem/Geometry/DHparameters.o \
-	MPProblem/Geometry/GMSPolyhedron.o \
+	MPProblem/Geometry/ActiveMultiBody.o \
 	MPProblem/Geometry/Body.o \
+	MPProblem/Geometry/Connection.o \
+	MPProblem/Geometry/DHParameters.o \
+	MPProblem/Geometry/FixedBody.o \
+	MPProblem/Geometry/FreeBody.o \
+	MPProblem/Geometry/GMSPolyhedron.o \
 	MPProblem/Geometry/MultiBody.o \
-	MPProblem/Robot.o \
+	MPProblem/Geometry/StaticMultiBody.o \
+	MPProblem/Geometry/SurfaceMultiBody.o \
 	MPProblem/Environment.o \
 	MPProblem/Boundary.o \
         MPProblem/BoundingBox.o \
@@ -258,21 +259,27 @@ PMPL_OBJS = \
 	ValidityCheckers/CollisionDetection/VClipCollisionDetection.o \
 	ValidityCheckers/CollisionDetection/SpheresCollisionDetection.o \
 	Cfg/Cfg.o \
-        Cfg/CfgReachableVolume.o \
-	Cfg/CfgMultiRobot.o \
         Utilities/MetricUtils.o \
         Utilities/IOUtils.o \
         Utilities/MPUtils.o \
 	Samplers/SimilarStructureSampler.o \
 	NeighborhoodFinders/MPNNWrapper.o
 
-ifneq ($(filter $(ROBOT_DEF), PMPSSSurfaceMult PMPCfgSurface),)
-  	PMPL_OBJS += Cfg/CfgSurface.o \
-               Cfg/SSSurface.o \
-               Cfg/SSSurfaceMult.o
-else
-  ifeq (${ROBOT_DEF}, $(or PMPReachDistCC PMPReachDistCCFixed))
+ifeq (${ROBOT_DEF}, PMPCfgMultiRobot)
+  PMPL_OBJS += Cfg/CfgMultiRobot.o
+endif
+ifeq (${ROBOT_DEF}, PMPReachableVolume)
+  PMPL_OBJS += Cfg/CfgReachableVolume.o
+endif
+ifneq (,$(filter $(ROBOT_DEF), PMPSSSurfaceMult PMPCfgSurface))
+  PMPL_OBJS += Cfg/CfgSurface.o \
+	       Cfg/SSSurface.o \
+	       Cfg/SSSurfaceMult.o
+
+endif
+ifeq (${ROBOT_DEF}, $(or PMPReachDistCC PMPReachDistCCFixed))
   PMPL_OBJS += Cfg/Cfg_reach_cc.o \
 	       Cfg/Cfg_reach_cc_fixed.o
-  endif
+
 endif
+

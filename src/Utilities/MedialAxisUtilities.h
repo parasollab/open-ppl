@@ -7,6 +7,8 @@
 
 #include "MetricUtils.h"
 #include "LocalPlanners/StraightLine.h"
+#include "MPProblem/Geometry/FixedBody.h"
+#include "MPProblem/Geometry/SurfaceMultiBody.h"
 #include "ValidityCheckers/CollisionDetection/CDInfo.h"
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -203,7 +205,7 @@ class SurfaceMedialAxisUtility : public MedialAxisUtility<MPTraits> {
     //get clearance functions for surface configurations             //
     //***************************************************************//
     double GetClearance2DSurf(Environment* _env, const Point2d& _pos, Point2d& _cdPt);
-    double GetClearance2DSurf(shared_ptr<MultiBody> _mb, const Point2d& _pos, Point2d& _cdPt, double _clear);
+    double GetClearance2DSurf(shared_ptr<SurfaceMultiBody> _mb, const Point2d& _pos, Point2d& _cdPt, double _clear);
     //***************************************************************//
     //2D-Surface version of pushing to MA                            //
     //  Takes a free cfg (surfacecfg) and pushes to medial axis of   //
@@ -376,10 +378,10 @@ ExactCollisionInfo(CfgType& _cfg, CfgType& _clrCfg,
   // If not using the bbx, done
   if(m_useBBX){
     // CfgType is now know as good, get BBX and ROBOT info
-    shared_ptr<MultiBody> robot = env->GetMultiBody(_cfg.GetRobotIndex());
+    shared_ptr<ActiveMultiBody> robot = env->GetRobot(_cfg.GetRobotIndex());
 
     // Find closest point between robot and bbx, set if less than min dist from obstacles
-    for(int m=0; m < robot->GetFreeBodyCount(); ++m) {
+    for(int m=0; m < robot->NumFreeBody(); ++m) {
       GMSPolyhedron& poly = robot->GetFreeBody(m)->GetWorldPolyhedron();
       for(size_t j = 0; j < poly.m_vertexList.size(); ++j){
         double clr = _bb->GetClearance(poly.m_vertexList[j]);
@@ -1118,7 +1120,7 @@ PushCfgToMedialAxis(CfgType& _cfg, shared_ptr<Boundary> _bb) {
 
   Environment* env = this->GetEnvironment();
   ValidityCheckerPointer vcm = this->GetValidityChecker(this->m_vcLabel);
-  shared_ptr<MultiBody> robot = env->GetMultiBody(_cfg.GetRobotIndex());
+  shared_ptr<ActiveMultiBody> robot = env->GetRobot(_cfg.GetRobotIndex());
 
   CDInfo tmpInfo;
   tmpInfo.ResetVars();
@@ -1259,7 +1261,7 @@ FindMedialAxisBorderExact(
     CfgType& _startCfg, CfgType& _endingCfg,
     double& _upperBound, double& _lowerBound, double& _stepSize) {
   Environment* env = this->GetEnvironment();
-  shared_ptr<MultiBody> robot = env->GetMultiBody(_cfg.GetRobotIndex());
+  shared_ptr<ActiveMultiBody> robot = env->GetRobot(_cfg.GetRobotIndex());
   ValidityCheckerPointer vcm = this->GetValidityChecker(this->m_vcLabel);
 
   CDInfo tmpInfo;
@@ -1674,15 +1676,17 @@ BinarySearchForPeaks(
 #ifdef PMPCfgSurface
 
 template<class MPTraits>
-SurfaceMedialAxisUtility<MPTraits>::SurfaceMedialAxisUtility(MPProblemType* _problem,
+SurfaceMedialAxisUtility<MPTraits>::
+SurfaceMedialAxisUtility(MPProblemType* _problem,
     string _vcLabel, string _dmLabel) :
   MedialAxisUtility<MPTraits>(_problem, _vcLabel, _dmLabel){
     this->m_name = "SurfaceMedialAxisUtility";
   }
 
 //the square of the distance from pos to p1p2
-inline double distsqr
-(const Point2d& _pos, const Point2d& _p1, const Point2d& _p2, Point2d& _cdPt) {
+inline double
+distsqr(const Point2d& _pos, const Point2d& _p1,
+    const Point2d& _p2, Point2d& _cdPt) {
   Vector2d n=_p1-_p2;
   double t=(n*(_pos-_p1))/(n*(_p2-_p1));
   if( t>=0 && t<=1 ){
@@ -1700,12 +1704,11 @@ inline double distsqr
 //get clearance of the point
 template<class MPTraits>
 double
-SurfaceMedialAxisUtility<MPTraits>::GetClearance2DSurf
-(shared_ptr<MultiBody> _mb, const Point2d& _pos, Point2d& _cdPt, double _clear)
-{
+SurfaceMedialAxisUtility<MPTraits>::
+GetClearance2DSurf(shared_ptr<SurfaceMultiBody> _mb,
+    const Point2d& _pos, Point2d& _cdPt, double _clear){
   double minDis=1e10;
   if(this->m_debug) cout << " GetClearance2DSurf (start call) (mb,pos,cdPt, clear)" << endl;
-  if(this->m_debug) cout << " getting world transformation. num fixed bodies: " << _mb->GetFixedBodyCount() << endl;
   Transformation& trans = _mb->GetFixedBody(0)->WorldTransformation();
   //check roughly <- this optimization should be added!!!
   Vector3d mbCenter = _mb->GetFixedBody(0)->GetCenterOfMass();
@@ -1740,15 +1743,14 @@ SurfaceMedialAxisUtility<MPTraits>::GetClearance2DSurf
 //get clearance of the point
 template<class MPTraits>
 double
-SurfaceMedialAxisUtility<MPTraits>::GetClearance2DSurf
-(Environment* _env, const Point2d& _pos, Point2d& _cdPt) {
+SurfaceMedialAxisUtility<MPTraits>::
+GetClearance2DSurf(Environment* _env, const Point2d& _pos, Point2d& _cdPt) {
   if(this->m_debug) cout << "MedialAxisUtility::GetClearance2DSurf" <<endl;
-  if(this->m_debug) cout << "num multibodies: " << _env->GetUsableMultiBodyCount() << endl;
 
   double minDist=_env->GetBoundary()->GetClearance2DSurf(_pos,_cdPt);
 
-  for(int i=1; i<(int)_env->GetUsableMultiBodyCount(); i++) { //skip 0 (assume it's robot)
-    shared_ptr<MultiBody> mb = _env->GetMultiBody(i);
+  for(size_t i=0; i<_env->NumSurfaces(); i++) {
+    shared_ptr<SurfaceMultiBody> mb = _env->GetSurface(i);
     //find clearance
     Point2d c;
     double dist = GetClearance2DSurf(mb,_pos,c,minDist);
@@ -1761,8 +1763,9 @@ SurfaceMedialAxisUtility<MPTraits>::GetClearance2DSurf
 
 template<class MPTraits>
 double
-SurfaceMedialAxisUtility<MPTraits>::PushCfgToMedialAxis2DSurf
-(CfgType& _cfg, shared_ptr<Boundary> _bb, bool& _valid) {
+SurfaceMedialAxisUtility<MPTraits>::
+PushCfgToMedialAxis2DSurf(CfgType& _cfg, shared_ptr<Boundary> _bb,
+    bool& _valid) {
 
   string callee = this->GetNameAndLabel() + "::PushCfgToMedialAxis2DSurf";
 

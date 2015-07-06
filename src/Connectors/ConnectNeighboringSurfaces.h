@@ -3,6 +3,8 @@
 
 #include "ConnectorMethod.h"
 
+#include "MPProblem/Geometry/SurfaceMultiBody.h"
+
 #define CLOSEDIST 0.4
 #define KATTEMPTS 3
 
@@ -139,15 +141,14 @@ Connect(RoadmapType* _rm,
   m_totalSuccess = m_totalFailure = 0;
 
   Environment* env = this->GetEnvironment();
-  int numSurfaces =  env->GetNavigableSurfacesCount();
+  int numSurfaces =  env->NumSurfaces();
   for(int i=0; i<numSurfaces; i++) {
     int id = i;
-    shared_ptr<MultiBody> mbSurf1 = env->GetNavigableSurface(i);
+    shared_ptr<SurfaceMultiBody> mbSurf1 = env->GetSurface(i);
     string iSurfName="BASE";
     if( i>=0 )
       iSurfName=mbSurf1->GetLabel();;
     if(this->m_debug) cout << "ConnectNeighboringSurfaces::Connect(...) - " << i << "  Processing multibody: " << mbSurf1->GetLabel() << endl;
-    if(this->m_debug) cout << "ConnectNeighboringSurfaces::Connect(...) - number fixed bodies: " << mbSurf1->GetFixedBodyCount() << " number free bodies: " << mbSurf1->GetFreeBodyCount() << endl;
     if( find(m_surfacesToIgnore.begin(),m_surfacesToIgnore.end(), iSurfName) != m_surfacesToIgnore.end() ) continue;
     GMSPolyhedron& mbPoly1 =  mbSurf1->GetFixedBody(0)->GetWorldPolyhedron();
     vector<Vector3d>& ptsSurface1 = mbPoly1.GetVertexList();
@@ -214,7 +215,7 @@ Connect(RoadmapType* _rm,
 	//loop over all surfaces
 	for(int j=0; j<numSurfaces && !qPtOnSurf; j++) {
 	  if(i==j) continue;//skip same surface..obvi
-	  shared_ptr<MultiBody> mbSurf2 = env->GetNavigableSurface(j);
+	  shared_ptr<SurfaceMultiBody> mbSurf2 = env->GetSurface(j);
 	  string iSurfName2=mbSurf2->GetLabel();
 	  if(i>=0)
 	     iSurfName2=mbSurf2->GetLabel();;

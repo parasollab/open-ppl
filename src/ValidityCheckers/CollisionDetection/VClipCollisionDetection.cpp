@@ -1,122 +1,63 @@
+#include "VClipCollisionDetection.h"
+
 #ifdef USE_VCLIP
 
-#include "VClipCollisionDetection.h"
 #include "CDInfo.h"
-#include "Utilities/MetricUtils.h"
-#include "MPProblem/Geometry/MultiBody.h"
-
-VClip::VClip() : CollisionDetectionMethod("VCLIP", Exact, VCLIP) {}
-
-VClip::~VClip() {}
+#include "MPProblem/Geometry/Body.h"
 
 ClosestFeaturesHT closestFeaturesHT(3000);
 
-bool
-VClip::IsInCollision(shared_ptr<MultiBody> _robot, shared_ptr<MultiBody> _obstacle,
-    StatClass& _stats, CDInfo& _cdInfo, const string& _callName, int _ignoreIAdjacentMultibodies) {
-  _stats.IncNumCollDetCalls(m_name, _callName);
+VClip::
+VClip() : CollisionDetectionMethod("VCLIP", CDType::Exact) {}
 
-  if (_cdInfo.m_retAllInfo == true)
-    return FillCdInfo(_robot, _obstacle, _cdInfo, _ignoreIAdjacentMultibodies);
-
-  Real dist;
-  VClipPose x12; //VClip position
-  Vect3 cp1, cp2;   // closest points between bodies, in local frame
-
-  for(int i=0 ; i < _robot->GetFreeBodyCount(); i++) {
-
-    shared_ptr<PolyTree> rob = _robot->GetFreeBody(i)->GetVClipBody();
-
-    for(int j=0; j < _obstacle->GetBodyCount(); j++) {
-
-      // if robot check self collision, skip adjacent links.
-      if(_robot == _obstacle &&
-          _robot->GetFreeBody(i)->IsWithinI(_obstacle->GetBody(j),_ignoreIAdjacentMultibodies) )
-        continue;
-
-
-      shared_ptr<PolyTree> obst = _obstacle->GetBody(j)->GetVClipBody();
-      x12 = GetVClipPose(_robot->GetFreeBody(i)->WorldTransformation(),
-          _obstacle->GetBody(j)->WorldTransformation());
-      dist = PolyTree::vclip(rob.get(),obst.get(),x12,closestFeaturesHT, cp1, cp2);
-
-      if(dist <= 0.0)
-        return true;
-    }
+void
+VClip::
+Build(Body* _body) {
+  GMSPolyhedron& poly = _body->GetPolyhedron();
+  Polyhedron* vpoly = new Polyhedron;
+  for(size_t v = 0 ; v < poly.m_vertexList.size() ; v++){
+    vpoly->addVertex("",
+        Vect3(poly.m_vertexList[v][0],
+          poly.m_vertexList[v][1],
+          poly.m_vertexList[v][2]
+          ));
   }
-
-  return false;
+  vpoly->buildHull();
+  shared_ptr<PolyTree> vclipBody(new PolyTree);
+  vclipBody->setPoly(vpoly);
+  _body->SetVClipBody(vclipBody);
 }
 
-
-/* Get all collsion information for given MultiBody.
- * Collision is checked in Body level between two MultiBodys,
- * if any of Body from Robot collides with any of Body from obstacle,
- * true will be returned.
- *
- * More information about collision between two object, such as the closet points between
- * two object, closest distance... all of these information are stored in _cdInfo.
- *
- * each obstacle could change the results in _cdInfo
- * Trace back to general IsInCollision call to see how it all
- * gets updated correctly.
- */
 bool
-VClip::FillCdInfo(shared_ptr<MultiBody> _robot, shared_ptr<MultiBody> _obstacle,
-    CDInfo& _cdInfo, int _ignoreIAdjacentMultibodies) {
-  Real dist, minCurrentDist;
-  VClipPose x12;
-  Vect3 cp1, cp2; //closest points between bodies, in local frame
+VClip::
+IsInCollision(shared_ptr<Body> _body1, shared_ptr<Body> _body2,
+    CDInfo& _cdInfo) {
 
-  bool isInCollision = false;
+  shared_ptr<PolyTree> body1 = _body1->GetVClipBody();
+  shared_ptr<PolyTree> body2 = _body2->GetVClipBody();
+  Transformation& t1 = _body1->WorldTransformation();
+  Transformation& t2 = _body2->WorldTransformation();
 
-  _cdInfo.ResetVars();
-  _cdInfo.m_retAllInfo = true;
+  VClipPose x12 = GetVClipPose(t1, t2);
 
-  minCurrentDist = MAX_DBL;
+  Vect3 cp1, cp2; // closest points between bodies, in local frame
+  Real dist = PolyTree::vclip(body1.get(), body2.get(), x12,
+      closestFeaturesHT, cp1, cp2);
 
-  for(int i=0; i<_robot->GetFreeBodyCount(); i++) {
-    shared_ptr<PolyTree> rob = _robot->GetFreeBody(i)->GetVClipBody();
+  _cdInfo.m_minDist = dist;
 
-    for(int j=0; j<_obstacle->GetBodyCount(); j++) {
-      // if robot check self collision, skip adjacent links.
-      if(_robot == _obstacle &&
-          _robot->GetFreeBody(i)->IsWithinI(_obstacle->GetBody(j),_ignoreIAdjacentMultibodies) )
-        continue;
+  Vector3d pt1(cp1[0], cp1[1], cp1[2]);
+  Vector3d pt2(cp2[0], cp2[1], cp2[2]);
 
+  _cdInfo.m_robotPoint = t1 * pt1;
+  _cdInfo.m_objectPoint = t2 * pt2;
 
-      shared_ptr<PolyTree> obst = _obstacle->GetBody(j)->GetVClipBody();
-      x12 = GetVClipPose(_robot->GetFreeBody(i)->WorldTransformation(),
-          _obstacle->GetBody(j)->WorldTransformation());
-      dist = PolyTree::vclip(rob.get(),obst.get(),x12,closestFeaturesHT, cp1, cp2);
-
-      if ( dist <= 0.0 ) {
-        if (dist < minCurrentDist)
-          _cdInfo.m_collidingObstIndex = j;
-        isInCollision = true;
-      }
-
-      if (dist < minCurrentDist) {
-        minCurrentDist = dist;
-        _cdInfo.m_nearestObstIndex = j;
-        _cdInfo.m_minDist = dist;
-
-        // change a 3 elmt array to Vector3d class
-        Vector3d robotPt(cp1[0], cp1[1], cp1[2]);
-        Vector3d obstPt(cp2[0], cp2[1], cp2[2]);
-
-        // transform points to world coords
-        _cdInfo.m_robotPoint = _robot->GetFreeBody(i)->WorldTransformation() * robotPt;
-        _cdInfo.m_objectPoint = _obstacle->GetBody(j)->WorldTransformation() * obstPt;
-      }
-    }
-  }
-
-  return isInCollision;
+  return dist <= 0.0;
 }
 
 VClipPose
-VClip::GetVClipPose(const Transformation& _myT, const Transformation& _obstT) {
+VClip::
+GetVClipPose(const Transformation& _myT, const Transformation& _obstT) {
   Transformation diff = (-_obstT) * _myT;
   Quaternion q;
   convertFromMatrix(q, diff.rotation().matrix());

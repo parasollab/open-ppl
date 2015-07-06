@@ -213,7 +213,7 @@ GetRealLocation(map<size_t,double>& _locations, map<size_t,size_t> _coordinates,
     int numPoints = num.second;
 
     // Get bounding box min and max (for this dimension)
-    pair<double, double> range = this->GetEnvironment()->GetRange(index, _boundary);
+    pair<double, double> range = _boundary->GetRange(index);
 
     // Resolution of grid
     double auxPoints = (double) numPoints;

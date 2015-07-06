@@ -241,8 +241,8 @@ class ReachableVolumeRRT : public BasicRRTStrategy<MPTraits> {
 
 shared_ptr<vector<Vector3D> > convertToJointPositions(CfgType _cfg){
   shared_ptr<vector<Vector3D> > joints = shared_ptr<vector<Vector3D> >(new vector<Vector3D>);
-  _cfg.ConfigEnvironment(this->GetMPProblem()->GetEnvironment());
-  this->GetMPProblem()->GetEnvironment()->GetMultiBody(_cfg.GetRobotIndex())->PolygonalApproximation(*joints);
+  _cfg.ConfigEnvironment();
+  this->GetEnvironment()->GetRobot(_cfg.GetRobotIndex())->PolygonalApproximation(*joints);
   for(unsigned int i=1; i<joints->size();i++){
     (*joints)[i]=(*joints)[i]-(*joints)[0];
   }

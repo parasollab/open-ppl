@@ -1,8 +1,10 @@
-#ifndef FREE_BODY_H
-#define FREE_BODY_H
+#ifndef FREE_BODY_H_
+#define FREE_BODY_H_
+
+#include <set>
 
 #include "Body.h"
-#include <set>
+#include "Connection.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup Environment
@@ -15,23 +17,119 @@ class FreeBody : public Body {
   public:
 
     ////////////////////////////////////////////////////////////////////////////
+    /// @brief Body type
+    ////////////////////////////////////////////////////////////////////////////
+    enum class BodyType {
+      Planar,     ///< 2D
+      Volumetric, ///< 3D
+      Fixed,      ///< Fixed base
+      Joint       ///< Joint
+    };
+
+    ////////////////////////////////////////////////////////////////////////////
+    /// @brief Body movement type
+    ////////////////////////////////////////////////////////////////////////////
+    enum class MovementType {
+      Rotational,   ///< Rotation + translation
+      Translational ///< Just translation
+    };
+
+    ////////////////////////////////////////////////////////////////////////////
     /// @name Constructors
     /// @{
-    ////////////////////////////////////////////////////////////////////////////
-    /// @param _owner Owner of this body
-    FreeBody(MultiBody* _owner);
 
     ////////////////////////////////////////////////////////////////////////////
     /// @param _owner Owner of this body
-    /// @param _polyhedron Geometry of body
-    FreeBody(MultiBody* _owner, GMSPolyhedron& _polyhedron);
+    /// @param _index Index in MultiBody
+    FreeBody(MultiBody* _owner, size_t _index);
 
-    FreeBody(const FreeBody&) = delete;
-    FreeBody& operator=(const FreeBody&) = delete;
+    FreeBody(const FreeBody&) = delete;            ///< No copy
+    FreeBody& operator=(const FreeBody&) = delete; ///< No assign
+
     /// @}
     ////////////////////////////////////////////////////////////////////////////
 
-    virtual bool IsFixedBody() const { return false; }
+    ////////////////////////////////////////////////////////////////////////////
+    /// @name Body Information
+    /// @{
+
+    ////////////////////////////////////////////////////////////////////////////
+    /// @param _tag Tag
+    /// @param _where Error information
+    /// @return BodyType of _tag
+    static BodyType GetBodyTypeFromTag(const string& _tag,
+        const string& _where);
+    ////////////////////////////////////////////////////////////////////////////
+    /// @param _tag Tag
+    /// @param _where Error information
+    /// @return MovementType of _tag
+    static MovementType GetMovementTypeFromTag(const string& _tag,
+        const string& _where);
+
+    ////////////////////////////////////////////////////////////////////////////
+    /// @param _b BodyType
+    /// @return Tag
+    static string GetTagFromBodyType(BodyType _b);
+    ////////////////////////////////////////////////////////////////////////////
+    /// @param _bm MovementType
+    /// @return Tag
+    static string GetTagFromMovementType(MovementType _bm);
+
+    ////////////////////////////////////////////////////////////////////////////
+    /// @return Is this body a base?
+    bool IsBase() const { return m_bodyType != BodyType::Joint; };
+    ////////////////////////////////////////////////////////////////////////////
+    /// @return Body type
+    BodyType GetBodyType() const { return m_bodyType; };
+    ////////////////////////////////////////////////////////////////////////////
+    /// @return Base movement type of body
+    MovementType GetMovementType() const { return m_movementType; };
+
+    /// @}
+    ////////////////////////////////////////////////////////////////////////////
+
+    ////////////////////////////////////////////////////////////////////////////
+    /// @name Connection Information
+    /// @{
+
+    ////////////////////////////////////////////////////////////////////////////
+    /// @return Number of forward Connection
+    size_t ForwardConnectionCount() const {return m_forwardConnections.size();}
+    ////////////////////////////////////////////////////////////////////////////
+    /// @return Number of backward Connection
+    size_t BackwardConnectionCount() const {return m_backwardConnections.size();}
+    ////////////////////////////////////////////////////////////////////////////
+    /// @param _index Index of desired forward Connection
+    /// @return Requested forward Connection
+    Connection& GetForwardConnection(size_t _index);
+    ////////////////////////////////////////////////////////////////////////////
+    /// @param _index Index of desired backward Connection
+    /// @return Requested backward Connection
+    Connection& GetBackwardConnection(size_t _index);
+
+    ////////////////////////////////////////////////////////////////////////////
+    /// @brief Determines if two bodies share the same joint
+    /// @param _otherBody Second body
+    /// @return True if adjacent
+    bool IsAdjacent(shared_ptr<FreeBody> _otherBody) const;
+    ////////////////////////////////////////////////////////////////////////////
+    /// @brief Determines if two bodies are within \p _i joints of each other
+    /// @param _otherBody Second body
+    /// @param _i Number of joints
+    /// @return True if within \p _i joints
+    bool IsWithinI(shared_ptr<FreeBody> _otherBody, size_t _i) const;
+
+    ////////////////////////////////////////////////////////////////////////////
+    /// @brief Link two Body, i.e., add a Connection between them
+    /// @param _c Connection description
+    void Link(const Connection& _c);
+
+    /// @}
+    ////////////////////////////////////////////////////////////////////////////
+
+    ////////////////////////////////////////////////////////////////////////////
+    /// @name Transformation
+    /// @{
 
     virtual Transformation& GetWorldTransformation();
 
@@ -39,6 +137,13 @@ class FreeBody : public Body {
     /// @brief Set transformation of body
     /// @param _transformation Transformation
     void Configure(Transformation& _transformation);
+
+    /// @}
+    ////////////////////////////////////////////////////////////////////////////
+
+    ////////////////////////////////////////////////////////////////////////////
+    /// @name I/O
+    /// @{
 
     using Body::Read;
     ////////////////////////////////////////////////////////////////////////////
@@ -49,7 +154,21 @@ class FreeBody : public Body {
 
     friend ostream& operator<<(ostream& _os, FreeBody& _fb);
 
+    /// @}
+    ////////////////////////////////////////////////////////////////////////////
+
   private:
+    ////////////////////////////////////////////////////////////////////////////
+    /// @brief Determines if two bodies are within \p _i joints of each other
+    /// @param _body1 First Body
+    /// @param _body2 Second Body
+    /// @param _i Number of joints
+    /// @param _prevBody Previous Body
+    /// @return True if within \p _i joints
+    bool IsWithinI(const FreeBody* const _body1,
+        const FreeBody* const _body2, size_t _i,
+        const FreeBody* const _prevBody) const;
+
     ////////////////////////////////////////////////////////////////////////////
     /// @brief Compute transformation of this body wrt the world frame
     /// @param visited Stores which bodies have been visited
@@ -60,7 +179,13 @@ class FreeBody : public Body {
     /// transformation from the proximal joint to the center of gravity of
     /// "this" body (Need a generalization for the connectionship, since
     /// currently it handles only one backward connection).
-    Transformation& ComputeWorldTransformation(std::set<int>& visited);
+    Transformation& ComputeWorldTransformation(std::set<size_t>& visited);
+
+    size_t m_index;                           ///< Index in ActiveMultiBody
+    BodyType m_bodyType;                      ///< Body type
+    MovementType m_movementType;              ///< Movement type
+    vector<Connection> m_forwardConnections;  ///< Forward Connection s
+    vector<Connection> m_backwardConnections; ///< Backward Connection s
 };
 
 #endif

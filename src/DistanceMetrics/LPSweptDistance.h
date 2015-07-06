@@ -2,10 +2,10 @@
 #define LP_SWEPT_DISTANCE_H_
 
 #include "DistanceMetricMethod.h"
-#include "MPProblem/Environment.h"
-#include "LocalPlanners/LPOutput.h"
 
-class StatClass;
+#include "LocalPlanners/LPOutput.h"
+#include "MPProblem/Environment.h"
+#include "MPProblem/Geometry/FreeBody.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup DistanceMetrics
@@ -97,22 +97,22 @@ Distance(const CfgType& _c1, const CfgType& _c2) {
   double d = 0;
   vector<GMSPolyhedron> poly2;
   int robot = _c1.GetRobotIndex();
-  int bodyCount = env->GetMultiBody(robot)->GetFreeBodyCount();
-  cfgs.begin()->ConfigEnvironment(env);
+  int bodyCount = env->GetRobot(robot)->NumFreeBody();
+  cfgs.begin()->ConfigEnvironment();
   for(int b=0; b<bodyCount; ++b)
     if(m_useBBox)
-      poly2.push_back(env->GetMultiBody(robot)->GetFreeBody(b)->GetWorldBoundingBox());
+      poly2.push_back(env->GetRobot(robot)->GetFreeBody(b)->GetWorldBoundingBox());
     else
-      poly2.push_back(env->GetMultiBody(robot)->GetFreeBody(b)->GetWorldPolyhedron());
+      poly2.push_back(env->GetRobot(robot)->GetFreeBody(b)->GetWorldPolyhedron());
   for(typename vector<CfgType>::const_iterator cit = cfgs.begin(); cit+1 != cfgs.end(); ++cit) {
     vector<GMSPolyhedron> poly1(poly2);
     poly2.clear();
-    (cit+1)->ConfigEnvironment(env);
+    (cit+1)->ConfigEnvironment();
     for(int b=0; b<bodyCount; ++b)
       if(m_useBBox)
-        poly2.push_back(env->GetMultiBody(robot)->GetFreeBody(b)->GetWorldBoundingBox());
+        poly2.push_back(env->GetRobot(robot)->GetFreeBody(b)->GetWorldBoundingBox());
       else
-        poly2.push_back(env->GetMultiBody(robot)->GetFreeBody(b)->GetWorldPolyhedron());
+        poly2.push_back(env->GetRobot(robot)->GetFreeBody(b)->GetWorldPolyhedron());
     d += SweptDistance(poly1, poly2);
   }
   return d;

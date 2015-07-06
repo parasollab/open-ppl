@@ -1,38 +1,24 @@
 #include "Connection.h"
 
-#include "MultiBody.h"
+#include "ActiveMultiBody.h"
+#include "FreeBody.h"
 
 size_t Connection::m_globalCounter = 0;
 
 Connection::
-Connection(MultiBody* _owner) : m_multibody(_owner), m_jointType(NONACTUATED) {
+Connection(MultiBody* _owner) : m_multibody(_owner), m_jointType(JointType::NonActuated) {
   m_globalIndex = m_globalCounter++;
 }
-
-Connection::
-Connection(const shared_ptr<Body>& _body1, const shared_ptr<Body>& _body2,
-    const Transformation& _transformationToBody2,
-    const DHparameters& _dhparameters,
-    const Transformation& _transformationToDHFrame) :
-  m_multibody(NULL),
-  m_transformationToBody2(_transformationToBody2),
-  m_transformationToDHFrame(_transformationToDHFrame),
-  m_dhParameters(_dhparameters),
-  m_jointType(NONACTUATED) {
-    m_globalIndex = m_globalCounter++;
-    m_bodies[0] = _body1;
-    m_bodies[1] = _body2;
-  }
 
 Connection::JointType
 Connection::
 GetJointTypeFromTag(const string& _tag, const string& _where) {
   if(_tag == "REVOLUTE")
-    return Connection::REVOLUTE;
+    return JointType::Revolute;
   else if (_tag == "SPHERICAL")
-    return Connection::SPHERICAL;
+    return JointType::Spherical;
   else if(_tag == "NONACTUATED")
-    return Connection::NONACTUATED;
+    return JointType::NonActuated;
   else
     throw ParseException(_where,
         "Unknown joint type '" + _tag + "'."
@@ -41,12 +27,12 @@ GetJointTypeFromTag(const string& _tag, const string& _where) {
 
 string
 Connection::
-GetTagFromJointType(const Connection::JointType& _jt){
+GetTagFromJointType(JointType _jt){
   switch(_jt){
-    case REVOLUTE:
-      return "REVOLUTE";
-    case SPHERICAL:
-      return "SPHERICAL";
+    case JointType::Revolute:
+      return "Revolute";
+    case JointType::Spherical:
+      return "Spherical";
     default:
       return "Unknown Joint Type";
   }
@@ -62,8 +48,8 @@ Read(istream& _is, CountingStreamBuffer& _cbs) {
       "Failed reading next body index.");
 
   //grab the shared_ptr to bodies
-  m_bodies[0] = m_multibody->GetFreeBody(m_bodyIndices.first);
-  m_bodies[1] = m_multibody->GetFreeBody(m_bodyIndices.second);
+  m_bodies[0] = ((ActiveMultiBody*)m_multibody)->GetFreeBody(m_bodyIndices.first);
+  m_bodies[1] = ((ActiveMultiBody*)m_multibody)->GetFreeBody(m_bodyIndices.second);
 
   //grab the joint type
   string connectionTypeTag = ReadFieldString(_is, _cbs,
@@ -72,11 +58,11 @@ Read(istream& _is, CountingStreamBuffer& _cbs) {
   m_jointType = GetJointTypeFromTag(connectionTypeTag, _cbs.Where());
 
   //grab the joint limits for revolute and spherical joints
-  if(m_jointType == Connection::REVOLUTE ||
-      m_jointType == Connection::SPHERICAL) {
+  if(m_jointType == JointType::Revolute ||
+      m_jointType == JointType::Spherical) {
     m_jointLimits[0].first = m_jointLimits[1].first = -1;
     m_jointLimits[0].second = m_jointLimits[1].second = 1;
-    size_t numRange = m_jointType == Connection::REVOLUTE ? 1 : 2;
+    size_t numRange = m_jointType == JointType::Revolute ? 1 : 2;
     for(size_t i = 0; i < numRange; i++){
       string tok;
       if(_is >> tok){
@@ -102,7 +88,7 @@ Read(istream& _is, CountingStreamBuffer& _cbs) {
       "Failed reading transformation to DH frame.");
 
   //DH parameters
-  m_dhParameters = ReadField<DHparameters>(_is, _cbs,
+  m_dhParameters = ReadField<DHParameters>(_is, _cbs,
       "Failed reading DH parameters.");
 
   //transformation to next body
@@ -120,4 +106,3 @@ operator<<(ostream& _os, const Connection& _c) {
     << _c.m_transformationToDHFrame << " " << _c.m_dhParameters << " "
     << _c.m_transformationToBody2;
 }
-

@@ -1,13 +1,18 @@
 #ifndef ENVIRONMENT_H_
 #define ENVIRONMENT_H_
 
+#include "Transformation.h"
+using namespace mathtool;
+
 #include "Cfg/CfgMultiRobot.h"
 #include "MPProblem/Boundary.h"
-#include "MPProblem/Robot.h"
-#include "MPProblem/Geometry/MultiBody.h"
 #include "Utilities/MPUtils.h"
 
-#include <stapl/containers/sequential/graph/graph.h>
+class ActiveMultiBody;
+class CollisionDetectionMethod;
+class MultiBody;
+class StaticMultiBody;
+class SurfaceMultiBody;
 
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup Environment
@@ -21,148 +26,232 @@
 class Environment {
   public:
 
+    ////////////////////////////////////////////////////////////////////////////
+    /// @name Constructors
+    /// @{
     Environment();
+    ////////////////////////////////////////////////////////////////////////////
+    /// @param _node XMLNode describing environment parameters
     Environment(XMLNode& _node);
+
     virtual ~Environment();
+    /// @}
+    ////////////////////////////////////////////////////////////////////////////
 
-    ///////////////////////////////////////////////////
-    //I/O
-    ///////////////////////////////////////////////////
-
-    //Return the file from which the environment came.
+    ////////////////////////////////////////////////////////////////////////////
+    /// @name I/O
+    /// @{
+    ////////////////////////////////////////////////////////////////////////////
+    /// @return Filename from which environment came
     const string& GetEnvFileName() const {return m_filename;}
 
+    ////////////////////////////////////////////////////////////////////////////
+    /// @brief Parse environment file
+    /// @param _filename Filename
     void Read(string _filename);
+    ////////////////////////////////////////////////////////////////////////////
+    /// @brief Prints environment resolutions and boundary information
+    /// @param _os Output stream
     void Print(ostream& _os) const;
-    void Write(ostream & _os);
+    ////////////////////////////////////////////////////////////////////////////
+    /// @brief Output environment to .env file format
+    /// @param _os Output stream
+    void Write(ostream& _os);
+    /// @}
+    ////////////////////////////////////////////////////////////////////////////
 
-    //////////////////////////////////////////////////////////
-    //Resolution
-    //////////////////////////////////////////////////////////
-
-    //Return the resolution for translation discretization.
+    ////////////////////////////////////////////////////////////////////////////
+    /// @name Resolutions
+    /// @{
+    ////////////////////////////////////////////////////////////////////////////
+    /// @return Position resolution
     double GetPositionRes() const { return m_positionRes; }
-    void SetPositionRes(double pRes) {m_positionRes=pRes;}
+    ////////////////////////////////////////////////////////////////////////////
+    /// @param _res Position resoltuion
+    void SetPositionRes(double _res) { m_positionRes = _res; }
 
-    //Return the resolution for rotation discretization.
+    ////////////////////////////////////////////////////////////////////////////
+    /// @return Orientation resolution
     double GetOrientationRes() const { return m_orientationRes; }
-    void SetOrientationRes(const double rRes) {m_orientationRes=rRes;}
+    ////////////////////////////////////////////////////////////////////////////
+    /// @param _res Orientation resolution
+    void SetOrientationRes(double _res) { m_orientationRes = _res; }
 
 #if (defined(PMPReachDistCC) || defined(PMPReachDistCCFixed))
-    //return the resolution for reachable distance discretization.
+    ////////////////////////////////////////////////////////////////////////////
+    /// @return Reachable distance resolution
     double GetRDRes() const {return m_rdRes;}
 #endif
+    /// @}
+    ////////////////////////////////////////////////////////////////////////////
 
-    //ComputeResolution, if _posRes is <0, auto&  compute
-    //the resolutions based on min_max body spans.
-    void ComputeResolution(double _positionResFactor = 0.05);
-
-    ///////////////////////////////////////////////////////////
-    //Boundary
-    ///////////////////////////////////////////////////////////
-
+    ////////////////////////////////////////////////////////////////////////////
+    /// @name Boundary
+    /// @{
+    ////////////////////////////////////////////////////////////////////////////
+    /// @return Boundary pointer
     shared_ptr<Boundary> GetBoundary() const {return m_boundary;}
+    ////////////////////////////////////////////////////////////////////////////
+    /// @param _b Boundary pointer
     void SetBoundary(shared_ptr<Boundary> _b) {m_boundary = _b;}
 
-    //test whether input configuration satisfies joint constraints  (i.e., is
-    //inside of C-Space) and lies inside of the workspace boundary (i.e., the
-    //robot at that configuration is inside of the workspace).
-    bool InBounds(const Cfg& _cfg) {return InBounds(_cfg, m_boundary);}
+    ////////////////////////////////////////////////////////////////////////////
+    /// @brief Test if configuration in inside of the workspace and satisfies
+    ///        physical robot constraints.
+    /// @param _cfg Configuration
+    /// @param _b Workspace region boundary
+    /// @return True if inside workspace and satisfying contraints
+    ///
+    /// Test whether input configuration satisfies joint constraints  (i.e., is
+    /// inside of C-Space) and lies inside of the workspace boundary (i.e., the
+    /// robot at that configuration is inside of the workspace).
     bool InBounds(const Cfg& _cfg, shared_ptr<Boundary> _b);
-    // TODO this is a work around for CfgMultiRobot class InBounds check
-    bool InBounds(const CfgMultiRobot& _cfg) {return InBounds(_cfg, m_boundary);}
+    ////////////////////////////////////////////////////////////////////////////
+    /// @brief Test if configuration in inside of the workspace and satisfies
+    ///        physical robot constraints.
+    ///
+    /// @overload
+    /// No boundary is specified.
+    bool InBounds(const Cfg& _cfg) {return InBounds(_cfg, m_boundary);}
+    ////////////////////////////////////////////////////////////////////////////
+    /// @brief Test if configuration in inside of the workspace and satisfies
+    ///        physical robot constraints.
+    ///
+    /// @overload
+    /// CfgMultiRobot overload.
+    /// @todo this is a work around for CfgMultiRobot class InBounds check
     bool InBounds(const CfgMultiRobot& _cfg, shared_ptr<Boundary> _b);
+    ////////////////////////////////////////////////////////////////////////////
+    /// @brief Test if configuration in inside of the workspace and satisfies
+    ///        physical robot constraints.
+    ///
+    /// @overload
+    /// CfgMultiRobot overload.
+    /// @todo this is a work around for CfgMultiRobot class InBounds check
+    bool InBounds(const CfgMultiRobot& _cfg) {return InBounds(_cfg, m_boundary);}
 
-    //access the possible range of values for the _i th DOF
-    pair<double, double> GetRange(size_t _i) {return GetRange(_i, m_boundary);}
-    pair<double, double> GetRange(size_t _i, shared_ptr<Boundary> _b);
-
-    //reset the boundary to the minimum bounding box surrounding the obstacles
-    //increased by a margin of _d + robotRadius
+    ////////////////////////////////////////////////////////////////////////////
+    /// @brief Resize the boundary to a margin away from the obstacles
+    /// @param _d Margin to increase minimum bounding box
+    /// @param _robotIndex Robot to base the margin off of
+    ///
+    /// Reset the boundary to the minimum bounding box surrounding the obstacles
+    /// increased by a margin of _d + robotRadius.
     void ResetBoundary(double _d, size_t _robotIndex);
 
-    //expand the boundary by a margin of _d + robotRadius
+    ////////////////////////////////////////////////////////////////////////////
+    /// @brief Expand the boundary by a margin of _d + robotRadius
+    /// @param _d Margin to increase bounding box
+    /// @param _robotIndex Robot to base the margin off of
     void ExpandBoundary(double _d, size_t _robotIndex);
+    /// @}
+    ////////////////////////////////////////////////////////////////////////////
 
-    ///////////////////////////////////////////////////////////
-    //MultiBodies
-    ///////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////
+    /// @name MultiBodies
+    /// @{
+    ////////////////////////////////////////////////////////////////////////////
+    /// @return Number of Active MultiBodies
+    size_t NumRobots() const {return m_robots.size();}
+    ////////////////////////////////////////////////////////////////////////////
+    /// @return Number of Static MultiBodies
+    size_t NumObstacles() const {return m_obstacles.size();}
+    ////////////////////////////////////////////////////////////////////////////
+    /// @return Number of Surface MultiBodies
+    size_t NumSurfaces() const {return m_surfaces.size();}
 
-    size_t GetActiveBodyCount() const {return m_activeBodies.size();}
-    size_t GetObstacleCount() const {return m_obstacleBodies.size();}
-    size_t GetUsableMultiBodyCount() const {return m_usableMultiBodies.size();}
-    size_t GetNavigableSurfacesCount() const {return m_navigableSurfaces.size();}
+    ////////////////////////////////////////////////////////////////////////////
+    /// @param _index Requested multibody
+    /// @return Pointer to active multibody
+    shared_ptr<ActiveMultiBody> GetRobot(size_t _index) const;
+    ////////////////////////////////////////////////////////////////////////////
+    /// @param _index Requested multibody
+    /// @return Pointer to static multibody
+    shared_ptr<StaticMultiBody> GetObstacle(size_t _index) const;
+    ////////////////////////////////////////////////////////////////////////////
+    /// @param _index Requested multibody
+    /// @return Pointer to surface multibody
+    shared_ptr<SurfaceMultiBody> GetSurface(size_t _index) const;
 
-    //Returns a pointer to ActiveBody according to this given index.
-    //If this index is out of the boundary of list, NULL will be returned.
-    shared_ptr<MultiBody> GetActiveBody(size_t _index) const;
+    ////////////////////////////////////////////////////////////////////////////
+    /// @return Pointer to random static multibody
+    shared_ptr<StaticMultiBody> GetRandomObstacle() const;
+    ////////////////////////////////////////////////////////////////////////////
+    /// @return Index to random navigable surface. -1 means base surface.
+    ssize_t GetRandomSurfaceIndex();
 
-    //Returns a pointer to MultiBody according to this given index.
-    //If this index is out of the boundary of list, NULL will be returned.
-    shared_ptr<MultiBody> GetMultiBody(size_t _index) const;
+    ////////////////////////////////////////////////////////////////////////////
+    /// @brief Add Obstacle to environment
+    /// @param _modelFileName path to .obj file that specifies obstacle geometry
+    /// @param _where a 6 dof vector specifying position and orientation
+    /// @param _cdMethods CD methods to build CD models for
+    /// @return Obstacle's index in m_obstacleBodies on success, -1 otherwise
+    size_t AddObstacle(const string& _modelFileName,
+        const Transformation& _where,
+        const vector<CollisionDetectionMethod*>& _cdMethods);
 
-    //Return a pointer to MultiBody in m_navigableSurfaces given index.
-    //If this index is out of the boundary of list, NULL will be returned.
-    shared_ptr<MultiBody> GetNavigableSurface(size_t _index) const;
+    ////////////////////////////////////////////////////////////////////////////
+    /// @brief Remove obstacle from environment
+    /// @param _position Index in m_obstacleBodies to be removed
+    void RemoveObstacle(size_t _position);
 
-    shared_ptr<MultiBody> GetRandomObstacle() const;
-    size_t GetRandomNavigableSurfaceIndex();
+    ////////////////////////////////////////////////////////////////////////////
+    /// @brief Build collision detection models for external libraries
+    /// @param _cdMethod Requested external library to build for
+    void BuildCDStructure(CollisionDetectionMethod* _cdMethod);
+    /// @}
+    ////////////////////////////////////////////////////////////////////////////
 
-
-    //AddObstacle
-    //_modelFileName: path to .obj file that specifies geometry of the obstacle
-    //_where: a 6 dof vector specifying position and orientation of the geometry:
-    //      (x, y, z, rotation about X, rotation about Y, rotation about Z)
-    //return value: obstacle's index in m_obstacleBodies on success, -1 otherwise
-    int AddObstacle(string _modelFileName, const Transformation& _where, const vector<cd_predefined>& _cdTypes);
-
-    //RemoveObstacleAt
-    //Removes multibody stored at position given in m_obstacleBodies
-    void RemoveObstacleAt(size_t position);
-
-    void BuildCDstructure(cd_predefined cdtype);
-
-    void SetRobots(vector<Robot> _robots) { m_robots=_robots; }
   protected:
 
+    ////////////////////////////////////////////////////////////////////////////
+    /// @brief Read boundary information
+    /// @param _is Input stream
+    /// @param _cbs Counting stream buffer for accurate error reporting
     void ReadBoundary(istream& _is, CountingStreamBuffer& _cbs);
+    ////////////////////////////////////////////////////////////////////////////
+    /// @brief Write boundary information
+    /// @param _os Output stream
+    void WriteBoundary(ostream& _os);
 
-    //BuildRobotStructure, builds a robot graph which determines DOFs for a given robot
-    //In an environment with multiple active bodies, for now this function will assume they all have the same DOFs
-    //until PMPL is changed later to support multiple roadmaps for heterogeneous systems. That is, this function assumes
-    //that if there is a multiagent sim going on, the agents are homogenous
-    void BuildRobotStructure();
-    void SubBuildRobotStrucutre(size_t _index);
+    ////////////////////////////////////////////////////////////////////////////
+    /// @brief Automatically compute resolutions
+    ///
+    /// ComputeResolution, if m_posRes is < 0 then auto compute the resolutions
+    /// based on minimum of max body spans multiplied by @c m_positionResFactor.
+    /// Reachable distance resolution is computed based upon input res
+    /// multiplied by the number of joints.
+    void ComputeResolution();
 
-    //determine if _cfg is inside of the C-space defined by this workspace
-    //boundary, and the joint limits of the robot
+    ////////////////////////////////////////////////////////////////////////////
+    /// @brief Determine if @p _cfg is within physical robot contraints
+    /// @param _cfg Configuration
+    /// @param _b Workspace region of environment
+    /// @return True if @p _cfg is inside physical robot constraints
     bool InCSpace(const Cfg& _cfg, shared_ptr<Boundary> _b);
 
-    //determine if a robot placed at _cfg lies entirely inside the workspace
-    //boundary _b
+    ////////////////////////////////////////////////////////////////////////////
+    /// @brief Determine if @p _cfg is within workspace boundary
+    /// @param _cfg Configuration
+    /// @param _b Workspace region of environment
+    /// @return True if @p _cfg is inside workspace boundary
     bool InWSpace(const Cfg& _cfg, shared_ptr<Boundary> _b);
 
-    string m_filename; //which file did this environment come from
-    string m_modelDataDir; //directory where environment file is located
-    bool m_saveDofs; //should we save the dof information to a file
+    string m_filename;     ///< Which file did this environment come from
+    string m_modelDataDir; ///< Directory where environment file is located
+    bool m_saveDofs;       ///< Should we save the dof information to a file
 
-    double m_positionRes; //positional resolution of movement
-    double m_orientationRes; //rotational resolution of movement
-    double m_rdRes; //resolution for movement in RD space
+    double m_positionRes;       ///< Positional resolution of movement
+    double m_positionResFactor; ///< Factor of body span to use as auto computed
+                                ///< Positional resolution
+    double m_orientationRes;    ///< Rotational resolution of movement
+    double m_rdRes;             ///< Resolution for movement in RD space
 
-    //Robot Graph (for single Active Multibody instance. Used for automatically
-    //determining C-space
-    typedef stapl::sequential::graph<stapl::UNDIRECTED, stapl::NONMULTIEDGES, size_t> RobotGraph;
-    RobotGraph m_robotGraph;
-    vector<Robot> m_robots; //computed set of robots in C-space for a single active body
+    shared_ptr<Boundary> m_boundary; ///< Boundary of the workspace
 
-    shared_ptr<Boundary> m_boundary; //boundary of the workspace
-
-    vector<shared_ptr<MultiBody> > m_activeBodies; //robots
-    vector<shared_ptr<MultiBody> > m_obstacleBodies; //all other multibodies
-    vector<shared_ptr<MultiBody> > m_usableMultiBodies; //obstacles and robot (for collision detection)
-    vector<shared_ptr<MultiBody> > m_navigableSurfaces; //surfaces
+    vector<shared_ptr<ActiveMultiBody>> m_robots;    ///< Robots
+    vector<shared_ptr<StaticMultiBody>> m_obstacles; ///< Other multibodies
+    vector<shared_ptr<SurfaceMultiBody>> m_surfaces; ///< Surfaces
 };
-
 
 #endif

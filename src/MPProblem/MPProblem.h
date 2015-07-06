@@ -141,23 +141,25 @@ class MPProblem : public MPProblemBase
 
     void BuildCDStructures();
 
-    //AddObstacle, will add an obstacle to the environment
-    //_modelFileName: a string specifying the path to the .obj file to be added as an obstacle
-    //_where: 6 dofs for obstacle placement: (x, y, z, rotation about X, rotation about Y, rotation about Z)
-    //return value: the obstacle's index in the Environment's m_otherMultiBodies on success, -1 on failure
-    int AddObstacle(string _modelFileName, const Transformation& _where);
+    ////////////////////////////////////////////////////////////////////////////
+    /// @brief Add an obstacle to the Environment
+    /// @param _modelFileName .obj file to be added as an obstacle
+    /// @param _where Obstacle placement
+    /// @return the obstacle's index in the Environment's m_otherMultiBodies on
+    ///         success, -1 on failure
+    size_t AddObstacle(const string& _modelFileName,
+        const Transformation& _where);
 
-    //RemoveObstacleAt
-    //a wrapper call to remove a multibody from the environment
-    void RemoveObstacleAt(size_t _index);
+    ////////////////////////////////////////////////////////////////////////////
+    /// @brief Remove obstacle from Environment
+    /// @param _index Index of obstacle in Environment
+    void RemoveObstacle(size_t _index);
 
   protected:
     virtual void Initialize();
     void ReadXMLFile(const string& _filename, typename MPTraits::MPProblemType* _problem);
     bool ParseChild(XMLNode& _node, typename MPTraits::MPProblemType* _problem);
     virtual void ParseXML(XMLNode& _node, typename MPTraits::MPProblemType* _problem);
-
-    vector<cd_predefined> GetSelectedCDTypes() const;
 
     string m_baseFilename;
 
@@ -490,9 +492,12 @@ template<class MPTraits>
 void
 MPProblem<MPTraits>::
 BuildCDStructures() {
-  if(m_environment != NULL)
-    for(auto&  cd : GetSelectedCDTypes())
-      m_environment->BuildCDstructure(cd);
+  if(m_environment) {
+    for(auto& vc : *m_validityCheckers)
+      if(shared_ptr<CollisionDetectionValidity<MPTraits>> method =
+          dynamic_pointer_cast<CollisionDetectionValidity<MPTraits>>(vc.second))
+        m_environment->BuildCDStructure(method->GetCDMethod());
+  }
   else
     throw RunTimeException(WHERE,
         "Cannot Build CD Structures. Must define an Environment.");
@@ -500,25 +505,18 @@ BuildCDStructures() {
 }
 
 template<class MPTraits>
-vector<cd_predefined>
-MPProblem<MPTraits>::GetSelectedCDTypes() const{
-  vector<cd_predefined> cdTypes;
-  for(auto& vc : *m_validityCheckers)
-    if(CollisionDetectionValidity<MPTraits>* method =
-        dynamic_cast<CollisionDetectionValidity<MPTraits>*>(vc.second.get()))
-      cdTypes.push_back(method->GetCDType());
-  return cdTypes;
-}
-
-template<class MPTraits>
-int
-MPProblem<MPTraits>::AddObstacle(string _modelFileName, const Transformation& _where){
-  if(m_environment != NULL){
-    vector<cd_predefined> cdtypes = GetSelectedCDTypes();
-    int index =  m_environment->AddObstacle(_modelFileName, _where, cdtypes);
-    return index;
+size_t
+MPProblem<MPTraits>::
+AddObstacle(const string& _modelFileName, const Transformation& _where) {
+  if(m_environment) {
+    vector<CollisionDetectionMethod*> cdMethods;
+    for(auto& vc : *m_validityCheckers)
+      if(shared_ptr<CollisionDetectionValidity<MPTraits>> method =
+          dynamic_pointer_cast<CollisionDetectionValidity<MPTraits>>(vc.second))
+        cdMethods.push_back(method->GetCDMethod());
+    return m_environment->AddObstacle(_modelFileName, _where, cdMethods);
   }
-  else{
+  else {
     cerr << "MPProblem::AddObstacle Warning: Attempted to add obstacle to a NULL environment" << endl;
     return -1;
   }
@@ -526,13 +524,13 @@ MPProblem<MPTraits>::AddObstacle(string _modelFileName, const Transformation& _w
 
 template<class MPTraits>
 void
-MPProblem<MPTraits>::RemoveObstacleAt(size_t _index){
-  if(m_environment != NULL){
-    m_environment->RemoveObstacleAt(_index);
-  }
-  else{
-    cerr << "MPProblem::RemoveObstacleAt Warning: Attempted to remove an obstacle from a NULL environment" << endl;
-  }
+MPProblem<MPTraits>::
+RemoveObstacle(size_t _index) {
+  if(m_environment)
+    m_environment->RemoveObstacle(_index);
+  else
+    cerr << "MPProblem::RemoveObstacleAt Warning: Attempted to remove an "
+      "obstacle from a NULL environment" << endl;
 }
 
 #endif

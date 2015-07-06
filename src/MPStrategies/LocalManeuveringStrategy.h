@@ -568,10 +568,10 @@ LocalManeuveringStrategy<MPTraits>::Initialize(){
   CfgType tmp, tmp2;
   Print(cout);
   if (this->m_debug) {
-    cout << "num robots: " << env->GetActiveBodyCount() << endl;
+    cout << "num robots: " << env->GetRobotCount() << endl;
     cout << " validity checker name: " << vc->GetNameAndLabel() << endl;
   }
-  //tmp.SetNumCfgs( env->GetActiveBodyCount() );
+  //tmp.SetNumCfgs( env->GetRobotCount() );
 
   //the query file will first contain the starting positions, and then the goal positions
   //first we'll read the start positions
@@ -588,7 +588,7 @@ LocalManeuveringStrategy<MPTraits>::Initialize(){
 
 	//now read goal positions
 	CfgType tmp2;
-	//tmp2.SetNumCfgs(env->GetActiveBodyCount());
+	//tmp2.SetNumCfgs(env->GetRobotCount());
 	ifs >> tmp2;
 
 	if(!ifs){
@@ -630,9 +630,9 @@ LocalManeuveringStrategy<MPTraits>::Initialize(){
      }
   }
   //for now assume that each agent is biased by the same path
-  for(size_t i=0; i<env->GetActiveBodyCount(); i++)
+  for(size_t i=0; i<env->GetRobotCount(); i++)
     m_perAgentPath.push_back( m_guidePath );
-  cout << "Number of active bodies: " << env->GetActiveBodyCount() << " number of usable bodies: " << env->GetUsableMultiBodyCount() << endl;
+  cout << "Number of active bodies: " << env->GetRobotCount() << " number of usable bodies: " << env->GetUsableMultiBodyCount() << endl;
   cout << "Number of roots: " << m_roots.size() << endl;
 
   for(CfgIter C = m_roots.begin(); C!=m_roots.end(); C++){

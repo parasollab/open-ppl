@@ -42,46 +42,6 @@ Epsilon(const T& _t1, const T& _t2) {
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-// Collision Detection
-///////////////////////////////////////////////////////////////////////////////
-
-//Need to define at least one type of collision detection library
-#ifndef USE_VCLIP
-#ifndef USE_RAPID
-#ifndef USE_PQP
-#ifndef USE_SOLID
-#ifndef NO_CD_USE
-#error You have to specify at least one collision detection library.
-#endif
-#endif
-#endif
-#endif
-#endif
-
-// Legal Types of Collision Detecters
-enum cd_predefined {
-  // voronoi clip
-#ifdef USE_VCLIP
-  VCLIP,
-#endif
-  // Robust and Accurate Polygon Interference Detection
-#ifdef USE_RAPID
-  RAPID,
-#endif
-  // Proximity Query Package
-#ifdef USE_PQP
-  PROXIMITYQUERYPACKAGE,
-#endif
-  // SOLID
-#ifdef USE_SOLID
-  SOLID,
-#endif
-  INSIDE_SPHERES,
-  BOUNDING_SPHERES,
-  CD_USER1
-};
-
-///////////////////////////////////////////////////////////////////////////////
 // Random Number Generation
 ///////////////////////////////////////////////////////////////////////////////
 

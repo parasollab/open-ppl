@@ -2,29 +2,62 @@
 
 #ifdef USE_SOLID
 
-Solid::Solid() : CollisionDetectionMethod() {
-  m_name = "SOLID";
-  m_type = Exact;
-  m_cdtype = SOLID;
+Solid::
+Solid() : CollisionDetectionMethod("SOLID", Exact) {
 }
 
-
-Solid::~Solid() {}
+void
+Solid::
+Build(Body* _body) {
+  GMSPolyhedron& poly = _body->GetWorldPolyhedron();
+  vertex = new MT_Point3[3*poly.m_polygonList.size()];
+  for(size_t q=0; q < poly.m_polygonList.size(); q++) {
+    int vertexNum[3];
+    float point[3][3];
+    for(int i=0; i<3; i++) {
+      vertexNum[i] = poly.m_polygonList[q].m_vertexList[i];
+      Vector3d tmp = poly.m_vertexList[vertexNum[i]];
+      for(int j=0; j<3; j++)
+        vertex[3*q+i][j] = tmp[j];
+    }
+  }
+  base = DT_NewVertexBase(vertex[0],sizeof(vertex[0]));
+  DT_ShapeHandle shape = DT_NewComplexShape(base);
+  for(size_t q=0; q < poly.m_polygonList.size(); q++) {
+    int vertexNum[3];
+    float point[3][3];
+    for(int i=0; i<3; i++) {
+      vertexNum[i] = poly.m_polygonList[q].m_vertexList[i];
+      Vector3d tmp = poly.m_vertexList[vertexNum[i]];
+      for(int j=0; j<3; j++)
+        point[i][j] = tmp[j];
+    }
+    DT_Begin();
+    DT_VertexIndex(3*q+0);
+    DT_VertexIndex(3*q+1);
+    DT_VertexIndex(3*q+2);
+    DT_End();
+  }
+  DT_EndComplexShape();
+  DT_ObjectHandle object = DT_CreateObject(NULL,shape);
+  _body->SetSolidBody(shared_ptr<DT_ObjectHandle>(new DT_ObjectHandle(object)));
+}
 
 bool
-Solid::IsInCollision(shared_ptr<MultiBody> _robot, shared_ptr<MultiBody> _obstacle,
-    StatClass& _stats, CDInfo& _cdInfo, const string& _callName, int _ignoreIAdjacentMultibodies) {
-  _stats.IncNumCollDetCalls(GetName(), _callName);
+Solid::
+IsInCollision(shared_ptr<Body> _body1, shared_ptr<Body> _body2,
+    CDInfo& _cdInfo) {
 
+  /// @todo dead code + need to update to new framework.
   _robot->UpdateVertexBase();
 
   if(_cdInfo.ret_all_info == false){
 
-    for(int i=0 ; i<_robot->GetFreeBodyCount(); i++) {
+    for(size_t i = 0; i < _robot->GetFreeBodyCount(); ++i) {
 
       shared_ptr<DT_ObjectHandle> rob = _robot->GetFreeBody(i)->GetSolidBody();
 
-      for(int j=0; j<_obstacle->GetBodyCount(); j++) {
+      for(size_t j = 0; j < _obstacle->GetBodyCount(); ++j) {
 
         // if robot check self collision, skip adjacent links.
         if(_robot == _obstacle &&
@@ -60,11 +93,11 @@ Solid::IsInCollision(shared_ptr<MultiBody> _robot, shared_ptr<MultiBody> _obstac
     _cdInfo.ResetVars();
     _cdInfo.ret_all_info = true;
 
-    for(int i=0 ; i<_robot->GetFreeBodyCount(); i++) {
+    for(size_t i = 0 ; i < _robot->GetFreeBodyCount(); ++i) {
 
       shared_ptr<DT_ObjectHandle> rob = _robot->GetFreeBody(i)->GetSolidBody();
 
-      for(int j=0; j<_obstacle->GetBodyCount(); j++) {
+      for(size_t j = 0; j < _obstacle->GetBodyCount(); ++j) {
 
         // if robot check self collision, skip adjacent links.
         if(_robot == _obstacle &&
@@ -113,15 +146,12 @@ Solid::IsInCollision(shared_ptr<MultiBody> _robot, shared_ptr<MultiBody> _obstac
             _cdInfo.object_point = _obstacle->GetBody(j)->WorldTransformation() * Vector3d(cp2[0],cp2[1],cp2[2]);
           }
         }
-
-      } // end for j
-    } // end for i
+      }
+    }
 
     return retVal;
-  }// _cdInfo.ret_all_info = true
+  }
 
-} // end IsInCollision_solid()
-
+}
 
 #endif
-

@@ -9,7 +9,11 @@
 /////////////////////////////////////////////////////////////////////
 
 #include "CfgSurface.h"
-#include "MPProblem/Geometry/MultiBody.h"
+
+#include "MPProblem/Geometry/ActiveMultiBody.h"
+#include "MPProblem/Geometry/FixedBody.h"
+#include "MPProblem/Geometry/FreeBody.h"
+#include "MPProblem/Geometry/SurfaceMultiBody.h"
 #include "MPProblem/Environment.h"
 
 CfgSurface::CfgSurface() :
@@ -246,12 +250,12 @@ CfgSurface::GetRobotCenterPosition() const {
 }
 
 Vector3d
-CfgSurface::GetRobotCenterofMass(Environment* _env) const {
-  ConfigEnvironment(_env);
+CfgSurface::GetRobotCenterofMass() const {
+  ConfigEnvironment();
 
   Vector3d com(0,0,0);
   GMSPolyhedron poly =
-    _env->GetMultiBody(m_robotIndex)->GetFreeBody(0)->GetWorldPolyhedron();
+    m_robots[m_robotIndex]->GetFreeBody(0)->GetWorldPolyhedron();
   for(vector<Vector3d>::const_iterator vit = poly.m_vertexList.begin(); vit
       != poly.m_vertexList.end(); ++vit)
     com = com + (*vit);
@@ -259,8 +263,10 @@ CfgSurface::GetRobotCenterofMass(Environment* _env) const {
   return com;
 }
 
-bool CfgSurface::ConfigEnvironment(Environment* _env) const {
-  shared_ptr<MultiBody> mb = _env->GetMultiBody(m_robotIndex);
+void
+CfgSurface::
+ConfigEnvironment() const {
+  shared_ptr<ActiveMultiBody> mb = m_robots[m_robotIndex];
 
   // configure the robot according to current Cfg: joint parameters
   // (and base locations/orientations for free flying robots.)
@@ -269,8 +275,6 @@ bool CfgSurface::ConfigEnvironment(Environment* _env) const {
       Orientation());
   // update link i
   mb->GetFreeBody(0)->Configure(T1);
-
-  return true;
 }
 
 void
@@ -330,7 +334,7 @@ CfgSurface::GetPositionOrientationFrom2Cfg(const Cfg& _c1, const Cfg& _c2) {
 void
 CfgSurface::GetRandomCfgImpl(Environment* _env, shared_ptr<Boundary> _bb) {
   if( m_surfaceID == INVALID_SURFACE ) { // need to set appropriate surface id
-    int rindex = _env->GetRandomNavigableSurfaceIndex();
+    int rindex = _env->GetRandomSurfaceIndex();
     m_surfaceID = rindex;
   }
 
@@ -342,7 +346,7 @@ CfgSurface::GetRandomCfgImpl(Environment* _env, shared_ptr<Boundary> _bb) {
   }
   else { //surface id points to something valid
     //////////////////////////////////////////////////////////////////////////////
-    shared_ptr<MultiBody> surface_body = _env->GetNavigableSurface(m_surfaceID);
+    shared_ptr<SurfaceMultiBody> surface_body = _env->GetSurface(m_surfaceID);
     shared_ptr<FixedBody> fb = surface_body->GetFixedBody(0);
     GMSPolyhedron& polyhedron = fb->GetWorldPolyhedron();
     Point3d surfPt3d = polyhedron.GetRandPtOnSurface();
