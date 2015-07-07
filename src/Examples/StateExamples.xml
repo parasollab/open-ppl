@@ -113,7 +113,7 @@
 
     </MPStrategies>
 
-    <Solver mpStrategyLabel="KRRTQuery" seed="12345678"  baseFilename="KRRT" vizmoDebug="true"/>
+    <Solver mpStrategyLabel="KRRTNodes" seed="12345678"  baseFilename="KRRT" vizmoDebug="true"/>
 
   </MPProblem>
 </MotionPlanning>

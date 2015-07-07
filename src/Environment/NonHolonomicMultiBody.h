@@ -22,6 +22,15 @@ class NonHolonomicMultiBody : public ActiveMultiBody {
     vector<double> GetRandomControl() const;
 
     ////////////////////////////////////////////////////////////////////////////
+    /// @param _pos Configuration dofs
+    /// @param _vel Configuration vels
+    /// @param _b Workspace bounds
+    /// @return True if configuration values are inside physical robot
+    ///         constraints
+    bool InSSpace(const vector<double>& _pos, const vector<double>& _vel,
+        shared_ptr<Boundary>& _b);
+
+    ////////////////////////////////////////////////////////////////////////////
     /// @name I/O
     /// @{
 

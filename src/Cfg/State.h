@@ -26,6 +26,8 @@ class State : public Cfg {
     State operator/(double _d) const;
     State& operator/=(double _d);
 
+    const vector<double>& GetVelocity() const {return m_vel;}
+
     State Apply(Environment* _env, const vector<double>& _u, double _dt);
 
     virtual void Read(istream& _is);

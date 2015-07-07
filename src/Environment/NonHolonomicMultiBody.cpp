@@ -16,6 +16,19 @@ GetRandomControl() const {
   return m_controls[index]->GetControl();
 }
 
+bool
+NonHolonomicMultiBody::
+InSSpace(const vector<double>& _pos, const vector<double>& _vel,
+    shared_ptr<Boundary>& _b) {
+  if(InCSpace(_pos, _b)) {
+    Vector3d linear(_vel[0], _vel[1], _vel[2]);
+    Vector3d angular(_vel[3], _vel[4], _vel[5]);
+    if(linear.norm() < m_maxLinearVel && angular.norm() < m_maxAngularVel)
+      return true;
+  }
+  return false;
+}
+
 void
 NonHolonomicMultiBody::
 Read(istream& _is, CountingStreamBuffer& _cbs) {

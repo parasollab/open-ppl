@@ -5,7 +5,9 @@
 using namespace mathtool;
 
 #include "Boundary.h"
+#include "NonHolonomicMultiBody.h"
 #include "Cfg/CfgMultiRobot.h"
+#include "Cfg/State.h"
 #include "Utilities/MPUtils.h"
 
 class ActiveMultiBody;
@@ -103,6 +105,7 @@ class Environment {
     ////////////////////////////////////////////////////////////////////////////
     /// @brief Test if configuration in inside of the workspace and satisfies
     ///        physical robot constraints.
+    /// @tparam CfgType Configuration class type
     /// @param _cfg Configuration
     /// @param _b Workspace region boundary
     /// @return True if inside workspace and satisfying contraints
@@ -110,30 +113,17 @@ class Environment {
     /// Test whether input configuration satisfies joint constraints  (i.e., is
     /// inside of C-Space) and lies inside of the workspace boundary (i.e., the
     /// robot at that configuration is inside of the workspace).
-    bool InBounds(const Cfg& _cfg, shared_ptr<Boundary> _b);
-    ////////////////////////////////////////////////////////////////////////////
-    /// @brief Test if configuration in inside of the workspace and satisfies
-    ///        physical robot constraints.
-    ///
-    /// @overload
-    /// No boundary is specified.
-    bool InBounds(const Cfg& _cfg) {return InBounds(_cfg, m_boundary);}
-    ////////////////////////////////////////////////////////////////////////////
-    /// @brief Test if configuration in inside of the workspace and satisfies
-    ///        physical robot constraints.
-    ///
-    /// @overload
-    /// CfgMultiRobot overload.
-    /// @todo this is a work around for CfgMultiRobot class InBounds check
+    template<class CfgType>
+      bool InBounds(const CfgType& _cfg, shared_ptr<Boundary> _b);
     bool InBounds(const CfgMultiRobot& _cfg, shared_ptr<Boundary> _b);
     ////////////////////////////////////////////////////////////////////////////
     /// @brief Test if configuration in inside of the workspace and satisfies
     ///        physical robot constraints.
     ///
     /// @overload
-    /// CfgMultiRobot overload.
-    /// @todo this is a work around for CfgMultiRobot class InBounds check
-    bool InBounds(const CfgMultiRobot& _cfg) {return InBounds(_cfg, m_boundary);}
+    /// No boundary is specified.
+    template<class CfgType>
+      bool InBounds(const CfgType& _cfg) {return InBounds(_cfg, m_boundary);}
 
     ////////////////////////////////////////////////////////////////////////////
     /// @brief Resize the boundary to a margin away from the obstacles
@@ -229,13 +219,18 @@ class Environment {
     void ComputeResolution();
 
     ////////////////////////////////////////////////////////////////////////////
+    /// @tparam CfgType Configuration class type
     /// @brief Determine if @p _cfg is within physical robot contraints
     /// @param _cfg Configuration
     /// @param _b Workspace region of environment
     /// @return True if @p _cfg is inside physical robot constraints
-    bool InCSpace(const Cfg& _cfg, shared_ptr<Boundary> _b);
+    template<class CfgType>
+      bool InCSpace(const CfgType& _cfg, shared_ptr<Boundary> _b);
+
+    bool InCSpace(const State& _cfg, shared_ptr<Boundary> _b);
 
     ////////////////////////////////////////////////////////////////////////////
+    /// @tparam CfgType Configuration class type
     /// @brief Determine if @p _cfg is within workspace boundary
     /// @param _cfg Configuration
     /// @param _b Workspace region of environment
@@ -259,5 +254,23 @@ class Environment {
     vector<shared_ptr<StaticMultiBody>> m_obstacles; ///< Other multibodies
     vector<shared_ptr<SurfaceMultiBody>> m_surfaces; ///< Surfaces
 };
+
+template<class CfgType>
+bool
+Environment::
+InBounds(const CfgType& _cfg, shared_ptr<Boundary> _b) {
+  if(InCSpace(_cfg, _b))
+    if(InWSpace(_cfg, _b))
+      return true;
+  return false;
+}
+
+template<class CfgType>
+bool
+Environment::
+InCSpace(const CfgType& _cfg, shared_ptr<Boundary> _b) {
+  size_t activeBodyIndex = _cfg.GetRobotIndex();
+  return m_robots[activeBodyIndex]->InCSpace(_cfg.GetData(), _b);
+}
 
 #endif

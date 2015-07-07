@@ -180,15 +180,6 @@ Write(ostream & _os) {
 
 bool
 Environment::
-InBounds(const Cfg& _cfg, shared_ptr<Boundary> _b) {
-  if(InCSpace(_cfg, _b))
-    if(InWSpace(_cfg, _b))
-      return true;
-  return false;
-}
-
-bool
-Environment::
 InBounds(const CfgMultiRobot& _cfg, shared_ptr<Boundary> _b) {
   const vector<Cfg> c = _cfg.GetRobotsCollect();
   for(auto& cfg : c)
@@ -368,9 +359,10 @@ ComputeResolution() {
 
 bool
 Environment::
-InCSpace(const Cfg& _cfg, shared_ptr<Boundary> _b) {
+InCSpace(const State& _cfg, shared_ptr<Boundary> _b) {
   size_t activeBodyIndex = _cfg.GetRobotIndex();
-  return m_robots[activeBodyIndex]->InCSpace(_cfg.GetData(), _b);
+  return static_pointer_cast<NonHolonomicMultiBody>(m_robots[activeBodyIndex])->
+    InSSpace(_cfg.GetData(), _cfg.GetVelocity(), _b);
 }
 
 bool
