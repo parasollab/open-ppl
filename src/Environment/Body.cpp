@@ -16,6 +16,7 @@ Body::
 Body(MultiBody* _owner) :
   m_multibody(_owner),
   m_label(0),
+  m_colorLoaded(false), m_textureLoaded(false),
   m_worldPolyhedronAvailable(false),
   m_convexHullAvailable(false),
   m_centerOfMassAvailable(false) {
@@ -156,6 +157,52 @@ Body::Read() {
   m_bbPolyhedron.m_vertexList[7] = Vector3d(maxx, maxy, maxz);
 
   FindBoundingBox();
+}
+
+void
+Body::
+ReadOptions(istream& _is, CountingStreamBuffer& _cbs) {
+  //read white space
+  char c;
+  while(isspace(_is.peek()))
+    _is.get(c);
+
+  //read '-'
+  if(_is.peek() != '-')
+    return;
+  _is.get(c);
+
+  _is >> c;
+  //read optional color
+  if(c == 'c') {
+    _is >> c; //read c(
+    if(c != '(')
+      throw ParseException(_cbs.Where(), "Invalid specification of color.");
+    m_color = ReadField<Color4>(_is, _cbs, "Invalid specification of color.");
+    _is >> c; //read )
+    if(c != ')')
+      throw ParseException(_cbs.Where(), "Invalid specification of color.");
+    m_colorLoaded = true;
+  }
+  //read optional texture file
+  else if(c == 't') {
+    _is >> c; //read t(
+    if(c != '(')
+      throw ParseException(_cbs.Where(), "Invalid specification of texture.");
+    m_textureFile = ReadFieldString(_is, _cbs,
+        "Invalid specification of texture.", false);
+    c = m_textureFile[m_textureFile.length() - 1];
+    if(c == ')')
+      m_textureFile = m_textureFile.substr(0, m_textureFile.length() - 1);
+    else {
+      _is >> c; //read )
+      if(c != ')')
+        throw ParseException(_cbs.Where(), "Invalid specification of texture.");
+    }
+    m_textureLoaded = true;
+  }
+  else
+    throw ParseException(_cbs.Where(), "Failed reading option '" + ::to_string(c) + "'.");
 }
 
 void

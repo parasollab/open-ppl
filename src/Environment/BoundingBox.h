@@ -20,6 +20,8 @@ class BoundingBox :  public Boundary {
 
     string Type() const {return "Box";}
 
+    const pair<double, double>* const GetBox() const {return m_bbx;}
+
     double GetMaxDist(double _r1 = 2.0, double _r2 = 0.5) const;
     pair<double, double> GetRange(size_t _i) const;
 

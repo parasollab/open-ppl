@@ -26,7 +26,7 @@ GetFreeBody(size_t _index) const {
 
 void
 ActiveMultiBody::
-InitializeDOFs(ostream* _os) {
+InitializeDOFs(shared_ptr<Boundary>& _b, ostream* _os) {
 
   size_t dof = 0;
 
@@ -39,6 +39,10 @@ InitializeDOFs(ostream* _os) {
   if(m_baseType == FreeBody::BodyType::Planar) {
     m_dofTypes.push_back(DofType::Positional);
     m_dofTypes.push_back(DofType::Positional);
+    m_dofInfo.push_back(DOFInfo("Base X Translation ",
+          _b->GetRange(0).first, _b->GetRange(0).second));
+    m_dofInfo.push_back(DOFInfo("Base Y Translation ",
+          _b->GetRange(1).first, _b->GetRange(1).second));
 
     if(_os) {
       *_os << "\t\t" << dof++ << ": X position" << endl;
@@ -47,15 +51,22 @@ InitializeDOFs(ostream* _os) {
 
     if(m_baseMovement == FreeBody::MovementType::Rotational) {
       m_dofTypes.push_back(DofType::Rotational);
+      m_dofInfo.push_back(DOFInfo("Base Rotation ", -1.0, 1.0));
 
       if(_os)
         *_os << "\t\t" << dof++ << ": Rotation about Z" << endl;
     }
   }
-  if(m_baseType == FreeBody::BodyType::Volumetric) {
+  else if(m_baseType == FreeBody::BodyType::Volumetric) {
     m_dofTypes.push_back(DofType::Positional);
     m_dofTypes.push_back(DofType::Positional);
     m_dofTypes.push_back(DofType::Positional);
+    m_dofInfo.push_back(DOFInfo("Base X Translation ",
+          _b->GetRange(0).first, _b->GetRange(0).second));
+    m_dofInfo.push_back(DOFInfo("Base Y Translation ",
+          _b->GetRange(1).first, _b->GetRange(1).second));
+    m_dofInfo.push_back(DOFInfo("Base Z Translation ",
+          _b->GetRange(2).first, _b->GetRange(2).second));
 
     if(_os) {
       *_os << "\t\t" << dof++ << ": X position" << endl;
@@ -66,6 +77,9 @@ InitializeDOFs(ostream* _os) {
       m_dofTypes.push_back(DofType::Rotational);
       m_dofTypes.push_back(DofType::Rotational);
       m_dofTypes.push_back(DofType::Rotational);
+      m_dofInfo.push_back(DOFInfo("Base X Rotation ", -1.0, 1.0));
+      m_dofInfo.push_back(DOFInfo("Base Y Rotation ", -1.0, 1.0));
+      m_dofInfo.push_back(DOFInfo("Base Z Rotation ", -1.0, 1.0));
 
       if(_os) {
         *_os << "\t\t" << dof++ << ": Rotation about X" << endl;
@@ -79,6 +93,9 @@ InitializeDOFs(ostream* _os) {
     switch(joint->GetConnectionType()) {
       case Connection::JointType::Revolute:
         m_dofTypes.push_back(DofType::Joint);
+        m_dofInfo.push_back(DOFInfo("Revolute Joint " +
+              ::to_string(joint->GetGlobalIndex()) + " Angle",
+              joint->GetJointLimits(0).first, joint->GetJointLimits(0).second));
 
         if(_os) {
           *_os << "\t\t" << dof++ << ": ";
@@ -92,6 +109,12 @@ InitializeDOFs(ostream* _os) {
       case Connection::JointType::Spherical:
         m_dofTypes.push_back(DofType::Joint);
         m_dofTypes.push_back(DofType::Joint);
+        m_dofInfo.push_back(DOFInfo("Spherical Joint " +
+              ::to_string(joint->GetGlobalIndex()) + " Angle 1",
+              joint->GetJointLimits(0).first, joint->GetJointLimits(0).second));
+        m_dofInfo.push_back(DOFInfo("Spherical Joint " +
+              ::to_string(joint->GetGlobalIndex()) + " Angle 2",
+              joint->GetJointLimits(1).first, joint->GetJointLimits(1).second));
 
         if(_os) {
           *_os << "\t\t" << dof++;

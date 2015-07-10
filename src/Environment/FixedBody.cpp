@@ -13,6 +13,8 @@ Read(istream& _is, CountingStreamBuffer& _cbs) {
       "Failed reading geometry filename.", false);
   Read();
 
+  ReadOptions(_is, _cbs);
+
   m_worldTransformation = ReadField<Transformation>(_is, _cbs,
       "Failed reading fixed body transformation.");
 }

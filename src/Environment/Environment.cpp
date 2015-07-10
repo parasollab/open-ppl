@@ -122,10 +122,10 @@ Read(string _filename) {
   for(size_t i = 0; i < size; ++i) {
     if(m_saveDofs) {
       ofstream dofFile(m_filename + "." + ::to_string(i) + ".dof");
-      m_robots[i]->InitializeDOFs(&dofFile);
+      m_robots[i]->InitializeDOFs(m_boundary, &dofFile);
     }
     else
-      m_robots[i]->InitializeDOFs();
+      m_robots[i]->InitializeDOFs(m_boundary);
 
     Cfg::InitRobots(m_robots[i], i);
   }

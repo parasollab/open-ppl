@@ -154,34 +154,6 @@ Read(istream& _is, CountingStreamBuffer& _cbs) {
   m_bbx[0].first = m_bbx[1].first = m_bbx[2].first = -numeric_limits<double>::max();
   m_bbx[0].second = m_bbx[1].second = m_bbx[2].second = numeric_limits<double>::max();
 
-  //read next three tokens
-  string where = _cbs.Where();
-  string line;
-  getline(_is, line);
-  istringstream iss(line);
-  for(size_t i = 0; i < 3; ++i) {
-    string tok;
-    if(iss >> tok){
-      size_t del = tok.find(":");
-      if(del == string::npos)
-        throw ParseException(where,
-            "Failed reading bounding box range " + ::to_string(i+1) +
-            ". Should be delimited by ':'.");
-
-      istringstream minv(tok.substr(0,del)),
-                    maxv(tok.substr(del+1, tok.length()));
-      if(!(minv >> m_bbx[i].first && maxv >> m_bbx[i].second))
-        throw ParseException(where,
-            "Failed reading bounding box range " + ::to_string(i+1) + ".");
-    }
-    else if(i<2) //error. only 1 token provided.
-      throw ParseException(where,
-          "Failed reading bounding box ranges. Only one provided.");
-  }
-
-  //////////////////////////////////////////////////////////////////////////////
-  /* NEW Input when VIZMO gets updated
-
   //check for first [
   string tok;
   char sep;
@@ -222,8 +194,6 @@ Read(istream& _is, CountingStreamBuffer& _cbs) {
   }
   else if(sep != ']')
     throw ParseException(_cbs.Where(), "Failed reading bounding box.");
-  */
-  //////////////////////////////////////////////////////////////////////////////
 }
 
 void

@@ -86,14 +86,6 @@ ResetBoundary(vector<pair<double, double> >& _obstBBX, double _d) {
 void
 BoundingSphere::
 Read(istream& _is, CountingStreamBuffer& _cbs) {
-  m_center = ReadField<Vector3d>(_is, _cbs,
-      "Failed reading center point of bounding sphere.");
-  m_radius = ReadField<double>(_is, _cbs,
-      "Failed reading radius of bounding sphere.");
-
-  //////////////////////////////////////////////////////////////////////////////
-  /* NEW Input when VIZMO gets updated
-
   //check for first [
   string tok;
   if(!(_is >> tok && tok == "["))
@@ -114,8 +106,6 @@ Read(istream& _is, CountingStreamBuffer& _cbs) {
   //check for ending ]
   if(!(_is >> tok && tok == "]"))
     throw ParseException(_cbs.Where(), "Failed reading bounding sphere. Missing ']'.");
-  */
-  //////////////////////////////////////////////////////////////////////////////
 }
 
 void

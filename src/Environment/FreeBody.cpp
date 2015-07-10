@@ -138,6 +138,8 @@ Read(istream& _is, CountingStreamBuffer& _cbs) {
 
   Read();
 
+  ReadOptions(_is, _cbs);
+
   //Read for Base Type.  If Planar or Volumetric, read in two more strings
   //If Joint skip this stuff. If Fixed read in positions like an obstacle
   string bodyTag = ReadFieldString(_is, _cbs, "Failed reading base tag."
