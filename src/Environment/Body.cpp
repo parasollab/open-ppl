@@ -201,8 +201,11 @@ ReadOptions(istream& _is, CountingStreamBuffer& _cbs) {
     }
     m_textureLoaded = true;
   }
-  else
-    throw ParseException(_cbs.Where(), "Failed reading option '" + ::to_string(c) + "'.");
+  //put back - for possible -x translation
+  else {
+    _is.putback(c);
+    _is.putback('-');
+  }
 }
 
 void
