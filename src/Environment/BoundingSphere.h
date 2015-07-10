@@ -17,6 +17,9 @@ class BoundingSphere : public Boundary {
 
     string Type() const {return "Sphere";}
 
+    const Vector3d& GetCenter() const {return m_center;}
+    const double GetRadius() const {return m_radius;}
+
     bool operator==(const Boundary& _b) const;
 
     double GetMaxDist(double _r1 = 2.0, double _r2 = 0.5) const;

@@ -26,6 +26,22 @@ class ActiveMultiBody : public MultiBody {
     typedef shared_ptr<Connection> Joint; ///< Joint of robot
 
     ////////////////////////////////////////////////////////////////////////////
+    /// @brief Information of DOF values: name, minimum value, maximum value
+    ////////////////////////////////////////////////////////////////////////////
+    struct DOFInfo {
+      //////////////////////////////////////////////////////////////////////////
+      /// @param _n Name
+      /// @param _min Minimum value
+      /// @param _max Maximum value
+      DOFInfo(string _n, double _min, double _max)
+        : m_name(_n), m_minVal(_min), m_maxVal(_max) {}
+
+      string m_name;   ///< DOF name
+      double m_minVal; ///< DOF min val
+      double m_maxVal; ///< DOF max val
+    };
+
+    ////////////////////////////////////////////////////////////////////////////
     /// @name Contructors
     /// @{
 
@@ -58,8 +74,9 @@ class ActiveMultiBody : public MultiBody {
 
     ////////////////////////////////////////////////////////////////////////////
     /// @brief Initialize DOFTypes of robot
+    /// @param _b Boundary for DOF ranges
     /// @param _os If not null, DOF type information will be output here as well
-    void InitializeDOFs(ostream* _os = NULL);
+    void InitializeDOFs(shared_ptr<Boundary>& _b, ostream* _os = NULL);
 
     ////////////////////////////////////////////////////////////////////////////
     /// @return Base Body type
@@ -75,6 +92,9 @@ class ActiveMultiBody : public MultiBody {
     ////////////////////////////////////////////////////////////////////////////
     /// @return DOF type information of robot
     const vector<DofType>& GetDOFTypes() const {return m_dofTypes;}
+    ////////////////////////////////////////////////////////////////////////////
+    /// @return DOF range information of robot
+    const vector<DOFInfo>& GetDOFInfo() const {return m_dofInfo;}
     ////////////////////////////////////////////////////////////////////////////
     /// @return Number of DOF for this robot
     size_t DOF() const {return m_dofTypes.size();}
@@ -129,6 +149,7 @@ class ActiveMultiBody : public MultiBody {
 
     vector<shared_ptr<FreeBody>> m_freeBody; ///< All free body
     vector<DofType> m_dofTypes;              ///< DOF type of robot motions
+    vector<DOFInfo> m_dofInfo;               ///< DOFInfo for each motion
     size_t m_baseIndex;                      ///< Free body index for base
     shared_ptr<FreeBody> m_baseBody;         ///< Body of base
     FreeBody::BodyType m_baseType;           ///< Type of base

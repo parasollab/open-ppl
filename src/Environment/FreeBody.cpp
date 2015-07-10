@@ -138,6 +138,8 @@ Read(istream& _is, CountingStreamBuffer& _cbs) {
 
   Read();
 
+  ReadOptions(_is, _cbs);
+
   m_mass = ReadField<double>(_is, _cbs, "Failed reading body mass.");
   cout << "Body: " << m_filename << " has mass " << m_mass << endl;
 

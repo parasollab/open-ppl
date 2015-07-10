@@ -20,6 +20,7 @@
 using namespace mathtool;
 
 #include "GMSPolyhedron.h"
+#include "Utilities/Color.h"
 #include "Utilities/MPUtils.h"
 
 class CollisionDetectionMethod;
@@ -71,6 +72,19 @@ class Body {
     ////////////////////////////////////////////////////////////////////////////
     /// @param _label New label for this body
     void SetLabel(const int _label) { m_label = _label; };
+
+    ////////////////////////////////////////////////////////////////////////////
+    /// @return Is color loaded as option?
+    bool IsColorLoaded() const { return m_colorLoaded; };
+    ////////////////////////////////////////////////////////////////////////////
+    /// @return Color
+    const Color4& GetColor() const { return m_color; };
+    ////////////////////////////////////////////////////////////////////////////
+    /// @return Is color loaded as option?
+    bool IsTextureLoaded() const { return m_textureLoaded; };
+    ////////////////////////////////////////////////////////////////////////////
+    /// @return Texture filename
+    const string& GetTexture() const { return m_textureFile; };
 
     ////////////////////////////////////////////////////////////////////////////
     /// @return Center of mass of body
@@ -198,17 +212,17 @@ class Body {
     /// @brief Read geometry information from file
     void Read();
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// @brief Output information of body
-    /// @param _os Output stream
-    //void Write(ostream& _os);
-
     static string m_modelDataDir; ///< Directory of geometry files
 
     /// @}
     ////////////////////////////////////////////////////////////////////////////
 
   protected:
+    ////////////////////////////////////////////////////////////////////////////
+    /// @brief Read optional color or texture
+    /// @param _is Input stream
+    /// @param _cbs Counting buffer stream
+    void ReadOptions(istream& _is, CountingStreamBuffer& _cbs);
 
     ////////////////////////////////////////////////////////////////////////////
     /// @brief Calculate center of mass in world coordinates
@@ -237,8 +251,13 @@ class Body {
     MultiBody* m_multibody;                  ///< Owner of Body
     string m_filename;                       ///< Geometry filename
     int m_label;                             ///< Body ID
-    Transformation m_worldTransformation;    ///< World Transformation
 
+    bool m_colorLoaded;                      ///< Was color option set
+    Color4 m_color;                          ///< Optionally specified color
+    bool m_textureLoaded;                    ///< Was texture option set
+    string m_textureFile;                    ///< Optionally specified texture
+
+    Transformation m_worldTransformation;    ///< World Transformation
     GMSPolyhedron m_polyhedron;              ///< Model in model coordinates
     bool m_worldPolyhedronAvailable;         ///< Is world polyhedron available
     GMSPolyhedron m_worldPolyhedron;         ///< Model in world coordinates
