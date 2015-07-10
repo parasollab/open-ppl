@@ -19,3 +19,8 @@ GetPath(const string& _filename) {
     return _filename;
 }
 
+void
+MPProblemBase::
+SetPath(const string& _filename) {
+  m_filePath = _filename;
+}
