@@ -31,6 +31,10 @@ class FixedBody : public Body {
 
     virtual Transformation& GetWorldTransformation();
 
+    ////////////////////////////////////////////////////////////////////////////
+    /// @param _worldTransformation Transformation w.r.t. world frame
+    void PutWorldTransformation(Transformation& _worldTransformation);
+
     /// @}
     ////////////////////////////////////////////////////////////////////////////
 

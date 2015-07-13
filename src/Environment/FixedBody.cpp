@@ -24,6 +24,13 @@ FixedBody::GetWorldTransformation() {
   return m_worldTransformation;
 }
 
+void
+FixedBody::
+PutWorldTransformation(Transformation& _worldTransformation) {
+  m_worldTransformation = _worldTransformation;
+}
+
+
 ostream&
 operator<<(ostream& _os, const FixedBody& _fb){
   return _os << _fb.m_filename << " " << _fb.m_worldTransformation;

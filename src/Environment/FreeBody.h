@@ -138,6 +138,17 @@ class FreeBody : public Body {
     /// @param _transformation Transformation
     void Configure(Transformation& _transformation);
 
+    Transformation& GetRenderTransformation();
+
+    ////////////////////////////////////////////////////////////////////////////
+    /// @return Rendering transformation without recomputing
+    Transformation& RenderTransformation() {return m_renderTransformation;}
+
+    ////////////////////////////////////////////////////////////////////////////
+    /// @brief Set transformation of body
+    /// @param _transformation Transformation
+    void ConfigureRender(Transformation& _transformation);
+
     /// @}
     ////////////////////////////////////////////////////////////////////////////
 
@@ -181,11 +192,25 @@ class FreeBody : public Body {
     /// currently it handles only one backward connection).
     Transformation& ComputeWorldTransformation(std::set<size_t>& visited);
 
+    ////////////////////////////////////////////////////////////////////////////
+    /// @brief Compute transformation of this body wrt the world frame
+    /// @param visited Stores which bodies have been visited
+    /// @return Transformation
+    ///
+    /// Compute transformation "this" body w.r.t the world frame in a recursive
+    /// manner; multiply the world transformation of the previous body with the
+    /// transformation from the proximal joint to the center of gravity of
+    /// "this" body (Need a generalization for the connectionship, since
+    /// currently it handles only one backward connection).
+    Transformation& ComputeRenderTransformation(std::set<size_t>& visited);
+
     size_t m_index;                           ///< Index in ActiveMultiBody
     BodyType m_bodyType;                      ///< Body type
     MovementType m_movementType;              ///< Movement type
     vector<Connection> m_forwardConnections;  ///< Forward Connection s
     vector<Connection> m_backwardConnections; ///< Backward Connection s
+
+    Transformation m_renderTransformation;    ///< Rendering Transform
 };
 
 #endif

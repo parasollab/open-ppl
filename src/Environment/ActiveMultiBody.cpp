@@ -190,6 +190,54 @@ Configure(const vector<double>& _v) {
       body->GetWorldTransformation();
 }
 
+void
+ActiveMultiBody::
+ConfigureRender(const vector<double>& _v) {
+  int index = 0;
+  int posIndex = index;
+  double x = 0, y = 0, z = 0, alpha = 0, beta = 0, gamma = 0;
+  if(m_baseType != FreeBody::BodyType::Fixed) {
+    x = _v[posIndex];
+    y = _v[posIndex + 1];
+    index += 2;
+    if(m_baseType == FreeBody::BodyType::Volumetric) {
+      index++;
+      z = _v[posIndex + 2];
+    }
+    if(m_baseMovement == FreeBody::MovementType::Rotational) {
+      if(m_baseType == FreeBody::BodyType::Planar) {
+        index++;
+        gamma = _v[posIndex + 2];
+      }
+      else {
+        index += 3;
+        alpha = _v[posIndex + 3];
+        beta = _v[posIndex + 4];
+        gamma = _v[posIndex + 5];
+      }
+    }
+    // configure the robot according to current Cfg: joint parameters
+    // (and base locations/orientations for free flying robots.)
+    Transformation t1(Vector3d(x, y, z),
+        Orientation(EulerAngle(gamma*PI, beta*PI, alpha*PI)));
+    m_baseBody->ConfigureRender(t1);
+  }
+  for(auto& joint : m_joints) {
+    if(joint->GetConnectionType() != Connection::JointType::NonActuated) {
+      size_t second = joint->GetNextBodyIndex();
+      GetFreeBody(second)->GetBackwardConnection(0).
+        GetDHRenderParameters().m_theta = _v[index++]*PI;
+      if(joint->GetConnectionType() == Connection::JointType::Spherical)
+        GetFreeBody(second)->GetBackwardConnection(0).
+          GetDHRenderParameters().m_alpha = _v[index++]*PI;
+    }
+  }
+  // configure the robot
+  for(auto& body : m_freeBody)
+    if(body->ForwardConnectionCount() == 0)  // tree tips: leaves.
+      body->GetRenderTransformation();
+}
+
 vector<double>
 ActiveMultiBody::
 GetRandomCfg(shared_ptr<Boundary>& _bounds) {

@@ -85,12 +85,6 @@ IsConvexHullVertex(const Vector3d& _v) {
 
 void
 Body::
-PutWorldTransformation(Transformation& _worldTransformation) {
-  m_worldTransformation = _worldTransformation;
-}
-
-void
-Body::
 BuildCDStructure(CollisionDetectionMethod* _cdMethod) {
   _cdMethod->Build(this);
 }
