@@ -279,8 +279,7 @@ ifneq (,$(filter $(ROBOT_DEF), PMPSSSurfaceMult PMPCfgSurface))
 	       Cfg/SSSurfaceMult.o
   endif
   ifeq (${ROBOT_DEF}, $(or PMPState))
-  PMPL_OBJS += Cfg/State.o \
-	       Edges/StateEdge.o
+  PMPL_OBJS += Cfg/State.o
   endif
   ifeq (${ROBOT_DEF}, $(or PMPReachDistCC PMPReachDistCCFixed))
   PMPL_OBJS += Cfg/Cfg_reach_cc.o \

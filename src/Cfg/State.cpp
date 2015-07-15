@@ -144,8 +144,8 @@ Write(ostream& _os) const {
   _os << scientific << setprecision(17);
   for(const auto& i : m_v)
     _os << setw(25) << i << ' ';
-  //for(const auto& i : m_vel)
-  //  _os << setw(25) << i << ' ';
+  for(const auto& i : m_vel)
+    _os << setw(25) << i << ' ';
   _os.unsetf(ios_base::floatfield);
 }
 

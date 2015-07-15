@@ -70,7 +70,7 @@
 struct StateTraits {
 
   typedef State CfgType;
-  typedef StateEdge WeightType;
+  typedef StateEdge<State> WeightType;
   typedef State& CfgRef;
 
   typedef MPProblem<StateTraits> MPProblemType;
