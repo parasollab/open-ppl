@@ -4,9 +4,8 @@
 #include "MapEvaluatorMethod.h"
 
 #include "LocalPlanners/LPOutput.h"
-#include "LocalPlanners/MedialAxisLP.h"
+#include "LocalPlanners/StraightLine.h"
 #include "Utilities/MetricUtils.h"
-#include "Utilities/MedialAxisUtilities.h"
 
 #include <containers/sequential/graph/algorithms/astar.h>
 

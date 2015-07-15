@@ -59,7 +59,42 @@ operator+=(const State& _s) {
     m_v[i] += _s.m_v[i];
     m_vel[i] += _s.m_vel[i];
   }
+  NormalizeOrientation();
   return *this;
+}
+
+State
+State::
+operator-(const State& _s) const {
+  State result = *this;
+  result -= _s;
+  return result;
+}
+
+State&
+State::
+operator-=(const State& _s) {
+  for(size_t i = 0; i < m_dof[m_robotIndex]; ++i) {
+    if(m_dofTypes[m_robotIndex][i] == DofType::Positional || m_dofTypes[m_robotIndex][i] == DofType::Joint)
+      m_v[i] -= _s.m_v[i];
+    else
+      m_v[i] = DirectedAngularDistance(m_v[i], _s.m_v[i]);
+    m_vel[i] -= _s.m_vel[i];
+  }
+  NormalizeOrientation();
+  return *this;
+}
+
+State
+State::
+operator-() const {
+  State result = *this;
+  for(size_t i = 0; i < m_dof[m_robotIndex]; ++i) {
+    result.m_v[i] = -result.m_v[i];
+    result.m_vel[i] = -result.m_vel[i];
+  }
+  result.NormalizeOrientation();
+  return result;
 }
 
 State
@@ -77,6 +112,7 @@ operator*=(double _d) {
     m_v[i] *= _d;
     m_vel[i] *= _d;
   }
+  NormalizeOrientation();
   return *this;
 }
 
@@ -95,6 +131,7 @@ operator/=(double _d) {
     m_v[i] /= _d;
     m_vel[i] /= _d;
   }
+  NormalizeOrientation();
   return *this;
 }
 

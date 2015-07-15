@@ -6,6 +6,7 @@
 
 //distance metric includes
 #include "DistanceMetrics/EuclideanDistance.h"
+#include "DistanceMetrics/WeightedEuclideanDistance.h"
 
 //validity checker includes
 #include "ValidityCheckers/AlwaysTrueValidity.h"
@@ -18,7 +19,7 @@
 #include "NeighborhoodFinders/RandomNF.h"
 
 //sampler includes
-#include "Samplers/BridgeTestSampler.h"
+/*#include "Samplers/BridgeTestSampler.h"
 #include "Samplers/GaussianSampler.h"
 #include "Samplers/GridSampler.h"
 #include "Samplers/MedialAxisSampler.h"
@@ -26,10 +27,10 @@
 #include "Samplers/ObstacleBasedSampler.h"
 #include "Samplers/UniformMedialAxisSampler.h"
 #include "Samplers/UniformObstacleBasedSampler.h"
-#include "Samplers/UniformRandomSampler.h"
+#include "Samplers/UniformRandomSampler.h"*/
 
 //local planner includes
-#include "LocalPlanners/StraightLine.h"
+//#include "LocalPlanners/StraightLine.h"
 
 //extenders includes
 #include "Extenders/KinodynamicExtender.h"
@@ -38,9 +39,9 @@
 #include "PathModifiers/ShortcuttingPathModifier.h"
 
 //connector includes
-#include "Connectors/CCsConnector.h"
+/*#include "Connectors/CCsConnector.h"
 #include "Connectors/NeighborhoodConnector.h"
-#include "Connectors/RewireConnector.h"
+#include "Connectors/RewireConnector.h"*/
 
 //metric includes
 #include "Metrics/NumEdgesMetric.h"
@@ -77,7 +78,8 @@ struct StateTraits {
 
   //types of distance metrics available in our world
   typedef boost::mpl::list<
-    EuclideanDistance<StateTraits>
+    EuclideanDistance<StateTraits>,
+    WeightedEuclideanDistance<StateTraits>
       > DistanceMetricMethodList;
 
   //types of validity checkers available in our world
@@ -96,7 +98,7 @@ struct StateTraits {
 
   //types of samplers available in our world
   typedef boost::mpl::list<
-    BridgeTestSampler<StateTraits>,
+    /*BridgeTestSampler<StateTraits>,
     GaussianSampler<StateTraits>,
     GridSampler<StateTraits>,
     MedialAxisSampler<StateTraits>,
@@ -104,12 +106,12 @@ struct StateTraits {
     ObstacleBasedSampler<StateTraits>,
     UniformMedialAxisSampler<StateTraits>,
     UniformObstacleBasedSampler<StateTraits>,
-    UniformRandomSampler<StateTraits>
+    UniformRandomSampler<StateTraits>*/
       > SamplerMethodList;
 
   //types of local planners available in our world
   typedef boost::mpl::list<
-    StraightLine<StateTraits>
+    //StraightLine<StateTraits>
       > LocalPlannerMethodList;
 
   //types of extenders avaible in our world
@@ -125,9 +127,9 @@ struct StateTraits {
 
   //types of connectors available in our world
   typedef boost::mpl::list<
-    CCsConnector<StateTraits>,
+    /*CCsConnector<StateTraits>,
     NeighborhoodConnector<StateTraits>,
-    RewireConnector<StateTraits>
+    RewireConnector<StateTraits>*/
       > ConnectorMethodList;
 
   //types of metrics available in our world

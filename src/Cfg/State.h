@@ -21,6 +21,9 @@ class State : public Cfg {
     bool operator==(const State& _other) const;
     State operator+(const State& _s) const;
     State& operator+=(const State& _s);
+    State operator-(const State& _s) const;
+    State& operator-=(const State& _s);
+    State operator-() const;
     State operator*(double _d) const;
     State& operator*=(double _d);
     State operator/(double _d) const;
