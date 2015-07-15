@@ -5,6 +5,8 @@
 
 #include "Environment/NonHolonomicMultiBody.h"
 
+#include "Environment/Control.h"
+
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup Extenders
 /// @brief Basic straight-line extension.
@@ -93,18 +95,52 @@ Extend(const StateType& _near, const StateType& _dir, StateType& _new,
   ValidityCheckerPointer vc = this->GetValidityChecker(m_vcLabel);
   string callee("KinodynamicExtender::Expand");
 
-  double dt;
-  size_t nTicks;
-  if(m_fixed) {
-    nTicks = floor(m_delta + 0.5); //round up nTicks
-    dt = m_delta*env->GetTimeRes() / nTicks;
-  }
-  else {
-    throw RunTimeException(WHERE, "Variable time-step not yet implemented");
-  }
+  double delta = m_fixed ? m_delta : m_delta*DRand();
+  size_t nTicks = ceil(delta);
+  double dt = delta*env->GetTimeRes()/nTicks;
 
   if(m_best) {
-    throw RunTimeException(WHERE, "Best control is not yet implemented");
+    const vector<shared_ptr<Control>>& control = robot->AvailableControls();
+    double distBest = numeric_limits<double>::infinity();
+
+    //Starting Best Control Iteration
+    for(auto& c : control) {
+      //reset variables
+      StateType tick = _near;
+      size_t ticker = 0;
+      bool collision = false;
+      _lpOutput.m_intermediates.clear();
+
+      //apply control
+      const vector<double>& cont = c->GetControl();
+      while(!collision && ticker < nTicks) {
+        tick = tick.Apply(env, cont, dt);
+        if(!env->InBounds(tick) || !vc->IsValid(tick, callee))
+          collision = true;
+        ++ticker;
+        _lpOutput.m_intermediates.push_back(tick);
+      }
+
+      //if success, save
+      if(!collision) {
+        double dist = dm->Distance(tick, _dir);
+        if(dist < distBest){
+          distBest = dist;
+          _new = tick;
+
+          _lpOutput.m_edge.first.SetWeight(nTicks);
+          _lpOutput.m_edge.second.SetWeight(nTicks);
+          _lpOutput.m_edge.first.SetControl(cont);
+          _lpOutput.m_edge.first.SetTimeStep(nTicks);
+
+          _lpOutput.AddIntermediatesToWeights(true);
+        }
+      }
+    }
+    if(distBest == numeric_limits<double>::infinity())
+      return false;
+    else
+      return true;
   }
   else {
     StateType tick = _near;
@@ -125,6 +161,7 @@ Extend(const StateType& _near, const StateType& _dir, StateType& _new,
       _lpOutput.m_edge.first.SetWeight(nTicks);
       _lpOutput.m_edge.second.SetWeight(nTicks);
       _lpOutput.m_edge.first.SetControl(control);
+      _lpOutput.m_edge.first.SetTimeStep(nTicks);
 
       _lpOutput.AddIntermediatesToWeights(true);
       return true;

@@ -16,6 +16,12 @@ GetRandomControl() const {
   return m_controls[index]->GetControl();
 }
 
+const vector<shared_ptr<Control>>&
+NonHolonomicMultiBody::
+AvailableControls() const {
+  return m_controls;
+}
+
 vector<double>
 NonHolonomicMultiBody::
 GetRandomVelocity() const {

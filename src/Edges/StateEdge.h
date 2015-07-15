@@ -14,7 +14,7 @@ class StateEdge : public DefaultWeight<StateType> {
     void SetControl(const vector<double>& _v) {m_control = _v;}
 
     double GetTimeStep() const {return m_timeStep;}
-    void SetControl(double _t) {m_timeStep = _t;}
+    void SetTimeStep(double _t) {m_timeStep = _t;}
 
     virtual void Read(istream& _os);
     virtual void Write(ostream& _is) const;

@@ -20,6 +20,7 @@ class NonHolonomicMultiBody : public ActiveMultiBody {
     ////////////////////////////////////////////////////////////////////////////
 
     vector<double> GetRandomControl() const;
+    const vector<shared_ptr<Control>>& AvailableControls() const;
 
     ////////////////////////////////////////////////////////////////////////////
     /// @brief Sample random velocity in bounds.
