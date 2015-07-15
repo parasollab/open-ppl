@@ -110,9 +110,14 @@ class ActiveMultiBody : public MultiBody {
     /// @{
 
     ////////////////////////////////////////////////////////////////////////////
-    /// @brief Place robot in _v
+    /// @brief Place robot at @p _v
     /// @param _v Configuration DOF parameters
     void Configure(const vector<double>& _v);
+
+    ////////////////////////////////////////////////////////////////////////////
+    /// @brief Compute rendering transforms for robot at @p _v
+    /// @param _v Configuration DOF parameters
+    void ConfigureRender(const vector<double>& _v);
 
     ////////////////////////////////////////////////////////////////////////////
     /// @brief Sample random configuration in boundary

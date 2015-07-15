@@ -15,6 +15,7 @@ class MPProblemBase {
   public:
     static bool IsAbsolutePathBaseFile(const std::string& _baseFilename);
     static std::string GetPath(const std::string& _filename);
+    static void SetPath(const std::string& _filename);
 
   protected:
     static std::string m_filePath; //variable to store relative path

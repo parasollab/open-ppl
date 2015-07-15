@@ -121,12 +121,25 @@ GetWorldTransformation() {
   return ComputeWorldTransformation(visited);
 }
 
+Transformation&
+FreeBody::
+GetRenderTransformation() {
+  set<size_t> visited;
+  return ComputeRenderTransformation(visited);
+}
+
 void
 FreeBody::
 Configure(Transformation& _transformation) {
   m_worldTransformation = _transformation;
   m_centerOfMassAvailable = false;
   m_worldPolyhedronAvailable = false;
+}
+
+void
+FreeBody::
+ConfigureRender(Transformation& _transformation) {
+  m_renderTransformation = _transformation;
 }
 
 void
@@ -244,5 +257,29 @@ ComputeWorldTransformation(set<size_t>& _visited) {
       back.GetTransformationToBody2();
 
     return m_worldTransformation;
+  }
+}
+
+Transformation&
+FreeBody::
+ComputeRenderTransformation(set<size_t>& _visited) {
+  if(_visited.find(m_index) != _visited.end()) {
+    return m_renderTransformation;
+  }
+  else {
+    _visited.insert(m_index);
+
+    if(m_backwardConnections.empty())
+      return m_renderTransformation;
+
+    Connection& back = m_backwardConnections[0];
+    Transformation dh = back.GetDHRenderParameters().GetTransformation();
+    m_renderTransformation =
+      back.GetPreviousBody()->ComputeRenderTransformation(_visited) *
+      back.GetTransformationToDHFrame() *
+      dh *
+      back.GetTransformationToBody2();
+
+    return m_renderTransformation;
   }
 }

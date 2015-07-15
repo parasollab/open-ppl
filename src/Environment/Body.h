@@ -150,10 +150,6 @@ class Body {
     /// calculation.
     Transformation& WorldTransformation() {return m_worldTransformation;}
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// @param _worldTransformation Transformation w.r.t. world frame
-    void PutWorldTransformation(Transformation& _worldTransformation);
-
     /// @}
     ////////////////////////////////////////////////////////////////////////////
 

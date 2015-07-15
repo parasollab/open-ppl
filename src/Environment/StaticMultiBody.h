@@ -29,6 +29,9 @@ class StaticMultiBody : public MultiBody {
     void Initialize(const string& _modelFileName, const Transformation& _where);
 
     ////////////////////////////////////////////////////////////////////////////
+    /// @return Is this MultiBody an internal type?
+    bool IsInternal() const;
+    ////////////////////////////////////////////////////////////////////////////
     /// @return Fixed body accroding to the given index
     shared_ptr<FixedBody> GetFixedBody(size_t _index) const;
     ////////////////////////////////////////////////////////////////////////////

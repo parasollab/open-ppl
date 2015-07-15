@@ -318,7 +318,7 @@ class MethodSet {
         oss << "Element '" << _label
           << "' does not exist in " << m_name << ". Choices are: ";
         for(auto& elem : m_elements)
-          if(!elem.second.get())
+          if(elem.second.get())
             oss << " '" << elem.first << "',";
         string err = oss.str();
         err.pop_back();

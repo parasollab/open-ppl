@@ -86,12 +86,6 @@ IsConvexHullVertex(const Vector3d& _v) {
 
 void
 Body::
-PutWorldTransformation(Transformation& _worldTransformation) {
-  m_worldTransformation = _worldTransformation;
-}
-
-void
-Body::
 BuildCDStructure(CollisionDetectionMethod* _cdMethod) {
   _cdMethod->Build(this);
 }
@@ -203,8 +197,11 @@ ReadOptions(istream& _is, CountingStreamBuffer& _cbs) {
     }
     m_textureLoaded = true;
   }
-  else
-    throw ParseException(_cbs.Where(), "Failed reading option '" + ::to_string(c) + "'.");
+  //put back - for possible -x translation
+  else {
+    _is.putback(c);
+    _is.putback('-');
+  }
 }
 
 void

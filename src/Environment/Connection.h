@@ -104,8 +104,8 @@ class Connection {
     /// @return DH frame description
     DHParameters& GetDHParameters() {return m_dhParameters;}
     ////////////////////////////////////////////////////////////////////////////
-    /// @return DH frame description
-    const DHParameters& GetDHParameters() const {return m_dhParameters;}
+    /// @return DH frame description for rendering
+    DHParameters& GetDHRenderParameters() {return m_dhRenderParameters;}
     ////////////////////////////////////////////////////////////////////////////
     /// @return Transformation to second body
     Transformation& GetTransformationToBody2() {return m_transformationToBody2;}
@@ -142,6 +142,7 @@ class Connection {
     Transformation m_transformationToBody2;   ///< Transform to second body
     Transformation m_transformationToDHFrame; ///< Transform to DH frame
     DHParameters m_dhParameters;              ///< DH frame description
+    DHParameters m_dhRenderParameters;        ///< DH Rendering parameters
 
     size_t m_globalIndex;                     ///< Global ID
     JointType m_jointType;                    ///< Type of connection
