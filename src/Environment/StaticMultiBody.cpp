@@ -21,6 +21,12 @@ Initialize(const string& _modelFileName, const Transformation& _where) {
   FindMultiBodyInfo();
 }
 
+bool
+StaticMultiBody::
+IsInternal() const {
+  return m_multiBodyType == MultiBodyType::Internal;
+}
+
 shared_ptr<FixedBody>
 StaticMultiBody::
 GetFixedBody(size_t _index) const {
