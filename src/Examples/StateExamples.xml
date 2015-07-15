@@ -7,8 +7,8 @@
     <Environment filename="3DState/3d.env" timeRes="0.05"/>
 
     <DistanceMetrics>
-      <WeightedEuclidean label="weuclidean" posWeight="0.8" rotWeight="0.2"
-        velWeight="0.0" avlWeight="0.0"/>
+      <WeightedEuclidean label="weuclidean" posWeight="0.6" rotWeight="0.2"
+        velWeight="0.1" avlWeight="0.1"/>
       <Euclidean label="euclidean"/>
     </DistanceMetrics>
 

@@ -22,6 +22,10 @@ class NonHolonomicMultiBody : public ActiveMultiBody {
     vector<double> GetRandomControl() const;
 
     ////////////////////////////////////////////////////////////////////////////
+    /// @brief Sample random velocity in bounds.
+    vector<double> GetRandomVelocity() const;
+
+    ////////////////////////////////////////////////////////////////////////////
     /// @param _pos Configuration dofs
     /// @param _vel Configuration vels
     /// @param _b Workspace bounds

@@ -16,6 +16,21 @@ GetRandomControl() const {
   return m_controls[index]->GetControl();
 }
 
+vector<double>
+NonHolonomicMultiBody::
+GetRandomVelocity() const {
+  Vector3d l(DRand);
+  l = l.normalize() * DRand() * m_maxLinearVel;
+  Vector3d a(DRand);
+  a = a.normalize() * DRand() * m_maxAngularVel;
+  vector<double> ret;
+  for(size_t i = 0; i < 3; ++i)
+    ret.push_back(l[i]);
+  for(size_t i = 0; i < 3; ++i)
+    ret.push_back(a[i]);
+  return ret;
+}
+
 bool
 NonHolonomicMultiBody::
 InSSpace(const vector<double>& _pos, const vector<double>& _vel,

@@ -37,6 +37,8 @@ class State : public Cfg {
     virtual void Write(ostream& _os) const;
 
   protected:
+    virtual void GetRandomCfgImpl(Environment* _env, shared_ptr<Boundary> bb);
+
     static State F(Environment* _env, const State& _s,
         const Vector3d& _force, const Vector3d& _torque);
 

@@ -6,6 +6,7 @@ using namespace mathtool;
 
 #include "Environment/ActiveMultiBody.h"
 #include "Environment/Environment.h"
+#include "Environment/NonHolonomicMultiBody.h"
 
 State::
 State(size_t _index) : Cfg(_index) {
@@ -186,6 +187,13 @@ Write(ostream& _os) const {
   _os.unsetf(ios_base::floatfield);
 }
 
+void
+State::
+GetRandomCfgImpl(Environment* _env, shared_ptr<Boundary> _bb) {
+  Cfg::GetRandomCfgImpl(_env, _bb);
+  m_vel = static_pointer_cast<NonHolonomicMultiBody>(m_robots[m_robotIndex])->GetRandomVelocity();
+}
+
 State
 State::
 F(Environment* _env, const State& _s,
@@ -220,4 +228,3 @@ F(Environment* _env, const State& _s,
 
   return xdot;
 }
-
