@@ -19,7 +19,7 @@ class StateEdge : public DefaultWeight<StateType> {
     virtual void Read(istream& _os);
     virtual void Write(ostream& _is) const;
 
-  private:
+  protected:
     vector<double> m_control;
     double m_timeStep;
 };
@@ -44,6 +44,7 @@ Read(istream& _is) {
   size_t controlSize;
   _is >> controlSize;
   double tmp;
+  m_control.clear();
   for(size_t i = 0; i < controlSize; ++i) {
     _is >> tmp;
     m_control.push_back(tmp);

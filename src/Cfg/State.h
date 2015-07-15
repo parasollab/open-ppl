@@ -33,7 +33,7 @@ class State : public Cfg {
     virtual void Read(istream& _is);
     virtual void Write(ostream& _os) const;
 
-  private:
+  protected:
     static State F(Environment* _env, const State& _s,
         const Vector3d& _force, const Vector3d& _torque);
 
