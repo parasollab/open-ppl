@@ -243,6 +243,20 @@ operator<<(ostream& _os, const Cfg& _cfg) {
   return _os;
 }
 
+vector<double>
+Cfg::
+GetNormalizedData(const shared_ptr<Boundary> _b) const {
+  pair<vector<double>, vector<double>> range = m_robots[m_robotIndex]->
+      GetCfgLimits(_b);
+  vector<double> normed;
+  for(size_t i = 0; i < DOF(); ++i) {
+    double radius = (range.second[i] - range.first[i]) / 2.;
+    double center = range.first[i] + radius;
+    normed.push_back((m_v[i] - center) / radius);
+  }
+  return move(normed);
+}
+
 void
 Cfg::SetData(const vector<double>& _data) {
   if(_data.size() != m_dof[m_robotIndex]) {
@@ -457,7 +471,8 @@ GetRandomCfg(Environment* _env) {
 }
 
 void
-Cfg::GetRandomCfg(Environment* _env, shared_ptr<Boundary> _bb) {
+Cfg::
+GetRandomCfg(Environment* _env, shared_ptr<Boundary> _bb) {
   m_witnessCfg.reset();
   // Probably should do something smarter than 3 strikes and exit.
   // eg, if it fails once, check size of bounding box vs robot radius

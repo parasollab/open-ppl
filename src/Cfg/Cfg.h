@@ -100,7 +100,15 @@ class Cfg {
     //
     //////////////////////////////////////////////////////////////////////////////////////////
     ///Get internal storage of configuration
-    const vector<double>& GetData() const {return m_v;};
+    const vector<double>& GetData() const {return m_v;}
+    ////////////////////////////////////////////////////////////////////////////
+    /// \brief   Compute the normalized representation relative to the
+    ///          environment bounds.
+    /// \warning This is not a normalization to length 1!
+    /// \param[in] _b The boundary to normalize against.
+    /// \return  A copy of this with each DOF scaled from [_b.min, _b.max] to
+    ///          [-1, 1].
+    vector<double> GetNormalizedData(const shared_ptr<Boundary> _b) const;
     void SetData(const vector<double>& _data);
     void SetJointData(const vector<double>& _data);
 
