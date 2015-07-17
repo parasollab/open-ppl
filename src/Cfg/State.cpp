@@ -139,7 +139,7 @@ operator/=(double _d) {
 State
 State::Apply(Environment* _env, const vector<double>& _u, double _dt) {
   Vector3d force(_u[0], _u[1], _u[2]);
-  Vector3d torque(_u[3], _u[4], _u[5]);
+  Vector3d torque(_u[5], _u[4], _u[3]);
   //cout << "Apply: " << force << " " << torque << endl;
   //cout << "dt: " << _dt << endl;
   //RK4 integration
@@ -200,31 +200,45 @@ F(Environment* _env, const State& _s,
     const Vector3d& _force, const Vector3d& _torque) {
   shared_ptr<FreeBody> body =_env->GetRobot(_s.m_robotIndex)->GetFreeBody(0);
   State xdot;
+
+  //pdot = v
   xdot.m_v = _s.m_vel;
 
+  //qdot = (L^-1)w
+  //http://www.princeton.edu/~stengel/MAE331Lecture9.pdf
   EulerAngle eq(_s.m_v[5]*PI, _s.m_v[4]*PI, _s.m_v[3]*PI);
   Matrix3x3 r;
   convertFromEuler(r, eq);
 
-  Quaternion q, w(0, Vector3d(_s.m_vel[3], _s.m_vel[4], _s.m_vel[5]));
-  convertFromMatrix(q, r);
-  Quaternion qdot = 0.5 * w * q;
-  EulerAngle edot;
-  convertFromQuaternion(edot, qdot);
-  xdot.m_v[3] = edot.gamma()/PI;
-  xdot.m_v[4] = edot.beta()/PI;
-  xdot.m_v[5] = edot.alpha()/PI;
+  double phi   = eq.alpha();
+  double theta = eq.beta();
+  //double psi   = eq.gamma();
 
+  double cphi = cos(phi);
+  double sphi = sin(phi);
+  double ttheta = tan(theta);
+  double ctheta = cos(theta);
+
+  double phiDot = _s.m_vel[3] + _s.m_vel[4]*sphi*ttheta + _s.m_vel[5]*cphi*ttheta;
+  double thetaDot = _s.m_vel[4]*cphi - _s.m_vel[5]*sphi;
+  double psiDot = 0;
+  if(ctheta != 0)
+    psiDot = _s.m_vel[4]*sphi/ctheta + _s.m_vel[5]*cphi/ctheta;
+
+  xdot.m_v[5] = phiDot / PI;
+  xdot.m_v[4] = thetaDot / PI;
+  xdot.m_v[3] = psiDot / PI;
+
+  //vdot = r*force/M
   Vector3d force = r * _force;
-  Vector3d torque = r * _torque;
   for(size_t i = 0; i < m_posdof[_s.m_robotIndex]; ++i)
     xdot.m_vel[i] = force[i] / body->GetMass();
 
-  Matrix3x3 rt = r.transpose();
-  Vector3d wdot = r * body->GetMoment() * rt * torque;
-  xdot.m_vel[3] = wdot[0];
-  xdot.m_vel[4] = wdot[1];
-  xdot.m_vel[5] = wdot[2];
+  //wdot = r*I^-1*torque
+  Vector3d wDot = r * body->GetMoment() * _torque;
+  xdot.m_vel[5] = wDot[0];
+  xdot.m_vel[4] = wDot[1];
+  xdot.m_vel[3] = wDot[2];
 
   return xdot;
 }
