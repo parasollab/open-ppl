@@ -4,7 +4,7 @@
 
     <!-- Example input, resolution defaults computed automatically. Can set
          through environment.-->
-    <Environment filename="2DState/2d.env" timeRes="0.05"/>
+    <Environment filename="3DState/3d.env" timeRes="0.05"/>
 
     <DistanceMetrics>
       <WeightedEuclidean label="weuclidean" posWeight="0.6" rotWeight="0.2"
@@ -64,14 +64,14 @@
 
       <!-- KinodynamicRRT -->
       <KinodynamicRRTStrategy label="KRRTQuery" growthFocus="0.05" minDist="0.001"
-        evaluateGoal="true" goalDist="5" query="2DState/2d.query"
+        evaluateGoal="true" goalDist="5" query="3DState/3d.query"
         dmLabel="weuclidean" nfLabel="Nearest" vcLabel="cd1"
         extenderLabel="FixedRandom" debug="false">
       </KinodynamicRRTStrategy>
 
       <!-- KinodynamicRRT -->
       <KinodynamicRRTStrategy label="KRRTNodes" growthFocus="0.05" minDist="0.000"
-        evaluateGoal="false" query="2DState/2d.query"
+        evaluateGoal="false" query="3DState/3d.query"
         dmLabel="weuclidean" nfLabel="Nearest" vcLabel="cd1"
         extenderLabel="FixedRandom" debug="false">
         <Evaluator label="NodesEval"/>
