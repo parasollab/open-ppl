@@ -124,6 +124,7 @@ class MPProblem : public MPProblemBase
 
     typedef MethodSet<MPTraits, MPStrategyMethod<MPTraits> > MPStrategySet;
     typedef typename MPStrategySet::MethodPointer MPStrategyPointer;
+    const MPStrategySet* const GetMPStrategies() const {return m_mpStrategies;}
     MPStrategyPointer GetMPStrategy(const string& _l){return m_mpStrategies->GetMethod(_l);}
     void AddMPStrategy(MPStrategyPointer _mps, const string& _l){m_mpStrategies->AddMethod(_mps, _l);}
 
