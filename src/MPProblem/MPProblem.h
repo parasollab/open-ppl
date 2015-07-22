@@ -79,6 +79,7 @@ class MPProblem : public MPProblemBase
 
     typedef MethodSet<MPTraits, SamplerMethod<MPTraits> > SamplerSet;
     typedef typename SamplerSet::MethodPointer SamplerPointer;
+    const SamplerSet* const GetSamplers() const {return m_samplers;}
     SamplerPointer GetSampler(const string& _l){return m_samplers->GetMethod(_l);}
     void AddSampler(SamplerPointer _s, const string& _l){m_samplers->AddMethod(_s, _l);}
 
