@@ -129,7 +129,7 @@ class ActiveMultiBody : public MultiBody {
     /// \return  A pair of configurations representing the minimum and maximum
     ///          DOF values allowed within the boundary.
     pair<vector<double>, vector<double>> GetCfgLimits(
-        const shared_ptr<Boundary>& _b) const;
+        const shared_ptr<const Boundary>& _b) const;
 
     ////////////////////////////////////////////////////////////////////////////
     /// @param _cfg Configuration dofs

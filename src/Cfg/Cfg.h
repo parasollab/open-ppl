@@ -92,15 +92,22 @@ class Cfg {
     const double& operator[](size_t _dof) const;
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////
     //
     //
     //    Access Methods : Retrieve and set related information of this class
     //
     //
-    //////////////////////////////////////////////////////////////////////////////////////////
-    ///Get internal storage of configuration
+    ////////////////////////////////////////////////////////////////////////////
+    /// \brief Get the internal storage of DOF data.
     const vector<double>& GetData() const {return m_v;}
+    ////////////////////////////////////////////////////////////////////////////
+    /// \brief Set the internal storage of DOF data.
+    void SetData(const vector<double>& _data);
+    ////////////////////////////////////////////////////////////////////////////
+    /// \brief Set the internal storage of joint DOF data.
+    /// \details Other DOFs will remain the same.
+    void SetJointData(const vector<double>& _data);
     ////////////////////////////////////////////////////////////////////////////
     /// \brief   Compute the normalized representation relative to the
     ///          environment bounds.
@@ -108,9 +115,15 @@ class Cfg {
     /// \param[in] _b The boundary to normalize against.
     /// \return  A copy of this with each DOF scaled from [_b.min, _b.max] to
     ///          [-1, 1].
-    vector<double> GetNormalizedData(const shared_ptr<Boundary> _b) const;
-    void SetData(const vector<double>& _data);
-    void SetJointData(const vector<double>& _data);
+    vector<double> GetNormalizedData(const shared_ptr<const Boundary> _b) const;
+    ////////////////////////////////////////////////////////////////////////////
+    /// \brief   Compute the standard representation from a form normalized
+    ///          relative to the environment bounds. This is the reverse of
+    ///          GetNormalizedData.
+    /// \param[in] _data The normalized DOF data relative to _b.
+    /// \param[in] _b    The normalization boundary.
+    void SetNormalizedData(const vector<double>& _data,
+        const shared_ptr<const Boundary> _b);
 
 
     //labeling of the Cfg and statistics

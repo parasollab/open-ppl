@@ -275,7 +275,7 @@ GetRandomCfg(shared_ptr<Boundary>& _bounds) {
 
 pair<vector<double>, vector<double>>
 ActiveMultiBody::
-GetCfgLimits(const shared_ptr<Boundary>& _bounds) const {
+GetCfgLimits(const shared_ptr<const Boundary>& _bounds) const {
   vector<double> min, max;
   min.reserve(DOF());
   max.reserve(DOF());

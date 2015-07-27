@@ -243,9 +243,39 @@ operator<<(ostream& _os, const Cfg& _cfg) {
   return _os;
 }
 
+void
+Cfg::
+SetData(const vector<double>& _data) {
+  if(_data.size() != DOF()) {
+    string msg = "Tried to set data for " + to_string(_data.size()) +
+        " DOFs, but robot has " + to_string(DOF()) + " DOFs!";
+    throw RunTimeException(WHERE, msg);
+  }
+  m_v = _data;
+  m_witnessCfg.reset();
+}
+
+void
+Cfg::
+SetJointData(const vector<double>& _data) {
+  if(_data.size() != GetNumOfJoints()) {
+    string msg = "Tried to set data for " + to_string(_data.size()) +
+        " joints, but robot has " + to_string(GetNumOfJoints()) + " joints!";
+    throw RunTimeException(WHERE, msg);
+  }
+  unsigned int j = 0;
+  for(size_t i = 0; i < m_dof[m_robotIndex]; ++i) {
+    if(m_dofTypes[m_robotIndex][i] == DofType::Joint) {
+      m_v[i]=_data[j];
+      j++;
+    }
+  }
+  m_witnessCfg.reset();
+}
+
 vector<double>
 Cfg::
-GetNormalizedData(const shared_ptr<Boundary> _b) const {
+GetNormalizedData(const shared_ptr<const Boundary> _b) const {
   pair<vector<double>, vector<double>> range = m_robots[m_robotIndex]->
       GetCfgLimits(_b);
   vector<double> normed;
@@ -258,47 +288,22 @@ GetNormalizedData(const shared_ptr<Boundary> _b) const {
 }
 
 void
-Cfg::SetData(const vector<double>& _data) {
-  if(_data.size() != m_dof[m_robotIndex]) {
-    cout << "\n\nERROR in Cfg::SetData, ";
-    cout << "DOF of data and Cfg are not equal " << _data.size() << "\t!=\t" << m_dof[m_robotIndex] << endl;
-    exit(-1);
+Cfg::
+SetNormalizedData(const vector<double>& _data,
+    const shared_ptr<const Boundary> _b) {
+  if(_data.size() != DOF()) {
+    string msg = "Tried to set data for " + to_string(_data.size()) +
+        " DOFs, but robot has " + to_string(DOF()) + " DOFs!";
+    throw RunTimeException(WHERE, msg);
   }
-  m_v = _data;
-  m_witnessCfg.reset();
+  pair<vector<double>, vector<double>> range = m_robots[m_robotIndex]->
+      GetCfgLimits(_b);
+  for(size_t i = 0; i < DOF(); ++i) {
+    double radius = (range.second[i] - range.first[i]) / 2.;
+    double center = range.first[i] + radius;
+    m_v[i] = _data[i] * radius + center;
+  }
 }
-
-//sets joint angle coordinates to be coordinates from _data + leaves other the same
-void
-Cfg::SetJointData(const vector<double>& _data) {
-  /*
-  if(_data.size() != m_dof) {
-  cout << "\n\nERROR in Cfg::SetData, ";
-  cout << "DOF of data and Cfg are not equal " << _data.size() << "\t!=\t" << m_dof << endl;
-    exit(-1);
-  }
-  */
-
-
-  unsigned int j=0;
-  for(size_t i = 0; i < m_dof[m_robotIndex]; ++i) {
-    if(m_dofTypes[m_robotIndex][i] == DofType::Joint){
-      if(j>=_data.size()){
-        cout << "\n\nERROR in Cfg::SetJointData, ";
-        cout << "DOF of data:"<<_data.size()<<" not equal to number of joints"<< endl;
-        exit(-1);
-      }
-
-      m_v[i]=_data[j];
-      j++;
-    }
-  }
-
-  //m_v = _data;
-  m_witnessCfg.reset();
-
-}
-
 
 bool
 Cfg::GetLabel(string _label) {
