@@ -87,7 +87,7 @@ template<class MPTraits>
 KinodynamicRRTStrategy<MPTraits>::
 KinodynamicRRTStrategy(MPProblemType* _problem, XMLNode& _node) :
   MPStrategyMethod<MPTraits>(_problem, _node),
-  m_query((Query<MPTraits>*)NULL) {
+  m_query( (Query<MPTraits>*)NULL ) {
     this->SetName("KinodynamicRRTStrategy");
     ParseXML(_node);
   }
@@ -239,6 +239,7 @@ Finalize() {
   vector<VID> path;
   if(m_query) {
     if(m_evaluateGoal) {
+      m_query->SetWritePath(true);
       if(m_query->PerformQuery(rdmp) && this->m_debug)
         cout << "Query successful!" << endl;
       else if(this->m_debug)

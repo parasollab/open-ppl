@@ -296,14 +296,6 @@ Query<MPTraits>::PerformQuery(const CfgType& _start, const CfgType& _goal, Roadm
   if(this->m_debug)
     cout << "*Q* There are " << ccs.size() << " CCs." << endl;
 
-  // Process node connection labels
-  vector<ConnectorPointer> connectionMethods;
-  if(m_nodeConnectionLabels.empty())
-    m_nodeConnectionLabels.push_back("");
-
-  for(auto&  label : m_nodeConnectionLabels)
-    connectionMethods.push_back(this->GetConnector(label));
-
   // Add start and goal to roadmap (if not already there)
   VID sVID, gVID;
   if(_rdmp->GetGraph()->IsVertex(_start))
@@ -339,8 +331,8 @@ Query<MPTraits>::PerformQuery(const CfgType& _start, const CfgType& _goal, Roadm
       if(this->m_debug)
         cout << "*Q* Connecting start to ccIt[" << distance(ccsBegin, ccIt)+1 << "]" << endl;
 
-      for(auto&  connector : connectionMethods)
-        connector->Connect(_rdmp, sVID, cc.begin(), cc.end());
+      for(auto& label : m_nodeConnectionLabels)
+        this->GetConnector(label)->Connect(_rdmp, sVID, cc.begin(), cc.end());
     }
 
     // Try to connect goal to cc
@@ -359,8 +351,8 @@ Query<MPTraits>::PerformQuery(const CfgType& _start, const CfgType& _goal, Roadm
       if(this->m_debug)
         cout << "*Q* Connecting goal to ccIt[" << distance(ccsBegin, ccIt)+1 << "]" << endl;
 
-      for(auto&  connector : connectionMethods)
-        connector->Connect(_rdmp, gVID, cc.begin(), cc.end());
+      for(auto& label : m_nodeConnectionLabels)
+        this->GetConnector(label)->Connect(_rdmp, gVID, cc.begin(), cc.end());
     }
 
     // Check if start and goal are connected to the same CC
