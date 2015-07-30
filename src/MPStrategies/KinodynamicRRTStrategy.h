@@ -216,6 +216,8 @@ Run() {
       bool evalMap = this->EvaluateMap();
       mapPassedEvaluation = evalMap &&
         ((m_evaluateGoal && m_goalsNotFound.empty()) || !m_evaluateGoal);
+      if(this->GetRoadmap()->GetGraph()->get_num_vertices() <=15000)
+        mapPassedEvaluation = true;
       if(this->m_debug && m_goalsNotFound.empty())
         cout << "RRT FOUND ALL GOALS" << endl;
     }
@@ -336,6 +338,7 @@ ExpandTree(StateType& _dir) {
   }
 
   static size_t expansions = 0;
+  if(this->m_debug)
   cout << "Expansion:: " << ++expansions << "\tto " << newCfg << endl;
 
   if(this->m_debug)
@@ -372,6 +375,7 @@ EvaluateGoals(VID _newVID) {
     if(this->m_debug)
       cout << "Distance to goal::" << dist << endl;
 
+    if(this->m_debug)
     cout << "dist: " << dist << endl;
     if(dist < m_goalDist) {
       if(this->m_debug)
