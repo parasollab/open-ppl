@@ -244,16 +244,22 @@ RoadmapGraph<VERTEX,WEIGHT>::GetVID(const VERTEX& _t) {
 template <class VERTEX, class WEIGHT>
 void
 RoadmapGraph<VERTEX,WEIGHT>::AddEdge(VID _v1, VID _v2, const WEIGHT& _w) {
+  GetVertex(_v1).Lock();
   this->add_edge(_v1, _v2, _w);
   VDAddEdge(GetVertex(_v1), GetVertex(_v2));
+  GetVertex(_v1).UnLock();
 }
 
 template <class VERTEX, class WEIGHT>
 void
 RoadmapGraph<VERTEX,WEIGHT>::AddEdge(VID _v1, VID _v2, const pair<WEIGHT,WEIGHT>& _w) {
+  GetVertex(_v1).Lock();
+  GetVertex(_v2).Lock();
   this->add_edge(_v1, _v2, _w.first);
   this->add_edge(_v2, _v1, _w.second);
   VDAddEdge(GetVertex(_v1), GetVertex(_v2));
+  GetVertex(_v2).UnLock();
+  GetVertex(_v1).UnLock();
 }
 
 template<class VERTEX, class WEIGHT>

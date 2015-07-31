@@ -348,8 +348,12 @@ ExpandTree(StateType& _dir) {
   // If good to go, add to roadmap
   if(dist >= m_minDist) {
     recentVID = g->AddVertex(newCfg);
-    g->GetVertex(recentVID).SetStat("Parent", neighbors[0].first);
-    g->AddEdge(nearVID, recentVID, lpOutput.m_edge);
+    if(nearVID != recentVID) {
+      g->GetVertex(recentVID).SetStat("Parent", neighbors[0].first);
+      g->AddEdge(nearVID, recentVID, lpOutput.m_edge);
+    }
+    else
+      recentVID = INVALID_VID;
   }
   else {
     if(this->m_debug)
