@@ -216,7 +216,7 @@ Run() {
       bool evalMap = this->EvaluateMap();
       mapPassedEvaluation = evalMap &&
         ((m_evaluateGoal && m_goalsNotFound.empty()) || !m_evaluateGoal);
-      if(this->GetRoadmap()->GetGraph()->get_num_vertices() <=15000)
+      if(this->GetRoadmap()->GetGraph()->get_num_vertices() >=15000)
         mapPassedEvaluation = true;
       if(this->m_debug && m_goalsNotFound.empty())
         cout << "RRT FOUND ALL GOALS" << endl;

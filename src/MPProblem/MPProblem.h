@@ -79,6 +79,7 @@ class MPProblem : public MPProblemBase
 
     typedef MethodSet<MPTraits, SamplerMethod<MPTraits> > SamplerSet;
     typedef typename SamplerSet::MethodPointer SamplerPointer;
+    const SamplerSet* const GetSamplers() const {return m_samplers;}
     SamplerPointer GetSampler(const string& _l){return m_samplers->GetMethod(_l);}
     void AddSampler(SamplerPointer _s, const string& _l){m_samplers->AddMethod(_s, _l);}
 
@@ -124,6 +125,7 @@ class MPProblem : public MPProblemBase
 
     typedef MethodSet<MPTraits, MPStrategyMethod<MPTraits> > MPStrategySet;
     typedef typename MPStrategySet::MethodPointer MPStrategyPointer;
+    const MPStrategySet* const GetMPStrategies() const {return m_mpStrategies;}
     MPStrategyPointer GetMPStrategy(const string& _l){return m_mpStrategies->GetMethod(_l);}
     void AddMPStrategy(MPStrategyPointer _mps, const string& _l){m_mpStrategies->AddMethod(_mps, _l);}
 

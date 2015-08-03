@@ -123,6 +123,13 @@ class ActiveMultiBody : public MultiBody {
     /// @brief Sample random configuration in boundary
     /// @param _boundary Boundary
     vector<double> GetRandomCfg(shared_ptr<Boundary>& _boundary);
+    ////////////////////////////////////////////////////////////////////////////
+    /// \brief   Get the DOF ranges for a given boundary.
+    /// \param[in] _b The boundary in question.
+    /// \return  A pair of configurations representing the minimum and maximum
+    ///          DOF values allowed within the boundary.
+    pair<vector<double>, vector<double>> GetCfgLimits(
+        const shared_ptr<const Boundary>& _b) const;
 
     ////////////////////////////////////////////////////////////////////////////
     /// @param _cfg Configuration dofs

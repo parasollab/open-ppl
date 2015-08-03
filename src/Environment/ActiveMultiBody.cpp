@@ -273,6 +273,46 @@ GetRandomCfg(shared_ptr<Boundary>& _bounds) {
   return v;
 }
 
+pair<vector<double>, vector<double>>
+ActiveMultiBody::
+GetCfgLimits(const shared_ptr<const Boundary>& _bounds) const {
+  vector<double> min, max;
+  min.reserve(DOF());
+  max.reserve(DOF());
+  if(m_baseType == FreeBody::BodyType::Planar ||
+      m_baseType == FreeBody::BodyType::Volumetric) {
+    size_t posDOF = m_baseType == FreeBody::BodyType::Volumetric ? 3 : 2;
+    for(size_t i = 0; i < posDOF; i++) {
+      pair<double, double> range = _bounds->GetRange(i);
+      min.push_back(range.first);
+      max.push_back(range.second);
+    }
+    if(m_baseMovement == FreeBody::MovementType::Rotational) {
+      size_t oriDOF = m_baseType == FreeBody::BodyType::Volumetric ? 3 : 1;
+      for(size_t i = 0; i < oriDOF; i++) {
+        min.push_back(-1);
+        max.push_back(1);
+      }
+    }
+  }
+  for(auto& joint : m_joints) {
+    if(joint->GetConnectionType() == Connection::JointType::Revolute) {
+      pair<double, double> r = joint->GetJointLimits(0);
+      min.push_back(r.first);
+      max.push_back(r.second);
+    }
+    else if(joint->GetConnectionType() == Connection::JointType::Spherical) {
+      pair<double, double> r = joint->GetJointLimits(0);
+      min.push_back(r.first);
+      max.push_back(r.second);
+      r = joint->GetJointLimits(1);
+      min.push_back(r.first);
+      max.push_back(r.second);
+    }
+  }
+  return make_pair(move(min), move(max));
+}
+
 bool
 ActiveMultiBody::
 InCSpace(const vector<double>& _cfg, shared_ptr<Boundary>& _b) {
