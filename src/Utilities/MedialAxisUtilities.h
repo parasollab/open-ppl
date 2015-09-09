@@ -10,6 +10,7 @@
 #include "Environment/SurfaceMultiBody.h"
 #include "LocalPlanners/StraightLine.h"
 #include "ValidityCheckers/CollisionDetection/CDInfo.h"
+#include "Environment/ActiveMultiBody.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup Utilities
