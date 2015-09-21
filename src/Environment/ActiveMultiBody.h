@@ -90,6 +90,13 @@ class ActiveMultiBody : public MultiBody {
     size_t NumJoints() const {return m_joints.size();}
 
     ////////////////////////////////////////////////////////////////////////////
+    /// @return const_iterator to begin of joints data
+    vector<Joint>::const_iterator joints_begin() const { return m_joints.begin(); }
+    ////////////////////////////////////////////////////////////////////////////
+    /// @return const_iterator to end of joints data
+    vector<Joint>::const_iterator joints_end() const { return m_joints.end(); }
+
+    ////////////////////////////////////////////////////////////////////////////
     /// @return DOF type information of robot
     const vector<DofType>& GetDOFTypes() const {return m_dofTypes;}
     ////////////////////////////////////////////////////////////////////////////
@@ -113,6 +120,16 @@ class ActiveMultiBody : public MultiBody {
     /// @brief Place robot at @p _v
     /// @param _v Configuration DOF parameters
     void Configure(const vector<double>& _v);
+    ////////////////////////////////////////////////////////////////////////////
+    /// @brief Place robot at @p _v for DOF and _t for theta values
+    /// @param _v Configuration DOF parameters
+    /// @param _t Configuration theta parameters
+    ///
+    /// This version is to support functionality in the folding code where
+    /// we need to configure the theta values as well.  Note that they are not
+    /// stored in _v as full dofs since they are not treated as such.  Instead
+    /// they are computed as a function of _v and other bio specific things.
+    void Configure(const vector<double>& _v, const vector<double>& _t);
 
     ////////////////////////////////////////////////////////////////////////////
     /// @brief Compute rendering transforms for robot at @p _v
@@ -124,9 +141,9 @@ class ActiveMultiBody : public MultiBody {
     /// @param _boundary Boundary
     vector<double> GetRandomCfg(shared_ptr<Boundary>& _boundary);
     ////////////////////////////////////////////////////////////////////////////
-    /// \brief   Get the DOF ranges for a given boundary.
-    /// \param[in] _b The boundary in question.
-    /// \return  A pair of configurations representing the minimum and maximum
+    /// @brief   Get the DOF ranges for a given boundary.
+    /// @param[in] _b The boundary in question.
+    /// @return  A pair of configurations representing the minimum and maximum
     ///          DOF values allowed within the boundary.
     pair<vector<double>, vector<double>> GetCfgLimits(
         const shared_ptr<const Boundary>& _b) const;
