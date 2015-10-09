@@ -92,8 +92,7 @@ class MultiBody {
 
     /// @}
     ////////////////////////////////////////////////////////////////////////////
-
-  protected:
+    
     ////////////////////////////////////////////////////////////////////////////
     /// @param _body Body to add
     void AddBody(const shared_ptr<Body>& _body);
@@ -102,6 +101,8 @@ class MultiBody {
     /// @brief Compute information, including center of mass, sphere, box, and
     ///        range
     void FindMultiBodyInfo();
+
+  protected:
 
     MultiBodyType m_multiBodyType;     ///< MultiBody type
 

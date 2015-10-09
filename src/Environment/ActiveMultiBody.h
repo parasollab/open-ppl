@@ -84,6 +84,10 @@ class ActiveMultiBody : public MultiBody {
     ////////////////////////////////////////////////////////////////////////////
     /// @return Base movement type
     FreeBody::MovementType GetBaseMovementType() const {return m_baseMovement;}
+    
+    ////////////////////////////////////////////////////////////////////////////
+    /// @void set Base movement type
+    void SetBaseMovementType(FreeBody::MovementType _mt) {m_baseMovement=_mt;}
 
     ////////////////////////////////////////////////////////////////////////////
     /// @return Number of Connection in this multibody
@@ -170,11 +174,21 @@ class ActiveMultiBody : public MultiBody {
 
     /// @}
     ////////////////////////////////////////////////////////////////////////////
-
-  private:
+    
     ////////////////////////////////////////////////////////////////////////////
     /// @param _body Body to add
     void AddBody(const shared_ptr<FreeBody>& _body);
+
+
+    ////////////////////////////////////////////////////////////////////////////
+    /// @param _body Body to set as base body
+    /// @brief It is used to set some things that get set by default in the Read
+    /// function.
+    /// This code is used in GB. If touched, someone in GB should verify change.
+    void SetBaseBody(const shared_ptr<FreeBody>& _body);
+
+
+  private:
 
     vector<shared_ptr<FreeBody>> m_freeBody; ///< All free body
     vector<DofType> m_dofTypes;              ///< DOF type of robot motions

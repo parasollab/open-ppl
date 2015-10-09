@@ -572,3 +572,12 @@ AddBody(const shared_ptr<FreeBody>& _body) {
   m_freeBody.push_back(_body);
   MultiBody::AddBody(_body);
 }
+
+void
+ActiveMultiBody::
+SetBaseBody(const shared_ptr<FreeBody>& _body) {
+  m_baseBody = _body;
+  m_baseIndex = 0;
+  m_baseType = _body->GetBodyType();
+  m_baseMovement = _body->GetMovementType();
+}

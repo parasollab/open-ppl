@@ -33,8 +33,8 @@ class SurfaceSampler : public SamplerMethod<MPTraits> {
     vector<string> m_surfacesToIgnore;
 
     //density based
-    bool m_SampleByDensity;
-    double m_DensityPercent;
+    bool m_sampleByDensity;
+    double m_densityPercent;
 
 
   public:
@@ -44,16 +44,18 @@ class SurfaceSampler : public SamplerMethod<MPTraits> {
     typedef typename MPProblemType::ValidityCheckerPointer ValidityCheckerPointer;
 
     SurfaceSampler(string _vcLabel="", double _maxAttempts=500, double _closeDist=0.1, double _propForMA=0.0, double _propForObs=0.0, int _obsSampleAttemptsPerIter=10, double _maxObsClearance=20.0, double _minObsClearance=2.0, double _overallMinClearanceReq=0.5, double _samplingdensity=-1.0, string _surfacesStrToIgnore="")
-      : m_vcLabel(_vcLabel), m_maxAttempts(_maxAttempts), m_closeDist(_closeDist), m_propForMA(_propForMA), m_propForObs(_propForObs), m_obsSampleAttemptsPerIter(_obsSampleAttemptsPerIter), m_maxObsClearance(_maxObsClearance), m_minObsClearance(_minObsClearance), m_overallMinClearanceReq(_overallMinClearanceReq), m_surfacesStrToIgnore(_surfacesStrToIgnore), m_DensityPercent(_samplingdensity) {
+      : m_vcLabel(_vcLabel), m_maxAttempts(_maxAttempts), m_closeDist(_closeDist), m_propForMA(_propForMA), m_propForObs(_propForObs), m_obsSampleAttemptsPerIter(_obsSampleAttemptsPerIter), m_maxObsClearance(_maxObsClearance), m_minObsClearance(_minObsClearance), m_overallMinClearanceReq(_overallMinClearanceReq), m_surfacesStrToIgnore(_surfacesStrToIgnore), m_densityPercent(_samplingdensity) {
       this->SetName("SurfaceSampler");
       m_surfacesToIgnore = GetTags(m_surfacesStrToIgnore,",");
-      m_SampleByDensity=false;
-      //m_DensityPercent=0.85;
-      //m_DensityPercent=0.92;
-      if( m_DensityPercent > 0 ) m_SampleByDensity = true;
-      if( m_DensityPercent > 1 ) {
-	 cerr << "Sampling density set to larger than 1...capping to 1. " << endl;
-	 m_DensityPercent = 0.99;
+      m_sampleByDensity=false;
+      //m_densityPercent=0.85;
+      //m_densityPercent=0.92;
+      cout << " Surface Sampling density: " << m_densityPercent << endl;
+      if( m_densityPercent > 0 ) 
+	m_sampleByDensity = true;
+      if( m_densityPercent > 1 ) {
+	cerr << "Sampling density set to larger than 1...capping to 1. " << endl;
+	m_densityPercent = 0.99;
       }
     }
 
@@ -93,7 +95,7 @@ class SurfaceSampler : public SamplerMethod<MPTraits> {
         << "\tmaxObsClearance = " << m_maxObsClearance
 	<< "\toverallMinClearanceReq = " << m_overallMinClearanceReq << endl;
       _out << "\tcloseDist = " << m_closeDist
-        << "\tsamplingdensity = " << m_DensityPercent<< endl;
+        << "\tsamplingdensity = " << m_densityPercent<< endl;
       _out << "\tsurfacesToIgnore = [";
       for(int i=0; i<(int)m_surfacesToIgnore.size();i++) {
 	 _out << m_surfacesToIgnore[i];
@@ -144,7 +146,7 @@ class SurfaceSampler : public SamplerMethod<MPTraits> {
       //mau.SetDebug(true);
       for(int i=-1; i<numSurfaces; i++) {
 	double thisSurfaceClearance = m_closeDist;
-	bool thisSurfaceSampleByDensity = m_SampleByDensity;
+	bool thisSurfaceSampleByDensity = m_sampleByDensity;
 	if( i==-1 ) thisSurfaceSampleByDensity = false;
 	cout << " Sampling for surface: " << i << " density sampling: " << thisSurfaceSampleByDensity << endl;
 	if( this->m_debug) cout << " Sampling for surface: " << i << endl;
@@ -171,8 +173,8 @@ class SurfaceSampler : public SamplerMethod<MPTraits> {
 	  double curAreaCovered=0;
 	  double density = 0;
 	  double startClearance = thisSurfaceClearance;
-	  while (density < m_DensityPercent ) {
-            for(int t=0; t<m_maxAttempts && density<m_DensityPercent; t++) {
+	  while (density < m_densityPercent ) {
+            for(int t=0; t<m_maxAttempts && density<m_densityPercent; t++) {
 	      CfgType tmp;
 	      tmp.SetSurfaceID(i);
 	      tmp.GetRandomCfg(env,_boundary);

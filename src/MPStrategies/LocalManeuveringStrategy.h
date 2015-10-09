@@ -553,6 +553,7 @@ LocalManeuveringStrategy<MPTraits>::WriteGBPathConfigurations(string _outputFile
 template<class MPTraits>
 void
 LocalManeuveringStrategy<MPTraits>::Initialize(){
+/*
   if (this->m_debug) cout << "In LocalManeuveringStrategy::Initialize" << endl;
 #ifndef PMPSSSurfaceMult
   cerr << "LocalManeuveringStrategy only defined for SSSurfaceMult configuration" << endl;
@@ -647,7 +648,7 @@ LocalManeuveringStrategy<MPTraits>::Initialize(){
   }
   m_planTimes.assign(numCfgs,make_pair(0,0));
 
-
+*/
 }//end initialize function
 
 template<class MPTraits>

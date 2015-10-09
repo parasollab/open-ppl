@@ -104,6 +104,11 @@ class Body {
     /// @{
 
     ////////////////////////////////////////////////////////////////////////////
+    /// @param _poly New polyhedron to define this body
+    /// 
+    /// This code is used in GB. If touched, someone in GB should verify change.
+    void SetPolyhedron(GMSPolyhedron& _poly);
+    ////////////////////////////////////////////////////////////////////////////
     /// @return Polyhedron in model coordinates
     GMSPolyhedron& GetPolyhedron() {return m_polyhedron;}
     ////////////////////////////////////////////////////////////////////////////
@@ -206,14 +211,6 @@ class Body {
 
     /// @}
     ////////////////////////////////////////////////////////////////////////////
-
-  protected:
-    ////////////////////////////////////////////////////////////////////////////
-    /// @brief Read optional color or texture
-    /// @param _is Input stream
-    /// @param _cbs Counting buffer stream
-    void ReadOptions(istream& _is, CountingStreamBuffer& _cbs);
-
     ////////////////////////////////////////////////////////////////////////////
     /// @brief Calculate center of mass in world coordinates
     ///
@@ -225,6 +222,14 @@ class Body {
     /// modify this to consider the length of edges, which is still an
     /// approximation.
     void ComputeCenterOfMass();
+
+  protected:
+    ////////////////////////////////////////////////////////////////////////////
+    /// @brief Read optional color or texture
+    /// @param _is Input stream
+    /// @param _cbs Counting buffer stream
+    void ReadOptions(istream& _is, CountingStreamBuffer& _cbs);
+
 
     ////////////////////////////////////////////////////////////////////////////
     /// @brief Determine bounding box

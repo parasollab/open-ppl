@@ -153,6 +153,51 @@ Body::Read() {
   FindBoundingBox();
 }
 
+
+void 
+Body::SetPolyhedron(GMSPolyhedron& _poly){
+  m_polyhedron=_poly; 
+  m_worldPolyhedron=_poly; 
+  m_centerOfMassAvailable=false; 
+  m_worldPolyhedronAvailable=false;
+  
+  GMSPolyhedron poly;
+  poly = GetPolyhedron();
+  double minx, miny, minz, maxx, maxy, maxz;
+  minx = maxx = poly.m_vertexList[0][0];
+  miny = maxy = poly.m_vertexList[0][1];
+  minz = maxz = poly.m_vertexList[0][2];
+  for(size_t i = 1 ; i < poly.m_vertexList.size() ; i++){
+    if(poly.m_vertexList[i][0] < minx)
+      minx = poly.m_vertexList[i][0];
+    else if(maxx < poly.m_vertexList[i][0])
+      maxx = poly.m_vertexList[i][0];
+
+    if(poly.m_vertexList[i][1] < miny)
+      miny = poly.m_vertexList[i][1];
+    else if(maxy < poly.m_vertexList[i][1])
+      maxy = poly.m_vertexList[i][1];
+
+    if(poly.m_vertexList[i][2] < minz)
+      minz = poly.m_vertexList[i][2];
+    else if(maxz < poly.m_vertexList[i][2])
+      maxz = poly.m_vertexList[i][2];
+  }
+
+  m_bbPolyhedron.m_vertexList = vector<Vector3d>(8);
+  m_bbWorldPolyhedron.m_vertexList = vector<Vector3d>(8);
+  m_bbPolyhedron.m_vertexList[0] = Vector3d(minx, miny, minz);
+  m_bbPolyhedron.m_vertexList[1] = Vector3d(minx, miny, maxz);
+  m_bbPolyhedron.m_vertexList[2] = Vector3d(minx, maxy, minz);
+  m_bbPolyhedron.m_vertexList[3] = Vector3d(minx, maxy, maxz);
+  m_bbPolyhedron.m_vertexList[4] = Vector3d(maxx, miny, minz);
+  m_bbPolyhedron.m_vertexList[5] = Vector3d(maxx, miny, maxz);
+  m_bbPolyhedron.m_vertexList[6] = Vector3d(maxx, maxy, minz);
+  m_bbPolyhedron.m_vertexList[7] = Vector3d(maxx, maxy, maxz);
+
+  FindBoundingBox();
+}
+
 void
 Body::
 ReadOptions(istream& _is, CountingStreamBuffer& _cbs) {

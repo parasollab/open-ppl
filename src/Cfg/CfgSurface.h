@@ -34,6 +34,9 @@ class CfgSurface : public Cfg {
     ///Do nothing destructor
     virtual ~CfgSurface();
 
+    //Init CfgSurface
+    void InitCfgSurface();
+
     //assignment operator
     CfgSurface& operator=(const CfgSurface& _cfg);
 
@@ -76,13 +79,14 @@ class CfgSurface : public Cfg {
 
     virtual const string GetName() const {return "CfgSurface";}
 
-    ///Get internal storage of configuration
-    vector<double> GetData() const;
-    void SetData(const vector<double>& _data);
+    ///Set internal storage of configuration
+    virtual void SetData(const vector<double>& _data);
+
+    void SetDataFromThis();
 
     //Get position in the form of Point2d
     const Point2d& GetPos() const {return m_pt;}
-    void SetPos(const Point2d& _p){m_pt = _p;}
+    void SetPos(const Point2d& _p){m_pt = _p; SetDataFromThis(); }
 
     //Get position in the form of Point2d
     double GetHeight() const {return m_h;}
