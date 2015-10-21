@@ -273,6 +273,7 @@
         <Evaluator label="FreqNodeEval"/>
         <Evaluator label="Query"/>
       </ComposeEvaluator>
+      <TimeEvaluator label="TimeEval" timeout="10"/>
     </MapEvaluators>
 
     <!-- For **UAStrategy use** -->

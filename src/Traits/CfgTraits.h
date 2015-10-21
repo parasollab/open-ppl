@@ -104,6 +104,7 @@
 #include "MapEvaluators/PrintMapEvaluation.h"
 #include "MapEvaluators/Query.h"
 #include "MapEvaluators/ReplanningEvaluation.h"
+#include "MapEvaluators/TimeEvaluator.h"
 #include "MapEvaluators/TrueEvaluation.h"
 
 //mp strategies includes
@@ -284,6 +285,7 @@ struct MPTraits {
     PrintMapEvaluation<MPTraits>,
     Query<MPTraits>,
     ReplanningEvaluation<MPTraits>,
+    TimeEvaluator<MPTraits>,
     TrueEvaluation<MPTraits>
       > MapEvaluatorMethodList;
 
