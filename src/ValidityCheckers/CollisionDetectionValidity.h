@@ -79,6 +79,17 @@ class CollisionDetectionValidity : public ValidityCheckerMethod<MPTraits> {
     /// @return Collision
     bool IsInSelfCollision(CDInfo& _cdInfo, shared_ptr<ActiveMultiBody> _rob,
         const string& _callName);
+
+    ////////////////////////////////////////////////////////////////////////////
+    /// @brief Check inter-robot collision
+    /// @param[out] _cdInfo CDInfo
+    /// @param _rob ActiveMultiBody of robot
+    /// @param _otherRobot ActiveMultiBody of the other robot to check
+    /// @param _callName Function calling validity checker
+    /// @return Collision
+    bool IsInterRobotCollision(CDInfo& _cdInfo, shared_ptr<ActiveMultiBody> _rob,
+        shared_ptr<ActiveMultiBody> _otherRobot, const string& _callName);
+
     ////////////////////////////////////////////////////////////////////////////
     /// @brief Check collision between robot and one obstacle
     /// @param[out] _cdInfo CDInfo
@@ -177,7 +188,8 @@ IsValidImpl(CfgType& _cfg, CDInfo& _cdInfo, const string& _callName) {
 
 template<class MPTraits>
 bool
-CollisionDetectionValidity<MPTraits>::IsInCollision(CDInfo& _cdInfo,
+CollisionDetectionValidity<MPTraits>::
+IsInCollision(CDInfo& _cdInfo,
     size_t _robotIndex,  const string& _callName) {
 
   _cdInfo.ResetVars(_cdInfo.m_retAllInfo);
@@ -193,6 +205,23 @@ CollisionDetectionValidity<MPTraits>::IsInCollision(CDInfo& _cdInfo,
     _cdInfo.m_collidingObstIndex = -1;
     return true;
   }
+
+#ifdef PMPCfgMultiRobot
+  //check inter-robot collision for multiple robot case
+  //for performance issue, check only robots that have higher robotIndex
+  size_t numRobot = env->NumRobots();
+  for (size_t n = _robotIndex+1; n < numRobot; n++) {
+    shared_ptr<ActiveMultiBody> otherRobot = env->GetRobot(n);
+    bool collisionFound = IsInterRobotCollision(_cdInfo, robot, otherRobot, _callName);
+    if(collisionFound) {
+      if(!_cdInfo.m_retAllInfo)
+        return true;
+      _cdInfo.m_collidingRobtIndex.push_back(make_pair(_robotIndex, n));
+    }
+  }
+  if(_cdInfo.m_collidingRobtIndex.size() > 0)
+    return true;
+#endif
 
   //check obstacle collisions
   size_t numObst = env->NumObstacles();
@@ -220,7 +249,7 @@ CollisionDetectionValidity<MPTraits>::IsInCollision(CDInfo& _cdInfo,
 
   return retVal;
 }
-
+  
 ////////////////////////////////////////////////////////////////////////////////
 /// @param _tp Collision computation type
 /// @param _coll Collision detection output
@@ -267,6 +296,31 @@ IsInSelfCollision(CDInfo& _cdInfo, shared_ptr<ActiveMultiBody> _rob,
   }
 
   return ReturnCollision(tp, false);
+}
+
+template<class MPTraits>
+bool
+CollisionDetectionValidity<MPTraits>::
+IsInterRobotCollision(CDInfo& _cdInfo, 
+    shared_ptr<ActiveMultiBody> _rob,
+    shared_ptr<ActiveMultiBody> _otherRobot, const string& _callName) {
+
+  this->GetStatClass()->IncNumCollDetCalls(m_cdMethod->GetName(), _callName);
+
+  size_t numBody = _rob->NumFreeBody();
+  size_t numOtherBody = _otherRobot->NumFreeBody();
+
+  for(size_t i = 0; i < numBody; ++i) {
+    for(size_t j = 0; j < numOtherBody; ++j) {
+      bool collisionFound = 
+        m_cdMethod->IsInCollision(_rob->GetFreeBody(i),
+            _otherRobot->GetFreeBody(j), _cdInfo);
+
+      if(collisionFound)
+        return true;
+    }
+  }
+  return false;
 }
 
 template<class MPTraits>
