@@ -97,7 +97,7 @@ Sampler(CfgType& _cfg, shared_ptr<Boundary> _boundary,
   //and only check validity with obstacles. Otherwise have both conditions.
   bool cfg1Free;
   if(!m_useBoundary) {
-    if(!env->InBounds(cfg1, _boundary)){
+    if(!env->InBounds(cfg1, _boundary)) {
       if(this->m_debug){
         VDAddTempCfg(cfg1, false);
         VDComment("GaussianSampler::Attempt out of bounds.");
@@ -112,7 +112,7 @@ Sampler(CfgType& _cfg, shared_ptr<Boundary> _boundary,
       vc->IsValid(cfg1, callee);
   }
 
-  if(this->m_debug){
+  if(this->m_debug) {
     cout << "cfg1::" << cfg1 << endl;
     cout << "cfg1Free::" << cfg1Free << endl;
     VDAddTempCfg(cfg1, cfg1Free);
@@ -142,7 +142,7 @@ Sampler(CfgType& _cfg, shared_ptr<Boundary> _boundary,
       vc->IsValid(cfg2, callee);
   }
 
-  if(this->m_debug){
+  if(this->m_debug) {
     cout << "incr::" << incr << endl;
     cout << "cfg2::" << cfg2 << endl;
     VDAddTempRay(incr);
@@ -161,7 +161,7 @@ Sampler(CfgType& _cfg, shared_ptr<Boundary> _boundary,
     _result.push_back(gen);
     _collision.push_back(col);
 
-    if(this->m_debug){
+    if(this->m_debug) {
       cout << "Generated::" << gen << endl; //May be repetitive..
       VDComment("GaussianSampling::Successful");
     }

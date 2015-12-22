@@ -73,7 +73,7 @@
         clearanceType="exact" penetrationType="exact"
         useBBX="true" debug="false" positional="true"
         epsilon="0.01" historyLength="100"/>
-      <GridSampler label="Grid" vcLabel="cd1" useBBX="true">
+      <GridSampler label="Grid" vcLabel="cd1">
         <Dimension index="0" points="10"/>
         <Dimension index="1" points="5"/>
         <Dimension index="2" points="5"/>

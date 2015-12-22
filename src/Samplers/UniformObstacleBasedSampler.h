@@ -93,7 +93,7 @@ Sampler(CfgType& _cfg, shared_ptr<Boundary> _boundary,
     margin = env->GetRobot(_cfg.GetRobotIndex())->GetMaxAxisRange();
 
   vector<pair<double, double> > origBoundary;
-  for(size_t i=0; i<3; i++)
+  for(size_t i = 0; i < 3; i++)
     origBoundary.push_back(_boundary->GetRange(i));
 
   env->ResetBoundary(margin, _cfg.GetRobotIndex());
@@ -134,7 +134,7 @@ Sampler(CfgType& _cfg, shared_ptr<Boundary> _boundary,
 
   inter.FindIncrement(cfg1, cfg2, &nTicks, positionRes, orientationRes);
   env->GetBoundary()->ResetBoundary(origBoundary, 0);
-  for(int i=1; i<nTicks; i++) {
+  for(int i = 1; i < nTicks; i++) {
     tick += inter;
     tickFree = (vc->IsValid(tick, callee)) && (!vc->IsInsideObstacle(tick));
     if(m_useBoundary)
@@ -151,7 +151,7 @@ Sampler(CfgType& _cfg, shared_ptr<Boundary> _boundary,
         tempFree = tickFree;
         temp = tick;
       }
-      else if(tickFree && env->InBounds(tick, _boundary)) {       //tickFree
+      else if(tickFree && env->InBounds(tick, _boundary)) { //tickFree
         _result.push_back(tick);
         tempFree = tickFree;
         temp = tick;

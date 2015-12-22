@@ -67,7 +67,7 @@ Sampler(CfgType& _cfg, shared_ptr<Boundary> _boundary,
 
   //Is configuration within environment boundary?
   bool inBBX = env->InBounds(_cfg);
-  if(this->m_debug){
+  if(this->m_debug) {
     cout << "_cfg::" << _cfg << endl;
     cout << "InBoudary::" << inBBX << endl;
   }
@@ -75,7 +75,7 @@ Sampler(CfgType& _cfg, shared_ptr<Boundary> _boundary,
   //Good. Now determine validity.
   if(inBBX) {
     bool isValid = vcm->IsValid(_cfg, callee);
-    if(this->m_debug){
+    if(this->m_debug) {
       cout << "IsValid::" << isValid << endl;
       VDAddTempCfg(_cfg, isValid);
       if(isValid)
@@ -97,7 +97,7 @@ Sampler(CfgType& _cfg, shared_ptr<Boundary> _boundary,
     }
   }
   //Sampled outside of boundary
-  else if(this->m_debug){
+  else if(this->m_debug) {
     cout << "Attempt outside of boundary" << endl;
     VDAddTempCfg(_cfg, false);
     VDComment("UniformSampling::Cfg outside of boundary");

@@ -35,7 +35,9 @@ struct ActivityAll : public ActivityType<CfgType> {
 
   ActivityAll(const CfgType& _cfg) : m_jointCount(_cfg.DOF()) {}
 
-  virtual boost::dynamic_bitset<> Active() { return boost::dynamic_bitset<>(m_jointCount).set(); }
+  virtual boost::dynamic_bitset<> Active() {
+    return boost::dynamic_bitset<>(m_jointCount).set();
+  }
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -49,7 +51,8 @@ struct ActivityNumber : public ActivityType<CfgType> {
   const size_t m_jointCount;
   const size_t m_number;
 
-  ActivityNumber(const CfgType& _cfg, size_t _number) : m_jointCount(_cfg.DOF()), m_number(min(_number, m_jointCount)) {}
+  ActivityNumber(const CfgType& _cfg, size_t _number)
+    : m_jointCount(_cfg.DOF()), m_number(min(_number, m_jointCount)) {}
 
   virtual boost::dynamic_bitset<> Active() {
     boost::dynamic_bitset<> bitset(m_jointCount);
@@ -67,7 +70,8 @@ struct ActivityNumber : public ActivityType<CfgType> {
 ////////////////////////////////////////////////////////////////////////////////
 template<class CfgType>
 struct ActivityFraction : public ActivityNumber<CfgType> {
-  ActivityFraction(const CfgType& _cfg, double _fraction) : ActivityNumber<CfgType>(_cfg, _fraction * _cfg.DOF()) {}
+  ActivityFraction(const CfgType& _cfg, double _fraction)
+    : ActivityNumber<CfgType>(_cfg, _fraction * _cfg.DOF()) {}
 };
 
 
@@ -111,7 +115,8 @@ struct DistributionConstant : public DistributionType {
 struct DistributionUniform : public DistributionType {
   const double m_low, m_high;
 
-  DistributionUniform(double _low, double _high) : m_low(min(_low,_high)), m_high(max(_low,_high)) {}
+  DistributionUniform(double _low, double _high)
+    : m_low(min(_low,_high)), m_high(max(_low,_high)) {}
 
   virtual double Random() { return m_low + DRand() * m_high; }
   friend ostream& operator<<(ostream& _os, const DistributionUniform& _d);
@@ -336,7 +341,8 @@ class SimilarStructureSampler : public SamplerMethod<MPTraits> {
 
       if(m_doAlignment) {
         effects[j] = rmsd.RMSD(original_coords, altered_coords, original_coords.size());
-      } else {
+      }
+      else {
         double accumulator = 0.0;
         for(size_t c = 0; c < original_coords.size(); ++c) {
           accumulator += (original_coords[c] - altered_coords[c]).normsqr();
@@ -385,11 +391,14 @@ class SimilarStructureSampler : public SamplerMethod<MPTraits> {
   virtual void InitializeJointActivity(const CfgType& _cfg, Environment* _env) {
     if(m_jointActivityString == "all") {
       m_jointActivity = shared_ptr<ActivityType<CfgType> >(new ActivityAll<CfgType>(_cfg));
-    } else if(m_jointActivityString == "number") {
+    }
+    else if(m_jointActivityString == "number") {
       m_jointActivity = shared_ptr<ActivityType<CfgType> >(new ActivityNumber<CfgType>(_cfg, m_jointActivityNumberActive));
-    } else if(m_jointActivityString == "fraction") {
+    }
+    else if(m_jointActivityString == "fraction") {
       m_jointActivity = shared_ptr<ActivityType<CfgType> >(new ActivityFraction<CfgType>(_cfg, m_jointActivityFractionActive));
-    } else {
+    }
+    else {
       cerr << "ERROR: Invalid ActivityType!" << endl;
       exit(-1);
     }

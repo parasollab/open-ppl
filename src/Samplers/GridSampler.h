@@ -40,21 +40,19 @@ class GridSampler : public SamplerMethod<MPTraits> {
 
   private:
     void GetCoordLocation(int _iter, size_t _totalCell,
-        map<size_t,size_t>& _coords, map<size_t,int> tempSize);
+        map<size_t,size_t>& _coords, map<size_t,int> _tempSize);
 
     void GetRealLocation(map<size_t,double>& _locations,
         map<size_t,size_t> _coordinates, shared_ptr<Boundary>  _boundary);
 
     string m_vcLabel; // Validity checker method
     map<size_t, size_t> m_numPoints; // Map of dimension to number of grid points
-    bool m_useBoundary; // Is the bounding box an obstacle?
 };
 
 template<class MPTraits>
 GridSampler<MPTraits>::
 GridSampler(string _vcm, map<size_t, size_t> _numPoints, bool _useBoundary)
-  : m_vcLabel(_vcm), m_numPoints(_numPoints),
-  m_useBoundary(_useBoundary) {
+  : m_vcLabel(_vcm), m_numPoints(_numPoints) {
     this->SetName("GridSampler");
   }
 
@@ -84,8 +82,6 @@ ParseXML(XMLNode& _node) {
   }
 
   m_vcLabel = _node.Read("vcLabel", true, "", "Validity test method");
-  m_useBoundary = _node.Read("useBBX", true, false,
-      "Use bounding box as obstacle");
 }
 
 // Prints options
@@ -95,7 +91,6 @@ GridSampler<MPTraits>::
 Print(ostream& _os) const {
   SamplerMethod<MPTraits>::Print(_os);
   _os << "\tvcLabel = " << m_vcLabel << endl;
-  _os << "\tuseBoundary = " << m_useBoundary << endl;
   _os << "\tnumPoints (index, points):" << endl;
   for(auto& dim : m_numPoints)
     _os << "\t\t" << dim.first << ", " << dim.second << endl;
@@ -159,7 +154,7 @@ template<class MPTraits>
 void
 GridSampler<MPTraits>::
 GetCoordLocation(int _iter, size_t _totalCell, map<size_t,size_t>& _coords,
-    map<size_t,int> tempSize) {
+    map<size_t,int> _tempSize) {
 
   int iterVal = _iter; //Assigning variable value as _iter.
   int divResult= 0;
@@ -168,7 +163,7 @@ GetCoordLocation(int _iter, size_t _totalCell, map<size_t,size_t>& _coords,
 
   //Check if it is just one point's dimension required
   //If the grid is defined in 1 dim, then return _iter as the coordinate.
-  if(tempSize.size() == 1) {
+  if(_tempSize.size() == 1) {
     map<size_t, size_t>::iterator iterat = m_numPoints.begin();
     int inde = iterat->first;
     _coords[inde] = _iter;
@@ -180,12 +175,12 @@ GetCoordLocation(int _iter, size_t _totalCell, map<size_t,size_t>& _coords,
   //each dim.
   //Note: It starts at the end of the map going backwards saving the mod value.
 
-  for(map<size_t, int>::reverse_iterator it = tempSize.rbegin();
-      it != tempSize.rend();it++) {
+  for(map<size_t, int>::reverse_iterator it = _tempSize.rbegin();
+      it != _tempSize.rend();it++) {
     int ind = it->first;
     int siz = it->second; //Saving the cummulative size of ind dim
 
-    if(it == tempSize.rbegin()) { //If this is the bigger dimension just safe 0
+    if(it == _tempSize.rbegin()) { //If this is the bigger dimension just safe 0
       _coords[ind] = 0;
       lastIt = ind; //Saving the reference value to the location asigned with 0.
     }
