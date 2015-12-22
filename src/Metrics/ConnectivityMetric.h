@@ -23,7 +23,7 @@ class ConnectivityMetric : public CoverageMetric<MPTraits, Set> {
         bool _computeAllCCs = false);
     ConnectivityMetric(MPProblemType* _problem, XMLNode& _node, bool _computeAllCCs = false);
 
-    virtual ~ConnectivityMetric();
+    virtual ~ConnectivityMetric() {}
 
     virtual void Print(ostream& _os) const;
 
@@ -34,34 +34,35 @@ class ConnectivityMetric : public CoverageMetric<MPTraits, Set> {
 };
 
 template<class MPTraits, class Set>
-ConnectivityMetric<MPTraits, Set>::ConnectivityMetric(const Set& _samples, const vector<string>& _connectorLabels, bool _computeAllCCs)
+ConnectivityMetric<MPTraits, Set>::
+ConnectivityMetric(const Set& _samples, const vector<string>& _connectorLabels, bool _computeAllCCs)
   : CoverageMetric<MPTraits, Set>(_samples, _connectorLabels, _computeAllCCs){
   this->SetName("ConnectivityMetric" + Set::GetName());
 }
 
 template<class MPTraits, class Set>
-ConnectivityMetric<MPTraits, Set>::ConnectivityMetric(MPProblemType* _problem, XMLNode& _node, bool _computeAllCCs)
+ConnectivityMetric<MPTraits, Set>::
+ConnectivityMetric(MPProblemType* _problem, XMLNode& _node, bool _computeAllCCs)
   : CoverageMetric<MPTraits, Set>(_problem, _node, _computeAllCCs) {
     this->SetName("ConnectivityMetric" + Set::GetName());
 }
 
 template<class MPTraits, class Set>
-ConnectivityMetric<MPTraits, Set>::~ConnectivityMetric() {
-}
-
-template<class MPTraits, class Set>
 void
-ConnectivityMetric<MPTraits, Set>::Print(ostream& _os) const {
+ConnectivityMetric<MPTraits, Set>::
+Print(ostream& _os) const {
   _os << "Percentage of queries solved" << endl;
 }
 
 template<class MPTraits, class Set>
 double
-ConnectivityMetric<MPTraits, Set>::operator()() {
-  CoverageMetric<MPTraits, Set>::operator()(); // Call CoverageMetric first
+ConnectivityMetric<MPTraits, Set>::
+operator()() {
+  CoverageMetric<MPTraits, Set>::
+    operator()(); // Call CoverageMetric first
 
-  static size_t numcalls = 0;
-  if(numcalls == 0)
+  static size_t numCalls = 0;
+  if(numCalls == 0)
     m_history.open(this->GetBaseFilename() + ".connectivity");
 
   int numQueries = 0;
@@ -82,7 +83,7 @@ ConnectivityMetric<MPTraits, Set>::operator()() {
   }
 
   double connectivityAmt = (double(numQueries))/(double(sz*(sz-1))/2.0);
-  m_history << numcalls++ << "\t" << connectivityAmt << endl;
+  m_history << numCalls++ << "\t" << connectivityAmt << endl;
 
   return connectivityAmt;
 }
