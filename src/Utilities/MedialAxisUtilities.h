@@ -382,7 +382,7 @@ ExactCollisionInfo(CfgType& _cfg, CfgType& _clrCfg,
     shared_ptr<ActiveMultiBody> robot = env->GetRobot(_cfg.GetRobotIndex());
 
     // Find closest point between robot and bbx, set if less than min dist from obstacles
-    for(int m=0; m < robot->NumFreeBody(); ++m) {
+    for(size_t m=0; m < robot->NumFreeBody(); ++m) {
       GMSPolyhedron& poly = robot->GetFreeBody(m)->GetWorldPolyhedron();
       for(size_t j = 0; j < poly.m_vertexList.size(); ++j){
         double clr = _bb->GetClearance(poly.m_vertexList[j]);
