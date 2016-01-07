@@ -4,6 +4,10 @@
 #include "Utilities/MPUtils.h"
 #include "Utilities/MetricUtils.h"
 
+#ifdef VIZMO
+#include "Models/Vizmo.h"
+#endif
+
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup MotionPlanningStrategies
 /// @brief Base algorithm abstraction for \ref MotionPlanningStrategies.
@@ -109,6 +113,9 @@ Run() {
 
   do {
     this->Iterate();
+#ifdef VIZMO
+    GetVizmo().GetMap()->RefreshMap();
+#endif
   } while(!this->EvaluateMap());
 
   this->GetStatClass()->StopClock(clockName);
