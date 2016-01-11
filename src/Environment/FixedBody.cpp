@@ -17,6 +17,7 @@ Read(istream& _is, CountingStreamBuffer& _cbs) {
 
   m_worldTransformation = ReadField<Transformation>(_is, _cbs,
       "Failed reading fixed body transformation.");
+  m_worldPolyhedronAvailable = false;
 }
 
 Transformation&
@@ -28,6 +29,7 @@ void
 FixedBody::
 PutWorldTransformation(Transformation& _worldTransformation) {
   m_worldTransformation = _worldTransformation;
+  m_worldPolyhedronAvailable = false;
 }
 
 
