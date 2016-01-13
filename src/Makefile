@@ -46,8 +46,8 @@ include ${PMPL_DIR}/Makefile.PMPLdefaults
 
 # macros
 DEFS += ${UTILS_DEF} -D${ROBOT_DEF} ${CGAL_DEF} ${STAPL_DEF}
-INCL =  ${PMPL_INCL} ${UTILS_INCL} ${STAPL_INCL} ${BOOST_INCL} ${CGAL_INCL} ${MPNN_INCL}
-LIBS =  ${PMPL_LIB} ${UTILS_LIB} ${MPNN_LIB} ${STAPL_LIB}
+INCL =  ${PMPL_INCL} ${UTILS_INCL} ${STAPL_INCL} ${BOOST_INCL} ${MPNN_INCL}
+LIBS =  ${PMPL_LIB} ${UTILS_LIB} ${STAPL_LIB} ${BOOST_LIB} ${CGAL_LIB} ${MPNN_LIB}
 
 # targets
 default_target: library

@@ -2,7 +2,6 @@
 
 #include <CGAL/Quotient.h>
 #include <CGAL/MP_Float.h>
-#include <../src/CGAL/MP_Float.cpp>
 #include <CGAL/Exact_predicates_exact_constructions_kernel.h>
 #include <CGAL/algorithm.h>
 #include <CGAL/Polyhedron_3.h>
@@ -154,13 +153,13 @@ Body::Read() {
 }
 
 
-void 
+void
 Body::SetPolyhedron(GMSPolyhedron& _poly){
-  m_polyhedron=_poly; 
-  m_worldPolyhedron=_poly; 
-  m_centerOfMassAvailable=false; 
+  m_polyhedron=_poly;
+  m_worldPolyhedron=_poly;
+  m_centerOfMassAvailable=false;
   m_worldPolyhedronAvailable=false;
-  
+
   GMSPolyhedron poly;
   poly = GetPolyhedron();
   double minx, miny, minz, maxx, maxy, maxz;
