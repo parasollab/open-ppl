@@ -1,7 +1,7 @@
 #ifndef SOLID_COLLISION_DETECTION_H_
 #define SOLID_COLLISION_DETECTION_H_
 
-#ifdef USE_SOLID
+#ifndef NO_SOLID
 
 #include <SOLID.h>
 

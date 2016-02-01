@@ -133,21 +133,21 @@ CollisionDetectionValidity(MPProblemType* _problem, XMLNode& _node) :
       m_cdMethod = new BoundingSpheres();
     else if(cdLabel == "InsideSpheres")
       m_cdMethod = new InsideSpheres();
-#ifdef USE_RAPID
+#ifndef NO_RAPID
     else if(cdLabel == "RAPID")
       m_cdMethod = new Rapid();
 #endif
-#ifdef USE_PQP
+#ifndef NO_PQP
     else if(cdLabel == "PQP")
       m_cdMethod = new PQP();
     else if(cdLabel == "PQP_SOLID")
       m_cdMethod = new PQPSolid();
 #endif
-#ifdef USE_VCLIP
+#ifndef NO_VCLIP
     else if(cdLabel == "VCLIP")
       m_cdMethod = new VClip();
 #endif
-#ifdef USE_SOLID
+#ifndef NO_SOLID
     else if(cdLabel == "SOLID")
       m_cdMethod = new Solid();
 #endif
@@ -249,7 +249,7 @@ IsInCollision(CDInfo& _cdInfo,
 
   return retVal;
 }
-  
+
 ////////////////////////////////////////////////////////////////////////////////
 /// @param _tp Collision computation type
 /// @param _coll Collision detection output
@@ -301,7 +301,7 @@ IsInSelfCollision(CDInfo& _cdInfo, shared_ptr<ActiveMultiBody> _rob,
 template<class MPTraits>
 bool
 CollisionDetectionValidity<MPTraits>::
-IsInterRobotCollision(CDInfo& _cdInfo, 
+IsInterRobotCollision(CDInfo& _cdInfo,
     shared_ptr<ActiveMultiBody> _rob,
     shared_ptr<ActiveMultiBody> _otherRobot, const string& _callName) {
 
@@ -312,7 +312,7 @@ IsInterRobotCollision(CDInfo& _cdInfo,
 
   for(size_t i = 0; i < numBody; ++i) {
     for(size_t j = 0; j < numOtherBody; ++j) {
-      bool collisionFound = 
+      bool collisionFound =
         m_cdMethod->IsInCollision(_rob->GetFreeBody(i),
             _otherRobot->GetFreeBody(j), _cdInfo);
 

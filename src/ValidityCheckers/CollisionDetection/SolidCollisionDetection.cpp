@@ -1,6 +1,6 @@
 #include "SolidCollisionDetection.h"
 
-#ifdef USE_SOLID
+#ifndef NO_SOLID
 
 Solid::
 Solid() : CollisionDetectionMethod("SOLID", Exact) {

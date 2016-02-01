@@ -1,6 +1,6 @@
 #include "PQPCollisionDetection.h"
 
-#ifdef USE_PQP
+#ifndef NO_PQP
 
 #include "CDInfo.h"
 #include "Environment/Body.h"
