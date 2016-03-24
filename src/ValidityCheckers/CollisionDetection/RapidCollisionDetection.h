@@ -1,7 +1,7 @@
 #ifndef RAPID_COLLISION_DETECTION_H_
 #define RAPID_COLLISION_DETECTION_H_
 
-#ifdef USE_RAPID
+#ifndef NO_RAPID
 
 #include "CollisionDetectionMethod.h"
 

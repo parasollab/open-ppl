@@ -1,6 +1,6 @@
 #include "VClipCollisionDetection.h"
 
-#ifdef USE_VCLIP
+#ifndef NO_VCLIP
 
 #include "CDInfo.h"
 #include "Environment/Body.h"

@@ -45,12 +45,14 @@ class SurfaceGridSampler : public SamplerMethod<MPTraits> {
     typedef typename MPProblemType::ValidityCheckerPointer ValidityCheckerPointer;
 
     //Constructor
-    SurfaceGridSampler(string _vcLabel="", double _dx=5.0, double _dz=5.0) : m_vcLabel(_vcLabel), m_dx(_dx), m_dz(_dz) {
+    SurfaceGridSampler(string _vcLabel="", double _dx=5.0, double _dz=5.0)
+      : m_vcLabel(_vcLabel), m_dx(_dx), m_dz(_dz) {
       this->SetName("SurfaceGridSampler");
     }
 
     //Constructor
-    SurfaceGridSampler(MPProblemType* _problem, XMLNode& _node) : SamplerMethod<MPTraits>(_problem,_node) {
+    SurfaceGridSampler(MPProblemType* _problem, XMLNode& _node)
+      : SamplerMethod<MPTraits>(_problem,_node) {
       this->SetName("SurfaceGridSampler");
       ParseXML(_node);
     }
@@ -78,9 +80,9 @@ class SurfaceGridSampler : public SamplerMethod<MPTraits> {
       callee += "::SampleImpl()";
       ValidityCheckerPointer vcp = this->GetValidityChecker(m_vcLabel);
       int numSurfaces=  env->NumSurfaces(); //Number of navigable surface
-      for(int i=-1; i<numSurfaces; i++) {
+      for(int i = -1; i<numSurfaces; i++) {
         //For the navigable surfaces not including the surface -1 (ground)
-        if(i>=0){
+        if(i>=0) {
           //Get navigable surface by number and get the polyhedron of that surface
           shared_ptr<SurfaceMultiBody> surfi = env->GetSurface((size_t) i);
           shared_ptr<FixedBody> fb = surfi->GetFixedBody(0);
@@ -88,15 +90,15 @@ class SurfaceGridSampler : public SamplerMethod<MPTraits> {
           //Obtain the bondaries of the surface
           const double* boundaries = surfi->GetBoundingBox();
           //Try to add point by point in the greed to the graph
-          for(double itdx=boundaries[0]; itdx<boundaries[1]; itdx+=m_dx){
-            for(double itdz=boundaries[4]; itdz<boundaries[5]; itdz+=m_dz){
+          for(double itdx=boundaries[0]; itdx<boundaries[1]; itdx+=m_dx) {
+            for(double itdz=boundaries[4]; itdz<boundaries[5]; itdz+=m_dz) {
               bool isValSurf=true;
               //Generate a point with the values of the iterators of the loops
               Point2d pt(itdx,itdz);
               //Get the height of the point defined before
               double tH = polyhedron.HeightAtPt(pt, isValSurf);
               //If there is a valid height fpr the point
-              if( isValSurf ){
+              if( isValSurf ) {
                 CfgType tmp;
                 //set the surface cfg to add
                 tmp.SetSurfaceID(i);
@@ -104,10 +106,11 @@ class SurfaceGridSampler : public SamplerMethod<MPTraits> {
                 tmp.SetHeight(tH);
                 //Validate surface cfg
                 bool isValid = vcp->IsValid(tmp, callee);
-                if(isValid){
+                if(isValid) {
                   //Add valid surface cfg
                   _result.push_back(tmp);
-                }else{
+                }
+                else {
                   _collision.push_back(tmp);
                 }
               }
@@ -115,12 +118,12 @@ class SurfaceGridSampler : public SamplerMethod<MPTraits> {
           }
         }
         //Ground grid sampling
-        else if(i==-1){
+        else if(i==-1) {
           //Get environment boundaries for axis x and z
           pair<double, double> dxx = _boundary->GetRange(0);
           pair<double, double> dxz = _boundary->GetRange(2);
-          for(double itdx=dxx.first; itdx<dxx.second; itdx+=m_dx){
-            for(double itdz=dxz.first; itdz<dxz.second; itdz+=m_dz){
+          for(double itdx=dxx.first; itdx<dxx.second; itdx+=m_dx) {
+            for(double itdz=dxz.first; itdz<dxz.second; itdz+=m_dz) {
               Point2d pt(itdx,itdz);
               CfgType tmp;
               tmp.SetSurfaceID(i);
@@ -128,9 +131,10 @@ class SurfaceGridSampler : public SamplerMethod<MPTraits> {
               //Height is 0 for this points
               tmp.SetHeight(0);
               bool isValid = vcp->IsValid(tmp, callee);
-              if(isValid){
+              if(isValid) {
                 _result.push_back(tmp);
-              }else{
+              }
+              else {
                 _collision.push_back(tmp);
               }
             }

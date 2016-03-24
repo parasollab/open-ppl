@@ -25,7 +25,7 @@ class CoverageMetric : public MetricMethod<MPTraits> {
         const vector<string>& _connectorLabels = vector<string>(),
         bool _computeAllCCs = false);
     CoverageMetric(MPProblemType* _problem, XMLNode& _node, bool _computeAllCCs = false);
-    virtual ~CoverageMetric();
+    virtual ~CoverageMetric() {}
 
     virtual void Print(ostream& _os) const;
 
@@ -49,7 +49,8 @@ CoverageMetric(const Set& _samples, const vector<string>& _connectorLabels,
   }
 
 template<class MPTraits, class Set>
-CoverageMetric<MPTraits, Set>::CoverageMetric(MPProblemType* _problem,
+CoverageMetric<MPTraits, Set>::
+CoverageMetric(MPProblemType* _problem,
     XMLNode& _node, bool _computeAllCCs) :
   MetricMethod<MPTraits>(_problem, _node), m_samples(_node) {
     this->SetName("CoverageMetric" + Set::GetName());
@@ -70,11 +71,6 @@ CoverageMetric<MPTraits, Set>::CoverageMetric(MPProblemType* _problem,
   }
 
 template<class MPTraits, class Set>
-CoverageMetric<MPTraits, Set>::
-~CoverageMetric() {
-}
-
-template<class MPTraits, class Set>
 void
 CoverageMetric<MPTraits, Set>::
 Print(ostream& _os) const {
@@ -87,10 +83,11 @@ Print(ostream& _os) const {
 
 template<class MPTraits, class Set>
 double
-CoverageMetric<MPTraits, Set>::operator()() {
+CoverageMetric<MPTraits, Set>::
+operator()() {
 
-  static size_t numcalls = 0;
-  if(numcalls == 0)
+  static size_t numCalls = 0;
+  if(numCalls == 0)
     m_history.open(this->GetBaseFilename() + ".coverage");
 
   RoadmapType* rmap = this->GetMPProblem()->GetRoadmap();
@@ -140,7 +137,7 @@ CoverageMetric<MPTraits, Set>::operator()() {
   }
 
   double coverageAmt = ((double)numConnections)/((double)m_connections.size());
-  m_history << numcalls++ << "\t" << coverageAmt << endl;
+  m_history << numCalls++ << "\t" << coverageAmt << endl;
 
   return coverageAmt;
 }

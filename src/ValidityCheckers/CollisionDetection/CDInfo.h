@@ -2,6 +2,7 @@
 #define CD_INFO_H_
 
 #include "Vector.h"
+#include<vector>
 
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup ValidityCheckers
@@ -37,6 +38,9 @@ struct CDInfo {
                                     ///< Robot
   int m_rapidContactID1;            ///< Triangle on robot in collision
   int m_rapidContactID2;            ///< Triangle on obstacle in collision
+
+  // The index for collided robots
+  std::vector<std::pair<size_t, size_t>> m_collidingRobtIndex;        
 };
 
 #endif

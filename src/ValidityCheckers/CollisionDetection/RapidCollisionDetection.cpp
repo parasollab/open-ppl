@@ -1,6 +1,6 @@
 #include "RapidCollisionDetection.h"
 
-#ifdef USE_RAPID
+#ifndef NO_RAPID
 
 #include <RAPID.H>
 

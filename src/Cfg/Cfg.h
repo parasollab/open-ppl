@@ -103,7 +103,7 @@ class Cfg {
     const vector<double>& GetData() const {return m_v;}
     ////////////////////////////////////////////////////////////////////////////
     /// \brief Set the internal storage of DOF data.
-    void SetData(const vector<double>& _data);
+    virtual void SetData(const vector<double>& _data);
     ////////////////////////////////////////////////////////////////////////////
     /// \brief Set the internal storage of joint DOF data.
     /// \details Other DOFs will remain the same.

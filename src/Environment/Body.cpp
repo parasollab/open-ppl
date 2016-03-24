@@ -2,7 +2,6 @@
 
 #include <CGAL/Quotient.h>
 #include <CGAL/MP_Float.h>
-#include <../src/CGAL/MP_Float.cpp>
 #include <CGAL/Exact_predicates_exact_constructions_kernel.h>
 #include <CGAL/algorithm.h>
 #include <CGAL/Polyhedron_3.h>
@@ -155,6 +154,51 @@ Body::Read() {
   ComputeMomentOfInertia();
 }
 
+
+void
+Body::SetPolyhedron(GMSPolyhedron& _poly){
+  m_polyhedron=_poly;
+  m_worldPolyhedron=_poly;
+  m_centerOfMassAvailable=false;
+  m_worldPolyhedronAvailable=false;
+
+  GMSPolyhedron poly;
+  poly = GetPolyhedron();
+  double minx, miny, minz, maxx, maxy, maxz;
+  minx = maxx = poly.m_vertexList[0][0];
+  miny = maxy = poly.m_vertexList[0][1];
+  minz = maxz = poly.m_vertexList[0][2];
+  for(size_t i = 1 ; i < poly.m_vertexList.size() ; i++){
+    if(poly.m_vertexList[i][0] < minx)
+      minx = poly.m_vertexList[i][0];
+    else if(maxx < poly.m_vertexList[i][0])
+      maxx = poly.m_vertexList[i][0];
+
+    if(poly.m_vertexList[i][1] < miny)
+      miny = poly.m_vertexList[i][1];
+    else if(maxy < poly.m_vertexList[i][1])
+      maxy = poly.m_vertexList[i][1];
+
+    if(poly.m_vertexList[i][2] < minz)
+      minz = poly.m_vertexList[i][2];
+    else if(maxz < poly.m_vertexList[i][2])
+      maxz = poly.m_vertexList[i][2];
+  }
+
+  m_bbPolyhedron.m_vertexList = vector<Vector3d>(8);
+  m_bbWorldPolyhedron.m_vertexList = vector<Vector3d>(8);
+  m_bbPolyhedron.m_vertexList[0] = Vector3d(minx, miny, minz);
+  m_bbPolyhedron.m_vertexList[1] = Vector3d(minx, miny, maxz);
+  m_bbPolyhedron.m_vertexList[2] = Vector3d(minx, maxy, minz);
+  m_bbPolyhedron.m_vertexList[3] = Vector3d(minx, maxy, maxz);
+  m_bbPolyhedron.m_vertexList[4] = Vector3d(maxx, miny, minz);
+  m_bbPolyhedron.m_vertexList[5] = Vector3d(maxx, miny, maxz);
+  m_bbPolyhedron.m_vertexList[6] = Vector3d(maxx, maxy, minz);
+  m_bbPolyhedron.m_vertexList[7] = Vector3d(maxx, maxy, maxz);
+
+  FindBoundingBox();
+}
+
 void
 Body::
 ReadOptions(istream& _is, CountingStreamBuffer& _cbs) {
@@ -216,28 +260,6 @@ Body::ComputeCenterOfMass() {
 
 void
 Body::
-ComputeMomentOfInertia() {
-  Vector3d centerOfMass = GetCenterOfMass();
-  vector<Vector3d>& vert = GetPolyhedron().m_vertexList;
-
-  double massPerVert = m_mass/vert.size();
-  for(const auto& v : vert) {
-    Vector3d r = v - centerOfMass;
-    m_moment[0][0] += massPerVert * (r[1]*r[1] + r[2]*r[2]);
-    m_moment[0][1] += massPerVert * -r[0] * r[1];
-    m_moment[0][2] += massPerVert * -r[0] * r[2];
-    m_moment[1][0] += massPerVert * -r[1] * r[0];
-    m_moment[1][1] += massPerVert * (r[0]*r[0] + r[2]*r[2]);
-    m_moment[1][2] += massPerVert * -r[1] * r[2];
-    m_moment[2][0] += massPerVert * -r[0] * r[2];
-    m_moment[2][1] += massPerVert * -r[1] * r[2];
-    m_moment[2][2] += massPerVert * (r[0]*r[0] + r[1]*r[1]);
-  }
-  m_moment = inverse(m_moment);
-}
-
-void
-Body::
 FindBoundingBox() {
   m_worldPolyhedronAvailable = false;
   GMSPolyhedron& poly = GetWorldPolyhedron();
@@ -285,3 +307,26 @@ ComputeConvexHull() {
 
   m_convexHullAvailable = true;
 }
+
+void
+Body::
+ComputeMomentOfInertia() {
+  Vector3d centerOfMass = GetCenterOfMass();
+  vector<Vector3d>& vert = GetPolyhedron().m_vertexList;
+
+  double massPerVert = m_mass/vert.size();
+  for(const auto& v : vert) {
+    Vector3d r = v - centerOfMass;
+    m_moment[0][0] += massPerVert * (r[1]*r[1] + r[2]*r[2]);
+    m_moment[0][1] += massPerVert * -r[0] * r[1];
+    m_moment[0][2] += massPerVert * -r[0] * r[2];
+    m_moment[1][0] += massPerVert * -r[1] * r[0];
+    m_moment[1][1] += massPerVert * (r[0]*r[0] + r[2]*r[2]);
+    m_moment[1][2] += massPerVert * -r[1] * r[2];
+    m_moment[2][0] += massPerVert * -r[0] * r[2];
+    m_moment[2][1] += massPerVert * -r[1] * r[2];
+    m_moment[2][2] += massPerVert * (r[0]*r[0] + r[1]*r[1]);
+  }
+  m_moment = inverse(m_moment);
+}
+

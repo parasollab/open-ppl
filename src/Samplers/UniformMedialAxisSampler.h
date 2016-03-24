@@ -13,6 +13,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 template<typename MPTraits>
 class UniformMedialAxisSampler : public SamplerMethod<MPTraits> {
+
   public:
     typedef typename MPTraits::CfgType CfgType;
     typedef typename MPTraits::MPProblemType MPProblemType;
@@ -149,7 +150,7 @@ Sampler(CfgType& _cfg, shared_ptr<Boundary> _boundary,
       m_stepSize * env->GetPositionRes(),
       m_stepSize * env->GetOrientationRes());
 
-  for(int i=1; i<nTicks; ++i) {
+  for(int i = 1; i < nTicks; ++i) {
 
     tick += inter;
     m_clearanceUtility.CollisionInfo(tick, tmp, _boundary, tick.m_clearanceInfo);
@@ -209,7 +210,7 @@ CheckMedialAxisCrossing(const CfgType& _c1, int _w1,
         return CheckVertVert(_w1, -(tempID+1), -(tickID+1));
       }
       //tiangle-triangle
-      else if(tempID >=0 && tickID >= 0) {
+      else if(tempID >= 0 && tickID >= 0) {
         bool tt = CheckTriTri(_w1, tempID, tickID);
         return tt;
       }
@@ -387,7 +388,7 @@ CheckTriTri(int _w, int _t1, int _t2) {
     //If (normal vector of left) x (normal vector of right) is the
     //opposite direction of the common edge, they form a concave face
     if(((polyhedron.m_polygonList[left].m_normal % polyhedron.
-            m_polygonList[right].m_normal) * va) < -0.0001){  //Concave
+            m_polygonList[right].m_normal) * va) < -0.0001) {  //Concave
       return true;
     }
     else {  //Convex

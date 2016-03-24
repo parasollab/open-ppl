@@ -12,6 +12,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 template<class MPTraits>
 class BridgeTestSampler : public SamplerMethod<MPTraits> {
+
   public:
     typedef typename MPTraits::CfgType CfgType;
     typedef typename MPTraits::MPProblemType MPProblemType;
@@ -130,7 +131,7 @@ Sampler(CfgType& _cfg, shared_ptr<Boundary> _boundary,
       CfgType cfg1 = _cfg, incr, cfg2;
       incr.GetRandomRay(fabs(GaussianDistribution(m_d, m_d)), dm);
       cfg2 = cfg1 + incr;
-      if(this->m_debug){
+      if(this->m_debug) {
         cout << "cfg1::" << cfg1 << endl;
         cout << "cfg2::" << cfg2 << endl;
       }
@@ -185,7 +186,7 @@ Sampler(CfgType& _cfg, shared_ptr<Boundary> _boundary,
       CfgType cfg1 = _cfg, incr, cfg2;
       incr.GetRandomRay(fabs(GaussianDistribution(m_d, m_d)), dm);
       cfg2 = cfg1 + incr;
-      if(this->m_debug){
+      if(this->m_debug) {
         cout << "cfg1::" << cfg1 << endl;
         cout << "cfg2::" << cfg2 << endl;
       }

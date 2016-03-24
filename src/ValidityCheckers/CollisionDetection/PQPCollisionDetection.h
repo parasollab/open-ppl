@@ -1,7 +1,7 @@
 #ifndef PQP_COLLISION_DETECTION_H_
 #define PQP_COLLISION_DETECTION_H_
 
-#ifdef USE_PQP
+#ifndef NO_PQP
 
 #include <PQP.h>
 

@@ -668,7 +668,7 @@ GetClosest(VID _ccVID, vector<CCType> _ccs, string _criteria) const {
   colorMap.reset();
   stapl::sequential::get_cc(*m_localTree,colorMap,_ccVID,sourceCC);
 
-  for(int i=0; i<_ccs.size(); i++) {
+  for(size_t i=0; i<_ccs.size(); i++) {
     if(_ccs[i].second == _ccVID)
       continue;
 

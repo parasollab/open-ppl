@@ -17,13 +17,24 @@
 #include "Environment/SurfaceMultiBody.h"
 
 CfgSurface::CfgSurface() :
-  m_pt(Point2d(0,0)), m_h(0), m_surfaceID(INVALID_SURFACE) {}
+  m_pt(Point2d(0,0)), m_h(0), m_surfaceID(INVALID_SURFACE) { 
+    m_v.resize(3,0); 
+    InitCfgSurface(); 
+  }
 
 CfgSurface::CfgSurface(double _x, double _y, double _h, int _sid) :
-  m_pt(Point2d(_x, _y)), m_h(_h), m_surfaceID(_sid) {}
+  m_pt(Point2d(_x, _y)), m_h(_h), m_surfaceID(_sid) { 
+    m_v.resize(3); 
+    InitCfgSurface(); 
+    SetDataFromThis(); 
+  }
 
 CfgSurface::CfgSurface(const Vector3d& _v) :
-  m_pt(Point2d(_v[0], _v[2])), m_h(_v[1]), m_surfaceID(INVALID_SURFACE) {}
+  m_pt(Point2d(_v[0], _v[2])), m_h(_v[1]), m_surfaceID(INVALID_SURFACE) { 
+    m_v.resize(3); 
+    InitCfgSurface(); 
+    SetDataFromThis(); 
+  }
 
 CfgSurface::CfgSurface(const CfgSurface& _c) :
   m_pt(_c.m_pt), m_h(_c.m_h), m_surfaceID(_c.m_surfaceID){
@@ -31,18 +42,29 @@ CfgSurface::CfgSurface(const CfgSurface& _c) :
     m_statMap = _c.m_statMap;
     m_clearanceInfo = _c.m_clearanceInfo;
     m_witnessCfg = _c.m_witnessCfg;
+    m_v = _c.m_v;
+    InitCfgSurface();
   }
 
 CfgSurface::CfgSurface(const Point2d& _p, double _h, int _sid) :
-  m_pt(_p), m_h(_h), m_surfaceID(_sid) {}
+  m_pt(_p), m_h(_h), m_surfaceID(_sid) {
+    m_v.resize(3); 
+    InitCfgSurface(); 
+    SetDataFromThis(); 
+  }
 
 CfgSurface::CfgSurface(const Cfg& _c) :
-  m_pt(Point2d(_c[0], _c[2])), m_h(_c[1]), m_surfaceID(INVALID_SURFACE) {}
+  m_pt(Point2d(_c[0], _c[2])), m_h(_c[1]), m_surfaceID(INVALID_SURFACE) {
+    m_v.resize(3); 
+    InitCfgSurface(); 
+    SetDataFromThis(); 
+  }
 
 CfgSurface::~CfgSurface() {}
 
 CfgSurface&
 CfgSurface::operator=(const CfgSurface& _cfg) {
+  InitCfgSurface();
   if(this != &_cfg){
     m_pt = _cfg.m_pt;
     m_h = _cfg.m_h;
@@ -52,8 +74,23 @@ CfgSurface::operator=(const CfgSurface& _cfg) {
     m_robotIndex = _cfg.m_robotIndex;
     m_clearanceInfo = _cfg.m_clearanceInfo;
     m_witnessCfg = _cfg.m_witnessCfg;
+    m_v = _cfg.m_v;
+    SetDataFromThis();
   }
   return *this;
+}
+
+void 
+CfgSurface::InitCfgSurface() {
+  m_dof.clear();
+  m_dof.push_back( size_t(3) );
+  m_posdof.push_back( size_t(3) );
+  m_numJoints.push_back( size_t(0) );
+  vector<DofType> dofTypes; 
+  dofTypes.push_back( DofType::Positional );
+  dofTypes.push_back( DofType::Positional );
+  dofTypes.push_back( DofType::Positional );
+  m_dofTypes.push_back( dofTypes );
 }
 
 bool
@@ -71,6 +108,7 @@ CfgSurface
 CfgSurface::operator+(const CfgSurface& _cfg) const {
   CfgSurface result = *this;
   result += _cfg;
+  result.SetDataFromThis();
   return result;
 }
 
@@ -81,6 +119,7 @@ CfgSurface::operator+=(const CfgSurface& _cfg) {
   m_h += _cfg.m_h;
   //m_surfaceID = _cfg.m_surfaceID;
   m_witnessCfg.reset();
+  SetDataFromThis();
   return *this;
 }
 
@@ -88,6 +127,7 @@ CfgSurface
 CfgSurface::operator-(const CfgSurface& _cfg) const {
   CfgSurface result = *this;
   result -= _cfg;
+  result.SetDataFromThis();
   return result;
 }
 
@@ -98,6 +138,7 @@ CfgSurface::operator-=(const CfgSurface& _cfg) {
   m_h -= _cfg.m_h;
   //m_surfaceID = _cfg.m_surfaceID;
   m_witnessCfg.reset();
+  SetDataFromThis();
   return *this;
 }
 
@@ -108,6 +149,7 @@ CfgSurface::operator-() const {
   result.m_pt[1] = -m_pt[1];
   result.m_h = -m_h;
   result.m_witnessCfg.reset();
+  result.SetDataFromThis();
   return result;
 }
 
@@ -115,6 +157,7 @@ CfgSurface
 CfgSurface::operator*(double _d) const {
   CfgSurface result = *this;
   result *= _d;
+  result.SetDataFromThis();
   return result;
 }
 
@@ -124,6 +167,7 @@ CfgSurface::operator*=(double _d) {
   m_pt[1] *= _d;
   m_h *= _d;
   m_witnessCfg.reset();
+  SetDataFromThis();
   return *this;
 }
 
@@ -131,6 +175,7 @@ CfgSurface
 CfgSurface::operator/(double _d) const {
   CfgSurface result = *this;
   result /= _d;
+  result.SetDataFromThis();
   return result;
 }
 
@@ -140,6 +185,7 @@ CfgSurface::operator/=(double _d) {
   m_pt[1] /= _d;
   m_h /= _d;
   m_witnessCfg.reset();
+  SetDataFromThis();
   return *this;
 }
 
@@ -178,6 +224,7 @@ void
 CfgSurface::Read(istream& _is){
   m_witnessCfg.reset();
   _is >> m_robotIndex >> m_surfaceID >> m_pt[0] >> m_h >> m_pt[1];
+  SetDataFromThis();
 }
 
 void
@@ -207,15 +254,6 @@ operator<<(ostream& _os, const CfgSurface& _cfg){
   return _os;
 }
 
-vector<double>
-CfgSurface::GetData() const{
-  vector<double> data(3);
-  data[0] = m_pt[0];
-  data[1] = m_h;
-  data[2] = m_pt[1];
-  return data;
-}
-
 void
 CfgSurface::SetData(const vector<double>& _data) {
   if(_data.size() != m_dof[m_robotIndex]) {
@@ -223,10 +261,21 @@ CfgSurface::SetData(const vector<double>& _data) {
     cout << "DOF of data and Cfg are not equal " << _data.size() << "\t!=\t" << m_dof[m_robotIndex] << endl;
     exit(-1);
   }
+  if( m_v.size() != 3 ) 
+    m_v.resize(3);
   m_pt[0] = _data[0];
   m_h = _data[1];
   m_pt[1] = _data[2];
+  
+  SetDataFromThis();
   m_witnessCfg.reset();
+}
+
+void 
+CfgSurface::SetDataFromThis() { 
+  m_v[0] = m_pt[0];
+  m_v[1] = m_h;
+  m_v[2] = m_pt[1];
 }
 
 vector<double>
@@ -283,6 +332,7 @@ CfgSurface::GetResolutionCfg(Environment* _env) {
   m_pt[0] = posRes;
   m_h = posRes;
   m_pt[1] = posRes;
+  SetDataFromThis();
   m_witnessCfg.reset();
 }
 
@@ -295,6 +345,7 @@ CfgSurface::IncrementTowardsGoal(const Cfg& _goal, const Cfg& _increment) {
     else
       operator[](i) += ((const CfgSurface&)_increment)[i];
   }
+  SetDataFromThis();
   m_witnessCfg.reset();
 }
 
@@ -333,6 +384,9 @@ CfgSurface::GetPositionOrientationFrom2Cfg(const Cfg& _c1, const Cfg& _c2) {
 
 void
 CfgSurface::GetRandomCfgImpl(Environment* _env, shared_ptr<Boundary> _bb) {
+  if( m_surfaceID<-1 ) {
+    m_surfaceID = INVALID_SURFACE;
+  }
   if( m_surfaceID == INVALID_SURFACE ) { // need to set appropriate surface id
     int rindex = _env->GetRandomSurfaceIndex();
     m_surfaceID = rindex;
@@ -356,5 +410,7 @@ CfgSurface::GetRandomCfgImpl(Environment* _env, shared_ptr<Boundary> _bb) {
     //////////////////////////////////////////////////////////////////////////////
   }
   m_witnessCfg.reset();
+
+  SetDataFromThis();
 }
 

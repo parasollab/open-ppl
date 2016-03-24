@@ -7,6 +7,7 @@
 
 #include "LPOutput.h"
 #include "MPProblem/IsClosedChain.h"
+#include <boost/utility/enable_if.hpp>
 
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup LocalPlanners

@@ -58,7 +58,7 @@ GetCoordinatesForRMSD(const CfgType& _c) {
   Environment* env = this->GetMPProblem()->GetEnvironment();
   _c.ConfigEnvironment();
   vector<Vector3d> coordinates;
-  for(int i=0; i< env->GetRobot(_c.GetRobotIndex())->NumFreeBody(); ++i)
+  for(size_t i=0; i< env->GetRobot(_c.GetRobotIndex())->NumFreeBody(); ++i)
     coordinates.push_back(env->GetRobot(_c.GetRobotIndex())->GetFreeBody(i)
         ->WorldTransformation().translation());
   return coordinates;

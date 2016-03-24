@@ -1,16 +1,19 @@
 #ifndef BODY_H_
 #define BODY_H_
 
-#ifdef USE_VCLIP
+#ifndef NO_VCLIP
 #include <vclip.h>
 #endif
-#ifdef USE_PQP
+
+#ifndef NO_PQP
 #include <PQP.h>
 #endif
-#ifdef USE_RAPID
+
+#ifndef NO_RAPID
 #include <RAPID.H>
 #endif
-#ifdef USE_SOLID
+
+#ifndef NO_SOLID
 #include <SOLID.h>
 #include "DT_Polyhedron.h"
 #include "DT_Polytope.h"
@@ -110,6 +113,11 @@ class Body {
     /// @{
 
     ////////////////////////////////////////////////////////////////////////////
+    /// @param _poly New polyhedron to define this body
+    ///
+    /// This code is used in GB. If touched, someone in GB should verify change.
+    void SetPolyhedron(GMSPolyhedron& _poly);
+    ////////////////////////////////////////////////////////////////////////////
     /// @return Polyhedron in model coordinates
     GMSPolyhedron& GetPolyhedron() {return m_polyhedron;}
     ////////////////////////////////////////////////////////////////////////////
@@ -161,7 +169,7 @@ class Body {
     /// @brief Build appropriate collision detection models
     void BuildCDStructure(CollisionDetectionMethod* _cdMethod);
 
-#ifdef USE_VCLIP
+#ifndef NO_VCLIP
     ////////////////////////////////////////////////////////////////////////////
     /// @return VClip model
     shared_ptr<PolyTree> GetVClipBody() {return vclipBody;}
@@ -169,7 +177,8 @@ class Body {
     /// @param _vclipBody VClip model
     void SetVClipBody(const shared_ptr<PolyTree>& _vclipBody) {vclipBody = _vclipBody;}
 #endif
-#ifdef USE_RAPID
+
+#ifndef NO_RAPID
     ////////////////////////////////////////////////////////////////////////////
     /// @return RAPID model
     shared_ptr<RAPID_model> GetRapidBody() {return rapidBody;}
@@ -177,7 +186,8 @@ class Body {
     /// @param _rapidBody Rapid model
     void SetRapidBody(const shared_ptr<RAPID_model>& _rapidBody) {rapidBody = _rapidBody;}
 #endif
-#ifdef USE_PQP
+
+#ifndef NO_PQP
     ////////////////////////////////////////////////////////////////////////////
     /// @return PQP model
     shared_ptr<PQP_Model> GetPQPBody() {return pqpBody;}
@@ -185,7 +195,8 @@ class Body {
     /// @param _pqpBody PQP model
     void SetPQPBody(const shared_ptr<PQP_Model>& _pqpBody) {pqpBody = _pqpBody;}
 #endif
-#ifdef USE_SOLID
+
+#ifndef NO_SOLID
     ////////////////////////////////////////////////////////////////////////////
     /// @return Solid model
     shared_ptr<DT_ObjectHandle> GetSolidBody() {return solidBody;}
@@ -212,14 +223,6 @@ class Body {
 
     /// @}
     ////////////////////////////////////////////////////////////////////////////
-
-  protected:
-    ////////////////////////////////////////////////////////////////////////////
-    /// @brief Read optional color or texture
-    /// @param _is Input stream
-    /// @param _cbs Counting buffer stream
-    void ReadOptions(istream& _is, CountingStreamBuffer& _cbs);
-
     ////////////////////////////////////////////////////////////////////////////
     /// @brief Calculate center of mass in world coordinates
     ///
@@ -232,9 +235,12 @@ class Body {
     /// approximation.
     void ComputeCenterOfMass();
 
+  protected:
     ////////////////////////////////////////////////////////////////////////////
-    /// @brief Approximate moment of inertia
-    void ComputeMomentOfInertia();
+    /// @brief Read optional color or texture
+    /// @param _is Input stream
+    /// @param _cbs Counting buffer stream
+    void ReadOptions(istream& _is, CountingStreamBuffer& _cbs);
 
     ////////////////////////////////////////////////////////////////////////////
     /// @brief Determine bounding box
@@ -243,6 +249,10 @@ class Body {
     ////////////////////////////////////////////////////////////////////////////
     /// @brief Compute convex hull of body
     void ComputeConvexHull();
+
+    ////////////////////////////////////////////////////////////////////////////
+    /// @brief Approximate moment of inertia
+    void ComputeMomentOfInertia();
 
     MultiBody* m_multibody;                  ///< Owner of Body
     string m_filename;                       ///< Geometry filename
@@ -271,16 +281,19 @@ class Body {
 
     double m_boundingBox[6];                 ///< Bounding box
 
-#ifdef USE_VCLIP
+#ifndef NO_VCLIP
     shared_ptr<PolyTree> vclipBody;          ///< VClip model
 #endif
-#ifdef USE_RAPID
+
+#ifndef NO_RAPID
     shared_ptr<RAPID_model> rapidBody;       ///< RAPID model
 #endif
-#ifdef USE_PQP
+
+#ifndef NO_PQP
     shared_ptr<PQP_Model> pqpBody;           ///< PQP model
 #endif
-#ifdef USE_SOLID
+
+#ifndef NO_SOLID
     shared_ptr<DT_ObjectHandle> solidBody;   ///< Solid model
     DT_VertexBaseHandle base;                ///< Solid base
     MT_Point3* vertex;                       ///< Solid set of vertices

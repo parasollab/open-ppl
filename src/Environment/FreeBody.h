@@ -79,8 +79,14 @@ class FreeBody : public Body {
     /// @return Is this body a base?
     bool IsBase() const { return m_bodyType != BodyType::Joint; };
     ////////////////////////////////////////////////////////////////////////////
+    /// @param _bt BodyType
+    void SetBodyType(BodyType _bt) { m_bodyType=_bt; };
+    ////////////////////////////////////////////////////////////////////////////
     /// @return Body type
     BodyType GetBodyType() const { return m_bodyType; };
+    ////////////////////////////////////////////////////////////////////////////
+    /// @param _mt Base movement type of body
+    void SetMovementType(MovementType _mt) { m_movementType=_mt; };
     ////////////////////////////////////////////////////////////////////////////
     /// @return Base movement type of body
     MovementType GetMovementType() const { return m_movementType; };

@@ -22,7 +22,7 @@ class CoverageDistanceMetric : public MetricMethod<MPTraits> {
 
     CoverageDistanceMetric(const Set& _samples = Set(), string _dmLabel = "");
     CoverageDistanceMetric(MPProblemType* _problem, XMLNode& _node);
-    virtual ~CoverageDistanceMetric();
+    virtual ~CoverageDistanceMetric() {}
 
     virtual void Print(ostream& _os) const;
 
@@ -52,11 +52,6 @@ CoverageDistanceMetric(MPProblemType* _problem, XMLNode& _node) :
   }
 
 template<class MPTraits, class Set>
-CoverageDistanceMetric<MPTraits, Set>::
-~CoverageDistanceMetric() {
-}
-
-template<class MPTraits, class Set>
 void
 CoverageDistanceMetric<MPTraits, Set>::
 Print(ostream& _os) const {
@@ -69,8 +64,8 @@ double
 CoverageDistanceMetric<MPTraits, Set>::
 operator()() {
 
-  static size_t numcalls = 0;
-  if(numcalls == 0)
+  static size_t numCalls = 0;
+  if(numCalls == 0)
     m_history.open(this->GetBaseFilename() + ".coverage");
 
   unsigned int i;

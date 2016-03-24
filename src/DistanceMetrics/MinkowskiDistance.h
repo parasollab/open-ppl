@@ -6,6 +6,8 @@
 #include "Environment/Environment.h"
 #include "MPProblem/IsClosedChain.h"
 
+#include <boost/utility/enable_if.hpp>
+
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup DistanceMetrics
 /// @brief TODO.

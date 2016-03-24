@@ -20,7 +20,7 @@ class CCDistanceMetric : public MetricMethod<MPTraits> {
 
     CCDistanceMetric(string _dm="");
     CCDistanceMetric(MPProblemType* _problem, XMLNode& _node);
-    virtual ~CCDistanceMetric();
+    virtual ~CCDistanceMetric() {}
 
     virtual void Print(ostream& _os) const;
 
@@ -31,13 +31,15 @@ class CCDistanceMetric : public MetricMethod<MPTraits> {
 };
 
 template<class MPTraits>
-CCDistanceMetric<MPTraits>::CCDistanceMetric(string _dm)
+CCDistanceMetric<MPTraits>::
+CCDistanceMetric(string _dm)
   : m_dmLabel(_dm) {
     this->SetName("CCDistanceMetric");
 }
 
 template<class MPTraits>
-CCDistanceMetric<MPTraits>::CCDistanceMetric(MPProblemType* _problem, XMLNode& _node)
+CCDistanceMetric<MPTraits>::
+CCDistanceMetric(MPProblemType* _problem, XMLNode& _node)
   : MetricMethod<MPTraits>(_problem, _node) {
     this->SetName("CCDistanceMetric");
 
@@ -45,19 +47,17 @@ CCDistanceMetric<MPTraits>::CCDistanceMetric(MPProblemType* _problem, XMLNode& _
 }
 
 template<class MPTraits>
-CCDistanceMetric<MPTraits>::~CCDistanceMetric() {
-}
-
-template<class MPTraits>
 void
-CCDistanceMetric<MPTraits>::Print(ostream& _os) const {
+CCDistanceMetric<MPTraits>::
+Print(ostream& _os) const {
   _os << "CC distance" << endl;
   _os << "\tdistance metric = " << m_dmLabel << endl;
 }
 
 template<class MPTraits>
 double
-CCDistanceMetric<MPTraits>::operator()() {
+CCDistanceMetric<MPTraits>::
+operator()() {
 
   vector<double> distance;
   double ccDistance;

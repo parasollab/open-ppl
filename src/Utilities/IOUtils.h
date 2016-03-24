@@ -1,10 +1,6 @@
 #ifndef IO_UTILS_H_
 #define IO_UTILS_H_
 
-#ifndef TIXML_USE_STL
-#define TIXML_USE_STL
-#endif
-
 #include <cctype>
 #include <string>
 #include <vector>
@@ -16,6 +12,9 @@
 #include <streambuf>
 using namespace std;
 
+#ifndef TIXML_USE_STL
+#define TIXML_USE_STL
+#endif
 #include "tinyxml.h"
 
 #include "PMPLExceptions.h"

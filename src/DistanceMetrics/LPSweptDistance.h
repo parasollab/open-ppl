@@ -3,6 +3,7 @@
 
 #include "DistanceMetricMethod.h"
 
+#include "Environment/ActiveMultiBody.h"
 #include "Environment/Environment.h"
 #include "Environment/FreeBody.h"
 #include "LocalPlanners/LPOutput.h"

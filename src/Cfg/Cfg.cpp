@@ -559,8 +559,8 @@ Cfg::FindIncrement(const Cfg& _start, const Cfg& _goal, int* _nTicks, double _po
   Cfg diff = _goal - _start;
 
   // adding two basically makes this a rough ceiling...
-  *_nTicks = max(1., floor(max(diff.PositionMagnitude()/_positionRes,
-        diff.OrientationMagnitude()/_orientationRes) + 0.5));
+  *_nTicks = max(1., ceil(max(diff.PositionMagnitude()/_positionRes,
+        diff.OrientationMagnitude()/_orientationRes)));
 
   this->FindIncrement(_start, _goal, *_nTicks);
 }

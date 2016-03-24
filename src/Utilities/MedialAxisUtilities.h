@@ -10,6 +10,7 @@
 #include "Environment/SurfaceMultiBody.h"
 #include "LocalPlanners/StraightLine.h"
 #include "ValidityCheckers/CollisionDetection/CDInfo.h"
+#include "Environment/ActiveMultiBody.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup Utilities
@@ -205,7 +206,7 @@ class SurfaceMedialAxisUtility : public MedialAxisUtility<MPTraits> {
     //get clearance functions for surface configurations             //
     //***************************************************************//
     double GetClearance2DSurf(Environment* _env, const Point2d& _pos, Point2d& _cdPt);
-    double GetClearance2DSurf(shared_ptr<SurfaceMultiBody> _mb, const Point2d& _pos, Point2d& _cdPt, double _clear);
+    double GetClearance2DSurf(shared_ptr<StaticMultiBody> _mb, const Point2d& _pos, Point2d& _cdPt, double _clear);
     //***************************************************************//
     //2D-Surface version of pushing to MA                            //
     //  Takes a free cfg (surfacecfg) and pushes to medial axis of   //
@@ -381,7 +382,7 @@ ExactCollisionInfo(CfgType& _cfg, CfgType& _clrCfg,
     shared_ptr<ActiveMultiBody> robot = env->GetRobot(_cfg.GetRobotIndex());
 
     // Find closest point between robot and bbx, set if less than min dist from obstacles
-    for(int m=0; m < robot->NumFreeBody(); ++m) {
+    for(size_t m=0; m < robot->NumFreeBody(); ++m) {
       GMSPolyhedron& poly = robot->GetFreeBody(m)->GetWorldPolyhedron();
       for(size_t j = 0; j < poly.m_vertexList.size(); ++j){
         double clr = _bb->GetClearance(poly.m_vertexList[j]);
@@ -1705,7 +1706,7 @@ distsqr(const Point2d& _pos, const Point2d& _p1,
 template<class MPTraits>
 double
 SurfaceMedialAxisUtility<MPTraits>::
-GetClearance2DSurf(shared_ptr<SurfaceMultiBody> _mb,
+GetClearance2DSurf(shared_ptr<StaticMultiBody> _mb,
     const Point2d& _pos, Point2d& _cdPt, double _clear){
   double minDis=1e10;
   if(this->m_debug) cout << " GetClearance2DSurf (start call) (mb,pos,cdPt, clear)" << endl;
@@ -1749,8 +1750,12 @@ GetClearance2DSurf(Environment* _env, const Point2d& _pos, Point2d& _cdPt) {
 
   double minDist=_env->GetBoundary()->GetClearance2DSurf(_pos,_cdPt);
 
-  for(size_t i=0; i<_env->NumSurfaces(); i++) {
-    shared_ptr<SurfaceMultiBody> mb = _env->GetSurface(i);
+  for(size_t i=0; i<_env->NumSurfaces()+_env->NumObstacles(); i++) {
+    shared_ptr<StaticMultiBody> mb;
+    if( i < _env->NumSurfaces() )
+      mb = _env->GetSurface(i);
+    else
+      mb = _env->GetObstacle(i-_env->NumSurfaces());
     //find clearance
     Point2d c;
     double dist = GetClearance2DSurf(mb,_pos,c,minDist);

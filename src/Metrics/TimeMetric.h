@@ -17,7 +17,7 @@ class TimeMetric : public MetricMethod<MPTraits> {
 
     TimeMetric();
     TimeMetric(typename MPTraits::MPProblemType* _problem, XMLNode& _node);
-    virtual ~TimeMetric();
+    virtual ~TimeMetric() {}
 
     virtual void Print(ostream& _os) const;
 
@@ -26,31 +26,31 @@ class TimeMetric : public MetricMethod<MPTraits> {
 };
 
 template<class MPTraits>
-TimeMetric<MPTraits>::TimeMetric() {
+TimeMetric<MPTraits>::
+TimeMetric() {
   this->SetName("TimeMetric");
 }
 
 template<class MPTraits>
-TimeMetric<MPTraits>::TimeMetric(typename MPTraits::MPProblemType* _problem, XMLNode& _node)
+TimeMetric<MPTraits>::
+TimeMetric(typename MPTraits::MPProblemType* _problem, XMLNode& _node)
   : MetricMethod<MPTraits>(_problem, _node) {
     this->SetName("TimeMetric");
 }
 
 template<class MPTraits>
-TimeMetric<MPTraits>::~TimeMetric() {
-}
-
-template<class MPTraits>
 void
-TimeMetric<MPTraits>::Print(ostream& _os) const {
+TimeMetric<MPTraits>::
+Print(ostream& _os) const {
   _os << "Time allowed" << endl;
 }
 
 
 template<class MPTraits>
 double
-TimeMetric<MPTraits>::operator()() {
-  StatClass * timeStatClass = this->GetMPProblem()->GetStatClass();
+TimeMetric<MPTraits>::
+operator()() {
+  StatClass* timeStatClass = this->GetStatClass();
   static int flag=0;
   string timeClockName = "Total running time";
   if(flag==0){
