@@ -270,20 +270,18 @@ GetRandomSurfaceIndex() {
   return LRand() % (m_surfaces.size() + 1) - 1;
 }
 
-size_t
+pair<size_t, shared_ptr<StaticMultiBody>>
 Environment::
-AddObstacle(const string& _modelFileName, const Transformation& _where,
-    const vector<CollisionDetectionMethod*>& _cdMethods) {
+AddObstacle(const string& _dir, const string& _filename,
+    const Transformation& _t) {
   shared_ptr<StaticMultiBody> mb(
       new StaticMultiBody(MultiBody::MultiBodyType::Passive));
-  mb->Initialize(_modelFileName, _where);
+  mb->Initialize(_dir + '/' + _filename, _t);
 
-  for(const auto& cd : _cdMethods)
-    mb->BuildCDStructure(cd);
+  mb->BuildCDStructure();
 
   m_obstacles.push_back(mb);
-
-  return m_obstacles.size()-1;
+  return make_pair(m_obstacles.size() - 1, m_obstacles.back());
 }
 
 void
@@ -298,11 +296,11 @@ RemoveObstacle(size_t position) {
 
 void
 Environment::
-BuildCDStructure(CollisionDetectionMethod* _cdMethod) {
+BuildCDStructure() {
   for(auto& body : m_robots)
-    body->BuildCDStructure(_cdMethod);
+    body->BuildCDStructure();
   for(auto& body : m_obstacles)
-    body->BuildCDStructure(_cdMethod);
+    body->BuildCDStructure();
 }
 
 void

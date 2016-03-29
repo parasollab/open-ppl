@@ -10,6 +10,7 @@
 #include "ValidityCheckers/CollisionDetection/CollisionDetectionMethod.h"
 
 string Body::m_modelDataDir;
+vector<CollisionDetectionMethod*> Body::m_cdMethods;
 
 Body::
 Body(MultiBody* _owner) :
@@ -84,8 +85,9 @@ IsConvexHullVertex(const Vector3d& _v) {
 
 void
 Body::
-BuildCDStructure(CollisionDetectionMethod* _cdMethod) {
-  _cdMethod->Build(this);
+BuildCDStructure() {
+  for(auto& cd : m_cdMethods)
+    cd->Build(this);
 }
 
 #ifdef USE_SOLID
@@ -108,7 +110,8 @@ Body::UpdateVertexBase(){
 
 void
 Body::Read() {
-  string filename = m_modelDataDir == "/" ? m_filename : m_modelDataDir + m_filename;
+  string filename = m_modelDataDir == "/" || m_filename[0] == '/' ?
+    m_filename : m_modelDataDir + m_filename;
 
   if(!FileExists(filename))
     throw ParseException(filename, "File not found.");
