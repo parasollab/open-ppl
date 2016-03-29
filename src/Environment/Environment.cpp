@@ -276,7 +276,7 @@ AddObstacle(const string& _dir, const string& _filename,
     const Transformation& _t) {
   shared_ptr<StaticMultiBody> mb(
       new StaticMultiBody(MultiBody::MultiBodyType::Passive));
-  mb->Initialize(_dir + '/' + _filename, _t);
+  mb->Initialize(_dir == "" ? _filename : _dir + '/' + _filename, _t);
 
   mb->BuildCDStructure();
 
@@ -292,6 +292,16 @@ RemoveObstacle(size_t position) {
   else
     cerr << "Environment::RemoveObstacleAt Warning: unable to remove obst at "
       "position " << position << endl;
+}
+
+void
+Environment::
+RemoveObstacle(shared_ptr<StaticMultiBody> _obst) {
+  auto it = find(m_obstacles.begin(), m_obstacles.end(), _obst);
+  if(it != m_obstacles.end())
+    m_obstacles.erase(it);
+  else
+    cerr << "Environment::RemoveObstacleAt Warning: unable to remove obst." << endl;
 }
 
 void

@@ -185,7 +185,7 @@ class Environment {
     /// @param _dir Directory for geometry file
     /// @param _filename Geometry filename
     /// @param _t Transformation of object
-    /// @return Pointer to newly created obstacle
+    /// @return (index, pointer) pair to newly created obstacle
     pair<size_t, shared_ptr<StaticMultiBody>> AddObstacle(const string& _dir,
         const string& _filename, const Transformation& _t = Transformation());
 
@@ -193,6 +193,11 @@ class Environment {
     /// @brief Remove obstacle from environment
     /// @param _position Index in m_obstacleBodies to be removed
     void RemoveObstacle(size_t _position);
+
+    ////////////////////////////////////////////////////////////////////////////
+    /// @brief Remove obstacle from environment
+    /// @param _obst Obstacle to be removed
+    void RemoveObstacle(shared_ptr<StaticMultiBody> _obst);
 
     ////////////////////////////////////////////////////////////////////////////
     /// @brief Build collision detection models for external libraries
