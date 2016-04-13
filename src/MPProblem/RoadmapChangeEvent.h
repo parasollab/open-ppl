@@ -1,10 +1,9 @@
 #ifndef RoadmapChangeEvent_h
 #define RoadmapChangeEvent_h
 
-#include <iostream>
 #include <memory>
-#include <vector>
-using namespace std;
+
+#include "Utilities/PMPLExceptions.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup Roadmap
