@@ -134,81 +134,81 @@ class MPBaseObject {
 
     ////////////////////////////////////////////////////////////////////////////
     /// @return Environment pointer
-    Environment* GetEnvironment() {return m_problem->GetEnvironment();}
+    Environment* GetEnvironment() const {return m_problem->GetEnvironment();}
     ////////////////////////////////////////////////////////////////////////////
     /// @return Roadmap pointer
-    RoadmapType* GetRoadmap() {return m_problem->GetRoadmap();}
+    RoadmapType* GetRoadmap() const {return m_problem->GetRoadmap();}
     ////////////////////////////////////////////////////////////////////////////
     /// @return BlockRoadmap pointer
-    RoadmapType* GetBlockRoadmap() {return m_problem->GetBlockRoadmap();}
+    RoadmapType* GetBlockRoadmap() const {return m_problem->GetBlockRoadmap();}
     ////////////////////////////////////////////////////////////////////////////
     /// @return StatClass pointer
-    StatClass* GetStatClass() {return m_problem->GetStatClass();}
+    StatClass* GetStatClass() const {return m_problem->GetStatClass();}
 
     ////////////////////////////////////////////////////////////////////////////
     /// @param _dm Label
     /// @return DistanceMetric pointer
-    DistanceMetricPointer GetDistanceMetric(const string& _dm) {
+    DistanceMetricPointer GetDistanceMetric(const string& _dm) const {
       return m_problem->GetDistanceMetric(_dm);
     }
     ////////////////////////////////////////////////////////////////////////////
     /// @param _vc Label
     /// @return ValidityChecker pointer
-    ValidityCheckerPointer GetValidityChecker(const string& _vc) {
+    ValidityCheckerPointer GetValidityChecker(const string& _vc) const {
       return m_problem->GetValidityChecker(_vc);
     }
     ////////////////////////////////////////////////////////////////////////////
     /// @param _nf Label
     /// @return NeighborhoodFinder pointer
-    NeighborhoodFinderPointer GetNeighborhoodFinder(const string& _nf) {
+    NeighborhoodFinderPointer GetNeighborhoodFinder(const string& _nf) const {
       return m_problem->GetNeighborhoodFinder(_nf);
     }
     ////////////////////////////////////////////////////////////////////////////
     /// @param _s Label
     /// @return Sampler pointer
-    SamplerPointer GetSampler(const string& _s) {
+    SamplerPointer GetSampler(const string& _s) const {
       return m_problem->GetSampler(_s);
     }
     ////////////////////////////////////////////////////////////////////////////
     /// @param _lp Label
     /// @return LocalPlanner pointer
-    LocalPlannerPointer GetLocalPlanner(const string& _lp) {
+    LocalPlannerPointer GetLocalPlanner(const string& _lp) const {
       return m_problem->GetLocalPlanner(_lp);
     }
     ////////////////////////////////////////////////////////////////////////////
     /// @param _e Label
     /// @return Extender pointer
-    ExtenderPointer GetExtender(const string& _e) {
+    ExtenderPointer GetExtender(const string& _e) const {
       return m_problem->GetExtender(_e);
     }
     ////////////////////////////////////////////////////////////////////////////
     /// @param _pm Label
     /// @return PathModifier pointer
-    PathModifierPointer GetPathModifier(const string& _pm) {
+    PathModifierPointer GetPathModifier(const string& _pm) const {
       return m_problem->GetPathModifier(_pm);
     }
     ////////////////////////////////////////////////////////////////////////////
     /// @param _c Label
     /// @return Connector pointer
-    ConnectorPointer GetConnector(const string& _c) {
+    ConnectorPointer GetConnector(const string& _c) const {
       return m_problem->GetConnector(_c);
     }
     ////////////////////////////////////////////////////////////////////////////
     /// @param _m Label
     /// @return Metric pointer
-    MetricPointer GetMetric(const string& _m) {
+    MetricPointer GetMetric(const string& _m) const {
       return m_problem->GetMetric(_m);
     }
     ////////////////////////////////////////////////////////////////////////////
     /// @param _me Label
     /// @return MapEvaluator pointer
-    MapEvaluatorPointer GetMapEvaluator(const string& _me) {
+    MapEvaluatorPointer GetMapEvaluator(const string& _me) const {
       return m_problem->GetMapEvaluator(_me);
     }
     ////////////////////////////////////////////////////////////////////////////
     /// @param _mps Label
     /// @return MPStrategy pointer
-    MPStrategyPointer GetMPStrategy(const string& _mps) {
+    MPStrategyPointer GetMPStrategy(const string& _mps) const {
       return m_problem->GetMPStrategy(_mps);
     }
 

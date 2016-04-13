@@ -294,7 +294,7 @@ NeighborhoodFinderMethod<MPTraits>::NeighborhoodFinderMethod(MPProblemType* _pro
 template<class MPTraits>
 typename MPTraits::MPProblemType::DistanceMetricPointer
 NeighborhoodFinderMethod<MPTraits>::GetDMMethod() const {
-  return this->GetMPProblem()->GetDistanceMetric(m_dmLabel);
+  return this->GetDistanceMetric(m_dmLabel);
 }
 
 template<class MPTraits>
@@ -313,67 +313,67 @@ NeighborhoodFinderMethod<MPTraits>::CheckUnconnected(RoadmapType* _rmp, const Cf
 template<class MPTraits>
 double
 NeighborhoodFinderMethod<MPTraits>::GetTotalTime() const{
-  return this->GetMPProblem()->GetStatClass()->GetSeconds(this->GetNameAndLabel()+"::Total");
+  return this->GetStatClass()->GetSeconds(this->GetNameAndLabel()+"::Total");
 }
 
 template<class MPTraits>
 double
 NeighborhoodFinderMethod<MPTraits>::GetQueryTime() const{
-  return this->GetMPProblem()->GetStatClass()->GetSeconds(this->GetNameAndLabel()+"::Query");
+  return this->GetStatClass()->GetSeconds(this->GetNameAndLabel()+"::Query");
 }
 
 template<class MPTraits>
 double
 NeighborhoodFinderMethod<MPTraits>::GetConstructionTime() const{
-  return this->GetMPProblem()->GetStatClass()->GetSeconds(this->GetNameAndLabel()+"::Construction");
+  return this->GetStatClass()->GetSeconds(this->GetNameAndLabel()+"::Construction");
 }
 
 template<class MPTraits>
 size_t
 NeighborhoodFinderMethod<MPTraits>::GetNumQueries() const{
-  return this->GetMPProblem()->GetStatClass()->GetNFStat(this->GetNameAndLabel()+"::NumQueries");
+  return this->GetStatClass()->GetNFStat(this->GetNameAndLabel()+"::NumQueries");
 }
 
 template<class MPTraits>
 void
 NeighborhoodFinderMethod<MPTraits>::StartTotalTime(){
-  this->GetMPProblem()->GetStatClass()->StartClock(this->GetNameAndLabel()+"::Total");
+  this->GetStatClass()->StartClock(this->GetNameAndLabel()+"::Total");
 }
 
 template<class MPTraits>
 void
 NeighborhoodFinderMethod<MPTraits>::EndTotalTime(){
-  this->GetMPProblem()->GetStatClass()->StopClock(this->GetNameAndLabel()+"::Total");
+  this->GetStatClass()->StopClock(this->GetNameAndLabel()+"::Total");
 }
 
 template<class MPTraits>
 void
 NeighborhoodFinderMethod<MPTraits>::StartQueryTime(){
-  this->GetMPProblem()->GetStatClass()->StartClock(this->GetNameAndLabel()+"::Query");
+  this->GetStatClass()->StartClock(this->GetNameAndLabel()+"::Query");
 }
 
 template<class MPTraits>
 void
 NeighborhoodFinderMethod<MPTraits>::EndQueryTime(){
-  this->GetMPProblem()->GetStatClass()->StopClock(this->GetNameAndLabel()+"::Query");
+  this->GetStatClass()->StopClock(this->GetNameAndLabel()+"::Query");
 }
 
 template<class MPTraits>
 void
 NeighborhoodFinderMethod<MPTraits>::StartConstructionTime(){
-  this->GetMPProblem()->GetStatClass()->StartClock(this->GetNameAndLabel()+"::Construction");
+  this->GetStatClass()->StartClock(this->GetNameAndLabel()+"::Construction");
 }
 
 template<class MPTraits>
 void
 NeighborhoodFinderMethod<MPTraits>::EndConstructionTime(){
-  this->GetMPProblem()->GetStatClass()->StopClock(this->GetNameAndLabel()+"::Construction");
+  this->GetStatClass()->StopClock(this->GetNameAndLabel()+"::Construction");
 }
 
 template<class MPTraits>
 void
 NeighborhoodFinderMethod<MPTraits>::IncrementNumQueries(){
-  this->GetMPProblem()->GetStatClass()->IncNFStat(this->GetNameAndLabel()+"::NumQueries");
+  this->GetStatClass()->IncNFStat(this->GetNameAndLabel()+"::NumQueries");
 }
 
 #endif
