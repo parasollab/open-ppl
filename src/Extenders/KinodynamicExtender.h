@@ -159,6 +159,7 @@ Extend(const StateType& _near, const StateType& _dir, StateType& _new,
     if(!collision) {
       _new = tick;
 
+      _lpOutput.SetLPLabel("RRTExpand");
       _lpOutput.m_edge.first.SetWeight(nTicks);
       _lpOutput.m_edge.second.SetWeight(nTicks);
       _lpOutput.m_edge.first.SetControl(control);
