@@ -109,14 +109,14 @@ Body::UpdateVertexBase(){
 #endif
 
 void
-Body::Read() {
+Body::Read(GMSPolyhedron::COMAdjust _comAdjust) {
   string filename = m_modelDataDir == "/" || m_filename[0] == '/' ?
     m_filename : m_modelDataDir + m_filename;
 
   if(!FileExists(filename))
     throw ParseException(filename, "File not found.");
 
-  m_polyhedron.Read(filename);
+  m_polyhedron.Read(filename, _comAdjust);
   m_worldPolyhedron = m_polyhedron;
   GMSPolyhedron poly;
   poly = GetPolyhedron();
@@ -208,44 +208,71 @@ ReadOptions(istream& _is, CountingStreamBuffer& _cbs) {
   while(isspace(_is.peek()))
     _is.get(c);
 
-  //read '-'
-  if(_is.peek() != '-')
-    return;
-  _is.get(c);
+  while(_is.peek() == '-') {
+    //read '-'
+    _is.get(c);
 
-  _is >> c;
-  //read optional color
-  if(c == 'c') {
-    _is >> c; //read c(
-    if(c != '(')
-      throw ParseException(_cbs.Where(), "Invalid specification of color.");
-    m_color = ReadField<Color4>(_is, _cbs, "Invalid specification of color.");
-    _is >> c; //read )
-    if(c != ')')
-      throw ParseException(_cbs.Where(), "Invalid specification of color.");
-    m_colorLoaded = true;
-  }
-  //read optional texture file
-  else if(c == 't') {
-    _is >> c; //read t(
-    if(c != '(')
-      throw ParseException(_cbs.Where(), "Invalid specification of texture.");
-    m_textureFile = ReadFieldString(_is, _cbs,
-        "Invalid specification of texture.", false);
-    c = m_textureFile[m_textureFile.length() - 1];
-    if(c == ')')
-      m_textureFile = m_textureFile.substr(0, m_textureFile.length() - 1);
-    else {
+    _is >> c;
+    //read optional com adjustment
+    if(c == 'a') {
+      _is >> c; //read t(
+      if(c != '(')
+        throw ParseException(_cbs.Where(), "Invalid specification of com adjustment.");
+      string adjust = ReadFieldString(_is, _cbs, "Invalid specification of com adjustment.");
+      cout << "Adjust: " << adjust << endl;
+      c = adjust.back();
+      //read )
+      if(c != ')')
+        throw ParseException(_cbs.Where(), "Invalid specification of com adjustment.");
+      adjust = adjust.substr(0, adjust.size() - 1);
+      cout << "Adjust2: " << adjust << endl;
+      if(adjust == "COM")
+        m_comAdjust = GMSPolyhedron::COMAdjust::COM;
+      else if(adjust == "SURFACE")
+        m_comAdjust = GMSPolyhedron::COMAdjust::Surface;
+      else if (adjust == "NONE")
+        m_comAdjust = GMSPolyhedron::COMAdjust::None;
+      else
+        throw ParseException(_cbs.Where(),
+            "Invalid specification of com adjustment: '" + adjust +
+            "'. Options are 'COM', 'Surface', or 'None'");
+    }
+    else if(c == 'c') {
+      _is >> c; //read c(
+      if(c != '(')
+        throw ParseException(_cbs.Where(), "Invalid specification of color.");
+      m_color = ReadField<Color4>(_is, _cbs, "Invalid specification of color.");
       _is >> c; //read )
       if(c != ')')
-        throw ParseException(_cbs.Where(), "Invalid specification of texture.");
+        throw ParseException(_cbs.Where(), "Invalid specification of color.");
+      m_colorLoaded = true;
     }
-    m_textureLoaded = true;
-  }
-  //put back - for possible -x translation
-  else {
-    _is.putback(c);
-    _is.putback('-');
+    //read optional texture file
+    else if(c == 't') {
+      _is >> c; //read t(
+      if(c != '(')
+        throw ParseException(_cbs.Where(), "Invalid specification of texture.");
+      m_textureFile = ReadFieldString(_is, _cbs,
+          "Invalid specification of texture.", false);
+      c = m_textureFile[m_textureFile.length() - 1];
+      if(c == ')')
+        m_textureFile = m_textureFile.substr(0, m_textureFile.length() - 1);
+      else {
+        _is >> c; //read )
+        if(c != ')')
+          throw ParseException(_cbs.Where(), "Invalid specification of texture.");
+      }
+      m_textureLoaded = true;
+    }
+    //put back - for possible -x translation
+    else {
+      _is.putback(c);
+      _is.putback('-');
+      return;
+    }
+
+    while(isspace(_is.peek()))
+      _is.get(c);
   }
 }
 

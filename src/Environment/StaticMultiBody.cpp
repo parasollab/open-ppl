@@ -11,7 +11,7 @@ void
 StaticMultiBody::
 Initialize(const string& _modelFileName, const Transformation& _where) {
   shared_ptr<FixedBody> fix(new FixedBody(this, _modelFileName));
-  fix->Read();
+  fix->Read(GMSPolyhedron::COMAdjust::COM);
 
   Transformation worldTransform(_where);
   fix->PutWorldTransformation(worldTransform);

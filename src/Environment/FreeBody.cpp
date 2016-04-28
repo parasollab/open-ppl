@@ -149,9 +149,9 @@ Read(istream& _is, CountingStreamBuffer& _cbs) {
   m_filename = ReadFieldString(_is, _cbs,
       "Failed reading geometry filename.", false);
 
-  Read();
-
   ReadOptions(_is, _cbs);
+
+  Read(m_comAdjust);
 
   //Read for Base Type.  If Planar or Volumetric, read in two more strings
   //If Joint skip this stuff. If Fixed read in positions like an obstacle

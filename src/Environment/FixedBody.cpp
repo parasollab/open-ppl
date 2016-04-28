@@ -11,9 +11,10 @@ FixedBody::
 Read(istream& _is, CountingStreamBuffer& _cbs) {
   m_filename = ReadFieldString(_is, _cbs,
       "Failed reading geometry filename.", false);
-  Read();
 
   ReadOptions(_is, _cbs);
+
+  Read(m_comAdjust);
 
   m_worldTransformation = ReadField<Transformation>(_is, _cbs,
       "Failed reading fixed body transformation.");
