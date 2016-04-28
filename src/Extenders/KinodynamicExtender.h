@@ -114,7 +114,7 @@ Extend(const StateType& _near, const StateType& _dir, StateType& _new,
       //apply control
       const vector<double>& cont = c->GetControl();
       while(!collision && ticker < nTicks) {
-        tick = tick.Apply(env, cont, dt);
+        tick = tick.Apply(cont, dt);
         if(!env->InBounds(tick) || !vc->IsValid(tick, callee))
           collision = true;
         ++ticker;
@@ -150,7 +150,7 @@ Extend(const StateType& _near, const StateType& _dir, StateType& _new,
     bool collision = false;
     vector<double> control = robot->GetRandomControl();
     while(!collision && ticker < nTicks) {
-      tick = tick.Apply(env, control, dt);
+      tick = tick.Apply(control, dt);
       if(!env->InBounds(tick) || !vc->IsValid(tick, callee))
         collision = true; //return previous tick, as it is collision-free
       ++ticker;

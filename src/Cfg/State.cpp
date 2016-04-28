@@ -137,20 +137,20 @@ operator/=(double _d) {
 }
 
 State
-State::Apply(Environment* _env, const vector<double>& _u, double _dt) {
+State::Apply(const vector<double>& _u, double _dt) {
   Vector3d force(_u[0], _u[1], _u[2]);
   Vector3d torque(_u[5], _u[4], _u[3]);
   //cout << "Apply: " << force << " " << torque << endl;
   //cout << "dt: " << _dt << endl;
   //RK4 integration
-  State x0 = F(_env, *this, force, torque);
+  State x0 = F(*this, force, torque);
   //cout << "x0: " << x0 << endl;
   //cout << "this + x0: " << (*this + x0) << endl;
-  State x1 = F(_env, *this + x0 * (_dt / 2.0), force, torque);
+  State x1 = F(*this + x0 * (_dt / 2.0), force, torque);
   //cout << "x1: " << x1 << endl;
-  State x2 = F(_env, *this + x1 * (_dt / 2.0), force, torque);
+  State x2 = F(*this + x1 * (_dt / 2.0), force, torque);
   //cout << "x2: " << x2 << endl;
-  State x3 = F(_env, *this + x2 * _dt, force, torque);
+  State x3 = F(*this + x2 * _dt, force, torque);
   //cout << "x3: " << x3 << endl;
   return *this + (x0 + x1 * 2 + x2 * 2 + x3) * (_dt / 6.0);
 }
@@ -196,9 +196,8 @@ GetRandomCfgImpl(Environment* _env, shared_ptr<Boundary> _bb) {
 
 State
 State::
-F(Environment* _env, const State& _s,
-    const Vector3d& _force, const Vector3d& _torque) {
-  shared_ptr<FreeBody> body =_env->GetRobot(_s.m_robotIndex)->GetFreeBody(0);
+F(const State& _s, const Vector3d& _force, const Vector3d& _torque) {
+  shared_ptr<FreeBody> body = m_robots[_s.m_robotIndex]->GetFreeBody(0);
   State xdot;
 
   //pdot = v

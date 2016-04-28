@@ -31,7 +31,7 @@ class State : public Cfg {
 
     const vector<double>& GetVelocity() const {return m_vel;}
 
-    State Apply(Environment* _env, const vector<double>& _u, double _dt);
+    State Apply(const vector<double>& _u, double _dt);
 
     virtual void Read(istream& _is);
     virtual void Write(ostream& _os) const;
@@ -39,7 +39,7 @@ class State : public Cfg {
   protected:
     virtual void GetRandomCfgImpl(Environment* _env, shared_ptr<Boundary> bb);
 
-    static State F(Environment* _env, const State& _s,
+    static State F(const State& _s,
         const Vector3d& _force, const Vector3d& _torque);
 
     vector<double> m_vel;
