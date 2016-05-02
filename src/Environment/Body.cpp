@@ -219,13 +219,11 @@ ReadOptions(istream& _is, CountingStreamBuffer& _cbs) {
       if(c != '(')
         throw ParseException(_cbs.Where(), "Invalid specification of com adjustment.");
       string adjust = ReadFieldString(_is, _cbs, "Invalid specification of com adjustment.");
-      cout << "Adjust: " << adjust << endl;
       c = adjust.back();
       //read )
       if(c != ')')
         throw ParseException(_cbs.Where(), "Invalid specification of com adjustment.");
       adjust = adjust.substr(0, adjust.size() - 1);
-      cout << "Adjust2: " << adjust << endl;
       if(adjust == "COM")
         m_comAdjust = GMSPolyhedron::COMAdjust::COM;
       else if(adjust == "SURFACE")
