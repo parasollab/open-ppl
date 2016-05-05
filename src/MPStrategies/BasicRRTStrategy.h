@@ -278,6 +278,8 @@ EvaluateMap() {
     mapPassedEvaluation = oneTree && evalMap && evalGoals;
     if(this->m_debug && foundAllGoals)
       cout << "RRT FOUND ALL GOALS" << endl;
+    if(this->m_trees.begin()->size() >= 15000)
+      mapPassedEvaluation = true;
   }
   else
     mapPassedEvaluation = evalMap && oneTree;

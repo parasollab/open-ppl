@@ -70,6 +70,12 @@ GetClearance2DSurf(Point2d _pos, Point2d& _cdPt) const {
 
 void
 BoundingSphere::
+ApplyOffset(const Vector3d& _v) {
+  m_center += _v;
+}
+
+void
+BoundingSphere::
 ResetBoundary(vector<pair<double, double> >& _obstBBX, double _d) {
   double maxrange = -numeric_limits<double>::max();
   for(int i = 0; i<3; ++i) {

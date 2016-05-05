@@ -15,6 +15,8 @@ BoundingBox(pair<double, double> _x, pair<double, double> _y,
   m_bbx[0] = _x;
   m_bbx[1] = _y;
   m_bbx[2] = _z;
+  m_center = (Vector3d(_x.first, _y.first, _z.first) +
+      Vector3d(_x.second, _y.second, _z.second))/2.;
 }
 
 double
@@ -137,6 +139,16 @@ GetClearance2DSurf(Point2d _pos, Point2d& _cdPt) const {
   if( minDist<0 ) minDist=0;
 
   return minDist;
+}
+
+void
+BoundingBox::
+ApplyOffset(const Vector3d& _v) {
+  m_center += _v;
+  for(size_t i = 0; i < 3; ++i) {
+    m_bbx[i].first += _v[i];
+    m_bbx[i].second += _v[i];
+  }
 }
 
 void

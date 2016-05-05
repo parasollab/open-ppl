@@ -109,24 +109,24 @@
 #include "MapEvaluators/TrueEvaluation.h"
 
 //mp strategies includes
-#include "MPStrategies/AdaptiveRRT.h"
-#include "MPStrategies/BasicPRM.h"
+//#include "MPStrategies/AdaptiveRRT.h"
+//#include "MPStrategies/BasicPRM.h"
 #include "MPStrategies/BasicRRTStrategy.h"
-#include "MPStrategies/BlindRRT.h"
-#include "MPStrategies/EvaluateMapStrategy.h"
-#include "MPStrategies/HybridPRM.h"
-#include "MPStrategies/LocalManeuveringStrategy.h"
-#include "MPStrategies/LPCompare.h"
-#include "MPStrategies/ModifyPath.h"
-#include "MPStrategies/MultiStrategy.h"
-#include "MPStrategies/PushQueryToMA.h"
-#include "MPStrategies/SparkPRM.h"
-#include "MPStrategies/SRTStrategy.h"
-#include "MPStrategies/TogglePRMStrategy.h"
-#include "MPStrategies/UnitTest/ClearanceTestStrategy.h"
-#include "MPStrategies/UnitTest/DMTestStrategy.h"
-#include "MPStrategies/UtilityGuidedGenerator.h"
-#include "MPStrategies/VisibilityBasedPRM.h"
+//#include "MPStrategies/BlindRRT.h"
+#include "MPStrategies/DynamicRegionRRT.h"
+//#include "MPStrategies/EvaluateMapStrategy.h"
+//#include "MPStrategies/HybridPRM.h"
+//#include "MPStrategies/LPCompare.h"
+//#include "MPStrategies/ModifyPath.h"
+//#include "MPStrategies/MultiStrategy.h"
+//#include "MPStrategies/PushQueryToMA.h"
+//#include "MPStrategies/SparkPRM.h"
+//#include "MPStrategies/SRTStrategy.h"
+//#include "MPStrategies/TogglePRMStrategy.h"
+//#include "MPStrategies/UnitTest/ClearanceTestStrategy.h"
+//#include "MPStrategies/UnitTest/DMTestStrategy.h"
+//#include "MPStrategies/UtilityGuidedGenerator.h"
+//#include "MPStrategies/VisibilityBasedPRM.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup MotionPlanningUniverse
@@ -292,24 +292,25 @@ struct MPTraits {
 
   //types of motion planning strategies available in our world
   typedef boost::mpl::list<
-    AdaptiveRRT<MPTraits>,
-    BasicPRM<MPTraits>,
+    //AdaptiveRRT<MPTraits>,
+    //BasicPRM<MPTraits>,
     BasicRRTStrategy<MPTraits>,
-    BlindRRT<MPTraits>,
-    ClearanceTestStrategy<MPTraits>,
-    DMTestStrategy<MPTraits>,
-    EvaluateMapStrategy<MPTraits>,
-    HybridPRM<MPTraits>,
-    LPCompare<MPTraits>,
-    ModifyPath<MPTraits>,
-    MultiStrategy<MPTraits>,
-    PushQueryToMA<MPTraits>,
-    SparkPRM<MPTraits, BasicPRM>,
-    SparkPRM<MPTraits, TogglePRMStrategy>,
-    SRTStrategy<MPTraits>,
-    TogglePRMStrategy<MPTraits>,
-    UtilityGuidedGenerator<MPTraits>,
-    VisibilityBasedPRM<MPTraits>
+    //BlindRRT<MPTraits>,
+    //ClearanceTestStrategy<MPTraits>,
+    //DMTestStrategy<MPTraits>,
+    DynamicRegionRRT<MPTraits>//,
+    //EvaluateMapStrategy<MPTraits>,
+    //HybridPRM<MPTraits>,
+    //LPCompare<MPTraits>,
+    //ModifyPath<MPTraits>,
+    //MultiStrategy<MPTraits>,
+    //PushQueryToMA<MPTraits>,
+    //SparkPRM<MPTraits, BasicPRM>,
+    //SparkPRM<MPTraits, TogglePRMStrategy>,
+    //SRTStrategy<MPTraits>,
+    //TogglePRMStrategy<MPTraits>,
+    //UtilityGuidedGenerator<MPTraits>,
+    //VisibilityBasedPRM<MPTraits>
       > MPStrategyMethodList;
 };
 
