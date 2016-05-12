@@ -21,6 +21,8 @@ typedef CGAL::Cartesian_d<double> Kernel;
 ////////////////////////////////////////////////////////////////////////////////
 class PMPLPointD : public Kernel::Point_d {
   public:
+    PMPLPointD() : Kernel::Point_d(), m_it(-1) {}
+
     template<typename InputIterator>
       PMPLPointD (size_t d, InputIterator first, InputIterator last) :
         Kernel::Point_d(d, first, last), m_it(-1) {}
@@ -217,7 +219,7 @@ UpdateInternalModel(RoadmapType* _rmp,
     return;
 
   typename RoadmapVCSType::const_iterator start;
-  if(this->m_curRoadmapVersion == -1)
+  if(this->m_curRoadmapVersion == static_cast<size_t>(-1))
     start = rvcs.begin();
   else
     start = rvcs.IteratorAt(m_curRoadmapVersion);
