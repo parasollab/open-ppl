@@ -206,14 +206,6 @@ template<class CfgType>
 void
 DefaultWeight<CfgType>::
 Read(istream& _is) {
-  size_t numIntermediates;
-  _is >> numIntermediates;
-  m_intermediates.clear();
-  CfgType tmp;
-  for(size_t i = 0; i < numIntermediates; ++i) {
-    _is >> tmp;
-    m_intermediates.push_back(tmp);
-  }
   _is >> m_weight;
 }
 
@@ -221,9 +213,6 @@ template<class CfgType>
 void
 DefaultWeight<CfgType>::
 Write(ostream& _os) const {
-  _os << m_intermediates.size() << " ";
-  for(auto&  cfg : m_intermediates)
-    _os << cfg;
   _os << m_weight;
 }
 

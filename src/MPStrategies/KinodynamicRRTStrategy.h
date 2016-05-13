@@ -350,7 +350,7 @@ ExpandTree(StateType& _dir) {
     recentVID = g->AddVertex(newCfg);
     if(nearVID != recentVID) {
       g->GetVertex(recentVID).SetStat("Parent", neighbors[0].first);
-      g->AddEdge(nearVID, recentVID, lpOutput.m_edge);
+      g->AddEdge(nearVID, recentVID, lpOutput.m_edge.first);
     }
     else
       recentVID = INVALID_VID;

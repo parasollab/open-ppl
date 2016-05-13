@@ -8,6 +8,8 @@ using namespace mathtool;
 #include "Environment/Environment.h"
 #include "Environment/NonHolonomicMultiBody.h"
 
+double State::m_timeRes = 0;
+
 State::
 State(size_t _index) : Cfg(_index) {
   if(m_dof.size() > 0)

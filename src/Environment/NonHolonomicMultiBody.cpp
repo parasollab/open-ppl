@@ -86,7 +86,6 @@ Read(istream& _is, CountingStreamBuffer& _cbs) {
   string tmp;
   getline(_is, tmp);
 
-  m_controls.push_back(shared_ptr<Control>(new Control(this)));
   for(size_t i = 0; i < controlsCount; ++i) {
     shared_ptr<Control> c(new Control(this));
     m_controls.push_back(c);

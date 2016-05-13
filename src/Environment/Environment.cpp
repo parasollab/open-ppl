@@ -17,7 +17,7 @@ Environment() :
   m_positionRes(0.05),
   m_orientationRes(0.05),
   m_rdRes(0.05),
-  m_timeRes(0.01) {
+  m_timeRes(0.05) {
   }
 
 Environment::
@@ -37,8 +37,6 @@ Environment(XMLNode& _node) {
 #else
   m_rdRes = 0.05;
 #endif
-  m_timeRes = _node.Read("timeRes", false, 0.01, 0.0, MAX_DBL,
-      "Time resolution");
   m_filename = MPProblemBase::GetPath(m_filename);
   Read(m_filename);
 }
@@ -68,6 +66,17 @@ Read(string _filename) {
 
   //read boundary
   ReadBoundary(ifs, cbs);
+
+  //Read time resolution
+  string resolution = ReadFieldString(ifs, cbs, "Failed reading resolution tag.");
+  if(resolution != "RESOLUTION")
+    throw ParseException(cbs.Where(),
+        "Unknown resolution tag '" + resolution + "'. Should read 'Resolution'.");
+  double timeRes = ReadField<double>(ifs,cbs, "Failed reading time resolution.");
+  m_timeRes = timeRes;
+#ifdef PMPState
+  State::SetTimeRes(m_timeRes);
+#endif
 
   //read number of multibodies
   string mbds = ReadFieldString(ifs, cbs, "Failed reading multibodies tag.");

@@ -4,7 +4,7 @@
 
     <!-- Example input, resolution defaults computed automatically. Can set
          through environment.-->
-    <Environment filename="3DState/3d.env" timeRes="0.05"/>
+    <Environment filename="3DState/3d.env"/>
 
     <DistanceMetrics>
       <WeightedEuclidean label="weuclidean" posWeight="0.6" rotWeight="0.2"
@@ -32,7 +32,7 @@
       <KinodynamicExtender label="FixedBest" dmLabel="weuclidean" vcLabel="cd1"
         delta="30.0" fixed="true" best="true"/>
       <KinodynamicExtender label="FixedRandom" dmLabel="weuclidean" vcLabel="cd1"
-        delta="30.0" fixed="true" best="false"/>
+        delta="100.0" fixed="true" best="false"/>
       <KinodynamicExtender label="VaryBest" dmLabel="weuclidean" vcLabel="cd1"
         delta="30.0" fixed="false" best="true"/>
       <KinodynamicExtender label="VaryRandom" dmLabel="weuclidean" vcLabel="cd1"
@@ -52,7 +52,7 @@
 
     <MapEvaluators>
       <PrintMapEvaluation label="PrintMap" base_name="Basic"/>
-      <ConditionalEvaluator label="NodesEval" metric_method="NumNodes" value="1000" operator=">="/>
+      <ConditionalEvaluator label="NodesEval" metric_method="NumNodes" value="30" operator=">="/>
       <ConditionalEvaluator label="EdgesEval" metric_method="NumEdges" value="1000" operator=">"/>
       <ComposeEvaluator label="Com1" operator="or">
         <Evaluator label="NodesEval"/>
@@ -63,14 +63,14 @@
     <MPStrategies>
 
       <!-- KinodynamicRRT -->
-      <KinodynamicRRTStrategy label="KRRTQuery" growthFocus="0.05" minDist="0.001"
+      <KinodynamicRRTStrategy label="KRRTQuery" growthFocus="0.05" minDist="20"
         evaluateGoal="true" goalDist="5" query="3DState/3d.query"
         dmLabel="weuclidean" nfLabel="Nearest" vcLabel="cd1"
         extenderLabel="FixedRandom" debug="false">
       </KinodynamicRRTStrategy>
 
       <!-- KinodynamicRRT -->
-      <KinodynamicRRTStrategy label="KRRTNodes" growthFocus="0.05" minDist="0.000"
+      <KinodynamicRRTStrategy label="KRRTNodes" growthFocus="0.05" minDist="0.01"
         evaluateGoal="false" query="3DState/3d.query"
         dmLabel="weuclidean" nfLabel="Nearest" vcLabel="cd1"
         extenderLabel="FixedRandom" debug="false">
