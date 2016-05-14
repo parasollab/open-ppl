@@ -21,6 +21,10 @@ class ExtenderMethod : public MPBaseObject<MPTraits> {
       : MPBaseObject<MPTraits>(_problem, _node) {}
 
     ////////////////////////////////////////////////////////////////////////////
+    /// @return Maximum extension distance
+    virtual double GetDelta() const = 0;
+
+    ////////////////////////////////////////////////////////////////////////////
     /// @brief Extends a path from an input configuration towards a given
     ///        direction
     /// @param _nearest Initial configuration to grow from
@@ -39,7 +43,7 @@ class ExtenderMethod : public MPBaseObject<MPTraits> {
     /// @endcode
     ////////////////////////////////////////////////////////////////////////////
     virtual bool Extend(const CfgType& _nearest, const CfgType& _dir,
-        CfgType& _new, LPOutput<MPTraits>& _lpOutput) =0;
+        CfgType& _new, LPOutput<MPTraits>& _lpOutput) = 0;
 };
 
 #endif

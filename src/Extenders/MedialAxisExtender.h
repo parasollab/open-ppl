@@ -29,6 +29,8 @@ class MedialAxisExtender : public ExtenderMethod<MPTraits> {
     void ParseXML(XMLNode& _node);
     virtual void Print(ostream& _os) const;
 
+    double GetDelta() const {return m_delta;}
+
     virtual bool Extend(const CfgType& _near, const CfgType& _dir,
         CfgType& _new, LPOutput<MPTraits>& _lpOutput);
 
