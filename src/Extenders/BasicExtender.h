@@ -162,7 +162,10 @@ BasicExtender<MPTraits>::Expand(const CfgType& _start, const CfgType& _dir,
     ++ticker;
   }
   if(previous != _start) {
-    _newCfg = previous;//Last Cfg pushed back is the final tick allowed
+    if(ticker == nTicks + 1) //Goal is reached
+      _newCfg = _dir;
+    else //Last Cfg pushed back is the final tick allowed
+      _newCfg = previous;
     return true;
   }
   else{
