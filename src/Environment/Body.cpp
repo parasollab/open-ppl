@@ -17,6 +17,7 @@ Body(MultiBody* _owner) :
   m_multibody(_owner),
   m_label(0),
   m_colorLoaded(false), m_textureLoaded(false),
+  m_comAdjust(GMSPolyhedron::COMAdjust::COM),
   m_worldPolyhedronAvailable(false),
   m_convexHullAvailable(false),
   m_centerOfMassAvailable(false) {
