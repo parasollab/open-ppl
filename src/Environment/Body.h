@@ -167,7 +167,7 @@ class Body {
 
     ////////////////////////////////////////////////////////////////////////////
     /// @brief Build appropriate collision detection models
-    void BuildCDStructure(CollisionDetectionMethod* _cdMethod);
+    void BuildCDStructure();
 
 #ifndef NO_VCLIP
     ////////////////////////////////////////////////////////////////////////////
@@ -234,6 +234,8 @@ class Body {
     /// modify this to consider the length of edges, which is still an
     /// approximation.
     void ComputeCenterOfMass();
+
+    static vector<CollisionDetectionMethod*> m_cdMethods; ///< All CD Methods
 
   protected:
     ////////////////////////////////////////////////////////////////////////////

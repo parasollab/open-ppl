@@ -177,13 +177,12 @@ class Environment {
 
     ////////////////////////////////////////////////////////////////////////////
     /// @brief Add Obstacle to environment
-    /// @param _modelFileName path to .obj file that specifies obstacle geometry
-    /// @param _where a 6 dof vector specifying position and orientation
-    /// @param _cdMethods CD methods to build CD models for
-    /// @return Obstacle's index in m_obstacleBodies on success, -1 otherwise
-    size_t AddObstacle(const string& _modelFileName,
-        const Transformation& _where,
-        const vector<CollisionDetectionMethod*>& _cdMethods);
+    /// @param _dir Directory for geometry file
+    /// @param _filename Geometry filename
+    /// @param _t Transformation of object
+    /// @return (index, pointer) pair to newly created obstacle
+    pair<size_t, shared_ptr<StaticMultiBody>> AddObstacle(const string& _dir,
+        const string& _filename, const Transformation& _t = Transformation());
 
     ////////////////////////////////////////////////////////////////////////////
     /// @brief Remove obstacle from environment
@@ -191,9 +190,14 @@ class Environment {
     void RemoveObstacle(size_t _position);
 
     ////////////////////////////////////////////////////////////////////////////
+    /// @brief Remove obstacle from environment
+    /// @param _obst Obstacle to be removed
+    void RemoveObstacle(shared_ptr<StaticMultiBody> _obst);
+
+    ////////////////////////////////////////////////////////////////////////////
     /// @brief Build collision detection models for external libraries
-    /// @param _cdMethod Requested external library to build for
-    void BuildCDStructure(CollisionDetectionMethod* _cdMethod);
+    void BuildCDStructure();
+
     /// @}
     ////////////////////////////////////////////////////////////////////////////
 

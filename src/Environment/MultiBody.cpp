@@ -52,9 +52,9 @@ GetTagFromMultiBodyType(MultiBodyType _b) {
 
 void
 MultiBody::
-BuildCDStructure(CollisionDetectionMethod* _cdMethod) {
+BuildCDStructure() {
   for(auto& body : m_bodies)
-    body->BuildCDStructure(_cdMethod);
+    body->BuildCDStructure();
 }
 
 void

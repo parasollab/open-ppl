@@ -1,5 +1,5 @@
-#ifndef RoadmapVCS_h
-#define RoadmapVCS_h
+#ifndef ROADMAP_VCS_H_
+#define ROADMAP_VCS_H_
 
 #include "RoadmapChangeEvent.h"
 
@@ -13,80 +13,27 @@ using namespace std;
 /// This class is like a version control system for roadmaps. It aids in
 /// tracking changes to the roadmap.
 ////////////////////////////////////////////////////////////////////////////////
-template<typename CFG, typename WEIGHT>
+template<typename GraphType>
 class RoadmapVCS {
-
   public:
-    typedef RoadmapChangeEvent<CFG, WEIGHT> ChangeEvent;
-    typedef vector< pair<int, ChangeEvent> > ChangeVector;
-    typedef typename ChangeVector::const_iterator cce_iter; // constant event iterator
+    typedef RoadmapChangeEvent<GraphType> Event;
+    typedef pair<size_t, Event> ChangeEvent;
+    typedef vector<ChangeEvent> ChangeEvents;
+    typedef typename ChangeEvents::const_iterator const_iterator;
 
-    RoadmapVCS();
+    RoadmapVCS() {}
 
-    cce_iter begin();
-    cce_iter end();
-    cce_iter iter_at(int version_number);
+    const_iterator begin() const {return m_changes.cbegin();}
+    const_iterator end() const {return m_changes.cend();}
+    const_iterator IteratorAt(size_t _versionNumber) const {return begin() + _versionNumber;}
 
-    void addEvent(ChangeEvent);
+    void AddEvent(Event&& _event) {m_changes.emplace_back(++m_versionNumber, _event);}
 
-    int get_version_number();
+    size_t GetVersionNumber() const {return m_versionNumber;}
 
-  protected:
-    // NOTE: not really using the first int in pair for now...
-    vector< pair<int, ChangeEvent > > change_list;
-    int version_number;
+  private:
+    ChangeEvents m_changes;
+    size_t m_versionNumber{(size_t)-1};
 };
-
-template<typename CFG, typename WEIGHT>
-RoadmapVCS<CFG, WEIGHT>::
-RoadmapVCS()
-{
-  version_number = -1;
-}
-
-template<typename CFG, typename WEIGHT>
-void
-RoadmapVCS<CFG, WEIGHT>::
-addEvent(ChangeEvent _event)
-{
-  version_number++;
-
-  pair<int, ChangeEvent> temp(version_number, _event);
-  change_list.push_back(temp);
-
-  //cout << "Event #" << version_number << endl;
-}
-
-template<typename CFG, typename WEIGHT>
-typename RoadmapVCS<CFG, WEIGHT>::cce_iter
-RoadmapVCS<CFG, WEIGHT>::
-begin()
-{
-  return change_list.begin();
-}
-
-template<typename CFG, typename WEIGHT>
-typename RoadmapVCS<CFG, WEIGHT>::cce_iter
-RoadmapVCS<CFG, WEIGHT>::
-end()
-{
-  return change_list.end();
-}
-
-template<typename CFG, typename WEIGHT>
-typename RoadmapVCS<CFG, WEIGHT>::cce_iter
-RoadmapVCS<CFG, WEIGHT>::
-iter_at(int _version_number)
-{
-  return change_list.begin() + _version_number;
-}
-
-template<typename CFG, typename WEIGHT>
-int
-RoadmapVCS<CFG, WEIGHT>::
-get_version_number()
-{
-  return version_number;
-}
 
 #endif

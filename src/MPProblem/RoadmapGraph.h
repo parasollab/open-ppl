@@ -65,8 +65,8 @@ class RoadmapGraph : public
     typedef typename GRAPH::vertex_property VP;
     typedef stapl::sequential::vector_property_map<GRAPH, size_t> ColorMap;
 #endif
-    typedef RoadmapChangeEvent<VERTEX, WEIGHT> ChangeEvent;
-    typedef RoadmapVCS<VERTEX, WEIGHT> RoadmapVCSType;
+    typedef RoadmapChangeEvent<GRAPH> ChangeEvent;
+    typedef RoadmapVCS<GRAPH> RoadmapVCSType;
 
     RoadmapGraph() {}
 
@@ -136,6 +136,8 @@ class RoadmapGraph : public
     }
 #endif
 
+    const RoadmapVCSType& GetRoadmapVCS() const {return m_roadmapVCS;}
+
   private:
     RoadmapVCSType m_roadmapVCS;
 };
@@ -155,8 +157,7 @@ RoadmapGraph<VERTEX,WEIGHT>::AddVertex(const VERTEX& _v) {
   }
   VID vid = this->add_vertex(_v);
   VDAddNode(_v);
-  ChangeEvent event(ChangeEvent::ADD_VERTEX, _v, vid);
-  m_roadmapVCS.addEvent(event);
+  m_roadmapVCS.AddEvent(ChangeEvent(_v, vid));
   return vid;
 #else
   return this->add_vertex(_v);
@@ -281,7 +282,7 @@ template<class VERTEX, class WEIGHT>
 bool
 RoadmapGraph<VERTEX,WEIGHT>::
 IsEdge(VID _v1, VID _v2, EI& _ei) {
-#ifndef _PARALLEL //rm guard after find_edge is implemented for pgraph
+#ifndef _PARALLEL
   VI vi;
   return this->find_edge(EID(_v1, _v2), vi, _ei);
 #else

@@ -149,8 +149,9 @@ class MPProblem : public MPProblemBase
     /// @param _where Obstacle placement
     /// @return the obstacle's index in the Environment's m_otherMultiBodies on
     ///         success, -1 on failure
-    size_t AddObstacle(const string& _modelFileName,
-        const Transformation& _where);
+    pair<size_t, shared_ptr<StaticMultiBody>> AddObstacle(
+        const string& _modelFileName,
+        const Transformation& _where = Transformation());
 
     ////////////////////////////////////////////////////////////////////////////
     /// @brief Remove obstacle from Environment
@@ -495,10 +496,12 @@ void
 MPProblem<MPTraits>::
 BuildCDStructures() {
   if(m_environment) {
+    Body::m_cdMethods.clear();
     for(auto& vc : *m_validityCheckers)
       if(shared_ptr<CollisionDetectionValidity<MPTraits>> method =
           dynamic_pointer_cast<CollisionDetectionValidity<MPTraits>>(vc.second))
-        m_environment->BuildCDStructure(method->GetCDMethod());
+        Body::m_cdMethods.push_back(method->GetCDMethod());
+    m_environment->BuildCDStructure();
   }
   else
     throw RunTimeException(WHERE,
@@ -507,20 +510,15 @@ BuildCDStructures() {
 }
 
 template<class MPTraits>
-size_t
+pair<size_t, shared_ptr<StaticMultiBody>>
 MPProblem<MPTraits>::
 AddObstacle(const string& _modelFileName, const Transformation& _where) {
   if(m_environment) {
-    vector<CollisionDetectionMethod*> cdMethods;
-    for(auto& vc : *m_validityCheckers)
-      if(shared_ptr<CollisionDetectionValidity<MPTraits>> method =
-          dynamic_pointer_cast<CollisionDetectionValidity<MPTraits>>(vc.second))
-        cdMethods.push_back(method->GetCDMethod());
-    return m_environment->AddObstacle(_modelFileName, _where, cdMethods);
+    return m_environment->AddObstacle("", _modelFileName, _where);
   }
   else {
     cerr << "MPProblem::AddObstacle Warning: Attempted to add obstacle to a NULL environment" << endl;
-    return -1;
+    return make_pair(-1, nullptr);
   }
 }
 

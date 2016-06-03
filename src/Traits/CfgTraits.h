@@ -26,6 +26,7 @@
 //neighborhood finder includes
 #include "NeighborhoodFinders/BandsNF.h"
 #include "NeighborhoodFinders/BruteForceNF.h"
+#include "NeighborhoodFinders/CGALNF.h"
 #include "NeighborhoodFinders/HierarchicalNF.h"
 #include "NeighborhoodFinders/HopLimitNF.h"
 #include "NeighborhoodFinders/OptimalNF.h"
@@ -175,7 +176,7 @@ struct MPTraits {
   typedef boost::mpl::list<
     BandsNF<MPTraits>,
     BruteForceNF<MPTraits>,
-    //CGALNF<MPTraits>,
+    CGALNF<MPTraits>,
     //DPESNF<MPTraits>,
     HierarchicalNF<MPTraits>,
     HopLimitNF<MPTraits>,
