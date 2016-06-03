@@ -27,11 +27,11 @@
       <CollisionDetection label="cd4" method="PQP_SOLID"/>
       <NodeClearanceValidity label="nc" delta="0.3" nfLabel="Nearest"/>
       <NegateValidity label="nv" vcLabel="cd1"/>
-      <MedialAxisClearance label="mac" maClearance="0.5" vcLabel="cd2" dmLabel="euclidean"
+      <MedialAxisClearance label="mac" maClearance="0.5" vcLabel="cd4" dmLabel="euclidean"
         clearanceType="exact" penetrationType="exact" useBBX="true" positional="true"
         epsilon="0.01" historyLength="5"/>
       <ComposeValidity label="cv" operator="AND">
-        <ValidityChecker label="cd2"/>
+        <ValidityChecker label="cd4"/>
         <ValidityChecker label="mac"/>
       </ComposeValidity>
       <AlwaysTrueValidity label="alwaysTrue"/>
@@ -69,7 +69,7 @@
         dmLabel="euclidean" stepSize="0.0" nShellsColl="0" nShellsFree="1" debug="false"/>
       <GaussianSampler label="Gauss" vcLabel="cd1" d="0.2" dmLabel="euclidean" useBBX="false"/>
       <BridgeTestSampler label="Bridge" vcLabel="cd1" d="0.2" dmLabel="euclidean" useBBX="true"/>
-      <MedialAxisSampler label="MAPRM" vcLabel="cd2" dmLabel="euclidean"
+      <MedialAxisSampler label="MAPRM" vcLabel="cd4" dmLabel="euclidean"
         clearanceType="exact" penetrationType="exact"
         useBBX="true" debug="false" positional="true"
         epsilon="0.01" historyLength="100"/>
@@ -94,7 +94,7 @@
       <TransformAtS label="tas" binaryEvaluation="true" vcLabel="cd1" s="0.5" saveIntermediates="false"/>
       <AStarDistance label="asd" vcLabel="cd1" dmLabel="euclidean"
         maxTries="6" numNeighbors="10" histLength="10" debug="true"/>
-      <AStarClearance label="asc" vcLabel="cd2" maxTries="6" numNeighbors="3" histLength="10"
+      <AStarClearance label="asc" vcLabel="cd4" maxTries="6" numNeighbors="3" histLength="10"
         dmLabel="euclidean" clearanceType="exact" penetrationType="exact"
         clearanceRays="2" penetrationRays="2" useBBX="true" positional="true" debug="false"/>
       <MedialAxisLP label="malpr" controller="recursive"
@@ -117,7 +117,7 @@
         debug="true" saveIntermediates="true"/>
       <ToggleLP label="togglelp" vcLabel="cd1" dmLabel="euclidean"
         lpLabel="sl" maxIter="5"/>
-      <ApproxSpheres label="apsph" vcLabel="cd2" dmLabel="euclidean" saveIntermediates="false"
+      <ApproxSpheres label="apsph" vcLabel="cd4" dmLabel="euclidean" saveIntermediates="false"
         clearanceType="exact" penetrationType="exact"/>
       <HierarchicalLP label="hlp">
         <LocalPlanner method="sl"/>
@@ -179,7 +179,7 @@
       <ResamplePathModifier label="ResamplePathModifier" debug="false"
         typeName="MAX_CLEARANCE"
         numResamples="1" stepSize="0.3" userValue="0.3"
-        vcLabel="cd2" dmLabel="euclidean" lpLabel="sl"
+        vcLabel="cd4" dmLabel="euclidean" lpLabel="sl"
         clearanceType="exact" penetrationType="exact" useBBX="true" positional="true"/>
       <ShortcuttingPathModifier label="ShortcuttingPathModifier" lpLabel="sl"
         debug="false"/>

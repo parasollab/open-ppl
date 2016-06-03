@@ -496,6 +496,7 @@ void
 MPProblem<MPTraits>::
 BuildCDStructures() {
   if(m_environment) {
+    Body::m_cdMethods.clear();
     for(auto& vc : *m_validityCheckers)
       if(shared_ptr<CollisionDetectionValidity<MPTraits>> method =
           dynamic_pointer_cast<CollisionDetectionValidity<MPTraits>>(vc.second))
