@@ -12,6 +12,9 @@ using namespace std;
 #include <Vector.h>
 using namespace mathtool;
 
+#include "IOUtils.h"
+
+class Environment;
 class TetGenDecomposition;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -222,11 +225,27 @@ class ReebGraphConstruction {
 
     ////////////////////////////////////////////////////////////////////////////
     /// @param _filename Filename to read embedded reeb graph
-    ReebGraphConstruction(const string& _filename);
+    ReebGraphConstruction(const string& _filename = "");
+
+    ////////////////////////////////////////////////////////////////////////////
+    /// @param _node XML node
+    ReebGraphConstruction(XMLNode& _node);
 
     ////////////////////////////////////////////////////////////////////////////
     /// @param _tetgen TetGen tetrahedralization
     ReebGraphConstruction(TetGenDecomposition* _tetgen);
+
+    /// @}
+    ////////////////////////////////////////////////////////////////////////////
+
+    ////////////////////////////////////////////////////////////////////////////
+    /// @name Operations
+    /// @{
+
+    ////////////////////////////////////////////////////////////////////////////
+    /// @param _env PMPL Environment as workspace
+    /// @param _baseFilename Base filename used for saving models
+    void Construct(Environment* _env, const string& _baseFilename = "");
 
     /// @}
     ////////////////////////////////////////////////////////////////////////////
@@ -274,6 +293,13 @@ class ReebGraphConstruction {
     ////////////////////////////////////////////////////////////////////////////
     /// @name Construction Helpers
     /// @{
+
+    ////////////////////////////////////////////////////////////////////////////
+    /// @brief Tetrahedralize environment and populate ReebGraph structures for
+    ///        construction
+    /// @param _env Environment
+    /// @param _baseFilename Base filename for output
+    void Tetrahedralize(Environment* _env, const string& _baseFilename);
 
     ////////////////////////////////////////////////////////////////////////////
     /// @brief Construct Reeb Graph based on algorithm presented in class
@@ -376,16 +402,19 @@ class ReebGraphConstruction {
     ////////////////////////////////////////////////////////////////////////////
     /// @brief Spatially embed reeb graph based on algorithm presented in class
     ///        description
-    /// @param _tetgen TetGen decomposition of workspace which construction was
-    ///                based upon
     ///
     /// Embedding algorithm relates each Reeb Node to its closest tetrahedron
     /// and finds an embedded ReebArc by biasing a path search in the
     /// tetrahedralization's dual graph.
-    void Embed(TetGenDecomposition* _tetgen);
+    void Embed();
 
     /// @}
     ////////////////////////////////////////////////////////////////////////////
+
+    string m_reebFilename;       ///< Input filename for embedded reeb graph
+    bool m_writeReeb;            ///< Output embedded reeb graph
+
+    TetGenDecomposition* m_tetrahedralization; ///< TetGen tetrahedralization
 
     vector<Vector3d> m_vertices; ///< Vertices of tetrahedralization
     unordered_set<MeshEdge*, MeshEdgeHash, MeshEdgeEq>

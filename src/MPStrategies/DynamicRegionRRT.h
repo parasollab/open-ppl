@@ -63,12 +63,7 @@ class DynamicRegionRRT : public BasicRRTStrategy<MPTraits> {
     vector<RegionPtr> m_regions; ///< All Regions
     RegionPtr m_samplingRegion;  ///< Points to the current sampling region.
 
-    TetGenDecomposition* m_tetrahedralization; ///< TetGen decomposition
-
     ReebGraphConstruction* m_reebGraphConstruction; ///< Embedded reeb graph
-    bool m_readReeb;
-    bool m_writeReeb;
-    string m_reebFilename;
 };
 
 
@@ -83,23 +78,15 @@ DynamicRegionRRT(const CfgType& _start, const CfgType& _goal, string _dm,
       _evaluators, _minDist, _growthFocus, _evaluateGoal,
       _start, _goal, _numRoots, _numDirections, _maxTrial, _growGoals) {
     this->SetName("DynamicRegionRRT");
-    m_readReeb = false;
-    m_writeReeb = false;
-
-    m_tetrahedralization = new TetGenDecomposition();
+    m_reebGraphConstruction = new ReebGraphConstruction();
   }
 
 template<class MPTraits>
 DynamicRegionRRT<MPTraits>::
 DynamicRegionRRT(MPProblemType* _problem, XMLNode& _node) :
   BasicRRTStrategy<MPTraits>(_problem, _node),
-  m_tetrahedralization(new TetGenDecomposition(_node)) {
+  m_reebGraphConstruction(new ReebGraphConstruction(_node)) {
     this->SetName("DynamicRegionRRT");
-
-    m_readReeb = _node.Read("readReeb", false, false, "Read Reeb Graph from file");
-    m_reebFilename = _node.Read("reebFilename", m_readReeb, "", "Filename for Read "
-        "or write ReebGraph operations.");
-    m_writeReeb = _node.Read("writeReeb", false, false, "Write Reeb Graph to file");
   }
 
 template<class MPTraits>
@@ -110,21 +97,11 @@ Initialize() {
 
   StatClass* stats = this->GetStatClass();
 
-  //Tetrahedralize environment
-  stats->StartClock("Tetrahedralization");
-  m_tetrahedralization->Decompose(this->GetEnvironment(), this->GetBaseFilename());
-  stats->StopClock("Tetrahedralization");
-
   //Embed ReebGraph
   stats->StartClock("ReebGraphConstruction");
-  if(m_readReeb)
-    m_reebGraphConstruction = new ReebGraphConstruction(MPProblemType::GetPath(m_reebFilename));
-  else
-    m_reebGraphConstruction = new ReebGraphConstruction(m_tetrahedralization);
+  m_reebGraphConstruction->Construct(this->GetEnvironment(),
+      this->GetBaseFilename());
   stats->StopClock("ReebGraphConstruction");
-
-  if(m_writeReeb)
-    m_reebGraphConstruction->Write(this->GetBaseFilename() + ".reeb");
 }
 
 

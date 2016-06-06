@@ -25,9 +25,9 @@ TetGenDecomposition(XMLNode& _node) :
   m_env(nullptr),
   m_freeModel(new tetgenio()),
   m_decompModel(new tetgenio()) {
-    m_readFilename = _node.Read("readTetGenFilename", false, "", "Input "
-        "Filename for reading TetGen models from file");
-    if(m_readFilename.empty()) {
+    m_tetGenFilename = _node.Read("tetGenFilename", false, "",
+        "Input Filename for reading TetGen models from file");
+    if(m_tetGenFilename.empty()) {
       m_switches = _node.Read("switches", false, "pnqQ",
           "TetGen input parameters. See TetGen manual. Need 'pn' at a minimum");
       m_writeFreeModel = _node.Read("writeFreeModel", false, false,
@@ -53,7 +53,7 @@ Decompose(Environment* _env, const string& _baseFilename) {
   m_env = _env;
   m_baseFilename = _baseFilename;
 
-  if(m_readFilename.empty()) {
+  if(m_tetGenFilename.empty()) {
     //make in tetgenio - this is a model of free workspace to decompose
     InitializeFreeModel();
     MakeFreeModel();
@@ -504,7 +504,7 @@ SaveDecompModel() {
 void
 TetGenDecomposition::
 LoadDecompModel() {
-  string basename = MPProblemBase::GetPath(m_readFilename);
+  string basename = MPProblemBase::GetPath(m_tetGenFilename);
   char* b = const_cast<char*>(basename.c_str());
   m_decompModel->load_node(b);
   m_decompModel->load_tet(b);

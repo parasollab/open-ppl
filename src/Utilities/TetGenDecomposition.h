@@ -216,7 +216,7 @@ class TetGenDecomposition {
     tetgenio* m_freeModel;   ///< TetGen model of free workspace
     tetgenio* m_decompModel; ///< TetGen model of tetrahedralization
 
-    string m_readFilename;   ///< TetGen model input base filename
+    string m_tetGenFilename; ///< TetGen model input base filename
 
     string m_switches;       ///< Switches for TetGen. See TetGen manual for
                              ///< details. Need 'pn' at a minimum.

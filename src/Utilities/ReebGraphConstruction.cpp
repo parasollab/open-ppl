@@ -7,6 +7,7 @@
 #include <containers/sequential/graph/algorithms/graph_input_output.h>
 
 #include "TetGenDecomposition.h"
+#include "MPProblem/MPProblemBase.h"
 
 istream&
 operator>>(istream& _is, ReebGraphConstruction::ReebNode& _rn) {
@@ -49,44 +50,34 @@ operator<<(ostream& _os, const ReebGraphConstruction::ReebArc& _ra) {
 }
 
 ReebGraphConstruction::
-ReebGraphConstruction(const string& _filename) {
-  Read(_filename);
-}
-
-ReebGraphConstruction::
-ReebGraphConstruction(TetGenDecomposition* _tetgen) {
-  //Fill vertices vector
-  size_t numPoints = _tetgen->GetNumPoints();
-  const double* const points = _tetgen->GetPoints();
-  m_vertices.reserve(numPoints);
-  for(size_t i = 0; i < numPoints; ++i)
-    m_vertices.emplace_back(&points[3*i]);
-
-  //Fill triangle vector
-  size_t numCorners = _tetgen->GetNumCorners();
-  size_t numTetras = _tetgen->GetNumTetras();
-  const int* const tetra = _tetgen->GetTetras();
-  map<Triangle, unordered_set<size_t>> triangles;
-
-  for(size_t i = 0; i < numTetras; ++i) {
-    auto AddTriangle = [&](size_t _i, size_t _j, size_t _k) {
-      int v[3] = {tetra[i*numCorners + _i], tetra[i*numCorners + _j], tetra[i*numCorners + _k]};
-      sort(v, v+3);
-      triangles[Triangle(v[0], v[1], v[2])].insert(i);
-    };
-
-    AddTriangle(0, 2, 1);
-    AddTriangle(0, 3, 2);
-    AddTriangle(0, 1, 3);
-    AddTriangle(1, 2, 3);
+ReebGraphConstruction(const string& _filename) : m_reebFilename(_filename),
+  m_tetrahedralization(new TetGenDecomposition()) {
   }
 
-  m_triangles.reserve(triangles.size());
-  copy(triangles.begin(), triangles.end(), back_inserter(m_triangles));
+ReebGraphConstruction::
+ReebGraphConstruction(XMLNode& _node) :
+  m_tetrahedralization(new TetGenDecomposition(_node)) {
+    m_reebFilename = _node.Read("reebFilename", false, "", "Filename for Read "
+        "or write ReebGraph operations.");
+    if(m_reebFilename.empty())
+      m_writeReeb = _node.Read("writeReeb", false, false,
+          "Write Reeb Graph to file");
+  }
 
-  //Compute ReebGraph
-  Construct();
-  Embed(_tetgen);
+void
+ReebGraphConstruction::
+Construct(Environment* _env, const string& _baseFilename) {
+  if(m_reebFilename.empty()) {
+    //Compute ReebGraph
+    Tetrahedralize(_env, _baseFilename);
+    Construct();
+    Embed();
+
+    if(m_writeReeb)
+      Write(_baseFilename + ".reeb");
+  }
+  else
+    Read(MPProblemBase::GetPath(m_reebFilename));
 }
 
 pair<ReebGraphConstruction::FlowGraph, size_t>
@@ -190,6 +181,42 @@ ReebGraphConstruction::
 Write(const string& _filename) {
   ofstream ofs(_filename);
   stapl::sequential::write_graph(m_reebGraph, ofs);
+}
+
+void
+ReebGraphConstruction::
+Tetrahedralize(Environment* _env, const string& _baseFilename) {
+  //Call TetGenDecomposition
+  m_tetrahedralization->Decompose(_env, _baseFilename);
+
+  //Fill vertices vector
+  size_t numPoints = m_tetrahedralization->GetNumPoints();
+  const double* const points = m_tetrahedralization->GetPoints();
+  m_vertices.reserve(numPoints);
+  for(size_t i = 0; i < numPoints; ++i)
+    m_vertices.emplace_back(&points[3*i]);
+
+  //Fill triangle vector
+  size_t numCorners = m_tetrahedralization->GetNumCorners();
+  size_t numTetras = m_tetrahedralization->GetNumTetras();
+  const int* const tetra = m_tetrahedralization->GetTetras();
+  map<Triangle, unordered_set<size_t>> triangles;
+
+  for(size_t i = 0; i < numTetras; ++i) {
+    auto AddTriangle = [&](size_t _i, size_t _j, size_t _k) {
+      int v[3] = {tetra[i*numCorners + _i], tetra[i*numCorners + _j], tetra[i*numCorners + _k]};
+      sort(v, v+3);
+      triangles[Triangle(v[0], v[1], v[2])].insert(i);
+    };
+
+    AddTriangle(0, 2, 1);
+    AddTriangle(0, 3, 2);
+    AddTriangle(0, 1, 3);
+    AddTriangle(1, 2, 3);
+  }
+
+  m_triangles.reserve(triangles.size());
+  copy(triangles.begin(), triangles.end(), back_inserter(m_triangles));
 }
 
 void
@@ -445,10 +472,10 @@ Remove2Nodes() {
 
 void
 ReebGraphConstruction::
-Embed(TetGenDecomposition* _tetgen) {
-  size_t numCorners = _tetgen->GetNumCorners();
-  const int* const tetras = _tetgen->GetTetras();
-  TetGenDecomposition::DualGraph& tetraGraph = _tetgen->GetDualGraph();
+Embed() {
+  size_t numCorners = m_tetrahedralization->GetNumCorners();
+  const int* const tetras = m_tetrahedralization->GetTetras();
+  TetGenDecomposition::DualGraph& tetraGraph = m_tetrahedralization->GetDualGraph();
 
   //embed ReebNodes in tetrahedralization by finding its closest tetrahedron
   for(auto nit = m_reebGraph.begin(); nit != m_reebGraph.end(); ++nit) {
