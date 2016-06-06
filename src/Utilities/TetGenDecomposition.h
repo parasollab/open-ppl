@@ -46,8 +46,8 @@ class TetGenDecomposition {
     ///                  minimum.
     /// @param _writeFreeModel Output TetGen model of workspace
     /// @param _writeDecompModel Output TetGen model of tetrahedralization
-    TetGenDecomposition(string _switches,
-        bool _writeFreeModel, bool _writeDecompModel);
+    TetGenDecomposition(const string& _switches = "pnqQ",
+        bool _writeFreeModel = false, bool _writeDecompModel = false);
     ////////////////////////////////////////////////////////////////////////////
     /// @param _node XML node for input parameters
     TetGenDecomposition(XMLNode& _node);
@@ -60,7 +60,9 @@ class TetGenDecomposition {
     /// @{
     ////////////////////////////////////////////////////////////////////////////
     /// @param _env PMPL Environment as workspace
-    void Decompose(Environment* _env);
+    /// @param _baseFilename Base filename used for saving models
+    void Decompose(Environment* _env, const string& _baseFilename = "");
+
     /// @}
     ////////////////////////////////////////////////////////////////////////////
 
@@ -183,28 +185,39 @@ class TetGenDecomposition {
     ////////////////////////////////////////////////////////////////////////////
     /// @name Output helpers
     /// @{
+
     ////////////////////////////////////////////////////////////////////////////
     /// @brief Output free workspace TetGen model
     void SaveFreeModel();
     ////////////////////////////////////////////////////////////////////////////
     /// @brief Output tetrahedralization TetGen model
     void SaveDecompModel();
+    ////////////////////////////////////////////////////////////////////////////
+    /// @brief Input tetrahedralization TetGen model
+    void LoadDecompModel();
+
     /// @}
     ////////////////////////////////////////////////////////////////////////////
 
     ////////////////////////////////////////////////////////////////////////////
     /// @name Dual Graph Helpers
     /// @{
+
     ////////////////////////////////////////////////////////////////////////////
     /// @brief Create Dual of tetrahedralization
     void MakeDualGraph();
+
     /// @}
     ////////////////////////////////////////////////////////////////////////////
 
     Environment* m_env;      ///< PMPL Environment
+    string m_baseFilename;   ///< PMPL base filename
 
     tetgenio* m_freeModel;   ///< TetGen model of free workspace
     tetgenio* m_decompModel; ///< TetGen model of tetrahedralization
+
+    string m_readFilename;   ///< TetGen model input base filename
+
     string m_switches;       ///< Switches for TetGen. See TetGen manual for
                              ///< details. Need 'pn' at a minimum.
     bool m_writeFreeModel;   ///< Output TetGen model of free workspace

@@ -64,9 +64,6 @@ class DynamicRegionRRT : public BasicRRTStrategy<MPTraits> {
     RegionPtr m_samplingRegion;  ///< Points to the current sampling region.
 
     TetGenDecomposition* m_tetrahedralization; ///< TetGen decomposition
-    string m_switches;             ///< Input switches to TetGen model
-    bool m_writeFreeModel;         ///< Output TetGen model of freespace
-    bool m_writeDecompModel;       ///< Output TetGen model tetrahedrons
 
     ReebGraphConstruction* m_reebGraphConstruction; ///< Embedded reeb graph
     bool m_readReeb;
@@ -86,21 +83,18 @@ DynamicRegionRRT(const CfgType& _start, const CfgType& _goal, string _dm,
       _evaluators, _minDist, _growthFocus, _evaluateGoal,
       _start, _goal, _numRoots, _numDirections, _maxTrial, _growGoals) {
     this->SetName("DynamicRegionRRT");
-    m_switches = "pqnQ";
-    m_writeFreeModel = false;
-    m_writeDecompModel = false;
     m_readReeb = false;
     m_writeReeb = false;
+
+    m_tetrahedralization = new TetGenDecomposition();
   }
 
 template<class MPTraits>
 DynamicRegionRRT<MPTraits>::
 DynamicRegionRRT(MPProblemType* _problem, XMLNode& _node) :
-  BasicRRTStrategy<MPTraits>(_problem, _node) {
+  BasicRRTStrategy<MPTraits>(_problem, _node),
+  m_tetrahedralization(new TetGenDecomposition(_node)) {
     this->SetName("DynamicRegionRRT");
-    m_switches = "pqn";
-    m_writeFreeModel = false;
-    m_writeDecompModel = false;
 
     m_readReeb = _node.Read("readReeb", false, false, "Read Reeb Graph from file");
     m_reebFilename = _node.Read("reebFilename", m_readReeb, "", "Filename for Read "
@@ -117,10 +111,8 @@ Initialize() {
   StatClass* stats = this->GetStatClass();
 
   //Tetrahedralize environment
-  m_tetrahedralization = new TetGenDecomposition(m_switches,
-      m_writeFreeModel, m_writeDecompModel);
   stats->StartClock("Tetrahedralization");
-  m_tetrahedralization->Decompose(this->GetEnvironment());
+  m_tetrahedralization->Decompose(this->GetEnvironment(), this->GetBaseFilename());
   stats->StopClock("Tetrahedralization");
 
   //Embed ReebGraph

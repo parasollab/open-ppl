@@ -7,9 +7,10 @@
 #include "Environment/Environment.h"
 #include "Environment/FixedBody.h"
 #include "Environment/StaticMultiBody.h"
+#include "MPProblem/MPProblemBase.h"
 
 TetGenDecomposition::
-TetGenDecomposition(string _switches,
+TetGenDecomposition(const string& _switches,
     bool _writeFreeModel, bool _writeDecompModel) :
   m_env(nullptr),
   m_freeModel(new tetgenio()),
@@ -24,12 +25,20 @@ TetGenDecomposition(XMLNode& _node) :
   m_env(nullptr),
   m_freeModel(new tetgenio()),
   m_decompModel(new tetgenio()) {
-    _node.Read("switches", false, "pqnQ",
-        "TetGen input parameters. See TetGen manual. Need 'pn' at a minimum");
-    _node.Read("writeFreeModel", false, false,
-        "Output TetGen model of workspace");
-    _node.Read("writeDecompModel", false, false,
-        "Output TetGen model of tetrahedralization");
+    m_readFilename = _node.Read("readTetGenFilename", false, "", "Input "
+        "Filename for reading TetGen models from file");
+    if(m_readFilename.empty()) {
+      m_switches = _node.Read("switches", false, "pnqQ",
+          "TetGen input parameters. See TetGen manual. Need 'pn' at a minimum");
+      m_writeFreeModel = _node.Read("writeFreeModel", false, false,
+          "Output TetGen model of workspace");
+      m_writeDecompModel = _node.Read("writeDecompModel", false, false,
+          "Output TetGen model of tetrahedralization");
+      if(!m_switches.find('p'))
+        m_switches += 'p';
+      if(!m_switches.find('n'))
+        m_switches += 'n';
+    }
   }
 
 TetGenDecomposition::
@@ -40,24 +49,32 @@ TetGenDecomposition::
 
 void
 TetGenDecomposition::
-Decompose(Environment* _env) {
+Decompose(Environment* _env, const string& _baseFilename) {
   m_env = _env;
+  m_baseFilename = _baseFilename;
 
-  //make in tetgenio - this is a model of free workspace to decompose
-  InitializeFreeModel();
-  MakeFreeModel();
-  if(m_writeFreeModel)
-    SaveFreeModel();
+  if(m_readFilename.empty()) {
+    //make in tetgenio - this is a model of free workspace to decompose
+    InitializeFreeModel();
+    MakeFreeModel();
+    if(m_writeFreeModel)
+      SaveFreeModel();
 
-  //decompose with tetgen
-  tetrahedralize(const_cast<char*>(m_switches.c_str()),
-      m_freeModel, m_decompModel);
-  if(m_writeDecompModel)
-    SaveDecompModel();
+    //decompose with tetgen
+    tetrahedralize(const_cast<char*>(m_switches.c_str()),
+        m_freeModel, m_decompModel);
+    if(m_writeDecompModel)
+      SaveDecompModel();
+  }
+  else {
+    LoadDecompModel();
+    tetrahedralize(const_cast<char*>("rn"), m_decompModel, m_decompModel);
+  }
 
   MakeDualGraph();
 
   m_env = nullptr;
+  m_baseFilename = "";
 }
 
 void
@@ -468,16 +485,30 @@ AddToFreeModel(const shared_ptr<BoundingSphere>& _boundary,
 void
 TetGenDecomposition::
 SaveFreeModel() {
-  m_freeModel->save_nodes((char*)"freespace");
-  m_freeModel->save_poly((char*)"freespace");
+  string basename = m_baseFilename + ".freespace";
+  char* b = const_cast<char*>(basename.c_str());
+  m_freeModel->save_nodes(b);
+  m_freeModel->save_poly(b);
 }
 
 void
 TetGenDecomposition::
 SaveDecompModel() {
-  m_decompModel->save_nodes((char*)"decomposed");
-  m_decompModel->save_elements((char*)"decomposed");
-  m_decompModel->save_faces((char*)"decomposed");
+  string basename = m_baseFilename + ".decomposed";
+  char* b = const_cast<char*>(basename.c_str());
+  m_decompModel->save_nodes(b);
+  m_decompModel->save_elements(b);
+  //m_decompModel->save_neighbors(b);
+}
+
+void
+TetGenDecomposition::
+LoadDecompModel() {
+  string basename = MPProblemBase::GetPath(m_readFilename);
+  char* b = const_cast<char*>(basename.c_str());
+  m_decompModel->load_node(b);
+  m_decompModel->load_tet(b);
+  //m_decompModel->load_neighbors(b);
 }
 
 void
