@@ -69,6 +69,9 @@ class DynamicRegionRRT : public BasicRRTStrategy<MPTraits> {
     bool m_writeDecompModel;       ///< Output TetGen model tetrahedrons
 
     ReebGraphConstruction* m_reebGraphConstruction; ///< Embedded reeb graph
+    bool m_readReeb;
+    bool m_writeReeb;
+    string m_reebFilename;
 };
 
 
@@ -86,6 +89,8 @@ DynamicRegionRRT(const CfgType& _start, const CfgType& _goal, string _dm,
     m_switches = "pqnQ";
     m_writeFreeModel = false;
     m_writeDecompModel = false;
+    m_readReeb = false;
+    m_writeReeb = false;
   }
 
 template<class MPTraits>
@@ -96,6 +101,11 @@ DynamicRegionRRT(MPProblemType* _problem, XMLNode& _node) :
     m_switches = "pqn";
     m_writeFreeModel = false;
     m_writeDecompModel = false;
+
+    m_readReeb = _node.Read("readReeb", false, false, "Read Reeb Graph from file");
+    m_reebFilename = _node.Read("reebFilename", m_readReeb, "", "Filename for Read "
+        "or write ReebGraph operations.");
+    m_writeReeb = _node.Read("writeReeb", false, false, "Write Reeb Graph to file");
   }
 
 template<class MPTraits>
@@ -115,8 +125,14 @@ Initialize() {
 
   //Embed ReebGraph
   stats->StartClock("ReebGraphConstruction");
-  m_reebGraphConstruction = new ReebGraphConstruction(m_tetrahedralization);
+  if(m_readReeb)
+    m_reebGraphConstruction = new ReebGraphConstruction(MPProblemType::GetPath(m_reebFilename));
+  else
+    m_reebGraphConstruction = new ReebGraphConstruction(m_tetrahedralization);
   stats->StopClock("ReebGraphConstruction");
+
+  if(m_writeReeb)
+    m_reebGraphConstruction->Write(this->GetBaseFilename() + ".reeb");
 }
 
 

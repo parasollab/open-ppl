@@ -51,6 +51,9 @@ class ReebGraphConstruction {
           double _w = numeric_limits<double>::max()) :
         m_vertexIndex(_vIndx), m_vertex(_v), m_w(_w) {}
 
+      friend istream& operator>>(istream& _is, ReebNode& _rn);
+      friend ostream& operator<<(ostream& _os, const ReebNode& _rn);
+
       size_t m_vertexIndex; ///< Vertex Index
       Vector3d m_vertex;    ///< Vertex
       double m_w;           ///< Morse function value
@@ -106,6 +109,9 @@ class ReebGraphConstruction {
           if(_m)
             m_edges.insert(_m);
         }
+
+      friend istream& operator>>(istream& _is, ReebArc& _ra);
+      friend ostream& operator<<(ostream& _os, const ReebArc& _ra);
 
       size_t m_source;                  ///< Source vertex index
       size_t m_target;                  ///< Target vertex index
@@ -215,6 +221,10 @@ class ReebGraphConstruction {
     /// @{
 
     ////////////////////////////////////////////////////////////////////////////
+    /// @param _filename Filename to read embedded reeb graph
+    ReebGraphConstruction(const string& _filename);
+
+    ////////////////////////////////////////////////////////////////////////////
     /// @param _tetgen TetGen tetrahedralization
     ReebGraphConstruction(TetGenDecomposition* _tetgen);
 
@@ -243,6 +253,21 @@ class ReebGraphConstruction {
     /// @}
     ////////////////////////////////////////////////////////////////////////////
 
+    ////////////////////////////////////////////////////////////////////////////
+    /// @name I/O
+    /// @{
+
+    ////////////////////////////////////////////////////////////////////////////
+    /// @brief Read embedding graph from file
+    /// @param _filename Filename
+    void Read(const string& _filename);
+    ////////////////////////////////////////////////////////////////////////////
+    /// @brief Write embedding graph to file
+    /// @param _filename Filename
+    void Write(const string& _filename);
+
+    /// @}
+    ////////////////////////////////////////////////////////////////////////////
 
   private:
 
@@ -364,12 +389,12 @@ class ReebGraphConstruction {
 
     vector<Vector3d> m_vertices; ///< Vertices of tetrahedralization
     unordered_set<MeshEdge*, MeshEdgeHash, MeshEdgeEq>
-      m_edges; ///< Edges of Tetrahedralization
+      m_edges;                   ///< Edges of Tetrahedralization
     vector<pair<Triangle, unordered_set<size_t>>>
-      m_triangles; ///< Triangles of Tetrahedralization and their corresponding
-                   ///< tetrahedrons
+      m_triangles;               ///< Triangles of Tetrahedralization and their
+                                 ///< corresponding tetrahedrons
 
-    ReebGraph m_reebGraph; ///< Reeb Graph
+    ReebGraph m_reebGraph;       ///< Reeb Graph
 };
 
 #endif

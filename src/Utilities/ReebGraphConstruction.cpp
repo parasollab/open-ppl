@@ -4,8 +4,54 @@
 #include <unordered_map>
 
 #include <containers/sequential/graph/algorithms/dijkstra.h>
+#include <containers/sequential/graph/algorithms/graph_input_output.h>
 
 #include "TetGenDecomposition.h"
+
+istream&
+operator>>(istream& _is, ReebGraphConstruction::ReebNode& _rn) {
+  return _is
+    >> _rn.m_vertexIndex
+    >> _rn.m_vertex
+    >> _rn.m_w
+    >> _rn.m_order;
+}
+
+ostream&
+operator<<(ostream& _os, const ReebGraphConstruction::ReebNode& _rn) {
+  return _os
+    << _rn.m_vertexIndex << " "
+    << _rn.m_vertex << " "
+    << _rn.m_w << " "
+    << _rn.m_order;
+}
+
+istream&
+operator>>(istream& _is, ReebGraphConstruction::ReebArc& _ra) {
+  size_t sz;
+  _is >> _ra.m_source >> _ra.m_target >> sz;
+  Vector3d p;
+  _ra.m_path.clear();
+  _ra.m_path.reserve(sz);
+  for(size_t i = 0; i < sz; ++i) {
+    _is >> p;
+    _ra.m_path.push_back(p);
+  }
+  return _is;
+}
+
+ostream&
+operator<<(ostream& _os, const ReebGraphConstruction::ReebArc& _ra) {
+  _os << _ra.m_source << " " << _ra.m_target << " " << _ra.m_path.size();
+  for(const auto& p : _ra.m_path)
+    _os << " " << p;
+  return _os;
+}
+
+ReebGraphConstruction::
+ReebGraphConstruction(const string& _filename) {
+  Read(_filename);
+}
 
 ReebGraphConstruction::
 ReebGraphConstruction(TetGenDecomposition* _tetgen) {
@@ -127,6 +173,23 @@ GetFlowGraph(const Vector3d& _p, double _posRes) {
   }
 
   return make_pair(f, closestID);
+}
+
+void
+ReebGraphConstruction::
+Read(const string& _filename) {
+  ifstream ifs(_filename);
+  m_reebGraph.clear();
+  m_reebGraph.set_lazy_update(true);
+  stapl::sequential::read_graph(m_reebGraph, ifs);
+  m_reebGraph.set_lazy_update(false);
+}
+
+void
+ReebGraphConstruction::
+Write(const string& _filename) {
+  ofstream ofs(_filename);
+  stapl::sequential::write_graph(m_reebGraph, ofs);
 }
 
 void
