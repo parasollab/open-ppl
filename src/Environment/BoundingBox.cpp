@@ -32,6 +32,15 @@ GetMaxDist(double _r1, double _r2) const {
   return pow(maxdist, _r2);
 }
 
+pair<double, double>&
+BoundingBox::
+GetRange(size_t _i) {
+  if(_i > 2)
+    throw RunTimeException(WHERE,
+        "Invalid access to dimension '" + ::to_string(_i) + "'.");
+  return m_bbx[_i];
+}
+
 pair<double, double>
 BoundingBox::
 GetRange(size_t _i) const {

@@ -113,6 +113,7 @@
 #include "MPStrategies/BasicPRM.h"
 #include "MPStrategies/BasicRRTStrategy.h"
 #include "MPStrategies/BlindRRT.h"
+#include "MPStrategies/DynamicDomainRRT.h"
 #include "MPStrategies/DynamicRegionRRT.h"
 #include "MPStrategies/EvaluateMapStrategy.h"
 #include "MPStrategies/HybridPRM.h"
@@ -299,6 +300,7 @@ struct MPTraits {
     BlindRRT<MPTraits>,
     ClearanceTestStrategy<MPTraits>,
     DMTestStrategy<MPTraits>,
+    DynamicDomainRRT<MPTraits>,
     DynamicRegionRRT<MPTraits>,
     EvaluateMapStrategy<MPTraits>,
     HybridPRM<MPTraits>,
