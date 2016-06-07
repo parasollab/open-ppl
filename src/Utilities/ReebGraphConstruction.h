@@ -235,10 +235,6 @@ class ReebGraphConstruction {
     /// @param _node XML node
     ReebGraphConstruction(XMLNode& _node);
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// @param _tetgen TetGen tetrahedralization
-    ReebGraphConstruction(TetGenDecomposition* _tetgen);
-
     /// @}
     ////////////////////////////////////////////////////////////////////////////
 
