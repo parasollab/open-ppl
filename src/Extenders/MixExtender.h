@@ -23,11 +23,16 @@ class MixExtender : public ExtenderMethod<MPTraits> {
     void ParseXML(XMLNode& _node);
     virtual void Print(ostream& _os) const;
 
+    double GetDelta() const;
+
     virtual bool Extend(const CfgType& _near, const CfgType& _dir,
         CfgType& _new, LPOutput<MPTraits>& _lpOutput);
 
   private:
     ExpanderSet m_growSet;
+
+    mutable bool m_deltaComputed = false;
+    mutable double m_delta = numeric_limits<double>::min();
 };
 
 template<class MPTraits>
@@ -94,6 +99,19 @@ MixExtender<MPTraits>::Print(ostream& _os) const {
       it != m_growSet.end(); it++)
     _os << "\t\t" << it->first << endl;
  }
+
+template<class MPTraits>
+double
+MixExtender<MPTraits>::
+GetDelta() const {
+  if(!m_deltaComputed) {
+    for(auto& e : m_growSet)
+      m_delta = max(m_delta, this->GetExtender(e.first)->GetDelta());
+    m_deltaComputed = true;
+  }
+
+  return m_delta;
+}
 
 template<class MPTraits>
 bool

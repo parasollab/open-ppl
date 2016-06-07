@@ -93,6 +93,9 @@ class Body {
     /// @return Center of mass of body
     Vector3d GetCenterOfMass();
     ////////////////////////////////////////////////////////////////////////////
+    /// @return Adjustment of center of mass
+    GMSPolyhedron::COMAdjust GetCOMAdjust() const {return m_comAdjust;}
+    ////////////////////////////////////////////////////////////////////////////
     /// @return Bounding sphere radius
     double GetBoundingSphereRadius() const;
     ////////////////////////////////////////////////////////////////////////////
@@ -211,7 +214,8 @@ class Body {
 
     ////////////////////////////////////////////////////////////////////////////
     /// @brief Read geometry information from file
-    void Read();
+    /// @param _comAdjust Center of mass adjustment method
+    void Read(GMSPolyhedron::COMAdjust _comAdjust);
 
     static string m_modelDataDir; ///< Directory of geometry files
 
@@ -255,6 +259,7 @@ class Body {
     Color4 m_color;                          ///< Optionally specified color
     bool m_textureLoaded;                    ///< Was texture option set
     string m_textureFile;                    ///< Optionally specified texture
+    GMSPolyhedron::COMAdjust m_comAdjust;    ///< COM Adjustment option
 
     Transformation m_worldTransformation;    ///< World Transformation
     GMSPolyhedron m_polyhedron;              ///< Model in model coordinates

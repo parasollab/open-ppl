@@ -340,8 +340,8 @@
       </BasicPRM>
 
       <!-- BasicRRT -->
-      <BasicRRTStrategy label="BasicRRT" delta="10.0" minDist="0.001"
-        numRoots="1" m="1" growthFocus="0.01" lpLabel="sl" dmLabel="euclidean"
+      <BasicRRTStrategy label="BasicRRT" minDist="0.001"
+        numRoots="1" m="1" growthFocus="0.01" dmLabel="euclidean"
         nfLabel="Nearest" vcLabel="cd1" connectorLabel="Closest"
         query="2D/2d.query" gtype="UNDIRECTED_TREE" debug="false"
         evaluateGoal="true" growGoals = "true" extenderLabel="BERO">
@@ -350,8 +350,8 @@
 
       <!-- RRG -->
       <!-- If optimal connection is wanted, the correct connector needs to be selected -->
-      <BasicRRTStrategy label="RRG" delta="10.0" minDist="0.001"
-        numRoots="1" m="1" growthFocus="0.01" lpLabel="sl" dmLabel="euclidean"
+      <BasicRRTStrategy label="RRG" minDist="0.001"
+        numRoots="1" m="1" growthFocus="0.01" dmLabel="euclidean"
         nfLabel="Nearest" vcLabel="cd1" query="2D/2d.query" extenderLabel="BERO"
         connectorLabel="OptimalConnector" gtype="UNDIRECTED_GRAPH">
         <Evaluator label="NodesEval"/>
@@ -359,8 +359,8 @@
 
       <!-- RRT* -->
       <!-- The connector needs to be OptimalRewire for RRT* -->
-      <BasicRRTStrategy label="RRTstar" delta="10.0" minDist="0.001"
-        numRoots="1" m="1" growthFocus="0.01" lpLabel="sl" dmLabel="euclidean"
+      <BasicRRTStrategy label="RRTstar" minDist="0.001"
+        numRoots="1" m="1" growthFocus="0.01" dmLabel="euclidean"
         nfLabel="Nearest" vcLabel="cd1" query="2D/2d.query" extenderLabel="BERO"
         connectorLabel="OptimalRewire" gtype="UNDIRECTED_GRAPH">
         <Evaluator label="NodesEval"/>
@@ -376,8 +376,8 @@
 
       <!-- ObstacleBasedRRT -->
       <!-- The extender needs to be MixExtender for OBRRT -->
-      <BasicRRTStrategy label="OBRRT" delta="10.0" minDist="0.001"
-        numRoots="1" m="1" growthFocus="0.01" lpLabel="sl" dmLabel="euclidean"
+      <BasicRRTStrategy label="OBRRT" minDist="0.001"
+        numRoots="1" m="1" growthFocus="0.01" dmLabel="euclidean"
         nfLabel="Nearest" vcLabel="cd1" connectorLabel="Closest"
         query="2D/2d.query" gtype="UNDIRECTED_TREE" debug="false"
         evaluateGoal="true" growGoals = "true" extenderLabel="ME">
@@ -385,8 +385,8 @@
       </BasicRRTStrategy>
 
       <!-- Adaptive RRT -->
-      <AdaptiveRRT label="AdaptiveRRT" delta="10.0" minDist="0.001"
-        numRoots="1" growthFocus="0.01" lpLabel="sl" dmLabel="euclidean"
+      <AdaptiveRRT label="AdaptiveRRT" minDist="0.001"
+        numRoots="1" growthFocus="0.01" dmLabel="euclidean"
         nfLabel="BFNF" vcLabel="cd1" query="2D/2d.query"
         gtype="UNDIRECTED_TREE" gamma="0.1" cost="reward" debug="true">
         <Evaluator label="NodesEval"/>
@@ -396,6 +396,14 @@
           <Extender label="ROVRO"/>
         </GrowthSet>
       </AdaptiveRRT>
+
+      <!-- DynamicRegionRRT -->
+      <DynamicRegionRRT label="DynamicRegionRRT" minDist="0.001"
+        numRoots="1" m="1" growthFocus="0.01" dmLabel="euclidean"
+        nfLabel="Nearest" vcLabel="cd" connectorLabel="Closest"
+        query="2D/2d.query" gtype="UNDIRECTED_TREE" debug="false"
+        evaluateGoal="true" growGoals = "false" extenderLabel="BERO">
+      </DynamicRegionRRT>
 
       <!-- Toggle PRM -->
       <TogglePRMStrategy label="TogglePRM" priority="true">

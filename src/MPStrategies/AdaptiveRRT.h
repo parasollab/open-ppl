@@ -62,7 +62,7 @@ class AdaptiveRRT : public BasicRRTStrategy<MPTraits> {
     string SelectGrowthMethod(GrowthSet& _gs);
     void UpdateCost(double _cost, string _s, GrowthSet& _gs);
     void RewardGrowthMethod(double _r, string _s, GrowthSet& _gs);
-    VID UpdateTree(VID _nearest, CfgType& _new, CfgType& _dir);
+    VID UpdateTree(VID _nearest, CfgType& _new, CfgType& _dir, double _delta);
     VID UpdateTree(CfgType& _newCfg, VID _nearVID, bool _againstWall,
         double _ratio);
 
@@ -223,8 +223,9 @@ AdaptiveRRT<MPTraits>::ExpandTree(CfgType& _dir){
 
   CfgType newCfg;
   LPOutput<MPTraits> lpOutput;
-  bool verifiedValid = this->GetExtender(gm)
-    ->Extend(nearest, _dir, newCfg, lpOutput);
+  auto e = this->GetExtender(gm);
+  bool verifiedValid = e->Extend(nearest, _dir, newCfg, lpOutput);
+  double delta = e->GetDelta();
 
   //end timing from cycles
   uint64_t end = GetCycles();
@@ -243,7 +244,7 @@ AdaptiveRRT<MPTraits>::ExpandTree(CfgType& _dir){
     AvgVisibility(nearest, 0);
 
     if(m_costMethod == REWARD)
-      UpdateCost(this->m_delta, gm, rgsit->second);
+      UpdateCost(delta, gm, rgsit->second);
 
     //reward the growth strategy based upon expanded distance in proportion to
     //delta_q
@@ -256,7 +257,7 @@ AdaptiveRRT<MPTraits>::ExpandTree(CfgType& _dir){
   double dist = dm->Distance(newCfg, nearest);
 
   if(m_costMethod == REWARD)
-    UpdateCost(max(this->m_delta - dist, 0.0) + 1E-6, gm, rgsit->second);
+    UpdateCost(max(delta - dist, 0.0) + 1E-6, gm, rgsit->second);
 
   if(dist >= this->m_minDist) {
     //expansion success
@@ -264,12 +265,12 @@ AdaptiveRRT<MPTraits>::ExpandTree(CfgType& _dir){
     //update the tree
     //Generate Waypoints is from AdaptiveMultiResRRT, but this one does not
     //acutally add nodes.
-    recentVID = UpdateTree(kClosest[0].first, newCfg, _dir);
+    recentVID = UpdateTree(kClosest[0].first, newCfg, _dir, delta);
     if(recentVID > this->m_currentTree->back()) {
       this->m_currentTree->push_back(recentVID);
       //reward the growth strategy based upon expanded distance in proportion to
       //delta_q
-      RewardGrowthMethod(dist/this->m_delta, gm, rgsit->second);
+      RewardGrowthMethod(dist/delta, gm, rgsit->second);
     }
     else {
       //node already existed in the roadmap. decrement reward
@@ -366,17 +367,17 @@ AdaptiveRRT<MPTraits>::RewardGrowthMethod(double _r, string _s, GrowthSet& _gs){
 template<class MPTraits>
 typename AdaptiveRRT<MPTraits>::VID
 AdaptiveRRT<MPTraits>::UpdateTree(VID _expandNode, CfgType& _newCfg,
-    CfgType& _dir){
+    CfgType& _dir, double _delta){
   DistanceMetricPointer dm = this->GetDistanceMetric(this->m_dm);
 
   CfgType& nearest = this->GetRoadmap()->GetGraph()->GetVertex(_expandNode);
 
   double visibility = GetVisibility(nearest);
   double distToNear = dm->Distance(nearest, _newCfg);
-  //if expansion did not reach at least m_delta * visibility and q_new is not
+  //if expansion did not reach at least delta * visibility and q_new is not
   //q_rand. Then it will be a partial expansion
-  bool partial = distToNear < this->m_delta && _newCfg != _dir;
-  double ratio = distToNear / this->m_delta;
+  bool partial = distToNear < _delta && _newCfg != _dir;
+  double ratio = distToNear / _delta;
 
   VID returnVID = UpdateTree(_newCfg, _expandNode, partial, ratio);
 

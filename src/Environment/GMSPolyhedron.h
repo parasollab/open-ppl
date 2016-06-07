@@ -45,7 +45,20 @@ class GMSPolygon {
 /// This class Contains vertices, normal of this polyhedra, and size (area).
 ////////////////////////////////////////////////////////////////////////////////
 class GMSPolyhedron {
+
   public:
+
+    ////////////////////////////////////////////////////////////////////////////
+    /// @ingroup Environment
+    /// @brief Center of mass adjustment approaches
+    ///
+    /// This enum lists the method to adjust all vertices of a model. 'COM' will
+    /// subtract the center of mass (com) from all vertices. 'Surface' will
+    /// subtract only x and z components of the com from all vertices. 'None'
+    /// will not perform any adjustment.
+    ////////////////////////////////////////////////////////////////////////////
+    enum class COMAdjust {COM, Surface, None};
+
     GMSPolyhedron();
     GMSPolyhedron(const GMSPolyhedron& _p);
     ~GMSPolyhedron();
@@ -62,23 +75,10 @@ class GMSPolyhedron {
      *file format body should request polyhedron to read. If format is not recognized
      *, exit will be called.
      */
-    Vector3d Read(string _fileName);
-
-    /// read GMS format and caluate maxRadius and minRadius
-    Vector3d Read(istream& _is);
-
-    /// read BYU format and caluate maxRadius and minRadius
-    Vector3d ReadBYU(istream& _is);
+    Vector3d Read(string _fileName, COMAdjust _comAdjust);
 
     /// load vertices and triangles from the imodel which loads all types of models
-    void LoadFromIModel(IModel* _im, Vector3d& _com);
-
-    /// read BYU/OBJ format and caluate maxRadius and minRadius
-    /// calls model loader lib
-    Vector3d ReadModel(string _fileName);
-
-    /// Write in "original" GMS format
-    void Write(ostream& _os);
+    Vector3d LoadFromIModel(IModel* _im, COMAdjust _comAdjust);
 
     /// Write in BYU format
     void WriteBYU(ostream& _os);

@@ -4,9 +4,9 @@
 DEPS = -MMD -MF $*.d
 
 UTILS_DEF = ${CD_DEF} ${CGAL_DEF}
-UTILS_INCL = ${CD_INCL} ${TINYXML_INCL} ${MATHTOOL_INCL} ${MODELLOADER_INCL} ${MPNN_INCL}
-UTILS_LIB = ${CD_LIB} ${CGAL_LIB} ${TINYXML_LIB} ${MODELLOADER_LIB} ${MPNN_LIB} ${KMEANS_LIB}
-UTILS_LIBFILE = ${CD_LIBFILE} ${TINYXML_LIBFILE} ${MODELLOADER_LIBFILE} ${MPNN_LIBFILE} ${KMEANS_LIBFILE}
+UTILS_INCL = ${CD_INCL} ${TINYXML_INCL} ${MATHTOOL_INCL} ${MODELLOADER_INCL} ${MPNN_INCL} ${TETGEN_INCL}
+UTILS_LIB = ${CD_LIB} ${CGAL_LIB} ${TINYXML_LIB} ${MODELLOADER_LIB} ${MPNN_LIB} ${KMEANS_LIB} ${TETGEN_LIB}
+UTILS_LIBFILE = ${CD_LIBFILE} ${TINYXML_LIBFILE} ${MODELLOADER_LIBFILE} ${MPNN_LIBFILE} ${KMEANS_LIBFILE} ${TETGEN_LIBFILE}
 
 NO_PQP = 0
 NO_RAPID = 0
@@ -216,6 +216,17 @@ ${KMEANS_DIR}/libkmeans.a:
 KMEANS_LIBFILE = ${KMEANS_DIR}/libkmeans.a
 
 ################################################################################
+# TetGen
+################################################################################
+TETGEN_DIR = ${UTILS_DIR}/tetgen1.5.0
+TETGEN_LIB = -L${TETGEN_DIR} -ltet
+TETGEN_INCL = -I${TETGEN_DIR}
+${TETGEN_DIR}/libtet.a:
+	cd ${TETGEN_DIR}; ${MAKE} platform=${platform} debug=${debug}
+
+TETGEN_LIBFILE = ${TETGEN_DIR}/libtet.a
+
+################################################################################
 ## STAPL
 ################################################################################
 #cd to STAPL dir and compile STAPL lib
@@ -264,6 +275,8 @@ PMPL_OBJS = \
         Utilities/IOUtils.o \
         Utilities/MetricUtils.o \
         Utilities/MPUtils.o \
+	Utilities/ReebGraphConstruction.o \
+	Utilities/TetGenDecomposition.o \
 	ValidityCheckers/CollisionDetection/CDInfo.o \
 	ValidityCheckers/CollisionDetection/CollisionDetectionMethod.o \
 	ValidityCheckers/CollisionDetection/RapidCollisionDetection.o \
