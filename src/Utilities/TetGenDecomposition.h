@@ -87,6 +87,9 @@ class TetGenDecomposition {
     ///         indices to points array, e.g., 4 points make a tetrahedron.
     const int* const GetTetras() const {return m_decompModel->tetrahedronlist;}
     ////////////////////////////////////////////////////////////////////////////
+    /// @return Neighbor list of tetrahedralization.
+    const int* const GetNeighbors() const {return m_decompModel->neighborlist;}
+    ////////////////////////////////////////////////////////////////////////////
     /// @return Dual graph of tetrahedralization
     DualGraph& GetDualGraph() {return m_dualGraph;}
     /// @{

@@ -85,6 +85,8 @@
       <UniformObstacleBasedSampler label="UOBPRM" vcLabel="cd1" useBBX="false" dmLabel="euclidean" d="0.02" />
       <UniformMedialAxisSampler label="UMAPRM" vcLabel="cd4" useBBX="true" dmLabel="euclidean" d="2.00" t="10"
         clearanceType="exact" penetrationType="exact" debug="false" positional="true"/>
+      <WorkspaceImportanceSampler label="WIS" vcLabel="cd1" switches="pnQ"
+        alpha="0.2"/>
     </Samplers>
 
     <LocalPlanners>

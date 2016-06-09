@@ -111,8 +111,18 @@ double DirectedAngularDistance(double _a, double _b) {
   return _b-_a;
 }
 
-///////////////////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////////////////
+double
+TriangleHeight(const Point3d& _a, const Point3d& _b, const Point3d& _c) {
+  //Using Heron's formula
+  double ab = (_a - _b).norm();
+  double bc = (_b - _c).norm();
+  double ac = (_a - _c).norm();
+  double p = (ab + bc + ac) / 2; //half of the perimeter
+  double area = sqrt(p*(p-ab)*(p-bc)*(p-ac));
+  double height = 2*area/(max(max(ab, bc), ac)); //h = 2A/b
+  return height;
+}
+
 bool
 PtInTriangle(const Point2d& _A, const Point2d& _B, const Point2d& _C,const Point2d & _P) {
   // FIRST CHECK THE SIGN OF THE Z-COMPONENT OF THE NORMAL BY CALCULATING

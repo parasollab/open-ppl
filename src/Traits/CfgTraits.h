@@ -46,6 +46,7 @@
 #include "Samplers/UniformMedialAxisSampler.h"
 #include "Samplers/UniformObstacleBasedSampler.h"
 #include "Samplers/UniformRandomSampler.h"
+#include "Samplers/WorkspaceImportanceSampler.h"
 
 //local planner includes
 #include "LocalPlanners/AStar.h"
@@ -204,7 +205,8 @@ struct MPTraits {
     SimilarStructureSampler<MPTraits>,
     UniformMedialAxisSampler<MPTraits>,
     UniformObstacleBasedSampler<MPTraits>,
-    UniformRandomSampler<MPTraits>
+    UniformRandomSampler<MPTraits>,
+    WorkspaceImportanceSampler<MPTraits>
       > SamplerMethodList;
 
   //types of local planners available in our world
