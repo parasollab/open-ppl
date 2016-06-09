@@ -4,7 +4,6 @@
 
 #include "MovieBYULoader.h"
 #include "ModelFactory.h"
-#include "ModelTool.h"
 #include "ObjLoader.h"
 
 #include "Utilities/IOUtils.h"
