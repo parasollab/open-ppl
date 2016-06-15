@@ -67,7 +67,7 @@ class BasicRRTStrategy : public MPStrategyMethod<MPTraits> {
     void ConnectTrees(VID _recentlyGrown);
     void ConnectNeighbors(VID _newVID);
     void EvaluateGoals(VID _newVID);
-
+    
     string m_lp;
     string m_dm;
     string m_nf;
