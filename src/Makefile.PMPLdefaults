@@ -250,14 +250,12 @@ PMPL_OBJS = \
         Environment/BoundingBox.o \
         Environment/BoundingSphere.o \
 	Environment/Connection.o \
-	Environment/Control.o \
 	Environment/DHParameters.o \
 	Environment/Environment.o \
 	Environment/FixedBody.o \
 	Environment/FreeBody.o \
 	Environment/GMSPolyhedron.o \
 	Environment/MultiBody.o \
-	Environment/NonHolonomicMultiBody.o \
 	Environment/StaticMultiBody.o \
 	Environment/SurfaceMultiBody.o \
 	MPProblem/MPProblemBase.o \
@@ -286,7 +284,9 @@ ifneq (,$(filter $(ROBOT_DEF), PMPSSSurfaceMult PMPCfgSurface))
 	       Cfg/SSSurfaceMult.o
   endif
   ifeq (${ROBOT_DEF}, $(or PMPState))
-  PMPL_OBJS += Cfg/State.o
+  PMPL_OBJS += Cfg/State.o \
+	      Environment/Control.o \
+	      Environment/NonHolonomicMultiBody.o 
   endif
   ifeq (${ROBOT_DEF}, $(or PMPReachDistCC PMPReachDistCCFixed))
   PMPL_OBJS += Cfg/Cfg_reach_cc.o \

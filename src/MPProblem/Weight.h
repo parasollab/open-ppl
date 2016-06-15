@@ -79,7 +79,6 @@ class DefaultWeight {
     string m_lpLabel;
     double m_weight;
     vector<CfgType> m_intermediates;
-
     static double MAX_WEIGHT;
     int m_checkedMult;
     bool m_hasClearance;

@@ -2,12 +2,7 @@
 <MotionPlanning warnings="true" warningsAsErrors="true" print="false">
   <MPProblem>
 
-    <!-- Example input, resolution defaults computed automatically. Can set
-         through environment.-->
-    <!--Environment filename=2D/2d.env" positionRes="0.10"
-         positionResFactor="0.2" orientationRes="0.20"/-->
     <Environment filename="2D/2d.env" saveDofs="false"/>
-
     <DistanceMetrics>
       <Euclidean label="euclidean"/>
       <ScaledEuclidean label= "scaledEuclidean" scale ="0.5"/>

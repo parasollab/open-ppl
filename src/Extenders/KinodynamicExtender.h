@@ -33,8 +33,12 @@ class KinodynamicExtender : public ExtenderMethod<MPTraits> {
 
     virtual bool Extend(const StateType& _near, const StateType& _dir,
         StateType& _new, LPOutput<MPTraits>& _lpOutput);
-
+    
   protected:
+    bool ExtendBestControl(const StateType&, const StateType&, size_t, double, StateType&, LPOutput<MPTraits>&);
+    bool ExtendRandomControl(const StateType&, const StateType&, size_t, double, StateType&, LPOutput<MPTraits>&);
+
+    void SetOutput(const string&, size_t, const vector<double>&, bool, LPOutput<MPTraits>&);
     string m_dmLabel;
     string m_vcLabel;
     double m_delta;   ///< Time step
@@ -90,33 +94,52 @@ Extend(const StateType& _near, const StateType& _dir, StateType& _new,
 
   //Setup...primarily for collision checks that occur later on
   Environment* env = this->GetEnvironment();
-  shared_ptr<NonHolonomicMultiBody> robot = dynamic_pointer_cast<NonHolonomicMultiBody>(env->GetRobot(0));
-  DistanceMetricPointer dm = this->GetDistanceMetric(m_dmLabel);
-  ValidityCheckerPointer vc = this->GetValidityChecker(m_vcLabel);
-  string callee("KinodynamicExtender::Expand");
 
   double delta = m_fixed ? m_delta : m_delta*DRand();
   size_t nTicks = ceil(delta);
   double dt = delta*env->GetTimeRes()/nTicks;
+  
 
-  if(m_best) {
-    const vector<shared_ptr<Control>>& control = robot->AvailableControls();
-    double distBest = numeric_limits<double>::infinity();
+  if(m_best) { 
+    return ExtendBestControl(_near, _dir, nTicks, dt, _new, _lpOutput);  
+  }
+  else {
+    return ExtendRandomControl(_near, _dir, nTicks, dt, _new, _lpOutput);
+  }
+  return false;
+}
 
-    //Starting Best Control Iteration
-    for(auto& c : control) {
-      //reset variables
-      StateType tick = _near;
-      size_t ticker = 0;
-      bool collision = false;
-      _lpOutput.m_intermediates.clear();
+template<typename MPTraits>
+bool
+KinodynamicExtender<MPTraits>::
+ExtendBestControl(const StateType& _near, const StateType& _dir, size_t _nTicks, double _dt, StateType& _new,
+      LPOutput<MPTraits>& _lpOutput) {
 
-      //apply control
-      const vector<double>& cont = c->GetControl();
-      while(!collision && ticker < nTicks) {
-        tick = tick.Apply(cont, dt);
-        if(!env->InBounds(tick) || !vc->IsValid(tick, callee))
-          collision = true;
+  string callee("KinodynamicExtender::Expand");
+  
+  Environment* env = this->GetEnvironment();
+  shared_ptr<NonHolonomicMultiBody> robot = dynamic_pointer_cast<NonHolonomicMultiBody>(env->GetRobot(0));
+  DistanceMetricPointer dm = this->GetDistanceMetric(m_dmLabel);
+  ValidityCheckerPointer vc = this->GetValidityChecker(m_vcLabel);
+
+   
+
+  const vector<shared_ptr<Control>>& control = robot->AvailableControls();
+  double distBest = numeric_limits<double>::infinity();
+
+  for(auto& c : control) {
+    //reset variables
+    StateType tick = _near;
+    size_t ticker = 0;
+    bool collision = false;
+    _lpOutput.m_intermediates.clear();
+      
+    //apply control
+    const vector<double>& cont = c->GetControl();
+    while(!collision && ticker < _nTicks) {
+      tick = tick.Apply(cont, _dt);
+      if(!env->InBounds(tick) || !vc->IsValid(tick, callee)) {
+        collision = true;
         ++ticker;
         _lpOutput.m_intermediates.push_back(tick);
       }
@@ -124,53 +147,71 @@ Extend(const StateType& _near, const StateType& _dir, StateType& _new,
       //if success, save
       if(!collision) {
         double dist = dm->Distance(tick, _dir);
-        if(dist < distBest){
+        if(dist < distBest) {
           distBest = dist;
           _new = tick;
-
-          _lpOutput.SetLPLabel("RRTExpand");
-          _lpOutput.m_edge.first.SetWeight(nTicks);
-          _lpOutput.m_edge.second.SetWeight(nTicks);
-          _lpOutput.m_edge.first.SetControl(cont);
-          _lpOutput.m_edge.first.SetTimeStep(nTicks);
-
-          _lpOutput.AddIntermediatesToWeights(true);
-        }
+          SetOutput("RRTExpand", _nTicks, cont, true, _lpOutput);
+	  _lpOutput.AddIntermediatesToWeights(true);
+	}
       }
     }
-    if(distBest == numeric_limits<double>::infinity())
-      return false;
-    else
-      return true;
+  }
+  if(distBest == numeric_limits<double>::infinity()) {
+    return false;
   }
   else {
-    StateType tick = _near;
-    size_t ticker = 0;
+    return true;
+  }
+  return false;
+}
 
-    bool collision = false;
-    vector<double> control = robot->GetRandomControl();
-    while(!collision && ticker < nTicks) {
-      tick = tick.Apply(control, dt);
-      if(!env->InBounds(tick) || !vc->IsValid(tick, callee))
-        collision = true; //return previous tick, as it is collision-free
+template<typename MPTraits>
+bool
+KinodynamicExtender<MPTraits>::
+ExtendRandomControl(const StateType& _near, const StateType& _dir, size_t _nTicks, double _dt, StateType& _new, 
+      LPOutput<MPTraits>& _lpOutput) {
+  string callee("KinodynamicExtender::Expand");
+  
+  Environment* env = this->GetEnvironment();
+
+  shared_ptr<NonHolonomicMultiBody> robot = dynamic_pointer_cast<NonHolonomicMultiBody>(env->GetRobot(0));
+  DistanceMetricPointer dm = this->GetDistanceMetric(m_dmLabel);
+  ValidityCheckerPointer vc = this->GetValidityChecker(m_vcLabel);
+
+ 
+  StateType tick = _near;
+  size_t ticker = 0;
+  bool collision = false;
+  
+  vector<double> control = robot->GetRandomControl();
+  
+  while(!collision && ticker < _nTicks) {
+  
+    tick = tick.Apply(control, _dt);
+    if(!env->InBounds(tick) || !vc->IsValid(tick, callee))
+      collision = true; //return previous tick, as it is collision-free
       ++ticker;
       _lpOutput.m_intermediates.push_back(tick);
     }
     if(!collision) {
       _new = tick;
-
-      _lpOutput.SetLPLabel("RRTExpand");
-      _lpOutput.m_edge.first.SetWeight(nTicks);
-      _lpOutput.m_edge.second.SetWeight(nTicks);
-      _lpOutput.m_edge.first.SetControl(control);
-      _lpOutput.m_edge.first.SetTimeStep(nTicks);
-
-      _lpOutput.AddIntermediatesToWeights(true);
+      SetOutput("RRTExpand", _nTicks, control, true, _lpOutput);
       return true;
     }
     else
       return false;
-  }
+}
+
+template<typename MPTraits>
+void
+KinodynamicExtender<MPTraits>::
+SetOutput(const string& _label, size_t _nTicks, const vector<double>& _control, bool _add, LPOutput<MPTraits>& _lpOutput) {
+     _lpOutput.SetLPLabel(_label);
+    _lpOutput.m_edge.first.SetWeight(_nTicks);
+    _lpOutput.m_edge.second.SetWeight(_nTicks);
+    _lpOutput.m_edge.first.SetControl(_control);
+    _lpOutput.m_edge.first.SetTimeStep(_nTicks);
+    _lpOutput.AddIntermediatesToWeights(_add);
 }
 
 #endif

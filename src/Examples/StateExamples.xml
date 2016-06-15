@@ -2,30 +2,18 @@
 <MotionPlanning warnings="true" warningsAsErrors="true" print="false">
   <MPProblem>
 
-    <!-- Example input, resolution defaults computed automatically. Can set
-         through environment.-->
     <Environment filename="3DState/3d.env"/>
-
     <DistanceMetrics>
       <WeightedEuclidean label="weuclidean" posWeight="0.6" rotWeight="0.2"
         velWeight="0.1" avlWeight="0.1"/>
-      <Euclidean label="euclidean"/>
     </DistanceMetrics>
 
     <ValidityCheckers>
       <CollisionDetection label="cd1" method="RAPID"/>
-      <CollisionDetection label="cd2" method="PQP"/>
-      <CollisionDetection label="cd3" method="VCLIP"/>
-      <CollisionDetection label="cd4" method="PQP_SOLID"/>
-      <AlwaysTrueValidity label="alwaysTrue"/>
     </ValidityCheckers>
 
     <NeighborhoodFinders>
-      <BruteForceNF label="BFNF" dmLabel="weuclidean" unconnected="false" k="10"/>
       <BruteForceNF label="Nearest" dmLabel="weuclidean" unconnected="false" k="1"/>
-      <OptimalNF label="OptimalK" nfLabel="BFNF"/>
-      <RadiusNF label="RadiusNF" dmLabel="weuclidean" radius="5"/>
-      <RandomNF label="RandomNF" dmLabel="weuclidean" k="5"/>
     </NeighborhoodFinders>
 
     <Extenders>
@@ -39,25 +27,12 @@
         delta="30.0" fixed="false" best="false"/>
     </Extenders>
 
-   <PathModifiers>
-      <ShortcuttingPathModifier label="ShortcuttingPathModifier" lpLabel="sl"
-        debug="false"/>
-    </PathModifiers>
-
     <Metrics>
       <NumNodesMetric label="NumNodes"/>
-      <NumEdgesMetric label="NumEdges"/>
-      <TimeMetric label="TimeInSec"/>
     </Metrics>
 
     <MapEvaluators>
-      <PrintMapEvaluation label="PrintMap" base_name="Basic"/>
       <ConditionalEvaluator label="NodesEval" metric_method="NumNodes" value="30" operator=">="/>
-      <ConditionalEvaluator label="EdgesEval" metric_method="NumEdges" value="1000" operator=">"/>
-      <ComposeEvaluator label="Com1" operator="or">
-        <Evaluator label="NodesEval"/>
-        <Evaluator label="Query"/>
-      </ComposeEvaluator>
     </MapEvaluators>
 
     <MPStrategies>

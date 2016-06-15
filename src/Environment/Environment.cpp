@@ -22,21 +22,8 @@ Environment() :
 
 Environment::
 Environment(XMLNode& _node) {
-
   m_filename = _node.Read("filename", true, "", "env filename");
   m_saveDofs = _node.Read("saveDofs", false, false, "save DoF flag");
-  m_positionRes = _node.Read("positionRes", false, -1.0, 0.0, MAX_DBL,
-      "position resolution");
-  m_positionResFactor = _node.Read("positionResFactor", false,
-      0.05, 0.0, MAX_DBL, "position resolution factor");
-  m_orientationRes = _node.Read("orientationRes", false, 0.05, 0.0, MAX_DBL,
-      "orientation resolution");
-#if (defined(PMPReachDistCC) || defined(PMPReachDistCCFixed))
-  m_rdRes = _node.Read("rdRes", false, .005, .00001, MAX_DBL,
-      "reachable distance resolution");
-#else
-  m_rdRes = 0.05;
-#endif
   m_filename = MPProblemBase::GetPath(m_filename);
   Read(m_filename);
 }
@@ -66,24 +53,32 @@ Read(string _filename) {
 
   //read boundary
   ReadBoundary(ifs, cbs);
-
-  //Read time resolution
-  string resolution = ReadFieldString(ifs, cbs, "Failed reading resolution tag.");
-  if(resolution != "RESOLUTION")
-    throw ParseException(cbs.Where(),
-        "Unknown resolution tag '" + resolution + "'. Should read 'Resolution'.");
-  double timeRes = ReadField<double>(ifs,cbs, "Failed reading time resolution.");
-  m_timeRes = timeRes;
-#ifdef PMPState
-  State::SetTimeRes(m_timeRes);
+  string resolution;
+  while((resolution = ReadFieldString(ifs, cbs, "Failed reading resolution tag.")) != "MULTIBODIES") {
+    if(resolution == "POSITIONRES") {
+      m_positionRes = ReadField<double>(ifs, cbs, "Failed reading Position resolution\n");
+    }
+    else if(resolution == "POSITIONRESFACTOR") {
+      m_positionResFactor = ReadField<double>(ifs, cbs, "Failed reading Position factor resolution\n");
+    }
+    else if(resolution == "ORIENTATION") {
+      m_orientationRes = ReadField<double>(ifs, cbs, "Failed reading Orientation resolution\n");
+    }
+#if (defined(PMPReachDistCC) || defined(PMPReachDistCCFixed))
+    else if(resolution == "RDRES") {
+      m_rdRes = ReadField<double>(ifs, cbs, "Failed reading Reachable Distance resolution");
+    }
 #endif
-
-  //read number of multibodies
-  string mbds = ReadFieldString(ifs, cbs, "Failed reading multibodies tag.");
-  if(mbds != "MULTIBODIES")
-    throw ParseException(cbs.Where(),
-        "Unknown multibodies tag '" + mbds + "'. Should read 'Multibodies'.");
-
+#ifdef PMPSTATE
+    else if(resolution == "TIMERES") {
+      m_timeRes = ReadField<double>(ifs, cbs, "Failed reading Time resolution\n");
+        State::SetTimeRes(m_timeRes);
+    }
+#endif
+    else
+      throw ParseException(cbs.Where(), "Unknown resolution tag '" + resolution + "'");
+  }
+  
   size_t multibodyCount = ReadField<size_t>(ifs, cbs,
       "Failed reading number of multibodies.");
 
