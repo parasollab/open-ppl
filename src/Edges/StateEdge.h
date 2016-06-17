@@ -40,7 +40,7 @@ template<class StateType>
 void
 StateEdge<StateType>::
 Read(istream& _is) {
-  DefaultWeight<StateType>::Read(_is);
+  _is >> this->m_weight;
   size_t controlSize;
   _is >> controlSize;
   double tmp;
@@ -56,7 +56,7 @@ template<class StateType>
 void
 StateEdge<StateType>::
 Write(ostream& _os) const {
-  DefaultWeight<StateType>::Write(_os);
+  _os << this->m_weight;
   _os << " " << m_control.size() << " ";
   for(auto& i : m_control)
     _os << i << " ";
