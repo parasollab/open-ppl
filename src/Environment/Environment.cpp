@@ -69,12 +69,12 @@ Read(string _filename) {
       m_rdRes = ReadField<double>(ifs, cbs, "Failed reading Reachable Distance resolution");
     }
 #endif
-#ifdef PMPSTATE
+#ifdef PMPState
     else if(resolution == "TIMERES") {
       m_timeRes = ReadField<double>(ifs, cbs, "Failed reading Time resolution\n");
-        State::SetTimeRes(m_timeRes);
+      State::SetTimeRes(m_timeRes);
     }
-#endif
+#endif 
     else
       throw ParseException(cbs.Where(), "Unknown resolution tag '" + resolution + "'");
   }
