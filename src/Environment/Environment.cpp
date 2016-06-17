@@ -21,12 +21,16 @@ Environment() :
   }
 
 Environment::
-Environment(XMLNode& _node) {
-  m_filename = _node.Read("filename", true, "", "env filename");
-  m_saveDofs = _node.Read("saveDofs", false, false, "save DoF flag");
-  m_filename = MPProblemBase::GetPath(m_filename);
-  Read(m_filename);
-}
+Environment(XMLNode& _node) :
+  m_positionRes(0.05),
+  m_orientationRes(0.05),
+  m_rdRes(0.05),
+  m_timeRes(0.05) {
+    m_filename = _node.Read("filename", true, "", "env filename");
+    m_saveDofs = _node.Read("saveDofs", false, false, "save DoF flag");
+    m_filename = MPProblemBase::GetPath(m_filename);
+    Read(m_filename);
+  }
 
 Environment::
 ~Environment() {}
@@ -55,30 +59,24 @@ Read(string _filename) {
   ReadBoundary(ifs, cbs);
   string resolution;
   while((resolution = ReadFieldString(ifs, cbs, "Failed reading resolution tag.")) != "MULTIBODIES") {
-    if(resolution == "POSITIONRES") {
+    if(resolution == "POSITIONRES")
       m_positionRes = ReadField<double>(ifs, cbs, "Failed reading Position resolution\n");
-    }
-    else if(resolution == "POSITIONRESFACTOR") {
+    else if(resolution == "POSITIONRESFACTOR")
       m_positionResFactor = ReadField<double>(ifs, cbs, "Failed reading Position factor resolution\n");
-    }
-    else if(resolution == "ORIENTATION") {
+    else if(resolution == "ORIENTATION")
       m_orientationRes = ReadField<double>(ifs, cbs, "Failed reading Orientation resolution\n");
-    }
 #if (defined(PMPReachDistCC) || defined(PMPReachDistCCFixed))
-    else if(resolution == "RDRES") {
+    else if(resolution == "RDRES")
       m_rdRes = ReadField<double>(ifs, cbs, "Failed reading Reachable Distance resolution");
-    }
 #endif
 #ifdef PMPState
-    else if(resolution == "TIMERES") {
+    else if(resolution == "TIMERES")
       m_timeRes = ReadField<double>(ifs, cbs, "Failed reading Time resolution\n");
-      State::SetTimeRes(m_timeRes);
-    }
-#endif 
+#endif
     else
       throw ParseException(cbs.Where(), "Unknown resolution tag '" + resolution + "'");
   }
-  
+
   size_t multibodyCount = ReadField<size_t>(ifs, cbs,
       "Failed reading number of multibodies.");
 
@@ -366,6 +364,9 @@ ComputeResolution() {
 #if (defined(PMPReachDistCC) || defined(PMPReachDistCCFixed))
   //make sure to calculate the rdRes based upon the DOF of the robot
   m_rdRes *= Cfg::GetNumOfJoints();
+#endif
+#ifdef PMPState
+  State::SetTimeRes(m_timeRes);
 #endif
 }
 

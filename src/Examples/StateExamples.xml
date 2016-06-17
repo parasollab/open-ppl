@@ -2,9 +2,9 @@
 <MotionPlanning warnings="true" warningsAsErrors="true" print="false">
   <MPProblem>
 
-    <Environment filename="3DState/3d.env"/>
+    <Environment filename="2DState/2d.env"/>
     <DistanceMetrics>
-      <WeightedEuclidean label="weuclidean" posWeight="0.6" rotWeight="0.2"
+      <WeightedEuclidean label="weuclidean" posWeight="0.4" rotWeight="0.4"
         velWeight="0.1" avlWeight="0.1"/>
     </DistanceMetrics>
 
@@ -20,7 +20,7 @@
       <KinodynamicExtender label="FixedBest" dmLabel="weuclidean" vcLabel="cd1"
         delta="30.0" fixed="true" best="true"/>
       <KinodynamicExtender label="FixedRandom" dmLabel="weuclidean" vcLabel="cd1"
-        delta="100.0" fixed="true" best="false"/>
+        delta="30.0" fixed="true" best="false"/>
       <KinodynamicExtender label="VaryBest" dmLabel="weuclidean" vcLabel="cd1"
         delta="30.0" fixed="false" best="true"/>
       <KinodynamicExtender label="VaryRandom" dmLabel="weuclidean" vcLabel="cd1"
@@ -39,14 +39,14 @@
 
       <!-- KinodynamicRRT -->
       <KinodynamicRRTStrategy label="KRRTQuery" growthFocus="0.05" minDist="20"
-        evaluateGoal="true" goalDist="5" query="3DState/3d.query"
+        evaluateGoal="true" goalDist="5" query="2DState/2d.query"
         dmLabel="weuclidean" nfLabel="Nearest" vcLabel="cd1"
         extenderLabel="FixedRandom" debug="false">
       </KinodynamicRRTStrategy>
 
       <!-- KinodynamicRRT -->
       <KinodynamicRRTStrategy label="KRRTNodes" growthFocus="0.05" minDist="0.01"
-        evaluateGoal="false" query="3DState/3d.query"
+        evaluateGoal="false" query="2DState/2d.query"
         dmLabel="weuclidean" nfLabel="Nearest" vcLabel="cd1"
         extenderLabel="FixedRandom" debug="false">
         <Evaluator label="NodesEval"/>
