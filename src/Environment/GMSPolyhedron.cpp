@@ -4,7 +4,6 @@
 
 #include "MovieBYULoader.h"
 #include "ModelFactory.h"
-#include "ModelTool.h"
 #include "ObjLoader.h"
 
 #include "Utilities/IOUtils.h"
@@ -108,7 +107,7 @@ GMSPolyhedron::ComputeNormals(){
 //      file format body should request polyhedron to read
 //=========================================================================
 Vector3d
-GMSPolyhedron::Read(string _fileName){
+GMSPolyhedron::Read(string _fileName, COMAdjust _comAdjust) {
   Vector3d com;	//com = Center of Mass
 
   if(!FileExists(_fileName))
@@ -117,222 +116,92 @@ GMSPolyhedron::Read(string _fileName){
   //---------------------------------------------------------------
   // Read polyhedron
   //---------------------------------------------------------------
-  string ext = "";
+  string ext;
   size_t pos = _fileName.rfind(".");
   if(pos != string::npos)
     ext = _fileName.substr(pos+1);
-  if (ext == "dat"){
-    ifstream ifs(_fileName.c_str());
-    com = Read(ifs);
+
+  if (ext == "g" || ext == "obj") {
+    unique_ptr<IModel> imodel(CreateModelLoader(_fileName, false));
+    if(!imodel)
+      throw ParseException(WHERE, "Cannot read model '" + _fileName + "'.");
+
+    Vector3d com = LoadFromIModel(imodel.get(), _comAdjust);
+
+    ComputeNormals();
+
+    return com;
   }
-  else if (ext == "g" || ext == "obj"){
-    com = ReadModel(_fileName);
-  }
-  else{
-    cerr << "ERROR: \"" << _fileName << "\" format is unrecognized.";
-    cerr << "Formats are recognized by file suffixes: GMS(*.dat), BYU(*.g), and OBJ(*.obj)" << endl;
-    exit(1);
-  }
-
-  return com;
-}
-
-
-//=========================================================================
-//  Read
-//      reads "original" GMS format
-//=========================================================================
-Vector3d
-GMSPolyhedron::Read(istream& _is){
-  Vector3d sum(0,0,0), com;
-
-  int numVertices;
-  _is >> numVertices;
-  for(int i=0; i<numVertices && _is; ++i){
-    Vector3d v;
-    _is >> v;
-    m_vertexList.push_back(v);
-    sum = sum + v;
-  }
-  com = sum / m_vertexList.size();
-
-  m_maxRadius = 0.0; // shift center to origin and find maximum radius.
-  for(vector<Vector3d>::iterator V = m_vertexList.begin(); V != m_vertexList.end(); ++V){
-    *V = *V - com;
-    if(V->norm() > m_maxRadius)
-      m_maxRadius = V->norm();
-  }
-
-  int numPolygons;
-  _is >> numPolygons;
-  for(int i=0; i<numPolygons && _is; ++i){
-    int numPolyVertices;
-    _is >> numPolyVertices;
-    GMSPolygon p;
-    p.m_vertexList = vector<int>(numPolyVertices, -1);
-    for(int j=0; j<numPolyVertices; ++j)
-      _is >> p.m_vertexList[j];
-    m_polygonList.push_back(p);
-  }
-
-  ComputeNormals();
-  return com;
-}
-
-
-//=========================================================================
-//  Read
-//      reads BYU format
-//      OLDer function that takes as parameter istream&
-//      new implementation passes file name to CreateModelLoader and returns
-//      IModel*
-//=========================================================================
-Vector3d
-GMSPolyhedron::ReadBYU(istream& _is){
-  int nParts, numVertices, numPolygons, nEdges;
-  _is >> nParts;              // throwaway for now
-  _is >> numVertices;
-  _is >> numPolygons;
-  _is >> nEdges;              // throwaway for now
-
-  int startPartPolys, nPartPolys;
-  _is >> startPartPolys;      // throwaway for now
-  _is >> nPartPolys;          // throwaway for now
-
-  Vector3d sum(0,0,0), com;
-  for(int i=0; i<numVertices && _is; ++i){
-    Vector3d v;
-    _is >> v;
-    m_vertexList.push_back(v);
-    sum = sum + v;
-  }
-  com = sum / m_vertexList.size();
-
-  m_maxRadius = 0.0; // shift center to origin and find maximum radius.
-  for(vector<Vector3d>::iterator V = m_vertexList.begin(); V != m_vertexList.end(); ++V){
-    *V = *V - com;
-    if(V->norm() > m_maxRadius)
-      m_maxRadius = V->norm();
-  }
-  com = Vector3d(0.0, 0.0, 0.0);
-
-  for(int i=0; i<numPolygons && _is; ++i){
-    GMSPolygon p;
-    do{
-      int tmp;
-      _is >> tmp;
-      p.m_vertexList.push_back(tmp);
-    } while(p.m_vertexList.back() > 0);
-    p.m_vertexList.back() *= -1; //last one is negative, so change sign
-
-    for(vector<int>::iterator I = p.m_vertexList.begin(); I != p.m_vertexList.end(); ++I)
-      *I = *I-1; //BYU starts numbering from 1 instead of 0, so decrement by 1
-
-    m_polygonList.push_back(p);
-  }
-
-  ComputeNormals();
-  return com;
+  else
+    throw ParseException(WHERE, _fileName + " has an unrecognized format '" +
+        ext + "'. Recognized formats are BYU(.g) and OBJ(.obj).");
 }
 
 //=========================================================================
 //  LoadFromIModel
 //    loads model using the model loader library
 //=========================================================================
-void
-GMSPolyhedron::LoadFromIModel(IModel* _imodel, Vector3d& _com){
-  Vector3d sum(0,0,0);
-  typedef IModel::Tri Tri;
-  typedef IModel::PtVector PtVector;
-  typedef IModel::TriVector TriVector;
-  typedef IModel::V3Vcetor V3Vcetor;
-  typedef IModel::V2Vcetor V2Vcetor;
+Vector3d
+GMSPolyhedron::LoadFromIModel(IModel* _imodel, COMAdjust _comAdjust) {
+  Vector3d com;
 
-  PtVector& verts = _imodel->GetVertices();
-  TriVector& tris = _imodel->GetTriP();
-  for(int i=0; i<(int)verts.size(); ++i) {
-    Vector3d v( verts[i][0], verts[i][1], verts[i][2] );
+  IModel::PtVector& verts = _imodel->GetVertices();
+  IModel::TriVector& tris = _imodel->GetTriP();
+
+  for(auto& v : verts) {
     m_vertexList.push_back(v);
-    sum = sum + v;
+    com = com + v;
   }
-  _com = sum / m_vertexList.size();
+  com /= m_vertexList.size();
 
-  m_maxRadius = 0.0; // shift center to origin and find maximum radius.
-  for(vector<Vector3d>::iterator V = m_vertexList.begin(); V != m_vertexList.end(); ++V){
-#ifndef PMPCfgSurface
-    *V = *V - _com;
-#else
-    Vector3d Vtmp = *V;
-    Vtmp[0] = Vtmp[0] - _com[0]; //don't mess with height component
-    Vtmp[2] = Vtmp[2] - _com[2];
-    *V = Vtmp;
-#endif
+  m_maxRadius = 0; // shift center to origin and find maximum radius.
+  for(auto& v : m_vertexList) {
 
-    if(V->norm() > m_maxRadius)
-      m_maxRadius = V->norm();
+    switch(_comAdjust) {
+      case COMAdjust::COM:
+        v -= com;
+        break;
+      case COMAdjust::Surface:
+        v[0] -= com[0];
+        v[2] -= com[2];
+        break;
+      case COMAdjust::None:
+      default:
+        break;
+    }
+
+    double dist = v.norm();
+    if(dist > m_maxRadius)
+      m_maxRadius = dist;
   }
 
-  int numPolygons = (int)tris.size();
-  for(int i=0; i<numPolygons; ++i){
+  for(auto& t : tris) {
     GMSPolygon p;
-    p.m_vertexList.push_back(tris[i][0]);
-    p.m_vertexList.push_back(tris[i][1]);
-    p.m_vertexList.push_back(tris[i][2]);
-
+    p.m_vertexList.push_back(t[0]);
+    p.m_vertexList.push_back(t[1]);
+    p.m_vertexList.push_back(t[2]);
     m_polygonList.push_back(p);
   }
-}
 
-Vector3d
-GMSPolyhedron::ReadModel(string _fileName){
-  IModel* imodel = CreateModelLoader(_fileName, false);
-  if(!imodel) {
-    cerr << "Error reading model::" << _fileName << endl;
-    exit(1);
-  }
-  Vector3d com;
-  LoadFromIModel( imodel, com );
-  ComputeNormals();
-  delete imodel;
   return com;
 }
 
 //=========================================================================
-//  Write
+//  Write in BYU format
 //=========================================================================
 void
-GMSPolyhedron::Write(ostream& _os){
-  _os << m_vertexList.size() << " " << endl;
-  for(vector<Vector3d>::const_iterator V = m_vertexList.begin(); V != m_vertexList.end(); ++V){
-    _os << *V;
-    _os << endl;
+GMSPolyhedron::WriteBYU(ostream& _os) {
+  size_t numTri = m_polygonList.size();
+  _os << "1 " << m_vertexList.size() << " " << numTri << " " << numTri*3 << endl;
+  _os << "1 " << numTri << endl;
+  for(const auto& v : m_vertexList)
+    _os << v << endl;
+  for(const auto& p : m_polygonList) {
+    for(vector<int>::const_iterator i = p.m_vertexList.begin();
+        (i+1) != p.m_vertexList.end(); ++i)
+      _os << *i+1 << " ";
+    _os << "-" << p.m_vertexList.back()+1 << endl;
   }
-  _os << m_polygonList.size() << " " << endl;
-  for(vector<GMSPolygon>::const_iterator P = m_polygonList.begin(); P != m_polygonList.end(); ++P){
-    _os << P->m_vertexList.size() << " ";
-    for(vector<int>::const_iterator I = P->m_vertexList.begin(); I != P->m_vertexList.end(); ++P)
-      _os << *I << " ";
-    _os << endl;
-  }
-  _os << endl;
-}
-
-//=========================================================================
-//  WriteBYU
-//=========================================================================
-void
-GMSPolyhedron::WriteBYU(ostream& _os){
-  _os << "1 " << m_vertexList.size() << " " << m_polygonList.size() << " 1 1 1\n";
-  for(vector<Vector3d>::const_iterator V = m_vertexList.begin(); V != m_vertexList.end(); ++V){
-    _os << *V;
-    _os << endl;
-  }
-  for(vector<GMSPolygon>::const_iterator P = m_polygonList.begin(); P != m_polygonList.end(); ++P){
-    for(vector<int>::const_iterator I = P->m_vertexList.begin(); (I+1) != P->m_vertexList.end(); ++I)
-      _os << *I+1 << " ";
-    _os << "-" << P->m_vertexList.back()+1 << endl;
-  }
-  _os << endl;
 }
 
 //=========================================================================

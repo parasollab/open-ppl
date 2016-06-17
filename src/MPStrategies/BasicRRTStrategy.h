@@ -25,16 +25,15 @@ class BasicRRTStrategy : public MPStrategyMethod<MPTraits> {
     typedef typename MPProblemType::DistanceMetricPointer DistanceMetricPointer;
     typedef typename MPProblemType::ValidityCheckerPointer ValidityCheckerPointer;
     typedef typename MPProblemType::NeighborhoodFinderPointer NeighborhoodFinderPointer;
-    typedef typename MPProblemType::LocalPlannerPointer LocalPlannerPointer;
     typedef typename MPProblemType::ExtenderPointer ExtenderPointer;
     typedef typename MPProblemType::ConnectorPointer ConnectorPointer;
 
     //Non-XML constructor sets all private variables
-    BasicRRTStrategy(string _lp="sl", string _dm="euclidean",
+    BasicRRTStrategy(string _dm="euclidean",
         string _nf="bfnf", string _vc="cd1", string _nc="kClosest",
         string _gt="UNDIRECTED_TREE", string _extenderLabel="BERO",
         vector<string> _evaluators=vector<string>(),
-        double _delta=10.0, double _minDist=0.01, double _growthFocus=0.05,
+        double _minDist=0.01, double _growthFocus=0.05,
         bool _evaluateGoal=true, const CfgType& _start=CfgType(),
         const CfgType& _goal=CfgType(), size_t _numRoots=1,
         size_t _numDirections=1, size_t _maxTrial = 3, bool _growGoals=false);
@@ -68,7 +67,6 @@ class BasicRRTStrategy : public MPStrategyMethod<MPTraits> {
     void ConnectNeighbors(VID _newVID);
     void EvaluateGoals(VID _newVID);
     
-    string m_lp;
     string m_dm;
     string m_nf;
     string m_vc;
@@ -76,7 +74,7 @@ class BasicRRTStrategy : public MPStrategyMethod<MPTraits> {
     string m_nc;
     string m_gt;
     string m_extenderLabel;
-    double m_delta, m_minDist, m_growthFocus;
+    double m_minDist, m_growthFocus;
     bool m_evaluateGoal;
     size_t m_numRoots, m_numDirections, m_maxTrial;
     bool m_growGoals;
@@ -89,14 +87,14 @@ class BasicRRTStrategy : public MPStrategyMethod<MPTraits> {
 
 template<class MPTraits>
 BasicRRTStrategy<MPTraits>::
-BasicRRTStrategy(string _lp, string _dm, string _nf, string _vc, string _nc,
+BasicRRTStrategy(string _dm, string _nf, string _vc, string _nc,
     string _gt, string _extenderLabel, vector<string> _evaluators,
-    double _delta, double _minDist, double _growthFocus, bool _evaluateGoal,
+    double _minDist, double _growthFocus, bool _evaluateGoal,
     const CfgType& _start, const CfgType& _goal, size_t _numRoots,
     size_t _numDirections, size_t _maxTrial, bool _growGoals) :
-    m_lp(_lp), m_dm(_dm), m_nf(_nf), m_vc(_vc),
+    m_dm(_dm), m_nf(_nf), m_vc(_vc),
     m_query(new Query<MPTraits>(_start, _goal)), m_nc(_nc), m_gt(_gt),
-    m_extenderLabel(_extenderLabel), m_delta(_delta), m_minDist(_minDist),
+    m_extenderLabel(_extenderLabel), m_minDist(_minDist),
     m_growthFocus(_growthFocus), m_evaluateGoal(_evaluateGoal),
     m_numRoots(_numRoots), m_numDirections(_numDirections), m_maxTrial(_maxTrial),
     m_growGoals(_growGoals) {
@@ -126,9 +124,7 @@ ParseXML(XMLNode& _node, bool _child) {
       this->m_meLabels.push_back(
           child.Read("label", true, "", "Evaluation Method"));
 
-  m_delta = _node.Read("delta", false, 1.0, 0.0, MAX_DBL,
-      "Delta Distance");
-  m_minDist = _node.Read("minDist", false, 0.0, 0.0, m_delta,
+  m_minDist = _node.Read("minDist", false, 0.0, 0.0, MAX_DBL,
       "Minimum Distance");
   m_numRoots = _node.Read("numRoots", false, 1, 0, MAX_INT,
       "Number of Roots");
@@ -137,7 +133,6 @@ ParseXML(XMLNode& _node, bool _child) {
   m_vc = _node.Read("vcLabel", true, "", "Validity Test Method");
   m_nf = _node.Read("nfLabel", true, "", "Neighborhood Finder");
   m_dm = _node.Read("dmLabel",true,"","Distance Metric");
-  m_lp = _node.Read("lpLabel", true, "", "Local Planning Method");
   m_numDirections = _node.Read("m", false, 1, 1, 1000,
       "Number of directions to extend");
   m_nc = _node.Read("connectorLabel", false, "",
@@ -170,7 +165,6 @@ Print(ostream& _os) const {
   _os << "\tNeighborhood Finder:: " << m_nf << endl;
   _os << "\tDistance Metric:: " << m_dm << endl;
   _os << "\tValidity Checker:: " << m_vc << endl;
-  _os << "\tLocal Planner:: " << m_lp << endl;
   _os << "\tConnection Method:: " << m_nc << endl;
   _os << "\tGraph Type:: " << m_gt << endl;
   _os << "\tExtender:: " << m_extenderLabel << endl;
@@ -179,7 +173,6 @@ Print(ostream& _os) const {
   _os << "\tGrow Goals:: " << m_growGoals << endl;
   for(auto&  s : this->m_meLabels)
     _os << "\t\t" << s << endl;
-  _os << "\tdelta:: " << m_delta << endl;
   _os << "\tminimum distance:: " << m_minDist << endl;
   _os << "\tnumber of roots:: " << m_numRoots << endl;
   _os << "\tgrowth focus:: " << m_growthFocus << endl;
@@ -464,7 +457,6 @@ ExpandTree(CfgType& _dir) {
   DistanceMetricPointer dm = this->GetDistanceMetric(m_dm);
   NeighborhoodFinderPointer nf = this->GetNeighborhoodFinder(m_nf);
   ExtenderPointer e = this->GetExtender(m_extenderLabel);
-  LocalPlannerPointer lp = this->GetLocalPlanner(m_lp);
   RoadmapType* rdmp = this->GetRoadmap();
   GraphType* g = rdmp->GetGraph();
 
@@ -759,9 +751,8 @@ void
 BasicRRTStrategy<MPTraits>::
 EvaluateGoals(VID _newVID) {
   // Setup MP Variables
-  Environment* env = this->GetEnvironment();
   DistanceMetricPointer dmp = this->GetDistanceMetric(m_dm);
-  LocalPlannerPointer lpp = this->GetLocalPlanner(m_lp);
+  ExtenderPointer e = this->GetExtender(m_extenderLabel);
   GraphType* rdmp = this->GetRoadmap()->GetGraph();
 
   CfgType& qnew = rdmp->GetVertex(_newVID);
@@ -772,9 +763,9 @@ EvaluateGoals(VID _newVID) {
     double dist = dmp->Distance(m_goals[*i], qnew);
     if(this->m_debug)
       cout << "Distance to goal::" << dist << endl;
-    CfgType col;
-    if(dist < m_delta && lpp->IsConnected(qnew, m_goals[*i], col, &lpOutput,
-          env->GetPositionRes(), env->GetOrientationRes(), true, false, false)){
+    CfgType newCfg;
+    if(dist < e->GetDelta() && e->Extend(qnew, m_goals[*i], newCfg, lpOutput)
+        && m_goals[*i] == newCfg) {
       if(this->m_debug)
         cout << "Goal found::" << m_goals[*i] << endl;
       VID goalVID;

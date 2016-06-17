@@ -31,9 +31,11 @@ class KinodynamicExtender : public ExtenderMethod<MPTraits> {
     void ParseXML(XMLNode& _node);
     virtual void Print(ostream& _os) const;
 
+    virtual double GetDelta() const {return m_delta;}
+
     virtual bool Extend(const StateType& _near, const StateType& _dir,
         StateType& _new, LPOutput<MPTraits>& _lpOutput);
-    
+
   protected:
     bool ExtendBestControl(const StateType&, const StateType&, size_t, double, StateType&, LPOutput<MPTraits>&);
     bool ExtendRandomControl(const StateType&, const StateType&, size_t, double, StateType&, LPOutput<MPTraits>&);
@@ -98,10 +100,10 @@ Extend(const StateType& _near, const StateType& _dir, StateType& _new,
   double delta = m_fixed ? m_delta : m_delta*DRand();
   size_t nTicks = ceil(delta);
   double dt = delta*env->GetTimeRes()/nTicks;
-  
 
-  if(m_best) { 
-    return ExtendBestControl(_near, _dir, nTicks, dt, _new, _lpOutput);  
+
+  if(m_best) {
+    return ExtendBestControl(_near, _dir, nTicks, dt, _new, _lpOutput);
   }
   else {
     return ExtendRandomControl(_near, _dir, nTicks, dt, _new, _lpOutput);
@@ -116,13 +118,13 @@ ExtendBestControl(const StateType& _near, const StateType& _dir, size_t _nTicks,
       LPOutput<MPTraits>& _lpOutput) {
 
   string callee("KinodynamicExtender::Expand");
-  
+
   Environment* env = this->GetEnvironment();
   shared_ptr<NonHolonomicMultiBody> robot = dynamic_pointer_cast<NonHolonomicMultiBody>(env->GetRobot(0));
   DistanceMetricPointer dm = this->GetDistanceMetric(m_dmLabel);
   ValidityCheckerPointer vc = this->GetValidityChecker(m_vcLabel);
 
-   
+
 
   const vector<shared_ptr<Control>>& control = robot->AvailableControls();
   double distBest = numeric_limits<double>::infinity();
@@ -133,7 +135,7 @@ ExtendBestControl(const StateType& _near, const StateType& _dir, size_t _nTicks,
     size_t ticker = 0;
     bool collision = false;
     _lpOutput.m_intermediates.clear();
-      
+
     //apply control
     const vector<double>& cont = c->GetControl();
     while(!collision && ticker < _nTicks) {
@@ -168,25 +170,25 @@ ExtendBestControl(const StateType& _near, const StateType& _dir, size_t _nTicks,
 template<typename MPTraits>
 bool
 KinodynamicExtender<MPTraits>::
-ExtendRandomControl(const StateType& _near, const StateType& _dir, size_t _nTicks, double _dt, StateType& _new, 
+ExtendRandomControl(const StateType& _near, const StateType& _dir, size_t _nTicks, double _dt, StateType& _new,
       LPOutput<MPTraits>& _lpOutput) {
   string callee("KinodynamicExtender::Expand");
-  
+
   Environment* env = this->GetEnvironment();
 
   shared_ptr<NonHolonomicMultiBody> robot = dynamic_pointer_cast<NonHolonomicMultiBody>(env->GetRobot(0));
   DistanceMetricPointer dm = this->GetDistanceMetric(m_dmLabel);
   ValidityCheckerPointer vc = this->GetValidityChecker(m_vcLabel);
 
- 
+
   StateType tick = _near;
   size_t ticker = 0;
   bool collision = false;
-  
+
   vector<double> control = robot->GetRandomControl();
-  
+
   while(!collision && ticker < _nTicks) {
-  
+
     tick = tick.Apply(control, _dt);
     if(!env->InBounds(tick) || !vc->IsValid(tick, callee))
       collision = true; //return previous tick, as it is collision-free

@@ -32,6 +32,7 @@ class BoundingSphere : public Boundary {
     Vector3d GetClearancePoint(const Vector3d& _p) const;
     double GetClearance2DSurf(Point2d _pos, Point2d& _cdPt) const;
 
+    void ApplyOffset(const Vector3d& _v);
     void ResetBoundary(vector<pair<double, double> >& _obstBBX, double _d);
 
     void Read(istream& _is, CountingStreamBuffer& _cbs);

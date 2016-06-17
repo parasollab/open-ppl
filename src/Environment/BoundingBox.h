@@ -23,6 +23,7 @@ class BoundingBox :  public Boundary {
     const pair<double, double>* const GetBox() const {return m_bbx;}
 
     double GetMaxDist(double _r1 = 2.0, double _r2 = 0.5) const;
+    pair<double, double>& GetRange(size_t _i);
     pair<double, double> GetRange(size_t _i) const;
 
     Point3d GetRandomPoint() const;
@@ -32,6 +33,7 @@ class BoundingBox :  public Boundary {
     Vector3d GetClearancePoint(const Vector3d& _p) const;
     double GetClearance2DSurf(Point2d _pos, Point2d& _cdPt) const;
 
+    void ApplyOffset(const Vector3d& _v);
     void ResetBoundary(vector<pair<double, double> >& _obstBBX, double _d);
 
     void Read(istream& _is, CountingStreamBuffer& _cbs);

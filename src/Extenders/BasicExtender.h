@@ -27,6 +27,8 @@ class BasicExtender : public ExtenderMethod<MPTraits> {
     void ParseXML(XMLNode& _node);
     virtual void Print(ostream& _os) const;
 
+    double GetDelta() const {return m_delta;}
+
     virtual bool Extend(const CfgType& _near, const CfgType& _dir,
         CfgType& _new, LPOutput<MPTraits>& _lpOutput);
 
@@ -160,7 +162,17 @@ BasicExtender<MPTraits>::Expand(const CfgType& _start, const CfgType& _dir,
     ++ticker;
   }
   if(previous != _start) {
-    _newCfg = previous;//Last Cfg pushed back is the final tick allowed
+    //Goal is reached. We have to adjust _newCfg to be equal to _dir because
+    //of accumulated floating-point error from the division in FindIncrement and
+    //adding incr to tick.
+    //
+    //Moreover, we do not specifically collision check _dir as at this point
+    //previous is within a resolution of _dir, i.e., they are very, very close.
+    if(ticker == nTicks + 1)
+      _newCfg = _dir;
+    //Collision reached. Use previous as it is the last collision-free tick
+    else
+      _newCfg = previous;
     return true;
   }
   else{

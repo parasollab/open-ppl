@@ -149,12 +149,12 @@ Read(istream& _is, CountingStreamBuffer& _cbs) {
   m_filename = ReadFieldString(_is, _cbs,
       "Failed reading geometry filename.", false);
 
-  Read();
-
   ReadOptions(_is, _cbs);
 
   m_mass = ReadField<double>(_is, _cbs, "Failed reading body mass.");
   cout << "Body: " << m_filename << " has mass " << m_mass << endl;
+
+  Read(m_comAdjust);
 
   //Read for Base Type.  If Planar or Volumetric, read in two more strings
   //If Joint skip this stuff. If Fixed read in positions like an obstacle

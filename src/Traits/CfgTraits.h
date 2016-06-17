@@ -44,6 +44,7 @@
 #include "Samplers/UniformMedialAxisSampler.h"
 #include "Samplers/UniformObstacleBasedSampler.h"
 #include "Samplers/UniformRandomSampler.h"
+#include "Samplers/WorkspaceImportanceSampler.h"
 
 //local planner includes
 #include "LocalPlanners/AStar.h"
@@ -110,6 +111,8 @@
 #include "MPStrategies/BasicPRM.h"
 #include "MPStrategies/BasicRRTStrategy.h"
 #include "MPStrategies/BlindRRT.h"
+#include "MPStrategies/DynamicDomainRRT.h"
+#include "MPStrategies/DynamicRegionRRT.h"
 #include "MPStrategies/EvaluateMapStrategy.h"
 #include "MPStrategies/HybridPRM.h"
 #include "MPStrategies/LocalManeuveringStrategy.h"
@@ -199,7 +202,8 @@ struct MPTraits {
     SimilarStructureSampler<MPTraits>,
     UniformMedialAxisSampler<MPTraits>,
     UniformObstacleBasedSampler<MPTraits>,
-    UniformRandomSampler<MPTraits>
+    UniformRandomSampler<MPTraits>,
+    WorkspaceImportanceSampler<MPTraits>
       > SamplerMethodList;
 
   //types of local planners available in our world
@@ -295,6 +299,8 @@ struct MPTraits {
     BlindRRT<MPTraits>,
     ClearanceTestStrategy<MPTraits>,
     DMTestStrategy<MPTraits>,
+    DynamicDomainRRT<MPTraits>,
+    DynamicRegionRRT<MPTraits>,
     EvaluateMapStrategy<MPTraits>,
     HybridPRM<MPTraits>,
     LPCompare<MPTraits>,
