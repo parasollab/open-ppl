@@ -2,7 +2,9 @@
 
 #include "ActiveMultiBody.h"
 #include "BoundingBox.h"
+#include "BoundingBox2D.h"
 #include "BoundingSphere.h"
+#include "BoundingSphere2D.h"
 #include "FreeBody.h"
 #include "NonHolonomicMultiBody.h"
 #include "StaticMultiBody.h"
@@ -332,8 +334,12 @@ ReadBoundary(istream& _is, CountingStreamBuffer& _cbs) {
       "Failed reading boundary type. Options are: box or sphere.");
   if(btype == "BOX")
     m_boundary = shared_ptr<BoundingBox>(new BoundingBox());
+  else if(btype == "BOX2D")
+    m_boundary = shared_ptr<BoundingBox2D>(new BoundingBox2D());
   else if(btype == "SPHERE")
     m_boundary = shared_ptr<BoundingSphere>(new BoundingSphere());
+  else if(btype == "SPHERE2D")
+    m_boundary = shared_ptr<BoundingSphere2D>(new BoundingSphere2D());
   else
     throw ParseException(_cbs.Where(), "Unknown boundary type '" + btype +
         "'. Options are: box or sphere.");

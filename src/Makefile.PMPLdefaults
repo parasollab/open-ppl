@@ -259,7 +259,9 @@ PMPL_OBJS = \
 	Environment/Body.o \
 	Environment/Boundary.o \
         Environment/BoundingBox.o \
+        Environment/BoundingBox2D.o \
         Environment/BoundingSphere.o \
+        Environment/BoundingSphere2D.o \
 	Environment/Connection.o \
 	Environment/DHParameters.o \
 	Environment/Environment.o \

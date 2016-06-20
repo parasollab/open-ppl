@@ -14,8 +14,7 @@ class BoundingBox :  public Boundary {
     BoundingBox();
     BoundingBox(pair<double, double> _x,
         pair<double, double> _y,
-        pair<double, double> _z = pair<double, double>(
-          -numeric_limits<double>::max(), numeric_limits<double>::max()));
+        pair<double, double> _z);
     ~BoundingBox() {}
 
     string Type() const {return "Box";}
