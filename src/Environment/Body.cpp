@@ -20,7 +20,8 @@ Body(MultiBody* _owner) :
   m_comAdjust(GMSPolyhedron::COMAdjust::COM),
   m_worldPolyhedronAvailable(false),
   m_convexHullAvailable(false),
-  m_centerOfMassAvailable(false) {
+  m_centerOfMassAvailable(false),
+  m_mass(1.0) {
     fill(m_boundingBox, m_boundingBox+6, 0);
   }
 
@@ -154,6 +155,7 @@ Body::Read(GMSPolyhedron::COMAdjust _comAdjust) {
   m_bbPolyhedron.m_vertexList[7] = Vector3d(maxx, maxy, maxz);
 
   FindBoundingBox();
+  ComputeMomentOfInertia();
 }
 
 
@@ -277,7 +279,7 @@ ReadOptions(istream& _is, CountingStreamBuffer& _cbs) {
 
 void
 Body::ComputeCenterOfMass() {
-  GMSPolyhedron& poly = GetWorldPolyhedron();
+  GMSPolyhedron& poly = GetPolyhedron();
   m_centerOfMass(0, 0, 0);
   for(const auto& v : poly.m_vertexList)
     m_centerOfMass += v;
@@ -334,3 +336,26 @@ ComputeConvexHull() {
 
   m_convexHullAvailable = true;
 }
+
+void
+Body::
+ComputeMomentOfInertia() {
+  Vector3d centerOfMass = GetCenterOfMass();
+  vector<Vector3d>& vert = GetPolyhedron().m_vertexList;
+
+  double massPerVert = m_mass/vert.size();
+  for(const auto& v : vert) {
+    Vector3d r = v - centerOfMass;
+    m_moment[0][0] += massPerVert * (r[1]*r[1] + r[2]*r[2]);
+    m_moment[0][1] += massPerVert * -r[0] * r[1];
+    m_moment[0][2] += massPerVert * -r[0] * r[2];
+    m_moment[1][0] += massPerVert * -r[1] * r[0];
+    m_moment[1][1] += massPerVert * (r[0]*r[0] + r[2]*r[2]);
+    m_moment[1][2] += massPerVert * -r[1] * r[2];
+    m_moment[2][0] += massPerVert * -r[0] * r[2];
+    m_moment[2][1] += massPerVert * -r[1] * r[2];
+    m_moment[2][2] += massPerVert * (r[0]*r[0] + r[1]*r[1]);
+  }
+  m_moment = inverse(m_moment);
+}
+

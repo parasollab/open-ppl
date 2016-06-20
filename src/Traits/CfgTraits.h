@@ -22,8 +22,6 @@
 #include "ValidityCheckers/NegateValidity.h"
 #include "ValidityCheckers/NodeClearanceValidity.h"
 #include "ValidityCheckers/ObstacleClearanceValidity.h"
-#include "ValidityCheckers/SurfaceValidity.h"
-#include "ValidityCheckers/SSSurfaceValidity.h"
 
 //neighborhood finder includes
 #include "NeighborhoodFinders/BandsNF.h"
@@ -54,7 +52,6 @@
 #include "LocalPlanners/MedialAxisLP.h"
 #include "LocalPlanners/RotateAtS.h"
 #include "LocalPlanners/StraightLine.h"
-#include "LocalPlanners/SurfaceLP.h"
 #include "LocalPlanners/ToggleLP.h"
 #include "LocalPlanners/TransformAtS.h"
 #include "LocalPlanners/ApproxSpheres.h"

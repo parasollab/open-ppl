@@ -151,6 +151,10 @@ Read(istream& _is, CountingStreamBuffer& _cbs) {
 
   ReadOptions(_is, _cbs);
 
+#ifdef PMPState
+  m_mass = ReadField<double>(_is, _cbs, "Failed reading body mass.");
+#endif
+
   Read(m_comAdjust);
 
   //Read for Base Type.  If Planar or Volumetric, read in two more strings

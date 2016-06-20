@@ -55,7 +55,8 @@ BoundingBox::
 GetRandomPoint() const {
   Point3d p;
   for(size_t i = 0; i < 3; ++i)
-    p[i] = m_bbx[i].first + (m_bbx[i].second - m_bbx[i].first)*DRand();
+    if(m_bbx[i].second != numeric_limits<double>::max())
+      p[i] = m_bbx[i].first + (m_bbx[i].second - m_bbx[i].first)*DRand();
   return p;
 }
 

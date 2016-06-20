@@ -1,8 +1,8 @@
 #ifndef SURFACE_TRAITS_H_
 #define SURFACE_TRAITS_H_
 
-#include "CfgTraits.h"
-
+#include "Cfg/CfgSurface.h"
+#include "Cfg/SSSurfaceMult.h"
 #include "MPProblem/Weight.h"
 
 //distance metric includes
@@ -62,7 +62,7 @@
 /// @brief Defines available methods in the Motion Planning Universe for
 ///        SurfaceCfg template specialization
 ///
-/// MPTraits is a type class which defines the motion planning universe. We
+/// SurfaceTraits is a type class which defines the motion planning universe. We
 /// construct our methods through a factory design pattern, and thus this states
 /// all available classes within an abstraction that you can use in the system.
 /// Essentially the important types are, the CfgType or the @cspace abstraction
@@ -71,86 +71,82 @@
 /// as extraneous methods in the type class imply longer compile times.
 ////////////////////////////////////////////////////////////////////////////////
 
-#if(defined(PMPCfgSurface) || defined(PMPSSSurfaceMult))
-class CfgSurface;
-
 #ifdef PMPCfgSurface
 
-template<>
-struct MPTraits<CfgSurface, DefaultWeight<CfgSurface> > {
+struct SurfaceTraits {
   typedef CfgSurface CfgType;
   typedef DefaultWeight<CfgType> WeightType;
   typedef CfgSurface& CfgRef;
 
-  typedef MPProblem<MPTraits> MPProblemType;
+  typedef MPProblem<SurfaceTraits> MPProblemType;
 
   //types of distance metrics available in our world
   typedef boost::mpl::list<
-    EuclideanDistance<MPTraits>
+    EuclideanDistance<SurfaceTraits>
     > DistanceMetricMethodList;
 
   //types of validity checkers available in our world
   typedef boost::mpl::list<
-    CollisionDetectionValidity<MPTraits>,
-    SurfaceValidity<MPTraits>
+    CollisionDetectionValidity<SurfaceTraits>,
+    SurfaceValidity<SurfaceTraits>
       > ValidityCheckerMethodList;
 
   //types of neighborhood finders available in our world
   typedef boost::mpl::list<
-    BruteForceNF<MPTraits>,
-    MPNNNF<MPTraits>
+    BruteForceNF<SurfaceTraits>,
+    MPNNNF<SurfaceTraits>
     > NeighborhoodFinderMethodList;
 
   //types of samplers available in our world
   typedef boost::mpl::list<
-    SurfaceSampler<MPTraits>,
-    SurfaceGridSampler<MPTraits>
+    SurfaceSampler<SurfaceTraits>,
+    SurfaceGridSampler<SurfaceTraits>
       > SamplerMethodList;
 
   //types of local planners available in our world
   typedef boost::mpl::list<
-    SurfaceLP<MPTraits>
+    SurfaceLP<SurfaceTraits>
     > LocalPlannerMethodList;
 
   //types of extenders avaible in our world
   typedef boost::mpl::list<
-    BasicExtender<MPTraits>,
-    MixExtender<MPTraits>,
-    RandomObstacleVector<MPTraits>,
-    RotationThenTranslation<MPTraits>,
-    TraceCSpaceObstacle<MPTraits>,
-    TraceMAPush<MPTraits>,
-    TraceObstacle<MPTraits>
+    BasicExtender<SurfaceTraits>,
+    MixExtender<SurfaceTraits>,
+    RandomObstacleVector<SurfaceTraits>,
+    RotationThenTranslation<SurfaceTraits>,
+    TraceCSpaceObstacle<SurfaceTraits>,
+    TraceMAPush<SurfaceTraits>,
+    TraceObstacle<SurfaceTraits>
       > ExtenderMethodList;
 
   //types of path smoothing available in our world
   typedef boost::mpl::list<
-    CombinedPathModifier<MPTraits>,
-    MedialAxisPathModifier<MPTraits>,
-    ResamplePathModifier<MPTraits>,
-    ShortcuttingPathModifier<MPTraits>
+    CombinedPathModifier<SurfaceTraits>,
+    MedialAxisPathModifier<SurfaceTraits>,
+    ResamplePathModifier<SurfaceTraits>,
+    ShortcuttingPathModifier<SurfaceTraits>
       > PathModifierMethodList;
 
   //types of connectors available in our world
   typedef boost::mpl::list<
-    ConnectNeighboringSurfaces<MPTraits>,
-    NeighborhoodConnector<MPTraits>,
-    CCsConnector<MPTraits>
+    ConnectNeighboringSurfaces<SurfaceTraits>,
+    NeighborhoodConnector<SurfaceTraits>,
+    CCsConnector<SurfaceTraits>
     > ConnectorMethodList;
 
   //types of metrics available in our world
   typedef boost::mpl::list<
-    NumNodesMetric<MPTraits>
+    NumNodesMetric<SurfaceTraits>
     > MetricMethodList;
 
   //types of map evaluators available in our world
   typedef boost::mpl::list<
-    ConditionalEvaluator<MPTraits>
+    ConditionalEvaluator<SurfaceTraits>
     > MapEvaluatorMethodList;
 
   //types of motion planning strategies available in our world
   typedef boost::mpl::list<
-    BasicPRM<MPTraits>
+    BasicPRM<SurfaceTraits>
     > MPStrategyMethodList;
 };
 
@@ -158,30 +154,28 @@ struct MPTraits<CfgSurface, DefaultWeight<CfgSurface> > {
 
 #ifdef PMPSSSurfaceMult
 
-class SSSurfaceMult;
-template<>
-struct MPTraits<SSSurfaceMult, DefaultWeight<SSSurfaceMult> > {
+struct SSSurfaceMultTraits {
   typedef SSSurfaceMult CfgType;
   typedef DefaultWeight<CfgType> WeightType;
   typedef SSSurfaceMult& CfgRef;
-  //switching MPTraits with CfgTraits
-  typedef MPProblem<MPTraits> MPProblemType;
+  //switching SSSurfaceMultTraits with CfgTraits
+  typedef MPProblem<SSSurfaceMultTraits> MPProblemType;
 
   //types of distance metrics available in our world
   typedef boost::mpl::list<
-    EuclideanDistance<MPTraits>
+    EuclideanDistance<SSSurfaceMultTraits>
     > DistanceMetricMethodList;
 
   //types of validity checkers available in our world
   typedef boost::mpl::list<
-    CollisionDetectionValidity<MPTraits>,
-    SurfaceValidity<MPTraits>,
-    SSSurfaceValidity<MPTraits>
+    CollisionDetectionValidity<SSSurfaceMultTraits>,
+    SurfaceValidity<SSSurfaceMultTraits>,
+    SSSurfaceValidity<SSSurfaceMultTraits>
       > ValidityCheckerMethodList;
 
   //types of neighborhood finders available in our world
   typedef boost::mpl::list<
-    BruteForceNF<MPTraits>
+    BruteForceNF<SSSurfaceMultTraits>
     > NeighborhoodFinderMethodList;
 
   //types of samplers available in our world
@@ -194,18 +188,18 @@ struct MPTraits<SSSurfaceMult, DefaultWeight<SSSurfaceMult> > {
 
   //types of extenders avaible in our world
   typedef boost::mpl::list<
-    BasicExtender<MPTraits>,
-    MixExtender<MPTraits>,
-    RandomObstacleVector<MPTraits>,
-    RotationThenTranslation<MPTraits>,
-    TraceCSpaceObstacle<MPTraits>,
-    TraceMAPush<MPTraits>,
-    TraceObstacle<MPTraits>
+    BasicExtender<SSSurfaceMultTraits>,
+    MixExtender<SSSurfaceMultTraits>,
+    RandomObstacleVector<SSSurfaceMultTraits>,
+    RotationThenTranslation<SSSurfaceMultTraits>,
+    TraceCSpaceObstacle<SSSurfaceMultTraits>,
+    TraceMAPush<SSSurfaceMultTraits>,
+    TraceObstacle<SSSurfaceMultTraits>
       > ExtenderMethodList;
 
   //types of path smoothing available in our world
   typedef boost::mpl::list<
-    CombinedPathModifier<MPTraits>
+    CombinedPathModifier<SSSurfaceMultTraits>
     > PathModifierMethodList;
 
   //types of connectors available in our world
@@ -214,22 +208,20 @@ struct MPTraits<SSSurfaceMult, DefaultWeight<SSSurfaceMult> > {
 
   //types of metrics available in our world
   typedef boost::mpl::list<
-    NumNodesMetric<MPTraits>
+    NumNodesMetric<SSSurfaceMultTraits>
     > MetricMethodList;
 
   //types of map evaluators available in our world
   typedef boost::mpl::list<
-    ConditionalEvaluator<MPTraits>
+    ConditionalEvaluator<SSSurfaceMultTraits>
     > MapEvaluatorMethodList;
 
   //types of motion planning strategies available in our world
   typedef boost::mpl::list<
-    BasicPRM<MPTraits>,
-    LocalManeuveringStrategy<MPTraits>
+    BasicPRM<SSSurfaceMultTraits>,
+    LocalManeuveringStrategy<SSSurfaceMultTraits>
       > MPStrategyMethodList;
 };
-
-#endif 
 
 #endif
 

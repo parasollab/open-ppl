@@ -15,35 +15,40 @@
 #ifdef PMPCfg
 #include "Cfg/Cfg.h"
 #include "Traits/CfgTraits.h"
-typedef Cfg PMPLCfgType;
+typedef MPTraits<Cfg> PMPLTraits;
+
+#elif (defined(PMPState))
+#include "Cfg/State.h"
+#include "Traits/StateTraits.h"
+typedef StateTraits PMPLTraits;
 
 #elif (defined(PMPCfgMultiRobot))
 #include "Cfg/CfgMultiRobot.h"
 #include "Traits/CfgTraits.h"
-typedef CfgMultiRobot PMPLCfgType;
+typedef MPTraits<CfgMultiRobot> PMPLTraits;
 
 #elif (defined(PMPCfgSurface))
 #include "Cfg/CfgSurface.h"
 #include "Traits/SurfaceTraits.h"
-typedef CfgSurface PMPLCfgType;
+typedef SurfaceTraits PMPLTraits;
 
 #elif (defined(PMPReachDistCC))
 #include "Cfg/Cfg_reach_cc.h"
-typedef Cfg_reach_cc PMPLCfgType;
+typedef MPTraits<Cfg_reach_cc> PMPLTraits;
 
 #elif (defined(PMPReachDistCCFixed))
 #include "Cfg/Cfg_reach_cc_fixed.h"
-typedef Cfg_reach_cc_fixed PMPLCfgType;
+typedef MPTraits<Cfg_reach_cc_fixed> PMPLTraits;
 
 #elif (defined(PMPSSSurfaceMult))
 #include "Cfg/SSSurfaceMult.h"
 #include "Traits/SurfaceTraits.h"
-typedef SSSurfaceMult PMPLCfgType;
+typedef SSSurfaceMultTraits PMPLTraits;
 
 #elif (defined(PMPReachableVolume))
 #include "Cfg/CfgReachableVolume.h"
 #include "Traits/ReachableVolumeTraits.h"
-typedef CfgReachableVolume PMPLCfgType;
+typedef CfgReachableVolumeTraits PMPLTraits;
 #else
 #error "Error, must define a RobotType for PMPL application"
 #endif
@@ -57,8 +62,7 @@ main(int _argc, char** _argv) {
     if(_argc < 3 || string(_argv[1]) != "-f")
       throw ParseException(WHERE, "Incorrect usage. Usage: -f options.xml");
 
-    typedef MPTraits<PMPLCfgType> Traits;
-    typedef Traits::MPProblemType MPProblemType;
+    typedef PMPLTraits::MPProblemType MPProblemType;
     MPProblemType* problem = new MPProblemType(_argv[2]);
     problem->Solve();
 

@@ -93,6 +93,12 @@ class Body {
     /// @return Center of mass of body
     Vector3d GetCenterOfMass();
     ////////////////////////////////////////////////////////////////////////////
+    /// @return Mass of body
+    const double GetMass() const {return m_mass;}
+    ////////////////////////////////////////////////////////////////////////////
+    /// @return Moment of Inertia of body
+    const Matrix3x3& GetMoment() const {return m_moment;}
+    ////////////////////////////////////////////////////////////////////////////
     /// @return Adjustment of center of mass
     GMSPolyhedron::COMAdjust GetCOMAdjust() const {return m_comAdjust;}
     ////////////////////////////////////////////////////////////////////////////
@@ -242,7 +248,6 @@ class Body {
     /// @param _cbs Counting buffer stream
     void ReadOptions(istream& _is, CountingStreamBuffer& _cbs);
 
-
     ////////////////////////////////////////////////////////////////////////////
     /// @brief Determine bounding box
     void FindBoundingBox();
@@ -250,6 +255,10 @@ class Body {
     ////////////////////////////////////////////////////////////////////////////
     /// @brief Compute convex hull of body
     void ComputeConvexHull();
+
+    ////////////////////////////////////////////////////////////////////////////
+    /// @brief Approximate moment of inertia
+    void ComputeMomentOfInertia();
 
     MultiBody* m_multibody;                  ///< Owner of Body
     string m_filename;                       ///< Geometry filename
@@ -273,6 +282,9 @@ class Body {
 
     bool m_centerOfMassAvailable;            ///< Is center of mass computed
     Vector3d m_centerOfMass;                 ///< Center of mass
+
+    double m_mass;                           ///< Mass of Body
+    Matrix3x3 m_moment;                      ///< Moment of Inertia
 
     double m_boundingBox[6];                 ///< Bounding box
 

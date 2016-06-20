@@ -1,6 +1,7 @@
 #ifndef RV_TRAITS_H_
 #define RV_TRAITS_H_
 
+#include "Cfg/CfgReachableVolume.h"
 #include "MPProblem/Weight.h"
 
 //distance metric includes
@@ -89,15 +90,12 @@
 #include "MPStrategies/BasicRRTStrategy.h"
 #include "MPStrategies/RVRRT.h"
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup MotionPlanningUniverse
 /// @brief Defines available methods in the Motion Planning Universe for
 ///        ReachableVolumeCfg
-/// @tparam C Cfg type
-/// @tparam W Weight type
 ///
-/// MPTraits is a type class which defines the motion planning universe. We
+/// CfgReachableVolumeTraits is a type class which defines the motion planning universe. We
 /// construct our methods through a factory design pattern, and thus this states
 /// all available classes within an abstraction that you can use in the system.
 /// Essentially the important types are, the CfgType or the @cspace abstraction
@@ -105,139 +103,138 @@
 /// each algorithm abstraction --- here you only need to define what you need,
 /// as extraneous methods in the type class imply longer compile times.
 ////////////////////////////////////////////////////////////////////////////////
-template<class C, class W = DefaultWeight<C> >
-struct MPTraits {
+struct CfgReachableVolumeTraits {
 
-  typedef C CfgType;
-  typedef W WeightType;
+  typedef CfgReachableVolume CfgType;
+  typedef DefaultWeight<CfgType> WeightType;
   typedef C& CfgRef;
 
-  typedef MPProblem<MPTraits> MPProblemType;
+  typedef MPProblem<CfgReachableVolumeTraits> MPProblemType;
 
   //types of distance metrics available in our world
   typedef boost::mpl::list<
-    BinaryLPSweptDistance<MPTraits>,
-    CenterOfMassDistance<MPTraits>,
-    EuclideanDistance<MPTraits>,
-    KnotTheoryDistance<MPTraits>,
-    LPSweptDistance<MPTraits>,
-    ManhattanDistance<MPTraits>,
-    MinkowskiDistance<MPTraits>,
-    RMSDDistance<MPTraits>,
-    ScaledEuclideanDistance<MPTraits>,
-    RVDistance<MPTraits>
+    BinaryLPSweptDistance<CfgReachableVolumeTraits>,
+    CenterOfMassDistance<CfgReachableVolumeTraits>,
+    EuclideanDistance<CfgReachableVolumeTraits>,
+    KnotTheoryDistance<CfgReachableVolumeTraits>,
+    LPSweptDistance<CfgReachableVolumeTraits>,
+    ManhattanDistance<CfgReachableVolumeTraits>,
+    MinkowskiDistance<CfgReachableVolumeTraits>,
+    RMSDDistance<CfgReachableVolumeTraits>,
+    ScaledEuclideanDistance<CfgReachableVolumeTraits>,
+    RVDistance<CfgReachableVolumeTraits>
       > DistanceMetricMethodList;
 
   //types of validity checkers available in our world
   typedef boost::mpl::list<
-    AlwaysTrueValidity<MPTraits>,
-    CollisionDetectionValidity<MPTraits>,
-    ComposeValidity<MPTraits>,
-    MedialAxisClearanceValidity<MPTraits>,
-    NegateValidity<MPTraits>,
-    NodeClearanceValidity<MPTraits>,
-    ObstacleClearanceValidity<MPTraits>
+    AlwaysTrueValidity<CfgReachableVolumeTraits>,
+    CollisionDetectionValidity<CfgReachableVolumeTraits>,
+    ComposeValidity<CfgReachableVolumeTraits>,
+    MedialAxisClearanceValidity<CfgReachableVolumeTraits>,
+    NegateValidity<CfgReachableVolumeTraits>,
+    NodeClearanceValidity<CfgReachableVolumeTraits>,
+    ObstacleClearanceValidity<CfgReachableVolumeTraits>
       > ValidityCheckerMethodList;
 
   //types of neighborhood finders available in our world
   typedef boost::mpl::list<
-    BandsNF<MPTraits>,
-    BruteForceNF<MPTraits>,
-    //CGALNF<MPTraits>,
-    //DPESNF<MPTraits>,
-    HierarchicalNF<MPTraits>,
-    HopLimitNF<MPTraits>,
-    //MetricTreeNF<MPTraits>,
-    //MPNNNF<MPTraits>,
-    OptimalNF<MPTraits>,
-    RadiusNF<MPTraits>,
-    RandomNF<MPTraits>//,
-    //SpillTreeNF<MPTraits>
+    BandsNF<CfgReachableVolumeTraits>,
+    BruteForceNF<CfgReachableVolumeTraits>,
+    //CGALNF<CfgReachableVolumeTraits>,
+    //DPESNF<CfgReachableVolumeTraits>,
+    HierarchicalNF<CfgReachableVolumeTraits>,
+    HopLimitNF<CfgReachableVolumeTraits>,
+    //MetricTreeNF<CfgReachableVolumeTraits>,
+    //MPNNNF<CfgReachableVolumeTraits>,
+    OptimalNF<CfgReachableVolumeTraits>,
+    RadiusNF<CfgReachableVolumeTraits>,
+    RandomNF<CfgReachableVolumeTraits>//,
+    //SpillTreeNF<CfgReachableVolumeTraits>
     > NeighborhoodFinderMethodList;
 
   //types of samplers available in our world
   typedef boost::mpl::list<
-    UniformRandomSampler<MPTraits>
+    UniformRandomSampler<CfgReachableVolumeTraits>
       > SamplerMethodList;
 
   //types of local planners available in our world
   //All of these samplers are applicable to problems without constraints
   //The RV Local planner is the only method that is applicable to problems with constraints
   typedef boost::mpl::list<
-    RotateAtS<MPTraits>,
-    StraightLine<MPTraits>,
-    TransformAtS<MPTraits>,
-    RVLocalPlanner<MPTraits>
+    RotateAtS<CfgReachableVolumeTraits>,
+    StraightLine<CfgReachableVolumeTraits>,
+    TransformAtS<CfgReachableVolumeTraits>,
+    RVLocalPlanner<CfgReachableVolumeTraits>
       > LocalPlannerMethodList;
 
   //types of extenders avaible in our world
   typedef boost::mpl::list<
-    BasicExtender<MPTraits>
+    BasicExtender<CfgReachableVolumeTraits>
       > ExtenderMethodList;
 
   //types of path smoothing available in our world
   //path smoothing can only be applied to problems without constraints
   typedef boost::mpl::list<
-    CombinedPathModifier<MPTraits>,
-    MedialAxisPathModifier<MPTraits>,
-    ResamplePathModifier<MPTraits>,
-    ShortcuttingPathModifier<MPTraits>
+    CombinedPathModifier<CfgReachableVolumeTraits>,
+    MedialAxisPathModifier<CfgReachableVolumeTraits>,
+    ResamplePathModifier<CfgReachableVolumeTraits>,
+    ShortcuttingPathModifier<CfgReachableVolumeTraits>
       > PathModifierMethodList;
 
 
   //types of connectors available in our world
   typedef boost::mpl::list<
-    AdaptiveConnector<MPTraits>,
-    CCExpansion<MPTraits>,
-    CCsConnector<MPTraits>,
-    ClosestVE<MPTraits>,
-    NeighborhoodConnector<MPTraits>,
-    //PreferentialAttachment<MPTraits>,
-    RRTConnect<MPTraits>
+    AdaptiveConnector<CfgReachableVolumeTraits>,
+    CCExpansion<CfgReachableVolumeTraits>,
+    CCsConnector<CfgReachableVolumeTraits>,
+    ClosestVE<CfgReachableVolumeTraits>,
+    NeighborhoodConnector<CfgReachableVolumeTraits>,
+    //PreferentialAttachment<CfgReachableVolumeTraits>,
+    RRTConnect<CfgReachableVolumeTraits>
       > ConnectorMethodList;
 
-  typedef ConnectivityMetric<MPTraits, RoadmapSet<MPTraits> > ConnectivityMetricRoadmapSet;
-  typedef CoverageDistanceMetric<MPTraits, RoadmapSet<MPTraits> > CoverageDistanceMetricRoadmapSet;
-  typedef CoverageMetric<MPTraits, RoadmapSet<MPTraits> > CoverageMetricRoadmapSet;
+  typedef ConnectivityMetric<CfgReachableVolumeTraits, RoadmapSet<CfgReachableVolumeTraits> > ConnectivityMetricRoadmapSet;
+  typedef CoverageDistanceMetric<CfgReachableVolumeTraits, RoadmapSet<CfgReachableVolumeTraits> > CoverageDistanceMetricRoadmapSet;
+  typedef CoverageMetric<CfgReachableVolumeTraits, RoadmapSet<CfgReachableVolumeTraits> > CoverageMetricRoadmapSet;
 
-  typedef ConnectivityMetric<MPTraits, VectorSet<MPTraits> > ConnectivityMetricVectorSet;
-  typedef CoverageDistanceMetric<MPTraits, VectorSet<MPTraits> > CoverageDistanceMetricVectorSet;
-  typedef CoverageMetric<MPTraits, VectorSet<MPTraits> > CoverageMetricVectorSet;
+  typedef ConnectivityMetric<CfgReachableVolumeTraits, VectorSet<CfgReachableVolumeTraits> > ConnectivityMetricVectorSet;
+  typedef CoverageDistanceMetric<CfgReachableVolumeTraits, VectorSet<CfgReachableVolumeTraits> > CoverageDistanceMetricVectorSet;
+  typedef CoverageMetric<CfgReachableVolumeTraits, VectorSet<CfgReachableVolumeTraits> > CoverageMetricVectorSet;
 
   //types of metrics available in our world
   typedef boost::mpl::list<
-    CCDistanceMetric<MPTraits>,
+    CCDistanceMetric<CfgReachableVolumeTraits>,
     ConnectivityMetricRoadmapSet,
     CoverageDistanceMetricRoadmapSet,
     CoverageMetricRoadmapSet,
     ConnectivityMetricVectorSet,
     CoverageDistanceMetricVectorSet,
     CoverageMetricVectorSet,
-    DiameterMetric<MPTraits>,
-    NumEdgesMetric<MPTraits>,
-    NumNodesMetric<MPTraits>,
-    TimeMetric<MPTraits>
+    DiameterMetric<CfgReachableVolumeTraits>,
+    NumEdgesMetric<CfgReachableVolumeTraits>,
+    NumNodesMetric<CfgReachableVolumeTraits>,
+    TimeMetric<CfgReachableVolumeTraits>
       > MetricMethodList;
 
 
   //types of map evaluators available in our world
   typedef boost::mpl::list<
-    ComposeEvaluator<MPTraits>,
-    ConditionalEvaluator<MPTraits>,
-    LazyQuery<MPTraits>,
-    LazyToggleQuery<MPTraits>,
-    NegateEvaluator<MPTraits>,
-    PrintMapEvaluation<MPTraits>,
-    Query<MPTraits>,
-    ReplanningEvaluation<MPTraits>,
-    TrueEvaluation<MPTraits>
+    ComposeEvaluator<CfgReachableVolumeTraits>,
+    ConditionalEvaluator<CfgReachableVolumeTraits>,
+    LazyQuery<CfgReachableVolumeTraits>,
+    LazyToggleQuery<CfgReachableVolumeTraits>,
+    NegateEvaluator<CfgReachableVolumeTraits>,
+    PrintMapEvaluation<CfgReachableVolumeTraits>,
+    Query<CfgReachableVolumeTraits>,
+    ReplanningEvaluation<CfgReachableVolumeTraits>,
+    TrueEvaluation<CfgReachableVolumeTraits>
       > MapEvaluatorMethodList;
 
   //types of motion planning strategies available in our world
   typedef boost::mpl::list<
-    BasicPRM<MPTraits>,
-    BasicRRTStrategy<MPTraits>,
-    ReachableVolumeRRT<MPTraits>
+    BasicPRM<CfgReachableVolumeTraits>,
+    BasicRRTStrategy<CfgReachableVolumeTraits>,
+    ReachableVolumeRRT<CfgReachableVolumeTraits>
       > MPStrategyMethodList;
 };
 

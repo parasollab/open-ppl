@@ -71,12 +71,14 @@ class DefaultWeight {
     bool IsStat(string _stat);
     void SetStat(string _stat, string _value);
 
+    virtual void Read(istream& _is);
+    virtual void Write(ostream& _os) const;
+
     // Data
   protected:
     string m_lpLabel;
     double m_weight;
     vector<CfgType> m_intermediates;
-
     static double MAX_WEIGHT;
     int m_checkedMult;
     bool m_hasClearance;
@@ -150,24 +152,15 @@ operator=(const DefaultWeight<CfgType>& _w) {
 template<class CfgType>
 ostream&
 operator<<(ostream& _os, const DefaultWeight<CfgType>& _w) {
-  _os << _w.m_intermediates.size() << " ";
-  for(auto&  cfg : _w.m_intermediates)
-    _os << cfg;
-  return _os << _w.m_weight;
+  _w.Write(_os);
+  return _os;
 }
 
 template<class CfgType>
 istream&
 operator>>(istream& _is, DefaultWeight<CfgType>& _w) {
-  size_t numIntermediates;
-  _is >> numIntermediates;
-  _w.m_intermediates.clear();
-  CfgType tmp;
-  for(size_t i = 0; i < numIntermediates; ++i) {
-    _is >> tmp;
-    _w.m_intermediates.push_back(tmp);
-  }
-  return _is >> _w.m_weight;
+  _w.Read(_is);
+  return _is;
 }
 
 template<class CfgType>
@@ -206,6 +199,31 @@ void
 DefaultWeight<CfgType>::
 SetStat(string _stat, string _value) {
   m_statMap[_stat] = _value;
+}
+
+template<class CfgType>
+void
+DefaultWeight<CfgType>::
+Read(istream& _is) {
+  size_t numIntermediates;
+  _is >> numIntermediates;
+  m_intermediates.clear();
+  CfgType tmp;
+  for(size_t i = 0; i < numIntermediates; ++i) {
+    _is >> tmp;
+    m_intermediates.push_back(tmp);
+  }
+  _is >> m_weight;
+}
+
+template<class CfgType>
+void
+DefaultWeight<CfgType>::
+Write(ostream& _os) const {
+  _os << m_intermediates.size() << " ";
+  for(auto&  cfg : m_intermediates)
+    _os << cfg;
+  _os << m_weight;
 }
 
 #endif

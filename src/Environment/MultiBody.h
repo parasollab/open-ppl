@@ -20,10 +20,13 @@ class MultiBody {
     /// @brief MultiBody type
     ////////////////////////////////////////////////////////////////////////////
     enum class MultiBodyType {
-      Active,   ///< Robot
-      Passive,  ///< Visible Obstacle
-      Internal, ///< Invisible Obstacle
-      Surface   ///< Surface
+      Active,       ///< Holonomic Robot
+#ifdef PMPState
+      NonHolonomic, ///< Nonholonomic Robot
+#endif
+      Passive,      ///< Visible Obstacle
+      Internal,     ///< Invisible Obstacle
+      Surface       ///< Surface
     };
 
     ////////////////////////////////////////////////////////////////////////////

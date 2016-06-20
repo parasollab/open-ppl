@@ -295,11 +295,13 @@ ifneq (,$(filter $(ROBOT_DEF), PMPSSSurfaceMult PMPCfgSurface))
   PMPL_OBJS += Cfg/CfgSurface.o \
 	       Cfg/SSSurface.o \
 	       Cfg/SSSurfaceMult.o
-
-endif
-ifeq (${ROBOT_DEF}, $(or PMPReachDistCC PMPReachDistCCFixed))
+  endif
+  ifeq (${ROBOT_DEF}, $(or PMPState))
+  PMPL_OBJS += Cfg/State.o \
+	      Environment/Control.o \
+	      Environment/NonHolonomicMultiBody.o
+  endif
+  ifeq (${ROBOT_DEF}, $(or PMPReachDistCC PMPReachDistCCFixed))
   PMPL_OBJS += Cfg/Cfg_reach_cc.o \
 	       Cfg/Cfg_reach_cc_fixed.o
-
-endif
-
+  endif
