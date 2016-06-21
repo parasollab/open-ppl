@@ -384,7 +384,6 @@ template<>
 bool
 Environment::
 InCSpace<State>(const State& _cfg, shared_ptr<Boundary> _b) {
-  cout << "States InCSpace!" << endl;
   size_t activeBodyIndex = _cfg.GetRobotIndex();
   return static_pointer_cast<NonHolonomicMultiBody>(m_robots[activeBodyIndex])->
     InSSpace(_cfg.GetData(), _cfg.GetVelocity(), _b);
