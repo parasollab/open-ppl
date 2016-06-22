@@ -9,7 +9,7 @@ NonHolonomicMultiBody() : ActiveMultiBody(),
     m_multiBodyType = MultiBodyType::NonHolonomic;
   }
 
-vector<double>
+const vector<double>&
 NonHolonomicMultiBody::
 GetRandomControl() const {
   size_t index = rand() % m_controls.size();

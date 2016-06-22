@@ -19,7 +19,7 @@ class NonHolonomicMultiBody : public ActiveMultiBody {
     /// @}
     ////////////////////////////////////////////////////////////////////////////
 
-    vector<double> GetRandomControl() const;
+    const vector<double>& GetRandomControl() const;
     const vector<shared_ptr<Control>>& AvailableControls() const;
 
     ////////////////////////////////////////////////////////////////////////////

@@ -105,7 +105,6 @@ Extend(const StateType& _near, const StateType& _dir, StateType& _new,
     return ExtendBestControl(_near, _dir, nTicks, dt, _new, _lpOutput);
   else
     return ExtendRandomControl(_near, _dir, nTicks, dt, _new, _lpOutput);
-  return false;
 }
 
 template<typename MPTraits>
@@ -172,7 +171,7 @@ ExtendRandomControl(const StateType& _near, const StateType& _dir, size_t _nTick
   size_t ticker = 0;
   bool collision = false;
 
-  vector<double> control = robot->GetRandomControl();
+  const vector<double>& control = robot->GetRandomControl();
 
   while(!collision && ticker < _nTicks) {
     tick = tick.Apply(control, _dt);
