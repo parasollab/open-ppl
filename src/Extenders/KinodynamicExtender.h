@@ -100,9 +100,6 @@ Extend(const StateType& _near, const StateType& _dir, StateType& _new,
   double timeStep = m_fixed ? m_timeStep : m_timeStep*DRand();
   size_t nTicks = ceil(timeStep);
   double dt = timeStep*env->GetTimeRes()/nTicks;
-  cout << "TimeRes: " << env->GetTimeRes();
-  cout << "\tdt: " << dt << endl;
-
 
   if(m_best)
     return ExtendBestControl(_near, _dir, nTicks, dt, _new, _lpOutput);
