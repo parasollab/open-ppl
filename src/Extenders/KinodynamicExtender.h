@@ -100,22 +100,22 @@ Extend(const StateType& _near, const StateType& _dir, StateType& _new,
   double timeStep = m_fixed ? m_timeStep : m_timeStep*DRand();
   size_t nTicks = ceil(timeStep);
   double dt = timeStep*env->GetTimeRes()/nTicks;
+  cout << "TimeRes: " << env->GetTimeRes();
+  cout << "\tdt: " << dt << endl;
 
 
-  if(m_best) {
+  if(m_best)
     return ExtendBestControl(_near, _dir, nTicks, dt, _new, _lpOutput);
-  }
-  else {
+  else
     return ExtendRandomControl(_near, _dir, nTicks, dt, _new, _lpOutput);
-  }
   return false;
 }
 
 template<typename MPTraits>
 bool
 KinodynamicExtender<MPTraits>::
-ExtendBestControl(const StateType& _near, const StateType& _dir, size_t _nTicks, double _dt, StateType& _new,
-      LPOutput<MPTraits>& _lpOutput) {
+ExtendBestControl(const StateType& _near, const StateType& _dir, size_t _nTicks,
+    double _dt, StateType& _new, LPOutput<MPTraits>& _lpOutput) {
 
   string callee("KinodynamicExtender::Expand");
 
@@ -123,8 +123,6 @@ ExtendBestControl(const StateType& _near, const StateType& _dir, size_t _nTicks,
   shared_ptr<NonHolonomicMultiBody> robot = dynamic_pointer_cast<NonHolonomicMultiBody>(env->GetRobot(0));
   DistanceMetricPointer dm = this->GetDistanceMetric(m_dmLabel);
   ValidityCheckerPointer vc = this->GetValidityChecker(m_vcLabel);
-
-
 
   const vector<shared_ptr<Control>>& control = robot->AvailableControls();
   double distBest = numeric_limits<double>::infinity();
@@ -140,31 +138,24 @@ ExtendBestControl(const StateType& _near, const StateType& _dir, size_t _nTicks,
     const vector<double>& cont = c->GetControl();
     while(!collision && ticker < _nTicks) {
       tick = tick.Apply(cont, _dt);
-      if(!env->InBounds(tick) || !vc->IsValid(tick, callee)) {
+      if(!env->InBounds(tick) || !vc->IsValid(tick, callee))
         collision = true;
-        ++ticker;
-        _lpOutput.m_intermediates.push_back(tick);
-      }
+      ++ticker;
+      _lpOutput.m_intermediates.push_back(tick);
+    }
 
-      //if success, save
-      if(!collision) {
-        double dist = dm->Distance(tick, _dir);
-        if(dist < distBest) {
-          distBest = dist;
-          _new = tick;
-          SetOutput("RRTExpand", _nTicks, cont, true, _lpOutput);
-	  _lpOutput.AddIntermediatesToWeights(true);
-	}
+    //if success, save
+    if(!collision) {
+      double dist = dm->Distance(tick, _dir);
+      if(dist < distBest) {
+        distBest = dist;
+        _new = tick;
+        SetOutput("RRTExpand", _nTicks, cont, true, _lpOutput);
+        _lpOutput.AddIntermediatesToWeights(true);
       }
     }
   }
-  if(distBest == numeric_limits<double>::infinity()) {
-    return false;
-  }
-  else {
-    return true;
-  }
-  return false;
+  return distBest == numeric_limits<double>::infinity();
 }
 
 template<typename MPTraits>
@@ -180,7 +171,6 @@ ExtendRandomControl(const StateType& _near, const StateType& _dir, size_t _nTick
   DistanceMetricPointer dm = this->GetDistanceMetric(m_dmLabel);
   ValidityCheckerPointer vc = this->GetValidityChecker(m_vcLabel);
 
-
   StateType tick = _near;
   size_t ticker = 0;
   bool collision = false;
@@ -188,20 +178,19 @@ ExtendRandomControl(const StateType& _near, const StateType& _dir, size_t _nTick
   vector<double> control = robot->GetRandomControl();
 
   while(!collision && ticker < _nTicks) {
-
     tick = tick.Apply(control, _dt);
     if(!env->InBounds(tick) || !vc->IsValid(tick, callee))
       collision = true; //return previous tick, as it is collision-free
-      ++ticker;
-      _lpOutput.m_intermediates.push_back(tick);
-    }
-    if(!collision) {
-      _new = tick;
-      SetOutput("RRTExpand", _nTicks, control, true, _lpOutput);
-      return true;
-    }
-    else
-      return false;
+    ++ticker;
+    _lpOutput.m_intermediates.push_back(tick);
+  }
+  if(!collision) {
+    _new = tick;
+    SetOutput("RRTExpand", _nTicks, control, true, _lpOutput);
+    return true;
+  }
+  else
+    return false;
 }
 
 template<typename MPTraits>
