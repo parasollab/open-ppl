@@ -157,7 +157,7 @@ ModifyImpl(vector<CfgType>& _path, vector<CfgType>& _newPath) {
 
   //Connect the start configuration and its pushed version
   if(!lp->IsConnected(_path.front(), pushed.front(), &tmpOutput,
-        posRes, oriRes, true, true, true)) {
+        posRes, oriRes, true, true)) {
     if(this->m_debug)
       cout << "Local Planner " << lp->GetNameAndLabel()
         << " could not connect the start to its pushed version" << endl;
@@ -174,7 +174,7 @@ ModifyImpl(vector<CfgType>& _path, vector<CfgType>& _newPath) {
     bool success = false;
     do {
       success = malp->LocalPlannerMethod<MPTraits>::IsConnected(*cit1, *cit2,
-          &tmpOutput, posRes, oriRes, true, true, true);
+          &tmpOutput, posRes, oriRes, true, true);
     } while(!success && tries++ < 10);
 
     //analyze MALP success
@@ -189,7 +189,7 @@ ModifyImpl(vector<CfgType>& _path, vector<CfgType>& _newPath) {
 
       //First FCM: Try with the other local planner
       if(lp->IsConnected(*cit1, *cit2, &tmpOutput,
-            posRes, oriRes, true, true, true))
+            posRes, oriRes, true, true))
         this->AddToPath(_newPath, &tmpOutput, *cit2);
       else {
         if(this->m_debug)
@@ -203,13 +203,13 @@ ModifyImpl(vector<CfgType>& _path, vector<CfgType>& _newPath) {
         CfgType oldCfg2 = graph->GetVertex(pathVIDs[i+1]);
 
         if(lp->IsConnected(*cit1, oldCfg1, &tmpOutput,
-              posRes, oriRes, true, true, true)) {
+              posRes, oriRes, true, true)) {
           this->AddToPath(_newPath, &tmpOutput, oldCfg1);
           if(lp->IsConnected(oldCfg1, oldCfg2, &tmpOutput,
-                posRes, oriRes, true, true, true)) {
+                posRes, oriRes, true, true)) {
             this->AddToPath(_newPath, &tmpOutput, oldCfg2);
             if(lp->IsConnected(oldCfg2, *cit2, &tmpOutput,
-                  posRes, oriRes, true, true, true))
+                  posRes, oriRes, true, true))
               this->AddToPath(_newPath, &tmpOutput, *cit2);
             else {
               if(this->m_debug)
@@ -234,7 +234,7 @@ ModifyImpl(vector<CfgType>& _path, vector<CfgType>& _newPath) {
 
   //Connect the goal configuration and its pushed version
   if(!lp->IsConnected(pushed.back(), _path.back(), &tmpOutput,
-        posRes, oriRes, true, true, true)) {
+        posRes, oriRes, true, true)) {
     if(this->m_debug)
       cout << "Local Planner " << lp->GetNameAndLabel()
         << " could not connect the goal to its pushed version" << endl;

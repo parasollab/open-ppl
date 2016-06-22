@@ -230,7 +230,6 @@ class ConnectorMethod : public MPBaseObject<MPTraits>
     ConnectionAttemptsCache m_attemptsCache; ///< All time connection attempts. Attempt is a pair<VID, VID> (edge) and bool (success/fail)
     string  m_nfLabel; ///< Neighborhood Finder
     string  m_lpLabel; ///< Local Planner
-    bool    m_addPartialEdge; ///< If failed attempt add partially validated portion of edge?
 
     ///Needed for BlindRRT
     SequentialGraphType* m_localGraph;
@@ -239,17 +238,14 @@ class ConnectorMethod : public MPBaseObject<MPTraits>
 
 template<class MPTraits>
 ConnectorMethod<MPTraits>::ConnectorMethod(string _nfLabel, string _lpLabel) :
-  m_nfLabel(_nfLabel), m_lpLabel(_lpLabel),
-  m_addPartialEdge(false) {
+  m_nfLabel(_nfLabel), m_lpLabel(_lpLabel) {
     this->SetName("ConnectorMethod");
-    m_addPartialEdge = false;
   }
 
   template<class MPTraits>
 ConnectorMethod<MPTraits>::ConnectorMethod(MPProblemType* _problem, XMLNode& _node)
   : MPBaseObject<MPTraits>(_problem, _node) {
     this->SetName("ConnectorMethod");
-    m_addPartialEdge = false;
     m_nfLabel = _node.Read("nfLabel", true, "", "Neighborhood Finder");
     m_lpLabel = _node.Read("lpLabel", true, "", "Local Planner");
   }
@@ -260,7 +256,6 @@ ConnectorMethod<MPTraits>::Print(ostream& _os) const {
   MPBaseObject<MPTraits>::Print(_os);
   _os << "\tnfLabel: " << m_nfLabel << endl;
   _os << "\tlpLabel: " << m_lpLabel << endl;
-  _os << "\taddPartialEdge: " << m_addPartialEdge << endl;
 }
 
 template<class MPTraits>

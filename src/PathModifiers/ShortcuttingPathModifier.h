@@ -111,7 +111,7 @@ ModifyImpl(vector<CfgType>& _path, vector<CfgType>& _newPath) {
         if(smoothFileOutput) {
           reconstruct = lp->IsConnected(graph->GetVertex(originalPathVIDs[i]),
               graph->GetVertex(originalPathVIDs[j]), &tmpOutput,
-              posRes, oriRes, true, true, true);
+              posRes, oriRes, true, true);
           this->AddToPath(_newPath, &tmpOutput,
               graph->GetVertex(originalPathVIDs[j]));
           //If could not reconstruct, abort the output,

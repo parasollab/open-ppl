@@ -38,7 +38,7 @@ class ToggleLP: public LocalPlannerMethod<MPTraits> {
         const CfgType& _c1, const CfgType& _c2, CfgType& _col,
         LPOutput<MPTraits>* _lpOutput,
         double _positionRes, double _orientationRes,
-        bool _checkCollision = true, bool _savePath = false, bool _saveFailedPath = false);
+        bool _checkCollision = true, bool _savePath = false);
 
     virtual vector<CfgType> ReconstructPath(
         const CfgType& _c1, const CfgType& _c2,
@@ -62,7 +62,7 @@ class ToggleLP: public LocalPlannerMethod<MPTraits> {
         const CfgType& _c1, const CfgType& _c2, CfgType& _col,
         LPOutput<MPTraits>* _lpOutput, int& _cdCounter,
         double _positionRes, double _orientationRes,
-        bool _checkCollision = true, bool _savePath = false, bool _saveFailedPath = false);
+        bool _checkCollision = true, bool _savePath = false);
 
     bool ToggleConnect(
         const CfgType& _s, const CfgType& _g, const CfgType& _n1, const CfgType& _n2,
@@ -134,7 +134,7 @@ ToggleLP<MPTraits>::IsConnected(
     const CfgType& _c1, const CfgType& _c2, CfgType& _col,
     LPOutput<MPTraits>* _lpOutput,
     double _positionRes, double _orientationRes,
-    bool _checkCollision, bool _savePath, bool _saveFailedPath) {
+    bool _checkCollision, bool _savePath) {
 #ifndef _PARALLEL
 
   StatClass* stats = this->GetMPProblem()->GetStatClass();
@@ -153,7 +153,7 @@ ToggleLP<MPTraits>::IsConnected(
   int cdCounter = 0;
 
   connected = IsConnectedToggle(_c1, _c2, _col, _lpOutput, cdCounter,
-      _positionRes, _orientationRes, _checkCollision, _savePath, _saveFailedPath);
+      _positionRes, _orientationRes, _checkCollision, _savePath);
   if(connected){
     stats->IncLPConnections(this->GetNameAndLabel());
     //find path in m_pathGraph
@@ -227,7 +227,7 @@ ToggleLP<MPTraits>::IsConnectedToggle(
     const CfgType& _c1, const CfgType& _c2, CfgType& _col,
     LPOutput<MPTraits>* _lpOutput, int& _cdCounter,
     double _positionRes, double _orientationRes,
-    bool _checkCollision, bool _savePath, bool _saveFailedPath) {
+    bool _checkCollision, bool _savePath) {
   StatClass* stats = this->GetMPProblem()->GetStatClass();
 
   m_iterations = 0;
@@ -246,7 +246,7 @@ ToggleLP<MPTraits>::IsConnectedToggle(
   LocalPlannerPointer lp = this->GetMPProblem()->GetLocalPlanner(m_lpLabel);
 
   if(lp->IsConnected(_c1, _c2, _col, _lpOutput,
-      _positionRes, _orientationRes, _checkCollision, _savePath, _saveFailedPath))
+      _positionRes, _orientationRes, _checkCollision, _savePath))
     return true;
 
   if(_col == CfgType())
@@ -279,11 +279,11 @@ ToggleLP<MPTraits>::IsConnectedToggle(
     VID nvid = m_pathGraph.AddVertex(n);
     CfgType c2, c3;
     bool b1 = lp->IsConnected(_c1, n, c2, _lpOutput,
-        _positionRes, _orientationRes, true, false, false);
+        _positionRes, _orientationRes, true, false);
     if(b1)
       m_pathGraph.AddEdge(m_sVID, nvid, pair<WeightType, WeightType>());
     bool b2 = lp->IsConnected(_c2, n, c3, _lpOutput,
-        _positionRes, _orientationRes, true, false, false);
+        _positionRes, _orientationRes, true, false);
     if(b2)
       m_pathGraph.AddEdge(m_gVID, nvid, pair<WeightType, WeightType>());
     if(this->m_debug) {
@@ -417,7 +417,7 @@ ToggleLP<MPTraits>::ToggleConnect(
   if(!_toggle)
     this->GetMPProblem()->GetValidityChecker(m_vcLabel)->ToggleValidity();
   bool connect = lp->IsConnected(_s, _g, c, _lpOutput,
-      _positionRes, _orientationRes, true, false, false);
+      _positionRes, _orientationRes, true, false);
   if(!_toggle)
     this->GetMPProblem()->GetValidityChecker(m_vcLabel)->ToggleValidity();
 
@@ -482,25 +482,25 @@ ToggleLP<MPTraits>::ReconstructPath(
   CfgType col;
   if(_intermediates.size() > 0) {
     lp->IsConnected(_c1, _intermediates[0], col,
-        dummyLPOutput, _posRes, _oriRes, false, true, false);
+        dummyLPOutput, _posRes, _oriRes, false, true);
     for(size_t j = 0; j < dummyLPOutput->m_path.size(); j++)
       lpOutput->m_path.push_back(dummyLPOutput->m_path[j]);
     for(size_t i = 0; i < _intermediates.size() - 1; i++) {
       lpOutput->m_path.push_back(_intermediates[i]);
       lp->IsConnected(_intermediates[i], _intermediates[i + 1],
-          col, dummyLPOutput, _posRes, _oriRes, false, true, false);
+          col, dummyLPOutput, _posRes, _oriRes, false, true);
       for(size_t j = 0; j < dummyLPOutput->m_path.size(); j++)
         lpOutput->m_path.push_back(dummyLPOutput->m_path[j]);
     }
     lpOutput->m_path.push_back(_intermediates[_intermediates.size() - 1]);
     lp->IsConnected(_intermediates[_intermediates.size() - 1],
-        _c2, col, dummyLPOutput, _posRes, _oriRes, false, true, false);
+        _c2, col, dummyLPOutput, _posRes, _oriRes, false, true);
     for(size_t j = 0; j < dummyLPOutput->m_path.size(); j++)
       lpOutput->m_path.push_back(dummyLPOutput->m_path[j]);
   }
   else {
     lp->IsConnected(_c1, _c2, col, dummyLPOutput,
-        _posRes, _oriRes, false, true, false);
+        _posRes, _oriRes, false, true);
     for(size_t j = 0; j < dummyLPOutput->m_path.size(); j++)
       lpOutput->m_path.push_back(dummyLPOutput->m_path[j]);
   }

@@ -53,8 +53,7 @@ class LocalPlannerMethod : public MPBaseObject<MPTraits> {
     /// No witness to failure is returned.
     virtual bool IsConnected(const CfgType& _c1, const CfgType& _c2,
         LPOutput<MPTraits>* _lpOutput, double _posRes, double _oriRes,
-        bool _checkCollision = true, bool _savePath = false,
-        bool _saveFailedPath = false);
+        bool _checkCollision = true, bool _savePath = false);
 
     ////////////////////////////////////////////////////////////////////////////
     /// @brief Validate a simple path between two nodes
@@ -66,8 +65,6 @@ class LocalPlannerMethod : public MPBaseObject<MPTraits> {
     /// @param _oriRes Rotational DOF resolution
     /// @param _checkCollision True if validity checking is performed
     /// @param _savePath True if all configurations along path wish to be saved
-    /// @param _saveFailedPath True if when fail a partially computed path is
-    ///        put in _lpOutput
     /// @return boolean success/fail value
     ///
     /// @usage
@@ -81,8 +78,7 @@ class LocalPlannerMethod : public MPBaseObject<MPTraits> {
     virtual bool IsConnected(
         const CfgType& _c1, const CfgType& _c2, CfgType& _col,
         LPOutput<MPTraits>* _lpOutput, double _posRes, double _oriRes,
-        bool _checkCollision = true, bool _savePath = false,
-        bool _saveFailedPath = false) = 0;
+        bool _checkCollision = true, bool _savePath = false) = 0;
 
     ////////////////////////////////////////////////////////////////////////////
     /// @brief Reconstruct a previously computed simple path between two nodes
@@ -117,10 +113,10 @@ template<class MPTraits>
 bool
 LocalPlannerMethod<MPTraits>::IsConnected(const CfgType& _c1, const CfgType& _c2,
     LPOutput<MPTraits>* _lpOutput, double _posRes, double _oriRes,
-    bool _checkCollision, bool _savePath, bool _saveFailedPath) {
+    bool _checkCollision, bool _savePath) {
   CfgType col;
   return IsConnected(_c1, _c2, col, _lpOutput, _posRes,
-      _oriRes, _checkCollision, _savePath, _saveFailedPath);
+      _oriRes, _checkCollision, _savePath);
 }
 
 template<class MPTraits>
@@ -131,7 +127,7 @@ LocalPlannerMethod<MPTraits>::ReconstructPath(
     double _posRes, double _oriRes) {
   LPOutput<MPTraits>* lpOutput = new LPOutput<MPTraits>();
   IsConnected(_c1, _c2, lpOutput, _posRes, _oriRes,
-      false, true, false);
+      false, true);
   vector<CfgType> path = lpOutput->m_path;
   delete lpOutput;
   return path;

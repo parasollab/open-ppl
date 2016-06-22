@@ -46,8 +46,7 @@ class MedialAxisLP : public LocalPlannerMethod<MPTraits> {
         const CfgType& _c1, const CfgType& _c2, CfgType& _col,
         LPOutput<MPTraits>* _lpOutput,
         double _positionRes, double _orientationRes,
-        bool _checkCollision = true, bool _savePath = true,
-        bool _saveFailedPath = true);
+        bool _checkCollision = true, bool _savePath = true);
 
     virtual vector<CfgType> ReconstructPath(
         const CfgType& _c1, const CfgType& _c2,
@@ -186,7 +185,7 @@ MedialAxisLP<MPTraits>::
 IsConnected(const CfgType& _c1, const CfgType& _c2, CfgType& _col,
     LPOutput<MPTraits>* _lpOutput,
     double _positionRes, double _orientationRes,
-    bool _checkCollision, bool _savePath, bool _saveFailedPath) {
+    bool _checkCollision, bool _savePath) {
   StatClass* stats = this->GetStatClass();
 
   if(!m_macVCAdded) {
@@ -212,14 +211,6 @@ IsConnected(const CfgType& _c1, const CfgType& _c2, CfgType& _col,
         << "setting to true.\n";
     }
     _savePath = true;
-  }
-  if(!_saveFailedPath) {
-    if(this->m_debug) {
-      cerr << "WARNING, in MedialAxisLP::IsConnected: saveFailedPath should be "
-        << "set to true (false is not applicable for this local planner), "
-        << "setting to true.\n";
-    }
-    _saveFailedPath = true;
   }
 
   //Clear lpOutput
@@ -307,7 +298,7 @@ IsConnectedRec(const CfgType& _c1, const CfgType& _c2, CfgType& _col,
 
   if(nTicks <= 1) {
     if(m_envLP.IsConnected(_c1, _c2, _col, &tmpLPOutput,
-          _posRes, _oriRes, true, true, true)) {
+          _posRes, _oriRes, true, true)) {
       for(size_t j = 0; j < tmpLPOutput.m_path.size(); ++j)
         _lpOutput->m_path.push_back(tmpLPOutput.m_path[j]);
       return true;
@@ -393,7 +384,7 @@ EpsilonClosePath(const CfgType& _c1, const CfgType& _c2, CfgType& _mid,
 
     m_medialAxisUtility.PushToMedialAxis(_mid, env->GetBoundary());
     return m_envLP.IsConnected(_c1, _c2, col, _lpOutput,
-        _posRes, _oriRes, true, true, true);
+        _posRes, _oriRes, true, true);
   }
 
   // Calculate relationship between resolution and m_epsilon
@@ -415,14 +406,14 @@ EpsilonClosePath(const CfgType& _c1, const CfgType& _c2, CfgType& _mid,
   // LPOuput if failed
   maLPOutput.m_path.push_back(_c1);
   passed = m_macLP.IsConnected(_c1, _c2, col, &testLPOutput,
-      posEps, oriEps, true, true, true);
+      posEps, oriEps, true, true);
   if(passed) {
     for(size_t j = 0; j < testLPOutput.m_path.size(); ++j)
       maLPOutput.m_path.push_back(testLPOutput.m_path[j]);
   }
   else {
     m_macLP.IsConnected(_c1, _c2, col, &maLPOutput, posEps,
-        oriEps, false, true, true);
+        oriEps, false, true);
   }
   maLPOutput.m_path.push_back(_c2);
 
@@ -474,7 +465,7 @@ EpsilonClosePath(const CfgType& _c1, const CfgType& _c2, CfgType& _mid,
     for(size_t i = 0; i < maLPOutput.m_path.size() - 1; ++i) {
       if(m_envLP.IsConnected(maLPOutput.m_path[i],
             maLPOutput.m_path[i + 1], col, &testLPOutput, _posRes, _oriRes,
-            false, true, true)) {
+            false, true)) {
         copy(testLPOutput.m_path.begin(), testLPOutput.m_path.end(),
             back_inserter(tmpLPOutput.m_path));
         if(i != maLPOutput.m_path.size() - 2)
@@ -539,7 +530,7 @@ IsConnectedIter(const CfgType& _c1, const CfgType& _c2, CfgType& _col,
       //check for valid connection between previous cfg and final cfg
       //if valid, save path.
       if(!m_envLP.IsConnected(prev, _c2, col, &lpOutput,
-            _posRes, _oriRes, true, true, true)) {
+            _posRes, _oriRes, true, true)) {
         if(this->m_debug)
           cout << "Couldn't connect prev: " << prev
             << " to final: " << _c2 << endl;
@@ -587,7 +578,7 @@ IsConnectedIter(const CfgType& _c1, const CfgType& _c2, CfgType& _col,
     //check for valid connection between previous cfg and pushed cfg
     //if valid, save path.
     if(!m_envLP.IsConnected(prev, curr, col, &lpOutput,
-          _posRes, _oriRes, true, true, true)) {
+          _posRes, _oriRes, true, true)) {
       if(this->m_debug)
         cout << "Couldn't connect prev: " << prev
           << " to curr: " << curr << endl;
@@ -652,7 +643,7 @@ IsConnectedBin(const CfgType& _c1, const CfgType& _c2, CfgType& _col,
       LPOutput<MPTraits> lpOutput;
       CfgType col;
       if(!m_envLP.IsConnected(seg.first.second, seg.second.second, col,
-            &lpOutput, _posRes, _oriRes, true, true, true)) {
+            &lpOutput, _posRes, _oriRes, true, true)) {
         if(this->m_debug)
           cout << "Connection on segment ({" << seg.first.second
             << "}, {" << seg.second.second << "}) failed." << endl;
@@ -716,25 +707,25 @@ ReconstructPath(const CfgType& _c1, const CfgType& _c2,
 
   if(_intermediates.size() > 0) {
     m_envLP.IsConnected(_c1, _intermediates[0], col,
-        dummyLPOutput, _posRes, _oriRes, false, true, false);
+        dummyLPOutput, _posRes, _oriRes, false, true);
     for(size_t j = 0; j < dummyLPOutput->m_path.size(); j++)
       lpOutput->m_path.push_back(dummyLPOutput->m_path[j]);
     for(size_t i = 0; i < _intermediates.size() - 1; i++){
       lpOutput->m_path.push_back(_intermediates[i]);
       m_envLP.IsConnected(_intermediates[i], _intermediates[i + 1],
-          col, dummyLPOutput, _posRes, _oriRes, false, true, false);
+          col, dummyLPOutput, _posRes, _oriRes, false, true);
       for(size_t j = 0; j < dummyLPOutput->m_path.size(); j++)
         lpOutput->m_path.push_back(dummyLPOutput->m_path[j]);
     }
     lpOutput->m_path.push_back(_intermediates[_intermediates.size() - 1]);
     m_envLP.IsConnected(_intermediates[_intermediates.size() - 1],
-        _c2, col, dummyLPOutput, _posRes, _oriRes, false, true, false);
+        _c2, col, dummyLPOutput, _posRes, _oriRes, false, true);
     for(size_t j = 0; j < dummyLPOutput->m_path.size(); j++)
       lpOutput->m_path.push_back(dummyLPOutput->m_path[j]);
   }
   else {
     m_envLP.IsConnected(_c1, _c2, col, dummyLPOutput,
-        _posRes, _oriRes, false, true, false);
+        _posRes, _oriRes, false, true);
     for(size_t j = 0; j < dummyLPOutput->m_path.size(); j++)
       lpOutput->m_path.push_back(dummyLPOutput->m_path[j]);
   }
@@ -839,7 +830,7 @@ ReduceNoise(const CfgType& _c1, const CfgType& _c2,
     CfgType mid = (*cit1 + *cit2)/2;
 
     if(m_envLP.IsConnected(prevMid, mid, col, &lpOutput,
-          _posRes, _oriRes, true, true, true)) {
+          _posRes, _oriRes, true, true)) {
       if(newIntermediates.empty() || newIntermediates.back() != prevMid)
         newIntermediates.push_back(prevMid);
       newIntermediates.push_back(mid);
@@ -854,7 +845,7 @@ ReduceNoise(const CfgType& _c1, const CfgType& _c2,
   CfgType mid = (_c2 + _lpOutput->m_intermediates.back())/2;
 
   if(m_envLP.IsConnected(prevMid, mid, col, &lpOutput,
-        _posRes, _oriRes, true, true, true)) {
+        _posRes, _oriRes, true, true)) {
     if(newIntermediates.empty() || newIntermediates.back() != prevMid)
       newIntermediates.push_back(prevMid);
     newIntermediates.push_back(mid);

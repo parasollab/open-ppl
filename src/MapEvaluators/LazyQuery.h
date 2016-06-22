@@ -173,7 +173,7 @@ LazyQuery<MPTraits>::CanRecreatePath(RoadmapType* _rdmp, vector<VID>& _attempted
             _rdmp->GetGraph()->GetVertex(_attemptedPath[index]),
             _rdmp->GetGraph()->GetVertex(_attemptedPath[index+1]),
             witness, &ci, this->GetMPProblem()->GetEnvironment()->GetPositionRes() * *resIt,
-            this->GetMPProblem()->GetEnvironment()->GetOrientationRes() * *resIt, true, false))
+            this->GetMPProblem()->GetEnvironment()->GetOrientationRes() * *resIt, true))
         (*ei).property().SetChecked(*resIt);
       else {
         // Add invalid edge to list
@@ -208,7 +208,7 @@ LazyQuery<MPTraits>::CanRecreatePath(RoadmapType* _rdmp, vector<VID>& _attempted
         _rdmp->GetGraph()->GetVertex(*it),
         _rdmp->GetGraph()->GetVertex(*(it+1)),
         &lpOut, this->GetMPProblem()->GetEnvironment()->GetPositionRes(),
-        this->GetMPProblem()->GetEnvironment()->GetOrientationRes(), false, true, false);
+        this->GetMPProblem()->GetEnvironment()->GetOrientationRes(), false, true);
     _recreatedPath.insert(_recreatedPath.end(), lpOut.m_path.begin(), lpOut.m_path.end());
     _recreatedPath.push_back(_rdmp->GetGraph()->GetVertex(*(it+1)));
   }

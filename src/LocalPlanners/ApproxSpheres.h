@@ -29,7 +29,7 @@ class ApproxSpheres: public LocalPlannerMethod<MPTraits> {
         LPOutput<MPTraits>* _lpOutput,
         double _posRes, double _oriRes,
         bool _checkCollision = true,
-        bool _savePath = false, bool _saveFailedPath = false);
+        bool _savePath = false);
 
   protected:
     ClearanceUtility<MPTraits> m_clearUtil; //Clearance Utility
@@ -71,7 +71,7 @@ IsConnected(const CfgType& _c1, const CfgType& _c2, CfgType& col,
     LPOutput<MPTraits>* _lpOutput,
     double _posRes, double _oriRes,
     bool _checkCollision,
-    bool _savePath, bool _saveFailedPath) {
+    bool _savePath) {
   StatClass* _stats = this->GetStatClass();
   DistanceMetricPointer _dm =
     this->GetDistanceMetric(m_clearUtil.GetDistanceMetricLabel());

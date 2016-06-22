@@ -178,16 +178,6 @@ CCsConnector<MPTraits>::ConnectCC(RoadmapType* _rm,
       rgraph->AddEdge(cc1Elem, cc2Elem, lpOutput.m_edge);
       return;
     }
-    else if(this->m_addPartialEdge) {
-      typename vector<typename LPOutput<MPTraits>::LPSavedEdge>::iterator eit;
-      for(eit = lpOutput.m_savedEdge.begin(); eit != lpOutput.m_savedEdge.end(); eit++) {
-        CfgType tmp = eit->first.second;
-        if(tmp != rgraph->GetVertex(cc1Elem)){
-          VID tmpVID = rgraph->AddVertex(tmp);
-          rgraph->AddEdge(cc1Elem, tmpVID, eit->second);
-        }
-      }
-    }
     if(_col != CfgType())
       *_collision++ = _col;
   }

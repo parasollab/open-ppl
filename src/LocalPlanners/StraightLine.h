@@ -41,12 +41,12 @@ class StraightLine : public LocalPlannerMethod<MPTraits> {
         const CfgType& _c1, const CfgType& _c2, CfgType& _col,
         LPOutput<MPTraits>* _lpOutput,
         double _positionRes, double _orientationRes,
-        bool _checkCollision = true, bool _savePath = false, bool _saveFailedPath = false) {
+        bool _checkCollision = true, bool _savePath = false) {
       //clear lpOutput
       _lpOutput->Clear();
       bool connected = IsConnectedFunc<CfgType>(_c1, _c2,
           _col, _lpOutput, _positionRes, _orientationRes, _checkCollision,
-          _savePath, _saveFailedPath);
+          _savePath);
       if(connected)
         _lpOutput->SetLPLabel(this->GetLabel());
       return connected;
@@ -58,7 +58,7 @@ class StraightLine : public LocalPlannerMethod<MPTraits> {
         const CfgType& _c1, const CfgType& _c2, CfgType& _col,
         LPOutput<MPTraits>* _lpOutput,
         double _positionRes, double _orientationRes,
-        bool _checkCollision = true, bool _savePath = false, bool _saveFailedPath = false,
+        bool _checkCollision = true, bool _savePath = false,
         typename boost::disable_if<IsClosedChain<Enable> >::type* _dummy = 0);
 
     // Specialization for closed chains
@@ -67,7 +67,7 @@ class StraightLine : public LocalPlannerMethod<MPTraits> {
         const CfgType& _c1, const CfgType& _c2, CfgType& _col,
         LPOutput<MPTraits>* _lpOutput,
         double _positionRes, double _orientationRes,
-        bool _checkCollision = true, bool _savePath = false, bool _saveFailedPath = false,
+        bool _checkCollision = true, bool _savePath = false,
         typename boost::enable_if<IsClosedChain<Enable> >::type* _dummy = 0);
 
   protected:
@@ -82,7 +82,7 @@ class StraightLine : public LocalPlannerMethod<MPTraits> {
         const CfgType& _c1, const CfgType& _c2, CfgType& _col,
         LPOutput<MPTraits>* _lpOutput, int& _cdCounter,
         double _positionRes, double _orientationRes,
-        bool _checkCollision = true, bool _savePath = false, bool _saveFailedPath = false);
+        bool _checkCollision = true, bool _savePath = false);
 
     /**
      * Check if two Cfgs could be connected by straight line
@@ -93,7 +93,7 @@ class StraightLine : public LocalPlannerMethod<MPTraits> {
         const CfgType& _c1, const CfgType& _c2, CfgType& _col,
         LPOutput<MPTraits>* _lpOutput, int& _cdCounter,
         double _positionRes, double _orientationRes,
-        bool _checkCollision = true, bool _savePath = false, bool _saveFailedPath = false);
+        bool _checkCollision = true, bool _savePath = false);
 
     string m_vcLabel;
     bool m_binaryEvaluation;
@@ -136,7 +136,7 @@ StraightLine<MPTraits>::IsConnectedFunc(
     const CfgType& _c1, const CfgType& _c2, CfgType& _col,
     LPOutput<MPTraits>* _lpOutput,
     double _positionRes, double _orientationRes,
-    bool _checkCollision, bool _savePath, bool _saveFailedPath,
+    bool _checkCollision, bool _savePath,
     typename boost::disable_if<IsClosedChain<Enable> >::type* _dummy) {
 
   StatClass* stats = this->GetMPProblem()->GetStatClass();
@@ -147,10 +147,10 @@ StraightLine<MPTraits>::IsConnectedFunc(
   bool connected;
   if(m_binaryEvaluation)
     connected = IsConnectedSLBinary(_c1, _c2, _col, _lpOutput,
-        cdCounter, _positionRes, _orientationRes, _checkCollision, _savePath, _saveFailedPath);
+        cdCounter, _positionRes, _orientationRes, _checkCollision, _savePath);
   else
     connected = IsConnectedSLSequential(_c1, _c2, _col, _lpOutput,
-        cdCounter, _positionRes, _orientationRes, _checkCollision, _savePath, _saveFailedPath);
+        cdCounter, _positionRes, _orientationRes, _checkCollision, _savePath);
   if(connected)
     stats->IncLPConnections(this->GetNameAndLabel());
 
@@ -166,7 +166,7 @@ StraightLine<MPTraits>::IsConnectedFunc(
     const CfgType& _c1, const CfgType& _c2, CfgType& _col,
     LPOutput<MPTraits>* _lpOutput,
     double _positionRes, double _orientationRes,
-    bool _checkCollision, bool _savePath, bool _saveFailedPath,
+    bool _checkCollision, bool _savePath,
     typename boost::enable_if<IsClosedChain<Enable> >::type* _dummy) {
 
   Environment* env = this->GetMPProblem()->GetEnvironment();
@@ -195,26 +195,26 @@ StraightLine<MPTraits>::IsConnectedFunc(
 
     if(m_binaryEvaluation) {
       connected = (IsConnectedSLBinary(_c1, intermediate, _col, _lpOutput,
-            cdCounter, _positionRes, _orientationRes, _checkCollision, _savePath, _saveFailedPath)
+            cdCounter, _positionRes, _orientationRes, _checkCollision, _savePath)
           &&
           IsConnectedSLBinary(intermediate, _c2, _col, _lpOutput,
-            cdCounter, _positionRes, _orientationRes, _checkCollision, _savePath, _saveFailedPath)
+            cdCounter, _positionRes, _orientationRes, _checkCollision, _savePath)
           );
     } else {
       connected = (IsConnectedSLSequential(_c1, intermediate, _col, _lpOutput,
-            cdCounter, _positionRes, _orientationRes, _checkCollision, _savePath, _saveFailedPath)
+            cdCounter, _positionRes, _orientationRes, _checkCollision, _savePath)
           &&
           IsConnectedSLSequential(intermediate, _c2, _col, _lpOutput,
-            cdCounter, _positionRes, _orientationRes, _checkCollision, _savePath, _saveFailedPath)
+            cdCounter, _positionRes, _orientationRes, _checkCollision, _savePath)
           );
     }
   } else {
     if(m_binaryEvaluation) {
       connected = IsConnectedSLBinary(_c1, _c2, _col, _lpOutput,
-          cdCounter, _positionRes, _orientationRes, _checkCollision, _savePath, _saveFailedPath);
+          cdCounter, _positionRes, _orientationRes, _checkCollision, _savePath);
     } else {
       connected = IsConnectedSLSequential(_c1, _c2, _col, _lpOutput,
-          cdCounter, _positionRes, _orientationRes, _checkCollision, _savePath, _saveFailedPath);
+          cdCounter, _positionRes, _orientationRes, _checkCollision, _savePath);
     }
   }
   if(connected)
@@ -230,7 +230,7 @@ StraightLine<MPTraits>::IsConnectedSLSequential(
     const CfgType& _c1, const CfgType& _c2, CfgType& _col,
     LPOutput<MPTraits>* _lpOutput, int& _cdCounter,
     double _positionRes, double _orientationRes,
-    bool _checkCollision, bool _savePath, bool _saveFailedPath) {
+    bool _checkCollision, bool _savePath) {
 
   Environment* env = this->GetMPProblem()->GetEnvironment();
   ValidityCheckerPointer vc = this->GetMPProblem()->GetValidityChecker(m_vcLabel);
@@ -258,16 +258,10 @@ StraightLine<MPTraits>::IsConnectedSLSequential(
         tick += negIncr;
         _lpOutput->m_edge.first.SetWeight(_lpOutput->m_edge.first.GetWeight() + nIter);
         _lpOutput->m_edge.second.SetWeight(_lpOutput->m_edge.second.GetWeight() + nIter);
-        typename LPOutput<MPTraits>::LPSavedEdge tmp;
-        tmp.first.first = _c1;
-        tmp.first.second = tick;
-        tmp.second.first = _lpOutput->m_edge.first;
-        tmp.second.second = _lpOutput->m_edge.second;
-        _lpOutput->m_savedEdge.push_back(tmp);
         return false;
       }
     }
-    if(_savePath || _saveFailedPath) {
+    if(_savePath) {
       _lpOutput->m_path.push_back(tick);
     }
     nIter++;
@@ -284,14 +278,14 @@ StraightLine<MPTraits>::IsConnectedSLBinary(
     const CfgType& _c1, const CfgType& _c2, CfgType& _col,
     LPOutput<MPTraits>* _lpOutput, int& _cdCounter,
     double _positionRes, double _orientationRes,
-    bool _checkCollision, bool _savePath, bool _saveFailedPath) {
+    bool _checkCollision, bool _savePath) {
 
   Environment* env = this->GetMPProblem()->GetEnvironment();
   ValidityCheckerPointer vc = this->GetMPProblem()->GetValidityChecker(m_vcLabel);
 
   if(!_checkCollision)
     return IsConnectedSLSequential(_c1, _c2, _col, _lpOutput,
-        _cdCounter, _positionRes, _orientationRes, _checkCollision, _savePath, _saveFailedPath);
+        _cdCounter, _positionRes, _orientationRes, _checkCollision, _savePath);
 
   string callee = this->GetNameAndLabel() + "::IsConnectedSLBinary";
 
@@ -335,7 +329,7 @@ StraightLine<MPTraits>::IsConnectedSLBinary(
     }
   }
 
-  if(_savePath || _saveFailedPath) {
+  if(_savePath) {
     CfgType tick = _c1;
     for(int n = 1; n < nTicks; ++n) {
       tick += incr;

@@ -45,7 +45,7 @@ class AStar : public LocalPlannerMethod<MPTraits> {
         const CfgType& _c1, const CfgType& _c2, CfgType& _col,
         LPOutput<MPTraits>* _lpOutput,
         double _positionRes, double _orientationRes,
-        bool _checkCollision = true, bool _savePath = false, bool _saveFailedPath = false);
+        bool _checkCollision = true, bool _savePath = false);
 
     virtual vector<CfgType> ReconstructPath(
         const CfgType& _c1, const CfgType& _c2, const vector<CfgType>& _intermediates,
@@ -55,14 +55,12 @@ class AStar : public LocalPlannerMethod<MPTraits> {
     }
 
   protected:
-    bool SetLPOutputFail(const CfgType& _c, const CfgType& _p,
-        LPOutput<MPTraits>* _lpOutput, string _debugMsg);
 
     virtual bool IsConnectedOneWay(
         const CfgType& _c1, const CfgType& _c2, CfgType& _col,
         LPOutput<MPTraits>* _lpOutput,
         double _positionRes, double _orientationRes,
-        bool _checkCollision = true, bool _savePath = false, bool _saveFailedPath = false);
+        bool _checkCollision = true, bool _savePath = false);
 
     virtual size_t ChooseOptimalNeighbor(CfgType& _col,
         const CfgType& _c1, const CfgType& _c2, vector<CfgType>& _neighbors) = 0;
@@ -116,17 +114,17 @@ AStar<MPTraits>::IsConnected(
     const CfgType& _c1, const CfgType& _c2, CfgType& _col,
     LPOutput<MPTraits>* _lpOutput,
     double _positionRes, double _orientationRes,
-    bool _checkCollision, bool _savePath, bool _saveFailedPath) {
+    bool _checkCollision, bool _savePath) {
   //clear _lpOutput
   _lpOutput->Clear();
   bool connected = false;
 
   connected = IsConnectedOneWay(_c1, _c2,_col, _lpOutput,
-      _positionRes, _orientationRes, _checkCollision, _savePath, _saveFailedPath);
+      _positionRes, _orientationRes, _checkCollision, _savePath);
 
   if(!connected) { //try the other way
     connected = IsConnectedOneWay(_c2, _c1,_col, _lpOutput,
-        _positionRes, _orientationRes, _checkCollision, _savePath, _saveFailedPath);
+        _positionRes, _orientationRes, _checkCollision, _savePath);
     if (_savePath)
       reverse(_lpOutput->m_path.begin(), _lpOutput->m_path.end());
   }
@@ -141,27 +139,11 @@ AStar<MPTraits>::IsConnected(
 
 template <class MPTraits>
 bool
-AStar<MPTraits>::SetLPOutputFail(const CfgType& _c, const CfgType& _p,
-    LPOutput<MPTraits>* _lpOutput, string _debugMsg) {
-  if(this->m_debug) {
-    cout << this->GetNameAndLabel() << "::" << _debugMsg << endl;
-  }
-  pair<pair<CfgType,CfgType>, pair<WeightType,WeightType> > tmp;
-  tmp.first.first = _c;
-  tmp.first.second = _p;
-  tmp.second.first = _lpOutput->m_edge.first;
-  tmp.second.second = _lpOutput->m_edge.second;
-  _lpOutput->m_savedEdge.push_back(tmp);
-  return false;
-}
-
-template <class MPTraits>
-bool
 AStar<MPTraits>::IsConnectedOneWay(
     const CfgType& _c1, const CfgType& _c2, CfgType& _col,
     LPOutput<MPTraits>* _lpOutput,
     double _positionRes, double _orientationRes,
-    bool _checkCollision, bool _savePath, bool _saveFailedPath) {
+    bool _checkCollision, bool _savePath) {
     StatClass* stats = this->GetMPProblem()->GetStatClass();
 
   if(this->m_debug) {
@@ -197,7 +179,9 @@ AStar<MPTraits>::IsConnectedOneWay(
 
     //neighbors all in collision
     if(neighbors.size() == 0) {
-      connected = SetLPOutputFail(_c1, p, _lpOutput, "Found 0 Neighbors");
+      connected = false;
+      if(this->m_debug)
+        cout << this->GetNameAndLabel() << ":: Found 0 Neighbors" << endl;
       break;
     }
 
@@ -216,20 +200,24 @@ AStar<MPTraits>::IsConnectedOneWay(
 
     //cycle has been detected, return false
     if(hasCycle) {
-      connected = SetLPOutputFail(_c1, p, _lpOutput, "Local Minima");
+      connected = false;
+      if(this->m_debug)
+        cout << this->GetNameAndLabel() << ":: Local minima" << endl;
       break;
     }
 
     iter++;
 
-    if(_savePath || _saveFailedPath) {
+    if(_savePath) {
       _lpOutput->m_path.push_back(p);
     }
     _lpOutput->m_intermediates.push_back(p);
 
     //too many tries have been attempted
     if((++tries > m_maxTries * nTicks)) {
-      connected = SetLPOutputFail(_c1, p, _lpOutput, "Max Tries Reached");
+      connected = false;
+      if(this->m_debug)
+        cout << this->GetNameAndLabel() << ":: Max tries reached" << endl;
       break;
     }
   } while(p != _c2);

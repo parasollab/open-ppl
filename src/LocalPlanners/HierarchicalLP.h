@@ -32,8 +32,7 @@ class HierarchicalLP : public LocalPlannerMethod<MPTraits> {
         const CfgType& _c1, const CfgType& _c2, CfgType& _col,
         LPOutput<MPTraits>* _lpOutput,
         double _posRes, double _oriRes,
-        bool _checkCollision = true, bool _savePath = false,
-        bool _saveFailedPath = false);
+        bool _checkCollision = true, bool _savePath = false);
 
   private:
     vector<string> m_lpLabels;
@@ -73,14 +72,14 @@ HierarchicalLP<MPTraits>::IsConnected(
     const CfgType& _c1, const CfgType& _c2, CfgType& _col,
     LPOutput<MPTraits>* _lpOutput,
     double _posRes, double _oriRes,
-    bool _checkCollision, bool _savePath, bool _saveFailedPath) {
+    bool _checkCollision, bool _savePath) {
   StatClass* stats = this->GetMPProblem()->GetStatClass();
 
   stats->IncLPAttempts(this->GetNameAndLabel());
   for(vector<string>::iterator it = m_lpLabels.begin(); it != m_lpLabels.end(); it++) {
     LocalPlannerPointer lpMethod = this->GetMPProblem()->GetLocalPlanner(*it);
     if(lpMethod->IsConnected(_c1, _c2, _col, _lpOutput,
-          _posRes, _oriRes, _checkCollision, _savePath, _saveFailedPath)) {
+          _posRes, _oriRes, _checkCollision, _savePath)) {
       stats->IncLPConnections(this->GetNameAndLabel());
       return true;
     }

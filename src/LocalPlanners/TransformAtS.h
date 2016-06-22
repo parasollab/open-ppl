@@ -31,7 +31,7 @@ class TransformAtS : public StraightLine<MPTraits> {
         const CfgType& _c1, const CfgType& _c2, CfgType& _col,
         LPOutput<MPTraits>* _lpOutput,
         double _positionRes, double _orientationRes,
-        bool _checkCollision = true, bool _savePath = false, bool _saveFailedPath = false);
+        bool _checkCollision = true, bool _savePath = false);
 
     virtual vector<CfgType> ReconstructPath(
         const CfgType& _c1, const CfgType& _c2,
@@ -50,7 +50,7 @@ class TransformAtS : public StraightLine<MPTraits> {
         LPOutput<MPTraits>* _lpOutput,
         double _positionRes, double _orientationRes,
         bool _checkCollision = true, bool _savePath = false,
-        bool _saveFailedPath = false, bool forward = true);
+        bool forward = true);
 
     double m_sValue;
 };
@@ -90,17 +90,17 @@ TransformAtS<MPTraits>::IsConnected(
     const CfgType& _c1, const CfgType& _c2, CfgType& _col,
     LPOutput<MPTraits>* _lpOutput,
     double _posRes, double _oriRes,
-    bool _checkCollision, bool _savePath, bool _saveFailedPath) {
+    bool _checkCollision, bool _savePath) {
 
   // Clear _lpOutput
   _lpOutput->Clear();
   // Check first direction
   bool connected = this->IsConnectedOneWay(_c1, _c2, _col, _lpOutput,
-      _posRes, _oriRes, _checkCollision, _savePath, _saveFailedPath, true);
+      _posRes, _oriRes, _checkCollision, _savePath, true);
   // Check opposite direction if necessary and applicable
   if(!connected && !this->IsReversible())
     connected = IsConnectedOneWay(_c2, _c1, _col, _lpOutput,
-        _posRes, _oriRes, _checkCollision, _savePath, _saveFailedPath, false);
+        _posRes, _oriRes, _checkCollision, _savePath, false);
 
   // Output any good results
   if(connected) {
@@ -166,7 +166,7 @@ TransformAtS<MPTraits>::IsConnectedOneWay(
     const CfgType& _c1, const CfgType& _c2, CfgType& _col,
     LPOutput<MPTraits>* _lpOutput,
     double _posRes, double _oriRes,
-    bool _checkCollision, bool _savePath, bool _saveFailedPath, bool _forward) {
+    bool _checkCollision, bool _savePath, bool _forward) {
   string callee = this->GetNameAndLabel() + "::IsConnectedOneWay()";
   ValidityCheckerPointer vcm = this->GetMPProblem()->GetValidityChecker(this->m_vcLabel);
   Environment* env = this->GetMPProblem()->GetEnvironment();
@@ -210,12 +210,12 @@ TransformAtS<MPTraits>::IsConnectedOneWay(
       connected && I != sequence.end() - 1; I++) {
     if(this->m_binaryEvaluation)
       connected = this->IsConnectedSLBinary(*I, *(I + 1), _col, _lpOutput,
-          cdCounter, _posRes, _oriRes,_checkCollision, _savePath, _saveFailedPath);
+          cdCounter, _posRes, _oriRes,_checkCollision, _savePath);
     else
       connected = this->IsConnectedSLSequential(*I, *(I + 1), _col, _lpOutput,
-          cdCounter, _posRes, _oriRes,_checkCollision, _savePath, _saveFailedPath);
+          cdCounter, _posRes, _oriRes,_checkCollision, _savePath);
     // Save path if desired
-    if((_savePath || _saveFailedPath) &&
+    if((_savePath) &&
         (distance(sequence.begin(), I) + 1 != (int)sequence.size() - 1)) //Don't put _c2 on end
       _lpOutput->m_path.push_back(*(I + 1));
   }
@@ -253,10 +253,10 @@ TransformAtS<MPTraits>::ReconstructPath(
   for(typename vector<CfgType>::iterator I = cfgList.begin(); I != cfgList.end() - 1; I++) {
     if(this->m_binaryEvaluation)
       this->IsConnectedSLBinary(*I, *(I + 1), col, lpOutput,
-          dummyCntr, _posRes, _oriRes, false, true, false);
+          dummyCntr, _posRes, _oriRes, false, true);
     else
       this->IsConnectedSLSequential(*I, *(I + 1), col, lpOutput,
-          dummyCntr, _posRes, _oriRes, false, true, false);
+          dummyCntr, _posRes, _oriRes, false, true);
     if(distance(cfgList.begin(), I) != (int)cfgList.size() - 2)
       lpOutput->m_path.push_back(*(I + 1));
   }

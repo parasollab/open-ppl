@@ -354,7 +354,7 @@ Connect(RoadmapType* _rm,
       CfgType col;
       bool test1 = !_rm->GetGraph()->IsEdge(kp->m_vid1, kp->m_vid2);
       bool test2 = lp->IsConnected(cfg1, cfg2, col,
-          &lpOutput, env->GetPositionRes(), env->GetOrientationRes(), !this->m_addPartialEdge);
+          &lpOutput, env->GetPositionRes(), env->GetOrientationRes());
 
       if(test1 && test2){
         //-- may have to add a new node in "middle" of existing edge
