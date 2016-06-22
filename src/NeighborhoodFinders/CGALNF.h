@@ -92,10 +92,9 @@ class CGALNF : public NeighborhoodFinderMethod<MPTraits> {
   private:
     double m_epsilon; // approximation
     int m_useScaling;
-    unordered_map<RoadmapType*, Tree> m_trees;
+    unordered_map<RoadmapType*, pair<size_t, Tree>> m_trees;
     Tree* m_queryTree;
     Tree* m_tmpTree{nullptr};
-    size_t m_curRoadmapVersion{(size_t)-1}; // used when updating internal model
     double m_maxBBXRange;
 };
 
@@ -209,20 +208,23 @@ CGALNF<MPTraits>::
 UpdateInternalModel(RoadmapType* _rmp,
     InputIterator _first, InputIterator _last) {
 
+  if(m_trees.count(_rmp) == 0)
+    m_trees[_rmp].first = -1;
+
   typedef typename GraphType::RoadmapVCSType RoadmapVCSType;
 
   GraphType* map = _rmp->GetGraph();
   const RoadmapVCSType& rvcs = map->GetRoadmapVCS();
 
   size_t newVersion = rvcs.GetVersionNumber();
-  if(m_curRoadmapVersion == newVersion)
+  if(m_trees[_rmp].first == newVersion)
     return;
 
   typename RoadmapVCSType::const_iterator start;
-  if(this->m_curRoadmapVersion == static_cast<size_t>(-1))
+  if(m_trees[_rmp].first == static_cast<size_t>(-1))
     start = rvcs.begin();
   else
-    start = rvcs.IteratorAt(m_curRoadmapVersion);
+    start = rvcs.IteratorAt(m_trees[_rmp].first);
 
   typename RoadmapVCSType::const_iterator end = rvcs.end();
   typename RoadmapVCSType::const_iterator iter;
@@ -241,7 +243,7 @@ UpdateInternalModel(RoadmapType* _rmp,
         cfgToAdd[2] /= m_maxBBXRange;
       }
 
-      m_trees[_rmp].insert(
+      m_trees[_rmp].second.insert(
           PointD(vidToAdd, cfgToAdd.DOF(),
             cfgToAdd.GetData().begin(), cfgToAdd.GetData().end())
           );
@@ -261,10 +263,10 @@ UpdateInternalModel(RoadmapType* _rmp,
   }
   else{
     this->m_fromRDMPVersion = false;
-    m_queryTree = &m_trees[_rmp];
+    m_queryTree = &m_trees[_rmp].second;
   }
 
-  m_curRoadmapVersion = newVersion;
+  m_trees[_rmp].first = newVersion;
 }
 
 #endif
