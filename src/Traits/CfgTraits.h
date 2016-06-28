@@ -27,6 +27,7 @@
 #include "NeighborhoodFinders/BandsNF.h"
 #include "NeighborhoodFinders/BruteForceNF.h"
 #include "NeighborhoodFinders/CGALNF.h"
+#include "NeighborhoodFinders/DPESNF.h"
 #include "NeighborhoodFinders/HierarchicalNF.h"
 #include "NeighborhoodFinders/HopLimitNF.h"
 #include "NeighborhoodFinders/OptimalNF.h"
@@ -180,7 +181,7 @@ struct MPTraits {
     BandsNF<MPTraits>,
     BruteForceNF<MPTraits>,
     CGALNF<MPTraits>,
-    //DPESNF<MPTraits>,
+    DPESNF<MPTraits>,
     HierarchicalNF<MPTraits>,
     HopLimitNF<MPTraits>,
     //MetricTreeNF<MPTraits>,

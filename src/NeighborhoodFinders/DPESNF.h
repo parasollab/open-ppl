@@ -1,392 +1,337 @@
-#ifndef _DPES_NEIGHBORHOOD_FINDER_H_
-#define _DPES_NEIGHBORHOOD_FINDER_H_
+#ifndef DPESNF_H_
+#define DPESNF_H_
 
 #include "NeighborhoodFinderMethod.h"
-#include "MPProblem.h"
-#include "DPES.h"
-
-#include <vector>
-#include <functional>
-using namespace std;
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// @ingroup NeighborhoodFinderUtils
-/// @ingroup DeadCode
-/// @brief TODO Dead Code
-///
-/// TODO
-/// @todo Dead code. Figure out what to do with this.
-////////////////////////////////////////////////////////////////////////////////
-template<typename CFG, typename WEIGHT>
-class VID_DPES_proxy{
-public:
-  typedef typename RoadmapGraph<CFG, WEIGHT>::VID VID;
-
-  VID_DPES_proxy(VID _v, Roadmap<CFG,WEIGHT>* _rmp){
-    m_vid = _v;
-    //if (m_rmp == NULL)
-      m_rmp = _rmp;
-  }
-
-  CFG GetData() { return (*(m_rmp->m_pRoadmap->find_vertex(m_vid))).property();}
-  const CFG GetData() const { return (*(m_rmp->m_pRoadmap->find_vertex(m_vid))).property();}
-   bool operator==(const VID_DPES_proxy<CFG,WEIGHT>& _p) {
-    return (GetData() ==  _p.GetData());
- }
-
-private:
-  VID m_vid;
-   Roadmap<CFG,WEIGHT>* m_rmp;
-
-};
-
-////////////////////////////////////////////////////////////////////////////////
-/// @ingroup NeighborhoodFinderUtils
-/// @ingroup DeadCode
-/// @brief TODO Dead Code
-///
-/// TODO
-/// @todo Dead code. Figure out what to do with this.
-////////////////////////////////////////////////////////////////////////////////
-template<typename CFG, typename WEIGHT>
-class CFG_DPES_Pivot_proxy{
-public:
-  typedef typename RoadmapGraph<CFG, WEIGHT>::VID VID;
-
-  CFG_DPES_Pivot_proxy(VID_DPES_proxy<CFG,WEIGHT> _vdp) { m_cfg = _vdp.GetData(); }
-  CFG_DPES_Pivot_proxy(const CFG& _cfg) { m_cfg = _cfg; }
-
-  CFG GetData() { return m_cfg; }
-  const CFG GetData() const { return m_cfg; }
-  bool operator==(const CFG_DPES_Pivot_proxy<CFG,WEIGHT>& _p) {
-    return (GetData() ==  _p.GetData());
-  }
-  bool operator==(const VID_DPES_proxy<CFG,WEIGHT>& _p) {
-    return (GetData() ==  _p.GetData());
-  }
-
-private:
-  CFG m_cfg;
-
-};
-
-////////////////////////////////////////////////////////////////////////////////
-/// @ingroup NeighborhoodFinderUtils
-/// @ingroup DeadCode
-/// @brief TODO Dead Code
-///
-/// TODO
-/// @todo Dead code. Figure out what to do with this.
-////////////////////////////////////////////////////////////////////////////////
-template<typename CFG, typename WEIGHT>
-class DistanceMetric_DPES_proxy {
-public:
-  typedef typename RoadmapGraph<CFG, WEIGHT>::VID VID;
-
-  DistanceMetric_DPES_proxy(shared_ptr<DistanceMetricMethod> dm, Environment* env) {
-    //if(m_dm == NULL)
-      m_dm = dm;
-    //if(m_env == NULL)
-      m_env = env;
-  }
-
-  double operator()(const VID_DPES_proxy<CFG,WEIGHT>& _p1, const VID_DPES_proxy<CFG,WEIGHT>& _p2) const  {
-    return m_dm->Distance(m_env, _p1.GetData(), _p2.GetData());
-  }
-
-  double operator()(const VID_DPES_proxy<CFG,WEIGHT>& _p1, const CFG_DPES_Pivot_proxy<CFG,WEIGHT>& _cfg) const {
-    return m_dm->Distance(m_env, _p1.GetData(), _cfg.GetData());
-  }
-
-  double operator()(const CFG_DPES_Pivot_proxy<CFG,WEIGHT>& _cfg, const VID_DPES_proxy<CFG,WEIGHT>& _p1) const {
-    return m_dm->Distance(m_env, _cfg.GetData(), _p1.GetData());
-  }
-
-  double operator()(const CFG_DPES_Pivot_proxy<CFG,WEIGHT>& _cfg1, const CFG_DPES_Pivot_proxy<CFG,WEIGHT>& _cfg2) const {
-    return m_dm->Distance(m_env, _cfg1.GetData(), _cfg2.GetData());
-  }
-
-
-private:
-   shared_ptr<DistanceMetricMethod> m_dm;
-   Environment* m_env;
-};
 
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup NeighborhoodFinders
-/// @ingroup DeadCode
-/// @brief TODO Dead Code
+/// @brief Distance-based Projection onto Euclidean Space (DPES)
+/// @tparam MPTraits Motion planning universe
 ///
-/// TODO
-/// @todo Dead code. Figure out what to do with this.
+/// Given a dimension \f$m\f$, project all input points onto
+/// \f$\mathcal{R}^m\f$. At query time, project query configuration to the lower
+/// dimensional space and use the Euclidean distance metric to determine
+/// proximity.
+///
+/// From: Plaku, E. and Kavraki, L., "Quantitative Analysis of Nearest-Neighbors
+/// Search in High-Dimensional Sampling-Based Motion Planning," In. Proc. of the
+/// Seventh Workshop on the Algorithmic Foundations of Robotics (WAFR), Springer
+/// Tracts in Advanced Robotics, 47, pp. 3-18.
+///
+/// Currently it is unclear how dynamic construction works in the paper. So to
+/// incrementally build pivots, basically, the first m points are chosen.
+///
+/// @todo Abstract the underlying storage structure to allow for KD-tree or
+///       other searches other than brute force searching.
 ////////////////////////////////////////////////////////////////////////////////
-template<typename CFG, typename WEIGHT>
-class DPESNF: public NeighborhoodFinderMethod {
+template<class MPTraits>
+class DPESNF : public NeighborhoodFinderMethod<MPTraits> {
 
-typedef DistanceMetric_DPES_proxy<CFG,WEIGHT> DM_PROXY;
+  public:
 
-typedef DPES<VID_DPES_proxy<CFG,WEIGHT>,
-       CFG_DPES_Pivot_proxy<CFG,WEIGHT>,
-       DistanceMetric_DPES_proxy<CFG,WEIGHT>,
-       DistanceMetric_DPES_proxy<CFG,WEIGHT> > DPES_TYPE;
+    typedef typename MPTraits::CfgType CfgType;
+    typedef typename MPTraits::MPProblemType MPProblemType;
+    typedef typename MPProblemType::VID VID;
+    typedef typename MPProblemType::RoadmapType RoadmapType;
 
-typedef typename RoadmapGraph<CFG, WEIGHT>::VID VID;
+    typedef vector<double> Projected; ///< Projected point of dim m
 
-public:
-  DPESNF(XMLNode& _node, MPProblem* _problem) :
-    NeighborhoodFinderMethod(_node, _problem), m_dprox(NULL), m_dpes(NULL) {
+    ////////////////////////////////////////////////////////////////////////////
+    ///@brief Model for DPES - includes points, pivots, and projected points
+    ////////////////////////////////////////////////////////////////////////////
+    struct DPESInfo {
+      size_t m_currentRoadmapVersion{size_t(-1)};      ///< RDMPVersion info
+      unordered_set<VID> m_points;                     ///< Unprojected points
+      vector<CfgType> m_pivots;                        ///< Pivots
+      unordered_map<VID, Projected> m_projectedPoints; ///< Projected cfgs
+    };
 
+    DPESNF(std::string _dmLabel = "", bool _unconnected = false,
+        size_t _m = 3, size_t _k = 10);
 
-    m_m = _node.Read("m", false, 3, 1, 6, "m value for DPES");
-    m_l = _node.Read("l", false, 50, 5, 1000, "l value for DPES");
-    m_cur_roadmap_version= -1;
-  }
+    DPESNF(MPProblemType* _problem, XMLNode& _node);
 
-  DPESNF(shared_ptr<DistanceMetricMethod> _dmm, std::string _label) :
-    NeighborhoodFinderMethod(_dmm,_label), m_dprox(NULL), m_dpes(NULL) {
-    m_cur_roadmap_version = -1;
-    m_m = 3;
-    m_l = 50;
-  }
+    virtual ~DPESNF() = default;
 
-  virtual ~DPESNF() {}
+    virtual void Print(std::ostream& _os) const;
 
-  virtual const std::string GetName () const {
-    return DPESNF::GetClassName();
-  }
-  static const std::string GetClassName() {
-    return "DPESNF";
-  }
-  virtual void Print(std::ostream& out_os) const {
-    out_os << this->GetClassName() << ":: m = " << m_m << "  l = " << m_l << std::endl;
-  }
+    template<typename InputIterator, typename OutputIterator>
+      OutputIterator FindNeighbors(RoadmapType* _rmp,
+          InputIterator _first, InputIterator _last,
+          const CfgType& _cfg, OutputIterator _out);
 
+    template<typename InputIterator, typename OutputIterator>
+      OutputIterator FindNeighborPairs(RoadmapType* _rmp,
+          InputIterator _first1, InputIterator _last1,
+          InputIterator _first2, InputIterator _last2,
+          OutputIterator _out);
 
-  template <typename InputIterator, typename OutputIterator>
-  OutputIterator
-  KClosest( Roadmap<CFG,WEIGHT>* _rmp,
-    InputIterator _input_first, InputIterator _input_last, VID _v, int k,
-    OutputIterator _out);
+  private:
 
-  // do the work here, and have the function above obtain the CFG and call this one
-  template <typename InputIterator, typename OutputIterator>
-  OutputIterator
-  KClosest( Roadmap<CFG,WEIGHT>* _rmp,
-    InputIterator _input_first, InputIterator _input_last, CFG _cfg, int k,
-    OutputIterator _out);
+    ////////////////////////////////////////////////////////////////////////////
+    /// @brief Add nodes to the model, updating pivots if necessary
+    /// @tparam InputIterator Input iterator of roadmap vertices
+    /// @param _rdmp Roadmap
+    /// @param _first Beginning iterator of input
+    /// @param _last Ending iterator of input
+    ///
+    /// Add [_first, _last) to the appropriate DPES model. Will create m new
+    /// pivots if it is the first call, or m pivots have not been made yet.
+    template<typename InputIterator>
+      void CreatePivots(RoadmapType* _rdmp,
+          InputIterator _first, InputIterator _last);
 
+    ////////////////////////////////////////////////////////////////////////////
+    /// @brief Project point _c to R^m of pivot space
+    /// @param _c Cfg
+    /// @return Projected point
+    ///
+    /// Project _c to R^m by computing a distance to each pivot. Each distance
+    /// is one dimension of the projected point.
+    Projected Project(const CfgType& _c);
 
-  // KClosest that operate over the entire roadmap to find the kclosest to a VID or CFG
-  //
-  // NOTE: These are the prefered methods for kClosest computations
-  template <typename OutputIterator>
-  OutputIterator
-  KClosest( Roadmap<CFG,WEIGHT>* _rmp,
-    VID _v, int k, OutputIterator _out);
+    ////////////////////////////////////////////////////////////////////////////
+    /// @brief Brute force computation of the K-closest elements in the
+    ///        projected space.
+    /// @tparam OutputIterator Output of vid, distance pairs for nearest
+    ///                        elements
+    /// @param _rdmp Roadmap
+    /// @param _c Query point
+    /// @param _out Output iterator
+    template<typename OutputIterator>
+      OutputIterator KClosest(RoadmapType* _rdmp, const CfgType& _c,
+          OutputIterator _out);
 
-  template <typename OutputIterator>
-  OutputIterator
-  KClosest( Roadmap<CFG,WEIGHT>* _rmp,
-    CFG _cfg, int k, OutputIterator _out);
+    ////////////////////////////////////////////////////////////////////////////
+    /// @brief Euclidean distance in R^m
+    /// @param _v1 Projected point 1
+    /// @param _v2 Projected point 2
+    /// @return Distance
+    double Euclidean(const vector<double>& _v1, const vector<double>& _v2);
 
+    size_t m_m;   ///< Number of pivots
+    unordered_map<RoadmapType*, DPESInfo>
+      m_dpesInfo; ///< DPES info for all roadmaps
 
-  // KClosest that operate over two ranges of VIDS.  K total pair<VID,VID> are returned that
-  // represent the kclosest pairs of VIDs between the two ranges.
-  template <typename InputIterator, typename OutputIterator>
-  OutputIterator
-  KClosestPairs( Roadmap<CFG,WEIGHT>* _rmp,
-    InputIterator _in1_first, InputIterator _in1_last,
-    InputIterator _in2_first, InputIterator _in2_last,
-    int k, OutputIterator _out);
-
-    int getM(size_t _size) const { return m_m; }
-    int getL(size_t _k)  const {return m_l; }
-
-private:
-  DM_PROXY* m_dprox;//(dmm, _rmp->GetEnvironment());
-  DPES_TYPE* m_dpes;//(dprox, dprox);
-  int m_cur_roadmap_version;
-  void UpdateInternalModel( Roadmap<CFG,WEIGHT>* _rmp );
-  int m_m; ///< Number of pivots
-  int m_l; ///< Number of DPES space neighbors, l > k
-
-  //dpes model here
-  //int roadmap version
-  //void UpdateInternalModel(Roadmap<CFG,WEIGHT>* _rmp) {
-    //1) checks roadmap version with internal version #
-    //2) updates any changes since last version.
-  //}
+    DPESInfo* m_queryInfo; ///< Current model to construct and query on
+    DPESInfo* m_tmpInfo{nullptr}; ///< Model for when query is not from an
+                                  ///< entire roadmap
 };
 
-template<typename CFG, typename WEIGHT>
-template<typename InputIterator, typename OutputIterator>
-OutputIterator
-DPESNF<CFG,WEIGHT>::
-KClosest( Roadmap<CFG,WEIGHT>* _rmp,
-    InputIterator _input_first, InputIterator _input_last, VID _v, int k,
-    OutputIterator _out) {
-  RoadmapGraph<CFG,WEIGHT>* pMap = _rmp->m_pRoadmap;
-  CFG _v_cfg = (*(pMap->find_vertex(_v))).property();
-  return KClosest(_rmp, _input_first, _input_last, _v_cfg, k, _out);
-}
-
-template<typename CFG, typename WEIGHT>
-template<typename InputIterator, typename OutputIterator>
-OutputIterator
-DPESNF<CFG,WEIGHT>::
-KClosest( Roadmap<CFG,WEIGHT>* _rmp,
-  InputIterator _input_first, InputIterator _input_last, CFG _cfg, int k,
-  OutputIterator _out) {
-
-  StartTotalTime();
-  IncrementNumQueries();
-
-  int l= getL( k);
-  int m = getM(100);//_rmp.size());
-
-  DM_PROXY dprox(dmm, _rmp->GetEnvironment());
-  DPES_TYPE dpes(dprox, dprox);
-
-// Creat S
-  InputIterator vi;
-  for (vi = _input_first; vi != _input_last; ++vi) {
-      dpes.AddNode(VID_DPES_proxy<CFG,WEIGHT>(*vi, _rmp));
+template<class MPTraits>
+DPESNF<MPTraits>::
+DPESNF(std::string _dmLabel, bool _unconnected,
+    size_t _m, size_t _k) :
+  NeighborhoodFinderMethod<MPTraits>(_dmLabel, _unconnected),
+  m_m(_m) {
+    this->SetName("DPESNF");
+    this->m_nfType = K;
+    this->m_k = _k;
   }
 
-//Creat Pivots
-  dpes.CreatPivots(m);
+template<class MPTraits>
+DPESNF<MPTraits>::
+DPESNF(MPProblemType* _problem, XMLNode& _node) :
+  NeighborhoodFinderMethod<MPTraits>(_problem, _node) {
+    this->SetName("DPESNF");
+    this->m_nfType = K;
+    this->m_k = _node.Read("k", true, 5, 0, MAX_INT, "k value");
+    m_m = _node.Read("m", true, 3, 1, MAX_INT, "m value for DPES");
+  }
 
-//Project to VS
-  dpes.UpdateProjected();
-
-  vector< pair<int, double> > closest(k);
-
-  StartQueryTime();
-  dpes.KClosestPIVOT(CFG_DPES_Pivot_proxy<CFG,WEIGHT>(_cfg), closest.begin(), k, l);
-  EndQueryTime();
-
-  for(vector< pair<int, double> >::iterator iter = closest.begin(); iter != closest.end(); ++iter) {
-		*_out = iter->first;
-		++_out;
-    //cout << "\t" << iter->first << "\t" << iter->second << endl;
-  //  cout << iter->second << " - index = " << iter->first << endl;
-
-	}
-  //cout << endl;
-
-  // 1) Make VID_DPES_proxy
-  // 2) Make CFG_DPES_pivot_proxy
-  // 3) Make DistanceMetric_proxy
-  //    -- compare VID_DPES_proxy VID_DPES_proxy
-  //    -- compare CFG_DPES_pivot_proxy VID_DPES_proxy
-  //    -- use shared_ptr<DistanceMetricMethod> dmm received from constructor
-   //return _input_first;
-   EndTotalTime();
-   return _out;
-}
-
-
-template<typename CFG, typename WEIGHT>
-template<typename OutputIterator>
-OutputIterator
-DPESNF<CFG,WEIGHT>::
-KClosest( Roadmap<CFG,WEIGHT>* _rmp,
-  VID _v, int k, OutputIterator _out) {
-
-  RoadmapGraph<CFG,WEIGHT>* pMap = _rmp->m_pRoadmap;
-  CFG _v_cfg = (*(pMap->find_vertex(_v))).property();
-  return KClosest(_rmp, _v_cfg, k, _out);
-}
-
-
-template<typename CFG, typename WEIGHT>
-template<typename OutputIterator>
-OutputIterator
-DPESNF<CFG,WEIGHT>::
-KClosest( Roadmap<CFG,WEIGHT>* _rmp,
-  CFG _cfg, int k, OutputIterator _out) {
-//  cout << "DPESNF::KClosest() - For entire roadmap" << endl;
-  StartTotalTime();
-
-  StartConstructionTime();
-  UpdateInternalModel(_rmp);
-  EndConstructionTime();
-
-  IncrementNumQueries();
-
-  int l= getL( k);
-
-  vector< pair<int, double> > closest(k);
-
-  StartQueryTime();
-  m_dpes->KClosestPIVOT(CFG_DPES_Pivot_proxy<CFG,WEIGHT>(_cfg), closest.begin(), k, l);
-  EndQueryTime();
-
-  for(vector< pair<int, double> >::iterator iter = closest.begin(); iter != closest.end(); ++iter) {
-		*_out = iter->first;
-		++_out;
-    //cout << "\t" << iter->first << "\t" << iter->second << endl;
-  //  cout << iter->second << " - index = " << iter->first << endl;
-
-	}
- // cout << "m = " << m_m << " l = " << l << endl;
-  EndTotalTime();
-  return _out;
-
-}
-
-
-template<typename CFG, typename WEIGHT>
-template<typename InputIterator, typename OutputIterator>
-OutputIterator
-DPESNF<CFG,WEIGHT>::
-KClosestPairs( Roadmap<CFG,WEIGHT>* _rmp,
-  InputIterator _in1_first, InputIterator _in1_last,
-  InputIterator _in2_first, InputIterator _in2_last,
-  int k, OutputIterator _out) {
-
-  // need to provide an implementation of this
-  return _out;
-}
-
-
-
-template<typename CFG, typename WEIGHT>
+template<class MPTraits>
 void
-DPESNF<CFG,WEIGHT>::
-UpdateInternalModel( Roadmap<CFG,WEIGHT>* _rmp )
-{
-  if(m_dpes == NULL) { //create the model for the first time
-    m_dprox = new DM_PROXY(dmm, _rmp->GetEnvironment());
-    m_dpes = new DPES_TYPE(*m_dprox, *m_dprox);
-  //  m_cur_roadmap_version = 0;
-  }
+DPESNF<MPTraits>::
+Print(std::ostream& _os) const {
+  NeighborhoodFinderMethod<MPTraits>::Print(_os);
+  _os
+    << "\tk: " << this->m_k << endl
+    << "\tm: " << m_m << endl;
+}
 
-  int new_version = _rmp->m_pRoadmap->roadmapVCS.get_version_number();
-  if(m_cur_roadmap_version != new_version) {
-    //redo everytghing.... clear m_dpes.
-    if(m_dpes != NULL) {
-      //delete m_dpes;
-      m_dpes->Clear();
+template<class MPTraits>
+template<typename InputIterator, typename OutputIterator>
+OutputIterator
+DPESNF<MPTraits>::
+FindNeighbors(RoadmapType* _rmp,
+    InputIterator _first, InputIterator _last,
+    const CfgType& _cfg, OutputIterator _out) {
+  this->StartTotalTime();
+
+  this->StartConstructionTime();
+  size_t& currRdmp = m_dpesInfo[_rmp].m_currentRoadmapVersion;
+  if(this->m_fromRDMPVersion) {
+    m_queryInfo = &m_dpesInfo[_rmp];
+    size_t rdmp = _rmp->GetGraph()->GetRoadmapVCS().GetVersionNumber();
+    if(currRdmp == size_t(-1) ||
+        currRdmp < rdmp) {
+      CreatePivots(_rmp, _first, _last);
+      currRdmp = rdmp;
     }
-    m_dpes = new DPES_TYPE(*m_dprox, *m_dprox);
-    // Creat S
-    vector< VID > roadmap_vids;
-    _rmp->m_pRoadmap->GetVerticesVID(roadmap_vids);
-    typename vector<VID>::iterator vi;
-    for (vi = roadmap_vids.begin(); vi != roadmap_vids.end(); ++vi) {
-        m_dpes->AddNode(VID_DPES_proxy<CFG,WEIGHT>(*vi, _rmp));
   }
-  //Creat Pivots
-  //int m = 3;//getM(_rmp.size());
-  m_dpes->CreatPivots(m_m);
+  else {
+    delete m_tmpInfo;
+    m_tmpInfo = new DPESInfo;
+    m_queryInfo = m_tmpInfo;
+    CreatePivots(_rmp, _first, _last);
+  }
+  this->EndConstructionTime();
 
-  //Project to VS
-  m_dpes->UpdateProjected();
-  m_cur_roadmap_version = new_version;
+  this->IncrementNumQueries();
+
+  this->StartQueryTime();
+  _out = KClosest(_rmp, _cfg, _out);
+  this->EndQueryTime();
+
+  this->EndTotalTime();
+  return _out;
+}
+
+template<class MPTraits>
+template<typename InputIterator, typename OutputIterator>
+OutputIterator
+DPESNF<MPTraits>::
+FindNeighborPairs(RoadmapType* _rmp,
+    InputIterator _first1, InputIterator _last1,
+    InputIterator _first2, InputIterator _last2,
+    OutputIterator _out) {
+  throw RunTimeException(WHERE,
+      "DPESNF::FindNeighborPairs is not yet implemented.");
+}
+
+template<class MPTraits>
+template<typename InputIterator>
+void
+DPESNF<MPTraits>::
+CreatePivots(RoadmapType* _rdmp,
+    InputIterator _first, InputIterator _last) {
+
+  typename RoadmapType::GraphType* g = _rdmp->GetGraph();
+
+  //Compute more pivots if necessary
+  if(m_queryInfo->m_pivots.size() < m_m) {
+    //Add all points first
+    for(InputIterator i = _first; i != _last; ++i)
+      m_queryInfo->m_points.insert(g->GetVID(i));
+
+    m_queryInfo->m_pivots.clear();
+
+    //First pivot selected randomly
+    size_t sz = m_queryInfo->m_points.size();
+    size_t indx = LRand() % sz;
+    auto i = m_queryInfo->m_points.begin();
+    advance(i, indx);
+    m_queryInfo->m_pivots.push_back(g->GetVertex(i));
+
+    //pivots 2..m - jth pivot selected by selecting a point in Points
+    //which maximizes min_{i=i}^{j-1} d(p_i, p_j)
+    for(size_t j = 1; j < m_m && j < sz; ++j) {
+      auto maxI = m_queryInfo->m_points.begin();
+      double maxV = 0;
+      for(auto i = m_queryInfo->m_points.begin(); i != m_queryInfo->m_points.end(); ++i) {
+        double minV = MAX_DBL;
+        CfgType& c = g->GetVertex(i);
+        for(auto& p : m_queryInfo->m_pivots)
+          minV = min(minV, this->GetDMMethod()->Distance(p, c));
+
+        if(minV > maxV) {
+          maxI = i;
+          maxV = minV;
+        }
+      }
+      m_queryInfo->m_pivots.push_back(g->GetVertex(maxI));
+    }
+
+    //project all input points in R^m
+    m_queryInfo->m_projectedPoints.clear();
+    for(auto& v : m_queryInfo->m_points)
+      m_queryInfo->m_projectedPoints[v] = Project(g->GetVertex(v));
+  }
+  //Otherwise just tack on projected points
+  else {
+    for(InputIterator i = _first; i != _last; ++i) {
+      VID v = g->GetVID(i);
+      if(!m_queryInfo->m_points.count(v)) {
+        m_queryInfo->m_points.insert(v);
+        m_queryInfo->m_projectedPoints[v] = Project(g->GetVertex(i));
+      }
+    }
   }
 }
 
+template<class MPTraits>
+typename DPESNF<MPTraits>::Projected
+DPESNF<MPTraits>::
+Project(const CfgType& _c) {
+  Projected proj(m_m, 0);
+  for(size_t i = 0; i < m_queryInfo->m_pivots.size(); ++i)
+    proj[i] = this->GetDMMethod()->Distance(_c, m_queryInfo->m_pivots[i]);
+  return proj;
+}
 
-#endif //end #ifndef _DPES_NEIGHBORHOOD_FINDER_H_
+template<class MPTraits>
+template<typename OutputIterator>
+OutputIterator
+DPESNF<MPTraits>::
+KClosest(RoadmapType* _rdmp, const CfgType& _c, OutputIterator _out) {
+  Projected v = Project(_c);
+
+  //K == 0 || query is less than the number of pivots -- Return all
+  if(this->m_k == 0 || this->m_k > m_queryInfo->m_points.size()) {
+    for(auto& p : m_queryInfo->m_projectedPoints)
+      if(_rdmp->GetGraph()->GetVertex(p.first) != _c)
+        *_out++ = make_pair(p.first, Euclidean(v, p.second));
+    return _out;
+  }
+
+  // Keep sorted list of k best so far
+  priority_queue<
+    pair<VID, double>,
+    vector<pair<VID, double>>,
+    CompareSecond<VID, double>> pq;
+
+  for(auto& p : m_queryInfo->m_projectedPoints) {
+
+    if(this->CheckUnconnected(_rdmp, _c, p.first))
+      continue;
+
+    CfgType& node = _rdmp->GetGraph()->GetVertex(p.first);
+
+    if(node == _c) // Don't connect to self
+      continue;
+
+    double dist = Euclidean(v, p.second);
+
+    if(pq.size() < this->m_k){
+      pq.push(make_pair(p.first, dist));
+    }
+    // If better than the worst so far, replace worst so far
+    else if(dist < pq.top().second) {
+      pq.pop();
+      pq.push(make_pair(p.first, dist));
+    }
+  }
+
+  // Transfer k closest to vector, sorted greatest to least dist
+  vector<pair<VID, double> > closest;
+  closest.reserve(pq.size());
+  while(!pq.empty()) {
+    closest.push_back(pq.top());
+    pq.pop();
+  }
+
+  // Reverse order
+  return copy(closest.rbegin(), closest.rend(), _out);
+}
+
+template<class MPTraits>
+double
+DPESNF<MPTraits>::
+Euclidean(const Projected& _v1, const Projected& _v2) {
+  double dist = 0;
+  for(size_t i = 0; i < m_m; ++i)
+    dist += sqr(_v1[i] - _v2[i]);
+  return sqrt(dist);
+}
+
+#endif
