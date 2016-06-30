@@ -39,115 +39,79 @@ class MultiBody;
 /// transformations of them.
 ////////////////////////////////////////////////////////////////////////////////
 class Body {
+
   public:
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// @name Constructors
-    /// @{
+    ///@name Constructors
+    ///@{
 
     ////////////////////////////////////////////////////////////////////////////
     /// @param _owner Owner of this body
-    Body(MultiBody* _owner);
+    Body(MultiBody* _owner) : m_multibody(_owner) { }
 
-    Body(const Body& _other) = delete;            ///< No copy
-    Body& operator=(const Body& _other) = delete; ///< No assign
 
-    virtual ~Body();
+    Body(const Body& _other) = delete;            ///< No copy.
+    Body& operator=(const Body& _other) = delete; ///< No assign.
 
-    /// @}
-    ////////////////////////////////////////////////////////////////////////////
+    virtual ~Body() = default;
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// @name Body Information
-    /// @{
+    ///@}
+    ///@name Body Information Accessors
+    ///@{
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// @return Owner of this body
     MultiBody* GetMultiBody() {return m_multibody;}
+    const string& GetFileName() const {return m_filename;}
+    int GetLabel() const {return m_label;};
+    void SetLabel(const int _label) {m_label = _label;};
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// @return Filename of Body
-    const string& GetFileName() const { return m_filename; }
+    ///@}
+    ///@name Rendering Property Accessors
+    ///@{
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// @return Label of body
-    int GetLabel() { return m_label; };
-    ////////////////////////////////////////////////////////////////////////////
-    /// @param _label New label for this body
-    void SetLabel(const int _label) { m_label = _label; };
+    bool IsColorLoaded() const {return m_colorLoaded;}
+    const Color4& GetColor() const {return m_color;}
+    bool IsTextureLoaded() const {return m_textureLoaded;}
+    const string& GetTexture() const {return m_textureFile;}
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// @return Is color loaded as option?
-    bool IsColorLoaded() const { return m_colorLoaded; };
-    ////////////////////////////////////////////////////////////////////////////
-    /// @return Color
-    const Color4& GetColor() const { return m_color; };
-    ////////////////////////////////////////////////////////////////////////////
-    /// @return Is color loaded as option?
-    bool IsTextureLoaded() const { return m_textureLoaded; };
-    ////////////////////////////////////////////////////////////////////////////
-    /// @return Texture filename
-    const string& GetTexture() const { return m_textureFile; };
+    ///@}
+    ///@name Model Property Accessors
+    ///@}
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// @return Center of mass of body
     Vector3d GetCenterOfMass();
-    ////////////////////////////////////////////////////////////////////////////
-    /// @return Mass of body
-    const double GetMass() const {return m_mass;}
-    ////////////////////////////////////////////////////////////////////////////
-    /// @return Moment of Inertia of body
-    const Matrix3x3& GetMoment() const {return m_moment;}
-    ////////////////////////////////////////////////////////////////////////////
-    /// @return Adjustment of center of mass
     GMSPolyhedron::COMAdjust GetCOMAdjust() const {return m_comAdjust;}
-    ////////////////////////////////////////////////////////////////////////////
-    /// @return Bounding sphere radius
-    double GetBoundingSphereRadius() const;
-    ////////////////////////////////////////////////////////////////////////////
-    /// @return Inside sphere radius
-    double GetInsideSphereRadius() const;
 
-    /// @}
-    ////////////////////////////////////////////////////////////////////////////
+    const double GetMass() const {return m_mass;}
+    const Matrix3x3& GetMoment() const {return m_moment;}
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// @name Model
-    /// @{
+    double GetBoundingSphereRadius() const {return m_polyhedron.m_maxRadius;}
+    double GetInsideSphereRadius() const {return m_polyhedron.m_minRadius;}
 
     ////////////////////////////////////////////////////////////////////////////
     /// @param _poly New polyhedron to define this body
     ///
     /// This code is used in GB. If touched, someone in GB should verify change.
     void SetPolyhedron(GMSPolyhedron& _poly);
+
     ////////////////////////////////////////////////////////////////////////////
     /// @return Polyhedron in model coordinates
     GMSPolyhedron& GetPolyhedron() {return m_polyhedron;}
+
     ////////////////////////////////////////////////////////////////////////////
     /// @return Polyhedron in world coordinates
     GMSPolyhedron& GetWorldPolyhedron();
-    ////////////////////////////////////////////////////////////////////////////
-    /// @return BoundingBox in model coordinates
-    GMSPolyhedron& GetBoundingBoxPolyhedron() {return m_bbPolyhedron;}
-    ////////////////////////////////////////////////////////////////////////////
-    /// @return Bounding box in world coordinates
-    GMSPolyhedron& GetWorldBoundingBox();
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// @return Bounding box
+    GMSPolyhedron& GetBoundingBoxPolyhedron() {return m_bbPolyhedron;}
+    GMSPolyhedron& GetWorldBoundingBox();
     double* GetBoundingBox() {return m_boundingBox;}
 
     ////////////////////////////////////////////////////////////////////////////
-    /// @param _v Vertex
-    /// @return True if \p _v is a convex hull vertex of Body
+    /// @param _v A vertex in model coordinates.
+    /// @return True if \p _v is a convex hull vertex of body.
     bool IsConvexHullVertex(const Vector3d& _v);
 
-    /// @}
-    ////////////////////////////////////////////////////////////////////////////
-
-    ////////////////////////////////////////////////////////////////////////////
-    /// @name Transformation
-    /// @{
+    ///@}
+    ///@name Transformation
+    ///@{
 
     ////////////////////////////////////////////////////////////////////////////
     /// @return Transformation of this body w.r.t. the world frame
@@ -161,72 +125,60 @@ class Body {
     /// calculation.
     Transformation& WorldTransformation() {return m_worldTransformation;}
 
-    /// @}
-    ////////////////////////////////////////////////////////////////////////////
+    ///@}
+    ///@name Collision Detection Models
+    ///@{
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// @name Collision Detection Models
-    /// @{
+    static vector<CollisionDetectionMethod*> m_cdMethods; ///< All CD Methods
 
     ////////////////////////////////////////////////////////////////////////////
     /// @brief Build appropriate collision detection models
     void BuildCDStructure();
 
 #ifndef NO_VCLIP
-    ////////////////////////////////////////////////////////////////////////////
-    /// @return VClip model
-    shared_ptr<PolyTree> GetVClipBody() {return vclipBody;}
-    ////////////////////////////////////////////////////////////////////////////
-    /// @param _vclipBody VClip model
-    void SetVClipBody(const shared_ptr<PolyTree>& _vclipBody) {vclipBody = _vclipBody;}
+    shared_ptr<PolyTree> GetVClipBody() {return m_vclipBody;}
+    void SetVClipBody(const shared_ptr<PolyTree>& _v) {m_vclipBody = _v;}
 #endif
 
 #ifndef NO_RAPID
-    ////////////////////////////////////////////////////////////////////////////
-    /// @return RAPID model
-    shared_ptr<RAPID_model> GetRapidBody() {return rapidBody;}
-    ////////////////////////////////////////////////////////////////////////////
-    /// @param _rapidBody Rapid model
-    void SetRapidBody(const shared_ptr<RAPID_model>& _rapidBody) {rapidBody = _rapidBody;}
+    shared_ptr<RAPID_model> GetRapidBody() {return m_rapidBody;}
+    void SetRapidBody(const shared_ptr<RAPID_model>& _r) {m_rapidBody = _r;}
 #endif
 
 #ifndef NO_PQP
-    ////////////////////////////////////////////////////////////////////////////
-    /// @return PQP model
-    shared_ptr<PQP_Model> GetPQPBody() {return pqpBody;}
-    ////////////////////////////////////////////////////////////////////////////
-    /// @param _pqpBody PQP model
-    void SetPQPBody(const shared_ptr<PQP_Model>& _pqpBody) {pqpBody = _pqpBody;}
+    shared_ptr<PQP_Model> GetPQPBody() {return m_pqpBody;}
+    void SetPQPBody(const shared_ptr<PQP_Model>& _p) {m_pqpBody = _p;}
 #endif
 
 #ifndef NO_SOLID
-    ////////////////////////////////////////////////////////////////////////////
-    /// @return Solid model
-    shared_ptr<DT_ObjectHandle> GetSolidBody() {return solidBody;}
-    ////////////////////////////////////////////////////////////////////////////
-    /// @param _solidBody Solid model
-    void SetSolidBody(const shared_ptr<DT_ObjectHandle>& _solidBody) {solidBody = _solidBody;}
-    ////////////////////////////////////////////////////////////////////////////
-    /// @brief Special function for SOLID
-    void UpdateVertexBase();
+    shared_ptr<DT_ObjectHandle> GetSolidBody() {return m_solidBody;}
+    void SetSolidBody(const shared_ptr<DT_ObjectHandle>& _s) {m_solidBody = _s;}
+    void UpdateVertexBase(); ///< Special function for SOLID
 #endif
 
-    /// @}
-    ////////////////////////////////////////////////////////////////////////////
+    ///@}
+    ///@name I/O
+    ///@{
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// @name I/O
-    /// @{
+    static string m_modelDataDir; ///< Directory of geometry files
 
     ////////////////////////////////////////////////////////////////////////////
     /// @brief Read geometry information from file
     /// @param _comAdjust Center of mass adjustment method
     void Read(GMSPolyhedron::COMAdjust _comAdjust);
 
-    static string m_modelDataDir; ///< Directory of geometry files
+  protected:
 
-    /// @}
     ////////////////////////////////////////////////////////////////////////////
+    /// @brief Read optional color or texture
+    /// @param _is Input stream
+    /// @param _cbs Counting buffer stream
+    void ReadOptions(istream& _is, CountingStreamBuffer& _cbs);
+
+    ///@}
+    ///@name Computation Helpers
+    ///@}
+
     ////////////////////////////////////////////////////////////////////////////
     /// @brief Calculate center of mass in world coordinates
     ///
@@ -239,72 +191,81 @@ class Body {
     /// approximation.
     void ComputeCenterOfMass();
 
-    static vector<CollisionDetectionMethod*> m_cdMethods; ///< All CD Methods
-
-  protected:
     ////////////////////////////////////////////////////////////////////////////
-    /// @brief Read optional color or texture
-    /// @param _is Input stream
-    /// @param _cbs Counting buffer stream
-    void ReadOptions(istream& _is, CountingStreamBuffer& _cbs);
+    /// @brief Approximate moment of inertia
+    void ComputeMomentOfInertia();
 
     ////////////////////////////////////////////////////////////////////////////
-    /// @brief Determine bounding box
-    void FindBoundingBox();
+    /// @brief Compute a bounding box in world coordinates.
+    void ComputeBoundingBox();
+
+    ////////////////////////////////////////////////////////////////////////////
+    /// @brief Compute a GMSPolyhedron representation of the bounding box in
+    ///        model coordinates.
+    void ComputeBoundingPolyhedron();
 
     ////////////////////////////////////////////////////////////////////////////
     /// @brief Compute convex hull of body
     void ComputeConvexHull();
 
     ////////////////////////////////////////////////////////////////////////////
-    /// @brief Approximate moment of inertia
-    void ComputeMomentOfInertia();
+    /// @brief Compute the world polyhedron from the model-coordinate version.
+    void ComputeWorldPolyhedron();
+
+    ///@}
+    ///@name Internal State
+    ///@{
 
     MultiBody* m_multibody;                  ///< Owner of Body
     string m_filename;                       ///< Geometry filename
-    int m_label;                             ///< Body ID
+    int m_label{0};                          ///< Body ID
 
-    bool m_colorLoaded;                      ///< Was color option set
+    bool m_colorLoaded{false};               ///< Was color option set
     Color4 m_color;                          ///< Optionally specified color
-    bool m_textureLoaded;                    ///< Was texture option set
+    bool m_textureLoaded{false};             ///< Was texture option set
     string m_textureFile;                    ///< Optionally specified texture
-    GMSPolyhedron::COMAdjust m_comAdjust;    ///< COM Adjustment option
 
-    Transformation m_worldTransformation;    ///< World Transformation
     GMSPolyhedron m_polyhedron;              ///< Model in model coordinates
-    bool m_worldPolyhedronAvailable;         ///< Is world polyhedron available
     GMSPolyhedron m_worldPolyhedron;         ///< Model in world coordinates
-    GMSPolyhedron m_bbPolyhedron;            ///< Bounding polyhedron
-    GMSPolyhedron m_bbWorldPolyhedron;       ///< Bounding polyhedron in world
 
-    bool m_convexHullAvailable;              ///< Is convex hull computed
+    bool m_worldPolyhedronAvailable{false};  ///< Is world polyhedron available
+    Transformation m_worldTransformation;    ///< World Transformation
+
+    GMSPolyhedron m_bbPolyhedron;            ///< Bounding box in model coords.
+    GMSPolyhedron m_bbWorldPolyhedron;       ///< Bounding box in world coords.
+    double m_boundingBox[6]{0,0,0,0,0,0};    ///< Another world bounding box.
+
+    bool m_convexHullAvailable{false};       ///< Is convex hull computed
     GMSPolyhedron m_convexHull;              ///< Convex hull of model
 
-    bool m_centerOfMassAvailable;            ///< Is center of mass computed
+    bool m_centerOfMassAvailable{false};     ///< Is center of mass computed
     Vector3d m_centerOfMass;                 ///< Center of mass
+    GMSPolyhedron::COMAdjust m_comAdjust{GMSPolyhedron::COMAdjust::COM};
+                                             ///< COM Adjustment option
 
-    double m_mass;                           ///< Mass of Body
+    double m_mass{1};                        ///< Mass of Body
     Matrix3x3 m_moment;                      ///< Moment of Inertia
 
-    double m_boundingBox[6];                 ///< Bounding box
-
 #ifndef NO_VCLIP
-    shared_ptr<PolyTree> vclipBody;          ///< VClip model
+    shared_ptr<PolyTree> m_vclipBody;        ///< VClip model
 #endif
 
 #ifndef NO_RAPID
-    shared_ptr<RAPID_model> rapidBody;       ///< RAPID model
+    shared_ptr<RAPID_model> m_rapidBody;     ///< RAPID model
 #endif
 
 #ifndef NO_PQP
-    shared_ptr<PQP_Model> pqpBody;           ///< PQP model
+    shared_ptr<PQP_Model> m_pqpBody;         ///< PQP model
 #endif
 
 #ifndef NO_SOLID
-    shared_ptr<DT_ObjectHandle> solidBody;   ///< Solid model
-    DT_VertexBaseHandle base;                ///< Solid base
-    MT_Point3* vertex;                       ///< Solid set of vertices
+    shared_ptr<DT_ObjectHandle> m_solidBody; ///< Solid model
+    DT_VertexBaseHandle m_base;              ///< Solid base
+    MT_Point3* m_vertex;                     ///< Solid set of vertices
 #endif
+
+    ///@}
+
 };
 
 #endif

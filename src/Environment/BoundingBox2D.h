@@ -34,6 +34,8 @@ class BoundingBox2D :  public Boundary {
     void Read(istream& _is, CountingStreamBuffer& _cbs);
     void Write(ostream& _os) const;
 
+    virtual CGALPolyhedron CGAL() const override;
+
   private:
     pair<double, double> m_bbx[2];
 };

@@ -197,3 +197,54 @@ Write(ostream& _os) const {
   _os << " ]";
 }
 
+Boundary::CGALPolyhedron
+BoundingBox2D::
+CGAL() const {
+  // Define builder object.
+  struct builder : public CGAL::Modifier_base<CGALPolyhedron::HalfedgeDS> {
+
+    const pair<double, double>* m_bbx;
+
+    builder(const pair<double, double>* _bbx) : m_bbx(_bbx) {}
+
+    void operator()(CGALPolyhedron::HalfedgeDS& _h) {
+      using Point = CGALPolyhedron::HalfedgeDS::Vertex::Point;
+      CGAL::Polyhedron_incremental_builder_3<CGALPolyhedron::HalfedgeDS> b(_h);
+
+      b.begin_surface(4, 2, 8);
+
+      b.add_vertex(Point(m_bbx[0].first  , m_bbx[1].first , 0));
+      b.add_vertex(Point(m_bbx[0].second , m_bbx[1].first , 0));
+      b.add_vertex(Point(m_bbx[0].second , m_bbx[1].second, 0));
+      b.add_vertex(Point(m_bbx[0].first  , m_bbx[1].second, 0));
+
+      // The bounding box has two facets: one on top, and one below. This is
+      // needed to create a closed surface as this representation is three-
+      // dimensional.
+      b.begin_facet();
+      b.add_vertex_to_facet(0);
+      b.add_vertex_to_facet(1);
+      b.add_vertex_to_facet(2);
+      b.add_vertex_to_facet(3);
+      b.end_facet();
+
+      b.begin_facet();
+      b.add_vertex_to_facet(0);
+      b.add_vertex_to_facet(3);
+      b.add_vertex_to_facet(2);
+      b.add_vertex_to_facet(1);
+      b.end_facet();
+
+      b.end_surface();
+    }
+  };
+
+  CGALPolyhedron cp;
+  builder b(m_bbx);
+  cp.delegate(b);
+
+  if(!cp.is_valid())
+    throw RunTimeException(WHERE, "BoundingBox2D:: Invalid CGAL polyhedron "
+        "created!");
+  return cp;
+}

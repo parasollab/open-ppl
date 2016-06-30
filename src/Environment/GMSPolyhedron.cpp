@@ -1,6 +1,11 @@
 #include "GMSPolyhedron.h"
 
+#include <CGAL/Polyhedron_incremental_builder_3.h>
+
+#include <algorithm>
 #include <fstream>
+#include <limits>
+#include <set>
 
 #include "MovieBYULoader.h"
 #include "ModelFactory.h"
@@ -11,27 +16,41 @@
 
 using namespace std;
 
-GMSPolygon::GMSPolygon() : m_area(0){
-}
+/*-------------------------- GMSPolygon --------------------------------------*/
 
-GMSPolygon::GMSPolygon(const GMSPolygon& _p)
-  : m_vertexList(_p.m_vertexList), m_normal(_p.m_normal), m_area(_p.m_area){
-  }
+GMSPolygon::
+GMSPolygon(int _v1, int _v2, int _v3) : m_vertexList{_v1, _v2, _v3} { }
 
-GMSPolygon::~GMSPolygon() {
-}
 
 bool
-GMSPolygon::operator==(const GMSPolygon& _p) const{
-  return (m_vertexList == _p.m_vertexList) &&
-    (m_normal == _p.m_normal) &&
-    (m_area == _p.m_area);
+GMSPolygon::
+operator==(const GMSPolygon& _p) const {
+  return m_area == _p.m_area
+      && m_normal == _p.m_normal
+      && m_vertexList == _p.m_vertexList;
 }
 
-//Find a unique common vertex between the two polygons
-//return -1 if none exists
+
+bool
+GMSPolygon::
+operator!=(const GMSPolygon& _p) const {
+  return !(*this == _p);
+}
+
+
+bool
+GMSPolygon::
+IsTriangle() const {
+  return m_vertexList.size() == 3 &&
+      m_vertexList[0] != m_vertexList[1] &&
+      m_vertexList[1] != m_vertexList[2] &&
+      m_vertexList[0] != m_vertexList[2];
+}
+
+
 int
-GMSPolygon::CommonVertex(const GMSPolygon& _p) {
+GMSPolygon::
+CommonVertex(const GMSPolygon& _p) const {
   for(size_t i = 0; i < m_vertexList.size(); ++i) {
     for(size_t j = 0; j < m_vertexList.size(); ++j) {
       if(m_vertexList[i] == _p.m_vertexList[j]) {
@@ -42,8 +61,10 @@ GMSPolygon::CommonVertex(const GMSPolygon& _p) {
   return -1;
 }
 
+
 pair<int, int>
-GMSPolygon::CommonEdge(const GMSPolygon& _p) {
+GMSPolygon::
+CommonEdge(const GMSPolygon& _p) const {
   pair<int, int> edgeID(-1, -1);
   for(size_t i = 0; i < m_vertexList.size(); ++i) {
     for(size_t j = 0; j < m_vertexList.size(); ++j) {
@@ -58,391 +79,427 @@ GMSPolygon::CommonEdge(const GMSPolygon& _p) {
   return edgeID;
 }
 
-//End Polygon begin Polyhedron implementation
-GMSPolyhedron::GMSPolyhedron(): m_area(0), m_maxRadius(0), m_minRadius(0), m_boundaryBuilt(false), m_force2DBoundary(false){
-}
-
-GMSPolyhedron::GMSPolyhedron(const GMSPolyhedron& _p)
-  : m_vertexList(_p.m_vertexList), m_polygonList(_p.m_polygonList),
-  m_area(_p.m_area), m_maxRadius(_p.m_maxRadius), m_minRadius(_p.m_minRadius),
-  m_boundaryLines(_p.m_boundaryLines), m_boundaryBuilt(_p.m_boundaryBuilt),
-  m_force2DBoundary(_p.m_force2DBoundary){
-}
-
-GMSPolyhedron::~GMSPolyhedron(){
-}
+/*-------------------------- GMSPolyhedron -----------------------------------*/
 
 bool
-GMSPolyhedron::operator==(const GMSPolyhedron& _p) const{
-  return (m_vertexList == _p.m_vertexList) &&
-    (m_polygonList == _p.m_polygonList) &&
-    (m_area == _p.m_area) &&
-    (m_maxRadius == _p.m_maxRadius) &&
-    (m_minRadius == _p.m_minRadius);
-}
-
-//=========================================================================
-//  ComputeNormals
-//
-//  populates Vector3d v1, and Vector3d v2.
-//=========================================================================
-void
-GMSPolyhedron::ComputeNormals(){
-  double sum = 0;
-  for(vector<GMSPolygon>::iterator P = m_polygonList.begin();P != m_polygonList.end(); ++P){
-    Vector3d v1 = m_vertexList[P->m_vertexList[1]] - m_vertexList[P->m_vertexList[0]];
-    Vector3d v2 = m_vertexList[P->m_vertexList[2]] - m_vertexList[P->m_vertexList[0]];
-    P->m_normal = v1 % v2;
-    P->m_area = (0.5) * P->m_normal.norm();
-    sum += P->m_area;
-    P->m_normal = P->m_normal.normalize();
-  }
-  m_area = sum;
+GMSPolyhedron::
+operator==(const GMSPolyhedron& _p) const {
+  return m_area == _p.m_area
+      && m_maxRadius == _p.m_maxRadius
+      && m_minRadius == _p.m_minRadius
+      && m_polygonList == _p.m_polygonList
+      && m_vertexList == _p.m_vertexList;
 }
 
 
-//=========================================================================
-//  Read
-//      this version of the "Read" method will distinguish which file,
-//      file format body should request polyhedron to read
-//=========================================================================
+bool
+GMSPolyhedron::
+operator!=(const GMSPolyhedron& _p) const {
+  return !(*this == _p);
+}
+
+
 Vector3d
-GMSPolyhedron::Read(string _fileName, COMAdjust _comAdjust) {
-  Vector3d com;	//com = Center of Mass
-
+GMSPolyhedron::
+Read(string _fileName, COMAdjust _comAdjust) {
   if(!FileExists(_fileName))
-    throw ParseException(WHERE, "Geometry file '" + _fileName + "' does not exist.");
+    throw ParseException(WHERE, "Geometry file '" + _fileName + "' not found.");
 
-  //---------------------------------------------------------------
-  // Read polyhedron
-  //---------------------------------------------------------------
+  // Get file extension.
   string ext;
   size_t pos = _fileName.rfind(".");
   if(pos != string::npos)
-    ext = _fileName.substr(pos+1);
+    ext = _fileName.substr(pos + 1);
 
-  if (ext == "g" || ext == "obj") {
-    unique_ptr<IModel> imodel(CreateModelLoader(_fileName, false));
-    if(!imodel)
-      throw ParseException(WHERE, "Cannot read model '" + _fileName + "'.");
-
-    Vector3d com = LoadFromIModel(imodel.get(), _comAdjust);
-
-    ComputeNormals();
-
-    return com;
-  }
-  else
+  if(ext != "g" && ext != "obj")
     throw ParseException(WHERE, _fileName + " has an unrecognized format '" +
         ext + "'. Recognized formats are BYU(.g) and OBJ(.obj).");
+
+  unique_ptr<IModel> imodel(CreateModelLoader(_fileName, false));
+  if(!imodel)
+    throw ParseException(WHERE, "Cannot read model '" + _fileName + "'.");
+
+  Vector3d com = LoadFromIModel(imodel.get(), _comAdjust);
+
+  ComputeNormals();
+
+  return com;
 }
 
-//=========================================================================
-//  LoadFromIModel
-//    loads model using the model loader library
-//=========================================================================
+
 Vector3d
-GMSPolyhedron::LoadFromIModel(IModel* _imodel, COMAdjust _comAdjust) {
+GMSPolyhedron::
+LoadFromIModel(IModel* _imodel, COMAdjust _comAdjust) {
+  // Add vertices to the polyhedron and compute center of mass.
   Vector3d com;
-
-  IModel::PtVector& verts = _imodel->GetVertices();
-  IModel::TriVector& tris = _imodel->GetTriP();
-
-  for(auto& v : verts) {
+  for(const auto& v : _imodel->GetVertices()) {
     m_vertexList.push_back(v);
-    com = com + v;
+    com += v;
   }
   com /= m_vertexList.size();
 
-  m_maxRadius = 0; // shift center to origin and find maximum radius.
-  for(auto& v : m_vertexList) {
+  // Repeat for CGAL points.
+  CGALPoint ccom;
+  for(const auto& c : _imodel->GetCGALVertices()) {
+    m_cgalPoints.push_back(c);
+    ccom[0] += c[0];
+    ccom[1] += c[1];
+    ccom[2] += c[2];
+  }
+  ccom[0] /= double(m_cgalPoints.size());
+  ccom[1] /= double(m_cgalPoints.size());
+  ccom[2] /= double(m_cgalPoints.size());
 
+  // Apply COMAdjust to vertices and find radii.
+  m_maxRadius = 0;
+  m_minRadius = numeric_limits<double>::infinity();
+  for(size_t i = 0; i < m_vertexList.size(); ++i) {
+    auto& v = m_vertexList[i];
+    auto& c = m_cgalPoints[i];
     switch(_comAdjust) {
-      case COMAdjust::COM:
+      case COMAdjust::COM:     // Move COM to xyz origin.
         v -= com;
+        c[0] -= ccom[0];
+        c[1] -= ccom[1];
+        c[2] -= ccom[2];
         break;
-      case COMAdjust::Surface:
+      case COMAdjust::Surface: // Move COM to xz origin.
         v[0] -= com[0];
         v[2] -= com[2];
+        c[0] -= ccom[0];
+        c[2] -= ccom[2];
         break;
-      case COMAdjust::None:
+      case COMAdjust::None:    // Do nothing.
       default:
         break;
     }
 
     double dist = v.norm();
-    if(dist > m_maxRadius)
-      m_maxRadius = dist;
+    m_maxRadius = max(m_maxRadius, dist);
+    m_minRadius = min(m_minRadius, dist);
   }
 
-  for(auto& t : tris) {
-    GMSPolygon p;
-    p.m_vertexList.push_back(t[0]);
-    p.m_vertexList.push_back(t[1]);
-    p.m_vertexList.push_back(t[2]);
-    m_polygonList.push_back(p);
-  }
+  // Add triangles to the polyhedron.
+  for(auto& t : _imodel->GetTriP())
+    m_polygonList.emplace_back(t[0], t[1], t[2]);
 
   return com;
 }
 
-//=========================================================================
-//  Write in BYU format
-//=========================================================================
+
 void
-GMSPolyhedron::WriteBYU(ostream& _os) {
+GMSPolyhedron::
+WriteBYU(ostream& _os) const {
   size_t numTri = m_polygonList.size();
-  _os << "1 " << m_vertexList.size() << " " << numTri << " " << numTri*3 << endl;
-  _os << "1 " << numTri << endl;
+  _os << "1 " << m_vertexList.size() << " " << numTri << " " << numTri * 3 << endl
+      << "1 " << numTri << endl;
   for(const auto& v : m_vertexList)
     _os << v << endl;
   for(const auto& p : m_polygonList) {
-    for(vector<int>::const_iterator i = p.m_vertexList.begin();
-        (i+1) != p.m_vertexList.end(); ++i)
-      _os << *i+1 << " ";
-    _os << "-" << p.m_vertexList.back()+1 << endl;
+    for(auto i = p.m_vertexList.begin(); (i + 1) != p.m_vertexList.end(); ++i)
+      _os << *i + 1 << " ";
+    _os << "-" << p.m_vertexList.back() + 1 << endl;
   }
 }
 
-//=========================================================================
-//  GetRandPtOnSurface
-//  This function will return a point that lies on the surface of the
-//  polyhedron. Function taken from GB code.
-//=========================================================================
-Point3d
-GMSPolyhedron::GetRandPtOnSurface(){
-  //using vertices in ptsSurface
-  int size=m_polygonList.size();
-  int it;
-  bool validIndex=false;
-  if( DRand() < 0.5 ) { //half the time choose by area proportional to total
-    while( !validIndex ){
 
-      double rProp=DRand();//generate a prob from 0..1
-      double cummProp=0;
-      it=0;
-      for(vector<GMSPolygon>::const_iterator P = m_polygonList.begin(); P != m_polygonList.end(); ++P,it++){
-	cummProp+= P->m_area/m_area; //this polygon : total area
-	if( rProp <= cummProp ) { //reached desired polygon
+void
+GMSPolyhedron::
+ComputeNormals() {
+  double sum = 0;
+  for(auto& p : m_polygonList) {
+    Vector3d v1 = m_vertexList[p.m_vertexList[1]] -
+        m_vertexList[p.m_vertexList[0]];
+    Vector3d v2 = m_vertexList[p.m_vertexList[2]] -
+        m_vertexList[p.m_vertexList[0]];
+    p.m_normal = v1 % v2;
+    p.m_area = .5 * p.m_normal.norm();
+    sum += p.m_area;
+    p.m_normal = p.m_normal.normalize();
+  }
+  m_area = sum;
+}
+
+
+void
+GMSPolyhedron::
+BuildBoundary2D() {
+  m_boundaryLines.clear();
+  m_boundaryBuilt = false;
+  m_force2DBoundary = true;
+  BuildBoundary();
+}
+
+
+void
+GMSPolyhedron::
+BuildBoundary() {
+  if(m_boundaryBuilt) return;            // only allow this to be attempted once
+  if(m_boundaryLines.size() > 0) return; // this has been done
+
+  m_boundaryBuilt = true;
+
+  // Create function for determining if a polygon is near the XZ surface plane.
+  static auto NearXZPlane = [&](const GMSPolygon& _p) -> bool {
+    const double tol = 0.3; // Tolerance for considering points near-plane.
+    const auto& p = _p.m_vertexList;
+    const auto& v = this->m_vertexList;
+    return fabs(v[p[0]][1]) <= tol && fabs(v[p[1]][1]) <= tol &&
+      fabs(v[p[2]][1]) <= tol;
+  };
+
+  // Get all of the edges from every triangle.
+  multiset<pair<int, int>> lines;
+  for(const auto& tri : m_polygonList) {
+    if(m_force2DBoundary && !NearXZPlane(tri))
+      continue;
+    for(unsigned short i = 0; i < 3; ++i) {
+      // Always put the lower vertex index first to make finding duplicates
+      // easier.
+      const int& a = tri.m_vertexList[i];
+      const int& b = tri.m_vertexList[(i + 1) % 3];
+      lines.emplace(min(a, b), max(a, b));
+    }
+  }
+
+  // Store the edges that occurred exactly once as the boundary lines.
+  for(auto iter = lines.begin(), next = ++lines.begin();
+      iter != lines.end() && next != lines.end(); ++iter, ++next) {
+    if(*iter != *next)
+      continue;
+    do {
+      ++next;
+    } while(next != lines.end() && *iter == *next);
+    iter = lines.erase(iter, next);
+    --iter;
+  }
+
+  m_boundaryLines.reserve(lines.size());
+  copy(lines.begin(), lines.end(), back_inserter(m_boundaryLines));
+}
+
+
+Point3d
+GMSPolyhedron::
+GetRandPtOnSurface() const {
+  // Chose a polygon on the surface. Half of the time, choose by fraction of
+  // total surface area. Otherwise, choose randomly.
+  size_t index;
+  if(DRand() < 0.5) {
+    // Choose by fractional area.
+    do {
+      index = 0;
+      double prob = DRand(), cummProb = 0;
+      for(const auto& tri : m_polygonList) {
+	cummProb += tri.m_area / m_area;
+	if(prob <= cummProb)
 	  break;
-	}
+        ++index;
       }
-      GMSPolygon& tv=m_polygonList[it];
-      if( tv.m_vertexList[0]==tv.m_vertexList[1] || tv.m_vertexList[1]==tv.m_vertexList[2] || tv.m_vertexList[0]==tv.m_vertexList[2] ) continue;
-      else validIndex=true;
-    }
+    } while(!m_polygonList[index].IsTriangle());
   }
-  else {//randomly select polygon
-    while( !validIndex ){
-      it=LRand() % size;
-      GMSPolygon& tv=m_polygonList[it];
-      if( tv.m_vertexList[0]==tv.m_vertexList[1] || tv.m_vertexList[1]==tv.m_vertexList[2] || tv.m_vertexList[0]==tv.m_vertexList[2] ) continue;
-      else validIndex=true;
-    }
+  else {
+    // Choose randomly.
+    do {
+      index = LRand() % m_polygonList.size();
+    } while(!m_polygonList[index].IsTriangle());
   }
-  GMSPolygon& tv=m_polygonList[it];
-  double u,v;
-  u = DRand(); //anything from 0-1 should work for these coords
-  v = DRand(); //anything from 0-1 should work for these coords
-  if( (u+v)>= 1 ){
-    u = 1-u;
-    v = 1-v;
+
+  // Now that a polygon index has been selected, get a random point on it using
+  // barycentric coordinates.
+  double u = DRand(), v = DRand();
+  if(u + v >= 1) {
+    u = 1 - u;
+    v = 1 - v;
   }
-  Vector3d p0 = m_vertexList[ tv.m_vertexList[0] ];
-  Vector3d p1 = m_vertexList[ tv.m_vertexList[1] ];
-  Vector3d p2 = m_vertexList[ tv.m_vertexList[2] ];
+  const GMSPolygon& tri = m_polygonList[index];
+  const Vector3d& p0 = m_vertexList[tri.m_vertexList[0]];
+  const Vector3d& p1 = m_vertexList[tri.m_vertexList[1]];
+  const Vector3d& p2 = m_vertexList[tri.m_vertexList[2]];
   Vector3d AB = p1 - p0;
   Vector3d AC = p2 - p0;
-  Vector3d pt3d = p0 + (u* AB) + (v* AC);
-  Point3d rtrnPt(pt3d[0], pt3d[1], pt3d[2]);
-  return rtrnPt;
+  return p0 + (u * AB) + (v * AC);
 }
 
-///////////////////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////////////////
-/// next two functions adapted from GB code as well
+
 bool
-GMSPolyhedron::IsOnSurface(Point2d& _pt, double _h){
-  //using vertices in m_ProjectedPts
-  int size=m_polygonList.size();
-  for( int it=0;it<size;it++ ){
-    GMSPolygon& poly = m_polygonList[it];
-    if( poly.m_vertexList[0]==poly.m_vertexList[1] || poly.m_vertexList[1]==poly.m_vertexList[2] || poly.m_vertexList[0]==poly.m_vertexList[2] ) continue;
-    Vector3d& v0 = m_vertexList[ poly.m_vertexList[0] ]; // get vertices of triangle
-    Vector3d& v1 = m_vertexList[ poly.m_vertexList[1] ];
-    Vector3d& v2 = m_vertexList[ poly.m_vertexList[2] ];
-    Point2d   p0(v0[0], v0[2]);//v0 in xyz, p0 ignores y component
-    Point2d   p1(v1[0], v1[2]);//v0 in xyz, p0 ignores y component
-    Point2d   p2(v2[0], v2[2]);//v0 in xyz, p0 ignores y component
-    if( PtInTriangle( p0, p1, p2, _pt ) ){
+GMSPolyhedron::
+IsOnSurface(const Point2d& _p) const {
+  for(const auto& poly : m_polygonList) {
+    if(!poly.IsTriangle())
+      continue;
+    const Vector3d& v0 = m_vertexList[poly.m_vertexList[0]];
+    const Vector3d& v1 = m_vertexList[poly.m_vertexList[1]];
+    const Vector3d& v2 = m_vertexList[poly.m_vertexList[2]];
+    Point2d p0(v0[0], v0[2]);
+    Point2d p1(v1[0], v1[2]);
+    Point2d p2(v2[0], v2[2]);
+    if(PtInTriangle(p0, p1, p2, _p))
       return true;
-    }
   }
   return false;
 }
 
+
 double
-GMSPolyhedron::HeightAtPt(Point2d _pt, bool& _valid){
-  //using vertices in ptsSurface
-  int size=m_polygonList.size();
-  for( int it=0;it<size;it++ ){
-    GMSPolygon& poly = m_polygonList[it];
-    if( poly.m_vertexList[0]==poly.m_vertexList[1] || poly.m_vertexList[1]==poly.m_vertexList[2] || poly.m_vertexList[0]==poly.m_vertexList[2] ) continue;
-    Vector3d& v0 = m_vertexList[ poly.m_vertexList[0] ]; // get vertices of triangle
-    Vector3d& v1 = m_vertexList[ poly.m_vertexList[1] ];
-    Vector3d& v2 = m_vertexList[ poly.m_vertexList[2] ];
-    Point2d   p0(v0[0], v0[2]);//v0 in xyz, p0 ignores y component
-    Point2d   p1(v1[0], v1[2]);//v0 in xyz, p0 ignores y component
-    Point2d   p2(v2[0], v2[2]);//v0 in xyz, p0 ignores y component
-    Point3d   p03d(v0[0], v0[1], v0[2]);
-    Point3d   p13d(v1[0], v1[1], v1[2]);
-    Point3d   p23d(v2[0], v2[1], v2[2]);
-    double u,v;
-    if( PtInTriangle( p0, p1, p2, _pt, u, v ) ){
+GMSPolyhedron::
+HeightAtPt(const Point2d& _p, bool& _valid) const {
+  for(const auto& poly : m_polygonList) {
+    if(!poly.IsTriangle())
+      continue;
+    const Vector3d& v0 = m_vertexList[poly.m_vertexList[0]];
+    const Vector3d& v1 = m_vertexList[poly.m_vertexList[1]];
+    const Vector3d& v2 = m_vertexList[poly.m_vertexList[2]];
+    Point2d p0(v0[0], v0[2]);
+    Point2d p1(v1[0], v1[2]);
+    Point2d p2(v2[0], v2[2]);
+    double u, v;
+    if(PtInTriangle(p0, p1, p2, _p, u, v)) {
       _valid = true;
-      Point3d pt3d = GetPtFromBarycentricCoords( p03d, p13d, p23d, u, v );
+      Point3d pt3d = GetPtFromBarycentricCoords(v0, v1, v2, u, v);
       return pt3d[1];
     }
   }
+  // After checking all triangles, inconsistency found in iscollision check
   _valid = false;
-  return -19999.0; //went through all of the triangles and inconsistency found in iscollision check
-}
-
-void
-GMSPolyhedron::BuildBoundary2D() {
-  m_boundaryLines.clear();
-  m_boundaryBuilt=false;
-  m_force2DBoundary=true;
-  BuildBoundary();
-}
-
-void
-GMSPolyhedron::BuildBoundary() {
-  if( m_boundaryBuilt ) return; //only allow this to be attempted once
-  if( m_boundaryLines.size() > 0 ) return; // this has been done
-
-  m_boundaryBuilt = true;
-  typedef vector<GMSPolygon>::iterator PIT;
-
-  //build all the lines locally
-  vector< Vector<int,2> > lines;
-  //TriVector& triP=m_SurfaceModel->GetTriP();
-  //vector<GMSPolygon>& triP = m_polygonList;
-  lines.reserve(m_polygonList.size()*3);
-  double nearZeroPlane=0.3;
-  for(PIT iT=m_polygonList.begin(); iT!=m_polygonList.end();iT++){
-    const GMSPolygon& tri=*iT;
-    if(m_force2DBoundary) {
-      if( fabs( m_vertexList[tri.m_vertexList[0]][1] ) > nearZeroPlane ||
-	  fabs( m_vertexList[tri.m_vertexList[1]][1] ) > nearZeroPlane ||
-	  fabs( m_vertexList[tri.m_vertexList[2]][1] ) > nearZeroPlane ) continue;
-    }
-    lines.push_back(Vector<int,2>(tri.m_vertexList[0],tri.m_vertexList[1]));
-    lines.push_back(Vector<int,2>(tri.m_vertexList[1],tri.m_vertexList[2]));
-    lines.push_back(Vector<int,2>(tri.m_vertexList[2],tri.m_vertexList[0]));
-  }
-
-  //Get Boundary lines by checking each line per triangle to see if
-  //the line (specified by id) occurs *exactly* once.
-  typedef vector< Vector<int,2> >::iterator LIT;
-  for(PIT iT=m_polygonList.begin(); iT!=m_polygonList.end();iT++){
-    Vector<int,2> line;
-    const GMSPolygon& tri=*iT;
-
-    if(m_force2DBoundary) {
-      if( fabs( m_vertexList[tri.m_vertexList[0]][1] ) > nearZeroPlane ||
-	  fabs( m_vertexList[tri.m_vertexList[1]][1] ) > nearZeroPlane ||
-	  fabs( m_vertexList[tri.m_vertexList[2]][1] ) > nearZeroPlane ) continue;
-    }
-
-    for( int iD=0; iD<3; iD++ ){
-      switch(iD){
-	case 0: line(tri.m_vertexList[0],tri.m_vertexList[1]); break;
-	case 1: line(tri.m_vertexList[1],tri.m_vertexList[2]); break;
-	case 2: line(tri.m_vertexList[2],tri.m_vertexList[0]); break;
-      }
-      int count=0;
-
-      for( LIT iL=lines.begin(); iL!=lines.end(); iL++ ){
-	Vector<int,2>& l=*iL;
-	if((l[0]==line[0]&&l[1]==line[1])||(l[0]==line[1]&&l[1]==line[0]))
-	  count++;
-      }
-      if( count==1 )
-	m_boundaryLines.push_back( make_pair(line[0],line[1]) );
-    }//endfor iD<3
-  }//endfor iT
+  return -19999.0;
 }
 
 
 ////////////////////////////////////////////////////////////////////////////////
-//the square of the distance from pos to p1p2
+/// \brief Given a reference point and a line segment, find the point on the
+///        segment nearest to the reference and return the squared distance
+///        between them.
+/// \param[in] _p The reference point.
+/// \param[in] _s The start of the line segment.
+/// \param[in] _e The end of the line segment.
+/// \param[in/out] _closest The point on the segment that is closest to _p.
+/// \return The squared distance between _p and _closest.
 inline double
-distsqr3D(const Point3d& _pos, const Point3d& _p1, const Point3d& _p2, Point3d& _cdPt)
-{
-
-  Vector3d n=_p1-_p2;
-  double t=(n*(_pos-_p1))/(n*(_p2-_p1));
-  if( t>=0 && t<=1 ){
-    for(int i=0;i<3;i++) _cdPt[i]=(1-t)*_p1[i]+t*_p2[i];
-    return (_pos-_cdPt).normsqr();
-  }
-  else{ //closest point is end pt
-    double d1=(_p1-_pos).normsqr();
-    double d2=(_p2-_pos).normsqr();
-    if( d1<d2 ){ _cdPt=_p1; return d1; }
-    else { _cdPt=_p2; return d2; }
-  }
+distanceSqrFromSegment(const Point3d& _p, const Point3d& _s, const Point3d& _e,
+    Point3d& _closest) {
+  Vector3d n = _e - _s;
+  Vector3d q = _p - _s;
+  double len = q.comp(n);
+  if(len <= 0)
+    _closest = _s;
+  else if(len >= n.norm())
+    _closest = _e;
+  else
+    _closest = q.proj(n);
+  return (_closest - _p).normsqr();
 }
 
-double GMSPolyhedron::GetClearance(Point3d _pt, Point3d& _closest, int _numRays) {
 
-  double closestPtDist = 1e10;
-  Point3d closestPt3d;
-  vector< pair<int,int> >& lineIndices = GetBoundaryLines();
-  for( int iL=0; iL<(int)lineIndices.size();iL++ ){ //for each BL
-    int id1 = m_boundaryLines[iL].first;
-    int id2 = m_boundaryLines[iL].second;
-    Vector3d vert13dTmp =  m_vertexList[id1];
-    Vector3d vert23dTmp =  m_vertexList[id2];
+double
+GMSPolyhedron::
+GetClearance(const Point3d& _p, Point3d& _closest) {
+  double closestDist = 1e10;
 
-    Point3d edge13d(vert13dTmp[0],vert13dTmp[1],vert13dTmp[2]);
-    Point3d edge23d(vert23dTmp[0],vert23dTmp[1],vert23dTmp[2]);
+  // Go through all boundary edges and find the closest point on any edge to _p.
+  for(const auto& bl : GetBoundaryLines()) {
+    const Vector3d& v1 =  m_vertexList[bl.first];
+    const Vector3d& v2 =  m_vertexList[bl.second];
 
-    //find closest pt from p to p1p2
+    // Find the point on this boundary line closest to p.
     Point3d c;
-    double dist=distsqr3D(_pt,edge13d,edge23d,c);
-    if( dist<closestPtDist ) { closestPtDist=dist; closestPt3d=c;}
-  }
-  _closest = closestPt3d;
-
-  return sqrt(closestPtDist);
-}
-
-double GMSPolyhedron::PushToMedialAxis(Point3d& _pt) {
-  Point3d orig = _pt;
-
-  Point3d closest;
-  int rays = 50;
-  double clear=GetClearance(_pt,closest,rays);
-  Vector3d dir=(_pt-closest).normalize();
-  dir[1]=0;
-  dir = dir.normalize()*0.5;
-  Point3d newClosest=closest;
-  int iteration=0;
-  do{
-    _pt=_pt+dir;
-    Point2d newProjPt(_pt[0],_pt[2]);
-    bool stillValid=true;
-    double newH = HeightAtPt(newProjPt,stillValid);
-    if(!stillValid) {
-       _pt=orig;
-       break;
+    double dist = distanceSqrFromSegment(_p, v1, v2, c);
+    if(dist < closestDist) {
+      closestDist = dist;
+      _closest = c;
     }
-    _pt[1]=newH;
-    clear=GetClearance(_pt,newClosest,rays);
-  }while( (newClosest-closest).normsqr()<0.1 && iteration<1000000 );
+  }
 
-  return clear;
+  return sqrt(closestDist);
 }
 
+
+double
+GMSPolyhedron::
+PushToMedialAxis(Point3d& _p) {
+  Point3d orig = _p;
+
+  // Compute clearance and closest point.
+  Point3d closest;
+  double clearance = GetClearance(_p, closest);
+
+  // Compute the direction in the xz plane from closest to _p.
+  Vector3d dir = (_p - closest).normalize();
+  dir[1] = 0;
+  dir = dir.normalize() * .5;
+
+  Point3d newClosest = closest;
+  size_t iteration = 0;
+  do {
+    // Push point along dir.
+    _p += dir;
+
+    // Project pushed point to xz plane.
+    Point2d proj(_p[0], _p[2]);
+
+    // Find height (y-coordinate) of polyhedron at this xz point.
+    bool valid = true;
+    double newH = HeightAtPt(proj, valid);
+
+    // If polyhedron doesn't extend to this xz point, return original point.
+    if(!valid) {
+      _p = orig;
+      break;
+    }
+
+    // Otherwise, set pushed point's y-coordinate to the polyhedron height.
+    _p[1] = newH;
+    clearance = GetClearance(_p, newClosest);
+  } while((newClosest - closest).normsqr() < 0.1 && iteration < 1000000);
+
+  return clearance;
+}
+
+
+GMSPolyhedron::CGALPolyhedron
+GMSPolyhedron::
+CGAL() const {
+  // Define builder object.
+  struct builder : public CGAL::Modifier_base<CGALPolyhedron::HalfedgeDS> {
+
+    const GMSPolyhedron& m_poly;
+
+    builder(const GMSPolyhedron& _p) : m_poly(_p) {}
+
+    void operator()(CGALPolyhedron::HalfedgeDS& _h) {
+      using Point = CGALPolyhedron::HalfedgeDS::Vertex::Point;
+      CGAL::Polyhedron_incremental_builder_3<CGALPolyhedron::HalfedgeDS> b(_h);
+
+      size_t num_vertices = m_poly.m_vertexList.size();
+      size_t num_facets   = m_poly.m_polygonList.size();
+      size_t num_edges    = num_facets * 3;
+
+      b.begin_surface(num_vertices, num_facets, num_edges);
+
+      // Add vertices.
+      for(const auto& p : m_poly.m_cgalPoints)
+        b.add_vertex(p);
+
+      // Add facets.
+      for(const auto& f : m_poly.m_polygonList) {
+        b.begin_facet();
+        for(const auto& i : f.m_vertexList)
+          b.add_vertex_to_facet(i);
+        b.end_facet();
+      }
+
+      b.end_surface();
+    }
+  };
+
+  // Delegate builder object.
+  CGALPolyhedron cp;
+  builder b(*this);
+  cp.delegate(b);
+  if(!cp.is_valid())
+    throw RunTimeException(WHERE, "GMSPolyhedron:: Invalid CGAL polyhedron "
+        "created!");
+  return cp;
+}
+
+/*----------------------------------------------------------------------------*/

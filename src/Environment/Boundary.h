@@ -6,6 +6,10 @@ using namespace mathtool;
 
 #include "Utilities/IOUtils.h"
 
+#include <CGAL/Exact_predicates_exact_constructions_kernel.h>
+#include <CGAL/Polyhedron_3.h>
+#include <CGAL/Polyhedron_incremental_builder_3.h>
+
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup Environment
 /// @brief TODO
@@ -13,7 +17,15 @@ using namespace mathtool;
 /// TODO
 ////////////////////////////////////////////////////////////////////////////////
 class Boundary {
+
   public:
+
+    typedef CGAL::Exact_predicates_exact_constructions_kernel CGALKernel;
+    typedef CGAL::Polyhedron_3<CGALKernel> CGALPolyhedron;
+
+    /// Create a CGAL polyhedron.
+    virtual CGALPolyhedron CGAL() const {return CGALPolyhedron();}
+
     Boundary() {}
     virtual ~Boundary() {}
 

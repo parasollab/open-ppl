@@ -215,3 +215,90 @@ Write(ostream& _os) const {
   _os << " ]";
 }
 
+
+Boundary::CGALPolyhedron
+BoundingBox::
+CGAL() const {
+  // Define builder object.
+  struct builder : public CGAL::Modifier_base<CGALPolyhedron::HalfedgeDS> {
+
+    const pair<double, double>* m_bbx;
+
+    builder(const pair<double, double>* _bbx) : m_bbx(_bbx) {}
+
+    void operator()(CGALPolyhedron::HalfedgeDS& _h) {
+      using Point = CGALPolyhedron::HalfedgeDS::Vertex::Point;
+      CGAL::Polyhedron_incremental_builder_3<CGALPolyhedron::HalfedgeDS> b(_h);
+
+      b.begin_surface(8, 6, 24);
+
+      b.add_vertex(Point(m_bbx[0].first  , m_bbx[1].first , m_bbx[2].first ));
+      b.add_vertex(Point(m_bbx[0].second , m_bbx[1].first , m_bbx[2].first ));
+      b.add_vertex(Point(m_bbx[0].second , m_bbx[1].second, m_bbx[2].first ));
+      b.add_vertex(Point(m_bbx[0].first  , m_bbx[1].second, m_bbx[2].first ));
+      b.add_vertex(Point(m_bbx[0].first  , m_bbx[1].first , m_bbx[2].second));
+      b.add_vertex(Point(m_bbx[0].second , m_bbx[1].first , m_bbx[2].second));
+      b.add_vertex(Point(m_bbx[0].second , m_bbx[1].second, m_bbx[2].second));
+      b.add_vertex(Point(m_bbx[0].first  , m_bbx[1].second, m_bbx[2].second));
+
+      // Front
+      b.begin_facet();
+      b.add_vertex_to_facet(0);
+      b.add_vertex_to_facet(1);
+      b.add_vertex_to_facet(2);
+      b.add_vertex_to_facet(3);
+      b.end_facet();
+
+      // Right
+      b.begin_facet();
+      b.add_vertex_to_facet(1);
+      b.add_vertex_to_facet(5);
+      b.add_vertex_to_facet(6);
+      b.add_vertex_to_facet(2);
+      b.end_facet();
+
+      // Back
+      b.begin_facet();
+      b.add_vertex_to_facet(5);
+      b.add_vertex_to_facet(4);
+      b.add_vertex_to_facet(7);
+      b.add_vertex_to_facet(6);
+      b.end_facet();
+
+      // Left
+      b.begin_facet();
+      b.add_vertex_to_facet(4);
+      b.add_vertex_to_facet(0);
+      b.add_vertex_to_facet(3);
+      b.add_vertex_to_facet(7);
+      b.end_facet();
+
+      // Top
+      b.begin_facet();
+      b.add_vertex_to_facet(3);
+      b.add_vertex_to_facet(2);
+      b.add_vertex_to_facet(6);
+      b.add_vertex_to_facet(7);
+      b.end_facet();
+
+      // Bottom
+      b.begin_facet();
+      b.add_vertex_to_facet(4);
+      b.add_vertex_to_facet(5);
+      b.add_vertex_to_facet(1);
+      b.add_vertex_to_facet(0);
+      b.end_facet();
+
+      b.end_surface();
+    }
+  };
+
+  CGALPolyhedron cp;
+  builder b(m_bbx);
+  cp.delegate(b);
+
+  if(!cp.is_valid())
+    throw RunTimeException(WHERE, "BoundingBox:: Invalid CGAL polyhedron "
+        "created!");
+  return cp;
+}
