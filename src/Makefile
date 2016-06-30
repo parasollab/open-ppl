@@ -95,6 +95,7 @@ reallyreallyclean:
 	cd ${MATHTOOL_DIR}; ${MAKE} clean
 	cd ${MODELLOADER_DIR}; ${MAKE} clean
 	cd ${KMEANS_DIR}; ${MAKE} clean
+	cd ${TETGEN_DIR}; ${MAKE} clean
 
 
 # include automatically generated dependencies
