@@ -517,6 +517,9 @@ Embed() {
     auto sourceit = m_reebGraph.find_vertex(eit->source());
     auto targetit = m_reebGraph.find_vertex(eit->target());
 
+    if(sourceit->property().m_tetra == targetit->property().m_tetra)
+      cout << "Stuff is equal." << endl;
+
     vector<size_t> pathVID;
     stapl::sequential::find_path_dijkstra(tetraGraph,
         sourceit->property().m_tetra, targetit->property().m_tetra,
@@ -526,32 +529,34 @@ Embed() {
 
     // for each tetrahedron pair in path, find common triangle and insert middle
     // of triangle into path for proper transition between the two tetrahedron
-    for(auto vit1 = pathVID.begin(), vit2 = vit1 + 1;
-        vit2 != pathVID.end(); ++vit1, ++vit2) {
-      Vector3d& v1 = tetraGraph.find_vertex(*vit1)->property();
-      ra.m_path.push_back(v1);
+    if(!pathVID.empty()) {
+      for(auto vit1 = pathVID.begin(), vit2 = vit1 + 1;
+          vit2 != pathVID.end(); ++vit1, ++vit2) {
+        Vector3d& v1 = tetraGraph.find_vertex(*vit1)->property();
+        ra.m_path.push_back(v1);
 
-      int t1[4];
-      copy(&tetras[(*vit1)*numCorners], &tetras[(*vit1)*numCorners + 4], t1);
-      int t2[4];
-      copy(&tetras[(*vit2)*numCorners], &tetras[(*vit2)*numCorners + 4], t2);
+        int t1[4];
+        copy(&tetras[(*vit1)*numCorners], &tetras[(*vit1)*numCorners + 4], t1);
+        int t2[4];
+        copy(&tetras[(*vit2)*numCorners], &tetras[(*vit2)*numCorners + 4], t2);
 
-      int tcommon[3];
-      size_t j = 0;
-      for(size_t i = 0; i < 4; ++i) {
-        int* f = find(t2, t2+4, t1[i]);
-        if(f != t2 + 4)
-          tcommon[j++] = *f;
+        int tcommon[3];
+        size_t j = 0;
+        for(size_t i = 0; i < 4; ++i) {
+          int* f = find(t2, t2+4, t1[i]);
+          if(f != t2 + 4)
+            tcommon[j++] = *f;
+        }
+
+        Vector3d c;
+        for(size_t i = 0; i < 3; ++i)
+          c += m_vertices[tcommon[i]];
+        c /= 3;
+
+        ra.m_path.push_back(c);
       }
-
-      Vector3d c;
-      for(size_t i = 0; i < 3; ++i)
-        c += m_vertices[tcommon[i]];
-      c /= 3;
-
-      ra.m_path.push_back(c);
+      ra.m_path.push_back(tetraGraph.find_vertex(pathVID.back())->property());
     }
-    ra.m_path.push_back(tetraGraph.find_vertex(pathVID.back())->property());
 
     //unweight all
     WeightGraph(1);
