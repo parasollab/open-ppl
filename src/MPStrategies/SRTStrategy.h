@@ -468,7 +468,7 @@ ExpandTree(VID _tree, CfgType& _dir) {
   Tree& currentTree = m_trees[_tree];
 
   nf->FindNeighbors(rdmp,
-      currentTree.second.begin(), currentTree.second.end(),
+      currentTree.second.begin(), currentTree.second.end(), false,
       _dir, back_inserter(kClosest));
 
   CfgType& nearest = g->GetVertex(kClosest[0].first);

@@ -36,6 +36,7 @@ class RRTConnect: public ConnectorMethod<MPTraits> {
         void Connect(RoadmapType* _rm,
             InputIterator1 _itr1First, InputIterator1 _itr1Last,
             InputIterator2 _itr2First, InputIterator2 _itr2Last,
+            bool _fromFullRoadmap,
             OutputIterator _collision);
 
   protected:
@@ -96,6 +97,7 @@ RRTConnect<MPTraits>::
 Connect(RoadmapType* _rm,
     InputIterator1 _itr1First, InputIterator1 _itr1Last,
     InputIterator2 _itr2First, InputIterator2 _itr2Last,
+    bool _fromFullRoadmap,
     OutputIterator _collision) {
 
   // Ta = itr1, Tb = itr2
@@ -160,7 +162,8 @@ ExpandTree(CfgType& _dir, const VID& _dirVID,
 
   // Find closest Cfg in map
   vector<pair<VID, double>> kClosest;
-  nf->FindNeighbors(rdmp, _targetTree->begin(), _targetTree->end(), _dir, back_inserter(kClosest));
+  nf->FindNeighbors(rdmp, _targetTree->begin(), _targetTree->end(), false,
+      _dir, back_inserter(kClosest));
 
   bool connected = false;
 

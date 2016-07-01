@@ -77,7 +77,9 @@ operator()() {
     bfnf.SetMPProblem(this->GetMPProblem());
     bfnf.SetLabel("__CoverageDistanceMetricNF");
     RoadmapType* rdmp = this->GetMPProblem()->GetRoadmap();
-    bfnf.FindNeighbors(rdmp, rdmp->GetGraph()->begin(), rdmp->GetGraph()->end(), *i, back_inserter(kClosest));
+    bfnf.FindNeighbors(rdmp,
+        rdmp->GetGraph()->begin(), rdmp->GetGraph()->end(), true,
+        *i, back_inserter(kClosest));
     CfgType nearest = this->GetMPProblem()->GetRoadmap()->GetGraph()->GetVertex(kClosest[0].first);
     //distance = this->GetMPProblem()->GetDistanceMetric(m_dmLabel)->Distance(env, *i, nearest);
     disVec.push_back(kClosest[0].second);

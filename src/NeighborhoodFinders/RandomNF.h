@@ -42,7 +42,8 @@ class RandomNF : public NeighborhoodFinderMethod<MPTraits> {
     //Find k-random neighbors.
     template<typename InputIterator, typename OutputIterator>
       OutputIterator FindNeighbors(RoadmapType* _rmp,
-          InputIterator _first, InputIterator _last, const CfgType& _cfg, OutputIterator _out);
+          InputIterator _first, InputIterator _last, bool _fromFullRoadmap,
+          const CfgType& _cfg, OutputIterator _out);
 
     //Find k-random pairs of neighbors
     template<typename InputIterator, typename OutputIterator>
@@ -55,7 +56,9 @@ class RandomNF : public NeighborhoodFinderMethod<MPTraits> {
 template <class MPTraits>
 template <typename InputIterator, typename OutputIterator>
 OutputIterator
-RandomNF<MPTraits>::FindNeighbors(RoadmapType* _rmp, InputIterator _first, InputIterator _last,
+RandomNF<MPTraits>::
+FindNeighbors(RoadmapType* _rmp,
+    InputIterator _first, InputIterator _last, bool _fromFullRoadmap,
     const CfgType& _cfg, OutputIterator _out) {
 
   GraphType* map = _rmp->GetGraph();

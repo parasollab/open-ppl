@@ -270,7 +270,8 @@ TogglePRMStrategy<MPTraits>::Connect(pair<string, VID> _vid,
     // Connect vertex using the connector
     connector->Connect(
         _vid.first=="valid" ? this->GetMPProblem()->GetRoadmap() : this->GetMPProblem()->GetBlockRoadmap(),
-        nodesVID.begin(), nodesVID.end(), _allvids.begin(), _allvids.end(), back_inserter(collision));
+        nodesVID.begin(), nodesVID.end(), _allvids.begin(), _allvids.end(),
+        true, back_inserter(collision));
 
     if(this->m_debug) {
       cout << "\n\nCollision Nodes from connecting: " << collision.size() << endl;

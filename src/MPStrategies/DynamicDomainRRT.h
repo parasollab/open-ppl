@@ -183,7 +183,10 @@ ExpandTree(CfgType& _dir) {
   stats->StartClock("NeighborhoodFinding");
 
   nf->FindNeighbors(this->GetRoadmap(), this->m_currentTree->begin(),
-      this->m_currentTree->end(), _dir, back_inserter(neighbors));
+      this->m_currentTree->end(),
+      this->m_currentTree->size() ==
+      this->GetRoadmap()->GetGraph()->get_num_vertices(),
+      _dir, back_inserter(neighbors));
 
   stats->StopClock("NeighborhoodFinding");
 

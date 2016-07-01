@@ -70,6 +70,7 @@ class CCExpansion: public ConnectorMethod<MPTraits> {
         void Connect(RoadmapType* _rm,
             InputIterator1 _itr1First, InputIterator1 _itr1Last,
             InputIterator2 _itr2First, InputIterator2 _itr2Last,
+            bool _fromFullRoadmap,
             OutputIterator _collision);
 
   protected:
@@ -301,6 +302,7 @@ CCExpansion<MPTraits>::
 Connect(RoadmapType* _rm,
     InputIterator1 _itr1First, InputIterator1 _itr1Last,
     InputIterator2 _itr2First, InputIterator2 _itr2Last,
+    bool _fromFullRoadmap,
     OutputIterator _collision) {
 
   // Get the representative VIDs

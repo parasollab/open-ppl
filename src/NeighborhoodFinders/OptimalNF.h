@@ -38,16 +38,15 @@ class OptimalNF : public NeighborhoodFinderMethod<MPTraits> {
       _os << "\tnfLabel: " << m_nfLabel << endl;
     }
 
-    virtual typename MPProblemType::DistanceMetricPointer GetDMMethod() const{
+    virtual typename MPProblemType::DistanceMetricPointer GetDMMethod() const {
       return this->GetMPProblem()->GetNeighborhoodFinder(m_nfLabel)->GetDMMethod();
     }
 
     template<typename InputIterator, typename OutputIterator>
       OutputIterator FindNeighbors(RoadmapType* _rmp,
-          InputIterator _first, InputIterator _last, const CfgType& _cfg, OutputIterator _out);
+          InputIterator _first, InputIterator _last, bool _fromFullRoadmap,
+          const CfgType& _cfg, OutputIterator _out);
 
-    // KClosest that operate over two ranges of VIDS.  K total pair<VID,VID> are returned that
-    // represent the _kclosest pairs of VIDs between the two ranges.
     template<typename InputIterator, typename OutputIterator>
       OutputIterator FindNeighborPairs(RoadmapType* _rmp,
           InputIterator _first1, InputIterator _last1,
@@ -61,7 +60,9 @@ class OptimalNF : public NeighborhoodFinderMethod<MPTraits> {
 template<class MPTraits>
 template<typename InputIterator, typename OutputIterator>
 OutputIterator
-OptimalNF<MPTraits>::FindNeighbors(RoadmapType* _rmp, InputIterator _first, InputIterator _last,
+OptimalNF<MPTraits>::
+FindNeighbors(RoadmapType* _rmp,
+    InputIterator _first, InputIterator _last, bool _fromFullRoadmap,
     const CfgType& _cfg, OutputIterator _out) {
 
   this->IncrementNumQueries();
@@ -78,21 +79,22 @@ OptimalNF<MPTraits>::FindNeighbors(RoadmapType* _rmp, InputIterator _first, Inpu
   if(nfptr->GetNFType() == K) {
     // Calculate k
     nfptr->GetK() = min<size_t>(ceil(2*2.71828*log(_rmp->GetGraph()->get_num_vertices())), distance(_first, _last));  // Rounding up
-    if (this->m_debug) cout << "Finding closest neighbors with k = " << nfptr->GetK() << endl;
+    if(this->m_debug)
+      cout << "Finding closest neighbors with k = " << nfptr->GetK() << endl;
   }
   else if(nfptr->GetNFType() == RADIUS) {
-    if(this->m_debug) cout << "Finding closest neighbors within radius = " << endl;
-    // Calculate radius
-    cerr << "Error:: OptimalNF cannot use radius based method. Optimal radius not yet implemented. Exiting." << endl;
-    exit(1);
+    if(this->m_debug)
+      cout << "Finding closest neighbors within radius = " << endl;
+    throw RunTimeException(WHERE, "OptimalNF cannot use radius based NF method."
+        " Optimal radius not yet implemented.");
   }
   else {
-    cerr << "Error:: OptimalNF cannot use anything but a radius or k based method. Exiting." << endl;
-    exit(1);
+    throw RunTimeException(WHERE, "OptimalNF cannot use anything but radius or "
+      " k based NF method.");
   }
 
   // Compute neighbors
-  nfptr->FindNeighbors(_rmp, _first, _last, _cfg, _out);
+  nfptr->FindNeighbors(_rmp, _first, _last, _fromFullRoadmap, _cfg, _out);
 
   //reset k and radius
   nfptr->GetK() = this->m_k;
@@ -112,8 +114,7 @@ OptimalNF<MPTraits>::FindNeighborPairs(RoadmapType* _rmp,
     InputIterator _first1, InputIterator _last1,
     InputIterator _first2, InputIterator _last2,
     OutputIterator _out) {
-  cerr << "ERROR:: OptimalNF::FindNeighborPairs is not yet implemented. Exiting." << endl;
-  exit(1);
+  throw RunTimeException(WHERE, "FindNeighborPairs is not yet implemented.");
 }
 
 #endif

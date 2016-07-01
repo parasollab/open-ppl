@@ -506,19 +506,18 @@ ConnectVertex(RoadmapType* _centroidRdmp, vector<VID>& _notRRT, VID _recentVID) 
       vector<pair<VID, double> > closest;
       CfgType recentCfg = graph->GetVertex(_recentVID);
 
-      nf->FindNeighbors(_centroidRdmp, centroidGraph->begin(),
-          centroidGraph->end(), recentCfg, back_inserter(closest));
+      nf->FindNeighbors(_centroidRdmp, recentCfg, back_inserter(closest));
       get_cc(*graph, cMap,
           centroidGraph->GetVertex(closest[0].first).GetStat("ccVID"), cc);
 
       stats->StopClock("RRT: BiasConnect");
-      connector->Connect(this->GetRoadmap(), _recentVID, cc.begin(), cc.end());
+      connector->Connect(this->GetRoadmap(), _recentVID, cc.begin(), cc.end(), false);
     }
   }
   else {
     // If not biasing connection, connect to everything else
     connector->Connect(this->GetRoadmap(), _recentVID,
-        _notRRT.begin(), _notRRT.end());
+        _notRRT.begin(), _notRRT.end(), false);
   }
   stats->StopClock("RRT: ConnectVertex");
 }
@@ -733,7 +732,7 @@ ExpandTree(CfgType& _dir, vector<VID>& _rrt, vector<VID>& _important) {
 
   // Find closest CFG in map
   stats->StartClock("RRT: ExpandTree: KClosest");
-  nf->FindNeighbors(this->GetRoadmap(), _rrt.begin(), _rrt.end(), _dir,
+  nf->FindNeighbors(this->GetRoadmap(), _rrt.begin(), _rrt.end(), false, _dir,
       back_inserter(kClosest));
   stats->StopClock("RRT: ExpandTree: KClosest");
   nearest = graph->GetVertex(kClosest[0].first);

@@ -74,7 +74,7 @@ class CGALNF : public NeighborhoodFinderMethod<MPTraits> {
 
     template<typename InputIterator, typename OutputIterator>
       OutputIterator FindNeighbors(RoadmapType* _rmp,
-          InputIterator _first, InputIterator _last,
+          InputIterator _first, InputIterator _last, bool _fromFullRoadmap,
           const CfgType& _cfg, OutputIterator _out);
 
     // KClosest that operate over two ranges of VIDS.  K total pair<VID,VID> are returned that
@@ -87,7 +87,7 @@ class CGALNF : public NeighborhoodFinderMethod<MPTraits> {
 
     template<typename InputIterator>
       void UpdateInternalModel(RoadmapType* _rmp,
-          InputIterator _first, InputIterator _last);
+          InputIterator _first, InputIterator _last, bool _fromFullRoadmap);
 
   private:
     double m_epsilon; // approximation
@@ -147,13 +147,13 @@ template<typename InputIterator, typename OutputIterator>
 OutputIterator
 CGALNF<MPTraits>::
 FindNeighbors(RoadmapType* _rmp,
-    InputIterator _first, InputIterator _last,
+    InputIterator _first, InputIterator _last, bool _fromFullRoadmap,
     const CfgType& _cfg, OutputIterator _out) {
 
   this->StartTotalTime();
 
   this->StartConstructionTime();
-  UpdateInternalModel(_rmp, _first, _last);
+  UpdateInternalModel(_rmp, _first, _last, _fromFullRoadmap);
   this->EndConstructionTime();
 
   this->IncrementNumQueries();
@@ -197,8 +197,7 @@ FindNeighborPairs(RoadmapType* _rmp,
     InputIterator _first1, InputIterator _last1,
     InputIterator _first2, InputIterator _last2,
     OutputIterator _out) {
-  cerr << "ERROR:: CGALNF::FindNeighborPairs is not yet implemented. Exiting." << endl;
-  exit(1);
+  throw RunTimeException(WHERE, "FindNeighborPairs is not yet implemented.");
 }
 
 template<class MPTraits>
@@ -206,52 +205,11 @@ template<typename InputIterator>
 void
 CGALNF<MPTraits>::
 UpdateInternalModel(RoadmapType* _rmp,
-    InputIterator _first, InputIterator _last) {
-
-  if(m_trees.count(_rmp) == 0)
-    m_trees[_rmp].first = -1;
-
-  typedef typename GraphType::RoadmapVCSType RoadmapVCSType;
+    InputIterator _first, InputIterator _last, bool _fromFullRoadmap) {
 
   GraphType* map = _rmp->GetGraph();
-  const RoadmapVCSType& rvcs = map->GetRoadmapVCS();
 
-  size_t newVersion = rvcs.GetVersionNumber();
-  if(m_trees[_rmp].first == newVersion)
-    return;
-
-  typename RoadmapVCSType::const_iterator start;
-  if(m_trees[_rmp].first == static_cast<size_t>(-1))
-    start = rvcs.begin();
-  else
-    start = rvcs.IteratorAt(m_trees[_rmp].first);
-
-  typename RoadmapVCSType::const_iterator end = rvcs.end();
-  typename RoadmapVCSType::const_iterator iter;
-
-  for(iter = start; iter != end; iter++) {
-    if((*iter).second.IsTypeAddVertex()) {
-
-      VID vidToAdd = (*iter).second.GetAddVertexEvent()->GetVID();
-
-      // scale roadmap CFGs
-      CfgType cfgToAdd = map->GetVertex(vidToAdd);
-
-      if (m_useScaling) {
-        cfgToAdd[0] /= m_maxBBXRange;
-        cfgToAdd[1] /= m_maxBBXRange;
-        cfgToAdd[2] /= m_maxBBXRange;
-      }
-
-      m_trees[_rmp].second.insert(
-          PointD(vidToAdd, cfgToAdd.DOF(),
-            cfgToAdd.GetData().begin(), cfgToAdd.GetData().end())
-          );
-    }
-  }
-
-  //should not be included if using the roadmap version
-  if(!this->m_fromRDMPVersion){
+  if(!_fromFullRoadmap) {
     delete m_tmpTree;
     m_tmpTree = new Tree();
     InputIterator V1;
@@ -261,12 +219,53 @@ UpdateInternalModel(RoadmapType* _rmp,
     }
     m_queryTree = m_tmpTree;
   }
-  else{
-    this->m_fromRDMPVersion = false;
+  else {
+    if(m_trees.count(_rmp) == 0)
+      m_trees[_rmp].first = -1;
+
+    typedef typename GraphType::RoadmapVCSType RoadmapVCSType;
+
+    const RoadmapVCSType& rvcs = map->GetRoadmapVCS();
+
+    size_t newVersion = rvcs.GetVersionNumber();
+    if(m_trees[_rmp].first == newVersion)
+      return;
+
+    typename RoadmapVCSType::const_iterator start;
+    if(m_trees[_rmp].first == static_cast<size_t>(-1))
+      start = rvcs.begin();
+    else
+      start = rvcs.IteratorAt(m_trees[_rmp].first);
+
+    typename RoadmapVCSType::const_iterator end = rvcs.end();
+    typename RoadmapVCSType::const_iterator iter;
+
+    for(iter = start; iter != end; iter++) {
+      if((*iter).second.IsTypeAddVertex()) {
+
+        VID vidToAdd = (*iter).second.GetAddVertexEvent()->GetVID();
+
+        // scale roadmap CFGs
+        CfgType cfgToAdd = map->GetVertex(vidToAdd);
+
+        if (m_useScaling) {
+          cfgToAdd[0] /= m_maxBBXRange;
+          cfgToAdd[1] /= m_maxBBXRange;
+          cfgToAdd[2] /= m_maxBBXRange;
+        }
+
+        m_trees[_rmp].second.insert(
+            PointD(vidToAdd, cfgToAdd.DOF(),
+              cfgToAdd.GetData().begin(), cfgToAdd.GetData().end())
+            );
+      }
+    }
+
+    m_trees[_rmp].first = newVersion;
+
+    //should not be included if using the roadmap version
     m_queryTree = &m_trees[_rmp].second;
   }
-
-  m_trees[_rmp].first = newVersion;
 }
 
 #endif

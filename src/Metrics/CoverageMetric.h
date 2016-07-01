@@ -118,7 +118,8 @@ operator()() {
 
       for(vector<string>::iterator sit = m_connectorLabels.begin(); sit != m_connectorLabels.end(); ++sit) {
         this->GetConnector(*sit)->Connect(rmap,
-            sampleList.begin(), sampleList.end(), cc.begin(), cc.end());
+            sampleList.begin(), sampleList.end(),
+            cc.begin(), cc.end(), false);
       }
 
       if((rgraph->get_out_degree(sampleVID)) > degreeBefore) {

@@ -526,7 +526,7 @@ ConnectCCs() {
 //#ifdef _PARALLEL
     pConnection->SetLocalGraph(m_localTree);
 //#endif
-    pConnection->Connect(rdmp, cc1.begin(), cc1.end(), cc2.begin(), cc2.end()) ;
+    pConnection->Connect(rdmp, cc1.begin(), cc1.end(), cc2.begin(), cc2.end(), false);
 
     iters++;
     colorMap.reset();
@@ -601,7 +601,7 @@ GetDistanceNodeToCentroid(vector<VID>& _sourceCC, vector<VID>& _targetCC) const 
   vector<pair<VID, double>> closestNode;
 
   nf->FindNeighbors(rdmp,
-      _sourceCC.begin(), _sourceCC.end(),
+      _sourceCC.begin(), _sourceCC.end(), false,
       targetCentroid, back_inserter(closestNode));
 
   if(closestNode.empty())
@@ -625,7 +625,7 @@ GetDistanceCentroidToNode(vector<VID>& _sourceCC, vector<VID>& _targetCC) const 
   vector<pair<VID, double>> closestNode;
 
   nf->FindNeighbors(rdmp,
-      _targetCC.begin(), _targetCC.end(),
+      _targetCC.begin(), _targetCC.end(), false,
       sourceCentroid, back_inserter(closestNode));
 
   if (closestNode.empty())

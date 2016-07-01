@@ -332,7 +332,8 @@ Query<MPTraits>::PerformQuery(const CfgType& _start, const CfgType& _goal, Roadm
         cout << "*Q* Connecting start to ccIt[" << distance(ccsBegin, ccIt)+1 << "]" << endl;
 
       for(auto& label : m_nodeConnectionLabels)
-        this->GetConnector(label)->Connect(_rdmp, sVID, cc.begin(), cc.end());
+        this->GetConnector(label)->Connect(_rdmp, sVID,
+            cc.begin(), cc.end(), false);
     }
 
     // Try to connect goal to cc
@@ -352,7 +353,8 @@ Query<MPTraits>::PerformQuery(const CfgType& _start, const CfgType& _goal, Roadm
         cout << "*Q* Connecting goal to ccIt[" << distance(ccsBegin, ccIt)+1 << "]" << endl;
 
       for(auto& label : m_nodeConnectionLabels)
-        this->GetConnector(label)->Connect(_rdmp, gVID, cc.begin(), cc.end());
+        this->GetConnector(label)->Connect(_rdmp, gVID,
+            cc.begin(), cc.end(), false);
     }
 
     // Check if start and goal are connected to the same CC

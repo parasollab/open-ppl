@@ -32,6 +32,7 @@ class RewireConnector : public ConnectorMethod<MPTraits> {
         void Connect(RoadmapType* _rm,
             InputIterator1 _itr1First, InputIterator1 _itr1Last,
             InputIterator2 _itr2First, InputIterator2 _itr2Last,
+            bool _fromFullRoadmap,
             OutputIterator _collision);
 
   private:
@@ -71,6 +72,7 @@ RewireConnector<MPTraits>::
 Connect(RoadmapType* _rm,
     InputIterator1 _itr1First, InputIterator1 _itr1Last,
     InputIterator2 _itr2First, InputIterator2 _itr2Last,
+    bool _fromFullRoadmap,
     OutputIterator _collision) {
 
 
@@ -90,7 +92,8 @@ Connect(RoadmapType* _rm,
 
     //determine nearest neighbors
     vector<pair<VID, double> > closest;
-    nfptr->FindNeighbors(_rm, _itr2First, _itr2Last, vCfg, back_inserter(closest));
+    nfptr->FindNeighbors(_rm, _itr2First, _itr2Last, _fromFullRoadmap, vCfg,
+        back_inserter(closest));
 
     if(this->m_debug){
       cout << "Neighbors | ";

@@ -44,10 +44,9 @@ class HierarchicalNF : public NeighborhoodFinderMethod<MPTraits> {
 
     template<typename InputIterator, typename OutputIterator>
       OutputIterator FindNeighbors(RoadmapType* _rmp,
-          InputIterator _first, InputIterator _last, const CfgType& _cfg, OutputIterator _out);
+          InputIterator _first, InputIterator _last, bool _fromFullRoadmap,
+          const CfgType& _cfg, OutputIterator _out);
 
-    // KClosest that operate over two ranges of VIDS.  K total pair<VID,VID> are returned that
-    // represent the _kclosest pairs of VIDs between the two ranges.
     template<typename InputIterator, typename OutputIterator>
       OutputIterator FindNeighborPairs(RoadmapType* _rmp,
           InputIterator _first1, InputIterator _last1,
@@ -57,45 +56,35 @@ class HierarchicalNF : public NeighborhoodFinderMethod<MPTraits> {
   private:
     string m_nfLabel;
     string m_nfLabel2;
-    vector<pair<VID, double> > m_closest;
-    vector<VID> ccVIDs;
 
 };
 
 template<class MPTraits>
 template<typename InputIterator, typename OutputIterator>
 OutputIterator
-HierarchicalNF<MPTraits>::FindNeighbors(RoadmapType* _rmp, InputIterator _first, InputIterator _last,
+HierarchicalNF<MPTraits>::
+FindNeighbors(RoadmapType* _rmp,
+    InputIterator _first, InputIterator _last, bool _fromFullRoadmap,
     const CfgType& _cfg, OutputIterator _out) {
 
   this->IncrementNumQueries();
   this->StartTotalTime();
   this->StartQueryTime();
 
-  GraphType* graph = _rmp->GetGraph();
-  NeighborhoodFinderPointer nf = this->GetMPProblem()->GetNeighborhoodFinder(m_nfLabel);
-  NeighborhoodFinderPointer nf2 = this->GetMPProblem()->GetNeighborhoodFinder(m_nfLabel2);
+  NeighborhoodFinderPointer nf = this->GetNeighborhoodFinder(m_nfLabel);
+  NeighborhoodFinderPointer nf2 = this->GetNeighborhoodFinder(m_nfLabel2);
 
+  vector<pair<VID, double> > closest;
+  nf->FindNeighbors(_rmp, _first, _last, _fromFullRoadmap, _cfg,
+      back_inserter(closest));
 
-  nf->FindNeighbors(_rmp, _first, _last, _cfg, back_inserter(m_closest));
+  vector<VID> closestVID;
+  closestVID.reserve(closest.size());
+  for(auto& p : closest)
+    closestVID.push_back(p.first);
 
-
-
- typename vector<pair<VID, double> >::const_iterator ccIt;
-    stapl::sequential::vector_property_map<GraphType, size_t> cmap;
-    for(ccIt = m_closest.begin(); ccIt != m_closest.end(); ccIt++) {
-      cmap.reset();
-      ccVIDs.clear();
-
-    get_cc(*graph, cmap, ccIt->first, ccVIDs);
-    }
-
-  nf2->FindNeighbors(_rmp,ccVIDs.begin(),ccVIDs.end(), _cfg, _out);
-
-  if(this->m_debug){
-    nf->Print(cout);
-    nf2->Print(cout);
-   }
+  nf2->FindNeighbors(_rmp, closestVID.begin(), closestVID.end(), false,
+      _cfg, _out);
 
   this->EndQueryTime();
   this->EndTotalTime();
@@ -110,8 +99,7 @@ HierarchicalNF<MPTraits>::FindNeighborPairs(RoadmapType* _rmp,
     InputIterator _first1, InputIterator _last1,
     InputIterator _first2, InputIterator _last2,
     OutputIterator _out) {
-  cerr << "ERROR:: HierarchicalNF::FindNeighborPairs is not yet implemented. Exiting." << endl;
-  exit(1);
+  throw RunTimeException(WHERE, "FindNeighborPairs is not yet implemented.");
 }
 
 #endif

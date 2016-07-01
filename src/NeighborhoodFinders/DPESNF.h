@@ -57,7 +57,7 @@ class DPESNF : public NeighborhoodFinderMethod<MPTraits> {
 
     template<typename InputIterator, typename OutputIterator>
       OutputIterator FindNeighbors(RoadmapType* _rmp,
-          InputIterator _first, InputIterator _last,
+          InputIterator _first, InputIterator _last, bool _fromFullRoadmap,
           const CfgType& _cfg, OutputIterator _out);
 
     template<typename InputIterator, typename OutputIterator>
@@ -154,13 +154,13 @@ template<typename InputIterator, typename OutputIterator>
 OutputIterator
 DPESNF<MPTraits>::
 FindNeighbors(RoadmapType* _rmp,
-    InputIterator _first, InputIterator _last,
+    InputIterator _first, InputIterator _last, bool _fromFullRoadmap,
     const CfgType& _cfg, OutputIterator _out) {
   this->StartTotalTime();
 
   this->StartConstructionTime();
   size_t& currRdmp = m_dpesInfo[_rmp].m_currentRoadmapVersion;
-  if(this->m_fromRDMPVersion) {
+  if(_fromFullRoadmap) {
     m_queryInfo = &m_dpesInfo[_rmp];
     size_t rdmp = _rmp->GetGraph()->GetRoadmapVCS().GetVersionNumber();
     if(currRdmp == size_t(-1) ||
@@ -195,8 +195,7 @@ FindNeighborPairs(RoadmapType* _rmp,
     InputIterator _first1, InputIterator _last1,
     InputIterator _first2, InputIterator _last2,
     OutputIterator _out) {
-  throw RunTimeException(WHERE,
-      "DPESNF::FindNeighborPairs is not yet implemented.");
+  throw RunTimeException(WHERE, "FindNeighborPairs is not yet implemented.");
 }
 
 template<class MPTraits>

@@ -139,6 +139,7 @@ class ClosestVE: public ConnectorMethod<MPTraits> {
         void Connect(RoadmapType* rm,
             InputIterator1 _itr1First, InputIterator1 _itr1Last,
             InputIterator2 _itr2First, InputIterator2 _itr2Last,
+            bool _fromFullRoadmap,
             OutputIterator _collision);
 
     int m_kClosest;
@@ -280,6 +281,7 @@ ClosestVE<MPTraits>::
 Connect(RoadmapType* _rm,
     InputIterator _itr1First, InputIterator _itr1Last,
     InputIterator2 _itr2First, InputIterator2 _itr2Last,
+    bool _fromFullRoadmap,
     OutputIterator _collision){
 
   typedef typename MPProblemType::RoadmapType RoadmapType;

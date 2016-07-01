@@ -5,7 +5,7 @@
 #include "Utilities/MPUtils.h"
 #include "Utilities/MetricUtils.h"
 
-namespace pmpl_detail{
+namespace pmpl_detail {
 
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup Connectors
@@ -25,9 +25,9 @@ template<typename CM, typename RDMP, typename I1, typename I2, typename O>
   struct VirtualConnect{
     public:
       VirtualConnect(CM* _v, RDMP* _r, I1 _i1f, I1 _i1l,
-          I2 _i2f, I2 _i2l, O _o) :
+          I2 _i2f, I2 _i2l, bool _b, O _o) :
         m_memory(_v), m_rdmp(_r), m_i1first(_i1f), m_i1last(_i1l),
-        m_i2first(_i2f), m_i2last(_i2l), m_output(_o){
+        m_i2first(_i2f), m_i2last(_i2l), m_fromFullRoadmap(_b), m_output(_o) {
         }
 
       template<typename T>
@@ -35,7 +35,7 @@ template<typename CM, typename RDMP, typename I1, typename I2, typename O>
           T* tptr = dynamic_cast<T*>(m_memory);
           if(tptr != NULL){
             tptr->Connect(m_rdmp, m_i1first, m_i1last,
-                m_i2first, m_i2last, m_output);
+                m_i2first, m_i2last, m_fromFullRoadmap, m_output);
           }
         }
 
@@ -44,6 +44,7 @@ template<typename CM, typename RDMP, typename I1, typename I2, typename O>
       RDMP* m_rdmp;
       I1 m_i1first, m_i1last;
       I2 m_i2first, m_i2last;
+      bool m_fromFullRoadmap;
       O m_output;
   };
 
@@ -93,7 +94,8 @@ class ConnectorMethod : public MPBaseObject<MPTraits>
       void Connect(RoadmapType* _rm,
           OutputIterator _collision = OutputIterator()) {
         GraphType* g = _rm->GetGraph();
-        Connect(_rm, g->begin(), g->end(), g->begin(), g->end(), _collision);
+        Connect(_rm, g->begin(), g->end(),
+            g->begin(), g->end(), true, _collision);
       }
 
 
@@ -107,7 +109,7 @@ class ConnectorMethod : public MPBaseObject<MPTraits>
       void Connect(RoadmapType* _rm, VID _vid,
           OutputIterator _collision = OutputIterator()) {
         GraphType* g = _rm->GetGraph();
-        Connect(_rm, _vid, g->begin(), g->end(), _collision);
+        Connect(_rm, _vid, g->begin(), g->end(), true, _collision);
       }
 
     ////////////////////////////////////////////////////////////////////////////
@@ -121,7 +123,8 @@ class ConnectorMethod : public MPBaseObject<MPTraits>
             InputIterator _itrFirst, InputIterator _itrLast,
             OutputIterator _collision = OutputIterator()) {
           GraphType* g = _rm->GetGraph();
-          Connect(_rm, _itrFirst, _itrLast, g->begin(), g->end(), _collision);
+          Connect(_rm, _itrFirst, _itrLast,
+              g->begin(), g->end(), true, _collision);
         }
 
     ////////////////////////////////////////////////////////////////////////////
@@ -133,9 +136,11 @@ class ConnectorMethod : public MPBaseObject<MPTraits>
       typename OutputIterator = NullOutputIterator>
       void Connect(RoadmapType* _rm, VID _vid,
           InputIterator _itrFirst, InputIterator _itrLast,
+          bool _fromFullRoadmap,
           OutputIterator _collision = OutputIterator()) {
         vector<VID> vids(1, _vid);
-        Connect(_rm, vids.begin(), vids.end(), _itrFirst, _itrLast, _collision);
+        Connect(_rm, vids.begin(), vids.end(),
+            _itrFirst, _itrLast, _fromFullRoadmap, _collision);
       }
 
     ////////////////////////////////////////////////////////////////////////////
@@ -149,6 +154,10 @@ class ConnectorMethod : public MPBaseObject<MPTraits>
     /// @param _itr1Last End iterator of first set of VIDs
     /// @param _itr2First Begin iterator of second set of VIDs
     /// @param _itr2Last End iterator of second set of VIDs
+    /// @param _fromFullRoadmap True if [_itr2First, _itr2Last) is the full
+    ///                         roadmap. This implies using the saved internal
+    ///                         NF model for finding neighbors with advanced
+    ///                         NFMethods.
     /// @param _collision Output iterator to store collision witnesses
     ///
     /// @usage
@@ -156,17 +165,19 @@ class ConnectorMethod : public MPBaseObject<MPTraits>
     /// ConnectorPointer c = this->GetMPProblem()->GetConnector(m_cLabel);
     /// ColorMapType cm;
     /// vector<VID> c1, c2;
+    /// bool b;
     /// vector<CfgType> col;
     /// c->Connect(this->GetMPProblem()->GetRoadmap(),
     ///            this->GetMPProblem()->GetStatClass(),
     ///            cmap, c1.begin(), c1.end(), c2.begin(), c2.end(),
-    ///            back_inserter(col));
+    ///            b, back_inserter(col));
     /// @endcode
     template<typename InputIterator1, typename InputIterator2,
       typename OutputIterator = NullOutputIterator>
       void Connect(RoadmapType* _rm,
           InputIterator1 _itr1First, InputIterator1 _itr1Last,
           InputIterator2 _itr2First, InputIterator2 _itr2Last,
+          bool _fromFullRoadmap,
           OutputIterator _collision = OutputIterator()) {
         typedef typename MPTraits::ConnectorMethodList MethodList;
         boost::mpl::for_each<MethodList>(
@@ -174,7 +185,7 @@ class ConnectorMethod : public MPBaseObject<MPTraits>
             ConnectorMethod<MPTraits>, RoadmapType,
             InputIterator1, InputIterator2, OutputIterator>(
               this, _rm, _itr1First, _itr1Last,
-              _itr2First, _itr2Last, _collision)
+              _itr2First, _itr2Last, _fromFullRoadmap, _collision)
             );
       }
 

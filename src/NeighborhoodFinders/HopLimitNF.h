@@ -44,10 +44,9 @@ class HopLimitNF : public NeighborhoodFinderMethod<MPTraits> {
 
     template<typename InputIterator, typename OutputIterator>
       OutputIterator FindNeighbors(RoadmapType* _rmp,
-          InputIterator _first, InputIterator _last, const CfgType& _cfg, OutputIterator _out);
+          InputIterator _first, InputIterator _last, bool _fromFullRoadmap,
+          const CfgType& _cfg, OutputIterator _out);
 
-    // KClosest that operate over two ranges of VIDS.  K total pair<VID,VID> are returned that
-    // represent the _kclosest pairs of VIDs between the two ranges.
     template<typename InputIterator, typename OutputIterator>
       OutputIterator FindNeighborPairs(RoadmapType* _rmp,
           InputIterator _first1, InputIterator _last1,
@@ -62,7 +61,9 @@ class HopLimitNF : public NeighborhoodFinderMethod<MPTraits> {
 template<class MPTraits>
 template<typename InputIterator, typename OutputIterator>
 OutputIterator
-HopLimitNF<MPTraits>::FindNeighbors(RoadmapType* _rmp, InputIterator _first, InputIterator _last,
+HopLimitNF<MPTraits>::
+FindNeighbors(RoadmapType* _rmp,
+    InputIterator _first, InputIterator _last, bool _fromFullRoadmap,
     const CfgType& _cfg, OutputIterator _out) {
   #ifndef _PARALLEL // proper fix will be to call parallel versions of graph algorithms called here
   this->IncrementNumQueries();
@@ -83,7 +84,8 @@ HopLimitNF<MPTraits>::FindNeighbors(RoadmapType* _rmp, InputIterator _first, Inp
   hopMap.put(parent, 0);
   stapl::sequential::hops_detail::hops_visitor<typename GraphType::GRAPH> vis(*graph, hopMap, m_h, vRes);
   breadth_first_search_early_quit(*graph, parent, vis, colorMap);
-  nf->FindNeighbors(_rmp, vRes.begin(), vRes.end(), _cfg, _out);
+  nf->FindNeighbors(_rmp, vRes.begin(), vRes.end(),
+      vRes.size() == graph->get_num_vertices(), _cfg, _out);
 
   this->EndQueryTime();
   this->EndTotalTime();
@@ -98,8 +100,7 @@ HopLimitNF<MPTraits>::FindNeighborPairs(RoadmapType* _rmp,
     InputIterator _first1, InputIterator _last1,
     InputIterator _first2, InputIterator _last2,
     OutputIterator _out) {
-  cerr << "ERROR:: HopLimitNF::FindNeighborPairs is not yet implemented. Exiting." << endl;
-  exit(1);
+  throw RunTimeException(WHERE, "FindNeighborPairs is not yet implemented.");
 }
 
 #endif

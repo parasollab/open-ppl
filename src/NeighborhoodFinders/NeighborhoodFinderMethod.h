@@ -21,21 +21,25 @@ namespace pmpl_detail {
 template<typename NF, typename RDMP, typename I, typename CFG, typename O>
   struct VirtualFindNeighbors{
     public:
-      VirtualFindNeighbors(NF* _v, RDMP* _r, I _f, I _l, const CFG& _c, O _o) :
-        m_memory(_v), m_rdmp(_r), m_first(_f), m_last(_l), m_cfg(_c), m_output(_o){
+      VirtualFindNeighbors(NF* _v, RDMP* _r, I _f, I _l, bool _b,
+          const CFG& _c, O _o) :
+        m_memory(_v), m_rdmp(_r), m_first(_f), m_last(_l),
+        m_fromFullRoadmap(_b), m_cfg(_c), m_output(_o){
         }
 
       template<typename T>
         void operator()(T& _t) {
           T* tptr = dynamic_cast<T*>(m_memory);
           if(tptr != NULL){
-            tptr->FindNeighbors(m_rdmp, m_first, m_last, m_cfg, m_output);
+            tptr->FindNeighbors(m_rdmp, m_first, m_last, m_fromFullRoadmap,
+                m_cfg, m_output);
           }
         }
     private:
       NF* m_memory;
       RDMP* m_rdmp;
       I m_first, m_last;
+      bool m_fromFullRoadmap;
       const CFG& m_cfg;
       O m_output;
   };
@@ -143,30 +147,37 @@ class NeighborhoodFinderMethod : public MPBaseObject<MPTraits> {
     ////////////////////////////////////////////////////////////////////////////
     size_t GetNumQueries() const;
 
-    ////////////////////////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////
     //   Neighborhood Finder Methods.
     //
     //   FindNeighbors and FindNeighborPairs need to be
     //   implemented in base classes
-    ////////////////////////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////
 
     ////////////////////////////////////////////////////////////////////////////
-    /// @brief Finds "closest" neighbors in a set of nodes to an input configuration
+    /// @brief Finds "closest" neighbors in a set of nodes to an input
+    ///        configuration
     ///
     /// @overload
     /// Uses the entire roadmap as set of nodes.
     ////////////////////////////////////////////////////////////////////////////
     template<typename OutputIterator>
-      OutputIterator FindNeighbors(RoadmapType* _rmp, const CfgType& _cfg, OutputIterator _out){
-        m_fromRDMPVersion = true;
-        return FindNeighbors(_rmp, _rmp->GetGraph()->begin(), _rmp->GetGraph()->end(), _cfg, _out);
+      OutputIterator FindNeighbors(RoadmapType* _rmp, const CfgType& _cfg,
+          OutputIterator _out){
+        return FindNeighbors(_rmp,
+            _rmp->GetGraph()->begin(), _rmp->GetGraph()->end(), true,
+            _cfg, _out);
       }
 
     ////////////////////////////////////////////////////////////////////////////
-    /// @brief Finds "closest" neighbors in a set of nodes to an input configuration
+    /// @brief Finds "closest" neighbors in a set of nodes to an input
+    ///        configuration
     /// @param _rmp The roadmap when input nodes are found
     /// @param _first Begin iterator of the set of VIDs
     /// @param _last End iterator of the set of VIDs
+    /// @param _fromFullRoadmap If true, saved internal NF model will be used
+    ///                         instead of computing a temporary one. Only
+    ///                         applies to advanced NFMethods.
     /// @param _cfg The query configuration to find neighbors of
     /// @param _out Output iterator for neighbor set. Underlying data structure
     ///        is of pair<VID, double> representing the neighbor and distance to
@@ -178,19 +189,22 @@ class NeighborhoodFinderMethod : public MPBaseObject<MPTraits> {
     /// NeighborhoodFinderPointer nf = this->GetMPProblem()->GetNeighborhoodFinder(m_nfLabel);
     /// CfgType c;
     /// vector<VID> nodes;
+    /// bool b;
     /// vector<pair<VID, double> > neighbors;
     /// nf->FindNeighbors(this->GetMPProblem()->GetRoadmap(),
-    ///                   nodes.begin(), nodes.end(), c,
+    ///                   nodes.begin(), nodes.end(), b, c,
     ///                   back_inserter(neighbors));
     /// @endcode
     ////////////////////////////////////////////////////////////////////////////
     template<typename InputIterator, typename OutputIterator>
       OutputIterator FindNeighbors(RoadmapType* _rmp,
-          InputIterator _first, InputIterator _last, const CfgType& _cfg, OutputIterator _out){
+          InputIterator _first, InputIterator _last, bool _fromFullRoadmap,
+          const CfgType& _cfg, OutputIterator _out) {
         typedef typename MPTraits::NeighborhoodFinderMethodList MethodList;
         boost::mpl::for_each<MethodList>(pmpl_detail::VirtualFindNeighbors<
             NeighborhoodFinderMethod, RoadmapType,
-            InputIterator, CfgType, OutputIterator>(this, _rmp, _first, _last, _cfg, _out));
+            InputIterator, CfgType, OutputIterator>(
+              this, _rmp, _first, _last, _fromFullRoadmap, _cfg, _out));
         return _out;
       }
 
@@ -273,20 +287,18 @@ class NeighborhoodFinderMethod : public MPBaseObject<MPTraits> {
 
     string m_dmLabel; ///< Distance Metric
     bool m_unconnected; ///< Require neighbor to not have direct edge
-    bool m_fromRDMPVersion; ///< Finding neighbors from entire roadmap
 };
 
 template<class MPTraits>
 NeighborhoodFinderMethod<MPTraits>::NeighborhoodFinderMethod(string _dmLabel, bool _unconnected)
   : MPBaseObject<MPTraits>(),
   m_nfType(OTHER), m_k(0), m_radius(0),
-  m_dmLabel(_dmLabel), m_unconnected(_unconnected), m_fromRDMPVersion(false) {}
+  m_dmLabel(_dmLabel), m_unconnected(_unconnected) {}
 
 template<class MPTraits>
 NeighborhoodFinderMethod<MPTraits>::NeighborhoodFinderMethod(MPProblemType* _problem, XMLNode& _node, bool _requireDM)
   : MPBaseObject<MPTraits>(_problem, _node),
-  m_nfType(OTHER), m_k(0), m_radius(0),
-  m_fromRDMPVersion(false){
+  m_nfType(OTHER), m_k(0), m_radius(0) {
     m_dmLabel = _node.Read("dmLabel", _requireDM, "", "Distance Metric Method");
     m_unconnected = _node.Read("unconnected", false, false, "Require neighbors to be non adjacent to the query configuration");
   }

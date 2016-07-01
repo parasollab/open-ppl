@@ -612,8 +612,10 @@ FindNearestNeighbor(const CfgType& _cfg, const TreeIter& _tree) {
 
   vector<pair<VID, double> > neighbors;
   auto nf = this->GetNeighborhoodFinder(m_nf);
-  nf->FindNeighbors(this->GetRoadmap(), _tree->begin(), _tree->end(), _cfg,
-      back_inserter(neighbors));
+  nf->FindNeighbors(this->GetRoadmap(),
+      _tree->begin(), _tree->end(),
+      _tree->size() == this->GetRoadmap()->GetGraph()->get_num_vertices(),
+      _cfg, back_inserter(neighbors));
   VID nearestVID = neighbors[0].first;
 
   this->GetStatClass()->StopClock("NeighborhoodFinding");
@@ -634,7 +636,9 @@ ConnectNeighbors(VID _newVID) {
   vector<VID> currentVID(1, _newVID);
   this->GetConnector(m_nc)->Connect(this->GetRoadmap(),
       currentVID.begin(), currentVID.end(),
-      m_currentTree->begin(), m_currentTree->end());
+      m_currentTree->begin(), m_currentTree->end(),
+      m_currentTree->size() ==
+      this->GetRoadmap()->GetGraph()->get_num_vertices());
 
   this->GetStatClass()->StopClock("Total Connection time");
 }

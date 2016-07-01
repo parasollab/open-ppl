@@ -189,6 +189,8 @@ AdaptiveRRT<MPTraits>::ExpandTree(CfgType& _dir){
   vector<pair<VID, double> > kClosest;
   nf->FindNeighbors(this->GetRoadmap(),
       this->m_currentTree->begin(), this->m_currentTree->end(),
+      this->m_currentTree->size() ==
+      this->GetRoadmap()->GetGraph()->get_num_vertices(),
       _dir, back_inserter(kClosest));
   CfgType& nearest =
       this->GetRoadmap()->GetGraph()->GetVertex(kClosest[0].first);

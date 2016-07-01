@@ -679,10 +679,9 @@ class BandsNF: public NeighborhoodFinderMethod<MPTraits> {
 
     template<typename InputIterator, typename OutputIterator>
       OutputIterator FindNeighbors(RoadmapType* _rmp,
-          InputIterator _first, InputIterator _last, const CfgType& _cfg, OutputIterator _out);
+          InputIterator _first, InputIterator _last, bool _fromFullRoadmap,
+          const CfgType& _cfg, OutputIterator _out);
 
-    // KClosest that operate over two ranges of VIDS.  K total pair<VID,VID> are returned that
-    // represent the _kclosest pairs of VIDs between the two ranges.
     template<typename InputIterator, typename OutputIterator>
       OutputIterator FindNeighborPairs(RoadmapType* _rmp,
           InputIterator _first1, InputIterator _last1,
@@ -697,8 +696,9 @@ class BandsNF: public NeighborhoodFinderMethod<MPTraits> {
 template<class MPTraits>
 template<typename InputIterator, typename OutputIterator>
 OutputIterator
-BandsNF<MPTraits>::FindNeighbors(RoadmapType* _roadmap,
-    InputIterator _first, InputIterator _last,
+BandsNF<MPTraits>::
+FindNeighbors(RoadmapType* _roadmap,
+    InputIterator _first, InputIterator _last, bool _fromFullRoadmap,
     const CfgType& _cfg, OutputIterator _out) {
 
   this->IncrementNumQueries();
@@ -758,8 +758,7 @@ BandsNF<MPTraits>::FindNeighborPairs(RoadmapType* _roadmap,
     InputIterator _first1, InputIterator _last1,
     InputIterator _first2, InputIterator _last2,
     OutputIterator _out) {
-  cerr << "ERROR:: BandsNF<MPTraits>::FindNeighborPairs is not yet implemented. Exiting" << endl;
-  exit(1);
+  throw RunTimeException(WHERE, "FindNeighborPairs is not yet implemented.");
 }
 
 #endif //end #ifndef

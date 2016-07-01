@@ -34,6 +34,7 @@ class AdaptiveConnector: public ConnectorMethod<MPTraits> {
       void Connect(RoadmapType* _rm,
           InputIterator1 _itr1First, InputIterator1 _itr1Last,
           InputIterator2 _itr2First, InputIterator2 _itr2Last,
+          bool _fromFullRoadmap,
           OutputIterator _collision);
 
   protected:
@@ -167,6 +168,7 @@ AdaptiveConnector<MPTraits>::
 Connect(RoadmapType* _rm,
     InputIterator1 _itr1First, InputIterator1 _itr1Last,
     InputIterator2 _itr2First, InputIterator2 _itr2Last,
+    bool _fromFullRoadmap,
     OutputIterator _collision) {
 
   if(m_nfProbabilities.empty() || m_neigborGenLabels.size() != m_nfProbabilities.size())
@@ -219,7 +221,8 @@ Connect(RoadmapType* _rm,
     //determine nearest neighbors
     vector<pair<VID, double> > closest;
     NeighborhoodFinderPointer nfptr = this->GetMPProblem()->GetNeighborhoodFinder(this->m_lastUse);
-    nfptr->FindNeighbors(_rm, _itr2First, _itr2Last, vCfg, back_inserter(closest));
+    nfptr->FindNeighbors(_rm, _itr2First, _itr2Last, _fromFullRoadmap, vCfg,
+        back_inserter(closest));
     if(this->m_debug){
       cout << "Neighbors | ";
       for(typename vector<pair<VID, double> >::iterator nit = closest.begin(); nit!=closest.end(); ++nit)
