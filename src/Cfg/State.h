@@ -12,7 +12,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 class State : public Cfg {
   public:
-    State(size_t _index = 0);
+    explicit State(size_t _index = 0);
     State(const Cfg& _other);
     State(const State& _other);
     virtual ~State() = default;

@@ -22,6 +22,8 @@
 
 //map evaluator includes
 #include "MapEvaluators/ConditionalEvaluator.h"
+#include "MapEvaluators/Query.h"
+#include "MapEvaluators/RRTQuery.h"
 
 //mp strategies includes
 #include "MPStrategies/KinodynamicRRTStrategy.h"
@@ -92,7 +94,9 @@ struct StateTraits {
 
   //types of map evaluators available in our world
   typedef boost::mpl::list<
-    ConditionalEvaluator<StateTraits>
+    ConditionalEvaluator<StateTraits>,
+    Query<StateTraits>, 
+    RRTQuery<StateTraits>
       > MapEvaluatorMethodList;
 
   //types of motion planning strategies available in our world

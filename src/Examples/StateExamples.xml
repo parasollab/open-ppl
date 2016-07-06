@@ -33,20 +33,21 @@
 
     <MapEvaluators>
       <ConditionalEvaluator label="NodesEval" metric_method="NumNodes" value="30" operator=">="/>
+      <RRTQuery label="RRTQuery" queryFile="2DState/2d.query" goalDist="5" dmLabel="weuclidean"
+            debug="false" /> 
     </MapEvaluators>
 
     <MPStrategies>
 
       <!-- KinodynamicRRT -->
-      <KinodynamicRRTStrategy label="KRRTQuery" growthFocus="0.05" minDist="20"
-        evaluateGoal="true" goalDist="5" query="2DState/2d.query"
+      <KinodynamicRRTStrategy label="KRRTQuery" growthFocus="0.05" minDist="0.01" 
         dmLabel="weuclidean" nfLabel="Nearest" vcLabel="cd1"
         extenderLabel="FixedRandom" debug="false">
+        <Evaluator label="RRTQuery"/>
       </KinodynamicRRTStrategy>
 
       <!-- KinodynamicRRT -->
-      <KinodynamicRRTStrategy label="KRRTNodes" growthFocus="0.05" minDist="0.01"
-        evaluateGoal="false" query="2DState/2d.query"
+      <KinodynamicRRTStrategy label="KRRTNodes" growthFocus="0.05" minDist="0.01" 
         dmLabel="weuclidean" nfLabel="Nearest" vcLabel="cd1"
         extenderLabel="FixedRandom" debug="false">
         <Evaluator label="NodesEval"/>
@@ -54,7 +55,7 @@
 
     </MPStrategies>
 
-    <Solver mpStrategyLabel="KRRTNodes" seed="12345678"  baseFilename="KRRT" vizmoDebug="true"/>
+    <Solver mpStrategyLabel="KRRTQuery" seed="12345678"  baseFilename="KRRT" vizmoDebug="true"/>
 
   </MPProblem>
 </MotionPlanning>
