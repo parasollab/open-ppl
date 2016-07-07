@@ -13,17 +13,15 @@
 ////////////////////////////////////////////////////////////////////////////////
 template<class MPTraits>
 class KinodynamicRRTStrategy : public MPStrategyMethod<MPTraits> {
+
   public:
+
     typedef typename MPTraits::CfgType StateType;
     typedef typename MPTraits::CfgRef StateRef;
     typedef typename MPTraits::MPProblemType MPProblemType;
     typedef typename MPProblemType::RoadmapType RoadmapType;
     typedef typename MPProblemType::GraphType GraphType;
     typedef typename MPProblemType::VID VID;
-    typedef typename MPProblemType::DistanceMetricPointer DistanceMetricPointer;
-    typedef typename MPProblemType::ValidityCheckerPointer ValidityCheckerPointer;
-    typedef typename MPProblemType::NeighborhoodFinderPointer NeighborhoodFinderPointer;
-    typedef typename MPProblemType::ExtenderPointer ExtenderPointer;
 
     //Non-XML constructor sets all private variables
     KinodynamicRRTStrategy(string _dm = "", string _nf = "", string _vc= "",
@@ -31,23 +29,22 @@ class KinodynamicRRTStrategy : public MPStrategyMethod<MPTraits> {
         vector<string> _evaluators = vector<string>(),
         double _goalDist = 10.0, double _minDist = 0.01,
         double _growthFocus = 0.05, bool _evaluateGoal = true,
-        const StateType& _start=StateType(), const StateType& _goal=StateType());
+        const StateType& _start = StateType(),
+        const StateType& _goal = StateType());
 
     KinodynamicRRTStrategy(MPProblemType* _problem, XMLNode& _node);
 
-    virtual ~KinodynamicRRTStrategy();
+    virtual ~KinodynamicRRTStrategy() = default;
 
     virtual void ParseXML(XMLNode& _node);
 
-    virtual void Initialize();
-    virtual void Run();
-    virtual void Finalize();
-    virtual void Print(ostream& _os) const;
-
-    void SetMPProblem(MPProblemType* _problem);
+    virtual void Initialize() override;
+    virtual void Run() override;
+    virtual void Finalize() override;
+    virtual void Print(ostream& _os) const override;
 
     //return path computed if RRT is successfully run with a query
-    vector<StateType> GetPath() {return m_query->GetPath();}
+    vector<StateType> GetPath() {return m_query->GetPath()->Cfgs();}
 
   protected:
     // Helper functions
@@ -55,11 +52,11 @@ class KinodynamicRRTStrategy : public MPStrategyMethod<MPTraits> {
     StateType SelectDirection();
     virtual VID ExpandTree(StateType& _dir);
 
-    string m_dm;
-    string m_nf;
-    string m_vc;
-    RRTQuery<MPTraits>* m_query;
+    string m_dmLabel;
+    string m_nfLabel;
+    string m_vcLabel;
     string m_extenderLabel;
+    RRTQuery<MPTraits>* m_query{nullptr};
     double m_goalDist, m_minDist, m_growthFocus;
     bool m_evaluateGoal;
 
@@ -67,33 +64,29 @@ class KinodynamicRRTStrategy : public MPStrategyMethod<MPTraits> {
     vector<size_t> m_goalsNotFound;
 };
 
+
 template<class MPTraits>
 KinodynamicRRTStrategy<MPTraits>::
 KinodynamicRRTStrategy(string _dm, string _nf, string _vc,
     string _extenderLabel, vector<string> _evaluators,
     double _goalDist, double _minDist, double _growthFocus, bool _evaluateGoal,
     const StateType& _start, const StateType& _goal) :
-  m_dm(_dm), m_nf(_nf), m_vc(_vc),
-  m_query(new RRTQuery<MPTraits>(_start, _goal)),
-  m_extenderLabel(_extenderLabel), m_goalDist(_goalDist), m_minDist(_minDist),
-  m_growthFocus(_growthFocus), m_evaluateGoal(_evaluateGoal) {
-    this->SetName("KinodynamicRRTStrategy");
-    this->m_meLabels = _evaluators;
-  }
+    m_dmLabel(_dm), m_nfLabel(_nf), m_vcLabel(_vc),
+    m_extenderLabel(_extenderLabel), m_goalDist(_goalDist), m_minDist(_minDist),
+    m_growthFocus(_growthFocus), m_evaluateGoal(_evaluateGoal) {
+  this->SetName("KinodynamicRRTStrategy");
+  this->m_meLabels = _evaluators;
+}
+
 
 template<class MPTraits>
 KinodynamicRRTStrategy<MPTraits>::
 KinodynamicRRTStrategy(MPProblemType* _problem, XMLNode& _node) :
-  MPStrategyMethod<MPTraits>(_problem, _node),
-  m_query( (RRTQuery<MPTraits>*)NULL ) {
-    this->SetName("KinodynamicRRTStrategy");
-    ParseXML(_node);
-  }
-
-template<class MPTraits>
-KinodynamicRRTStrategy<MPTraits>::
-~KinodynamicRRTStrategy() {
+    MPStrategyMethod<MPTraits>(_problem, _node) {
+  this->SetName("KinodynamicRRTStrategy");
+  ParseXML(_node);
 }
+
 
 template<class MPTraits>
 void
@@ -101,32 +94,20 @@ KinodynamicRRTStrategy<MPTraits>::
 ParseXML(XMLNode& _node) {
   for(auto& child : _node)
     if(child.Name() == "Evaluator")
-      this->m_meLabels.push_back(
-          child.Read("label", true, "", "Evaluation Method"));
+      this->m_meLabels.push_back(child.Read("label", true, "",
+          "Evaluation Method"));
 
   m_minDist = _node.Read("minDist", false, 0.0, 0.0, MAX_DBL,
       "Minimum Distance");
   m_growthFocus = _node.Read("growthFocus", false, 0.0, 0.0, 1.0,
       "#GeneratedTowardsGoal/#Generated");
-  m_vc = _node.Read("vcLabel", true, "", "Validity Test Method");
-  m_nf = _node.Read("nfLabel", true, "", "Neighborhood Finder");
-  m_dm = _node.Read("dmLabel",true,"","Distance Metric");
-  m_extenderLabel = _node.Read("extenderLabel", true, "",
-      "Extender label");
-  //optionally read in a query and create a Query object.
-  //string query = _node.Read("query", false, "", "Query Filename");
+  m_vcLabel = _node.Read("vcLabel", true, "", "Validity Test Method");
+  m_nfLabel = _node.Read("nfLabel", true, "", "Neighborhood Finder");
+  m_dmLabel = _node.Read("dmLabel", true, "", "Distance Metric");
+  m_extenderLabel = _node.Read("extenderLabel", true, "", "Extender label");
   // m_evaluateGoal = _node.Read("evaluateGoal", !query.empty(), false, "");
   // m_goalDist = _node.Read("goalDist", m_evaluateGoal, 1.0, 0.0, MAX_DBL,
   //   "Delta Distance");
-  for(auto& child : _node) {
-    if(child.Name() == "Evalutator")
-      this->m_meLabels.push_back(_node.Read("label", true, "", "Map Evaluator"));
-  }
-  //if(query != "") {
-  //  m_query = shared_ptr<RRTQuery<MPTraits>>(new RRTQuery<MPTraits>(query));
-  //  m_query->SetMPProblem(this->GetMPProblem());
-  //  m_query->SetDebug(this->m_debug);
-  // }
 }
 
 template<class MPTraits>
@@ -134,9 +115,9 @@ void
 KinodynamicRRTStrategy<MPTraits>::
 Print(ostream& _os) const {
   _os << "KinodynamicRRTStrategy::Print" << endl;
-  _os << "\tNeighborhood Finder:: " << m_nf << endl;
-  _os << "\tDistance Metric:: " << m_dm << endl;
-  _os << "\tValidity Checker:: " << m_vc << endl;
+  _os << "\tNeighborhood Finder:: " << m_nfLabel << endl;
+  _os << "\tDistance Metric:: " << m_dmLabel << endl;
+  _os << "\tValidity Checker:: " << m_vcLabel << endl;
   _os << "\tExtender:: " << m_extenderLabel << endl;
   _os << "\tEvaluate Goal:: " << m_evaluateGoal << endl;
   _os << "\tEvaluators:: " << endl;
@@ -151,24 +132,29 @@ template<class MPTraits>
 void
 KinodynamicRRTStrategy<MPTraits>::
 Initialize() {
-  // Add root vertex/vertices
-  
-  m_query = static_cast<RRTQuery<MPTraits>*>(this->GetMapEvaluator("RRTQuery").get());
+  // Check for query information.
+  m_query = static_cast<RRTQuery<MPTraits>*>(this->GetMapEvaluator("RRTQuery").
+      get());
+  GraphType* g = this->GetRoadmap()->GetGraph();
 
-  if(m_query->GetQuery().empty()) {
-    StateType tmp;
+  if(!m_query->GetQuery().empty())
+    // A query was given: add the root vertex to the roadmap.
+    g->AddVertex(m_query->GetQuery().front());
+  else {
+    // No query was given, so make a start goal and grow.
     Environment* env = this->GetEnvironment();
-    string callee = "KinodynamicRRTStrategy::RRT";
-    while(true){
+    auto vc = this->GetValidityChecker(m_vcLabel);
+    const string callee = "KinodynamicRRTStrategy::RRT";
+
+    StateType tmp;
+    do {
       tmp.GetRandomCfg(env);
-      if(env->InBounds(tmp)
-          && this->GetValidityChecker(m_vc)->IsValid(tmp, callee)){
-        VID add = this->GetRoadmap()->GetGraph()->AddVertex(tmp);
-        break;
-      }
-    }
+    } while(!env->InBounds(tmp) || !vc->IsValid(tmp, callee));
+    g->AddVertex(tmp);
   }
 }
+
+
 template<class MPTraits>
 void
 KinodynamicRRTStrategy<MPTraits>::
@@ -186,7 +172,7 @@ Run() {
     //towards a goal
     StateType dir;
     double randomRatio = DRand();
-    if(randomRatio < m_growthFocus) {
+    if(randomRatio < m_growthFocus && !m_query->GetGoals().empty()) {
       dir = GoalBiasedDirection();
       if(this->m_debug)
         cout << "goal biased direction selected: " << dir << endl;
@@ -197,17 +183,10 @@ Run() {
         cout << "random direction selected: " << dir << endl;
     }
 
-    VID recent = ExpandTree(dir);
-    if(recent != INVALID_VID) {
-      
-      //evaluate the roadmap
-      bool evalMap = this->EvaluateMap();
-      mapPassedEvaluation = evalMap &&
-        ((m_evaluateGoal && m_goalsNotFound.empty()) || !m_evaluateGoal);
-      if(this->GetRoadmap()->GetGraph()->get_num_vertices() >=15000)
-        mapPassedEvaluation = true;
-      if(this->m_debug && m_goalsNotFound.empty())
-        cout << "RRT FOUND ALL GOALS" << endl;
+    if(ExpandTree(dir) != INVALID_VID) {
+      // A new node was made. Re-evaluate the roadmap.
+      mapPassedEvaluation = this->EvaluateMap() ||
+          this->GetRoadmap()->GetGraph()->get_num_vertices() >= 15000;
     }
   }
 
@@ -218,6 +197,7 @@ Run() {
   }
 }
 
+
 template<class MPTraits>
 void
 KinodynamicRRTStrategy<MPTraits>::
@@ -226,40 +206,27 @@ Finalize() {
   string base = this->GetBaseFilename();
 
   //perform query if query was given as input
-  vector<VID> path;
-  if(m_query) {
-    if(m_evaluateGoal) {
-      m_query->SetWritePath(true);
-      if(m_query->PerformQuery(rdmp) && this->m_debug)
-        cout << "Query successful!" << endl;
-      else if(this->m_debug)
-        cout << "Query unsuccessful." << endl;
-    }
-    path = m_query->GetPathVIDs();
-  }
+  if(!m_query->GetQuery().empty() && m_query->GetGoals().empty())
+    m_query->WritePath();
 
   //output final map
   rdmp->Write(base + ".map", this->GetEnvironment());
 
   //output stats
   string str = base + ".stat";
-  ofstream  osStat(str.c_str());
+  ofstream osStat(str.c_str());
   StatClass* stats = this->GetStatClass();
   stats->PrintAllStats(osStat, rdmp);
 }
+
 
 template<class MPTraits>
 typename KinodynamicRRTStrategy<MPTraits>::StateType
 KinodynamicRRTStrategy<MPTraits>::
 GoalBiasedDirection() {
-  // Determine direction, make sure goal not found
-  if(m_goalsNotFound.empty())
-    return StateType();
-  else {
-    size_t goalNum = LRand()%m_goalsNotFound.size();
-    return m_goals[m_goalsNotFound[goalNum]];
-  }
+  return m_query->GetGoals()[LRand() % m_query->GetGoals().size()];
 }
+
 
 template<class MPTraits>
 typename KinodynamicRRTStrategy<MPTraits>::StateType
@@ -270,28 +237,25 @@ SelectDirection(){
   return dir;
 }
 
+
 template<class MPTraits>
 typename KinodynamicRRTStrategy<MPTraits>::VID
 KinodynamicRRTStrategy<MPTraits>::
 ExpandTree(StateType& _dir) {
   // Setup MP Variables
   StatClass* stats = this->GetStatClass();
-  DistanceMetricPointer dm = this->GetDistanceMetric(m_dm);
-  NeighborhoodFinderPointer nf = this->GetNeighborhoodFinder(m_nf);
-  ExtenderPointer e = this->GetExtender(m_extenderLabel);
   RoadmapType* rdmp = this->GetRoadmap();
   GraphType* g = rdmp->GetGraph();
+  auto dm = this->GetDistanceMetric(m_dmLabel);
+  auto nf = this->GetNeighborhoodFinder(m_nfLabel);
+  auto e = this->GetExtender(m_extenderLabel);
 
   VID recentVID = INVALID_VID;
 
   // Find closest Cfg in map
-  vector<pair<VID, double> > neighbors;
-  vector<StateType> cfgs;
-
   stats->StartClock("NeighborhoodFinding");
-
+  vector<pair<VID, double>> neighbors;
   nf->FindNeighbors(this->GetRoadmap(), _dir, back_inserter(neighbors));
-
   stats->StopClock("NeighborhoodFinding");
 
   VID nearVID = neighbors[0].first;
@@ -349,15 +313,6 @@ ExpandTree(StateType& _dir) {
   }
 
   return recentVID;
-}
-
-template<class MPTraits>
-void
-KinodynamicRRTStrategy<MPTraits>::
-SetMPProblem(MPProblemType* _problem) {
-  MPBaseObject<MPTraits>::SetMPProblem(_problem);
-  if(m_query)
-    m_query->SetMPProblem(_problem);
 }
 
 #endif

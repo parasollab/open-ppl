@@ -21,7 +21,9 @@
 #include "Metrics/NumNodesMetric.h"
 
 //map evaluator includes
+#include "MapEvaluators/ComposeEvaluator.h"
 #include "MapEvaluators/ConditionalEvaluator.h"
+
 #include "MapEvaluators/Query.h"
 #include "MapEvaluators/RRTQuery.h"
 
@@ -94,8 +96,9 @@ struct StateTraits {
 
   //types of map evaluators available in our world
   typedef boost::mpl::list<
+    ComposeEvaluator<StateTraits>,
     ConditionalEvaluator<StateTraits>,
-    Query<StateTraits>, 
+    Query<StateTraits>,
     RRTQuery<StateTraits>
       > MapEvaluatorMethodList;
 
