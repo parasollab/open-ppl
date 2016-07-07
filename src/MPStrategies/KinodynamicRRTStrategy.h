@@ -180,7 +180,7 @@ Run() {
   StatClass* stats = this->GetStatClass();
 
   stats->StartClock("RRT Generation");
-
+  cout << "Number of Verticies: " << this->GetRoadmap()->GetGraph()->get_num_vertices() << endl;
   bool mapPassedEvaluation = false;
   while(!mapPassedEvaluation) {
     //find my growth direction. Default is too randomly select node or bias
