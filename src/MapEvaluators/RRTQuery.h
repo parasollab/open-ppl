@@ -334,7 +334,7 @@ ReadQuery(string _filename) {
   
   GraphType* g = this->GetRoadmap()->GetGraph(); 
   for(auto& cfg : m_query)
-    cout << "Vertex id: " << g->AddVertex(cfg) << endl;
+    g->AddVertex(cfg);
 }
 
 //initialize variable defaults
