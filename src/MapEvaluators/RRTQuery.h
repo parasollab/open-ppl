@@ -129,7 +129,7 @@ class RRTQuery : public MapEvaluatorMethod<MPTraits> {
 
 template <typename MPTraits>
 RRTQuery<MPTraits>::
-RRTQuery(string _searchAlgo, string _dmLabel, string _nfLabel, double _goalDist) :
+RRTQuery(string _searchAlgo, string _nfLabel, double _goalDist) :
     m_goalDist(_goalDist), m_nfLabel(_nfLabel) {
   this->SetName("RRTQuery");
   SetSearchAlgViaString(_searchAlgo, WHERE);
