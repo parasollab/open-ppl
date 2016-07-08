@@ -497,39 +497,40 @@ Embed() {
   }
 
   //embed ReebArcs in tetrahedralization
-  for(auto eit = m_reebGraph.edges_begin(); eit != m_reebGraph.edges_end(); ++eit) {
+  for(auto eit = m_reebGraph.edges_begin(); eit != m_reebGraph.edges_end();
+      ++eit) {
     ReebArc& ra = eit->property();
 
     auto WeightGraph = [&](double _factor) {
       for(auto& tetraid : ra.m_tetra) {
         auto vit = tetraGraph.find_vertex(tetraid);
-        for(auto eit = vit->begin(); eit != vit->end(); ++eit) {
-          auto targetit = tetraGraph.find_vertex(eit->target());
-          eit->property() = _factor * (vit->property() - targetit->property()).norm();
+        for(auto adjEI = vit->begin(); adjEI != vit->end(); ++adjEI) {
+          auto targetit = tetraGraph.find_vertex(adjEI->target());
+          adjEI->property() = _factor *
+            (vit->property() - targetit->property()).norm();
         }
       }
     };
+
+    // Get start and end vertices. Skip this iteration if they are the same.
+    auto sourceit = m_reebGraph.find_vertex(eit->source());
+    auto targetit = m_reebGraph.find_vertex(eit->target());
+    if(sourceit->property().m_tetra == targetit->property().m_tetra)
+      continue;
 
     //weight all tetrahedron on reeb arc to bias search
     WeightGraph(0.01);
 
     //find path
-    auto sourceit = m_reebGraph.find_vertex(eit->source());
-    auto targetit = m_reebGraph.find_vertex(eit->target());
-
-    if(sourceit->property().m_tetra == targetit->property().m_tetra)
-      cout << "Stuff is equal." << endl;
-
     vector<size_t> pathVID;
     stapl::sequential::find_path_dijkstra(tetraGraph,
         sourceit->property().m_tetra, targetit->property().m_tetra,
         pathVID, numeric_limits<double>::max());
 
-    ra.m_path.clear();
-
     // for each tetrahedron pair in path, find common triangle and insert middle
     // of triangle into path for proper transition between the two tetrahedron
     if(!pathVID.empty()) {
+      ra.m_path.clear();
       for(auto vit1 = pathVID.begin(), vit2 = vit1 + 1;
           vit2 != pathVID.end(); ++vit1, ++vit2) {
         Vector3d& v1 = tetraGraph.find_vertex(*vit1)->property();
