@@ -214,9 +214,8 @@ class ReebGraphConstruction {
       }
     };
 
-    typedef stapl::sequential::graph<
-      stapl::DIRECTED, stapl::MULTIEDGES,
-      Vector3d, vector<Vector3d>
+    typedef stapl::sequential::directed_preds_graph<
+      stapl::MULTIEDGES, Vector3d, vector<Vector3d>
         > FlowGraph; ///< Flow graph is a directed multiedge graph of points and
                      ///< paths. Is a flow of the embedded ReebGraph.
 
@@ -234,6 +233,8 @@ class ReebGraphConstruction {
     ////////////////////////////////////////////////////////////////////////////
     /// @param _node XML node
     ReebGraphConstruction(XMLNode& _node);
+
+    ~ReebGraphConstruction();
 
     /// @}
     ////////////////////////////////////////////////////////////////////////////
@@ -257,6 +258,8 @@ class ReebGraphConstruction {
     ////////////////////////////////////////////////////////////////////////////
     /// @return Reeb Graph
     ReebGraph& GetReebGraph() {return m_reebGraph;}
+
+    TetGenDecomposition* GetTetrahedralization() {return m_tetrahedralization;}
 
     ////////////////////////////////////////////////////////////////////////////
     /// @brief Compute Flow graph (directed) of ReebGraph from source point

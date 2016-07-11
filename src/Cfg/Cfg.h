@@ -61,7 +61,7 @@ class ClearanceInfo {
 class Cfg {
   public:
 
-    Cfg(size_t _index = 0);
+    explicit Cfg(size_t _index = 0);
     Cfg(const Cfg& _other);
     virtual ~Cfg() {};
 

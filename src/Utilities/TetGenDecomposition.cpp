@@ -16,7 +16,6 @@
 TetGenDecomposition::
 TetGenDecomposition(const string& _switches,
     bool _writeFreeModel, bool _writeDecompModel) :
-    m_env(nullptr),
     m_freeModel(new tetgenio()),
     m_decompModel(new tetgenio()),
     m_switches(_switches),
@@ -26,7 +25,6 @@ TetGenDecomposition(const string& _switches,
 
 TetGenDecomposition::
 TetGenDecomposition(XMLNode& _node) :
-    m_env(nullptr),
     m_freeModel(new tetgenio()),
     m_decompModel(new tetgenio()) {
   m_tetGenFilename = _node.Read("tetGenFilename", false, "",

@@ -13,11 +13,10 @@ class BoundingSphere : public Boundary {
   public:
     BoundingSphere();
     BoundingSphere(const Vector3d& _center, double _radius);
-    ~BoundingSphere() {}
+    virtual ~BoundingSphere() = default;
 
     string Type() const {return "Sphere";}
 
-    const Vector3d& GetCenter() const {return m_center;}
     const double GetRadius() const {return m_radius;}
 
     bool operator==(const Boundary& _b) const;
@@ -39,7 +38,6 @@ class BoundingSphere : public Boundary {
     void Write(ostream& _os) const;
 
   private:
-    Vector3d m_center;
     double m_radius;
 
 #ifdef _PARALLEL

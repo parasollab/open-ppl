@@ -31,10 +31,10 @@ endif
 
 ifndef ROBOT_DEF
   # define robot type
-  #ROBOT_DEF = PMPCfg
+  ROBOT_DEF = PMPCfg
   #ROBOT_DEF = PMPCfgMultiRobot
   #ROBOT_DEF = PMPCfgSurface
-  ROBOT_DEF = PMPState
+  #ROBOT_DEF = PMPState
   #ROBOT_DEF = PMPSSSurfaceMult
   #ROBOT_DEF = PMPReachDistCC
   #ROBOT_DEF = PMPReachDistCCFixed
