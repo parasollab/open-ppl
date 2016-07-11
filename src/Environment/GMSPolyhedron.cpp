@@ -137,7 +137,7 @@ LoadFromIModel(IModel* _imodel, COMAdjust _comAdjust) {
     com += v;
   }
   com /= m_vertexList.size();
-
+/*
   // Repeat for CGAL points.
   CGALPoint ccom;
   for(const auto& c : _imodel->GetCGALVertices()) {
@@ -149,25 +149,25 @@ LoadFromIModel(IModel* _imodel, COMAdjust _comAdjust) {
   ccom[0] /= double(m_cgalPoints.size());
   ccom[1] /= double(m_cgalPoints.size());
   ccom[2] /= double(m_cgalPoints.size());
-
+*/
   // Apply COMAdjust to vertices and find radii.
   m_maxRadius = 0;
   m_minRadius = numeric_limits<double>::infinity();
   for(size_t i = 0; i < m_vertexList.size(); ++i) {
     auto& v = m_vertexList[i];
-    auto& c = m_cgalPoints[i];
+ //   auto& c = m_cgalPoints[i];
     switch(_comAdjust) {
       case COMAdjust::COM:     // Move COM to xyz origin.
         v -= com;
-        c[0] -= ccom[0];
-        c[1] -= ccom[1];
-        c[2] -= ccom[2];
+  //      c[0] -= ccom[0];
+  //      c[1] -= ccom[1];
+  //      c[2] -= ccom[2];
         break;
       case COMAdjust::Surface: // Move COM to xz origin.
         v[0] -= com[0];
         v[2] -= com[2];
-        c[0] -= ccom[0];
-        c[2] -= ccom[2];
+  //      c[0] -= ccom[0];
+  //      c[2] -= ccom[2];
         break;
       case COMAdjust::None:    // Do nothing.
       default:
