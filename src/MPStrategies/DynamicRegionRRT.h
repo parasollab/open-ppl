@@ -353,55 +353,6 @@ SelectDirection() {
   }
 }
 
-
-uemplate <typename MPTraits>
-void
-DynamicRegionRRT<MPTraits>::
-PruneFlowGraph(FlowGraph& _f) const {
-  using VD = FlowGraph::vertex_descriptor;
-
-  // Find the flow-graph node nearest to the goal.
-  const CfgRef goalCfg = this->m_query->GetQuery()[1];
-  Vector3d goalPoint(goalCfg[0], goalCfg[1], goalCfg[2]);
-  double closestDistance = std::numeric_limits<double>::max();
-  VD goal;
-  for(auto vit = _f.begin(); vit != _f.end(); ++vit) {
-    const auto& thisPoint = vit->property();
-    double distance = (thisPoint - goalPoint).norm();
-    if(distance < closestDistance) {
-      closestDistance = distance;
-      goal = vit->descriptor();
-    }
-  }
-
-  // Initialize a list of vertices to prune with every vertex in the graph.
-  vector<VD> toPrune;
-  toPrune.reserve(_f.get_num_vertices());
-  for(const auto& v : _f)
-    toPrune.push_back(v.descriptor());
-
-  // Remove vertices from the prune list by starting from the goal and working
-  // backwards up the incoming edges. Don't prune any vertex that is an ancestor
-  // of the goal.
-  queue<VD> q;
-  q.push(goal);
-  do {
-    VD current = q.front();
-    q.pop();
-
-    auto iter = find(toPrune.begin(), toPrune.end(), current);
-    if(iter != toPrune.end())
-      toPrune.erase(iter);
-
-    for(auto ancestor : _f.find_vertex(current)->predecessors())
-      q.push(ancestor);
-  } while(!q.empty());
-
-  // Remove the vertices we aren't keeping.
-  for(auto vd : toPrune)
-    if(_f.find_vertex(vd) != _f.end())
-      _f.delete_vertex(vd);
-}
 template <typename MPTraits>
 void
 DynamicRegionRRT<MPTraits>::
