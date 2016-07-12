@@ -185,8 +185,7 @@ Run() {
 
     if(ExpandTree(dir) != INVALID_VID) {
       // A new node was made. Re-evaluate the roadmap.
-      mapPassedEvaluation = this->EvaluateMap() ||
-          this->GetRoadmap()->GetGraph()->get_num_vertices() >= 15000;
+      mapPassedEvaluation = this->EvaluateMap();
     }
   }
 

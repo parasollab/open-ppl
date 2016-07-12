@@ -1,14 +1,14 @@
-#ifndef DYNAMIC_REGION_RRT_H_
-#define DYNAMIC_REGION_RRT_H_
+#ifndef KINODYNAMIC_REGION_RRT_H_
+#define KINODYNAMIC_REGION_RRT_H_
 
-#include <queue>
 #include <unordered_map>
 
-#include "BasicRRTStrategy.h"
+#include "KinodynamicRRTStrategy.h"
 
 #include "Environment/Boundary.h"
 #include "Environment/BoundingSphere.h"
 #include "Utilities/ReebGraphConstruction.h"
+
 
 #ifdef VIZMO
 #include "GUI/ModelSelectionWidget.h"
@@ -18,40 +18,43 @@
 #endif
 
 ////////////////////////////////////////////////////////////////////////////////
-/// \brief  DynamicRegionRRT
+/// \brief  KinoDynamicRegionRRT
 ////////////////////////////////////////////////////////////////////////////////
 template<class MPTraits>
-class DynamicRegionRRT : public BasicRRTStrategy<MPTraits> {
+class KinoDynamicRegionRRT : public KinodynamicRRTStrategy<MPTraits> {
 
   public:
 
     // Local Types
-    typedef typename MPTraits::MPProblemType MPProblemType;
-    typedef typename MPTraits::CfgType CfgType;
-    typedef typename MPTraits::CfgRef CfgRef;
+    typedef typename MPTraits::CfgType StateType;
+    typedef typename MPTraits::CfgRef StateRef;
     typedef typename MPTraits::WeightType WeightType;
+    typedef typename MPTraits::MPProblemType MPProblemType;
     typedef typename MPProblemType::VID VID;
     typedef typename MPProblemType::GraphType GraphType;
     typedef typename MPProblemType::LocalPlannerPointer LocalPlannerPointer;
     typedef typename MPProblemType::DistanceMetricPointer DistanceMetricPointer;
     typedef typename MPProblemType::NeighborhoodFinderPointer
         NeighborhoodFinderPointer;
+    typedef vector<VID> TreeType; 
+    typedef typename MPProblemType::ExtenderPointer ExtenderPointer;
     typedef shared_ptr<Boundary> RegionPtr;
     typedef ReebGraphConstruction::FlowGraph FlowGraph;
-
+    
     // Construction
-    DynamicRegionRRT(const CfgType& _start = CfgType(),
-        const CfgType& _goal = CfgType(),
-        string _dm = "euclidean", string _nf = "BFNF", string _vc = "PQP_SOLID",
-        string _nc = "kClosest", string _gt = "UNDIRECTED_TREE",
-        string _extenderLabel = "BERO",
+    KinoDynamicRegionRRT(const StateType& _start = StateType(),
+        const StateType& _goal = StateType(),
+        string _dm = "", string _nf = "", string _vc = "",
+        string _nc = "", string _gt = "",
+        string _extenderLabel = "",
         vector<string> _evaluators = vector<string>(),
         double _minDist = 0.001, double _growthFocus = 0.05,
         bool _evaluateGoal = true, size_t _numRoots = 1,
         size_t _numDirections = 1, size_t _maxTrial = 3,
-        bool _growGoals = false);
-    DynamicRegionRRT(MPProblemType* _problem, XMLNode& _node);
-
+        double _goalDist = 10.0);
+    KinoDynamicRegionRRT(MPProblemType* _problem, XMLNode& _node);
+    
+    void ParseXML(XMLNode& _node);
     // Inherited functions
     void Initialize();
     void Run();
@@ -64,8 +67,8 @@ class DynamicRegionRRT : public BasicRRTStrategy<MPTraits> {
     ///         entire environment and each attract region with uniform
     ///         probability to generate q_rand.
     /// \return The resulting growth direction.
-    CfgType SelectDirection();
-
+    StateType SelectDirection();
+    
     ////////////////////////////////////////////////////////////////////////////
     /// \brief Prune the flow graph by removing all vertices that have no path
     ///        to the goal.
@@ -74,135 +77,138 @@ class DynamicRegionRRT : public BasicRRTStrategy<MPTraits> {
 
     vector<RegionPtr> m_regions; ///< All Regions
     RegionPtr m_samplingRegion;  ///< Points to the current sampling region.
-
+    int m_regionRadius;    
     ReebGraphConstruction* m_reebGraphConstruction; ///< Embedded reeb graph
 };
 
 
 template<class MPTraits>
-DynamicRegionRRT<MPTraits>::
-DynamicRegionRRT(const CfgType& _start, const CfgType& _goal, string _dm,
+KinoDynamicRegionRRT<MPTraits>::
+KinoDynamicRegionRRT(const StateType& _start, const StateType& _goal, string _dm,
     string _nf, string _vc, string _nc, string _gt, string _extenderLabel,
     vector<string> _evaluators, double _minDist,
     double _growthFocus, bool _evaluateGoal, size_t _numRoots,
-    size_t _numDirections, size_t _maxTrial, bool _growGoals) :
-    BasicRRTStrategy<MPTraits>(_dm, _nf, _vc, _nc, _gt, _extenderLabel,
-    _evaluators, _minDist, _growthFocus, _evaluateGoal,
-    _start, _goal, _numRoots, _numDirections, _maxTrial, _growGoals) {
-  this->SetName("DynamicRegionRRT");
-  m_reebGraphConstruction = new ReebGraphConstruction();
-}
+    size_t _numDirections, size_t _maxTrial, double _goalDist) :
+  
+  KinodynamicRRTStrategy<MPTraits>(_dm, _nf, _vc, _extenderLabel,
+      _evaluators, _goalDist, _minDist, _growthFocus, _evaluateGoal,
+      _start, _goal) {
+    
+    this->SetName("KinoDynamicRegionRRT");
+    m_reebGraphConstruction = new ReebGraphConstruction();
+  }
 
 template<class MPTraits>
-DynamicRegionRRT<MPTraits>::
-DynamicRegionRRT(MPProblemType* _problem, XMLNode& _node) :
-    BasicRRTStrategy<MPTraits>(_problem, _node),
-    m_reebGraphConstruction(new ReebGraphConstruction(_node)) {
-  this->SetName("DynamicRegionRRT");
-}
+KinoDynamicRegionRRT<MPTraits>::
+KinoDynamicRegionRRT(MPProblemType* _problem, XMLNode& _node) :
+  KinodynamicRRTStrategy<MPTraits>(_problem, _node),
+  m_reebGraphConstruction(new ReebGraphConstruction(_node)) {
+    this->SetName("KinoDynamicRegionRRT");
+    ParseXML(_node); 
+  }
 
 template<class MPTraits>
 void
-DynamicRegionRRT<MPTraits>::
+KinoDynamicRegionRRT<MPTraits>::
+ParseXML(XMLNode& _node) {
+  m_regionRadius = stoi(_node.Read("regionRadius", true, "3", "Region radius multiplier"));
+}
+template<class MPTraits>
+void
+KinoDynamicRegionRRT<MPTraits>::
 Initialize() {
-  BasicRRTStrategy<MPTraits>::Initialize();
-
+KinodynamicRRTStrategy<MPTraits>::Initialize();
+  
   StatClass* stats = this->GetStatClass();
 
   //Embed ReebGraph
   stats->StartClock("ReebGraphConstruction");
   m_reebGraphConstruction->Construct(this->GetEnvironment(),
       this->GetBaseFilename());
-#ifdef VIZMO
-  GetVizmo().GetEnv()->AddTetGenDecompositionModel(m_reebGraphConstruction->
-      GetTetrahedralization());
-  GetVizmo().GetEnv()->AddReebGraphModel(m_reebGraphConstruction);
-  GetMainWindow()->GetModelSelectionWidget()->CallResetLists();
-
-  // Make map non-selectable during execution.
-  GetVizmo().GetMap()->SetSelectable(false);
-#endif
-
   stats->StopClock("ReebGraphConstruction");
 }
 
 
 template<class MPTraits>
 void
-DynamicRegionRRT<MPTraits>::
+KinoDynamicRegionRRT<MPTraits>::
 Run() {
   if(this->m_debug)
-    cout << "\nBegin DynamicRegionRRT::Run" << endl;
+    cout << "\nBegin KinoDynamicRegionRRT::Run" << endl;
 
   // Setup MP Variables
   StatClass* stats = this->GetStatClass();
   Environment* env = this->GetEnvironment();
 
-  stats->StartClock("DynamicRegionRRT");
+  stats->StartClock("KinoDynamicRegionRRT");
 
-  CfgRef s = this->m_query->GetQuery()[0];
+  StateType s = this->m_query->GetQuery()[0];
   Vector3d start(s[0], s[1], s[2]);
 
   //Get directed flow network
+  typedef ReebGraphConstruction::FlowGraph FlowGraph;
   typedef FlowGraph::vertex_descriptor FVD;
   typedef FlowGraph::edge_descriptor FED;
   pair<FlowGraph, FVD> flow = m_reebGraphConstruction->
     GetFlowGraph(start, env->GetPositionRes());
-
+  
   // Prune flow-graph of non-relevant paths.
   PruneFlowGraph(flow.first);
 
   unordered_map<FVD, bool> visited;
   for(auto vit = flow.first.begin(); vit != flow.first.end(); ++vit)
     visited[vit->descriptor()] = false;
-
+  
 #ifdef VIZMO
-  // Make temporary models for the regions.
+  // Make Temporary models for the regions
   map<RegionPtr, Model*> models;
   TempObjsModel tom;
 #endif
+
 
   //Spark a region for each outgoing edge of start
 
   //Region structure stores tuple of flow edge descriptor,
   //index along flow edge, number of failed extentions
   unordered_map<RegionPtr, tuple<FED, size_t, size_t>> regions;
-  //unordered_map<RegionPtr, pair<FED, size_t>> regions;
 
-  const double regionRadius = 2 * env->GetRobot(0)->GetBoundingSphereRadius();
+  double robotRadius = env->GetRobot(0)->GetBoundingSphereRadius();
   auto sit = flow.first.find_vertex(flow.second);
   for(auto eit = sit->begin(); eit != sit->end(); ++eit) {
     auto i = regions.emplace(
-        RegionPtr(new BoundingSphere(sit->property(), regionRadius)),
+        RegionPtr(new BoundingSphere(start, 3*robotRadius)),
         make_tuple(eit->descriptor(), 0, 0));
-        //make_pair(eit->descriptor(), 0));
     m_regions.push_back(i.first->first);
-#ifdef VIZMO
-    models[m_regions.back()] = new ThreadSafeSphereModel(
-        m_regions.back()->GetCenter(), regionRadius);
-    tom.AddOther(models[m_regions.back()]);
-#endif
   }
+  
+#ifdef VIZMO
+  models[m_regions.back()] = new ThreadSafeSpereModel(
+    m_regions.back()->GetCenter(), regionRadius);
+  tom.AddOther(models[m_regions.back()]);
+#endif
+ 
   visited[sit->descriptor()] = true;
 
-  CfgType dir;
+  StateType dir;
   bool mapPassedEvaluation = false;
   while(!mapPassedEvaluation) {
-    //find my growth direction. Default is to randomly select node or bias
-    //towards a goal
+    //find my growth direction. Default is to randomly select node or bias towards a goal
     double randomRatio = DRand();
-    if(randomRatio < this->m_growthFocus)
+    if(randomRatio < this->m_growthFocus) {
       dir = this->GoalBiasedDirection();
-    else
-      dir = this->SelectDirection();
-
+      if(this->m_debug)
+        cout << "Goal Biased direction selected: " << dir << endl;
+    }
+    else {
+      dir = SelectDirection();
+      if(this->m_debug)
+        cout << "Random Direction selected: " << dir << endl;
+    }
     // Randomize Current Tree
-    this->m_currentTree = this->m_trees.begin() + LRand() % this->m_trees.size();
-
     VID recent = this->ExpandTree(dir);
     if(recent != INVALID_VID) {
 
-      CfgRef newest = this->GetRoadmap()->GetGraph()->GetVertex(recent);
+      StateRef newest = this->GetRoadmap()->GetGraph()->GetVertex(recent);
 
       if(m_samplingRegion) {
         get<2>(regions[m_samplingRegion]) = 0;
@@ -214,17 +220,15 @@ Run() {
           FlowGraph::vertex_iterator vi;
           FlowGraph::adj_edge_iterator ei;
           flow.first.find_edge(get<0>(pr), vi, ei);
-          //flow.first.find_edge(pr.first, vi, ei);
           vector<Vector3d>& path = ei->property();
           size_t& i = get<1>(pr);
-          //size_t& i = pr.second;
           size_t j = i+1;
           if(j < path.size()) {
             Vector3d& next = path[j];
             m_samplingRegion->ApplyOffset(next-cur);
 #ifdef VIZMO
             static_cast<ThreadSafeSphereModel*>(models[m_samplingRegion])->
-                MoveTo(next);
+              MoveTo(next);
 #endif
             i = j;
           }
@@ -247,47 +251,32 @@ Run() {
 
       for(auto vit = flow.first.begin(); vit != flow.first.end(); ++vit) {
         double dist = (vit->property() - p).norm();
-        if(dist < regionRadius && !visited[vit->descriptor()]) {
+        if(dist < m_regionRadius*robotRadius && !visited[vit->descriptor()]) {
           for(auto eit = vit->begin(); eit != vit->end(); ++eit) {
             auto i = regions.emplace(
-                RegionPtr(new BoundingSphere(vit->property(), regionRadius)),
+                RegionPtr(new BoundingSphere(vit->property(), m_regionRadius*robotRadius)),
                 make_tuple(eit->descriptor(), 0, 0));
             m_regions.push_back(i.first->first);
 #ifdef VIZMO
             models[m_regions.back()] = new ThreadSafeSphereModel(
-                vit->property(), regionRadius);
+              vit->property(), regionRadius);
             tom.AddOther(models[m_regions.back()]);
 #endif
           }
           visited[vit->descriptor()] = true;
         }
       }
-
-      //connect various trees together
-      this->ConnectTrees(recent);
-      //see if tree is connected to goals
-      if(this->m_evaluateGoal)
-        this->EvaluateGoals(recent);
-
+      
       //evaluate the roadmap
-      bool evalMap = this->EvaluateMap();
-      bool oneTree = this->m_trees.size() == 1;
-      if(!this->m_growGoals) {
-        bool useGoals = this->m_evaluateGoal;
-        bool allGoals = useGoals && this->m_goalsNotFound.size() == 0;
-        mapPassedEvaluation = evalMap && oneTree && (allGoals || !useGoals);
-        if(this->m_debug && allGoals)
-          cout << "RRT FOUND ALL GOALS" << endl;
-        if(this->m_trees.begin()->size() >= 15000)
-          mapPassedEvaluation = true;
-      }
-      else
-        mapPassedEvaluation = evalMap && oneTree;
+      mapPassedEvaluation = this->EvaluateMap() &&
+        ((this->m_evaluateGoal && this->m_goalsNotFound.empty()) || !this->m_evaluateGoal);
+      if(this->m_debug && this->m_goalsNotFound.empty())
+        cout << "RRT FOUND ALL GOALS" << endl;
     }
     else {
       if(m_samplingRegion) {
         ++get<2>(regions[m_samplingRegion]);
-        if(get<2>(regions[m_samplingRegion]) > 1000) {
+        if(get<2>(regions[m_samplingRegion]) > 100) {
           auto rit = find(m_regions.begin(), m_regions.end(), m_samplingRegion);
           m_regions.erase(rit);
           regions.erase(m_samplingRegion);
@@ -300,26 +289,26 @@ Run() {
 #endif
   }
 
-  stats->StopClock("DynamicRegionRRT");
+  stats->StopClock("KinoDynamicRegionRRT");
 
   m_regions.clear();
   regions.clear();
 
   if(this->m_debug)
-    cout<<"\nEnd DynamicRegionRRT::Run" << endl;
+    cout<<"\nEnd KinoDynamicRegionRRT::Run" << endl;
 }
 
 
 template<class MPTraits>
 void
-DynamicRegionRRT<MPTraits>::
+KinoDynamicRegionRRT<MPTraits>::
 Finalize() {
-  BasicRRTStrategy<MPTraits>::Finalize();
+  KinodynamicRRTStrategy<MPTraits>::Finalize();
 }
 
 template<class MPTraits>
-typename DynamicRegionRRT<MPTraits>::CfgType
-DynamicRegionRRT<MPTraits>::
+typename KinoDynamicRegionRRT<MPTraits>::StateType
+KinoDynamicRegionRRT<MPTraits>::
 SelectDirection() {
   RegionPtr samplingBoundary;
   Environment* env = this->GetEnvironment();
@@ -336,13 +325,13 @@ SelectDirection() {
   }
 
   try {
-    CfgType mySample;
+    StateType mySample;
     mySample.GetRandomCfg(env,samplingBoundary);
     return mySample;
   }
   //catch Boundary too small exception
   catch(PMPLException _e) {
-    CfgType mySample;
+    StateType mySample;
     mySample.GetRandomCfg(env);
     return mySample;
   }
@@ -353,63 +342,14 @@ SelectDirection() {
   }
 }
 
-
-uemplate <typename MPTraits>
-void
-DynamicRegionRRT<MPTraits>::
-PruneFlowGraph(FlowGraph& _f) const {
-  using VD = FlowGraph::vertex_descriptor;
-
-  // Find the flow-graph node nearest to the goal.
-  const CfgRef goalCfg = this->m_query->GetQuery()[1];
-  Vector3d goalPoint(goalCfg[0], goalCfg[1], goalCfg[2]);
-  double closestDistance = std::numeric_limits<double>::max();
-  VD goal;
-  for(auto vit = _f.begin(); vit != _f.end(); ++vit) {
-    const auto& thisPoint = vit->property();
-    double distance = (thisPoint - goalPoint).norm();
-    if(distance < closestDistance) {
-      closestDistance = distance;
-      goal = vit->descriptor();
-    }
-  }
-
-  // Initialize a list of vertices to prune with every vertex in the graph.
-  vector<VD> toPrune;
-  toPrune.reserve(_f.get_num_vertices());
-  for(const auto& v : _f)
-    toPrune.push_back(v.descriptor());
-
-  // Remove vertices from the prune list by starting from the goal and working
-  // backwards up the incoming edges. Don't prune any vertex that is an ancestor
-  // of the goal.
-  queue<VD> q;
-  q.push(goal);
-  do {
-    VD current = q.front();
-    q.pop();
-
-    auto iter = find(toPrune.begin(), toPrune.end(), current);
-    if(iter != toPrune.end())
-      toPrune.erase(iter);
-
-    for(auto ancestor : _f.find_vertex(current)->predecessors())
-      q.push(ancestor);
-  } while(!q.empty());
-
-  // Remove the vertices we aren't keeping.
-  for(auto vd : toPrune)
-    if(_f.find_vertex(vd) != _f.end())
-      _f.delete_vertex(vd);
-}
 template <typename MPTraits>
 void
-DynamicRegionRRT<MPTraits>::
+KinoDynamicRegionRRT<MPTraits>::
 PruneFlowGraph(FlowGraph& _f) const {
   using VD = FlowGraph::vertex_descriptor;
 
   // Find the flow-graph node nearest to the goal.
-  const CfgRef goalCfg = this->m_query->GetQuery()[1];
+  const StateType goalCfg = this->m_query->GetQuery()[1];
   Vector3d goalPoint(goalCfg[0], goalCfg[1], goalCfg[2]);
   double closestDistance = std::numeric_limits<double>::max();
   VD goal;
