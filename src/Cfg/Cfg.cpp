@@ -216,17 +216,15 @@ Cfg::Read(istream& _is) {
 }
 
 void
-Cfg::Write(ostream& _os) const{
+Cfg::
+Write(ostream& _os) const{
   //write out robot index, and then dofs
-  _os << setw(4) << m_robotIndex << ' ';
-  _os << scientific << setprecision(17);
+  _os << setw(4) << m_robotIndex << ' ' << setprecision(4);
   for(vector<double>::const_iterator i = m_v.begin(); i != m_v.end(); ++i)
-    _os << setw(25) << *i << ' ';
+    _os << setw(6) << *i << ' ';
   _os.unsetf(ios_base::floatfield);
-  if (_os.fail()) {
-    cerr << "Cfg::Write error - failed to write to file" << endl;
-    exit(1);
-  }
+  if(_os.fail())
+    throw RunTimeException(WHERE, "Failed to write to file.");
 }
 
 istream&

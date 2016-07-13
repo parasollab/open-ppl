@@ -65,7 +65,7 @@ Extend(const CfgType& _near, const CfgType& _dir,
   if(m_medialAxisUtility.PushToMedialAxis(innerCfg,
       this->GetEnvironment()->GetBoundary())) {
     LPOutput<MPTraits> newLPOutput;
-    bool result = this->Expand(_near, innerCfg, _new, this->m_delta,
+    bool result = this->Expand(_near, innerCfg, _new, this->m_maxDist,
         newLPOutput, env->GetPositionRes(), env->GetOrientationRes());
     _lpOutput.m_edge.first.SetWeight(_lpOutput.m_edge.first.GetWeight() +
         newLPOutput.m_edge.first.GetWeight());

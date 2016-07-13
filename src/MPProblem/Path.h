@@ -44,7 +44,7 @@ class Path {
 
     ////////////////////////////////////////////////////////////////////////////
     /// \brief Get the roadmap used by this path.
-    RoadmapType* Roadmap() const {return m_roadmap;}
+    RoadmapType* GetRoadmap() const {return m_roadmap;}
 
     ////////////////////////////////////////////////////////////////////////////
     /// \brief The number of cfgs in the path.

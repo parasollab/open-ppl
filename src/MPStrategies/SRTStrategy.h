@@ -59,7 +59,6 @@ class SRTStrategy : public MPStrategyMethod<MPTraits> {
     string m_nfLabel;
     string m_vcLabel;
     string m_eLabel;
-    double m_delta, m_minDist;
     size_t m_numSamples; //"k" random trees per iteration
     size_t m_numExpansions; //"m" expansion iterations per tree
     size_t m_numCloseCent; //"n_c" closest centroids
@@ -98,9 +97,6 @@ ParseXML(XMLNode& _node) {
       this->m_meLabels.push_back(
           child.Read("label", true, "", "Evaluation Method"));
 
-  m_delta = _node.Read("delta", false, 1.0, 0.0, MAX_DBL, "Delta Distance");
-  m_minDist = _node.Read("minDist", false, 0.0, 0.0, m_delta,
-      "Minimum Distance");
   m_vcLabel = _node.Read("vcLabel", true, "", "Validity Test Method");
   m_nfLabel = _node.Read("nfLabel", true, "", "Neighborhood Finder");
   m_dmLabel = _node.Read("dmLabel",true,"", "Distance Metric");
@@ -139,8 +135,6 @@ Print(ostream& _os) const {
   _os << "\tEvaluators:: " << endl;
   for(const auto& label: this->m_meLabels)
     _os << "\t\t" << label << endl;
-  _os << "\tdelta:: " << m_delta << endl;
-  _os << "\tminimum distance:: " << m_minDist << endl;
 }
 
 
@@ -476,7 +470,7 @@ ExpandTree(VID _tree, CfgType& _dir) {
   CfgType newCfg;
   int weight = 0;
 
-  typename MPProblemType::ExtenderPointer e = this->GetExtender(m_eLabel);
+  auto e = this->GetExtender(m_eLabel);
   LPOutput<MPTraits> lpOutput;
   if(!e->Extend(nearest, _dir, newCfg, lpOutput)) {
     if(this->m_debug)
@@ -488,7 +482,7 @@ ExpandTree(VID _tree, CfgType& _dir) {
     cout << "RRT expanded to " << newCfg << endl;
 
   // If good to go, add to roadmap
-  if(dm->Distance(newCfg, nearest) >= m_minDist ) {
+  if(dm->Distance(newCfg, nearest) >= e->GetMinDistance()) {
     recentVID = g->AddVertex(newCfg);
     currentTree.second.push_back(recentVID);
 

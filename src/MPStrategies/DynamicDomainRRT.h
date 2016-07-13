@@ -261,7 +261,7 @@ ExpandTree(CfgType& _dir) {
          << "\tfrom " << nearVID << " to " << newCfg << endl;
 
   // If good to go, add to roadmap
-  if(dist >= this->m_minDist) {
+  if(dist >= e->GetMinDistance()) {
     recentVID = g->AddVertex(newCfg);
     g->GetVertex(recentVID).SetStat("Parent", neighbors[0].first);
     g->GetVertex(recentVID).SetStat(RLabel(), MAX_DBL);
@@ -313,7 +313,7 @@ ExpandTree(CfgType& _dir) {
         if(this->m_debug)
           cout << "RRT could not expand to additional directions!" << endl;
       }
-      else if(dist >= this->m_minDist) {
+      else if(dist >= e->GetMinDistance()) {
         VID otherVID = g->AddVertex(newCfg);
         g->GetVertex(otherVID).SetStat("Parent", nearVID);
         g->GetVertex(otherVID).SetStat(RLabel(), MAX_DBL);

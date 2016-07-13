@@ -201,7 +201,8 @@ AdaptiveRRT<MPTraits>::ExpandTree(CfgType& _dir){
   if(this->m_debug)
     cout << "nearest:: " << nearest << "\tvisibility:: " << visibility << endl;
 
-  if(dm->Distance(_dir, nearest) < this->m_minDist){
+  double minDist = this->GetExtender(this->m_extenderLabel)->GetMinDistance();
+  if(dm->Distance(_dir, nearest) < minDist){
     //chosen a q_rand which is too close. Penalize nearest with 0.
     nearest.IncStat("Fail");
     AvgVisibility(nearest, 0);
@@ -227,7 +228,7 @@ AdaptiveRRT<MPTraits>::ExpandTree(CfgType& _dir){
   LPOutput<MPTraits> lpOutput;
   auto e = this->GetExtender(gm);
   bool verifiedValid = e->Extend(nearest, _dir, newCfg, lpOutput);
-  double delta = e->GetDelta();
+  double delta = e->GetMaxDistance();
 
   //end timing from cycles
   uint64_t end = GetCycles();
@@ -250,7 +251,7 @@ AdaptiveRRT<MPTraits>::ExpandTree(CfgType& _dir){
 
     //reward the growth strategy based upon expanded distance in proportion to
     //delta_q
-    RewardGrowthMethod(-this->m_minDist, gm, rgsit->second);
+    RewardGrowthMethod(-minDist, gm, rgsit->second);
 
     return recentVID;
   }
@@ -261,7 +262,7 @@ AdaptiveRRT<MPTraits>::ExpandTree(CfgType& _dir){
   if(m_costMethod == REWARD)
     UpdateCost(max(delta - dist, 0.0) + 1E-6, gm, rgsit->second);
 
-  if(dist >= this->m_minDist) {
+  if(dist >= minDist) {
     //expansion success
     nearest.IncStat("Success");
     //update the tree
@@ -276,14 +277,14 @@ AdaptiveRRT<MPTraits>::ExpandTree(CfgType& _dir){
     }
     else {
       //node already existed in the roadmap. decrement reward
-      RewardGrowthMethod(-this->m_minDist, gm, rgsit->second);
+      RewardGrowthMethod(-minDist, gm, rgsit->second);
     }
   }
   else{
-    //could not expand at least m_minDist. Penalize nearest with 0;
+    //could not expand at least minDist. Penalize nearest with 0;
     nearest.IncStat("Fail");
     AvgVisibility(nearest, 0);
-    RewardGrowthMethod(-this->m_minDist, gm, rgsit->second);
+    RewardGrowthMethod(-minDist, gm, rgsit->second);
   }
 
   return recentVID;

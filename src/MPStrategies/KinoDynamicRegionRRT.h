@@ -36,11 +36,11 @@ class KinoDynamicRegionRRT : public KinodynamicRRTStrategy<MPTraits> {
     typedef typename MPProblemType::DistanceMetricPointer DistanceMetricPointer;
     typedef typename MPProblemType::NeighborhoodFinderPointer
         NeighborhoodFinderPointer;
-    typedef vector<VID> TreeType; 
+    typedef vector<VID> TreeType;
     typedef typename MPProblemType::ExtenderPointer ExtenderPointer;
     typedef shared_ptr<Boundary> RegionPtr;
     typedef ReebGraphConstruction::FlowGraph FlowGraph;
-    
+
     // Construction
     KinoDynamicRegionRRT(const StateType& _start = StateType(),
         const StateType& _goal = StateType(),
@@ -53,7 +53,7 @@ class KinoDynamicRegionRRT : public KinodynamicRRTStrategy<MPTraits> {
         size_t _numDirections = 1, size_t _maxTrial = 3,
         double _goalDist = 10.0);
     KinoDynamicRegionRRT(MPProblemType* _problem, XMLNode& _node);
-    
+
     void ParseXML(XMLNode& _node);
     // Inherited functions
     void Initialize();
@@ -68,7 +68,7 @@ class KinoDynamicRegionRRT : public KinodynamicRRTStrategy<MPTraits> {
     ///         probability to generate q_rand.
     /// \return The resulting growth direction.
     StateType SelectDirection();
-    
+
     ////////////////////////////////////////////////////////////////////////////
     /// \brief Prune the flow graph by removing all vertices that have no path
     ///        to the goal.
@@ -77,7 +77,7 @@ class KinoDynamicRegionRRT : public KinodynamicRRTStrategy<MPTraits> {
 
     vector<RegionPtr> m_regions; ///< All Regions
     RegionPtr m_samplingRegion;  ///< Points to the current sampling region.
-    int m_regionRadius;    
+    double m_regionRadius{2.5};
     ReebGraphConstruction* m_reebGraphConstruction; ///< Embedded reeb graph
 };
 
@@ -89,11 +89,10 @@ KinoDynamicRegionRRT(const StateType& _start, const StateType& _goal, string _dm
     vector<string> _evaluators, double _minDist,
     double _growthFocus, bool _evaluateGoal, size_t _numRoots,
     size_t _numDirections, size_t _maxTrial, double _goalDist) :
-  
-  KinodynamicRRTStrategy<MPTraits>(_dm, _nf, _vc, _extenderLabel,
-      _evaluators, _goalDist, _minDist, _growthFocus, _evaluateGoal,
-      _start, _goal) {
-    
+    KinodynamicRRTStrategy<MPTraits>(_start, _goal, _dm, _nf, _vc,
+    _extenderLabel, _evaluators, _goalDist, _minDist, _growthFocus,
+    _evaluateGoal) {
+
     this->SetName("KinoDynamicRegionRRT");
     m_reebGraphConstruction = new ReebGraphConstruction();
   }
@@ -104,21 +103,23 @@ KinoDynamicRegionRRT(MPProblemType* _problem, XMLNode& _node) :
   KinodynamicRRTStrategy<MPTraits>(_problem, _node),
   m_reebGraphConstruction(new ReebGraphConstruction(_node)) {
     this->SetName("KinoDynamicRegionRRT");
-    ParseXML(_node); 
+    ParseXML(_node);
   }
 
 template<class MPTraits>
 void
 KinoDynamicRegionRRT<MPTraits>::
 ParseXML(XMLNode& _node) {
-  m_regionRadius = stoi(_node.Read("regionRadius", true, "3", "Region radius multiplier"));
+  m_regionRadius = _node.Read("regionRadius", true, 3., 1., 4.,
+      "Region radius multiplier");
 }
+
 template<class MPTraits>
 void
 KinoDynamicRegionRRT<MPTraits>::
 Initialize() {
-KinodynamicRRTStrategy<MPTraits>::Initialize();
-  
+  KinodynamicRRTStrategy<MPTraits>::Initialize();
+
   StatClass* stats = this->GetStatClass();
 
   //Embed ReebGraph
@@ -151,14 +152,14 @@ Run() {
   typedef FlowGraph::edge_descriptor FED;
   pair<FlowGraph, FVD> flow = m_reebGraphConstruction->
     GetFlowGraph(start, env->GetPositionRes());
-  
+
   // Prune flow-graph of non-relevant paths.
   PruneFlowGraph(flow.first);
 
   unordered_map<FVD, bool> visited;
   for(auto vit = flow.first.begin(); vit != flow.first.end(); ++vit)
     visited[vit->descriptor()] = false;
-  
+
 #ifdef VIZMO
   // Make Temporary models for the regions
   map<RegionPtr, Model*> models;
@@ -172,30 +173,31 @@ Run() {
   //index along flow edge, number of failed extentions
   unordered_map<RegionPtr, tuple<FED, size_t, size_t>> regions;
 
-  double robotRadius = env->GetRobot(0)->GetBoundingSphereRadius();
+  double regionRadius = m_regionRadius *
+      env->GetRobot(0)->GetBoundingSphereRadius();
   auto sit = flow.first.find_vertex(flow.second);
   for(auto eit = sit->begin(); eit != sit->end(); ++eit) {
     auto i = regions.emplace(
-        RegionPtr(new BoundingSphere(start, 3*robotRadius)),
+        RegionPtr(new BoundingSphere(start, regionRadius)),
         make_tuple(eit->descriptor(), 0, 0));
     m_regions.push_back(i.first->first);
   }
-  
+
 #ifdef VIZMO
-  models[m_regions.back()] = new ThreadSafeSpereModel(
+  models[m_regions.back()] = new ThreadSafeSphereModel(
     m_regions.back()->GetCenter(), regionRadius);
   tom.AddOther(models[m_regions.back()]);
 #endif
- 
+
   visited[sit->descriptor()] = true;
 
   StateType dir;
-  bool mapPassedEvaluation = false;
-  while(!mapPassedEvaluation) {
-    //find my growth direction. Default is to randomly select node or bias towards a goal
-    double randomRatio = DRand();
-    if(randomRatio < this->m_growthFocus) {
-      dir = this->GoalBiasedDirection();
+  while(!this->EvaluateMap()) {
+    //find my growth direction. Default is to randomly select node or bias
+    //towards a goal
+    if(this->m_query && DRand() < this->m_growthFocus &&
+        !this->m_query->GetGoals().empty()) {
+      dir = this->m_query->GetRandomGoal();
       if(this->m_debug)
         cout << "Goal Biased direction selected: " << dir << endl;
     }
@@ -251,10 +253,10 @@ Run() {
 
       for(auto vit = flow.first.begin(); vit != flow.first.end(); ++vit) {
         double dist = (vit->property() - p).norm();
-        if(dist < m_regionRadius*robotRadius && !visited[vit->descriptor()]) {
+        if(dist < regionRadius && !visited[vit->descriptor()]) {
           for(auto eit = vit->begin(); eit != vit->end(); ++eit) {
             auto i = regions.emplace(
-                RegionPtr(new BoundingSphere(vit->property(), m_regionRadius*robotRadius)),
+                RegionPtr(new BoundingSphere(vit->property(), regionRadius)),
                 make_tuple(eit->descriptor(), 0, 0));
             m_regions.push_back(i.first->first);
 #ifdef VIZMO
@@ -266,23 +268,15 @@ Run() {
           visited[vit->descriptor()] = true;
         }
       }
-      
-      //evaluate the roadmap
-      mapPassedEvaluation = this->EvaluateMap() &&
-        ((this->m_evaluateGoal && this->m_goalsNotFound.empty()) || !this->m_evaluateGoal);
-      if(this->m_debug && this->m_goalsNotFound.empty())
-        cout << "RRT FOUND ALL GOALS" << endl;
+
     }
-    else {
-      if(m_samplingRegion) {
-        ++get<2>(regions[m_samplingRegion]);
-        if(get<2>(regions[m_samplingRegion]) > 100) {
-          auto rit = find(m_regions.begin(), m_regions.end(), m_samplingRegion);
-          m_regions.erase(rit);
-          regions.erase(m_samplingRegion);
-        }
+    else if(m_samplingRegion) {
+      ++get<2>(regions[m_samplingRegion]);
+      if(get<2>(regions[m_samplingRegion]) > 100) {
+        auto rit = find(m_regions.begin(), m_regions.end(), m_samplingRegion);
+        m_regions.erase(rit);
+        regions.erase(m_samplingRegion);
       }
-      mapPassedEvaluation = false;
     }
 #ifdef VIZMO
     GetVizmo().GetMap()->RefreshMap();

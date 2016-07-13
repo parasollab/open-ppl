@@ -59,7 +59,7 @@ TraceCSpaceObstacle<MPTraits>::Extend(const CfgType& _near, const CfgType& _dir,
   // expand to c1
   if(this->m_debug)
     cout << "\texpand c1" << endl;
-  if(!this->Expand(_near, _dir, innerCfg, this->m_delta, _lpOutput,
+  if(!this->Expand(_near, _dir, innerCfg, this->m_maxDist, _lpOutput,
       env->GetPositionRes(), env->GetOrientationRes()))
     return false;
   _lpOutput.m_intermediates.push_back(innerCfg);
@@ -68,7 +68,7 @@ TraceCSpaceObstacle<MPTraits>::Extend(const CfgType& _near, const CfgType& _dir,
   if(this->m_debug)
     cout << "\texpand c2" << endl;
   rDir.GetRandomRay(vecScale, dm);
-  if(!this->Expand(_near, rDir, innerCfg, this->m_delta, _lpOutput,
+  if(!this->Expand(_near, rDir, innerCfg, this->m_maxDist, _lpOutput,
       env->GetPositionRes(), env->GetOrientationRes()))
     return false;
   _lpOutput.m_intermediates.push_back(innerCfg);
@@ -89,7 +89,7 @@ TraceCSpaceObstacle<MPTraits>::Extend(const CfgType& _near, const CfgType& _dir,
   // final expand
   if(this->m_debug)
     cout << "\tfinal expand" << endl;
-  if(this->Expand(newNear, cspaceDir, _new, this->m_delta, _lpOutput,
+  if(this->Expand(newNear, cspaceDir, _new, this->m_maxDist, _lpOutput,
       env->GetPositionRes(), env->GetOrientationRes())) {
     _lpOutput.m_intermediates.push_back(innerCfg);
     return true;

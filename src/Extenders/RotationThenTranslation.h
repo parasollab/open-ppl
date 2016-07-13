@@ -19,35 +19,57 @@
 ////////////////////////////////////////////////////////////////////////////////
 template<class MPTraits>
 class RotationThenTranslation : public BasicExtender<MPTraits> {
+
   public:
+
+    ///\name Motion Planning Types
+    ///@{
+
     typedef typename MPTraits::CfgType CfgType;
     typedef typename MPTraits::MPProblemType MPProblemType;
+
+    ///@}
+    ///\name Construction
+    ///@{
 
     RotationThenTranslation(const string& _dmLabel = "",
         const string& _vcLabel = "", double _delta = 1.0);
     RotationThenTranslation(MPProblemType* _problem, XMLNode& _node);
 
+    ///@}
+    ///\name ExtenderMethod Overrides
+    ///@{
+
     virtual bool Extend(const CfgType& _near, const CfgType& _dir,
         CfgType& _new, LPOutput<MPTraits>& _lpOutput);
+
+    ///@}
 };
 
-template<class MPTraits>
-RotationThenTranslation<MPTraits>::RotationThenTranslation(const string& _dmLabel,
-    const string& _vcLabel, double _delta) :
-  BasicExtender<MPTraits>(_dmLabel, _vcLabel, _delta) {
-    this->SetName("RotationThenTranslation");
-  }
+/*------------------------------ Construction --------------------------------*/
 
 template<class MPTraits>
-RotationThenTranslation<MPTraits>::RotationThenTranslation(MPProblemType* _problem, XMLNode& _node) :
-  BasicExtender<MPTraits>(_problem, _node) {
-    this->SetName("RotationThenTranslation");
-  }
+RotationThenTranslation<MPTraits>::
+RotationThenTranslation(const string& _dmLabel, const string& _vcLabel,
+    double _delta) : BasicExtender<MPTraits>(_dmLabel, _vcLabel, _delta) {
+  this->SetName("RotationThenTranslation");
+}
+
+
+template<class MPTraits>
+RotationThenTranslation<MPTraits>::
+RotationThenTranslation(MPProblemType* _problem, XMLNode& _node) :
+    BasicExtender<MPTraits>(_problem, _node) {
+  this->SetName("RotationThenTranslation");
+}
+
+/*------------------------- ExtenderMethod Overrides -------------------------*/
 
 template<class MPTraits>
 bool
-RotationThenTranslation<MPTraits>::Extend(const CfgType& _near,
-    const CfgType& _dir, CfgType& _new, LPOutput<MPTraits>& _lpOutput) {
+RotationThenTranslation<MPTraits>::
+Extend(const CfgType& _near, const CfgType& _dir, CfgType& _new,
+    LPOutput<MPTraits>& _lpOutput) {
   // Setup MP Variables
   Environment* env = this->GetEnvironment();
   CfgType innerCfg, newDir, newPos;
@@ -59,7 +81,7 @@ RotationThenTranslation<MPTraits>::Extend(const CfgType& _near,
   for(size_t i = 0; i < _dir.PosDOF(); i++)
     newDir[i] = _near[i];
 
-  if(this->Expand(_near, newDir, innerCfg, this->m_delta, _lpOutput,
+  if(this->Expand(_near, newDir, innerCfg, this->m_maxDist, _lpOutput,
       env->GetPositionRes(), env->GetOrientationRes())) {
     _lpOutput.m_intermediates.push_back(innerCfg);
 
@@ -71,7 +93,7 @@ RotationThenTranslation<MPTraits>::Extend(const CfgType& _near,
       newPos[i] = _dir[i];
 
     LPOutput<MPTraits> newLPOutput;
-    bool result = this->Expand(innerCfg, newPos, _new, this->m_delta,
+    bool result = this->Expand(innerCfg, newPos, _new, this->m_maxDist,
         newLPOutput, env->GetPositionRes(), env->GetOrientationRes());
     _lpOutput.m_edge.first.SetWeight(_lpOutput.m_edge.first.GetWeight() +
         newLPOutput.m_edge.first.GetWeight());
@@ -82,5 +104,7 @@ RotationThenTranslation<MPTraits>::Extend(const CfgType& _near,
 
   return false;
 }
+
+/*----------------------------------------------------------------------------*/
 
 #endif

@@ -3,6 +3,7 @@
 
 #include <iomanip>
 #include "MPStrategyMethod.h"
+#include "MapEvaluators/RRTQuery.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 /// \ingroup MotionPlanningStrategies
@@ -12,7 +13,6 @@
 ///
 /// Our not-so-basic RRT offers many variations by setting the appropriate
 /// options:
-/// \arg m_evaluateGoal   Use RRT goal evaluation?
 /// \arg m_growGoals      Grow from goals?
 /// \arg m_gt             Indicates DIRECTED vs. UNDIRECTED and GRAPH vs. TREE.
 ///
@@ -27,7 +27,7 @@ class BasicRRTStrategy : public MPStrategyMethod<MPTraits> {
 
   public:
 
-    /// \name Local Types
+    ///\name Local Types
     ///@{
 
     typedef typename MPTraits::CfgType          CfgType;
@@ -41,7 +41,7 @@ class BasicRRTStrategy : public MPStrategyMethod<MPTraits> {
     typedef typename vector<TreeType>::iterator TreeIter;
 
     ///@}
-    /// \name Construction
+    ///\name Construction
     ///@{
 
     BasicRRTStrategy(string _dm = "euclidean",
@@ -57,45 +57,31 @@ class BasicRRTStrategy : public MPStrategyMethod<MPTraits> {
     virtual ~BasicRRTStrategy() = default;
 
     ///@}
-    /// \name MPBaseObject overrides
+    ///\name MPBaseObject overrides
     ///@{
 
     virtual void ParseXML(XMLNode& _node, bool _child = false);
     virtual void Print(ostream& _os) const;
-    void SetMPProblem(MPProblemType* _problem);
 
     ///@}
-    /// \name MPStrategy Overrides
+    ///\name MPStrategy Overrides
     ///@{
 
     virtual void Initialize() override;
-    virtual bool EvaluateMap() override;
     virtual void Iterate() override;
     virtual void Finalize() override;
-
-    ///@}
-    /// \name Path Function
-    ///@{
-
-    ////////////////////////////////////////////////////////////////////////////
-    /// \return The path computed if RRT is successfully run with a query.
-    vector<CfgType> GetPath() {return m_query->GetPath();}
 
     ///@}
 
   protected:
 
-    /// \name Direction Helpers
+    ///\name Direction Helpers
     ///@{
 
     ////////////////////////////////////////////////////////////////////////////
-    /// \brief Get a random goal to grow towards.
-    /// \return A random goal that has not yet been found, or a default CfgType
-    ///         if all goals have been found.
-    CfgType GoalBiasedDirection();
-    ////////////////////////////////////////////////////////////////////////////
     /// \brief Get a random configuration to grow towards.
     CfgType SelectDirection();
+
     ////////////////////////////////////////////////////////////////////////////
     /// \brief Sample a target configuration to grow towards from an existing
     ///        configuration. m_maxTrial samples are attempted.
@@ -105,15 +91,17 @@ class BasicRRTStrategy : public MPStrategyMethod<MPTraits> {
     CfgType SelectDispersedDirection(VID _v);
 
     ///@}
-    /// \name Neighbor Helpers
+    ///\name Neighbor Helpers
     ///@{
 
     ////////////////////////////////////////////////////////////////////////////
     /// \brief Get the configurations that are adjacent to _v in the map.
     vector<CfgType> SelectNeighbors(VID _v);
+
     ////////////////////////////////////////////////////////////////////////////
     /// \brief Find the nearest configuration to the target _cfg within _tree.
     VID FindNearestNeighbor(const CfgType& _cfg, const TreeIter& _tree);
+
     ////////////////////////////////////////////////////////////////////////////
     /// \brief If the graph type is GRAPH, try to connect a configuration to its
     ///        neighbors. No-op for TREE type graph.
@@ -121,7 +109,7 @@ class BasicRRTStrategy : public MPStrategyMethod<MPTraits> {
     void ConnectNeighbors(VID _newVID);
 
     ///@}
-    /// \name Growth Helpers
+    ///\name Growth Helpers
     ///@{
 
     ////////////////////////////////////////////////////////////////////////////
@@ -134,24 +122,21 @@ class BasicRRTStrategy : public MPStrategyMethod<MPTraits> {
     /// \return The extension edge distance.
     virtual double Extend(const VID _nearVID, const CfgType& _qRand,
         CfgType& _qNew, LPOutput<MPTraits>& _lpOutput);
+
     ////////////////////////////////////////////////////////////////////////////
     /// \brief Add a new configuration to the roadmap and current tree.
     /// \param[in] _newCfg    The new configuration to add.
     virtual VID AddNode(const CfgType& _newCfg);
+
     ////////////////////////////////////////////////////////////////////////////
     /// \brief Add a new edge to the roadmap.
     /// \param[in] _source   The source node.
     /// \param[in] _target   The target node.
     /// \param[in] _lpOutput The extender output.
     void AddEdge(VID _source, VID _target, const LPOutput<MPTraits>& _lpOutput);
-    ////////////////////////////////////////////////////////////////////////////
-    /// \brief Test each undiscovered goal for rechability to a new
-    ///        configuration. A successful connection labels a goal as discovered.
-    /// \param[in] _newVID The VID of the new configuration.
-    void EvaluateGoals(VID _newVID);
 
     ///@}
-    /// \name Tree Helpers
+    ///\name Tree Helpers
     ///@{
 
     ////////////////////////////////////////////////////////////////////////////
@@ -160,25 +145,29 @@ class BasicRRTStrategy : public MPStrategyMethod<MPTraits> {
     /// \param[in] _nearestVID The VID to grow from.
     /// \param[in] _target     The target configuration.
     virtual VID ExpandTree(const VID _nearestVID, const CfgType& _target);
+
     ////////////////////////////////////////////////////////////////////////////
     /// \brief Overload provided for compatability with old methods.
     virtual VID ExpandTree(CfgType& _target);
+
     ////////////////////////////////////////////////////////////////////////////
     /// \brief If multiple trees exist, try to connect the current tree with the
     ///        one that is nearest to a recently grown configuration.
     /// \param[in] _recentlyGrown The VID of the recently grown configuration.
     void ConnectTrees(VID _recentlyGrown);
+
     ////////////////////////////////////////////////////////////////////////////
     /// \brief Check that each node in the graph is also in a tree, and that the
     ///        number of trees is equal to the number of connected components.
     ///        Calls RebuildTrees to correct if either check fails.
     void ValidateTrees();
+
     ////////////////////////////////////////////////////////////////////////////
     /// \brief Reconstruct m_trees from the roadmap CC info.
     void RebuildTrees();
 
     ///@}
-    /// \name MP Object Labels
+    ///\name MP Object Labels
     ///@{
 
     string m_dm;            ///< The distance metric label.
@@ -189,41 +178,37 @@ class BasicRRTStrategy : public MPStrategyMethod<MPTraits> {
     string m_extenderLabel; ///< The extender label.
 
     ///@}
-    /// \name RRT Properties
+    ///\name RRT Properties
     ///@{
 
-    double m_minDist;       ///< The minimum expansion distance.
     double m_growthFocus;   ///< The fraction of goal-biased expansions.
-    bool m_evaluateGoal;    ///< Use RRT goal evaluation.
     size_t m_numRoots;      ///< The number of roots to use without a query.
     size_t m_numDirections; ///< The number of expansion directions per iteration.
     size_t m_maxTrial;      ///< The number of samples taken for disperse search.
-    bool m_growGoals;       ///< Grow trees from goals.
+    bool   m_growGoals;     ///< Grow trees from goals.
 
     ///@}
-    /// \name Tree Data
+    ///\name Tree Data
     ///@{
 
     vector<TreeType> m_trees;                          ///< The current tree set.
     typename vector<TreeType>::iterator m_currentTree; ///< The working tree.
 
     ///@}
-    /// \name Goal Data
-    ///@{
-
-    vector<CfgType> m_goals;        ///< The list of all goal configurations.
-    vector<size_t> m_goalsNotFound; ///< Stores the indexes of unfound goals.
-
-    ///@}
-    /// \name Extension Success Tracking
+    ///\name Extension Success Tracking
     ///@{
 
     size_t m_successes{0};  ///< The count of successful extensions.
     size_t m_trials{0};     ///< The count of attempted extensions.
 
     ///@}
+    ///\name Query
+    ///@{
 
-    shared_ptr<Query<MPTraits>> m_query{nullptr}; ///< The query object.
+    bool m_queryLoaded{false};            ///< Use a query?
+    RRTQuery<MPTraits>* m_query{nullptr}; ///< The query object.
+
+    ///@}
 };
 
 /*----------------------------- construction ---------------------------------*/
@@ -237,10 +222,10 @@ BasicRRTStrategy(string _dm, string _nf, string _vc, string _nc,
     size_t _numDirections, size_t _maxTrial, bool _growGoals) :
     m_dm(_dm), m_nf(_nf), m_vc(_vc),
     m_nc(_nc), m_gt(_gt),
-    m_extenderLabel(_extenderLabel), m_minDist(_minDist),
-    m_growthFocus(_growthFocus), m_evaluateGoal(_evaluateGoal),
+    m_extenderLabel(_extenderLabel),
+    m_growthFocus(_growthFocus),
     m_numRoots(_numRoots), m_numDirections(_numDirections), m_maxTrial(_maxTrial),
-    m_growGoals(_growGoals), m_query(new Query<MPTraits>(_start, _goal)) {
+    m_growGoals(_growGoals) {
   this->m_meLabels = _evaluators;
   this->SetName("BasicRRTStrategy");
 }
@@ -262,13 +247,11 @@ BasicRRTStrategy<MPTraits>::
 ParseXML(XMLNode& _node, bool _child) {
   // Parse RRT parameters
   m_gt = _node.Read("gtype", true, "", "Graph type dir/undirected tree/graph");
-  m_minDist = _node.Read("minDist", false, 0.0, 0.0, MAX_DBL, "Minimum Distance");
   m_numRoots = _node.Read("numRoots", false, 1, 0, MAX_INT, "Number of Roots");
   m_growthFocus = _node.Read("growthFocus", false, 0.0, 0.0, 1.0,
       "Fraction of goal-biased iterations");
   m_numDirections = _node.Read("m", false, 1, 1, 1000,
       "Number of directions to extend");
-  m_evaluateGoal = _node.Read("evaluateGoal", false, false, "");
   m_growGoals = _node.Read("growGoals", false, false,
       "Determines whether or not we grow a tree from the goal");
   m_maxTrial = _node.Read("trial", false, 3, 1, 1000,
@@ -281,18 +264,14 @@ ParseXML(XMLNode& _node, bool _child) {
   m_nc = _node.Read("connectorLabel", false, "", "Node Connection Method");
   if(!_child)
     m_extenderLabel = _node.Read("extenderLabel", true, "", "Extender label");
-  for(auto& child : _node)
-    if(child.Name() == "Evaluator")
-      this->m_meLabels.push_back(
-          child.Read("label", true, "", "Evaluation Method"));
 
-  // Optionally read in a query and create a Query object.
-  string query = _node.Read("query", false, "", "Query Filename");
-  if(query != "") {
-    m_query = shared_ptr<Query<MPTraits>>(new Query<MPTraits>(query));
-    m_query->SetMPProblem(this->GetMPProblem());
-    m_query->SetDebug(this->m_debug);
-  }
+  // Parse child nodes.
+  for(auto& child : _node)
+    if(child.Name() == "Evaluator") {
+      string label = child.Read("label", true, "", "Evaluation Method");
+      this->m_meLabels.push_back(label);
+      m_queryLoaded |= (label == "RRTQuery");
+    }
 }
 
 
@@ -313,22 +292,10 @@ Print(ostream& _os) const {
 
   _os << "  RRT properties:" << endl
       << "\tGraph Type:: " << m_gt << endl
-      << "\tEvaluate Goal:: " << m_evaluateGoal << endl
       << "\tGrow Goals:: " << m_growGoals << endl
-      << "\tminimum distance:: " << m_minDist << endl
       << "\tnumber of roots:: " << m_numRoots << endl
       << "\tgrowth focus:: " << m_growthFocus << endl
       << "\tnumber of expansion directions:: " << m_numDirections << endl;
-}
-
-
-template<class MPTraits>
-void
-BasicRRTStrategy<MPTraits>::
-SetMPProblem(MPProblemType* _problem) {
-  MPBaseObject<MPTraits>::SetMPProblem(_problem);
-  if(m_query)
-    m_query->SetMPProblem(_problem);
 }
 
 /*-------------------------- MPStrategy overrides ----------------------------*/
@@ -342,9 +309,23 @@ Initialize() {
 
   GraphType* g = this->GetRoadmap()->GetGraph();
 
+  // Check for query info.
+  try {
+    string label = "RRTQuery";
+    m_query = static_cast<RRTQuery<MPTraits>*>(this->GetMapEvaluator(label).
+        get());
+    m_queryLoaded = true;
+    auto iter = find(this->m_meLabels.begin(), this->m_meLabels.end(), label);
+    if(iter == this->m_meLabels.end())
+      this->m_meLabels.push_back(label);
+  }
+  catch(RunTimeException) {
+    m_query = nullptr;
+  }
+
   // If a query was loaded, process query cfgs
-  if(m_query) {
-    vector<CfgType>& queryCfgs = m_query->GetQuery();
+  if(m_queryLoaded) {
+    const vector<CfgType>& queryCfgs = m_query->GetQuery();
 
     // If growing goals, set each query cfg as its own tree
     if(m_growGoals) {
@@ -354,14 +335,10 @@ Initialize() {
       }
     }
 
-    // If not growing goals, add start to map and goals to m_goals.
+    // If not growing goals, add only the start to map.
     else {
       VID start = g->AddVertex(queryCfgs.front());
       m_trees.push_back(vector<VID>(1, start));
-      for(auto goal = queryCfgs.begin() + 1; goal != queryCfgs.end(); ++goal) {
-        m_goals.push_back(*goal);
-        m_goalsNotFound.push_back(m_goals.size() - 1);
-      }
     }
   }
   // If no query loaded, make m_numRoots random roots
@@ -392,15 +369,6 @@ Initialize() {
       if(!m_trees[i].empty())
         cout << "\t\tIts root is: " << g->GetVertex(m_trees[i].front()) << endl;
     }
-
-    cout << "There are " << m_goals.size() << " goals"
-         << (m_goals.empty() ? "." : ":") << endl;
-    for(const auto& goal : m_goals)
-      cout << "\t" << goal << endl;
-
-    cout << "There are " << m_goalsNotFound.size() << " goals not found."
-         << endl << endl
-         << "Ending Initializing BasicRRTStrategy" << endl << endl;
   }
 }
 
@@ -412,13 +380,13 @@ Iterate() {
   ++m_trials;
   if(this->m_debug)
     cout << "*** Starting iteration " << m_trials << " "
-         << "*********************************************************" << endl;
+         << "***************************************************" << endl;
 
   // Find my growth direction. Default is to randomly select node or bias
   // towards a goal.
   CfgType target;
-  if(DRand() < m_growthFocus) {
-    target = GoalBiasedDirection();
+  if(m_queryLoaded && DRand() < m_growthFocus && !m_query->GetGoals().empty()) {
+    target = m_query->GetRandomGoal();
     if(this->m_debug)
       cout << "Goal biased direction selected: " << target << endl;
   }
@@ -453,18 +421,12 @@ template<class MPTraits>
 void
 BasicRRTStrategy<MPTraits>::
 Finalize() {
-  RoadmapType* map = this->GetRoadmap();
-
-  // Perform query if query was given as input
-  if(m_query && m_evaluateGoal) {
-    m_query->SetWritePath(true);
-    if(m_query->PerformQuery(map) && this->m_debug)
-      cout << "Query successful!" << endl;
-    else if(this->m_debug)
-      cout << "Query unsuccessful." << endl;
-  }
+  // Output path if we completed a query with at least one goal.
+  if(m_queryLoaded && !m_query->GetQuery().empty() && m_query->GetGoals().empty())
+    m_query->WritePath();
 
   // Output final map
+  RoadmapType* map = this->GetRoadmap();
   string baseFilename = this->GetBaseFilename();
   map->Write(baseFilename + ".map", this->GetEnvironment());
 
@@ -480,47 +442,7 @@ Finalize() {
   this->GetStatClass()->PrintClock(this->GetNameAndLabel() + "::Run()", cout);
 }
 
-
-template<class MPTraits>
-bool
-BasicRRTStrategy<MPTraits>::
-EvaluateMap() {
-  // First run map evaluators
-  bool evalMap = MPStrategyMethod<MPTraits>::EvaluateMap();
-
-  // Additionally check RRT conditions
-  bool oneTree = m_trees.size() == 1;
-  bool foundAllGoals = m_goalsNotFound.empty();
-  bool evalGoals = !m_evaluateGoal || foundAllGoals;
-
-  if(this->m_debug)
-    cout << "Evaluating map:"
-         << "\n\tNumber of trees: " << m_trees.size()
-         << "\n\tGoals not found: " << m_goalsNotFound.size()
-         << "\n\tMapEvaluators:   " << (evalMap ? "passed" : "failed") << endl;
-
-  return m_growGoals ? evalMap && oneTree :
-                       evalMap && oneTree && evalGoals;
-}
-
-/*---------------------------- RRT functions ---------------------------------*/
-
 /*--------------------------- Direction Helpers ------------------------------*/
-
-template<class MPTraits>
-typename MPTraits::CfgType
-BasicRRTStrategy<MPTraits>::
-GoalBiasedDirection() {
-  /// \warning Should be named something like SelectTargetGoal as this does not
-  ///          return a direction.
-  if(m_goalsNotFound.empty())
-    return CfgType();
-  else {
-    size_t index = LRand() % m_goalsNotFound.size();
-    return m_goals[m_goalsNotFound[index]];
-  }
-}
-
 
 template<class MPTraits>
 typename MPTraits::CfgType
@@ -655,7 +577,6 @@ Extend(const VID _nearVID, const CfgType& _qRand, CfgType& _qNew,
   double dist = 0;
   CfgRef qNear = this->GetRoadmap()->GetGraph()->GetVertex(_nearVID);
   auto e  = this->GetExtender(m_extenderLabel);
-  auto dm = this->GetDistanceMetric(m_dm);
   if(e->Extend(qNear, _qRand, _qNew, _lpOutput))
     dist = _lpOutput.m_edge.first.GetWeight();
 
@@ -690,7 +611,7 @@ void
 BasicRRTStrategy<MPTraits>::
 AddEdge(VID _source, VID _target, const LPOutput<MPTraits>& _lpOutput) {
   GraphType* g = this->GetRoadmap()->GetGraph();
-  if(m_gt.find("UNDIRECTED") != std::string::npos)
+  if(m_growGoals || m_gt.find("UNDIRECTED") != std::string::npos)
     g->AddEdge(_source, _target, _lpOutput.m_edge);
   else
     g->AddEdge(_source, _target, _lpOutput.m_edge.first);
@@ -698,69 +619,6 @@ AddEdge(VID _source, VID _target, const LPOutput<MPTraits>& _lpOutput) {
 
   if(this->m_debug)
     cout << "\tAdding Edge (" << _source << ", " << _target << ")." << endl;
-}
-
-
-template<class MPTraits>
-void
-BasicRRTStrategy<MPTraits>::
-EvaluateGoals(VID _newVID) {
-  if(m_goalsNotFound.empty() || !m_evaluateGoal)
-    return;
-
-  if(this->m_debug)
-    cout << "Evaluating goals..." << endl;
-
-  // Setup MP Variables
-  GraphType* g = this->GetRoadmap()->GetGraph();
-  auto dm = this->GetDistanceMetric(m_dm);
-  auto e = this->GetExtender(m_extenderLabel);
-
-  // Check each unfound goal for reachability to qNew
-  CfgType& qNew = g->GetVertex(_newVID);
-  for(auto i = m_goalsNotFound.begin(); i != m_goalsNotFound.end();) {
-    double dist = dm->Distance(m_goals[*i], qNew);
-
-    if(this->m_debug)
-      cout << "\tChecking goal " << *i << ": distance = " << dist << endl;
-
-    // Skip goals that are too far.
-    if(dist >= e->GetDelta()) {
-      if(this->m_debug)
-        cout << "\t\tGoal is too far, skipping connection check." << endl;
-      ++i;
-      continue;
-    }
-
-    // Try to connect qNew to this goal
-    CfgType newCfg;
-    LPOutput<MPTraits> lpOutput;
-    if(e->Extend(qNew, m_goals[*i], newCfg, lpOutput) && newCfg == m_goals[*i]) {
-      // Connection succeeded
-      if(this->m_debug)
-        cout << "\t\tGoal found!" << endl;
-
-      // Add goal and edge to map if not already there
-      VID goalVID;
-      if(!(g->IsVertex(m_goals[*i])))
-        goalVID = AddNode(m_goals[*i]);
-      else {
-        goalVID = g->GetVID(m_goals[*i]);
-        m_currentTree->push_back(goalVID);
-      }
-      AddEdge(_newVID, goalVID, lpOutput);
-
-      // Remove this goal from goals not found
-      i = m_goalsNotFound.erase(i);
-    }
-
-    // If too far or unconnectable, move on to next goal
-    else {
-      ++i;
-      if(this->m_debug)
-        cout << "\t\tGoal could not be connected!" << endl;
-    }
-  }
 }
 
 /*------------------------------ Tree Helpers --------------------------------*/
@@ -772,12 +630,14 @@ ExpandTree(const VID _nearestVID, const CfgType& _target) {
   if(this->m_debug)
     cout << "Trying expansion from " << _nearestVID << "..." << endl;
 
+  auto e = this->GetExtender(m_extenderLabel);
+
   // Try to extend from the _nearestVID to _target
   VID newVID{};
   CfgType newCfg;
   LPOutput<MPTraits> lpOutput;
   double dist = this->Extend(_nearestVID, _target, newCfg, lpOutput);
-  if(dist >= m_minDist) {
+  if(dist >= e->GetMinDistance()) {
     if(this->m_debug)
       cout << "\tSuccess!" << endl;
 
@@ -786,7 +646,6 @@ ExpandTree(const VID _nearestVID, const CfgType& _target) {
       return INVALID_VID; // Node already exists
     AddEdge(_nearestVID, newVID, lpOutput);
     ConnectNeighbors(newVID);
-    EvaluateGoals(newVID);
     ConnectTrees(newVID);
   }
   else {
@@ -804,7 +663,7 @@ ExpandTree(const VID _nearestVID, const CfgType& _target) {
     CfgType newCfg;
     LPOutput<MPTraits> lpOutput;
     dist = this->Extend(_nearestVID, randCfg, newCfg, lpOutput);
-    if(dist >= m_minDist) {
+    if(dist >= e->GetMinDistance()) {
       if(this->m_debug)
         cout << "\tSuccess!" << endl;
 
@@ -813,7 +672,6 @@ ExpandTree(const VID _nearestVID, const CfgType& _target) {
         continue; // Node already exists
       AddEdge(_nearestVID, otherVID, lpOutput);
       ConnectNeighbors(otherVID);
-      EvaluateGoals(otherVID);
       ConnectTrees(otherVID);
     }
     else if(this->m_debug)
@@ -883,7 +741,7 @@ ConnectTrees(VID _recentlyGrown) {
   LPOutput<MPTraits> lpOutput;
   double dist = this->Extend(closestVID, qNew, newCfg, lpOutput);
   // If the extension didn't go far enough, abort connection.
-  if(dist < m_minDist) {
+  if(dist < this->GetExtender(m_extenderLabel)->GetMinDistance()) {
     if(this->m_debug)
       cout << "\tFailed: could not expand far enough." << endl;
   }
@@ -916,7 +774,6 @@ ConnectTrees(VID _recentlyGrown) {
     VID newVID = AddNode(newCfg);
     AddEdge(closestVID, newVID, lpOutput);
     ConnectNeighbors(newVID);
-    EvaluateGoals(newVID);
     swap(m_currentTree, closestTree);
   }
 }

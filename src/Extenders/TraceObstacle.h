@@ -58,7 +58,7 @@ TraceObstacle<MPTraits>::Extend(const CfgType& _near, const CfgType& _dir,
   double vecScale = 10.0;
 
   // Expand to find a colliding triangle
-  this->Expand(_near, _dir, _new, this->m_delta, _lpOutput, cdInfo,
+  this->Expand(_near, _dir, _new, this->m_maxDist, _lpOutput, cdInfo,
     env->GetPositionRes(), env->GetOrientationRes());
 
   // Get an obstacle vector from the colliding triangle

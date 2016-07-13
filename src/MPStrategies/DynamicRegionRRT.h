@@ -32,10 +32,6 @@ class DynamicRegionRRT : public BasicRRTStrategy<MPTraits> {
     typedef typename MPTraits::WeightType WeightType;
     typedef typename MPProblemType::VID VID;
     typedef typename MPProblemType::GraphType GraphType;
-    typedef typename MPProblemType::LocalPlannerPointer LocalPlannerPointer;
-    typedef typename MPProblemType::DistanceMetricPointer DistanceMetricPointer;
-    typedef typename MPProblemType::NeighborhoodFinderPointer
-        NeighborhoodFinderPointer;
     typedef shared_ptr<Boundary> RegionPtr;
     typedef ReebGraphConstruction::FlowGraph FlowGraph;
 
@@ -55,7 +51,6 @@ class DynamicRegionRRT : public BasicRRTStrategy<MPTraits> {
     // Inherited functions
     void Initialize();
     void Run();
-    void Finalize();
 
   private:
 
@@ -140,7 +135,7 @@ Run() {
 
   stats->StartClock("DynamicRegionRRT");
 
-  CfgRef s = this->m_query->GetQuery()[0];
+  const CfgType& s = this->m_query->GetQuery()[0];
   Vector3d start(s[0], s[1], s[2]);
 
   //Get directed flow network
@@ -186,13 +181,12 @@ Run() {
   visited[sit->descriptor()] = true;
 
   CfgType dir;
-  bool mapPassedEvaluation = false;
-  while(!mapPassedEvaluation) {
+  while(!this->EvaluateMap()) {
     //find my growth direction. Default is to randomly select node or bias
     //towards a goal
-    double randomRatio = DRand();
-    if(randomRatio < this->m_growthFocus)
-      dir = this->GoalBiasedDirection();
+    if(this->m_queryLoaded && DRand() < this->m_growthFocus &&
+        !this->m_query->GetGoals().empty())
+      dir = this->m_query->GetRandomGoal();
     else
       dir = this->SelectDirection();
 
@@ -202,7 +196,7 @@ Run() {
     VID recent = this->ExpandTree(dir);
     if(recent != INVALID_VID) {
 
-      CfgRef newest = this->GetRoadmap()->GetGraph()->GetVertex(recent);
+      CfgType& newest = this->GetRoadmap()->GetGraph()->GetVertex(recent);
 
       if(m_samplingRegion) {
         get<2>(regions[m_samplingRegion]) = 0;
@@ -265,24 +259,6 @@ Run() {
 
       //connect various trees together
       this->ConnectTrees(recent);
-      //see if tree is connected to goals
-      if(this->m_evaluateGoal)
-        this->EvaluateGoals(recent);
-
-      //evaluate the roadmap
-      bool evalMap = this->EvaluateMap();
-      bool oneTree = this->m_trees.size() == 1;
-      if(!this->m_growGoals) {
-        bool useGoals = this->m_evaluateGoal;
-        bool allGoals = useGoals && this->m_goalsNotFound.size() == 0;
-        mapPassedEvaluation = evalMap && oneTree && (allGoals || !useGoals);
-        if(this->m_debug && allGoals)
-          cout << "RRT FOUND ALL GOALS" << endl;
-        if(this->m_trees.begin()->size() >= 15000)
-          mapPassedEvaluation = true;
-      }
-      else
-        mapPassedEvaluation = evalMap && oneTree;
     }
     else {
       if(m_samplingRegion) {
@@ -293,7 +269,6 @@ Run() {
           regions.erase(m_samplingRegion);
         }
       }
-      mapPassedEvaluation = false;
     }
 #ifdef VIZMO
     GetVizmo().GetMap()->RefreshMap();
@@ -309,13 +284,6 @@ Run() {
     cout<<"\nEnd DynamicRegionRRT::Run" << endl;
 }
 
-
-template<class MPTraits>
-void
-DynamicRegionRRT<MPTraits>::
-Finalize() {
-  BasicRRTStrategy<MPTraits>::Finalize();
-}
 
 template<class MPTraits>
 typename DynamicRegionRRT<MPTraits>::CfgType
@@ -353,6 +321,7 @@ SelectDirection() {
   }
 }
 
+
 template <typename MPTraits>
 void
 DynamicRegionRRT<MPTraits>::
@@ -360,7 +329,7 @@ PruneFlowGraph(FlowGraph& _f) const {
   using VD = FlowGraph::vertex_descriptor;
 
   // Find the flow-graph node nearest to the goal.
-  const CfgRef goalCfg = this->m_query->GetQuery()[1];
+  const CfgType& goalCfg = this->m_query->GetQuery()[1];
   Vector3d goalPoint(goalCfg[0], goalCfg[1], goalCfg[2]);
   double closestDistance = std::numeric_limits<double>::max();
   VD goal;

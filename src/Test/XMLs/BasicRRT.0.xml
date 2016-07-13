@@ -27,8 +27,8 @@
     </LocalPlanners>
 
     <Extenders>
-      <BasicExtender label="BERO" debug="false"
-        dmLabel="euclidean" vcLabel="cd" delta="1.0"/>
+      <BasicExtender label="BERO" debug="false" dmLabel="euclidean" vcLabel="cd"
+        maxDist="1" minDist=".001"/>
     </Extenders>
 
     <Connectors>
@@ -43,15 +43,20 @@
     <MapEvaluators>
       <ConditionalEvaluator label="NodesEval" metric_method="NumNodes"
         value="100" operator=">="/>
+      <RRTQuery label="RRTQuery" queryFile="../Envs/2D/2d.query"
+        nfLabel="Nearest" exLabel="BERO" debug="true"/>
     </MapEvaluators>
 
     <MPStrategies>
-      <BasicRRTStrategy label="BasicRRT" minDist="0.001"
+      <BasicRRTStrategy label="BasicRRT"
         numRoots="1" m="1" growthFocus="0.01" dmLabel="euclidean"
         nfLabel="Nearest" vcLabel="cd" connectorLabel="Closest"
-        query="../Envs/2D/2d.query" gtype="UNDIRECTED_TREE" debug="false"
-        evaluateGoal="true" growGoals = "true" extenderLabel="BERO">
+        gtype="UNDIRECTED_TREE" debug="true" growGoals="true"
+        extenderLabel="BERO">
+        <!--
         <Evaluator label="NodesEval"/>
+        -->
+        <Evaluator label="RRTQuery"/>
       </BasicRRTStrategy>
     </MPStrategies>
 

@@ -14,11 +14,20 @@
 ////////////////////////////////////////////////////////////////////////////////
 template<class MPTraits>
 class MedialAxisExtender : public ExtenderMethod<MPTraits> {
+
   public:
+
+    ///\name Motion Planning Types
+    ///@{
+
     typedef typename MPTraits::CfgType CfgType;
     typedef typename MPTraits::MPProblemType MPProblemType;
     typedef typename MPProblemType::DistanceMetricPointer DistanceMetricPointer;
     typedef typename MPProblemType::LocalPlannerPointer LocalPlannerPointer;
+
+    ///@}
+    ///\name Construction
+    ///@{
 
     MedialAxisExtender(const MedialAxisUtility<MPTraits>& _medialAxisUtility =
         MedialAxisUtility<MPTraits>(),
@@ -26,48 +35,66 @@ class MedialAxisExtender : public ExtenderMethod<MPTraits> {
         size_t _maxIntermediates = 10, const string& _lpLabel = "");
     MedialAxisExtender(MPProblemType* _problem, XMLNode& _node);
 
-    void ParseXML(XMLNode& _node);
-    virtual void Print(ostream& _os) const;
+    ///@}
+    ///\name MPBaseObject Overrides
+    ///@{
 
-    double GetDelta() const {return m_delta;}
+    void ParseXML(XMLNode& _node);
+    virtual void Print(ostream& _os) const override;
+
+    ///@}
+    ///\name ExtenderMethod Overrides
+    ///@{
 
     virtual bool Extend(const CfgType& _near, const CfgType& _dir,
-        CfgType& _new, LPOutput<MPTraits>& _lpOutput);
+        CfgType& _new, LPOutput<MPTraits>& _lpOutput) override;
+
+    ///@}
 
   private:
+
+    ///\name MedialAxisExtender Properties
+    ///@{
+
     MedialAxisUtility<MPTraits> m_medialAxisUtility;
-    double m_delta, m_minDist, m_extendDist;
+    double m_extendDist;
     size_t m_maxIntermediates;
     string m_lpLabel;
+
+    ///@}
 };
+
+/*------------------------------- Construction -------------------------------*/
 
 template<class MPTraits>
 MedialAxisExtender<MPTraits>::
 MedialAxisExtender(const MedialAxisUtility<MPTraits>& _medialAxisUtility,
     double _delta, double _minDist, double _extendDist,
     size_t _maxIntermediates, const string& _lpLabel) :
-  ExtenderMethod<MPTraits>(), m_medialAxisUtility(_medialAxisUtility),
-  m_delta(_delta), m_minDist(_minDist), m_extendDist(_extendDist),
-  m_maxIntermediates(_maxIntermediates), m_lpLabel(_lpLabel) {
-    this->SetName("MedialAxisExtender");
-  }
+    ExtenderMethod<MPTraits>(), m_medialAxisUtility(_medialAxisUtility),
+    m_extendDist(_extendDist), m_maxIntermediates(_maxIntermediates),
+    m_lpLabel(_lpLabel) {
+  this->SetName("MedialAxisExtender");
+  this->m_maxDist = _delta;
+  this->m_minDist = _minDist;
+}
+
 
 template<class MPTraits>
 MedialAxisExtender<MPTraits>::
 MedialAxisExtender(MPProblemType* _problem, XMLNode& _node) :
-  ExtenderMethod<MPTraits>(_problem, _node),
-  m_medialAxisUtility(_problem, _node) {
-    this->SetName("MedialAxisExtender");
-    ParseXML(_node);
-  }
+    ExtenderMethod<MPTraits>(_problem, _node),
+    m_medialAxisUtility(_problem, _node) {
+  this->SetName("MedialAxisExtender");
+  ParseXML(_node);
+}
+
+/*--------------------------- MPBaseObject Overrides -------------------------*/
 
 template<class MPTraits>
 void
 MedialAxisExtender<MPTraits>::
 ParseXML(XMLNode& _node) {
-  m_delta = _node.Read("delta", false, 1.0, 0.0, MAX_DBL, "Delta distance");
-  m_minDist = _node.Read("minDist", true, 0.001, 0.0, MAX_DBL,
-      "Minimum expansion between each step");
   m_extendDist = _node.Read("extendDist", true, 0.5, 0.0, MAX_DBL, "Step size");
   m_maxIntermediates = _node.Read("maxIntermediates", false, 10, 1, MAX_INT,
       "Maximum number of intermediates on an edge");
@@ -75,18 +102,19 @@ ParseXML(XMLNode& _node) {
       "Local Planner between intermediates");
 }
 
+
 template<class MPTraits>
 void
 MedialAxisExtender<MPTraits>::
 Print(ostream& _os) const {
   ExtenderMethod<MPTraits>::Print(_os);
   m_medialAxisUtility.Print(_os);
-  _os << "\tdelta: " << m_delta << endl;
-  _os << "\tmin dist: " << m_minDist << endl;
   _os << "\textend dist: " << m_extendDist << endl;
   _os << "\tmax intermediates: " << m_maxIntermediates << endl;
   _os << "\tlocal planner label: \"" << m_lpLabel << "\"" << endl;
 }
+
+/*-------------------------- ExtenderMethod Overrides ------------------------*/
 
 template<class MPTraits>
 bool
@@ -151,9 +179,9 @@ Extend(const CfgType& _near, const CfgType& _dir,
     //2) no simple path exists between adjacent configurations
     //3) traveled too far
   } while(
-      dist > m_minDist
+      dist > this->m_minDist
       && lp->IsConnected(curr, tick, &lpOutput, positionRes, orientationRes)
-      && length + dist <= m_delta
+      && length + dist <= this->m_maxDist
       );
 
   _lpOutput.m_intermediates.erase(_lpOutput.m_intermediates.begin());
@@ -165,5 +193,7 @@ Extend(const CfgType& _near, const CfgType& _dir,
     return true;
   }
 }
+
+/*----------------------------------------------------------------------------*/
 
 #endif

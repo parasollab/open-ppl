@@ -10,45 +10,80 @@
 ////////////////////////////////////////////////////////////////////////////////
 template<class MPTraits>
 class MixExtender : public ExtenderMethod<MPTraits> {
+
   public:
-    // Extender label, probability, normalize probability
-    typedef vector<pair<string, pair<double, double> > > ExpanderSet;
+
+    ///\name Motion Planning Types
+    ///@{
 
     typedef typename MPTraits::CfgType CfgType;
     typedef typename MPTraits::MPProblemType MPProblemType;
 
+    /// \brief Extender label, probability, normalize probability
+    typedef vector<pair<string, pair<double, double>>> ExpanderSet;
+
+    ///@}
+    ///\name Construction
+    ///@{
+
     MixExtender();
     MixExtender(MPProblemType* _problem, XMLNode& _node);
+    virtual ~MixExtender() = default;
+
+    ///@}
+    ///\name MPBaseObject Overrides
+    ///@{
 
     void ParseXML(XMLNode& _node);
-    virtual void Print(ostream& _os) const;
+    virtual void Print(ostream& _os) const override;
 
-    double GetDelta() const;
+    ///@{
+    ///\name ExtenderMethod Overrides
+    ///@{
 
     virtual bool Extend(const CfgType& _near, const CfgType& _dir,
-        CfgType& _new, LPOutput<MPTraits>& _lpOutput);
+        CfgType& _new, LPOutput<MPTraits>& _lpOutput) override;
+
+    ///@}
 
   private:
+
+    ///\name Helpers
+    ///@{
+
+    ////////////////////////////////////////////////////////////////////////////
+    /// \brief Compute the minimum and maximum distances over the extender set.
+    void ComputeLimits();
+
+    ///@}
+    ///\name MixExtender State
+    ///@{
+
     ExpanderSet m_growSet;
 
-    mutable bool m_deltaComputed = false;
-    mutable double m_delta = numeric_limits<double>::min();
+    ///@}
 };
+
+/*------------------------------- Construction -------------------------------*/
 
 template<class MPTraits>
 MixExtender<MPTraits>::
-MixExtender() :
-  ExtenderMethod<MPTraits>() {
-    this->SetName("MixExtender");
-  }
+MixExtender() : ExtenderMethod<MPTraits>() {
+  this->SetName("MixExtender");
+  ComputeLimits();
+}
+
 
 template<class MPTraits>
 MixExtender<MPTraits>::
 MixExtender(MPProblemType* _problem, XMLNode& _node) :
-  ExtenderMethod<MPTraits>(_problem, _node) {
-    this->SetName("MixExtender");
-    ParseXML(_node);
-  }
+    ExtenderMethod<MPTraits>(_problem, _node) {
+  this->SetName("MixExtender");
+  ParseXML(_node);
+  ComputeLimits();
+}
+
+/*---------------------------- MPBaseObject Overrides ------------------------*/
 
 template<class MPTraits>
 void
@@ -90,51 +125,55 @@ ParseXML(XMLNode& _node) {
   }
 }
 
+
 template<class MPTraits>
 void
-MixExtender<MPTraits>::Print(ostream& _os) const {
+MixExtender<MPTraits>::
+Print(ostream& _os) const {
   ExtenderMethod<MPTraits>::Print(_os);
   _os << "\textender label : " << endl;
-  for(ExpanderSet::const_iterator it = m_growSet.begin();
-      it != m_growSet.end(); it++)
-    _os << "\t\t" << it->first << endl;
+  for(auto ex : m_growSet)
+    _os << "\t\t" << ex.first << endl;
  }
 
-template<class MPTraits>
-double
-MixExtender<MPTraits>::
-GetDelta() const {
-  if(!m_deltaComputed) {
-    for(auto& e : m_growSet)
-      m_delta = max(m_delta, this->GetExtender(e.first)->GetDelta());
-    m_deltaComputed = true;
-  }
-
-  return m_delta;
-}
+/*------------------------- ExtenderMethod Overrides -------------------------*/
 
 template<class MPTraits>
 bool
-MixExtender<MPTraits>::Extend(const CfgType& _near, const CfgType& _dir,
-    CfgType& _new, LPOutput<MPTraits>& _lpOutput) {
-  if(m_growSet.size() > 0) {
-    double growthProb = DRand();
-    for(ExpanderSet::iterator it = m_growSet.begin(); it != m_growSet.end();
-        it++) {
-      if(growthProb < it->second.second) {
-        if(this->m_debug)
-          cout << " calling : " << it->first << endl;
-        return this->GetExtender(it->first)
-          ->Extend(_near, _dir, _new, _lpOutput);
-      }
+MixExtender<MPTraits>::
+Extend(const CfgType& _near, const CfgType& _dir, CfgType& _new,
+    LPOutput<MPTraits>& _lpOutput) {
+  if(m_growSet.empty())
+    throw RunTimeException(WHERE, "No extender methods present in MixExtender");
+
+  double growthProb = DRand();
+  for(ExpanderSet::iterator it = m_growSet.begin(); it != m_growSet.end();
+      it++) {
+    if(growthProb < it->second.second) {
+      if(this->m_debug)
+        cout << " calling : " << it->first << endl;
+      return this->GetExtender(it->first)->Extend(_near, _dir, _new, _lpOutput);
     }
-  }
-  else{
-    cerr << "Error::ExpandTree : No extender method" << endl;
-    exit(1);
   }
 
   return false;
 }
+
+/*----------------------------- Helpers --------------------------------------*/
+
+template <typename MPTraits>
+void
+MixExtender<MPTraits>::
+ComputeLimits() {
+  this->m_maxDist = numeric_limits<double>::min();
+  this->m_minDist = numeric_limits<double>::max();
+  for(auto& ex : m_growSet) {
+    auto e = this->GetExtender(ex.first);
+    this->m_maxDist = max(this->m_maxDist, e->GetMaxDistance());
+    this->m_minDist = min(this->m_minDist, e->GetMaxDistance());
+  }
+}
+
+/*----------------------------------------------------------------------------*/
 
 #endif

@@ -43,7 +43,7 @@
       <OptimalNF label="OptimalK" nfLabel="BFNF"/>
       <RadiusNF label="RadiusNF" dmLabel="euclidean" radius="5"/>
       <RandomNF label="RandomNF" dmLabel="euclidean" k="5"/>
-      <DPESNF label="BFNF" dmLabel="euclidean" k="5" m="3"/>
+      <DPESNF label="DPESNF" dmLabel="euclidean" k="5" m="3"/>
       <!--MPNNNF label="BFNF" dmLabel="euclidean" use_rotational="0" use_scaling="0"/-->
       <CGALNF label="CGALNF" dmLabel="euclidean" k="5"/>
       <!--SpillTreeNF label="BFNF" dmLabel="euclidean"/-->
@@ -124,10 +124,29 @@
     </LocalPlanners>
 
     <Extenders>
-      <BasicExtender label="BERO" debug="false"
-        dmLabel="euclidean" vcLabel="cd1" delta="1.0"/>
-      <BasicExtender label="BESO" debug="false"
-        dmLabel="euclidean" vcLabel="cd1" delta="10.0" randomOrientation="false"/>
+      <BasicExtender label="BERO" debug="false" dmLabel="euclidean" vcLabel="cd1"
+        maxDist="1." minDist=".001"/>
+      <BasicExtender label="BESO" debug="false" dmLabel="euclidean" vcLabel="cd1"
+        maxDist="10." minDist=".001" randomOrientation="false"/>
+      <MedialAxisExtender label="MAE" maxDist="10.0" minDist="0.01"
+        extendDist="0.5" maxIntermediates="10" lpLabel="sl" vcLabel="cd4"
+        dmLabel="euclidean" clearanceType="exact" penetrationType="exact"
+        useBBX="true" epsilon="0.01" historyLength="5" positional="true"/>
+      <RandomObstacleVector label="ROVRO" debug="false" dmLabel="euclidean"
+        vcLabel="cd1" maxDist="10.0" minDist=".001"/>
+      <RandomObstacleVector label="ROVSO" debug="false" dmLabel="euclidean"
+        vcLabel="cd1" maxDist="10.0" minDist=".001" randomOrientation="false"/>
+      <RotationThenTranslation label="RTT" debug="false" dmLabel="euclidean"
+        vcLabel="cd1" maxDist="10.0" minDist=".001"/>
+      <TraceCSpaceObstacle label="TCSO" debug="false" dmLabel="euclidean"
+        vcLabel="cd1" maxDist="10.0" minDist=".001"/>
+      <TraceMAPush label="TMAP" debug="false" dmLabel="euclidean" vcLabel="cd1"
+        maxDist="10.0" minDist=".001" clearanceType="exact"
+        penetrationType="exact"/>
+      <TraceObstacle label="TORO" debug="false" dmLabel="euclidean"
+        vcLabel="cd1" maxDist="10.0" minDist=".001"/>
+      <TraceObstacle label="TOSO" debug="false" dmLabel="euclidean"
+        vcLabel="cd1" maxDist="10.0" minDist=".001" randomOrientation="false"/>
       <MixExtender label="ME">
         <Extender label="BERO" probability="0.1"/>
         <Extender label="BESO" probability="0.1"/>
@@ -139,26 +158,6 @@
         <Extender label="TCSO" probability="0.1"/>
         <Extender label="TMAP" probability="0.1"/>
       </MixExtender>
-      <MedialAxisExtender label="MAE" delta="10.0" minDist="0.01"
-        extendDist="0.5" maxIntermediates="10" lpLabel="sl"
-        vcLabel="cd4" dmLabel="euclidean"
-        clearanceType="exact" penetrationType="exact" useBBX="true"
-        epsilon="0.01" historyLength="5" positional="true"/>
-      <RandomObstacleVector label="ROVRO" debug="false"
-        dmLabel="euclidean" vcLabel="cd1" delta="10.0"/>
-      <RandomObstacleVector label="ROVSO" debug="false"
-        dmLabel="euclidean" vcLabel="cd1" delta="10.0" randomOrientation="false"/>
-      <RotationThenTranslation label="RTT" debug="false"
-        dmLabel="euclidean" vcLabel="cd1" delta="10.0"/>
-      <TraceCSpaceObstacle label="TCSO" debug="false"
-        dmLabel="euclidean" vcLabel="cd1" delta="10.0"/>
-      <TraceMAPush label="TMAP" debug="false"
-        dmLabel="euclidean" vcLabel="cd1" delta="10.0"
-        clearanceType="exact" penetrationType="exact"/>
-      <TraceObstacle label="TORO" debug="false"
-        dmLabel="euclidean" vcLabel="cd1" delta="10.0"/>
-      <TraceObstacle label="TOSO" debug="false"
-        dmLabel="euclidean" vcLabel="cd1" delta="10.0" randomOrientation="false"/>
     </Extenders>
 
    <PathModifiers>
@@ -201,7 +200,8 @@
       <!--PreferentialAttachment label="Preferential" lp_method="sl" nf="BFNF" k="2" fail="5" unconnected="true"
         random="true" dm_method="euclidean" CheckIfSameCC="false"/-->
       <RewireConnector label="OptimalRewire" nfLabel="OptimalK" lpLabel="sl"/>
-      <RRTConnect label="RRTConnect" nfLabel="BFNF" lpLabel="sl" eLabel="BERO" minDist="0.0" iterations="10000"/>
+      <RRTConnect label="RRTConnect" nfLabel="BFNF" lpLabel="sl" eLabel="BERO"
+        minDist="0.0" iterations="10000"/>
     </Connectors>
 
     <Metrics>
@@ -321,8 +321,10 @@
         <Evaluator method="NodesEval"/>
       </BasicPRM>
 
-      <!-- Basic PRM restarted from an input roadmap input.map at the beginning of node connection -->
-      <BasicPRM label="BasicPRM2" inputMap="input.map" startAt="connecting">
+      <!-- Basic PRM restarted from an input roadmap input.map at the beginning
+           of node connection -->
+      <BasicPRM label="BasicPRM2"
+        inputMap="input.map" startAt="connecting">
         <Sampler method="UniformRandomFree" number="10" attempts="10"/>
         <Connector method="Closest"/>
         <ComponentConnector method="ConnectCCs"/>
@@ -337,7 +339,7 @@
       </BasicPRM>
 
       <!-- BasicRRT -->
-      <BasicRRTStrategy label="BasicRRT" minDist="0.001"
+      <BasicRRTStrategy label="BasicRRT"
         numRoots="1" m="1" growthFocus="0.01" dmLabel="euclidean"
         nfLabel="Nearest" vcLabel="cd1" connectorLabel="Closest"
         query="2D/2d.query" gtype="UNDIRECTED_TREE" debug="false"
@@ -345,35 +347,33 @@
         <Evaluator label="NodesEval"/>
       </BasicRRTStrategy>
 
-      <!-- RRG -->
-      <!-- If optimal connection is wanted, the correct connector needs to be selected -->
-      <BasicRRTStrategy label="RRG" minDist="0.001"
+      <!-- If optimal connection is wanted, the correct connector needs to be
+           selected -->
+      <BasicRRTStrategy label="RRG"
         numRoots="1" m="1" growthFocus="0.01" dmLabel="euclidean"
         nfLabel="Nearest" vcLabel="cd1" query="2D/2d.query" extenderLabel="BERO"
         connectorLabel="OptimalConnector" gtype="UNDIRECTED_GRAPH">
         <Evaluator label="NodesEval"/>
       </BasicRRTStrategy>
 
-      <!-- RRT* -->
       <!-- The connector needs to be OptimalRewire for RRT* -->
-      <BasicRRTStrategy label="RRTstar" minDist="0.001"
+      <BasicRRTStrategy label="RRTstar"
         numRoots="1" m="1" growthFocus="0.01" dmLabel="euclidean"
         nfLabel="Nearest" vcLabel="cd1" query="2D/2d.query" extenderLabel="BERO"
         connectorLabel="OptimalRewire" gtype="UNDIRECTED_GRAPH">
         <Evaluator label="NodesEval"/>
       </BasicRRTStrategy>
 
-      <!-- SRTStrategy -->
-      <SRTStrategy label="SRT" delta="5" minDist="0.01"
-        lpLabel="sl" dmLabel="euclidean" nfLabel="Nearest" vcLabel="cd1" eLabel="BERO"
-        query="2D/2d.query" debug="true"
-        samples="5" expansions="10" closeCent="1" randCent="2" closePairs="2" connIter="5">
+      <SRTStrategy label="SRT"
+        lpLabel="sl" dmLabel="euclidean" nfLabel="Nearest"
+        vcLabel="cd1" eLabel="BERO" query="2D/2d.query" debug="true" samples="5"
+        expansions="10" closeCent="1" randCent="2" closePairs="2" connIter="5">
         <Evaluator label="ModQuery"/>
       </SRTStrategy>
 
       <!-- ObstacleBasedRRT -->
       <!-- The extender needs to be MixExtender for OBRRT -->
-      <BasicRRTStrategy label="OBRRT" minDist="0.001"
+      <BasicRRTStrategy label="OBRRT"
         numRoots="1" m="1" growthFocus="0.01" dmLabel="euclidean"
         nfLabel="Nearest" vcLabel="cd1" connectorLabel="Closest"
         query="2D/2d.query" gtype="UNDIRECTED_TREE" debug="false"
@@ -382,7 +382,7 @@
       </BasicRRTStrategy>
 
       <!-- Adaptive RRT -->
-      <AdaptiveRRT label="AdaptiveRRT" minDist="0.001"
+      <AdaptiveRRT label="AdaptiveRRT"
         numRoots="1" growthFocus="0.01" dmLabel="euclidean"
         nfLabel="BFNF" vcLabel="cd1" query="2D/2d.query"
         gtype="UNDIRECTED_TREE" gamma="0.1" cost="reward" debug="true">
@@ -395,7 +395,7 @@
       </AdaptiveRRT>
 
       <!-- DynamicDomainRRT -->
-      <DynamicDomainRRT label="DynamicDomainRRT" minDist="0.001"
+      <DynamicDomainRRT label="DynamicDomainRRT"
         growthFocus="0.01" dmLabel="euclidean"
         nfLabel="Nearest" vcLabel="cd1"
         query="2D/2d.query" gtype="UNDIRECTED_TREE" debug="false"
@@ -403,7 +403,7 @@
         r="10"/>
 
       <!-- DynamicRegionRRT -->
-      <DynamicRegionRRT label="DynamicRegionRRT" minDist="0.001"
+      <DynamicRegionRRT label="DynamicRegionRRT"
         growthFocus="0.01" dmLabel="euclidean"
         nfLabel="Nearest" vcLabel="cd"
         query="2D/2d.query" gtype="UNDIRECTED_TREE" debug="false"
@@ -442,7 +442,8 @@
         <Evaluator label="NodesEval"/>
       </EvaluateMapStrategy>
 
-      <UtilityGuidedGenerator label="UtilityGuided" vcLabel="cd1" nfLabel="BFNF" connectorLabel="Closest">
+      <UtilityGuidedGenerator label="UtilityGuided" vcLabel="cd1" nfLabel="BFNF"
+        connectorLabel="Closest">
         <Evaluator label="NodesEval"/>
       </UtilityGuidedGenerator>
 

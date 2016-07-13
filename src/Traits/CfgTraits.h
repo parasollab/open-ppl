@@ -104,6 +104,7 @@
 #include "MapEvaluators/PrintMapEvaluation.h"
 #include "MapEvaluators/Query.h"
 #include "MapEvaluators/ReplanningEvaluation.h"
+#include "MapEvaluators/RRTQuery.h"
 #include "MapEvaluators/TimeEvaluator.h"
 #include "MapEvaluators/TrueEvaluation.h"
 
@@ -288,6 +289,7 @@ struct MPTraits {
     PrintMapEvaluation<MPTraits>,
     Query<MPTraits>,
     ReplanningEvaluation<MPTraits>,
+    RRTQuery<MPTraits>,
     TimeEvaluator<MPTraits>,
     TrueEvaluation<MPTraits>
       > MapEvaluatorMethodList;
@@ -301,7 +303,7 @@ struct MPTraits {
     ClearanceTestStrategy<MPTraits>,
     DMTestStrategy<MPTraits>,
     DynamicDomainRRT<MPTraits>,
-    DynamicRegionRRT<MPTraits>,
+    //DynamicRegionRRT<MPTraits>,
     EvaluateMapStrategy<MPTraits>,
     HybridPRM<MPTraits>,
     LPCompare<MPTraits>,

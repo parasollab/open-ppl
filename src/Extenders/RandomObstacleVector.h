@@ -1,5 +1,5 @@
-#ifndef RANDOMOBSTACLEVECTOR_H_
-#define RANDOMOBSTACLEVECTOR_H_
+#ifndef RANDOM_OBSTACLE_VECTOR_H_
+#define RANDOM_OBSTACLE_VECTOR_H_
 
 #include "BasicExtender.h"
 
@@ -17,32 +17,51 @@
 ////////////////////////////////////////////////////////////////////////////////
 template<class MPTraits>
 class RandomObstacleVector : public BasicExtender<MPTraits> {
+
   public:
+
+    ///\name Motion Planning Types
+    ///@{
+
     typedef typename MPTraits::CfgType CfgType;
     typedef typename MPTraits::MPProblemType MPProblemType;
 
-    RandomObstacleVector(const string& _dmLabel = "",
-        const string& _vcLabel = "", double _delta = 1.0,
-        bool _randomOrientation = true);
+    ///@}
+    ///\name Construction
+    ///@{
+
+    RandomObstacleVector(const string& _dmLabel = "", const string& _vcLabel = "",
+        double _delta = 1.0, bool _randomOrientation = true);
     RandomObstacleVector(MPProblemType* _problem, XMLNode& _node);
 
+    ///@}
+    ///\name ExtenderMethod Overrides
+    ///@{
+
     virtual bool Extend(const CfgType& _near, const CfgType& _dir,
-        CfgType& _new, LPOutput<MPTraits>& _lpOutput);
+        CfgType& _new, LPOutput<MPTraits>& _lpOutput) override;
+
+    ///@}
 };
 
-template<class MPTraits>
-RandomObstacleVector<MPTraits>::RandomObstacleVector(const string& _dmLabel,
-    const string& _vcLabel, double _delta, bool _randomOrientation) :
-  BasicExtender<MPTraits>(_dmLabel, _vcLabel, _delta, _randomOrientation) {
-    this->SetName("RandomObstacleVector");
-  }
+/*------------------------------ Construction --------------------------------*/
 
 template<class MPTraits>
-RandomObstacleVector<MPTraits>::RandomObstacleVector(MPProblemType* _problem,
-    XMLNode& _node) :
-  BasicExtender<MPTraits>(_problem, _node) {
-    this->SetName("RandomObstacleVector");
-  }
+RandomObstacleVector<MPTraits>::
+RandomObstacleVector(const string& _dmLabel, const string& _vcLabel,
+    double _delta, bool _randomOrientation) :
+    BasicExtender<MPTraits>(_dmLabel, _vcLabel, _delta, _randomOrientation) {
+  this->SetName("RandomObstacleVector");
+}
+
+
+template<class MPTraits>
+RandomObstacleVector<MPTraits>::
+RandomObstacleVector(MPProblemType* _problem, XMLNode& _node) :
+    BasicExtender<MPTraits>(_problem, _node) {
+  this->SetName("RandomObstacleVector");
+}
+
 
 template<class MPTraits>
 bool
@@ -55,9 +74,11 @@ RandomObstacleVector<MPTraits>::Extend(const CfgType& _near,
 
   // Get an obstacle vector from env
   int numBodies = env->NumObstacles();
-  if( numBodies > 1 ) {//this growth method only works with obstacles (need 2 multibodies)
+  if( numBodies > 1 ) {
+    //this growth method only works with obstacles (need 2 multibodies)
     int randIndex = (LRand() % (numBodies-1)) + 1;
-    GMSPolyhedron& poly = env->GetObstacle(randIndex)->GetFixedBody(0)->GetWorldPolyhedron();
+    GMSPolyhedron& poly = env->GetObstacle(randIndex)->GetFixedBody(0)->
+        GetWorldPolyhedron();
     vector<Vector3d>& vertexList    = poly.m_vertexList;
     vector<GMSPolygon>& polygonList = poly.m_polygonList;
 

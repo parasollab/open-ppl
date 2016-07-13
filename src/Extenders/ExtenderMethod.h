@@ -10,19 +10,66 @@
 /// starting node in some input direction - note that not all expansion
 /// methods go in straight lines through @cspace.
 ////////////////////////////////////////////////////////////////////////////////
-template<class MPTraits>
+template <class MPTraits>
 class ExtenderMethod : public MPBaseObject<MPTraits> {
+
+  protected:
+
+    ///\name Extender Properties
+    ///@{
+
+    double m_minDist{.001};
+    double m_maxDist{10};
+
+    ///@}
+
   public:
+
+    ///\name Motion Planning Types
+    ///@{
+
     typedef typename MPTraits::CfgType CfgType;
     typedef typename MPTraits::MPProblemType MPProblemType;
 
-    ExtenderMethod() {}
-    ExtenderMethod(MPProblemType* _problem, XMLNode& _node)
-      : MPBaseObject<MPTraits>(_problem, _node) {}
+    ///@}
+    ///\name Construction
+    ///@{
+
+    ExtenderMethod() = default;
+    ExtenderMethod(MPProblemType* _problem, XMLNode& _node) :
+        MPBaseObject<MPTraits>(_problem, _node) {
+      ParseXML(_node);
+    }
+    virtual ~ExtenderMethod() = default;
+
+    ///@}
+    ///\name MPBaseObject Overrides
+    ///@{
+
+    virtual void Print(ostream& _os) const override {
+      MPBaseObject<MPTraits>::Print(_os);
+      _os << "\tMin distance: " << m_minDist << endl
+          << "\tMax distance: " << m_maxDist << endl;
+    }
+
+    void ParseXML(XMLNode& _node) {
+      m_maxDist = _node.Read("maxDist", false, 10., 0., MAX_DBL, "Maximum "
+          "extension distance");
+      m_minDist = _node.Read("minDist", false, .001, 0., MAX_DBL, "Minimum "
+          "extension distance.");
+    }
+
+    ///@}
+    ///\name Required Interface
+    ///@{
 
     ////////////////////////////////////////////////////////////////////////////
     /// @return Maximum extension distance
-    virtual double GetDelta() const = 0;
+    virtual double GetMinDistance() const {return m_minDist;}
+
+    ////////////////////////////////////////////////////////////////////////////
+    /// @return Maximum extension distance
+    virtual double GetMaxDistance() const {return m_maxDist;}
 
     ////////////////////////////////////////////////////////////////////////////
     /// @brief Extends a path from an input configuration towards a given
@@ -44,6 +91,8 @@ class ExtenderMethod : public MPBaseObject<MPTraits> {
     ////////////////////////////////////////////////////////////////////////////
     virtual bool Extend(const CfgType& _nearest, const CfgType& _dir,
         CfgType& _new, LPOutput<MPTraits>& _lpOutput) = 0;
+
+    ///@}
 };
 
 #endif
