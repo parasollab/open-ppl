@@ -140,9 +140,8 @@ ParseXML(XMLNode& _node) {
   m_best = _node.Read("best", true, false, "Best control or random control.");
 
   // Ensure maxDist isn't used by requiring an impossible bound during parsing.
-  double checkdist = _node.Read("maxDist", false, 0., 0., -1.,
-      "Max distance can't be specified for this object, it is computed "
-      "automatically.");
+  _node.Read("maxDist", false, 0., 0., -1., "Max distance can't be specified "
+      "for this object, it is computed automatically.");
 }
 
 
