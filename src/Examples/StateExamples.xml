@@ -63,8 +63,8 @@
       </BasicRRTStrategy>
     </MPStrategies>
 
-    <Solver mpStrategyLabel="KRRTQuery" seed="12345678"  baseFilename="KRRT"
-      vizmoDebug="true"/>
+    <Solver mpStrategyLabel="DynamicRegionRRT" seed="12345678"
+      baseFilename="drrrt" vizmoDebug="true"/>
 
   </MPProblem>
 </MotionPlanning>

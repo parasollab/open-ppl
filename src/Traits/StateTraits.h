@@ -29,6 +29,7 @@
 
 //mp strategies includes
 #include "MPStrategies/BasicRRTStrategy.h"
+#include "MPStrategies/DynamicRegionRRT.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup MotionPlanningUniverse
@@ -104,7 +105,8 @@ struct StateTraits {
 
   //types of motion planning strategies available in our world
   typedef boost::mpl::list<
-    BasicRRTStrategy<StateTraits>
+    BasicRRTStrategy<StateTraits>,
+    DynamicRegionRRT<StateTraits>
       > MPStrategyMethodList;
 };
 
