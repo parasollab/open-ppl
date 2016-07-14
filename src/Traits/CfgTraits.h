@@ -303,7 +303,7 @@ struct MPTraits {
     ClearanceTestStrategy<MPTraits>,
     DMTestStrategy<MPTraits>,
     DynamicDomainRRT<MPTraits>,
-    //DynamicRegionRRT<MPTraits>,
+    DynamicRegionRRT<MPTraits>,
     EvaluateMapStrategy<MPTraits>,
     HybridPRM<MPTraits>,
     LPCompare<MPTraits>,

@@ -23,13 +23,13 @@
 
     <Extenders>
       <KinodynamicExtender label="FixedBest" dmLabel="weuclidean" vcLabel="cd1"
-        timeStep="30.0" fixed="true" best="true"/>
+        timeStep="30" fixed="true" best="true" minDist=".01"/>
       <KinodynamicExtender label="FixedRandom" dmLabel="weuclidean" vcLabel="cd1"
-        timeStep="30.0" fixed="true" best="false"/>
+        timeStep="30" fixed="true" best="false" minDist=".01"/>
       <KinodynamicExtender label="VaryBest" dmLabel="weuclidean" vcLabel="cd1"
-        timeStep="30.0" fixed="false" best="true"/>
+        timeStep="30" fixed="false" best="true" minDist=".01"/>
       <KinodynamicExtender label="VaryRandom" dmLabel="weuclidean" vcLabel="cd1"
-        timeStep="30.0" fixed="false" best="false"/>
+        timeStep="30" fixed="false" best="false" minDist=".01"/>
     </Extenders>
 
     <Metrics>
@@ -38,10 +38,10 @@
 
     <MapEvaluators>
       <ConditionalEvaluator label="NodesEval" metric_method="NumNodes"
-        value="1500" operator=">="/>
+        value="100" operator=">="/>
       <RRTQuery label="RRTQuery" queryFile="2DState/2d.query" goalDist=".3"
-        nfLabel="NearestPosition" debug="false"/>
-      <ComposeEvaluator label="BoundedQuery" operator="AND">
+        nfLabel="NearestPosition" exLabel="FixedRandom" debug="false"/>
+      <ComposeEvaluator label="BoundedQuery" operator="OR">
         <Evaluator label="RRTQuery"/>
         <Evaluator label="NodesEval"/>
       </ComposeEvaluator>
@@ -49,18 +49,18 @@
 
     <MPStrategies>
       <!-- KinodynamicRRT -->
-      <KinodynamicRRTStrategy label="KRRTQuery" growthFocus="0.05" minDist="0.01"
+      <BasicRRTStrategy label="KRRTQuery" growthFocus="0.05"
         dmLabel="weuclidean" nfLabel="Nearest" vcLabel="cd1"
-        extenderLabel="FixedRandom" debug="false">
+        gtype="UNDIRECTED_TREE" extenderLabel="FixedRandom" debug="false">
         <Evaluator label="BoundedQuery"/>
-      </KinodynamicRRTStrategy>
+      </BasicRRTStrategy>
 
       <!-- KinodynamicRRT -->
-      <KinodynamicRRTStrategy label="KRRTNodes" growthFocus="0.05" minDist="0.01"
+      <BasicRRTStrategy label="KRRTNodes" growthFocus="0.05"
         dmLabel="weuclidean" nfLabel="Nearest" vcLabel="cd1"
-        extenderLabel="FixedRandom" debug="false">
+        gtype="UNDIRECTED_TREE" extenderLabel="FixedRandom" debug="false">
         <Evaluator label="NodesEval"/>
-      </KinodynamicRRTStrategy>
+      </BasicRRTStrategy>
     </MPStrategies>
 
     <Solver mpStrategyLabel="KRRTQuery" seed="12345678"  baseFilename="KRRT"

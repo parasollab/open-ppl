@@ -26,6 +26,9 @@ class NonHolonomicMultiBody : public ActiveMultiBody {
     /// @brief Sample random velocity in bounds.
     vector<double> GetRandomVelocity() const;
 
+    double GetMaxLinearVelocity() const {return m_maxLinearVel;}
+    double GetMaxAngularVelocity() const {return m_maxAngularVel;}
+
     ////////////////////////////////////////////////////////////////////////////
     /// @param _pos Configuration dofs
     /// @param _vel Configuration vels

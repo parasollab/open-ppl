@@ -28,7 +28,7 @@
 #include "MapEvaluators/RRTQuery.h"
 
 //mp strategies includes
-#include "MPStrategies/KinodynamicRRTStrategy.h"
+#include "MPStrategies/BasicRRTStrategy.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup MotionPlanningUniverse
@@ -104,7 +104,7 @@ struct StateTraits {
 
   //types of motion planning strategies available in our world
   typedef boost::mpl::list<
-    KinodynamicRRTStrategy<StateTraits>
+    BasicRRTStrategy<StateTraits>
       > MPStrategyMethodList;
 };
 

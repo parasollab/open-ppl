@@ -141,14 +141,20 @@ class BasicRRTStrategy : public MPStrategyMethod<MPTraits> {
 
     ////////////////////////////////////////////////////////////////////////////
     /// \brief Attempt to expand the map by growing towards a target
-    ///        configuration.
-    /// \param[in] _nearestVID The VID to grow from.
-    /// \param[in] _target     The target configuration.
-    virtual VID ExpandTree(const VID _nearestVID, const CfgType& _target);
+    ///        configuration from the nearest existing node in the current tree.
+    /// \param[in] _target The target configuration.
+    /// \return            The VID of a newly created Cfg if successful,
+    ///                    INVALID_VID otherwise.
+    virtual VID ExpandTree(CfgType& _target);
 
     ////////////////////////////////////////////////////////////////////////////
-    /// \brief Overload provided for compatability with old methods.
-    virtual VID ExpandTree(CfgType& _target);
+    /// \brief Attempt to expand the map by growing towards a target
+    ///        configuration from an arbitrary node.
+    /// \param[in] _nearestVID The VID to grow from.
+    /// \param[in] _target     The target configuration.
+    /// \return                The VID of a newly created Cfg if successful,
+    ///                        INVALID_VID otherwise.
+    virtual VID ExpandTree(const VID _nearestVID, const CfgType& _target);
 
     ////////////////////////////////////////////////////////////////////////////
     /// \brief If multiple trees exist, try to connect the current tree with the
@@ -532,7 +538,7 @@ BasicRRTStrategy<MPTraits>::
 FindNearestNeighbor(const CfgType& _cfg, const TreeIter& _tree) {
   this->GetStatClass()->StartClock("NeighborhoodFinding");
 
-  vector<pair<VID, double> > neighbors;
+  vector<pair<VID, double>> neighbors;
   auto nf = this->GetNeighborhoodFinder(m_nf);
   nf->FindNeighbors(this->GetRoadmap(),
       _tree->begin(), _tree->end(),
@@ -626,6 +632,15 @@ AddEdge(VID _source, VID _target, const LPOutput<MPTraits>& _lpOutput) {
 template<class MPTraits>
 typename BasicRRTStrategy<MPTraits>::VID
 BasicRRTStrategy<MPTraits>::
+ExpandTree(CfgType& _target) {
+  VID nearestVID = FindNearestNeighbor(_target, m_currentTree);
+  return this->ExpandTree(nearestVID, _target);
+}
+
+
+template<class MPTraits>
+typename BasicRRTStrategy<MPTraits>::VID
+BasicRRTStrategy<MPTraits>::
 ExpandTree(const VID _nearestVID, const CfgType& _target) {
   if(this->m_debug)
     cout << "Trying expansion from " << _nearestVID << "..." << endl;
@@ -633,7 +648,7 @@ ExpandTree(const VID _nearestVID, const CfgType& _target) {
   auto e = this->GetExtender(m_extenderLabel);
 
   // Try to extend from the _nearestVID to _target
-  VID newVID{};
+  VID newVID;
   CfgType newCfg;
   LPOutput<MPTraits> lpOutput;
   double dist = this->Extend(_nearestVID, _target, newCfg, lpOutput);
@@ -679,15 +694,6 @@ ExpandTree(const VID _nearestVID, const CfgType& _target) {
   }
 
   return newVID;
-}
-
-
-template<class MPTraits>
-typename BasicRRTStrategy<MPTraits>::VID
-BasicRRTStrategy<MPTraits>::
-ExpandTree(CfgType& _target) {
-  VID nearestVID = FindNearestNeighbor(_target, m_currentTree);
-  return this->ExpandTree(nearestVID, _target);
 }
 
 

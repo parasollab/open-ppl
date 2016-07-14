@@ -78,7 +78,7 @@ Read(GMSPolyhedron::COMAdjust _comAdjust) {
     m_filename : m_modelDataDir + m_filename;
 
   if(!FileExists(filename))
-    throw ParseException(filename, "File not found.");
+    throw ParseException(WHERE, "File \'" + filename + "\' not found.");
 
   m_polyhedron.Read(filename, _comAdjust);
   m_worldPolyhedron = m_polyhedron;

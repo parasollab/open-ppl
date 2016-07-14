@@ -233,7 +233,6 @@ template <typename MPTraits>
 bool
 RRTQuery<MPTraits>::
 operator()() {
-  this->m_debug = true;
   return PerformQuery(this->GetRoadmap());
 }
 

@@ -46,8 +46,13 @@ class KinodynamicExtender : public ExtenderMethod<MPTraits> {
     ///\name ExtenderMethod Overrides
     ///@{
 
-    virtual bool Extend(const StateType& _near, const StateType& _dir,
-        StateType& _new, LPOutput<MPTraits>& _lpOutput) override;
+    virtual bool Extend(const StateType& _start, const StateType& _end,
+        StateType& _new, LPOutput<MPTraits>& _lp) override;
+
+    ////////////////////////////////////////////////////////////////////////////
+    /// \brief Compute the maximum distance that this extender could push a
+    ///        configuration on first request.
+    virtual double GetMaxDistance() const;
 
     ///@}
 
@@ -56,13 +61,30 @@ class KinodynamicExtender : public ExtenderMethod<MPTraits> {
     ///\name Helpers
     ///@{
 
-    bool ExtendBestControl(const StateType&, const StateType&, size_t, double,
-        StateType&, LPOutput<MPTraits>&);
-    bool ExtendRandomControl(const StateType&, const StateType&, size_t, double,
-        StateType&, LPOutput<MPTraits>&);
+    ////////////////////////////////////////////////////////////////////////////
+    /// \brief Try each control and choose the one that produces a configuration
+    ///        closest to _end.
+    bool ExtendBestControl(const StateType& _start, const StateType& _end,
+        size_t _ticks, double _dt, StateType& _new,
+        LPOutput<MPTraits>& _lp) const;
 
-    void SetOutput(const string&, size_t, const vector<double>&, bool,
-        LPOutput<MPTraits>&);
+    ////////////////////////////////////////////////////////////////////////////
+    /// \brief Extend with a random control.
+    bool ExtendRandomControl(const StateType& _start, const StateType& _end,
+        size_t _ticks, double _dt, StateType& _new,
+        LPOutput<MPTraits>& _lp) const;
+
+    ////////////////////////////////////////////////////////////////////////////
+    /// \brief Set the lpOutput data, including label, timestep, distance, and
+    ///        intermediates.
+    /// \param[in]  _ticks   The number of ticks in this extension.
+    /// \param[in]  _control The control used to generate this extension.
+    /// \param[in]  _start   The start configuration.
+    /// \param[in]  _end     The ending configuration.
+    /// \param[out] _lp      The lpOutput object to set.
+    void SetOutput(size_t _ticks, const vector<double>& _control,
+        const StateType& _start, const StateType& _end,
+        LPOutput<MPTraits>& _lp) const;
 
     ///@}
     ///\name MPObject Labels
@@ -75,7 +97,7 @@ class KinodynamicExtender : public ExtenderMethod<MPTraits> {
     ///\name Extender Properties
     ///@{
 
-    double m_timeStep; ///< Time step
+    double m_timeStep; ///< The number of time resolutions to use for a step.
     bool m_fixed;      ///< True is fixed step at m_timeStep
                        ///< false is varyiable time-step in (0, m_timeStep)
     bool m_best;       ///< True is best control selection
@@ -116,6 +138,11 @@ ParseXML(XMLNode& _node) {
   m_fixed = _node.Read("fixed", true, true, "Fixed time-step or variable "
       "time-step.");
   m_best = _node.Read("best", true, false, "Best control or random control.");
+
+  // Ensure maxDist isn't used by requiring an impossible bound during parsing.
+  double checkdist = _node.Read("maxDist", false, 0., 0., -1.,
+      "Max distance can't be specified for this object, it is computed "
+      "automatically.");
 }
 
 
@@ -134,16 +161,34 @@ Print(ostream& _os) const {
 template<class MPTraits>
 bool
 KinodynamicExtender<MPTraits>::
-Extend(const StateType& _near, const StateType& _dir, StateType& _new,
-    LPOutput<MPTraits>& _lpOutput) {
+Extend(const StateType& _start, const StateType& _end, StateType& _new,
+    LPOutput<MPTraits>& _lp) {
   double timeStep = m_fixed ? m_timeStep : m_timeStep*DRand();
   size_t nTicks = ceil(timeStep);
   double dt = timeStep * this->GetEnvironment()->GetTimeRes() / nTicks;
 
   if(m_best)
-    return ExtendBestControl(_near, _dir, nTicks, dt, _new, _lpOutput);
+    return ExtendBestControl(_start, _end, nTicks, dt, _new, _lp);
   else
-    return ExtendRandomControl(_near, _dir, nTicks, dt, _new, _lpOutput);
+    return ExtendRandomControl(_start, _end, nTicks, dt, _new, _lp);
+}
+
+
+template <typename MPTraits>
+double
+KinodynamicExtender<MPTraits>::
+GetMaxDistance() const {
+  static bool distanceCached = false;
+  if(!distanceCached) {
+    // Approximate max distance as the largest timestep * max velocity.
+    auto env = this->GetEnvironment();
+    shared_ptr<NonHolonomicMultiBody> robot =
+        dynamic_pointer_cast<NonHolonomicMultiBody>(env->GetRobot(0));
+    const_cast<double&>(this->m_maxDist) = robot->GetMaxLinearVelocity() *
+        m_timeStep * env->GetTimeRes();
+    distanceCached = true;
+  }
+  return this->m_maxDist;
 }
 
 /*------------------------------ Helpers -------------------------------------*/
@@ -151,8 +196,8 @@ Extend(const StateType& _near, const StateType& _dir, StateType& _new,
 template<typename MPTraits>
 bool
 KinodynamicExtender<MPTraits>::
-ExtendBestControl(const StateType& _near, const StateType& _dir, size_t _nTicks,
-    double _dt, StateType& _new, LPOutput<MPTraits>& _lpOutput) {
+ExtendBestControl(const StateType& _start, const StateType& _end, size_t _nTicks,
+    double _dt, StateType& _new, LPOutput<MPTraits>& _lp) const {
   string callee("KinodynamicExtender::Expand");
 
   Environment* env = this->GetEnvironment();
@@ -166,10 +211,10 @@ ExtendBestControl(const StateType& _near, const StateType& _dir, size_t _nTicks,
 
   for(auto& c : control) {
     //reset variables
-    StateType tick = _near;
+    StateType tick = _start;
     size_t ticker = 0;
     bool collision = false;
-    _lpOutput.m_intermediates.clear();
+    LPOutput<MPTraits> lp;
 
     //apply control
     const vector<double>& cont = c->GetControl();
@@ -178,17 +223,17 @@ ExtendBestControl(const StateType& _near, const StateType& _dir, size_t _nTicks,
       if(!env->InBounds(tick) || !vc->IsValid(tick, callee))
         collision = true;
       ++ticker;
-      _lpOutput.m_intermediates.push_back(tick);
+      lp.m_intermediates.push_back(tick);
     }
 
-    //if success, save
+    // If successful and better than the current best, save this extension.
     if(!collision) {
-      double dist = dm->Distance(tick, _dir);
+      double dist = dm->Distance(tick, _end);
       if(dist < distBest) {
         distBest = dist;
         _new = tick;
-        SetOutput("RRTExpand", _nTicks, cont, true, _lpOutput);
-        _lpOutput.AddIntermediatesToWeights(true);
+        _lp.m_intermediates = lp.m_intermediates;
+        SetOutput(_nTicks, cont, _start, _new, _lp);
       }
     }
   }
@@ -199,8 +244,8 @@ ExtendBestControl(const StateType& _near, const StateType& _dir, size_t _nTicks,
 template<typename MPTraits>
 bool
 KinodynamicExtender<MPTraits>::
-ExtendRandomControl(const StateType& _near, const StateType& _dir,
-    size_t _nTicks, double _dt, StateType& _new, LPOutput<MPTraits>& _lpOutput) {
+ExtendRandomControl(const StateType& _start, const StateType& _end,
+    size_t _nTicks, double _dt, StateType& _new, LPOutput<MPTraits>& _lp) const {
   string callee("KinodynamicExtender::Expand");
 
   Environment* env = this->GetEnvironment();
@@ -210,7 +255,7 @@ ExtendRandomControl(const StateType& _near, const StateType& _dir,
   auto dm = this->GetDistanceMetric(m_dmLabel);
   auto vc = this->GetValidityChecker(m_vcLabel);
 
-  StateType tick = _near;
+  StateType tick = _start;
   size_t ticker = 0;
   bool collision = false;
 
@@ -221,11 +266,11 @@ ExtendRandomControl(const StateType& _near, const StateType& _dir,
     if(!env->InBounds(tick) || !vc->IsValid(tick, callee))
       collision = true; //return previous tick, as it is collision-free
     ++ticker;
-    _lpOutput.m_intermediates.push_back(tick);
+    _lp.m_intermediates.push_back(tick);
   }
   if(!collision) {
     _new = tick;
-    SetOutput("RRTExpand", _nTicks, control, true, _lpOutput);
+    SetOutput(_nTicks, control, _start, _new, _lp);
     return true;
   }
   else
@@ -236,14 +281,31 @@ ExtendRandomControl(const StateType& _near, const StateType& _dir,
 template<typename MPTraits>
 void
 KinodynamicExtender<MPTraits>::
-SetOutput(const string& _label, size_t _nTicks, const vector<double>& _control,
-    bool _add, LPOutput<MPTraits>& _lpOutput) {
-  _lpOutput.SetLPLabel(_label);
-  _lpOutput.m_edge.first.SetWeight(_nTicks);
-  _lpOutput.m_edge.second.SetWeight(_nTicks);
-  _lpOutput.m_edge.first.SetControl(_control);
-  _lpOutput.m_edge.first.SetTimeStep(_nTicks);
-  _lpOutput.AddIntermediatesToWeights(_add);
+SetOutput(size_t _nTicks, const vector<double>& _control,
+    const StateType& _start, const StateType& _end,
+    LPOutput<MPTraits>& _lp) const {
+  _lp.SetLPLabel("RRTExpand");
+  _lp.m_edge.first.SetControl(_control);
+  _lp.m_edge.first.SetTimeStep(_nTicks);
+  _lp.AddIntermediatesToWeights(true);
+
+  double dist = 0;
+  auto& intermediates = _lp.m_intermediates;
+
+  // Use the distance metric to compute the actual path length.
+  auto dm = this->GetDistanceMetric(m_dmLabel);
+  if(intermediates.empty())
+    dist = dm->Distance(_start, _end);
+  else {
+    dist = dm->Distance(_start, intermediates.front());
+    for(auto cit1 = intermediates.begin(), cit2 = cit1 + 1;
+        cit2 != intermediates.end(); ++cit1, ++cit2)
+      dist += dm->Distance(*cit1, *cit2);
+    dist += dm->Distance(intermediates.back(), _end);
+  }
+
+  _lp.m_edge.first.SetWeight(dist);
+  _lp.m_edge.second.SetWeight(dist);
 }
 
 /*----------------------------------------------------------------------------*/
