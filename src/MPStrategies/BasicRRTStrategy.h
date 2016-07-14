@@ -234,7 +234,7 @@ BasicRRTStrategy(string _dm, string _nf, string _vc, string _nc,
   this->m_meLabels = _evaluators;
   this->SetName("BasicRRTStrategy");
 #ifdef VIZMO
-  this->meLabels.push_back("RRTQuery");
+  this->m_meLabels.push_back("RRTQuery");
 #endif
 }
 

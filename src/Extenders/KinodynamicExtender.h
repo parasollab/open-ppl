@@ -32,7 +32,7 @@ class KinodynamicExtender : public ExtenderMethod<MPTraits> {
     ///@{
 
     KinodynamicExtender(const string& _dmLabel = "", const string& _vcLabel = "",
-        double _timeStep = 1.0);
+        double _timeStep = 1.0, bool _fixed = true, bool _best = false);
     KinodynamicExtender(MPProblemType* _problem, XMLNode& _node);
 
     ///@}
@@ -111,8 +111,9 @@ class KinodynamicExtender : public ExtenderMethod<MPTraits> {
 template<class MPTraits>
 KinodynamicExtender<MPTraits>::
 KinodynamicExtender(const string& _dmLabel, const string& _vcLabel,
-    double _timeStep) : ExtenderMethod<MPTraits>(), m_dmLabel(_dmLabel),
-    m_vcLabel(_vcLabel), m_timeStep(_timeStep) {
+    double _timeStep, bool _fixed, bool _best) :
+    ExtenderMethod<MPTraits>(), m_dmLabel(_dmLabel), m_vcLabel(_vcLabel),
+    m_timeStep(_timeStep), m_fixed(_fixed), m_best(_best) {
   this->SetName("KinodynamicExtender");
 }
 

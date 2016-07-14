@@ -38,9 +38,10 @@ class DynamicRegionRRT : public BasicRRTStrategy<MPTraits> {
     // Construction
     DynamicRegionRRT(const CfgType& _start = CfgType(),
         const CfgType& _goal = CfgType(),
-        string _dm = "euclidean", string _nf = "BFNF", string _vc = "PQP_SOLID",
-        string _nc = "kClosest", string _gt = "UNDIRECTED_TREE",
+        string _dm = "euclidean", string _nf = "BFNF",
         string _extenderLabel = "BERO",
+        string _vc = "PQP_SOLID",
+        string _nc = "kClosest", string _gt = "UNDIRECTED_TREE",
         vector<string> _evaluators = vector<string>(),
         double _minDist = 0.001, double _growthFocus = 0.05,
         bool _evaluateGoal = true, size_t _numRoots = 1,
@@ -77,7 +78,7 @@ class DynamicRegionRRT : public BasicRRTStrategy<MPTraits> {
 template<class MPTraits>
 DynamicRegionRRT<MPTraits>::
 DynamicRegionRRT(const CfgType& _start, const CfgType& _goal, string _dm,
-    string _nf, string _vc, string _nc, string _gt, string _extenderLabel,
+    string _nf, string _extenderLabel, string _vc, string _nc, string _gt,
     vector<string> _evaluators, double _minDist,
     double _growthFocus, bool _evaluateGoal, size_t _numRoots,
     size_t _numDirections, size_t _maxTrial, bool _growGoals) :
