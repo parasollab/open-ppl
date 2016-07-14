@@ -90,44 +90,17 @@ InitializeDOFs(shared_ptr<Boundary>& _b, ostream* _os) {
   }
 
   for(auto& joint : m_joints) {
-    switch(joint->GetConnectionType()) {
-      case Connection::JointType::Revolute:
+    for(size_t i=0; i<4; i++) {
+      if(!(joint->GetDHParameters().IsFixed(i))) 
         m_dofTypes.push_back(DofType::Joint);
-        m_dofInfo.push_back(DOFInfo("Revolute Joint " +
-              ::to_string(joint->GetGlobalIndex()) + " Angle",
-              joint->GetJointLimits(0).first, joint->GetJointLimits(0).second));
+    }
 
-        if(_os) {
-          *_os << "\t\t" << dof++ << ": ";
-          *_os << "Rotational joint from body " << joint->GetPreviousBodyIndex();
-          *_os << " (" << joint->GetPreviousBody()->GetFileName() << ")";
-          *_os << " to body " << joint->GetNextBodyIndex();
-          *_os << " (" << joint->GetNextBody()->GetFileName() << ")" << endl;
-        }
-        break;
-
-      case Connection::JointType::Spherical:
-        m_dofTypes.push_back(DofType::Joint);
-        m_dofTypes.push_back(DofType::Joint);
-        m_dofInfo.push_back(DOFInfo("Spherical Joint " +
-              ::to_string(joint->GetGlobalIndex()) + " Angle 1",
-              joint->GetJointLimits(0).first, joint->GetJointLimits(0).second));
-        m_dofInfo.push_back(DOFInfo("Spherical Joint " +
-              ::to_string(joint->GetGlobalIndex()) + " Angle 2",
-              joint->GetJointLimits(1).first, joint->GetJointLimits(1).second));
-
-        if(_os) {
-          *_os << "\t\t" << dof++;
-          *_os << "/" << dof++ << ": ";
-          *_os << "Spherical joint from body " << joint->GetPreviousBodyIndex();
-          *_os << " (" << joint->GetPreviousBody()->GetFileName() << ")";
-          *_os << " to body " << joint->GetNextBodyIndex();
-          *_os << " (" << joint->GetNextBody()->GetFileName() << ")" << endl;
-        }
-        break;
-
-      case Connection::JointType::NonActuated:
-        break;
+    if(_os) {
+      *_os << "\t\t" << dof++ << ": " ;
+      *_os << "Joint between body " << joint->GetPreviousBodyIndex();
+      *_os << " (" << joint->GetPreviousBody()->GetFileName() << ")";
+      *_os << " and body " << joint->GetNextBodyIndex();
+      *_os << " (" << joint->GetNextBody()->GetFileName() << ")" << endl;
     }
   }
 }
@@ -177,11 +150,11 @@ Configure(const vector<double>& _v) {
     m_baseBody->Configure(t1);
   }
   for(auto& joint : m_joints) {
-    if(joint->GetConnectionType() != Connection::JointType::NonActuated) {
-      size_t second = joint->GetNextBodyIndex();
-      GetFreeBody(second)->GetBackwardConnection(0).GetDHParameters().m_theta = _v[index++]*PI;
-      if(joint->GetConnectionType() == Connection::JointType::Spherical)
-        GetFreeBody(second)->GetBackwardConnection(0).GetDHParameters().m_alpha = _v[index++]*PI;
+    for(size_t i = 0; i < 4; i++) {
+      if(!(joint->GetDHParameters().IsFixed(3-i))) {
+        size_t second = joint->GetNextBodyIndex();
+        GetFreeBody(second)->GetBackwardConnection(0).GetDHParameters().SetDHParameters(3-i, _v[index++]*PI);
+      }
     }
   }
   // configure the robot
@@ -222,12 +195,13 @@ Configure(const vector<double>& _v, const vector<double>& _t) {
     m_baseBody->Configure(t1);
   }
   for(auto& joint : m_joints) {
-    if(joint->GetConnectionType() != Connection::JointType::NonActuated) {
-      size_t second = joint->GetNextBodyIndex();
-      GetFreeBody(second)->GetBackwardConnection(0).GetDHParameters().m_theta = _v[index++]*PI;
-      if(joint->GetConnectionType() == Connection::JointType::Spherical)
-        GetFreeBody(second)->GetBackwardConnection(0).GetDHParameters().m_alpha = _v[index++]*PI;
-      GetFreeBody(joint->GetNextBodyIndex())->GetBackwardConnection(0).GetDHParameters().m_theta = _t[t_index++];
+    for(size_t i = 0; i < 4; i++) {
+      if(!(joint->GetDHParameters().IsFixed(3-i))) {
+        size_t second = joint->GetNextBodyIndex();
+        GetFreeBody(second)->GetBackwardConnection(0).GetDHParameters().SetDHParameters(3-i, _v[index++]*PI);
+        if(i == 0) 
+          GetFreeBody(joint->GetNextBodyIndex())->GetBackwardConnection(0).GetDHParameters().SetDHParameters(3-i, _t[t_index++]);
+      }
     }
   }
   // configure the robot
@@ -269,13 +243,11 @@ ConfigureRender(const vector<double>& _v) {
     m_baseBody->ConfigureRender(t1);
   }
   for(auto& joint : m_joints) {
-    if(joint->GetConnectionType() != Connection::JointType::NonActuated) {
-      size_t second = joint->GetNextBodyIndex();
-      GetFreeBody(second)->GetBackwardConnection(0).
-        GetDHRenderParameters().m_theta = _v[index++]*PI;
-      if(joint->GetConnectionType() == Connection::JointType::Spherical)
-        GetFreeBody(second)->GetBackwardConnection(0).
-          GetDHRenderParameters().m_alpha = _v[index++]*PI;
+    for(size_t i = 0; i < 4; i++) {
+      if(!(joint->GetDHParameters().IsFixed(3-i))) {
+        size_t second = joint->GetNextBodyIndex();
+        GetFreeBody(second)->GetBackwardConnection(0).GetDHRenderParameters().SetDHParameters(3-i, _v[index++]*PI);
+      }
     }
   }
   // configure the robot
@@ -301,19 +273,27 @@ GetRandomCfg(shared_ptr<Boundary>& _bounds) {
         v.push_back(2.0*DRand()-1.0);
     }
   }
+  pair<double, double> r;
   for(auto& joint : m_joints) {
-    if(joint->GetConnectionType() == Connection::JointType::Revolute) {
-      pair<double, double> r = joint->GetJointLimits(0);
-      double t = DRand()*(r.second-r.first)+r.first;
-      v.push_back(t);
-    }
-    else if(joint->GetConnectionType() == Connection::JointType::Spherical) {
-      pair<double, double> r = joint->GetJointLimits(0);
-      double t = DRand()*(r.second-r.first)+r.first;
-      r = joint->GetJointLimits(1);
-      double a = DRand()*(r.second-r.first)+r.first;
-      v.push_back(t);
-      v.push_back(a);
+    for(size_t i = 0; i < 4; i++) {
+      if(!(joint->GetDHParameters().IsFixed(i))) {
+        switch(i) {
+          case 0: 
+            r = joint->GetDHParameters().GetAlphaRange();
+            break;
+          case 1: 
+            r = joint->GetDHParameters().GetARange();
+            break;
+          case 2: 
+            r = joint->GetDHParameters().GetDRange();
+            break;
+          case 3: 
+            r = joint->GetDHParameters().GetThetaRange();
+            break;
+        }
+        double t = DRand()*(r.second-r.first)+r.first;
+        v.push_back(t);
+      }
     }
   }
   return v;
@@ -341,19 +321,27 @@ GetCfgLimits(const shared_ptr<const Boundary>& _bounds) const {
       }
     }
   }
+  pair<double, double> r;
   for(auto& joint : m_joints) {
-    if(joint->GetConnectionType() == Connection::JointType::Revolute) {
-      pair<double, double> r = joint->GetJointLimits(0);
-      min.push_back(r.first);
-      max.push_back(r.second);
-    }
-    else if(joint->GetConnectionType() == Connection::JointType::Spherical) {
-      pair<double, double> r = joint->GetJointLimits(0);
-      min.push_back(r.first);
-      max.push_back(r.second);
-      r = joint->GetJointLimits(1);
-      min.push_back(r.first);
-      max.push_back(r.second);
+    for(size_t i = 0; i < 4; i++) {
+      if(!(joint->GetDHParameters().IsFixed(3-i))) {
+        switch(3-i) {
+          case 0:
+            r = joint->GetDHParameters().GetAlphaRange();
+            break;
+          case 1:
+            r = joint->GetDHParameters().GetARange();
+            break;
+          case 2:
+            r = joint->GetDHParameters().GetDRange();
+            break;
+          case 3:
+            r = joint->GetDHParameters().GetThetaRange();
+            break;
+        }
+        min.push_back(r.first);
+        max.push_back(r.second);
+      }
     }
   }
   return make_pair(move(min), move(max));
@@ -390,14 +378,9 @@ InCSpace(const vector<double>& _cfg, shared_ptr<Boundary>& _b) {
     }
   }
   for(auto& joint : m_joints) {
-    if(joint->GetConnectionType() != Connection::JointType::NonActuated) {
-      if(_cfg[index] < joint->GetJointLimits(0).first ||
-          _cfg[index] > joint->GetJointLimits(0).second)
-        return false;
-      index++;
-      if(joint->GetConnectionType() == Connection::JointType::Spherical) {
-        if(_cfg[index] < joint->GetJointLimits(1).first ||
-            _cfg[index] > joint->GetJointLimits(1).second)
+    for(size_t i = 0; i < 4; i++) {
+      if(!(joint->GetDHParameters().IsFixed(i))) {
+        if(!(joint->GetDHParameters().InRange(_cfg, index, i)))
           return false;
         index++;
       }

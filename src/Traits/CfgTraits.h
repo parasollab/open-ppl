@@ -26,7 +26,7 @@
 //neighborhood finder includes
 #include "NeighborhoodFinders/BandsNF.h"
 #include "NeighborhoodFinders/BruteForceNF.h"
-#include "NeighborhoodFinders/CGALNF.h"
+//#include "NeighborhoodFinders/CGALNF.h"
 #include "NeighborhoodFinders/DPESNF.h"
 #include "NeighborhoodFinders/HierarchicalNF.h"
 #include "NeighborhoodFinders/HopLimitNF.h"
@@ -109,6 +109,7 @@
 
 //mp strategies includes
 #include "MPStrategies/AdaptiveRRT.h"
+#include "MPStrategies/AnalyzeStrategy.h"
 #include "MPStrategies/BasicPRM.h"
 #include "MPStrategies/BasicRRTStrategy.h"
 #include "MPStrategies/BlindRRT.h"
@@ -180,7 +181,7 @@ struct MPTraits {
   typedef boost::mpl::list<
     BandsNF<MPTraits>,
     BruteForceNF<MPTraits>,
-    CGALNF<MPTraits>,
+    //CGALNF<MPTraits>,
     DPESNF<MPTraits>,
     HierarchicalNF<MPTraits>,
     HopLimitNF<MPTraits>,
@@ -295,6 +296,7 @@ struct MPTraits {
   //types of motion planning strategies available in our world
   typedef boost::mpl::list<
     AdaptiveRRT<MPTraits>,
+    AnalyzeStrategy<MPTraits>,
     BasicPRM<MPTraits>,
     BasicRRTStrategy<MPTraits>,
     BlindRRT<MPTraits>,

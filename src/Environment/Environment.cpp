@@ -2,11 +2,8 @@
 
 #include "ActiveMultiBody.h"
 #include "BoundingBox.h"
-#include "BoundingBox2D.h"
 #include "BoundingSphere.h"
-#include "BoundingSphere2D.h"
 #include "FreeBody.h"
-#include "NonHolonomicMultiBody.h"
 #include "StaticMultiBody.h"
 #include "SurfaceMultiBody.h"
 #include "Cfg/Cfg.h"
@@ -18,21 +15,29 @@ Environment() :
   m_saveDofs(false),
   m_positionRes(0.05),
   m_orientationRes(0.05),
-  m_rdRes(0.05),
-  m_timeRes(0.05) {
+  m_rdRes(0.05) {
   }
 
 Environment::
-Environment(XMLNode& _node) :
-  m_positionRes(0.05),
-  m_orientationRes(0.05),
-  m_rdRes(0.05),
-  m_timeRes(0.05) {
-    m_filename = _node.Read("filename", true, "", "env filename");
-    m_saveDofs = _node.Read("saveDofs", false, false, "save DoF flag");
-    m_filename = MPProblemBase::GetPath(m_filename);
-    Read(m_filename);
-  }
+Environment(XMLNode& _node) {
+
+  m_filename = _node.Read("filename", true, "", "env filename");
+  m_saveDofs = _node.Read("saveDofs", false, false, "save DoF flag");
+  m_positionRes = _node.Read("positionRes", false, -1.0, 0.0, MAX_DBL,
+      "position resolution");
+  m_positionResFactor = _node.Read("positionResFactor", false,
+      0.05, 0.0, MAX_DBL, "position resolution factor");
+  m_orientationRes = _node.Read("orientationRes", false, 0.05, 0.0, MAX_DBL,
+      "orientation resolution");
+#if (defined(PMPReachDistCC) || defined(PMPReachDistCCFixed))
+  m_rdRes = _node.Read("rdRes", false, .005, .00001, MAX_DBL,
+      "reachable distance resolution");
+#else
+  m_rdRes = 0.05;
+#endif
+  m_filename = MPProblemBase::GetPath(m_filename);
+  Read(m_filename);
+}
 
 Environment::
 ~Environment() {}
@@ -59,25 +64,12 @@ Read(string _filename) {
 
   //read boundary
   ReadBoundary(ifs, cbs);
-  string resolution;
-  while((resolution = ReadFieldString(ifs, cbs, "Failed reading resolution tag.")) != "MULTIBODIES") {
-    if(resolution == "POSITIONRES")
-      m_positionRes = ReadField<double>(ifs, cbs, "Failed reading Position resolution\n");
-    else if(resolution == "POSITIONRESFACTOR")
-      m_positionResFactor = ReadField<double>(ifs, cbs, "Failed reading Position factor resolution\n");
-    else if(resolution == "ORIENTATION")
-      m_orientationRes = ReadField<double>(ifs, cbs, "Failed reading Orientation resolution\n");
-#if (defined(PMPReachDistCC) || defined(PMPReachDistCCFixed))
-    else if(resolution == "RDRES")
-      m_rdRes = ReadField<double>(ifs, cbs, "Failed reading Reachable Distance resolution");
-#endif
-#ifdef PMPState
-    else if(resolution == "TIMERES")
-      m_timeRes = ReadField<double>(ifs, cbs, "Failed reading Time resolution\n");
-#endif
-    else
-      throw ParseException(cbs.Where(), "Unknown resolution tag '" + resolution + "'");
-  }
+
+  //read number of multibodies
+  string mbds = ReadFieldString(ifs, cbs, "Failed reading multibodies tag.");
+  if(mbds != "MULTIBODIES")
+    throw ParseException(cbs.Where(),
+        "Unknown multibodies tag '" + mbds + "'. Should read 'Multibodies'.");
 
   size_t multibodyCount = ReadField<size_t>(ifs, cbs,
       "Failed reading number of multibodies.");
@@ -100,15 +92,6 @@ Read(string _filename) {
           m_robots.push_back(mb);
           break;
         }
-#ifdef PMPState
-      case MultiBody::MultiBodyType::NonHolonomic:
-        {
-          shared_ptr<ActiveMultiBody> mb(new NonHolonomicMultiBody());
-          mb->Read(ifs, cbs);
-          m_robots.push_back(mb);
-          break;
-        }
-#endif
       case MultiBody::MultiBodyType::Internal:
       case MultiBody::MultiBodyType::Passive:
         {
@@ -184,10 +167,18 @@ Write(ostream & _os) {
   }
 }
 
-template<>
 bool
 Environment::
-InBounds<CfgMultiRobot>(const CfgMultiRobot& _cfg, shared_ptr<Boundary> _b) {
+InBounds(const Cfg& _cfg, shared_ptr<Boundary> _b) {
+  if(InCSpace(_cfg, _b))
+    if(InWSpace(_cfg, _b))
+      return true;
+  return false;
+}
+
+bool
+Environment::
+InBounds(const CfgMultiRobot& _cfg, shared_ptr<Boundary> _b) {
   const vector<Cfg> c = _cfg.GetRobotsCollect();
   for(auto& cfg : c)
     if(!InBounds(cfg, _b))
@@ -253,6 +244,7 @@ GetObstacle(size_t _index) const {
         "Cannot access StaticBody '" + ::to_string(_index) + "'.");
   return m_obstacles[_index];
 }
+
 
 shared_ptr<SurfaceMultiBody>
 Environment::
@@ -334,12 +326,8 @@ ReadBoundary(istream& _is, CountingStreamBuffer& _cbs) {
       "Failed reading boundary type. Options are: box or sphere.");
   if(btype == "BOX")
     m_boundary = shared_ptr<BoundingBox>(new BoundingBox());
-  else if(btype == "BOX2D")
-    m_boundary = shared_ptr<BoundingBox2D>(new BoundingBox2D());
   else if(btype == "SPHERE")
     m_boundary = shared_ptr<BoundingSphere>(new BoundingSphere());
-  else if(btype == "SPHERE2D")
-    m_boundary = shared_ptr<BoundingSphere2D>(new BoundingSphere2D());
   else
     throw ParseException(_cbs.Where(), "Unknown boundary type '" + btype +
         "'. Options are: box or sphere.");
@@ -374,21 +362,14 @@ ComputeResolution() {
   //make sure to calculate the rdRes based upon the DOF of the robot
   m_rdRes *= Cfg::GetNumOfJoints();
 #endif
-#ifdef PMPState
-  State::SetTimeRes(m_timeRes);
-#endif
 }
 
-#ifdef PMPState
-template<>
 bool
 Environment::
-InCSpace<State>(const State& _cfg, shared_ptr<Boundary> _b) {
+InCSpace(const Cfg& _cfg, shared_ptr<Boundary> _b) {
   size_t activeBodyIndex = _cfg.GetRobotIndex();
-  return static_pointer_cast<NonHolonomicMultiBody>(m_robots[activeBodyIndex])->
-    InSSpace(_cfg.GetData(), _cfg.GetVelocity(), _b);
+  return m_robots[activeBodyIndex]->InCSpace(_cfg.GetData(), _b);
 }
-#endif
 
 bool
 Environment::

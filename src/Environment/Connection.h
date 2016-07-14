@@ -19,7 +19,6 @@ class MultiBody;
 ///
 /// This class stores information about connection from one body to another one.
 /// The information stored in this class includes:
-///   - Connection type
 ///   - Two FreeBody instances
 ///   - Transform from frame of body1 to DH-Frame
 ///   - DHParameter
@@ -28,14 +27,6 @@ class MultiBody;
 class Connection {
   public:
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// @brief Connection type
-    ////////////////////////////////////////////////////////////////////////////
-    enum class JointType {
-      Revolute,   ///< 1 DOF
-      Spherical,  ///< 2 DOF
-      NonActuated ///< 0 DOF
-    };
 
     ////////////////////////////////////////////////////////////////////////////
     /// @name Constructors
@@ -48,16 +39,6 @@ class Connection {
     /// @}
     ////////////////////////////////////////////////////////////////////////////
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// @param _tag String to parse
-    /// @param _where Location of \p _tag for error reporting
-    /// @return Joint type
-    static JointType GetJointTypeFromTag(const string& _tag,
-        const string& _where);
-    ////////////////////////////////////////////////////////////////////////////
-    /// @param _jt Joint type
-    /// @return String representing joint type
-    static string GetTagFromJointType(JointType _jt);
 
     ////////////////////////////////////////////////////////////////////////////
     /// @name Joint Information
@@ -66,12 +47,6 @@ class Connection {
     ////////////////////////////////////////////////////////////////////////////
     /// @return Global connection index
     size_t GetGlobalIndex() const {return m_globalIndex;}
-    ////////////////////////////////////////////////////////////////////////////
-    /// @return Connection type
-    JointType GetConnectionType() const {return m_jointType;}
-    ////////////////////////////////////////////////////////////////////////////
-    /// @return Connection type
-    const pair<double, double>& GetJointLimits(size_t _i) const {return m_jointLimits[_i];}
 
     /// @}
     ////////////////////////////////////////////////////////////////////////////
@@ -103,6 +78,9 @@ class Connection {
     ////////////////////////////////////////////////////////////////////////////
     /// @return DH frame description
     DHParameters& GetDHParameters() {return m_dhParameters;}
+    ////////////////////////////////////////////////////////////////////////////
+    /// @return DH frame description
+    const DHParameters& GetDHParameters() const {return m_dhParameters;}
     ////////////////////////////////////////////////////////////////////////////
     /// @return DH frame description for rendering
     DHParameters& GetDHRenderParameters() {return m_dhRenderParameters;}
@@ -145,9 +123,7 @@ class Connection {
     DHParameters m_dhRenderParameters;        ///< DH Rendering parameters
 
     size_t m_globalIndex;                     ///< Global ID
-    JointType m_jointType;                    ///< Type of connection
     pair<size_t, size_t> m_bodyIndices;       ///< (previous body, next body)
-    pair<double, double> m_jointLimits[2];    ///< valid range within [-1,1)
 
     static size_t m_globalCounter;            ///< Global ID counter
 };

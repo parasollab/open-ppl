@@ -47,13 +47,14 @@ class Body {
 
     ////////////////////////////////////////////////////////////////////////////
     /// @param _owner Owner of this body
-    Body(MultiBody* _owner) : m_multibody(_owner) { }
+    Body(MultiBody* _owner);
 
 
     Body(const Body& _other) = delete;            ///< No copy.
     Body& operator=(const Body& _other) = delete; ///< No assign.
 
-    virtual ~Body() = default;
+    virtual ~Body();
+    bool m_buildConvex;                     ///< if we need a convex body
 
     ///@}
     ///@name Body Information Accessors
@@ -78,7 +79,6 @@ class Body {
     ///@}
 
     Vector3d GetCenterOfMass();
-    GMSPolyhedron::COMAdjust GetCOMAdjust() const {return m_comAdjust;}
 
     const double GetMass() const {return m_mass;}
     const Matrix3x3& GetMoment() const {return m_moment;}
@@ -96,6 +96,9 @@ class Body {
     /// @return Polyhedron in model coordinates
     GMSPolyhedron& GetPolyhedron() {return m_polyhedron;}
 
+    ////////////////////////////////////////////////////////////////////////////
+    /// @return Polyhedron in model coordinates
+    GMSPolyhedron& GetConvexPolyhedron();
     ////////////////////////////////////////////////////////////////////////////
     /// @return Polyhedron in world coordinates
     GMSPolyhedron& GetWorldPolyhedron();
@@ -164,8 +167,11 @@ class Body {
 
     ////////////////////////////////////////////////////////////////////////////
     /// @brief Read geometry information from file
-    /// @param _comAdjust Center of mass adjustment method
-    void Read(GMSPolyhedron::COMAdjust _comAdjust);
+    void Read();
+
+    ////////////////////////////////////////////////////////////////////////////
+    /// FindBoundingBoxmethod
+    void FindBoundingBox();
 
   protected:
 
@@ -240,8 +246,6 @@ class Body {
 
     bool m_centerOfMassAvailable{false};     ///< Is center of mass computed
     Vector3d m_centerOfMass;                 ///< Center of mass
-    GMSPolyhedron::COMAdjust m_comAdjust{GMSPolyhedron::COMAdjust::COM};
-                                             ///< COM Adjustment option
 
     double m_mass{1};                        ///< Mass of Body
     Matrix3x3 m_moment;                      ///< Moment of Inertia

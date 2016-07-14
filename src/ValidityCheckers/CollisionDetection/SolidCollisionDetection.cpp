@@ -8,8 +8,14 @@ Solid() : CollisionDetectionMethod("SOLID", Exact) {
 
 void
 Solid::
-Build(Body* _body) {
-  GMSPolyhedron& poly = _body->GetWorldPolyhedron();
+Build(Body* _body, bool _isConvex) {
+  GMSPolyhedron obstacle;
+  if(_isConvex)
+    obstacle = _body->GetConvexPolyhedron();
+  else
+    obstacle = _body->GetPolyhedron();
+  GMSPolyhedron& poly = obstacle;
+
   vertex = new MT_Point3[3*poly.m_polygonList.size()];
   for(size_t q=0; q < poly.m_polygonList.size(); q++) {
     int vertexNum[3];

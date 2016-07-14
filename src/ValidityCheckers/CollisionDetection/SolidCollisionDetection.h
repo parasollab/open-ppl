@@ -19,7 +19,7 @@ class Solid : public CollisionDetectionMethod {
   public:
     Solid();
 
-    virtual void Build(Body* _body);
+    virtual void Build(Body* _body, bool _isConvex = false);
 
     virtual bool IsInCollision(shared_ptr<Body> _body1,
         shared_ptr<Body> _body2, CDInfo& _cdInfo);

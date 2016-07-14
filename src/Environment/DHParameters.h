@@ -3,10 +3,13 @@
 
 #include <iostream>
 #include <fstream>
+#include <sstream>
 using namespace std;
 
 #include <Transformation.h>
 using namespace mathtool;
+
+#include "Cfg/Cfg.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup Environment
@@ -33,8 +36,6 @@ class DHParameters {
     /// @param _a A
     /// @param _d D
     /// @param _theta Theta
-    DHParameters(double _alpha = 0.0, double _a = 0.0,
-        double _d = 0.0, double _theta = 0.0);
 
     ////////////////////////////////////////////////////////////////////////////
     /// @param _is Input stream
@@ -49,10 +50,26 @@ class DHParameters {
     /// @return Transformation for DH frame
     Transformation GetTransformation() const;
 
-    double m_alpha;   ///< Angle between two x axis
-    double m_a;       ///< Distance between two z axis
-    double m_d;       ///< Algebraic distance along z axis
-    double m_theta;   ///< Angle between two z axis
+  private:
+    //Only this class and class that handles initial reading allowed to change, 
+    //constant throughout execution
+    pair<double, double> m_parameterRanges[4];
+    double m_parameterValues[4];  ///< Initiate to midpoint of range
+
+  public:
+
+    //Helpers
+    bool IsFixed(size_t _index) const;
+    bool InRange(const vector<double>& _cfg, size_t _dof, size_t index) const;
+    pair<double, double> GetAlphaRange() const {return m_parameterRanges[0];}  ///< Angle between two x axis
+    pair<double, double> GetARange() const {return m_parameterRanges[1];}      ///< Distance between two z axis
+    pair<double, double> GetDRange() const {return m_parameterRanges[2];}      ///< Algebraic distance along z axis
+    pair<double, double> GetThetaRange() const {return m_parameterRanges[3];}  ///< Angle between two z axis
+    double GetAlpha() const {return m_parameterValues[0];}
+    double GetA() const {return m_parameterValues[1];}
+    double GetD() const {return m_parameterValues[2];}
+    double GetTheta() const {return m_parameterValues[3];}
+    void SetDHParameters(size_t _index, double _v);
 };
 
 #endif
