@@ -13,14 +13,8 @@ Rapid() : CollisionDetectionMethod("RAPID", CDType::Exact) {
 
 void
 Rapid::
-Build(Body* _body, bool _isConvex) {
-  GMSPolyhedron obstacle;
-  if(_isConvex)
-    obstacle = _body->GetConvexPolyhedron();
-  else
-    obstacle = _body->GetPolyhedron();
-  GMSPolyhedron& poly = obstacle;
-
+Build(Body* _body) {
+  GMSPolyhedron& poly = _body->GetPolyhedron();
   shared_ptr<RAPID_model> rapidBody(new RAPID_model);
   rapidBody->BeginModel();
   for(size_t q = 0; q < poly.m_polygonList.size(); q++) {

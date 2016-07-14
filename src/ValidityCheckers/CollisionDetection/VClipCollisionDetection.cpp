@@ -12,13 +12,8 @@ VClip() : CollisionDetectionMethod("VCLIP", CDType::Exact) {}
 
 void
 VClip::
-Build(Body* _body, bool _isConvex) {
-  GMSPolyhedron obstacle;
-  if(_isConvex)
-    obstacle = _body->GetConvexPolyhedron();
-  else
-    obstacle = _body->GetPolyhedron();
-  GMSPolyhedron& poly = obstacle;
+Build(Body* _body) {
+  GMSPolyhedron& poly = _body->GetPolyhedron();
   Polyhedron* vpoly = new Polyhedron;
   for(size_t v = 0 ; v < poly.m_vertexList.size() ; v++){
     vpoly->addVertex("",

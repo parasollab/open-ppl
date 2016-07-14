@@ -15,14 +15,8 @@ PQP::
 
 void
 PQP::
-Build(Body* _body, bool _isConvex) {
-  GMSPolyhedron obstacle;
-  if(_isConvex)
-    obstacle = _body->GetConvexPolyhedron();
-  else
-    obstacle = _body->GetPolyhedron();
-  GMSPolyhedron& poly = obstacle;
-
+Build(Body* _body) {
+  GMSPolyhedron& poly = _body->GetPolyhedron();
   shared_ptr<PQP_Model> pqpBody(new PQP_Model);
   pqpBody->BeginModel();
   for(size_t q = 0; q < poly.m_polygonList.size(); q++) {

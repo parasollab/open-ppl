@@ -17,7 +17,7 @@ class Rapid: public CollisionDetectionMethod {
   public:
     Rapid();
 
-    virtual void Build(Body* _body, bool _isConvex = 0);
+    virtual void Build(Body* _body);
 
     virtual bool IsInCollision(shared_ptr<Body> _body1,
         shared_ptr<Body> _body2, CDInfo& _cdInfo);

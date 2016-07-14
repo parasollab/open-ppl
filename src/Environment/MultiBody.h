@@ -108,9 +108,9 @@ class MultiBody {
   protected:
 
     MultiBodyType m_multiBodyType;     ///< MultiBody type
-    vector<shared_ptr<Body>> m_bodies; ///< All bodies
 
   private:
+    vector<shared_ptr<Body>> m_bodies; ///< All bodies
 
     Vector3d m_com;                    ///< Center of mass
     double m_radius;                   ///< Bounding Sphere

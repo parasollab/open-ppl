@@ -57,7 +57,7 @@ class CollisionDetectionMethod {
     ////////////////////////////////////////////////////////////////////////////
     /// @brief Build representation for CD library
     /// @param _body Body to build representation of
-    virtual void Build(Body* _body, bool _isConvex = false) = 0;
+    virtual void Build(Body* _body) = 0;
 
     ////////////////////////////////////////////////////////////////////////////
     /// @brief Check if two Body are in collision
