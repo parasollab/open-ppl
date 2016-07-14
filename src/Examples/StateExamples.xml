@@ -51,7 +51,7 @@
       <!-- KinodynamicRRT -->
       <BasicRRTStrategy label="KRRTQuery" growthFocus="0.05"
         dmLabel="weuclidean" nfLabel="Nearest" vcLabel="cd1"
-        gtype="UNDIRECTED_TREE" extenderLabel="FixedRandom" debug="false">
+        gtype="UNDIRECTED_TREE" extenderLabel="FixedRandom" debug="true">
         <Evaluator label="BoundedQuery"/>
       </BasicRRTStrategy>
 

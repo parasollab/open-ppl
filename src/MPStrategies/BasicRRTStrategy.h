@@ -211,7 +211,6 @@ class BasicRRTStrategy : public MPStrategyMethod<MPTraits> {
     ///\name Query
     ///@{
 
-    bool m_queryLoaded{false};            ///< Use a query?
     RRTQuery<MPTraits>* m_query{nullptr}; ///< The query object.
 
     ///@}
@@ -234,6 +233,9 @@ BasicRRTStrategy(string _dm, string _nf, string _vc, string _nc,
     m_growGoals(_growGoals) {
   this->m_meLabels = _evaluators;
   this->SetName("BasicRRTStrategy");
+#ifdef VIZMO
+  this->meLabels.push_back("RRTQuery");
+#endif
 }
 
 
@@ -273,11 +275,9 @@ ParseXML(XMLNode& _node, bool _child) {
 
   // Parse child nodes.
   for(auto& child : _node)
-    if(child.Name() == "Evaluator") {
-      string label = child.Read("label", true, "", "Evaluation Method");
-      this->m_meLabels.push_back(label);
-      m_queryLoaded |= (label == "RRTQuery");
-    }
+    if(child.Name() == "Evaluator")
+      this->m_meLabels.push_back(child.Read("label", true, "",
+          "Evaluation Method"));
 }
 
 
@@ -316,21 +316,15 @@ Initialize() {
   GraphType* g = this->GetRoadmap()->GetGraph();
 
   // Check for query info.
-  try {
-    string label = "RRTQuery";
-    m_query = static_cast<RRTQuery<MPTraits>*>(this->GetMapEvaluator(label).
-        get());
-    m_queryLoaded = true;
-    auto iter = find(this->m_meLabels.begin(), this->m_meLabels.end(), label);
-    if(iter == this->m_meLabels.end())
-      this->m_meLabels.push_back(label);
-  }
-  catch(RunTimeException) {
-    m_query = nullptr;
-  }
+  m_query = nullptr;
+  bool queryLoaded = false;
+  for(auto l : this->m_meLabels)
+    queryLoaded |= l.find("Query", 0) != string::npos;
 
   // If a query was loaded, process query cfgs
-  if(m_queryLoaded) {
+  if(queryLoaded) {
+    m_query = static_cast<RRTQuery<MPTraits>*>(this->GetMapEvaluator("RRTQuery").
+        get());
     const vector<CfgType>& queryCfgs = m_query->GetQuery();
 
     // If growing goals, set each query cfg as its own tree
@@ -391,7 +385,7 @@ Iterate() {
   // Find my growth direction. Default is to randomly select node or bias
   // towards a goal.
   CfgType target;
-  if(m_queryLoaded && DRand() < m_growthFocus && !m_query->GetGoals().empty()) {
+  if(m_query && DRand() < m_growthFocus && !m_query->GetGoals().empty()) {
     target = m_query->GetRandomGoal();
     if(this->m_debug)
       cout << "Goal biased direction selected: " << target << endl;
@@ -428,7 +422,7 @@ void
 BasicRRTStrategy<MPTraits>::
 Finalize() {
   // Output path if we completed a query with at least one goal.
-  if(m_queryLoaded && !m_query->GetQuery().empty() && m_query->GetGoals().empty())
+  if(m_query && !m_query->GetQuery().empty() && m_query->GetGoals().empty())
     m_query->WritePath();
 
   // Output final map

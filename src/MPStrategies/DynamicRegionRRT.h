@@ -184,7 +184,7 @@ Run() {
   while(!this->EvaluateMap()) {
     //find my growth direction. Default is to randomly select node or bias
     //towards a goal
-    if(this->m_queryLoaded && DRand() < this->m_growthFocus &&
+    if(this->m_query && DRand() < this->m_growthFocus &&
         !this->m_query->GetGoals().empty())
       dir = this->m_query->GetRandomGoal();
     else

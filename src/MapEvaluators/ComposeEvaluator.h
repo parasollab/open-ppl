@@ -111,16 +111,28 @@ operator()() {
   for(auto l : m_evalLabels)
     evalMethods.push_back(this->GetMPProblem()->GetMapEvaluator(l));
 
+  if(this->m_debug)
+    cout << "ComposeEvaluator:: checking evaluators..." << endl;
   switch(m_logicalOperator) {
     case AND:
-      for(auto e : evalMethods)
-        if(!e->operator()())
+      for(auto e : evalMethods) {
+        bool passed = e->operator()();
+        if(this->m_debug)
+          cout << "\t" << e->GetNameAndLabel() << ":"
+               << (passed ? "passed" : "failed") << endl;
+        if(!passed)
           return false;
+      }
       return true;
     case OR:
-      for(auto e : evalMethods)
-        if(e->operator()())
+      for(auto e : evalMethods) {
+        bool passed = e->operator()();
+        if(this->m_debug)
+          cout << "\t" << e->GetNameAndLabel() << ":"
+               << (passed ? "passed" : "failed") << endl;
+        if(passed)
           return true;
+      }
       return false;
     default:
       throw RunTimeException(WHERE, "Unknown operator is stated.");
