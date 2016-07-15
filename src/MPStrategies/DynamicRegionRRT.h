@@ -18,17 +18,14 @@
 #endif
 
 ////////////////////////////////////////////////////////////////////////////////
-/// \brief  DynamicRegionRRT uses an embedded Reeb graph to guide dynamic
-///         sampling regions through the environment.
+/// \brief  DynamicRegionRRT
 ////////////////////////////////////////////////////////////////////////////////
 template<class MPTraits>
 class DynamicRegionRRT : public BasicRRTStrategy<MPTraits> {
 
   public:
 
-    ///\name Motion Planning Types
-    ///@{
-
+    // Local Types
     typedef typename MPTraits::MPProblemType MPProblemType;
     typedef typename MPTraits::CfgType CfgType;
     typedef typename MPTraits::CfgRef CfgRef;
@@ -38,10 +35,7 @@ class DynamicRegionRRT : public BasicRRTStrategy<MPTraits> {
     typedef shared_ptr<Boundary> RegionPtr;
     typedef ReebGraphConstruction::FlowGraph FlowGraph;
 
-    ///@}
-    ///\name Construction
-    ///@{
-
+    // Construction
     DynamicRegionRRT(const CfgType& _start = CfgType(),
         const CfgType& _goal = CfgType(),
         string _dm = "euclidean", string _nf = "BFNF",
@@ -55,19 +49,11 @@ class DynamicRegionRRT : public BasicRRTStrategy<MPTraits> {
         bool _growGoals = false);
     DynamicRegionRRT(MPProblemType* _problem, XMLNode& _node);
 
-    ///@}
-    ///\name MPBaseObject Overrides
-    ///@{
+    // Inherited functions
+    void Initialize();
+    void Run();
 
-    virtual void Initialize() override;
-    virtual void Run() override;
-
-    ///@}
-
-  protected:
-
-    ///\name RRT Overrides
-    ///@{
+  private:
 
     ////////////////////////////////////////////////////////////////////////////
     /// \brief  Computes the growth direction for the RRT, choosing between the
@@ -76,32 +62,22 @@ class DynamicRegionRRT : public BasicRRTStrategy<MPTraits> {
     /// \return The resulting growth direction.
     CfgType SelectDirection();
 
-    ///@}
-
-  private:
-
-    ///\name Helpers
-    ///@{
-
     ////////////////////////////////////////////////////////////////////////////
     /// \brief Prune the flow graph by removing all vertices that have no path
     ///        to the goal.
     /// \param[in] _f The flow graph to prune.
     void PruneFlowGraph(FlowGraph& _f) const;
 
-    ///@}
-    ///\name Internal State
-    ///@{
-
+    ////////////////////////////////////////////////////////////////////////////
+    bool Touching(const CfgType& _cfg, RegionPtr _region); 
+    double m_regionMulti;        ///< Region radius multiplier   
+    double m_overhangFactor;     ///< The amount the robot radius can be overhanging the region 
     vector<RegionPtr> m_regions; ///< All Regions
     RegionPtr m_samplingRegion;  ///< Points to the current sampling region.
-
+    
     ReebGraphConstruction* m_reebGraphConstruction; ///< Embedded reeb graph
-
-    ///@}
 };
 
-/*------------------------------ Construction --------------------------------*/
 
 template<class MPTraits>
 DynamicRegionRRT<MPTraits>::
@@ -112,18 +88,21 @@ DynamicRegionRRT(const CfgType& _start, const CfgType& _goal, string _dm,
     size_t _numDirections, size_t _maxTrial, bool _growGoals) :
     BasicRRTStrategy<MPTraits>(_dm, _nf, _vc, _nc, _gt, _extenderLabel,
     _evaluators, _minDist, _growthFocus, _evaluateGoal,
-    _start, _goal, _numRoots, _numDirections, _maxTrial, _growGoals) {
+    _start, _goal, _numRoots, _numDirections, _maxTrial, _growGoals), m_regionMulti(3.0) {
   this->SetName("DynamicRegionRRT");
+  m_reebGraphConstruction = new ReebGraphConstruction();
 }
 
 template<class MPTraits>
 DynamicRegionRRT<MPTraits>::
 DynamicRegionRRT(MPProblemType* _problem, XMLNode& _node) :
-    BasicRRTStrategy<MPTraits>(_problem, _node) {
+    BasicRRTStrategy<MPTraits>(_problem, _node),
+    m_reebGraphConstruction(new ReebGraphConstruction(_node)) {
   this->SetName("DynamicRegionRRT");
+  m_regionMulti = _node.Read("regionRadius", true, 0.0, 1.5, 4.0,
+      "Region radius multiplier");
+  m_overhangFactor = _node.Read("touchingRatio", false, 0.5, 0.0, 1.0)
 }
-
-/*-------------------------- MPBaseObject Overriddes -------------------------*/
 
 template<class MPTraits>
 void
@@ -135,8 +114,6 @@ Initialize() {
 
   //Embed ReebGraph
   stats->StartClock("ReebGraphConstruction");
-  delete m_reebGraphConstruction;
-  m_reebGraphConstruction = new ReebGraphConstruction();
   m_reebGraphConstruction->Construct(this->GetEnvironment(),
       this->GetBaseFilename());
 #ifdef VIZMO
@@ -193,15 +170,13 @@ Run() {
   //Region structure stores tuple of flow edge descriptor,
   //index along flow edge, number of failed extentions
   unordered_map<RegionPtr, tuple<FED, size_t, size_t>> regions;
-  //unordered_map<RegionPtr, pair<FED, size_t>> regions;
 
-  const double regionRadius = 2 * env->GetRobot(0)->GetBoundingSphereRadius();
+  const double regionRadius = m_regionMulti * env->GetRobot(0)->GetBoundingSphereRadius();
   auto sit = flow.first.find_vertex(flow.second);
   for(auto eit = sit->begin(); eit != sit->end(); ++eit) {
     auto i = regions.emplace(
         RegionPtr(new BoundingSphere(sit->property(), regionRadius)),
         make_tuple(eit->descriptor(), 0, 0));
-        //make_pair(eit->descriptor(), 0));
     m_regions.push_back(i.first->first);
 #ifdef VIZMO
     models[m_regions.back()] = new ThreadSafeSphereModel(
@@ -228,27 +203,31 @@ Run() {
     if(recent != INVALID_VID) {
 
       CfgType& newest = this->GetRoadmap()->GetGraph()->GetVertex(recent);
-
+  
+  // chech each region if the recent cfg is touching the it
+  // if so, advance it until the cfg isnt touch it anymore
+      
       if(m_samplingRegion) {
         get<2>(regions[m_samplingRegion]) = 0;
+      }
+      
+      for(RegionPtr& region : m_regions) {
+         
+        while(region && Touching(newest, region)) {
+          Vector3d cur = region->GetCenter();
 
-        while(env->InBounds(newest, m_samplingRegion)) {
-          Vector3d cur = m_samplingRegion->GetCenter();
-
-          auto& pr = regions[m_samplingRegion];
+          auto& pr = regions[region];
           FlowGraph::vertex_iterator vi;
           FlowGraph::adj_edge_iterator ei;
           flow.first.find_edge(get<0>(pr), vi, ei);
-          //flow.first.find_edge(pr.first, vi, ei);
           vector<Vector3d>& path = ei->property();
           size_t& i = get<1>(pr);
-          //size_t& i = pr.second;
           size_t j = i+1;
           if(j < path.size()) {
             Vector3d& next = path[j];
-            m_samplingRegion->ApplyOffset(next-cur);
+            region->ApplyOffset(next-cur);
 #ifdef VIZMO
-            static_cast<ThreadSafeSphereModel*>(models[m_samplingRegion])->
+            static_cast<ThreadSafeSphereModel*>(models[region])->
                 MoveTo(next);
 #endif
             i = j;
@@ -256,12 +235,12 @@ Run() {
           //else need to delete region
           else {
 #ifdef VIZMO
-            tom.RemoveOther(models[m_samplingRegion]);
-            models.erase(m_samplingRegion);
-#endif
-            auto rit = find(m_regions.begin(), m_regions.end(), m_samplingRegion);
+            tom.RemoveOther(models[region]);
+            models.erase(region);
+#endif 
+            auto rit = find(m_regions.begin(), m_regions.end(), region);
             m_regions.erase(rit);
-            regions.erase(m_samplingRegion);
+            regions.erase(region);
             break;
           }
         }
@@ -294,7 +273,7 @@ Run() {
     else {
       if(m_samplingRegion) {
         ++get<2>(regions[m_samplingRegion]);
-        if(get<2>(regions[m_samplingRegion]) > 1000) {
+        if(get<2>(regions[m_samplingRegion]) > 200) {
           auto rit = find(m_regions.begin(), m_regions.end(), m_samplingRegion);
           m_regions.erase(rit);
           regions.erase(m_samplingRegion);
@@ -315,7 +294,6 @@ Run() {
     cout<<"\nEnd DynamicRegionRRT::Run" << endl;
 }
 
-/*----------------------------- RRT Overrides --------------------------------*/
 
 template<class MPTraits>
 typename DynamicRegionRRT<MPTraits>::CfgType
@@ -353,7 +331,6 @@ SelectDirection() {
   }
 }
 
-/*-------------------------------- Helpers -----------------------------------*/
 
 template <typename MPTraits>
 void
@@ -404,6 +381,32 @@ PruneFlowGraph(FlowGraph& _f) const {
       _f.delete_vertex(vd);
 }
 
-/*----------------------------------------------------------------------------*/
+template <typename MPTraits>
+bool
+DynamicRegionRRT<MPTraits>::
+Touching(const CfgType& _cfg, RegionPtr _region) {
+   
+  auto robot = this->GetEnvironment()->GetRobot(0);
+  
+  if(robot->NumFreeBody() != 1)
+    throw RunTimeException(WHERE, "Currently only support singled body robots");
 
+  const double regionRadius = static_cast<BoundingSphere*>(_region.get())->GetRadius();
+  const double robotRadius = robot->GetFreeBody(0)->GetInsideSphereRadius();   
+   
+  Vector3d robotCenter(_cfg[0],_cfg[1],_cfg[2]);
+  const Vector3d& regionCenter = _region->GetCenter();
+  double overhangDist = (regionCenter - robotCenter).norm() - regionRadius;
+  bool success = (overhangDist <= (m_overhangFactor * robotRadius)); 
+  if(this->m_debug) {
+    cout << "Region Radius: " << regionRadius << endl
+         << "Robot Radius: " << robotRadius << endl;
+    cout << "Robot Center: " << robotCenter << endl;
+    cout << "Region Center: " << regionCenter << endl;
+    cout << "Overhang Distance: " << overhangDist << endl;
+    cout << "Success: " << success << endl; 
+  }
+  
+  return success; 
+}
 #endif
