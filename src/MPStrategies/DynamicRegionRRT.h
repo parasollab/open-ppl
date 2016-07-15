@@ -101,7 +101,8 @@ DynamicRegionRRT(MPProblemType* _problem, XMLNode& _node) :
   this->SetName("DynamicRegionRRT");
   m_regionMulti = _node.Read("regionRadius", true, 0.0, 1.5, 4.0,
       "Region radius multiplier");
-  m_overhangFactor = _node.Read("touchingRatio", false, 0.5, 0.0, 1.0)
+  m_overhangFactor = _node.Read("touchingRatio", false, 0.5, 0.0, 1.0,
+      "Robot overhang when touching a region");
 }
 
 template<class MPTraits>
