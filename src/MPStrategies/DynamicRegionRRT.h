@@ -89,15 +89,10 @@ class DynamicRegionRRT : public BasicRRTStrategy<MPTraits> {
     /// \param[in] _f The flow graph to prune.
     void PruneFlowGraph(FlowGraph& _f) const;
 
-    ////////////////////////////////////////////////////////////////////////////
-    bool Touching(const CfgType& _cfg, RegionPtr _region);
-
     ///@}
     ///\name Internal State
     ///@{
 
-    double m_regionMulti;        ///< Region radius multiplier
-    double m_overhangFactor;     ///< The amount the robot radius can be overhanging the region
     vector<RegionPtr> m_regions; ///< All Regions
     RegionPtr m_samplingRegion;  ///< Points to the current sampling region.
 
@@ -126,10 +121,6 @@ DynamicRegionRRT<MPTraits>::
 DynamicRegionRRT(MPProblemType* _problem, XMLNode& _node) :
     BasicRRTStrategy<MPTraits>(_problem, _node) {
   this->SetName("DynamicRegionRRT");
-  m_regionMulti = _node.Read("regionRadius", true, 0.0, 1.5, 4.0,
-      "Region radius multiplier");
-  m_overhangFactor = _node.Read("touchingRatio", false, 0.5, 0.0, 1.0,
-      "Robot overhang when touching a region");
 }
 
 /*-------------------------- MPBaseObject Overriddes -------------------------*/
@@ -238,14 +229,11 @@ Run() {
 
       if(m_samplingRegion) {
         get<2>(regions[m_samplingRegion]) = 0;
-      }
 
-      for(auto riter = m_regions.begin(); riter != m_regions.end(); ) {
-        RegionPtr region = *riter;
-        while(region && Touching(newest, region)) {
-          Vector3d cur = region->GetCenter();
+        while(env->InBounds(newest, m_samplingRegion)) {
+          Vector3d cur = m_samplingRegion->GetCenter();
 
-          auto& pr = regions[region];
+          auto& pr = regions[m_samplingRegion];
           FlowGraph::vertex_iterator vi;
           FlowGraph::adj_edge_iterator ei;
           flow.first.find_edge(get<0>(pr), vi, ei);
@@ -254,9 +242,9 @@ Run() {
           size_t j = i+1;
           if(j < path.size()) {
             Vector3d& next = path[j];
-            region->ApplyOffset(next-cur);
+            m_samplingRegion->ApplyOffset(next-cur);
 #ifdef VIZMO
-            static_cast<ThreadSafeSphereModel*>(models[region])->
+            static_cast<ThreadSafeSphereModel*>(models[m_samplingRegion])->
                 MoveTo(next);
 #endif
             i = j;
@@ -264,18 +252,15 @@ Run() {
           //else need to delete region
           else {
 #ifdef VIZMO
-            tom.RemoveOther(models[region]);
-            models.erase(region);
+            tom.RemoveOther(models[m_samplingRegion]);
+            models.erase(m_samplingRegion);
 #endif
-            riter = m_regions.erase(riter);
-            regions.erase(region);
-            region.reset();
+            auto rit = find(m_regions.begin(), m_regions.end(), m_samplingRegion);
+            m_regions.erase(rit);
+            regions.erase(m_samplingRegion);
             break;
           }
         }
-        // If region still exists, go on to next.
-        if(region)
-          ++riter;
       }
 
       //Add new regions
@@ -305,7 +290,7 @@ Run() {
     else {
       if(m_samplingRegion) {
         ++get<2>(regions[m_samplingRegion]);
-        if(get<2>(regions[m_samplingRegion]) > 200) {
+        if(get<2>(regions[m_samplingRegion]) > 1000) {
           auto rit = find(m_regions.begin(), m_regions.end(), m_samplingRegion);
           m_regions.erase(rit);
           regions.erase(m_samplingRegion);
@@ -413,37 +398,6 @@ PruneFlowGraph(FlowGraph& _f) const {
   for(auto vd : toPrune)
     if(_f.find_vertex(vd) != _f.end())
       _f.delete_vertex(vd);
-}
-
-
-template <typename MPTraits>
-bool
-DynamicRegionRRT<MPTraits>::
-Touching(const CfgType& _cfg, RegionPtr _region) {
-
-  auto robot = this->GetEnvironment()->GetRobot(0);
-
-  if(robot->NumFreeBody() != 1)
-    throw RunTimeException(WHERE, "Currently only support singled body robots");
-
-  const double regionRadius = static_cast<BoundingSphere*>(_region.get())->
-      GetRadius();
-  const double robotRadius = robot->GetFreeBody(0)->GetInsideSphereRadius();
-
-  Vector3d robotCenter(_cfg[0],_cfg[1],_cfg[2]);
-  const Vector3d& regionCenter = _region->GetCenter();
-  double overhangDist = (regionCenter - robotCenter).norm() - regionRadius;
-  bool success = (overhangDist <= (m_overhangFactor * robotRadius));
-  if(this->m_debug) {
-    cout << "Region Radius: " << regionRadius << endl
-         << "Robot Radius: " << robotRadius << endl;
-    cout << "Robot Center: " << robotCenter << endl;
-    cout << "Region Center: " << regionCenter << endl;
-    cout << "Overhang Distance: " << overhangDist << endl;
-    cout << "Success: " << success << endl;
-  }
-
-  return success;
 }
 
 /*----------------------------------------------------------------------------*/
