@@ -18,14 +18,17 @@
 #endif
 
 ////////////////////////////////////////////////////////////////////////////////
-/// \brief  DynamicRegionRRT
+/// \brief  DynamicRegionRRT uses an embedded Reeb graph to guide dynamic
+///         sampling regions through the environment.
 ////////////////////////////////////////////////////////////////////////////////
 template<class MPTraits>
 class DynamicRegionRRT : public BasicRRTStrategy<MPTraits> {
 
   public:
 
-    // Local Types
+    ///\name Motion Planning Types
+    ///@{
+
     typedef typename MPTraits::MPProblemType MPProblemType;
     typedef typename MPTraits::CfgType CfgType;
     typedef typename MPTraits::CfgRef CfgRef;
@@ -35,7 +38,10 @@ class DynamicRegionRRT : public BasicRRTStrategy<MPTraits> {
     typedef shared_ptr<Boundary> RegionPtr;
     typedef ReebGraphConstruction::FlowGraph FlowGraph;
 
-    // Construction
+    ///@}
+    ///\name Construction
+    ///@{
+
     DynamicRegionRRT(const CfgType& _start = CfgType(),
         const CfgType& _goal = CfgType(),
         string _dm = "euclidean", string _nf = "BFNF",
@@ -49,11 +55,19 @@ class DynamicRegionRRT : public BasicRRTStrategy<MPTraits> {
         bool _growGoals = false);
     DynamicRegionRRT(MPProblemType* _problem, XMLNode& _node);
 
-    // Inherited functions
-    void Initialize();
-    void Run();
+    ///@}
+    ///\name MPBaseObject Overrides
+    ///@{
 
-  private:
+    virtual void Initialize() override;
+    virtual void Run() override;
+
+    ///@}
+
+  protected:
+
+    ///\name RRT Overrides
+    ///@{
 
     ////////////////////////////////////////////////////////////////////////////
     /// \brief  Computes the growth direction for the RRT, choosing between the
@@ -62,18 +76,32 @@ class DynamicRegionRRT : public BasicRRTStrategy<MPTraits> {
     /// \return The resulting growth direction.
     CfgType SelectDirection();
 
+    ///@}
+
+  private:
+
+    ///\name Helpers
+    ///@{
+
     ////////////////////////////////////////////////////////////////////////////
     /// \brief Prune the flow graph by removing all vertices that have no path
     ///        to the goal.
     /// \param[in] _f The flow graph to prune.
     void PruneFlowGraph(FlowGraph& _f) const;
 
+    ///@}
+    ///\name Internal State
+    ///@{
+
     vector<RegionPtr> m_regions; ///< All Regions
     RegionPtr m_samplingRegion;  ///< Points to the current sampling region.
 
     ReebGraphConstruction* m_reebGraphConstruction; ///< Embedded reeb graph
+
+    ///@}
 };
 
+/*------------------------------ Construction --------------------------------*/
 
 template<class MPTraits>
 DynamicRegionRRT<MPTraits>::
@@ -86,16 +114,16 @@ DynamicRegionRRT(const CfgType& _start, const CfgType& _goal, string _dm,
     _evaluators, _minDist, _growthFocus, _evaluateGoal,
     _start, _goal, _numRoots, _numDirections, _maxTrial, _growGoals) {
   this->SetName("DynamicRegionRRT");
-  m_reebGraphConstruction = new ReebGraphConstruction();
 }
 
 template<class MPTraits>
 DynamicRegionRRT<MPTraits>::
 DynamicRegionRRT(MPProblemType* _problem, XMLNode& _node) :
-    BasicRRTStrategy<MPTraits>(_problem, _node),
-    m_reebGraphConstruction(new ReebGraphConstruction(_node)) {
+    BasicRRTStrategy<MPTraits>(_problem, _node) {
   this->SetName("DynamicRegionRRT");
 }
+
+/*-------------------------- MPBaseObject Overriddes -------------------------*/
 
 template<class MPTraits>
 void
@@ -107,6 +135,8 @@ Initialize() {
 
   //Embed ReebGraph
   stats->StartClock("ReebGraphConstruction");
+  delete m_reebGraphConstruction;
+  m_reebGraphConstruction = new ReebGraphConstruction();
   m_reebGraphConstruction->Construct(this->GetEnvironment(),
       this->GetBaseFilename());
 #ifdef VIZMO
@@ -285,6 +315,7 @@ Run() {
     cout<<"\nEnd DynamicRegionRRT::Run" << endl;
 }
 
+/*----------------------------- RRT Overrides --------------------------------*/
 
 template<class MPTraits>
 typename DynamicRegionRRT<MPTraits>::CfgType
@@ -322,6 +353,7 @@ SelectDirection() {
   }
 }
 
+/*-------------------------------- Helpers -----------------------------------*/
 
 template <typename MPTraits>
 void
@@ -371,5 +403,7 @@ PruneFlowGraph(FlowGraph& _f) const {
     if(_f.find_vertex(vd) != _f.end())
       _f.delete_vertex(vd);
 }
+
+/*----------------------------------------------------------------------------*/
 
 #endif
