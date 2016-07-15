@@ -410,7 +410,7 @@
       <!-- DynamicRegionRRT -->
       <DynamicRegionRRT label="DynamicRegionRRT"
         growthFocus="0.01" dmLabel="euclidean"
-        nfLabel="Nearest" vcLabel="cd"
+        nfLabel="Nearest" vcLabel="cd1"
         gtype="UNDIRECTED_TREE" debug="false"
         growGoals="false" extenderLabel="BERO"/>
 
@@ -474,25 +474,32 @@
       </MultiStrategy>
 
       <!-- BlindRRT -->
-      <BlindRRT label="BlindRRT" delta="2.0" minDist="0.1" CCconnection="NodeToNode"
-        lpLabel="sl" dmLabel="euclidean" initialSamples="200" ccIters="100"
-        nfLabel="BFNF" vcLabel="cd1" connectorLabel="RRTConnect" query="2D/2d.query" debug="true" evaluateGoal="true"/>
+      <BlindRRT label="BlindRRT" delta="2.0" minDist="0.1"
+        CCconnection="NodeToNode" lpLabel="sl" dmLabel="euclidean"
+        initialSamples="200" ccIters="100" nfLabel="BFNF" vcLabel="cd1"
+        connectorLabel="RRTConnect" query="2D/2d.query" debug="true"
+        evaluateGoal="true"/>
 
       <!-- Spark PRM Examples -->
-      <TogglePRMStrategyWithRRT label="SparkToggle" maxNPCCSize="2" initSamples="10" maxRRTSize="100" attemptRatio="10"
-        delta="5" minDist="0.1" vcLabel="cd1" nfLabel="BFNF" nfVertexLabel="Nearest" trimDepth="2"
-        dmLabel="euclidean" cLabel="SparkPRMConnector" eLabel="BERO" priority="false" growthFocus="0.25"
-        checkEdgeCases="true" checkImportant="true" trimAll="true" biasConnect="true" rrtDebug="false">
+      <TogglePRMStrategyWithRRT label="SparkToggle" maxNPCCSize="2"
+        initSamples="10" maxRRTSize="100" attemptRatio="10" delta="5"
+        minDist="0.1" vcLabel="cd1" nfLabel="BFNF" nfVertexLabel="Nearest"
+        trimDepth="2" dmLabel="euclidean" cLabel="SparkPRMConnector"
+        eLabel="BERO" priority="false" growthFocus="0.25" checkEdgeCases="true"
+        checkImportant="true" trimAll="true" biasConnect="true"
+        rrtDebug="false">
         <Sampler methodLabel="UniformRandomFree" number="10" attempts="10"/>
         <Connector methodLabel="ToggleConnect"/>
         <ColConnector methodLabel="ToggleConnect"/>
         <Evaluator methodLabel="ModQuery"/>
       </TogglePRMStrategyWithRRT>
 
-      <BasicPRMWithRRT label="SparkUniform" maxNPCCSize="2" initSamples="10" maxRRTSize="100" attemptRatio="10"
-        delta="5" minDist="0.1" vcLabel="cd1" nfLabel="BFNF" nfVertexLabel="Nearest" trimDepth="2"
-        dmLabel="euclidean" cLabel="SparkPRMConnector" eLabel="BERO" growthFocus="0.25"
-        checkEdgeCases="true" checkImportant="true" trimAll="true" biasConnect="true" rrtDebug="false">
+      <BasicPRMWithRRT label="SparkUniform" maxNPCCSize="2" initSamples="10"
+        maxRRTSize="100" attemptRatio="10" delta="5" minDist="0.1" vcLabel="cd1"
+        nfLabel="BFNF" nfVertexLabel="Nearest" trimDepth="2" dmLabel="euclidean"
+        cLabel="SparkPRMConnector" eLabel="BERO" growthFocus="0.25"
+        checkEdgeCases="true" checkImportant="true" trimAll="true"
+        biasConnect="true" rrtDebug="false">
         <Sampler method="UniformRandomFree" number="10" attempts="10"/>
         <Connector method="Closest"/>
         <Evaluator method="ModQuery"/>
