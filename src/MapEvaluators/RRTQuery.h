@@ -103,6 +103,8 @@ class RRTQuery : public MapEvaluatorMethod<MPTraits> {
     vector<CfgType> m_query;    ///< The start and all goal configurations.
     vector<CfgType> m_goals;    ///< The undiscovered goal configurations.
     double m_goalDist{0.};      ///< Getting at least this close = success.
+    VID m_highestCheckedVID;    ///< The highest VID we have tried to connect to
+                                ///< the goal.
 
     ///@}
     ///\name Path State
@@ -139,13 +141,13 @@ class RRTQuery : public MapEvaluatorMethod<MPTraits> {
     /// \brief Find the nearest node in _r to _goal, assuming that _goal is not
     ///        already in _r.
     pair<VID, double> FindNearestNeighbor(RoadmapType* _r,
-        const CfgType& _goal) const;
+        const CfgType& _goal);
 
     ////////////////////////////////////////////////////////////////////////////
     /// \brief Find the node in _r that is nearest to _goal and connected to
     ///        _start.
     pair<VID, double> FindNearestConnectedNeighbor(RoadmapType* _r,
-        const CfgType& _start, const CfgType& _goal) const;
+        const CfgType& _start, const CfgType& _goal);
 
     void GeneratePath(RoadmapType* _r, const CfgType& _start,
         const pair<VID, double>& _nearest);
@@ -308,7 +310,7 @@ PerformQuery(RoadmapType* _r, const CfgType& _start, const CfgType& _goal) {
   if(success) {
     GeneratePath(_r, _start, nearest);
     if(this->m_debug)
-      cout << "\tSuccees: found path from start to nearest node "
+      cout << "\tSuccess: found path from start to nearest node "
            << nearest.first << " at a distance of " << nearest.second
            << " from the goal." << endl;
   }
@@ -355,6 +357,7 @@ Initialize(RoadmapType* _r) {
   if(!_r)
     _r = this->GetRoadmap();
   m_path = unique_ptr<Path<MPTraits>>(new Path<MPTraits>(_r));
+  m_highestCheckedVID = 0;
 }
 
 /*------------------------------- Helpers ------------------------------------*/
@@ -377,6 +380,9 @@ template <typename MPTraits>
 bool
 RRTQuery<MPTraits>::
 SameCC(RoadmapType* _r, const VID _start, const VID _goal) const {
+  if(this->m_debug)
+    cout << "\t\tChecking connectivity..." << endl;
+
   auto g = _r->GetGraph();
   auto stats = this->GetStatClass();
 
@@ -386,7 +392,7 @@ SameCC(RoadmapType* _r, const VID _start, const VID _goal) const {
   stats->StopClock("RRTQuery::CCTesting");
 
   if(this->m_debug)
-    cout << "\tThe start and goal are "
+    cout << "\t\t\tThe start and goal are "
          << (connected ? "" : "not ") << "connected." << endl;
 
   return connected;
@@ -396,15 +402,40 @@ SameCC(RoadmapType* _r, const VID _start, const VID _goal) const {
 template <typename MPTraits>
 pair<typename MPTraits::MPProblemType::VID, double>
 RRTQuery<MPTraits>::
-FindNearestNeighbor(RoadmapType* _r, const CfgType& _goal) const {
+FindNearestNeighbor(RoadmapType* _r, const CfgType& _goal) {
+  if(this->m_debug)
+    cout << "\t\tFinding the nearest node to the goal..." << endl;
+
   auto g = _r->GetGraph();
+
+  VID highestVID = g->get_num_vertices() - 1;
+
+  // Quit if we have already tried with the current set of vertices.
+  if(m_highestCheckedVID == highestVID) {
+    if(this->m_debug)
+      cout << "\t\t\tAll nodes have already been checked." << endl;
+    return make_pair(INVALID_VID, numeric_limits<double>::max());
+  }
+  else if(this->m_debug)
+    cout << "\t\t\tNodes 0 through " << m_highestCheckedVID
+         << " have already been checked." << endl
+         << "\t\t\tSearching nodes " << m_highestCheckedVID + 1 << " through "
+         << highestVID << "..." << endl;
+
   auto stats = this->GetStatClass();
 
+  // If we haven't tried all vertexes, find the nearest untried vertex.
   stats->StartClock("RRTQuery::NeighborhoodFinding");
   vector<pair<VID, double>> neighbors;
-  this->GetNeighborhoodFinder(m_nfLabel)->FindNeighbors(_r, g->begin(),
-      g->end(), true, _goal, back_inserter(neighbors));
+  this->GetNeighborhoodFinder(m_nfLabel)->FindNeighbors(_r,
+      ++g->find_vertex(m_highestCheckedVID), g->end(), true, _goal,
+      back_inserter(neighbors));
+  m_highestCheckedVID = highestVID;
   stats->StopClock("RRTQuery::NeighborhoodFinding");
+
+  if(this->m_debug)
+    cout << "\t\t\tFound nearest node " << neighbors.back().first << " at "
+         << "distance " << neighbors.back().second << "." << endl;
 
   return neighbors.back();
 }
@@ -414,7 +445,10 @@ template <typename MPTraits>
 pair<typename MPTraits::MPProblemType::VID, double>
 RRTQuery<MPTraits>::
 FindNearestConnectedNeighbor(RoadmapType* _r, const CfgType& _start,
-    const CfgType& _goal) const {
+    const CfgType& _goal) {
+  if(this->m_debug)
+    cout << "\tSearching for the nearest connected neighbor..." << endl;
+
   auto g = _r->GetGraph();
   pair<VID, double> nearest;
 
@@ -434,9 +468,13 @@ FindNearestConnectedNeighbor(RoadmapType* _r, const CfgType& _start,
     // If _goal isn't already connected, find the nearest connected node.
     nearest = FindNearestNeighbor(_r, _goal);
 
-  if(this->m_debug)
-    cout << "\tClosest neighbor to goal is node " << nearest.first << " at "
-         << "distance " << setprecision(4) << nearest.second << ".\n";
+  if(this->m_debug) {
+    if(nearest.first != INVALID_VID)
+      cout << "\t\tClosest neighbor to goal is node " << nearest.first << " at "
+           << "distance " << setprecision(4) << nearest.second << ".\n";
+    else
+      cout << "\t\tNo valid node was found." << endl;
+  }
   return nearest;
 }
 
