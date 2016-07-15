@@ -245,7 +245,7 @@ Run() {
         while(region && Touching(newest, region)) {
           Vector3d cur = region->GetCenter();
 
-          auto& pr = regions[m_samplingRegion];
+          auto& pr = regions[region];
           FlowGraph::vertex_iterator vi;
           FlowGraph::adj_edge_iterator ei;
           flow.first.find_edge(get<0>(pr), vi, ei);
