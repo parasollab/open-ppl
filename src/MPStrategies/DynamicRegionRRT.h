@@ -18,14 +18,17 @@
 #endif
 
 ////////////////////////////////////////////////////////////////////////////////
-/// \brief  DynamicRegionRRT
+/// \brief  DynamicRegionRRT uses an embedded Reeb graph to guide dynamic
+///         sampling regions through the environment.
 ////////////////////////////////////////////////////////////////////////////////
 template<class MPTraits>
 class DynamicRegionRRT : public BasicRRTStrategy<MPTraits> {
 
   public:
 
-    // Local Types
+    ///\name Motion Planning Types
+    ///@{
+
     typedef typename MPTraits::MPProblemType MPProblemType;
     typedef typename MPTraits::CfgType CfgType;
     typedef typename MPTraits::CfgRef CfgRef;
@@ -35,7 +38,10 @@ class DynamicRegionRRT : public BasicRRTStrategy<MPTraits> {
     typedef shared_ptr<Boundary> RegionPtr;
     typedef ReebGraphConstruction::FlowGraph FlowGraph;
 
-    // Construction
+    ///@}
+    ///\name Construction
+    ///@{
+
     DynamicRegionRRT(const CfgType& _start = CfgType(),
         const CfgType& _goal = CfgType(),
         string _dm = "euclidean", string _nf = "BFNF",
@@ -49,11 +55,19 @@ class DynamicRegionRRT : public BasicRRTStrategy<MPTraits> {
         bool _growGoals = false);
     DynamicRegionRRT(MPProblemType* _problem, XMLNode& _node);
 
-    // Inherited functions
-    void Initialize();
-    void Run();
+    ///@}
+    ///\name MPBaseObject Overrides
+    ///@{
 
-  private:
+    virtual void Initialize() override;
+    virtual void Run() override;
+
+    ///@}
+
+  protected:
+
+    ///\name RRT Overrides
+    ///@{
 
     ////////////////////////////////////////////////////////////////////////////
     /// \brief  Computes the growth direction for the RRT, choosing between the
@@ -62,6 +76,13 @@ class DynamicRegionRRT : public BasicRRTStrategy<MPTraits> {
     /// \return The resulting growth direction.
     CfgType SelectDirection();
 
+    ///@}
+
+  private:
+
+    ///\name Helpers
+    ///@{
+
     ////////////////////////////////////////////////////////////////////////////
     /// \brief Prune the flow graph by removing all vertices that have no path
     ///        to the goal.
@@ -69,15 +90,23 @@ class DynamicRegionRRT : public BasicRRTStrategy<MPTraits> {
     void PruneFlowGraph(FlowGraph& _f) const;
 
     ////////////////////////////////////////////////////////////////////////////
-    bool Touching(const CfgType& _cfg, RegionPtr _region); 
-    double m_regionMulti;        ///< Region radius multiplier   
-    double m_overhangFactor;     ///< The amount the robot radius can be overhanging the region 
+    bool Touching(const CfgType& _cfg, RegionPtr _region);
+
+    ///@}
+    ///\name Internal State
+    ///@{
+
+    double m_regionMulti;        ///< Region radius multiplier
+    double m_overhangFactor;     ///< The amount the robot radius can be overhanging the region
     vector<RegionPtr> m_regions; ///< All Regions
     RegionPtr m_samplingRegion;  ///< Points to the current sampling region.
-    
-    ReebGraphConstruction* m_reebGraphConstruction; ///< Embedded reeb graph
+
+    ReebGraphConstruction* m_reebGraphConstruction{nullptr}; ///< Embedded reeb graph
+
+    ///@}
 };
 
+/*------------------------------ Construction --------------------------------*/
 
 template<class MPTraits>
 DynamicRegionRRT<MPTraits>::
@@ -88,22 +117,22 @@ DynamicRegionRRT(const CfgType& _start, const CfgType& _goal, string _dm,
     size_t _numDirections, size_t _maxTrial, bool _growGoals) :
     BasicRRTStrategy<MPTraits>(_dm, _nf, _vc, _nc, _gt, _extenderLabel,
     _evaluators, _minDist, _growthFocus, _evaluateGoal,
-    _start, _goal, _numRoots, _numDirections, _maxTrial, _growGoals), m_regionMulti(3.0) {
+    _start, _goal, _numRoots, _numDirections, _maxTrial, _growGoals) {
   this->SetName("DynamicRegionRRT");
-  m_reebGraphConstruction = new ReebGraphConstruction();
 }
 
 template<class MPTraits>
 DynamicRegionRRT<MPTraits>::
 DynamicRegionRRT(MPProblemType* _problem, XMLNode& _node) :
-    BasicRRTStrategy<MPTraits>(_problem, _node),
-    m_reebGraphConstruction(new ReebGraphConstruction(_node)) {
+    BasicRRTStrategy<MPTraits>(_problem, _node) {
   this->SetName("DynamicRegionRRT");
   m_regionMulti = _node.Read("regionRadius", true, 0.0, 1.5, 4.0,
       "Region radius multiplier");
   m_overhangFactor = _node.Read("touchingRatio", false, 0.5, 0.0, 1.0,
       "Robot overhang when touching a region");
 }
+
+/*-------------------------- MPBaseObject Overriddes -------------------------*/
 
 template<class MPTraits>
 void
@@ -115,6 +144,8 @@ Initialize() {
 
   //Embed ReebGraph
   stats->StartClock("ReebGraphConstruction");
+  delete m_reebGraphConstruction;
+  m_reebGraphConstruction = new ReebGraphConstruction();
   m_reebGraphConstruction->Construct(this->GetEnvironment(),
       this->GetBaseFilename());
 #ifdef VIZMO
@@ -172,7 +203,7 @@ Run() {
   //index along flow edge, number of failed extentions
   unordered_map<RegionPtr, tuple<FED, size_t, size_t>> regions;
 
-  const double regionRadius = m_regionMulti * env->GetRobot(0)->GetBoundingSphereRadius();
+  const double regionRadius = 2 * env->GetRobot(0)->GetBoundingSphereRadius();
   auto sit = flow.first.find_vertex(flow.second);
   for(auto eit = sit->begin(); eit != sit->end(); ++eit) {
     auto i = regions.emplace(
@@ -204,20 +235,17 @@ Run() {
     if(recent != INVALID_VID) {
 
       CfgType& newest = this->GetRoadmap()->GetGraph()->GetVertex(recent);
-  
-  // chech each region if the recent cfg is touching the it
-  // if so, advance it until the cfg isnt touch it anymore
-      
+
       if(m_samplingRegion) {
         get<2>(regions[m_samplingRegion]) = 0;
       }
-      
-      for(RegionPtr& region : m_regions) {
-         
+
+      for(auto riter = m_regions.begin(); riter != m_regions.end(); ) {
+        RegionPtr region = *riter;
         while(region && Touching(newest, region)) {
           Vector3d cur = region->GetCenter();
 
-          auto& pr = regions[region];
+          auto& pr = regions[m_samplingRegion];
           FlowGraph::vertex_iterator vi;
           FlowGraph::adj_edge_iterator ei;
           flow.first.find_edge(get<0>(pr), vi, ei);
@@ -238,13 +266,16 @@ Run() {
 #ifdef VIZMO
             tom.RemoveOther(models[region]);
             models.erase(region);
-#endif 
-            auto rit = find(m_regions.begin(), m_regions.end(), region);
-            m_regions.erase(rit);
+#endif
+            riter = m_regions.erase(riter);
             regions.erase(region);
+            region.reset();
             break;
           }
         }
+        // If region still exists, go on to next.
+        if(region)
+          ++riter;
       }
 
       //Add new regions
@@ -295,6 +326,7 @@ Run() {
     cout<<"\nEnd DynamicRegionRRT::Run" << endl;
 }
 
+/*----------------------------- RRT Overrides --------------------------------*/
 
 template<class MPTraits>
 typename DynamicRegionRRT<MPTraits>::CfgType
@@ -332,6 +364,7 @@ SelectDirection() {
   }
 }
 
+/*-------------------------------- Helpers -----------------------------------*/
 
 template <typename MPTraits>
 void
@@ -382,32 +415,37 @@ PruneFlowGraph(FlowGraph& _f) const {
       _f.delete_vertex(vd);
 }
 
+
 template <typename MPTraits>
 bool
 DynamicRegionRRT<MPTraits>::
 Touching(const CfgType& _cfg, RegionPtr _region) {
-   
+
   auto robot = this->GetEnvironment()->GetRobot(0);
-  
+
   if(robot->NumFreeBody() != 1)
     throw RunTimeException(WHERE, "Currently only support singled body robots");
 
-  const double regionRadius = static_cast<BoundingSphere*>(_region.get())->GetRadius();
-  const double robotRadius = robot->GetFreeBody(0)->GetInsideSphereRadius();   
-   
+  const double regionRadius = static_cast<BoundingSphere*>(_region.get())->
+      GetRadius();
+  const double robotRadius = robot->GetFreeBody(0)->GetInsideSphereRadius();
+
   Vector3d robotCenter(_cfg[0],_cfg[1],_cfg[2]);
   const Vector3d& regionCenter = _region->GetCenter();
   double overhangDist = (regionCenter - robotCenter).norm() - regionRadius;
-  bool success = (overhangDist <= (m_overhangFactor * robotRadius)); 
+  bool success = (overhangDist <= (m_overhangFactor * robotRadius));
   if(this->m_debug) {
     cout << "Region Radius: " << regionRadius << endl
          << "Robot Radius: " << robotRadius << endl;
     cout << "Robot Center: " << robotCenter << endl;
     cout << "Region Center: " << regionCenter << endl;
     cout << "Overhang Distance: " << overhangDist << endl;
-    cout << "Success: " << success << endl; 
+    cout << "Success: " << success << endl;
   }
-  
-  return success; 
+
+  return success;
 }
+
+/*----------------------------------------------------------------------------*/
+
 #endif
