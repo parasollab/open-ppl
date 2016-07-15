@@ -283,7 +283,8 @@ GetRandomRay(double _incr, DistanceMetricPointer _dm, bool _norm) {
     m_v.push_back(2. * DRand() - 1.);
 
   //scale to appropriate length
-  _dm->ScaleCfg(_incr, *this);
+  _dm->ScaleCfg(_incr,
+      static_cast<typename DistanceMetricPointer::element_type::CfgType&>(*this));
   if(_norm)
     NormalizeOrientation();
 }
@@ -295,7 +296,8 @@ GetSmoothingValue(ClearanceUtility<MPTraits>& _clearanceUtils,
     shared_ptr<Boundary> _bb) {
   CDInfo cdInfo;
   typename MPTraits::CfgType tmp;
-  _clearanceUtils.CollisionInfo(*this, tmp, _bb, cdInfo);
+  _clearanceUtils.CollisionInfo(static_cast<typename MPTraits::CfgType&>(*this),
+      tmp, _bb, cdInfo);
   return cdInfo.m_minDist;
 }
 
