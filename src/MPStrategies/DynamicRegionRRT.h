@@ -93,6 +93,9 @@ class DynamicRegionRRT : public BasicRRTStrategy<MPTraits> {
     ///\name Internal State
     ///@{
 
+    bool m_prune{true};          ///< Prune the flow graph?
+    double m_regionFactor{2.5};  ///< The region radius is this * robot radius.
+
     vector<RegionPtr> m_regions; ///< All Regions
     RegionPtr m_samplingRegion;  ///< Points to the current sampling region.
 
@@ -121,6 +124,9 @@ DynamicRegionRRT<MPTraits>::
 DynamicRegionRRT(MPProblemType* _problem, XMLNode& _node) :
     BasicRRTStrategy<MPTraits>(_problem, _node) {
   this->SetName("DynamicRegionRRT");
+  _node.Read("regionFactor", false, 2.5, 1., 4., "The region radius is this * "
+      "robot radius");
+  _node.Read("pruneFlowGraph", false, true, "Enable/disable flow graph pruning");
 }
 
 /*-------------------------- MPBaseObject Overriddes -------------------------*/
@@ -141,7 +147,6 @@ Initialize() {
       this->GetBaseFilename());
   stats->StopClock("ReebGraphConstruction");
 
-  m_regions.clear();
 #ifdef VIZMO
   GetVizmo().GetEnv()->AddTetGenDecompositionModel(m_reebGraphConstruction->
       GetTetrahedralization());
@@ -165,7 +170,7 @@ Run() {
   StatClass* stats = this->GetStatClass();
   Environment* env = this->GetEnvironment();
 
-  stats->StartClock("DynamicRegionRRT");
+  stats->StartClock("DynamicRegionRRT::Run");
 
   const CfgType& s = this->m_query->GetQuery()[0];
   Vector3d start(s[0], s[1], s[2]);
@@ -177,7 +182,8 @@ Run() {
     GetFlowGraph(start, env->GetPositionRes());
 
   // Prune flow-graph of non-relevant paths.
-  PruneFlowGraph(flow.first);
+  if(m_prune)
+    PruneFlowGraph(flow.first);
 
   unordered_map<FVD, bool> visited;
   for(auto vit = flow.first.begin(); vit != flow.first.end(); ++vit)
@@ -195,7 +201,8 @@ Run() {
   //index along flow edge, number of failed extentions
   unordered_map<RegionPtr, tuple<FED, size_t, size_t>> regions;
 
-  const double regionRadius = 2 * env->GetRobot(0)->GetBoundingSphereRadius();
+  const double regionRadius = m_regionFactor *
+      env->GetRobot(0)->GetBoundingSphereRadius();
   auto sit = flow.first.find_vertex(flow.second);
   for(auto eit = sit->begin(); eit != sit->end(); ++eit) {
     auto i = regions.emplace(
@@ -228,13 +235,16 @@ Run() {
 
       CfgType& newest = this->GetRoadmap()->GetGraph()->GetVertex(recent);
 
-      if(m_samplingRegion) {
+      if(m_samplingRegion)
         get<2>(regions[m_samplingRegion]) = 0;
 
-        while(env->InBounds(newest, m_samplingRegion)) {
-          Vector3d cur = m_samplingRegion->GetCenter();
+      for(auto iter = m_regions.begin(); iter != m_regions.end(); ) {
+        RegionPtr region = *iter;
+        bool increment = true;
+        while(env->InBounds(newest, region)) {
+          Vector3d cur = region->GetCenter();
 
-          auto& pr = regions[m_samplingRegion];
+          auto& pr = regions[region];
           FlowGraph::vertex_iterator vi;
           FlowGraph::adj_edge_iterator ei;
           flow.first.find_edge(get<0>(pr), vi, ei);
@@ -243,9 +253,9 @@ Run() {
           size_t j = i+1;
           if(j < path.size()) {
             Vector3d& next = path[j];
-            m_samplingRegion->ApplyOffset(next-cur);
+            region->ApplyOffset(next-cur);
 #ifdef VIZMO
-            static_cast<ThreadSafeSphereModel*>(models[m_samplingRegion])->
+            static_cast<ThreadSafeSphereModel*>(models[region])->
                 MoveTo(next);
 #endif
             i = j;
@@ -253,15 +263,16 @@ Run() {
           //else need to delete region
           else {
 #ifdef VIZMO
-            tom.RemoveOther(models[m_samplingRegion]);
-            models.erase(m_samplingRegion);
+            tom.RemoveOther(models[region]);
+            models.erase(region);
 #endif
-            auto rit = find(m_regions.begin(), m_regions.end(), m_samplingRegion);
-            m_regions.erase(rit);
-            regions.erase(m_samplingRegion);
+            iter = m_regions.erase(iter);
+            regions.erase(region);
+            increment = false;
             break;
           }
         }
+        if(increment) ++iter;
       }
 
       //Add new regions
@@ -303,7 +314,7 @@ Run() {
 #endif
   }
 
-  stats->StopClock("DynamicRegionRRT");
+  stats->StopClock("DynamicRegionRRT::Run");
 
   m_regions.clear();
   regions.clear();
