@@ -124,9 +124,10 @@ DynamicRegionRRT<MPTraits>::
 DynamicRegionRRT(MPProblemType* _problem, XMLNode& _node) :
     BasicRRTStrategy<MPTraits>(_problem, _node) {
   this->SetName("DynamicRegionRRT");
-  _node.Read("regionFactor", false, 2.5, 1., 4., "The region radius is this * "
-      "robot radius");
-  _node.Read("pruneFlowGraph", false, true, "Enable/disable flow graph pruning");
+  m_regionFactor = _node.Read("regionFactor", false, 2.5, 1., 4., "The region "
+      "radius is this * robot radius");
+  m_prune = _node.Read("pruneFlowGraph", false, true, "Enable/disable flow "
+      "graph pruning");
 }
 
 /*-------------------------- MPBaseObject Overriddes -------------------------*/
