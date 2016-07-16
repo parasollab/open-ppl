@@ -139,6 +139,9 @@ Initialize() {
   m_reebGraphConstruction = new ReebGraphConstruction();
   m_reebGraphConstruction->Construct(this->GetEnvironment(),
       this->GetBaseFilename());
+  stats->StopClock("ReebGraphConstruction");
+
+  m_regions.clear();
 #ifdef VIZMO
   GetVizmo().GetEnv()->AddTetGenDecompositionModel(m_reebGraphConstruction->
       GetTetrahedralization());
@@ -148,8 +151,6 @@ Initialize() {
   // Make map non-selectable during execution.
   GetVizmo().GetMap()->SetSelectable(false);
 #endif
-
-  stats->StopClock("ReebGraphConstruction");
 }
 
 

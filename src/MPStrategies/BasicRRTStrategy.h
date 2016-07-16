@@ -313,6 +313,11 @@ Initialize() {
   if(this->m_debug)
     cout << "Initializing BasicRRTStrategy" << endl;
 
+  // Clear all state variables to avoid problems when running multiple times.
+  m_trees.clear();
+  m_successes = 0;
+  m_trials = 0;
+
   GraphType* g = this->GetRoadmap()->GetGraph();
 
   // Check for query info.
