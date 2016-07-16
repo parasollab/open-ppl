@@ -163,9 +163,11 @@ bool
 KinodynamicExtender<MPTraits>::
 Extend(const StateType& _start, const StateType& _end, StateType& _new,
     LPOutput<MPTraits>& _lp) {
-  double timeStep = m_fixed ? m_timeStep : m_timeStep*DRand();
-  size_t nTicks = ceil(timeStep);
-  double dt = timeStep * this->GetEnvironment()->GetTimeRes() / nTicks;
+  size_t nTicks = ceil(m_timeStep);
+  double dt = m_timeStep * this->GetEnvironment()->GetTimeRes() / nTicks;
+
+  if(!m_fixed)
+    nTicks = max(nTicks / 2., nTicks * (DRand() + DRand()) / 2.);
 
   if(m_best)
     return ExtendBestControl(_start, _end, nTicks, dt, _new, _lp);
@@ -237,7 +239,7 @@ ExtendBestControl(const StateType& _start, const StateType& _end, size_t _nTicks
       }
     }
   }
-  return distBest == numeric_limits<double>::infinity();
+  return distBest != numeric_limits<double>::infinity();
 }
 
 

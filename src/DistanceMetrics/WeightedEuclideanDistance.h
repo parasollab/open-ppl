@@ -20,6 +20,7 @@ class WeightedEuclideanDistance : public DistanceMetricMethod<MPTraits> {
     WeightedEuclideanDistance(double _posW = 0.25, double _rotW = 0.25,
         double _velW = 0.25, double _avlW = 0.25);
     WeightedEuclideanDistance(MPProblemType* _problem, XMLNode& _node);
+    virtual ~WeightedEuclideanDistance() = default;
 
     virtual double Distance(const StateType& _s1, const StateType& _s2);
 

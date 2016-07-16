@@ -41,6 +41,18 @@ class MixExtender : public ExtenderMethod<MPTraits> {
     ///\name ExtenderMethod Overrides
     ///@{
 
+    virtual double GetMinDistance() const {
+      if(!m_limitsCached)
+        ComputeLimits();
+      return this->m_minDist;
+    }
+
+    virtual double GetMaxDistance() const {
+      if(!m_limitsCached)
+        ComputeLimits();
+      return this->m_maxDist;
+    }
+
     virtual bool Extend(const CfgType& _near, const CfgType& _dir,
         CfgType& _new, LPOutput<MPTraits>& _lpOutput) override;
 
@@ -53,13 +65,14 @@ class MixExtender : public ExtenderMethod<MPTraits> {
 
     ////////////////////////////////////////////////////////////////////////////
     /// \brief Compute the minimum and maximum distances over the extender set.
-    void ComputeLimits();
+    void ComputeLimits() const;
 
     ///@}
     ///\name MixExtender State
     ///@{
 
     ExpanderSet m_growSet;
+    mutable bool m_limitsCached{false};
 
     ///@}
 };
@@ -70,7 +83,6 @@ template<class MPTraits>
 MixExtender<MPTraits>::
 MixExtender() : ExtenderMethod<MPTraits>() {
   this->SetName("MixExtender");
-  ComputeLimits();
 }
 
 
@@ -80,7 +92,6 @@ MixExtender(MPProblemType* _problem, XMLNode& _node) :
     ExtenderMethod<MPTraits>(_problem, _node) {
   this->SetName("MixExtender");
   ParseXML(_node);
-  ComputeLimits();
 }
 
 /*---------------------------- MPBaseObject Overrides ------------------------*/
@@ -164,14 +175,17 @@ Extend(const CfgType& _near, const CfgType& _dir, CfgType& _new,
 template <typename MPTraits>
 void
 MixExtender<MPTraits>::
-ComputeLimits() {
-  this->m_maxDist = numeric_limits<double>::min();
-  this->m_minDist = numeric_limits<double>::max();
+ComputeLimits() const {
+  double& minDist = const_cast<double&>(this->m_minDist);
+  double& maxDist = const_cast<double&>(this->m_maxDist);
+  maxDist = numeric_limits<double>::min();
+  minDist = numeric_limits<double>::max();
   for(auto& ex : m_growSet) {
     auto e = this->GetExtender(ex.first);
-    this->m_maxDist = max(this->m_maxDist, e->GetMaxDistance());
-    this->m_minDist = min(this->m_minDist, e->GetMaxDistance());
+    maxDist = max(maxDist, e->GetMaxDistance());
+    minDist = min(minDist, e->GetMinDistance());
   }
+  m_limitsCached = true;
 }
 
 /*----------------------------------------------------------------------------*/

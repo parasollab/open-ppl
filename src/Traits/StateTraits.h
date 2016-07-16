@@ -5,6 +5,7 @@
 #include "Edges/StateEdge.h"
 
 //distance metric includes
+#include "DistanceMetrics/ExperimentalDistance.h"
 #include "DistanceMetrics/WeightedEuclideanDistance.h"
 
 //validity checker includes
@@ -16,6 +17,7 @@
 
 //extenders includes
 #include "Extenders/KinodynamicExtender.h"
+#include "Extenders/MixExtender.h"
 
 //metric includes
 #include "Metrics/NumNodesMetric.h"
@@ -54,6 +56,7 @@ struct StateTraits {
 
   //types of distance metrics available in our world
   typedef boost::mpl::list<
+    ExperimentalDistance<StateTraits>,
     WeightedEuclideanDistance<StateTraits>
       > DistanceMetricMethodList;
 
@@ -78,7 +81,8 @@ struct StateTraits {
 
   //types of extenders avaible in our world
   typedef boost::mpl::list<
-    KinodynamicExtender<StateTraits>
+    KinodynamicExtender<StateTraits>,
+    MixExtender<StateTraits>
       > ExtenderMethodList;
 
   //types of path smoothing available in our world
