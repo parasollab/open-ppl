@@ -296,7 +296,8 @@ void
 ReachableVolumeRRT<MPTraits>::Run() {
 
   Environment* env = this->GetMPProblem()->GetEnvironment();
-  NeighborhoodFinderPointer nfp = this->GetMPProblem()->GetNeighborhoodFinder(this->m_nf);
+  NeighborhoodFinderPointer nfp = this->GetMPProblem()->
+      GetNeighborhoodFinder(this->m_nfLabel);
 
   this->m_debug=false;
   if(this->m_debug) cout << "\nRunning RVRRTStrategy::" << endl;
@@ -306,7 +307,8 @@ ReachableVolumeRRT<MPTraits>::Run() {
   StatClass* stats = this->GetMPProblem()->GetStatClass();
 
   stats->StartClock("RRT Generation");
-  DistanceMetricPointer dm = this->GetMPProblem()->GetDistanceMetric(this->m_dm);
+  DistanceMetricPointer dm = this->GetMPProblem()->
+      GetDistanceMetric(this->m_dmLabel);
   CfgType dir;
 
   bool mapPassedEvaluation = false;

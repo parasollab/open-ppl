@@ -88,18 +88,18 @@ template<class MPTraits>
 AdaptiveRRT<MPTraits>::
 AdaptiveRRT(double _wallPenalty, double _gamma, const GrowthSets& _growthSets,
     CostMethod _c) :
-  m_wallPenalty(_wallPenalty), m_gamma(_gamma), m_growthSets(_growthSets),
-  m_costMethod(_c) {
-    this->SetName("AdaptiveRRT");
-  }
+    m_wallPenalty(_wallPenalty), m_gamma(_gamma), m_growthSets(_growthSets),
+    m_costMethod(_c) {
+  this->SetName("AdaptiveRRT");
+}
 
 template<class MPTraits>
 AdaptiveRRT<MPTraits>::
 AdaptiveRRT(MPProblemType* _problem, XMLNode& _node) :
-  BasicRRTStrategy<MPTraits>(_problem, _node, true){
-    this->SetName("AdaptiveRRT");
-    ParseXML(_node);
-  };
+    BasicRRTStrategy<MPTraits>(_problem, _node, true){
+  this->SetName("AdaptiveRRT");
+  ParseXML(_node);
+}
 
 template<class MPTraits>
 void
@@ -181,11 +181,11 @@ typename AdaptiveRRT<MPTraits>::VID
 AdaptiveRRT<MPTraits>::ExpandTree(CfgType& _dir){
 
   // Setup MP Variables
-  DistanceMetricPointer dm = this->GetDistanceMetric(this->m_dm);
+  DistanceMetricPointer dm = this->GetDistanceMetric(this->m_dmLabel);
   VID recentVID = INVALID_VID;
 
   //get the expand node from the roadmap
-  NeighborhoodFinderPointer nf = this->GetNeighborhoodFinder(this->m_nf);
+  NeighborhoodFinderPointer nf = this->GetNeighborhoodFinder(this->m_nfLabel);
   vector<pair<VID, double> > kClosest;
   nf->FindNeighbors(this->GetRoadmap(),
       this->m_currentTree->begin(), this->m_currentTree->end(),
@@ -201,7 +201,7 @@ AdaptiveRRT<MPTraits>::ExpandTree(CfgType& _dir){
   if(this->m_debug)
     cout << "nearest:: " << nearest << "\tvisibility:: " << visibility << endl;
 
-  double minDist = this->GetExtender(this->m_extenderLabel)->GetMinDistance();
+  double minDist = this->GetExtender(this->m_exLabel)->GetMinDistance();
   if(dm->Distance(_dir, nearest) < minDist){
     //chosen a q_rand which is too close. Penalize nearest with 0.
     nearest.IncStat("Fail");
@@ -371,7 +371,7 @@ template<class MPTraits>
 typename AdaptiveRRT<MPTraits>::VID
 AdaptiveRRT<MPTraits>::UpdateTree(VID _expandNode, CfgType& _newCfg,
     CfgType& _dir, double _delta){
-  DistanceMetricPointer dm = this->GetDistanceMetric(this->m_dm);
+  DistanceMetricPointer dm = this->GetDistanceMetric(this->m_dmLabel);
 
   CfgType& nearest = this->GetRoadmap()->GetGraph()->GetVertex(_expandNode);
 

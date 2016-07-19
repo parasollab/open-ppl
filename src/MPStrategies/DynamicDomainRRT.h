@@ -23,64 +23,91 @@
 ////////////////////////////////////////////////////////////////////////////////
 template<class MPTraits>
 class DynamicDomainRRT : public BasicRRTStrategy<MPTraits> {
-  public:
-    typedef typename MPTraits::CfgType CfgType;
-    typedef typename MPTraits::CfgRef CfgRef;
-    typedef typename MPTraits::WeightType WeightType;
-    typedef typename MPTraits::MPProblemType MPProblemType;
-    typedef typename MPProblemType::RoadmapType RoadmapType;
-    typedef typename MPProblemType::GraphType GraphType;
-    typedef typename MPProblemType::VID VID;
-    typedef typename MPProblemType::DistanceMetricPointer DistanceMetricPointer;
-    typedef typename MPProblemType::NeighborhoodFinderPointer NeighborhoodFinderPointer;
-    typedef typename MPProblemType::ExtenderPointer ExtenderPointer;
 
-    //Non-XML constructor sets all private variables
-    DynamicDomainRRT(string _dm="euclidean",
-        string _nf="bfnf", string _vc="cd1", string _nc="kClosest",
-        string _gt="UNDIRECTED_TREE", string _extenderLabel="BERO",
-        vector<string> _evaluators=vector<string>(),
-        double _minDist=0.01, double _growthFocus=0.05,
-        bool _evaluateGoal=true, const CfgType& _start=CfgType(),
-        const CfgType& _goal=CfgType(), size_t _numRoots=1,
-        size_t _numDirections=1, size_t _maxTrial = 3, bool _growGoals=false,
-        double _r = 10);
+  public:
+
+    ///\name Motion Planning Types
+    ///@{
+
+    typedef typename MPTraits::CfgType          CfgType;
+    typedef typename MPTraits::CfgRef           CfgRef;
+    typedef typename MPTraits::WeightType       WeightType;
+    typedef typename MPTraits::MPProblemType    MPProblemType;
+    typedef typename MPProblemType::RoadmapType RoadmapType;
+    typedef typename MPProblemType::GraphType   GraphType;
+    typedef typename MPProblemType::VID         VID;
+
+    ///}@
+    ///\name Construction
+    ///@{
+
+    DynamicDomainRRT(string _dm = "euclidean", string _nf = "bfnf",
+        string _vc = "cd1", string _nc = "kClosest", string _ex = "BERO",
+        vector<string> _evaluators = vector<string>(),
+        string _gt = "UNDIRECTED_TREE",  bool _growGoals = false,
+        double _growthFocus = .05, size_t _numRoots = 1,
+        size_t _numDirections = 1, size_t _maxTrial = 3, double _r = 10.);
 
     DynamicDomainRRT(MPProblemType* _problem, XMLNode& _node);
 
-    virtual ~DynamicDomainRRT();
+    virtual ~DynamicDomainRRT() = default;
 
-    virtual void Initialize();
+    ///@}
+    ///\name MPStrategyMethod Overrides
+    ///@{
+
+    virtual void Initialize() override;
+
+    ///@}
+    ///\name MPBaseObject Overrides
+    ///@{
+
     virtual void Print(ostream& _os) const;
 
+    ///@}
+
   protected:
+
+    ///\name RRT Overrides
+    ///@{
+
+    virtual CfgType SelectDirection() override;
+    virtual VID ExpandTree(CfgType& _dir) override;
+
+    ///@}
+    ///\name Helpers
+    ///@{
+
     ////////////////////////////////////////////////////////////////////////////
     /// @return String for accessing Cfg::GetStat for radius value
     static constexpr string RLabel() {return "DDRRT::R";}
 
-    virtual CfgType SelectDirection();
-    virtual VID ExpandTree(CfgType& _dir);
+    ///@}
+    ///\name Internal State
+    ///@{
 
     double m_r; ///< R value to set radius on failures to. R is a factor of the
                 ///< environment resolution.
     bool m_boundaryNodes; ///< True if boundary configurations have been found
     shared_ptr<BoundingBox> m_bbx; ///< Sampling domain
+
+    ///@}
 };
+
+/*---------------------------- Construction ----------------------------------*/
 
 template<class MPTraits>
 DynamicDomainRRT<MPTraits>::
 DynamicDomainRRT(string _dm, string _nf, string _vc, string _nc,
-    string _gt, string _extenderLabel, vector<string> _evaluators,
-    double _minDist, double _growthFocus, bool _evaluateGoal,
-    const CfgType& _start, const CfgType& _goal, size_t _numRoots,
-    size_t _numDirections, size_t _maxTrial, bool _growGoals, double _r) :
-    BasicRRTStrategy<MPTraits>(_dm, _nf, _vc, _nc, _gt, _extenderLabel,
-        _evaluators, _minDist, _growthFocus, _evaluateGoal, _start, _goal,
-        _numRoots, _numDirections, _maxTrial, _growGoals),
+    string _ex, vector<string> _evaluators, string _gt, bool _growGoals,
+    double _growthFocus, size_t _numRoots, size_t _numDirections,
+    size_t _maxTrial, double _r) :
+    BasicRRTStrategy<MPTraits>(_dm, _nf, _vc, _nc, _ex, _evaluators, _gt,
+        _growGoals, _growthFocus, _numRoots, _numDirections, _maxTrial),
     m_r(_r) {
-  this->m_meLabels = _evaluators;
   this->SetName("DynamicDomainRRT");
 }
+
 
 template<class MPTraits>
 DynamicDomainRRT<MPTraits>::
@@ -91,10 +118,7 @@ DynamicDomainRRT(MPProblemType* _problem, XMLNode& _node) :
       "R value of approach. Should be a multiple of environment resolution.");
 }
 
-template<class MPTraits>
-DynamicDomainRRT<MPTraits>::
-~DynamicDomainRRT() {
-}
+/*-------------------------- MPBaseObject Overrides --------------------------*/
 
 template<class MPTraits>
 void
@@ -103,6 +127,8 @@ Print(ostream& _os) const {
   BasicRRTStrategy<MPTraits>::Print(_os);
   _os << "\tr:: " << m_r << endl;
 }
+
+/*-------------------------- MPStrategy Overrides ----------------------------*/
 
 template<class MPTraits>
 void
@@ -120,14 +146,17 @@ Initialize() {
           this->GetEnvironment()->GetBoundary())));
 }
 
+/*----------------------------- RRT Overrides --------------------------------*/
+
 template<class MPTraits>
 typename MPTraits::CfgType
 DynamicDomainRRT<MPTraits>::
-SelectDirection(){
+SelectDirection() {
   CfgType dir;
   dir.GetRandomCfg(this->GetEnvironment(), m_bbx);
   return dir;
 }
+
 
 template<class MPTraits>
 typename DynamicDomainRRT<MPTraits>::VID
@@ -135,11 +164,10 @@ DynamicDomainRRT<MPTraits>::
 ExpandTree(CfgType& _dir) {
   // Setup MP Variables
   StatClass* stats = this->GetStatClass();
-  DistanceMetricPointer dm = this->GetDistanceMetric(this->m_dm);
-  NeighborhoodFinderPointer nf = this->GetNeighborhoodFinder(this->m_nf);
-  ExtenderPointer e = this->GetExtender(this->m_extenderLabel);
-  RoadmapType* rdmp = this->GetRoadmap();
-  GraphType* g = rdmp->GetGraph();
+  auto dm = this->GetDistanceMetric(this->m_dmLabel);
+  auto nf = this->GetNeighborhoodFinder(this->m_nfLabel);
+  auto e = this->GetExtender(this->m_exLabel);
+  GraphType* g = this->GetRoadmap()->GetGraph();
 
   VID recentVID = INVALID_VID;
 
@@ -351,5 +379,7 @@ ExpandTree(CfgType& _dir) {
 
   return recentVID;
 }
+
+/*----------------------------------------------------------------------------*/
 
 #endif

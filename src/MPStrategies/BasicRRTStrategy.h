@@ -27,7 +27,7 @@ class BasicRRTStrategy : public MPStrategyMethod<MPTraits> {
 
   public:
 
-    ///\name Local Types
+    ///\name Motion Planning Types
     ///@{
 
     typedef typename MPTraits::CfgType          CfgType;
@@ -37,23 +37,33 @@ class BasicRRTStrategy : public MPStrategyMethod<MPTraits> {
     typedef typename MPProblemType::RoadmapType RoadmapType;
     typedef typename MPProblemType::GraphType   GraphType;
     typedef typename MPProblemType::VID         VID;
+
+    ///@}
+    ///\name Local Types
+    ///@{
+
     typedef vector<VID>                         TreeType;
     typedef typename vector<TreeType>::iterator TreeIter;
+
+    ////////////////////////////////////////////////////////////////////////////
+    /// The supported graph structures.
+    enum GraphStucture {UndirectedTree, DirectedTree, UndirectedGraph,
+        DirectedGraph};
 
     ///@}
     ///\name Construction
     ///@{
 
-    BasicRRTStrategy(string _dm = "euclidean",
-        string _nf = "bfnf", string _vc = "cd1", string _nc = "kClosest",
-        string _gt = "UNDIRECTED_TREE", string _extenderLabel = "BERO",
-        vector<string> _evaluators=vector<string>(),
-        double _minDist = 0.01, double _growthFocus = 0.05,
-        bool _evaluateGoal = true, const CfgType& _start = CfgType(),
-        const CfgType& _goal = CfgType(), size_t _numRoots = 1,
-        size_t _numDirections = 1, size_t _maxTrial = 3, bool _growGoals = false);
+    BasicRRTStrategy(string _dm = "euclidean", string _nf = "bfnf",
+        string _vc = "cd1", string _nc = "kClosest", string _ex = "BERO",
+        vector<string> _evaluators = vector<string>(),
+        string _gt = "UNDIRECTED_TREE",  bool _growGoals = false,
+        double _growthFocus = .05, size_t _numRoots = 1,
+        size_t _numDirections = 1, size_t _maxTrial = 3);
+
     BasicRRTStrategy(MPProblemType* _problem, XMLNode& _node,
         bool _child = false);
+
     virtual ~BasicRRTStrategy() = default;
 
     ///@}
@@ -80,7 +90,7 @@ class BasicRRTStrategy : public MPStrategyMethod<MPTraits> {
 
     ////////////////////////////////////////////////////////////////////////////
     /// \brief Get a random configuration to grow towards.
-    CfgType SelectDirection();
+    virtual CfgType SelectDirection();
 
     ////////////////////////////////////////////////////////////////////////////
     /// \brief Sample a target configuration to grow towards from an existing
@@ -176,22 +186,22 @@ class BasicRRTStrategy : public MPStrategyMethod<MPTraits> {
     ///\name MP Object Labels
     ///@{
 
-    string m_dm;            ///< The distance metric label.
-    string m_nf;            ///< The neighborhood finder label.
-    string m_vc;            ///< The validity checker label.
-    string m_nc;            ///< The connector label.
+    string m_dmLabel;       ///< The distance metric label.
+    string m_nfLabel;       ///< The neighborhood finder label.
+    string m_vcLabel;       ///< The validity checker label.
+    string m_ncLabel;       ///< The connector label.
+    string m_exLabel;       ///< The extender label.
     string m_gt;            ///< The graph type.
-    string m_extenderLabel; ///< The extender label.
 
     ///@}
     ///\name RRT Properties
     ///@{
 
+    bool   m_growGoals;     ///< Grow trees from goals.
     double m_growthFocus;   ///< The fraction of goal-biased expansions.
     size_t m_numRoots;      ///< The number of roots to use without a query.
     size_t m_numDirections; ///< The number of expansion directions per iteration.
     size_t m_maxTrial;      ///< The number of samples taken for disperse search.
-    bool   m_growGoals;     ///< Grow trees from goals.
 
     ///@}
     ///\name Tree Data
@@ -221,21 +231,19 @@ class BasicRRTStrategy : public MPStrategyMethod<MPTraits> {
 template<class MPTraits>
 BasicRRTStrategy<MPTraits>::
 BasicRRTStrategy(string _dm, string _nf, string _vc, string _nc,
-    string _gt, string _extenderLabel, vector<string> _evaluators,
-    double _minDist, double _growthFocus, bool _evaluateGoal,
-    const CfgType& _start, const CfgType& _goal, size_t _numRoots,
-    size_t _numDirections, size_t _maxTrial, bool _growGoals) :
-    m_dm(_dm), m_nf(_nf), m_vc(_vc),
-    m_nc(_nc), m_gt(_gt),
-    m_extenderLabel(_extenderLabel),
-    m_growthFocus(_growthFocus),
-    m_numRoots(_numRoots), m_numDirections(_numDirections), m_maxTrial(_maxTrial),
-    m_growGoals(_growGoals) {
-  this->m_meLabels = _evaluators;
+    string _ex, vector<string> _evaluators, string _gt, bool _growGoals,
+    double _growthFocus, size_t _numRoots, size_t _numDirections,
+    size_t _maxTrial) :
+    m_dmLabel(_dm), m_nfLabel(_nf), m_vcLabel(_vc), m_ncLabel(_nc),
+    m_exLabel(_ex), m_gt(_gt), m_growGoals(_growGoals),
+    m_growthFocus(_growthFocus), m_numRoots(_numRoots),
+    m_numDirections(_numDirections), m_maxTrial(_maxTrial) {
   this->SetName("BasicRRTStrategy");
-#ifdef VIZMO
-  this->m_meLabels.push_back("RRTQuery");
-#endif
+
+  if(_evaluators.empty())
+    this->m_meLabels.push_back("RRTQuery");
+  else
+    this->m_meLabels = _evaluators;
 }
 
 
@@ -266,12 +274,12 @@ ParseXML(XMLNode& _node, bool _child) {
       "Number of trials to get a dispersed direction");
 
   // Parse MP object labels
-  m_vc = _node.Read("vcLabel", true, "", "Validity Test Method");
-  m_nf = _node.Read("nfLabel", true, "", "Neighborhood Finder");
-  m_dm = _node.Read("dmLabel",true,"","Distance Metric");
-  m_nc = _node.Read("connectorLabel", false, "", "Node Connection Method");
+  m_vcLabel = _node.Read("vcLabel", true, "", "Validity Test Method");
+  m_nfLabel = _node.Read("nfLabel", true, "", "Neighborhood Finder");
+  m_dmLabel = _node.Read("dmLabel",true,"","Distance Metric");
+  m_ncLabel = _node.Read("connectorLabel", false, "", "Node Connection Method");
   if(!_child)
-    m_extenderLabel = _node.Read("extenderLabel", true, "", "Extender label");
+    m_exLabel = _node.Read("extenderLabel", true, "", "Extender label");
 
   // Parse child nodes.
   for(auto& child : _node)
@@ -287,11 +295,11 @@ BasicRRTStrategy<MPTraits>::
 Print(ostream& _os) const {
   _os << "BasicRRTStrategy::Print" << endl
       << "  MP objects:" << endl
-      << "\tNeighborhood Finder:: " << m_nf << endl
-      << "\tDistance Metric:: " << m_dm << endl
-      << "\tValidity Checker:: " << m_vc << endl
-      << "\tConnection Method:: " << m_nc << endl
-      << "\tExtender:: " << m_extenderLabel << endl
+      << "\tDistance Metric:: " << m_dmLabel << endl
+      << "\tNeighborhood Finder:: " << m_nfLabel << endl
+      << "\tValidity Checker:: " << m_vcLabel << endl
+      << "\tConnection Method:: " << m_ncLabel << endl
+      << "\tExtender:: " << m_exLabel << endl
       << "\tEvaluators:: " << endl;
   for(auto& s : this->m_meLabels)
     _os << "\t\t" << s << endl;
@@ -350,7 +358,7 @@ Initialize() {
   else {
     for(size_t i = 0; i < m_numRoots; ++i) {
       auto env = this->GetEnvironment();
-      auto vc  = this->GetValidityChecker(m_vc);
+      auto vc  = this->GetValidityChecker(m_vcLabel);
 
       CfgType root;
       do {
@@ -538,7 +546,7 @@ FindNearestNeighbor(const CfgType& _cfg, const TreeIter& _tree) {
   this->GetStatClass()->StartClock("NeighborhoodFinding");
 
   vector<pair<VID, double>> neighbors;
-  auto nf = this->GetNeighborhoodFinder(m_nf);
+  auto nf = this->GetNeighborhoodFinder(m_nfLabel);
   nf->FindNeighbors(this->GetRoadmap(),
       _tree->begin(), _tree->end(),
       _tree->size() == this->GetRoadmap()->GetGraph()->get_num_vertices(),
@@ -561,7 +569,7 @@ ConnectNeighbors(VID _newVID) {
   this->GetStatClass()->StartClock("Total Connection time");
 
   vector<VID> currentVID(1, _newVID);
-  this->GetConnector(m_nc)->Connect(this->GetRoadmap(),
+  this->GetConnector(m_ncLabel)->Connect(this->GetRoadmap(),
       currentVID.begin(), currentVID.end(),
       m_currentTree->begin(), m_currentTree->end(),
       m_currentTree->size() ==
@@ -581,7 +589,7 @@ Extend(const VID _nearVID, const CfgType& _qRand, CfgType& _qNew,
 
   double dist = 0;
   CfgRef qNear = this->GetRoadmap()->GetGraph()->GetVertex(_nearVID);
-  auto e  = this->GetExtender(m_extenderLabel);
+  auto e  = this->GetExtender(m_exLabel);
   if(e->Extend(qNear, _qRand, _qNew, _lpOutput))
     dist = _lpOutput.m_edge.first.GetWeight();
 
@@ -644,7 +652,7 @@ ExpandTree(const VID _nearestVID, const CfgType& _target) {
   if(this->m_debug)
     cout << "Trying expansion from " << _nearestVID << "..." << endl;
 
-  auto e = this->GetExtender(m_extenderLabel);
+  auto e = this->GetExtender(m_exLabel);
 
   // Try to extend from the _nearestVID to _target
   VID newVID;
@@ -706,7 +714,7 @@ ConnectTrees(VID _recentlyGrown) {
 
   // Setup MP variables
   GraphType* g = this->GetRoadmap()->GetGraph();
-  auto dm = this->GetDistanceMetric(m_dm);
+  auto dm = this->GetDistanceMetric(m_dmLabel);
 
   // Get qNew from its VID
   CfgType qNew = g->GetVertex(_recentlyGrown);
@@ -746,7 +754,7 @@ ConnectTrees(VID _recentlyGrown) {
   LPOutput<MPTraits> lpOutput;
   double dist = this->Extend(closestVID, qNew, newCfg, lpOutput);
   // If the extension didn't go far enough, abort connection.
-  if(dist < this->GetExtender(m_extenderLabel)->GetMinDistance()) {
+  if(dist < this->GetExtender(m_exLabel)->GetMinDistance()) {
     if(this->m_debug)
       cout << "\tFailed: could not expand far enough." << endl;
   }

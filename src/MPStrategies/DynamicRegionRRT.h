@@ -29,34 +29,37 @@ class DynamicRegionRRT : public BasicRRTStrategy<MPTraits> {
     ///\name Motion Planning Types
     ///@{
 
-    typedef typename MPTraits::MPProblemType MPProblemType;
-    typedef typename MPTraits::CfgType CfgType;
-    typedef typename MPTraits::CfgRef CfgRef;
-    typedef typename MPTraits::WeightType WeightType;
-    typedef typename MPProblemType::VID VID;
+    typedef typename MPTraits::MPProblemType  MPProblemType;
+    typedef typename MPTraits::CfgType        CfgType;
+    typedef typename MPTraits::CfgRef         CfgRef;
+    typedef typename MPTraits::WeightType     WeightType;
+    typedef typename MPProblemType::VID       VID;
     typedef typename MPProblemType::GraphType GraphType;
-    typedef shared_ptr<Boundary> RegionPtr;
-    typedef ReebGraphConstruction::FlowGraph FlowGraph;
+
+    ///@}
+    ///\name Local Types
+    ///@{
+
+    typedef shared_ptr<Boundary>              RegionPtr;
+    typedef ReebGraphConstruction::FlowGraph  FlowGraph;
 
     ///@}
     ///\name Construction
     ///@{
 
-    DynamicRegionRRT(const CfgType& _start = CfgType(),
-        const CfgType& _goal = CfgType(),
-        string _dm = "euclidean", string _nf = "BFNF",
-        string _extenderLabel = "BERO",
-        string _vc = "PQP_SOLID",
-        string _nc = "kClosest", string _gt = "UNDIRECTED_TREE",
+    DynamicRegionRRT(string _dm = "euclidean", string _nf = "bfnf",
+        string _vc = "cd1", string _nc = "kClosest", string _ex = "BERO",
         vector<string> _evaluators = vector<string>(),
-        double _minDist = 0.001, double _growthFocus = 0.05,
-        bool _evaluateGoal = true, size_t _numRoots = 1,
-        size_t _numDirections = 1, size_t _maxTrial = 3,
-        bool _growGoals = false);
+        string _gt = "UNDIRECTED_TREE",  bool _growGoals = false,
+        double _growthFocus = .05, size_t _numRoots = 1,
+        size_t _numDirections = 1, size_t _maxTrial = 3);
+
     DynamicRegionRRT(MPProblemType* _problem, XMLNode& _node);
 
+    virtual ~DynamicRegionRRT() = default;
+
     ///@}
-    ///\name MPBaseObject Overrides
+    ///\name MPStrategyMethod Overrides
     ///@{
 
     virtual void Initialize() override;
@@ -74,7 +77,7 @@ class DynamicRegionRRT : public BasicRRTStrategy<MPTraits> {
     ///         entire environment and each attract region with uniform
     ///         probability to generate q_rand.
     /// \return The resulting growth direction.
-    CfgType SelectDirection();
+    virtual CfgType SelectDirection() override;
 
     ///@}
 
@@ -99,25 +102,25 @@ class DynamicRegionRRT : public BasicRRTStrategy<MPTraits> {
     vector<RegionPtr> m_regions; ///< All Regions
     RegionPtr m_samplingRegion;  ///< Points to the current sampling region.
 
-    ReebGraphConstruction* m_reebGraphConstruction{nullptr}; ///< Embedded reeb graph
+    ReebGraphConstruction* m_reebGraph{nullptr}; ///< Embedded reeb graph
 
     ///@}
 };
 
 /*------------------------------ Construction --------------------------------*/
 
+
 template<class MPTraits>
 DynamicRegionRRT<MPTraits>::
-DynamicRegionRRT(const CfgType& _start, const CfgType& _goal, string _dm,
-    string _nf, string _extenderLabel, string _vc, string _nc, string _gt,
-    vector<string> _evaluators, double _minDist,
-    double _growthFocus, bool _evaluateGoal, size_t _numRoots,
-    size_t _numDirections, size_t _maxTrial, bool _growGoals) :
-    BasicRRTStrategy<MPTraits>(_dm, _nf, _vc, _nc, _gt, _extenderLabel,
-    _evaluators, _minDist, _growthFocus, _evaluateGoal,
-    _start, _goal, _numRoots, _numDirections, _maxTrial, _growGoals) {
+DynamicRegionRRT(string _dm, string _nf, string _vc, string _nc, string _ex,
+    vector<string> _evaluators, string _gt, bool _growGoals,
+    double _growthFocus, size_t _numRoots, size_t _numDirections,
+    size_t _maxTrial) :
+    BasicRRTStrategy<MPTraits>(_dm, _nf, _vc, _nc, _ex, _evaluators, _gt,
+        _growGoals, _growthFocus, _numRoots, _numDirections, _maxTrial) {
   this->SetName("DynamicRegionRRT");
 }
+
 
 template<class MPTraits>
 DynamicRegionRRT<MPTraits>::
@@ -130,7 +133,7 @@ DynamicRegionRRT(MPProblemType* _problem, XMLNode& _node) :
       "graph pruning");
 }
 
-/*-------------------------- MPBaseObject Overriddes -------------------------*/
+/*----------------------- MPStrategyMethod Overriddes ------------------------*/
 
 template<class MPTraits>
 void
@@ -142,16 +145,16 @@ Initialize() {
 
   //Embed ReebGraph
   stats->StartClock("ReebGraphConstruction");
-  delete m_reebGraphConstruction;
-  m_reebGraphConstruction = new ReebGraphConstruction();
-  m_reebGraphConstruction->Construct(this->GetEnvironment(),
+  delete m_reebGraph;
+  m_reebGraph = new ReebGraphConstruction();
+  m_reebGraph->Construct(this->GetEnvironment(),
       this->GetBaseFilename());
   stats->StopClock("ReebGraphConstruction");
 
 #ifdef VIZMO
-  GetVizmo().GetEnv()->AddTetGenDecompositionModel(m_reebGraphConstruction->
+  GetVizmo().GetEnv()->AddTetGenDecompositionModel(m_reebGraph->
       GetTetrahedralization());
-  GetVizmo().GetEnv()->AddReebGraphModel(m_reebGraphConstruction);
+  GetVizmo().GetEnv()->AddReebGraphModel(m_reebGraph);
   GetMainWindow()->GetModelSelectionWidget()->CallResetLists();
 
   // Make map non-selectable during execution.
@@ -179,8 +182,8 @@ Run() {
   //Get directed flow network
   typedef FlowGraph::vertex_descriptor FVD;
   typedef FlowGraph::edge_descriptor FED;
-  pair<FlowGraph, FVD> flow = m_reebGraphConstruction->
-    GetFlowGraph(start, env->GetPositionRes());
+  pair<FlowGraph, FVD> flow = m_reebGraph->
+      GetFlowGraph(start, env->GetPositionRes());
 
   // Prune flow-graph of non-relevant paths.
   if(m_prune)
