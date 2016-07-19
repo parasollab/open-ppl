@@ -53,9 +53,7 @@
         nfLabel="Nearest" vcLabel="cd" connectorLabel="Closest"
         gtype="UNDIRECTED_TREE" debug="true" growGoals="true"
         extenderLabel="BERO">
-        <!--
-        <Evaluator label="NodesEval"/>
-        -->
+        <!--Evaluator label="NodesEval"/-->
         <Evaluator label="RRTQuery"/>
       </BasicRRTStrategy>
     </MPStrategies>
