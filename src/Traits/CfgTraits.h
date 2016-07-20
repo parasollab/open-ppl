@@ -255,13 +255,19 @@ struct MPTraits {
     RRTConnect<MPTraits>
       > ConnectorMethodList;
 
-  typedef ConnectivityMetric<MPTraits, RoadmapSet<MPTraits> > ConnectivityMetricRoadmapSet;
-  typedef CoverageDistanceMetric<MPTraits, RoadmapSet<MPTraits> > CoverageDistanceMetricRoadmapSet;
-  typedef CoverageMetric<MPTraits, RoadmapSet<MPTraits> > CoverageMetricRoadmapSet;
+  typedef ConnectivityMetric<MPTraits, RoadmapSet<MPTraits>>
+      ConnectivityMetricRoadmapSet;
+  typedef CoverageDistanceMetric<MPTraits, RoadmapSet<MPTraits>>
+      CoverageDistanceMetricRoadmapSet;
+  typedef CoverageMetric<MPTraits, RoadmapSet<MPTraits>>
+      CoverageMetricRoadmapSet;
 
-  typedef ConnectivityMetric<MPTraits, VectorSet<MPTraits> > ConnectivityMetricVectorSet;
-  typedef CoverageDistanceMetric<MPTraits, VectorSet<MPTraits> > CoverageDistanceMetricVectorSet;
-  typedef CoverageMetric<MPTraits, VectorSet<MPTraits> > CoverageMetricVectorSet;
+  typedef ConnectivityMetric<MPTraits, VectorSet<MPTraits>>
+      ConnectivityMetricVectorSet;
+  typedef CoverageDistanceMetric<MPTraits, VectorSet<MPTraits>>
+      CoverageDistanceMetricVectorSet;
+  typedef CoverageMetric<MPTraits, VectorSet<MPTraits>>
+      CoverageMetricVectorSet;
 
   //types of metrics available in our world
   typedef boost::mpl::list<

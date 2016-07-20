@@ -20,18 +20,18 @@ class BasicExtender : public ExtenderMethod<MPTraits> {
     ///\name Motion Planning Types
     ///@{
 
-    typedef typename MPTraits::CfgType CfgType;
+    typedef typename MPTraits::CfgType       CfgType;
     typedef typename MPTraits::MPProblemType MPProblemType;
-    typedef typename MPProblemType::DistanceMetricPointer DistanceMetricPointer;
-    typedef typename MPProblemType::ValidityCheckerPointer ValidityCheckerPointer;
 
     ///@}
     ///\name Construction
     ///@{
 
     BasicExtender(const string& _dmLabel = "", const string& _vcLabel = "",
-        double _delta = 1.0, bool _randomOrientation = true);
+        double _min = .001, double _max = 1, bool _randomOrientation = true);
+
     BasicExtender(MPProblemType* _problem, XMLNode& _node);
+
     virtual ~BasicExtender() = default;
 
     ///@}
@@ -46,10 +46,10 @@ class BasicExtender : public ExtenderMethod<MPTraits> {
     ///@{
 
     virtual bool Extend(const CfgType& _start, const CfgType& _end,
-        CfgType& _new, LPOutput<MPTraits>& _lpOutput);
+        CfgType& _new, LPOutput<MPTraits>& _lp) override;
 
     ///@}
-    ///\name Helpers?
+    ///\name Helpers
     ///@{
 
     ////////////////////////////////////////////////////////////////////////////
@@ -61,35 +61,39 @@ class BasicExtender : public ExtenderMethod<MPTraits> {
     /// \param[out] _newCfg Return for newly created cfg.
     /// \param[in]  _delta  Maximum distance to grow
     bool Expand(const CfgType& _start, const CfgType& _end, CfgType& _newCfg,
-        double _delta, LPOutput<MPTraits>& _lpOutput,
+        double _delta, LPOutput<MPTraits>& _lp,
         double _posRes, double _oriRes);
     bool Expand(const CfgType& _start, const CfgType& _end, CfgType& _newCfg,
-        double _delta, LPOutput<MPTraits>& _lpOutput, CDInfo& _cdInfo,
+        double _delta, LPOutput<MPTraits>& _lp, CDInfo& _cdInfo,
         double _posRes, double _oriRes);
 
     ///@}
 
   protected:
 
-    string m_dmLabel;
-    string m_vcLabel;
-    bool m_randomOrientation;
+    ///\name Internal State
+    ///@{
+
+    string m_dmLabel;         ///< The distance metric to use.
+    string m_vcLabel;         ///< The validity checker to use.
+    bool m_randomOrientation; ///< Setting this to false fixes orientation.
+
+    ///@}
 };
 
 /*------------------------------- Construction -------------------------------*/
 
-template<class MPTraits>
+template <typename MPTraits>
 BasicExtender<MPTraits>::
-BasicExtender(const string& _dmLabel, const string& _vcLabel, double _delta,
-    bool _randomOrientation) :
-    ExtenderMethod<MPTraits>(), m_dmLabel(_dmLabel), m_vcLabel(_vcLabel),
-    m_randomOrientation(_randomOrientation) {
-  this->m_maxDist = _delta;
+BasicExtender(const string& _dmLabel, const string& _vcLabel, double _min,
+    double _max, bool _randomOrientation) :
+    ExtenderMethod<MPTraits>(_min, _max), m_dmLabel(_dmLabel),
+    m_vcLabel(_vcLabel), m_randomOrientation(_randomOrientation) {
   this->SetName("BasicExtender");
 }
 
 
-template<class MPTraits>
+template <typename MPTraits>
 BasicExtender<MPTraits>::
 BasicExtender(MPProblemType* _problem, XMLNode& _node) :
     ExtenderMethod<MPTraits>(_problem, _node) {
@@ -99,7 +103,7 @@ BasicExtender(MPProblemType* _problem, XMLNode& _node) :
 
 /*-------------------------- MPBaseObject Overrides --------------------------*/
 
-template<class MPTraits>
+template <typename MPTraits>
 void
 BasicExtender<MPTraits>::
 ParseXML(XMLNode& _node) {
@@ -110,7 +114,7 @@ ParseXML(XMLNode& _node) {
 }
 
 
-template<class MPTraits>
+template <typename MPTraits>
 void
 BasicExtender<MPTraits>::
 Print(ostream& _os) const {
@@ -122,11 +126,11 @@ Print(ostream& _os) const {
 
 /*------------------------- ExtenderMethod Overrides -------------------------*/
 
-template<class MPTraits>
+template <typename MPTraits>
 bool
 BasicExtender<MPTraits>::
 Extend(const CfgType& _start, const CfgType& _end, CfgType& _new,
-    LPOutput<MPTraits>& _lpOutput) {
+    LPOutput<MPTraits>& _lp) {
   Environment* env = this->GetEnvironment();
 
   // If non-random orientation, adjust the end's non-positional DOFs to match
@@ -135,32 +139,31 @@ Extend(const CfgType& _start, const CfgType& _end, CfgType& _new,
     CfgType end = _end;
     for(size_t i = end.PosDOF(); i < _end.DOF(); i++)
       end[i] = _start[i];
-    return Expand(_start, end, _new, this->m_maxDist, _lpOutput,
+    return Expand(_start, end, _new, this->m_maxDist, _lp,
         env->GetPositionRes(), env->GetOrientationRes());
   }
-  return Expand(_start, _end, _new, this->m_maxDist, _lpOutput,
+  return Expand(_start, _end, _new, this->m_maxDist, _lp,
       env->GetPositionRes(), env->GetOrientationRes());
 }
 
 /*-------------------------------- Helpers? ----------------------------------*/
 
-template<class MPTraits>
+template <typename MPTraits>
 bool
 BasicExtender<MPTraits>::
 Expand(const CfgType& _start, const CfgType& _end, CfgType& _newCfg,
-    double _delta, LPOutput<MPTraits>& _lpOutput, double _posRes,
-    double _oriRes) {
+    double _delta, LPOutput<MPTraits>& _lp, double _posRes, double _oriRes) {
   CDInfo cdInfo;
-  return Expand(_start, _end, _newCfg, _delta, _lpOutput, cdInfo, _posRes,
+  return Expand(_start, _end, _newCfg, _delta, _lp, cdInfo, _posRes,
       _oriRes);
 }
 
 
-template<class MPTraits>
+template <typename MPTraits>
 bool
 BasicExtender<MPTraits>::
 Expand(const CfgType& _start, const CfgType& _end, CfgType& _newCfg,
-    double _delta, LPOutput<MPTraits>& _lpOutput, CDInfo& _cdInfo,
+    double _delta, LPOutput<MPTraits>& _lp, CDInfo& _cdInfo,
     double _posRes, double _oriRes) {
   Environment* env = this->GetEnvironment();
   auto dm = this->GetDistanceMetric(m_dmLabel);
@@ -205,10 +208,10 @@ Expand(const CfgType& _start, const CfgType& _end, CfgType& _newCfg,
 
   // Set edge weight according to distance metric.
   double distance = dm->Distance(_start, _newCfg);
-  _lpOutput.m_edge.first.SetWeight(distance);
-  _lpOutput.m_edge.second.SetWeight(distance);
+  _lp.m_edge.first.SetWeight(distance);
+  _lp.m_edge.second.SetWeight(distance);
 
-  return true;
+  return distance >= this->m_minDist;
 }
 
 /*----------------------------------------------------------------------------*/

@@ -12,7 +12,7 @@
 /// \f$q_{dir}\f$ until either \f$q_{dir}\f$ is reached, a distance of
 /// \f$\Delta q\f$ is extended, or no progress is made.
 ////////////////////////////////////////////////////////////////////////////////
-template<class MPTraits>
+template <typename MPTraits>
 class MedialAxisExtender : public ExtenderMethod<MPTraits> {
 
   public:
@@ -20,10 +20,8 @@ class MedialAxisExtender : public ExtenderMethod<MPTraits> {
     ///\name Motion Planning Types
     ///@{
 
-    typedef typename MPTraits::CfgType CfgType;
+    typedef typename MPTraits::CfgType       CfgType;
     typedef typename MPTraits::MPProblemType MPProblemType;
-    typedef typename MPProblemType::DistanceMetricPointer DistanceMetricPointer;
-    typedef typename MPProblemType::LocalPlannerPointer LocalPlannerPointer;
 
     ///@}
     ///\name Construction
@@ -31,9 +29,12 @@ class MedialAxisExtender : public ExtenderMethod<MPTraits> {
 
     MedialAxisExtender(const MedialAxisUtility<MPTraits>& _medialAxisUtility =
         MedialAxisUtility<MPTraits>(),
-        double _delta = 1.0, double _minDist = 0.001, double _extendDist = 0.5,
+        double _min = .001, double _max = 1, double _extendDist = 0.5,
         size_t _maxIntermediates = 10, const string& _lpLabel = "");
+
     MedialAxisExtender(MPProblemType* _problem, XMLNode& _node);
+
+    virtual ~MedialAxisExtender() = default;
 
     ///@}
     ///\name MPBaseObject Overrides
@@ -46,41 +47,41 @@ class MedialAxisExtender : public ExtenderMethod<MPTraits> {
     ///\name ExtenderMethod Overrides
     ///@{
 
-    virtual bool Extend(const CfgType& _near, const CfgType& _dir,
-        CfgType& _new, LPOutput<MPTraits>& _lpOutput) override;
+    virtual bool Extend(const CfgType& _start, const CfgType& _end,
+        CfgType& _new, LPOutput<MPTraits>& _lp) override;
 
     ///@}
 
   private:
 
-    ///\name MedialAxisExtender Properties
+    ///\name Internal State
     ///@{
 
     MedialAxisUtility<MPTraits> m_medialAxisUtility;
-    double m_extendDist;
-    size_t m_maxIntermediates;
-    string m_lpLabel;
+                                ///< Tool for pushing Cfgs to the medial axis.
+
+    double m_extendDist;        ///< The step size to use for medial-axis push.
+    size_t m_maxIntermediates;  ///< The maximum number of steps to make.
+    string m_lpLabel;           ///< The local planner for connecting steps.
 
     ///@}
 };
 
 /*------------------------------- Construction -------------------------------*/
 
-template<class MPTraits>
+template <typename MPTraits>
 MedialAxisExtender<MPTraits>::
 MedialAxisExtender(const MedialAxisUtility<MPTraits>& _medialAxisUtility,
-    double _delta, double _minDist, double _extendDist,
+    double _min, double _max, double _extendDist,
     size_t _maxIntermediates, const string& _lpLabel) :
-    ExtenderMethod<MPTraits>(), m_medialAxisUtility(_medialAxisUtility),
+    ExtenderMethod<MPTraits>(_min, _max), m_medialAxisUtility(_medialAxisUtility),
     m_extendDist(_extendDist), m_maxIntermediates(_maxIntermediates),
     m_lpLabel(_lpLabel) {
   this->SetName("MedialAxisExtender");
-  this->m_maxDist = _delta;
-  this->m_minDist = _minDist;
 }
 
 
-template<class MPTraits>
+template <typename MPTraits>
 MedialAxisExtender<MPTraits>::
 MedialAxisExtender(MPProblemType* _problem, XMLNode& _node) :
     ExtenderMethod<MPTraits>(_problem, _node),
@@ -91,7 +92,7 @@ MedialAxisExtender(MPProblemType* _problem, XMLNode& _node) :
 
 /*--------------------------- MPBaseObject Overrides -------------------------*/
 
-template<class MPTraits>
+template <typename MPTraits>
 void
 MedialAxisExtender<MPTraits>::
 ParseXML(XMLNode& _node) {
@@ -103,7 +104,7 @@ ParseXML(XMLNode& _node) {
 }
 
 
-template<class MPTraits>
+template <typename MPTraits>
 void
 MedialAxisExtender<MPTraits>::
 Print(ostream& _os) const {
@@ -116,37 +117,36 @@ Print(ostream& _os) const {
 
 /*-------------------------- ExtenderMethod Overrides ------------------------*/
 
-template<class MPTraits>
+template <typename MPTraits>
 bool
 MedialAxisExtender<MPTraits>::
-Extend(const CfgType& _near, const CfgType& _dir,
-    CfgType& _new, LPOutput<MPTraits>& _lpOutput) {
+Extend(const CfgType& _start, const CfgType& _end, CfgType& _new,
+    LPOutput<MPTraits>& _lp) {
   //Setup
   Environment* env = this->GetEnvironment();
-  DistanceMetricPointer dm =
-    this->GetDistanceMetric(m_medialAxisUtility.GetDistanceMetricLabel());
-  LocalPlannerPointer lp = this->GetLocalPlanner(m_lpLabel);
+  auto dm = this->GetDistanceMetric(m_medialAxisUtility.GetDistanceMetricLabel());
+  auto lp = this->GetLocalPlanner(m_lpLabel);
 
   LPOutput<MPTraits> lpOutput;
 
-  CfgType tick = _near, curr;
+  CfgType tick = _start, curr;
   double positionRes = env->GetPositionRes();
   double orientationRes = env->GetOrientationRes();
   double dist = 0, length = 0;
 
   VDClearAll();
-  VDAddTempCfg(_near, false);
-  VDAddTempCfg(_dir, false);
+  VDAddTempCfg(_start, false);
+  VDAddTempCfg(_end, false);
 
   do {
     curr = tick;
     length += dist;
-    _lpOutput.m_intermediates.push_back(curr);
+    _lp.m_intermediates.push_back(curr);
 
-    if(_lpOutput.m_intermediates.size() > m_maxIntermediates)
+    if(_lp.m_intermediates.size() > m_maxIntermediates)
       break;
     //take a step at distance _extendDist
-    CfgType incr = _dir - curr;
+    CfgType incr = _end - curr;
     dm->ScaleCfg(m_extendDist, incr);
     tick = curr + incr;
 
@@ -154,7 +154,7 @@ Extend(const CfgType& _near, const CfgType& _dir,
     VDAddTempCfg(tick, true);
     VDClearLastTemp();
 
-    /*cout << "\nExpanding near: " << _near << " to " << _dir << endl;
+    /*cout << "\nExpanding near: " << _start << " to " << _end << endl;
     cout << "curr: " << curr << endl;
     cout << "tick: " << tick << endl;
     */
@@ -184,12 +184,12 @@ Extend(const CfgType& _near, const CfgType& _dir,
       && length + dist <= this->m_maxDist
       );
 
-  _lpOutput.m_intermediates.erase(_lpOutput.m_intermediates.begin());
-  if(_lpOutput.m_intermediates.empty())
+  _lp.m_intermediates.erase(_lp.m_intermediates.begin());
+  if(_lp.m_intermediates.empty())
     return false;
   else {
-    _new = _lpOutput.m_intermediates.back();
-    _lpOutput.m_intermediates.pop_back();
+    _new = _lp.m_intermediates.back();
+    _lp.m_intermediates.pop_back();
     return true;
   }
 }

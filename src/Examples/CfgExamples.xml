@@ -236,7 +236,7 @@
         <NodeConnectionMethod method="Closest"/>
       </Query>
       <RRTQuery label="RRTQuery" queryFile="2D/2d.query" goalDist=".3"
-        nfLabel="NearestPosition" exLabel="FixedRandom" debug="false"/>
+        nfLabel="Nearest" exLabel="BERO" debug="false"/>
       <LazyQuery label="LazyQuery" queryFile="2D/2d.query"
         lpLabel="sl" dmLabel="euclidean" vcMethod="cd1" graphSearchAlg="astar"
         deleteNodes="false" debug="false"
@@ -263,13 +263,13 @@
       <ConditionalEvaluator label="FreqNodeEval" metric_method="NumNodes"
         value="50" operator="%"/>
       <NegateEvaluator label="Neg" evalLabel="NodesEval"/>
-      <ComposeEvaluator label="Com1" operator="or">
+      <ComposeEvaluator label="BoundedQuery" operator="or">
         <Evaluator label="NodesEval"/>
         <Evaluator label="Query"/>
       </ComposeEvaluator>
-      <ComposeEvaluator label="Com2" operator="and">
-        <Evaluator label="Com1"/>
-        <Evaluator label="PrintMap"/>
+      <ComposeEvaluator label="BoundedRRTQuery" operator="or">
+        <Evaluator label="NodesEval"/>
+        <Evaluator label="RRTQuery"/>
       </ComposeEvaluator>
       <ComposeEvaluator label="ModQuery" operator="and">
         <Evaluator label="FreqNodeEval"/>
@@ -401,11 +401,11 @@
 
       <!-- DynamicDomainRRT -->
       <DynamicDomainRRT label="DynamicDomainRRT"
-        growthFocus="0.01" dmLabel="euclidean"
-        nfLabel="Nearest" vcLabel="cd1"
-        gtype="UNDIRECTED_TREE" debug="false"
-        growGoals="false" extenderLabel="BERO"
-        r="10"/>
+        growthFocus="0.01" dmLabel="euclidean" nfLabel="Nearest" vcLabel="cd1"
+        gtype="UNDIRECTED_TREE" debug="false" growGoals="false"
+        extenderLabel="BERO" r="2">
+        <Evaluator label="BoundedRRTQuery"/>
+      </DynamicDomainRRT>
 
       <!-- DynamicRegionRRT -->
       <DynamicRegionRRT label="DynamicRegionRRT"
@@ -526,9 +526,12 @@
 
     </MPStrategies>
 
-    <Solver mpStrategyLabel="BasicPRM1" seed="12345678" baseFilename="Basic" vizmoDebug="true"/>
+    <Solver mpStrategyLabel="BasicPRM1" seed="12345678"
+      baseFilename="Basic" vizmoDebug="true"/>
+
     <!-- MPProblem allows multiple solvers to be specified and executed. -->
-    <!--Solver mpStrategyLabel="BasicPRM2" seed="12345678" baseFilename="Basic2" vizmoDebug="true"/-->
+    <!--Solver mpStrategyLabel="BasicPRM2" seed="12345678"
+         baseFilename="Basic2" vizmoDebug="true"/-->
 
   </MPProblem>
 </MotionPlanning>

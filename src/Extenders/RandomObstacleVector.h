@@ -15,7 +15,7 @@
 /// random obstacle vector from all of the triangles in the environment. The
 /// oriantation DOFs are set randomly.
 ////////////////////////////////////////////////////////////////////////////////
-template<class MPTraits>
+template <typename MPTraits>
 class RandomObstacleVector : public BasicExtender<MPTraits> {
 
   public:
@@ -23,7 +23,7 @@ class RandomObstacleVector : public BasicExtender<MPTraits> {
     ///\name Motion Planning Types
     ///@{
 
-    typedef typename MPTraits::CfgType CfgType;
+    typedef typename MPTraits::CfgType       CfgType;
     typedef typename MPTraits::MPProblemType MPProblemType;
 
     ///@}
@@ -31,31 +31,34 @@ class RandomObstacleVector : public BasicExtender<MPTraits> {
     ///@{
 
     RandomObstacleVector(const string& _dmLabel = "", const string& _vcLabel = "",
-        double _delta = 1.0, bool _randomOrientation = true);
+        double _min = .001, double _max = 1, bool _randomOrientation = true);
+
     RandomObstacleVector(MPProblemType* _problem, XMLNode& _node);
+
+    virtual ~RandomObstacleVector() = default;
 
     ///@}
     ///\name ExtenderMethod Overrides
     ///@{
 
-    virtual bool Extend(const CfgType& _near, const CfgType& _dir,
-        CfgType& _new, LPOutput<MPTraits>& _lpOutput) override;
+    virtual bool Extend(const CfgType& _start, const CfgType& _end,
+        CfgType& _new, LPOutput<MPTraits>& _lp) override;
 
     ///@}
 };
 
 /*------------------------------ Construction --------------------------------*/
 
-template<class MPTraits>
+template <typename MPTraits>
 RandomObstacleVector<MPTraits>::
 RandomObstacleVector(const string& _dmLabel, const string& _vcLabel,
-    double _delta, bool _randomOrientation) :
-    BasicExtender<MPTraits>(_dmLabel, _vcLabel, _delta, _randomOrientation) {
+    double _min, double _max, bool _randomOrientation) :
+    BasicExtender<MPTraits>(_dmLabel, _vcLabel, _min, _max, _randomOrientation) {
   this->SetName("RandomObstacleVector");
 }
 
 
-template<class MPTraits>
+template <typename MPTraits>
 RandomObstacleVector<MPTraits>::
 RandomObstacleVector(MPProblemType* _problem, XMLNode& _node) :
     BasicExtender<MPTraits>(_problem, _node) {
@@ -63,10 +66,11 @@ RandomObstacleVector(MPProblemType* _problem, XMLNode& _node) :
 }
 
 
-template<class MPTraits>
+template <typename MPTraits>
 bool
-RandomObstacleVector<MPTraits>::Extend(const CfgType& _near,
-    const CfgType& _dir, CfgType& _new, LPOutput<MPTraits>& _lpOutput) {
+RandomObstacleVector<MPTraits>::
+Extend(const CfgType& _start, const CfgType& _end, CfgType& _new,
+    LPOutput<MPTraits>& _lp) {
   // Setup MP Variables
   Environment* env = this->GetEnvironment();
   //VECTOR SCALE - THIS WILL BE HARD CODED BUT SHOULD PROBABLY BE MADE AN OPTION
@@ -93,12 +97,12 @@ RandomObstacleVector<MPTraits>::Extend(const CfgType& _near,
       obsVec *= -1.0;
 
     // Apply this obstacle vector
-    CfgType newDir = _dir;
+    CfgType newDir = _end;
     for(size_t i = 0; i < newDir.PosDOF(); i++)
-      newDir[i] = _near[i] + obsVec[i];
+      newDir[i] = _start[i] + obsVec[i];
 
     // Expand with the BasicExtender
-    return BasicExtender<MPTraits>::Extend(_near, newDir, _new, _lpOutput);
+    return BasicExtender<MPTraits>::Extend(_start, newDir, _new, _lp);
   }
 
   return false;

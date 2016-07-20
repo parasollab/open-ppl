@@ -8,7 +8,7 @@
 /// @brief Randomly choose an extender from a set of extenders.
 /// @tparam MPTraits Motion planning universe
 ////////////////////////////////////////////////////////////////////////////////
-template<class MPTraits>
+template <typename MPTraits>
 class MixExtender : public ExtenderMethod<MPTraits> {
 
   public:
@@ -16,7 +16,7 @@ class MixExtender : public ExtenderMethod<MPTraits> {
     ///\name Motion Planning Types
     ///@{
 
-    typedef typename MPTraits::CfgType CfgType;
+    typedef typename MPTraits::CfgType       CfgType;
     typedef typename MPTraits::MPProblemType MPProblemType;
 
     /// \brief Extender label, probability, normalize probability
@@ -27,7 +27,9 @@ class MixExtender : public ExtenderMethod<MPTraits> {
     ///@{
 
     MixExtender();
+
     MixExtender(MPProblemType* _problem, XMLNode& _node);
+
     virtual ~MixExtender() = default;
 
     ///@}
@@ -41,20 +43,11 @@ class MixExtender : public ExtenderMethod<MPTraits> {
     ///\name ExtenderMethod Overrides
     ///@{
 
-    virtual double GetMinDistance() const {
-      if(!m_limitsCached)
-        ComputeLimits();
-      return this->m_minDist;
-    }
+    virtual double GetMinDistance() const override;
+    virtual double GetMaxDistance() const override;
 
-    virtual double GetMaxDistance() const {
-      if(!m_limitsCached)
-        ComputeLimits();
-      return this->m_maxDist;
-    }
-
-    virtual bool Extend(const CfgType& _near, const CfgType& _dir,
-        CfgType& _new, LPOutput<MPTraits>& _lpOutput) override;
+    virtual bool Extend(const CfgType& _start, const CfgType& _end,
+        CfgType& _new, LPOutput<MPTraits>& _lp) override;
 
     ///@}
 
@@ -79,14 +72,14 @@ class MixExtender : public ExtenderMethod<MPTraits> {
 
 /*------------------------------- Construction -------------------------------*/
 
-template<class MPTraits>
+template <typename MPTraits>
 MixExtender<MPTraits>::
 MixExtender() : ExtenderMethod<MPTraits>() {
   this->SetName("MixExtender");
 }
 
 
-template<class MPTraits>
+template <typename MPTraits>
 MixExtender<MPTraits>::
 MixExtender(MPProblemType* _problem, XMLNode& _node) :
     ExtenderMethod<MPTraits>(_problem, _node) {
@@ -96,7 +89,7 @@ MixExtender(MPProblemType* _problem, XMLNode& _node) :
 
 /*---------------------------- MPBaseObject Overrides ------------------------*/
 
-template<class MPTraits>
+template <typename MPTraits>
 void
 MixExtender<MPTraits>::
 ParseXML(XMLNode& _node) {
@@ -137,7 +130,7 @@ ParseXML(XMLNode& _node) {
 }
 
 
-template<class MPTraits>
+template <typename MPTraits>
 void
 MixExtender<MPTraits>::
 Print(ostream& _os) const {
@@ -149,11 +142,31 @@ Print(ostream& _os) const {
 
 /*------------------------- ExtenderMethod Overrides -------------------------*/
 
-template<class MPTraits>
+template <typename MPTraits>
+double
+MixExtender<MPTraits>::
+GetMinDistance() const {
+  if(!m_limitsCached)
+    ComputeLimits();
+  return this->m_minDist;
+}
+
+
+template <typename MPTraits>
+double
+MixExtender<MPTraits>::
+GetMaxDistance() const {
+  if(!m_limitsCached)
+    ComputeLimits();
+  return this->m_maxDist;
+}
+
+
+template <typename MPTraits>
 bool
 MixExtender<MPTraits>::
-Extend(const CfgType& _near, const CfgType& _dir, CfgType& _new,
-    LPOutput<MPTraits>& _lpOutput) {
+Extend(const CfgType& _start, const CfgType& _end, CfgType& _new,
+    LPOutput<MPTraits>& _lp) {
   if(m_growSet.empty())
     throw RunTimeException(WHERE, "No extender methods present in MixExtender");
 
@@ -163,7 +176,7 @@ Extend(const CfgType& _near, const CfgType& _dir, CfgType& _new,
     if(growthProb < it->second.second) {
       if(this->m_debug)
         cout << " calling : " << it->first << endl;
-      return this->GetExtender(it->first)->Extend(_near, _dir, _new, _lpOutput);
+      return this->GetExtender(it->first)->Extend(_start, _end, _new, _lp);
     }
   }
 

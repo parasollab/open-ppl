@@ -18,8 +18,8 @@ class ExtenderMethod : public MPBaseObject<MPTraits> {
     ///\name Extender Properties
     ///@{
 
-    double m_minDist{.001};
-    double m_maxDist{10};
+    double m_minDist;
+    double m_maxDist;
 
     ///@}
 
@@ -28,18 +28,21 @@ class ExtenderMethod : public MPBaseObject<MPTraits> {
     ///\name Motion Planning Types
     ///@{
 
-    typedef typename MPTraits::CfgType CfgType;
+    typedef typename MPTraits::CfgType       CfgType;
     typedef typename MPTraits::MPProblemType MPProblemType;
 
     ///@}
     ///\name Construction
     ///@{
 
-    ExtenderMethod() = default;
+    ExtenderMethod(double _min = .001, double _max = 1) :
+        m_minDist(_min), m_maxDist(_max) { }
+
     ExtenderMethod(MPProblemType* _problem, XMLNode& _node) :
         MPBaseObject<MPTraits>(_problem, _node) {
       ParseXML(_node);
     }
+
     virtual ~ExtenderMethod() = default;
 
     ///@}
@@ -53,7 +56,7 @@ class ExtenderMethod : public MPBaseObject<MPTraits> {
     }
 
     void ParseXML(XMLNode& _node) {
-      m_maxDist = _node.Read("maxDist", false, 10., 0., MAX_DBL, "Maximum "
+      m_maxDist = _node.Read("maxDist", false, 1., 0., MAX_DBL, "Maximum "
           "extension distance");
       m_minDist = _node.Read("minDist", false, .001, 0., MAX_DBL, "Minimum "
           "extension distance.");
@@ -74,23 +77,24 @@ class ExtenderMethod : public MPBaseObject<MPTraits> {
     ////////////////////////////////////////////////////////////////////////////
     /// @brief Extends a path from an input configuration towards a given
     ///        direction
-    /// @param _nearest Initial configuration to grow from
-    /// @param _dir Direction configuration to grow to
-    /// @param _new Placeholder for resulting configuration
-    /// @param _lpOutput Placeholder for polygonal chain configurations for
-    ///        non-straight-line extention operations and associated weight
+    /// @param _start Initial configuration to grow from.
+    /// @param _end   Direction configuration to grow to.
+    /// @param _new   Placeholder for resulting configuration.
+    /// @param _lp    Placeholder for polygonal chain configurations for
+    ///               non-straight-line extention operations and associated
+    ///               weight.
     /// @return Success/fail for extention operation
     ///
     /// @usage
     /// @code
-    /// ExtenderPointer e = this->GetExtender(m_eLabel);
-    /// CfgType c, cDir, cNew;
-    /// LPOutput<MPTraits> lpOutput;
-    /// bool pass = e->Extend(c, cDir, cNew, lpOutput);
+    /// ExtenderPointer e = this->GetExtender(m_exLabel);
+    /// CfgType start, goal, new;
+    /// LPOutput<MPTraits> lp;
+    /// bool pass = e->Extend(start, goal, new, lp);
     /// @endcode
     ////////////////////////////////////////////////////////////////////////////
-    virtual bool Extend(const CfgType& _nearest, const CfgType& _dir,
-        CfgType& _new, LPOutput<MPTraits>& _lpOutput) = 0;
+    virtual bool Extend(const CfgType& _start, const CfgType& _end,
+        CfgType& _new, LPOutput<MPTraits>& _lp) = 0;
 
     ///@}
 };

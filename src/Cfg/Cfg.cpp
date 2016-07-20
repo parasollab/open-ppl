@@ -361,16 +361,16 @@ SetLabel(string _label, bool _value) {
 
 double
 Cfg::
-GetStat(string _stat) {
+GetStat(string _stat) const {
   if(!IsStat(_stat))
     throw RunTimeException(WHERE, "No stat \'" + _stat + "\' found.");
-  return m_statMap[_stat];
+  return m_statMap.at(_stat);
 }
 
 
 bool
 Cfg::
-IsStat(string _stat) {
+IsStat(string _stat) const {
   return m_statMap.count(_stat) > 0;
 }
 

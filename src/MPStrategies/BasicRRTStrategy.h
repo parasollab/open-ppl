@@ -45,11 +45,6 @@ class BasicRRTStrategy : public MPStrategyMethod<MPTraits> {
     typedef vector<VID>                         TreeType;
     typedef typename vector<TreeType>::iterator TreeIter;
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// The supported graph structures.
-    enum GraphStucture {UndirectedTree, DirectedTree, UndirectedGraph,
-        DirectedGraph};
-
     ///@}
     ///\name Construction
     ///@{
@@ -125,18 +120,19 @@ class BasicRRTStrategy : public MPStrategyMethod<MPTraits> {
     ////////////////////////////////////////////////////////////////////////////
     /// \brief Extend a new configuration from a nearby configuration towards a
     ///        growth target.
-    /// \param[in]  _nearVID  The nearby configuration's VID.
-    /// \param[in]  _qRand    The growth target.
-    /// \param[out] _qNew     The new configuration.
-    /// \param[out] _lpOutput The extension edge output.
-    /// \return The extension edge distance.
-    virtual double Extend(const VID _nearVID, const CfgType& _qRand,
-        CfgType& _qNew, LPOutput<MPTraits>& _lpOutput);
+    /// \param[in]  _nearVID The nearby configuration's VID.
+    /// \param[in]  _qRand   The growth target.
+    /// \param[in]  _lp      This is a local plan: _qRand is already in the map.
+    /// \return The new node's VID.
+    virtual VID Extend(const VID _nearVID, const CfgType& _qRand,
+        const bool _lp = false);
 
     ////////////////////////////////////////////////////////////////////////////
     /// \brief Add a new configuration to the roadmap and current tree.
     /// \param[in] _newCfg    The new configuration to add.
-    virtual VID AddNode(const CfgType& _newCfg);
+    /// \return A pair with the added VID and a bool indicating whether the new
+    ///         node was already in the map.
+    virtual pair<VID, bool> AddNode(const CfgType& _newCfg);
 
     ////////////////////////////////////////////////////////////////////////////
     /// \brief Add a new edge to the roadmap.
@@ -581,41 +577,68 @@ ConnectNeighbors(VID _newVID) {
 /*----------------------------- Growth Helpers -------------------------------*/
 
 template<class MPTraits>
-double
+typename BasicRRTStrategy<MPTraits>::VID
 BasicRRTStrategy<MPTraits>::
-Extend(const VID _nearVID, const CfgType& _qRand, CfgType& _qNew,
-    LPOutput<MPTraits>& _lpOutput) {
+Extend(const VID _nearVID, const CfgType& _qRand, const bool _lp) {
   this->GetStatClass()->StartClock("Extend");
 
-  double dist = 0;
-  CfgRef qNear = this->GetRoadmap()->GetGraph()->GetVertex(_nearVID);
-  auto e  = this->GetExtender(m_exLabel);
-  if(e->Extend(qNear, _qRand, _qNew, _lpOutput))
-    dist = _lpOutput.m_edge.first.GetWeight();
+  auto e = this->GetExtender(m_exLabel);
+  const CfgType& qNear = this->GetRoadmap()->GetGraph()->GetVertex(_nearVID);
+  CfgType qNew;
+  LPOutput<MPTraits> lp;
+  pair<VID, bool> extension{INVALID_VID, false};
+
+  if(e->Extend(qNear, _qRand, qNew, lp))
+    extension = AddNode(qNew);
 
   this->GetStatClass()->StopClock("Extend");
-  return dist;
+
+  VID& newVID = extension.first;
+  bool nodeIsNew = extension.second;
+
+  if(newVID == INVALID_VID) {
+    // The extension failed to reach a valid node.
+    if(this->m_debug)
+      cout << "\tNode too close, not adding." << endl;
+    return INVALID_VID;
+  }
+  else if(this->m_debug)
+    cout << "\tExtended " << lp.m_edge.first << " units." << endl;
+
+  // If we are local planning, reached the goal, and haven't added the edge,
+  // this is a valid local plan.
+  bool validLP = _lp && qNew == _qRand &&
+      !this->GetRoadmap()->GetGraph()->IsEdge(_nearVID, newVID);
+
+  if(nodeIsNew || validLP)
+    AddEdge(_nearVID, newVID, lp);
+
+  if(nodeIsNew && !_lp)
+    ConnectNeighbors(newVID);
+
+  if(_lp && !validLP)
+    newVID = INVALID_VID;
+
+  return newVID;
 }
 
 
 template<class MPTraits>
-typename BasicRRTStrategy<MPTraits>::VID
+pair<typename BasicRRTStrategy<MPTraits>::VID, bool>
 BasicRRTStrategy<MPTraits>::
 AddNode(const CfgType& _newCfg) {
   GraphType* g = this->GetRoadmap()->GetGraph();
   VID newVID = g->AddVertex(_newCfg);
-  if(newVID == g->get_num_vertices() - 1) {
+  bool nodeIsNew = newVID == g->get_num_vertices() - 1;
+  if(nodeIsNew) {
     m_currentTree->push_back(newVID);
     if(this->m_debug)
       cout << "\tAdding VID " << newVID << " to tree "
            << distance(m_trees.begin(), m_currentTree) << "." << endl;
   }
-  else {
-    newVID = INVALID_VID;
-    if(this->m_debug)
-      cout << "\tVID " << newVID << " already exists, not adding" << endl;
-  }
-  return newVID;
+  else if(this->m_debug)
+    cout << "\tVID " << newVID << " already exists, not adding." << endl;
+  return make_pair(newVID, nodeIsNew);
 }
 
 
@@ -652,29 +675,12 @@ ExpandTree(const VID _nearestVID, const CfgType& _target) {
   if(this->m_debug)
     cout << "Trying expansion from " << _nearestVID << "..." << endl;
 
-  auto e = this->GetExtender(m_exLabel);
-
   // Try to extend from the _nearestVID to _target
-  VID newVID;
-  CfgType newCfg;
-  LPOutput<MPTraits> lpOutput;
-  double dist = this->Extend(_nearestVID, _target, newCfg, lpOutput);
-  if(dist >= e->GetMinDistance()) {
-    if(this->m_debug)
-      cout << "\tSuccess!" << endl;
-
-    newVID = AddNode(newCfg);
-    if(newVID == INVALID_VID)
-      return INVALID_VID; // Node already exists
-    AddEdge(_nearestVID, newVID, lpOutput);
-    ConnectNeighbors(newVID);
+  VID newVID = this->Extend(_nearestVID, _target);
+  if(newVID != INVALID_VID)
     ConnectTrees(newVID);
-  }
-  else {
-    if(this->m_debug)
-      cout << "\tNode too close, not adding." << endl;
+  else
     return INVALID_VID;
-  }
 
   // Expand to other directions
   for(size_t i = 1; i < m_numDirections; ++i) {
@@ -682,22 +688,9 @@ ExpandTree(const VID _nearestVID, const CfgType& _target) {
       cout << "Expanding to other directions (" << i << "/"
            << m_numDirections - 1 << "):: ";
     CfgType randCfg = this->SelectDispersedDirection(_nearestVID);
-    CfgType newCfg;
-    LPOutput<MPTraits> lpOutput;
-    dist = this->Extend(_nearestVID, randCfg, newCfg, lpOutput);
-    if(dist >= e->GetMinDistance()) {
-      if(this->m_debug)
-        cout << "\tSuccess!" << endl;
-
-      VID otherVID = AddNode(newCfg);
-      if(otherVID == INVALID_VID)
-        continue; // Node already exists
-      AddEdge(_nearestVID, otherVID, lpOutput);
-      ConnectNeighbors(otherVID);
+    VID otherVID = this->Extend(_nearestVID, randCfg);
+    if(otherVID != INVALID_VID)
       ConnectTrees(otherVID);
-    }
-    else if(this->m_debug)
-      cout << "\tNode too close, not adding." << endl;
   }
 
   return newVID;
@@ -717,7 +710,7 @@ ConnectTrees(VID _recentlyGrown) {
   auto dm = this->GetDistanceMetric(m_dmLabel);
 
   // Get qNew from its VID
-  CfgType qNew = g->GetVertex(_recentlyGrown);
+  const CfgType& qNew = g->GetVertex(_recentlyGrown);
 
   // Find the closest neighbor to qNew in all other trees
   double minDist = MAX_DBL;
@@ -748,21 +741,16 @@ ConnectTrees(VID _recentlyGrown) {
          << distance(m_trees.begin(), m_currentTree) << ", VID "
          << _recentlyGrown << "), distance = " << setw(4) << minDist << endl;
 
-  // Try to expand from closestVID to qNew in order to connect the trees,
-  // returning on failure.
-  CfgType newCfg;
-  LPOutput<MPTraits> lpOutput;
-  double dist = this->Extend(closestVID, qNew, newCfg, lpOutput);
-  // If the extension didn't go far enough, abort connection.
-  if(dist < this->GetExtender(m_exLabel)->GetMinDistance()) {
+  // Try to expand from closestVID (in closestTree) to qNew (in m_currentTree)
+  // in order to connect the trees.
+  swap(m_currentTree, closestTree);
+  VID newVID = this->Extend(closestVID, qNew, true);
+
+  if(newVID != INVALID_VID) {
+    // The extension reached all the way to qNew. Merge the closest and current
+    // trees.
     if(this->m_debug)
-      cout << "\tFailed: could not expand far enough." << endl;
-  }
-  // If the extension reached all the way to qNew, merge the closest and current
-  // trees
-  else if(qNew == newCfg) {
-    if(this->m_debug)
-      cout << "\tSuccess! Trees connected!" << endl;
+      cout << "\tConnectTrees succeeded!" << endl;
 
     // Merge trees into the lower of the two indexes
     if(distance(m_trees.begin(), m_currentTree) >
@@ -771,22 +759,11 @@ ConnectTrees(VID _recentlyGrown) {
     m_currentTree->insert(m_currentTree->end(), closestTree->begin(),
         closestTree->end());
     m_trees.erase(closestTree);
-
-    // Add edge between connecting configurations
-    AddEdge(closestVID, _recentlyGrown, lpOutput);
   }
-  // If the extension went far enough but didn't connect, add the new node to
-  // the closest tree
   else {
+    // The extension didn't connect the trees. Swap back to the original tree.
     if(this->m_debug)
-      cout << "\tFailed: could not expand all the way." << endl
-           << "\tExpansion distance: " << dist << endl;
-
-    // Add new node from
-    swap(m_currentTree, closestTree);
-    VID newVID = AddNode(newCfg);
-    AddEdge(closestVID, newVID, lpOutput);
-    ConnectNeighbors(newVID);
+      cout << "\tConnectTrees failed: could not expand all the way." << endl;
     swap(m_currentTree, closestTree);
   }
 }

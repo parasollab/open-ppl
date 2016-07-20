@@ -16,7 +16,7 @@
 /// \f$q_{dir}\f$ until either \f$q_{dir}\f$ is reached, a distance of
 /// \f$\Delta q\f$ is extended, or @cobst is reached.
 ////////////////////////////////////////////////////////////////////////////////
-template<class MPTraits>
+template <typename MPTraits>
 class KinodynamicExtender : public ExtenderMethod<MPTraits> {
 
   public:
@@ -24,7 +24,7 @@ class KinodynamicExtender : public ExtenderMethod<MPTraits> {
     ///\name Motion Planning Types
     ///@{
 
-    typedef typename MPTraits::CfgType StateType;
+    typedef typename MPTraits::CfgType       StateType;
     typedef typename MPTraits::MPProblemType MPProblemType;
 
     ///@}
@@ -32,8 +32,12 @@ class KinodynamicExtender : public ExtenderMethod<MPTraits> {
     ///@{
 
     KinodynamicExtender(const string& _dmLabel = "", const string& _vcLabel = "",
-        double _timeStep = 1.0, bool _fixed = true, bool _best = false);
+        double _min = .001, double _timeStep = 1, bool _fixed = true,
+        bool _best = false);
+
     KinodynamicExtender(MPProblemType* _problem, XMLNode& _node);
+
+    virtual ~KinodynamicExtender() = default;
 
     ///@}
     ///\name MPBaseObject Overrides
@@ -52,7 +56,7 @@ class KinodynamicExtender : public ExtenderMethod<MPTraits> {
     ////////////////////////////////////////////////////////////////////////////
     /// \brief Compute the maximum distance that this extender could push a
     ///        configuration on first request.
-    virtual double GetMaxDistance() const;
+    virtual double GetMaxDistance() const override;
 
     ///@}
 
@@ -90,35 +94,33 @@ class KinodynamicExtender : public ExtenderMethod<MPTraits> {
     ///\name MPObject Labels
     ///@{
 
-    string m_dmLabel;
-    string m_vcLabel;
+    string m_dmLabel;  ///< The distance metric to use.
+    string m_vcLabel;  ///< The validity checker to use.
 
     ///@}
     ///\name Extender Properties
     ///@{
 
     double m_timeStep; ///< The number of time resolutions to use for a step.
-    bool m_fixed;      ///< True is fixed step at m_timeStep
-                       ///< false is varyiable time-step in (0, m_timeStep)
-    bool m_best;       ///< True is best control selection
-                       ///< false is random control selection
+    bool m_fixed;      ///< True for fixed time step, false for variable.
+    bool m_best;       ///< True for best control, false for random control.
 
     ///@}
 };
 
 /*------------------------------- Construction -------------------------------*/
 
-template<class MPTraits>
+template <typename MPTraits>
 KinodynamicExtender<MPTraits>::
 KinodynamicExtender(const string& _dmLabel, const string& _vcLabel,
-    double _timeStep, bool _fixed, bool _best) :
-    ExtenderMethod<MPTraits>(), m_dmLabel(_dmLabel), m_vcLabel(_vcLabel),
+    double _min, double _timeStep, bool _fixed, bool _best) :
+    ExtenderMethod<MPTraits>(_min), m_dmLabel(_dmLabel), m_vcLabel(_vcLabel),
     m_timeStep(_timeStep), m_fixed(_fixed), m_best(_best) {
   this->SetName("KinodynamicExtender");
 }
 
 
-template<class MPTraits>
+template <typename MPTraits>
 KinodynamicExtender<MPTraits>::
 KinodynamicExtender(MPProblemType* _problem, XMLNode& _node) :
     ExtenderMethod<MPTraits>(_problem, _node) {
@@ -128,7 +130,7 @@ KinodynamicExtender(MPProblemType* _problem, XMLNode& _node) :
 
 /*---------------------------- MPBaseObject Overrides ------------------------*/
 
-template<class MPTraits>
+template <typename MPTraits>
 void
 KinodynamicExtender<MPTraits>::
 ParseXML(XMLNode& _node) {
@@ -146,7 +148,7 @@ ParseXML(XMLNode& _node) {
 }
 
 
-template<class MPTraits>
+template <typename MPTraits>
 void
 KinodynamicExtender<MPTraits>::
 Print(ostream& _os) const {
@@ -158,7 +160,7 @@ Print(ostream& _os) const {
 
 /*------------------------- ExtenderMethod Overrides -------------------------*/
 
-template<class MPTraits>
+template <typename MPTraits>
 bool
 KinodynamicExtender<MPTraits>::
 Extend(const StateType& _start, const StateType& _end, StateType& _new,
@@ -239,7 +241,8 @@ ExtendBestControl(const StateType& _start, const StateType& _end, size_t _nTicks
       }
     }
   }
-  return distBest != numeric_limits<double>::infinity();
+  return distBest != numeric_limits<double>::infinity() &&
+         distBest >= this->m_minDist;
 }
 
 
@@ -273,7 +276,7 @@ ExtendRandomControl(const StateType& _start, const StateType& _end,
   if(!collision) {
     _new = tick;
     SetOutput(_nTicks, control, _start, _new, _lp);
-    return true;
+    return _lp.m_edge.first >= this->m_minDist;
   }
   else
     return false;

@@ -132,8 +132,8 @@ class Cfg {
     bool IsLabel(string _label);
     void SetLabel(string _label,bool _value);
 
-    double GetStat(string _stat);
-    bool IsStat(string _stat);
+    double GetStat(string _stat) const;
+    bool IsStat(string _stat) const;
     void SetStat(string _stat, double _value = 0.0);
     void IncStat(string _stat, double _value = 1.0);
 

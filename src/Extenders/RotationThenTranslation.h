@@ -1,5 +1,5 @@
-#ifndef ROTATIONTHENTRANSLATION_H_
-#define ROTATIONTHENTRANSLATION_H_
+#ifndef ROTATION_THEN_TRANSLATION_H_
+#define ROTATION_THEN_TRANSLATION_H_
 
 #include "BasicExtender.h"
 
@@ -17,7 +17,7 @@
 /// \f$q_{near}\f$ to \f$q_{rand1}\f$ which is only a change in orientation
 /// followed by a translation from \f$q_{rand1}\f$ to \f$q_{rand}\f$.
 ////////////////////////////////////////////////////////////////////////////////
-template<class MPTraits>
+template <typename MPTraits>
 class RotationThenTranslation : public BasicExtender<MPTraits> {
 
   public:
@@ -25,7 +25,7 @@ class RotationThenTranslation : public BasicExtender<MPTraits> {
     ///\name Motion Planning Types
     ///@{
 
-    typedef typename MPTraits::CfgType CfgType;
+    typedef typename MPTraits::CfgType       CfgType;
     typedef typename MPTraits::MPProblemType MPProblemType;
 
     ///@}
@@ -33,30 +33,34 @@ class RotationThenTranslation : public BasicExtender<MPTraits> {
     ///@{
 
     RotationThenTranslation(const string& _dmLabel = "",
-        const string& _vcLabel = "", double _delta = 1.0);
+        const string& _vcLabel = "", double _min = .001, double _max = 1);
+
     RotationThenTranslation(MPProblemType* _problem, XMLNode& _node);
+
+    virtual ~RotationThenTranslation() = default;
 
     ///@}
     ///\name ExtenderMethod Overrides
     ///@{
 
-    virtual bool Extend(const CfgType& _near, const CfgType& _dir,
-        CfgType& _new, LPOutput<MPTraits>& _lpOutput);
+    virtual bool Extend(const CfgType& _start, const CfgType& _end,
+        CfgType& _new, LPOutput<MPTraits>& _lp) override;
 
     ///@}
 };
 
 /*------------------------------ Construction --------------------------------*/
 
-template<class MPTraits>
+template <typename MPTraits>
 RotationThenTranslation<MPTraits>::
 RotationThenTranslation(const string& _dmLabel, const string& _vcLabel,
-    double _delta) : BasicExtender<MPTraits>(_dmLabel, _vcLabel, _delta) {
+    double _min, double _max) :
+    BasicExtender<MPTraits>(_dmLabel, _vcLabel, _min, _max) {
   this->SetName("RotationThenTranslation");
 }
 
 
-template<class MPTraits>
+template <typename MPTraits>
 RotationThenTranslation<MPTraits>::
 RotationThenTranslation(MPProblemType* _problem, XMLNode& _node) :
     BasicExtender<MPTraits>(_problem, _node) {
@@ -65,11 +69,11 @@ RotationThenTranslation(MPProblemType* _problem, XMLNode& _node) :
 
 /*------------------------- ExtenderMethod Overrides -------------------------*/
 
-template<class MPTraits>
+template <typename MPTraits>
 bool
 RotationThenTranslation<MPTraits>::
-Extend(const CfgType& _near, const CfgType& _dir, CfgType& _new,
-    LPOutput<MPTraits>& _lpOutput) {
+Extend(const CfgType& _start, const CfgType& _end, CfgType& _new,
+    LPOutput<MPTraits>& _lp) {
   // Setup MP Variables
   Environment* env = this->GetEnvironment();
   CfgType innerCfg, newDir, newPos;
@@ -77,27 +81,27 @@ Extend(const CfgType& _near, const CfgType& _dir, CfgType& _new,
   // Rotate component
   if(this->m_debug)
     cout << "rotate component" << endl;
-  newDir = _dir;
-  for(size_t i = 0; i < _dir.PosDOF(); i++)
-    newDir[i] = _near[i];
+  newDir = _end;
+  for(size_t i = 0; i < _end.PosDOF(); i++)
+    newDir[i] = _start[i];
 
-  if(this->Expand(_near, newDir, innerCfg, this->m_maxDist, _lpOutput,
+  if(this->Expand(_start, newDir, innerCfg, this->m_maxDist, _lp,
       env->GetPositionRes(), env->GetOrientationRes())) {
-    _lpOutput.m_intermediates.push_back(innerCfg);
+    _lp.m_intermediates.push_back(innerCfg);
 
     // Translate component
     if(this->m_debug)
       cout << "translate component" << endl;
     newPos = innerCfg;
     for(size_t i = 0; i < newPos.PosDOF(); i++)
-      newPos[i] = _dir[i];
+      newPos[i] = _end[i];
 
     LPOutput<MPTraits> newLPOutput;
     bool result = this->Expand(innerCfg, newPos, _new, this->m_maxDist,
         newLPOutput, env->GetPositionRes(), env->GetOrientationRes());
-    _lpOutput.m_edge.first.SetWeight(_lpOutput.m_edge.first.GetWeight() +
+    _lp.m_edge.first.SetWeight(_lp.m_edge.first.GetWeight() +
         newLPOutput.m_edge.first.GetWeight());
-    _lpOutput.m_edge.second.SetWeight(_lpOutput.m_edge.second.GetWeight() +
+    _lp.m_edge.second.SetWeight(_lp.m_edge.second.GetWeight() +
         newLPOutput.m_edge.second.GetWeight());
     return result;
   }
