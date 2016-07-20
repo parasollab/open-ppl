@@ -119,7 +119,7 @@ class RRTQuery : public MapEvaluatorMethod<MPTraits> {
 
     string m_nfLabel;           ///< Neighborhood finder label.
     string m_exLabel;           ///< Extender label.
-
+  
     ///@}
     ///\name Graph State
     ///@{
@@ -152,7 +152,7 @@ class RRTQuery : public MapEvaluatorMethod<MPTraits> {
     void GeneratePath(RoadmapType* _r, const CfgType& _start,
         const pair<VID, double>& _nearest);
 
-    pair<VID, double> ExtendToGoal(RoadmapType* _r,
+    pair<VID,double> ExtendToGoal(RoadmapType* _r,
         const pair<VID, double>& _nearest, const CfgType& _goal) const;
 
     ///@}
@@ -291,12 +291,11 @@ PerformQuery(RoadmapType* _r, const CfgType& _start, const CfgType& _goal) {
 
   // Find the nearest node to _goal that is also connected to _start.
   nearest = FindNearestConnectedNeighbor(_r, _start, _goal);
-
   if(nearest.first == INVALID_VID)
     // If the nearest node is invalid, it means that the goal is in the map and
     // not connected to start. In this case, we can't connect.
     success = false;
-  else if(nearest.second <= m_goalDist)
+  else if(nearest.second <= m_goalDist) 
     // The nearest node is within the goal distance, so we are close enough.
     success = true;
   else {
@@ -533,12 +532,15 @@ ExtendToGoal(RoadmapType* _r, const pair<VID, double>& _nearest,
   CfgType qNew;
   LPOutput<MPTraits> lpOutput;
   if(e->Extend(g->GetVertex(_nearest.first), _goal, qNew, lpOutput)) {
-    distance = lpOutput.m_edge.first.GetWeight();
+    distance = lpOutput.m_edge.first.GetWeight(); 
     // If we went far enough, add the new node and edge.
     if(distance > e->GetMinDistance() && !g->IsVertex(qNew)) {
       newVID = g->AddVertex(qNew);
       qNew.SetStat("Parent", _nearest.first);
       g->AddEdge(_nearest.first, newVID, lpOutput.m_edge);
+      // Using the NeighborhoodFinder's Distance metric for consistancy in
+      // distance 
+      distance = this->GetNeighborhoodFinder(m_nfLabel)->GetDMMethod()->Distance(qNew, _goal); 
       if(this->m_debug)
         cout << "\t\tExtension succeeded, created new node " << newVID << " at "
              << "distance " << distance << " from goal." << endl;
