@@ -276,7 +276,7 @@ ExtendRandomControl(const StateType& _start, const StateType& _end,
   if(!collision) {
     _new = tick;
     SetOutput(_nTicks, control, _start, _new, _lp);
-    return _lp.m_edge.first >= this->m_minDist;
+    return _lp.m_edge.first.GetWeight() >= this->m_minDist;
   }
   else
     return false;
