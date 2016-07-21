@@ -47,7 +47,7 @@ class DynamicRegionRRT : public BasicRRTStrategy<MPTraits> {
     ///\name Construction
     ///@{
 
-    DynamicRegionRRT(string _dm = "euclidean", string _nf = "bfnf",
+    DynamicRegionRRT(string _dm = "euclidean", string _nf = "Nearest",
         string _vc = "cd1", string _nc = "kClosest", string _ex = "BERO",
         vector<string> _evaluators = vector<string>(),
         string _gt = "UNDIRECTED_TREE",  bool _growGoals = false,

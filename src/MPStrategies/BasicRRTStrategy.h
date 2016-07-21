@@ -397,10 +397,10 @@ Iterate() {
   if(m_query && DRand() < m_growthFocus && !m_query->GetGoals().empty()) {
     target = m_query->GetRandomGoal();
     if(this->m_debug)
-      cout << "Goal biased direction selected: " << target << endl;
+      cout << "Goal-biased direction selected: " << target << endl;
   }
   else {
-    target = SelectDirection();
+    target = this->SelectDirection();
     if(this->m_debug)
       cout << "Random direction selected: " << target << endl;
   }
