@@ -26,8 +26,8 @@ class Boundary {
     /// Create a CGAL polyhedron.
     virtual CGALPolyhedron CGAL() const {return CGALPolyhedron();}
 
-    Boundary() {}
-    virtual ~Boundary() {}
+    Boundary() = default;
+    virtual ~Boundary() = default;
 
     virtual string Type() const = 0;
 
@@ -51,6 +51,7 @@ class Boundary {
     friend ostream& operator<<(ostream& _os, const Boundary& _b);
 
   protected:
+
     Point3d m_center;
 
 #ifdef _PARALLEL

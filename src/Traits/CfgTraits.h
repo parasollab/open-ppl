@@ -104,6 +104,7 @@
 #include "MapEvaluators/PrintMapEvaluation.h"
 #include "MapEvaluators/Query.h"
 #include "MapEvaluators/ReplanningEvaluation.h"
+#include "MapEvaluators/RRTQuery.h"
 #include "MapEvaluators/TimeEvaluator.h"
 #include "MapEvaluators/TrueEvaluation.h"
 
@@ -254,13 +255,19 @@ struct MPTraits {
     RRTConnect<MPTraits>
       > ConnectorMethodList;
 
-  typedef ConnectivityMetric<MPTraits, RoadmapSet<MPTraits> > ConnectivityMetricRoadmapSet;
-  typedef CoverageDistanceMetric<MPTraits, RoadmapSet<MPTraits> > CoverageDistanceMetricRoadmapSet;
-  typedef CoverageMetric<MPTraits, RoadmapSet<MPTraits> > CoverageMetricRoadmapSet;
+  typedef ConnectivityMetric<MPTraits, RoadmapSet<MPTraits>>
+      ConnectivityMetricRoadmapSet;
+  typedef CoverageDistanceMetric<MPTraits, RoadmapSet<MPTraits>>
+      CoverageDistanceMetricRoadmapSet;
+  typedef CoverageMetric<MPTraits, RoadmapSet<MPTraits>>
+      CoverageMetricRoadmapSet;
 
-  typedef ConnectivityMetric<MPTraits, VectorSet<MPTraits> > ConnectivityMetricVectorSet;
-  typedef CoverageDistanceMetric<MPTraits, VectorSet<MPTraits> > CoverageDistanceMetricVectorSet;
-  typedef CoverageMetric<MPTraits, VectorSet<MPTraits> > CoverageMetricVectorSet;
+  typedef ConnectivityMetric<MPTraits, VectorSet<MPTraits>>
+      ConnectivityMetricVectorSet;
+  typedef CoverageDistanceMetric<MPTraits, VectorSet<MPTraits>>
+      CoverageDistanceMetricVectorSet;
+  typedef CoverageMetric<MPTraits, VectorSet<MPTraits>>
+      CoverageMetricVectorSet;
 
   //types of metrics available in our world
   typedef boost::mpl::list<
@@ -288,6 +295,7 @@ struct MPTraits {
     PrintMapEvaluation<MPTraits>,
     Query<MPTraits>,
     ReplanningEvaluation<MPTraits>,
+    RRTQuery<MPTraits>,
     TimeEvaluator<MPTraits>,
     TrueEvaluation<MPTraits>
       > MapEvaluatorMethodList;

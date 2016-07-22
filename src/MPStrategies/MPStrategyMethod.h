@@ -34,40 +34,58 @@ class MPStrategyMethod : public MPBaseObject<MPTraits> {
 
   public:
 
+    ///\name Motion Planning Types
+    ///@{
+
     typedef typename MPTraits::MPProblemType MPProblemType;
-    typedef typename MPProblemType::MapEvaluatorPointer MapEvaluatorPointer;
-    typedef typename MPProblemType::VID VID;
+    typedef typename MPProblemType::VID      VID;
 
-    MPStrategyMethod();
+    ///@}
+    ///\name Construction
+    ///@{
+
+    MPStrategyMethod() = default;
     MPStrategyMethod(MPProblemType* _problem, XMLNode& _node);
-    virtual ~MPStrategyMethod();
+    virtual ~MPStrategyMethod() = default;
 
+    ///@}
+    ///\name Interface
+    ///@{
+
+    ////////////////////////////////////////////////////////////////////////////
+    /// \brief Execute the strategy by calling Initialize, Run, and Finalize.
     void operator()();
 
-    virtual void Initialize() = 0;
-    virtual void Run();
-    virtual bool EvaluateMap();
-    virtual void Iterate() {}
-    virtual void Finalize() = 0;
-    virtual void Print(ostream& _os) const;
+    virtual void Initialize() = 0; ///< Set up the strategy.
+    virtual void Run();            ///< Call Iterate until EvaluateMap is true.
+    virtual bool EvaluateMap();    ///< Check if we satisfied all map evaluators.
+    virtual void Iterate() {}      ///< Execute one iteration of the strategy.
+    virtual void Finalize() = 0;   ///< Clean-up and output results.
+    virtual void Print(ostream& _os) const; ///< Print parameters and options.
 
-    void SetBoundary(shared_ptr<Boundary> bb) {m_boundary = bb;}
+    ////////////////////////////////////////////////////////////////////////////
+    /// \brief Designate a sampling boundary.
+    /// \warning This is ignored by most strategies.
+    void SetBoundary(shared_ptr<Boundary> _b) {m_boundary = _b;}
 
-    // Virtual method used in PRMWithRRTStrategy
+    ////////////////////////////////////////////////////////////////////////////
+    /// \brief Virtual method used only in PRMWithRRTStrategy
     virtual bool CheckNarrowPassageSample(VID _vid) {return false;}
+
+    ///@}
 
   protected:
 
+    ///\name Internal State
+    ///@{
+
     shared_ptr<Boundary> m_boundary;  ///< Points to the environment boundary.
     vector<string> m_meLabels;        ///< The list of map evaluators to use.
+
+    ///@}
 };
 
-
-template<class MPTraits>
-MPStrategyMethod<MPTraits>::
-MPStrategyMethod() {
-}
-
+/*----------------------------- Construction ---------------------------------*/
 
 template<class MPTraits>
 MPStrategyMethod<MPTraits>::
@@ -77,12 +95,7 @@ MPStrategyMethod(MPProblemType* _problem, XMLNode& _node) :
     m_boundary = this->GetEnvironment()->GetBoundary();
 }
 
-
-template<class MPTraits>
-MPStrategyMethod<MPTraits>::
-~MPStrategyMethod() {
-}
-
+/*-------------------------- MPBaseObject Overrides --------------------------*/
 
 template<class MPTraits>
 void
@@ -91,14 +104,15 @@ Print(ostream& _os) const {
   _os << this->GetNameAndLabel() << endl;
 }
 
+/*------------------------------ Interface -----------------------------------*/
 
 template<class MPTraits>
 void
 MPStrategyMethod<MPTraits>::
 operator()() {
-  Initialize();
+  this->Initialize();
   this->Run();
-  Finalize();
+  this->Finalize();
 }
 
 
@@ -138,7 +152,7 @@ EvaluateMap() {
     stats->StartClock(clockName);
 
     for(auto& label : m_meLabels) {
-      MapEvaluatorPointer evaluator = this->GetMapEvaluator(label);
+      auto evaluator = this->GetMapEvaluator(label);
       const string& evalName = evaluator->GetNameAndLabel();
 
       stats->StartClock(evalName);
@@ -162,5 +176,7 @@ EvaluateMap() {
     return passed;
   }
 }
+
+/*----------------------------------------------------------------------------*/
 
 #endif

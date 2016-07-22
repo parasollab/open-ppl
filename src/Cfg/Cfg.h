@@ -19,22 +19,23 @@ class Environment;
 class ActiveMultiBody;
 class Boundary;
 
+
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup Cfgs
 /// @brief Information about the clearance of a cfg.
 ////////////////////////////////////////////////////////////////////////////////
 class ClearanceInfo {
+
   private:
-    double m_clearance; // closest distance from this Cfg to any Obstacle in C-space
-    Cfg* m_direction; //direct to Cfg that is closest to c-obst
+
+    double m_clearance; ///< Distance to nearest c-space obstacle.
+    Cfg* m_direction;   ///< Direction to nearest c-obstacle configuration.
     int m_obstacleId;
 
   public:
 
-    ClearanceInfo(Cfg* _direction = NULL, double _clearance = -1e10) {
-      m_clearance = _clearance;
-      m_direction = _direction;
-    }
+    ClearanceInfo(Cfg* _direction = nullptr, double _clearance = -1e10) :
+        m_clearance(_clearance), m_direction(_direction) { }
     ~ClearanceInfo();
 
     double GetClearance() {return m_clearance;};
@@ -46,6 +47,7 @@ class ClearanceInfo {
     int GetObstacleId() { return m_obstacleId;};
     void SetObstacleId(int _id) { m_obstacleId = _id;};
 };
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup Cfgs
@@ -59,11 +61,12 @@ class ClearanceInfo {
 /// random sampling, etc.
 ////////////////////////////////////////////////////////////////////////////////
 class Cfg {
+
   public:
 
-    Cfg(size_t _index = 0);
+    explicit Cfg(size_t _index = 0);
     Cfg(const Cfg& _other);
-    virtual ~Cfg() {};
+    virtual ~Cfg() = default;
 
     // assume _index within the size of the vector.
     static void InitRobots(shared_ptr<ActiveMultiBody>& _robot, size_t _index);
@@ -92,22 +95,20 @@ class Cfg {
     const double& operator[](size_t _dof) const;
 
 
-    ////////////////////////////////////////////////////////////////////////////
-    //
-    //
-    //    Access Methods : Retrieve and set related information of this class
-    //
-    //
-    ////////////////////////////////////////////////////////////////////////////
+    // Access Methods : Retrieve and set related information of this class
+
     /// \brief Get the internal storage of DOF data.
     const vector<double>& GetData() const {return m_v;}
+
     ////////////////////////////////////////////////////////////////////////////
     /// \brief Set the internal storage of DOF data.
     virtual void SetData(const vector<double>& _data);
+
     ////////////////////////////////////////////////////////////////////////////
     /// \brief Set the internal storage of joint DOF data.
     /// \details Other DOFs will remain the same.
     void SetJointData(const vector<double>& _data);
+
     ////////////////////////////////////////////////////////////////////////////
     /// \brief   Compute the normalized representation relative to the
     ///          environment bounds.
@@ -116,6 +117,7 @@ class Cfg {
     /// \return  A copy of this with each DOF scaled from [_b.min, _b.max] to
     ///          [-1, 1].
     vector<double> GetNormalizedData(const shared_ptr<const Boundary> _b) const;
+
     ////////////////////////////////////////////////////////////////////////////
     /// \brief   Compute the standard representation from a form normalized
     ///          relative to the environment bounds. This is the reverse of
@@ -125,14 +127,13 @@ class Cfg {
     void SetNormalizedData(const vector<double>& _data,
         const shared_ptr<const Boundary> _b);
 
-
     //labeling of the Cfg and statistics
     bool GetLabel(string _label);
     bool IsLabel(string _label);
     void SetLabel(string _label,bool _value);
 
-    double GetStat(string _stat);
-    bool IsStat(string _stat);
+    double GetStat(string _stat) const;
+    bool IsStat(string _stat) const;
     void SetStat(string _stat, double _value = 0.0);
     void IncStat(string _stat, double _value = 1.0);
 
@@ -161,13 +162,7 @@ class Cfg {
     virtual Vector3d GetRobotCenterPosition() const;
     virtual Vector3d GetRobotCenterofMass() const;
 
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    //
-    //
-    //    Generation Related Methods : These methods are related to create Cfgs randomly
-    //
-    //
-    //////////////////////////////////////////////////////////////////////////////////////////
+    // Generation Related Methods : create Cfgs randomly
     /**
      * Configuration where workspace robot's EVERY VERTEX
      * is guaranteed to lie within the environment specified bounding box If
@@ -184,9 +179,11 @@ class Cfg {
 
     void GetResolutionCfg(Environment*);
 
-    ///Increase every value in this instance in each dimention by the value in _increment
+    // Increase every value in this instance in each dimention by the value in
+    // _increment.
     virtual void IncrementTowardsGoal(const Cfg& _goal, const Cfg& _increment);
-    virtual void FindIncrement(const Cfg& _start, const Cfg& _goal, int* _nTicks, double _positionRes, double _orientationRes);
+    virtual void FindIncrement(const Cfg& _start, const Cfg& _goal, int* _nTicks,
+        double _positionRes, double _orientationRes);
     virtual void FindIncrement(const Cfg& _start, const Cfg& _goal, int _nTicks);
 
     /**create a new Cfg instance whose configuration is weighted summation of the
@@ -200,7 +197,8 @@ class Cfg {
     virtual void GetPositionOrientationFrom2Cfg(const Cfg&, const Cfg&);
 
     template<template<class> class ClearanceUtility, class MPTraits>
-      double GetSmoothingValue(ClearanceUtility<MPTraits>& _clearanceUtils, shared_ptr<Boundary> _bb);
+    double GetSmoothingValue(ClearanceUtility<MPTraits>& _clearanceUtils,
+        shared_ptr<Boundary> _bb);
 
     //polygonal approximation
     vector<Vector3d> PolyApprox() const;
@@ -213,6 +211,7 @@ class Cfg {
     virtual void Write(ostream& _os) const;
 
   protected:
+
     //Normalize the orientation to the range [-1, 1)
     virtual void NormalizeOrientation(int _index = -1);
 
@@ -237,8 +236,12 @@ class Cfg {
     map<string,double> m_statMap;
 
   public:
-    static const vector<shared_ptr<ActiveMultiBody>>& GetRobots() { return m_robots; }
-    static const shared_ptr<ActiveMultiBody>& GetRobot(size_t _index = 0) { return m_robots[_index]; }
+    static const vector<shared_ptr<ActiveMultiBody>>& GetRobots() {
+      return m_robots;
+    }
+    static const shared_ptr<ActiveMultiBody>& GetRobot(size_t _index = 0) {
+      return m_robots[_index];
+    }
 
     CDInfo m_clearanceInfo;
     shared_ptr<Cfg> m_witnessCfg;
@@ -250,8 +253,7 @@ class Cfg {
     void cc(size_t _c) {m_cc = _c;}
     size_t cc() const {return m_cc;}
 
-    void define_type(stapl::typer& _t)
-    {
+    void define_type(stapl::typer& _t) {
       _t.member(m_v);
       _t.member(m_labelMap);
       _t.member(m_statMap);
@@ -261,75 +263,147 @@ class Cfg {
     }
 
   private:
+
     bool m_active;
     size_t m_cc;
 #endif
-}; // class Cfg
+};
 
 //I/O for Cfg
 ostream& operator<< (ostream& _os, const Cfg& _cfg);
 istream& operator>> (istream& _is, Cfg& _cfg);
 
-template<class DistanceMetricPointer>
+template <class DistanceMetricPointer>
 void
 Cfg::
 GetRandomRay(double _incr, DistanceMetricPointer _dm, bool _norm) {
   //randomly sample params
   m_v.clear();
   for(size_t i = 0; i < DOF(); ++i)
-    m_v.push_back(2.0*DRand() - 1.0);
+    m_v.push_back(2. * DRand() - 1.);
 
   //scale to appropriate length
-  _dm->ScaleCfg(_incr, (typename DistanceMetricPointer::element_type::CfgType&)*this);
+  _dm->ScaleCfg(_incr,
+      static_cast<typename DistanceMetricPointer::element_type::CfgType&>(*this));
   if(_norm)
     NormalizeOrientation();
 }
 
-template<template<class> class ClearanceUtility, class MPTraits>
+template <template <class> class ClearanceUtility, class MPTraits>
 double
-Cfg::GetSmoothingValue(ClearanceUtility<MPTraits>& _clearanceUtils, shared_ptr<Boundary> _bb){
+Cfg::
+GetSmoothingValue(ClearanceUtility<MPTraits>& _clearanceUtils,
+    shared_ptr<Boundary> _bb) {
   CDInfo cdInfo;
   typename MPTraits::CfgType tmp;
-  _clearanceUtils.CollisionInfo(*((typename MPTraits::CfgType*)this), tmp, _bb, cdInfo);
+  _clearanceUtils.CollisionInfo(static_cast<typename MPTraits::CfgType&>(*this),
+      tmp, _bb, cdInfo);
   return cdInfo.m_minDist;
 }
 
 #ifdef _PARALLEL
 namespace stapl {
+
+  //////////////////////////////////////////////////////////////////////////////
+  /// @TODO
+  //////////////////////////////////////////////////////////////////////////////
   template <typename Accessor>
-    class proxy<Cfg, Accessor>
-    : public Accessor {
-      private:
-        friend class proxy_core_access;
-        typedef Cfg target_t;
+  class proxy<Cfg, Accessor> : public Accessor {
 
-      public:
-        //typedef target_t::parameter_type  parameter_type;
-        explicit proxy(Accessor const& acc) : Accessor(acc) { }
-        operator target_t() const { return Accessor::read(); }
-        proxy const& operator=(proxy const& rhs) { Accessor::write(rhs); return *this; }
-        proxy const& operator=(target_t const& rhs) { Accessor::write(rhs); return *this;}
-        int DOF() const { return Accessor::const_invoke(&target_t::DOF);}
-        int PosDOF() const { return Accessor::const_invoke(&target_t::PosDOF);}
-        void Write(ostream& _os) const { return Accessor::const_invoke(&target_t::Write, _os);}
-        void Read(istream& _is){ return Accessor::const_invoke(&target_t::Read, _is);}
-        const vector<double>& GetData() const { return Accessor::const_invoke(&target_t::GetData);}
-        void SetData(vector<double>& _data) const { return Accessor::const_invoke(&target_t::SetData, _data);}
-        bool GetLabel(string _label) const { return Accessor::const_invoke(&target_t::GetLabel, _label);}
-        bool IsLabel(string _label) const { return Accessor::const_invoke(&target_t::IsLabel, _label);}
-        bool SetLabel(string _label) const { return Accessor::const_invoke(&target_t::SetLabel, _label);}
-        double GetStat(string _stat) const { return Accessor::const_invoke(&target_t::GetStat, _stat);}
-        bool IsStat(string _stat) const { return Accessor::const_invoke(&target_t::IsStat, _stat);}
-        void SetStat(string _stat, double _val) const { return Accessor::const_invoke(&target_t::SetStat, _stat,_val);}
-        void IncStat(string _stat, double _val) const { return Accessor::const_invoke(&target_t::IncStat, _stat,_val);}
-        static int GetNumOfJoints()  { return Accessor::const_invoke(&target_t::GetNumOfJoints);}
-        void active(bool _a) { return Accessor::invoke(&target_t::active, _a);}
-        bool active() const { return Accessor::const_invoke(&target_t::active);}
-        void cc(size_t _c) { return Accessor::invoke(&target_t::cc, _c);}
-        size_t cc() const { return Accessor::const_invoke(&target_t::cc);}
+    friend class proxy_core_access;
+    typedef Cfg target_t;
 
-        // static void SetNumOfJoints(int _numOfJoints)  { return Accessor::const_invoke(&target_t::SetNumOfJoints, _numOfJoints);}
-    }; //struct proxy
+    public:
+
+      //typedef target_t::parameter_type  parameter_type;
+      explicit proxy(Accessor const& acc) : Accessor(acc) { }
+      operator target_t() const {
+        return Accessor::read();
+      }
+
+      proxy const& operator=(proxy const& rhs) {
+        Accessor::write(rhs);
+        return *this;
+      }
+
+      proxy const& operator=(target_t const& rhs) {
+        Accessor::write(rhs);
+        return *this;
+      }
+
+      int DOF() const {
+        return Accessor::const_invoke(&target_t::DOF);
+      }
+
+      int PosDOF() const {
+        return Accessor::const_invoke(&target_t::PosDOF);
+      }
+
+      void Write(ostream& _os) const {
+        return Accessor::const_invoke(&target_t::Write, _os);
+      }
+
+      void Read(istream& _is) {
+        return Accessor::const_invoke(&target_t::Read, _is);
+      }
+
+      const vector<double>& GetData() const {
+        return Accessor::const_invoke(&target_t::GetData);
+      }
+
+      void SetData(vector<double>& _data) const {
+        return Accessor::const_invoke(&target_t::SetData, _data);
+      }
+
+      bool GetLabel(string _label) const {
+        return Accessor::const_invoke(&target_t::GetLabel, _label);
+      }
+
+      bool IsLabel(string _label) const {
+        return Accessor::const_invoke(&target_t::IsLabel, _label);
+      }
+
+      bool SetLabel(string _label) const {
+        return Accessor::const_invoke(&target_t::SetLabel, _label);
+      }
+
+      double GetStat(string _stat) const {
+        return Accessor::const_invoke(&target_t::GetStat, _stat);
+      }
+
+      bool IsStat(string _stat) const {
+        return Accessor::const_invoke(&target_t::IsStat, _stat);
+      }
+
+      void SetStat(string _stat, double _val) const {
+        return Accessor::const_invoke(&target_t::SetStat, _stat,_val);
+      }
+
+      void IncStat(string _stat, double _val) const {
+        return Accessor::const_invoke(&target_t::IncStat, _stat,_val);
+      }
+
+      static int GetNumOfJoints() {
+        return Accessor::const_invoke(&target_t::GetNumOfJoints);
+      }
+
+      void active(bool _a) {
+        return Accessor::invoke(&target_t::active, _a);
+      }
+
+      bool active() const {
+        return Accessor::const_invoke(&target_t::active);
+      }
+
+      void cc(size_t _c) {
+        return Accessor::invoke(&target_t::cc, _c);
+      }
+
+      size_t cc() const {
+        return Accessor::const_invoke(&target_t::cc);
+      }
+
+  };
 }
 #endif
 

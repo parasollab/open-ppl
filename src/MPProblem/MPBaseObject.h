@@ -67,7 +67,7 @@ class MPBaseObject {
         ParseXML(_node);
       };
 
-    virtual ~MPBaseObject() {}
+    virtual ~MPBaseObject() = default;
 
     /// @}
     ////////////////////////////////////////////////////////////////////////////

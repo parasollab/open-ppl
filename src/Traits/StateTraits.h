@@ -5,6 +5,7 @@
 #include "Edges/StateEdge.h"
 
 //distance metric includes
+#include "DistanceMetrics/ExperimentalDistance.h"
 #include "DistanceMetrics/WeightedEuclideanDistance.h"
 
 //validity checker includes
@@ -16,15 +17,22 @@
 
 //extenders includes
 #include "Extenders/KinodynamicExtender.h"
+#include "Extenders/MixExtender.h"
 
 //metric includes
 #include "Metrics/NumNodesMetric.h"
 
 //map evaluator includes
+#include "MapEvaluators/ComposeEvaluator.h"
 #include "MapEvaluators/ConditionalEvaluator.h"
 
+#include "MapEvaluators/Query.h"
+#include "MapEvaluators/RRTQuery.h"
+
 //mp strategies includes
-#include "MPStrategies/KinodynamicRRTStrategy.h"
+#include "MPStrategies/BasicRRTStrategy.h"
+#include "MPStrategies/DynamicDomainRRT.h"
+#include "MPStrategies/DynamicRegionRRT.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup MotionPlanningUniverse
@@ -48,6 +56,7 @@ struct StateTraits {
 
   //types of distance metrics available in our world
   typedef boost::mpl::list<
+    ExperimentalDistance<StateTraits>,
     WeightedEuclideanDistance<StateTraits>
       > DistanceMetricMethodList;
 
@@ -72,7 +81,8 @@ struct StateTraits {
 
   //types of extenders avaible in our world
   typedef boost::mpl::list<
-    KinodynamicExtender<StateTraits>
+    KinodynamicExtender<StateTraits>,
+    MixExtender<StateTraits>
       > ExtenderMethodList;
 
   //types of path smoothing available in our world
@@ -92,12 +102,17 @@ struct StateTraits {
 
   //types of map evaluators available in our world
   typedef boost::mpl::list<
-    ConditionalEvaluator<StateTraits>
+    ComposeEvaluator<StateTraits>,
+    ConditionalEvaluator<StateTraits>,
+    Query<StateTraits>,
+    RRTQuery<StateTraits>
       > MapEvaluatorMethodList;
 
   //types of motion planning strategies available in our world
   typedef boost::mpl::list<
-    KinodynamicRRTStrategy<StateTraits>
+    BasicRRTStrategy<StateTraits>,
+    DynamicDomainRRT<StateTraits>,
+    DynamicRegionRRT<StateTraits>
       > MPStrategyMethodList;
 };
 

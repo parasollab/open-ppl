@@ -18,7 +18,7 @@ class MapEvaluatorMethod : public MPBaseObject<MPTraits> {
     MapEvaluatorMethod() {}
     MapEvaluatorMethod(typename MPTraits::MPProblemType* _problem, XMLNode& _node)
       : MPBaseObject<MPTraits>(_problem, _node) {}
-    virtual ~MapEvaluatorMethod() {}
+    virtual ~MapEvaluatorMethod() = default;
 
     ////////////////////////////////////////////////////////////////////////////
     /// @brief Having state implies that a new roadmap needs to be loaded and

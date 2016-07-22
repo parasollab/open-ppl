@@ -1,5 +1,5 @@
-#ifndef TRACEOBSTACLE_H_
-#define TRACEOBSTACLE_H_
+#ifndef TRACE_OBSTACLE_H_
+#define TRACE_OBSTACLE_H_
 
 #include "BasicExtender.h"
 
@@ -18,38 +18,63 @@
 /// randomly generated orientation. This is useful when growing in areas where
 /// difficult movements are needed.
 ////////////////////////////////////////////////////////////////////////////////
-template<class MPTraits>
+template <typename MPTraits>
 class TraceObstacle : public BasicExtender<MPTraits> {
+
   public:
-    typedef typename MPTraits::CfgType CfgType;
+
+    ///\name Motion Planning Types
+    ///@{
+
+    typedef typename MPTraits::CfgType       CfgType;
     typedef typename MPTraits::MPProblemType MPProblemType;
 
+    ///@}
+    ///\name Construction
+    ///@{
+
     TraceObstacle(const string& _dmLabel = "", const string& _vcLabel = "",
-        double _delta = 1.0, bool _randomOrientation = true);
+        double _min = .001, double _max = 1, bool _randomOrientation = true);
+
     TraceObstacle(MPProblemType* _problem, XMLNode& _node);
 
-    virtual bool Extend(const CfgType& _near, const CfgType& _dir,
-        CfgType& _new, LPOutput<MPTraits>& _lpOutput);
+    virtual ~TraceObstacle() = default;
+
+    ///@}
+    ///\name ExtenderMethod Overrides
+    ///@{
+
+    virtual bool Extend(const CfgType& _start, const CfgType& _end,
+        CfgType& _new, LPOutput<MPTraits>& _lp) override;
+
+    ///@}
 };
 
-template<class MPTraits>
-TraceObstacle<MPTraits>::TraceObstacle(const string& _dmLabel,
-    const string& _vcLabel, double _delta, bool _randomOrientation) :
-  BasicExtender<MPTraits>(_dmLabel, _vcLabel, _delta, _randomOrientation) {
-    this->SetName("TraceObstacle");
-  }
+/*------------------------------- Construction -------------------------------*/
 
-template<class MPTraits>
-TraceObstacle<MPTraits>::TraceObstacle(MPProblemType* _problem,
-    XMLNode& _node) :
-  BasicExtender<MPTraits>(_problem, _node) {
-    this->SetName("TraceObstacle");
-  }
+template <typename MPTraits>
+TraceObstacle<MPTraits>::
+TraceObstacle(const string& _dmLabel, const string& _vcLabel, double _min,
+    double _max, bool _randomOrientation) :
+    BasicExtender<MPTraits>(_dmLabel, _vcLabel, _min, _max, _randomOrientation) {
+  this->SetName("TraceObstacle");
+}
 
-template<class MPTraits>
+
+template <typename MPTraits>
+TraceObstacle<MPTraits>::
+TraceObstacle(MPProblemType* _problem, XMLNode& _node) :
+    BasicExtender<MPTraits>(_problem, _node) {
+  this->SetName("TraceObstacle");
+}
+
+/*------------------------- ExtenderMethod Overrides -------------------------*/
+
+template <typename MPTraits>
 bool
-TraceObstacle<MPTraits>::Extend(const CfgType& _near, const CfgType& _dir,
-    CfgType& _new, LPOutput<MPTraits>& _lpOutput) {
+TraceObstacle<MPTraits>::
+Extend(const CfgType& _start, const CfgType& _end, CfgType& _new,
+    LPOutput<MPTraits>& _lp) {
   // Setup MP Variables
   Environment* env = this->GetEnvironment();
   CfgType newDir;
@@ -58,7 +83,7 @@ TraceObstacle<MPTraits>::Extend(const CfgType& _near, const CfgType& _dir,
   double vecScale = 10.0;
 
   // Expand to find a colliding triangle
-  this->Expand(_near, _dir, _new, this->m_delta, _lpOutput, cdInfo,
+  this->Expand(_start, _end, _new, this->m_maxDist, _lp, cdInfo,
     env->GetPositionRes(), env->GetOrientationRes());
 
   // Get an obstacle vector from the colliding triangle
@@ -87,12 +112,14 @@ TraceObstacle<MPTraits>::Extend(const CfgType& _near, const CfgType& _dir,
     obsVec *= -1.0;
 
   // Apply this obstacle vector
-  newDir = _dir;
+  newDir = _end;
   for(size_t i = 0; i < newDir.PosDOF(); i++)
-    newDir[i] = _near[i] + obsVec[i];
+    newDir[i] = _start[i] + obsVec[i];
 
   // Expand with Random or Same Orientation
-  return BasicExtender<MPTraits>::Extend(_near, newDir, _new, _lpOutput);
+  return BasicExtender<MPTraits>::Extend(_start, newDir, _new, _lp);
 }
+
+/*----------------------------------------------------------------------------*/
 
 #endif

@@ -168,22 +168,22 @@ class TetGenDecomposition {
     ///@name Internal State
     ///@{
 
-    Environment* m_env;      ///< PMPL Environment
-    string m_baseFilename;   ///< PMPL base filename
+    Environment* m_env{nullptr}; ///< PMPL Environment
+    string m_baseFilename;       ///< PMPL base filename
 
-    tetgenio* m_freeModel;   ///< TetGen model of free workspace
-    tetgenio* m_decompModel; ///< TetGen model of tetrahedralization
+    tetgenio* m_freeModel;       ///< TetGen model of free workspace
+    tetgenio* m_decompModel;     ///< TetGen model of tetrahedralization
 
-    string m_tetGenFilename; ///< TetGen model input base filename
+    string m_tetGenFilename;     ///< TetGen model input base filename
 
-    string m_switches;       ///< Switches for TetGen. See TetGen manual for
-                             ///< details. Need 'pn' at a minimum.
-    bool m_writeFreeModel;   ///< Output TetGen model of free workspace
-    bool m_writeDecompModel; ///< Output TetGen model of tetrahedralization
+    string m_switches;           ///< Switches for TetGen. See TetGen manual for
+                                 ///< details. Need 'pn' at a minimum.
+    bool m_writeFreeModel;       ///< Output TetGen model of free workspace
+    bool m_writeDecompModel;     ///< Output TetGen model of tetrahedralization
 
-    DualGraph m_dualGraph;   ///< Dual of tetrahedralization
+    DualGraph m_dualGraph;       ///< Dual of tetrahedralization
 
-    bool m_debug{true};      ///< Toggle debug messages.
+    bool m_debug{true};          ///< Toggle debug messages.
 
     ///@}
 };

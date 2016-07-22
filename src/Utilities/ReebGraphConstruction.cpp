@@ -49,20 +49,28 @@ operator<<(ostream& _os, const ReebGraphConstruction::ReebArc& _ra) {
   return _os;
 }
 
+
 ReebGraphConstruction::
 ReebGraphConstruction(const string& _filename) : m_reebFilename(_filename),
-  m_tetrahedralization(new TetGenDecomposition()) {
-  }
+    m_tetrahedralization(new TetGenDecomposition()) { }
+
 
 ReebGraphConstruction::
 ReebGraphConstruction(XMLNode& _node) :
-  m_tetrahedralization(new TetGenDecomposition(_node)) {
-    m_reebFilename = _node.Read("reebFilename", false, "", "Filename for Read "
-        "or write ReebGraph operations.");
-    if(m_reebFilename.empty())
-      m_writeReeb = _node.Read("writeReeb", false, false,
-          "Write Reeb Graph to file");
-  }
+    m_tetrahedralization(new TetGenDecomposition(_node)) {
+  m_reebFilename = _node.Read("reebFilename", false, "", "Filename for Read "
+      "or write ReebGraph operations.");
+  if(m_reebFilename.empty())
+    m_writeReeb = _node.Read("writeReeb", false, false,
+        "Write Reeb Graph to file");
+}
+
+
+ReebGraphConstruction::
+~ReebGraphConstruction() {
+  delete m_tetrahedralization;
+}
+
 
 void
 ReebGraphConstruction::
@@ -501,16 +509,16 @@ Embed() {
       ++eit) {
     ReebArc& ra = eit->property();
 
-    auto WeightGraph = [&](double _factor) {
-      for(auto& tetraid : ra.m_tetra) {
-        auto vit = tetraGraph.find_vertex(tetraid);
-        for(auto adjEI = vit->begin(); adjEI != vit->end(); ++adjEI) {
-          auto targetit = tetraGraph.find_vertex(adjEI->target());
-          adjEI->property() = _factor *
-            (vit->property() - targetit->property()).norm();
-        }
-      }
-    };
+    //auto WeightGraph = [&](double _factor) {
+    //  for(auto& tetraid : ra.m_tetra) {
+    //    auto vit = tetraGraph.find_vertex(tetraid);
+    //    for(auto adjEI = vit->begin(); adjEI != vit->end(); ++adjEI) {
+    //      auto targetit = tetraGraph.find_vertex(adjEI->target());
+    //      adjEI->property() = _factor *
+    //        (vit->property() - targetit->property()).norm();
+    //    }
+    //  }
+    //};
 
     // Get start and end vertices. Skip this iteration if they are the same.
     auto sourceit = m_reebGraph.find_vertex(eit->source());
@@ -519,13 +527,16 @@ Embed() {
       continue;
 
     //weight all tetrahedron on reeb arc to bias search
-    WeightGraph(0.01);
+    //WeightGraph(0.01);
 
     //find path
     vector<size_t> pathVID;
     stapl::sequential::find_path_dijkstra(tetraGraph,
         sourceit->property().m_tetra, targetit->property().m_tetra,
         pathVID, numeric_limits<double>::max());
+
+    //unweight all
+    //WeightGraph(1);
 
     // for each tetrahedron pair in path, find common triangle and insert middle
     // of triangle into path for proper transition between the two tetrahedron
@@ -558,9 +569,6 @@ Embed() {
       }
       ra.m_path.push_back(tetraGraph.find_vertex(pathVID.back())->property());
     }
-
-    //unweight all
-    WeightGraph(1);
   }
 }
 

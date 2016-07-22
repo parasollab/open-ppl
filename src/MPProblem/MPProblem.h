@@ -159,6 +159,7 @@ class MPProblem : public MPProblemBase
     void RemoveObstacle(size_t _index);
 
   protected:
+
     virtual void Initialize();
     void ReadXMLFile(const string& _filename, typename MPTraits::MPProblemType* _problem);
     bool ParseChild(XMLNode& _node, typename MPTraits::MPProblemType* _problem);
@@ -266,23 +267,34 @@ template<class MPTraits>
 void
 MPProblem<MPTraits>::
 Initialize() {
-  m_environment = NULL;
+  m_environment = nullptr;
   m_roadmap = new RoadmapType();
   m_blockRoadmap = new RoadmapType();
   m_colRoadmap = new RoadmapType();
   m_stats = new StatClass();
 
-  m_distanceMetrics = new DistanceMetricSet(typename MPTraits::DistanceMetricMethodList(), "DistanceMetrics");
-  m_validityCheckers = new ValidityCheckerSet(typename MPTraits::ValidityCheckerMethodList(), "ValidityCheckers");
-  m_neighborhoodFinders = new NeighborhoodFinderSet(typename MPTraits::NeighborhoodFinderMethodList(), "NeighborhoodFinders");
-  m_samplers = new SamplerSet(typename MPTraits::SamplerMethodList(), "Samplers");
-  m_localPlanners = new LocalPlannerSet(typename MPTraits::LocalPlannerMethodList(), "LocalPlanners");
-  m_extenders = new ExtenderSet(typename MPTraits::ExtenderMethodList(), "Extenders");
-  m_pathModifiers = new PathModifierSet(typename MPTraits::PathModifierMethodList(), "PathModifiers");
-  m_connectors = new ConnectorSet(typename MPTraits::ConnectorMethodList(), "Connectors");
-  m_metrics = new MetricSet(typename MPTraits::MetricMethodList(), "Metrics");
-  m_mapEvaluators = new MapEvaluatorSet(typename MPTraits::MapEvaluatorMethodList(), "MapEvaluators");
-  m_mpStrategies = new MPStrategySet(typename MPTraits::MPStrategyMethodList(), "MPStrategies");
+  m_distanceMetrics = new DistanceMetricSet(
+      typename MPTraits::DistanceMetricMethodList(), "DistanceMetrics");
+  m_validityCheckers = new ValidityCheckerSet(
+      typename MPTraits::ValidityCheckerMethodList(), "ValidityCheckers");
+  m_neighborhoodFinders = new NeighborhoodFinderSet(
+      typename MPTraits::NeighborhoodFinderMethodList(), "NeighborhoodFinders");
+  m_samplers = new SamplerSet(
+      typename MPTraits::SamplerMethodList(), "Samplers");
+  m_localPlanners = new LocalPlannerSet(
+      typename MPTraits::LocalPlannerMethodList(), "LocalPlanners");
+  m_extenders = new ExtenderSet(
+      typename MPTraits::ExtenderMethodList(), "Extenders");
+  m_pathModifiers = new PathModifierSet(
+      typename MPTraits::PathModifierMethodList(), "PathModifiers");
+  m_connectors = new ConnectorSet(
+      typename MPTraits::ConnectorMethodList(), "Connectors");
+  m_metrics = new MetricSet(
+      typename MPTraits::MetricMethodList(), "Metrics");
+  m_mapEvaluators = new MapEvaluatorSet(
+      typename MPTraits::MapEvaluatorMethodList(), "MapEvaluators");
+  m_mpStrategies = new MPStrategySet(
+      typename MPTraits::MPStrategyMethodList(), "MPStrategies");
 
   m_cdBuilt = false;
 }
@@ -394,7 +406,8 @@ ParseChild(XMLNode& _node, typename MPTraits::MPProblemType* _problem) {
 
 template<class MPTraits>
 void
-MPProblem<MPTraits>::ParseXML(XMLNode& _node, typename MPTraits::MPProblemType* _problem) {
+MPProblem<MPTraits>::ParseXML(XMLNode& _node,
+    typename MPTraits::MPProblemType* _problem) {
 
   for(auto& child : _node)
     ParseChild(child, _problem);

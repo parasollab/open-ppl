@@ -44,8 +44,6 @@ class AdaptiveRRT : public BasicRRTStrategy<MPTraits> {
     typedef typename MPProblemType::RoadmapType RoadmapType;
     typedef typename MPProblemType::GraphType GraphType;
     typedef typename MPProblemType::VID VID;
-    typedef typename MPProblemType::DistanceMetricPointer DistanceMetricPointer;
-    typedef typename MPProblemType::NeighborhoodFinderPointer NeighborhoodFinderPointer;
 
     AdaptiveRRT(double _wallPenalty = 0.5, double _gamma = 0.5,
         const GrowthSets& _growthSets = GrowthSets(), CostMethod _c = FIXED);
@@ -87,19 +85,19 @@ class AdaptiveRRT : public BasicRRTStrategy<MPTraits> {
 template<class MPTraits>
 AdaptiveRRT<MPTraits>::
 AdaptiveRRT(double _wallPenalty, double _gamma, const GrowthSets& _growthSets,
-    CostMethod _c) :
-  m_wallPenalty(_wallPenalty), m_gamma(_gamma), m_growthSets(_growthSets),
-  m_costMethod(_c) {
-    this->SetName("AdaptiveRRT");
-  }
+    CostMethod _c) : BasicRRTStrategy<MPTraits>(),
+    m_wallPenalty(_wallPenalty), m_gamma(_gamma), m_growthSets(_growthSets),
+    m_costMethod(_c) {
+  this->SetName("AdaptiveRRT");
+}
 
 template<class MPTraits>
 AdaptiveRRT<MPTraits>::
 AdaptiveRRT(MPProblemType* _problem, XMLNode& _node) :
-  BasicRRTStrategy<MPTraits>(_problem, _node, true){
-    this->SetName("AdaptiveRRT");
-    ParseXML(_node);
-  };
+    BasicRRTStrategy<MPTraits>(_problem, _node, true){
+  this->SetName("AdaptiveRRT");
+  ParseXML(_node);
+}
 
 template<class MPTraits>
 void
@@ -181,11 +179,11 @@ typename AdaptiveRRT<MPTraits>::VID
 AdaptiveRRT<MPTraits>::ExpandTree(CfgType& _dir){
 
   // Setup MP Variables
-  DistanceMetricPointer dm = this->GetDistanceMetric(this->m_dm);
+  auto dm = this->GetDistanceMetric(this->m_dmLabel);
   VID recentVID = INVALID_VID;
 
   //get the expand node from the roadmap
-  NeighborhoodFinderPointer nf = this->GetNeighborhoodFinder(this->m_nf);
+  auto nf = this->GetNeighborhoodFinder(this->m_nfLabel);
   vector<pair<VID, double> > kClosest;
   nf->FindNeighbors(this->GetRoadmap(),
       this->m_currentTree->begin(), this->m_currentTree->end(),
@@ -201,7 +199,8 @@ AdaptiveRRT<MPTraits>::ExpandTree(CfgType& _dir){
   if(this->m_debug)
     cout << "nearest:: " << nearest << "\tvisibility:: " << visibility << endl;
 
-  if(dm->Distance(_dir, nearest) < this->m_minDist){
+  double minDist = this->GetExtender(this->m_exLabel)->GetMinDistance();
+  if(dm->Distance(_dir, nearest) < minDist){
     //chosen a q_rand which is too close. Penalize nearest with 0.
     nearest.IncStat("Fail");
     AvgVisibility(nearest, 0);
@@ -227,7 +226,7 @@ AdaptiveRRT<MPTraits>::ExpandTree(CfgType& _dir){
   LPOutput<MPTraits> lpOutput;
   auto e = this->GetExtender(gm);
   bool verifiedValid = e->Extend(nearest, _dir, newCfg, lpOutput);
-  double delta = e->GetDelta();
+  double delta = e->GetMaxDistance();
 
   //end timing from cycles
   uint64_t end = GetCycles();
@@ -250,7 +249,7 @@ AdaptiveRRT<MPTraits>::ExpandTree(CfgType& _dir){
 
     //reward the growth strategy based upon expanded distance in proportion to
     //delta_q
-    RewardGrowthMethod(-this->m_minDist, gm, rgsit->second);
+    RewardGrowthMethod(-minDist, gm, rgsit->second);
 
     return recentVID;
   }
@@ -261,7 +260,7 @@ AdaptiveRRT<MPTraits>::ExpandTree(CfgType& _dir){
   if(m_costMethod == REWARD)
     UpdateCost(max(delta - dist, 0.0) + 1E-6, gm, rgsit->second);
 
-  if(dist >= this->m_minDist) {
+  if(dist >= minDist) {
     //expansion success
     nearest.IncStat("Success");
     //update the tree
@@ -276,14 +275,14 @@ AdaptiveRRT<MPTraits>::ExpandTree(CfgType& _dir){
     }
     else {
       //node already existed in the roadmap. decrement reward
-      RewardGrowthMethod(-this->m_minDist, gm, rgsit->second);
+      RewardGrowthMethod(-minDist, gm, rgsit->second);
     }
   }
   else{
-    //could not expand at least m_minDist. Penalize nearest with 0;
+    //could not expand at least minDist. Penalize nearest with 0;
     nearest.IncStat("Fail");
     AvgVisibility(nearest, 0);
-    RewardGrowthMethod(-this->m_minDist, gm, rgsit->second);
+    RewardGrowthMethod(-minDist, gm, rgsit->second);
   }
 
   return recentVID;
@@ -370,7 +369,7 @@ template<class MPTraits>
 typename AdaptiveRRT<MPTraits>::VID
 AdaptiveRRT<MPTraits>::UpdateTree(VID _expandNode, CfgType& _newCfg,
     CfgType& _dir, double _delta){
-  DistanceMetricPointer dm = this->GetDistanceMetric(this->m_dm);
+  auto dm = this->GetDistanceMetric(this->m_dmLabel);
 
   CfgType& nearest = this->GetRoadmap()->GetGraph()->GetVertex(_expandNode);
 

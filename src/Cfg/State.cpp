@@ -174,11 +174,11 @@ State::
 Write(ostream& _os) const {
   //write out robot index, and then dofs
   _os << setw(4) << m_robotIndex << ' ';
-  _os << scientific << setprecision(17);
+  _os << setprecision(4);
   for(const auto& i : m_v)
-    _os << setw(25) << i << ' ';
+    _os << setw(6) << i << ' ';
   for(const auto& i : m_vel)
-    _os << setw(25) << i << ' ';
+    _os << setw(6) << i << ' ';
   _os.unsetf(ios_base::floatfield);
 }
 
