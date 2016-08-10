@@ -81,8 +81,8 @@
 #include "MapEvaluators/LazyToggleQuery.h"
 #include "MapEvaluators/NegateEvaluator.h"
 #include "MapEvaluators/PrintMapEvaluation.h"
-#include "MapEvaluators/Query.h"
-#include "MapEvaluators/ReplanningEvaluation.h"
+#include "MapEvaluators/PRMQuery.h"
+#include "MapEvaluators/RRTQuery.h"
 #include "MapEvaluators/TrueEvaluation.h"
 
 //mp strategies includes
@@ -225,8 +225,8 @@ struct CfgReachableVolumeTraits {
     LazyToggleQuery<CfgReachableVolumeTraits>,
     NegateEvaluator<CfgReachableVolumeTraits>,
     PrintMapEvaluation<CfgReachableVolumeTraits>,
-    Query<CfgReachableVolumeTraits>,
-    ReplanningEvaluation<CfgReachableVolumeTraits>,
+    PRMQuery<CfgReachableVolumeTraits>,
+    RRTQuery<CfgReachableVolumeTraits>,
     TrueEvaluation<CfgReachableVolumeTraits>
       > MapEvaluatorMethodList;
 

@@ -8,11 +8,11 @@
 #include "ParallelMethods/WorkFunctions/RadialUtils.h"
 
 ////////////////////////////////////////////////////////////////////////////////
-/// @ingroup MotionPlanningStrategies
-/// @brief TODO
+/// @ingroup DeadCode
+/// @brief This code is far out of date and not in use. It needs to be brought
+///        up to the current RRT/RRTQuery framework and documented before it can
+///        be returned to the standard compile.
 /// @tparam MPTraits Motion planning universe
-///
-/// \todo Configure for pausible execution.
 ////////////////////////////////////////////////////////////////////////////////
 template<class MPTraits>
 class BlindRRT : public MPStrategyMethod<MPTraits> {

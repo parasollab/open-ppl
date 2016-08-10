@@ -1,0 +1,64 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<MotionPlanning warnings="true" warningsAsErrors="true" print="false">
+  <Input>
+    <Environment filename="../Envs/2D/2d.env" saveDofs="false"/>
+    <Query filename="../Envs/2D/2d.query"/>
+  </Input>
+
+  <MPProblem>
+    <DistanceMetrics>
+      <Euclidean label="euclidean"/>
+    </DistanceMetrics>
+
+    <ValidityCheckers>
+      <CollisionDetection label="cd4" method="PQP_SOLID"/>
+      <AlwaysTrueValidity label="alwaysTrue"/>
+    </ValidityCheckers>
+
+    <NeighborhoodFinders>
+      <BruteForceNF label="BFNF" dmLabel="euclidean" unconnected="false" k="10"/>
+    </NeighborhoodFinders>
+
+    <Samplers>
+      <UniformRandomSampler label="UniformRandom" vcLabel="alwaysTrue"/>
+    </Samplers>
+
+    <LocalPlanners>
+      <StraightLine label="sl" binaryEvaluation="true" vcLabel="cd4"/>
+      <StraightLine label="slAlwaysTrue" binaryEvaluation="true"
+        vcLabel="alwaysTrue"/>
+    </LocalPlanners>
+
+    <Connectors>
+      <NeighborhoodConnector label="ClosestAlwaysTrue" nfLabel="BFNF"
+        lpLabel="slAlwaysTrue" checkIfSameCC="false"/>
+      <NeighborhoodConnector label="ToggleConnect" nfLabel="BFNF"
+        lpLabel="sl" countFailures="true" fail="1" checkIfSameCC="false"/>
+    </Connectors>
+
+    <MapEvaluators>
+      <LazyToggleQuery label="LazyToggleQuery" fullRecreatePath="false"
+        lpLabel="sl" dmLabel="euclidean" vcMethod="cd4" graphSearchAlg="astar"
+        deleteNodes="false" iterative="true">
+        <NodeConnectionMethod method="ClosestAlwaysTrue"/>
+        <ToggleConnectionMethod method="ToggleConnect"/>
+        <Resolution mult="27"/>
+        <Resolution mult="16"/>
+        <Resolution mult="1"/>
+      </LazyToggleQuery>
+    </MapEvaluators>
+
+    <MPStrategies>
+      <TogglePRMStrategy label="LazyTogglePRM" priority="true">
+        <Sampler methodLabel="UniformRandom" number="10" attempts="1"/>
+        <Connector methodLabel="ClosestAlwaysTrue"/>
+        <ColConnector methodLabel="ToggleConnect"/>
+        <Evaluator methodLabel="LazyToggleQuery"/>
+      </TogglePRMStrategy>
+    </MPStrategies>
+
+    <Solver mpStrategyLabel="LazyTogglePRM" seed="0"
+      baseFilename="../Scratch/LazyTogglePRM"/>
+
+  </MPProblem>
+</MotionPlanning>

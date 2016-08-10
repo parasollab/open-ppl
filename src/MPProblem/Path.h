@@ -36,7 +36,7 @@ class Path {
     ////////////////////////////////////////////////////////////////////////////
     /// \brief Construct an empty path.
     /// \param[in] _r The roadmap used by this path.
-    Path(RoadmapType* _r) : m_roadmap(_r) { }
+    Path(MPProblemType* _p, RoadmapType* _r) : m_problem(_p), m_roadmap(_r) { }
 
     ///@}
     ///\name Path Interface
@@ -52,21 +52,26 @@ class Path {
 
     ////////////////////////////////////////////////////////////////////////////
     /// \brief The total edge weight.
-    double Length();
+    double Length() const;
 
     ////////////////////////////////////////////////////////////////////////////
     /// \brief Get the VIDs in the path.
     const vector<VID>& VIDs() const {return m_vids;}
 
     ////////////////////////////////////////////////////////////////////////////
-    /// \brief Get the Cfgs in the path.
-    const vector<CfgType>& Cfgs();
+    /// \brief Get a copy of the Cfgs in the path.
+    /// \warning If the cfgs in the roadmap are later altered (i.e., if the DOF
+    ///          values or labels are edited), this copy will be out-of-date.
+    const vector<CfgType>& Cfgs() const;
 
     ////////////////////////////////////////////////////////////////////////////
-    /// \brief Get the full Cfg path with steps spaced one environment
+    /// \brief Get the current full Cfg path with steps spaced one environment
     ///        resolution apart. This is not cached due to its size and
     ///        infrequent usage.
-    const vector<CfgType> FullCfgs() const;
+    /// \param[in] _lp The local planner to use when connecting cfgs.
+    /// \return The full path of configurations, including local-plan
+    ///         intermediates between the roadmap nodes.
+    const vector<CfgType> FullCfgs(const string& _lp = "") const;
 
     ////////////////////////////////////////////////////////////////////////////
     /// \brief Append another path to the end of this one.
@@ -106,14 +111,15 @@ class Path {
     ///\name Internal State
     ///@{
 
-    RoadmapType*    m_roadmap;     ///< The roadmap containing the configurations.
-    vector<VID>     m_vids;        ///< The vids of the path configruations.
+    MPProblemType* const m_problem;     ///< The associated MPProblem.
+    RoadmapType* const m_roadmap;       ///< The roadmap.
+    vector<VID> m_vids;                 ///< The vids of the path configurations.
 
-    vector<CfgType> m_cfgs;        ///< The path configurations.
-    bool   m_cfgsCached{false};    ///< Are the current cfgs correct?
+    vector<CfgType> m_cfgs;             ///< The path configurations.
+    mutable bool m_cfgsCached{false};   ///< Are the current cfgs correct?
 
-    double m_length{0};            ///< The path length.
-    bool   m_lengthCached{false};  ///< Is the current path length correct?
+    double m_length{0};                 ///< The path length.
+    mutable bool m_lengthCached{false}; ///< Is the current path length correct?
 
     ///@}
 };
@@ -123,15 +129,18 @@ class Path {
 template <typename MPTraits>
 double
 Path<MPTraits>::
-Length() {
+Length() const {
   if(!m_lengthCached) {
-    m_length = 0;
+    double& length = const_cast<double&>(m_length);
+    length = 0;
     for(auto start = m_vids.begin(); start + 1 < m_vids.end(); ++start) {
+      if(*start == *(start + 1))
+        continue;  // Skip repeated vertices.
       typename GraphType::edge_descriptor ed(*start, *(start + 1));
       typename GraphType::vertex_iterator vi;
       typename GraphType::adj_edge_iterator ei;
       if(m_roadmap->GetGraph()->find_edge(ed, vi, ei))
-        m_length += (*ei).property().GetWeight();
+        length += (*ei).property().GetWeight();
       else
         throw RunTimeException(WHERE, "Tried to compute length for a path "
             "containing the edge (" + to_string(*start) + "," +
@@ -147,12 +156,13 @@ Length() {
 template <typename MPTraits>
 const vector<typename MPTraits::CfgType>&
 Path<MPTraits>::
-Cfgs() {
+Cfgs() const {
   if(!m_cfgsCached) {
-    m_cfgs.clear();
-    m_cfgs.reserve(m_vids.size());
+    vector<CfgType>& cfgs = const_cast<vector<CfgType>&>(m_cfgs);
+    cfgs.clear();
+    cfgs.reserve(m_vids.size());
     for(const auto& vid : m_vids)
-      m_cfgs.push_back(m_roadmap->GetGraph()->GetVertex(vid));
+      cfgs.push_back(m_roadmap->GetGraph()->GetVertex(vid));
     m_cfgsCached = true;
   }
   return m_cfgs;
@@ -162,13 +172,13 @@ Cfgs() {
 template <typename MPTraits>
 const vector<typename MPTraits::CfgType>
 Path<MPTraits>::
-FullCfgs() const {
+FullCfgs(const string& _lp) const {
   GraphType* g = m_roadmap->GetGraph();
   vector<CfgType> out = {g->GetVertex(m_vids.front())};
 
-  StraightLine<MPTraits> sl;
-  sl.SetMPProblem(m_roadmap->GetMPProblem());
-  auto env = m_roadmap->GetEnvironment();
+  // Set up local planner to recreate edges. If none was provided, use edge
+  // planner, or fall back to straight-line.
+  auto env = m_problem->GetEnvironment();
 
   for(auto it = m_vids.begin(); it + 1 < m_vids.end(); ++it) {
     // Get the next edge.
@@ -179,17 +189,33 @@ FullCfgs() const {
       g->find_edge(ed, vi, ei);
     }
 
-    // Get the intermediates of this edge.
-    vector<CfgType> intermediates = ei->property().GetIntermediates();
+    // Use the local planner from parameter if specified.
+    // If not specified, use the edge lp.
+    // Fall back to straight-line if edge lp is not available (this will always
+    // happen if it was grown with an extender).
+    typename MPTraits::MPProblemType::LocalPlannerPointer lp;
+    if(!_lp.empty())
+      lp = m_problem->GetLocalPlanner(_lp);
+    else {
+      try {
+        lp = m_problem->GetLocalPlanner(ei->property().GetLPLabel());
+      }
+      catch(...) {
+        lp = m_problem->GetLocalPlanner("sl");
+      }
+    }
 
+    // Recreate this edge, including intermediates.
     CfgRef start = g->GetVertex(*it);
     CfgRef end   = g->GetVertex(*(it+1));
-    intermediates.insert(intermediates.begin(), start);
-    intermediates.push_back(end);
+    vector<CfgType> recreatedEdge = ei->property().GetIntermediates();
+    recreatedEdge.insert(recreatedEdge.begin(), start);
+    recreatedEdge.push_back(end);
 
-    for(auto cit = intermediates.begin(); cit + 1 != intermediates.end(); ++cit) {
-      vector<CfgType> edge = sl.ReconstructPath(*cit, *(cit+1), vector<CfgType>(),
-          env->GetPositionRes(), env->GetOrientationRes());
+    // Construct a resolution-level path along the recreated edge.
+    for(auto cit = recreatedEdge.begin(); cit + 1 != recreatedEdge.end(); ++cit) {
+      vector<CfgType> edge = lp->ReconstructPath(*cit, *(cit+1),
+          vector<CfgType>(), env->GetPositionRes(), env->GetOrientationRes());
       out.insert(out.end(), edge.begin(), edge.end());
     }
     out.push_back(end);

@@ -260,13 +260,12 @@ template<class MPTraits>
 void
 BasicPRM<MPTraits>::
 Finalize() {
-  //output final map
+  // Output final map.
   this->GetRoadmap()->Write(this->GetBaseFilename() + ".map",
       this->GetEnvironment());
 
-  //output stats
-  string str = this->GetBaseFilename() + ".stat";
-  ofstream  osStat(str.c_str());
+  // Output stats.
+  ofstream  osStat(this->GetBaseFilename() + ".stat");
   StatClass* stats = this->GetStatClass();
   stats->PrintAllStats(osStat, this->GetRoadmap());
 }

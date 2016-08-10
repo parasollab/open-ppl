@@ -15,7 +15,7 @@ template<class MPTraits>
 class MapEvaluatorMethod : public MPBaseObject<MPTraits> {
   public:
 
-    MapEvaluatorMethod() {}
+    MapEvaluatorMethod() = default;
     MapEvaluatorMethod(typename MPTraits::MPProblemType* _problem, XMLNode& _node)
       : MPBaseObject<MPTraits>(_problem, _node) {}
     virtual ~MapEvaluatorMethod() = default;

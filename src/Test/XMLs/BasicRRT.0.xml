@@ -1,9 +1,11 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <MotionPlanning warnings="true" warningsAsErrors="true" print="false">
-  <MPProblem>
-
+  <Input>
     <Environment filename="../Envs/2D/2d.env" saveDofs="false"/>
+    <Query filename="../Envs/2D/2d.query"/>
+  </Input>
 
+  <MPProblem>
     <DistanceMetrics>
       <Euclidean label="euclidean"/>
     </DistanceMetrics>
@@ -43,7 +45,7 @@
     <MapEvaluators>
       <ConditionalEvaluator label="NodesEval" metric_method="NumNodes"
         value="100" operator=">="/>
-      <RRTQuery label="RRTQuery" queryFile="../Envs/2D/2d.query"
+      <RRTQuery label="RRTQuery"
         nfLabel="Nearest" exLabel="BERO" debug="true"/>
     </MapEvaluators>
 

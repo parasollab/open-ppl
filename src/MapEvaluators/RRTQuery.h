@@ -1,24 +1,27 @@
 #ifndef RRT_QUERY_H_
 #define RRT_QUERY_H_
 
-#include "MapEvaluatorMethod.h"
+#include "QueryMethod.h"
 
 #include "LocalPlanners/LPOutput.h"
 #include "LocalPlanners/StraightLine.h"
-#include "MapEvaluators/Query.h"
-#include "MPProblem/Path.h"
 #include "Utilities/MetricUtils.h"
 #include <containers/sequential/graph/algorithms/astar.h>
 
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup MapEvaluators
-/// @brief TODO.
+/// @brief Evaluate a roadmap under construction to see if a query has been
+///        satisfied.
 /// @tparam MPTraits Motion planning universe
 ///
-/// TODO.
+/// This query is specialized for RRT methods. The first query point is treated
+/// as the start, and the remaining points are treated as sub-goals. This object
+/// will attempt to find a path from the start through all sub-goals. If a
+/// particular sub-goal is not already in the map, an extension towards it will
+/// be attempted if the nearest node is within the provided extender's range.
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
-class RRTQuery : public MapEvaluatorMethod<MPTraits> {
+class RRTQuery : public QueryMethod<MPTraits> {
 
   public:
 
@@ -37,15 +40,8 @@ class RRTQuery : public MapEvaluatorMethod<MPTraits> {
     ///\name Construction
     ///@{
 
-    RRTQuery(string _searchAlgo = "astar", string _nfLabel = "",
-        double _goalDist = 0.);
-    RRTQuery(string _queryFileName, double _goalDist = 0.,
-        const string& _nfLabel = "",
-        bool _writePaths = true);
-    RRTQuery(const CfgType& _start, const CfgType& _goal,
-        bool _writePaths = true);
+    RRTQuery();
     RRTQuery(MPProblemType* _problem, XMLNode& _node);
-
     virtual ~RRTQuery() = default;
 
     ///@}
@@ -54,15 +50,11 @@ class RRTQuery : public MapEvaluatorMethod<MPTraits> {
 
     void ParseXML(XMLNode& _node);
     virtual void Print(ostream& _os) const override;
-    virtual bool operator()() override;
 
     ///@}
     ///\name Query Interface
     ///@{
 
-    const vector<CfgType>& GetQuery() const {return m_query;}
-    const vector<CfgType>& GetGoals() const {return m_goals;}
-    const Path<MPTraits>& GetPath() const {return m_path;}
     const CfgType& GetRandomGoal() const {
       if(m_goals.empty())
         throw RunTimeException(WHERE, "Random goal requested, but none are "
@@ -71,89 +63,79 @@ class RRTQuery : public MapEvaluatorMethod<MPTraits> {
     }
 
     ////////////////////////////////////////////////////////////////////////////
-    /// \brief Checks whether a path can be drawn through all query points using
-    ///        the configurations in a given roadmap.
-    virtual bool PerformQuery(RoadmapType* _r);
-
-    ////////////////////////////////////////////////////////////////////////////
-    /// \brief Checks whether a path can be drawn from start to goal using the
-    ///        configurations in a given roadmap.
-    virtual bool PerformQuery(RoadmapType* _r, const CfgType& _start,
-        const CfgType& _goal);
-
-    ////////////////////////////////////////////////////////////////////////////
-    /// \brief Read a Query file.
-    virtual void ReadQuery(string _filename);
-
-    ////////////////////////////////////////////////////////////////////////////
-    void WritePath() const;
+    /// \brief Check whether a path connecting a given start and goal exists in
+    ///        the roadmap.
+    /// \param[in] _start The starting configuration to use.
+    /// \param[in] _goal  The goal configuration to use.
+    /// \return A bool indicating whether the path was found.
+    virtual bool PerformSubQuery(const CfgType& _start, const CfgType& _goal)
+        override;
 
     ////////////////////////////////////////////////////////////////////////////
     /// \brief Reset the path and list of undiscovered goals.
-    void Initialize(RoadmapType* _r = nullptr);
+    /// \param[in] _r The roadmap to use.
+    virtual void Initialize(RoadmapType* _r = nullptr) override;
 
     ///@}
 
   protected:
 
+    ///\name Helpers
+    ///@{
+
+    ////////////////////////////////////////////////////////////////////////////
+    /// \brief Find the nearest node to a goal configuration, assuming that the
+    ///        goal is not already in the map.
+    /// \param[in] _goal The goal node of interest.
+    /// \return The descriptor of the map node that is nearest to _goal, or
+    ///         INVALID_VID if we have already checked every node in the map. The
+    ///         second item is the distance from said node to _goal.
+    pair<VID, double> FindNearestNeighbor(const CfgType& _goal);
+
+    ////////////////////////////////////////////////////////////////////////////
+    /// \brief Find the nearest node to a goal configuration that is already
+    ///        connected to the start node. The start is assumed to be in the map,
+    ///        but the goal may or may not be.
+    /// \param[in] _start The descriptor of the start node in the map.
+    /// \param[in] _goal  The goal configuration, possibly in the map.
+    /// \return If the goal isn't in the map, return the descriptor of the map
+    ///         node that is nearest to it and their separation distance. If
+    ///         the goal is already in the map, return its VID if it is connected
+    ///         to the start and INVALID_VID otherwise.
+    pair<VID, double> FindNearestConnectedNeighbor(const VID _start,
+        const CfgType& _goal);
+
+    ////////////////////////////////////////////////////////////////////////////
+    /// \brief Extend towards a goal from the nearest node in the map.
+    /// \param[in] _nearest The descriptor of the nearest node and its distance
+    ///                     to _goal.
+    /// \param[in] _goal The goal configuration to extend towards.
+    /// \return The descriptor of the newly extended node and its distance to
+    ///         _goal, or INVALID_VID if the extension failed.
+    pair<VID,double> ExtendToGoal(const pair<VID, double>& _nearest,
+        const CfgType& _goal) const;
+
+    ///@}
     ///\name Query State
     ///@{
 
-    string m_queryFile;         ///< The query file name.
-    vector<CfgType> m_query;    ///< The start and all goal configurations.
-    vector<CfgType> m_goals;    ///< The undiscovered goal configurations.
     double m_goalDist{0.};      ///< Getting at least this close = success.
     VID m_highestCheckedVID;    ///< The highest VID we have tried to connect to
                                 ///< the goal.
 
     ///@}
-    ///\name Path State
-    ///@{
-
-    unique_ptr<Path<MPTraits>> m_path; ///< The current path.
-    bool m_fullRecreatePath{true};     ///< Create full paths or just VIDs?
-
-    ///@}
     ///\name MP Object Labels
     ///@{
 
-    string m_nfLabel;           ///< Neighborhood finder label.
-    string m_exLabel;           ///< Extender label.
-  
-    ///@}
-    ///\name Graph State
-    ///@{
-
-    enum GraphSearchAlg {DIJKSTRAS, ASTAR}; ///< The supported sssp algorithms.
-    GraphSearchAlg m_searchAlg{ASTAR};      ///< The sssp algorithm to use.
+    string m_nfLabel{"Nearest"};       ///< Neighborhood finder label.
+    string m_exLabel{"BERO"};          ///< Extender label.
 
     ///@}
-    ///\name Helpers
+    ///\name Unhide QueryMethod names.
     ///@{
 
-    void SetSearchAlgViaString(string _alg, string _where);
-
-    ////////////////////////////////////////////////////////////////////////////
-    /// \brief Check if a start and goal node are connected by a given roadmap.
-    bool SameCC(RoadmapType* _r, const VID _start, const VID _goal) const;
-
-    ////////////////////////////////////////////////////////////////////////////
-    /// \brief Find the nearest node in _r to _goal, assuming that _goal is not
-    ///        already in _r.
-    pair<VID, double> FindNearestNeighbor(RoadmapType* _r,
-        const CfgType& _goal);
-
-    ////////////////////////////////////////////////////////////////////////////
-    /// \brief Find the node in _r that is nearest to _goal and connected to
-    ///        _start.
-    pair<VID, double> FindNearestConnectedNeighbor(RoadmapType* _r,
-        const CfgType& _start, const CfgType& _goal);
-
-    void GeneratePath(RoadmapType* _r, const CfgType& _start,
-        const pair<VID, double>& _nearest);
-
-    pair<VID,double> ExtendToGoal(RoadmapType* _r,
-        const pair<VID, double>& _nearest, const CfgType& _goal) const;
+    using QueryMethod<MPTraits>::m_goals;
+    using QueryMethod<MPTraits>::m_path;
 
     ///@}
 };
@@ -162,39 +144,17 @@ class RRTQuery : public MapEvaluatorMethod<MPTraits> {
 
 template <typename MPTraits>
 RRTQuery<MPTraits>::
-RRTQuery(string _searchAlgo, string _nfLabel, double _goalDist) :
-    m_goalDist(_goalDist), m_nfLabel(_nfLabel) {
+RRTQuery() : QueryMethod<MPTraits>() {
   this->SetName("RRTQuery");
-  SetSearchAlgViaString(_searchAlgo, WHERE);
-}
-
-
-template <typename MPTraits>
-RRTQuery<MPTraits>::
-RRTQuery(string _queryFileName, double _goalDist,
-    const string& _nfLabel, bool _writePaths) {
-  this->SetName("RRTQuery");
-  ReadQuery(_queryFileName);
-  m_nfLabel = _nfLabel;
 }
 
 
 template <typename MPTraits>
 RRTQuery<MPTraits>::
 RRTQuery(MPProblemType* _problem, XMLNode& _node) :
-    MapEvaluatorMethod<MPTraits>(_problem, _node) {
+    QueryMethod<MPTraits>(_problem, _node) {
   this->SetName("RRTQuery");
   ParseXML(_node);
-  ReadQuery(m_queryFile);
-}
-
-
-template <typename MPTraits>
-RRTQuery<MPTraits>::
-RRTQuery(const CfgType& _start, const CfgType& _goal, bool _writePaths) {
-  this->SetName("RRTQuery");
-  m_query.push_back(_start);
-  m_query.push_back(_goal);
 }
 
 /*--------------------------- MPBaseObject Overrides -------------------------*/
@@ -203,20 +163,11 @@ template <typename MPTraits>
 void
 RRTQuery<MPTraits>::
 ParseXML(XMLNode& _node) {
-  m_queryFile = _node.Read("queryFile", true, "", "Query filename");
-  m_nfLabel = _node.Read("nfLabel", false, "Nearest", "Neighborhood finder "
+  m_nfLabel = _node.Read("nfLabel", false, m_nfLabel, "Neighborhood finder "
       "method");
-  m_exLabel = _node.Read("exLabel", true, "BERO", "Extender method");
-  string searchAlg = _node.Read("graphSearchAlg", false, "dijkstras", "Graph "
-      "search algorithm");
-  m_fullRecreatePath = _node.Read("fullRecreatePath", false, true, "Whether or "
-      "not to recreate path");
+  m_exLabel = _node.Read("exLabel", true, m_exLabel, "Extender method");
   m_goalDist = _node.Read("goalDist", false, 0., 0.,
       numeric_limits<double>::max(), "Minimun Distance for valid query");
-
-  // Ignore case for graph search algorithm
-  transform(searchAlg.begin(), searchAlg.end(), searchAlg.begin(), ::tolower);
-  SetSearchAlgViaString(searchAlg, _node.Where());
 }
 
 
@@ -224,18 +175,10 @@ template <typename MPTraits>
 void
 RRTQuery<MPTraits>::
 Print(ostream& _os) const {
-  _os << this->GetNameAndLabel() << "::"
-      << "\n\tquery file = \"" << m_queryFile << "\""
-      << "\n\tsearch alg = " << m_searchAlg
-      << "\n\tfullRecreatePath = " << m_fullRecreatePath << endl;
-}
-
-
-template <typename MPTraits>
-bool
-RRTQuery<MPTraits>::
-operator()() {
-  return PerformQuery(this->GetRoadmap());
+  QueryMethod<MPTraits>::Print(_os);
+  _os << "\n\tNeighborhood Finder: " << m_nfLabel
+      << "\n\tExtender: " << m_exLabel
+      << "\n\tGoal distance: " << m_goalDist << endl;
 }
 
 /*--------------------------- Query Interface --------------------------------*/
@@ -243,71 +186,35 @@ operator()() {
 template <typename MPTraits>
 bool
 RRTQuery<MPTraits>::
-PerformQuery(RoadmapType* _r) {
-  if(m_query.empty())
-    throw RunTimeException(WHERE, "RRTQuery::PerformQuery error: m_query is "
-        "empty. This is sometimes caused by reading the wrong query file in the "
-        "XML.");
-
-  if(this->m_debug)
-    cout << "Evaluating query with " << m_goals.size() << " goals not found.\n";
-
-  // If no goals remain, then this must be a refinement step (as in optimal
-  // planning). In this case, reinitialize and rebuild the whole path.
-  // We also need to rebuild when using a different roadmap.
-  if(m_goals.empty() || m_path->GetRoadmap() != _r)
-    Initialize(_r);
-
-  // Search for a sequential path through each query point in order.
-  for(auto it = m_goals.begin(); it < m_goals.end();) {
-    // Start from the last reached query point.
-    const auto& start = m_query[m_query.size() - m_goals.size() - 1];
-    if(!PerformQuery(_r, start, *it))
-      return false;
-    else
-      it = m_goals.erase(it);
-  }
-  this->GetStatClass()->AddToHistory("pathlength", m_path->Length());
-
-  if(this->m_debug)
-    cout << "\tQuery found all goals!" << endl;
-
-  return true;
-}
-
-
-template <typename MPTraits>
-bool
-RRTQuery<MPTraits>::
-PerformQuery(RoadmapType* _r, const CfgType& _start, const CfgType& _goal) {
+PerformSubQuery(const CfgType& _start, const CfgType& _goal) {
   if(this->m_debug)
     cout << "Evaluating sub-query:" << endl
          << "\tfrom " << _start << endl
          << "\tto   " << _goal << endl;
-  VDComment("Begin Query");
 
+  VID start = m_path->GetRoadmap()->GetGraph()->GetVID(_start);
   pair<VID, double> nearest;
   bool success = false;
 
   // Find the nearest node to _goal that is also connected to _start.
-  nearest = FindNearestConnectedNeighbor(_r, _start, _goal);
+  nearest = FindNearestConnectedNeighbor(start, _goal);
   if(nearest.first == INVALID_VID)
     // If the nearest node is invalid, it means that the goal is in the map and
     // not connected to start. In this case, we can't connect.
     success = false;
-  else if(nearest.second <= m_goalDist) 
+  else if(nearest.second <= m_goalDist)
     // The nearest node is within the goal distance, so we are close enough.
     success = true;
   else {
     // The nearest node is too far and the goal isn't already connected. Try to
     // extend toward goal if we are within extender's delta range. If we can't
     // extend, we can't connect.
-    nearest = ExtendToGoal(_r, nearest, _goal);
+    nearest = ExtendToGoal(nearest, _goal);
     success = nearest.first != INVALID_VID && nearest.second <= m_goalDist;
   }
 
   if(success) {
-    GeneratePath(_r, _start, nearest);
+    this->GeneratePath(start, nearest.first);
     if(this->m_debug)
       cout << "\tSuccess: found path from start to nearest node "
            << nearest.first << " at a distance of " << nearest.second
@@ -315,6 +222,7 @@ PerformQuery(RoadmapType* _r, const CfgType& _start, const CfgType& _goal) {
   }
   else if(this->m_debug)
     cout << "\tFailed to connect (goal distance is " << m_goalDist << ").\n";
+
   return success;
 }
 
@@ -322,90 +230,22 @@ PerformQuery(RoadmapType* _r, const CfgType& _start, const CfgType& _goal) {
 template <typename MPTraits>
 void
 RRTQuery<MPTraits>::
-ReadQuery(string _filename) {
-  if(this->m_debug)
-    cout << "Reading query file \'" << _filename << "\'..." << endl;
-  CfgType tempCfg;
-  _filename = MPProblemType::GetPath(_filename);
-  ifstream in(_filename.c_str());
-  if(!in)
-    throw ParseException(WHERE, "Can't open infile: " + _filename + ".");
-  while(in >> tempCfg)
-    m_query.push_back(tempCfg);
-  if(this->m_debug)
-    cout << "\tWe read " << m_query.size() << " cfgs." << endl;
-}
-
-
-template <typename MPTraits>
-void
-RRTQuery<MPTraits>::
-WritePath() const {
-  if(m_path)
-    ::WritePath(this->GetBaseFilename() + ".full.path", m_path->Cfgs());
-}
-
-
-template <typename MPTraits>
-void
-RRTQuery<MPTraits>::
 Initialize(RoadmapType* _r) {
-  m_goals.clear();
-  copy(m_query.begin() + 1, m_query.end(), back_inserter(m_goals));
-
-  if(!_r)
-    _r = this->GetRoadmap();
-  m_path = unique_ptr<Path<MPTraits>>(new Path<MPTraits>(_r));
+  QueryMethod<MPTraits>::Initialize(_r);
   m_highestCheckedVID = 0;
 }
 
 /*------------------------------- Helpers ------------------------------------*/
 
-template <typename MPTraits>
-void
-RRTQuery<MPTraits>::
-SetSearchAlgViaString(string _alg, string _where) {
-  if(_alg == "dijkstras")
-    m_searchAlg = DIJKSTRAS;
-  else if(_alg == "astar")
-    m_searchAlg = ASTAR;
-  else
-    throw ParseException(_where, "Invalid graph search algorithm '" + _alg +
-        "'. Choices are 'dijkstras' or 'astar'.");
-}
-
 
 template <typename MPTraits>
-bool
+pair<typename RRTQuery<MPTraits>::VID, double>
 RRTQuery<MPTraits>::
-SameCC(RoadmapType* _r, const VID _start, const VID _goal) const {
-  if(this->m_debug)
-    cout << "\t\tChecking connectivity..." << endl;
-
-  auto g = _r->GetGraph();
-  auto stats = this->GetStatClass();
-
-  stats->StartClock("RRTQuery::CCTesting");
-  stapl::sequential::vector_property_map<GraphType, size_t> cmap;
-  bool connected = is_same_cc(*g, cmap, _start, _goal);
-  stats->StopClock("RRTQuery::CCTesting");
-
-  if(this->m_debug)
-    cout << "\t\t\tThe start and goal are "
-         << (connected ? "" : "not ") << "connected." << endl;
-
-  return connected;
-}
-
-
-template <typename MPTraits>
-pair<typename MPTraits::MPProblemType::VID, double>
-RRTQuery<MPTraits>::
-FindNearestNeighbor(RoadmapType* _r, const CfgType& _goal) {
+FindNearestNeighbor(const CfgType& _goal) {
   if(this->m_debug)
     cout << "\t\tFinding the nearest node to the goal..." << endl;
 
-  auto g = _r->GetGraph();
+  auto g = m_path->GetRoadmap()->GetGraph();
 
   VID highestVID = g->get_num_vertices() - 1;
 
@@ -426,7 +266,7 @@ FindNearestNeighbor(RoadmapType* _r, const CfgType& _goal) {
   // If we haven't tried all vertexes, find the nearest untried vertex.
   stats->StartClock("RRTQuery::NeighborhoodFinding");
   vector<pair<VID, double>> neighbors;
-  this->GetNeighborhoodFinder(m_nfLabel)->FindNeighbors(_r,
+  this->GetNeighborhoodFinder(m_nfLabel)->FindNeighbors(m_path->GetRoadmap(),
       ++g->find_vertex(m_highestCheckedVID), g->end(), true, _goal,
       back_inserter(neighbors));
   m_highestCheckedVID = highestVID;
@@ -441,31 +281,27 @@ FindNearestNeighbor(RoadmapType* _r, const CfgType& _goal) {
 
 
 template <typename MPTraits>
-pair<typename MPTraits::MPProblemType::VID, double>
+pair<typename RRTQuery<MPTraits>::VID, double>
 RRTQuery<MPTraits>::
-FindNearestConnectedNeighbor(RoadmapType* _r, const CfgType& _start,
-    const CfgType& _goal) {
+FindNearestConnectedNeighbor(const VID _start, const CfgType& _goal) {
   if(this->m_debug)
     cout << "\tSearching for the nearest connected neighbor..." << endl;
 
-  auto g = _r->GetGraph();
+  auto g = m_path->GetRoadmap()->GetGraph();
   pair<VID, double> nearest;
 
   if(g->IsVertex(_goal)) {
     // The goal is already in the roadmap. It is it's own neighbor if it shares
     // a CC with _start and disconnected otherwise.
-    VID start = g->GetVID(_start);
     VID goal = g->GetVID(_goal);
-    if(goal == INVALID_VID)
-      throw RunTimeException(WHERE, "goal cannot be invalid");
-    if(SameCC(_r, start, goal))
+    if(this->SameCC(_start, goal))
       nearest = make_pair(goal, 0);
     else
       nearest = make_pair(INVALID_VID, numeric_limits<double>::max());
   }
   else
     // If _goal isn't already connected, find the nearest connected node.
-    nearest = FindNearestNeighbor(_r, _goal);
+    nearest = FindNearestNeighbor(_goal);
 
   if(this->m_debug) {
     if(nearest.first != INVALID_VID)
@@ -479,42 +315,10 @@ FindNearestConnectedNeighbor(RoadmapType* _r, const CfgType& _start,
 
 
 template <typename MPTraits>
-void
+pair<typename RRTQuery<MPTraits>::VID, double>
 RRTQuery<MPTraits>::
-GeneratePath(RoadmapType* _r, const CfgType& _start,
-    const pair<VID, double>& _nearest) {
-  if(this->m_debug)
-    cout << "\tVID " << _nearest.first << " within goal distance ("
-         << _nearest.second << "/" << m_goalDist << ")." << endl;
-
-  auto g = _r->GetGraph();
-  auto stats = this->GetStatClass();
-  stats->IncGOStat("Graph Search");
-  stats->StartClock("RRTQuery::GraphSearch");
-  vector<VID> path;
-  switch(m_searchAlg) {
-    case DIJKSTRAS:
-      find_path_dijkstra(*g, g->GetVID(_start), _nearest.first, path,
-          WeightType::MaxWeight());
-      break;
-    case ASTAR:
-      Heuristic<MPTraits> heuristic(g->GetVertex(_nearest.first),
-          this->GetEnvironment()->GetPositionRes(),
-          this->GetEnvironment()->GetOrientationRes());
-      astar(*g, g->GetVID(_start), _nearest.first, path, heuristic);
-      break;
-  }
-  *m_path += path;
-  stats->StopClock("RRTQuery::GraphSearch");
-}
-
-
-template <typename MPTraits>
-pair<typename MPTraits::MPProblemType::VID, double>
-RRTQuery<MPTraits>::
-ExtendToGoal(RoadmapType* _r, const pair<VID, double>& _nearest,
-    const CfgType& _goal) const {
-  auto g = _r->GetGraph();
+ExtendToGoal(const pair<VID, double>& _nearest, const CfgType& _goal) const {
+  auto g = m_path->GetRoadmap()->GetGraph();
   auto e = this->GetExtender(m_exLabel);
 
   VID newVID = INVALID_VID;
@@ -532,15 +336,15 @@ ExtendToGoal(RoadmapType* _r, const pair<VID, double>& _nearest,
   CfgType qNew;
   LPOutput<MPTraits> lpOutput;
   if(e->Extend(g->GetVertex(_nearest.first), _goal, qNew, lpOutput)) {
-    distance = lpOutput.m_edge.first.GetWeight(); 
+    distance = lpOutput.m_edge.first.GetWeight();
     // If we went far enough, add the new node and edge.
     if(distance > e->GetMinDistance() && !g->IsVertex(qNew)) {
       newVID = g->AddVertex(qNew);
       qNew.SetStat("Parent", _nearest.first);
       g->AddEdge(_nearest.first, newVID, lpOutput.m_edge);
-      // Using the NeighborhoodFinder's Distance metric for consistancy in
-      // distance 
-      distance = this->GetNeighborhoodFinder(m_nfLabel)->GetDMMethod()->Distance(qNew, _goal); 
+      // Using the NeighborhoodFinder's Distance metric for consistency.
+      distance = this->GetNeighborhoodFinder(m_nfLabel)->GetDMMethod()->
+          Distance(qNew, _goal);
       if(this->m_debug)
         cout << "\t\tExtension succeeded, created new node " << newVID << " at "
              << "distance " << distance << " from goal." << endl;

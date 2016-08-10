@@ -234,10 +234,17 @@ Read(istream& _is) {
   //if this failed, then we're done reading Cfgs
   if (_is.fail())
     return;
-  for(vector<double>::iterator i = m_v.begin(); i != m_v.end(); ++i) {
-    _is >> *i;
-    if(_is.fail())
-      throw ParseException(WHERE, "Failed reading values for all dofs.");
+  for(size_t i = 0; i < m_v.size(); ++i) {
+    _is >> m_v[i];
+    if(_is.fail()) {
+      // If we fail, print the DOFS we actually read with the error message.
+      string dofs;
+      for(size_t k = 0; k < i; ++k)
+        dofs += to_string(m_v[i]) + " ";
+      throw ParseException(WHERE, "Failed reading values for all dofs: expected "
+          + to_string(m_v.size()) + ", but read " + to_string(i) + ":\n\t" +
+          dofs);
+    }
   }
 }
 

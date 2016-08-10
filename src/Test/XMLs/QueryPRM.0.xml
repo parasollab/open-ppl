@@ -2,6 +2,7 @@
 <MotionPlanning warnings="true" warningsAsErrors="true" print="false">
   <Input>
     <Environment filename="../Envs/2D/2d.env" saveDofs="false"/>
+    <Query filename="../Envs/2D/2d.query"/>
   </Input>
 
   <MPProblem>
@@ -10,19 +11,19 @@
     </DistanceMetrics>
 
     <ValidityCheckers>
-      <CollisionDetection label="cd" method="RAPID"/>
+      <CollisionDetection label="cd4" method="PQP_SOLID"/>
     </ValidityCheckers>
 
     <NeighborhoodFinders>
-      <BruteForceNF label="BFNF" dmLabel="euclidean" unconnected="false" k="5"/>
+      <BruteForceNF label="BFNF" dmLabel="euclidean" unconnected="false" k="10"/>
     </NeighborhoodFinders>
 
     <Samplers>
-      <UniformRandomSampler label="UniformRandomFree" vcLabel="cd"/>
+      <UniformRandomSampler label="UniformRandomFree" vcLabel="cd4"/>
     </Samplers>
 
     <LocalPlanners>
-      <StraightLine label="sl" binaryEvaluation="true" vcLabel="cd"/>
+      <StraightLine label="sl" binaryEvaluation="true" vcLabel="cd4"/>
     </LocalPlanners>
 
     <Connectors>
@@ -30,28 +31,22 @@
         checkIfSameCC="false" debug="false"/>
     </Connectors>
 
-    <Metrics>
-      <NumNodesMetric label="NumNodes"/>
-    </Metrics>
-
     <MapEvaluators>
-      <ConditionalEvaluator label="NodesEval" metric_method="NumNodes"
-        value="100" operator=">="/>
+      <PRMQuery label="PRMQuery" debug="false" fullRecreatePath="false">
+        <NodeConnectionMethod method="Closest"/>
+      </PRMQuery>
     </MapEvaluators>
 
     <MPStrategies>
-
-      <!-- Basic PRM where num samples is based on Number -->
-      <BasicPRM label="BasicPRM">
+      <BasicPRM label="QueryPRM">
         <Sampler method="UniformRandomFree" number="1" attempts="1"/>
         <Connector method="Closest"/>
-        <Evaluator method="NodesEval"/>
+        <Evaluator method="PRMQuery"/>
       </BasicPRM>
-
     </MPStrategies>
 
-    <Solver mpStrategyLabel="BasicPRM" seed="0"
-      baseFilename="../Scratch/BasicPRM"/>
+    <Solver mpStrategyLabel="QueryPRM" seed="0"
+      baseFilename="../Scratch/QueryPRM"/>
 
   </MPProblem>
 </MotionPlanning>

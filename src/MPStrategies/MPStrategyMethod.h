@@ -49,6 +49,12 @@ class MPStrategyMethod : public MPBaseObject<MPTraits> {
     virtual ~MPStrategyMethod() = default;
 
     ///@}
+    ///\name MPBaseObject Overrides
+    ///@{
+
+    virtual void Print(ostream& _os) const override;
+
+    ///@}
     ///\name Interface
     ///@{
 
@@ -61,12 +67,16 @@ class MPStrategyMethod : public MPBaseObject<MPTraits> {
     virtual bool EvaluateMap();    ///< Check if we satisfied all map evaluators.
     virtual void Iterate() {}      ///< Execute one iteration of the strategy.
     virtual void Finalize() = 0;   ///< Clean-up and output results.
-    virtual void Print(ostream& _os) const; ///< Print parameters and options.
 
     ////////////////////////////////////////////////////////////////////////////
     /// \brief Designate a sampling boundary.
     /// \warning This is ignored by most strategies.
     void SetBoundary(shared_ptr<Boundary> _b) {m_boundary = _b;}
+
+    ////////////////////////////////////////////////////////////////////////////
+    /// \brief Determine if any of the map evaluators have "Query" in their
+    ///        label.
+    bool UsingQuery() const;
 
     ////////////////////////////////////////////////////////////////////////////
     /// \brief Virtual method used only in PRMWithRRTStrategy
@@ -175,6 +185,17 @@ EvaluateMap() {
 
     return passed;
   }
+}
+
+
+template <typename MPTraits>
+bool
+MPStrategyMethod<MPTraits>::
+UsingQuery() const {
+  for(const auto& label : m_meLabels)
+    if(label.find("Query", 0) != string::npos)
+      return true;
+  return false;
 }
 
 /*----------------------------------------------------------------------------*/

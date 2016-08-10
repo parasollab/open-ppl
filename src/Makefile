@@ -46,7 +46,7 @@ include ${UTILS_DIR}/makefile_includes/Makefile.defaults
 include ${PMPL_DIR}/Makefile.PMPLdefaults
 
 # macros
-DEFS += -D${ROBOT_DEF} ${UTILS_DEF} ${CGAL_DEF} ${STAPL_DEF}
+DEFS += -D${ROBOT_DEF} ${UTILS_DEF} ${CGAL_DEF} ${STAPL_DEF} ${BOOST_DEF}
 INCL =  ${PMPL_INCL} ${UTILS_INCL} ${STAPL_INCL} ${BOOST_INCL}
 LIBS =  ${PMPL_LIB} ${UTILS_LIB} ${STAPL_LIB} ${BOOST_LIB}
 

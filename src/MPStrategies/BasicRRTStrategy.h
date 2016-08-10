@@ -235,11 +235,7 @@ BasicRRTStrategy(string _dm, string _nf, string _vc, string _nc,
     m_growthFocus(_growthFocus), m_numRoots(_numRoots),
     m_numDirections(_numDirections), m_maxTrial(_maxTrial) {
   this->SetName("BasicRRTStrategy");
-
-  if(_evaluators.empty())
-    this->m_meLabels.push_back("RRTQuery");
-  else
-    this->m_meLabels = _evaluators;
+  this->m_meLabels = _evaluators;
 }
 
 
@@ -326,12 +322,9 @@ Initialize() {
 
   // Check for query info.
   m_query = nullptr;
-  bool queryLoaded = false;
-  for(auto l : this->m_meLabels)
-    queryLoaded |= l.find("Query", 0) != string::npos;
 
   // If a query was loaded, process query cfgs
-  if(queryLoaded) {
+  if(this->UsingQuery()) {
     m_query = static_cast<RRTQuery<MPTraits>*>(this->GetMapEvaluator("RRTQuery").
         get());
     const vector<CfgType>& queryCfgs = m_query->GetQuery();
@@ -430,10 +423,6 @@ template<class MPTraits>
 void
 BasicRRTStrategy<MPTraits>::
 Finalize() {
-  // Output path if we completed a query with at least one goal.
-  if(m_query && !m_query->GetQuery().empty() && m_query->GetGoals().empty())
-    m_query->WritePath();
-
   // Output final map
   RoadmapType* map = this->GetRoadmap();
   string baseFilename = this->GetBaseFilename();

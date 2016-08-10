@@ -51,7 +51,6 @@
 
 //map evaluator includes
 #include "MapEvaluators/ConditionalEvaluator.h"
-#include "MapEvaluators/Query.h"
 
 //mp strategies includes
 #include "MPStrategies/BasicPRM.h"

@@ -1,0 +1,60 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<MotionPlanning warnings="true" warningsAsErrors="true" print="false">
+  <Input>
+    <Environment filename="../Envs/2D/2d.env" saveDofs="false"/>
+    <Query filename="../Envs/2D/2d.query"/>
+  </Input>
+
+  <MPProblem>
+    <DistanceMetrics>
+      <Euclidean label="euclidean"/>
+    </DistanceMetrics>
+
+    <ValidityCheckers>
+      <CollisionDetection label="cd4" method="PQP_SOLID"/>
+      <AlwaysTrueValidity label="alwaysTrue"/>
+    </ValidityCheckers>
+
+    <NeighborhoodFinders>
+      <BruteForceNF label="BFNF" dmLabel="euclidean" unconnected="false" k="10"/>
+    </NeighborhoodFinders>
+
+    <Samplers>
+      <UniformRandomSampler label="UniformRandom" vcLabel="alwaysTrue"/>
+    </Samplers>
+
+    <LocalPlanners>
+      <StraightLine label="sl" binaryEvaluation="true" vcLabel="cd4"/>
+      <StraightLine label="slAlwaysTrue" binaryEvaluation="true"
+        vcLabel="alwaysTrue"/>
+    </LocalPlanners>
+
+    <Connectors>
+      <NeighborhoodConnector label="ClosestAlwaysTrue" nfLabel="BFNF"
+        lpLabel="slAlwaysTrue" checkIfSameCC="false"/>
+    </Connectors>
+
+    <MapEvaluators>
+      <LazyQuery label="LazyQuery" fullRecreatePath="false" lpLabel="sl"
+        dmLabel="euclidean" vcMethod="cd4" graphSearchAlg="astar"
+        deleteNodes="false" numEnhance="10" d="0.5">
+        <NodeConnectionMethod method="ClosestAlwaysTrue"/>
+        <Resolution mult="27"/>
+        <Resolution mult="16"/>
+        <Resolution mult="1"/>
+      </LazyQuery>
+    </MapEvaluators>
+
+    <MPStrategies>
+      <BasicPRM label="LazyPRM">
+        <Sampler method="UniformRandom" number="1" attempts="1"/>
+        <Connector method="ClosestAlwaysTrue"/>
+        <Evaluator method="LazyQuery"/>
+      </BasicPRM>
+    </MPStrategies>
+
+    <Solver mpStrategyLabel="LazyPRM" seed="0"
+      baseFilename="../Scratch/LazyPRM"/>
+
+  </MPProblem>
+</MotionPlanning>

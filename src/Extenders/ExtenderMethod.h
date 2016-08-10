@@ -1,6 +1,8 @@
 #ifndef EXTENDER_METHOD_H_
 #define EXTENDER_METHOD_H_
 
+#include "LocalPlanners/LPOutput.h"
+
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup Extenders
 /// @brief Base algorithm abstraction for \ref Extenders.

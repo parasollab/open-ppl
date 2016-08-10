@@ -2,6 +2,7 @@
 #define CONNECTION_METHOD_H_
 
 #include <boost/mpl/for_each.hpp>
+#include "MPProblem/MPBaseObject.h"
 #include "Utilities/MPUtils.h"
 #include "Utilities/MetricUtils.h"
 

@@ -26,7 +26,6 @@
 #include "MapEvaluators/ComposeEvaluator.h"
 #include "MapEvaluators/ConditionalEvaluator.h"
 
-#include "MapEvaluators/Query.h"
 #include "MapEvaluators/RRTQuery.h"
 
 //mp strategies includes
@@ -104,7 +103,6 @@ struct StateTraits {
   typedef boost::mpl::list<
     ComposeEvaluator<StateTraits>,
     ConditionalEvaluator<StateTraits>,
-    Query<StateTraits>,
     RRTQuery<StateTraits>
       > MapEvaluatorMethodList;
 

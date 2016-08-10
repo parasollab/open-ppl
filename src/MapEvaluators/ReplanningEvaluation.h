@@ -4,11 +4,12 @@
 #include "MapEvaluatorMethod.h"
 
 ////////////////////////////////////////////////////////////////////////////////
-/// @ingroup MapEvaluators
-/// @brief TODO.
+/// @ingroup DeadCode
+/// @brief This method is somewhat dated and contains various unexplained
+///        assumptions, such as treating all query points but the last as roots,
+///        which makes little sense for PRM. It needs proper documentation and
+///        validation to be brought back into the current Traits.
 /// @tparam MPTraits Motion planning universe
-///
-/// TODO.
 ////////////////////////////////////////////////////////////////////////////////
 template<class MPTraits>
 class ReplanningEvaluation : public LazyQuery<MPTraits> {

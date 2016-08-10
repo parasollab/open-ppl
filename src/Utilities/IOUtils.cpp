@@ -1,31 +1,22 @@
 #include "IOUtils.h"
 
-///////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////
-//
-//
-//  XML Wrapper
-//
-//
-///////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////
 
 XMLNode::
 XMLNode(const string& _filename, const string& _desiredNode) :
-  m_childBuilt(false), m_accessed(false), m_filename(_filename) {
-    m_doc = new TiXmlDocument(_filename);
+    m_filename(_filename) {
+  m_doc = new TiXmlDocument(_filename);
 
-    if(!m_doc->LoadFile())
-      throw ParseException(
-          Where(_filename, m_doc->ErrorRow(), m_doc->ErrorCol(), false),
-          m_doc->ErrorDesc());
+  if(!m_doc->LoadFile())
+    throw ParseException(
+        Where(_filename, m_doc->ErrorRow(), m_doc->ErrorCol(), false),
+        m_doc->ErrorDesc());
 
-    m_node = m_doc->FirstChild(_desiredNode.c_str());
+  m_node = m_doc->FirstChild(_desiredNode.c_str());
 
-    if(!m_node)
-      throw ParseException(_filename,
-          "Unable to find XML node '" + _desiredNode + "'.");
-  }
+  if(!m_node)
+    throw ParseException(_filename,
+        "Unable to find XML node '" + _desiredNode + "'.");
+}
 
 XMLNode::iterator
 XMLNode::
@@ -127,8 +118,7 @@ BuildChildVector() {
 
 XMLNode::
 XMLNode(TiXmlNode* _node, const string& _filename, TiXmlDocument* _doc) :
-  m_node(_node), m_childBuilt(false), m_accessed(false),
-  m_filename(_filename), m_doc(_doc) {
+  m_node(_node), m_filename(_filename), m_doc(_doc) {
   }
 
 string

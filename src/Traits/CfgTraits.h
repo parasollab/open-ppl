@@ -102,8 +102,7 @@
 #include "MapEvaluators/LazyToggleQuery.h"
 #include "MapEvaluators/NegateEvaluator.h"
 #include "MapEvaluators/PrintMapEvaluation.h"
-#include "MapEvaluators/Query.h"
-#include "MapEvaluators/ReplanningEvaluation.h"
+#include "MapEvaluators/PRMQuery.h"
 #include "MapEvaluators/RRTQuery.h"
 #include "MapEvaluators/TimeEvaluator.h"
 #include "MapEvaluators/TrueEvaluation.h"
@@ -112,7 +111,6 @@
 #include "MPStrategies/AdaptiveRRT.h"
 #include "MPStrategies/BasicPRM.h"
 #include "MPStrategies/BasicRRTStrategy.h"
-#include "MPStrategies/BlindRRT.h"
 #include "MPStrategies/DynamicDomainRRT.h"
 #include "MPStrategies/DynamicRegionRRT.h"
 #include "MPStrategies/EvaluateMapStrategy.h"
@@ -293,8 +291,7 @@ struct MPTraits {
     LazyToggleQuery<MPTraits>,
     NegateEvaluator<MPTraits>,
     PrintMapEvaluation<MPTraits>,
-    Query<MPTraits>,
-    ReplanningEvaluation<MPTraits>,
+    PRMQuery<MPTraits>,
     RRTQuery<MPTraits>,
     TimeEvaluator<MPTraits>,
     TrueEvaluation<MPTraits>
@@ -305,7 +302,6 @@ struct MPTraits {
     AdaptiveRRT<MPTraits>,
     BasicPRM<MPTraits>,
     BasicRRTStrategy<MPTraits>,
-    BlindRRT<MPTraits>,
     ClearanceTestStrategy<MPTraits>,
     DMTestStrategy<MPTraits>,
     DynamicDomainRRT<MPTraits>,

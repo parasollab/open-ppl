@@ -213,8 +213,8 @@ class XMLNode {
     string Where(const string& _f, int _l, int _c, bool _name = true) const;
 
     TiXmlNode* m_node;          ///< TiXmlNode
-    bool m_childBuilt;          ///< Have children been parsed into nodes?
-    bool m_accessed;            ///< Has this node been accessed or not?
+    bool m_childBuilt{false};   ///< Have children been parsed into nodes?
+    bool m_accessed{false};     ///< Has this node been accessed or not?
     vector<XMLNode> m_children; ///< Children of node
     unordered_set<string>
       m_reqAttributes;          ///< Attributes which have been requested
