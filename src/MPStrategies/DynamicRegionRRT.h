@@ -216,7 +216,7 @@ Run() {
 #ifdef VIZMO
     models[m_regions.back()] = new ThreadSafeSphereModel(
         m_regions.back()->GetCenter(), regionRadius);
-    tom.AddOther(models[m_regions.back()]);
+    tom.AddModel(models[m_regions.back()]);
 #endif
   }
   visited[sit->descriptor()] = true;
@@ -267,7 +267,7 @@ Run() {
           //else need to delete region
           else {
 #ifdef VIZMO
-            tom.RemoveOther(models[region]);
+            tom.RemoveModel(models[region]);
             models.erase(region);
 #endif
             iter = m_regions.erase(iter);
@@ -293,7 +293,7 @@ Run() {
 #ifdef VIZMO
             models[m_regions.back()] = new ThreadSafeSphereModel(
                 vit->property(), regionRadius);
-            tom.AddOther(models[m_regions.back()]);
+            tom.AddModel(models[m_regions.back()]);
 #endif
           }
           visited[vit->descriptor()] = true;
