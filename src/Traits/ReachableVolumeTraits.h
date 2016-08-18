@@ -5,14 +5,6 @@
 #include "MPProblem/Weight.h"
 
 //distance metric includes
-#include "DistanceMetrics/BinaryLPSweptDistance.h"
-#include "DistanceMetrics/CenterOfMassDistance.h"
-#include "DistanceMetrics/EuclideanDistance.h"
-#include "DistanceMetrics/KnotTheoryDistance.h"
-#include "DistanceMetrics/LPSweptDistance.h"
-#include "DistanceMetrics/ManhattanDistance.h"
-#include "DistanceMetrics/ReachableDistance.h"
-#include "DistanceMetrics/RMSDDistance.h"
 #include "DistanceMetrics/ScaledEuclideanDistance.h"
 #include "DistanceMetrics/RVDistance.h"
 
@@ -28,38 +20,20 @@
 #include "ValidityCheckers/SSSurfaceValidity.h"
 
 //neighborhood finder includes
-#include "NeighborhoodFinders/BandsNF.h"
 #include "NeighborhoodFinders/BruteForceNF.h"
-#include "NeighborhoodFinders/HierarchicalNF.h"
-#include "NeighborhoodFinders/HopLimitNF.h"
-#include "NeighborhoodFinders/OptimalNF.h"
-#include "NeighborhoodFinders/RadiusNF.h"
-#include "NeighborhoodFinders/RandomNF.h"
 
 //sampler includes
 #include "Samplers/UniformRandomSampler.h"
 
 //local planner includes
-#include "LocalPlanners/RotateAtS.h"
-#include "LocalPlanners/StraightLine.h"
-#include "LocalPlanners/TransformAtS.h"
 #include "LocalPlanners/RVLocalPlanner.h"
 
 //extenders includes
 #include "Extenders/BasicExtender.h"
 
 //path smoothing includes
-#include "PathModifiers/CombinedPathModifier.h"
-#include "PathModifiers/MedialAxisPathModifier.h"
-#include "PathModifiers/ResamplePathModifier.h"
-#include "PathModifiers/ShortcuttingPathModifier.h"
 
 //connector includes
-#include "Connectors/AdaptiveConnector.h"
-#include "Connectors/CCExpansion.h"
-#include "Connectors/CCsConnector.h"
-#include "Connectors/ClosestVE.h"
-#include "Connectors/NeighborhoodConnector.h"
 #include "Connectors/RRTConnect.h"
 
 //metric includes
@@ -77,12 +51,8 @@
 //map evaluator includes
 #include "MapEvaluators/ComposeEvaluator.h"
 #include "MapEvaluators/ConditionalEvaluator.h"
-#include "MapEvaluators/LazyQuery.h"
-#include "MapEvaluators/LazyToggleQuery.h"
 #include "MapEvaluators/NegateEvaluator.h"
 #include "MapEvaluators/PrintMapEvaluation.h"
-#include "MapEvaluators/PRMQuery.h"
-#include "MapEvaluators/RRTQuery.h"
 #include "MapEvaluators/TrueEvaluation.h"
 
 //mp strategies includes
@@ -103,6 +73,7 @@
 /// each algorithm abstraction --- here you only need to define what you need,
 /// as extraneous methods in the type class imply longer compile times.
 ////////////////////////////////////////////////////////////////////////////////
+template<class C, class W = DefaultWeight<C> >
 struct CfgReachableVolumeTraits {
 
   typedef CfgReachableVolume CfgType;
@@ -113,14 +84,6 @@ struct CfgReachableVolumeTraits {
 
   //types of distance metrics available in our world
   typedef boost::mpl::list<
-    BinaryLPSweptDistance<CfgReachableVolumeTraits>,
-    CenterOfMassDistance<CfgReachableVolumeTraits>,
-    EuclideanDistance<CfgReachableVolumeTraits>,
-    KnotTheoryDistance<CfgReachableVolumeTraits>,
-    LPSweptDistance<CfgReachableVolumeTraits>,
-    ManhattanDistance<CfgReachableVolumeTraits>,
-    MinkowskiDistance<CfgReachableVolumeTraits>,
-    RMSDDistance<CfgReachableVolumeTraits>,
     ScaledEuclideanDistance<CfgReachableVolumeTraits>,
     RVDistance<CfgReachableVolumeTraits>
       > DistanceMetricMethodList;
@@ -138,18 +101,7 @@ struct CfgReachableVolumeTraits {
 
   //types of neighborhood finders available in our world
   typedef boost::mpl::list<
-    BandsNF<CfgReachableVolumeTraits>,
-    BruteForceNF<CfgReachableVolumeTraits>,
-    //CGALNF<CfgReachableVolumeTraits>,
-    //DPESNF<CfgReachableVolumeTraits>,
-    HierarchicalNF<CfgReachableVolumeTraits>,
-    HopLimitNF<CfgReachableVolumeTraits>,
-    //MetricTreeNF<CfgReachableVolumeTraits>,
-    //MPNNNF<CfgReachableVolumeTraits>,
-    OptimalNF<CfgReachableVolumeTraits>,
-    RadiusNF<CfgReachableVolumeTraits>,
-    RandomNF<CfgReachableVolumeTraits>//,
-    //SpillTreeNF<CfgReachableVolumeTraits>
+    BruteForceNF<CfgReachableVolumeTraits>
     > NeighborhoodFinderMethodList;
 
   //types of samplers available in our world
@@ -161,9 +113,6 @@ struct CfgReachableVolumeTraits {
   //All of these samplers are applicable to problems without constraints
   //The RV Local planner is the only method that is applicable to problems with constraints
   typedef boost::mpl::list<
-    RotateAtS<CfgReachableVolumeTraits>,
-    StraightLine<CfgReachableVolumeTraits>,
-    TransformAtS<CfgReachableVolumeTraits>,
     RVLocalPlanner<CfgReachableVolumeTraits>
       > LocalPlannerMethodList;
 
@@ -175,21 +124,11 @@ struct CfgReachableVolumeTraits {
   //types of path smoothing available in our world
   //path smoothing can only be applied to problems without constraints
   typedef boost::mpl::list<
-    CombinedPathModifier<CfgReachableVolumeTraits>,
-    MedialAxisPathModifier<CfgReachableVolumeTraits>,
-    ResamplePathModifier<CfgReachableVolumeTraits>,
-    ShortcuttingPathModifier<CfgReachableVolumeTraits>
-      > PathModifierMethodList;
+    > PathModifierMethodList;
 
 
   //types of connectors available in our world
   typedef boost::mpl::list<
-    AdaptiveConnector<CfgReachableVolumeTraits>,
-    CCExpansion<CfgReachableVolumeTraits>,
-    CCsConnector<CfgReachableVolumeTraits>,
-    ClosestVE<CfgReachableVolumeTraits>,
-    NeighborhoodConnector<CfgReachableVolumeTraits>,
-    //PreferentialAttachment<CfgReachableVolumeTraits>,
     RRTConnect<CfgReachableVolumeTraits>
       > ConnectorMethodList;
 
@@ -221,12 +160,8 @@ struct CfgReachableVolumeTraits {
   typedef boost::mpl::list<
     ComposeEvaluator<CfgReachableVolumeTraits>,
     ConditionalEvaluator<CfgReachableVolumeTraits>,
-    LazyQuery<CfgReachableVolumeTraits>,
-    LazyToggleQuery<CfgReachableVolumeTraits>,
     NegateEvaluator<CfgReachableVolumeTraits>,
     PrintMapEvaluation<CfgReachableVolumeTraits>,
-    PRMQuery<CfgReachableVolumeTraits>,
-    RRTQuery<CfgReachableVolumeTraits>,
     TrueEvaluation<CfgReachableVolumeTraits>
       > MapEvaluatorMethodList;
 
