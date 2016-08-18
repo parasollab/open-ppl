@@ -9,9 +9,6 @@ PQP::
 PQP() : CollisionDetectionMethod("PQP", CDType::Exact) {
 }
 
-PQP::
-~PQP() {
-}
 
 void
 PQP::
@@ -33,6 +30,7 @@ Build(Body* _body) {
   pqpBody->EndModel();
   _body->SetPQPBody(pqpBody);
 }
+
 
 bool
 PQP::
@@ -70,50 +68,104 @@ IsInCollision(shared_ptr<Body> _body1, shared_ptr<Body> _body2,
   }
 }
 
+
 bool
 PQPSolid::
 IsInCollision(shared_ptr<Body> _body1, shared_ptr<Body> _body2,
     CDInfo& _cdInfo) {
   bool collision = PQP::IsInCollision(_body1, _body2, _cdInfo);
   if(!collision)
-    collision = IsInsideObstacle(_body1->GetWorldPolyhedron().m_vertexList[0], _body2);
+    collision = IsInsideObstacle(_body1->GetWorldPolyhedron().m_vertexList[0],
+        _body2);
   return collision;
 }
+
 
 bool
 PQPSolid::
 IsInsideObstacle(const Vector3d& _pt, shared_ptr<Body> _body) {
-  static PQP_Model* ray = BuildPQPSegment(1e10, 0, 0);
+  // Set up a pseudo-ray for a ray-shooting test.
+  static PQP_Model* ray = BuildPseudoRay();
+  static PQP_REAL rotation[3][3] = {{1, 0, 0}, {0, 1, 0}, {0, 0, 1}};
+  PQP_REAL translation[3] = {_pt[0], _pt[1], _pt[2]};
 
-  PQP_REAL t[3] = {_pt[0], _pt[1], _pt[2]};
-  static PQP_REAL r[3][3] = {{1, 0, 0}, {0, 1, 0}, {0, 0, 1}};
-
+  // Get obstacle info.
   shared_ptr<PQP_Model> body = _body->GetPQPBody();
   Transformation& t2 = _body->WorldTransformation();
 
+  // Perform ray-shooting collision test.
   PQP_CollideResult result;
-  PQP_Collide(&result, r, t, ray,
+  PQP_Collide(&result, rotation, translation, ray,
       t2.rotation().matrix(), t2.translation(), body.get());
 
-  return result.NumPairs() % 2 == 1;
+  // Sort collisions by relative X-value.
+
+  static const double tolerance = 10 * numeric_limits<double>::epsilon();
+  static const Vector3d r(10e6, 0, 0); // Vector-representation of the ray.
+  const auto& vertices = _body->GetWorldPolyhedron().GetVertexList();
+  const auto& polygons = _body->GetWorldPolyhedron().GetPolygonList();
+
+  enum TransitionType {Entering = 0, Exiting = 1};
+  typedef pair<double, TransitionType> Transition;
+
+  // We will store the processed collisions in a set to sort them and remove
+  // duplicate transitions of the same type and x-value. Duplicate removal guards
+  // against the case where the psuedo-ray passes through an edge or vertex that
+  // is shared by multiple triangles with the same facing.
+  static auto compare = [](const Transition& _t1, const Transition& _t2) -> bool {
+    if(abs(_t1.first - _t2.first) > tolerance)
+      return _t1.first < _t2.first;
+    else
+      return _t1.second < _t2.second;
+  };
+  static set<Transition, decltype(compare)> collisions(compare);
+
+  // Process each collision.
+  collisions.clear();
+  for(int i = 0; i < result.NumPairs(); ++i) {
+    const auto& triangle = polygons[result.Id2(i)];
+    const auto& v = vertices[triangle[0]];
+    const auto& n = triangle.m_normal;
+
+    // Skip collisions against triangles whose normals are perpendicular to the
+    // ray: these are scrapes and don't affect inside/outside-ness.
+    if(abs(n[0]) < tolerance) continue;
+
+    // The collision occurs at some fraction of r. This fraction is the ratio of
+    // |pt to the triangle plane| over |r's projection along n|.
+    double alpha = ((v - _pt) * n) / (r * n);
+
+    // We are exiting the triangle if the normal has positive x value and
+    // entering it otherwise (zero x values handled above).
+    collisions.emplace(alpha * r[0], TransitionType(n[0] > 0));
+  }
+
+  // Check the ordered collisions to see what happened. Skip over any points
+  // where we enter and exit at the same point.
+  while(!collisions.empty()) {
+    if(collisions.size() == 1 ||
+        abs(collisions.begin()->first - (++collisions.begin())->first) >
+        tolerance)
+      return collisions.begin()->second;
+    else
+      collisions.erase(collisions.begin(), ++++collisions.begin());
+  }
+
+  // If we're still here, there are no valid collisions.
+  return false;
 }
 
+
 PQP_Model*
-PQPSolid::BuildPQPSegment(PQP_REAL _x, PQP_REAL _y, PQP_REAL _z) const {
-  //build a narrow triangle.
-  PQP_Model* ray = new PQP_Model();
+PQPSolid::
+BuildPseudoRay() const {
+  PQP_Model* ray{new PQP_Model()};
 
-  if(_x == 0 && _y == 0 && _z == 0)
-     cerr << "! CollisionDetection::BuildPQPRay Warning : All are [0]" << endl;
-
-  static PQP_REAL tinyV = 1e-20/numeric_limits<long>::max();
-  static PQP_REAL picoV = tinyV/2;
-  static PQP_REAL p1[3] = { tinyV, tinyV, tinyV };
-  static PQP_REAL p2[3] = { picoV, picoV, picoV };
-  PQP_REAL p3[3] = { _x, _y, _z};
+  PQP_REAL zero[3] = {0, 0, 0};
+  PQP_REAL x[3] = {1e10, 0, 0};
 
   ray->BeginModel();
-  ray->AddTri(p1, p2, p3, 0);
+  ray->AddTri(zero, zero, x, 0);
   ray->EndModel();
 
   return ray;

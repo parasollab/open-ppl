@@ -16,9 +16,11 @@
 /// enable this pass in @c CDInfo with @c m_retAllInfo set to true.
 ////////////////////////////////////////////////////////////////////////////////
 class PQP : public CollisionDetectionMethod {
+
   public:
+
     PQP();
-    virtual ~PQP();
+    virtual ~PQP() = default;
 
     virtual void Build(Body* _body);
 
@@ -37,23 +39,30 @@ class PQP : public CollisionDetectionMethod {
 /// it can be used for @c IsInsideObstacle checks.
 ////////////////////////////////////////////////////////////////////////////////
 class PQPSolid : public PQP {
+
   public:
+
     PQPSolid() : PQP() {m_name = "PQP_SOLID";}
 
     virtual bool IsInCollision(shared_ptr<Body> _body1,
         shared_ptr<Body> _body2, CDInfo& _cdInfo);
 
+    ////////////////////////////////////////////////////////////////////////////
+    /// @brief Shoot a pseudo-ray outward from a reference point to determine if
+    ///        it lies within a given body.
+    /// @param[in] _pt The reference point of interest.
+    /// @param[in] _body The body to check against.
+    /// @return True if _pt is inside _body.
     virtual bool IsInsideObstacle(const Vector3d& _pt, shared_ptr<Body> _body);
 
   private:
+
     ////////////////////////////////////////////////////////////////////////////
-    /// @brief Builds minimal area triangle extending to (_dX, _dY, _dZ) from
-    ///        the origin.
-    /// @param _dX X coordinate
-    /// @param _dY Y coordinate
-    /// @param _dZ Z coordinate
-    /// @return PQP model of triangle
-    PQP_Model* BuildPQPSegment(PQP_REAL _dX, PQP_REAL _dY, PQP_REAL _dZ) const;
+    /// @brief Build a zero-area triangle with base at the origin and extending
+    ///        to (+inf, 0, 0) for the ray-shooting test in IsInsideObstacle.
+    /// @return A PQP model of a triangular pseudo-ray.
+    PQP_Model* BuildPseudoRay() const;
+
 };
 
 #endif
