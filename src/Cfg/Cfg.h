@@ -64,9 +64,16 @@ class Cfg {
 
   public:
 
+    ///\name Construction
+    ///@{
+
     explicit Cfg(size_t _index = 0);
+    explicit Cfg(const Vector3d& _v, size_t _index = 0);
     Cfg(const Cfg& _other);
+
     virtual ~Cfg() = default;
+
+    ///@}
 
     // assume _index within the size of the vector.
     static void InitRobots(shared_ptr<ActiveMultiBody>& _robot, size_t _index);
@@ -99,6 +106,9 @@ class Cfg {
 
     /// \brief Get the internal storage of DOF data.
     const vector<double>& GetData() const {return m_v;}
+
+    /// \brief Get the robot's reference point.
+    Point3d GetPoint() const;
 
     ////////////////////////////////////////////////////////////////////////////
     /// \brief Set the internal storage of DOF data.

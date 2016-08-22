@@ -592,7 +592,7 @@ Extend(const VID _nearVID, const CfgType& _qRand, const bool _lp) {
     return INVALID_VID;
   }
   else if(this->m_debug)
-    cout << "\tExtended " << lp.m_edge.first << " units." << endl;
+    cout << "\tExtended " << lp.m_edge.first.GetWeight() << " units." << endl;
 
   // If we are local planning, reached the goal, and haven't added the edge,
   // this is a valid local plan.

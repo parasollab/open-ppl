@@ -21,12 +21,18 @@ vector<shared_ptr<ActiveMultiBody>> Cfg::m_robots;
 
 
 Cfg::
-Cfg(size_t _robotIndex) {
-  m_v.clear();
-  m_robotIndex = _robotIndex;
+Cfg(size_t _robotIndex) : m_robotIndex(_robotIndex) {
   if(m_dof.size() > 0)
     m_v.resize(m_dof[m_robotIndex], 0.0);
-  m_witnessCfg.reset();
+}
+
+
+Cfg::
+Cfg(const Vector3d& _v, size_t _robotIndex) : m_robotIndex(_robotIndex) {
+  if(m_dof.size() > 0)
+    m_v.resize(m_dof[m_robotIndex], 0.0);
+  for(size_t i = 0; i < PosDOF(); ++i)
+    m_v[i] = _v[i];
 }
 
 
@@ -274,6 +280,13 @@ ostream&
 operator<<(ostream& _os, const Cfg& _cfg) {
   _cfg.Write(_os);
   return _os;
+}
+
+
+Point3d
+Cfg::
+GetPoint() const {
+  return Point3d(m_v[0], m_v[1], PosDOF() == 3 ? m_v[2] : 0);
 }
 
 
