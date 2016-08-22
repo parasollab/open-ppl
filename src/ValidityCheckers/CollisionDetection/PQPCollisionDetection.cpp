@@ -4,6 +4,7 @@
 
 #include "CDInfo.h"
 #include "Environment/Body.h"
+#include <set>
 
 PQP::
 PQP() : CollisionDetectionMethod("PQP", CDType::Exact) {
