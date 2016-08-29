@@ -10,6 +10,8 @@
 #include "Environment/BoundingSphere.h"
 #include "Utilities/ReebGraphConstruction.h"
 
+#include "Utilities/MedialAxisUtilities.h"
+
 #ifdef VIZMO
 #include "GUI/ModelSelectionWidget.h"
 #include "Models/TempObjsModel.h"
@@ -91,6 +93,11 @@ class DynamicRegionRRT : public BasicRRTStrategy<MPTraits> {
     ///        to the goal.
     /// \param[in] _f The flow graph to prune.
     void PruneFlowGraph(FlowGraph& _f) const;
+
+    ////////////////////////////////////////////////////////////////////////////
+    /// \brief Push the nodes and edges of the flow graph to the medial axis.
+    /// \param[in] _f The flow graph to push.
+    void FlowToMedialAxis(FlowGraph& _f) const;
 
     ///@}
     ///\name Internal State
@@ -180,14 +187,19 @@ Run() {
   Vector3d start(s[0], s[1], s[2]);
 
   //Get directed flow network
+
   typedef FlowGraph::vertex_descriptor FVD;
   typedef FlowGraph::edge_descriptor FED;
+
   pair<FlowGraph, FVD> flow = m_reebGraph->
       GetFlowGraph(start, env->GetPositionRes());
 
   // Prune flow-graph of non-relevant paths.
   if(m_prune)
     PruneFlowGraph(flow.first);
+
+  // Push flow-graph to medial axis.
+  FlowToMedialAxis(flow.first);
 
   unordered_map<FVD, bool> visited;
   for(auto vit = flow.first.begin(); vit != flow.first.end(); ++vit)
@@ -414,6 +426,49 @@ PruneFlowGraph(FlowGraph& _f) const {
   for(auto vd : toPrune)
     if(_f.find_vertex(vd) != _f.end())
       _f.delete_vertex(vd);
+}
+
+
+template <typename MPTraits>
+void
+DynamicRegionRRT<MPTraits>::
+FlowToMedialAxis(FlowGraph& _f) const {
+  if(this->m_debug)
+    cout << "Flow graph has " << _f.get_num_vertices() << " vertices "
+         << " and " << _f.get_num_edges() << " edges."
+         << "\n\tPushing to medial axis:";
+
+  MedialAxisUtility<MPTraits> mau(this->GetMPProblem(), "cd4", this->m_dmLabel,
+      true, true, 10, 10, true, true);
+  auto boundary = this->GetEnvironment()->GetBoundary();
+
+  auto push = [&](Point3d& _p) {
+    CfgType cfg(_p);
+
+    if(this->m_debug)
+      cout << "\n\t\tPushing from: " << setprecision(4) << cfg.GetPoint()
+           << "\n\t\t          to: ";
+
+    if(mau.PushToMedialAxis(cfg, boundary)) {
+      _p = cfg.GetPoint();
+      if(this->m_debug)
+        cout << cfg.GetPoint();
+    }
+    else if(this->m_debug)
+      cout << "(failed)";
+  };
+
+  // Push flowgraph vertices.
+  for(auto vit = _f.begin(); vit != _f.end(); ++vit)
+    push(vit->property());
+
+  // Push flowgraph edges.
+  for(auto eit = _f.edges_begin(); eit != _f.edges_end(); ++eit)
+    for(auto pit = eit->property().begin(); pit < eit->property().end(); ++pit)
+      push(*pit);
+
+  if(this->m_debug)
+    cout << "\n\tMedial axis push complete." << endl;
 }
 
 /*----------------------------------------------------------------------------*/
