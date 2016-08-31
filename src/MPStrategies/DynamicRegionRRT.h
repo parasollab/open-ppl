@@ -99,12 +99,19 @@ class DynamicRegionRRT : public BasicRRTStrategy<MPTraits> {
     /// \param[in] _f The flow graph to push.
     void FlowToMedialAxis(FlowGraph& _f) const;
 
+    ////////////////////////////////////////////////////////////////////////////
+    /// \brief Test whether the newest cfg is touching a region 
+    /// \param[in] _cfg The newest cfg.
+    /// \param[in] _region The region begin tested.
+    bool IsTouching(const CfgType& _cfg, RegionPtr _region);
+    
     ///@}
     ///\name Internal State
     ///@{
 
     bool m_prune{true};          ///< Prune the flow graph?
     double m_regionFactor{2.5};  ///< The region radius is this * robot radius.
+    double m_robotFactor{1.};    ///< The robot is touch if inside by this amount
 
     vector<RegionPtr> m_regions; ///< All Regions
     RegionPtr m_samplingRegion;  ///< Points to the current sampling region.
@@ -138,6 +145,8 @@ DynamicRegionRRT(MPProblemType* _problem, XMLNode& _node) :
       "radius is this * robot radius");
   m_prune = _node.Read("pruneFlowGraph", false, true, "Enable/disable flow "
       "graph pruning");
+  m_robotFactor = _node.Read("robotFactor", false, 1., 0., 1., "The robot is "
+      "touch if inside by this amount");
 }
 
 /*----------------------- MPStrategyMethod Overriddes ------------------------*/
@@ -257,7 +266,7 @@ Run() {
       for(auto iter = m_regions.begin(); iter != m_regions.end(); ) {
         RegionPtr region = *iter;
         bool increment = true;
-        while(env->InBounds(newest, region)) {
+        while(IsTouching(newest, region)) {
           Vector3d cur = region->GetCenter();
 
           auto& pr = regions[region];
@@ -469,6 +478,27 @@ FlowToMedialAxis(FlowGraph& _f) const {
 
   if(this->m_debug)
     cout << "\n\tMedial axis push complete." << endl;
+}
+
+template <typename MPTraits>
+bool
+DynamicRegionRRT<MPTraits>::
+IsTouching(const CfgType& _cfg, RegionPtr _region) {
+  auto region = static_pointer_cast<BoundingSphere>(_region);
+  
+  const Point3d& robotCenter = _cfg.GetPoint(); 
+  const Point3d& regionCenter = region->GetCenter(); 
+  
+  double robotRadius = this->GetEnvironment()->GetRobot(0)->GetBoundingSphereRadius();
+  double regionRadius = region->GetRadius();
+  
+  // distance between the region and the robot
+  double dist = (regionCenter - robotCenter).norm();
+
+  // the maximum distance the the robot is inisde the region 
+  double maxPenetration = robotRadius + regionRadius - dist;
+
+  return maxPenetration > 0 && maxPenetration >= 2 * robotRadius * m_robotFactor;
 }
 
 /*----------------------------------------------------------------------------*/
