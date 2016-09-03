@@ -328,8 +328,10 @@ ComputeWorldPolyhedron() {
   for(size_t i = 0; i < c.size(); ++i) {
     auto x = transform(c[i]);
     m_worldPolyhedron.m_cgalPoints[i] = x;
-    m_worldPolyhedron.m_vertexList[i](to_double(x[0]), to_double(x[1]),
-        to_double(x[2]));
+//    m_worldPolyhedron.m_vertexList[i](to_double(x[0]), to_double(x[1]),
+//        to_double(x[2]));
+    m_worldPolyhedron.m_vertexList[i] = m_worldTransformation *
+        m_worldPolyhedron.m_vertexList[i];
   }
   for(size_t i = 0; i < m_polyhedron.m_polygonList.size(); ++i)
     m_worldPolyhedron.m_polygonList[i].m_normal =
