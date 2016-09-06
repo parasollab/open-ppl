@@ -23,6 +23,7 @@ class Boundary;
 class BoundingBox;
 class BoundingSphere;
 class StaticMultiBody;
+class WorkspaceDecomposition;
 
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup Utilities
@@ -39,26 +40,21 @@ class TetGenDecomposition {
     using NefPolyhedron = CGAL::Nef_polyhedron_3<CGALKernel>;
     using CGALPoint     = NefPolyhedron::Point_3;
 
-    typedef stapl::sequential::graph<
-      stapl::UNDIRECTED, stapl::NONMULTIEDGES,
-      Vector3d, double
-        > DualGraph; ///< Dual Graph of tetrahedralization
-
     ///@}
-    ///@name Constructors
+    ///@name Construction
     ///@{
 
     ////////////////////////////////////////////////////////////////////////////
     /// @param _switches Switches for TetGen. See TetGen manual. Need 'pn' at a
     ///                  minimum.
+    /// @param _baseFilename Base filename used for saving models
     /// @param _writeFreeModel Output TetGen model of workspace
     /// @param _writeDecompModel Output TetGen model of tetrahedralization
-    TetGenDecomposition(const string& _switches = "pnqQ",
+    TetGenDecomposition(const string& _baseFilename = "",
+        const string& _switches = "pnqQ",
         bool _writeFreeModel = false, bool _writeDecompModel = false);
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// @param _node XML node for input parameters
-    TetGenDecomposition(XMLNode& _node);
+    TetGenDecomposition(XMLNode& _node); ///< @TODO Add XML parsing.
 
     ~TetGenDecomposition();
 
@@ -67,50 +63,24 @@ class TetGenDecomposition {
     ///@{
 
     ////////////////////////////////////////////////////////////////////////////
-    /// @param _env PMPL Environment as workspace
-    /// @param _baseFilename Base filename used for saving models
-    void Decompose(Environment* _env, const string& _baseFilename = "");
-
-    ///@}
-    ///@name Accessors
-    ///@{
-
-    ////////////////////////////////////////////////////////////////////////////
-    /// @return Number of points in tetrahedralization
-    size_t GetNumPoints() const {return m_decompModel->numberofpoints;}
-
-    ////////////////////////////////////////////////////////////////////////////
-    /// @return TetGen points of tetrahedralization. Three double per point.
-    const double* const GetPoints() const {return m_decompModel->pointlist;}
-
-    ////////////////////////////////////////////////////////////////////////////
-    /// @return Number of points in tetrahedron. Usually 4, but allowed to be 10
-    ///         in TetGen. See TetGen manual for details.
-    size_t GetNumCorners() const {return m_decompModel->numberofcorners;}
-
-    ////////////////////////////////////////////////////////////////////////////
-    /// @return Number of tetrahedron in tetrahedralization
-    size_t GetNumTetras() const {return m_decompModel->numberoftetrahedra;}
-
-    ////////////////////////////////////////////////////////////////////////////
-    /// @return Tetrahedrons of tetrahedralization. Sets of number of corners of
-    ///         indices to points array, e.g., 4 points make a tetrahedron.
-    const int* const GetTetras() const {return m_decompModel->tetrahedronlist;}
-
-    ////////////////////////////////////////////////////////////////////////////
-    /// @return Neighbor list of tetrahedralization.
-    const int* const GetNeighbors() const {return m_decompModel->neighborlist;}
-
-    ////////////////////////////////////////////////////////////////////////////
-    /// @return Dual graph of tetrahedralization
-    DualGraph& GetDualGraph() {return m_dualGraph;}
-
-    ///@}
+    /// @brief Use tetgen to decompose a given environment.
+    /// @param _env PMPL Environment as workspace.
+    shared_ptr<WorkspaceDecomposition> operator()(const Environment* _env);
 
   private:
 
-    ///@name Make workspace model
+    ////////////////////////////////////////////////////////////////////////////
+    /// @brief Make a workspace decomposition object from the completed tetgen
+    ///        model.
+    shared_ptr<WorkspaceDecomposition> MakeDecomposition();
+
+    ///@}
+    ///@name Freespace Model Creation
     ///@{
+
+    ////////////////////////////////////////////////////////////////////////////
+    /// @brief Reset the internal structures.
+    void Initialize();
 
     ////////////////////////////////////////////////////////////////////////////
     /// @brief Add all vertices and facets to free workspace model
@@ -141,7 +111,7 @@ class TetGenDecomposition {
     vector<vector<vector<size_t>>> ExtractFacets(const NefPolyhedron& _freespace);
 
     ///@}
-    ///@name Output helpers
+    ///@name IO Helpers
     ///@{
 
     ////////////////////////////////////////////////////////////////////////////
@@ -157,33 +127,23 @@ class TetGenDecomposition {
     void LoadDecompModel();
 
     ///@}
-    ///@name Dual Graph Helpers
-    ///@{
-
-    ////////////////////////////////////////////////////////////////////////////
-    /// @brief Create Dual of tetrahedralization
-    void MakeDualGraph();
-
-    ///@}
     ///@name Internal State
     ///@{
 
-    Environment* m_env{nullptr}; ///< PMPL Environment
-    string m_baseFilename;       ///< PMPL base filename
+    const Environment* m_env{nullptr}; ///< PMPL Environment.
+    string m_baseFilename;             ///< PMPL base filename.
 
-    tetgenio* m_freeModel;       ///< TetGen model of free workspace
-    tetgenio* m_decompModel;     ///< TetGen model of tetrahedralization
+    tetgenio* m_freeModel{nullptr};    ///< TetGen model of free workspace.
+    tetgenio* m_decompModel{nullptr};  ///< TetGen model of tetrahedralization.
 
-    string m_tetGenFilename;     ///< TetGen model input base filename
+    string m_tetGenFilename;     ///< TetGen model input base filename.
 
     string m_switches;           ///< Switches for TetGen. See TetGen manual for
                                  ///< details. Need 'pn' at a minimum.
-    bool m_writeFreeModel;       ///< Output TetGen model of free workspace
-    bool m_writeDecompModel;     ///< Output TetGen model of tetrahedralization
+    bool m_writeFreeModel;       ///< Output TetGen model of free workspace.
+    bool m_writeDecompModel;     ///< Output TetGen model of tetrahedralization.
 
-    DualGraph m_dualGraph;       ///< Dual of tetrahedralization
-
-    bool m_debug{true};          ///< Toggle debug messages.
+    bool m_debug;                ///< Toggle debug messages.
 
     ///@}
 };

@@ -12,35 +12,22 @@
 #include "Cfg/Cfg.h"
 #include "MPProblem/MPProblemBase.h"
 
-Environment::
-Environment() :
-  m_filename(""),
-  m_saveDofs(false),
-  m_positionRes(0.05),
-  m_orientationRes(0.05),
-  m_rdRes(0.05),
-  m_timeRes(0.05) {
-  }
+
+/*------------------------------- Construction -------------------------------*/
 
 Environment::
-Environment(XMLNode& _node) :
-  m_positionRes(0.05),
-  m_orientationRes(0.05),
-  m_rdRes(0.05),
-  m_timeRes(0.05) {
-    m_filename = _node.Read("filename", true, "", "env filename");
-    m_saveDofs = _node.Read("saveDofs", false, false, "save DoF flag");
-    m_filename = MPProblemBase::GetPath(m_filename);
-    Read(m_filename);
-  }
+Environment(XMLNode& _node) {
+  m_filename = _node.Read("filename", true, "", "env filename");
+  m_saveDofs = _node.Read("saveDofs", false, m_saveDofs, "save DoF flag");
+  m_filename = MPProblemBase::GetPath(m_filename);
+  Read(m_filename);
+}
 
-Environment::
-~Environment() {}
+/*------------------------------------ I/O -----------------------------------*/
 
 void
 Environment::
 Read(string _filename) {
-
   if(!FileExists(_filename))
     throw ParseException(_filename, "File does not exist");
 
@@ -60,23 +47,29 @@ Read(string _filename) {
   //read boundary
   ReadBoundary(ifs, cbs);
   string resolution;
-  while((resolution = ReadFieldString(ifs, cbs, "Failed reading resolution tag.")) != "MULTIBODIES") {
+  while((resolution = ReadFieldString(ifs, cbs, "Failed reading resolution tag."))
+      != "MULTIBODIES") {
     if(resolution == "POSITIONRES")
-      m_positionRes = ReadField<double>(ifs, cbs, "Failed reading Position resolution\n");
+      m_positionRes = ReadField<double>(ifs, cbs, "Failed reading Position "
+          "resolution\n");
     else if(resolution == "POSITIONRESFACTOR")
-      m_positionResFactor = ReadField<double>(ifs, cbs, "Failed reading Position factor resolution\n");
+      m_positionResFactor = ReadField<double>(ifs, cbs, "Failed reading Position "
+          "factor resolution\n");
     else if(resolution == "ORIENTATION")
-      m_orientationRes = ReadField<double>(ifs, cbs, "Failed reading Orientation resolution\n");
+      m_orientationRes = ReadField<double>(ifs, cbs, "Failed reading "
+          "Orientation resolution\n");
 #if (defined(PMPReachDistCC) || defined(PMPReachDistCCFixed))
     else if(resolution == "RDRES")
-      m_rdRes = ReadField<double>(ifs, cbs, "Failed reading Reachable Distance resolution");
+      m_rdRes = ReadField<double>(ifs, cbs, "Failed reading Reachable Distance "
+          "resolution");
 #endif
 #ifdef PMPState
     else if(resolution == "TIMERES")
       m_timeRes = ReadField<double>(ifs, cbs, "Failed reading Time resolution\n");
 #endif
     else
-      throw ParseException(cbs.Where(), "Unknown resolution tag '" + resolution + "'");
+      throw ParseException(cbs.Where(), "Unknown resolution tag '" + resolution
+          + "'");
   }
 
   size_t multibodyCount = ReadField<size_t>(ifs, cbs,
@@ -84,13 +77,12 @@ Read(string _filename) {
 
   //parse and construct each multibody
   for(size_t m = 0; m < multibodyCount && ifs; ++m) {
-
     string multibodyType = ReadFieldString(ifs, cbs,
         "Failed reading multibody type."
         " Options are: active, passive, internal, or surface.");
 
     MultiBody::MultiBodyType bodyType =
-      MultiBody::GetMultiBodyTypeFromTag(multibodyType, cbs.Where());
+        MultiBody::GetMultiBodyTypeFromTag(multibodyType, cbs.Where());
 
     switch(bodyType) {
       case MultiBody::MultiBodyType::Active:
@@ -133,9 +125,11 @@ Read(string _filename) {
 
   size_t size = m_robots.size();
   Cfg::SetSize(size);
+
 #ifdef PMPCfgMultiRobot
   CfgMultiRobot::m_numRobot = size;
 #endif
+
   for(size_t i = 0; i < size; ++i) {
     if(m_saveDofs) {
       ofstream dofFile(m_filename + "." + ::to_string(i) + ".dof");
@@ -150,26 +144,28 @@ Read(string _filename) {
   ComputeResolution();
 }
 
+
 void
 Environment::
 Print(ostream& _os) const {
-  _os << "Environment" << endl;
-  _os << "\tpositionRes::" << m_positionRes << endl;
-  _os << "\torientationRes::" << m_orientationRes << endl;
+  _os << "Environment" << endl
+      << "\tpositionRes::" << m_positionRes << endl
+      << "\torientationRes::" << m_orientationRes << endl
 #if (defined(PMPReachDistCC) || defined(PMPReachDistCCFixed))
-  _os << "\trdRes::" << m_rdRes << endl;
+      << "\trdRes::" << m_rdRes << endl
 #endif
-  _os << "\tboundary::" << *m_boundary << endl;
+      << "\tboundary::" << *m_boundary << endl;
 }
+
 
 void
 Environment::
 Write(ostream & _os) {
   WriteBoundary(_os);
   _os << endl << endl
-    << "MultiBodies" << endl
-    << m_robots.size() + m_obstacles.size() + m_surfaces.size()
-    << endl << endl;
+      << "MultiBodies" << endl
+      << m_robots.size() + m_obstacles.size() + m_surfaces.size()
+      << endl << endl;
   for(const auto& body : m_robots) {
     body->Write(_os);
     _os << endl;
@@ -184,6 +180,8 @@ Write(ostream & _os) {
   }
 }
 
+/*----------------------------- Boundary Functions ---------------------------*/
+
 template<>
 bool
 Environment::
@@ -195,10 +193,10 @@ InBounds<CfgMultiRobot>(const CfgMultiRobot& _cfg, shared_ptr<Boundary> _b) {
   return true;
 }
 
+
 void
 Environment::
 ResetBoundary(double _d, size_t _robotIndex) {
-
   double minx, miny, minz, maxx, maxy, maxz;
   minx = miny = minz = numeric_limits<double>::max();
   maxx = maxy = maxz = -numeric_limits<double>::max();
@@ -221,20 +219,22 @@ ResetBoundary(double _d, size_t _robotIndex) {
   m_boundary->ResetBoundary(obstBBX, _d);
 }
 
+
 void
 Environment::
 ExpandBoundary(double _d, size_t _robotIndex) {
-
   double robotRadius = m_robots[_robotIndex]->GetBoundingSphereRadius();
   _d += robotRadius;
 
-  vector<pair<double, double> > originBBX(3);
+  vector<pair<double, double>> originBBX(3);
   originBBX[0] = GetBoundary()->GetRange(0);
   originBBX[1] = GetBoundary()->GetRange(1);
   originBBX[2] = GetBoundary()->GetRange(2);
 
   m_boundary->ResetBoundary(originBBX, _d);
 }
+
+/*---------------------------- Multibody Functions ---------------------------*/
 
 shared_ptr<ActiveMultiBody>
 Environment::
@@ -245,6 +245,7 @@ GetRobot(size_t _index) const {
   return m_robots[_index];
 }
 
+
 shared_ptr<StaticMultiBody>
 Environment::
 GetObstacle(size_t _index) const {
@@ -254,6 +255,7 @@ GetObstacle(size_t _index) const {
   return m_obstacles[_index];
 }
 
+
 shared_ptr<SurfaceMultiBody>
 Environment::
 GetSurface(size_t _index) const {
@@ -262,6 +264,7 @@ GetSurface(size_t _index) const {
         "Cannot access Navigable Surface '" + ::to_string(_index) + "'.");
   return m_surfaces[_index];
 }
+
 
 shared_ptr<StaticMultiBody>
 Environment::
@@ -273,11 +276,13 @@ GetRandomObstacle() const {
   return m_obstacles[rIndex];
 }
 
+
 ssize_t
 Environment::
 GetRandomSurfaceIndex() {
   return LRand() % (m_surfaces.size() + 1) - 1;
 }
+
 
 pair<size_t, shared_ptr<StaticMultiBody>>
 Environment::
@@ -285,13 +290,14 @@ AddObstacle(const string& _dir, const string& _filename,
     const Transformation& _t) {
   shared_ptr<StaticMultiBody> mb(
       new StaticMultiBody(MultiBody::MultiBodyType::Passive));
-  mb->Initialize(_dir == "" ? _filename : _dir + '/' + _filename, _t);
 
+  mb->Initialize(_dir == "" ? _filename : _dir + '/' + _filename, _t);
   mb->BuildCDStructure();
 
   m_obstacles.push_back(mb);
   return make_pair(m_obstacles.size() - 1, m_obstacles.back());
 }
+
 
 void
 Environment::
@@ -303,6 +309,7 @@ RemoveObstacle(size_t position) {
       "position " << position << endl;
 }
 
+
 void
 Environment::
 RemoveObstacle(shared_ptr<StaticMultiBody> _obst) {
@@ -310,8 +317,10 @@ RemoveObstacle(shared_ptr<StaticMultiBody> _obst) {
   if(it != m_obstacles.end())
     m_obstacles.erase(it);
   else
-    cerr << "Environment::RemoveObstacleAt Warning: unable to remove obst." << endl;
+    cerr << "Environment::RemoveObstacleAt Warning: unable to remove obst."
+         << endl;
 }
+
 
 void
 Environment::
@@ -321,6 +330,8 @@ BuildCDStructure() {
   for(auto& body : m_obstacles)
     body->BuildCDStructure();
 }
+
+/*------------------------------- Helpers ------------------------------------*/
 
 void
 Environment::
@@ -347,6 +358,7 @@ ReadBoundary(istream& _is, CountingStreamBuffer& _cbs) {
   m_boundary->Read(_is, _cbs);
 }
 
+
 void
 Environment::
 WriteBoundary(ostream& _os) {
@@ -354,17 +366,16 @@ WriteBoundary(ostream& _os) {
   m_boundary->Write(_os);
 }
 
+
 void
 Environment::
 ComputeResolution() {
   double bodiesMinSpan = numeric_limits<double>::max();
-  for(auto& body : m_robots) {
+  for(auto& body : m_robots)
     bodiesMinSpan = min(bodiesMinSpan, body->GetMaxAxisRange());
-  }
 
-  for(auto& body : m_obstacles) {
+  for(auto& body : m_obstacles)
     bodiesMinSpan = min(bodiesMinSpan, body->GetMaxAxisRange());
-  }
 
   // Set to XML input resolution if specified, else compute resolution factor
   if(m_positionRes < 0)
@@ -379,6 +390,7 @@ ComputeResolution() {
 #endif
 }
 
+
 #ifdef PMPState
 template<>
 bool
@@ -390,22 +402,21 @@ InCSpace<State>(const State& _cfg, shared_ptr<Boundary> _b) {
 }
 #endif
 
+
 bool
 Environment::
 InWSpace(const Cfg& _cfg, shared_ptr<Boundary> _b) {
-
   shared_ptr<ActiveMultiBody> robot = m_robots[_cfg.GetRobotIndex()];
 
-  if(_b->GetClearance(_cfg.GetRobotCenterPosition()) < robot->GetBoundingSphereRadius()) { //faster, loose check
+  if(_b->GetClearance(_cfg.GetRobotCenterPosition()) <
+      robot->GetBoundingSphereRadius()) { //faster, loose check
     // Robot is close to wall, have a strict check.
     _cfg.ConfigEnvironment(); // Config the robot in the environment.
 
     //check each part of the robot multibody for being inside of the boundary
     for(size_t m = 0; m < robot->NumFreeBody(); ++m) {
-
-      typedef vector<Vector3d>::const_iterator VIT;
-
-      Transformation& worldTransformation = robot->GetFreeBody(m)->WorldTransformation();
+      Transformation& worldTransformation = robot->GetFreeBody(m)->
+          WorldTransformation();
 
       //first check just the boundary of the polyhedron
       GMSPolyhedron& bbPoly = robot->GetFreeBody(m)->GetBoundingBoxPolyhedron();
@@ -431,3 +442,4 @@ InWSpace(const Cfg& _cfg, shared_ptr<Boundary> _b) {
   return true;
 }
 
+/*----------------------------------------------------------------------------*/

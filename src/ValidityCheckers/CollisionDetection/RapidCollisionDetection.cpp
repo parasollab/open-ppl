@@ -18,11 +18,9 @@ Build(Body* _body) {
   shared_ptr<RAPID_model> rapidBody(new RAPID_model);
   rapidBody->BeginModel();
   for(size_t q = 0; q < poly.m_polygonList.size(); q++) {
-    int vertexNum[3];
     double point[3][3];
     for(int i = 0; i < 3; i++) {
-      vertexNum[i] = poly.m_polygonList[q].m_vertexList[i];
-      Vector3d& tmp = poly.m_vertexList[vertexNum[i]];
+      const Vector3d& tmp = poly.m_polygonList[q].GetPoint(i);
       for(int j = 0; j < 3; j++)
         point[i][j] = tmp[j];
     }

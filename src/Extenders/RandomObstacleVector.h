@@ -88,10 +88,10 @@ Extend(const CfgType& _start, const CfgType& _end, CfgType& _new,
 
     // Random polygon
     int randPolyInd = LRand() % polygonList.size();
-    int randEdgeInd = LRand() % polygonList[randPolyInd].m_vertexList.size();
-    int v1Ind= polygonList[randPolyInd].m_vertexList[randEdgeInd];
-    randEdgeInd = (randEdgeInd+1) % polygonList[randPolyInd].m_vertexList.size();
-    int v2Ind= polygonList[randPolyInd].m_vertexList[randEdgeInd];
+    int randEdgeInd = LRand() % polygonList[randPolyInd].GetNumVertices();
+    int v1Ind= polygonList[randPolyInd][randEdgeInd];
+    randEdgeInd = (randEdgeInd+1) % polygonList[randPolyInd].GetNumVertices();
+    int v2Ind= polygonList[randPolyInd][randEdgeInd];
     Vector3d obsVec = vecScale * (vertexList[v1Ind] - vertexList[v2Ind]);
     if( DRand() < 0.5 )
       obsVec *= -1.0;

@@ -334,8 +334,9 @@ ComputeWorldPolyhedron() {
         m_polyhedron.m_vertexList[i];
   }
   for(size_t i = 0; i < m_polyhedron.m_polygonList.size(); ++i)
-    m_worldPolyhedron.m_polygonList[i].m_normal =
-      m_worldTransformation.rotation() * m_polyhedron.m_polygonList[i].m_normal;
+    m_worldPolyhedron.m_polygonList[i].GetNormal() =
+        m_worldTransformation.rotation() *
+        m_polyhedron.m_polygonList[i].GetNormal();
 
   m_worldPolyhedronAvailable = true;
 }

@@ -274,6 +274,7 @@ PMPL_OBJS = \
 	Environment/Environment.o \
 	Environment/FixedBody.o \
 	Environment/FreeBody.o \
+	Environment/GMSPolygon.o \
 	Environment/GMSPolyhedron.o \
 	Environment/MultiBody.o \
 	Environment/StaticMultiBody.o \
@@ -292,7 +293,10 @@ PMPL_OBJS = \
 	ValidityCheckers/CollisionDetection/PQPCollisionDetection.o \
 	ValidityCheckers/CollisionDetection/SolidCollisionDetection.o \
 	ValidityCheckers/CollisionDetection/SpheresCollisionDetection.o \
-	ValidityCheckers/CollisionDetection/VClipCollisionDetection.o
+	ValidityCheckers/CollisionDetection/VClipCollisionDetection.o \
+	Workspace/WorkspaceDecomposition.o \
+	Workspace/WorkspacePortal.o \
+	Workspace/WorkspaceRegion.o
 
 ifeq (${ROBOT_DEF}, PMPCfgMultiRobot)
   PMPL_OBJS += Cfg/CfgMultiRobot.o

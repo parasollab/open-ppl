@@ -6,26 +6,26 @@
 #include <containers/sequential/graph/algorithms/dijkstra.h>
 #include <containers/sequential/graph/algorithms/graph_input_output.h>
 
-#include "TetGenDecomposition.h"
+#include "Environment/Environment.h"
 #include "MPProblem/MPProblemBase.h"
+#include "Workspace/WorkspaceDecomposition.h"
+
+#include "TetGenDecomposition.h"
+
+/*---------------------------- iostream Operators ----------------------------*/
 
 istream&
 operator>>(istream& _is, ReebGraphConstruction::ReebNode& _rn) {
-  return _is
-    >> _rn.m_vertexIndex
-    >> _rn.m_vertex
-    >> _rn.m_w
-    >> _rn.m_order;
+  return _is >> _rn.m_vertexIndex >> _rn.m_vertex >> _rn.m_w >> _rn.m_order;
 }
+
 
 ostream&
 operator<<(ostream& _os, const ReebGraphConstruction::ReebNode& _rn) {
-  return _os
-    << _rn.m_vertexIndex << " "
-    << _rn.m_vertex << " "
-    << _rn.m_w << " "
-    << _rn.m_order;
+  return _os << _rn.m_vertexIndex << " " << _rn.m_vertex << " " << _rn.m_w << " "
+             << _rn.m_order;
 }
+
 
 istream&
 operator>>(istream& _is, ReebGraphConstruction::ReebArc& _ra) {
@@ -41,6 +41,7 @@ operator>>(istream& _is, ReebGraphConstruction::ReebArc& _ra) {
   return _is;
 }
 
+
 ostream&
 operator<<(ostream& _os, const ReebGraphConstruction::ReebArc& _ra) {
   _os << _ra.m_source << " " << _ra.m_target << " " << _ra.m_path.size();
@@ -49,15 +50,15 @@ operator<<(ostream& _os, const ReebGraphConstruction::ReebArc& _ra) {
   return _os;
 }
 
+/*------------------------------- Construction -------------------------------*/
 
 ReebGraphConstruction::
-ReebGraphConstruction(const string& _filename) : m_reebFilename(_filename),
-    m_tetrahedralization(new TetGenDecomposition()) { }
+ReebGraphConstruction(const string& _filename) : m_reebFilename(_filename) { }
 
 
 ReebGraphConstruction::
-ReebGraphConstruction(XMLNode& _node) :
-    m_tetrahedralization(new TetGenDecomposition(_node)) {
+ReebGraphConstruction(XMLNode& _node) {
+  /// @TODO Add real XML parsing that doesn't depend on other objects.
   m_reebFilename = _node.Read("reebFilename", false, "", "Filename for Read "
       "or write ReebGraph operations.");
   if(m_reebFilename.empty())
@@ -65,21 +66,15 @@ ReebGraphConstruction(XMLNode& _node) :
         "Write Reeb Graph to file");
 }
 
-
-ReebGraphConstruction::
-~ReebGraphConstruction() {
-  delete m_tetrahedralization;
-}
-
+/*----------------------------------------------------------------------------*/
 
 void
 ReebGraphConstruction::
 Construct(Environment* _env, const string& _baseFilename) {
   if(m_reebFilename.empty()) {
-    //Compute ReebGraph
     Tetrahedralize(_env, _baseFilename);
     Construct();
-    Embed();
+    Embed(_env);
 
     if(m_writeReeb)
       Write(_baseFilename + ".reeb");
@@ -87,6 +82,7 @@ Construct(Environment* _env, const string& _baseFilename) {
   else
     Read(MPProblemBase::GetPath(m_reebFilename));
 }
+
 
 pair<ReebGraphConstruction::FlowGraph, size_t>
 ReebGraphConstruction::
@@ -101,7 +97,8 @@ GetFlowGraph(const Vector3d& _p, double _posRes) {
   double closestDist = numeric_limits<double>::max();
   FVD closestID = -1;
   for(auto vit = m_reebGraph.begin(); vit != m_reebGraph.end(); ++vit) {
-    Vector3d v = vit->property().m_vertex;
+    /// @TODO Make v a const-ref when stapl fixes sequential graph.
+    Vector3d& v = vit->property().m_vertex;
     FVD vd = vit->descriptor();
     f.add_vertex(vd, v);
     visited[vd] = White;
@@ -155,7 +152,7 @@ GetFlowGraph(const Vector3d& _p, double _posRes) {
                 q.push(v);
               case Gray:
                 {
-                  vector<Vector3d>& opath = eit->property().m_path;
+                  const vector<Vector3d>& opath = eit->property().m_path;
                   vector<Vector3d> path(opath.rbegin(), opath.rend());
                   f.add_edge(ReebGraph::edge_descriptor(u, v, eit->descriptor().id()), path);
                   break;
@@ -174,6 +171,7 @@ GetFlowGraph(const Vector3d& _p, double _posRes) {
   return make_pair(f, closestID);
 }
 
+
 void
 ReebGraphConstruction::
 Read(const string& _filename) {
@@ -184,6 +182,7 @@ Read(const string& _filename) {
   m_reebGraph.set_lazy_update(false);
 }
 
+
 void
 ReebGraphConstruction::
 Write(const string& _filename) {
@@ -191,41 +190,38 @@ Write(const string& _filename) {
   stapl::sequential::write_graph(m_reebGraph, ofs);
 }
 
+
 void
 ReebGraphConstruction::
 Tetrahedralize(Environment* _env, const string& _baseFilename) {
-  //Call TetGenDecomposition
-  m_tetrahedralization->Decompose(_env, _baseFilename);
+  // Get tetrahedral decomposition from environment.
+  if(!_env->GetDecomposition())
+    _env->Decompose(TetGenDecomposition(_baseFilename));
+  auto tetrahedralization = _env->GetDecomposition();
 
-  //Fill vertices vector
-  size_t numPoints = m_tetrahedralization->GetNumPoints();
-  const double* const points = m_tetrahedralization->GetPoints();
-  m_vertices.reserve(numPoints);
-  for(size_t i = 0; i < numPoints; ++i)
-    m_vertices.emplace_back(&points[3*i]);
+  // Copy vertices.
+  m_vertices = tetrahedralization->GetPoints();
 
-  //Fill triangle vector
-  size_t numCorners = m_tetrahedralization->GetNumCorners();
-  size_t numTetras = m_tetrahedralization->GetNumTetras();
-  const int* const tetra = m_tetrahedralization->GetTetras();
+  // Copy triangular faces from tetrahedrons. We want a mapping from each
+  // triangle to the pair of tetrahedra bordering it.
   map<Triangle, unordered_set<size_t>> triangles;
-
-  for(size_t i = 0; i < numTetras; ++i) {
-    auto AddTriangle = [&](size_t _i, size_t _j, size_t _k) {
-      int v[3] = {tetra[i*numCorners + _i], tetra[i*numCorners + _j], tetra[i*numCorners + _k]};
-      sort(v, v+3);
-      triangles[Triangle(v[0], v[1], v[2])].insert(i);
-    };
-
-    AddTriangle(0, 2, 1);
-    AddTriangle(0, 3, 2);
-    AddTriangle(0, 1, 3);
-    AddTriangle(1, 2, 3);
+  size_t count = 0;
+  for(auto tetra = tetrahedralization->begin();
+      tetra != tetrahedralization->end(); ++tetra) {
+    for(const auto& facet : tetra->property().GetFacets()) {
+      // Sort point indexes so opposite-facing triangles have the same
+      // representation.
+      int v[3] = {facet[0], facet[1], facet[2]};
+      sort(v, v + 3);
+      triangles[Triangle(v[0], v[1], v[2])].insert(count);
+    }
+    ++count;
   }
 
   m_triangles.reserve(triangles.size());
   copy(triangles.begin(), triangles.end(), back_inserter(m_triangles));
 }
+
 
 void
 ReebGraphConstruction::
@@ -234,28 +230,27 @@ Construct() {
   /// @brief Morse function over model (currently height)
   /// @param _v Vertex
   /// @todo Generalize to allow something other than height
-  auto f = [&](const Vector3d& _v) {
+  auto f = [](const Vector3d& _v) {
     return _v[1];
   };
 
-  //Add all vertices of tetrahedralization
-  for(size_t i = 0; i < m_vertices.size(); ++i) {
-    double w = f(m_vertices[i]);
-    CreateNode(i, m_vertices[i], w);
-  }
+  // Add all vertices of tetrahedralization
+  for(size_t i = 0; i < m_vertices.size(); ++i)
+    CreateNode(i, m_vertices[i], f(m_vertices[i]));
 
-  //Precompute absolute ordering of vertices to optimize vertex comparison
+  // Precompute absolute ordering of vertices to optimize vertex comparison
   vector<size_t> order;
   for(size_t i = 0; i < m_vertices.size(); ++i)
     order.emplace_back(i);
   ReebNodeComp rnc;
   sort(order.begin(), order.end(), [&](size_t _a, size_t _b) {
-        return rnc(m_reebGraph.find_vertex(_a)->property(), m_reebGraph.find_vertex(_b)->property());
-      });
+      return rnc(m_reebGraph.find_vertex(_a)->property(),
+                 m_reebGraph.find_vertex(_b)->property());
+  });
   for(size_t i = 0; i < order.size(); ++i)
     m_reebGraph.find_vertex(order[i])->property().m_order = i;
 
-  //Precompute ordering of triangles proper usage of MergePaths function
+  // Precompute ordering of triangles proper usage of MergePaths function
   for(auto& t : m_triangles) {
     size_t v[3] = {get<0>(t.first), get<1>(t.first), get<2>(t.first)};
     sort(v, v+3, [&](size_t _a, size_t _b) {
@@ -306,11 +301,13 @@ Construct() {
   Remove2Nodes();
 }
 
+
 void
 ReebGraphConstruction::
 CreateNode(size_t _i, const Vector3d& _v, double _w) {
   m_reebGraph.add_vertex(_i, ReebNode(_i, _v, _w));
 }
+
 
 ReebGraphConstruction::MeshEdge*
 ReebGraphConstruction::
@@ -324,14 +321,15 @@ CreateArc(size_t _s, size_t _t, const unordered_set<size_t>& _tetra) {
     RGEID eid = m_reebGraph.add_edge(_s, _t, ReebArc(_s, _t, m2));
     m2->m_arcs.insert(eid);
   }
+
   //Associate tetrahedrons with edge's reeb arcs
   MeshEdge* e = *m_edges.find(&m);
-  for(auto& a : e->m_arcs) {
-    ReebArc& ra = GetReebArc(a);
-    ra.m_tetra.insert(_tetra.begin(), _tetra.end());
-  }
+  for(auto& a : e->m_arcs)
+    GetReebArc(a).m_tetra.insert(_tetra.begin(), _tetra.end());
+
   return e;
 }
+
 
 void
 ReebGraphConstruction::
@@ -346,6 +344,7 @@ MergePaths(MeshEdge* _e0, MeshEdge* _e1, MeshEdge* _e2) {
   ArcSet& a3 = _e2->m_arcs;
   GlueByMergeSorting(a2, _e0, a3, _e2);
 }
+
 
 void
 ReebGraphConstruction::
@@ -386,6 +385,7 @@ GlueByMergeSorting(ArcSet& _a0, MeshEdge* _e0, ArcSet& _a1, MeshEdge* _e1) {
   }
 }
 
+
 void
 ReebGraphConstruction::
 MergeArcs(RGEID _a0, RGEID _a1) {
@@ -413,6 +413,7 @@ MergeArcs(RGEID _a0, RGEID _a1) {
   m_reebGraph.delete_edge(_a1);
 }
 
+
 ReebGraphConstruction::ReebArc&
 ReebGraphConstruction::
 GetReebArc(RGEID _a) {
@@ -422,12 +423,14 @@ GetReebArc(RGEID _a) {
   return ei->property();
 }
 
+
 void
 ReebGraphConstruction::
 DeleteMeshEdge(MeshEdge* _e) {
   for(auto& a : _e->m_arcs)
     GetReebArc(a).m_edges.erase(_e);
 }
+
 
 void
 ReebGraphConstruction::
@@ -478,42 +481,42 @@ Remove2Nodes() {
   } while(removed);
 }
 
+
 void
 ReebGraphConstruction::
-Embed() {
-  size_t numCorners = m_tetrahedralization->GetNumCorners();
-  const int* const tetras = m_tetrahedralization->GetTetras();
-  TetGenDecomposition::DualGraph& tetraGraph = m_tetrahedralization->GetDualGraph();
+Embed(const Environment* _env) {
+  const auto& tetrahedralization = _env->GetDecomposition();
+  const auto& dualGraph = tetrahedralization->GetDualGraph();
 
-  //embed ReebNodes in tetrahedralization by finding its closest tetrahedron
-  for(auto nit = m_reebGraph.begin(); nit != m_reebGraph.end(); ++nit) {
-    Vector3d& vn = nit->property().m_vertex;
+  // Embed ReebNodes in freespace by finding its closest tetrahedron.
+  // TODO require that the reeb vertex also touches its 'nearest' tetrahedron.
+  for(auto rit = m_reebGraph.begin(); rit != m_reebGraph.end(); ++rit) {
     double minDist = numeric_limits<double>::max();
-    Vector3d closest;
     size_t closestID = -1;
-    for(auto tit = tetraGraph.begin(); tit != tetraGraph.end(); ++tit) {
-      Vector3d& vt = tit->property();
-      double dist = (vt - vn).norm();
+    const Vector3d& reebNode = rit->property().m_vertex;
+
+    // Check each dual graph node for proximity to this reeb graph node.
+    for(auto dit = dualGraph.begin(); dit != dualGraph.end(); ++dit) {
+      double dist = (dit->property() - reebNode).norm();
       if(dist < minDist) {
         minDist = dist;
-        closest = vt;
-        closestID = tit->descriptor();
+        closestID = dit->descriptor();
       }
     }
-    nit->property().m_vertex = closest;
-    nit->property().m_tetra = closestID;
+    rit->property().m_tetra = closestID;
+    rit->property().m_vertex = dualGraph.find_vertex(closestID)->property();
   }
 
-  //embed ReebArcs in tetrahedralization
+  // Embed ReebArcs in freespace.
   for(auto eit = m_reebGraph.edges_begin(); eit != m_reebGraph.edges_end();
       ++eit) {
-    ReebArc& ra = eit->property();
+    ReebArc& arc = eit->property();
 
     //auto WeightGraph = [&](double _factor) {
-    //  for(auto& tetraid : ra.m_tetra) {
-    //    auto vit = tetraGraph.find_vertex(tetraid);
+    //  for(auto& tetraid : arc.m_tetra) {
+    //    auto vit = dualGraph.find_vertex(tetraid);
     //    for(auto adjEI = vit->begin(); adjEI != vit->end(); ++adjEI) {
-    //      auto targetit = tetraGraph.find_vertex(adjEI->target());
+    //      auto targetit = dualGraph.find_vertex(adjEI->target());
     //      adjEI->property() = _factor *
     //        (vit->property() - targetit->property()).norm();
     //    }
@@ -531,7 +534,10 @@ Embed() {
 
     //find path
     vector<size_t> pathVID;
-    stapl::sequential::find_path_dijkstra(tetraGraph,
+    /// @TODO Remove the const-cast once the stapl sequential graph interface
+    ///       allows calling dijkstra's on a const ref to the graph.
+    stapl::sequential::find_path_dijkstra(
+        const_cast<WorkspaceDecomposition::DualGraph&>(dualGraph),
         sourceit->property().m_tetra, targetit->property().m_tetra,
         pathVID, numeric_limits<double>::max());
 
@@ -541,34 +547,28 @@ Embed() {
     // for each tetrahedron pair in path, find common triangle and insert middle
     // of triangle into path for proper transition between the two tetrahedron
     if(!pathVID.empty()) {
-      ra.m_path.clear();
-      for(auto vit1 = pathVID.begin(), vit2 = vit1 + 1;
-          vit2 != pathVID.end(); ++vit1, ++vit2) {
-        Vector3d& v1 = tetraGraph.find_vertex(*vit1)->property();
-        ra.m_path.push_back(v1);
+      arc.m_path.clear();
+      for(auto current = pathVID.begin(), next = current + 1;
+          next != pathVID.end(); ++current, ++next) {
+        // Add the center of the current tetrahedron to the path.
+        arc.m_path.push_back(dualGraph.find_vertex(*current)->property());
 
-        int t1[4];
-        copy(&tetras[(*vit1)*numCorners], &tetras[(*vit1)*numCorners + 4], t1);
-        int t2[4];
-        copy(&tetras[(*vit2)*numCorners], &tetras[(*vit2)*numCorners + 4], t2);
+        // Get the facets that join the current and next tetrahedron.
+        const auto& portal = tetrahedralization->GetPortal(*current, *next);
+        const auto facets = portal.FindFacets();
+        if(facets.size() > 1)
+          throw PMPLException("ReebGraph error", WHERE, "A portal between "
+              "workspace regions has more than one facet, which isn't possible "
+              "for tetrahedral regions.");
 
-        int tcommon[3];
-        size_t j = 0;
-        for(size_t i = 0; i < 4; ++i) {
-          int* f = find(t2, t2+4, t1[i]);
-          if(f != t2 + 4)
-            tcommon[j++] = *f;
-        }
-
-        Vector3d c;
-        for(size_t i = 0; i < 3; ++i)
-          c += m_vertices[tcommon[i]];
-        c /= 3;
-
-        ra.m_path.push_back(c);
+        // Add the centroid of the joining facet to the path.
+        arc.m_path.push_back(facets.front()->FindCenter());
       }
-      ra.m_path.push_back(tetraGraph.find_vertex(pathVID.back())->property());
+
+      // Add the center of the last tetrahedron as the end of the path.
+      arc.m_path.push_back(dualGraph.find_vertex(pathVID.back())->property());
     }
   }
 }
 
+/*----------------------------------------------------------------------------*/

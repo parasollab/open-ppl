@@ -100,11 +100,11 @@ class DynamicRegionRRT : public BasicRRTStrategy<MPTraits> {
     void FlowToMedialAxis(FlowGraph& _f) const;
 
     ////////////////////////////////////////////////////////////////////////////
-    /// \brief Test whether the newest cfg is touching a region 
+    /// \brief Test whether the newest cfg is touching a region
     /// \param[in] _cfg The newest cfg.
     /// \param[in] _region The region begin tested.
     bool IsTouching(const CfgType& _cfg, RegionPtr _region);
-    
+
     ///@}
     ///\name Internal State
     ///@{
@@ -158,18 +158,18 @@ Initialize() {
   BasicRRTStrategy<MPTraits>::Initialize();
 
   StatClass* stats = this->GetStatClass();
+  auto env = this->GetEnvironment();
 
   //Embed ReebGraph
   stats->StartClock("ReebGraphConstruction");
   delete m_reebGraph;
   m_reebGraph = new ReebGraphConstruction();
-  m_reebGraph->Construct(this->GetEnvironment(),
-      this->GetBaseFilename());
+  m_reebGraph->Construct(env, this->GetBaseFilename());
   stats->StopClock("ReebGraphConstruction");
 
 #ifdef VIZMO
-  GetVizmo().GetEnv()->AddTetGenDecompositionModel(m_reebGraph->
-      GetTetrahedralization());
+  GetVizmo().GetEnv()->AddWorkspaceDecompositionModel(
+      env->GetDecomposition().get());
   GetVizmo().GetEnv()->AddReebGraphModel(m_reebGraph);
   GetMainWindow()->GetModelSelectionWidget()->CallResetLists();
 
@@ -485,17 +485,18 @@ bool
 DynamicRegionRRT<MPTraits>::
 IsTouching(const CfgType& _cfg, RegionPtr _region) {
   auto region = static_pointer_cast<BoundingSphere>(_region);
-  
-  const Point3d& robotCenter = _cfg.GetPoint(); 
-  const Point3d& regionCenter = region->GetCenter(); 
-  
-  double robotRadius = this->GetEnvironment()->GetRobot(0)->GetBoundingSphereRadius();
+
+  const Point3d& robotCenter = _cfg.GetPoint();
+  const Point3d& regionCenter = region->GetCenter();
+
+  double robotRadius = this->GetEnvironment()->GetRobot(0)->
+      GetBoundingSphereRadius();
   double regionRadius = region->GetRadius();
-  
+
   // distance between the region and the robot
   double dist = (regionCenter - robotCenter).norm();
 
-  // the maximum distance the the robot is inisde the region 
+  // the maximum distance the the robot is inisde the region
   double maxPenetration = robotRadius + regionRadius - dist;
 
   return maxPenetration > 0 && maxPenetration >= 2 * robotRadius * m_robotFactor;

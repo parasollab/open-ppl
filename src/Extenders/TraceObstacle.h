@@ -103,10 +103,10 @@ Extend(const CfgType& _start, const CfgType& _end, CfgType& _new,
     polyIndex = obsContactIndex;
   else
     polyIndex = LRand() % polygonList.size();
-  int randEdgeInd = LRand() % polygonList[polyIndex].m_vertexList.size();
-  int v1Ind= polygonList[polyIndex].m_vertexList[randEdgeInd];
-  randEdgeInd = (randEdgeInd+1) % polygonList[polyIndex].m_vertexList.size();
-  int v2Ind= polygonList[polyIndex].m_vertexList[randEdgeInd];
+  int randEdgeInd = LRand() % polygonList[polyIndex].GetNumVertices();
+  int v1Ind= polygonList[polyIndex][randEdgeInd];
+  randEdgeInd = (randEdgeInd+1) % polygonList[polyIndex].GetNumVertices();
+  int v2Ind= polygonList[polyIndex][randEdgeInd];
   Vector3d obsVec = vecScale * (vertexList[v1Ind] - vertexList[v2Ind]);
   if( DRand() < 0.5 )
     obsVec *= -1.0;

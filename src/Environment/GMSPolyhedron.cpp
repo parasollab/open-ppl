@@ -16,70 +16,8 @@
 
 using namespace std;
 
-/*-------------------------- GMSPolygon --------------------------------------*/
 
-GMSPolygon::
-GMSPolygon(int _v1, int _v2, int _v3) : m_vertexList{_v1, _v2, _v3} { }
-
-
-bool
-GMSPolygon::
-operator==(const GMSPolygon& _p) const {
-  return m_area == _p.m_area
-      && m_normal == _p.m_normal
-      && m_vertexList == _p.m_vertexList;
-}
-
-
-bool
-GMSPolygon::
-operator!=(const GMSPolygon& _p) const {
-  return !(*this == _p);
-}
-
-
-bool
-GMSPolygon::
-IsTriangle() const {
-  return m_vertexList.size() == 3 &&
-      m_vertexList[0] != m_vertexList[1] &&
-      m_vertexList[1] != m_vertexList[2] &&
-      m_vertexList[0] != m_vertexList[2];
-}
-
-
-int
-GMSPolygon::
-CommonVertex(const GMSPolygon& _p) const {
-  for(size_t i = 0; i < m_vertexList.size(); ++i) {
-    for(size_t j = 0; j < m_vertexList.size(); ++j) {
-      if(m_vertexList[i] == _p.m_vertexList[j]) {
-        return m_vertexList[i];
-      }
-    }
-  }
-  return -1;
-}
-
-
-pair<int, int>
-GMSPolygon::
-CommonEdge(const GMSPolygon& _p) const {
-  pair<int, int> edgeID(-1, -1);
-  for(size_t i = 0; i < m_vertexList.size(); ++i) {
-    for(size_t j = 0; j < m_vertexList.size(); ++j) {
-      if(m_vertexList[i] == _p.m_vertexList[j]) {
-        if(edgeID.first == -1)
-          edgeID.first = m_vertexList[i];
-        else
-          edgeID.second = m_vertexList[i];
-      }
-    }
-  }
-  return edgeID;
-}
-
-/*-------------------------- GMSPolyhedron -----------------------------------*/
+/*-------------------------------- Equality ----------------------------------*/
 
 bool
 GMSPolyhedron::
@@ -98,6 +36,7 @@ operator!=(const GMSPolyhedron& _p) const {
   return !(*this == _p);
 }
 
+/*------------------------------ I/O Functions -------------------------------*/
 
 Vector3d
 GMSPolyhedron::
@@ -120,8 +59,6 @@ Read(string _fileName, COMAdjust _comAdjust) {
     throw ParseException(WHERE, "Cannot read model '" + _fileName + "'.");
 
   Vector3d com = LoadFromIModel(imodel.get(), _comAdjust);
-
-  ComputeNormals();
 
   return com;
 }
@@ -181,7 +118,12 @@ LoadFromIModel(IModel* _imodel, COMAdjust _comAdjust) {
 
   // Add triangles to the polyhedron.
   for(auto& t : _imodel->GetTriP())
-    m_polygonList.emplace_back(t[0], t[1], t[2]);
+    m_polygonList.emplace_back(t[0], t[1], t[2], m_vertexList);
+
+  // Compute the surface area.
+  m_area = 0;
+  for(const auto& p : m_polygonList)
+    m_area += p.GetArea();
 
   return com;
 }
@@ -196,88 +138,13 @@ WriteBYU(ostream& _os) const {
   for(const auto& v : m_vertexList)
     _os << v << endl;
   for(const auto& p : m_polygonList) {
-    for(auto i = p.m_vertexList.begin(); (i + 1) != p.m_vertexList.end(); ++i)
+    for(auto i = p.begin(); (i + 1) != p.end(); ++i)
       _os << *i + 1 << " ";
-    _os << "-" << p.m_vertexList.back() + 1 << endl;
+    _os << "-" << (*--p.end()) + 1 << endl;
   }
 }
 
-
-void
-GMSPolyhedron::
-ComputeNormals() {
-  double sum = 0;
-  for(auto& p : m_polygonList) {
-    Vector3d v1 = m_vertexList[p.m_vertexList[1]] -
-        m_vertexList[p.m_vertexList[0]];
-    Vector3d v2 = m_vertexList[p.m_vertexList[2]] -
-        m_vertexList[p.m_vertexList[0]];
-    p.m_normal = v1 % v2;
-    p.m_area = .5 * p.m_normal.norm();
-    sum += p.m_area;
-    p.m_normal = p.m_normal.normalize();
-  }
-  m_area = sum;
-}
-
-
-void
-GMSPolyhedron::
-BuildBoundary2D() {
-  m_boundaryLines.clear();
-  m_boundaryBuilt = false;
-  m_force2DBoundary = true;
-  BuildBoundary();
-}
-
-
-void
-GMSPolyhedron::
-BuildBoundary() {
-  if(m_boundaryBuilt) return;            // only allow this to be attempted once
-  if(m_boundaryLines.size() > 0) return; // this has been done
-
-  m_boundaryBuilt = true;
-
-  // Create function for determining if a polygon is near the XZ surface plane.
-  static auto NearXZPlane = [&](const GMSPolygon& _p) -> bool {
-    const double tol = 0.3; // Tolerance for considering points near-plane.
-    const auto& p = _p.m_vertexList;
-    const auto& v = this->m_vertexList;
-    return fabs(v[p[0]][1]) <= tol && fabs(v[p[1]][1]) <= tol &&
-      fabs(v[p[2]][1]) <= tol;
-  };
-
-  // Get all of the edges from every triangle.
-  multiset<pair<int, int>> lines;
-  for(const auto& tri : m_polygonList) {
-    if(m_force2DBoundary && !NearXZPlane(tri))
-      continue;
-    for(unsigned short i = 0; i < 3; ++i) {
-      // Always put the lower vertex index first to make finding duplicates
-      // easier.
-      const int& a = tri.m_vertexList[i];
-      const int& b = tri.m_vertexList[(i + 1) % 3];
-      lines.emplace(min(a, b), max(a, b));
-    }
-  }
-
-  // Store the edges that occurred exactly once as the boundary lines.
-  for(auto iter = lines.begin(), next = ++lines.begin();
-      iter != lines.end() && next != lines.end(); ++iter, ++next) {
-    if(*iter != *next)
-      continue;
-    do {
-      ++next;
-    } while(next != lines.end() && *iter == *next);
-    iter = lines.erase(iter, next);
-    --iter;
-  }
-
-  m_boundaryLines.reserve(lines.size());
-  copy(lines.begin(), lines.end(), back_inserter(m_boundaryLines));
-}
-
+/*-------------------------------- Equality ----------------------------------*/
 
 Point3d
 GMSPolyhedron::
@@ -291,7 +158,7 @@ GetRandPtOnSurface() const {
       index = 0;
       double prob = DRand(), cummProb = 0;
       for(const auto& tri : m_polygonList) {
-	cummProb += tri.m_area / m_area;
+	cummProb += tri.GetArea() / m_area;
 	if(prob <= cummProb)
 	  break;
         ++index;
@@ -313,11 +180,11 @@ GetRandPtOnSurface() const {
     v = 1 - v;
   }
   const GMSPolygon& tri = m_polygonList[index];
-  const Vector3d& p0 = m_vertexList[tri.m_vertexList[0]];
-  const Vector3d& p1 = m_vertexList[tri.m_vertexList[1]];
-  const Vector3d& p2 = m_vertexList[tri.m_vertexList[2]];
-  Vector3d AB = p1 - p0;
-  Vector3d AC = p2 - p0;
+  const Vector3d& p0 = tri.GetPoint(0);
+  const Vector3d& p1 = tri.GetPoint(1);
+  const Vector3d& p2 = tri.GetPoint(2);
+  const Vector3d AB = p1 - p0;
+  const Vector3d AC = p2 - p0;
   return p0 + (u * AB) + (v * AC);
 }
 
@@ -328,12 +195,12 @@ IsOnSurface(const Point2d& _p) const {
   for(const auto& poly : m_polygonList) {
     if(!poly.IsTriangle())
       continue;
-    const Vector3d& v0 = m_vertexList[poly.m_vertexList[0]];
-    const Vector3d& v1 = m_vertexList[poly.m_vertexList[1]];
-    const Vector3d& v2 = m_vertexList[poly.m_vertexList[2]];
-    Point2d p0(v0[0], v0[2]);
-    Point2d p1(v1[0], v1[2]);
-    Point2d p2(v2[0], v2[2]);
+    const Vector3d& v0 = poly.GetPoint(0);
+    const Vector3d& v1 = poly.GetPoint(1);
+    const Vector3d& v2 = poly.GetPoint(2);
+    const Point2d p0(v0[0], v0[2]);
+    const Point2d p1(v1[0], v1[2]);
+    const Point2d p2(v2[0], v2[2]);
     if(PtInTriangle(p0, p1, p2, _p))
       return true;
   }
@@ -347,9 +214,9 @@ HeightAtPt(const Point2d& _p, bool& _valid) const {
   for(const auto& poly : m_polygonList) {
     if(!poly.IsTriangle())
       continue;
-    const Vector3d& v0 = m_vertexList[poly.m_vertexList[0]];
-    const Vector3d& v1 = m_vertexList[poly.m_vertexList[1]];
-    const Vector3d& v2 = m_vertexList[poly.m_vertexList[2]];
+    const Vector3d& v0 = poly.GetPoint(0);
+    const Vector3d& v1 = poly.GetPoint(1);
+    const Vector3d& v2 = poly.GetPoint(2);
     Point2d p0(v0[0], v0[2]);
     Point2d p1(v1[0], v1[2]);
     Point2d p2(v2[0], v2[2]);
@@ -378,8 +245,8 @@ HeightAtPt(const Point2d& _p, bool& _valid) const {
 inline double
 distanceSqrFromSegment(const Point3d& _p, const Point3d& _s, const Point3d& _e,
     Point3d& _closest) {
-  Vector3d n = _e - _s;
-  Vector3d q = _p - _s;
+  const Vector3d n = _e - _s;
+  const Vector3d q = _p - _s;
   double len = q.comp(n);
   if(len <= 0)
     _closest = _s;
@@ -481,10 +348,10 @@ CGAL() const {
         b.add_vertex(p);
 
       // Add facets.
-      for(const auto& f : m_poly.m_polygonList) {
+      for(const auto& facet : m_poly.m_polygonList) {
         b.begin_facet();
-        for(const auto& i : f.m_vertexList)
-          b.add_vertex_to_facet(i);
+        for(const auto& index : facet)
+          b.add_vertex_to_facet(index);
         b.end_facet();
       }
 
@@ -500,6 +367,64 @@ CGAL() const {
     throw RunTimeException(WHERE, "GMSPolyhedron:: Invalid CGAL polyhedron "
         "created!");
   return cp;
+}
+
+/*-------------------------- Initialization Helpers --------------------------*/
+
+void
+GMSPolyhedron::
+BuildBoundary2D() {
+  m_boundaryLines.clear();
+  m_boundaryBuilt = false;
+  m_force2DBoundary = true;
+  BuildBoundary();
+}
+
+
+void
+GMSPolyhedron::
+BuildBoundary() {
+  if(m_boundaryBuilt) return;            // only allow this to be attempted once
+  if(m_boundaryLines.size() > 0) return; // this has been done
+
+  m_boundaryBuilt = true;
+
+  // Create function for determining if a polygon is near the XZ surface plane.
+  static auto NearXZPlane = [&](const GMSPolygon& _p) -> bool {
+    const double tolerance = 0.3; // Tolerance for considering points near-plane.
+    return fabs(_p.GetPoint(0)[1]) <= tolerance
+        && fabs(_p.GetPoint(1)[1]) <= tolerance
+        && fabs(_p.GetPoint(2)[1]) <= tolerance;
+  };
+
+  // Get all of the edges from every triangle.
+  multiset<pair<int, int>> lines;
+  for(const auto& tri : m_polygonList) {
+    if(m_force2DBoundary && !NearXZPlane(tri))
+      continue;
+    for(unsigned short i = 0; i < 3; ++i) {
+      // Always put the lower vertex index first to make finding duplicates
+      // easier.
+      const int& a = tri[i];
+      const int& b = tri[(i + 1) % 3];
+      lines.emplace(min(a, b), max(a, b));
+    }
+  }
+
+  // Store the edges that occurred exactly once as the boundary lines.
+  for(auto iter = lines.begin(), next = ++lines.begin();
+      iter != lines.end() && next != lines.end(); ++iter, ++next) {
+    if(*iter != *next)
+      continue;
+    do {
+      ++next;
+    } while(next != lines.end() && *iter == *next);
+    iter = lines.erase(iter, next);
+    --iter;
+  }
+
+  m_boundaryLines.reserve(lines.size());
+  copy(lines.begin(), lines.end(), back_inserter(m_boundaryLines));
 }
 
 /*----------------------------------------------------------------------------*/

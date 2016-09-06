@@ -1,6 +1,12 @@
 #ifndef ENVIRONMENT_H_
 #define ENVIRONMENT_H_
 
+#include <functional>
+#include <iostream>
+#include <memory>
+#include <string>
+#include <vector>
+
 #include "Transformation.h"
 using namespace mathtool;
 
@@ -15,6 +21,7 @@ class CollisionDetectionMethod;
 class MultiBody;
 class StaticMultiBody;
 class SurfaceMultiBody;
+class WorkspaceDecomposition;
 
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup Environment
@@ -26,23 +33,27 @@ class SurfaceMultiBody;
 /// sampling/exploration region for the planner.
 ////////////////////////////////////////////////////////////////////////////////
 class Environment {
+
   public:
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// @name Constructors
-    /// @{
-    Environment();
-    ////////////////////////////////////////////////////////////////////////////
-    /// @param _node XMLNode describing environment parameters
+    ///@name Local Types
+    ///@{
+
+    typedef function<shared_ptr<WorkspaceDecomposition>(const Environment*)>
+        DecompositionFunction;
+
+    ///@}
+    ///@name Construction
+    ///@{
+
+    Environment() = default;
     Environment(XMLNode& _node);
+    virtual ~Environment() = default;
 
-    virtual ~Environment();
-    /// @}
-    ////////////////////////////////////////////////////////////////////////////
+    ///@}
+    ///@name I/O
+    ///@{
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// @name I/O
-    /// @{
     ////////////////////////////////////////////////////////////////////////////
     /// @return Filename from which environment came
     const string& GetEnvFileName() const {return m_filename;}
@@ -51,55 +62,38 @@ class Environment {
     /// @brief Parse environment file
     /// @param _filename Filename
     void Read(string _filename);
+
     ////////////////////////////////////////////////////////////////////////////
     /// @brief Prints environment resolutions and boundary information
     /// @param _os Output stream
     void Print(ostream& _os) const;
+
     ////////////////////////////////////////////////////////////////////////////
     /// @brief Output environment to .env file format
     /// @param _os Output stream
     void Write(ostream& _os);
-    /// @}
-    ////////////////////////////////////////////////////////////////////////////
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// @name Resolutions
-    /// @{
-    ////////////////////////////////////////////////////////////////////////////
-    /// @return Position resolution
-    double GetPositionRes() const { return m_positionRes; }
-    ////////////////////////////////////////////////////////////////////////////
-    /// @param _res Position resoltuion
-    void SetPositionRes(double _res) { m_positionRes = _res; }
+    ///@}
+    ///@name Resolutions
+    ///@{
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// @return Orientation resolution
-    double GetOrientationRes() const { return m_orientationRes; }
-    ////////////////////////////////////////////////////////////////////////////
-    /// @param _res Orientation resolution
-    void SetOrientationRes(double _res) { m_orientationRes = _res; }
+    double GetPositionRes() const {return m_positionRes;}
+    void SetPositionRes(double _res) {m_positionRes = _res;}
+
+    double GetOrientationRes() const {return m_orientationRes;}
+    void SetOrientationRes(double _res) {m_orientationRes = _res;}
 
 #if (defined(PMPReachDistCC) || defined(PMPReachDistCCFixed))
-    ////////////////////////////////////////////////////////////////////////////
-    /// @return Reachable distance resolution
-    double GetRDRes() const {return m_rdRes;}
+    double GetRDRes() const {return m_rdRes;} ///< Reachable distance resolution.
 #endif
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// @return Time resolution
-    double GetTimeRes() const { return m_timeRes; }
+    double GetTimeRes() const {return m_timeRes;}
 
-    /// @}
-    ////////////////////////////////////////////////////////////////////////////
+    ///@}
+    ///@name Boundary Functions
+    ///@{
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// @name Boundary
-    /// @{
-    ////////////////////////////////////////////////////////////////////////////
-    /// @return Boundary pointer
     shared_ptr<Boundary> GetBoundary() const {return m_boundary;}
-    ////////////////////////////////////////////////////////////////////////////
-    /// @param _b Boundary pointer
     void SetBoundary(shared_ptr<Boundary> _b) {m_boundary = _b;}
 
     ////////////////////////////////////////////////////////////////////////////
@@ -114,15 +108,11 @@ class Environment {
     /// inside of C-Space) and lies inside of the workspace boundary (i.e., the
     /// robot at that configuration is inside of the workspace).
     template<class CfgType>
-      bool InBounds(const CfgType& _cfg, shared_ptr<Boundary> _b);
-    ////////////////////////////////////////////////////////////////////////////
-    /// @brief Test if configuration in inside of the workspace and satisfies
-    ///        physical robot constraints.
-    ///
+    bool InBounds(const CfgType& _cfg, shared_ptr<Boundary> _b);
+
     /// @overload
-    /// No boundary is specified.
     template<class CfgType>
-      bool InBounds(const CfgType& _cfg) {return InBounds(_cfg, m_boundary);}
+    bool InBounds(const CfgType& _cfg) {return InBounds(_cfg, m_boundary);}
 
     ////////////////////////////////////////////////////////////////////////////
     /// @brief Resize the boundary to a margin away from the obstacles
@@ -138,18 +128,19 @@ class Environment {
     /// @param _d Margin to increase bounding box
     /// @param _robotIndex Robot to base the margin off of
     void ExpandBoundary(double _d, size_t _robotIndex);
-    /// @}
-    ////////////////////////////////////////////////////////////////////////////
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// @name MultiBodies
-    /// @{
+    ///@}
+    ///@name Multibody Functions
+    ///@{
+
     ////////////////////////////////////////////////////////////////////////////
     /// @return Number of Active MultiBodies
     size_t NumRobots() const {return m_robots.size();}
+
     ////////////////////////////////////////////////////////////////////////////
     /// @return Number of Static MultiBodies
     size_t NumObstacles() const {return m_obstacles.size();}
+
     ////////////////////////////////////////////////////////////////////////////
     /// @return Number of Surface MultiBodies
     size_t NumSurfaces() const {return m_surfaces.size();}
@@ -158,10 +149,12 @@ class Environment {
     /// @param _index Requested multibody
     /// @return Pointer to active multibody
     shared_ptr<ActiveMultiBody> GetRobot(size_t _index) const;
+
     ////////////////////////////////////////////////////////////////////////////
     /// @param _index Requested multibody
     /// @return Pointer to static multibody
     shared_ptr<StaticMultiBody> GetObstacle(size_t _index) const;
+
     ////////////////////////////////////////////////////////////////////////////
     /// @param _index Requested multibody
     /// @return Pointer to surface multibody
@@ -170,6 +163,7 @@ class Environment {
     ////////////////////////////////////////////////////////////////////////////
     /// @return Pointer to random static multibody
     shared_ptr<StaticMultiBody> GetRandomObstacle() const;
+
     ////////////////////////////////////////////////////////////////////////////
     /// @return Index to random navigable surface. -1 means base surface.
     ssize_t GetRandomSurfaceIndex();
@@ -197,16 +191,32 @@ class Environment {
     /// @brief Build collision detection models for external libraries
     void BuildCDStructure();
 
-    /// @}
+    ///@}
+    ///@name Decomposition
+    ///@{
+
+    shared_ptr<const WorkspaceDecomposition> GetDecomposition() const {
+      return const_pointer_cast<const WorkspaceDecomposition>(m_decomposition);
+    }
+
     ////////////////////////////////////////////////////////////////////////////
+    /// @brief Compute a decomposition of the workspace.
+    /// @param[in] _f The decomposition function to use.
+    void Decompose(DecompositionFunction&& _f) {m_decomposition = _f(this);}
+
+    ///@}
 
   protected:
+
+    ///@name Helpers
+    ///@{
 
     ////////////////////////////////////////////////////////////////////////////
     /// @brief Read boundary information
     /// @param _is Input stream
     /// @param _cbs Counting stream buffer for accurate error reporting
     void ReadBoundary(istream& _is, CountingStreamBuffer& _cbs);
+
     ////////////////////////////////////////////////////////////////////////////
     /// @brief Write boundary information
     /// @param _os Output stream
@@ -228,7 +238,7 @@ class Environment {
     /// @param _b Workspace region of environment
     /// @return True if @p _cfg is inside physical robot constraints
     template<class CfgType>
-      bool InCSpace(const CfgType& _cfg, shared_ptr<Boundary> _b);
+    bool InCSpace(const CfgType& _cfg, shared_ptr<Boundary> _b);
 
     ////////////////////////////////////////////////////////////////////////////
     /// @tparam CfgType Configuration class type
@@ -238,38 +248,61 @@ class Environment {
     /// @return True if @p _cfg is inside workspace boundary
     bool InWSpace(const Cfg& _cfg, shared_ptr<Boundary> _b);
 
-    string m_filename;     ///< Which file did this environment come from
-    string m_modelDataDir; ///< Directory where environment file is located
-    bool m_saveDofs;       ///< Should we save the dof information to a file
+    ///@}
+    ///@name File Info
+    ///@{
 
-    double m_positionRes;       ///< Positional resolution of movement
-    double m_positionResFactor; ///< Factor of body span to use as auto computed
-                                ///< Positional resolution
-    double m_orientationRes;    ///< Rotational resolution of movement
-    double m_rdRes;             ///< Resolution for movement in RD space
-    double m_timeRes;           ///< Resolution for time
+    string m_filename;      ///< Which file did this environment come from?
+    string m_modelDataDir;  ///< Directory where environment file is located.
+    bool m_saveDofs{false}; ///< Should we save the dof information to a file?
 
-    shared_ptr<Boundary> m_boundary; ///< Boundary of the workspace
+    ///@}
+    ///@name Resolution Info
+    ///@{
 
-    vector<shared_ptr<ActiveMultiBody>> m_robots;    ///< Robots
-    vector<shared_ptr<StaticMultiBody>> m_obstacles; ///< Other multibodies
-    vector<shared_ptr<SurfaceMultiBody>> m_surfaces; ///< Surfaces
+    double m_positionRes{.05};       ///< Positional resolution of movement.
+    double m_positionResFactor;      ///< Factor of body span to use as auto-
+                                     ///< computed positional resolution.
+    double m_orientationRes{.05};    ///< Rotational resolution of movement.
+    double m_rdRes{.05};             ///< Resolution for movement in RD space.
+    double m_timeRes{.05};           ///< Resolution for time.
+
+    ///@}
+    ///@name Models
+    ///@{
+
+    shared_ptr<Boundary> m_boundary; ///< Workspace boundary.
+
+    vector<shared_ptr<ActiveMultiBody>> m_robots;    ///< Robots.
+    vector<shared_ptr<StaticMultiBody>> m_obstacles; ///< Other multibodies.
+    vector<shared_ptr<SurfaceMultiBody>> m_surfaces; ///< Surfaces.
+
+    ///@}
+    ///@name Decomposition
+    ///@{
+
+    /// A workspace decomposition model describes a partitioning of free space.
+    shared_ptr<WorkspaceDecomposition> m_decomposition;
+
+    ///@}
 };
+
+/*----------------------------- Boundary Functions ---------------------------*/
 
 template<class CfgType>
 bool
 Environment::
 InBounds(const CfgType& _cfg, shared_ptr<Boundary> _b) {
-  if(InCSpace(_cfg, _b))
-    if(InWSpace(_cfg, _b))
-      return true;
-  return false;
+  return InCSpace(_cfg, _b) && InWSpace(_cfg, _b);
 }
+
 
 template<>
 bool
 Environment::
 InBounds<CfgMultiRobot>(const CfgMultiRobot& _cfg, shared_ptr<Boundary> _b);
+
+/*--------------------------------- Helpers ----------------------------------*/
 
 template<class CfgType>
 bool
@@ -279,11 +312,14 @@ InCSpace(const CfgType& _cfg, shared_ptr<Boundary> _b) {
   return m_robots[activeBodyIndex]->InCSpace(_cfg.GetData(), _b);
 }
 
+
 #ifdef PMPState
 template<>
 bool
 Environment::
 InCSpace<State>(const State& _cfg, shared_ptr<Boundary> _b);
 #endif
+
+/*----------------------------------------------------------------------------*/
 
 #endif

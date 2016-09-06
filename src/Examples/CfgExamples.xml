@@ -101,8 +101,7 @@
       <UniformMedialAxisSampler label="UMAPRM" vcLabel="cd4" useBBX="true"
         dmLabel="euclidean" d="2.00" t="10" clearanceType="exact"
         penetrationType="exact" debug="false" positional="true"/>
-      <WorkspaceImportanceSampler label="WIS" vcLabel="cd1" switches="pnQ"
-        alpha="0.2"/>
+      <WorkspaceImportanceSampler label="WIS" vcLabel="cd1" alpha="0.2"/>
     </Samplers>
 
     <LocalPlanners>
@@ -441,7 +440,9 @@
         growthFocus="0.01" dmLabel="euclidean"
         nfLabel="Nearest" vcLabel="cd1"
         gtype="UNDIRECTED_TREE" debug="false"
-        growGoals="false" extenderLabel="BERO"/>
+        growGoals="false" extenderLabel="BERO">
+        <Evaluator label="BoundedRRTQuery"/>
+      </DynamicRegionRRT>
 
       <!-- Toggle PRM -->
       <TogglePRMStrategy label="TogglePRM" priority="true">

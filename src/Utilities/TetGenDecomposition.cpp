@@ -8,25 +8,22 @@
 #include "Environment/FixedBody.h"
 #include "Environment/StaticMultiBody.h"
 #include "MPProblem/MPProblemBase.h"
+#include "Workspace/WorkspaceDecomposition.h"
 
 #include <CGAL/IO/io.h>
 
 /*------------------------------- Construction -------------------------------*/
 
 TetGenDecomposition::
-TetGenDecomposition(const string& _switches,
+TetGenDecomposition(const string& _baseFilename, const string& _switches,
     bool _writeFreeModel, bool _writeDecompModel) :
-    m_freeModel(new tetgenio()),
-    m_decompModel(new tetgenio()),
-    m_switches(_switches),
-    m_writeFreeModel(_writeFreeModel),
-    m_writeDecompModel(_writeDecompModel) { }
+    m_baseFilename(_baseFilename), m_switches(_switches),
+    m_writeFreeModel(_writeFreeModel), m_writeDecompModel(_writeDecompModel) { }
 
 
 TetGenDecomposition::
-TetGenDecomposition(XMLNode& _node) :
-    m_freeModel(new tetgenio()),
-    m_decompModel(new tetgenio()) {
+TetGenDecomposition(XMLNode& _node) {
+  /// @TODO Add real XML parsing that doesn't depend on other objects.
   m_tetGenFilename = _node.Read("tetGenFilename", false, "",
       "Input Filename for reading TetGen models from file");
   if(m_tetGenFilename.empty()) {
@@ -44,6 +41,7 @@ TetGenDecomposition(XMLNode& _node) :
   m_debug = _node.Read("debug", false, false, "Show debug messages");
 }
 
+
 TetGenDecomposition::
 ~TetGenDecomposition() {
   delete m_freeModel;
@@ -52,17 +50,16 @@ TetGenDecomposition::
 
 /*----------------------------- Decomposition --------------------------------*/
 
-void
+shared_ptr<WorkspaceDecomposition>
 TetGenDecomposition::
-Decompose(Environment* _env, const string& _baseFilename) {
+operator()(const Environment* _env) {
   if(m_debug)
     cout << "Decomposing environment with tetgen..." << endl;
 
+  Initialize();
   m_env = _env;
-  m_baseFilename = _baseFilename;
 
   if(m_tetGenFilename.empty()) {
-    //make in tetgenio - this is a model of free workspace to decompose
     MakeFreeModel();
     if(m_writeFreeModel)
       SaveFreeModel();
@@ -70,7 +67,6 @@ Decompose(Environment* _env, const string& _baseFilename) {
     if(m_debug)
       cout << "\tRunning tetgen with switches '" << m_switches << "'..." << endl;
 
-    //decompose with tetgen
     tetrahedralize(const_cast<char*>(m_switches.c_str()),
         m_freeModel, m_decompModel);
     if(m_writeDecompModel)
@@ -85,23 +81,75 @@ Decompose(Environment* _env, const string& _baseFilename) {
     tetrahedralize(const_cast<char*>("rn"), m_decompModel, m_decompModel);
   }
 
-  MakeDualGraph();
-
   m_env = nullptr;
-  m_baseFilename = "";
 
   if(m_debug)
     cout << "Decomposition complete." << endl;
+
+  return MakeDecomposition();
+}
+
+
+shared_ptr<WorkspaceDecomposition>
+TetGenDecomposition::
+MakeDecomposition() {
+  // Assert that tetgen actually produced a tetrahedralization and not something
+  // else.
+  const size_t numCorners = m_decompModel->numberofcorners;
+  if(numCorners != 4)
+    throw PMPLException("TetGen error", WHERE, "The decomposition is not "
+        "tetrahedral. Expected 4 points per tetraherdon, but got " +
+        to_string(numCorners) + ".");
+
+  // Make decomposition object.
+  shared_ptr<WorkspaceDecomposition> decomposition(new WorkspaceDecomposition());
+
+  // Add points.
+  const size_t numPoints = m_decompModel->numberofpoints;
+  const double* const points = m_decompModel->pointlist;
+  for(size_t i = 0; i < numPoints; ++i)
+    decomposition->AddPoint(Point3d(&points[3 * i]));
+
+  // Make region for each tetrahedron.
+  const size_t numTetras = m_decompModel->numberoftetrahedra;
+  const int* const tetra = m_decompModel->tetrahedronlist;
+  for(size_t i = 0; i < numTetras; ++i)
+    decomposition->AddTetrahedralRegion(&tetra[i * numCorners]);
+
+  // Make edges between adjacent tetrahedra.
+  const int* const neighbors = m_decompModel->neighborlist;
+  for(size_t i = 0; i < numTetras; ++i) {
+    // Each tetrahedron has up to 4 neighbors. Empty slots are marked with an
+    // index of -1.
+    for(size_t j = 0; j < 4; ++j) {
+      size_t neighborIndex = neighbors[4 * i + j];
+      if(neighborIndex != size_t(-1))
+        decomposition->AddPortal(i, neighborIndex);
+    }
+  }
+
+  decomposition->Finalize();
+  return decomposition;
 }
 
 /*------------------------ Freespace Model Creation --------------------------*/
 
 void
 TetGenDecomposition::
+Initialize() {
+  delete m_freeModel;
+  delete m_decompModel;
+  m_freeModel = new tetgenio();
+  m_decompModel = new tetgenio();
+}
+
+
+void
+TetGenDecomposition::
 MakeFreeModel() {
   if(m_debug)
     cout << "Creating free model..." << endl
-         << "Adding boundary..." << endl;
+         << "\tAdding boundary..." << endl;
 
   // Initialize the freespace model as an outward-facing boundary.
   auto cp = m_env->GetBoundary()->CGAL();
@@ -110,13 +158,13 @@ MakeFreeModel() {
   // Subtract each obstacle from the freespace.
   for(size_t i = 0; i < m_env->NumObstacles(); ++i) {
     if(m_debug)
-      cout << "Adding obstacle " << i << "..." << endl;
+      cout << "\tAdding obstacle " << i << "..." << endl;
     shared_ptr<StaticMultiBody> obst = m_env->GetObstacle(i);
     if(!obst->IsInternal()) {
       auto ocp = obst->GetFixedBody(0)->GetWorldPolyhedron().CGAL();
       if(m_debug)
-        cout << "\tobstacle is " << (ocp.is_closed() ? "" : "not ") << "closed"
-             << endl;
+        cout << "\t\tobstacle is " << (ocp.is_closed() ? "" : "not ")
+             << "closed" << endl;
       freespace -= NefPolyhedron(ocp);
     }
   }
@@ -347,40 +395,6 @@ LoadDecompModel() {
   m_decompModel->load_node(b);
   m_decompModel->load_tet(b);
   //m_decompModel->load_neighbors(b);
-}
-
-/*------------------------- Dual Graph Helpers -------------------------------*/
-
-void
-TetGenDecomposition::
-MakeDualGraph() {
-  m_dualGraph.clear();
-  size_t numTetras = m_decompModel->numberoftetrahedra;
-  size_t numCorners = m_decompModel->numberofcorners;
-  const double* const points = m_decompModel->pointlist;
-  const int* const tetra = m_decompModel->tetrahedronlist;
-  const int* const neighbors = m_decompModel->neighborlist;
-
-  //Computer center of tetrahedron as vertex of dual
-  for(size_t i = 0; i < numTetras; ++i) {
-    Vector3d com;
-    for(size_t j = 0; j < numCorners; ++j)
-      com += Vector3d(&points[3*tetra[i*numCorners + j]]);
-    com /= numCorners;
-    m_dualGraph.add_vertex(i, com);
-  }
-
-  //Tetrahedron adjacency implies edge in dual
-  for(size_t i = 0; i < numTetras; ++i) {
-    for(size_t j = 0; j < 4; ++j) {
-      size_t neigh = neighbors[4*i + j];
-      if(neigh != size_t(-1)) {
-        Vector3d v1 = m_dualGraph.find_vertex(neigh)->property();
-        Vector3d v2 = m_dualGraph.find_vertex(i)->property();
-        m_dualGraph.add_edge(i, neigh, (v1-v2).norm());
-      }
-    }
-  }
 }
 
 /*----------------------------------------------------------------------------*/

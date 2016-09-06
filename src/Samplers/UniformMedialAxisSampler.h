@@ -280,28 +280,29 @@ FindTriangle(int _witness, const CfgType& _c) {
   for(size_t i=0; i < polyhedron.m_polygonList.size(); ++i) {
 
     GMSPolygon& poly = polyhedron.m_polygonList[i];
+    const Vector3d& normal = poly.GetNormal();
 
     //Find the max dimension among the normal vector so we know which
     //two dimensions (except the max dimension) form the surface (in
     //order to call PtInTriangle function)
-    double maxv = fabs(poly.m_normal[0]);
+    double maxv = fabs(normal[0]);
     int maxDim = 0;
-    if(fabs(poly.m_normal[1]) > maxv) {
-      maxv = fabs(poly.m_normal[1]);
+    if(fabs(normal[1]) > maxv) {
+      maxv = fabs(normal[1]);
       maxDim = 1;
     }
-    if(fabs(poly.m_normal[2]) > maxv) {
-      maxv = fabs(poly.m_normal[2]);
+    if(fabs(normal[2]) > maxv) {
+      maxv = fabs(normal[2]);
       maxDim = 2;
     }
 
-    const Vector3d& v0 = polyhedron.m_vertexList[poly.m_vertexList[0]];
-    const Vector3d& v1 = polyhedron.m_vertexList[poly.m_vertexList[1]];
-    const Vector3d& v2 = polyhedron.m_vertexList[poly.m_vertexList[2]];
+    const Vector3d& v0 = poly.GetPoint(0);
+    const Vector3d& v1 = poly.GetPoint(1);
+    const Vector3d& v2 = poly.GetPoint(2);
 
     Vector3d vp = witnessPoint - v0;
-    double projDist = (witnessPoint - (witnessPoint - (poly.m_normal *
-            (vp*poly.m_normal)))).norm();
+    double projDist = (witnessPoint - (witnessPoint - (normal *
+            (vp * normal)))).norm();
     if(projDist <= 0.0001) {
       //p0, p1, p2 are the vertices of the triangle
       size_t dim1 = min((maxDim+1) % 3, (maxDim+2) % 3);
@@ -332,14 +333,14 @@ bool
 UniformMedialAxisSampler<MPTraits>::
 CheckVertVert(int _w, int _v1, int _v2) {
   Environment* env = this->GetEnvironment();
-  GMSPolyhedron& polyhedron = env->GetObstacle(_w)->GetFixedBody(0)->GetPolyhedron();
+  GMSPolyhedron& polyhedron = env->GetObstacle(_w)->GetFixedBody(0)->
+      GetPolyhedron();
   vector<GMSPolygon>& polygons = polyhedron.m_polygonList;
 
   typedef vector<GMSPolygon>::iterator PIT;
   for(PIT pit = polygons.begin(); pit!=polygons.end(); ++pit) {
-    vector<int>& verts = pit->m_vertexList;
-    if(find(verts.begin(), verts.end(), _v1) != verts.end() &&
-        find(verts.begin(), verts.end(), _v2) != verts.end())
+    if(find(pit->begin(), pit->end(), _v1) != pit->end() &&
+        find(pit->begin(), pit->end(), _v2) != pit->end())
       return false;
   }
 
@@ -363,9 +364,8 @@ CheckTriTri(int _w, int _t1, int _t2) {
     const Vector3d& v0 = polyhedron.m_vertexList[edge.first];
     const Vector3d& v1 = polyhedron.m_vertexList[edge.second];
     Vector3d v2;
-    for(vector<int>::iterator I = polyhedron.m_polygonList[_t1].
-        m_vertexList.begin(); I != polyhedron.m_polygonList[_t1].
-        m_vertexList.end(); I++) {
+    for(vector<int>::iterator I = polyhedron.m_polygonList[_t1].begin();
+        I != polyhedron.m_polygonList[_t1].end(); I++) {
       if((*I != edge.first) && (*I != edge.second))
         v2 = polyhedron.m_vertexList[*I];
     }
@@ -376,7 +376,7 @@ CheckTriTri(int _w, int _t1, int _t2) {
     //The face is on the left of the common edge if (va x vb).normal
     //vector of the face > 0
     //If < 0, the face is on the right
-    if(((va % vb) * polyhedron.m_polygonList[_t1].m_normal) > 0) {
+    if(((va % vb) * polyhedron.m_polygonList[_t1].GetNormal()) > 0) {
       left = _t1;
       right = _t2;
     }
@@ -387,8 +387,8 @@ CheckTriTri(int _w, int _t1, int _t2) {
     //Check if the two triangles form a concave face
     //If (normal vector of left) x (normal vector of right) is the
     //opposite direction of the common edge, they form a concave face
-    if(((polyhedron.m_polygonList[left].m_normal % polyhedron.
-            m_polygonList[right].m_normal) * va) < -0.0001) {  //Concave
+    if(((polyhedron.m_polygonList[left].GetNormal() % polyhedron.
+            m_polygonList[right].GetNormal()) * va) < -0.0001) {  //Concave
       return true;
     }
     else {  //Convex
@@ -419,9 +419,9 @@ CheckVertTri(int _w, int _v, int _t) {
     GetFixedBody(0)->GetPolyhedron();
   Vector3d& vert = polyhedron.m_vertexList[_v];
   GMSPolygon& poly = polyhedron.m_polygonList[_t];
-  for(size_t i = 0; i<poly.m_vertexList.size(); ++i) {
+  for(size_t i = 0; i < poly.GetNumVertices(); ++i) {
     //shares a common vertex, return false!
-    if(vert == polyhedron.m_vertexList[poly.m_vertexList[i]])
+    if(vert == poly.GetPoint(i))
       return false;
   }
   //vertex and triangle are separate, must've crossed the medial axis

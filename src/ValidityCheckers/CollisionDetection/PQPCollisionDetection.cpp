@@ -18,11 +18,9 @@ Build(Body* _body) {
   shared_ptr<PQP_Model> pqpBody(new PQP_Model);
   pqpBody->BeginModel();
   for(size_t q = 0; q < poly.m_polygonList.size(); q++) {
-    int vertexNum[3];
     double point[3][3];
     for(int i = 0; i < 3; i++) {
-      vertexNum[i] = poly.m_polygonList[q].m_vertexList[i];
-      Vector3d& tmp = poly.m_vertexList[vertexNum[i]];
+      const Vector3d& tmp = poly.m_polygonList[q].GetPoint(i);
       for(int j = 0; j < 3; j++)
         point[i][j] = tmp[j];
     }
@@ -126,7 +124,7 @@ IsInsideObstacle(const Vector3d& _pt, shared_ptr<Body> _body) {
   for(int i = 0; i < result.NumPairs(); ++i) {
     const auto& triangle = polygons[result.Id2(i)];
     const auto& v = vertices[triangle[0]];
-    const auto& n = triangle.m_normal;
+    const auto& n = triangle.GetNormal();
 
     // Skip collisions against triangles whose normals are perpendicular to the
     // ray: these are scrapes and don't affect inside/outside-ness.

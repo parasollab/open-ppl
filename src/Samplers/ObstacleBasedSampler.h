@@ -306,13 +306,14 @@ ChooseRandomWeightedTriangle(shared_ptr<StaticMultiBody> _mBody, bool _isFreeBod
 
   // Choose index as the triangle that first makes sum > targetArea
   for(index = -1; sum <= targetArea; index++)
-    sum += _mBody->GetFixedBody(0)->GetPolyhedron().m_polygonList[index + 1].m_area;
+    sum += _mBody->GetFixedBody(0)->GetPolyhedron().m_polygonList[index + 1].
+        GetArea();
   // Choose the triangle of the StaticMultiBody with that index
-  GMSPolygon *poly = &polyhedron.m_polygonList[index];
+  GMSPolygon& poly = polyhedron.m_polygonList[index];
   // Choose a random point in that triangle
-  Vector3d p = polyhedron.m_vertexList[poly->m_vertexList[0]];
-  Vector3d q = polyhedron.m_vertexList[poly->m_vertexList[1]];
-  Vector3d r = polyhedron.m_vertexList[poly->m_vertexList[2]];
+  const Vector3d& p = poly.GetPoint(0);
+  const Vector3d& q = poly.GetPoint(1);
+  const Vector3d& r = poly.GetPoint(2);
   Vector3d x = ChoosePointOnTriangle(p, q, r);
 
   return GetCfgWithParams(x);
@@ -326,10 +327,10 @@ ChooseRandomTriangle(shared_ptr<StaticMultiBody> _mBody, bool _isFreeBody) {
   GMSPolyhedron& polyhedron = GetPolyhedron(_mBody, _isFreeBody);
 
   // Choose a random triangle
-  GMSPolygon *poly = &polyhedron.m_polygonList[(int)(DRand()*polyhedron.m_polygonList.size())];
-  Vector3d p = polyhedron.m_vertexList[poly->m_vertexList[0]];
-  Vector3d q = polyhedron.m_vertexList[poly->m_vertexList[1]];
-  Vector3d r = polyhedron.m_vertexList[poly->m_vertexList[2]];
+  GMSPolygon& poly = polyhedron.m_polygonList[(int)(DRand()*polyhedron.m_polygonList.size())];
+  const Vector3d& p = poly.GetPoint(0);
+  const Vector3d& q = poly.GetPoint(1);
+  const Vector3d& r = poly.GetPoint(2);
   Vector3d x = ChoosePointOnTriangle(p, q, r);
 
   return GetCfgWithParams(x);

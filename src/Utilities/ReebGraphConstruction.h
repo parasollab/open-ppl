@@ -35,9 +35,8 @@ class ReebGraphConstruction {
 
   public:
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// @name Types
-    /// {
+    ///@name Local Types
+    ///@{
 
     typedef tuple<size_t, size_t, size_t> Triangle; ///< Triangle: 3 indices for
                                                     ///< vertex array.
@@ -46,13 +45,14 @@ class ReebGraphConstruction {
     /// @brief Vertex property of ReebGraph
     ////////////////////////////////////////////////////////////////////////////
     struct ReebNode {
+
       //////////////////////////////////////////////////////////////////////////
       /// @param _vIndx Vertex Index
       /// @param _v Vertex
       /// @param _w Morse function value
       ReebNode(size_t _vIndx = -1, const Vector3d& _v = Vector3d(),
           double _w = numeric_limits<double>::max()) :
-        m_vertexIndex(_vIndx), m_vertex(_v), m_w(_w) {}
+          m_vertexIndex(_vIndx), m_vertex(_v), m_w(_w) {}
 
       friend istream& operator>>(istream& _is, ReebNode& _rn);
       friend ostream& operator<<(ostream& _os, const ReebNode& _rn);
@@ -69,6 +69,7 @@ class ReebGraphConstruction {
     ///        value (2-4) vertex[x-z] (5) vertex index
     ////////////////////////////////////////////////////////////////////////////
     struct ReebNodeComp {
+
       //////////////////////////////////////////////////////////////////////////
       /// @param _a Node 1
       /// @param _b Node 2
@@ -219,47 +220,31 @@ class ReebGraphConstruction {
         > FlowGraph; ///< Flow graph is a directed multiedge graph of points and
                      ///< paths. Is a flow of the embedded ReebGraph.
 
-    /// @}
-    ////////////////////////////////////////////////////////////////////////////
-
-    ////////////////////////////////////////////////////////////////////////////
-    /// @name Constructors
-    /// @{
+    ///@}
+    ///@name Construction
+    ///@{
 
     ////////////////////////////////////////////////////////////////////////////
     /// @param _filename Filename to read embedded reeb graph
     ReebGraphConstruction(const string& _filename = "");
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// @param _node XML node
-    ReebGraphConstruction(XMLNode& _node);
+    ReebGraphConstruction(XMLNode& _node); ///< @TODO Add XML parsing.
 
-    ~ReebGraphConstruction();
-
-    /// @}
-    ////////////////////////////////////////////////////////////////////////////
-
-    ////////////////////////////////////////////////////////////////////////////
-    /// @name Operations
-    /// @{
+    ///@}
+    ///@name Operations
+    ///@{
 
     ////////////////////////////////////////////////////////////////////////////
     /// @param _env PMPL Environment as workspace
     /// @param _baseFilename Base filename used for saving models
     void Construct(Environment* _env, const string& _baseFilename = "");
 
-    /// @}
-    ////////////////////////////////////////////////////////////////////////////
+    ///@}
+    ///@name Accessors
+    ///@{
+    ///@TODO Fix const-ness of accessors when STAPL fixes sequential graph.
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// @name Accessors
-    /// @{
-
-    ////////////////////////////////////////////////////////////////////////////
-    /// @return Reeb Graph
     ReebGraph& GetReebGraph() {return m_reebGraph;}
-
-    TetGenDecomposition* GetTetrahedralization() {return m_tetrahedralization;}
 
     ////////////////////////////////////////////////////////////////////////////
     /// @brief Compute Flow graph (directed) of ReebGraph from source point
@@ -272,30 +257,26 @@ class ReebGraphConstruction {
     /// edges in the flow, it is not just a BFS tree.
     pair<FlowGraph, size_t> GetFlowGraph(const Vector3d& _p, double _posRes);
 
-    /// @}
-    ////////////////////////////////////////////////////////////////////////////
-
-    ////////////////////////////////////////////////////////////////////////////
-    /// @name I/O
-    /// @{
+    ///@}
+    ///@name I/O
+    ///@{
 
     ////////////////////////////////////////////////////////////////////////////
     /// @brief Read embedding graph from file
     /// @param _filename Filename
     void Read(const string& _filename);
+
     ////////////////////////////////////////////////////////////////////////////
     /// @brief Write embedding graph to file
     /// @param _filename Filename
     void Write(const string& _filename);
 
-    /// @}
-    ////////////////////////////////////////////////////////////////////////////
+    ///@}
 
   private:
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// @name Construction Helpers
-    /// @{
+    ///@name Construction Helpers
+    ///@{
 
     ////////////////////////////////////////////////////////////////////////////
     /// @brief Tetrahedralize environment and populate ReebGraph structures for
@@ -409,24 +390,26 @@ class ReebGraphConstruction {
     /// Embedding algorithm relates each Reeb Node to its closest tetrahedron
     /// and finds an embedded ReebArc by biasing a path search in the
     /// tetrahedralization's dual graph.
-    void Embed();
+    void Embed(const Environment* _env);
 
-    /// @}
-    ////////////////////////////////////////////////////////////////////////////
+    ///@}
+    ///@name Internal State
+    ///@{
 
     string m_reebFilename;       ///< Input filename for embedded reeb graph
-    bool m_writeReeb;            ///< Output embedded reeb graph
-
-    TetGenDecomposition* m_tetrahedralization; ///< TetGen tetrahedralization
+    bool m_writeReeb{false};     ///< Output embedded reeb graph
 
     vector<Vector3d> m_vertices; ///< Vertices of tetrahedralization
-    unordered_set<MeshEdge*, MeshEdgeHash, MeshEdgeEq>
-      m_edges;                   ///< Edges of Tetrahedralization
-    vector<pair<Triangle, unordered_set<size_t>>>
-      m_triangles;               ///< Triangles of Tetrahedralization and their
-                                 ///< corresponding tetrahedrons
+
+    /// Edges of Tetrahedralization
+    unordered_set<MeshEdge*, MeshEdgeHash, MeshEdgeEq> m_edges;
+
+    /// Triangles of Tetrahedralization and their corresponding tetrahedrons.
+    vector<pair<Triangle, unordered_set<size_t>>> m_triangles;
 
     ReebGraph m_reebGraph;       ///< Reeb Graph
+
+    ///@}
 };
 
 #endif
