@@ -182,6 +182,7 @@ Read(istream& _is, CountingStreamBuffer& _cbs) {
         m_worldTransformation =
           ReadField<Transformation>(_is, _cbs,
               "Failed reading fixed based transformation.");
+        ConfigureRender(m_worldTransformation);
         break;
       }
 
