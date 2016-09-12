@@ -96,13 +96,20 @@ Read(istream& _is, CountingStreamBuffer& _cbs) {
       "Failed reading transformation to next body.");
 
   //make the connection
-  m_bodies[0]->Link(*this);
+  m_bodies[0]->Link(this);
 }
 
 ostream&
 operator<<(ostream& _os, const Connection& _c) {
-  return _os << _c.m_bodyIndices.first << " " << _c.m_bodyIndices.second << " "
-    << Connection::GetTagFromJointType(_c.m_jointType) << endl
-    << _c.m_transformationToDHFrame << " " << _c.m_dhParameters << " "
-    << _c.m_transformationToBody2;
+  _os << _c.m_bodyIndices.first << " " << _c.m_bodyIndices.second << " "
+      << Connection::GetTagFromJointType(_c.m_jointType);
+  if(_c.m_jointType == Connection::JointType::Revolute ||
+      _c.m_jointType == Connection::JointType::Spherical)
+    _os << " " << _c.GetJointLimits(0).first << ":"
+        << _c.GetJointLimits(0).second;
+  _os << endl
+      << _c.m_transformationToDHFrame << endl
+      << _c.m_dhParameters << endl
+      << _c.m_transformationToBody2 << endl;
+  return _os;
 }

@@ -71,7 +71,7 @@ Connection&
 FreeBody::
 GetForwardConnection(size_t _index) {
   if(_index < m_forwardConnections.size())
-    return m_forwardConnections[_index];
+    return *m_forwardConnections[_index];
   else
     throw RunTimeException(WHERE,
         "Cannot access forward connection '" + ::to_string(_index) + "'.");
@@ -80,8 +80,8 @@ GetForwardConnection(size_t _index) {
 Connection&
 FreeBody::
 GetBackwardConnection(size_t _index) {
-  if (_index < m_backwardConnections.size())
-    return m_backwardConnections[_index];
+  if(_index < m_backwardConnections.size())
+    return *m_backwardConnections[_index];
   else
     throw RunTimeException(WHERE,
         "Cannot access backward connection '" + ::to_string(_index) + "'.");
@@ -91,10 +91,10 @@ bool
 FreeBody::
 IsAdjacent(shared_ptr<FreeBody> _otherBody) const {
   for(const auto& c : m_forwardConnections)
-    if(c.GetNextBody() == _otherBody)
+    if(c->GetNextBody() == _otherBody)
       return true;
   for(const auto& c : m_backwardConnections)
-    if(c.GetPreviousBody() == _otherBody)
+    if(c->GetPreviousBody() == _otherBody)
       return true;
   return this == _otherBody.get();
 }
@@ -107,9 +107,9 @@ IsWithinI(shared_ptr<FreeBody> _otherBody, size_t _i) const {
 
 void
 FreeBody::
-Link(const Connection& _c) {
+Link(Connection* _c) {
   m_forwardConnections.push_back(_c);
-  _c.GetNextBody()->m_backwardConnections.push_back(_c);
+  _c->GetNextBody()->m_backwardConnections.push_back(_c);
   m_worldPolyhedronAvailable = false;
   m_centerOfMassAvailable = false;
 }
@@ -223,13 +223,13 @@ IsWithinI(const FreeBody* const _body1, const FreeBody* const _body2, size_t _i,
     return false;
 
   for(const auto& c : m_forwardConnections) {
-    FreeBody* next = c.GetNextBody().get();
-    if(next != _prevBody && IsWithinI(next, _body2, _i-1, _body1))
+    FreeBody* next = c->GetNextBody().get();
+    if(next != _prevBody && IsWithinI(next, _body2, _i - 1, _body1))
       return true;
   }
   for(const auto& c : m_backwardConnections) {
-    FreeBody* prev = c.GetPreviousBody().get();
-    if(prev != _prevBody && IsWithinI(prev, _body2, _i-1, _body1))
+    FreeBody* prev = c->GetPreviousBody().get();
+    if(prev != _prevBody && IsWithinI(prev, _body2, _i - 1, _body1))
       return true;
   }
   return false;
@@ -250,7 +250,7 @@ ComputeWorldTransformation(set<size_t>& _visited) {
     if(m_backwardConnections.empty())
       return m_worldTransformation;
 
-    Connection& back = m_backwardConnections[0];
+    Connection& back = *m_backwardConnections[0];
     Transformation dh = back.GetDHParameters().GetTransformation();
     m_worldTransformation =
       back.GetPreviousBody()->ComputeWorldTransformation(_visited) *
@@ -274,7 +274,7 @@ ComputeRenderTransformation(set<size_t>& _visited) {
     if(m_backwardConnections.empty())
       return m_renderTransformation;
 
-    Connection& back = m_backwardConnections[0];
+    Connection& back = *m_backwardConnections[0];
     Transformation dh = back.GetDHRenderParameters().GetTransformation();
     m_renderTransformation =
       back.GetPreviousBody()->ComputeRenderTransformation(_visited) *

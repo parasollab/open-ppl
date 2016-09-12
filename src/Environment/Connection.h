@@ -119,24 +119,22 @@ class Connection {
     /// @return Transformation to DH frame
     const Transformation& GetTransformationToDHFrame() const {return m_transformationToDHFrame;}
 
-    /// @}
-    ////////////////////////////////////////////////////////////////////////////
+    ///@}
+    ///@name I/O
+    ///@{
 
     ////////////////////////////////////////////////////////////////////////////
-    /// @name I/O
-    /// @{
-
-    ////////////////////////////////////////////////////////////////////////////
+    /// @brief Read in the connection info from an input stream.
     /// @param _is Stream
     /// @param _cbs Counting stream buffer
     void Read(istream& _is, CountingStreamBuffer& _cbs);
 
     friend ostream& operator<<(ostream& _os, const Connection& _c);
 
-    /// @}
-    ////////////////////////////////////////////////////////////////////////////
+    ///@}
 
   private:
+
     MultiBody* m_multibody;                   ///< Owner of this Connection
     shared_ptr<FreeBody> m_bodies[2];         ///< (previous body, next body)
     Transformation m_transformationToBody2;   ///< Transform to second body

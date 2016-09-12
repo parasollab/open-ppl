@@ -128,7 +128,7 @@ class FreeBody : public Body {
     ////////////////////////////////////////////////////////////////////////////
     /// @brief Link two Body, i.e., add a Connection between them
     /// @param _c Connection description
-    void Link(const Connection& _c);
+    void Link(Connection* _c);
 
     /// @}
     ////////////////////////////////////////////////////////////////////////////
@@ -210,13 +210,13 @@ class FreeBody : public Body {
     /// currently it handles only one backward connection).
     Transformation& ComputeRenderTransformation(std::set<size_t>& visited);
 
-    size_t m_index;                           ///< Index in ActiveMultiBody
-    BodyType m_bodyType;                      ///< Body type
-    MovementType m_movementType;              ///< Movement type
-    vector<Connection> m_forwardConnections;  ///< Forward Connection s
-    vector<Connection> m_backwardConnections; ///< Backward Connection s
+    size_t m_index;                            ///< Index in ActiveMultiBody
+    BodyType m_bodyType;                       ///< Body type
+    MovementType m_movementType;               ///< Movement type
+    vector<Connection*> m_forwardConnections;  ///< Forward Connections
+    vector<Connection*> m_backwardConnections; ///< Backward Connections
 
-    Transformation m_renderTransformation;    ///< Rendering Transform
+    Transformation m_renderTransformation;     ///< Rendering Transform
 };
 
 #endif
