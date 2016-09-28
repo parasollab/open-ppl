@@ -5,6 +5,7 @@
 #include "BoundingBox2D.h"
 #include "BoundingSphere.h"
 #include "BoundingSphere2D.h"
+#include "FixedBody.h"
 #include "FreeBody.h"
 #include "NonHolonomicMultiBody.h"
 #include "StaticMultiBody.h"
@@ -319,6 +320,23 @@ RemoveObstacle(shared_ptr<StaticMultiBody> _obst) {
   else
     cerr << "Environment::RemoveObstacleAt Warning: unable to remove obst."
          << endl;
+}
+
+
+map<Vector3d, vector<size_t>>
+Environment::
+ComputeObstacleVertexMap() const {
+  map<Vector3d, vector<size_t>> out;
+
+  // Iterate through all the obstacles and add their points to the map.
+  for(size_t i = 0; i < NumObstacles(); ++i) {
+    const auto& obstaclePoly = GetObstacle(i)->GetFixedBody(0)->
+        GetWorldPolyhedron();
+    for(const auto& v : obstaclePoly.GetVertexList())
+      out[v].push_back(i);
+  }
+
+  return out;
 }
 
 

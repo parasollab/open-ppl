@@ -159,12 +159,17 @@ MakeFreeModel() {
   for(size_t i = 0; i < m_env->NumObstacles(); ++i) {
     if(m_debug)
       cout << "\tAdding obstacle " << i << "..." << endl;
+
     shared_ptr<StaticMultiBody> obst = m_env->GetObstacle(i);
     if(!obst->IsInternal()) {
+      // Make CGAL representation of this obstacle.
       auto ocp = obst->GetFixedBody(0)->GetWorldPolyhedron().CGAL();
+
       if(m_debug)
         cout << "\t\tobstacle is " << (ocp.is_closed() ? "" : "not ")
              << "closed" << endl;
+
+      // Subtract it from the freespace.
       freespace -= NefPolyhedron(ocp);
     }
   }

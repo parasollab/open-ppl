@@ -3,6 +3,7 @@
 
 #include <functional>
 #include <iostream>
+#include <map>
 #include <memory>
 #include <string>
 #include <vector>
@@ -186,6 +187,11 @@ class Environment {
     /// @brief Remove obstacle from environment
     /// @param _obst Obstacle to be removed
     void RemoveObstacle(shared_ptr<StaticMultiBody> _obst);
+
+    ////////////////////////////////////////////////////////////////////////////
+    /// @brief Compute a mapping of the obstacle vertices.
+    /// @return A map from obstacle points to obstacle indexes.
+    map<Vector3d, vector<size_t>> ComputeObstacleVertexMap() const;
 
     ////////////////////////////////////////////////////////////////////////////
     /// @brief Build collision detection models for external libraries
