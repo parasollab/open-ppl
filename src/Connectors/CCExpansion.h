@@ -257,7 +257,7 @@ ParseXML(XMLNode& _node){
           "Always add intermediate nodes?") == "true") ? true : false);
   m_dmLabel = _node.Read("dmLabel",true,"euclidean",
       "VC for RRTExpand.");
-  m_vcLabel = _node.Read("vcLabel",true,"cd2",
+  m_vcLabel = _node.Read("vcLabel",true,"pqp",
       "Distance Metric for RRTExpand.");
 
   string nodePolicy = _node.Read("nodeChoice",true, "RANDOM",

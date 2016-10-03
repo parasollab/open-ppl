@@ -16,8 +16,8 @@
     </DistanceMetrics>
 
     <ValidityCheckers>
-      <CollisionDetection label="cd1" method="RAPID" />
-      <SSSurfaceValidity label="sv" vc_method="cd1"/>
+      <CollisionDetection label="rapid" method="RAPID" />
+      <SSSurfaceValidity label="sv" vc_method="rapid"/>
     </ValidityCheckers>
 
     <MapEvaluators>

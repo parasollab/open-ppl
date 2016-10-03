@@ -1,22 +1,12 @@
 #ifndef BODY_H_
 #define BODY_H_
 
-#ifndef NO_VCLIP
-#include <vclip.h>
-#endif
-
 #ifndef NO_PQP
 #include <PQP.h>
 #endif
 
 #ifndef NO_RAPID
 #include <RAPID.H>
-#endif
-
-#ifndef NO_SOLID
-#include <SOLID.h>
-#include "DT_Polyhedron.h"
-#include "DT_Polytope.h"
 #endif
 
 #include "Transformation.h"
@@ -135,11 +125,6 @@ class Body {
     /// @brief Build appropriate collision detection models
     void BuildCDStructure();
 
-#ifndef NO_VCLIP
-    shared_ptr<PolyTree> GetVClipBody() {return m_vclipBody;}
-    void SetVClipBody(const shared_ptr<PolyTree>& _v) {m_vclipBody = _v;}
-#endif
-
 #ifndef NO_RAPID
     shared_ptr<RAPID_model> GetRapidBody() {return m_rapidBody;}
     void SetRapidBody(const shared_ptr<RAPID_model>& _r) {m_rapidBody = _r;}
@@ -148,12 +133,6 @@ class Body {
 #ifndef NO_PQP
     shared_ptr<PQP_Model> GetPQPBody() {return m_pqpBody;}
     void SetPQPBody(const shared_ptr<PQP_Model>& _p) {m_pqpBody = _p;}
-#endif
-
-#ifndef NO_SOLID
-    shared_ptr<DT_ObjectHandle> GetSolidBody() {return m_solidBody;}
-    void SetSolidBody(const shared_ptr<DT_ObjectHandle>& _s) {m_solidBody = _s;}
-    void UpdateVertexBase(); ///< Special function for SOLID
 #endif
 
     ///@}
@@ -246,22 +225,12 @@ class Body {
     double m_mass{1};                        ///< Mass of Body
     Matrix3x3 m_moment;                      ///< Moment of Inertia
 
-#ifndef NO_VCLIP
-    shared_ptr<PolyTree> m_vclipBody;        ///< VClip model
-#endif
-
 #ifndef NO_RAPID
     shared_ptr<RAPID_model> m_rapidBody;     ///< RAPID model
 #endif
 
 #ifndef NO_PQP
     shared_ptr<PQP_Model> m_pqpBody;         ///< PQP model
-#endif
-
-#ifndef NO_SOLID
-    shared_ptr<DT_ObjectHandle> m_solidBody; ///< Solid model
-    DT_VertexBaseHandle m_base;              ///< Solid base
-    MT_Point3* m_vertex;                     ///< Solid set of vertices
 #endif
 
     ///@}

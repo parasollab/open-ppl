@@ -10,10 +10,10 @@
     </DistanceMetrics>
 
     <ValidityCheckers>
-      <CollisionDetection label="cd1" method="RAPID"/>
-      <CollisionDetection label="cd2" method="PQP"/>
+      <CollisionDetection label="rapid" method="RAPID"/>
+      <CollisionDetection label="pqp" method="PQP"/>
       <!--<NodeClearanceValidity label="nc" delta="8.0" dmMethod="euclidean" nfMethod="BFNF"/>-->
-      <SurfaceValidity label="sv" vc_method="cd2"/>
+      <SurfaceValidity label="sv" vc_method="pqp"/>
     </ValidityCheckers>
 
     <NeighborhoodFinders>

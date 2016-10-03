@@ -178,26 +178,6 @@ BuildCDStructure() {
     cd->Build(this);
 }
 
-
-#ifdef USE_SOLID
-void
-Body::
-UpdateVertexBase() {
-  GMSPolyhedron poly = GetWorldPolyhedron();
-  for(size_t q = 0; q < poly.m_polygonList.size(); ++q) {
-    int vertexNum[3];
-    for(int i = 0; i < 3; ++i) {
-      vertexNum[i] = poly.m_polygonList[q].m_vertexList[i];
-      Vector3d &tmp = poly.m_vertexList[vertexNum[i]];
-      m_vertex[3 * q + i][0] = tmp[0];
-      m_vertex[3 * q + i][1] = tmp[1];
-      m_vertex[3 * q + i][2] = tmp[2];
-    }
-  }
-  DT_ChangeVertexBase(m_base, m_vertex[0]);
-}
-#endif
-
 /*----------------------------- Computation Helpers --------------------------*/
 
 void

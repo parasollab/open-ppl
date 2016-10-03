@@ -11,7 +11,7 @@
     </DistanceMetrics>
 
     <ValidityCheckers>
-      <CollisionDetection label="cd4" method="PQP_SOLID"/>
+      <CollisionDetection label="pqp_solid" method="PQP_SOLID"/>
       <AlwaysTrueValidity label="alwaysTrue"/>
     </ValidityCheckers>
 
@@ -24,7 +24,7 @@
     </Samplers>
 
     <LocalPlanners>
-      <StraightLine label="sl" binaryEvaluation="true" vcLabel="cd4"/>
+      <StraightLine label="sl" binaryEvaluation="true" vcLabel="pqp_solid"/>
       <StraightLine label="slAlwaysTrue" binaryEvaluation="true"
         vcLabel="alwaysTrue"/>
     </LocalPlanners>
@@ -36,7 +36,7 @@
 
     <MapEvaluators>
       <LazyQuery label="LazyQuery" fullRecreatePath="false" lpLabel="sl"
-        dmLabel="euclidean" vcMethod="cd4" graphSearchAlg="astar"
+        dmLabel="euclidean" vcMethod="pqp_solid" graphSearchAlg="astar"
         deleteNodes="false" numEnhance="10" d="0.5">
         <NodeConnectionMethod method="ClosestAlwaysTrue"/>
         <Resolution mult="27"/>

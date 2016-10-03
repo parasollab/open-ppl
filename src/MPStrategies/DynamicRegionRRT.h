@@ -50,7 +50,7 @@ class DynamicRegionRRT : public BasicRRTStrategy<MPTraits> {
     ///@{
 
     DynamicRegionRRT(string _dm = "euclidean", string _nf = "Nearest",
-        string _vc = "cd1", string _nc = "kClosest", string _ex = "BERO",
+        string _vc = "rapid", string _nc = "kClosest", string _ex = "BERO",
         vector<string> _evaluators = vector<string>(),
         string _gt = "UNDIRECTED_TREE",  bool _growGoals = false,
         double _growthFocus = .05, size_t _numRoots = 1,
@@ -447,7 +447,7 @@ FlowToMedialAxis(FlowGraph& _f) const {
          << " and " << _f.get_num_edges() << " edges."
          << "\n\tPushing to medial axis:";
 
-  MedialAxisUtility<MPTraits> mau(this->GetMPProblem(), "cd4", this->m_dmLabel,
+  MedialAxisUtility<MPTraits> mau(this->GetMPProblem(), "pqp_solid", this->m_dmLabel,
       true, true, 10, 10, true, true);
   auto boundary = this->GetEnvironment()->GetBoundary();
 

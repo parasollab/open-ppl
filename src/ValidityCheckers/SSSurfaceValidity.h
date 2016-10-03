@@ -48,7 +48,7 @@ SSSurfaceValidity<MPTraits>::SSSurfaceValidity(string _vcLabel) : ValidityChecke
   this->m_vcLabel = _vcLabel;
 
   m_prob.AddValidityChecker(typename TmpProblemType::ValidityCheckerPointer(new SurfaceValidity<TmpTraitsType>(m_vcLabel)), "temp");
-  m_prob.AddValidityChecker(typename TmpProblemType::ValidityCheckerPointer(new CollisionDetectionValidity<TmpTraitsType>(new Rapid())), "cd1");
+  m_prob.AddValidityChecker(typename TmpProblemType::ValidityCheckerPointer(new CollisionDetectionValidity<TmpTraitsType>(new Rapid())), "rapid");
   m_prob.SetMPProblem();
 }
 
@@ -59,7 +59,7 @@ SSSurfaceValidity<MPTraits>::SSSurfaceValidity(typename MPTraits::MPProblemType*
     this->m_vcLabel = _node.Read("vc_method", true, "", "Validity Checker Method");
 
     m_prob.AddValidityChecker(typename TmpProblemType::ValidityCheckerPointer(new SurfaceValidity<TmpTraitsType>(m_vcLabel)), "temp");
-    m_prob.AddValidityChecker(typename TmpProblemType::ValidityCheckerPointer(new CollisionDetectionValidity<TmpTraitsType>(new Rapid())), "cd1");
+    m_prob.AddValidityChecker(typename TmpProblemType::ValidityCheckerPointer(new CollisionDetectionValidity<TmpTraitsType>(new Rapid())), "rapid");
     m_prob.SetMPProblem();
   }
 

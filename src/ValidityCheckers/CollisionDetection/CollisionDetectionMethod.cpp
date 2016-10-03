@@ -1,22 +1,22 @@
 #include "CollisionDetectionMethod.h"
-
-#include "Environment/Body.h"
 #include "Utilities/PMPLExceptions.h"
 
-CollisionDetectionMethod::
-CollisionDetectionMethod(const string& _name, CDType _type) :
-  m_name(_name), m_type(_type) {
-  }
+#include <iostream>
+
+/*------------------------------- Construction -------------------------------*/
 
 CollisionDetectionMethod::
-~CollisionDetectionMethod() {
-}
+CollisionDetectionMethod(const string& _name) : m_name(_name) { }
+
+/*--------------------------------- Accessors --------------------------------*/
 
 void
 CollisionDetectionMethod::
 Print(ostream& _os) const {
-  _os << "\t" << m_name << " " << endl;
+  _os << m_name << endl;
 }
+
+/*------------------------------- CD Interface -------------------------------*/
 
 bool
 CollisionDetectionMethod::
@@ -24,3 +24,4 @@ IsInsideObstacle(const Vector3d& _pt, shared_ptr<Body> _body) {
   throw RunTimeException(WHERE, "Not implemented.");
 }
 
+/*----------------------------------------------------------------------------*/

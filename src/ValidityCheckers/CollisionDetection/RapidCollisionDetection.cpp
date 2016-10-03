@@ -7,9 +7,13 @@
 #include "CDInfo.h"
 #include "Environment/Body.h"
 
+
+/*------------------------------- Construction -------------------------------*/
+
 Rapid::
-Rapid() : CollisionDetectionMethod("RAPID", CDType::Exact) {
-}
+Rapid() : CollisionDetectionMethod("RAPID") { }
+
+/*------------------------------- CD Interface -------------------------------*/
 
 void
 Rapid::
@@ -29,6 +33,7 @@ Build(Body* _body) {
   rapidBody->EndModel();
   _body->SetRapidBody(rapidBody);
 }
+
 
 bool
 Rapid::
@@ -55,5 +60,6 @@ IsInCollision(shared_ptr<Body> _body1, shared_ptr<Body> _body2,
   return false;
 }
 
+/*----------------------------------------------------------------------------*/
 
 #endif

@@ -10,8 +10,6 @@ UTILS_LIBFILE = ${CD_LIBFILE} ${TINYXML_LIBFILE} ${MODELLOADER_LIBFILE} ${MPNN_L
 
 NO_PQP = 0
 NO_RAPID = 0
-NO_SOLID = 1
-NO_VCLIP = 0
 
 ifeq (${parallel}, 1)
   BOOST_INCL = -I$(BOOST_ROOT)/include
@@ -27,8 +25,6 @@ endif
 
 #linux/gcc on Manhattan
 ifeq (${platform}, LINUX_gcc_mh)
-  #temporarily remove VCLIP - does not compile because of hash map
-  NO_VCLIP = 1
   #use same boost as used in STAPL
   BOOST_ROOT = /usr/local
   BOOST_INCL = -I$(BOOST_ROOT)/include
@@ -37,10 +33,8 @@ ifeq (${platform}, LINUX_gcc_mh)
   BOOST_LIB = -L$(Boost_LIBRARY_DIRS) -lboost_thread -lboost_serialization -lboost_date_time
 endif
 
-#linuc/gcc on brazos (brazos.tamu.edu) - TODO Verify VCLIP + boost options
+#linuc/gcc on brazos (brazos.tamu.edu) - TODO Verify boost options
 ifeq (${platform}, LINUX_gcc_brazos)
-  #temporarily remove VCLIP?
-  NO_VCLIP = 1
   #use same boost as used in STAPL - TODO Remove hardcoding of Yanis's directory
   BOOST_ROOT = /home/ipapadop/usr/boost_1_48
   BOOST_INCL = -I$(BOOST_ROOT)/include
@@ -50,8 +44,6 @@ endif
 
 #linux/gcc Cray - hopper.nersc.gov || edison.nersc.gov || rain.cse.tamu.edu
 ifeq (${platform}, CRAY_gcc)
-  #temporarily remove VCLIP? - TODO Verify
-  NO_VCLIP = 1
   # first boost for rain, second for nersc machines
   BOOST_ROOT = /opt/boost/gcc-4.7.2/boost-1.53
   #BOOST_ROOT = /global/homes/i/ipapadop/usr/hopper/boost/boost_1_48
@@ -68,8 +60,6 @@ endif
 
 #aix/64-bit/native compiler - (e.g., hydra.tamu.edu)
 ifeq (${platform}, AIX_64_xlC)
-  #temporarily remove VCLIP? - TODO Verify
-  NO_VCLIP = 1
   #TODO Remove hardcoding, check DEPS to see if change is needed
   BOOST_INCL = -I/scratch/shawnat/usr/include/boost-1_33_1
   DEPS = -M -MF $*.d
@@ -113,27 +103,7 @@ else
   CD_DEF += -DNO_RAPID
 endif
 
-ifeq (${NO_SOLID}, 0)
-  CD_INCL += ${SOLID_INCL}
-  CD_LIB += ${SOLID_LIB}
-  CD_LIBFILE += ${SOLID_DIR}/lib/libsolid.a
-else
-  CD_DEF += -DNO_SOLID
-endif
-
-ifeq (${NO_VCLIP}, 0)
-  CD_INCL += ${VCLIP_INCL}
-  CD_LIB += ${VCLIP_LIB}
-  CD_LIBFILE += ${VCLIP_DIR}/lib/libvclip.a
-else
-  CD_DEF += -DNO_VCLIP
-endif
-
 CD_DIR = ${UTILS_DIR}/CD-libs
-
-QHULL_DIR = ${CD_DIR}/qhull-2010.1/src
-${QHULL_DIR}/libqhull.a:
-	cd ${QHULL_DIR}; ${MAKE} platform=${platform} debug=${debug}
 
 PQP_DIR = ${CD_DIR}/PQP_v1.2
 PQP_LIB = -L${PQP_DIR}/lib -lPQP
@@ -141,23 +111,11 @@ PQP_INCL = -I${PQP_DIR}/include
 ${PQP_DIR}/lib/libPQP.a:
 	cd ${PQP_DIR}; ${MAKE} platform=${platform} debug=${debug}
 
-SOLID_DIR = ${CD_DIR}/solid-3.5.6
-SOLID_LIB = -L${SOLID_DIR}/lib -lsolid
-SOLID_INCL = -I${SOLID_DIR}/include -I${SOLID_DIR}/src/convex
-${SOLID_DIR}/lib/libsolid.a:
-	cd ${CD_DIR}; ${MAKE} solid
-
 RAPID_DIR = ${CD_DIR}/RAPID
 RAPID_LIB = -L${RAPID_DIR} -lRAPID
 RAPID_INCL = -I${RAPID_DIR}
 ${RAPID_DIR}/libRAPID.a:
 	cd ${RAPID_DIR}; ${MAKE} platform=${platform} debug=${debug}
-
-VCLIP_DIR = ${CD_DIR}/VCLIP
-VCLIP_LIB = -L${VCLIP_DIR}/lib -lvclip -L${QHULL_DIR} -lqhull
-VCLIP_INCL = -I${VCLIP_DIR}/include
-${VCLIP_DIR}/lib/libvclip.a: ${QHULL_DIR}/libqhull.a
-	cd ${VCLIP_DIR}; ${MAKE} platform=${platform} debug=${debug}
 
 ################################################################################
 ## CGAL
@@ -291,9 +249,7 @@ PMPL_OBJS = \
 	ValidityCheckers/CollisionDetection/CollisionDetectionMethod.o \
 	ValidityCheckers/CollisionDetection/RapidCollisionDetection.o \
 	ValidityCheckers/CollisionDetection/PQPCollisionDetection.o \
-	ValidityCheckers/CollisionDetection/SolidCollisionDetection.o \
 	ValidityCheckers/CollisionDetection/SpheresCollisionDetection.o \
-	ValidityCheckers/CollisionDetection/VClipCollisionDetection.o \
 	Workspace/WorkspaceDecomposition.o \
 	Workspace/WorkspacePortal.o \
 	Workspace/WorkspaceRegion.o

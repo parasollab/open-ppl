@@ -14,7 +14,9 @@
 /// found, i.e., triangle IDs are stored in CDInfo.
 ////////////////////////////////////////////////////////////////////////////////
 class Rapid: public CollisionDetectionMethod {
+
   public:
+
     Rapid();
 
     virtual void Build(Body* _body);

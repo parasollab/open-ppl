@@ -11,10 +11,12 @@
 /// will be unsure, but no collision is certain.
 ////////////////////////////////////////////////////////////////////////////////
 class BoundingSpheres : public CollisionDetectionMethod {
+
   public:
+
     BoundingSpheres();
 
-    virtual void Build(Body* _body) {};
+    virtual void Build(Body* _body) {}
 
     virtual bool IsInCollision(shared_ptr<Body> _body1,
         shared_ptr<Body> _body2, CDInfo& _cdInfo);
@@ -28,10 +30,12 @@ class BoundingSpheres : public CollisionDetectionMethod {
 /// collisions will be sure, but no collision is uncertain.
 ////////////////////////////////////////////////////////////////////////////////
 class InsideSpheres : public CollisionDetectionMethod {
+
   public:
+
     InsideSpheres();
 
-    virtual void Build(Body* _body) {};
+    virtual void Build(Body* _body) {}
 
     virtual bool IsInCollision(shared_ptr<Body> _body1,
         shared_ptr<Body> _body2, CDInfo& _cdInfo);

@@ -28,6 +28,7 @@ class PQP : public CollisionDetectionMethod {
         shared_ptr<Body> _body2, CDInfo& _cdInfo);
 };
 
+
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup CollisionDetection
 /// @brief Proximity Query Package (PQP) collision detection middleware

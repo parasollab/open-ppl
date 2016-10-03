@@ -86,7 +86,7 @@ class SRTStrategy : public MPStrategyMethod<MPTraits> {
     string m_lpLabel{"sl"};
     string m_dmLabel{"euclidean"};
     string m_nfLabel{"Nearest"};
-    string m_vcLabel{"cd4"};
+    string m_vcLabel{"pqp_solid"};
     string m_exLabel{"BERO"};
 
     ///@}

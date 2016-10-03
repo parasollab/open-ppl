@@ -92,7 +92,7 @@ class WorkspaceImportanceSampler : public SamplerMethod<MPTraits> {
     ///@name Internal State
     ///@{
 
-    string m_vcLabel{"cd4"}; ///< Validity checker label.
+    string m_vcLabel{"pqp_solid"}; ///< Validity checker label.
 
     vector<size_t> m_numAttempts; ///< Number of attempts per tetrahedron
 

@@ -17,21 +17,20 @@
     </DistanceMetrics>
 
     <ValidityCheckers>
-      <CollisionDetection label="cd1" method="RAPID"/>
-      <CollisionDetection label="cd2" method="PQP"/>
-      <CollisionDetection label="cd3" method="VCLIP"/>
-      <CollisionDetection label="cd4" method="PQP_SOLID"/>
+      <CollisionDetection label="rapid" method="RAPID"/>
+      <CollisionDetection label="pqp" method="PQP"/>
+      <CollisionDetection label="pqp_solid" method="PQP_SOLID"/>
       <!--NodeClearanceValidity label="nc" delta="0.3" nfLabel="Nearest"/-->
-      <!--NegateValidity label="nv" vcLabel="cd1"/-->
-      <!--MedialAxisClearance label="mac" maClearance="0.5" vcLabel="cd2" dmLabel="euclidean"
+      <!--NegateValidity label="nv" vcLabel="rapid"/-->
+      <!--MedialAxisClearance label="mac" maClearance="0.5" vcLabel="pqp" dmLabel="euclidean"
         clearanceType="exact" penetrationType="exact" useBBX="true" positional="true"
         epsilon="0.01" historyLength="5"/-->
       <!--ComposeValidity label="cv" operator="AND">
-        <ValidityChecker label="cd2"/>
+        <ValidityChecker label="pqp"/>
         <ValidityChecker label="mac"/>
       </ComposeValidity-->
       <AlwaysTrueValidity label="alwaysTrue"/>
-      <!--ObstacleClearance label="oc" obstClearance="2.5" vcLabel="cd4" dmLabel="euclidean"
+      <!--ObstacleClearance label="oc" obstClearance="2.5" vcLabel="pqp_solid" dmLabel="euclidean"
         clearanceType="exact" penetrationType="exact" useBBX="true" positional="true"/-->
     </ValidityCheckers>
 
@@ -60,16 +59,16 @@
 
     <Samplers>
       <UniformRandomSampler label="UniformRandom" vcLabel="alwaysTrue"/>
-      <UniformRandomSampler label="UniformRandomFree" vcLabel="cd1"/>
-      <ObstacleBasedSampler label="OBPRM" vcLabel="cd1" useBBX="false" pointSelection="cspace"
+      <UniformRandomSampler label="UniformRandomFree" vcLabel="rapid"/>
+      <ObstacleBasedSampler label="OBPRM" vcLabel="rapid" useBBX="false" pointSelection="cspace"
         dmLabel="euclidean" stepSize="0.0" nShellsColl="0" nShellsFree="1" debug="false"/>
-      <GaussianSampler label="Gauss" vcLabel="cd1" d="0.2" dmLabel="euclidean" useBBX="false"/>
-      <BridgeTestSampler label="Bridge" vcLabel="cd1" d="0.2" dmLabel="euclidean" useBBX="true"/>
-      <!--MedialAxisSampler label="MAPRM" vcLabel="cd2" dmLabel="euclidean"
+      <GaussianSampler label="Gauss" vcLabel="rapid" d="0.2" dmLabel="euclidean" useBBX="false"/>
+      <BridgeTestSampler label="Bridge" vcLabel="rapid" d="0.2" dmLabel="euclidean" useBBX="true"/>
+      <!--MedialAxisSampler label="MAPRM" vcLabel="pqp" dmLabel="euclidean"
         clearanceType="exact" penetrationType="exact"
         useBBX="true" debug="false" positional="true"
         epsilon="0.01" historyLength="100"/-->
-      <!--GridSampler label="Grid" vcLabel="cd1" useBBX="true">
+      <!--GridSampler label="Grid" vcLabel="rapid" useBBX="true">
         <Dimension index="0" points="10"/>
         <Dimension index="1" points="5"/>
         <Dimension index="2" points="5"/>
@@ -78,42 +77,42 @@
         <Sampler label="UniformRandomFree" p="0.8"/>
         <Sampler label="UniformRandom" p="0.2"/>
       </MixSampler-->
-      <!--UniformObstacleBasedSampler label="UOBPRM" vcLabel="cd1" useBBX="false" dmLabel="euclidean" d="0.02" /-->
-      <!--UniformMedialAxisSampler label="UMAPRM" vcLabel="cd4" useBBX="true" dmLabel="euclidean" d="2.00" t="10"
+      <!--UniformObstacleBasedSampler label="UOBPRM" vcLabel="rapid" useBBX="false" dmLabel="euclidean" d="0.02" /-->
+      <!--UniformMedialAxisSampler label="UMAPRM" vcLabel="pqp_solid" useBBX="true" dmLabel="euclidean" d="2.00" t="10"
         clearanceType="exact" penetrationType="exact" debug="false" positional="true"/-->
     </Samplers>
 
     <LocalPlanners>
-      <StraightLine label="sl" binaryEvaluation="true" vcLabel="cd1"/>
+      <StraightLine label="sl" binaryEvaluation="true" vcLabel="rapid"/>
       <StraightLine label="slAlwaysTrue" binaryEvaluation="true" vcLabel="alwaysTrue"/>
-      <!--RotateAtS label="ras" binaryEvaluation="true" vcLabel="cd1" s="0.5" saveIntermediates="false"/>
-      <TransformAtS label="tas" binaryEvaluation="true" vcLabel="cd1" s="0.5" saveIntermediates="false"/-->
-      <!--AStarDistance label="asd" vcLabel="cd1" dmLabel="euclidean"
+      <!--RotateAtS label="ras" binaryEvaluation="true" vcLabel="rapid" s="0.5" saveIntermediates="false"/>
+      <TransformAtS label="tas" binaryEvaluation="true" vcLabel="rapid" s="0.5" saveIntermediates="false"/-->
+      <!--AStarDistance label="asd" vcLabel="rapid" dmLabel="euclidean"
         maxTries="6" numNeighbors="10" histLength="10" debug="true"/>
-      <AStarClearance label="asc" vcLabel="cd2" maxTries="6" numNeighbors="3" histLength="10"
+      <AStarClearance label="asc" vcLabel="pqp" maxTries="6" numNeighbors="3" histLength="10"
         dmLabel="euclidean" clearanceType="exact" penetrationType="exact"
         clearanceRays="2" penetrationRays="2" useBBX="true" positional="true" debug="false"/-->
       <!--MedialAxisLP label="malpr" controller="recursive"
         macEpsilon="0.1" maxIter="10"
-        vcLabel="cd4" dmLabel="euclidean"
+        vcLabel="pqp_solid" dmLabel="euclidean"
         clearanceType="exact" penetrationType="exact" useBBX="true"
         epsilon="0.01" historyLength="5" positional="true"
         debug="true" saveIntermediates="true"/>
       <MedialAxisLP label="malpi" controller="iterative"
         resFactor="20" maxIter="100"
-        vcLabel="cd4" dmLabel="euclidean"
+        vcLabel="pqp_solid" dmLabel="euclidean"
         clearanceType="exact" penetrationType="exact" useBBX="true"
         epsilon="0.01" historyLength="5" positional="true"
         debug="true" saveIntermediates="true"/>
       <MedialAxisLP label="malpb" controller="binary"
         resFactor="20" maxIter="100"
-        vcLabel="cd4" dmLabel="euclidean"
+        vcLabel="pqp_solid" dmLabel="euclidean"
         clearanceType="exact" penetrationType="exact" useBBX="true"
         epsilon="0.01" historyLength="5" positional="true"
         debug="true" saveIntermediates="true"/-->
-      <!--ToggleLP label="togglelp" vcLabel="cd1" dmLabel="euclidean"
+      <!--ToggleLP label="togglelp" vcLabel="rapid" dmLabel="euclidean"
         lpLabel="sl" maxIter="5"/-->
-      <!--ApproxSpheres label="apsph" vcLabel="cd2" dmLabel="euclidean" saveIntermediates="false"
+      <!--ApproxSpheres label="apsph" vcLabel="pqp" dmLabel="euclidean" saveIntermediates="false"
         clearanceType="exact" penetrationType="exact"/-->
       <!--HierarchicalLP label="hlp">
         <LocalPlanner method="sl"/>
@@ -124,9 +123,9 @@
 
     <Extenders>
       <BasicExtender label="BERO" debug="false"
-        dmLabel="euclidean" vcLabel="cd1" delta="1.0"/>
+        dmLabel="euclidean" vcLabel="rapid" delta="1.0"/>
       <BasicExtender label="BESO" debug="false"
-        dmLabel="euclidean" vcLabel="cd1" delta="10.0" randomOrientation="false"/>
+        dmLabel="euclidean" vcLabel="rapid" delta="10.0" randomOrientation="false"/>
       <!--MixExtender label="ME">
         <Extender label="BERO" probability="0.1"/>
         <Extender label="BESO" probability="0.1"/>
@@ -140,24 +139,24 @@
       </MixExtender>
       <MedialAxisExtender label="MAE" delta="10.0" minDist="0.01"
         extendDist="0.5" maxIntermediates="10" lpLabel="sl"
-        vcLabel="cd4" dmLabel="euclidean"
+        vcLabel="pqp_solid" dmLabel="euclidean"
         clearanceType="exact" penetrationType="exact" useBBX="true"
         epsilon="0.01" historyLength="5" positional="true"/>
       <RandomObstacleVector label="ROVRO" debug="false"
-        dmLabel="euclidean" vcLabel="cd1" delta="10.0"/>
+        dmLabel="euclidean" vcLabel="rapid" delta="10.0"/>
       <RandomObstacleVector label="ROVSO" debug="false"
-        dmLabel="euclidean" vcLabel="cd1" delta="10.0" randomOrientation="false"/>
+        dmLabel="euclidean" vcLabel="rapid" delta="10.0" randomOrientation="false"/>
       <RotationThenTranslation label="RTT" debug="false"
-        dmLabel="euclidean" vcLabel="cd1" delta="10.0"/>
+        dmLabel="euclidean" vcLabel="rapid" delta="10.0"/>
       <TraceCSpaceObstacle label="TCSO" debug="false"
-        dmLabel="euclidean" vcLabel="cd1" delta="10.0"/>
+        dmLabel="euclidean" vcLabel="rapid" delta="10.0"/>
       <TraceMAPush label="TMAP" debug="false"
-        dmLabel="euclidean" vcLabel="cd1" delta="10.0"
+        dmLabel="euclidean" vcLabel="rapid" delta="10.0"
         clearanceType="exact" penetrationType="exact"/>
       <TraceObstacle label="TORO" debug="false"
-        dmLabel="euclidean" vcLabel="cd1" delta="10.0"/>
+        dmLabel="euclidean" vcLabel="rapid" delta="10.0"/>
       <TraceObstacle label="TOSO" debug="false"
-        dmLabel="euclidean" vcLabel="cd1" delta="10.0" randomOrientation="false"/-->
+        dmLabel="euclidean" vcLabel="rapid" delta="10.0" randomOrientation="false"/-->
     </Extenders>
 
     <!--PathModifiers>
@@ -167,7 +166,7 @@
         <Modifier label="ResamplePathModifier"/>
       </CombinedPathModifier>
       <CRetractionPathModifier label="CR" iter="25"
-        vcLabel="cd4" dmLabel="euclidean"
+        vcLabel="pqp_solid" dmLabel="euclidean"
         clearanceType="exact" penetrationType="exact"
         useBBX="true" positional="true" debug="false"/>
       <MedialAxisPathModifier label="MAPS"
@@ -175,7 +174,7 @@
       <ResamplePathModifier label="ResamplePathModifier" debug="false"
         typeName="MAX_CLEARANCE"
         numResamples="1" stepSize="0.3" userValue="0.3"
-        vcLabel="cd2" dmLabel="euclidean" lpLabel="sl"
+        vcLabel="pqp" dmLabel="euclidean" lpLabel="sl"
         clearanceType="exact" penetrationType="exact" useBBX="true" positional="true"/>
       <ShortcuttingPathModifier label="ShortcuttingPathModifier" lpLabel="sl"
         debug="false"/>
@@ -238,7 +237,7 @@
         <NodeConnectionMethod method="Closest"/>
       </Query>
       <LazyQuery label="LazyQuery" queryFile="2D/2d.query"
-        lpLabel="sl" dmLabel="euclidean" vcMethod="cd1" graphSearchAlg="astar"
+        lpLabel="sl" dmLabel="euclidean" vcMethod="rapid" graphSearchAlg="astar"
         deleteNodes="false" debug="false"
         numEnhance="10" d="0.5" pmLabel="">
         <NodeConnectionMethod method="ClosestAlwaysTrue"/>
@@ -247,7 +246,7 @@
         <Resolution mult="1"/>
       </LazyQuery>
       <LazyToggleQuery label="LazyToggleQuery" queryFile="2D/2d.query"
-        lpLabel="sl" dmLabel="euclidean" vcMethod="cd1" graphSearchAlg="astar"
+        lpLabel="sl" dmLabel="euclidean" vcMethod="rapid" graphSearchAlg="astar"
         deleteNodes="false" iterative="true" debug="false" pmLabel="">
         <NodeConnectionMethod method="ClosestAlwaysTrue"/>
         <ToggleConnectionMethod method="LazyToggleConnect"/>
@@ -314,7 +313,7 @@
       <!-- BlindRRT -->
       <BlindRRT label="BlindRRT" delta="2.0" minDist="0.1" CCconnection="NodeToNode"
         lpLabel="sl" dmLabel="euclidean" initialSamples="200" ccIters="100"
-        nfLabel="BFNF" vcLabel="cd1" connectorLabel="RRTConnect" query="2D/2d.query" debug="true" evaluateGoal="true"/>
+        nfLabel="BFNF" vcLabel="rapid" connectorLabel="RRTConnect" query="2D/2d.query" debug="true" evaluateGoal="true"/>
 
       <!-- Basic Parallel PRM -->
       <BasicParallelPRM label="BasicParallelPRM" debug="true">
@@ -338,7 +337,7 @@
       <!-- Bulk Synchronous RRT -->
       <BulkRRT label="BulkRRT" debug="true">
          <k_nodes kNodes = "1"/>
-         <vc_method vcm = "cd1"/>
+         <vc_method vcm = "rapid"/>
          <evaluation_method Method="NodesEval"/>
          <dm_method Method="euclidean"/>
          <min_distance minDist ="0.1"/>
@@ -351,7 +350,7 @@
 	<region_constr numRegions = "2" rayLength= "50" numNeighbors = "1"/>
 	<!-- numAttempts should at least equal numNodes-->
         <rrt_constr numNodes = "100" numAttempts = "20" delta= "4.0" minDist = "0.05" strictBranching="false" />
-	<vc_method vcm = "cd1"/>
+	<vc_method vcm = "rapid"/>
 	<dm_method Method="euclidean"/>
 	<connectionMethod Label="RegionConnector"/>
         <nf_method Method="BFNF"/>
@@ -365,7 +364,7 @@
 	<!-- numAttempts should at least equal numNodes-->
         <rrt_constr numNodes = "100" numAttempts = "20" delta= "4.0" numCCIters="25"
           minDist = "0.05" strictBranching="true" CCconnection="NodeToNode"/>
-	<vc_method vcm = "cd1"/>
+	<vc_method vcm = "rapid"/>
 	<dm_method Method="euclidean"/>
 	<connectionMethod Label="RegionRRTConnect"/>
         <nf_method Method="BFNF"/>

@@ -11,7 +11,7 @@
     </DistanceMetrics>
 
     <ValidityCheckers>
-      <CollisionDetection label="cd1" method="RAPID"/>
+      <CollisionDetection label="rapid" method="RAPID"/>
     </ValidityCheckers>
 
     <NeighborhoodFinders>
@@ -22,13 +22,13 @@
     </NeighborhoodFinders>
 
     <Extenders>
-      <KinodynamicExtender label="FixedBest" dmLabel="weuclidean" vcLabel="cd1"
+      <KinodynamicExtender label="FixedBest" dmLabel="weuclidean" vcLabel="rapid"
         timeStep="30" fixed="true" best="true" minDist=".01"/>
-      <KinodynamicExtender label="FixedRandom" dmLabel="weuclidean" vcLabel="cd1"
+      <KinodynamicExtender label="FixedRandom" dmLabel="weuclidean" vcLabel="rapid"
         timeStep="30" fixed="true" best="false" minDist=".01"/>
-      <KinodynamicExtender label="VaryBest" dmLabel="weuclidean" vcLabel="cd1"
+      <KinodynamicExtender label="VaryBest" dmLabel="weuclidean" vcLabel="rapid"
         timeStep="30" fixed="false" best="true" minDist=".01"/>
-      <KinodynamicExtender label="VaryRandom" dmLabel="weuclidean" vcLabel="cd1"
+      <KinodynamicExtender label="VaryRandom" dmLabel="weuclidean" vcLabel="rapid"
         timeStep="30" fixed="false" best="false" minDist=".01"/>
     </Extenders>
 
@@ -50,14 +50,14 @@
     <MPStrategies>
       <!-- KinodynamicRRT -->
       <BasicRRTStrategy label="KRRTQuery" growthFocus="0.05"
-        dmLabel="weuclidean" nfLabel="Nearest" vcLabel="cd1"
+        dmLabel="weuclidean" nfLabel="Nearest" vcLabel="rapid"
         gtype="UNDIRECTED_TREE" extenderLabel="FixedRandom" debug="true">
         <Evaluator label="BoundedQuery"/>
       </BasicRRTStrategy>
 
       <!-- KinodynamicRRT -->
       <BasicRRTStrategy label="KRRTNodes" growthFocus="0.05"
-        dmLabel="weuclidean" nfLabel="Nearest" vcLabel="cd1"
+        dmLabel="weuclidean" nfLabel="Nearest" vcLabel="rapid"
         gtype="UNDIRECTED_TREE" extenderLabel="FixedRandom" debug="false">
         <Evaluator label="NodesEval"/>
       </BasicRRTStrategy>

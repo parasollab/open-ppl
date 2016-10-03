@@ -12,24 +12,24 @@
       <Euclidean label="euclidean"/>
       <ScaledEuclidean label= "scaledEuclidean" scale ="0.2"/>
       <RMSD label="rmsd"/>
-    </DistanceMetrics>    
+    </DistanceMetrics>
 
-    <ValidityCheckers>    
-      <CollisionDetection label="cd1" method="RAPID" ignore_i_adjacent_nodes=4 ignore_i_adjacent_links=4/>
-      <CollisionDetection label="cd2" method="PQP" ignore_i_adjacent_nodes=4 ignore_i_adjacent_links=4/>
-   
-      <CollisionDetection label="cd4" method="PQP_SOLID"ignore_i_adjacent_nodes=4 ignore_i_adjacent_links=4 />
+    <ValidityCheckers>
+      <CollisionDetection label="rapid" method="RAPID" ignore_i_adjacent_nodes=4 ignore_i_adjacent_links=4/>
+      <CollisionDetection label="pqp" method="PQP" ignore_i_adjacent_nodes=4 ignore_i_adjacent_links=4/>
+
+      <CollisionDetection label="pqp_solid" method="PQP_SOLID"ignore_i_adjacent_nodes=4 ignore_i_adjacent_links=4 />
       <NodeClearanceValidity label="nc" delta="0.3" dmLabel="euclidean" nfLabel="Nearest"/>
-      <NegateValidity label="nv" vcLabel="cd1"/>
-      <MedialAxisClearance label="mac" maClearance="0.5" vcLabel="cd2" dmLabel="euclidean"
-        clearanceType="exact" penetrationType="exact" useBBX="true" positional="true" 
+      <NegateValidity label="nv" vcLabel="rapid"/>
+      <MedialAxisClearance label="mac" maClearance="0.5" vcLabel="pqp" dmLabel="euclidean"
+        clearanceType="exact" penetrationType="exact" useBBX="true" positional="true"
         epsilon="0.01" historyLength="5"/>
       <ComposeValidity label="cv" operator="AND">
-        <ValidityChecker label="cd2"/>
+        <ValidityChecker label="pqp"/>
         <ValidityChecker label="mac"/>
       </ComposeValidity>
       <AlwaysTrueValidity label="alwaysTrue"/>
-      <ObstacleClearance label="oc" obstClearance="2.5" vcLabel="cd4" dmLabel="euclidean"
+      <ObstacleClearance label="oc" obstClearance="2.5" vcLabel="pqp_solid" dmLabel="euclidean"
         clearanceType="exact" penetrationType="exact" useBBX="true" positional="true"/>
     </ValidityCheckers>
 
@@ -39,17 +39,17 @@
       <BruteForceNF label="Nearest" dmLabel="euclidean" unconnected="false" k="1"/>
       <BruteForceNF label="BFNFAll" dmLabel="euclidean" k="0"/>
     </NeighborhoodFinders>
-    
+
     <Samplers>
       <UniformRandomSampler label="UniformRandom" vcLabel="alwaysTrue"/>
-      <UniformRandomSampler label="UniformRandomFree" vcLabel="cd4"/>
+      <UniformRandomSampler label="UniformRandomFree" vcLabel="pqp_solid"/>
     </Samplers>
 
     <LocalPlanners>
-      <StraightLine label="sl" binaryEvaluation="true" vcLabel="cd4" recordKeep="true"/>
+      <StraightLine label="sl" binaryEvaluation="true" vcLabel="pqp_solid" recordKeep="true"/>
       <StraightLine label="slAlwaysTrue" binaryEvaluation="true" vcLabel="alwaysTrue"/>
-      <RotateAtS label="ras" binaryEvaluation="true" vcLabel="cd4" s="0.5" saveIntermediates="false"/>
-      <TransformAtS label="tas" binaryEvaluation="true" vcLabel="cd1" s="0.5" saveIntermediates="false"/>
+      <RotateAtS label="ras" binaryEvaluation="true" vcLabel="pqp_solid" s="0.5" saveIntermediates="false"/>
+      <TransformAtS label="tas" binaryEvaluation="true" vcLabel="rapid" s="0.5" saveIntermediates="false"/>
     </LocalPlanners>
 
     <Connectors>
@@ -79,20 +79,20 @@
     </MapEvaluators>
 
 
-    <MPStrategies>  
+    <MPStrategies>
       <BasicPRM label="BasicPRM1">
         <node_generation_method Method="UniformRandomFree" Number="10" Attempts="10"/>
         <node_connection_method Method="Closest"/>
         <evaluation_method Method="NodesEval"/>
       </BasicPRM>
 
-      <ReachableVolumeRRT label="RVRRT" delta=".5" minDist="0.001" 
+      <ReachableVolumeRRT label="RVRRT" delta=".5" minDist="0.001"
         numRoots="1" m="1" growthFocus="0" lpLabel="ras" dmLabel="scaledEuclidean" extenderLabel=""
-        nfLabel="Nearest" vcLabel="cd4" query="walls.query" connectorLabel="Closest" gtype="UNDIRECTED_GRAPH" chainFile="Chain.tree" deltaRV="7" s=".9" s_rot=".9" treeStructure="RootFirst" perturbDir = "WorkspaceDir" repositionPolicy = "Random" jointPerturbMethod = "MostDistantJoint" growGoals="false">
-        <Evaluator label="NodesEval"/> 
+        nfLabel="Nearest" vcLabel="pqp_solid" query="walls.query" connectorLabel="Closest" gtype="UNDIRECTED_GRAPH" chainFile="Chain.tree" deltaRV="7" s=".9" s_rot=".9" treeStructure="RootFirst" perturbDir = "WorkspaceDir" repositionPolicy = "Random" jointPerturbMethod = "MostDistantJoint" growGoals="false">
+        <Evaluator label="NodesEval"/>
       </ReachableVolumeRRT>
 
-    </MPStrategies> 
+    </MPStrategies>
     <Solver mpStrategyLabel="RVRRT" seed="111111"  baseFilename="RVRRT_Map" vizmoDebug="false"/>
   </MPProblem>
 </MotionPlanning>

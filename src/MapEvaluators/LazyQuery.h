@@ -91,7 +91,7 @@ class LazyQuery : public PRMQuery<MPTraits> {
     /// These objects are used to lazily validate the computed path.
 
     string m_dmLabel{"euclidean"};
-    string m_vcLabel{"cd4"};
+    string m_vcLabel{"pqp_solid"};
     string m_lpLabel{"sl"};
 
     ///@}

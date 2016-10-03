@@ -50,7 +50,7 @@ class BasicRRTStrategy : public MPStrategyMethod<MPTraits> {
     ///@{
 
     BasicRRTStrategy(string _dm = "euclidean", string _nf = "bfnf",
-        string _vc = "cd1", string _nc = "kClosest", string _ex = "BERO",
+        string _vc = "rapid", string _nc = "kClosest", string _ex = "BERO",
         vector<string> _evaluators = vector<string>(),
         string _gt = "UNDIRECTED_TREE",  bool _growGoals = false,
         double _growthFocus = .05, size_t _numRoots = 1,

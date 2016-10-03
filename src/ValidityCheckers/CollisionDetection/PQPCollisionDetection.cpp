@@ -6,10 +6,12 @@
 #include "Environment/Body.h"
 #include <set>
 
-PQP::
-PQP() : CollisionDetectionMethod("PQP", CDType::Exact) {
-}
+/*------------------------------- Construction -------------------------------*/
 
+PQP::
+PQP() : CollisionDetectionMethod("PQP") { }
+
+/*------------------------------- CD Interface -------------------------------*/
 
 void
 PQP::
@@ -154,6 +156,7 @@ IsInsideObstacle(const Vector3d& _pt, shared_ptr<Body> _body) {
   return false;
 }
 
+/*--------------------------------- Helpers ----------------------------------*/
 
 PQP_Model*
 PQPSolid::
@@ -169,5 +172,7 @@ BuildPseudoRay() const {
 
   return ray;
 }
+
+/*----------------------------------------------------------------------------*/
 
 #endif

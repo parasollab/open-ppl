@@ -99,7 +99,7 @@ operator() (BBView _v1, RGView _v2) const {
 
     CfgType tmp = *vit;
     //TODO: Pass validity checker label as string
-    if(m_problem->GetValidityChecker("cd1")->IsValid(tmp, callee)) {
+    if(m_problem->GetValidityChecker("rapid")->IsValid(tmp, callee)) {
       VID vid = m_problem->GetRoadmap()->GetGraph()->add_vertex(tmp);
       regionVIDs.push_back(vid);
     }

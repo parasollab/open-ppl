@@ -11,7 +11,7 @@
     </DistanceMetrics>
 
     <ValidityCheckers>
-      <CollisionDetection label="cd4" method="PQP_SOLID"/>
+      <CollisionDetection label="pqp_solid" method="PQP_SOLID"/>
     </ValidityCheckers>
 
     <NeighborhoodFinders>
@@ -19,11 +19,11 @@
     </NeighborhoodFinders>
 
     <Samplers>
-      <UniformRandomSampler label="UniformRandomFree" vcLabel="cd4"/>
+      <UniformRandomSampler label="UniformRandomFree" vcLabel="pqp_solid"/>
     </Samplers>
 
     <LocalPlanners>
-      <StraightLine label="sl" binaryEvaluation="true" vcLabel="cd4"/>
+      <StraightLine label="sl" binaryEvaluation="true" vcLabel="pqp_solid"/>
     </LocalPlanners>
 
     <Connectors>
