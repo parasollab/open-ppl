@@ -3,9 +3,9 @@
 
 #ifdef PMPSSSurfaceMult
 #include "Cfg/SSSurface.h"
-#include "ValidityCheckers/SurfaceValidity.h"
-#include "ValidityCheckers/CollisionDetectionValidity.h"
-#include "DistanceMetrics/EuclideanDistance.h"
+#include "PlanningLibrary/ValidityCheckers/SurfaceValidity.h"
+#include "PlanningLibrary/ValidityCheckers/CollisionDetectionValidity.h"
+#include "PlanningLibrary/DistanceMetrics/EuclideanDistance.h"
 #include "MPProblem/MPProblem.h"
 #include "MPProblem/Weight.h"
 

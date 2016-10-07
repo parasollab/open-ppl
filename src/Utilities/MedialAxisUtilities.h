@@ -8,8 +8,8 @@
 #include "MetricUtils.h"
 #include "Environment/FixedBody.h"
 #include "Environment/SurfaceMultiBody.h"
-#include "LocalPlanners/StraightLine.h"
-#include "ValidityCheckers/CollisionDetection/CDInfo.h"
+#include "PlanningLibrary/LocalPlanners/StraightLine.h"
+#include "PlanningLibrary/ValidityCheckers/CollisionDetection/CDInfo.h"
 #include "Environment/ActiveMultiBody.h"
 
 ////////////////////////////////////////////////////////////////////////////////

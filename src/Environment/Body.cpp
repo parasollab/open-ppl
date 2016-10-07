@@ -7,7 +7,7 @@
 #include <CGAL/Polyhedron_3.h>
 #include <CGAL/convex_hull_3.h>
 
-#include "ValidityCheckers/CollisionDetection/CollisionDetectionMethod.h"
+#include "PlanningLibrary/ValidityCheckers/CollisionDetection/CollisionDetectionMethod.h"
 
 /*--------------------------- Statics Initializers ----------------------------*/
 

@@ -5,60 +5,60 @@
 #include "MPProblem/Weight.h"
 
 //distance metric includes
-#include "DistanceMetrics/ScaledEuclideanDistance.h"
-#include "DistanceMetrics/RVDistance.h"
+#include "PlanningLibrary/DistanceMetrics/ScaledEuclideanDistance.h"
+#include "PlanningLibrary/DistanceMetrics/RVDistance.h"
 
 //validity checker includes
-#include "ValidityCheckers/AlwaysTrueValidity.h"
-#include "ValidityCheckers/CollisionDetectionValidity.h"
-#include "ValidityCheckers/ComposeValidity.h"
-#include "ValidityCheckers/MedialAxisClearanceValidity.h"
-#include "ValidityCheckers/NegateValidity.h"
-#include "ValidityCheckers/NodeClearanceValidity.h"
-#include "ValidityCheckers/ObstacleClearanceValidity.h"
-#include "ValidityCheckers/SurfaceValidity.h"
-#include "ValidityCheckers/SSSurfaceValidity.h"
+#include "PlanningLibrary/ValidityCheckers/AlwaysTrueValidity.h"
+#include "PlanningLibrary/ValidityCheckers/CollisionDetectionValidity.h"
+#include "PlanningLibrary/ValidityCheckers/ComposeValidity.h"
+#include "PlanningLibrary/ValidityCheckers/MedialAxisClearanceValidity.h"
+#include "PlanningLibrary/ValidityCheckers/NegateValidity.h"
+#include "PlanningLibrary/ValidityCheckers/NodeClearanceValidity.h"
+#include "PlanningLibrary/ValidityCheckers/ObstacleClearanceValidity.h"
+#include "PlanningLibrary/ValidityCheckers/SurfaceValidity.h"
+#include "PlanningLibrary/ValidityCheckers/SSSurfaceValidity.h"
 
 //neighborhood finder includes
-#include "NeighborhoodFinders/BruteForceNF.h"
+#include "PlanningLibrary/NeighborhoodFinders/BruteForceNF.h"
 
 //sampler includes
-#include "Samplers/UniformRandomSampler.h"
+#include "PlanningLibrary/Samplers/UniformRandomSampler.h"
 
 //local planner includes
-#include "LocalPlanners/RVLocalPlanner.h"
+#include "PlanningLibrary/LocalPlanners/RVLocalPlanner.h"
 
 //extenders includes
-#include "Extenders/BasicExtender.h"
+#include "PlanningLibrary/Extenders/BasicExtender.h"
 
 //path smoothing includes
 
 //connector includes
-#include "Connectors/RRTConnect.h"
+#include "PlanningLibrary/Connectors/RRTConnect.h"
 
 //metric includes
-#include "Metrics/CCDistanceMetric.h"
-#include "Metrics/ConnectivityMetric.h"
-#include "Metrics/CoverageDistanceMetric.h"
-#include "Metrics/CoverageMetric.h"
-#include "Metrics/DiameterMetric.h"
-#include "Metrics/NumEdgesMetric.h"
-#include "Metrics/NumNodesMetric.h"
-#include "Metrics/RoadmapSet.h"
-#include "Metrics/TimeMetric.h"
-#include "Metrics/VectorSet.h"
+#include "PlanningLibrary/Metrics/CCDistanceMetric.h"
+#include "PlanningLibrary/Metrics/ConnectivityMetric.h"
+#include "PlanningLibrary/Metrics/CoverageDistanceMetric.h"
+#include "PlanningLibrary/Metrics/CoverageMetric.h"
+#include "PlanningLibrary/Metrics/DiameterMetric.h"
+#include "PlanningLibrary/Metrics/NumEdgesMetric.h"
+#include "PlanningLibrary/Metrics/NumNodesMetric.h"
+#include "PlanningLibrary/Metrics/RoadmapSet.h"
+#include "PlanningLibrary/Metrics/TimeMetric.h"
+#include "PlanningLibrary/Metrics/VectorSet.h"
 
 //map evaluator includes
-#include "MapEvaluators/ComposeEvaluator.h"
-#include "MapEvaluators/ConditionalEvaluator.h"
-#include "MapEvaluators/NegateEvaluator.h"
-#include "MapEvaluators/PrintMapEvaluation.h"
-#include "MapEvaluators/TrueEvaluation.h"
+#include "PlanningLibrary/MapEvaluators/ComposeEvaluator.h"
+#include "PlanningLibrary/MapEvaluators/ConditionalEvaluator.h"
+#include "PlanningLibrary/MapEvaluators/NegateEvaluator.h"
+#include "PlanningLibrary/MapEvaluators/PrintMapEvaluation.h"
+#include "PlanningLibrary/MapEvaluators/TrueEvaluation.h"
 
 //mp strategies includes
-#include "MPStrategies/BasicPRM.h"
-#include "MPStrategies/BasicRRTStrategy.h"
-#include "MPStrategies/RVRRT.h"
+#include "PlanningLibrary/MPStrategies/BasicPRM.h"
+#include "PlanningLibrary/MPStrategies/BasicRRTStrategy.h"
+#include "PlanningLibrary/MPStrategies/RVRRT.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup MotionPlanningUniverse

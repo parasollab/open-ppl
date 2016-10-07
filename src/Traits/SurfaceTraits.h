@@ -6,55 +6,55 @@
 #include "MPProblem/Weight.h"
 
 //distance metric includes
-#include "DistanceMetrics/EuclideanDistance.h"
+#include "PlanningLibrary/DistanceMetrics/EuclideanDistance.h"
 
 //validity checker includes
-#include "ValidityCheckers/CollisionDetectionValidity.h"
-#include "ValidityCheckers/SurfaceValidity.h"
-#include "ValidityCheckers/SSSurfaceValidity.h"
+#include "PlanningLibrary/ValidityCheckers/CollisionDetectionValidity.h"
+#include "PlanningLibrary/ValidityCheckers/SurfaceValidity.h"
+#include "PlanningLibrary/ValidityCheckers/SSSurfaceValidity.h"
 
 //neighborhood finder includes
-#include "NeighborhoodFinders/BruteForceNF.h"
-#include "NeighborhoodFinders/MPNNNF.h"
+#include "PlanningLibrary/NeighborhoodFinders/BruteForceNF.h"
+#include "PlanningLibrary/NeighborhoodFinders/MPNNNF.h"
 
 //sampler includes
-#include "Samplers/SurfaceGridSampler.h"
-#include "Samplers/SurfaceSampler.h"
-#include "Samplers/UniformRandomSampler.h"
+#include "PlanningLibrary/Samplers/SurfaceGridSampler.h"
+#include "PlanningLibrary/Samplers/SurfaceSampler.h"
+#include "PlanningLibrary/Samplers/UniformRandomSampler.h"
 
 //local planner includes
-#include "LocalPlanners/StraightLine.h"
-#include "LocalPlanners/SurfaceLP.h"
+#include "PlanningLibrary/LocalPlanners/StraightLine.h"
+#include "PlanningLibrary/LocalPlanners/SurfaceLP.h"
 
 //extenders includes
-#include "Extenders/BasicExtender.h"
-#include "Extenders/MixExtender.h"
-#include "Extenders/RandomObstacleVector.h"
-#include "Extenders/RotationThenTranslation.h"
-#include "Extenders/TraceCSpaceObstacle.h"
-#include "Extenders/TraceMAPush.h"
-#include "Extenders/TraceObstacle.h"
+#include "PlanningLibrary/Extenders/BasicExtender.h"
+#include "PlanningLibrary/Extenders/MixExtender.h"
+#include "PlanningLibrary/Extenders/RandomObstacleVector.h"
+#include "PlanningLibrary/Extenders/RotationThenTranslation.h"
+#include "PlanningLibrary/Extenders/TraceCSpaceObstacle.h"
+#include "PlanningLibrary/Extenders/TraceMAPush.h"
+#include "PlanningLibrary/Extenders/TraceObstacle.h"
 
 //path smoothing includes
-#include "PathModifiers/CombinedPathModifier.h"
-#include "PathModifiers/MedialAxisPathModifier.h"
-#include "PathModifiers/ResamplePathModifier.h"
-#include "PathModifiers/ShortcuttingPathModifier.h"
+#include "PlanningLibrary/PathModifiers/CombinedPathModifier.h"
+#include "PlanningLibrary/PathModifiers/MedialAxisPathModifier.h"
+#include "PlanningLibrary/PathModifiers/ResamplePathModifier.h"
+#include "PlanningLibrary/PathModifiers/ShortcuttingPathModifier.h"
 
 //connector includes
-#include "Connectors/CCsConnector.h"
-#include "Connectors/ConnectNeighboringSurfaces.h"
-#include "Connectors/NeighborhoodConnector.h"
+#include "PlanningLibrary/Connectors/CCsConnector.h"
+#include "PlanningLibrary/Connectors/ConnectNeighboringSurfaces.h"
+#include "PlanningLibrary/Connectors/NeighborhoodConnector.h"
 
 //metric includes
-#include "Metrics/NumNodesMetric.h"
+#include "PlanningLibrary/Metrics/NumNodesMetric.h"
 
 //map evaluator includes
-#include "MapEvaluators/ConditionalEvaluator.h"
+#include "PlanningLibrary/MapEvaluators/ConditionalEvaluator.h"
 
 //mp strategies includes
-#include "MPStrategies/BasicPRM.h"
-#include "MPStrategies/LocalManeuveringStrategy.h"
+#include "PlanningLibrary/MPStrategies/BasicPRM.h"
+#include "PlanningLibrary/MPStrategies/LocalManeuveringStrategy.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup MotionPlanningUniverse

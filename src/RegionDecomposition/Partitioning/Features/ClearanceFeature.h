@@ -2,7 +2,7 @@
 #define CLEARANCEFEATURE_H_
 
 #include "MPFeature.h"
-#include "DistanceMetrics.h"
+#include "PlanningLibrary/DistanceMetrics.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup RegionDecomposition

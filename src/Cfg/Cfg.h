@@ -11,7 +11,7 @@
 #include "Vector.h"
 
 #include "Utilities/MPUtils.h"
-#include "ValidityCheckers/CollisionDetection/CDInfo.h"
+#include "PlanningLibrary/ValidityCheckers/CollisionDetection/CDInfo.h"
 
 enum class DofType;
 class Cfg;

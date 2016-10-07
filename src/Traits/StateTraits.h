@@ -5,33 +5,33 @@
 #include "Edges/StateEdge.h"
 
 //distance metric includes
-#include "DistanceMetrics/ExperimentalDistance.h"
-#include "DistanceMetrics/WeightedEuclideanDistance.h"
+#include "PlanningLibrary/DistanceMetrics/ExperimentalDistance.h"
+#include "PlanningLibrary/DistanceMetrics/WeightedEuclideanDistance.h"
 
 //validity checker includes
-#include "ValidityCheckers/CollisionDetectionValidity.h"
+#include "PlanningLibrary/ValidityCheckers/CollisionDetectionValidity.h"
 
 //neighborhood finder includes
-#include "NeighborhoodFinders/BruteForceNF.h"
-#include "NeighborhoodFinders/RadiusNF.h"
+#include "PlanningLibrary/NeighborhoodFinders/BruteForceNF.h"
+#include "PlanningLibrary/NeighborhoodFinders/RadiusNF.h"
 
 //extenders includes
-#include "Extenders/KinodynamicExtender.h"
-#include "Extenders/MixExtender.h"
+#include "PlanningLibrary/Extenders/KinodynamicExtender.h"
+#include "PlanningLibrary/Extenders/MixExtender.h"
 
 //metric includes
-#include "Metrics/NumNodesMetric.h"
+#include "PlanningLibrary/Metrics/NumNodesMetric.h"
 
 //map evaluator includes
-#include "MapEvaluators/ComposeEvaluator.h"
-#include "MapEvaluators/ConditionalEvaluator.h"
+#include "PlanningLibrary/MapEvaluators/ComposeEvaluator.h"
+#include "PlanningLibrary/MapEvaluators/ConditionalEvaluator.h"
 
-#include "MapEvaluators/RRTQuery.h"
+#include "PlanningLibrary/MapEvaluators/RRTQuery.h"
 
 //mp strategies includes
-#include "MPStrategies/BasicRRTStrategy.h"
-#include "MPStrategies/DynamicDomainRRT.h"
-#include "MPStrategies/DynamicRegionRRT.h"
+#include "PlanningLibrary/MPStrategies/BasicRRTStrategy.h"
+#include "PlanningLibrary/MPStrategies/DynamicDomainRRT.h"
+#include "PlanningLibrary/MPStrategies/DynamicRegionRRT.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup MotionPlanningUniverse

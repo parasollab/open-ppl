@@ -4,7 +4,7 @@
 #include <algorithm>
 
 #include "Roadmap.h"
-#include "LocalPlanners/StraightLine.h"
+#include "PlanningLibrary/LocalPlanners/StraightLine.h"
 #include "Utilities/PMPLExceptions.h"
 
 ////////////////////////////////////////////////////////////////////////////////

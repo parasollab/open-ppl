@@ -1,8 +1,8 @@
 #include "VisibilityFeature.h"
 #include "MPProblem.h"
 #include "MPStrategy.h"
-#include "LocalPlanners.h"
-#include "DistanceMetrics.h"
+#include "PlanningLibrary/LocalPlanners.h"
+#include "PlanningLibrary/DistanceMetrics.h"
 
 VisibilityFeature::VisibilityFeature():MPFeature(){
 }

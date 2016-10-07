@@ -7,7 +7,7 @@
 
 #if (defined(PMPReachDistCC) || defined(PMPReachDistCCFixed))
 #include "MPProblem/ClosedChainProblem.h"
-#include "MPStrategies/ClosedChainStrategy.h"
+#include "PlanningLibrary/MPStrategies/ClosedChainStrategy.h"
 #endif
 
 
