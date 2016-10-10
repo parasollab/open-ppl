@@ -6,9 +6,10 @@
 using namespace std;
 
 #include "Utilities/IOUtils.h"
+#include "Utilities/MethodSet.h"
 
 class Environment;
-template<class MPTraits> class Roadmap;
+template <typename MPTraits> class Roadmap;
 class StatClass;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -20,14 +21,13 @@ class StatClass;
 /// PMPL extend themselves off of. It essentially composes a class name
 /// @c m_name, a unique label @c m_label, and provides access to the MPProblem.
 ////////////////////////////////////////////////////////////////////////////////
-template<class MPTraits>
+template <typename MPTraits>
 class MPBaseObject {
 
   public:
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// @name MPBaseObject Typedefs
-    /// @{
+    ///@name Local Types
+    ///@{
 
     typedef typename MPTraits::MPProblemType MPProblemType;
     typedef typename MPProblemType::RoadmapType RoadmapType;
@@ -43,12 +43,9 @@ class MPBaseObject {
     typedef typename MPProblemType::MapEvaluatorPointer MapEvaluatorPointer;
     typedef typename MPProblemType::MPStrategyPointer MPStrategyPointer;
 
-    /// @}
-    ////////////////////////////////////////////////////////////////////////////
-
-    ////////////////////////////////////////////////////////////////////////////
-    /// @name Constructor, Destructor
-    /// @{
+    ///@}
+    ///@name Construction
+    ///@{
 
     ////////////////////////////////////////////////////////////////////////////
     /// @param _problem Global MPProblem
@@ -57,24 +54,22 @@ class MPBaseObject {
     /// @param _debug Turn debug output on or off
     MPBaseObject(MPProblemType* _problem = NULL, const string& _label = "",
         const string& _name = "", bool _debug = false) :
-      m_name(_name), m_debug(_debug), m_label(_label), m_problem(_problem) {
-      };
+        m_name(_name), m_debug(_debug), m_label(_label), m_problem(_problem) {
+    }
+
     ////////////////////////////////////////////////////////////////////////////
     /// @param _problem Global MPProblem
     /// @param _node XMLNode to parse for this object
     MPBaseObject(MPProblemType* _problem, XMLNode& _node) :
-      m_problem(_problem) {
-        ParseXML(_node);
-      };
+        m_problem(_problem) {
+      ParseXML(_node);
+    }
 
     virtual ~MPBaseObject() = default;
 
-    /// @}
-    ////////////////////////////////////////////////////////////////////////////
-
-    ////////////////////////////////////////////////////////////////////////////
-    /// @name I/O
-    /// @{
+    ///@}
+    ///@name I/O
+    ///@{
 
     ////////////////////////////////////////////////////////////////////////////
     /// @brief Parse XML node
@@ -86,7 +81,7 @@ class MPBaseObject {
       m_label = _node.Read("label", true, "", "Label Identifier");
       m_debug = _node.Read("debug", false, false,
           "Run-time debug on(true)/off(false)");
-    };
+    }
 
     ////////////////////////////////////////////////////////////////////////////
     /// @brief Print values of object
@@ -95,17 +90,16 @@ class MPBaseObject {
     /// Print values of object to ostream. By default name and label are output.
     virtual void Print(ostream& _os) const {
       _os << this->GetNameAndLabel() << endl;
-    };
+    }
 
-    /// @}
-    ////////////////////////////////////////////////////////////////////////////
-
-    ////////////////////////////////////////////////////////////////////////////
-    /// @name MPBaseObject Accessors
+    ///@}
+    ///@name MPBaseObject Accessors
+    ///@{
 
     ////////////////////////////////////////////////////////////////////////////
     /// @return MPProblem object
     MPProblemType* GetMPProblem() const {return m_problem;}
+
     ////////////////////////////////////////////////////////////////////////////
     /// @param _m MPProblem object
     virtual void SetMPProblem(MPProblemType* _m) {m_problem = _m;}
@@ -114,6 +108,7 @@ class MPBaseObject {
     /// @brief Get unique string identifier to object
     /// @return unique identifier "m_name::m_label"
     string GetNameAndLabel() const {return m_name + "::" + m_label;}
+
     ////////////////////////////////////////////////////////////////////////////
     /// @param _s label
     void SetLabel(const string& _s) {m_label = _s;}
@@ -121,26 +116,27 @@ class MPBaseObject {
     ////////////////////////////////////////////////////////////////////////////
     /// @return debug value
     bool GetDebug() const {return m_debug;}
+
     ////////////////////////////////////////////////////////////////////////////
     /// @param _d debug value
     void SetDebug(bool _d) {m_debug = _d;}
 
-    /// @}
-    ////////////////////////////////////////////////////////////////////////////
-
-    ////////////////////////////////////////////////////////////////////////////
-    /// @name MPBaseObject Accessors to MPProblem Objects
-    /// @{
+    ///@}
+    ///@name MPBaseObject Accessors to MPProblem Objects
+    ///@{
 
     ////////////////////////////////////////////////////////////////////////////
     /// @return Environment pointer
     Environment* GetEnvironment() const {return m_problem->GetEnvironment();}
+
     ////////////////////////////////////////////////////////////////////////////
     /// @return Roadmap pointer
     RoadmapType* GetRoadmap() const {return m_problem->GetRoadmap();}
+
     ////////////////////////////////////////////////////////////////////////////
     /// @return BlockRoadmap pointer
     RoadmapType* GetBlockRoadmap() const {return m_problem->GetBlockRoadmap();}
+
     ////////////////////////////////////////////////////////////////////////////
     /// @return StatClass pointer
     StatClass* GetStatClass() const {return m_problem->GetStatClass();}
@@ -151,60 +147,70 @@ class MPBaseObject {
     DistanceMetricPointer GetDistanceMetric(const string& _dm) const {
       return m_problem->GetDistanceMetric(_dm);
     }
+
     ////////////////////////////////////////////////////////////////////////////
     /// @param _vc Label
     /// @return ValidityChecker pointer
     ValidityCheckerPointer GetValidityChecker(const string& _vc) const {
       return m_problem->GetValidityChecker(_vc);
     }
+
     ////////////////////////////////////////////////////////////////////////////
     /// @param _nf Label
     /// @return NeighborhoodFinder pointer
     NeighborhoodFinderPointer GetNeighborhoodFinder(const string& _nf) const {
       return m_problem->GetNeighborhoodFinder(_nf);
     }
+
     ////////////////////////////////////////////////////////////////////////////
     /// @param _s Label
     /// @return Sampler pointer
     SamplerPointer GetSampler(const string& _s) const {
       return m_problem->GetSampler(_s);
     }
+
     ////////////////////////////////////////////////////////////////////////////
     /// @param _lp Label
     /// @return LocalPlanner pointer
     LocalPlannerPointer GetLocalPlanner(const string& _lp) const {
       return m_problem->GetLocalPlanner(_lp);
     }
+
     ////////////////////////////////////////////////////////////////////////////
     /// @param _e Label
     /// @return Extender pointer
     ExtenderPointer GetExtender(const string& _e) const {
       return m_problem->GetExtender(_e);
     }
+
     ////////////////////////////////////////////////////////////////////////////
     /// @param _pm Label
     /// @return PathModifier pointer
     PathModifierPointer GetPathModifier(const string& _pm) const {
       return m_problem->GetPathModifier(_pm);
     }
+
     ////////////////////////////////////////////////////////////////////////////
     /// @param _c Label
     /// @return Connector pointer
     ConnectorPointer GetConnector(const string& _c) const {
       return m_problem->GetConnector(_c);
     }
+
     ////////////////////////////////////////////////////////////////////////////
     /// @param _m Label
     /// @return Metric pointer
     MetricPointer GetMetric(const string& _m) const {
       return m_problem->GetMetric(_m);
     }
+
     ////////////////////////////////////////////////////////////////////////////
     /// @param _me Label
     /// @return MapEvaluator pointer
     MapEvaluatorPointer GetMapEvaluator(const string& _me) const {
       return m_problem->GetMapEvaluator(_me);
     }
+
     ////////////////////////////////////////////////////////////////////////////
     /// @param _mps Label
     /// @return MPStrategy pointer
@@ -212,12 +218,10 @@ class MPBaseObject {
       return m_problem->GetMPStrategy(_mps);
     }
 
-    /// @}
-    ////////////////////////////////////////////////////////////////////////////
+    ///@}
 
   protected:
 
-    ////////////////////////////////////////////////////////////////////////////
     /// @return Label
     const string& GetLabel() const {return m_label;}
 

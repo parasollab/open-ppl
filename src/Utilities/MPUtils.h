@@ -12,9 +12,6 @@ using std::shared_ptr;
 #include <containers/sequential/graph/algorithms/connected_components.h>
 #endif
 
-#include <boost/mpl/list.hpp>
-#include <boost/mpl/next_prior.hpp>
-
 #include "Vector.h"
 using namespace mathtool;
 
@@ -150,7 +147,7 @@ double NormalizeTheta(double _theta);
 template <typename T, typename U>
 struct CompareSecond {
 
-  bool operator()(const pair<T, U>& _a, const pair<T, U>& _b) const {
+  const bool operator()(const pair<T, U>& _a, const pair<T, U>& _b) const {
     return _a.second < _b.second;
   }
 
@@ -164,7 +161,7 @@ struct CompareSecond {
 template <typename T, typename U>
 struct CompareSecondReverse {
 
-  bool operator()(const pair<T, U>& _a, const pair<T, U>& _b) const {
+  const bool operator()(const pair<T, U>& _a, const pair<T, U>& _b) const {
     return _a.second > _b.second;
   }
 
@@ -201,8 +198,8 @@ struct DistanceCompareFirst : public binary_function<P, P, bool> {
 template <typename InputIterator, typename BinaryOperator, typename UnaryOperator>
 struct Compose {
 
-  bool operator()(InputIterator _first, InputIterator _last,
-      BinaryOperator _binaryOp, UnaryOperator _op) {
+  const bool operator()(InputIterator _first, InputIterator _last,
+      BinaryOperator _binaryOp, UnaryOperator _op) const {
     if (_first == _last)
       return false;
     else {
@@ -221,8 +218,8 @@ struct Compose {
 template <typename InputIterator, typename UnaryOperator>
 struct Compose<InputIterator, logical_and<bool>, UnaryOperator> {
 
-  bool operator()(InputIterator _first, InputIterator _last,
-      logical_and<bool> _binaryOp, UnaryOperator _op) {
+  const bool operator()(InputIterator _first, InputIterator _last,
+      logical_and<bool> _binaryOp, UnaryOperator _op) const {
     if (_first == _last)
       return false;
     else {
@@ -246,17 +243,17 @@ struct Compose<InputIterator, logical_and<bool>, UnaryOperator> {
 template <typename InputIterator, typename UnaryOperator>
 struct Compose<InputIterator, logical_or<bool>, UnaryOperator> {
 
-  bool operator()(InputIterator _first, InputIterator _last,
-      logical_or<bool> _binaryOp, UnaryOperator _op) {
+  const bool operator()(InputIterator _first, InputIterator _last,
+      logical_or<bool> _binaryOp, UnaryOperator _op) const {
     if (_first == _last)
       return false;
     else {
       bool result = _op(*_first++);
-      if (result == true)
+      if(result == true)
         return result;
-      while (_first != _last) {
+      while(_first != _last) {
         result = _binaryOp(result, _op(*_first++));
-        if (result == true)
+        if(result == true)
           return result;
       }
       return result;
@@ -272,141 +269,9 @@ struct Compose<InputIterator, logical_or<bool>, UnaryOperator> {
 template <typename InputIterator, typename UnaryOperator>
 struct ComposeNegate {
 
-  bool operator()(InputIterator _it, UnaryOperator _op) {
+  const bool operator()(InputIterator _it, UnaryOperator _op) const {
     return !_op(*_it);
   }
-
-};
-
-/*------------------------------- Method Set ---------------------------------*/
-
-////////////////////////////////////////////////////////////////////////////////
-/// @brief Creates new method instances from an XML node.
-template<typename MPTraits, typename Method>
-struct MethodFactory {
-
-  shared_ptr<Method> operator()(typename MPTraits::MPProblemType* _problem,
-      XMLNode& _node) const {
-    return shared_ptr<Method>(new Method(_problem, _node));
-  }
-
-};
-
-////////////////////////////////////////////////////////////////////////////////
-/// @brief Defines basic method container class to hold methods (for classes like
-///        DistanceMetricMethod, LocalPlannerMethod, etc).
-///
-/// MethodTypeList must be defined within templated class of MPTraits
-///   e.g., Method = NeighborhoodFinderMethod
-///         MethodTypeList = boost::mpl::list<BruteForceNF, BandsNF, ...>
-///   e.g., Method = LocalPlannerMethod
-///         MethodTypeList = boost::mpl::list<Straightline, RotateAtS, ...>
-////////////////////////////////////////////////////////////////////////////////
-template<typename MPTraits, typename Method>
-class MethodSet {
-
-  public:
-
-    typedef shared_ptr<Method> MethodPointer;
-
-    template<typename MethodTypeList>
-    MethodSet(const MethodTypeList& _etl, const string& _name) : m_default(""),
-        m_name(_name) {
-      AddToUniverse(typename boost::mpl::begin<MethodTypeList>::type(),
-          typename boost::mpl::end<MethodTypeList>::type());
-    }
-
-    void ParseXML(typename MPTraits::MPProblemType* _problem, XMLNode& _node) {
-      for(auto& child : _node)
-        AddMethod(_problem, child);
-    }
-
-    void AddMethod(typename MPTraits::MPProblemType* _problem, XMLNode& _node) {
-      if(m_universe.find(_node.Name()) != m_universe.end()) {
-        MethodPointer e = m_universe[_node.Name()](_problem, _node);
-        AddMethod(e, e->m_label);
-      }
-    }
-
-    void AddMethod(MethodPointer _e, const string& _label) {
-      if(m_universe.find(_e->m_name) != m_universe.end()) {
-        _e->SetLabel(_label);
-        if(m_elements.empty())
-          m_default = _label;
-        if(m_elements.find(_label) == m_elements.end())
-          m_elements[_label] = _e;
-        else
-          cerr << "\nWarning, method list already has a pointer associated with "
-               << "\"" << _label << "\", not added\n";
-      }
-      else
-        throw ParseException(WHERE, "Method '" + _e->m_name +
-            "' is not contained within the motion planning universe.");
-    }
-
-    MethodPointer GetMethod(const string& _label) {
-      MethodPointer element;
-      if(_label == "")
-        element = m_elements[m_default];
-      else
-        element = m_elements[_label];
-      if(element.get() == NULL) {
-        ostringstream oss;
-        oss << "Element '" << _label
-          << "' does not exist in " << m_name << ". Choices are: ";
-        for(auto& elem : m_elements)
-          if(elem.second.get())
-            oss << " '" << elem.first << "',";
-        string err = oss.str();
-        err.pop_back();
-        throw RunTimeException(WHERE, err);
-      }
-      return element;
-    }
-
-    void SetMPProblem(typename MPTraits::MPProblemType* _problem) {
-      for(auto&  elem : m_elements)
-        elem.second->SetMPProblem(_problem);
-    }
-
-    void Print(ostream& _os) const {
-      size_t count = 0;
-      _os << endl << m_name << " has these methods available::" << endl << endl;
-      for(auto& elem : m_elements) {
-        _os << ++count << ") \"" << elem.first << "\" (" << elem.second->m_name
-            << ")" << endl;
-        elem.second->Print(_os);
-        _os << endl;
-      }
-      _os << endl;
-    }
-
-    typedef typename map<string, MethodPointer>::iterator MIT;
-    typedef typename map<string, MethodPointer>::const_iterator CMIT;
-    MIT begin() {return m_elements.begin();}
-    MIT end() {return m_elements.end();}
-    CMIT begin() const {return m_elements.begin();}
-    CMIT end() const {return m_elements.end();}
-
-  protected:
-
-    typedef function<MethodPointer(typename MPTraits::MPProblemType*, XMLNode&)>
-        FactoryType;
-
-    template <typename Last>
-    void AddToUniverse(Last, Last){}
-
-    template <typename First, typename Last>
-    void AddToUniverse(First, Last) {
-      typename boost::mpl::deref<First>::type first;
-      m_universe[first.m_name] = MethodFactory<MPTraits,
-          typename boost::mpl::deref<First>::type>();
-      AddToUniverse(typename boost::mpl::next<First>::type(), Last());
-    }
-
-    string m_default, m_name;
-    map<string, FactoryType> m_universe;
-    map<string, MethodPointer> m_elements;
 
 };
 
