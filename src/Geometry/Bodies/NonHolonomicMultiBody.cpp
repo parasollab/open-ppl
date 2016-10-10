@@ -1,13 +1,15 @@
 #include "NonHolonomicMultiBody.h"
 
-#include "Control.h"
+#include "Geometry/Control.h"
+
+/*--------------------------------- Construction -----------------------------*/
 
 NonHolonomicMultiBody::
-NonHolonomicMultiBody() : ActiveMultiBody(),
-  m_maxLinearVel(numeric_limits<double>::max()),
-  m_maxAngularVel(numeric_limits<double>::max()) {
-    m_multiBodyType = MultiBodyType::NonHolonomic;
-  }
+NonHolonomicMultiBody() : ActiveMultiBody() {
+  m_multiBodyType = MultiBodyType::NonHolonomic;
+}
+
+/*----------------------------------- Controls -------------------------------*/
 
 const vector<double>&
 NonHolonomicMultiBody::
@@ -16,11 +18,14 @@ GetRandomControl() const {
   return m_controls[index]->GetControl();
 }
 
+
 const vector<shared_ptr<Control>>&
 NonHolonomicMultiBody::
 AvailableControls() const {
   return m_controls;
 }
+
+/*--------------------------------- State Info -------------------------------*/
 
 vector<double>
 NonHolonomicMultiBody::
@@ -50,6 +55,8 @@ InSSpace(const vector<double>& _pos, const vector<double>& _vel,
   }
   return false;
 }
+
+/*------------------------------------ IO ------------------------------------*/
 
 void
 NonHolonomicMultiBody::
@@ -91,6 +98,7 @@ Read(istream& _is, CountingStreamBuffer& _cbs) {
   }
 }
 
+
 void
 NonHolonomicMultiBody::
 Write(ostream & _os) {
@@ -102,3 +110,4 @@ Write(ostream & _os) {
     _os << *control << endl;
 }
 
+/*----------------------------------------------------------------------------*/

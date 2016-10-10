@@ -219,7 +219,7 @@ PMPL_INCL = \
 	-I${PMPL_DIR}
 
 PMPL_OBJS = \
-	Cfg/Cfg.o \
+	Geometry/Control.o \
 	Geometry/GMSPolygon.o \
 	Geometry/GMSPolyhedron.o \
 	Geometry/Bodies/ActiveMultiBody.o \
@@ -227,8 +227,8 @@ PMPL_OBJS = \
 	Geometry/Bodies/FixedBody.o \
 	Geometry/Bodies/FreeBody.o \
 	Geometry/Bodies/MultiBody.o \
+	Geometry/Bodies/NonHolonomicMultiBody.o \
 	Geometry/Bodies/StaticMultiBody.o \
-	Geometry/Bodies/SurfaceMultiBody.o \
 	Geometry/Bodies/Connection.o \
 	Geometry/Bodies/DHParameters.o \
 	Geometry/Boundaries/Boundary.o \
@@ -237,40 +237,21 @@ PMPL_OBJS = \
         Geometry/Boundaries/BoundingSphere.o \
         Geometry/Boundaries/BoundingSphere2D.o \
 	MPProblem/MPProblemBase.o \
+	MPProblem/ConfigurationSpace/Cfg.o \
+        MPProblem/ConfigurationSpace/State.o \
 	MPProblem/Environment/Environment.o \
+	MPProblem/Workspace/WorkspaceDecomposition.o \
+	MPProblem/Workspace/WorkspacePortal.o \
+	MPProblem/Workspace/WorkspaceRegion.o \
 	PlanningLibrary/NeighborhoodFinders/MPNNWrapper.o \
 	PlanningLibrary/Samplers/SimilarStructureSampler.o \
-        Utilities/IOUtils.o \
-        Utilities/MetricUtils.o \
-        Utilities/MPUtils.o \
-	Utilities/ReebGraphConstruction.o \
-	Utilities/TetGenDecomposition.o \
 	PlanningLibrary/ValidityCheckers/CollisionDetection/CDInfo.o \
 	PlanningLibrary/ValidityCheckers/CollisionDetection/CollisionDetectionMethod.o \
 	PlanningLibrary/ValidityCheckers/CollisionDetection/RapidCollisionDetection.o \
 	PlanningLibrary/ValidityCheckers/CollisionDetection/PQPCollisionDetection.o \
 	PlanningLibrary/ValidityCheckers/CollisionDetection/SpheresCollisionDetection.o \
-	Workspace/WorkspaceDecomposition.o \
-	Workspace/WorkspacePortal.o \
-	Workspace/WorkspaceRegion.o
-
-ifeq (${ROBOT_DEF}, PMPCfgMultiRobot)
-  PMPL_OBJS += Cfg/CfgMultiRobot.o
-endif
-ifeq (${ROBOT_DEF}, PMPReachableVolume)
-  PMPL_OBJS += Cfg/CfgReachableVolume.o
-endif
-ifneq (,$(filter $(ROBOT_DEF), PMPSSSurfaceMult PMPCfgSurface))
-  PMPL_OBJS += Cfg/CfgSurface.o \
-	       Cfg/SSSurface.o \
-	       Cfg/SSSurfaceMult.o
-  endif
-  ifeq (${ROBOT_DEF}, $(or PMPState))
-  PMPL_OBJS += Cfg/State.o \
-	      Environment/Control.o \
-	      Environment/NonHolonomicMultiBody.o
-  endif
-  ifeq (${ROBOT_DEF}, $(or PMPReachDistCC PMPReachDistCCFixed))
-  PMPL_OBJS += Cfg/Cfg_reach_cc.o \
-	       Cfg/Cfg_reach_cc_fixed.o
-  endif
+        Utilities/IOUtils.o \
+        Utilities/MetricUtils.o \
+        Utilities/MPUtils.o \
+	Utilities/ReebGraphConstruction.o \
+	Utilities/TetGenDecomposition.o

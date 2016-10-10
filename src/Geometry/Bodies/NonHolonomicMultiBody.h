@@ -5,22 +5,31 @@
 
 class Control;
 
+////////////////////////////////////////////////////////////////////////////////
+/// @brief An active multibody with controls and dynamic state.
+////////////////////////////////////////////////////////////////////////////////
 class NonHolonomicMultiBody : public ActiveMultiBody {
+
   public:
-    ////////////////////////////////////////////////////////////////////////////
-    /// @name Constructors
-    /// @{
+
+    ///@name Construction
+    ///@{
 
     NonHolonomicMultiBody();
 
     NonHolonomicMultiBody(const NonHolonomicMultiBody&) = delete;            ///< No copy
     NonHolonomicMultiBody& operator=(const NonHolonomicMultiBody&) = delete; ///< No assign
 
-    /// @}
-    ////////////////////////////////////////////////////////////////////////////
+    ///@}
+    ///@name Controls
+    ///@{
 
     const vector<double>& GetRandomControl() const;
     const vector<shared_ptr<Control>>& AvailableControls() const;
+
+    ///@}
+    ///@name State Info
+    ///@{
 
     ////////////////////////////////////////////////////////////////////////////
     /// @brief Sample random velocity in bounds.
@@ -38,20 +47,25 @@ class NonHolonomicMultiBody : public ActiveMultiBody {
     bool InSSpace(const vector<double>& _pos, const vector<double>& _vel,
         shared_ptr<Boundary>& _b);
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// @name I/O
-    /// @{
+    ///@}
+    ///@name I/O
+    ///@{
 
     virtual void Read(istream& _is, CountingStreamBuffer& _cbs);
     virtual void Write(ostream& _os);
 
-    /// @}
-    ////////////////////////////////////////////////////////////////////////////
+    ///@}
 
   private:
+
+    ///@name Internal State
+    ///@{
+
     vector<shared_ptr<Control>> m_controls; ///< Available controls
-    double m_maxLinearVel;                  ///< Maximum linear velocity
-    double m_maxAngularVel;                 ///< Maximum angular velocity
+    double m_maxLinearVel{numeric_limits<double>::max()}; ///< Max linear velocity
+    double m_maxAngularVel{numeric_limits<double>::max()}; ///< Max angular velocity
+
+    ///@}
 };
 
 #endif

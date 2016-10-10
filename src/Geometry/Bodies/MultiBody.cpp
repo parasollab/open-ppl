@@ -19,12 +19,8 @@ GetMultiBodyTypeFromTag(const string& _tag, const string& _where) {
     return MultiBodyType::Passive;
   else if(_tag == "ACTIVE")
     return MultiBodyType::Active;
-#ifdef PMPState
   else if(_tag == "NONHOLONOMIC")
     return MultiBodyType::NonHolonomic;
-#endif
-  else if(_tag == "SURFACE")
-    return MultiBodyType::Surface;
   else if(_tag == "INTERNAL")
     return MultiBodyType::Internal;
   else
@@ -39,16 +35,12 @@ GetTagFromMultiBodyType(MultiBodyType _b) {
   switch(_b) {
     case MultiBodyType::Active:
       return "Active";
-#ifdef PMPState
     case MultiBodyType::NonHolonomic:
       return "NonHolonomic";
-#endif
     case MultiBodyType::Passive:
       return "Passive";
     case MultiBodyType::Internal:
       return "Internal";
-    case MultiBodyType::Surface:
-      return "Surface";
     default:
       return "Unknown Base Type";
   }

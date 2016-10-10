@@ -2,7 +2,7 @@
 #define MP_PROBLEM_H_
 
 #include "MPProblemBase.h"
-#include "Roadmap.h"
+#include "MPProblem/ConfigurationSpace/Roadmap.h"
 
 #include "MPProblem/Environment/Environment.h"
 #include "Utilities/MetricUtils.h"

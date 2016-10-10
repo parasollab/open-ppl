@@ -5,7 +5,7 @@
 
 #include "PlanningLibrary/LocalPlanners/LPOutput.h"
 #include "PlanningLibrary/LocalPlanners/StraightLine.h"
-#include "MPProblem/Path.h"
+#include "MPProblem/ConfigurationSpace/Path.h"
 #include "Utilities/MetricUtils.h"
 #include <containers/sequential/graph/algorithms/astar.h>
 

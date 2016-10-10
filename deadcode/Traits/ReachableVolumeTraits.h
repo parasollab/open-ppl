@@ -2,7 +2,7 @@
 #define RV_TRAITS_H_
 
 #include "Cfg/CfgReachableVolume.h"
-#include "MPProblem/Weight.h"
+#include "Edges/Weight.h"
 
 //distance metric includes
 #include "PlanningLibrary/DistanceMetrics/ScaledEuclideanDistance.h"

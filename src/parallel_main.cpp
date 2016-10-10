@@ -6,20 +6,8 @@
 #include "Traits/ParallelCfgTraits.h"
 
 #if (defined(PMPCfg))
-#include "Cfg/Cfg.h"
+#include "MPProblem/ConfigurationSpace/Cfg.h"
 typedef Cfg PMPLCfgType;
-#elif (defined(PMPCfgSurface))
-#include "Cfg/CfgSurface.h"
-typedef CfgSurface PMPLCfgType;
-#elif (defined(PMPReachDistCC))
-#include "Cfg/Cfg_reach_cc.h"
-typedef Cfg_reach_cc PMPLCfgType;
-#elif (defined(PMPReachDistCCFixed))
-#include "Cfg/Cfg_reach_cc_fixed.h"
-typedef Cfg_reach_cc_fixed PMPLCfgType;
-#elif (defined(PMPSSSurfaceMult))
-#include "Cfg/SSSurfaceMult.h"
-typedef SSSurfaceMult PMPLCfgType;
 #else
 #error "Error, must define a RobotType for PMPL application"
 #endif

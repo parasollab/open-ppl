@@ -4,7 +4,7 @@
 #include "SamplerMethod.h"
 
 #include "Utilities/TetGenDecomposition.h"
-#include "Workspace/WorkspaceDecomposition.h"
+#include "MPProblem/Workspace/WorkspaceDecomposition.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup Samplers

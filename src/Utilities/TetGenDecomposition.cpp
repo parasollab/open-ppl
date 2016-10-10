@@ -8,7 +8,7 @@
 #include "Geometry/Bodies/FixedBody.h"
 #include "Geometry/Bodies/StaticMultiBody.h"
 #include "MPProblem/MPProblemBase.h"
-#include "Workspace/WorkspaceDecomposition.h"
+#include "MPProblem/Workspace/WorkspaceDecomposition.h"
 
 #include <CGAL/IO/io.h>
 

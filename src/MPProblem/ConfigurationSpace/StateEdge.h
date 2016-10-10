@@ -1,7 +1,7 @@
 #ifndef STATE_EDGE_H_
 #define STATE_EDGE_H_
 
-#include "MPProblem/Weight.h"
+#include "Edges/Weight.h"
 
 template<class StateType>
 class StateEdge : public DefaultWeight<StateType> {

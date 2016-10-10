@@ -13,15 +13,13 @@ using namespace mathtool;
 
 #include "Geometry/Boundaries/Boundary.h"
 #include "Geometry/Bodies/NonHolonomicMultiBody.h"
-#include "Cfg/CfgMultiRobot.h"
-#include "Cfg/State.h"
+#include "MPProblem/ConfigurationSpace/State.h"
 #include "Utilities/MPUtils.h"
 
 class ActiveMultiBody;
 class CollisionDetectionMethod;
 class MultiBody;
 class StaticMultiBody;
-class SurfaceMultiBody;
 class WorkspaceDecomposition;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -143,10 +141,6 @@ class Environment {
     size_t NumObstacles() const {return m_obstacles.size();}
 
     ////////////////////////////////////////////////////////////////////////////
-    /// @return Number of Surface MultiBodies
-    size_t NumSurfaces() const {return m_surfaces.size();}
-
-    ////////////////////////////////////////////////////////////////////////////
     /// @param _index Requested multibody
     /// @return Pointer to active multibody
     shared_ptr<ActiveMultiBody> GetRobot(size_t _index) const;
@@ -157,17 +151,8 @@ class Environment {
     shared_ptr<StaticMultiBody> GetObstacle(size_t _index) const;
 
     ////////////////////////////////////////////////////////////////////////////
-    /// @param _index Requested multibody
-    /// @return Pointer to surface multibody
-    shared_ptr<SurfaceMultiBody> GetSurface(size_t _index) const;
-
-    ////////////////////////////////////////////////////////////////////////////
     /// @return Pointer to random static multibody
     shared_ptr<StaticMultiBody> GetRandomObstacle() const;
-
-    ////////////////////////////////////////////////////////////////////////////
-    /// @return Index to random navigable surface. -1 means base surface.
-    ssize_t GetRandomSurfaceIndex();
 
     ////////////////////////////////////////////////////////////////////////////
     /// @brief Add Obstacle to environment
@@ -281,7 +266,6 @@ class Environment {
 
     vector<shared_ptr<ActiveMultiBody>> m_robots;    ///< Robots.
     vector<shared_ptr<StaticMultiBody>> m_obstacles; ///< Other multibodies.
-    vector<shared_ptr<SurfaceMultiBody>> m_surfaces; ///< Surfaces.
 
     ///@}
     ///@name Decomposition
@@ -301,12 +285,6 @@ Environment::
 InBounds(const CfgType& _cfg, shared_ptr<Boundary> _b) {
   return InCSpace(_cfg, _b) && InWSpace(_cfg, _b);
 }
-
-
-template<>
-bool
-Environment::
-InBounds<CfgMultiRobot>(const CfgMultiRobot& _cfg, shared_ptr<Boundary> _b);
 
 /*--------------------------------- Helpers ----------------------------------*/
 

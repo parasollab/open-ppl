@@ -1,8 +1,8 @@
 #ifndef STATE_TRAITS_H_
 #define STATE_TRAITS_H_
 
-#include "Cfg/State.h"
-#include "Edges/StateEdge.h"
+#include "MPProblem/ConfigurationSpace/State.h"
+#include "MPProblem/ConfigurationSpace/StateEdge.h"
 
 //distance metric includes
 #include "PlanningLibrary/DistanceMetrics/ExperimentalDistance.h"

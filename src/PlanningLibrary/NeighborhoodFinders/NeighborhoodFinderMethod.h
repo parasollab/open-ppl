@@ -4,7 +4,7 @@
 #include <boost/mpl/list.hpp>
 #include <boost/mpl/for_each.hpp>
 #include "Utilities/MPUtils.h"
-#include "MPProblem/RoadmapGraph.h"
+#include "MPProblem/ConfigurationSpace/RoadmapGraph.h"
 
 namespace pmpl_detail {
 

@@ -32,12 +32,7 @@ endif
 ifndef ROBOT_DEF
   # define robot type
   ROBOT_DEF = PMPCfg
-  #ROBOT_DEF = PMPCfgMultiRobot
-  #ROBOT_DEF = PMPCfgSurface
   #ROBOT_DEF = PMPState
-  #ROBOT_DEF = PMPSSSurfaceMult
-  #ROBOT_DEF = PMPReachDistCC
-  #ROBOT_DEF = PMPReachDistCCFixed
   #ROBOT_DEF = PMPReachableVolume
 endif
 
@@ -84,7 +79,6 @@ reallyclean:
 	@${MAKE} clean
 	rm -f ${PMPL_OBJS} *.d
 	rm -f Dependencies
-	touch Dependencies
 
 reallyreallyclean:
 	@${MAKE} reallyclean

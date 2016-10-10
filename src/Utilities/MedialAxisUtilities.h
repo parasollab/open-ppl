@@ -8,7 +8,6 @@
 #include "MetricUtils.h"
 #include "Geometry/Bodies/ActiveMultiBody.h"
 #include "Geometry/Bodies/FixedBody.h"
-#include "Geometry/Bodies/SurfaceMultiBody.h"
 #include "PlanningLibrary/LocalPlanners/StraightLine.h"
 #include "PlanningLibrary/ValidityCheckers/CollisionDetection/CDInfo.h"
 
@@ -184,38 +183,6 @@ class MedialAxisUtility : public ClearanceUtility<MPTraits> {
     size_t m_historyLength;
 };
 
-////////////////////////////////////////////////////////////////////////////////
-/// @ingroup Utilities
-/// @brief TODO
-/// @tparam MPTraits Motion planning universe
-///
-/// TODO
-////////////////////////////////////////////////////////////////////////////////
-template<class MPTraits>
-class SurfaceMedialAxisUtility : public MedialAxisUtility<MPTraits> {
-  public:
-    typedef typename MPTraits::CfgType CfgType;
-    typedef typename MPTraits::MPProblemType MPProblemType;
-    typedef typename MPProblemType::DistanceMetricPointer DistanceMetricPointer;
-    typedef typename MPProblemType::ValidityCheckerPointer ValidityCheckerPointer;
-
-    SurfaceMedialAxisUtility(MPProblemType* _problem = NULL,
-        string _vcLabel = "", string _dmLabel = "");
-
-    //***************************************************************//
-    //get clearance functions for surface configurations             //
-    //***************************************************************//
-    double GetClearance2DSurf(Environment* _env, const Point2d& _pos, Point2d& _cdPt);
-    double GetClearance2DSurf(shared_ptr<StaticMultiBody> _mb, const Point2d& _pos, Point2d& _cdPt, double _clear);
-    //***************************************************************//
-    //2D-Surface version of pushing to MA                            //
-    //  Takes a free cfg (surfacecfg) and pushes to medial axis of   //
-    // environment defined by the boundary lines of the obstacles    //
-    // (multibodies)                                                 //
-    //***************************************************************//
-    double PushCfgToMedialAxis2DSurf(CfgType& _cfg, shared_ptr<Boundary> _bb, bool& _valid);
-};
-//#endif
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
@@ -1663,144 +1630,5 @@ BinarySearchForPeaks(
 
   return _midMCfg;
 }
-
-///////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////
-//
-//
-// Surface Medial Axis Utility
-//
-//
-///////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////
-
-#ifdef PMPCfgSurface
-
-template<class MPTraits>
-SurfaceMedialAxisUtility<MPTraits>::
-SurfaceMedialAxisUtility(MPProblemType* _problem,
-    string _vcLabel, string _dmLabel) :
-  MedialAxisUtility<MPTraits>(_problem, _vcLabel, _dmLabel){
-    this->m_name = "SurfaceMedialAxisUtility";
-  }
-
-//the square of the distance from pos to p1p2
-inline double
-distsqr(const Point2d& _pos, const Point2d& _p1,
-    const Point2d& _p2, Point2d& _cdPt) {
-  Vector2d n=_p1-_p2;
-  double t=(n*(_pos-_p1))/(n*(_p2-_p1));
-  if( t>=0 && t<=1 ){
-    for(int i=0;i<2;i++) _cdPt[i]=(1-t)*_p1[i]+t*_p2[i];
-    return (_pos-_cdPt).normsqr();
-  }
-  else{ //closest point is end pt
-    double d1=(_p1-_pos).normsqr();
-    double d2=(_p2-_pos).normsqr();
-    if( d1<d2 ){ _cdPt=_p1; return d1; }
-    else { _cdPt=_p2; return d2; }
-  }
-}
-
-//get clearance of the point
-template<class MPTraits>
-double
-SurfaceMedialAxisUtility<MPTraits>::
-GetClearance2DSurf(shared_ptr<StaticMultiBody> _mb,
-    const Point2d& _pos, Point2d& _cdPt, double _clear){
-  double minDis=1e10;
-  if(this->m_debug) cout << " GetClearance2DSurf (start call) (mb,pos,cdPt, clear)" << endl;
-  Transformation& trans = _mb->GetFixedBody(0)->WorldTransformation();
-  //check roughly <- this optimization should be added!!!
-  Vector3d mbCenter = _mb->GetFixedBody(0)->GetCenterOfMass();
-  Point2d tPt(mbCenter[0],mbCenter[2]);
-  double* bbx = _mb->GetFixedBody(0)->GetBoundingBox();
-  double rad2d = sqrt(pow(bbx[1]-bbx[0],2.0) + pow(bbx[5]-bbx[4],2.0));
-  double diffWRadius = (_pos-tPt).norm()-rad2d;
-  if( diffWRadius>_clear) return minDis;
-
-  GMSPolyhedron& gmsPoly = _mb->GetFixedBody(0)->GetWorldPolyhedron();
-  vector<Vector3d>& Geo=gmsPoly.GetVertexList();
-  vector< pair<int,int> >& boundaryLines=gmsPoly.GetBoundaryLines();
-  if(this->m_debug) cout << " boundary lines size: " << boundaryLines.size() << " transformation: " << trans << endl;
-  for(int i=0; i<(int)boundaryLines.size(); i++) {
-    int id1 = boundaryLines[i].first;
-    int id2 = boundaryLines[i].second;
-    Vector3d v1 = Geo[id1];
-    Vector3d v2 = Geo[id2];
-    Point2d p1(v1[0],v1[2]);
-    Point2d p2(v2[0],v2[2]);
-    Point2d c;
-    double dist=distsqr(_pos,p1,p2,c);
-    if( dist<minDis) { minDis=dist; _cdPt=c;}
-  }//endfor i
-
-  double clearDist = sqrt(minDis);
-  if(this->m_debug) cout << " computed clearance: " << clearDist << endl;
-  return clearDist;
-
-}
-
-//get clearance of the point
-template<class MPTraits>
-double
-SurfaceMedialAxisUtility<MPTraits>::
-GetClearance2DSurf(Environment* _env, const Point2d& _pos, Point2d& _cdPt) {
-  if(this->m_debug) cout << "MedialAxisUtility::GetClearance2DSurf" <<endl;
-
-  double minDist=_env->GetBoundary()->GetClearance2DSurf(_pos,_cdPt);
-
-  for(size_t i=0; i<_env->NumSurfaces()+_env->NumObstacles(); i++) {
-    shared_ptr<StaticMultiBody> mb;
-    if( i < _env->NumSurfaces() )
-      mb = _env->GetSurface(i);
-    else
-      mb = _env->GetObstacle(i-_env->NumSurfaces());
-    //find clearance
-    Point2d c;
-    double dist = GetClearance2DSurf(mb,_pos,c,minDist);
-    if( dist<minDist ){ minDist=dist; _cdPt=c; }
-    if(this->m_debug) cout << " getting mb: " << i;
-    if(this->m_debug) cout << " GetClearance2DSurf (mb,_pos,c,minDist) minDist: " << minDist << endl;
-  }//end for i
-  return minDist;
-}
-
-template<class MPTraits>
-double
-SurfaceMedialAxisUtility<MPTraits>::
-PushCfgToMedialAxis2DSurf(CfgType& _cfg, shared_ptr<Boundary> _bb,
-    bool& _valid) {
-
-  string callee = this->GetNameAndLabel() + "::PushCfgToMedialAxis2DSurf";
-
-  if(this->m_debug) cout << callee << endl << "Cfg: " << _cfg  << endl;
-
-  Environment* env = this->GetEnvironment();
-  ////////////////////////////////////////////
-  Point2d closest;
-  Point2d pos=_cfg.GetPos();
-  if(this->m_debug) cout << " Calling GetClearance2DSurf(env,pos,closest)" << endl;
-  double clear=this->GetClearance2DSurf(env,pos,closest);
-  Vector2d dir=(pos-closest).normalize()*0.5;
-  Point2d newClosest=closest;
-  int iter=0;
-  int maxIter=1000;
-  do{
-    closest=newClosest;
-    pos=pos+dir;
-    if(this->m_debug) cout << " Calling GetClearance2DSurf(env,pos,closest) new pos: " << pos << endl;
-    clear=this->GetClearance2DSurf(env,pos,newClosest);
-    if(this->m_debug) cout << " computed clearance: " << clear << " iteration: " << iter << endl;
-    iter++;
-    if(iter >= maxIter ) break;
-  }while( (newClosest-closest).normsqr()<0.01 );
-  _cfg.SetPos(pos);
-
-  return clear;
-}
-
-#endif
-
 
 #endif

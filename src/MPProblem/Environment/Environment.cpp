@@ -5,12 +5,11 @@
 #include "Geometry/Bodies/FreeBody.h"
 #include "Geometry/Bodies/NonHolonomicMultiBody.h"
 #include "Geometry/Bodies/StaticMultiBody.h"
-#include "Geometry/Bodies/SurfaceMultiBody.h"
 #include "Geometry/Boundaries/BoundingBox.h"
 #include "Geometry/Boundaries/BoundingBox2D.h"
 #include "Geometry/Boundaries/BoundingSphere.h"
 #include "Geometry/Boundaries/BoundingSphere2D.h"
-#include "Cfg/Cfg.h"
+#include "MPProblem/ConfigurationSpace/Cfg.h"
 #include "MPProblem/MPProblemBase.h"
 
 
@@ -39,7 +38,6 @@ Read(string _filename) {
 
   m_robots.clear();
   m_obstacles.clear();
-  m_surfaces.clear();
 
   // open file
   CountingStreamBuffer cbs(_filename);
@@ -93,7 +91,6 @@ Read(string _filename) {
           m_robots.push_back(mb);
           break;
         }
-#ifdef PMPState
       case MultiBody::MultiBodyType::NonHolonomic:
         {
           shared_ptr<ActiveMultiBody> mb(new NonHolonomicMultiBody());
@@ -101,20 +98,12 @@ Read(string _filename) {
           m_robots.push_back(mb);
           break;
         }
-#endif
       case MultiBody::MultiBodyType::Internal:
       case MultiBody::MultiBodyType::Passive:
         {
           shared_ptr<StaticMultiBody> mb(new StaticMultiBody(bodyType));
           mb->Read(ifs, cbs);
           m_obstacles.push_back(mb);
-          break;
-        }
-      case MultiBody::MultiBodyType::Surface:
-        {
-          shared_ptr<SurfaceMultiBody> mb(new SurfaceMultiBody());
-          mb->Read(ifs, cbs);
-          m_surfaces.push_back(mb);
           break;
         }
     }
@@ -126,10 +115,6 @@ Read(string _filename) {
 
   size_t size = m_robots.size();
   Cfg::SetSize(size);
-
-#ifdef PMPCfgMultiRobot
-  CfgMultiRobot::m_numRobot = size;
-#endif
 
   for(size_t i = 0; i < size; ++i) {
     if(m_saveDofs) {
@@ -165,7 +150,7 @@ Write(ostream & _os) {
   WriteBoundary(_os);
   _os << endl << endl
       << "MultiBodies" << endl
-      << m_robots.size() + m_obstacles.size() + m_surfaces.size()
+      << m_robots.size() + m_obstacles.size()
       << endl << endl;
   for(const auto& body : m_robots) {
     body->Write(_os);
@@ -175,25 +160,9 @@ Write(ostream & _os) {
     body->Write(_os);
     _os << endl;
   }
-  for(const auto& body : m_surfaces) {
-    body->Write(_os);
-    _os << endl;
-  }
 }
 
 /*----------------------------- Boundary Functions ---------------------------*/
-
-template<>
-bool
-Environment::
-InBounds<CfgMultiRobot>(const CfgMultiRobot& _cfg, shared_ptr<Boundary> _b) {
-  const vector<Cfg> c = _cfg.GetRobotsCollect();
-  for(auto& cfg : c)
-    if(!InBounds(cfg, _b))
-      return false;
-  return true;
-}
-
 
 void
 Environment::
@@ -257,16 +226,6 @@ GetObstacle(size_t _index) const {
 }
 
 
-shared_ptr<SurfaceMultiBody>
-Environment::
-GetSurface(size_t _index) const {
-  if(_index < 0 || _index >= m_surfaces.size())
-    throw RunTimeException(WHERE,
-        "Cannot access Navigable Surface '" + ::to_string(_index) + "'.");
-  return m_surfaces[_index];
-}
-
-
 shared_ptr<StaticMultiBody>
 Environment::
 GetRandomObstacle() const {
@@ -275,13 +234,6 @@ GetRandomObstacle() const {
 
   size_t rIndex = LRand() % m_obstacles.size();
   return m_obstacles[rIndex];
-}
-
-
-ssize_t
-Environment::
-GetRandomSurfaceIndex() {
-  return LRand() % (m_surfaces.size() + 1) - 1;
 }
 
 

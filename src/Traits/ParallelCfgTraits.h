@@ -1,7 +1,7 @@
 #ifndef PARALLEL_CFG_TRAITS_H_
 #define PARALLEL_CFG_TRAITS_H_
 
-#include "MPProblem/Weight.h"
+#include "MPProblem/ConfigurationSpace/Weight.h"
 
 //distance metric includes
 //#include "PlanningLibrary/DistanceMetrics/BinaryLPSweptDistance.h"
@@ -108,7 +108,6 @@
 //#include "PlanningLibrary/MPStrategies/BasicPRM.h"
 //#include "PlanningLibrary/MPStrategies/BasicRRTStrategy.h"
 //#include "PlanningLibrary/MPStrategies/EvaluateMapStrategy.h"
-//#include "PlanningLibrary/MPStrategies/LocalManeuveringStrategy.h"
 //#include "PlanningLibrary/MPStrategies/MedialAxisRRT.h"
 //#include "PlanningLibrary/MPStrategies/MultiStrategy.h"
 //#include "PlanningLibrary/MPStrategies/SparkPRM.h"

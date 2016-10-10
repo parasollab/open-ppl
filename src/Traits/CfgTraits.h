@@ -1,7 +1,7 @@
 #ifndef CFG_TRAITS_H_
 #define CFG_TRAITS_H_
 
-#include "MPProblem/Weight.h"
+#include "MPProblem/ConfigurationSpace/Weight.h"
 
 //distance metric includes
 #include "PlanningLibrary/DistanceMetrics/BinaryLPSweptDistance.h"
@@ -115,7 +115,6 @@
 #include "PlanningLibrary/MPStrategies/DynamicRegionRRT.h"
 #include "PlanningLibrary/MPStrategies/EvaluateMapStrategy.h"
 #include "PlanningLibrary/MPStrategies/HybridPRM.h"
-#include "PlanningLibrary/MPStrategies/LocalManeuveringStrategy.h"
 #include "PlanningLibrary/MPStrategies/LPCompare.h"
 #include "PlanningLibrary/MPStrategies/ModifyPath.h"
 #include "PlanningLibrary/MPStrategies/MultiStrategy.h"
