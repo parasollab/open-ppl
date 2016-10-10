@@ -2,7 +2,7 @@
 #define ClosedChainProblem_h
 
 #include "MPProblem.h"
-#include "Environment.h"
+#include "MPProblem/Environment/Environment.h"
 #include "boost/lambda/lambda.hpp"
 #include "MPProblem/ClosedChainProblem.h"
 #include "VirtualLink.h"

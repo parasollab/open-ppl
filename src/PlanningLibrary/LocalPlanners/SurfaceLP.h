@@ -6,8 +6,8 @@
 
 #include "StraightLine.h"
 
-#include "Environment/FixedBody.h"
-#include "Environment/SurfaceMultiBody.h"
+#include "Geometry/Bodies/FixedBody.h"
+#include "Geometry/Bodies/SurfaceMultiBody.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup LocalPlanners

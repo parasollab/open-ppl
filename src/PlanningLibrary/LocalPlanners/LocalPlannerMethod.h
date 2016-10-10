@@ -1,7 +1,7 @@
 #ifndef LOCAL_PLANNER_METHOD_H_
 #define LOCAL_PLANNER_METHOD_H_
 
-#include "Environment/Environment.h"
+#include "MPProblem/Environment/Environment.h"
 #include "Utilities/MetricUtils.h"
 #include "Utilities/MPUtils.h"
 

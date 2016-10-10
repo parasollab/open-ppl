@@ -1,7 +1,7 @@
 #include "CfgReachableVolume.h"
 
-#include "Environment/ActiveMultiBody.h"
-#include "Environment/Environment.h"
+#include "Geometry/Bodies/ActiveMultiBody.h"
+#include "MPProblem/Environment/Environment.h"
 #include "ReachableVolumeUtil/ReachableVolumeRobot.h"
 
 shared_ptr<vector<shared_ptr<ReachableVolumeRobot> > > g_reachableVolumeRobots;

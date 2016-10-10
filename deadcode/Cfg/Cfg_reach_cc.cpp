@@ -1,8 +1,8 @@
 #include "Cfg_reach_cc.h"
 #include <numeric>
-#include "Environment.h"
-#include "MultiBody.h"
-#include "FreeBody.h"
+#include "MPProblem/Environment/Environment.h"
+#include "Geometry/Bodies/MultiBody.h"
+#include "Geometry/Bodies/FreeBody.h"
 #include  "DistanceMetrics.h"
 #include "boost/lambda/lambda.hpp"
 #include "boost/random.hpp"

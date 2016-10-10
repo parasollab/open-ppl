@@ -12,8 +12,8 @@
 
 #include "CfgMultiRobot.h"
 
-#include "Environment/Environment.h"
-#include "Environment/MultiBody.h"
+#include "MPProblem/Environment/Environment.h"
+#include "Geometry/Bodies/MultiBody.h"
 #include "Utilities/MetricUtils.h"
 
 size_t CfgMultiRobot::m_numRobot;

@@ -1,6 +1,6 @@
 #include "ActiveMultiBody.h"
 
-#include "Boundary.h"
+#include "Geometry/Boundaries/Boundary.h"
 #include "FreeBody.h"
 
 ActiveMultiBody::

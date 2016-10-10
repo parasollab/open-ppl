@@ -1,7 +1,7 @@
 #ifndef BOUNDING_SPHERE_2D_H_
 #define BOUNDING_SPHERE_2D_H_
 
-#include "Boundary.h"
+#include "Geometry/Boundaries/Boundary.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup Environment

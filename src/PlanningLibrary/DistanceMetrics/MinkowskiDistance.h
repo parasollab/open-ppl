@@ -3,7 +3,7 @@
 
 #include "DistanceMetricMethod.h"
 
-#include "Environment/Environment.h"
+#include "MPProblem/Environment/Environment.h"
 #include "MPProblem/IsClosedChain.h"
 
 #include <boost/utility/enable_if.hpp>

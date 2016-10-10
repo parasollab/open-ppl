@@ -10,30 +10,30 @@
 
 #include "CfgSurface.h"
 
-#include "Environment/ActiveMultiBody.h"
-#include "Environment/Environment.h"
-#include "Environment/FixedBody.h"
-#include "Environment/FreeBody.h"
-#include "Environment/SurfaceMultiBody.h"
+#include "Geometry/Bodies/ActiveMultiBody.h"
+#include "MPProblem/Environment/Environment.h"
+#include "Geometry/Bodies/FixedBody.h"
+#include "Geometry/Bodies/FreeBody.h"
+#include "Geometry/Bodies/SurfaceMultiBody.h"
 
 CfgSurface::CfgSurface() :
-  m_pt(Point2d(0,0)), m_h(0), m_surfaceID(INVALID_SURFACE) { 
-    m_v.resize(3,0); 
-    InitCfgSurface(); 
+  m_pt(Point2d(0,0)), m_h(0), m_surfaceID(INVALID_SURFACE) {
+    m_v.resize(3,0);
+    InitCfgSurface();
   }
 
 CfgSurface::CfgSurface(double _x, double _y, double _h, int _sid) :
-  m_pt(Point2d(_x, _y)), m_h(_h), m_surfaceID(_sid) { 
-    m_v.resize(3); 
-    InitCfgSurface(); 
-    SetDataFromThis(); 
+  m_pt(Point2d(_x, _y)), m_h(_h), m_surfaceID(_sid) {
+    m_v.resize(3);
+    InitCfgSurface();
+    SetDataFromThis();
   }
 
 CfgSurface::CfgSurface(const Vector3d& _v) :
-  m_pt(Point2d(_v[0], _v[2])), m_h(_v[1]), m_surfaceID(INVALID_SURFACE) { 
-    m_v.resize(3); 
-    InitCfgSurface(); 
-    SetDataFromThis(); 
+  m_pt(Point2d(_v[0], _v[2])), m_h(_v[1]), m_surfaceID(INVALID_SURFACE) {
+    m_v.resize(3);
+    InitCfgSurface();
+    SetDataFromThis();
   }
 
 CfgSurface::CfgSurface(const CfgSurface& _c) :
@@ -48,16 +48,16 @@ CfgSurface::CfgSurface(const CfgSurface& _c) :
 
 CfgSurface::CfgSurface(const Point2d& _p, double _h, int _sid) :
   m_pt(_p), m_h(_h), m_surfaceID(_sid) {
-    m_v.resize(3); 
-    InitCfgSurface(); 
-    SetDataFromThis(); 
+    m_v.resize(3);
+    InitCfgSurface();
+    SetDataFromThis();
   }
 
 CfgSurface::CfgSurface(const Cfg& _c) :
   m_pt(Point2d(_c[0], _c[2])), m_h(_c[1]), m_surfaceID(INVALID_SURFACE) {
-    m_v.resize(3); 
-    InitCfgSurface(); 
-    SetDataFromThis(); 
+    m_v.resize(3);
+    InitCfgSurface();
+    SetDataFromThis();
   }
 
 CfgSurface::~CfgSurface() {}
@@ -80,13 +80,13 @@ CfgSurface::operator=(const CfgSurface& _cfg) {
   return *this;
 }
 
-void 
+void
 CfgSurface::InitCfgSurface() {
   m_dof.clear();
   m_dof.push_back( size_t(3) );
   m_posdof.push_back( size_t(3) );
   m_numJoints.push_back( size_t(0) );
-  vector<DofType> dofTypes; 
+  vector<DofType> dofTypes;
   dofTypes.push_back( DofType::Positional );
   dofTypes.push_back( DofType::Positional );
   dofTypes.push_back( DofType::Positional );
@@ -261,18 +261,18 @@ CfgSurface::SetData(const vector<double>& _data) {
     cout << "DOF of data and Cfg are not equal " << _data.size() << "\t!=\t" << m_dof[m_robotIndex] << endl;
     exit(-1);
   }
-  if( m_v.size() != 3 ) 
+  if( m_v.size() != 3 )
     m_v.resize(3);
   m_pt[0] = _data[0];
   m_h = _data[1];
   m_pt[1] = _data[2];
-  
+
   SetDataFromThis();
   m_witnessCfg.reset();
 }
 
-void 
-CfgSurface::SetDataFromThis() { 
+void
+CfgSurface::SetDataFromThis() {
   m_v[0] = m_pt[0];
   m_v[1] = m_h;
   m_v[2] = m_pt[1];

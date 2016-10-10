@@ -3,7 +3,7 @@
 
 #include "DistanceMetricMethod.h"
 
-#include "Environment/Environment.h"
+#include "MPProblem/Environment/Environment.h"
 
 template <class MPTraits> class SimilarStructureSampler;
 

@@ -5,7 +5,7 @@
 #include <RAPID.H>
 
 #include "CDInfo.h"
-#include "Environment/Body.h"
+#include "Geometry/Bodies/Body.h"
 
 
 /*------------------------------- Construction -------------------------------*/

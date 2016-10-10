@@ -2,11 +2,11 @@
 
 #include "PMPLExceptions.h"
 
-#include "Environment/BoundingBox.h"
-#include "Environment/BoundingSphere.h"
-#include "Environment/Environment.h"
-#include "Environment/FixedBody.h"
-#include "Environment/StaticMultiBody.h"
+#include "Geometry/Boundaries/BoundingBox.h"
+#include "Geometry/Boundaries/BoundingSphere.h"
+#include "MPProblem/Environment/Environment.h"
+#include "Geometry/Bodies/FixedBody.h"
+#include "Geometry/Bodies/StaticMultiBody.h"
 #include "MPProblem/MPProblemBase.h"
 #include "Workspace/WorkspaceDecomposition.h"
 

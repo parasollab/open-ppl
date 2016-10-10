@@ -3,8 +3,8 @@
 
 #include "BasicExtender.h"
 
-#include "Environment/FixedBody.h"
-#include "Environment/StaticMultiBody.h"
+#include "Geometry/Bodies/FixedBody.h"
+#include "Geometry/Bodies/StaticMultiBody.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup Extenders

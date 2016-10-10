@@ -6,11 +6,11 @@
 #include <deque>
 
 #include "MetricUtils.h"
-#include "Environment/FixedBody.h"
-#include "Environment/SurfaceMultiBody.h"
+#include "Geometry/Bodies/ActiveMultiBody.h"
+#include "Geometry/Bodies/FixedBody.h"
+#include "Geometry/Bodies/SurfaceMultiBody.h"
 #include "PlanningLibrary/LocalPlanners/StraightLine.h"
 #include "PlanningLibrary/ValidityCheckers/CollisionDetection/CDInfo.h"
-#include "Environment/ActiveMultiBody.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup Utilities

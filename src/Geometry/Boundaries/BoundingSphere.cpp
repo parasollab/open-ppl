@@ -1,4 +1,4 @@
-#include "BoundingSphere.h"
+#include "Geometry/Boundaries/BoundingSphere.h"
 
 #include "Utilities/MPUtils.h"
 

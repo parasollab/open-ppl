@@ -4,9 +4,9 @@
 #include "Quaternion.h"
 using namespace mathtool;
 
-#include "Environment/ActiveMultiBody.h"
-#include "Environment/Environment.h"
-#include "Environment/NonHolonomicMultiBody.h"
+#include "Geometry/Bodies/ActiveMultiBody.h"
+#include "MPProblem/Environment/Environment.h"
+#include "Geometry/Bodies/NonHolonomicMultiBody.h"
 
 double State::m_timeRes = 0;
 

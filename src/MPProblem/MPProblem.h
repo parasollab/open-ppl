@@ -4,7 +4,7 @@
 #include "MPProblemBase.h"
 #include "Roadmap.h"
 
-#include "Environment/Environment.h"
+#include "MPProblem/Environment/Environment.h"
 #include "Utilities/MetricUtils.h"
 #include "Utilities/MPUtils.h"
 

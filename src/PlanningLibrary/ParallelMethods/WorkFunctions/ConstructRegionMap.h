@@ -1,7 +1,7 @@
 #ifndef CONSTRUCTREGIONMAP_H_
 #define CONSTRUCTREGIONMAP_H_
 
-#include "Environment/BoundingBox.h"
+#include "Geometry/Boundaries/BoundingBox.h"
 #include "PlanningLibrary/ParallelMethods/ParallelSBMPHeader.h"
 
 using namespace psbmp;

@@ -3,7 +3,7 @@
 
 #include "ExtenderMethod.h"
 
-#include "Environment/NonHolonomicMultiBody.h"
+#include "Geometry/Bodies/NonHolonomicMultiBody.h"
 
 #include "Environment/Control.h"
 

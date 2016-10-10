@@ -1,4 +1,4 @@
-#include "Boundary.h"
+#include "Geometry/Boundaries/Boundary.h"
 
 ostream&
 operator<<(ostream& _os, const Boundary& _b) {

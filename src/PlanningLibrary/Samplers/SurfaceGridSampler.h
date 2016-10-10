@@ -5,7 +5,7 @@
 
 #include "SamplerMethod.h"
 
-#include "Environment/SurfaceMultiBody.h"
+#include "Geometry/Bodies/SurfaceMultiBody.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup Samplers

@@ -6,7 +6,7 @@
 #include <containers/sequential/graph/algorithms/dijkstra.h>
 #include <containers/sequential/graph/algorithms/graph_input_output.h>
 
-#include "Environment/Environment.h"
+#include "MPProblem/Environment/Environment.h"
 #include "MPProblem/MPProblemBase.h"
 #include "Workspace/WorkspaceDecomposition.h"
 

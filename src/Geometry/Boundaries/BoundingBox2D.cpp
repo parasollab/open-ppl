@@ -1,76 +1,67 @@
-#include "BoundingBox.h"
+#include "Geometry/Boundaries/BoundingBox2D.h"
 
 #include "Utilities/MPUtils.h"
 
-BoundingBox::
-BoundingBox() {
-  for(size_t i = 0; i < 3; ++i)
+BoundingBox2D::
+BoundingBox2D() {
+  for(size_t i = 0; i < 2; ++i)
     m_bbx[i] = make_pair(-numeric_limits<double>::max(),
         numeric_limits<double>::max());
 }
 
-BoundingBox::
-BoundingBox(pair<double, double> _x, pair<double, double> _y,
-    pair<double, double> _z) {
+BoundingBox2D::
+BoundingBox2D(pair<double, double> _x, pair<double, double> _y) {
   m_bbx[0] = _x;
   m_bbx[1] = _y;
-  m_bbx[2] = _z;
-  m_center = (Vector3d(_x.first, _y.first, _z.first) +
-      Vector3d(_x.second, _y.second, _z.second))/2.;
+  m_center = (Vector3d(_x.first, _y.first, 0) +
+      Vector3d(_x.second, _y.second, 0))/2.;
 }
 
 double
-BoundingBox::
+BoundingBox2D::
 GetMaxDist(double _r1, double _r2) const {
   double maxdist = 0;
-  for(size_t i = 0; i < 3; ++i) {
+  for(size_t i = 0; i < 2; ++i) {
     double diff = m_bbx[i].second - m_bbx[i].first;
     maxdist += pow(diff, _r1);
   }
   return pow(maxdist, _r2);
 }
 
-pair<double, double>&
-BoundingBox::
-GetRange(size_t _i) {
-  if(_i > 2)
-    throw RunTimeException(WHERE,
-        "Invalid access to dimension '" + ::to_string(_i) + "'.");
-  return m_bbx[_i];
-}
-
 pair<double, double>
-BoundingBox::
+BoundingBox2D::
 GetRange(size_t _i) const {
   if(_i > 2)
     throw RunTimeException(WHERE,
         "Invalid access to dimension '" + ::to_string(_i) + "'.");
+  if(_i > 1)
+    return make_pair(-numeric_limits<double>::max(), numeric_limits<double>::max());
   return m_bbx[_i];
 }
 
 Point3d
-BoundingBox::
+BoundingBox2D::
 GetRandomPoint() const {
   Point3d p;
-  for(size_t i = 0; i < 3; ++i)
+  for(size_t i = 0; i < 2; ++i)
     p[i] = m_bbx[i].first + (m_bbx[i].second - m_bbx[i].first)*DRand();
   return p;
 }
 
 bool
-BoundingBox::
+BoundingBox2D::
 InBoundary(const Vector3d& _p) const {
-  for(size_t i = 0; i < 3; ++i)
+  for(size_t i = 0; i < 2; ++i)
     if( _p[i] < m_bbx[i].first || _p[i] > m_bbx[i].second)
       return false;
   return true;
 }
 
 double
-BoundingBox::
+BoundingBox2D::
 GetClearance(const Vector3d& _p) const {
   double minClearance = numeric_limits<double>::max();
-  for(size_t i = 0; i < 3; ++i) {
+  for(size_t i = 0; i < 2; ++i) {
     double clearance = min((_p[i] - m_bbx[i].first ), (m_bbx[i].second - _p[i]));
     if (clearance < minClearance || i == 0)
       minClearance = clearance;
@@ -79,7 +70,7 @@ GetClearance(const Vector3d& _p) const {
 }
 
 int
-BoundingBox::
+BoundingBox2D::
 GetSideID(const vector<double>& _p) const {
   double minClearance = numeric_limits<double>::max();
   int id, faceID = 0;
@@ -98,11 +89,11 @@ GetSideID(const vector<double>& _p) const {
 }
 
 Vector3d
-BoundingBox::
+BoundingBox2D::
 GetClearancePoint(const Vector3d& _p) const {
   Vector3d clrP;
   double minClearance = numeric_limits<double>::max();
-  for(size_t i = 0; i < 3; ++i) {
+  for(size_t i = 0; i < 2; ++i) {
     if(_p[i] - m_bbx[i].first < minClearance){
       minClearance = _p[i] - m_bbx[i].first;
       clrP = _p;
@@ -118,12 +109,12 @@ GetClearancePoint(const Vector3d& _p) const {
 }
 
 double
-BoundingBox::
+BoundingBox2D::
 GetClearance2DSurf(Point2d _pos, Point2d& _cdPt) const {
   double minDist=1e10;
   double cbbx[6]={m_bbx[0].first,m_bbx[0].second,
     m_bbx[1].first,m_bbx[1].second,
-    m_bbx[2].first,m_bbx[2].second};
+    0, 0};
   double dist[4]={_pos[0]-cbbx[0],cbbx[1]-_pos[0],
     _pos[1]-cbbx[4],cbbx[5]-_pos[1]};
   if(dist[0]<minDist){
@@ -149,29 +140,29 @@ GetClearance2DSurf(Point2d _pos, Point2d& _cdPt) const {
 }
 
 void
-BoundingBox::
+BoundingBox2D::
 ApplyOffset(const Vector3d& _v) {
   m_center += _v;
-  for(size_t i = 0; i < 3; ++i) {
+  for(size_t i = 0; i < 2; ++i) {
     m_bbx[i].first += _v[i];
     m_bbx[i].second += _v[i];
   }
 }
 
 void
-BoundingBox::
+BoundingBox2D::
 ResetBoundary(vector<pair<double, double> >& _obstBBX, double _d){
-  for(size_t i = 0; i<3; ++i){
+  for(size_t i = 0; i < 2; ++i){
     m_bbx[i].first = _obstBBX[i].first - _d;
     m_bbx[i].second = _obstBBX[i].second + _d;
   }
 }
 
 void
-BoundingBox::
+BoundingBox2D::
 Read(istream& _is, CountingStreamBuffer& _cbs) {
-  m_bbx[0].first = m_bbx[1].first = m_bbx[2].first = -numeric_limits<double>::max();
-  m_bbx[0].second = m_bbx[1].second = m_bbx[2].second = numeric_limits<double>::max();
+  m_bbx[0].first = m_bbx[1].first = -numeric_limits<double>::max();
+  m_bbx[0].second = m_bbx[1].second = numeric_limits<double>::max();
 
   //check for first [
   string tok;
@@ -192,32 +183,22 @@ Read(istream& _is, CountingStreamBuffer& _cbs) {
   if(!(_is >> m_bbx[1].first >> sep >> m_bbx[1].second) && sep != ':')
     throw ParseException(_cbs.Where(), "Failed reading bounding box range 1.");
 
-  //read ;
-  if(!(_is >> sep && sep == ';'))
-    throw ParseException(_cbs.Where(), "Failed reading separator ';'.");
-
-  //read min:max 2
-  if(!(_is >> m_bbx[2].first >> sep >> m_bbx[2].second) && sep != ':')
-    throw ParseException(_cbs.Where(), "Failed reading bounding box range 2.");
-
   if(!(_is >> sep) && sep != ']')
     throw ParseException(_cbs.Where(),
         "Failed reading bounding box. Missing ']'.");
 }
 
 void
-BoundingBox::
+BoundingBox2D::
 Write(ostream& _os) const {
   _os << "[ ";
   _os << m_bbx[0].first << ':' << m_bbx[0].second << " ; ";
   _os << m_bbx[1].first << ':' << m_bbx[1].second;
-  _os << " ; " << m_bbx[2].first << ':' << m_bbx[2].second;
   _os << " ]";
 }
 
-
 Boundary::CGALPolyhedron
-BoundingBox::
+BoundingBox2D::
 CGAL() const {
   // Define builder object.
   struct builder : public CGAL::Modifier_base<CGALPolyhedron::HalfedgeDS> {
@@ -230,18 +211,16 @@ CGAL() const {
       using Point = CGALPolyhedron::HalfedgeDS::Vertex::Point;
       CGAL::Polyhedron_incremental_builder_3<CGALPolyhedron::HalfedgeDS> b(_h);
 
-      b.begin_surface(8, 6, 24);
+      b.begin_surface(4, 2, 8);
 
-      b.add_vertex(Point(m_bbx[0].first  , m_bbx[1].first , m_bbx[2].first ));
-      b.add_vertex(Point(m_bbx[0].second , m_bbx[1].first , m_bbx[2].first ));
-      b.add_vertex(Point(m_bbx[0].second , m_bbx[1].second, m_bbx[2].first ));
-      b.add_vertex(Point(m_bbx[0].first  , m_bbx[1].second, m_bbx[2].first ));
-      b.add_vertex(Point(m_bbx[0].first  , m_bbx[1].first , m_bbx[2].second));
-      b.add_vertex(Point(m_bbx[0].second , m_bbx[1].first , m_bbx[2].second));
-      b.add_vertex(Point(m_bbx[0].second , m_bbx[1].second, m_bbx[2].second));
-      b.add_vertex(Point(m_bbx[0].first  , m_bbx[1].second, m_bbx[2].second));
+      b.add_vertex(Point(m_bbx[0].first  , m_bbx[1].first , 0));
+      b.add_vertex(Point(m_bbx[0].second , m_bbx[1].first , 0));
+      b.add_vertex(Point(m_bbx[0].second , m_bbx[1].second, 0));
+      b.add_vertex(Point(m_bbx[0].first  , m_bbx[1].second, 0));
 
-      // Front
+      // The bounding box has two facets: one on top, and one below. This is
+      // needed to create a closed surface as this representation is three-
+      // dimensional.
       b.begin_facet();
       b.add_vertex_to_facet(0);
       b.add_vertex_to_facet(1);
@@ -249,44 +228,11 @@ CGAL() const {
       b.add_vertex_to_facet(3);
       b.end_facet();
 
-      // Right
       b.begin_facet();
-      b.add_vertex_to_facet(1);
-      b.add_vertex_to_facet(5);
-      b.add_vertex_to_facet(6);
-      b.add_vertex_to_facet(2);
-      b.end_facet();
-
-      // Back
-      b.begin_facet();
-      b.add_vertex_to_facet(5);
-      b.add_vertex_to_facet(4);
-      b.add_vertex_to_facet(7);
-      b.add_vertex_to_facet(6);
-      b.end_facet();
-
-      // Left
-      b.begin_facet();
-      b.add_vertex_to_facet(4);
       b.add_vertex_to_facet(0);
       b.add_vertex_to_facet(3);
-      b.add_vertex_to_facet(7);
-      b.end_facet();
-
-      // Top
-      b.begin_facet();
-      b.add_vertex_to_facet(3);
       b.add_vertex_to_facet(2);
-      b.add_vertex_to_facet(6);
-      b.add_vertex_to_facet(7);
-      b.end_facet();
-
-      // Bottom
-      b.begin_facet();
-      b.add_vertex_to_facet(4);
-      b.add_vertex_to_facet(5);
       b.add_vertex_to_facet(1);
-      b.add_vertex_to_facet(0);
       b.end_facet();
 
       b.end_surface();
@@ -298,7 +244,7 @@ CGAL() const {
   cp.delegate(b);
 
   if(!cp.is_valid())
-    throw RunTimeException(WHERE, "BoundingBox:: Invalid CGAL polyhedron "
+    throw RunTimeException(WHERE, "BoundingBox2D:: Invalid CGAL polyhedron "
         "created!");
   return cp;
 }

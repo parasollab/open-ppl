@@ -12,7 +12,7 @@
 #include "Transformation.h"
 using namespace mathtool;
 
-#include "GMSPolyhedron.h"
+#include "Geometry/GMSPolyhedron.h"
 #include "Utilities/Color.h"
 #include "Utilities/MPUtils.h"
 

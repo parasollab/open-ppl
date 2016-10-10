@@ -1,7 +1,7 @@
 #include "Cfg.h"
 
-#include "Environment/ActiveMultiBody.h"
-#include "Environment/Environment.h"
+#include "Geometry/Bodies/ActiveMultiBody.h"
+#include "MPProblem/Environment/Environment.h"
 #include "Utilities/MetricUtils.h"
 
 /*---------------------------- Clearance Info --------------------------------*/

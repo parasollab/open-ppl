@@ -1,6 +1,6 @@
 #include "SpheresCollisionDetection.h"
 
-#include "Environment/Body.h"
+#include "Geometry/Bodies/Body.h"
 
 
 BoundingSpheres::

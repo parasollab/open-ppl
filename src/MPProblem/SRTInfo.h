@@ -5,7 +5,7 @@
 #include "MetricUtils.h"
 #include <utility>
 #include "RegionGraph.h"
-#include "Boundary.h"
+#include "Geometry/Boundaries/Boundary.h"
 #include "CfgTypes.h"
 
 ////////////////////////////////////////////////////////////////////////////////

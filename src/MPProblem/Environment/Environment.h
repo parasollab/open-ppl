@@ -11,8 +11,8 @@
 #include "Transformation.h"
 using namespace mathtool;
 
-#include "Boundary.h"
-#include "NonHolonomicMultiBody.h"
+#include "Geometry/Boundaries/Boundary.h"
+#include "Geometry/Bodies/NonHolonomicMultiBody.h"
 #include "Cfg/CfgMultiRobot.h"
 #include "Cfg/State.h"
 #include "Utilities/MPUtils.h"

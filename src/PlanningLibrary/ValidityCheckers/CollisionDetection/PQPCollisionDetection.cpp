@@ -3,7 +3,7 @@
 #ifndef NO_PQP
 
 #include "CDInfo.h"
-#include "Environment/Body.h"
+#include "Geometry/Bodies/Body.h"
 #include <set>
 
 /*------------------------------- Construction -------------------------------*/

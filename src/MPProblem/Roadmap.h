@@ -2,7 +2,7 @@
 #define ROADMAP_H_
 
 #include "RoadmapGraph.h"
-#include "Environment/Environment.h"
+#include "MPProblem/Environment/Environment.h"
 
 #ifdef _PARALLEL
 #include <containers/graph/algorithms/graph_io.hpp>

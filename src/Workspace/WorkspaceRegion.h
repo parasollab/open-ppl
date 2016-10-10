@@ -3,7 +3,7 @@
 
 #include <vector>
 
-#include "Environment/GMSPolyhedron.h"
+#include "Geometry/GMSPolyhedron.h"
 
 class WorkspaceDecomposition;
 

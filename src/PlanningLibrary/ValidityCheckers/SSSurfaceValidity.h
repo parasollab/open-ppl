@@ -4,7 +4,7 @@
 #ifdef PMPSSSurfaceMult
 
 #include "ValidityCheckerMethod.h"
-#include "Environment/Environment.h"
+#include "MPProblem/Environment/Environment.h"
 #include "PlanningLibrary/ValidityCheckers/SurfaceValidity.h"
 #include "PlanningLibrary/ValidityCheckers/ValidityCheckerMethod.h"
 #include "PlanningLibrary/ValidityCheckers/CollisionDetection/CDInfo.h"

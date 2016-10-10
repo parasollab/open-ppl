@@ -6,8 +6,8 @@
 
 #include "BasicRRTStrategy.h"
 
-#include "Environment/Boundary.h"
-#include "Environment/BoundingSphere.h"
+#include "Geometry/Boundaries/Boundary.h"
+#include "Geometry/Boundaries/BoundingSphere.h"
 #include "Utilities/ReebGraphConstruction.h"
 
 #include "Utilities/MedialAxisUtilities.h"

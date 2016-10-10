@@ -3,7 +3,7 @@
 
 #include "BasicRRTStrategy.h"
 
-#include "Environment/BoundingBox.h"
+#include "Geometry/Boundaries/BoundingBox.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup MotionPlanningStrategies

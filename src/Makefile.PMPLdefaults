@@ -220,24 +220,24 @@ PMPL_INCL = \
 
 PMPL_OBJS = \
 	Cfg/Cfg.o \
-	Environment/ActiveMultiBody.o \
-	Environment/Body.o \
-	Environment/Boundary.o \
-        Environment/BoundingBox.o \
-        Environment/BoundingBox2D.o \
-        Environment/BoundingSphere.o \
-        Environment/BoundingSphere2D.o \
-	Environment/Connection.o \
-	Environment/DHParameters.o \
-	Environment/Environment.o \
-	Environment/FixedBody.o \
-	Environment/FreeBody.o \
-	Environment/GMSPolygon.o \
-	Environment/GMSPolyhedron.o \
-	Environment/MultiBody.o \
-	Environment/StaticMultiBody.o \
-	Environment/SurfaceMultiBody.o \
+	Geometry/GMSPolygon.o \
+	Geometry/GMSPolyhedron.o \
+	Geometry/Bodies/ActiveMultiBody.o \
+	Geometry/Bodies/Body.o \
+	Geometry/Bodies/FixedBody.o \
+	Geometry/Bodies/FreeBody.o \
+	Geometry/Bodies/MultiBody.o \
+	Geometry/Bodies/StaticMultiBody.o \
+	Geometry/Bodies/SurfaceMultiBody.o \
+	Geometry/Bodies/Connection.o \
+	Geometry/Bodies/DHParameters.o \
+	Geometry/Boundaries/Boundary.o \
+        Geometry/Boundaries/BoundingBox.o \
+        Geometry/Boundaries/BoundingBox2D.o \
+        Geometry/Boundaries/BoundingSphere.o \
+        Geometry/Boundaries/BoundingSphere2D.o \
 	MPProblem/MPProblemBase.o \
+	MPProblem/Environment/Environment.o \
 	PlanningLibrary/NeighborhoodFinders/MPNNWrapper.o \
 	PlanningLibrary/Samplers/SimilarStructureSampler.o \
         Utilities/IOUtils.o \

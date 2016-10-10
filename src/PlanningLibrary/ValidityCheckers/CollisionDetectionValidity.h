@@ -3,10 +3,10 @@
 
 #include "ValidityCheckerMethod.h"
 
-#include "Environment/ActiveMultiBody.h"
-#include "Environment/Environment.h"
-#include "Environment/FixedBody.h"
-#include "Environment/StaticMultiBody.h"
+#include "Geometry/Bodies/ActiveMultiBody.h"
+#include "MPProblem/Environment/Environment.h"
+#include "Geometry/Bodies/FixedBody.h"
+#include "Geometry/Bodies/StaticMultiBody.h"
 
 #include "Utilities/MetricUtils.h"
 

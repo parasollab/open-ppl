@@ -1,7 +1,7 @@
-#ifndef BOUNDING_BOX_H_
-#define BOUNDING_BOX_H_
+#ifndef BOUNDINGSPHERE_H_
+#define BOUNDINGSPHERE_H_
 
-#include "Boundary.h"
+#include "Geometry/Boundaries/Boundary.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup Environment
@@ -9,20 +9,19 @@
 ///
 /// TODO
 ////////////////////////////////////////////////////////////////////////////////
-class BoundingBox :  public Boundary {
+class BoundingSphere : public Boundary {
   public:
-    BoundingBox();
-    BoundingBox(pair<double, double> _x,
-        pair<double, double> _y,
-        pair<double, double> _z);
-    ~BoundingBox() {}
+    BoundingSphere();
+    BoundingSphere(const Vector3d& _center, double _radius);
+    virtual ~BoundingSphere() = default;
 
-    string Type() const {return "Box";}
+    string Type() const {return "Sphere";}
 
-    const pair<double, double>* const GetBox() const {return m_bbx;}
+    const double GetRadius() const {return m_radius;}
+
+    bool operator==(const Boundary& _b) const;
 
     double GetMaxDist(double _r1 = 2.0, double _r2 = 0.5) const;
-    pair<double, double>& GetRange(size_t _i);
     pair<double, double> GetRange(size_t _i) const;
 
     Point3d GetRandomPoint() const;
@@ -38,16 +37,13 @@ class BoundingBox :  public Boundary {
     void Read(istream& _is, CountingStreamBuffer& _cbs);
     void Write(ostream& _os) const;
 
-    virtual CGALPolyhedron CGAL() const override;
-
   private:
-    pair<double, double> m_bbx[3];
+    double m_radius;
 
 #ifdef _PARALLEL
   public:
-    void define_type(stapl::typer &_t)
-    {
-      _t.member(m_bbx);
+    void define_type(stapl::typer& _t) {
+      _t.member(m_radius);
     }
 #endif
 };
@@ -55,11 +51,11 @@ class BoundingBox :  public Boundary {
 #ifdef _PARALLEL
 namespace stapl {
   template <typename Accessor>
-    class proxy<BoundingBox, Accessor>
+    class proxy<BoundingSphere, Accessor>
     : public Accessor {
       private:
         friend class proxy_core_access;
-        typedef BoundingBox target_t;
+        typedef BoundingSphere target_t;
 
       public:
         explicit proxy(Accessor const& acc) : Accessor(acc) { }
