@@ -48,20 +48,17 @@ class MPBaseObject {
     ///@{
 
     ////////////////////////////////////////////////////////////////////////////
-    /// @param _problem Global MPProblem
     /// @param _label ID of the object, i.e., user defined label
     /// @param _name Name of the object, i.e., derived class name
     /// @param _debug Turn debug output on or off
-    MPBaseObject(MPProblemType* _problem = NULL, const string& _label = "",
-        const string& _name = "", bool _debug = false) :
-        m_name(_name), m_debug(_debug), m_label(_label), m_problem(_problem) {
-    }
+    MPBaseObject(MPProblemType* _p = nullptr, const string& _label = "",
+        const string& _name = "",
+        bool _debug = false) :
+        m_name(_name), m_debug(_debug), m_label(_label), m_problem(_p) { }
 
     ////////////////////////////////////////////////////////////////////////////
-    /// @param _problem Global MPProblem
     /// @param _node XMLNode to parse for this object
-    MPBaseObject(MPProblemType* _problem, XMLNode& _node) :
-        m_problem(_problem) {
+    MPBaseObject(MPProblemType* _p, XMLNode& _node) : m_problem(_p) {
       ParseXML(_node);
     }
 
@@ -77,7 +74,7 @@ class MPBaseObject {
     ///
     /// Parse XML node. By default every MPBaseObject requires a label and
     /// optionally loads a debug parameter.
-    virtual void ParseXML(XMLNode& _node) {
+    void ParseXML(XMLNode& _node) {
       m_label = _node.Read("label", true, "", "Label Identifier");
       m_debug = _node.Read("debug", false, false,
           "Run-time debug on(true)/off(false)");
@@ -222,6 +219,7 @@ class MPBaseObject {
 
   protected:
 
+    ////////////////////////////////////////////////////////////////////////////
     /// @return Label
     const string& GetLabel() const {return m_label;}
 
@@ -238,8 +236,8 @@ class MPBaseObject {
 
   private:
 
-    string m_label;           ///< Unique identifier of object
-    MPProblemType* m_problem; ///< Shared pointer to MPProblem object
+    string m_label;                    ///< Unique identifier of object
+    MPProblemType* m_problem{nullptr}; ///< Pointer to MPProblem object.
 
     template<typename T, typename U> friend class MethodSet;
 };

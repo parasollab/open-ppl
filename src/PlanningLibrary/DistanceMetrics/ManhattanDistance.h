@@ -5,44 +5,57 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup DistanceMetrics
-/// @brief TODO.
-/// @tparam MPTraits Motion planning universe
+/// @brief Compute the Manhattan distance between two configurations.
 ///
-/// TODO.
+/// The Manhattan distance requires that each basis of the configuration space
+/// be traversed separately. Its name is analogous to how one moves around the
+/// city of Manhattan by following the streets rather than flying over the
+/// buildings.
 ////////////////////////////////////////////////////////////////////////////////
-template<class MPTraits>
+template <typename MPTraits>
 class ManhattanDistance : public MinkowskiDistance<MPTraits> {
+
   public:
+
+    ///@name Local Types
+    ///@{
+
     typedef typename MPTraits::MPProblemType MPProblemType;
+
+    ///@}
+    ///@name Construction
+    ///@{
 
     ManhattanDistance(bool _normalize = false);
     ManhattanDistance(MPProblemType* _problem, XMLNode& _node);
-    virtual ~ManhattanDistance();
+    virtual ~ManhattanDistance() = default;
+
+    ///@}
 };
 
-template<class MPTraits>
+/*------------------------------- Construction -------------------------------*/
+
+template <typename MPTraits>
 ManhattanDistance<MPTraits>::
 ManhattanDistance(bool _normalize) :
-  MinkowskiDistance<MPTraits>(1, 1, 1, _normalize) {
+    MinkowskiDistance<MPTraits>(1, 1, 1, _normalize) {
   this->SetName("Manhattan");
 }
 
-template<class MPTraits>
+
+template <typename MPTraits>
 ManhattanDistance<MPTraits>::
 ManhattanDistance(MPProblemType* _problem, XMLNode& _node) :
-  MinkowskiDistance<MPTraits>(_problem, _node, false) {
-    this->SetName("Manhattan");
+    MinkowskiDistance<MPTraits>(_problem, _node) {
+  this->SetName("Manhattan");
 
-    this->m_r1 = 1;
-    this->m_r2 = 1;
-    this->m_r3 = 1;
-    this->m_normalize = _node.Read("normalize", false, false,
-        "flag if position dof should be normalized by environment diagonal");
-  }
-
-template<class MPTraits>
-ManhattanDistance<MPTraits>::
-~ManhattanDistance() {
+  this->m_r1 = 1;
+  this->m_r2 = 1;
+  this->m_r3 = 1;
+  this->m_normalize = _node.Read("normalize", false, false,
+      "flag if position dof should be normalized by environment diagonal");
 }
+
+/*----------------------------------------------------------------------------*/
 
 #endif

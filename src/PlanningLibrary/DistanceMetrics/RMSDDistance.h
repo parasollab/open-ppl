@@ -5,53 +5,82 @@
 
 #include "MPProblem/Environment/Environment.h"
 
-template <class MPTraits> class SimilarStructureSampler;
+template <typename MPTraits> class SimilarStructureSampler;
 
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup DistanceMetrics
 /// @brief TODO.
-/// @tparam MPTraits Motion planning universe
-///
-/// TODO.
 ////////////////////////////////////////////////////////////////////////////////
-template<class MPTraits>
+template <typename MPTraits>
 class RMSDDistance : public DistanceMetricMethod<MPTraits> {
+
   public:
+
+    ///@name Local Types
+    ///@{
+
     typedef typename MPTraits::CfgType CfgType;
     typedef typename MPTraits::MPProblemType MPProblemType;
 
+    ///@}
+    ///@name Construction
+    ///@{
+
     RMSDDistance();
     RMSDDistance(MPProblemType* _problem, XMLNode& _node);
-    virtual ~RMSDDistance();
+    virtual ~RMSDDistance() = default;
+
+    ///@}
+    ///@name Distance Interface
+    ///@{
 
     virtual double Distance(const CfgType& _c1, const CfgType& _c2);
 
+    ///@}
+
   private:
-    virtual vector<Vector3d> GetCoordinatesForRMSD(const CfgType& _c);
+
+    ///@name Helpers
+    ///@{
+
+    vector<Vector3d> GetCoordinatesForRMSD(const CfgType& _c);
     double RMSD(vector<Vector3d> _x, vector<Vector3d> _y, int _dim);
 
-  friend class SimilarStructureSampler<MPTraits>;
+    ///@}
+
+    friend class SimilarStructureSampler<MPTraits>;
 };
 
-template<class MPTraits>
+/*------------------------------- Construction -------------------------------*/
+
+template <typename MPTraits>
 RMSDDistance<MPTraits>::
 RMSDDistance() : DistanceMetricMethod<MPTraits>() {
   this->SetName("RMSD");
 }
 
-template<class MPTraits>
+
+template <typename MPTraits>
 RMSDDistance<MPTraits>::
 RMSDDistance(MPProblemType* _problem, XMLNode& _node) :
-  DistanceMetricMethod<MPTraits>(_problem, _node) {
-    this->SetName("RMSD");
-  }
-
-template<class MPTraits>
-RMSDDistance<MPTraits>::
-~RMSDDistance() {
+    DistanceMetricMethod<MPTraits>(_problem, _node) {
+  this->SetName("RMSD");
 }
 
-template<class MPTraits>
+/*----------------------------- Distance Interface ---------------------------*/
+
+template <typename MPTraits>
+double
+RMSDDistance<MPTraits>::
+Distance(const CfgType& _c1, const CfgType& _c2) {
+  vector<Vector3d> x = GetCoordinatesForRMSD(_c1);
+  vector<Vector3d> y = GetCoordinatesForRMSD(_c2);
+  return RMSD(x,y,x.size());
+}
+
+/*---------------------------------- Helpers ---------------------------------*/
+
+template <typename MPTraits>
 vector<Vector3d>
 RMSDDistance<MPTraits>::
 GetCoordinatesForRMSD(const CfgType& _c) {
@@ -64,22 +93,15 @@ GetCoordinatesForRMSD(const CfgType& _c) {
   return coordinates;
 }
 
-template<class MPTraits>
-double
-RMSDDistance<MPTraits>::
-Distance(const CfgType& _c1, const CfgType& _c2) {
-  vector<Vector3d> x = GetCoordinatesForRMSD(_c1);
-  vector<Vector3d> y = GetCoordinatesForRMSD(_c2);
-  return RMSD(x,y,x.size());
-}
 
-template<class MPTraits>
+template <typename MPTraits>
 double
 RMSDDistance<MPTraits>::
 RMSD(vector<Vector3d> _x, vector<Vector3d> _y, int _dim) {
   if((int)_x.size() < _dim || (int)_y.size() < _dim || _dim <= 0) {
-    cout << "Error in MyDistanceMetrics::RMSD, not enough data in vectors" << endl;
-    exit(101);
+    cout << "Error in MyDistanceMetrics::RMSD, not enough data in vectors"
+         << endl;
+    exit(-1);
   }
 
   //rmsd = sqrt( sum_of[(U*xn - yn)^2]/N )
@@ -171,5 +193,7 @@ RMSD(vector<Vector3d> _x, vector<Vector3d> _y, int _dim) {
 
   return rmsd;
 }
+
+/*----------------------------------------------------------------------------*/
 
 #endif

@@ -310,44 +310,18 @@ StatClass::PrintAllStats(ostream& _os, RoadmapType* _rmap, int _numCCs) {
     ofs.close();
   }
 
-
-  _os << endl << endl;
-  _os << "Number of Nodes: " << _rmap->GetGraph()->get_num_vertices() << endl;
-  _os << "Number of Edges: " << _rmap->GetGraph()->get_num_edges() << endl;
-  /*  Removed by Roger for reasons given below
-      _os << "Number of Collision Detection Calls: " << endl;
-      for(i=0;i<MaxCD;i++)
-      if (strcmp(CDNameList[i],"empty")!=0)
-      _os << setw(20) << CDNameList[i]
-      << setw(15) << NumCollDetCalls[i] << endl;
-   */
-
-  _os << endl;
+  _os << endl << endl
+      << "Number of Nodes: " << _rmap->GetGraph()->get_num_vertices() << endl
+      << "Number of Edges: " << _rmap->GetGraph()->get_num_edges() << endl
+      << endl;
 
   DisplayCCStats(_os, *_rmap->GetGraph());
 
-  ///Below removed b/c it counts Coll Detection too fine grained.  We have decided
-  ///to only keep Total times Cfg::isCollision is called.  This makes the 'price' for a
-  ///free node the same as a collision node.  Will be added back after collision detection
-  ///counting is properly fixed     --Roger 9/17/2005
-  /*
-     _os << endl << endl << "Collision Detection Exact Counts:" << endl;
-     for (i=0, iter=CollDetCountByName.begin(); iter != CollDetCountByName.end(); iter++, i++)
-     {
-     total+=iter->second;
-     _os << i << ") " << iter->second << " ";
-     _os << flush;
-     printf("%s\n", iter->first.data()); //K2 does not have the << operator defined for string
-     fflush(stdout);
-     }
-
-     _os << "total " << total << endl;
-   */
-
   _os << endl << endl << "Cfg::isCollision() Exact Counts:" << endl;
-  for (i=0, iter=m_isCollByName.begin(); iter != m_isCollByName.end(); iter++, i++) {
-    _os << i << ") " << iter->second << " " << iter->first << endl;;
-  }
+  for(i = 0, iter = m_isCollByName.begin(); iter != m_isCollByName.end();
+      ++iter, ++i)
+    _os << i << ") " << iter->second << " " << iter->first << endl;
+
   _os << "Total Cfg::isCollision() = " << m_isCollTotal << endl << endl;
 
   //Output Clock Statistics.
@@ -584,13 +558,16 @@ StatClass::ComputeIntraCCFeatures(RoadmapType* _rdmp, Environment* _env, Distanc
 // between the closest pairs of ccs
 template<class MPProblemType, class RoadmapType>
 void
-StatClass::ComputeInterCCFeatures(MPProblemType* _problem, RoadmapType* _rdmp, string _nfMethod, string _dmMethod) {
+StatClass::
+ComputeInterCCFeatures(MPProblemType* _problem, RoadmapType* _rdmp,
+    string _nfMethod, string _dmMethod) {
 #ifndef _PARALLEL
-  typename MPProblemType::DistanceMetricPointer dm = _problem->GetDistanceMetric(_dmMethod);
-  typename MPProblemType::NeighborhoodFinderPointer nf = _problem->GetNeighborhoodFinder(_nfMethod);
+  auto dm = _problem->GetDistanceMetric(_dmMethod);
+  auto nf = _problem->GetNeighborhoodFinder(_nfMethod);
   typedef typename MPProblemType::CfgType CfgType;
   typedef typename RoadmapType::GraphType GraphType;
   typedef typename GraphType::vertex_descriptor VID;
+
   stapl::sequential::vector_property_map<GraphType, size_t> cMap;
   vector< pair<size_t,VID> > ccs; //connected components in the roadmap
   cout << "in inter ccs portion" << endl;
@@ -614,15 +591,16 @@ StatClass::ComputeInterCCFeatures(MPProblemType* _problem, RoadmapType* _rdmp, s
   m_ccNumber = ccs.size();
 
   double totalComponentsDist = 0;
-  for(typename vector< pair<size_t,VID> >::iterator cce=ccs.begin(); cce < ccs.end(); cce++){
+  for(auto cce = ccs.begin(); cce < ccs.end(); ++cce) {
     cMap.reset();
     get_cc_edges(*(_rdmp->GetGraph()),cMap,ccEdges,cce->second);
-    double totalSize = 0.0;
-    cout << "size of edge list for cc:" << cce->second << " "<< ccEdges.size() << endl;
-    for(typename vector< pair<VID,VID> >::iterator ccIter=ccEdges.begin(); ccIter<ccEdges.end();ccIter++) {
-      CfgType ccIterA = (*(_rdmp->GetGraph()->find_vertex(ccIter->first))).property();
-      CfgType ccIterB = (*(_rdmp->GetGraph()->find_vertex(ccIter->second))).property();
-      double dist = dm->Distance(_problem->GetEnvironment(), ccIterA, ccIterB);
+    double totalSize = 0;
+    cout << "size of edge list for cc:" << cce->second << " " << ccEdges.size()
+         << endl;
+    for(auto ccIter = ccEdges.begin(); ccIter < ccEdges.end(); ++ccIter) {
+      CfgType a = _rdmp->GetGraph()->find_vertex(ccIter->first)->property();
+      CfgType b = _rdmp->GetGraph()->find_vertex(ccIter->second)->property();
+      double dist = dm->Distance(_problem->GetEnvironment(), a, b);
       totalSize += dist;
     }
     ccEdges.clear();
@@ -637,26 +615,22 @@ StatClass::ComputeInterCCFeatures(MPProblemType* _problem, RoadmapType* _rdmp, s
   }
   m_avgCCSize /= ccs.size();
   m_sigmaCCSize = 0;
-  for (size_t j = 0; j < ccSizes.size(); j++)
-    m_sigmaCCSize  += pow(ccSizes[j]-m_avgCCSize, 2);
-  if (ccSizes.size() > 1)
-    m_sigmaCCSize /= (ccSizes.size()-1);
+  for(size_t j = 0; j < ccSizes.size(); j++)
+    m_sigmaCCSize += pow(ccSizes[j] - m_avgCCSize, 2);
+  if(ccSizes.size() > 1)
+    m_sigmaCCSize /= (ccSizes.size() - 1);
   m_sigmaCCSize = sqrt(m_sigmaCCSize);
-  if (totalComponentsDist>0) {
-    m_minCCSize/=totalComponentsDist;
-    m_maxCCSize/=totalComponentsDist;
-    m_avgCCSize/=totalComponentsDist;
-    m_sigmaCCSize/=totalComponentsDist;
+  if(totalComponentsDist > 0) {
+    m_minCCSize /= totalComponentsDist;
+    m_maxCCSize /= totalComponentsDist;
+    m_avgCCSize /= totalComponentsDist;
+    m_sigmaCCSize /= totalComponentsDist;
   }
 
-  typename vector< pair<size_t,VID> >::iterator cci; // cci is CC[i] hereafter
-  if(ccs.size()>1)
-    for (cci = ccs.begin(); cci < ccs.end(); cci++) {
-      typename vector< pair<size_t,VID> >::iterator ccj;//ccj will be the rest of the ccs that cci has not
-      //checked against
-      ccj = cci;
-      //ccj++;
-      for(ccj++;ccj<ccs.end();ccj++) {
+  if(ccs.size() > 1)
+    for(auto cci = ccs.begin(); cci < ccs.end(); ++cci) {
+      auto ccj = cci;
+      for(++ccj; ccj < ccs.end(); ++ccj) {
         vector<VID> cciCfgs; //configurations in cci
         vector<VID> ccjCfgs; //configurations in ccj
 
@@ -666,25 +640,27 @@ StatClass::ComputeInterCCFeatures(MPProblemType* _problem, RoadmapType* _rdmp, s
         get_cc(*(_rdmp->GetGraph()),cMap, ccj->second, ccjCfgs); //fill ccjCfgs
 
         vector< pair<VID,VID> > pairs;
-        nf->KClosestPairs(_rdmp,
-            cciCfgs.begin(), cciCfgs.end(), ccjCfgs.begin(), ccjCfgs.end(), 1, back_inserter(pairs));
-        double tmpDist = dm->Distance(_problem->GetEnvironment(), (*(_rdmp->GetGraph()->find_vertex(pairs[0].first))).property(),
-            (*(_rdmp->GetGraph()->find_vertex(pairs[0].second))).property() );
+        nf->KClosestPairs(_rdmp, cciCfgs.begin(), cciCfgs.end(), ccjCfgs.begin(),
+            ccjCfgs.end(), 1, back_inserter(pairs));
+        double tmpDist = dm->Distance(_problem->GetEnvironment(),
+            _rdmp->GetGraph()->find_vertex(pairs[0].first)->property(),
+            _rdmp->GetGraph()->find_vertex(pairs[0].second)->property());
         if(tmpDist > m_maxInterCCDist)
           m_maxInterCCDist = tmpDist;
         if(m_minInterCCDist == 0.0 || tmpDist < m_minInterCCDist)
           m_minInterCCDist = tmpDist;
         m_avgInterCCDist += tmpDist;
-        minCCDistanceBetweenClosestPairs.push_back( tmpDist );
-        pairsChecked++;
+        minCCDistanceBetweenClosestPairs.push_back(tmpDist);
+        ++pairsChecked;
       }
     }
 
-  if (pairsChecked > 0)
+  if(pairsChecked > 0)
     m_avgInterCCDist /= pairsChecked;
-  for (size_t j = 0; j < minCCDistanceBetweenClosestPairs.size(); j++)
-    m_sigmaInterCCDist += pow(minCCDistanceBetweenClosestPairs[j]-m_avgInterCCDist , 2);
-  if (minCCDistanceBetweenClosestPairs.size() > 1)
+  for(size_t j = 0; j < minCCDistanceBetweenClosestPairs.size(); ++j)
+    m_sigmaInterCCDist += pow(minCCDistanceBetweenClosestPairs[j] -
+        m_avgInterCCDist, 2);
+  if(minCCDistanceBetweenClosestPairs.size() > 1)
     m_sigmaInterCCDist /= minCCDistanceBetweenClosestPairs.size() - 1;
   m_sigmaInterCCDist = sqrt(m_sigmaInterCCDist);
 #endif

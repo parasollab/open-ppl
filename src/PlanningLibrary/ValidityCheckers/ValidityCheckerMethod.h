@@ -1,10 +1,11 @@
-#ifndef VALIDITYCHECKERMETHOD_H
-#define VALIDITYCHECKERMETHOD_H
+#ifndef VALIDITY_CHECKER_METHOD_H
+#define VALIDITY_CHECKER_METHOD_H
 
 #include <string>
 #include "Utilities/MPUtils.h"
 #include "PlanningLibrary/ValidityCheckers/CollisionDetection/CDInfo.h"
-#include "MPProblem/MPBaseObject.h"
+#include "PlanningLibrary/MPBaseObject.h"
+
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup ValidityCheckers
 /// @brief Base algorithm abstraction for \ref ValidityCheckers.

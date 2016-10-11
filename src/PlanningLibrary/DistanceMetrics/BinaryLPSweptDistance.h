@@ -6,48 +6,77 @@
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup DistanceMetrics
 /// @brief TODO.
-/// @tparam MPTraits Motion planning universe
-///
-/// TODO.
 ////////////////////////////////////////////////////////////////////////////////
-template <class MPTraits>
+template <typename MPTraits>
 class BinaryLPSweptDistance : public LPSweptDistance<MPTraits> {
-  public:
-    typedef typename MPTraits::MPProblemType MPProblemType;
-    typedef typename MPTraits::CfgType CfgType;
 
-    BinaryLPSweptDistance(string _lp = "", double _posRes = 0.1, double _oriRes = 0.1,
-        double _tolerance = 0.01, int _maxAttempts = 100, bool _bbox = false);
+  public:
+
+    ///@name Local Types
+    ///@{
+
+    typedef typename MPTraits::MPProblemType MPProblemType;
+    typedef typename MPTraits::CfgType       CfgType;
+
+    ///@}
+    ///@name Construction
+    ///@{
+
+    BinaryLPSweptDistance(string _lp = "", double _posRes = .1,
+        double _oriRes = .1, double _tolerance = .01, int _maxAttempts = 100,
+        bool _bbox = false);
     BinaryLPSweptDistance(MPProblemType* _problem, XMLNode& _node);
 
-    virtual void Print(ostream& _os) const;
+    ///@}
+    ///@name MPBaseObject Overrides
+    ///@{
 
-    virtual double Distance(const CfgType& _c1, const CfgType& _c2);
+    virtual void Print(ostream& _os) const override;
+
+    ///@}
+    ///@name Distance Interface
+    ///@{
+
+    virtual double Distance(const CfgType& _c1, const CfgType& _c2) override;
+
+    ///@}
 
   private:
+
+    ///@name Internal State
+    ///@{
+
     double m_tolerance;
     int m_maxAttempts;
+
+    ///@}
 };
 
-template<class MPTraits>
+/*------------------------------- Construction -------------------------------*/
+
+template <typename MPTraits>
 BinaryLPSweptDistance<MPTraits>::
 BinaryLPSweptDistance(string _lp, double _posRes, double _oriRes,
     double _tolerance, int _maxAttempts, bool _bbox) :
-  LPSweptDistance<MPTraits>(_lp, _posRes, _oriRes, _bbox),
+    LPSweptDistance<MPTraits>(_lp, _posRes, _oriRes, _bbox),
   m_tolerance(_tolerance), m_maxAttempts(_maxAttempts) {
-    this->SetName("BinaryLPSwept");
-  }
+  this->SetName("BinaryLPSwept");
+}
 
-template<class MPTraits>
+
+template <typename MPTraits>
 BinaryLPSweptDistance<MPTraits>::
 BinaryLPSweptDistance(MPProblemType* _problem, XMLNode& _node) :
-  LPSweptDistance<MPTraits>(_problem, _node) {
-    this->SetName("BinaryLPSwept");
-    m_tolerance = _node.Read("tolerance", false, 0.01, 0.0, 1000.0, "tolerance");
-    m_maxAttempts = _node.Read("maxAttempts", false, 10, 1, 100, "maximum depth of lp_swept distance search");
-  }
+    LPSweptDistance<MPTraits>(_problem, _node) {
+  this->SetName("BinaryLPSwept");
+  m_tolerance = _node.Read("tolerance", false, 0.01, 0.0, 1000.0, "tolerance");
+  m_maxAttempts = _node.Read("maxAttempts", false, 10, 1, 100, "maximum depth "
+      "of lp_swept distance search");
+}
 
-template<class MPTraits>
+/*--------------------------- MPBaseObject Overrides -------------------------*/
+
+template <typename MPTraits>
 void
 BinaryLPSweptDistance<MPTraits>::
 Print(ostream& _os) const {
@@ -56,7 +85,9 @@ Print(ostream& _os) const {
   _os << "\tmaxAttempts = " << m_maxAttempts << endl;
 }
 
-template<class MPTraits>
+/*----------------------------- Distance Interface ---------------------------*/
+
+template <typename MPTraits>
 double
 BinaryLPSweptDistance<MPTraits>::
 Distance(const CfgType& _c1, const CfgType& _c2) {
@@ -69,8 +100,9 @@ Distance(const CfgType& _c1, const CfgType& _c2) {
   int matchCount = 1;
 
   for(int i = 1; i < m_maxAttempts; i++) {
-    this->m_positionRes = max(this->m_positionRes/2.0, env->GetPositionRes());
-    this->m_orientationRes = max(this->m_orientationRes/2.0, env->GetOrientationRes());
+    this->m_positionRes = max(this->m_positionRes / 2., env->GetPositionRes());
+    this->m_orientationRes = max(this->m_orientationRes / 2.,
+        env->GetOrientationRes());
 
     newDist = LPSweptDistance<MPTraits>::Distance(_c1, _c2);
 
@@ -94,5 +126,7 @@ Distance(const CfgType& _c1, const CfgType& _c2) {
 
   return newDist;
 }
+
+/*----------------------------------------------------------------------------*/
 
 #endif

@@ -15,51 +15,74 @@
 ////////////////////////////////////////////////////////////////////////////////
 template<class MPTraits>
 class ReachableDistance : public DistanceMetricMethod<MPTraits> {
+
   public:
-    typedef typename MPTraits::CfgType CfgType;
+
+    ///@name Local Types
+    ///@{
+
     typedef typename MPTraits::MPProblemType MPProblemType;
+    typedef typename MPTraits::CfgType       CfgType;
+
+    ///@}
+    ///@name Construction
+    ///@{
 
     ReachableDistance(double _s1 = 0.33, double _s2 = 0.33);
-    ReachableDistance(MPProblemType* _problem, XMLNode& _node, bool _warn = true);
-    virtual ~ReachableDistance();
+    ReachableDistance(MPProblemType* _problem, XMLNode& _node);
+    virtual ~ReachableDistance() = default;
 
-    virtual void Print(ostream& _os) const;
+    ///@}
+    ///@name MPBaseObject Overrides
+    ///@{
+
+    virtual void Print(ostream& _os) const override;
+
+    ///@}
+    ///@name Distance Interface
+    ///@{
 
     virtual double Distance(const CfgType& _c1, const CfgType& _c2);
 
+    ///@}
+
   private:
-    double m_scale1, m_scale2;
+
+    ///@name Internal State
+    ///@{
+
+    double m_scale1;
+    double m_scale2;
+
+    ///@}
 };
+
 
 template<class MPTraits>
 ReachableDistance<MPTraits>::
 ReachableDistance(double _s1, double _s2) :
-  DistanceMetricMethod<MPTraits>(), m_scale1(_s1), m_scale2(_s2)  {
-    this->SetName("Reachable");
-  }
-
-template<class MPTraits>
-ReachableDistance<MPTraits>::
-ReachableDistance(MPProblemType* _problem, XMLNode& _node, bool _warn) :
-  DistanceMetricMethod<MPTraits>(_problem, _node, false) {
-    this->SetName("Reachable");
-
-    m_scale1 = _node.Read("s1", false, 0.33, 0.0, 1.0, "position scale factor");
-    m_scale2 = _node.Read("s2", false, 0.33, 0.0, 1.0, "link lengths scale factor");
-
-    if(m_scale1 + m_scale2 > 1.0) {
-      cerr << "\n\nERROR in ReachableDistance(): scale factor parameters must add up to less than or equal to 1: " << m_scale1 << " + " << m_scale2 << " = " << m_scale1 + m_scale2 << "\nexiting.\n";
-      exit(-1);
-    }
-
-    if(_warn)
-      _node.warnUnrequestedAttributes();
-  }
-
-template<class MPTraits>
-ReachableDistance<MPTraits>::
-~ReachableDistance() {
+    DistanceMetricMethod<MPTraits>(), m_scale1(_s1), m_scale2(_s2)  {
+  this->SetName("Reachable");
 }
+
+
+template<class MPTraits>
+ReachableDistance<MPTraits>::
+ReachableDistance(MPProblemType* _problem, XMLNode& _node) :
+    DistanceMetricMethod<MPTraits>(_problem, _node) {
+  this->SetName("Reachable");
+
+  m_scale1 = _node.Read("s1", false, 0.33, 0.0, 1.0, "position scale factor");
+  m_scale2 = _node.Read("s2", false, 0.33, 0.0, 1.0, "link lengths scale factor");
+
+  if(m_scale1 + m_scale2 > 1.0) {
+    cerr << "\n\nERROR in ReachableDistance(): scale factor parameters must "
+         << "add up to less than or equal to 1: " << m_scale1 << " + "
+         << m_scale2 << " = " << m_scale1 + m_scale2 << "\nexiting.\n";
+    exit(-1);
+  }
+}
+
 
 template<class MPTraits>
 void
@@ -95,5 +118,4 @@ Distance(const CfgType& _c1, const CfgType& _c2) {
 }
 
 #endif
-
 #endif

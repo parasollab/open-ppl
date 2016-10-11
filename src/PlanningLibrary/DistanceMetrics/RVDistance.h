@@ -11,7 +11,7 @@
 ///
 /// TODO.
 ////////////////////////////////////////////////////////////////////////////////
-template<class MPTraits>
+template <typename MPTraits>
 class RVDistance : public MinkowskiDistance<MPTraits> {
   public:
     typedef typename MPTraits::CfgType CfgType;
@@ -29,14 +29,14 @@ class RVDistance : public MinkowskiDistance<MPTraits> {
     bool m_debug;
 };
 
-template<class MPTraits>
+template <typename MPTraits>
 RVDistance<MPTraits>::
 RVDistance(bool _normalize) :
   MinkowskiDistance<MPTraits>(2, 2, 1.0/2, _normalize) {
     this->m_name = "ReachableVolume";
   }
 
-template<class MPTraits>
+template <typename MPTraits>
 RVDistance<MPTraits>::
 RVDistance(typename MPTraits::MPProblemType* _problem, XMLNode& _node) :
   MinkowskiDistance<MPTraits>(_problem, _node, false) {
@@ -57,13 +57,13 @@ RVDistance(typename MPTraits::MPProblemType* _problem, XMLNode& _node) :
         "S_rot, the rotational scaling factor");
   }
 
-template<class MPTraits>
+template <typename MPTraits>
 double
 RVDistance<MPTraits>::RotationalDistance(const CfgType& _c) {
   return RotationalDistance(_c, this->m_r2);
 }
 
-template<class MPTraits>
+template <typename MPTraits>
 double
 RVDistance<MPTraits>::RotationalDistance(const CfgType& _c, double _r2) {
   vector<double> r = _c.GetRotation();
@@ -73,7 +73,7 @@ RVDistance<MPTraits>::RotationalDistance(const CfgType& _c, double _r2) {
   return rot;
 }
 
-template<class MPTraits>
+template <typename MPTraits>
 double
 RVDistance<MPTraits>::InternalDistance(Environment* _env, CfgType _c1, CfgType _c2,bool _debug = false) {
   _c1.ResetRigidBodyCoordinates();
@@ -103,7 +103,7 @@ RVDistance<MPTraits>::InternalDistance(Environment* _env, CfgType _c1, CfgType _
 }
 
 
-template<class MPTraits>
+template <typename MPTraits>
 double
 RVDistance<MPTraits>::Distance(const CfgType& _c1, const CfgType& _c2) {
   //my stuff goes here
@@ -127,7 +127,7 @@ RVDistance<MPTraits>::Distance(const CfgType& _c1, const CfgType& _c2) {
   return pow(m_S*((1-m_S_rot)*pos+m_S_rot*rot)+(1-m_S)*rv, this->m_r3);
 }
 
-template<class MPTraits>
+template <typename MPTraits>
 RVDistance<MPTraits>::~RVDistance() {}
 
 

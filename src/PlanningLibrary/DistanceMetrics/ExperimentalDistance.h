@@ -7,36 +7,60 @@
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup DistanceMetrics
 /// @brief These aren't the droids you're looking for.
-/// @tparam MPTraits Motion planning universe
+///
+/// This metric applies only to nonholonomic robots. It works as a weighted
+/// Euclidean distance between two states, except that it allows the first
+/// state to coast under its present momentum for one timestep before checking
+/// the distance. Thus, it measures how close the first state will be to the
+/// second after drifting.
 ////////////////////////////////////////////////////////////////////////////////
-template<class MPTraits>
+template <typename MPTraits>
 class ExperimentalDistance : public WeightedEuclideanDistance<MPTraits> {
+
   public:
-    typedef typename MPTraits::CfgType StateType;
+
+    ///@name Local Types
+    ///@{
+
     typedef typename MPTraits::MPProblemType MPProblemType;
+    typedef typename MPTraits::CfgType       StateType;
 
-    ExperimentalDistance(double _posW = 0.25, double _rotW = 0.25,
-        double _velW = 0.25, double _avlW = 0.25, double _ts = 30);
+    ///@}
+    ///@name Construction
+    ///@{
+
+    ExperimentalDistance();
     ExperimentalDistance(MPProblemType* _problem, XMLNode& _node);
+    virtual ~ExperimentalDistance() = default;
 
-    virtual double Distance(const StateType& _s1, const StateType& _s2);
+    ///@}
+    ///@name Distance Interface
+    ///@{
+
+    virtual double Distance(const StateType& _s1, const StateType& _s2) override;
+
+    ///@}
 
   private:
 
-    double m_timestep; ///< The timestep to use.
+    ///@name Internal State
+    ///@{
+
+    double m_timestep{30}; ///< The timestep to use.
+
+    ///@}
 };
 
+/*------------------------------- Construction -------------------------------*/
 
-template<class MPTraits>
+template <typename MPTraits>
 ExperimentalDistance<MPTraits>::
-ExperimentalDistance(double _posW, double _rotW, double _velW,
-    double _avlW, double _ts) :
-    WeightedEuclideanDistance<MPTraits>(_posW, _rotW, _velW, _avlW),
-    m_timestep(_ts) {
+ExperimentalDistance() : WeightedEuclideanDistance<MPTraits>() {
   this->SetName("ExperimentalDistance");
 }
 
-template<class MPTraits>
+
+template <typename MPTraits>
 ExperimentalDistance<MPTraits>::
 ExperimentalDistance(MPProblemType* _problem, XMLNode& _node) :
     WeightedEuclideanDistance<MPTraits>(_problem, _node) {
@@ -46,7 +70,9 @@ ExperimentalDistance(MPProblemType* _problem, XMLNode& _node) :
       numeric_limits<double>::max(), "The fixed timestep");
 }
 
-template<class MPTraits>
+/*----------------------------- Distance Interface ---------------------------*/
+
+template <typename MPTraits>
 double
 ExperimentalDistance<MPTraits>::
 Distance(const StateType& _s1, const StateType& _s2) {
@@ -56,5 +82,7 @@ Distance(const StateType& _s1, const StateType& _s2) {
   s1.Apply(s1.GetVelocity(), dt);
   return WeightedEuclideanDistance<MPTraits>::Distance(s1, _s2);
 }
+
+/*----------------------------------------------------------------------------*/
 
 #endif

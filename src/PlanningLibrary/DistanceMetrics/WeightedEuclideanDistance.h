@@ -6,54 +6,76 @@
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup DistanceMetrics
 /// @brief Weighted Euclidean distance for State space
-/// @tparam MPTraits Motion planning universe
 ///
 /// Weighted Euclidean distance in State space will have four weight components:
 /// position, rotation, velocity, and angular velocity.
 ////////////////////////////////////////////////////////////////////////////////
-template<class MPTraits>
+template <typename MPTraits>
 class WeightedEuclideanDistance : public DistanceMetricMethod<MPTraits> {
-  public:
-    typedef typename MPTraits::CfgType StateType;
-    typedef typename MPTraits::MPProblemType MPProblemType;
 
-    WeightedEuclideanDistance(double _posW = 0.25, double _rotW = 0.25,
-        double _velW = 0.25, double _avlW = 0.25);
+  public:
+
+    ///@name Local Types
+    ///@{
+
+    typedef typename MPTraits::MPProblemType MPProblemType;
+    typedef typename MPTraits::CfgType       StateType;
+
+    ///@}
+    ///@name Construction
+    ///@{
+
+    WeightedEuclideanDistance();
     WeightedEuclideanDistance(MPProblemType* _problem, XMLNode& _node);
     virtual ~WeightedEuclideanDistance() = default;
 
-    virtual double Distance(const StateType& _s1, const StateType& _s2);
+    ///@}
+    ///@name Distance Interface
+    ///@{
 
-  private:
-    double m_posW; ///< Positional weight
-    double m_rotW; ///< Rotational weight
-    double m_velW; ///< Velocity weight
-    double m_avlW; ///< Angular velocity weight
+    virtual double Distance(const StateType& _s1, const StateType& _s2) override;
+
+    ///@}
+
+  protected:
+
+    ///@name Internal State
+    ///@{
+
+    double m_posW{.25}; ///< Position weight.
+    double m_rotW{.25}; ///< Rotation weight.
+    double m_velW{.25}; ///< Linear velocity weight.
+    double m_avlW{.25}; ///< Angular velocity weight.
+
+    ///@}
 };
 
-template<class MPTraits>
-WeightedEuclideanDistance<MPTraits>::
-WeightedEuclideanDistance(double _posW, double _rotW, double _velW,
-    double _avlW) :
-  DistanceMetricMethod<MPTraits>(), m_posW(_posW), m_rotW(_rotW),
-  m_velW(_velW), m_avlW(_avlW) {
-    this->SetName("WeightedEuclidean");
-  }
+/*------------------------------- Construction -------------------------------*/
 
-template<class MPTraits>
+template <typename MPTraits>
 WeightedEuclideanDistance<MPTraits>::
-WeightedEuclideanDistance(MPProblemType* _problem, XMLNode& _node) :
-  DistanceMetricMethod<MPTraits>(_problem, _node) {
-    this->SetName("WeightedEuclidean");
-
-    m_posW = _node.Read("posWeight", true, 0.0, 0.0, 1.0, "Position weight");
-    m_rotW = _node.Read("rotWeight", true, 0.0, 0.0, 1.0, "Rotation weight");
-    m_velW = _node.Read("velWeight", true, 0.0, 0.0, 1.0, "Velocity weight");
-    m_avlW = _node.Read("avlWeight", true, 0.0, 0.0, 1.0,
-        "Angular velocity weight");
+WeightedEuclideanDistance() : DistanceMetricMethod<MPTraits>() {
+  this->SetName("WeightedEuclidean");
 }
 
-template<class MPTraits>
+
+template <typename MPTraits>
+WeightedEuclideanDistance<MPTraits>::
+WeightedEuclideanDistance(MPProblemType* _problem, XMLNode& _node) :
+    DistanceMetricMethod<MPTraits>(_problem, _node) {
+  this->SetName("WeightedEuclidean");
+
+  m_posW = _node.Read("posWeight", true, m_posW, 0.0, 1.0, "Position weight");
+  m_rotW = _node.Read("rotWeight", true, m_rotW, 0.0, 1.0, "Rotation weight");
+  m_velW = _node.Read("velWeight", true, m_velW, 0.0, 1.0,
+      "Linear velocity weight");
+  m_avlW = _node.Read("avlWeight", true, m_avlW, 0.0, 1.0,
+      "Angular velocity weight");
+}
+
+/*----------------------------- Distance Interface ---------------------------*/
+
+template <typename MPTraits>
 double
 WeightedEuclideanDistance<MPTraits>::
 Distance(const StateType& _s1, const StateType& _s2) {
@@ -69,5 +91,7 @@ Distance(const StateType& _s1, const StateType& _s2) {
     m_velW*vel.norm() + m_avlW*avl.norm();
   return dist;
 }
+
+/*----------------------------------------------------------------------------*/
 
 #endif

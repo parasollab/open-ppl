@@ -1,12 +1,11 @@
 #ifndef DISTANCE_METRIC_METHOD_H
 #define DISTANCE_METRIC_METHOD_H
 
-#include "MPProblem/MPBaseObject.h"
+#include "PlanningLibrary/MPBaseObject.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup DistanceMetrics
 /// @brief Base algorithm abstraction for \ref DistanceMetrics.
-/// @tparam MPTraits Motion planning universe
 ///
 /// DistanceMetricMethod has two important methods: @c Distance and @c ScaleCfg.
 ///
@@ -16,15 +15,28 @@
 /// @c ScaleCfg is purposed to scale a \f$d\f$-dimensional ray in @cspace to a
 /// certain magnitude based upon a general @dm.
 ////////////////////////////////////////////////////////////////////////////////
-template<class MPTraits>
+template <typename MPTraits>
 class DistanceMetricMethod  : public MPBaseObject<MPTraits> {
-  public:
-    typedef typename MPTraits::CfgType CfgType;
-    typedef typename MPTraits::MPProblemType MPProblemType;
 
-    DistanceMetricMethod() {}
-    DistanceMetricMethod(MPProblemType* _problem, XMLNode& _node);
-    virtual ~DistanceMetricMethod() {}
+  public:
+
+    ///@name Local Types
+    ///@{
+
+    typedef typename MPTraits::MPProblemType MPProblemType;
+    typedef typename MPTraits::CfgType       CfgType;
+
+    ///@}
+    ///@name Construction
+    ///@{
+
+    DistanceMetricMethod() = default;
+    DistanceMetricMethod(MPProblemType* _p, XMLNode& _node);
+    virtual ~DistanceMetricMethod() = default;
+
+    ///@}
+    ///@name Distance Interface
+    ///@{
 
     ////////////////////////////////////////////////////////////////////////////
     /// @brief Compute a distance between two configurations
@@ -34,7 +46,7 @@ class DistanceMetricMethod  : public MPBaseObject<MPTraits> {
     ///
     /// @usage
     /// @code
-    /// DistanceMetricPointer dm = this->GetMPProblem()->GetDistanceMetric(m_dmLabel);
+    /// auto dm = this->GetMPProblem()->GetDistanceMetric(m_dmLabel);
     /// CfgType c1, c2;
     /// double dist = dm->Distance(c1, c2);
     /// @endcode
@@ -50,22 +62,29 @@ class DistanceMetricMethod  : public MPBaseObject<MPTraits> {
     ///
     /// @usage
     /// @code
-    /// DistanceMetricPointer dm = this->GetMPProblem()->GetDistanceMetric(m_dmLabel);
+    /// auto dm = this->GetMPProblem()->GetDistanceMetric(m_dmLabel);
     /// CfgType ray, origin;
     /// double length;
     /// dm->ScaleCfg(length, ray, origin);
     /// @endcode
     ////////////////////////////////////////////////////////////////////////////
-    virtual void ScaleCfg(double _length, CfgType& _c, const CfgType& _o = CfgType());
+    virtual void ScaleCfg(double _length, CfgType& _c,
+        const CfgType& _o = CfgType());
+
+    ///@}
 };
 
-template<class MPTraits>
+/*------------------------------- Construction -------------------------------*/
+
+template <typename MPTraits>
 DistanceMetricMethod<MPTraits>::
 DistanceMetricMethod(MPProblemType* _problem, XMLNode& _node)
   : MPBaseObject<MPTraits>(_problem, _node) {
 }
 
-template<class MPTraits>
+/*----------------------------- Distance Interface ---------------------------*/
+
+template <typename MPTraits>
 void
 DistanceMetricMethod<MPTraits>::
 ScaleCfg(double _length, CfgType& _c, const CfgType& _o) {
@@ -94,5 +113,7 @@ ScaleCfg(double _length, CfgType& _c, const CfgType& _o) {
 
   _c = currentCfg;
 }
+
+/*----------------------------------------------------------------------------*/
 
 #endif

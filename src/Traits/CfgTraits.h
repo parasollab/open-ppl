@@ -10,7 +10,6 @@
 #include "PlanningLibrary/DistanceMetrics/KnotTheoryDistance.h"
 #include "PlanningLibrary/DistanceMetrics/LPSweptDistance.h"
 #include "PlanningLibrary/DistanceMetrics/ManhattanDistance.h"
-#include "PlanningLibrary/DistanceMetrics/ReachableDistance.h"
 #include "PlanningLibrary/DistanceMetrics/RMSDDistance.h"
 #include "PlanningLibrary/DistanceMetrics/ScaledEuclideanDistance.h"
 

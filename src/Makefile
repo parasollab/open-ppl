@@ -21,14 +21,6 @@ ifndef UTILS_DIR
   UTILS_DIR = ../utils
 endif
 
-ifndef STAPL_DIR
-  STAPL_DIR = ${UTILS_DIR}/stapl_release
-endif
-
-ifndef STL_LIB
-  STL_LIB = 4.8.2
-endif
-
 ifndef ROBOT_DEF
   # define robot type
   ROBOT_DEF = PMPCfg

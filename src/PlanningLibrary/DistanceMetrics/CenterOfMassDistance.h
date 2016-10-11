@@ -5,41 +5,61 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup DistanceMetrics
-/// @brief TODO.
-/// @tparam MPTraits Motion planning universe
-///
-/// TODO.
+/// @brief Measure the Euclidean distance between the center of mass for two
+///        configurations.
 ////////////////////////////////////////////////////////////////////////////////
-template<class MPTraits>
+template <typename MPTraits>
 class CenterOfMassDistance : public DistanceMetricMethod<MPTraits> {
+
   public:
-    typedef typename MPTraits::CfgType CfgType;
+
+    ///@name Local Types
+    ///@{
+
     typedef typename MPTraits::MPProblemType MPProblemType;
+    typedef typename MPTraits::CfgType       CfgType;
+
+    ///@}
+    ///@name Construction
+    ///@{
 
     CenterOfMassDistance();
     CenterOfMassDistance(MPProblemType* _problem, XMLNode& _node);
 
-    virtual double Distance(const CfgType& _c1, const CfgType& _c2);
+    ///@}
+    ///@name Distance Interface
+    ///@{
+
+    virtual double Distance(const CfgType& _c1, const CfgType& _c2) override;
+
+    ///@}
 };
 
-template<class MPTraits>
+/*------------------------------- Construction -------------------------------*/
+
+template <typename MPTraits>
 CenterOfMassDistance<MPTraits>::
 CenterOfMassDistance() : DistanceMetricMethod<MPTraits>() {
   this->SetName("CenterOfMass");
 }
 
-template<class MPTraits>
+
+template <typename MPTraits>
 CenterOfMassDistance<MPTraits>::
 CenterOfMassDistance(MPProblemType* _problem, XMLNode& _node) :
-  DistanceMetricMethod<MPTraits>(_problem, _node) {
-    this->SetName("CenterOfMass");
-  }
+    DistanceMetricMethod<MPTraits>(_problem, _node) {
+  this->SetName("CenterOfMass");
+}
 
-template<class MPTraits>
+/*----------------------------- Distance Interface ---------------------------*/
+
+template <typename MPTraits>
 double
 CenterOfMassDistance<MPTraits>::
 Distance(const CfgType& _c1, const CfgType& _c2) {
   return (_c1.GetRobotCenterofMass() - _c2.GetRobotCenterofMass()).norm();
 }
+
+/*----------------------------------------------------------------------------*/
 
 #endif

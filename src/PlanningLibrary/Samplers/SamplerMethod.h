@@ -7,7 +7,7 @@
 #include "runtime.hpp"
 #endif
 
-#include "MPProblem/MPBaseObject.h"
+#include "PlanningLibrary/MPBaseObject.h"
 #include "Utilities/MetricUtils.h"
 
 class Environment;

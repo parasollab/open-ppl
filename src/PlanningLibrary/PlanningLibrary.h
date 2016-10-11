@@ -1,9 +1,6 @@
 #ifndef PLANNING_LIBRARY_H_
 #define PLANNING_LIBRARY_H_
 
-#include "MPProblem/ConfigurationSpace/Roadmap.h"
-
-#include "MPProblem/Environment/Environment.h"
 #include "Utilities/MetricUtils.h"
 #include "Utilities/MPUtils.h"
 
@@ -40,9 +37,6 @@ class PlanningLibrary final
     ///@{
 
     typedef typename MPTraits::MPProblemType      MPProblemType;
-    typedef Roadmap<MPTraits>                     RoadmapType;
-    typedef typename RoadmapType::GraphType       GraphType;
-    typedef typename GraphType::vertex_descriptor VID;
 
     ////////////////////////////////////////////////////////////////////////////
     /// @brief Solver represents an input set to PlanningLibrary. It includes an
@@ -90,13 +84,17 @@ class PlanningLibrary final
 
     PlanningLibrary();
     PlanningLibrary(const string& _filename);
-    virtual ~PlanningLibrary();
+    ~PlanningLibrary();
+
+    ///@}
+    ///@name Configuration
+    ///@{
 
     ////////////////////////////////////////////////////////////////////////////
-    /// @brief Read an XML file for parsing into an PlanningLibrary.
+    /// @brief Read an XML file to set the algorithms and parameters in this
+    ///        instance.
     /// @param[in] _filename    The XML file name.
-    /// @param[in,out] _problem The PlanningLibrary to parse into.
-    void ReadXMLFile(const string& _filename, MPProblemType* _problem);
+    void ReadXMLFile(const string& _filename);
 
     ///@}
     ///@name Base Filename Accessors
@@ -104,40 +102,6 @@ class PlanningLibrary final
 
     const string& GetBaseFilename() const {return m_baseFilename;}
     void SetBaseFilename(const string& _s) {m_baseFilename = _s;}
-
-    ///@}
-    ///@name Environment Accessors
-    ///@{
-
-    Environment* GetEnvironment() {return m_environment;}
-    void SetEnvironment(Environment* _e) {m_environment = _e;}
-
-    ////////////////////////////////////////////////////////////////////////////
-    /// @brief Add an obstacle to the Environment
-    /// @param _modelFileName .obj file to be added as an obstacle
-    /// @param _where Obstacle placement
-    /// @return the obstacle's index in the Environment's m_otherMultiBodies on
-    ///         success, -1 on failure
-    pair<size_t, shared_ptr<StaticMultiBody>> AddObstacle(
-        const string& _modelFileName,
-        const Transformation& _where = Transformation());
-
-    ////////////////////////////////////////////////////////////////////////////
-    /// @brief Remove an obstacle from the Environment.
-    /// @param[in] _index The obstalce's index.
-    void RemoveObstacle(size_t _index);
-
-    ////////////////////////////////////////////////////////////////////////////
-    /// @brief Initialize collision detectors for this environment.
-    void BuildCDStructures();
-
-    ///@}
-    ///@name Roadmap Accessors
-    ///@{
-
-    RoadmapType* GetRoadmap() {return m_roadmap;}
-    void SetRoadmap(RoadmapType* _roadmap) {m_roadmap = _roadmap;}
-    RoadmapType* GetBlockRoadmap() {return m_blockRoadmap;}
 
     ///@}
     ///@name Stat Class Accessor
