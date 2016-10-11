@@ -21,12 +21,12 @@
 ////////////////////////////////////////////////////////////////////////////////
 template<class MPTraits>
 class NeighborhoodConnector: public ConnectorMethod<MPTraits> {
+
   public:
+
     typedef typename MPTraits::CfgType CfgType;
     typedef typename MPTraits::CfgRef CfgRef;
     typedef typename MPTraits::MPProblemType MPProblemType;
-    typedef typename MPProblemType::NeighborhoodFinderPointer NeighborhoodFinderPointer;
-    typedef typename MPProblemType::LocalPlannerPointer LocalPlannerPointer;
     typedef typename MPProblemType::RoadmapType RoadmapType;
     typedef typename MPProblemType::VID VID;
     typedef typename RoadmapType::GraphType GraphType;
@@ -106,7 +106,7 @@ Connect(RoadmapType* _rm,
     bool _fromFullRoadmap,
     OutputIterator _collision) {
 
-  NeighborhoodFinderPointer nfptr = this->GetNeighborhoodFinder(this->m_nfLabel);
+  auto nfptr = this->GetNeighborhoodFinder(this->m_nfLabel);
 
   // the vertices in this iteration are the source for the connection operation
   for(InputIterator1 itr1 = _itr1First; itr1 != _itr1Last; ++itr1){
@@ -145,7 +145,7 @@ ConnectNeighbors(RoadmapType* _rm,VID _vid,
     OutputIterator _collision) {
 
   Environment* env = this->GetMPProblem()->GetEnvironment();
-  LocalPlannerPointer lp = this->GetMPProblem()->GetLocalPlanner(this->m_lpLabel);
+  auto lp = this->GetMPProblem()->GetLocalPlanner(this->m_lpLabel);
   GraphType* map = _rm->GetGraph();
 
   LPOutput<MPTraits> lpOutput;

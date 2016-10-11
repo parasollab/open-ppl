@@ -1,6 +1,7 @@
 #ifndef DPESNF_H_
 #define DPESNF_H_
 
+#include <unordered_map>
 #include "NeighborhoodFinderMethod.h"
 
 ////////////////////////////////////////////////////////////////////////////////

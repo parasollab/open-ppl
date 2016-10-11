@@ -6,13 +6,12 @@
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup Connectors
 /// @brief TODO
-/// @tparam MPTraits Motion planning universe
-///
-/// TODO
 ////////////////////////////////////////////////////////////////////////////////
 template<class MPTraits>
 class RRTConnect: public ConnectorMethod<MPTraits> {
+
   public:
+
     typedef typename MPTraits::CfgType CfgType;
     typedef typename MPTraits::WeightType WeightType;
     typedef typename MPTraits::MPProblemType MPProblemType;

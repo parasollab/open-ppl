@@ -6,12 +6,10 @@
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup Connectors
 /// @brief TODO
-/// @tparam MPTraits Motion planning universe
-///
-/// TODO
 ////////////////////////////////////////////////////////////////////////////////
 template<class MPTraits>
 class RegionConnector : public ConnectorMethod<MPTraits> {
+
   public:
 
     typedef typename MPTraits::CfgType CfgType;

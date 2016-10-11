@@ -25,7 +25,6 @@
 //neighborhood finder includes
 #include "PlanningLibrary/NeighborhoodFinders/BandsNF.h"
 #include "PlanningLibrary/NeighborhoodFinders/BruteForceNF.h"
-#include "PlanningLibrary/NeighborhoodFinders/CGALNF.h"
 #include "PlanningLibrary/NeighborhoodFinders/DPESNF.h"
 #include "PlanningLibrary/NeighborhoodFinders/HierarchicalNF.h"
 #include "PlanningLibrary/NeighborhoodFinders/HopLimitNF.h"
@@ -80,7 +79,6 @@
 #include "PlanningLibrary/Connectors/ClosestVE.h"
 #include "PlanningLibrary/Connectors/NeighborhoodConnector.h"
 #include "PlanningLibrary/Connectors/RewireConnector.h"
-#include "PlanningLibrary/Connectors/RRTConnect.h"
 
 //metric includes
 #include "PlanningLibrary/Metrics/CCDistanceMetric.h"
@@ -177,7 +175,6 @@ struct MPTraits {
   typedef boost::mpl::list<
     BandsNF<MPTraits>,
     BruteForceNF<MPTraits>,
-    CGALNF<MPTraits>,
     DPESNF<MPTraits>,
     HierarchicalNF<MPTraits>,
     HopLimitNF<MPTraits>,
@@ -246,9 +243,7 @@ struct MPTraits {
     CCsConnector<MPTraits>,
     ClosestVE<MPTraits>,
     NeighborhoodConnector<MPTraits>,
-    //PreferentialAttachment<MPTraits>,
-    RewireConnector<MPTraits>,
-    RRTConnect<MPTraits>
+    RewireConnector<MPTraits>
       > ConnectorMethodList;
 
   typedef ConnectivityMetric<MPTraits, RoadmapSet<MPTraits>>

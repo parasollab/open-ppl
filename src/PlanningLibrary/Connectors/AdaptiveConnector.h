@@ -6,48 +6,69 @@
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup Connectors
 /// @brief TODO
-/// @tparam MPTraits Motion planning universe
-///
-/// TODO
 ////////////////////////////////////////////////////////////////////////////////
 template<class MPTraits>
 class AdaptiveConnector: public ConnectorMethod<MPTraits> {
+
   public:
+
+    ///@name Local Types
+    ///@{
+
     typedef typename MPTraits::CfgType CfgType;
     typedef typename MPTraits::CfgRef CfgRef;
     typedef typename MPTraits::MPProblemType MPProblemType;
-    typedef typename MPProblemType::NeighborhoodFinderPointer NeighborhoodFinderPointer;
-    typedef typename MPProblemType::LocalPlannerPointer LocalPlannerPointer;
     typedef typename MPProblemType::RoadmapType RoadmapType;
     typedef typename MPProblemType::VID VID;
     typedef typename RoadmapType::GraphType GraphType;
 
-    AdaptiveConnector(const vector<string>& _neigborGenLabels = vector<string>(),string _lpLabel = "", bool _setUniform=false, double _percentageRandom=0.5,bool _fixedCost =false, bool _fixedReward=false,bool _checkIfSameCC = false, bool _countFailures = false, size_t _fail = 5);
-    AdaptiveConnector(MPProblemType* _problem, XMLNode& _node);
+    ///@}
+    ///@name Construction
+    ///@{
 
-    virtual void Print(ostream& _os) const;
+    AdaptiveConnector(const vector<string>& _neigborGenLabels = vector<string>(),
+        string _lpLabel = "", bool _setUniform = false,
+        double _percentageRandom = .5, bool _fixedCost = false,
+        bool _fixedReward = false, bool _checkIfSameCC = false,
+        bool _countFailures = false, size_t _fail = 5);
+    AdaptiveConnector(MPProblemType* _problem, XMLNode& _node);
+    virtual ~AdaptiveConnector() = default;
+
+    ///@}
+    ///@name MPBaseObject Overrides
+    ///@{
+
+    virtual void Print(ostream& _os) const override;
+
+    ///@}
+
     virtual void ParseXML(XMLNode& _node);
+
     virtual void Initialize();
 
     template<typename InputIterator1, typename InputIterator2,
-      typename OutputIterator>
-      void Connect(RoadmapType* _rm,
-          InputIterator1 _itr1First, InputIterator1 _itr1Last,
-          InputIterator2 _itr2First, InputIterator2 _itr2Last,
-          bool _fromFullRoadmap,
-          OutputIterator _collision);
+        typename OutputIterator>
+    void Connect(RoadmapType* _rm,
+        InputIterator1 _itr1First, InputIterator1 _itr1Last,
+        InputIterator2 _itr2First, InputIterator2 _itr2Last,
+        bool _fromFullRoadmap,
+        OutputIterator _collision);
 
   protected:
+
     template<typename InputIterator, typename OutputIterator>
-      void ConnectNeighbors(RoadmapType* _rm, VID _vid,
-          InputIterator _closestFirst, InputIterator _closestLast,
-          OutputIterator _collision);
+    void ConnectNeighbors(RoadmapType* _rm, VID _vid,
+        InputIterator _closestFirst, InputIterator _closestLast,
+        OutputIterator _collision);
 
     string UpdateNFChoice();
-    void RewardUpdateProbability(double _reward, unsigned long int _cost,int _prevConnectionAttempt);
+
+    void RewardUpdateProbability(double _reward, unsigned long int _cost,
+        int _prevConnectionAttempt);
 
 
   private:
+
     void PrintData(ostream& _os);
 
     //input parameters
@@ -69,30 +90,33 @@ class AdaptiveConnector: public ConnectorMethod<MPTraits> {
     string m_lastUse;
 };
 
+
 template<class MPTraits>
 AdaptiveConnector<MPTraits>::
 AdaptiveConnector(const vector<string>& _neigborGenLabels, string _lpLabel,
     bool _setUniform, double _percentageRandom, bool _fixedCost,
     bool _fixedReward,bool _checkIfSameCC, bool _countFailures, size_t _fail) :
-  ConnectorMethod<MPTraits>("",_lpLabel),
-  m_neigborGenLabels(_neigborGenLabels),
-  m_setUniform(_setUniform),
-  m_percentageRandom(_percentageRandom),
-  m_fixedCost(_fixedCost),
-  m_fixedReward(_fixedReward),
-  m_checkIfSameCC(_checkIfSameCC),
-  m_countFailures(_countFailures),
-  m_fail(_fail) {
-    this->SetName("AdaptiveConnector");
-  }
+    ConnectorMethod<MPTraits>("",_lpLabel),
+    m_neigborGenLabels(_neigborGenLabels),
+    m_setUniform(_setUniform),
+    m_percentageRandom(_percentageRandom),
+    m_fixedCost(_fixedCost),
+    m_fixedReward(_fixedReward),
+    m_checkIfSameCC(_checkIfSameCC),
+    m_countFailures(_countFailures),
+    m_fail(_fail) {
+  this->SetName("AdaptiveConnector");
+}
+
 
 template<class MPTraits>
 AdaptiveConnector<MPTraits>::
 AdaptiveConnector(MPProblemType* _problem, XMLNode& _node) :
-  ConnectorMethod<MPTraits>(_problem, _node) {
-    this->SetName("AdaptiveConnector");
-    ParseXML(_node);
-  }
+    ConnectorMethod<MPTraits>(_problem, _node) {
+  this->SetName("AdaptiveConnector");
+  ParseXML(_node);
+}
+
 
 template<class MPTraits>
 void
@@ -220,7 +244,7 @@ Connect(RoadmapType* _rm,
 
     //determine nearest neighbors
     vector<pair<VID, double> > closest;
-    NeighborhoodFinderPointer nfptr = this->GetMPProblem()->GetNeighborhoodFinder(this->m_lastUse);
+    auto nfptr = this->GetMPProblem()->GetNeighborhoodFinder(this->m_lastUse);
     nfptr->FindNeighbors(_rm, _itr2First, _itr2Last, _fromFullRoadmap, vCfg,
         back_inserter(closest));
     if(this->m_debug){
@@ -243,7 +267,7 @@ ConnectNeighbors(RoadmapType* _rm, VID _vid,
     OutputIterator _collision) {
 
   Environment* env = this->GetMPProblem()->GetEnvironment();
-  LocalPlannerPointer lp = this->GetMPProblem()->GetLocalPlanner(this->m_lpLabel);
+  auto lp = this->GetMPProblem()->GetLocalPlanner(this->m_lpLabel);
   GraphType* map = _rm->GetGraph();
 
   LPOutput<MPTraits> lpOutput;

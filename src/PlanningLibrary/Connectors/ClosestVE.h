@@ -88,7 +88,6 @@ class ClosestVE: public ConnectorMethod<MPTraits> {
     typedef typename MPProblemType::RoadmapType RoadmapType;
     typedef typename MPTraits::WeightType WeightType;
     typedef typename MPTraits::CfgType CfgType;
-    typedef typename MPProblemType::DistanceMetricPointer DistanceMetricPointer;
     typedef typename MPProblemType::LocalPlannerPointer LocalPlannerPointer;
 
   public:
@@ -209,8 +208,8 @@ ClosestVE<MPTraits>::FindKClosestPairs(RoadmapType* _rm,
   typedef typename MPProblemType::RoadmapType RoadmapType;
   typedef typename RoadmapType::GraphType GraphType;
 
-  DistanceMetricPointer dm = this->GetMPProblem()->GetNeighborhoodFinder(this->m_nfLabel)->GetDMMethod();
-  LocalPlannerPointer lp = this->GetMPProblem()->GetLocalPlanner(this->m_lpLabel);
+  auto dm = this->GetNeighborhoodFinder(this->m_nfLabel)->GetDMMethod();
+  auto lp = this->GetLocalPlanner(this->m_lpLabel);
 
   CfgType cfg = _rm->GetGraph()->GetVertex(_vid);
   vector<pair<CfgVEType<MPTraits>,double> > kp;
@@ -288,29 +287,27 @@ Connect(RoadmapType* _rm,
   typedef typename RoadmapType::GraphType GraphType;
   typedef typename GraphType::VI VI;
 
-  DistanceMetricPointer dm = this->GetMPProblem()->GetNeighborhoodFinder(this->m_nfLabel)->GetDMMethod();
+  auto dm = this->GetNeighborhoodFinder(this->m_nfLabel)->GetDMMethod();
   Environment* env = this->GetMPProblem()->GetEnvironment();
-  LocalPlannerPointer lp = this->GetMPProblem()->GetLocalPlanner(this->m_lpLabel);
+  auto lp = this->GetLocalPlanner(this->m_lpLabel);
 
-  if(this->m_debug){
-    cout << "closestVE(k="<< m_kClosest <<"): "<<flush;
-  }
+  if(this->m_debug)
+    cout << "closestVE(k = " << m_kClosest << " ): " << flush;
 
-  if(this->m_lpLabel != "sl"){
-    if(this->m_debug){
-      cout <<"\n\nWARNING: Skipping call to ClosestVE .. only 'sl' lp allowed!" << endl;
-    }
+  if(this->m_lpLabel != "sl") {
+    if(this->m_debug)
+      cout << "\n\nWARNING: Skipping call to ClosestVE .. only 'sl' lp allowed!"
+           << endl;
     return;
   }
 
-  vector< pair<pair<VID,VID>,WeightType> > edges;
+  vector<pair<pair<VID, VID>, WeightType>> edges;
 
   //Get all Vertices on the Graph
-   vector< VID > vids;
+  vector<VID> vids;
 
-  for(VI vit = _rm->GetGraph()->begin(); vit!=_rm->GetGraph()->end(); ++vit){
+  for(VI vit = _rm->GetGraph()->begin(); vit != _rm->GetGraph()->end(); ++vit)
     vids.push_back(_rm->GetGraph()->AddVertex(_rm->GetGraph()->GetVertex(vit)));
-  }
 
   typename GraphType::vertex_iterator vi;
   typename GraphType::adj_edge_iterator ei;
@@ -339,17 +336,18 @@ Connect(RoadmapType* _rm,
     for (kp=KP.begin();kp<KP.end();++kp){
       if(kp->m_vid1 != INVALID_VID || kp->m_vid2 != INVALID_VID){
         typename GraphType::ColorMap colorMap;
-        if(stapl::sequential::is_same_cc(*_rm->GetGraph(), colorMap, kp->m_vid1, kp->m_vid2))
+        if(stapl::sequential::is_same_cc(*_rm->GetGraph(), colorMap, kp->m_vid1,
+            kp->m_vid2))
           continue;
       }
 
       CfgType cfg1 = _rm->GetGraph()->GetVertex(kp->m_vid1);
       CfgType cfg2;
 
-      if ( kp->m_cfg2IsOnEdge ) {
+      if(kp->m_cfg2IsOnEdge) {
         cfg2 = kp->m_cfgOnEdge;
       }
-      else{
+      else {
         cfg2 = _rm->GetGraph()->GetVertex(kp->m_vid2);
       }
 

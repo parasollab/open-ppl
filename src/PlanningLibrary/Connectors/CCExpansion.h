@@ -7,7 +7,10 @@
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup Connectors
 /// @brief Expand CCs out in attempt for better roadmap connectivity.
-/// @tparam MPTraits Motion planning universe
+/// @TODO This method is incorrectly implemented as a connector when in fact it
+///       should be an MPStrategy. It needs to be moved to the strategies and to
+///       have hard-coded things like the unit vector function replaced with
+///       the appropriate generalized implementations.
 ///
 /// -- General Overview --
 ///
@@ -32,10 +35,12 @@
 ////////////////////////////////////////////////////////////////////////////////
 template <class MPTraits>
 class CCExpansion: public ConnectorMethod<MPTraits> {
+
   public:
-    ///////////////////////////////
-    /* Typedefs */
-    ///////////////////////////////
+
+    ///@name Local Types
+    ///@{
+
     typedef typename MPTraits::CfgType CfgType;
     typedef typename MPTraits::CfgRef CfgRef;
     typedef typename MPTraits::MPProblemType MPProblemType;
@@ -45,35 +50,38 @@ class CCExpansion: public ConnectorMethod<MPTraits> {
     typedef typename RoadmapType::GraphType GraphType;
     typedef typename vector<VID>::iterator VIDIT;
 
-    //////////////////////////////////
-    /* Constructors and Destructors */
-    //////////////////////////////////
+    ///@}
+    ///@name Construction
+    ///@{
+
     CCExpansion(MPProblemType* _problem = NULL, string _lp = "",
         string _nf = "", string _vc = "");
     CCExpansion(MPProblemType* _problem, XMLNode& _node);
 
-    //////////////////////////////////////
-    /* Print Method */
-    //////////////////////////////////////
-    virtual void Print(ostream& _os) const;
+    ///@}
+    ///@name MPBaseObject Overrides
+    ///@{
 
-    //////////////////////////////////////
-    /* XML Parser */
-    //////////////////////////////////////
+    virtual void Print(ostream& _os) const override;
+
     virtual void ParseXML(XMLNode& _node);
 
-    //////////////////////////////////////
-    /* Wrapper Connect() Method */
-    //////////////////////////////////////
+    ///@}
+    ///@name Connection Interface
+    ///@{
+
     template<typename InputIterator1, typename InputIterator2,
-      typename OutputIterator>
-        void Connect(RoadmapType* _rm,
-            InputIterator1 _itr1First, InputIterator1 _itr1Last,
-            InputIterator2 _itr2First, InputIterator2 _itr2Last,
-            bool _fromFullRoadmap,
-            OutputIterator _collision);
+        typename OutputIterator>
+    void Connect(RoadmapType* _rm,
+        InputIterator1 _itr1First, InputIterator1 _itr1Last,
+        InputIterator2 _itr2First, InputIterator2 _itr2Last,
+        bool _fromFullRoadmap,
+        OutputIterator _collision);
+
+    ///@}
 
   protected:
+
     ////////////////////////////////////////////////////////////////////////////
     /* Updated RDMP Methods */
     ////////////////////////////////////////////////////////////////////////////

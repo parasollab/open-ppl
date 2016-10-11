@@ -16,72 +16,102 @@
 ////////////////////////////////////////////////////////////////////////////////
 template<class MPTraits>
 class CCsConnector: public ConnectorMethod<MPTraits> {
+
   public:
 
-    typedef typename MPTraits::CfgType CfgType;
-    typedef typename MPTraits::MPProblemType MPProblemType;
+    ///@name Local Types
+    ///@{
+
+    typedef typename MPTraits::MPProblemType    MPProblemType;
+    typedef typename MPTraits::CfgType          CfgType;
+    typedef typename MPProblemType::VID         VID;
     typedef typename MPProblemType::RoadmapType RoadmapType;
-    typedef typename RoadmapType::GraphType GraphType;
-    typedef typename MPProblemType::VID VID;
-    typedef typename MPProblemType::DistanceMetricPointer DistanceMetricPointer;
-    typedef typename MPProblemType::NeighborhoodFinderPointer NeighborhoodFinderPointer;
-    typedef typename MPProblemType::LocalPlannerPointer LocalPlannerPointer;
+    typedef typename RoadmapType::GraphType     GraphType;
+
+    ///@}
+    ///@name Construction
+    ///@{
 
     CCsConnector(string _nfLabel = "", string _lpLabel = "", size_t _k = 5);
     CCsConnector(MPProblemType* _problem, XMLNode& _node);
+    virtual ~CCsConnector() = default;
 
-    virtual void Print(ostream& _os) const;
+    ///@}
+    ///@name MPBaseObject Overrides
+    ///@{
+
+    virtual void Print(ostream& _os) const override;
+
+    ///@}
+    ///@name Connection Interface
+    ///@{
 
     template<typename InputIterator1, typename InputIterator2,
-      typename OutputIterator>
-        void Connect(RoadmapType* _rm,
-            InputIterator1 _itr1First, InputIterator1 _itr1Last,
-            InputIterator2 _itr2First, InputIterator2 _itr2Last,
-            bool _fromFullRoadmap,
-            OutputIterator _collision);
+        typename OutputIterator>
+    void Connect(RoadmapType* _rm,
+        InputIterator1 _itr1First, InputIterator1 _itr1Last,
+        InputIterator2 _itr2First, InputIterator2 _itr2Last,
+        bool _fromFullRoadmap,
+        OutputIterator _collision);
 
     template<typename OutputIterator>
-      void ConnectCC(RoadmapType* _rm,
-          vector<VID>& _cc1Vec, vector<VID>& _cc2Vec,
-          OutputIterator _collision);
+    void ConnectCC(RoadmapType* _rm,
+        vector<VID>& _cc1Vec, vector<VID>& _cc2Vec,
+        OutputIterator _collision);
+
+    ///@}
 
   protected:
 
     // compute all pair distance between ccs.
     // approximated using coms of ccs
-    void ComputeAllPairsCCDist(RoadmapType* _rm, vector<pair<size_t, VID> >& _ccs);
+    void ComputeAllPairsCCDist(RoadmapType* _rm, vector<pair<size_t, VID>>& _ccs);
 
     //get k closest pairs
     void GetKCCs(size_t _k, VID _ccid, vector<VID>& _kCCID);
 
   private:
-    size_t m_k; //how many closest CCs to connect to
 
-    map<VID, vector<pair<VID,double> > > m_ccDist;
+    ///@name Internal State
+    ///@{
+
+    size_t m_k; ///< How many closest CCs to connect to.
+
+    map<VID, vector<pair<VID, double>>> m_ccDist;
+
+    ///@}
 };
 
-template<class MPTraits>
-CCsConnector<MPTraits>::CCsConnector(string _nfLabel, string _lpLabel, size_t _k)
-  : ConnectorMethod<MPTraits>(_nfLabel, _lpLabel), m_k(_k) {
-    this->SetName("CCsConnector");
-  }
 
 template<class MPTraits>
-CCsConnector<MPTraits>::CCsConnector(MPProblemType* _problem, XMLNode& _node)
-  : ConnectorMethod<MPTraits>(_problem, _node) {
-    this->SetName("CCsConnector");
-    m_k = _node.Read("k", true, 5, 0, 1000, "k closest CCs");
-  }
+CCsConnector<MPTraits>::
+CCsConnector(string _nfLabel, string _lpLabel, size_t _k) :
+    ConnectorMethod<MPTraits>(_nfLabel, _lpLabel), m_k(_k) {
+  this->SetName("CCsConnector");
+}
+
+
+template<class MPTraits>
+CCsConnector<MPTraits>::
+CCsConnector(MPProblemType* _problem, XMLNode& _node) :
+    ConnectorMethod<MPTraits>(_problem, _node) {
+  this->SetName("CCsConnector");
+  m_k = _node.Read("k", true, 5, 0, 1000, "k closest CCs");
+}
+
 
 template<class MPTraits>
 void
-CCsConnector<MPTraits>::Print(ostream& _os) const {
+CCsConnector<MPTraits>::
+Print(ostream& _os) const {
   ConnectorMethod<MPTraits>::Print(_os);
   _os << "\tk: " << m_k << endl;
 }
 
+
 template<class MPTraits>
-template<typename InputIterator1, typename InputIterator2, typename OutputIterator>
+template<typename InputIterator1, typename InputIterator2,
+    typename OutputIterator>
 void
 CCsConnector<MPTraits>::
 Connect(RoadmapType* _rm,
@@ -104,9 +134,6 @@ Connect(RoadmapType* _rm,
 
   if(ccs.size() <= 1) return;
 
-  ///////////////////////////////////////////////////////////////////////////////////
-  /// ConnectkCCs
-  ///////////////////////////////////////////////////////////////////////////////////
   size_t k = m_k ? m_k : ccs.size()-1;
 
   if(this->m_debug)
@@ -147,6 +174,7 @@ Connect(RoadmapType* _rm,
   }
 }
 
+
 template<class MPTraits>
 template<typename OutputIterator>
 void
@@ -156,23 +184,23 @@ CCsConnector<MPTraits>::ConnectCC(RoadmapType* _rm,
   Environment* env = this->GetEnvironment();
   GraphType* rgraph = _rm->GetGraph();
   LPOutput<MPTraits> lpOutput;
-  NeighborhoodFinderPointer nf = this->GetNeighborhoodFinder(this->m_nfLabel);
-  LocalPlannerPointer lp = this->GetLocalPlanner(this->m_lpLabel);
+  auto nf = this->GetNeighborhoodFinder(this->m_nfLabel);
+  auto lp = this->GetLocalPlanner(this->m_lpLabel);
 
   typedef vector<pair<pair<VID, VID>, double> > NeighborPairs;
-  typedef typename NeighborPairs::iterator NPIT;
 
   NeighborPairs neighborPairs;
-  nf->FindNeighborPairs(_rm, _cc1Vec.begin(), _cc1Vec.end(), _cc2Vec.begin(), _cc2Vec.end(), back_inserter(neighborPairs));
+  nf->FindNeighborPairs(_rm, _cc1Vec.begin(), _cc1Vec.end(), _cc2Vec.begin(),
+      _cc2Vec.end(), back_inserter(neighborPairs));
 
   // Begin the connection attempts
-  for(NPIT npit = neighborPairs.begin(); npit!=neighborPairs.end(); ++npit){
+  for(auto npit = neighborPairs.begin(); npit != neighborPairs.end(); ++npit) {
 
     VID cc1Elem = npit->first.first;
     VID cc2Elem = npit->first.second;
 
     CfgType _col;
-    if (lp->IsConnected(
+    if(lp->IsConnected(
           rgraph->GetVertex(cc1Elem),
           rgraph->GetVertex(cc2Elem),
           _col, &lpOutput,
@@ -185,13 +213,14 @@ CCsConnector<MPTraits>::ConnectCC(RoadmapType* _rm,
   }
 }
 
+
 template<class MPTraits>
 void
 CCsConnector<MPTraits>::
 ComputeAllPairsCCDist(RoadmapType* _rm, vector<pair<size_t, VID> >& _ccs) {
 
-  GraphType* rgraph=_rm->GetGraph();
-  DistanceMetricPointer dmm = this->GetMPProblem()->GetNeighborhoodFinder(this->m_nfLabel)->GetDMMethod();
+  GraphType* rgraph = _rm->GetGraph();
+  auto dmm = this->GetNeighborhoodFinder(this->m_nfLabel)->GetDMMethod();
   typename GraphType::ColorMap colorMap;
 
   //compute com of ccs
@@ -216,16 +245,16 @@ ComputeAllPairsCCDist(RoadmapType* _rm, vector<pair<size_t, VID> >& _ccs) {
       }
 }
 
-//get m_k closest pairs of CCs
+
 template<class MPTraits>
 void
 CCsConnector<MPTraits>::GetKCCs(size_t _k, VID _ccid, vector<VID>& _kCCID){
   typedef vector<double>::iterator IT;
   vector<pair<VID, double> >& dis2CCs = m_ccDist[_ccid];
-  partial_sort(dis2CCs.begin(), dis2CCs.begin() + _k, dis2CCs.end(), CompareSecond<VID, double>());
+  partial_sort(dis2CCs.begin(), dis2CCs.begin() + _k, dis2CCs.end(),
+      CompareSecond<VID, double>());
 
-  //copy
-  for(typename vector<pair<VID, double> >::iterator i=dis2CCs.begin(); i != dis2CCs.begin() + _k; ++i)
+  for(auto i = dis2CCs.begin(); i != dis2CCs.begin() + _k; ++i)
     _kCCID.push_back(i->first);
 }
 

@@ -57,9 +57,6 @@
       <DPESNF label="DPESNF" dmLabel="euclidean" k="5" m="3"/>
       <!--MPNNNF label="BFNF" dmLabel="euclidean" use_rotational="0"
            use_scaling="0"/-->
-      <CGALNF label="CGALNF" dmLabel="euclidean" k="5"/>
-      <!--SpillTreeNF label="BFNF" dmLabel="euclidean"/-->
-      <!--MetricTreeNF label="BFNF" dmLabel="euclidean"/-->
       <BandsNF label="RbandNF_2bands_4k" debug="false" dmLabel="euclidean">
         <RBand label="first" max = '8' k='8' policy='closest'
           dmLabel="euclidean"/>
@@ -225,12 +222,7 @@
         lpLabel="slAlwaysTrue" checkIfSameCC="false"/>
       <NeighborhoodConnector label="AllToAll" nfLabel="BFNFAll" lpLabel="sl"
         checkIfSameCC="false"/>
-      <!--PreferentialAttachment label="Preferential" lp_method="sl" nf="BFNF"
-           k="2" fail="5" unconnected="true"
-        random="true" dm_method="euclidean" CheckIfSameCC="false"/-->
       <RewireConnector label="OptimalRewire" nfLabel="OptimalK" lpLabel="sl"/>
-      <RRTConnect label="RRTConnect" nfLabel="BFNF" lpLabel="sl" eLabel="BERO"
-        minDist="0.0" iterations="10000"/>
     </Connectors>
 
     <Metrics>

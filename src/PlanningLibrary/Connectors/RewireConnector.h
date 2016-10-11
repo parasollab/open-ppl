@@ -7,13 +7,12 @@
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup Connectors
 /// @brief TODO
-/// @tparam MPTraits Motion planning universe
-///
-/// TODO
 ////////////////////////////////////////////////////////////////////////////////
 template<typename MPTraits>
 class RewireConnector : public ConnectorMethod<MPTraits> {
+
   public:
+
     typedef typename MPTraits::MPProblemType MPProblemType;
     typedef typename MPProblemType::VID VID;
     typedef typename MPTraits::CfgType CfgType;
