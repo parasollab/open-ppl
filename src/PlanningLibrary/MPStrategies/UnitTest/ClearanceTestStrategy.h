@@ -6,11 +6,10 @@
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup MotionPlanningStrategies
 /// @brief TODO
-/// @tparam MPTraits Motion planning universe
 ///
 /// TODO
 ////////////////////////////////////////////////////////////////////////////////
-template <class MPTraits>
+template <typename MPTraits>
 class ClearanceTestStrategy : public MPStrategyMethod<MPTraits> {
   public:
     typedef typename MPTraits::CfgType CfgType;
@@ -21,9 +20,8 @@ class ClearanceTestStrategy : public MPStrategyMethod<MPTraits> {
         const vector<ClearanceUtility<MPTraits> >& _utilities =
         vector<ClearanceUtility<MPTraits> >(),
         string _dmLabel = "");
-    ClearanceTestStrategy(typename MPTraits::MPProblemType* _problem,
-        XMLNode& _node);
-    virtual ~ClearanceTestStrategy();
+    ClearanceTestStrategy(XMLNode& _node);
+    virtual ~ClearanceTestStrategy() = default;
 
     virtual void ParseXML(XMLNode& _node);
     virtual void Print(ostream& _os) const;
@@ -39,7 +37,7 @@ class ClearanceTestStrategy : public MPStrategyMethod<MPTraits> {
 };
 
 
-template <class MPTraits>
+template <typename MPTraits>
 ClearanceTestStrategy<MPTraits>::
 ClearanceTestStrategy(const map<string, pair<size_t, size_t> >& _samplerLabels,
     const vector<ClearanceUtility<MPTraits> >& _utilities, string _dmLabel) :
@@ -49,20 +47,15 @@ ClearanceTestStrategy(const map<string, pair<size_t, size_t> >& _samplerLabels,
     this->SetName("ClearanceTest");
   }
 
-template <class MPTraits>
+template <typename MPTraits>
 ClearanceTestStrategy<MPTraits>::
-ClearanceTestStrategy(typename MPTraits::MPProblemType* _problem,
-    XMLNode& _node) : MPStrategyMethod<MPTraits>(_problem, _node) {
+ClearanceTestStrategy(XMLNode& _node) : MPStrategyMethod<MPTraits>(_node) {
   this->SetName("ClearanceTest");
   ParseXML(_node);
 }
 
-template <class MPTraits>
-ClearanceTestStrategy<MPTraits>::
-~ClearanceTestStrategy() {
-}
 
-template <class MPTraits>
+template <typename MPTraits>
 void
 ClearanceTestStrategy<MPTraits>::
 ParseXML(XMLNode& _node) {
@@ -80,8 +73,7 @@ ParseXML(XMLNode& _node) {
         make_pair(numberSamples, numberAttempts);
     }
     else if(child.Name() == "Clearance") {
-      m_clearanceUtilities.push_back(
-          ClearanceUtility<MPTraits>(this->GetMPProblem(), child));
+      m_clearanceUtilities.push_back(ClearanceUtility<MPTraits>(child));
     }
   }
 
@@ -91,7 +83,7 @@ ParseXML(XMLNode& _node) {
         "compare to it.");
 }
 
-template <class MPTraits>
+template <typename MPTraits>
 void
 ClearanceTestStrategy<MPTraits>::
 Print(ostream& _os) const {
@@ -110,21 +102,21 @@ Print(ostream& _os) const {
   _os << endl;
 }
 
-template <class MPTraits>
+template <typename MPTraits>
 void
 ClearanceTestStrategy<MPTraits>::
 Run() {
   ClockClass clock;
   StatClass *stats = this->GetStatClass();
   stats->StartClock("Clearance Test");
+  auto boundary = this->GetEnvironment()->GetBoundary();
 
   //generate samples
   vector<CfgType> samples;
   for(auto&  sampler : m_samplerLabels) {
-    typename MPTraits::MPProblemType::SamplerPointer s =
-      this->GetSampler(sampler.first);
+    auto s = this->GetSampler(sampler.first);
     s->Sample(sampler.second.first, sampler.second.second,
-        this->m_boundary, back_inserter(samples));
+        boundary, back_inserter(samples));
   }
   if(this->m_debug)
     cout << "\tgenerated " << samples.size() << " samples total" << endl;
@@ -139,7 +131,7 @@ Run() {
     CfgType baselineWitness;
     CDInfo baselineInfo;
     if(m_clearanceUtilities.front().CollisionInfo(
-          sample, baselineWitness, this->m_boundary, baselineInfo))
+          sample, baselineWitness, boundary, baselineInfo))
       baselineClearance = baselineInfo.m_minDist;
     else
       cerr << "Error, could not compute base collision information for cfg: "
@@ -157,7 +149,7 @@ Run() {
       CfgType approxWitness;
       CDInfo approxInfo;
       if(cit->CollisionInfo(sample, approxWitness,
-            this->m_boundary, approxInfo))
+            boundary, approxInfo))
         approxClearance = approxInfo.m_minDist;
       else
         cerr << "Error, could not compute approx collision information for cfg:"

@@ -29,7 +29,7 @@ class MinkowskiDistance : public DistanceMetricMethod<MPTraits> {
 
     MinkowskiDistance(double _r1 = 3, double _r2 = 3, double _r3 = 1. / 3,
         bool _normalize = false);
-    MinkowskiDistance(MPProblemType* _problem, XMLNode& _node);
+    MinkowskiDistance(XMLNode& _node);
     virtual ~MinkowskiDistance() = default;
 
     ///@}
@@ -100,8 +100,7 @@ MinkowskiDistance(double _r1, double _r2, double _r3, bool _normalize) :
 
 template <typename MPTraits>
 MinkowskiDistance<MPTraits>::
-MinkowskiDistance(MPProblemType* _problem, XMLNode& _node) :
-    DistanceMetricMethod<MPTraits>(_problem, _node),
+MinkowskiDistance(XMLNode& _node) : DistanceMetricMethod<MPTraits>(_node),
     m_r1(3), m_r2(3), m_r3(1./3.), m_normalize(false) {
   this->SetName("Minkowski");
 

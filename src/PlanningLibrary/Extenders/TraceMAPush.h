@@ -7,7 +7,6 @@
 /// @ingroup Extenders
 /// @brief Extend tangent to a workspace obstacle and then push to the medial
 ///        axis.
-/// @tparam MPTraits Motion planning universe
 ///
 /// This performs the same as @c TraceObstacle but after the target
 /// configuration has been pushed in the obstacle direction, it is then pushed
@@ -32,7 +31,7 @@ class TraceMAPush : public TraceObstacle<MPTraits> {
     TraceMAPush(const string& _dmLabel = "", const string& _vcLabel = "",
         double _min = .001, double _max = 1);
 
-    TraceMAPush(MPProblemType* _problem, XMLNode& _node);
+    TraceMAPush(XMLNode& _node);
 
     virtual ~TraceMAPush() = default;
 
@@ -67,9 +66,8 @@ TraceMAPush(const string& _dmLabel, const string& _vcLabel, double _min,
 
 template <typename MPTraits>
 TraceMAPush<MPTraits>::
-TraceMAPush(MPProblemType* _problem, XMLNode& _node) :
-    TraceObstacle<MPTraits>(_problem, _node),
-    m_medialAxisUtility(_problem, _node) {
+TraceMAPush(XMLNode& _node) : TraceObstacle<MPTraits>(_node),
+    m_medialAxisUtility(_node) {
   this->SetName("TraceMAPush");
 }
 

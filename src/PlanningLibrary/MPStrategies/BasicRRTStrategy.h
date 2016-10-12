@@ -22,7 +22,7 @@
 ///
 /// \internal This strategy is configured for pausible execution.
 ////////////////////////////////////////////////////////////////////////////////
-template<class MPTraits>
+template <typename MPTraits>
 class BasicRRTStrategy : public MPStrategyMethod<MPTraits> {
 
   public:
@@ -56,7 +56,7 @@ class BasicRRTStrategy : public MPStrategyMethod<MPTraits> {
         double _growthFocus = .05, size_t _numRoots = 1,
         size_t _numDirections = 1, size_t _maxTrial = 3);
 
-    BasicRRTStrategy(MPProblemType* _problem, XMLNode& _node,
+    BasicRRTStrategy(XMLNode& _node,
         bool _child = false);
 
     virtual ~BasicRRTStrategy() = default;
@@ -224,7 +224,7 @@ class BasicRRTStrategy : public MPStrategyMethod<MPTraits> {
 
 /*----------------------------- construction ---------------------------------*/
 
-template<class MPTraits>
+template <typename MPTraits>
 BasicRRTStrategy<MPTraits>::
 BasicRRTStrategy(string _dm, string _nf, string _vc, string _nc,
     string _ex, vector<string> _evaluators, string _gt, bool _growGoals,
@@ -239,17 +239,17 @@ BasicRRTStrategy(string _dm, string _nf, string _vc, string _nc,
 }
 
 
-template<class MPTraits>
+template <typename MPTraits>
 BasicRRTStrategy<MPTraits>::
-BasicRRTStrategy(MPProblemType* _problem, XMLNode& _node, bool _child) :
-    MPStrategyMethod<MPTraits>(_problem, _node) {
+BasicRRTStrategy(XMLNode& _node, bool _child) :
+    MPStrategyMethod<MPTraits>(_node) {
   this->SetName("BasicRRTStrategy");
   ParseXML(_node, _child);
 }
 
 /*------------------------- MPBaseObject overrides ---------------------------*/
 
-template<class MPTraits>
+template <typename MPTraits>
 void
 BasicRRTStrategy<MPTraits>::
 ParseXML(XMLNode& _node, bool _child) {
@@ -281,7 +281,7 @@ ParseXML(XMLNode& _node, bool _child) {
 }
 
 
-template<class MPTraits>
+template <typename MPTraits>
 void
 BasicRRTStrategy<MPTraits>::
 Print(ostream& _os) const {
@@ -306,7 +306,7 @@ Print(ostream& _os) const {
 
 /*-------------------------- MPStrategy overrides ----------------------------*/
 
-template<class MPTraits>
+template <typename MPTraits>
 void
 BasicRRTStrategy<MPTraits>::
 Initialize() {
@@ -375,7 +375,7 @@ Initialize() {
 }
 
 
-template<class MPTraits>
+template <typename MPTraits>
 void
 BasicRRTStrategy<MPTraits>::
 Iterate() {
@@ -419,7 +419,7 @@ Iterate() {
 }
 
 
-template<class MPTraits>
+template <typename MPTraits>
 void
 BasicRRTStrategy<MPTraits>::
 Finalize() {
@@ -442,7 +442,7 @@ Finalize() {
 
 /*--------------------------- Direction Helpers ------------------------------*/
 
-template<class MPTraits>
+template <typename MPTraits>
 typename MPTraits::CfgType
 BasicRRTStrategy<MPTraits>::
 SelectDirection() {
@@ -454,7 +454,7 @@ SelectDirection() {
 }
 
 
-template<class MPTraits>
+template <typename MPTraits>
 typename MPTraits::CfgType
 BasicRRTStrategy<MPTraits>::
 SelectDispersedDirection(VID _v) {
@@ -511,7 +511,7 @@ SelectDispersedDirection(VID _v) {
 
 /*---------------------------- Neighbor Helpers ------------------------------*/
 
-template<class MPTraits>
+template <typename MPTraits>
 vector<typename MPTraits::CfgType>
 BasicRRTStrategy<MPTraits>::
 SelectNeighbors(VID _v) {
@@ -524,7 +524,7 @@ SelectNeighbors(VID _v) {
 }
 
 
-template<class MPTraits>
+template <typename MPTraits>
 typename BasicRRTStrategy<MPTraits>::VID
 BasicRRTStrategy<MPTraits>::
 FindNearestNeighbor(const CfgType& _cfg, const TreeIter& _tree) {
@@ -543,7 +543,7 @@ FindNearestNeighbor(const CfgType& _cfg, const TreeIter& _tree) {
 }
 
 
-template<class MPTraits>
+template <typename MPTraits>
 void
 BasicRRTStrategy<MPTraits>::
 ConnectNeighbors(VID _newVID) {
@@ -565,7 +565,7 @@ ConnectNeighbors(VID _newVID) {
 
 /*----------------------------- Growth Helpers -------------------------------*/
 
-template<class MPTraits>
+template <typename MPTraits>
 typename BasicRRTStrategy<MPTraits>::VID
 BasicRRTStrategy<MPTraits>::
 Extend(const VID _nearVID, const CfgType& _qRand, const bool _lp) {
@@ -612,7 +612,7 @@ Extend(const VID _nearVID, const CfgType& _qRand, const bool _lp) {
 }
 
 
-template<class MPTraits>
+template <typename MPTraits>
 pair<typename BasicRRTStrategy<MPTraits>::VID, bool>
 BasicRRTStrategy<MPTraits>::
 AddNode(const CfgType& _newCfg) {
@@ -631,7 +631,7 @@ AddNode(const CfgType& _newCfg) {
 }
 
 
-template<class MPTraits>
+template <typename MPTraits>
 void
 BasicRRTStrategy<MPTraits>::
 AddEdge(VID _source, VID _target, const LPOutput<MPTraits>& _lpOutput) {
@@ -648,7 +648,7 @@ AddEdge(VID _source, VID _target, const LPOutput<MPTraits>& _lpOutput) {
 
 /*------------------------------ Tree Helpers --------------------------------*/
 
-template<class MPTraits>
+template <typename MPTraits>
 typename BasicRRTStrategy<MPTraits>::VID
 BasicRRTStrategy<MPTraits>::
 ExpandTree(CfgType& _target) {
@@ -657,7 +657,7 @@ ExpandTree(CfgType& _target) {
 }
 
 
-template<class MPTraits>
+template <typename MPTraits>
 typename BasicRRTStrategy<MPTraits>::VID
 BasicRRTStrategy<MPTraits>::
 ExpandTree(const VID _nearestVID, const CfgType& _target) {
@@ -686,7 +686,7 @@ ExpandTree(const VID _nearestVID, const CfgType& _target) {
 }
 
 
-template<class MPTraits>
+template <typename MPTraits>
 void
 BasicRRTStrategy<MPTraits>::
 ConnectTrees(VID _recentlyGrown) {
@@ -758,7 +758,7 @@ ConnectTrees(VID _recentlyGrown) {
 }
 
 
-template<class MPTraits>
+template <typename MPTraits>
 void
 BasicRRTStrategy<MPTraits>::
 ValidateTrees() {
@@ -783,7 +783,7 @@ ValidateTrees() {
 }
 
 
-template<class MPTraits>
+template <typename MPTraits>
 void
 BasicRRTStrategy<MPTraits>::
 RebuildTrees() {

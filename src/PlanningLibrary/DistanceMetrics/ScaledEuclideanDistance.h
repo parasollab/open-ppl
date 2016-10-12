@@ -24,7 +24,7 @@ class ScaledEuclideanDistance : public EuclideanDistance<MPTraits> {
     ///@{
 
     ScaledEuclideanDistance();
-    ScaledEuclideanDistance(MPProblemType* _problem, XMLNode& _node);
+    ScaledEuclideanDistance(XMLNode& _node);
     virtual ~ScaledEuclideanDistance() = default;
 
     ///@}
@@ -62,8 +62,7 @@ ScaledEuclideanDistance() : EuclideanDistance<MPTraits>() {
 
 template <typename MPTraits>
 ScaledEuclideanDistance<MPTraits>::
-ScaledEuclideanDistance(MPProblemType* _problem, XMLNode& _node) :
-    EuclideanDistance<MPTraits>(_problem, _node) {
+ScaledEuclideanDistance(XMLNode& _node) : EuclideanDistance<MPTraits>(_node) {
   this->SetName("ScaledEuclidean");
   m_scale = _node.Read("scale", false, m_scale, 0.0, 1.0, "scale factor");
 }

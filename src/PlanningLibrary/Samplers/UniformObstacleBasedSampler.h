@@ -6,7 +6,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup Samplers
 /// @brief TODO
-/// @tparam MPTraits Motion planning universe
 ///
 /// TODO
 ////////////////////////////////////////////////////////////////////////////////
@@ -15,13 +14,11 @@ class UniformObstacleBasedSampler : public SamplerMethod<MPTraits> {
   public:
     typedef typename MPTraits::CfgType CfgType;
     typedef typename MPTraits::MPProblemType MPProblemType;
-    typedef typename MPProblemType::DistanceMetricPointer DistanceMetricPointer;
-    typedef typename MPProblemType::ValidityCheckerPointer ValidityCheckerPointer;
 
     UniformObstacleBasedSampler(string _vcLabel = "", string _dmLabel = "",
         double _margin = 0, bool _useBoundary = false);
 
-    UniformObstacleBasedSampler(MPProblemType* _problem, XMLNode& _node);
+    UniformObstacleBasedSampler(XMLNode& _node);
 
     void ParseXML(XMLNode& _node);
     void Print(ostream& _os) const;
@@ -35,7 +32,7 @@ class UniformObstacleBasedSampler : public SamplerMethod<MPTraits> {
     string m_vcLabel, m_dmLabel;
 };
 
-template<class MPTraits>
+template <typename MPTraits>
 UniformObstacleBasedSampler<MPTraits>::
 UniformObstacleBasedSampler(string _vcLabel, string _dmLabel,
     double _margin, bool _useBoundary) :
@@ -44,15 +41,15 @@ UniformObstacleBasedSampler(string _vcLabel, string _dmLabel,
     this->SetName("UniformObstacleBasedSampler");
   }
 
-template<class MPTraits>
+template <typename MPTraits>
 UniformObstacleBasedSampler<MPTraits>::
-UniformObstacleBasedSampler(MPProblemType* _problem, XMLNode& _node) :
-  SamplerMethod<MPTraits>(_problem, _node) {
+UniformObstacleBasedSampler(XMLNode& _node) :
+  SamplerMethod<MPTraits>(_node) {
     this->SetName("UniformObstacleBasedSampler");
     ParseXML(_node);
   }
 
-template<class MPTraits>
+template <typename MPTraits>
 void
 UniformObstacleBasedSampler<MPTraits>::
 ParseXML(XMLNode& _node) {
@@ -64,7 +61,7 @@ ParseXML(XMLNode& _node) {
   m_dmLabel =_node.Read("dmLabel", true, "default", "Distance Metric Method");
 }
 
-template<class MPTraits>
+template <typename MPTraits>
 void
 UniformObstacleBasedSampler<MPTraits>::
 Print(ostream& _os) const {
@@ -75,15 +72,15 @@ Print(ostream& _os) const {
   _os << "\tdmLabel = " << m_dmLabel << endl;
 }
 
-template<class MPTraits>
+template <typename MPTraits>
 bool
 UniformObstacleBasedSampler<MPTraits>::
 Sampler(CfgType& _cfg, shared_ptr<Boundary> _boundary,
     vector<CfgType>& _result, vector<CfgType>& _collision) {
   Environment* env = this->GetEnvironment();
   string callee(this->GetNameAndLabel() + "::SampleImpl()");
-  ValidityCheckerPointer vc = this->GetValidityChecker(m_vcLabel);
-  DistanceMetricPointer dm = this->GetDistanceMetric(m_dmLabel);
+  auto vc = this->GetValidityChecker(m_vcLabel);
+  auto dm = this->GetDistanceMetric(m_dmLabel);
 
   bool generated = false;
   int attempts = 0;

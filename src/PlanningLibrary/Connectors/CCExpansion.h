@@ -45,7 +45,6 @@ class CCExpansion: public ConnectorMethod<MPTraits> {
     typedef typename MPTraits::CfgRef CfgRef;
     typedef typename MPTraits::MPProblemType MPProblemType;
     typedef typename MPProblemType::VID VID;
-    typedef typename MPProblemType::DistanceMetricPointer DistanceMetricPointer;
     typedef typename MPProblemType::RoadmapType RoadmapType;
     typedef typename RoadmapType::GraphType GraphType;
     typedef typename vector<VID>::iterator VIDIT;
@@ -54,9 +53,8 @@ class CCExpansion: public ConnectorMethod<MPTraits> {
     ///@name Construction
     ///@{
 
-    CCExpansion(MPProblemType* _problem = NULL, string _lp = "",
-        string _nf = "", string _vc = "");
-    CCExpansion(MPProblemType* _problem, XMLNode& _node);
+    CCExpansion(string _lp = "", string _nf = "", string _vc = "");
+    CCExpansion(XMLNode& _node);
 
     ///@}
     ///@name MPBaseObject Overrides
@@ -185,46 +183,36 @@ class CCExpansion: public ConnectorMethod<MPTraits> {
 
 };
 
-///////////////////////////////////////////////////////////////////////////////
 //////////////////////////* Method Definitions *///////////////////////////////
-///////////////////////////////////////////////////////////////////////////////
 
-///////////////////////////////////////////////////////////////////////////////
-/* Constructor : Default */
-///////////////////////////////////////////////////////////////////////////////
 template<class MPTraits>
 CCExpansion<MPTraits>::
-CCExpansion(MPProblemType* _problem, string _lp, string _nf, string _vc) :
-  ConnectorMethod<MPTraits>(), m_medialAxisUtility() {
-    this->SetName("CCExpansion");
-    m_dmLabel = "";
-    m_vcLabel = _vc;
-    m_nfLabel = _nf;
+CCExpansion(string _lp, string _nf, string _vc) :
+    ConnectorMethod<MPTraits>(), m_medialAxisUtility() {
+  this->SetName("CCExpansion");
+  m_dmLabel = "";
+  m_vcLabel = _vc;
+  m_nfLabel = _nf;
 
-    m_kNodes = 1;
-    m_nIterations = 1;
-    m_minStepDistance = 4.0;
-    m_maxStepDistance = 100.0;
+  m_kNodes = 1;
+  m_nIterations = 1;
+  m_minStepDistance = 4.0;
+  m_maxStepDistance = 100.0;
 
-    m_expansionMethod = m_RE;
-    m_nodeSelectionOption = m_R;
-  }
+  m_expansionMethod = m_RE;
+  m_nodeSelectionOption = m_R;
+}
 
-///////////////////////////////////////////////////////////////////////////////
-/* Constructor : XML Inputs */
-///////////////////////////////////////////////////////////////////////////////
+
 template<class MPTraits>
 CCExpansion<MPTraits>::
-CCExpansion(MPProblemType* _problem, XMLNode& _node) :
-  ConnectorMethod<MPTraits>(_problem,_node),
-  m_medialAxisUtility(_problem,_node){
-    this->SetName("CCExpansion");
-    ParseXML(_node);
-  }
+CCExpansion(XMLNode& _node) : ConnectorMethod<MPTraits>(_node),
+    m_medialAxisUtility(_node) {
+  this->SetName("CCExpansion");
+  ParseXML(_node);
+}
 
-///////////////////////////////////////////////////////////////////////////////
-/* Print */
-///////////////////////////////////////////////////////////////////////////////
+
 template <class MPTraits>
 void
 CCExpansion<MPTraits>::
@@ -389,8 +377,7 @@ RandomExpand(RoadmapType* _rm, int _index) {
   LPOutput<MPTraits> lpOutput;
   CDInfo cdInfo;
   CfgType prev, node, direction, bumpPoint;
-  DistanceMetricPointer dm =
-    this->GetNeighborhoodFinder(this->m_nfLabel)->GetDMMethod();
+  auto dm = this->GetNeighborhoodFinder(this->m_nfLabel)->GetDMMethod();
   BasicExtender<MPTraits> be(m_dmLabel, m_vcLabel);
   be.SetMPProblem(this->GetMPProblem());
 
@@ -434,8 +421,7 @@ ExpandFrom(RoadmapType* _rm, int _index) {
   CDInfo cdInfo;
   CfgType prev, node, direction, bumpPoint;
   CfgType away = m_srcCentroid;
-  DistanceMetricPointer dm =
-    this->GetNeighborhoodFinder(this->m_nfLabel)->GetDMMethod();
+  auto dm = this->GetNeighborhoodFinder(this->m_nfLabel)->GetDMMethod();
   BasicExtender<MPTraits> be(m_dmLabel, m_vcLabel);
   be.SetMPProblem(this->GetMPProblem());
 
@@ -486,8 +472,7 @@ ExpandTo(RoadmapType* _rm, int _index) {
   CDInfo cdInfo;
   CfgType prev, node, direction, bumpPoint;
   CfgType target = m_goalTargetNode;
-  DistanceMetricPointer dm =
-    this->GetNeighborhoodFinder(this->m_nfLabel)->GetDMMethod();
+  auto dm = this->GetNeighborhoodFinder(this->m_nfLabel)->GetDMMethod();
   BasicExtender<MPTraits> be(m_dmLabel, m_vcLabel);
   be.SetMPProblem(this->GetMPProblem());
 
@@ -532,8 +517,7 @@ MedialAxisExpand(RoadmapType* _rm, int _index) {
   LPOutput<MPTraits> lpOutput;
   CDInfo cdInfo;
   CfgType prev, bump1, bump2, dir1, dir2;
-  DistanceMetricPointer dm =
-    this->GetNeighborhoodFinder(this->m_nfLabel)->GetDMMethod();
+  auto dm = this->GetNeighborhoodFinder(this->m_nfLabel)->GetDMMethod();
   BasicExtender<MPTraits> be(m_dmLabel, m_vcLabel);
   be.SetMPProblem(this->GetMPProblem());
 
@@ -594,8 +578,7 @@ MedialRecurse(RoadmapType* _rm, CfgType& _prev, CfgType& _dir, int _count) {
 
   LPOutput<MPTraits> lpOutput;
   CDInfo cdInfo;
-  DistanceMetricPointer dm =
-    this->GetNeighborhoodFinder(this->m_nfLabel)->GetDMMethod();
+  auto dm = this->GetNeighborhoodFinder(this->m_nfLabel)->GetDMMethod();
   BasicExtender<MPTraits> be(m_dmLabel, m_vcLabel);
   be.SetMPProblem(this->GetMPProblem());
 
@@ -617,8 +600,7 @@ MedialRecurse(RoadmapType* _rm, CfgType& _prev, CfgType& _dir, int _count) {
     CfgType mid1 = bump1;
     m_medialAxisUtility.PushToMedialAxis(mid1,
         this->GetEnvironment()->GetBoundary());
-    // Ignore the first medial expansion since we may still be near our initial
-    // expansion node.
+    // Ignore the first medial expansion since we may still be near our initial // expansion node.
     if(_count <= 1 || IsClear(_rm, mid1)){
       UpdateRoadmap(_rm, _prev, bump1, mid1);
       GetMedialAxisRay(_rm, _prev, bump1, mid1, dir1);
@@ -681,8 +663,7 @@ CCExpansion<MPTraits>::
 FindNearestCC(RoadmapType* _rm, VID& _curCC, vector<VID>& _allCCs) {
   vector<VID> ccvids;
   pair<VID,double> nearestCC(INVALID_VID, numeric_limits<double>::max());
-  DistanceMetricPointer dm =
-    this->GetNeighborhoodFinder(this->m_nfLabel)->GetDMMethod();
+  auto dm = this->GetNeighborhoodFinder(this->m_nfLabel)->GetDMMethod();
 
   for(VIDIT it = _allCCs.begin(); it != _allCCs.end(); ++it){
     // Avoid self-check
@@ -715,8 +696,7 @@ TargetCCInfo(RoadmapType* _rm, vector<VID>& _curCC){
 
   vector< pair<VID,double> > cc1Mod;
   m_avgIntraDistTarget = 0;
-  DistanceMetricPointer dm =
-    this->GetNeighborhoodFinder(this->m_nfLabel)->GetDMMethod();
+  auto dm = this->GetNeighborhoodFinder(this->m_nfLabel)->GetDMMethod();
 
   for(VIDIT it = _curCC.begin(); it != _curCC.end(); ++it){
     CfgType cfg = _rm->GetGraph()->GetVertex(*it);
@@ -735,8 +715,7 @@ template<class MPTraits>
 void
 CCExpansion<MPTraits>::
 SelectCandidates(RoadmapType* _rm, vector<VID>& _curCC){
-  DistanceMetricPointer dm =
-    this->GetNeighborhoodFinder(this->m_nfLabel)->GetDMMethod();
+  auto dm = this->GetNeighborhoodFinder(this->m_nfLabel)->GetDMMethod();
   m_expansionChains.clear();
 
   // Find max possible number of candidate nodes
@@ -781,8 +760,7 @@ CCExpansion<MPTraits>::
 GetMedialAxisRay(RoadmapType* _rm, CfgType& _prev, CfgType& _bumpPoint,
     CfgType& _curr, CfgType& _dir) {
 
-  DistanceMetricPointer dm =
-    this->GetNeighborhoodFinder(this->m_nfLabel)->GetDMMethod();
+  auto dm = this->GetNeighborhoodFinder(this->m_nfLabel)->GetDMMethod();
   CfgType uA = _bumpPoint - _prev;
   CfgType uB = _curr - _bumpPoint;
 
@@ -826,8 +804,7 @@ template <class MPTraits>
 bool
 CCExpansion<MPTraits>::
 WithinProximity(RoadmapType* _rm, CfgType& _bumpPoint, CfgType& _target) {
-  DistanceMetricPointer dm =
-    this->GetNeighborhoodFinder(this->m_nfLabel)->GetDMMethod();
+  auto dm = this->GetNeighborhoodFinder(this->m_nfLabel)->GetDMMethod();
   double dist = dm->Distance(_bumpPoint, _target);
   return (dist < m_avgIntraDistTarget) ? true : false;
 }
@@ -861,8 +838,7 @@ UpdateRoadmap(RoadmapType* _rm, CfgType& _prev,
   // If adding intermediate, ignore lp call
   if(!m_addIntermediate){
     CfgType col;
-    DistanceMetricPointer dm =
-      this->GetNeighborhoodFinder(this->m_nfLabel)->GetDMMethod();
+    auto dm = this->GetNeighborhoodFinder(this->m_nfLabel)->GetDMMethod();
     test = this->GetLocalPlanner(this->m_lpLabel)->
       IsConnected(_prev, _target, col, &lpOutput,
           this->GetEnvironment()->GetPositionRes(),
@@ -913,8 +889,7 @@ IsClear(RoadmapType* _rm, CfgType& bumpPoint) {
   if(m_maxFailedExpansions == 0)
     return true;
   int numFails = 0;
-  DistanceMetricPointer dm =
-    this->GetNeighborhoodFinder(this->m_nfLabel)->GetDMMethod();
+  auto dm = this->GetNeighborhoodFinder(this->m_nfLabel)->GetDMMethod();
 
   // Check to make sure that we are not expanding back into the chain
   for(VIDIT it = m_allExpansionNodes.begin(); it != m_allExpansionNodes.end();

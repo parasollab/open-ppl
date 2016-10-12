@@ -15,7 +15,6 @@ static inline uint64_t GetCycles(){
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup MotionPlanningStrategies
 /// @brief Adaptively select growth methods in RRT
-/// @tparam MPTraits Motion planning universe
 ///
 /// AdaptiveRRT employs structural filtering to the RRT paradigm by providing a
 /// two-level cost-adaptive strategy to select the RRT growth method. First,
@@ -26,7 +25,7 @@ static inline uint64_t GetCycles(){
 ///
 /// \internal This strategy is configured for pausible execution.
 ////////////////////////////////////////////////////////////////////////////////
-template<class MPTraits>
+template <typename MPTraits>
 class AdaptiveRRT : public BasicRRTStrategy<MPTraits> {
   public:
 
@@ -47,7 +46,7 @@ class AdaptiveRRT : public BasicRRTStrategy<MPTraits> {
 
     AdaptiveRRT(double _wallPenalty = 0.5, double _gamma = 0.5,
         const GrowthSets& _growthSets = GrowthSets(), CostMethod _c = FIXED);
-    AdaptiveRRT(MPProblemType* _problem, XMLNode& _node);
+    AdaptiveRRT(XMLNode& _node);
 
     virtual void Initialize();
 
@@ -82,7 +81,7 @@ class AdaptiveRRT : public BasicRRTStrategy<MPTraits> {
     CostMethod m_costMethod;
 };
 
-template<class MPTraits>
+template <typename MPTraits>
 AdaptiveRRT<MPTraits>::
 AdaptiveRRT(double _wallPenalty, double _gamma, const GrowthSets& _growthSets,
     CostMethod _c) : BasicRRTStrategy<MPTraits>(),
@@ -91,15 +90,15 @@ AdaptiveRRT(double _wallPenalty, double _gamma, const GrowthSets& _growthSets,
   this->SetName("AdaptiveRRT");
 }
 
-template<class MPTraits>
+template <typename MPTraits>
 AdaptiveRRT<MPTraits>::
-AdaptiveRRT(MPProblemType* _problem, XMLNode& _node) :
-    BasicRRTStrategy<MPTraits>(_problem, _node, true){
+AdaptiveRRT(XMLNode& _node) :
+    BasicRRTStrategy<MPTraits>(_node, true){
   this->SetName("AdaptiveRRT");
   ParseXML(_node);
 }
 
-template<class MPTraits>
+template <typename MPTraits>
 void
 AdaptiveRRT<MPTraits>::
 ParseXML(XMLNode& _node) {
@@ -137,7 +136,7 @@ ParseXML(XMLNode& _node) {
         "'. Choices are 'fixed', 'reward', or 'cycles'.");
 }
 
-template<class MPTraits>
+template <typename MPTraits>
 void
 AdaptiveRRT<MPTraits>::Print(ostream& _os) const {
   BasicRRTStrategy<MPTraits>::Print(_os);
@@ -159,7 +158,7 @@ AdaptiveRRT<MPTraits>::Print(ostream& _os) const {
   _os << endl;
 }
 
-template<class MPTraits>
+template <typename MPTraits>
 void
 AdaptiveRRT<MPTraits>::Initialize(){
   BasicRRTStrategy<MPTraits>::Initialize();
@@ -174,7 +173,7 @@ AdaptiveRRT<MPTraits>::Initialize(){
   }
 }
 
-template<class MPTraits>
+template <typename MPTraits>
 typename AdaptiveRRT<MPTraits>::VID
 AdaptiveRRT<MPTraits>::ExpandTree(CfgType& _dir){
 
@@ -288,7 +287,7 @@ AdaptiveRRT<MPTraits>::ExpandTree(CfgType& _dir){
   return recentVID;
 }
 
-template<class MPTraits>
+template <typename MPTraits>
 string
 AdaptiveRRT<MPTraits>::SelectGrowthMethod(GrowthSet& _gs){
   if(this->m_debug)
@@ -336,7 +335,7 @@ AdaptiveRRT<MPTraits>::SelectGrowthMethod(GrowthSet& _gs){
   exit(1);
 }
 
-template<class MPTraits>
+template <typename MPTraits>
 void
 AdaptiveRRT<MPTraits>::UpdateCost(double _cost, string _s, GrowthSet& _gs){
   //update the average cost of the growth method
@@ -350,7 +349,7 @@ AdaptiveRRT<MPTraits>::UpdateCost(double _cost, string _s, GrowthSet& _gs){
   }
 }
 
-template<class MPTraits>
+template <typename MPTraits>
 void
 AdaptiveRRT<MPTraits>::RewardGrowthMethod(double _r, string _s, GrowthSet& _gs){
   if(this->m_debug)
@@ -365,7 +364,7 @@ AdaptiveRRT<MPTraits>::RewardGrowthMethod(double _r, string _s, GrowthSet& _gs){
 
 //This function simply calls the correct update tree based on expansion
 //type.
-template<class MPTraits>
+template <typename MPTraits>
 typename AdaptiveRRT<MPTraits>::VID
 AdaptiveRRT<MPTraits>::UpdateTree(VID _expandNode, CfgType& _newCfg,
     CfgType& _dir, double _delta){
@@ -394,7 +393,7 @@ AdaptiveRRT<MPTraits>::UpdateTree(VID _expandNode, CfgType& _newCfg,
 }
 
 //add node to tree, and update visibility
-template<class MPTraits>
+template <typename MPTraits>
 typename AdaptiveRRT<MPTraits>::VID
 AdaptiveRRT<MPTraits>::UpdateTree(CfgType& _newCfg, VID _nearVID,
     bool _againstWall, double _ratio){
@@ -445,7 +444,7 @@ AdaptiveRRT<MPTraits>::UpdateTree(CfgType& _newCfg, VID _nearVID,
 //note:: this function assumes that the total attempts has already been updated
 //which is why we multiply by (total-1) and divide by (total) instead of (total)
 //and (total+1)
-template<class MPTraits>
+template <typename MPTraits>
 void
 AdaptiveRRT<MPTraits>::AvgVisibility(CfgType& _cfg, double _val){
   double success = _cfg.GetStat("Success");
@@ -457,7 +456,7 @@ AdaptiveRRT<MPTraits>::AvgVisibility(CfgType& _cfg, double _val){
 
 //Visibility is stored with the cfg. Isolate definition of visibility to this
 //function.
-template<class MPTraits>
+template <typename MPTraits>
 double
 AdaptiveRRT<MPTraits>::GetVisibility(CfgType& _cfg){
   if(!_cfg.IsStat("Visibility")){
@@ -470,7 +469,7 @@ AdaptiveRRT<MPTraits>::GetVisibility(CfgType& _cfg){
   return _cfg.GetStat("Visibility");
 }
 
-template<class MPTraits>
+template <typename MPTraits>
 double
 AdaptiveRRT<MPTraits>::GetCost(string _s, GrowthSet& _gs){
   if(m_costMethod == FIXED)
@@ -481,7 +480,7 @@ AdaptiveRRT<MPTraits>::GetCost(string _s, GrowthSet& _gs){
     return _gs[_s].first.first/(double)_gs[_s].first.second;
 }
 
-template<class MPTraits>
+template <typename MPTraits>
 double
 AdaptiveRRT<MPTraits>::CostInsensitiveProb(string _s, GrowthSet& _gs){
   double sw = 0.0;

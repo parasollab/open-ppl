@@ -29,7 +29,7 @@
 ///       empty implementation for now to give people time to update their code.
 ///       We can then remove documentation notes related to this change.
 ////////////////////////////////////////////////////////////////////////////////
-template<class MPTraits>
+template <typename MPTraits>
 class MPStrategyMethod : public MPBaseObject<MPTraits> {
 
   public:
@@ -45,7 +45,7 @@ class MPStrategyMethod : public MPBaseObject<MPTraits> {
     ///@{
 
     MPStrategyMethod() = default;
-    MPStrategyMethod(MPProblemType* _problem, XMLNode& _node);
+    MPStrategyMethod(XMLNode& _node);
     virtual ~MPStrategyMethod() = default;
 
     ///@}
@@ -69,11 +69,6 @@ class MPStrategyMethod : public MPBaseObject<MPTraits> {
     virtual void Finalize() = 0;   ///< Clean-up and output results.
 
     ////////////////////////////////////////////////////////////////////////////
-    /// \brief Designate a sampling boundary.
-    /// \warning This is ignored by most strategies.
-    void SetBoundary(shared_ptr<Boundary> _b) {m_boundary = _b;}
-
-    ////////////////////////////////////////////////////////////////////////////
     /// \brief Determine if any of the map evaluators have "Query" in their
     ///        label.
     bool UsingQuery() const;
@@ -89,7 +84,6 @@ class MPStrategyMethod : public MPBaseObject<MPTraits> {
     ///\name Internal State
     ///@{
 
-    shared_ptr<Boundary> m_boundary;  ///< Points to the environment boundary.
     vector<string> m_meLabels;        ///< The list of map evaluators to use.
 
     ///@}
@@ -97,17 +91,14 @@ class MPStrategyMethod : public MPBaseObject<MPTraits> {
 
 /*----------------------------- Construction ---------------------------------*/
 
-template<class MPTraits>
+template <typename MPTraits>
 MPStrategyMethod<MPTraits>::
-MPStrategyMethod(MPProblemType* _problem, XMLNode& _node) :
-    MPBaseObject<MPTraits>(_problem, _node) {
-  if(m_boundary == NULL)
-    m_boundary = this->GetEnvironment()->GetBoundary();
+MPStrategyMethod(XMLNode& _node) : MPBaseObject<MPTraits>(_node) {
 }
 
 /*-------------------------- MPBaseObject Overrides --------------------------*/
 
-template<class MPTraits>
+template <typename MPTraits>
 void
 MPStrategyMethod<MPTraits>::
 Print(ostream& _os) const {
@@ -116,7 +107,7 @@ Print(ostream& _os) const {
 
 /*------------------------------ Interface -----------------------------------*/
 
-template<class MPTraits>
+template <typename MPTraits>
 void
 MPStrategyMethod<MPTraits>::
 operator()() {
@@ -126,7 +117,7 @@ operator()() {
 }
 
 
-template<class MPTraits>
+template <typename MPTraits>
 void
 MPStrategyMethod<MPTraits>::
 Run() {
@@ -148,7 +139,7 @@ Run() {
 }
 
 
-template<class MPTraits>
+template <typename MPTraits>
 bool
 MPStrategyMethod<MPTraits>::
 EvaluateMap() {

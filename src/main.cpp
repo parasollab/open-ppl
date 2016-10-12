@@ -1,5 +1,3 @@
-#include "MPProblem/MPProblem.h"
-
 #ifdef PMPCfg
 #include "MPProblem/ConfigurationSpace/Cfg.h"
 #include "Traits/CfgTraits.h"
@@ -24,10 +22,14 @@ main(int _argc, char** _argv) {
       throw ParseException(WHERE, "Incorrect usage. Usage: -f options.xml");
 
     typedef PMPLTraits::MPProblemType MPProblemType;
+    typedef PMPLTraits::PlanningLibraryType PlanningLibraryType;
     MPProblemType* problem = new MPProblemType(_argv[2]);
-    problem->Solve();
+    PlanningLibraryType* lib = new PlanningLibraryType(_argv[2]);
+    lib->SetMPProblem(problem);
+    lib->Solve();
 
     delete problem;
+    delete lib;
 
     return 0;
   }

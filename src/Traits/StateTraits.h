@@ -1,6 +1,9 @@
 #ifndef STATE_TRAITS_H_
 #define STATE_TRAITS_H_
 
+#include "MPProblem/MPProblem.h"
+#include "PlanningLibrary/PlanningLibrary.h"
+
 #include "MPProblem/ConfigurationSpace/State.h"
 #include "MPProblem/ConfigurationSpace/StateEdge.h"
 
@@ -52,6 +55,7 @@ struct StateTraits {
   typedef State& CfgRef;
 
   typedef MPProblem<StateTraits> MPProblemType;
+  typedef PlanningLibrary<StateTraits> PlanningLibraryType;
 
   //types of distance metrics available in our world
   typedef boost::mpl::list<

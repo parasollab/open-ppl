@@ -4,7 +4,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup LocalPlanners
 /// @brief Computed information from a local plan
-/// @tparam MPTraits Motion planning universe
 ///
 /// This struct stores all information available from local plan computations.
 /// Namely, it stores intermediates along edges (not straight line), the path

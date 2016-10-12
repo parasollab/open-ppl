@@ -7,17 +7,16 @@
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup ValidityCheckers
 /// @brief TODO
-/// @tparam MPTraits Motion planning universe
 ///
 /// TODO
 ////////////////////////////////////////////////////////////////////////////////
-template<class MPTraits>
+template <typename MPTraits>
 class ObstacleClearanceValidity : public ValidityCheckerMethod<MPTraits> {
   public:
     typedef typename MPTraits::CfgType CfgType;
 
     ObstacleClearanceValidity(double _obstClearance = 1.0, const ClearanceUtility<MPTraits>& _c = ClearanceUtility<MPTraits>());
-    ObstacleClearanceValidity(typename MPTraits::MPProblemType* _problem, XMLNode& _node);
+    ObstacleClearanceValidity(XMLNode& _node);
 
     virtual ~ObstacleClearanceValidity() { }
 
@@ -30,20 +29,20 @@ class ObstacleClearanceValidity : public ValidityCheckerMethod<MPTraits> {
     ClearanceUtility<MPTraits> m_clearanceUtility;
 };
 
-template<class MPTraits>
+template <typename MPTraits>
 ObstacleClearanceValidity<MPTraits>::ObstacleClearanceValidity(double _obstClearance, const ClearanceUtility<MPTraits>& _c) :
   m_obstClearance(_obstClearance), m_clearanceUtility(_c) {
     this->m_name = "ObstacleClearance";
   }
 
-template<class MPTraits>
-ObstacleClearanceValidity<MPTraits>::ObstacleClearanceValidity(typename MPTraits::MPProblemType* _problem, XMLNode& _node) :
-  ValidityCheckerMethod<MPTraits>(_problem, _node), m_clearanceUtility(_problem, _node) {
+template <typename MPTraits>
+ObstacleClearanceValidity<MPTraits>::ObstacleClearanceValidity(XMLNode& _node) :
+  ValidityCheckerMethod<MPTraits>(_node), m_clearanceUtility(_node) {
     this->m_name = "ObstacleClearance";
     m_obstClearance = _node.Read("obstClearance", true, 1.0, -MAX_DBL, MAX_DBL, "Required clearance from obstacles");
   }
 
-template<class MPTraits>
+template <typename MPTraits>
 void
 ObstacleClearanceValidity<MPTraits>::Print(ostream& _os) const {
   ValidityCheckerMethod<MPTraits>::Print(_os);
@@ -52,10 +51,10 @@ ObstacleClearanceValidity<MPTraits>::Print(ostream& _os) const {
   m_clearanceUtility.Print(_os);
 }
 
-template<class MPTraits>
+template <typename MPTraits>
 bool
 ObstacleClearanceValidity<MPTraits>::IsValidImpl(CfgType& _cfg, CDInfo& _cdInfo, const string& _callName) {
-  Environment* env = this->GetMPProblem()->GetEnvironment();
+  Environment* env = this->GetEnvironment();
 
   shared_ptr<Boundary> b = env->GetBoundary();
   _cdInfo.ResetVars();

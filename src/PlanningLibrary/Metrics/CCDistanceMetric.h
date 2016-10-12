@@ -6,11 +6,10 @@
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup Metrics
 /// @brief TODO.
-/// @tparam MPTraits Motion planning universe
 ///
 /// TODO.
 ////////////////////////////////////////////////////////////////////////////////
-template<class MPTraits>
+template <typename MPTraits>
 class CCDistanceMetric : public MetricMethod<MPTraits> {
   public:
     typedef typename MPTraits::MPProblemType MPProblemType;
@@ -19,7 +18,7 @@ class CCDistanceMetric : public MetricMethod<MPTraits> {
     typedef typename MPProblemType::GraphType GraphType;
 
     CCDistanceMetric(string _dm="");
-    CCDistanceMetric(MPProblemType* _problem, XMLNode& _node);
+    CCDistanceMetric(XMLNode& _node);
     virtual ~CCDistanceMetric() {}
 
     virtual void Print(ostream& _os) const;
@@ -30,23 +29,23 @@ class CCDistanceMetric : public MetricMethod<MPTraits> {
     string m_dmLabel;
 };
 
-template<class MPTraits>
+template <typename MPTraits>
 CCDistanceMetric<MPTraits>::
 CCDistanceMetric(string _dm)
   : m_dmLabel(_dm) {
     this->SetName("CCDistanceMetric");
 }
 
-template<class MPTraits>
+template <typename MPTraits>
 CCDistanceMetric<MPTraits>::
-CCDistanceMetric(MPProblemType* _problem, XMLNode& _node)
-  : MetricMethod<MPTraits>(_problem, _node) {
+CCDistanceMetric(XMLNode& _node)
+  : MetricMethod<MPTraits>(_node) {
     this->SetName("CCDistanceMetric");
 
     m_dmLabel = _node.Read("dmLabel", true, "", "distance metric method");
 }
 
-template<class MPTraits>
+template <typename MPTraits>
 void
 CCDistanceMetric<MPTraits>::
 Print(ostream& _os) const {
@@ -54,14 +53,14 @@ Print(ostream& _os) const {
   _os << "\tdistance metric = " << m_dmLabel << endl;
 }
 
-template<class MPTraits>
+template <typename MPTraits>
 double
 CCDistanceMetric<MPTraits>::
 operator()() {
 
   vector<double> distance;
   double ccDistance;
-  RoadmapType* rmap = this->GetMPProblem()->GetRoadmap();
+  RoadmapType* rmap = this->GetRoadmap();
   GraphType* pMap = rmap->GetGraph();
 
   //get ccs
@@ -89,7 +88,7 @@ operator()() {
       get_cc(*pMap, cmap, ccj->second, ccjVids);
 
       vector<pair<VID, VID> > pairs;
-      distance.push_back(this->GetMPProblem()->GetDistanceMetric(m_dmLabel)->Distance(
+      distance.push_back(this->GetDistanceMetric(m_dmLabel)->Distance(
                                                                                  pMap->GetVertex(pairs[0].first),
                                                                                  pMap->GetVertex(pairs[0].second)));
     }

@@ -6,7 +6,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup Metrics
 /// @brief TODO.
-/// @tparam MPTraits Motion planning universe
 /// @tparam Set Container type of Cfgs to compare against
 ///
 /// TODO.
@@ -21,7 +20,7 @@ class CoverageDistanceMetric : public MetricMethod<MPTraits> {
     typedef typename RoadmapType::VID VID;
 
     CoverageDistanceMetric(const Set& _samples = Set(), string _dmLabel = "");
-    CoverageDistanceMetric(MPProblemType* _problem, XMLNode& _node);
+    CoverageDistanceMetric(XMLNode& _node);
     virtual ~CoverageDistanceMetric() {}
 
     virtual void Print(ostream& _os) const;
@@ -44,8 +43,8 @@ CoverageDistanceMetric(const Set& _samples, string _dmLabel) :
 
 template<class MPTraits, class Set>
 CoverageDistanceMetric<MPTraits, Set>::
-CoverageDistanceMetric(MPProblemType* _problem, XMLNode& _node) :
-  MetricMethod<MPTraits>(_problem, _node), m_samples(_node) {
+CoverageDistanceMetric(XMLNode& _node) :
+  MetricMethod<MPTraits>(_node), m_samples(_node) {
 
     this->SetName("CoverageDistanceMetric" + Set::GetName());
     m_dmLabel = _node.Read("dmLabel", false, "default", "Distance Metric Method");
@@ -76,12 +75,12 @@ operator()() {
     BruteForceNF<MPTraits> bfnf(m_dmLabel, false, 1);
     bfnf.SetMPProblem(this->GetMPProblem());
     bfnf.SetLabel("__CoverageDistanceMetricNF");
-    RoadmapType* rdmp = this->GetMPProblem()->GetRoadmap();
+    RoadmapType* rdmp = this->GetRoadmap();
     bfnf.FindNeighbors(rdmp,
         rdmp->GetGraph()->begin(), rdmp->GetGraph()->end(), true,
         *i, back_inserter(kClosest));
-    CfgType nearest = this->GetMPProblem()->GetRoadmap()->GetGraph()->GetVertex(kClosest[0].first);
-    //distance = this->GetMPProblem()->GetDistanceMetric(m_dmLabel)->Distance(env, *i, nearest);
+    CfgType nearest = this->GetRoadmap()->GetGraph()->GetVertex(kClosest[0].first);
+    //distance = this->GetDistanceMetric(m_dmLabel)->Distance(env, *i, nearest);
     disVec.push_back(kClosest[0].second);
   }
   //average of distance vector and standard deviation is calculated

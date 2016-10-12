@@ -11,11 +11,10 @@ using namespace stapl;
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup ParallelMethods
 /// @brief TODO
-/// @tparam MPTraits Motion planning universe
 ///
 /// TODO
 ////////////////////////////////////////////////////////////////////////////////
-template<class MPTraits>
+template <typename MPTraits>
 class BulkWF {
   public:
 
@@ -24,15 +23,12 @@ class BulkWF {
     typedef typename MPTraits::MPProblemType MPProblemType;
     typedef typename MPProblemType::GraphType GraphType;
     typedef typename MPProblemType::VID VID;
-    typedef typename MPProblemType::DistanceMetricPointer DistanceMetricPointer;
-    typedef typename MPProblemType::NeighborhoodFinderPointer NeighborhoodFinderPointer;
-    typedef typename MPProblemType::ExtenderPointer ExtenderPointer;
     typedef pair<pair<VID,CfgType>, double> NFType;
     typedef vector<NFType> NFResultType;
 
     typedef void result_type;
 
-    BulkWF(MPProblemType* _problem, string _dm, string _eLabel, double _minDist) {
+    BulkWF(string _dm, string _eLabel, double _minDist) {
       m_problem = _problem;
       m_dm = _dm;
       m_minDist = _minDist;
@@ -49,10 +45,10 @@ class BulkWF {
       result_type operator()(const View& _view, GraphView& _gview){
 
         ///Setup global variables
-        DistanceMetricPointer dmm = m_problem->GetDistanceMetric(m_dm);
+        auto dmm = m_problem->GetDistanceMetric(m_dm);
         Environment* env = m_problem->GetEnvironment();
-        NeighborhoodFinderPointer nf = m_problem->GetNeighborhoodFinder("BFNF");
-        ExtenderPointer e = m_problem->GetExtender(m_eLabel);
+        auto nf = m_problem->GetNeighborhoodFinder("BFNF");
+        auto e = m_problem->GetExtender(m_eLabel);
 
         for(typename View::iterator vit = _view.begin(); vit != _view.end(); ++vit) {
 
@@ -63,7 +59,7 @@ class BulkWF {
           //We want to find a random configuration to attempt expansion that way.
           dir.GetRandomCfg(env);
 
-          NFMapFunc<MPTraits> nfMap(m_problem, dir, 1, m_dm);
+          NFMapFunc<MPTraits> nfMap(mdir, 1, m_dm);
           NFReduceFunc<MPTraits> nfReduce(1);
           NFResultType nfresult = map_reduce<skeletons::tags::with_coarsened_wf>(nfMap, nfReduce, _gview);
           nearestVID = nfresult[0].first.first;
@@ -95,23 +91,20 @@ class BulkWF {
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup ParallelMethods
 /// @brief TODO
-/// @tparam MPTraits Motion planning universe
 ///
 /// TODO
 ////////////////////////////////////////////////////////////////////////////////
-template<class MPTraits>
+template <typename MPTraits>
 class BulkRRT : public MPStrategyMethod<MPTraits> {
   public:
     typedef typename MPTraits::CfgType CfgType;
     typedef typename MPTraits::WeightType WeightType;
     typedef typename MPTraits::MPProblemType MPProblemType;
-    typedef typename MPProblemType::MPStrategyPointer MPStrategyPointer;
     typedef typename MPProblemType::GraphType GraphType;
-    typedef typename MPProblemType::ValidityCheckerPointer ValidityCheckerPointer;
     typedef typename MPProblemType::VID VID;
     typedef graph_view<GraphType>  gviewType;
 
-    BulkRRT(typename MPTraits::MPProblemType* _problem, XMLNode& _node);
+    BulkRRT(XMLNode& _node);
     BulkRRT();
     virtual ~BulkRRT();
 
@@ -132,28 +125,28 @@ class BulkRRT : public MPStrategyMethod<MPTraits> {
     string m_dm;
 };
 
-template<class MPTraits>
+template <typename MPTraits>
 BulkRRT<MPTraits>::
 BulkRRT() {
   this->SetName("BulkRRT");
 }
 
-template<class MPTraits>
+template <typename MPTraits>
 BulkRRT<MPTraits>::
-BulkRRT(typename MPTraits::MPProblemType* _problem, XMLNode& _node) :
-  MPStrategyMethod<MPTraits>(_problem, _node) {
+BulkRRT(XMLNode& _node) :
+  MPStrategyMethod<MPTraits>(_node) {
     ParseXML(_node);
     this->SetName("BulkRRT");
   }
 
-template<class MPTraits>
+template <typename MPTraits>
 BulkRRT<MPTraits>::
 ~BulkRRT() {
   /*if(m_query != NULL)
     delete m_query;*/
 }
 
-template<class MPTraits>
+template <typename MPTraits>
 void
 BulkRRT<MPTraits>::
 ParseXML(XMLNode& _node) {
@@ -188,12 +181,12 @@ ParseXML(XMLNode& _node) {
   }
 };
 
-template<class MPTraits>
+template <typename MPTraits>
 void BulkRRT<MPTraits>::Initialize() {
   cout << "BulkRRT::Initialize()" <<endl;
 }
 
-template<class MPTraits>
+template <typename MPTraits>
 void BulkRRT<MPTraits>::Run() {
 
   cout << "BulkRRT:: Run()" << endl;
@@ -211,7 +204,7 @@ void BulkRRT<MPTraits>::Run() {
     /*
        StatClass* stat = m_problem->GetStatClass();
        Environment* env = m_problem->GetEnvironment();
-       ValidityCheckerPointer vc = m_problem->GetValidityChecker(m_vcMethod);
+       auto vc = m_problem->GetValidityChecker(m_vcMethod);
        string callee = "BulkRRT::";
        CDInfo cdInfo;
        int condition(0);
@@ -253,7 +246,7 @@ void BulkRRT<MPTraits>::Run() {
   stapl::rmi_fence();
 
   //WORK
-  BulkWF<MPTraits> wf(m_problem, m_dm, m_eLabel, m_minDist);
+  BulkWF<MPTraits> wf(mm_dm, m_eLabel, m_minDist);
   typedef stapl::array<VID> vidArray;
   typedef stapl::array_view<vidArray> viewVidArray;
   stapl::counter<stapl::default_timer> t1;
@@ -278,7 +271,7 @@ void BulkRRT<MPTraits>::Run() {
   stapl::rmi_fence();
 }
 
-template<class MPTraits>
+template <typename MPTraits>
 void
 BulkRRT<MPTraits>::
 Finalize() {
@@ -290,7 +283,7 @@ Finalize() {
   cout << "location [" << stapl::get_location_id() <<"] ALL FINISHED" << endl;
 }
 
-template<class MPTraits>
+template <typename MPTraits>
 void
 BulkRRT<MPTraits>::
 Print(ostream& _os) const {

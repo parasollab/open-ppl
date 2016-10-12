@@ -6,23 +6,22 @@
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup Metrics
 /// @brief Get number of nodes in roadmap.
-/// @tparam MPTraits Motion planning universe
 ////////////////////////////////////////////////////////////////////////////////
-template<class MPTraits>
+template <typename MPTraits>
 class NumNodesMetric : public MetricMethod<MPTraits> {
   public:
     NumNodesMetric(){
       this->SetName("NumNodesMetric");
     }
 
-    NumNodesMetric(typename MPTraits::MPProblemType* _problem, XMLNode& _node) : MetricMethod<MPTraits>(_problem, _node){
+    NumNodesMetric(XMLNode& _node) : MetricMethod<MPTraits>(_node){
       this->SetName("NumNodesMetric");
     }
 
     virtual ~NumNodesMetric(){}
 
     virtual double operator()(){
-      return this->GetMPProblem()->GetRoadmap()->GetGraph()->get_num_vertices();
+      return this->GetRoadmap()->GetGraph()->get_num_vertices();
     }
 };
 

@@ -12,7 +12,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup LocalPlanners
 /// @brief Validate straight-line path between two configurations
-/// @tparam MPTraits Motion planning universe
 ///
 /// This local planner validates straight line paths which is a direct linear
 /// interpolation between two configurations in @cfree.
@@ -23,13 +22,11 @@ class StraightLine : public LocalPlannerMethod<MPTraits> {
     typedef typename MPTraits::CfgType CfgType;
     typedef typename MPTraits::WeightType WeightType;
     typedef typename MPTraits::MPProblemType MPProblemType;
-    typedef typename MPProblemType::DistanceMetricPointer DistanceMetricPointer;
-    typedef typename MPProblemType::ValidityCheckerPointer ValidityCheckerPointer;
 
     StraightLine(const string& _vcLabel = "", bool _evalation = false,
         bool _saveIntermediates = false);
-    StraightLine(MPProblemType* _problem, XMLNode& _node);
-    virtual ~StraightLine();
+    StraightLine(XMLNode& _node);
+    virtual ~StraightLine() = default;
 
     virtual void Print(ostream& _os) const;
 
@@ -107,8 +104,8 @@ StraightLine<MPTraits>::StraightLine(const string& _vcLabel, bool _evalation,
 }
 
 template<class MPTraits>
-StraightLine<MPTraits>::StraightLine(MPProblemType* _problem, XMLNode& _node) :
-    LocalPlannerMethod<MPTraits>(_problem, _node) {
+StraightLine<MPTraits>::StraightLine(XMLNode& _node) :
+    LocalPlannerMethod<MPTraits>(_node) {
   this->SetName("StraightLine");
   m_binaryEvaluation = _node.Read("binaryEvaluation", false, false,
       "binary evalution along the edge");
@@ -116,8 +113,6 @@ StraightLine<MPTraits>::StraightLine(MPProblemType* _problem, XMLNode& _node) :
       "Validity Test Label");
 }
 
-template<class MPTraits>
-StraightLine<MPTraits>::~StraightLine() { }
 
 template<class MPTraits>
 void
@@ -139,7 +134,7 @@ StraightLine<MPTraits>::IsConnectedFunc(
     bool _checkCollision, bool _savePath,
     typename boost::disable_if<IsClosedChain<Enable> >::type* _dummy) {
 
-  StatClass* stats = this->GetMPProblem()->GetStatClass();
+  StatClass* stats = this->GetStatClass();
 
   stats->IncLPAttempts(this->GetNameAndLabel());
   int cdCounter = 0;
@@ -169,9 +164,9 @@ StraightLine<MPTraits>::IsConnectedFunc(
     bool _checkCollision, bool _savePath,
     typename boost::enable_if<IsClosedChain<Enable> >::type* _dummy) {
 
-  Environment* env = this->GetMPProblem()->GetEnvironment();
-  ValidityCheckerPointer vc = this->GetMPProblem()->GetValidityChecker(m_vcLabel);
-  StatClass* stats = this->GetMPProblem()->GetStatClass();
+  Environment* env = this->GetEnvironment();
+  auto vc = this->GetValidityChecker(m_vcLabel);
+  StatClass* stats = this->GetStatClass();
   string callee = this->GetNameAndLabel() + "::IsConnectedSLSequential";
 
   stats->IncLPAttempts(this->GetNameAndLabel());
@@ -232,8 +227,8 @@ StraightLine<MPTraits>::IsConnectedSLSequential(
     double _positionRes, double _orientationRes,
     bool _checkCollision, bool _savePath) {
 
-  Environment* env = this->GetMPProblem()->GetEnvironment();
-  ValidityCheckerPointer vc = this->GetMPProblem()->GetValidityChecker(m_vcLabel);
+  Environment* env = this->GetEnvironment();
+  auto vc = this->GetValidityChecker(m_vcLabel);
 
   int nTicks;
   CfgType tick;
@@ -280,8 +275,8 @@ StraightLine<MPTraits>::IsConnectedSLBinary(
     double _positionRes, double _orientationRes,
     bool _checkCollision, bool _savePath) {
 
-  Environment* env = this->GetMPProblem()->GetEnvironment();
-  ValidityCheckerPointer vc = this->GetMPProblem()->GetValidityChecker(m_vcLabel);
+  Environment* env = this->GetEnvironment();
+  auto vc = this->GetValidityChecker(m_vcLabel);
 
   if(!_checkCollision)
     return IsConnectedSLSequential(_c1, _c2, _col, _lpOutput,

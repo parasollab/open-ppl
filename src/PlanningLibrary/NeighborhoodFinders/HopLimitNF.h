@@ -8,11 +8,10 @@
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup NeighborhoodFinders
 /// @brief TODO
-/// @tparam MPTraits Motion planning universe
 ///
 /// TODO
 ////////////////////////////////////////////////////////////////////////////////
-template<class MPTraits>
+template <typename MPTraits>
 class HopLimitNF : public NeighborhoodFinderMethod<MPTraits> {
   public:
     typedef typename MPTraits::CfgType CfgType;
@@ -20,7 +19,6 @@ class HopLimitNF : public NeighborhoodFinderMethod<MPTraits> {
     typedef typename MPProblemType::RoadmapType RoadmapType;
     typedef typename MPProblemType::VID VID;
     typedef typename MPProblemType::GraphType GraphType;
-    typedef typename MPProblemType::NeighborhoodFinderPointer NeighborhoodFinderPointer;
 
     HopLimitNF(string _dmLabel = "", size_t _h=1) :
       NeighborhoodFinderMethod<MPTraits>(_dmLabel), m_h(_h) {
@@ -28,8 +26,8 @@ class HopLimitNF : public NeighborhoodFinderMethod<MPTraits> {
         this->m_nfType = OTHER;
       }
 
-    HopLimitNF(MPProblemType* _problem, XMLNode& _node) :
-      NeighborhoodFinderMethod<MPTraits>(_problem, _node) {
+    HopLimitNF(XMLNode& _node) :
+      NeighborhoodFinderMethod<MPTraits>(_node) {
         this->SetName("HopLimitNF");
         this->m_nfType = OTHER;
         m_h = _node.Read("hoplimit", true, MAX_INT, 1, MAX_INT, "Hop Limit");
@@ -58,7 +56,7 @@ class HopLimitNF : public NeighborhoodFinderMethod<MPTraits> {
     string m_nfLabel;
 };
 
-template<class MPTraits>
+template <typename MPTraits>
 template<typename InputIterator, typename OutputIterator>
 OutputIterator
 HopLimitNF<MPTraits>::
@@ -71,8 +69,8 @@ FindNeighbors(RoadmapType* _rmp,
   this->StartQueryTime();
 
   GraphType* graph = _rmp->GetGraph();
-  NeighborhoodFinderPointer nf = this->GetMPProblem()->GetNeighborhoodFinder(m_nfLabel);
-  typename MPProblemType::DistanceMetricPointer dm = nf->GetDMMethod();
+  auto nf = this->GetNeighborhoodFinder(m_nfLabel);
+  auto dm = nf->GetDMMethod();
 
   VID v = graph->GetVID(_cfg);
   typename GraphType::vertex_iterator vi = graph->find_vertex(v);
@@ -93,7 +91,7 @@ FindNeighbors(RoadmapType* _rmp,
   return _out;
 }
 
-template<class MPTraits>
+template <typename MPTraits>
 template<typename InputIterator, typename OutputIterator>
 OutputIterator
 HopLimitNF<MPTraits>::FindNeighborPairs(RoadmapType* _rmp,

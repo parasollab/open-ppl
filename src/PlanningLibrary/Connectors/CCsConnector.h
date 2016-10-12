@@ -8,7 +8,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup Connectors
 /// @brief Attempt connection between nearby CCs
-/// @tparam MPTraits Motion planning universe
 ///
 /// Attempts connection between different connected components of the roadmap.
 /// We try to connect k-closest pairs of connected components.
@@ -33,7 +32,7 @@ class CCsConnector: public ConnectorMethod<MPTraits> {
     ///@{
 
     CCsConnector(string _nfLabel = "", string _lpLabel = "", size_t _k = 5);
-    CCsConnector(MPProblemType* _problem, XMLNode& _node);
+    CCsConnector(XMLNode& _node);
     virtual ~CCsConnector() = default;
 
     ///@}
@@ -93,8 +92,7 @@ CCsConnector(string _nfLabel, string _lpLabel, size_t _k) :
 
 template<class MPTraits>
 CCsConnector<MPTraits>::
-CCsConnector(MPProblemType* _problem, XMLNode& _node) :
-    ConnectorMethod<MPTraits>(_problem, _node) {
+CCsConnector(XMLNode& _node) : ConnectorMethod<MPTraits>(_node) {
   this->SetName("CCsConnector");
   m_k = _node.Read("k", true, 5, 0, 1000, "k closest CCs");
 }

@@ -1,6 +1,9 @@
 #ifndef CFG_TRAITS_H_
 #define CFG_TRAITS_H_
 
+#include "MPProblem/MPProblem.h"
+#include "PlanningLibrary/PlanningLibrary.h"
+
 #include "MPProblem/ConfigurationSpace/Weight.h"
 
 //distance metric includes
@@ -146,6 +149,7 @@ struct MPTraits {
   typedef C& CfgRef;
 
   typedef MPProblem<MPTraits> MPProblemType;
+  typedef PlanningLibrary<MPTraits> PlanningLibraryType;
 
   //types of distance metrics available in our world
   typedef boost::mpl::list<

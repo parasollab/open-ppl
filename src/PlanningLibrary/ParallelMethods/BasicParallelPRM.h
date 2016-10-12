@@ -8,16 +8,16 @@ using namespace std;
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup ParallelMethods
 /// @brief TODO
-/// @tparam MPTraits Motion planning universe
 ///
 /// TODO
 ////////////////////////////////////////////////////////////////////////////////
-template<class MPTraits>
+template <typename MPTraits>
 class SampleWF {
   public:
     typedef typename MPTraits::CfgType CfgType;
     typedef typename MPTraits::MPProblemType MPProblemType;
-    typedef typename MPProblemType::SamplerPointer SamplerPointer;
+    typedef typename MPTraits::PlanningLibraryType PlanningLibraryType;
+    typedef typename PlanningLibraryType::SamplerPointer SamplerPointer;
 
     SampleWF(SamplerPointer _sp, MPProblemType* _problem);
     SampleWF(const SampleWF& _wf, std::size_t _offset) {}
@@ -34,11 +34,11 @@ class SampleWF {
     MPProblemType* m_problem;
 };
 
-template<class MPTraits>
+template <typename MPTraits>
 SampleWF<MPTraits>::
 SampleWF(SamplerPointer _sp, MPProblemType* _problem) : m_sp(_sp), m_problem(_problem) {}
 
-template<class MPTraits>
+template <typename MPTraits>
 template<typename View>
 void
 SampleWF<MPTraits>::
@@ -65,17 +65,17 @@ operator()(const View& _view) const {
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup ParallelMethods
 /// @brief TODO
-/// @tparam MPTraits Motion planning universe
 ///
 /// TODO
 ////////////////////////////////////////////////////////////////////////////////
-template<class MPTraits>
+template <typename MPTraits>
 class ConnectWF {
   public:
     typedef typename MPTraits::MPProblemType MPProblemType;
     typedef typename MPProblemType::GraphType GraphType;
     typedef typename MPProblemType::VID VID;
-    typedef typename MPProblemType::ConnectorPointer ConnectorPointer;
+    typedef typename MPTraits::PlanningLibraryType PlanningLibraryType;
+    typedef typename PlanningLibraryType::ConnectorPointer ConnectorPointer;
 
     ConnectWF(ConnectorPointer _cp, MPProblemType* _problem) {
       m_cp = _cp;
@@ -97,7 +97,7 @@ class ConnectWF {
     MPProblemType* m_problem;
 };
 
-template<class MPTraits>
+template <typename MPTraits>
 template<typename NativeView, typename RepeatView>
 void
 ConnectWF<MPTraits>::
@@ -124,11 +124,10 @@ operator()(NativeView _vw1, RepeatView _vw2) const {
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup ParallelMethods
 /// @brief TODO
-/// @tparam MPTraits Motion planning universe
 ///
 /// TODO
 ////////////////////////////////////////////////////////////////////////////////
-template<class MPTraits>
+template <typename MPTraits>
 class BasicParallelPRM : public MPStrategyMethod<MPTraits> {
   public:
     typedef typename MPTraits::CfgType CfgType;
@@ -136,15 +135,12 @@ class BasicParallelPRM : public MPStrategyMethod<MPTraits> {
     typedef typename MPProblemType::RoadmapType RoadmapType;
     typedef typename MPProblemType::GraphType GraphType;
     typedef typename MPProblemType::VID VID;
-    typedef typename MPProblemType::SamplerPointer SamplerPointer;
-    typedef typename MPProblemType::ConnectorPointer ConnectorPointer;
-    typedef typename MPProblemType::MapEvaluatorPointer MapEvaluatorPointer;
 
     BasicParallelPRM(const vector<pair<string, size_t> >& _samplerLabels = vector<pair<string, size_t> >(),
         const vector<string>& _connectorLabels = vector<string>(),
         const vector<string>& _evaluatorLabels = vector<string>());
 
-    BasicParallelPRM(MPProblemType* _problem, XMLNode& _node);
+    BasicParallelPRM(XMLNode& _node);
 
     virtual ~BasicParallelPRM() {};
 
@@ -160,7 +156,7 @@ class BasicParallelPRM : public MPStrategyMethod<MPTraits> {
     vector<string> m_connectorLabels;
 };
 
-template<class MPTraits>
+template <typename MPTraits>
 BasicParallelPRM<MPTraits>::
 BasicParallelPRM(const vector<pair<string, size_t> >& _samplerLabels,
     const vector<string>& _connectorLabels,
@@ -170,16 +166,16 @@ BasicParallelPRM(const vector<pair<string, size_t> >& _samplerLabels,
   this->SetName("BasicParallelPRM");
 }
 
-template<class MPTraits>
+template <typename MPTraits>
 BasicParallelPRM<MPTraits>::
-BasicParallelPRM(MPProblemType* _problem, XMLNode& _node) :
-    MPStrategyMethod<MPTraits>(_problem, _node) {
+BasicParallelPRM(XMLNode& _node) :
+    MPStrategyMethod<MPTraits>(_node) {
   this->SetName("BasicParallelPRM");
   ParseXML(_node);
 }
 
 
-template<class MPTraits>
+template <typename MPTraits>
 void
 BasicParallelPRM<MPTraits>::
 ParseXML(XMLNode& _node) {
@@ -201,7 +197,7 @@ ParseXML(XMLNode& _node) {
   }
 }
 
-template<class MPTraits>
+template <typename MPTraits>
 void
 BasicParallelPRM<MPTraits>::
 Print(ostream& _os) const {
@@ -220,19 +216,19 @@ Print(ostream& _os) const {
     _os << "\t" << label;
 }
 
-template<class MPTraits>
+template <typename MPTraits>
 void
 BasicParallelPRM<MPTraits>::
 Initialize() {
   // Reload map evaluators
   for(auto& label : this->m_meLabels) {
-    MapEvaluatorPointer evaluator = this->GetMapEvaluator(label);
+    auto evaluator = this->GetMapEvaluator(label);
     if(evaluator->HasState())
       evaluator->operator()();
   }
 }
 
-template<class MPTraits>
+template <typename MPTraits>
 void
 BasicParallelPRM<MPTraits>::
 Run() {
@@ -248,7 +244,7 @@ Run() {
     // Generate roadmap nodes
     cout << "Generation Phase" << endl;
     for(auto& sampler : m_samplerLabels) {
-      SamplerPointer nodeGen = this->GetSampler(sampler.first);
+      auto nodeGen = this->GetSampler(sampler.first);
       typedef stapl::array<CfgType> CfgArray;
       typedef stapl::array_view<CfgArray> ViewCfgArray;
       CfgArray pa(sampler.second);
@@ -271,7 +267,7 @@ Run() {
       if (this->m_debug)
         cout << "BasicParallelPRM::graph size " << rmg->size() << endl;
 
-      ConnectorPointer connector = this->GetConnector(connectorLabel);
+      auto connector = this->GetConnector(connectorLabel);
       typedef stapl::graph_view<GraphType> VType;
       VType view(*rmg);
 
@@ -292,7 +288,7 @@ Run() {
   }
 }
 
-template<class MPTraits>
+template <typename MPTraits>
 void
 BasicParallelPRM<MPTraits>::
 Finalize() {

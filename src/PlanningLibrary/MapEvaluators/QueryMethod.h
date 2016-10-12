@@ -67,7 +67,6 @@ struct Heuristic {
 /// @ingroup MapEvaluators
 /// @brief Base class for all query methods. These objects evaluate a roadmap
 ///        under construction to see if a planning query has been satisfied.
-/// @tparam MPTraits Motion planning universe
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
 class QueryMethod : public MapEvaluatorMethod<MPTraits> {
@@ -90,7 +89,7 @@ class QueryMethod : public MapEvaluatorMethod<MPTraits> {
     ///@{
 
     QueryMethod();
-    QueryMethod(MPProblemType* _problem, XMLNode& _node);
+    QueryMethod(XMLNode& _node);
     virtual ~QueryMethod() = default;
 
     ///@}
@@ -99,9 +98,10 @@ class QueryMethod : public MapEvaluatorMethod<MPTraits> {
 
     void ParseXML(XMLNode& _node);
     virtual void Print(ostream& _os) const override;
+    virtual void SetMPProblem(MPProblemType* _p) override;
 
     ///@}
-    ///\name MapEvaluatorMethod Overrides
+    ///\name MapEvaluator Interface
     ///@{
 
     virtual bool operator()() override;
@@ -206,14 +206,10 @@ QueryMethod() : MapEvaluatorMethod<MPTraits>() {
 
 template <typename MPTraits>
 QueryMethod<MPTraits>::
-QueryMethod(MPProblemType* _problem, XMLNode& _node) :
-    MapEvaluatorMethod<MPTraits>(_problem, _node) {
+QueryMethod(XMLNode& _node) :
+    MapEvaluatorMethod<MPTraits>(_node) {
   this->SetName("QueryMethod");
   ParseXML(_node);
-
-  string queryFile = this->GetMPProblem()->GetQueryFilename();
-  if(!queryFile.empty())
-    ReadQuery(this->GetMPProblem()->GetQueryFilename());
 }
 
 /*--------------------------- MPBaseObject Overrides -------------------------*/
@@ -240,6 +236,19 @@ Print(ostream& _os) const {
       << "\n\tFull Paths: " << m_fullRecreatePath << endl;
 }
 
+
+template <typename MPTraits>
+void
+QueryMethod<MPTraits>::
+SetMPProblem(MPProblemType* _p) {
+  MPBaseObject<MPTraits>::SetMPProblem(_p);
+
+  string queryFile = this->GetQueryFilename();
+  if(!queryFile.empty())
+    ReadQuery(this->GetQueryFilename());
+}
+
+/*-------------------------- MapEvaluator Interface --------------------------*/
 
 template <typename MPTraits>
 bool
@@ -316,7 +325,8 @@ WritePath() const {
   if(!m_path)
     return;
   if(m_fullRecreatePath)
-    ::WritePath(this->GetBaseFilename() + ".full.path", m_path->FullCfgs());
+    ::WritePath(this->GetBaseFilename() + ".full.path", m_path->FullCfgs(this->
+        GetPlanningLibrary()));
   else
     ::WritePath(this->GetBaseFilename() + ".rdmp.path", m_path->Cfgs());
 }

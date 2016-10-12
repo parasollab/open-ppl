@@ -7,14 +7,13 @@
 /// @ingroup MotionPlanningStrategies
 /// @brief This method is the 'Sampling-based Roadmap of Trees', which grows
 ///        several RRT trees and connects them together to build the roadmap.
-/// @tparam MPTraits Motion planning universe
 ///
 /// The earliest reference to this work is:
 ///   Bekris, Chen, Ladd, Plaku, and Kavraki. "Multiple query probabilistic
 ///     roadmap planning using single query planning primitives". Proc. of the
 ///     International Conference on Intelligent Robots and Systems (IROS), 2003.
 ////////////////////////////////////////////////////////////////////////////////
-template<class MPTraits>
+template <typename MPTraits>
 class SRTStrategy : public MPStrategyMethod<MPTraits> {
 
   public:
@@ -41,7 +40,7 @@ class SRTStrategy : public MPStrategyMethod<MPTraits> {
     ///@{
 
     SRTStrategy();
-    SRTStrategy(MPProblemType* _problem, XMLNode& _node);
+    SRTStrategy(XMLNode& _node);
 
     ///@}
     ///\name MPBaseObject Overrides
@@ -112,24 +111,24 @@ class SRTStrategy : public MPStrategyMethod<MPTraits> {
 
 /*----------------------------- Construction ---------------------------------*/
 
-template<class MPTraits>
+template <typename MPTraits>
 SRTStrategy<MPTraits>::
 SRTStrategy() : MPStrategyMethod<MPTraits>() {
   this->SetName("SRTStrategy");
 }
 
 
-template<class MPTraits>
+template <typename MPTraits>
 SRTStrategy<MPTraits>::
-SRTStrategy(MPProblemType* _problem, XMLNode& _node) :
-    MPStrategyMethod<MPTraits>(_problem, _node) {
+SRTStrategy(XMLNode& _node) :
+    MPStrategyMethod<MPTraits>(_node) {
   this->SetName("SRTStrategy");
   ParseXML(_node);
 }
 
 /*-------------------------- MPBaseObject Overrides --------------------------*/
 
-template<class MPTraits>
+template <typename MPTraits>
 void
 SRTStrategy<MPTraits>::
 ParseXML(XMLNode& _node) {
@@ -159,7 +158,7 @@ ParseXML(XMLNode& _node) {
 }
 
 
-template<class MPTraits>
+template <typename MPTraits>
 void
 SRTStrategy<MPTraits>::
 Print(ostream& _os) const {
@@ -176,7 +175,7 @@ Print(ostream& _os) const {
 
 /*------------------------ MPStrategyMethod Overrides ------------------------*/
 
-template<class MPTraits>
+template <typename MPTraits>
 void
 SRTStrategy<MPTraits>::
 Initialize() {
@@ -203,7 +202,7 @@ Initialize() {
 }
 
 
-template<class MPTraits>
+template <typename MPTraits>
 void
 SRTStrategy<MPTraits>::
 Iterate() {
@@ -221,7 +220,7 @@ Iterate() {
 }
 
 
-template<class MPTraits>
+template <typename MPTraits>
 void
 SRTStrategy<MPTraits>::
 Finalize() {
@@ -247,7 +246,7 @@ Finalize() {
 
 /*------------------------------- Helpers ------------------------------------*/
 
-template<class MPTraits>
+template <typename MPTraits>
 void
 SRTStrategy<MPTraits>::
 GenerateTrees() {
@@ -275,7 +274,7 @@ GenerateTrees() {
 }
 
 
-template<class MPTraits>
+template <typename MPTraits>
 void
 SRTStrategy<MPTraits>::
 ExpandTrees() {
@@ -291,7 +290,7 @@ ExpandTrees() {
 }
 
 
-template<class MPTraits>
+template <typename MPTraits>
 void
 SRTStrategy<MPTraits>::
 FindCandidateConnections(vector<pair<VID, VID> >& _candPairs) {
@@ -335,7 +334,7 @@ FindCandidateConnections(vector<pair<VID, VID> >& _candPairs) {
 }
 
 
-template<class MPTraits>
+template <typename MPTraits>
 void
 SRTStrategy<MPTraits>::
 ConnectTrees(vector<pair<VID, VID>>& _candPairs) {
@@ -394,7 +393,7 @@ ConnectTrees(vector<pair<VID, VID>>& _candPairs) {
 }
 
 
-template<class MPTraits>
+template <typename MPTraits>
 bool
 SRTStrategy<MPTraits>::
 Connect(VID _t1, VID _t2) {
@@ -437,7 +436,7 @@ Connect(VID _t1, VID _t2) {
 }
 
 
-template<class MPTraits>
+template <typename MPTraits>
 bool
 SRTStrategy<MPTraits>::
 RRTConnect(VID _t1, VID _t2) {
@@ -464,7 +463,7 @@ RRTConnect(VID _t1, VID _t2) {
 }
 
 
-template<class MPTraits>
+template <typename MPTraits>
 typename MPTraits::CfgType
 SRTStrategy<MPTraits>::
 SelectDirection(){
@@ -475,7 +474,7 @@ SelectDirection(){
 }
 
 
-template<class MPTraits>
+template <typename MPTraits>
 typename SRTStrategy<MPTraits>::VID
 SRTStrategy<MPTraits>::
 ExpandTree(VID _tree, const CfgType& _dir) {

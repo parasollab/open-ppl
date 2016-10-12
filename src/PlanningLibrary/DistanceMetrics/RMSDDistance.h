@@ -27,7 +27,7 @@ class RMSDDistance : public DistanceMetricMethod<MPTraits> {
     ///@{
 
     RMSDDistance();
-    RMSDDistance(MPProblemType* _problem, XMLNode& _node);
+    RMSDDistance(XMLNode& _node);
     virtual ~RMSDDistance() = default;
 
     ///@}
@@ -62,8 +62,7 @@ RMSDDistance() : DistanceMetricMethod<MPTraits>() {
 
 template <typename MPTraits>
 RMSDDistance<MPTraits>::
-RMSDDistance(MPProblemType* _problem, XMLNode& _node) :
-    DistanceMetricMethod<MPTraits>(_problem, _node) {
+RMSDDistance(XMLNode& _node) : DistanceMetricMethod<MPTraits>(_node) {
   this->SetName("RMSD");
 }
 
@@ -84,7 +83,7 @@ template <typename MPTraits>
 vector<Vector3d>
 RMSDDistance<MPTraits>::
 GetCoordinatesForRMSD(const CfgType& _c) {
-  Environment* env = this->GetMPProblem()->GetEnvironment();
+  Environment* env = this->GetEnvironment();
   _c.ConfigEnvironment();
   vector<Vector3d> coordinates;
   for(size_t i=0; i< env->GetRobot(_c.GetRobotIndex())->NumFreeBody(); ++i)

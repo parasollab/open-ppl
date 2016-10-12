@@ -6,7 +6,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup Extenders
 /// @brief Basic straight-line extension.
-/// @tparam MPTraits Motion planning universe
 ///
 /// Extends in straight-line through @cspace from \f$q_{near}\f$ towards
 /// \f$q_{dir}\f$ until either \f$q_{dir}\f$ is reached, a distance of
@@ -30,7 +29,7 @@ class BasicExtender : public ExtenderMethod<MPTraits> {
     BasicExtender(const string& _dmLabel = "", const string& _vcLabel = "",
         double _min = .001, double _max = 1, bool _randomOrientation = true);
 
-    BasicExtender(MPProblemType* _problem, XMLNode& _node);
+    BasicExtender(XMLNode& _node);
 
     virtual ~BasicExtender() = default;
 
@@ -95,8 +94,7 @@ BasicExtender(const string& _dmLabel, const string& _vcLabel, double _min,
 
 template <typename MPTraits>
 BasicExtender<MPTraits>::
-BasicExtender(MPProblemType* _problem, XMLNode& _node) :
-    ExtenderMethod<MPTraits>(_problem, _node) {
+BasicExtender(XMLNode& _node) : ExtenderMethod<MPTraits>(_node) {
   this->SetName("BasicExtender");
   ParseXML(_node);
 }

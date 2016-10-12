@@ -7,7 +7,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup MotionPlanningStrategies
 /// @brief Constructs roadmap based upon visibility
-/// @tparam MPTraits Motion planning universe
 ///
 ///  Nodes are sampled one at a time, and will be classified as either guards
 ///    or connections.
@@ -23,7 +22,7 @@
 ///
 /// \internal This strategy is configured for pausible execution.
 ////////////////////////////////////////////////////////////////////////////////
-template<class MPTraits>
+template <typename MPTraits>
 class VisibilityBasedPRM : public MPStrategyMethod<MPTraits> {
 
   public:
@@ -33,15 +32,11 @@ class VisibilityBasedPRM : public MPStrategyMethod<MPTraits> {
     typedef typename MPTraits::MPProblemType MPProblemType;
     typedef typename MPProblemType::VID VID;
     typedef typename MPProblemType::GraphType GraphType;
-    typedef typename MPProblemType::SamplerPointer SamplerPointer;
-    typedef typename MPProblemType::LocalPlannerPointer LocalPlannerPointer;
-    typedef typename MPProblemType::DistanceMetricPointer DistanceMetricPointer;
-    typedef typename MPProblemType::ValidityCheckerPointer ValidityCheckerPointer;
 
     VisibilityBasedPRM(const string _sampler = "",
         const string _vc = "", const string _lp = "",
         const size_t _maxFailedIterations = 10);
-    VisibilityBasedPRM(MPProblemType* _problem, XMLNode& _node);
+    VisibilityBasedPRM(XMLNode& _node);
 
     virtual void ParseXML(XMLNode& _node);
     virtual void Print(ostream& _os) const;
@@ -69,7 +64,7 @@ class VisibilityBasedPRM : public MPStrategyMethod<MPTraits> {
 };
 
 
-template<class MPTraits>
+template <typename MPTraits>
 VisibilityBasedPRM<MPTraits>::
 VisibilityBasedPRM(const string _sampler, const string _vc, const string _lp,
     const size_t _maxFailedIterations) : m_samplerLabel(_sampler),
@@ -79,16 +74,16 @@ VisibilityBasedPRM(const string _sampler, const string _vc, const string _lp,
 }
 
 
-template<class MPTraits>
+template <typename MPTraits>
 VisibilityBasedPRM<MPTraits>::
-VisibilityBasedPRM(MPProblemType* _problem, XMLNode& _node) :
-    MPStrategyMethod<MPTraits>(_problem, _node), m_failedIterations(0) {
+VisibilityBasedPRM(XMLNode& _node) :
+    MPStrategyMethod<MPTraits>(_node), m_failedIterations(0) {
   this->SetName("VisibilityBasedPRM");
   ParseXML(_node);
 }
 
 
-template<class MPTraits>
+template <typename MPTraits>
 void
 VisibilityBasedPRM<MPTraits>::
 ParseXML(XMLNode& _node) {
@@ -100,7 +95,7 @@ ParseXML(XMLNode& _node) {
 }
 
 
-template<class MPTraits>
+template <typename MPTraits>
 void
 VisibilityBasedPRM<MPTraits>::
 Print(ostream& _os) const {
@@ -113,13 +108,13 @@ Print(ostream& _os) const {
 }
 
 
-template<class MPTraits>
+template <typename MPTraits>
 void
 VisibilityBasedPRM<MPTraits>::
 Iterate() {
   if(this->m_debug)
     cout << "\nCreating node, currently "
-         << this->GetMPProblem()->GetRoadmap()->GetGraph()->get_num_vertices()
+         << this->GetRoadmap()->GetGraph()->get_num_vertices()
          << " nodes and " << m_guards.size() << " guard sets.";
 
   //Sample one node
@@ -139,7 +134,7 @@ Iterate() {
 }
 
 
-template<class MPTraits>
+template <typename MPTraits>
 bool
 VisibilityBasedPRM<MPTraits>::
 EvaluateMap() {
@@ -147,7 +142,7 @@ EvaluateMap() {
 }
 
 
-template<class MPTraits>
+template <typename MPTraits>
 void
 VisibilityBasedPRM<MPTraits>::
 Finalize() {
@@ -159,11 +154,11 @@ Finalize() {
       this->GetEnvironment());
 
   //Output .stat file
-  StatClass* stats = this->GetMPProblem()->GetStatClass();
+  StatClass* stats = this->GetStatClass();
   string fileName = this->GetBaseFilename() + ".stat";
   ofstream osStat(fileName.c_str());
   osStat << "Visibility-Based PRM Stats\n";
-  stats->PrintAllStats(osStat, this->GetMPProblem()->GetRoadmap());
+  stats->PrintAllStats(osStat, this->GetRoadmap());
   stats->PrintClock("Map Generation", osStat);
   osStat << "\nNumber of connected guard components: " << m_guards.size();
   osStat.close();
@@ -173,19 +168,20 @@ Finalize() {
 }
 
 
-template<class MPTraits>
+template <typename MPTraits>
 void
 VisibilityBasedPRM<MPTraits>::
 GenerateNode(vector<CfgType>& _outNode) {
-  SamplerPointer sampler = this->GetMPProblem()->GetSampler(m_samplerLabel);
-  ValidityCheckerPointer vc = this->GetMPProblem()->GetValidityChecker(m_vcLabel);
+  auto sampler = this->GetSampler(m_samplerLabel);
+  auto vc = this->GetValidityChecker(m_vcLabel);
 
   string callee("VisibilityBasedPRM::GenerateNodes");
 
   do {
     //Sample one node
     do {
-      sampler->Sample(1, 1, this->m_boundary, back_inserter(_outNode));
+      sampler->Sample(1, 1, this->GetEnvironment()->GetBoundary(),
+          back_inserter(_outNode));
     } while (_outNode.size() <= 0);
 
     //Check validity
@@ -200,13 +196,13 @@ GenerateNode(vector<CfgType>& _outNode) {
 }
 
 
-template<class MPTraits>
+template <typename MPTraits>
 bool
 VisibilityBasedPRM<MPTraits>::
 ConnectVisibleGuardSets(vector<CfgType>& _outNode) {
-  LocalPlannerPointer lp = this->GetMPProblem()->GetLocalPlanner(m_lpLabel);
-  GraphType* g = this->GetMPProblem()->GetRoadmap()->GetGraph();
-  Environment* env = this->GetMPProblem()->GetEnvironment();
+  auto lp = this->GetLocalPlanner(m_lpLabel);
+  GraphType* g = this->GetRoadmap()->GetGraph();
+  Environment* env = this->GetEnvironment();
 
   typedef typename vector<CfgType>::iterator CIT;
   typedef typename vector<vector<CfgType> >::iterator GIT; //Guard subset iterator

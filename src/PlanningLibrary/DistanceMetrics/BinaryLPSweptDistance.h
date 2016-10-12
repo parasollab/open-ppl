@@ -25,7 +25,7 @@ class BinaryLPSweptDistance : public LPSweptDistance<MPTraits> {
     BinaryLPSweptDistance(string _lp = "", double _posRes = .1,
         double _oriRes = .1, double _tolerance = .01, int _maxAttempts = 100,
         bool _bbox = false);
-    BinaryLPSweptDistance(MPProblemType* _problem, XMLNode& _node);
+    BinaryLPSweptDistance(XMLNode& _node);
 
     ///@}
     ///@name MPBaseObject Overrides
@@ -66,8 +66,7 @@ BinaryLPSweptDistance(string _lp, double _posRes, double _oriRes,
 
 template <typename MPTraits>
 BinaryLPSweptDistance<MPTraits>::
-BinaryLPSweptDistance(MPProblemType* _problem, XMLNode& _node) :
-    LPSweptDistance<MPTraits>(_problem, _node) {
+BinaryLPSweptDistance(XMLNode& _node) : LPSweptDistance<MPTraits>(_node) {
   this->SetName("BinaryLPSwept");
   m_tolerance = _node.Read("tolerance", false, 0.01, 0.0, 1000.0, "tolerance");
   m_maxAttempts = _node.Read("maxAttempts", false, 10, 1, 100, "maximum depth "
@@ -94,7 +93,7 @@ Distance(const CfgType& _c1, const CfgType& _c2) {
   double positionResSave = this->m_positionRes;
   double orientationResSave = this->m_orientationRes;
 
-  Environment* env = this->GetMPProblem()->GetEnvironment();
+  Environment* env = this->GetEnvironment();
   double oldDist = LPSweptDistance<MPTraits>::Distance(_c1, _c2);
   double newDist = 0.0;
   int matchCount = 1;

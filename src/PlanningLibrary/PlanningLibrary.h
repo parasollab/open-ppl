@@ -1,5 +1,7 @@
-#ifndef PLANNING_LIBRARY_H_
-#define PLANNING_LIBRARY_H_
+#ifndef MP_LIBRARY_H_
+#define MP_LIBRARY_H_
+
+#include "MPProblem/MPProblem.h"
 
 #include "Utilities/MetricUtils.h"
 #include "Utilities/MPUtils.h"
@@ -93,21 +95,21 @@ class PlanningLibrary final
     ////////////////////////////////////////////////////////////////////////////
     /// @brief Read an XML file to set the algorithms and parameters in this
     ///        instance.
-    /// @param[in] _filename    The XML file name.
+    /// @param[in] _filename The XML file name.
     void ReadXMLFile(const string& _filename);
 
     ///@}
     ///@name Base Filename Accessors
     ///@{
 
-    const string& GetBaseFilename() const {return m_baseFilename;}
-    void SetBaseFilename(const string& _s) {m_baseFilename = _s;}
+    const string& GetBaseFilename() const {return m_problem->GetBaseFilename();}
+    void SetBaseFilename(const string& _s) {m_problem->SetBaseFilename(_s);}
 
     ///@}
     ///@name Stat Class Accessor
     ///@{
 
-    StatClass* GetStatClass() {return m_stats;}
+    StatClass* GetStatClass() {return m_problem->GetStatClass();}
 
     ///@}
     ///@name Distance Metric Accessors
@@ -214,8 +216,8 @@ class PlanningLibrary final
     ///@name Map Evaluator Accessors
     ///@{
 
-    string GetQueryFilename() const {return m_queryFilename;}
-    void SetQueryFilename(const string& _s) {m_queryFilename = _s;}
+    string GetQueryFilename() const {return m_problem->GetQueryFilename();}
+    void SetQueryFilename(const string& _s) {m_problem->SetQueryFilename(_s);}
 
     MapEvaluatorPointer GetMapEvaluator(const string& _l) {
       return m_mapEvaluators->GetMethod(_l);
@@ -241,6 +243,14 @@ class PlanningLibrary final
     ///@{
 
     ////////////////////////////////////////////////////////////////////////////
+    /// @brief Get the current MPProblem.
+    MPProblemType* GetMPProblem() {return m_problem;}
+
+    ////////////////////////////////////////////////////////////////////////////
+    /// @brief Set the current MPProblem of all methods.
+    void SetMPProblem(MPProblemType* _p);
+
+    ////////////////////////////////////////////////////////////////////////////
     /// @brief Add an input set to this PlanningLibrary.
     /// @param[in] _label        The MPStrategy label to use.
     /// @param[in] _seed         The random seed to use.
@@ -250,35 +260,35 @@ class PlanningLibrary final
         const string& _baseFileName, bool _vizmoDebug = false) {
       m_solvers.push_back(Solver(_label, _seed, _baseFileName, _vizmoDebug));
     }
+
     void Solve(); ///< Run each input (solver) in sequence.
 
     ///@}
     ///@name Debugging
     ///@{
 
-    virtual void Print(ostream& _os) const; ///< Print each method set.
+    void Print(ostream& _os) const; ///< Print each method set.
+
+    ///@}
 
   private:
 
-    ///@}
     ///@name Construction Helpers
     ///@{
 
-    virtual void Initialize(); ///< Initialize all local method sets and data.
+    void Initialize(); ///< Initialize all local method sets and data.
 
     ////////////////////////////////////////////////////////////////////////////
     /// @brief Helper for parsing XML nodes.
     /// @param[in] _node The child node to be parsed.
-    /// @param[in,out]   The PlanningLibrary to parse into.
-    bool ParseChild(XMLNode& _node, MPProblemType* _problem);
-
-    void SetMPProblem(); ///< Set the MPProblem of all methods to this.
+    bool ParseChild(XMLNode& _node);
 
     ///@}
     ///@name Inputs
     ///@{
 
-    vector<Solver> m_solvers;       ///< The set of inputs to execute.
+    MPProblemType* m_problem;   ///< The current MPProblem.
+    vector<Solver> m_solvers;   ///< The set of inputs to execute.
 
     ///@}
     ///@name Method Sets
@@ -315,7 +325,7 @@ template <typename MPTraits>
 PlanningLibrary<MPTraits>::
 PlanningLibrary(const string& _filename) {
   Initialize();
-  ReadXMLFile(_filename, this);
+  ReadXMLFile(_filename);
 }
 
 
@@ -339,18 +349,40 @@ PlanningLibrary<MPTraits>::
 template <typename MPTraits>
 void
 PlanningLibrary<MPTraits>::
-SetMPProblem(){
-  m_distanceMetrics->SetMPProblem(this);
-  m_validityCheckers->SetMPProblem(this);
-  m_neighborhoodFinders->SetMPProblem(this);
-  m_samplers->SetMPProblem(this);
-  m_localPlanners->SetMPProblem(this);
-  m_extenders->SetMPProblem(this);
-  m_pathModifiers->SetMPProblem(this);
-  m_connectors->SetMPProblem(this);
-  m_metrics->SetMPProblem(this);
-  m_mapEvaluators->SetMPProblem(this);
-  m_mpStrategies->SetMPProblem(this);
+SetMPProblem(MPProblemType* _p) {
+  m_problem = _p;
+
+  // Set the current MPProblem for all algorithms.
+  m_distanceMetrics->SetMPProblem(_p);
+  m_validityCheckers->SetMPProblem(_p);
+  m_neighborhoodFinders->SetMPProblem(_p);
+  m_samplers->SetMPProblem(_p);
+  m_localPlanners->SetMPProblem(_p);
+  m_extenders->SetMPProblem(_p);
+  m_pathModifiers->SetMPProblem(_p);
+  m_connectors->SetMPProblem(_p);
+  m_metrics->SetMPProblem(_p);
+  m_mapEvaluators->SetMPProblem(_p);
+  m_mpStrategies->SetMPProblem(_p);
+
+  // Ensure CD structures have been built.
+  auto& cdMethods = Body::m_cdMethods;
+  for(auto& vc : *m_validityCheckers) {
+    // Try to cast each validity checker to the collision detection base class.
+    auto method =
+        dynamic_pointer_cast<CollisionDetectionValidity<MPTraits>>(vc.second);
+
+    // If the cast failed, then this isn't a CD method and we can move on.
+    if(!method) continue;
+
+    // Check if the method was already added.
+    const auto& cd = method->GetCDMethod();
+    const bool alreadyAdded = find(cdMethods.begin(), cdMethods.end(), cd) !=
+        cdMethods.end();
+    if(!alreadyAdded)
+      cdMethods.push_back(cd);
+  }
+  m_problem->GetEnvironment()->BuildCDStructure();
 }
 
 
@@ -358,27 +390,27 @@ template <typename MPTraits>
 void
 PlanningLibrary<MPTraits>::
 Initialize() {
-  m_distanceMetrics = new DistanceMetricSet(
+  m_distanceMetrics = new DistanceMetricSet(this,
       typename MPTraits::DistanceMetricMethodList(), "DistanceMetrics");
-  m_validityCheckers = new ValidityCheckerSet(
+  m_validityCheckers = new ValidityCheckerSet(this,
       typename MPTraits::ValidityCheckerMethodList(), "ValidityCheckers");
-  m_neighborhoodFinders = new NeighborhoodFinderSet(
+  m_neighborhoodFinders = new NeighborhoodFinderSet(this,
       typename MPTraits::NeighborhoodFinderMethodList(), "NeighborhoodFinders");
-  m_samplers = new SamplerSet(
+  m_samplers = new SamplerSet(this,
       typename MPTraits::SamplerMethodList(), "Samplers");
-  m_localPlanners = new LocalPlannerSet(
+  m_localPlanners = new LocalPlannerSet(this,
       typename MPTraits::LocalPlannerMethodList(), "LocalPlanners");
-  m_extenders = new ExtenderSet(
+  m_extenders = new ExtenderSet(this,
       typename MPTraits::ExtenderMethodList(), "Extenders");
-  m_pathModifiers = new PathModifierSet(
+  m_pathModifiers = new PathModifierSet(this,
       typename MPTraits::PathModifierMethodList(), "PathModifiers");
-  m_connectors = new ConnectorSet(
+  m_connectors = new ConnectorSet(this,
       typename MPTraits::ConnectorMethodList(), "Connectors");
-  m_metrics = new MetricSet(
+  m_metrics = new MetricSet(this,
       typename MPTraits::MetricMethodList(), "Metrics");
-  m_mapEvaluators = new MapEvaluatorSet(
+  m_mapEvaluators = new MapEvaluatorSet(this,
       typename MPTraits::MapEvaluatorMethodList(), "MapEvaluators");
-  m_mpStrategies = new MPStrategySet(
+  m_mpStrategies = new MPStrategySet(this,
       typename MPTraits::MPStrategyMethodList(), "MPStrategies");
 }
 
@@ -387,27 +419,24 @@ Initialize() {
 template <typename MPTraits>
 void
 PlanningLibrary<MPTraits>::
-ReadXMLFile(const string& _filename, MPProblemType* _problem) {
-  size_t sl = _filename.rfind("/");
-  m_filePath = _filename.substr(0, sl == string::npos ? 0 : sl + 1);
-
+ReadXMLFile(const string& _filename) {
   // Open the XML and get the root node.
   XMLNode mpNode(_filename, "MotionPlanning");
 
   // Find the 'PlanningLibrary' node.
   XMLNode* planningLibrary = nullptr;
   for(auto& child : mpNode)
-    if(child.Name() == "PlanningLibrary")
+    if(child.Name() == "MPProblem")
       planningLibrary = &child;
 
-  // Throw exceptions if we can't find it.
+  // Throw exception if we can't find it.
   if(!planningLibrary)
     throw ParseException(WHERE, "Cannot find PlanningLibrary node in XML file '"
         + _filename + "'.");
 
   // Parse the library node to set algorithms and parameters.
   for(auto& child : *planningLibrary)
-    ParseChild(child, _problem);
+    ParseChild(child);
 
   // Ensure we have at least one solver.
   if(m_solvers.empty())
@@ -432,49 +461,49 @@ ReadXMLFile(const string& _filename, MPProblemType* _problem) {
 template <typename MPTraits>
 bool
 PlanningLibrary<MPTraits>::
-ParseChild(XMLNode& _node, MPProblemType* _problem) {
+ParseChild(XMLNode& _node) {
   if(_node.Name() == "DistanceMetrics") {
-    m_distanceMetrics->ParseXML(_problem, _node);
+    m_distanceMetrics->ParseXML(_node);
     return true;
   }
   else if(_node.Name() == "ValidityCheckers") {
-    m_validityCheckers->ParseXML(_problem, _node);
+    m_validityCheckers->ParseXML(_node);
     return true;
   }
   else if(_node.Name() == "NeighborhoodFinders") {
-    m_neighborhoodFinders->ParseXML(_problem, _node);
+    m_neighborhoodFinders->ParseXML(_node);
     return true;
   }
   else if(_node.Name() == "Samplers") {
-    m_samplers->ParseXML(_problem, _node);
+    m_samplers->ParseXML(_node);
     return true;
   }
   else if(_node.Name() == "LocalPlanners") {
-    m_localPlanners->ParseXML(_problem, _node);
+    m_localPlanners->ParseXML(_node);
     return true;
   }
   else if(_node.Name() == "Extenders") {
-    m_extenders->ParseXML(_problem, _node);
+    m_extenders->ParseXML(_node);
     return true;
   }
   else if(_node.Name() == "PathModifiers") {
-    m_pathModifiers->ParseXML(_problem, _node);
+    m_pathModifiers->ParseXML(_node);
     return true;
   }
   else if(_node.Name() == "Connectors") {
-    m_connectors->ParseXML(_problem, _node);
+    m_connectors->ParseXML(_node);
     return true;
   }
   else if(_node.Name() == "Metrics") {
-    m_metrics->ParseXML(_problem, _node);
+    m_metrics->ParseXML(_node);
     return true;
   }
   else if(_node.Name() == "MapEvaluators") {
-    m_mapEvaluators->ParseXML(_problem, _node);
+    m_mapEvaluators->ParseXML(_node);
     return true;
   }
   else if(_node.Name() == "MPStrategies") {
-    m_mpStrategies->ParseXML(_problem, _node);
+    m_mpStrategies->ParseXML(_node);
     return true;
   }
   else if(_node.Name() == "Solver") {
@@ -503,7 +532,6 @@ void
 PlanningLibrary<MPTraits>::
 Print(ostream& _os) const {
   _os << "PlanningLibrary" << endl;
-  m_environment->Print(_os);
   m_distanceMetrics->Print(_os);
   m_validityCheckers->Print(_os);
   m_neighborhoodFinders->Print(_os);
@@ -535,12 +563,12 @@ Solve() {
     SRand(get<1>(sit));
 #endif
 
-    SetBaseFilename(GetPath(get<2>(sit)));
-    m_stats->SetAuxDest(GetBaseFilename());
+    SetBaseFilename(GetMPProblem()->GetPath(get<2>(sit)));
+    GetStatClass()->SetAuxDest(GetBaseFilename());
 
     // Initialize vizmo debug if there is a valid filename
     if(get<3>(sit))
-        VDInit(m_baseFilename + ".vd");
+        VDInit(GetBaseFilename() + ".vd");
 
     GetMPStrategy(get<0>(sit))->operator()();
 

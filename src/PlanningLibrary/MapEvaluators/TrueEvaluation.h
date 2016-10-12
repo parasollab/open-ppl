@@ -6,17 +6,16 @@
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup MapEvaluators
 /// @brief TODO.
-/// @tparam MPTraits Motion planning universe
 ///
 /// TODO.
 ////////////////////////////////////////////////////////////////////////////////
-template<class MPTraits>
+template <typename MPTraits>
 class TrueEvaluation : public MapEvaluatorMethod<MPTraits> {
   public:
 
     TrueEvaluation();
-    TrueEvaluation(typename MPTraits::MPProblemType* _problem, XMLNode& _node);
-    virtual ~TrueEvaluation();
+    TrueEvaluation(XMLNode& _node);
+    virtual ~TrueEvaluation() = default;
 
     virtual void Print(ostream& _os) const;
 
@@ -24,22 +23,19 @@ class TrueEvaluation : public MapEvaluatorMethod<MPTraits> {
     virtual bool operator()(int _regionID) {return true;}
 };
 
-template<class MPTraits>
+template <typename MPTraits>
 TrueEvaluation<MPTraits>::TrueEvaluation() {
   this->SetName("TrueEvaluation");
 }
 
-template<class MPTraits>
-TrueEvaluation<MPTraits>::TrueEvaluation(typename MPTraits::MPProblemType* _problem, XMLNode& _node)
-  : MapEvaluatorMethod<MPTraits>(_problem, _node) {
+template <typename MPTraits>
+TrueEvaluation<MPTraits>::TrueEvaluation(XMLNode& _node)
+  : MapEvaluatorMethod<MPTraits>(_node) {
     this->SetName("TrueEvaluation");
 }
 
-template<class MPTraits>
-TrueEvaluation<MPTraits>::~TrueEvaluation() {
-}
 
-template<class MPTraits>
+template <typename MPTraits>
 void
 TrueEvaluation<MPTraits>::Print(ostream& _os) const {
   _os << this->GetNameAndLabel() << endl;

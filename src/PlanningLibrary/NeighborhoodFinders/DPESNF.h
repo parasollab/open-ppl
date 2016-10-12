@@ -7,7 +7,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup NeighborhoodFinders
 /// @brief Distance-based Projection onto Euclidean Space (DPES)
-/// @tparam MPTraits Motion planning universe
 ///
 /// Given a dimension \f$m\f$, project all input points onto
 /// \f$\mathcal{R}^m\f$. At query time, project query configuration to the lower
@@ -25,7 +24,7 @@
 /// @todo Abstract the underlying storage structure to allow for KD-tree or
 ///       other searches other than brute force searching.
 ////////////////////////////////////////////////////////////////////////////////
-template<class MPTraits>
+template <typename MPTraits>
 class DPESNF : public NeighborhoodFinderMethod<MPTraits> {
 
   public:
@@ -50,7 +49,7 @@ class DPESNF : public NeighborhoodFinderMethod<MPTraits> {
     DPESNF(std::string _dmLabel = "", bool _unconnected = false,
         size_t _m = 3, size_t _k = 10);
 
-    DPESNF(MPProblemType* _problem, XMLNode& _node);
+    DPESNF(XMLNode& _node);
 
     virtual ~DPESNF() = default;
 
@@ -119,7 +118,7 @@ class DPESNF : public NeighborhoodFinderMethod<MPTraits> {
                                   ///< entire roadmap
 };
 
-template<class MPTraits>
+template <typename MPTraits>
 DPESNF<MPTraits>::
 DPESNF(std::string _dmLabel, bool _unconnected,
     size_t _m, size_t _k) :
@@ -130,17 +129,17 @@ DPESNF(std::string _dmLabel, bool _unconnected,
     this->m_k = _k;
   }
 
-template<class MPTraits>
+template <typename MPTraits>
 DPESNF<MPTraits>::
-DPESNF(MPProblemType* _problem, XMLNode& _node) :
-  NeighborhoodFinderMethod<MPTraits>(_problem, _node) {
+DPESNF(XMLNode& _node) :
+  NeighborhoodFinderMethod<MPTraits>(_node) {
     this->SetName("DPESNF");
     this->m_nfType = K;
     this->m_k = _node.Read("k", true, 5, 0, MAX_INT, "k value");
     m_m = _node.Read("m", true, 3, 1, MAX_INT, "m value for DPES");
   }
 
-template<class MPTraits>
+template <typename MPTraits>
 void
 DPESNF<MPTraits>::
 Print(std::ostream& _os) const {
@@ -150,7 +149,7 @@ Print(std::ostream& _os) const {
     << "\tm: " << m_m << endl;
 }
 
-template<class MPTraits>
+template <typename MPTraits>
 template<typename InputIterator, typename OutputIterator>
 OutputIterator
 DPESNF<MPTraits>::
@@ -188,7 +187,7 @@ FindNeighbors(RoadmapType* _rmp,
   return _out;
 }
 
-template<class MPTraits>
+template <typename MPTraits>
 template<typename InputIterator, typename OutputIterator>
 OutputIterator
 DPESNF<MPTraits>::
@@ -199,7 +198,7 @@ FindNeighborPairs(RoadmapType* _rmp,
   throw RunTimeException(WHERE, "FindNeighborPairs is not yet implemented.");
 }
 
-template<class MPTraits>
+template <typename MPTraits>
 template<typename InputIterator>
 void
 DPESNF<MPTraits>::
@@ -259,7 +258,7 @@ CreatePivots(RoadmapType* _rdmp,
   }
 }
 
-template<class MPTraits>
+template <typename MPTraits>
 typename DPESNF<MPTraits>::Projected
 DPESNF<MPTraits>::
 Project(const CfgType& _c) {
@@ -269,7 +268,7 @@ Project(const CfgType& _c) {
   return proj;
 }
 
-template<class MPTraits>
+template <typename MPTraits>
 template<typename OutputIterator>
 OutputIterator
 DPESNF<MPTraits>::
@@ -324,7 +323,7 @@ KClosest(RoadmapType* _rdmp, const CfgType& _c, OutputIterator _out) {
   return copy(closest.rbegin(), closest.rend(), _out);
 }
 
-template<class MPTraits>
+template <typename MPTraits>
 double
 DPESNF<MPTraits>::
 Euclidean(const Projected& _v1, const Projected& _v2) {

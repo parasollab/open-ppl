@@ -11,7 +11,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup LocalPlanners
 /// @brief TODO
-/// @tparam MPTraits Motion planning universe
 ///
 /// TODO
 ////////////////////////////////////////////////////////////////////////////////
@@ -21,8 +20,6 @@ class RVLocalPlanner: public LocalPlannerMethod<MPTraits> {
     typedef typename MPTraits::CfgType CfgType;
     typedef typename MPTraits::WeightType WeightType;
     typedef typename MPTraits::MPProblemType MPProblemType;
-    typedef typename MPProblemType::DistanceMetricPointer DistanceMetricPointer;
-    typedef typename MPProblemType::ValidityCheckerPointer ValidityCheckerPointer;
     ReachableVolumeRobot m_rvr;
     string m_treeStructure;
     string m_repositionPolicy;
@@ -30,7 +27,7 @@ class RVLocalPlanner: public LocalPlannerMethod<MPTraits> {
     double m_S;
 
     RVLocalPlanner(string _vcLabel = "", bool _evalation = false);
-    RVLocalPlanner(MPProblemType* _problem, XMLNode& _node);
+    RVLocalPlanner(XMLNode& _node);
     virtual ~RVLocalPlanner();
 
     virtual void PrintOptions(ostream& _os);
@@ -47,8 +44,8 @@ class RVLocalPlanner: public LocalPlannerMethod<MPTraits> {
         bool _checkCollision = true, bool _savePath = false,
         bool _saveFailedPath = false){
 
-      Environment* env = this->GetMPProblem()->GetEnvironment();
-      ValidityCheckerPointer vcm = this->GetMPProblem()->GetValidityChecker(m_vcLabel);
+      Environment* env = this->GetEnvironment();
+      auto vcm = this->GetValidityChecker(m_vcLabel);
       string callee = this->GetName() + "::IsConnectedRV";
       CDInfo cdInfo;
       CfgType tick;
@@ -189,8 +186,8 @@ RVLocalPlanner<MPTraits>::RVLocalPlanner(string _vcLabel, bool _evalation) :
 
 
 template<class MPTraits>
-RVLocalPlanner<MPTraits>::RVLocalPlanner(MPProblemType* _problem, XMLNode& _node) :
-  LocalPlannerMethod<MPTraits>(_problem, _node) {
+RVLocalPlanner<MPTraits>::RVLocalPlanner(XMLNode& _node) :
+  LocalPlannerMethod<MPTraits>(_node) {
     this->SetName("RVLocalPlanner");
     m_vcLabel = _node.Read("vcLabel", true, "", "Validity Test Method");
     m_treeStructure = _node.Read("treeStructure", false, "EndEffectorFirst", "Structure of reachable volume tree");

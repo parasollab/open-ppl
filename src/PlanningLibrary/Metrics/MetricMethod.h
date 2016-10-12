@@ -6,19 +6,18 @@
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup Metrics
 /// @brief Base algorithm abstraction for \ref Metrics.
-/// @tparam MPTraits Motion planning universe
 ///
 /// MetricMethod has one main function, @c operator() which returns a value
 /// associated with the roadmap for that metric.
 ////////////////////////////////////////////////////////////////////////////////
-template<class MPTraits>
+template <typename MPTraits>
 class MetricMethod : public MPBaseObject<MPTraits> {
+
   public:
 
-    MetricMethod() {}
-    MetricMethod(typename MPTraits::MPProblemType* _problem, XMLNode& _node)
-      : MPBaseObject<MPTraits>(_problem, _node) {}
-    virtual ~MetricMethod() {}
+    MetricMethod() = default;
+    MetricMethod(XMLNode& _node) : MPBaseObject<MPTraits>(_node) {}
+    virtual ~MetricMethod() = default;
 
     ////////////////////////////////////////////////////////////////////////////
     /// @brief Compute a metric from a roadmap
@@ -26,7 +25,7 @@ class MetricMethod : public MPBaseObject<MPTraits> {
     ///
     /// @usage
     /// @code
-    /// MetricPointer m = this->GetMPProblem()->GetMetric(m_mLabel);
+    /// MetricPointer m = this->GetMetric(m_mLabel);
     /// double v = (*m)(); //call as function object
     /// double v2 = m->operator()(); //call with pointer notation
     /// @endcode

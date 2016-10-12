@@ -6,7 +6,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup PathModifiers
 /// @brief Retract path to higher clearance.
-/// @tparam MPTraits Motion planning universe
 ///
 /// This method represents algorithm 7, C-Retraction from Geraerts and Overmars,
 /// "Creating High-quality Paths for Motion Planning," IJRR 2007. Essentially it
@@ -14,19 +13,17 @@
 /// configurations, and modifying the path based on if the random configurations
 /// have better clearance.
 ////////////////////////////////////////////////////////////////////////////////
-template<class MPTraits>
+template <typename MPTraits>
 class CRetractionPathModifier : public PathModifierMethod<MPTraits> {
   public:
     typedef typename MPTraits::CfgType CfgType;
     typedef typename MPTraits::MPProblemType MPProblemType;
     typedef typename MPProblemType::GraphType GraphType;
     typedef typename MPProblemType::VID VID;
-    typedef typename MPProblemType::LocalPlannerPointer LocalPlannerPointer;
-    typedef typename MPProblemType::DistanceMetricPointer DistanceMetricPointer;
 
     CRetractionPathModifier(size_t _iter = 10,
         const ClearanceUtility<MPTraits>& _cu = ClearanceUtility<MPTraits>());
-    CRetractionPathModifier(MPProblemType* _problem, XMLNode& _node);
+    CRetractionPathModifier(XMLNode& _node);
 
     void Print(ostream& _os) const;
 
@@ -40,7 +37,7 @@ class CRetractionPathModifier : public PathModifierMethod<MPTraits> {
     ClearanceUtility<MPTraits> m_clearanceUtility;
 };
 
-template<class MPTraits>
+template <typename MPTraits>
 CRetractionPathModifier<MPTraits>::
 CRetractionPathModifier(size_t _iter,
         const ClearanceUtility<MPTraits>& _cu) :
@@ -48,18 +45,18 @@ CRetractionPathModifier(size_t _iter,
     this->SetName("CRetractionPathModifier");
   }
 
-template<class MPTraits>
+template <typename MPTraits>
 CRetractionPathModifier<MPTraits>::
-CRetractionPathModifier(MPProblemType* _problem, XMLNode& _node) :
-  PathModifierMethod<MPTraits>(_problem, _node),
-  m_clearanceUtility(_problem, _node) {
+CRetractionPathModifier(XMLNode& _node) :
+  PathModifierMethod<MPTraits>(_node),
+  m_clearanceUtility(_node) {
     this->SetName("CRetractionPathModifier");
     m_iter = _node.Read("iter", true, 10, 0, MAX_INT, "Loop iterations");
     m_maxIter = _node.Read("maxIter", false, 1000, 0, MAX_INT,
         "Max loop iterations");
   }
 
-template<class MPTraits>
+template <typename MPTraits>
 void
 CRetractionPathModifier<MPTraits>::
 Print(ostream& _os) const {
@@ -70,7 +67,7 @@ Print(ostream& _os) const {
 }
 
 
-template<class MPTraits>
+template <typename MPTraits>
 bool
 CRetractionPathModifier<MPTraits>::
 ModifyImpl(vector<CfgType>& _path, vector<CfgType>& _newPath) {
@@ -96,8 +93,7 @@ ModifyImpl(vector<CfgType>& _path, vector<CfgType>& _newPath) {
 
   Environment* env = this->GetEnvironment();
   shared_ptr<Boundary> boundary = env->GetBoundary();
-  DistanceMetricPointer dm =
-    this->GetDistanceMetric(m_clearanceUtility.GetDistanceMetricLabel());
+  auto dm = this->GetDistanceMetric(m_clearanceUtility.GetDistanceMetricLabel());
 
   double step = min(env->GetPositionRes(), env->GetOrientationRes());
 
@@ -187,8 +183,7 @@ ValidatePath(vector<CfgType>& _path,
 
   Environment* env = this->GetEnvironment();
   shared_ptr<Boundary> boundary = env->GetBoundary();
-  DistanceMetricPointer dm =
-    this->GetDistanceMetric(m_clearanceUtility.GetDistanceMetricLabel());
+  auto dm = this->GetDistanceMetric(m_clearanceUtility.GetDistanceMetricLabel());
 
   double step = min(env->GetPositionRes(), env->GetOrientationRes());
 

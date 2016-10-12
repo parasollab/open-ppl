@@ -14,14 +14,12 @@ class RegionConnector : public ConnectorMethod<MPTraits> {
 
     typedef typename MPTraits::CfgType CfgType;
     typedef typename MPTraits::MPProblemType MPProblemType;
-    typedef typename MPProblemType::NeighborhoodFinderPointer NeighborhoodFinderPointer;
-    typedef typename MPProblemType::LocalPlannerPointer LocalPlannerPointer;
     typedef typename MPProblemType::RoadmapType RoadmapType;
     typedef typename MPProblemType::VID VID;
 
     // Constructors
     RegionConnector(string _nfLabel = "", string _lpLabel = "", size_t _iters = 10);
-    RegionConnector(MPProblemType* _problem, XMLNode& _node);
+    RegionConnector(XMLNode& _node);
 
     // Utility Methods and Typedefs
     virtual void Print(ostream& _os) const;
@@ -48,18 +46,17 @@ class RegionConnector : public ConnectorMethod<MPTraits> {
 template<class MPTraits>
 RegionConnector<MPTraits>::
 RegionConnector(string _nfLabel, string _lpLabel, size_t _iters) :
-  ConnectorMethod<MPTraits>(_nfLabel, _lpLabel), m_iters(_iters) {
-    this->SetName("RegionConnector");
-  }
+    ConnectorMethod<MPTraits>(_nfLabel, _lpLabel), m_iters(_iters) {
+  this->SetName("RegionConnector");
+}
 
 template<class MPTraits>
 RegionConnector<MPTraits>::
-RegionConnector(MPProblemType* _problem, XMLNode& _node) :
-  ConnectorMethod<MPTraits>(_problem, _node)  {
-    this->SetName("RegionConnector");
-    m_iters = _node.Read("numIters", true, 1, 0, MAX_INT,
-        "number of times to execute the region connection");
-  }
+RegionConnector(XMLNode& _node) : ConnectorMethod<MPTraits>(_node)  {
+  this->SetName("RegionConnector");
+  m_iters = _node.Read("numIters", true, 1, 0, MAX_INT,
+      "number of times to execute the region connection");
+}
 
 template<class MPTraits>
 void
@@ -93,7 +90,7 @@ Connect(RoadmapType* _rm,
     vector<pair<VID, double>> closestRegion2;
     CfgType cfg = _rm->GetGraph()->GetVertex(randNode);
 
-    NeighborhoodFinderPointer nfptr = this->GetNeighborhoodFinder(this->m_nfLabel);
+    auto nfptr = this->GetNeighborhoodFinder(this->m_nfLabel);
     nfptr->FindNeighbors(_rm, _itr2First, _itr2Last, cfg, back_inserter(closestRegion2));
 
     // 3. the closest node from region 1 of nodes found in step 2 are obtained
@@ -119,7 +116,7 @@ ConnectNeighbors(RoadmapType* _rm, VID _vid,
     vector<pair<VID, double>>& _closest, OutputIterator _collision) {
 
   Environment* env = this->GetEnvironment();
-  LocalPlannerPointer lp = this->GetLocalPlanner(this->m_lpLabel);
+  auto lp = this->GetLocalPlanner(this->m_lpLabel);
   LPOutput <MPTraits> lpOutput;
 
   typedef typename vector<pair<VID, double>>::iterator VIT;

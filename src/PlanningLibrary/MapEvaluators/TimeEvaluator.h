@@ -10,7 +10,7 @@
 ///          of time.
 /// \tparam  MPTraits Motion planning universe
 ////////////////////////////////////////////////////////////////////////////////
-template<class MPTraits>
+template <typename MPTraits>
 class TimeEvaluator : public MapEvaluatorMethod<MPTraits> {
 
   private:
@@ -31,8 +31,8 @@ class TimeEvaluator : public MapEvaluatorMethod<MPTraits> {
       this->SetName("TimeEvaluator");
       m_clock.SetName("TimeEvaluatorClock");
     }
-    TimeEvaluator(MPProblemType* _problem, XMLNode& _node)
-        : MapEvaluatorMethod<MPTraits>(_problem, _node) {
+    TimeEvaluator(XMLNode& _node)
+        : MapEvaluatorMethod<MPTraits>(_node) {
       this->SetName("TimeEvaluator");
       m_clock.SetName("TimeEvaluatorClock");
       ParseXML(_node);

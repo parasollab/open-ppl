@@ -20,14 +20,14 @@
 /// it takes as input a configuration @c c and determines whether the robot
 /// configured at @c lies entirely within an obstacle.
 ////////////////////////////////////////////////////////////////////////////////
-template<class MPTraits>
+template <typename MPTraits>
 class ValidityCheckerMethod : public MPBaseObject<MPTraits> {
   public:
     typedef typename MPTraits::CfgType CfgType;
 
     ValidityCheckerMethod() : MPBaseObject<MPTraits>(), m_validity(true) {}
-    ValidityCheckerMethod(typename MPTraits::MPProblemType* _problem, XMLNode& _node) :
-      MPBaseObject<MPTraits>(_problem, _node), m_validity(true) {}
+    ValidityCheckerMethod(XMLNode& _node) :
+      MPBaseObject<MPTraits>(_node), m_validity(true) {}
     virtual ~ValidityCheckerMethod(){}
 
     virtual void Print(ostream& _os) const {
@@ -55,7 +55,7 @@ class ValidityCheckerMethod : public MPBaseObject<MPTraits> {
     ///
     /// @usage
     /// @code
-    /// ValidityCheckerPointer vc = this->GetMPProblem()->GetValidityChecker(m_vcLabel);
+    /// ValidityCheckerPointer vc = this->GetValidityChecker(m_vcLabel);
     /// CfgType c;
     /// CDInfo cdInfo;
     /// string callee("SomeFunc");
@@ -76,7 +76,7 @@ class ValidityCheckerMethod : public MPBaseObject<MPTraits> {
     ///
     /// @usage
     /// @code
-    /// ValidityCheckerPointer vc = this->GetMPProblem()->GetValidityChecker(m_vcLabel);
+    /// ValidityCheckerPointer vc = this->GetValidityChecker(m_vcLabel);
     /// CfgType c;
     /// bool valid = vc->IsInsideObstacle(c);
     /// @endcode

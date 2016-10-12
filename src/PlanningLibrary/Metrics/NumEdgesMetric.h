@@ -6,24 +6,23 @@
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup Metrics
 /// @brief Get number of edges in roadmap.
-/// @tparam MPTraits Motion planning universe
 ////////////////////////////////////////////////////////////////////////////////
-template<class MPTraits>
+template <typename MPTraits>
 class NumEdgesMetric : public MetricMethod<MPTraits> {
   public:
     NumEdgesMetric(){
       this->SetName("NumEdgesMetric");
     }
 
-    NumEdgesMetric(typename MPTraits::MPProblemType* _problem, XMLNode& _node)
-      : MetricMethod<MPTraits>(_problem, _node) {
+    NumEdgesMetric(XMLNode& _node)
+      : MetricMethod<MPTraits>(_node) {
       this->SetName("NumEdgesMetric");
     }
 
     virtual ~NumEdgesMetric(){}
 
     virtual double operator()(){
-      return this->GetMPProblem()->GetRoadmap()->GetGraph()->get_num_edges();
+      return this->GetRoadmap()->GetGraph()->get_num_edges();
     }
 };
 

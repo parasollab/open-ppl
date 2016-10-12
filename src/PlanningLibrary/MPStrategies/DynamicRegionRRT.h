@@ -23,7 +23,7 @@
 /// \brief  DynamicRegionRRT uses an embedded Reeb graph to guide dynamic
 ///         sampling regions through the environment.
 ////////////////////////////////////////////////////////////////////////////////
-template<class MPTraits>
+template <typename MPTraits>
 class DynamicRegionRRT : public BasicRRTStrategy<MPTraits> {
 
   public:
@@ -56,7 +56,7 @@ class DynamicRegionRRT : public BasicRRTStrategy<MPTraits> {
         double _growthFocus = .05, size_t _numRoots = 1,
         size_t _numDirections = 1, size_t _maxTrial = 3);
 
-    DynamicRegionRRT(MPProblemType* _problem, XMLNode& _node);
+    DynamicRegionRRT(XMLNode& _node);
 
     virtual ~DynamicRegionRRT() = default;
 
@@ -124,7 +124,7 @@ class DynamicRegionRRT : public BasicRRTStrategy<MPTraits> {
 /*------------------------------ Construction --------------------------------*/
 
 
-template<class MPTraits>
+template <typename MPTraits>
 DynamicRegionRRT<MPTraits>::
 DynamicRegionRRT(string _dm, string _nf, string _vc, string _nc, string _ex,
     vector<string> _evaluators, string _gt, bool _growGoals,
@@ -136,10 +136,10 @@ DynamicRegionRRT(string _dm, string _nf, string _vc, string _nc, string _ex,
 }
 
 
-template<class MPTraits>
+template <typename MPTraits>
 DynamicRegionRRT<MPTraits>::
-DynamicRegionRRT(MPProblemType* _problem, XMLNode& _node) :
-    BasicRRTStrategy<MPTraits>(_problem, _node) {
+DynamicRegionRRT(XMLNode& _node) :
+    BasicRRTStrategy<MPTraits>(_node) {
   this->SetName("DynamicRegionRRT");
   m_regionFactor = _node.Read("regionFactor", false, 2.5, 1., 4., "The region "
       "radius is this * robot radius");
@@ -151,7 +151,7 @@ DynamicRegionRRT(MPProblemType* _problem, XMLNode& _node) :
 
 /*----------------------- MPStrategyMethod Overriddes ------------------------*/
 
-template<class MPTraits>
+template <typename MPTraits>
 void
 DynamicRegionRRT<MPTraits>::
 Initialize() {
@@ -179,7 +179,7 @@ Initialize() {
 }
 
 
-template<class MPTraits>
+template <typename MPTraits>
 void
 DynamicRegionRRT<MPTraits>::
 Run() {
@@ -350,7 +350,7 @@ Run() {
 
 /*----------------------------- RRT Overrides --------------------------------*/
 
-template<class MPTraits>
+template <typename MPTraits>
 typename DynamicRegionRRT<MPTraits>::CfgType
 DynamicRegionRRT<MPTraits>::
 SelectDirection() {
@@ -447,7 +447,7 @@ FlowToMedialAxis(FlowGraph& _f) const {
          << " and " << _f.get_num_edges() << " edges."
          << "\n\tPushing to medial axis:";
 
-  MedialAxisUtility<MPTraits> mau(this->GetMPProblem(), "pqp_solid", this->m_dmLabel,
+  MedialAxisUtility<MPTraits> mau("pqp_solid", this->m_dmLabel,
       true, true, 10, 10, true, true);
   auto boundary = this->GetEnvironment()->GetBoundary();
 

@@ -6,23 +6,20 @@
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup PathModifiers
 /// @brief TODO.
-/// @tparam MPTraits Motion planning universe
 ///
 /// TODO.
 ////////////////////////////////////////////////////////////////////////////////
-template<class MPTraits>
+template <typename MPTraits>
 class ShortcuttingPathModifier : public PathModifierMethod<MPTraits> {
   public:
     typedef typename MPTraits::CfgType CfgType;
     typedef typename MPTraits::MPProblemType MPProblemType;
     typedef typename MPProblemType::GraphType GraphType;
     typedef typename MPProblemType::VID VID;
-    typedef typename MPProblemType::LocalPlannerPointer LocalPlannerPointer;
-    typedef typename MPProblemType::DistanceMetricPointer DistanceMetricPointer;
 
     ShortcuttingPathModifier(const string& _dmLabel = "",
         const string& _lpLabel = "");
-    ShortcuttingPathModifier(MPProblemType* _problem, XMLNode& _node);
+    ShortcuttingPathModifier(XMLNode& _node);
 
     virtual void ParseXML(XMLNode& _node);
     virtual void Print(ostream& _os) const;
@@ -33,29 +30,29 @@ class ShortcuttingPathModifier : public PathModifierMethod<MPTraits> {
     string m_lpLabel; // Local planner
 };
 
-template<class MPTraits>
+template <typename MPTraits>
 ShortcuttingPathModifier<MPTraits>::
 ShortcuttingPathModifier(const string& _dmLabel, const string& _lpLabel) :
   PathModifierMethod<MPTraits>(), m_lpLabel(_lpLabel) {
     this->SetName("ShortcuttingPathModifier");
   }
 
-template<class MPTraits>
+template <typename MPTraits>
 ShortcuttingPathModifier<MPTraits>::
-ShortcuttingPathModifier(MPProblemType* _problem, XMLNode& _node) :
-  PathModifierMethod<MPTraits>(_problem, _node) {
+ShortcuttingPathModifier(XMLNode& _node) :
+  PathModifierMethod<MPTraits>(_node) {
     this->SetName("ShortcuttingPathModifier");
     ParseXML(_node);
   }
 
-template<class MPTraits>
+template <typename MPTraits>
 void
 ShortcuttingPathModifier<MPTraits>::
 ParseXML(XMLNode& _node) {
   m_lpLabel = _node.Read("lpLabel", true, "", "Local planner method");
 }
 
-template<class MPTraits>
+template <typename MPTraits>
 void
 ShortcuttingPathModifier<MPTraits>::
 Print(ostream& _os) const {
@@ -65,7 +62,7 @@ Print(ostream& _os) const {
 
 // Shortens the path by skipping nodes with a greedy approach.
 // This function is also supposed to be used before MedialAxisSmooth.
-template<class MPTraits>
+template <typename MPTraits>
 bool
 ShortcuttingPathModifier<MPTraits>::
 ModifyImpl(vector<CfgType>& _path, vector<CfgType>& _newPath) {
@@ -81,7 +78,7 @@ ModifyImpl(vector<CfgType>& _path, vector<CfgType>& _newPath) {
   if(!originalPathVIDs.empty()) {
     smoothFileOutput = true;
 
-    LocalPlannerPointer lp = this->GetLocalPlanner(m_lpLabel);
+    auto lp = this->GetLocalPlanner(m_lpLabel);
     Environment* env = this->GetEnvironment();
     StatClass* stats = this->GetStatClass();
     LPOutput<MPTraits> tmpOutput;

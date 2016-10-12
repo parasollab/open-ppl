@@ -31,7 +31,7 @@ class AdaptiveConnector: public ConnectorMethod<MPTraits> {
         double _percentageRandom = .5, bool _fixedCost = false,
         bool _fixedReward = false, bool _checkIfSameCC = false,
         bool _countFailures = false, size_t _fail = 5);
-    AdaptiveConnector(MPProblemType* _problem, XMLNode& _node);
+    AdaptiveConnector(XMLNode& _node);
     virtual ~AdaptiveConnector() = default;
 
     ///@}
@@ -111,8 +111,7 @@ AdaptiveConnector(const vector<string>& _neigborGenLabels, string _lpLabel,
 
 template<class MPTraits>
 AdaptiveConnector<MPTraits>::
-AdaptiveConnector(MPProblemType* _problem, XMLNode& _node) :
-    ConnectorMethod<MPTraits>(_problem, _node) {
+AdaptiveConnector(XMLNode& _node) : ConnectorMethod<MPTraits>(_node) {
   this->SetName("AdaptiveConnector");
   ParseXML(_node);
 }
@@ -121,11 +120,17 @@ AdaptiveConnector(MPProblemType* _problem, XMLNode& _node) :
 template<class MPTraits>
 void
 AdaptiveConnector<MPTraits>::ParseXML(XMLNode& _node){
-  m_checkIfSameCC = _node.Read("checkIfSameCC", false, true, "If true, do not connect if edges are in the same CC");
-  m_countFailures = _node.Read("countFailures", false, false, "if false, ignore failure count and just attempt k; if true, attempt k neighbors until too many failures detected");
-  m_fail = _node.Read("fail", false, 5, 0, 10000, "amount of failed connections allowed before operation terminates");
-  m_percentageRandom = _node.Read("percentRandom", true, 0.5, 0.0, 1.0, "percent that a learned one is chosen");
-  m_setUniform = _node.Read("uniformProbability", false, false, "give all connection methods the same probability of getting chosen");
+  m_checkIfSameCC = _node.Read("checkIfSameCC", false, true, "If true, do not "
+      "connect if edges are in the same CC");
+  m_countFailures = _node.Read("countFailures", false, false, "if false, ignore "
+      "failure count and just attempt k; if true, attempt k neighbors until too "
+      "many failures detected");
+  m_fail = _node.Read("fail", false, 5, 0, 10000, "amount of failed connections "
+      "allowed before operation terminates");
+  m_percentageRandom = _node.Read("percentRandom", true, 0.5, 0.0, 1.0, "percent"
+      " that a learned one is chosen");
+  m_setUniform = _node.Read("uniformProbability", false, false, "give all "
+      "connection methods the same probability of getting chosen");
   m_fixedCost = _node.Read("fixedCost", true, false, "set a fixed cost");
   m_fixedReward = _node.Read("fixedReward", true, false, "set a fixed reward");
 
@@ -133,9 +138,11 @@ AdaptiveConnector<MPTraits>::ParseXML(XMLNode& _node){
     if(child.Name() == "NeighborFinder"){
       string nodeNfMethod = child.Read("Method",true,"","Method");
       m_neigborGenLabels.push_back(nodeNfMethod);
-      int initialCost = child.Read("initialCost",false,1,1,MAX_INT,"initialCost at the start of the learn phase");
+      int initialCost = child.Read("initialCost", false, 1, 1, MAX_INT,
+          "initialCost at the start of the learn phase");
       m_nfCosts[nodeNfMethod] = initialCost;
-      double initialWeight = child.Read("initialWeight",false,1,1,MAX_INT,"initialWeight at the start of the learn phase");
+      double initialWeight = child.Read("initialWeight", false, 1, 1, MAX_INT,
+          "initialWeight at the start of the learn phase");
       m_nfWeights[nodeNfMethod] = initialWeight;
     }
   }
@@ -244,7 +251,7 @@ Connect(RoadmapType* _rm,
 
     //determine nearest neighbors
     vector<pair<VID, double> > closest;
-    auto nfptr = this->GetMPProblem()->GetNeighborhoodFinder(this->m_lastUse);
+    auto nfptr = this->GetNeighborhoodFinder(this->m_lastUse);
     nfptr->FindNeighbors(_rm, _itr2First, _itr2Last, _fromFullRoadmap, vCfg,
         back_inserter(closest));
     if(this->m_debug){
@@ -266,8 +273,8 @@ ConnectNeighbors(RoadmapType* _rm, VID _vid,
     InputIterator _closestFirst, InputIterator _closestLast,
     OutputIterator _collision) {
 
-  Environment* env = this->GetMPProblem()->GetEnvironment();
-  auto lp = this->GetMPProblem()->GetLocalPlanner(this->m_lpLabel);
+  Environment* env = this->GetEnvironment();
+  auto lp = this->GetLocalPlanner(this->m_lpLabel);
   GraphType* map = _rm->GetGraph();
 
   LPOutput<MPTraits> lpOutput;

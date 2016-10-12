@@ -6,7 +6,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup Connectors
 /// @brief Connect nearby neighbors together.
-/// @tparam MPTraits Motion planning universe
 ///
 ///
 /// Connect nodes in map to their neighbors. The following algorithm is used:
@@ -32,8 +31,9 @@ class NeighborhoodConnector: public ConnectorMethod<MPTraits> {
     typedef typename RoadmapType::GraphType GraphType;
 
     NeighborhoodConnector(string _nfLabel = "", string _lpLabel = "",
-        bool _checkIfSameCC = false, bool _countFailures = false, size_t _fail = 5);
-    NeighborhoodConnector(MPProblemType* _problem, XMLNode& _node);
+        bool _checkIfSameCC = false, bool _countFailures = false,
+        size_t _fail = 5);
+    NeighborhoodConnector(XMLNode& _node);
 
     virtual void Print(ostream& _os) const;
     virtual void ParseXML(XMLNode& _node);
@@ -63,20 +63,18 @@ template<class MPTraits>
 NeighborhoodConnector<MPTraits>::
 NeighborhoodConnector(string _nfLabel, string _lpLabel,
     bool _checkIfSameCC, bool _countFailures, size_t _fail) :
-  ConnectorMethod<MPTraits>(_nfLabel, _lpLabel),
-  m_checkIfSameCC(_checkIfSameCC),
-  m_countFailures(_countFailures),
-  m_fail(_fail) {
-    this->SetName("NeighborhoodConnector");
-  }
+    ConnectorMethod<MPTraits>(_nfLabel, _lpLabel),
+    m_checkIfSameCC(_checkIfSameCC),
+    m_countFailures(_countFailures),
+    m_fail(_fail) {
+  this->SetName("NeighborhoodConnector");
+}
 
-//Read from XML to get the parameters.
 template<class MPTraits>
 NeighborhoodConnector<MPTraits>::
-NeighborhoodConnector(MPProblemType* _problem, XMLNode& _node) :
-  ConnectorMethod<MPTraits>(_problem, _node) {
-    ParseXML(_node);
-  }
+NeighborhoodConnector(XMLNode& _node) : ConnectorMethod<MPTraits>(_node) {
+  ParseXML(_node);
+}
 
 template<class MPTraits>
 void
@@ -144,8 +142,8 @@ ConnectNeighbors(RoadmapType* _rm,VID _vid,
     InputIterator _first, InputIterator _last,
     OutputIterator _collision) {
 
-  Environment* env = this->GetMPProblem()->GetEnvironment();
-  auto lp = this->GetMPProblem()->GetLocalPlanner(this->m_lpLabel);
+  Environment* env = this->GetEnvironment();
+  auto lp = this->GetLocalPlanner(this->m_lpLabel);
   GraphType* map = _rm->GetGraph();
 
   LPOutput<MPTraits> lpOutput;

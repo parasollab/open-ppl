@@ -9,7 +9,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup Extenders
 /// @brief Extend tangent to a workspace obstacle.
-/// @tparam MPTraits Motion planning universe
 ///
 /// Trace workspace obstacle. In this way of extending, the first
 /// colliding triangle is found after extending by @c BasicExtender. An obstacle
@@ -36,7 +35,7 @@ class TraceObstacle : public BasicExtender<MPTraits> {
     TraceObstacle(const string& _dmLabel = "", const string& _vcLabel = "",
         double _min = .001, double _max = 1, bool _randomOrientation = true);
 
-    TraceObstacle(MPProblemType* _problem, XMLNode& _node);
+    TraceObstacle(XMLNode& _node);
 
     virtual ~TraceObstacle() = default;
 
@@ -63,8 +62,7 @@ TraceObstacle(const string& _dmLabel, const string& _vcLabel, double _min,
 
 template <typename MPTraits>
 TraceObstacle<MPTraits>::
-TraceObstacle(MPProblemType* _problem, XMLNode& _node) :
-    BasicExtender<MPTraits>(_problem, _node) {
+TraceObstacle(XMLNode& _node) : BasicExtender<MPTraits>(_node) {
   this->SetName("TraceObstacle");
 }
 

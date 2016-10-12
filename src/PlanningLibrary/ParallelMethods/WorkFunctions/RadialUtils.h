@@ -39,8 +39,8 @@ BlindRRTExpand(typename MPTraits::MPProblemType* _mp,
   //Setup...primarily for collision checks that occur later on
   string callee("RRTUtility::BlindRRTExpand");
   Environment* env = _mp->GetEnvironment();
-  typename MPTraits::MPProblemType::DistanceMetricPointer dm = _mp->GetDistanceMetric(_dm);
-  typename MPTraits::MPProblemType::ValidityCheckerPointer vc = _mp->GetValidityChecker(_vc);
+  auto dm = _mp->GetDistanceMetric(_dm);
+  auto vc = _mp->GetValidityChecker(_vc);
 
   typedef typename MPTraits::CfgType CfgType;
   typename MPTraits::CfgType incr, tick = _start, previous = _start;
@@ -126,16 +126,14 @@ class RadialUtils {
   public:
 
     typedef typename MPTraits::MPProblemType MPProblemType;
+    typedef typename MPTraits::PlanningLibraryType PlanningLibraryType;
     typedef typename MPProblemType::VID VID;
     typedef typename MPTraits::CfgType CfgType;
     typedef typename MPTraits::WeightType WeightType;
     typedef typename MPProblemType::RoadmapType RoadmapType;
     typedef typename MPProblemType::GraphType GraphType;
     typedef typename GraphType::GRAPH LocalGraphType;
-    typedef typename MPProblemType::DistanceMetricPointer DistanceMetricPointer;
-    typedef typename MPProblemType::ValidityCheckerPointer ValidityCheckerPointer;
-    typedef typename MPProblemType::NeighborhoodFinderPointer NeighborhoodFinderPointer;
-    typedef typename MPProblemType::ConnectorPointer ConnectorPointer;
+    typedef typename PlanningLibraryType::ValidityCheckerPointer ValidityCheckerPointer;
     typedef typename stapl::sequential::map_property_map< typename GraphType::GRAPH ,size_t > ColorMap;
     typedef pair<size_t, VID> CCType;
     typedef typename stapl::sequential::graph<stapl::DIRECTED, stapl::NONMULTIEDGES, CfgType,WeightType> LocalTreeType;
@@ -342,7 +340,7 @@ template<class MPTraits>
 int
 RadialUtils<MPTraits>::
 ExpandTree(vector<VID>& _currBranch, CfgType& _dir)  {
-  NeighborhoodFinderPointer nf = m_problem->GetNeighborhoodFinder(m_nf);
+  auto nf = m_problem->GetNeighborhoodFinder(m_nf);
   RoadmapType* rdmp = m_problem->GetRoadmap();
   StatClass* stats = m_problem->GetStatClass();
 
@@ -376,8 +374,8 @@ RadialUtils<MPTraits>::
 ExpandTree(vector<VID>& _currBranch, VID _nearestVID, CfgType& _nearest, CfgType& _dir,
     vector<pair<VID, VID> >& _pendingEdges, vector<int>& _pendingWeights)  {
   Environment* env = m_problem->GetEnvironment();
-  DistanceMetricPointer dm = m_problem->GetDistanceMetric(m_dm);
-  ValidityCheckerPointer vc = m_problem->GetValidityChecker(m_vc);
+  auto dm = m_problem->GetDistanceMetric(m_dm);
+  auto vc = m_problem->GetValidityChecker(m_vc);
   VID newVID = INVALID_VID;
 
   ExpansionType::Expansion expansion;
@@ -448,9 +446,9 @@ ConnectCCs() {
 
   //Setup MP variables
   RoadmapType* rdmp = m_problem->GetRoadmap();
-  ValidityCheckerPointer vc = m_problem->GetValidityChecker(m_vc);
-  DistanceMetricPointer dm = m_problem->GetDistanceMetric(m_dm);
-  ConnectorPointer pConnection = m_problem->GetConnector("RRTConnect");
+  auto vc = m_problem->GetValidityChecker(m_vc);
+  auto dm = m_problem->GetDistanceMetric(m_dm);
+  auto pConnection = m_problem->GetConnector("RRTConnect");
 
   ColorMap colorMap;
   vector< CCType > ccs;
@@ -546,7 +544,7 @@ void
 RadialUtils<MPTraits>::
 RemoveInvalidNodes(vector<VID>& _allVIDs) {
   RoadmapType* rdmp = m_problem->GetRoadmap();
-  ValidityCheckerPointer vc = m_problem->GetValidityChecker(m_vc);
+  auto vc = m_problem->GetValidityChecker(m_vc);
 
   for(auto&  i : _allVIDs) {
     VID vid = i;
@@ -570,7 +568,7 @@ template<class MPTraits>
 double
 RadialUtils<MPTraits>::
 GetDistanceNodeToNode(vector<VID>& _sourceCC, vector<VID>& _targetCC) const {
-  NeighborhoodFinderPointer nf = m_problem->GetNeighborhoodFinder(m_nf);
+  auto nf = m_problem->GetNeighborhoodFinder(m_nf);
   RoadmapType* rdmp = m_problem->GetRoadmap();
   vector<pair<pair<VID,VID>, double>> closestPair;
 
@@ -596,7 +594,7 @@ RadialUtils<MPTraits>::
 GetDistanceNodeToCentroid(vector<VID>& _sourceCC, vector<VID>& _targetCC) const {
 
   RoadmapType* rdmp = m_problem->GetRoadmap();
-  NeighborhoodFinderPointer nf = m_problem->GetNeighborhoodFinder(m_nf);
+  auto nf = m_problem->GetNeighborhoodFinder(m_nf);
   CfgType targetCentroid = GetCentroid(_targetCC);
   vector<pair<VID, double>> closestNode;
 
@@ -620,7 +618,7 @@ double
 RadialUtils<MPTraits>::
 GetDistanceCentroidToNode(vector<VID>& _sourceCC, vector<VID>& _targetCC) const {
   RoadmapType* rdmp = m_problem->GetRoadmap();
-  NeighborhoodFinderPointer nf = m_problem->GetNeighborhoodFinder(m_nf);
+  auto nf = m_problem->GetNeighborhoodFinder(m_nf);
   CfgType sourceCentroid = GetCentroid(_sourceCC);
   vector<pair<VID, double>> closestNode;
 
@@ -645,7 +643,7 @@ RadialUtils<MPTraits>::
 GetDistanceCentroidToCentroid(vector<VID>& _sourceCC, vector<VID>& _targetCC) const {
   CfgType sourceCentroid = GetCentroid(_sourceCC);
   CfgType targetCentroid = GetCentroid(_targetCC);
-  DistanceMetricPointer dm = m_problem->GetDistanceMetric(m_dm);
+  auto dm = m_problem->GetDistanceMetric(m_dm);
   return dm->Distance(sourceCentroid, targetCentroid);
 }
 

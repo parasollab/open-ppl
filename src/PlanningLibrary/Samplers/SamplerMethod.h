@@ -11,12 +11,11 @@
 #include "Utilities/MetricUtils.h"
 
 class Environment;
-template<class MPTraits> class MixSampler;
+template <typename MPTraits> class MixSampler;
 
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup Samplers
 /// @brief Base algorithm abstraction for \ref Samplers.
-/// @tparam MPTraits Motion planning universe
 ///
 /// SamplerMethod has two sets of important functions. The first are the
 /// various public methods in the base class, @c Sample, and second is the
@@ -29,7 +28,7 @@ template<class MPTraits> class MixSampler;
 ///
 /// @usage
 /// @code
-/// SamplerPointer s = this->GetMPProblem()->GetSampler(m_sLabel);
+/// SamplerPointer s = this->GetSampler(m_sLabel);
 /// size_t num, attempts;
 /// shared_ptr<Boundary> bounds;
 /// vector<CfgType> result;
@@ -41,7 +40,7 @@ template<class MPTraits> class MixSampler;
 ///
 /// @usage
 /// @code
-/// SamplerPointer s = this->GetMPProblem()->GetSampler(m_sLabel);
+/// SamplerPointer s = this->GetSampler(m_sLabel);
 /// vector<CfgType> input;
 /// size_t attempts;
 /// shared_ptr<Boundary> bounds;
@@ -56,7 +55,7 @@ template<class MPTraits> class MixSampler;
 /// a single input configuration and applying the sampler rule to generate one
 /// or more configurations.
 ////////////////////////////////////////////////////////////////////////////////
-template<class MPTraits>
+template <typename MPTraits>
 #ifdef _PARALLEL
 class SamplerMethod : public MPBaseObject<MPTraits>, public stapl::p_object {
 #else
@@ -67,7 +66,7 @@ class SamplerMethod : public MPBaseObject<MPTraits> {
     typedef typename MPTraits::MPProblemType MPProblemType;
 
     SamplerMethod();
-    SamplerMethod(MPProblemType* _problem, XMLNode& _node);
+    SamplerMethod(XMLNode& _node);
     virtual ~SamplerMethod();
 
     virtual void Print(ostream& _os) const;
@@ -92,30 +91,30 @@ class SamplerMethod : public MPBaseObject<MPTraits> {
     friend class MixSampler<MPTraits>;
 };
 
-template<class MPTraits>
+template <typename MPTraits>
 SamplerMethod<MPTraits>::
 SamplerMethod() : MPBaseObject<MPTraits>() {
 }
 
-template<class MPTraits>
+template <typename MPTraits>
 SamplerMethod<MPTraits>::
-SamplerMethod(MPProblemType* _problem, XMLNode& _node) :
-  MPBaseObject<MPTraits>(_problem, _node) {
+SamplerMethod(XMLNode& _node) :
+  MPBaseObject<MPTraits>(_node) {
   }
 
-template<class MPTraits>
+template <typename MPTraits>
 SamplerMethod<MPTraits>::
 ~SamplerMethod() {
 };
 
-template<class MPTraits>
+template <typename MPTraits>
 void
 SamplerMethod<MPTraits>::
 Print(ostream& _os) const {
   _os << this->GetNameAndLabel() << endl;
 }
 
-template<class MPTraits>
+template <typename MPTraits>
 template<typename ResultOutputIterator, typename ColOutputIterator>
 ResultOutputIterator
 SamplerMethod<MPTraits>::
@@ -145,7 +144,7 @@ Sample(size_t _numNodes, size_t _maxAttempts,
   return _result;
 }
 
-template<class MPTraits>
+template <typename MPTraits>
 template<typename InputIterator, typename ResultOutputIterator, typename ColOutputIterator>
 ResultOutputIterator
 SamplerMethod<MPTraits>::

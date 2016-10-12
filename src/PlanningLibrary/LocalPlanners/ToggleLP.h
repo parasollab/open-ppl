@@ -8,7 +8,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup LocalPlanners
 /// @brief TODO
-/// @tparam MPTraits Motion planning universe
 ///
 /// TODO
 ////////////////////////////////////////////////////////////////////////////////
@@ -20,14 +19,11 @@ class ToggleLP: public LocalPlannerMethod<MPTraits> {
     typedef typename MPTraits::MPProblemType MPProblemType;
     typedef typename MPProblemType::GraphType GraphType;
     typedef typename MPProblemType::VID VID;
-    typedef typename MPProblemType::DistanceMetricPointer DistanceMetricPointer;
-    typedef typename MPProblemType::ValidityCheckerPointer ValidityCheckerPointer;
-    typedef typename MPProblemType::LocalPlannerPointer LocalPlannerPointer;
 
     ToggleLP(const string& _vcLabel = "", const string& _lpLabel = "",
         const string& _dmLabel = "",
         int _maxIter = 0, bool _saveIntermediates = false);
-    ToggleLP(MPProblemType* _problem, XMLNode& _node);
+    ToggleLP(XMLNode& _node);
     void InitVars();
     virtual ~ToggleLP();
 
@@ -93,8 +89,8 @@ ToggleLP(const string& _vclabel, const string& _lpLabel,
 
 template<class MPTraits>
 ToggleLP<MPTraits>::
-ToggleLP(MPProblemType* _problem, XMLNode& _node) :
-    LocalPlannerMethod<MPTraits>(_problem, _node) {
+ToggleLP(XMLNode& _node) :
+    LocalPlannerMethod<MPTraits>(_node) {
   InitVars();
 
   m_vcLabel = _node.Read("vcLabel", true, "", "Validity Test Label");
@@ -137,7 +133,7 @@ ToggleLP<MPTraits>::IsConnected(
     bool _checkCollision, bool _savePath) {
 #ifndef _PARALLEL
 
-  StatClass* stats = this->GetMPProblem()->GetStatClass();
+  StatClass* stats = this->GetStatClass();
 
   //Note : Initialize connected to false to avoid compiler warning in parallel
   //code.  If I am wrong please correct
@@ -185,9 +181,9 @@ typename MPTraits::CfgType
 ToggleLP<MPTraits>::ChooseAlteredCfg(
     const CfgType& _c1, const CfgType& _c2,
     typename boost::disable_if<IsClosedChain<Enable> >::type* _dummy){
-  Environment* env = this->GetMPProblem()->GetEnvironment();
-  DistanceMetricPointer dm = this->GetMPProblem()->GetDistanceMetric(m_dmLabel);
-  StatClass* stats = this->GetMPProblem()->GetStatClass();
+  Environment* env = this->GetEnvironment();
+  auto dm = this->GetDistanceMetric(m_dmLabel);
+  StatClass* stats = this->GetStatClass();
 
   size_t attempts = 0;
   CfgType mid, temp;
@@ -212,7 +208,7 @@ typename MPTraits::CfgType
 ToggleLP<MPTraits>::ChooseAlteredCfg(
     const CfgType& _c1, const CfgType& _c2,
     typename boost::enable_if<IsClosedChain<Enable> >::type* _dummy) {
-  Environment* env = this->GetMPProblem()->GetEnvironment();
+  Environment* env = this->GetEnvironment();
 
   CfgType temp;
   do{
@@ -228,7 +224,7 @@ ToggleLP<MPTraits>::IsConnectedToggle(
     LPOutput<MPTraits>* _lpOutput, int& _cdCounter,
     double _positionRes, double _orientationRes,
     bool _checkCollision, bool _savePath) {
-  StatClass* stats = this->GetMPProblem()->GetStatClass();
+  StatClass* stats = this->GetStatClass();
 
   m_iterations = 0;
   m_degeneracyReached = false;
@@ -242,8 +238,8 @@ ToggleLP<MPTraits>::IsConnectedToggle(
   }
 
   string callee(this->GetNameAndLabel()+"::IsConnectedToggle");
-  ValidityCheckerPointer vc = this->GetMPProblem()->GetValidityChecker(m_vcLabel);
-  LocalPlannerPointer lp = this->GetMPProblem()->GetLocalPlanner(m_lpLabel);
+  auto vc = this->GetValidityChecker(m_vcLabel);
+  auto lp = this->GetLocalPlanner(m_lpLabel);
 
   if(lp->IsConnected(_c1, _c2, _col, _lpOutput,
       _positionRes, _orientationRes, _checkCollision, _savePath))
@@ -335,7 +331,7 @@ ToggleLP<MPTraits>::IsConnectedToggle(
 template<class MPTraits>
 void
 ToggleLP<MPTraits>::CalcStats(bool _val, bool _toggle) {
-  StatClass* stats = this->GetMPProblem()->GetStatClass();
+  StatClass* stats = this->GetStatClass();
 
   if(_val) {
     if(_toggle)
@@ -408,18 +404,18 @@ ToggleLP<MPTraits>::ToggleConnect(
          << endl;
 
   //set up variables for VC and LP
-  LocalPlannerPointer lp = this->GetMPProblem()->GetLocalPlanner(m_lpLabel);
+  auto lp = this->GetLocalPlanner(m_lpLabel);
 
   if(this->m_debug) VDAddTempEdge(_s, _g);
 
   //check connection between source and goal
   CfgType c; // collision CfgType
   if(!_toggle)
-    this->GetMPProblem()->GetValidityChecker(m_vcLabel)->ToggleValidity();
+    this->GetValidityChecker(m_vcLabel)->ToggleValidity();
   bool connect = lp->IsConnected(_s, _g, c, _lpOutput,
       _positionRes, _orientationRes, true, false);
   if(!_toggle)
-    this->GetMPProblem()->GetValidityChecker(m_vcLabel)->ToggleValidity();
+    this->GetValidityChecker(m_vcLabel)->ToggleValidity();
 
   if(this->m_debug) cout << "connect::" << connect << "\n\tc::" << c << endl;
 
@@ -476,7 +472,7 @@ ToggleLP<MPTraits>::ReconstructPath(
     const CfgType& _c1, const CfgType& _c2,
     const vector<CfgType>& _intermediates,
     double _posRes, double _oriRes) {
-  LocalPlannerPointer lp = this->GetMPProblem()->GetLocalPlanner(m_lpLabel);
+  auto lp = this->GetLocalPlanner(m_lpLabel);
   LPOutput<MPTraits>* lpOutput = new LPOutput<MPTraits>();
   LPOutput<MPTraits>* dummyLPOutput = new LPOutput<MPTraits>();
   CfgType col;

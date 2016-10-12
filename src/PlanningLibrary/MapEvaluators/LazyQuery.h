@@ -10,7 +10,6 @@ using namespace std;
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup MapEvaluators
 /// @brief Lazy @prm, extract path, validate, and repeat
-/// @tparam MPTraits Motion planning universe
 ///
 /// First assumes all nodes and edges are valid, then checks for validity in the
 /// query phase and deletes nodes and edges found to be invalid.
@@ -34,7 +33,7 @@ class LazyQuery : public PRMQuery<MPTraits> {
     ///@{
 
     LazyQuery();
-    LazyQuery(MPProblemType* _problem, XMLNode& _node);
+    LazyQuery(XMLNode& _node);
     virtual ~LazyQuery() = default;
 
     ///@}
@@ -123,8 +122,8 @@ LazyQuery() : PRMQuery<MPTraits>() {
 
 template <typename MPTraits>
 LazyQuery<MPTraits>::
-LazyQuery(MPProblemType* _problem, XMLNode& _node) :
-    PRMQuery<MPTraits>(_problem, _node) {
+LazyQuery(XMLNode& _node) :
+    PRMQuery<MPTraits>(_node) {
   this->SetName("LazyQuery");
   ParseXML(_node);
 }
@@ -322,7 +321,7 @@ LazyQuery<MPTraits>::
 PruneInvalidEdges() {
   auto g = m_path->GetRoadmap()->GetGraph();
   auto env = this->GetEnvironment();
-  auto lp = this->GetMPProblem()->GetLocalPlanner(m_lpLabel);
+  auto lp = this->GetLocalPlanner(m_lpLabel);
 
   if(this->m_debug)
     cout << "\t\tChecking edges..." << endl;

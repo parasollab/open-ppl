@@ -11,21 +11,17 @@
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup ParallelMethods
 /// @brief TODO
-/// @tparam MPTraits Motion planning universe
 ///
 /// TODO
 ////////////////////////////////////////////////////////////////////////////////
-template<class MPTraits>
+template <typename MPTraits>
 class RegularSubdivisionMethod : public MPStrategyMethod<MPTraits> {
   public:
     typedef typename MPTraits::CfgType CfgType;
     typedef typename MPTraits::WeightType WeightType;
     typedef typename MPTraits::MPProblemType MPProblemType;
-    typedef typename MPProblemType::MPStrategyPointer MPStrategyPointer;
     typedef typename MPProblemType::GraphType GraphType;
     typedef typename MPProblemType::VID VID;
-    typedef typename MPProblemType::SamplerPointer SamplerPointer;
-    typedef typename MPProblemType::ConnectorPointer ConnectorPointer;
 
     typedef typename stapl::dynamic_graph<
       stapl::DIRECTED, stapl::NONMULTIEDGES,
@@ -41,7 +37,7 @@ class RegularSubdivisionMethod : public MPStrategyMethod<MPTraits> {
         const vector<string>& _strategiesLabels = vector<string>(),
         string _ccc= "", int _row = 0, int _col = 0);
 
-    RegularSubdivisionMethod(typename MPTraits::MPProblemType* _problem, XMLNode& _node);
+    RegularSubdivisionMethod(XMLNode& _node);
     virtual ~RegularSubdivisionMethod(){ };
 
     virtual void ParseXML(XMLNode& _node);
@@ -62,7 +58,7 @@ class RegularSubdivisionMethod : public MPStrategyMethod<MPTraits> {
     CCsConnector<MPTraits>* m_ccConnector;
 };
 
-template<class MPTraits>
+template <typename MPTraits>
 RegularSubdivisionMethod<MPTraits>::
 RegularSubdivisionMethod(const vector<pair<string, int> >& _vecStrNodeGenLabels,
     const vector<string>& _vecStrNodeConnectionLabels, const vector<string>& _strategiesLabels,
@@ -72,15 +68,14 @@ RegularSubdivisionMethod(const vector<pair<string, int> >& _vecStrNodeGenLabels,
     this->SetName("RegularSubdivisionMethod");
 }
 
-template<class MPTraits>
+template <typename MPTraits>
 RegularSubdivisionMethod<MPTraits>::
-RegularSubdivisionMethod(typename MPTraits::MPProblemType* _problem,
-    XMLNode& _node) : MPStrategyMethod<MPTraits>(_problem,_node) {
+RegularSubdivisionMethod(XMLNode& _node) : MPStrategyMethod<MPTraits>(_node) {
   ParseXML(_node);
   this->SetName("RegularSubdivisionMethod");
 }
 
-template<class MPTraits>
+template <typename MPTraits>
 void
 RegularSubdivisionMethod<MPTraits>::
 ParseXML(XMLNode& _node) {
@@ -132,7 +127,7 @@ ParseXML(XMLNode& _node) {
 };
 
 
-template<class MPTraits>
+template <typename MPTraits>
 void
 RegularSubdivisionMethod<MPTraits>::
 Print(ostream& _os) const {
@@ -162,14 +157,14 @@ Print(ostream& _os) const {
   }
 }
 
-template<class MPTraits>
+template <typename MPTraits>
 void
 RegularSubdivisionMethod<MPTraits>::
 Run() {
   cout << "RegularSubdivisionMethod:: Run()" << endl;
 
-  Environment* env = this->GetMPProblem()->GetEnvironment();
-  GraphType* rmg = this->GetMPProblem()->GetRoadmap()->GetGraph();
+  Environment* env = this->GetEnvironment();
+  GraphType* rmg = this->GetRoadmap()->GetGraph();
   BasicDecomposition* decomposer = new BasicDecomposition();
 
   m_ccConnector = new CCsConnector<MPTraits>(m_nf, m_lp);
@@ -182,7 +177,8 @@ Run() {
   typedef vector<string>::iterator J;
   typedef CCsConnector<MPTraits>* CCP;
   typedef std::tuple<CCP,string, int> ccConnectParam;
-  typedef std::tuple<ConnectorPointer,string, int> ncConnectParam;
+  typedef std::tuple<typename MPTraits::PlanningLibraryType::ConnectorPointer,
+          string, int> ncConnectParam;
   typedef stapl::array< BoundingBox > arrayBbox;
   typedef array_view <arrayBbox> viewBbox;
 
@@ -220,7 +216,7 @@ Run() {
   if (m_strategiesLabels.size() != 0) {
     for(J itr1 = m_strategiesLabels.begin(); itr1 != m_strategiesLabels.end(); ++itr1) {
       if(this->m_debug) PrintValue("View size " , regionView.size());
-      MPStrategyPointer strategy = this->GetMPProblem()->GetMPStrategy(*itr1);
+      auto strategy = this->GetMPStrategy(*itr1);
       ConstructRoadmap<MPTraits> constrRegionMap(strategy);
       map_func(constrRegionMap, regionView,arrView);
     }
@@ -229,14 +225,14 @@ Run() {
 
     for(I itr = m_vecStrNodeGenLabels.begin(); itr != m_vecStrNodeGenLabels.end(); ++itr){
       num_samples = itr->second;
-      SamplerPointer sp = this->GetMPProblem()->GetSampler(itr->first);
+      auto sp = this->GetSampler(itr->first);
       NodeGenerator<MPTraits> nodeGen(this->GetMPProblem(),sp,num_samples);
       map_func(nodeGen,arrView,regionView);
     }
 
     for(J itr1 = m_vecStrNodeConnectionLabels.begin();
         itr1 != m_vecStrNodeConnectionLabels.end(); ++itr1) {
-      ConnectorPointer cp = this->GetMPProblem()->GetConnector(*itr1);
+      auto cp = this->GetConnector(*itr1);
       NodeConnector<MPTraits> nodeCon(this->GetMPProblem(), cp);
       stapl::for_each(regionView,nodeCon);
     }
@@ -302,7 +298,7 @@ Run() {
   }
   else if(m_ccc== "random") {
     for(J itr2 = m_regionConnectionLabels.begin(); itr2 != m_regionConnectionLabels.end(); ++itr2) {
-      ConnectorPointer ncp = this->GetMPProblem()->GetConnector(*itr2);
+      auto ncp = this->GetConnector(*itr2);
       ncConnectParam conParam2 = std::make_tuple(ncp,m_ccc,m_k1);
 
       RegionRandomConnector<RRGraph, Region<BoundingBox, MPTraits>, MPTraits >
@@ -322,11 +318,11 @@ Run() {
   rmi_fence();
 }
 
-template<class MPTraits>
+template <typename MPTraits>
 void RegularSubdivisionMethod<MPTraits>::Finalize() {
   stringstream basefname;
   basefname << this->GetBaseFilename() << ".p" << stapl::get_num_locations() << ".it" << m_runs;
-  this->GetMPProblem()->GetRoadmap()->Write(basefname.str() + ".map", this->GetMPProblem()->GetEnvironment());
+  this->GetRoadmap()->Write(basefname.str() + ".map", this->GetEnvironment());
   rmi_fence();
   cout << "location [" << get_location_id() <<"] ALL FINISHED" << endl;
 }

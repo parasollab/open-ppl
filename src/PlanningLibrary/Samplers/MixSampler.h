@@ -6,12 +6,11 @@
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup Samplers
 /// @brief TODO
-/// @tparam MPTraits Motion planning universe
 ///
 /// TODO
 ////////////////////////////////////////////////////////////////////////////////
 // Samples by "snapping" random configurations to lattice points in a grid
-template<class MPTraits>
+template <typename MPTraits>
 class MixSampler : public SamplerMethod<MPTraits> {
 
   public:
@@ -19,7 +18,7 @@ class MixSampler : public SamplerMethod<MPTraits> {
     typedef typename MPTraits::MPProblemType MPProblemType;
 
     MixSampler();
-    MixSampler(MPProblemType* _problem, XMLNode& _node);
+    MixSampler(XMLNode& _node);
 
     void ParseXML(XMLNode& _node);
 
@@ -32,21 +31,21 @@ class MixSampler : public SamplerMethod<MPTraits> {
     vector<pair <string, double> > samplers; // Stores method label with cumulative probability
 };
 
-template<class MPTraits>
+template <typename MPTraits>
 MixSampler<MPTraits>::
 MixSampler() {
   this->SetName("MixSampler");
 }
 
-template<class MPTraits>
+template <typename MPTraits>
 MixSampler<MPTraits>::
-MixSampler(MPProblemType* _problem, XMLNode& _node) :
-  SamplerMethod<MPTraits>(_problem, _node) {
+MixSampler(XMLNode& _node) :
+  SamplerMethod<MPTraits>(_node) {
     this->SetName("MixSampler");
     ParseXML(_node);
   }
 
-template<class MPTraits>
+template <typename MPTraits>
 void
 MixSampler<MPTraits>::
 ParseXML(XMLNode& _node) {
@@ -79,7 +78,7 @@ ParseXML(XMLNode& _node) {
   }
 }
 
-template<class MPTraits>
+template <typename MPTraits>
 void
 MixSampler<MPTraits>::
 Print(ostream& _os) const {
@@ -90,7 +89,7 @@ Print(ostream& _os) const {
 }
 
 // Attempts to sample, returns true if successful
-template<class MPTraits>
+template <typename MPTraits>
 bool
 MixSampler<MPTraits>::
 Sampler(CfgType& _cfg, shared_ptr<Boundary> _boundary,

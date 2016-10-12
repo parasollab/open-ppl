@@ -6,21 +6,19 @@
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup ValidityCheckers
 /// @brief TODO
-/// @tparam MPTraits Motion planning universe
 ///
 /// TODO
 ////////////////////////////////////////////////////////////////////////////////
-template<class MPTraits>
+template <typename MPTraits>
 class NodeClearanceValidity : public ValidityCheckerMethod<MPTraits> {
   public:
     typedef typename MPTraits::CfgType CfgType;
     typedef typename MPTraits::MPProblemType MPProblemType;
-    typedef typename MPProblemType::DistanceMetricPointer DistanceMetricPointer;
     typedef typename MPProblemType::RoadmapType RoadmapType;
     typedef typename MPProblemType::VID VID;
 
     NodeClearanceValidity(double _delta = 1.0, string _nfLabel = "");
-    NodeClearanceValidity(MPProblemType* _problem, XMLNode& _node);
+    NodeClearanceValidity(XMLNode& _node);
     virtual ~NodeClearanceValidity();
 
     virtual void Print(ostream& _os) const;
@@ -39,8 +37,8 @@ NodeClearanceValidity<MPTraits>::NodeClearanceValidity(double _delta, string _nf
   }
 
 template <class MPTraits>
-NodeClearanceValidity<MPTraits>::NodeClearanceValidity(MPProblemType* _problem, XMLNode& _node):
-  ValidityCheckerMethod<MPTraits>(_problem, _node) {
+NodeClearanceValidity<MPTraits>::NodeClearanceValidity(XMLNode& _node):
+  ValidityCheckerMethod<MPTraits>(_node) {
     this->m_name = "NodeClearanceValidity";
     m_delta = _node.Read("delta", true, 1.0, 0.0, MAX_DBL, "Clearance from every other node");
     m_nfLabel = _node.Read("nfLabel", true, "", "Neighborhood Finder to be used");
@@ -64,8 +62,8 @@ NodeClearanceValidity<MPTraits>::IsValidImpl(CfgType& _cfg,
   /* TODO: remove ifdef when constness problem in STAPL is fixed*/
 #ifndef _PARALLEL
   vector<pair<VID, double> > kClosest;
-  this->GetMPProblem()->GetNeighborhoodFinder(m_nfLabel)->FindNeighbors(
-      this->GetMPProblem()->GetRoadmap(), static_cast<CfgType>(_cfg), back_inserter(kClosest) );
+  this->GetNeighborhoodFinder(m_nfLabel)->FindNeighbors(
+      this->GetRoadmap(), static_cast<CfgType>(_cfg), back_inserter(kClosest) );
 
   if(kClosest.empty()) {
     _cfg.SetLabel("VALID", true);

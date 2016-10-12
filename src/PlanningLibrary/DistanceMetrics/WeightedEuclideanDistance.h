@@ -26,7 +26,7 @@ class WeightedEuclideanDistance : public DistanceMetricMethod<MPTraits> {
     ///@{
 
     WeightedEuclideanDistance();
-    WeightedEuclideanDistance(MPProblemType* _problem, XMLNode& _node);
+    WeightedEuclideanDistance(XMLNode& _node);
     virtual ~WeightedEuclideanDistance() = default;
 
     ///@}
@@ -61,8 +61,8 @@ WeightedEuclideanDistance() : DistanceMetricMethod<MPTraits>() {
 
 template <typename MPTraits>
 WeightedEuclideanDistance<MPTraits>::
-WeightedEuclideanDistance(MPProblemType* _problem, XMLNode& _node) :
-    DistanceMetricMethod<MPTraits>(_problem, _node) {
+WeightedEuclideanDistance(XMLNode& _node) :
+    DistanceMetricMethod<MPTraits>(_node) {
   this->SetName("WeightedEuclidean");
 
   m_posW = _node.Read("posWeight", true, m_posW, 0.0, 1.0, "Position weight");

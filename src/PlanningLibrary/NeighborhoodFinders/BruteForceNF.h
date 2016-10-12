@@ -6,11 +6,10 @@
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup NeighborhoodFinders
 /// @brief TODO
-/// @tparam MPTraits Motion planning universe
 ///
 /// TODO
 ////////////////////////////////////////////////////////////////////////////////
-template<class MPTraits>
+template <typename MPTraits>
 class BruteForceNF : public NeighborhoodFinderMethod<MPTraits> {
   public:
     typedef typename MPTraits::CfgType CfgType;
@@ -18,7 +17,6 @@ class BruteForceNF : public NeighborhoodFinderMethod<MPTraits> {
     typedef typename MPProblemType::RoadmapType RoadmapType;
     typedef typename MPProblemType::VID VID;
     typedef typename MPProblemType::GraphType GraphType;
-    typedef typename MPProblemType::DistanceMetricPointer DistanceMetricPointer;
 
     BruteForceNF(string _dmLabel = "", bool _unconnected = false, size_t _k = 5) :
       NeighborhoodFinderMethod<MPTraits>(_dmLabel, _unconnected) {
@@ -27,8 +25,8 @@ class BruteForceNF : public NeighborhoodFinderMethod<MPTraits> {
         this->m_k = _k;
       }
 
-    BruteForceNF(MPProblemType* _problem, XMLNode& _node) :
-      NeighborhoodFinderMethod<MPTraits>(_problem, _node) {
+    BruteForceNF(XMLNode& _node) :
+      NeighborhoodFinderMethod<MPTraits>(_node) {
         this->SetName("BruteForceNF");
         this->m_nfType = K;
         this->m_k = _node.Read("k", true, 5, 0, MAX_INT, "Number of neighbors to find");
@@ -51,7 +49,7 @@ class BruteForceNF : public NeighborhoodFinderMethod<MPTraits> {
           OutputIterator _out);
 };
 
-template<class MPTraits>
+template <typename MPTraits>
 template<typename InputIterator, typename OutputIterator>
 OutputIterator
 BruteForceNF<MPTraits>::
@@ -60,7 +58,7 @@ FindNeighbors(RoadmapType* _rmp,
     const CfgType& _cfg, OutputIterator _out) {
 
   GraphType* map = _rmp->GetGraph();
-  DistanceMetricPointer dmm = this->GetMPProblem()->GetDistanceMetric(this->m_dmLabel);
+  auto dmm = this->GetDistanceMetric(this->m_dmLabel);
 
   if(!this->m_k) {
     for(InputIterator it = _first; it != _last; ++it)
@@ -114,7 +112,7 @@ FindNeighbors(RoadmapType* _rmp,
   return copy(closest.rbegin(), closest.rend(), _out);
 }
 
-template<class MPTraits>
+template <typename MPTraits>
 template<typename InputIterator, typename OutputIterator>
 OutputIterator
 BruteForceNF<MPTraits>::FindNeighborPairs(RoadmapType* _rmp,
@@ -123,7 +121,7 @@ BruteForceNF<MPTraits>::FindNeighborPairs(RoadmapType* _rmp,
     OutputIterator _out) {
 
   GraphType* map = _rmp->GetGraph();
-  DistanceMetricPointer dmm = this->GetMPProblem()->GetDistanceMetric(this->m_dmLabel);
+  auto dmm = this->GetDistanceMetric(this->m_dmLabel);
 
   if(!this->m_k){
     for(InputIterator i1 = _first1; i1!=_last1; ++i1)

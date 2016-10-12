@@ -6,13 +6,12 @@
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup MotionPlanningStrategies
 /// @brief TODO
-/// @tparam MPTraits Motion planning universe
 ///
 /// TODO
 ///
 /// \internal This strategy is configured for pausible execution.
 ////////////////////////////////////////////////////////////////////////////////
-template<class MPTraits>
+template <typename MPTraits>
 class ModifyPath : public MPStrategyMethod<MPTraits> {
   public:
     typedef typename MPTraits::CfgType CfgType;
@@ -20,7 +19,7 @@ class ModifyPath : public MPStrategyMethod<MPTraits> {
 
     ModifyPath(const string& _pathFile = "", const string& _mapFile = "",
         const string& _pmLabel = "");
-    ModifyPath(MPProblemType* _problem, XMLNode& _node);
+    ModifyPath(XMLNode& _node);
 
     virtual void Initialize();
     virtual void Iterate();
@@ -35,7 +34,7 @@ class ModifyPath : public MPStrategyMethod<MPTraits> {
     vector<CfgType> m_path, m_smoothPath;
 };
 
-template<class MPTraits>
+template <typename MPTraits>
 ModifyPath<MPTraits>::
 ModifyPath(const string& _pathFile, const string& _mapFile,
     const string& _pmLabel) :
@@ -43,17 +42,17 @@ ModifyPath(const string& _pathFile, const string& _mapFile,
     this->SetName("ModifyPath");
   }
 
-template<class MPTraits>
+template <typename MPTraits>
 ModifyPath<MPTraits>::
-ModifyPath(MPProblemType* _problem, XMLNode& _node) :
-  MPStrategyMethod<MPTraits>(_problem, _node) {
+ModifyPath(XMLNode& _node) :
+  MPStrategyMethod<MPTraits>(_node) {
     this->SetName("ModifyPath");
     m_pathFile = _node.Read("pathFile", true, "", "Path Filename");
     m_mapFile = _node.Read("mapFile", false, "", "Map Filename");
     m_pmLabel = _node.Read("pmLabel", true, "", "Path modifier label");
   }
 
-template<class MPTraits>
+template <typename MPTraits>
 void
 ModifyPath<MPTraits>::
 Print(ostream& _os) const {
@@ -61,7 +60,7 @@ Print(ostream& _os) const {
   _os << "Path Modifier: " << m_pmLabel << endl;
 }
 
-template<class MPTraits>
+template <typename MPTraits>
 void
 ModifyPath<MPTraits>::
 Initialize() {
@@ -88,7 +87,7 @@ Initialize() {
   }
 }
 
-template<class MPTraits>
+template <typename MPTraits>
 void
 ModifyPath<MPTraits>::
 Iterate() {
@@ -102,7 +101,7 @@ Iterate() {
   stats->StopClock(this->GetNameAndLabel());
 }
 
-template<class MPTraits>
+template <typename MPTraits>
 void
 ModifyPath<MPTraits>::Finalize() {
   //output smoothed path

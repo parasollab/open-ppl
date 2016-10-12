@@ -6,11 +6,10 @@
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup NeighborhoodFinders
 /// @brief TODO
-/// @tparam MPTraits Motion planning universe
 ///
 /// TODO
 ////////////////////////////////////////////////////////////////////////////////
-template<class MPTraits>
+template <typename MPTraits>
 class RandomNF : public NeighborhoodFinderMethod<MPTraits> {
   public:
     typedef typename MPTraits::CfgType CfgType;
@@ -18,7 +17,6 @@ class RandomNF : public NeighborhoodFinderMethod<MPTraits> {
     typedef typename MPProblemType::RoadmapType RoadmapType;
     typedef typename MPProblemType::VID VID;
     typedef typename MPProblemType::GraphType GraphType;
-    typedef typename MPProblemType::DistanceMetricPointer DistanceMetricPointer;
 
     RandomNF(string _dmLabel = "", bool _unconnected = false, size_t _k = 5):
       NeighborhoodFinderMethod<MPTraits>(_dmLabel, _unconnected) {
@@ -27,8 +25,8 @@ class RandomNF : public NeighborhoodFinderMethod<MPTraits> {
         this->m_k = _k;
       }
 
-    RandomNF(MPProblemType* _problem, XMLNode& _node):
-      NeighborhoodFinderMethod<MPTraits>(_problem,_node) {
+    RandomNF(XMLNode& _node):
+      NeighborhoodFinderMethod<MPTraits>(_node) {
         this->SetName("RandomNF");
         this->m_nfType = K;
         this->m_k = _node.Read("k", true, 5, 0, MAX_INT, "Number of neighbors to find");
@@ -62,7 +60,7 @@ FindNeighbors(RoadmapType* _rmp,
     const CfgType& _cfg, OutputIterator _out) {
 
   GraphType* map = _rmp->GetGraph();
-  DistanceMetricPointer dmm = this->GetMPProblem()->GetDistanceMetric(this->m_dmLabel);
+  auto dmm = this->GetDistanceMetric(this->m_dmLabel);
 
   this->IncrementNumQueries();
   this->StartTotalTime();
@@ -87,7 +85,7 @@ FindNeighbors(RoadmapType* _rmp,
   return _out;
 }
 
-template<class MPTraits>
+template <typename MPTraits>
 template<typename InputIterator, typename OutputIterator>
 OutputIterator
 RandomNF<MPTraits>::FindNeighborPairs(RoadmapType* _rmp,
@@ -96,7 +94,7 @@ RandomNF<MPTraits>::FindNeighborPairs(RoadmapType* _rmp,
     OutputIterator _out) {
 
   GraphType* map = _rmp->GetGraph();
-  DistanceMetricPointer dmm = this->GetMPProblem()->GetDistanceMetric(this->m_dmLabel);
+  auto dmm = this->GetDistanceMetric(this->m_dmLabel);
 
   set<pair<VID, VID> > ids;
 

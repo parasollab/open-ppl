@@ -6,17 +6,16 @@
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup MotionPlanningStrategies
 /// @brief TODO
-/// @tparam MPTraits Motion planning universe
 ///
 /// TODO
 ///
 /// \todo Configure for pausible execution.
 ////////////////////////////////////////////////////////////////////////////////
-template<class MPTraits>
+template <typename MPTraits>
 class MultiStrategy : public MPStrategyMethod<MPTraits> {
   public:
     MultiStrategy<MPTraits>();
-    MultiStrategy(typename MPTraits::MPProblemType* _problem, XMLNode& _node);
+    MultiStrategy(XMLNode& _node);
 
     virtual void ParseXML(XMLNode& _node);
     virtual void Initialize() {}
@@ -28,21 +27,21 @@ class MultiStrategy : public MPStrategyMethod<MPTraits> {
 };
 
 
-template<class MPTraits>
+template <typename MPTraits>
 MultiStrategy<MPTraits>::MultiStrategy() {
   this->SetName("MultiStrategy");
 }
 
 
-template<class MPTraits>
-MultiStrategy<MPTraits>::MultiStrategy(typename MPTraits::MPProblemType* _problem, XMLNode& _node) :
-  MPStrategyMethod<MPTraits>(_problem, _node) {
+template <typename MPTraits>
+MultiStrategy<MPTraits>::MultiStrategy(XMLNode& _node) :
+  MPStrategyMethod<MPTraits>(_node) {
     this->SetName("MultiStrategy");
     ParseXML(_node);
   }
 
 
-template<class MPTraits>
+template <typename MPTraits>
 void
 MultiStrategy<MPTraits>::
 ParseXML(XMLNode& _node) {
@@ -52,7 +51,7 @@ ParseXML(XMLNode& _node) {
 }
 
 
-template<class MPTraits>
+template <typename MPTraits>
 void MultiStrategy<MPTraits>::Run() {
   for(auto& label : m_mpsLabels) {
     cout << "MultiStrategy: Beginning Strategy: " << label << endl;

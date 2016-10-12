@@ -41,20 +41,17 @@ struct NodeTypeCounts {
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup MotionPlanningStrategies
 /// @brief TODO
-/// @tparam MPTraits Motion planning universe
 ///
 /// TODO
 ///
 /// \todo Configure for pausible execution.
 ////////////////////////////////////////////////////////////////////////////////
-template<class MPTraits>
+template <typename MPTraits>
 class HybridPRM : public MPStrategyMethod<MPTraits> {
   public:
     typedef typename MPTraits::CfgType CfgType;
     typedef typename MPTraits::MPProblemType MPProblemType;
     typedef typename MPProblemType::GraphType GraphType;
-    typedef typename MPProblemType::SamplerPointer SamplerPointer;
-    typedef typename MPProblemType::ConnectorPointer ConnectorPointer;
     typedef typename GraphType::vertex_descriptor VID;
 
     HybridPRM() {
@@ -66,7 +63,7 @@ class HybridPRM : public MPStrategyMethod<MPTraits> {
     int _binSize, const map<string, pair<int, int> >& _samplerLabels,
     const vector<string>& _connectorLabels, const vector<string>& _evaluatorLabels);
 
-    HybridPRM(typename MPTraits::MPProblemType* _problem, XMLNode& _node);
+    HybridPRM(XMLNode& _node);
     virtual ~HybridPRM() {}
 
     virtual void ParseXML(XMLNode& _node);
@@ -117,7 +114,7 @@ inline ostream& operator<<(ostream& _os, const NodeTypeCounts& _nt){
   return _os;
 }
 
-template<class MPTraits>
+template <typename MPTraits>
 HybridPRM<MPTraits>::
 HybridPRM(string _samplerSelectionDistribution,
     bool _countCost, double _percentageRandom, bool _fixedCost,
@@ -134,15 +131,15 @@ HybridPRM(string _samplerSelectionDistribution,
   this->SetName("HybridPRM");
 }
 
-template<class MPTraits>
+template <typename MPTraits>
 HybridPRM<MPTraits>::
-HybridPRM(typename MPTraits::MPProblemType* _problem, XMLNode& _node) :
-    MPStrategyMethod<MPTraits>(_problem, _node) {
+HybridPRM(XMLNode& _node) :
+    MPStrategyMethod<MPTraits>(_node) {
   this->SetName("HybridPRM");
   ParseXML(_node);
 }
 
-template<class MPTraits>
+template <typename MPTraits>
 void HybridPRM<MPTraits>::
 ParseXML(XMLNode& _node) {
   for(auto& child : _node) {
@@ -170,7 +167,7 @@ ParseXML(XMLNode& _node) {
     m_windowPercent = 1.0; // 100% of the time learning
 }
 
-template<class MPTraits>
+template <typename MPTraits>
 void
 HybridPRM<MPTraits>::Print(ostream& _os) const {
   _os << "HybridPRM<MPTraits>::\n";
@@ -194,19 +191,19 @@ HybridPRM<MPTraits>::Print(ostream& _os) const {
 
 }
 
-template<class MPTraits>
+template <typename MPTraits>
 void HybridPRM<MPTraits>::Initialize(){
   Print(cout);
-  this->GetMPProblem()->GetStatClass()->StartClock("Map Generation");
+  this->GetStatClass()->StartClock("Map Generation");
 
   InitializeWeightsProbabilitiesCosts();
   CopyLearnedProbToProbUse();
 
 }
 
-template<class MPTraits>
+template <typename MPTraits>
 void HybridPRM<MPTraits>::Run(){
-  StatClass* stats = this->GetMPProblem()->GetStatClass();
+  StatClass* stats = this->GetStatClass();
   int totalSamples = 0;
   bool mapPassedEvaluation = this->EvaluateMap();
   map<VID, Visibility> visMap;
@@ -226,19 +223,20 @@ void HybridPRM<MPTraits>::Run(){
 
       unsigned long int numcdbeforegen = stats->GetIsCollTotal();
       vector<CfgType> vectorCfgs;
-      SamplerPointer pNodeGen = this->GetMPProblem()->GetSampler(nextNodeGen);
-      pNodeGen->Sample(1, 1, this->m_boundary, back_inserter(vectorCfgs));
+      auto pNodeGen = this->GetSampler(nextNodeGen);
+      pNodeGen->Sample(1, 1, this->GetEnvironment()->GetBoundary(),
+          back_inserter(vectorCfgs));
       unsigned long int numcdaftergen = stats->GetIsCollTotal();
       for(typename vector<CfgType>::iterator C = vectorCfgs.begin(); C != vectorCfgs.end(); ++C) {
         if(C->IsLabel("VALID") && C->GetLabel("VALID")) {
           cmap.reset();
-          int nNumPrevCCs = get_cc_count(*(this->GetMPProblem()->GetRoadmap()->GetGraph()), cmap);
+          int nNumPrevCCs = get_cc_count(*(this->GetRoadmap()->GetGraph()), cmap);
 
           //add node to roadmap
-          VID newVID = this->GetMPProblem()->GetRoadmap()->GetGraph()->AddVertex(*C);
+          VID newVID = this->GetRoadmap()->GetGraph()->AddVertex(*C);
           vector<pair<pair<VID,VID>,bool> > connectionattempts;
     	  for(auto&  label : m_connectorLabels) {
-            ConnectorPointer connector = this->GetConnector(label);
+            auto connector = this->GetConnector(label);
             connector->ClearConnectionAttempts();
             connector->Connect(this->GetRoadmap(), newVID);
             connectionattempts.insert(connectionattempts.end(),
@@ -262,7 +260,7 @@ void HybridPRM<MPTraits>::Run(){
           cout << "cost used = " << cost << endl;
 	  }
           cmap.reset();
-          int nNumCurrCCs = get_cc_count(*(this->GetMPProblem()->GetRoadmap()->GetGraph()), cmap);
+          int nNumCurrCCs = get_cc_count(*(this->GetRoadmap()->GetGraph()), cmap);
           double reward = ComputeVisibilityReward(nextNodeGen, visMap[newVID].Ratio(), 0.3, nNumPrevCCs, nNumCurrCCs, nodeTypes);
           if(InLearningWindow(totalSamples)){
     	    RewardAndUpdateWeightsProbabilities(nextNodeGen, reward, cost);
@@ -303,9 +301,9 @@ void HybridPRM<MPTraits>::Run(){
   }
 }
 
-template<class MPTraits>
+template <typename MPTraits>
 void HybridPRM<MPTraits>::Finalize() {
-  StatClass* stats = this->GetMPProblem()->GetStatClass();
+  StatClass* stats = this->GetStatClass();
 
   //output map
   this->GetRoadmap()->Write(this->GetBaseFilename() + ".map", this->GetEnvironment());
@@ -316,12 +314,12 @@ void HybridPRM<MPTraits>::Finalize() {
   string outStatname = this->GetBaseFilename() + ".stat";
   std::ofstream  osStat(outStatname.c_str());
   osStat << "NodeGen+Connection Stats" << endl;
-  stats->PrintAllStats(osStat, this->GetMPProblem()->GetRoadmap());
+  stats->PrintAllStats(osStat, this->GetRoadmap());
   stats->PrintClock("Map Generation", osStat);
   osStat.close();
 }
 
-template<class MPTraits>
+template <typename MPTraits>
 void
 HybridPRM<MPTraits>::
 InitializeWeightsProbabilitiesCosts(){
@@ -342,7 +340,7 @@ InitializeWeightsProbabilitiesCosts(){
 }
 
 
-template<class MPTraits>
+template <typename MPTraits>
 void
 HybridPRM<MPTraits>::
 CopyLearnedProbToProbUse() {
@@ -352,7 +350,7 @@ CopyLearnedProbToProbUse() {
 }
 
 
-template<class MPTraits>
+template <typename MPTraits>
 void
 HybridPRM<MPTraits>::
 PrintWeightsProbabilitiesCosts(ostream& _out) {
@@ -370,7 +368,7 @@ PrintWeightsProbabilitiesCosts(ostream& _out) {
 }
 
 
-template<class MPTraits>
+template <typename MPTraits>
 string
 HybridPRM<MPTraits>::
 SelectNextSamplingMethod(bool _learning) {
@@ -431,7 +429,7 @@ SelectNextSamplingMethod(bool _learning) {
 }
 
 
-template<class MPTraits>
+template <typename MPTraits>
 double
 HybridPRM<MPTraits>::
 ComputeVisibilityReward(string _nextNodeGen, double _visibility, double _threshold, int _prevCcCount, int _currCcCount, NodeTypeCounts& _nodeTypes) {
@@ -455,7 +453,7 @@ ComputeVisibilityReward(string _nextNodeGen, double _visibility, double _thresho
 }
 
 
-template<class MPTraits>
+template <typename MPTraits>
 bool
 HybridPRM<MPTraits>::
 InLearningWindow(int _totalSamples) const {
@@ -465,7 +463,7 @@ InLearningWindow(int _totalSamples) const {
 }
 
 
-template<class MPTraits>
+template <typename MPTraits>
 void
 HybridPRM<MPTraits>::
 RewardAndUpdateWeightsProbabilities(string _nodeSelected, double _reward, unsigned long int _cost) {

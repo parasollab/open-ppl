@@ -6,7 +6,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup Extenders
 /// @brief Extends along medial axis of @cfree.
-/// @tparam MPTraits Motion planning universe
 ///
 /// Extend along the medial axis of @cfree from \f$q_{near}\f$ towards
 /// \f$q_{dir}\f$ until either \f$q_{dir}\f$ is reached, a distance of
@@ -32,7 +31,7 @@ class MedialAxisExtender : public ExtenderMethod<MPTraits> {
         double _min = .001, double _max = 1, double _extendDist = 0.5,
         size_t _maxIntermediates = 10, const string& _lpLabel = "");
 
-    MedialAxisExtender(MPProblemType* _problem, XMLNode& _node);
+    MedialAxisExtender(XMLNode& _node);
 
     virtual ~MedialAxisExtender() = default;
 
@@ -83,9 +82,8 @@ MedialAxisExtender(const MedialAxisUtility<MPTraits>& _medialAxisUtility,
 
 template <typename MPTraits>
 MedialAxisExtender<MPTraits>::
-MedialAxisExtender(MPProblemType* _problem, XMLNode& _node) :
-    ExtenderMethod<MPTraits>(_problem, _node),
-    m_medialAxisUtility(_problem, _node) {
+MedialAxisExtender(XMLNode& _node) : ExtenderMethod<MPTraits>(_node),
+    m_medialAxisUtility(_node) {
   this->SetName("MedialAxisExtender");
   ParseXML(_node);
 }

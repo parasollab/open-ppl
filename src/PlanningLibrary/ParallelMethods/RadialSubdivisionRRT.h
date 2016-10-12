@@ -7,13 +7,12 @@
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup ParallelMethods
 /// @brief TODO
-/// @tparam MPTraits Motion planning universe
 ///
 /// TODO
 /// TODO check correctness of region creation (uniformly divided regions)
 /// TODO Resurrect remove_cycles somehow
 ////////////////////////////////////////////////////////////////////////////////
-template<class MPTraits>
+template <typename MPTraits>
 class RadialSubdivisionRRT : public MPStrategyMethod<MPTraits> {
   public:
     typedef typename MPTraits::MPProblemType MPProblemType;
@@ -31,7 +30,7 @@ class RadialSubdivisionRRT : public MPStrategyMethod<MPTraits> {
     typedef graph_view<RadialRegionGraph> RegionGraphView;
     typedef stapl::counter<stapl::default_timer> staplTimer;
 
-    RadialSubdivisionRRT(MPProblemType* _problem, XMLNode& _node);
+    RadialSubdivisionRRT(XMLNode& _node);
     RadialSubdivisionRRT();
     virtual ~RadialSubdivisionRRT();
 
@@ -61,29 +60,26 @@ class RadialSubdivisionRRT : public MPStrategyMethod<MPTraits> {
     string m_vcLabel, m_dmLabel, m_nfLabel, m_eLabel, m_connectorLabel;
     bool m_strictBranching;
     double m_overlap;
-    MPProblemType* m_problem;
 };
 
-template<class MPTraits>
+template <typename MPTraits>
 RadialSubdivisionRRT<MPTraits>::
-RadialSubdivisionRRT(MPProblemType* _problem,
-    XMLNode& _node) :
-  MPStrategyMethod<MPTraits>(_problem, _node) {
+RadialSubdivisionRRT(XMLNode& _node) : MPStrategyMethod<MPTraits>(_node) {
     this->SetName("RadialSubdivisionRRT");
     ParseXML(_node);
   }
 
-template<class MPTraits>
+template <typename MPTraits>
 RadialSubdivisionRRT<MPTraits>::
 RadialSubdivisionRRT() {
   this->SetName("RadialSubdivisionRRT");
 }
 
-template<class MPTraits>
+template <typename MPTraits>
 RadialSubdivisionRRT<MPTraits>::
 ~RadialSubdivisionRRT() { }
 
-template<class MPTraits>
+template <typename MPTraits>
 void
 RadialSubdivisionRRT<MPTraits>::
 ParseXML(XMLNode& _node) {
@@ -117,19 +113,19 @@ ParseXML(XMLNode& _node) {
   }
 };
 
-template<class MPTraits>
+template <typename MPTraits>
 void RadialSubdivisionRRT<MPTraits>::Initialize() {
   cout << "RadialSubdivisionRRT::Initialize()" <<endl;
 }
 
 
 ///Compute approximate ray lenght from boundary if not given by user
-template<class MPTraits>
+template <typename MPTraits>
 double RadialSubdivisionRRT<MPTraits>::ComputeRandomRayLength(Boundary& _cBoundary) {
   return 2*_cBoundary.GetMaxDist();
 }
 
-template<class MPTraits>
+template <typename MPTraits>
 void
 RadialSubdivisionRRT<MPTraits>::
 RegionVertex(RegionGraphView _regionView, CfgType _root) {
@@ -147,7 +143,7 @@ RegionVertex(RegionGraphView _regionView, CfgType _root) {
   }
 }
 
-template<class MPTraits>
+template <typename MPTraits>
 void
 RadialSubdivisionRRT<MPTraits>::
 RegionEdge(RegionGraphView _regionView) {
@@ -156,7 +152,7 @@ RegionEdge(RegionGraphView _regionView) {
   map_func(wf, _regionView, make_repeat_view(_regionView));
 }
 
-template<class MPTraits>
+template <typename MPTraits>
 void
 RadialSubdivisionRRT<MPTraits>::
 BuildRRT(RegionGraphView _regionView, CfgType _root) {
@@ -167,7 +163,7 @@ BuildRRT(RegionGraphView _regionView, CfgType _root) {
   stapl::for_each(_regionView,wf);
 }
 
-template<class MPTraits>
+template <typename MPTraits>
 void
 RadialSubdivisionRRT<MPTraits>::
 ConnectRegions(RegionGraphView _regionView) {
@@ -176,7 +172,7 @@ ConnectRegions(RegionGraphView _regionView) {
   map_func(wf, _regionView, make_repeat_view(_regionView));
 }
 
-template<class MPTraits>
+template <typename MPTraits>
 void
 RadialSubdivisionRRT<MPTraits>::
 RemoveCycles(RoadmapGraph<CfgType, WeightType>* _rmg) {
@@ -185,7 +181,7 @@ RemoveCycles(RoadmapGraph<CfgType, WeightType>* _rmg) {
   //remove_cycles(rmView);
 }
 
-template<class MPTraits>
+template <typename MPTraits>
 void
 RadialSubdivisionRRT<MPTraits>::
 Run() {
@@ -316,18 +312,18 @@ Run() {
 }
 
 
-template<class MPTraits>
+template <typename MPTraits>
 void
 RadialSubdivisionRRT<MPTraits>::
 Finalize() {
   stringstream basefname;
   basefname << this->GetBaseFilename();// << ".p" << stapl::get_num_locations() << ".r" << m_numRegions;
-  this->GetMPProblem()->GetRoadmap()->Write(basefname.str() + ".map", this->GetMPProblem()->GetEnvironment());
+  this->GetRoadmap()->Write(basefname.str() + ".map", this->GetEnvironment());
   stapl::rmi_fence();
   cout << "location [" << stapl::get_location_id() <<"] ALL FINISHED" << endl;
 }
 
-template<class MPTraits>
+template <typename MPTraits>
 void
 RadialSubdivisionRRT<MPTraits>::
 Print(ostream& _os) const {

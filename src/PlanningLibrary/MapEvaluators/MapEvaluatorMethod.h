@@ -1,24 +1,31 @@
 #ifndef MAP_EVALUATION_METHOD_H_
 #define MAP_EVALUATION_METHOD_H_
 
+#include "PlanningLibrary/MPBaseObject.h"
 #include "Utilities/MPUtils.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup MapEvaluators
 /// @brief Base algorithm abstraction for \ref MapEvaluators.
-/// @tparam MPTraits Motion planning universe
 ///
 /// MapEvaluatorMethod has one main function, @c operator(), which applies a
 /// boolean pass/fail evaluation to a roadmap.
 ////////////////////////////////////////////////////////////////////////////////
-template<class MPTraits>
+template <typename MPTraits>
 class MapEvaluatorMethod : public MPBaseObject<MPTraits> {
+
   public:
 
+    ///@name Construction
+    ///@{
+
     MapEvaluatorMethod() = default;
-    MapEvaluatorMethod(typename MPTraits::MPProblemType* _problem, XMLNode& _node)
-      : MPBaseObject<MPTraits>(_problem, _node) {}
+    MapEvaluatorMethod(XMLNode& _node) : MPBaseObject<MPTraits>(_node) {}
     virtual ~MapEvaluatorMethod() = default;
+
+    ///@}
+    ///@name Evaluation Interface
+    ///@{
 
     ////////////////////////////////////////////////////////////////////////////
     /// @brief Having state implies that a new roadmap needs to be loaded and
@@ -38,12 +45,14 @@ class MapEvaluatorMethod : public MPBaseObject<MPTraits> {
     ///
     /// @usage
     /// @code
-    /// MapEvaluatorPointer me = this->GetMPProblem()->GetMapEvaluator(m_meLabel);
+    /// MapEvaluatorPointer me = this->GetMapEvaluator(m_meLabel);
     /// bool passed = (*me)(); //call as a function object
     /// bool passed2 = me->operator()(); //call with pointer notation
     /// @endcode
     ////////////////////////////////////////////////////////////////////////////
     virtual bool operator()() = 0;
+
+    ///@}
 };
 
 #endif

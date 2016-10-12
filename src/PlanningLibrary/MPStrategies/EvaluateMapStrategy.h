@@ -6,13 +6,12 @@
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup MotionPlanningStrategies
 /// @brief TODO
-/// @tparam MPTraits Motion planning universe
 ///
 /// TODO
 ///
 /// \internal This strategy is configured for pausible execution.
 ////////////////////////////////////////////////////////////////////////////////
-template<class MPTraits>
+template <typename MPTraits>
 class EvaluateMapStrategy : public MPStrategyMethod<MPTraits> {
 
   public:
@@ -21,7 +20,7 @@ class EvaluateMapStrategy : public MPStrategyMethod<MPTraits> {
 
     EvaluateMapStrategy(string _mapFileName = "",
         const vector<string>& _evaluatorLabels = vector<string>());
-    EvaluateMapStrategy(MPProblemType* _problem, XMLNode& _node);
+    EvaluateMapStrategy(XMLNode& _node);
     virtual ~EvaluateMapStrategy() {}
 
     virtual void Print(ostream& _os) const;
@@ -39,7 +38,7 @@ class EvaluateMapStrategy : public MPStrategyMethod<MPTraits> {
 };
 
 
-template<class MPTraits>
+template <typename MPTraits>
 EvaluateMapStrategy<MPTraits>::
 EvaluateMapStrategy(string _mapFileName,
     const vector<string>& _evaluatorLabels) : m_mapFileName(_mapFileName) {
@@ -48,16 +47,16 @@ EvaluateMapStrategy(string _mapFileName,
 }
 
 
-template<class MPTraits>
+template <typename MPTraits>
 EvaluateMapStrategy<MPTraits>::
-EvaluateMapStrategy(MPProblemType* _problem, XMLNode& _node) :
-    MPStrategyMethod<MPTraits>(_problem, _node) {
+EvaluateMapStrategy(XMLNode& _node) :
+    MPStrategyMethod<MPTraits>(_node) {
   this->SetName("EvaluateMapStrategy");
   ParseXML(_node);
 }
 
 
-template<class MPTraits>
+template <typename MPTraits>
 void
 EvaluateMapStrategy<MPTraits>::
 Print(ostream& _os) const {
@@ -69,7 +68,7 @@ Print(ostream& _os) const {
 }
 
 
-template<class MPTraits>
+template <typename MPTraits>
 void
 EvaluateMapStrategy<MPTraits>::
 ParseXML(XMLNode& _node) {
@@ -83,7 +82,7 @@ ParseXML(XMLNode& _node) {
 }
 
 
-template<class MPTraits>
+template <typename MPTraits>
 void
 EvaluateMapStrategy<MPTraits>::
 Initialize() {
@@ -91,7 +90,7 @@ Initialize() {
 }
 
 
-template<class MPTraits>
+template <typename MPTraits>
 void
 EvaluateMapStrategy<MPTraits>::
 Run() {

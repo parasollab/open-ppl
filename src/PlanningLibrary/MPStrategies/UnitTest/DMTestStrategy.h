@@ -6,17 +6,16 @@
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup MotionPlanningStrategies
 /// @brief TODO
-/// @tparam MPTraits Motion planning universe
 ///
 /// TODO
 ////////////////////////////////////////////////////////////////////////////////
-template <class MPTraits>
+template <typename MPTraits>
 class DMTestStrategy : public MPStrategyMethod<MPTraits> {
   public:
     typedef typename MPTraits::MPProblemType::RoadmapType RoadmapType;
 
     DMTestStrategy();
-    DMTestStrategy(typename MPTraits::MPProblemType* _problem, XMLNode& _node);
+    DMTestStrategy(XMLNode& _node);
     virtual ~DMTestStrategy();
 
     virtual void ParseXML(XMLNode& _node);
@@ -34,25 +33,25 @@ class DMTestStrategy : public MPStrategyMethod<MPTraits> {
 };
 
 
-template <class MPTraits>
+template <typename MPTraits>
 DMTestStrategy<MPTraits>::DMTestStrategy() : MPStrategyMethod<MPTraits>(),
   m_rdmp(NULL), m_numToVerify(0) {
     this->SetName("DMTest");
   }
 
-template <class MPTraits>
+template <typename MPTraits>
 DMTestStrategy<MPTraits>::
-DMTestStrategy(typename MPTraits::MPProblemType* _problem, XMLNode& _node)
-  : MPStrategyMethod<MPTraits>(_problem, _node), m_rdmp(NULL) {
+DMTestStrategy(XMLNode& _node)
+  : MPStrategyMethod<MPTraits>(_node), m_rdmp(NULL) {
     this->SetName("DMTest");
     ParseXML(_node);
   }
 
-template <class MPTraits>
+template <typename MPTraits>
 DMTestStrategy<MPTraits>::
 ~DMTestStrategy() {}
 
-template <class MPTraits>
+template <typename MPTraits>
 void
 DMTestStrategy<MPTraits>::
 ParseXML(XMLNode& _node) {
@@ -61,7 +60,7 @@ ParseXML(XMLNode& _node) {
   m_numToVerify = _node.Read("num_to_verify", false, MAX_INT, 0, MAX_INT, "number of nodes to verify distances");
 }
 
-template <class MPTraits>
+template <typename MPTraits>
 void
 DMTestStrategy<MPTraits>::Print(ostream& _out) const {
   _out << "DMTestStrategy ::  m_inputRoadmapFilename = \"" << m_inputRoadmapFilename
@@ -75,7 +74,7 @@ struct less_second : public binary_function<pair<size_t, double>, pair<size_t, d
   }
 };
 
-template <class MPTraits>
+template <typename MPTraits>
 void
 DMTestStrategy<MPTraits>::
 Run()
@@ -83,17 +82,17 @@ Run()
   Print(cout);
 
   if(m_inputRoadmapFilename == "") {
-    m_rdmp = this->GetMPProblem()->GetRoadmap();
+    m_rdmp = this->GetRoadmap();
   } else {
     m_rdmp = new RoadmapType();
     m_rdmp->Read(m_inputRoadmapFilename.c_str());
   }
 
   ClockClass clock;
-  StatClass *stats = this->GetMPProblem()->GetStatClass();
+  StatClass *stats = this->GetStatClass();
   stats->StartClock("Distance Metric");
 
-  typename MPTraits::MPProblemType::DistanceMetricPointer dm = this->GetMPProblem()->GetDistanceMetric(m_dmMethod);
+  auto dm = this->GetDistanceMetric(m_dmMethod);
   dm->Print(cout);
   cout << endl;
 

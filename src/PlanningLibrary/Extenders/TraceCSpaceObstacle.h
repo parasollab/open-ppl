@@ -6,7 +6,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup Extenders
 /// @brief Extend in a direction tangent to @cobst.
-/// @tparam MPTraits Motion planning universe
 ///
 /// Trace @cobst. In this growth method, we try to find a vector tangent to a
 /// @coboundary. It is not feasible to compute @coboundary, so here we
@@ -34,7 +33,7 @@ class TraceCSpaceObstacle : public BasicExtender<MPTraits> {
     TraceCSpaceObstacle(const string& _dmLabel = "", const string& _vcLabel = "",
         double _min = .001, double _max = 1);
 
-    TraceCSpaceObstacle(MPProblemType* _problem, XMLNode& _node);
+    TraceCSpaceObstacle(XMLNode& _node);
 
     virtual ~TraceCSpaceObstacle() = default;
 
@@ -61,8 +60,7 @@ TraceCSpaceObstacle(const string& _dmLabel, const string& _vcLabel,
 
 template <typename MPTraits>
 TraceCSpaceObstacle<MPTraits>::
-TraceCSpaceObstacle(MPProblemType* _problem, XMLNode& _node) :
-    BasicExtender<MPTraits>(_problem, _node) {
+TraceCSpaceObstacle(XMLNode& _node) : BasicExtender<MPTraits>(_node) {
   this->SetName("TraceCSpaceObstacle");
 }
 

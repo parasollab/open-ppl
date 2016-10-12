@@ -6,9 +6,8 @@
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup NeighborhoodFinders
 /// @brief Find neighbors within a certain radius.
-/// @tparam MPTraits Motion planning universe
 ////////////////////////////////////////////////////////////////////////////////
-template<class MPTraits>
+template <typename MPTraits>
 class RadiusNF: public NeighborhoodFinderMethod<MPTraits> {
   public:
     typedef typename MPTraits::CfgType CfgType;
@@ -16,7 +15,6 @@ class RadiusNF: public NeighborhoodFinderMethod<MPTraits> {
     typedef typename MPProblemType::RoadmapType RoadmapType;
     typedef typename MPProblemType::VID VID;
     typedef typename MPProblemType::GraphType GraphType;
-    typedef typename MPProblemType::DistanceMetricPointer DistanceMetricPointer;
 
     RadiusNF(string _dmLabel = "", bool _unconnected = false, double _r = 1.0) :
       NeighborhoodFinderMethod<MPTraits>(_dmLabel, _unconnected) {
@@ -25,8 +23,8 @@ class RadiusNF: public NeighborhoodFinderMethod<MPTraits> {
         this->m_radius = _r;
       }
 
-    RadiusNF(MPProblemType* _problem, XMLNode& _node) :
-      NeighborhoodFinderMethod<MPTraits>(_problem, _node) {
+    RadiusNF(XMLNode& _node) :
+      NeighborhoodFinderMethod<MPTraits>(_node) {
         this->SetName("RadiusNF");
         this->m_nfType = RADIUS;
         this->m_radius = _node.Read("radius", true, 0.5, 0.0, MAX_DBL, "Radius");
@@ -49,7 +47,7 @@ class RadiusNF: public NeighborhoodFinderMethod<MPTraits> {
           OutputIterator _out);
 };
 
-template<class MPTraits>
+template <typename MPTraits>
 template<typename InputIterator, typename OutputIterator>
 OutputIterator
 RadiusNF<MPTraits>::
@@ -62,7 +60,7 @@ FindNeighbors(RoadmapType* _rmp,
   this->StartQueryTime();
 
   GraphType* map = _rmp->GetGraph();
-  DistanceMetricPointer dmm = this->GetMPProblem()->GetDistanceMetric(this->m_dmLabel);
+  auto dmm = this->GetDistanceMetric(this->m_dmLabel);
   set<pair<VID, double>, CompareSecond<VID, double> > inRadius;
 
   // Find all nodes within radius
@@ -87,7 +85,7 @@ FindNeighbors(RoadmapType* _rmp,
   return copy(inRadius.begin(), inRadius.end(), _out);
 }
 
-template<class MPTraits>
+template <typename MPTraits>
 template<typename InputIterator, typename OutputIterator>
 OutputIterator
 RadiusNF<MPTraits>::FindNeighborPairs(RoadmapType* _rmp,
@@ -96,7 +94,7 @@ RadiusNF<MPTraits>::FindNeighborPairs(RoadmapType* _rmp,
     OutputIterator _out) {
 
   GraphType* map = _rmp->GetGraph();
-  DistanceMetricPointer dmm = this->GetMPProblem()->GetDistanceMetric(this->m_dmLabel);
+  auto dmm = this->GetDistanceMetric(this->m_dmLabel);
   set<pair<pair<VID, VID >, double> > inRadius;
 
   // Find all pairs within radius

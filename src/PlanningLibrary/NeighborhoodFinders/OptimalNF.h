@@ -6,19 +6,19 @@
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup NeighborhoodFinders
 /// @brief TODO
-/// @tparam MPTraits Motion planning universe
 ///
 /// TODO
 ////////////////////////////////////////////////////////////////////////////////
-template<class MPTraits>
+template <typename MPTraits>
 class OptimalNF : public NeighborhoodFinderMethod<MPTraits> {
   public:
     typedef typename MPTraits::CfgType CfgType;
     typedef typename MPTraits::MPProblemType MPProblemType;
+    typedef typename MPTraits::PlanningLibraryType PlanningLibraryType;
     typedef typename MPProblemType::RoadmapType RoadmapType;
     typedef typename MPProblemType::VID VID;
     typedef typename MPProblemType::GraphType GraphType;
-    typedef typename MPProblemType::DistanceMetricPointer DistanceMetricPointer;
+    typedef typename PlanningLibraryType::DistanceMetricPointer DistanceMetricPointer;
 
     OptimalNF(string _dmLabel = "", bool _unconnected = false, size_t _k = 5) :
       NeighborhoodFinderMethod<MPTraits>(_dmLabel, _unconnected) {
@@ -26,8 +26,8 @@ class OptimalNF : public NeighborhoodFinderMethod<MPTraits> {
         this->m_nfType = OPTIMAL;
       }
 
-    OptimalNF(MPProblemType* _problem, XMLNode& _node) :
-      NeighborhoodFinderMethod<MPTraits>(_problem, _node, false) {
+    OptimalNF(XMLNode& _node) :
+      NeighborhoodFinderMethod<MPTraits>(_node, false) {
         this->SetName("OptimalNF");
         this->m_nfType = OPTIMAL;
         m_nfLabel = _node.Read("nfLabel", true, "", "Neighborhood Finder");
@@ -38,8 +38,8 @@ class OptimalNF : public NeighborhoodFinderMethod<MPTraits> {
       _os << "\tnfLabel: " << m_nfLabel << endl;
     }
 
-    virtual typename MPProblemType::DistanceMetricPointer GetDMMethod() const {
-      return this->GetMPProblem()->GetNeighborhoodFinder(m_nfLabel)->GetDMMethod();
+    virtual DistanceMetricPointer GetDMMethod() const {
+      return this->GetNeighborhoodFinder(m_nfLabel)->GetDMMethod();
     }
 
     template<typename InputIterator, typename OutputIterator>
@@ -57,7 +57,7 @@ class OptimalNF : public NeighborhoodFinderMethod<MPTraits> {
     string m_nfLabel;
 };
 
-template<class MPTraits>
+template <typename MPTraits>
 template<typename InputIterator, typename OutputIterator>
 OutputIterator
 OptimalNF<MPTraits>::
@@ -69,8 +69,7 @@ FindNeighbors(RoadmapType* _rmp,
   this->StartTotalTime();
   this->StartQueryTime();
 
-  typename MPProblemType::NeighborhoodFinderPointer nfptr =
-    this->GetMPProblem()->GetNeighborhoodFinder(this->m_nfLabel);
+  auto nfptr = this->GetNeighborhoodFinder(this->m_nfLabel);
 
   //save k and radius
   this->m_k = nfptr->GetK();
@@ -107,7 +106,7 @@ FindNeighbors(RoadmapType* _rmp,
   return _out;
 }
 
-template<class MPTraits>
+template <typename MPTraits>
 template<typename InputIterator, typename OutputIterator>
 OutputIterator
 OptimalNF<MPTraits>::FindNeighborPairs(RoadmapType* _rmp,

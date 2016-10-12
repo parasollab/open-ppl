@@ -383,11 +383,10 @@ class DistanceWeightedRandomPolicy : public Policy {
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup NeighborhoodFinderUtils
 /// @brief TODO
-/// @tparam MPTraits Motion planning universe
 ///
 /// TODO
 ////////////////////////////////////////////////////////////////////////////////
-template<class MPTraits>
+template <typename MPTraits>
 class Band : public MPBaseObject<MPTraits> {
   public:
     typedef typename MPTraits::CfgType CfgType;
@@ -395,13 +394,12 @@ class Band : public MPBaseObject<MPTraits> {
     typedef typename MPProblemType::RoadmapType RoadmapType;
     typedef typename MPProblemType::VID VID;
     typedef typename MPProblemType::GraphType GraphType;
-    typedef typename MPProblemType::DistanceMetricPointer DistanceMetricPointer;
 
     Band(string _dmm = "", string _label = "", MPProblemType* _mp = NULL) : MPBaseObject<MPTraits>(_mp, _label), m_dmLabel(_dmm) {
       this->SetName("Band");
     }
 
-    Band(MPProblemType* _problem, XMLNode& _node): MPBaseObject<MPTraits>(_problem, _node) {
+    Band(XMLNode& _node): MPBaseObject<MPTraits>(_node) {
       this->SetName("Band");
       m_dmLabel = _node.Read("dmLabel", true, "default", "Distance Metric Method");
 
@@ -467,7 +465,7 @@ class Band : public MPBaseObject<MPTraits> {
         if (m_debug) cout << "Band<MPTraits>:::GetDistList()" << endl;
 
         GraphType* map = _rmp->GetGraph();
-        DistanceMetricPointer dmm = this->GetMPProblem()->GetDistanceMetric(this->m_dmLabel);
+        auto dmm = this->GetDistanceMetric(this->m_dmLabel);
 
         vector< pair<VID, double> > distList;
 
@@ -499,11 +497,10 @@ class Band : public MPBaseObject<MPTraits> {
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup NeighborhoodFinderUtils
 /// @brief TODO
-/// @tparam MPTraits Motion planning universe
 ///
 /// TODO
 ////////////////////////////////////////////////////////////////////////////////
-template<class MPTraits>
+template <typename MPTraits>
 class DBand : public Band<MPTraits> {
   public:
     typedef typename MPTraits::CfgType CfgType;
@@ -511,7 +508,7 @@ class DBand : public Band<MPTraits> {
     typedef typename MPProblemType::RoadmapType RoadmapType;
     typedef typename MPProblemType::VID VID;
 
-    DBand(XMLNode& _node, MPProblemType* _problem) : Band<MPTraits>(_problem, _node){
+    DBand(XMLNode& _node) : Band<MPTraits>(_node){
       this->SetName("DBand");
     }
 
@@ -569,11 +566,10 @@ class DBand : public Band<MPTraits> {
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup NeighborhoodFinderUtils
 /// @brief TODO
-/// @tparam MPTraits Motion planning universe
 ///
 /// TODO
 ////////////////////////////////////////////////////////////////////////////////
-template<class MPTraits>
+template <typename MPTraits>
 class RBand : public Band<MPTraits> {
   public:
     typedef typename MPTraits::CfgType CfgType;
@@ -581,7 +577,7 @@ class RBand : public Band<MPTraits> {
     typedef typename MPProblemType::RoadmapType RoadmapType;
     typedef typename MPProblemType::VID VID;
 
-    RBand(XMLNode& _node, MPProblemType* _problem) : Band<MPTraits> (_problem, _node) {
+    RBand(XMLNode& _node) : Band<MPTraits> (_node) {
       this->SetName("RBand");
     }
 
@@ -641,11 +637,10 @@ class RBand : public Band<MPTraits> {
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup NeighborhoodFinders
 /// @brief TODO
-/// @tparam MPTraits Motion planning universe
 ///
 /// TODO
 ////////////////////////////////////////////////////////////////////////////////
-template<class MPTraits>
+template <typename MPTraits>
 class BandsNF: public NeighborhoodFinderMethod<MPTraits> {
   public:
     typedef typename MPTraits::CfgType CfgType;
@@ -658,16 +653,16 @@ class BandsNF: public NeighborhoodFinderMethod<MPTraits> {
         this->SetName("BandsNF");
       }
 
-    BandsNF(MPProblemType* _problem, XMLNode& _node) :
-      NeighborhoodFinderMethod<MPTraits>(_problem, _node) {
+    BandsNF(XMLNode& _node) :
+      NeighborhoodFinderMethod<MPTraits>(_node) {
         this->SetName("BandsNF");
         for(auto& child : _node) {
           if (child.Name() == "DBand") {
-            Band<MPTraits>* dband = new DBand<MPTraits>(child, _problem);
+            Band<MPTraits>* dband = new DBand<MPTraits>(child);
             this->m_bands.push_back(dband);
           }
           else if(child.Name() == "RBand") {
-            Band<MPTraits>* rband = new RBand<MPTraits>(child, _problem);
+            Band<MPTraits>* rband = new RBand<MPTraits>(child);
             this->m_bands.push_back(rband);
           }
         }
@@ -693,7 +688,7 @@ class BandsNF: public NeighborhoodFinderMethod<MPTraits> {
 };
 
 // Returns all nodes within radius from _cfg
-template<class MPTraits>
+template <typename MPTraits>
 template<typename InputIterator, typename OutputIterator>
 OutputIterator
 BandsNF<MPTraits>::
@@ -751,7 +746,7 @@ FindNeighbors(RoadmapType* _roadmap,
 }
 
 // Returns all pairs within radius
-template<class MPTraits>
+template <typename MPTraits>
 template<typename InputIterator, typename OutputIterator>
 OutputIterator
 BandsNF<MPTraits>::FindNeighborPairs(RoadmapType* _roadmap,

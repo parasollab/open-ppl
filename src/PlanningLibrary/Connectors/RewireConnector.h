@@ -20,24 +20,22 @@ class RewireConnector : public ConnectorMethod<MPTraits> {
     typedef typename MPTraits::WeightType WeightType;
     typedef typename MPProblemType::RoadmapType RoadmapType;
     typedef typename RoadmapType::GraphType GraphType;
-    typedef typename MPProblemType::DistanceMetricPointer DistanceMetricPointer;
-    typedef typename MPProblemType::NeighborhoodFinderPointer NeighborhoodFinderPointer;
 
     RewireConnector(string _nfLabel = "", string _lpLabel = "");
-    RewireConnector(MPProblemType* _problem, XMLNode& _node);
+    RewireConnector(XMLNode& _node);
 
     template<typename InputIterator1, typename InputIterator2,
-      typename OutputIterator>
-        void Connect(RoadmapType* _rm,
-            InputIterator1 _itr1First, InputIterator1 _itr1Last,
-            InputIterator2 _itr2First, InputIterator2 _itr2Last,
-            bool _fromFullRoadmap,
-            OutputIterator _collision);
+        typename OutputIterator>
+    void Connect(RoadmapType* _rm,
+        InputIterator1 _itr1First, InputIterator1 _itr1Last,
+        InputIterator2 _itr2First, InputIterator2 _itr2Last,
+        bool _fromFullRoadmap,
+        OutputIterator _collision);
 
   private:
     template<typename OutputIterator>
-      void ConnectNeighbors(RoadmapType* _rm, VID _vid,
-          vector<pair<VID, double> >& _closest, OutputIterator _collision);
+    void ConnectNeighbors(RoadmapType* _rm, VID _vid,
+        vector<pair<VID, double> >& _closest, OutputIterator _collision);
 
     double GetDistance(VID _vid1, VID _vid2, RoadmapType* _rm);
     double GetShortestPath(VID _root, VID _vid, RoadmapType* _rm);
@@ -49,20 +47,19 @@ class RewireConnector : public ConnectorMethod<MPTraits> {
 template<class MPTraits>
 RewireConnector<MPTraits>::
 RewireConnector(string _nfLabel, string _lpLabel) :
-  ConnectorMethod<MPTraits>(_nfLabel, _lpLabel) {
-    this->SetName("RewireConnector");
-  }
+    ConnectorMethod<MPTraits>(_nfLabel, _lpLabel) {
+  this->SetName("RewireConnector");
+}
 
 template<class MPTraits>
 RewireConnector<MPTraits>::
-RewireConnector(MPProblemType* _problem, XMLNode& _node) :
-  ConnectorMethod<MPTraits>(_problem, _node) {
-    this->SetName("RewireConnector");
-    m_distanceBased = _node.Read("distanceBased", false, true,
-        "Optimization criteria: True - path length; False - path clearance.");
-    if(!m_distanceBased)
-      m_clearanceUtility = ClearanceUtility<MPTraits>(_problem, _node);
-  }
+RewireConnector(XMLNode& _node) : ConnectorMethod<MPTraits>(_node) {
+  this->SetName("RewireConnector");
+  m_distanceBased = _node.Read("distanceBased", false, true,
+      "Optimization criteria: True - path length; False - path clearance.");
+  if(!m_distanceBased)
+    m_clearanceUtility = ClearanceUtility<MPTraits>(_node);
+}
 
 template<class MPTraits>
 template<typename InputIterator1, typename InputIterator2, typename OutputIterator>
@@ -75,7 +72,7 @@ Connect(RoadmapType* _rm,
     OutputIterator _collision) {
 
 
-  NeighborhoodFinderPointer nfptr = this->GetNeighborhoodFinder(this->m_nfLabel);
+  auto nfptr = this->GetNeighborhoodFinder(this->m_nfLabel);
 
   // the vertices in this iteration are the source for the connection operation
   for(InputIterator1 itr1 = _itr1First; itr1 != _itr1Last; ++itr1){

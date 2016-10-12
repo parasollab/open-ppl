@@ -64,7 +64,6 @@ namespace pmpl_detail {
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup Connectors
 /// @brief Base algorithm abstraction for \ref Connectors.
-/// @tparam MPTraits Motion planning universe
 ///
 /// ConnectorMethod essentially has one important function, @c Connect which can
 /// be called in a multitude of ways. In its basic forms it takes two sets of
@@ -97,7 +96,7 @@ class ConnectorMethod : public MPBaseObject<MPTraits>
     ///@{
 
     ConnectorMethod(string _lpLabel = "", string _nfLabel = "");
-    ConnectorMethod(MPProblemType* _problem, XMLNode& _node);
+    ConnectorMethod(XMLNode& _node);
     virtual ~ConnectorMethod() = default;
 
     ///@}
@@ -181,13 +180,13 @@ class ConnectorMethod : public MPBaseObject<MPTraits>
     ///
     /// @usage
     /// @code
-    /// ConnectorPointer c = this->GetMPProblem()->GetConnector(m_cLabel);
+    /// ConnectorPointer c = this->GetConnector(m_cLabel);
     /// ColorMapType cm;
     /// vector<VID> c1, c2;
     /// bool b;
     /// vector<CfgType> col;
-    /// c->Connect(this->GetMPProblem()->GetRoadmap(),
-    ///            this->GetMPProblem()->GetStatClass(),
+    /// c->Connect(this->GetRoadmap(),
+    ///            this->GetStatClass(),
     ///            cmap, c1.begin(), c1.end(), c2.begin(), c2.end(),
     ///            b, back_inserter(col));
     /// @endcode
@@ -279,8 +278,7 @@ ConnectorMethod(string _nfLabel, string _lpLabel) :
 
 template<class MPTraits>
 ConnectorMethod<MPTraits>::
-ConnectorMethod(MPProblemType* _problem, XMLNode& _node) :
-    MPBaseObject<MPTraits>(_problem, _node) {
+ConnectorMethod(XMLNode& _node) : MPBaseObject<MPTraits>(_node) {
   this->SetName("ConnectorMethod");
   m_nfLabel = _node.Read("nfLabel", true, "", "Neighborhood Finder");
   m_lpLabel = _node.Read("lpLabel", true, "", "Local Planner");

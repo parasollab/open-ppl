@@ -2,7 +2,7 @@
 #define SIMILAR_STRUCTURE_SAMPLER_H_
 
 //
-// Code adapted from Dr. Lydia Tapia's group at UNM
+// Code adapted from Lydia Tapia's group at UNM
 // All results using this sampler should cite their work.
 //
 
@@ -148,7 +148,6 @@ struct DistributionGaussian : public DistributionType {
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup Samplers
 /// @brief TODO
-/// @tparam MPTraits Motion planning universe
 ///
 /// TODO
 ////////////////////////////////////////////////////////////////////////////////
@@ -184,8 +183,8 @@ class SimilarStructureSampler : public SamplerMethod<MPTraits> {
     this->SetName("SimilarStructureSampler");
   }
 
-  SimilarStructureSampler(typename MPTraits::MPProblemType* _problem, XMLNode& _node) :
-    SamplerMethod<MPTraits>(_problem, _node),
+  SimilarStructureSampler(XMLNode& _node) :
+    SamplerMethod<MPTraits>(_node),
     m_jointActivityFractionActive(0.0),
     m_jointActivityNumberActive(0) {
     this->SetName("SimilarStructureSampler");
@@ -411,7 +410,7 @@ class SimilarStructureSampler : public SamplerMethod<MPTraits> {
     const size_t resultSize = _result.size();
 
     Environment* env = this->GetEnvironment();
-    typename MPTraits::MPProblemType::ValidityCheckerPointer vcm = this->GetValidityChecker(m_vcLabel);
+    auto vcm = this->GetValidityChecker(m_vcLabel);
 
     const vector<CfgType> seed_nodes(1, _cfg);
     for(size_t seed_index = 0; seed_index < seed_nodes.size(); ++seed_index) {

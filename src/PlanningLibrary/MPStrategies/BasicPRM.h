@@ -6,14 +6,13 @@
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup MotionPlanningStrategies
 /// @brief Basic PRM approach
-/// @tparam MPTraits Motion planning universe
 ///
 /// BasicPRM essentially combines samplers and connectors to iteratively
 /// construct a roadmap until planning is "done"
 ///
 /// \internal This strategy is configured for pausible execution.
 ////////////////////////////////////////////////////////////////////////////////
-template<class MPTraits>
+template <typename MPTraits>
 class BasicPRM : public MPStrategyMethod<MPTraits> {
   public:
 
@@ -24,9 +23,6 @@ class BasicPRM : public MPStrategyMethod<MPTraits> {
     typedef typename MPProblemType::RoadmapType RoadmapType;
     typedef typename MPProblemType::GraphType GraphType;
     typedef typename MPProblemType::VID VID;
-    typedef typename MPProblemType::SamplerPointer SamplerPointer;
-    typedef typename MPProblemType::ConnectorPointer ConnectorPointer;
-    typedef typename MPProblemType::MapEvaluatorPointer MapEvaluatorPointer;
 
     BasicPRM(
         const map<string, pair<size_t, size_t> >& _samplerLabels = map<string, pair<size_t, size_t> >(),
@@ -35,7 +31,7 @@ class BasicPRM : public MPStrategyMethod<MPTraits> {
         const vector<string>& _evaluatorLabels = vector<string>(),
         string _inputMapFilename = "",
         Start _startAt = Sampling);
-    BasicPRM(typename MPTraits::MPProblemType* _problem, XMLNode& _node);
+    BasicPRM(XMLNode& _node);
     virtual ~BasicPRM() {}
 
     virtual void ParseXML(XMLNode& _node);
@@ -79,7 +75,7 @@ class BasicPRM : public MPStrategyMethod<MPTraits> {
     Start m_startAt; ///< When inputting a roadmap, specifies where in algorithm to start
 };
 
-template<class MPTraits>
+template <typename MPTraits>
 BasicPRM<MPTraits>::
 BasicPRM(const map<string, pair<size_t, size_t> >& _samplerLabels,
     const vector<string>& _connectorLabels,
@@ -94,16 +90,15 @@ BasicPRM(const map<string, pair<size_t, size_t> >& _samplerLabels,
   this->SetName("BasicPRM");
 }
 
-template<class MPTraits>
+template <typename MPTraits>
 BasicPRM<MPTraits>::
-BasicPRM(typename MPTraits::MPProblemType* _problem, XMLNode& _node) :
-    MPStrategyMethod<MPTraits>(_problem, _node), m_currentIteration(0),
-    m_inputMapFilename(""), m_startAt(Sampling) {
+BasicPRM(XMLNode& _node) : MPStrategyMethod<MPTraits>(_node),
+    m_currentIteration(0), m_inputMapFilename(""), m_startAt(Sampling) {
   this->SetName("BasicPRM");
   ParseXML(_node);
 }
 
-template<class MPTraits>
+template <typename MPTraits>
 void
 BasicPRM<MPTraits>::
 ParseXML(XMLNode& _node) {
@@ -148,7 +143,7 @@ ParseXML(XMLNode& _node) {
   }
 }
 
-template<class MPTraits>
+template <typename MPTraits>
 void
 BasicPRM<MPTraits>::
 Print(ostream& _os) const {
@@ -184,7 +179,7 @@ Print(ostream& _os) const {
     _os << "\t\t" << label << endl;
 }
 
-template<class MPTraits>
+template <typename MPTraits>
 void
 BasicPRM<MPTraits>::
 Initialize() {
@@ -209,7 +204,7 @@ Initialize() {
     }
 
     for(const auto& label: this->m_meLabels) {
-      MapEvaluatorPointer evaluator = this->GetMapEvaluator(label);
+      auto evaluator = this->GetMapEvaluator(label);
       if(evaluator->HasState())
         evaluator->operator()();
     }
@@ -217,7 +212,7 @@ Initialize() {
 }
 
 
-template<class MPTraits>
+template <typename MPTraits>
 void
 BasicPRM<MPTraits>::
 Iterate() {
@@ -256,7 +251,7 @@ Iterate() {
   m_startAt = Sampling;
 }
 
-template<class MPTraits>
+template <typename MPTraits>
 void
 BasicPRM<MPTraits>::
 Finalize() {
@@ -270,7 +265,7 @@ Finalize() {
   stats->PrintAllStats(osStat, this->GetRoadmap());
 }
 
-template<class MPTraits>
+template <typename MPTraits>
 template<typename OutputIterator>
 void
 BasicPRM<MPTraits>::
@@ -285,12 +280,12 @@ Sample(OutputIterator _thisIterationOut) {
   //For each sampler generate nodes into samples
   vector<CfgType> samples;
   for(auto&  sampler : m_samplerLabels) {
-    SamplerPointer s = this->GetSampler(sampler.first);
+    auto s = this->GetSampler(sampler.first);
 
     stats->StartClock(s->GetNameAndLabel());
 
     s->Sample(sampler.second.first, sampler.second.second,
-        this->m_boundary, back_inserter(samples));
+        this->GetEnvironment()->GetBoundary(), back_inserter(samples));
 
     stats->StopClock(s->GetNameAndLabel());
   }
@@ -313,7 +308,7 @@ Sample(OutputIterator _thisIterationOut) {
   }
 }
 
-template<class MPTraits>
+template <typename MPTraits>
 template<class InputIterator>
 void
 BasicPRM<MPTraits>::
@@ -327,7 +322,7 @@ Connect(InputIterator _first, InputIterator _last, const vector<string>& _labels
 
   typedef vector<string>::const_iterator SIT;
   for(SIT sit = _labels.begin(); sit != _labels.end(); ++sit){
-    ConnectorPointer c = this->GetConnector(*sit);
+    auto c = this->GetConnector(*sit);
 
     stats->StartClock(c->GetNameAndLabel());
 
@@ -346,7 +341,7 @@ Connect(InputIterator _first, InputIterator _last, const vector<string>& _labels
   }
 }
 
-template<class MPTraits>
+template <typename MPTraits>
 template<class InputIterator>
 void
 BasicPRM<MPTraits>::

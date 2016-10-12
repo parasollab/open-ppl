@@ -10,7 +10,6 @@ template<class MPTraits> struct LPOutput;
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup LocalPlanners
 /// @brief Base algorithm abstraction for \ref LocalPlanners.
-/// @tparam MPTraits Motion planning universe
 ///
 /// LocalPlannerMethod has two main functions: @c IsConnected and
 /// @c ReconstructPath.
@@ -44,8 +43,8 @@ class LocalPlannerMethod : public MPBaseObject<MPTraits> {
     LocalPlannerMethod(bool _saveIntermediates = false) :
         m_saveIntermediates(_saveIntermediates) { }
 
-    LocalPlannerMethod(MPProblemType* _problem, XMLNode& _node) :
-        MPBaseObject<MPTraits>(_problem, _node) {
+    LocalPlannerMethod(XMLNode& _node) :
+        MPBaseObject<MPTraits>(_node) {
       m_saveIntermediates = _node.Read("saveIntermediates", false,
           false, "Save intermediate nodes");
     }
@@ -76,8 +75,8 @@ class LocalPlannerMethod : public MPBaseObject<MPTraits> {
     ///
     /// @usage
     /// @code
-    /// LocalPlannerPointer lp = this->GetMPProblem()->GetLocalPlanner(m_lpLabel);
-    /// Environment* env = this->GetMPProblem()->GetEnvironment();
+    /// LocalPlannerPointer lp = this->GetLocalPlanner(m_lpLabel);
+    /// Environment* env = this->GetEnvironment();
     /// CfgType c1, c2, col;
     /// LPOutput<MPTraits> lpOut;
     /// lp->IsConnected(c1, c2, col, &lpOut, env->GetPositionRes(),
@@ -108,8 +107,8 @@ class LocalPlannerMethod : public MPBaseObject<MPTraits> {
     ///
     /// @usage
     /// @code
-    /// LocalPlannerPointer lp = this->GetMPProblem()->GetLocalPlanner(m_lpLabel);
-    /// Environment* env = this->GetMPProblem()->GetEnvironment();
+    /// LocalPlannerPointer lp = this->GetLocalPlanner(m_lpLabel);
+    /// Environment* env = this->GetEnvironment();
     /// CfgType c1, c2;
     /// vector<CfgType> intermediates;
     /// lp->ReconstructPath(c1, c2, intermediates, env->GetPositionRes(),

@@ -95,16 +95,17 @@ enum NFType {K, RADIUS, OPTIMAL, APPROX, OTHER};
 /// @c FindNeighborPairs determines the "closest" pairs of configurations
 /// betweeen two sets of nodes located in a roadmap.
 ////////////////////////////////////////////////////////////////////////////////
-template<class MPTraits>
+template <typename MPTraits>
 class NeighborhoodFinderMethod : public MPBaseObject<MPTraits> {
   public:
     typedef typename MPTraits::CfgType CfgType;
     typedef typename MPTraits::MPProblemType MPProblemType;
     typedef typename MPProblemType::RoadmapType RoadmapType;
     typedef typename MPProblemType::VID VID;
+    typedef typename MPTraits::PlanningLibraryType PlanningLibraryType;
 
     NeighborhoodFinderMethod(string _dmLabel = "", bool _unconnected = false);
-    NeighborhoodFinderMethod(MPProblemType* _problem, XMLNode& _node, bool _requireDM = true);
+    NeighborhoodFinderMethod(XMLNode& _node, bool _requireDM = true);
 
     virtual void Print(ostream& _os) const {
       MPBaseObject<MPTraits>::Print(_os);
@@ -128,7 +129,7 @@ class NeighborhoodFinderMethod : public MPBaseObject<MPTraits> {
     ////////////////////////////////////////////////////////////////////////////
     /// @return Distance Metric for this neighborhood finder
     ////////////////////////////////////////////////////////////////////////////
-    virtual typename MPProblemType::DistanceMetricPointer GetDMMethod() const;
+    virtual typename PlanningLibraryType::DistanceMetricPointer GetDMMethod() const;
 
     ////////////////////////////////////////////////////////////////////////////
     /// @return Total time of neighborhood finding
@@ -186,12 +187,12 @@ class NeighborhoodFinderMethod : public MPBaseObject<MPTraits> {
     ///
     /// @usage
     /// @code
-    /// NeighborhoodFinderPointer nf = this->GetMPProblem()->GetNeighborhoodFinder(m_nfLabel);
+    /// NeighborhoodFinderPointer nf = this->GetNeighborhoodFinder(m_nfLabel);
     /// CfgType c;
     /// vector<VID> nodes;
     /// bool b;
     /// vector<pair<VID, double> > neighbors;
-    /// nf->FindNeighbors(this->GetMPProblem()->GetRoadmap(),
+    /// nf->FindNeighbors(this->GetRoadmap(),
     ///                   nodes.begin(), nodes.end(), b, c,
     ///                   back_inserter(neighbors));
     /// @endcode
@@ -222,10 +223,10 @@ class NeighborhoodFinderMethod : public MPBaseObject<MPTraits> {
     ///
     /// @usage
     /// @code
-    /// NeighborhoodFinderPointer nf = this->GetMPProblem()->GetNeighborhoodFinder(m_nfLabel);
+    /// NeighborhoodFinderPointer nf = this->GetNeighborhoodFinder(m_nfLabel);
     /// vector<VID> s1, s2;
     /// vector<pair<pair<VID, VID>, double> > neighbors;
-    /// nf->FindNeighbors(this->GetMPProblem()->GetRoadmap(),
+    /// nf->FindNeighbors(this->GetRoadmap(),
     ///                   s1.begin(), s1.end(), s2.begin(), s2.end(),
     ///                   back_inserter(neighbors));
     /// @endcode
@@ -289,27 +290,27 @@ class NeighborhoodFinderMethod : public MPBaseObject<MPTraits> {
     bool m_unconnected; ///< Require neighbor to not have direct edge
 };
 
-template<class MPTraits>
+template <typename MPTraits>
 NeighborhoodFinderMethod<MPTraits>::NeighborhoodFinderMethod(string _dmLabel, bool _unconnected)
   : MPBaseObject<MPTraits>(),
   m_nfType(OTHER), m_k(0), m_radius(0),
   m_dmLabel(_dmLabel), m_unconnected(_unconnected) {}
 
-template<class MPTraits>
-NeighborhoodFinderMethod<MPTraits>::NeighborhoodFinderMethod(MPProblemType* _problem, XMLNode& _node, bool _requireDM)
-  : MPBaseObject<MPTraits>(_problem, _node),
+template <typename MPTraits>
+NeighborhoodFinderMethod<MPTraits>::NeighborhoodFinderMethod(XMLNode& _node, bool _requireDM)
+  : MPBaseObject<MPTraits>(_node),
   m_nfType(OTHER), m_k(0), m_radius(0) {
     m_dmLabel = _node.Read("dmLabel", _requireDM, "", "Distance Metric Method");
     m_unconnected = _node.Read("unconnected", false, false, "Require neighbors to be non adjacent to the query configuration");
   }
 
-template<class MPTraits>
-typename MPTraits::MPProblemType::DistanceMetricPointer
+template <typename MPTraits>
+typename MPTraits::PlanningLibraryType::DistanceMetricPointer
 NeighborhoodFinderMethod<MPTraits>::GetDMMethod() const {
   return this->GetDistanceMetric(m_dmLabel);
 }
 
-template<class MPTraits>
+template <typename MPTraits>
 bool
 NeighborhoodFinderMethod<MPTraits>::CheckUnconnected(RoadmapType* _rmp, const CfgType& _c, VID _v){
   if(this->m_unconnected){
@@ -322,67 +323,67 @@ NeighborhoodFinderMethod<MPTraits>::CheckUnconnected(RoadmapType* _rmp, const Cf
   return false;
 }
 
-template<class MPTraits>
+template <typename MPTraits>
 double
 NeighborhoodFinderMethod<MPTraits>::GetTotalTime() const{
   return this->GetStatClass()->GetSeconds(this->GetNameAndLabel()+"::Total");
 }
 
-template<class MPTraits>
+template <typename MPTraits>
 double
 NeighborhoodFinderMethod<MPTraits>::GetQueryTime() const{
   return this->GetStatClass()->GetSeconds(this->GetNameAndLabel()+"::Query");
 }
 
-template<class MPTraits>
+template <typename MPTraits>
 double
 NeighborhoodFinderMethod<MPTraits>::GetConstructionTime() const{
   return this->GetStatClass()->GetSeconds(this->GetNameAndLabel()+"::Construction");
 }
 
-template<class MPTraits>
+template <typename MPTraits>
 size_t
 NeighborhoodFinderMethod<MPTraits>::GetNumQueries() const{
   return this->GetStatClass()->GetNFStat(this->GetNameAndLabel()+"::NumQueries");
 }
 
-template<class MPTraits>
+template <typename MPTraits>
 void
 NeighborhoodFinderMethod<MPTraits>::StartTotalTime(){
   this->GetStatClass()->StartClock(this->GetNameAndLabel()+"::Total");
 }
 
-template<class MPTraits>
+template <typename MPTraits>
 void
 NeighborhoodFinderMethod<MPTraits>::EndTotalTime(){
   this->GetStatClass()->StopClock(this->GetNameAndLabel()+"::Total");
 }
 
-template<class MPTraits>
+template <typename MPTraits>
 void
 NeighborhoodFinderMethod<MPTraits>::StartQueryTime(){
   this->GetStatClass()->StartClock(this->GetNameAndLabel()+"::Query");
 }
 
-template<class MPTraits>
+template <typename MPTraits>
 void
 NeighborhoodFinderMethod<MPTraits>::EndQueryTime(){
   this->GetStatClass()->StopClock(this->GetNameAndLabel()+"::Query");
 }
 
-template<class MPTraits>
+template <typename MPTraits>
 void
 NeighborhoodFinderMethod<MPTraits>::StartConstructionTime(){
   this->GetStatClass()->StartClock(this->GetNameAndLabel()+"::Construction");
 }
 
-template<class MPTraits>
+template <typename MPTraits>
 void
 NeighborhoodFinderMethod<MPTraits>::EndConstructionTime(){
   this->GetStatClass()->StopClock(this->GetNameAndLabel()+"::Construction");
 }
 
-template<class MPTraits>
+template <typename MPTraits>
 void
 NeighborhoodFinderMethod<MPTraits>::IncrementNumQueries(){
   this->GetStatClass()->IncNFStat(this->GetNameAndLabel()+"::NumQueries");

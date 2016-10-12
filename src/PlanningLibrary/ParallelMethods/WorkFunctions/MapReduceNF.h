@@ -24,9 +24,10 @@ template<class MPTraits>
 class NFMapFunc {
   private:
     typedef typename MPTraits::MPProblemType MPProblemType;
+    typedef typename MPTraits::PlanningLibraryType PlanningLibraryType;
     typedef typename MPProblemType::VID VID;
     typedef typename MPTraits::CfgType CfgType;
-    typedef typename MPProblemType::DistanceMetricPointer DistanceMetricPointer;
+    typedef typename PlanningLibraryType::DistanceMetricPointer DistanceMetricPointer;
     typedef pair<pair<VID, CfgType>, double> NFType;
     typedef vector<NFType> NFResultType;
 
@@ -53,7 +54,7 @@ class NFMapFunc {
       result_type operator()(View _v) {
         cout << "MapReduceNF called." << endl;
         ///replace with call to NF
-        DistanceMetricPointer dmm = m_problem->GetDistanceMetric(m_dmLabel);
+        auto dmm = m_problem->GetDistanceMetric(m_dmLabel);
         return FindNeighbors(dmm, _v.begin(), _v.end(), m_cfg, m_k);
       }
 
@@ -155,7 +156,8 @@ class NFMapFuncRRRT {
     typedef typename MPTraits::MPProblemType MPProblemType;
     typedef typename MPProblemType::VID VID;
     typedef typename MPTraits::CfgType CfgType;
-    typedef typename MPProblemType::DistanceMetricPointer DistanceMetricPointer;
+    typedef typename MPTraits::PlanningLibraryType PlanningLibraryType;
+    typedef typename PlanningLibraryType::DistanceMetricPointer DistanceMetricPointer;
     typedef pair<pair<VID, CfgType>, double> NFType;
     typedef vector<NFType> NFResultType;
 
@@ -182,7 +184,7 @@ class NFMapFuncRRRT {
       result_type operator()(View _v) {
         cout << "MapReduceNF called." << endl;
         ///replace with call to NF
-        DistanceMetricPointer dmm = m_problem->GetDistanceMetric(m_dmLabel);
+        auto dmm = m_problem->GetDistanceMetric(m_dmLabel);
         return FindNeighbors(dmm, _v.begin(), _v.end(), m_cfg, m_k);
       }
 

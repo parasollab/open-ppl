@@ -1,12 +1,13 @@
 #ifndef EXTENDER_METHOD_H_
 #define EXTENDER_METHOD_H_
 
+#include <limits>
+
 #include "PlanningLibrary/LocalPlanners/LPOutput.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup Extenders
 /// @brief Base algorithm abstraction for \ref Extenders.
-/// @tparam MPTraits Motion planning universe
 ///
 /// ExtenderMethod has one main method, @c Extend, to grow a simple path from a
 /// starting node in some input direction - note that not all expansion
@@ -40,8 +41,8 @@ class ExtenderMethod : public MPBaseObject<MPTraits> {
     ExtenderMethod(double _min = .001, double _max = 1) :
         m_minDist(_min), m_maxDist(_max) { }
 
-    ExtenderMethod(MPProblemType* _problem, XMLNode& _node) :
-        MPBaseObject<MPTraits>(_problem, _node) {
+    ExtenderMethod(XMLNode& _node) :
+        MPBaseObject<MPTraits>(_node) {
       ParseXML(_node);
     }
 
@@ -58,10 +59,10 @@ class ExtenderMethod : public MPBaseObject<MPTraits> {
     }
 
     void ParseXML(XMLNode& _node) {
-      m_maxDist = _node.Read("maxDist", false, 1., 0., MAX_DBL, "Maximum "
-          "extension distance");
-      m_minDist = _node.Read("minDist", false, .001, 0., MAX_DBL, "Minimum "
-          "extension distance.");
+      m_maxDist = _node.Read("maxDist", false, 1., 0.,
+          std::numeric_limits<double>::max(), "Maximum extension distance");
+      m_minDist = _node.Read("minDist", false, .001, 0.,
+          std::numeric_limits<double>::max(), "Minimum extension distance.");
     }
 
     ///@}

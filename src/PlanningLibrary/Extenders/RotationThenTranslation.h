@@ -6,7 +6,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup Extenders
 /// @brief Extend all rotational DOF before extending all translational DOF.
-/// @tparam MPTraits Motion planning universe
 ///
 /// Rotation followed by Extension. In this way of extending the source
 /// configuration is first rotated to align with the target configuration until
@@ -35,7 +34,7 @@ class RotationThenTranslation : public BasicExtender<MPTraits> {
     RotationThenTranslation(const string& _dmLabel = "",
         const string& _vcLabel = "", double _min = .001, double _max = 1);
 
-    RotationThenTranslation(MPProblemType* _problem, XMLNode& _node);
+    RotationThenTranslation(XMLNode& _node);
 
     virtual ~RotationThenTranslation() = default;
 
@@ -62,8 +61,7 @@ RotationThenTranslation(const string& _dmLabel, const string& _vcLabel,
 
 template <typename MPTraits>
 RotationThenTranslation<MPTraits>::
-RotationThenTranslation(MPProblemType* _problem, XMLNode& _node) :
-    BasicExtender<MPTraits>(_problem, _node) {
+RotationThenTranslation(XMLNode& _node) : BasicExtender<MPTraits>(_node) {
   this->SetName("RotationThenTranslation");
 }
 

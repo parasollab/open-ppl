@@ -9,53 +9,79 @@
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup PathModifiers
 /// @brief TODO.
-/// @tparam MPTraits Motion planning universe
 ///
 /// TODO.
 ////////////////////////////////////////////////////////////////////////////////
-template<class MPTraits>
+template <typename MPTraits>
 class MedialAxisPathModifier : public PathModifierMethod<MPTraits> {
+
   public:
+
+    ///@name Local Types
+    ///@{
+
     typedef typename MPTraits::CfgType CfgType;
     typedef typename MPTraits::MPProblemType MPProblemType;
     typedef typename MPProblemType::GraphType GraphType;
     typedef typename MPProblemType::VID VID;
-    typedef typename MPProblemType::LocalPlannerPointer LocalPlannerPointer;
-    typedef typename MPProblemType::DistanceMetricPointer DistanceMetricPointer;
+
+    ///@}
+    ///@name Construction
+    ///@{
 
     MedialAxisPathModifier(const string& _pmLabel = "",
         const string& _lpLabel = "", const string& _malpLabel = "");
-    MedialAxisPathModifier(MPProblemType* _problem, XMLNode& _node);
+    MedialAxisPathModifier(XMLNode& _node);
+    virtual ~MedialAxisPathModifier() = default;
 
-    void Print(ostream& _os) const;
+    ///@}
+    ///@name MPBaseObject Overrides
+    ///@{
+
+    virtual void Print(ostream& _os) const override;
+
+    ///@}
+
     void ParseXML(XMLNode& _node);
+
+    ///@name Modifier Interface
+    ///@{
 
     bool ModifyImpl(vector<CfgType>& _path, vector<CfgType>& _newPath);
 
+    ///@}
+
   private:
+
+    ///@name Internal State
+    ///@{
+
     string m_pmLabel;
     string m_lpLabel;
     string m_malpLabel;
+
+    ///@}
 };
 
-template<class MPTraits>
+template <typename MPTraits>
 MedialAxisPathModifier<MPTraits>::
 MedialAxisPathModifier(const string& _pmLabel, const string& _lpLabel,
     const string& _malpLabel) :
-  PathModifierMethod<MPTraits>(), m_pmLabel(_pmLabel), m_lpLabel(_lpLabel),
-  m_malpLabel(_malpLabel) {
-    this->SetName("MedialAxisPathModifier");
-  }
+    PathModifierMethod<MPTraits>(), m_pmLabel(_pmLabel), m_lpLabel(_lpLabel),
+    m_malpLabel(_malpLabel) {
+  this->SetName("MedialAxisPathModifier");
+}
 
-template<class MPTraits>
+
+template <typename MPTraits>
 MedialAxisPathModifier<MPTraits>::
-MedialAxisPathModifier(MPProblemType* _problem, XMLNode& _node) :
-  PathModifierMethod<MPTraits>(_problem, _node) {
-    this->SetName("MedialAxisPathModifier");
-    ParseXML(_node);
-  }
+MedialAxisPathModifier(XMLNode& _node) : PathModifierMethod<MPTraits>(_node) {
+  this->SetName("MedialAxisPathModifier");
+  ParseXML(_node);
+}
 
-template<class MPTraits>
+
+template <typename MPTraits>
 void
 MedialAxisPathModifier<MPTraits>::
 ParseXML(XMLNode& _node) {
@@ -65,7 +91,8 @@ ParseXML(XMLNode& _node) {
       "Medial axis local planner label needed by MedialAxisPathModifier");
 }
 
-template<class MPTraits>
+
+template <typename MPTraits>
 void
 MedialAxisPathModifier<MPTraits>::
 Print(ostream& _os) const {
@@ -76,7 +103,7 @@ Print(ostream& _os) const {
 }
 
 
-template<class MPTraits>
+template <typename MPTraits>
 bool
 MedialAxisPathModifier<MPTraits>::
 ModifyImpl(vector<CfgType>& _path, vector<CfgType>& _newPath) {
@@ -108,8 +135,7 @@ ModifyImpl(vector<CfgType>& _path, vector<CfgType>& _newPath) {
   //smooth path
   vector<CfgType> path;
   if(m_pmLabel != "NULL") {
-    typedef typename MPProblemType::PathModifierPointer PathModifierPointer;
-    PathModifierPointer pm = this->GetPathModifier(m_pmLabel);
+    auto pm = this->GetPathModifier(m_pmLabel);
     pm->Modify(_path, path);
   }
   else
@@ -147,7 +173,7 @@ ModifyImpl(vector<CfgType>& _path, vector<CfgType>& _newPath) {
   }
 
   //Create the variables used to connect the nodes
-  LocalPlannerPointer lp = this->GetLocalPlanner(this->m_lpLabel);
+  auto lp = this->GetLocalPlanner(this->m_lpLabel);
   LPOutput<MPTraits> tmpOutput;
   double posRes = env->GetPositionRes();
   double oriRes = env->GetOrientationRes();

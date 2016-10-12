@@ -24,7 +24,7 @@ class KnotTheoryDistance : public DistanceMetricMethod<MPTraits> {
     ///@{
 
     KnotTheoryDistance();
-    KnotTheoryDistance(MPProblemType* _problem, XMLNode& _node);
+    KnotTheoryDistance(XMLNode& _node);
     virtual ~KnotTheoryDistance() = default;
 
     ///@}
@@ -58,8 +58,7 @@ KnotTheoryDistance() : DistanceMetricMethod<MPTraits>() {
 
 template <typename MPTraits>
 KnotTheoryDistance<MPTraits>::
-KnotTheoryDistance(MPProblemType* _problem, XMLNode& _node) :
-    DistanceMetricMethod<MPTraits>(_problem, _node) {
+KnotTheoryDistance(XMLNode& _node) : DistanceMetricMethod<MPTraits>(_node) {
   this->SetName("KnotTheory");
 }
 
@@ -80,7 +79,7 @@ template <typename MPTraits>
 vector<Vector3d>
 KnotTheoryDistance<MPTraits>::
 GetCoordinatesForKnot(const CfgType& _c) {
-  Environment* env = this->GetMPProblem()->GetEnvironment();
+  Environment* env = this->GetEnvironment();
   _c.ConfigEnvironment();
   vector<Vector3d> coordinates;
   for(size_t i=0; i< env->GetRobot(_c.GetRobotIndex())->NumFreeBody(); ++i)

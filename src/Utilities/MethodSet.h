@@ -16,13 +16,12 @@
 ////////////////////////////////////////////////////////////////////////////////
 /// @brief Creates new method instances from an XML node.
 ////////////////////////////////////////////////////////////////////////////////
-template<typename MPTraits, typename Method>
+template <typename Method>
 struct MethodFactory final {
 
   ///@name Local Types
   ///@{
 
-  typedef typename MPTraits::MPProblemType MPProblemType;
   typedef std::shared_ptr<Method>          MethodPointer;
 
   ///@}
@@ -30,8 +29,8 @@ struct MethodFactory final {
   ///@{
 
   MethodPointer
-  operator()(MPProblemType* _problem, XMLNode& _node) const {
-    return MethodPointer(new Method(_problem, _node));
+  operator()(XMLNode& _node) const {
+    return MethodPointer(new Method(_node));
   }
 
   ///@}
@@ -61,16 +60,17 @@ class MethodSet final {
     ///@name Local Types
     ///@{
 
-    typedef typename MPTraits::MPProblemType                       MPProblemType;
+    typedef typename MPTraits::MPProblemType              MPProblemType;
+    typedef typename MPTraits::PlanningLibraryType        PlanningLibraryType;
 
-    typedef std::shared_ptr<Method>                                MethodPointer;
-    typedef typename std::map<std::string, MethodPointer>          MethodMap;
+    typedef std::shared_ptr<Method>                       MethodPointer;
+    typedef typename std::map<std::string, MethodPointer> MethodMap;
 
-    typedef std::function<MethodPointer(MPProblemType*, XMLNode&)> FactoryType;
-    typedef typename std::map<std::string, FactoryType>            FactoryMap;
+    typedef std::function<MethodPointer(XMLNode&)>        FactoryType;
+    typedef typename std::map<std::string, FactoryType>   FactoryMap;
 
-    typedef typename MethodMap::iterator                           iterator;
-    typedef typename MethodMap::const_iterator                     const_iterator;
+    typedef typename MethodMap::iterator                  iterator;
+    typedef typename MethodMap::const_iterator            const_iterator;
 
     ///@}
     ///@name Construction
@@ -82,7 +82,8 @@ class MethodSet final {
     /// @param _mtl An instance of the method type list.
     /// @param _name The name of this method set.
     template <typename MethodTypeList>
-    MethodSet(const MethodTypeList& _mtl, const std::string& _name);
+    MethodSet(PlanningLibraryType* _p, const MethodTypeList& _mtl,
+        const std::string& _name);
 
     ///@}
     ///@name Method Accessors
@@ -90,10 +91,10 @@ class MethodSet final {
 
     ////////////////////////////////////////////////////////////////////////////
     /// @breif Add the appropriate methods from an XML node.
-    void ParseXML(MPProblemType* _problem, XMLNode& _node);
+    void ParseXML(XMLNode& _node);
 
     ////////////////////////////////////////////////////////////////////////////
-    void AddMethod(MPProblemType* _problem, XMLNode& _node);
+    void AddMethod(XMLNode& _node);
 
     ////////////////////////////////////////////////////////////////////////////
     void AddMethod(MethodPointer _e, const std::string& _label);
@@ -143,6 +144,8 @@ class MethodSet final {
     ///@name Internal State
     ///@{
 
+    PlanningLibraryType* const m_library; ///< The owning planning library.
+
     std::string m_name;     ///< The name of this set of methods.
     std::string m_default;  ///< The name of the default method in this set.
 
@@ -158,7 +161,8 @@ class MethodSet final {
 template <typename MPTraits, typename Method>
 template <typename MethodTypeList>
 MethodSet<MPTraits, Method>::
-MethodSet(const MethodTypeList& _mtl, const std::string& _name) : m_name(_name) {
+MethodSet(PlanningLibraryType* _p, const MethodTypeList& _mtl,
+    const std::string& _name) : m_library(_p), m_name(_name) {
   AddToUniverse(typename boost::mpl::begin<MethodTypeList>::type(),
                 typename boost::mpl::end<MethodTypeList>::type());
 }
@@ -167,23 +171,23 @@ MethodSet(const MethodTypeList& _mtl, const std::string& _name) : m_name(_name) 
 template <typename MPTraits, typename Method>
 void
 MethodSet<MPTraits, Method>::
-ParseXML(MPProblemType* _problem, XMLNode& _node) {
+ParseXML(XMLNode& _node) {
   for(auto& child : _node)
-    AddMethod(_problem, child);
+    AddMethod(child);
 }
 
 
 template <typename MPTraits, typename Method>
 void
 MethodSet<MPTraits, Method>::
-AddMethod(MPProblemType* _problem, XMLNode& _node) {
+AddMethod(XMLNode& _node) {
   auto iter = m_universe.find(_node.Name());
 
   // Skip if method isn't in universe.
   if(iter == m_universe.end())
     return;
 
-  MethodPointer e = iter->second(_problem, _node);
+  MethodPointer e = iter->second(_node);
   AddMethod(e, e->m_label);
 }
 
@@ -199,6 +203,7 @@ AddMethod(MethodPointer _e, const std::string& _label) {
     throw ParseException(WHERE, "Method '" + _e->m_name +
         "' is not contained within the motion planning universe.");
 
+  _e->SetPlanningLibrary(m_library);
   _e->SetLabel(_label);
   if(m_elements.empty())
     m_default = _label;
@@ -297,7 +302,7 @@ MethodSet<MPTraits, Method>::
 AddToUniverse(First, Last) {
   using FirstType = typename boost::mpl::deref<First>::type;
   FirstType first;
-  m_universe[first.m_name] = MethodFactory<MPTraits, FirstType>();
+  m_universe[first.m_name] = MethodFactory<FirstType>();
   AddToUniverse(typename boost::mpl::next<First>::type(), Last());
 }
 

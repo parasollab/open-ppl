@@ -10,7 +10,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup Extenders
 /// @brief Basic straight-line extension.
-/// @tparam MPTraits Motion planning universe
 ///
 /// Extends in straight-line through @cspace from \f$q_{near}\f$ towards
 /// \f$q_{dir}\f$ until either \f$q_{dir}\f$ is reached, a distance of
@@ -35,7 +34,7 @@ class KinodynamicExtender : public ExtenderMethod<MPTraits> {
         double _min = .001, double _timeStep = 1, bool _fixed = true,
         bool _best = false);
 
-    KinodynamicExtender(MPProblemType* _problem, XMLNode& _node);
+    KinodynamicExtender(XMLNode& _node);
 
     virtual ~KinodynamicExtender() = default;
 
@@ -122,8 +121,7 @@ KinodynamicExtender(const string& _dmLabel, const string& _vcLabel,
 
 template <typename MPTraits>
 KinodynamicExtender<MPTraits>::
-KinodynamicExtender(MPProblemType* _problem, XMLNode& _node) :
-    ExtenderMethod<MPTraits>(_problem, _node) {
+KinodynamicExtender(XMLNode& _node) : ExtenderMethod<MPTraits>(_node) {
   this->SetName("KinodynamicExtender");
   ParseXML(_node);
 }

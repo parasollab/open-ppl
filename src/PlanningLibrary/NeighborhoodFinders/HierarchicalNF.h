@@ -8,11 +8,10 @@
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup NeighborhoodFinders
 /// @brief TODO
-/// @tparam MPTraits Motion planning universe
 ///
 /// TODO
 ////////////////////////////////////////////////////////////////////////////////
-template<class MPTraits>
+template <typename MPTraits>
 class HierarchicalNF : public NeighborhoodFinderMethod<MPTraits> {
   public:
     typedef typename MPTraits::CfgType CfgType;
@@ -20,7 +19,6 @@ class HierarchicalNF : public NeighborhoodFinderMethod<MPTraits> {
     typedef typename MPProblemType::RoadmapType RoadmapType;
     typedef typename MPProblemType::VID VID;
     typedef typename MPProblemType::GraphType GraphType;
-    typedef typename MPProblemType::NeighborhoodFinderPointer NeighborhoodFinderPointer;
 
     HierarchicalNF(string _dmLabel = "") :
       NeighborhoodFinderMethod<MPTraits>(_dmLabel) {
@@ -28,8 +26,8 @@ class HierarchicalNF : public NeighborhoodFinderMethod<MPTraits> {
         this->m_nfType = OTHER;
       }
 
-    HierarchicalNF(MPProblemType* _problem, XMLNode& _node) :
-      NeighborhoodFinderMethod<MPTraits>(_problem, _node) {
+    HierarchicalNF(XMLNode& _node) :
+      NeighborhoodFinderMethod<MPTraits>(_node) {
         this->SetName("HierarchicalNF");
         this->m_nfType = OTHER;
         m_nfLabel = _node.Read("nfLabel", true, "default", "Neighbor Finder Method1");
@@ -59,7 +57,7 @@ class HierarchicalNF : public NeighborhoodFinderMethod<MPTraits> {
 
 };
 
-template<class MPTraits>
+template <typename MPTraits>
 template<typename InputIterator, typename OutputIterator>
 OutputIterator
 HierarchicalNF<MPTraits>::
@@ -71,8 +69,8 @@ FindNeighbors(RoadmapType* _rmp,
   this->StartTotalTime();
   this->StartQueryTime();
 
-  NeighborhoodFinderPointer nf = this->GetNeighborhoodFinder(m_nfLabel);
-  NeighborhoodFinderPointer nf2 = this->GetNeighborhoodFinder(m_nfLabel2);
+  auto nf = this->GetNeighborhoodFinder(m_nfLabel);
+  auto nf2 = this->GetNeighborhoodFinder(m_nfLabel2);
 
   vector<pair<VID, double> > closest;
   nf->FindNeighbors(_rmp, _first, _last, _fromFullRoadmap, _cfg,
@@ -92,7 +90,7 @@ FindNeighbors(RoadmapType* _rmp,
   return _out;
 }
 
-template<class MPTraits>
+template <typename MPTraits>
 template<typename InputIterator, typename OutputIterator>
 OutputIterator
 HierarchicalNF<MPTraits>::FindNeighborPairs(RoadmapType* _rmp,

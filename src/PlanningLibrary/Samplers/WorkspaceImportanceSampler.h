@@ -10,7 +10,6 @@
 /// @ingroup Samplers
 /// @brief Workspace Importance Sampling uses a tetrahedralization to bias
 ///        sampling towards narrow passages of the workspace.
-/// @tparam MPTraits Motion planning universe
 ///
 /// Workspace Importance Sampling defines an importance value over each
 /// tetrahedron of a tetrahedralization. From the importance value, a number of
@@ -39,7 +38,7 @@ class WorkspaceImportanceSampler : public SamplerMethod<MPTraits> {
     ///@{
 
     WorkspaceImportanceSampler();
-    WorkspaceImportanceSampler(MPProblemType* _problem, XMLNode& _node);
+    WorkspaceImportanceSampler(XMLNode& _node);
 
     ///@}
     ///@name MPBaseObject Overrides
@@ -104,17 +103,17 @@ class WorkspaceImportanceSampler : public SamplerMethod<MPTraits> {
 
 /*------------------------------- Construction -------------------------------*/
 
-template<class MPTraits>
+template <typename MPTraits>
 WorkspaceImportanceSampler<MPTraits>::
 WorkspaceImportanceSampler() {
   this->SetName("WorkspaceImportanceSampler");
 }
 
 
-template<class MPTraits>
+template <typename MPTraits>
 WorkspaceImportanceSampler<MPTraits>::
-WorkspaceImportanceSampler(MPProblemType* _problem, XMLNode& _node) :
-    SamplerMethod<MPTraits>(_problem, _node) {
+WorkspaceImportanceSampler(XMLNode& _node) :
+    SamplerMethod<MPTraits>(_node) {
   this->SetName("WorkspaceImportanceSampler");
   m_vcLabel = _node.Read("vcLabel", false, m_vcLabel, "Validity Test Method");
   m_alpha = _node.Read("alpha", false,
@@ -124,7 +123,7 @@ WorkspaceImportanceSampler(MPProblemType* _problem, XMLNode& _node) :
 
 /*---------------------------- MPBaseObject Overrides ------------------------*/
 
-template<class MPTraits>
+template <typename MPTraits>
 void
 WorkspaceImportanceSampler<MPTraits>::
 Print(ostream& _os) const {
@@ -134,7 +133,7 @@ Print(ostream& _os) const {
 
 /*--------------------------- SamplerMethod Overrides ------------------------*/
 
-template<class MPTraits>
+template <typename MPTraits>
 bool
 WorkspaceImportanceSampler<MPTraits>::
 Sampler(CfgType& _cfg, shared_ptr<Boundary> _boundary,
@@ -185,7 +184,7 @@ Sampler(CfgType& _cfg, shared_ptr<Boundary> _boundary,
 
 /*---------------------------------- Helpers ---------------------------------*/
 
-template<class MPTraits>
+template <typename MPTraits>
 void
 WorkspaceImportanceSampler<MPTraits>::
 Initialize() {

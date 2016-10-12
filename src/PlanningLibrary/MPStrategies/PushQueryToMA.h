@@ -6,13 +6,12 @@
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup MotionPlanningStrategies
 /// @brief TODO
-/// @tparam MPTraits Motion planning universe
 ///
 /// TODO
 ///
 /// \internal This strategy is configured for pausible execution.
 ////////////////////////////////////////////////////////////////////////////////
-template<class MPTraits>
+template <typename MPTraits>
 class PushQueryToMA : public MPStrategyMethod<MPTraits> {
   public:
     typedef typename MPTraits::CfgType CfgType;
@@ -22,7 +21,7 @@ class PushQueryToMA : public MPStrategyMethod<MPTraits> {
         const string& _outQueryFile = "",
         const MedialAxisUtility<MPTraits>& _medialAxisUtility =
         MedialAxisUtility<MPTraits>());
-    PushQueryToMA(MPProblemType* _problem, XMLNode& _node);
+    PushQueryToMA(XMLNode& _node);
 
     virtual void Initialize();
     virtual void Iterate();
@@ -36,7 +35,7 @@ class PushQueryToMA : public MPStrategyMethod<MPTraits> {
     vector<CfgType> m_query;
 };
 
-template<class MPTraits>
+template <typename MPTraits>
 PushQueryToMA<MPTraits>::
 PushQueryToMA(const string& _inQueryFile, const string& _outQueryFile,
     const MedialAxisUtility<MPTraits>& _medialAxisUtility) :
@@ -45,17 +44,17 @@ PushQueryToMA(const string& _inQueryFile, const string& _outQueryFile,
     this->SetName("PushQueryToMA");
   }
 
-template<class MPTraits>
+template <typename MPTraits>
 PushQueryToMA<MPTraits>::
-PushQueryToMA(MPProblemType* _problem, XMLNode& _node) :
-  MPStrategyMethod<MPTraits>(_problem, _node),
-  m_medialAxisUtility(_problem, _node) {
+PushQueryToMA(XMLNode& _node) :
+  MPStrategyMethod<MPTraits>(_node),
+  m_medialAxisUtility(_node) {
     this->SetName("PushQueryToMA");
     m_inQueryFile = _node.Read("inFilename", true, "", "Query Filename");
     m_outQueryFile = _node.Read("outFilename", true, "", "Query Filename");
   }
 
-template<class MPTraits>
+template <typename MPTraits>
 void
 PushQueryToMA<MPTraits>::
 Print(ostream& _os) const {
@@ -64,7 +63,7 @@ Print(ostream& _os) const {
   m_medialAxisUtility.Print(_os);
 }
 
-template<class MPTraits>
+template <typename MPTraits>
 void
 PushQueryToMA<MPTraits>::
 Initialize() {
@@ -78,7 +77,7 @@ Initialize() {
     m_query.push_back(tmp);
 }
 
-template<class MPTraits>
+template <typename MPTraits>
 void
 PushQueryToMA<MPTraits>::
 Iterate() {
@@ -88,7 +87,7 @@ Iterate() {
       throw RunTimeException(WHERE, "Cannot push to MA.");
 }
 
-template<class MPTraits>
+template <typename MPTraits>
 void
 PushQueryToMA<MPTraits>::
 Finalize() {

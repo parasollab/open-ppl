@@ -6,11 +6,10 @@
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup MapEvaluators
 /// @brief TODO.
-/// @tparam MPTraits Motion planning universe
 ///
 /// TODO.
 ////////////////////////////////////////////////////////////////////////////////
-template<class MPTraits>
+template <typename MPTraits>
 class ConditionalEvaluator : public MapEvaluatorMethod<MPTraits> {
   public:
 
@@ -18,8 +17,7 @@ class ConditionalEvaluator : public MapEvaluatorMethod<MPTraits> {
 
     ConditionalEvaluator(Operator _operator = LT, string _metric = "",
         double _value = 1.0);
-    ConditionalEvaluator(typename MPTraits::MPProblemType* _problem,
-        XMLNode& _node);
+    ConditionalEvaluator(XMLNode& _node);
     virtual ~ConditionalEvaluator() = default;
 
     virtual void Print(ostream& _os) const;
@@ -34,7 +32,7 @@ class ConditionalEvaluator : public MapEvaluatorMethod<MPTraits> {
 };
 
 
-template<class MPTraits>
+template <typename MPTraits>
 ConditionalEvaluator<MPTraits>::
 ConditionalEvaluator(Operator _operator, string _metric, double _value) :
     MapEvaluatorMethod<MPTraits>(), m_operator(_operator), m_metric(_metric),
@@ -43,10 +41,9 @@ ConditionalEvaluator(Operator _operator, string _metric, double _value) :
 }
 
 
-template<class MPTraits>
+template <typename MPTraits>
 ConditionalEvaluator<MPTraits>::
-ConditionalEvaluator(typename MPTraits::MPProblemType* _problem, XMLNode& _node) :
-    MapEvaluatorMethod<MPTraits>(_problem, _node) {
+ConditionalEvaluator(XMLNode& _node) : MapEvaluatorMethod<MPTraits>(_node) {
   this->SetName("ConditionalEvaluator");
 
   m_metric = _node.Read("metric_method", true, "", "Metric Method");
@@ -69,7 +66,7 @@ ConditionalEvaluator(typename MPTraits::MPProblemType* _problem, XMLNode& _node)
 }
 
 
-template<class MPTraits>
+template <typename MPTraits>
 void
 ConditionalEvaluator<MPTraits>::
 Print(ostream& _os) const {
@@ -88,11 +85,11 @@ Print(ostream& _os) const {
 }
 
 
-template<class MPTraits>
+template <typename MPTraits>
 bool
 ConditionalEvaluator<MPTraits>::
 operator()() {
-  double metricValue = this->GetMPProblem()->GetMetric(m_metric)->operator()();
+  double metricValue = this->GetMetric(m_metric)->operator()();
 
   switch(m_operator){
     case LT: return metricValue < m_value;

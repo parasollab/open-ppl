@@ -27,7 +27,7 @@ class ManhattanDistance : public MinkowskiDistance<MPTraits> {
     ///@{
 
     ManhattanDistance(bool _normalize = false);
-    ManhattanDistance(MPProblemType* _problem, XMLNode& _node);
+    ManhattanDistance(XMLNode& _node);
     virtual ~ManhattanDistance() = default;
 
     ///@}
@@ -45,8 +45,7 @@ ManhattanDistance(bool _normalize) :
 
 template <typename MPTraits>
 ManhattanDistance<MPTraits>::
-ManhattanDistance(MPProblemType* _problem, XMLNode& _node) :
-    MinkowskiDistance<MPTraits>(_problem, _node) {
+ManhattanDistance(XMLNode& _node) : MinkowskiDistance<MPTraits>(_node) {
   this->SetName("Manhattan");
 
   this->m_r1 = 1;

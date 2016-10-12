@@ -8,7 +8,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup Samplers
 /// @brief Generate configurations along a grid through @cspace.
-/// @tparam MPTraits Motion planning universe
 ///
 /// This samplers generates randomly a cfg \f$c\f$. Then for the dimensions
 /// established in the xml file it generates a grid of points changing the
@@ -20,13 +19,12 @@ class GridSampler : public SamplerMethod<MPTraits> {
   public:
     typedef typename MPTraits::CfgType CfgType;
     typedef typename MPTraits::MPProblemType MPProblemType;
-    typedef typename MPProblemType::ValidityCheckerPointer ValidityCheckerPointer;
 
     GridSampler(string _vcm = "",
         map<size_t, size_t> _numPoints = map<size_t, size_t>(),
         bool _useBoundary  = true);
 
-    GridSampler(MPProblemType* _problem, XMLNode& _node);
+    GridSampler(XMLNode& _node);
 
     // Reads XML
     void ParseXML(XMLNode& _node);
@@ -49,23 +47,23 @@ class GridSampler : public SamplerMethod<MPTraits> {
     map<size_t, size_t> m_numPoints; // Map of dimension to number of grid points
 };
 
-template<class MPTraits>
+template <typename MPTraits>
 GridSampler<MPTraits>::
 GridSampler(string _vcm, map<size_t, size_t> _numPoints, bool _useBoundary)
   : m_vcLabel(_vcm), m_numPoints(_numPoints) {
     this->SetName("GridSampler");
   }
 
-template<class MPTraits>
+template <typename MPTraits>
 GridSampler<MPTraits>::
-GridSampler(MPProblemType* _problem, XMLNode& _node) :
-  SamplerMethod<MPTraits>(_problem, _node) {
+GridSampler(XMLNode& _node) :
+  SamplerMethod<MPTraits>(_node) {
     this->SetName("GridSampler");
     ParseXML(_node);
   }
 
 // Reads XML
-template<class MPTraits>
+template <typename MPTraits>
 void
 GridSampler<MPTraits>::
 ParseXML(XMLNode& _node) {
@@ -85,7 +83,7 @@ ParseXML(XMLNode& _node) {
 }
 
 // Prints options
-template<class MPTraits>
+template <typename MPTraits>
 void
 GridSampler<MPTraits>::
 Print(ostream& _os) const {
@@ -97,14 +95,14 @@ Print(ostream& _os) const {
 }
 
 // Attempts to sample, bool value is not working, it just return true at the end.
-template<class MPTraits>
+template <typename MPTraits>
 bool
 GridSampler<MPTraits>::
 Sampler(CfgType& _cfg, shared_ptr<Boundary> _boundary,
     vector<CfgType>& _result, vector<CfgType>& _collision) {
 
   string callee = this->GetNameAndLabel() + "::Sampler()";
-  ValidityCheckerPointer vc = this->GetValidityChecker(m_vcLabel);
+  auto vc = this->GetValidityChecker(m_vcLabel);
 
   //Calculate total number of cfg to be created
   size_t totalCell = 1;
@@ -150,7 +148,7 @@ Sampler(CfgType& _cfg, shared_ptr<Boundary> _boundary,
  * Each point in the grid is numerated. This function transforms the int number
  * into coordinates of the dimensions required.
  */
-template<class MPTraits>
+template <typename MPTraits>
 void
 GridSampler<MPTraits>::
 GetCoordLocation(int _iter, size_t _totalCell, map<size_t,size_t>& _coords,
@@ -197,7 +195,7 @@ GetCoordLocation(int _iter, size_t _totalCell, map<size_t,size_t>& _coords,
 
 //Calculate the real point in the workspace for a cfg having the number of grid's point
 //of each dimension.
-template<class MPTraits>
+template <typename MPTraits>
 void
 GridSampler<MPTraits>::
 GetRealLocation(map<size_t,double>& _locations, map<size_t,size_t> _coordinates,

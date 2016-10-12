@@ -9,7 +9,6 @@ using namespace std;
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup MapEvaluators
 /// @brief A mix of Toggle @prm and Lazy @prm
-/// @tparam MPTraits Motion planning universe
 ///
 /// TODO.
 ////////////////////////////////////////////////////////////////////////////////
@@ -32,7 +31,7 @@ class LazyToggleQuery : public LazyQuery<MPTraits> {
     ///@{
 
     LazyToggleQuery();
-    LazyToggleQuery(MPProblemType* _problem, XMLNode& _node);
+    LazyToggleQuery(XMLNode& _node);
     virtual ~LazyToggleQuery() = default;
 
     ///@}
@@ -107,8 +106,7 @@ LazyToggleQuery() : LazyQuery<MPTraits>() {
 
 template <typename MPTraits>
 LazyToggleQuery<MPTraits>::
-LazyToggleQuery(MPProblemType* _problem, XMLNode& _node) :
-    LazyQuery<MPTraits>(_problem, _node) {
+LazyToggleQuery(XMLNode& _node) : LazyQuery<MPTraits>(_node) {
   this->SetName("LazyToggleQuery");
   ParseXML(_node);
 }
@@ -228,7 +226,7 @@ template <typename MPTraits>
 void
 LazyToggleQuery<MPTraits>::
 ToggleConnect(const CfgType& _cfg) {
-  auto blockedMap = this->GetMPProblem()->GetBlockRoadmap();
+  auto blockedMap = this->GetBlockRoadmap();
   auto g = blockedMap->GetGraph();
 
   // Add the new node to the blocked map if not already there.

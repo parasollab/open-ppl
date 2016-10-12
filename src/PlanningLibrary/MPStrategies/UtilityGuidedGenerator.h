@@ -6,14 +6,15 @@
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup MotionPlanningStrategyUtils
 /// @brief TODO
-/// @tparam MPTraits Motion planning universe
 ///
 /// TODO
 ////////////////////////////////////////////////////////////////////////////////
 template <class MPTraits>
 struct ApproximateCSpaceModel {
+
   typedef typename MPTraits::CfgType CfgType;
-  typedef typename MPTraits::MPProblemType::DistanceMetricPointer DistanceMetricPointer;
+  typedef typename MPTraits::PlanningLibraryType PlanningLibraryType;
+  typedef typename PlanningLibraryType::DistanceMetricPointer DistanceMetricPointer;
 
   vector<pair<CfgType, double> > m_modelNodes;
   Environment* m_env;
@@ -41,7 +42,6 @@ struct ApproximateCSpaceModel {
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup MotionPlanningStrategies
 /// @brief TODO
-/// @tparam MPTraits Motion planning universe
 ///
 /// TODO
 ///
@@ -53,18 +53,14 @@ class UtilityGuidedGenerator : public MPStrategyMethod<MPTraits> {
   typedef typename MPTraits::MPProblemType MPProblemType;
   typedef typename MPTraits::CfgType CfgType;
   typedef typename MPProblemType::RoadmapType RoadmapType;
-  typedef typename MPProblemType::DistanceMetricPointer DistanceMetricPointer;
-  typedef typename MPProblemType::ValidityCheckerPointer ValidityCheckerPointer;
-  typedef typename MPProblemType::ConnectorPointer ConnectorPointer;
   typedef typename MPProblemType::VID VID;
   typedef typename MPProblemType::GraphType::GRAPH GRAPH;
-  typedef typename MPProblemType::NeighborhoodFinderPointer NeighborhoodFinderPointer;
 
   UtilityGuidedGenerator(string _vcLabel = "", string _nfLabel = "",
         string _connector = "", vector<string> _evaluators = vector<string>(),
         double _componentDist = 0.5, double _tao = 0.01,
         int _kNeighbors = 10, int _kSamples = 5);
-  UtilityGuidedGenerator(MPProblemType* _problem, XMLNode& _node);
+  UtilityGuidedGenerator(XMLNode& _node);
   virtual ~UtilityGuidedGenerator();
 
   virtual void ParseXML(XMLNode& _node);
@@ -97,8 +93,8 @@ UtilityGuidedGenerator(string _vcLabel, string _nfLabel, string _connector,
 }
 
 template <class MPTraits>
-UtilityGuidedGenerator<MPTraits>::UtilityGuidedGenerator(MPProblemType* _problem, XMLNode& _node) :
-        MPStrategyMethod<MPTraits>(_problem, _node) {
+UtilityGuidedGenerator<MPTraits>::UtilityGuidedGenerator(XMLNode& _node) :
+        MPStrategyMethod<MPTraits>(_node) {
   this->SetName("UtilityGuidedGenerator");
   ParseXML(_node);
 }
@@ -106,7 +102,7 @@ UtilityGuidedGenerator<MPTraits>::UtilityGuidedGenerator(MPProblemType* _problem
 template <class MPTraits>
 UtilityGuidedGenerator<MPTraits>::~UtilityGuidedGenerator(){}
 
-template<class MPTraits>
+template <typename MPTraits>
 void
 UtilityGuidedGenerator<MPTraits>::ParseXML(XMLNode& _node) {
   m_vcLabel = _node.Read("vcLabel", true, "", "Validity Checker to verify validity of nodes.");
@@ -154,18 +150,18 @@ UtilityGuidedGenerator<MPTraits>::Run() {
   if(this->m_debug) cout << "\nRunning UtilityGuidedGenerator::" << endl;
 
   //setup variables
-  StatClass* stats = this->GetMPProblem()->GetStatClass();
-  RoadmapType* rmap = this->GetMPProblem()->GetRoadmap();
-  Environment* env = this->GetMPProblem()->GetEnvironment();
+  StatClass* stats = this->GetStatClass();
+  RoadmapType* rmap = this->GetRoadmap();
+  Environment* env = this->GetEnvironment();
   shared_ptr<Boundary> bb = env->GetBoundary();
 
-  DistanceMetricPointer dm = this->GetMPProblem()->GetNeighborhoodFinder(m_nfLabel)->GetDMMethod();
+  auto dm = this->GetNeighborhoodFinder(m_nfLabel)->GetDMMethod();
   ApproximateCSpaceModel<MPTraits> model(env, dm);
 
-  ValidityCheckerPointer vcm = this->GetMPProblem()->GetValidityChecker(m_vcLabel);
+  auto vcm = this->GetValidityChecker(m_vcLabel);
   string callee(this->GetNameAndLabel() + "::Run()");
 
-  ConnectorPointer connector = this->GetMPProblem()->GetConnector(m_connectorLabel);
+  auto connector = this->GetConnector(m_connectorLabel);
 
 
   stats->StartClock("Map Generation");
@@ -275,11 +271,11 @@ template <class MPTraits>
 typename MPTraits::CfgType
 UtilityGuidedGenerator<MPTraits>::
 GenerateEntropyGuidedSample() {
-  RoadmapType* rmap = this->GetMPProblem()->GetRoadmap();
-  Environment* env = this->GetMPProblem()->GetEnvironment();
+  RoadmapType* rmap = this->GetRoadmap();
+  Environment* env = this->GetEnvironment();
   shared_ptr<Boundary> bb = env->GetBoundary();
-  NeighborhoodFinderPointer nf = this->GetMPProblem()->GetNeighborhoodFinder(m_nfLabel);
-  DistanceMetricPointer dm = nf->GetDMMethod();
+  auto nf = this->GetNeighborhoodFinder(m_nfLabel);
+  auto dm = nf->GetDMMethod();
 
   CfgType q1, q2;
 

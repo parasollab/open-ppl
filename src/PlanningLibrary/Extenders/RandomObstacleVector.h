@@ -9,7 +9,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup Extenders
 /// @brief Extend in a direction based upon a random obstacle vector.
-/// @tparam MPTraits Motion planning universe
 ///
 /// In this extend method, \f$q_{dir} = q_{near} + O\f$ where \f$O\f$ is a
 /// random obstacle vector from all of the triangles in the environment. The
@@ -33,7 +32,7 @@ class RandomObstacleVector : public BasicExtender<MPTraits> {
     RandomObstacleVector(const string& _dmLabel = "", const string& _vcLabel = "",
         double _min = .001, double _max = 1, bool _randomOrientation = true);
 
-    RandomObstacleVector(MPProblemType* _problem, XMLNode& _node);
+    RandomObstacleVector(XMLNode& _node);
 
     virtual ~RandomObstacleVector() = default;
 
@@ -60,8 +59,7 @@ RandomObstacleVector(const string& _dmLabel, const string& _vcLabel,
 
 template <typename MPTraits>
 RandomObstacleVector<MPTraits>::
-RandomObstacleVector(MPProblemType* _problem, XMLNode& _node) :
-    BasicExtender<MPTraits>(_problem, _node) {
+RandomObstacleVector(XMLNode& _node) : BasicExtender<MPTraits>(_node) {
   this->SetName("RandomObstacleVector");
 }
 

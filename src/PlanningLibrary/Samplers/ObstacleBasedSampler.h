@@ -6,7 +6,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup Samplers
 /// @brief Obstacle-based sampling
-/// @tparam MPTraits Motion planning universe
 ///
 /// OBPRM samples by pushing random configurations along a random ray until they
 /// change validity, keeping the best free configuration.
@@ -16,14 +15,12 @@ class ObstacleBasedSampler : public SamplerMethod<MPTraits> {
   public:
     typedef typename MPTraits::CfgType CfgType;
     typedef typename MPTraits::MPProblemType MPProblemType;
-    typedef typename MPProblemType::DistanceMetricPointer DistanceMetricPointer;
-    typedef typename MPProblemType::ValidityCheckerPointer ValidityCheckerPointer;
 
     ObstacleBasedSampler(string _vcLabel = "", string _dmLabel = "",
         int _free = 1, int _coll = 0, double _step = 0,
         bool _useBBX = true, string _pointSelection = "cspace");
 
-    ObstacleBasedSampler(MPProblemType* _problem, XMLNode& _node);
+    ObstacleBasedSampler(XMLNode& _node);
 
     void ParseXML(XMLNode& _node);
 
@@ -76,7 +73,7 @@ class ObstacleBasedSampler : public SamplerMethod<MPTraits> {
     string m_pointSelection; // Needed for the WOBPRM
 };
 
-template<class MPTraits>
+template <typename MPTraits>
 ObstacleBasedSampler<MPTraits>::
 ObstacleBasedSampler(string _vcLabel, string _dmLabel,
     int _free, int _coll, double _step, bool _useBBX, string _pointSelection) :
@@ -86,19 +83,15 @@ ObstacleBasedSampler(string _vcLabel, string _dmLabel,
     this->SetName("ObstacleBasedSampler");
   }
 
-template<class MPTraits>
+template <typename MPTraits>
 ObstacleBasedSampler<MPTraits>::
-ObstacleBasedSampler(MPProblemType* _problem, XMLNode& _node) :
-  SamplerMethod<MPTraits>(_problem, _node) {
+ObstacleBasedSampler(XMLNode& _node) :
+  SamplerMethod<MPTraits>(_node) {
     this->SetName("ObstacleBasedSampler");
     ParseXML(_node);
-    Environment* env = _problem->GetEnvironment();
-    // If the step size is unreasonable, set it to the minimum
-    if(m_stepSize <= 0.0)
-      m_stepSize = min(env->GetPositionRes(), env->GetOrientationRes());
   }
 
-template<class MPTraits>
+template <typename MPTraits>
 void
 ObstacleBasedSampler<MPTraits>::
 ParseXML(XMLNode& _node) {
@@ -128,7 +121,7 @@ ParseXML(XMLNode& _node) {
         " and 'all'.");
 }
 
-template<class MPTraits>
+template <typename MPTraits>
 void
 ObstacleBasedSampler<MPTraits>::
 Print(ostream& _os) const {
@@ -143,7 +136,7 @@ Print(ostream& _os) const {
 }
 
 // Generates and adds shells to their containers
-template<class MPTraits>
+template <typename MPTraits>
 void
 ObstacleBasedSampler<MPTraits>::
 GenerateShells(shared_ptr<Boundary> _boundary,
@@ -152,7 +145,7 @@ GenerateShells(shared_ptr<Boundary> _boundary,
 
   Environment* env = this->GetEnvironment();
   string callee = this->GetNameAndLabel() + "::GenerateShells()";
-  ValidityCheckerPointer vcm = this->GetValidityChecker(m_vcLabel);
+  auto vcm = this->GetValidityChecker(m_vcLabel);
   if(this->m_debug)
     cout << "nShellsColl = " << m_nShellsColl << endl;
 
@@ -180,21 +173,19 @@ GenerateShells(shared_ptr<Boundary> _boundary,
   }
 }
 
-template<class MPTraits>
+template <typename MPTraits>
 bool
 ObstacleBasedSampler<MPTraits>::
 Sampler(CfgType& _cfg, shared_ptr<Boundary> _boundary,
     vector<CfgType>& _result, vector<CfgType>& _collision) {
-
   Environment* env = this->GetEnvironment();
   // If the step size is unreasonable, set it to the minimum
-  if(m_stepSize <= 0.0) {
+  if(m_stepSize <= 0.0)
     m_stepSize = min(env->GetPositionRes(), env->GetOrientationRes());
-  }
 
   string callee = this->GetNameAndLabel() + "::Sampler()";
-  ValidityCheckerPointer vcm = this->GetValidityChecker(m_vcLabel);
-  DistanceMetricPointer dm = this->GetDistanceMetric(m_dmLabel);
+  auto vcm = this->GetValidityChecker(m_vcLabel);
+  auto dm = this->GetDistanceMetric(m_dmLabel);
 
   // Old state
   CfgType c1 = ChooseASample(_cfg);
@@ -258,7 +249,7 @@ Sampler(CfgType& _cfg, shared_ptr<Boundary> _boundary,
 // ////////////////////////////////////////////////////////////////
 
 // Returns a CfgType at the center of mass of the StaticMultiBody
-template<class MPTraits>
+template <typename MPTraits>
 typename ObstacleBasedSampler<MPTraits>::CfgType
 ObstacleBasedSampler<MPTraits>::
 ChooseCenterOfMass(shared_ptr<StaticMultiBody> _mBody) {
@@ -267,7 +258,7 @@ ChooseCenterOfMass(shared_ptr<StaticMultiBody> _mBody) {
 }
 
 // Returns a CfgType at a random vertex of the StaticMultiBody
-template<class MPTraits>
+template <typename MPTraits>
 typename ObstacleBasedSampler<MPTraits>::CfgType
 ObstacleBasedSampler<MPTraits>::
 ChooseRandomVertex(shared_ptr<StaticMultiBody> _mBody, bool _isFreeBody) {
@@ -277,7 +268,7 @@ ChooseRandomVertex(shared_ptr<StaticMultiBody> _mBody, bool _isFreeBody) {
 }
 
 // Returns a point inside the triangle determined by the vectors
-template<class MPTraits>
+template <typename MPTraits>
 Vector3d
 ObstacleBasedSampler<MPTraits>::
 ChoosePointOnTriangle(Vector3d _p, Vector3d _q, Vector3d _r) {
@@ -294,7 +285,7 @@ ChoosePointOnTriangle(Vector3d _p, Vector3d _q, Vector3d _r) {
 }
 
 // Chooses a random point on a random triangle (weighted by area) in the StaticMultiBody
-template<class MPTraits>
+template <typename MPTraits>
 typename ObstacleBasedSampler<MPTraits>::CfgType
 ObstacleBasedSampler<MPTraits>::
 ChooseRandomWeightedTriangle(shared_ptr<StaticMultiBody> _mBody, bool _isFreeBody) {
@@ -320,7 +311,7 @@ ChooseRandomWeightedTriangle(shared_ptr<StaticMultiBody> _mBody, bool _isFreeBod
 }
 
 // Chooses a random point in a random triangle in the StaticMultiBody
-template<class MPTraits>
+template <typename MPTraits>
 typename ObstacleBasedSampler<MPTraits>::CfgType
 ObstacleBasedSampler<MPTraits>::
 ChooseRandomTriangle(shared_ptr<StaticMultiBody> _mBody, bool _isFreeBody) {
@@ -337,7 +328,7 @@ ChooseRandomTriangle(shared_ptr<StaticMultiBody> _mBody, bool _isFreeBody) {
 }
 
 // Chooses a random extreme vertex of the StaticMultiBody
-template<class MPTraits>
+template <typename MPTraits>
 typename ObstacleBasedSampler<MPTraits>::CfgType
 ObstacleBasedSampler<MPTraits>::
 ChooseExtremeVertex(shared_ptr<StaticMultiBody> _mBody, bool _isFreeBody) {
@@ -356,7 +347,7 @@ ChooseExtremeVertex(shared_ptr<StaticMultiBody> _mBody, bool _isFreeBody) {
 }
 
 // Checks m_pointSelection and returns an appropriate CfgType
-template<class MPTraits>
+template <typename MPTraits>
 typename ObstacleBasedSampler<MPTraits>::CfgType
 ObstacleBasedSampler<MPTraits>::
 ChooseASample(CfgType& _cfg) {
@@ -416,7 +407,7 @@ ChooseASample(CfgType& _cfg) {
 }
 
 // Returns a CfgType with the coordinates specified in the vector and no rotation
-template<class MPTraits>
+template <typename MPTraits>
 typename ObstacleBasedSampler<MPTraits>::CfgType
 ObstacleBasedSampler<MPTraits>::
 GetCfgWithParams(Vector3d& _v) {
@@ -429,7 +420,7 @@ GetCfgWithParams(Vector3d& _v) {
 }
 
 // Returns an appropriate polygon: for a robot, the _mBody frame; for an obstacle, the world frame
-template<class MPTraits>
+template <typename MPTraits>
 GMSPolyhedron&
 ObstacleBasedSampler<MPTraits>::
 GetPolyhedron(shared_ptr<StaticMultiBody>& _mBody, bool _isFreeBody) {

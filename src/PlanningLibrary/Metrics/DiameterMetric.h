@@ -7,11 +7,10 @@
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup Metrics
 /// @brief TODO.
-/// @tparam MPTraits Motion planning universe
 ///
 /// TODO.
 ////////////////////////////////////////////////////////////////////////////////
-template<class MPTraits>
+template <typename MPTraits>
 class DiameterMetric : public MetricMethod<MPTraits> {
   public:
     typedef typename MPTraits::CfgType CfgType;
@@ -21,7 +20,7 @@ class DiameterMetric : public MetricMethod<MPTraits> {
     typedef typename MPProblemType::GraphType GraphType;
 
     DiameterMetric();
-    DiameterMetric(MPProblemType* _problem, XMLNode& _node);
+    DiameterMetric(XMLNode& _node);
     virtual ~DiameterMetric() {}
 
     virtual void Print(ostream& _os) const;
@@ -29,27 +28,27 @@ class DiameterMetric : public MetricMethod<MPTraits> {
     double operator()();
 };
 
-template<class MPTraits>
+template <typename MPTraits>
 DiameterMetric<MPTraits>::
 DiameterMetric() {
   this->SetName("DiameterMetric");
 }
 
-template<class MPTraits>
+template <typename MPTraits>
 DiameterMetric<MPTraits>::
-DiameterMetric(MPProblemType* _problem, XMLNode& _node)
-  : MetricMethod<MPTraits>(_problem, _node) {
+DiameterMetric(XMLNode& _node)
+  : MetricMethod<MPTraits>(_node) {
     this->SetName("DiameterMetric");
 }
 
-template<class MPTraits>
+template <typename MPTraits>
 void
 DiameterMetric<MPTraits>::
 Print(ostream& _os) const {
   _os << "CC diameter" << endl;
 }
 
-template<class MPTraits>
+template <typename MPTraits>
 double
 DiameterMetric<MPTraits>::
 operator()() {
@@ -57,7 +56,7 @@ operator()() {
   //vector<double> prev_diameter, new_diameter;
   vector<double> diameter;
   double ccDiameter;
-  RoadmapType* rMap = this->GetMPProblem()->GetRoadmap();
+  RoadmapType* rMap = this->GetRoadmap();
   GraphType* rGraph = rMap->GetGraph();
 
   //get ccs

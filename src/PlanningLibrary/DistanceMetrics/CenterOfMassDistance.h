@@ -24,7 +24,7 @@ class CenterOfMassDistance : public DistanceMetricMethod<MPTraits> {
     ///@{
 
     CenterOfMassDistance();
-    CenterOfMassDistance(MPProblemType* _problem, XMLNode& _node);
+    CenterOfMassDistance(XMLNode& _node);
 
     ///@}
     ///@name Distance Interface
@@ -46,8 +46,7 @@ CenterOfMassDistance() : DistanceMetricMethod<MPTraits>() {
 
 template <typename MPTraits>
 CenterOfMassDistance<MPTraits>::
-CenterOfMassDistance(MPProblemType* _problem, XMLNode& _node) :
-    DistanceMetricMethod<MPTraits>(_problem, _node) {
+CenterOfMassDistance(XMLNode& _node) : DistanceMetricMethod<MPTraits>(_node) {
   this->SetName("CenterOfMass");
 }
 

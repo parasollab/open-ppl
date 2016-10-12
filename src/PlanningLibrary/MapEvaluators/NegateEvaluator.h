@@ -7,19 +7,17 @@
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup MapEvaluators
 /// @brief TODO.
-/// @tparam MPTraits Motion planning universe
 ///
 /// TODO.
 ////////////////////////////////////////////////////////////////////////////////
-template<class MPTraits>
+template <typename MPTraits>
 class NegateEvaluator : public MapEvaluatorMethod<MPTraits> {
   public:
 
     typedef typename MPTraits::MPProblemType MPProblemType;
-    typedef typename MPProblemType::MapEvaluatorPointer MapEvaluatorPointer;
 
     NegateEvaluator(string _label = "");
-    NegateEvaluator(MPProblemType* _problem, XMLNode& _node);
+    NegateEvaluator(XMLNode& _node);
     ~NegateEvaluator(){}
 
     virtual void Print(ostream& _os) const;
@@ -30,32 +28,33 @@ class NegateEvaluator : public MapEvaluatorMethod<MPTraits> {
     string m_evalLabel;
 };
 
-template<class MPTraits>
+template <typename MPTraits>
 NegateEvaluator<MPTraits>::NegateEvaluator(string _label) : m_evalLabel(_label){
   this->SetName("NegateEvaluator");
 }
 
-template<class MPTraits>
-NegateEvaluator<MPTraits>::NegateEvaluator(MPProblemType* _problem, XMLNode& _node) :
-    MapEvaluatorMethod<MPTraits>(_problem, _node) {
+template <typename MPTraits>
+NegateEvaluator<MPTraits>::NegateEvaluator(XMLNode& _node) :
+    MapEvaluatorMethod<MPTraits>(_node) {
   this->SetName("NegateEvaluator");
   m_evalLabel = _node.Read("evalLabel", true, "", "Evaluator Label");
 }
 
-template<class MPTraits>
+template <typename MPTraits>
 void
 NegateEvaluator<MPTraits>::Print(ostream& _os) const {
   _os << this->GetNameAndLabel() << endl << "evaluation method = " << m_evalLabel << endl;
 }
 
-template<class MPTraits>
+template <typename MPTraits>
 bool
 NegateEvaluator<MPTraits>::operator()() {
+  typedef typename MPTraits::PlanningLibraryType::MapEvaluatorPointer MapEvaluatorPointer;
   typedef typename vector<MapEvaluatorPointer>::iterator MEIterator;
   typedef EvaluatorFunctor<MapEvaluatorPointer> EvalFunctor;
 
   vector<MapEvaluatorPointer> evalMethods;
-  evalMethods.push_back(this->GetMPProblem()->GetMapEvaluator(m_evalLabel));
+  evalMethods.push_back(this->GetMapEvaluator(m_evalLabel));
 
   EvalFunctor comFunc;
 

@@ -7,7 +7,6 @@
 /// @ingroup LocalPlanners
 /// @brief Translate to \f$s\f$ along straight-line, rotate all, then finish
 ///        translation.
-/// @tparam MPTraits Motion planning universe
 ///
 /// The rotate at s local planner performs a translation to the location "s"
 /// percent along the straight line path, change all orientation DoFs, then
@@ -22,7 +21,7 @@ class RotateAtS : public TransformAtS<MPTraits> {
 
     RotateAtS(double _s = 0.5, const string& _vcLabel = "", bool _evalation = false,
         bool _saveIntermediates = false);
-    RotateAtS(MPProblemType* _problem, XMLNode& _node);
+    RotateAtS(XMLNode& _node);
     virtual ~RotateAtS();
 
   protected:
@@ -44,8 +43,8 @@ RotateAtS(double _s, const string& _vcLabel,
 
 template<class MPTraits>
 RotateAtS<MPTraits>::
-RotateAtS(MPProblemType* _problem, XMLNode& _node):
-  TransformAtS<MPTraits>(_problem, _node) {
+RotateAtS(XMLNode& _node):
+  TransformAtS<MPTraits>(_node) {
     this->SetName("RotateAtS");
   }
 

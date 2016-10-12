@@ -12,7 +12,6 @@
 /// @ingroup MapEvaluators
 /// @brief Evaluate a roadmap under construction to see if a query has been
 ///        satisfied.
-/// @tparam MPTraits Motion planning universe
 ///
 /// This query is specialized for RRT methods. The first query point is treated
 /// as the start, and the remaining points are treated as sub-goals. This object
@@ -41,7 +40,7 @@ class RRTQuery : public QueryMethod<MPTraits> {
     ///@{
 
     RRTQuery();
-    RRTQuery(MPProblemType* _problem, XMLNode& _node);
+    RRTQuery(XMLNode& _node);
     virtual ~RRTQuery() = default;
 
     ///@}
@@ -151,8 +150,8 @@ RRTQuery() : QueryMethod<MPTraits>() {
 
 template <typename MPTraits>
 RRTQuery<MPTraits>::
-RRTQuery(MPProblemType* _problem, XMLNode& _node) :
-    QueryMethod<MPTraits>(_problem, _node) {
+RRTQuery(XMLNode& _node) :
+    QueryMethod<MPTraits>(_node) {
   this->SetName("RRTQuery");
   ParseXML(_node);
 }

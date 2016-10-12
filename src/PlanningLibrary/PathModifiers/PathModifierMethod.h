@@ -7,24 +7,40 @@
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup PathModifiers
 /// @brief Base algorithm abstraction for \ref PathModifiers.
-/// @tparam MPTraits Motion planning universe
 ///
 /// PathModifierMethod has one main method, @c Modify, which takes an input path
 /// and produces a valid output path.
 ////////////////////////////////////////////////////////////////////////////////
-template<class MPTraits>
+template <typename MPTraits>
 class PathModifierMethod : public MPBaseObject<MPTraits> {
+
   public:
+
+    ///@name Local Types
+    ///@{
+
     typedef typename MPTraits::CfgType CfgType;
-    typedef typename vector<CfgType>::iterator CfgIter;
     typedef typename MPTraits::MPProblemType MPProblemType;
     typedef typename MPProblemType::GraphType GraphType;
     typedef typename MPProblemType::VID VID;
 
-    PathModifierMethod();
-    PathModifierMethod(MPProblemType* _problem, XMLNode& _node);
+    ///@}
+    ///@name Construction
+    ///@{
 
-    virtual void Print(ostream& _os) const;
+    PathModifierMethod() = default;
+    PathModifierMethod(XMLNode& _node);
+    virtual ~PathModifierMethod() = default;
+
+    ///@}
+    ///@name MPBaseObject Overrides
+    ///@{
+
+    virtual void Print(ostream& _os) const override;
+
+    ///@}
+    ///@name PathModifier Interface
+    ///@{
 
     ////////////////////////////////////////////////////////////////////////////
     /// @brief Modifies the input path to a new valid path
@@ -42,6 +58,7 @@ class PathModifierMethod : public MPBaseObject<MPTraits> {
         vector<CfgType>& _newPath);
 
   protected:
+
     ////////////////////////////////////////////////////////////////////////////
     /// @brief Modifies the input path to a new valid path
     /// @param _path A path of configurations within a resolution
@@ -70,6 +87,7 @@ class PathModifierMethod : public MPBaseObject<MPTraits> {
         vector<CfgType>& _newPath);
 
   private:
+
     ////////////////////////////////////////////////////////////////////////////
     /// @brief Write path to file
     /// @param _path Path
@@ -78,20 +96,15 @@ class PathModifierMethod : public MPBaseObject<MPTraits> {
     string m_pathFile; ///< Where to write the smoothed path
 };
 
-template<class MPTraits>
-PathModifierMethod<MPTraits>::
-PathModifierMethod() :
-  MPBaseObject<MPTraits>() {
-  }
 
-template<class MPTraits>
+template <typename MPTraits>
 PathModifierMethod<MPTraits>::
-PathModifierMethod(MPProblemType* _problem, XMLNode& _node) :
-  MPBaseObject<MPTraits>(_problem, _node) {
-    m_pathFile = _node.Read("pathFile", false, "", "Smoothed path filename");
-  }
+PathModifierMethod(XMLNode& _node) : MPBaseObject<MPTraits>(_node) {
+  m_pathFile = _node.Read("pathFile", false, "", "Smoothed path filename");
+}
 
-template<class MPTraits>
+
+template <typename MPTraits>
 void
 PathModifierMethod<MPTraits>::
 Print(ostream& _os) const {
@@ -99,17 +112,19 @@ Print(ostream& _os) const {
   _os << "\tpath file: \"" << m_pathFile << "\"" << endl;
 }
 
-template<class MPTraits>
+
+template <typename MPTraits>
 void
 PathModifierMethod<MPTraits>::
 Modify(vector<CfgType>& _path, vector<CfgType>& _newPath) {
   ModifyImpl(_path, _newPath);
 }
 
+
 // Auxiliary function created to avoid checking emptiness everytime
 // Adds the path that is stored in lpOutput to m_path as well as the _end
 // configuration
-template<class MPTraits>
+template <typename MPTraits>
 void
 PathModifierMethod<MPTraits>::
 AddToPath(vector<CfgType>& _path, LPOutput<MPTraits>* _lpOutput,
@@ -120,8 +135,9 @@ AddToPath(vector<CfgType>& _path, LPOutput<MPTraits>* _lpOutput,
   _path.push_back(_end);
 }
 
+
 // Get pathVIDs from path
-template<class MPTraits>
+template <typename MPTraits>
 vector<typename MPTraits::MPProblemType::VID>
 PathModifierMethod<MPTraits>::
 GetPathVIDs(vector<CfgType>& _path, GraphType* _graph) {
@@ -134,16 +150,16 @@ GetPathVIDs(vector<CfgType>& _path, GraphType* _graph) {
   return pathVIDs;
 }
 
-template<class MPTraits>
+
+template <typename MPTraits>
 void
 PathModifierMethod<MPTraits>::
 RemoveBranches(const string& _dmLabel, vector<CfgType>& _path,
     vector<CfgType>& _newPath) {
   _newPath.clear();
-  typedef typename MPProblemType::DistanceMetricPointer DistanceMetricPointer;
 
   Environment* env = this->GetEnvironment();
-  DistanceMetricPointer dm = this->GetDistanceMetric(_dmLabel);
+  auto dm = this->GetDistanceMetric(_dmLabel);
 
   //RemoveBranches Algorithm
   //_path = {q_1, q_2, ..., q_m}

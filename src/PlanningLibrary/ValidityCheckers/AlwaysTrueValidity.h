@@ -6,9 +6,8 @@
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup ValidityCheckers
 /// @brief Always return a configuration is valid.
-/// @tparam MPTraits Motion planning universe
 ////////////////////////////////////////////////////////////////////////////////
-template<class MPTraits>
+template <typename MPTraits>
 class AlwaysTrueValidity : public ValidityCheckerMethod<MPTraits> {
   public:
     typedef typename MPTraits::CfgType CfgType;
@@ -17,8 +16,8 @@ class AlwaysTrueValidity : public ValidityCheckerMethod<MPTraits> {
       this->m_name = "AlwaysTrueValidity";
     }
 
-    AlwaysTrueValidity(typename MPTraits::MPProblemType* _problem, XMLNode& _node)
-      : ValidityCheckerMethod<MPTraits>(_problem, _node){
+    AlwaysTrueValidity(XMLNode& _node)
+      : ValidityCheckerMethod<MPTraits>(_node){
         this->m_name = "AlwaysTrueValidity";
       }
 

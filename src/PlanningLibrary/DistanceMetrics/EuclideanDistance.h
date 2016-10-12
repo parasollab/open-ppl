@@ -25,7 +25,7 @@ class EuclideanDistance : public MinkowskiDistance<MPTraits> {
     ///@{
 
     EuclideanDistance(bool _normalize = false);
-    EuclideanDistance(MPProblemType* _problem, XMLNode& _node);
+    EuclideanDistance(XMLNode& _node);
 
     ///@}
 };
@@ -42,8 +42,7 @@ EuclideanDistance(bool _normalize) :
 
 template <typename MPTraits>
 EuclideanDistance<MPTraits>::
-EuclideanDistance(MPProblemType* _problem, XMLNode& _node) :
-    MinkowskiDistance<MPTraits>(_problem, _node) {
+EuclideanDistance(XMLNode& _node) : MinkowskiDistance<MPTraits>(_node) {
   this->SetName("Euclidean");
 
   this->m_r1 = 2;

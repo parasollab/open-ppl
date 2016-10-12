@@ -163,13 +163,12 @@ class PerturbMostDistantJoint : public PerturbJoints{
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup MotionPlanningStrategies
 /// @brief TODO
-/// @tparam MPTraits Motion planning universe
 ///
 /// TODO
 ///
 /// \todo Configure for pausible execution.
 ////////////////////////////////////////////////////////////////////////////////
-template<class MPTraits>
+template <typename MPTraits>
 class ReachableVolumeRRT : public BasicRRTStrategy<MPTraits> {
  public:
     typedef typename MPTraits::CfgType CfgType;
@@ -178,11 +177,6 @@ class ReachableVolumeRRT : public BasicRRTStrategy<MPTraits> {
     typedef typename MPProblemType::RoadmapType RoadmapType;
     typedef typename MPProblemType::GraphType GraphType;
     typedef typename MPProblemType::VID VID;
-    typedef typename MPProblemType::DistanceMetricPointer DistanceMetricPointer;
-    typedef typename MPProblemType::ValidityCheckerPointer ValidityCheckerPointer;
-    typedef typename MPProblemType::NeighborhoodFinderPointer NeighborhoodFinderPointer;
-    typedef typename MPProblemType::LocalPlannerPointer LocalPlannerPointer;
-    typedef typename MPProblemType::ConnectorPointer ConnectorPointer;
 
     map<VID, shared_ptr<vector<Vector3D> > > m_rvCfgs;  //whenever adding node also add to this, later we may want to add this to cfg instead
     double m_deltaRV;
@@ -219,7 +213,7 @@ class ReachableVolumeRRT : public BasicRRTStrategy<MPTraits> {
   }
 
 
-  ReachableVolumeRRT(MPProblemType* _problem, XMLNode& _node, bool _warnXML=true):BasicRRTStrategy<MPTraits>(_problem, _node, false){
+  ReachableVolumeRRT(XMLNode& _node, bool _warnXML=true):BasicRRTStrategy<MPTraits>(_node, false){
     ParseXMLRVRRT(_node);
   }
 
@@ -291,24 +285,22 @@ void PrintOptions(ostream& _os) {
 */
 };
 
-template<class MPTraits>
+template <typename MPTraits>
 void
 ReachableVolumeRRT<MPTraits>::Run() {
 
-  Environment* env = this->GetMPProblem()->GetEnvironment();
-  NeighborhoodFinderPointer nfp = this->GetMPProblem()->
-      GetNeighborhoodFinder(this->m_nfLabel);
+  Environment* env = this->GetEnvironment();
+  auto nfp = this->GetNeighborhoodFinder(this->m_nfLabel);
 
   this->m_debug=false;
   if(this->m_debug) cout << "\nRunning RVRRTStrategy::" << endl;
 
   // Setup MP Variables
 
-  StatClass* stats = this->GetMPProblem()->GetStatClass();
+  StatClass* stats = this->GetStatClass();
 
   stats->StartClock("RRT Generation");
-  DistanceMetricPointer dm = this->GetMPProblem()->
-      GetDistanceMetric(this->m_dmLabel);
+  auto dm = this->GetDistanceMetric(this->m_dmLabel);
   CfgType dir;
 
   bool mapPassedEvaluation = false;
@@ -317,14 +309,14 @@ ReachableVolumeRRT<MPTraits>::Run() {
   int nGoalsNotFound=this->m_trees.size();
   while(!mapPassedEvaluation){
     //get dir - need both rv cfg (for perturbation) and regular cfg (for dm)
-    dir.GetRandomCfg(this->GetMPProblem()->GetEnvironment());
+    dir.GetRandomCfg(this->GetEnvironment());
     if(this->m_debug) cout<<"dir = "<<dir<<endl;
     VID nnVid;
     CfgType nn;
     minDist=-1;
     //find nearest neibhbor to ran
-    for(typename GraphType::VI i = this->GetMPProblem()->GetRoadmap()->GetGraph()->begin();  i!=this->GetMPProblem()->GetRoadmap()->GetGraph()->end(); i++){
-      CfgType current = this->GetMPProblem()->GetRoadmap()->GetGraph()->GetVertex(i);
+    for(typename GraphType::VI i = this->GetRoadmap()->GetGraph()->begin();  i!=this->GetRoadmap()->GetGraph()->end(); i++){
+      CfgType current = this->GetRoadmap()->GetGraph()->GetVertex(i);
       double dist = dm->Distance(current,dir);
       if(minDist==-1 || minDist>dist){
 	minDist=dist;
@@ -443,20 +435,20 @@ ReachableVolumeRRT<MPTraits>::Run() {
     newNodeCfg.SetData(cfgData);
     LPOutput<MPTraits> lpOutput;
     if(this->m_debug) cout<<"new node ="<<newNodeCfg<<endl;
-    bool success = this->GetMPProblem()->GetLocalPlanner(this->m_lp)->
-      IsConnected(nn, newNodeCfg, &lpOutput, this->GetMPProblem()->GetEnvironment()->GetPositionRes(), this->GetMPProblem()->GetEnvironment()->GetOrientationRes(),true,false,false);  //changed dir to nn here
+    bool success = this->GetLocalPlanner(this->m_lp)->
+      IsConnected(nn, newNodeCfg, &lpOutput, this->GetEnvironment()->GetPositionRes(), this->GetEnvironment()->GetOrientationRes(),true,false,false);  //changed dir to nn here
     if(success){
-      VID newNodeVid = this->GetMPProblem()->GetRoadmap()->GetGraph()->AddVertex(newNodeCfg);
-      this->GetMPProblem()->GetRoadmap()->GetGraph()->AddEdge(nnVid,newNodeVid,WeightType());
-      this->GetMPProblem()->GetRoadmap()->GetGraph()->AddEdge(newNodeVid,nnVid,WeightType());
+      VID newNodeVid = this->GetRoadmap()->GetGraph()->AddVertex(newNodeCfg);
+      this->GetRoadmap()->GetGraph()->AddEdge(nnVid,newNodeVid,WeightType());
+      this->GetRoadmap()->GetGraph()->AddEdge(newNodeVid,nnVid,WeightType());
       m_rvCfgs[newNodeVid] = shared_ptr<vector<Vector3D> >(newNode);
       if(this->m_growGoals){
 	this->ConnectTrees(newNodeVid);
       }else{
 	for(vector<size_t>::iterator i = this->m_goalsNotFound.begin(); i!=this->m_goalsNotFound.end(); i++){
 	  vector<pair<VID, double> > closest;
-	  bool connectToGoal = this->GetMPProblem()->GetLocalPlanner(this->m_lp)->
-	    IsConnected(nn, newNodeCfg, &lpOutput, this->GetMPProblem()->GetEnvironment()->GetPositionRes(), this->GetMPProblem()->GetEnvironment()->GetOrientationRes(),true,false,false);
+	  bool connectToGoal = this->GetLocalPlanner(this->m_lp)->
+	    IsConnected(nn, newNodeCfg, &lpOutput, this->GetEnvironment()->GetPositionRes(), this->GetEnvironment()->GetOrientationRes(),true,false,false);
 
 	  if(connectToGoal){
 	    this->m_goalsNotFound.erase(i);

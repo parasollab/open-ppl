@@ -6,23 +6,18 @@
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup Samplers
 /// @brief TODO
-/// @tparam MPTraits Motion planning universe
-///
-/// TODO
 ////////////////////////////////////////////////////////////////////////////////
-template<class MPTraits>
+template <typename MPTraits>
 class BridgeTestSampler : public SamplerMethod<MPTraits> {
 
   public:
     typedef typename MPTraits::CfgType CfgType;
     typedef typename MPTraits::MPProblemType MPProblemType;
-    typedef typename MPProblemType::ValidityCheckerPointer ValidityCheckerPointer;
-    typedef typename MPProblemType::DistanceMetricPointer DistanceMetricPointer;
 
     BridgeTestSampler(string _vcLabel = "", string _dmLabel = "",
         double _d = 0.5, bool _useBoundary = false);
 
-    BridgeTestSampler(MPProblemType* _problem, XMLNode& _node);
+    BridgeTestSampler(XMLNode& _node);
 
     void ParseXML(XMLNode& _node);
 
@@ -37,7 +32,7 @@ class BridgeTestSampler : public SamplerMethod<MPTraits> {
     string m_vcLabel, m_dmLabel;
 };
 
-template<class MPTraits>
+template <typename MPTraits>
 BridgeTestSampler<MPTraits>::
 BridgeTestSampler(string _vcLabel, string _dmLabel,
     double _d, bool _useBoundary) :
@@ -46,15 +41,15 @@ BridgeTestSampler(string _vcLabel, string _dmLabel,
     this->SetName("BridgeTestSampler");
   }
 
-template<class MPTraits>
+template <typename MPTraits>
 BridgeTestSampler<MPTraits>::
-BridgeTestSampler(MPProblemType* _problem, XMLNode& _node) :
-  SamplerMethod<MPTraits>(_problem, _node) {
+BridgeTestSampler(XMLNode& _node) :
+  SamplerMethod<MPTraits>(_node) {
     this->SetName("BridgeTestSampler");
     ParseXML(_node);
   }
 
-template<class MPTraits>
+template <typename MPTraits>
 void
 BridgeTestSampler<MPTraits>::
 ParseXML(XMLNode& _node) {
@@ -66,7 +61,7 @@ ParseXML(XMLNode& _node) {
 }
 
 //Display values of class variables at calling time
-template<class MPTraits>
+template <typename MPTraits>
 void
 BridgeTestSampler<MPTraits>::
 Print(ostream& _os) const {
@@ -77,7 +72,7 @@ Print(ostream& _os) const {
   _os << "\tdmLabel = " << m_dmLabel << endl;
 }
 
-template<class MPTraits>
+template <typename MPTraits>
 bool
 BridgeTestSampler<MPTraits>::
 Sampler(CfgType& _cfg, shared_ptr<Boundary> _boundary,
@@ -85,8 +80,8 @@ Sampler(CfgType& _cfg, shared_ptr<Boundary> _boundary,
 
   string callee(this->GetNameAndLabel() + "::SampleImpl()");
   Environment* env = this->GetEnvironment();
-  ValidityCheckerPointer vc = this->GetValidityChecker(m_vcLabel);
-  DistanceMetricPointer dm = this->GetDistanceMetric(m_dmLabel);
+  auto vc = this->GetValidityChecker(m_vcLabel);
+  auto dm = this->GetDistanceMetric(m_dmLabel);
   bool generated = false;
 
   if(this->m_debug)

@@ -4,7 +4,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup MotionPlanningStrategies
 /// @brief Constructs RRTs within narrow passages to quickly plan through them.
-/// @tparam MPTraits Motion planning universe
 ///
 /// Constructs RRTs within narrow passages to quickly plan through them.
 ///
@@ -20,9 +19,6 @@ class SparkPRM : public Strategy<MPTraits> {
     typedef typename MPProblemType::RoadmapType RoadmapType;
     typedef typename MPProblemType::GraphType GraphType;
     typedef typename MPProblemType::VID VID;
-    typedef typename MPProblemType::DistanceMetricPointer DistanceMetricPointer;
-    typedef typename MPProblemType::NeighborhoodFinderPointer NeighborhoodFinderPointer;
-    typedef typename MPProblemType::ConnectorPointer ConnectorPointer;
     typedef typename GraphType::const_vertex_iterator CVI;
 
     SparkPRM(size_t _maxNPCCSize = 3, size_t _initSamples = 30,
@@ -34,7 +30,7 @@ class SparkPRM : public Strategy<MPTraits> {
         string _dmLabel = "", string _nfLabel = "", string _nfVertexLabel = "",
         string _vcLabel = "", string _cLabel = "", string _eLabel = "",
         bool _rrtDebug = false);
-    SparkPRM(MPProblemType* _problem, XMLNode& _node);
+    SparkPRM(XMLNode& _node);
 
     virtual void ParseXML(XMLNode& _node);
     virtual void Print(ostream& _os);
@@ -136,8 +132,8 @@ SparkPRM(size_t _maxNPCCSize, size_t _initSamples,
 
 template<class MPTraits, template<typename> class Strategy>
 SparkPRM<MPTraits, Strategy>::
-SparkPRM(MPProblemType* _problem, XMLNode& _node) :
-  Strategy<MPTraits>(_problem, _node) {
+SparkPRM(XMLNode& _node) :
+  Strategy<MPTraits>(_node) {
     this->m_name += "WithRRT";
     ParseXML(_node);
   }
@@ -488,7 +484,7 @@ ConnectVertex(RoadmapType* _centroidRdmp, vector<VID>& _notRRT, VID _recentVID) 
 
   StatClass* stats = this->GetStatClass();
   stats->StartClock("RRT: ConnectVertex");
-  ConnectorPointer connector = this->GetConnector(m_cLabel);
+  auto connector = this->GetConnector(m_cLabel);
   stapl::sequential::vector_property_map<GraphType, size_t> cMap;
   GraphType* centroidGraph = _centroidRdmp->GetGraph();
 
@@ -499,8 +495,7 @@ ConnectVertex(RoadmapType* _centroidRdmp, vector<VID>& _notRRT, VID _recentVID) 
     if(centroidGraph->get_num_vertices() != 0) {
 
       stats->StartClock("RRT: BiasConnect");
-      NeighborhoodFinderPointer nf =
-          this->GetNeighborhoodFinder(m_nfVertexLabel);
+      auto nf = this->GetNeighborhoodFinder(m_nfVertexLabel);
       GraphType* graph = this->GetRoadmap()->GetGraph();
       vector<VID> cc;
       vector<pair<VID, double> > closest;
@@ -721,8 +716,8 @@ ExpandTree(CfgType& _dir, vector<VID>& _rrt, vector<VID>& _important) {
 
   StatClass* stats = this->GetStatClass();
   GraphType* graph = this->GetRoadmap()->GetGraph();
-  DistanceMetricPointer dm = this->GetDistanceMetric(m_dmLabel);
-  NeighborhoodFinderPointer nf = this->GetNeighborhoodFinder(m_nfLabel);
+  auto dm = this->GetDistanceMetric(m_dmLabel);
+  auto nf = this->GetNeighborhoodFinder(m_nfLabel);
   VID recentVID = INVALID_VID;
   CDInfo cdInfo;
   CfgType nearest, newCfg;
@@ -755,7 +750,7 @@ ExpandTree(CfgType& _dir, vector<VID>& _rrt, vector<VID>& _important) {
   }
 
   // Expand the RRT
-  typename MPProblemType::ExtenderPointer e = this->GetExtender(m_eLabel);
+  auto e = this->GetExtender(m_eLabel);
   LPOutput<MPTraits> lpOutput;
   stats->StartClock("RRT: ExpandTree: RRTExpand");
   if(!e->Extend(nearest, _dir, newCfg, lpOutput)) {

@@ -15,7 +15,6 @@ class StatClass;
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup MotionPlanningUniverse
 /// @brief Base class of all algorithm abstractions in PMPL.
-/// @tparam MPTraits Motion planning universe
 ///
 /// The MPBaseObject is an abstract class which all algorithm abstractions in
 /// PMPL extend themselves off of. It essentially composes a class name
@@ -29,19 +28,25 @@ class MPBaseObject {
     ///@name Local Types
     ///@{
 
-    typedef typename MPTraits::MPProblemType MPProblemType;
-    typedef typename MPProblemType::RoadmapType RoadmapType;
-    typedef typename MPProblemType::DistanceMetricPointer DistanceMetricPointer;
-    typedef typename MPProblemType::ValidityCheckerPointer ValidityCheckerPointer;
-    typedef typename MPProblemType::NeighborhoodFinderPointer NeighborhoodFinderPointer;
-    typedef typename MPProblemType::SamplerPointer SamplerPointer;
-    typedef typename MPProblemType::LocalPlannerPointer LocalPlannerPointer;
-    typedef typename MPProblemType::ExtenderPointer ExtenderPointer;
-    typedef typename MPProblemType::PathModifierPointer PathModifierPointer;
-    typedef typename MPProblemType::ConnectorPointer ConnectorPointer;
-    typedef typename MPProblemType::MetricPointer MetricPointer;
-    typedef typename MPProblemType::MapEvaluatorPointer MapEvaluatorPointer;
-    typedef typename MPProblemType::MPStrategyPointer MPStrategyPointer;
+    typedef typename MPTraits::MPProblemType                  MPProblemType;
+    typedef typename MPTraits::PlanningLibraryType            PlanningLibraryType;
+
+    typedef typename MPProblemType::RoadmapType               RoadmapType;
+
+    typedef typename PlanningLibraryType::SamplerPointer      SamplerPointer;
+    typedef typename PlanningLibraryType::LocalPlannerPointer LocalPlannerPointer;
+    typedef typename PlanningLibraryType::ExtenderPointer     ExtenderPointer;
+    typedef typename PlanningLibraryType::PathModifierPointer PathModifierPointer;
+    typedef typename PlanningLibraryType::ConnectorPointer    ConnectorPointer;
+    typedef typename PlanningLibraryType::MetricPointer       MetricPointer;
+    typedef typename PlanningLibraryType::MapEvaluatorPointer MapEvaluatorPointer;
+    typedef typename PlanningLibraryType::MPStrategyPointer   MPStrategyPointer;
+    typedef typename PlanningLibraryType::DistanceMetricPointer
+                                                        DistanceMetricPointer;
+    typedef typename PlanningLibraryType::ValidityCheckerPointer
+                                                        ValidityCheckerPointer;
+    typedef typename PlanningLibraryType::NeighborhoodFinderPointer
+                                                        NeighborhoodFinderPointer;
 
     ///@}
     ///@name Construction
@@ -51,14 +56,13 @@ class MPBaseObject {
     /// @param _label ID of the object, i.e., user defined label
     /// @param _name Name of the object, i.e., derived class name
     /// @param _debug Turn debug output on or off
-    MPBaseObject(MPProblemType* _p = nullptr, const string& _label = "",
-        const string& _name = "",
+    MPBaseObject(const string& _label = "", const string& _name = "",
         bool _debug = false) :
-        m_name(_name), m_debug(_debug), m_label(_label), m_problem(_p) { }
+        m_name(_name), m_debug(_debug), m_label(_label) { }
 
     ////////////////////////////////////////////////////////////////////////////
     /// @param _node XMLNode to parse for this object
-    MPBaseObject(MPProblemType* _p, XMLNode& _node) : m_problem(_p) {
+    MPBaseObject(XMLNode& _node) {
       ParseXML(_node);
     }
 
@@ -90,8 +94,12 @@ class MPBaseObject {
     }
 
     ///@}
-    ///@name MPBaseObject Accessors
+    ///@name Accessors
     ///@{
+
+    void SetPlanningLibrary(PlanningLibraryType* _p) {m_library = _p;}
+
+    PlanningLibraryType* GetPlanningLibrary() const {return m_library;}
 
     ////////////////////////////////////////////////////////////////////////////
     /// @return MPProblem object
@@ -99,7 +107,7 @@ class MPBaseObject {
 
     ////////////////////////////////////////////////////////////////////////////
     /// @param _m MPProblem object
-    virtual void SetMPProblem(MPProblemType* _m) {m_problem = _m;}
+    virtual void SetMPProblem(MPProblemType* _p) {m_problem = _p;}
 
     ////////////////////////////////////////////////////////////////////////////
     /// @brief Get unique string identifier to object
@@ -119,7 +127,7 @@ class MPBaseObject {
     void SetDebug(bool _d) {m_debug = _d;}
 
     ///@}
-    ///@name MPBaseObject Accessors to MPProblem Objects
+    ///@name MPProblem Accessors
     ///@{
 
     ////////////////////////////////////////////////////////////////////////////
@@ -138,81 +146,93 @@ class MPBaseObject {
     /// @return StatClass pointer
     StatClass* GetStatClass() const {return m_problem->GetStatClass();}
 
+    string GetQueryFilename() const {return m_problem->GetQueryFilename();}
+
+    void SetQueryFilename(const string& _n) {
+      return m_problem->SetQueryFilename(_n);
+    }
+
+    ///@}
+    ///@name PlanningLibrary Accessors
+    ///@{
+
     ////////////////////////////////////////////////////////////////////////////
     /// @param _dm Label
     /// @return DistanceMetric pointer
     DistanceMetricPointer GetDistanceMetric(const string& _dm) const {
-      return m_problem->GetDistanceMetric(_dm);
+      return m_library->GetDistanceMetric(_dm);
     }
 
     ////////////////////////////////////////////////////////////////////////////
     /// @param _vc Label
     /// @return ValidityChecker pointer
     ValidityCheckerPointer GetValidityChecker(const string& _vc) const {
-      return m_problem->GetValidityChecker(_vc);
+      return m_library->GetValidityChecker(_vc);
     }
+
+    void ToggleValidity() {m_library->ToggleValidity();}
 
     ////////////////////////////////////////////////////////////////////////////
     /// @param _nf Label
     /// @return NeighborhoodFinder pointer
     NeighborhoodFinderPointer GetNeighborhoodFinder(const string& _nf) const {
-      return m_problem->GetNeighborhoodFinder(_nf);
+      return m_library->GetNeighborhoodFinder(_nf);
     }
 
     ////////////////////////////////////////////////////////////////////////////
     /// @param _s Label
     /// @return Sampler pointer
     SamplerPointer GetSampler(const string& _s) const {
-      return m_problem->GetSampler(_s);
+      return m_library->GetSampler(_s);
     }
 
     ////////////////////////////////////////////////////////////////////////////
     /// @param _lp Label
     /// @return LocalPlanner pointer
     LocalPlannerPointer GetLocalPlanner(const string& _lp) const {
-      return m_problem->GetLocalPlanner(_lp);
+      return m_library->GetLocalPlanner(_lp);
     }
 
     ////////////////////////////////////////////////////////////////////////////
     /// @param _e Label
     /// @return Extender pointer
     ExtenderPointer GetExtender(const string& _e) const {
-      return m_problem->GetExtender(_e);
+      return m_library->GetExtender(_e);
     }
 
     ////////////////////////////////////////////////////////////////////////////
     /// @param _pm Label
     /// @return PathModifier pointer
     PathModifierPointer GetPathModifier(const string& _pm) const {
-      return m_problem->GetPathModifier(_pm);
+      return m_library->GetPathModifier(_pm);
     }
 
     ////////////////////////////////////////////////////////////////////////////
     /// @param _c Label
     /// @return Connector pointer
     ConnectorPointer GetConnector(const string& _c) const {
-      return m_problem->GetConnector(_c);
+      return m_library->GetConnector(_c);
     }
 
     ////////////////////////////////////////////////////////////////////////////
     /// @param _m Label
     /// @return Metric pointer
     MetricPointer GetMetric(const string& _m) const {
-      return m_problem->GetMetric(_m);
+      return m_library->GetMetric(_m);
     }
 
     ////////////////////////////////////////////////////////////////////////////
     /// @param _me Label
     /// @return MapEvaluator pointer
     MapEvaluatorPointer GetMapEvaluator(const string& _me) const {
-      return m_problem->GetMapEvaluator(_me);
+      return m_library->GetMapEvaluator(_me);
     }
 
     ////////////////////////////////////////////////////////////////////////////
     /// @param _mps Label
     /// @return MPStrategy pointer
     MPStrategyPointer GetMPStrategy(const string& _mps) const {
-      return m_problem->GetMPStrategy(_mps);
+      return m_library->GetMPStrategy(_mps);
     }
 
     ///@}
@@ -236,8 +256,9 @@ class MPBaseObject {
 
   private:
 
-    string m_label;                    ///< Unique identifier of object
-    MPProblemType* m_problem{nullptr}; ///< Pointer to MPProblem object.
+    string m_label;                          ///< Unique identifier of object
+    MPProblemType* m_problem{nullptr};       ///< The current MPProblem object.
+    PlanningLibraryType* m_library{nullptr}; ///< The planning library object.
 
     template<typename T, typename U> friend class MethodSet;
 };

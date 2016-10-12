@@ -8,7 +8,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup LocalPlanners
 /// @brief Plan along the medial axis between two medial axis configurations
-/// @tparam MPTraits Motion planning universe
 ///
 /// This class defines the medial axis local planner which performs a
 /// push of the pathway connecting two medial axis configurations along
@@ -27,13 +26,10 @@ class MedialAxisLP : public LocalPlannerMethod<MPTraits> {
     typedef typename MPTraits::CfgType CfgType;
     typedef typename MPTraits::WeightType WeightType;
     typedef typename MPTraits::MPProblemType MPProblemType;
-    typedef typename MPProblemType::DistanceMetricPointer DistanceMetricPointer;
-    typedef typename MPProblemType::ValidityCheckerPointer ValidityCheckerPointer;
-    typedef typename MPProblemType::LocalPlannerPointer LocalPlannerPointer;
 
     MedialAxisLP(MedialAxisUtility<MPTraits> _medialAxisUtility = MedialAxisUtility<MPTraits>(),
         double _macEpsilon = 0.01, size_t _maxIter = 2);
-    MedialAxisLP(MPProblemType* _problem, XMLNode& _node);
+    MedialAxisLP(XMLNode& _node);
     virtual ~MedialAxisLP();
 
     virtual void Print(ostream& _os) const;
@@ -112,9 +108,9 @@ MedialAxisLP(MedialAxisUtility<MPTraits> _medialAxisUtility,
 
 template<class MPTraits>
 MedialAxisLP<MPTraits>::
-MedialAxisLP(MPProblemType* _problem, XMLNode& _node) :
-  LocalPlannerMethod<MPTraits>(_problem, _node),
-  m_medialAxisUtility(_problem, _node) {
+MedialAxisLP(XMLNode& _node) :
+  LocalPlannerMethod<MPTraits>(_node),
+  m_medialAxisUtility(_node) {
     string controller = _node.Read("controller", true, "",
         "Which algorithm to run?");
     transform(controller.begin(), controller.end(),
@@ -190,8 +186,8 @@ IsConnected(const CfgType& _c1, const CfgType& _c2, CfgType& _col,
 
   if(!m_macVCAdded) {
     m_macVCAdded = true;
-    this->GetMPProblem()->AddValidityChecker(
-        ValidityCheckerPointer(m_macVC),
+    this->GetPlanningLibrary()->AddValidityChecker(
+        typename MPTraits::PlanningLibraryType::ValidityCheckerPointer(m_macVC),
         "MAC::" + this->GetNameAndLabel());
   }
 
@@ -358,7 +354,7 @@ EpsilonClosePath(const CfgType& _c1, const CfgType& _c2, CfgType& _mid,
     LPOutput<MPTraits>* _lpOutput,
     double _posRes, double _oriRes) {
   Environment* env = this->GetEnvironment();
-  DistanceMetricPointer dm = this->GetDistanceMetric(m_dmLabel);
+  auto dm = this->GetDistanceMetric(m_dmLabel);
 
   if(this->m_debug)
     cout << "MedialAxisLP::EpsilonClosePath()" << endl;
@@ -745,11 +741,9 @@ RemoveBranches(LPOutput<MPTraits>* _lpOutput) {
 
   vector<CfgType> newPath, newIntermediates;
 
-  typedef typename MPProblemType::DistanceMetricPointer DistanceMetricPointer;
 
   Environment* env = this->GetEnvironment();
-  DistanceMetricPointer dm =
-    this->GetDistanceMetric(m_medialAxisUtility.GetDistanceMetricLabel());
+  auto dm = this->GetDistanceMetric(m_medialAxisUtility.GetDistanceMetricLabel());
 
   //RemoveBranches Algorithm
   //_path = {q_1, q_2, ..., q_m}

@@ -31,7 +31,7 @@ class DistanceMetricMethod  : public MPBaseObject<MPTraits> {
     ///@{
 
     DistanceMetricMethod() = default;
-    DistanceMetricMethod(MPProblemType* _p, XMLNode& _node);
+    DistanceMetricMethod(XMLNode& _node);
     virtual ~DistanceMetricMethod() = default;
 
     ///@}
@@ -46,7 +46,7 @@ class DistanceMetricMethod  : public MPBaseObject<MPTraits> {
     ///
     /// @usage
     /// @code
-    /// auto dm = this->GetMPProblem()->GetDistanceMetric(m_dmLabel);
+    /// auto dm = this->GetDistanceMetric(m_dmLabel);
     /// CfgType c1, c2;
     /// double dist = dm->Distance(c1, c2);
     /// @endcode
@@ -62,7 +62,7 @@ class DistanceMetricMethod  : public MPBaseObject<MPTraits> {
     ///
     /// @usage
     /// @code
-    /// auto dm = this->GetMPProblem()->GetDistanceMetric(m_dmLabel);
+    /// auto dm = this->GetDistanceMetric(m_dmLabel);
     /// CfgType ray, origin;
     /// double length;
     /// dm->ScaleCfg(length, ray, origin);
@@ -78,8 +78,7 @@ class DistanceMetricMethod  : public MPBaseObject<MPTraits> {
 
 template <typename MPTraits>
 DistanceMetricMethod<MPTraits>::
-DistanceMetricMethod(MPProblemType* _problem, XMLNode& _node)
-  : MPBaseObject<MPTraits>(_problem, _node) {
+DistanceMetricMethod(XMLNode& _node) : MPBaseObject<MPTraits>(_node) {
 }
 
 /*----------------------------- Distance Interface ---------------------------*/

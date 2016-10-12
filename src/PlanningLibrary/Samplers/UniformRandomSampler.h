@@ -6,7 +6,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup Samplers
 /// @brief TODO
-/// @tparam MPTraits Motion planning universe
 ///
 /// TODO
 ////////////////////////////////////////////////////////////////////////////////
@@ -15,10 +14,9 @@ class UniformRandomSampler : public SamplerMethod<MPTraits> {
   public:
     typedef typename MPTraits::CfgType CfgType;
     typedef typename MPTraits::MPProblemType MPProblemType;
-    typedef typename MPProblemType::ValidityCheckerPointer ValidityCheckerPointer;
 
     UniformRandomSampler(string _vcLabel = "");
-    UniformRandomSampler(MPProblemType* _problem, XMLNode& _node);
+    UniformRandomSampler(XMLNode& _node);
 
     virtual void Print(ostream& _os) const;
 
@@ -30,21 +28,21 @@ class UniformRandomSampler : public SamplerMethod<MPTraits> {
     string m_vcLabel;
 };
 
-template<class MPTraits>
+template <typename MPTraits>
 UniformRandomSampler<MPTraits>::
 UniformRandomSampler(string _vcLabel) : m_vcLabel(_vcLabel) {
   this->SetName("UniformRandomSampler");
 }
 
-template<class MPTraits>
+template <typename MPTraits>
 UniformRandomSampler<MPTraits>::
-UniformRandomSampler(MPProblemType* _problem, XMLNode& _node) :
-  SamplerMethod<MPTraits>(_problem, _node) {
+UniformRandomSampler(XMLNode& _node) :
+  SamplerMethod<MPTraits>(_node) {
     this->SetName("UniformRandomSampler");
     m_vcLabel = _node.Read("vcLabel", true, "", "Validity Test Method");
   }
 
-template<class MPTraits>
+template <typename MPTraits>
 void
 UniformRandomSampler<MPTraits>::
 Print(ostream& _os) const {
@@ -52,7 +50,7 @@ Print(ostream& _os) const {
   _os << "\tvcLabel = " << m_vcLabel << endl;
 }
 
-template<class MPTraits>
+template <typename MPTraits>
 bool
 UniformRandomSampler<MPTraits>::
 Sampler(CfgType& _cfg, shared_ptr<Boundary> _boundary,
@@ -60,7 +58,7 @@ Sampler(CfgType& _cfg, shared_ptr<Boundary> _boundary,
 
   string callee(this->GetNameAndLabel() + "::SampleImpl()");
   Environment* env = this->GetEnvironment();
-  ValidityCheckerPointer vcm = this->GetValidityChecker(m_vcLabel);
+  auto vcm = this->GetValidityChecker(m_vcLabel);
 
   if(this->m_debug)
     VDClearAll();

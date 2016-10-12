@@ -6,13 +6,12 @@
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup MotionPlanningStrategies
 /// @brief TODO
-/// @tparam MPTraits Motion planning universe
 ///
 /// TODO
 ///
 /// \internal This strategy is configured for pausible execution.
 ////////////////////////////////////////////////////////////////////////////////
-template<class MPTraits>
+template <typename MPTraits>
 class LPCompare : public MPStrategyMethod<MPTraits> {
   public:
     typedef typename MPTraits::CfgType CfgType;
@@ -21,7 +20,7 @@ class LPCompare : public MPStrategyMethod<MPTraits> {
     typedef typename MPProblemType::RoadmapType::GraphType GraphType;
 
     LPCompare<MPTraits>();
-    LPCompare(MPProblemType* _problem, XMLNode& _node);
+    LPCompare(XMLNode& _node);
 
     virtual void Initialize();
     virtual void Iterate();
@@ -41,16 +40,15 @@ class LPCompare : public MPStrategyMethod<MPTraits> {
 };
 
 
-template<class MPTraits>
+template <typename MPTraits>
 LPCompare<MPTraits>::
 LPCompare() {
   this->SetName("LPCompare");
 }
 
-template<class MPTraits>
+template <typename MPTraits>
 LPCompare<MPTraits>::
-LPCompare(typename MPTraits::MPProblemType* _problem, XMLNode& _node) :
-  MPStrategyMethod<MPTraits>(_problem, _node) {
+LPCompare(XMLNode& _node) : MPStrategyMethod<MPTraits>(_node) {
     this->SetName("LPCompare");
     m_rdmp1in = _node.Read("rdmp1", true, "", "Roadmap file 1");
     m_rdmp2in = _node.Read("rdmp2", true, "", "Roadmap file 2");
@@ -59,7 +57,7 @@ LPCompare(typename MPTraits::MPProblemType* _problem, XMLNode& _node) :
     m_dmLabel = _node.Read("dmLabel", true, "", "DM");
   }
 
-template<class MPTraits>
+template <typename MPTraits>
 void
 LPCompare<MPTraits>::
 Initialize() {
@@ -70,7 +68,7 @@ Initialize() {
   m_rdmp2->Read(m_rdmp2in);
 }
 
-template<class MPTraits>
+template <typename MPTraits>
 void
 LPCompare<MPTraits>::
 Iterate() {
@@ -123,7 +121,7 @@ Iterate() {
   cout << "Num Only In R2: " << m_numOnlyInR2 << endl;
 }
 
-template<class MPTraits>
+template <typename MPTraits>
 void
 LPCompare<MPTraits>::
 Finalize() {
@@ -143,7 +141,7 @@ Finalize() {
   osStat << "NumOnlyInR2: " << m_numOnlyInR2 << endl;
 }
 
-template<class MPTraits>
+template <typename MPTraits>
 tuple<double, double, double>
 LPCompare<MPTraits>::
 CompareEdge(CfgType& _s, CfgType& _g, WeightType& _w1, WeightType& _w2) {
@@ -154,15 +152,14 @@ CompareEdge(CfgType& _s, CfgType& _g, WeightType& _w1, WeightType& _w2) {
   tuple<double, double, double> q;
 
   //collect paths
-  typedef typename MPProblemType::LocalPlannerPointer LocalPlannerPointer;
   vector<CfgType> p1, p2;
 
   //path on edge 1
-  LocalPlannerPointer lp1 = this->GetLocalPlanner(m_lpLabel1);
+  auto lp1 = this->GetLocalPlanner(m_lpLabel1);
   p1 = lp1->ReconstructPath(_s, _g, _w1.GetIntermediates(), posRes, oriRes);
 
   //path on edge 2
-  LocalPlannerPointer lp2 = this->GetLocalPlanner(m_lpLabel2);
+  auto lp2 = this->GetLocalPlanner(m_lpLabel2);
   p2 = lp2->ReconstructPath(_s, _g, _w2.GetIntermediates(), posRes, oriRes);
 
   //compare distance between corresponding intermediates to get metrics
@@ -173,12 +170,11 @@ CompareEdge(CfgType& _s, CfgType& _g, WeightType& _w1, WeightType& _w2) {
   return q;
 }
 
-template<class MPTraits>
+template <typename MPTraits>
 double
 LPCompare<MPTraits>::
 ComparePaths(vector<CfgType>& _p1, vector<CfgType>& _p2) {
-  typedef typename MPProblemType::DistanceMetricPointer DistanceMetricPointer;
-  DistanceMetricPointer dm = this->GetDistanceMetric(m_dmLabel);
+  auto dm = this->GetDistanceMetric(m_dmLabel);
 
   //for each cfg in p1
   //  find corresponding cfg in p2
@@ -196,12 +192,11 @@ ComparePaths(vector<CfgType>& _p1, vector<CfgType>& _p2) {
   return dist;
 }
 
-template<class MPTraits>
+template <typename MPTraits>
 double
 LPCompare<MPTraits>::
 ComparePaths2(vector<CfgType>& _p1, vector<CfgType>& _p2) {
-  typedef typename MPProblemType::DistanceMetricPointer DistanceMetricPointer;
-  DistanceMetricPointer dm = this->GetDistanceMetric(m_dmLabel);
+  auto dm = this->GetDistanceMetric(m_dmLabel);
 
   double c1 = ComparePaths(_p1, _p2) * _p1.size();
   double c2 = ComparePaths(_p2, _p1) * _p2.size();

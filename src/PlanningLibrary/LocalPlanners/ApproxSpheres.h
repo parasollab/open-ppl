@@ -6,7 +6,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup LocalPlanners
 /// @brief TODO
-/// @tparam MPTraits Motion planning universe
 ///
 /// TODO
 ////////////////////////////////////////////////////////////////////////////////
@@ -15,12 +14,11 @@ class ApproxSpheres: public LocalPlannerMethod<MPTraits> {
   public:
     typedef typename MPTraits::CfgType CfgType;
     typedef typename MPTraits::MPProblemType MPProblemType;
-    typedef typename MPProblemType::DistanceMetricPointer DistanceMetricPointer;
 
     ApproxSpheres(bool _saveIntermediates = false,
         const ClearanceUtility<MPTraits>& _c = ClearanceUtility<MPTraits>());
 
-    ApproxSpheres(MPProblemType* _problem, XMLNode& _node);
+    ApproxSpheres(XMLNode& _node);
 
     virtual void Print(ostream& _os) const;
 
@@ -39,20 +37,19 @@ class ApproxSpheres: public LocalPlannerMethod<MPTraits> {
 template<class MPTraits>
 ApproxSpheres<MPTraits>::
 ApproxSpheres(bool _saveIntermediates, const ClearanceUtility<MPTraits>& _c) :
-  LocalPlannerMethod<MPTraits>(_saveIntermediates), m_clearUtil(_c) {
-    this->SetName("ApproxSpheres");
-  }
+    LocalPlannerMethod<MPTraits>(_saveIntermediates), m_clearUtil(_c) {
+  this->SetName("ApproxSpheres");
+}
 
 template<class MPTraits>
 ApproxSpheres<MPTraits>::
-ApproxSpheres(MPProblemType* _problem, XMLNode& _node) :
-  LocalPlannerMethod<MPTraits>(_problem, _node),
-  m_clearUtil(_problem, _node) {
-    this->SetName("ApproxSpheres");
-    if(!m_clearUtil.GetExactClearance())
-      throw ParseException(_node.Where(),
-          "Clearance type needs to be 'exact'.");
-  }
+ApproxSpheres(XMLNode& _node) : LocalPlannerMethod<MPTraits>(_node),
+    m_clearUtil(_node) {
+  this->SetName("ApproxSpheres");
+  if(!m_clearUtil.GetExactClearance())
+    throw ParseException(_node.Where(),
+        "Clearance type needs to be 'exact'.");
+}
 
 template<class MPTraits>
 void
@@ -73,8 +70,7 @@ IsConnected(const CfgType& _c1, const CfgType& _c2, CfgType& col,
     bool _checkCollision,
     bool _savePath) {
   StatClass* _stats = this->GetStatClass();
-  DistanceMetricPointer _dm =
-    this->GetDistanceMetric(m_clearUtil.GetDistanceMetricLabel());
+  auto _dm = this->GetDistanceMetric(m_clearUtil.GetDistanceMetricLabel());
   Environment* _env = this->GetEnvironment();
 
   //clear lpOutput

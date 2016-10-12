@@ -7,11 +7,10 @@
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup Samplers
 /// @brief TODO
-/// @tparam MPTraits Motion planning universe
 ///
 /// TODO
 ////////////////////////////////////////////////////////////////////////////////
-template<class MPTraits>
+template <typename MPTraits>
 class MedialAxisSampler : public SamplerMethod<MPTraits> {
   public:
     typedef typename MPTraits::CfgType CfgType;
@@ -19,7 +18,7 @@ class MedialAxisSampler : public SamplerMethod<MPTraits> {
 
     MedialAxisSampler(const MedialAxisUtility<MPTraits>& _medialAxisUtility =
         MedialAxisUtility<MPTraits>());
-    MedialAxisSampler(MPProblemType* _problem, XMLNode& _node);
+    MedialAxisSampler(XMLNode& _node);
 
     virtual void Print(ostream& _os) const;
 
@@ -30,22 +29,22 @@ class MedialAxisSampler : public SamplerMethod<MPTraits> {
     MedialAxisUtility<MPTraits> m_medialAxisUtility;
 };
 
-template<class MPTraits>
+template <typename MPTraits>
 MedialAxisSampler<MPTraits>::
 MedialAxisSampler(const MedialAxisUtility<MPTraits>& _medialAxisUtility):
   m_medialAxisUtility(_medialAxisUtility) {
     this->SetName("MedialAxisSampler");
   }
 
-template<class MPTraits>
+template <typename MPTraits>
 MedialAxisSampler<MPTraits>::
-MedialAxisSampler(MPProblemType* _problem, XMLNode& _node):
-  SamplerMethod<MPTraits>(_problem, _node),
-  m_medialAxisUtility(_problem, _node) {
+MedialAxisSampler(XMLNode& _node):
+  SamplerMethod<MPTraits>(_node),
+  m_medialAxisUtility(_node) {
     this->SetName("MedialAxisSampler");
   }
 
-template<class MPTraits>
+template <typename MPTraits>
 void
 MedialAxisSampler<MPTraits>::
 Print(ostream& _os) const {
@@ -53,7 +52,7 @@ Print(ostream& _os) const {
   m_medialAxisUtility.Print(_os);
 }
 
-template<class MPTraits>
+template <typename MPTraits>
 bool
 MedialAxisSampler<MPTraits>::
 Sampler(CfgType& _cfg, shared_ptr<Boundary> _boundary,

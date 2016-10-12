@@ -10,7 +10,6 @@
 /// @ingroup LocalPlanners
 /// @brief A* like local planning (not true A*) which steps towards optimal
 ///        neighbors when it cannot progress to the goal.
-/// @tparam MPTraits Motion planning universe
 ///
 /// Abstract class for A* like local planning. This steps towards the goal until
 /// it cannot, then it chooses an optimal neighbor. The algorithm is as follows:
@@ -23,19 +22,22 @@
 ////////////////////////////////////////////////////////////////////////////////
 template <class MPTraits>
 class AStar : public LocalPlannerMethod<MPTraits> {
+
   public:
-    /// @{
+
+    ///@name Local Types
+    ///@{
+
     typedef typename MPTraits::CfgType CfgType;
     typedef typename MPTraits::WeightType WeightType;
     typedef typename MPTraits::MPProblemType MPProblemType;
-    typedef typename MPProblemType::DistanceMetricPointer DistanceMetricPointer;
-    typedef typename MPProblemType::ValidityCheckerPointer ValidityCheckerPointer;
-    /// @}
+
+    ///@}
 
     AStar(const string& _vcLabel = "", size_t _maxTries = 0,
         size_t _numNeighbors = 0, size_t _histLength = 5, bool _saveIntermediates = false);
 
-    AStar(MPProblemType* _problem, XMLNode& _node);
+    AStar(XMLNode& _node);
 
     virtual ~AStar();
 
@@ -84,8 +86,8 @@ AStar<MPTraits>::AStar(const string& _vcLabel,
 }
 
 template <class MPTraits>
-AStar<MPTraits>::AStar(MPProblemType* _problem, XMLNode& _node) :
-  LocalPlannerMethod<MPTraits>(_problem, _node) {
+AStar<MPTraits>::AStar(XMLNode& _node) :
+  LocalPlannerMethod<MPTraits>(_node) {
   this->SetName("AStar");
   m_vcLabel = _node.Read("vcLabel", true, "", "Validity Test Label");
   m_maxTries = _node.Read("maxTries", true, 0, 0, MAX_INT, "n tries");
@@ -144,7 +146,7 @@ AStar<MPTraits>::IsConnectedOneWay(
     LPOutput<MPTraits>* _lpOutput,
     double _positionRes, double _orientationRes,
     bool _checkCollision, bool _savePath) {
-    StatClass* stats = this->GetMPProblem()->GetStatClass();
+    StatClass* stats = this->GetStatClass();
 
   if(this->m_debug) {
     VDClearAll();
@@ -240,8 +242,8 @@ AStar<MPTraits>::FindNeighbors(
   vector<CfgType> neighbors, ret;
   vector<double> posOnly, oriOnly;
   string callee = this->GetNameAndLabel() + "::FindNeighbors";
-  ValidityCheckerPointer vc = this->GetMPProblem()->GetValidityChecker(m_vcLabel);
-  StatClass* stats = this->GetMPProblem()->GetStatClass();
+  auto vc = this->GetValidityChecker(m_vcLabel);
+  StatClass* stats = this->GetStatClass();
 
   //Push 2 cfgs into neighbors whose position or orientation is the same
   //as _increment
@@ -306,7 +308,6 @@ AStar<MPTraits>::FindNeighbors(
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup LocalPlanners
 /// @brief A* like local planning which optimizes distance.
-/// @tparam MPTraits Motion planning universe
 ///
 /// Specialized A* like algorithm for distance based optimization.
 ////////////////////////////////////////////////////////////////////////////////
@@ -315,12 +316,11 @@ class AStarDistance : public AStar<MPTraits> {
   public:
     typedef typename MPTraits::CfgType CfgType;
     typedef typename MPTraits::MPProblemType MPProblemType;
-    typedef typename MPProblemType::DistanceMetricPointer DistanceMetricPointer;
 
     AStarDistance(const string& _vcLabel = "", const string& _dmLabel = "",
         size_t _maxTries = 0, size_t _numNeighbors = 0, size_t _histLength = 5);
 
-    AStarDistance(MPProblemType* _problem, XMLNode& _node);
+    AStarDistance(XMLNode& _node);
 
     virtual ~AStarDistance();
 
@@ -344,8 +344,8 @@ AStarDistance(const string& _vcLabel, const string& _dmLabel,
 
 template <class MPTraits>
 AStarDistance<MPTraits>::
-AStarDistance(MPProblemType* _problem, XMLNode& _node) :
-  AStar<MPTraits>(_problem, _node) {
+AStarDistance(XMLNode& _node) :
+  AStar<MPTraits>(_node) {
     this->SetName("AStarDistance");
     m_dmLabel = _node.Read("dmLabel", true, "", "Distance Metric Label");
   }
@@ -365,7 +365,7 @@ template <class MPTraits>
 size_t
 AStarDistance<MPTraits>::ChooseOptimalNeighbor(CfgType& _col,
     const CfgType& _c1, const CfgType& _c2, vector<CfgType>& _neighbors) {
-  DistanceMetricPointer dm = this->GetMPProblem()->GetDistanceMetric(m_dmLabel);
+  auto dm = this->GetDistanceMetric(m_dmLabel);
   double minDistance = MAX_DBL;
   size_t retPosition = 0;
   double value = 0;
@@ -382,7 +382,6 @@ AStarDistance<MPTraits>::ChooseOptimalNeighbor(CfgType& _col,
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup LocalPlanners
 /// @brief A* like local planning which optimizes clearance.
-/// @tparam MPTraits Motion planning universe
 ///
 /// Specialized A* like algorithm for clearance based optimization.
 ////////////////////////////////////////////////////////////////////////////////
@@ -391,15 +390,14 @@ class AStarClearance : public AStar<MPTraits> {
   public:
     typedef typename MPTraits::CfgType CfgType;
     typedef typename MPTraits::MPProblemType MPProblemType;
-    typedef typename MPProblemType::DistanceMetricPointer DistanceMetricPointer;
 
     AStarClearance(const string& _vcLabel = "",
         size_t _maxTries = 0, size_t _numNeighbors = 0, size_t _histLength = 5,
         const ClearanceUtility<MPTraits>& _c = ClearanceUtility<MPTraits>());
 
-    AStarClearance(MPProblemType* _problem, XMLNode& _node);
+    AStarClearance(XMLNode& _node);
 
-    virtual ~AStarClearance();
+    virtual ~AStarClearance() = default;
 
     virtual void Print(ostream& _os) const;
 
@@ -415,19 +413,18 @@ AStarClearance<MPTraits>::
 AStarClearance(const string& _vcLabel,
     size_t _maxTries, size_t _numNeighbors, size_t _histLength,
     const ClearanceUtility<MPTraits>& _c) :
-  AStar<MPTraits>(_vcLabel, _maxTries, _numNeighbors, _histLength), m_clearanceUtility(_c) {
-    this->SetName("AStarClearance");
-  }
+    AStar<MPTraits>(_vcLabel, _maxTries, _numNeighbors, _histLength),
+    m_clearanceUtility(_c) {
+  this->SetName("AStarClearance");
+}
 
 template <class MPTraits>
 AStarClearance<MPTraits>::
-AStarClearance(MPProblemType* _problem, XMLNode& _node) :
-  AStar<MPTraits>(_problem, _node), m_clearanceUtility(_problem, _node) {
-    this->SetName("AStarClearance");
-  }
+AStarClearance(XMLNode& _node) : AStar<MPTraits>(_node),
+    m_clearanceUtility(_node) {
+  this->SetName("AStarClearance");
+}
 
-template <class MPTraits>
-AStarClearance<MPTraits>::~AStarClearance() {}
 
 template <class MPTraits>
 void
@@ -441,7 +438,7 @@ template <class MPTraits>
 size_t
 AStarClearance<MPTraits>::ChooseOptimalNeighbor(CfgType& _col,
     const CfgType& _c1, const CfgType& _c2, vector<CfgType>& _neighbors) {
-  Environment* env = this->GetMPProblem()->GetEnvironment();
+  Environment* env = this->GetEnvironment();
   double maxClearance = -MAX_DBL;
   size_t retPosition = 0;
   double value = 0;

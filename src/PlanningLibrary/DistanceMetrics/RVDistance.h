@@ -7,18 +7,21 @@
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup DistanceMetrics
 /// @brief TODO.
-/// @tparam MPTraits Motion planning universe
-///
-/// TODO.
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
 class RVDistance : public MinkowskiDistance<MPTraits> {
+
   public:
+
     typedef typename MPTraits::CfgType CfgType;
+    typedef typename MPTraits::MPProblemType MPProblemType;
+
     RVDistance(bool _normalize = false);
-    RVDistance(typename MPTraits::MPProblemType* _problem, XMLNode& _node);
+    RVDistance(XMLNode& _node);
+    virtual ~RVDistance() = default;
+
     virtual double Distance(const CfgType& _c1, const CfgType& _c2);
-    virtual ~RVDistance();
+
     double RotationalDistance(const CfgType& _c);
     static double RotationalDistance(const CfgType& _c, double _r2);
     static double InternalDistance(Environment* _env, CfgType _c1, CfgType _c2, bool _debug);
@@ -32,30 +35,29 @@ class RVDistance : public MinkowskiDistance<MPTraits> {
 template <typename MPTraits>
 RVDistance<MPTraits>::
 RVDistance(bool _normalize) :
-  MinkowskiDistance<MPTraits>(2, 2, 1.0/2, _normalize) {
-    this->m_name = "ReachableVolume";
-  }
+    MinkowskiDistance<MPTraits>(2, 2, 1.0/2, _normalize) {
+  this->m_name = "ReachableVolume";
+}
 
 template <typename MPTraits>
 RVDistance<MPTraits>::
-RVDistance(typename MPTraits::MPProblemType* _problem, XMLNode& _node) :
-  MinkowskiDistance<MPTraits>(_problem, _node, false) {
-    this->m_name = "ReachableVolume";
-    /*
-       this->m_r1 = 2;
-       this->m_r2 = 2;
-       this->m_r3 = 1.0/2;
-       */
-    this->m_r1 = 1;
-    this->m_r2 = 1;
-    this->m_r3 = 1;
-    this->m_normalize = _node.Read("normalize", false, true,
-        "flag if position dof should be normalized by environment diagonal");
-    m_S = _node.Read("S", false, .5, 0.0, 1.0,
-        "S, the scaling factor used by RV distance metric d=S*TranslationalDistance + (1-S)*RVDistance");
-    m_S_rot = _node.Read("S_rot", false, .5, 0.0, 1.0,
-        "S_rot, the rotational scaling factor");
-  }
+RVDistance(XMLNode& _node) : MinkowskiDistance<MPTraits>(_node) {
+  this->m_name = "ReachableVolume";
+  /*
+     this->m_r1 = 2;
+     this->m_r2 = 2;
+     this->m_r3 = 1.0/2;
+     */
+  this->m_r1 = 1;
+  this->m_r2 = 1;
+  this->m_r3 = 1;
+  this->m_normalize = _node.Read("normalize", false, true, "flag if position "
+      "dof should be normalized by environment diagonal");
+  m_S = _node.Read("S", false, .5, 0.0, 1.0, "S, the scaling factor used by RV "
+      "distance metric d=S*TranslationalDistance + (1-S)*RVDistance");
+  m_S_rot = _node.Read("S_rot", false, .5, 0.0, 1.0, "S_rot, the rotational "
+      "scaling factor");
+}
 
 template <typename MPTraits>
 double
@@ -119,17 +121,12 @@ RVDistance<MPTraits>::Distance(const CfgType& _c1, const CfgType& _c2) {
   //double pos = this->PositionDistance(_env, diff);
   double pos = this->PositionDistance(diff);
   double rot = this->RotationalDistance(diff);
-  Environment* env = this->GetMPProblem()->GetEnvironment();
+  Environment* env = this->GetEnvironment();
   double rv = InternalDistance(env,_c1,_c2,m_debug);
   if(m_debug){
     cout<<"pos="<<pos<<", rot="<<rot<<" total ="<<pow(m_S*(pos+rot)+(1-m_S)*rv, this->m_r3)<<endl;
   }
   return pow(m_S*((1-m_S_rot)*pos+m_S_rot*rot)+(1-m_S)*rv, this->m_r3);
 }
-
-template <typename MPTraits>
-RVDistance<MPTraits>::~RVDistance() {}
-
-
 
 #endif

@@ -6,7 +6,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup Metrics
 /// @brief TODO.
-/// @tparam MPTraits Motion planning universe
 /// @tparam Set Container type of Cfgs to compare against
 ///
 /// TODO.
@@ -21,7 +20,7 @@ class ConnectivityMetric : public CoverageMetric<MPTraits, Set> {
     ConnectivityMetric(const Set& _samples = Set(),
         const vector<string>& _connectorLabels = vector<string>(),
         bool _computeAllCCs = false);
-    ConnectivityMetric(MPProblemType* _problem, XMLNode& _node, bool _computeAllCCs = false);
+    ConnectivityMetric(XMLNode& _node, bool _computeAllCCs = false);
 
     virtual ~ConnectivityMetric() {}
 
@@ -42,8 +41,8 @@ ConnectivityMetric(const Set& _samples, const vector<string>& _connectorLabels, 
 
 template<class MPTraits, class Set>
 ConnectivityMetric<MPTraits, Set>::
-ConnectivityMetric(MPProblemType* _problem, XMLNode& _node, bool _computeAllCCs)
-  : CoverageMetric<MPTraits, Set>(_problem, _node, _computeAllCCs) {
+ConnectivityMetric(XMLNode& _node, bool _computeAllCCs)
+  : CoverageMetric<MPTraits, Set>(_node, _computeAllCCs) {
     this->SetName("ConnectivityMetric" + Set::GetName());
 }
 

@@ -3,6 +3,7 @@
 
 #include "MPUtils.h"
 
+#include <ctgmath>
 #include <deque>
 
 #include "MetricUtils.h"
@@ -30,7 +31,6 @@ struct ClearanceStats{
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup Utilities
 /// @brief TODO
-/// @tparam MPTraits Motion planning universe
 ///
 /// Used to encapsulate all the fields and functions necessary for clearance and
 /// penetration calculations
@@ -44,21 +44,20 @@ class ClearanceUtility : public MPBaseObject<MPTraits> {
     typedef typename MPTraits::MPProblemType MPProblemType;
     typedef typename MPProblemType::GraphType GraphType;
     typedef typename MPProblemType::VID VID;
-    typedef typename MPProblemType::DistanceMetricPointer DistanceMetricPointer;
-    typedef typename MPProblemType::ValidityCheckerPointer ValidityCheckerPointer;
 
-    ClearanceUtility(MPProblemType* _problem = NULL,
+    ClearanceUtility(
         string _vcLabel = "", string _dmLabel = "",
         bool _exactClearance = false, bool _exactPenetration = false,
         size_t _clearanceRays = 10, size_t _penetrationRays = 10,
         double _approxStepSize = MAX_DBL, double _approxResolution = MAX_DBL,
         bool _useBBX = true, bool _positional = true, bool _debug = false);
 
-    ClearanceUtility(MPProblemType* _problem, XMLNode& _node);
+    ClearanceUtility(XMLNode& _node);
 
     void ParseXML(XMLNode& _node);
 
     virtual void Print(ostream& _os) const;
+    virtual void SetMPProblem(MPProblemType* _p);
 
     string GetDistanceMetricLabel() const {return m_dmLabel;}
     string GetValidityCheckerLabel() const {return m_vcLabel;}
@@ -117,7 +116,6 @@ class ClearanceUtility : public MPBaseObject<MPTraits> {
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup Utilities
 /// @brief TODO
-/// @tparam MPTraits Motion planning universe
 ///
 /// TODO
 ////////////////////////////////////////////////////////////////////////////////
@@ -126,17 +124,15 @@ class MedialAxisUtility : public ClearanceUtility<MPTraits> {
   public:
     typedef typename MPTraits::CfgType CfgType;
     typedef typename MPTraits::MPProblemType MPProblemType;
-    typedef typename MPProblemType::DistanceMetricPointer DistanceMetricPointer;
-    typedef typename MPProblemType::ValidityCheckerPointer ValidityCheckerPointer;
 
-    MedialAxisUtility(MPProblemType* _problem = NULL,
+    MedialAxisUtility(
         string _vcLabel = "", string _dmLabel = "",
         bool _exactClearance = false, bool _exactPenetration = false,
         size_t _clearanceRays = 10, size_t _penetrationRays = 10,
         bool _useBBX = true, bool _positional = true, bool _debug = false,
         double _epsilon = 0.1, size_t _historyLength = 5);
 
-    MedialAxisUtility(MPProblemType* _problem, XMLNode& _node);
+    MedialAxisUtility(XMLNode& _node);
 
     void ParseXML(XMLNode& _node);
 
@@ -196,7 +192,7 @@ class MedialAxisUtility : public ClearanceUtility<MPTraits> {
 
 template<class MPTraits>
 ClearanceUtility<MPTraits>::
-ClearanceUtility(MPProblemType* _problem,
+ClearanceUtility(
     string _vcLabel, string _dmLabel,
     bool _exactClearance, bool _exactPenetration,
     size_t _clearanceRays, size_t _penetrationRays,
@@ -208,7 +204,6 @@ ClearanceUtility(MPProblemType* _problem,
   m_approxStepSize(_approxStepSize), m_approxResolution(_approxResolution),
   m_useBBX(_useBBX), m_positional(_positional){
     this->m_name = "ClearanceUtility";
-    this->SetMPProblem(_problem);
     this->m_debug = _debug;
 
     if(m_approxStepSize == MAX_DBL &&
@@ -223,11 +218,10 @@ ClearanceUtility(MPProblemType* _problem,
 
 template<class MPTraits>
 ClearanceUtility<MPTraits>::
-ClearanceUtility(MPProblemType* _problem, XMLNode& _node):
-  MPBaseObject<MPTraits>(_problem, _node){
-    this->m_name = "ClearanceUtility";
-    ParseXML(_node);
-  }
+ClearanceUtility(XMLNode& _node) : MPBaseObject<MPTraits>(_node) {
+  this->m_name = "ClearanceUtility";
+  ParseXML(_node);
+}
 
 template<class MPTraits>
 void
@@ -245,7 +239,7 @@ ParseXML(XMLNode& _node){
   m_exactPenetration = penetrationType.compare("exact")==0;
 
   //if approximate calculations require number of rays to be defined
-  double minStepSize = 1. / this->GetEnvironment()->GetBoundary()->GetMaxDist();
+  double minStepSize = nan("");
   m_approxStepSize = _node.Read("stepSize", false,
       minStepSize, minStepSize, MAX_DBL,
       "Step size for initial approximate computations as multiple of environment resolution");
@@ -285,6 +279,18 @@ Print(ostream& _os) const {
     _os << "\tapproxStepSize = " << m_approxStepSize << endl;
     _os << "\tapproxResolution = " << m_approxResolution << endl;
   }
+}
+
+template<class MPTraits>
+void
+ClearanceUtility<MPTraits>::
+SetMPProblem(MPProblemType* _p) {
+  MPBaseObject<MPTraits>::SetMPProblem(_p);
+  double minStepSize = 1. / this->GetEnvironment()->GetBoundary()->GetMaxDist();
+  if(std::isnan(m_approxStepSize))
+    m_approxStepSize = minStepSize;
+  if(std::isnan(m_approxResolution))
+    m_approxResolution = minStepSize;
 }
 
 //*********************************************************************//
@@ -330,7 +336,7 @@ ExactCollisionInfo(CfgType& _cfg, CfgType& _clrCfg,
 
   // Setup Validity Checker
   string callee = this->GetNameAndLabel() + "::ExactCollisionInfo";
-  ValidityCheckerPointer vcm = this->GetValidityChecker(m_vcLabel);
+  auto vcm = this->GetValidityChecker(m_vcLabel);
   _cdInfo.ResetVars();
   _cdInfo.m_retAllInfo = true;
 
@@ -448,8 +454,8 @@ ApproxCollisionInfo(CfgType& _cfg, CfgType& _clrCfg,
 
   // Initialization
   string callee = this->GetNameAndLabel() + "::ApproxCollisionInfo";
-  DistanceMetricPointer dm  = this->GetDistanceMetric(m_dmLabel);
-  ValidityCheckerPointer vcm = this->GetValidityChecker(m_vcLabel);
+  auto dm  = this->GetDistanceMetric(m_dmLabel);
+  auto vcm = this->GetValidityChecker(m_vcLabel);
   _cdInfo.ResetVars();
   _cdInfo.m_retAllInfo = true;
 
@@ -779,7 +785,7 @@ PathClearance(vector<VID>& _path) {
     return ClearanceStats();
 
   GraphType* g = this->GetRoadmap()->GetGraph();
-  DistanceMetricPointer dm = this->GetDistanceMetric(m_dmLabel);
+  auto dm = this->GetDistanceMetric(m_dmLabel);
 
   typedef typename GraphType::EI EI;
   typedef typename GraphType::VI VI;
@@ -823,7 +829,7 @@ PathClearance(vector<Cfg>& _path) {
     return ClearanceStats();
 
   GraphType* g = this->GetRoadmap()->GetGraph();
-  DistanceMetricPointer dm = this->GetDistanceMetric(m_dmLabel);
+  auto dm = this->GetDistanceMetric(m_dmLabel);
 
   typedef typename GraphType::EI EI;
   typedef typename GraphType::VI VI;
@@ -890,7 +896,7 @@ MinEdgeClearance(const CfgType& _c1, const CfgType& _c2,
   if(_weight.HasClearance())
     return _weight.GetClearance();
   Environment* env = this->GetEnvironment();
-  DistanceMetricPointer dm = this->GetDistanceMetric(m_dmLabel);
+  auto dm = this->GetDistanceMetric(m_dmLabel);
   double minClearance = 1e6;
   //Reconstruct the path given the two nodes
   vector<CfgType> intermediates = _weight.GetIntermediates();
@@ -943,13 +949,13 @@ MinEdgeClearance(const CfgType& _c1, const CfgType& _c2,
 
 template<class MPTraits>
 MedialAxisUtility<MPTraits>::
-MedialAxisUtility(MPProblemType* _problem,
+MedialAxisUtility(
     string _vcLabel, string _dmLabel,
     bool _exactClearance, bool _exactPenetration,
     size_t _clearanceRays, size_t _penetrationRays,
     bool _useBBX, bool _positional, bool _debug,
     double _epsilon, size_t _historyLength) :
-  ClearanceUtility<MPTraits>(_problem, _vcLabel, _dmLabel,
+  ClearanceUtility<MPTraits>(_vcLabel, _dmLabel,
       _exactClearance, _exactPenetration, _clearanceRays, _penetrationRays,
       _useBBX, _positional, _debug),
   m_epsilon(_epsilon), m_historyLength(_historyLength) {
@@ -958,8 +964,8 @@ MedialAxisUtility(MPProblemType* _problem,
 
 template<class MPTraits>
 MedialAxisUtility<MPTraits>::
-MedialAxisUtility(MPProblemType* _problem, XMLNode& _node):
-  ClearanceUtility<MPTraits>(_problem, _node) {
+MedialAxisUtility(XMLNode& _node):
+  ClearanceUtility<MPTraits>(_node) {
     this->m_name = "MedialAxisUtility";
     ParseXML(_node);
   }
@@ -995,7 +1001,7 @@ PushToMedialAxis(CfgType& _cfg, shared_ptr<Boundary> _bb) {
   if(this->m_debug)
     cout << endl << callee << endl << "Being Pushed: " << _cfg;
 
-  ValidityCheckerPointer vcm = this->GetValidityChecker(this->m_vcLabel);
+  auto vcm = this->GetValidityChecker(this->m_vcLabel);
 
   CDInfo tmpInfo;
   tmpInfo.ResetVars();
@@ -1087,7 +1093,7 @@ PushCfgToMedialAxis(CfgType& _cfg, shared_ptr<Boundary> _bb) {
     cout << callee << endl << "Cfg: " << _cfg << " eps: " << m_epsilon << endl;
 
   Environment* env = this->GetEnvironment();
-  ValidityCheckerPointer vcm = this->GetValidityChecker(this->m_vcLabel);
+  auto vcm = this->GetValidityChecker(this->m_vcLabel);
   shared_ptr<ActiveMultiBody> robot = env->GetRobot(_cfg.GetRobotIndex());
 
   CDInfo tmpInfo;
@@ -1230,7 +1236,7 @@ FindMedialAxisBorderExact(
     double& _upperBound, double& _lowerBound, double& _stepSize) {
   Environment* env = this->GetEnvironment();
   shared_ptr<ActiveMultiBody> robot = env->GetRobot(_cfg.GetRobotIndex());
-  ValidityCheckerPointer vcm = this->GetValidityChecker(this->m_vcLabel);
+  auto vcm = this->GetValidityChecker(this->m_vcLabel);
 
   CDInfo tmpInfo;
   tmpInfo.ResetVars();
@@ -1330,7 +1336,7 @@ FindMedialAxisBorderApprox(
     CfgType& _startCfg, CfgType& _endingCfg,
     double& _upperBound, double& _lowerBound, double& _stepSize) {
   Environment* env = this->GetEnvironment();
-  ValidityCheckerPointer vcm = this->GetValidityChecker(this->m_vcLabel);
+  auto vcm = this->GetValidityChecker(this->m_vcLabel);
 
   CDInfo tmpInfo;
   tmpInfo.ResetVars();
@@ -1495,7 +1501,7 @@ BinarySearchForPeaks(
     double _lowerBound, double _upperBound,
     CfgType& _transCfg, CfgType& _cfg,
     shared_ptr<Boundary> _bb, vector<double>& _dists) {
-  DistanceMetricPointer dm = this->GetDistanceMetric(this->m_dmLabel);
+  auto dm = this->GetDistanceMetric(this->m_dmLabel);
 
   // Variables for modified binary search
   size_t attempts = 0, maxAttempts = 20, badPeaks = 0, maxBadPeaks = 10;

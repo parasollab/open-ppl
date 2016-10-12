@@ -7,7 +7,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup Samplers
 /// @brief TODO
-/// @tparam MPTraits Motion planning universe
 ///
 /// TODO
 ////////////////////////////////////////////////////////////////////////////////
@@ -17,14 +16,12 @@ class UniformMedialAxisSampler : public SamplerMethod<MPTraits> {
   public:
     typedef typename MPTraits::CfgType CfgType;
     typedef typename MPTraits::MPProblemType MPProblemType;
-    typedef typename MPProblemType::DistanceMetricPointer DistanceMetricPointer;
-    typedef typename MPProblemType::ValidityCheckerPointer ValidityCheckerPointer;
 
     UniformMedialAxisSampler(string _vcLabel = "", string _dmLabel = "",
         double _length = 0, double _stepSize = 0, bool _useBoundary = false,
         const ClearanceUtility<MPTraits>& _clearanceUtility = ClearanceUtility<MPTraits>());
 
-    UniformMedialAxisSampler(MPProblemType* _problem, XMLNode& _node);
+    UniformMedialAxisSampler(XMLNode& _node);
 
     virtual void ParseXML(XMLNode& _node);
     virtual void Print(ostream& _os) const;
@@ -55,7 +52,7 @@ class UniformMedialAxisSampler : public SamplerMethod<MPTraits> {
     ClearanceUtility<MPTraits> m_clearanceUtility;
 };
 
-template<class MPTraits>
+template <typename MPTraits>
 UniformMedialAxisSampler<MPTraits>::
 UniformMedialAxisSampler(string _vcLabel, string _dmLabel,
     double _length, double _stepSize, bool _useBoundary,
@@ -66,16 +63,16 @@ UniformMedialAxisSampler(string _vcLabel, string _dmLabel,
     this->SetName("UniformMedialAxisSampler");
   }
 
-template<class MPTraits>
+template <typename MPTraits>
 UniformMedialAxisSampler<MPTraits>::
-UniformMedialAxisSampler(MPProblemType* _problem, XMLNode& _node)
-  : SamplerMethod<MPTraits>(_problem, _node),
-  m_clearanceUtility(_problem, _node) {
+UniformMedialAxisSampler(XMLNode& _node)
+  : SamplerMethod<MPTraits>(_node),
+  m_clearanceUtility(_node) {
     this->SetName("UniformMedialAxisSampler");
     ParseXML(_node);
   }
 
-template<class MPTraits>
+template <typename MPTraits>
 void
 UniformMedialAxisSampler<MPTraits>::
 ParseXML(XMLNode& _node) {
@@ -89,7 +86,7 @@ ParseXML(XMLNode& _node) {
       "Use bounding box as obstacle");
 }
 
-template<class MPTraits>
+template <typename MPTraits>
 void
 UniformMedialAxisSampler<MPTraits>::
 Print(ostream& _os) const {
@@ -102,15 +99,15 @@ Print(ostream& _os) const {
   _os << "\tuseBoundary = " << m_useBoundary << endl;
 }
 
-template<class MPTraits>
+template <typename MPTraits>
 bool
 UniformMedialAxisSampler<MPTraits>::
 Sampler(CfgType& _cfg, shared_ptr<Boundary> _boundary,
     vector<CfgType>& _result, vector<CfgType>& _collision) {
 
   Environment* env = this->GetEnvironment();
-  ValidityCheckerPointer vc = this->GetValidityChecker(m_vcLabel);
-  DistanceMetricPointer dm = this->GetDistanceMetric(m_dmLabel);
+  auto vc = this->GetValidityChecker(m_vcLabel);
+  auto dm = this->GetDistanceMetric(m_dmLabel);
 
   string callee(this->GetNameAndLabel() + "::SampleImpl()");
   CDInfo cdInfo;
@@ -171,7 +168,7 @@ Sampler(CfgType& _cfg, shared_ptr<Boundary> _boundary,
   return generated;
 }
 
-template<class MPTraits>
+template <typename MPTraits>
 bool
 UniformMedialAxisSampler<MPTraits>::
 CheckMedialAxisCrossing(const CfgType& _c1, int _w1,
@@ -233,7 +230,7 @@ CheckMedialAxisCrossing(const CfgType& _c1, int _w1,
   }
 }
 
-template<class MPTraits>
+template <typename MPTraits>
 int
 UniformMedialAxisSampler<MPTraits>::
 FindVertex(int _witness, const CfgType& _c) {
@@ -260,7 +257,7 @@ FindVertex(int _witness, const CfgType& _c) {
   return 1;
 }
 
-template<class MPTraits>
+template <typename MPTraits>
 int
 UniformMedialAxisSampler<MPTraits>::
 FindTriangle(int _witness, const CfgType& _c) {
@@ -328,7 +325,7 @@ FindTriangle(int _witness, const CfgType& _c) {
   return id;
 }
 
-template<class MPTraits>
+template <typename MPTraits>
 bool
 UniformMedialAxisSampler<MPTraits>::
 CheckVertVert(int _w, int _v1, int _v2) {
@@ -347,7 +344,7 @@ CheckVertVert(int _w, int _v1, int _v2) {
   return true;
 }
 
-template<class MPTraits>
+template <typename MPTraits>
 bool
 UniformMedialAxisSampler<MPTraits>::
 CheckTriTri(int _w, int _t1, int _t2) {
@@ -409,7 +406,7 @@ CheckTriTri(int _w, int _t1, int _t2) {
   }
 }
 
-template<class MPTraits>
+template <typename MPTraits>
 bool
 UniformMedialAxisSampler<MPTraits>::
 CheckVertTri(int _w, int _v, int _t) {
@@ -428,7 +425,7 @@ CheckVertTri(int _w, int _v, int _t) {
   return true;
 }
 
-template<class MPTraits>
+template <typename MPTraits>
 bool
 UniformMedialAxisSampler<MPTraits>::
 BinarySearch(shared_ptr<Boundary> _boundary,
@@ -535,7 +532,7 @@ BinarySearch(shared_ptr<Boundary> _boundary,
     CfgType& higher = left.m_clearanceInfo.m_minDist >
       right.m_clearanceInfo.m_minDist ? left : right;
 
-    ValidityCheckerPointer vc = this->GetMPProblem()->GetValidityChecker(m_vcLabel);
+    auto vc = this->GetValidityChecker(m_vcLabel);
     CDInfo cdInfo;
     string callee = this->GetNameAndLabel() + "::BinS";
     bool cfgFree = env->InBounds(higher)

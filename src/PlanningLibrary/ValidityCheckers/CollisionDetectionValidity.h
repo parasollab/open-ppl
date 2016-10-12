@@ -18,13 +18,12 @@
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup ValidityCheckers
 /// @brief Collision detection validation
-/// @tparam MPTraits Motion planning universe
 ///
 /// Validation here means collision-free. This class interfaces with external CD
 /// libraries to determing collision information -- sometimes including
 /// clearance and penetration information.
 ////////////////////////////////////////////////////////////////////////////////
-template<class MPTraits>
+template <typename MPTraits>
 class CollisionDetectionValidity : public ValidityCheckerMethod<MPTraits> {
 
   public:
@@ -43,9 +42,8 @@ class CollisionDetectionValidity : public ValidityCheckerMethod<MPTraits> {
         bool _ignoreSelfCollision = false, int _ignoreIAdjacentLinks = 1);
 
     ////////////////////////////////////////////////////////////////////////////
-    /// @param _problem MPProblem
     /// @param _node XML input node
-    CollisionDetectionValidity(MPProblemType* _problem, XMLNode& _node);
+    CollisionDetectionValidity(XMLNode& _node);
 
     virtual ~CollisionDetectionValidity();
 
@@ -107,7 +105,7 @@ class CollisionDetectionValidity : public ValidityCheckerMethod<MPTraits> {
 };
 
 
-template<class MPTraits>
+template <typename MPTraits>
 CollisionDetectionValidity<MPTraits>::
 CollisionDetectionValidity(CollisionDetectionMethod* _cdMethod,
     bool _ignoreSelfCollision, int _ignoreIAdjacentLinks) :
@@ -118,10 +116,10 @@ CollisionDetectionValidity(CollisionDetectionMethod* _cdMethod,
 }
 
 
-template<class MPTraits>
+template <typename MPTraits>
 CollisionDetectionValidity<MPTraits>::
-CollisionDetectionValidity(MPProblemType* _problem, XMLNode& _node) :
-    ValidityCheckerMethod<MPTraits>(_problem, _node) {
+CollisionDetectionValidity(XMLNode& _node) :
+    ValidityCheckerMethod<MPTraits>(_node) {
   this->m_name = "CollisionDetection";
 
   m_ignoreSelfCollision = _node.Read("ignoreSelfCollision", false, false,
@@ -151,14 +149,14 @@ CollisionDetectionValidity(MPProblemType* _problem, XMLNode& _node) :
 }
 
 
-template<class MPTraits>
+template <typename MPTraits>
 CollisionDetectionValidity<MPTraits>::
 ~CollisionDetectionValidity() {
   delete m_cdMethod;
 }
 
 
-template<class MPTraits>
+template <typename MPTraits>
 bool
 CollisionDetectionValidity<MPTraits>::
 IsValidImpl(CfgType& _cfg, CDInfo& _cdInfo, const string& _callName) {
@@ -183,7 +181,7 @@ IsValidImpl(CfgType& _cfg, CDInfo& _cdInfo, const string& _callName) {
 }
 
 
-template<class MPTraits>
+template <typename MPTraits>
 bool
 CollisionDetectionValidity<MPTraits>::
 IsInCollision(CDInfo& _cdInfo, size_t _robotIndex, const string& _callName) {
@@ -247,7 +245,7 @@ IsInCollision(CDInfo& _cdInfo, size_t _robotIndex, const string& _callName) {
 }
 
 
-template<class MPTraits>
+template <typename MPTraits>
 bool
 CollisionDetectionValidity<MPTraits>::
 IsInSelfCollision(CDInfo& _cdInfo, shared_ptr<ActiveMultiBody> _rob,
@@ -272,7 +270,7 @@ IsInSelfCollision(CDInfo& _cdInfo, shared_ptr<ActiveMultiBody> _rob,
 }
 
 
-template<class MPTraits>
+template <typename MPTraits>
 bool
 CollisionDetectionValidity<MPTraits>::
 IsInterRobotCollision(CDInfo& _cdInfo,
@@ -297,7 +295,7 @@ IsInterRobotCollision(CDInfo& _cdInfo,
 }
 
 
-template<class MPTraits>
+template <typename MPTraits>
 bool
 CollisionDetectionValidity<MPTraits>::
 IsInObstCollision(CDInfo& _cdInfo, shared_ptr<ActiveMultiBody> _rob,
@@ -327,7 +325,7 @@ IsInObstCollision(CDInfo& _cdInfo, shared_ptr<ActiveMultiBody> _rob,
 }
 
 
-template<class MPTraits>
+template <typename MPTraits>
 bool
 CollisionDetectionValidity<MPTraits>::
 IsInsideObstacle(const CfgType& _cfg) {

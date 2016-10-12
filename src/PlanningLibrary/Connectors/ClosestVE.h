@@ -6,7 +6,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup Connectors
 /// @brief Information on vertex or edge connection
-/// @tparam MPTraits Motion planning universe
 ///
 /// CfgVEType is a class used to store information about connecting to what may
 /// be either another configuration or a new configuration along an edge of the
@@ -74,7 +73,6 @@ CfgVEType<MPTraits>::
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup Connectors
 /// @brief Connect nodes to other close vertices or point on edges in roadmap.
-/// @tparam MPTraits Motion planning universe
 ///
 /// Connect nodes in map to their k closest neighbors, which could be vertex or
 /// point on edges in roadmap. This method not only creates edges, but creates
@@ -82,18 +80,20 @@ CfgVEType<MPTraits>::
 ////////////////////////////////////////////////////////////////////////////////
 template<class MPTraits>
 class ClosestVE: public ConnectorMethod<MPTraits> {
+
   private:
+
     typedef typename MPTraits::MPProblemType MPProblemType;
     typedef typename MPProblemType::VID VID;
     typedef typename MPProblemType::RoadmapType RoadmapType;
     typedef typename MPTraits::WeightType WeightType;
     typedef typename MPTraits::CfgType CfgType;
-    typedef typename MPProblemType::LocalPlannerPointer LocalPlannerPointer;
 
   public:
-    ClosestVE(string _lp = "", string _nf = "", MPProblemType* _problem = NULL);
-    ClosestVE(MPProblemType* _problem, XMLNode& _node);
-    ~ClosestVE();
+
+    ClosestVE(string _lp = "", string _nf = "");
+    ClosestVE(XMLNode& _node);
+    virtual ~ClosestVE() = default;
 
     virtual void ParseXML(XMLNode& _node);
     virtual void Print(ostream& _os) const;
@@ -145,43 +145,36 @@ class ClosestVE: public ConnectorMethod<MPTraits> {
 };
 
 template <class MPTraits>
-ClosestVE<MPTraits>::ClosestVE(string _lp, string _nf, MPProblemType* _problem) :
-  ConnectorMethod<MPTraits>() {
+ClosestVE<MPTraits>::
+ClosestVE(string _lp, string _nf) : ConnectorMethod<MPTraits>() {
   this->SetName("ClosestVE");
   m_kClosest = KCLOSESTVE;
   this->m_lpLabel = _lp;
   this->m_nfLabel = _nf;
-  this->SetMPProblem(_problem);
 }
 
-/////////////////////////////////////////////////////////////////////////////
 
 template <class MPTraits>
-ClosestVE<MPTraits>::ClosestVE(MPProblemType* _problem, XMLNode& _node) :
-  ConnectorMethod<MPTraits>(_problem, _node) {
-    this->SetName("ClosestVE");
-    m_kClosest = KCLOSESTVE;
-    ParseXML(_node);
-  }
-/////////////////////////////////////////////////////////////////////////////
-
-template <class MPTraits>
-ClosestVE<MPTraits>::~ClosestVE() {
+ClosestVE<MPTraits>::
+ClosestVE(XMLNode& _node) : ConnectorMethod<MPTraits>(_node) {
+  this->SetName("ClosestVE");
+  m_kClosest = KCLOSESTVE;
+  ParseXML(_node);
 }
 
-/////////////////////////////////////////////////////////////////////////////
 
 template <class MPTraits>
 void
-ClosestVE<MPTraits>::ParseXML(XMLNode& _node) {
+ClosestVE<MPTraits>::
+ParseXML(XMLNode& _node) {
   m_kClosest = _node.Read("kClosest", true, 5,1,1000, "K Closest Connections");
 }
 
-/////////////////////////////////////////////////////////////////////////////
 
 template <class MPTraits>
 void
-ClosestVE<MPTraits>::Print(ostream& _os) const {
+ClosestVE<MPTraits>::
+Print(ostream& _os) const {
   _os << this->GetNameAndLabel() << endl;
   _os << "\tm_kClosest = " << m_kClosest << endl;
 }
@@ -288,7 +281,7 @@ Connect(RoadmapType* _rm,
   typedef typename GraphType::VI VI;
 
   auto dm = this->GetNeighborhoodFinder(this->m_nfLabel)->GetDMMethod();
-  Environment* env = this->GetMPProblem()->GetEnvironment();
+  Environment* env = this->GetEnvironment();
   auto lp = this->GetLocalPlanner(this->m_lpLabel);
 
   if(this->m_debug)

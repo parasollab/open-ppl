@@ -13,7 +13,6 @@
 /// @ingroup MapEvaluators
 /// @brief Evaluate a roadmap under construction to see if a query has been
 ///        satisfied.
-/// @tparam MPTraits Motion planning universe
 ///
 /// This query is specialized for PRM methods.
 ////////////////////////////////////////////////////////////////////////////////
@@ -38,7 +37,7 @@ class PRMQuery : public QueryMethod<MPTraits> {
     ///@{
 
     PRMQuery();
-    PRMQuery(MPProblemType* _problem, XMLNode& _node);
+    PRMQuery(XMLNode& _node);
     virtual ~PRMQuery() = default;
 
     ///@}
@@ -120,8 +119,8 @@ PRMQuery() : QueryMethod<MPTraits>() {
 
 template <typename MPTraits>
 PRMQuery<MPTraits>::
-PRMQuery(MPProblemType* _problem, XMLNode& _node) :
-    QueryMethod<MPTraits>(_problem, _node) {
+PRMQuery(XMLNode& _node) :
+    QueryMethod<MPTraits>(_node) {
   this->SetName("PRMQuery");
   ParseXML(_node);
 }

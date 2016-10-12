@@ -8,7 +8,7 @@
 #include "Utilities/PMPLExceptions.h"
 
 ////////////////////////////////////////////////////////////////////////////////
-/// \brief A path of connected configurations from a given roadmap.
+/// @brief A path of connected configurations from a given roadmap.
 ///
 /// The implementation uses a vector of VID's as the primary representation.
 /// The corresponding configurations are computed lazily upon request.
@@ -18,97 +18,100 @@ class Path {
 
   public:
 
-    ///\name Motion Planning Types
+    ///@name Motion Planning Types
     ///@{
 
-    typedef typename MPTraits::CfgType          CfgType;
-    typedef typename MPTraits::CfgRef           CfgRef;
-    typedef typename MPTraits::WeightType       WeightType;
-    typedef typename MPTraits::MPProblemType    MPProblemType;
-    typedef typename MPProblemType::RoadmapType RoadmapType;
-    typedef typename MPProblemType::GraphType   GraphType;
-    typedef typename MPProblemType::VID         VID;
+    typedef typename MPTraits::CfgType             CfgType;
+    typedef typename MPTraits::CfgRef              CfgRef;
+    typedef typename MPTraits::WeightType          WeightType;
+    typedef typename MPTraits::MPProblemType       MPProblemType;
+    typedef typename MPProblemType::RoadmapType    RoadmapType;
+    typedef typename MPProblemType::GraphType      GraphType;
+    typedef typename MPProblemType::VID            VID;
+    typedef typename MPTraits::PlanningLibraryType PlanningLibraryType;
 
     ///@}
-    ///\name Construction
+    ///@name Construction
     ///@{
 
     ////////////////////////////////////////////////////////////////////////////
-    /// \brief Construct an empty path.
-    /// \param[in] _r The roadmap used by this path.
+    /// @brief Construct an empty path.
+    /// @param[in] _r The roadmap used by this path.
     Path(MPProblemType* _p, RoadmapType* _r) : m_problem(_p), m_roadmap(_r) { }
 
     ///@}
-    ///\name Path Interface
+    ///@name Path Interface
     ///@{
 
     ////////////////////////////////////////////////////////////////////////////
-    /// \brief Get the roadmap used by this path.
+    /// @brief Get the roadmap used by this path.
     RoadmapType* GetRoadmap() const {return m_roadmap;}
 
     ////////////////////////////////////////////////////////////////////////////
-    /// \brief The number of cfgs in the path.
+    /// @brief The number of cfgs in the path.
     size_t Size() const {return m_vids.size();}
 
     ////////////////////////////////////////////////////////////////////////////
-    /// \brief The total edge weight.
+    /// @brief The total edge weight.
     double Length() const;
 
     ////////////////////////////////////////////////////////////////////////////
-    /// \brief Get the VIDs in the path.
+    /// @brief Get the VIDs in the path.
     const vector<VID>& VIDs() const {return m_vids;}
 
     ////////////////////////////////////////////////////////////////////////////
-    /// \brief Get a copy of the Cfgs in the path.
-    /// \warning If the cfgs in the roadmap are later altered (i.e., if the DOF
+    /// @brief Get a copy of the Cfgs in the path.
+    /// @warning If the cfgs in the roadmap are later altered (i.e., if the DOF
     ///          values or labels are edited), this copy will be out-of-date.
     const vector<CfgType>& Cfgs() const;
 
     ////////////////////////////////////////////////////////////////////////////
-    /// \brief Get the current full Cfg path with steps spaced one environment
+    /// @brief Get the current full Cfg path with steps spaced one environment
     ///        resolution apart. This is not cached due to its size and
     ///        infrequent usage.
-    /// \param[in] _lp The local planner to use when connecting cfgs.
-    /// \return The full path of configurations, including local-plan
+    /// @param[in] _lib The planning library to use.
+    /// @param[in] _lp  The local planner label to use when connecting cfgs.
+    /// @return The full path of configurations, including local-plan
     ///         intermediates between the roadmap nodes.
-    const vector<CfgType> FullCfgs(const string& _lp = "") const;
+    const vector<CfgType> FullCfgs(PlanningLibraryType* _lib,
+        const string& _lp = "") const;
 
     ////////////////////////////////////////////////////////////////////////////
-    /// \brief Append another path to the end of this one.
-    /// \param[in] _p The path to append.
+    /// @brief Append another path to the end of this one.
+    /// @param[in] _p The path to append.
     Path& operator+=(const Path& _p);
 
     ////////////////////////////////////////////////////////////////////////////
-    /// \brief Add another path to the end of this one and return the result.
-    /// \param[in] _p The path to add.
+    /// @brief Add another path to the end of this one and return the result.
+    /// @param[in] _p The path to add.
     Path operator+(const Path& _p) const;
 
     ////////////////////////////////////////////////////////////////////////////
-    /// \brief Append a new set of VIDs to the end of this path.
-    /// \param[in] _vids The VIDs to append.
+    /// @brief Append a new set of VIDs to the end of this path.
+    /// @param[in] _vids The VIDs to append.
     Path& operator+=(const vector<VID>& _vids);
 
     ////////////////////////////////////////////////////////////////////////////
-    /// \brief Add a new set of VIDs to the end of this path and return the
+    /// @brief Add a new set of VIDs to the end of this path and return the
     ///        result.
-    /// \param[in] _vids The VIDs to add.
+    /// @param[in] _vids The VIDs to add.
     Path operator+(const vector<VID>& _vids) const;
 
     ////////////////////////////////////////////////////////////////////////////
-    /// \brief Clear all data in the path.
+    /// @brief Clear all data in the path.
     void Clear();
 
     ///@}
 
   private:
 
-    ///\name Helpers
+    ///@name Helpers
     ///@{
 
     void AssertSameMap(const Path& _p) const;
 
     ///@}
-    ///\name Internal State
+    ///@name Internal State
     ///@{
 
     MPProblemType* const m_problem;     ///< The associated MPProblem.
@@ -172,7 +175,7 @@ Cfgs() const {
 template <typename MPTraits>
 const vector<typename MPTraits::CfgType>
 Path<MPTraits>::
-FullCfgs(const string& _lp) const {
+FullCfgs(PlanningLibraryType* _lib, const string& _lp) const {
   GraphType* g = m_roadmap->GetGraph();
   vector<CfgType> out = {g->GetVertex(m_vids.front())};
 
@@ -193,15 +196,15 @@ FullCfgs(const string& _lp) const {
     // If not specified, use the edge lp.
     // Fall back to straight-line if edge lp is not available (this will always
     // happen if it was grown with an extender).
-    typename MPTraits::MPProblemType::LocalPlannerPointer lp;
+    typename PlanningLibraryType::LocalPlannerPointer lp;
     if(!_lp.empty())
-      lp = m_problem->GetLocalPlanner(_lp);
+      lp = _lib->GetLocalPlanner(_lp);
     else {
       try {
-        lp = m_problem->GetLocalPlanner(ei->property().GetLPLabel());
+        lp = _lib->GetLocalPlanner(ei->property().GetLPLabel());
       }
       catch(...) {
-        lp = m_problem->GetLocalPlanner("sl");
+        lp = _lib->GetLocalPlanner("sl");
       }
     }
 

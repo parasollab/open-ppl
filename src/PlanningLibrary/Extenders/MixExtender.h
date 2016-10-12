@@ -6,7 +6,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup Extenders
 /// @brief Randomly choose an extender from a set of extenders.
-/// @tparam MPTraits Motion planning universe
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
 class MixExtender : public ExtenderMethod<MPTraits> {
@@ -28,7 +27,7 @@ class MixExtender : public ExtenderMethod<MPTraits> {
 
     MixExtender();
 
-    MixExtender(MPProblemType* _problem, XMLNode& _node);
+    MixExtender(XMLNode& _node);
 
     virtual ~MixExtender() = default;
 
@@ -81,8 +80,7 @@ MixExtender() : ExtenderMethod<MPTraits>() {
 
 template <typename MPTraits>
 MixExtender<MPTraits>::
-MixExtender(MPProblemType* _problem, XMLNode& _node) :
-    ExtenderMethod<MPTraits>(_problem, _node) {
+MixExtender(XMLNode& _node) : ExtenderMethod<MPTraits>(_node) {
   this->SetName("MixExtender");
   ParseXML(_node);
 }

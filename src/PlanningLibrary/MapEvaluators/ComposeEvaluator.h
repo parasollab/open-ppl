@@ -7,7 +7,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup MapEvaluators
 /// @brief TODO.
-/// @tparam MPTraits Motion planning universe
 ///
 /// TODO.
 ////////////////////////////////////////////////////////////////////////////////
@@ -26,7 +25,7 @@ class ComposeEvaluator : public MapEvaluatorMethod<MPTraits> {
     ///@{
 
     typedef typename MPTraits::MPProblemType            MPProblemType;
-    typedef typename MPProblemType::MapEvaluatorPointer MapEvaluatorPointer;
+    typedef typename MPTraits::PlanningLibraryType      PlanningLibraryType;
 
     ///@}
     ///\name Construction
@@ -34,7 +33,7 @@ class ComposeEvaluator : public MapEvaluatorMethod<MPTraits> {
 
     ComposeEvaluator(LogicalOperator _logicalOperator = AND,
         const vector<string>& _evalLabels = vector<string>());
-    ComposeEvaluator(MPProblemType* _problem, XMLNode& _node);
+    ComposeEvaluator(XMLNode& _node);
 
     ///@}
     ///\name MPBaseObject Overrides
@@ -58,7 +57,7 @@ class ComposeEvaluator : public MapEvaluatorMethod<MPTraits> {
 
 /*----------------------------- Construction ---------------------------------*/
 
-template<class MPTraits>
+template <typename MPTraits>
 ComposeEvaluator<MPTraits>::
 ComposeEvaluator(LogicalOperator _logicalOperator,
     const vector<string>& _evalLabels) : MapEvaluatorMethod<MPTraits>(),
@@ -67,10 +66,10 @@ ComposeEvaluator(LogicalOperator _logicalOperator,
 }
 
 
-template<class MPTraits>
+template <typename MPTraits>
 ComposeEvaluator<MPTraits>::
-ComposeEvaluator(MPProblemType* _problem, XMLNode& _node) :
-    MapEvaluatorMethod<MPTraits>(_problem, _node) {
+ComposeEvaluator(XMLNode& _node) :
+    MapEvaluatorMethod<MPTraits>(_node) {
   this->SetName("ComposeEvaluator");
 
   string logicalOperator = _node.Read("operator", true, "", "operator");
@@ -92,7 +91,7 @@ ComposeEvaluator(MPProblemType* _problem, XMLNode& _node) :
 }
 
 
-template<class MPTraits>
+template <typename MPTraits>
 void
 ComposeEvaluator<MPTraits>::
 Print(ostream& _os) const {
@@ -103,13 +102,14 @@ Print(ostream& _os) const {
 }
 
 
-template<class MPTraits>
+template <typename MPTraits>
 bool
 ComposeEvaluator<MPTraits>::
 operator()() {
+  typedef typename PlanningLibraryType::MapEvaluatorPointer MapEvaluatorPointer;
   vector<MapEvaluatorPointer> evalMethods;
   for(auto l : m_evalLabels)
-    evalMethods.push_back(this->GetMPProblem()->GetMapEvaluator(l));
+    evalMethods.push_back(this->GetMapEvaluator(l));
 
   if(this->m_debug)
     cout << "ComposeEvaluator:: checking evaluators..." << endl;

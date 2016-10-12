@@ -11,11 +11,10 @@ using namespace std;
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup NeighborhoodFinders
 /// @brief TODO
-/// @tparam MPTraits Motion planning universe
 ///
 /// TODO
 ////////////////////////////////////////////////////////////////////////////////
-template<class MPTraits>
+template <typename MPTraits>
 class MPNNNF : public NeighborhoodFinderMethod<MPTraits> {
   public:
     typedef typename MPTraits::CfgType CfgType;
@@ -24,7 +23,6 @@ class MPNNNF : public NeighborhoodFinderMethod<MPTraits> {
     typedef typename MPProblemType::VID VID;
     typedef typename MPProblemType::GraphType GraphType;
     typedef typename GraphType::vertex_iterator VI;
-    typedef typename MPProblemType::DistanceMetricPointer DistanceMetricPointer;
 
     MPNNNF(string _dmLabel = "", bool _unconnected = false, size_t _k = 5) :
       NeighborhoodFinderMethod<MPTraits>(_dmLabel, _unconnected) {
@@ -43,8 +41,8 @@ class MPNNNF : public NeighborhoodFinderMethod<MPTraits> {
 	/////////////////////////////////////
       }
 
-    MPNNNF(MPProblemType* _problem, XMLNode& _node) :
-      NeighborhoodFinderMethod<MPTraits>(_problem, _node) {
+    MPNNNF(XMLNode& _node) :
+      NeighborhoodFinderMethod<MPTraits>(_node) {
         this->SetName("MPNNNF");
         this->m_nfType = K;
         this->m_k = _node.Read("k", true, 5, 0, MAX_INT, "Number of neighbors to find");
@@ -90,12 +88,12 @@ MPNNNF<MPTraits>::AddPoint(CfgType& _cfg, VID _v) {
   kdtree->add_node(_cfg.GetData(), _v);
 }
 
-template<class MPTraits>
+template <typename MPTraits>
 void
 MPNNNF<MPTraits>::
 UpdateInternalModel()
 {
-  RoadmapType* _rmp = this->GetMPProblem()->GetRoadmap();
+  RoadmapType* _rmp = this->GetRoadmap();
   GraphType* g = _rmp->GetGraph();
   int curRdmpSize = 0;
   for(VI v=g->begin(); v!=g->end(); v++) curRdmpSize++;
@@ -155,14 +153,14 @@ UpdateInternalModel()
 
 }
 
-template<class MPTraits>
+template <typename MPTraits>
 template<typename InputIterator, typename OutputIterator>
 OutputIterator
 MPNNNF<MPTraits>::FindNeighbors(RoadmapType* _rmp, InputIterator _first, InputIterator _last,
     const CfgType& _cfg, OutputIterator _out) {
 
   GraphType* map = _rmp->GetGraph();
-  DistanceMetricPointer dmm = this->GetMPProblem()->GetDistanceMetric(this->m_dmLabel);
+  auto dmm = this->GetDistanceMetric(this->m_dmLabel);
 
   if(!this->m_k) {
     for(InputIterator it = _first; it != _last; ++it)
@@ -188,7 +186,7 @@ MPNNNF<MPTraits>::FindNeighbors(RoadmapType* _rmp, InputIterator _first, InputIt
   return copy(closest.begin(), closest.end(), _out);
 }
 
-template<class MPTraits>
+template <typename MPTraits>
 template<typename InputIterator, typename OutputIterator>
 OutputIterator
 MPNNNF<MPTraits>::FindNeighborPairs(RoadmapType* _rmp,
@@ -197,7 +195,7 @@ MPNNNF<MPTraits>::FindNeighborPairs(RoadmapType* _rmp,
     OutputIterator _out) {
 
   GraphType* map = _rmp->GetGraph();
-  DistanceMetricPointer dmm = this->GetMPProblem()->GetDistanceMetric(this->m_dmLabel);
+  auto dmm = this->GetDistanceMetric(this->m_dmLabel);
 
   if(!this->m_k){
     for(InputIterator i1 = _first1; i1!=_last1; ++i1)

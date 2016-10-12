@@ -7,7 +7,6 @@
 /// @ingroup LocalPlanners
 /// @brief Translates to \f$s\f$ along the path, then changes orientation and
 ///        joint @dofs one by one, then translates to goal.
-/// @tparam MPTraits Motion planning universe
 ///
 /// Translates to the location \f$s\f$ percent along the straight line path,
 /// changes all orientation DoFs one by one, then translates to the goal.
@@ -17,12 +16,10 @@ class TransformAtS : public StraightLine<MPTraits> {
   public:
     typedef typename MPTraits::CfgType CfgType;
     typedef typename MPTraits::MPProblemType MPProblemType;
-    typedef typename MPProblemType::DistanceMetricPointer DistanceMetricPointer;
-    typedef typename MPProblemType::ValidityCheckerPointer ValidityCheckerPointer;
 
     TransformAtS(double _s = 0.5, const string& _vcLabel = "", bool _evalation = false,
         bool _saveIntermediates = false);
-    TransformAtS(MPProblemType* _problem, XMLNode& _node);
+    TransformAtS(XMLNode& _node);
     virtual ~TransformAtS();
 
     virtual void Print(ostream& _os) const;
@@ -63,8 +60,8 @@ TransformAtS<MPTraits>::TransformAtS(double _s, const string& _vcLabel,
 }
 
 template <class MPTraits>
-TransformAtS<MPTraits>::TransformAtS(MPProblemType* _problem, XMLNode& _node) :
-    StraightLine<MPTraits>(_problem, _node) {
+TransformAtS<MPTraits>::
+TransformAtS(XMLNode& _node) : StraightLine<MPTraits>(_node) {
   this->SetName("TransformAtS");
   m_sValue = _node.Read("s", true, 0.5, 0.0, 1.0, "Transform at s value");
 }
@@ -168,9 +165,9 @@ TransformAtS<MPTraits>::IsConnectedOneWay(
     double _posRes, double _oriRes,
     bool _checkCollision, bool _savePath, bool _forward) {
   string callee = this->GetNameAndLabel() + "::IsConnectedOneWay()";
-  ValidityCheckerPointer vcm = this->GetMPProblem()->GetValidityChecker(this->m_vcLabel);
-  Environment* env = this->GetMPProblem()->GetEnvironment();
-  StatClass* stats = this->GetMPProblem()->GetStatClass();
+  auto vcm = this->GetValidityChecker(this->m_vcLabel);
+  Environment* env = this->GetEnvironment();
+  StatClass* stats = this->GetStatClass();
 
   if(this->m_debug)
     cout << "Start CFG positional DOF: " << _c1.PosDOF() << endl;

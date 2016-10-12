@@ -6,11 +6,10 @@
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup PathModifiers
 /// @brief TODO.
-/// @tparam MPTraits Motion planning universe
 ///
 /// TODO.
 ////////////////////////////////////////////////////////////////////////////////
-template<class MPTraits>
+template <typename MPTraits>
 class ResamplePathModifier : public PathModifierMethod<MPTraits> {
   public:
     typedef typename MPTraits::CfgType CfgType;
@@ -18,13 +17,11 @@ class ResamplePathModifier : public PathModifierMethod<MPTraits> {
     typedef typename MPTraits::MPProblemType MPProblemType;
     typedef typename MPProblemType::GraphType GraphType;
     typedef typename MPProblemType::VID VID;
-    typedef typename MPProblemType::LocalPlannerPointer LocalPlannerPointer;
-    typedef typename MPProblemType::DistanceMetricPointer DistanceMetricPointer;
 
     ResamplePathModifier(const string _dmLabel = "", const string _lpLabel = "",
         const size_t _numResamples = 0, const double _stepSize = -1,
         const double _userValue = -1, const string _typeName = "");
-    ResamplePathModifier(MPProblemType* _problem, XMLNode& _node);
+    ResamplePathModifier(XMLNode& _node);
 
     virtual void ParseXML(XMLNode& _node);
     virtual void Print(ostream& _os) const;
@@ -49,7 +46,7 @@ class ResamplePathModifier : public PathModifierMethod<MPTraits> {
 };
 
 // Non-XML Constructor
-template<class MPTraits>
+template <typename MPTraits>
 ResamplePathModifier<MPTraits>::ResamplePathModifier(const string _dmLabel,
     const string _lpLabel, const size_t _numResamples, const double _stepSize,
     const double _userValue, const string _typeName) :
@@ -60,14 +57,14 @@ ResamplePathModifier<MPTraits>::ResamplePathModifier(const string _dmLabel,
   }
 
 // XML Constructor
-template<class MPTraits>
-ResamplePathModifier<MPTraits>::ResamplePathModifier(MPProblemType* _problem, XMLNode& _node) :
-  PathModifierMethod<MPTraits>(_problem, _node) {
+template <typename MPTraits>
+ResamplePathModifier<MPTraits>::ResamplePathModifier(XMLNode& _node) :
+  PathModifierMethod<MPTraits>(_node) {
     this->SetName("ResamplePathModifier");
     ParseXML(_node);
   }
 
-template<class MPTraits>
+template <typename MPTraits>
 void
 ResamplePathModifier<MPTraits>::ParseXML(XMLNode& _node) {
   m_dmLabel = _node.Read("dmLabel", false, "", "Distance metric method");
@@ -78,10 +75,10 @@ ResamplePathModifier<MPTraits>::ParseXML(XMLNode& _node) {
   m_typeName = _node.Read("typeName", true, "", "type of the CFG task");
 
   if(m_typeName == "MAX_CLEARANCE")
-    m_clearanceUtils = ClearanceUtility<MPTraits>(this->GetMPProblem(), _node);
+    m_clearanceUtils = ClearanceUtility<MPTraits>(_node);
 }
 
-template<class MPTraits>
+template <typename MPTraits>
 void
 ResamplePathModifier<MPTraits>::Print(ostream& _os) const {
   PathModifierMethod<MPTraits>::Print(_os);
@@ -108,7 +105,7 @@ struct SortDescend {
   }
 };
 
-template<class MPTraits>
+template <typename MPTraits>
 bool
 ResamplePathModifier<MPTraits>::ModifyImpl(vector<CfgType>& _originalPath, vector<CfgType>& _newPath) {
   if(this->m_debug)
@@ -119,7 +116,7 @@ ResamplePathModifier<MPTraits>::ModifyImpl(vector<CfgType>& _originalPath, vecto
   size_t maxAttempts = 1000;
 
   if(m_boundary == NULL)
-    m_boundary = this->GetMPProblem()->GetEnvironment()->GetBoundary();
+    m_boundary = this->GetEnvironment()->GetBoundary();
 
   if(this->m_debug) {
     cout << "\ttypeName::" << m_typeName << endl;
@@ -128,7 +125,7 @@ ResamplePathModifier<MPTraits>::ModifyImpl(vector<CfgType>& _originalPath, vecto
     cout << "\tuserValue::" << m_userValue << endl;
   }
 
-  StatClass* stats = this->GetMPProblem()->GetStatClass();
+  StatClass* stats = this->GetStatClass();
   stats->StartClock("Resampling");
 
   vector<double> smoothingValues;
@@ -207,7 +204,7 @@ ResamplePathModifier<MPTraits>::ModifyImpl(vector<CfgType>& _originalPath, vecto
   return false;
 }
 
-template<class MPTraits>
+template <typename MPTraits>
 vector<pair<typename MPTraits::CfgType, double> >
 ResamplePathModifier<MPTraits>::FindNeighbors(CfgType& _previous, CfgType& _current, CfgType& _next, size_t _maxAttempts) {
   size_t numOfSamples = m_numResamples;
@@ -216,10 +213,10 @@ ResamplePathModifier<MPTraits>::FindNeighbors(CfgType& _previous, CfgType& _curr
   bool firstConnectFlag, secondConnectFlag;
 
   LPOutput<MPTraits> lpOutput;
-  DistanceMetricPointer dm = this->GetMPProblem()->GetDistanceMetric(this->m_dmLabel);
-  LocalPlannerPointer lp = this->GetMPProblem()->GetLocalPlanner(this->m_lpLabel);
-  GraphType* graph = this->GetMPProblem()->GetRoadmap()->GetGraph();
-  Environment* env = this->GetMPProblem()->GetEnvironment();
+  auto dm = this->GetDistanceMetric(this->m_dmLabel);
+  auto lp = this->GetLocalPlanner(this->m_lpLabel);
+  GraphType* graph = this->GetRoadmap()->GetGraph();
+  Environment* env = this->GetEnvironment();
 
   oldConfigurationWeight = _current.GetSmoothingValue(m_clearanceUtils, m_boundary);
 

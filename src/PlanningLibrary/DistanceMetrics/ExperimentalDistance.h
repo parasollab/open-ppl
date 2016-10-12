@@ -30,7 +30,7 @@ class ExperimentalDistance : public WeightedEuclideanDistance<MPTraits> {
     ///@{
 
     ExperimentalDistance();
-    ExperimentalDistance(MPProblemType* _problem, XMLNode& _node);
+    ExperimentalDistance(XMLNode& _node);
     virtual ~ExperimentalDistance() = default;
 
     ///@}
@@ -62,8 +62,8 @@ ExperimentalDistance() : WeightedEuclideanDistance<MPTraits>() {
 
 template <typename MPTraits>
 ExperimentalDistance<MPTraits>::
-ExperimentalDistance(MPProblemType* _problem, XMLNode& _node) :
-    WeightedEuclideanDistance<MPTraits>(_problem, _node) {
+ExperimentalDistance(XMLNode& _node) :
+    WeightedEuclideanDistance<MPTraits>(_node) {
   this->SetName("ExperimentalDistance");
 
   m_timestep = _node.Read("timestep", true, 0., 0.,

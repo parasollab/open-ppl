@@ -6,17 +6,16 @@
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup MapEvaluators
 /// @brief TODO.
-/// @tparam MPTraits Motion planning universe
 ///
 /// TODO.
 ////////////////////////////////////////////////////////////////////////////////
-template<class MPTraits>
+template <typename MPTraits>
 class PrintMapEvaluation : public MapEvaluatorMethod<MPTraits> {
   public:
 
     PrintMapEvaluation();
     PrintMapEvaluation(string _baseName);
-    PrintMapEvaluation(typename MPTraits::MPProblemType* _problem, XMLNode& _node);
+    PrintMapEvaluation(XMLNode& _node);
     virtual ~PrintMapEvaluation();
 
     virtual void Print(ostream& _os) const;
@@ -27,50 +26,50 @@ class PrintMapEvaluation : public MapEvaluatorMethod<MPTraits> {
     string m_baseName;
 };
 
-template<class MPTraits>
+template <typename MPTraits>
 PrintMapEvaluation<MPTraits>::PrintMapEvaluation() {
   this->SetName("PrintMapEvaluation");
 }
 
-template<class MPTraits>
+template <typename MPTraits>
 PrintMapEvaluation<MPTraits>::PrintMapEvaluation(string _baseName)
   : m_baseName(_baseName) {
   this->SetName("PrintMapEvaluation");
 }
 
-template<class MPTraits>
-PrintMapEvaluation<MPTraits>::PrintMapEvaluation(typename MPTraits::MPProblemType* _problem, XMLNode& _node)
-  : MapEvaluatorMethod<MPTraits>(_problem, _node) {
+template <typename MPTraits>
+PrintMapEvaluation<MPTraits>::PrintMapEvaluation(XMLNode& _node)
+  : MapEvaluatorMethod<MPTraits>(_node) {
   this->SetName("PrintMapEvaluation");
   m_baseName = _node.Read("base_name", true, "", "base filename for map output");
 }
 
-template<class MPTraits>
+template <typename MPTraits>
 PrintMapEvaluation<MPTraits>::~PrintMapEvaluation() {
 }
 
-template<class MPTraits>
+template <typename MPTraits>
 void
 PrintMapEvaluation<MPTraits>::Print(ostream& _os) const {
   _os << this->GetNameAndLabel() << endl;
   _os << "\tbase filename = " << m_baseName << endl;
 }
 
-template<class MPTraits>
+template <typename MPTraits>
 bool
 PrintMapEvaluation<MPTraits>::operator()() {
-  int numNodes = this->GetMPProblem()->GetRoadmap()->GetGraph()->get_num_vertices();
-  int numEdges = this->GetMPProblem()->GetRoadmap()->GetGraph()->get_num_edges();
+  int numNodes = this->GetRoadmap()->GetGraph()->get_num_vertices();
+  int numEdges = this->GetRoadmap()->GetGraph()->get_num_edges();
   ostringstream osName;
   osName << m_baseName << "." << numNodes << "." << numEdges << ".map";
-  this->GetMPProblem()->GetRoadmap()->Write(osName.str(), this->GetMPProblem()->GetEnvironment());
+  this->GetRoadmap()->Write(osName.str(), this->GetEnvironment());
 
-  int numCollNodes = this->GetMPProblem()->GetBlockRoadmap()->GetGraph()->get_num_vertices();
-  int numCollEdges = this->GetMPProblem()->GetBlockRoadmap()->GetGraph()->get_num_edges();
+  int numCollNodes = this->GetBlockRoadmap()->GetGraph()->get_num_vertices();
+  int numCollEdges = this->GetBlockRoadmap()->GetGraph()->get_num_edges();
   if(numCollNodes) {
     ostringstream osCollName;
     osCollName << m_baseName << "." << numCollNodes << "." << numCollEdges << ".block.map";
-    this->GetMPProblem()->GetBlockRoadmap()->Write(osCollName.str(), this->GetMPProblem()->GetEnvironment());
+    this->GetBlockRoadmap()->Write(osCollName.str(), this->GetEnvironment());
   }
 
   return true;

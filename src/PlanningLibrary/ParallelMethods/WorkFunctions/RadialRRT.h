@@ -391,7 +391,8 @@ template<class MPTraits>
 class ConnectRegion {
   private:
     typedef typename MPTraits::MPProblemType MPProblemType;
-    typedef typename MPProblemType::ConnectorPointer ConnectorPointer;
+    typedef typename MPTraits::PlanningLibraryType PlanningLibraryType;
+    typedef typename PlanningLibraryType::ConnectorPointer ConnectorPointer;
     typedef typename MPTraits::CfgType CfgType;
     typedef typename MPProblemType::VID VID;
     typedef typename MPTraits::WeightType WeightType;
@@ -452,8 +453,6 @@ class RadialRegionEdge {
     typedef typename MPTraits::WeightType WeightType;
     typedef typename MPTraits::CfgType CfgType;
     typedef typename MPProblemType::VID VID;
-    typedef typename MPProblemType::DistanceMetricPointer DistanceMetricPointer;
-    typedef typename MPProblemType::NeighborhoodFinderPointer NeighborhoodFinderPointer;
     typedef pair<pair<VID, CfgType>, double> NFType;
     typedef vector<NFType> NFResultType;
 
@@ -478,7 +477,7 @@ class RadialRegionEdge {
     template <typename vertexView, typename repeatView>
       result_type operator() (vertexView _v1, repeatView _v2) {
         ///replace with call to NF
-        DistanceMetricPointer dmm = m_problem->GetDistanceMetric(m_dmLabel);
+        auto dmm = m_problem->GetDistanceMetric(m_dmLabel);
         CfgType cfg = _v1.property().GetCandidate();
         VID vid = _v1.descriptor();
         vector<CfgType> neighbors;
@@ -517,7 +516,6 @@ struct RadialRegionVertex{
   private:
     typedef typename MPTraits::MPProblemType MPProblemType;
     typedef typename MPTraits::CfgType CfgType;
-    typedef typename MPProblemType::DistanceMetricPointer DistanceMetricPointer;
     MPProblemType* m_problem;
     CfgType m_root;
     double m_radius;
@@ -539,7 +537,7 @@ struct RadialRegionVertex{
     /// Add point to region graph
     template <typename View>
       void operator() (View _vw) const {
-        DistanceMetricPointer dmm = m_problem->GetDistanceMetric(m_dmLabel);
+        auto dmm = m_problem->GetDistanceMetric(m_dmLabel);
         CfgType point = m_root;
         point.GetRandomRay(m_radius, dmm);
         //point.GetRandomCfg(m_radius, m_radius);
@@ -663,11 +661,6 @@ class BuildRadialRRT {
     typedef typename MPProblemType::RoadmapType RoadmapType;
     typedef typename MPProblemType::GraphType GraphType;
     typedef typename GraphType::GRAPH LocalGraphType;
-    typedef typename MPProblemType::DistanceMetricPointer DistanceMetricPointer;
-    typedef typename MPProblemType::ValidityCheckerPointer ValidityCheckerPointer;
-    typedef typename MPProblemType::NeighborhoodFinderPointer NeighborhoodFinderPointer;
-    typedef typename MPProblemType::ExtenderPointer ExtenderPointer;
-    typedef typename MPProblemType::ConnectorPointer ConnectorPointer;
     typedef stapl::counter<stapl::default_timer> STAPLTimer;
 
 
@@ -725,9 +718,9 @@ class BuildRadialRRT {
         vector<CfgType> neighbors = _view.property().GetNeighbors();
 
         ///Setup global variables
-        DistanceMetricPointer dm = m_problem->GetDistanceMetric(m_dm);
-        NeighborhoodFinderPointer nfp = m_problem->GetNeighborhoodFinder(m_nfm);
-        ExtenderPointer e = m_problem->GetExtender(m_eLabel);
+        auto dm = m_problem->GetDistanceMetric(m_dm);
+        auto nfp = m_problem->GetNeighborhoodFinder(m_nfm);
+        auto e = m_problem->GetExtender(m_eLabel);
         Environment* env = m_problem->GetEnvironment();
         GraphType* globalTree = m_problem->GetRoadmap()->GetGraph();
         vector<VID> branch;
@@ -819,10 +812,6 @@ class BuildRadialBlindRRT {
     typedef typename MPProblemType::RoadmapType RoadmapType;
     typedef typename MPProblemType::GraphType GraphType;
     //typedef typename GraphType::GRAPH LocalGraphType;
-    typedef typename MPProblemType::DistanceMetricPointer DistanceMetricPointer;
-    typedef typename MPProblemType::ValidityCheckerPointer ValidityCheckerPointer;
-    typedef typename MPProblemType::NeighborhoodFinderPointer NeighborhoodFinderPointer;
-    typedef typename MPProblemType::ConnectorPointer ConnectorPointer;
     typedef typename stapl::graph_view<typename GraphType::GRAPH> RoadmapViewType;
     typedef typename stapl::result_of::native_view<RoadmapViewType>::type NativeViewType;
     typedef stapl::counter<stapl::default_timer> STAPLTimer;
@@ -892,8 +881,8 @@ class BuildRadialBlindRRT {
         localTree->clear();
         localTree->add_vertex(0, m_root);
         ///Setup global variables
-        DistanceMetricPointer dm = m_problem->GetDistanceMetric(m_dm);
-        NeighborhoodFinderPointer nfp = m_problem->GetNeighborhoodFinder(m_nf);
+        auto dm = m_problem->GetDistanceMetric(m_dm);
+        auto nfp = m_problem->GetNeighborhoodFinder(m_nf);
         Environment* env = m_problem->GetEnvironment();
         GraphType* globalTree = m_problem->GetRoadmap()->GetGraph();
 
@@ -1162,9 +1151,8 @@ template<class MPTraits>
 class ConnectGlobalCCs {
   private:
     typedef typename MPTraits::MPProblemType MPProblemType;
-    typedef typename MPProblemType::ConnectorPointer ConnectorPointer;
-    typedef typename MPProblemType::LocalPlannerPointer LocalPlannerPointer;
-    typedef typename MPProblemType::DistanceMetricPointer DistanceMetricPointer;
+    typedef typename MPTraits::PlanningLibraryType PlanningLibraryType;
+    typedef typename PlanningLibraryType::ConnectorPointer ConnectorPointer;
     typedef typename MPTraits::CfgType CfgType;
     typedef typename MPProblemType::VID VID;
     typedef typename MPTraits::WeightType WeightType;
@@ -1200,7 +1188,7 @@ class ConnectGlobalCCs {
         shared_ptr<RegionRRTConnect<MPTraits> > rrtConnect(dynamic_pointer_cast<RegionRRTConnect<MPTraits> >(m_connector));
 
 
-        DistanceMetricPointer dm = m_problem->GetDistanceMetric("");
+        auto dm = m_problem->GetDistanceMetric("");
         //edges are assumed to be directed
         //typedef typename vertexView::adj_edges_type ADJV;
         //ADJV  edges = _view.edges();

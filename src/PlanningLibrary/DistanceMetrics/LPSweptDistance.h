@@ -1,6 +1,8 @@
 #ifndef LP_SWEPT_DISTANCE_H_
 #define LP_SWEPT_DISTANCE_H_
 
+#include <ctgmath>
+
 #include "DistanceMetricMethod.h"
 
 #include "Geometry/Bodies/ActiveMultiBody.h"
@@ -29,7 +31,7 @@ class LPSweptDistance : public DistanceMetricMethod<MPTraits> {
 
     LPSweptDistance(string _lpLabel="", double _positionRes = 0.1,
         double _orientationRes = 0.1, bool _bbox = false);
-    LPSweptDistance(MPProblemType* _problem, XMLNode& _node);
+    LPSweptDistance(XMLNode& _node);
     virtual ~LPSweptDistance() = default;
 
     ///@}
@@ -78,14 +80,11 @@ LPSweptDistance(string _lpLabel, double _posRes, double _oriRes, bool _bbox) :
 
 template <typename MPTraits>
 LPSweptDistance<MPTraits>::
-LPSweptDistance(MPProblemType* _problem, XMLNode& _node) :
-    DistanceMetricMethod<MPTraits>(_problem, _node) {
+LPSweptDistance(XMLNode& _node) : DistanceMetricMethod<MPTraits>(_node) {
   this->SetName("LPSwept");
-  m_positionRes = _node.Read("posRes", false,
-      _problem->GetEnvironment()->GetPositionRes(), 0.0, 1000.0,
+  m_positionRes = _node.Read("posRes", false, nan(""), 0., 1000.,
       "position resolution");
-  m_orientationRes = _node.Read("oriRes", false,
-      _problem->GetEnvironment()->GetOrientationRes(), 0.0, 1000.0,
+  m_orientationRes = _node.Read("oriRes", false, nan(""), 0., 1000.,
       "orientation resolution");
   m_useBBox = _node.Read("useBBox", false, false, "use bbox instead of robot "
       "vertices");
@@ -116,9 +115,14 @@ Distance(const CfgType& _c1, const CfgType& _c2) {
     exit(1);
   }
 
-  Environment* env = this->GetMPProblem()->GetEnvironment();
+  if(std::isnan(m_positionRes))
+    m_positionRes = this->GetEnvironment()->GetPositionRes();
+  if(std::isnan(m_orientationRes))
+    m_orientationRes = this->GetEnvironment()->GetOrientationRes();
+
+  Environment* env = this->GetEnvironment();
   StatClass stats;
-  auto lpMethod = this->GetMPProblem()->GetLocalPlanner(m_lpLabel);
+  auto lpMethod = this->GetLocalPlanner(m_lpLabel);
   LPOutput<MPTraits> lpOutput;
   CfgType dummy;
 

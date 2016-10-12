@@ -9,11 +9,10 @@
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup ParallelMethods
 /// @brief TODO
-/// @tparam MPTraits Motion planning universe
 ///
 /// TODO
 ////////////////////////////////////////////////////////////////////////////////
-template<class MPTraits>
+template <typename MPTraits>
 class RadialBlindRRT : public RadialSubdivisionRRT<MPTraits> {
   public:
     typedef typename MPTraits::MPProblemType MPProblemType;
@@ -31,7 +30,7 @@ class RadialBlindRRT : public RadialSubdivisionRRT<MPTraits> {
     typedef typename stapl::sequential::map_property_map< typename GraphType::GRAPH ,size_t > ColorMap;
 
 
-    RadialBlindRRT(MPProblemType* _problem, XMLNode& _node);
+    RadialBlindRRT(XMLNode& _node);
     RadialBlindRRT();
     virtual ~RadialBlindRRT();
 
@@ -55,25 +54,25 @@ class RadialBlindRRT : public RadialSubdivisionRRT<MPTraits> {
     size_t m_numCCIters;
 };
 
-template<class MPTraits>
+template <typename MPTraits>
 RadialBlindRRT<MPTraits>::
-RadialBlindRRT(MPProblemType* _problem, XMLNode& _node) :
-  RadialSubdivisionRRT<MPTraits>(_problem, _node) {
+RadialBlindRRT(XMLNode& _node) :
+  RadialSubdivisionRRT<MPTraits>(_node) {
     this->SetName("RadialBlindRRT");
     ParseXML(_node);
   }
 
-template<class MPTraits>
+template <typename MPTraits>
 RadialBlindRRT<MPTraits>::
 RadialBlindRRT() {
   this->SetName("RadialBlindRRT");
 }
 
-template<class MPTraits>
+template <typename MPTraits>
 RadialBlindRRT<MPTraits>::
 ~RadialBlindRRT() { }
 
-template<class MPTraits>
+template <typename MPTraits>
 void
 RadialBlindRRT<MPTraits>::
 ParseXML(XMLNode& _node) {
@@ -87,14 +86,14 @@ ParseXML(XMLNode& _node) {
   }
 };
 
-template<class MPTraits>
+template <typename MPTraits>
 void
 RadialBlindRRT<MPTraits>::
 Initialize() {
   cout << "RadialBlindRRT::Initialize()" <<endl;
 }
 
-template<class MPTraits>
+template <typename MPTraits>
 void
 RadialBlindRRT<MPTraits>::
 BuildRRT(RegionGraphView _regionView, CfgType _root) {
@@ -107,7 +106,7 @@ BuildRRT(RegionGraphView _regionView, CfgType _root) {
   stapl::for_each(_regionView,wf);
 }
 
-template<class MPTraits>
+template <typename MPTraits>
 void
 RadialBlindRRT<MPTraits>::
 ConnectRegions(RegionGraphView _regionView) {
@@ -118,7 +117,7 @@ ConnectRegions(RegionGraphView _regionView) {
   map_func(wf, _regionView, make_repeat_view(_regionView));
 }
 
-template<class MPTraits>
+template <typename MPTraits>
 void
 RadialBlindRRT<MPTraits>::DeleteInvalid(GraphView _graphView) {
   /// COMPUTE CCs AND SET REGION CCs
@@ -146,7 +145,7 @@ RadialBlindRRT<MPTraits>::DeleteInvalid(GraphView _graphView) {
   }
 }
 
-template<class MPTraits>
+template <typename MPTraits>
 void
 RadialBlindRRT<MPTraits>::
 Run() {
@@ -281,20 +280,20 @@ Run() {
 }
 
 
-template<class MPTraits>
+template <typename MPTraits>
 void
 RadialBlindRRT<MPTraits>::
 Finalize() {
   stringstream basefname;
   //basefname << this->GetBaseFilename() << ".N" << this->m_numNodes << ".R" << this->m_numRegions << ".p" << get_num_locations() ;
   basefname << this->GetBaseFilename() ;
-  this->GetMPProblem()->GetRoadmap()->
-    Write(basefname.str() + ".map", this->GetMPProblem()->GetEnvironment());
+  this->GetRoadmap()->
+    Write(basefname.str() + ".map", this->GetEnvironment());
   stapl::rmi_fence();
   cout << "location [" << stapl::get_location_id() <<"] ALL FINISHED" << endl;
 }
 
-template<class MPTraits>
+template <typename MPTraits>
 void
 RadialBlindRRT<MPTraits>::
 PrintOptions(ostream& _os) {

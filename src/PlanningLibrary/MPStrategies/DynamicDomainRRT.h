@@ -9,7 +9,6 @@
 /// @ingroup MotionPlanningStrategies
 /// @brief Dynamic Domain RRT adapts the sampling space of RRTs to better
 ///        approximate boundary information
-/// @tparam MPTraits Motion planning universe
 ///
 /// Dynamic Domain RRT considers a bounding sphere around each configuration.
 /// During RRT sampling only nodes within some \f$q_{near}\f$'s radius. If
@@ -21,7 +20,7 @@
 /// Conf. on Robotics and Automation (ICRA), pp. 3856-3861, Barcelona, Spain,
 /// Apr. 2005.
 ////////////////////////////////////////////////////////////////////////////////
-template<class MPTraits>
+template <typename MPTraits>
 class DynamicDomainRRT : public BasicRRTStrategy<MPTraits> {
 
   public:
@@ -48,7 +47,7 @@ class DynamicDomainRRT : public BasicRRTStrategy<MPTraits> {
         double _growthFocus = .05, size_t _numRoots = 1,
         size_t _numDirections = 1, size_t _maxTrial = 3, double _r = 10.);
 
-    DynamicDomainRRT(MPProblemType* _problem, XMLNode& _node);
+    DynamicDomainRRT(XMLNode& _node);
 
     virtual ~DynamicDomainRRT() = default;
 
@@ -100,7 +99,7 @@ class DynamicDomainRRT : public BasicRRTStrategy<MPTraits> {
 
 /*---------------------------- Construction ----------------------------------*/
 
-template<class MPTraits>
+template <typename MPTraits>
 DynamicDomainRRT<MPTraits>::
 DynamicDomainRRT(string _dm, string _nf, string _vc, string _nc,
     string _ex, vector<string> _evaluators, string _gt, bool _growGoals,
@@ -113,10 +112,10 @@ DynamicDomainRRT(string _dm, string _nf, string _vc, string _nc,
 }
 
 
-template<class MPTraits>
+template <typename MPTraits>
 DynamicDomainRRT<MPTraits>::
-DynamicDomainRRT(MPProblemType* _problem, XMLNode& _node) :
-    BasicRRTStrategy<MPTraits>(_problem, _node) {
+DynamicDomainRRT(XMLNode& _node) :
+    BasicRRTStrategy<MPTraits>(_node) {
   this->SetName("DynamicDomainRRT");
   m_r = _node.Read("r", true, 2., 0., numeric_limits<double>::max(),
       "Dynamic domain factor. This is a multiple of extender max distance.");
@@ -124,7 +123,7 @@ DynamicDomainRRT(MPProblemType* _problem, XMLNode& _node) :
 
 /*-------------------------- MPBaseObject Overrides --------------------------*/
 
-template<class MPTraits>
+template <typename MPTraits>
 void
 DynamicDomainRRT<MPTraits>::
 Print(ostream& _os) const {
@@ -134,7 +133,7 @@ Print(ostream& _os) const {
 
 /*-------------------------- MPStrategy Overrides ----------------------------*/
 
-template<class MPTraits>
+template <typename MPTraits>
 void
 DynamicDomainRRT<MPTraits>::
 Initialize() {
@@ -164,7 +163,7 @@ Extend(const VID _nearVID, const CfgType& _qRand, const bool _lp) {
 }
 
 
-template<class MPTraits>
+template <typename MPTraits>
 typename DynamicDomainRRT<MPTraits>::VID
 DynamicDomainRRT<MPTraits>::
 ExpandTree(const VID _nearestVID, const CfgType& _target) {

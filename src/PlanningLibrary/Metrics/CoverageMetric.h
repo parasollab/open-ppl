@@ -6,7 +6,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup Metrics
 /// @brief TODO.
-/// @tparam MPTraits Motion planning universe
 /// @tparam Set Container type of Cfgs to compare against
 ///
 /// TODO.
@@ -19,12 +18,11 @@ class CoverageMetric : public MetricMethod<MPTraits> {
     typedef typename MPProblemType::VID VID;
     typedef typename MPProblemType::RoadmapType RoadmapType;
     typedef typename MPProblemType::GraphType GraphType;
-    typedef typename MPProblemType::ConnectorPointer ConnectorPointer;
 
     CoverageMetric(const Set& _samples = Set(),
         const vector<string>& _connectorLabels = vector<string>(),
         bool _computeAllCCs = false);
-    CoverageMetric(MPProblemType* _problem, XMLNode& _node, bool _computeAllCCs = false);
+    CoverageMetric(XMLNode& _node, bool _computeAllCCs = false);
     virtual ~CoverageMetric() {}
 
     virtual void Print(ostream& _os) const;
@@ -50,9 +48,8 @@ CoverageMetric(const Set& _samples, const vector<string>& _connectorLabels,
 
 template<class MPTraits, class Set>
 CoverageMetric<MPTraits, Set>::
-CoverageMetric(MPProblemType* _problem,
-    XMLNode& _node, bool _computeAllCCs) :
-  MetricMethod<MPTraits>(_problem, _node), m_samples(_node) {
+CoverageMetric(XMLNode& _node, bool _computeAllCCs) :
+  MetricMethod<MPTraits>(_node), m_samples(_node) {
     this->SetName("CoverageMetric" + Set::GetName());
 
     m_allData = _node.Read("computeAllCCs", false, _computeAllCCs,
@@ -90,7 +87,7 @@ operator()() {
   if(numCalls == 0)
     m_history.open(this->GetBaseFilename() + ".coverage");
 
-  RoadmapType* rmap = this->GetMPProblem()->GetRoadmap();
+  RoadmapType* rmap = this->GetRoadmap();
   GraphType* rgraph = rmap->GetGraph();
 
   m_connections = vector<vector<VID> >(m_samples.size());
