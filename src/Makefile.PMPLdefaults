@@ -253,13 +253,13 @@ PMPL_OBJS = \
 	MPProblem/Workspace/WorkspaceDecomposition.o \
 	MPProblem/Workspace/WorkspacePortal.o \
 	MPProblem/Workspace/WorkspaceRegion.o \
-	PlanningLibrary/NeighborhoodFinders/MPNNWrapper.o \
-	PlanningLibrary/Samplers/SimilarStructureSampler.o \
-	PlanningLibrary/ValidityCheckers/CollisionDetection/CDInfo.o \
-	PlanningLibrary/ValidityCheckers/CollisionDetection/CollisionDetectionMethod.o \
-	PlanningLibrary/ValidityCheckers/CollisionDetection/RapidCollisionDetection.o \
-	PlanningLibrary/ValidityCheckers/CollisionDetection/PQPCollisionDetection.o \
-	PlanningLibrary/ValidityCheckers/CollisionDetection/SpheresCollisionDetection.o \
+	MPLibrary/NeighborhoodFinders/MPNNWrapper.o \
+	MPLibrary/Samplers/SimilarStructureSampler.o \
+	MPLibrary/ValidityCheckers/CollisionDetection/CDInfo.o \
+	MPLibrary/ValidityCheckers/CollisionDetection/CollisionDetectionMethod.o \
+	MPLibrary/ValidityCheckers/CollisionDetection/RapidCollisionDetection.o \
+	MPLibrary/ValidityCheckers/CollisionDetection/PQPCollisionDetection.o \
+	MPLibrary/ValidityCheckers/CollisionDetection/SpheresCollisionDetection.o \
         Utilities/IOUtils.o \
         Utilities/MetricUtils.o \
         Utilities/MPUtils.o \

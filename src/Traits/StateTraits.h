@@ -2,39 +2,39 @@
 #define STATE_TRAITS_H_
 
 #include "MPProblem/MPProblem.h"
-#include "PlanningLibrary/PlanningLibrary.h"
+#include "MPLibrary/MPLibrary.h"
 
 #include "MPProblem/ConfigurationSpace/State.h"
 #include "MPProblem/ConfigurationSpace/StateEdge.h"
 
 //distance metric includes
-#include "PlanningLibrary/DistanceMetrics/ExperimentalDistance.h"
-#include "PlanningLibrary/DistanceMetrics/WeightedEuclideanDistance.h"
+#include "MPLibrary/DistanceMetrics/ExperimentalDistance.h"
+#include "MPLibrary/DistanceMetrics/WeightedEuclideanDistance.h"
 
 //validity checker includes
-#include "PlanningLibrary/ValidityCheckers/CollisionDetectionValidity.h"
+#include "MPLibrary/ValidityCheckers/CollisionDetectionValidity.h"
 
 //neighborhood finder includes
-#include "PlanningLibrary/NeighborhoodFinders/BruteForceNF.h"
-#include "PlanningLibrary/NeighborhoodFinders/RadiusNF.h"
+#include "MPLibrary/NeighborhoodFinders/BruteForceNF.h"
+#include "MPLibrary/NeighborhoodFinders/RadiusNF.h"
 
 //extenders includes
-#include "PlanningLibrary/Extenders/KinodynamicExtender.h"
-#include "PlanningLibrary/Extenders/MixExtender.h"
+#include "MPLibrary/Extenders/KinodynamicExtender.h"
+#include "MPLibrary/Extenders/MixExtender.h"
 
 //metric includes
-#include "PlanningLibrary/Metrics/NumNodesMetric.h"
+#include "MPLibrary/Metrics/NumNodesMetric.h"
 
 //map evaluator includes
-#include "PlanningLibrary/MapEvaluators/ComposeEvaluator.h"
-#include "PlanningLibrary/MapEvaluators/ConditionalEvaluator.h"
+#include "MPLibrary/MapEvaluators/ComposeEvaluator.h"
+#include "MPLibrary/MapEvaluators/ConditionalEvaluator.h"
 
-#include "PlanningLibrary/MapEvaluators/RRTQuery.h"
+#include "MPLibrary/MapEvaluators/RRTQuery.h"
 
 //mp strategies includes
-#include "PlanningLibrary/MPStrategies/BasicRRTStrategy.h"
-#include "PlanningLibrary/MPStrategies/DynamicDomainRRT.h"
-#include "PlanningLibrary/MPStrategies/DynamicRegionRRT.h"
+#include "MPLibrary/MPStrategies/BasicRRTStrategy.h"
+#include "MPLibrary/MPStrategies/DynamicDomainRRT.h"
+#include "MPLibrary/MPStrategies/DynamicRegionRRT.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup MotionPlanningUniverse
@@ -55,7 +55,7 @@ struct StateTraits {
   typedef State& CfgRef;
 
   typedef MPProblem<StateTraits> MPProblemType;
-  typedef PlanningLibrary<StateTraits> PlanningLibraryType;
+  typedef MPLibrary<StateTraits> MPLibraryType;
 
   //types of distance metrics available in our world
   typedef boost::mpl::list<

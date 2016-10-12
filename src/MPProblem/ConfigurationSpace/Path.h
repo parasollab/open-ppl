@@ -4,7 +4,7 @@
 #include <algorithm>
 
 #include "Roadmap.h"
-#include "PlanningLibrary/LocalPlanners/StraightLine.h"
+#include "MPLibrary/LocalPlanners/StraightLine.h"
 #include "Utilities/PMPLExceptions.h"
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -28,7 +28,7 @@ class Path {
     typedef typename MPProblemType::RoadmapType    RoadmapType;
     typedef typename MPProblemType::GraphType      GraphType;
     typedef typename MPProblemType::VID            VID;
-    typedef typename MPTraits::PlanningLibraryType PlanningLibraryType;
+    typedef typename MPTraits::MPLibraryType MPLibraryType;
 
     ///@}
     ///@name Construction
@@ -73,7 +73,7 @@ class Path {
     /// @param[in] _lp  The local planner label to use when connecting cfgs.
     /// @return The full path of configurations, including local-plan
     ///         intermediates between the roadmap nodes.
-    const vector<CfgType> FullCfgs(PlanningLibraryType* _lib,
+    const vector<CfgType> FullCfgs(MPLibraryType* _lib,
         const string& _lp = "") const;
 
     ////////////////////////////////////////////////////////////////////////////
@@ -175,7 +175,7 @@ Cfgs() const {
 template <typename MPTraits>
 const vector<typename MPTraits::CfgType>
 Path<MPTraits>::
-FullCfgs(PlanningLibraryType* _lib, const string& _lp) const {
+FullCfgs(MPLibraryType* _lib, const string& _lp) const {
   GraphType* g = m_roadmap->GetGraph();
   vector<CfgType> out = {g->GetVertex(m_vids.front())};
 
@@ -196,7 +196,7 @@ FullCfgs(PlanningLibraryType* _lib, const string& _lp) const {
     // If not specified, use the edge lp.
     // Fall back to straight-line if edge lp is not available (this will always
     // happen if it was grown with an extender).
-    typename PlanningLibraryType::LocalPlannerPointer lp;
+    typename MPLibraryType::LocalPlannerPointer lp;
     if(!_lp.empty())
       lp = _lib->GetLocalPlanner(_lp);
     else {

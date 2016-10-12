@@ -22,9 +22,9 @@ main(int _argc, char** _argv) {
       throw ParseException(WHERE, "Incorrect usage. Usage: -f options.xml");
 
     typedef PMPLTraits::MPProblemType MPProblemType;
-    typedef PMPLTraits::PlanningLibraryType PlanningLibraryType;
+    typedef PMPLTraits::MPLibraryType MPLibraryType;
     MPProblemType* problem = new MPProblemType(_argv[2]);
-    PlanningLibraryType* lib = new PlanningLibraryType(_argv[2]);
+    MPLibraryType* lib = new MPLibraryType(_argv[2]);
     lib->SetMPProblem(problem);
     lib->Solve();
 

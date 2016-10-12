@@ -61,7 +61,7 @@ class MethodSet final {
     ///@{
 
     typedef typename MPTraits::MPProblemType              MPProblemType;
-    typedef typename MPTraits::PlanningLibraryType        PlanningLibraryType;
+    typedef typename MPTraits::MPLibraryType        MPLibraryType;
 
     typedef std::shared_ptr<Method>                       MethodPointer;
     typedef typename std::map<std::string, MethodPointer> MethodMap;
@@ -82,7 +82,7 @@ class MethodSet final {
     /// @param _mtl An instance of the method type list.
     /// @param _name The name of this method set.
     template <typename MethodTypeList>
-    MethodSet(PlanningLibraryType* _p, const MethodTypeList& _mtl,
+    MethodSet(MPLibraryType* _p, const MethodTypeList& _mtl,
         const std::string& _name);
 
     ///@}
@@ -144,7 +144,7 @@ class MethodSet final {
     ///@name Internal State
     ///@{
 
-    PlanningLibraryType* const m_library; ///< The owning planning library.
+    MPLibraryType* const m_library; ///< The owning planning library.
 
     std::string m_name;     ///< The name of this set of methods.
     std::string m_default;  ///< The name of the default method in this set.
@@ -161,7 +161,7 @@ class MethodSet final {
 template <typename MPTraits, typename Method>
 template <typename MethodTypeList>
 MethodSet<MPTraits, Method>::
-MethodSet(PlanningLibraryType* _p, const MethodTypeList& _mtl,
+MethodSet(MPLibraryType* _p, const MethodTypeList& _mtl,
     const std::string& _name) : m_library(_p), m_name(_name) {
   AddToUniverse(typename boost::mpl::begin<MethodTypeList>::type(),
                 typename boost::mpl::end<MethodTypeList>::type());
@@ -203,7 +203,7 @@ AddMethod(MethodPointer _e, const std::string& _label) {
     throw ParseException(WHERE, "Method '" + _e->m_name +
         "' is not contained within the motion planning universe.");
 
-  _e->SetPlanningLibrary(m_library);
+  _e->SetMPLibrary(m_library);
   _e->SetLabel(_label);
   if(m_elements.empty())
     m_default = _label;

@@ -9,8 +9,8 @@
 #include "MetricUtils.h"
 #include "Geometry/Bodies/ActiveMultiBody.h"
 #include "Geometry/Bodies/FixedBody.h"
-#include "PlanningLibrary/LocalPlanners/StraightLine.h"
-#include "PlanningLibrary/ValidityCheckers/CollisionDetection/CDInfo.h"
+#include "MPLibrary/LocalPlanners/StraightLine.h"
+#include "MPLibrary/ValidityCheckers/CollisionDetection/CDInfo.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup Utilities

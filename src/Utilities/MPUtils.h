@@ -174,7 +174,7 @@ struct CompareSecondReverse {
 template <class MPTraits, class P>
 struct DistanceCompareFirst : public binary_function<P, P, bool> {
 
-  typedef typename MPTraits::PlanningLibraryType::DistanceMetricPointer
+  typedef typename MPTraits::MPLibraryType::DistanceMetricPointer
       DistanceMetricPointer;
 
   Environment* m_env;
