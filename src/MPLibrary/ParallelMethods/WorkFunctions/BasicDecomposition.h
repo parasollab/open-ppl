@@ -47,7 +47,7 @@ DecomposeWS(Environment* _env, size_t _wsdim, size_t _nx, size_t _ny,
     zwidth = (boundary->GetRange(2).second - boundary->GetRange(2).first)/_nz;
 
   //Get radius for the first robot as approximate estimate for boundary overlap
-  double robotradius = _env->GetRobot(0)->GetMaxAxisRange();
+  double robotradius = Cfg::GetRobots(0)->GetMaxAxisRange();
 
   double xoverlap = xwidth * _xOverlapPercentage + robotradius;
   double yoverlap = ywidth * _yOverlapPercentage + robotradius;

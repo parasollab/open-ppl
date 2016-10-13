@@ -227,7 +227,7 @@ Run() {
   unordered_map<RegionPtr, tuple<FED, size_t, size_t>> regions;
 
   const double regionRadius = m_regionFactor *
-      env->GetRobot(0)->GetBoundingSphereRadius();
+      s.GetRobot()->GetBoundingSphereRadius();
   auto sit = flow.first.find_vertex(flow.second);
   for(auto eit = sit->begin(); eit != sit->end(); ++eit) {
     auto i = regions.emplace(
@@ -489,8 +489,7 @@ IsTouching(const CfgType& _cfg, RegionPtr _region) {
   const Point3d& robotCenter = _cfg.GetPoint();
   const Point3d& regionCenter = region->GetCenter();
 
-  double robotRadius = this->GetEnvironment()->GetRobot(0)->
-      GetBoundingSphereRadius();
+  double robotRadius = _cfg.GetRobot()->GetBoundingSphereRadius();
   double regionRadius = region->GetRadius();
 
   // distance between the region and the robot

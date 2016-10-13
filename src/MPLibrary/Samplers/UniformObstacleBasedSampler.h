@@ -5,54 +5,76 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup Samplers
-/// @brief TODO
+/// @brief This sampler generates obstacle-based configurations that uniformly
+///        cover the contact surface.
 ///
-/// TODO
+/// @TODO Add paper reference.
 ////////////////////////////////////////////////////////////////////////////////
 template<typename MPTraits>
 class UniformObstacleBasedSampler : public SamplerMethod<MPTraits> {
+
   public:
+
+    ///@name Local Types
+    ///@{
+
     typedef typename MPTraits::CfgType CfgType;
-    typedef typename MPTraits::MPProblemType MPProblemType;
+
+    ///@}
+    ///@name Construction
+    ///@{
 
     UniformObstacleBasedSampler(string _vcLabel = "", string _dmLabel = "",
         double _margin = 0, bool _useBoundary = false);
 
     UniformObstacleBasedSampler(XMLNode& _node);
 
-    void ParseXML(XMLNode& _node);
-    void Print(ostream& _os) const;
+    virtual ~UniformObstacleBasedSampler() = default;
+
+    ///@}
+    ///@name MPBaseObject Overrides
+    ///@{
+
+    void Print(ostream& _os) const override;
+
+    ///@}
+    ///@name Sampler Interface
+    ///@{
 
     virtual bool Sampler(CfgType& _cfg, shared_ptr<Boundary> _boundary,
-        vector<CfgType>& _result, vector<CfgType>& _collision);
+        vector<CfgType>& _result, vector<CfgType>& _collision) override;
+
+    ///@}
 
   private:
+
+    ///@name Internal State
+    ///@{
+
     double m_margin;
     bool m_useBoundary;
     string m_vcLabel, m_dmLabel;
+
+    ///@}
 };
 
-template <typename MPTraits>
-UniformObstacleBasedSampler<MPTraits>::
-UniformObstacleBasedSampler(string _vcLabel, string _dmLabel,
-    double _margin, bool _useBoundary) :
-  m_margin(_margin), m_useBoundary(_useBoundary),
-  m_vcLabel(_vcLabel), m_dmLabel(_dmLabel) {
-    this->SetName("UniformObstacleBasedSampler");
-  }
+/*------------------------------ Construction --------------------------------*/
 
 template <typename MPTraits>
 UniformObstacleBasedSampler<MPTraits>::
-UniformObstacleBasedSampler(XMLNode& _node) :
-  SamplerMethod<MPTraits>(_node) {
-    this->SetName("UniformObstacleBasedSampler");
-    ParseXML(_node);
-  }
+UniformObstacleBasedSampler(string _vcLabel, string _dmLabel, double _margin,
+    bool _useBoundary) :
+    m_margin(_margin), m_useBoundary(_useBoundary),
+    m_vcLabel(_vcLabel), m_dmLabel(_dmLabel) {
+  this->SetName("UniformObstacleBasedSampler");
+}
+
 
 template <typename MPTraits>
-void
 UniformObstacleBasedSampler<MPTraits>::
-ParseXML(XMLNode& _node) {
+UniformObstacleBasedSampler(XMLNode& _node) : SamplerMethod<MPTraits>(_node) {
+  this->SetName("UniformObstacleBasedSampler");
+
   m_margin = _node.Read("d", true, 0.0, 0.0, MAX_DBL,
       "set the bounding box whose margin is d away from obstacles");
   m_useBoundary = _node.Read("useBBX", true, false,
@@ -61,16 +83,20 @@ ParseXML(XMLNode& _node) {
   m_dmLabel =_node.Read("dmLabel", true, "default", "Distance Metric Method");
 }
 
+/*-------------------------- MPBaseObject Overrides --------------------------*/
+
 template <typename MPTraits>
 void
 UniformObstacleBasedSampler<MPTraits>::
 Print(ostream& _os) const {
   SamplerMethod<MPTraits>::Print(_os);
-  _os << "\tmargin = " << m_margin << endl;
-  _os << "\tuseBoundary = " << m_useBoundary << endl;
-  _os << "\tvcLabel = " << m_vcLabel << endl;
-  _os << "\tdmLabel = " << m_dmLabel << endl;
+  _os << "\tmargin = " << m_margin << endl
+      << "\tuseBoundary = " << m_useBoundary << endl
+      << "\tvcLabel = " << m_vcLabel << endl
+      << "\tdmLabel = " << m_dmLabel << endl;
 }
+
+/*--------------------------- Sampler Interface ------------------------------*/
 
 template <typename MPTraits>
 bool
@@ -87,13 +113,13 @@ Sampler(CfgType& _cfg, shared_ptr<Boundary> _boundary,
   bool cfg1Free;
   double margin = m_margin;
   if(margin == 0)
-    margin = env->GetRobot(_cfg.GetRobotIndex())->GetMaxAxisRange();
+    margin = _cfg.GetRobot()->GetMaxAxisRange();
 
   vector<pair<double, double> > origBoundary;
   for(size_t i = 0; i < 3; i++)
     origBoundary.push_back(_boundary->GetRange(i));
 
-  env->ResetBoundary(margin, _cfg.GetRobotIndex());
+  env->ResetBoundary(margin, _cfg.GetRobot());
   shared_ptr<Boundary> boundaryNew = env->GetBoundary();
 
   attempts++;
@@ -158,5 +184,6 @@ Sampler(CfgType& _cfg, shared_ptr<Boundary> _boundary,
   return generated;
 }
 
-#endif
+/*----------------------------------------------------------------------------*/
 
+#endif

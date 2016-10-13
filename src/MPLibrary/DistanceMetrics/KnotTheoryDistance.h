@@ -79,12 +79,11 @@ template <typename MPTraits>
 vector<Vector3d>
 KnotTheoryDistance<MPTraits>::
 GetCoordinatesForKnot(const CfgType& _c) {
-  Environment* env = this->GetEnvironment();
-  _c.ConfigEnvironment();
+  _c.ConfigureRobot();
   vector<Vector3d> coordinates;
-  for(size_t i=0; i< env->GetRobot(_c.GetRobotIndex())->NumFreeBody(); ++i)
-    coordinates.push_back(env->GetRobot(_c.GetRobotIndex())->GetFreeBody(i)
-        ->WorldTransformation().translation());
+  for(size_t i = 0; i < _c.GetRobot()->NumFreeBody(); ++i)
+    coordinates.push_back(_c.GetRobot()->GetFreeBody(i)->WorldTransformation().
+        translation());
   return coordinates;
 }
 

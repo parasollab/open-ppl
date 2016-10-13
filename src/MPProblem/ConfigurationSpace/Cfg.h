@@ -80,9 +80,9 @@ class Cfg {
 
     Cfg& operator=(const Cfg& _cfg);
     ///determines equality of this and other configuration
-    bool operator== (const Cfg& _cfg) const;
+    bool operator==(const Cfg& _cfg) const;
     ///determines non-equality of this and other configuration
-    bool operator!= (const Cfg& _cfg) const;
+    bool operator!=(const Cfg& _cfg) const;
     //addition
     Cfg operator+(const Cfg& _cfg) const;
     Cfg& operator+=(const Cfg& _cfg);
@@ -103,6 +103,7 @@ class Cfg {
 
 
     // Access Methods : Retrieve and set related information of this class
+    static void SetSize(size_t _size);
 
     /// \brief Get the internal storage of DOF data.
     const vector<double>& GetData() const {return m_v;}
@@ -147,20 +148,41 @@ class Cfg {
     void SetStat(string _stat, double _value = 0.0);
     void IncStat(string _stat, double _value = 1.0);
 
-    /// Return the number of degrees of freedom for the configuration class
-    size_t DOF() const {return m_dof[m_robotIndex];};
-    size_t PosDOF() const {return m_posdof[m_robotIndex];}
-    size_t GetNumOfJoints() const {return m_numJoints[m_robotIndex];}
-    static void SetSize(size_t _size);
-    virtual const string GetName() const {return "Cfg";};
+    ///@name Robot Info
+    ///@{
 
-    /// methods for Distance Metric.
+    size_t DOF() const;
+    size_t PosDOF() const;
+    size_t GetNumOfJoints() const;
+
+    ////////////////////////////////////////////////////////////////////////////
+    /// @brief Get the robot referenced by this configuration.
+    /// @param[in] _index The robot index of interest.
+    ActiveMultiBody* GetRobot() const {
+      return m_robotIndex == size_t(-1) ? m_pointRobot.get() :
+                                          m_robots[m_robotIndex].get();
+    }
+
+    static vector<shared_ptr<ActiveMultiBody>> GetRobots() {
+      return m_robots;
+    }
+
+    size_t GetRobotIndex() const {return m_robotIndex;}
+    void SetRobotIndex(size_t _i) {m_robotIndex = _i;}
+
+    ///@}
+    ///@name Access Specific DOF Types
+    ///@{
+
     virtual vector<double> GetPosition() const;
     virtual vector<double> GetOrientation() const;
 
     virtual vector<double> GetNonJoints() const;
     virtual vector<double> GetJoints() const;
     virtual vector<double> GetRotation() const;
+
+    ///@}
+
     void ResetRigidBodyCoordinates();
 
     virtual double Magnitude() const;
@@ -182,10 +204,10 @@ class Cfg {
     virtual void GetRandomCfg(Environment* _env);
     virtual void GetRandomCfg(Environment* _env, shared_ptr<Boundary> _bb);
 
-    template<class DistanceMetricPointer>
-      void GetRandomRay(double _incr, DistanceMetricPointer _dm, bool _norm=true);
+    template <typename DistanceMetricPointer>
+    void GetRandomRay(double _incr, DistanceMetricPointer _dm, bool _norm = true);
 
-    virtual void ConfigEnvironment() const;
+    virtual void ConfigureRobot() const;
 
     void GetResolutionCfg(Environment*);
 
@@ -213,45 +235,44 @@ class Cfg {
     //polygonal approximation
     vector<Vector3d> PolyApprox() const;
 
-    size_t GetRobotIndex() const {return m_robotIndex;}
-    void SetRobotIndex(size_t _newIndex){m_robotIndex = _newIndex;}
-
     //I/O Helper functions
     virtual void Read(istream& _is);
     virtual void Write(ostream& _os) const;
 
   protected:
 
-    //Normalize the orientation to the range [-1, 1)
+    ////////////////////////////////////////////////////////////////////////////
+    /// @brief Normalize an orientation DOF to the range [-1, 1).
+    /// @param[in] _index The index of the DOF to normalize. If it is -1, all
+    ///                   orientation DOFs will be normalized.
     virtual void NormalizeOrientation(int _index = -1);
 
-    //generates random configuration within C-space
-    virtual void GetRandomCfgImpl(Environment* _env, shared_ptr<Boundary> bb);
+    ////////////////////////////////////////////////////////////////////////////
+    /// @brief Set this configuration's DOFs to random values that lie within a
+    ///        given sampling boundary.
+    /// @param[in] _env The environment to generate the configuration within.
+    /// @param[in] _b The boundary to sample within.
+    virtual void GetRandomCfgImpl(Environment* _env, shared_ptr<Boundary> _b);
 
-    vector<double> m_v;
-    size_t m_robotIndex; //which active body in the env this cfg refers to
+    ///@name Static class data
+    ///@{
 
-    // Static member for cfg
-    // information is recorded in vector with a m_robotIndex as index
-    static vector<size_t> m_dof;
-    static vector<size_t> m_posdof;
-    static vector<size_t> m_numJoints;
-
-    static vector<vector<DofType> > m_dofTypes;
     static vector<shared_ptr<ActiveMultiBody>> m_robots;
+    static shared_ptr<ActiveMultiBody> m_pointRobot;
 
-    /** TODO- there may still problem with (un)packing map
-     */
-    map<string,bool> m_labelMap;
-    map<string,double> m_statMap;
+    ///@}
+    ///@name Internal State
+    ///@{
+
+    vector<double> m_v;  ///< The DOF values.
+    size_t m_robotIndex; ///< The ActiveBody this cfg refers to.
+
+    map<string, bool> m_labelMap;
+    map<string, double> m_statMap;
+
+    ///@}
 
   public:
-    static const vector<shared_ptr<ActiveMultiBody>>& GetRobots() {
-      return m_robots;
-    }
-    static const shared_ptr<ActiveMultiBody>& GetRobot(size_t _index = 0) {
-      return m_robots[_index];
-    }
 
     CDInfo m_clearanceInfo;
     shared_ptr<Cfg> m_witnessCfg;

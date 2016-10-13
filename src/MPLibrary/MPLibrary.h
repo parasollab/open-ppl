@@ -381,6 +381,8 @@ SetMPProblem(MPProblemType* _p) {
     if(!alreadyAdded)
       cdMethods.push_back(cd);
   }
+  for(auto& body : m_problem->GetRobots())
+    body->BuildCDStructure();
   m_problem->GetEnvironment()->BuildCDStructure();
 }
 

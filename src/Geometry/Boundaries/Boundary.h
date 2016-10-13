@@ -10,6 +10,8 @@ using namespace mathtool;
 #include <CGAL/Polyhedron_3.h>
 #include <CGAL/Polyhedron_incremental_builder_3.h>
 
+class Cfg;
+
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup Environment
 /// @brief TODO
@@ -37,6 +39,8 @@ class Boundary {
 
     virtual Point3d GetRandomPoint() const = 0;
     virtual bool InBoundary(const Vector3d& _p) const = 0;
+    virtual bool InBoundary(const Cfg& _c) const;
+
     virtual double GetClearance(const Vector3d& _p) const = 0;
     virtual int GetSideID(const vector<double>& _p) const = 0;
     virtual Vector3d GetClearancePoint(const Vector3d& _p) const = 0;

@@ -160,7 +160,7 @@ MakeFreeModel() {
     if(m_debug)
       cout << "\tAdding obstacle " << i << "..." << endl;
 
-    shared_ptr<StaticMultiBody> obst = m_env->GetObstacle(i);
+    StaticMultiBody* obst = m_env->GetObstacle(i);
     if(!obst->IsInternal()) {
       // Make CGAL representation of this obstacle.
       auto ocp = obst->GetFixedBody(0)->GetWorldPolyhedron().CGAL();
@@ -255,9 +255,9 @@ AddHoles(const NefPolyhedron& _freespace) {
   NefPolyhedron boundary(cp);
   boundary = boundary.complement();
 
-  vector<shared_ptr<StaticMultiBody>> holes;
+  vector<StaticMultiBody*> holes;
   for(size_t i = 0; i < m_env->NumObstacles(); ++i) {
-    shared_ptr<StaticMultiBody> obst = m_env->GetObstacle(i);
+    StaticMultiBody* obst = m_env->GetObstacle(i);
     if(!obst->IsInternal())
       holes.push_back(obst);
   }

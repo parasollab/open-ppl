@@ -73,10 +73,10 @@ class CollisionDetectionValidity : public ValidityCheckerMethod<MPTraits> {
     /// @brief Orchestrate collision computation between robot and environment
     ///        multibodies
     /// @param[out] _cdInfo CDInfo
-    /// @param _robotIndex ActiveBody index of robot
+    /// @param _cfg Configuration of interest.
     /// @param _callName Function calling validity checker
     /// @return Collision
-    bool IsInCollision(CDInfo& _cdInfo, size_t _robotIndex,
+    bool IsInCollision(CDInfo& _cdInfo, const CfgType& _cfg,
         const string& _callName);
 
     ////////////////////////////////////////////////////////////////////////////
@@ -85,7 +85,7 @@ class CollisionDetectionValidity : public ValidityCheckerMethod<MPTraits> {
     /// @param _rob ActiveMultiBody of robot
     /// @param _callName Function calling validity checker
     /// @return Collision
-    bool IsInSelfCollision(CDInfo& _cdInfo, shared_ptr<ActiveMultiBody> _rob,
+    bool IsInSelfCollision(CDInfo& _cdInfo, ActiveMultiBody* _rob,
         const string& _callName);
 
     ////////////////////////////////////////////////////////////////////////////
@@ -95,8 +95,8 @@ class CollisionDetectionValidity : public ValidityCheckerMethod<MPTraits> {
     /// @param _otherRobot ActiveMultiBody of the other robot to check
     /// @param _callName Function calling validity checker
     /// @return Collision
-    bool IsInterRobotCollision(CDInfo& _cdInfo, shared_ptr<ActiveMultiBody> _rob,
-        shared_ptr<ActiveMultiBody> _otherRobot, const string& _callName);
+    bool IsInterRobotCollision(CDInfo& _cdInfo, ActiveMultiBody* _rob,
+        ActiveMultiBody* _otherRobot, const string& _callName);
 
     ////////////////////////////////////////////////////////////////////////////
     /// @brief Check collision between robot and one obstacle
@@ -105,8 +105,8 @@ class CollisionDetectionValidity : public ValidityCheckerMethod<MPTraits> {
     /// @param _obst StaticMultiBody of obstacle
     /// @param _callName Function calling validity checker
     /// @return Collision
-    bool IsInObstCollision(CDInfo& _cdInfo, shared_ptr<ActiveMultiBody> _rob,
-        shared_ptr<StaticMultiBody> _obst, const string& _callName);
+    bool IsInObstCollision(CDInfo& _cdInfo, ActiveMultiBody* _rob,
+        StaticMultiBody* _obst, const string& _callName);
 
     CollisionDetectionMethod* m_cdMethod; ///< Collision Detection library
     bool m_ignoreSelfCollision;           ///< Check self collisions
@@ -175,34 +175,27 @@ IsValidImpl(CfgType& _cfg, CDInfo& _cdInfo, const string& _callName) {
   this->GetStatClass()->IncCfgIsColl(_callName);
 
   //position environment
-  _cfg.ConfigEnvironment();
+  _cfg.ConfigureRobot();
 
   //check collision
-#ifdef PMPCfgMultiRobot
-  bool answerFromEnvironment = false;
-  for(size_t i = 0; i < CfgType::m_numRobot; ++i)
-    answerFromEnvironment |= IsInCollision(_cdInfo, i, _callName);
-#else
-  bool answerFromEnvironment = IsInCollision(_cdInfo, _cfg.GetRobotIndex(),
-      _callName);
-#endif
+  bool answer = IsInCollision(_cdInfo, _cfg, _callName);
 
-  _cfg.SetLabel("VALID", !answerFromEnvironment);
+  _cfg.SetLabel("VALID", !answer);
 
-  return !answerFromEnvironment;
+  return !answer;
 }
 
 
 template <typename MPTraits>
 bool
 CollisionDetectionValidity<MPTraits>::
-IsInCollision(CDInfo& _cdInfo, size_t _robotIndex, const string& _callName) {
+IsInCollision(CDInfo& _cdInfo, const CfgType& _cfg, const string& _callName) {
   _cdInfo.ResetVars(_cdInfo.m_retAllInfo);
   bool retVal = false;
 
   //get robot
   Environment* env = this->GetEnvironment();
-  shared_ptr<ActiveMultiBody> robot = env->GetRobot(_robotIndex);
+  auto robot = _cfg.GetRobot();
 
   //check self collision
   if(!m_ignoreSelfCollision && robot->NumFreeBody() > 1 &&
@@ -210,24 +203,6 @@ IsInCollision(CDInfo& _cdInfo, size_t _robotIndex, const string& _callName) {
     _cdInfo.m_collidingObstIndex = -1;
     return true;
   }
-
-#ifdef PMPCfgMultiRobot
-  //check inter-robot collision for multiple robot case
-  //for performance issue, check only robots that have higher robotIndex
-  size_t numRobot = env->NumRobots();
-  for (size_t n = _robotIndex+1; n < numRobot; n++) {
-    shared_ptr<ActiveMultiBody> otherRobot = env->GetRobot(n);
-    bool collisionFound = IsInterRobotCollision(_cdInfo, robot, otherRobot,
-        _callName);
-    if(collisionFound) {
-      if(!_cdInfo.m_retAllInfo)
-        return true;
-      _cdInfo.m_collidingRobtIndex.push_back(make_pair(_robotIndex, n));
-    }
-  }
-  if(_cdInfo.m_collidingRobtIndex.size() > 0)
-    return true;
-#endif
 
   //check obstacle collisions
   size_t numObst = env->NumObstacles();
@@ -260,15 +235,15 @@ IsInCollision(CDInfo& _cdInfo, size_t _robotIndex, const string& _callName) {
 template <typename MPTraits>
 bool
 CollisionDetectionValidity<MPTraits>::
-IsInSelfCollision(CDInfo& _cdInfo, shared_ptr<ActiveMultiBody> _rob,
+IsInSelfCollision(CDInfo& _cdInfo, ActiveMultiBody* _rob,
     const string& _callName) {
   this->GetStatClass()->IncNumCollDetCalls(m_cdMethod->GetName(), _callName);
 
   size_t numBody = _rob->NumFreeBody();
   for(size_t i = 0; i < numBody - 1; ++i) {
     for(size_t j = i+1; j < numBody; ++j) {
-      shared_ptr<FreeBody> body1 = _rob->GetFreeBody(i);
-      shared_ptr<FreeBody> body2 = _rob->GetFreeBody(j);
+      auto body1 = _rob->GetFreeBody(i);
+      auto body2 = _rob->GetFreeBody(j);
 
       if(body1->IsWithinI(body2, m_ignoreIAdjacentLinks))
         continue;
@@ -285,9 +260,8 @@ IsInSelfCollision(CDInfo& _cdInfo, shared_ptr<ActiveMultiBody> _rob,
 template <typename MPTraits>
 bool
 CollisionDetectionValidity<MPTraits>::
-IsInterRobotCollision(CDInfo& _cdInfo,
-    shared_ptr<ActiveMultiBody> _rob,
-    shared_ptr<ActiveMultiBody> _otherRobot, const string& _callName) {
+IsInterRobotCollision(CDInfo& _cdInfo, ActiveMultiBody* _rob,
+    ActiveMultiBody* _otherRobot, const string& _callName) {
   this->GetStatClass()->IncNumCollDetCalls(m_cdMethod->GetName(), _callName);
 
   size_t numBody = _rob->NumFreeBody();
@@ -310,8 +284,8 @@ IsInterRobotCollision(CDInfo& _cdInfo,
 template <typename MPTraits>
 bool
 CollisionDetectionValidity<MPTraits>::
-IsInObstCollision(CDInfo& _cdInfo, shared_ptr<ActiveMultiBody> _rob,
-    shared_ptr<StaticMultiBody> _obst, const string& _callName) {
+IsInObstCollision(CDInfo& _cdInfo, ActiveMultiBody* _rob,
+    StaticMultiBody* _obst, const string& _callName) {
   this->GetStatClass()->IncNumCollDetCalls(m_cdMethod->GetName(), _callName);
 
   bool collision = false;

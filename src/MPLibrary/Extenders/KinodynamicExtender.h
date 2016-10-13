@@ -184,8 +184,7 @@ GetMaxDistance() const {
   if(!distanceCached) {
     // Approximate max distance as the largest timestep * max velocity.
     auto env = this->GetEnvironment();
-    shared_ptr<NonHolonomicMultiBody> robot =
-        dynamic_pointer_cast<NonHolonomicMultiBody>(env->GetRobot(0));
+    auto robot = dynamic_cast<NonHolonomicMultiBody*>(Cfg::GetRobots()[0]);
     const_cast<double&>(this->m_maxDist) = robot->GetMaxLinearVelocity() *
         m_timeStep * env->GetTimeRes();
     distanceCached = true;
@@ -203,8 +202,7 @@ ExtendBestControl(const StateType& _start, const StateType& _end, size_t _nTicks
   string callee("KinodynamicExtender::Expand");
 
   Environment* env = this->GetEnvironment();
-  shared_ptr<NonHolonomicMultiBody> robot =
-      dynamic_pointer_cast<NonHolonomicMultiBody>(env->GetRobot(0));
+  auto robot = dynamic_cast<NonHolonomicMultiBody*>(_start->GetRobot());
   auto dm = this->GetDistanceMetric(m_dmLabel);
   auto vc = this->GetValidityChecker(m_vcLabel);
 
@@ -254,7 +252,7 @@ ExtendRandomControl(const StateType& _start, const StateType& _end,
   Environment* env = this->GetEnvironment();
 
   shared_ptr<NonHolonomicMultiBody> robot =
-      dynamic_pointer_cast<NonHolonomicMultiBody>(env->GetRobot(0));
+      dynamic_pointer_cast<NonHolonomicMultiBody>(_start->GetRobot());
   auto dm = this->GetDistanceMetric(m_dmLabel);
   auto vc = this->GetValidityChecker(m_vcLabel);
 

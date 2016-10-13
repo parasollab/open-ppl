@@ -36,7 +36,6 @@ Read(string _filename) {
   m_modelDataDir = m_filename.substr(0, sl == string::npos ? 0 : sl);
   Body::m_modelDataDir = m_modelDataDir + "/";
 
-  m_robots.clear();
   m_obstacles.clear();
 
   // open file
@@ -74,6 +73,9 @@ Read(string _filename) {
   size_t multibodyCount = ReadField<size_t>(ifs, cbs,
       "Failed reading number of multibodies.");
 
+  // Make storage for robots.
+  vector<shared_ptr<ActiveMultiBody>> robots;
+
   //parse and construct each multibody
   for(size_t m = 0; m < multibodyCount && ifs; ++m) {
     string multibodyType = ReadFieldString(ifs, cbs,
@@ -88,14 +90,14 @@ Read(string _filename) {
         {
           shared_ptr<ActiveMultiBody> mb(new ActiveMultiBody());
           mb->Read(ifs, cbs);
-          m_robots.push_back(mb);
+          robots.push_back(mb);
           break;
         }
       case MultiBody::MultiBodyType::NonHolonomic:
         {
           shared_ptr<ActiveMultiBody> mb(new NonHolonomicMultiBody());
           mb->Read(ifs, cbs);
-          m_robots.push_back(mb);
+          robots.push_back(mb);
           break;
         }
       case MultiBody::MultiBodyType::Internal:
@@ -109,25 +111,25 @@ Read(string _filename) {
     }
   }
 
-  if(m_robots.empty())
+  if(robots.empty())
     throw ParseException(cbs.Where(),
         "No active multibodies in the environment.");
 
-  size_t size = m_robots.size();
+  size_t size = robots.size();
   Cfg::SetSize(size);
 
   for(size_t i = 0; i < size; ++i) {
     if(m_saveDofs) {
       ofstream dofFile(m_filename + "." + ::to_string(i) + ".dof");
-      m_robots[i]->InitializeDOFs(m_boundary, &dofFile);
+      robots[i]->InitializeDOFs(m_boundary, &dofFile);
     }
     else
-      m_robots[i]->InitializeDOFs(m_boundary);
+      robots[i]->InitializeDOFs(m_boundary);
 
-    Cfg::InitRobots(m_robots[i], i);
+    Cfg::InitRobots(robots[i], i);
   }
 
-  ComputeResolution();
+  ComputeResolution(robots);
 }
 
 
@@ -149,13 +151,9 @@ Environment::
 Write(ostream & _os) {
   WriteBoundary(_os);
   _os << endl << endl
-      << "MultiBodies" << endl
-      << m_robots.size() + m_obstacles.size()
+      << "Obstacles" << endl
+      << m_obstacles.size()
       << endl << endl;
-  for(const auto& body : m_robots) {
-    body->Write(_os);
-    _os << endl;
-  }
   for(const auto& body : m_obstacles) {
     body->Write(_os);
     _os << endl;
@@ -166,12 +164,12 @@ Write(ostream & _os) {
 
 void
 Environment::
-ResetBoundary(double _d, size_t _robotIndex) {
+ResetBoundary(double _d, ActiveMultiBody* _robot) {
   double minx, miny, minz, maxx, maxy, maxz;
   minx = miny = minz = numeric_limits<double>::max();
   maxx = maxy = maxz = -numeric_limits<double>::max();
 
-  double robotRadius = m_robots[_robotIndex]->GetBoundingSphereRadius();
+  double robotRadius = _robot->GetBoundingSphereRadius();
   _d += robotRadius;
 
   for(auto& body : m_obstacles) {
@@ -192,8 +190,8 @@ ResetBoundary(double _d, size_t _robotIndex) {
 
 void
 Environment::
-ExpandBoundary(double _d, size_t _robotIndex) {
-  double robotRadius = m_robots[_robotIndex]->GetBoundingSphereRadius();
+ExpandBoundary(double _d, ActiveMultiBody* _robot) {
+  double robotRadius = _robot->GetBoundingSphereRadius();
   _d += robotRadius;
 
   vector<pair<double, double>> originBBX(3);
@@ -204,36 +202,26 @@ ExpandBoundary(double _d, size_t _robotIndex) {
   m_boundary->ResetBoundary(originBBX, _d);
 }
 
-/*---------------------------- Multibody Functions ---------------------------*/
+/*---------------------------- Obstacle Functions ----------------------------*/
 
-shared_ptr<ActiveMultiBody>
-Environment::
-GetRobot(size_t _index) const {
-  if(_index < 0 || _index >= m_robots.size())
-    throw RunTimeException(WHERE,
-        "Cannot access ActiveBody '" + ::to_string(_index) + "'.");
-  return m_robots[_index];
-}
-
-
-shared_ptr<StaticMultiBody>
+StaticMultiBody*
 Environment::
 GetObstacle(size_t _index) const {
   if(_index < 0 || _index >= m_obstacles.size())
     throw RunTimeException(WHERE,
         "Cannot access StaticBody '" + ::to_string(_index) + "'.");
-  return m_obstacles[_index];
+  return m_obstacles[_index].get();
 }
 
 
-shared_ptr<StaticMultiBody>
+StaticMultiBody*
 Environment::
 GetRandomObstacle() const {
   if(m_obstacles.empty())
     throw RunTimeException(WHERE, "No static multibodies to select from.");
 
   size_t rIndex = LRand() % m_obstacles.size();
-  return m_obstacles[rIndex];
+  return m_obstacles[rIndex].get();
 }
 
 
@@ -295,8 +283,6 @@ ComputeObstacleVertexMap() const {
 void
 Environment::
 BuildCDStructure() {
-  for(auto& body : m_robots)
-    body->BuildCDStructure();
   for(auto& body : m_obstacles)
     body->BuildCDStructure();
 }
@@ -339,9 +325,9 @@ WriteBoundary(ostream& _os) {
 
 void
 Environment::
-ComputeResolution() {
+ComputeResolution(vector<shared_ptr<ActiveMultiBody>> _robots) {
   double bodiesMinSpan = numeric_limits<double>::max();
-  for(auto& body : m_robots)
+  for(auto& body : _robots)
     bodiesMinSpan = min(bodiesMinSpan, body->GetMaxAxisRange());
 
   for(auto& body : m_obstacles)
@@ -351,65 +337,9 @@ ComputeResolution() {
   if(m_positionRes < 0)
     m_positionRes = bodiesMinSpan * m_positionResFactor;
 
-#if (defined(PMPReachDistCC) || defined(PMPReachDistCCFixed))
-  //make sure to calculate the rdRes based upon the DOF of the robot
-  m_rdRes *= Cfg::GetNumOfJoints();
-#endif
 #ifdef PMPState
   State::SetTimeRes(m_timeRes);
 #endif
-}
-
-
-#ifdef PMPState
-template<>
-bool
-Environment::
-InCSpace<State>(const State& _cfg, shared_ptr<Boundary> _b) {
-  size_t activeBodyIndex = _cfg.GetRobotIndex();
-  return static_pointer_cast<NonHolonomicMultiBody>(m_robots[activeBodyIndex])->
-    InSSpace(_cfg.GetData(), _cfg.GetVelocity(), _b);
-}
-#endif
-
-
-bool
-Environment::
-InWSpace(const Cfg& _cfg, shared_ptr<Boundary> _b) {
-  shared_ptr<ActiveMultiBody> robot = m_robots[_cfg.GetRobotIndex()];
-
-  if(_b->GetClearance(_cfg.GetRobotCenterPosition()) <
-      robot->GetBoundingSphereRadius()) { //faster, loose check
-    // Robot is close to wall, have a strict check.
-    _cfg.ConfigEnvironment(); // Config the robot in the environment.
-
-    //check each part of the robot multibody for being inside of the boundary
-    for(size_t m = 0; m < robot->NumFreeBody(); ++m) {
-      Transformation& worldTransformation = robot->GetFreeBody(m)->
-          WorldTransformation();
-
-      //first check just the boundary of the polyhedron
-      GMSPolyhedron& bbPoly = robot->GetFreeBody(m)->GetBoundingBoxPolyhedron();
-      bool bcheck = true;
-      for(const auto& v : bbPoly.m_vertexList) {
-        if(!_b->InBoundary(worldTransformation * v)) {
-          bcheck = false;
-          break;
-        }
-      }
-
-      //boundary of polyhedron is inside the boundary thus the whole geometry is
-      if(bcheck)
-        continue;
-
-      //the boundary intersected. Now check the geometry itself.
-      GMSPolyhedron& poly = robot->GetFreeBody(m)->GetPolyhedron();
-      for(const auto& v : poly.m_vertexList)
-        if(!_b->InBoundary(worldTransformation * v))
-          return false;
-    }
-  }
-  return true;
 }
 
 /*----------------------------------------------------------------------------*/

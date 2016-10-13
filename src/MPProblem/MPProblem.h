@@ -1,11 +1,14 @@
 #ifndef MP_PROBLEM_H_
 #define MP_PROBLEM_H_
 
+#include <vector>
+
 #include "MPProblemBase.h"
 #include "MPProblem/ConfigurationSpace/Roadmap.h"
 #include "MPProblem/Environment/Environment.h"
 #include "Utilities/MetricUtils.h"
 #include "Utilities/MPUtils.h"
+#include "Utilities/PMPLExceptions.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 /// @brief Representation of a motion planning problem. It owns the environment,
@@ -57,6 +60,21 @@ class MPProblem : public MPProblemBase
     void SetEnvironment(Environment* _e) {m_environment = _e;}
 
     ///@}
+    ///@name Robot Accessors
+    ///@{
+
+    ////////////////////////////////////////////////////////////////////////////
+    /// @return Number of Active MultiBodies
+    size_t NumRobots() const {return m_robots.size();}
+
+    ////////////////////////////////////////////////////////////////////////////
+    /// @param _index Requested multibody
+    /// @return Pointer to active multibody
+    ActiveMultiBody* GetRobot(size_t _index) const;
+
+    vector<ActiveMultiBody*> GetRobots() const;
+
+    ///@}
     ///@name Query Accessors
     ///@{
 
@@ -83,9 +101,10 @@ class MPProblem : public MPProblemBase
 
     virtual void Print(ostream& _os) const; ///< Print each method set.
 
+    ///@}
+
   protected:
 
-    ///@}
     ///@name Construction Helpers
     ///@{
 
@@ -100,17 +119,20 @@ class MPProblem : public MPProblemBase
     ///@name Core Properties
     ///@{
 
-    string       m_baseFilename; ///< The base name for output files.
     Environment* m_environment;  ///< The environment to plan in.
+
     RoadmapType* m_roadmap;      ///< The free-space roadmap.
     RoadmapType* m_blockRoadmap; ///< The obstacle-space roadmap.
     StatClass*   m_stats;        ///< Performance tracking object.
 
+    vector<shared_ptr<ActiveMultiBody>> m_robots;  ///< Robots.
+
     ///@}
-    ///@name Inputs
+    ///@name Files
     ///@{
 
-    string         m_queryFilename; ///< The query file name.
+    string m_baseFilename;  ///< The base name for output files.
+    string m_queryFilename; ///< The query file name.
 
     ///@}
 
@@ -140,6 +162,7 @@ MPProblem<MPTraits>::
   delete m_blockRoadmap;
   delete m_stats;
   delete m_environment;
+  m_robots.clear();
 }
 
 
@@ -179,11 +202,15 @@ ReadXMLFile(const string& _filename) {
     throw ParseException(WHERE, "Cannot find Input node in XML file '" +
         _filename + "'.");
 
-  // Parse the input node first to set the environment, then parse the MP node
-  // to set algorithms and parameters.
-  if(!envIsSet)
+  // Parse the input node to set the environment and query.
+  if(!envIsSet) {
+    Cfg::GetRobots().clear();
     for(auto& child : *input)
       ParseChild(child);
+    m_robots = Cfg::GetRobots();
+  }
+
+  // Read robots from Cfg class.
 
   // Print XML details if requested.
   bool print = mpNode.Read("print", false, false, "Print all XML input");
@@ -221,6 +248,30 @@ ParseChild(XMLNode& _node) {
     return false;
 }
 
+/*------------------------------ Robot Functions -----------------------------*/
+
+template<class MPTraits>
+ActiveMultiBody*
+MPProblem<MPTraits>::
+GetRobot(size_t _index) const {
+  if(_index < 0 || _index >= m_robots.size())
+    throw RunTimeException(WHERE,
+        "Cannot access ActiveBody '" + ::to_string(_index) + "'.");
+  return m_robots[_index].get();
+}
+
+
+template<class MPTraits>
+vector<ActiveMultiBody*>
+MPProblem<MPTraits>::
+GetRobots() const {
+  vector<ActiveMultiBody*> robots;
+  robots.reserve(m_robots.size());
+  for(const auto& ptr : m_robots)
+    robots.push_back(ptr.get());
+  return robots;
+}
+
 /*-------------------------------- Debugging ---------------------------------*/
 
 template<class MPTraits>
@@ -230,8 +281,6 @@ Print(ostream& _os) const {
   _os << "MPProblem" << endl;
   m_environment->Print(_os);
 }
-
-/*--------------------------- Execution Interface ----------------------------*/
 
 /*----------------------------------------------------------------------------*/
 

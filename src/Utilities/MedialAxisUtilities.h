@@ -333,7 +333,7 @@ ExactCollisionInfo(CfgType& _cfg, CfgType& _clrCfg,
   // If not using the bbx, done
   if(m_useBBX){
     // CfgType is now know as good, get BBX and ROBOT info
-    shared_ptr<ActiveMultiBody> robot = env->GetRobot(_cfg.GetRobotIndex());
+    auto robot = _cfg.GetRobot();
 
     // Find closest point between robot and bbx, set if less than min dist from obstacles
     for(size_t m=0; m < robot->NumFreeBody(); ++m) {
@@ -1071,7 +1071,6 @@ PushCfgToMedialAxis(CfgType& _cfg, shared_ptr<Boundary> _bb) {
 
   Environment* env = this->GetEnvironment();
   auto vcm = this->GetValidityChecker(this->m_vcLabel);
-  shared_ptr<ActiveMultiBody> robot = env->GetRobot(_cfg.GetRobotIndex());
 
   CDInfo tmpInfo;
   tmpInfo.ResetVars();
@@ -1212,7 +1211,7 @@ FindMedialAxisBorderExact(
     CfgType& _startCfg, CfgType& _endingCfg,
     double& _upperBound, double& _lowerBound, double& _stepSize) {
   Environment* env = this->GetEnvironment();
-  shared_ptr<ActiveMultiBody> robot = env->GetRobot(_cfg.GetRobotIndex());
+  auto robot = _cfg.GetRobot();
   auto vcm = this->GetValidityChecker(this->m_vcLabel);
 
   CDInfo tmpInfo;

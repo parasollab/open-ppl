@@ -82,10 +82,6 @@ class Environment {
     double GetOrientationRes() const {return m_orientationRes;}
     void SetOrientationRes(double _res) {m_orientationRes = _res;}
 
-#if (defined(PMPReachDistCC) || defined(PMPReachDistCCFixed))
-    double GetRDRes() const {return m_rdRes;} ///< Reachable distance resolution.
-#endif
-
     double GetTimeRes() const {return m_timeRes;}
 
     ///@}
@@ -116,25 +112,21 @@ class Environment {
     ////////////////////////////////////////////////////////////////////////////
     /// @brief Resize the boundary to a margin away from the obstacles
     /// @param _d Margin to increase minimum bounding box
-    /// @param _robotIndex Robot to base the margin off of
+    /// @param _robot Robot to base the margin off of
     ///
     /// Reset the boundary to the minimum bounding box surrounding the obstacles
     /// increased by a margin of _d + robotRadius.
-    void ResetBoundary(double _d, size_t _robotIndex);
+    void ResetBoundary(double _d, ActiveMultiBody* _robot);
 
     ////////////////////////////////////////////////////////////////////////////
     /// @brief Expand the boundary by a margin of _d + robotRadius
     /// @param _d Margin to increase bounding box
-    /// @param _robotIndex Robot to base the margin off of
-    void ExpandBoundary(double _d, size_t _robotIndex);
+    /// @param _robot Robot to base the margin off of
+    void ExpandBoundary(double _d, ActiveMultiBody* _robot);
 
     ///@}
-    ///@name Multibody Functions
+    ///@name Obstacle Functions
     ///@{
-
-    ////////////////////////////////////////////////////////////////////////////
-    /// @return Number of Active MultiBodies
-    size_t NumRobots() const {return m_robots.size();}
 
     ////////////////////////////////////////////////////////////////////////////
     /// @return Number of Static MultiBodies
@@ -142,17 +134,12 @@ class Environment {
 
     ////////////////////////////////////////////////////////////////////////////
     /// @param _index Requested multibody
-    /// @return Pointer to active multibody
-    shared_ptr<ActiveMultiBody> GetRobot(size_t _index) const;
-
-    ////////////////////////////////////////////////////////////////////////////
-    /// @param _index Requested multibody
     /// @return Pointer to static multibody
-    shared_ptr<StaticMultiBody> GetObstacle(size_t _index) const;
+    StaticMultiBody* GetObstacle(size_t _index) const;
 
     ////////////////////////////////////////////////////////////////////////////
     /// @return Pointer to random static multibody
-    shared_ptr<StaticMultiBody> GetRandomObstacle() const;
+    StaticMultiBody* GetRandomObstacle() const;
 
     ////////////////////////////////////////////////////////////////////////////
     /// @brief Add Obstacle to environment
@@ -220,24 +207,7 @@ class Environment {
     /// based on minimum of max body spans multiplied by @c m_positionResFactor.
     /// Reachable distance resolution is computed based upon input res
     /// multiplied by the number of joints.
-    void ComputeResolution();
-
-    ////////////////////////////////////////////////////////////////////////////
-    /// @tparam CfgType Configuration class type
-    /// @brief Determine if @p _cfg is within physical robot contraints
-    /// @param _cfg Configuration
-    /// @param _b Workspace region of environment
-    /// @return True if @p _cfg is inside physical robot constraints
-    template<class CfgType>
-    bool InCSpace(const CfgType& _cfg, shared_ptr<Boundary> _b);
-
-    ////////////////////////////////////////////////////////////////////////////
-    /// @tparam CfgType Configuration class type
-    /// @brief Determine if @p _cfg is within workspace boundary
-    /// @param _cfg Configuration
-    /// @param _b Workspace region of environment
-    /// @return True if @p _cfg is inside workspace boundary
-    bool InWSpace(const Cfg& _cfg, shared_ptr<Boundary> _b);
+    void ComputeResolution(vector<shared_ptr<ActiveMultiBody>> _robots);
 
     ///@}
     ///@name File Info
@@ -255,7 +225,6 @@ class Environment {
     double m_positionResFactor;      ///< Factor of body span to use as auto-
                                      ///< computed positional resolution.
     double m_orientationRes{.05};    ///< Rotational resolution of movement.
-    double m_rdRes{.05};             ///< Resolution for movement in RD space.
     double m_timeRes{.05};           ///< Resolution for time.
 
     ///@}
@@ -264,7 +233,6 @@ class Environment {
 
     shared_ptr<Boundary> m_boundary; ///< Workspace boundary.
 
-    vector<shared_ptr<ActiveMultiBody>> m_robots;    ///< Robots.
     vector<shared_ptr<StaticMultiBody>> m_obstacles; ///< Other multibodies.
 
     ///@}
@@ -283,26 +251,8 @@ template<class CfgType>
 bool
 Environment::
 InBounds(const CfgType& _cfg, shared_ptr<Boundary> _b) {
-  return InCSpace(_cfg, _b) && InWSpace(_cfg, _b);
+  return _cfg.GetRobot()->InCSpace(_cfg.GetData(), _b) && _b->InBoundary(_cfg);
 }
-
-/*--------------------------------- Helpers ----------------------------------*/
-
-template<class CfgType>
-bool
-Environment::
-InCSpace(const CfgType& _cfg, shared_ptr<Boundary> _b) {
-  size_t activeBodyIndex = _cfg.GetRobotIndex();
-  return m_robots[activeBodyIndex]->InCSpace(_cfg.GetData(), _b);
-}
-
-
-#ifdef PMPState
-template<>
-bool
-Environment::
-InCSpace<State>(const State& _cfg, shared_ptr<Boundary> _b);
-#endif
 
 /*----------------------------------------------------------------------------*/
 

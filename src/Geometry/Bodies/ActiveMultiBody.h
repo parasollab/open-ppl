@@ -22,7 +22,9 @@ enum class DofType {
 /// A MultiBody representing a Robot in workspace.
 ////////////////////////////////////////////////////////////////////////////////
 class ActiveMultiBody : public MultiBody {
+
   public:
+
     typedef shared_ptr<Connection> Joint; ///< Joint of robot
 
     ////////////////////////////////////////////////////////////////////////////
@@ -41,21 +43,17 @@ class ActiveMultiBody : public MultiBody {
       double m_maxVal; ///< DOF max val
     };
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// @name Contructors
-    /// @{
+    ///@name Contruction
+    ///@{
 
     ActiveMultiBody();
 
     ActiveMultiBody(const ActiveMultiBody&) = delete;            ///< No copy
     ActiveMultiBody& operator=(const ActiveMultiBody&) = delete; ///< No assign
 
-    /// @}
-    ////////////////////////////////////////////////////////////////////////////
-
-    ////////////////////////////////////////////////////////////////////////////
-    /// @name Bodies
-    /// @{
+    ///@}
+    ///@name Bodies
+    ///@{
 
     ////////////////////////////////////////////////////////////////////////////
     /// @return Number of free body
@@ -65,18 +63,15 @@ class ActiveMultiBody : public MultiBody {
     /// @return Free body accroding to the given index
     shared_ptr<FreeBody> GetFreeBody(size_t _index) const;
 
-    /// @}
-    ////////////////////////////////////////////////////////////////////////////
-
-    ////////////////////////////////////////////////////////////////////////////
-    /// @name Robot Information
-    /// @{
+    ///@}
+    ///@name Robot Information
+    ///@{
 
     ////////////////////////////////////////////////////////////////////////////
     /// @brief Initialize DOFTypes of robot
     /// @param _b Boundary for DOF ranges
     /// @param _os If not null, DOF type information will be output here as well
-    void InitializeDOFs(shared_ptr<Boundary>& _b, ostream* _os = NULL);
+    void InitializeDOFs(shared_ptr<Boundary>& _b, ostream* _os = nullptr);
 
     ////////////////////////////////////////////////////////////////////////////
     /// @return Base Body type
@@ -84,7 +79,7 @@ class ActiveMultiBody : public MultiBody {
     ////////////////////////////////////////////////////////////////////////////
     /// @return Base movement type
     FreeBody::MovementType GetBaseMovementType() const {return m_baseMovement;}
-    
+
     ////////////////////////////////////////////////////////////////////////////
     /// @void set Base movement type
     void SetBaseMovementType(FreeBody::MovementType _mt) {m_baseMovement=_mt;}
@@ -95,35 +90,37 @@ class ActiveMultiBody : public MultiBody {
 
     ////////////////////////////////////////////////////////////////////////////
     /// @return const_iterator to begin of joints data
-    vector<Joint>::const_iterator joints_begin() const { return m_joints.begin(); }
+    vector<Joint>::const_iterator joints_begin() const {return m_joints.begin();}
+
     ////////////////////////////////////////////////////////////////////////////
     /// @return const_iterator to end of joints data
-    vector<Joint>::const_iterator joints_end() const { return m_joints.end(); }
+    vector<Joint>::const_iterator joints_end() const {return m_joints.end();}
 
     ////////////////////////////////////////////////////////////////////////////
     /// @return DOF type information of robot
-    const vector<DofType>& GetDOFTypes() const {return m_dofTypes;}
+    const DofType& GetDOFType(const size_t _i) const {return m_dofTypes[_i];}
+
     ////////////////////////////////////////////////////////////////////////////
     /// @return DOF range information of robot
     const vector<DOFInfo>& GetDOFInfo() const {return m_dofInfo;}
+
     ////////////////////////////////////////////////////////////////////////////
     /// @return Number of DOF for this robot
     size_t DOF() const {return m_dofTypes.size();}
+
     ////////////////////////////////////////////////////////////////////////////
     /// @return Number of positional DOF for this robot
     size_t PosDOF() const;
 
-    /// @}
-    ////////////////////////////////////////////////////////////////////////////
-
-    ////////////////////////////////////////////////////////////////////////////
-    /// @name Configuration Methods
-    /// @{
+    ///@}
+    ///@name Configuration Methods
+    ///@{
 
     ////////////////////////////////////////////////////////////////////////////
     /// @brief Place robot at @p _v
     /// @param _v Configuration DOF parameters
     void Configure(const vector<double>& _v);
+
     ////////////////////////////////////////////////////////////////////////////
     /// @brief Place robot at @p _v for DOF and _t for theta values
     /// @param _v Configuration DOF parameters
@@ -144,6 +141,7 @@ class ActiveMultiBody : public MultiBody {
     /// @brief Sample random configuration in boundary
     /// @param _boundary Boundary
     vector<double> GetRandomCfg(shared_ptr<Boundary>& _boundary);
+
     ////////////////////////////////////////////////////////////////////////////
     /// @brief   Get the DOF ranges for a given boundary.
     /// @param[in] _b The boundary in question.
@@ -162,23 +160,18 @@ class ActiveMultiBody : public MultiBody {
     /// @param[out] _result Polygonal Approximation
     void PolygonalApproximation(vector<Vector3d>& _result);
 
-    /// @}
-    ////////////////////////////////////////////////////////////////////////////
-
-    ////////////////////////////////////////////////////////////////////////////
-    /// @name I/O
-    /// @{
+    ///@}
+    ///@name I/O
+    ///@{
 
     virtual void Read(istream& _is, CountingStreamBuffer& _cbs);
     virtual void Write(ostream& _os);
 
-    /// @}
-    ////////////////////////////////////////////////////////////////////////////
-    
+    ///@}
+
     ////////////////////////////////////////////////////////////////////////////
     /// @param _body Body to add
     void AddBody(const shared_ptr<FreeBody>& _body);
-
 
     ////////////////////////////////////////////////////////////////////////////
     /// @param _body Body to set as base body
@@ -186,7 +179,6 @@ class ActiveMultiBody : public MultiBody {
     /// function.
     /// This code is used in GB. If touched, someone in GB should verify change.
     void SetBaseBody(const shared_ptr<FreeBody>& _body);
-
 
   private:
 

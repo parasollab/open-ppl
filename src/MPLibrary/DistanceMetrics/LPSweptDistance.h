@@ -120,7 +120,6 @@ Distance(const CfgType& _c1, const CfgType& _c2) {
   if(std::isnan(m_orientationRes))
     m_orientationRes = this->GetEnvironment()->GetOrientationRes();
 
-  Environment* env = this->GetEnvironment();
   StatClass stats;
   auto lpMethod = this->GetLocalPlanner(m_lpLabel);
   LPOutput<MPTraits> lpOutput;
@@ -135,27 +134,24 @@ Distance(const CfgType& _c1, const CfgType& _c2) {
   cfgs.push_back(_c2);
   double d = 0;
   vector<GMSPolyhedron> poly2;
-  int robot = _c1.GetRobotIndex();
-  int bodyCount = env->GetRobot(robot)->NumFreeBody();
-  cfgs.begin()->ConfigEnvironment();
-  for(int b=0; b<bodyCount; ++b)
+  auto robot = _c1.GetRobot();
+  int bodyCount = robot->NumFreeBody();
+  cfgs.begin()->ConfigureRobot();
+  for(int b=0; b<bodyCount; ++b) {
     if(m_useBBox)
-      poly2.push_back(env->GetRobot(robot)->GetFreeBody(b)->
-          GetWorldBoundingBox());
+      poly2.push_back(robot->GetFreeBody(b)->GetWorldBoundingBox());
     else
-      poly2.push_back(env->GetRobot(robot)->GetFreeBody(b)->
-          GetWorldPolyhedron());
+      poly2.push_back(robot->GetFreeBody(b)->GetWorldPolyhedron());
+  }
   for(auto cit = cfgs.begin(); cit + 1 != cfgs.end(); ++cit) {
     vector<GMSPolyhedron> poly1(poly2);
     poly2.clear();
-    (cit+1)->ConfigEnvironment();
+    (cit+1)->ConfigureRobot();
     for(int b=0; b<bodyCount; ++b)
       if(m_useBBox)
-        poly2.push_back(env->GetRobot(robot)->GetFreeBody(b)->
-            GetWorldBoundingBox());
+        poly2.push_back(robot->GetFreeBody(b)->GetWorldBoundingBox());
       else
-        poly2.push_back(env->GetRobot(robot)->GetFreeBody(b)->
-            GetWorldPolyhedron());
+        poly2.push_back(robot->GetFreeBody(b)->GetWorldPolyhedron());
     d += SweptDistance(poly1, poly2);
   }
   return d;

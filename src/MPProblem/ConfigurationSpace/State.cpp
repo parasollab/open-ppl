@@ -12,12 +12,12 @@ double State::m_timeRes = 0;
 
 State::
 State(size_t _index) : Cfg(_index) {
-  if(m_dof.size() > 0)
-    m_vel.resize(m_dof[m_robotIndex], 0.0);
+  if(!m_robots.empty())
+    m_vel.resize(DOF(), 0.0);
 }
 
 State::
-State(const Cfg& _other) : Cfg(_other), m_vel(m_dof[m_robotIndex], 0) {
+State(const Cfg& _other) : Cfg(_other), m_vel(DOF(), 0) {
 }
 
 State::
@@ -27,7 +27,7 @@ State(const State& _other) : Cfg(_other), m_vel(_other.m_vel) {
 State
 State::operator=(const State& _other) {
   Cfg::operator=(_other);
-  for(size_t i = 0; i < m_dof[m_robotIndex]; ++i)
+  for(size_t i = 0; i < DOF(); ++i)
     m_vel[i] = _other.m_vel[i];
   return *this;
 }
@@ -39,7 +39,7 @@ operator==(const State& _other) const {
   if(!cfgequal)
     return false;
 
-  for(size_t i = 0; i < m_dof[m_robotIndex]; ++i) {
+  for(size_t i = 0; i < DOF(); ++i) {
     double eps = Epsilon(m_vel[i], _other.m_vel[i]);
     if(abs(m_vel[i] - _other.m_vel[i]) > eps)
       return false;
@@ -58,7 +58,7 @@ operator+(const State& _s) const {
 State&
 State::
 operator+=(const State& _s) {
-  for(size_t i = 0; i < m_dof[m_robotIndex]; ++i) {
+  for(size_t i = 0; i < DOF(); ++i) {
     m_v[i] += _s.m_v[i];
     m_vel[i] += _s.m_vel[i];
   }
@@ -77,8 +77,9 @@ operator-(const State& _s) const {
 State&
 State::
 operator-=(const State& _s) {
-  for(size_t i = 0; i < m_dof[m_robotIndex]; ++i) {
-    if(m_dofTypes[m_robotIndex][i] == DofType::Positional || m_dofTypes[m_robotIndex][i] == DofType::Joint)
+  for(size_t i = 0; i < DOF(); ++i) {
+    if(GetRobot()->GetDOFType(i) == DofType::Positional ||
+        GetRobot()->GetDOFType(i) == DofType::Joint)
       m_v[i] -= _s.m_v[i];
     else
       m_v[i] = DirectedAngularDistance(m_v[i], _s.m_v[i]);
@@ -92,7 +93,7 @@ State
 State::
 operator-() const {
   State result = *this;
-  for(size_t i = 0; i < m_dof[m_robotIndex]; ++i) {
+  for(size_t i = 0; i < DOF(); ++i) {
     result.m_v[i] = -result.m_v[i];
     result.m_vel[i] = -result.m_vel[i];
   }
@@ -111,7 +112,7 @@ operator*(double _d) const {
 State&
 State::
 operator*=(double _d) {
-  for(size_t i = 0; i < m_dof[m_robotIndex]; ++i) {
+  for(size_t i = 0; i < DOF(); ++i) {
     m_v[i] *= _d;
     m_vel[i] *= _d;
   }
@@ -130,7 +131,7 @@ operator/(double _d) const {
 State&
 State::
 operator/=(double _d) {
-  for(size_t i = 0; i < m_dof[m_robotIndex]; ++i) {
+  for(size_t i = 0; i < DOF(); ++i) {
     m_v[i] /= _d;
     m_vel[i] /= _d;
   }
@@ -226,7 +227,7 @@ F(const State& _s, const Vector3d& _force, const Vector3d& _torque) {
 
   //vdot = r*force/M
   Vector3d force = r * _force;
-  for(size_t i = 0; i < m_posdof[_s.m_robotIndex]; ++i)
+  for(size_t i = 0; i < _s.PosDOF(); ++i)
     xdot.m_vel[i] = force[i] / body->GetMass();
 
   //wdot = r*I^-1*torque

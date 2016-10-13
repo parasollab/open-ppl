@@ -108,6 +108,7 @@ Sampler(CfgType& _cfg, shared_ptr<Boundary> _boundary,
   Environment* env = this->GetEnvironment();
   auto vc = this->GetValidityChecker(m_vcLabel);
   auto dm = this->GetDistanceMetric(m_dmLabel);
+  auto robot = _cfg.GetRobot();
 
   string callee(this->GetNameAndLabel() + "::SampleImpl()");
   CDInfo cdInfo;
@@ -115,18 +116,16 @@ Sampler(CfgType& _cfg, shared_ptr<Boundary> _boundary,
   bool generated = false;
   int cfg1Witness;
 
-  double length = m_length ? m_length :
-    env->GetRobot(_cfg.GetRobotIndex())->GetMaxAxisRange();
+  double length = m_length ? m_length : robot->GetMaxAxisRange();
 
   //extend boundary
-  env->ExpandBoundary(length, _cfg.GetRobotIndex());
+  env->ExpandBoundary(length, robot);
 
   //Generate first cfg
   CfgType& cfg1 = _cfg;
 
   //restore boundary
-  env->ExpandBoundary(-length - 2*env->GetRobot(_cfg.GetRobotIndex())->
-      GetBoundingSphereRadius(), _cfg.GetRobotIndex());
+  env->ExpandBoundary(-length - 2 * robot->GetBoundingSphereRadius(), robot);
 
   CfgType tmp;
   m_clearanceUtility.CollisionInfo(cfg1, tmp, _boundary, cfg1.m_clearanceInfo);

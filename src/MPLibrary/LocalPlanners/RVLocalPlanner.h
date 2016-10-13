@@ -87,8 +87,8 @@ class RVLocalPlanner: public LocalPlannerMethod<MPTraits> {
       vector<Vector3d> joints2;
       CfgType c2Copy = _c2;
       c2Copy.ResetRigidBodyCoordinates();
-      c2Copy.ConfigEnvironment();
-      env->GetRobot(c2Copy.GetRobotIndex())->PolygonalApproximation(joints2);
+      c2Copy.ConfigureRobot();
+      _c2.GetRobot()->PolygonalApproximation(joints2);
       queue<shared_ptr<ReachableVolumeJointTreeNode> > joints;
       joints.push(m_rvr.m_RVLinkages.front()->m_root);
       while(!joints.empty()){
@@ -106,9 +106,9 @@ class RVLocalPlanner: public LocalPlannerMethod<MPTraits> {
 	while(!stop){
 	  CfgType tickCopy=tick;
 	  tickCopy.ResetRigidBodyCoordinates();
-	  tickCopy.ConfigEnvironment();
+	  tickCopy.ConfigureRobot();
 	  vector<Vector3d> jointsTick;
-	  env->GetRobot(tickCopy.GetRobotIndex())->PolygonalApproximation(jointsTick);
+	  tickCopy.GetRobot()->PolygonalApproximation(jointsTick);
 	  double d_joints=ReachableVolume::distance(jointsTick[jid],joints2[jid]);
 	  double rvRes=m_rvres;
 	  if(d_joints<=m_rvres*2){
@@ -131,7 +131,7 @@ class RVLocalPlanner: public LocalPlannerMethod<MPTraits> {
 
 	  tick.SetJointData(*jointAngleCfg);
 	  delete(jointAngleCfg);
-	  tick.ConfigEnvironment();
+	  tick.ConfigureRobot();
 	  if(!env->InBounds(tick) || !vcm->IsValid(tick, cdInfo, callee)) {
 	    return false;
 	  }
