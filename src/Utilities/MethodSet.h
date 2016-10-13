@@ -106,8 +106,9 @@ class MethodSet final {
     MethodPointer GetMethod(const std::string& _label);
 
     ////////////////////////////////////////////////////////////////////////////
-    /// @brief Set the MPProblem object for all methods in this set.
-    void SetMPProblem(MPProblemType* _problem);
+    /// @brief Prepare all methods in this set for execution on the owning
+    ///        MPLibrary's current MPProblem.
+    void Initialize();
 
     ////////////////////////////////////////////////////////////////////////////
     /// @brief Display the instantiated methods.
@@ -237,9 +238,9 @@ GetMethod(const std::string& _label) {
 template <typename MPTraits, typename Method>
 void
 MethodSet<MPTraits, Method>::
-SetMPProblem(MPProblemType* _problem) {
+Initialize() {
   for(auto& elem : m_elements)
-    elem.second->SetMPProblem(_problem);
+    elem.second->Initialize();
 }
 
 
@@ -263,6 +264,7 @@ Print(ostream& _os) const {
 /*--------------------------------- Iteration --------------------------------*/
 
 template <typename MPTraits, typename Method>
+inline
 typename MethodSet<MPTraits, Method>::iterator
 MethodSet<MPTraits, Method>::
 begin() noexcept {
@@ -271,6 +273,7 @@ begin() noexcept {
 
 
 template <typename MPTraits, typename Method>
+inline
 typename MethodSet<MPTraits, Method>::iterator
 MethodSet<MPTraits, Method>::
 end() noexcept {
@@ -279,6 +282,7 @@ end() noexcept {
 
 
 template <typename MPTraits, typename Method>
+inline
 typename MethodSet<MPTraits, Method>::const_iterator
 MethodSet<MPTraits, Method>::
 begin() const noexcept {
@@ -287,6 +291,7 @@ begin() const noexcept {
 
 
 template <typename MPTraits, typename Method>
+inline
 typename MethodSet<MPTraits, Method>::const_iterator
 MethodSet<MPTraits, Method>::
 end() const noexcept {

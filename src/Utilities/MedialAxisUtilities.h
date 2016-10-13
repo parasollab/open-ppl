@@ -54,10 +54,8 @@ class ClearanceUtility : public MPBaseObject<MPTraits> {
 
     ClearanceUtility(XMLNode& _node);
 
-    void ParseXML(XMLNode& _node);
-
     virtual void Print(ostream& _os) const;
-    virtual void SetMPProblem(MPProblemType* _p);
+    virtual void Initialize();
 
     string GetDistanceMetricLabel() const {return m_dmLabel;}
     string GetValidityCheckerLabel() const {return m_vcLabel;}
@@ -134,8 +132,6 @@ class MedialAxisUtility : public ClearanceUtility<MPTraits> {
 
     MedialAxisUtility(XMLNode& _node);
 
-    void ParseXML(XMLNode& _node);
-
     double GetEpsilon() const {return m_epsilon;}
 
     virtual void Print(ostream& _os) const;
@@ -198,35 +194,21 @@ ClearanceUtility(
     size_t _clearanceRays, size_t _penetrationRays,
     double _approxStepSize, double _approxResolution,
     bool _useBBX, bool _positional, bool _debug):
-  m_vcLabel(_vcLabel), m_dmLabel(_dmLabel),
-  m_exactClearance(_exactClearance), m_exactPenetration(_exactPenetration),
-  m_clearanceRays(_clearanceRays), m_penetrationRays(_penetrationRays),
-  m_approxStepSize(_approxStepSize), m_approxResolution(_approxResolution),
-  m_useBBX(_useBBX), m_positional(_positional){
-    this->m_name = "ClearanceUtility";
-    this->m_debug = _debug;
+    m_vcLabel(_vcLabel), m_dmLabel(_dmLabel),
+    m_exactClearance(_exactClearance), m_exactPenetration(_exactPenetration),
+    m_clearanceRays(_clearanceRays), m_penetrationRays(_penetrationRays),
+    m_approxStepSize(_approxStepSize), m_approxResolution(_approxResolution),
+    m_useBBX(_useBBX), m_positional(_positional){
+  this->SetName("ClearanceUtility");
+  this->m_debug = _debug;
+}
 
-    if(m_approxStepSize == MAX_DBL &&
-        this->GetMPProblem() != NULL && this->GetEnvironment() != NULL)
-      m_approxStepSize = 1. /
-        this->GetEnvironment()->GetBoundary()->GetMaxDist();
-    if(m_approxResolution == MAX_DBL &&
-        this->GetMPProblem() != NULL && this->GetEnvironment() != NULL)
-      m_approxResolution = 1. /
-        this->GetEnvironment()->GetBoundary()->GetMaxDist();
-  }
 
 template<class MPTraits>
 ClearanceUtility<MPTraits>::
 ClearanceUtility(XMLNode& _node) : MPBaseObject<MPTraits>(_node) {
-  this->m_name = "ClearanceUtility";
-  ParseXML(_node);
-}
+  this->SetName("ClearanceUtility");
 
-template<class MPTraits>
-void
-ClearanceUtility<MPTraits>::
-ParseXML(XMLNode& _node){
   m_vcLabel = _node.Read("vcLabel", true, "", "Validity Test Method");
   m_dmLabel = _node.Read("dmLabel", true, "", "Distance metric");
 
@@ -239,12 +221,11 @@ ParseXML(XMLNode& _node){
   m_exactPenetration = penetrationType.compare("exact")==0;
 
   //if approximate calculations require number of rays to be defined
-  double minStepSize = nan("");
   m_approxStepSize = _node.Read("stepSize", false,
-      minStepSize, minStepSize, MAX_DBL,
+      MAX_DBL, 0., MAX_DBL,
       "Step size for initial approximate computations as multiple of environment resolution");
   m_approxResolution = _node.Read("resolution", false,
-      minStepSize, minStepSize, MAX_DBL,
+      MAX_DBL, 0., MAX_DBL,
       "Resolution for final approximate computations as multiple of environment resolution");
   m_clearanceRays = _node.Read("clearanceRays",
       !m_exactClearance, 10, 1, 1000, "Number of Clearance Rays");
@@ -256,6 +237,7 @@ ParseXML(XMLNode& _node){
   m_positional = _node.Read("positional", false, true,
       "Use only positional DOFs");
 }
+
 
 template<class MPTraits>
 void
@@ -284,12 +266,11 @@ Print(ostream& _os) const {
 template<class MPTraits>
 void
 ClearanceUtility<MPTraits>::
-SetMPProblem(MPProblemType* _p) {
-  MPBaseObject<MPTraits>::SetMPProblem(_p);
+Initialize() {
   double minStepSize = 1. / this->GetEnvironment()->GetBoundary()->GetMaxDist();
-  if(std::isnan(m_approxStepSize))
+  if(m_approxStepSize == MAX_DBL)
     m_approxStepSize = minStepSize;
-  if(std::isnan(m_approxResolution))
+  if(m_approxResolution == MAX_DBL)
     m_approxResolution = minStepSize;
 }
 
@@ -909,7 +890,8 @@ MinEdgeClearance(const CfgType& _c1, const CfgType& _c2,
   }
   else{
     StraightLine<MPTraits> sl;
-    sl.SetMPProblem(this->GetMPProblem());
+    sl.SetMPLibrary(this->GetMPLibrary());
+    sl.Initialize();
     intermediates.insert(intermediates.begin(), _c1);
     intermediates.push_back(_c2);
     for(CIT cit = intermediates.begin(); (cit+1)!=intermediates.end(); ++cit) {
@@ -955,30 +937,25 @@ MedialAxisUtility(
     size_t _clearanceRays, size_t _penetrationRays,
     bool _useBBX, bool _positional, bool _debug,
     double _epsilon, size_t _historyLength) :
-  ClearanceUtility<MPTraits>(_vcLabel, _dmLabel,
-      _exactClearance, _exactPenetration, _clearanceRays, _penetrationRays,
-      _useBBX, _positional, _debug),
-  m_epsilon(_epsilon), m_historyLength(_historyLength) {
-    this->m_name = "MedialAxisUtility";
-  }
+    ClearanceUtility<MPTraits>(_vcLabel, _dmLabel,
+        _exactClearance, _exactPenetration, _clearanceRays, _penetrationRays,
+        _useBBX, _positional, _debug),
+    m_epsilon(_epsilon), m_historyLength(_historyLength) {
+  this->SetName("MedialAxisUtility");
+}
+
 
 template<class MPTraits>
 MedialAxisUtility<MPTraits>::
-MedialAxisUtility(XMLNode& _node):
-  ClearanceUtility<MPTraits>(_node) {
-    this->m_name = "MedialAxisUtility";
-    ParseXML(_node);
-  }
+MedialAxisUtility(XMLNode& _node) : ClearanceUtility<MPTraits>(_node) {
+  this->SetName("MedialAxisUtility");
 
-template<class MPTraits>
-void
-MedialAxisUtility<MPTraits>::
-ParseXML(XMLNode& _node) {
   m_epsilon = _node.Read("epsilon", false, 0.1, 0.0, 1.0,
       "Epsilon-Close to the MA (fraction of the resolution)");
   m_historyLength = _node.Read("historyLength", false, 5, 3, 100,
       "History Length");
 }
+
 
 template<class MPTraits>
 void

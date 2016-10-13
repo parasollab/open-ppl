@@ -30,13 +30,13 @@ class NegateValidity : public ValidityCheckerMethod<MPTraits> {
 template <typename MPTraits>
 NegateValidity<MPTraits>::NegateValidity(string _label) :
   ValidityCheckerMethod<MPTraits>(), m_vcLabel(_label) {
-    this->m_name = "NegateValidity";
+    this->SetName("NegateValidity");
   }
 
 template <typename MPTraits>
 NegateValidity<MPTraits>::NegateValidity(XMLNode& _node) :
   ValidityCheckerMethod<MPTraits>(_node) {
-    this->m_name = "NegateValidity";
+    this->SetName("NegateValidity");
     m_vcLabel = _node.Read("vcLabel", true, "", "validity checker method");
   }
 

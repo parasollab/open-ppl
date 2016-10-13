@@ -127,14 +127,14 @@ SparkPRM(size_t _maxNPCCSize, size_t _initSamples,
   m_dmLabel(_dmLabel), m_nfLabel(_nfLabel), m_nfVertexLabel(_nfVertexLabel),
   m_vcLabel(_vcLabel), m_cLabel(_cLabel), m_eLabel(_eLabel),
   m_rrtDebug(_rrtDebug) {
-    this->m_name += "WithRRT";
+    this->SetName("Spark" + this->GetName());
   }
 
 template<class MPTraits, template<typename> class Strategy>
 SparkPRM<MPTraits, Strategy>::
 SparkPRM(XMLNode& _node) :
   Strategy<MPTraits>(_node) {
-    this->m_name += "WithRRT";
+    this->SetName("Spark" + this->GetName());
     ParseXML(_node);
   }
 

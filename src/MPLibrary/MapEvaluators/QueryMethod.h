@@ -98,7 +98,7 @@ class QueryMethod : public MapEvaluatorMethod<MPTraits> {
 
     void ParseXML(XMLNode& _node);
     virtual void Print(ostream& _os) const override;
-    virtual void SetMPProblem(MPProblemType* _p) override;
+    virtual void Initialize() override;
 
     ///@}
     ///\name MapEvaluator Interface
@@ -240,12 +240,10 @@ Print(ostream& _os) const {
 template <typename MPTraits>
 void
 QueryMethod<MPTraits>::
-SetMPProblem(MPProblemType* _p) {
-  MPBaseObject<MPTraits>::SetMPProblem(_p);
-
+Initialize() {
   string queryFile = this->GetQueryFilename();
   if(!queryFile.empty())
-    ReadQuery(this->GetQueryFilename());
+    ReadQuery(queryFile);
 }
 
 /*-------------------------- MapEvaluator Interface --------------------------*/

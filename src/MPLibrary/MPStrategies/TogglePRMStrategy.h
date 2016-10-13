@@ -48,13 +48,13 @@ class TogglePRMStrategy : public MPStrategyMethod<MPTraits> {
 
 template <typename MPTraits>
 TogglePRMStrategy<MPTraits>::TogglePRMStrategy() : m_priority(false) {
-  this->m_name = "TogglePRMStrategy";
+  this->SetName("TogglePRMStrategy");
 }
 
 template <typename MPTraits>
 TogglePRMStrategy<MPTraits>::TogglePRMStrategy(XMLNode& _node) :
 MPStrategyMethod<MPTraits>(_node), m_priority(false) {
-  this->m_name = "TogglePRMStrategy";
+  this->SetName("TogglePRMStrategy");
   ParseXML(_node);
 }
 
@@ -141,9 +141,9 @@ TogglePRMStrategy<MPTraits>::Run() {
       else { // Invalid, add to obstacle roadmap. Toggle validity while connecting
         VID vid = this->GetBlockRoadmap()->GetGraph()->AddVertex(cfg);
         allColNodesVID.push_back(vid);
-        this->ToggleValidity();
+        this->GetMPLibrary()->ToggleValidity();
         Connect(make_pair("invalid", vid), allColNodesVID, queue);
-        this->ToggleValidity();
+        this->GetMPLibrary()->ToggleValidity();
       }
     }
 

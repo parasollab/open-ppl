@@ -1,5 +1,5 @@
-#ifndef ALWAYSTRUEVALIDITY_H
-#define ALWAYSTRUEVALIDITY_H
+#ifndef ALWAYS_TRUE_VALIDITY_H
+#define ALWAYS_TRUE_VALIDITY_H
 
 #include "ValidityCheckerMethod.h"
 
@@ -9,24 +9,57 @@
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
 class AlwaysTrueValidity : public ValidityCheckerMethod<MPTraits> {
+
   public:
+
+    ///@name Local Types
+    ///@{
+
     typedef typename MPTraits::CfgType CfgType;
 
-    AlwaysTrueValidity(){
-      this->m_name = "AlwaysTrueValidity";
-    }
+    ///@}
+    ///@name Construction
+    ///@{
 
-    AlwaysTrueValidity(XMLNode& _node)
-      : ValidityCheckerMethod<MPTraits>(_node){
-        this->m_name = "AlwaysTrueValidity";
-      }
+    AlwaysTrueValidity();
+    AlwaysTrueValidity(XMLNode& _node);
+    virtual ~AlwaysTrueValidity() = default;
 
-    virtual ~AlwaysTrueValidity(){}
+    ///@}
+    ///@name ValidityChecker Interface
+    ///@{
 
-    virtual bool IsValidImpl(CfgType& _cfg, CDInfo& _cdInfo, const string& _callName){
-      _cfg.SetLabel("Lazy", true);
-      return true;
-    }
+    virtual bool IsValidImpl(CfgType& _cfg, CDInfo& _cdInfo,
+        const string& _callName) override;
+
+    ///@}
 };
+
+/*------------------------------ Construction --------------------------------*/
+
+template <typename MPTraits>
+AlwaysTrueValidity<MPTraits>::
+AlwaysTrueValidity() {
+  this->SetName("AlwaysTrueValidity");
+}
+
+
+template <typename MPTraits>
+AlwaysTrueValidity<MPTraits>::
+AlwaysTrueValidity(XMLNode& _node) : ValidityCheckerMethod<MPTraits>(_node) {
+  this->SetName("AlwaysTrueValidity");
+}
+
+/*------------------------- ValidityChecker Interface ------------------------*/
+
+template <typename MPTraits>
+bool
+AlwaysTrueValidity<MPTraits>::
+IsValidImpl(CfgType& _cfg, CDInfo& _cdInfo, const string& _callName) {
+  _cfg.SetLabel("Lazy", true);
+  return true;
+}
+
+/*----------------------------------------------------------------------------*/
 
 #endif

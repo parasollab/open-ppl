@@ -438,8 +438,6 @@ class Band : public MPBaseObject<MPTraits> {
       _os << this->GetNameAndLabel() << ":: TODO" << endl;
     }
 
-    string GetName() const {return this->m_name;}
-
     // given initial set V (_first --> _last), and CFG v1, return V_n.
     template<typename InputIterator>
       vector< pair<VID, double> >

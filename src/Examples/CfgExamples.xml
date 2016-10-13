@@ -203,7 +203,7 @@
 
     <Connectors>
       <AdaptiveConnector label="AdaptiveCS" nfLabel="" lpLabel="sl"
-        percentRandom="0.5" checkIfSameCC="false" debug="true"
+        percentRandom="0.5" checkIfSameCC="false" debug="false"
         uniformProbability="false" fixedCost="false" fixedReward="false">
         <NeighborFinder Method="BFNF"/>
         <NeighborFinder Method="Nearest"/>
@@ -501,7 +501,7 @@
         connectorLabel="RRTConnect" debug="false"/>-->
 
       <!-- Spark PRM Examples -->
-      <TogglePRMStrategyWithRRT label="SparkToggle" maxNPCCSize="2"
+      <SparkTogglePRMStrategy label="SparkToggle" maxNPCCSize="2"
         initSamples="10" maxRRTSize="100" attemptRatio="10" delta="5"
         minDist="0.1" vcLabel="rapid" nfLabel="BFNF" nfVertexLabel="Nearest"
         trimDepth="2" dmLabel="euclidean" cLabel="SparkPRMConnector"
@@ -512,9 +512,9 @@
         <Connector methodLabel="ToggleConnect"/>
         <ColConnector methodLabel="ToggleConnect"/>
         <Evaluator methodLabel="ModQuery"/>
-      </TogglePRMStrategyWithRRT>
+      </SparkTogglePRMStrategy>
 
-      <BasicPRMWithRRT label="SparkUniform" maxNPCCSize="2" initSamples="10"
+      <SparkBasicPRM label="SparkUniform" maxNPCCSize="2" initSamples="10"
         maxRRTSize="100" attemptRatio="10" delta="5" minDist="0.1" vcLabel="rapid"
         nfLabel="BFNF" nfVertexLabel="Nearest" trimDepth="2" dmLabel="euclidean"
         cLabel="SparkPRMConnector" eLabel="BERO" growthFocus="0.25"
@@ -523,7 +523,7 @@
         <Sampler method="UniformRandomFree" number="10" attempts="10"/>
         <Connector method="Closest"/>
         <Evaluator method="ModQuery"/>
-      </BasicPRMWithRRT>
+      </SparkBasicPRM>
 
       <!-- Visibility Based PRM Strategy -->
       <VisibilityBasedPRM label="VBPRM" sampler="UniformRandomFree"

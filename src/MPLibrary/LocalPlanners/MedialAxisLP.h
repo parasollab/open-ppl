@@ -27,10 +27,11 @@ class MedialAxisLP : public LocalPlannerMethod<MPTraits> {
     typedef typename MPTraits::WeightType WeightType;
     typedef typename MPTraits::MPProblemType MPProblemType;
 
-    MedialAxisLP(MedialAxisUtility<MPTraits> _medialAxisUtility = MedialAxisUtility<MPTraits>(),
+    MedialAxisLP(MedialAxisUtility<MPTraits> _medialAxisUtility =
+        MedialAxisUtility<MPTraits>(),
         double _macEpsilon = 0.01, size_t _maxIter = 2);
     MedialAxisLP(XMLNode& _node);
-    virtual ~MedialAxisLP();
+    virtual ~MedialAxisLP() = default;
 
     virtual void Print(ostream& _os) const;
 
@@ -94,50 +95,46 @@ class MedialAxisLP : public LocalPlannerMethod<MPTraits> {
     string m_dmLabel;
 };
 
-// Definitions for Constructors and Destructor
+
 template<class MPTraits>
 MedialAxisLP<MPTraits>::
 MedialAxisLP(MedialAxisUtility<MPTraits> _medialAxisUtility,
     double _macEpsilon, size_t _maxIter) :
-  LocalPlannerMethod<MPTraits>(),
-  m_medialAxisUtility(_medialAxisUtility),
-  m_macEpsilon(_macEpsilon), m_maxIter(_maxIter) {
-    this->SetMPProblem(_medialAxisUtility.GetMPProblem());
-    Init();
-  }
+    LocalPlannerMethod<MPTraits>(),
+    m_medialAxisUtility(_medialAxisUtility),
+    m_macEpsilon(_macEpsilon), m_maxIter(_maxIter) {
+  Init();
+}
+
 
 template<class MPTraits>
 MedialAxisLP<MPTraits>::
-MedialAxisLP(XMLNode& _node) :
-  LocalPlannerMethod<MPTraits>(_node),
-  m_medialAxisUtility(_node) {
-    string controller = _node.Read("controller", true, "",
-        "Which algorithm to run?");
-    transform(controller.begin(), controller.end(),
-        controller.begin(), ::toupper);
-    m_maxIter = _node.Read("maxIter", true, 2, 1, MAX_INT,
-        "Maximum Number of Iterations");
-    if(controller == "RECURSIVE") {
-      m_controller = Controller::Recursive;
-      m_macEpsilon = _node.Read("macEpsilon", true, 0.1, 0.0,
-          MAX_DBL, "Epsilon-Close to the MA");
-    }
-    else if(controller == "ITERATIVE" || controller == "BINARY") {
-      m_controller = controller == "ITERATIVE" ?
-        Controller::Iterative : Controller::Binary;
-      m_resFactor = _node.Read("resFactor", true, 1.0, 0.0,
-          MAX_DBL, "Resolution for Iter and Bin");
-    }
-    else
-      throw ParseException(_node.Where(),
-          "Unknown controller '" + controller +
-          "'. Choices are 'RECURSIVE', 'ITERATIVE', or 'BINARY'.");
-    Init();
+MedialAxisLP(XMLNode& _node) : LocalPlannerMethod<MPTraits>(_node),
+    m_medialAxisUtility(_node) {
+  string controller = _node.Read("controller", true, "",
+      "Which algorithm to run?");
+  transform(controller.begin(), controller.end(),
+      controller.begin(), ::toupper);
+  m_maxIter = _node.Read("maxIter", true, 2, 1, MAX_INT,
+      "Maximum Number of Iterations");
+  if(controller == "RECURSIVE") {
+    m_controller = Controller::Recursive;
+    m_macEpsilon = _node.Read("macEpsilon", true, 0.1, 0.0,
+        MAX_DBL, "Epsilon-Close to the MA");
   }
+  else if(controller == "ITERATIVE" || controller == "BINARY") {
+    m_controller = controller == "ITERATIVE" ?
+      Controller::Iterative : Controller::Binary;
+    m_resFactor = _node.Read("resFactor", true, 1.0, 0.0,
+        MAX_DBL, "Resolution for Iter and Bin");
+  }
+  else
+    throw ParseException(_node.Where(),
+        "Unknown controller '" + controller +
+        "'. Choices are 'RECURSIVE', 'ITERATIVE', or 'BINARY'.");
+  Init();
+}
 
-template<class MPTraits>
-MedialAxisLP<MPTraits>::
-~MedialAxisLP() {}
 
 template<class MPTraits>
 void
@@ -155,10 +152,10 @@ Init() {
       m_medialAxisUtility.GetValidityCheckerLabel(), true);
   m_macLP = StraightLine<MPTraits>("MAC::" + this->GetNameAndLabel(), true);
 
-  //make sure MPProblems point to the correct place
-  m_macVC->SetMPProblem(this->GetMPProblem());
-  m_envLP.SetMPProblem(this->GetMPProblem());
-  m_macLP.SetMPProblem(this->GetMPProblem());
+  //make sure MPLibraries point to the correct place
+  m_macVC->SetMPLibrary(this->GetMPLibrary());
+  m_envLP.SetMPLibrary(this->GetMPLibrary());
+  m_macLP.SetMPLibrary(this->GetMPLibrary());
 }
 
 template<class MPTraits>

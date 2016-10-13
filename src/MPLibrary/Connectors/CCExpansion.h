@@ -379,7 +379,7 @@ RandomExpand(RoadmapType* _rm, int _index) {
   CfgType prev, node, direction, bumpPoint;
   auto dm = this->GetNeighborhoodFinder(this->m_nfLabel)->GetDMMethod();
   BasicExtender<MPTraits> be(m_dmLabel, m_vcLabel);
-  be.SetMPProblem(this->GetMPProblem());
+  be.SetMPLibrary(this->GetMPLibrary());
 
   // Expansion node
   prev = node = _rm->GetGraph()->GetVertex(m_expansionChains[_index]);
@@ -423,7 +423,7 @@ ExpandFrom(RoadmapType* _rm, int _index) {
   CfgType away = m_srcCentroid;
   auto dm = this->GetNeighborhoodFinder(this->m_nfLabel)->GetDMMethod();
   BasicExtender<MPTraits> be(m_dmLabel, m_vcLabel);
-  be.SetMPProblem(this->GetMPProblem());
+  be.SetMPLibrary(this->GetMPLibrary());
 
   // Expansion node
   prev = node = _rm->GetGraph()->GetVertex(m_expansionChains[_index]);
@@ -474,7 +474,7 @@ ExpandTo(RoadmapType* _rm, int _index) {
   CfgType target = m_goalTargetNode;
   auto dm = this->GetNeighborhoodFinder(this->m_nfLabel)->GetDMMethod();
   BasicExtender<MPTraits> be(m_dmLabel, m_vcLabel);
-  be.SetMPProblem(this->GetMPProblem());
+  be.SetMPLibrary(this->GetMPLibrary());
 
   // Expansion node
   prev = node = _rm->GetGraph()->GetVertex(m_expansionChains[_index]);
@@ -519,7 +519,7 @@ MedialAxisExpand(RoadmapType* _rm, int _index) {
   CfgType prev, bump1, bump2, dir1, dir2;
   auto dm = this->GetNeighborhoodFinder(this->m_nfLabel)->GetDMMethod();
   BasicExtender<MPTraits> be(m_dmLabel, m_vcLabel);
-  be.SetMPProblem(this->GetMPProblem());
+  be.SetMPLibrary(this->GetMPLibrary());
 
   /// Kick-Off Expansion history with a random ray
   prev = _rm->GetGraph()->GetVertex(m_expansionChains[_index]);
@@ -580,7 +580,7 @@ MedialRecurse(RoadmapType* _rm, CfgType& _prev, CfgType& _dir, int _count) {
   CDInfo cdInfo;
   auto dm = this->GetNeighborhoodFinder(this->m_nfLabel)->GetDMMethod();
   BasicExtender<MPTraits> be(m_dmLabel, m_vcLabel);
-  be.SetMPProblem(this->GetMPProblem());
+  be.SetMPLibrary(this->GetMPLibrary());
 
   /// Compute new expansion directions
   CfgType dir1 = _dir + _prev;

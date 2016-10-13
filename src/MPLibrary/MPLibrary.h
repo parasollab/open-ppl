@@ -353,17 +353,16 @@ SetMPProblem(MPProblemType* _p) {
   m_problem = _p;
 
   // Set the current MPProblem for all algorithms.
-  m_distanceMetrics->SetMPProblem(_p);
-  m_validityCheckers->SetMPProblem(_p);
-  m_neighborhoodFinders->SetMPProblem(_p);
-  m_samplers->SetMPProblem(_p);
-  m_localPlanners->SetMPProblem(_p);
-  m_extenders->SetMPProblem(_p);
-  m_pathModifiers->SetMPProblem(_p);
-  m_connectors->SetMPProblem(_p);
-  m_metrics->SetMPProblem(_p);
-  m_mapEvaluators->SetMPProblem(_p);
-  m_mpStrategies->SetMPProblem(_p);
+  m_distanceMetrics->Initialize();
+  m_validityCheckers->Initialize();
+  m_neighborhoodFinders->Initialize();
+  m_samplers->Initialize();
+  m_localPlanners->Initialize();
+  m_extenders->Initialize();
+  m_pathModifiers->Initialize();
+  m_connectors->Initialize();
+  m_metrics->Initialize();
+  m_mapEvaluators->Initialize();
 
   // Ensure CD structures have been built.
   auto& cdMethods = Body::m_cdMethods;

@@ -39,12 +39,11 @@ class AdaptiveConnector: public ConnectorMethod<MPTraits> {
     ///@{
 
     virtual void Print(ostream& _os) const override;
+    virtual void Initialize() override;
 
     ///@}
-
-    virtual void ParseXML(XMLNode& _node);
-
-    virtual void Initialize();
+    ///@name Connector Interface
+    ///@{
 
     template<typename InputIterator1, typename InputIterator2,
         typename OutputIterator>
@@ -113,13 +112,7 @@ template<class MPTraits>
 AdaptiveConnector<MPTraits>::
 AdaptiveConnector(XMLNode& _node) : ConnectorMethod<MPTraits>(_node) {
   this->SetName("AdaptiveConnector");
-  ParseXML(_node);
-}
 
-
-template<class MPTraits>
-void
-AdaptiveConnector<MPTraits>::ParseXML(XMLNode& _node){
   m_checkIfSameCC = _node.Read("checkIfSameCC", false, true, "If true, do not "
       "connect if edges are in the same CC");
   m_countFailures = _node.Read("countFailures", false, false, "if false, ignore "
@@ -151,9 +144,11 @@ AdaptiveConnector<MPTraits>::ParseXML(XMLNode& _node){
     throw ParseException(_node.Where(), "nfLabel should be specified as ''.");
 }
 
+
 template<class MPTraits>
 void
-AdaptiveConnector<MPTraits>::Print(ostream& _os) const {
+AdaptiveConnector<MPTraits>::
+Print(ostream& _os) const {
   ConnectorMethod<MPTraits>::Print(_os);
   _os << "\tfail = " << m_fail << endl;
   _os << "\tcountFailures = " << m_countFailures << endl;
@@ -163,7 +158,7 @@ AdaptiveConnector<MPTraits>::Print(ostream& _os) const {
   _os << "\tfixedReward = " << m_fixedReward << endl;
   _os << "\tcheckIfSameCC = " << m_checkIfSameCC << endl;
   _os << "\tList of NeighborFinders Used"<< endl;
-  for(vector<string>::const_iterator nf = m_neigborGenLabels.begin(); nf != m_neigborGenLabels.end(); nf++)
+  for(auto nf = m_neigborGenLabels.begin(); nf != m_neigborGenLabels.end(); nf++)
     _os <<"     "<<*nf << endl;
 }
 
@@ -181,7 +176,7 @@ Initialize() {
   m_nfProbabilitiesWithNoCost.clear();
   m_nfCosts.clear();
 
-  for(vector<string>::const_iterator NF = m_neigborGenLabels.begin(); NF != m_neigborGenLabels.end(); ++NF){
+  for(auto NF = m_neigborGenLabels.begin(); NF != m_neigborGenLabels.end(); ++NF){
     m_nfCosts[*NF]=1;
     m_nfWeights[*NF]=1;
     m_nfProbabilities[*NF] = double(1.0/m_neigborGenLabels.size());  //all the probalities are assigned one at the beginning.
@@ -193,7 +188,8 @@ Initialize() {
 }
 
 template<class MPTraits>
-template<typename InputIterator1, typename InputIterator2, typename OutputIterator>
+template<typename InputIterator1, typename InputIterator2,
+    typename OutputIterator>
 void
 AdaptiveConnector<MPTraits>::
 Connect(RoadmapType* _rm,
@@ -201,67 +197,65 @@ Connect(RoadmapType* _rm,
     InputIterator2 _itr2First, InputIterator2 _itr2Last,
     bool _fromFullRoadmap,
     OutputIterator _collision) {
-
-  if(m_nfProbabilities.empty() || m_neigborGenLabels.size() != m_nfProbabilities.size())
+  if(m_nfProbabilities.empty() ||
+      m_neigborGenLabels.size() != m_nfProbabilities.size())
     Initialize();
 
   // the vertices in this iteration are the source for the connection operation
-  for(InputIterator1 itr1 = _itr1First; itr1 != _itr1Last; ++itr1){
+  for(InputIterator1 itr1 = _itr1First; itr1 != _itr1Last; ++itr1) {
+     static double prevConnectionAttempt = 0, prevConnectionSuccess = 0;
+     static unsigned long int prevConnectionCollision = 0;
 
-     static double prevConnectionAttempt=0, prevConnectionSuccess=0;
-     static unsigned long int prevConnectionCollision=0;
+     double currAttempts = get<0>(this->GetStatClass()->m_lpInfo.begin()->second);
+     double currSuccess  = get<1>(this->GetStatClass()->m_lpInfo.begin()->second);
+     unsigned long int currCollision = this->GetStatClass()->GetIsCollTotal();
 
+     double reward = 0;
+     unsigned long int cost=0;
+     if(m_lastUse !=""){
+       reward = currSuccess/currAttempts;
+       if(prevConnectionAttempt != 0)
+         reward = (currSuccess - prevConnectionSuccess) /
+           (currAttempts - prevConnectionAttempt);
+       cost = (double)(currCollision - prevConnectionCollision);
+     }
 
-    double  currAttempts =   get<0>(this->GetStatClass()->m_lpInfo.begin()->second);
-    double  currSuccess  =   get<1>(this->GetStatClass()->m_lpInfo.begin()->second);
-    unsigned long int  currCollision = this->GetStatClass()->GetIsCollTotal();
+     if(this->m_debug){
+       cout << "curr collision" << currCollision << endl;
+       cout << "pre collision" << prevConnectionCollision << endl;
+     }
+     prevConnectionAttempt = currAttempts;
+     prevConnectionSuccess = currSuccess;
+     prevConnectionCollision= currCollision;
+     if(m_nfConnected[this->m_lastUse] !=0){
+       RewardUpdateProbability(reward, cost,prevConnectionAttempt);
+     }
+     this->m_lastUse = UpdateNFChoice();
+     m_nfConnected[this->m_lastUse]++;
+     if(this->m_debug)
+       PrintData(cout);
 
-    double reward = 0;
-    unsigned long int cost=0;
-    if(m_lastUse !=""){
-      reward = currSuccess/currAttempts;
-      if (prevConnectionAttempt !=0)
-	reward = (currSuccess - prevConnectionSuccess) / (currAttempts -prevConnectionAttempt);
-        cost = (double)(currCollision - prevConnectionCollision);
-      }
-    //if (m_lastUse !="")
+     // find cfg pointed to by itr1
+     VID vid = _rm->GetGraph()->GetVID(itr1);
+     CfgRef vCfg = _rm->GetGraph()->GetVertex(itr1);
+     if(this->m_debug)
+       cout << (itr1 - _itr1First)
+         << "\tAttempting connections: VID = "
+         << vid << "  --> Cfg = " << vCfg << endl;
 
-    if(this->m_debug){
-      cout<<"curr collision"<<currCollision<<endl;
-      cout<<"pre collision"<<prevConnectionCollision<<endl;
-    }
-    prevConnectionAttempt =  currAttempts;
-    prevConnectionSuccess =  currSuccess;
-    prevConnectionCollision= currCollision;
-    if(m_nfConnected[this->m_lastUse] !=0){
-    RewardUpdateProbability(reward, cost,prevConnectionAttempt);
-    }
-    this->m_lastUse = UpdateNFChoice();
-    m_nfConnected[this->m_lastUse]++;
-    if(this->m_debug)
-      PrintData(cout);
+     //determine nearest neighbors
+     vector<pair<VID, double> > closest;
+     auto nfptr = this->GetNeighborhoodFinder(this->m_lastUse);
+     nfptr->FindNeighbors(_rm, _itr2First, _itr2Last, _fromFullRoadmap, vCfg,
+         back_inserter(closest));
+     if(this->m_debug){
+       cout << "Neighbors | ";
+       for(auto nit = closest.begin(); nit != closest.end(); ++nit)
+         cout << nit->first << " ";
+     }
 
-    // find cfg pointed to by itr1
-    VID vid = _rm->GetGraph()->GetVID(itr1);
-    CfgRef vCfg = _rm->GetGraph()->GetVertex(itr1);
-    if(this->m_debug)
-      cout << (itr1 - _itr1First)
-        << "\tAttempting connections: VID = "
-        << vid << "  --> Cfg = " << vCfg << endl;
-
-    //determine nearest neighbors
-    vector<pair<VID, double> > closest;
-    auto nfptr = this->GetNeighborhoodFinder(this->m_lastUse);
-    nfptr->FindNeighbors(_rm, _itr2First, _itr2Last, _fromFullRoadmap, vCfg,
-        back_inserter(closest));
-    if(this->m_debug){
-      cout << "Neighbors | ";
-      for(typename vector<pair<VID, double> >::iterator nit = closest.begin(); nit!=closest.end(); ++nit)
-        cout << nit->first << " ";
-    }
-
-    //test connections through LP
-    ConnectNeighbors(_rm, vid, closest.begin(), closest.end(), _collision);
+     //test connections through LP
+     ConnectNeighbors(_rm, vid, closest.begin(), closest.end(), _collision);
   }
 }
 

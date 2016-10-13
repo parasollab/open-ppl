@@ -22,24 +22,31 @@
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
 class ValidityCheckerMethod : public MPBaseObject<MPTraits> {
+
   public:
+
+    ///@name Local Types
+    ///@{
+
     typedef typename MPTraits::CfgType CfgType;
 
-    ValidityCheckerMethod() : MPBaseObject<MPTraits>(), m_validity(true) {}
-    ValidityCheckerMethod(XMLNode& _node) :
-      MPBaseObject<MPTraits>(_node), m_validity(true) {}
-    virtual ~ValidityCheckerMethod(){}
+    ///@}
+    ///@name Construction
+    ///@{
 
-    virtual void Print(ostream& _os) const {
-      _os << this->GetNameAndLabel() << endl;
-    }
+    ValidityCheckerMethod() = default;
+    ValidityCheckerMethod(XMLNode& _node) : MPBaseObject<MPTraits>(_node) {}
+    virtual ~ValidityCheckerMethod() = default;
+
+    ///@}
+    ///@name ValidityChecker Interface
+    ///@{
 
     ////////////////////////////////////////////////////////////////////////////
     /// @brief Classify a configuration to either @cfree or @cobst
     ///
     /// @overload
     /// No extra collision information is returned.
-    ////////////////////////////////////////////////////////////////////////////
     bool IsValid(CfgType& _cfg, const string& _callName) {
       CDInfo cdInfo;
       return IsValid(_cfg, cdInfo, _callName);
@@ -61,7 +68,6 @@ class ValidityCheckerMethod : public MPBaseObject<MPTraits> {
     /// string callee("SomeFunc");
     /// bool valid = vc->IsValid(c, cdInfo, callee);
     /// @endcode
-    ////////////////////////////////////////////////////////////////////////////
     bool IsValid(CfgType& _cfg, CDInfo& _cdInfo, const string& _callName) {
       if(m_validity)
         return IsValidImpl(_cfg, _cdInfo, _callName);
@@ -80,20 +86,19 @@ class ValidityCheckerMethod : public MPBaseObject<MPTraits> {
     /// CfgType c;
     /// bool valid = vc->IsInsideObstacle(c);
     /// @endcode
-    ////////////////////////////////////////////////////////////////////////////
-    virtual bool IsInsideObstacle(const CfgType& _cfg){
+    virtual bool IsInsideObstacle(const CfgType& _cfg) {
       cerr << "error: IsInsideObstacle() not defined." << endl;
       exit(-1);
     }
 
     ////////////////////////////////////////////////////////////////////////////
     /// @brief Switches the meaning of "valid" to "invalid" and vice versa
-    ////////////////////////////////////////////////////////////////////////////
-    void ToggleValidity() { m_validity = !m_validity; }
+    void ToggleValidity() {m_validity = !m_validity;}
 
-    bool GetValidity() const { return m_validity; }
+    bool GetValidity() const {return m_validity;}
 
   protected:
+
     ////////////////////////////////////////////////////////////////////////////
     /// @brief Implementation of the classification of a configuration to either
     ///        @cfree or @cobst
@@ -103,9 +108,10 @@ class ValidityCheckerMethod : public MPBaseObject<MPTraits> {
     /// @param _callName Function caller for statistics tracking
     /// @return boolean valid/invalid. Valid (true) implies @cfree.
     ////////////////////////////////////////////////////////////////////////////
-    virtual bool IsValidImpl(CfgType& _cfg, CDInfo& _cdInfo, const string& _callName) =0;
+    virtual bool IsValidImpl(CfgType& _cfg, CDInfo& _cdInfo,
+        const string& _callName) = 0;
 
-    bool m_validity; ///< True: valid implies true validity. False: valid implies invalid and vice verse.
+    bool m_validity{true}; ///< Use standard validity? False indicates negation.
 };
 
 #endif

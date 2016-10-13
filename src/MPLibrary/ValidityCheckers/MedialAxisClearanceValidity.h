@@ -42,7 +42,7 @@ template <typename MPTraits>
 MedialAxisClearanceValidity<MPTraits>::
 MedialAxisClearanceValidity(const MedialAxisUtility<MPTraits>& _m, double _c) :
   m_medialAxisUtility(_m), m_clearance(_c) {
-    this->m_name = "MedialAxisClearance";
+    this->SetName("MedialAxisClearance");
   }
 
 template <typename MPTraits>
@@ -50,7 +50,7 @@ MedialAxisClearanceValidity<MPTraits>::
 MedialAxisClearanceValidity(XMLNode& _node) :
   ValidityCheckerMethod<MPTraits>(_node),
   m_medialAxisUtility(_node) {
-    this->m_name = "MedialAxisClearance";
+    this->SetName("MedialAxisClearance");
     ParseXML(_node);
     m_history.clear();
   }

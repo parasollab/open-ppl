@@ -6,8 +6,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup ValidityCheckers
 /// @brief TODO
-///
-/// TODO
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
 class NodeClearanceValidity : public ValidityCheckerMethod<MPTraits> {
@@ -33,13 +31,13 @@ class NodeClearanceValidity : public ValidityCheckerMethod<MPTraits> {
 template <class MPTraits>
 NodeClearanceValidity<MPTraits>::NodeClearanceValidity(double _delta, string _nfLabel) :
   ValidityCheckerMethod<MPTraits>(), m_delta(_delta), m_nfLabel(_nfLabel) {
-    this->m_name = "NodeClearanceValidity";
+    this->SetName("NodeClearanceValidity");
   }
 
 template <class MPTraits>
 NodeClearanceValidity<MPTraits>::NodeClearanceValidity(XMLNode& _node):
   ValidityCheckerMethod<MPTraits>(_node) {
-    this->m_name = "NodeClearanceValidity";
+    this->SetName("NodeClearanceValidity");
     m_delta = _node.Read("delta", true, 1.0, 0.0, MAX_DBL, "Clearance from every other node");
     m_nfLabel = _node.Read("nfLabel", true, "", "Neighborhood Finder to be used");
   }

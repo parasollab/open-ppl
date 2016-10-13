@@ -73,7 +73,8 @@ operator()() {
   for(typename Set::Iterator i = m_samples.begin(); i!=m_samples.end(); ++i){
     vector<pair<VID, double> > kClosest;
     BruteForceNF<MPTraits> bfnf(m_dmLabel, false, 1);
-    bfnf.SetMPProblem(this->GetMPProblem());
+    bfnf.SetMPLibrary(this->GetMPLibrary());
+    bfnf.Initialize();
     bfnf.SetLabel("__CoverageDistanceMetricNF");
     RoadmapType* rdmp = this->GetRoadmap();
     bfnf.FindNeighbors(rdmp,

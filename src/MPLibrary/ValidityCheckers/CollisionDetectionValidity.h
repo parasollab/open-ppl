@@ -28,9 +28,12 @@ class CollisionDetectionValidity : public ValidityCheckerMethod<MPTraits> {
 
   public:
 
-    typedef typename MPTraits::CfgType CfgType;
-    typedef typename MPTraits::MPProblemType MPProblemType;
+    ///@name Local Types
+    ///@{
 
+    typedef typename MPTraits::CfgType CfgType;
+
+    ///@}
     ///@name Construction
     ///@{
 
@@ -38,24 +41,31 @@ class CollisionDetectionValidity : public ValidityCheckerMethod<MPTraits> {
     /// @param _cdMethod Collision detection library
     /// @param _ignoreSelfCollision Compute robot self-collisions?
     /// @param _ignoreIAdjacentLinks For self-collision adjacent links to ignore
-    CollisionDetectionValidity(CollisionDetectionMethod* _cdMethod = NULL,
+    CollisionDetectionValidity(CollisionDetectionMethod* _cdMethod = nullptr,
         bool _ignoreSelfCollision = false, int _ignoreIAdjacentLinks = 1);
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// @param _node XML input node
     CollisionDetectionValidity(XMLNode& _node);
 
     virtual ~CollisionDetectionValidity();
 
     ///@}
-
-    ////////////////////////////////////////////////////////////////////////////
-    /// @return Collision Detection library
-    CollisionDetectionMethod* GetCDMethod() const {return m_cdMethod;}
+    ///@name ValidityChecker Interface
+    ///@{
 
     virtual bool IsValidImpl(CfgType& _cfg, CDInfo& _cdInfo,
         const string& _callName);
+
+    ///@}
+    ///@name CollisionDetection Interface
+    ///@{
+
+    ////////////////////////////////////////////////////////////////////////////
+    /// @return Collision Detection library
+    CollisionDetectionMethod* GetCDMethod() const noexcept {return m_cdMethod;}
+
     virtual bool IsInsideObstacle(const CfgType& _cfg);
+
+    ///@}
 
   private:
 
@@ -104,6 +114,7 @@ class CollisionDetectionValidity : public ValidityCheckerMethod<MPTraits> {
                                           ///< adjacent links to ignore
 };
 
+/*------------------------------- Construction -------------------------------*/
 
 template <typename MPTraits>
 CollisionDetectionValidity<MPTraits>::
@@ -112,7 +123,7 @@ CollisionDetectionValidity(CollisionDetectionMethod* _cdMethod,
     ValidityCheckerMethod<MPTraits>(), m_cdMethod(_cdMethod),
     m_ignoreSelfCollision(_ignoreSelfCollision),
     m_ignoreIAdjacentLinks(_ignoreIAdjacentLinks) {
-  this->m_name = "CollisionDetection";
+  this->SetName("CollisionDetection");
 }
 
 
@@ -120,7 +131,7 @@ template <typename MPTraits>
 CollisionDetectionValidity<MPTraits>::
 CollisionDetectionValidity(XMLNode& _node) :
     ValidityCheckerMethod<MPTraits>(_node) {
-  this->m_name = "CollisionDetection";
+  this->SetName("CollisionDetection");
 
   m_ignoreSelfCollision = _node.Read("ignoreSelfCollision", false, false,
       "Check for self collision");
@@ -155,6 +166,7 @@ CollisionDetectionValidity<MPTraits>::
   delete m_cdMethod;
 }
 
+/*------------------------- ValidityChecker Interface ------------------------*/
 
 template <typename MPTraits>
 bool

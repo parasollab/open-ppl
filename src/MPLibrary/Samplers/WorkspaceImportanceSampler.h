@@ -30,8 +30,7 @@ class WorkspaceImportanceSampler : public SamplerMethod<MPTraits> {
     ///@name Motion Planning Types
     ///@{
 
-    typedef typename MPTraits::CfgType       CfgType;
-    typedef typename MPTraits::MPProblemType MPProblemType;
+    typedef typename MPTraits::CfgType CfgType;
 
     ///@}
     ///@name Construction
@@ -39,12 +38,15 @@ class WorkspaceImportanceSampler : public SamplerMethod<MPTraits> {
 
     WorkspaceImportanceSampler();
     WorkspaceImportanceSampler(XMLNode& _node);
+    virtual ~WorkspaceImportanceSampler() = default;
 
     ///@}
     ///@name MPBaseObject Overrides
     ///@{
 
     virtual void Print(ostream& _os) const override;
+
+    virtual void Initialize() override;
 
     ///@}
 
@@ -64,8 +66,9 @@ class WorkspaceImportanceSampler : public SamplerMethod<MPTraits> {
     ///@{
 
     ////////////////////////////////////////////////////////////////////////////
-    /// @brief Compute importance and num attempts for each tetrahedron.
-    void Initialize();
+    /// @brief Make sure the decomposition is available and compute tetrahedron
+    ///        importances.
+    void InitDecomposition();
 
     ////////////////////////////////////////////////////////////////////////////
     /// @brief Compute the height of a tetraherdon relative to a specified facet.
@@ -93,10 +96,12 @@ class WorkspaceImportanceSampler : public SamplerMethod<MPTraits> {
 
     string m_vcLabel{"pqp_solid"}; ///< Validity checker label.
 
-    vector<size_t> m_numAttempts; ///< Number of attempts per tetrahedron
+    vector<size_t> m_numAttempts;  ///< Number of attempts per tetrahedron
 
     double m_alpha{.2}; ///< The "eagerness in obtaining one milestone for
                         ///< each tetrahedron".
+
+    bool m_initialized{false};    ///< Is the decomposition initialized?
 
     ///@}
 };
@@ -131,6 +136,14 @@ Print(ostream& _os) const {
   _os << "\tvcLabel = " << m_vcLabel << endl;
 }
 
+
+template <typename MPTraits>
+void
+WorkspaceImportanceSampler<MPTraits>::
+Initialize() {
+  m_initialized = false; // Tell object to initialize on first use.
+}
+
 /*--------------------------- SamplerMethod Overrides ------------------------*/
 
 template <typename MPTraits>
@@ -138,12 +151,8 @@ bool
 WorkspaceImportanceSampler<MPTraits>::
 Sampler(CfgType& _cfg, shared_ptr<Boundary> _boundary,
     vector<CfgType>& _result, vector<CfgType>& _collision) {
-  // Ensure auxiliary structures are initialized.
-  static bool init = false;
-  if(!init) {
-    Initialize();
-    init = true;
-  }
+  if(!m_initialized)
+    InitDecomposition();
 
   string callee(this->GetNameAndLabel() + "::SampleImpl()");
   Environment* env = this->GetEnvironment();
@@ -187,7 +196,7 @@ Sampler(CfgType& _cfg, shared_ptr<Boundary> _boundary,
 template <typename MPTraits>
 void
 WorkspaceImportanceSampler<MPTraits>::
-Initialize() {
+InitDecomposition() {
   // Get the tetrahedralization from the environment.
   auto env = this->GetEnvironment();
   if(!env->GetDecomposition())
@@ -202,6 +211,7 @@ Initialize() {
     totalImportance += importances[i] = ComputeTetrahedronImportance(i);
 
   // Compute tetrahedron attempts based on importance values.
+  m_numAttempts.clear();
   m_numAttempts.reserve(numTetras);
   for(size_t i = 0; i < numTetras; ++i) {
     size_t nt = log(1 - m_alpha) / log(1 - importances[i] / totalImportance);

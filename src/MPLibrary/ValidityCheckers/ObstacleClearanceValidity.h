@@ -32,13 +32,13 @@ class ObstacleClearanceValidity : public ValidityCheckerMethod<MPTraits> {
 template <typename MPTraits>
 ObstacleClearanceValidity<MPTraits>::ObstacleClearanceValidity(double _obstClearance, const ClearanceUtility<MPTraits>& _c) :
   m_obstClearance(_obstClearance), m_clearanceUtility(_c) {
-    this->m_name = "ObstacleClearance";
+    this->SetName("ObstacleClearance");
   }
 
 template <typename MPTraits>
 ObstacleClearanceValidity<MPTraits>::ObstacleClearanceValidity(XMLNode& _node) :
   ValidityCheckerMethod<MPTraits>(_node), m_clearanceUtility(_node) {
-    this->m_name = "ObstacleClearance";
+    this->SetName("ObstacleClearance");
     m_obstClearance = _node.Read("obstClearance", true, 1.0, -MAX_DBL, MAX_DBL, "Required clearance from obstacles");
   }
 
