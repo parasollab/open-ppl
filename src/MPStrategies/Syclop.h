@@ -281,6 +281,8 @@ template <typename MPTraits>
 size_t
 Syclop<MPTraits>::
 Cov(RegionPointer _r) {
+  // Initially, just approximate the number of cells as number of vertices in
+  // the region.
   return 0;
 }
 
