@@ -131,7 +131,7 @@ class Syclop : public BasicRRTStrategy<MPTraits> {
 
     ////////////////////////////////////////////////////////////////////////////
     /// @brief Estimate the progress made in connecting _r1 to _r2.
-    void Conn(RegionPointer _r1, RegionPointer _r2);
+    size_t Conn(RegionPointer _r1, RegionPointer _r2);
 
     ////////////////////////////////////////////////////////////////////////////
     /// @brief Compute the edge weight in the region graph from _r1 to _r2.
@@ -304,9 +304,10 @@ Sel(RegionPointer _r1, RegionPointer _r2) {
 
 
 template <typename MPTraits>
-void
+size_t
 Syclop<MPTraits>::
 Conn(RegionPointer _r1, RegionPointer _r2) {
+  return 0;
 }
 
 
@@ -314,7 +315,10 @@ template <typename MPTraits>
 double
 Syclop<MPTraits>::
 Cost(RegionPointer _r1, RegionPointer _r2) {
-  return 0;
+  static auto alpha = [](RegionPointer _r) {
+    return 1. / ((1. + Cov(_r)) * pow(FreeVol(_r), 4));
+  };
+  return alpha(_r1) * alpha(_r2) * (1. + pow(Sel(_r1, _r2), 2)) / (1. + pow(Conn(_r1, _r2), 2));
 }
 
 /*----------------------------------------------------------------------------*/
