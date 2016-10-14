@@ -252,7 +252,8 @@ PMPL_OBJS = \
 	ValidityCheckers/CollisionDetection/SpheresCollisionDetection.o \
 	Workspace/WorkspaceDecomposition.o \
 	Workspace/WorkspacePortal.o \
-	Workspace/WorkspaceRegion.o
+	Workspace/WorkspaceRegion.o \
+	Workspace/GridOverlay.o
 
 ifeq (${ROBOT_DEF}, PMPCfgMultiRobot)
   PMPL_OBJS += Cfg/CfgMultiRobot.o
