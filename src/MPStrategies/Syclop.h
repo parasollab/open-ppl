@@ -2,8 +2,9 @@
 #define SYCLOP_H_
 
 #include <iomanip>
-#include "MPStrategyMethod.h"
-#include "MapEvaluators/RRTQuery.h"
+#include <map>
+
+#include "BasicRRTStrategy.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup MotionPlanningStrategies
@@ -141,6 +142,23 @@ class Syclop : public BasicRRTStrategy<MPTraits> {
     ///@name Syclop State
     ///@{
 
+    ////////////////////////////////////////////////////////////////////////////
+    /// @brief Holds all external data related to a specific workspace region.
+    ////////////////////////////////////////////////////////////////////////////
+    struct RegionData {
+
+      ///@name Internal State
+      ///@{
+
+      double weight; ///< Relative probability of selecting this region from a lead.
+      double alpha;  ///< The edge-weight coefficient for this region.
+
+      ///@}
+
+    };
+
+    map<RegionPointer, RegionData> m_regionData;
+
     // Some kind of coverage map/structure
 
     // Some kind of connectivity map/structure
@@ -226,6 +244,9 @@ template <typename MPTraits>
 vector<typename Syclop<MPTraits>::RegionPointer>
 Syclop<MPTraits>::
 DiscreteLead() {
+  // Apply weights to region graph edges.
+  // Search region graph from start to goal.
+  // Return path.
   return vector<RegionPointer>();
 }
 
@@ -258,6 +279,16 @@ template <typename MPTraits>
 typename Syclop<MPTraits>::RegionPointer
 Syclop<MPTraits>::
 LocateRegion(const VID _v) {
+  // Get the reference point for this configuration.
+  auto point = this->GetRoadmap()->GetGraph()->find_vertex(_v)->property().
+      GetPoint();
+
+  // Search region graph to see which region contains point.
+  auto regionGraph = this->GetEnvironment()->GetDecomposition();
+  for(const auto& r : *regionGraph) {
+    // TODO If point is inside r, return r.
+  }
+
   return nullptr;
 }
 
