@@ -76,6 +76,15 @@ class Environment {
     ///@name Resolutions
     ///@{
 
+    ////////////////////////////////////////////////////////////////////////////
+    /// @brief Automatically compute resolutions
+    ///
+    /// ComputeResolution, if m_posRes is < 0 then auto compute the resolutions
+    /// based on minimum of max body spans multiplied by @c m_positionResFactor.
+    /// Reachable distance resolution is computed based upon input res
+    /// multiplied by the number of joints.
+    void ComputeResolution(vector<ActiveMultiBody*> _robots);
+
     double GetPositionRes() const {return m_positionRes;}
     void SetPositionRes(double _res) {m_positionRes = _res;}
 
@@ -199,15 +208,6 @@ class Environment {
     /// @brief Write boundary information
     /// @param _os Output stream
     void WriteBoundary(ostream& _os);
-
-    ////////////////////////////////////////////////////////////////////////////
-    /// @brief Automatically compute resolutions
-    ///
-    /// ComputeResolution, if m_posRes is < 0 then auto compute the resolutions
-    /// based on minimum of max body spans multiplied by @c m_positionResFactor.
-    /// Reachable distance resolution is computed based upon input res
-    /// multiplied by the number of joints.
-    void ComputeResolution(vector<shared_ptr<ActiveMultiBody>> _robots);
 
     ///@}
     ///@name File Info

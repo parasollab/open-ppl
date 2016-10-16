@@ -76,7 +76,7 @@ class Cfg {
     ///@}
 
     // assume _index within the size of the vector.
-    static void InitRobots(shared_ptr<ActiveMultiBody>& _robot, size_t _index);
+    static void InitRobots(ActiveMultiBody* _robot, size_t _index);
 
     Cfg& operator=(const Cfg& _cfg);
     ///determines equality of this and other configuration
@@ -159,11 +159,10 @@ class Cfg {
     /// @brief Get the robot referenced by this configuration.
     /// @param[in] _index The robot index of interest.
     ActiveMultiBody* GetRobot() const {
-      return m_robotIndex == size_t(-1) ? m_pointRobot.get() :
-                                          m_robots[m_robotIndex].get();
+      return m_robotIndex == size_t(-1) ? m_pointRobot : m_robots[m_robotIndex];
     }
 
-    static vector<shared_ptr<ActiveMultiBody>> GetRobots() {
+    static vector<ActiveMultiBody*> GetRobots() {
       return m_robots;
     }
 
@@ -239,6 +238,14 @@ class Cfg {
     virtual void Read(istream& _is);
     virtual void Write(ostream& _os) const;
 
+    ///@name Static class data
+    ///@{
+
+    static vector<ActiveMultiBody*> m_robots;
+    static ActiveMultiBody* m_pointRobot;
+
+    ///@}
+
   protected:
 
     ////////////////////////////////////////////////////////////////////////////
@@ -254,13 +261,6 @@ class Cfg {
     /// @param[in] _b The boundary to sample within.
     virtual void GetRandomCfgImpl(Environment* _env, shared_ptr<Boundary> _b);
 
-    ///@name Static class data
-    ///@{
-
-    static vector<shared_ptr<ActiveMultiBody>> m_robots;
-    static shared_ptr<ActiveMultiBody> m_pointRobot;
-
-    ///@}
     ///@name Internal State
     ///@{
 

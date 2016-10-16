@@ -2,13 +2,14 @@
 <MotionPlanning warnings="true" warningsAsErrors="true" print="false">
 
   <!-- Here we specify input files, such as environment and query. -->
-  <Input>
-    <Environment filename="2D/2d.env" saveDofs="false"/>
+  <Problem>
+    <Environment filename="2D/2d.env"/>
+    <Robot label="boxy" filename="2D/boxy.robot"/>
     <Query filename="2D/2d.query"/>
-  </Input>
+  </Problem>
 
   <!-- Set available algorithms and parameters. -->
-  <MPProblem>
+  <Library>
 
     <DistanceMetrics>
       <Euclidean label="euclidean"/>
@@ -553,5 +554,6 @@
     <!--Solver mpStrategyLabel="BasicPRM2" seed="12345678"
          baseFilename="Basic2" vizmoDebug="true"/-->
 
-  </MPProblem>
+  </Library>
+
 </MotionPlanning>

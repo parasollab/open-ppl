@@ -13,8 +13,8 @@ ClearanceInfo::
 
 /*-------------------------------- Cfg ---------------------------------------*/
 
-vector<shared_ptr<ActiveMultiBody>> Cfg::m_robots;
-shared_ptr<ActiveMultiBody> Cfg::m_pointRobot;
+vector<ActiveMultiBody*> Cfg::m_robots;
+ActiveMultiBody* Cfg::m_pointRobot;
 
 
 Cfg::
@@ -73,11 +73,11 @@ SetSize(size_t _size) {
 
 void
 Cfg::
-InitRobots(shared_ptr<ActiveMultiBody>& _robots, size_t _index) {
+InitRobots(ActiveMultiBody* _robot, size_t _index) {
   if(_index == size_t(-1))
-    m_pointRobot = _robots;
+    m_pointRobot = _robot;
   else
-    m_robots[_index] = _robots;
+    m_robots[_index] = _robot;
 }
 
 

@@ -73,9 +73,6 @@ Read(string _filename) {
   size_t multibodyCount = ReadField<size_t>(ifs, cbs,
       "Failed reading number of multibodies.");
 
-  // Make storage for robots.
-  vector<shared_ptr<ActiveMultiBody>> robots;
-
   //parse and construct each multibody
   for(size_t m = 0; m < multibodyCount && ifs; ++m) {
     string multibodyType = ReadFieldString(ifs, cbs,
@@ -88,16 +85,12 @@ Read(string _filename) {
     switch(bodyType) {
       case MultiBody::MultiBodyType::Active:
         {
-          shared_ptr<ActiveMultiBody> mb(new ActiveMultiBody());
-          mb->Read(ifs, cbs);
-          robots.push_back(mb);
+          /// @TODO: Add support for holonomic dynamic obstacles
           break;
         }
       case MultiBody::MultiBodyType::NonHolonomic:
         {
-          shared_ptr<ActiveMultiBody> mb(new NonHolonomicMultiBody());
-          mb->Read(ifs, cbs);
-          robots.push_back(mb);
+          /// @TODO: Add support for non-holonomic dynamic obstacles
           break;
         }
       case MultiBody::MultiBodyType::Internal:
@@ -110,26 +103,6 @@ Read(string _filename) {
         }
     }
   }
-
-  if(robots.empty())
-    throw ParseException(cbs.Where(),
-        "No active multibodies in the environment.");
-
-  size_t size = robots.size();
-  Cfg::SetSize(size);
-
-  for(size_t i = 0; i < size; ++i) {
-    if(m_saveDofs) {
-      ofstream dofFile(m_filename + "." + ::to_string(i) + ".dof");
-      robots[i]->InitializeDOFs(m_boundary, &dofFile);
-    }
-    else
-      robots[i]->InitializeDOFs(m_boundary);
-
-    Cfg::InitRobots(robots[i], i);
-  }
-
-  ComputeResolution(robots);
 }
 
 
@@ -158,6 +131,27 @@ Write(ostream & _os) {
     body->Write(_os);
     _os << endl;
   }
+}
+
+/*-------------------------------- Resolutions -------------------------------*/
+
+void
+Environment::
+ComputeResolution(vector<ActiveMultiBody*> _robots) {
+  double bodiesMinSpan = numeric_limits<double>::max();
+  for(auto& body : _robots)
+    bodiesMinSpan = min(bodiesMinSpan, body->GetMaxAxisRange());
+
+  for(auto& body : m_obstacles)
+    bodiesMinSpan = min(bodiesMinSpan, body->GetMaxAxisRange());
+
+  // Set to XML input resolution if specified, else compute resolution factor
+  if(m_positionRes < 0)
+    m_positionRes = bodiesMinSpan * m_positionResFactor;
+
+#ifdef PMPState
+  State::SetTimeRes(m_timeRes);
+#endif
 }
 
 /*----------------------------- Boundary Functions ---------------------------*/
@@ -320,26 +314,6 @@ Environment::
 WriteBoundary(ostream& _os) {
   _os << "Boundary " << m_boundary->Type() << " ";
   m_boundary->Write(_os);
-}
-
-
-void
-Environment::
-ComputeResolution(vector<shared_ptr<ActiveMultiBody>> _robots) {
-  double bodiesMinSpan = numeric_limits<double>::max();
-  for(auto& body : _robots)
-    bodiesMinSpan = min(bodiesMinSpan, body->GetMaxAxisRange());
-
-  for(auto& body : m_obstacles)
-    bodiesMinSpan = min(bodiesMinSpan, body->GetMaxAxisRange());
-
-  // Set to XML input resolution if specified, else compute resolution factor
-  if(m_positionRes < 0)
-    m_positionRes = bodiesMinSpan * m_positionResFactor;
-
-#ifdef PMPState
-  State::SetTimeRes(m_timeRes);
-#endif
 }
 
 /*----------------------------------------------------------------------------*/

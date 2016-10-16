@@ -250,6 +250,7 @@ PMPL_OBJS = \
 	MPProblem/ConfigurationSpace/Cfg.o \
         MPProblem/ConfigurationSpace/State.o \
 	MPProblem/Environment/Environment.o \
+	MPProblem/Robot/Robot.o \
 	MPProblem/Workspace/WorkspaceDecomposition.o \
 	MPProblem/Workspace/WorkspacePortal.o \
 	MPProblem/Workspace/WorkspaceRegion.o \

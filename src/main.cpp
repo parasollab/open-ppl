@@ -11,6 +11,8 @@ typedef StateTraits PMPLTraits;
 #else
 #error "Error, must define a RobotType for PMPL application"
 #endif
+typedef PMPLTraits::MPProblemType MPProblemType;
+typedef PMPLTraits::MPLibraryType MPLibraryType;
 
 using namespace std;
 
@@ -21,8 +23,6 @@ main(int _argc, char** _argv) {
     if(_argc < 3 || string(_argv[1]) != "-f")
       throw ParseException(WHERE, "Incorrect usage. Usage: -f options.xml");
 
-    typedef PMPLTraits::MPProblemType MPProblemType;
-    typedef PMPLTraits::MPLibraryType MPLibraryType;
     MPProblemType* problem = new MPProblemType(_argv[2]);
     MPLibraryType* lib = new MPLibraryType(_argv[2]);
     lib->SetMPProblem(problem);

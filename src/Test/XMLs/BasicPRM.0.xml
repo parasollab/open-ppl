@@ -1,10 +1,11 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <MotionPlanning warnings="true" warningsAsErrors="true" print="false">
-  <Input>
+  <Problem>
     <Environment filename="../Envs/2D/2d.env" saveDofs="false"/>
-  </Input>
+    <Robot label="boxy" filename="../Envs/2D/boxy.robot"/>
+  </Problem>
 
-  <MPProblem>
+  <Library>
     <DistanceMetrics>
       <Euclidean label="euclidean"/>
     </DistanceMetrics>
@@ -53,5 +54,5 @@
     <Solver mpStrategyLabel="BasicPRM" seed="0"
       baseFilename="../Scratch/BasicPRM"/>
 
-  </MPProblem>
+  </Library>
 </MotionPlanning>

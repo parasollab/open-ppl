@@ -26,7 +26,7 @@ GetFreeBody(size_t _index) const {
 
 void
 ActiveMultiBody::
-InitializeDOFs(shared_ptr<Boundary>& _b, ostream* _os) {
+InitializeDOFs(const Boundary* _b, ostream* _os) {
 
   size_t dof = 0;
 

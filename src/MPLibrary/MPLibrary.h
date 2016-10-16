@@ -364,7 +364,7 @@ SetMPProblem(MPProblemType* _p) {
   m_metrics->Initialize();
   m_mapEvaluators->Initialize();
 
-  // Ensure CD structures have been built.
+  // Ensure that the compiled CD methods are available for the bodies.
   auto& cdMethods = Body::m_cdMethods;
   for(auto& vc : *m_validityCheckers) {
     // Try to cast each validity checker to the collision detection base class.
@@ -381,6 +381,8 @@ SetMPProblem(MPProblemType* _p) {
     if(!alreadyAdded)
       cdMethods.push_back(cd);
   }
+
+  // Build CD models.
   for(auto& body : m_problem->GetRobots())
     body->BuildCDStructure();
   m_problem->GetEnvironment()->BuildCDStructure();
@@ -427,7 +429,7 @@ ReadXMLFile(const string& _filename) {
   // Find the 'MPLibrary' node.
   XMLNode* planningLibrary = nullptr;
   for(auto& child : mpNode)
-    if(child.Name() == "MPProblem")
+    if(child.Name() == "Library")
       planningLibrary = &child;
 
   // Throw exception if we can't find it.

@@ -187,14 +187,13 @@ void
 State::
 GetRandomCfgImpl(Environment* _env, shared_ptr<Boundary> _bb) {
   Cfg::GetRandomCfgImpl(_env, _bb);
-  m_vel = static_pointer_cast<NonHolonomicMultiBody>(
-      m_robots[m_robotIndex])->GetRandomVelocity();
+  m_vel = static_cast<NonHolonomicMultiBody*>(GetRobot())->GetRandomVelocity();
 }
 
 State
 State::
 F(const State& _s, const Vector3d& _force, const Vector3d& _torque) {
-  shared_ptr<FreeBody> body = m_robots[_s.m_robotIndex]->GetFreeBody(0);
+  shared_ptr<FreeBody> body = _s.GetRobot()->GetFreeBody(0);
   State xdot;
 
   //pdot = v

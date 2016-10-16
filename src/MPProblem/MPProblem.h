@@ -6,6 +6,7 @@
 #include "MPProblemBase.h"
 #include "MPProblem/ConfigurationSpace/Roadmap.h"
 #include "MPProblem/Environment/Environment.h"
+#include "MPProblem/Robot/Robot.h"
 #include "Utilities/MetricUtils.h"
 #include "Utilities/MPUtils.h"
 #include "Utilities/PMPLExceptions.h"
@@ -109,6 +110,7 @@ class MPProblem : public MPProblemBase
     ///@{
 
     virtual void Initialize(); ///< Initialize all local method sets and data.
+    virtual void Clear();      ///< Destroys all objects and releases memory.
 
     ////////////////////////////////////////////////////////////////////////////
     /// @brief Helper for parsing XML nodes.
@@ -119,13 +121,12 @@ class MPProblem : public MPProblemBase
     ///@name Core Properties
     ///@{
 
-    Environment* m_environment;  ///< The environment to plan in.
+    Environment* m_environment{nullptr};  ///< The planning environment.
+    vector<Robot*> m_robots;              ///< The robots in our problem.
 
-    RoadmapType* m_roadmap;      ///< The free-space roadmap.
-    RoadmapType* m_blockRoadmap; ///< The obstacle-space roadmap.
-    StatClass*   m_stats;        ///< Performance tracking object.
-
-    vector<shared_ptr<ActiveMultiBody>> m_robots;  ///< Robots.
+    RoadmapType* m_roadmap{nullptr};      ///< The free-space roadmap.
+    RoadmapType* m_blockRoadmap{nullptr}; ///< The obstacle-space roadmap.
+    StatClass*   m_stats{nullptr};        ///< Performance tracking object.
 
     ///@}
     ///@name Files
@@ -158,11 +159,7 @@ MPProblem(const string& _filename) {
 template<class MPTraits>
 MPProblem<MPTraits>::
 ~MPProblem() {
-  delete m_roadmap;
-  delete m_blockRoadmap;
-  delete m_stats;
-  delete m_environment;
-  m_robots.clear();
+  Clear();
 }
 
 
@@ -170,10 +167,29 @@ template<class MPTraits>
 void
 MPProblem<MPTraits>::
 Initialize() {
-  m_environment = nullptr;
+  Clear();
   m_roadmap = new RoadmapType();
   m_blockRoadmap = new RoadmapType();
   m_stats = new StatClass();
+}
+
+
+template<class MPTraits>
+void
+MPProblem<MPTraits>::
+Clear() {
+  delete m_roadmap;
+  delete m_blockRoadmap;
+  delete m_stats;
+  delete m_environment;
+  m_roadmap = nullptr;
+  m_blockRoadmap = nullptr;
+  m_stats = nullptr;
+  m_environment = nullptr;
+
+  for(auto& robot : m_robots)
+    delete robot;
+  m_robots.clear();
 }
 
 /*---------------------------- XML Helpers -----------------------------------*/
@@ -192,25 +208,19 @@ ReadXMLFile(const string& _filename) {
 
   // Find the 'Input' node.
   XMLNode* input = nullptr;
-  for(auto& child : mpNode) {
-    if(child.Name() == "Input")
+  for(auto& child : mpNode)
+    if(child.Name() == "Problem")
       input = &child;
-  }
 
-  // Throw exception if we can't it.
+  // Throw exception if we can't find it.
   if(!envIsSet && !input)
     throw ParseException(WHERE, "Cannot find Input node in XML file '" +
         _filename + "'.");
 
-  // Parse the input node to set the environment and query.
-  if(!envIsSet) {
-    Cfg::GetRobots().clear();
+  // Parse the input node to set the environment, robot(s), and query.
+  if(!envIsSet)
     for(auto& child : *input)
       ParseChild(child);
-    m_robots = Cfg::GetRobots();
-  }
-
-  // Read robots from Cfg class.
 
   // Print XML details if requested.
   bool print = mpNode.Read("print", false, false, "Print all XML input");
@@ -225,6 +235,27 @@ ReadXMLFile(const string& _filename) {
     if(!envIsSet)
       input->WarnAll(warningsAsErrors);
   }
+
+  // Make sure there is an environment and a robot.
+  if(!m_environment)
+    throw ParseException(input->Where(), "No environment specified in the "
+        "problem node.");
+  if(m_robots.empty())
+    throw ParseException(input->Where(), "No robots specified in the problem "
+        "node.");
+
+  // Initialize the Cfg robot pointers.
+  Cfg::m_robots.clear();
+  Cfg::SetSize(m_robots.size());
+  for(size_t i = 0; i < m_robots.size(); ++i)
+    Cfg::InitRobots(m_robots[i]->GetMultiBody(), i);
+
+  // Set the boundary for each robot.
+  for(auto& robot : m_robots)
+    robot->SetBoundary(GetEnvironment()->GetBoundary().get());
+
+  // Compute the environment resolution.
+  GetEnvironment()->ComputeResolution(GetRobots());
 }
 
 
@@ -238,10 +269,14 @@ ParseChild(XMLNode& _node) {
       m_environment = new Environment(_node);
     return true;
   }
-  if(_node.Name() == "Query") {
+  else if(_node.Name() == "Robot") {
+    m_robots.push_back(new Robot(_node));
+    return true;
+  }
+  else if(_node.Name() == "Query") {
     // Ignore this node if we already have a query file.
     if(m_queryFilename.empty())
-      m_queryFilename = _node.Read("filename", false, "", "Query file name");
+      m_queryFilename = _node.Read("filename", true, "", "Query file name");
     return true;
   }
   else
@@ -257,7 +292,7 @@ GetRobot(size_t _index) const {
   if(_index < 0 || _index >= m_robots.size())
     throw RunTimeException(WHERE,
         "Cannot access ActiveBody '" + ::to_string(_index) + "'.");
-  return m_robots[_index].get();
+  return m_robots[_index]->GetMultiBody();
 }
 
 
@@ -268,7 +303,7 @@ GetRobots() const {
   vector<ActiveMultiBody*> robots;
   robots.reserve(m_robots.size());
   for(const auto& ptr : m_robots)
-    robots.push_back(ptr.get());
+    robots.push_back(ptr->GetMultiBody());
   return robots;
 }
 

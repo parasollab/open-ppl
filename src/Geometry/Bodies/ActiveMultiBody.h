@@ -71,7 +71,7 @@ class ActiveMultiBody : public MultiBody {
     /// @brief Initialize DOFTypes of robot
     /// @param _b Boundary for DOF ranges
     /// @param _os If not null, DOF type information will be output here as well
-    void InitializeDOFs(shared_ptr<Boundary>& _b, ostream* _os = nullptr);
+    void InitializeDOFs(const Boundary* _b, ostream* _os = nullptr);
 
     ////////////////////////////////////////////////////////////////////////////
     /// @return Base Body type

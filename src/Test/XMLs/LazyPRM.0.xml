@@ -1,11 +1,12 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <MotionPlanning warnings="true" warningsAsErrors="true" print="false">
-  <Input>
+  <Problem>
     <Environment filename="../Envs/2D/2d.env" saveDofs="false"/>
+    <Robot label="boxy" filename="../Envs/2D/boxy.robot"/>
     <Query filename="../Envs/2D/2d.query"/>
-  </Input>
+  </Problem>
 
-  <MPProblem>
+  <Library>
     <DistanceMetrics>
       <Euclidean label="euclidean"/>
     </DistanceMetrics>
@@ -56,5 +57,5 @@
     <Solver mpStrategyLabel="LazyPRM" seed="0"
       baseFilename="../Scratch/LazyPRM"/>
 
-  </MPProblem>
+  </Library>
 </MotionPlanning>
