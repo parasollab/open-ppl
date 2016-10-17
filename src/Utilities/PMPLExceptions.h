@@ -1,30 +1,14 @@
-#ifndef PMPLEXCEPTIONS_H_
-#define PMPLEXCEPTIONS_H_
+#ifndef PMPL_EXCEPTIONS_H_
+#define PMPL_EXCEPTIONS_H_
 
 #include <string>
 #include <sstream>
 #include <stdexcept>
+
+#include "Utilities/RuntimeUtils.h"
+
 using namespace std;
 
-////////////////////////////////////////////////////////////////////////////////
-/// @ingroup Exceptions
-/// @brief Describe where in code an error occurs.
-/// @tparam X Filename type
-/// @tparam Y Function name type
-/// @tparam Z Line type
-/// @param x Filename
-/// @param y Function name
-/// @param z Line number
-/// @return String describing when in code something occurs
-////////////////////////////////////////////////////////////////////////////////
-template<typename X, typename Y, typename Z>
-string WhereAt(X x, Y y, Z z) {
-  ostringstream oss;
-  oss << "File: " << x << "\n\tFunction: " << y << "\n\tLine: " << z;
-  return oss.str();
-};
-
-#define WHERE WhereAt(__FILE__, __PRETTY_FUNCTION__, __LINE__)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup Exceptions

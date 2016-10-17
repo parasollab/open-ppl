@@ -5,9 +5,10 @@
 #include "MultiBody.h"
 
 class Boundary;
+class Cfg;
 
 ////////////////////////////////////////////////////////////////////////////////
-/// @brief Type of free movement
+/// Type of free movement
 ////////////////////////////////////////////////////////////////////////////////
 enum class DofType {
   Positional, ///< Translational motion R = [min, max]
@@ -17,7 +18,7 @@ enum class DofType {
 
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup Environment
-/// @brief A collection of geometries in workspace reprenting robots
+/// A collection of geometries in workspace reprenting robots
 ///
 /// A MultiBody representing a Robot in workspace.
 ////////////////////////////////////////////////////////////////////////////////
@@ -28,7 +29,7 @@ class ActiveMultiBody : public MultiBody {
     typedef shared_ptr<Connection> Joint; ///< Joint of robot
 
     ////////////////////////////////////////////////////////////////////////////
-    /// @brief Information of DOF values: name, minimum value, maximum value
+    /// Information of DOF values: name, minimum value, maximum value
     ////////////////////////////////////////////////////////////////////////////
     struct DOFInfo {
       //////////////////////////////////////////////////////////////////////////
@@ -68,7 +69,7 @@ class ActiveMultiBody : public MultiBody {
     ///@{
 
     ////////////////////////////////////////////////////////////////////////////
-    /// @brief Initialize DOFTypes of robot
+    /// Initialize DOFTypes of robot
     /// @param _b Boundary for DOF ranges
     /// @param _os If not null, DOF type information will be output here as well
     void InitializeDOFs(const Boundary* _b, ostream* _os = nullptr);
@@ -117,14 +118,19 @@ class ActiveMultiBody : public MultiBody {
     ///@{
 
     ////////////////////////////////////////////////////////////////////////////
-    /// @brief Place robot at @p _v
-    /// @param _v Configuration DOF parameters
+    /// Place a robot at a given configuration.
+    /// @param _c The configuration to use.
+    void Configure(const Cfg& _c);
+
+    ////////////////////////////////////////////////////////////////////////////
+    /// Place a robot at a given configuration.
+    /// @param _v The DOF values to use.
     void Configure(const vector<double>& _v);
 
     ////////////////////////////////////////////////////////////////////////////
-    /// @brief Place robot at @p _v for DOF and _t for theta values
-    /// @param _v Configuration DOF parameters
-    /// @param _t Configuration theta parameters
+    /// Place a robot at a given configuration.
+    /// @param _v The position DOF values to use.
+    /// @param _t The orientation DOF values to use.
     ///
     /// This version is to support functionality in the folding code where
     /// we need to configure the theta values as well.  Note that they are not
@@ -133,17 +139,17 @@ class ActiveMultiBody : public MultiBody {
     void Configure(const vector<double>& _v, const vector<double>& _t);
 
     ////////////////////////////////////////////////////////////////////////////
-    /// @brief Compute rendering transforms for robot at @p _v
+    /// Compute rendering transforms for robot at @p _v
     /// @param _v Configuration DOF parameters
     void ConfigureRender(const vector<double>& _v);
 
     ////////////////////////////////////////////////////////////////////////////
-    /// @brief Sample random configuration in boundary
+    /// Sample random configuration in boundary
     /// @param _boundary Boundary
     vector<double> GetRandomCfg(shared_ptr<Boundary>& _boundary);
 
     ////////////////////////////////////////////////////////////////////////////
-    /// @brief   Get the DOF ranges for a given boundary.
+    /// Get the DOF ranges for a given boundary.
     /// @param[in] _b The boundary in question.
     /// @return  A pair of configurations representing the minimum and maximum
     ///          DOF values allowed within the boundary.
@@ -175,9 +181,9 @@ class ActiveMultiBody : public MultiBody {
 
     ////////////////////////////////////////////////////////////////////////////
     /// @param _body Body to set as base body
-    /// @brief It is used to set some things that get set by default in the Read
+    /// It is used to set some things that get set by default in the Read
     /// function.
-    /// This code is used in GB. If touched, someone in GB should verify change.
+    /// @TODO This function was written for GB, see if we can remove it.
     void SetBaseBody(const shared_ptr<FreeBody>& _body);
 
   private:

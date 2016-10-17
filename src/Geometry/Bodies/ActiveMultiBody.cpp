@@ -1,7 +1,8 @@
 #include "ActiveMultiBody.h"
 
-#include "Geometry/Boundaries/Boundary.h"
 #include "FreeBody.h"
+#include "Geometry/Boundaries/Boundary.h"
+#include "MPProblem/ConfigurationSpace/Cfg.h"
 
 ActiveMultiBody::
 ActiveMultiBody() : MultiBody() {
@@ -143,6 +144,12 @@ PosDOF() const {
     default:
       return 0;
   }
+}
+
+void
+ActiveMultiBody::
+Configure(const Cfg& _c) {
+  Configure(_c.GetData());
 }
 
 void

@@ -13,7 +13,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 class MPProblemBase {
   public:
-    static bool IsAbsolutePathBaseFile(const std::string& _baseFilename);
     static std::string GetPath(const std::string& _filename);
     static void SetPath(const std::string& _filename);
 
