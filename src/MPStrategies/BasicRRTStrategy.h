@@ -139,7 +139,8 @@ class BasicRRTStrategy : public MPStrategyMethod<MPTraits> {
     /// \param[in] _source   The source node.
     /// \param[in] _target   The target node.
     /// \param[in] _lpOutput The extender output.
-    void AddEdge(VID _source, VID _target, const LPOutput<MPTraits>& _lpOutput);
+    virtual void AddEdge(VID _source, VID _target,
+        const LPOutput<MPTraits>& _lpOutput);
 
     ///@}
     ///\name Tree Helpers

@@ -3,8 +3,8 @@
 
   <!-- Here we specify input files, such as environment and query. -->
   <Input>
-    <Environment filename="2D/2d.env" saveDofs="false"/>
-    <Query filename="2D/2d.query"/>
+    <Environment filename="3D/3d.env" saveDofs="false"/>
+    <Query filename="3D/3d.query"/>
   </Input>
 
   <!-- Set available algorithms and parameters. -->

@@ -6,6 +6,10 @@
 #include <vector>
 
 #include "BasicRRTStrategy.h"
+#include "Workspace/GridOverlay.h"
+#include "Workspace/WorkspaceDecomposition.h"
+#include "Workspace/WorkspaceRegion.h"
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup MotionPlanningStrategies
@@ -22,7 +26,7 @@ class Syclop : public BasicRRTStrategy<MPTraits> {
 
   public:
 
-    ///\name Motion Planning Types
+    ///@name Motion Planning Types
     ///@{
 
     typedef typename MPTraits::CfgType          CfgType;
@@ -34,14 +38,14 @@ class Syclop : public BasicRRTStrategy<MPTraits> {
     typedef typename MPProblemType::VID         VID;
 
     ///@}
-    ///\name Local Types
+    ///@name Local Types
     ///@{
 
     typedef vector<VID>                         TreeType;
     typedef typename vector<TreeType>::iterator TreeIter;
 
     ///@}
-    ///\name Construction
+    ///@name Construction
     ///@{
 
     Syclop();
@@ -51,7 +55,7 @@ class Syclop : public BasicRRTStrategy<MPTraits> {
     virtual ~Syclop() = default;
 
     ///@}
-    ///\name MPStrategy Overrides
+    ///@name MPStrategy Overrides
     ///@{
 
     virtual void Initialize() override;
@@ -61,31 +65,34 @@ class Syclop : public BasicRRTStrategy<MPTraits> {
 
   protected:
 
-    ///\name Neighbor Helpers
+    ///@name Neighbor Helpers
     ///@{
 
     VID FindNearestNeighbor(const CfgType& _cfg, const TreeIter& _tree);
 
     ///@}
-    ///\name Growth Helpers
+    ///@name Growth Helpers
     ///@{
 
+    ////////////////////////////////////////////////////////////////////////////
+    /// As basic RRT, but also logs extension attempts.
     virtual VID Extend(const VID _nearVID, const CfgType& _qRand,
         const bool _lp = false) override;
 
+    ////////////////////////////////////////////////////////////////////////////
+    /// As basic RRT, but also updates coverage information.
     virtual pair<VID, bool> AddNode(const CfgType& _newCfg) override;
 
-    ///@}
-    ///\name Tree Helpers
-    ///@{
-
-    virtual VID ExpandTree(const VID _nearestVID, const CfgType& _target) override;
+    ////////////////////////////////////////////////////////////////////////////
+    /// As basic RRT, but also updates edge connectivity information.
+    virtual void AddEdge(VID _source, VID _target,
+        const LPOutput<MPTraits>& _lpOutput);
 
     ///@}
     ///@name Syclop Functions
     ///@{
 
-    typedef int* RegionPointer;
+    typedef WorkspaceRegion* RegionPointer;
 
     ////////////////////////////////////////////////////////////////////////////
     /// @brief Compute a high-level plan (a sequence of regions).
@@ -105,29 +112,19 @@ class Syclop : public BasicRRTStrategy<MPTraits> {
 
     ////////////////////////////////////////////////////////////////////////////
     /// @brief Find the workspace region that holds a given configuration.
-    RegionPointer LocateRegion(const VID _v);
-    RegionPointer LocateRegion(const Point3d& _p);
+    RegionPointer LocateRegion(const VID _v) const;
+    RegionPointer LocateRegion(const CfgType& _c) const; ///< @overload
+    RegionPointer LocateRegion(const Point3d& _p) const; ///< @overload
 
     ////////////////////////////////////////////////////////////////////////////
-    /// @brief Update the coverage of the region containing a new vertex.
-    void UpdateCoverage(const VID _v);
-
-    ////////////////////////////////////////////////////////////////////////////
-    /// @brief Update the connectivity information after connecting a vertex v1
-    ///        in a region r1 to a vertex v2 in a different region r2.
-    void UpdateConnections(const VID _v1, const VID _v2);
+    /// @brief Find the coverage cell index that holds a given configuration.
+    size_t LocateCoverageCell(const VID _v) const;
+    size_t LocateCoverageCell(const CfgType& _c) const; ///< @overload
+    size_t LocateCoverageCell(const Point3d& _p) const; ///< @overload
 
     ///@}
     ///@name Syclop Helpers
     ///@}
-
-    ////////////////////////////////////////////////////////////////////////////
-    /// @brief Find the number of occupied sub-cells in a given region.
-    size_t Cov(RegionPointer _r);
-
-    ////////////////////////////////////////////////////////////////////////////
-    /// @brief Estimate the free state space volume of a given region.
-    double FreeVol(RegionPointer _r);
 
     ////////////////////////////////////////////////////////////////////////////
     /// @brief Count the number of times that _r1 and _r2 have been selected as
@@ -154,22 +151,42 @@ class Syclop : public BasicRRTStrategy<MPTraits> {
       ///@name Internal State
       ///@{
 
-      double weight; ///< Relative probability of selecting this region from a lead.
-      double alpha;  ///< The edge-weight coefficient for this region.
+      /// Relative probability of selecting this region from a lead.
+      double weight;
 
-      double freeVolume; ///< The estimated free state-space volume of this region.
+      /// The edge-weight coefficient for this region.
+      double alpha;
 
-      size_t numTimesSelected{0}; ///< The number of times this region has been selected.
+      /// The estimated free state-space volume of this region.
+      double freeVolume;
+
+      /// The number of times this region has been selected.
+      size_t numTimesSelected{0};
 
       vector<VID> vertices; ///< The VID's of the configurations in this region.
 
-      void UpdateAlpha(RegionPointer _r) {
-        alpha = 1. / ((1. + Cov(_r)) * pow(FreeVol(_r), 4));
+      set<size_t> cells; ///< The set of coverage cells in the target that
+                         ///< were reached from the source.
+
+      size_t Coverage() const {return cells.size();}
+
+      ///@}
+      ///@name Update Functions
+      ///@{
+
+      void AddCell(size_t _index) {
+        cells.insert(_index);
+        UpdateAlpha();
+        UpdateWeight();
       }
 
-      void UpdateWeight(RegionPointer _r) {
-        weight = pow(FreeVol(_r), 4) /
-            ((1. + Cov(_r)) * (1. + pow(numTimesSelected, 2)));
+      void UpdateAlpha() {
+        alpha = 1. / ((1. + Coverage()) * pow(freeVolume, 4));
+      }
+
+      void UpdateWeight() {
+        weight = pow(freeVolume, 4) /
+            ((1. + Coverage()) * (1. + pow(numTimesSelected, 2)));
       }
 
       ///@}
@@ -179,15 +196,41 @@ class Syclop : public BasicRRTStrategy<MPTraits> {
     /// Holds extra data associated with the regions.
     map<RegionPointer, RegionData> m_regionData;
 
-    // Some kind of coverage map/structure
+    ////////////////////////////////////////////////////////////////////////////
+    /// @brief Tracks data related to edges between regions in the decomposition
+    ///        graph.
+    ////////////////////////////////////////////////////////////////////////////
+    struct RegionPairData {
 
-    // Some kind of connectivity map/structure
+      // TODO: compute numLeadUses
+      size_t numLeadUses{0};  ///< Times this edge was used in a lead.
+      size_t numAttempts{0};  ///< Attempted extensions across this edge.
+
+      /// Add the index of a cell containing a vertex in the target that was
+      /// reached by extending from the source.
+      void AddCell(size_t _index) {cells.insert(_index);}
+
+      /// Get the coverage for this edge.
+      size_t Coverage() const {return cells.size();}
+
+      private:
+
+        /// The set of coverage cells in the target that were reached from the
+        /// source.
+        set<size_t> cells;
+    };
+
+    /// Holds extra data associated with region pairs.
+    map<pair<RegionPointer, RegionPointer>, RegionPairData> m_regionPairData;
+
+    /// Coverage grid
+    GridOverlay* m_grid{nullptr}; // TODO: validate impl.
 
     ///@}
     ///@name Pre-processing Stuff
     ///@{
 
-    void ComputeFreeVolumes();
+    void ComputeFreeVolumes(); ///< Estimate the free volume of each region.
 
     ///@}
 };
@@ -197,6 +240,7 @@ class Syclop : public BasicRRTStrategy<MPTraits> {
 template<class MPTraits>
 Syclop<MPTraits>::
 Syclop() : BasicRRTStrategy<MPTraits>() {
+  // Done.
   this->SetName("Syclop");
 }
 
@@ -205,6 +249,7 @@ template<class MPTraits>
 Syclop<MPTraits>::
 Syclop(MPProblemType* _problem, XMLNode& _node) :
     BasicRRTStrategy<MPTraits>(_problem, _node) {
+  // Done.
   this->SetName("Syclop");
 }
 
@@ -216,8 +261,16 @@ Syclop<MPTraits>::
 Initialize() {
   BasicRRTStrategy<MPTraits>::Initialize();
 
-  // TODO: Decompose workspace.
+  // Decompose workspace.
+  auto env = this->GetEnvironment();
+  env->Decompose(TetGenDecomposition(this->GetBaseFilename()));
 
+  // Create coverage grid.
+  delete m_grid;
+  // TODO: Choose length intelligently instead of using 1.
+  m_grid = new GridOverlay(env->GetBoundary(), 1);
+
+  // Estimate the free c-space volume of each region.
   ComputeFreeVolumes();
 }
 
@@ -257,39 +310,51 @@ Syclop<MPTraits>::
 Extend(const VID _nearVID, const CfgType& _qRand, const bool _lp) {
   // TODO: if we extended into a region that wasn't previously available, add it
   // to the list of available regions.
+
+  // Log this extension attempt.
+  RegionPointer r1 = LocateRegion(_nearVID);
+  RegionPointer r2 = LocateRegion(_qRand);
+  ++(m_regionPairData[make_pair(r1, r2)].numAttempts);
+
   return BasicRRTStrategy<MPTraits>::Extend(_nearVID, _qRand, _lp);
 }
 
 
 template<class MPTraits>
-pair<typename BasicRRTStrategy<MPTraits>::VID, bool>
+pair<typename Syclop<MPTraits>::VID, bool>
 Syclop<MPTraits>::
 AddNode(const CfgType& _newCfg) {
+  // Done.
   auto added = BasicRRTStrategy<MPTraits>::AddNode(_newCfg);
 
   // If node is new and not invalid, update region data.
   if(added.second) {
-    // Add this VID to the appropriate region.
     RegionPointer r = LocateRegion(added.first);
-    m_regionData[r].vertices.push_back(added.first);
+    size_t cellIndex = LocateCoverageCell(_newCfg.GetPoint());
 
-    // Update region data.
-    m_regionData[r].UpdateAlpha(r);
-    m_regionData[r].UpdateWeight(r);
+    // Add this VID to the appropriate region and update coverage.
+    m_regionData[r].vertices.push_back(added.first);
+    m_regionData[r].AddCell(cellIndex);
   }
 
   return added;
 }
 
 
-/*------------------------------ Tree Helpers --------------------------------*/
-
 template<class MPTraits>
-typename Syclop<MPTraits>::VID
+void
 Syclop<MPTraits>::
-ExpandTree(const VID _nearestVID, const CfgType& _target) {
-  VID newVID = BasicRRTStrategy<MPTraits>::ExpandTree(_nearestVID, _target);
-  return newVID;
+AddEdge(VID _source, VID _target, const LPOutput<MPTraits>& _lpOutput) {
+  // Done.
+  BasicRRTStrategy<MPTraits>::AddEdge(_source, _target, _lpOutput);
+
+  // Update the list of cells in the target region that were reached by
+  // extending from the source region.
+  RegionPointer r1 = LocateRegion(_source);
+  RegionPointer r2 = LocateRegion(_target);
+  size_t cellIndex = LocateCoverageCell(_target);
+
+  m_regionPairData[make_pair(r1, r2)].AddCell(cellIndex);
 }
 
 /*------------------------------ Syclop Functions ----------------------------*/
@@ -331,6 +396,7 @@ template <typename MPTraits>
 typename Syclop<MPTraits>::RegionPointer
 Syclop<MPTraits>::
 SelectRegion(vector<RegionPointer> _available) {
+  // Done.
   // Compute the total weight of the available regions.
   double totalWeight = 0.;
   for(const auto& region : _available)
@@ -346,7 +412,7 @@ SelectRegion(vector<RegionPointer> _available) {
     if(cumulative > roll) {
       // Select this region!
       ++m_regionData[region].numTimesSelected;
-      m_regionData[region].UpdateWeight(region);
+      m_regionData[region].UpdateWeight();
       return region;
     }
   }
@@ -360,13 +426,14 @@ template <typename MPTraits>
 typename Syclop<MPTraits>::VID
 Syclop<MPTraits>::
 SelectVertex(RegionPointer _r) {
+  // Done.
   const auto& vertices = m_regionData[_r].vertices;
 
   if(vertices.empty())
     throw RunTimeException(WHERE, "Tried to select a vertex from a region with "
         "no vertices.");
 
-  size_t randomIndex = Rand() % vertices.size();
+  size_t randomIndex = rand() % vertices.size();
   return vertices[randomIndex];
 }
 
@@ -374,25 +441,32 @@ SelectVertex(RegionPointer _r) {
 template <typename MPTraits>
 typename Syclop<MPTraits>::RegionPointer
 Syclop<MPTraits>::
-LocateRegion(const VID _v) {
-  // Get the reference point for this configuration.
-  auto point = this->GetRoadmap()->GetGraph()->find_vertex(_v)->property().
-      GetPoint();
-  return LocateRegion(point);
+LocateRegion(const VID _v) const {
+  // Done.
+  return LocateRegion(this->GetRoadmap()->GetGraph()->GetVertex(_v));
 }
 
 
 template <typename MPTraits>
 typename Syclop<MPTraits>::RegionPointer
 Syclop<MPTraits>::
-LocateRegion(const Point3d& _p) {
+LocateRegion(const CfgType& _c) const {
+  // Done.
+  return LocateRegion(_c.GetPoint());
+}
+
+
+template <typename MPTraits>
+typename Syclop<MPTraits>::RegionPointer
+Syclop<MPTraits>::
+LocateRegion(const Point3d& _p) const {
   // Search region graph to see which region contains this point.
   {
     // Option 1: brute-force linear search
-    auto regionGraph = this->GetEnvironment()->GetDecomposition();
-    for(const auto& r : *regionGraph) {
-      // TODO If point is inside r, return r.
-    }
+    //auto regionGraph = this->GetEnvironment()->GetDecomposition();
+    //for(const auto& r : *regionGraph) {
+    //  // TODO If point is inside r, return r.
+    //}
   }
   {
     // Option 2: find the coverage grid cell that holds this vertex, then map the
@@ -405,18 +479,29 @@ LocateRegion(const Point3d& _p) {
 
 
 template <typename MPTraits>
-void
+size_t
 Syclop<MPTraits>::
-UpdateCoverage(const VID _v) {
-  // TODO
+LocateCoverageCell(const VID _v) const {
+  // Done.
+  return LocateCoverageCell(this->GetRoadmap()->GetGraph()->GetVertex(_v));
 }
 
 
 template <typename MPTraits>
-void
+size_t
 Syclop<MPTraits>::
-UpdateConnections(const VID _v1, const VID _v2) {
-  // TODO
+LocateCoverageCell(const CfgType& _c) const {
+  // Done.
+  return LocateCoverageCell(_c.GetPoint());
+}
+
+
+template <typename MPTraits>
+size_t
+Syclop<MPTraits>::
+LocateCoverageCell(const Point3d& _p) const {
+  // Done.
+  return m_grid->LocateCell(_p);
 }
 
 /*------------------------------ Syclop Helpers ------------------------------*/
@@ -424,30 +509,19 @@ UpdateConnections(const VID _v1, const VID _v2) {
 template <typename MPTraits>
 size_t
 Syclop<MPTraits>::
-Cov(RegionPointer _r) {
-  // Initially, just approximate the number of occupied cells as number of
-  // vertices in the region.
-  return m_regionData[_r].vertices.size();
-
-  // TODO use the number of occupied coverage grid cells instead.
-}
-
-
-template <typename MPTraits>
-inline
-double
-Syclop<MPTraits>::
-FreeVol(RegionPointer _r) {
-  return m_regionData[_r].freeVolume;
-}
-
-
-template <typename MPTraits>
-size_t
-Syclop<MPTraits>::
 Sel(RegionPointer _r1, RegionPointer _r2) {
-  // TODO
-  return 0;
+  // Done.
+  const auto& rd1 = m_regionData[_r1];
+  const auto& rd2 = m_regionData[_r2];
+  const auto& edgeData = m_regionPairData[make_pair(_r1, _r2)];
+
+  // If _r1 and _r2 have no samples, then return number of times discrete lead
+  // has included the edge _r1, _r2.
+  // Else, return number of times we tried to extend from _r1 to _r2.
+  if(rd1.vertices.empty() && rd2.vertices.empty())
+    return edgeData.numLeadUses;
+  else
+    return edgeData.numAttempts;
 }
 
 
@@ -455,8 +529,8 @@ template <typename MPTraits>
 size_t
 Syclop<MPTraits>::
 Conn(RegionPointer _r1, RegionPointer _r2) {
-  // TODO
-  return 0;
+  // Done.
+  return m_regionPairData[make_pair(_r1, _r2)].Coverage();
 }
 
 
@@ -464,17 +538,19 @@ template <typename MPTraits>
 double
 Syclop<MPTraits>::
 Cost(RegionPointer _r1, RegionPointer _r2) {
-  double& a1 = m_regionData[_r1].alpha;
-  double& a2 = m_regionData[_r2].alpha;
+  // Done.
+  double a1 = m_regionData[_r1].alpha;
+  double a2 = m_regionData[_r2].alpha;
   return a1 * a2 * (1. + pow(Sel(_r1, _r2), 2)) / (1. + pow(Conn(_r1, _r2), 2));
 }
 
 /*--------------------------- Pre-processing Stuff ---------------------------*/
 
 template <typename MPTraits>
-double
+void
 Syclop<MPTraits>::
 ComputeFreeVolumes() {
+  // Done.
   static constexpr double eps = 1;
   static constexpr size_t numSamples = 5000;
 
@@ -496,9 +572,9 @@ ComputeFreeVolumes() {
   auto vc = this->GetValidityChecker("pqp_solid");
 
   map<RegionPointer, pair<size_t, size_t>> results;
-  for(const auto& sample : samples) {
-    RegionPointer r = LocateRegion(sample.GetPoint());
-    if(vc->IsValid(samples[i], "Syclop::ComputeFreeVolumes"))
+  for(auto& sample : samples) {
+    RegionPointer r = LocateRegion(sample);
+    if(vc->IsValid(sample, "Syclop::ComputeFreeVolumes"))
       ++results[r].first;
     else
       ++results[r].second;
@@ -512,8 +588,18 @@ ComputeFreeVolumes() {
     const size_t numValid = results[region].first;
     const size_t numInvalid = results[region].second;
 
-    data.freeVolume = (eps + numValid) / (eps + numValid + numInvalid);
-    data.freeVolume *= 1./* TODO: replace with volume of region */;
+    auto tetrahedronVolume = [](const RegionPointer _r) -> double {
+      /// @sa Formula taken from reference:
+      ///     http://mathworld.wolfram.com/Tetrahedron.html
+      const Vector3d& base = _r->GetPoint(0);
+      const Vector3d a = _r->GetPoint(1) - base;
+      const Vector3d b = _r->GetPoint(2) - base;
+      const Vector3d c = _r->GetPoint(3) - base;
+      return std::abs(a * (b % c)) / 6.;
+    };
+
+    data.freeVolume = tetrahedronVolume(region) * (eps + numValid) /
+        (eps + numValid + numInvalid);
   }
 
   this->GetStatClass()->StopClock("ComputeFreeVolumes");

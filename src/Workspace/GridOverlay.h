@@ -1,5 +1,6 @@
-#ifndef GRIDOVERLAY_H_
-#define GRIDOVERLAY_H_
+#ifndef GRID_OVERLAY_H_
+#define GRID_OVERLAY_H_
+
 #include "Cfg/Cfg.h"
 #include "Environment/Boundary.h"
 #include "Vector.h"
@@ -7,33 +8,41 @@
 ///////////////////////////////////////////////////////////////////////////////
 /// A grid overlay of a given boundary.
 ///
-///
 /// Currently it only works for bounding boxes
 ///////////////////////////////////////////////////////////////////////////////
-
-
-
 class GridOverlay {
+
   public:
 
-    ///@name Types 
+    ///@name Local Types
     ///@{
-      typedef size_t VID; 
+
+    typedef size_t VID;
+
     ///@}
-
-
-    ///@name Constructor
+    ///@name Construction
     ///@{
-    GridOverlay(shared_ptr<Boundary> _b, int _length);
+
+    GridOverlay(shared_ptr<Boundary> _b, double _length);
+
     ///@}
-    
-    
+    ///@name Cell Finders
+    ///@{
+
     size_t LocateCell(const Cfg& _v) const;
-    size_t IndexOfCoor(const Vector3d& _coor) const;
+    size_t LocateCell(const Point3d& _p) const;
+
+    ///@}
 
   private:
-    int m_length; ///< Length of a cell
-    shared_ptr<Boundary> m_boundary; ///< the boundary of the grid
+
+    ///@name Internal State
+    ///@{
+
+    double m_length;                 ///< Length of a cell.
+    shared_ptr<Boundary> m_boundary; ///< The boundary of the grid.
+
+    ///@}
 };
 
 #endif

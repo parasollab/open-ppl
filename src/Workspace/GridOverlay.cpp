@@ -2,32 +2,36 @@
 #include "Utilities/MPUtils.h"
 #include "Environment/BoundingBox.h"
 
-GridOverlay::
-GridOverlay(shared_ptr<Boundary> _b, int _length):
-  m_length(_length), m_boundary(_b) {}
+/*------------------------------- Construction -------------------------------*/
 
-size_t 
+GridOverlay::
+GridOverlay(shared_ptr<Boundary> _b, double _length):
+    m_length(_length), m_boundary(_b) { }
+
+
+size_t
 GridOverlay::
 LocateCell(const Cfg& _v) const {
-  Point3d coor = _v.GetPoint();
-  return IndexOfCoor(coor);
+  return LocateCell(_v.GetPoint());
 }
 
+/*------------------------------- Cell Finding -------------------------------*/
 
-size_t 
+size_t
 GridOverlay::
-IndexOfCoor(const Vector3d& _coor) const {
-  
-  const int dem = 3;
+LocateCell(const Point3d& _p) const {
+  const int dimension = 3;
   int index = 0;
   int factor = 1;
   int temp;
-  for(int i = 0; i < dem; ++i) {
+  for(int i = 0; i < dimension; ++i) {
     auto range = m_boundary->GetRange(i);
-    temp = (int) m_length* (_coor[i] - range.first / range.second - range.first);
+    temp = (int)m_length * ((_p[i] - range.first) / (range.second - range.first));
 
     index += temp * factor;
     factor *= m_length;
   }
   return index;
 }
+
+/*----------------------------------------------------------------------------*/
