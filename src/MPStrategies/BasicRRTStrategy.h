@@ -105,7 +105,7 @@ class BasicRRTStrategy : public MPStrategyMethod<MPTraits> {
 
     ////////////////////////////////////////////////////////////////////////////
     /// \brief Find the nearest configuration to the target _cfg within _tree.
-    VID FindNearestNeighbor(const CfgType& _cfg, const TreeIter& _tree);
+    virtual VID FindNearestNeighbor(const CfgType& _cfg, const TreeType& _tree);
 
     ////////////////////////////////////////////////////////////////////////////
     /// \brief If the graph type is GRAPH, try to connect a configuration to its
@@ -411,7 +411,7 @@ Iterate() {
   ValidateTrees();
 
   // Find the nearest configuration to target within the current tree
-  VID nearestVID = FindNearestNeighbor(target, m_currentTree);
+  VID nearestVID = this->FindNearestNeighbor(target, *m_currentTree);
 
   // Expand current tree
   VID newVID = this->ExpandTree(nearestVID, target);
@@ -528,14 +528,14 @@ SelectNeighbors(VID _v) {
 template<class MPTraits>
 typename BasicRRTStrategy<MPTraits>::VID
 BasicRRTStrategy<MPTraits>::
-FindNearestNeighbor(const CfgType& _cfg, const TreeIter& _tree) {
+FindNearestNeighbor(const CfgType& _cfg, const TreeType& _tree) {
   this->GetStatClass()->StartClock("NeighborhoodFinding");
 
   vector<pair<VID, double>> neighbors;
   auto nf = this->GetNeighborhoodFinder(m_nfLabel);
   nf->FindNeighbors(this->GetRoadmap(),
-      _tree->begin(), _tree->end(),
-      _tree->size() == this->GetRoadmap()->GetGraph()->get_num_vertices(),
+      _tree.begin(), _tree.end(),
+      _tree.size() == this->GetRoadmap()->GetGraph()->get_num_vertices(),
       _cfg, back_inserter(neighbors));
   VID nearestVID = neighbors[0].first;
 
@@ -619,7 +619,7 @@ BasicRRTStrategy<MPTraits>::
 AddNode(const CfgType& _newCfg) {
   GraphType* g = this->GetRoadmap()->GetGraph();
   VID newVID = g->AddVertex(_newCfg);
-  bool nodeIsNew = newVID == g->get_num_vertices() - 1;
+  const bool nodeIsNew = newVID == g->get_num_vertices() - 1;
   if(nodeIsNew) {
     m_currentTree->push_back(newVID);
     if(this->m_debug)
@@ -653,7 +653,7 @@ template<class MPTraits>
 typename BasicRRTStrategy<MPTraits>::VID
 BasicRRTStrategy<MPTraits>::
 ExpandTree(CfgType& _target) {
-  VID nearestVID = FindNearestNeighbor(_target, m_currentTree);
+  VID nearestVID = this->FindNearestNeighbor(_target, *m_currentTree);
   return this->ExpandTree(nearestVID, _target);
 }
 
@@ -712,7 +712,7 @@ ConnectTrees(VID _recentlyGrown) {
       continue;
 
     // Find nearest neighbor to qNew in other tree
-    VID nearestVID = FindNearestNeighbor(qNew, trit);
+    VID nearestVID = this->FindNearestNeighbor(qNew, *trit);
     CfgType nearestCfg = g->GetVertex(nearestVID);
     double dist = dm->Distance(qNew, nearestCfg);
 
