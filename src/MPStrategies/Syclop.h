@@ -481,16 +481,21 @@ Syclop<MPTraits>::
 LocateRegion(const Point3d& _p) const {
   // Search region graph to see which region contains this point.
   {
-    // Option 1: brute-force linear search
-    //auto regionGraph = this->GetEnvironment()->GetDecomposition();
-    //for(const auto& r : *regionGraph) {
-    //  // TODO If point is inside r, return r.
-    //}
+    // Temporary solution: brute-force linear search
+    auto regionGraph = this->GetEnvironment()->GetDecomposition();
+    for(auto iter = regionGraph->begin(); iter != regionGraph->end(); ++iter) {
+      // Stupid hacks to work around stapl const fail.
+      auto& ref = const_cast<WorkspaceRegion&>(iter->property());
+      const RegionPointer r = &ref;
+
+      // If point is inside r, return r.
+      if(r->GetBoundary()->InBoundary(_p))
+        return r;
+    }
   }
   {
-    // Option 2: find the coverage grid cell that holds this vertex, then map the
+    // TODO: find the coverage grid cell that holds this vertex, then map the
     // possible regions based on which ones touch that coverage cell.
-    // TODO
   }
 
   return nullptr;

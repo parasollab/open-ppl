@@ -1,10 +1,12 @@
 #ifndef WORKSPACE_REGION_H_
 #define WORKSPACE_REGION_H_
 
+#include <memory>
 #include <vector>
 
 #include "Environment/GMSPolyhedron.h"
 
+class Boundary;
 class WorkspaceDecomposition;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -13,7 +15,7 @@ class WorkspaceDecomposition;
 /// Since many regions may share the same points, this object stores only point
 /// indexes. The actual points are stored by the owning WorkspaceDecomposition.
 ////////////////////////////////////////////////////////////////////////////////
-class WorkspaceRegion {
+class WorkspaceRegion final {
 
   public:
 
@@ -40,6 +42,9 @@ class WorkspaceRegion {
     void AddPoint(const size_t _i);
     void AddFacet(Facet&& _f);
 
+    /// Add a boundary and assume ownership of it.
+    void AddBoundary(Boundary* _b);
+
     ///@}
     ///@name Accessors
     ///@{
@@ -58,6 +63,10 @@ class WorkspaceRegion {
     ////////////////////////////////////////////////////////////////////////////
     /// @brief Get the set of facets that border this region.
     const vector<Facet>& GetFacets() const {return m_facets;}
+
+    ////////////////////////////////////////////////////////////////////////////
+    /// @brief Get the boundary for this region.
+    const Boundary* GetBoundary() const {return m_boundary.get();}
 
     ///@}
     ///@name Queries
@@ -90,6 +99,8 @@ class WorkspaceRegion {
 
     vector<size_t> m_points; ///< The indexes of the points bounding this region.
     vector<Facet> m_facets;  ///< The bounding facets of this region.
+
+    shared_ptr<Boundary> m_boundary;  ///< The boundary object for this region.
 
     ///@}
 };

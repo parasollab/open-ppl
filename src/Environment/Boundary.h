@@ -40,7 +40,10 @@ class Boundary {
     virtual double GetClearance(const Vector3d& _p) const = 0;
     virtual int GetSideID(const vector<double>& _p) const = 0;
     virtual Vector3d GetClearancePoint(const Vector3d& _p) const = 0;
-    virtual double GetClearance2DSurf(Point2d _pos, Point2d& _cdPt) const = 0;
+
+    virtual double GetClearance2DSurf(Point2d _pos, Point2d& _cdPt) const {
+      return 0;
+    }
 
     virtual void ApplyOffset(const Vector3d& _v) = 0;
     virtual void ResetBoundary(vector<pair<double, double> >& _obstBBX, double _d) = 0;

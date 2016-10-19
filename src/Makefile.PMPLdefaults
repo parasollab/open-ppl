@@ -237,6 +237,7 @@ PMPL_OBJS = \
 	Environment/MultiBody.o \
 	Environment/StaticMultiBody.o \
 	Environment/SurfaceMultiBody.o \
+	Environment/TetrahedralBoundary.o \
 	MPProblem/MPProblemBase.o \
 	NeighborhoodFinders/MPNNWrapper.o \
 	Samplers/SimilarStructureSampler.o \

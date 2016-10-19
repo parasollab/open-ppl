@@ -1,4 +1,5 @@
 #include "WorkspaceDecomposition.h"
+#include "Environment/TetrahedralBoundary.h"
 
 /*----------------------------- Accessors ------------------------------------*/
 
@@ -44,8 +45,13 @@ AddTetrahedralRegion(const int _pts[4]) throw(PMPLException) {
     wr.AddFacet(move(f));
   }
 
+  // Create a tetrahedral boundary object for the region.
+  /// @TODO The boundary currently double-stores the points. We would like to
+  /// have a non-mutable boundary that holds only references to the points.
+  wr.AddBoundary(new TetrahedralBoundary(wr.GetPoints()));
+
   // Add region to the graph.
-  add_vertex(wr);
+  add_vertex(move(wr));
 }
 
 
