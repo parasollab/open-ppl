@@ -101,11 +101,11 @@ class Syclop : public BasicRRTStrategy<MPTraits> {
 
     ////////////////////////////////////////////////////////////////////////////
     /// Compute a high-level plan (a sequence of regions).
-    vector<RegionPointer> DiscreteLead();
+    vector<VID> DiscreteLead();
 
     ////////////////////////////////////////////////////////////////////////////
     /// Compute a set of potential regions from the discrete lead.
-    void FindAvailableRegions(vector<RegionPointer> _lead);
+    void FindAvailableRegions(vector<VID> _lead);
 
     ////////////////////////////////////////////////////////////////////////////
     /// Select a region from a set of available regions.
@@ -202,6 +202,9 @@ class Syclop : public BasicRRTStrategy<MPTraits> {
 
     /// Holds extra data associated with the regions.
     map<RegionPointer, RegionData> m_regionData;
+
+    /// Holds edges and their weights
+    map<pair<size_t, size_t>, double> m_edgeWeightMap;
 
     ////////////////////////////////////////////////////////////////////////////
     /// Tracks data related to edges between regions in the decomposition
@@ -380,25 +383,84 @@ AddEdge(VID _source, VID _target, const LPOutput<MPTraits>& _lpOutput) {
 /*------------------------------ Syclop Functions ----------------------------*/
 
 template <typename MPTraits>
-vector<typename Syclop<MPTraits>::RegionPointer>
+vector<typename Syclop<MPTraits>::VID>
 Syclop<MPTraits>::
 DiscreteLead() {
   static constexpr double probabilityOfDijkstras = .95;
-  // TODO: Apply weights to region graph edges.
+
+  // Apply weights to region graph edges.
+  auto regionGraph = this->GetEnvironment()->GetDecomposition();
+
+  for(auto iter = regionGraph->edges_begin(); iter != regionGraph->edges_end();
+      ++iter) {
+    // Get iterators to the two regions on the edge
+    auto r1 = regionGraph->find_vertex(iter->descriptor().first);
+    auto r2 = regionGraph->find_vertex(iter->descriptor().second);
+
+    const double weight = Cost(*r1, *r2);
+
+    //Set the weight for the edge
+    m_edgeWeightMap[iter->descriptor()] = weight;
+  }
 
   // Search region graph from start to goal.
-  vector<RegionPointer> path;
+  vector<VID> path;
+
+  // Get start and goal from query
+  const CfgType& startCfg = this->m_query->GetQuery()[0];
+  const CfgType& goalCfg = this->m_query->GetQuery()[1];
+
+  const auto startRegion = LocateRegion(startCfg);
+  const auto goalRegion = LocateRegion(goalCfg);
+
+  size_t start;
+  size_t goal;
+
+  // Find the start and goal in the graph
+  for(auto iter = regionGraph->begin(); iter != regionGraph->end(); ++iter) {
+    if(*iter == startRegion)
+      start = iter->descriptor();
+    else if(*iter == goalRegion)
+      goal = iter->descriptor();
+  }
 
   if(DRand() < probabilityOfDijkstras) {
-    // TODO: Search with djikstra's.
+    // Search with djikstra's.
+    find_path_dijkstra(regionGraph, m_edgeWeightMap, start, goal, path);
   }
   else {
-    // TODO: Search with DFS, random child ordering.
+    // Search with DFS, random child ordering.
+    map<VID, VID> parentMap;
+    parentMap[start] = INVALID_VID;
+
+    stapl::sequential::vector_property_map<GraphType, size_t> cmap;
+
+    // Visitor struct required for dfs
+    // At each edge it adds the vid to the parentMap
+    struct myVisitor : public visitor_base<decltype(regionGraph)> {
+      virtual visitor_return tree_edge(vertex_iterator _vit,
+          adj_edge_iterator _eit) override {
+        parentMap[_eit->target()] = _vit->descriptor();
+
+        return CONTINUE;
+      }
+    };
+
+    depth_first_search(regionGraph, start, myVisitor(), cmap);
+
+    // Add the parent VIDs to the path starting from the end
+    VID current = goal;
+    path.push_back(goal);
+    while(current != INVALID_VID) {
+      path.push_back(parentMap[current]);
+      current = parentMap[current];
+    }
+
+    reverse(path.begin(), path.end());
   }
 
   // TODO: increment the usage count for each region pair
 
-  // Set our uses for this lead to zero.
   m_currentLeadUses = 0;
 
   // Return path.
@@ -409,22 +471,25 @@ DiscreteLead() {
 template <typename MPTraits>
 void
 Syclop<MPTraits>::
-FindAvailableRegions(vector<RegionPointer> _lead) {
+AvailableRegions(vector<VID> _lead) {
   // Done.
   static constexpr double probabilityOfQuitting = .05;
 
   m_availableRegions.clear();
 
+  auto& regionGraph = this->GetEnvironment()->GetDecomposition();
+
   // Work backwards through the lead, adding non-empty regions until we quit or
   // hit the end.
   for(auto iter = _lead.rbegin(); iter != _lead.rend(); ++iter) {
-    const auto& data = m_regionData[*iter];
+    auto region = &regionGraph->GetRegion(*iter);
+    const auto& data = m_regionData[region];
 
     // If there are no vertices in this region, move on to the next one.
     if(data.vertices.empty())
       continue;
     else
-      m_availableRegions.insert(*iter);
+      m_availableRegions.insert(region);
 
     // Check for random quit.
     if(DRand() < probabilityOfQuitting)
@@ -541,7 +606,7 @@ LocateRegion(const Point3d& _p) const {
   {
     // TODO: find the coverage grid cell that holds this vertex, then map the
     // possible regions based on which ones touch that coverage cell.
-    // 
+    //
     // Maybe a correct implementation
   }
 
