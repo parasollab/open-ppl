@@ -5,7 +5,7 @@
 
 /*------------------------------- InBoundary ---------------------------------*/
 
-bool
+const bool
 Boundary::
 InBoundary(const Cfg& _cfg) const {
   auto robot = _cfg.GetRobot();

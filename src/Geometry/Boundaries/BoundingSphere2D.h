@@ -4,43 +4,88 @@
 #include "Geometry/Boundaries/Boundary.h"
 
 ////////////////////////////////////////////////////////////////////////////////
-/// @ingroup Environment
-/// @brief TODO
-///
-/// TODO
+/// @ingroup Geometry
+/// A two-dimensional bounding circle.
 ////////////////////////////////////////////////////////////////////////////////
 class BoundingSphere2D : public Boundary {
+
   public:
+
+    ///@name Construction
+    ///@{
+
     BoundingSphere2D();
+
     BoundingSphere2D(const Vector2d& _center, double _radius);
-    ~BoundingSphere2D() {}
 
-    string Type() const {return "Sphere2D";}
+    virtual ~BoundingSphere2D() = default;
 
-    const Vector3d& GetCenter() const {return m_center;}
+    ///@}
+    ///@name
+    ///@{
+
     const double GetRadius() const {return m_radius;}
 
-    bool operator==(const Boundary& _b) const;
+    ///@}
+    ///@name Property Accessors
+    ///@{
 
-    double GetMaxDist(double _r1 = 2.0, double _r2 = 0.5) const;
-    pair<double, double> GetRange(size_t _i) const;
+    virtual string Type() const noexcept override {return "Sphere2D";}
 
-    Point3d GetRandomPoint() const;
-    bool InBoundary(const Vector3d& _p) const;
-    double GetClearance(const Vector3d& _p) const;
-    int GetSideID(const vector<double>& _p) const;
-    Vector3d GetClearancePoint(const Vector3d& _p) const;
-    double GetClearance2DSurf(Point2d _pos, Point2d& _cdPt) const;
+    virtual double GetMaxDist(double _r1 = 2.0, double _r2 = 0.5) const override;
 
-    void ApplyOffset(const Vector3d& _v);
-    void ResetBoundary(vector<pair<double, double> >& _obstBBX, double _d);
+    virtual pair<double, double> GetRange(size_t _i) const override;
 
-    void Read(istream& _is, CountingStreamBuffer& _cbs);
-    void Write(ostream& _os) const;
+    ///@}
+    ///@name Sampling
+    ///@{
+
+    virtual Point3d GetRandomPoint() const override;
+
+    ///@}
+    ///@name Containment Testing
+    ///@{
+
+    virtual const bool InBoundary(const Vector3d& _p) const override;
+
+    ///@}
+    ///@name Clearance Testing
+    ///@{
+
+    virtual double GetClearance(const Vector3d& _p) const override;
+
+    virtual int GetSideID(const vector<double>& _p) const override;
+
+    virtual Vector3d GetClearancePoint(const Vector3d& _p) const override;
+
+    ///@}
+    ///@name Modifiers
+    ///@{
+
+    virtual void ApplyOffset(const Vector3d& _v) override;
+
+    virtual void ResetBoundary(const vector<pair<double, double>>& _bbx,
+        double _margin) override;
+
+    ///@}
+    ///@name I/O
+    ///@{
+
+    virtual void Read(istream& _is, CountingStreamBuffer& _cbs) override;
+
+    virtual void Write(ostream& _os) const override;
+
+    ///@}
 
   private:
-    Vector3d m_center;
-    double m_radius;
+
+    ///@name Internal State
+    ///@{
+
+    double m_radius; ///< The bounding sphere radius.
+
+    ///@}
+
 };
 
 #endif

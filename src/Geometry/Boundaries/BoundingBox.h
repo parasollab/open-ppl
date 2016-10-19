@@ -4,41 +4,80 @@
 #include "Geometry/Boundaries/Boundary.h"
 
 ////////////////////////////////////////////////////////////////////////////////
-/// @ingroup Environment
-/// @brief TODO
-///
-/// TODO
+/// @ingroup Geometry
+/// An axis-aligned 3d bounding box.
 ////////////////////////////////////////////////////////////////////////////////
 class BoundingBox :  public Boundary {
+
   public:
+
+    ///@name Construction
+    ///@{
+
     BoundingBox();
+
     BoundingBox(pair<double, double> _x,
         pair<double, double> _y,
         pair<double, double> _z);
-    ~BoundingBox() {}
 
-    string Type() const {return "Box";}
+    virtual ~BoundingBox() = default;
 
-    const pair<double, double>* const GetBox() const {return m_bbx;}
+    ///@}
+    ///@name Property Accesors
+    ///@}
 
-    double GetMaxDist(double _r1 = 2.0, double _r2 = 0.5) const;
-    pair<double, double>& GetRange(size_t _i);
-    pair<double, double> GetRange(size_t _i) const;
+    virtual string Type() const noexcept override {return "Box";}
 
-    Point3d GetRandomPoint() const;
-    bool InBoundary(const Vector3d& _p) const;
-    double GetClearance(const Vector3d& _p) const;
-    int GetSideID(const vector<double>& _p) const;
-    Vector3d GetClearancePoint(const Vector3d& _p) const;
-    double GetClearance2DSurf(Point2d _pos, Point2d& _cdPt) const;
+    virtual double GetMaxDist(double _r1 = 2.0, double _r2 = 0.5) const override;
 
-    void ApplyOffset(const Vector3d& _v);
-    void ResetBoundary(vector<pair<double, double> >& _obstBBX, double _d);
+    virtual pair<double, double> GetRange(size_t _i) const override;
 
-    void Read(istream& _is, CountingStreamBuffer& _cbs);
-    void Write(ostream& _os) const;
+    ///@}
+    ///@name Sampling
+    ///@{
+
+    virtual Point3d GetRandomPoint() const override;
+
+    ///@}
+    ///@name Containment Testing
+    ///@{
+
+    virtual const bool InBoundary(const Vector3d& _p) const override;
+
+    ///@}
+    ///@name Clearance Testing
+    ///@{
+
+    virtual double GetClearance(const Vector3d& _p) const override;
+
+    virtual int GetSideID(const vector<double>& _p) const override;
+
+    virtual Vector3d GetClearancePoint(const Vector3d& _p) const override;
+
+    ///@}
+    ///@name Modifiers
+    ///@{
+
+    virtual void ApplyOffset(const Vector3d& _v) override;
+
+    virtual void ResetBoundary(const vector<pair<double, double>>& _bbx,
+        double _margin) override;
+
+    ///@}
+    ///@name I/O
+    ///@{
+
+    virtual void Read(istream& _is, CountingStreamBuffer& _cbs) override;
+
+    virtual void Write(ostream& _os) const override;
+
+    ///@}
+    ///@name CGAL Representations
+    ///@{
 
     virtual CGALPolyhedron CGAL() const override;
+
+    ///@}
 
   private:
     pair<double, double> m_bbx[3];

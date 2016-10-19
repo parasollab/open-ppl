@@ -2,7 +2,9 @@
 #define CONSTRAINT_H_
 
 class ActiveMultiBody;
+class Boundary;
 class Cfg;
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// An abstract base class representing the required interface for a constraint
@@ -25,6 +27,8 @@ class Constraint {
     ///@}
     ///@name Constraint Interface
     ///@{
+
+    Boundary GetBoundary() const = 0;
 
     ////////////////////////////////////////////////////////////////////////////
     /// Determine whether a given configuration of the object satisfies this

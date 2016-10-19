@@ -2,9 +2,12 @@
 
 #include "Utilities/MPUtils.h"
 
+/*------------------------------- Construction -------------------------------*/
+
 BoundingSphere::
 BoundingSphere() : m_radius(numeric_limits<double>::max()) {
 }
+
 
 BoundingSphere::
 BoundingSphere(const Vector3d& _center, double _radius) :
@@ -12,11 +15,14 @@ BoundingSphere(const Vector3d& _center, double _radius) :
   m_center = _center;
 }
 
+/*---------------------------- Property Accessors ----------------------------*/
+
 double
 BoundingSphere::
 GetMaxDist(double _r1, double _r2) const {
-  return pow(2*m_radius, _r1 * _r2);
+  return pow(2. * m_radius, _r1 * _r2);
 }
+
 
 pair<double, double>
 BoundingSphere::
@@ -26,6 +32,8 @@ GetRange(size_t _i) const {
         "Invalid access to dimension '" + ::to_string(_i) + "'.");
   return make_pair(m_center[_i]-m_radius, m_center[_i]+m_radius);
 }
+
+/*-------------------------------- Sampling ----------------------------------*/
 
 Point3d
 BoundingSphere::
@@ -37,17 +45,22 @@ GetRandomPoint() const {
   return p + m_center;
 }
 
-bool
+/*----------------------------- Containment Testing --------------------------*/
+
+const bool
 BoundingSphere::
 InBoundary(const Vector3d& _p) const {
-  return (_p-m_center).norm() < m_radius;
+  return (_p - m_center).norm() < m_radius;
 }
+
+/*------------------------------ Clearance Testing ---------------------------*/
 
 double
 BoundingSphere::
 GetClearance(const Vector3d& _p) const {
   return m_radius - (_p - m_center).norm();
 }
+
 
 int
 BoundingSphere::
@@ -60,14 +73,10 @@ Vector3d
 BoundingSphere::
 GetClearancePoint(const Vector3d& _p) const {
   Vector3d v = (_p - m_center).normalize();
-  return v*m_radius + m_center;
+  return v * m_radius + m_center;
 }
 
-double
-BoundingSphere::
-GetClearance2DSurf(Point2d _pos, Point2d& _cdPt) const {
-  throw RunTimeException(WHERE, "Not implemented.");
-}
+/*---------------------------------- Modifiers -------------------------------*/
 
 void
 BoundingSphere::
@@ -75,20 +84,23 @@ ApplyOffset(const Vector3d& _v) {
   m_center += _v;
 }
 
+
 void
 BoundingSphere::
-ResetBoundary(vector<pair<double, double> >& _obstBBX, double _d) {
+ResetBoundary(const vector<pair<double, double>>& _bbx, double _margin) {
   double maxrange = -numeric_limits<double>::max();
   for(int i = 0; i<3; ++i) {
-    double diff = _obstBBX[i].second - _obstBBX[i].first;
+    double diff = _bbx[i].second - _bbx[i].first;
     if(diff > maxrange)
       maxrange = diff;
   }
-  m_center[0] = (_obstBBX[0].second + _obstBBX[0].first)/2;
-  m_center[1] = (_obstBBX[1].second + _obstBBX[1].first)/2;
-  m_center[2] = (_obstBBX[2].second + _obstBBX[2].first)/2;
-  m_radius = maxrange + _d;
+  m_center[0] = (_bbx[0].second + _bbx[0].first) / 2;
+  m_center[1] = (_bbx[1].second + _bbx[1].first) / 2;
+  m_center[2] = (_bbx[2].second + _bbx[2].first) / 2;
+  m_radius = maxrange + _margin;
 }
+
+/*------------------------------------ I/O -----------------------------------*/
 
 void
 BoundingSphere::
@@ -112,8 +124,10 @@ Read(istream& _is, CountingStreamBuffer& _cbs) {
 
   //check for ending ]
   if(!(_is >> tok && tok == "]"))
-    throw ParseException(_cbs.Where(), "Failed reading bounding sphere. Missing ']'.");
+    throw ParseException(_cbs.Where(), "Failed reading bounding sphere. "
+        "Missing ']'.");
 }
+
 
 void
 BoundingSphere::
@@ -121,3 +135,4 @@ Write(ostream& _os) const {
   _os << "[ " << m_center << " ; " << m_radius << " ]";
 }
 
+/*----------------------------------------------------------------------------*/

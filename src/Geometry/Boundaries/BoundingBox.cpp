@@ -2,6 +2,8 @@
 
 #include "Utilities/MPUtils.h"
 
+/*------------------------------- Construction -------------------------------*/
+
 BoundingBox::
 BoundingBox() {
   for(size_t i = 0; i < 3; ++i)
@@ -19,6 +21,8 @@ BoundingBox(pair<double, double> _x, pair<double, double> _y,
       Vector3d(_x.second, _y.second, _z.second))/2.;
 }
 
+/*---------------------------- Property Accessors ----------------------------*/
+
 double
 BoundingBox::
 GetMaxDist(double _r1, double _r2) const {
@@ -30,14 +34,6 @@ GetMaxDist(double _r1, double _r2) const {
   return pow(maxdist, _r2);
 }
 
-pair<double, double>&
-BoundingBox::
-GetRange(size_t _i) {
-  if(_i > 2)
-    throw RunTimeException(WHERE,
-        "Invalid access to dimension '" + ::to_string(_i) + "'.");
-  return m_bbx[_i];
-}
 
 pair<double, double>
 BoundingBox::
@@ -48,6 +44,8 @@ GetRange(size_t _i) const {
   return m_bbx[_i];
 }
 
+/*-------------------------------- Sampling ----------------------------------*/
+
 Point3d
 BoundingBox::
 GetRandomPoint() const {
@@ -57,7 +55,9 @@ GetRandomPoint() const {
   return p;
 }
 
-bool
+/*----------------------------- Containment Testing --------------------------*/
+
+const bool
 BoundingBox::
 InBoundary(const Vector3d& _p) const {
   for(size_t i = 0; i < 3; ++i)
@@ -65,6 +65,8 @@ InBoundary(const Vector3d& _p) const {
       return false;
   return true;
 }
+
+/*------------------------------ Clearance Testing ---------------------------*/
 
 double
 BoundingBox::
@@ -77,6 +79,7 @@ GetClearance(const Vector3d& _p) const {
   }
   return minClearance;
 }
+
 
 int
 BoundingBox::
@@ -96,6 +99,7 @@ GetSideID(const vector<double>& _p) const {
   }
   return faceID;
 }
+
 
 Vector3d
 BoundingBox::
@@ -117,36 +121,7 @@ GetClearancePoint(const Vector3d& _p) const {
   return clrP;
 }
 
-double
-BoundingBox::
-GetClearance2DSurf(Point2d _pos, Point2d& _cdPt) const {
-  double minDist=1e10;
-  double cbbx[6]={m_bbx[0].first,m_bbx[0].second,
-    m_bbx[1].first,m_bbx[1].second,
-    m_bbx[2].first,m_bbx[2].second};
-  double dist[4]={_pos[0]-cbbx[0],cbbx[1]-_pos[0],
-    _pos[1]-cbbx[4],cbbx[5]-_pos[1]};
-  if(dist[0]<minDist){
-    minDist=dist[0];
-    _cdPt(cbbx[0], _pos[1]);
-  }
-  if(dist[1]<minDist){
-    minDist=dist[1];
-    _cdPt(cbbx[1], _pos[1]);
-  }
-  if(dist[2]<minDist){
-    minDist=dist[2];
-    _cdPt(_pos[0], cbbx[4]);
-  }
-  if(dist[3]<minDist){
-    minDist=dist[3];
-    _cdPt(_pos[0], cbbx[5]);
-  }
-
-  if( minDist<0 ) minDist=0;
-
-  return minDist;
-}
+/*---------------------------------- Modifiers -------------------------------*/
 
 void
 BoundingBox::
@@ -158,20 +133,25 @@ ApplyOffset(const Vector3d& _v) {
   }
 }
 
+
 void
 BoundingBox::
-ResetBoundary(vector<pair<double, double> >& _obstBBX, double _d){
+ResetBoundary(const vector<pair<double, double>>& _bbx, double _margin) {
   for(size_t i = 0; i<3; ++i){
-    m_bbx[i].first = _obstBBX[i].first - _d;
-    m_bbx[i].second = _obstBBX[i].second + _d;
+    m_bbx[i].first = _bbx[i].first - _margin;
+    m_bbx[i].second = _bbx[i].second + _margin;
   }
 }
+
+/*------------------------------------ I/O -----------------------------------*/
 
 void
 BoundingBox::
 Read(istream& _is, CountingStreamBuffer& _cbs) {
-  m_bbx[0].first = m_bbx[1].first = m_bbx[2].first = -numeric_limits<double>::max();
-  m_bbx[0].second = m_bbx[1].second = m_bbx[2].second = numeric_limits<double>::max();
+  m_bbx[0].first = m_bbx[1].first = m_bbx[2].first =
+      -numeric_limits<double>::max();
+  m_bbx[0].second = m_bbx[1].second = m_bbx[2].second =
+      numeric_limits<double>::max();
 
   //check for first [
   string tok;
@@ -205,6 +185,7 @@ Read(istream& _is, CountingStreamBuffer& _cbs) {
         "Failed reading bounding box. Missing ']'.");
 }
 
+
 void
 BoundingBox::
 Write(ostream& _os) const {
@@ -215,6 +196,7 @@ Write(ostream& _os) const {
   _os << " ]";
 }
 
+/*--------------------------- CGAL Representation ----------------------------*/
 
 Boundary::CGALPolyhedron
 BoundingBox::
@@ -302,3 +284,5 @@ CGAL() const {
         "created!");
   return cp;
 }
+
+/*----------------------------------------------------------------------------*/

@@ -2,12 +2,15 @@
 
 #include "Utilities/MPUtils.h"
 
+/*------------------------------- Construction -------------------------------*/
+
 BoundingBox2D::
 BoundingBox2D() {
   for(size_t i = 0; i < 2; ++i)
     m_bbx[i] = make_pair(-numeric_limits<double>::max(),
         numeric_limits<double>::max());
 }
+
 
 BoundingBox2D::
 BoundingBox2D(pair<double, double> _x, pair<double, double> _y) {
@@ -16,6 +19,8 @@ BoundingBox2D(pair<double, double> _x, pair<double, double> _y) {
   m_center = (Vector3d(_x.first, _y.first, 0) +
       Vector3d(_x.second, _y.second, 0))/2.;
 }
+
+/*---------------------------- Property Accessors ----------------------------*/
 
 double
 BoundingBox2D::
@@ -28,6 +33,7 @@ GetMaxDist(double _r1, double _r2) const {
   return pow(maxdist, _r2);
 }
 
+
 pair<double, double>
 BoundingBox2D::
 GetRange(size_t _i) const {
@@ -35,9 +41,12 @@ GetRange(size_t _i) const {
     throw RunTimeException(WHERE,
         "Invalid access to dimension '" + ::to_string(_i) + "'.");
   if(_i > 1)
-    return make_pair(-numeric_limits<double>::max(), numeric_limits<double>::max());
+    return make_pair(-numeric_limits<double>::max(),
+        numeric_limits<double>::max());
   return m_bbx[_i];
 }
+
+/*-------------------------------- Sampling ----------------------------------*/
 
 Point3d
 BoundingBox2D::
@@ -48,7 +57,9 @@ GetRandomPoint() const {
   return p;
 }
 
-bool
+/*----------------------------- Containment Testing --------------------------*/
+
+const bool
 BoundingBox2D::
 InBoundary(const Vector3d& _p) const {
   for(size_t i = 0; i < 2; ++i)
@@ -56,6 +67,8 @@ InBoundary(const Vector3d& _p) const {
       return false;
   return true;
 }
+
+/*------------------------------ Clearance Testing ---------------------------*/
 
 double
 BoundingBox2D::
@@ -69,6 +82,7 @@ GetClearance(const Vector3d& _p) const {
   return minClearance;
 }
 
+
 int
 BoundingBox2D::
 GetSideID(const vector<double>& _p) const {
@@ -78,15 +92,16 @@ GetSideID(const vector<double>& _p) const {
     if((_p[i] - m_bbx[i].first) < (m_bbx[i].second - _p[i]))
       id = i;
     else
-      id = i+3;
+      id = i + 3;
     double clearance = min((_p[i] - m_bbx[i].first ), (m_bbx[i].second - _p[i]));
-    if (clearance < minClearance || i == 0) {
+    if(clearance < minClearance || i == 0) {
       faceID = id;
       minClearance = clearance;
     }
   }
   return faceID;
 }
+
 
 Vector3d
 BoundingBox2D::
@@ -108,36 +123,7 @@ GetClearancePoint(const Vector3d& _p) const {
   return clrP;
 }
 
-double
-BoundingBox2D::
-GetClearance2DSurf(Point2d _pos, Point2d& _cdPt) const {
-  double minDist=1e10;
-  double cbbx[6]={m_bbx[0].first,m_bbx[0].second,
-    m_bbx[1].first,m_bbx[1].second,
-    0, 0};
-  double dist[4]={_pos[0]-cbbx[0],cbbx[1]-_pos[0],
-    _pos[1]-cbbx[4],cbbx[5]-_pos[1]};
-  if(dist[0]<minDist){
-    minDist=dist[0];
-    _cdPt(cbbx[0], _pos[1]);
-  }
-  if(dist[1]<minDist){
-    minDist=dist[1];
-    _cdPt(cbbx[1], _pos[1]);
-  }
-  if(dist[2]<minDist){
-    minDist=dist[2];
-    _cdPt(_pos[0], cbbx[4]);
-  }
-  if(dist[3]<minDist){
-    minDist=dist[3];
-    _cdPt(_pos[0], cbbx[5]);
-  }
-
-  if( minDist<0 ) minDist=0;
-
-  return minDist;
-}
+/*---------------------------------- Modifiers -------------------------------*/
 
 void
 BoundingBox2D::
@@ -149,14 +135,17 @@ ApplyOffset(const Vector3d& _v) {
   }
 }
 
+
 void
 BoundingBox2D::
-ResetBoundary(vector<pair<double, double> >& _obstBBX, double _d){
+ResetBoundary(const vector<pair<double, double>>& _bbx, double _margin) {
   for(size_t i = 0; i < 2; ++i){
-    m_bbx[i].first = _obstBBX[i].first - _d;
-    m_bbx[i].second = _obstBBX[i].second + _d;
+    m_bbx[i].first = _bbx[i].first - _margin;
+    m_bbx[i].second = _bbx[i].second + _margin;
   }
 }
+
+/*------------------------------------ I/O -----------------------------------*/
 
 void
 BoundingBox2D::
@@ -188,6 +177,7 @@ Read(istream& _is, CountingStreamBuffer& _cbs) {
         "Failed reading bounding box. Missing ']'.");
 }
 
+
 void
 BoundingBox2D::
 Write(ostream& _os) const {
@@ -196,6 +186,8 @@ Write(ostream& _os) const {
   _os << m_bbx[1].first << ':' << m_bbx[1].second;
   _os << " ]";
 }
+
+/*--------------------------- CGAL Representation ----------------------------*/
 
 Boundary::CGALPolyhedron
 BoundingBox2D::
@@ -248,3 +240,5 @@ CGAL() const {
         "created!");
   return cp;
 }
+
+/*----------------------------------------------------------------------------*/

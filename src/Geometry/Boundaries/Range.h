@@ -1,16 +1,53 @@
 #ifndef RANGE_TYPE_H_
 #define RANGE_TYPE_H_
 
+#include <cctype>
 #include <limits>
+#include <type_traits>
+#include <utility>
+
+/*------------------------- Range-checking Functions -------------------------*/
+
+////////////////////////////////////////////////////////////////////////////////
+/// Check a value for containment within a given range.
+/// @param _val The value to test.
+/// @param _min The lower bound of the range.
+/// @param _max The upper bound of the range.
+/// @param _inclusive Count values on the boundary as inside?
+/// @return True if the test value lies inside the range (or on the boundary
+///         for inclusive test).
+template <typename T, typename U>
+inline
+const bool
+InRange(const U& _val, const T& _min, const T& _max, const bool _inclusive = true)
+    noexcept {
+  return _inclusive ? _min <= _val && _val <= _max :
+                      _min <  _val && _val <  _max ;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Check a value for containment within a given range.
+/// @param _val The value to test.
+/// @param _bounds A pair describing the lower, upper bounds.
+/// @param _inclusive Count values on the boundary as inside?
+/// @return True if the test value lies inside the range (or on the boundary
+///         for inclusive test).
+template <typename T, typename U>
+inline
+const bool
+InRange(const U& _val, const std::pair<T, T>& _bounds,
+    const bool _inclusive = true) noexcept {
+  return InRange(_val, _bounds.first, _bounds.second, _inclusive);
+}
+
+/*-------------------------------- Range Type --------------------------------*/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// A range of numeric values.
 ////////////////////////////////////////////////////////////////////////////////
-template <typename NumericType>
+template <typename T>
 struct Range final {
-
-  ///@name Local Types
-  ///@{
 
   ///@}
   ///@name Internal State
@@ -25,29 +62,47 @@ struct Range final {
 
   //////////////////////////////////////////////////////////////////////////////
   /// Construct a range over all values of T.
-  Range();
+  Range() noexcept;
 
   //////////////////////////////////////////////////////////////////////////////
   /// Construct a bounded range.
   /// @param _min The lower bound.
   /// @param _max The upper bound.
-  Range(const T _min, const T _max);
+  Range(const T _min, const T _max) noexcept;
+
+  //////////////////////////////////////////////////////////////////////////////
+  /// Construct a bounded range.
+  /// @param _bounds A pair of min, max values.
+  Range(const std::pair<T, T>& _bounds) noexcept;
 
   ///@}
   ///@name Interface
   ///@{
 
   //////////////////////////////////////////////////////////////////////////////
+  /// Compute the length of this range.
+  const T Length() const noexcept;
+
+  //////////////////////////////////////////////////////////////////////////////
+  /// Compute the center of this range.
+  const T Center() const noexcept;
+
+  //////////////////////////////////////////////////////////////////////////////
   /// Test if a value is inside this range.
-  /// @param _t The value to test.
+  /// @param _val The value to test.
   /// @param _inclusive Count values on the boundary as inside?
   /// @return True if the test value lies inside the range (or on the boundary
   ///         for inclusive test).
-  const bool Inside(const T& _t, const bool _inclusive = true) const noexcept;
+  template <typename U>
+  const bool Inside(const U& _val, const bool _inclusive = true) const noexcept;
 
   //////////////////////////////////////////////////////////////////////////////
-  /// Compute the length of this range.
-  const T Length() const noexcept;
+  /// Test the clearance of a value. Clearance is defined as the minimum
+  /// distance to a boundary value, and will be negative if the test value falls
+  /// outside the range.
+  /// @param _val The value to test.
+  template <typename U>
+  const T Clearance(const U& _val) const noexcept;
 
   ///@}
 
@@ -56,26 +111,34 @@ struct Range final {
 /*------------------------------- Construction -------------------------------*/
 
 template <typename T>
+inline
 Range<T>::
-Range() :
+Range() noexcept :
     min(std::numeric_limits<T>::min()),
     max(std::numeric_limits<T>::max()) { }
 
 
 template <typename T>
+inline
 Range<T>::
-Range(const T _min, const T _max) :
+Range(const T _min, const T _max) noexcept :
     min(_min), max(_max) { }
+
+
+template <typename T>
+inline
+Range<T>::
+Range(const std::pair<T, T>& _bounds) noexcept :
+    min(_bounds.first), max(_bounds.second) { }
 
 /*------------------------------- Interface ----------------------------------*/
 
 template <typename T>
 inline
-const bool
+const T
 Range<T>::
-Inside(const T& _t, const bool _inclusive) const noexcept {
-  return _inclusive ? min <= _t && _t <= max :
-                      min <  _t && _t <= max ;
+Length() const noexcept {
+  return max - min;
 }
 
 
@@ -84,7 +147,48 @@ inline
 const T
 Range<T>::
 Length() const noexcept {
-  return max - min;
+  return Length() / T(2);
+}
+
+
+template <typename T>
+template <typename U>
+inline
+const bool
+Range<T>::
+Inside(const U& _val, const bool _inclusive) const noexcept {
+  return InRange(_val, min, max, _inclusive);
+}
+
+
+template <typename T>
+template <typename U>
+inline
+const T
+Range<T>::
+Clearance(const U& _val) const noexcept {
+  static_assert(!std::is_unsigned<T>::value, "Can't compute clearance for "
+      "unsigned ranges as the return would be negative if the test value "
+      "lies outside the range.");
+  return std::min(_val - min, max - _val);
+}
+
+/*---------------------------------- I/O -------------------------------------*/
+
+template <typename T>
+std::ostream&
+operator<<(std::ostream& _os, const Range<T>& _r) {
+  return _os << _r.min << ":" << _r.max;
+}
+
+
+template <typename T>
+std::istream&
+operator>>(std::istream& _is, Range<T>& _r) {
+  _is >> _r.min;
+  while(!isdigit(_is.peek()))
+    _is.get();
+  return _is >> _r.max;
 }
 
 /*----------------------------------------------------------------------------*/
