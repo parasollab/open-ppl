@@ -4,8 +4,8 @@
 DEPS = -MMD -MF $*.d
 
 UTILS_DEF = ${CD_DEF} ${CGAL_DEF}
-UTILS_INCL = ${CD_INCL} ${TINYXML_INCL} ${MATHTOOL_INCL} ${MODELLOADER_INCL} ${MPNN_INCL} ${TETGEN_INCL}
-UTILS_LIB = ${CD_LIB} ${CGAL_LIB} ${TINYXML_LIB} ${MODELLOADER_LIB} ${MPNN_LIB} ${KMEANS_LIB} ${TETGEN_LIB}
+UTILS_INCL = ${CD_INCL} ${TINYXML_INCL} ${MATHTOOL_INCL} ${MODELLOADER_INCL} ${MPNN_INCL} ${TETGEN_INCL} ${BULLET_INCL}
+UTILS_LIB = ${CD_LIB} ${CGAL_LIB} ${TINYXML_LIB} ${MODELLOADER_LIB} ${MPNN_LIB} ${KMEANS_LIB} ${TETGEN_LIB} ${BULLET_LIB}
 UTILS_LIBFILE = ${CD_LIBFILE} ${TINYXML_LIBFILE} ${MODELLOADER_LIBFILE} ${MPNN_LIBFILE} ${KMEANS_LIBFILE} ${TETGEN_LIBFILE}
 
 NO_PQP = 0
@@ -221,12 +221,25 @@ BOOST_DEF := -DBOOST_MPL_CFG_NO_PREPROCESSED_HEADERS \
              -DBOOST_MPL_LIMIT_LIST_SIZE=30
 
 ################################################################################
+# Bullet
+################################################################################
+
+BULLET_DIR  := ${UTILS_DIR}/bullet
+BULLET_LIB  := -L${BULLET_DIR}/build/install/lib \
+               -lBulletInverseDynamics -lBulletDynamics -lBulletCollision \
+	       -lLinearMath
+BULLET_INCL := -I${BULLET_DIR}/build/install/include
+
+bullet:
+	cd ${BULLET_DIR} ; ./parasol_setup.sh
+
+
+################################################################################
 ## PMPL
 ################################################################################
-PMPL_LIB = -L${PMPL_DIR} -lobprm
-PMPL_LIBFILE =${PMPL_DIR}/libobprm.a
-PMPL_INCL = \
-	-I${PMPL_DIR}
+PMPL_LIB     = -L${PMPL_DIR} -lobprm
+PMPL_LIBFILE = ${PMPL_DIR}/libobprm.a
+PMPL_INCL    = -I${PMPL_DIR}
 
 PMPL_OBJS = \
 	Geometry/Control.o \
