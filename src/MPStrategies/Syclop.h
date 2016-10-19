@@ -20,6 +20,7 @@
 ///
 /// Erion Plaku, Lydia E. Kavraki, Moshe Y. Vardi. "Synergistic Combination of
 ///   Layers of Planning". IEEE Transactions on Robotics. 2010.
+/// @warning This method doesn't support bi-directional growth.
 /// @ingroup MotionPlanningStrategies
 ////////////////////////////////////////////////////////////////////////////////
 template<class MPTraits>
@@ -104,11 +105,11 @@ class Syclop : public BasicRRTStrategy<MPTraits> {
 
     ////////////////////////////////////////////////////////////////////////////
     /// Compute a set of potential regions from the discrete lead.
-    void AvailableRegions(vector<RegionPointer> _lead);
+    void FindAvailableRegions(vector<RegionPointer> _lead);
 
     ////////////////////////////////////////////////////////////////////////////
     /// Select a region from a set of available regions.
-    RegionPointer SelectRegion(vector<RegionPointer> _available);
+    RegionPointer SelectRegion();
 
     ////////////////////////////////////////////////////////////////////////////
     /// Select a vertex from within a given region.
@@ -234,6 +235,18 @@ class Syclop : public BasicRRTStrategy<MPTraits> {
     /// The currently available regions.
     set<RegionPointer> m_availableRegions;
 
+    ///@name Switch Tracking
+    ///@{
+    /// Data for knowing when to change regions/leads.
+
+    size_t m_currentLeadUses{0};
+    size_t m_maxLeadUses{0};
+
+    size_t m_currentRegionUses{0};
+    size_t m_maxRegionUses{0};
+
+    RegionPointer m_currentRegion{nullptr};
+
     ///@}
     ///@name Pre-processing Stuff
     ///@{
@@ -250,6 +263,7 @@ Syclop<MPTraits>::
 Syclop() : BasicRRTStrategy<MPTraits>() {
   // Done.
   this->SetName("Syclop");
+  this->m_growGoals = false;
 }
 
 
@@ -259,6 +273,7 @@ Syclop(MPProblemType* _problem, XMLNode& _node) :
     BasicRRTStrategy<MPTraits>(_problem, _node) {
   // Done.
   this->SetName("Syclop");
+  this->m_growGoals = false;
 }
 
 /*-------------------------- MPStrategy overrides ----------------------------*/
@@ -293,9 +308,13 @@ Initialize() {
 template<class MPTraits>
 typename Syclop<MPTraits>::VID
 Syclop<MPTraits>::
-FindNearestNeighbor(const CfgType& _cfg, const TreeType& _tree) {
-  // TODO: Use the lead to pick a vertex from the available regions.
-  return BasicRRTStrategy<MPTraits>::FindNearestNeighbor(_cfg, _tree);
+FindNearestNeighbor(const CfgType& _cfg, const TreeType&) {
+  // Select a region based on the weighting.
+  RegionPointer r = SelectRegion();
+  auto& vertices = m_regionData[r].vertices;
+
+  // Find the nearest neighbor from within the selected region.
+  return BasicRRTStrategy<MPTraits>::FindNearestNeighbor(_cfg, vertices);
 }
 
 /*----------------------------- Growth Helpers -------------------------------*/
@@ -379,6 +398,9 @@ DiscreteLead() {
 
   // TODO: increment the usage count for each region pair
 
+  // Set our uses for this lead to zero.
+  m_currentLeadUses = 0;
+
   // Return path.
   return path;
 }
@@ -387,7 +409,7 @@ DiscreteLead() {
 template <typename MPTraits>
 void
 Syclop<MPTraits>::
-AvailableRegions(vector<RegionPointer> _lead) {
+FindAvailableRegions(vector<RegionPointer> _lead) {
   // Done.
   static constexpr double probabilityOfQuitting = .05;
 
@@ -414,30 +436,53 @@ AvailableRegions(vector<RegionPointer> _lead) {
 template <typename MPTraits>
 typename Syclop<MPTraits>::RegionPointer
 Syclop<MPTraits>::
-SelectRegion(vector<RegionPointer> _available) {
+SelectRegion() {
   // Done.
-  // Compute the total weight of the available regions.
-  double totalWeight = 0.;
-  for(const auto& region : _available)
-    totalWeight += m_regionData[region].weight;
+  // If a region is currently selected and has uses remaining, we don't need to
+  // select a new one.
+  const bool needNewRegion = !m_currentRegion ||
+      m_currentRegionUses >= m_maxRegionUses;
 
-  // Roll a die in range [0, 1].
-  const double roll = DRand();
+  if(needNewRegion) {
+    m_currentRegionUses = 0;
 
-  // Choose a region based on relative weight.
-  double cumulative = 0.;
-  for(const auto& region : _available) {
-    cumulative += m_regionData[region].weight / totalWeight;
-    if(cumulative > roll) {
-      // Select this region!
-      ++m_regionData[region].numTimesSelected;
-      m_regionData[region].UpdateWeight();
-      return region;
+    // If no regions are available or if we are out of uses for this lead,
+    // compute a new lead and extract the available regions.
+    if(m_availableRegions.empty() || m_currentLeadUses >= m_maxLeadUses)
+      FindAvailableRegions(DiscreteLead());
+
+    ++m_currentLeadUses;
+
+    // Compute the total weight of the available regions.
+    double totalWeight = 0.;
+    for(const auto& region : m_availableRegions)
+      totalWeight += m_regionData[region].weight;
+
+    // Roll a die in range [0, 1].
+    const double roll = DRand();
+
+    // Choose a region based on relative weight.
+    double cumulative = 0.;
+    for(const auto& region : m_availableRegions) {
+      cumulative += m_regionData[region].weight / totalWeight;
+      if(cumulative > roll) {
+        // Select this region!
+        m_currentRegion = region;
+        break;
+      }
     }
   }
 
-  throw RunTimeException(WHERE, "Failed to select a region by weight!");
-  return nullptr;
+  // Assert that we got a region.
+  if(!m_currentRegion)
+    throw RunTimeException(WHERE, "Failed to select a region!");
+
+  // Update region data.
+  ++m_currentRegionUses;
+  ++m_regionData[m_currentRegion].numTimesSelected;
+  m_regionData[m_currentRegion].UpdateWeight();
+
+  return m_currentRegion;
 }
 
 
