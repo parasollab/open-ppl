@@ -541,6 +541,8 @@ LocateRegion(const Point3d& _p) const {
   {
     // TODO: find the coverage grid cell that holds this vertex, then map the
     // possible regions based on which ones touch that coverage cell.
+    // 
+    // Maybe a correct implementation
   }
 
   return nullptr;
