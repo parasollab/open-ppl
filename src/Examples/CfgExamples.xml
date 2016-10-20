@@ -384,7 +384,7 @@
         nfLabel="Nearest" vcLabel="rapid" connectorLabel="Closest"
         gtype="UNDIRECTED_TREE" debug="false"
         growGoals="true" extenderLabel="BERO">
-        <Evaluator label="NodesEval"/>
+        <Evaluator label="BoundedRRTQuery"/>
       </Syclop>
 
 

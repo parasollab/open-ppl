@@ -391,6 +391,10 @@ Initialize() {
   m_regionPairData.clear();
   m_availableRegions.clear();
 
+  // Add start vertex to regionData
+  auto startRegion = LocateRegion(0);
+  m_regionData[startRegion].vertices.push_back(0);
+
   // Create coverage grid.
   const double gridLength = env->GetPositionRes() * 10;
   delete m_grid;
@@ -502,6 +506,7 @@ DiscreteLead() {
   vector<VID> path;
   if(DRand() < probabilityOfDijkstras) {
     // Search with djikstra's.
+    cout << "Dijkstras" << endl;
 
     // Set up an edge weight map that maps edges to the cost function.
     stapl::sequential::edge_property_map<WorkspaceDecomposition, WeightFunctor>
@@ -514,6 +519,7 @@ DiscreteLead() {
         path);
   }
   else {
+    cout << "DFS" << endl;
     // Search with DFS, random child ordering.
 
     // Set up a parent map to capture the search path.
@@ -533,12 +539,18 @@ DiscreteLead() {
       current = parentMap[current];
     }
 
+    cout << "parentMap: " << parentMap.size() << endl;
+
     reverse(path.begin(), path.end());
   }
 
   // TODO: increment the usage count for each region pair
 
   m_currentLeadUses = 0;
+
+  cout << "path: " << path.size() << endl;
+  if(path.empty())
+    throw RunTimeException(WHERE, "Path is empty");
 
   // Return path.
   return path;
@@ -571,6 +583,9 @@ FindAvailableRegions(vector<VID> _lead) {
     if(DRand() < probabilityOfQuitting)
       break;
   }
+
+  if(m_availableRegions.empty())
+    throw RunTimeException(WHERE, "Available regions is empty");
 }
 
 
@@ -611,6 +626,8 @@ SelectRegion() {
         break;
       }
     }
+    cout << "Cumulative: " << cumulative << std::endl;
+    cout << "roll: " << roll << std::endl;
   }
 
   // Assert that we got a region.
@@ -790,9 +807,10 @@ ComputeFreeVolumes() {
   }
 
   // For each region, compute the approximate free volume using the samples.
-  for(auto& regionData : m_regionData) {
-    auto& region = regionData.first;
-    auto& data = regionData.second;
+  auto regionGraph = this->GetEnvironment()->GetDecomposition();
+  for(auto iter = regionGraph->begin(); iter != regionGraph->end(); ++iter) {
+    auto region = &iter->property();
+    auto& data = m_regionData[region];
 
     const size_t numValid = results[region].first;
     const size_t numInvalid = results[region].second;
@@ -809,6 +827,8 @@ ComputeFreeVolumes() {
 
     data.freeVolume = tetrahedronVolume(region) * (eps + numValid) /
         (eps + numValid + numInvalid);
+    data.UpdateWeight();
+    data.UpdateAlpha();
   }
 
   this->GetStatClass()->StopClock("ComputeFreeVolumes");
