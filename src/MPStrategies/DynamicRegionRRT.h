@@ -168,8 +168,7 @@ Initialize() {
   stats->StopClock("ReebGraphConstruction");
 
 #ifdef VIZMO
-  GetVizmo().GetEnv()->AddWorkspaceDecompositionModel(
-      env->GetDecomposition().get());
+  GetVizmo().GetEnv()->AddWorkspaceDecompositionModel(env->GetDecomposition());
   GetVizmo().GetEnv()->AddReebGraphModel(m_reebGraph);
   GetMainWindow()->GetModelSelectionWidget()->CallResetLists();
 

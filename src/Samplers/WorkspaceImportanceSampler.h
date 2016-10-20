@@ -148,7 +148,7 @@ Sampler(CfgType& _cfg, shared_ptr<Boundary> _boundary,
 
   string callee(this->GetNameAndLabel() + "::SampleImpl()");
   Environment* env = this->GetEnvironment();
-  const auto& tetrahedralization = env->GetDecomposition();
+  auto tetrahedralization = env->GetDecomposition();
   auto vc = this->GetValidityChecker(m_vcLabel);
 
   // Pick a tetrahedron with uniform random probability.

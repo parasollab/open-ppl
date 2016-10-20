@@ -11,6 +11,8 @@
 #include "Workspace/WorkspaceDecomposition.h"
 #include "Workspace/WorkspaceRegion.h"
 
+#include <containers/sequential/graph/algorithms/depth_first_search.h>
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// This method is the 'Synergistic Combination of Layers of Planning' technique
@@ -54,7 +56,7 @@ class Syclop : public BasicRRTStrategy<MPTraits> {
 
     Syclop(MPProblemType* _problem, XMLNode& _node);
 
-    virtual ~Syclop() = default;
+    virtual ~Syclop();
 
     ///@}
     ///@name MPStrategy Overrides
@@ -97,7 +99,7 @@ class Syclop : public BasicRRTStrategy<MPTraits> {
     ///@name Syclop Functions
     ///@{
 
-    typedef WorkspaceRegion* RegionPointer;
+    typedef const WorkspaceRegion* RegionPointer;
 
     ////////////////////////////////////////////////////////////////////////////
     /// Compute a high-level plan (a sequence of regions).
@@ -143,9 +145,16 @@ class Syclop : public BasicRRTStrategy<MPTraits> {
     ////////////////////////////////////////////////////////////////////////////
     /// Compute the edge weight in the region graph from _r1 to _r2.
     double Cost(RegionPointer _r1, RegionPointer _r2);
+    double Cost(const WorkspacePortal& _p); ///< @overload
 
     ///@}
-    ///@name Syclop State
+    ///@name Pre-processing Stuff
+    ///@{
+
+    void ComputeFreeVolumes(); ///< Estimate the free volume of each region.
+
+    ///@}
+    ///@name Auxiliary Classes
     ///@{
 
     ////////////////////////////////////////////////////////////////////////////
@@ -200,44 +209,128 @@ class Syclop : public BasicRRTStrategy<MPTraits> {
 
     };
 
-    /// Holds extra data associated with the regions.
-    map<RegionPointer, RegionData> m_regionData;
-
-    /// Holds edges and their weights
-    map<pair<size_t, size_t>, double> m_edgeWeightMap;
-
-    ////////////////////////////////////////////////////////////////////////////
-    /// Tracks data related to edges between regions in the decomposition
-    /// graph.
-    ////////////////////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////////////////////////
+    /// Tracks data related to edges between regions in the decomposition graph.
+    //////////////////////////////////////////////////////////////////////////////
     struct RegionPairData {
 
-      size_t numLeadUses{0};  ///< Times this edge was used in a lead.
-      size_t numAttempts{0};  ///< Attempted extensions across this edge.
-
+      ////////////////////////////////////////////////////////////////////////////
       /// Add the index of a cell containing a vertex in the target that was
       /// reached by extending from the source.
       void AddCell(size_t _index) {cells.insert(_index);}
 
+      ////////////////////////////////////////////////////////////////////////////
       /// Get the coverage for this edge.
       size_t Coverage() const {return cells.size();}
+
+      ///@name Internal State
+      ///@{
+
+      size_t numLeadUses{0};  ///< Times this edge was used in a lead.
+      size_t numAttempts{0};  ///< Attempted extensions across this edge.
 
       private:
 
         /// The set of coverage cells in the target that were reached from the
         /// source.
         set<size_t> cells;
+
+        ///@}
     };
+
+    //////////////////////////////////////////////////////////////////////////////
+    /// A functor for getting associating region graph edges with the cost
+    /// function.
+    //////////////////////////////////////////////////////////////////////////////
+    struct WeightFunctor {
+
+      ///@name Local Types
+      ///@{
+
+      typedef WorkspacePortal  property_type;
+      typedef double           value_type;
+      typedef Syclop<MPTraits> strategy_type;
+
+      ///@}
+      ///@name Internal State
+      ///@{
+
+      strategy_type* m_syclop;
+
+      ///@}
+      ///@name Construction
+      ///@{
+
+      WeightFunctor(strategy_type* _s) : m_syclop(_s) {}
+
+      ///@}
+      ///@name Edge Map Functor Interface
+      ///@{
+
+      value_type get(property_type& _p) {return m_syclop->Cost(_p);}
+
+      void put(property_type& _p, value_type& _v) {}
+
+      template <typename functor>
+      void apply(property_type& _p, functor _f) {_f(_p);}
+
+      ///@}
+    };
+
+    //////////////////////////////////////////////////////////////////////////////
+    /// A visitor to track the parent-child relationships discovered during DFS.
+    //////////////////////////////////////////////////////////////////////////////
+    struct DFSVisitor : public stapl::visitor_base<WorkspaceDecomposition> {
+
+      ///@name Local Types
+      ///@{
+
+      typedef WorkspaceDecomposition graph_type;
+      typedef stapl::visitor_return  visitor_return;
+      typedef map<VID, VID>          map_type;
+
+      ///@}
+      ///@name Internal State
+      ///@{
+
+      map_type& m_parentMap;
+
+      ///@}
+      ///@name Construction
+      ///@{
+
+      DFSVisitor(map_type& _pm) : m_parentMap(_pm) {}
+
+      ///@}
+      ///@name Visitor Interface
+      ///@{
+
+      virtual visitor_return tree_edge(graph_type::vertex_iterator _vit,
+          graph_type::adj_edge_iterator _eit) override {
+        m_parentMap[_eit->target()] = _eit->source();
+        return visitor_return::CONTINUE;
+      }
+
+      ///@}
+    };
+
+    ///@}
+    ///@name Syclop State
+    ///@{
+
+    /// Holds extra data associated with the regions.
+    map<RegionPointer, RegionData> m_regionData;
 
     /// Holds extra data associated with region pairs.
     map<pair<RegionPointer, RegionPointer>, RegionPairData> m_regionPairData;
 
-    /// Coverage grid
-    GridOverlay* m_grid{nullptr}; // TODO: validate impl.
+    /// The coverage grid.
+    GridOverlay* m_grid{nullptr};
 
     /// The currently available regions.
     set<RegionPointer> m_availableRegions;
 
+    ///@}
     ///@name Switch Tracking
     ///@{
     /// Data for knowing when to change regions/leads.
@@ -251,20 +344,15 @@ class Syclop : public BasicRRTStrategy<MPTraits> {
     RegionPointer m_currentRegion{nullptr};
 
     ///@}
-    ///@name Pre-processing Stuff
-    ///@{
 
-    void ComputeFreeVolumes(); ///< Estimate the free volume of each region.
-
-    ///@}
 };
 
-/*----------------------------- construction ---------------------------------*/
+
+/*----------------------------- Construction ---------------------------------*/
 
 template<class MPTraits>
 Syclop<MPTraits>::
 Syclop() : BasicRRTStrategy<MPTraits>() {
-  // Done.
   this->SetName("Syclop");
   this->m_growGoals = false;
 }
@@ -274,9 +362,15 @@ template<class MPTraits>
 Syclop<MPTraits>::
 Syclop(MPProblemType* _problem, XMLNode& _node) :
     BasicRRTStrategy<MPTraits>(_problem, _node) {
-  // Done.
   this->SetName("Syclop");
   this->m_growGoals = false;
+}
+
+
+template<class MPTraits>
+Syclop<MPTraits>::
+~Syclop() {
+  delete m_grid;
 }
 
 /*-------------------------- MPStrategy overrides ----------------------------*/
@@ -298,9 +392,9 @@ Initialize() {
   m_availableRegions.clear();
 
   // Create coverage grid.
+  const double gridLength = env->GetPositionRes() * 10;
   delete m_grid;
-  // TODO: Choose length intelligently instead of using 1.
-  m_grid = new GridOverlay(env->GetBoundary(), 1);
+  m_grid = new GridOverlay(env->GetBoundary(), gridLength);
 
   // Estimate the free c-space volume of each region.
   ComputeFreeVolumes();
@@ -312,9 +406,9 @@ template<class MPTraits>
 typename Syclop<MPTraits>::VID
 Syclop<MPTraits>::
 FindNearestNeighbor(const CfgType& _cfg, const TreeType&) {
-  // Select a region based on the weighting.
+  // Select an available region and get the vertices within.
   RegionPointer r = SelectRegion();
-  auto& vertices = m_regionData[r].vertices;
+  const auto& vertices = m_regionData[r].vertices;
 
   // Find the nearest neighbor from within the selected region.
   return BasicRRTStrategy<MPTraits>::FindNearestNeighbor(_cfg, vertices);
@@ -326,7 +420,6 @@ template<class MPTraits>
 typename Syclop<MPTraits>::VID
 Syclop<MPTraits>::
 Extend(const VID _nearVID, const CfgType& _qRand, const bool _lp) {
-  // Done.
   // Log this extension attempt.
   RegionPointer r1 = LocateRegion(_nearVID);
   RegionPointer r2 = LocateRegion(_qRand);
@@ -340,7 +433,6 @@ template<class MPTraits>
 pair<typename Syclop<MPTraits>::VID, bool>
 Syclop<MPTraits>::
 AddNode(const CfgType& _newCfg) {
-  // Done.
   auto added = BasicRRTStrategy<MPTraits>::AddNode(_newCfg);
 
   // If node is new and not invalid, update region data.
@@ -368,7 +460,6 @@ template<class MPTraits>
 void
 Syclop<MPTraits>::
 AddEdge(VID _source, VID _target, const LPOutput<MPTraits>& _lpOutput) {
-  // Done.
   BasicRRTStrategy<MPTraits>::AddEdge(_source, _target, _lpOutput);
 
   // Update the list of cells in the target region that were reached by
@@ -388,65 +479,51 @@ Syclop<MPTraits>::
 DiscreteLead() {
   static constexpr double probabilityOfDijkstras = .95;
 
-  // Apply weights to region graph edges.
   auto regionGraph = this->GetEnvironment()->GetDecomposition();
 
-  for(auto iter = regionGraph->edges_begin(); iter != regionGraph->edges_end();
-      ++iter) {
-    // Get iterators to the two regions on the edge
-    auto r1 = regionGraph->find_vertex(iter->descriptor().first);
-    auto r2 = regionGraph->find_vertex(iter->descriptor().second);
-
-    const double weight = Cost(*r1, *r2);
-
-    //Set the weight for the edge
-    m_edgeWeightMap[iter->descriptor()] = weight;
-  }
-
-  // Search region graph from start to goal.
-  vector<VID> path;
-
-  // Get start and goal from query
+  // Get start and goal configurations from the query.
   const CfgType& startCfg = this->m_query->GetQuery()[0];
   const CfgType& goalCfg = this->m_query->GetQuery()[1];
 
-  const auto startRegion = LocateRegion(startCfg);
-  const auto goalRegion = LocateRegion(goalCfg);
-
-  size_t start;
-  size_t goal;
+  // Find the start and goal regions.
+  auto startRegion = LocateRegion(startCfg);
+  auto goalRegion = LocateRegion(goalCfg);
 
   // Find the start and goal in the graph
+  size_t start, goal;
   for(auto iter = regionGraph->begin(); iter != regionGraph->end(); ++iter) {
-    if(*iter == startRegion)
+    if(&iter->property() == startRegion)
       start = iter->descriptor();
-    else if(*iter == goalRegion)
+    if(&iter->property() == goalRegion)
       goal = iter->descriptor();
   }
 
+  // Search region graph for a path from start to goal.
+  vector<VID> path;
   if(DRand() < probabilityOfDijkstras) {
     // Search with djikstra's.
-    find_path_dijkstra(regionGraph, m_edgeWeightMap, start, goal, path);
+
+    // Set up an edge weight map that maps edges to the cost function.
+    stapl::sequential::edge_property_map<WorkspaceDecomposition, WeightFunctor>
+        edgeMap(const_cast<WorkspaceDecomposition&>(*regionGraph),
+        WeightFunctor(this));
+
+    // Apply dijkstra's search with the weight map.
+    stapl::sequential::find_path_dijkstra(
+        const_cast<WorkspaceDecomposition&>(*regionGraph), edgeMap, start, goal,
+        path);
   }
   else {
     // Search with DFS, random child ordering.
+
+    // Set up a parent map to capture the search path.
     map<VID, VID> parentMap;
     parentMap[start] = INVALID_VID;
 
     stapl::sequential::vector_property_map<GraphType, size_t> cmap;
-
-    // Visitor struct required for dfs
-    // At each edge it adds the vid to the parentMap
-    struct myVisitor : public visitor_base<decltype(regionGraph)> {
-      virtual visitor_return tree_edge(vertex_iterator _vit,
-          adj_edge_iterator _eit) override {
-        parentMap[_eit->target()] = _vit->descriptor();
-
-        return CONTINUE;
-      }
-    };
-
-    depth_first_search(regionGraph, start, myVisitor(), cmap);
+    auto visitor = DFSVisitor(parentMap);
+    stapl::sequential::depth_first_search(
+        const_cast<WorkspaceDecomposition&>(*regionGraph), start, visitor, cmap);
 
     // Add the parent VIDs to the path starting from the end
     VID current = goal;
@@ -471,13 +548,12 @@ DiscreteLead() {
 template <typename MPTraits>
 void
 Syclop<MPTraits>::
-AvailableRegions(vector<VID> _lead) {
-  // Done.
+FindAvailableRegions(vector<VID> _lead) {
   static constexpr double probabilityOfQuitting = .05;
 
   m_availableRegions.clear();
 
-  auto& regionGraph = this->GetEnvironment()->GetDecomposition();
+  auto regionGraph = this->GetEnvironment()->GetDecomposition();
 
   // Work backwards through the lead, adding non-empty regions until we quit or
   // hit the end.
@@ -502,7 +578,6 @@ template <typename MPTraits>
 typename Syclop<MPTraits>::RegionPointer
 Syclop<MPTraits>::
 SelectRegion() {
-  // Done.
   // If a region is currently selected and has uses remaining, we don't need to
   // select a new one.
   const bool needNewRegion = !m_currentRegion ||
@@ -555,7 +630,6 @@ template <typename MPTraits>
 typename Syclop<MPTraits>::VID
 Syclop<MPTraits>::
 SelectVertex(RegionPointer _r) {
-  // Done.
   const auto& vertices = m_regionData[_r].vertices;
 
   if(vertices.empty())
@@ -571,7 +645,6 @@ template <typename MPTraits>
 typename Syclop<MPTraits>::RegionPointer
 Syclop<MPTraits>::
 LocateRegion(const VID _v) const {
-  // Done.
   return LocateRegion(this->GetRoadmap()->GetGraph()->GetVertex(_v));
 }
 
@@ -580,7 +653,6 @@ template <typename MPTraits>
 typename Syclop<MPTraits>::RegionPointer
 Syclop<MPTraits>::
 LocateRegion(const CfgType& _c) const {
-  // Done.
   return LocateRegion(_c.GetPoint());
 }
 
@@ -596,7 +668,7 @@ LocateRegion(const Point3d& _p) const {
     for(auto iter = regionGraph->begin(); iter != regionGraph->end(); ++iter) {
       // Stupid hacks to work around stapl const fail.
       auto& ref = const_cast<WorkspaceRegion&>(iter->property());
-      const RegionPointer r = &ref;
+      RegionPointer r = &ref;
 
       // If point is inside r, return r.
       if(r->GetBoundary()->InBoundary(_p))
@@ -618,7 +690,6 @@ template <typename MPTraits>
 size_t
 Syclop<MPTraits>::
 LocateCoverageCell(const VID _v) const {
-  // Done.
   return LocateCoverageCell(this->GetRoadmap()->GetGraph()->GetVertex(_v));
 }
 
@@ -627,7 +698,6 @@ template <typename MPTraits>
 size_t
 Syclop<MPTraits>::
 LocateCoverageCell(const CfgType& _c) const {
-  // Done.
   return LocateCoverageCell(_c.GetPoint());
 }
 
@@ -636,7 +706,6 @@ template <typename MPTraits>
 size_t
 Syclop<MPTraits>::
 LocateCoverageCell(const Point3d& _p) const {
-  // Done.
   return m_grid->LocateCell(_p);
 }
 
@@ -646,7 +715,6 @@ template <typename MPTraits>
 size_t
 Syclop<MPTraits>::
 Sel(RegionPointer _r1, RegionPointer _r2) {
-  // Done.
   const auto& rd1 = m_regionData[_r1];
   const auto& rd2 = m_regionData[_r2];
   const auto& edgeData = m_regionPairData[make_pair(_r1, _r2)];
@@ -665,7 +733,6 @@ template <typename MPTraits>
 size_t
 Syclop<MPTraits>::
 Conn(RegionPointer _r1, RegionPointer _r2) {
-  // Done.
   return m_regionPairData[make_pair(_r1, _r2)].Coverage();
 }
 
@@ -673,8 +740,15 @@ Conn(RegionPointer _r1, RegionPointer _r2) {
 template <typename MPTraits>
 double
 Syclop<MPTraits>::
+Cost(const WorkspacePortal& _p) {
+  return Cost(&_p.GetSource(), &_p.GetTarget());
+}
+
+
+template <typename MPTraits>
+double
+Syclop<MPTraits>::
 Cost(RegionPointer _r1, RegionPointer _r2) {
-  // Done.
   double a1 = m_regionData[_r1].alpha;
   double a2 = m_regionData[_r2].alpha;
   return a1 * a2 * (1. + pow(Sel(_r1, _r2), 2)) / (1. + pow(Conn(_r1, _r2), 2));
@@ -686,7 +760,6 @@ template <typename MPTraits>
 void
 Syclop<MPTraits>::
 ComputeFreeVolumes() {
-  // Done.
   static constexpr double eps = 1;
   static constexpr size_t numSamples = 5000;
 
@@ -724,7 +797,7 @@ ComputeFreeVolumes() {
     const size_t numValid = results[region].first;
     const size_t numInvalid = results[region].second;
 
-    auto tetrahedronVolume = [](const RegionPointer _r) -> double {
+    auto tetrahedronVolume = [](RegionPointer _r) -> double {
       /// @sa Formula taken from reference:
       ///     http://mathworld.wolfram.com/Tetrahedron.html
       const Vector3d& base = _r->GetPoint(0);
