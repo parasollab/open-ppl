@@ -336,12 +336,14 @@ class Syclop : public BasicRRTStrategy<MPTraits> {
     /// Data for knowing when to change regions/leads.
 
     size_t m_currentLeadUses{0};
-    size_t m_maxLeadUses{0};
+    size_t m_maxLeadUses{6};
 
     size_t m_currentRegionUses{0};
-    size_t m_maxRegionUses{0};
+    size_t m_maxRegionUses{6};
 
     RegionPointer m_currentRegion{nullptr};
+
+    bool m_improvement{false}; ///< Have we improved the map w/ current region?
 
     ///@}
 
@@ -364,6 +366,13 @@ Syclop(MPProblemType* _problem, XMLNode& _node) :
     BasicRRTStrategy<MPTraits>(_problem, _node) {
   this->SetName("Syclop");
   this->m_growGoals = false;
+
+  const size_t min = 1;
+  const size_t max = numeric_limits<size_t>::max();
+  m_maxLeadUses = _node.Read("maxLeadUses", false, m_maxLeadUses, min, max,
+      "Number of times to use a discrete lead");
+  m_maxRegionUses = _node.Read("maxRegionUses", false, m_maxRegionUses, min, max,
+      "Number of times to use a region");
 }
 
 
@@ -383,13 +392,25 @@ Initialize() {
   BasicRRTStrategy<MPTraits>::Initialize();
 
   // Decompose workspace.
+  this->GetStatClass()->StartClock("Decomposition");
   auto env = this->GetEnvironment();
   env->Decompose(TetGenDecomposition(this->GetBaseFilename()));
+  this->GetStatClass()->StopClock("Decomposition");
+
+#ifdef VIZMO
+  // Add workspace model if we are in vizmo land.
+  GetVizmo().GetEnv()->AddWorkspaceDecompositionModel(env->GetDecomposition());
+  GetMainWindow()->GetModelSelectionWidget()->CallResetLists();
+#endif
 
   // Clear algorithm state.
   m_regionData.clear();
   m_regionPairData.clear();
   m_availableRegions.clear();
+  m_currentRegion = nullptr;
+  m_currentRegionUses = 0;
+  m_currentLeadUses = 0;
+  m_improvement = false;
 
   // Add start vertex to regionData
   auto startRegion = LocateRegion(0);
@@ -454,6 +475,9 @@ AddNode(const CfgType& _newCfg) {
     auto iter = find(m_availableRegions.begin(), m_availableRegions.end(), r);
     if(iter == m_availableRegions.end())
       m_availableRegions.insert(r);
+
+    // Mark that we improved the map.
+    m_improvement = true;
   }
 
   return added;
@@ -481,7 +505,12 @@ template <typename MPTraits>
 vector<typename Syclop<MPTraits>::VID>
 Syclop<MPTraits>::
 DiscreteLead() {
+  this->GetStatClass()->StartClock("GenerateDiscreteLead");
+
   static constexpr double probabilityOfDijkstras = .95;
+
+  if(this->m_debug)
+    cout << "Generating new discrete lead..." << endl;
 
   auto regionGraph = this->GetEnvironment()->GetDecomposition();
 
@@ -506,7 +535,8 @@ DiscreteLead() {
   vector<VID> path;
   if(DRand() < probabilityOfDijkstras) {
     // Search with djikstra's.
-    cout << "Dijkstras" << endl;
+    if(this->m_debug)
+      cout << "\tSearching with dijkstras algorithm..." << endl;
 
     // Set up an edge weight map that maps edges to the cost function.
     stapl::sequential::edge_property_map<WorkspaceDecomposition, WeightFunctor>
@@ -519,8 +549,9 @@ DiscreteLead() {
         path);
   }
   else {
-    cout << "DFS" << endl;
     // Search with DFS, random child ordering.
+    if(this->m_debug)
+      cout << "\tSearching with DFS..." << endl;
 
     // Set up a parent map to capture the search path.
     map<VID, VID> parentMap;
@@ -539,20 +570,29 @@ DiscreteLead() {
       current = parentMap[current];
     }
 
-    cout << "parentMap: " << parentMap.size() << endl;
+    if(this->m_debug)
+      cout << "\t\tGenerated a parent map of size " << parentMap.size() << ".\n";
 
     reverse(path.begin(), path.end());
   }
 
-  // TODO: increment the usage count for each region pair
+  // Increment the usage count for each region pair in this lead.
+  for(auto i1 = path.begin(), i2 = i1 + 1; i2 != path.end(); ++i1, ++i2) {
+    auto r1 = &regionGraph->GetRegion(*i1);
+    auto r2 = &regionGraph->GetRegion(*i2);
+    ++(m_regionPairData[make_pair(r1, r2)].numLeadUses);
+  }
 
+  // Mark this lead as unused.
   m_currentLeadUses = 0;
 
-  cout << "path: " << path.size() << endl;
+  // Sanity check.
+  if(this->m_debug)
+    cout << "\tGenerated lead of length " << path.size() << "." << endl;
   if(path.empty())
     throw RunTimeException(WHERE, "Path is empty");
 
-  // Return path.
+  this->GetStatClass()->StopClock("GenerateDiscreteLead");
   return path;
 }
 
@@ -562,6 +602,9 @@ void
 Syclop<MPTraits>::
 FindAvailableRegions(vector<VID> _lead) {
   static constexpr double probabilityOfQuitting = .05;
+
+  if(this->m_debug)
+    cout << "Finding available regions from lead...\n";
 
   m_availableRegions.clear();
 
@@ -584,6 +627,9 @@ FindAvailableRegions(vector<VID> _lead) {
       break;
   }
 
+  // Sanity check.
+  if(this->m_debug)
+    cout << "\tFound " << m_availableRegions.size() << " available regions.\n";
   if(m_availableRegions.empty())
     throw RunTimeException(WHERE, "Available regions is empty");
 }
@@ -593,17 +639,49 @@ template <typename MPTraits>
 typename Syclop<MPTraits>::RegionPointer
 Syclop<MPTraits>::
 SelectRegion() {
-  // If a region is currently selected and has uses remaining, we don't need to
-  // select a new one.
+  static constexpr double probabilityOfAbandoningLead = .25;
+
+  // We need a new region if we don't have one or if no uses remain.
   const bool needNewRegion = !m_currentRegion ||
       m_currentRegionUses >= m_maxRegionUses;
 
+  if(this->m_debug) {
+    cout << "Selecting a region...\n";
+    if(m_currentRegion)
+      cout << "\tCurrent region has been used " << m_currentRegionUses << "/"
+           << m_maxRegionUses << " times.\n";
+    cout << "\t"
+         << (needNewRegion ? "Selecting a new region." : "Using current region.")
+         << endl;
+  }
+
   if(needNewRegion) {
+    // We will choose a new region: reset its uses and improvement.
     m_currentRegionUses = 0;
+    m_improvement = false;
 
     // If no regions are available or if we are out of uses for this lead,
     // compute a new lead and extract the available regions.
-    if(m_availableRegions.empty() || m_currentLeadUses >= m_maxLeadUses)
+    const bool needNewLead = m_availableRegions.empty() ||
+        m_currentLeadUses >= m_maxLeadUses;
+
+    const bool abandonEarly = !m_improvement &&
+        DRand() < probabilityOfAbandoningLead;
+
+    if(this->m_debug) {
+      if(!m_availableRegions.empty())
+        cout << "\tCurrent lead has been used " << m_currentLeadUses << "/"
+             << m_maxLeadUses << " times.\n";
+      else
+        cout << "\tNo discrete lead available.\n";
+      if(!needNewLead && abandonEarly)
+        cout << "\tAbandoning current lead early!\n";
+      cout << "\t"
+           << (needNewLead || abandonEarly ? "Generating new" : "Using current")
+           << " lead." << endl;
+    }
+
+    if(needNewLead || abandonEarly)
       FindAvailableRegions(DiscreteLead());
 
     ++m_currentLeadUses;
@@ -618,19 +696,26 @@ SelectRegion() {
 
     // Choose a region based on relative weight.
     double cumulative = 0.;
+    size_t count = 0;
     for(const auto& region : m_availableRegions) {
-      cumulative += m_regionData[region].weight / totalWeight;
+      ++count;
+      const double relativeWeight = m_regionData[region].weight / totalWeight;
+      cumulative += relativeWeight;
       if(cumulative > roll) {
         // Select this region!
         m_currentRegion = region;
+
+        if(this->m_debug)
+          cout << "\tSelected " << count << "th available region with "
+               << "relative weight " << setprecision(4) << relativeWeight
+               << " out of " << m_availableRegions.size() << " candidates."
+               << endl;
         break;
       }
     }
-    cout << "Cumulative: " << cumulative << std::endl;
-    cout << "roll: " << roll << std::endl;
   }
 
-  // Assert that we got a region.
+  // Sanity check.
   if(!m_currentRegion)
     throw RunTimeException(WHERE, "Failed to select a region!");
 
@@ -649,12 +734,18 @@ Syclop<MPTraits>::
 SelectVertex(RegionPointer _r) {
   const auto& vertices = m_regionData[_r].vertices;
 
+  // Sanity check.
   if(vertices.empty())
     throw RunTimeException(WHERE, "Tried to select a vertex from a region with "
         "no vertices.");
 
-  size_t randomIndex = rand() % vertices.size();
-  return vertices[randomIndex];
+  const size_t randomIndex = rand() % vertices.size();
+  const VID selected = vertices[randomIndex];
+
+  if(this->m_debug)
+    cout << "Selected VID " << selected << " out of " << vertices.size()
+         << " vertices in the current region." << endl;
+  return selected;
 }
 
 
@@ -678,27 +769,27 @@ template <typename MPTraits>
 typename Syclop<MPTraits>::RegionPointer
 Syclop<MPTraits>::
 LocateRegion(const Point3d& _p) const {
-  // Search region graph to see which region contains this point.
-  {
-    // Temporary solution: brute-force linear search
-    auto regionGraph = this->GetEnvironment()->GetDecomposition();
-    for(auto iter = regionGraph->begin(); iter != regionGraph->end(); ++iter) {
-      // Stupid hacks to work around stapl const fail.
-      auto& ref = const_cast<WorkspaceRegion&>(iter->property());
-      RegionPointer r = &ref;
+  this->GetStatClass()->StartClock("LocateRegion");
 
-      // If point is inside r, return r.
-      if(r->GetBoundary()->InBoundary(_p))
-        return r;
+  // Search region graph to see which region contains this point.
+
+  // Temporary solution: brute-force linear search
+  // TODO: find the coverage grid cell that holds this vertex, then map the
+  // possible regions based on which ones touch that coverage cell.
+  auto regionGraph = this->GetEnvironment()->GetDecomposition();
+  for(auto iter = regionGraph->begin(); iter != regionGraph->end(); ++iter) {
+    // Stupid hacks to work around stapl const fail.
+    auto& ref = const_cast<WorkspaceRegion&>(iter->property());
+    RegionPointer r = &ref;
+
+    // If point is inside r, return r.
+    if(r->GetBoundary()->InBoundary(_p)) {
+      this->GetStatClass()->StopClock("LocateRegion");
+      return r;
     }
   }
-  {
-    // TODO: find the coverage grid cell that holds this vertex, then map the
-    // possible regions based on which ones touch that coverage cell.
-    //
-    // Maybe a correct implementation
-  }
 
+  this->GetStatClass()->StopClock("LocateRegion");
   return nullptr;
 }
 
@@ -723,7 +814,10 @@ template <typename MPTraits>
 size_t
 Syclop<MPTraits>::
 LocateCoverageCell(const Point3d& _p) const {
-  return m_grid->LocateCell(_p);
+  this->GetStatClass()->StartClock("LocateCoverageCell");
+  const size_t cell = m_grid->LocateCell(_p);
+  this->GetStatClass()->StopClock("LocateCoverageCell");
+  return cell;
 }
 
 /*------------------------------ Syclop Helpers ------------------------------*/
@@ -777,10 +871,13 @@ template <typename MPTraits>
 void
 Syclop<MPTraits>::
 ComputeFreeVolumes() {
+  this->GetStatClass()->StartClock("ComputeFreeVolumes");
+
+  if(this->m_debug)
+    cout << "Computing region volumes and initializing region data...\n";
+
   static constexpr double eps = 1;
   static constexpr size_t numSamples = 5000;
-
-  this->GetStatClass()->StartClock("ComputeFreeVolumes");
 
   // Make a fixed number of samples.
   auto sampler = this->GetSampler("UniformRandom");
@@ -830,6 +927,9 @@ ComputeFreeVolumes() {
     data.UpdateWeight();
     data.UpdateAlpha();
   }
+
+  if(this->m_debug)
+    cout << "\tThere are " << regionGraph->GetNumRegions() << " regions.\n";
 
   this->GetStatClass()->StopClock("ComputeFreeVolumes");
 }
