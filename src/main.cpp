@@ -74,9 +74,5 @@ main(int _argc, char** _argv) {
     cerr << endl << e.what() << endl;
     return 1;
   }
-  catch(...) {
-    cerr << "Unknown error." << endl;
-    return 1;
-  }
 }
 

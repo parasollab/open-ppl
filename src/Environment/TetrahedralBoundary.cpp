@@ -44,8 +44,13 @@ GetMaxDist(double _r1, double _r2) const {
 pair<double, double>
 TetrahedralBoundary::
 GetRange(size_t _i) const {
-  throw RunTimeException(WHERE, "Not implemented");
-  return make_pair(0, 0);
+  double minV = numeric_limits<double>::max();
+  double maxV = numeric_limits<double>::min();
+  for(const auto& p : m_points) {
+    minV = std::min(minV, p[_i]);
+    maxV = std::max(maxV, p[_i]);
+  }
+  return make_pair(minV, maxV);
 }
 
 /*--------------------------------- Sampling ---------------------------------*/

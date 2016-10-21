@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <iomanip>
 #include <map>
+#include <set>
 #include <vector>
 
 #include "BasicRRTStrategy.h"
@@ -152,6 +153,8 @@ class Syclop : public BasicRRTStrategy<MPTraits> {
     ///@{
 
     void ComputeFreeVolumes(); ///< Estimate the free volume of each region.
+
+    void ComputeGridMap(); ///< Compute map from coverage grid to regions.
 
     ///@}
     ///@name Auxiliary Classes
@@ -327,6 +330,9 @@ class Syclop : public BasicRRTStrategy<MPTraits> {
     /// The coverage grid.
     GridOverlay* m_grid{nullptr};
 
+    /// A map from grid cells to regions.
+    vector<vector<RegionPointer>> m_gridMap;
+
     /// The currently available regions.
     set<RegionPointer> m_availableRegions;
 
@@ -407,22 +413,26 @@ Initialize() {
   m_regionData.clear();
   m_regionPairData.clear();
   m_availableRegions.clear();
+  m_gridMap.clear();
   m_currentRegion = nullptr;
   m_currentRegionUses = 0;
   m_currentLeadUses = 0;
   m_improvement = false;
-
-  // Add start vertex to regionData
-  auto startRegion = LocateRegion(0);
-  m_regionData[startRegion].vertices.push_back(0);
 
   // Create coverage grid.
   const double gridLength = env->GetPositionRes() * 10;
   delete m_grid;
   m_grid = new GridOverlay(env->GetBoundary(), gridLength);
 
+  // Map the coverage grid cells to the workspace regions.
+  ComputeGridMap();
+
   // Estimate the free c-space volume of each region.
   ComputeFreeVolumes();
+
+  // Add start vertex to regionData.
+  auto startRegion = LocateRegion(0);
+  m_regionData[startRegion].vertices.push_back(0);
 }
 
 /*---------------------------- Neighbor Helpers ------------------------------*/
@@ -716,7 +726,7 @@ SelectRegion() {
   }
 
   // Sanity check.
-  if(m_currentRegion)
+  if(!m_currentRegion)
     throw RunTimeException(WHERE, "Failed to select a region!");
 
   // Update region data.
@@ -771,21 +781,17 @@ Syclop<MPTraits>::
 LocateRegion(const Point3d& _p) const {
   this->GetStatClass()->StartClock("LocateRegion");
 
-  // Search region graph to see which region contains this point.
+  // Find the coverage grid cell that holds this vertex, then use the grid map
+  // to find the set of regions that touch the grid cell.
+  const size_t cell = LocateCoverageCell(_p);
+  auto candidateRegions = m_gridMap.at(cell);
 
-  // Temporary solution: brute-force linear search
-  // TODO: find the coverage grid cell that holds this vertex, then map the
-  // possible regions based on which ones touch that coverage cell.
-  auto regionGraph = this->GetEnvironment()->GetDecomposition();
-  for(auto iter = regionGraph->begin(); iter != regionGraph->end(); ++iter) {
-    // Stupid hacks to work around stapl const fail.
-    auto& ref = const_cast<WorkspaceRegion&>(iter->property());
-    RegionPointer r = &ref;
-
-    // If point is inside r, return r.
-    if(r->GetBoundary()->InBoundary(_p)) {
+  // Scan through the candidate regions and return the first one that contains
+  // our point.
+  for(auto region : candidateRegions) {
+    if(region->GetBoundary()->InBoundary(_p)) {
       this->GetStatClass()->StopClock("LocateRegion");
-      return r;
+      return region;
     }
   }
 
@@ -897,7 +903,9 @@ ComputeFreeVolumes() {
   map<RegionPointer, pair<size_t, size_t>> results;
   for(auto& sample : samples) {
     RegionPointer r = LocateRegion(sample);
-    if(vc->IsValid(sample, "Syclop::ComputeFreeVolumes"))
+    if(!r)
+      continue; // Skip samples whos projection is outside any region.
+    else if(vc->IsValid(sample, "Syclop::ComputeFreeVolumes"))
       ++results[r].first;
     else
       ++results[r].second;
@@ -932,6 +940,33 @@ ComputeFreeVolumes() {
     cout << "\tThere are " << regionGraph->GetNumRegions() << " regions.\n";
 
   this->GetStatClass()->StopClock("ComputeFreeVolumes");
+}
+
+
+template <typename MPTraits>
+void
+Syclop<MPTraits>::
+ComputeGridMap() {
+  this->GetStatClass()->StartClock("ComputeGridMap");
+
+  if(this->m_debug)
+    cout << "Computing grid map..." << endl;
+
+  m_gridMap.resize(m_grid->Size());
+
+  // For each region, find the coverage cells that are associated with it.
+  auto regionGraph = this->GetEnvironment()->GetDecomposition();
+  for(auto iter = regionGraph->begin(); iter != regionGraph->end(); ++iter) {
+    auto region = &iter->property();
+    auto cells = m_grid->LocateBBXCells(region->GetBoundary());
+    for(auto index : cells)
+      m_gridMap[index].push_back(region);
+  }
+
+  if(this->m_debug)
+    cout << "done." << endl;
+
+  this->GetStatClass()->StopClock("ComputeGridMap");
 }
 
 /*----------------------------------------------------------------------------*/

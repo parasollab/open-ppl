@@ -19,6 +19,13 @@ GridOverlay(shared_ptr<Boundary> _b, double _length):
 
 size_t
 GridOverlay::
+Size() const noexcept {
+  return m_num[0] * m_num[1] * m_num[2];
+}
+
+
+size_t
+GridOverlay::
 LocateCell(const Cfg& _v) const {
   return LocateCell(_v.GetPoint());
 }

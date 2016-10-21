@@ -24,7 +24,7 @@ class GridOverlay {
     ///@name Cell Finders
     ///@{
 
-    size_t Size() const; ///< Get the number of cells in the grid.
+    size_t Size() const noexcept; ///< Get the number of cells in the grid.
 
     ////////////////////////////////////////////////////////////////////////////
     /// Find the cell that contains the reference point of a configuration.
