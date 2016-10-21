@@ -34,14 +34,14 @@ LocateCell(const Point3d& _p) const {
   y = (int)(height * ((_p[1] - range.first) / (range.second - range.first)));
 
   // for edge case of then the point in on the upper edge of the grid
-  y = min(y, width - 1);
+  y = min(y, height - 1);
 
   range = m_boundary->GetRange(2);
   depth = ceil((range.second - range.first) / m_length);
   z = (int)(depth * ((_p[2] - range.first) / (range.second - range.first)));
 
   // for edge case of then the point in on the upper edge of the grid
-  z = min(z, width - 1);
+  z = min(z, depth - 1);
 
   return (width * height) * z + height * y + x;
 }

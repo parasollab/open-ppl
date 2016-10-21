@@ -716,7 +716,7 @@ SelectRegion() {
   }
 
   // Sanity check.
-  if(!m_currentRegion)
+  if(m_currentRegion)
     throw RunTimeException(WHERE, "Failed to select a region!");
 
   // Update region data.
