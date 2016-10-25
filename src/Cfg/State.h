@@ -13,6 +13,7 @@
 class State : public Cfg {
   public:
     explicit State(size_t _index = 0);
+    explicit State(const Vector3d& _v, size_t _index = 0);
     State(const Cfg& _other);
     State(const State& _other);
     virtual ~State() = default;

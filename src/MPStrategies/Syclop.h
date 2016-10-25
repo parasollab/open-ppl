@@ -8,6 +8,7 @@
 #include <vector>
 
 #include "BasicRRTStrategy.h"
+#include "Utilities/TetGenDecomposition.h"
 #include "Workspace/GridOverlay.h"
 #include "Workspace/WorkspaceDecomposition.h"
 #include "Workspace/WorkspaceRegion.h"

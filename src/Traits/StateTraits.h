@@ -9,11 +9,15 @@
 #include "DistanceMetrics/WeightedEuclideanDistance.h"
 
 //validity checker includes
+#include "ValidityCheckers/AlwaysTrueValidity.h"
 #include "ValidityCheckers/CollisionDetectionValidity.h"
 
 //neighborhood finder includes
 #include "NeighborhoodFinders/BruteForceNF.h"
 #include "NeighborhoodFinders/RadiusNF.h"
+
+//sampler includes
+#include "Samplers/UniformRandomSampler.h"
 
 //extenders includes
 #include "Extenders/KinodynamicExtender.h"
@@ -32,6 +36,7 @@
 #include "MPStrategies/BasicRRTStrategy.h"
 #include "MPStrategies/DynamicDomainRRT.h"
 #include "MPStrategies/DynamicRegionRRT.h"
+#include "MPStrategies/Syclop.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup MotionPlanningUniverse
@@ -61,6 +66,7 @@ struct StateTraits {
 
   //types of validity checkers available in our world
   typedef boost::mpl::list<
+    AlwaysTrueValidity<StateTraits>,
     CollisionDetectionValidity<StateTraits>
       > ValidityCheckerMethodList;
 
@@ -72,6 +78,7 @@ struct StateTraits {
 
   //types of samplers available in our world
   typedef boost::mpl::list<
+    UniformRandomSampler<StateTraits>
           > SamplerMethodList;
 
   //types of local planners available in our world
@@ -110,7 +117,8 @@ struct StateTraits {
   typedef boost::mpl::list<
     BasicRRTStrategy<StateTraits>,
     DynamicDomainRRT<StateTraits>,
-    DynamicRegionRRT<StateTraits>
+    DynamicRegionRRT<StateTraits>,
+    Syclop<StateTraits>
       > MPStrategyMethodList;
 };
 

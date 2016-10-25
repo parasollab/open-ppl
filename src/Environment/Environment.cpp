@@ -347,7 +347,6 @@ ComputeObstacleVertexMap() const {
 void
 Environment::
 BuildCDStructure() {
-  cout << "building cd structures" << endl;
   for(auto& body : m_robots)
     body->BuildCDStructure();
   for(auto& body : m_obstacles)
