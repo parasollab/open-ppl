@@ -486,7 +486,7 @@ Remove2Nodes() {
 void
 ReebGraphConstruction::
 Embed(const Environment* _env) {
-  const auto& tetrahedralization = _env->GetDecomposition();
+  auto tetrahedralization = _env->GetDecomposition();
   const auto& dualGraph = tetrahedralization->GetDualGraph();
 
   // Embed ReebNodes in freespace by finding its closest tetrahedron.

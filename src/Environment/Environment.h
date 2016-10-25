@@ -201,8 +201,8 @@ class Environment {
     ///@name Decomposition
     ///@{
 
-    shared_ptr<const WorkspaceDecomposition> GetDecomposition() const {
-      return const_pointer_cast<const WorkspaceDecomposition>(m_decomposition);
+    const WorkspaceDecomposition* GetDecomposition() const {
+      return m_decomposition.get();
     }
 
     ////////////////////////////////////////////////////////////////////////////

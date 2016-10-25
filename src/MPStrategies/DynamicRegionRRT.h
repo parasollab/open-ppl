@@ -195,8 +195,7 @@ Initialize() {
 
   // If we're in vizmo land, add the decomp/graph models to the scene.
 #ifdef VIZMO
-  GetVizmo().GetEnv()->AddWorkspaceDecompositionModel(
-      env->GetDecomposition().get());
+  GetVizmo().GetEnv()->AddWorkspaceDecompositionModel(env->GetDecomposition());
   GetVizmo().GetEnv()->AddGraphModel(*m_flowGraph);
   GetMainWindow()->GetModelSelectionWidget()->CallResetLists();
 

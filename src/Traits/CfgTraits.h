@@ -122,6 +122,7 @@
 #include "MPStrategies/PushQueryToMA.h"
 #include "MPStrategies/SparkPRM.h"
 #include "MPStrategies/SRTStrategy.h"
+#include "MPStrategies/Syclop.h"
 #include "MPStrategies/TogglePRMStrategy.h"
 #include "MPStrategies/UnitTest/ClearanceTestStrategy.h"
 #include "MPStrategies/UnitTest/DMTestStrategy.h"
@@ -315,6 +316,7 @@ struct MPTraits {
     SparkPRM<MPTraits, BasicPRM>,
     SparkPRM<MPTraits, TogglePRMStrategy>,
     SRTStrategy<MPTraits>,
+    Syclop<MPTraits>,
     TogglePRMStrategy<MPTraits>,
     UtilityGuidedGenerator<MPTraits>,
     VisibilityBasedPRM<MPTraits>

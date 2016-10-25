@@ -148,10 +148,10 @@
     </LocalPlanners>
 
     <Extenders>
-      <BasicExtender label="BERO" debug="false" dmLabel="euclidean" vcLabel="rapid"
-        maxDist="1." minDist=".001"/>
-      <BasicExtender label="BESO" debug="false" dmLabel="euclidean" vcLabel="rapid"
-        maxDist="10." minDist=".001" randomOrientation="false"/>
+      <BasicExtender label="BERO" debug="false" dmLabel="euclidean"
+        vcLabel="rapid" maxDist="10." minDist=".01"/>
+      <BasicExtender label="BESO" debug="false" dmLabel="euclidean"
+        vcLabel="rapid" maxDist="10." minDist=".01" randomOrientation="false"/>
       <MedialAxisExtender label="MAE" maxDist="10.0" minDist="0.01"
         extendDist="0.5" maxIntermediates="10" lpLabel="sl" vcLabel="pqp_solid"
         dmLabel="euclidean" clearanceType="exact" penetrationType="exact"
@@ -376,8 +376,16 @@
         nfLabel="Nearest" vcLabel="rapid" connectorLabel="Closest"
         gtype="UNDIRECTED_TREE" debug="false"
         growGoals="true" extenderLabel="BERO">
-        <Evaluator label="NodesEval"/>
+        <Evaluator label="RRTQuery"/>
       </BasicRRTStrategy>
+
+      <Syclop label="Syclop"
+        numRoots="1" m="1" growthFocus="0.01" dmLabel="euclidean"
+        nfLabel="Nearest" vcLabel="rapid" connectorLabel="Closest"
+        gtype="UNDIRECTED_TREE" debug="false" extenderLabel="BERO">
+        <Evaluator label="RRTQuery"/>
+      </Syclop>
+
 
       <!-- If optimal connection is wanted, the correct connector needs to be
            selected -->
@@ -556,10 +564,8 @@
 
     <!-- MPProblem allows multiple solvers to be specified and executed. -->
 
-    <Solver mpStrategyLabel="BasicPRM1" seed="12345678"
-      baseFilename="Basic" vizmoDebug="true"/>
-    <!--Solver mpStrategyLabel="BasicPRM2" seed="12345678"
-         baseFilename="Basic2" vizmoDebug="true"/-->
+    <Solver mpStrategyLabel="BasicRRT" seed="12345678"
+      baseFilename="RRT" vizmoDebug="true"/>
 
   </MPProblem>
 </MotionPlanning>

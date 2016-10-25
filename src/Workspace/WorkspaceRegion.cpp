@@ -1,6 +1,8 @@
 #include "WorkspaceRegion.h"
 #include "WorkspaceDecomposition.h"
 
+#include "Environment/Boundary.h"
+
 #include <algorithm>
 
 /*--------------------------------- Modifiers --------------------------------*/
@@ -16,6 +18,13 @@ void
 WorkspaceRegion::
 AddFacet(Facet&& _f) {
   m_facets.emplace_back(move(_f));
+}
+
+
+void
+WorkspaceRegion::
+AddBoundary(Boundary* _b) {
+  m_boundary = shared_ptr<Boundary>(_b);
 }
 
 /*--------------------------------- Accessors --------------------------------*/

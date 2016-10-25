@@ -40,6 +40,9 @@ class WorkspaceDecomposition : public stapl::sequential::graph<stapl::DIRECTED,
     typedef typename RegionGraph::adj_edge_iterator       adj_edge_iterator;
     typedef typename RegionGraph::const_adj_edge_iterator const_adj_edge_iterator;
 
+    typedef typename RegionGraph::vertex_descriptor       vertex_descriptor;
+    typedef typename RegionGraph::edge_descriptor         edge_descriptor;
+
     typedef stapl::sequential::graph<stapl::DIRECTED, stapl::NONMULTIEDGES,
         Vector3d, double> DualGraph;
 
