@@ -99,7 +99,7 @@ Distance(const CfgType& _c1, const CfgType& _c2) {
   vector<GMSPolyhedron> poly2;
   int robot = _c1.GetRobotIndex();
   int bodyCount = env->GetRobot(robot)->NumFreeBody();
-  cfgs.begin()->ConfigEnvironment();
+  cfgs.begin()->ConfigureRobot();
   for(int b=0; b<bodyCount; ++b)
     if(m_useBBox)
       poly2.push_back(env->GetRobot(robot)->GetFreeBody(b)->GetWorldBoundingBox());
@@ -108,7 +108,7 @@ Distance(const CfgType& _c1, const CfgType& _c2) {
   for(typename vector<CfgType>::const_iterator cit = cfgs.begin(); cit+1 != cfgs.end(); ++cit) {
     vector<GMSPolyhedron> poly1(poly2);
     poly2.clear();
-    (cit+1)->ConfigEnvironment();
+    (cit+1)->ConfigureRobot();
     for(int b=0; b<bodyCount; ++b)
       if(m_useBBox)
         poly2.push_back(env->GetRobot(robot)->GetFreeBody(b)->GetWorldBoundingBox());

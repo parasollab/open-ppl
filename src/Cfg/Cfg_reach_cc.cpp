@@ -334,8 +334,8 @@ isWithinResolution(const Cfg &c,
 
 bool
 Cfg_reach_cc::
-ConfigEnvironment(Environment* _env) const {
-  Cfg_free_tree::ConfigEnvironment(_env);
+ConfigureRobot(Environment* _env) const {
+  Cfg_free_tree::ConfigureRobot(_env);
   vector<int> link_ids;
   for(int i=0; i<_env->GetMultiBody(m_robotIndex)->GetFreeBodyCount(); ++i)
     link_ids.push_back( _env->GetMultiBody(m_robotIndex)->GetFreeBodyIndex( _env->GetMultiBody(m_robotIndex)->GetFreeBody(i) ) );
@@ -765,7 +765,7 @@ void ClosedChainStrategy::Solve(){
         for(size_t i=0; i<CCProblem->g_loopRoots.size(); ++i)
           CCProblem->g_loopRoots[i]->ResetTree();
         CCProblem->ConfigBase(CCProblem->GetEnvironment());
-        //ConfigEnvironment(&env);
+        //ConfigureRobot(&env);
 
         bSampleSucceeded = true;
         for(size_t i=0; i< CCProblem->g_loopRoots.size(); ++i)
@@ -1016,7 +1016,7 @@ void ClosedChainStrategy::Solve(){
       //compute collision
       Clock_Class CollisionClock;
       CollisionClock.StartClock("Collision check");
-      //ConfigEnvironment(&env);
+      //ConfigureRobot(&env);
       string CallName = "RandomSample";
 
       //colliding = CCProblem->GetCollisionDetection()->IsInCollision(CCProblem->GetEnvironment(), Stats, _cdInfo,  boost::shared_ptr<MultiBody>((MultiBody*)NULL), true, &CallName);

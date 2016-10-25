@@ -305,18 +305,17 @@ ComputeWorldPolyhedron() {
                                                r[2][0], r[2][1], r[2][2], t[2]);
 
   const auto& c = m_polyhedron.m_cgalPoints;
-  for(size_t i = 0; i < c.size(); ++i) {
-    auto x = transform(c[i]);
-    m_worldPolyhedron.m_cgalPoints[i] = x;
-//    m_worldPolyhedron.m_vertexList[i](to_double(x[0]), to_double(x[1]),
-//        to_double(x[2]));
-    m_worldPolyhedron.m_vertexList[i] = m_worldTransformation *
-        m_polyhedron.m_vertexList[i];
-  }
-  for(size_t i = 0; i < m_polyhedron.m_polygonList.size(); ++i)
+  for(size_t i = 0; i < c.size(); ++i)
+    m_worldPolyhedron.m_cgalPoints[i] = transform(c[i]);
+
+  auto& vertices = m_polyhedron.m_vertexList;
+  for(size_t i = 0; i < vertices.size(); ++i)
+    m_worldPolyhedron.m_vertexList[i] = m_worldTransformation * vertices[i];
+
+  auto& polygons = m_polyhedron.m_polygonList;
+  for(size_t i = 0; i < polygons.size(); ++i)
     m_worldPolyhedron.m_polygonList[i].GetNormal() =
-        m_worldTransformation.rotation() *
-        m_polyhedron.m_polygonList[i].GetNormal();
+        m_worldTransformation.rotation() * polygons[i].GetNormal();
 
   m_worldPolyhedronAvailable = true;
 }

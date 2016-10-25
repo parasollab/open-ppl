@@ -68,7 +68,7 @@ class SSSurfaceMult : public Cfg{
       void GetRandomRay(double _incr, Environment* _env, DistanceMetricPointer _dm, bool _norm=true);
 
     //prepare multibodies for collision checking
-    virtual bool ConfigEnvironment(Environment* _env) const;
+    virtual bool ConfigureRobot(Environment* _env) const;
 
     void SetNumCfgs(size_t _num);
     size_t GetNumCfgs(){return m_cfgs.size();}

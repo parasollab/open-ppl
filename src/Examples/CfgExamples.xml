@@ -382,7 +382,7 @@
       <Syclop label="Syclop"
         numRoots="1" m="1" growthFocus="0.01" dmLabel="euclidean"
         nfLabel="Nearest" vcLabel="rapid" connectorLabel="Closest"
-        gtype="UNDIRECTED_TREE" debug="true" extenderLabel="BERO">
+        gtype="UNDIRECTED_TREE" debug="false" extenderLabel="BERO">
         <Evaluator label="RRTQuery"/>
       </Syclop>
 

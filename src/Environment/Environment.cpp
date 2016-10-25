@@ -131,6 +131,7 @@ Read(string _filename) {
   CfgMultiRobot::m_numRobot = size;
 #endif
 
+  // Initialize robots.
   for(size_t i = 0; i < size; ++i) {
     if(m_saveDofs) {
       ofstream dofFile(m_filename + "." + ::to_string(i) + ".dof");
@@ -141,6 +142,7 @@ Read(string _filename) {
 
     Cfg::InitRobots(m_robots[i], i);
   }
+  InitializePointRobot();
 
   ComputeResolution();
 }
@@ -202,7 +204,7 @@ ResetBoundary(double _d, size_t _robotIndex) {
   minx = miny = minz = numeric_limits<double>::max();
   maxx = maxy = maxz = -numeric_limits<double>::max();
 
-  double robotRadius = m_robots[_robotIndex]->GetBoundingSphereRadius();
+  double robotRadius = GetRobot(_robotIndex)->GetBoundingSphereRadius();
   _d += robotRadius;
 
   for(auto& body : m_obstacles) {
@@ -224,7 +226,7 @@ ResetBoundary(double _d, size_t _robotIndex) {
 void
 Environment::
 ExpandBoundary(double _d, size_t _robotIndex) {
-  double robotRadius = m_robots[_robotIndex]->GetBoundingSphereRadius();
+  double robotRadius = GetRobot(_robotIndex)->GetBoundingSphereRadius();
   _d += robotRadius;
 
   vector<pair<double, double>> originBBX(3);
@@ -239,10 +241,12 @@ ExpandBoundary(double _d, size_t _robotIndex) {
 
 shared_ptr<ActiveMultiBody>
 Environment::
-GetRobot(size_t _index) const {
-  if(_index < 0 || _index >= m_robots.size())
-    throw RunTimeException(WHERE,
-        "Cannot access ActiveBody '" + ::to_string(_index) + "'.");
+GetRobot(const size_t _index) const {
+  if(_index == size_t(-1))
+    return m_pointRobot;
+  else if(_index < 0 || _index >= m_robots.size())
+    throw RunTimeException(WHERE, "Cannot access ActiveBody '" +
+        ::to_string(_index) + "'.");
   return m_robots[_index];
 }
 
@@ -343,13 +347,41 @@ ComputeObstacleVertexMap() const {
 void
 Environment::
 BuildCDStructure() {
+  cout << "building cd structures" << endl;
   for(auto& body : m_robots)
     body->BuildCDStructure();
   for(auto& body : m_obstacles)
     body->BuildCDStructure();
+  m_pointRobot->BuildCDStructure();
 }
 
 /*------------------------------- Helpers ------------------------------------*/
+
+void
+Environment::
+InitializePointRobot() {
+  // Make robot.
+  m_pointRobot = shared_ptr<ActiveMultiBody>(new ActiveMultiBody());
+  shared_ptr<FreeBody> free(new FreeBody(m_pointRobot.get(), 0));
+  free->SetBodyType(FreeBody::BodyType::Volumetric);
+  free->SetMovementType(FreeBody::MovementType::Translational);
+
+  // Create body geometry. Use a single, open triangle.
+  auto& poly = free->GetPolyhedron();
+  poly.GetVertexList() = vector<Vector3d>{Vector3d(1e-8, 0, 0),
+      Vector3d(0, 0, 1e-8), Vector3d(-1e-8, 0, 0)};
+  poly.GetPolygonList() = vector<GMSPolygon>{GMSPolygon(0, 1, 2,
+      poly.GetVertexList())};
+  free->SetPolyhedron(poly);
+
+  // Add body geometry to robot object.
+  m_pointRobot->AddBody(free);
+  m_pointRobot->SetBaseBody(free);
+  m_pointRobot->InitializeDOFs(m_boundary);
+
+  Cfg::InitRobots(m_pointRobot, size_t(-1));
+}
+
 
 void
 Environment::
@@ -415,7 +447,7 @@ bool
 Environment::
 InCSpace<State>(const State& _cfg, shared_ptr<Boundary> _b) {
   size_t activeBodyIndex = _cfg.GetRobotIndex();
-  return static_pointer_cast<NonHolonomicMultiBody>(m_robots[activeBodyIndex])->
+  return static_pointer_cast<NonHolonomicMultiBody>(GetRobot(activeBodyIndex))->
     InSSpace(_cfg.GetData(), _cfg.GetVelocity(), _b);
 }
 #endif
@@ -424,12 +456,12 @@ InCSpace<State>(const State& _cfg, shared_ptr<Boundary> _b) {
 bool
 Environment::
 InWSpace(const Cfg& _cfg, shared_ptr<Boundary> _b) {
-  shared_ptr<ActiveMultiBody> robot = m_robots[_cfg.GetRobotIndex()];
+  shared_ptr<ActiveMultiBody> robot = GetRobot(_cfg.GetRobotIndex());
 
   if(_b->GetClearance(_cfg.GetRobotCenterPosition()) <
       robot->GetBoundingSphereRadius()) { //faster, loose check
     // Robot is close to wall, have a strict check.
-    _cfg.ConfigEnvironment(); // Config the robot in the environment.
+    _cfg.ConfigureRobot(); // Config the robot in the environment.
 
     //check each part of the robot multibody for being inside of the boundary
     for(size_t m = 0; m < robot->NumFreeBody(); ++m) {

@@ -46,7 +46,7 @@ class Cfg_reach_cc : public Cfg_free_tree {
 				  double positionRes,
 				  double orientationRes) const;
 
-  virtual bool ConfigEnvironment(Environment*) const;
+  virtual bool ConfigureRobot(Environment*) const;
 
   virtual void GetRandomCfgCenterOfMass(Environment* _env,shared_ptr<Boundary> _bb);
   virtual void GetRandomRay(double incr, Environment* env,shared_ptr <DistanceMetricMethod> dm, bool _norm=true);
