@@ -149,7 +149,7 @@ class Environment {
     ////////////////////////////////////////////////////////////////////////////
     /// @param _index Requested multibody
     /// @return Pointer to active multibody
-    shared_ptr<ActiveMultiBody> GetRobot(size_t _index) const;
+    shared_ptr<ActiveMultiBody> GetRobot(const size_t _index) const;
 
     ////////////////////////////////////////////////////////////////////////////
     /// @param _index Requested multibody
@@ -218,6 +218,11 @@ class Environment {
     ///@{
 
     ////////////////////////////////////////////////////////////////////////////
+    /// @brief Initialize the pseudo point robot. This is a robot with index -1
+    ///        whos body is a single tiny, open triangle.
+    void InitializePointRobot();
+
+    ////////////////////////////////////////////////////////////////////////////
     /// @brief Read boundary information
     /// @param _is Input stream
     /// @param _cbs Counting stream buffer for accurate error reporting
@@ -279,6 +284,7 @@ class Environment {
 
     shared_ptr<Boundary> m_boundary; ///< Workspace boundary.
 
+    shared_ptr<ActiveMultiBody> m_pointRobot;        ///< A point robot.
     vector<shared_ptr<ActiveMultiBody>> m_robots;    ///< Robots.
     vector<shared_ptr<StaticMultiBody>> m_obstacles; ///< Other multibodies.
     vector<shared_ptr<SurfaceMultiBody>> m_surfaces; ///< Surfaces.
@@ -315,7 +321,7 @@ bool
 Environment::
 InCSpace(const CfgType& _cfg, shared_ptr<Boundary> _b) {
   size_t activeBodyIndex = _cfg.GetRobotIndex();
-  return m_robots[activeBodyIndex]->InCSpace(_cfg.GetData(), _b);
+  return GetRobot(activeBodyIndex)->InCSpace(_cfg.GetData(), _b);
 }
 
 

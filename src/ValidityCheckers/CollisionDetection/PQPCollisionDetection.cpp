@@ -16,17 +16,16 @@ PQP() : CollisionDetectionMethod("PQP") { }
 void
 PQP::
 Build(Body* _body) {
-  GMSPolyhedron& poly = _body->GetPolyhedron();
+  GMSPolyhedron& polyhedron = _body->GetPolyhedron();
   shared_ptr<PQP_Model> pqpBody(new PQP_Model);
   pqpBody->BeginModel();
-  for(size_t q = 0; q < poly.m_polygonList.size(); q++) {
+  size_t q = 0;
+  for(const auto& poly : polyhedron.m_polygonList) {
     double point[3][3];
-    for(int i = 0; i < 3; i++) {
-      const Vector3d& tmp = poly.m_polygonList[q].GetPoint(i);
-      for(int j = 0; j < 3; j++)
-        point[i][j] = tmp[j];
-    }
-    pqpBody->AddTri(point[0], point[1], point[2], q);
+    for(size_t i = 0; i < 3; ++i)
+      for(size_t j = 0; j < 3; ++j)
+        point[i][j] = poly.GetPoint(i)[j];
+    pqpBody->AddTri(point[0], point[1], point[2], q++);
   }
   pqpBody->EndModel();
   _body->SetPQPBody(pqpBody);

@@ -388,7 +388,7 @@ SSSurface SSSurface::Update(double _dt){
 }
 
 /////////////////////////////////////////////////////////////
-bool SSSurface::ConfigEnvironment(Environment* _env) const {
+bool SSSurface::ConfigureRobot(Environment* _env) const {
   shared_ptr<ActiveMultiBody> mb = _env->GetRobot(m_robotIndex);
 
   // configure the robot according to current Cfg: joint parameters

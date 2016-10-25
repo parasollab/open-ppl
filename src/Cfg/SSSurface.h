@@ -151,7 +151,7 @@ class SSSurface : public CfgSurface {
 
     ////////////////////////////////////////////////////////////
     //this should have been implemented in the first plac3
-    bool ConfigEnvironment(Environment* _env) const;
+    bool ConfigureRobot(Environment* _env) const;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     //

@@ -255,7 +255,7 @@ class ReebGraphConstruction {
     /// Computed with modified BFS on Reeb Graph. First, finds closest Reeb Node
     /// to \c p. Second, uses BFS to get directed flow. Note BFS considers cross
     /// edges in the flow, it is not just a BFS tree.
-    pair<FlowGraph, size_t> GetFlowGraph(const Vector3d& _p, double _posRes);
+    pair<FlowGraph*, size_t> GetFlowGraph(const Vector3d& _p, double _posRes);
 
     ///@}
     ///@name I/O

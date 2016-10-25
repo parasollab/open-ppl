@@ -35,7 +35,7 @@ Cfg_reach_cc_fixed::
 
 /*bool
 Cfg_reach_cc_fixed::
-ConfigEnvironment(Environment* _env) const {
+ConfigureRobot(Environment* _env) const {
   int robot = _env->GetRobotIndex();
 
   for(int i=0; i<m_numOfJoints; ++i) {

@@ -475,7 +475,7 @@ void ClosedChainProblem::ConfigBase(Environment* env, const vector<double>& v)
 
 
 
-void ClosedChainProblem::ConfigEnvironment(Environment* env)
+void ClosedChainProblem::ConfigureRobot(Environment* env)
 {
   int robot = env->GetRobotIndex();
 

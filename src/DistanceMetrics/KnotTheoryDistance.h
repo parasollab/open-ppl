@@ -60,7 +60,7 @@ vector<Vector3d>
 KnotTheoryDistance<MPTraits>::
 GetCoordinatesForKnot(const CfgType& _c) {
   Environment* env = this->GetMPProblem()->GetEnvironment();
-  _c.ConfigEnvironment();
+  _c.ConfigureRobot();
   vector<Vector3d> coordinates;
   for(size_t i=0; i< env->GetRobot(_c.GetRobotIndex())->NumFreeBody(); ++i)
     coordinates.push_back(env->GetRobot(_c.GetRobotIndex())->GetFreeBody(i)

@@ -84,11 +84,11 @@ Construct(Environment* _env, const string& _baseFilename) {
 }
 
 
-pair<ReebGraphConstruction::FlowGraph, size_t>
+pair<ReebGraphConstruction::FlowGraph*, size_t>
 ReebGraphConstruction::
 GetFlowGraph(const Vector3d& _p, double _posRes) {
   typedef FlowGraph::vertex_descriptor FVD;
-  FlowGraph f;
+  FlowGraph* f = new FlowGraph;
 
   enum Color {White, Gray, Black};
   unordered_map<FVD, Color> visited;
@@ -100,7 +100,7 @@ GetFlowGraph(const Vector3d& _p, double _posRes) {
     /// @TODO Make v a const-ref when stapl fixes sequential graph.
     Vector3d& v = vit->property().m_vertex;
     FVD vd = vit->descriptor();
-    f.add_vertex(vd, v);
+    f->add_vertex(vd, v);
     visited[vd] = White;
     double dist = (v - _p).norm();
     if(dist < closestDist) {
@@ -130,7 +130,7 @@ GetFlowGraph(const Vector3d& _p, double _posRes) {
           visited[v] = Gray;
           q.push(v);
         case Gray:
-          f.add_edge(eit->descriptor(), eit->property().m_path);
+          f->add_edge(eit->descriptor(), eit->property().m_path);
           break;
         default:
           break;
@@ -154,7 +154,8 @@ GetFlowGraph(const Vector3d& _p, double _posRes) {
                 {
                   const vector<Vector3d>& opath = eit->property().m_path;
                   vector<Vector3d> path(opath.rbegin(), opath.rend());
-                  f.add_edge(ReebGraph::edge_descriptor(u, v, eit->descriptor().id()), path);
+                  f->add_edge(ReebGraph::edge_descriptor(u, v,
+                        eit->descriptor().id()), path);
                   break;
                 }
               default:

@@ -10,8 +10,6 @@
 #include "Environment/BoundingSphere.h"
 #include "Utilities/ReebGraphConstruction.h"
 
-#include "Utilities/MedialAxisUtilities.h"
-
 #ifdef VIZMO
 #include "GUI/ModelSelectionWidget.h"
 #include "Models/TempObjsModel.h"
@@ -89,15 +87,25 @@ class DynamicRegionRRT : public BasicRRTStrategy<MPTraits> {
     ///@{
 
     ////////////////////////////////////////////////////////////////////////////
+    /// Initialize the flow graph.
+    /// @return The flow-graph vertex descriptor of the starting node.
+    size_t InitializeFlowGraph();
+
+    ////////////////////////////////////////////////////////////////////////////
     /// \brief Prune the flow graph by removing all vertices that have no path
     ///        to the goal.
     /// \param[in] _f The flow graph to prune.
-    void PruneFlowGraph(FlowGraph& _f) const;
+    void PruneFlowGraph(FlowGraph* _f);
 
     ////////////////////////////////////////////////////////////////////////////
     /// \brief Push the nodes and edges of the flow graph to the medial axis.
     /// \param[in] _f The flow graph to push.
-    void FlowToMedialAxis(FlowGraph& _f) const;
+    void FixFlowgraphClearance(FlowGraph* _f) const;
+
+    ////////////////////////////////////////////////////////////////////////////
+    /// Initialize the tracking of current regions.
+    /// @param _startID The vertex descriptor of the starting flow node.
+    void InitializeCurrentRegions(size_t _startID);
 
     ////////////////////////////////////////////////////////////////////////////
     /// \brief Test whether the newest cfg is touching a region
@@ -109,14 +117,29 @@ class DynamicRegionRRT : public BasicRRTStrategy<MPTraits> {
     ///\name Internal State
     ///@{
 
-    bool m_prune{true};          ///< Prune the flow graph?
-    double m_regionFactor{2.5};  ///< The region radius is this * robot radius.
-    double m_robotFactor{1.};    ///< The robot is touch if inside by this amount
+    bool m_prune{true};       ///< Prune the flow graph?
+    double m_regionFactor{2}; ///< The region radius is this * robot radius.
+    double m_regionRadius;    ///< The region radius.
+    double m_robotFactor{1.}; ///< The robot is touching if inside by this amount.
 
-    vector<RegionPtr> m_regions; ///< All Regions
     RegionPtr m_samplingRegion;  ///< Points to the current sampling region.
 
-    ReebGraphConstruction* m_reebGraph{nullptr}; ///< Embedded reeb graph
+    FlowGraph* m_flowGraph{nullptr}; ///< The flow graph.
+
+    /// Which flow vertices have been visited?
+    unordered_map<FlowGraph::vertex_descriptor, bool> m_visited;
+
+    /// Current region tracking structure maps a region to a tuple of
+    /// <flow edge descriptor, index along flow edge, num failed extentions>
+    unordered_map<RegionPtr, tuple<FlowGraph::edge_descriptor, size_t, size_t>>
+        m_currentRegions;
+
+    // Extra models for vizmo land.
+#ifdef VIZMO
+    // Make temporary models for the regions.
+    TempObjsModel* m_tom{nullptr};
+    map<RegionPtr, Model*> m_models;
+#endif
 
     ///@}
 };
@@ -141,6 +164,7 @@ DynamicRegionRRT<MPTraits>::
 DynamicRegionRRT(MPProblemType* _problem, XMLNode& _node) :
     BasicRRTStrategy<MPTraits>(_problem, _node) {
   this->SetName("DynamicRegionRRT");
+
   m_regionFactor = _node.Read("regionFactor", false, 2.5, 1., 4., "The region "
       "radius is this * robot radius");
   m_prune = _node.Read("pruneFlowGraph", false, true, "Enable/disable flow "
@@ -156,21 +180,24 @@ void
 DynamicRegionRRT<MPTraits>::
 Initialize() {
   BasicRRTStrategy<MPTraits>::Initialize();
+#ifdef VIZMO
+  m_tom = new TempObjsModel();
+#endif
 
-  StatClass* stats = this->GetStatClass();
   auto env = this->GetEnvironment();
 
-  //Embed ReebGraph
-  stats->StartClock("ReebGraphConstruction");
-  delete m_reebGraph;
-  m_reebGraph = new ReebGraphConstruction();
-  m_reebGraph->Construct(env, this->GetBaseFilename());
-  stats->StopClock("ReebGraphConstruction");
+  // Compute region radius for our robot.
+  m_regionRadius = m_regionFactor * env->GetRobot(0)->GetBoundingSphereRadius();
 
+  size_t startFlowVID = InitializeFlowGraph();
+  FixFlowgraphClearance(m_flowGraph);
+  InitializeCurrentRegions(startFlowVID);
+
+  // If we're in vizmo land, add the decomp/graph models to the scene.
 #ifdef VIZMO
   GetVizmo().GetEnv()->AddWorkspaceDecompositionModel(
       env->GetDecomposition().get());
-  GetVizmo().GetEnv()->AddReebGraphModel(m_reebGraph);
+  GetVizmo().GetEnv()->AddGraphModel(*m_flowGraph);
   GetMainWindow()->GetModelSelectionWidget()->CallResetLists();
 
   // Make map non-selectable during execution.
@@ -183,69 +210,15 @@ template<class MPTraits>
 void
 DynamicRegionRRT<MPTraits>::
 Run() {
+  StatClass* stats = this->GetStatClass();
+  stats->StartClock("DynamicRegionRRT::Run");
+
   if(this->m_debug)
     cout << "\nBegin DynamicRegionRRT::Run" << endl;
 
-  // Setup MP Variables
-  StatClass* stats = this->GetStatClass();
-  Environment* env = this->GetEnvironment();
-
-  stats->StartClock("DynamicRegionRRT::Run");
-
-  const CfgType& s = this->m_query->GetQuery()[0];
-  Vector3d start(s[0], s[1], s[2]);
-
-  //Get directed flow network
-
-  typedef FlowGraph::vertex_descriptor FVD;
-  typedef FlowGraph::edge_descriptor FED;
-
-  pair<FlowGraph, FVD> flow = m_reebGraph->
-      GetFlowGraph(start, env->GetPositionRes());
-
-  // Prune flow-graph of non-relevant paths.
-  if(m_prune)
-    PruneFlowGraph(flow.first);
-
-  // Push flow-graph to medial axis.
-  FlowToMedialAxis(flow.first);
-
-  unordered_map<FVD, bool> visited;
-  for(auto vit = flow.first.begin(); vit != flow.first.end(); ++vit)
-    visited[vit->descriptor()] = false;
-
-#ifdef VIZMO
-  // Make temporary models for the regions.
-  map<RegionPtr, Model*> models;
-  TempObjsModel tom;
-#endif
-
-  //Spark a region for each outgoing edge of start
-
-  //Region structure stores tuple of flow edge descriptor,
-  //index along flow edge, number of failed extentions
-  unordered_map<RegionPtr, tuple<FED, size_t, size_t>> regions;
-
-  const double regionRadius = m_regionFactor *
-      env->GetRobot(0)->GetBoundingSphereRadius();
-  auto sit = flow.first.find_vertex(flow.second);
-  for(auto eit = sit->begin(); eit != sit->end(); ++eit) {
-    auto i = regions.emplace(
-        RegionPtr(new BoundingSphere(sit->property(), regionRadius)),
-        make_tuple(eit->descriptor(), 0, 0));
-    m_regions.push_back(i.first->first);
-#ifdef VIZMO
-    models[m_regions.back()] = new ThreadSafeSphereModel(
-        m_regions.back()->GetCenter(), regionRadius);
-    tom.AddModel(models[m_regions.back()]);
-#endif
-  }
-  visited[sit->descriptor()] = true;
-
-  CfgType dir;
   while(!this->EvaluateMap()) {
-    //find my growth direction. Default is to randomly select node or bias
-    //towards a goal
+    // Find growth direction.
+    CfgType dir;
     if(this->m_query && DRand() < this->m_growthFocus &&
         !this->m_query->GetGoals().empty())
       dir = this->m_query->GetRandomGoal();
@@ -261,38 +234,35 @@ Run() {
       CfgType& newest = this->GetRoadmap()->GetGraph()->GetVertex(recent);
 
       if(m_samplingRegion)
-        get<2>(regions[m_samplingRegion]) = 0;
+        get<2>(m_currentRegions[m_samplingRegion]) = 0;
 
-      for(auto iter = m_regions.begin(); iter != m_regions.end(); ) {
-        RegionPtr region = *iter;
+      for(auto iter = m_currentRegions.begin(); iter != m_currentRegions.end();) {
+        RegionPtr region = iter->first;
         bool increment = true;
         while(IsTouching(newest, region)) {
           Vector3d cur = region->GetCenter();
 
-          auto& pr = regions[region];
           FlowGraph::vertex_iterator vi;
           FlowGraph::adj_edge_iterator ei;
-          flow.first.find_edge(get<0>(pr), vi, ei);
+          m_flowGraph->find_edge(get<0>(iter->second), vi, ei);
           vector<Vector3d>& path = ei->property();
-          size_t& i = get<1>(pr);
-          size_t j = i+1;
+          size_t& i = get<1>(iter->second);
+          size_t j = i + 1;
           if(j < path.size()) {
             Vector3d& next = path[j];
-            region->ApplyOffset(next-cur);
+            region->ApplyOffset(next - cur);
 #ifdef VIZMO
-            static_cast<ThreadSafeSphereModel*>(models[region])->
-                MoveTo(next);
+            static_cast<ThreadSafeSphereModel*>(m_models[region])->MoveTo(next);
 #endif
             i = j;
           }
           //else need to delete region
           else {
 #ifdef VIZMO
-            tom.RemoveModel(models[region]);
-            models.erase(region);
+            m_tom->RemoveModel(m_models[region]);
+            m_models.erase(region);
 #endif
-            iter = m_regions.erase(iter);
-            regions.erase(region);
+            iter = m_currentRegions.erase(iter);
             increment = false;
             break;
           }
@@ -301,23 +271,21 @@ Run() {
       }
 
       //Add new regions
-      Vector3d p(newest[0], newest[1], newest[2]);
+      Vector3d p = newest.GetPoint();
 
-      for(auto vit = flow.first.begin(); vit != flow.first.end(); ++vit) {
+      for(auto vit = m_flowGraph->begin(); vit != m_flowGraph->end(); ++vit) {
         double dist = (vit->property() - p).norm();
-        if(dist < regionRadius && !visited[vit->descriptor()]) {
+        if(dist < m_regionRadius && !m_visited[vit->descriptor()]) {
           for(auto eit = vit->begin(); eit != vit->end(); ++eit) {
-            auto i = regions.emplace(
-                RegionPtr(new BoundingSphere(vit->property(), regionRadius)),
-                make_tuple(eit->descriptor(), 0, 0));
-            m_regions.push_back(i.first->first);
+            RegionPtr r(new BoundingSphere(vit->property(), m_regionRadius));
+            m_currentRegions.emplace(r, make_tuple(eit->descriptor(), 0, 0));
 #ifdef VIZMO
-            models[m_regions.back()] = new ThreadSafeSphereModel(
-                vit->property(), regionRadius);
-            tom.AddModel(models[m_regions.back()]);
+            m_models[r] = new ThreadSafeSphereModel(vit->property(),
+                m_regionRadius);
+            m_tom->AddModel(m_models[r]);
 #endif
           }
-          visited[vit->descriptor()] = true;
+          m_visited[vit->descriptor()] = true;
         }
       }
 
@@ -326,12 +294,9 @@ Run() {
     }
     else {
       if(m_samplingRegion) {
-        ++get<2>(regions[m_samplingRegion]);
-        if(get<2>(regions[m_samplingRegion]) > 1000) {
-          auto rit = find(m_regions.begin(), m_regions.end(), m_samplingRegion);
-          m_regions.erase(rit);
-          regions.erase(m_samplingRegion);
-        }
+        ++get<2>(m_currentRegions[m_samplingRegion]);
+        if(get<2>(m_currentRegions[m_samplingRegion]) > 1000)
+          m_currentRegions.erase(m_samplingRegion);
       }
     }
 #ifdef VIZMO
@@ -340,9 +305,13 @@ Run() {
   }
 
   stats->StopClock("DynamicRegionRRT::Run");
+#ifdef VIZMO
+  m_models.clear();
+  delete m_tom;
+  m_tom = nullptr;
+#endif
 
-  m_regions.clear();
-  regions.clear();
+  m_currentRegions.clear();
 
   if(this->m_debug)
     cout<<"\nEnd DynamicRegionRRT::Run" << endl;
@@ -357,20 +326,22 @@ SelectDirection() {
   RegionPtr samplingBoundary;
   Environment* env = this->GetEnvironment();
 
-  size_t _index = rand() % (m_regions.size() + 1);
+  size_t _index = rand() % (m_currentRegions.size() + 1);
 
-  if(_index == m_regions.size()) {
+  if(_index == m_currentRegions.size()) {
     m_samplingRegion.reset();
     samplingBoundary = this->GetEnvironment()->GetBoundary();
   }
   else {
-    m_samplingRegion = m_regions[_index];
+    auto iter = m_currentRegions.begin();
+    advance(iter, _index);
+    m_samplingRegion = iter->first;
     samplingBoundary = m_samplingRegion;
   }
 
   try {
     CfgType mySample;
-    mySample.GetRandomCfg(env,samplingBoundary);
+    mySample.GetRandomCfg(env, samplingBoundary);
     return mySample;
   }
   //catch Boundary too small exception
@@ -389,9 +360,41 @@ SelectDirection() {
 /*-------------------------------- Helpers -----------------------------------*/
 
 template <typename MPTraits>
+size_t
+DynamicRegionRRT<MPTraits>::
+InitializeFlowGraph() {
+  auto stats = this->GetStatClass();
+  auto env = this->GetEnvironment();
+
+  // Build Reeb graph.
+  stats->StartClock("ReebGraphConstruction");
+  auto reebGraph = new ReebGraphConstruction();
+  reebGraph->Construct(env, this->GetBaseFilename());
+  stats->StopClock("ReebGraphConstruction");
+
+  // Build flow graph.
+  stats->StartClock("FlowGraphConstruction");
+  Vector3d start = this->m_query->GetQuery()[0].GetPoint();
+
+  // Get flow from reeb graph.
+  pair<FlowGraph*, FlowGraph::vertex_descriptor> flow = reebGraph->
+      GetFlowGraph(start, env->GetPositionRes());
+  delete m_flowGraph;
+  m_flowGraph = flow.first;
+
+  // Prune flow graph of non-relevant paths.
+  if(m_prune)
+    PruneFlowGraph(m_flowGraph);
+
+  stats->StopClock("FlowGraphConstruction");
+  return flow.second;
+}
+
+
+template <typename MPTraits>
 void
 DynamicRegionRRT<MPTraits>::
-PruneFlowGraph(FlowGraph& _f) const {
+PruneFlowGraph(FlowGraph* _f) {
   using VD = FlowGraph::vertex_descriptor;
 
   // Find the flow-graph node nearest to the goal.
@@ -399,7 +402,7 @@ PruneFlowGraph(FlowGraph& _f) const {
   Vector3d goalPoint(goalCfg[0], goalCfg[1], goalCfg[2]);
   double closestDistance = std::numeric_limits<double>::max();
   VD goal;
-  for(auto vit = _f.begin(); vit != _f.end(); ++vit) {
+  for(auto vit = _f->begin(); vit != _f->end(); ++vit) {
     const auto& thisPoint = vit->property();
     double distance = (thisPoint - goalPoint).norm();
     if(distance < closestDistance) {
@@ -410,8 +413,8 @@ PruneFlowGraph(FlowGraph& _f) const {
 
   // Initialize a list of vertices to prune with every vertex in the graph.
   vector<VD> toPrune;
-  toPrune.reserve(_f.get_num_vertices());
-  for(const auto& v : _f)
+  toPrune.reserve(_f->get_num_vertices());
+  for(const auto& v : *_f)
     toPrune.push_back(v.descriptor());
 
   // Remove vertices from the prune list by starting from the goal and working
@@ -427,58 +430,134 @@ PruneFlowGraph(FlowGraph& _f) const {
     if(iter != toPrune.end())
       toPrune.erase(iter);
 
-    for(auto ancestor : _f.find_vertex(current)->predecessors())
+    for(auto ancestor : _f->find_vertex(current)->predecessors())
       q.push(ancestor);
   } while(!q.empty());
 
   // Remove the vertices we aren't keeping.
   for(auto vd : toPrune)
-    if(_f.find_vertex(vd) != _f.end())
-      _f.delete_vertex(vd);
+    if(_f->find_vertex(vd) != _f->end())
+      _f->delete_vertex(vd);
 }
 
 
 template <typename MPTraits>
 void
 DynamicRegionRRT<MPTraits>::
-FlowToMedialAxis(FlowGraph& _f) const {
-  if(this->m_debug)
-    cout << "Flow graph has " << _f.get_num_vertices() << " vertices "
-         << " and " << _f.get_num_edges() << " edges."
-         << "\n\tPushing to medial axis:";
+FixFlowgraphClearance(FlowGraph* _f) const {
+  this->GetStatClass()->StartClock("FlowgraphClearance");
 
-  MedialAxisUtility<MPTraits> mau(this->GetMPProblem(), "pqp_solid", this->m_dmLabel,
-      true, true, 10, 10, true, true);
+  if(this->m_debug)
+    cout << "Flow graph has " << _f->get_num_vertices() << " vertices "
+         << " and " << _f->get_num_edges() << " edges."
+         << "\n\tPushing nodes with low clearance away from nearest obstacles:";
+
+  const double robotRadius = this->GetEnvironment()->GetRobot(0)->
+      GetBoundingSphereRadius();
   auto boundary = this->GetEnvironment()->GetBoundary();
+  auto vc = this->GetValidityChecker("pqp_solid");
+
+  // This is a cheaper version of our clearance utility that is optimized for a
+  // point and doesn't compute a witness. It finds the minimum clearance of the
+  // input point _p.
+  auto getClearanceInfo = [&](const Point3d& _p) -> pair<double, Point3d> {
+    // Check against obstacles using a point robot.
+    CfgType cfg(_p, size_t(-1));
+    CDInfo cdInfo;
+    vc->IsValid(cfg, cdInfo, "Flowgraph Push");
+
+    // Check against boundary.
+    const double boundaryClearance = boundary->GetClearance(_p);
+    if(boundaryClearance < cdInfo.m_minDist) {
+      cdInfo.m_objectPoint = boundary->GetClearancePoint(_p);
+      cdInfo.m_minDist = boundaryClearance;
+    }
+
+    // Return the minimum clearance and nearest obstacle point.
+    return make_pair(cdInfo.m_minDist, cdInfo.m_objectPoint);
+  };
 
   auto push = [&](Point3d& _p) {
-    CfgType cfg(_p);
-
     if(this->m_debug)
-      cout << "\n\t\tPushing from: " << setprecision(4) << cfg.GetPoint()
+      cout << "\n\t\tPushing from: " << setprecision(4) << _p
            << "\n\t\t          to: ";
 
-    if(mau.PushToMedialAxis(cfg, boundary)) {
-      _p = cfg.GetPoint();
+    // Get clearance info for this point.
+    auto initialClearance = getClearanceInfo(_p);
+    const Point3d& objectPoint = initialClearance.second;
+
+    // Check if we are at least one robot radius away from the nearest obstacle.
+    const Vector3d w = _p - objectPoint;   // From obstacle to original point.
+    const double wMag = w.norm();
+    Vector3d t = w * (robotRadius / wMag); // As w, but one robot radius long.
+    if(wMag >= t.norm()) {
       if(this->m_debug)
-        cout << cfg.GetPoint();
+        cout << "(already clear)" << endl;
+      return;
     }
-    else if(this->m_debug)
-      cout << "(failed)";
+
+    // Try to improve the clearance if we are too close.
+    int tries = 3;
+    while(tries-- && wMag < t.norm()) {
+      // Set the new point as the nearest object point plus t.
+      const Point3d newPoint = t + objectPoint;
+      auto newClearance = getClearanceInfo(newPoint);
+
+      // If t has better clearance than _p, push _p to t and quit.
+      if(newClearance.first > initialClearance.first) {
+        _p = t + objectPoint;
+        if(this->m_debug)
+          cout << _p << endl;
+        return;
+      }
+      // Otherwise, cut the difference between t and w in half and retry.
+      else
+        t = (w + t) / 2.;
+    }
+    if(this->m_debug)
+      cout << "(FAILED)" << endl;
   };
 
   // Push flowgraph vertices.
-  for(auto vit = _f.begin(); vit != _f.end(); ++vit)
+  for(auto vit = _f->begin(); vit != _f->end(); ++vit)
     push(vit->property());
 
   // Push flowgraph edges.
-  for(auto eit = _f.edges_begin(); eit != _f.edges_end(); ++eit)
+  for(auto eit = _f->edges_begin(); eit != _f->edges_end(); ++eit)
     for(auto pit = eit->property().begin(); pit < eit->property().end(); ++pit)
       push(*pit);
 
   if(this->m_debug)
-    cout << "\n\tMedial axis push complete." << endl;
+    cout << "\n\tFlow-graph clearance adjustment complete." << endl;
+
+  this->GetStatClass()->StopClock("FlowgraphClearance");
 }
+
+
+template <typename MPTraits>
+void
+DynamicRegionRRT<MPTraits>::
+InitializeCurrentRegions(size_t _startID) {
+  auto startFlowVertex = m_flowGraph->find_vertex(_startID);
+
+  // Track which flow-graph vertices have been visited.
+  m_visited.clear();
+  for(auto vit = m_flowGraph->begin(); vit != m_flowGraph->end(); ++vit)
+    m_visited[vit->descriptor()] = false;
+  m_visited[startFlowVertex->descriptor()] = true;
+
+  // Intialize current regions.
+  m_currentRegions.clear();
+  for(auto eit = startFlowVertex->begin(); eit != startFlowVertex->end(); ++eit) {
+    RegionPtr r(new BoundingSphere(startFlowVertex->property(), m_regionRadius));
+    m_currentRegions.emplace(r, make_tuple(eit->descriptor(), 0, 0));
+#ifdef VIZMO
+    m_models[r] = new ThreadSafeSphereModel(r->GetCenter(), m_regionRadius);
+    m_tom->AddModel(m_models[r]);
+#endif
+  }
+}
+
 
 template <typename MPTraits>
 bool
@@ -493,12 +572,10 @@ IsTouching(const CfgType& _cfg, RegionPtr _region) {
       GetBoundingSphereRadius();
   double regionRadius = region->GetRadius();
 
-  // distance between the region and the robot
+  // The robot is touching if at least one robot factor of it's bounding sphere
+  // penetrates into the region.
   double dist = (regionCenter - robotCenter).norm();
-
-  // the maximum distance the the robot is inisde the region
   double maxPenetration = robotRadius + regionRadius - dist;
-
   return maxPenetration > 0 && maxPenetration >= 2 * robotRadius * m_robotFactor;
 }
 

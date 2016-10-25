@@ -165,7 +165,7 @@ IsValidImpl(CfgType& _cfg, CDInfo& _cdInfo, const string& _callName) {
   this->GetStatClass()->IncCfgIsColl(_callName);
 
   //position environment
-  _cfg.ConfigEnvironment();
+  _cfg.ConfigureRobot();
 
   //check collision
 #ifdef PMPCfgMultiRobot

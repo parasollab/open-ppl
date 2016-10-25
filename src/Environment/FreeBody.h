@@ -14,6 +14,7 @@
 /// computing transformations so that it can be validated.
 ////////////////////////////////////////////////////////////////////////////////
 class FreeBody : public Body {
+
   public:
 
     ////////////////////////////////////////////////////////////////////////////
@@ -34,9 +35,8 @@ class FreeBody : public Body {
       Translational ///< Just translation
     };
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// @name Constructors
-    /// @{
+    ///@name Construction
+    ///@{
 
     ////////////////////////////////////////////////////////////////////////////
     /// @param _owner Owner of this body
@@ -46,12 +46,9 @@ class FreeBody : public Body {
     FreeBody(const FreeBody&) = delete;            ///< No copy
     FreeBody& operator=(const FreeBody&) = delete; ///< No assign
 
-    /// @}
-    ////////////////////////////////////////////////////////////////////////////
-
-    ////////////////////////////////////////////////////////////////////////////
-    /// @name Body Information
-    /// @{
+    ///@}
+    ///@name IO Helpers
+    ///@{
 
     ////////////////////////////////////////////////////////////////////////////
     /// @param _tag Tag
@@ -59,6 +56,7 @@ class FreeBody : public Body {
     /// @return BodyType of _tag
     static BodyType GetBodyTypeFromTag(const string& _tag,
         const string& _where);
+
     ////////////////////////////////////////////////////////////////////////////
     /// @param _tag Tag
     /// @param _where Error information
@@ -70,44 +68,53 @@ class FreeBody : public Body {
     /// @param _b BodyType
     /// @return Tag
     static string GetTagFromBodyType(BodyType _b);
+
     ////////////////////////////////////////////////////////////////////////////
     /// @param _bm MovementType
     /// @return Tag
     static string GetTagFromMovementType(MovementType _bm);
 
+    ///@}
+    ///@name Body Information
+    ///@{
+
     ////////////////////////////////////////////////////////////////////////////
     /// @return Is this body a base?
-    bool IsBase() const { return m_bodyType != BodyType::Joint; };
+    bool IsBase() const {return m_bodyType != BodyType::Joint;}
+
     ////////////////////////////////////////////////////////////////////////////
     /// @param _bt BodyType
-    void SetBodyType(BodyType _bt) { m_bodyType=_bt; };
+    void SetBodyType(BodyType _bt) {m_bodyType = _bt;}
+
     ////////////////////////////////////////////////////////////////////////////
     /// @return Body type
-    BodyType GetBodyType() const { return m_bodyType; };
+    BodyType GetBodyType() const {return m_bodyType;}
+
     ////////////////////////////////////////////////////////////////////////////
     /// @param _mt Base movement type of body
-    void SetMovementType(MovementType _mt) { m_movementType=_mt; };
+    void SetMovementType(MovementType _mt) {m_movementType = _mt;}
+
     ////////////////////////////////////////////////////////////////////////////
     /// @return Base movement type of body
-    MovementType GetMovementType() const { return m_movementType; };
+    MovementType GetMovementType() const {return m_movementType;}
 
-    /// @}
-    ////////////////////////////////////////////////////////////////////////////
-
-    ////////////////////////////////////////////////////////////////////////////
-    /// @name Connection Information
-    /// @{
+    ///@}
+    ///@name Connection Information
+    ///@{
 
     ////////////////////////////////////////////////////////////////////////////
     /// @return Number of forward Connection
     size_t ForwardConnectionCount() const {return m_forwardConnections.size();}
+
     ////////////////////////////////////////////////////////////////////////////
     /// @return Number of backward Connection
     size_t BackwardConnectionCount() const {return m_backwardConnections.size();}
+
     ////////////////////////////////////////////////////////////////////////////
     /// @param _index Index of desired forward Connection
     /// @return Requested forward Connection
     Connection& GetForwardConnection(size_t _index);
+
     ////////////////////////////////////////////////////////////////////////////
     /// @param _index Index of desired backward Connection
     /// @return Requested backward Connection
@@ -118,6 +125,7 @@ class FreeBody : public Body {
     /// @param _otherBody Second body
     /// @return True if adjacent
     bool IsAdjacent(shared_ptr<FreeBody> _otherBody) const;
+
     ////////////////////////////////////////////////////////////////////////////
     /// @brief Determines if two bodies are within \p _i joints of each other
     /// @param _otherBody Second body
@@ -130,12 +138,9 @@ class FreeBody : public Body {
     /// @param _c Connection description
     void Link(Connection* _c);
 
-    /// @}
-    ////////////////////////////////////////////////////////////////////////////
-
-    ////////////////////////////////////////////////////////////////////////////
-    /// @name Transformation
-    /// @{
+    ///@}
+    ///@name Transformation
+    ///@{
 
     virtual Transformation& GetWorldTransformation();
 
@@ -155,14 +160,12 @@ class FreeBody : public Body {
     /// @param _transformation Transformation
     void ConfigureRender(Transformation& _transformation);
 
-    /// @}
-    ////////////////////////////////////////////////////////////////////////////
-
-    ////////////////////////////////////////////////////////////////////////////
-    /// @name I/O
-    /// @{
+    ///@}
+    ///@name I/O
+    ///@{
 
     using Body::Read;
+
     ////////////////////////////////////////////////////////////////////////////
     /// @brief Parse
     /// @param _is Stream
@@ -171,8 +174,7 @@ class FreeBody : public Body {
 
     friend ostream& operator<<(ostream& _os, FreeBody& _fb);
 
-    /// @}
-    ////////////////////////////////////////////////////////////////////////////
+    ///@}
 
   private:
     ////////////////////////////////////////////////////////////////////////////

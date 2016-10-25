@@ -86,7 +86,7 @@ public:
     template<class DistanceMetricPointer>
       void GetRandomRay(double _incr, DistanceMetricPointer _dm, bool _norm=true);
 
-    virtual void ConfigEnvironment() const;
+    virtual void ConfigureRobot() const;
 
     void GetResolutionCfg(Environment*);
 

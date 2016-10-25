@@ -86,7 +86,7 @@ void CfgReachableVolume::GetRandomCfg(Environment* _env, shared_ptr<Boundary> _b
     for(size_t i = 0; i < m_v.size(); i++)
       cout<<m_v[i]<<endl;
     Cfg::SetData(m_v);
-    ConfigEnvironment();
+    ConfigureRobot();
     /*
     _env->GetMultiBody(_env->GetRobotIndex())->PolygonalApproximation(joints);
     cout<<"************"<<endl<<"Printing Joints"<<endl;

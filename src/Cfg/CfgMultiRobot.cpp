@@ -285,9 +285,9 @@ GetRobotCenterofMass() const {
 
 void
 CfgMultiRobot::
-ConfigEnvironment() const {
+ConfigureRobot() const {
   for(ConstCIter cIter= m_robotsCollect.begin(); cIter != m_robotsCollect.end(); cIter++)
-    cIter->ConfigEnvironment();
+    cIter->ConfigureRobot();
 }
 
 void
@@ -345,7 +345,7 @@ CfgMultiRobot::
 PolyApprox(Environment* _env) const {
   throw PMPLException("Not Implemented", WHERE, "Not Implemented");
   /* vector<Vector3d> result; */
-  /* ConfigEnvironment(); */
+  /* ConfigureRobot(); */
   /* _env->GetMultiBody(m_robotIndex)->PolygonalApproximation(result); */
   /* return result; */
 }

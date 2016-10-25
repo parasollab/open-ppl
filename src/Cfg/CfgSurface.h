@@ -116,7 +116,7 @@ class CfgSurface : public Cfg {
       void GetRandomRay(double _incr, DistanceMetricPointer _dm, bool _norm=true);
 
     ///Move the (the first link of)  robot in enviroment to the given configuration.
-    virtual void ConfigEnvironment() const;
+    virtual void ConfigureRobot() const;
 
     void GetResolutionCfg(Environment*);
 

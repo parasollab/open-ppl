@@ -79,7 +79,7 @@ class ClosedChainProblem:public MPProblem{
 
   void ConfigBase(Environment* env, const vector<double>& v);
   void ConfigBase(Environment* env){ConfigBase(env, vector<double>(6, 0));}
-  void ConfigEnvironment(Environment* env);
+  void ConfigureRobot(Environment* env);
   void ConfigEar(Environment* env, Link* ear_root, vector<int>& actual_ear_links, int base_link_id, double base_link_angle);
   void ConfigEar(Environment* env, Link* ear_root, Link* loop_root);
   void ConfigEar(Environment* env, Link* ear_root, Link* loop_root, double base_link_angle);

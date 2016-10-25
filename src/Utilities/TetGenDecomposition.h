@@ -143,7 +143,7 @@ class TetGenDecomposition {
     bool m_writeFreeModel;       ///< Output TetGen model of free workspace.
     bool m_writeDecompModel;     ///< Output TetGen model of tetrahedralization.
 
-    bool m_debug;                ///< Toggle debug messages.
+    bool m_debug{false};         ///< Toggle debug messages.
 
     ///@}
 };
