@@ -224,8 +224,7 @@ ComputeTetrahedronHeight(const WorkspaceRegion& _tetra,
 
     // Look for this point in the facet.
     bool pointOnFacet = false;
-    size_t index = 0;
-    for(; index < 3; ++index) {
+    for(size_t index = 0; index < 3; ++index) {
       if(p == _f.GetPoint(index)) {
         pointOnFacet = true;
         break;
@@ -234,7 +233,7 @@ ComputeTetrahedronHeight(const WorkspaceRegion& _tetra,
 
     // If we didn't find p on this facet, then use p to find the height.
     if(!pointOnFacet) {
-      height = (_f.GetPoint(index) - p) * _f.GetNormal();
+      height = (_f.GetPoint(0) - p) * _f.GetNormal();
       break;
     }
   }
