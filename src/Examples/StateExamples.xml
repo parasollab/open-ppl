@@ -7,10 +7,10 @@
 
   <MPProblem>
     <DistanceMetrics>
-      <WeightedEuclidean label="weuclidean" posWeight="0.4" rotWeight="0.4"
-        velWeight="0.1" avlWeight="0.1"/>
-      <WeightedEuclidean label="weuclidean-pos" posWeight="0.5"
-        rotWeight="0.5" velWeight="0" avlWeight="0"/>
+      <WeightedEuclidean label="weuclidean"
+        posWeight="0.4" rotWeight="0.4" velWeight="0.1" avlWeight="0.1"/>
+      <WeightedEuclidean label="weuclidean-pos"
+        posWeight="0.5" rotWeight="0.5" velWeight="0" avlWeight="0"/>
     </DistanceMetrics>
 
     <ValidityCheckers>
@@ -20,10 +20,10 @@
     </ValidityCheckers>
 
     <NeighborhoodFinders>
-      <BruteForceNF label="Nearest" dmLabel="weuclidean" unconnected="false"
-        k="1"/>
-      <BruteForceNF label="NearestPosition" dmLabel="weuclidean-pos"
-        unconnected="false" k="1"/>
+      <BruteForceNF label="Nearest"
+        dmLabel="weuclidean" unconnected="false" k="1"/>
+      <BruteForceNF label="NearestPosition"
+        dmLabel="weuclidean-pos" unconnected="false" k="1"/>
     </NeighborhoodFinders>
 
     <Samplers>
@@ -39,6 +39,13 @@
         timeStep="30" fixed="false" best="true" minDist=".01"/>
       <KinodynamicExtender label="VariRandom" dmLabel="weuclidean" vcLabel="rapid"
         timeStep="30" fixed="false" best="false" minDist=".01"/>
+
+      <MixExtender label="Schmorgasbord">
+        <Extender label="FixedRandom" probability=".5"/>
+        <Extender label="FixedBest" probability="1"/>
+        <Extender label="VariRandom" probability=".5"/>
+        <Extender label="VariBest" probability="1"/>
+      </MixExtender>
     </Extenders>
 
     <Metrics>

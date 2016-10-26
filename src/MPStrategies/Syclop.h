@@ -476,10 +476,13 @@ AddNode(const CfgType& _newCfg) {
     // Find the region and coverage cell for this node.
     RegionPointer r = LocateRegion(added.first);
     size_t cellIndex = LocateCoverageCell(_newCfg.GetPoint());
+    auto& data = m_regionData[r];
+
+    size_t previousCoverage = data.Coverage();
 
     // Add this node to the appropriate region and update coverage.
-    m_regionData[r].vertices.push_back(added.first);
-    m_regionData[r].AddCell(cellIndex);
+    data.vertices.push_back(added.first);
+    data.AddCell(cellIndex);
 
     // If we extended into a region that wasn't previously available, add it
     // to the list of available regions.
@@ -488,7 +491,8 @@ AddNode(const CfgType& _newCfg) {
       m_availableRegions.insert(r);
 
     // Mark that we improved the map.
-    m_improvement = true;
+    if(data.Coverage() != previousCoverage)
+      m_improvement = true;
   }
 
   return added;
@@ -612,7 +616,7 @@ template <typename MPTraits>
 void
 Syclop<MPTraits>::
 FindAvailableRegions(vector<VID> _lead) {
-  static constexpr double probabilityOfQuitting = .05;
+  static constexpr double probabilityOfQuitting = .5;
 
   if(this->m_debug)
     cout << "Finding available regions from lead...\n";
@@ -951,7 +955,7 @@ ComputeGridMap() {
   this->GetStatClass()->StartClock("ComputeGridMap");
 
   if(this->m_debug)
-    cout << "Computing grid map..." << endl;
+    cout << "Computing grid map...";
 
   m_gridMap.resize(m_grid->Size());
 
@@ -965,7 +969,9 @@ ComputeGridMap() {
   }
 
   if(this->m_debug)
-    cout << "done." << endl;
+    cout << "done. Grid has " << m_grid->Size() << " cells ("
+         << m_grid->Size(0) << "x" << m_grid->Size(1) << "x" << m_grid->Size(2)
+         << ")." << endl;
 
   this->GetStatClass()->StopClock("ComputeGridMap");
 }

@@ -26,6 +26,13 @@ Size() const noexcept {
 
 size_t
 GridOverlay::
+Size(const size_t _i) const noexcept {
+  return m_num[_i];
+}
+
+
+size_t
+GridOverlay::
 LocateCell(const Cfg& _v) const {
   return LocateCell(_v.GetPoint());
 }

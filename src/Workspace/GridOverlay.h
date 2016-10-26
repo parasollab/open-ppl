@@ -25,6 +25,7 @@ class GridOverlay {
     ///@{
 
     size_t Size() const noexcept; ///< Get the number of cells in the grid.
+    size_t Size(const size_t _i) const noexcept; ///< Get num cells in an index.
 
     ////////////////////////////////////////////////////////////////////////////
     /// Find the cell that contains the reference point of a configuration.
