@@ -185,6 +185,7 @@ Initialize() {
 #endif
 
   auto env = this->GetEnvironment();
+  m_samplingRegion.reset();
 
   // Compute region radius for our robot.
   m_regionRadius = m_regionFactor * env->GetRobot(0)->GetBoundingSphereRadius();
