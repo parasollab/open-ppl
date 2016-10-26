@@ -14,10 +14,18 @@ typedef StateTraits PMPLTraits;
 typedef PMPLTraits::MPProblemType MPProblemType;
 typedef PMPLTraits::MPLibraryType MPLibraryType;
 
+#include "Simulator/Simulator.h"
+
 using namespace std;
 
 int
-main(int _argc, char** _argv) {
+main(int _argc, char** _argv) { 
+// in progress
+//  Simulator simulator;
+//  simulator.Initialize();
+//
+//  for(int i = 0; i < 150; ++i)
+//    simulator.Step();
 
   try {
     if(_argc < 3 || string(_argv[1]) != "-f")

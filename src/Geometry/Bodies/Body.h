@@ -9,6 +9,9 @@
 #include <RAPID.H>
 #endif
 
+// bullet dynamics header
+#include "btBulletDynamicsCommon.h"
+
 #include "Transformation.h"
 using namespace mathtool;
 
@@ -136,9 +139,19 @@ class Body {
 #endif
 
     ///@}
-    ///@name I/O
-    ///@{
 
+
+    ////////////////////////////////////////////////////////////////////////////
+    /// @brief Temparary Bullet functions
+
+    btCollisionShape* GetBulletBody() { return m_collisionShape; }
+
+    void ComputeBulletShape();
+
+    ///@}
+
+    ///@name I/O
+    ///@{ 
     static string m_modelDataDir; ///< Directory of geometry files
 
     ////////////////////////////////////////////////////////////////////////////
@@ -233,6 +246,7 @@ class Body {
     shared_ptr<PQP_Model> m_pqpBody;         ///< PQP model
 #endif
 
+    btCollisionShape* m_collisionShape{nullptr};    
     ///@}
 
 };

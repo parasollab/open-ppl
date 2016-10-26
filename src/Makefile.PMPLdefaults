@@ -228,7 +228,7 @@ BULLET_DIR  := ${UTILS_DIR}/bullet
 BULLET_LIB  := -L${BULLET_DIR}/build/install/lib \
                -lBulletInverseDynamics -lBulletDynamics -lBulletCollision \
 	       -lLinearMath
-BULLET_INCL := -I${BULLET_DIR}/build/install/include
+BULLET_INCL := -I${BULLET_DIR}/build/install/include/bullet -I${BULLET_DIR}/build/examples
 
 bullet:
 	cd ${BULLET_DIR} ; ./parasol_setup.sh
@@ -274,6 +274,7 @@ PMPL_OBJS = \
 	MPLibrary/ValidityCheckers/CollisionDetection/RapidCollisionDetection.o \
 	MPLibrary/ValidityCheckers/CollisionDetection/PQPCollisionDetection.o \
 	MPLibrary/ValidityCheckers/CollisionDetection/SpheresCollisionDetection.o \
+	Simulator/Simulator.o \
         Utilities/IOUtils.o \
         Utilities/MetricUtils.o \
         Utilities/MPUtils.o \
