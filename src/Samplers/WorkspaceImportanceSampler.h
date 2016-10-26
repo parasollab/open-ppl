@@ -192,7 +192,7 @@ Initialize() {
   // Get the tetrahedralization from the environment.
   auto env = this->GetEnvironment();
   if(!env->GetDecomposition())
-    env->Decompose(TetGenDecomposition(this->GetBaseFilename()));
+    env->Decompose(TetGenDecomposition(this->GetBaseFilename(), "pnQ"));
   auto tetrahedralization = env->GetDecomposition();
 
   // Compute tetrahedron importance values.
