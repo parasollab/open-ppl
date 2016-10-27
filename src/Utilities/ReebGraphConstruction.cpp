@@ -197,7 +197,7 @@ ReebGraphConstruction::
 Tetrahedralize(Environment* _env, const string& _baseFilename) {
   // Get tetrahedral decomposition from environment.
   if(!_env->GetDecomposition())
-    _env->Decompose(TetGenDecomposition(_baseFilename));
+    _env->Decompose(TetGenDecomposition(_baseFilename, "pnQ"));
   auto tetrahedralization = _env->GetDecomposition();
 
   // Copy vertices.
