@@ -189,11 +189,22 @@ template<class MPTraits>
 void
 WorkspaceImportanceSampler<MPTraits>::
 Initialize() {
+  if(this->m_debug)
+    cout << "Initializing " << this->GetNameAndLabel() << "...\n";
+
   // Get the tetrahedralization from the environment.
   auto env = this->GetEnvironment();
-  if(!env->GetDecomposition())
+  if(!env->GetDecomposition()) {
+    if(this->m_debug)
+      cout << "\tDecomposing environment...\n";
     env->Decompose(TetGenDecomposition(this->GetBaseFilename(), "pnQ"));
+  }
+  else if(this->m_debug)
+    cout << "\tEnvironment is already decomposed.\n";
   auto tetrahedralization = env->GetDecomposition();
+
+  if(this->m_debug)
+    cout << "\tComputing importance values...\n";
 
   // Compute tetrahedron importance values.
   const size_t numTetras = tetrahedralization->GetNumRegions();
@@ -202,12 +213,27 @@ Initialize() {
   for(size_t i = 0; i < numTetras; ++i)
     totalImportance += importances[i] = ComputeTetrahedronImportance(i);
 
+  if(this->m_debug)
+    cout << "\t\tImportance range: ["
+         << *min_element(importances.begin(), importances.end())
+         << ":"
+         << *max_element(importances.begin(), importances.end())
+         << "]\n"
+         << "\tComputing num attempts per tetraherdon...\n";
+
   // Compute tetrahedron attempts based on importance values.
   m_numAttempts.reserve(numTetras);
   for(size_t i = 0; i < numTetras; ++i) {
     size_t nt = log(1 - m_alpha) / log(1 - importances[i] / totalImportance);
     m_numAttempts.push_back(nt);
   }
+
+  if(this->m_debug)
+    cout << "\t\tNumber of attempts range: ["
+         << *min_element(m_numAttempts.begin(), m_numAttempts.end())
+         << ":"
+         << *max_element(m_numAttempts.begin(), m_numAttempts.end())
+         << "]" << endl;
 }
 
 
@@ -243,6 +269,10 @@ ComputeTetrahedronHeight(const WorkspaceRegion& _tetra,
     throw PMPLException("Tetrahedralization error", WHERE, "Can't have a "
         "tetrahedron with non-positive height " + to_string(height) + ".");
 
+  // Limit the minimum height because very small values ruin the importance
+  // calculations.
+  height = max(height, 10 * this->GetEnvironment()->GetPositionRes());
+
   return height;
 }
 
@@ -261,10 +291,13 @@ ComputeTetrahedronImportance(const size_t _i) const {
 
   // Find number of neighbors.
   auto iter = this->GetEnvironment()->GetDecomposition()->find_vertex(_i);
-  size_t numNeighbors = iter->size();
+  const size_t numNeighbors = iter->size();
   if(numNeighbors > 4)
     throw PMPLException("Tetrahedralization error", WHERE, "Can't have more than"
         " four neighbors in a tetrahedral region graph.");
+  if(numNeighbors == 0)
+    throw PMPLException("Tetrahedralization error", WHERE, "Can't have a tetrahe"
+        "dron with no neighbors.");
 
   // Initialize all facets as relevant to the importance calculation.
   const auto& tetra = iter->property();
