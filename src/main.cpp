@@ -19,25 +19,25 @@ typedef PMPLTraits::MPLibraryType MPLibraryType;
 using namespace std;
 
 int
-main(int _argc, char** _argv) { 
-// in progress
-//  Simulator simulator;
-//  simulator.Initialize();
-//
-//  for(int i = 0; i < 150; ++i)
-//    simulator.Step();
-
+main(int _argc, char** _argv) {
   try {
     if(_argc < 3 || string(_argv[1]) != "-f")
       throw ParseException(WHERE, "Incorrect usage. Usage: -f options.xml");
 
     MPProblemType* problem = new MPProblemType(_argv[2]);
-    MPLibraryType* lib = new MPLibraryType(_argv[2]);
-    lib->SetMPProblem(problem);
-    lib->Solve();
+    //MPLibraryType* lib = new MPLibraryType(_argv[2]);
+    //lib->SetMPProblem(problem);
+    //lib->Solve();
+
+    // Create simulator using MPProblemType
+    Simulator<MPProblemType> simulator(problem);
+    simulator.Initialize();
+
+    for(int i = 0; i < 150; ++i)
+      simulator.Step();
 
     delete problem;
-    delete lib;
+    //delete lib;
 
     return 0;
   }

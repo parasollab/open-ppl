@@ -274,7 +274,6 @@ PMPL_OBJS = \
 	MPLibrary/ValidityCheckers/CollisionDetection/RapidCollisionDetection.o \
 	MPLibrary/ValidityCheckers/CollisionDetection/PQPCollisionDetection.o \
 	MPLibrary/ValidityCheckers/CollisionDetection/SpheresCollisionDetection.o \
-	Simulator/Simulator.o \
         Utilities/IOUtils.o \
         Utilities/MetricUtils.o \
         Utilities/MPUtils.o \
