@@ -29,12 +29,14 @@ class Simulator {
     void AddWorldObject(MultiBody* _body);
 
     ////////////////////////////////////////////////////////////////////////////
-    /// @Create a btCollisionShape from the environment bounding box
-    btCollisionShape* CreateEnvBBX();
+    /// @brief Create a btCollisionShape from the environment bounding box and
+    ///        set the environment bounding box member variable
+    void SetEnvBBX();
 
-    T* m_problem;
 
-    btCollisionShape* m_envBBX;
+    T* m_problem; ///< MPProblem object
+
+    btCollisionShape* m_envBBX; ///< Environment bounding box
 
     btDefaultCollisionConfiguration* m_collisionConfiguration;
     btCollisionDispatcher* m_dispatcher;
@@ -76,6 +78,7 @@ Simulator<T>::
   delete m_solver;
   delete m_overlappingPairCache;
   delete m_dispatcher;
+  delete m_envBBX;
 
   m_collisionShapes.clear();
 }
@@ -89,13 +92,17 @@ Initialize() {
   m_dispatcher = new btCollisionDispatcher(m_collisionConfiguration);
   m_overlappingPairCache = new btDbvtBroadphase();
   m_solver = new btSequentialImpulseConstraintSolver;
-  m_dynamicsWorld = new btDiscreteDynamicsWorld(m_dispatcher, m_overlappingPairCache,
-                                              m_solver, m_collisionConfiguration);
+  m_dynamicsWorld = new btDiscreteDynamicsWorld(m_dispatcher,
+      m_overlappingPairCache, m_solver, m_collisionConfiguration);
 
   m_dynamicsWorld->setGravity(btVector3(0,-10, 0));
 
+  // Set environment bounding box
+  SetEnvBBX();
+
   {
-    btCollisionShape* groundShape = new btBoxShape(btVector3(btScalar(50.), btScalar(50.), btScalar(50.)));
+    btCollisionShape* groundShape = new btBoxShape(btVector3(btScalar(50.),
+          btScalar(50.), btScalar(50.)));
 
 
     m_collisionShapes.push_back(groundShape);
@@ -117,7 +124,8 @@ Initialize() {
 
     btDefaultMotionState* myMotionState = new btDefaultMotionState(groundTransform);
 
-    btRigidBody::btRigidBodyConstructionInfo rbInfo(mass, myMotionState, groundShape, localInertia);
+    btRigidBody::btRigidBodyConstructionInfo rbInfo(mass, myMotionState,
+        groundShape, localInertia);
 
     btRigidBody* body = new btRigidBody(rbInfo);
 
@@ -147,7 +155,8 @@ Initialize() {
     startTransform.setOrigin(btVector3(2,10,0));
 
     btDefaultMotionState* myMotionState = new btDefaultMotionState(startTransform);
-    btRigidBody::btRigidBodyConstructionInfo rbInfo(mass, myMotionState, colShape, localInertia);
+    btRigidBody::btRigidBodyConstructionInfo rbInfo(mass, myMotionState, colShape,
+        localInertia);
     btRigidBody* body = new btRigidBody(rbInfo);
 
     m_dynamicsWorld->addRigidBody(body);
@@ -174,8 +183,8 @@ Step() {
       else
         trans = obj->getWorldTransform();
 
-      printf("World pos object %d = %lf, %lf, %lf \n", j, trans.getOrigin().getX(), trans.getOrigin().getY(),
-      trans.getOrigin().getZ());
+      printf("World pos object %d = %lf, %lf, %lf \n", j, trans.getOrigin().getX(),
+          trans.getOrigin().getY(), trans.getOrigin().getZ());
     }
 }
 
@@ -215,25 +224,24 @@ AddWorldObject(MultiBody* _body) {
 
 
 template<class T>
-btCollisionShape*
+void
 Simulator<T>::
-CreateEnvBBX() {
-  auto& boundary = m_problem->GetEnvironment()->GetBoundary();
+SetEnvBBX() {
+  const auto& boundary = m_problem->GetEnvironment()->GetBoundary();
 
   // Get bounding box ranges
   auto r1 = boundary->GetRange(0);
   auto r2 = boundary->GetRange(1);
-  auto r3 = boundary->GetRange(2);
 
-  // Compute edge lengths
-  double x = r1.second - r1.first;
-  double y = r2.second - r2.first;
-  double z = r3.second - r3.first;
+  // Compute half edge lengths of bounding box
+  double x = (r1.second - r1.first) / 2;
+  double y = (r2.second - r2.first) / 2;
 
   // Create a btCollisionShape using half lenghts of the bounding box
-  btCollisionShape* envBBX = new btBoxShape(btVector3(btScalar(x), btScalar(y), btScalar(z)));
+  // TODO: Change height so the box is just a floor
+  m_envBBX = new btBoxShape(btVector3(btScalar(x), btScalar(y), btScalar(1.)));
 
-  return envBBX;
+  return;
 }
 
 #endif
