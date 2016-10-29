@@ -20,6 +20,7 @@ const int StatClass::ALL= -1;
 
 StatClass::StatClass() {
   ClearStats();
+  StartClock("TotalExecutionTime");
 }
 
 StatClass::~StatClass() {}

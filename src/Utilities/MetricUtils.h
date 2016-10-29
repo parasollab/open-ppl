@@ -51,8 +51,8 @@ class ClockClass {
     int GetUSeconds();
 
   private:
-    int m_sTime, m_uTime;
-    int m_suTime, m_uuTime;
+    int m_sTime{0}, m_uTime{0};
+    int m_suTime{0}, m_uuTime{0};
     string m_clockName;
 };
 
