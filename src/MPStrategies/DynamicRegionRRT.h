@@ -245,16 +245,16 @@ Run() {
           FlowGraph::vertex_iterator vi;
           FlowGraph::adj_edge_iterator ei;
           m_flowGraph->find_edge(get<0>(iter->second), vi, ei);
-          vector<Vector3d>& path = ei->property();
-          size_t& i = get<1>(iter->second);
+          const vector<Vector3d>& path = ei->property();
+          size_t i = get<1>(iter->second);
           size_t j = i + 1;
           if(j < path.size()) {
-            Vector3d& next = path[j];
+            Vector3d next = path[j];
             region->ApplyOffset(next - cur);
 #ifdef VIZMO
             static_cast<ThreadSafeSphereModel*>(m_models[region])->MoveTo(next);
 #endif
-            i = j;
+            get<1>(iter->second) = j;
           }
           //else need to delete region
           else {

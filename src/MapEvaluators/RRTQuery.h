@@ -3,8 +3,6 @@
 
 #include "QueryMethod.h"
 
-#include "LocalPlanners/LPOutput.h"
-#include "LocalPlanners/StraightLine.h"
 #include "Utilities/MetricUtils.h"
 #include <containers/sequential/graph/algorithms/astar.h>
 

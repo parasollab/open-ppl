@@ -29,8 +29,8 @@
 //map evaluator includes
 #include "MapEvaluators/ComposeEvaluator.h"
 #include "MapEvaluators/ConditionalEvaluator.h"
-
 #include "MapEvaluators/RRTQuery.h"
+#include "MapEvaluators/TimeEvaluator.h"
 
 //mp strategies includes
 #include "MPStrategies/BasicRRTStrategy.h"
@@ -110,7 +110,8 @@ struct StateTraits {
   typedef boost::mpl::list<
     ComposeEvaluator<StateTraits>,
     ConditionalEvaluator<StateTraits>,
-    RRTQuery<StateTraits>
+    RRTQuery<StateTraits>,
+    TimeEvaluator<StateTraits>
       > MapEvaluatorMethodList;
 
   //types of motion planning strategies available in our world
