@@ -322,16 +322,3 @@ ComputeWorldPolyhedron() {
 }
 
 /*----------------------------------------------------------------------------*/
-
-
-void
-Body::
-ComputeBulletShape() {
-  ComputeBoundingBox();
-  
-  double x = m_boundingBox[0] - m_boundingBox[1];
-  double y = m_boundingBox[2] - m_boundingBox[3];
-  double z = m_boundingBox[4] - m_boundingBox[5];
-
-  m_collisionShape = new btBoxShape(btVector3(btScalar(x/2),btScalar(y/2), btScalar(z/2)));
-}

@@ -25,19 +25,14 @@ main(int _argc, char** _argv) {
       throw ParseException(WHERE, "Incorrect usage. Usage: -f options.xml");
 
     MPProblemType* problem = new MPProblemType(_argv[2]);
-    //MPLibraryType* lib = new MPLibraryType(_argv[2]);
-    //lib->SetMPProblem(problem);
-    //lib->Solve();
 
-    // Create simulator using MPProblemType
     Simulator<MPProblemType> simulator(problem);
     simulator.Initialize();
 
-    for(int i = 0; i < 150; ++i)
+    for(int i = 0; i < 200; ++i)
       simulator.Step();
 
     delete problem;
-    //delete lib;
 
     return 0;
   }

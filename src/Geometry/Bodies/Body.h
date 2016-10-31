@@ -139,17 +139,14 @@ class Body {
 #endif
 
     ///@}
-
-
-    ////////////////////////////////////////////////////////////////////////////
-    /// @brief Temparary Bullet functions
-
+    ///@name Bullet functions
+    ///@{
+    
     btCollisionShape* GetBulletBody() { return m_collisionShape; }
-
-    void ComputeBulletShape();
+    
+    void SetButtetShape(btCollisionShape* _shape) { m_collisionShape = _shape; }
 
     ///@}
-
     ///@name I/O
     ///@{ 
     static string m_modelDataDir; ///< Directory of geometry files
