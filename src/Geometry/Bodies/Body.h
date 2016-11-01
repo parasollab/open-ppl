@@ -54,6 +54,7 @@ class Body {
 
     MultiBody* GetMultiBody() {return m_multibody;}
     const string& GetFileName() const {return m_filename;}
+    string GetFilePath() const;
     int GetLabel() const {return m_label;};
     void SetLabel(const int _label) {m_label = _label;};
 

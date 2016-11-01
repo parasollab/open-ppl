@@ -5,6 +5,9 @@
 #include "Matrix.h"
 #include "Quaternion.h"
 
+#include <iostream>
+
+
 using namespace mathtool;
 
 btVector3
@@ -27,5 +30,15 @@ ToBullet(const Matrix3x3& _m) {
 
 btTransform
 ToBullet(const Transformation& _t) {
-  return btTransform(ToBullet(_t.rotation().matrix()), ToBullet(_t.translation()));
+  btTransform trans;
+  trans.setIdentity();
+  trans.setOrigin(ToBullet(_t.translation()));
+  return trans;
+  //return btTransform(ToBullet(_t.rotation().matrix()), ToBullet(_t.translation()));
+}
+
+
+std::ostream& operator<< (std::ostream& _out, const btVector3& _v) {
+  _out << _v[0] << ',' << _v[1] << ',' << _v[2];
+  return _out;
 }

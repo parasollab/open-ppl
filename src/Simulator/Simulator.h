@@ -5,11 +5,18 @@
 #include "Geometry/Bodies/MultiBody.h"
 #include "MPProblem/MPProblem.h"
 #include "ConvexDecomposition/cd_wavefront.h"
+#include "BulletCollision/Gimpact/btGImpactShape.h"
 #include "Conversions.h"
 
 #include <iostream>
 
 class MultiBody;
+
+// temparary
+//
+
+btTriangleMesh* build_triangle(const ConvexDecomposition::WavefrontObj& _obj);
+
 
 template<class T>
 class Simulator {
@@ -223,6 +230,7 @@ AddWorldObject(btCollisionShape* _shape, const btTransform& _trans, double _mass
     btRigidBody::btRigidBodyConstructionInfo rbInfo(mass, myMotionState, _shape, localInertia);
     btRigidBody* body = new btRigidBody(rbInfo);
     
+    
     // add the rigid body to the dynamics world
     m_dynamicsWorld->addRigidBody(body);
 }
@@ -235,7 +243,17 @@ AddObstacles() {
   const auto& numObstacles = env->NumObstacles();
   for(size_t i = 0; i < numObstacles; ++i) {
     StaticMultiBody* body = env->GetObstacle(i);
-    AddWorldObject(BuildCollisionShape(body), ToBullet(body->GetFixedBody(0)->GetWorldTransformation()), 0.);
+    btCollisionShape* temp = BuildCollisionShape(body);
+    AddWorldObject(temp, ToBullet(body->GetFixedBody(0)->GetWorldTransformation()), 0.);
+    
+    btTransform trans;
+    trans.setIdentity();
+
+    btVector3 min, max;
+
+    temp->getAabb(trans, min, max);
+
+    cout << min << endl << max << endl;
   }
 }
 
@@ -256,13 +274,64 @@ template<class T>
 btCollisionShape* 
 Simulator<T>::
 BuildCollisionShape(MultiBody* _body) {
-  // TODO: build an accurate representation of the object 
-  const double* bbx = _body->GetBoundingBox();
-  // the side lengths of the bounding box
-  double x = bbx[1] - bbx[0];
-  double y = bbx[3] - bbx[2];
-  double z = bbx[5] - bbx[4];
-  return new btBoxShape(btVector3(x/2, y/2, z/2)); 
+  ConvexDecomposition::WavefrontObj wfo;
+  StaticMultiBody* sbody = dynamic_cast<StaticMultiBody*>(_body);
+  if(sbody)
+    std::cout << "Value = " << wfo.loadObj(sbody->GetFixedBody(0)->GetFilePath().c_str()) << std::endl;
+  else {
+    ActiveMultiBody* abody = dynamic_cast<ActiveMultiBody*>(_body);
+    std::cout << "Value = " << wfo.loadObj(abody->GetFreeBody(0)->GetFilePath().c_str()) << std::endl;
+  }
+  
+//  std::cout << "Triangle Count: " << wfo.mTriCount << std::endl
+//            << "Vertex Count: " << wfo.mVertexCount << std::endl;
+//
+//  std::cout << "Triangels:\n";
+//  for(int i = 0; i < wfo.mTriCount * 3; ++i) {
+//    if(i % 3 == 0)
+//      std::cout << std::endl;
+//    std::cout << wfo.mIndices[i] << " ";
+//  }
+//  std::cout << std::endl;
+//
+//  std::cout << "\nVertices:\n";
+//  for(int i = 0; i < wfo.mVertexCount * 3; ++i) {
+//    if(i % 3 == 0)
+//      std::cout << std::endl;
+//    std::cout << wfo.mVertices[i] << " ";
+//  }
+//
+//  std::cout << std::endl;
+//
+//  btTriangleIndexVertexArray* vertexArray = new btTriangleIndexVertexArray(wfo.mTriCount, wfo.mIndices,
+//                                         3 * sizeof(int), wfo.mVertexCount, wfo.mVertices, 3 * sizeof(float));
+//
+//  btGImpactTriangleMesh t;
+//  auto ptr = new btGImpactMeshShape(vertexArray);
+//  ptr->updateBound();
+  auto ptr = new btGImpactMeshShape(build_triangle(wfo));
+  ptr->updateBound();
+  return ptr;
+}
+
+btTriangleMesh* build_triangle(const ConvexDecomposition::WavefrontObj& _obj) {
+  btTriangleMesh* triangle = new btTriangleMesh();
+  triangle->preallocateVertices(_obj.mVertexCount);
+  triangle->preallocateIndices(_obj.mTriCount);
+  for(int i = 0; i < _obj.mVertexCount; ++i) {
+    int start = i * 3;
+    triangle->findOrAddVertex(btVector3(_obj.mVertices[start],
+                                        _obj.mVertices[start + 1],
+                                        _obj.mVertices[start + 2]), false);
+  }
+
+  for(int i = 0; i < _obj.mTriCount; ++i) {
+    int start = i * 3;
+    triangle->addTriangleIndices(_obj.mIndices[start],
+                                 _obj.mIndices[start + 1],
+                                 _obj.mIndices[start + 2]);
+  }
+  return triangle;
 }
 
 #endif

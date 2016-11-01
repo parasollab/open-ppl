@@ -74,8 +74,7 @@ IsConvexHullVertex(const Vector3d& _v) {
 void
 Body::
 Read(GMSPolyhedron::COMAdjust _comAdjust) {
-  string filename = m_modelDataDir == "/" || m_filename[0] == '/' ?
-    m_filename : m_modelDataDir + m_filename;
+  string filename = GetFilePath();
 
   if(!FileExists(filename))
     throw ParseException(WHERE, "File \'" + filename + "\' not found.");
@@ -319,6 +318,13 @@ ComputeWorldPolyhedron() {
         m_polyhedron.m_polygonList[i].GetNormal();
 
   m_worldPolyhedronAvailable = true;
+}
+
+string
+Body::
+GetFilePath() const {
+  return m_modelDataDir == "/" || m_filename[0] == '/' ?
+    m_filename : m_modelDataDir + m_filename;
 }
 
 /*----------------------------------------------------------------------------*/
