@@ -20,7 +20,7 @@ ToBullet(const Quaternion& _q) {
   return btQuaternion(ToBullet(_q.imaginary()), _q.real());
 }
 
-btMatrix3x3 
+btMatrix3x3
 ToBullet(const Matrix3x3& _m) {
   return btMatrix3x3(_m[0][0],_m[0][1],_m[0][2],
                      _m[1][0],_m[1][1],_m[1][2],
@@ -30,15 +30,13 @@ ToBullet(const Matrix3x3& _m) {
 
 btTransform
 ToBullet(const Transformation& _t) {
-  btTransform trans;
-  trans.setIdentity();
-  trans.setOrigin(ToBullet(_t.translation()));
-  return trans;
-  //return btTransform(ToBullet(_t.rotation().matrix()), ToBullet(_t.translation()));
+  return btTransform(ToBullet(_t.rotation().matrix()),
+      ToBullet(_t.translation()));
 }
 
 
-std::ostream& operator<< (std::ostream& _out, const btVector3& _v) {
+std::ostream&
+operator<<(std::ostream& _out, const btVector3& _v) {
   _out << _v[0] << ',' << _v[1] << ',' << _v[2];
   return _out;
 }
