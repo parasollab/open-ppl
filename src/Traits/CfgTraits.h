@@ -76,6 +76,7 @@
 
 //connector includes
 #include "Connectors/AdaptiveConnector.h"
+#include "Connectors/AdaptiveConnector_Spatial.h"
 #include "Connectors/CCExpansion.h"
 #include "Connectors/CCsConnector.h"
 #include "Connectors/ClosestVE.h"
@@ -245,6 +246,7 @@ struct MPTraits {
   //types of connectors available in our world
   typedef boost::mpl::list<
     AdaptiveConnector<MPTraits>,
+    AdaptiveConnector_Spatial<MPTraits>,
     CCExpansion<MPTraits>,
     CCsConnector<MPTraits>,
     ClosestVE<MPTraits>,
