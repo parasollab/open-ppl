@@ -1,9 +1,9 @@
-#ifndef ADAPTIVE_CONNECTOR_SPATIAL_H
-#define ADAPTIVE_CONNECTOR_SPATIAL_H
+#ifndef SPATIAL_ADAPTIVE_CONNECTOR_H
+#define SPATIAL_ADAPTIVE_CONNECTOR_H
 
 ///////////////////////////////////////////////////////////////////////////
 /// @ingroup Connectors
-/// @brief ANC_Spatial chooses a connection method to connect every new node
+/// @brief Spatial ANC chooses a connection method to connect every new node
 /// to the graph based on its local neighborhood
 /// @tparam MPTraits Motion planning universe
 ///
@@ -15,7 +15,7 @@
 #include "ConnectorMethod.h"
 
 template<class MPTraits>
-class AdaptiveConnector_Spatial: public ConnectorMethod<MPTraits> {
+class SpatialAdaptiveConnector: public ConnectorMethod<MPTraits> {
   public:
     typedef typename MPTraits::CfgType                        CfgType;
     typedef typename MPTraits::CfgRef                         CfgRef;
@@ -28,7 +28,7 @@ class AdaptiveConnector_Spatial: public ConnectorMethod<MPTraits> {
     typedef pair<string, string>                              CMType;
     typedef tuple<pair< CMType,int>, double, double >         pc_data;
 
-    AdaptiveConnector_Spatial(const vector<CMType>& _CMLabels = vector<CMType>(),
+    SpatialAdaptiveConnector(const vector<CMType>& _CMLabels = vector<CMType>(),
         const map<CMType,int>& _lastUseID = map<CMType,int>(),
         bool _setUniform = false,
         double _percentageRandom = 0.5,
@@ -38,7 +38,7 @@ class AdaptiveConnector_Spatial: public ConnectorMethod<MPTraits> {
         bool _countFailures = false,
         size_t _fail = 5);
 
-    AdaptiveConnector_Spatial(MPProblemType* _problem, XMLNode& _node);
+    SpatialAdaptiveConnector(MPProblemType* _problem, XMLNode& _node);
 
     virtual void Print(ostream& _os) const;
     virtual void ParseXML(XMLNode& _node);
@@ -95,8 +95,8 @@ class AdaptiveConnector_Spatial: public ConnectorMethod<MPTraits> {
 };
 
 template<class MPTraits>
-AdaptiveConnector_Spatial<MPTraits>::
-AdaptiveConnector_Spatial(const vector<CMType>& _CMLabels, const map<CMType,int>&_lastUseID,
+SpatialAdaptiveConnector<MPTraits>::
+SpatialAdaptiveConnector(const vector<CMType>& _CMLabels, const map<CMType,int>&_lastUseID,
     bool _setUniform, double _percentageRandom, bool _fixedCost,
     bool _fixedReward,bool _checkIfSameCC, bool _countFailures, size_t _fail) :
   ConnectorMethod<MPTraits>("",""),
@@ -108,21 +108,21 @@ AdaptiveConnector_Spatial(const vector<CMType>& _CMLabels, const map<CMType,int>
   m_checkIfSameCC(_checkIfSameCC),
   m_countFailures(_countFailures),
   m_fail(_fail) {
-    this->SetName("AdaptiveConnector_Spatial");
+    this->SetName("SpatialAdaptiveConnector");
   }
 
 template<class MPTraits>
-AdaptiveConnector_Spatial<MPTraits>::
-AdaptiveConnector_Spatial(MPProblemType* _problem, XMLNode& _node):
+SpatialAdaptiveConnector<MPTraits>::
+SpatialAdaptiveConnector(MPProblemType* _problem, XMLNode& _node):
   ConnectorMethod<MPTraits>(_problem, _node) {
     ParseXML(_node);
   }
 
 template<class MPTraits>
 void
-AdaptiveConnector_Spatial<MPTraits>::
+SpatialAdaptiveConnector<MPTraits>::
 ParseXML(XMLNode& _node) {
-  this->SetName("AdaptiveConnector_Spatial");
+  this->SetName("SpatialAdaptiveConnector");
   m_checkIfSameCC = _node.Read("checkIfSameCC", false, true,
       "If true, do not connect if edges are in the same CC");
   m_countFailures = _node.Read("countFailures", false, false,
@@ -160,7 +160,7 @@ ParseXML(XMLNode& _node) {
 
 template<class MPTraits>
 void
-AdaptiveConnector_Spatial<MPTraits>::
+SpatialAdaptiveConnector<MPTraits>::
 Print(ostream& _os) const {
   ConnectorMethod<MPTraits>::Print(_os);
   _os << "\tfail = " << m_fail << endl;
@@ -178,7 +178,7 @@ Print(ostream& _os) const {
 
 template<class MPTraits>
 void
-AdaptiveConnector_Spatial<MPTraits>::
+SpatialAdaptiveConnector<MPTraits>::
 Initialize() {
   if(this->m_debug)
     cout<<"initializing"<<endl;
@@ -206,7 +206,7 @@ Initialize() {
 template<class MPTraits>
 template<typename InputIterator1, typename InputIterator2, typename OutputIterator>
 void
-AdaptiveConnector_Spatial<MPTraits>::
+SpatialAdaptiveConnector<MPTraits>::
 Connect(RoadmapType* _rm,
     InputIterator1 _itr1First, InputIterator1 _itr1Last,
     InputIterator2 _itr2First, InputIterator2 _itr2Last,
@@ -264,7 +264,7 @@ Connect(RoadmapType* _rm,
 template<class MPTraits>
 template <typename InputIterator, typename OutputIterator>
 void
-AdaptiveConnector_Spatial<MPTraits>::
+SpatialAdaptiveConnector<MPTraits>::
 ConnectNeighbors(RoadmapType* _rm, VID _vid,
     InputIterator _closestFirst, InputIterator _closestLast,
     OutputIterator _collision) {
@@ -418,7 +418,7 @@ ConnectNeighbors(RoadmapType* _rm, VID _vid,
 
 template<class MPTraits>
 void
-AdaptiveConnector_Spatial<MPTraits>::
+SpatialAdaptiveConnector<MPTraits>::
 RewardUpdateProbability(VID _nit, double _reward, unsigned long int _cost,
     int _prevConnectionAttempt) {
   cout << endl << endl;
@@ -577,8 +577,8 @@ RewardUpdateProbability(VID _nit, double _reward, unsigned long int _cost,
 }
 
 template<class MPTraits>
-typename AdaptiveConnector_Spatial<MPTraits>::CMType
-AdaptiveConnector_Spatial<MPTraits>::
+typename SpatialAdaptiveConnector<MPTraits>::CMType
+SpatialAdaptiveConnector<MPTraits>::
 UpdateCMChoice(VID _nit) {
   double proSum = 0;
   double nfProb =0;
@@ -657,7 +657,7 @@ UpdateCMChoice(VID _nit) {
 
 template<class MPTraits>
 void
-AdaptiveConnector_Spatial<MPTraits>::
+SpatialAdaptiveConnector<MPTraits>::
 PrintData(ostream& _os) {
   _os << "\nmethod\tprob\tprob_no_m_cost\tweight\tavg_cost\ttimes_used\n";
   for(vector<CMType>::const_iterator CM = m_CMLabels.begin();

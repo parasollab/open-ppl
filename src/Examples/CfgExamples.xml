@@ -215,7 +215,7 @@
       </AdaptiveConnector>
       <CCsConnector label="ConnectCCs" nfLabel="BFNF" lpLabel="sl" k="5"/>
       <ClosestVE label="ClosestVE" kClosest="3" nfLabel="BFNF" lpLabel="sl"/>
-      <AdaptiveConnector_Spatial label="ANC_Spatial" nfLabel="" lpLabel="sl"
+      <SpatialAdaptiveConnector label="SpatialANC" nfLabel="" lpLabel="sl"
         percentRandom="0.5" checkIfSameCC="false" debug="true"
         uniformProbability="false" fixedCost="false" fixedReward="false"
         LocalNeighborFinder="BFNF" LocalLocalPlanner="sl">
@@ -224,7 +224,7 @@
         <ConnectionMethod NeighborFinder="LargeBFNF" LocalPlanner="sl"/>
         <ConnectionMethod NeighborFinder="LargeBFNF" LocalPlanner="ras"/>
         <ConnectionMethod NeighborFinder="SweptBFNF" LocalPlanner="ras"/>
-      </AdaptiveConnector_Spatial>
+      </SpatialAdaptiveConnector>
       <NeighborhoodConnector label="Closest" nfLabel="BFNF" lpLabel="sl"
         checkIfSameCC="false" debug="false"/>
       <NeighborhoodConnector label="SparkPRMConnector" nfLabel="Nearest"
