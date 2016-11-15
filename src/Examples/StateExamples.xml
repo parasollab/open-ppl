@@ -17,7 +17,6 @@
       <CollisionDetection label="rapid" method="RAPID"/>
       <CollisionDetection label="pqp_solid" method="PQP_SOLID"/>
       <AlwaysTrueValidity label="alwaysTrue"/>
-      <CollisionDetection label="cd4" method="PQP_SOLID"/>
     </ValidityCheckers>
 
     <NeighborhoodFinders>
@@ -92,18 +91,9 @@
         gtype="UNDIRECTED_TREE" extenderLabel="FixedRandom" debug="false">
         <Evaluator label="BoundedRRTQuery"/>
       </Syclop>
-
-      <DynamicRegionRRT label="KDRRRT"
-        growthFocus="0.01" dmLabel="weuclidean"
-        nfLabel="Nearest" vcLabel="cd1"
-        gtype="UNDIRECTED_TREE" debug="false"
-        growGoals="false" extenderLabel="FixedRandom">
-        <Evaluator label="BoundedRRTQuery"/>
-      </DynamicRegionRRT>
-
     </MPStrategies>
 
-    <Solver mpStrategyLabel="KDRRRT" seed="12345678" baseFilename="RRT"/>
+    <Solver mpStrategyLabel="RRT" seed="12345678" baseFilename="RRT"/>
 
   </MPProblem>
 </MotionPlanning>
