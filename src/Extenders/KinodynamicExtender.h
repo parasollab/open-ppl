@@ -9,7 +9,7 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup Extenders
-/// @brief Basic straight-line extension.
+/// @brief Extend that extends using some control from the start configuration 
 /// @tparam MPTraits Motion planning universe
 ///
 /// Extends in straight-line through @cspace from \f$q_{near}\f$ towards
@@ -59,6 +59,17 @@ class KinodynamicExtender : public ExtenderMethod<MPTraits> {
     virtual double GetMaxDistance() const override;
 
     ///@}
+    ///\name Helpers
+    ///@{
+    
+    ////////////////////////////////////////////////////////////////////////////
+    /// \brief Applies a single control at a starting state
+    /// \param[in]  _start      The start configuration.
+    /// \param[in]  _con        The Control used.
+    /// \param[out] _collision  Determine if the control is valid. 
+    StateType ApplyControl(const StateType& _start, const vector<double>& _con, bool& _collision);
+
+    /// @}
 
   protected:
 
@@ -77,6 +88,17 @@ class KinodynamicExtender : public ExtenderMethod<MPTraits> {
     bool ExtendRandomControl(const StateType& _start, const StateType& _end,
         size_t _ticks, double _dt, StateType& _new,
         LPOutput<MPTraits>& _lp) const;
+
+    ////////////////////////////////////////////////////////////////////////////
+    /// \brief Applies a single control at a starting state
+    /// \param[in]  _start      The start configuration.
+    /// \param[in]  _con        The Control used.
+    /// \param[in]  _nTick      The number of tick in the extention
+    /// \param[in]  _dt         The change in time of each extention
+    /// \param[out] _lp         The ouput of the local planner
+    /// \param[out] _collision  Determine if the control is valid. 
+    StateType ApplyControl(const StateType& _start, const vector<double>& _con,
+        double _nTick, double _dt, LPOutput<MPTraits>& _lp, bool& _collision) const;
 
     ////////////////////////////////////////////////////////////////////////////
     /// \brief Set the lpOutput data, including label, timestep, distance, and
@@ -197,6 +219,43 @@ GetMaxDistance() const {
 
 /*------------------------------ Helpers -------------------------------------*/
 
+template <typename MPTraits>
+typename KinodynamicExtender<MPTraits>::StateType
+KinodynamicExtender<MPTraits>::
+ApplyControl(const StateType& _start, const vector<double>& _con, bool& _collision) {
+  size_t nTicks = ceil(m_timeStep);
+  double dt = m_timeStep * this->GetEnvironment()->GetTimeRes() / nTicks;
+  LPOutput<MPTraits> lp; // if lp output is need then use the other funtion
+  return ApplyControl(_start, _con, nTicks, dt, lp, _collision);
+}
+
+template <typename MPTraits>
+typename KinodynamicExtender<MPTraits>::StateType
+KinodynamicExtender<MPTraits>::
+ApplyControl(const StateType& _start, const vector<double>& _con,
+        double _nTicks, double _dt, LPOutput<MPTraits>& _lp, bool& _collision) const{
+
+  string callee("KinodynamicExtender::ApplyControl");
+  auto env = this->GetEnvironment();
+  StateType tick = _start;
+  size_t ticker = 0;
+  bool collision = false;
+
+  auto vc = this->GetValidityChecker(m_vcLabel);
+
+  // applies the control
+  while(!collision && ticker < _nTicks) {
+    tick = tick.Apply(_con, _dt);
+    if(!env->InBounds(tick) || !vc->IsValid(tick, callee))
+      collision = true;
+    ++ticker;
+    _lp.m_intermediates.push_back(tick);
+  }
+
+  _collision = collision;
+  return tick;
+}
+
 template<typename MPTraits>
 bool
 KinodynamicExtender<MPTraits>::
@@ -207,28 +266,21 @@ ExtendBestControl(const StateType& _start, const StateType& _end, size_t _nTicks
   Environment* env = this->GetEnvironment();
   shared_ptr<NonHolonomicMultiBody> robot =
       dynamic_pointer_cast<NonHolonomicMultiBody>(env->GetRobot(0));
+
+  StateType tick;
   auto dm = this->GetDistanceMetric(m_dmLabel);
-  auto vc = this->GetValidityChecker(m_vcLabel);
 
   const vector<shared_ptr<Control>>& control = robot->AvailableControls();
   double distBest = numeric_limits<double>::infinity();
+  
+  bool collision = false;
 
   for(auto& c : control) {
     //reset variables
-    StateType tick = _start;
-    size_t ticker = 0;
-    bool collision = false;
     LPOutput<MPTraits> lp;
 
     //apply control
-    const vector<double>& cont = c->GetControl();
-    while(!collision && ticker < _nTicks) {
-      tick = tick.Apply(cont, _dt);
-      if(!env->InBounds(tick) || !vc->IsValid(tick, callee))
-        collision = true;
-      ++ticker;
-      lp.m_intermediates.push_back(tick);
-    }
+    tick = ApplyControl(_start, c->GetControl(), _nTicks, _dt, lp, collision);
 
     // If successful and better than the current best, save this extension.
     if(!collision) {
@@ -237,7 +289,7 @@ ExtendBestControl(const StateType& _start, const StateType& _end, size_t _nTicks
         distBest = dist;
         _new = tick;
         _lp.m_intermediates = lp.m_intermediates;
-        SetOutput(_nTicks, cont, _start, _new, _lp);
+        SetOutput(_nTicks, c->GetControl(), _start, _new, _lp);
       }
     }
   }
@@ -251,28 +303,17 @@ bool
 KinodynamicExtender<MPTraits>::
 ExtendRandomControl(const StateType& _start, const StateType& _end,
     size_t _nTicks, double _dt, StateType& _new, LPOutput<MPTraits>& _lp) const {
-  string callee("KinodynamicExtender::Expand");
 
   Environment* env = this->GetEnvironment();
 
   shared_ptr<NonHolonomicMultiBody> robot =
       dynamic_pointer_cast<NonHolonomicMultiBody>(env->GetRobot(0));
-  auto dm = this->GetDistanceMetric(m_dmLabel);
-  auto vc = this->GetValidityChecker(m_vcLabel);
 
   StateType tick = _start;
-  size_t ticker = 0;
   bool collision = false;
-
   const vector<double>& control = robot->GetRandomControl();
+  tick = ApplyControl(_start, control, _nTicks, _dt, _lp, collision);
 
-  while(!collision && ticker < _nTicks) {
-    tick = tick.Apply(control, _dt);
-    if(!env->InBounds(tick) || !vc->IsValid(tick, callee))
-      collision = true; //return previous tick, as it is collision-free
-    ++ticker;
-    _lp.m_intermediates.push_back(tick);
-  }
   if(!collision) {
     _new = tick;
     SetOutput(_nTicks, control, _start, _new, _lp);

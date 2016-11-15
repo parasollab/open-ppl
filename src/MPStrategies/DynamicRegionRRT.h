@@ -9,6 +9,8 @@
 #include "Environment/Boundary.h"
 #include "Environment/BoundingSphere.h"
 #include "Utilities/ReebGraphConstruction.h"
+#include "Utilities/ReachabilityUtil.h"
+#include "DistanceMetrics/ReachabilityDistance.h"
 
 #ifdef VIZMO
 #include "GUI/ModelSelectionWidget.h"
@@ -42,6 +44,7 @@ class DynamicRegionRRT : public BasicRRTStrategy<MPTraits> {
 
     typedef shared_ptr<Boundary>              RegionPtr;
     typedef ReebGraphConstruction::FlowGraph  FlowGraph;
+    typedef typename ReachabilityUtil<DynamicRegionRRT, MPTraits>::ReachableSet ReachableSet;
 
     ///@}
     ///\name Construction
@@ -67,6 +70,7 @@ class DynamicRegionRRT : public BasicRRTStrategy<MPTraits> {
 
     ///@}
 
+    ReachableSet GetReachableSet() { return m_reachableSet; }
   protected:
 
     ///\name RRT Overrides
@@ -77,9 +81,11 @@ class DynamicRegionRRT : public BasicRRTStrategy<MPTraits> {
     ///         entire environment and each attract region with uniform
     ///         probability to generate q_rand.
     /// \return The resulting growth direction.
+    
     virtual CfgType SelectDirection() override;
 
     ///@}
+
 
   private:
 
@@ -133,6 +139,8 @@ class DynamicRegionRRT : public BasicRRTStrategy<MPTraits> {
     /// <flow edge descriptor, index along flow edge, num failed extentions>
     unordered_map<RegionPtr, tuple<FlowGraph::edge_descriptor, size_t, size_t>>
         m_currentRegions;
+
+    ReachableSet m_reachableSet;
 
     // Extra models for vizmo land.
 #ifdef VIZMO
@@ -211,6 +219,8 @@ void
 DynamicRegionRRT<MPTraits>::
 Run() {
   StatClass* stats = this->GetStatClass();
+  ReachabilityUtil<DynamicRegionRRT, MPTraits> reachabilityUtil(this);
+  ReachabilityDistance<DynamicRegionRRT, MPTraits> reachableDistance(this);
   stats->StartClock("DynamicRegionRRT::Run");
 
   if(this->m_debug)
@@ -232,6 +242,9 @@ Run() {
     if(recent != INVALID_VID) {
 
       CfgType& newest = this->GetRoadmap()->GetGraph()->GetVertex(recent);
+      
+      m_reachableSet = reachabilityUtil(newest);
+      cout << "Reachable Set: " << m_reachableSet.size() << endl;
 
       if(m_samplingRegion)
         get<2>(m_currentRegions[m_samplingRegion]) = 0;
