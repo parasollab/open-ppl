@@ -1,23 +1,32 @@
+# External Makefiles ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+
 include ../makefile_includes/Makefile.defaults
+
+# Compiler Configuration ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
 INCL = -I. -I/usr/local/include
 
-OBJECTS = KM_ANN.o KMeans.o KMterm.o KMrand.o KCutil.o KCtree.o KMdata.o KMcenters.o \
-	KMfilterCenters.o KMlocal.o
+# Object File Configuration ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
-CLEAN = $(OBJECTS) *.a *.so *~ *.o
+OBJECTS = KM_ANN.o KMeans.o KMterm.o KMrand.o KCutil.o KCtree.o KMdata.o \
+	  KMcenters.o KMfilterCenters.o KMlocal.o
 
-#default target
-default_target: library
+# Library Configuration ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
-library: libkmeans.a
+# Default target is the library.
+.DEFAULT_GOAL := $(LIBRARY)
 
-install: library
+LIBRARY := libkmeans.a
+$(LIBRARY): $(OBJECTS)
+	@echo Linking k-means library...
+	@rm -f $@
+	@$(AR) $@ $(OBJECTS)
 
-libkmeans.a: ${OBJECTS}
-	/bin/rm -f libkmeans.a
-	${AR} libkmeans.a ${OBJECTS}
+# Cleanup ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
-.SUFFIXES: .o .cpp
+.PHONY:
+clean:
+	@echo Cleaning k-means library...
+	@rm -f $(OBJECTS) $(LIBRARY)
 
-
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#

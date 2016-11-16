@@ -9,9 +9,6 @@
 #include <RAPID.H>
 #endif
 
-// bullet dynamics header
-#include "btBulletDynamicsCommon.h"
-
 #include "Transformation.h"
 using namespace mathtool;
 
@@ -19,6 +16,7 @@ using namespace mathtool;
 #include "Utilities/Color.h"
 #include "Utilities/MPUtils.h"
 
+class btCollisionShape;
 class CollisionDetectionMethod;
 class MultiBody;
 
@@ -142,14 +140,14 @@ class Body {
     ///@}
     ///@name Bullet functions
     ///@{
-    
+
     btCollisionShape* GetBulletBody() { return m_collisionShape; }
-    
+
     void SetButtetShape(btCollisionShape* _shape) { m_collisionShape = _shape; }
 
     ///@}
     ///@name I/O
-    ///@{ 
+    ///@{
     static string m_modelDataDir; ///< Directory of geometry files
 
     ////////////////////////////////////////////////////////////////////////////
@@ -244,7 +242,7 @@ class Body {
     shared_ptr<PQP_Model> m_pqpBody;         ///< PQP model
 #endif
 
-    btCollisionShape* m_collisionShape{nullptr};    
+    btCollisionShape* m_collisionShape{nullptr};
     ///@}
 
 };

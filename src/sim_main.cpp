@@ -14,6 +14,8 @@ typedef StateTraits PMPLTraits;
 typedef PMPLTraits::MPProblemType MPProblemType;
 typedef PMPLTraits::MPLibraryType MPLibraryType;
 
+#include "Simulator/Simulator.h"
+#include "sandbox/gui/main_window.h"
 
 using namespace std;
 
@@ -24,12 +26,21 @@ main(int _argc, char** _argv) {
       throw ParseException(WHERE, "Incorrect usage. Usage: -f options.xml");
 
     MPProblemType* problem = new MPProblemType(_argv[2]);
-    MPLibraryType* pmpl = new MPLibraryType(_argv[2]);
-    pmpl->SetMPProblem(problem);
-    pmpl->Solve();
+
+    Simulator<MPProblemType> simulator(problem);
+    simulator.Initialize();
+
+    for(int i = 0; i < 75; ++i)
+      simulator.Step();
+
+    QApplication app(_argc, _argv);
+    main_window window;
+    window.visualization(&simulator);
+
+    window.show();
+    app.exec();
 
     delete problem;
-    delete pmpl;
 
     return 0;
   }

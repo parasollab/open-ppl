@@ -60,8 +60,8 @@ class ReebGraphConstruction {
       size_t m_vertexIndex; ///< Vertex Index
       Vector3d m_vertex;    ///< Vertex
       double m_w;           ///< Morse function value
-      size_t m_order;       ///< Total ordering of vertex
-      size_t m_tetra;       ///< Tetrahedron index from embedding process
+      size_t m_order{0};    ///< Total ordering of vertex
+      size_t m_tetra{0};    ///< Tetrahedron index from embedding process
     };
 
     ////////////////////////////////////////////////////////////////////////////

@@ -7,18 +7,20 @@
 
 #include <iostream>
 
-
 using namespace mathtool;
+
 
 btVector3
 ToBullet(const Vector3d& _v) {
   return btVector3(_v[0], _v[1], _v[2]);
 }
 
+
 btQuaternion
 ToBullet(const Quaternion& _q) {
   return btQuaternion(ToBullet(_q.imaginary()), _q.real());
 }
+
 
 btMatrix3x3
 ToBullet(const Matrix3x3& _m) {
@@ -27,6 +29,7 @@ ToBullet(const Matrix3x3& _m) {
                      _m[2][0],_m[2][1],_m[2][2]
                     );
 }
+
 
 btTransform
 ToBullet(const Transformation& _t) {
