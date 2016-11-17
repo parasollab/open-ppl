@@ -21,6 +21,17 @@ class NonHolonomicMultiBody : public ActiveMultiBody {
     NonHolonomicMultiBody& operator=(const NonHolonomicMultiBody&) = delete; ///< No assign
 
     ///@}
+    ///@name MultiBody Info
+    ///@{
+
+    using MultiBody::MultiBodyType;
+
+    /// Get the type for this MultiBody.
+    virtual MultiBodyType GetType() const noexcept override {
+      return MultiBodyType::NonHolonomic;
+    }
+
+    ///@}
     ///@name Controls
     ///@{
 

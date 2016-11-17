@@ -6,6 +6,7 @@
 #include "glutils/drawable_call_list.h"
 
 class btBoxShape;
+class MultiBody;
 namespace glutils {
   class triangulated_model;
 }
@@ -32,9 +33,9 @@ class Drawable : public glutils::drawable_call_list {
     /// @param[in] _filename The obj file to build from.
     Drawable(const std::string& _filename);
 
-    /// Construct a drawable representation of a simulated object from a
-    /// triangulated model.
-    //Drawable(glutils::triangulated_model* _t);
+    /// Construct a drawable representation of a PMPL multibody.
+    /// @param[in] _m The PMPL multibody to draw.
+    Drawable(MultiBody* _m);
 
     virtual ~Drawable();
 

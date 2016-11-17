@@ -14,7 +14,7 @@ typedef StateTraits PMPLTraits;
 typedef PMPLTraits::MPProblemType MPProblemType;
 typedef PMPLTraits::MPLibraryType MPLibraryType;
 
-#include "Simulator/Simulator.h"
+#include "Simulator/Simulation.h"
 #include "sandbox/gui/main_window.h"
 
 using namespace std;
@@ -25,31 +25,28 @@ main(int _argc, char** _argv) {
     if(_argc < 3 || string(_argv[1]) != "-f")
       throw ParseException(WHERE, "Incorrect usage. Usage: -f options.xml");
 
+    // Make problem object.
     MPProblemType* problem = new MPProblemType(_argv[2]);
 
-    Simulator<MPProblemType> simulator(problem);
-    simulator.Initialize();
+    // Make simulation object.
+    Simulation<MPProblemType> simulation(problem);
 
-    for(int i = 0; i < 75; ++i)
-      simulator.Step();
-
+    // Make visualizer object.
     QApplication app(_argc, _argv);
     main_window window;
-    window.visualization(&simulator);
 
+    // Load the simulation into the visualizer and start it.
+    window.visualization(&simulation);
     window.show();
     app.exec();
 
+    // Clean up problem when we are done.
     delete problem;
 
     return 0;
   }
   catch(const std::runtime_error& e) {
     cerr << endl << e.what() << endl;
-    return 1;
-  }
-  catch(...) {
-    cerr << "Unknown error." << endl;
     return 1;
   }
 }

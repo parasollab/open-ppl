@@ -262,12 +262,13 @@ $(GLVIS_LIBFILE):
 # Simulator
 ################################################################################
 SIM_INCL := $(BULLET_INCL) $(GLVIS_INCL) $(QT_INCL)
-SIM_LIBS := $(BULLET_LIB) $(GLVIS_LIBS) $(QT_LIBS) $(GL_LIBS)
+SIM_LIBS := $(BULLET_LIB) $(GLVIS_LIBS) $(QT_LIBS) $(GL_LIBS) -lpthread
 
 SIM_LIBFILE := $(BULLET_LIBFILE) $(GLVIS_LIBFILE)
 
 SIM_OBJS := \
   $(PMPL_DIR)/sim_main.o \
+  Simulator/BulletEngine.o \
   Simulator/Drawable.o
 
 $(SIM_OBJS): $(SIM_LIBFILE)

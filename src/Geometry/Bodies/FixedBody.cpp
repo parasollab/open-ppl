@@ -1,10 +1,11 @@
 #include "FixedBody.h"
 
+
 FixedBody::
-FixedBody(MultiBody* _owner, const string& _filename) :
-  Body(_owner) {
-    m_filename = _filename;
-  }
+FixedBody(MultiBody* _owner, const string& _filename) : Body(_owner) {
+  m_filename = _filename;
+}
+
 
 void
 FixedBody::
@@ -21,10 +22,12 @@ Read(istream& _is, CountingStreamBuffer& _cbs) {
   m_worldPolyhedronAvailable = false;
 }
 
+
 Transformation&
 FixedBody::GetWorldTransformation() {
   return m_worldTransformation;
 }
+
 
 void
 FixedBody::

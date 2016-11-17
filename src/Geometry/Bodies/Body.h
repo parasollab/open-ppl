@@ -21,22 +21,16 @@ class CollisionDetectionMethod;
 class MultiBody;
 
 ////////////////////////////////////////////////////////////////////////////////
-/// @ingroup Environment
-/// @brief Single geometric body in the workspace
-///
-/// Body is a high level representation of a workspace object.
-/// Body s essentially encapsulate the geometry of the body (including boundary
-/// information), collision detection models, and contain methods to modify
-/// transformations of them.
+/// A single geometric body in workspace.
+/// @ingroup Geometry
 ////////////////////////////////////////////////////////////////////////////////
 class Body {
 
   public:
 
-    ///@name Constructors
+    ///@name Construction
     ///@{
 
-    ////////////////////////////////////////////////////////////////////////////
     /// @param _owner Owner of this body
     Body(MultiBody* _owner) : m_multibody(_owner) { }
 
@@ -78,17 +72,12 @@ class Body {
     double GetBoundingSphereRadius() const {return m_polyhedron.m_maxRadius;}
     double GetInsideSphereRadius() const {return m_polyhedron.m_minRadius;}
 
-    ////////////////////////////////////////////////////////////////////////////
     /// @param _poly New polyhedron to define this body
-    ///
-    /// This code is used in GB. If touched, someone in GB should verify change.
     void SetPolyhedron(GMSPolyhedron& _poly);
 
-    ////////////////////////////////////////////////////////////////////////////
     /// @return Polyhedron in model coordinates
     GMSPolyhedron& GetPolyhedron() {return m_polyhedron;}
 
-    ////////////////////////////////////////////////////////////////////////////
     /// @return Polyhedron in world coordinates
     GMSPolyhedron& GetWorldPolyhedron();
 
@@ -96,7 +85,6 @@ class Body {
     GMSPolyhedron& GetWorldBoundingBox();
     double* GetBoundingBox() {return m_boundingBox;}
 
-    ////////////////////////////////////////////////////////////////////////////
     /// @param _v A vertex in model coordinates.
     /// @return True if \p _v is a convex hull vertex of body.
     bool IsConvexHullVertex(const Vector3d& _v);
@@ -105,11 +93,9 @@ class Body {
     ///@name Transformation
     ///@{
 
-    ////////////////////////////////////////////////////////////////////////////
     /// @return Transformation of this body w.r.t. the world frame
     virtual Transformation& GetWorldTransformation() = 0;
 
-    ////////////////////////////////////////////////////////////////////////////
     /// @return Transformation of this body w.r.t. the world frame
     ///
     /// Return world transformation of this body. If worldTransformation has
@@ -123,8 +109,7 @@ class Body {
 
     static vector<CollisionDetectionMethod*> m_cdMethods; ///< All CD Methods
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// @brief Build appropriate collision detection models
+    /// Build appropriate collision detection models.
     void BuildCDStructure();
 
 #ifndef NO_RAPID
@@ -138,7 +123,7 @@ class Body {
 #endif
 
     ///@}
-    ///@name Bullet functions
+    ///@name Bullet Models
     ///@{
 
     btCollisionShape* GetBulletBody() { return m_collisionShape; }
@@ -148,17 +133,16 @@ class Body {
     ///@}
     ///@name I/O
     ///@{
+
     static string m_modelDataDir; ///< Directory of geometry files
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// @brief Read geometry information from file
+    /// Read geometry information from file.
     /// @param _comAdjust Center of mass adjustment method
     void Read(GMSPolyhedron::COMAdjust _comAdjust);
 
   protected:
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// @brief Read optional color or texture
+    /// Read optional color or texture.
     /// @param _is Input stream
     /// @param _cbs Counting buffer stream
     void ReadOptions(istream& _is, CountingStreamBuffer& _cbs);
@@ -167,8 +151,7 @@ class Body {
     ///@name Computation Helpers
     ///@}
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// @brief Calculate center of mass in world coordinates
+    /// Calculate center of mass in world coordinates
     ///
     /// This function is automatically calld by GetCenterOfMass() if it has
     /// never been computed. After computing it, this function will not be
@@ -179,25 +162,20 @@ class Body {
     /// approximation.
     void ComputeCenterOfMass();
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// @brief Approximate moment of inertia
+    /// Approximate moment of inertia.
     void ComputeMomentOfInertia();
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// @brief Compute a bounding box in world coordinates.
+    /// Compute a bounding box in world coordinates.
     void ComputeBoundingBox();
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// @brief Compute a GMSPolyhedron representation of the bounding box in
-    ///        model coordinates.
+    /// Compute a GMSPolyhedron representation of the bounding box in model
+    /// coordinates.
     void ComputeBoundingPolyhedron();
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// @brief Compute convex hull of body
+    /// Compute convex hull of body.
     void ComputeConvexHull();
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// @brief Compute the world polyhedron from the model-coordinate version.
+    /// Compute the world polyhedron from the model-coordinate version.
     void ComputeWorldPolyhedron();
 
     ///@}
@@ -243,6 +221,7 @@ class Body {
 #endif
 
     btCollisionShape* m_collisionShape{nullptr};
+
     ///@}
 
 };

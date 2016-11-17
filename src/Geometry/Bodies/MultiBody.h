@@ -4,7 +4,7 @@
 #include "Body.h"
 
 ////////////////////////////////////////////////////////////////////////////////
-/// @ingroup Environment
+/// @ingroup Geometry
 /// @brief A collection of geometries in workspace reprenting, e.g., robots
 ///
 /// A MultiBody represent a Obstacle or a Robot in workspace. MultiBody contain
@@ -14,10 +14,11 @@
 /// mass, surface area size, bounding sphere radius, etc.
 ////////////////////////////////////////////////////////////////////////////////
 class MultiBody {
+
   public:
 
     ////////////////////////////////////////////////////////////////////////////
-    /// @brief MultiBody type
+    /// The types of MultiBody that we can support.
     ////////////////////////////////////////////////////////////////////////////
     enum class MultiBodyType {
       Active,       ///< Holonomic Robot
@@ -26,9 +27,8 @@ class MultiBody {
       Internal      ///< Invisible Obstacle
     };
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// @name Constructors
-    /// @{
+    ///@name Construction
+    ///@{
 
     MultiBody();
 
@@ -37,69 +37,68 @@ class MultiBody {
 
     virtual ~MultiBody();
 
-    /// @}
-    ////////////////////////////////////////////////////////////////////////////
+    ///@}
+    ///@name MultiBody Info
+    ///@{
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// @name MultiBody Info
-    /// @{
+    /// Parse a string into a MultiBodyType.
+    /// @param[in] _tag The string to parse.
+    /// @param[in] _where File location info for error reporting.
+    /// @return The MultiBodyType described by _tag.
+    static MultiBodyType GetMultiBodyTypeFromTag(const string& _tag,
+        const string& _where);
 
-    static MultiBodyType GetMultiBodyTypeFromTag(const string& _tag, const string& _where);
+    /// Print a MultiBodyType to a string.
+    /// @param[in] _b The type to print.
+    /// @return A string representation of _b.
     static string GetTagFromMultiBodyType(MultiBodyType _b);
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// @return Center of mass
+    /// Get the type for this MultiBody.
+    virtual MultiBodyType GetType() const noexcept = 0;
+
+    /// Get the center of mass.
     const Vector3d& GetCenterOfMass() const {return m_com;}
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// @return Bounding sphere radius
+    /// Get the bounding sphere radius.
     double GetBoundingSphereRadius() const {return m_radius;}
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// @return Maximum distance in X, Y, or Z direction
+    /// Get the maximum distance in X, Y, or Z direction.
     double GetMaxAxisRange() const {return m_maxAxisRange;}
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// @return Bounding Box
-    const double * GetBoundingBox() const {return m_boundingBox.data();}
+    /// Get the bounding box.
+    const double* GetBoundingBox() const {return m_boundingBox.data();}
 
-    /// @}
-    ////////////////////////////////////////////////////////////////////////////
+    ///@}
+    ///@name Collision Detection
+    ///@{
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// @name Collision Detection
-    /// @{
-
-    ////////////////////////////////////////////////////////////////////////////
-    /// @brief Build CD representation
+    /// Build collision detection representations.
     void BuildCDStructure();
 
-    /// @}
-    ////////////////////////////////////////////////////////////////////////////
+    ///@}
+    ///@name I/O
+    ///@{
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// @name I/O
-    /// @{
-
-    ////////////////////////////////////////////////////////////////////////////
-    /// @brief Read MultiBody from stream and compute information
-    /// @param _is Input stream
-    /// @param _cbs Counting stream buffer
+    /// Read a MultiBody from an input stream and compute information.
+    /// @param[in] _is The input stream to read from.
+    /// @param[in] _cbs Counting stream buffer
     virtual void Read(istream& _is, CountingStreamBuffer& _cbs) = 0;
-    ////////////////////////////////////////////////////////////////////////////
-    /// @param _os Output stream
+
+    /// Write the MultiBody to an output stream.
+    /// @param _os The output stream to write to.
     virtual void Write(ostream & _os) = 0;
 
-    /// @}
-    ////////////////////////////////////////////////////////////////////////////
+    ///@}
+    ///@name Modifiers
+    ///@{
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// @param _body Body to add
+    /// Add a body.
+    /// @param _body The body to add.
     void AddBody(const shared_ptr<Body>& _body);
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// @brief Compute information, including center of mass, sphere, box, and
-    ///        range
+    ///@}
+
+    /// Compute center of mass, boundaries, and range.
     void FindMultiBodyInfo();
 
   protected:
@@ -107,6 +106,7 @@ class MultiBody {
     MultiBodyType m_multiBodyType;     ///< MultiBody type
 
   private:
+
     vector<shared_ptr<Body>> m_bodies; ///< All bodies
 
     Vector3d m_com;                    ///< Center of mass

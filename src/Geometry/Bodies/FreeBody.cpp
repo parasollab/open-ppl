@@ -1,11 +1,11 @@
 #include "FreeBody.h"
 
+
 FreeBody::
-FreeBody(MultiBody* _owner, size_t _index) : Body(_owner),
-  m_index(_index),
-  m_bodyType(BodyType::Planar),
-  m_movementType(MovementType::Translational) {
-  }
+FreeBody(MultiBody* _owner, size_t _index)
+  : Body(_owner), m_index(_index), m_bodyType(BodyType::Planar),
+    m_movementType(MovementType::Translational) { }
+
 
 FreeBody::BodyType
 FreeBody::
@@ -24,6 +24,7 @@ GetBodyTypeFromTag(const string& _tag, const string& _where) {
         " Options are: 'planar', 'volumetric', 'fixed', or 'joint'.");
 }
 
+
 FreeBody::MovementType
 FreeBody::
 GetMovementTypeFromTag(const string& _tag, const string& _where) {
@@ -36,6 +37,7 @@ GetMovementTypeFromTag(const string& _tag, const string& _where) {
         "Unknown movement type '" + _tag + "'."
         " Options are: 'rotational' or 'translational'.");
 }
+
 
 string
 FreeBody::
@@ -54,6 +56,7 @@ GetTagFromBodyType(BodyType _b) {
   }
 }
 
+
 string
 FreeBody::
 GetTagFromMovementType(MovementType _bm) {
@@ -67,6 +70,7 @@ GetTagFromMovementType(MovementType _bm) {
   }
 }
 
+
 Connection&
 FreeBody::
 GetForwardConnection(size_t _index) {
@@ -77,6 +81,7 @@ GetForwardConnection(size_t _index) {
         "Cannot access forward connection '" + ::to_string(_index) + "'.");
 }
 
+
 Connection&
 FreeBody::
 GetBackwardConnection(size_t _index) {
@@ -86,6 +91,7 @@ GetBackwardConnection(size_t _index) {
     throw RunTimeException(WHERE,
         "Cannot access backward connection '" + ::to_string(_index) + "'.");
 }
+
 
 bool
 FreeBody::
@@ -99,11 +105,13 @@ IsAdjacent(shared_ptr<FreeBody> _otherBody) const {
   return this == _otherBody.get();
 }
 
+
 bool
 FreeBody::
 IsWithinI(shared_ptr<FreeBody> _otherBody, size_t _i) const {
   return IsWithinI(this, _otherBody.get(), _i, NULL);
 }
+
 
 void
 FreeBody::
@@ -114,6 +122,7 @@ Link(Connection* _c) {
   m_centerOfMassAvailable = false;
 }
 
+
 Transformation&
 FreeBody::
 GetWorldTransformation() {
@@ -121,12 +130,14 @@ GetWorldTransformation() {
   return ComputeWorldTransformation(visited);
 }
 
+
 Transformation&
 FreeBody::
 GetRenderTransformation() {
   set<size_t> visited;
   return ComputeRenderTransformation(visited);
 }
+
 
 void
 FreeBody::
@@ -136,11 +147,13 @@ Configure(Transformation& _transformation) {
   m_worldPolyhedronAvailable = false;
 }
 
+
 void
 FreeBody::
 ConfigureRender(Transformation& _transformation) {
   m_renderTransformation = _transformation;
 }
+
 
 void
 FreeBody::
@@ -157,40 +170,37 @@ Read(istream& _is, CountingStreamBuffer& _cbs) {
 
   Read(m_comAdjust);
 
-  //Read for Base Type.  If Planar or Volumetric, read in two more strings
-  //If Joint skip this stuff. If Fixed read in positions like an obstacle
+  // Read for Base Type. If Planar or Volumetric, read in two more strings
+  // If Joint skip this stuff. If Fixed read in positions like an obstacle
   string bodyTag = ReadFieldString(_is, _cbs, "Failed reading base tag."
       " Options are: planar, volumetric, fixed, or joint.");
   m_bodyType = GetBodyTypeFromTag(bodyTag, _cbs.Where());
 
   switch(m_bodyType) {
-    //if base is volumetric or planar we should parse the rotational type
     case BodyType::Volumetric:
     case BodyType::Planar:
+      // If base is volumetric or planar, we should parse the rotational type.
       {
         string baseMovementTag = ReadFieldString(_is, _cbs,
             "Failed reading rotation tag."
             " Options are: rotational or translational.");
-        m_movementType =
-          GetMovementTypeFromTag(baseMovementTag, _cbs.Where());
+        m_movementType = GetMovementTypeFromTag(baseMovementTag, _cbs.Where());
         break;
       }
-
-      //if base if fixed we should read a transformation
     case BodyType::Fixed:
+      // If base if fixed, we should read a transformation.
       {
-        m_worldTransformation =
-          ReadField<Transformation>(_is, _cbs,
-              "Failed reading fixed based transformation.");
+        m_worldTransformation = ReadField<Transformation>(_is, _cbs,
+            "Failed reading fixed based transformation.");
         ConfigureRender(m_worldTransformation);
         break;
       }
-
-      //if the base is a joint nothing additional is parsed
     case BodyType::Joint:
+      // No additional parsing needed if base is a joint.
       break;
   }
 }
+
 
 ostream&
 operator<<(ostream& _os, FreeBody& _fb){
@@ -211,6 +221,7 @@ operator<<(ostream& _os, FreeBody& _fb){
 
   return _os;
 }
+
 
 bool
 FreeBody::
@@ -234,6 +245,7 @@ IsWithinI(const FreeBody* const _body1, const FreeBody* const _body2, size_t _i,
   }
   return false;
 }
+
 
 Transformation&
 FreeBody::
@@ -261,6 +273,7 @@ ComputeWorldTransformation(set<size_t>& _visited) {
     return m_worldTransformation;
   }
 }
+
 
 Transformation&
 FreeBody::

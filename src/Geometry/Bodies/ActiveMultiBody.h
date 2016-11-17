@@ -8,7 +8,7 @@ class Boundary;
 class Cfg;
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Type of free movement
+/// Types of movement that are supported.
 ////////////////////////////////////////////////////////////////////////////////
 enum class DofType {
   Positional, ///< Translational motion R = [min, max]
@@ -17,10 +17,9 @@ enum class DofType {
 };
 
 ////////////////////////////////////////////////////////////////////////////////
-/// @ingroup Environment
-/// A collection of geometries in workspace reprenting robots
-///
-/// A MultiBody representing a Robot in workspace.
+/// @ingroup Geometry
+/// A collection of geometries in workspace reprenting robots or other movable
+/// objects.
 ////////////////////////////////////////////////////////////////////////////////
 class ActiveMultiBody : public MultiBody {
 
@@ -53,15 +52,26 @@ class ActiveMultiBody : public MultiBody {
     ActiveMultiBody& operator=(const ActiveMultiBody&) = delete; ///< No assign
 
     ///@}
+    ///@name MultiBody Info
+    ///@{
+
+    using MultiBody::MultiBodyType;
+
+    /// Get the type for this MultiBody.
+    virtual MultiBodyType GetType() const noexcept override {
+      return MultiBodyType::Active;
+    }
+
+    ///@}
     ///@name Bodies
     ///@{
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// @return Number of free body
+    /// Get the number of sub-bodies.
     size_t NumFreeBody() const;
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// @return Free body accroding to the given index
+    /// Get a sub-body by index.
+    /// @param[in] _index The index of the free body.
+    /// @return A pointer to the desired body.
     shared_ptr<FreeBody> GetFreeBody(size_t _index) const;
 
     ///@}
