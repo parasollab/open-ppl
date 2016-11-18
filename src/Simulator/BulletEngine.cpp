@@ -1,12 +1,16 @@
 #include "BulletEngine.h"
 
-#include "Conversions.h"
+#include "BulletDynamics/Featherstone/btMultiBodyDynamicsWorld.h"
+#include "BulletDynamics/Featherstone/btMultiBodyConstraintSolver.h"
+#include "BulletDynamics/Featherstone/btMultiBodyLinkCollider.h"
 
-#include "ConvexDecomposition/cd_wavefront.h"
 #include "BulletCollision/Gimpact/btGImpactShape.h"
 #include "BulletCollision/Gimpact/btGImpactCollisionAlgorithm.h"
+#include "ConvexDecomposition/cd_wavefront.h"
 
 #include "nonstd/runtime.h"
+
+#include "Conversions.h"
 
 #include "Geometry/Bodies/ActiveMultiBody.h"
 #include "Geometry/Bodies/FixedBody.h"
@@ -21,11 +25,11 @@ BulletEngine() {
   // Create the bullet objects needed for a dynamic rigid body simulation.
   m_collisionConfiguration = new btDefaultCollisionConfiguration();
   m_dispatcher = new btCollisionDispatcher(m_collisionConfiguration);
-  m_overlappingPairCache = new btDbvtBroadphase();
-  m_solver = new btSequentialImpulseConstraintSolver();
+  m_broadphase = new btDbvtBroadphase();
+  m_solver = new btMultiBodyConstraintSolver();
 
-  m_dynamicsWorld = new btDiscreteDynamicsWorld(m_dispatcher,
-      m_overlappingPairCache, m_solver, m_collisionConfiguration);
+  m_dynamicsWorld = new btMultiBodyDynamicsWorld(m_dispatcher,
+      m_broadphase, m_solver, m_collisionConfiguration);
 
   // This is needed to get gimpact shapes to respond to collisions.
   btGImpactCollisionAlgorithm::registerAlgorithm(m_dispatcher);
@@ -59,7 +63,7 @@ BulletEngine::
   // Delete the remaining bullet objects.
   delete m_dynamicsWorld;
   delete m_solver;
-  delete m_overlappingPairCache;
+  delete m_broadphase;
   delete m_dispatcher;
   delete m_collisionConfiguration;
 }
@@ -70,8 +74,10 @@ void
 BulletEngine::
 Step(const btScalar _timestep, const int _maxSubSteps,
     const btScalar _resolution) {
-  m_dynamicsWorld->updateAabbs();
-  m_dynamicsWorld->computeOverlappingPairs();
+  // This doesn't seem to be required in the examples, testing without it for
+  // now.
+  //m_dynamicsWorld->updateAabbs();
+  //m_dynamicsWorld->computeOverlappingPairs();
   m_dynamicsWorld->stepSimulation(_timestep, _maxSubSteps, _resolution);
 }
 
@@ -81,28 +87,15 @@ glutils::transform
 BulletEngine::
 GetObjectTransform(const size_t _i) const {
   // Check for out-of-range access.
-  nonstd::assert_msg(_i < size_t(m_dynamicsWorld->getNumCollisionObjects()),
+  nonstd::assert_msg(_i < size_t(m_dynamicsWorld->getNumMultibodies()),
       "BulletEngine error: requested transform for object " + std::to_string(_i)
       + ", but there are only " +
-      std::to_string(m_dynamicsWorld->getNumCollisionObjects()) +
+      std::to_string(m_dynamicsWorld->getNumMultibodies()) +
       " objects in the simulation.");
 
   glutils::transform t;
-
-  // Get object _i and try casting to rigid body.
-  btCollisionObject* obj = m_dynamicsWorld->getCollisionObjectArray()[_i];
-  btRigidBody* body = btRigidBody::upcast(obj);
-
-  if(body && body->getMotionState()) {
-    // This is a movable object. Get transform from the motion state.
-    btTransform trans;
-    body->getMotionState()->getWorldTransform(trans);
-    trans.getOpenGLMatrix(t.data());
-  }
-  else {
-    // This is a static object. Get transform directly from the object.
-    obj->getWorldTransform().getOpenGLMatrix(t.data());
-  }
+  btMultiBody* mb = m_dynamicsWorld->getMultiBody(_i);
+  mb->getBaseWorldTransform().getOpenGLMatrix(t.data());
 
   return t;
 }
@@ -148,12 +141,33 @@ AddObject(btCollisionShape* _shape, const btTransform& _trans, double _mass) {
 
   // Each object will be represented by a bullet rigid body, and each rigid body
   // has a motion state to describe it's current position, velocity, etc.
-  btDefaultMotionState* state = new btDefaultMotionState(_trans);
-  btRigidBody::btRigidBodyConstructionInfo rbInfo(_mass, state, _shape, inertia);
-  btRigidBody* body = new btRigidBody(rbInfo);
-
+  //btDefaultMotionState* state = new btDefaultMotionState(_trans);
+  //btRigidBody::btRigidBodyConstructionInfo rbInfo(_mass, state, _shape, inertia);
+  //btRigidBody* body = new btRigidBody(rbInfo);
   // Add the rigid body to the bullet world.
-  m_dynamicsWorld->addRigidBody(body);
+  //m_dynamicsWorld->addRigidBody(body);
+
+  // Make multi body.
+  const int links = 0; // Number of links in addition to the base.
+  const bool fixedBase = !isDynamic; // Base is fixed?
+  const bool canSleep = false; // Can this object sleep? Not sure what it means.
+  btMultiBody* mb = new btMultiBody(links, _mass, inertia, fixedBase, canSleep);
+  mb->finalizeMultiDof();
+  mb->setBaseWorldTransform(_trans);
+  mb->setBaseVel(btVector3(0, 0, 0));
+
+  // The multibody on its own doesn't process collisions. Add a collider for
+  // each link. The base collider has link id -1.
+  btMultiBodyLinkCollider* col = new btMultiBodyLinkCollider(mb, -1);
+  col->setCollisionShape(_shape);
+  col->setWorldTransform(_trans);
+
+  m_dynamicsWorld->addMultiBody(mb);
+  // Not sure what the numbers mean here but we need them. Appears to be related
+  // to collisions being checked in groups, see
+  // BulletCollision/CollisionDispatch/btCollisionWorld.h
+  m_dynamicsWorld->addCollisionObject(col, 2, 1 + 2);
+  mb->setBaseCollider(col);
 }
 
 /*------------------------------ Helpers -------------------------------------*/
@@ -163,6 +177,8 @@ BulletEngine::
 BuildCollisionShape(MultiBody* _body) {
   // Get the multibody's obj file and use it to create a bullet body.
   /// @TODO Parse all components of the multibodies instead of just the first.
+  ///       Look at bullet/examples/MultiBody/MultiDofDemo.cpp
+  ///           and bullet/src/BulletDynamics/FeatherStone/btMultiBody.h
   std::string filename;
 
   StaticMultiBody* sbody = dynamic_cast<StaticMultiBody*>(_body);

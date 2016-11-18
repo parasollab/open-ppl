@@ -6,11 +6,11 @@
 #include "glutils/gltraits.h"
 
 // Bullet forward-declarations.
-class btDynamicsWorld;
+class btMultiBodyDynamicsWorld;
 class btDefaultCollisionConfiguration;
 class btCollisionDispatcher;
 class btBroadphaseInterface;
-class btSequentialImpulseConstraintSolver;
+class btMultiBodyConstraintSolver;
 
 // PMPL forward-declarations.
 class MultiBody;
@@ -25,13 +25,13 @@ class BulletEngine final {
   ///@{
 
   /// The bullet world.
-  btDynamicsWorld*                     m_dynamicsWorld{nullptr};
+  btMultiBodyDynamicsWorld*        m_dynamicsWorld{nullptr};
 
   // The collision detection components.
-  btDefaultCollisionConfiguration*     m_collisionConfiguration{nullptr};
-  btCollisionDispatcher*               m_dispatcher{nullptr};
-  btBroadphaseInterface*               m_overlappingPairCache{nullptr};
-  btSequentialImpulseConstraintSolver* m_solver{nullptr};
+  btDefaultCollisionConfiguration* m_collisionConfiguration{nullptr};
+  btCollisionDispatcher*           m_dispatcher{nullptr};
+  btBroadphaseInterface*           m_broadphase{nullptr};
+  btMultiBodyConstraintSolver*     m_solver{nullptr};
 
   /// The collision shapes in our bullet world. These are stored separately from
   /// rigid bodies to allow bodies with the same shape to share collision

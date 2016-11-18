@@ -6,19 +6,20 @@
 #include "Geometry/Bodies/ActiveMultiBody.h"
 
 class Boundary;
+class Controller;
 
 ////////////////////////////////////////////////////////////////////////////////
-/// @brief Representation of a robot that has geometry, dynamics, and a
-///        controller.
+/// Representation of a robot that has geometry, dynamics, and a controller.
 ////////////////////////////////////////////////////////////////////////////////
 class Robot {
 
   ///@name Internal State
   ///@{
 
-  ActiveMultiBody m_multibody;  ///< The robot's geometric representation.
+  ActiveMultiBody m_multibody;       ///< The robot's geometric representation.
+  Controller* m_controller{nullptr}; ///< The robot's controller.
 
-  std::string m_label;          ///< The robot's unique label.
+  std::string m_label;               ///< The robot's unique label.
 
   ///@}
 
@@ -29,14 +30,14 @@ class Robot {
 
     Robot() = default;
     Robot(XMLNode& _node);
-    virtual ~Robot() = default;
+    virtual ~Robot();
 
     ///@}
     ///@name Geometry Accessors
     ///@{
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// @brief Set the boundary to determine the DOF ranges.
+    /// Set the boundary to determine the DOF ranges.
+    /// @param[in] _b The boundary to use.
     void SetBoundary(const Boundary* _b);
 
     ActiveMultiBody* GetMultiBody();
@@ -46,6 +47,13 @@ class Robot {
     ///@name Controller Accessors
     ///@{
 
+    /// Get the robot's controller.
+    Controller* GetController();
+
+    /// Set the robot's controller.
+    /// @param[in] _c The controller to use. The robot will take ownership of
+    ///               this controller and destruct it when necessary.
+    void SetController(Controller* const _c);
 
     ///@}
     ///@name Dynamics Accessors
@@ -54,26 +62,5 @@ class Robot {
 
     ///@}
 };
-
-/*----------------------------- Inlined Functions ----------------------------*/
-
-/*---------------------------- Geometry Accessors ----------------------------*/
-
-inline
-ActiveMultiBody*
-Robot::
-GetMultiBody() {
-  return &m_multibody;
-}
-
-
-inline
-const ActiveMultiBody*
-Robot::
-GetMultiBody() const {
-  return &m_multibody;
-}
-
-/*----------------------------------------------------------------------------*/
 
 #endif

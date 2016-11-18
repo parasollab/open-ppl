@@ -2,6 +2,9 @@
 
 #include "Geometry/Boundaries/Boundary.h"
 
+/// Temporary stand-in.
+class Controller {};
+
 /*------------------------------ Construction --------------------------------*/
 
 Robot::
@@ -24,12 +27,48 @@ Robot(XMLNode& _node) {
   m_multibody.Read(ifs, cbs);
 }
 
+
+Robot::
+~Robot() {
+  delete m_controller;
+}
+
 /*--------------------------- Geometry Accessors -----------------------------*/
 
 void
 Robot::
 SetBoundary(const Boundary* _b) {
   m_multibody.InitializeDOFs(_b);
+}
+
+
+ActiveMultiBody*
+Robot::
+GetMultiBody() {
+  return &m_multibody;
+}
+
+
+const ActiveMultiBody*
+Robot::
+GetMultiBody() const {
+  return &m_multibody;
+}
+
+/*--------------------------- Controller Accessors ---------------------------*/
+
+Controller*
+Robot::
+GetController() {
+  return m_controller;
+}
+
+
+void
+Robot::
+SetController(Controller* const _c) {
+  delete m_controller;
+  m_controller = _c;
 }
 
 /*----------------------------------------------------------------------------*/
