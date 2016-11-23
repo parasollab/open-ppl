@@ -12,7 +12,6 @@
 using namespace mathtool;
 
 #include "Geometry/Boundaries/Boundary.h"
-#include "Geometry/Bodies/NonHolonomicMultiBody.h"
 #include "MPProblem/ConfigurationSpace/State.h"
 #include "Utilities/MPUtils.h"
 

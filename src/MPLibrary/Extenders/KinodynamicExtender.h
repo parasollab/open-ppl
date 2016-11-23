@@ -5,7 +5,7 @@
 
 #include "Geometry/Bodies/NonHolonomicMultiBody.h"
 
-#include "Environment/Control.h"
+#include "MPProblem/Robot/Control/Control.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup Extenders

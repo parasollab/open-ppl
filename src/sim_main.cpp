@@ -40,7 +40,8 @@ main(int _argc, char** _argv) {
     window.show();
     app.exec();
 
-    // Clean up problem when we are done.
+    // Clean up the simulation and problem when we are done.
+    simulation.Uninitialize();
     delete problem;
 
     return 0;

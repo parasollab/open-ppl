@@ -3,6 +3,7 @@
 
 #include <vector>
 
+#include "Geometry/Bodies/ActiveMultiBody.h"
 #include "MPProblemBase.h"
 #include "MPProblem/ConfigurationSpace/Roadmap.h"
 #include "MPProblem/Environment/Environment.h"
@@ -15,7 +16,7 @@
 /// @brief Representation of a motion planning problem. It owns the environment,
 ///        queries, and robots.
 ////////////////////////////////////////////////////////////////////////////////
-template<class MPTraits>
+template <typename MPTraits>
 #ifdef _PARALLEL
 class MPProblem : public stapl::p_object, public MPProblemBase
 #else
@@ -67,6 +68,8 @@ class MPProblem : public MPProblemBase
     ////////////////////////////////////////////////////////////////////////////
     /// @return Number of Active MultiBodies
     size_t NumRobots() const {return m_robots.size();}
+
+    Robot* GetNewRobot(size_t _index) const;
 
     ////////////////////////////////////////////////////////////////////////////
     /// @param _index Requested multibody
@@ -141,14 +144,14 @@ class MPProblem : public MPProblemBase
 
 /*---------------------------- Construction ----------------------------------*/
 
-template<class MPTraits>
+template <typename MPTraits>
 MPProblem<MPTraits>::
 MPProblem() {
   Initialize();
 };
 
 
-template<class MPTraits>
+template <typename MPTraits>
 MPProblem<MPTraits>::
 MPProblem(const string& _filename) {
   Initialize();
@@ -156,14 +159,14 @@ MPProblem(const string& _filename) {
 }
 
 
-template<class MPTraits>
+template <typename MPTraits>
 MPProblem<MPTraits>::
 ~MPProblem() {
   Clear();
 }
 
 
-template<class MPTraits>
+template <typename MPTraits>
 void
 MPProblem<MPTraits>::
 Initialize() {
@@ -174,7 +177,7 @@ Initialize() {
 }
 
 
-template<class MPTraits>
+template <typename MPTraits>
 void
 MPProblem<MPTraits>::
 Clear() {
@@ -194,7 +197,7 @@ Clear() {
 
 /*---------------------------- XML Helpers -----------------------------------*/
 
-template<class MPTraits>
+template <typename MPTraits>
 void
 MPProblem<MPTraits>::
 ReadXMLFile(const string& _filename) {
@@ -250,16 +253,12 @@ ReadXMLFile(const string& _filename) {
   for(size_t i = 0; i < m_robots.size(); ++i)
     Cfg::InitRobots(m_robots[i]->GetMultiBody(), i);
 
-  // Set the boundary for each robot.
-  for(auto& robot : m_robots)
-    robot->SetBoundary(GetEnvironment()->GetBoundary().get());
-
   // Compute the environment resolution.
   GetEnvironment()->ComputeResolution(GetRobots());
 }
 
 
-template<class MPTraits>
+template <typename MPTraits>
 bool
 MPProblem<MPTraits>::
 ParseChild(XMLNode& _node) {
@@ -270,7 +269,12 @@ ParseChild(XMLNode& _node) {
     return true;
   }
   else if(_node.Name() == "Robot") {
-    m_robots.push_back(new Robot(_node));
+    /// @TODO We currently assume that the environment is parsed first. Need to
+    ///       make sure this always happens regardless of the XML file ordering.
+    /// @TODO Move the DOF parsing into MultiBody's read so that we don't have
+    ///       to pass the boundary with the robot constructor.
+    auto robot = new Robot(_node, GetEnvironment()->GetBoundary().get());
+    m_robots.push_back(robot);
     return true;
   }
   else if(_node.Name() == "Query") {
@@ -285,18 +289,27 @@ ParseChild(XMLNode& _node) {
 
 /*------------------------------ Robot Functions -----------------------------*/
 
-template<class MPTraits>
-ActiveMultiBody*
+template <typename MPTraits>
+Robot*
 MPProblem<MPTraits>::
-GetRobot(size_t _index) const {
-  if(_index < 0 || _index >= m_robots.size())
-    throw RunTimeException(WHERE,
-        "Cannot access ActiveBody '" + ::to_string(_index) + "'.");
-  return m_robots[_index]->GetMultiBody();
+GetNewRobot(size_t _index) const {
+  if(_index >= m_robots.size())
+    throw RunTimeException(WHERE, "Requested Robot " + std::to_string(_index) +
+        ", but only " + std::to_string(m_robots.size()) +
+        " robots are available.");
+  return m_robots[_index];
 }
 
 
-template<class MPTraits>
+template <typename MPTraits>
+ActiveMultiBody*
+MPProblem<MPTraits>::
+GetRobot(size_t _index) const {
+  return GetNewRobot(_index)->GetMultiBody();
+}
+
+
+template <typename MPTraits>
 vector<ActiveMultiBody*>
 MPProblem<MPTraits>::
 GetRobots() const {
@@ -309,7 +322,7 @@ GetRobots() const {
 
 /*-------------------------------- Debugging ---------------------------------*/
 
-template<class MPTraits>
+template <typename MPTraits>
 void
 MPProblem<MPTraits>::
 Print(ostream& _os) const {

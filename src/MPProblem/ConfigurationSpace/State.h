@@ -35,8 +35,9 @@ class State : public Cfg {
     static void SetTimeRes(double _timeRes) { m_timeRes = _timeRes; }
 
     ////////////////////////////////////////////////////////////////////////////
-    /// @brief Apply control to state using 4th order Runge-Kutta (RK4)
-    /// @param _u Control
+    /// Apply a specific force and torque to this state using 4th order
+    /// Runge-Kutta (RK4).
+    /// @param _u Force vector.
     /// @param _dt Time step to integrate over
     /// @return Resulting state
     State Apply(const vector<double>& _u, double _dt);

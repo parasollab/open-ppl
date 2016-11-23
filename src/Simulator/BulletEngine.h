@@ -11,6 +11,7 @@ class btDefaultCollisionConfiguration;
 class btCollisionDispatcher;
 class btBroadphaseInterface;
 class btMultiBodyConstraintSolver;
+class btMultiBody;
 
 // PMPL forward-declarations.
 class MultiBody;
@@ -75,13 +76,13 @@ class BulletEngine final {
 
     /// Add a PMPL multibody to the simulation.
     /// @param[in] _m The multibody to add.
-    void AddObject(MultiBody* _m);
+    btMultiBody* AddObject(MultiBody* _m);
 
     /// Add an object to the world.
     /// @param _shape The bullet collision shape that reprsents the object.
     /// @param _trans The world tranform of the object.
     /// @param _mass The mass of the _shape in the world.
-    void AddObject(btCollisionShape* _shape, const btTransform& _trans,
+    btMultiBody* AddObject(btCollisionShape* _shape, const btTransform& _trans,
         double _mass);
 
     ///@}

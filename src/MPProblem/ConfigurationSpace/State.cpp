@@ -6,7 +6,7 @@ using namespace mathtool;
 
 #include "Geometry/Bodies/ActiveMultiBody.h"
 #include "MPProblem/Environment/Environment.h"
-#include "Geometry/Bodies/NonHolonomicMultiBody.h"
+//#include "Geometry/Bodies/NonHolonomicMultiBody.h"
 
 double State::m_timeRes = 0;
 
@@ -187,7 +187,7 @@ void
 State::
 GetRandomCfgImpl(Environment* _env, shared_ptr<Boundary> _bb) {
   Cfg::GetRandomCfgImpl(_env, _bb);
-  m_vel = static_cast<NonHolonomicMultiBody*>(GetRobot())->GetRandomVelocity();
+  //m_vel = static_cast<NonHolonomicMultiBody*>(GetRobot())->GetRandomVelocity();
 }
 
 State

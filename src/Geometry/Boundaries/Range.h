@@ -2,9 +2,11 @@
 #define RANGE_TYPE_H_
 
 #include <cctype>
+#include <iostream>
 #include <limits>
 #include <type_traits>
 #include <utility>
+
 
 /*------------------------- Range-checking Functions -------------------------*/
 
@@ -114,8 +116,7 @@ template <typename T>
 inline
 Range<T>::
 Range() noexcept :
-    min(std::numeric_limits<T>::min()),
-    max(std::numeric_limits<T>::max()) { }
+    min(T(0)), max(T(0)) { }
 
 
 template <typename T>
@@ -146,7 +147,7 @@ template <typename T>
 inline
 const T
 Range<T>::
-Length() const noexcept {
+Center() const noexcept {
   return Length() / T(2);
 }
 

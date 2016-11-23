@@ -28,6 +28,8 @@ GetFreeBody(size_t _index) const {
 void
 ActiveMultiBody::
 InitializeDOFs(const Boundary* _b, ostream* _os) {
+  m_dofTypes.clear();
+  m_dofInfo.clear();
 
   size_t dof = 0;
 

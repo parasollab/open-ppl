@@ -24,7 +24,7 @@ include $(PMPL_DIR)/Makefile.PMPLdefaults
 
 DEFS := $(PMPL_DEF) $(UTILS_DEF) $(STAPL_DEF) $(BOOST_DEF)
 INCL := $(PMPL_INCL) $(UTILS_INCL) $(STAPL_INCL) $(BOOST_INCL) $(SIM_INCL)
-LIBS := $(PMPL_LIB) $(UTILS_LIB) $(STAPL_LIB) $(BOOST_LIB)
+LIBS := $(PMPL_LIB) $(UTILS_LIB) $(STAPL_LIB) $(BOOST_LIB) $(SIM_LIBS)
 DEPS = -MMD -MF $*.d
 
 # Object File Configuration ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
@@ -57,7 +57,7 @@ pmpl: $(PMPL_LIBFILE) $(MAIN)
 # Build the simulator.
 sim: $(PMPL_LIBFILE) $(SIM_LIBFILE) $(SIM_OBJS)
 	@echo Linking $@...
-	@$(CXX) $(CXXFLAGS) $(OPTS) $(SIM_OBJS) $(SIM_LIBS) $(LIBS) -o $@
+	@$(CXX) $(CXXFLAGS) $(OPTS) $(SIM_OBJS) $(LIBS) -o $@
 
 # Object File Recipes ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 

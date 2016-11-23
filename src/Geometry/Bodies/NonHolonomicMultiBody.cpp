@@ -1,6 +1,6 @@
 #include "NonHolonomicMultiBody.h"
 
-#include "Geometry/Control.h"
+#include "MPProblem/Robot/Control/Control.h"
 
 /*--------------------------------- Construction -----------------------------*/
 

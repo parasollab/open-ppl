@@ -102,7 +102,7 @@ GetObjectTransform(const size_t _i) const {
 
 /*----------------------------- Modifiers ------------------------------------*/
 
-void
+btMultiBody*
 BulletEngine::
 AddObject(MultiBody* _m) {
   // Get base transform and mass.
@@ -123,11 +123,11 @@ AddObject(MultiBody* _m) {
   }
 
   btCollisionShape* shape = BuildCollisionShape(_m);
-  AddObject(shape, trans, mass);
+  return AddObject(shape, trans, mass);
 }
 
 
-void
+btMultiBody*
 BulletEngine::
 AddObject(btCollisionShape* _shape, const btTransform& _trans, double _mass) {
   // Add the shape to a list of shapes to be deleted later.
@@ -168,6 +168,8 @@ AddObject(btCollisionShape* _shape, const btTransform& _trans, double _mass) {
   // BulletCollision/CollisionDispatch/btCollisionWorld.h
   m_dynamicsWorld->addCollisionObject(col, 2, 1 + 2);
   mb->setBaseCollider(col);
+
+  return mb;
 }
 
 /*------------------------------ Helpers -------------------------------------*/

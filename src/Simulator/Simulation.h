@@ -98,7 +98,11 @@ template <typename MPProblemType>
 void
 Simulation<MPProblemType>::
 Initialize() {
-  // Require a problem to initialize.
+  // If the engine object is not null, we are already initialized.
+  if(m_engine)
+    return;
+
+  // Require a non-null problem to initialize.
   nonstd::assert_msg(m_problem, "Simulation error: cannot initialize without a "
       "problem!");
 
@@ -116,6 +120,10 @@ template <typename MPProblemType>
 void
 Simulation<MPProblemType>::
 Uninitialize() {
+  // If the engine object is null, we are already uninitialized.
+  if(!m_engine)
+    return;
+
   // Delete the bullet engine.
   delete m_engine;
   m_engine = nullptr;
@@ -124,6 +132,10 @@ Uninitialize() {
   auto drawables = this->m_drawables;
   for(auto d : drawables)
     this->remove_drawable(d);
+
+  // Remove bullet model pointers from problem objects.
+  for(size_t i = 0; i < m_problem->NumRobots(); ++i)
+    m_problem->GetNewRobot(i)->SetDynamicsModel(nullptr);
 }
 
 
@@ -134,9 +146,11 @@ Step() {
   // Push the current transforms for all rendering objects.
   {
     std::lock_guard<std::mutex> lock(m_guard);
+
     if(m_backloggedSteps > m_backlogMax)
       return;
     ++m_backloggedSteps;
+
     for(size_t i = 0; i < this->m_drawables.size(); ++i)
       /// @TODO Fix this to the transform of object i once we make the bbx
       ///       drawable.
@@ -148,6 +162,9 @@ Step() {
   static constexpr btScalar resolution = 1.f / 60.f; // Using tics this long...
   static constexpr int maxSubSteps = 2;              // Up to this many ticks.
   m_engine->Step(timestep, maxSubSteps, resolution);
+
+  for(size_t i = 0; i < m_problem->NumRobots(); ++i)
+    m_problem->GetNewRobot(i)->Step();
 }
 
 /*------------------------ Visualization Interface ---------------------------*/
@@ -159,9 +176,11 @@ render() {
   // Update the transform for all rendering objects.
   {
     std::lock_guard<std::mutex> lock(m_guard);
+
     if(m_backloggedSteps == 0)
       return;
     --m_backloggedSteps;
+
     for(const auto d : m_drawables)
       d->update_transform();
   }
@@ -257,7 +276,8 @@ Simulation<MPProblemType>::
 AddRobots() {
   for(size_t i = 0; i < m_problem->NumRobots(); ++i) {
     MultiBody* body = m_problem->GetRobot(i);
-    m_engine->AddObject(body);
+    auto bulletModel = m_engine->AddObject(body);
+    m_problem->GetNewRobot(i)->SetDynamicsModel(bulletModel);
     this->add_drawable(new Drawable(body));
   }
 }
