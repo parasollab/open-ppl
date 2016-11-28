@@ -1,5 +1,5 @@
-#ifndef MEDIALAXISUTILITY_H_
-#define MEDIALAXISUTILITY_H_
+#ifndef MEDIAL_AXIS_UTILITY_H_
+#define MEDIAL_AXIS_UTILITY_H_
 
 #include "MPUtils.h"
 
@@ -37,13 +37,14 @@ struct ClearanceStats{
 ////////////////////////////////////////////////////////////////////////////////
 template<class MPTraits>
 class ClearanceUtility : public MPBaseObject<MPTraits> {
+
   public:
-    typedef typename MPTraits::CfgType CfgType;
-    typedef typename MPTraits::CfgRef CfgRef;
-    typedef typename MPTraits::WeightType WeightType;
-    typedef typename MPTraits::MPProblemType MPProblemType;
-    typedef typename MPProblemType::GraphType GraphType;
-    typedef typename MPProblemType::VID VID;
+
+    typedef typename MPTraits::CfgType      CfgType;
+    typedef typename MPTraits::WeightType   WeightType;
+    typedef typename MPTraits::RoadmapType  RoadmapType;
+    typedef typename RoadmapType::GraphType GraphType;
+    typedef typename RoadmapType::VID       VID;
 
     ClearanceUtility(
         string _vcLabel = "", string _dmLabel = "",
@@ -119,9 +120,10 @@ class ClearanceUtility : public MPBaseObject<MPTraits> {
 ////////////////////////////////////////////////////////////////////////////////
 template<class MPTraits>
 class MedialAxisUtility : public ClearanceUtility<MPTraits> {
+
   public:
+
     typedef typename MPTraits::CfgType CfgType;
-    typedef typename MPTraits::MPProblemType MPProblemType;
 
     MedialAxisUtility(
         string _vcLabel = "", string _dmLabel = "",
@@ -781,7 +783,7 @@ PathClearance(vector<VID>& _path) {
     VI vi;
     EID ed(*vit, *(vit+1));
     g->find_edge(ed, vi, ei);
-    CfgRef s = g->GetVertex((*ei).source()), t = g->GetVertex((*ei).target());
+    CfgType& s = g->GetVertex((*ei).source()), t = g->GetVertex((*ei).target());
     pathLength += dm->Distance(s, t);
     double currentClearance = MinEdgeClearance(s, t, (*ei).property());
     clearanceVec.push_back(currentClearance);

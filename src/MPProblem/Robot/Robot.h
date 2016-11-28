@@ -4,13 +4,13 @@
 #include <string>
 #include <vector>
 
-#include "MPProblem/Robot/Actuation/Actuator.h"
+#include "Control.h"
 
 class btMultiBody;
 class ActiveMultiBody;
+class Actuator;
 class Agent;
 class Boundary;
-class Controller;
 class XMLNode;
 
 
@@ -20,14 +20,19 @@ class XMLNode;
 /// @details A robot has many components, including:
 ///   @arg ActiveMultiBody: The robot's physical geometry.
 ///   @arg Agent: The robot's high-level decision-making algorithm. Determines
-///               what actions the robot should take to complete its task.
-///   @arg Controller: The robot's low-level decision-making algorithm.
-///                    Determines how to execute a higher-level action and sends
-///                    the appropriate commands to the actuators.
+///               what actions the robot should take to complete its task. Used
+///               only in simulations.
+///   @arg ControlSet: The discrete set of controls that the robot can use, if
+///                    any.
+///   @arg ControlSpace: The continuous space of controls that the robot can use,
+///                      if any.
 ///   @arg Actuators: The robot's motors/effectors. Translates control commands
 ///                   into generalized forces.
 ///   @arg BulletModel: Simulation model of the robot. Represents the robot in
 ///                     the bullet world.
+///
+/// @TODO Think about const-correctness for this object. I've left it out for
+///       now because most of the functions alter the robot indirectly.
 ////////////////////////////////////////////////////////////////////////////////
 class Robot {
 
@@ -36,9 +41,10 @@ class Robot {
 
   ActiveMultiBody* m_multibody{nullptr}; ///< Robot's geometric representation.
 
-  Agent* m_agent{nullptr};               ///< Robot's agent.
-  Controller* m_controller{nullptr};     ///< Robot's controller.
-  std::vector<Actuator> m_actuators;     ///< Robot's actuators.
+  Agent* m_agent{nullptr};               ///< Decision-making agent.
+  std::vector<Actuator*> m_actuators;    ///< Actuators.
+  ControlSet* m_controlSet{nullptr};     ///< Discrete control set, if any.
+  ControlSpace* m_controlSpace{nullptr}; ///< Continuous control space, if any.
 
   btMultiBody* m_dynamicsModel{nullptr}; ///< The bullet dynamics model.
 
@@ -82,14 +88,16 @@ class Robot {
     void SetAgent(Agent* const _a);
 
     ///@}
-    ///@name Controller Accessors
+    ///@name Control Accessors
     ///@{
-    /// Access the robot's controller. The robot will take ownership of its
-    /// controller and delete it when either the controller is changed or when
-    /// the robot object is destroyed.
+    /// Access the robot's control structures. The robot will take ownership of
+    /// these and delete them when necessary.
 
-    Controller* GetController();
-    void SetController(Controller* const _c);
+    ControlSet* GetControlSet();
+    void SetControlSet(ControlSet* const _c);
+
+    ControlSpace* GetControlSpace();
+    void SetControlSpace(ControlSpace* const _c);
 
     ///@}
     ///@name Actuator Accessors
@@ -97,8 +105,8 @@ class Robot {
     /// Access the robot's actuators. These are set during input file parsing
     /// and cannot be changed otherwise.
 
-    Actuator& GetActuator(const size_t _i);
-    std::vector<Actuator>& GetActuators();
+    Actuator* GetActuator(const size_t _i);
+    const std::vector<Actuator*>& GetActuators();
 
     ///@}
     ///@name Dynamics Accessors

@@ -1,5 +1,5 @@
-#ifndef HIERARCHICALNF_H_
-#define HIERARCHICALNF_H_
+#ifndef HIERARCHICAL_NF_H_
+#define HIERARCHICAL_NF_H_
 
 #include "NeighborhoodFinderMethod.h"
 
@@ -13,12 +13,13 @@
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
 class HierarchicalNF : public NeighborhoodFinderMethod<MPTraits> {
+
   public:
-    typedef typename MPTraits::CfgType CfgType;
-    typedef typename MPTraits::MPProblemType MPProblemType;
-    typedef typename MPProblemType::RoadmapType RoadmapType;
-    typedef typename MPProblemType::VID VID;
-    typedef typename MPProblemType::GraphType GraphType;
+
+    typedef typename MPTraits::CfgType      CfgType;
+    typedef typename MPTraits::RoadmapType  RoadmapType;
+    typedef typename RoadmapType::VID       VID;
+    typedef typename RoadmapType::GraphType GraphType;
 
     HierarchicalNF(string _dmLabel = "") :
       NeighborhoodFinderMethod<MPTraits>(_dmLabel) {

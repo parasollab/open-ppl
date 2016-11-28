@@ -1,5 +1,5 @@
-#ifndef CONNECTIVITYMETRIC_H
-#define CONNECTIVITYMETRIC_H
+#ifndef CONNECTIVITY_METRIC_H
+#define CONNECTIVITY_METRIC_H
 
 #include "CoverageMetric.h"
 
@@ -12,10 +12,12 @@
 ////////////////////////////////////////////////////////////////////////////////
 template<class MPTraits, class Set>
 class ConnectivityMetric : public CoverageMetric<MPTraits, Set> {
+
   public:
-    typedef typename MPTraits::CfgType CfgType;
-    typedef typename MPTraits::MPProblemType MPProblemType;
-    typedef typename MPProblemType::VID VID;
+
+    typedef typename MPTraits::CfgType     CfgType;
+    typedef typename MPTraits::RoadmapType RoadmapType;
+    typedef typename RoadmapType::VID      VID;
 
     ConnectivityMetric(const Set& _samples = Set(),
         const vector<string>& _connectorLabels = vector<string>(),
@@ -29,7 +31,9 @@ class ConnectivityMetric : public CoverageMetric<MPTraits, Set> {
     double operator()();
 
   private:
+
     ofstream m_history;
+
 };
 
 template<class MPTraits, class Set>

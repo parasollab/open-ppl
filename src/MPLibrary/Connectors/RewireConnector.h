@@ -13,12 +13,10 @@ class RewireConnector : public ConnectorMethod<MPTraits> {
 
   public:
 
-    typedef typename MPTraits::MPProblemType MPProblemType;
-    typedef typename MPProblemType::VID VID;
-    typedef typename MPTraits::CfgType CfgType;
-    typedef typename MPTraits::CfgRef CfgRef;
-    typedef typename MPTraits::WeightType WeightType;
-    typedef typename MPProblemType::RoadmapType RoadmapType;
+    typedef typename MPTraits::CfgType      CfgType;
+    typedef typename MPTraits::WeightType   WeightType;
+    typedef typename MPTraits::RoadmapType  RoadmapType;
+    typedef typename RoadmapType::VID       VID;
     typedef typename RoadmapType::GraphType GraphType;
 
     RewireConnector(string _nfLabel = "", string _lpLabel = "");
@@ -79,7 +77,7 @@ Connect(RoadmapType* _rm,
 
     // find cfg pointed to by itr1
     VID vid = _rm->GetGraph()->GetVID(itr1);
-    CfgRef vCfg = _rm->GetGraph()->GetVertex(itr1);
+    CfgType& vCfg = _rm->GetGraph()->GetVertex(itr1);
 
     if(this->m_debug)
       cout << (itr1 - _itr1First)
@@ -152,8 +150,8 @@ ConnectNeighbors(RoadmapType* _rm, VID _vid,
     }
     _rm->GetGraph()->AddEdge(_vid, vmin, minlpOutput.m_edge);
     vi->property().SetStat("Parent", vmin);
-    CfgRef cfg1 = _rm->GetGraph()->GetVertex(parent);
-    CfgRef cfg2 = _rm->GetGraph()->GetVertex(_vid);
+    CfgType& cfg1 = _rm->GetGraph()->GetVertex(parent);
+    CfgType& cfg2 = _rm->GetGraph()->GetVertex(_vid);
     VDRemoveEdge(cfg1, cfg2);     // for vizmo
     VDRemoveEdge(cfg2, cfg1);
     _rm->GetGraph()->delete_edge(parent, _vid);
@@ -196,8 +194,8 @@ ConnectNeighbors(RoadmapType* _rm, VID _vid,
         ei = (*vi).begin();
         parent = vi->property().GetStat("Parent");
         // Removing the parent-child edge
-        CfgRef cfg1 = _rm->GetGraph()->GetVertex(parent);
-        CfgRef cfg2 = _rm->GetGraph()->GetVertex(neighbor);
+        CfgType& cfg1 = _rm->GetGraph()->GetVertex(parent);
+        CfgType& cfg2 = _rm->GetGraph()->GetVertex(neighbor);
         _rm->GetGraph()->delete_edge(parent, neighbor);
         VDRemoveEdge(cfg1, cfg2);
         _rm->GetGraph()->delete_edge(neighbor, parent);
@@ -256,16 +254,16 @@ GetDistance(VID _vid1, VID _vid2, RoadmapType* _rm) {
   }
   else if(m_distanceBased) {
     //grab the individual Cfgs and calculate distance
-    CfgRef cfg1 = _rm->GetGraph()->GetVertex(_vid1);
-    CfgRef cfg2 = _rm->GetGraph()->GetVertex(_vid2);
+    CfgType& cfg1 = _rm->GetGraph()->GetVertex(_vid1);
+    CfgType& cfg2 = _rm->GetGraph()->GetVertex(_vid2);
     double distance = this->GetNeighborhoodFinder(this->m_nfLabel)->
       GetDMMethod()->Distance(cfg1, cfg2);
     return distance;
   }
   else {
     //calculate the clearance between them.
-    CfgRef cfg1 = _rm->GetGraph()->GetVertex(_vid1);
-    CfgRef cfg2 = _rm->GetGraph()->GetVertex(_vid2);
+    CfgType& cfg1 = _rm->GetGraph()->GetVertex(_vid1);
+    CfgType& cfg2 = _rm->GetGraph()->GetVertex(_vid2);
     WeightType w(this->m_lpLabel);
     return m_clearanceUtility.MinEdgeClearance(cfg1, cfg2, w);
   }

@@ -1,5 +1,5 @@
-#ifndef COMBINEDPATHMODIFIER_H_
-#define COMBINEDPATHMODIFIER_H_
+#ifndef COMBINED_PATH_MODIFIER_H_
+#define COMBINED_PATH_MODIFIER_H_
 
 #include "PathModifierMethod.h"
 
@@ -11,9 +11,10 @@
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
 class CombinedPathModifier : public PathModifierMethod<MPTraits> {
+
   public:
+
     typedef typename MPTraits::CfgType CfgType;
-    typedef typename MPTraits::MPProblemType MPProblemType;
 
     CombinedPathModifier(const vector<string>& _pathModifierLabels = vector<string>());
     CombinedPathModifier(XMLNode& _node);

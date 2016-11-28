@@ -31,12 +31,11 @@ class DynamicRegionRRT : public BasicRRTStrategy<MPTraits> {
     ///\name Motion Planning Types
     ///@{
 
-    typedef typename MPTraits::MPProblemType  MPProblemType;
-    typedef typename MPTraits::CfgType        CfgType;
-    typedef typename MPTraits::CfgRef         CfgRef;
-    typedef typename MPTraits::WeightType     WeightType;
-    typedef typename MPProblemType::VID       VID;
-    typedef typename MPProblemType::GraphType GraphType;
+    typedef typename MPTraits::CfgType      CfgType;
+    typedef typename MPTraits::WeightType   WeightType;
+    typedef typename MPTraits::RoadmapType  RoadmapType;
+    typedef typename RoadmapType::VID       VID;
+    typedef typename RoadmapType::GraphType GraphType;
 
     ///@}
     ///\name Local Types

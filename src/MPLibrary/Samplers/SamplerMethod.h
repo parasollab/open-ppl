@@ -61,9 +61,10 @@ class SamplerMethod : public MPBaseObject<MPTraits>, public stapl::p_object {
 #else
 class SamplerMethod : public MPBaseObject<MPTraits> {
 #endif
+
   public:
+
     typedef typename MPTraits::CfgType CfgType;
-    typedef typename MPTraits::MPProblemType MPProblemType;
 
     SamplerMethod();
     SamplerMethod(XMLNode& _node);

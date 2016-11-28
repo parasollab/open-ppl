@@ -15,12 +15,6 @@ class EuclideanDistance : public MinkowskiDistance<MPTraits> {
 
   public:
 
-    ///@name Local Types
-    ///@{
-
-    typedef typename MPTraits::MPProblemType MPProblemType;
-
-    ///@}
     ///@name Construction
     ///@{
 

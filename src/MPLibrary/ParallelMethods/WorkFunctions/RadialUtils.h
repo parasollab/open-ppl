@@ -126,14 +126,14 @@ class RadialUtils {
   public:
 
     typedef typename MPTraits::MPProblemType MPProblemType;
-    typedef typename MPTraits::MPLibraryType MPLibraryType;
+    typedef typename MPTraits::MPLibrary MPLibrary;
     typedef typename MPProblemType::VID VID;
     typedef typename MPTraits::CfgType CfgType;
     typedef typename MPTraits::WeightType WeightType;
     typedef typename MPProblemType::RoadmapType RoadmapType;
     typedef typename MPProblemType::GraphType GraphType;
     typedef typename GraphType::GRAPH LocalGraphType;
-    typedef typename MPLibraryType::ValidityCheckerPointer ValidityCheckerPointer;
+    typedef typename MPLibrary::ValidityCheckerPointer ValidityCheckerPointer;
     typedef typename stapl::sequential::map_property_map< typename GraphType::GRAPH ,size_t > ColorMap;
     typedef pair<size_t, VID> CCType;
     typedef typename stapl::sequential::graph<stapl::DIRECTED, stapl::NONMULTIEDGES, CfgType,WeightType> LocalTreeType;

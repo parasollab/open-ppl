@@ -1,11 +1,12 @@
 #ifndef STATE_TRAITS_H_
 #define STATE_TRAITS_H_
 
-#include "MPProblem/MPProblem.h"
 #include "MPLibrary/MPLibrary.h"
+#include "MPLibrary/MPSolution.h"
+#include "MPLibrary/MPTask.h"
 
-#include "MPProblem/ConfigurationSpace/State.h"
-#include "MPProblem/ConfigurationSpace/StateEdge.h"
+#include "ConfigurationSpace/State.h"
+#include "ConfigurationSpace/StateEdge.h"
 
 //distance metric includes
 #include "MPLibrary/DistanceMetrics/ExperimentalDistance.h"
@@ -54,8 +55,9 @@ struct StateTraits {
   typedef StateEdge<State> WeightType;
   typedef State& CfgRef;
 
-  typedef MPProblem<StateTraits> MPProblemType;
-  typedef MPLibrary<StateTraits> MPLibraryType;
+  typedef MPLibraryType<StateTraits> MPLibrary;
+  typedef MPSolution<StateTraits>    MPSolution;
+  typedef MPTaskType<StateTraits>    MPTask;
 
   //types of distance metrics available in our world
   typedef boost::mpl::list<

@@ -17,7 +17,6 @@ class HierarchicalLP : public LocalPlannerMethod<MPTraits> {
   public:
     typedef typename MPTraits::CfgType CfgType;
     typedef typename MPTraits::WeightType WeightType;
-    typedef typename MPTraits::MPProblemType MPProblemType;
 
     HierarchicalLP(const vector<string>& _lpLabels = vector<string>(), bool _saveIntermediates = false);
 

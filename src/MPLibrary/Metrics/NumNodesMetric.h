@@ -1,15 +1,17 @@
-#ifndef NUMNODESMETRIC_H
-#define NUMNODESMETRIC_H
+#ifndef NUM_NODES_METRIC_H
+#define NUM_NODES_METRIC_H
 
 #include "MetricMethod.h"
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Get number of nodes in roadmap.
 /// @ingroup Metrics
-/// @brief Get number of nodes in roadmap.
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
 class NumNodesMetric : public MetricMethod<MPTraits> {
+
   public:
+
     NumNodesMetric(){
       this->SetName("NumNodesMetric");
     }

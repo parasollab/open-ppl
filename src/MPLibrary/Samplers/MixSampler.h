@@ -14,8 +14,8 @@ template <typename MPTraits>
 class MixSampler : public SamplerMethod<MPTraits> {
 
   public:
+
     typedef typename MPTraits::CfgType CfgType;
-    typedef typename MPTraits::MPProblemType MPProblemType;
 
     MixSampler();
     MixSampler(XMLNode& _node);

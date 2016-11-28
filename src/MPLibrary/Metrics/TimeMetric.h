@@ -1,5 +1,5 @@
-#ifndef TIMEMETRIC_H
-#define TIMEMETRIC_H
+#ifndef TIME_METRIC_H
+#define TIME_METRIC_H
 
 #include "MetricMethod.h"
 #include "Utilities/MetricUtils.h"
@@ -12,6 +12,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
 class TimeMetric : public MetricMethod<MPTraits> {
+
   public:
 
     TimeMetric();

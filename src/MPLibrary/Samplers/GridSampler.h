@@ -17,8 +17,8 @@ template <class MPTraits>
 class GridSampler : public SamplerMethod<MPTraits> {
 
   public:
+
     typedef typename MPTraits::CfgType CfgType;
-    typedef typename MPTraits::MPProblemType MPProblemType;
 
     GridSampler(string _vcm = "",
         map<size_t, size_t> _numPoints = map<size_t, size_t>(),

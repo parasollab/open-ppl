@@ -29,10 +29,9 @@ class DPESNF : public NeighborhoodFinderMethod<MPTraits> {
 
   public:
 
-    typedef typename MPTraits::CfgType CfgType;
-    typedef typename MPTraits::MPProblemType MPProblemType;
-    typedef typename MPProblemType::VID VID;
-    typedef typename MPProblemType::RoadmapType RoadmapType;
+    typedef typename MPTraits::CfgType     CfgType;
+    typedef typename MPTraits::RoadmapType RoadmapType;
+    typedef typename RoadmapType::VID      VID;
 
     typedef vector<double> Projected; ///< Projected point of dim m
 

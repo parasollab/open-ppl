@@ -1,14 +1,12 @@
-#ifndef COMPOSEEVALUATION_H_
-#define COMPOSEEVALUATION_H_
+#ifndef COMPOSE_EVALUATION_H_
+#define COMPOSE_EVALUATION_H_
 
 #include "MapEvaluatorMethod.h"
 #include "EvaluatorFunctor.h"
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Combines two or more MapEvaluators to produce a compound condition.
 /// @ingroup MapEvaluators
-/// @brief TODO.
-///
-/// TODO.
 ////////////////////////////////////////////////////////////////////////////////
 template <class MPTraits>
 class ComposeEvaluator : public MapEvaluatorMethod<MPTraits> {
@@ -24,8 +22,7 @@ class ComposeEvaluator : public MapEvaluatorMethod<MPTraits> {
     ///\name Motion Planning Types
     ///@{
 
-    typedef typename MPTraits::MPProblemType            MPProblemType;
-    typedef typename MPTraits::MPLibraryType      MPLibraryType;
+    typedef typename MPTraits::MPLibrary MPLibrary;
 
     ///@}
     ///\name Construction
@@ -106,7 +103,7 @@ template <typename MPTraits>
 bool
 ComposeEvaluator<MPTraits>::
 operator()() {
-  typedef typename MPLibraryType::MapEvaluatorPointer MapEvaluatorPointer;
+  typedef typename MPLibrary::MapEvaluatorPointer MapEvaluatorPointer;
   vector<MapEvaluatorPointer> evalMethods;
   for(auto l : m_evalLabels)
     evalMethods.push_back(this->GetMapEvaluator(l));

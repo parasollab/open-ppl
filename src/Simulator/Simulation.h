@@ -2,6 +2,7 @@
 #define SIMULATION_H_
 
 #include "MPProblem/MPProblem.h"
+#include "MPProblem/Robot/Robot.h"
 
 #include "sandbox/gui/base_visualization.h"
 #include "nonstd/io.h"
@@ -163,8 +164,9 @@ Step() {
   static constexpr int maxSubSteps = 2;              // Up to this many ticks.
   m_engine->Step(timestep, maxSubSteps, resolution);
 
-  for(size_t i = 0; i < m_problem->NumRobots(); ++i)
-    m_problem->GetNewRobot(i)->Step();
+  /// @TODO
+  //for(size_t i = 0; i < m_problem->NumRobots(); ++i)
+  //  m_problem->GetNewRobot(i)->Step();
 }
 
 /*------------------------ Visualization Interface ---------------------------*/

@@ -1,5 +1,5 @@
-#ifndef HOPLIMITNF_H_
-#define HOPLIMITNF_H_
+#ifndef HOP_LIMIT_NF_H_
+#define HOP_LIMIT_NF_H_
 
 #include "NeighborhoodFinderMethod.h"
 
@@ -13,12 +13,13 @@
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
 class HopLimitNF : public NeighborhoodFinderMethod<MPTraits> {
+
   public:
-    typedef typename MPTraits::CfgType CfgType;
-    typedef typename MPTraits::MPProblemType MPProblemType;
-    typedef typename MPProblemType::RoadmapType RoadmapType;
-    typedef typename MPProblemType::VID VID;
-    typedef typename MPProblemType::GraphType GraphType;
+
+    typedef typename MPTraits::CfgType      CfgType;
+    typedef typename MPTraits::RoadmapType  RoadmapType;
+    typedef typename RoadmapType::VID       VID;
+    typedef typename RoadmapType::GraphType GraphType;
 
     HopLimitNF(string _dmLabel = "", size_t _h=1) :
       NeighborhoodFinderMethod<MPTraits>(_dmLabel), m_h(_h) {

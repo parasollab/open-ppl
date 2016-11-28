@@ -16,13 +16,13 @@ using namespace std;
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
 class MPNNNF : public NeighborhoodFinderMethod<MPTraits> {
+
   public:
-    typedef typename MPTraits::CfgType CfgType;
-    typedef typename MPTraits::MPProblemType MPProblemType;
-    typedef typename MPProblemType::RoadmapType RoadmapType;
-    typedef typename MPProblemType::VID VID;
-    typedef typename MPProblemType::GraphType GraphType;
-    typedef typename GraphType::vertex_iterator VI;
+
+    typedef typename MPTraits::CfgType      CfgType;
+    typedef typename MPTraits::RoadmapType  RoadmapType;
+    typedef typename RoadmapType::VID       VID;
+    typedef typename RoadmapType::GraphType GraphType;
 
     MPNNNF(string _dmLabel = "", bool _unconnected = false, size_t _k = 5) :
       NeighborhoodFinderMethod<MPTraits>(_dmLabel, _unconnected) {
@@ -96,7 +96,7 @@ UpdateInternalModel()
   RoadmapType* _rmp = this->GetRoadmap();
   GraphType* g = _rmp->GetGraph();
   int curRdmpSize = 0;
-  for(VI v=g->begin(); v!=g->end(); v++) curRdmpSize++;
+  for(auto v=g->begin(); v!=g->end(); v++) curRdmpSize++;
   if (curRdmpSize==m_lastRdmpSize)
     return;
   else m_lastRdmpSize = curRdmpSize; //continue to update model
@@ -124,7 +124,7 @@ UpdateInternalModel()
   m_cur_roadmap_version = -1;
 
   //set bound
-  MPProblemType* problem = this->GetMPProblem();
+  auto problem = this->GetMPProblem();
   m_max_bbox_range = 0.0;
   if( this->m_debug) {
     cout << "setting bbox range: " << m_max_bbox_range << endl;
@@ -144,10 +144,10 @@ UpdateInternalModel()
 
   if( this->m_debug ) { cout << "Updating internal model rdmp size " << curRdmpSize << endl; }
   int vertexIndex=0;
-  for(VI v=g->begin(); v!=g->end(); v++,vertexIndex++) {
+  for(auto v=g->begin(); v!=g->end(); v++,vertexIndex++) {
      CfgType cfg = v->property();
      this->AddPoint(cfg,v->descriptor());
-  }//endfor VI
+  }
 
   if( this->m_debug ) { cout << "-done! Updating internal model rdmp size " << curRdmpSize << endl; }
 

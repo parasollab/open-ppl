@@ -15,7 +15,7 @@ TransformConstraint(ActiveMultiBody* _m, FreeBody* _f) : Constraint(_m),
 
 /*------------------------------ Constraint Interface ------------------------*/
 
-const bool
+bool
 TransformConstraint::
 operator()(const Cfg& _c) const {
   // Configure the object at _c and get its transformation.
@@ -24,13 +24,20 @@ operator()(const Cfg& _c) const {
 
   // Check the current transform against each constraint function. If any fail,
   // then the constraint isn't satisfied.
-  for(auto& constraint : m_constraints)
-    if(!constraint(currentTransform))
+  for(auto& constraintFunction : m_constraints)
+    if(!constraintFunction(currentTransform))
       return false;
   return true;
 }
 
 /*------------------------------- Creation Interface -------------------------*/
+
+void
+TransformConstraint::
+AddFunction(ConstraintFunction&& _f) {
+  m_constraints.push_back(_f);
+}
+
 
 void
 TransformConstraint::

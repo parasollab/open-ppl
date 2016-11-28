@@ -171,12 +171,11 @@ class PerturbMostDistantJoint : public PerturbJoints{
 template <typename MPTraits>
 class ReachableVolumeRRT : public BasicRRTStrategy<MPTraits> {
  public:
-    typedef typename MPTraits::CfgType CfgType;
-    typedef typename MPTraits::WeightType WeightType;
-    typedef typename MPTraits::MPProblemType MPProblemType;
-    typedef typename MPProblemType::RoadmapType RoadmapType;
-    typedef typename MPProblemType::GraphType GraphType;
-    typedef typename MPProblemType::VID VID;
+    typedef typename MPTraits::CfgType      CfgType;
+    typedef typename MPTraits::WeightType   WeightType;
+    typedef typename MPTraits::RoadmapType  RoadmapType;
+    typedef typename RoadmapType::GraphType GraphType;
+    typedef typename RoadmapType::VID       VID;
 
     map<VID, shared_ptr<vector<Vector3D> > > m_rvCfgs;  //whenever adding node also add to this, later we may want to add this to cfg instead
     double m_deltaRV;

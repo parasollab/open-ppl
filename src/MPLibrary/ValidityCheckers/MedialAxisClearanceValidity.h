@@ -15,7 +15,6 @@ class MedialAxisClearanceValidity : public ValidityCheckerMethod<MPTraits> {
   public:
 
     typedef typename MPTraits::CfgType CfgType;
-    typedef typename MPTraits::MPProblemType MPProblemType;
 
     MedialAxisClearanceValidity(const MedialAxisUtility<MPTraits>& _m = MedialAxisUtility<MPTraits>(), double _c = 0.001);
     MedialAxisClearanceValidity(XMLNode& _node);

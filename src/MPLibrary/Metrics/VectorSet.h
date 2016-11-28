@@ -1,5 +1,5 @@
-#ifndef VECTORSET_H
-#define VECTORSET_H
+#ifndef VECTOR_SET_H
+#define VECTOR_SET_H
 
 #include <fstream>
 
@@ -11,7 +11,9 @@
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
 class VectorSet {
+
   public:
+
     typedef typename MPTraits::CfgType CfgType;
     typedef typename vector<CfgType>::iterator Iterator;
     typedef typename vector<CfgType>::const_iterator ConstIterator;

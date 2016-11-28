@@ -4,7 +4,7 @@
 #include <boost/mpl/list.hpp>
 #include <boost/mpl/for_each.hpp>
 #include "Utilities/MPUtils.h"
-#include "MPProblem/ConfigurationSpace/RoadmapGraph.h"
+#include "ConfigurationSpace/RoadmapGraph.h"
 
 namespace pmpl_detail {
 
@@ -97,12 +97,13 @@ enum NFType {K, RADIUS, OPTIMAL, APPROX, OTHER};
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
 class NeighborhoodFinderMethod : public MPBaseObject<MPTraits> {
+
   public:
-    typedef typename MPTraits::CfgType CfgType;
-    typedef typename MPTraits::MPProblemType MPProblemType;
-    typedef typename MPProblemType::RoadmapType RoadmapType;
-    typedef typename MPProblemType::VID VID;
-    typedef typename MPTraits::MPLibraryType MPLibraryType;
+
+    typedef typename MPTraits::CfgType       CfgType;
+    typedef typename MPTraits::RoadmapType   RoadmapType;
+    typedef typename RoadmapType::VID        VID;
+    typedef typename MPTraits::MPLibrary MPLibrary;
 
     NeighborhoodFinderMethod(string _dmLabel = "", bool _unconnected = false);
     NeighborhoodFinderMethod(XMLNode& _node, bool _requireDM = true);
@@ -129,7 +130,7 @@ class NeighborhoodFinderMethod : public MPBaseObject<MPTraits> {
     ////////////////////////////////////////////////////////////////////////////
     /// @return Distance Metric for this neighborhood finder
     ////////////////////////////////////////////////////////////////////////////
-    virtual typename MPLibraryType::DistanceMetricPointer GetDMMethod() const;
+    virtual typename MPLibrary::DistanceMetricPointer GetDMMethod() const;
 
     ////////////////////////////////////////////////////////////////////////////
     /// @return Total time of neighborhood finding
@@ -305,7 +306,7 @@ NeighborhoodFinderMethod<MPTraits>::NeighborhoodFinderMethod(XMLNode& _node, boo
   }
 
 template <typename MPTraits>
-typename MPTraits::MPLibraryType::DistanceMetricPointer
+typename MPTraits::MPLibrary::DistanceMetricPointer
 NeighborhoodFinderMethod<MPTraits>::GetDMMethod() const {
   return this->GetDistanceMetric(m_dmLabel);
 }

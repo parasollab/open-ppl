@@ -12,9 +12,10 @@
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
 class ObstacleBasedSampler : public SamplerMethod<MPTraits> {
+
   public:
+
     typedef typename MPTraits::CfgType CfgType;
-    typedef typename MPTraits::MPProblemType MPProblemType;
 
     ObstacleBasedSampler(string _vcLabel = "", string _dmLabel = "",
         int _free = 1, int _coll = 0, double _step = 0,

@@ -1,45 +1,29 @@
-#ifdef PMPCfg
-#include "MPProblem/ConfigurationSpace/Cfg.h"
-#include "Traits/CfgTraits.h"
-typedef MPTraits<Cfg> PMPLTraits;
+#include "MPLibrary/PMPL.h"
 
-#elif (defined(PMPState))
-#include "MPProblem/ConfigurationSpace/State.h"
-#include "Traits/StateTraits.h"
-typedef StateTraits PMPLTraits;
-
-#else
-#error "Error, must define a RobotType for PMPL application"
-#endif
-typedef PMPLTraits::MPProblemType MPProblemType;
-typedef PMPLTraits::MPLibraryType MPLibraryType;
-
-
-using namespace std;
+#include <string>
+#include <exception>
 
 int
 main(int _argc, char** _argv) {
   try {
-    if(_argc < 3 || string(_argv[1]) != "-f")
+    if(_argc < 3 || std::string(_argv[1]) != "-f")
       throw ParseException(WHERE, "Incorrect usage. Usage: -f options.xml");
 
-    MPProblemType* problem = new MPProblemType(_argv[2]);
-    MPLibraryType* pmpl = new MPLibraryType(_argv[2]);
-    pmpl->SetMPProblem(problem);
-    pmpl->Solve();
+    MPProblem* problem = new MPProblem(_argv[2]);
+    MPLibrary* pmpl = new MPLibrary(_argv[2]);
+    MPTask* task = nullptr;
+    MPSolution* solution = new MPSolution;
+    pmpl->Solve(problem, task, solution);
 
     delete problem;
+    delete task;
+    delete solution;
     delete pmpl;
 
     return 0;
   }
   catch(const std::runtime_error& e) {
-    cerr << endl << e.what() << endl;
-    return 1;
-  }
-  catch(...) {
-    cerr << "Unknown error." << endl;
+    std::cerr << std::endl << e.what() << std::endl;
     return 1;
   }
 }
-

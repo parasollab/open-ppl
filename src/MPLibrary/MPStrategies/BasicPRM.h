@@ -18,11 +18,10 @@ class BasicPRM : public MPStrategyMethod<MPTraits> {
 
     enum Start {Sampling, Connecting, ConnectingComponents, Evaluating};
 
-    typedef typename MPTraits::CfgType CfgType;
-    typedef typename MPTraits::MPProblemType MPProblemType;
-    typedef typename MPProblemType::RoadmapType RoadmapType;
-    typedef typename MPProblemType::GraphType GraphType;
-    typedef typename MPProblemType::VID VID;
+    typedef typename MPTraits::CfgType      CfgType;
+    typedef typename MPTraits::RoadmapType  RoadmapType;
+    typedef typename RoadmapType::GraphType GraphType;
+    typedef typename RoadmapType::VID       VID;
 
     BasicPRM(
         const map<string, pair<size_t, size_t> >& _samplerLabels = map<string, pair<size_t, size_t> >(),

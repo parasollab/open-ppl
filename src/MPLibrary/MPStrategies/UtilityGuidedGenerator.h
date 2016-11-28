@@ -1,5 +1,5 @@
-#ifndef UTILITYGUIDEDGENERATOR_H_
-#define UTILITYGUIDEDGENERATOR_H_
+#ifndef UTILITY_GUIDED_GENERATOR_H_
+#define UTILITY_GUIDED_GENERATOR_H_
 
 #include "MPStrategyMethod.h"
 
@@ -13,14 +13,15 @@ template <class MPTraits>
 struct ApproximateCSpaceModel {
 
   typedef typename MPTraits::CfgType CfgType;
-  typedef typename MPTraits::MPLibraryType MPLibraryType;
-  typedef typename MPLibraryType::DistanceMetricPointer DistanceMetricPointer;
+  typedef typename MPTraits::MPLibrary MPLibrary;
+  typedef typename MPLibrary::DistanceMetricPointer DistanceMetricPointer;
 
   vector<pair<CfgType, double> > m_modelNodes;
   Environment* m_env;
   DistanceMetricPointer m_dm;
 
-  ApproximateCSpaceModel(Environment* _env, DistanceMetricPointer _dm) : m_env(_env), m_dm(_dm) {}
+  ApproximateCSpaceModel(Environment* _env, DistanceMetricPointer _dm) :
+      m_env(_env), m_dm(_dm) {}
   ~ApproximateCSpaceModel() {}
 
   void AddSample(const CfgType& _c, double _coll) {
@@ -37,6 +38,7 @@ struct ApproximateCSpaceModel {
       return accumulate(m_modelNodes.begin(), m_modelNodes.begin() + size,
 			0.0, PlusSecond<pair<CfgType,double> >()) / size;
   }
+
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -49,34 +51,36 @@ struct ApproximateCSpaceModel {
 ////////////////////////////////////////////////////////////////////////////////
 template <class MPTraits>
 class UtilityGuidedGenerator : public MPStrategyMethod<MPTraits> {
- public:
-  typedef typename MPTraits::MPProblemType MPProblemType;
-  typedef typename MPTraits::CfgType CfgType;
-  typedef typename MPProblemType::RoadmapType RoadmapType;
-  typedef typename MPProblemType::VID VID;
-  typedef typename MPProblemType::GraphType::GRAPH GRAPH;
 
-  UtilityGuidedGenerator(string _vcLabel = "", string _nfLabel = "",
+  public:
+
+    typedef typename MPTraits::CfgType      CfgType;
+    typedef typename MPTraits::RoadmapType  RoadmapType;
+    typedef typename RoadmapType::VID       VID;
+    typedef typename RoadmapType::GraphType GraphType;
+
+    UtilityGuidedGenerator(string _vcLabel = "", string _nfLabel = "",
         string _connector = "", vector<string> _evaluators = vector<string>(),
         double _componentDist = 0.5, double _tao = 0.01,
         int _kNeighbors = 10, int _kSamples = 5);
-  UtilityGuidedGenerator(XMLNode& _node);
-  virtual ~UtilityGuidedGenerator();
+    UtilityGuidedGenerator(XMLNode& _node);
+    virtual ~UtilityGuidedGenerator();
 
-  virtual void ParseXML(XMLNode& _node);
-  virtual void Print(ostream& _os) const;
+    virtual void ParseXML(XMLNode& _node);
+    virtual void Print(ostream& _os) const;
 
-  virtual void Initialize();
-  virtual void Run();
-  virtual void Finalize();
+    virtual void Initialize();
+    virtual void Run();
+    virtual void Finalize();
 
- protected:
-  CfgType GenerateEntropyGuidedSample();
+  protected:
 
-  //data
-  string m_vcLabel, m_nfLabel, m_connectorLabel;
-  double m_componentDist, m_tao;
-  int m_kNeighbors, m_kSamples;
+    CfgType GenerateEntropyGuidedSample();
+
+    //data
+    string m_vcLabel, m_nfLabel, m_connectorLabel;
+    double m_componentDist, m_tao;
+    int m_kNeighbors, m_kSamples;
 };
 
 
@@ -279,7 +283,7 @@ GenerateEntropyGuidedSample() {
 
   CfgType q1, q2;
 
-  stapl::sequential::vector_property_map<GRAPH, size_t > cmap;
+  stapl::sequential::vector_property_map<GraphType, size_t > cmap;
   vector<pair<size_t, VID> > ccs;
   if(get_cc_stats(*rmap->GetGraph(), cmap, ccs) == 1) {
     int index = (int)floor((double)DRand()*(double)rmap->GetGraph()->get_num_vertices());

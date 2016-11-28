@@ -22,8 +22,7 @@ class ExperimentalDistance : public WeightedEuclideanDistance<MPTraits> {
     ///@name Local Types
     ///@{
 
-    typedef typename MPTraits::MPProblemType MPProblemType;
-    typedef typename MPTraits::CfgType       StateType;
+    typedef typename MPTraits::CfgType StateType;
 
     ///@}
     ///@name Construction

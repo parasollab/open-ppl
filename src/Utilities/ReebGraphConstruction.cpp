@@ -8,7 +8,7 @@
 
 #include "MPProblem/Environment/Environment.h"
 #include "MPProblem/MPProblemBase.h"
-#include "MPProblem/Workspace/WorkspaceDecomposition.h"
+#include "Workspace/WorkspaceDecomposition.h"
 
 #include "TetGenDecomposition.h"
 

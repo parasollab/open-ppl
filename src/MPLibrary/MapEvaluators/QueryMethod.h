@@ -5,7 +5,8 @@
 
 #include "MPLibrary/LocalPlanners/LPOutput.h"
 #include "MPLibrary/LocalPlanners/StraightLine.h"
-#include "MPProblem/ConfigurationSpace/Path.h"
+#include "MPProblem/MPProblemBase.h"
+#include "ConfigurationSpace/Path.h"
 #include "Utilities/MetricUtils.h"
 #include <containers/sequential/graph/algorithms/astar.h>
 
@@ -76,13 +77,11 @@ class QueryMethod : public MapEvaluatorMethod<MPTraits> {
     ///\name Motion Planning Types
     ///@{
 
-    typedef typename MPTraits::CfgType          CfgType;
-    typedef typename MPTraits::CfgRef           CfgRef;
-    typedef typename MPTraits::WeightType       WeightType;
-    typedef typename MPTraits::MPProblemType    MPProblemType;
-    typedef typename MPProblemType::RoadmapType RoadmapType;
-    typedef typename MPProblemType::GraphType   GraphType;
-    typedef typename MPProblemType::VID         VID;
+    typedef typename MPTraits::CfgType      CfgType;
+    typedef typename MPTraits::WeightType   WeightType;
+    typedef typename MPTraits::RoadmapType  RoadmapType;
+    typedef typename RoadmapType::GraphType GraphType;
+    typedef typename RoadmapType::VID       VID;
 
     ///@}
     ///\name Construction
@@ -298,7 +297,7 @@ template <typename MPTraits>
 void
 QueryMethod<MPTraits>::
 ReadQuery(string _filename) {
-  _filename = MPProblemType::GetPath(_filename);
+  _filename = MPProblemBase::GetPath(_filename);
   if(this->m_debug)
     cout << "Reading query file \'" << _filename << "\'..." << endl;
 

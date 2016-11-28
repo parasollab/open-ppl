@@ -1,5 +1,5 @@
-#ifndef RESAMPLEPATHMODIFIER_H_
-#define RESAMPLEPATHMODIFIER_H_
+#ifndef RESAMPLE_PATH_MODIFIER_H_
+#define RESAMPLE_PATH_MODIFIER_H_
 
 #include "PathModifierMethod.h"
 
@@ -11,12 +11,13 @@
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
 class ResamplePathModifier : public PathModifierMethod<MPTraits> {
+
   public:
-    typedef typename MPTraits::CfgType CfgType;
-    typedef typename vector<CfgType>::iterator CfgIter;
-    typedef typename MPTraits::MPProblemType MPProblemType;
-    typedef typename MPProblemType::GraphType GraphType;
-    typedef typename MPProblemType::VID VID;
+
+    typedef typename MPTraits::CfgType      CfgType;
+    typedef typename MPTraits::RoadmapType  RoadmapType;
+    typedef typename RoadmapType::GraphType GraphType;
+    typedef typename RoadmapType::VID       VID;
 
     ResamplePathModifier(const string _dmLabel = "", const string _lpLabel = "",
         const size_t _numResamples = 0, const double _stepSize = -1,
@@ -133,7 +134,7 @@ ResamplePathModifier<MPTraits>::ModifyImpl(vector<CfgType>& _originalPath, vecto
   // Make room for the path
   _newPath.clear();
 
-  CfgIter cit = _originalPath.begin();
+  auto cit = _originalPath.begin();
   _newPath.push_back(*cit);
 
   if(this->m_debug) {

@@ -23,8 +23,7 @@ class KinodynamicExtender : public ExtenderMethod<MPTraits> {
     ///\name Motion Planning Types
     ///@{
 
-    typedef typename MPTraits::CfgType       StateType;
-    typedef typename MPTraits::MPProblemType MPProblemType;
+    typedef typename MPTraits::CfgType StateType;
 
     ///@}
     ///\name Construction

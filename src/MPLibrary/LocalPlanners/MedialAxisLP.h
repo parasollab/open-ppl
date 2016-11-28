@@ -25,7 +25,6 @@ class MedialAxisLP : public LocalPlannerMethod<MPTraits> {
 
     typedef typename MPTraits::CfgType CfgType;
     typedef typename MPTraits::WeightType WeightType;
-    typedef typename MPTraits::MPProblemType MPProblemType;
 
     MedialAxisLP(MedialAxisUtility<MPTraits> _medialAxisUtility =
         MedialAxisUtility<MPTraits>(),
@@ -184,7 +183,7 @@ IsConnected(const CfgType& _c1, const CfgType& _c2, CfgType& _col,
   if(!m_macVCAdded) {
     m_macVCAdded = true;
     this->GetMPLibrary()->AddValidityChecker(
-        typename MPTraits::MPLibraryType::ValidityCheckerPointer(m_macVC),
+        typename MPTraits::MPLibrary::ValidityCheckerPointer(m_macVC),
         "MAC::" + this->GetNameAndLabel());
   }
 

@@ -27,13 +27,11 @@ class RRTQuery : public QueryMethod<MPTraits> {
     ///\name Motion Planning Types
     ///@{
 
-    typedef typename MPTraits::CfgType          CfgType;
-    typedef typename MPTraits::CfgRef           CfgRef;
-    typedef typename MPTraits::WeightType       WeightType;
-    typedef typename MPTraits::MPProblemType    MPProblemType;
-    typedef typename MPProblemType::RoadmapType RoadmapType;
-    typedef typename MPProblemType::GraphType   GraphType;
-    typedef typename MPProblemType::VID         VID;
+    typedef typename MPTraits::CfgType      CfgType;
+    typedef typename MPTraits::WeightType   WeightType;
+    typedef typename MPTraits::RoadmapType  RoadmapType;
+    typedef typename RoadmapType::GraphType GraphType;
+    typedef typename RoadmapType::VID       VID;
 
     ///@}
     ///\name Construction

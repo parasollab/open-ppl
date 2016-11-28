@@ -86,7 +86,7 @@ template <typename MPTraits>
 bool
 ComposeValidity<MPTraits>::
 IsValidImpl(CfgType& _cfg, CDInfo& _cdInfo, const string& _callName) {
-  typedef typename MPTraits::MPLibraryType::ValidityCheckerPointer
+  typedef typename MPTraits::MPLibrary::ValidityCheckerPointer
       ValidityCheckerPointer;
   typedef typename vector<ValidityCheckerPointer>::iterator VCIterator;
 

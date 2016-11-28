@@ -1,5 +1,5 @@
-#ifndef DIAMETERMETRIC_H
-#define DIAMETERMETRIC_H
+#ifndef DIAMETER_METRIC_H_
+#define DIAMETER_METRIC_H_
 
 #include "MetricMethod.h"
 #include "containers/sequential/graph/algorithms/diameter.h"
@@ -12,12 +12,13 @@
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
 class DiameterMetric : public MetricMethod<MPTraits> {
+
   public:
-    typedef typename MPTraits::CfgType CfgType;
-    typedef typename MPTraits::MPProblemType MPProblemType;
-    typedef typename MPProblemType::RoadmapType RoadmapType;
-    typedef typename MPProblemType::VID VID;
-    typedef typename MPProblemType::GraphType GraphType;
+
+    typedef typename MPTraits::CfgType      CfgType;
+    typedef typename MPTraits::RoadmapType  RoadmapType;
+    typedef typename RoadmapType::VID       VID;
+    typedef typename RoadmapType::GraphType GraphType;
 
     DiameterMetric();
     DiameterMetric(XMLNode& _node);
@@ -26,6 +27,7 @@ class DiameterMetric : public MetricMethod<MPTraits> {
     virtual void Print(ostream& _os) const;
 
     double operator()();
+
 };
 
 template <typename MPTraits>

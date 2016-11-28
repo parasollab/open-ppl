@@ -13,9 +13,10 @@
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
 class ModifyPath : public MPStrategyMethod<MPTraits> {
+
   public:
+
     typedef typename MPTraits::CfgType CfgType;
-    typedef typename MPTraits::MPProblemType MPProblemType;
 
     ModifyPath(const string& _pathFile = "", const string& _mapFile = "",
         const string& _pmLabel = "");

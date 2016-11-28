@@ -16,8 +16,8 @@ class SampleWF {
   public:
     typedef typename MPTraits::CfgType CfgType;
     typedef typename MPTraits::MPProblemType MPProblemType;
-    typedef typename MPTraits::MPLibraryType MPLibraryType;
-    typedef typename MPLibraryType::SamplerPointer SamplerPointer;
+    typedef typename MPTraits::MPLibrary MPLibrary;
+    typedef typename MPLibrary::SamplerPointer SamplerPointer;
 
     SampleWF(SamplerPointer _sp, MPProblemType* _problem);
     SampleWF(const SampleWF& _wf, std::size_t _offset) {}
@@ -74,8 +74,8 @@ class ConnectWF {
     typedef typename MPTraits::MPProblemType MPProblemType;
     typedef typename MPProblemType::GraphType GraphType;
     typedef typename MPProblemType::VID VID;
-    typedef typename MPTraits::MPLibraryType MPLibraryType;
-    typedef typename MPLibraryType::ConnectorPointer ConnectorPointer;
+    typedef typename MPTraits::MPLibrary MPLibrary;
+    typedef typename MPLibrary::ConnectorPointer ConnectorPointer;
 
     ConnectWF(ConnectorPointer _cp, MPProblemType* _problem) {
       m_cp = _cp;

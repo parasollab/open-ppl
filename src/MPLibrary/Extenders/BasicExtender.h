@@ -19,8 +19,7 @@ class BasicExtender : public ExtenderMethod<MPTraits> {
     ///\name Motion Planning Types
     ///@{
 
-    typedef typename MPTraits::CfgType       CfgType;
-    typedef typename MPTraits::MPProblemType MPProblemType;
+    typedef typename MPTraits::CfgType CfgType;
 
     ///@}
     ///\name Construction

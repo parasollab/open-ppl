@@ -1,12 +1,11 @@
 #include "Robot.h"
 
+#include "Actuator.h"
+#include "ControlGenerators.h"
+
+#include "Behaviors/Agent/Agent.h"
 #include "Geometry/Bodies/ActiveMultiBody.h"
 #include "Geometry/Boundaries/Boundary.h"
-
-#include "MPProblem/Robot/Agent/NullAgent.h"
-#include "MPProblem/Robot/Control/Controller.h"
-#include "MPProblem/Robot/Control/ControlGenerators.h"
-#include "MPProblem/Robot/Control/SteeringFunctions.h"
 
 
 /*------------------------------ Construction --------------------------------*/
@@ -48,21 +47,15 @@ Robot(XMLNode& _node, Boundary* const _b) {
     reverse[i] = -.3;
     forward[i] = .3;
   }
-  m_actuators.emplace_back(this);
-  m_actuators.back().SetLimits(reverse, forward);
-  m_actuators.back().SetMaxForce(.5);
+  m_actuators.push_back(new Actuator(this));
+  m_actuators.back()->SetLimits(reverse, forward);
+  m_actuators.back()->SetMaxForce(.5);
 
-  // Create a controller.
+  // Create control set.
   /// @TODO Read in control generation method instead of hard-coding. Currently
-  ///       we assume a very simple control model and PID feedback steering.
-  m_controller = new Controller(this);
-  m_controller->ComputeControls(SimpleControlGenerator());
-  // Use gains of .5, .01, .1 for the P, I, and D terms.
-  m_controller->SetSteeringFunction(new PIDFeedback(.5, .01 , .1));
-
-  // Create an agent for the robot.
-  /// @TODO Parse agent type rather than hard-coding.
-  m_agent = new NullAgent(this);
+  ///       we assume a simple control set.
+  SimpleControlGenerator simple;
+  SetControlSet(simple.GenerateDiscreteSet(this));
 }
 
 
@@ -70,7 +63,11 @@ Robot::
 ~Robot() {
   delete m_multibody;
   delete m_agent;
-  delete m_controller;
+  delete m_controlSet;
+  delete m_controlSpace;
+
+  for(auto a : m_actuators)
+    delete a;
 }
 
 /*------------------------- Simulation Interface -----------------------------*/
@@ -98,7 +95,7 @@ GetMultiBody() const {
   return m_multibody;
 }
 
-/*--------------------------- Controller Accessors ---------------------------*/
+/*------------------------------ Agent Accessors -----------------------------*/
 
 Agent*
 Robot::
@@ -114,32 +111,47 @@ SetAgent(Agent* const _a) {
   m_agent = _a;
 }
 
-/*--------------------------- Controller Accessors ---------------------------*/
+/*---------------------------- Control Accessors -----------------------------*/
 
-Controller*
+ControlSet*
 Robot::
-GetController() {
-  return m_controller;
+GetControlSet() {
+  return m_controlSet;
 }
 
 
 void
 Robot::
-SetController(Controller* const _c) {
-  delete m_controller;
-  m_controller = _c;
+SetControlSet(ControlSet* const _c) {
+  delete m_controlSet;
+  m_controlSet = _c;
+}
+
+
+ControlSpace*
+Robot::
+GetControlSpace() {
+  return m_controlSpace;
+}
+
+
+void
+Robot::
+SetControlSpace(ControlSpace* const _c) {
+  delete m_controlSpace;
+  m_controlSpace = _c;
 }
 
 /*---------------------------- Actuator Accessors ----------------------------*/
 
-Actuator&
+Actuator*
 Robot::
 GetActuator(const size_t _i) {
   return m_actuators[_i];
 }
 
 
-std::vector<Actuator>&
+const std::vector<Actuator*>&
 Robot::
 GetActuators() {
   return m_actuators;

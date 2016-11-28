@@ -2,7 +2,7 @@
 #define RADIALRRT_H_
 
 #include "MPLibrary/ParallelMethods/ParallelSBMPHeader.h"
-#include "MPProblem/ConfigurationSpace/RoadmapGraph.h"
+#include "ConfigurationSpace/RoadmapGraph.h"
 #include "MapReduceNF.h"
 #include "RadialUtils.h"
 
@@ -391,8 +391,8 @@ template<class MPTraits>
 class ConnectRegion {
   private:
     typedef typename MPTraits::MPProblemType MPProblemType;
-    typedef typename MPTraits::MPLibraryType MPLibraryType;
-    typedef typename MPLibraryType::ConnectorPointer ConnectorPointer;
+    typedef typename MPTraits::MPLibrary MPLibrary;
+    typedef typename MPLibrary::ConnectorPointer ConnectorPointer;
     typedef typename MPTraits::CfgType CfgType;
     typedef typename MPProblemType::VID VID;
     typedef typename MPTraits::WeightType WeightType;
@@ -1151,8 +1151,8 @@ template<class MPTraits>
 class ConnectGlobalCCs {
   private:
     typedef typename MPTraits::MPProblemType MPProblemType;
-    typedef typename MPTraits::MPLibraryType MPLibraryType;
-    typedef typename MPLibraryType::ConnectorPointer ConnectorPointer;
+    typedef typename MPTraits::MPLibrary MPLibrary;
+    typedef typename MPLibrary::ConnectorPointer ConnectorPointer;
     typedef typename MPTraits::CfgType CfgType;
     typedef typename MPProblemType::VID VID;
     typedef typename MPTraits::WeightType WeightType;

@@ -14,7 +14,6 @@ class RVDistance : public MinkowskiDistance<MPTraits> {
   public:
 
     typedef typename MPTraits::CfgType CfgType;
-    typedef typename MPTraits::MPProblemType MPProblemType;
 
     RVDistance(bool _normalize = false);
     RVDistance(XMLNode& _node);

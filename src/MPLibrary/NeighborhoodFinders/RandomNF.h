@@ -1,5 +1,5 @@
-#ifndef RANDOMNF_H_
-#define RANDOMNF_H_
+#ifndef RANDOM_NF_H_
+#define RANDOM_NF_H_
 
 #include "NeighborhoodFinderMethod.h"
 
@@ -11,12 +11,13 @@
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
 class RandomNF : public NeighborhoodFinderMethod<MPTraits> {
+
   public:
-    typedef typename MPTraits::CfgType CfgType;
-    typedef typename MPTraits::MPProblemType MPProblemType;
-    typedef typename MPProblemType::RoadmapType RoadmapType;
-    typedef typename MPProblemType::VID VID;
-    typedef typename MPProblemType::GraphType GraphType;
+
+    typedef typename MPTraits::CfgType      CfgType;
+    typedef typename MPTraits::RoadmapType  RoadmapType;
+    typedef typename RoadmapType::VID       VID;
+    typedef typename RoadmapType::GraphType GraphType;
 
     RandomNF(string _dmLabel = "", bool _unconnected = false, size_t _k = 5):
       NeighborhoodFinderMethod<MPTraits>(_dmLabel, _unconnected) {

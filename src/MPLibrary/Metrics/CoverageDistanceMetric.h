@@ -1,5 +1,5 @@
-#ifndef COVERAGEDISTANCEMETRIC_H
-#define COVERAGEDISTANCEMETRIC_H
+#ifndef COVERAGE_DISTANCE_METRIC_H
+#define COVERAGE_DISTANCE_METRIC_H
 
 #include "MetricMethod.h"
 
@@ -12,12 +12,13 @@
 ////////////////////////////////////////////////////////////////////////////////
 template<class MPTraits, class Set>
 class CoverageDistanceMetric : public MetricMethod<MPTraits> {
+
   public:
-    typedef typename MPTraits::CfgType CfgType;
-    typedef typename MPTraits::WeightType WeightType;
-    typedef typename MPTraits::MPProblemType MPProblemType;
-    typedef typename MPProblemType::RoadmapType RoadmapType;
-    typedef typename RoadmapType::VID VID;
+
+    typedef typename MPTraits::CfgType     CfgType;
+    typedef typename MPTraits::WeightType  WeightType;
+    typedef typename MPTraits::RoadmapType RoadmapType;
+    typedef typename RoadmapType::VID      VID;
 
     CoverageDistanceMetric(const Set& _samples = Set(), string _dmLabel = "");
     CoverageDistanceMetric(XMLNode& _node);
@@ -28,10 +29,11 @@ class CoverageDistanceMetric : public MetricMethod<MPTraits> {
     double operator()();
 
   protected:
-    //input
+
     Set m_samples;
     string m_dmLabel;
     ofstream m_history;
+
 };
 
 template<class MPTraits, class Set>

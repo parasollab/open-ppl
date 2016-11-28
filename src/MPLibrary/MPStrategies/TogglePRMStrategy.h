@@ -1,6 +1,5 @@
-
-#ifndef TOGGLEPRMSTRATEGY_H_
-#define TOGGLEPRMSTRATEGY_H_
+#ifndef TOGGLE_PRM_STRATEGY_H_
+#define TOGGLE_PRM_STRATEGY_H_
 
 #include "MPLibrary/MPStrategies/MPStrategyMethod.h"
 #include "Utilities/MetricUtils.h"
@@ -19,9 +18,10 @@ template <typename MPTraits>
 class TogglePRMStrategy : public MPStrategyMethod<MPTraits> {
 
   public:
-    typedef typename MPTraits::CfgType CfgType;
-    typedef typename MPTraits::MPProblemType MPProblemType;
-    typedef typename MPProblemType::VID VID;
+
+    typedef typename MPTraits::CfgType     CfgType;
+    typedef typename MPTraits::RoadmapType RoadmapType;
+    typedef typename RoadmapType::VID      VID;
 
     TogglePRMStrategy();
     TogglePRMStrategy(XMLNode& _node);

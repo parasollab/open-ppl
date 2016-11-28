@@ -12,9 +12,8 @@
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
 class NegateEvaluator : public MapEvaluatorMethod<MPTraits> {
-  public:
 
-    typedef typename MPTraits::MPProblemType MPProblemType;
+  public:
 
     NegateEvaluator(string _label = "");
     NegateEvaluator(XMLNode& _node);
@@ -25,7 +24,9 @@ class NegateEvaluator : public MapEvaluatorMethod<MPTraits> {
     virtual bool operator()();
 
   private:
+
     string m_evalLabel;
+
 };
 
 template <typename MPTraits>
@@ -49,7 +50,7 @@ NegateEvaluator<MPTraits>::Print(ostream& _os) const {
 template <typename MPTraits>
 bool
 NegateEvaluator<MPTraits>::operator()() {
-  typedef typename MPTraits::MPLibraryType::MapEvaluatorPointer MapEvaluatorPointer;
+  typedef typename MPTraits::MPLibrary::MapEvaluatorPointer MapEvaluatorPointer;
   typedef typename vector<MapEvaluatorPointer>::iterator MEIterator;
   typedef EvaluatorFunctor<MapEvaluatorPointer> EvalFunctor;
 

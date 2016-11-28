@@ -55,7 +55,7 @@ pmpl: $(PMPL_LIBFILE) $(MAIN)
 	@$(CXX) $(CXXFLAGS) $(OPTS) $(MAIN) $(LIBS) -o $@
 
 # Build the simulator.
-sim: $(PMPL_LIBFILE) $(SIM_LIBFILE) $(SIM_OBJS)
+sim: $(PMPL_LIBFILE) $(SIM_OBJS)
 	@echo Linking $@...
 	@$(CXX) $(CXXFLAGS) $(OPTS) $(SIM_OBJS) $(LIBS) -o $@
 

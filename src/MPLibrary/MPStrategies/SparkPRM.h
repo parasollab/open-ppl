@@ -13,13 +13,12 @@ template<class MPTraits, template<typename> class Strategy>
 class SparkPRM : public Strategy<MPTraits> {
 
   public:
-    typedef typename MPTraits::CfgType CfgType;
-    typedef typename MPTraits::WeightType WeightType;
-    typedef typename MPTraits::MPProblemType MPProblemType;
-    typedef typename MPProblemType::RoadmapType RoadmapType;
-    typedef typename MPProblemType::GraphType GraphType;
-    typedef typename MPProblemType::VID VID;
-    typedef typename GraphType::const_vertex_iterator CVI;
+
+    typedef typename MPTraits::CfgType      CfgType;
+    typedef typename MPTraits::WeightType   WeightType;
+    typedef typename MPTraits::RoadmapType  RoadmapType;
+    typedef typename RoadmapType::GraphType GraphType;
+    typedef typename RoadmapType::VID       VID;
 
     SparkPRM(size_t _maxNPCCSize = 3, size_t _initSamples = 30,
         size_t _maxRRTSize = 100, size_t _attemptRatio = 10,
@@ -452,7 +451,7 @@ ComputeCentroids(RoadmapType* _centroidRdmp, vector<VID>& _notRRT, VID _root) {
 
   // Get centroids, remove the RRT's CC
   ComputeCCCentroidGraph(graph, centroidGraph);
-  for(CVI it = centroidGraph->begin(); it != centroidGraph->end(); it++) {
+  for(auto it = centroidGraph->begin(); it != centroidGraph->end(); it++) {
     cMap.reset();
     if(is_same_cc(*graph, cMap, _root,
         (VID)((CfgType)it->property()).GetStat("ccVID"))) {
@@ -624,7 +623,7 @@ UpdateCentroids(RoadmapType* _centroidRdmp, vector<VID>& _notRRT, VID _root) {
 
   // Remove any CCs connected to the RRT
 #ifdef VIZMO
-  for(CVI it = centroidGraph->begin(); it != centroidGraph->end();) {
+  for(auto it = centroidGraph->begin(); it != centroidGraph->end();) {
     cMap.reset();
     if(is_same_cc(*graph, cMap, _root,
         (VID)((CfgType)it->property()).GetStat("ccVID"))) {
@@ -636,7 +635,7 @@ UpdateCentroids(RoadmapType* _centroidRdmp, vector<VID>& _notRRT, VID _root) {
       it++;
   }
 #else
-  for(CVI it = centroidGraph->begin(); it != centroidGraph->end(); it++) {
+  for(auto it = centroidGraph->begin(); it != centroidGraph->end(); it++) {
     cMap.reset();
     if(is_same_cc(*graph, cMap, _root,
         (VID)((CfgType)it->property()).GetStat("ccVID"))) {
@@ -651,7 +650,7 @@ UpdateCentroids(RoadmapType* _centroidRdmp, vector<VID>& _notRRT, VID _root) {
   if(needUpdate && !m_biasConnect) {
     vector<VID> cc;
     _notRRT.clear();
-    for(CVI it = centroidGraph->begin(); it != centroidGraph->end(); it++) {
+    for(auto it = centroidGraph->begin(); it != centroidGraph->end(); it++) {
       cMap.reset();
       get_cc(*graph, cMap, (VID)((CfgType)it->property()).GetStat("ccVID"), cc);
       _notRRT.insert(_notRRT.end(), cc.begin(), cc.end());

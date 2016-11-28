@@ -1,16 +1,15 @@
-#ifndef PRINTMAPEVALUATION_H
-#define PRINTMAPEVALUATION_H
+#ifndef PRINT_MAP_EVALUATION_H
+#define PRINT_MAP_EVALUATION_H
 
 #include "MapEvaluatorMethod.h"
 
 ////////////////////////////////////////////////////////////////////////////////
+/// @TODO
 /// @ingroup MapEvaluators
-/// @brief TODO.
-///
-/// TODO.
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
 class PrintMapEvaluation : public MapEvaluatorMethod<MPTraits> {
+
   public:
 
     PrintMapEvaluation();
@@ -23,6 +22,7 @@ class PrintMapEvaluation : public MapEvaluatorMethod<MPTraits> {
     virtual bool operator()();
 
   protected:
+
     string m_baseName;
 };
 

@@ -14,11 +14,11 @@
 template<class MPTraits>
 class ToggleLP: public LocalPlannerMethod<MPTraits> {
   public:
-    typedef typename MPTraits::CfgType CfgType;
-    typedef typename MPTraits::WeightType WeightType;
-    typedef typename MPTraits::MPProblemType MPProblemType;
-    typedef typename MPProblemType::GraphType GraphType;
-    typedef typename MPProblemType::VID VID;
+    typedef typename MPTraits::CfgType      CfgType;
+    typedef typename MPTraits::WeightType   WeightType;
+    typedef typename MPTraits::RoadmapType  RoadmapType;
+    typedef typename RoadmapType::GraphType GraphType;
+    typedef typename RoadmapType::VID       VID;
 
     ToggleLP(const string& _vcLabel = "", const string& _lpLabel = "",
         const string& _dmLabel = "",

@@ -1,5 +1,5 @@
-#ifndef NODECLEARANCEVALIDITY_H
-#define NODECLEARANCEVALIDITY_H
+#ifndef NODE_CLEARANCE_VALIDITY_H
+#define NODE_CLEARANCE_VALIDITY_H
 
 #include "ValidityCheckerMethod.h"
 
@@ -9,11 +9,12 @@
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
 class NodeClearanceValidity : public ValidityCheckerMethod<MPTraits> {
+
   public:
-    typedef typename MPTraits::CfgType CfgType;
-    typedef typename MPTraits::MPProblemType MPProblemType;
-    typedef typename MPProblemType::RoadmapType RoadmapType;
-    typedef typename MPProblemType::VID VID;
+
+    typedef typename MPTraits::CfgType     CfgType;
+    typedef typename MPTraits::RoadmapType RoadmapType;
+    typedef typename RoadmapType::VID      VID;
 
     NodeClearanceValidity(double _delta = 1.0, string _nfLabel = "");
     NodeClearanceValidity(XMLNode& _node);

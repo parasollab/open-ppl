@@ -37,12 +37,11 @@ class AdaptiveRRT : public BasicRRTStrategy<MPTraits> {
     //double is visibility threshold for the GrowthSet
     typedef map<double, GrowthSet> GrowthSets;
 
-    typedef typename MPTraits::CfgType CfgType;
-    typedef typename MPTraits::WeightType WeightType;
-    typedef typename MPTraits::MPProblemType MPProblemType;
-    typedef typename MPProblemType::RoadmapType RoadmapType;
-    typedef typename MPProblemType::GraphType GraphType;
-    typedef typename MPProblemType::VID VID;
+    typedef typename MPTraits::CfgType      CfgType;
+    typedef typename MPTraits::WeightType   WeightType;
+    typedef typename MPTraits::RoadmapType  RoadmapType;
+    typedef typename RoadmapType::GraphType GraphType;
+    typedef typename RoadmapType::VID       VID;
 
     AdaptiveRRT(double _wallPenalty = 0.5, double _gamma = 0.5,
         const GrowthSets& _growthSets = GrowthSets(), CostMethod _c = FIXED);

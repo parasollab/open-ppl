@@ -1,5 +1,5 @@
-#ifndef SHORTCUTTINGPATHMODIFIER_H_
-#define SHORTCUTTINGPATHMODIFIER_H_
+#ifndef SHORT_CUTTING_PATH_MODIFIER_H_
+#define SHORT_CUTTING_PATH_MODIFIER_H_
 
 #include "PathModifierMethod.h"
 
@@ -11,11 +11,13 @@
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
 class ShortcuttingPathModifier : public PathModifierMethod<MPTraits> {
+
   public:
-    typedef typename MPTraits::CfgType CfgType;
-    typedef typename MPTraits::MPProblemType MPProblemType;
-    typedef typename MPProblemType::GraphType GraphType;
-    typedef typename MPProblemType::VID VID;
+
+    typedef typename MPTraits::CfgType      CfgType;
+    typedef typename MPTraits::RoadmapType  RoadmapType;
+    typedef typename RoadmapType::GraphType GraphType;
+    typedef typename RoadmapType::VID       VID;
 
     ShortcuttingPathModifier(const string& _dmLabel = "",
         const string& _lpLabel = "");

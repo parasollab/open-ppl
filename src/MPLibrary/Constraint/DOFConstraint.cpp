@@ -9,7 +9,7 @@ DOFConstraint(ActiveMultiBody* _m) : Constraint(_m) { }
 
 /*------------------------------ Constraint Interface ------------------------*/
 
-const bool
+bool
 DOFConstraint::
 operator()(const Cfg& _c) const {
   const auto& cfg = _c.GetData();

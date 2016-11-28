@@ -12,9 +12,10 @@
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
 class MedialAxisSampler : public SamplerMethod<MPTraits> {
+
   public:
+
     typedef typename MPTraits::CfgType CfgType;
-    typedef typename MPTraits::MPProblemType MPProblemType;
 
     MedialAxisSampler(const MedialAxisUtility<MPTraits>& _medialAxisUtility =
         MedialAxisUtility<MPTraits>());

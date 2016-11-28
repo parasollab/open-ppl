@@ -1,5 +1,5 @@
-#ifndef CCDISTANCEMETRIC_H
-#define CCDISTANCEMETRIC_H
+#ifndef CC_DISTANCE_METRIC_H
+#define CC_DISTANCE_METRIC_H
 
 #include "MetricMethod.h"
 
@@ -11,11 +11,12 @@
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
 class CCDistanceMetric : public MetricMethod<MPTraits> {
+
   public:
-    typedef typename MPTraits::MPProblemType MPProblemType;
-    typedef typename MPProblemType::RoadmapType RoadmapType;
-    typedef typename MPProblemType::VID VID;
-    typedef typename MPProblemType::GraphType GraphType;
+
+    typedef typename MPTraits::RoadmapType  RoadmapType;
+    typedef typename RoadmapType::VID       VID;
+    typedef typename RoadmapType::GraphType GraphType;
 
     CCDistanceMetric(string _dm="");
     CCDistanceMetric(XMLNode& _node);

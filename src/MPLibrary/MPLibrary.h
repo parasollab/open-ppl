@@ -20,29 +20,32 @@
 #include "MPLibrary/ValidityCheckers/ValidityCheckerMethod.h"
 
 ////////////////////////////////////////////////////////////////////////////////
-/// @brief The set of all algorithms in PMPL for solving motion planning problems.
-///
-/// The MPLibrary represents a collection of planning algorithms that can
-/// operate on a specific MPProblem to solve its queries.
+/// A collection of planning algorithms that can operate on a specific
+/// MPProblem and MPTask.
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
 #ifdef _PARALLEL
-class MPLibrary final : public stapl::p_object
+class MPLibraryType final : public stapl::p_object
 #else
-class MPLibrary final
+class MPLibraryType final
 #endif
 {
 
   public:
 
-    ///@name General Abstraction Types
+    ///@name Motion Planning Types
     ///@{
 
-    typedef typename MPTraits::MPProblemType      MPProblemType;
+    typedef typename MPTraits::MPSolution  MPSolution;
+    typedef typename MPTraits::MPTask      MPTask;
+    typedef typename MPTraits::RoadmapType RoadmapType;
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// @brief Solver represents an input set to MPLibrary. It includes an
-    ///        MPStrategy label, seed, base file name, and vizmo debug option.
+    ///@}
+    ///@name Local Types
+    ///@{
+
+    /// Solver represents an input set to MPLibraryType. It includes an
+    /// MPStrategy label, seed, base file name, and vizmo debug option.
     typedef tuple<string, long, string, bool> Solver;
 
     ///@}
@@ -84,17 +87,15 @@ class MPLibrary final
     ///@name Construction
     ///@{
 
-    MPLibrary();
-    MPLibrary(const string& _filename);
-    ~MPLibrary();
+    MPLibraryType();
+    MPLibraryType(const string& _filename);
+    ~MPLibraryType();
 
     ///@}
     ///@name Configuration
     ///@{
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// @brief Read an XML file to set the algorithms and parameters in this
-    ///        instance.
+    /// Read an XML file to set the algorithms and parameters in this instance.
     /// @param[in] _filename The XML file name.
     void ReadXMLFile(const string& _filename);
 
@@ -104,12 +105,6 @@ class MPLibrary final
 
     const string& GetBaseFilename() const {return m_problem->GetBaseFilename();}
     void SetBaseFilename(const string& _s) {m_problem->SetBaseFilename(_s);}
-
-    ///@}
-    ///@name Stat Class Accessor
-    ///@{
-
-    StatClass* GetStatClass() {return m_problem->GetStatClass();}
 
     ///@}
     ///@name Distance Metric Accessors
@@ -239,19 +234,21 @@ class MPLibrary final
     }
 
     ///@}
+    ///@name Solution Accessors
+    ///@{
+
+    RoadmapType* GetRoadmap() {return m_solution->GetRoadmap();}
+    RoadmapType* GetBlockRoadmap() {return m_solution->GetBlockRoadmap();}
+    StatClass*   GetStatClass() {return m_solution->GetStatClass();}
+
+    ///@}
     ///@name Execution Interface
     ///@{
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// @brief Get the current MPProblem.
-    MPProblemType* GetMPProblem() {return m_problem;}
+    /// Get the current MPProblem.
+    MPProblem* GetMPProblem() {return m_problem;}
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// @brief Set the current MPProblem of all methods.
-    void SetMPProblem(MPProblemType* _p);
-
-    ////////////////////////////////////////////////////////////////////////////
-    /// @brief Add an input set to this MPLibrary.
+    /// Add an input set to this MPLibrary.
     /// @param[in] _label        The MPStrategy label to use.
     /// @param[in] _seed         The random seed to use.
     /// @param[in] _baseFileName The base name of the XML file to use.
@@ -261,7 +258,13 @@ class MPLibrary final
       m_solvers.push_back(Solver(_label, _seed, _baseFileName, _vizmoDebug));
     }
 
-    void Solve(); ///< Run each input (solver) in sequence.
+    /// Run each input (solver) in sequence.
+    /// @param[in] _problem The problem representation.
+    /// @param[in] _task The task representation.
+    /// @param[in/out] _solution The solution container, which may or may not
+    ///                          already be populated. Existing solutions should
+    ///                          be extended, not overwritten.
+    void Solve(MPProblem* _problem, MPTask* _task, MPSolution* _solution);
 
     ///@}
     ///@name Debugging
@@ -278,17 +281,21 @@ class MPLibrary final
 
     void Initialize(); ///< Initialize all local method sets and data.
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// @brief Helper for parsing XML nodes.
+    /// Helper for parsing XML nodes.
     /// @param[in] _node The child node to be parsed.
     bool ParseChild(XMLNode& _node);
+
+    /// Set the current MPProblem of all methods.
+    void SetMPProblem(MPProblem* _p);
 
     ///@}
     ///@name Inputs
     ///@{
 
-    MPProblemType* m_problem;   ///< The current MPProblem.
-    vector<Solver> m_solvers;   ///< The set of inputs to execute.
+    MPProblem*     m_problem{nullptr};  ///< The current MPProblem.
+    MPTask*        m_task{nullptr};     ///< The current task.
+    MPSolution*    m_solution{nullptr}; ///< The current solution.
+    vector<Solver> m_solvers;           ///< The set of inputs to execute.
 
     ///@}
     ///@name Method Sets
@@ -315,23 +322,23 @@ class MPLibrary final
 /*---------------------------- Construction ----------------------------------*/
 
 template <typename MPTraits>
-MPLibrary<MPTraits>::
-MPLibrary() {
+MPLibraryType<MPTraits>::
+MPLibraryType() {
   Initialize();
 };
 
 
 template <typename MPTraits>
-MPLibrary<MPTraits>::
-MPLibrary(const string& _filename) {
+MPLibraryType<MPTraits>::
+MPLibraryType(const string& _filename) {
   Initialize();
   ReadXMLFile(_filename);
 }
 
 
 template <typename MPTraits>
-MPLibrary<MPTraits>::
-~MPLibrary() {
+MPLibraryType<MPTraits>::
+~MPLibraryType() {
   delete m_distanceMetrics;
   delete m_validityCheckers;
   delete m_neighborhoodFinders;
@@ -348,8 +355,8 @@ MPLibrary<MPTraits>::
 
 template <typename MPTraits>
 void
-MPLibrary<MPTraits>::
-SetMPProblem(MPProblemType* _p) {
+MPLibraryType<MPTraits>::
+SetMPProblem(MPProblem* _p) {
   m_problem = _p;
 
   // Set the current MPProblem for all algorithms.
@@ -391,7 +398,7 @@ SetMPProblem(MPProblemType* _p) {
 
 template <typename MPTraits>
 void
-MPLibrary<MPTraits>::
+MPLibraryType<MPTraits>::
 Initialize() {
   m_distanceMetrics = new DistanceMetricSet(this,
       typename MPTraits::DistanceMetricMethodList(), "DistanceMetrics");
@@ -421,7 +428,7 @@ Initialize() {
 
 template <typename MPTraits>
 void
-MPLibrary<MPTraits>::
+MPLibraryType<MPTraits>::
 ReadXMLFile(const string& _filename) {
   // Open the XML and get the root node.
   XMLNode mpNode(_filename, "MotionPlanning");
@@ -463,7 +470,7 @@ ReadXMLFile(const string& _filename) {
 
 template <typename MPTraits>
 bool
-MPLibrary<MPTraits>::
+MPLibraryType<MPTraits>::
 ParseChild(XMLNode& _node) {
   if(_node.Name() == "DistanceMetrics") {
     m_distanceMetrics->ParseXML(_node);
@@ -532,7 +539,7 @@ ParseChild(XMLNode& _node) {
 
 template <typename MPTraits>
 void
-MPLibrary<MPTraits>::
+MPLibraryType<MPTraits>::
 Print(ostream& _os) const {
   _os << "MPLibrary" << endl;
   m_distanceMetrics->Print(_os);
@@ -552,8 +559,12 @@ Print(ostream& _os) const {
 
 template <typename MPTraits>
 void
-MPLibrary<MPTraits>::
-Solve() {
+MPLibraryType<MPTraits>::
+Solve(MPProblem* _problem, MPTask* _task, MPSolution* _solution) {
+  m_task = _task;
+  m_solution = _solution;
+  SetMPProblem(_problem);
+
   for(auto& sit : m_solvers) {
 
     // Call solver
@@ -579,6 +590,11 @@ Solve() {
     if(get<3>(sit))
       VDClose();
   }
+
+  // Unset inputs.
+  //SetMPProblem(nullptr);
+  //m_task = nullptr;
+  //m_solution = nullptr;
 }
 
 /*----------------------------------------------------------------------------*/

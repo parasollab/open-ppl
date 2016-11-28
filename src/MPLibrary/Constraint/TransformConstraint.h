@@ -37,11 +37,15 @@ class TransformConstraint : public Constraint {
     ///@name Constraint Interface
     ///@{
 
-    virtual const bool operator()(const Cfg& _c) const;
+    virtual bool operator()(const Cfg& _c) const;
 
     ///@}
     ///@name Creation Interface
     ///@{
+
+    /// Add a generic constraint function.
+    /// @param[in] _f The constraint function to add.
+    void AddFunction(ConstraintFunction&& _f);
 
     ////////////////////////////////////////////////////////////////////////////
     /// Set a positional bound on the _i'th coordinate.

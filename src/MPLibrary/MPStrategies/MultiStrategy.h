@@ -13,7 +13,9 @@
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
 class MultiStrategy : public MPStrategyMethod<MPTraits> {
+
   public:
+
     MultiStrategy<MPTraits>();
     MultiStrategy(XMLNode& _node);
 
@@ -23,7 +25,9 @@ class MultiStrategy : public MPStrategyMethod<MPTraits> {
     virtual void Finalize() {}
 
   private:
+
     vector<string> m_mpsLabels;
+
 };
 
 

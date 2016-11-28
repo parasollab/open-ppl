@@ -1,6 +1,6 @@
 #include "Control.h"
 
-#include "MPProblem/Robot/Actuation/Actuator.h"
+#include "Actuator.h"
 
 
 /*--------------------------- Simulation Interface ---------------------------*/
@@ -61,28 +61,3 @@ operator!=(const Control& _rhs) const noexcept {
 }
 
 /*----------------------------------------------------------------------------*/
-
-// Old parsing stuff that I will probably throw away.
-
-//#include "Utilities/IOUtils.h"
-//void
-//Control::
-//Read(istream& _is, CountingStreamBuffer& _cbs) {
-//  m_power.clear();
-//  string control;
-//  getline(_is, control);
-//  istringstream iss(control);
-//  double v;
-//  while(iss >> v)
-//    m_power.push_back(v);
-//}
-//
-//
-//ostream&
-//operator<<(ostream& _os, const Control& _c) {
-//  ostringstream oss;
-//  for(const auto& v : _c)
-//    oss << v << " ";
-//  string s = oss.str();
-//  return _os << s.substr(0, s.length()-1);
-//}

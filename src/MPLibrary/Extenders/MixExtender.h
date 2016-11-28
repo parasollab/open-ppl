@@ -15,8 +15,7 @@ class MixExtender : public ExtenderMethod<MPTraits> {
     ///\name Motion Planning Types
     ///@{
 
-    typedef typename MPTraits::CfgType       CfgType;
-    typedef typename MPTraits::MPProblemType MPProblemType;
+    typedef typename MPTraits::CfgType CfgType;
 
     /// \brief Extender label, probability, normalize probability
     typedef vector<pair<string, pair<double, double>>> ExpanderSet;

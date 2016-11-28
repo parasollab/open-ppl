@@ -16,8 +16,6 @@ class EvaluateMapStrategy : public MPStrategyMethod<MPTraits> {
 
   public:
 
-    typedef typename MPTraits::MPProblemType MPProblemType;
-
     EvaluateMapStrategy(string _mapFileName = "",
         const vector<string>& _evaluatorLabels = vector<string>());
     EvaluateMapStrategy(XMLNode& _node);

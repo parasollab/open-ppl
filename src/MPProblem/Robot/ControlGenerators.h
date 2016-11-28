@@ -1,8 +1,6 @@
 #ifndef CONTROL_GENERATORS_H_
 #define CONTROL_GENERATORS_H_
 
-#include <set>
-
 #include "Control.h"
 
 class Robot;
@@ -13,15 +11,17 @@ class Robot;
 ////////////////////////////////////////////////////////////////////////////////
 struct ControlGenerator {
 
-  virtual ~ControlGenerator() = default;
+  virtual ~ControlGenerator() = 0;
 
   /// Generate a discrete set of controls for a robot.
   /// @param[in] _r The robot to generate controls for.
   /// @return A discrete set of controls for the given robot.
-  virtual std::set<Control> GenerateDiscreteSet(Robot* const _r) const = 0;
+  virtual ControlSet* GenerateDiscreteSet(Robot* const _r) const;
 
-  /// @TODO Add a method for generating a control space instead of a discrete
-  ///       control set. This will probably look like a boundary object.
+  /// Generate a continuous control space for each of a robot's actuators.
+  /// @param[in] +r The robot to generate controls for.
+  /// @return A continuous control space for each actuator.
+  virtual ControlSpace* GenerateContinuousSpace(Robot* const _r) const;
 
 };
 
@@ -35,7 +35,7 @@ struct SimpleControlGenerator : public ControlGenerator {
 
   virtual ~SimpleControlGenerator() = default;
 
-  virtual std::set<Control> GenerateDiscreteSet(Robot* const _r) const override;
+  virtual ControlSet* GenerateDiscreteSet(Robot* const _r) const override;
 
 };
 

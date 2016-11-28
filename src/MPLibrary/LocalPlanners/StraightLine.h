@@ -21,7 +21,6 @@ class StraightLine : public LocalPlannerMethod<MPTraits> {
   public:
     typedef typename MPTraits::CfgType CfgType;
     typedef typename MPTraits::WeightType WeightType;
-    typedef typename MPTraits::MPProblemType MPProblemType;
 
     StraightLine(const string& _vcLabel = "", bool _evalation = false,
         bool _saveIntermediates = false);

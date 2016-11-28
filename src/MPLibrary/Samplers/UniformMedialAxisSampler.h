@@ -14,8 +14,8 @@ template<typename MPTraits>
 class UniformMedialAxisSampler : public SamplerMethod<MPTraits> {
 
   public:
+
     typedef typename MPTraits::CfgType CfgType;
-    typedef typename MPTraits::MPProblemType MPProblemType;
 
     UniformMedialAxisSampler(string _vcLabel = "", string _dmLabel = "",
         double _length = 0, double _stepSize = 0, bool _useBoundary = false,

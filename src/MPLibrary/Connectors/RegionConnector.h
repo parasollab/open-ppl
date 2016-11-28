@@ -12,13 +12,13 @@ class RegionConnector : public ConnectorMethod<MPTraits> {
 
   public:
 
-    typedef typename MPTraits::CfgType CfgType;
-    typedef typename MPTraits::MPProblemType MPProblemType;
-    typedef typename MPProblemType::RoadmapType RoadmapType;
-    typedef typename MPProblemType::VID VID;
+    typedef typename MPTraits::CfgType     CfgType;
+    typedef typename MPTraits::RoadmapType RoadmapType;
+    typedef typename RoadmapType::VID      VID;
 
     // Constructors
-    RegionConnector(string _nfLabel = "", string _lpLabel = "", size_t _iters = 10);
+    RegionConnector(string _nfLabel = "", string _lpLabel = "",
+        size_t _iters = 10);
     RegionConnector(XMLNode& _node);
 
     // Utility Methods and Typedefs

@@ -1,10 +1,13 @@
 #ifndef CFG_TRAITS_H_
 #define CFG_TRAITS_H_
 
-#include "MPProblem/MPProblem.h"
 #include "MPLibrary/MPLibrary.h"
+#include "MPLibrary/MPSolution.h"
+#include "MPLibrary/MPTask.h"
 
-#include "MPProblem/ConfigurationSpace/Weight.h"
+#include "ConfigurationSpace/Path.h"
+#include "ConfigurationSpace/Roadmap.h"
+#include "ConfigurationSpace/Weight.h"
 
 //distance metric includes
 #include "MPLibrary/DistanceMetrics/BinaryLPSweptDistance.h"
@@ -141,15 +144,17 @@
 /// each algorithm abstraction --- here you only need to define what you need,
 /// as extraneous methods in the type class imply longer compile times.
 ////////////////////////////////////////////////////////////////////////////////
-template<class C, class W = DefaultWeight<C> >
+template <typename C, typename W = DefaultWeight<C>>
 struct MPTraits {
 
-  typedef C CfgType;
-  typedef W WeightType;
-  typedef C& CfgRef;
-
-  typedef MPProblem<MPTraits> MPProblemType;
-  typedef MPLibrary<MPTraits> MPLibraryType;
+  typedef C                        CfgType;
+  //typedef C&                       CfgRef;
+  typedef W                        WeightType;
+  typedef Path<MPTraits>           PathType;
+  typedef Roadmap<MPTraits>        RoadmapType;
+  typedef MPTaskType<MPTraits>     MPTask;
+  typedef MPLibraryType<MPTraits>  MPLibrary;
+  typedef MPSolutionType<MPTraits> MPSolution;
 
   //types of distance metrics available in our world
   typedef boost::mpl::list<

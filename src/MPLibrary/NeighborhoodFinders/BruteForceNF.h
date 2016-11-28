@@ -1,5 +1,5 @@
-#ifndef BRUTEFORCENF_H_
-#define BRUTEFORCENF_H_
+#ifndef BRUTE_FORCE_NF_H_
+#define BRUTE_FORCE_NF_H_
 
 #include "NeighborhoodFinderMethod.h"
 
@@ -11,12 +11,13 @@
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
 class BruteForceNF : public NeighborhoodFinderMethod<MPTraits> {
+
   public:
-    typedef typename MPTraits::CfgType CfgType;
-    typedef typename MPTraits::MPProblemType MPProblemType;
-    typedef typename MPProblemType::RoadmapType RoadmapType;
-    typedef typename MPProblemType::VID VID;
-    typedef typename MPProblemType::GraphType GraphType;
+
+    typedef typename MPTraits::CfgType      CfgType;
+    typedef typename MPTraits::RoadmapType  RoadmapType;
+    typedef typename RoadmapType::VID       VID;
+    typedef typename RoadmapType::GraphType GraphType;
 
     BruteForceNF(string _dmLabel = "", bool _unconnected = false, size_t _k = 5) :
       NeighborhoodFinderMethod<MPTraits>(_dmLabel, _unconnected) {

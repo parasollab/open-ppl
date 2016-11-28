@@ -2,7 +2,7 @@
 
 #include "FreeBody.h"
 #include "Geometry/Boundaries/Boundary.h"
-#include "MPProblem/ConfigurationSpace/Cfg.h"
+#include "ConfigurationSpace/Cfg.h"
 
 ActiveMultiBody::
 ActiveMultiBody() : MultiBody() {

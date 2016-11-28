@@ -13,7 +13,6 @@ template<class MPTraits>
 class ApproxSpheres: public LocalPlannerMethod<MPTraits> {
   public:
     typedef typename MPTraits::CfgType CfgType;
-    typedef typename MPTraits::MPProblemType MPProblemType;
 
     ApproxSpheres(bool _saveIntermediates = false,
         const ClearanceUtility<MPTraits>& _c = ClearanceUtility<MPTraits>());

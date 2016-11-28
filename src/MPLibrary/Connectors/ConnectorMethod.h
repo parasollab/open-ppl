@@ -81,11 +81,10 @@ class ConnectorMethod : public MPBaseObject<MPTraits>
     ///@name Local Types
     ///@{
 
-    typedef typename MPTraits::MPProblemType      MPProblemType;
-    typedef typename MPTraits::CfgType            CfgType;
-    typedef typename MPProblemType::VID           VID;
-    typedef typename MPProblemType::RoadmapType   RoadmapType;
-    typedef typename RoadmapType::GraphType       GraphType;
+    typedef typename MPTraits::CfgType      CfgType;
+    typedef typename MPTraits::RoadmapType  RoadmapType;
+    typedef typename RoadmapType::VID       VID;
+    typedef typename RoadmapType::GraphType GraphType;
 
     typedef pair<VID, VID>                        ConnectionAttempt;
     typedef vector<pair<ConnectionAttempt, bool>> ConnectionAttempts;

@@ -1,17 +1,16 @@
-#ifndef ROADMAPSET_H
-#define ROADMAPSET_H
+#ifndef ROADMAP_SET_H
+#define ROADMAP_SET_H
 
 ////////////////////////////////////////////////////////////////////////////////
+/// @TODO
 /// @ingroup Metrics
-/// @brief TODO.
-///
-/// TODO.
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
 class RoadmapSet {
+
   public:
 
-    typedef typename MPTraits::MPProblemType::RoadmapType RoadmapType;
+    typedef typename MPTraits::RoadmapType  RoadmapType;
     typedef typename RoadmapType::GraphType GraphType;
     typedef typename GraphType::VPI Iterator;
     typedef typename GraphType::CVPI ConstIterator;

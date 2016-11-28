@@ -41,13 +41,10 @@ class CCExpansion: public ConnectorMethod<MPTraits> {
     ///@name Local Types
     ///@{
 
-    typedef typename MPTraits::CfgType CfgType;
-    typedef typename MPTraits::CfgRef CfgRef;
-    typedef typename MPTraits::MPProblemType MPProblemType;
-    typedef typename MPProblemType::VID VID;
-    typedef typename MPProblemType::RoadmapType RoadmapType;
+    typedef typename MPTraits::CfgType     CfgType;
+    typedef typename MPTraits::RoadmapType RoadmapType;
+    typedef typename RoadmapType::VID      VID;
     typedef typename RoadmapType::GraphType GraphType;
-    typedef typename vector<VID>::iterator VIDIT;
 
     ///@}
     ///@name Construction
@@ -633,8 +630,8 @@ FindDifficultNodes(RoadmapType* _rm, vector<VID>& _cc1, int _k) {
   vector<pair<VID,double> > nodeWeights(_cc1.size());
   typedef typename vector<pair<VID,double> >::iterator PIDIT;
   PIDIT it2 = nodeWeights.begin();
-  for(VIDIT it = _cc1.begin(); it != _cc1.end(); ++it){
-    CfgRef cfg = _rm->GetGraph()->GetVertex(*it);
+  for(auto it = _cc1.begin(); it != _cc1.end(); ++it){
+    CfgType& cfg = _rm->GetGraph()->GetVertex(*it);
     if(!cfg.IsStat("succConnectionAttempts") ||
         !cfg.IsStat("totalConnectionAttempts")){
       *it2++ = pair<VID,double>(*it,0.0); // Node has never had an attempted
@@ -665,7 +662,7 @@ FindNearestCC(RoadmapType* _rm, VID& _curCC, vector<VID>& _allCCs) {
   pair<VID,double> nearestCC(INVALID_VID, numeric_limits<double>::max());
   auto dm = this->GetNeighborhoodFinder(this->m_nfLabel)->GetDMMethod();
 
-  for(VIDIT it = _allCCs.begin(); it != _allCCs.end(); ++it){
+  for(auto it = _allCCs.begin(); it != _allCCs.end(); ++it){
     // Avoid self-check
     if(*it == _curCC){
       continue;
@@ -698,7 +695,7 @@ TargetCCInfo(RoadmapType* _rm, vector<VID>& _curCC){
   m_avgIntraDistTarget = 0;
   auto dm = this->GetNeighborhoodFinder(this->m_nfLabel)->GetDMMethod();
 
-  for(VIDIT it = _curCC.begin(); it != _curCC.end(); ++it){
+  for(auto it = _curCC.begin(); it != _curCC.end(); ++it){
     CfgType cfg = _rm->GetGraph()->GetVertex(*it);
     double dist = dm->Distance(cfg, m_goalTargetNode);
     cc1Mod.push_back(make_pair(*it,dist));
@@ -731,7 +728,7 @@ SelectCandidates(RoadmapType* _rm, vector<VID>& _curCC){
   // Grab up to the k farthest candidates from the centroid
   else if(m_nodeSelectionOption == m_F){
     vector< pair<VID,double> > cc1Mod;
-    for(VIDIT it = _curCC.begin(); it != _curCC.end(); ++it){
+    for(auto it = _curCC.begin(); it != _curCC.end(); ++it){
       CfgType cfg = _rm->GetGraph()->GetVertex(*it);
       double dist = dm->Distance(cfg, m_srcCentroid);
       cc1Mod.push_back(make_pair(*it,dist));
@@ -892,7 +889,7 @@ IsClear(RoadmapType* _rm, CfgType& bumpPoint) {
   auto dm = this->GetNeighborhoodFinder(this->m_nfLabel)->GetDMMethod();
 
   // Check to make sure that we are not expanding back into the chain
-  for(VIDIT it = m_allExpansionNodes.begin(); it != m_allExpansionNodes.end();
+  for(auto it = m_allExpansionNodes.begin(); it != m_allExpansionNodes.end();
       ++it){
     CfgType bb = _rm->GetGraph()->GetVertex(*it);
     bool test1 = (bb != bumpPoint); // Do not self compare!

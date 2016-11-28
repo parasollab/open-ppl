@@ -12,12 +12,13 @@
 ////////////////////////////////////////////////////////////////////////////////
 template<class MPTraits, class Set>
 class CoverageMetric : public MetricMethod<MPTraits> {
+
   public:
-    typedef typename MPTraits::CfgType CfgType;
-    typedef typename MPTraits::MPProblemType MPProblemType;
-    typedef typename MPProblemType::VID VID;
-    typedef typename MPProblemType::RoadmapType RoadmapType;
-    typedef typename MPProblemType::GraphType GraphType;
+
+    typedef typename MPTraits::CfgType      CfgType;
+    typedef typename MPTraits::RoadmapType  RoadmapType;
+    typedef typename RoadmapType::VID       VID;
+    typedef typename RoadmapType::GraphType GraphType;
 
     CoverageMetric(const Set& _samples = Set(),
         const vector<string>& _connectorLabels = vector<string>(),
@@ -30,12 +31,13 @@ class CoverageMetric : public MetricMethod<MPTraits> {
     double operator()();
 
   protected:
-    //input
+
     Set m_samples;
     vector<string> m_connectorLabels;
     bool m_allData;
     vector<vector<VID> > m_connections;
     ofstream m_history;
+
 };
 
 template<class MPTraits, class Set>

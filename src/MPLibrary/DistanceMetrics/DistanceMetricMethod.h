@@ -23,8 +23,7 @@ class DistanceMetricMethod  : public MPBaseObject<MPTraits> {
     ///@name Local Types
     ///@{
 
-    typedef typename MPTraits::MPProblemType MPProblemType;
-    typedef typename MPTraits::CfgType       CfgType;
+    typedef typename MPTraits::CfgType CfgType;
 
     ///@}
     ///@name Construction

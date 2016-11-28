@@ -30,7 +30,6 @@ class AStar : public LocalPlannerMethod<MPTraits> {
 
     typedef typename MPTraits::CfgType CfgType;
     typedef typename MPTraits::WeightType WeightType;
-    typedef typename MPTraits::MPProblemType MPProblemType;
 
     ///@}
 
@@ -315,7 +314,6 @@ template <class MPTraits>
 class AStarDistance : public AStar<MPTraits> {
   public:
     typedef typename MPTraits::CfgType CfgType;
-    typedef typename MPTraits::MPProblemType MPProblemType;
 
     AStarDistance(const string& _vcLabel = "", const string& _dmLabel = "",
         size_t _maxTries = 0, size_t _numNeighbors = 0, size_t _histLength = 5);
@@ -389,7 +387,6 @@ template <class MPTraits>
 class AStarClearance : public AStar<MPTraits> {
   public:
     typedef typename MPTraits::CfgType CfgType;
-    typedef typename MPTraits::MPProblemType MPProblemType;
 
     AStarClearance(const string& _vcLabel = "",
         size_t _maxTries = 0, size_t _numNeighbors = 0, size_t _histLength = 5,

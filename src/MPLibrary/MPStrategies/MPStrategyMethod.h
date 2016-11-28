@@ -37,8 +37,8 @@ class MPStrategyMethod : public MPBaseObject<MPTraits> {
     ///\name Motion Planning Types
     ///@{
 
-    typedef typename MPTraits::MPProblemType MPProblemType;
-    typedef typename MPProblemType::VID      VID;
+    typedef typename MPTraits::RoadmapType RoadmapType;
+    typedef typename RoadmapType::VID      VID;
 
     ///@}
     ///\name Construction

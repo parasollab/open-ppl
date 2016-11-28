@@ -11,9 +11,10 @@
 ////////////////////////////////////////////////////////////////////////////////
 template <class MPTraits>
 class UniformRandomSampler : public SamplerMethod<MPTraits> {
+
   public:
+
     typedef typename MPTraits::CfgType CfgType;
-    typedef typename MPTraits::MPProblemType MPProblemType;
 
     UniformRandomSampler(string _vcLabel = "");
     UniformRandomSampler(XMLNode& _node);

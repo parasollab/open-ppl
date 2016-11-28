@@ -17,7 +17,6 @@ class KnotTheoryDistance : public DistanceMetricMethod<MPTraits> {
     ///@{
 
     typedef typename MPTraits::CfgType CfgType;
-    typedef typename MPTraits::MPProblemType MPProblemType;
 
     ///@}
     ///@name Construction

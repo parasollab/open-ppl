@@ -1,6 +1,6 @@
 #include "Geometry/Bodies/ActiveMultiBody.h"
 #include "Geometry/Boundaries/Boundary.h"
-#include "MPProblem/ConfigurationSpace/Cfg.h"
+#include "ConfigurationSpace/Cfg.h"
 
 
 /*------------------------------- InBoundary ---------------------------------*/

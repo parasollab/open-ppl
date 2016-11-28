@@ -13,9 +13,10 @@
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
 class PushQueryToMA : public MPStrategyMethod<MPTraits> {
+
   public:
+
     typedef typename MPTraits::CfgType CfgType;
-    typedef typename MPTraits::MPProblemType MPProblemType;
 
     PushQueryToMA(const string& _inQueryFile = "",
         const string& _outQueryFile = "",

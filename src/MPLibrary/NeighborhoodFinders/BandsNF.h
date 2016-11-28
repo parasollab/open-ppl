@@ -389,13 +389,13 @@ class DistanceWeightedRandomPolicy : public Policy {
 template <typename MPTraits>
 class Band : public MPBaseObject<MPTraits> {
   public:
-    typedef typename MPTraits::CfgType CfgType;
-    typedef typename MPTraits::MPProblemType MPProblemType;
-    typedef typename MPProblemType::RoadmapType RoadmapType;
-    typedef typename MPProblemType::VID VID;
-    typedef typename MPProblemType::GraphType GraphType;
+    typedef typename MPTraits::CfgType      CfgType;
+    typedef typename MPTraits::RoadmapType  RoadmapType;
+    typedef typename RoadmapType::VID       VID;
+    typedef typename RoadmapType::GraphType GraphType;
 
-    Band(string _dmm = "", string _label = "", MPProblemType* _mp = NULL) : MPBaseObject<MPTraits>(_mp, _label), m_dmLabel(_dmm) {
+    Band(string _dmm = "", string _label = "") :
+        MPBaseObject<MPTraits>(_label), m_dmLabel(_dmm) {
       this->SetName("Band");
     }
 
@@ -500,11 +500,12 @@ class Band : public MPBaseObject<MPTraits> {
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
 class DBand : public Band<MPTraits> {
+
   public:
-    typedef typename MPTraits::CfgType CfgType;
-    typedef typename MPTraits::MPProblemType MPProblemType;
-    typedef typename MPProblemType::RoadmapType RoadmapType;
-    typedef typename MPProblemType::VID VID;
+
+    typedef typename MPTraits::CfgType     CfgType;
+    typedef typename MPTraits::RoadmapType RoadmapType;
+    typedef typename RoadmapType::VID      VID;
 
     DBand(XMLNode& _node) : Band<MPTraits>(_node){
       this->SetName("DBand");
@@ -569,11 +570,12 @@ class DBand : public Band<MPTraits> {
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
 class RBand : public Band<MPTraits> {
+
   public:
-    typedef typename MPTraits::CfgType CfgType;
-    typedef typename MPTraits::MPProblemType MPProblemType;
-    typedef typename MPProblemType::RoadmapType RoadmapType;
-    typedef typename MPProblemType::VID VID;
+
+    typedef typename MPTraits::CfgType     CfgType;
+    typedef typename MPTraits::RoadmapType RoadmapType;
+    typedef typename RoadmapType::VID      VID;
 
     RBand(XMLNode& _node) : Band<MPTraits> (_node) {
       this->SetName("RBand");
@@ -640,11 +642,12 @@ class RBand : public Band<MPTraits> {
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
 class BandsNF: public NeighborhoodFinderMethod<MPTraits> {
+
   public:
-    typedef typename MPTraits::CfgType CfgType;
-    typedef typename MPTraits::MPProblemType MPProblemType;
-    typedef typename MPProblemType::RoadmapType RoadmapType;
-    typedef typename MPProblemType::VID VID;
+
+    typedef typename MPTraits::CfgType     CfgType;
+    typedef typename MPTraits::RoadmapType RoadmapType;
+    typedef typename RoadmapType::VID      VID;
 
     BandsNF(string _dmLabel = "", bool _unconnected = false, size_t _k = 5) :
       NeighborhoodFinderMethod<MPTraits>(_dmLabel, _unconnected) {

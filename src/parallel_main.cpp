@@ -6,7 +6,7 @@
 #include "Traits/ParallelCfgTraits.h"
 
 #if (defined(PMPCfg))
-#include "MPProblem/ConfigurationSpace/Cfg.h"
+#include "ConfigurationSpace/Cfg.h"
 typedef Cfg PMPLCfgType;
 #else
 #error "Error, must define a RobotType for PMPL application"

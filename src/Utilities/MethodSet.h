@@ -39,8 +39,8 @@ struct MethodFactory final {
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// @brief Defines basic method container class to hold methods (for classes like
-///        DistanceMetricMethod, LocalPlannerMethod, etc).
+/// Defines basic method container class to hold methods (for classes like
+/// DistanceMetricMethod, LocalPlannerMethod, etc).
 ///
 /// MethodTypeList must be defined within templated class of MPTraits
 ///   e.g., Method = NeighborhoodFinderMethod
@@ -60,8 +60,7 @@ class MethodSet final {
     ///@name Local Types
     ///@{
 
-    typedef typename MPTraits::MPProblemType              MPProblemType;
-    typedef typename MPTraits::MPLibraryType        MPLibraryType;
+    typedef typename MPTraits::MPLibrary              MPLibrary;
 
     typedef std::shared_ptr<Method>                       MethodPointer;
     typedef typename std::map<std::string, MethodPointer> MethodMap;
@@ -76,42 +75,34 @@ class MethodSet final {
     ///@name Construction
     ///@{
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// @brief Construct a MethodSet from a MethodTypeList defined in the
-    ///        MPTraits class.
+    /// Construct a MethodSet from a MethodTypeList defined in the MPTraits class.
     /// @param _mtl An instance of the method type list.
     /// @param _name The name of this method set.
     template <typename MethodTypeList>
-    MethodSet(MPLibraryType* _p, const MethodTypeList& _mtl,
+    MethodSet(MPLibrary* _p, const MethodTypeList& _mtl,
         const std::string& _name);
 
     ///@}
     ///@name Method Accessors
     ///@{
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// @breif Add the appropriate methods from an XML node.
+    /// Add the appropriate methods from an XML node.
     void ParseXML(XMLNode& _node);
 
-    ////////////////////////////////////////////////////////////////////////////
     void AddMethod(XMLNode& _node);
 
-    ////////////////////////////////////////////////////////////////////////////
     void AddMethod(MethodPointer _e, const std::string& _label);
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// @brief Get a method by label.
+    /// Get a method by label.
     /// @param _label The method label.
     /// @return The corresponding method pointer.
     MethodPointer GetMethod(const std::string& _label);
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// @brief Prepare all methods in this set for execution on the owning
-    ///        MPLibrary's current MPProblem.
+    /// Prepare all methods in this set for execution on the owning MPLibrary's
+    /// current MPProblem.
     void Initialize();
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// @brief Display the instantiated methods.
+    /// Display the instantiated methods.
     void Print(std::ostream& _os) const;
 
     ///@}
@@ -145,7 +136,7 @@ class MethodSet final {
     ///@name Internal State
     ///@{
 
-    MPLibraryType* const m_library; ///< The owning planning library.
+    MPLibrary* const m_library; ///< The owning planning library.
 
     std::string m_name;     ///< The name of this set of methods.
     std::string m_default;  ///< The name of the default method in this set.
@@ -162,7 +153,7 @@ class MethodSet final {
 template <typename MPTraits, typename Method>
 template <typename MethodTypeList>
 MethodSet<MPTraits, Method>::
-MethodSet(MPLibraryType* _p, const MethodTypeList& _mtl,
+MethodSet(MPLibrary* _p, const MethodTypeList& _mtl,
     const std::string& _name) : m_library(_p), m_name(_name) {
   AddToUniverse(typename boost::mpl::begin<MethodTypeList>::type(),
                 typename boost::mpl::end<MethodTypeList>::type());

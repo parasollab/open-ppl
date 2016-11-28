@@ -33,13 +33,17 @@ struct Control final {
   Signal signal;      ///< The signal for this control.
 
   ///@}
-  ///@name Simulation Interface
+  ///@name Planning Interface
   ///@{
 
   /// Ask the actuator to compute the generalized force for this control.
   std::vector<double> GetForce() const;
 
-  /// Tell the actuator to execute this control.
+  ///@}
+  ///@name Simulation Interface
+  ///@{
+
+  /// Tell the actuator to execute this control on the simulated robot.
   void Execute() const;
 
   ///@}
@@ -56,5 +60,10 @@ struct Control final {
   ///@}
 
 };
+
+typedef std::set<Control> ControlSet;
+/// @TODO Add real abstraction for control space. This will probably look like a
+///       boundary object for each actuator.
+typedef int ControlSpace;
 
 #endif

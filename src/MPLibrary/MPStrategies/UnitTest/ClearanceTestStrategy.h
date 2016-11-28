@@ -11,7 +11,9 @@
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
 class ClearanceTestStrategy : public MPStrategyMethod<MPTraits> {
+
   public:
+
     typedef typename MPTraits::CfgType CfgType;
 
     ClearanceTestStrategy(

@@ -48,11 +48,13 @@ struct NodeTypeCounts {
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
 class HybridPRM : public MPStrategyMethod<MPTraits> {
+
   public:
-    typedef typename MPTraits::CfgType CfgType;
-    typedef typename MPTraits::MPProblemType MPProblemType;
-    typedef typename MPProblemType::GraphType GraphType;
-    typedef typename GraphType::vertex_descriptor VID;
+
+    typedef typename MPTraits::CfgType      CfgType;
+    typedef typename MPTraits::RoadmapType  RoadmapType;
+    typedef typename RoadmapType::GraphType GraphType;
+    typedef typename RoadmapType::VID       VID;
 
     HybridPRM() {
      this->SetName("HybridPRM");

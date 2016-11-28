@@ -11,8 +11,10 @@
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
 class DMTestStrategy : public MPStrategyMethod<MPTraits> {
+
   public:
-    typedef typename MPTraits::MPProblemType::RoadmapType RoadmapType;
+
+    typedef typename MPTraits::RoadmapType RoadmapType;
 
     DMTestStrategy();
     DMTestStrategy(XMLNode& _node);
@@ -55,7 +57,9 @@ template <typename MPTraits>
 void
 DMTestStrategy<MPTraits>::
 ParseXML(XMLNode& _node) {
-  m_inputRoadmapFilename = _node.Read("input_roadmap", false, "", "filename of input roadmap, if none provded, uses current one from MPProblem");
+  m_inputRoadmapFilename = _node.Read("input_roadmap", false, "",
+      "filename of input roadmap, if none provded, uses current one from "
+      "MPProblem");
   m_dmMethod = _node.Read("dm_method", true, "", "distance metric label");
   m_numToVerify = _node.Read("num_to_verify", false, MAX_INT, 0, MAX_INT, "number of nodes to verify distances");
 }
@@ -125,7 +129,7 @@ Run()
 
   if(g->get_num_vertices() > 1) {
     typename GraphType::VI vi = g->begin(), vi2 = vi+1;
-    typename MPTraits::CfgRef origin = g->GetVertex(vi);
+    typename MPTraits::CfgType& origin = g->GetVertex(vi);
     typename MPTraits::CfgType c = g->GetVertex(vi2);
     double dist = dm->Distance(origin, c);
     cout << "\nScale Cfg: 1/2x\n\torigin = " << origin << "\n\tc = " << c << "\n\tscaled distance = " << dist * 0.5 << endl;

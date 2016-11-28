@@ -1,5 +1,5 @@
-#ifndef RADIUSNF_H_
-#define RADIUSNF_H_
+#ifndef RADIUS_NF_H_
+#define RADIUS_NF_H_
 
 #include "NeighborhoodFinderMethod.h"
 
@@ -9,12 +9,13 @@
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
 class RadiusNF: public NeighborhoodFinderMethod<MPTraits> {
+
   public:
-    typedef typename MPTraits::CfgType CfgType;
-    typedef typename MPTraits::MPProblemType MPProblemType;
-    typedef typename MPProblemType::RoadmapType RoadmapType;
-    typedef typename MPProblemType::VID VID;
-    typedef typename MPProblemType::GraphType GraphType;
+
+    typedef typename MPTraits::CfgType      CfgType;
+    typedef typename MPTraits::RoadmapType  RoadmapType;
+    typedef typename RoadmapType::VID       VID;
+    typedef typename RoadmapType::GraphType GraphType;
 
     RadiusNF(string _dmLabel = "", bool _unconnected = false, double _r = 1.0) :
       NeighborhoodFinderMethod<MPTraits>(_dmLabel, _unconnected) {

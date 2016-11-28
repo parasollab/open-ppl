@@ -12,7 +12,7 @@
 using namespace mathtool;
 
 #include "Geometry/Boundaries/Boundary.h"
-#include "MPProblem/ConfigurationSpace/State.h"
+#include "ConfigurationSpace/State.h"
 #include "Utilities/MPUtils.h"
 
 class ActiveMultiBody;

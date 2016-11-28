@@ -1,13 +1,11 @@
-#ifndef CONDITIONALEVALUATION_H
-#define CONDITIONALEVALUATION_H
+#ifndef CONDITIONAL_EVALUATION_H
+#define CONDITIONAL_EVALUATION_H
 
 #include "MapEvaluatorMethod.h"
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Evaluates whether a given metric meets a specific numeric condition.
 /// @ingroup MapEvaluators
-/// @brief TODO.
-///
-/// TODO.
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
 class ConditionalEvaluator : public MapEvaluatorMethod<MPTraits> {

@@ -24,10 +24,10 @@ template<class MPTraits>
 class NFMapFunc {
   private:
     typedef typename MPTraits::MPProblemType MPProblemType;
-    typedef typename MPTraits::MPLibraryType MPLibraryType;
+    typedef typename MPTraits::MPLibrary MPLibrary;
     typedef typename MPProblemType::VID VID;
     typedef typename MPTraits::CfgType CfgType;
-    typedef typename MPLibraryType::DistanceMetricPointer DistanceMetricPointer;
+    typedef typename MPLibrary::DistanceMetricPointer DistanceMetricPointer;
     typedef pair<pair<VID, CfgType>, double> NFType;
     typedef vector<NFType> NFResultType;
 
@@ -156,8 +156,8 @@ class NFMapFuncRRRT {
     typedef typename MPTraits::MPProblemType MPProblemType;
     typedef typename MPProblemType::VID VID;
     typedef typename MPTraits::CfgType CfgType;
-    typedef typename MPTraits::MPLibraryType MPLibraryType;
-    typedef typename MPLibraryType::DistanceMetricPointer DistanceMetricPointer;
+    typedef typename MPTraits::MPLibrary MPLibrary;
+    typedef typename MPLibrary::DistanceMetricPointer DistanceMetricPointer;
     typedef pair<pair<VID, CfgType>, double> NFType;
     typedef vector<NFType> NFResultType;
 

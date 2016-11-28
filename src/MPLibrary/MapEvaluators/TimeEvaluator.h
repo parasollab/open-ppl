@@ -15,9 +15,6 @@ class TimeEvaluator : public MapEvaluatorMethod<MPTraits> {
 
   private:
 
-    // Local types
-    typedef typename MPTraits::MPProblemType MPProblemType;
-
     // Member data
     ClockClass m_clock;          ///< The timing object.
     bool       m_started{false}; ///< Has timing started?

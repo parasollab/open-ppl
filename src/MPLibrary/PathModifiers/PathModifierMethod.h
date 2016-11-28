@@ -19,10 +19,10 @@ class PathModifierMethod : public MPBaseObject<MPTraits> {
     ///@name Local Types
     ///@{
 
-    typedef typename MPTraits::CfgType CfgType;
-    typedef typename MPTraits::MPProblemType MPProblemType;
-    typedef typename MPProblemType::GraphType GraphType;
-    typedef typename MPProblemType::VID VID;
+    typedef typename MPTraits::CfgType      CfgType;
+    typedef typename MPTraits::RoadmapType  RoadmapType;
+    typedef typename RoadmapType::GraphType GraphType;
+    typedef typename RoadmapType::VID       VID;
 
     ///@}
     ///@name Construction
@@ -138,7 +138,7 @@ AddToPath(vector<CfgType>& _path, LPOutput<MPTraits>* _lpOutput,
 
 // Get pathVIDs from path
 template <typename MPTraits>
-vector<typename MPTraits::MPProblemType::VID>
+vector<typename MPTraits::RoadmapType::VID>
 PathModifierMethod<MPTraits>::
 GetPathVIDs(vector<CfgType>& _path, GraphType* _graph) {
   vector<VID> pathVIDs;

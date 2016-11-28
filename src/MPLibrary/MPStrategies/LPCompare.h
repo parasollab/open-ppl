@@ -13,11 +13,13 @@
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
 class LPCompare : public MPStrategyMethod<MPTraits> {
+
   public:
-    typedef typename MPTraits::CfgType CfgType;
-    typedef typename MPTraits::WeightType WeightType;
-    typedef typename MPTraits::MPProblemType MPProblemType;
-    typedef typename MPProblemType::RoadmapType::GraphType GraphType;
+
+    typedef typename MPTraits::CfgType      CfgType;
+    typedef typename MPTraits::WeightType   WeightType;
+    typedef typename MPTraits::RoadmapType  RoadmapType;
+    typedef typename RoadmapType::GraphType GraphType;
 
     LPCompare<MPTraits>();
     LPCompare(XMLNode& _node);

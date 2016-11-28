@@ -177,7 +177,7 @@ Run() {
   typedef vector<string>::iterator J;
   typedef CCsConnector<MPTraits>* CCP;
   typedef std::tuple<CCP,string, int> ccConnectParam;
-  typedef std::tuple<typename MPTraits::MPLibraryType::ConnectorPointer,
+  typedef std::tuple<typename MPTraits::MPLibrary::ConnectorPointer,
           string, int> ncConnectParam;
   typedef stapl::array< BoundingBox > arrayBbox;
   typedef array_view <arrayBbox> viewBbox;

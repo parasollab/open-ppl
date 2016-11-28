@@ -20,7 +20,8 @@ UTILS_INCL = $(CD_INCL) $(TINYXML_INCL) $(MATHTOOL_INCL) $(MODELLOADER_INCL) \
 UTILS_LIB  = $(CD_LIB) $(CGAL_LIB) $(TINYXML_LIB) $(MODELLOADER_LIB) \
 	     $(MPNN_LIB) $(KMEANS_LIB) $(TETGEN_LIB)
 UTILS_LIBFILE = $(CD_LIBFILE) $(TINYXML_LIBFILE) $(MODELLOADER_LIBFILE) \
-		$(MPNN_LIBFILE) $(KMEANS_LIBFILE) $(TETGEN_LIBFILE)
+		$(MPNN_LIBFILE) $(KMEANS_LIBFILE) $(TETGEN_LIBFILE) \
+		$(BULLET_LIBFILE) $(GLVIS_LIBFILE)
 
 ifeq ($(parallel), 1)
   BOOST_INCL = -I$(BOOST_ROOT)/include
@@ -264,14 +265,11 @@ $(GLVIS_LIBFILE):
 SIM_INCL := $(BULLET_INCL) $(GLVIS_INCL) $(QT_INCL)
 SIM_LIBS := $(BULLET_LIB) $(GLVIS_LIBS) $(QT_LIBS) $(GL_LIBS) -lpthread
 
-SIM_LIBFILE := $(BULLET_LIBFILE) $(GLVIS_LIBFILE)
 
 SIM_OBJS := \
   $(PMPL_DIR)/sim_main.o \
   Simulator/BulletEngine.o \
   Simulator/Drawable.o
-
-$(SIM_OBJS): $(SIM_LIBFILE)
 
 ################################################################################
 # PMPL
@@ -283,6 +281,10 @@ PMPL_LIB  := -L$(PMPL_DIR) -lobprm
 PMPL_LIBFILE := $(PMPL_DIR)/libobprm.a
 
 PMPL_OBJS := \
+  	Behaviors/Agent/Agent.o \
+  	Behaviors/Agent/NullAgent.o \
+	ConfigurationSpace/Cfg.o \
+        ConfigurationSpace/State.o \
 	Geometry/GMSPolygon.o \
 	Geometry/GMSPolyhedron.o \
 	Geometry/Bodies/ActiveMultiBody.o \
@@ -299,20 +301,15 @@ PMPL_OBJS := \
         Geometry/Boundaries/BoundingSphere.o \
         Geometry/Boundaries/BoundingSphere2D.o \
 	MPProblem/MPProblemBase.o \
-	MPProblem/ConfigurationSpace/Cfg.o \
-        MPProblem/ConfigurationSpace/State.o \
+	MPProblem/MPProblem.o \
 	MPProblem/Environment/Environment.o \
-	MPProblem/Robot/Actuation/Actuator.o \
-  	MPProblem/Robot/Agent/Agent.o \
-  	MPProblem/Robot/Agent/NullAgent.o \
-	MPProblem/Robot/Control/Control.o \
-	MPProblem/Robot/Control/Controller.o \
-  	MPProblem/Robot/Control/ControlGenerators.o \
-  	MPProblem/Robot/Control/SteeringFunctions.o \
+	MPProblem/Robot/Actuator.o \
+	MPProblem/Robot/Control.o \
+  	MPProblem/Robot/ControlGenerators.o \
 	MPProblem/Robot/Robot.o \
-	MPProblem/Workspace/WorkspaceDecomposition.o \
-	MPProblem/Workspace/WorkspacePortal.o \
-	MPProblem/Workspace/WorkspaceRegion.o \
+	Workspace/WorkspaceDecomposition.o \
+	Workspace/WorkspacePortal.o \
+	Workspace/WorkspaceRegion.o \
 	MPLibrary/NeighborhoodFinders/MPNNWrapper.o \
 	MPLibrary/Samplers/SimilarStructureSampler.o \
 	MPLibrary/ValidityCheckers/CollisionDetection/CDInfo.o \

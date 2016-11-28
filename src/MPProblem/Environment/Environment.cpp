@@ -9,7 +9,7 @@
 #include "Geometry/Boundaries/BoundingBox2D.h"
 #include "Geometry/Boundaries/BoundingSphere.h"
 #include "Geometry/Boundaries/BoundingSphere2D.h"
-#include "MPProblem/ConfigurationSpace/Cfg.h"
+#include "ConfigurationSpace/Cfg.h"
 #include "MPProblem/MPProblemBase.h"
 
 

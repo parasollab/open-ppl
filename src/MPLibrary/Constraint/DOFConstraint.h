@@ -1,7 +1,7 @@
 #ifndef DOF_CONSTRAINT_H_
 #define DOF_CONSTRAINT_H_
 
-#include <map>
+#include <unordered_map>
 
 #include "Constraint.h"
 #include "Geometry/Boundaries/Range.h"
@@ -14,7 +14,8 @@ class DOFConstraint : public Constraint {
   ///@name Internal State
   ///@{
 
-  std::map<size_t, Range<double>> m_limits; ///< The restricted DOF ranges.
+  /// The restricted DOF ranges.
+  std::unordered_map<size_t, Range<double>> m_limits;
 
   ///@}
 
@@ -24,19 +25,19 @@ class DOFConstraint : public Constraint {
     ///@{
 
     DOFConstraint(const ActiveMultiBody*);
+
     virtual ~DOFConstraint() = default;
 
     ///@}
     ///@name Constraint Interface
     ///@{
 
-    virtual const bool operator()(const Cfg& _c) const;
+    virtual bool operator()(const Cfg& _c) const;
 
     ///@}
     ///@name Creation Interface
     ///@{
 
-    ////////////////////////////////////////////////////////////////////////////
     /// Add a limit for a specific DOF value, overwriting any previously set
     /// limits.
     /// @param _dof The DOF index to limit.

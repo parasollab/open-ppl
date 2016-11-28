@@ -15,7 +15,6 @@ template<class MPTraits>
 class TransformAtS : public StraightLine<MPTraits> {
   public:
     typedef typename MPTraits::CfgType CfgType;
-    typedef typename MPTraits::MPProblemType MPProblemType;
 
     TransformAtS(double _s = 0.5, const string& _vcLabel = "", bool _evalation = false,
         bool _saveIntermediates = false);

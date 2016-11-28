@@ -19,7 +19,6 @@ class RVLocalPlanner: public LocalPlannerMethod<MPTraits> {
   public:
     typedef typename MPTraits::CfgType CfgType;
     typedef typename MPTraits::WeightType WeightType;
-    typedef typename MPTraits::MPProblemType MPProblemType;
     ReachableVolumeRobot m_rvr;
     string m_treeStructure;
     string m_repositionPolicy;

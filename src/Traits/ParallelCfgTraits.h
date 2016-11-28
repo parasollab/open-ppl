@@ -1,7 +1,7 @@
 #ifndef PARALLEL_CFG_TRAITS_H_
 #define PARALLEL_CFG_TRAITS_H_
 
-#include "MPProblem/ConfigurationSpace/Weight.h"
+#include "ConfigurationSpace/Weight.h"
 
 //distance metric includes
 //#include "MPLibrary/DistanceMetrics/BinaryLPSweptDistance.h"

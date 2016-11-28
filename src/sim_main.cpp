@@ -1,18 +1,4 @@
-#ifdef PMPCfg
-#include "MPProblem/ConfigurationSpace/Cfg.h"
-#include "Traits/CfgTraits.h"
-typedef MPTraits<Cfg> PMPLTraits;
-
-#elif (defined(PMPState))
-#include "MPProblem/ConfigurationSpace/State.h"
-#include "Traits/StateTraits.h"
-typedef StateTraits PMPLTraits;
-
-#else
-#error "Error, must define a RobotType for PMPL application"
-#endif
-typedef PMPLTraits::MPProblemType MPProblemType;
-typedef PMPLTraits::MPLibraryType MPLibraryType;
+#include "MPLibrary/PMPL.h"
 
 #include "Simulator/Simulation.h"
 #include "sandbox/gui/main_window.h"
@@ -26,10 +12,10 @@ main(int _argc, char** _argv) {
       throw ParseException(WHERE, "Incorrect usage. Usage: -f options.xml");
 
     // Make problem object.
-    MPProblemType* problem = new MPProblemType(_argv[2]);
+    MPProblem* problem = new MPProblem(_argv[2]);
 
     // Make simulation object.
-    Simulation<MPProblemType> simulation(problem);
+    Simulation<MPProblem> simulation(problem);
 
     // Make visualizer object.
     QApplication app(_argc, _argv);

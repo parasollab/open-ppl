@@ -5,6 +5,7 @@
 #include <string>
 using namespace std;
 
+#include "MPProblem/MPProblem.h"
 #include "Utilities/IOUtils.h"
 #include "Utilities/MethodSet.h"
 
@@ -37,24 +38,21 @@ class MPBaseObject {
     ///@name Local Types
     ///@{
 
-    typedef typename MPTraits::MPProblemType              MPProblemType;
-    typedef typename MPTraits::MPLibraryType              MPLibraryType;
+    typedef typename MPTraits::RoadmapType             RoadmapType;
+    typedef typename MPTraits::MPLibrary               MPLibrary;
 
-    typedef typename MPProblemType::RoadmapType           RoadmapType;
-
-    typedef typename MPLibraryType::SamplerPointer        SamplerPointer;
-    typedef typename MPLibraryType::LocalPlannerPointer   LocalPlannerPointer;
-    typedef typename MPLibraryType::ExtenderPointer       ExtenderPointer;
-    typedef typename MPLibraryType::PathModifierPointer   PathModifierPointer;
-    typedef typename MPLibraryType::ConnectorPointer      ConnectorPointer;
-    typedef typename MPLibraryType::MetricPointer         MetricPointer;
-    typedef typename MPLibraryType::MapEvaluatorPointer   MapEvaluatorPointer;
-    typedef typename MPLibraryType::MPStrategyPointer     MPStrategyPointer;
-    typedef typename MPLibraryType::DistanceMetricPointer DistanceMetricPointer;
-    typedef typename MPLibraryType::ValidityCheckerPointer
-                                                        ValidityCheckerPointer;
-    typedef typename MPLibraryType::NeighborhoodFinderPointer
-                                                        NeighborhoodFinderPointer;
+    typedef typename MPLibrary::SamplerPointer         SamplerPointer;
+    typedef typename MPLibrary::LocalPlannerPointer    LocalPlannerPointer;
+    typedef typename MPLibrary::ExtenderPointer        ExtenderPointer;
+    typedef typename MPLibrary::PathModifierPointer    PathModifierPointer;
+    typedef typename MPLibrary::ConnectorPointer       ConnectorPointer;
+    typedef typename MPLibrary::MetricPointer          MetricPointer;
+    typedef typename MPLibrary::MapEvaluatorPointer    MapEvaluatorPointer;
+    typedef typename MPLibrary::MPStrategyPointer      MPStrategyPointer;
+    typedef typename MPLibrary::DistanceMetricPointer  DistanceMetricPointer;
+    typedef typename MPLibrary::ValidityCheckerPointer ValidityCheckerPointer;
+    typedef typename MPLibrary::NeighborhoodFinderPointer
+                                                       NeighborhoodFinderPointer;
 
     ///@}
     ///@name Construction
@@ -127,11 +125,11 @@ class MPBaseObject {
 
     ////////////////////////////////////////////////////////////////////////////
     /// @brief Set the owning MPLibrary.
-    void SetMPLibrary(MPLibraryType*) noexcept;
+    void SetMPLibrary(MPLibrary*) noexcept;
 
     ////////////////////////////////////////////////////////////////////////////
     /// @brief Get the owning MPLibrary.
-    MPLibraryType* GetMPLibrary() const noexcept;
+    MPLibrary* GetMPLibrary() const noexcept;
 
     ////////////////////////////////////////////////////////////////////////////
     /// @brief Get a distance metric by label from the owning MPLibrary.
@@ -183,7 +181,7 @@ class MPBaseObject {
 
     ////////////////////////////////////////////////////////////////////////////
     /// @brief Get the library's current MPProblem.
-    MPProblemType* GetMPProblem() const noexcept;
+    MPProblem* GetMPProblem() const noexcept;
 
     ////////////////////////////////////////////////////////////////////////////
     /// @brief Get the current environment.
@@ -225,7 +223,7 @@ class MPBaseObject {
 
     string m_name;                     ///< Class name
     string m_label;                    ///< Unique identifier.
-    MPLibraryType* m_library{nullptr}; ///< The owning MPLibrary.
+    MPLibrary* m_library{nullptr}; ///< The owning MPLibrary.
 
     template<typename T, typename U> friend class MethodSet;
 };
@@ -279,14 +277,14 @@ template <typename MPTraits>
 inline
 void
 MPBaseObject<MPTraits>::
-SetMPLibrary(MPLibraryType* _l) noexcept {
+SetMPLibrary(MPLibrary* _l) noexcept {
   m_library = _l;
 }
 
 
 template <typename MPTraits>
 inline
-typename MPBaseObject<MPTraits>::MPLibraryType*
+typename MPBaseObject<MPTraits>::MPLibrary*
 MPBaseObject<MPTraits>::
 GetMPLibrary() const noexcept {
   return m_library;
@@ -395,7 +393,7 @@ GetMPStrategy(const string& _label) const noexcept {
 
 template <typename MPTraits>
 inline
-typename MPTraits::MPProblemType*
+MPProblem*
 MPBaseObject<MPTraits>::
 GetMPProblem() const noexcept {
   return m_library->GetMPProblem();
@@ -416,7 +414,7 @@ inline
 typename MPBaseObject<MPTraits>::RoadmapType*
 MPBaseObject<MPTraits>::
 GetRoadmap() const noexcept {
-  return GetMPProblem()->GetRoadmap();
+  return m_library->GetRoadmap();
 }
 
 
@@ -425,7 +423,7 @@ inline
 typename MPBaseObject<MPTraits>::RoadmapType*
 MPBaseObject<MPTraits>::
 GetBlockRoadmap() const noexcept {
-  return GetMPProblem()->GetBlockRoadmap();
+  return m_library->GetBlockRoadmap();
 }
 
 
@@ -434,7 +432,7 @@ inline
 StatClass*
 MPBaseObject<MPTraits>::
 GetStatClass() const noexcept {
-  return GetMPProblem()->GetStatClass();
+  return m_library->GetStatClass();
 }
 
 

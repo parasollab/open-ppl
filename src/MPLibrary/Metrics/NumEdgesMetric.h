@@ -1,15 +1,17 @@
-#ifndef NUMEDGESMETRIC_H
-#define NUMEDGESMETRIC_H
+#ifndef NUM_EDGES_METRIC_H
+#define NUM_EDGES_METRIC_H
 
 #include "MetricMethod.h"
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Get number of edges in roadmap.
 /// @ingroup Metrics
-/// @brief Get number of edges in roadmap.
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
 class NumEdgesMetric : public MetricMethod<MPTraits> {
+
   public:
+
     NumEdgesMetric(){
       this->SetName("NumEdgesMetric");
     }

@@ -17,10 +17,12 @@
 ////////////////////////////////////////////////////////////////////////////////
 template <class MPTraits>
 class CfgVEType {
+
   private:
-    typedef typename MPTraits::MPProblemType MPProblemType;
-    typedef typename MPProblemType::VID VID;
-    typedef typename MPTraits::CfgType CfgType;
+
+    typedef typename MPTraits::CfgType     CfgType;
+    typedef typename MPTraits::RoadmapType RoadmapType;
+    typedef typename RoadmapType::VID      VID;
 
   public:
 
@@ -83,11 +85,11 @@ class ClosestVE: public ConnectorMethod<MPTraits> {
 
   private:
 
-    typedef typename MPTraits::MPProblemType MPProblemType;
-    typedef typename MPProblemType::VID VID;
-    typedef typename MPProblemType::RoadmapType RoadmapType;
-    typedef typename MPTraits::WeightType WeightType;
-    typedef typename MPTraits::CfgType CfgType;
+    typedef typename MPTraits::CfgType      CfgType;
+    typedef typename MPTraits::WeightType   WeightType;
+    typedef typename MPTraits::RoadmapType  RoadmapType;
+    typedef typename RoadmapType::GraphType GraphType;
+    typedef typename RoadmapType::VID       VID;
 
   public:
 
@@ -198,9 +200,6 @@ ClosestVE<MPTraits>::FindKClosestPairs(RoadmapType* _rm,
     return pairs;
   }
 
-  typedef typename MPProblemType::RoadmapType RoadmapType;
-  typedef typename RoadmapType::GraphType GraphType;
-
   auto dm = this->GetNeighborhoodFinder(this->m_nfLabel)->GetDMMethod();
   auto lp = this->GetLocalPlanner(this->m_lpLabel);
 
@@ -276,10 +275,6 @@ Connect(RoadmapType* _rm,
     bool _fromFullRoadmap,
     OutputIterator _collision){
 
-  typedef typename MPProblemType::RoadmapType RoadmapType;
-  typedef typename RoadmapType::GraphType GraphType;
-  typedef typename GraphType::VI VI;
-
   auto dm = this->GetNeighborhoodFinder(this->m_nfLabel)->GetDMMethod();
   Environment* env = this->GetEnvironment();
   auto lp = this->GetLocalPlanner(this->m_lpLabel);
@@ -299,7 +294,7 @@ Connect(RoadmapType* _rm,
   //Get all Vertices on the Graph
   vector<VID> vids;
 
-  for(VI vit = _rm->GetGraph()->begin(); vit != _rm->GetGraph()->end(); ++vit)
+  for(auto vit = _rm->GetGraph()->begin(); vit != _rm->GetGraph()->end(); ++vit)
     vids.push_back(_rm->GetGraph()->AddVertex(_rm->GetGraph()->GetVertex(vit)));
 
   typename GraphType::vertex_iterator vi;

@@ -4,9 +4,7 @@
 #include <limits>
 
 #include "Geometry/Bodies/ActiveMultiBody.h"
-#include "MPProblem/ConfigurationSpace/Cfg.h"
 #include "MPProblem/Robot/Robot.h"
-#include "MPProblem/Robot/Control/Control.h"
 #include "Utilities/PMPLExceptions.h"
 
 #include "BulletDynamics/Featherstone/btMultiBody.h"
@@ -86,9 +84,9 @@ ComputeForce(const Control::Signal& _s) const {
 void
 Actuator::
 Execute(const Control::Signal& _s) const {
-  /// @TODO Read in the robot's simulated state as the starting point. Currently
-  ///       we just use a 0 configuration and assume it doesn't matter.
-  Cfg state;
+  /// @TODO Generalize this so that the robot's starting point can be taken into
+  ///       account. Currently we assume that the generated force is independent
+  ///       of starting state.
   auto f = ComputeForce(_s);
 
   /// @TODO Generalize this to accomodate multi-link robots. We are assuming

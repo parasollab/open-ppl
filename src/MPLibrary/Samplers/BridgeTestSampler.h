@@ -11,8 +11,8 @@ template <typename MPTraits>
 class BridgeTestSampler : public SamplerMethod<MPTraits> {
 
   public:
+
     typedef typename MPTraits::CfgType CfgType;
-    typedef typename MPTraits::MPProblemType MPProblemType;
 
     BridgeTestSampler(string _vcLabel = "", string _dmLabel = "",
         double _d = 0.5, bool _useBoundary = false);

@@ -12,9 +12,10 @@
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
 class NegateValidity : public ValidityCheckerMethod<MPTraits> {
+
   public:
+
     typedef typename MPTraits::CfgType CfgType;
-    typedef typename MPTraits::MPProblemType MPProblemType;
 
     NegateValidity(string _label = "");
     NegateValidity(XMLNode& _node);
@@ -45,7 +46,7 @@ bool
 NegateValidity<MPTraits>::
 IsValidImpl(CfgType& _cfg, CDInfo& _cdInfo,
    const string& _callName) {
-  typedef typename MPTraits::MPLibraryType::ValidityCheckerPointer ValidityCheckerPointer;
+  typedef typename MPTraits::MPLibrary::ValidityCheckerPointer ValidityCheckerPointer;
   vector<ValidityCheckerPointer> vcMethods;
   typedef typename vector<ValidityCheckerPointer>::iterator VCIterator;
   vcMethods.push_back(this->GetValidityChecker(m_vcLabel));
