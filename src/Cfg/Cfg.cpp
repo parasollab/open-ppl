@@ -244,6 +244,18 @@ operator[](size_t _dof) const {
   return m_v[_dof];
 }
 
+bool 
+Cfg::
+operator<(const Cfg& _cfg) const {
+  for(size_t i = 0; i < DOF(); ++i) {
+    if(m_v[i] < _cfg.m_v[i])
+      return true;
+    else if(m_v[i] > _cfg.m_v[i])
+      return false;
+  }
+  return false;
+}
+
 
 void
 Cfg::

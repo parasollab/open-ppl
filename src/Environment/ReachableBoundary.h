@@ -9,9 +9,14 @@
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup Environment
 /// @brief Boundary of the reachable set
+/// 
+/// @TODO: find a more accurate method of representing the boundary of the
+///        reachable set that is also efficient to test for collisions.
+///
+/// @note currently not used
 ////////////////////////////////////////////////////////////////////////////////
 template<typename MPTraits>
-class ReachableBoundary : public Boundary {
+class ReachableBoundary {
 
   public:
 
@@ -27,10 +32,10 @@ class ReachableBoundary : public Boundary {
     ~ReachableBoundary() {}
 
     ///@}
+    ///\name Boundary Operations
+    ///@{
 
-    string Type() const { return "Box"; }
-
-    const pair<double, double>* const GetBox() const { return m_bbx; }
+    const pair<double, double>* const GetBox() const {return m_bbx;}
 
     double GetMaxDist(double _r1 = 2.0, double _r2 = 0.5) const;
     pair<double, double>& GetRange(size_t _i);
@@ -38,11 +43,18 @@ class ReachableBoundary : public Boundary {
 
     bool InBoundary(const Vector3d& _p) const;
 
+    ///@}
+  
+    const vector<CfgType>& GetReachableSet() {return m_reachableSet;}
+
   private:
 
-    pair<double, double> m_bbx[3]; ///< Each pair is the min and max x, y, and z value
+    pair<double, double> m_bbx[3];  ///< Each pair is the min and max x, y, and z value
+    vector<CfgType> m_reachableSet; ///< Reachable set of the boundary
+    Vector3d m_center;              ///< center of the boundary
 };
 
+/*------------------------------- Construction -------------------------------*/
 
 template<typename MPTraits>
 ReachableBoundary<MPTraits>::
@@ -73,11 +85,15 @@ ReachableBoundary(const vector<CfgType>& _cfgs) {
   for(int i = 0; i < 3; ++i) {
     m_bbx[i] = make_pair(min[i], max[i]);
   }
-
+  
+  // find the center of the box
   m_center = (Vector3d(m_bbx[0].first, m_bbx[1].first, m_bbx[2].first) +
       Vector3d(m_bbx[0].second, m_bbx[1].second, m_bbx[2].second))/2.;
+
+  m_reachableSet = _cfgs;
 }
 
+/*------------------------------ Boundary Operations -------------------------*/
 
 template<typename MPTraits>
 double

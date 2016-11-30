@@ -2,6 +2,7 @@
 #define BRUTEFORCENF_H_
 
 #include "NeighborhoodFinderMethod.h"
+#include <cmath>
 
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup NeighborhoodFinders
@@ -86,7 +87,10 @@ FindNeighbors(RoadmapType* _rmp,
     if(node == _cfg) // Don't connect to self
       continue;
 
-    double dist = dmm->Distance(_cfg, node);
+    double dist = dmm->Distance(node, _cfg);
+
+    if(std::isinf(dist))
+      continue;
 
     if(pq.size() < this->m_k){
       VID vid = map->GetVID(it);

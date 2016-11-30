@@ -537,7 +537,11 @@ FindNearestNeighbor(const CfgType& _cfg, const TreeType& _tree) {
       _tree.begin(), _tree.end(),
       _tree.size() == this->GetRoadmap()->GetGraph()->get_num_vertices(),
       _cfg, back_inserter(neighbors));
-  VID nearestVID = neighbors[0].first;
+
+  VID nearestVID = INVALID_VID;
+
+  if(!neighbors.empty())
+    nearestVID = neighbors[0].first;
 
   this->GetStatClass()->StopClock("NeighborhoodFinding");
   return nearestVID;
@@ -662,9 +666,14 @@ template<class MPTraits>
 typename BasicRRTStrategy<MPTraits>::VID
 BasicRRTStrategy<MPTraits>::
 ExpandTree(const VID _nearestVID, const CfgType& _target) {
+  if(_nearestVID == INVALID_VID) {
+    if(this->m_debug)
+      cout << "NearestNeighbor is invalid" << endl;
+
+    return INVALID_VID;
+  }
   if(this->m_debug)
     cout << "Trying expansion from " << _nearestVID << "..." << endl;
-
   // Try to extend from the _nearestVID to _target
   VID newVID = this->Extend(_nearestVID, _target);
   if(newVID != INVALID_VID)

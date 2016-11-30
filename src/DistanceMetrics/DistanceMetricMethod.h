@@ -15,6 +15,12 @@
 ///
 /// @c ScaleCfg is purposed to scale a \f$d\f$-dimensional ray in @cspace to a
 /// certain magnitude based upon a general @dm.
+///
+/// @note we assume that for asymmetric distance metrics, we are checking the
+/// distance from the first cfg to the second
+///
+/// @note in all cases we assume that using distance = infinity means that the
+/// second cfg is not reachable from the first
 ////////////////////////////////////////////////////////////////////////////////
 template<class MPTraits>
 class DistanceMetricMethod  : public MPBaseObject<MPTraits> {

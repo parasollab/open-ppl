@@ -101,6 +101,8 @@ class Cfg {
     double& operator[](size_t _dof);
     const double& operator[](size_t _dof) const;
 
+    // week ordering
+    bool operator<(const Cfg& _cfg) const;
 
     // Access Methods : Retrieve and set related information of this class
 

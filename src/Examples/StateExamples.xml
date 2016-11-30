@@ -11,6 +11,7 @@
         posWeight="0.4" rotWeight="0.4" velWeight="0.1" avlWeight="0.1"/>
       <WeightedEuclidean label="weuclidean-pos"
         posWeight="0.5" rotWeight="0.5" velWeight="0" avlWeight="0"/>
+      <ReachabilityDistance label="reachableDistance"/>
     </DistanceMetrics>
 
     <ValidityCheckers>
@@ -22,6 +23,8 @@
     <NeighborhoodFinders>
       <BruteForceNF label="Nearest"
         dmLabel="weuclidean" unconnected="false" k="1"/>
+      <BruteForceNF label="ReachableNF"
+        dmLabel="reachableDistance" unconnected="false" k="1"/>
       <BruteForceNF label="NearestPosition"
         dmLabel="weuclidean-pos" unconnected="false" k="1"/>
     </NeighborhoodFinders>

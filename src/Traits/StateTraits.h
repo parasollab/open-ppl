@@ -7,6 +7,7 @@
 //distance metric includes
 #include "DistanceMetrics/ExperimentalDistance.h"
 #include "DistanceMetrics/WeightedEuclideanDistance.h"
+#include "DistanceMetrics/ReachabilityDistance.h"
 
 //validity checker includes
 #include "ValidityCheckers/AlwaysTrueValidity.h"
@@ -61,7 +62,8 @@ struct StateTraits {
   //types of distance metrics available in our world
   typedef boost::mpl::list<
     ExperimentalDistance<StateTraits>,
-    WeightedEuclideanDistance<StateTraits>
+    WeightedEuclideanDistance<StateTraits>,
+    ReachabilityDistance<StateTraits>
       > DistanceMetricMethodList;
 
   //types of validity checkers available in our world
