@@ -112,7 +112,7 @@ class QueryMethod : public MapEvaluatorMethod<MPTraits> {
 
     const vector<CfgType>& GetQuery() const {return m_query;}
     const vector<CfgType>& GetGoals() const {return m_goals;}
-    const Path<MPTraits>& GetPath() const {return m_path;}
+    const Path<MPTraits>* GetPath() const {return m_path.get();}
 
     ////////////////////////////////////////////////////////////////////////////
     /// \brief Check whether a path can be drawn through all query points using
