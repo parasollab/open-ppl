@@ -33,6 +33,12 @@ class MPProblem : public MPProblemBase
     MPProblem(const std::string& _filename);
     virtual ~MPProblem();
 
+    ///@}
+    ///@name XML File Parsing
+    ///@{
+
+    const std::string& GetXMLFilename() const {return m_xmlFilename;}
+
     /// Read an XML file.
     /// @param[in] _filename    The XML file name.
     void ReadXMLFile(const std::string& _filename);
@@ -59,6 +65,9 @@ class MPProblem : public MPProblemBase
     size_t NumRobots() const;
 
     Robot* GetNewRobot(size_t _index) const;
+
+    /// Fetch a robot by label.
+    Robot* GetNewRobot(const std::string& _label);
 
     /// @param _index Requested multibody
     /// @return Pointer to active multibody
@@ -101,6 +110,7 @@ class MPProblem : public MPProblemBase
     ///@name Files
     ///@{
 
+    std::string m_xmlFilename;   ///< The XML file name.
     std::string m_baseFilename;  ///< The base name for output files.
     std::string m_queryFilename; ///< The query file name.
 

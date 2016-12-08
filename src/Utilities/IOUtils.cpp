@@ -1,21 +1,47 @@
 #include "IOUtils.h"
 
+#include <functional>
+
 
 XMLNode::
 XMLNode(const string& _filename, const string& _desiredNode) :
     m_filename(_filename) {
+  // Read the XML file into a tinyxml document.
   m_doc = new TiXmlDocument(_filename);
-
   if(!m_doc->LoadFile())
     throw ParseException(
         Where(_filename, m_doc->ErrorRow(), m_doc->ErrorCol(), false),
         m_doc->ErrorDesc());
 
-  m_node = m_doc->FirstChild(_desiredNode.c_str());
+  // Define a DFS search to locate the desired node in the XML tree.
+  std::function<TiXmlNode*(TiXmlNode* const)> findNode =
+      [&findNode, &_desiredNode](TiXmlNode* const _node) -> TiXmlNode* {
+        // Skip nodes that don't represnt elements.
+        if(_node->Type() != TiXmlNode::ELEMENT)
+          return nullptr;
 
+        // Check this node for the desired tag.
+        if(_node->ValueStr() == _desiredNode)
+          return _node;
+
+        // If this isn't it, check direct children.
+        TiXmlNode* child = _node->FirstChild();
+        while(child) {
+          TiXmlNode* result = findNode(child);
+          if(result)
+            return result;
+          child = child->NextSibling();
+        }
+
+        // If we're still here, the tag wasn't found in the subtree. Return null.
+        return nullptr;
+      };
+
+  // Search the XML node tree for the node with the desired description.
+  m_node = findNode(m_doc->RootElement());
   if(!m_node)
-    throw ParseException(_filename,
-        "Unable to find XML node '" + _desiredNode + "'.");
+    throw ParseException(_filename, "Unable to find XML node '" + _desiredNode +
+        "'.");
 }
 
 XMLNode::iterator

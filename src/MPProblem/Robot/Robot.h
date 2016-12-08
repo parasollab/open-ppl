@@ -6,11 +6,14 @@
 
 #include "Control.h"
 
-class btMultiBody;
 class ActiveMultiBody;
 class Actuator;
 class Agent;
+class btMultiBody;
 class Boundary;
+class ControllerMethod;
+class DynamicsModel;
+class MPProblem;
 class XMLNode;
 
 
@@ -22,14 +25,16 @@ class XMLNode;
 ///   @arg Agent: The robot's high-level decision-making algorithm. Determines
 ///               what actions the robot should take to complete its task. Used
 ///               only in simulations.
+///   @arg Actuators: The robot's motors/effectors. Translates control commands
+///                   into generalized forces.
 ///   @arg ControlSet: The discrete set of controls that the robot can use, if
 ///                    any.
 ///   @arg ControlSpace: The continuous space of controls that the robot can use,
 ///                      if any.
-///   @arg Actuators: The robot's motors/effectors. Translates control commands
-///                   into generalized forces.
-///   @arg BulletModel: Simulation model of the robot. Represents the robot in
-///                     the bullet world.
+///   @arg Controller: The robot's low-level controller, which determines what
+///                    control should be applied to move from point to point.
+///   @arg DynamicsModel: Simulation model of the robot. Represents the robot in
+///                       the bullet world.
 ///
 /// @TODO Think about const-correctness for this object. I've left it out for
 ///       now because most of the functions alter the robot indirectly.
@@ -39,16 +44,20 @@ class Robot {
   ///@name Internal State
   ///@{
 
-  ActiveMultiBody* m_multibody{nullptr}; ///< Robot's geometric representation.
+  MPProblem* const m_problem;              ///< The owning problem object.
 
-  Agent* m_agent{nullptr};               ///< Decision-making agent.
-  std::vector<Actuator*> m_actuators;    ///< Actuators.
-  ControlSet* m_controlSet{nullptr};     ///< Discrete control set, if any.
-  ControlSpace* m_controlSpace{nullptr}; ///< Continuous control space, if any.
+  ActiveMultiBody* m_multibody{nullptr};   ///< Robot's geometric representation.
 
-  btMultiBody* m_dynamicsModel{nullptr}; ///< The bullet dynamics model.
+  Agent* m_agent{nullptr};                 ///< High-level decision-making agent.
 
-  std::string m_label;                   ///< The robot's unique label.
+  std::vector<Actuator*> m_actuators;      ///< Actuators.
+  ControlSet* m_controlSet{nullptr};       ///< Discrete control set, if any.
+  ControlSpace* m_controlSpace{nullptr};   ///< Continuous control space, if any.
+  ControllerMethod* m_controller{nullptr}; ///< Low-level controller.
+
+  DynamicsModel* m_dynamicsModel{nullptr}; ///< The bullet dynamics model.
+
+  std::string m_label;                     ///< The robot's unique label.
 
   ///@}
 
@@ -57,8 +66,8 @@ class Robot {
     ///@name Construction
     ///@{
 
-    Robot();
-    Robot(XMLNode& _node, Boundary* const _b);
+    Robot(MPProblem* _p, XMLNode& _node, Boundary* const _b);
+
     virtual ~Robot();
 
     ///@}
@@ -67,7 +76,11 @@ class Robot {
 
     /// Execute a simulation step: update the percept model, have the agent make
     /// a decision, and send the resulting controls to the actuators.
-    void Step();
+    /// @param _dt The timestep length.
+    void Step(const double _dt);
+
+    /// Enable the Robot's agent to access the problem data.
+    MPProblem* GetMPProblem() const;
 
     ///@}
     ///@name Geometry Accessors
@@ -99,6 +112,9 @@ class Robot {
     ControlSpace* GetControlSpace();
     void SetControlSpace(ControlSpace* const _c);
 
+    ControllerMethod* GetController();
+    void SetController(ControllerMethod* const _c);
+
     ///@}
     ///@name Actuator Accessors
     ///@{
@@ -111,13 +127,18 @@ class Robot {
     ///@}
     ///@name Dynamics Accessors
     ///@{
-    /// Access the robot's dynamics model. This is essentially a multibody model
-    /// from whatever physics engine we are using (currently bullet). The robot
-    /// does NOT assume ownership over this model - instead the physics engine
-    /// is responsible for its destruction.
+    /// Access the robot's dynamics model. The robot will take ownership of it
+    /// and delete it when necessary.
 
-    btMultiBody* GetDynamicsModel();
+    DynamicsModel* GetDynamicsModel();
     void SetDynamicsModel(btMultiBody* const _m);
+
+    ///@}
+    ///@name Other
+    ///@{
+
+    /// Get the unique label for this instance.
+    const std::string& GetLabel() const noexcept;
 
     ///@}
 

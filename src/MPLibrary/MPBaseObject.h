@@ -10,12 +10,10 @@ using namespace std;
 #include "Utilities/MethodSet.h"
 
 class Environment;
-template <typename MPTraits> class Roadmap;
 class StatClass;
 
 ////////////////////////////////////////////////////////////////////////////////
-/// @ingroup MotionPlanningUniverse
-/// @brief Abstract base class for all algorithm abstractions in PMPL.
+/// Abstract base class for all algorithm abstractions in PMPL.
 ///
 /// The MPBaseObject carries a class name @c m_name and unique label @c m_label
 /// for each algorithm. The name refers to the class from which the object was
@@ -39,6 +37,7 @@ class MPBaseObject {
     ///@{
 
     typedef typename MPTraits::RoadmapType             RoadmapType;
+    typedef typename MPTraits::PathType                PathType;
     typedef typename MPTraits::MPLibrary               MPLibrary;
 
     typedef typename MPLibrary::SamplerPointer         SamplerPointer;
@@ -58,16 +57,14 @@ class MPBaseObject {
     ///@name Construction
     ///@{
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// @brief Default constructor explicitly gives name, label, and debug.
+    /// Default constructor explicitly gives name, label, and debug.
     /// @param _label ID of the object, i.e., user defined label
     /// @param _name Name of the object, i.e., derived class name
     /// @param _debug Turn debug output on or off
     MPBaseObject(const string& _label = "", const string& _name = "",
         bool _debug = false);
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// @brief XML constructor pulls label and debug from an XML node.
+    /// XML constructor pulls label and debug from an XML node.
     /// @param _node XMLNode to parse for this object
     MPBaseObject(XMLNode& _node);
 
@@ -77,8 +74,7 @@ class MPBaseObject {
     ///@name I/O
     ///@{
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// @brief Print internal state of this object.
+    /// Print internal state of this object.
     /// @param _os The std::ostream to print to.
     virtual void Print(ostream& _os) const;
 
@@ -86,11 +82,10 @@ class MPBaseObject {
     ///@name Initialization
     ///@{
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// @brief Initialize this object for the current MPProblem. This should
-    ///        reset any internal state of the algorithms so that they are ready
-    ///        for execution. It is also the place to initialize any state that
-    ///        depends on the current problem.
+    /// Initialize this object for the current MPProblem. This should reset any
+    /// internal state of the algorithms so that they are ready for execution. It
+    /// is also the place to initialize any state that depends on the current
+    /// problem.
     /// @warning This member will be called for every compiled algorithm in the
     ///          planning library - even those that will not be used. If an
     ///          algorithm needs to do expenisve setup, then this method should
@@ -103,126 +98,108 @@ class MPBaseObject {
     ///@name Name and Label Accessors
     ///@{
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// @brief Get the class name for this object.
+    /// Get the class name for this object.
     const string& GetName() const {return m_name;}
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// @return Label
+    /// Get the unique label for this object.
     const string& GetLabel() const {return m_label;}
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// @brief Get the unique string identifier for this object "m_name::m_label".
+    /// Get the unique string identifier for this object "m_name::m_label".
     string GetNameAndLabel() const;
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// @brief Set the unique label for this object.
+    /// Set the unique label for this object.
     void SetLabel(const string&);
 
     ///@}
     ///@name MPLibrary Accessors
     ///@{
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// @brief Set the owning MPLibrary.
+    /// Set the owning MPLibrary.
     void SetMPLibrary(MPLibrary*) noexcept;
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// @brief Get the owning MPLibrary.
+    /// Get the owning MPLibrary.
     MPLibrary* GetMPLibrary() const noexcept;
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// @brief Get a distance metric by label from the owning MPLibrary.
+    /// Get a distance metric by label from the owning MPLibrary.
     DistanceMetricPointer GetDistanceMetric(const string&) const noexcept;
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// @brief Get a validity checker by label from the owning MPLibrary.
+    /// Get a validity checker by label from the owning MPLibrary.
     ValidityCheckerPointer GetValidityChecker(const string&) const noexcept;
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// @brief Get a neighborhood finder by label from the owning MPLibrary.
+    /// Get a neighborhood finder by label from the owning MPLibrary.
     NeighborhoodFinderPointer GetNeighborhoodFinder(const string&) const noexcept;
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// @brief Get a sampler by label from the owning MPLibrary.
+    /// Get a sampler by label from the owning MPLibrary.
     SamplerPointer GetSampler(const string&) const noexcept;
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// @brief Get a local planner by label from the owning MPLibrary.
+    /// Get a local planner by label from the owning MPLibrary.
     LocalPlannerPointer GetLocalPlanner(const string&) const noexcept;
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// @brief Get an extender by label from the owning MPLibrary.
+    /// Get an extender by label from the owning MPLibrary.
     ExtenderPointer GetExtender(const string&) const noexcept;
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// @brief Get a path modifier by label from the owning MPLibrary.
+    /// Get a path modifier by label from the owning MPLibrary.
     PathModifierPointer GetPathModifier(const string&) const noexcept;
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// @brief Get a connector by label from the owning MPLibrary.
+    /// Get a connector by label from the owning MPLibrary.
     ConnectorPointer GetConnector(const string&) const noexcept;
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// @brief Get a metric by label from the owning MPLibrary.
+    /// Get a metric by label from the owning MPLibrary.
     MetricPointer GetMetric(const string&) const noexcept;
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// @brief Get a map evaluator by label from the owning MPLibrary.
+    /// Get a map evaluator by label from the owning MPLibrary.
     MapEvaluatorPointer GetMapEvaluator(const string&) const noexcept;
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// @brief Get a strategy by label from the owning MPLibrary.
+    /// Get a strategy by label from the owning MPLibrary.
     MPStrategyPointer GetMPStrategy(const string&) const noexcept;
 
     ///@}
-    ///@name MPProblem Accessors
+    ///@name Problem Accessors
     ///@{
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// @brief Get the library's current MPProblem.
+    /// Get the library's current MPProblem.
     MPProblem* GetMPProblem() const noexcept;
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// @brief Get the current environment.
+    /// Get the current environment.
     Environment* GetEnvironment() const noexcept;
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// @brief Get the current free-space roadmap.
+    /// Get the current query filename.
+    string GetQueryFilename() const noexcept;
+
+    ///@}
+    ///@name Solution Accessors
+    ///@{
+
+    /// Get the current free-space roadmap.
     RoadmapType* GetRoadmap() const noexcept;
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// @brief Get the current obstacle-space roadmap.
+    /// Get the current obstacle-space roadmap.
     RoadmapType* GetBlockRoadmap() const noexcept;
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// @brief Get the current StatClass.
-    StatClass* GetStatClass() const noexcept;
+    /// Get the current best path.
+    PathType* GetPath() const noexcept;
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// @brief Get the current query filename.
-    string GetQueryFilename() const noexcept;
+    /// Get the current StatClass.
+    StatClass* GetStatClass() const noexcept;
 
     ///@}
 
   protected:
 
-    ////////////////////////////////////////////////////////////////////////////
     /// @param _s Class name
     void SetName(const string& _s) {m_name = _s;}
 
-    ////////////////////////////////////////////////////////////////////////////
     /// @return base file name from MPProblem
     const string& GetBaseFilename() const {
       return GetMPProblem()->GetBaseFilename();
     }
 
-    bool m_debug;                      ///< Print debug info?
+    bool m_debug;                  ///< Print debug info?
 
   private:
 
-    string m_name;                     ///< Class name
-    string m_label;                    ///< Unique identifier.
+    string m_name;                 ///< Class name
+    string m_label;                ///< Unique identifier.
     MPLibrary* m_library{nullptr}; ///< The owning MPLibrary.
 
     template<typename T, typename U> friend class MethodSet;
@@ -284,7 +261,7 @@ SetMPLibrary(MPLibrary* _l) noexcept {
 
 template <typename MPTraits>
 inline
-typename MPBaseObject<MPTraits>::MPLibrary*
+typename MPTraits::MPLibrary*
 MPBaseObject<MPTraits>::
 GetMPLibrary() const noexcept {
   return m_library;
@@ -389,7 +366,7 @@ GetMPStrategy(const string& _label) const noexcept {
   return m_library->GetMPStrategy(_label);
 }
 
-/*----------------------------- MPProblem Accessors --------------------------*/
+/*------------------------------ Problem Accessors ---------------------------*/
 
 template <typename MPTraits>
 inline
@@ -411,7 +388,17 @@ GetEnvironment() const noexcept {
 
 template <typename MPTraits>
 inline
-typename MPBaseObject<MPTraits>::RoadmapType*
+string
+MPBaseObject<MPTraits>::
+GetQueryFilename() const noexcept {
+  return GetMPProblem()->GetQueryFilename();
+}
+
+/*--------------------------- Solution Accessors -----------------------------*/
+
+template <typename MPTraits>
+inline
+typename MPTraits::RoadmapType*
 MPBaseObject<MPTraits>::
 GetRoadmap() const noexcept {
   return m_library->GetRoadmap();
@@ -420,10 +407,19 @@ GetRoadmap() const noexcept {
 
 template <typename MPTraits>
 inline
-typename MPBaseObject<MPTraits>::RoadmapType*
+typename MPTraits::RoadmapType*
 MPBaseObject<MPTraits>::
 GetBlockRoadmap() const noexcept {
   return m_library->GetBlockRoadmap();
+}
+
+
+template <typename MPTraits>
+inline
+typename MPTraits::PathType*
+MPBaseObject<MPTraits>::
+GetPath() const noexcept {
+  return m_library->GetPath();
 }
 
 
@@ -433,15 +429,6 @@ StatClass*
 MPBaseObject<MPTraits>::
 GetStatClass() const noexcept {
   return m_library->GetStatClass();
-}
-
-
-template <typename MPTraits>
-inline
-string
-MPBaseObject<MPTraits>::
-GetQueryFilename() const noexcept {
-  return GetMPProblem()->GetQueryFilename();
 }
 
 /*----------------------------------------------------------------------------*/

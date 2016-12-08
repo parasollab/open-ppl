@@ -52,13 +52,9 @@ class MPSolutionType final {
     ///@name Internal State
     ///@{
 
-    /// @TODO Add robot group pointer so that we know which group this belongs
-    ///       to.
-
     RoadmapType* m_freeMap{nullptr}; ///< The free-space roadmap.
     RoadmapType* m_obstMap{nullptr}; ///< The obstacle-space roadmap.
     PathType*    m_path{nullptr};    ///< The current solution path.
-
     StatClass*   m_stats{nullptr};   ///< Performance tracking.
 
     ///@}
@@ -71,6 +67,7 @@ MPSolutionType<MPTraits>::
 MPSolutionType() {
   m_freeMap = new RoadmapType();
   m_obstMap = new RoadmapType();
+  m_path = new PathType(m_freeMap);
   m_stats = new StatClass();
 }
 
@@ -80,6 +77,7 @@ MPSolutionType<MPTraits>::
 ~MPSolutionType() {
   delete m_freeMap;
   delete m_obstMap;
+  delete m_path;
   delete m_stats;
 }
 

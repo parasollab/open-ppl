@@ -164,9 +164,9 @@ Step() {
   static constexpr int maxSubSteps = 2;              // Up to this many ticks.
   m_engine->Step(timestep, maxSubSteps, resolution);
 
-  /// @TODO
-  //for(size_t i = 0; i < m_problem->NumRobots(); ++i)
-  //  m_problem->GetNewRobot(i)->Step();
+  // Step each Robot's agent.
+  for(size_t i = 0; i < m_problem->NumRobots(); ++i)
+    m_problem->GetNewRobot(i)->Step(timestep);
 }
 
 /*------------------------ Visualization Interface ---------------------------*/

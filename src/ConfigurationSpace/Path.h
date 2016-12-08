@@ -8,7 +8,7 @@
 #include "Utilities/PMPLExceptions.h"
 
 ////////////////////////////////////////////////////////////////////////////////
-/// @brief A path of connected configurations from a given roadmap.
+/// A path of connected configurations from a given roadmap.
 ///
 /// The implementation uses a vector of VID's as the primary representation.
 /// The corresponding configurations are computed lazily upon request.
@@ -26,7 +26,7 @@ class Path {
     typedef typename MPTraits::RoadmapType   RoadmapType;
     typedef typename RoadmapType::GraphType  GraphType;
     typedef typename RoadmapType::VID        VID;
-    typedef typename MPTraits::MPLibrary MPLibrary;
+    typedef typename MPTraits::MPLibrary     MPLibrary;
 
     ///@}
     ///@name Construction
@@ -34,7 +34,7 @@ class Path {
 
     /// Construct an empty path.
     /// @param[in] _r The roadmap used by this path.
-    Path(MPProblem* _p, RoadmapType* _r) : m_problem(_p), m_roadmap(_r) { }
+    Path(RoadmapType* _r) : m_roadmap(_r) { }
 
     ///@}
     ///@name Path Interface
@@ -99,7 +99,6 @@ class Path {
     ///@name Internal State
     ///@{
 
-    MPProblem* const m_problem;         ///< The associated MPProblem.
     RoadmapType* const m_roadmap;       ///< The roadmap.
     vector<VID> m_vids;                 ///< The vids of the path configurations.
 
@@ -166,7 +165,7 @@ FullCfgs(MPLibrary* _lib, const string& _lp) const {
 
   // Set up local planner to recreate edges. If none was provided, use edge
   // planner, or fall back to straight-line.
-  auto env = m_problem->GetEnvironment();
+  auto env = _lib->GetMPProblem()->GetEnvironment();
 
   for(auto it = m_vids.begin(); it + 1 < m_vids.end(); ++it) {
     // Get the next edge.

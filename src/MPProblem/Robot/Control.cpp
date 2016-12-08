@@ -2,6 +2,8 @@
 
 #include "Actuator.h"
 
+#include "nonstd/io.h"
+
 
 /*--------------------------- Simulation Interface ---------------------------*/
 
@@ -58,6 +60,13 @@ bool
 Control::
 operator!=(const Control& _rhs) const noexcept {
   return !(*this == _rhs);
+}
+
+/*-------------------------------- Display -----------------------------------*/
+
+std::ostream&
+operator<<(std::ostream& _os, const Control& _c) {
+  return _os << nonstd::print_container(_c.signal);
 }
 
 /*----------------------------------------------------------------------------*/

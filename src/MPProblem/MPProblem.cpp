@@ -35,50 +35,41 @@ MPProblem::
 void
 MPProblem::
 ReadXMLFile(const string& _filename) {
-  bool envIsSet = m_environment;
+  const bool envIsSet = m_environment;
 
   size_t sl = _filename.rfind("/");
   m_filePath = _filename.substr(0, sl == string::npos ? 0 : sl + 1);
+  m_xmlFilename = _filename;
 
-  // Open the XML and get the root node.
+  // Open the XML and get the root and input nodes.
   XMLNode mpNode(_filename, "MotionPlanning");
-
-  // Find the 'Input' node.
-  XMLNode* input = nullptr;
-  for(auto& child : mpNode)
-    if(child.Name() == "Problem")
-      input = &child;
-
-  // Throw exception if we can't find it.
-  if(!envIsSet && !input)
-    throw ParseException(WHERE, "Cannot find Input node in XML file '" +
-        _filename + "'.");
+  XMLNode input(_filename, "Problem");
 
   // Parse the input node to set the environment, robot(s), and query.
   if(!envIsSet)
-    for(auto& child : *input)
+    for(auto& child : input)
       ParseChild(child);
 
   // Print XML details if requested.
-  bool print = mpNode.Read("print", false, false, "Print all XML input");
+  const bool print = mpNode.Read("print", false, false, "Print all XML input");
   if(print)
     Print(cout);
 
   // Handle XML warnings/errors.
-  bool warnings = mpNode.Read("warnings", false, false, "Report warnings");
+  const bool warnings = mpNode.Read("warnings", false, false, "Report warnings");
   if(warnings) {
-    bool warningsAsErrors = mpNode.Read("warningsAsErrors", false, false,
+    const bool warningsAsErrors = mpNode.Read("warningsAsErrors", false, false,
         "XML warnings considered errors");
     if(!envIsSet)
-      input->WarnAll(warningsAsErrors);
+      input.WarnAll(warningsAsErrors);
   }
 
   // Make sure there is an environment and a robot.
   if(!m_environment)
-    throw ParseException(input->Where(), "No environment specified in the "
+    throw ParseException(input.Where(), "No environment specified in the "
         "problem node.");
   if(m_robots.empty())
-    throw ParseException(input->Where(), "No robots specified in the problem "
+    throw ParseException(input.Where(), "No robots specified in the problem "
         "node.");
 
   // Initialize the Cfg robot pointers.
@@ -107,7 +98,7 @@ ParseChild(XMLNode& _node) {
     ///       make sure this always happens regardless of the XML file ordering.
     /// @TODO Move the DOF parsing into MultiBody's read so that we don't have
     ///       to pass the boundary with the robot constructor.
-    auto robot = new Robot(_node, GetEnvironment()->GetBoundary().get());
+    auto robot = new Robot(this, _node, GetEnvironment()->GetBoundary().get());
     m_robots.push_back(robot);
     return true;
   }
@@ -153,6 +144,19 @@ GetNewRobot(size_t _index) const {
         ", but only " + std::to_string(m_robots.size()) +
         " robots are available.");
   return m_robots[_index];
+}
+
+
+Robot*
+MPProblem::
+GetNewRobot(const std::string& _label) {
+  for(auto robot : m_robots)
+    if(robot->GetLabel() == _label)
+      return robot;
+
+  throw RunTimeException(WHERE, "Requested Robot with label '" + _label + "', "
+      "but no such robot was found.");
+  return nullptr;
 }
 
 

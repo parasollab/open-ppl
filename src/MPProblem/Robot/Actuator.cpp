@@ -3,11 +3,13 @@
 #include <algorithm>
 #include <limits>
 
+#include "DynamicsModel.h"
+#include "Robot.h"
 #include "Geometry/Bodies/ActiveMultiBody.h"
-#include "MPProblem/Robot/Robot.h"
 #include "Utilities/PMPLExceptions.h"
 
 #include "BulletDynamics/Featherstone/btMultiBody.h"
+
 
 /*------------------------------- Construction -------------------------------*/
 
@@ -34,8 +36,11 @@ SetLimits(const std::vector<double>& _min, const std::vector<double>& _max) {
         " DOFs, but new limits have " + std::to_string(_min.size()) + ", " +
         std::to_string(_max.size()) + " DOFs.");
 
-  for(size_t i = 0; i < m_limits.size(); ++i)
+  for(size_t i = 0; i < m_limits.size(); ++i) {
     m_limits[i] = Range<double>(_min[i], _max[i]);
+    if(_min[i] != 0 || _max[i] != 0)
+      m_mask[i] = true;
+  }
 }
 
 
@@ -92,8 +97,8 @@ Execute(const Control::Signal& _s) const {
   /// @TODO Generalize this to accomodate multi-link robots. We are assuming
   ///       robot is 6-dof rigid body for the moment
   auto model = m_robot->GetDynamicsModel();
-  model->addBaseForce(btVector3(f[0], f[1], f[2]));
-  model->addBaseTorque(btVector3(f[3], f[4], f[5]));
+  model->Get()->addBaseForce(btVector3(f[0], f[1], f[2]));
+  model->Get()->addBaseTorque(btVector3(f[3], f[4], f[5]));
 }
 
 /*----------------------------------------------------------------------------*/

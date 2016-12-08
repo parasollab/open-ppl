@@ -158,26 +158,25 @@ void
 ActiveMultiBody::
 Configure(const vector<double>& _v) {
   int index = 0;
-  int posIndex = index;
   double x = 0, y = 0, z = 0, alpha = 0, beta = 0, gamma = 0;
   if(m_baseType != FreeBody::BodyType::Fixed) {
-    x = _v[posIndex];
-    y = _v[posIndex + 1];
+    x = _v[0];
+    y = _v[1];
     index += 2;
     if(m_baseType == FreeBody::BodyType::Volumetric) {
       index++;
-      z = _v[posIndex + 2];
+      z = _v[2];
     }
     if(m_baseMovement == FreeBody::MovementType::Rotational) {
       if(m_baseType == FreeBody::BodyType::Planar) {
         index++;
-        gamma = _v[posIndex + 2];
+        gamma = _v[2];
       }
       else {
         index += 3;
-        alpha = _v[posIndex + 3];
-        beta = _v[posIndex + 4];
-        gamma = _v[posIndex + 5];
+        alpha = _v[3];
+        beta = _v[4];
+        gamma = _v[5];
       }
     }
     // configure the robot according to current Cfg: joint parameters
@@ -203,26 +202,25 @@ void
 ActiveMultiBody::
 Configure(const vector<double>& _v, const vector<double>& _t) {
   int index = 0, t_index = 0;
-  int posIndex = index;
   double x = 0, y = 0, z = 0, alpha = 0, beta = 0, gamma = 0;
   if(m_baseType != FreeBody::BodyType::Fixed) {
-    x = _v[posIndex];
-    y = _v[posIndex + 1];
+    x = _v[0];
+    y = _v[1];
     index += 2;
     if(m_baseType == FreeBody::BodyType::Volumetric) {
       index++;
-      z = _v[posIndex + 2];
+      z = _v[2];
     }
     if(m_baseMovement == FreeBody::MovementType::Rotational) {
       if(m_baseType == FreeBody::BodyType::Planar) {
         index++;
-        gamma = _v[posIndex + 2];
+        gamma = _v[2];
       }
       else {
         index += 3;
-        alpha = _v[posIndex + 3];
-        beta = _v[posIndex + 4];
-        gamma = _v[posIndex + 5];
+        alpha = _v[3];
+        beta = _v[4];
+        gamma = _v[5];
       }
     }
     // configure the robot according to current Cfg: joint parameters
@@ -249,26 +247,25 @@ void
 ActiveMultiBody::
 ConfigureRender(const vector<double>& _v) {
   int index = 0;
-  int posIndex = index;
   double x = 0, y = 0, z = 0, alpha = 0, beta = 0, gamma = 0;
   if(m_baseType != FreeBody::BodyType::Fixed) {
-    x = _v[posIndex];
-    y = _v[posIndex + 1];
+    x = _v[0];
+    y = _v[1];
     index += 2;
     if(m_baseType == FreeBody::BodyType::Volumetric) {
       index++;
-      z = _v[posIndex + 2];
+      z = _v[2];
     }
     if(m_baseMovement == FreeBody::MovementType::Rotational) {
       if(m_baseType == FreeBody::BodyType::Planar) {
         index++;
-        gamma = _v[posIndex + 2];
+        gamma = _v[2];
       }
       else {
         index += 3;
-        alpha = _v[posIndex + 3];
-        beta = _v[posIndex + 4];
-        gamma = _v[posIndex + 5];
+        alpha = _v[3];
+        beta = _v[4];
+        gamma = _v[5];
       }
     }
     // configure the robot according to current Cfg: joint parameters

@@ -25,7 +25,7 @@ Initialize() {
 
 void
 NullAgent::
-Step() {
+Step(const double) {
   // Null agent does nothing on every step.
 }
 

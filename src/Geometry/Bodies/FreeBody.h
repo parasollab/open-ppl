@@ -86,6 +86,8 @@ class FreeBody : public Body {
     /// @return Base movement type of body
     MovementType GetMovementType() const {return m_movementType;}
 
+    const std::string& Label() const noexcept {return m_label;}
+
     ///@}
     ///@name Connection Information
     ///@{
@@ -191,6 +193,7 @@ class FreeBody : public Body {
     ///@{
 
     size_t m_index;                            ///< Index in ActiveMultiBody
+    std::string m_label;                       ///< The unique part label.
     BodyType m_bodyType;                       ///< Body type
     MovementType m_movementType;               ///< Movement type
     vector<Connection*> m_forwardConnections;  ///< Forward Connections

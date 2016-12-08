@@ -1,21 +1,22 @@
 #include "Robot.h"
 
 #include "Actuator.h"
-#include "ControlGenerators.h"
-
-#include "Behaviors/Agent/Agent.h"
+#include "DynamicsModel.h"
+#include "Behaviors/Agents/Agent.h"
+#include "Behaviors/Controllers/ControllerMethod.h"
 #include "Geometry/Bodies/ActiveMultiBody.h"
 #include "Geometry/Boundaries/Boundary.h"
+
+// Temporaries for hard-coded stuff
+#include "ControlGenerators.h"
+#include "Behaviors/Agents/PathFollowingAgent.h"
+#include "Behaviors/Controllers/SimpleController.h"
 
 
 /*------------------------------ Construction --------------------------------*/
 
 Robot::
-Robot() = default;
-
-
-Robot::
-Robot(XMLNode& _node, Boundary* const _b) {
+Robot(MPProblem* _p, XMLNode& _node, Boundary* const _b) : m_problem(_p) {
   // Get the unique robot label.
   m_label = _node.Read("label", true, "", "Unique robot label");
 
@@ -56,6 +57,16 @@ Robot(XMLNode& _node, Boundary* const _b) {
   ///       we assume a simple control set.
   SimpleControlGenerator simple;
   SetControlSet(simple.GenerateDiscreteSet(this));
+
+  // Create controller.
+  /// @TODO Read in controller type instead of hard-coding. Currently we assume
+  ///       the simplest controller.
+  m_controller = new SimpleController(this, .1);
+
+  // Create agent.
+  /// @TODO Read in agent type instead of hard-coding. Currently we assume a
+  ///       path-following agent.
+  m_agent = new PathFollowingAgent(this);
 }
 
 
@@ -65,6 +76,8 @@ Robot::
   delete m_agent;
   delete m_controlSet;
   delete m_controlSpace;
+  delete m_controller;
+  delete m_dynamicsModel;
 
   for(auto a : m_actuators)
     delete a;
@@ -74,10 +87,23 @@ Robot::
 
 void
 Robot::
-Step() {
+Step(const double _dt) {
+  // Update the agent's perception of the world.
   /// @TODO Add percept model
-  //m_percept->Update();
-  m_agent->Step();
+  //if(m_percept)
+  //  m_percept->Update();
+
+  // Run the agent's decision-making routine. The agent will apply controls as
+  // required to execute its decision.
+  if(m_agent)
+    m_agent->Step(_dt);
+}
+
+
+MPProblem*
+Robot::
+GetMPProblem() const {
+  return m_problem;
 }
 
 /*--------------------------- Geometry Accessors -----------------------------*/
@@ -142,6 +168,21 @@ SetControlSpace(ControlSpace* const _c) {
   m_controlSpace = _c;
 }
 
+
+ControllerMethod*
+Robot::
+GetController() {
+  return m_controller;
+}
+
+
+void
+Robot::
+SetController(ControllerMethod* const _c) {
+  delete m_controller;
+  m_controller = _c;
+}
+
 /*---------------------------- Actuator Accessors ----------------------------*/
 
 Actuator*
@@ -159,7 +200,7 @@ GetActuators() {
 
 /*---------------------------- Dynamics Accessors ----------------------------*/
 
-btMultiBody*
+DynamicsModel*
 Robot::
 GetDynamicsModel() {
   return m_dynamicsModel;
@@ -169,7 +210,16 @@ GetDynamicsModel() {
 void
 Robot::
 SetDynamicsModel(btMultiBody* const _m) {
-  m_dynamicsModel = _m;
+  delete m_dynamicsModel;
+  m_dynamicsModel = new DynamicsModel(this, _m);
+}
+
+/*------------------------------- Other --------------------------------------*/
+
+const std::string&
+Robot::
+GetLabel() const noexcept {
+  return m_label;
 }
 
 /*----------------------------------------------------------------------------*/

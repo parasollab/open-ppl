@@ -4,7 +4,10 @@
 FreeBody::
 FreeBody(MultiBody* _owner, size_t _index)
   : Body(_owner), m_index(_index), m_bodyType(BodyType::Planar),
-    m_movementType(MovementType::Translational) { }
+    m_movementType(MovementType::Translational) {
+  /// @TODO Parse the label properly after we set up the robot xml file.
+  m_label = std::to_string(m_index);
+}
 
 
 FreeBody::BodyType

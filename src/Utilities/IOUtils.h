@@ -212,7 +212,7 @@ class XMLNode {
     /// string with filename, name, row (line number), and column of XMLNode.
     string Where(const string& _f, int _l, int _c, bool _name = true) const;
 
-    TiXmlNode* m_node;          ///< TiXmlNode
+    TiXmlNode* m_node{nullptr}; ///< TiXmlNode
     bool m_childBuilt{false};   ///< Have children been parsed into nodes?
     bool m_accessed{false};     ///< Has this node been accessed or not?
     vector<XMLNode> m_children; ///< Children of node

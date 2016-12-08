@@ -29,6 +29,7 @@ class Agent {
     ///@{
 
     Agent(Robot* const _r);
+
     virtual ~Agent();
 
     ///@}
@@ -41,7 +42,8 @@ class Agent {
 
     /// Decide what to do on each time step in the simulation. The agent should
     /// implement its decision by sending commands to the robot's controller.
-    virtual void Step() = 0;
+    /// @param _dt The timestep length.
+    virtual void Step(const double _dt) = 0;
 
     /// Tear down the agent. Release any resources and reset the object to it's
     /// pre-initialize state.

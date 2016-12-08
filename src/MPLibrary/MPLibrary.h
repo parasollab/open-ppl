@@ -39,6 +39,7 @@ class MPLibraryType final
     typedef typename MPTraits::MPSolution  MPSolution;
     typedef typename MPTraits::MPTask      MPTask;
     typedef typename MPTraits::RoadmapType RoadmapType;
+    typedef typename MPTraits::PathType    PathType;
 
     ///@}
     ///@name Local Types
@@ -240,6 +241,7 @@ class MPLibraryType final
     RoadmapType* GetRoadmap() {return m_solution->GetRoadmap();}
     RoadmapType* GetBlockRoadmap() {return m_solution->GetBlockRoadmap();}
     StatClass*   GetStatClass() {return m_solution->GetStatClass();}
+    PathType*    GetPath() {return m_solution->GetPath();}
 
     ///@}
     ///@name Execution Interface
@@ -590,11 +592,6 @@ Solve(MPProblem* _problem, MPTask* _task, MPSolution* _solution) {
     if(get<3>(sit))
       VDClose();
   }
-
-  // Unset inputs.
-  //SetMPProblem(nullptr);
-  //m_task = nullptr;
-  //m_solution = nullptr;
 }
 
 /*----------------------------------------------------------------------------*/

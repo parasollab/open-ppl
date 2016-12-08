@@ -9,10 +9,22 @@ main(int _argc, char** _argv) {
     if(_argc < 3 || std::string(_argv[1]) != "-f")
       throw ParseException(WHERE, "Incorrect usage. Usage: -f options.xml");
 
-    MPProblem* problem = new MPProblem(_argv[2]);
-    MPLibrary* pmpl = new MPLibrary(_argv[2]);
+    std::string xmlFile = _argv[2];
+
+    MPProblem* problem = new MPProblem(xmlFile);
+    MPLibrary* pmpl = new MPLibrary(xmlFile);
+
+    // Manually set up single-task parsing until we implement jobs.
     MPTask* task = nullptr;
+    //XMLNode jobs(xmlFile, "Jobs");
+    //for(auto& node : jobs)
+    //  if(node.Name() == "Task") {
+    //    task = new MPTask(problem, node);
+    //    break;
+    //  }
+
     MPSolution* solution = new MPSolution;
+
     pmpl->Solve(problem, task, solution);
 
     delete problem;

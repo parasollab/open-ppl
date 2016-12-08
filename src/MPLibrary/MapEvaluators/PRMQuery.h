@@ -10,18 +10,17 @@
 #include <containers/sequential/graph/algorithms/astar.h>
 
 ////////////////////////////////////////////////////////////////////////////////
-/// @ingroup MapEvaluators
-/// @brief Evaluate a roadmap under construction to see if a query has been
-///        satisfied.
+/// Evaluate a roadmap under construction to see if a query has been satisfied.
 ///
 /// This query is specialized for PRM methods.
+/// @ingroup MapEvaluators
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
 class PRMQuery : public QueryMethod<MPTraits> {
 
   public:
 
-    ///\name Motion Planning Types
+    ///@name Motion Planning Types
     ///@{
 
     typedef typename MPTraits::CfgType      CfgType;
@@ -31,7 +30,7 @@ class PRMQuery : public QueryMethod<MPTraits> {
     typedef typename RoadmapType::VID       VID;
 
     ///@}
-    ///\name Construction
+    ///@name Construction
     ///@{
 
     PRMQuery();
@@ -39,14 +38,13 @@ class PRMQuery : public QueryMethod<MPTraits> {
     virtual ~PRMQuery() = default;
 
     ///@}
-    ///\name MPBaseObject Overrides
+    ///@name MPBaseObject Overrides
     ///@{
 
-    void ParseXML(XMLNode& _node);
     virtual void Print(ostream& _os) const override;
 
     ///@}
-    ///\name QueryMethod Overrides
+    ///@name QueryMethod Overrides
     ///@{
 
     virtual bool PerformSubQuery(const CfgType& _start, const CfgType& _goal)
@@ -56,54 +54,44 @@ class PRMQuery : public QueryMethod<MPTraits> {
 
   protected:
 
-    ///\name Helpers
+    ///@name Helpers
     ///@{
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// \brief Ensure a given configuration is in the roadmap, adding it if
-    ///        necessary.
-    /// \param[in] _cfg The configuration to ensure.
-    /// \return The VID of _cfg, and a bool indicating whether or not it had to
+    /// Ensure a given configuration is in the roadmap, adding it if necessary.
+    /// @param[in] _cfg The configuration to ensure.
+    /// @return The VID of _cfg, and a bool indicating whether or not it had to
     ///         be added to the map.
     pair<VID, bool> EnsureCfgInMap(const CfgType& _cfg);
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// \brief Remove an ensured configuration if it was added to the map.
-    /// \param[in] _temp The ensured configuration's VID and an indicator of
+    /// Remove an ensured configuration if it was added to the map.
+    /// @param[in] _temp The ensured configuration's VID and an indicator of
     ///                  whether or not it was added as a temporary.
     void RemoveTempCfg(pair<VID, bool> _temp);
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// \brief Get the CC stats of the roadmap.
-    /// \return A vector with one element per CC. The elements contain the size
+    /// Get the CC stats of the roadmap.
+    /// @return A vector with one element per CC. The elements contain the size
     ///         of a CC and one VID within it.
     vector<pair<size_t, VID>> FindCCs();
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// \brief Try to connect a given VID to the CC containing a second VID.
-    /// \param[in] _toConnect The VID to connect.
-    /// \param[in] _inCC One of the VIDs in the CC of interest.
+    /// Try to connect a given VID to the CC containing a second VID.
+    /// @param[in] _toConnect The VID to connect.
+    /// @param[in] _inCC One of the VIDs in the CC of interest.
     void ConnectToCC(const VID _toConnect, const VID _inCC);
 
     ///@}
-    ///\name MP Object Labels
+    ///@name MP Object Labels
     ///@{
 
     vector<string> m_ncLabels{"kClosest"};
 
     ///@}
-    ///\name Graph Search
+    ///@name Graph Search
     ///@{
 
-    bool m_deleteNodes{false};     // Delete any added nodes?
+    bool m_deleteNodes{false}; ///< Delete any added nodes?
 
     ///@}
-    ///\name Unhide QueryMethod names.
-    ///@{
 
-    using QueryMethod<MPTraits>::m_path;
-
-    ///@}
 };
 
 /*------------------------------ Construction --------------------------------*/
@@ -117,18 +105,9 @@ PRMQuery() : QueryMethod<MPTraits>() {
 
 template <typename MPTraits>
 PRMQuery<MPTraits>::
-PRMQuery(XMLNode& _node) :
-    QueryMethod<MPTraits>(_node) {
+PRMQuery(XMLNode& _node) : QueryMethod<MPTraits>(_node) {
   this->SetName("PRMQuery");
-  ParseXML(_node);
-}
 
-/*-------------------------- MPBaseObject Overrides --------------------------*/
-
-template <typename MPTraits>
-void
-PRMQuery<MPTraits>::
-ParseXML(XMLNode& _node) {
   m_deleteNodes = _node.Read("deleteNodes", false, m_deleteNodes, "Whether or "
       "not to delete start and goal from roadmap");
 
@@ -144,6 +123,7 @@ ParseXML(XMLNode& _node) {
   }
 }
 
+/*-------------------------- MPBaseObject Overrides --------------------------*/
 
 template <typename MPTraits>
 void
@@ -213,7 +193,7 @@ template <typename MPTraits>
 pair<typename PRMQuery<MPTraits>::VID, bool>
 PRMQuery<MPTraits>::
 EnsureCfgInMap(const CfgType& _cfg) {
-  auto g = m_path->GetRoadmap()->GetGraph();
+  auto g = this->GetRoadmap()->GetGraph();
   return g->IsVertex(_cfg) ? make_pair(g->GetVID(_cfg), false) :
                              make_pair(g->AddVertex(_cfg), true) ;
 }
@@ -224,7 +204,7 @@ void
 PRMQuery<MPTraits>::
 RemoveTempCfg(pair<VID, bool> _temp) {
   if(_temp.second)
-    m_path->GetRoadmap()->GetGraph()->delete_vertex(_temp.first);
+    this->GetRoadmap()->GetGraph()->delete_vertex(_temp.first);
 }
 
 
@@ -238,7 +218,7 @@ FindCCs() {
   stats->StartClock("PRMQuery::FindCCs");
   vector<pair<size_t, VID>> ccs;
   stapl::sequential::vector_property_map<GraphType, size_t> cmap;
-  get_cc_stats(*m_path->GetRoadmap()->GetGraph(), cmap, ccs);
+  get_cc_stats(*this->GetRoadmap()->GetGraph(), cmap, ccs);
   stats->StopClock("PRMQuery::FindCCs");
 
   if(this->m_debug)
@@ -267,11 +247,11 @@ ConnectToCC(const VID _toConnect, const VID _inCC) {
   // Get the CC containing _inCC.
   vector<VID> cc;
   stapl::sequential::vector_property_map<GraphType, size_t> cmap;
-  stapl::sequential::get_cc(*m_path->GetRoadmap()->GetGraph(), cmap, _inCC, cc);
+  stapl::sequential::get_cc(*this->GetRoadmap()->GetGraph(), cmap, _inCC, cc);
 
   // Try to join _toConnect to that CC using each connector.
   for(auto& label : m_ncLabels)
-    this->GetConnector(label)->Connect(m_path->GetRoadmap(), _toConnect,
+    this->GetConnector(label)->Connect(this->GetRoadmap(), _toConnect,
         cc.begin(), cc.end(), false);
 
   stats->StopClock("PRMQuery::ConnectToCC");

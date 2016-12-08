@@ -35,7 +35,7 @@ BulletEngine() {
   btGImpactCollisionAlgorithm::registerAlgorithm(m_dispatcher);
 
   // Set the gravity in our world.
-  m_dynamicsWorld->setGravity(btVector3(0,-10, 0));
+  m_dynamicsWorld->setGravity(btVector3(0, 0, 0));
 }
 
 

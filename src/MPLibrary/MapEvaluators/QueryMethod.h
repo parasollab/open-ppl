@@ -12,36 +12,35 @@
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// \brief Heuristic for A* graph search. Uses FindIncrement to estimate the
-///        distance to a given goal configuration.
+/// Heuristic for A* graph search. Uses FindIncrement to estimate the distance
+/// to a given goal configuration.
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
 struct Heuristic {
 
   public:
 
-    ///\name Motion Planning Types
+    ///@name Motion Planning Types
     ///@{
 
     typedef typename MPTraits::CfgType    CfgType;
     typedef typename MPTraits::WeightType WeightType;
 
     ///@}
-    ///\name Construction
+    ///@name Construction
     ///@{
 
     Heuristic(const CfgType& _goal, double _posRes, double _oriRes) :
         m_goal(_goal), m_posRes(_posRes), m_oriRes(_oriRes) { }
 
     ///@}
-    ///\name Interface
+    ///@name Interface
     ///@{
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// \brief Return the number of ticks as the estimated distance from a given
-    ///        configuration to the goal.
-    /// \param[in] _c The configuration of interest.
-    /// \return The estimated distance from _c to m_goal.
+    /// Return the number of ticks as the estimated distance from a given
+    /// configuration to the goal.
+    /// @param[in] _c The configuration of interest.
+    /// @return The estimated distance from _c to m_goal.
     WeightType operator()(const CfgType& _c) {
       int tick;
       CfgType incr;
@@ -53,7 +52,7 @@ struct Heuristic {
 
   private:
 
-    ///\name Internal State
+    ///@name Internal State
     ///@{
 
     CfgType m_goal;  ///< The goal configuration for this search.
@@ -65,16 +64,16 @@ struct Heuristic {
 
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Base class for all query methods. These objects evaluate a roadmap under
+/// construction to see if a planning query has been satisfied.
 /// @ingroup MapEvaluators
-/// @brief Base class for all query methods. These objects evaluate a roadmap
-///        under construction to see if a planning query has been satisfied.
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
 class QueryMethod : public MapEvaluatorMethod<MPTraits> {
 
   public:
 
-    ///\name Motion Planning Types
+    ///@name Motion Planning Types
     ///@{
 
     typedef typename MPTraits::CfgType      CfgType;
@@ -84,7 +83,7 @@ class QueryMethod : public MapEvaluatorMethod<MPTraits> {
     typedef typename RoadmapType::VID       VID;
 
     ///@}
-    ///\name Construction
+    ///@name Construction
     ///@{
 
     QueryMethod();
@@ -92,100 +91,83 @@ class QueryMethod : public MapEvaluatorMethod<MPTraits> {
     virtual ~QueryMethod() = default;
 
     ///@}
-    ///\name MPBaseObject Overrides
+    ///@name MPBaseObject Overrides
     ///@{
 
-    void ParseXML(XMLNode& _node);
     virtual void Print(ostream& _os) const override;
     virtual void Initialize() override;
 
     ///@}
-    ///\name MapEvaluator Interface
+    ///@name MapEvaluator Interface
     ///@{
 
     virtual bool operator()() override;
 
     ///@}
-    ///\name Query Interface
+    ///@name Query Interface
     ///@{
 
     const vector<CfgType>& GetQuery() const {return m_query;}
     const vector<CfgType>& GetGoals() const {return m_goals;}
-    const Path<MPTraits>& GetPath() const {return m_path;}
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// \brief Check whether a path can be drawn through all query points using
-    ///        the configurations in a given roadmap.
-    /// \param[in] _r The roadmap to search.
-    /// \return A bool indicating whether a path in _r traversing all goals was
+    /// Check whether a path can be drawn through all query points using the
+    /// configurations in a given roadmap.
+    /// @param[in] _r The roadmap to search.
+    /// @return A bool indicating whether a path in _r traversing all goals was
     ///         found.
     virtual bool PerformQuery(RoadmapType* const _r);
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// \brief Check whether a path connecting a given start and goal exists in
-    ///        the roadmap.
-    /// \param[in] _start The starting configuration to use.
-    /// \param[in] _goal  The goal configuration to use.
-    /// \return A bool indicating whether the path was found.
+    /// Check whether a path connecting a given start and goal exists in the
+    /// roadmap.
+    /// @param[in] _start The starting configuration to use.
+    /// @param[in] _goal  The goal configuration to use.
+    /// @return A bool indicating whether the path was found.
     virtual bool PerformSubQuery(const CfgType& _start, const CfgType& _goal) = 0;
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// \brief Read a Query file.
-    /// \param[in] _filename The query file to read.
+    /// Read a Query file.
+    /// @param[in] _filename The query file to read.
     void ReadQuery(string _filename);
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// \brief Output the discovered path to file.
+    /// Output the discovered path to file.
     void WritePath() const;
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// \brief Reset the path and list of undiscovered goals.
-    /// \param[in] _r The roadmap to use.
-    virtual void Initialize(RoadmapType* _r = nullptr);
+    /// Reset the path and list of undiscovered goals.
+    virtual void Reset();
 
     ///@}
 
   protected:
 
-    ///\name Helpers
+    ///@name Helpers
     ///@{
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// \brief Set the search algorithm choice from a string.
-    /// \param[in] _alg The search algorithm to use ('astar' or 'dijkstras').
-    /// \param[in] _where Error location info in case _alg isn't recognized.
+    /// Set the search algorithm choice from a string.
+    /// @param[in] _alg The search algorithm to use ('astar' or 'dijkstras').
+    /// @param[in] _where Error location info in case _alg isn't recognized.
     void SetSearchAlgViaString(string _alg, const string& _where);
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// \brief Check if a two nodes are connected by the roadmap.
-    /// \param[in] _start The starting node's descriptor.
-    /// \param[in] _end The ending node's descriptor.
-    /// \return True if _start and _goal are connected.
+    /// Check if a two nodes are connected by the roadmap.
+    /// @param[in] _start The starting node's descriptor.
+    /// @param[in] _end The ending node's descriptor.
+    /// @return True if _start and _goal are connected.
     bool SameCC(const VID _start, const VID _end) const;
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// \brief Generate a path through the roadmap from a start node to an end
-    ///        node.
-    /// \param[in] _start The start node.
-    /// \param[in] _end The end node.
+    /// Generate a path through the roadmap from a start node to an end node.
+    /// @param[in] _start The start node.
+    /// @param[in] _end The end node.
     void GeneratePath(const VID _start, const VID _end);
 
     ///@}
-    ///\name Query State
+    ///@name Query State
     ///@{
 
     vector<CfgType> m_query;    ///< The start and all goal configurations.
     vector<CfgType> m_goals;    ///< The undiscovered goal configurations.
 
-    ///@}
-    ///\name Path State
-    ///@{
-
-    unique_ptr<Path<MPTraits>> m_path; ///< The current path.
     bool m_fullRecreatePath{true};     ///< Create full paths or just VIDs?
 
     ///@}
-    ///\name Graph Search
+    ///@name Graph Search
     ///@{
 
     enum GraphSearchAlg {DIJKSTRAS, ASTAR}; ///< The supported sssp algorithms.
@@ -208,15 +190,7 @@ QueryMethod<MPTraits>::
 QueryMethod(XMLNode& _node) :
     MapEvaluatorMethod<MPTraits>(_node) {
   this->SetName("QueryMethod");
-  ParseXML(_node);
-}
 
-/*--------------------------- MPBaseObject Overrides -------------------------*/
-
-template <typename MPTraits>
-void
-QueryMethod<MPTraits>::
-ParseXML(XMLNode& _node) {
   string searchAlg = _node.Read("graphSearchAlg", false, "dijkstras", "Graph "
       "search algorithm");
   m_fullRecreatePath = _node.Read("fullRecreatePath", false, true, "Whether or "
@@ -225,6 +199,7 @@ ParseXML(XMLNode& _node) {
   SetSearchAlgViaString(searchAlg, _node.Where());
 }
 
+/*--------------------------- MPBaseObject Overrides -------------------------*/
 
 template <typename MPTraits>
 void
@@ -270,9 +245,8 @@ PerformQuery(RoadmapType* const _r) {
 
   // If no goals remain, then this must be a refinement step (as in optimal
   // planning). In this case, reinitialize and rebuild the whole path.
-  // We also need to rebuild when changing roadmaps.
-  if(m_goals.empty() || m_path->GetRoadmap() != _r)
-    Initialize(_r);
+  if(m_goals.empty())
+    Reset();
 
   // Search for a sequential path through each query point in order.
   for(auto it = m_goals.begin(); it < m_goals.end();) {
@@ -283,7 +257,7 @@ PerformQuery(RoadmapType* const _r) {
     else
       it = m_goals.erase(it);
   }
-  this->GetStatClass()->AddToHistory("pathlength", m_path->Length());
+  this->GetStatClass()->AddToHistory("pathlength", this->GetPath()->Length());
   WritePath();
 
   if(this->m_debug)
@@ -319,27 +293,26 @@ template <typename MPTraits>
 void
 QueryMethod<MPTraits>::
 WritePath() const {
-  if(!m_path)
+  if(!this->GetPath())
     return;
   if(m_fullRecreatePath)
-    ::WritePath(this->GetBaseFilename() + ".full.path", m_path->FullCfgs(this->
-        GetMPLibrary()));
+    ::WritePath(this->GetBaseFilename() + ".full.path",
+        this->GetPath()->FullCfgs(this->GetMPLibrary()));
   else
-    ::WritePath(this->GetBaseFilename() + ".rdmp.path", m_path->Cfgs());
+    ::WritePath(this->GetBaseFilename() + ".rdmp.path", this->GetPath()->Cfgs());
 }
 
 
 template <typename MPTraits>
 void
 QueryMethod<MPTraits>::
-Initialize(RoadmapType* _r) {
+Reset() {
+  // Reset the goals.
   m_goals.clear();
   copy(m_query.begin() + 1, m_query.end(), back_inserter(m_goals));
 
-  if(!_r)
-    _r = this->GetRoadmap();
-  m_path = unique_ptr<Path<MPTraits>>(
-      new Path<MPTraits>(this->GetMPProblem(), _r));
+  // Reset the path.
+  this->GetPath()->Clear();
 }
 
 /*------------------------------- Helpers ------------------------------------*/
@@ -366,7 +339,7 @@ SameCC(const VID _start, const VID _end) const {
   if(this->m_debug)
     cout << "\tChecking connectivity..." << endl;
 
-  auto g = m_path->GetRoadmap()->GetGraph();
+  auto g = this->GetRoadmap()->GetGraph();
   auto stats = this->GetStatClass();
 
   stats->IncGOStat("CC Operations");
@@ -388,7 +361,7 @@ template <typename MPTraits>
 void
 QueryMethod<MPTraits>::
 GeneratePath(const VID _start, const VID _end) {
-  auto g = m_path->GetRoadmap()->GetGraph();
+  auto g = this->GetRoadmap()->GetGraph();
   auto stats = this->GetStatClass();
   stats->IncGOStat("Graph Search");
   stats->StartClock("QueryMethod::GraphSearch");
@@ -404,7 +377,7 @@ GeneratePath(const VID _start, const VID _end) {
       astar(*g, _start, _end, path, heuristic);
       break;
   }
-  *m_path += path;
+  *this->GetPath() += path;
   stats->StopClock("QueryMethod::GraphSearch");
 }
 

@@ -7,17 +7,16 @@
 using namespace std;
 
 ////////////////////////////////////////////////////////////////////////////////
-/// @ingroup MapEvaluators
-/// @brief A mix of Toggle @prm and Lazy @prm
+/// A mix of Toggle @prm and Lazy @prm
 ///
-/// TODO.
+/// @ingroup MapEvaluators
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
 class LazyToggleQuery : public LazyQuery<MPTraits> {
 
   public:
 
-    ///\name Motion Planning Types
+    ///@name Motion Planning Types
     ///@{
 
     typedef typename MPTraits::CfgType      CfgType;
@@ -26,7 +25,7 @@ class LazyToggleQuery : public LazyQuery<MPTraits> {
     typedef typename RoadmapType::VID       VID;
 
     ///@}
-    ///\name Construction
+    ///@name Construction
     ///@{
 
     LazyToggleQuery();
@@ -34,14 +33,13 @@ class LazyToggleQuery : public LazyQuery<MPTraits> {
     virtual ~LazyToggleQuery() = default;
 
     ///@}
-    ///\name MPBaseObject Overrides
+    ///@name MPBaseObject Overrides
     ///@{
 
-    void ParseXML(XMLNode& _node);
     virtual void Print(ostream& _os) const override;
 
     ///@}
-    ///\name QueryMethod Overrides
+    ///@name QueryMethod Overrides
     ///@{
 
     virtual bool PerformSubQuery(const CfgType& _start, const CfgType& _goal)
@@ -51,34 +49,31 @@ class LazyToggleQuery : public LazyQuery<MPTraits> {
 
   protected:
 
-    ///\name LazyQuery Overrides
+    ///@name LazyQuery Overrides
     ///@{
 
     virtual void ProcessInvalidNode(const CfgType& _cfg) override;
 
     ///@}
-    ///\name Helpers
+    ///@name Helpers
     ///@{
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// \brief Process the witness node queue. Iterative version stops when
-    ///        a valid node is popped and start and goal are connected.
-    /// \param[in] _start The query start.
-    /// \param[in] _goal The query goal.
+    /// Process the witness node queue. Iterative version stops when a valid node
+    /// is popped and start and goal are connected.
+    /// @param[in] _start The query start.
+    /// @param[in] _goal The query goal.
     void ProcessQueue(const VID _start, const VID _goal);
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// \brief Perform lazy connection of a witness node.
-    /// \param[in] _cfg The node to connect.
+    /// Perform lazy connection of a witness node.
+    /// @param[in] _cfg The node to connect.
     void LazyConnect(const CfgType& _cfg);
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// \brief Perform toggle connection of a witness node.
-    /// \param[in] _cfg The node to connect.
+    /// Perform toggle connection of a witness node.
+    /// @param[in] _cfg The node to connect.
     void ToggleConnect(const CfgType& _cfg);
 
     ///@}
-    ///\name Toggle State
+    ///@name Toggle State
     ///@{
 
     string m_toggleConnect{"ToggleConnect"}; ///< Connector for blocked nodes.
@@ -86,12 +81,7 @@ class LazyToggleQuery : public LazyQuery<MPTraits> {
     bool m_iterative{true};   ///< Process the queue in an iterative fashion?
 
     ///@}
-    ///\name Unhide QueryMethod names.
-    ///@{
 
-    using QueryMethod<MPTraits>::m_path;
-
-    ///@}
 };
 
 /*------------------------------ Construction --------------------------------*/
@@ -107,15 +97,7 @@ template <typename MPTraits>
 LazyToggleQuery<MPTraits>::
 LazyToggleQuery(XMLNode& _node) : LazyQuery<MPTraits>(_node) {
   this->SetName("LazyToggleQuery");
-  ParseXML(_node);
-}
 
-/*-------------------------- MPBaseObject Overrides --------------------------*/
-
-template <typename MPTraits>
-void
-LazyToggleQuery<MPTraits>::
-ParseXML(XMLNode& _node) {
   m_iterative = _node.Read("iterative", false, m_iterative,
       "Process queue in either iterative or grouped method");
 
@@ -125,6 +107,7 @@ ParseXML(XMLNode& _node) {
           "Toggle connection method");
 }
 
+/*-------------------------- MPBaseObject Overrides --------------------------*/
 
 template <typename MPTraits>
 void
@@ -149,7 +132,7 @@ PerformSubQuery(const CfgType& _start, const CfgType& _goal) {
       return true;
 
     if(gVID == INVALID_VID) {
-      auto g = m_path->GetRoadmap()->GetGraph();
+      auto g = this->GetRoadmap()->GetGraph();
       sVID = g->GetVID(_start);
       gVID = g->GetVID(_goal);
     }
@@ -209,7 +192,7 @@ void
 LazyToggleQuery<MPTraits>::
 LazyConnect(const CfgType& _cfg) {
   // Add the configuration to the roadmap.
-  auto roadmap = m_path->GetRoadmap();
+  auto roadmap = this->GetRoadmap();
   VID newVID = roadmap->GetGraph()->AddVertex(_cfg);
   if(this->m_debug)
     cout << "\t\tAdding a free node " << newVID << " to roadmap:\n\t\t"

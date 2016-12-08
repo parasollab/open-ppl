@@ -25,7 +25,7 @@ class NullAgent : public Agent {
     virtual void Initialize() override;
 
     /// Do nothing on each step.
-    virtual void Step() override;
+    virtual void Step(const double _dt) override;
 
     /// Do nothing.
     virtual void Uninitialize() override;

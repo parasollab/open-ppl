@@ -3,7 +3,7 @@
 
 #include "MPLibrary/MPLibrary.h"
 #include "MPLibrary/MPSolution.h"
-#include "MPLibrary/MPTask.h"
+#include "MPTask/MPTask.h"
 
 #include "ConfigurationSpace/State.h"
 #include "ConfigurationSpace/StateEdge.h"

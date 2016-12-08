@@ -2,6 +2,7 @@
 #define CONTROL_H_
 
 #include <cstddef>
+#include <iostream>
 #include <set>
 #include <vector>
 
@@ -61,7 +62,11 @@ struct Control final {
 
 };
 
+/// Display function for debugging controls. Prints the signal.
+std::ostream& operator<<(std::ostream&, const Control&);
+
 typedef std::set<Control> ControlSet;
+
 /// @TODO Add real abstraction for control space. This will probably look like a
 ///       boundary object for each actuator.
 typedef int ControlSpace;

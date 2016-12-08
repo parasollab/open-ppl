@@ -281,8 +281,12 @@ PMPL_LIB  := -L$(PMPL_DIR) -lobprm
 PMPL_LIBFILE := $(PMPL_DIR)/libobprm.a
 
 PMPL_OBJS := \
-  	Behaviors/Agent/Agent.o \
-  	Behaviors/Agent/NullAgent.o \
+  	Behaviors/Agents/Agent.o \
+  	Behaviors/Agents/NullAgent.o \
+  	Behaviors/Agents/PathFollowingAgent.o \
+	Behaviors/Controllers/ControllerMethod.o \
+	Behaviors/Controllers/PIDFeedback.o \
+	Behaviors/Controllers/SimpleController.o \
 	ConfigurationSpace/Cfg.o \
         ConfigurationSpace/State.o \
 	Geometry/GMSPolygon.o \
@@ -306,6 +310,7 @@ PMPL_OBJS := \
 	MPProblem/Robot/Actuator.o \
 	MPProblem/Robot/Control.o \
   	MPProblem/Robot/ControlGenerators.o \
+	MPProblem/Robot/DynamicsModel.o \
 	MPProblem/Robot/Robot.o \
 	Workspace/WorkspaceDecomposition.o \
 	Workspace/WorkspacePortal.o \

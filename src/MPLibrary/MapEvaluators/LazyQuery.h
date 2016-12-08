@@ -8,18 +8,18 @@
 using namespace std;
 
 ////////////////////////////////////////////////////////////////////////////////
-/// @ingroup MapEvaluators
-/// @brief Lazy @prm, extract path, validate, and repeat
+/// Lazy @prm, extract path, validate, and repeat
 ///
 /// First assumes all nodes and edges are valid, then checks for validity in the
 /// query phase and deletes nodes and edges found to be invalid.
+/// @ingroup MapEvaluators
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
 class LazyQuery : public PRMQuery<MPTraits> {
 
   public:
 
-    ///\name Motion Planning Types
+    ///@name Motion Planning Types
     ///@{
 
     typedef typename MPTraits::CfgType      CfgType;
@@ -28,7 +28,7 @@ class LazyQuery : public PRMQuery<MPTraits> {
     typedef typename RoadmapType::VID       VID;
 
     ///@}
-    ///\name Construction
+    ///@name Construction
     ///@{
 
     LazyQuery();
@@ -36,14 +36,13 @@ class LazyQuery : public PRMQuery<MPTraits> {
     virtual ~LazyQuery() = default;
 
     ///@}
-    ///\name MPBaseObject Overrides
+    ///@name MPBaseObject Overrides
     ///@{
 
-    void ParseXML(XMLNode& _node);
     virtual void Print(ostream& _os) const override;
 
     ///@}
-    ///\name QueryMethod Overrides
+    ///@name QueryMethod Overrides
     ///@{
 
     virtual bool PerformSubQuery(const CfgType& _start, const CfgType& _goal)
@@ -53,38 +52,33 @@ class LazyQuery : public PRMQuery<MPTraits> {
 
   protected:
 
-    ///\name Helpers
+    ///@name Helpers
     ///@{
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// \brief Checks validity of nodes and edges and deletes any invalid ones.
-    /// \return True if the path was valid.
+    /// Checks validity of nodes and edges and deletes any invalid ones.
+    /// @return True if the path was valid.
     bool ValidatePath();
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// \brief Check each vertex and ensure it is valid. Upon discovering an
-    ///        invalid vertex, delete it and return.
-    /// \return True if a vertex was deleted.
+    /// Check each vertex and ensure it is valid. Upon discovering an invalid
+    /// vertex, delete it and return.
+    /// @return True if a vertex was deleted.
     bool PruneInvalidVertices();
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// \brief Check each edge and ensure it is valid. Upon discovering an
-    ///        invalid edge, delete it and return.
-    /// \return True if an edge was deleted.
+    /// Check each edge and ensure it is valid. Upon discovering an invalid edge,
+    /// delete it and return.
+    /// @return True if an edge was deleted.
     bool PruneInvalidEdges();
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// \brief Choose a random deleted edge and generate nodes with a gaussian
-    ///        distribution around the edge's midpoint.
+    /// Choose a random deleted edge and generate nodes with a gaussian
+    /// distribution around the edge's midpoint.
     virtual void NodeEnhance();
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// \brief Additional handling of invalid vertices.
-    /// \param[in] _cfg The invalid configuration to handle.
+    /// Additional handling of invalid vertices.
+    /// @param[in] _cfg The invalid configuration to handle.
     virtual void ProcessInvalidNode(const CfgType& _cfg) { }
 
     ///@}
-    ///\name MP Object Labels
+    ///@name MP Object Labels
     ///@{
     /// These objects are used to lazily validate the computed path.
 
@@ -93,7 +87,7 @@ class LazyQuery : public PRMQuery<MPTraits> {
     string m_lpLabel{"sl"};
 
     ///@}
-    ///\name Enhancement State
+    ///@name Enhancement State
     ///@{
 
     vector<int> m_resolutions{1}; ///< List of resolution multiples to check.
@@ -102,12 +96,7 @@ class LazyQuery : public PRMQuery<MPTraits> {
     vector<pair<CfgType, CfgType>> m_edges; ///< Candidate edges.
 
     ///@}
-    ///\name Unhide QueryMethod names.
-    ///@{
 
-    using QueryMethod<MPTraits>::m_path;
-
-    ///@}
 };
 
 /*------------------------------- Construction -------------------------------*/
@@ -121,18 +110,9 @@ LazyQuery() : PRMQuery<MPTraits>() {
 
 template <typename MPTraits>
 LazyQuery<MPTraits>::
-LazyQuery(XMLNode& _node) :
-    PRMQuery<MPTraits>(_node) {
+LazyQuery(XMLNode& _node) : PRMQuery<MPTraits>(_node) {
   this->SetName("LazyQuery");
-  ParseXML(_node);
-}
 
-/*--------------------------- MPBaseObject Overrides -------------------------*/
-
-template <typename MPTraits>
-void
-LazyQuery<MPTraits>::
-ParseXML(XMLNode& _node) {
   m_dmLabel = _node.Read("dmLabel", false, m_dmLabel, "Distance metric method");
   m_vcLabel = _node.Read("vcMethod", false, m_vcLabel, "Validity checker method");
   m_lpLabel = _node.Read("lpLabel", false, m_lpLabel, "Local planner method");
@@ -156,6 +136,7 @@ ParseXML(XMLNode& _node) {
         + to_string(m_resolutions.back()) + ".");
 }
 
+/*--------------------------- MPBaseObject Overrides -------------------------*/
 
 template <typename MPTraits>
 void
@@ -243,7 +224,7 @@ ValidatePath() {
   // Check vertices and edges for validity. If any are removed, the path is
   // invalid.
   if(PruneInvalidVertices() || PruneInvalidEdges()) {
-    m_path->Clear();
+    this->GetPath()->Clear();
     if(this->m_debug)
       cout << "\tPath is invalid." << endl;
     return false;
@@ -263,14 +244,15 @@ PruneInvalidVertices() {
   if(this->m_debug)
     cout << "\t\tChecking vertices..." << endl;
 
-  auto g  = m_path->GetRoadmap()->GetGraph();
+  auto g  = this->GetRoadmap()->GetGraph();
   auto vc = this->GetValidityChecker(m_vcLabel);
+  auto path = this->GetPath();
 
   // Check each vertex in the path.
-  for(size_t i = 0; i < m_path->Size(); ++i) {
+  for(size_t i = 0; i < path->Size(); ++i) {
     // Work from the outside towards the middle.
-    const size_t index = i % 2 ? m_path->Size() - i / 2 - 1 : i / 2;
-    const VID vid = m_path->VIDs()[index];
+    const size_t index = i % 2 ? path->Size() - i / 2 - 1 : i / 2;
+    const VID vid = path->VIDs()[index];
 
     // Skip checks if already validated.
     CfgType& cfg = g->GetVertex(vid);
@@ -318,9 +300,10 @@ template <typename MPTraits>
 bool
 LazyQuery<MPTraits>::
 PruneInvalidEdges() {
-  auto g = m_path->GetRoadmap()->GetGraph();
+  auto g = this->GetRoadmap()->GetGraph();
   auto env = this->GetEnvironment();
   auto lp = this->GetLocalPlanner(m_lpLabel);
+  auto path = this->GetPath();
 
   if(this->m_debug)
     cout << "\t\tChecking edges..." << endl;
@@ -330,11 +313,11 @@ PruneInvalidEdges() {
     if(this->m_debug)
       cout << "\t\tChecking with resolution " << res << "...";
 
-    for(size_t i = 0; i < m_path->Size() - 1; ++i) {
+    for(size_t i = 0; i < path->Size() - 1; ++i) {
       // Check from outside to middle
-      size_t index = i % 2 ? m_path->Size() - i / 2 - 2 : i / 2;
-      VID v1 = m_path->VIDs()[index];
-      VID v2 = m_path->VIDs()[index + 1];
+      size_t index = i % 2 ? path->Size() - i / 2 - 2 : i / 2;
+      VID v1 = path->VIDs()[index];
+      VID v2 = path->VIDs()[index + 1];
 
       // Get graph edge iterator.
       typename GraphType::adj_edge_iterator edge;
@@ -404,7 +387,7 @@ NodeEnhance() {
     cout << "\tLazyQuery is enhancing nodes...\n\t  Generated VIDs:";
 
   auto dm = this->GetDistanceMetric(m_dmLabel);
-  auto roadmap = m_path->GetRoadmap();
+  auto roadmap = this->GetRoadmap();
 
   for(int i = 0; i < m_numEnhance; ++i) {
     // Pick a random edge from m_edges.
