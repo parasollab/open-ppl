@@ -15,7 +15,7 @@ main(int _argc, char** _argv) {
     MPProblem* problem = new MPProblem(_argv[2]);
 
     // Make simulation object.
-    Simulation<MPProblem> simulation(problem);
+    Simulation simulation(problem);
 
     // Make visualizer object.
     QApplication app(_argc, _argv);

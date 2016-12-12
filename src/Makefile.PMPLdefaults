@@ -269,7 +269,8 @@ SIM_LIBS := $(BULLET_LIB) $(GLVIS_LIBS) $(QT_LIBS) $(GL_LIBS) -lpthread
 SIM_OBJS := \
   $(PMPL_DIR)/sim_main.o \
   Simulator/BulletEngine.o \
-  Simulator/Drawable.o
+  Simulator/Drawable.o \
+  Simulator/Simulation.o
 
 ################################################################################
 # PMPL
