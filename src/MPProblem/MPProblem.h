@@ -5,8 +5,6 @@
 #include <string>
 #include <vector>
 
-#include "MPProblemBase.h"
-
 class ActiveMultiBody;
 class Environment;
 class Robot;
@@ -15,12 +13,11 @@ class XMLNode;
 ////////////////////////////////////////////////////////////////////////////////
 /// Representation of a motion planning problem, including an environment,
 /// queries, and robots.
-/// @TODO Destroy MPProblemBase and put that stuff here.
 ////////////////////////////////////////////////////////////////////////////////
 #ifdef _PARALLEL
-class MPProblem : public stapl::p_object, public MPProblemBase
+class MPProblem final : public stapl::p_object
 #else
-class MPProblem : public MPProblemBase
+class MPProblem final
 #endif
 {
 
@@ -29,14 +26,20 @@ class MPProblem : public MPProblemBase
     ///@name Construction
     ///@{
 
+    /// Instantiate an empty MPProblem.
     MPProblem();
+
+    /// Instantiate an MPProblem from an XML file.
+    /// @param[in] _filename The name of the XML file.
     MPProblem(const std::string& _filename);
-    virtual ~MPProblem();
+
+    ~MPProblem();
 
     ///@}
     ///@name XML File Parsing
     ///@{
 
+    /// Get the XML filename from which this object was parsed.
     const std::string& GetXMLFilename() const {return m_xmlFilename;}
 
     /// Read an XML file.
@@ -89,6 +92,13 @@ class MPProblem : public MPProblemBase
     virtual void Print(std::ostream& _os) const; ///< Print each method set.
 
     ///@}
+    ///@name File Path Accessors
+    ///@{
+
+    static std::string GetPath(const std::string& _filename);
+    static void SetPath(const std::string& _filename);
+
+    ///@}
 
   protected:
 
@@ -110,9 +120,11 @@ class MPProblem : public MPProblemBase
     ///@name Files
     ///@{
 
-    std::string m_xmlFilename;   ///< The XML file name.
-    std::string m_baseFilename;  ///< The base name for output files.
-    std::string m_queryFilename; ///< The query file name.
+    std::string m_xmlFilename;     ///< The XML file name.
+    std::string m_baseFilename;    ///< The base name for output files.
+    std::string m_queryFilename;   ///< The query file name.
+
+    static std::string m_filePath; ///< The relative path for the problem XML.
 
     ///@}
 

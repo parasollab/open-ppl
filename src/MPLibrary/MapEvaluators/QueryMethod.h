@@ -3,11 +3,12 @@
 
 #include "MapEvaluatorMethod.h"
 
+#include "ConfigurationSpace/Path.h"
 #include "MPLibrary/LocalPlanners/LPOutput.h"
 #include "MPLibrary/LocalPlanners/StraightLine.h"
-#include "MPProblem/MPProblemBase.h"
-#include "ConfigurationSpace/Path.h"
+#include "MPProblem/MPProblem.h"
 #include "Utilities/MetricUtils.h"
+
 #include <containers/sequential/graph/algorithms/astar.h>
 
 
@@ -271,7 +272,7 @@ template <typename MPTraits>
 void
 QueryMethod<MPTraits>::
 ReadQuery(string _filename) {
-  _filename = MPProblemBase::GetPath(_filename);
+  _filename = MPProblem::GetPath(_filename);
   if(this->m_debug)
     cout << "Reading query file \'" << _filename << "\'..." << endl;
 

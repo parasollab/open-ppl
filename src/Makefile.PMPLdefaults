@@ -305,17 +305,6 @@ PMPL_OBJS := \
         Geometry/Boundaries/BoundingBox2D.o \
         Geometry/Boundaries/BoundingSphere.o \
         Geometry/Boundaries/BoundingSphere2D.o \
-	MPProblem/MPProblemBase.o \
-	MPProblem/MPProblem.o \
-	MPProblem/Environment/Environment.o \
-	MPProblem/Robot/Actuator.o \
-	MPProblem/Robot/Control.o \
-  	MPProblem/Robot/ControlGenerators.o \
-	MPProblem/Robot/DynamicsModel.o \
-	MPProblem/Robot/Robot.o \
-	Workspace/WorkspaceDecomposition.o \
-	Workspace/WorkspacePortal.o \
-	Workspace/WorkspaceRegion.o \
 	MPLibrary/NeighborhoodFinders/MPNNWrapper.o \
 	MPLibrary/Samplers/SimilarStructureSampler.o \
 	MPLibrary/ValidityCheckers/CollisionDetection/CDInfo.o \
@@ -323,8 +312,18 @@ PMPL_OBJS := \
 	MPLibrary/ValidityCheckers/CollisionDetection/RapidCollisionDetection.o \
 	MPLibrary/ValidityCheckers/CollisionDetection/PQPCollisionDetection.o \
 	MPLibrary/ValidityCheckers/CollisionDetection/SpheresCollisionDetection.o \
+	MPProblem/MPProblem.o \
+	MPProblem/Environment/Environment.o \
+	MPProblem/Robot/Actuator.o \
+	MPProblem/Robot/Control.o \
+  	MPProblem/Robot/ControlGenerators.o \
+	MPProblem/Robot/DynamicsModel.o \
+	MPProblem/Robot/Robot.o \
         Utilities/IOUtils.o \
         Utilities/MetricUtils.o \
         Utilities/MPUtils.o \
 	Utilities/ReebGraphConstruction.o \
-	Utilities/TetGenDecomposition.o
+	Utilities/TetGenDecomposition.o \
+	Workspace/WorkspaceDecomposition.o \
+	Workspace/WorkspacePortal.o \
+	Workspace/WorkspaceRegion.o

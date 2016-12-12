@@ -4,13 +4,14 @@
 
 #include "Geometry/Boundaries/BoundingBox.h"
 #include "Geometry/Boundaries/BoundingSphere.h"
-#include "MPProblem/Environment/Environment.h"
 #include "Geometry/Bodies/FixedBody.h"
 #include "Geometry/Bodies/StaticMultiBody.h"
-#include "MPProblem/MPProblemBase.h"
+#include "MPProblem/Environment/Environment.h"
+#include "MPProblem/MPProblem.h"
 #include "Workspace/WorkspaceDecomposition.h"
 
 #include <CGAL/IO/io.h>
+
 
 /*------------------------------- Construction -------------------------------*/
 
@@ -395,7 +396,7 @@ SaveDecompModel() {
 void
 TetGenDecomposition::
 LoadDecompModel() {
-  string basename = MPProblemBase::GetPath(m_tetGenFilename);
+  string basename = MPProblem::GetPath(m_tetGenFilename);
   char* b = const_cast<char*>(basename.c_str());
   m_decompModel->load_node(b);
   m_decompModel->load_tet(b);

@@ -7,7 +7,7 @@
 #include <containers/sequential/graph/algorithms/graph_input_output.h>
 
 #include "MPProblem/Environment/Environment.h"
-#include "MPProblem/MPProblemBase.h"
+#include "MPProblem/MPProblem.h"
 #include "Workspace/WorkspaceDecomposition.h"
 
 #include "TetGenDecomposition.h"
@@ -80,7 +80,7 @@ Construct(Environment* _env, const string& _baseFilename) {
       Write(_baseFilename + ".reeb");
   }
   else
-    Read(MPProblemBase::GetPath(m_reebFilename));
+    Read(MPProblem::GetPath(m_reebFilename));
 }
 
 

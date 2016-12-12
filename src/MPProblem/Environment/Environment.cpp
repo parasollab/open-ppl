@@ -1,5 +1,6 @@
 #include "MPProblem/Environment/Environment.h"
 
+#include "ConfigurationSpace/Cfg.h"
 #include "Geometry/Bodies/ActiveMultiBody.h"
 #include "Geometry/Bodies/FixedBody.h"
 #include "Geometry/Bodies/FreeBody.h"
@@ -9,8 +10,7 @@
 #include "Geometry/Boundaries/BoundingBox2D.h"
 #include "Geometry/Boundaries/BoundingSphere.h"
 #include "Geometry/Boundaries/BoundingSphere2D.h"
-#include "ConfigurationSpace/Cfg.h"
-#include "MPProblem/MPProblemBase.h"
+#include "MPProblem/MPProblem.h"
 
 
 /*------------------------------- Construction -------------------------------*/
@@ -19,7 +19,7 @@ Environment::
 Environment(XMLNode& _node) {
   m_filename = _node.Read("filename", true, "", "env filename");
   m_saveDofs = _node.Read("saveDofs", false, m_saveDofs, "save DoF flag");
-  m_filename = MPProblemBase::GetPath(m_filename);
+  m_filename = MPProblem::GetPath(m_filename);
   Read(m_filename);
 }
 

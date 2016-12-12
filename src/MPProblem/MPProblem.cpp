@@ -8,6 +8,7 @@
 
 using namespace std;
 
+
 /*---------------------------- Construction ----------------------------------*/
 
 MPProblem::
@@ -184,6 +185,25 @@ MPProblem::
 Print(ostream& _os) const {
   _os << "MPProblem" << endl;
   m_environment->Print(_os);
+}
+
+/*-------------------------- File Path Accessors -----------------------------*/
+
+string MPProblem::m_filePath = "";
+
+string
+MPProblem::
+GetPath(const string& _filename) {
+  if(_filename[0] != '/')
+    return m_filePath + _filename;
+  else
+    return _filename;
+}
+
+void
+MPProblem::
+SetPath(const string& _filename) {
+  m_filePath = _filename;
 }
 
 /*----------------------------------------------------------------------------*/
