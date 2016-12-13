@@ -3,7 +3,6 @@
 
 #include "MPLibrary/MPLibrary.h"
 #include "MPLibrary/MPSolution.h"
-#include "MPTask/MPTask.h"
 
 #include "ConfigurationSpace/Path.h"
 #include "ConfigurationSpace/Roadmap.h"
@@ -148,11 +147,9 @@ template <typename C, typename W = DefaultWeight<C>>
 struct MPTraits {
 
   typedef C                        CfgType;
-  //typedef C&                       CfgRef;
   typedef W                        WeightType;
-  typedef Path<MPTraits>           PathType;
+  typedef PathType<MPTraits>       Path;
   typedef Roadmap<MPTraits>        RoadmapType;
-  typedef MPTaskType<MPTraits>     MPTask;
   typedef MPLibraryType<MPTraits>  MPLibrary;
   typedef MPSolutionType<MPTraits> MPSolution;
 

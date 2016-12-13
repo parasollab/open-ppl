@@ -37,7 +37,7 @@ class MPBaseObject {
     ///@{
 
     typedef typename MPTraits::RoadmapType             RoadmapType;
-    typedef typename MPTraits::PathType                PathType;
+    typedef typename MPTraits::Path                    Path;
     typedef typename MPTraits::MPLibrary               MPLibrary;
 
     typedef typename MPLibrary::SamplerPointer         SamplerPointer;
@@ -177,7 +177,7 @@ class MPBaseObject {
     RoadmapType* GetBlockRoadmap() const noexcept;
 
     /// Get the current best path.
-    PathType* GetPath() const noexcept;
+    Path* GetPath() const noexcept;
 
     /// Get the current StatClass.
     StatClass* GetStatClass() const noexcept;
@@ -416,7 +416,7 @@ GetBlockRoadmap() const noexcept {
 
 template <typename MPTraits>
 inline
-typename MPTraits::PathType*
+typename MPTraits::Path*
 MPBaseObject<MPTraits>::
 GetPath() const noexcept {
   return m_library->GetPath();

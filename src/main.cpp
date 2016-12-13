@@ -1,7 +1,11 @@
-#include "MPLibrary/PMPL.h"
-
-#include <string>
 #include <exception>
+#include <string>
+
+#include "MPLibrary/PMPL.h"
+#include "MPProblem/MPProblem.h"
+#include "MPProblem/MPTask.h"
+#include "Utilities/PMPLExceptions.h"
+
 
 int
 main(int _argc, char** _argv) {

@@ -33,6 +33,13 @@ MPProblem::
 
 /*---------------------------- XML Helpers -----------------------------------*/
 
+const std::string&
+MPProblem::
+GetXMLFilename() const {
+  return m_xmlFilename;
+}
+
+
 void
 MPProblem::
 ReadXMLFile(const string& _filename) {
@@ -178,6 +185,14 @@ GetRobots() const {
   return robots;
 }
 
+/*----------------------------- Task Accessors -------------------------------*/
+
+const std::vector<MPTask*>&
+MPProblem::
+GetTasks() const noexcept {
+  return m_tasks;
+}
+
 /*-------------------------------- Debugging ---------------------------------*/
 
 void
@@ -189,7 +204,22 @@ Print(ostream& _os) const {
 
 /*-------------------------- File Path Accessors -----------------------------*/
 
+const std::string&
+MPProblem::
+GetBaseFilename() const {
+  return m_baseFilename;
+}
+
+
+void
+MPProblem::
+SetBaseFilename(const std::string& _s) {
+  m_baseFilename = _s;
+}
+
+
 string MPProblem::m_filePath = "";
+
 
 string
 MPProblem::
@@ -199,6 +229,7 @@ GetPath(const string& _filename) {
   else
     return _filename;
 }
+
 
 void
 MPProblem::

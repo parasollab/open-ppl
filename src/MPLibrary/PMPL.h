@@ -25,9 +25,8 @@ typedef StateTraits PMPLTraits;
 typedef PMPLTraits::CfgType     CfgType;
 typedef PMPLTraits::WeightType  WeightType;
 typedef PMPLTraits::RoadmapType RoadmapType;
-typedef PMPLTraits::PathType    PathType;
+typedef PMPLTraits::Path        Path;
 typedef PMPLTraits::MPLibrary   MPLibrary;
 typedef PMPLTraits::MPSolution  MPSolution;
-typedef PMPLTraits::MPTask      MPTask;
 
 #endif

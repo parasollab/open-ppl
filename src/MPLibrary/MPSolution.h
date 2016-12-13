@@ -16,7 +16,7 @@ class MPSolutionType final {
     ///@name Solution Object Types
     ///@{
 
-    typedef typename MPTraits::PathType    PathType;
+    typedef typename MPTraits::Path        Path;
     typedef typename MPTraits::RoadmapType RoadmapType;
 
     ///@}
@@ -37,7 +37,7 @@ class MPSolutionType final {
     ///@name Path Accessors
     ///@{
 
-    PathType* GetPath() noexcept;
+    Path* GetPath() noexcept;
 
     ///@}
     ///@name StatClass Accessor
@@ -54,7 +54,7 @@ class MPSolutionType final {
 
     RoadmapType* m_freeMap{nullptr}; ///< The free-space roadmap.
     RoadmapType* m_obstMap{nullptr}; ///< The obstacle-space roadmap.
-    PathType*    m_path{nullptr};    ///< The current solution path.
+    Path*        m_path{nullptr};    ///< The current solution path.
     StatClass*   m_stats{nullptr};   ///< Performance tracking.
 
     ///@}
@@ -67,7 +67,7 @@ MPSolutionType<MPTraits>::
 MPSolutionType() {
   m_freeMap = new RoadmapType();
   m_obstMap = new RoadmapType();
-  m_path = new PathType(m_freeMap);
+  m_path = new Path(m_freeMap);
   m_stats = new StatClass();
 }
 
@@ -104,7 +104,7 @@ GetBlockRoadmap() noexcept {
 
 template <typename MPTraits>
 inline
-typename MPTraits::PathType*
+typename MPTraits::Path*
 MPSolutionType<MPTraits>::
 GetPath() noexcept {
   return m_path;

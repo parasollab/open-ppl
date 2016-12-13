@@ -3,7 +3,6 @@
 
 #include "MPLibrary/MPLibrary.h"
 #include "MPLibrary/MPSolution.h"
-#include "MPTask/MPTask.h"
 
 #include "ConfigurationSpace/State.h"
 #include "ConfigurationSpace/StateEdge.h"
@@ -57,7 +56,6 @@ struct StateTraits {
 
   typedef MPLibraryType<StateTraits> MPLibrary;
   typedef MPSolution<StateTraits>    MPSolution;
-  typedef MPTaskType<StateTraits>    MPTask;
 
   //types of distance metrics available in our world
   typedef boost::mpl::list<

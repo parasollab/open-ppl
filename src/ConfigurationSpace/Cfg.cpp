@@ -35,12 +35,12 @@ Cfg(const Vector3d& _v, size_t _robotIndex) : m_robotIndex(_robotIndex) {
 
 Cfg::
 Cfg(const Cfg& _other) :
+    m_clearanceInfo(_other.m_clearanceInfo),
+    m_witnessCfg(_other.m_witnessCfg),
     m_v(_other.m_v),
     m_robotIndex(_other.m_robotIndex),
     m_labelMap(_other.m_labelMap),
-    m_statMap(_other.m_statMap),
-    m_clearanceInfo(_other.m_clearanceInfo),
-    m_witnessCfg(_other.m_witnessCfg) {}
+    m_statMap(_other.m_statMap) {}
 
 
 size_t
@@ -541,8 +541,6 @@ GetRobotCenterofMass() const {
   return GetRobot()->GetCenterOfMass();
 }
 
-// generates random configuration where workspace robot's EVERY VERTEX
-// is guaranteed to lie within the environment specified bounding box
 void
 Cfg::
 GetRandomCfg(Environment* _env) {
@@ -568,8 +566,8 @@ GetRandomCfg(Environment* _env, shared_ptr<Boundary> _bb) {
   // throw error message and some helpful statistics
   ostringstream oss;
   oss << "GetRandomCfg not able to find anything in boundary: "
-    << *_bb << ". Robot radius is "
-    << GetRobot()->GetBoundingSphereRadius() << ".";
+      << *_bb << ". Robot radius is "
+      << GetRobot()->GetBoundingSphereRadius() << ".";
   throw PMPLException("Boundary too small", WHERE, oss.str());
 }
 

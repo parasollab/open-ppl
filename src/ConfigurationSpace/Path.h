@@ -14,7 +14,7 @@
 /// The corresponding configurations are computed lazily upon request.
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
-class Path {
+class PathType {
 
   public:
 
@@ -34,7 +34,7 @@ class Path {
 
     /// Construct an empty path.
     /// @param[in] _r The roadmap used by this path.
-    Path(RoadmapType* _r) : m_roadmap(_r) { }
+    PathType(RoadmapType* _r) : m_roadmap(_r) { }
 
     ///@}
     ///@name Path Interface
@@ -69,19 +69,19 @@ class Path {
 
     /// Append another path to the end of this one.
     /// @param[in] _p The path to append.
-    Path& operator+=(const Path& _p);
+    PathType& operator+=(const PathType& _p);
 
     /// Add another path to the end of this one and return the result.
     /// @param[in] _p The path to add.
-    Path operator+(const Path& _p) const;
+    PathType operator+(const PathType& _p) const;
 
     /// Append a new set of VIDs to the end of this path.
     /// @param[in] _vids The VIDs to append.
-    Path& operator+=(const vector<VID>& _vids);
+    PathType& operator+=(const vector<VID>& _vids);
 
     /// Add a new set of VIDs to the end of this path and return the result.
     /// @param[in] _vids The VIDs to add.
-    Path operator+(const vector<VID>& _vids) const;
+    PathType operator+(const vector<VID>& _vids) const;
 
     /// Clear all data in the path.
     void Clear();
@@ -93,7 +93,7 @@ class Path {
     ///@name Helpers
     ///@{
 
-    void AssertSameMap(const Path& _p) const;
+    void AssertSameMap(const PathType& _p) const;
 
     ///@}
     ///@name Internal State
@@ -115,7 +115,7 @@ class Path {
 
 template <typename MPTraits>
 double
-Path<MPTraits>::
+PathType<MPTraits>::
 Length() const {
   if(!m_lengthCached) {
     double& length = const_cast<double&>(m_length);
@@ -142,7 +142,7 @@ Length() const {
 
 template <typename MPTraits>
 const vector<typename MPTraits::CfgType>&
-Path<MPTraits>::
+PathType<MPTraits>::
 Cfgs() const {
   if(!m_cfgsCached) {
     vector<CfgType>& cfgs = const_cast<vector<CfgType>&>(m_cfgs);
@@ -158,7 +158,7 @@ Cfgs() const {
 
 template <typename MPTraits>
 const vector<typename MPTraits::CfgType>
-Path<MPTraits>::
+PathType<MPTraits>::
 FullCfgs(MPLibrary* _lib, const string& _lp) const {
   GraphType* g = m_roadmap->GetGraph();
   vector<CfgType> out = {g->GetVertex(m_vids.front())};
@@ -212,26 +212,26 @@ FullCfgs(MPLibrary* _lib, const string& _lp) const {
 
 
 template <typename MPTraits>
-Path<MPTraits>&
-Path<MPTraits>::
-operator+=(const Path& _p) {
+PathType<MPTraits>&
+PathType<MPTraits>::
+operator+=(const PathType& _p) {
   AssertSameMap(_p);
   return *this += _p.m_vids;
 }
 
 
 template <typename MPTraits>
-Path<MPTraits>
-Path<MPTraits>::
-operator+(const Path& _p) const {
+PathType<MPTraits>
+PathType<MPTraits>::
+operator+(const PathType& _p) const {
   AssertSameMap(_p);
   return *this + _p.m_vids;
 }
 
 
 template <typename MPTraits>
-Path<MPTraits>&
-Path<MPTraits>::
+PathType<MPTraits>&
+PathType<MPTraits>::
 operator+=(const vector<VID>& _vids) {
   std::copy(_vids.begin(), _vids.end(), back_inserter(m_vids));
   m_lengthCached = false;
@@ -241,10 +241,10 @@ operator+=(const vector<VID>& _vids) {
 
 
 template <typename MPTraits>
-Path<MPTraits>
-Path<MPTraits>::
+PathType<MPTraits>
+PathType<MPTraits>::
 operator+(const vector<VID>& _vids) const {
-  Path out(*this);
+  PathType out(*this);
   out += _vids;
   return out;
 }
@@ -252,7 +252,7 @@ operator+(const vector<VID>& _vids) const {
 
 template <typename MPTraits>
 void
-Path<MPTraits>::
+PathType<MPTraits>::
 Clear() {
   m_lengthCached = false;
   m_cfgsCached = false;
@@ -264,8 +264,8 @@ Clear() {
 
 template <typename MPTraits>
 void
-Path<MPTraits>::
-AssertSameMap(const Path& _p) const {
+PathType<MPTraits>::
+AssertSameMap(const PathType& _p) const {
   if(m_roadmap != _p.m_roadmap)
     throw RunTimeException(WHERE, "Can't add paths from different roadmaps!");
 }

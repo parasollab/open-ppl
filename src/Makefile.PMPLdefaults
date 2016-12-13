@@ -313,6 +313,11 @@ PMPL_OBJS := \
 	MPLibrary/ValidityCheckers/CollisionDetection/PQPCollisionDetection.o \
 	MPLibrary/ValidityCheckers/CollisionDetection/SpheresCollisionDetection.o \
 	MPProblem/MPProblem.o \
+	MPProblem/MPTask.o \
+	MPProblem/Constraints/Constraint.o \
+	MPProblem/Constraints/ConstraintFactory.o \
+	MPProblem/Constraints/CSpaceConstraint.o \
+	MPProblem/Constraints/WorkspaceConstraint.o \
 	MPProblem/Environment/Environment.o \
 	MPProblem/Robot/Actuator.o \
 	MPProblem/Robot/Control.o \

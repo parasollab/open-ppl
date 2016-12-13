@@ -3,6 +3,7 @@
 #include <limits>
 
 #include "Behaviors/Controllers/ControllerMethod.h"
+#include "MPProblem/Robot/Robot.h"
 #include "MPProblem/Robot/DynamicsModel.h"
 
 

@@ -3,31 +3,26 @@
 
 class ActiveMultiBody;
 class Boundary;
+class Cfg;
 
 
 ////////////////////////////////////////////////////////////////////////////////
 /// An abstract base class representing the required interface for a constraint
-/// on the state of a movable object.
+/// on the state of a movable object. The Constraint interface requires plain
+/// jane Cfg's to ensure that they are usable by reactive agents.
 ////////////////////////////////////////////////////////////////////////////////
-template <typename MPTraits>
-class ConstraintType {
+class Constraint {
 
   public:
 
-    ///@name Motion Planning Types
-    ///@{
-
-    typedef typename MPTraits::CfgType CfgType;
-
-    ///@}
     ///@name Construction
     ///@{
 
     /// Create a constraint for a movable object.
     /// @param _m The movable object to constrain.
-    ConstraintType(ActiveMultiBody* const _m);
+    Constraint(ActiveMultiBody* const _m);
 
-    virtual ~ConstraintType() = default;
+    virtual ~Constraint() = default;
 
     ///@}
     ///@name Constraint Interface
@@ -41,7 +36,7 @@ class ConstraintType {
     /// constraint.
     /// @param _c The configuration to check.
     /// @return   True if _c satisfies this constraint.
-    virtual bool operator()(const CfgType& _c) const = 0;
+    virtual bool Satisfied(const Cfg& _c) const = 0;
 
     ///@}
 
@@ -55,14 +50,5 @@ class ConstraintType {
     ///@}
 
 };
-
-/*--------------------------------- Construction -----------------------------*/
-
-template <typename MPTraits>
-inline
-ConstraintType<MPTraits>::
-ConstraintType(ActiveMultiBody* const _m) : m_multibody(_m) { }
-
-/*----------------------------------------------------------------------------*/
 
 #endif

@@ -37,9 +37,8 @@ class MPLibraryType final
     ///@{
 
     typedef typename MPTraits::MPSolution  MPSolution;
-    typedef typename MPTraits::MPTask      MPTask;
     typedef typename MPTraits::RoadmapType RoadmapType;
-    typedef typename MPTraits::PathType    PathType;
+    typedef typename MPTraits::Path        Path;
 
     ///@}
     ///@name Local Types
@@ -235,13 +234,19 @@ class MPLibraryType final
     }
 
     ///@}
+    ///@name Task Accessors
+    ///@{
+
+    MPTask* GetTask() {return m_task;}
+
+    ///@}
     ///@name Solution Accessors
     ///@{
 
     RoadmapType* GetRoadmap() {return m_solution->GetRoadmap();}
     RoadmapType* GetBlockRoadmap() {return m_solution->GetBlockRoadmap();}
     StatClass*   GetStatClass() {return m_solution->GetStatClass();}
-    PathType*    GetPath() {return m_solution->GetPath();}
+    Path*        GetPath() {return m_solution->GetPath();}
 
     ///@}
     ///@name Execution Interface

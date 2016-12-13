@@ -7,12 +7,14 @@
 
 class ActiveMultiBody;
 class Environment;
+class MPTask;
 class Robot;
 class XMLNode;
 
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Representation of a motion planning problem, including an environment,
-/// queries, and robots.
+/// tasks, and robots.
 ////////////////////////////////////////////////////////////////////////////////
 #ifdef _PARALLEL
 class MPProblem final : public stapl::p_object
@@ -40,18 +42,11 @@ class MPProblem final
     ///@{
 
     /// Get the XML filename from which this object was parsed.
-    const std::string& GetXMLFilename() const {return m_xmlFilename;}
+    const std::string& GetXMLFilename() const;
 
     /// Read an XML file.
-    /// @param[in] _filename    The XML file name.
+    /// @param[in] _filename The XML file name.
     void ReadXMLFile(const std::string& _filename);
-
-    ///@}
-    ///@name Base Filename Accessors
-    ///@{
-
-    const std::string& GetBaseFilename() const {return m_baseFilename;}
-    void SetBaseFilename(const std::string& _s) {m_baseFilename = _s;}
 
     ///@}
     ///@name Environment Accessors
@@ -85,6 +80,8 @@ class MPProblem final
     const std::string& GetQueryFilename() const {return m_queryFilename;}
     void SetQueryFilename(const std::string& _s) {m_queryFilename = _s;}
 
+    const std::vector<MPTask*>& GetTasks() const noexcept;
+
     ///@}
     ///@name Debugging
     ///@{
@@ -94,6 +91,9 @@ class MPProblem final
     ///@}
     ///@name File Path Accessors
     ///@{
+
+    const std::string& GetBaseFilename() const;
+    void SetBaseFilename(const std::string& _s);
 
     static std::string GetPath(const std::string& _filename);
     static void SetPath(const std::string& _filename);
@@ -114,7 +114,8 @@ class MPProblem final
     ///@{
 
     Environment* m_environment{nullptr};  ///< The planning environment.
-    std::vector<Robot*> m_robots;              ///< The robots in our problem.
+    std::vector<Robot*> m_robots;         ///< The robots in our problem.
+    std::vector<MPTask*> m_tasks;         ///< The tasks in our problem.
 
     ///@}
     ///@name Files

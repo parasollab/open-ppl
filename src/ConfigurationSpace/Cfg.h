@@ -1,17 +1,18 @@
 #ifndef CFG_H_
 #define CFG_H_
 
-#include <vector>
+#include <cstddef>
 #include <map>
+#include <vector>
+
+#include "MPLibrary/ValidityCheckers/CollisionDetection/CDInfo.h"
+#include "Utilities/MPUtils.h"
+
+#include "Vector.h"
 
 #ifdef _PARALLEL
 #include "views/proxy.h"
 #endif
-
-#include "Vector.h"
-
-#include "Utilities/MPUtils.h"
-#include "MPLibrary/ValidityCheckers/CollisionDetection/CDInfo.h"
 
 enum class DofType;
 class Cfg;
@@ -21,22 +22,35 @@ class Boundary;
 
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Information about the clearance of a cfg.
 /// @ingroup Cfgs
-/// @brief Information about the clearance of a cfg.
 ////////////////////////////////////////////////////////////////////////////////
-class ClearanceInfo {
+class ClearanceInfo final {
 
   private:
 
+    ///@name Internal State
+    ///@{
+
     double m_clearance; ///< Distance to nearest c-space obstacle.
     Cfg* m_direction;   ///< Direction to nearest c-obstacle configuration.
-    int m_obstacleId;
+    int m_obstacleId;   ///< The index of the nearest workspace obstacle?
+
+    ///@}
 
   public:
 
+    ///@name Construction
+    ///@{
+
     ClearanceInfo(Cfg* _direction = nullptr, double _clearance = -1e10) :
         m_clearance(_clearance), m_direction(_direction) { }
+
     ~ClearanceInfo();
+
+    ///@}
+    ///@name Clearance Interface
+    ///@{
 
     double GetClearance() {return m_clearance;};
     void SetClearance(double _clearance) {m_clearance = _clearance;};
@@ -46,25 +60,28 @@ class ClearanceInfo {
 
     int GetObstacleId() { return m_obstacleId;};
     void SetObstacleId(int _id) { m_obstacleId = _id;};
+
+    ///@}
+
 };
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// @ingroup Cfgs
-/// @brief Default @cspace configuration definition.
+/// Default @cspace configuration definition.
 ///
-/// Cfg is the core class which defines a configuration, or a vector of values
-/// representing all the degrees of freedom of a robot. This is the abstraction
-/// of @cspace essentially, and thus Cfg is a point or vector inside of @cspace.
-/// Most mathematical operations are defined over this class, i.e.,
-/// @c operator+ and @c operator-, reading and writing to streams, accessing,
-/// random sampling, etc.
+/// @ingroup Cfgs
+/// @details Cfg is the core class which defines a configuration, or a vector of
+///          values representing all the degrees of freedom of a robot. This is
+///          the abstraction of @cspace essentially, and thus Cfg is a point or
+///          vector inside of @cspace. Most mathematical operations are defined
+///          over this class, i.e., @c operator+ and @c operator-, reading and
+///          writing to streams, accessing, random sampling, etc.
 ////////////////////////////////////////////////////////////////////////////////
 class Cfg {
 
   public:
 
-    ///\name Construction
+    ///@name Construction
     ///@{
 
     explicit Cfg(size_t _index = 0);
@@ -74,104 +91,42 @@ class Cfg {
     virtual ~Cfg() = default;
 
     ///@}
-
-    // assume _index within the size of the vector.
-    static void InitRobots(ActiveMultiBody* _robot, size_t _index);
+    ///@name Assignment
+    ///@{
 
     Cfg& operator=(const Cfg& _cfg);
-    ///determines equality of this and other configuration
-    bool operator==(const Cfg& _cfg) const;
-    ///determines non-equality of this and other configuration
-    bool operator!=(const Cfg& _cfg) const;
-    //addition
-    Cfg operator+(const Cfg& _cfg) const;
     Cfg& operator+=(const Cfg& _cfg);
-    //subtraction
-    Cfg operator-(const Cfg& _cfg) const;
     Cfg& operator-=(const Cfg& _cfg);
-    //negate
-    Cfg operator-() const;
-    //scalar multiply
-    Cfg operator*(double _d) const;
     Cfg& operator*=(double _d);
-    //scalar divide
-    Cfg operator/(double _d) const;
     Cfg& operator/=(double _d);
-    //access dof values
-    double& operator[](size_t _dof);
-    const double& operator[](size_t _dof) const;
-
-
-    // Access Methods : Retrieve and set related information of this class
-    static void SetSize(size_t _size);
-
-    /// \brief Get the internal storage of DOF data.
-    const vector<double>& GetData() const {return m_v;}
-
-    /// \brief Get the robot's reference point.
-    Point3d GetPoint() const;
-
-    ////////////////////////////////////////////////////////////////////////////
-    /// \brief Set the internal storage of DOF data.
-    virtual void SetData(const vector<double>& _data);
-
-    ////////////////////////////////////////////////////////////////////////////
-    /// \brief Set the internal storage of joint DOF data.
-    /// \details Other DOFs will remain the same.
-    void SetJointData(const vector<double>& _data);
-
-    ////////////////////////////////////////////////////////////////////////////
-    /// \brief   Compute the normalized representation relative to the
-    ///          environment bounds.
-    /// \warning This is not a normalization to length 1!
-    /// \param[in] _b The boundary to normalize against.
-    /// \return  A copy of this with each DOF scaled from [_b.min, _b.max] to
-    ///          [-1, 1].
-    vector<double> GetNormalizedData(const shared_ptr<const Boundary> _b) const;
-
-    ////////////////////////////////////////////////////////////////////////////
-    /// \brief   Compute the standard representation from a form normalized
-    ///          relative to the environment bounds. This is the reverse of
-    ///          GetNormalizedData.
-    /// \param[in] _data The normalized DOF data relative to _b.
-    /// \param[in] _b    The normalization boundary.
-    void SetNormalizedData(const vector<double>& _data,
-        const shared_ptr<const Boundary> _b);
-
-    //labeling of the Cfg and statistics
-    bool GetLabel(string _label);
-    bool IsLabel(string _label);
-    void SetLabel(string _label,bool _value);
-
-    double GetStat(string _stat) const;
-    bool IsStat(string _stat) const;
-    void SetStat(string _stat, double _value = 0.0);
-    void IncStat(string _stat, double _value = 1.0);
-
-    ///@name Robot Info
-    ///@{
-
-    size_t DOF() const;
-    size_t PosDOF() const;
-    size_t GetNumOfJoints() const;
-
-    ////////////////////////////////////////////////////////////////////////////
-    /// @brief Get the robot referenced by this configuration.
-    /// @param[in] _index The robot index of interest.
-    ActiveMultiBody* GetRobot() const {
-      return m_robotIndex == size_t(-1) ? m_pointRobot : m_robots[m_robotIndex];
-    }
-
-    static vector<ActiveMultiBody*> GetRobots() {
-      return m_robots;
-    }
-
-    size_t GetRobotIndex() const {return m_robotIndex;}
-    void SetRobotIndex(size_t _i) {m_robotIndex = _i;}
 
     ///@}
-    ///@name Access Specific DOF Types
+    ///@name Arithmetic
     ///@{
+
+    Cfg operator+(const Cfg& _cfg) const;
+    Cfg operator-(const Cfg& _cfg) const;
+    Cfg operator-() const;
+    Cfg operator*(double _d) const;
+    Cfg operator/(double _d) const;
+
+    virtual double Magnitude() const;
+    virtual double PositionMagnitude() const;
+    virtual double OrientationMagnitude() const;
+
+    ///@}
+    ///@name Equality
+    ///@{
+
+    bool operator==(const Cfg& _cfg) const;
+    bool operator!=(const Cfg& _cfg) const;
+
+    ///@}
+    ///@name DOF Accessors
+    ///@{
+
+    double& operator[](size_t _dof);
+    const double& operator[](size_t _dof) const;
 
     virtual vector<double> GetPosition() const;
     virtual vector<double> GetOrientation() const;
@@ -180,18 +135,72 @@ class Cfg {
     virtual vector<double> GetJoints() const;
     virtual vector<double> GetRotation() const;
 
+    /// Get the robot's reference point.
+    Point3d GetPoint() const;
+
+    /// Get the internal storage of DOF data.
+    const vector<double>& GetData() const {return m_v;}
+
+    /// Set the internal storage of DOF data.
+    virtual void SetData(const vector<double>& _data);
+
+    /// Set the internal storage of joint DOF data.
+    /// @details Other DOFs will remain the same.
+    void SetJointData(const vector<double>& _data);
+
+    /// Compute the normalized representation relative to the environment bounds.
+    /// @warning This is not a normalization to length 1!
+    /// @param[in] _b The boundary to normalize against.
+    /// @return  A copy of this with each DOF scaled from [_b.min, _b.max] to
+    ///          [-1, 1].
+    vector<double> GetNormalizedData(const shared_ptr<const Boundary> _b) const;
+
+    /// Compute the standard representation from a form normalized relative to
+    /// the environment bounds. This is the reverse of GetNormalizedData.
+    /// @param[in] _data The normalized DOF data relative to _b.
+    /// @param[in] _b    The normalization boundary.
+    void SetNormalizedData(const vector<double>& _data,
+        const shared_ptr<const Boundary> _b);
+
     ///@}
+    ///@name Labels and Stats
+    ///@{
 
-    void ResetRigidBodyCoordinates();
+    //labeling of the Cfg and statistics
+    bool GetLabel(string _label);
+    bool IsLabel(string _label);
+    void SetLabel(string _label, bool _value);
 
-    virtual double Magnitude() const;
-    virtual double PositionMagnitude() const;
-    virtual double OrientationMagnitude() const;
+    double GetStat(string _stat) const;
+    bool IsStat(string _stat) const;
+    void SetStat(string _stat, double _value = 0.0);
+    void IncStat(string _stat, double _value = 1.0);
+
+    ///@}
+    ///@name Robot Info
+    ///@{
+
+    size_t DOF() const;
+    size_t PosDOF() const;
+    size_t GetNumOfJoints() const;
+
+    /// Get the robot referenced by this configuration.
+    /// @param[in] _index The robot index of interest.
+    ActiveMultiBody* GetRobot() const {
+      return m_robotIndex == size_t(-1) ? m_pointRobot : m_robots[m_robotIndex];
+    }
+
+    size_t GetRobotIndex() const {return m_robotIndex;}
+    void SetRobotIndex(size_t _i) {m_robotIndex = _i;}
 
     //Calculate the center position and center of mass of the robot configures
     //at this Cfg
     virtual Vector3d GetRobotCenterPosition() const;
     virtual Vector3d GetRobotCenterofMass() const;
+
+    ///@}
+
+    void ResetRigidBodyCoordinates();
 
     // Generation Related Methods : create Cfgs randomly
     /**
@@ -234,29 +243,48 @@ class Cfg {
     //polygonal approximation
     vector<Vector3d> PolyApprox() const;
 
-    //I/O Helper functions
+    ///@name I/O
+    ///@{
+
     virtual void Read(istream& _is);
     virtual void Write(ostream& _os) const;
 
-    ///@name Static class data
+    ///@}
+    ///@name Ugly Static Hacks
     ///@{
+    /// @TODO Remove this junk and replace with a more elegant, instance-based
+    ///       solution. Storing an index is specifically less efficient than
+    ///       storing a robot pointer since we require an additional look-up
+    ///       (and also container) to get the desired object.
 
     static vector<ActiveMultiBody*> m_robots;
     static ActiveMultiBody* m_pointRobot;
+
+    static void InitRobots(ActiveMultiBody* _robot, size_t _index);
+
+    static void SetSize(size_t _size);
+
+    static vector<ActiveMultiBody*> GetRobots() {return m_robots;}
+
+    ///@}
+    ///@name Internal State with poor encapsulation
+    ///@{
+    /// @TODO Fix encapsulation issues.
+
+    CDInfo m_clearanceInfo;
+    shared_ptr<Cfg> m_witnessCfg;
 
     ///@}
 
   protected:
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// @brief Normalize an orientation DOF to the range [-1, 1).
+    /// Normalize an orientation DOF to the range [-1, 1).
     /// @param[in] _index The index of the DOF to normalize. If it is -1, all
     ///                   orientation DOFs will be normalized.
     virtual void NormalizeOrientation(int _index = -1);
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// @brief Set this configuration's DOFs to random values that lie within a
-    ///        given sampling boundary.
+    /// Set this configuration's DOFs to random values that lie within a given
+    /// sampling boundary.
     /// @param[in] _env The environment to generate the configuration within.
     /// @param[in] _b The boundary to sample within.
     virtual void GetRandomCfgImpl(Environment* _env, shared_ptr<Boundary> _b);
@@ -267,17 +295,15 @@ class Cfg {
     vector<double> m_v;  ///< The DOF values.
     size_t m_robotIndex; ///< The ActiveBody this cfg refers to.
 
-    map<string, bool> m_labelMap;
-    map<string, double> m_statMap;
+    map<string, bool> m_labelMap;  ///< A map of labels for this cfg.
+    map<string, double> m_statMap; ///< A map of stats for this cfg.
 
     ///@}
 
+#ifdef _PARALLEL
+
   public:
 
-    CDInfo m_clearanceInfo;
-    shared_ptr<Cfg> m_witnessCfg;
-
-#ifdef _PARALLEL
     //parallel connected component
     void active(bool _a) {m_active = _a;}
     bool active() const {return m_active;}
@@ -297,12 +323,13 @@ class Cfg {
 
     bool m_active;
     size_t m_cc;
+
 #endif
 };
 
 //I/O for Cfg
-ostream& operator<< (ostream& _os, const Cfg& _cfg);
-istream& operator>> (istream& _is, Cfg& _cfg);
+ostream& operator<<(ostream& _os, const Cfg& _cfg);
+istream& operator>>(istream& _is, Cfg& _cfg);
 
 template <class DistanceMetricPointer>
 void
