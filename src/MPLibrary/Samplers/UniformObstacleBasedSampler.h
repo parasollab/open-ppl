@@ -41,7 +41,7 @@ class UniformObstacleBasedSampler : public SamplerMethod<MPTraits> {
     ///@name Sampler Interface
     ///@{
 
-    virtual bool Sampler(CfgType& _cfg, shared_ptr<Boundary> _boundary,
+    virtual bool Sampler(CfgType& _cfg, const Boundary* const _boundary,
         vector<CfgType>& _result, vector<CfgType>& _collision) override;
 
     ///@}
@@ -101,7 +101,7 @@ Print(ostream& _os) const {
 template <typename MPTraits>
 bool
 UniformObstacleBasedSampler<MPTraits>::
-Sampler(CfgType& _cfg, shared_ptr<Boundary> _boundary,
+Sampler(CfgType& _cfg, const Boundary* const _boundary,
     vector<CfgType>& _result, vector<CfgType>& _collision) {
   Environment* env = this->GetEnvironment();
   string callee(this->GetNameAndLabel() + "::SampleImpl()");
@@ -120,7 +120,6 @@ Sampler(CfgType& _cfg, shared_ptr<Boundary> _boundary,
     origBoundary.push_back(_boundary->GetRange(i));
 
   env->ResetBoundary(margin, _cfg.GetRobot());
-  shared_ptr<Boundary> boundaryNew = env->GetBoundary();
 
   attempts++;
   //Generate first cfg
@@ -156,7 +155,7 @@ Sampler(CfgType& _cfg, shared_ptr<Boundary> _boundary,
   CfgType temp = cfg1;
 
   inter.FindIncrement(cfg1, cfg2, &nTicks, positionRes, orientationRes);
-  env->GetBoundary()->ResetBoundary(origBoundary, 0);
+  env->ResetBoundary(origBoundary, 0);
   for(int i = 1; i < nTicks; i++) {
     tick += inter;
     tickFree = (vc->IsValid(tick, callee)) && (!vc->IsInsideObstacle(tick));

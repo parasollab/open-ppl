@@ -21,7 +21,7 @@ WorkspaceConstraint(ActiveMultiBody* const _m, XMLNode& _node) : Constraint(_m) 
 
   // Find the part.
   for(size_t i = 0; i < m_multibody->NumFreeBody(); ++i) {
-    auto body = m_multibody->GetFreeBody(i).get();
+    auto body = m_multibody->GetFreeBody(i);
     if(body->Label() == partLabel) {
       m_freeBody = body;
       break;
@@ -38,7 +38,7 @@ WorkspaceConstraint(ActiveMultiBody* const _m, XMLNode& _node) : Constraint(_m) 
 
 /*------------------------------ Constraint Interface ------------------------*/
 
-Boundary*
+const Boundary*
 WorkspaceConstraint::
 GetBoundary() const {
   /// @TODO
@@ -85,7 +85,7 @@ SetPositionalBound(const size_t _i, const double _min, const double _max) {
   m_constraints.push_back(
       [_i, _min, _max](const Transformation& _t) {
         const auto& position = _t.translation();
-        return Range<double>(_min, _max).Inside(position[_i]);
+        return InRange(position[_i], _min, _max);
       });
 }
 

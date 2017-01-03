@@ -55,7 +55,7 @@ class WorkspaceImportanceSampler : public SamplerMethod<MPTraits> {
     ///@name SamplerMethod Overrides
     ///@{
 
-    virtual bool Sampler(CfgType& _cfg, shared_ptr<Boundary> _boundary,
+    virtual bool Sampler(CfgType& _cfg, const Boundary* const _boundary,
         vector<CfgType>& _result, vector<CfgType>& _collision) override;
 
     ///@}
@@ -149,7 +149,7 @@ Initialize() {
 template <typename MPTraits>
 bool
 WorkspaceImportanceSampler<MPTraits>::
-Sampler(CfgType& _cfg, shared_ptr<Boundary> _boundary,
+Sampler(CfgType& _cfg, const Boundary* const _boundary,
     vector<CfgType>& _result, vector<CfgType>& _collision) {
   if(!m_initialized)
     InitDecomposition();

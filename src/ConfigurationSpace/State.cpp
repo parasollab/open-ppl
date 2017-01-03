@@ -185,15 +185,15 @@ Write(ostream& _os) const {
 
 void
 State::
-GetRandomCfgImpl(Environment* _env, shared_ptr<Boundary> _bb) {
-  Cfg::GetRandomCfgImpl(_env, _bb);
+GetRandomCfgImpl(Environment* _env, const Boundary* const _b) {
+  Cfg::GetRandomCfgImpl(_env, _b);
   //m_vel = static_cast<NonHolonomicMultiBody*>(GetRobot())->GetRandomVelocity();
 }
 
 State
 State::
 F(const State& _s, const Vector3d& _force, const Vector3d& _torque) {
-  shared_ptr<FreeBody> body = _s.GetRobot()->GetFreeBody(0);
+  auto body = _s.GetRobot()->GetFreeBody(0);
   State xdot;
 
   //pdot = v

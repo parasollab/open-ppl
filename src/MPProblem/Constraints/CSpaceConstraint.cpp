@@ -11,18 +11,19 @@
 /*------------------------------ Construction --------------------------------*/
 
 CSpaceConstraint::
-CSpaceConstraint(ActiveMultiBody* const _m, XMLNode& _node) : Constraint(_m) {
+CSpaceConstraint(ActiveMultiBody* const _m, XMLNode& _node) : Constraint(_m),
+    m_bbx(_m->DOF()) {
   // Parse child nodes to set limits.
   for(auto& child : _node) {
     if(child.Name() == "Limit") {
       const size_t dof = child.Read("dof", true, size_t(0), size_t(0),
           size_t(_m->DOF()), "The DOF index to restrict");
       const double min = child.Read("min", true, 0.,
-          std::numeric_limits<double>::min(), std::numeric_limits<double>::max(),
-          "Min value");
+          std::numeric_limits<double>::lowest(),
+          std::numeric_limits<double>::max(), "Min value");
       const double max = child.Read("max", true, 0.,
-          std::numeric_limits<double>::min(), std::numeric_limits<double>::max(),
-          "Max value");
+          std::numeric_limits<double>::lowest(),
+          std::numeric_limits<double>::max(), "Max value");
       SetLimit(dof, min, max);
     }
   }
@@ -30,29 +31,17 @@ CSpaceConstraint(ActiveMultiBody* const _m, XMLNode& _node) : Constraint(_m) {
 
 /*-------------------------- Constraint Interface ----------------------------*/
 
-Boundary*
+const Boundary*
 CSpaceConstraint::
 GetBoundary() const {
-  /// @TODO
-  throw RunTimeException(WHERE, "Not yet implemented.");
-  return nullptr;
+  return &m_bbx;
 }
 
 
 bool
 CSpaceConstraint::
 Satisfied(const Cfg& _c) const {
-  const auto& cfg = _c.GetData();
-
-  // If any of the limits are violated, the constraint is not satisfied.
-  for(const auto& constraint : m_limits) {
-    const auto& index = constraint.first;
-    const auto& range = constraint.second;
-
-    if(!range.Inside(cfg[index]))
-      return false;
-  }
-  return true;
+  return m_bbx.InCSpace(_c);
 }
 
 /*--------------------------- Creation Interface -----------------------------*/
@@ -68,7 +57,7 @@ SetLimit(const size_t _dof, const double _min, const double _max) {
         std::to_string(m_multibody->DOF()) + " DOFs.");
 
   // Set the limit.
-  m_limits[_dof] = Range<double>(_min, _max);
+  m_bbx.SetRange(_dof, _min, _max);
 }
 
 /*----------------------------------------------------------------------------*/

@@ -1,13 +1,8 @@
 #ifndef BODY_H_
 #define BODY_H_
 
-#ifndef NO_PQP
 #include <PQP.h>
-#endif
-
-#ifndef NO_RAPID
 #include <RAPID.H>
-#endif
 
 #include "Transformation.h"
 using namespace mathtool;
@@ -16,12 +11,21 @@ using namespace mathtool;
 #include "Utilities/Color.h"
 #include "Utilities/MPUtils.h"
 
-class btCollisionShape;
 class CollisionDetectionMethod;
 class MultiBody;
 
+
 ////////////////////////////////////////////////////////////////////////////////
-/// A single geometric body in workspace.
+/// A single polyhedral body in workspace. One or more of these are composed to
+/// form a MultiBody, which is PMPL's working representation of object geometries.
+///
+/// @details Each Body has two representations: one for the 'model frame' and one
+///          for the 'world frame'. The model frame is the coordinate frame in
+///          which the Body was originally described - this is usually centered
+///          on the Body's center of mass. The world frame is the coordinate
+///          frame in our current environment - this represents the Body after
+///          it has been translated/oriented into its place in the planning
+///          scene.
 /// @ingroup Geometry
 ////////////////////////////////////////////////////////////////////////////////
 class Body {
@@ -31,9 +35,9 @@ class Body {
     ///@name Construction
     ///@{
 
-    /// @param _owner Owner of this body
-    Body(MultiBody* _owner) : m_multibody(_owner) { }
-
+    /// Construct an empty body.
+    /// @param _owner The owning multibody.
+    Body(MultiBody* _owner);
 
     Body(const Body& _other) = delete;            ///< No copy.
     Body& operator=(const Body& _other) = delete; ///< No assign.
@@ -41,67 +45,80 @@ class Body {
     virtual ~Body() = default;
 
     ///@}
-    ///@name Body Information Accessors
+    ///@name Metadata Accessors
     ///@{
 
-    MultiBody* GetMultiBody() {return m_multibody;}
-    const string& GetFileName() const {return m_filename;}
+    /// Get the owning MultiBody.
+    MultiBody* GetMultiBody();
+
+    /// Get the file name from which this body was constructed.
+    const string& GetFileName() const;
+
+    /// Get the full path of the file from which this body was constructed.
     string GetFilePath() const;
-    int GetLabel() const {return m_label;};
-    void SetLabel(const int _label) {m_label = _label;};
 
     ///@}
     ///@name Rendering Property Accessors
     ///@{
 
-    bool IsColorLoaded() const {return m_colorLoaded;}
-    const Color4& GetColor() const {return m_color;}
-    bool IsTextureLoaded() const {return m_textureLoaded;}
-    const string& GetTexture() const {return m_textureFile;}
+    /// Check if a color was loaded.
+    bool IsColorLoaded() const;
+
+    /// Get the loaded color.
+    const Color4& GetColor() const;
+
+    /// Check if a texture was loaded.
+    bool IsTextureLoaded() const;
+
+    /// Get the loaded texture file name.
+    const string& GetTexture() const;
 
     ///@}
     ///@name Model Property Accessors
     ///@}
 
-    Vector3d GetCenterOfMass();
-    GMSPolyhedron::COMAdjust GetCOMAdjust() const {return m_comAdjust;}
+    /// Get the center-of-mass adjustment option.
+    GMSPolyhedron::COMAdjust GetCOMAdjust() const;
 
-    const double GetMass() const {return m_mass;}
-    const Matrix3x3& GetMoment() const {return m_moment;}
+    /// Get the mass.
+    double GetMass() const;
 
-    double GetBoundingSphereRadius() const {return m_polyhedron.m_maxRadius;}
-    double GetInsideSphereRadius() const {return m_polyhedron.m_minRadius;}
+    /// Get the moment of inertia in the model frame.
+    const Matrix3x3& GetMoment() const;
 
-    /// @param _poly New polyhedron to define this body
+    /// Get the bounding radius as measured from the body's center point.
+    double GetBoundingSphereRadius() const;
+
+    /// Get the minimum radius as measured from the body's center point.
+    double GetInsideSphereRadius() const;
+
+    /// Set the polyhedron model for this body.
     void SetPolyhedron(GMSPolyhedron& _poly);
 
-    /// @return Polyhedron in model coordinates
-    GMSPolyhedron& GetPolyhedron() {return m_polyhedron;}
+    /// Get the polyhedron in model coordinates.
+    const GMSPolyhedron& GetPolyhedron() const;
 
-    /// @return Polyhedron in world coordinates
-    GMSPolyhedron& GetWorldPolyhedron();
+    /// Get the polyhedron in world coordinates.
+    const GMSPolyhedron& GetWorldPolyhedron() const;
 
-    GMSPolyhedron& GetBoundingBoxPolyhedron() {return m_bbPolyhedron;}
-    GMSPolyhedron& GetWorldBoundingBox();
-    double* GetBoundingBox() {return m_boundingBox;}
+    /// Compute the bounding box in world coordinates.
+    GMSPolyhedron GetWorldBoundingBox() const;
 
+    /// Test if a point is a convex hull vertex of this body's polyhedron in
+    /// model coordinates.
     /// @param _v A vertex in model coordinates.
     /// @return True if \p _v is a convex hull vertex of body.
-    bool IsConvexHullVertex(const Vector3d& _v);
+    bool IsConvexHullVertex(const Vector3d& _v) const;
 
     ///@}
     ///@name Transformation
     ///@{
 
     /// @return Transformation of this body w.r.t. the world frame
-    virtual Transformation& GetWorldTransformation() = 0;
+    virtual const Transformation& GetWorldTransformation() const = 0;
 
-    /// @return Transformation of this body w.r.t. the world frame
-    ///
-    /// Return world transformation of this body. If worldTransformation has
-    /// been calculated(updated), this method should be used to avoid redundant
-    /// calculation.
-    Transformation& WorldTransformation() {return m_worldTransformation;}
+    /// Mark all cached objects as requiring an update.
+    void MarkDirty() const;
 
     ///@}
     ///@name Collision Detection Models
@@ -112,23 +129,11 @@ class Body {
     /// Build appropriate collision detection models.
     void BuildCDStructure();
 
-#ifndef NO_RAPID
-    shared_ptr<RAPID_model> GetRapidBody() {return m_rapidBody;}
-    void SetRapidBody(const shared_ptr<RAPID_model>& _r) {m_rapidBody = _r;}
-#endif
+    RAPID_model* GetRapidBody() const {return m_rapidBody.get();}
+    void SetRapidBody(unique_ptr<RAPID_model>&& _r) {m_rapidBody = move(_r);}
 
-#ifndef NO_PQP
-    shared_ptr<PQP_Model> GetPQPBody() {return m_pqpBody;}
-    void SetPQPBody(const shared_ptr<PQP_Model>& _p) {m_pqpBody = _p;}
-#endif
-
-    ///@}
-    ///@name Bullet Models
-    ///@{
-
-    btCollisionShape* GetBulletBody() { return m_collisionShape; }
-
-    void SetButtetShape(btCollisionShape* _shape) { m_collisionShape = _shape; }
+    PQP_Model* GetPQPBody() const {return m_pqpBody.get();}
+    void SetPQPBody(unique_ptr<PQP_Model>&& _p) {m_pqpBody = move(_p);}
 
     ///@}
     ///@name I/O
@@ -151,76 +156,45 @@ class Body {
     ///@name Computation Helpers
     ///@}
 
-    /// Calculate center of mass in world coordinates
-    ///
-    /// This function is automatically calld by GetCenterOfMass() if it has
-    /// never been computed. After computing it, this function will not be
-    /// called again: rigid body. This way of computing center of mass is
-    /// physically not true. This assumes that each vertex carries the same
-    /// mass, and edges are weightless. To be more accurate, we need to be
-    /// modify this to consider the length of edges, which is still an
-    /// approximation.
-    void ComputeCenterOfMass();
+    /// Approximate moment of inertia in model coordinates.
+    void ComputeMomentOfInertia() const;
 
-    /// Approximate moment of inertia.
-    void ComputeMomentOfInertia();
-
-    /// Compute a bounding box in world coordinates.
-    void ComputeBoundingBox();
-
-    /// Compute a GMSPolyhedron representation of the bounding box in model
-    /// coordinates.
-    void ComputeBoundingPolyhedron();
-
-    /// Compute convex hull of body.
-    void ComputeConvexHull();
+    /// Compute convex hull of body in model coordinates.
+    void ComputeConvexHull() const;
 
     /// Compute the world polyhedron from the model-coordinate version.
-    void ComputeWorldPolyhedron();
+    void ComputeWorldPolyhedron() const;
 
     ///@}
     ///@name Internal State
     ///@{
 
-    MultiBody* m_multibody;                  ///< Owner of Body
-    string m_filename;                       ///< Geometry filename
-    int m_label{0};                          ///< Body ID
+    MultiBody* m_multibody;                  ///< The owning MultBody.
+    string m_filename;                       ///< Geometry filename.
 
-    bool m_colorLoaded{false};               ///< Was color option set
     Color4 m_color;                          ///< Optionally specified color
-    bool m_textureLoaded{false};             ///< Was texture option set
+    bool m_colorLoaded{false};               ///< Was color option set?
+
     string m_textureFile;                    ///< Optionally specified texture
+    bool m_textureLoaded{false};             ///< Was texture option set?
 
-    GMSPolyhedron m_polyhedron;              ///< Model in model coordinates
-    GMSPolyhedron m_worldPolyhedron;         ///< Model in world coordinates
+    GMSPolyhedron m_polyhedron;              ///< Model in model coordinates.
+    GMSPolyhedron m_convexHull;              ///< Convex hull in model frame.
+    mutable bool m_convexHullCached{false};  ///< Is convex hull cached?
 
-    bool m_worldPolyhedronAvailable{false};  ///< Is world polyhedron available
-    Transformation m_worldTransformation;    ///< World Transformation
+    Transformation m_transform;         ///< Transform from model to world frame.
+    mutable bool m_transformCached{false};    ///< Is the transform cached?
 
-    GMSPolyhedron m_bbPolyhedron;            ///< Bounding box in model coords.
-    GMSPolyhedron m_bbWorldPolyhedron;       ///< Bounding box in world coords.
-    double m_boundingBox[6]{0,0,0,0,0,0};    ///< Another world bounding box.
-
-    bool m_convexHullAvailable{false};       ///< Is convex hull computed
-    GMSPolyhedron m_convexHull;              ///< Convex hull of model
-
-    bool m_centerOfMassAvailable{false};     ///< Is center of mass computed
-    Vector3d m_centerOfMass;                 ///< Center of mass
-    GMSPolyhedron::COMAdjust m_comAdjust{GMSPolyhedron::COMAdjust::COM};
-                                             ///< COM Adjustment option
+    GMSPolyhedron m_worldPolyhedron;         ///< Model in world coordinates.
+    mutable bool m_worldPolyhedronCached{false}; ///< Is world polyhedron cached?
 
     double m_mass{1};                        ///< Mass of Body
     Matrix3x3 m_moment;                      ///< Moment of Inertia
+    GMSPolyhedron::COMAdjust m_comAdjust{GMSPolyhedron::COMAdjust::COM};
+                                             ///< COM Adjustment option
 
-#ifndef NO_RAPID
-    shared_ptr<RAPID_model> m_rapidBody;     ///< RAPID model
-#endif
-
-#ifndef NO_PQP
-    shared_ptr<PQP_Model> m_pqpBody;         ///< PQP model
-#endif
-
-    btCollisionShape* m_collisionShape{nullptr};
+    unique_ptr<RAPID_model> m_rapidBody;     ///< RAPID model
+    unique_ptr<PQP_Model> m_pqpBody;         ///< PQP model
 
     ///@}
 

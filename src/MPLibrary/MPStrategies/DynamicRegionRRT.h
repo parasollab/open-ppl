@@ -20,8 +20,8 @@
 #endif
 
 ////////////////////////////////////////////////////////////////////////////////
-/// \brief  DynamicRegionRRT uses an embedded Reeb graph to guide dynamic
-///         sampling regions through the environment.
+/// DynamicRegionRRT uses an embedded Reeb graph to guide dynamic sampling
+/// regions through the environment.
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
 class DynamicRegionRRT : public BasicRRTStrategy<MPTraits> {
@@ -41,8 +41,8 @@ class DynamicRegionRRT : public BasicRRTStrategy<MPTraits> {
     ///\name Local Types
     ///@{
 
-    typedef shared_ptr<Boundary>              RegionPtr;
-    typedef ReebGraphConstruction::FlowGraph  FlowGraph;
+    typedef Boundary*                        RegionPtr;
+    typedef ReebGraphConstruction::FlowGraph FlowGraph;
 
     ///@}
     ///\name Construction
@@ -112,8 +112,8 @@ class DynamicRegionRRT : public BasicRRTStrategy<MPTraits> {
     double m_regionFactor{2.5};  ///< The region radius is this * robot radius.
     double m_robotFactor{1.};    ///< The robot is touch if inside by this amount
 
-    vector<RegionPtr> m_regions; ///< All Regions
-    RegionPtr m_samplingRegion;  ///< Points to the current sampling region.
+    vector<RegionPtr> m_regions;         ///< All Regions
+    RegionPtr m_samplingRegion{nullptr}; ///< The current sampling region.
 
     ReebGraphConstruction* m_reebGraph{nullptr}; ///< Embedded reeb graph
 
@@ -230,7 +230,7 @@ Run() {
   auto sit = flow.first.find_vertex(flow.second);
   for(auto eit = sit->begin(); eit != sit->end(); ++eit) {
     auto i = regions.emplace(
-        RegionPtr(new BoundingSphere(sit->property(), regionRadius)),
+        new BoundingSphere(sit->property(), regionRadius),
         make_tuple(eit->descriptor(), 0, 0));
     m_regions.push_back(i.first->first);
 #ifdef VIZMO
@@ -307,7 +307,7 @@ Run() {
         if(dist < regionRadius && !visited[vit->descriptor()]) {
           for(auto eit = vit->begin(); eit != vit->end(); ++eit) {
             auto i = regions.emplace(
-                RegionPtr(new BoundingSphere(vit->property(), regionRadius)),
+                new BoundingSphere(vit->property(), regionRadius),
                 make_tuple(eit->descriptor(), 0, 0));
             m_regions.push_back(i.first->first);
 #ifdef VIZMO
@@ -353,13 +353,13 @@ template <typename MPTraits>
 typename DynamicRegionRRT<MPTraits>::CfgType
 DynamicRegionRRT<MPTraits>::
 SelectDirection() {
-  RegionPtr samplingBoundary;
+  const Boundary* samplingBoundary;
   Environment* env = this->GetEnvironment();
 
   size_t _index = rand() % (m_regions.size() + 1);
 
   if(_index == m_regions.size()) {
-    m_samplingRegion.reset();
+    m_samplingRegion = nullptr;
     samplingBoundary = this->GetEnvironment()->GetBoundary();
   }
   else {
@@ -369,7 +369,7 @@ SelectDirection() {
 
   try {
     CfgType mySample;
-    mySample.GetRandomCfg(env,samplingBoundary);
+    mySample.GetRandomCfg(env, samplingBoundary);
     return mySample;
   }
   //catch Boundary too small exception
@@ -483,7 +483,7 @@ template <typename MPTraits>
 bool
 DynamicRegionRRT<MPTraits>::
 IsTouching(const CfgType& _cfg, RegionPtr _region) {
-  auto region = static_pointer_cast<BoundingSphere>(_region);
+  auto region = static_cast<BoundingSphere*>(_region);
 
   const Point3d& robotCenter = _cfg.GetPoint();
   const Point3d& regionCenter = region->GetCenter();

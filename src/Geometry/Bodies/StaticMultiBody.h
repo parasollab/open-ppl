@@ -49,7 +49,7 @@ class StaticMultiBody : public MultiBody {
 
     /// Get a fixed sub-body by index.
     /// @param[in] _index The index of the sub-body to fetch.
-    shared_ptr<FixedBody> GetFixedBody(size_t _index) const;
+    const FixedBody* GetFixedBody(size_t _index) const;
 
     /// @param _body Fixed Body to add
     void AddBody(const shared_ptr<FixedBody>& _body);
@@ -59,7 +59,13 @@ class StaticMultiBody : public MultiBody {
 
   protected:
 
+    ///@name Internal State
+    ///@{
+
     vector<shared_ptr<FixedBody>> m_fixedBody; ///< All fixed body
+
+    ///@}
+
 };
 
 #endif

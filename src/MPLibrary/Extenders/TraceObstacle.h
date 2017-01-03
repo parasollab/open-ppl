@@ -90,10 +90,10 @@ Extend(const CfgType& _start, const CfgType& _end, CfgType& _new,
     cIndex = LRand() % env->NumObstacles();
     obsContactIndex = -1;
   }
-  GMSPolyhedron& poly =
+  const GMSPolyhedron& poly =
       env->GetObstacle(cIndex)->GetFixedBody(0)->GetWorldPolyhedron();
-  vector<Vector3d>& vertexList    = poly.m_vertexList;
-  vector<GMSPolygon>& polygonList = poly.m_polygonList;
+  const vector<Vector3d>& vertexList    = poly.m_vertexList;
+  const vector<GMSPolygon>& polygonList = poly.m_polygonList;
 
   int polyIndex;
   if( obsContactIndex != -1 )

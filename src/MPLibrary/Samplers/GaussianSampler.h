@@ -25,7 +25,7 @@ class GaussianSampler : public SamplerMethod<MPTraits> {
 
     virtual void Print(ostream& _os) const;
 
-    virtual bool Sampler(CfgType& _cfg, shared_ptr<Boundary> _boundary,
+    virtual bool Sampler(CfgType& _cfg, const Boundary* const _boundary,
         vector<CfgType>& _result, vector<CfgType>& _collision);
 
   private:
@@ -77,7 +77,7 @@ Print(ostream& _os) const {
 template <typename MPTraits>
 bool
 GaussianSampler<MPTraits>::
-Sampler(CfgType& _cfg, shared_ptr<Boundary> _boundary,
+Sampler(CfgType& _cfg, const Boundary* const _boundary,
     vector<CfgType>& _result, vector<CfgType>& _collision) {
 
   string callee(this->GetNameAndLabel() + "::SampleImpl()");

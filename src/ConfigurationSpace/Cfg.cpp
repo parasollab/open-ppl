@@ -337,7 +337,7 @@ SetJointData(const vector<double>& _data) {
 
 vector<double>
 Cfg::
-GetNormalizedData(const shared_ptr<const Boundary> _b) const {
+GetNormalizedData(const Boundary* const _b) const {
   pair<vector<double>, vector<double>> range = GetRobot()->GetCfgLimits(_b);
   vector<double> normed;
   for(size_t i = 0; i < DOF(); ++i) {
@@ -351,8 +351,7 @@ GetNormalizedData(const shared_ptr<const Boundary> _b) const {
 
 void
 Cfg::
-SetNormalizedData(const vector<double>& _data,
-    const shared_ptr<const Boundary> _b) {
+SetNormalizedData(const vector<double>& _data, const Boundary* const _b) {
   if(_data.size() != DOF()) {
     string msg = "Tried to set data for " + to_string(_data.size()) +
         " DOFs, but robot has " + to_string(DOF()) + " DOFs!";
@@ -549,7 +548,7 @@ GetRandomCfg(Environment* _env) {
 
 void
 Cfg::
-GetRandomCfg(Environment* _env, shared_ptr<Boundary> _bb) {
+GetRandomCfg(Environment* _env, const Boundary* const _b) {
   m_witnessCfg.reset();
   // Probably should do something smarter than 3 strikes and exit.
   // eg, if it fails once, check size of bounding box vs robot radius
@@ -557,16 +556,16 @@ GetRandomCfg(Environment* _env, shared_ptr<Boundary> _bb) {
   // box specified
   size_t tries = 100;
   while(tries-- > 0) {
-    this->GetRandomCfgImpl(_env, _bb);
+    this->GetRandomCfgImpl(_env, _b);
 
-    if(_env->InBounds(*this, _bb))
+    if(_env->InBounds(*this, _b))
       return;
   }
 
   // throw error message and some helpful statistics
   ostringstream oss;
   oss << "GetRandomCfg not able to find anything in boundary: "
-      << *_bb << ". Robot radius is "
+      << *_b << ". Robot radius is "
       << GetRobot()->GetBoundingSphereRadius() << ".";
   throw PMPLException("Boundary too small", WHERE, oss.str());
 }
@@ -730,7 +729,7 @@ NormalizeOrientation(int _index) {
 
 void
 Cfg::
-GetRandomCfgImpl(Environment* _env, shared_ptr<Boundary> _b) {
+GetRandomCfgImpl(Environment* _env, const Boundary* const _b) {
   m_v = GetRobot()->GetRandomCfg(_b);
   m_witnessCfg.reset();
 }

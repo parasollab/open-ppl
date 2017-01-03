@@ -24,6 +24,9 @@ namespace mathtool {
 /// functions can be combined to produce more complex constraints.
 ///
 /// @TODO Add XML parsing.
+/// @TODO Rename this object to 'TransformConstraint' since that's what it does.
+///       Create a separate WorkspaceConstraint that constrains either some or
+///       all of the robot to avoid specific areas/planes in workspace.
 ////////////////////////////////////////////////////////////////////////////////
 class WorkspaceConstraint : public Constraint {
 
@@ -47,7 +50,7 @@ class WorkspaceConstraint : public Constraint {
     ///@name Constraint Interface
     ///@{
 
-    virtual Boundary* GetBoundary() const override;
+    virtual const Boundary* GetBoundary() const override;
 
     virtual bool Satisfied(const Cfg& _c) const override;
 

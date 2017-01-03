@@ -1,11 +1,12 @@
 #ifndef BOUNDING_BOX_H_
 #define BOUNDING_BOX_H_
 
-#include "Geometry/Boundaries/Boundary.h"
+#include "Boundary.h"
+#include "Range.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup Geometry
-/// An axis-aligned 3d bounding box.
+/// An axis-aligned N-dimensional bounding box.
 ////////////////////////////////////////////////////////////////////////////////
 class BoundingBox :  public Boundary {
 
@@ -14,8 +15,14 @@ class BoundingBox :  public Boundary {
     ///@name Construction
     ///@{
 
-    BoundingBox();
+    /// Construct an infinite bounding box.
+    /// @param[in] _dimension The number of dimensions.
+    BoundingBox(const size_t _dimension = 3);
 
+    /// Construct a three-dimensional bounding box.
+    /// @param[in] _x The range in the X dimension.
+    /// @param[in] _y The range in the Y dimension.
+    /// @param[in] _z The range in the Z dimension.
     BoundingBox(pair<double, double> _x,
         pair<double, double> _y,
         pair<double, double> _z);
@@ -26,7 +33,7 @@ class BoundingBox :  public Boundary {
     ///@name Property Accesors
     ///@}
 
-    virtual string Type() const noexcept override {return "Box";}
+    virtual string Type() const noexcept override;
 
     virtual double GetMaxDist(double _r1 = 2.0, double _r2 = 0.5) const override;
 
@@ -42,7 +49,8 @@ class BoundingBox :  public Boundary {
     ///@name Containment Testing
     ///@{
 
-    virtual const bool InBoundary(const Vector3d& _p) const override;
+    virtual bool InBoundary(const Vector3d& _p) const override;
+    virtual bool InCSpace(const Cfg& _c) const override;
 
     ///@}
     ///@name Clearance Testing
@@ -63,6 +71,10 @@ class BoundingBox :  public Boundary {
     virtual void ResetBoundary(const vector<pair<double, double>>& _bbx,
         double _margin) override;
 
+    virtual void SetRange(const size_t _i, const double _min, const double _max);
+
+    virtual void SetRange(const size_t _i, Range<double>&& _r);
+
     ///@}
     ///@name I/O
     ///@{
@@ -75,12 +87,28 @@ class BoundingBox :  public Boundary {
     ///@name CGAL Representations
     ///@{
 
+    /// A CGAL representation of the workspace portion of this boundary.
     virtual CGALPolyhedron CGAL() const override;
 
     ///@}
 
+  protected:
+
+    ///@name Helpers
+    ///@{
+
+    void UpdateCenter();
+
+    ///@}
+
   private:
-    pair<double, double> m_bbx[3];
+
+    ///@name Internal State
+    ///@{
+
+    std::vector<Range<double>> m_bbx;
+
+    ///@}
 
 #ifdef _PARALLEL
   public:
@@ -89,24 +117,44 @@ class BoundingBox :  public Boundary {
       _t.member(m_bbx);
     }
 #endif
+
 };
 
 #ifdef _PARALLEL
 namespace stapl {
-  template <typename Accessor>
-    class proxy<BoundingBox, Accessor>
-    : public Accessor {
-      private:
-        friend class proxy_core_access;
-        typedef BoundingBox target_t;
 
-      public:
-        explicit proxy(Accessor const& acc) : Accessor(acc) { }
-        operator target_t() const { return Accessor::read(); }
-        proxy const& operator=(proxy const& rhs) { Accessor::write(rhs); return *this; }
-        proxy const& operator=(target_t const& rhs) { Accessor::write(rhs); return *this;}
-        Point3d GetRandomPoint() const { return Accessor::const_invoke(&target_t::GetRandomPoint);}
-    };
+  //////////////////////////////////////////////////////////////////////////////
+  /// @TODO A parallel MP researcher needs to document this class.
+  //////////////////////////////////////////////////////////////////////////////
+  template <typename Accessor>
+  class proxy<BoundingBox, Accessor> : public Accessor {
+
+    private:
+
+      friend class proxy_core_access;
+      typedef BoundingBox target_t;
+
+    public:
+
+      explicit proxy(Accessor const& acc) : Accessor(acc) { }
+
+      operator target_t() const {return Accessor::read();}
+
+      proxy const& operator=(proxy const& rhs) {
+        Accessor::write(rhs);
+        return *this;
+      }
+
+      proxy const& operator=(target_t const& rhs) {
+        Accessor::write(rhs);
+        return *this;
+      }
+
+      Point3d GetRandomPoint() const {
+        return Accessor::const_invoke(&target_t::GetRandomPoint);
+      }
+  };
+
 }
 #endif
 

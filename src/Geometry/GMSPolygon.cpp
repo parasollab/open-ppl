@@ -10,12 +10,12 @@ using namespace std;
 
 GMSPolygon::
 GMSPolygon(int _v1, int _v2, int _v3, const vector<Point3d>& _pts) :
-    m_vertexList{_v1, _v2, _v3}, m_pointList(&_pts) {
+    m_indexes{_v1, _v2, _v3}, m_pointList(&_pts) {
   // Rotate the vertex list so that the lowest-index point is always first. This
   // is required to ensure that polygons constructed from points {1, 2, 3} and
   // {2, 3, 1}, which represent the same structure, compare as equal.
-  auto iter = min_element(m_vertexList.begin(), m_vertexList.end());
-  rotate(m_vertexList.begin(), iter, m_vertexList.end());
+  auto iter = min_element(m_indexes.begin(), m_indexes.end());
+  rotate(m_indexes.begin(), iter, m_indexes.end());
   ComputeNormal();
 }
 
@@ -24,7 +24,7 @@ GMSPolygon(int _v1, int _v2, int _v3, const vector<Point3d>& _pts) :
 const Point3d&
 GMSPolygon::
 GetPoint(const size_t _i) const {
-  return (*m_pointList)[m_vertexList[_i]];
+  return (*m_pointList)[m_indexes[_i]];
 }
 
 /*--------------------------------- Modifiers --------------------------------*/
@@ -32,7 +32,7 @@ GetPoint(const size_t _i) const {
 void
 GMSPolygon::
 Reverse() {
-  reverse(++m_vertexList.begin(), m_vertexList.end());
+  reverse(++m_indexes.begin(), m_indexes.end());
   m_normal *= -1;
 }
 
@@ -56,7 +56,7 @@ operator==(const GMSPolygon& _p) const {
   return m_area == _p.m_area
       && m_pointList == _p.m_pointList
       && m_normal == _p.m_normal
-      && m_vertexList == _p.m_vertexList;
+      && m_indexes == _p.m_indexes;
 }
 
 
@@ -71,10 +71,10 @@ operator!=(const GMSPolygon& _p) const {
 const bool
 GMSPolygon::
 IsTriangle() const {
-  return m_vertexList.size() == 3 &&
-      m_vertexList[0] != m_vertexList[1] &&
-      m_vertexList[1] != m_vertexList[2] &&
-      m_vertexList[0] != m_vertexList[2];
+  return m_indexes.size() == 3 &&
+      m_indexes[0] != m_indexes[1] &&
+      m_indexes[1] != m_indexes[2] &&
+      m_indexes[0] != m_indexes[2];
 }
 
 
@@ -82,9 +82,9 @@ const Point3d
 GMSPolygon::
 FindCenter() const {
   Point3d center;
-  for(size_t i = 0; i < m_vertexList.size(); ++i)
+  for(size_t i = 0; i < m_indexes.size(); ++i)
     center += GetPoint(i);
-  return center /= m_vertexList.size();
+  return center /= m_indexes.size();
 }
 
 
@@ -98,10 +98,10 @@ PointIsAbove(const Point3d& _p) const {
 const int
 GMSPolygon::
 CommonVertex(const GMSPolygon& _p) const {
-  for(size_t i = 0; i < m_vertexList.size(); ++i) {
-    for(size_t j = 0; j < m_vertexList.size(); ++j) {
-      if(m_vertexList[i] == _p.m_vertexList[j]) {
-        return m_vertexList[i];
+  for(size_t i = 0; i < m_indexes.size(); ++i) {
+    for(size_t j = 0; j < m_indexes.size(); ++j) {
+      if(m_indexes[i] == _p.m_indexes[j]) {
+        return m_indexes[i];
       }
     }
   }
@@ -113,13 +113,13 @@ const pair<int, int>
 GMSPolygon::
 CommonEdge(const GMSPolygon& _p) const {
   pair<int, int> edgeID(-1, -1);
-  for(size_t i = 0; i < m_vertexList.size(); ++i) {
-    for(size_t j = 0; j < m_vertexList.size(); ++j) {
-      if(m_vertexList[i] == _p.m_vertexList[j]) {
+  for(size_t i = 0; i < m_indexes.size(); ++i) {
+    for(size_t j = 0; j < m_indexes.size(); ++j) {
+      if(m_indexes[i] == _p.m_indexes[j]) {
         if(edgeID.first == -1)
-          edgeID.first = m_vertexList[i];
+          edgeID.first = m_indexes[i];
         else
-          edgeID.second = m_vertexList[i];
+          edgeID.second = m_indexes[i];
       }
     }
   }

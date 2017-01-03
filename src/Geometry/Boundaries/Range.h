@@ -7,6 +7,8 @@
 #include <type_traits>
 #include <utility>
 
+#include "Utilities/MPUtils.h"
+
 
 /*------------------------- Range-checking Functions -------------------------*/
 
@@ -20,7 +22,7 @@
 ///         for inclusive test).
 template <typename T, typename U>
 inline
-const bool
+bool
 InRange(const U& _val, const T& _min, const T& _max, const bool _inclusive = true)
     noexcept {
   return _inclusive ? _min <= _val && _val <= _max :
@@ -37,10 +39,23 @@ InRange(const U& _val, const T& _min, const T& _max, const bool _inclusive = tru
 ///         for inclusive test).
 template <typename T, typename U>
 inline
-const bool
+bool
 InRange(const U& _val, const std::pair<T, T>& _bounds,
     const bool _inclusive = true) noexcept {
   return InRange(_val, _bounds.first, _bounds.second, _inclusive);
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Sample a range for an enclosed value with uniform probability.
+/// @param _min The lower bound.
+/// @param _max The upper bound.
+/// @return A random value within [_min, _max] sampled with uniform probability.
+template <typename T>
+inline
+T
+SampleRange(const T& _min, const T& _max) noexcept {
+  return _min + (_max - _min) * DRand();
 }
 
 /*-------------------------------- Range Type --------------------------------*/
@@ -62,17 +77,14 @@ struct Range final {
   ///@name Construction
   ///@{
 
-  //////////////////////////////////////////////////////////////////////////////
   /// Construct a range over all values of T.
   Range() noexcept;
 
-  //////////////////////////////////////////////////////////////////////////////
   /// Construct a bounded range.
   /// @param _min The lower bound.
   /// @param _max The upper bound.
   Range(const T _min, const T _max) noexcept;
 
-  //////////////////////////////////////////////////////////////////////////////
   /// Construct a bounded range.
   /// @param _bounds A pair of min, max values.
   Range(const std::pair<T, T>& _bounds) noexcept;
@@ -81,30 +93,30 @@ struct Range final {
   ///@name Interface
   ///@{
 
-  //////////////////////////////////////////////////////////////////////////////
   /// Compute the length of this range.
-  const T Length() const noexcept;
+  T Length() const noexcept;
 
-  //////////////////////////////////////////////////////////////////////////////
   /// Compute the center of this range.
-  const T Center() const noexcept;
+  /// @warning This will not be exact for integral types.
+  T Center() const noexcept;
 
-  //////////////////////////////////////////////////////////////////////////////
   /// Test if a value is inside this range.
   /// @param _val The value to test.
   /// @param _inclusive Count values on the boundary as inside?
   /// @return True if the test value lies inside the range (or on the boundary
   ///         for inclusive test).
   template <typename U>
-  const bool Inside(const U& _val, const bool _inclusive = true) const noexcept;
+  bool Contains(const U& _val, const bool _inclusive = true) const noexcept;
 
-  //////////////////////////////////////////////////////////////////////////////
   /// Test the clearance of a value. Clearance is defined as the minimum
   /// distance to a boundary value, and will be negative if the test value falls
   /// outside the range.
   /// @param _val The value to test.
   template <typename U>
-  const T Clearance(const U& _val) const noexcept;
+  T Clearance(const U& _val) const noexcept;
+
+  /// Sample the range for a random contained value with uniform probability.
+  T Sample() const noexcept;
 
   ///@}
 
@@ -136,7 +148,7 @@ Range(const std::pair<T, T>& _bounds) noexcept :
 
 template <typename T>
 inline
-const T
+T
 Range<T>::
 Length() const noexcept {
   return max - min;
@@ -145,7 +157,7 @@ Length() const noexcept {
 
 template <typename T>
 inline
-const T
+T
 Range<T>::
 Center() const noexcept {
   return Length() / T(2);
@@ -155,9 +167,9 @@ Center() const noexcept {
 template <typename T>
 template <typename U>
 inline
-const bool
+bool
 Range<T>::
-Inside(const U& _val, const bool _inclusive) const noexcept {
+Contains(const U& _val, const bool _inclusive) const noexcept {
   return InRange(_val, min, max, _inclusive);
 }
 
@@ -165,13 +177,22 @@ Inside(const U& _val, const bool _inclusive) const noexcept {
 template <typename T>
 template <typename U>
 inline
-const T
+T
 Range<T>::
 Clearance(const U& _val) const noexcept {
   static_assert(!std::is_unsigned<T>::value, "Can't compute clearance for "
       "unsigned ranges as the return would be negative if the test value "
       "lies outside the range.");
   return std::min(_val - min, max - _val);
+}
+
+
+template <typename T>
+inline
+T
+Range<T>::
+Sample() const noexcept {
+  return SampleRange(min, max);
 }
 
 /*---------------------------------- I/O -------------------------------------*/

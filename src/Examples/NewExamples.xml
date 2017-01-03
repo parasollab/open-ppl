@@ -8,6 +8,36 @@
 
     <Robot label="boxy" filename="3D/boxy.robot"/>
 
+    <Task label="point-to-point" robot="boxy">
+      <StartConstraints>
+        <!-- require an exact starting configuration -->
+        <CSpaceConstraint>
+          <Limit dof="0" min="0" max="0"/>
+          <Limit dof="1" min="0" max="0"/>
+          <Limit dof="2" min="0" max="0"/>
+          <Limit dof="3" min="0" max="0"/>
+          <Limit dof="4" min="0" max="0"/>
+          <Limit dof="5" min="0" max="0"/>
+        </CSpaceConstraint>
+      </StartConstraints>
+
+      <PathConstraints>
+        <!-- no path constraints -->
+      </PathConstraints>
+
+      <GoalConstraints>
+        <!-- require an exact goal configuration -->
+        <CSpaceConstraint>
+          <Limit dof="0" min="20" max="20"/>
+          <Limit dof="1" min="5" max="5"/>
+          <Limit dof="2" min="10" max="10"/>
+          <Limit dof="3" min=".2" max=".2"/>
+          <Limit dof="4" min=".8" max=".8"/>
+          <Limit dof="5" min=".5" max=".5"/>
+        </CSpaceConstraint>
+      </GoalConstraints>
+    </Task>
+
   </Problem>
 
 
@@ -560,38 +590,6 @@
   </Agents-->
 
 
-  <Jobs>
-    <!-- Here we describe the tasks and jobs that the robots need to execute. -->
-
-    <Task label="point-to-point" robot="boxy">
-      <StartConstraints>
-        <!-- require an exact starting configuration -->
-        <CSpaceConstraint>
-          <Limit dof="0" min="0" max="0"/>
-          <Limit dof="1" min="0" max="0"/>
-          <Limit dof="2" min="0" max="0"/>
-          <Limit dof="3" min="0" max="0"/>
-          <Limit dof="4" min="0" max="0"/>
-          <Limit dof="5" min="0" max="0"/>
-        </CSpaceConstraint>
-      </StartConstraints>
-
-      <PathConstraints>
-        <!-- no path constraints -->
-      </PathConstraints>
-
-      <GoalConstraints>
-        <!-- require an exact goal configuration -->
-        <CSpaceConstraint>
-          <Limit dof="0" min="20" max="20"/>
-          <Limit dof="1" min="5" max="5"/>
-          <Limit dof="2" min="10" max="10"/>
-          <Limit dof="3" min=".2" max=".2"/>
-          <Limit dof="4" min=".8" max=".8"/>
-          <Limit dof="5" min=".5" max=".5"/>
-        </CSpaceConstraint>
-      </GoalConstraints>
-    </Task>
 
     <!-- TODO Implement jobs to support multi-task problems. No code support yet
          but shouldn't be too hard. -->
@@ -607,7 +605,5 @@
       vizmoDebug="true">
       <Task label="point-to-point" prereqs="" priority="0"/>
     </Job-->
-
-  </Jobs>
 
 </MotionPlanning>

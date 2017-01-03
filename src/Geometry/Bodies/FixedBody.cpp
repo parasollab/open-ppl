@@ -17,27 +17,29 @@ Read(istream& _is, CountingStreamBuffer& _cbs) {
 
   Read(m_comAdjust);
 
-  m_worldTransformation = ReadField<Transformation>(_is, _cbs,
+  m_transform = ReadField<Transformation>(_is, _cbs,
       "Failed reading fixed body transformation.");
-  m_worldPolyhedronAvailable = false;
+
+  MarkDirty();
 }
 
 
-Transformation&
-FixedBody::GetWorldTransformation() {
-  return m_worldTransformation;
+const Transformation&
+FixedBody::
+GetWorldTransformation() const {
+  return m_transform;
 }
 
 
 void
 FixedBody::
-PutWorldTransformation(Transformation& _worldTransformation) {
-  m_worldTransformation = _worldTransformation;
-  m_worldPolyhedronAvailable = false;
+PutWorldTransformation(const Transformation& _worldTransformation) {
+  m_transform = _worldTransformation;
+  MarkDirty();
 }
 
 
 ostream&
 operator<<(ostream& _os, const FixedBody& _fb){
-  return _os << _fb.m_filename << " " << _fb.m_worldTransformation;
+  return _os << _fb.m_filename << " " << _fb.m_transform;
 }

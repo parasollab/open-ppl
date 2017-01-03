@@ -1,6 +1,7 @@
 #include "MPProblem.h"
 
 #include "Geometry/Bodies/ActiveMultiBody.h"
+#include "MPProblem/MPTask.h"
 #include "MPProblem/Environment/Environment.h"
 #include "MPProblem/Robot/Robot.h"
 #include "Utilities/MPUtils.h"
@@ -106,7 +107,7 @@ ParseChild(XMLNode& _node) {
     ///       make sure this always happens regardless of the XML file ordering.
     /// @TODO Move the DOF parsing into MultiBody's read so that we don't have
     ///       to pass the boundary with the robot constructor.
-    auto robot = new Robot(this, _node, GetEnvironment()->GetBoundary().get());
+    auto robot = new Robot(this, _node, GetEnvironment()->GetBoundary());
     m_robots.push_back(robot);
     return true;
   }
@@ -114,6 +115,11 @@ ParseChild(XMLNode& _node) {
     // Ignore this node if we already have a query file.
     if(m_queryFilename.empty())
       m_queryFilename = _node.Read("filename", true, "", "Query file name");
+    return true;
+  }
+  else if(_node.Name() == "Task") {
+    MPTask* newTask = new MPTask(this, _node);
+    m_tasks.push_back(newTask);
     return true;
   }
   else

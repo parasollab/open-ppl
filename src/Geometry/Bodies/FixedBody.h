@@ -27,11 +27,11 @@ class FixedBody : public Body {
     ///@name Transformation
     ///@{
 
-    virtual Transformation& GetWorldTransformation();
+    virtual const Transformation& GetWorldTransformation() const override;
 
     /// Set the transform for this object.
     /// @param _worldTransformation Transformation w.r.t. world frame
-    void PutWorldTransformation(Transformation& _worldTransformation);
+    void PutWorldTransformation(const Transformation& _worldTransformation);
 
     ///@}
     ///@name I/O

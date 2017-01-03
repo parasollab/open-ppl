@@ -30,7 +30,7 @@ class Constraint {
 
     /// Get a sampling boundary that describes the subset of CSpace allowed by
     /// this constraint.
-    virtual Boundary* GetBoundary() const = 0;
+    virtual const Boundary* GetBoundary() const = 0;
 
     /// Determine whether a given configuration of the object satisfies this
     /// constraint.

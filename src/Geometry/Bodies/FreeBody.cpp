@@ -98,21 +98,21 @@ GetBackwardConnection(size_t _index) {
 
 bool
 FreeBody::
-IsAdjacent(shared_ptr<FreeBody> _otherBody) const {
+IsAdjacent(const FreeBody* const _otherBody) const {
   for(const auto& c : m_forwardConnections)
     if(c->GetNextBody() == _otherBody)
       return true;
   for(const auto& c : m_backwardConnections)
     if(c->GetPreviousBody() == _otherBody)
       return true;
-  return this == _otherBody.get();
+  return this == _otherBody;
 }
 
 
 bool
 FreeBody::
-IsWithinI(shared_ptr<FreeBody> _otherBody, size_t _i) const {
-  return IsWithinI(this, _otherBody.get(), _i, NULL);
+IsWithinI(const FreeBody* const _otherBody, size_t _i) const {
+  return IsWithinI(this, _otherBody, _i, NULL);
 }
 
 
@@ -121,14 +121,15 @@ FreeBody::
 Link(Connection* _c) {
   m_forwardConnections.push_back(_c);
   _c->GetNextBody()->m_backwardConnections.push_back(_c);
-  m_worldPolyhedronAvailable = false;
-  m_centerOfMassAvailable = false;
+  MarkDirty();
 }
 
 
-Transformation&
+const Transformation&
 FreeBody::
-GetWorldTransformation() {
+GetWorldTransformation() const {
+  if(m_transformCached)
+    return m_transform;
   set<size_t> visited;
   return ComputeWorldTransformation(visited);
 }
@@ -144,16 +145,15 @@ GetRenderTransformation() {
 
 void
 FreeBody::
-Configure(Transformation& _transformation) {
-  m_worldTransformation = _transformation;
-  m_centerOfMassAvailable = false;
-  m_worldPolyhedronAvailable = false;
+Configure(const Transformation& _transformation) {
+  m_transform = _transformation;
+  MarkDirty();
 }
 
 
 void
 FreeBody::
-ConfigureRender(Transformation& _transformation) {
+ConfigureRender(const Transformation& _transformation) {
   m_renderTransformation = _transformation;
 }
 
@@ -161,7 +161,6 @@ ConfigureRender(Transformation& _transformation) {
 void
 FreeBody::
 Read(istream& _is, CountingStreamBuffer& _cbs) {
-
   m_filename = ReadFieldString(_is, _cbs,
       "Failed reading geometry filename.", false);
 
@@ -193,9 +192,9 @@ Read(istream& _is, CountingStreamBuffer& _cbs) {
     case BodyType::Fixed:
       // If base if fixed, we should read a transformation.
       {
-        m_worldTransformation = ReadField<Transformation>(_is, _cbs,
+        m_transform = ReadField<Transformation>(_is, _cbs,
             "Failed reading fixed based transformation.");
-        ConfigureRender(m_worldTransformation);
+        ConfigureRender(m_transform);
         break;
       }
     case BodyType::Joint:
@@ -217,7 +216,7 @@ operator<<(ostream& _os, FreeBody& _fb){
       _os << FreeBody::GetTagFromMovementType(_fb.m_movementType);
       break;
     case FreeBody::BodyType::Fixed:
-      _os << _fb.m_worldTransformation;
+      _os << _fb.m_transform;
     case FreeBody::BodyType::Joint:
       break;
   }
@@ -237,12 +236,12 @@ IsWithinI(const FreeBody* const _body1, const FreeBody* const _body2, size_t _i,
     return false;
 
   for(const auto& c : m_forwardConnections) {
-    FreeBody* next = c->GetNextBody().get();
+    FreeBody* next = c->GetNextBody();
     if(next != _prevBody && IsWithinI(next, _body2, _i - 1, _body1))
       return true;
   }
   for(const auto& c : m_backwardConnections) {
-    FreeBody* prev = c->GetPreviousBody().get();
+    FreeBody* prev = c->GetPreviousBody();
     if(prev != _prevBody && IsWithinI(prev, _body2, _i - 1, _body1))
       return true;
   }
@@ -250,31 +249,40 @@ IsWithinI(const FreeBody* const _body1, const FreeBody* const _body2, size_t _i,
 }
 
 
-Transformation&
+const Transformation&
 FreeBody::
-ComputeWorldTransformation(set<size_t>& _visited) {
-  m_centerOfMassAvailable = false;
-  m_worldPolyhedronAvailable = false;
+ComputeWorldTransformation(set<size_t>& _visited) const {
+  /// @note This method is marked const even though it might change the world
+  ///       transformation because it is essentially completing a lazy
+  ///       computation of the transform. The computation begins when we first
+  ///       position the robot (thereby changing the body transforms) and lazily
+  ///       resolves when we actually request the updated transform.
 
-  if(_visited.find(m_index) != _visited.end()) {
-    return m_worldTransformation;
-  }
-  else {
-    _visited.insert(m_index);
+  // If this link has already been visited, no need to do anything.
+  if(_visited.find(m_index) != _visited.end())
+    return m_transform;
 
-    if(m_backwardConnections.empty())
-      return m_worldTransformation;
+  // Otherwise, visit this link.
+  _visited.insert(m_index);
 
-    Connection& back = *m_backwardConnections[0];
-    Transformation dh = back.GetDHParameters().GetTransformation();
-    m_worldTransformation =
+  // The transform is already correct if there are no backward connections
+  // (this is a base link) or if we have already computed it.
+  if(m_backwardConnections.empty() || m_transformCached)
+    return m_transform;
+
+  // Otherwise, compute the transform of this link from its backward
+  // connection.
+  const Connection& back = *m_backwardConnections[0];
+  auto& transform = const_cast<Transformation&>(m_transform);
+  transform =
       back.GetPreviousBody()->ComputeWorldTransformation(_visited) *
       back.GetTransformationToDHFrame() *
-      dh *
+      back.GetDHParameters().GetTransformation() *
       back.GetTransformationToBody2();
 
-    return m_worldTransformation;
-  }
+  m_transformCached = true;
+
+  return m_transform;
 }
 
 
@@ -291,12 +299,11 @@ ComputeRenderTransformation(set<size_t>& _visited) {
       return m_renderTransformation;
 
     Connection& back = *m_backwardConnections[0];
-    Transformation dh = back.GetDHRenderParameters().GetTransformation();
     m_renderTransformation =
-      back.GetPreviousBody()->ComputeRenderTransformation(_visited) *
-      back.GetTransformationToDHFrame() *
-      dh *
-      back.GetTransformationToBody2();
+        back.GetPreviousBody()->ComputeRenderTransformation(_visited) *
+        back.GetTransformationToDHFrame() *
+        back.GetDHRenderParameters().GetTransformation() *
+        back.GetTransformationToBody2();
 
     return m_renderTransformation;
   }

@@ -18,8 +18,8 @@ Rapid() : CollisionDetectionMethod("RAPID") { }
 void
 Rapid::
 Build(Body* _body) {
-  GMSPolyhedron& poly = _body->GetPolyhedron();
-  shared_ptr<RAPID_model> rapidBody(new RAPID_model);
+  const GMSPolyhedron& poly = _body->GetPolyhedron();
+  unique_ptr<RAPID_model> rapidBody(new RAPID_model);
   rapidBody->BeginModel();
   for(size_t q = 0; q < poly.m_polygonList.size(); q++) {
     double point[3][3];
@@ -31,23 +31,27 @@ Build(Body* _body) {
     rapidBody->AddTri(point[0], point[1], point[2], q);
   }
   rapidBody->EndModel();
-  _body->SetRapidBody(rapidBody);
+  _body->SetRapidBody(move(rapidBody));
 }
 
 
 bool
 Rapid::
-IsInCollision(shared_ptr<Body> _body1, shared_ptr<Body> _body2,
+IsInCollision(const Body* const _body1, const Body* const _body2,
     CDInfo& _cdInfo) {
 
-  shared_ptr<RAPID_model> body1 = _body1->GetRapidBody();
-  shared_ptr<RAPID_model> body2 = _body2->GetRapidBody();
-  Transformation& t1 = _body1->WorldTransformation();
-  Transformation& t2 = _body2->WorldTransformation();
+  auto body1 = _body1->GetRapidBody();
+  auto body2 = _body2->GetRapidBody();
+  /// @TODO See if we can modify RAPID_Collide to take const double arrays
+  ///       instead of just double arrays so we don't have to copy.
+  //const Transformation& t1 = _body1->GetWorldTransformation();
+  //const Transformation& t2 = _body2->GetWorldTransformation();
+  Transformation t1 = _body1->GetWorldTransformation();
+  Transformation t2 = _body2->GetWorldTransformation();
 
   if(RAPID_Collide(
-        t1.rotation().matrix(), t1.translation(), body1.get(),
-        t2.rotation().matrix(), t2.translation(), body2.get(),
+        t1.rotation().matrix(), t1.translation(), body1,
+        t2.rotation().matrix(), t2.translation(), body2,
         RAPID_FIRST_CONTACT))
     throw RunTimeException(WHERE, "RAPID_ERR_COLLIDE_OUT_OF_MEMORY");
 

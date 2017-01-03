@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 
+class Boundary;
 class Cfg;
 class Constraint;
 class MPProblem;
@@ -75,6 +76,10 @@ class MPTask final {
     const std::vector<Constraint*>& GetPathConstraints() const noexcept;
     const std::vector<Constraint*>& GetGoalConstraints() const noexcept;
 
+    const Boundary* GetStartBoundary() const noexcept;
+    const Boundary* GetPathBoundary() const noexcept;
+    const Boundary* GetGoalBoundary() const noexcept;
+
     ///@}
     ///@name Constraint Evaluation
     ///@{
@@ -103,6 +108,23 @@ class MPTask final {
 
   private:
 
+    ///@name Helpers
+    ///@{
+
+    /// Evaluate a path against a set of constraints.
+    /// @param[in] _p The path to validate.
+    /// @param[in] _c The set of constraints to check.
+    /// @return True if all constraints in _c are satisfied by _p.
+    bool EvaluateConstraints(const std::vector<Cfg>& _p,
+        const std::vector<Constraint*>& _c) const;
+
+    /// Create a compose boundary object from a set of constraints.
+    /// @param[in] _c The set of constraints to use.
+    /// @return A boundary describing the spaces that satisfy _c.
+    const Boundary* MakeComposeBoundary(const std::vector<Constraint*>& _c) const
+        noexcept;
+
+    ///@}
     ///@name Internal State
     ///@{
 

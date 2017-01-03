@@ -20,7 +20,7 @@ Print(ostream& _os) const {
 
 bool
 CollisionDetectionMethod::
-IsInsideObstacle(const Vector3d& _pt, shared_ptr<Body> _body) {
+IsInsideObstacle(const Vector3d& _pt, const Body* const _body) {
   throw RunTimeException(WHERE, "Not implemented.");
 }
 

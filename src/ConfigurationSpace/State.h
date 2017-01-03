@@ -46,7 +46,8 @@ class State : public Cfg {
     virtual void Write(ostream& _os) const;
 
   protected:
-    virtual void GetRandomCfgImpl(Environment* _env, shared_ptr<Boundary> bb);
+
+    virtual void GetRandomCfgImpl(Environment* _env, const Boundary* const _b);
 
     ////////////////////////////////////////////////////////////////////////////
     /// @brief Apply a specific force and torque to a state to yield a new

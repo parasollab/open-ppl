@@ -47,7 +47,7 @@ GetRandomPoint() const {
 
 /*----------------------------- Containment Testing --------------------------*/
 
-const bool
+bool
 BoundingSphere::
 InBoundary(const Vector3d& _p) const {
   return (_p - m_center).norm() < m_radius;

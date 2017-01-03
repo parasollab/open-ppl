@@ -18,10 +18,10 @@ class FreeBody : public Body {
     /// Body type
     ////////////////////////////////////////////////////////////////////////////
     enum class BodyType {
-      Planar,     ///< 2D
-      Volumetric, ///< 3D
+      Planar,     ///< 2D base
+      Volumetric, ///< 3D base
       Fixed,      ///< Fixed base
-      Joint       ///< Joint
+      Joint       ///< Link
     };
 
     ////////////////////////////////////////////////////////////////////////////
@@ -109,13 +109,13 @@ class FreeBody : public Body {
     /// Determines if two bodies share the same joint
     /// @param _otherBody Second body
     /// @return True if adjacent
-    bool IsAdjacent(shared_ptr<FreeBody> _otherBody) const;
+    bool IsAdjacent(const FreeBody* const _otherBody) const;
 
     /// Determines if two bodies are within \p _i joints of each other
     /// @param _otherBody Second body
     /// @param _i Number of joints
     /// @return True if within \p _i joints
-    bool IsWithinI(shared_ptr<FreeBody> _otherBody, size_t _i) const;
+    bool IsWithinI(const FreeBody* const _otherBody, size_t _i) const;
 
     /// Link two Body, i.e., add a Connection between them
     /// @param _c Connection description
@@ -125,11 +125,11 @@ class FreeBody : public Body {
     ///@name Transformation
     ///@{
 
-    virtual Transformation& GetWorldTransformation();
+    virtual const Transformation& GetWorldTransformation() const override;
 
     /// Set the transformation.
     /// @param[in] _transformation The new transformation for this body.
-    void Configure(Transformation& _transformation);
+    void Configure(const Transformation& _transformation);
 
     Transformation& GetRenderTransformation();
 
@@ -138,7 +138,7 @@ class FreeBody : public Body {
 
     /// Set the rendering transformation.
     /// @param _transformation Transformation
-    void ConfigureRender(Transformation& _transformation);
+    void ConfigureRender(const Transformation& _transformation);
 
     ///@}
     ///@name I/O
@@ -176,7 +176,8 @@ class FreeBody : public Body {
     /// transformation from the proximal joint to the center of gravity of
     /// "this" body (Need a generalization for the connectionship, since
     /// currently it handles only one backward connection).
-    Transformation& ComputeWorldTransformation(std::set<size_t>& visited);
+    const Transformation& ComputeWorldTransformation(std::set<size_t>& visited)
+        const;
 
     /// Compute transformation of this body wrt the world frame
     /// @param visited Stores which bodies have been visited

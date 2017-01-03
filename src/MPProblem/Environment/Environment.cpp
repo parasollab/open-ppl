@@ -23,6 +23,12 @@ Environment(XMLNode& _node) {
   Read(m_filename);
 }
 
+
+Environment::
+~Environment() {
+  delete m_boundary;
+}
+
 /*------------------------------------ I/O -----------------------------------*/
 
 void
@@ -184,6 +190,13 @@ ResetBoundary(double _d, ActiveMultiBody* _robot) {
 
 void
 Environment::
+ResetBoundary(const vector<pair<double, double>>& _bbx, const double _margin) {
+  m_boundary->ResetBoundary(_bbx, _margin);
+}
+
+
+void
+Environment::
 ExpandBoundary(double _d, ActiveMultiBody* _robot) {
   double robotRadius = _robot->GetBoundingSphereRadius();
   _d += robotRadius;
@@ -294,13 +307,13 @@ ReadBoundary(istream& _is, CountingStreamBuffer& _cbs) {
   string btype = ReadFieldString(_is, _cbs,
       "Failed reading boundary type. Options are: box or sphere.");
   if(btype == "BOX")
-    m_boundary = shared_ptr<BoundingBox>(new BoundingBox());
+    m_boundary = new BoundingBox();
   else if(btype == "BOX2D")
-    m_boundary = shared_ptr<BoundingBox2D>(new BoundingBox2D());
+    m_boundary = new BoundingBox2D();
   else if(btype == "SPHERE")
-    m_boundary = shared_ptr<BoundingSphere>(new BoundingSphere());
+    m_boundary = new BoundingSphere();
   else if(btype == "SPHERE2D")
-    m_boundary = shared_ptr<BoundingSphere2D>(new BoundingSphere2D());
+    m_boundary = new BoundingSphere2D();
   else
     throw ParseException(_cbs.Where(), "Unknown boundary type '" + btype +
         "'. Options are: box or sphere.");

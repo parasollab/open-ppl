@@ -49,7 +49,7 @@ GetRandomPoint() const {
 
 /*----------------------------- Containment Testing --------------------------*/
 
-const bool
+bool
 BoundingSphere2D::
 InBoundary(const Vector3d& _p) const {
   Vector3d p(_p[0], _p[1], 0);

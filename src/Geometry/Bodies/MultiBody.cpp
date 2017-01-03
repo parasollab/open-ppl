@@ -65,29 +65,38 @@ FindMultiBodyInfo() {
   // Find COM
   m_com(0, 0, 0);
   for(auto& body : m_bodies)
-    m_com += body->GetCenterOfMass();
+    m_com += body->GetWorldPolyhedron().GetCentroid();
   m_com /= m_bodies.size();
 
   //Find Bounding box
-  double minx, miny, minz, maxx, maxy, maxz;
-  minx = miny = minz = numeric_limits<double>::max();
-  maxx = maxy = maxz = numeric_limits<double>::lowest();
+  double minX, minY, minZ, maxX, maxY, maxZ;
+  minX = minY = minZ = numeric_limits<double>::max();
+  maxX = maxY = maxZ = numeric_limits<double>::lowest();
 
   for(auto& body : m_bodies) {
-    double* tmp = body->GetBoundingBox();
-    minx = min(minx, tmp[0]); maxx = max(maxx, tmp[1]);
-    miny = min(miny, tmp[2]); maxy = max(maxy, tmp[3]);
-    minz = min(minz, tmp[4]); maxz = max(maxz, tmp[5]);
+    const auto bbx = body->GetWorldBoundingBox();
+    const auto& minVertex = bbx.m_vertexList[0];
+    const auto& maxVertex = bbx.m_vertexList[7];
+
+    minX = min(minX, minVertex[0]);
+    maxX = max(maxX, maxVertex[1]);
+    minY = min(minY, minVertex[2]);
+    maxY = max(maxY, maxVertex[3]);
+    minZ = min(minZ, minVertex[4]);
+    maxZ = max(maxZ, maxVertex[5]);
   }
 
-  m_boundingBox[0] = minx; m_boundingBox[1] = maxx;
-  m_boundingBox[2] = miny; m_boundingBox[3] = maxy;
-  m_boundingBox[4] = minz; m_boundingBox[5] = maxz;
+  m_boundingBox[0] = minX;
+  m_boundingBox[1] = maxX;
+  m_boundingBox[2] = minY;
+  m_boundingBox[3] = maxY;
+  m_boundingBox[4] = minZ;
+  m_boundingBox[5] = maxZ;
 
   // Find max axis range
-  double rangex = maxx - minx;
-  double rangey = maxy - miny;
-  double rangez = maxz - minz;
+  double rangex = maxX - minX;
+  double rangey = maxY - minY;
+  double rangez = maxZ - minZ;
   m_maxAxisRange = max(rangex, max(rangey,rangez));
 
   // Find bounding radius

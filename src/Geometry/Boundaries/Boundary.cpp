@@ -3,9 +3,17 @@
 #include "ConfigurationSpace/Cfg.h"
 
 
-/*------------------------------- InBoundary ---------------------------------*/
+/*--------------------------- Property Accessors -----------------------------*/
 
-const bool
+const Point3d&
+Boundary::
+GetCenter() const noexcept {
+  return m_center;
+}
+
+/*--------------------------- Containment Testing ----------------------------*/
+
+bool
 Boundary::
 InBoundary(const Cfg& _cfg) const {
   auto robot = _cfg.GetRobot();
@@ -22,31 +30,49 @@ InBoundary(const Cfg& _cfg) const {
   // Check each part of the robot multibody for being inside of the boundary.
   for(size_t m = 0; m < robot->NumFreeBody(); ++m) {
     const auto body = robot->GetFreeBody(m);
-    const Transformation& worldTransformation = body->WorldTransformation();
 
-    //first check just the boundary of the polyhedron
-    const GMSPolyhedron& bbPoly = body->GetBoundingBoxPolyhedron();
-    bool bcheck = true;
-    for(const auto& v : bbPoly.m_vertexList) {
-      if(!InBoundary(worldTransformation * v)) {
-        bcheck = false;
+    // First check if the body's bounding box intersects the boundary.
+    bool bbxGood = true;
+    const GMSPolyhedron bbx = body->GetWorldBoundingBox();
+    for(const auto& v : bbx.m_vertexList) {
+      if(!InBoundary(v)) {
+        bbxGood = false;
         break;
       }
     }
 
-    //boundary of polyhedron is inside the boundary thus the whole geometry is
-    if(bcheck)
+    // If the bounding box is inside the boundary, the whole geometry must be.
+    // Skip the fine-grain check.
+    if(bbxGood)
       continue;
 
-    //the boundary intersected. Now check the geometry itself.
-    const GMSPolyhedron& poly = body->GetPolyhedron();
+    // If the bounding box touches the boundary, we need to check each vertex in
+    // the body geometry.
+    const GMSPolyhedron& poly = body->GetWorldPolyhedron();
     for(const auto& v : poly.m_vertexList)
-      if(!InBoundary(worldTransformation * v))
+      if(!InBoundary(v))
         return false;
   }
 
   // None of the robot parts touched the boundary, so we are inside.
   return true;
+}
+
+
+bool
+Boundary::
+InCSpace(const Cfg& _cfg) const {
+  throw RunTimeException(WHERE, "No base class implementation supported.");
+  return false;
+}
+
+/*-------------------------- CGAL Representations ----------------------------*/
+
+Boundary::CGALPolyhedron
+Boundary::
+CGAL() const {
+  throw RunTimeException(WHERE, "No base class implementation supported.");
+  return CGALPolyhedron();
 }
 
 /*------------------------------- Display ------------------------------------*/

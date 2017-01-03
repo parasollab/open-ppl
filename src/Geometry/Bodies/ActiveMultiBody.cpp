@@ -4,10 +4,25 @@
 #include "Geometry/Boundaries/Boundary.h"
 #include "ConfigurationSpace/Cfg.h"
 
+
+/*------------------------------ Construction --------------------------------*/
+
 ActiveMultiBody::
 ActiveMultiBody() : MultiBody() {
   m_multiBodyType = MultiBodyType::Active;
 }
+
+/*----------------------------- MultiBody Info -------------------------------*/
+
+const Vector3d&
+ActiveMultiBody::
+GetCenterOfMass() const {
+  throw RunTimeException(WHERE, "There is an error in the center of mass "
+      "computation for active multibodies - the COM is not updated as the a.m.b."
+      " changes configuration. Please correct before using.");
+  return MultiBody::GetCenterOfMass();
+}
+
 
 size_t
 ActiveMultiBody::
@@ -15,15 +30,25 @@ NumFreeBody() const {
   return m_freeBody.size();
 }
 
-shared_ptr<FreeBody>
+
+const FreeBody*
 ActiveMultiBody::
-GetFreeBody(size_t _index) const {
-  if(_index < m_freeBody.size())
-    return m_freeBody[_index];
-  else
+GetFreeBody(const size_t _index) const {
+  if(_index >= m_freeBody.size())
     throw RunTimeException(WHERE,
-        "Cannot access FixedBody(" + ::to_string(_index) + ").");
+        "Cannot access FreeBody(" + ::to_string(_index) + ").");
+  return m_freeBody[_index].get();
 }
+
+
+FreeBody*
+ActiveMultiBody::
+GetFreeBody(const size_t _index) {
+  return const_cast<FreeBody*>(const_cast<const ActiveMultiBody*>(this)->
+      GetFreeBody(_index));
+}
+
+/*------------------------------ Robot Info ----------------------------------*/
 
 void
 ActiveMultiBody::
@@ -42,9 +67,9 @@ InitializeDOFs(const Boundary* _b, ostream* _os) {
   if(m_baseType == FreeBody::BodyType::Planar) {
     m_dofTypes.push_back(DofType::Positional);
     m_dofTypes.push_back(DofType::Positional);
-    m_dofInfo.push_back(DOFInfo("Base X Translation ",
+    m_dofInfo.push_back(DofInfo("Base X Translation ",
           _b->GetRange(0).first, _b->GetRange(0).second));
-    m_dofInfo.push_back(DOFInfo("Base Y Translation ",
+    m_dofInfo.push_back(DofInfo("Base Y Translation ",
           _b->GetRange(1).first, _b->GetRange(1).second));
 
     if(_os) {
@@ -54,7 +79,7 @@ InitializeDOFs(const Boundary* _b, ostream* _os) {
 
     if(m_baseMovement == FreeBody::MovementType::Rotational) {
       m_dofTypes.push_back(DofType::Rotational);
-      m_dofInfo.push_back(DOFInfo("Base Rotation ", -1.0, 1.0));
+      m_dofInfo.push_back(DofInfo("Base Rotation ", -1.0, 1.0));
 
       if(_os)
         *_os << "\t\t" << dof++ << ": Rotation about Z" << endl;
@@ -64,11 +89,11 @@ InitializeDOFs(const Boundary* _b, ostream* _os) {
     m_dofTypes.push_back(DofType::Positional);
     m_dofTypes.push_back(DofType::Positional);
     m_dofTypes.push_back(DofType::Positional);
-    m_dofInfo.push_back(DOFInfo("Base X Translation ",
+    m_dofInfo.push_back(DofInfo("Base X Translation ",
           _b->GetRange(0).first, _b->GetRange(0).second));
-    m_dofInfo.push_back(DOFInfo("Base Y Translation ",
+    m_dofInfo.push_back(DofInfo("Base Y Translation ",
           _b->GetRange(1).first, _b->GetRange(1).second));
-    m_dofInfo.push_back(DOFInfo("Base Z Translation ",
+    m_dofInfo.push_back(DofInfo("Base Z Translation ",
           _b->GetRange(2).first, _b->GetRange(2).second));
 
     if(_os) {
@@ -80,9 +105,9 @@ InitializeDOFs(const Boundary* _b, ostream* _os) {
       m_dofTypes.push_back(DofType::Rotational);
       m_dofTypes.push_back(DofType::Rotational);
       m_dofTypes.push_back(DofType::Rotational);
-      m_dofInfo.push_back(DOFInfo("Base X Rotation ", -1.0, 1.0));
-      m_dofInfo.push_back(DOFInfo("Base Y Rotation ", -1.0, 1.0));
-      m_dofInfo.push_back(DOFInfo("Base Z Rotation ", -1.0, 1.0));
+      m_dofInfo.push_back(DofInfo("Base X Rotation ", -1.0, 1.0));
+      m_dofInfo.push_back(DofInfo("Base Y Rotation ", -1.0, 1.0));
+      m_dofInfo.push_back(DofInfo("Base Z Rotation ", -1.0, 1.0));
 
       if(_os) {
         *_os << "\t\t" << dof++ << ": Rotation about X" << endl;
@@ -96,7 +121,7 @@ InitializeDOFs(const Boundary* _b, ostream* _os) {
     switch(joint->GetConnectionType()) {
       case Connection::JointType::Revolute:
         m_dofTypes.push_back(DofType::Joint);
-        m_dofInfo.push_back(DOFInfo("Revolute Joint " +
+        m_dofInfo.push_back(DofInfo("Revolute Joint " +
               ::to_string(joint->GetGlobalIndex()) + " Angle",
               joint->GetJointLimits(0).first, joint->GetJointLimits(0).second));
 
@@ -112,10 +137,10 @@ InitializeDOFs(const Boundary* _b, ostream* _os) {
       case Connection::JointType::Spherical:
         m_dofTypes.push_back(DofType::Joint);
         m_dofTypes.push_back(DofType::Joint);
-        m_dofInfo.push_back(DOFInfo("Spherical Joint " +
+        m_dofInfo.push_back(DofInfo("Spherical Joint " +
               ::to_string(joint->GetGlobalIndex()) + " Angle 1",
               joint->GetJointLimits(0).first, joint->GetJointLimits(0).second));
-        m_dofInfo.push_back(DOFInfo("Spherical Joint " +
+        m_dofInfo.push_back(DofInfo("Spherical Joint " +
               ::to_string(joint->GetGlobalIndex()) + " Angle 2",
               joint->GetJointLimits(1).first, joint->GetJointLimits(1).second));
 
@@ -135,9 +160,17 @@ InitializeDOFs(const Boundary* _b, ostream* _os) {
   }
 }
 
+
 size_t
 ActiveMultiBody::
-PosDOF() const {
+DOF() const noexcept {
+  return m_dofTypes.size();
+}
+
+
+size_t
+ActiveMultiBody::
+PosDOF() const noexcept {
   switch(m_baseType) {
     case FreeBody::BodyType::Planar:
       return 2;
@@ -148,18 +181,40 @@ PosDOF() const {
   }
 }
 
+
+size_t
+ActiveMultiBody::
+OrientationDOF() const noexcept {
+  if(m_baseMovement != FreeBody::MovementType::Rotational)
+    return 0;
+  else
+    return m_baseType == FreeBody::BodyType::Volumetric ? 3 : 1;
+}
+
+
+size_t
+ActiveMultiBody::
+JointDOF() const noexcept {
+  return DOF() - PosDOF() - OrientationDOF();
+}
+
+/*------------------------- Configuration Methods ----------------------------*/
+
 void
 ActiveMultiBody::
 Configure(const Cfg& _c) {
   Configure(_c.GetData());
 }
 
+
 void
 ActiveMultiBody::
 Configure(const vector<double>& _v) {
   int index = 0;
-  double x = 0, y = 0, z = 0, alpha = 0, beta = 0, gamma = 0;
+
+  // Configure the base.
   if(m_baseType != FreeBody::BodyType::Fixed) {
+    double x = 0, y = 0, z = 0, alpha = 0, beta = 0, gamma = 0;
     x = _v[0];
     y = _v[1];
     index += 2;
@@ -169,7 +224,7 @@ Configure(const vector<double>& _v) {
     }
     if(m_baseMovement == FreeBody::MovementType::Rotational) {
       if(m_baseType == FreeBody::BodyType::Planar) {
-        index++;
+        ++index;
         gamma = _v[2];
       }
       else {
@@ -179,31 +234,43 @@ Configure(const vector<double>& _v) {
         gamma = _v[5];
       }
     }
-    // configure the robot according to current Cfg: joint parameters
-    // (and base locations/orientations for free flying robots.)
-    Transformation t1(Vector3d(x, y, z), Orientation(EulerAngle(gamma*PI, beta*PI, alpha*PI)));
+
+    Transformation t1(Vector3d(x, y, z), Orientation(EulerAngle(gamma * PI,
+        beta * PI, alpha * PI)));
     m_baseBody->Configure(t1);
   }
+
+  // Configure the links.
   for(auto& joint : m_joints) {
-    if(joint->GetConnectionType() != Connection::JointType::NonActuated) {
-      size_t second = joint->GetNextBodyIndex();
-      GetFreeBody(second)->GetBackwardConnection(0).GetDHParameters().m_theta = _v[index++]*PI;
-      if(joint->GetConnectionType() == Connection::JointType::Spherical)
-        GetFreeBody(second)->GetBackwardConnection(0).GetDHParameters().m_alpha = _v[index++]*PI;
-    }
+    // Skip non-actuated joints.
+    if(joint->GetConnectionType() == Connection::JointType::NonActuated)
+      continue;
+
+    // Get the connection object.
+    const size_t jointIndex = joint->GetNextBodyIndex();
+    auto& connection = m_freeBody[jointIndex]->GetBackwardConnection(0);
+    auto& dh = connection.GetDHParameters();
+
+    // Adjust connection to reflect new configuration.
+    dh.m_theta = _v[index++] * PI;
+    if(joint->GetConnectionType() == Connection::JointType::Spherical)
+      dh.m_alpha = _v[index++] * PI;
   }
-  // configure the robot
-  for(auto& body : m_freeBody)
-    if(body->ForwardConnectionCount() == 0)  // tree tips: leaves.
-      body->GetWorldTransformation();
+
+  // The base transform has been updated, now update the links.
+  UpdateLinks();
 }
+
 
 void
 ActiveMultiBody::
 Configure(const vector<double>& _v, const vector<double>& _t) {
   int index = 0, t_index = 0;
-  double x = 0, y = 0, z = 0, alpha = 0, beta = 0, gamma = 0;
+
+  // Configure the base.
   if(m_baseType != FreeBody::BodyType::Fixed) {
+    double x = 0, y = 0, z = 0, alpha = 0, beta = 0, gamma = 0;
+
     x = _v[0];
     y = _v[1];
     index += 2;
@@ -213,7 +280,7 @@ Configure(const vector<double>& _v, const vector<double>& _t) {
     }
     if(m_baseMovement == FreeBody::MovementType::Rotational) {
       if(m_baseType == FreeBody::BodyType::Planar) {
-        index++;
+        ++index;
         gamma = _v[2];
       }
       else {
@@ -223,32 +290,43 @@ Configure(const vector<double>& _v, const vector<double>& _t) {
         gamma = _v[5];
       }
     }
-    // configure the robot according to current Cfg: joint parameters
-    // (and base locations/orientations for free flying robots.)
-    Transformation t1(Vector3d(x, y, z), Orientation(EulerAngle(gamma*PI, beta*PI, alpha*PI)));
+
+    Transformation t1(Vector3d(x, y, z), Orientation(EulerAngle(gamma * PI,
+        beta * PI, alpha * PI)));
     m_baseBody->Configure(t1);
   }
+
+  // Configure the links.
   for(auto& joint : m_joints) {
-    if(joint->GetConnectionType() != Connection::JointType::NonActuated) {
-      size_t second = joint->GetNextBodyIndex();
-      GetFreeBody(second)->GetBackwardConnection(0).GetDHParameters().m_theta = _v[index++]*PI;
-      if(joint->GetConnectionType() == Connection::JointType::Spherical)
-        GetFreeBody(second)->GetBackwardConnection(0).GetDHParameters().m_alpha = _v[index++]*PI;
-      GetFreeBody(joint->GetNextBodyIndex())->GetBackwardConnection(0).GetDHParameters().m_theta = _t[t_index++];
-    }
+    // Skip non-actuated joints.
+    if(joint->GetConnectionType() == Connection::JointType::NonActuated)
+      continue;
+
+    // Get the connection object's DHParameters.
+    const size_t jointIndex = joint->GetNextBodyIndex();
+    auto& connection = m_freeBody[jointIndex]->GetBackwardConnection(0);
+    auto& dh = connection.GetDHParameters();
+
+    // Adjust connection to reflect new configuration.
+    ++index; // Skip the theta value in _v as we will use _t instead.
+    dh.m_theta = _t[t_index++];
+    if(joint->GetConnectionType() == Connection::JointType::Spherical)
+      dh.m_alpha = _v[index++] * PI;
   }
-  // configure the robot
-  for(auto& body : m_freeBody)
-    if(body->ForwardConnectionCount() == 0)  // tree tips: leaves.
-      body->GetWorldTransformation();
+
+  // The base transform has been updated, now update the links.
+  UpdateLinks();
 }
+
 
 void
 ActiveMultiBody::
 ConfigureRender(const vector<double>& _v) {
   int index = 0;
-  double x = 0, y = 0, z = 0, alpha = 0, beta = 0, gamma = 0;
+
+  // Configure base.
   if(m_baseType != FreeBody::BodyType::Fixed) {
+    double x = 0, y = 0, z = 0, alpha = 0, beta = 0, gamma = 0;
     x = _v[0];
     y = _v[1];
     index += 2;
@@ -268,56 +346,66 @@ ConfigureRender(const vector<double>& _v) {
         gamma = _v[5];
       }
     }
-    // configure the robot according to current Cfg: joint parameters
-    // (and base locations/orientations for free flying robots.)
+
     Transformation t1(Vector3d(x, y, z),
         Orientation(EulerAngle(gamma*PI, beta*PI, alpha*PI)));
     m_baseBody->ConfigureRender(t1);
   }
+
+  // Configure links.
   for(auto& joint : m_joints) {
-    if(joint->GetConnectionType() != Connection::JointType::NonActuated) {
-      size_t second = joint->GetNextBodyIndex();
-      GetFreeBody(second)->GetBackwardConnection(0).
-        GetDHRenderParameters().m_theta = _v[index++]*PI;
-      if(joint->GetConnectionType() == Connection::JointType::Spherical)
-        GetFreeBody(second)->GetBackwardConnection(0).
-          GetDHRenderParameters().m_alpha = _v[index++]*PI;
-    }
+    // Skip non-actuated joints.
+    if(joint->GetConnectionType() == Connection::JointType::NonActuated)
+      continue;
+
+    // Get connection object.
+    const size_t jointIndex = joint->GetNextBodyIndex();
+    auto& connection = m_freeBody[jointIndex]->GetBackwardConnection(0);
+    auto& dh = connection.GetDHRenderParameters();
+
+    // Adjust connection to reflect new configuration.
+    dh.m_theta = _v[index++]*PI;
+    if(joint->GetConnectionType() == Connection::JointType::Spherical)
+      dh.m_alpha = _v[index++]*PI;
   }
+
   // configure the robot
   for(auto& body : m_freeBody)
     if(body->ForwardConnectionCount() == 0)  // tree tips: leaves.
       body->GetRenderTransformation();
 }
 
+
 vector<double>
 ActiveMultiBody::
-GetRandomCfg(shared_ptr<Boundary>& _bounds) {
+GetRandomCfg(const Boundary* const _b) {
   vector<double> v;
   v.reserve(DOF());
-  if(m_baseType == FreeBody::BodyType::Planar ||
-      m_baseType == FreeBody::BodyType::Volumetric) {
-    Point3d p = _bounds->GetRandomPoint();
-    size_t posDOF = m_baseType == FreeBody::BodyType::Volumetric ? 3 : 2;
-    for(size_t i = 0; i < posDOF; i++)
+
+  // Sample any positional DOFs.
+  if(PosDOF()) {
+    Point3d p = _b->GetRandomPoint();
+    for(size_t i = 0; i < PosDOF(); ++i)
       v.push_back(p[i]);
-    if(m_baseMovement == FreeBody::MovementType::Rotational) {
-      size_t oriDOF = m_baseType == FreeBody::BodyType::Volumetric ? 3 : 1;
-      for(size_t i = 0; i < oriDOF; i++)
-        v.push_back(2.0*DRand()-1.0);
-    }
   }
+
+  // Sample any rotational DOFs.
+  for(size_t i = 0; i < OrientationDOF(); ++i)
+    v.push_back(2. * DRand() - 1.);
+
+  // Sample any joint DOFs.
+  for(size_t i = 0; i < JointDOF(); ++i)
   for(auto& joint : m_joints) {
     if(joint->GetConnectionType() == Connection::JointType::Revolute) {
       pair<double, double> r = joint->GetJointLimits(0);
-      double t = DRand()*(r.second-r.first)+r.first;
+      double t = DRand() * (r.second - r.first) + r.first;
       v.push_back(t);
     }
     else if(joint->GetConnectionType() == Connection::JointType::Spherical) {
       pair<double, double> r = joint->GetJointLimits(0);
-      double t = DRand()*(r.second-r.first)+r.first;
+      double t = DRand() * (r.second - r.first) + r.first;
       r = joint->GetJointLimits(1);
-      double a = DRand()*(r.second-r.first)+r.first;
+      double a = DRand() * (r.second - r.first) + r.first;
       v.push_back(t);
       v.push_back(a);
     }
@@ -325,28 +413,32 @@ GetRandomCfg(shared_ptr<Boundary>& _bounds) {
   return v;
 }
 
+
 pair<vector<double>, vector<double>>
 ActiveMultiBody::
-GetCfgLimits(const shared_ptr<const Boundary>& _bounds) const {
+GetCfgLimits(const Boundary* const _b) const {
   vector<double> min, max;
   min.reserve(DOF());
   max.reserve(DOF());
-  if(m_baseType == FreeBody::BodyType::Planar ||
-      m_baseType == FreeBody::BodyType::Volumetric) {
-    size_t posDOF = m_baseType == FreeBody::BodyType::Volumetric ? 3 : 2;
-    for(size_t i = 0; i < posDOF; i++) {
-      pair<double, double> range = _bounds->GetRange(i);
+
+  // Get position limits.
+  if(PosDOF()) {
+    for(size_t i = 0; i < PosDOF(); ++i) {
+      pair<double, double> range = _b->GetRange(i);
       min.push_back(range.first);
       max.push_back(range.second);
     }
-    if(m_baseMovement == FreeBody::MovementType::Rotational) {
-      size_t oriDOF = m_baseType == FreeBody::BodyType::Volumetric ? 3 : 1;
-      for(size_t i = 0; i < oriDOF; i++) {
-        min.push_back(-1);
-        max.push_back(1);
-      }
+  }
+
+  // Get orientation limits.
+  if(OrientationDOF()) {
+    for(size_t i = 0; i < OrientationDOF(); ++i) {
+      min.push_back(-1);
+      max.push_back(1);
     }
   }
+
+  // Get joint limits.
   for(auto& joint : m_joints) {
     if(joint->GetConnectionType() == Connection::JointType::Revolute) {
       pair<double, double> r = joint->GetJointLimits(0);
@@ -362,39 +454,37 @@ GetCfgLimits(const shared_ptr<const Boundary>& _bounds) const {
       max.push_back(r.second);
     }
   }
+
   return make_pair(move(min), move(max));
 }
 
+
 bool
 ActiveMultiBody::
-InCSpace(const vector<double>& _cfg, shared_ptr<Boundary>& _b) {
+InCSpace(const vector<double>& _cfg, const Boundary* const _b) {
   size_t index = 0;
-  if(m_baseType != FreeBody::BodyType::Fixed) {
+
+  // Check that the reference point lies in the boundary.
+  if(PosDOF()) {
     Vector3d p;
-    p[0] = _cfg[index];
-    p[1] = _cfg[index+1];
-    index+=2;
+    p[0] = _cfg[0];
+    p[1] = _cfg[1];
+    index += 2;
     if(m_baseType == FreeBody::BodyType::Volumetric) {
       p[2] = _cfg[index];
       index++;
     }
     if(!_b->InBoundary(p))
       return false;
-    if(m_baseMovement == FreeBody::MovementType::Rotational) {
-      if(m_baseType == FreeBody::BodyType::Planar) {
-        if(fabs(_cfg[index]) > 1)
-          return false;
-        index++;
-      }
-      else {
-        for(size_t i = 0; i<3; ++i) {
-          if(fabs(_cfg[index]) > 1)
-            return false;
-          index++;
-        }
-      }
-    }
   }
+
+  // Check that all orientation DOF's lie within [-1, 1].
+  for(size_t i = 0; i < OrientationDOF(); ++i)
+    if(fabs(_cfg[index]) > 1)
+      return false;
+  index += OrientationDOF();
+
+  // Check that all joint DOF's lie within their limits.
   for(auto& joint : m_joints) {
     if(joint->GetConnectionType() != Connection::JointType::NonActuated) {
       if(_cfg[index] < joint->GetJointLimits(0).first ||
@@ -409,8 +499,11 @@ InCSpace(const vector<double>& _cfg, shared_ptr<Boundary>& _b) {
       }
     }
   }
+
+  // If we're still here, all the DOF values are OK.
   return true;
 }
+
 
 void
 ActiveMultiBody::
@@ -422,7 +515,7 @@ PolygonalApproximation(vector<Vector3d>& _result) {
   //If rigid body then return the line between the first 4 vertices and the
   //second 4 vertices of the world bounding box
   if(nfree == 1) {
-    GMSPolyhedron& bbox = GetFreeBody(0)->GetWorldBoundingBox();
+    const GMSPolyhedron bbox = GetFreeBody(0)->GetWorldBoundingBox();
 
     Vector3d joint;
     for(size_t i = 0; i < 4; ++i)
@@ -437,13 +530,14 @@ PolygonalApproximation(vector<Vector3d>& _result) {
     _result.push_back(joint);
   }
   else {
-    for(size_t i = 0; i < nfree-1; ++i) {
-      GMSPolyhedron& bbox1 = GetFreeBody(i)->GetWorldBoundingBox();
-      GMSPolyhedron& bbox2 = GetFreeBody(i)->GetForwardConnection(0).GetNextBody()->GetWorldBoundingBox();
+    for(size_t i = 0; i < nfree - 1; ++i) {
+      const GMSPolyhedron bbox1 = m_freeBody[i]->GetWorldBoundingBox();
+      const GMSPolyhedron bbox2 = m_freeBody[i]->GetForwardConnection(0).
+          GetNextBody()->GetWorldBoundingBox();
 
       //find the four closest pairs of points between bbox1 and bbox2
-      vector<Vector3d>& vertices1 = bbox1.m_vertexList;
-      vector<Vector3d>& vertices2 = bbox2.m_vertexList;
+      const vector<Vector3d>& vertices1 = bbox1.m_vertexList;
+      const vector<Vector3d>& vertices2 = bbox2.m_vertexList;
       typedef tuple<size_t, size_t, double> VertexIndexDistance;
       vector<VertexIndexDistance> closestDists;
       for(int num = 0; num < 4; ++num) {
@@ -504,6 +598,8 @@ PolygonalApproximation(vector<Vector3d>& _result) {
   }
 }
 
+/*--------------------------------- I/O --------------------------------------*/
+
 void
 ActiveMultiBody::
 Read(istream& _is, CountingStreamBuffer& _cbs) {
@@ -549,19 +645,25 @@ Read(istream& _is, CountingStreamBuffer& _cbs) {
   }
   sort(m_joints.begin(), m_joints.end(),
       [](const shared_ptr<Connection>& _a, const shared_ptr<Connection>& _b) {
-      return _a->GetGlobalIndex() < _b->GetGlobalIndex();
+        return _a->GetGlobalIndex() < _b->GetGlobalIndex();
       });
 
   FindMultiBodyInfo();
 }
 
+
 void
 ActiveMultiBody::
 Write(ostream & _os) {
+  // Write type.
   _os << GetTagFromMultiBodyType(m_multiBodyType) << endl;
+
+  // Write free body count and free bodies.
   _os << m_freeBody.size() << endl;
   for(auto& body : m_freeBody)
     _os << *body << endl;
+
+  // Write connections.
   _os << "Connections" << endl;
   size_t numConnection = 0;
   for(auto& body : m_freeBody)
@@ -572,6 +674,7 @@ Write(ostream & _os) {
       _os << body->GetForwardConnection(j);
 }
 
+
 void
 ActiveMultiBody::
 AddBody(const shared_ptr<FreeBody>& _body) {
@@ -579,11 +682,20 @@ AddBody(const shared_ptr<FreeBody>& _body) {
   MultiBody::AddBody(_body);
 }
 
+/*--------------------------------- Helpers ----------------------------------*/
+
 void
 ActiveMultiBody::
-SetBaseBody(const shared_ptr<FreeBody>& _body) {
-  m_baseBody = _body;
-  m_baseIndex = 0;
-  m_baseType = _body->GetBodyType();
-  m_baseMovement = _body->GetMovementType();
+UpdateLinks() {
+  for(auto& body : m_freeBody)
+    if(!body->IsBase())
+      body->MarkDirty();
+
+  /// @TODO I think we should be able to remove this forced recomputation and
+  ///       let it resolve lazily, need to test though.
+  for(auto& body : m_freeBody)
+    if(body->ForwardConnectionCount() == 0)  // tree tips: leaves.
+      body->GetWorldTransformation();
 }
+
+/*----------------------------------------------------------------------------*/

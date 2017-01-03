@@ -1,5 +1,6 @@
 #include "MPTask.h"
 
+#include "Geometry/Boundaries/Boundary.h"
 #include "ConfigurationSpace/Cfg.h"
 #include "MPProblem/MPProblem.h"
 #include "MPProblem/Constraints/Constraint.h"
@@ -92,6 +93,27 @@ GetGoalConstraints() const noexcept {
   return m_goalConstraints;
 }
 
+
+const Boundary*
+MPTask::
+GetStartBoundary() const noexcept {
+  return MakeComposeBoundary(m_startConstraints);
+}
+
+
+const Boundary*
+MPTask::
+GetPathBoundary() const noexcept {
+  return MakeComposeBoundary(m_pathConstraints);
+}
+
+
+const Boundary*
+MPTask::
+GetGoalBoundary() const noexcept {
+  return MakeComposeBoundary(m_goalConstraints);
+}
+
 /*---------------------------- Constraint Evaluation -------------------------*/
 
 MPTask::Status
@@ -118,11 +140,7 @@ Evaluate(const std::vector<Cfg>& _p) const {
 bool
 MPTask::
 EvaluateStartConstraints(const std::vector<Cfg>& _p) const {
-  const auto& cfg = _p.front();
-  for(const auto& constraint : m_startConstraints)
-    if(!constraint->Satisfied(cfg))
-      return false;
-  return true;
+  return EvaluateConstraints(_p, m_startConstraints);
 }
 
 
@@ -131,22 +149,41 @@ MPTask::
 EvaluatePathConstraints(const std::vector<Cfg>& _p) const {
   /// @TODO Consider some kind of caching mechanism to avoid extraneous
   ///       recomputation.
-  for(const auto& cfg : _p)
-    for(const auto& constraint : m_pathConstraints)
-      if(!constraint->Satisfied(cfg))
-        return false;
-  return true;
+  return EvaluateConstraints(_p, m_pathConstraints);
 }
 
 
 bool
 MPTask::
 EvaluateGoalConstraints(const std::vector<Cfg>& _p) const {
+  return EvaluateConstraints(_p, m_goalConstraints);
+}
+
+/*-------------------------------- Helpers -----------------------------------*/
+
+bool
+MPTask::
+EvaluateConstraints(const std::vector<Cfg>& _p,
+    const std::vector<Constraint*>& _constraints) const {
   const auto& cfg = _p.back();
-  for(const auto& constraint : m_goalConstraints)
+  for(const auto& constraint : _constraints)
     if(!constraint->Satisfied(cfg))
       return false;
   return true;
+}
+
+
+const Boundary*
+MPTask::
+MakeComposeBoundary(const std::vector<Constraint*>& _constraints) const noexcept {
+  //Boundary* out = nullptr;
+  //for(const auto& constraint : _constraints)
+  //  /// @TODO Create a composed boundary from the constraint boundaries.
+  //  constraint->GetBoundary();
+  //return out;
+  cerr << "Warning: MPTask is currently creating constraint boundaries from "
+       << "only the first constraint in each set!" << endl;
+  return _constraints.front()->GetBoundary();
 }
 
 /*----------------------------------------------------------------------------*/

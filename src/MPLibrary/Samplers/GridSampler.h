@@ -33,7 +33,7 @@ class GridSampler : public SamplerMethod<MPTraits> {
     virtual void Print(ostream& _os) const;
 
     // Attempts to sample, bool value is not working, it just return true at the end.
-    virtual bool Sampler(CfgType& _cfg, shared_ptr<Boundary> _boundary,
+    virtual bool Sampler(CfgType& _cfg, const Boundary* const _boundary,
         vector<CfgType>& _result, vector<CfgType>& _collision);
 
   private:
@@ -41,7 +41,7 @@ class GridSampler : public SamplerMethod<MPTraits> {
         map<size_t,size_t>& _coords, map<size_t,int> _tempSize);
 
     void GetRealLocation(map<size_t,double>& _locations,
-        map<size_t,size_t> _coordinates, shared_ptr<Boundary>  _boundary);
+        map<size_t,size_t> _coordinates, const Boundary* const  _boundary);
 
     string m_vcLabel; // Validity checker method
     map<size_t, size_t> m_numPoints; // Map of dimension to number of grid points
@@ -98,7 +98,7 @@ Print(ostream& _os) const {
 template <typename MPTraits>
 bool
 GridSampler<MPTraits>::
-Sampler(CfgType& _cfg, shared_ptr<Boundary> _boundary,
+Sampler(CfgType& _cfg, const Boundary* const _boundary,
     vector<CfgType>& _result, vector<CfgType>& _collision) {
 
   string callee = this->GetNameAndLabel() + "::Sampler()";
@@ -199,7 +199,7 @@ template <typename MPTraits>
 void
 GridSampler<MPTraits>::
 GetRealLocation(map<size_t,double>& _locations, map<size_t,size_t> _coordinates,
-    shared_ptr<Boundary>  _boundary) {
+    const Boundary* const  _boundary) {
 
   for(auto&  num : m_numPoints) {
     int index = num.first;

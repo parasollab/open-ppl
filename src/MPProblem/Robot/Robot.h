@@ -66,7 +66,7 @@ class Robot {
     ///@name Construction
     ///@{
 
-    Robot(MPProblem* _p, XMLNode& _node, Boundary* const _b);
+    Robot(MPProblem* _p, XMLNode& _node, const Boundary* const _b);
 
     virtual ~Robot();
 

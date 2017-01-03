@@ -271,9 +271,9 @@ AddHoles(const NefPolyhedron& _freespace) {
   size_t num = 0;
   for(const auto obst : holes) {
     const auto& body = obst->GetFixedBody(0);
-    Vector3d com = body->GetCenterOfMass();
+    const auto& com = body->GetWorldPolyhedron().GetCentroid();
     Vector3d hole = com;
-    GMSPolyhedron& poly = body->GetPolyhedron();
+    const GMSPolyhedron& poly = body->GetPolyhedron();
     for(auto& v : poly.m_vertexList)
       if(body->IsConvexHullVertex(v) && (v - com).norm() > (hole - com).norm())
         hole = v;

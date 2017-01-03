@@ -157,7 +157,7 @@ UtilityGuidedGenerator<MPTraits>::Run() {
   StatClass* stats = this->GetStatClass();
   RoadmapType* rmap = this->GetRoadmap();
   Environment* env = this->GetEnvironment();
-  shared_ptr<Boundary> bb = env->GetBoundary();
+  auto bb = env->GetBoundary();
 
   auto dm = this->GetNeighborhoodFinder(m_nfLabel)->GetDMMethod();
   ApproximateCSpaceModel<MPTraits> model(env, dm);
@@ -277,7 +277,7 @@ UtilityGuidedGenerator<MPTraits>::
 GenerateEntropyGuidedSample() {
   RoadmapType* rmap = this->GetRoadmap();
   Environment* env = this->GetEnvironment();
-  shared_ptr<Boundary> bb = env->GetBoundary();
+  auto bb = env->GetBoundary();
   auto nf = this->GetNeighborhoodFinder(m_nfLabel);
   auto dm = nf->GetDMMethod();
 

@@ -27,14 +27,13 @@ IsInternal() const {
   return m_multiBodyType == MultiBodyType::Internal;
 }
 
-shared_ptr<FixedBody>
+const FixedBody*
 StaticMultiBody::
 GetFixedBody(size_t _index) const {
-  if(_index < m_fixedBody.size())
-    return m_fixedBody[_index];
-  else
+  if(_index >= m_fixedBody.size())
     throw RunTimeException(WHERE,
         "Cannot access FixedBody(" + ::to_string(_index) + ").");
+  return m_fixedBody[_index].get();
 }
 
 void

@@ -16,7 +16,7 @@
 /*------------------------------ Construction --------------------------------*/
 
 Robot::
-Robot(MPProblem* _p, XMLNode& _node, Boundary* const _b) : m_problem(_p) {
+Robot(MPProblem* _p, XMLNode& _node, const Boundary* const _b) : m_problem(_p) {
   // Get the unique robot label.
   m_label = _node.Read("label", true, "", "Unique robot label");
 

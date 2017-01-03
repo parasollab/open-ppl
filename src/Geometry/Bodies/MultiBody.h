@@ -57,7 +57,7 @@ class MultiBody {
     virtual MultiBodyType GetType() const noexcept = 0;
 
     /// Get the center of mass.
-    const Vector3d& GetCenterOfMass() const {return m_com;}
+    virtual const Vector3d& GetCenterOfMass() const {return m_com;}
 
     /// Get the bounding sphere radius.
     double GetBoundingSphereRadius() const {return m_radius;}
@@ -99,6 +99,11 @@ class MultiBody {
     ///@}
 
     /// Compute center of mass, boundaries, and range.
+    /// @warning This function is wrong for COM and boundaries - the only thing
+    ///          it computes correctly is the min and max bounding radii. The
+    ///          problem is that it performs a one-time computation of the COM
+    ///          and bbx, but these things should change as active bodies change
+    ///          configuration.
     void FindMultiBodyInfo();
 
   protected:

@@ -17,8 +17,6 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup ValidityCheckers
-/// @brief Collision detection validation
-///
 /// Validation here means collision-free. This class interfaces with external CD
 /// libraries to determing collision information -- sometimes including
 /// clearance and penetration information.
@@ -37,7 +35,6 @@ class CollisionDetectionValidity : public ValidityCheckerMethod<MPTraits> {
     ///@name Construction
     ///@{
 
-    ////////////////////////////////////////////////////////////////////////////
     /// @param _cdMethod Collision detection library
     /// @param _ignoreSelfCollision Compute robot self-collisions?
     /// @param _ignoreIAdjacentLinks For self-collision adjacent links to ignore
@@ -59,7 +56,6 @@ class CollisionDetectionValidity : public ValidityCheckerMethod<MPTraits> {
     ///@name CollisionDetection Interface
     ///@{
 
-    ////////////////////////////////////////////////////////////////////////////
     /// @return Collision Detection library
     CollisionDetectionMethod* GetCDMethod() const noexcept {return m_cdMethod;}
 
@@ -69,9 +65,8 @@ class CollisionDetectionValidity : public ValidityCheckerMethod<MPTraits> {
 
   private:
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// @brief Orchestrate collision computation between robot and environment
-    ///        multibodies
+    /// Orchestrate collision computation between robot and environment
+    /// multibodies
     /// @param[out] _cdInfo CDInfo
     /// @param _cfg Configuration of interest.
     /// @param _callName Function calling validity checker
@@ -79,8 +74,7 @@ class CollisionDetectionValidity : public ValidityCheckerMethod<MPTraits> {
     bool IsInCollision(CDInfo& _cdInfo, const CfgType& _cfg,
         const string& _callName);
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// @brief Check self-collision with robot
+    /// Check self-collision with robot
     /// @param[out] _cdInfo CDInfo
     /// @param _rob ActiveMultiBody of robot
     /// @param _callName Function calling validity checker
@@ -88,8 +82,7 @@ class CollisionDetectionValidity : public ValidityCheckerMethod<MPTraits> {
     bool IsInSelfCollision(CDInfo& _cdInfo, ActiveMultiBody* _rob,
         const string& _callName);
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// @brief Check inter-robot collision
+    /// Check inter-robot collision
     /// @param[out] _cdInfo CDInfo
     /// @param _rob ActiveMultiBody of robot
     /// @param _otherRobot ActiveMultiBody of the other robot to check
@@ -98,8 +91,7 @@ class CollisionDetectionValidity : public ValidityCheckerMethod<MPTraits> {
     bool IsInterRobotCollision(CDInfo& _cdInfo, ActiveMultiBody* _rob,
         ActiveMultiBody* _otherRobot, const string& _callName);
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// @brief Check collision between robot and one obstacle
+    /// Check collision between robot and one obstacle
     /// @param[out] _cdInfo CDInfo
     /// @param _rob ActiveMultiBody of robot
     /// @param _obst StaticMultiBody of obstacle
@@ -290,7 +282,7 @@ IsInObstCollision(CDInfo& _cdInfo, ActiveMultiBody* _rob,
 
   bool collision = false;
   size_t numBody = _rob->NumFreeBody();
-  shared_ptr<Body> obst = _obst->GetFixedBody(0);
+  auto obst = _obst->GetFixedBody(0);
 
   for(size_t i = 0; i < numBody; ++i) {
     CDInfo cdInfo(_cdInfo.m_retAllInfo);
@@ -326,5 +318,7 @@ IsInsideObstacle(const CfgType& _cfg) {
       return true;
   return false;
 }
+
+/*----------------------------------------------------------------------------*/
 
 #endif

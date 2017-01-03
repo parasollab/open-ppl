@@ -29,7 +29,9 @@ class PathModifierMethod : public MPBaseObject<MPTraits> {
     ///@{
 
     PathModifierMethod() = default;
+
     PathModifierMethod(XMLNode& _node);
+
     virtual ~PathModifierMethod() = default;
 
     ///@}
@@ -42,8 +44,7 @@ class PathModifierMethod : public MPBaseObject<MPTraits> {
     ///@name PathModifier Interface
     ///@{
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// @brief Modifies the input path to a new valid path
+    /// Modifies the input path to a new valid path
     /// @param _path A path of configurations within a resolution
     ///        distance of each other
     /// @param _newPath An empty vector to place the resulting modified path
@@ -59,8 +60,7 @@ class PathModifierMethod : public MPBaseObject<MPTraits> {
 
   protected:
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// @brief Modifies the input path to a new valid path
+    /// Modifies the input path to a new valid path
     /// @param _path A path of configurations within a resolution
     ///        distance of each other
     /// @param _newPath An empty vector to place the resulting modified path
@@ -68,34 +68,39 @@ class PathModifierMethod : public MPBaseObject<MPTraits> {
     virtual bool ModifyImpl(vector<CfgType>& _path,
         vector<CfgType>& _newPath) = 0;
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// @brief Appends local plan to path
+    /// Appends local plan to path
     /// @param _path Path to append local plan to
     /// @param _lpOutput Local plan output
     /// @param _end End Cfg of local plan
     void AddToPath(vector<CfgType>& _path, LPOutput<MPTraits>* _lpOutput,
         CfgType& _end);
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// @brief Extract path VIDs in roadmap from path
+    /// Extract path VIDs in roadmap from path
     /// @param _path Path to extract VIDs from
     /// @param _graph RoadmapGraph containing path nodes
     /// @return Path VIDs
     vector<VID> GetPathVIDs(vector<CfgType>& _path, GraphType* _graph);
 
+    /// @TODO Figure out what this does and document it.
     void RemoveBranches(const string& _dmLabel, vector<CfgType>& _path,
         vector<CfgType>& _newPath);
 
   private:
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// @brief Write path to file
+    /// Write path to file
     /// @param _path Path
     void OutputPath(vector<CfgType>& _path);
 
-    string m_pathFile; ///< Where to write the smoothed path
+    ///@}
+    ///@name Internal State
+    ///@{
+
+    string m_pathFile; ///< Where to write the smoothed path.
+
+    ///@}
 };
 
+/*------------------------------ Construction --------------------------------*/
 
 template <typename MPTraits>
 PathModifierMethod<MPTraits>::
@@ -103,6 +108,7 @@ PathModifierMethod(XMLNode& _node) : MPBaseObject<MPTraits>(_node) {
   m_pathFile = _node.Read("pathFile", false, "", "Smoothed path filename");
 }
 
+/*------------------------- MPBaseObject Overrides ---------------------------*/
 
 template <typename MPTraits>
 void
@@ -112,6 +118,7 @@ Print(ostream& _os) const {
   _os << "\tpath file: \"" << m_pathFile << "\"" << endl;
 }
 
+/*--------------------------- PathModifier Interface -------------------------*/
 
 template <typename MPTraits>
 void
@@ -121,14 +128,10 @@ Modify(vector<CfgType>& _path, vector<CfgType>& _newPath) {
 }
 
 
-// Auxiliary function created to avoid checking emptiness everytime
-// Adds the path that is stored in lpOutput to m_path as well as the _end
-// configuration
 template <typename MPTraits>
 void
 PathModifierMethod<MPTraits>::
-AddToPath(vector<CfgType>& _path, LPOutput<MPTraits>* _lpOutput,
-    CfgType& _end) {
+AddToPath(vector<CfgType>& _path, LPOutput<MPTraits>* _lpOutput, CfgType& _end) {
   if(!_lpOutput->m_path.empty())
     _path.insert(_path.end(), _lpOutput->m_path.begin(),
         _lpOutput->m_path.end());
@@ -136,7 +139,6 @@ AddToPath(vector<CfgType>& _path, LPOutput<MPTraits>* _lpOutput,
 }
 
 
-// Get pathVIDs from path
 template <typename MPTraits>
 vector<typename MPTraits::RoadmapType::VID>
 PathModifierMethod<MPTraits>::
@@ -173,12 +175,10 @@ RemoveBranches(const string& _dmLabel, vector<CfgType>& _path,
 
   double res = min(env->GetPositionRes(), env->GetOrientationRes());
 
-  typedef typename vector<CfgType>::iterator CIT;
-  for(CIT cit = _path.begin(); cit != _path.end(); ++cit) {
+  for(auto cit = _path.begin(); cit != _path.end(); ++cit) {
     _newPath.push_back(*cit);
 
-    typedef typename vector<CfgType>::reverse_iterator RCIT;
-    RCIT rcit = _path.rbegin();
+    auto rcit = _path.rbegin();
     while(dm->Distance(*cit, *rcit) > res)
       rcit++;
 
@@ -192,5 +192,7 @@ RemoveBranches(const string& _dmLabel, vector<CfgType>& _path,
   //the loop doesn't push the goal of the path, be sure to do it
   _newPath.push_back(_path.back());
 }
+
+/*----------------------------------------------------------------------------*/
 
 #endif

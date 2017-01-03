@@ -6,7 +6,7 @@
 class Control;
 
 ////////////////////////////////////////////////////////////////////////////////
-/// @brief An active multibody with controls and dynamic state.
+/// An active multibody with controls and dynamic state.
 ////////////////////////////////////////////////////////////////////////////////
 class NonHolonomicMultiBody : public ActiveMultiBody {
 
@@ -17,8 +17,8 @@ class NonHolonomicMultiBody : public ActiveMultiBody {
 
     NonHolonomicMultiBody();
 
-    NonHolonomicMultiBody(const NonHolonomicMultiBody&) = delete;            ///< No copy
-    NonHolonomicMultiBody& operator=(const NonHolonomicMultiBody&) = delete; ///< No assign
+    NonHolonomicMultiBody(const NonHolonomicMultiBody&) = delete;
+    NonHolonomicMultiBody& operator=(const NonHolonomicMultiBody&) = delete;
 
     ///@}
     ///@name MultiBody Info
@@ -42,21 +42,19 @@ class NonHolonomicMultiBody : public ActiveMultiBody {
     ///@name State Info
     ///@{
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// @brief Sample random velocity in bounds.
+    /// Sample random velocity in bounds.
     vector<double> GetRandomVelocity() const;
 
     double GetMaxLinearVelocity() const {return m_maxLinearVel;}
     double GetMaxAngularVelocity() const {return m_maxAngularVel;}
 
-    ////////////////////////////////////////////////////////////////////////////
     /// @param _pos Configuration dofs
     /// @param _vel Configuration vels
     /// @param _b Workspace bounds
     /// @return True if configuration values are inside physical robot
     ///         constraints
     bool InSSpace(const vector<double>& _pos, const vector<double>& _vel,
-        shared_ptr<Boundary>& _b);
+        const Boundary* const _b);
 
     ///@}
     ///@name I/O

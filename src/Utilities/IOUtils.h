@@ -28,10 +28,15 @@ using namespace std;
 /// this is because this is our only need for intput XML files - for now.
 ////////////////////////////////////////////////////////////////////////////////
 class XMLNode {
+
   public:
+
     typedef vector<XMLNode>::iterator iterator;
 
-    ////////////////////////////////////////////////////////////////////////////
+    ///@name Construction
+    ///@{
+
+    /// Construct an XML node object from an XML file.
     /// @param _filename XML Filename
     /// @param _desiredNode Desired XML Node to make root of tree
     ///
@@ -39,22 +44,31 @@ class XMLNode {
     /// \p _filename is poorly formed input
     XMLNode(const string& _filename, const string& _desiredNode);
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// @return Name of XMLNode
+    ///@}
+    ///@name Metadata Accessors
+    ///@{
+
+    /// Get the XMLNode name.
     const string& Name() const {return m_node->ValueStr();}
-    ////////////////////////////////////////////////////////////////////////////
-    /// @return Name of XML file
+
+    /// Get the XML filename.
     const string& Filename() const {return m_filename;}
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// @return Iterator to first child
+    ///@}
+    ///@name Iteration
+    ///@{
+
+    /// Get an iterator to this node's first child.
     iterator begin();
-    ////////////////////////////////////////////////////////////////////////////
-    /// @return Iterator to end of children
+
+    /// Get an iterator to this node's last child.
     iterator end();
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// @brief Read XML attribute
+    ///@}
+    ///@name Attribute Parsing
+    ///@{
+
+    /// Read XML attribute.
     /// @tparam T Type of attribute
     /// @param _name Name of attribute
     /// @param _req Is attribute required
@@ -69,15 +83,14 @@ class XMLNode {
     /// required to be in the range [\p _min, \p _max]. Otherwise, an error is
     /// reported and \p _desc is shown to the user.
     template<typename T>
-      T Read(const string& _name,
-          bool _req,
-          const T& _default,
-          const T& _min,
-          const T& _max,
-          const string& _desc);
+    T Read(const string& _name,
+        bool _req,
+        const T& _default,
+        const T& _min,
+        const T& _max,
+        const string& _desc);
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// @brief Read XML boolean attribute
+    /// Read XML boolean attribute
     /// @param _name Name of attribute
     /// @param _req Is attribute required
     /// @param _default Default value of attribute
@@ -92,8 +105,7 @@ class XMLNode {
         bool _default,
         const string& _desc);
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// @brief Read XML string attribute
+    /// Read XML string attribute
     /// @return Value of attribute
     ///
     /// Calls string version of function to avoid confusion with bool -> const
@@ -105,8 +117,7 @@ class XMLNode {
       return Read(_name, _req, string(_default), _desc);
     }
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// @brief Read XML string attribute
+    /// Read XML string attribute
     /// @param _name Name of attribute
     /// @param _req Is attribute required
     /// @param _default Default value of attribute
@@ -121,8 +132,7 @@ class XMLNode {
         const string& _default,
         const string& _desc);
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// @brief Report warnings for XML tree rooted at this node
+    /// Report warnings for XML tree rooted at this node
     /// @param _warningsAsErrors True will throw exceptions for warnings
     ///
     /// To be called after parsing phase. This will report warnings throughout
@@ -132,8 +142,7 @@ class XMLNode {
     ///   - unrequested attribues
     void WarnAll(bool _warningsAsErrors = false);
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// @brief Generate string describing where the node is
+    /// Generate string describing where the node is
     /// @return String representing where node is
     ///
     /// To be used with PMPLExceptions, specifically ParseException. Gives
@@ -141,67 +150,59 @@ class XMLNode {
     string Where() const;
 
   private:
-    ////////////////////////////////////////////////////////////////////////////
-    /// @brief Generate XMLNodes for all children
+
+    /// Generate XMLNodes for all children
     ///
     /// Builds the internal vector of children, used when iterating over
     /// the children. This vector is only built with ELEMENT type nodes.
     void BuildChildVector();
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// @brief Private constructor for use within BuildChildVector
+    /// Private constructor for use within BuildChildVector
     /// @param _node New TiXMLNode
     /// @param _filename XML filename
     /// @param _doc TiXmlDocument from tree's root node
     XMLNode(TiXmlNode* _node, const string& _filename, TiXmlDocument* _doc);
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// @brief Return error report for attribute being the wrong type
+    /// Return error report for attribute being the wrong type
     /// @param _name Name of attribute
     /// @param _desc Description of attribute
     /// @return Error report
     string AttrWrongType(const string& _name, const string& _desc) const;
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// @brief Return error report for missing attribute
+    /// Return error report for missing attribute
     /// @param _name Name of attribute
     /// @param _desc Description of attribute
     /// @return Error report
     string AttrMissing(const string& _name, const string& _desc) const;
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// @brief Return error report for attribute being in an invalid range
+    /// Return error report for attribute being in an invalid range
     /// @tparam T Type of attribute
     /// @param _name Name of attribute
     /// @param _desc Description of attribute
     /// @param _min Minimum value of attribute
     /// @param _max Maximum value of attribute
+    /// @param _val The specified value.
     /// @return Error report
     template<typename T>
-      string AttrInvalidBounds(const string& _name, const string& _desc,
-          const T& _min, const T& _max) const;
+    string AttrInvalidBounds(const string& _name, const string& _desc,
+        const T& _min, const T& _max, const T& _val) const;
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// @brief Recursive function computing whether nodes have been accessed
+    /// Recursive function computing whether nodes have been accessed
     void ComputeAccessed();
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// @brief Recursive function reporting all unknown/unparsed nodes and
-    ///        unrequested attributes
+    /// Recursive function reporting all unknown/unparsed nodes and unrequested
+    /// attributes.
     /// @param[out] _anyWarnings Initially should be false, and stores whether
     ///                          any warnings have been reported
     void WarnAllRec(bool& _anyWarnings);
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// @brief Report unknown node warning to cerr
+    /// Report unknown node warning to cerr
     void WarnUnknownNode();
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// @brief Report unrequested attributes to cerr
+    /// Report unrequested attributes to cerr
     bool WarnUnrequestedAttributes();
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// @brief Generate string describing where the node is
+    /// Generate string describing where the node is
     /// @param _f Filename
     /// @param _l Line number
     /// @param _c Column number
@@ -212,6 +213,9 @@ class XMLNode {
     /// string with filename, name, row (line number), and column of XMLNode.
     string Where(const string& _f, int _l, int _c, bool _name = true) const;
 
+    ///@name Internal State
+    ///@{
+
     TiXmlNode* m_node{nullptr}; ///< TiXmlNode
     bool m_childBuilt{false};   ///< Have children been parsed into nodes?
     bool m_accessed{false};     ///< Has this node been accessed or not?
@@ -220,6 +224,8 @@ class XMLNode {
       m_reqAttributes;          ///< Attributes which have been requested
     string m_filename;          ///< XML Filename
     TiXmlDocument* m_doc;       ///< Overall TiXmlDocument
+
+    ///@}
 };
 
 template<typename T>
@@ -251,7 +257,7 @@ Read(const string& _name,
       {
         if(toReturn < _min || toReturn > _max)
           throw ParseException(Where(),
-              AttrInvalidBounds(_name, _desc, _min, _max));
+              AttrInvalidBounds(_name, _desc, _min, _max, toReturn));
         break;
       }
     default:
@@ -265,11 +271,12 @@ template<typename T>
 string
 XMLNode::
 AttrInvalidBounds(const string& _name, const string& _desc,
-    const T& _min, const T& _max) const {
+    const T& _min, const T& _max, const T& _val) const {
   ostringstream oss;
-  oss << "Invalid attribute range on '" << _name << "'." << endl;
-  oss << "\tAttribute description: " << _desc << "." << endl;
-  oss << "\tValid range: ["<< _min << ", " << _max << "].";
+  oss << "Invalid value for attribute '" << _name << "'." << endl
+      << "\tAttribute description: " << _desc << "." << endl
+      << "\tValid range: ["<< _min << ", " << _max << "]" << endl
+      << "\tValue specified: " << _val;
   return oss.str();
 }
 

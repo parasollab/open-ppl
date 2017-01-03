@@ -405,7 +405,7 @@ class SimilarStructureSampler : public SamplerMethod<MPTraits> {
 
 
  public:
-  virtual bool Sampler(CfgType& _cfg, shared_ptr<Boundary> _boundary,
+  virtual bool Sampler(CfgType& _cfg, const Boundary* const _boundary,
         vector<CfgType>& _result, vector<CfgType>& _collision) {
     const size_t resultSize = _result.size();
 

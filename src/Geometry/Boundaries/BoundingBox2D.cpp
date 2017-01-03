@@ -59,7 +59,7 @@ GetRandomPoint() const {
 
 /*----------------------------- Containment Testing --------------------------*/
 
-const bool
+bool
 BoundingBox2D::
 InBoundary(const Vector3d& _p) const {
   for(size_t i = 0; i < 2; ++i)

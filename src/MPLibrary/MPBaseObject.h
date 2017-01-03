@@ -10,6 +10,7 @@ using namespace std;
 #include "Utilities/MethodSet.h"
 
 class Environment;
+class MPTask;
 class StatClass;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -165,6 +166,9 @@ class MPBaseObject {
 
     /// Get the current query filename.
     string GetQueryFilename() const noexcept;
+
+    /// Get the current task.
+    MPTask* GetTask() const noexcept;
 
     ///@}
     ///@name Solution Accessors
@@ -392,6 +396,15 @@ string
 MPBaseObject<MPTraits>::
 GetQueryFilename() const noexcept {
   return GetMPProblem()->GetQueryFilename();
+}
+
+
+template <typename MPTraits>
+inline
+MPTask*
+MPBaseObject<MPTraits>::
+GetTask() const noexcept {
+  return m_library->GetTask();
 }
 
 /*--------------------------- Solution Accessors -----------------------------*/

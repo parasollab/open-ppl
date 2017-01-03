@@ -8,8 +8,6 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup PathModifiers
-/// @brief TODO.
-///
 /// TODO.
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
@@ -31,7 +29,9 @@ class MedialAxisPathModifier : public PathModifierMethod<MPTraits> {
 
     MedialAxisPathModifier(const string& _pmLabel = "",
         const string& _lpLabel = "", const string& _malpLabel = "");
+
     MedialAxisPathModifier(XMLNode& _node);
+
     virtual ~MedialAxisPathModifier() = default;
 
     ///@}
@@ -41,13 +41,11 @@ class MedialAxisPathModifier : public PathModifierMethod<MPTraits> {
     virtual void Print(ostream& _os) const override;
 
     ///@}
-
-    void ParseXML(XMLNode& _node);
-
     ///@name Modifier Interface
     ///@{
 
-    bool ModifyImpl(vector<CfgType>& _path, vector<CfgType>& _newPath);
+    virtual bool ModifyImpl(vector<CfgType>& _path, vector<CfgType>& _newPath)
+        override;
 
     ///@}
 
@@ -63,6 +61,8 @@ class MedialAxisPathModifier : public PathModifierMethod<MPTraits> {
     ///@}
 };
 
+/*------------------------------ Construction --------------------------------*/
+
 template <typename MPTraits>
 MedialAxisPathModifier<MPTraits>::
 MedialAxisPathModifier(const string& _pmLabel, const string& _lpLabel,
@@ -77,20 +77,13 @@ template <typename MPTraits>
 MedialAxisPathModifier<MPTraits>::
 MedialAxisPathModifier(XMLNode& _node) : PathModifierMethod<MPTraits>(_node) {
   this->SetName("MedialAxisPathModifier");
-  ParseXML(_node);
-}
-
-
-template <typename MPTraits>
-void
-MedialAxisPathModifier<MPTraits>::
-ParseXML(XMLNode& _node) {
   m_pmLabel = _node.Read("pmLabel", false, "NULL", "Path Modifier method");
   m_lpLabel = _node.Read("lpLabel", true, "", "Local planner method");
   m_malpLabel = _node.Read("malpLabel", true, "",
       "Medial axis local planner label needed by MedialAxisPathModifier");
 }
 
+/*--------------------------- MPBaseObject Overrides -------------------------*/
 
 template <typename MPTraits>
 void
@@ -102,6 +95,7 @@ Print(ostream& _os) const {
   _os << "\tmedial axis local planner: \"" << m_malpLabel << "\"" << endl;
 }
 
+/*---------------------- PathModifierMethod Overrides ------------------------*/
 
 template <typename MPTraits>
 bool
@@ -148,20 +142,17 @@ ModifyImpl(vector<CfgType>& _path, vector<CfgType>& _newPath) {
     throw PMPLException("Path Modification", WHERE,
         "pathVIDs in " + this->GetNameAndLabel() + " is empty.");
 
-  typedef typename vector<VID>::iterator VIT;
-  typedef typename vector<CfgType>::iterator CIT;
-
   //Get Cfgs from pathVIDs
   vector<CfgType> pushed;
-  for(VIT vit = pathVIDs.begin(); vit != pathVIDs.end(); ++vit)
+  for(auto vit = pathVIDs.begin(); vit != pathVIDs.end(); ++vit)
     pushed.push_back(graph->GetVertex(*vit));
 
   //Push all the nodes of the path
   MedialAxisUtility<MPTraits>& mau = malp->GetMedialAxisUtility();
   Environment* env = this->GetEnvironment();
-  shared_ptr<Boundary> boundary = env->GetBoundary();
+  auto boundary = env->GetBoundary();
 
-  for(CIT cit = pushed.begin(); cit != pushed.end(); ++cit) {
+  for(auto cit = pushed.begin(); cit != pushed.end(); ++cit) {
     size_t tries = mau.GetExactClearance() ? 100 : 0;
     bool success = false;
     do {
@@ -193,7 +184,7 @@ ModifyImpl(vector<CfgType>& _path, vector<CfgType>& _newPath) {
   this->AddToPath(_newPath, &tmpOutput, pushed.front());
 
   //Connect the pushed configurations with MALP
-  for(CIT cit1 = pushed.begin(), cit2 = cit1+1;
+  for(auto cit1 = pushed.begin(), cit2 = cit1 + 1;
       cit2 != pushed.end(); ++cit1, ++cit2) {
     //do attempts for MALP
     size_t tries = mau.GetExactClearance() ? 10 : 0;
@@ -275,5 +266,7 @@ ModifyImpl(vector<CfgType>& _path, vector<CfgType>& _newPath) {
     cout << "*M* Done, returing true\n";
   return true;
 }
+
+/*----------------------------------------------------------------------------*/
 
 #endif

@@ -21,6 +21,7 @@ class MultiBody;
 class StaticMultiBody;
 class WorkspaceDecomposition;
 
+
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup Environment
 /// @brief Workspace for the motion planning problem.
@@ -46,37 +47,32 @@ class Environment {
 
     Environment() = default;
     Environment(XMLNode& _node);
-    virtual ~Environment() = default;
+    virtual ~Environment();
 
     ///@}
     ///@name I/O
     ///@{
 
-    ////////////////////////////////////////////////////////////////////////////
     /// @return Filename from which environment came
     const string& GetEnvFileName() const {return m_filename;}
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// @brief Parse environment file
-    /// @param _filename Filename
+    /// Parse environment file.
+    /// @param[in] _filename The name of the file to read.
     void Read(string _filename);
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// @brief Prints environment resolutions and boundary information
-    /// @param _os Output stream
+    /// Print environment resolutions and boundary information.
+    /// @param[in] _os The output stream to print to.
     void Print(ostream& _os) const;
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// @brief Output environment to .env file format
-    /// @param _os Output stream
+    /// Output environment to .env file format.
+    /// @param[in] _os The output stream to write to.
     void Write(ostream& _os);
 
     ///@}
     ///@name Resolutions
     ///@{
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// @brief Automatically compute resolutions
+    /// Automatically compute resolutions.
     ///
     /// ComputeResolution, if m_posRes is < 0 then auto compute the resolutions
     /// based on minimum of max body spans multiplied by @c m_positionResFactor.
@@ -96,38 +92,41 @@ class Environment {
     ///@name Boundary Functions
     ///@{
 
-    shared_ptr<Boundary> GetBoundary() const {return m_boundary;}
-    void SetBoundary(shared_ptr<Boundary> _b) {m_boundary = _b;}
+    const Boundary* GetBoundary() const {return m_boundary;}
+    void SetBoundary(Boundary* const _b) {m_boundary = _b;}
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// @brief Test if configuration in inside of the workspace and satisfies
-    ///        physical robot constraints.
-    /// @tparam CfgType Configuration class type
-    /// @param _cfg Configuration
-    /// @param _b Workspace region boundary
-    /// @return True if inside workspace and satisfying contraints
+    /// Test if a configuration lies inside of the workspace and satisfies
+    /// physical robot constraints.
+    /// @param _cfg The configuration to test.
+    /// @param _b The enclosing boundary of the workspace region.
+    /// @return True if the configuration is inside the boundary and satisfies
+    ///         contraints.
     ///
     /// Test whether input configuration satisfies joint constraints  (i.e., is
     /// inside of C-Space) and lies inside of the workspace boundary (i.e., the
     /// robot at that configuration is inside of the workspace).
     template<class CfgType>
-    bool InBounds(const CfgType& _cfg, shared_ptr<Boundary> _b);
+    bool InBounds(const CfgType& _cfg, const Boundary* const _b);
 
     /// @overload
     template<class CfgType>
     bool InBounds(const CfgType& _cfg) {return InBounds(_cfg, m_boundary);}
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// @brief Resize the boundary to a margin away from the obstacles
+    /// Resize the boundary to the minimum bounding box surrounding the obstacles
+    /// increased by a margin of _d + robotRadius.
     /// @param _d Margin to increase minimum bounding box
     /// @param _robot Robot to base the margin off of
-    ///
-    /// Reset the boundary to the minimum bounding box surrounding the obstacles
-    /// increased by a margin of _d + robotRadius.
     void ResetBoundary(double _d, ActiveMultiBody* _robot);
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// @brief Expand the boundary by a margin of _d + robotRadius
+    /// Forward to the boundary reset.
+    /// @TODO This is a temporary hack to be removed after cloning functions are
+    ///       implemented in the boundary class hierarchy. Rather than changing
+    ///       the environment boundary, methods wishing to use a modified
+    ///       version of it should clone it and adjust the clone.
+    void ResetBoundary(const vector<pair<double, double>>& _bbx,
+        const double _margin);
+
+    /// Expand the boundary by a margin of _d + robotRadius
     /// @param _d Margin to increase bounding box
     /// @param _robot Robot to base the margin off of
     void ExpandBoundary(double _d, ActiveMultiBody* _robot);
@@ -136,21 +135,17 @@ class Environment {
     ///@name Obstacle Functions
     ///@{
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// @return Number of Static MultiBodies
+    /// Number of Static MultiBodies
     size_t NumObstacles() const {return m_obstacles.size();}
 
-    ////////////////////////////////////////////////////////////////////////////
     /// @param _index Requested multibody
     /// @return Pointer to static multibody
     StaticMultiBody* GetObstacle(size_t _index) const;
 
-    ////////////////////////////////////////////////////////////////////////////
     /// @return Pointer to random static multibody
     StaticMultiBody* GetRandomObstacle() const;
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// @brief Add Obstacle to environment
+    /// Add an obstacle to the environment.
     /// @param _dir Directory for geometry file
     /// @param _filename Geometry filename
     /// @param _t Transformation of object
@@ -158,23 +153,19 @@ class Environment {
     pair<size_t, shared_ptr<StaticMultiBody>> AddObstacle(const string& _dir,
         const string& _filename, const Transformation& _t = Transformation());
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// @brief Remove obstacle from environment
+    /// Remove an obstacle from the environment.
     /// @param _position Index in m_obstacleBodies to be removed
     void RemoveObstacle(size_t _position);
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// @brief Remove obstacle from environment
+    /// Remove obstacle from environment
     /// @param _obst Obstacle to be removed
     void RemoveObstacle(shared_ptr<StaticMultiBody> _obst);
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// @brief Compute a mapping of the obstacle vertices.
+    /// Compute a mapping of the obstacle vertices.
     /// @return A map from obstacle points to obstacle indexes.
     map<Vector3d, vector<size_t>> ComputeObstacleVertexMap() const;
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// @brief Build collision detection models for external libraries
+    /// Build collision detection models for external libraries
     void BuildCDStructure();
 
     ///@}
@@ -185,8 +176,7 @@ class Environment {
       return const_pointer_cast<const WorkspaceDecomposition>(m_decomposition);
     }
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// @brief Compute a decomposition of the workspace.
+    /// Compute a decomposition of the workspace.
     /// @param[in] _f The decomposition function to use.
     void Decompose(DecompositionFunction&& _f) {m_decomposition = _f(this);}
 
@@ -197,14 +187,12 @@ class Environment {
     ///@name Helpers
     ///@{
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// @brief Read boundary information
+    /// Read boundary information.
     /// @param _is Input stream
     /// @param _cbs Counting stream buffer for accurate error reporting
     void ReadBoundary(istream& _is, CountingStreamBuffer& _cbs);
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// @brief Write boundary information
+    /// Write boundary information.
     /// @param _os Output stream
     void WriteBoundary(ostream& _os);
 
@@ -230,9 +218,8 @@ class Environment {
     ///@name Models
     ///@{
 
-    shared_ptr<Boundary> m_boundary; ///< Workspace boundary.
-
-    vector<shared_ptr<StaticMultiBody>> m_obstacles; ///< Other multibodies.
+    Boundary* m_boundary{nullptr};                   ///< Workspace boundary.
+    vector<shared_ptr<StaticMultiBody>> m_obstacles; ///< Obstacle multibodies.
 
     ///@}
     ///@name Decomposition
@@ -249,7 +236,7 @@ class Environment {
 template<class CfgType>
 bool
 Environment::
-InBounds(const CfgType& _cfg, shared_ptr<Boundary> _b) {
+InBounds(const CfgType& _cfg, const Boundary* const _b) {
   return _cfg.GetRobot()->InCSpace(_cfg.GetData(), _b) && _b->InBoundary(_cfg);
 }
 

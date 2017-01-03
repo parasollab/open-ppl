@@ -6,6 +6,8 @@
 #include "Geometry/Bodies/Body.h"
 #include <set>
 
+
+/*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ PQP ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
 /*------------------------------- Construction -------------------------------*/
 
 PQP::
@@ -16,8 +18,8 @@ PQP() : CollisionDetectionMethod("PQP") { }
 void
 PQP::
 Build(Body* _body) {
-  GMSPolyhedron& poly = _body->GetPolyhedron();
-  shared_ptr<PQP_Model> pqpBody(new PQP_Model);
+  const GMSPolyhedron& poly = _body->GetPolyhedron();
+  unique_ptr<PQP_Model> pqpBody(new PQP_Model);
   pqpBody->BeginModel();
   for(size_t q = 0; q < poly.m_polygonList.size(); q++) {
     double point[3][3];
@@ -29,25 +31,28 @@ Build(Body* _body) {
     pqpBody->AddTri(point[0], point[1], point[2], q);
   }
   pqpBody->EndModel();
-  _body->SetPQPBody(pqpBody);
+  _body->SetPQPBody(move(pqpBody));
 }
 
 
 bool
 PQP::
-IsInCollision(shared_ptr<Body> _body1, shared_ptr<Body> _body2,
+IsInCollision(const Body* const _body1, const Body* const _body2,
     CDInfo& _cdInfo) {
-
-  shared_ptr<PQP_Model> body1 = _body1->GetPQPBody();
-  shared_ptr<PQP_Model> body2 = _body2->GetPQPBody();
-  Transformation& t1 = _body1->WorldTransformation();
-  Transformation& t2 = _body2->WorldTransformation();
+  auto body1 = _body1->GetPQPBody();
+  auto body2 = _body2->GetPQPBody();
+  /// @TODO See if we can modify PQP_Distance to take const double arrays
+  ///       instead of just double arrays so we don't have to copy.
+  //const Transformation& t1 = _body1->GetWorldTransformation();
+  //const Transformation& t2 = _body2->GetWorldTransformation();
+  Transformation t1 = _body1->GetWorldTransformation();
+  Transformation t2 = _body2->GetWorldTransformation();
 
   if(_cdInfo.m_retAllInfo) {
     PQP_DistanceResult result;
     if(PQP_Distance(&result,
-          t1.rotation().matrix(), t1.translation(), body1.get(),
-          t2.rotation().matrix(), t2.translation(), body2.get(), 0.0, 0.0))
+          t1.rotation().matrix(), t1.translation(), body1,
+          t2.rotation().matrix(), t2.translation(), body2, 0.0, 0.0))
       throw RunTimeException(WHERE, "PQP_ERR_COLLIDE_OUT_OF_MEMORY");
 
     _cdInfo.m_minDist = result.Distance();
@@ -60,8 +65,8 @@ IsInCollision(shared_ptr<Body> _body1, shared_ptr<Body> _body2,
   else {
     PQP_CollideResult result;
     if(PQP_Collide(&result,
-          t1.rotation().matrix(), t1.translation(), body1.get(),
-          t2.rotation().matrix(), t2.translation(), body2.get(),
+          t1.rotation().matrix(), t1.translation(), body1,
+          t2.rotation().matrix(), t2.translation(), body2,
           PQP_FIRST_CONTACT))
       throw RunTimeException(WHERE, "PQP_ERR_COLLIDE_OUT_OF_MEMORY");
 
@@ -69,10 +74,19 @@ IsInCollision(shared_ptr<Body> _body1, shared_ptr<Body> _body2,
   }
 }
 
+/*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ PQPSolid ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
+/*------------------------------- Construction -------------------------------*/
+
+PQPSolid::
+PQPSolid() : PQP() {
+  m_name = "PQP_SOLID";
+}
+
+/*------------------------------- CD Interface -------------------------------*/
 
 bool
 PQPSolid::
-IsInCollision(shared_ptr<Body> _body1, shared_ptr<Body> _body2,
+IsInCollision(const Body* const _body1, const Body* const _body2,
     CDInfo& _cdInfo) {
   bool collision = PQP::IsInCollision(_body1, _body2, _cdInfo);
   if(!collision)
@@ -84,20 +98,22 @@ IsInCollision(shared_ptr<Body> _body1, shared_ptr<Body> _body2,
 
 bool
 PQPSolid::
-IsInsideObstacle(const Vector3d& _pt, shared_ptr<Body> _body) {
+IsInsideObstacle(const Vector3d& _pt, const Body* const _body) {
   // Set up a pseudo-ray for a ray-shooting test.
   static PQP_Model* ray = BuildPseudoRay();
   static PQP_REAL rotation[3][3] = {{1, 0, 0}, {0, 1, 0}, {0, 0, 1}};
   PQP_REAL translation[3] = {_pt[0], _pt[1], _pt[2]};
 
   // Get obstacle info.
-  shared_ptr<PQP_Model> body = _body->GetPQPBody();
-  Transformation& t2 = _body->WorldTransformation();
+  auto body = _body->GetPQPBody();
+  /// @TODO See if we can modify PQP_Collide to take const double arrays
+  ///       instead of just double arrays so we don't have to copy.
+  Transformation t2 = _body->GetWorldTransformation();
 
   // Perform ray-shooting collision test.
   PQP_CollideResult result;
   PQP_Collide(&result, rotation, translation, ray,
-      t2.rotation().matrix(), t2.translation(), body.get());
+      t2.rotation().matrix(), t2.translation(), body);
 
   // Sort collisions by relative X-value.
 

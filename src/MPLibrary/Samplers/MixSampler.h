@@ -25,7 +25,7 @@ class MixSampler : public SamplerMethod<MPTraits> {
     virtual void Print(ostream& _os) const;
 
   protected:
-    virtual bool Sampler(CfgType& _cfg, shared_ptr<Boundary> _boundary,
+    virtual bool Sampler(CfgType& _cfg, const Boundary* const _boundary,
         vector<CfgType>& _result, vector<CfgType>& _collision);
 
     vector<pair <string, double> > samplers; // Stores method label with cumulative probability
@@ -92,7 +92,7 @@ Print(ostream& _os) const {
 template <typename MPTraits>
 bool
 MixSampler<MPTraits>::
-Sampler(CfgType& _cfg, shared_ptr<Boundary> _boundary,
+Sampler(CfgType& _cfg, const Boundary* const _boundary,
     vector<CfgType>& _result, vector<CfgType>& _collision) {
   double rand = DRand();
   for(auto&  sampler : samplers)

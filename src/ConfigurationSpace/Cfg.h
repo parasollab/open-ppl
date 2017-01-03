@@ -153,14 +153,14 @@ class Cfg {
     /// @param[in] _b The boundary to normalize against.
     /// @return  A copy of this with each DOF scaled from [_b.min, _b.max] to
     ///          [-1, 1].
-    vector<double> GetNormalizedData(const shared_ptr<const Boundary> _b) const;
+    vector<double> GetNormalizedData(const Boundary* const _b) const;
 
     /// Compute the standard representation from a form normalized relative to
     /// the environment bounds. This is the reverse of GetNormalizedData.
     /// @param[in] _data The normalized DOF data relative to _b.
     /// @param[in] _b    The normalization boundary.
     void SetNormalizedData(const vector<double>& _data,
-        const shared_ptr<const Boundary> _b);
+        const Boundary* const _b);
 
     ///@}
     ///@name Labels and Stats
@@ -210,7 +210,7 @@ class Cfg {
      * The function will try a predefined number of times
      */
     virtual void GetRandomCfg(Environment* _env);
-    virtual void GetRandomCfg(Environment* _env, shared_ptr<Boundary> _bb);
+    virtual void GetRandomCfg(Environment* _env, const Boundary* const _b);
 
     template <typename DistanceMetricPointer>
     void GetRandomRay(double _incr, DistanceMetricPointer _dm, bool _norm = true);
@@ -238,7 +238,7 @@ class Cfg {
 
     template<template<class> class ClearanceUtility, class MPTraits>
     double GetSmoothingValue(ClearanceUtility<MPTraits>& _clearanceUtils,
-        shared_ptr<Boundary> _bb);
+        const Boundary* const _b);
 
     //polygonal approximation
     vector<Vector3d> PolyApprox() const;
@@ -270,6 +270,7 @@ class Cfg {
     ///@name Internal State with poor encapsulation
     ///@{
     /// @TODO Fix encapsulation issues.
+    /// @TODO Witness should not be a shared_ptr.
 
     CDInfo m_clearanceInfo;
     shared_ptr<Cfg> m_witnessCfg;
@@ -287,7 +288,7 @@ class Cfg {
     /// sampling boundary.
     /// @param[in] _env The environment to generate the configuration within.
     /// @param[in] _b The boundary to sample within.
-    virtual void GetRandomCfgImpl(Environment* _env, shared_ptr<Boundary> _b);
+    virtual void GetRandomCfgImpl(Environment* _env, const Boundary* const _b);
 
     ///@name Internal State
     ///@{
@@ -331,6 +332,7 @@ class Cfg {
 ostream& operator<<(ostream& _os, const Cfg& _cfg);
 istream& operator>>(istream& _is, Cfg& _cfg);
 
+
 template <class DistanceMetricPointer>
 void
 Cfg::
@@ -347,17 +349,19 @@ GetRandomRay(double _incr, DistanceMetricPointer _dm, bool _norm) {
     NormalizeOrientation();
 }
 
+
 template <template <class> class ClearanceUtility, class MPTraits>
 double
 Cfg::
 GetSmoothingValue(ClearanceUtility<MPTraits>& _clearanceUtils,
-    shared_ptr<Boundary> _bb) {
+    const Boundary* const _b) {
   CDInfo cdInfo;
   typename MPTraits::CfgType tmp;
   _clearanceUtils.CollisionInfo(static_cast<typename MPTraits::CfgType&>(*this),
-      tmp, _bb, cdInfo);
+      tmp, _b, cdInfo);
   return cdInfo.m_minDist;
 }
+
 
 #ifdef _PARALLEL
 namespace stapl {

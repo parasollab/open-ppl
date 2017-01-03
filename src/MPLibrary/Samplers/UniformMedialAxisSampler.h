@@ -6,8 +6,6 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup Samplers
-/// @brief TODO
-///
 /// TODO
 ////////////////////////////////////////////////////////////////////////////////
 template<typename MPTraits>
@@ -15,7 +13,14 @@ class UniformMedialAxisSampler : public SamplerMethod<MPTraits> {
 
   public:
 
+    ///@name Motion Planning Types
+    ///@{
+
     typedef typename MPTraits::CfgType CfgType;
+
+    ///@}
+    ///@name Construction
+    ///@{
 
     UniformMedialAxisSampler(string _vcLabel = "", string _dmLabel = "",
         double _length = 0, double _stepSize = 0, bool _useBoundary = false,
@@ -23,13 +28,27 @@ class UniformMedialAxisSampler : public SamplerMethod<MPTraits> {
 
     UniformMedialAxisSampler(XMLNode& _node);
 
-    virtual void ParseXML(XMLNode& _node);
-    virtual void Print(ostream& _os) const;
+    virtual ~UniformMedialAxisSampler() = default;
 
-    virtual bool Sampler(CfgType& _cfg, shared_ptr<Boundary> _boundary,
-        vector<CfgType>& _result, vector<CfgType>& _collision);
+    ///@}
+    ///@name MPBaseObject Overrides
+    ///@{
+
+    virtual void Print(ostream& _os) const override;
+
+    ///@}
+    ///@name SamplerMethod Overrides
+    ///@{
+
+    virtual bool Sampler(CfgType& _cfg, const Boundary* const _boundary,
+        vector<CfgType>& _result, vector<CfgType>& _collision) override;
+
+    ///@}
 
   protected:
+
+    ///@name Helpers
+    ///@{
 
     bool CheckMedialAxisCrossing(const CfgType& _c1, int _w1,
         const CfgType& _c2, int _w2);
@@ -40,42 +59,47 @@ class UniformMedialAxisSampler : public SamplerMethod<MPTraits> {
     bool CheckTriTri(int _w, int _t1, int _t2);
     bool CheckVertTri(int _w, int _v, int _t);
 
-    bool BinarySearch(shared_ptr<Boundary> _boundary,
+    bool BinarySearch(const Boundary* const _boundary,
         const CfgType& _c1, int _w1, const CfgType& _c2, int _w2,
         vector<CfgType>& _result);
 
+    ///@}
+
   private:
+
+    ///@name Internal State
+    ///@{
+
     double m_length;
     double m_stepSize;
     bool m_useBoundary;
     string m_vcLabel, m_dmLabel;
     ClearanceUtility<MPTraits> m_clearanceUtility;
+
+    ///@}
+
 };
+
+/*------------------------------ Construction --------------------------------*/
 
 template <typename MPTraits>
 UniformMedialAxisSampler<MPTraits>::
 UniformMedialAxisSampler(string _vcLabel, string _dmLabel,
     double _length, double _stepSize, bool _useBoundary,
     const ClearanceUtility<MPTraits>& _clearanceUtility) :
-  m_length(_length), m_stepSize(_stepSize), m_useBoundary(_useBoundary),
-  m_vcLabel(_vcLabel), m_dmLabel(_dmLabel),
-  m_clearanceUtility(_clearanceUtility) {
-    this->SetName("UniformMedialAxisSampler");
-  }
+    m_length(_length), m_stepSize(_stepSize), m_useBoundary(_useBoundary),
+    m_vcLabel(_vcLabel), m_dmLabel(_dmLabel),
+    m_clearanceUtility(_clearanceUtility) {
+  this->SetName("UniformMedialAxisSampler");
+}
+
 
 template <typename MPTraits>
 UniformMedialAxisSampler<MPTraits>::
-UniformMedialAxisSampler(XMLNode& _node)
-  : SamplerMethod<MPTraits>(_node),
-  m_clearanceUtility(_node) {
-    this->SetName("UniformMedialAxisSampler");
-    ParseXML(_node);
-  }
+UniformMedialAxisSampler(XMLNode& _node) :
+    SamplerMethod<MPTraits>(_node), m_clearanceUtility(_node) {
+  this->SetName("UniformMedialAxisSampler");
 
-template <typename MPTraits>
-void
-UniformMedialAxisSampler<MPTraits>::
-ParseXML(XMLNode& _node) {
   m_vcLabel = _node.Read("vcLabel", true, "", "Validity Test Method");
   m_dmLabel =_node.Read("dmLabel", true, "default", "Distance Metric Method");
   m_length = _node.Read("d", true, 0.0, 0.0, MAX_DBL,
@@ -85,6 +109,8 @@ ParseXML(XMLNode& _node) {
   m_useBoundary = _node.Read("useBBX", true, false,
       "Use bounding box as obstacle");
 }
+
+/*------------------------- MPBaseObject Overrides ---------------------------*/
 
 template <typename MPTraits>
 void
@@ -99,10 +125,12 @@ Print(ostream& _os) const {
   _os << "\tuseBoundary = " << m_useBoundary << endl;
 }
 
+/*----------------------- SamplerMethod Overrides ----------------------------*/
+
 template <typename MPTraits>
 bool
 UniformMedialAxisSampler<MPTraits>::
-Sampler(CfgType& _cfg, shared_ptr<Boundary> _boundary,
+Sampler(CfgType& _cfg, const Boundary* const _boundary,
     vector<CfgType>& _result, vector<CfgType>& _collision) {
 
   Environment* env = this->GetEnvironment();
@@ -152,8 +180,7 @@ Sampler(CfgType& _cfg, shared_ptr<Boundary> _boundary,
     m_clearanceUtility.CollisionInfo(tick, tmp, _boundary, tick.m_clearanceInfo);
     tickWitness = tick.m_clearanceInfo.m_nearestObstIndex;
 
-    bool crossed = CheckMedialAxisCrossing(temp, tempWitness,
-        tick, tickWitness);
+    bool crossed = CheckMedialAxisCrossing(temp, tempWitness, tick, tickWitness);
     if(crossed) {
       if(BinarySearch(_boundary, temp, tempWitness, tick, tickWitness, _result)) {
         generated = true;
@@ -167,12 +194,13 @@ Sampler(CfgType& _cfg, shared_ptr<Boundary> _boundary,
   return generated;
 }
 
+/*--------------------------------- Helpers ----------------------------------*/
+
 template <typename MPTraits>
 bool
 UniformMedialAxisSampler<MPTraits>::
 CheckMedialAxisCrossing(const CfgType& _c1, int _w1,
     const CfgType& _c2, int _w2) {
-
   Environment* env = this->GetEnvironment();
   //The closest obstacle is the same, check if the triangles which the
   //witness points belong to are adjacent and form a concave face
@@ -229,6 +257,7 @@ CheckMedialAxisCrossing(const CfgType& _c1, int _w1,
   }
 }
 
+
 template <typename MPTraits>
 int
 UniformMedialAxisSampler<MPTraits>::
@@ -238,14 +267,14 @@ FindVertex(int _witness, const CfgType& _c) {
   stat->StartClock("FindVertex");
   //Find the vertex which the witness points belong to first
   //assume obstacle multibodies have 1 body
-  GMSPolyhedron& polyhedron = env->GetObstacle(_witness)->
-    GetFixedBody(0)->GetPolyhedron();
+  const GMSPolyhedron& polyhedron = env->GetObstacle(_witness)->
+      GetFixedBody(0)->GetPolyhedron();
   const Transformation& t = env->GetObstacle(_witness)->
-    GetFixedBody(0)->WorldTransformation();
+      GetFixedBody(0)->GetWorldTransformation();
 
   Vector3d witnessPoint = -t * _c.m_clearanceInfo.m_objectPoint;
   for(size_t i=0; i < polyhedron.m_vertexList.size(); ++i) {
-    Vector3d& vert = polyhedron.m_vertexList[i];
+    const Vector3d& vert = polyhedron.m_vertexList[i];
 
     if(witnessPoint == vert) {
       stat->StopClock("FindVertex");
@@ -256,6 +285,7 @@ FindVertex(int _witness, const CfgType& _c) {
   return 1;
 }
 
+
 template <typename MPTraits>
 int
 UniformMedialAxisSampler<MPTraits>::
@@ -265,17 +295,17 @@ FindTriangle(int _witness, const CfgType& _c) {
   stat->StartClock("FindTriangle");
   //Find the triangles which the witness points belong to first
   //assume obstacle multibodies have 1 body
-  GMSPolyhedron& polyhedron = env->GetObstacle(_witness)->
-    GetFixedBody(0)->GetPolyhedron();
+  const GMSPolyhedron& polyhedron = env->GetObstacle(_witness)->
+      GetFixedBody(0)->GetPolyhedron();
   const Transformation& t = env->GetObstacle(_witness)->
-    GetFixedBody(0)->WorldTransformation();
+      GetFixedBody(0)->GetWorldTransformation();
 
   Vector3d witnessPoint = -t * _c.m_clearanceInfo.m_objectPoint;
 
   int id = -1;
   for(size_t i=0; i < polyhedron.m_polygonList.size(); ++i) {
 
-    GMSPolygon& poly = polyhedron.m_polygonList[i];
+    const GMSPolygon& poly = polyhedron.m_polygonList[i];
     const Vector3d& normal = poly.GetNormal();
 
     //Find the max dimension among the normal vector so we know which
@@ -324,17 +354,17 @@ FindTriangle(int _witness, const CfgType& _c) {
   return id;
 }
 
+
 template <typename MPTraits>
 bool
 UniformMedialAxisSampler<MPTraits>::
 CheckVertVert(int _w, int _v1, int _v2) {
   Environment* env = this->GetEnvironment();
-  GMSPolyhedron& polyhedron = env->GetObstacle(_w)->GetFixedBody(0)->
+  const GMSPolyhedron& polyhedron = env->GetObstacle(_w)->GetFixedBody(0)->
       GetPolyhedron();
-  vector<GMSPolygon>& polygons = polyhedron.m_polygonList;
+  const vector<GMSPolygon>& polygons = polyhedron.m_polygonList;
 
-  typedef vector<GMSPolygon>::iterator PIT;
-  for(PIT pit = polygons.begin(); pit!=polygons.end(); ++pit) {
+  for(auto pit = polygons.begin(); pit != polygons.end(); ++pit) {
     if(find(pit->begin(), pit->end(), _v1) != pit->end() &&
         find(pit->begin(), pit->end(), _v2) != pit->end())
       return false;
@@ -343,24 +373,26 @@ CheckVertVert(int _w, int _v1, int _v2) {
   return true;
 }
 
+
 template <typename MPTraits>
 bool
 UniformMedialAxisSampler<MPTraits>::
 CheckTriTri(int _w, int _t1, int _t2) {
   Environment* env = this->GetEnvironment();
   //Check if two triangles are adjacent to each other
-  GMSPolyhedron& polyhedron = env->GetObstacle(_w)->
-    GetFixedBody(0)->GetPolyhedron();
+  const GMSPolyhedron& polyhedron = env->GetObstacle(_w)->
+      GetFixedBody(0)->GetPolyhedron();
 
   //test if there is a common edge (v0, v1) between the triangles
   pair<int, int> edge = polyhedron.m_polygonList[_t1].
-    CommonEdge(polyhedron.m_polygonList[_t2]);
+      CommonEdge(polyhedron.m_polygonList[_t2]);
+
   if(edge.first != -1 && edge.second != -1) {
     //Get vertex information for two facets
     const Vector3d& v0 = polyhedron.m_vertexList[edge.first];
     const Vector3d& v1 = polyhedron.m_vertexList[edge.second];
     Vector3d v2;
-    for(vector<int>::iterator I = polyhedron.m_polygonList[_t1].begin();
+    for(auto I = polyhedron.m_polygonList[_t1].begin();
         I != polyhedron.m_polygonList[_t1].end(); I++) {
       if((*I != edge.first) && (*I != edge.second))
         v2 = polyhedron.m_vertexList[*I];
@@ -394,10 +426,10 @@ CheckTriTri(int _w, int _t1, int _t2) {
 
   //test if there is one common vertex between the triangles
   int vert = polyhedron.m_polygonList[_t1].
-    CommonVertex(polyhedron.m_polygonList[_t2]);
+      CommonVertex(polyhedron.m_polygonList[_t2]);
   if(vert != -1) {
     return !env->GetObstacle(_w)->GetFixedBody(0)->
-      IsConvexHullVertex(polyhedron.m_vertexList[vert]);
+        IsConvexHullVertex(polyhedron.m_vertexList[vert]);
   }
   //no common edge or vertex, triangles are not adjacent
   else {
@@ -405,16 +437,17 @@ CheckTriTri(int _w, int _t1, int _t2) {
   }
 }
 
+
 template <typename MPTraits>
 bool
 UniformMedialAxisSampler<MPTraits>::
 CheckVertTri(int _w, int _v, int _t) {
   Environment* env = this->GetEnvironment();
   //Check if vertex belongs to triangle, thus are adjacent
-  GMSPolyhedron& polyhedron = env->GetObstacle(_w)->
-    GetFixedBody(0)->GetPolyhedron();
-  Vector3d& vert = polyhedron.m_vertexList[_v];
-  GMSPolygon& poly = polyhedron.m_polygonList[_t];
+  const GMSPolyhedron& polyhedron = env->GetObstacle(_w)->
+      GetFixedBody(0)->GetPolyhedron();
+  const Vector3d& vert = polyhedron.m_vertexList[_v];
+  const GMSPolygon& poly = polyhedron.m_polygonList[_t];
   for(size_t i = 0; i < poly.GetNumVertices(); ++i) {
     //shares a common vertex, return false!
     if(vert == poly.GetPoint(i))
@@ -424,10 +457,11 @@ CheckVertTri(int _w, int _v, int _t) {
   return true;
 }
 
+
 template <typename MPTraits>
 bool
 UniformMedialAxisSampler<MPTraits>::
-BinarySearch(shared_ptr<Boundary> _boundary,
+BinarySearch(const Boundary* const _boundary,
     const CfgType& _c1, int _w1, const CfgType& _c2, int _w2,
     vector<CfgType>& _result) {
 
@@ -546,5 +580,6 @@ BinarySearch(shared_ptr<Boundary> _boundary,
   return false;
 }
 
-#endif
+/*----------------------------------------------------------------------------*/
 
+#endif

@@ -78,10 +78,10 @@ Extend(const CfgType& _start, const CfgType& _end, CfgType& _new,
   if( numBodies > 1 ) {
     //this growth method only works with obstacles (need 2 multibodies)
     int randIndex = (LRand() % (numBodies-1)) + 1;
-    GMSPolyhedron& poly = env->GetObstacle(randIndex)->GetFixedBody(0)->
+    const GMSPolyhedron& poly = env->GetObstacle(randIndex)->GetFixedBody(0)->
         GetWorldPolyhedron();
-    vector<Vector3d>& vertexList    = poly.m_vertexList;
-    vector<GMSPolygon>& polygonList = poly.m_polygonList;
+    const vector<Vector3d>& vertexList    = poly.m_vertexList;
+    const vector<GMSPolygon>& polygonList = poly.m_polygonList;
 
     // Random polygon
     int randPolyInd = LRand() % polygonList.size();

@@ -17,22 +17,12 @@ main(int _argc, char** _argv) {
 
     MPProblem* problem = new MPProblem(xmlFile);
     MPLibrary* pmpl = new MPLibrary(xmlFile);
-
-    // Manually set up single-task parsing until we implement jobs.
-    MPTask* task = nullptr;
-    //XMLNode jobs(xmlFile, "Jobs");
-    //for(auto& node : jobs)
-    //  if(node.Name() == "Task") {
-    //    task = new MPTask(problem, node);
-    //    break;
-    //  }
-
     MPSolution* solution = new MPSolution;
 
-    pmpl->Solve(problem, task, solution);
+    //pmpl->Solve(problem, problem->GetTasks().front(), solution);
+    pmpl->Solve(problem, nullptr, solution);
 
     delete problem;
-    delete task;
     delete solution;
     delete pmpl;
 

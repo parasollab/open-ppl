@@ -5,58 +5,93 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup PathModifiers
-/// @brief Retract path to higher clearance.
+/// Retract path to higher clearance.
 ///
-/// This method represents algorithm 7, C-Retraction from Geraerts and Overmars,
-/// "Creating High-quality Paths for Motion Planning," IJRR 2007. Essentially it
-/// optimizes clearance based upon picking nearby neighbors to path
-/// configurations, and modifying the path based on if the random configurations
-/// have better clearance.
+/// @details This method represents algorithm 7, C-Retraction from Geraerts and
+///          Overmars, "Creating High-quality Paths for Motion Planning," IJRR
+///          2007. Essentially it optimizes clearance based upon picking nearby
+///          neighbors to path configurations, and modifying the path based on
+///          if the random configurations have better clearance.
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
 class CRetractionPathModifier : public PathModifierMethod<MPTraits> {
 
   public:
 
+    ///@name Motion Planning Types
+    ///@{
+
     typedef typename MPTraits::CfgType      CfgType;
     typedef typename MPTraits::RoadmapType  RoadmapType;
     typedef typename RoadmapType::GraphType GraphType;
     typedef typename RoadmapType::VID       VID;
 
+    ///@}
+    ///@name Construction
+    ///@{
+
     CRetractionPathModifier(size_t _iter = 10,
         const ClearanceUtility<MPTraits>& _cu = ClearanceUtility<MPTraits>());
+
     CRetractionPathModifier(XMLNode& _node);
 
-    void Print(ostream& _os) const;
+    virtual ~CRetractionPathModifier() = default;
+
+    ///@}
+    ///@name MPBaseObject Overrides
+    ///@{
+
+    virtual void Print(ostream& _os) const override;
+
+    ///@}
+    ///@name PathModifierMethod Overrides
+    ///@{
 
     bool ModifyImpl(vector<CfgType>& _path, vector<CfgType>& _newPath);
 
+    ///@}
+
   private:
+
+    ///@name Helpers
+    ///@{
+
     void ValidatePath(vector<CfgType>& _path,
         vector<CfgType>& _path1, vector<CfgType>& _path2);
 
+    ///@}
+    ///@name Internal State
+    ///@{
+
     size_t m_iter, m_maxIter;
     ClearanceUtility<MPTraits> m_clearanceUtility;
+
+    ///@}
+
 };
+
+/*------------------------------ Construction --------------------------------*/
 
 template <typename MPTraits>
 CRetractionPathModifier<MPTraits>::
-CRetractionPathModifier(size_t _iter,
-        const ClearanceUtility<MPTraits>& _cu) :
-  PathModifierMethod<MPTraits>(), m_iter(_iter), m_clearanceUtility(_cu) {
-    this->SetName("CRetractionPathModifier");
-  }
+CRetractionPathModifier(size_t _iter, const ClearanceUtility<MPTraits>& _cu) :
+    PathModifierMethod<MPTraits>(), m_iter(_iter), m_clearanceUtility(_cu) {
+  this->SetName("CRetractionPathModifier");
+}
+
 
 template <typename MPTraits>
 CRetractionPathModifier<MPTraits>::
 CRetractionPathModifier(XMLNode& _node) :
-  PathModifierMethod<MPTraits>(_node),
-  m_clearanceUtility(_node) {
-    this->SetName("CRetractionPathModifier");
-    m_iter = _node.Read("iter", true, 10, 0, MAX_INT, "Loop iterations");
-    m_maxIter = _node.Read("maxIter", false, 1000, 0, MAX_INT,
-        "Max loop iterations");
-  }
+    PathModifierMethod<MPTraits>(_node),
+    m_clearanceUtility(_node) {
+  this->SetName("CRetractionPathModifier");
+  m_iter = _node.Read("iter", true, 10, 0, MAX_INT, "Loop iterations");
+  m_maxIter = _node.Read("maxIter", false, 1000, 0, MAX_INT,
+      "Max loop iterations");
+}
+
+/*--------------------------- MPBaseObject Overrides -------------------------*/
 
 template <typename MPTraits>
 void
@@ -68,6 +103,7 @@ Print(ostream& _os) const {
   m_clearanceUtility.Print(_os);
 }
 
+/*---------------------- PathModifierMethod Overrides ------------------------*/
 
 template <typename MPTraits>
 bool
@@ -94,7 +130,7 @@ ModifyImpl(vector<CfgType>& _path, vector<CfgType>& _newPath) {
   this->RemoveBranches(m_clearanceUtility.GetDistanceMetricLabel(), _path, p);
 
   Environment* env = this->GetEnvironment();
-  shared_ptr<Boundary> boundary = env->GetBoundary();
+  auto boundary = env->GetBoundary();
   auto dm = this->GetDistanceMetric(m_clearanceUtility.GetDistanceMetricLabel());
 
   double step = min(env->GetPositionRes(), env->GetOrientationRes());
@@ -160,6 +196,8 @@ ModifyImpl(vector<CfgType>& _path, vector<CfgType>& _newPath) {
   return true;
 }
 
+/*--------------------------------- Helpers ----------------------------------*/
+
 template<typename MPTraits>
 void
 CRetractionPathModifier<MPTraits>::
@@ -184,7 +222,7 @@ ValidatePath(vector<CfgType>& _path,
   //path'' <- RemoveBranches(path'')
 
   Environment* env = this->GetEnvironment();
-  shared_ptr<Boundary> boundary = env->GetBoundary();
+  auto boundary = env->GetBoundary();
   auto dm = this->GetDistanceMetric(m_clearanceUtility.GetDistanceMetricLabel());
 
   double step = min(env->GetPositionRes(), env->GetOrientationRes());
@@ -226,5 +264,6 @@ ValidatePath(vector<CfgType>& _path,
   this->RemoveBranches(m_clearanceUtility.GetDistanceMetricLabel(), p, _path2);
 }
 
-#endif
+/*----------------------------------------------------------------------------*/
 
+#endif

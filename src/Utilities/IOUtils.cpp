@@ -168,10 +168,15 @@ AttrMissing(const string& _name, const string& _desc) const {
 void
 XMLNode::
 ComputeAccessed() {
+  // Count a node as accessed if any child was accessed.
   for(auto& child : *this) {
     child.ComputeAccessed();
     m_accessed = m_accessed || child.m_accessed;
   }
+
+  // Count a node as accessed if it has no children and no attributes.
+  if(this->begin() == this->end() && !m_node->ToElement()->FirstAttribute())
+    m_accessed = true;
 }
 
 void

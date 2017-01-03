@@ -3,9 +3,43 @@
 
   <!-- Here we specify input files, such as environment and query. -->
   <Problem>
+
     <Environment filename="3D/3d.env"/>
+
     <Robot label="boxy" filename="3D/boxy.robot"/>
+
     <Query filename="3D/3d.query"/>
+
+    <Task label="point-to-point" robot="boxy">
+      <StartConstraints>
+        <!-- require an exact starting configuration -->
+        <CSpaceConstraint>
+          <Limit dof="0" min="0" max="0"/>
+          <Limit dof="1" min="0" max="0"/>
+          <Limit dof="2" min="0" max="0"/>
+          <Limit dof="3" min="0" max="0"/>
+          <Limit dof="4" min="0" max="0"/>
+          <Limit dof="5" min="0" max="0"/>
+        </CSpaceConstraint>
+      </StartConstraints>
+
+      <PathConstraints>
+        <!-- no path constraints -->
+      </PathConstraints>
+
+      <GoalConstraints>
+        <!-- require an exact goal configuration -->
+        <CSpaceConstraint>
+          <Limit dof="0" min="20" max="20"/>
+          <Limit dof="1" min="5" max="5"/>
+          <Limit dof="2" min="10" max="10"/>
+          <Limit dof="3" min=".2" max=".2"/>
+          <Limit dof="4" min=".8" max=".8"/>
+          <Limit dof="5" min=".5" max=".5"/>
+        </CSpaceConstraint>
+      </GoalConstraints>
+    </Task>
+
   </Problem>
 
   <!-- Set available algorithms and parameters. -->

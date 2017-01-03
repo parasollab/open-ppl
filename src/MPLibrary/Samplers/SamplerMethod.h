@@ -28,10 +28,10 @@ template <typename MPTraits> class MixSampler;
 ///
 /// @usage
 /// @code
-/// SamplerPointer s = this->GetSampler(m_sLabel);
 /// size_t num, attempts;
-/// shared_ptr<Boundary> bounds;
+/// Boundary* bounds;
 /// vector<CfgType> result;
+/// auto s = this->GetSampler(m_sLabel);
 /// s->Sample(num, attempts, bounds, back_inserter(result));
 /// @endcode
 ///
@@ -40,20 +40,16 @@ template <typename MPTraits> class MixSampler;
 ///
 /// @usage
 /// @code
-/// SamplerPointer s = this->GetSampler(m_sLabel);
-/// vector<CfgType> input;
+/// vector<CfgType> input, result;
 /// size_t attempts;
-/// shared_ptr<Boundary> bounds;
-/// vector<CfgType> result;
-/// s->Sample(input.begin(), input.end(), attempts, bounds, back_inserter(result));
+/// Boundary* bounds;
+/// auto s = this->GetSampler(m_sLabel);
+/// s->Sample(input.begin(), input.end(), attempts, bounds,
+///     back_inserter(result));
 /// @endcode
 ///
-/// There are other versions of this method with the option to return the failed
-/// attempts.
-///
-/// @c Sampler is the private virtual function responsible for taking as input
-/// a single input configuration and applying the sampler rule to generate one
-/// or more configurations.
+/// Both versions of this method offer the option to return the failed attempts
+/// with an optional output iterator parameter that is null by default.
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
 #ifdef _PARALLEL
@@ -64,49 +60,91 @@ class SamplerMethod : public MPBaseObject<MPTraits> {
 
   public:
 
+    ///@name Motion Planning Types
+    ///@{
+
     typedef typename MPTraits::CfgType CfgType;
 
-    SamplerMethod();
+    ///@}
+    ///@name Construction
+    ///@{
+
+    SamplerMethod() = default;
     SamplerMethod(XMLNode& _node);
-    virtual ~SamplerMethod();
+    virtual ~SamplerMethod() = default;
 
-    virtual void Print(ostream& _os) const;
+    ///@}
+    ///@name MPBaseObject Overrides
+    ///@{
 
-    template<typename ResultOutputIterator,
-      typename ColOutputIterator = NullOutputIterator>
-        ResultOutputIterator Sample(size_t _numNodes, size_t _maxAttempts,
-            shared_ptr<Boundary> _boundary, ResultOutputIterator _result,
-            ColOutputIterator _collision = ColOutputIterator());
+    virtual void Print(ostream& _os) const override;
 
-    template<typename InputIterator, typename ResultOutputIterator,
-      typename ColOutputIterator = NullOutputIterator>
-        ResultOutputIterator Sample(InputIterator _first, InputIterator _last,
-            size_t _maxAttempts, shared_ptr<Boundary> _boundary,
-            ResultOutputIterator _result,
-            ColOutputIterator _collision = ColOutputIterator());
+    ///@}
+    ///@name Sampler Interface
+    ///@{
+
+    /// Try to sample a set number of new configurations from a given boundary.
+    /// @param[in] _numNodes The number of samples desired.
+    /// @param[in] _maxAttempts The maximum number of attempts for each sample.
+    /// @param[in] _boundary The boundary to sample from.
+    /// @param[out] _result An iterator to storage for the new configurations.
+    /// @param[out] _collision An (optional) iterator to storage for failed
+    ///                        attempts.
+    template <typename ResultOutputIterator,
+        typename ColOutputIterator = NullOutputIterator>
+    ResultOutputIterator Sample(size_t _numNodes, size_t _maxAttempts,
+        const Boundary* const _boundary, ResultOutputIterator _result,
+        ColOutputIterator _collision = ColOutputIterator());
+
+    /// Apply the sampler rule to a set of existing configurations. The output
+    /// will generally be a filtered or perturbed version of the input set.
+    /// @param[in] _first An iterator to the beginning of a list of input
+    ///                   configurations.
+    /// @param[in] _last An iterator to the end of a list of input
+    ///                  configurations.
+    /// @param[in] _maxAttempts The maximum number of attempts to successfully
+    ///                         apply the sampler rule to each input.
+    /// @param[in] _boundary The sampling boundary to use.
+    /// @param[out] _result An iterator to storage for the output configurations.
+    /// @param[out] _collision An (optional) iterator to storage for failed
+    ///                        attempts.
+    template <typename InputIterator, typename ResultOutputIterator,
+        typename ColOutputIterator = NullOutputIterator>
+    ResultOutputIterator Sample(InputIterator _first, InputIterator _last,
+        size_t _maxAttempts, const Boundary* const _boundary,
+        ResultOutputIterator _result,
+        ColOutputIterator _collision = ColOutputIterator());
+
+    ///@}
 
   protected:
-    virtual bool Sampler(CfgType& _cfg, shared_ptr<Boundary> _boundary,
+
+    ///@name Sampler Rule
+    ///@{
+
+    /// Takes a single input configuration and applies the sampler rule to
+    /// generate one or more output configurations.
+    /// @param[in] _cfg The input configuration.
+    /// @param[in] _boundary The sampling boundary.
+    /// @param[out] _result The resulting output configurations.
+    /// @param[out] _collision The (optional) return for failed attempts.
+    virtual bool Sampler(CfgType& _cfg, const Boundary* const _boundary,
         vector<CfgType>& _result, vector<CfgType>& _collision) = 0;
 
+    ///@}
+
     friend class MixSampler<MPTraits>;
+
 };
+
+/*------------------------------ Construction --------------------------------*/
 
 template <typename MPTraits>
 SamplerMethod<MPTraits>::
-SamplerMethod() : MPBaseObject<MPTraits>() {
+SamplerMethod(XMLNode& _node) : MPBaseObject<MPTraits>(_node) {
 }
 
-template <typename MPTraits>
-SamplerMethod<MPTraits>::
-SamplerMethod(XMLNode& _node) :
-  MPBaseObject<MPTraits>(_node) {
-  }
-
-template <typename MPTraits>
-SamplerMethod<MPTraits>::
-~SamplerMethod() {
-};
+/*------------------------- MPBaseObject Overrides ---------------------------*/
 
 template <typename MPTraits>
 void
@@ -115,12 +153,14 @@ Print(ostream& _os) const {
   _os << this->GetNameAndLabel() << endl;
 }
 
+/*---------------------------- Sampler Interface -----------------------------*/
+
 template <typename MPTraits>
-template<typename ResultOutputIterator, typename ColOutputIterator>
+template <typename ResultOutputIterator, typename ColOutputIterator>
 ResultOutputIterator
 SamplerMethod<MPTraits>::
 Sample(size_t _numNodes, size_t _maxAttempts,
-    shared_ptr<Boundary> _boundary,
+    const Boundary* const _boundary,
     ResultOutputIterator _result, ColOutputIterator _collision) {
 
   Environment* env = this->GetEnvironment();
@@ -137,7 +177,8 @@ Sample(size_t _numNodes, size_t _maxAttempts,
         break;
     }
 
-    this->GetStatClass()->IncNodesGenerated(this->GetNameAndLabel(), result.size());
+    this->GetStatClass()->IncNodesGenerated(this->GetNameAndLabel(),
+        result.size());
     _result = copy(result.begin(), result.end(), _result);
     _collision = copy(collision.begin(), collision.end(), _collision);
   }
@@ -145,12 +186,14 @@ Sample(size_t _numNodes, size_t _maxAttempts,
   return _result;
 }
 
+
 template <typename MPTraits>
-template<typename InputIterator, typename ResultOutputIterator, typename ColOutputIterator>
+template <typename InputIterator, typename ResultOutputIterator,
+          typename ColOutputIterator>
 ResultOutputIterator
 SamplerMethod<MPTraits>::
 Sample(InputIterator _first, InputIterator _last,
-    size_t _maxAttempts, shared_ptr<Boundary> _boundary,
+    size_t _maxAttempts, const Boundary* const _boundary,
     ResultOutputIterator _result, ColOutputIterator _collision) {
 
   while(_first != _last) {
@@ -163,7 +206,8 @@ Sample(InputIterator _first, InputIterator _last,
         break;
     }
 
-    this->GetStatClass()->IncNodesGenerated(this->GetNameAndLabel(), result.size());
+    this->GetStatClass()->IncNodesGenerated(this->GetNameAndLabel(),
+        result.size());
     _result = copy(result.begin(), result.end(), _result);
     _collision = copy(collision.begin(), collision.end(), _collision);
     _first++;
@@ -171,5 +215,7 @@ Sample(InputIterator _first, InputIterator _last,
 
   return _result;
 }
+
+/*----------------------------------------------------------------------------*/
 
 #endif

@@ -5,7 +5,7 @@
 #include <map>
 
 #include "Constraint.h"
-#include "Geometry/Boundaries/Range.h"
+#include "Geometry/Boundaries/BoundingBox.h"
 
 class XMLNode;
 
@@ -28,7 +28,7 @@ class CSpaceConstraint : public Constraint {
     ///@name Constraint Interface
     ///@{
 
-    virtual Boundary* GetBoundary() const override;
+    virtual const Boundary* GetBoundary() const override;
 
     virtual bool Satisfied(const Cfg& _c) const override;
 
@@ -50,8 +50,7 @@ class CSpaceConstraint : public Constraint {
     ///@name Internal State
     ///@{
 
-    /// @TODO use n-dim. aabb here.
-    std::map<size_t, Range<double>> m_limits; ///< The restricted DOF ranges.
+    BoundingBox m_bbx;   ///< The C-Space bounding box for this constraint.
 
     ///@}
 

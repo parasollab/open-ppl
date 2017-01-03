@@ -18,8 +18,8 @@ class BoundingSpheres : public CollisionDetectionMethod {
 
     virtual void Build(Body* _body) {}
 
-    virtual bool IsInCollision(shared_ptr<Body> _body1,
-        shared_ptr<Body> _body2, CDInfo& _cdInfo);
+    virtual bool IsInCollision(const Body* const _body1,
+        const Body* const _body2, CDInfo& _cdInfo);
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -37,8 +37,8 @@ class InsideSpheres : public CollisionDetectionMethod {
 
     virtual void Build(Body* _body) {}
 
-    virtual bool IsInCollision(shared_ptr<Body> _body1,
-        shared_ptr<Body> _body2, CDInfo& _cdInfo);
+    virtual bool IsInCollision(const Body* const _body1,
+        const Body* const _body2, CDInfo& _cdInfo);
 };
 
 #endif

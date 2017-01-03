@@ -40,7 +40,7 @@ class BoundingBox2D :  public Boundary {
     ///@name Containment Testing
     ///@{
 
-    virtual const bool InBoundary(const Vector3d& _p) const override;
+    virtual bool InBoundary(const Vector3d& _p) const override;
 
     ///@}
     ///@name Clearance Testing

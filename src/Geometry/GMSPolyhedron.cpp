@@ -17,6 +17,90 @@
 using namespace std;
 
 
+/*------------------------------ Construction --------------------------------*/
+
+GMSPolyhedron::
+GMSPolyhedron(const GMSPolyhedron& _p) :
+    m_vertexList(_p.m_vertexList),
+    m_cgalPoints(_p.m_cgalPoints),
+    m_area(_p.m_area),
+    m_maxRadius(_p.m_maxRadius),
+    m_minRadius(_p.m_minRadius),
+    m_boundaryLines(_p.m_boundaryLines),
+    m_boundaryBuilt(_p.m_boundaryBuilt),
+    m_force2DBoundary(_p.m_force2DBoundary)
+{
+  // Need to manually copy the polygons so that they refer to this polyhedron's
+  // point list and not _p's.
+  m_polygonList.reserve(_p.m_polygonList.size());
+  for(const auto& p : _p.m_polygonList)
+    m_polygonList.emplace_back(p[0], p[1], p[2], m_vertexList);
+}
+
+
+GMSPolyhedron::
+GMSPolyhedron(GMSPolyhedron&& _p) :
+    m_vertexList(move(_p.m_vertexList)),
+    m_cgalPoints(move(_p.m_cgalPoints)),
+    m_area(_p.m_area),
+    m_maxRadius(_p.m_maxRadius),
+    m_minRadius(_p.m_minRadius),
+    m_boundaryLines(move(_p.m_boundaryLines)),
+    m_boundaryBuilt(_p.m_boundaryBuilt),
+    m_force2DBoundary(_p.m_force2DBoundary)
+{
+  // Need to manually copy the polygons so that they refer to this polyhedron's
+  // point list and not _p's.
+  m_polygonList.reserve(_p.m_polygonList.size());
+  for(const auto& p : _p.m_polygonList)
+    m_polygonList.emplace_back(p[0], p[1], p[2], m_vertexList);
+}
+
+/*------------------------------- Assignment ---------------------------------*/
+
+GMSPolyhedron&
+GMSPolyhedron::
+operator=(const GMSPolyhedron& _p) {
+  m_vertexList = _p.m_vertexList;
+  m_cgalPoints = _p.m_cgalPoints;
+  m_area = _p.m_area;
+  m_maxRadius = _p.m_maxRadius;
+  m_minRadius = _p.m_minRadius;
+  m_boundaryLines = _p.m_boundaryLines;
+  m_boundaryBuilt = _p.m_boundaryBuilt;
+  m_force2DBoundary = _p.m_force2DBoundary;
+
+  // Need to manually copy the polygons so that they refer to this polyhedron's
+  // point list and not _p's.
+  m_polygonList.reserve(_p.m_polygonList.size());
+  for(const auto& p : _p.m_polygonList)
+    m_polygonList.emplace_back(p[0], p[1], p[2], m_vertexList);
+
+  return *this;
+}
+
+
+GMSPolyhedron&
+GMSPolyhedron::
+operator=(GMSPolyhedron&& _p) {
+  m_vertexList = move(_p.m_vertexList);
+  m_cgalPoints = move(_p.m_cgalPoints);
+  m_area = _p.m_area;
+  m_maxRadius = _p.m_maxRadius;
+  m_minRadius = _p.m_minRadius;
+  m_boundaryLines = move(_p.m_boundaryLines);
+  m_boundaryBuilt = _p.m_boundaryBuilt;
+  m_force2DBoundary = _p.m_force2DBoundary;
+
+  // Need to manually copy the polygons so that they refer to this polyhedron's
+  // point list and not _p's.
+  m_polygonList.reserve(_p.m_polygonList.size());
+  for(const auto& p : _p.m_polygonList)
+    m_polygonList.emplace_back(p[0], p[1], p[2], m_vertexList);
+
+  return *this;
+}
+
 /*-------------------------------- Equality ----------------------------------*/
 
 bool
@@ -144,7 +228,44 @@ WriteBYU(ostream& _os) const {
   }
 }
 
-/*-------------------------------- Equality ----------------------------------*/
+/*-------------------------------- Accessors ---------------------------------*/
+
+vector<Vector3d>&
+GMSPolyhedron::
+GetVertexList() noexcept {
+  return m_vertexList;
+}
+
+
+vector<GMSPolygon>&
+GMSPolyhedron::
+GetPolygonList() noexcept {
+  return m_polygonList;
+}
+
+
+const vector<Vector3d>&
+GMSPolyhedron::
+GetVertexList() const noexcept {
+  return m_vertexList;
+}
+
+
+const vector<GMSPolygon>&
+GMSPolyhedron::
+GetPolygonList() const noexcept {
+  return m_polygonList;
+}
+
+
+vector<pair<int,int>>&
+GMSPolyhedron::
+GetBoundaryLines() {
+   BuildBoundary();
+   return m_boundaryLines;
+};
+
+/*--------------------------- Geometry Functions -----------------------------*/
 
 Point3d
 GMSPolyhedron::
@@ -323,6 +444,68 @@ PushToMedialAxis(Point3d& _p) {
 }
 
 
+const Vector3d&
+GMSPolyhedron::
+GetCentroid() const {
+  if(!m_centroidCached)
+    ComputeCentroid();
+  return m_centroid;
+}
+
+
+GMSPolyhedron
+GMSPolyhedron::
+ComputeBoundingPolyhedron() const {
+  // Find Extreme values.
+  double minX, minY, minZ, maxX, maxY, maxZ;
+  minX = maxX = m_vertexList[0][0];
+  minY = maxY = m_vertexList[0][1];
+  minZ = maxZ = m_vertexList[0][2];
+
+  for(const auto& v : m_vertexList) {
+    minX = min(minX, v[0]);
+    maxX = max(maxX, v[0]);
+    minY = min(minY, v[1]);
+    maxY = max(maxY, v[1]);
+    minZ = min(minZ, v[2]);
+    maxZ = max(maxZ, v[2]);
+  }
+
+  // Make output polyhedron.
+  GMSPolyhedron bbx;
+  auto& verts = bbx.m_vertexList;
+  auto& polys = bbx.m_polygonList;
+
+  // Add vertices.
+  verts.reserve(8);
+  verts.emplace_back(minX, minY, minZ);
+  verts.emplace_back(minX, minY, maxZ);
+  verts.emplace_back(minX, maxY, minZ);
+  verts.emplace_back(minX, maxY, maxZ);
+  verts.emplace_back(maxX, minY, minZ);
+  verts.emplace_back(maxX, minY, maxZ);
+  verts.emplace_back(maxX, maxY, minZ);
+  verts.emplace_back(maxX, maxY, maxZ);
+
+  // Add polygons.
+  polys.reserve(12);
+  polys.emplace_back(0, 1, 3, verts);
+  polys.emplace_back(0, 3, 2, verts);
+  polys.emplace_back(4, 0, 2, verts);
+  polys.emplace_back(4, 2, 6, verts);
+  polys.emplace_back(5, 4, 6, verts);
+  polys.emplace_back(5, 6, 7, verts);
+  polys.emplace_back(1, 5, 7, verts);
+  polys.emplace_back(1, 7, 3, verts);
+  polys.emplace_back(3, 7, 6, verts);
+  polys.emplace_back(3, 6, 2, verts);
+  polys.emplace_back(0, 4, 1, verts);
+  polys.emplace_back(0, 1, 5, verts);
+
+  return bbx;
+}
+
+
 GMSPolyhedron::CGALPolyhedron
 GMSPolyhedron::
 CGAL() const {
@@ -425,6 +608,18 @@ BuildBoundary() {
 
   m_boundaryLines.reserve(lines.size());
   copy(lines.begin(), lines.end(), back_inserter(m_boundaryLines));
+}
+
+
+void
+GMSPolyhedron::
+ComputeCentroid() const {
+  auto& centroid = const_cast<Vector3d&>(m_centroid);
+  centroid(0, 0, 0);
+  for(const auto& v : m_vertexList)
+    centroid += v;
+  centroid /= m_vertexList.size();
+  m_centroidCached = true;
 }
 
 /*----------------------------------------------------------------------------*/
