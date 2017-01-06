@@ -3,6 +3,7 @@
 #include "glutils/color.h"
 
 #include "Geometry/Bodies/Body.h"
+#include "Simulator/Drawable.h"
 
 
 /*------------------------------ Construction --------------------------------*/
@@ -10,6 +11,35 @@
 DrawableBody::
 DrawableBody(Drawable* const _parent, const Body* const _body)
   : m_parent(_parent), m_body(_body) { }
+
+/*--------------------------- drawable Overrides -----------------------------*/
+
+void
+DrawableBody::
+select() noexcept {
+  m_parent->select();
+}
+
+
+void
+DrawableBody::
+deselect() noexcept {
+  m_parent->deselect();
+}
+
+
+void
+DrawableBody::
+highlight() noexcept {
+  m_parent->highlight();
+}
+
+
+void
+DrawableBody::
+unhighlight() noexcept {
+  m_parent->unhighlight();
+}
 
 /*----------------------- drawable_call_list Overrides -----------------------*/
 
@@ -25,6 +55,7 @@ build() {
 void
 DrawableBody::
 build_select() {
+  glLineWidth(1);
   glBegin(GL_TRIANGLES);
   const auto& polyhedron = m_body->GetPolyhedron();
   for(const auto& polygon : polyhedron.GetPolygonList())
@@ -38,6 +69,7 @@ void
 DrawableBody::
 build_selected() {
   glColor3fv(glutils::color::yellow);
+  glLineWidth(4);
 
   const auto& polyhedron = m_body->GetPolyhedron();
   for(const auto& polygon : polyhedron.GetPolygonList())

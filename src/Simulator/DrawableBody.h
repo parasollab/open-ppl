@@ -30,6 +30,18 @@ class DrawableBody final : public glutils::drawable_call_list {
     virtual ~DrawableBody() = default;
 
     ///@}
+    ///@name drawable Overrides
+    ///@{
+    /// When this object is selected/unselected, propogate the event to the
+    /// parent object.
+
+    virtual void select() noexcept override;
+    virtual void deselect() noexcept override;
+
+    virtual void highlight() noexcept override;
+    virtual void unhighlight() noexcept override;
+
+    ///@}
 
   protected:
 

@@ -88,4 +88,36 @@ draw_highlighted() {
   /// @TODO
 }
 
+
+void
+Drawable::
+select() noexcept {
+  for(auto& body : m_bodies)
+    body.glutils::drawable::select();
+}
+
+
+void
+Drawable::
+deselect() noexcept {
+  for(auto& body : m_bodies)
+    body.glutils::drawable::deselect();
+}
+
+
+void
+Drawable::
+highlight() noexcept {
+  for(auto& body : m_bodies)
+    body.glutils::drawable::highlight();
+}
+
+
+void
+Drawable::
+unhighlight() noexcept {
+  for(auto& body : m_bodies)
+    body.glutils::drawable::unhighlight();
+}
+
 /*----------------------------------------------------------------------------*/

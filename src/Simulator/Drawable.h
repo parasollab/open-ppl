@@ -59,6 +59,12 @@ class Drawable final : public glutils::drawable {
     virtual void draw_selected() override;
     virtual void draw_highlighted() override;
 
+    virtual void select() noexcept override;
+    virtual void deselect() noexcept override;
+
+    virtual void highlight() noexcept override;
+    virtual void unhighlight() noexcept override;
+
     ///@}
 
 };
