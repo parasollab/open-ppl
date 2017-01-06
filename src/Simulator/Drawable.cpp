@@ -1,99 +1,91 @@
 #include "Drawable.h"
 
-#include "glutils/color.h"
-#include "glutils/obj_file.h"
-#include "glutils/triangulated_model.h"
-
-#include "BulletCollision/CollisionShapes/btBoxShape.h"
-#include "BulletCollision/CollisionShapes/btConvexPolyhedron.h"
-
-#include "Geometry/Bodies/MultiBody.h"
 #include "Geometry/Bodies/ActiveMultiBody.h"
 #include "Geometry/Bodies/FixedBody.h"
 #include "Geometry/Bodies/FreeBody.h"
+#include "Geometry/Bodies/MultiBody.h"
 #include "Geometry/Bodies/StaticMultiBody.h"
+
 
 /*------------------------------- Construction -------------------------------*/
 
 Drawable::
-Drawable(const std::string& _filename) {
-  // Make a temporary model from the obj file. We will use it to build the call
-  // lists and then throw it away.
-  m_model = new glutils::triangulated_model;
-  glutils::obj_file(_filename) >> *m_model;
-}
-
-
-Drawable::
 Drawable(MultiBody* _m) {
-  // Get the multibody's obj file and use it to create a bullet body.
-  /// @TODO Parse all components of the multibodies instead of just the first.
-  /// @TODO Don't rely on obj file - build model directly from multibody data.
-  std::string filename;
-
-  StaticMultiBody* sbody = dynamic_cast<StaticMultiBody*>(_m);
-  if(sbody)
-    filename = sbody->GetFixedBody(0)->GetFilePath();
-  else {
-    ActiveMultiBody* abody = dynamic_cast<ActiveMultiBody*>(_m);
-    filename = abody->GetFreeBody(0)->GetFilePath();
+  switch(_m->GetType()) {
+    case MultiBody::MultiBodyType::Active:
+    case MultiBody::MultiBodyType::NonHolonomic:
+      {
+        ActiveMultiBody* aMB = dynamic_cast<ActiveMultiBody*>(_m);
+        for(size_t i = 0; i < aMB->GetNumBodies(); ++i)
+          m_bodies.emplace_back(this, aMB->GetFreeBody(i));
+      }
+      break;
+    case MultiBody::MultiBodyType::Passive:
+      {
+        StaticMultiBody* sMB = dynamic_cast<StaticMultiBody*>(_m);
+        for(size_t i = 0; i < sMB->GetNumBodies(); ++i)
+          m_bodies.emplace_back(this, sMB->GetFixedBody(i));
+      }
+      break;
+    case MultiBody::MultiBodyType::Internal:
+      break;
+    default:
+      throw RunTimeException(WHERE, "Unrecognized MultiBody type");
   }
-
-  m_model = new glutils::triangulated_model;
-  glutils::obj_file(filename) >> *m_model;
 }
 
+/*---------------------------- MultiBody Support -----------------------------*/
 
+size_t
 Drawable::
-~Drawable() {
-  // Delete the temporary model in case we never build its call lists.
-  delete m_model;
-}
-
-/*----------------------- drawable_call_list Overrides -----------------------*/
-
-void
-Drawable::
-build() {
-  // Draw walls.
-  glColor3fv(glutils::color::blue);
-
-  glBegin(GL_TRIANGLES);
-  for(auto iter = m_model->facets_begin(); iter != m_model->facets_end(); ++iter)
-  {
-    const auto& facet = *iter;
-
-    for(const auto& index : facet)
-      glVertex3fv(static_cast<const GLfloat*>(facet.get_point(index)));
-  }
-  glEnd();
+GetNumBodies() const noexcept {
+  return m_bodies.size();
 }
 
 
 void
 Drawable::
-build_selected() {
-  glColor3fv(glutils::color::yellow);
-
-  for(auto iter = m_model->facets_begin(); iter != m_model->facets_end(); ++iter)
-  {
-    const auto& facet = *iter;
-
-    glBegin(GL_LINE_LOOP);
-    for(const auto& index : facet)
-      glVertex3fv(static_cast<const GLfloat*>(facet.get_point(index)));
-    glEnd();
-  }
+PushTransform(const size_t _i, const glutils::transform& _t) {
+  m_bodies[_i].push_transform(_t);
 }
 
 
 void
 Drawable::
-build_highlighted() {
-  // This is the last build instruction. We can release the memory for the model
-  // now since it won't be used again.
-  delete m_model;
-  m_model = nullptr;
+UpdateTransform() {
+  for(auto& b : m_bodies)
+    b.update_transform();
+}
+
+/*--------------------------- Drawable Overrides -----------------------------*/
+
+void
+Drawable::
+draw() {
+  for(auto& b : m_bodies)
+    b.render();
+}
+
+
+void
+Drawable::
+draw_select() {
+  for(auto& b : m_bodies)
+    b.render_select();
+}
+
+
+void
+Drawable::
+draw_selected() {
+  /// @TODO
+}
+
+
+void
+Drawable::
+draw_highlighted() {
+  /// @TODO
 }
 
 /*----------------------------------------------------------------------------*/

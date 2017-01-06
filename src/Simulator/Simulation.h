@@ -6,7 +6,7 @@
 #include <mutex>
 #include <thread>
 
-#include "sandbox/gui/base_visualization.h"
+#include "sandbox/base_visualization.h"
 
 class BulletEngine;
 class MPProblem;
@@ -23,15 +23,23 @@ class Simulation : public base_visualization {
     ///@name Construction
     ///@{
 
-    Simulation(MPProblem* _problem);
+    /// Create a simulation of an MPProblem.
+    /// @param[in] _problem The MPProblem to simulate.
+    Simulation(MPProblem* const _problem);
+
     virtual ~Simulation();
 
     ///@}
     ///@name Simulation Interface
     ///@{
 
+    /// Set up the simulation.
     void Initialize();
+
+    /// Tear down the simulation.
     void Uninitialize();
+
+    /// Advance the simulation one timestep.
     void Step();
 
     ///@}
@@ -62,7 +70,7 @@ class Simulation : public base_visualization {
     ///@name Internal State
     ///@{
 
-    MPProblem* m_problem{nullptr};     ///< The MPProblem we are simulating.
+    MPProblem* const m_problem;        ///< The MPProblem we are simulating.
     BulletEngine* m_engine{nullptr};   ///< An engine to drive the simulation.
 
     mutable std::mutex m_guard;        ///< Lock for updating object transforms.

@@ -2,15 +2,19 @@
 
 #include <numeric>
 
-MultiBody::
-MultiBody() :
-  m_multiBodyType(MultiBodyType::Passive),
-  m_radius(0), m_maxAxisRange(0) {
-  }
 
 MultiBody::
-~MultiBody() {
+MultiBody() :
+    m_multiBodyType(MultiBodyType::Passive),
+    m_radius(0), m_maxAxisRange(0) { }
+
+
+size_t
+MultiBody::
+GetNumBodies() const noexcept {
+  return m_bodies.size();
 }
+
 
 MultiBody::MultiBodyType
 MultiBody::

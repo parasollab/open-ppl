@@ -4,18 +4,16 @@
 #include "Body.h"
 
 ////////////////////////////////////////////////////////////////////////////////
+/// A geometric object in workspace (such as an obstacle or robot) with one or
+/// more sub-components, referred to as Bodies.
 /// @ingroup Geometry
-/// @brief A collection of geometries in workspace reprenting, e.g., robots
-///
-/// A MultiBody represent a Obstacle or a Robot in workspace. MultiBody contain
-/// one or more Body s, either FixedBody s or FreeBody s. Many access methods
-/// are implemented to allow client access internal information about MultiBody
-/// instance, like number of Body s, Fixed and Free, Bounding box, center of
-/// mass, surface area size, bounding sphere radius, etc.
 ////////////////////////////////////////////////////////////////////////////////
 class MultiBody {
 
   public:
+
+    ///@name Local Types
+    ///@{
 
     ////////////////////////////////////////////////////////////////////////////
     /// The types of MultiBody that we can support.
@@ -27,6 +25,7 @@ class MultiBody {
       Internal      ///< Invisible Obstacle
     };
 
+    ///@}
     ///@name Construction
     ///@{
 
@@ -35,11 +34,13 @@ class MultiBody {
     MultiBody(const MultiBody&) = delete;            ///< No copy
     MultiBody& operator=(const MultiBody&) = delete; ///< No assign
 
-    virtual ~MultiBody();
+    virtual ~MultiBody() = default;
 
     ///@}
     ///@name MultiBody Info
     ///@{
+
+    size_t GetNumBodies() const noexcept;
 
     /// Parse a string into a MultiBodyType.
     /// @param[in] _tag The string to parse.
@@ -108,6 +109,9 @@ class MultiBody {
 
   protected:
 
+    ///@name Internal State
+    ///@{
+
     MultiBodyType m_multiBodyType;     ///< MultiBody type
 
   private:
@@ -120,6 +124,8 @@ class MultiBody {
     double m_maxAxisRange;             ///< Max axis range
 
     string m_modelDataDir;             ///< Directory of environment file
+
+    ///@}
 };
 
 #endif

@@ -17,7 +17,7 @@
 /*---------------------------- Construction ----------------------------------*/
 
 Simulation::
-Simulation(MPProblem* _problem) : m_problem(_problem) {}
+Simulation(MPProblem* const _problem) : m_problem(_problem) {}
 
 
 Simulation::
@@ -35,8 +35,8 @@ Initialize() {
     return;
 
   // Require a non-null problem to initialize.
-  nonstd::assert_msg(m_problem, "Simulation error: cannot initialize without a "
-      "problem!");
+  nonstd::assert_msg(m_problem, "Simulation error: cannot initialize with a "
+      "null problem!");
 
   // Create a bullet engine.
   m_engine = new BulletEngine;
@@ -81,10 +81,13 @@ Step() {
       return;
     ++m_backloggedSteps;
 
-    for(size_t i = 0; i < this->m_drawables.size(); ++i)
+    for(size_t i = 0; i < this->m_drawables.size(); ++i) {
       /// @TODO Fix this to the transform of object i once we make the bbx
       ///       drawable.
-      this->m_drawables[i]->push_transform(m_engine->GetObjectTransform(i + 1));
+      auto d = static_cast<Drawable*>(this->m_drawables[i]);
+      for(size_t j = 0; j < d->GetNumBodies(); ++j)
+        d->PushTransform(j, m_engine->GetObjectTransform(i + 1, j));
+    }
   }
 
   // Step the simulation forward with a fixed timestep.
@@ -107,12 +110,15 @@ render() {
   {
     std::lock_guard<std::mutex> lock(m_guard);
 
+    // If there are no queued frames, there is nothing new to render. Leave the
+    // previous frame on the scene.
     if(m_backloggedSteps == 0)
       return;
     --m_backloggedSteps;
 
-    for(const auto d : m_drawables)
-      d->update_transform();
+    // Otherwise, update objects to the next queued positions.
+    for(auto d : m_drawables)
+      static_cast<Drawable*>(d)->UpdateTransform();
   }
 
   // Rrrrrender.
@@ -178,6 +184,8 @@ AddBBX() {
   btBoxShape* box = new btBoxShape(btVector3(x, thickness, z));
   m_engine->AddObject(box, trans, 0.);
 
+  /// @TODO Add visual for the bounding box/floor.
+  /// @TODO Support other boundary types.
   //auto d = new Drawable(?);
   //this->add_drawable(d);
 }

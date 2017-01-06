@@ -85,7 +85,7 @@ Step(const btScalar _timestep, const int _maxSubSteps,
 
 glutils::transform
 BulletEngine::
-GetObjectTransform(const size_t _i) const {
+GetObjectTransform(const size_t _i, const size_t _j) const {
   // Check for out-of-range access.
   nonstd::assert_msg(_i < size_t(m_dynamicsWorld->getNumMultibodies()),
       "BulletEngine error: requested transform for object " + std::to_string(_i)
@@ -95,7 +95,10 @@ GetObjectTransform(const size_t _i) const {
 
   glutils::transform t;
   btMultiBody* mb = m_dynamicsWorld->getMultiBody(_i);
-  mb->getBaseWorldTransform().getOpenGLMatrix(t.data());
+  if(_j == 0)
+    mb->getBaseWorldTransform().getOpenGLMatrix(t.data());
+  else
+    mb->getLink(int(_j)).m_cachedWorldTransform.getOpenGLMatrix(t.data());
 
   return t;
 }

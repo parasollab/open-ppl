@@ -270,6 +270,7 @@ SIM_OBJS := \
   $(PMPL_DIR)/sim_main.o \
   Simulator/BulletEngine.o \
   Simulator/Drawable.o \
+  Simulator/DrawableBody.o \
   Simulator/Simulation.o
 
 ################################################################################

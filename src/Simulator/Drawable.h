@@ -1,25 +1,26 @@
 #ifndef DRAWABLE_H_
 #define DRAWABLE_H_
 
+#include <cstddef>
 #include <string>
+#include <vector>
 
-#include "glutils/drawable_call_list.h"
+#include "glutils/drawable.h"
 
-class btBoxShape;
+#include "DrawableBody.h"
+
 class MultiBody;
-namespace glutils {
-  class triangulated_model;
-}
+
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Instructions for drawing an object in the simulator.
+/// Instructions for drawing a pmpl MultiBody in the Simulator.
 ////////////////////////////////////////////////////////////////////////////////
-class Drawable : public glutils::drawable_call_list {
+class Drawable final : public glutils::drawable {
 
   ///@name Internal State
   ///@{
 
-  glutils::triangulated_model* m_model{nullptr};
+  std::vector<DrawableBody> m_bodies; ///< Drawables for each sub-body.
 
   ///@}
 
@@ -28,29 +29,38 @@ class Drawable : public glutils::drawable_call_list {
     ///@name Construction
     ///@{
 
-    /// Construct a drawable representation of a simulated object from an obj
-    /// file.
-    /// @param[in] _filename The obj file to build from.
-    Drawable(const std::string& _filename);
-
     /// Construct a drawable representation of a PMPL multibody.
     /// @param[in] _m The PMPL multibody to draw.
     Drawable(MultiBody* _m);
 
-    virtual ~Drawable();
+    virtual ~Drawable() = default;
 
     ///@}
-
-  protected:
-
-    ///@name drawable_call_list Overrides
+    ///@name MultiBody Support
     ///@{
 
-    virtual void build() override;
-    virtual void build_selected() override;
-    virtual void build_highlighted() override;
+    /// Get the number of bodies in this drawable.
+    size_t GetNumBodies() const noexcept;
+
+    /// Push a transform for a given body.
+    /// @param[in] _i The index of the body to update.
+    /// @param[in] _t The transform to push.
+    void PushTransform(const size_t _i, const glutils::transform& _t);
+
+    /// Update the transform queue for all bodies.
+    void UpdateTransform();
 
     ///@}
+    ///@name Drawable Overrides
+    ///@{
+
+    virtual void draw() override;
+    virtual void draw_select() override;
+    virtual void draw_selected() override;
+    virtual void draw_highlighted() override;
+
+    ///@}
+
 };
 
 #endif
