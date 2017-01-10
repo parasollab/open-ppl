@@ -1,9 +1,12 @@
 #ifndef BULLET_ENGINE_H_
 #define BULLET_ENGINE_H_
 
+#include "Geometry/Bodies/Connection.h"
+
 #include "btBulletDynamicsCommon.h"
 
 #include "glutils/gltraits.h"
+
 
 // Bullet forward-declarations.
 class btMultiBodyDynamicsWorld;
@@ -80,12 +83,26 @@ class BulletEngine final {
     /// @param[in] _m The multibody to add.
     btMultiBody* AddObject(MultiBody* _m);
 
-    /// Add an object to the world.
+    /// Add an object to the world,
     /// @param _shape The bullet collision shape that reprsents the object.
-    /// @param _trans The world tranform of the object.
-    /// @param _mass The mass of the _shape in the world.
-    btMultiBody* AddObject(btCollisionShape* _shape, const btTransform& _trans,
-        double _mass);
+    /// @param _transform The world tranform of object.
+    /// @param _mass The mass of _shape in the world.
+    btMultiBody* AddObject(btCollisionShape* _shape, btTransform _transform,
+                            double _mass);
+
+    /// Add an object to the world.
+    /// @param _shapes The bullet collision shapes that reprsents the object
+    ///                with or without multiple links
+    /// @param _transforms The world tranform of each object.
+    /// @param _masses The mass of each of _shapes in the world.
+    /// @param _joints The list of connections between links. Default is an
+    ///                empty vector.
+    //TODO: make this one private?
+    btMultiBody* AddObject(std::vector< btCollisionShape* > _shapes,
+        std::vector< btTransform > _transforms,
+        std::vector< double > _masses,
+        std::vector< std::shared_ptr< Connection > > _joints =
+            std::vector< std::shared_ptr< Connection > >());
 
     ///@}
 
@@ -97,7 +114,7 @@ class BulletEngine final {
     /// Build a bullet collision shape from a pmpl MultiBody.
     /// @param[in] _body The pmpl MultiBody.
     /// @return A bullet collision shape.
-    btCollisionShape* BuildCollisionShape(MultiBody* _body);
+    std::vector<btCollisionShape*> BuildCollisionShape(MultiBody* _body);
 
     /// Build a bullet collision shape from an obj file.
     /// @param[in] _filename The obj file to use.

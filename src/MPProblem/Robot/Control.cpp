@@ -66,6 +66,8 @@ operator!=(const Control& _rhs) const noexcept {
 
 std::ostream&
 operator<<(std::ostream& _os, const Control& _c) {
+  if(_c.signal.empty())
+    return _os;
   return _os << nonstd::print_container(_c.signal);
 }
 

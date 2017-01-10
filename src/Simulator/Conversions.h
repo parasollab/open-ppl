@@ -12,6 +12,18 @@
 
 using namespace mathtool;
 
+inline
+void
+PrintbtVector3(btVector3& _vec) {
+  std::cout << _vec[0] << ", " << _vec[1] << ", " << _vec[2] << std::endl;
+}
+
+inline
+void
+PrintbtQuaternion(btQuaternion& _quat) {
+  std::cout << _quat.getX() << ", " << _quat.getY() << ", " << _quat.getZ()
+      << ", " << _quat.getW() << std::endl;
+}
 
 inline
 btVector3
@@ -23,7 +35,10 @@ ToBullet(const Vector3d& _v) {
 inline
 btQuaternion
 ToBullet(const Quaternion& _q) {
-  return btQuaternion(ToBullet(_q.imaginary()), _q.real());
+  const Vector3d imag = _q.imaginary();
+  return btQuaternion(imag[0], imag[1], imag[2], _q.real());
+  //This was the wrong constructor:
+  //btQuaternion(ToBullet(_q.imaginary()), _q.real());
 }
 
 

@@ -82,7 +82,7 @@ class Connection final {
     /// @return Connection type
     JointType GetConnectionType() const;
 
-    /// @return Connection type
+    /// @return Joint Limits
     const pair<double, double>& GetJointLimits(size_t _i) const;
 
     ///@}

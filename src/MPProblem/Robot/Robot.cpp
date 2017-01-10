@@ -67,6 +67,8 @@ Robot(MPProblem* _p, XMLNode& _node, const Boundary* const _b) : m_problem(_p) {
   /// @TODO Read in agent type instead of hard-coding. Currently we assume a
   ///       path-following agent.
   m_agent = new PathFollowingAgent(this);
+
+  m_multibody->Configure(std::vector<double>(m_multibody->DOF(), 0));
 }
 
 

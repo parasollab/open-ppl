@@ -85,9 +85,9 @@ Step() {
       /// @TODO Fix this to the transform of object i once we make the bbx
       ///       drawable.
       auto d = static_cast<Drawable*>(this->m_drawables[i]);
-      d->PushTransform(0, m_engine->GetObjectTransform(i + 1, 0));
-      //for(size_t j = 0; j < d->GetNumBodies(); ++j)
-      //  d->PushTransform(j, m_engine->GetObjectTransform(i + 1, j));
+      //d->PushTransform(0, m_engine->GetObjectTransform(i + 1, 0));
+      for(size_t j = 0; j < d->GetNumBodies(); ++j)
+        d->PushTransform(j, m_engine->GetObjectTransform(i + 1, j));
     }
   }
 
