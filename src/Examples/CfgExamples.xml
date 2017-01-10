@@ -6,11 +6,12 @@
 
     <Environment filename="3D/3d.env"/>
 
-    <Robot label="boxy" filename="3D/boxy.robot"/>
+    <Robot label="links" filename="3D/linked.robot"/>
+    <!--Robot label="boxy" filename="3D/boxy.robot"/-->
 
-    <Query filename="3D/3d.query"/>
+    <Query filename="3D/new.query"/>
 
-    <Task label="point-to-point" robot="boxy">
+    <Task label="point-to-point" robot="links">
       <StartConstraints>
         <!-- require an exact starting configuration -->
         <CSpaceConstraint>

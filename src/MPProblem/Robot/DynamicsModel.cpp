@@ -33,6 +33,7 @@ std::vector<double>
 DynamicsModel::
 GetSimulatedState() const {
   std::vector<double> out;
+  out.reserve(m_robot->GetMultiBody()->DOF());
 
   // First get the base state.
   switch(m_robot->GetMultiBody()->GetBaseType()) {
@@ -78,7 +79,9 @@ GetSimulatedState() const {
       throw RunTimeException(WHERE, "Unrecognized base type.");
   }
 
-  /// @TODO Add joint dofs.
+  while(out.size() < m_robot->GetMultiBody()->DOF())
+    out.push_back(0);
+
   return out;
 }
 
