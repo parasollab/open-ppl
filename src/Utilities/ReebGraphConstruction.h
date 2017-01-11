@@ -16,6 +16,7 @@ using namespace mathtool;
 
 class Environment;
 class TetGenDecomposition;
+class WorkspaceSkeleton;
 
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup Utilities
@@ -235,6 +236,11 @@ class ReebGraphConstruction {
     ///@{
 
     ////////////////////////////////////////////////////////////////////////////
+    /// @brief basically copy all the vertices and edges from reeb graph to
+    /// skeleton
+    WorkspaceSkeleton GetSkeleton();
+
+    ////////////////////////////////////////////////////////////////////////////
     /// @param _env PMPL Environment as workspace
     /// @param _baseFilename Base filename used for saving models
     void Construct(Environment* _env, const string& _baseFilename = "");
@@ -391,7 +397,7 @@ class ReebGraphConstruction {
     /// and finds an embedded ReebArc by biasing a path search in the
     /// tetrahedralization's dual graph.
     void Embed(const Environment* _env);
-
+    
     ///@}
     ///@name Internal State
     ///@{

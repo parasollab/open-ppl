@@ -11,6 +11,7 @@
 #include "Workspace/WorkspaceDecomposition.h"
 
 #include "TetGenDecomposition.h"
+#include "Workspace/WorkspaceSkeleton.h"
 
 /*---------------------------- iostream Operators ----------------------------*/
 
@@ -83,6 +84,24 @@ Construct(Environment* _env, const string& _baseFilename) {
     Read(MPProblem::GetPath(m_reebFilename));
 }
 
+WorkspaceSkeleton
+ReebGraphConstruction::
+GetSkeleton() {
+  WorkspaceSkeleton skeleton;
+  typedef WorkspaceSkeleton::GraphType Graph;
+  Graph g;
+  // Copy vertices from reeb graph to skeleton
+  for(auto vit = m_reebGraph.begin(); vit != m_reebGraph.end(); ++vit) {
+    Vector3d& v = vit->property().m_vertex;
+    g.add_vertex(v);
+  }
+  // Copy edges
+  for(auto eit = m_reebGraph.edges_begin(); eit != m_reebGraph.edges_end(); ++eit){
+    g.add_edge(eit->descriptor(), eit->property().m_path);
+  }
+  skeleton.SetGraph(g);
+  return skeleton;
+}
 
 pair<ReebGraphConstruction::FlowGraph, size_t>
 ReebGraphConstruction::

@@ -11,6 +11,7 @@
 #include "Utilities/ReebGraphConstruction.h"
 
 #include "Utilities/MedialAxisUtilities.h"
+#include "Workspace/WorkspaceSkeleton.h"
 
 #ifdef VIZMO
 #include "GUI/ModelSelectionWidget.h"
@@ -116,6 +117,7 @@ class DynamicRegionRRT : public BasicRRTStrategy<MPTraits> {
     RegionPtr m_samplingRegion{nullptr}; ///< The current sampling region.
 
     ReebGraphConstruction* m_reebGraph{nullptr}; ///< Embedded reeb graph
+    WorkspaceSkeleton m_skeleton; ///< Workspace skeleton obj
 
     ///@}
 };
@@ -187,31 +189,22 @@ Run() {
 
   // Setup MP Variables
   StatClass* stats = this->GetStatClass();
-  Environment* env = this->GetEnvironment();
 
   stats->StartClock("DynamicRegionRRT::Run");
 
   const CfgType& s = this->m_query->GetQuery()[0];
   Vector3d start(s[0], s[1], s[2]);
-
-  //Get directed flow network
-
-  typedef FlowGraph::vertex_descriptor FVD;
-  typedef FlowGraph::edge_descriptor FED;
-
-  pair<FlowGraph, FVD> flow = m_reebGraph->
-      GetFlowGraph(start, env->GetPositionRes());
-
-  // Prune flow-graph of non-relevant paths.
-  if(m_prune)
-    PruneFlowGraph(flow.first);
+  
+  // Create the directed workspace skeleton
+  WorkspaceSkeleton m_skeleton = m_reebGraph->GetSkeleton();
+  m_skeleton = m_skeleton.Direct(start);
+  
+  const CfgType& goalCfg = this->m_query->GetQuery()[1];
+  m_skeleton.PruneFlowGraph(goalCfg);
+  m_skeleton.MarkAllNodesUnvisited();
 
   // Push flow-graph to medial axis.
-  FlowToMedialAxis(flow.first);
-
-  unordered_map<FVD, bool> visited;
-  for(auto vit = flow.first.begin(); vit != flow.first.end(); ++vit)
-    visited[vit->descriptor()] = false;
+  //FlowToMedialAxis(flow.first);
 
 #ifdef VIZMO
   // Make temporary models for the regions.
@@ -220,26 +213,9 @@ Run() {
 #endif
 
   //Spark a region for each outgoing edge of start
-
-  //Region structure stores tuple of flow edge descriptor,
-  //index along flow edge, number of failed extentions
-  unordered_map<RegionPtr, tuple<FED, size_t, size_t>> regions;
-
   const double regionRadius = m_regionFactor *
       s.GetRobot()->GetBoundingSphereRadius();
-  auto sit = flow.first.find_vertex(flow.second);
-  for(auto eit = sit->begin(); eit != sit->end(); ++eit) {
-    auto i = regions.emplace(
-        new BoundingSphere(sit->property(), regionRadius),
-        make_tuple(eit->descriptor(), 0, 0));
-    m_regions.push_back(i.first->first);
-#ifdef VIZMO
-    models[m_regions.back()] = new ThreadSafeSphereModel(
-        m_regions.back()->GetCenter(), regionRadius);
-    tom.AddModel(models[m_regions.back()]);
-#endif
-  }
-  visited[sit->descriptor()] = true;
+  m_skeleton.InitRegions(start, regionRadius);
 
   CfgType dir;
   while(!this->EvaluateMap()) {
@@ -260,77 +236,25 @@ Run() {
       CfgType& newest = this->GetRoadmap()->GetGraph()->GetVertex(recent);
 
       if(m_samplingRegion)
-        get<2>(regions[m_samplingRegion]) = 0;
+        m_skeleton.SetFailedAttempts(m_samplingRegion, 0);
 
-      for(auto iter = m_regions.begin(); iter != m_regions.end(); ) {
-        RegionPtr region = *iter;
-        bool increment = true;
-        while(IsTouching(newest, region)) {
-          Vector3d cur = region->GetCenter();
-
-          auto& pr = regions[region];
-          FlowGraph::vertex_iterator vi;
-          FlowGraph::adj_edge_iterator ei;
-          flow.first.find_edge(get<0>(pr), vi, ei);
-          vector<Vector3d>& path = ei->property();
-          size_t& i = get<1>(pr);
-          size_t j = i+1;
-          if(j < path.size()) {
-            Vector3d& next = path[j];
-            region->ApplyOffset(next-cur);
-#ifdef VIZMO
-            static_cast<ThreadSafeSphereModel*>(models[region])->
-                MoveTo(next);
-#endif
-            i = j;
-          }
-          //else need to delete region
-          else {
-#ifdef VIZMO
-            tom.RemoveModel(models[region]);
-            models.erase(region);
-#endif
-            iter = m_regions.erase(iter);
-            regions.erase(region);
-            increment = false;
-            break;
-          }
-        }
-        if(increment) ++iter;
-      }
+      m_skeleton.AdvanceRegions(newest);
 
       //Add new regions
       Vector3d p(newest[0], newest[1], newest[2]);
-
-      for(auto vit = flow.first.begin(); vit != flow.first.end(); ++vit) {
-        double dist = (vit->property() - p).norm();
-        if(dist < regionRadius && !visited[vit->descriptor()]) {
-          for(auto eit = vit->begin(); eit != vit->end(); ++eit) {
-            auto i = regions.emplace(
-                new BoundingSphere(vit->property(), regionRadius),
-                make_tuple(eit->descriptor(), 0, 0));
-            m_regions.push_back(i.first->first);
-#ifdef VIZMO
-            models[m_regions.back()] = new ThreadSafeSphereModel(
-                vit->property(), regionRadius);
-            tom.AddModel(models[m_regions.back()]);
-#endif
-          }
-          visited[vit->descriptor()] = true;
-        }
-      }
+      m_skeleton.CreateRegions(p, regionRadius);
 
       //connect various trees together
       this->ConnectTrees(recent);
     }
     else {
       if(m_samplingRegion) {
-        ++get<2>(regions[m_samplingRegion]);
-        if(get<2>(regions[m_samplingRegion]) > 1000) {
-          auto rit = find(m_regions.begin(), m_regions.end(), m_samplingRegion);
-          m_regions.erase(rit);
-          regions.erase(m_samplingRegion);
-        }
+        //++get<2>(regions[m_samplingRegion]);
+        //if(get<2>(regions[m_samplingRegion]) > 1000) {
+        //  auto rit = find(m_regions.begin(), m_regions.end(), m_samplingRegion);
+        //  m_regions.erase(rit);
+        //  regions.erase(m_samplingRegion);
+        //}
       }
     }
 #ifdef VIZMO
@@ -339,9 +263,6 @@ Run() {
   }
 
   stats->StopClock("DynamicRegionRRT::Run");
-
-  m_regions.clear();
-  regions.clear();
 
   if(this->m_debug)
     cout<<"\nEnd DynamicRegionRRT::Run" << endl;
@@ -356,14 +277,16 @@ SelectDirection() {
   const Boundary* samplingBoundary;
   Environment* env = this->GetEnvironment();
 
-  size_t _index = rand() % (m_regions.size() + 1);
+  auto& regions = m_skeleton.GetRegions();
 
-  if(_index == m_regions.size()) {
+  size_t _index = rand() % (regions.size() + 1);
+
+  if(_index == regions.size()) {
     m_samplingRegion = nullptr;
     samplingBoundary = this->GetEnvironment()->GetBoundary();
   }
   else {
-    m_samplingRegion = m_regions[_index];
+    m_samplingRegion = regions[_index];
     samplingBoundary = m_samplingRegion;
   }
 

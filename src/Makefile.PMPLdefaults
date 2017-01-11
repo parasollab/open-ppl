@@ -332,4 +332,5 @@ PMPL_OBJS := \
 	Workspace/WorkspaceDecomposition.o \
 	Workspace/WorkspacePortal.o \
 	Workspace/WorkspaceRegion.o \
+	Workspace/WorkspaceSkeleton.o \
   	Behaviors/Agents/PathFollowingAgent.o
