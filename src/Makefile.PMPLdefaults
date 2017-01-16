@@ -301,10 +301,14 @@ PMPL_OBJS := \
 	Geometry/Bodies/Connection.o \
 	Geometry/Bodies/DHParameters.o \
 	Geometry/Boundaries/Boundary.o \
-        Geometry/Boundaries/BoundingBox.o \
-        Geometry/Boundaries/BoundingBox2D.o \
-        Geometry/Boundaries/BoundingSphere.o \
-        Geometry/Boundaries/BoundingSphere2D.o \
+	Geometry/Boundaries/AbstractBoundingBox.o \
+	Geometry/Boundaries/AbstractBoundingSphere.o \
+	Geometry/Boundaries/CSpaceBoundingBox.o \
+	Geometry/Boundaries/CSpaceBoundingSphere.o \
+	Geometry/Boundaries/WorkspaceBoundingBox.o \
+	Geometry/Boundaries/WorkspaceBoundingSphere.o \
+	Geometry/Shapes/NBox.o \
+	Geometry/Shapes/NSphere.o \
 	MPLibrary/NeighborhoodFinders/MPNNWrapper.o \
 	MPLibrary/Samplers/SimilarStructureSampler.o \
 	MPLibrary/ValidityCheckers/CollisionDetection/CDInfo.o \

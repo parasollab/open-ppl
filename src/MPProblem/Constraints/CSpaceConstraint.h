@@ -5,7 +5,7 @@
 #include <map>
 
 #include "Constraint.h"
-#include "Geometry/Boundaries/BoundingBox.h"
+#include "Geometry/Boundaries/CSpaceBoundingBox.h"
 
 class XMLNode;
 
@@ -50,7 +50,7 @@ class CSpaceConstraint : public Constraint {
     ///@name Internal State
     ///@{
 
-    BoundingBox m_bbx;   ///< The C-Space bounding box for this constraint.
+    CSpaceBoundingBox m_bbx;   ///< The C-Space bounding box for this constraint.
 
     ///@}
 

@@ -20,12 +20,11 @@ using namespace std;
 #include "PMPLExceptions.h"
 
 ////////////////////////////////////////////////////////////////////////////////
-/// @ingroup IOUtils
-/// @brief Wrapper class for XML handeling
+/// Wrapper class for XML handling
 ///
-/// This is a wrapper class for XML handeling.  It is READONLY and supports only
-/// trivial XML parsing.  Wrapping up TinyXML, it only supports TiXmlElements;
-/// this is because this is our only need for intput XML files - for now.
+/// @ingroup IOUtils
+/// @details This is a wrapper class for XML handling with tiny xml. It is read
+///          only and supports trivial XML parsing.
 ////////////////////////////////////////////////////////////////////////////////
 class XMLNode {
 
@@ -280,15 +279,7 @@ AttrInvalidBounds(const string& _name, const string& _desc,
   return oss.str();
 }
 
-///////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////
-//
-//
-//  Vizmo Debug output
-//
-//
-///////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////
+/*--------------------------- Vizmo Debug output -----------------------------*/
 
 extern ofstream* vdo;
 
@@ -402,15 +393,6 @@ void VDQuery(const CfgType& _cfg1, const CfgType& _cfg2){
   }
 };
 
-///////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////
-//
-//
-//  Path output
-//
-//
-///////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////
 
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup IOUtils
@@ -435,74 +417,53 @@ void WritePath(string _outputFile, const vector<CfgType>& _path) {
   ofs.close();
 };
 
-///////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////
-//
-//
-//  Reading Fields, used in Multibody.h
-//
-//
-///////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////
 
 ////////////////////////////////////////////////////////////////////////////////
+/// @TODO
 /// @ingroup IOUtils
-/// @brief TODO
-///
-/// TODO
 ////////////////////////////////////////////////////////////////////////////////
 class CountingStreamBuffer : public streambuf {
+
   public:
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// @brief Constructor
     /// @param _filename Filename
     CountingStreamBuffer(string _filename);
 
-    ////////////////////////////////////////////////////////////////////////////
     /// @return Current line number
     size_t LineNumber() const { return m_line; }
 
-    ////////////////////////////////////////////////////////////////////////////
     /// @return Line number of previously read character
     size_t PrevLineNumber() const { return m_prevLine; }
 
-    ////////////////////////////////////////////////////////////////////////////
     /// @return Current column
     size_t Column() const { return m_column; }
 
-    ////////////////////////////////////////////////////////////////////////////
     /// @return Current file position
     streamsize FilePos() const { return m_filePos; }
 
-    ////////////////////////////////////////////////////////////////////////////
     /// @return String describing current file position
     string Where() const;
 
   protected:
+
     //Disallow copy and assignment
     CountingStreamBuffer(const CountingStreamBuffer&);
     CountingStreamBuffer& operator=(const CountingStreamBuffer&);
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// @brief Extract next character from stream without advancing read
-    ///        position
+    /// Extract next character from stream without advancing read position.
     /// @return Next character or EOF
     streambuf::int_type underflow() { return m_streamBuffer->sgetc(); }
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// @brief Extract next character from stream
+    /// Extract next character from stream
     /// @return Next character of EOF
     streambuf::int_type uflow();
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// @brief Put back last character
+    /// Put back last character
     /// @param _c Character
     /// @return Value of character put back or EOF
     streambuf::int_type pbackfail(streambuf::int_type _c);
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// @brief Change position by offset according to dir and mode
+    /// Change position by offset according to dir and mode
     /// @param _pos Position
     /// @param _dir Direction
     /// @param _mode Mode
@@ -510,14 +471,17 @@ class CountingStreamBuffer : public streambuf {
     virtual ios::pos_type seekoff(ios::off_type _pos, ios_base::seekdir _dir,
         ios_base::openmode _mode);
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// @brief Change to specified position according to mode
+    /// Change to specified position according to mode
     /// @param _pos Position
     /// @param _mode Mode
     /// @return Position
     virtual ios::pos_type seekpos(ios::pos_type _pos, ios_base::openmode _mode);
 
   private:
+
+    ///@name Internal State
+    ///@{
+
     string m_filename;         ///< Filename
     ifstream m_fileStream;     ///< Hosted file stream
     streambuf* m_streamBuffer; ///< Hosted streambuffer
@@ -526,6 +490,8 @@ class CountingStreamBuffer : public streambuf {
     size_t m_column;           ///< Current column
     size_t m_prevColumn;       ///< Previous column
     streamsize m_filePos;      ///< File position
+
+    ///@}
 };
 
 ////////////////////////////////////////////////////////////////////////////////

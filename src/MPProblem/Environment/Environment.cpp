@@ -6,10 +6,8 @@
 #include "Geometry/Bodies/FreeBody.h"
 //#include "Geometry/Bodies/NonHolonomicMultiBody.h"
 #include "Geometry/Bodies/StaticMultiBody.h"
-#include "Geometry/Boundaries/BoundingBox.h"
-#include "Geometry/Boundaries/BoundingBox2D.h"
-#include "Geometry/Boundaries/BoundingSphere.h"
-#include "Geometry/Boundaries/BoundingSphere2D.h"
+#include "Geometry/Boundaries/WorkspaceBoundingBox.h"
+#include "Geometry/Boundaries/WorkspaceBoundingSphere.h"
 #include "MPProblem/MPProblem.h"
 
 
@@ -128,7 +126,8 @@ Print(ostream& _os) const {
 void
 Environment::
 Write(ostream & _os) {
-  WriteBoundary(_os);
+  _os << "Boundary ";
+  m_boundary->Write(_os);
   _os << endl << endl
       << "Obstacles" << endl
       << m_obstacles.size()
@@ -202,9 +201,10 @@ ExpandBoundary(double _d, ActiveMultiBody* _robot) {
   _d += robotRadius;
 
   vector<pair<double, double>> originBBX(3);
-  originBBX[0] = GetBoundary()->GetRange(0);
-  originBBX[1] = GetBoundary()->GetRange(1);
-  originBBX[2] = GetBoundary()->GetRange(2);
+  for(size_t i = 0; i < 3; ++i) {
+    const auto& r = GetBoundary()->GetRange(i);
+    originBBX[i] = make_pair(r.min, r.max);
+  }
 
   m_boundary->ResetBoundary(originBBX, _d);
 }
@@ -307,26 +307,18 @@ ReadBoundary(istream& _is, CountingStreamBuffer& _cbs) {
   string btype = ReadFieldString(_is, _cbs,
       "Failed reading boundary type. Options are: box or sphere.");
   if(btype == "BOX")
-    m_boundary = new BoundingBox();
+    m_boundary = new WorkspaceBoundingBox(3);
   else if(btype == "BOX2D")
-    m_boundary = new BoundingBox2D();
+    m_boundary = new WorkspaceBoundingBox(2);
   else if(btype == "SPHERE")
-    m_boundary = new BoundingSphere();
+    m_boundary = new WorkspaceBoundingSphere(3);
   else if(btype == "SPHERE2D")
-    m_boundary = new BoundingSphere2D();
+    m_boundary = new WorkspaceBoundingSphere(2);
   else
     throw ParseException(_cbs.Where(), "Unknown boundary type '" + btype +
         "'. Options are: box or sphere.");
 
   m_boundary->Read(_is, _cbs);
-}
-
-
-void
-Environment::
-WriteBoundary(ostream& _os) {
-  _os << "Boundary " << m_boundary->Type() << " ";
-  m_boundary->Write(_os);
 }
 
 /*----------------------------------------------------------------------------*/

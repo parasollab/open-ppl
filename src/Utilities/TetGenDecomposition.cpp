@@ -2,8 +2,6 @@
 
 #include "PMPLExceptions.h"
 
-#include "Geometry/Boundaries/BoundingBox.h"
-#include "Geometry/Boundaries/BoundingSphere.h"
 #include "Geometry/Bodies/FixedBody.h"
 #include "Geometry/Bodies/StaticMultiBody.h"
 #include "MPProblem/Environment/Environment.h"

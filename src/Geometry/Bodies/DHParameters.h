@@ -12,16 +12,16 @@ using namespace mathtool;
 /// Denavit-Hartenberg Parameters for describing joint connections.
 ///
 /// @details A description of DH Parameters:
-///   - The \f$z\f$ vector of any link frame is on a joint axis.
-///   - \f$d\f$ is the algebraic distance along axis \f$z_{i-1}\f$ to the point
-///     where the common perpendicular intersects axis \f$z_{i-1}\f$.
-///   - \f$a\f$ is the length of the common perpendicular.
-///   - \f$\theta\f$ is the angle, about \f$z_{i-1}\f$, that the common
-///     perpendicular makes with vector \f$x_{i-1}\f$.
-///   - \f$\alpha\f$ is the angle, about \f$x_i\f$, that vector \f$z_i\f$ makes
-///     with vector \f$z_{i-1}\f$.
-/// Here \f$x_i\f$, \f$z_i\f$ is \f$x\f$ and \f$z\f$ direction of current link.
-/// \f$x_{i-1}\f$ and \f$z_{i-1}\f$ is \f$x\f$ and \f$z\f$ direction of previous
+///   - The z vector of any link frame is on a joint axis.
+///   - d is the algebraic distance along axis z_{i-1} to the point
+///     where the common perpendicular intersects axis z_{i-1}.
+///   - a is the length of the common perpendicular.
+///   - \theta is the angle, about z_{i-1}, that the common
+///     perpendicular makes with vector x_{i-1}.
+///   - \alpha is the angle, about x_i, that vector z_i makes
+///     with vector z_{i-1}.
+/// Here x_i, z_i is x and z direction of current link.
+/// x_{i-1} and z_{i-1} is x and z direction of previous
 /// link.
 /// @ingroup Geometry
 ////////////////////////////////////////////////////////////////////////////////

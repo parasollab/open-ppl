@@ -90,7 +90,7 @@ struct Range final {
   Range(const std::pair<T, T>& _bounds) noexcept;
 
   ///@}
-  ///@name Interface
+  ///@name Queries
   ///@{
 
   /// Compute the length of this range.
@@ -119,6 +119,15 @@ struct Range final {
   T Sample() const noexcept;
 
   ///@}
+  ///@name Modifiers
+  ///@{
+
+  /// Resize the range.
+  /// @param _min The new lower bound.
+  /// @param _max The new upper bound.
+  void Resize(const T _min, const T _max) noexcept;
+
+  ///@}
 
 };
 
@@ -144,7 +153,7 @@ Range<T>::
 Range(const std::pair<T, T>& _bounds) noexcept :
     min(_bounds.first), max(_bounds.second) { }
 
-/*------------------------------- Interface ----------------------------------*/
+/*-------------------------------- Queries -----------------------------------*/
 
 template <typename T>
 inline
@@ -193,6 +202,17 @@ T
 Range<T>::
 Sample() const noexcept {
   return SampleRange(min, max);
+}
+
+/*-------------------------------- Modifiers ---------------------------------*/
+
+template <typename T>
+inline
+void
+Range<T>::
+Resize(const T _min, const T _max) noexcept {
+  min = _min;
+  max = _max;
 }
 
 /*---------------------------------- I/O -------------------------------------*/

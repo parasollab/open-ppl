@@ -7,7 +7,7 @@
 #include "BasicRRTStrategy.h"
 
 #include "Geometry/Boundaries/Boundary.h"
-#include "Geometry/Boundaries/BoundingSphere.h"
+#include "Geometry/Boundaries/WorkspaceBoundingSphere.h"
 #include "Utilities/ReebGraphConstruction.h"
 
 #include "Utilities/MedialAxisUtilities.h"
@@ -20,6 +20,7 @@
 #include "Models/Vizmo.h"
 #endif
 
+
 ////////////////////////////////////////////////////////////////////////////////
 /// DynamicRegionRRT uses an embedded Reeb graph to guide dynamic sampling
 /// regions through the environment.
@@ -29,7 +30,7 @@ class DynamicRegionRRT : public BasicRRTStrategy<MPTraits> {
 
   public:
 
-    ///\name Motion Planning Types
+    ///@name Motion Planning Types
     ///@{
 
     typedef typename MPTraits::CfgType      CfgType;
@@ -39,14 +40,13 @@ class DynamicRegionRRT : public BasicRRTStrategy<MPTraits> {
     typedef typename RoadmapType::GraphType GraphType;
 
     ///@}
-    ///\name Local Types
+    ///@name Local Types
     ///@{
 
-    typedef Boundary*                        RegionPtr;
     typedef ReebGraphConstruction::FlowGraph FlowGraph;
 
     ///@}
-    ///\name Construction
+    ///@name Construction
     ///@{
 
     DynamicRegionRRT(string _dm = "euclidean", string _nf = "Nearest",
@@ -61,7 +61,7 @@ class DynamicRegionRRT : public BasicRRTStrategy<MPTraits> {
     virtual ~DynamicRegionRRT() = default;
 
     ///@}
-    ///\name MPStrategyMethod Overrides
+    ///@name MPStrategyMethod Overrides
     ///@{
 
     virtual void Initialize() override;
@@ -71,53 +71,33 @@ class DynamicRegionRRT : public BasicRRTStrategy<MPTraits> {
 
   protected:
 
-    ///\name RRT Overrides
+    ///@name RRT Overrides
     ///@{
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// \brief  Computes the growth direction for the RRT, choosing between the
-    ///         entire environment and each attract region with uniform
-    ///         probability to generate q_rand.
-    /// \return The resulting growth direction.
+    /// Computes the growth direction for the RRT, choosing between the entire
+    /// environment and each attract region with uniform probability to generate
+    /// q_rand.
+    /// @return The resulting growth direction.
     virtual CfgType SelectDirection() override;
 
     ///@}
 
   private:
 
-    ///\name Helpers
-    ///@{
-
-    ////////////////////////////////////////////////////////////////////////////
-    /// \brief Prune the flow graph by removing all vertices that have no path
-    ///        to the goal.
-    /// \param[in] _f The flow graph to prune.
-    void PruneFlowGraph(FlowGraph& _f) const;
-
-    ////////////////////////////////////////////////////////////////////////////
-    /// \brief Push the nodes and edges of the flow graph to the medial axis.
-    /// \param[in] _f The flow graph to push.
-    void FlowToMedialAxis(FlowGraph& _f) const;
-
-    ////////////////////////////////////////////////////////////////////////////
-    /// \brief Test whether the newest cfg is touching a region
-    /// \param[in] _cfg The newest cfg.
-    /// \param[in] _region The region begin tested.
-    bool IsTouching(const CfgType& _cfg, RegionPtr _region);
-
     ///@}
-    ///\name Internal State
+    ///@name Internal State
     ///@{
 
     bool m_prune{true};          ///< Prune the flow graph?
-    double m_regionFactor{2.5};  ///< The region radius is this * robot radius.
-    double m_robotFactor{1.};    ///< The robot is touch if inside by this amount
 
-    vector<RegionPtr> m_regions;         ///< All Regions
-    RegionPtr m_samplingRegion{nullptr}; ///< The current sampling region.
+    double m_regionFactor{2.5};  ///< The region radius is this * robot radius.
+    double m_robotFactor{1.};
+        ///< The robot is touching a sampling region if inside by this amount.
+
+    Boundary* m_samplingRegion{nullptr};         ///< The current sampling region.
 
     ReebGraphConstruction* m_reebGraph{nullptr}; ///< Embedded reeb graph
-    WorkspaceSkeleton m_skeleton; ///< Workspace skeleton obj
+    WorkspaceSkeleton m_skeleton;                ///< Workspace skeleton
 
     ///@}
 };
@@ -158,19 +138,40 @@ DynamicRegionRRT<MPTraits>::
 Initialize() {
   BasicRRTStrategy<MPTraits>::Initialize();
 
-  StatClass* stats = this->GetStatClass();
   auto env = this->GetEnvironment();
 
+  StatClass* stats = this->GetStatClass();
+  stats->StartClock("SkeletonConstruction");
+
   //Embed ReebGraph
-  stats->StartClock("ReebGraphConstruction");
   delete m_reebGraph;
   m_reebGraph = new ReebGraphConstruction();
   m_reebGraph->Construct(env, this->GetBaseFilename());
-  stats->StopClock("ReebGraphConstruction");
+
+  // Create the workspace skeleton.
+  m_skeleton = m_reebGraph->GetSkeleton();
+
+  // Direct the workspace skeleton outward from the starting point.
+  const CfgType& s = this->m_query->GetQuery()[0];
+  Vector3d start(s[0], s[1], s[2]);
+  m_skeleton = m_skeleton.Direct(start);
+
+  // Prune the workspace skeleton relative to the goal.
+  const CfgType& goalCfg = this->m_query->GetQuery()[1];
+  m_skeleton.PruneFlowGraph(goalCfg);
+  //if(m_prune)
+  //  m_skeleton.PushToMedialAxis();
+
+  // Spark a region for each outgoing edge of start
+  const double robotRadius = s.GetRobot()->GetBoundingSphereRadius();
+  const double regionRadius = m_regionFactor * robotRadius;
+  m_skeleton.MarkAllNodesUnvisited();
+  m_skeleton.InitRegions(start, regionRadius);
+
+  stats->StopClock("SkeletonConstruction");
 
 #ifdef VIZMO
-  GetVizmo().GetEnv()->AddWorkspaceDecompositionModel(
-      env->GetDecomposition().get());
+  GetVizmo().GetEnv()->AddWorkspaceDecompositionModel(env->GetDecomposition());
   GetVizmo().GetEnv()->AddReebGraphModel(m_reebGraph);
   GetMainWindow()->GetModelSelectionWidget()->CallResetLists();
 
@@ -187,85 +188,70 @@ Run() {
   if(this->m_debug)
     cout << "\nBegin DynamicRegionRRT::Run" << endl;
 
-  // Setup MP Variables
   StatClass* stats = this->GetStatClass();
-
   stats->StartClock("DynamicRegionRRT::Run");
 
   const CfgType& s = this->m_query->GetQuery()[0];
   Vector3d start(s[0], s[1], s[2]);
-  
-  // Create the directed workspace skeleton
-  WorkspaceSkeleton m_skeleton = m_reebGraph->GetSkeleton();
-  m_skeleton = m_skeleton.Direct(start);
-  
-  const CfgType& goalCfg = this->m_query->GetQuery()[1];
-  m_skeleton.PruneFlowGraph(goalCfg);
-  m_skeleton.MarkAllNodesUnvisited();
+  const double robotRadius = s.GetRobot()->GetBoundingSphereRadius();
+  const double regionRadius = m_regionFactor * robotRadius;
 
-  // Push flow-graph to medial axis.
-  //FlowToMedialAxis(flow.first);
-
-#ifdef VIZMO
-  // Make temporary models for the regions.
-  map<RegionPtr, Model*> models;
-  TempObjsModel tom;
-#endif
-
-  //Spark a region for each outgoing edge of start
-  const double regionRadius = m_regionFactor *
-      s.GetRobot()->GetBoundingSphereRadius();
-  m_skeleton.InitRegions(start, regionRadius);
-
-  CfgType dir;
+  CfgType target;
   while(!this->EvaluateMap()) {
-    //find my growth direction. Default is to randomly select node or bias
-    //towards a goal
+    // Find growth direction: either sample or bias towards a goal.
     if(this->m_query && DRand() < this->m_growthFocus &&
         !this->m_query->GetGoals().empty())
-      dir = this->m_query->GetRandomGoal();
+      target = this->m_query->GetRandomGoal();
     else
-      dir = this->SelectDirection();
+      target = this->SelectDirection();
 
     // Randomize Current Tree
     this->m_currentTree = this->m_trees.begin() + LRand() % this->m_trees.size();
 
-    VID recent = this->ExpandTree(dir);
-    if(recent != INVALID_VID) {
+    // Try to extend the tree towards target.
+    VID recent = this->ExpandTree(target);
 
+    // If the attempt succeeds, update the regions.
+    if(recent != INVALID_VID) {
       CfgType& newest = this->GetRoadmap()->GetGraph()->GetVertex(recent);
 
+      // Clear failed sampling attempts on current region.
       if(m_samplingRegion)
         m_skeleton.SetFailedAttempts(m_samplingRegion, 0);
 
+      // Move existing regions along.
       m_skeleton.AdvanceRegions(newest);
 
-      //Add new regions
+      // Create new regions near newest.
       Vector3d p(newest[0], newest[1], newest[2]);
       m_skeleton.CreateRegions(p, regionRadius);
 
-      //connect various trees together
+      // Connect trees if there are more than one.
       this->ConnectTrees(recent);
     }
-    else {
-      if(m_samplingRegion) {
-        //++get<2>(regions[m_samplingRegion]);
-        //if(get<2>(regions[m_samplingRegion]) > 1000) {
-        //  auto rit = find(m_regions.begin(), m_regions.end(), m_samplingRegion);
-        //  m_regions.erase(rit);
-        //  regions.erase(m_samplingRegion);
-        //}
-      }
+    // If the attempt fails and we are using a dynamic region, reset its failure
+    // count.
+    else if(m_samplingRegion) {
+      /// @TODO
+      //++get<2>(regions[m_samplingRegion]);
+      //if(get<2>(regions[m_samplingRegion]) > 1000) {
+      //  auto rit = find(m_regions.begin(), m_regions.end(), m_samplingRegion);
+      //  m_regions.erase(rit);
+      //  regions.erase(m_samplingRegion);
+      //}
     }
 #ifdef VIZMO
     GetVizmo().GetMap()->RefreshMap();
-#endif
   }
+  GetVizmo().GetMap()->SetSelectable(true);
+#else
+  }
+#endif
 
   stats->StopClock("DynamicRegionRRT::Run");
 
   if(this->m_debug)
-    cout<<"\nEnd DynamicRegionRRT::Run" << endl;
+    std::cout << "\nEnd DynamicRegionRRT::Run" << std::endl;
 }
 
 /*----------------------------- RRT Overrides --------------------------------*/
@@ -277,150 +263,34 @@ SelectDirection() {
   const Boundary* samplingBoundary;
   Environment* env = this->GetEnvironment();
 
+  // Randomly select a sampling region.
   auto& regions = m_skeleton.GetRegions();
-
-  size_t _index = rand() % (regions.size() + 1);
-
-  if(_index == regions.size()) {
+  size_t index = rand() % (regions.size() + 1);
+  if(index == regions.size()) {
     m_samplingRegion = nullptr;
-    samplingBoundary = this->GetEnvironment()->GetBoundary();
+    samplingBoundary = env->GetBoundary();
   }
   else {
-    m_samplingRegion = regions[_index];
+    m_samplingRegion = regions[index];
     samplingBoundary = m_samplingRegion;
   }
 
+  // Generate the target q_rand from within the selected region.
   try {
     CfgType mySample;
     mySample.GetRandomCfg(env, samplingBoundary);
     return mySample;
   }
-  //catch Boundary too small exception
+  // Catch Boundary too small exception.
   catch(PMPLException _e) {
     CfgType mySample;
     mySample.GetRandomCfg(env);
     return mySample;
   }
-  //catch all others and exit
-  catch(exception _e) {
-    cerr << _e.what() << endl;
-    exit(1);
+  catch(std::exception _e) {
+    std::cerr << _e.what() << std::endl;
+    std::exit(1);
   }
-}
-
-/*-------------------------------- Helpers -----------------------------------*/
-
-template <typename MPTraits>
-void
-DynamicRegionRRT<MPTraits>::
-PruneFlowGraph(FlowGraph& _f) const {
-  using VD = FlowGraph::vertex_descriptor;
-
-  // Find the flow-graph node nearest to the goal.
-  const CfgType& goalCfg = this->m_query->GetQuery()[1];
-  Vector3d goalPoint(goalCfg[0], goalCfg[1], goalCfg[2]);
-  double closestDistance = std::numeric_limits<double>::max();
-  VD goal;
-  for(auto vit = _f.begin(); vit != _f.end(); ++vit) {
-    const auto& thisPoint = vit->property();
-    double distance = (thisPoint - goalPoint).norm();
-    if(distance < closestDistance) {
-      closestDistance = distance;
-      goal = vit->descriptor();
-    }
-  }
-
-  // Initialize a list of vertices to prune with every vertex in the graph.
-  vector<VD> toPrune;
-  toPrune.reserve(_f.get_num_vertices());
-  for(const auto& v : _f)
-    toPrune.push_back(v.descriptor());
-
-  // Remove vertices from the prune list by starting from the goal and working
-  // backwards up the incoming edges. Don't prune any vertex that is an ancestor
-  // of the goal.
-  queue<VD> q;
-  q.push(goal);
-  do {
-    VD current = q.front();
-    q.pop();
-
-    auto iter = find(toPrune.begin(), toPrune.end(), current);
-    if(iter != toPrune.end())
-      toPrune.erase(iter);
-
-    for(auto ancestor : _f.find_vertex(current)->predecessors())
-      q.push(ancestor);
-  } while(!q.empty());
-
-  // Remove the vertices we aren't keeping.
-  for(auto vd : toPrune)
-    if(_f.find_vertex(vd) != _f.end())
-      _f.delete_vertex(vd);
-}
-
-
-template <typename MPTraits>
-void
-DynamicRegionRRT<MPTraits>::
-FlowToMedialAxis(FlowGraph& _f) const {
-  if(this->m_debug)
-    cout << "Flow graph has " << _f.get_num_vertices() << " vertices "
-         << " and " << _f.get_num_edges() << " edges."
-         << "\n\tPushing to medial axis:";
-
-  MedialAxisUtility<MPTraits> mau("pqp_solid", this->m_dmLabel,
-      true, true, 10, 10, true, true);
-  auto boundary = this->GetEnvironment()->GetBoundary();
-
-  auto push = [&](Point3d& _p) {
-    CfgType cfg(_p);
-
-    if(this->m_debug)
-      cout << "\n\t\tPushing from: " << setprecision(4) << cfg.GetPoint()
-           << "\n\t\t          to: ";
-
-    if(mau.PushToMedialAxis(cfg, boundary)) {
-      _p = cfg.GetPoint();
-      if(this->m_debug)
-        cout << cfg.GetPoint();
-    }
-    else if(this->m_debug)
-      cout << "(failed)";
-  };
-
-  // Push flowgraph vertices.
-  for(auto vit = _f.begin(); vit != _f.end(); ++vit)
-    push(vit->property());
-
-  // Push flowgraph edges.
-  for(auto eit = _f.edges_begin(); eit != _f.edges_end(); ++eit)
-    for(auto pit = eit->property().begin(); pit < eit->property().end(); ++pit)
-      push(*pit);
-
-  if(this->m_debug)
-    cout << "\n\tMedial axis push complete." << endl;
-}
-
-template <typename MPTraits>
-bool
-DynamicRegionRRT<MPTraits>::
-IsTouching(const CfgType& _cfg, RegionPtr _region) {
-  auto region = static_cast<BoundingSphere*>(_region);
-
-  const Point3d& robotCenter = _cfg.GetPoint();
-  const Point3d& regionCenter = region->GetCenter();
-
-  double robotRadius = _cfg.GetRobot()->GetBoundingSphereRadius();
-  double regionRadius = region->GetRadius();
-
-  // distance between the region and the robot
-  double dist = (regionCenter - robotCenter).norm();
-
-  // the maximum distance the the robot is inisde the region
-  double maxPenetration = robotRadius + regionRadius - dist;
-
-  return maxPenetration > 0 && maxPenetration >= 2 * robotRadius * m_robotFactor;
 }
 
 /*----------------------------------------------------------------------------*/

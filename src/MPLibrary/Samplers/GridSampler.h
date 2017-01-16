@@ -206,24 +206,20 @@ GetRealLocation(map<size_t,double>& _locations, map<size_t,size_t> _coordinates,
     int numPoints = num.second;
 
     // Get bounding box min and max (for this dimension)
-    pair<double, double> range = _boundary->GetRange(index);
+    auto range = _boundary->GetRange(index);
 
     // Resolution of grid
-    double auxPoints = (double) numPoints;
-    double delta;
-    if(numPoints == 0)
-      delta = (range.second - range.first);
-    else
-      delta = (range.second - range.first) / auxPoints;
+    double delta = range.Length();
+    if(numPoints != 0)
+      delta /= numPoints;
 
     // Get the real place in the workspace .
-    double coor = (double) _coordinates[index];
-    double gridVal = (coor * delta) + range.first;
+    double gridVal = (_coordinates[index] * delta) + range.min;
 
     //Push gridVal inside bounding box (if necessary)
-    gridVal = min(range.second, gridVal);
-    gridVal = max(range.first, gridVal);
-    _locations[index] =(double) gridVal;
+    gridVal = min(range.max, gridVal);
+    gridVal = max(range.min, gridVal);
+    _locations[index] = gridVal;
   }
 }
 

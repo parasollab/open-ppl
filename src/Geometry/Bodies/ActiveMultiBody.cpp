@@ -68,9 +68,9 @@ InitializeDOFs(const Boundary* _b, ostream* _os) {
     m_dofTypes.push_back(DofType::Positional);
     m_dofTypes.push_back(DofType::Positional);
     m_dofInfo.push_back(DofInfo("Base X Translation ",
-          _b->GetRange(0).first, _b->GetRange(0).second));
+          _b->GetRange(0).min, _b->GetRange(0).max));
     m_dofInfo.push_back(DofInfo("Base Y Translation ",
-          _b->GetRange(1).first, _b->GetRange(1).second));
+          _b->GetRange(1).min, _b->GetRange(1).max));
 
     if(_os) {
       *_os << "\t\t" << dof++ << ": X position" << endl;
@@ -90,11 +90,11 @@ InitializeDOFs(const Boundary* _b, ostream* _os) {
     m_dofTypes.push_back(DofType::Positional);
     m_dofTypes.push_back(DofType::Positional);
     m_dofInfo.push_back(DofInfo("Base X Translation ",
-          _b->GetRange(0).first, _b->GetRange(0).second));
+          _b->GetRange(0).min, _b->GetRange(0).max));
     m_dofInfo.push_back(DofInfo("Base Y Translation ",
-          _b->GetRange(1).first, _b->GetRange(1).second));
+          _b->GetRange(1).min, _b->GetRange(1).max));
     m_dofInfo.push_back(DofInfo("Base Z Translation ",
-          _b->GetRange(2).first, _b->GetRange(2).second));
+          _b->GetRange(2).min, _b->GetRange(2).max));
 
     if(_os) {
       *_os << "\t\t" << dof++ << ": X position" << endl;
@@ -384,7 +384,7 @@ GetRandomCfg(const Boundary* const _b) {
 
   // Sample any positional DOFs.
   if(PosDOF()) {
-    Point3d p = _b->GetRandomPoint();
+    auto p = _b->GetRandomPoint();
     for(size_t i = 0; i < PosDOF(); ++i)
       v.push_back(p[i]);
   }
@@ -424,9 +424,9 @@ GetCfgLimits(const Boundary* const _b) const {
   // Get position limits.
   if(PosDOF()) {
     for(size_t i = 0; i < PosDOF(); ++i) {
-      pair<double, double> range = _b->GetRange(i);
-      min.push_back(range.first);
-      max.push_back(range.second);
+      const auto& range = _b->GetRange(i);
+      min.push_back(range.min);
+      max.push_back(range.min);
     }
   }
 

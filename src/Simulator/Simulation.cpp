@@ -172,9 +172,9 @@ AddBBX() {
 
   // Compute half edge lengths of bounding box
   const btScalar thickness = 1.;
-  const btScalar x = (r1.second - r1.first) / 2;
-  const btScalar y = r2.first - thickness / 2;
-  const btScalar z = (r3.second - r3.first) / 2;
+  const btScalar x = r1.Center();
+  const btScalar y = r2.min - thickness / 2;
+  const btScalar z = r3.Center();
 
   // Make the transform.
   btTransform trans;

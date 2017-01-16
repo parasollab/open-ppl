@@ -3,12 +3,10 @@
 
 #include "BasicRRTStrategy.h"
 
-#include "Geometry/Boundaries/BoundingBox.h"
 
 ////////////////////////////////////////////////////////////////////////////////
-/// @ingroup MotionPlanningStrategies
-/// @brief Dynamic Domain RRT adapts the sampling space of RRTs to better
-///        approximate boundary information
+/// Dynamic Domain RRT adapts the sampling space of RRTs to better approximate
+/// boundary information.
 ///
 /// Dynamic Domain RRT considers a bounding sphere around each configuration.
 /// During RRT sampling only nodes within some \f$q_{near}\f$'s radius. If
@@ -19,13 +17,14 @@
 /// Efficient Exploration by Controlling the Sampling Domain," Proc. of the Int.
 /// Conf. on Robotics and Automation (ICRA), pp. 3856-3861, Barcelona, Spain,
 /// Apr. 2005.
+/// @ingroup MotionPlanningStrategies
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
 class DynamicDomainRRT : public BasicRRTStrategy<MPTraits> {
 
   public:
 
-    ///\name Motion Planning Types
+    ///@name Motion Planning Types
     ///@{
 
     typedef typename MPTraits::CfgType      CfgType;
@@ -34,8 +33,8 @@ class DynamicDomainRRT : public BasicRRTStrategy<MPTraits> {
     typedef typename RoadmapType::GraphType GraphType;
     typedef typename RoadmapType::VID       VID;
 
-    ///}@
-    ///\name Construction
+    ///@}
+    ///@name Construction
     ///@{
 
     DynamicDomainRRT(string _dm = "euclidean", string _nf = "bfnf",
@@ -50,13 +49,13 @@ class DynamicDomainRRT : public BasicRRTStrategy<MPTraits> {
     virtual ~DynamicDomainRRT() = default;
 
     ///@}
-    ///\name MPStrategyMethod Overrides
+    ///@name MPStrategyMethod Overrides
     ///@{
 
     virtual void Initialize() override;
 
     ///@}
-    ///\name MPBaseObject Overrides
+    ///@name MPBaseObject Overrides
     ///@{
 
     virtual void Print(ostream& _os) const;
@@ -65,34 +64,34 @@ class DynamicDomainRRT : public BasicRRTStrategy<MPTraits> {
 
   protected:
 
-    ///\name RRT Overrides
+    ///@name RRT Overrides
     ///@{
 
     virtual VID ExpandTree(const VID _nearestVID, const CfgType& _target)
         override;
+
     virtual VID Extend(const VID _nearVID, const CfgType& _qRand,
         const bool _lp = false) override;
 
     ///@}
-    ///\name Helpers
+    ///@name Helpers
     ///@{
 
-    ////////////////////////////////////////////////////////////////////////////
     /// @return String for accessing Cfg::GetStat for radius value
     static constexpr string RLabel() {return "DDRRT::R";}
 
     ///@}
-    ///\name Internal State
+    ///@name Internal State
     ///@{
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// \brief The dynamic domain radius factor. When we fail to extend from a
-    ///        configuration, its dynamic domain is set to this times the
-    ///        extender max distance. Future extensions from this node are
-    ///        aborted if the target is outside its dynamic domain.
+    /// The dynamic domain radius factor. When we fail to extend from a
+    /// configuration, its dynamic domain is set to this times the extender max
+    /// distance. Future extensions from this node are aborted if the target is
+    /// outside its dynamic domain.
     double m_r;
 
     ///@}
+
 };
 
 /*---------------------------- Construction ----------------------------------*/

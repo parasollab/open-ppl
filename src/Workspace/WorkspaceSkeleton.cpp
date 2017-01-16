@@ -1,13 +1,13 @@
 #include "WorkspaceSkeleton.h"
 
+#include "Geometry/Boundaries/WorkspaceBoundingSphere.h"
+
+
+/*----------------------------------------------------------------------------*/
+
 WorkspaceSkeleton
 WorkspaceSkeleton::
-Direct(const Vector3d& _start)
-{  
-  //we assumes the m_graph object already contains the info we need
-  //the object of directed workspace skeleton for return
-  WorkspaceSkeleton directedWSSkeleton;
-  //object of skeleton graph to construct
+Direct(const Vector3d& _start) {
   GraphType skeletonGraph;
 
   enum Color {White, Gray, Black};
@@ -88,96 +88,103 @@ Direct(const Vector3d& _start)
     }
     visited[u] = Black;
   }
-  directedWSSkeleton.SetGraph(skeletonGraph);
 
-  return directedWSSkeleton;
+  WorkspaceSkeleton skeleton;
+  skeleton.SetGraph(skeletonGraph);
+  return skeleton;
 }
+
 
 void
 WorkspaceSkeleton::
-InitRegions(const Vector3d& _start, const double _regionRadius)
-{
-  //Spark a region for each outgoing edge from @param _start
-  
-  // @SOLVED how do we get the FVD from a vertex3d object (_start)?
-  // used the nearest vertex in the flow graph
-
-  // Find all outgoing edges from _start and create regions for each edge
+InitRegions(const Vector3d& _start, const double _regionRadius) {
+  // Find the vertex nearest to start.
   auto sit = FindNearestVertex(_start);
+
+  // Spark a region for each outgoing edge from _start.
   for(auto eit = sit->begin(); eit != sit->end(); ++eit) {
-    auto i = regions.emplace(
-        new BoundingSphere(sit->property(), _regionRadius),
-        make_tuple(eit->descriptor(), 0, 0));
-    m_regions.push_back(i.first->first);
+    auto r = new WorkspaceBoundingSphere(sit->property(), _regionRadius);
+    m_regionData.emplace(r, RegionData{eit->descriptor(), 0, 0});
+    m_regions.push_back(r);
   }
   m_visited[sit->descriptor()] = true;
 }
 
+
 void
 WorkspaceSkeleton::
-CreateRegions(const Vector3d& _p, double _regionRadius){
+CreateRegions(const Vector3d& _p, const double _regionRadius) {
+  // Check each skeleton node to see if a new region should be created.
   for(auto vit = m_graph.begin(); vit != m_graph.end(); ++vit) {
+    // Skip skeleton nodes that are already visited.
     if(m_visited[vit->descriptor()])
       continue;
+
+    // Skip skeleton nodes that are too far away.
     const double dist = (vit->property() - _p).norm();
-    if(dist < _regionRadius) {
-      for(auto eit = vit->begin(); eit != vit->end(); ++eit) {
-        auto i = regions.emplace(
-            new BoundingSphere(vit->property(), _regionRadius),
-            make_tuple(eit->descriptor(), 0, 0));
-        m_regions.push_back(i.first->first);
-      }
-      m_visited[vit->descriptor()] = true;
+    if(dist >= _regionRadius)
+      continue;
+
+    // If we're still here, the region is in range and unvisited.
+    // Create a new region for each outgoing edge of this skeleton node.
+    for(auto eit = vit->begin(); eit != vit->end(); ++eit) {
+      auto r = new WorkspaceBoundingSphere(vit->property(), _regionRadius);
+      m_regionData.emplace(r, RegionData{eit->descriptor(), 0, 0});
+      m_regions.push_back(r);
     }
+    m_visited[vit->descriptor()] = true;
   }
 }
 
-void 
+
+void
 WorkspaceSkeleton::
-AdvanceRegions(const Cfg& _cfg){
+AdvanceRegions(const Cfg& _cfg) {
   // Iterate all regions and see if any regions contain the new cfg
-  // If a region contains the new cfg, advance it along the flow edge and 
+  // If a region contains the new cfg, advance it along the flow edge and
   // until the new region we get from this is at the end of the flow edge or
   // it no longer contains the cfg
-  
-  //iterate through all regions to see which should be advanced
-  for(auto itr = m_regions.begin(); itr != m_regions.end(); )
-  {
-    //get the region from all regions sequentially
-    RegionPtr region = *itr;
-    //the bool flag for if the regions is advanced before reaching edge end
+
+  // Iterate through all regions to see which should be advanced.
+  for(auto iter = m_regions.begin(); iter != m_regions.end(); ) {
+    Boundary* region = *iter;
     bool increment = true;
     //while the robot still in the region
     while(IsTouching(_cfg, region)) {
-      Vector3d cur = region->GetCenter();
+      const auto& rc = region->GetCenter();
+      Vector3d current(rc[0], rc[1], rc[2]);
+
       //get detailed info about current region
       //tuple of edge descriptor, vertex index, failed extensions
-      auto& pr = regions[region];
+      auto& regionData = m_regionData[region];
       GraphType::vertex_iterator vi;
       GraphType::adj_edge_iterator ei;
-      //get corresponding vertex itr and edge itr of a edge descriptor
-      m_graph.find_edge(get<0>(pr), vi, ei);
+
+      //get corresponding vertex iter and edge iter of a edge descriptor
+      m_graph.find_edge(regionData.edgeDescriptor, vi, ei);
       vector<Vector3d>& path = ei->property();
-      size_t& i = get<1>(pr);
-      size_t j = i+1;
+      size_t& i = regionData.edgeIndex;
+      size_t j = i + 1;
+
       //if after advancing we will still be on the edge
       if(j < path.size()) {
         //get the next region center
-        Vector3d& next = path[j];
         //advance the region
-        region->ApplyOffset(next-cur);
         //change current region center index on the edge
+        Vector3d& next = path[j];
+        region->ApplyOffset(next - current);
         i = j;
       }
       //else we exceed the edge and need to delete region
       else {
-        itr = m_regions.erase(itr);
-        regions.erase(region);
+        iter = m_regions.erase(iter);
+        m_regionData.erase(region);
         increment = false;
         break;
       }
     }
-    if(increment) ++itr;
+    if(increment)
+      ++iter;
   }
 }
 
@@ -185,35 +192,38 @@ AdvanceRegions(const Cfg& _cfg){
 
 bool
 WorkspaceSkeleton::
-IsTouching(const Cfg& _cfg, RegionPtr _region, double _robotFactor) {
-  auto region = static_cast<BoundingSphere*>(_region);
+IsTouching(const Cfg& _cfg, const Boundary* const _region,
+    const double _robotFactor) {
+  auto region = static_cast<const WorkspaceBoundingSphere*>(_region);
 
+  // Compute the distance between the robot's reference point and the region
+  // center.
   const Point3d& robotCenter = _cfg.GetPoint();
-  const Point3d& regionCenter = region->GetCenter();
+  const auto& rc = region->GetCenter();
+  const Point3d regionCenter(rc[0], rc[1], rc[2]);
+  const double dist = (regionCenter - robotCenter).norm();
 
-  double robotRadius = _cfg.GetRobot()->GetBoundingSphereRadius();
-  double regionRadius = region->GetRadius();
+  const double robotRadius = _cfg.GetRobot()->GetBoundingSphereRadius();
+  const double regionRadius = region->GetRadius();
 
-  // distance between the region and the robot
-  double dist = (regionCenter - robotCenter).norm();
-
-  // the maximum distance the the robot is inisde the region
-  double maxPenetration = robotRadius + regionRadius - dist;
-
+  // The robot is touching if at least one robot factor of it's bounding sphere
+  // penetrates into the region.
+  /// @TODO Check this, probably should be maxPenetration = regionRadius - dist.
+  const double maxPenetration = robotRadius + regionRadius - dist;
   return maxPenetration > 0 && maxPenetration >= 2 * robotRadius * _robotFactor;
 }
 
-WorkspaceSkeleton::vertex_itr
+
+WorkspaceSkeleton::vertex_iterator
 WorkspaceSkeleton::
-FindNearestVertex(const Vector3d& _target){
+FindNearestVertex(const Vector3d& _target) {
   double closestDist = numeric_limits<double>::max();
-  vertex_itr closestVI;
-  for(auto vit = m_graph.begin(); vit != m_graph.end(); ++vit)
-  {
-    Vector3d v = vit->property();
-    double dist = (v - _target).norm();
-    if(dist < closestDist)
-    {
+  vertex_iterator closestVI;
+
+  for(auto vit = m_graph.begin(); vit != m_graph.end(); ++vit) {
+    Vector3d& v = vit->property();
+    const double dist = (v - _target).norm();
+    if(dist < closestDist) {
       closestDist = dist;
       closestVI = vit;
     }
@@ -221,18 +231,19 @@ FindNearestVertex(const Vector3d& _target){
   return closestVI;
 }
 
+
 void
 WorkspaceSkeleton::
-PruneFlowGraph(const Cfg& goalCfg) {
+PruneFlowGraph(const Cfg& _goal) {
   using VD = GraphType::vertex_descriptor;
 
   // Find the flow-graph node nearest to the goal.
   // @SOLVED how to get the goal cfg in our current implementation
   // used a new param
-  //const Cfg& goalCfg = this->m_query->GetQuery()[1];
-  Vector3d goalPoint(goalCfg[0], goalCfg[1], goalCfg[2]);
+  //const Cfg& _goal = this->m_query->GetQuery()[1];
+  Vector3d goalPoint(_goal[0], _goal[1], _goal[2]);
   double closestDistance = std::numeric_limits<double>::max();
-  // Iterate all and find a vertex in the flow graph that is closest from the 
+  // Iterate all and find a vertex in the flow graph that is closest from the
   // actual goal cfg
   VD goal = VD(-1);
   for(auto vit = m_graph.begin(); vit != m_graph.end(); ++vit) {
@@ -262,12 +273,12 @@ PruneFlowGraph(const Cfg& goalCfg) {
     // try to find current vertex in the toPrune list
     // i.e., the list in which all vertices are not currently found to be an
     // ancestor yet
-    auto itr = find(toPrune.begin(), toPrune.end(), current);
+    auto iter = find(toPrune.begin(), toPrune.end(), current);
     // if found, we can erase it from the list so that we won't be pruning it
-    if(itr != toPrune.end())
-      toPrune.erase(itr);
+    if(iter != toPrune.end())
+      toPrune.erase(iter);
     // if not found, just keep it there
-    
+
     // the backtrack BFS logic
     for(auto ancestor : m_graph.find_vertex(current)->predecessors())
       q.push(ancestor);
@@ -282,9 +293,13 @@ PruneFlowGraph(const Cfg& goalCfg) {
 //void
 //WorkspaceSkeleton::
 //FlowToMedialAxis(GraphType& _f) const {
-//  // @SOLVED how do we get the m_dmLabel and environment boundary here?
 //  // use euclidean as default
 //  // @TODO how to use the MAUtility here
+//  if(this->m_debug)
+//    cout << "Flow graph has " << _f.get_num_vertices() << " vertices "
+//         << " and " << _f.get_num_edges() << " edges."
+//         << "\n\tPushing to medial axis:";
+//
 //  MedialAxisUtility<MPTraits> mau("pqp_solid", "euclidean",
 //      true, true, 10, 10, true, true);
 //  auto boundary = this->GetEnvironment()->GetBoundary();
@@ -292,7 +307,7 @@ PruneFlowGraph(const Cfg& goalCfg) {
 //  // Define the push function
 //  auto push = [&](Point3d& _p) {
 //    Cfg cfg(_p);
-//    
+//
 //    // @TODO how do we get the boundary
 //    // If success we use the new point instead
 //    if(mau.PushToMedialAxis(cfg, boundary)) {
@@ -309,33 +324,58 @@ PruneFlowGraph(const Cfg& goalCfg) {
 //  for(auto eit = _f.edges_begin(); eit != _f.edges_end(); ++eit)
 //    for(auto pit = eit->property().begin(); pit < eit->property().end(); ++pit)
 //      push(*pit);
+//
+//  if(this->m_debug)
+//    cout << "\n\tMedial axis push complete." << endl;
 //}
 
-void
-WorkspaceSkeleton::
-MarkAllNodesUnvisited(){
-  m_visited.clear();
-  for(auto vit = m_graph.begin(); vit != m_graph.end(); ++vit){
-    m_visited[vit->descriptor()] = false;
-  }
-}
 
 void
 WorkspaceSkeleton::
-SetFailedAttempts(RegionPtr _region, size_t _num){
-  get<2>(regions[_region]) = _num;
+MarkAllNodesUnvisited() {
+  m_visited.clear();
+  for(auto vit = m_graph.begin(); vit != m_graph.end(); ++vit)
+    m_visited[vit->descriptor()] = false;
 }
+
+
+void
+WorkspaceSkeleton::
+SetFailedAttempts(const Boundary* const _region, const size_t _num) {
+  // Const cast because STL map is stupid about pointer const-ness.
+  m_regionData[const_cast<Boundary*>(_region)].failCount = _num;
+}
+
 
 /*--------------------------- Setters & Getters ------------------------------*/
 
 void
 WorkspaceSkeleton::
-SetGraph(GraphType& _graph){
+SetGraph(GraphType& _graph) {
   this->m_graph = _graph;
 }
 
-vector<WorkspaceSkeleton::RegionPtr>&
+
+const std::vector<Boundary*>&
 WorkspaceSkeleton::
-GetRegions(){
+GetRegions() const {
   return m_regions;
 }
+
+/*----------------------------------------------------------------------------*/
+
+/// @TODO Revisit visual debugging later.
+
+// Creating the model storage:
+//#ifdef VIZMO
+//  // Make temporary models for the regions.
+//  map<Boundary*, Model*> models;
+//  TempObjsModel tom;
+//#endif
+
+// Initializing a new model:
+//#ifdef VIZMO
+//    models[m_regions.back()] = new ThreadSafeSphereModel(
+//        m_regions.back()->GetCenter(), regionRadius);
+//    tom.AddModel(models[m_regions.back()]);
+//#endif

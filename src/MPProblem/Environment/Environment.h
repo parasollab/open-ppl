@@ -23,13 +23,10 @@ class WorkspaceDecomposition;
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// @ingroup Environment
-/// @brief Workspace for the motion planning problem.
+/// Workspace for the motion planning problem.
 ///
-/// The Environment is essentially the workspace of the motion planning problem.
-/// We define a workspace as a set of MultiBody which are essentially either
-/// robot or obstacle geometries and a Boundary to define the
-/// sampling/exploration region for the planner.
+/// @details The Environment is essentially the workspace of a motion planning
+///          problem, and includes a boundary and zero or more obstacles.
 ////////////////////////////////////////////////////////////////////////////////
 class Environment {
 
@@ -46,7 +43,9 @@ class Environment {
     ///@{
 
     Environment() = default;
+
     Environment(XMLNode& _node);
+
     virtual ~Environment();
 
     ///@}
@@ -116,6 +115,10 @@ class Environment {
     /// increased by a margin of _d + robotRadius.
     /// @param _d Margin to increase minimum bounding box
     /// @param _robot Robot to base the margin off of
+    /// @TODO This is a temporary hack to be removed after cloning functions are
+    ///       implemented in the boundary class hierarchy. Rather than changing
+    ///       the environment boundary, methods wishing to use a modified
+    ///       version of it should clone it and adjust the clone.
     void ResetBoundary(double _d, ActiveMultiBody* _robot);
 
     /// Forward to the boundary reset.
@@ -129,6 +132,10 @@ class Environment {
     /// Expand the boundary by a margin of _d + robotRadius
     /// @param _d Margin to increase bounding box
     /// @param _robot Robot to base the margin off of
+    /// @TODO This is a temporary hack to be removed after cloning functions are
+    ///       implemented in the boundary class hierarchy. Rather than changing
+    ///       the environment boundary, methods wishing to use a modified
+    ///       version of it should clone it and adjust the clone.
     void ExpandBoundary(double _d, ActiveMultiBody* _robot);
 
     ///@}
@@ -172,8 +179,8 @@ class Environment {
     ///@name Decomposition
     ///@{
 
-    shared_ptr<const WorkspaceDecomposition> GetDecomposition() const {
-      return const_pointer_cast<const WorkspaceDecomposition>(m_decomposition);
+    const WorkspaceDecomposition* GetDecomposition() const {
+      return m_decomposition.get();
     }
 
     /// Compute a decomposition of the workspace.
@@ -191,10 +198,6 @@ class Environment {
     /// @param _is Input stream
     /// @param _cbs Counting stream buffer for accurate error reporting
     void ReadBoundary(istream& _is, CountingStreamBuffer& _cbs);
-
-    /// Write boundary information.
-    /// @param _os Output stream
-    void WriteBoundary(ostream& _os);
 
     ///@}
     ///@name File Info

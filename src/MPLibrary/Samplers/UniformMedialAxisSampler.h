@@ -2,7 +2,10 @@
 #define UNIFORM_MEDIAL_AXIS_SAMPLER_H_
 
 #include "SamplerMethod.h"
+
+#include "Geometry/Boundaries/WorkspaceBoundingBox.h"
 #include "Utilities/MedialAxisUtilities.h"
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup Samplers
@@ -202,17 +205,20 @@ UniformMedialAxisSampler<MPTraits>::
 CheckMedialAxisCrossing(const CfgType& _c1, int _w1,
     const CfgType& _c2, int _w2) {
   Environment* env = this->GetEnvironment();
-  //The closest obstacle is the same, check if the triangles which the
-  //witness points belong to are adjacent and form a concave face
+
+  // The closest obstacle is the same, check if the triangles which the
+  // witness points belong to are adjacent and form a concave face
   if(_w1 == _w2) {
-    //Check if the witness points are on the bounding box
+
+    // Check if the witness points are on the bounding box
     if(_w1 == -1) {
-      int side1 = env->GetBoundary()->GetSideID(_c1.GetData());
-      int side2 = env->GetBoundary()->GetSideID(_c2.GetData());
-      if(side1 == side2)
-        return false;
-      else
-        return true;
+      // Check if the boundary is a bounding box. Crash if it isn't since we
+      // need the 'GetSideID' function which is only sensical for boxes.
+      auto box = dynamic_cast<const WorkspaceBoundingBox*>(env->GetBoundary());
+      if(!box)
+        throw RunTimeException(WHERE, "Non-box boundary used. This method "
+            "requires a box-shaped boundary.");
+      return box->GetSideID(_c1.GetData()) != box->GetSideID(_c2.GetData());
     }
 
     //Find the triangles which the witness points belong to first
@@ -466,14 +472,21 @@ BinarySearch(const Boundary* const _boundary,
     vector<CfgType>& _result) {
 
   Environment* env = this->GetEnvironment();
+
+  // Downcast the boundary to a workspace box or bust.
+  auto box = dynamic_cast<const WorkspaceBoundingBox*>(_boundary);
+  if(!box)
+    throw RunTimeException(WHERE, "Non-box boundary used. This method "
+        "requires a box-shaped boundary.");
+
   CfgType left = _c1, right = _c2;
   //grab initial IDs
   int leftOI = _w1, rightOI = _w2;
   int leftID = leftOI, rightID = rightOI;
   if(_w1 == -1)  //the witness point is on the bounding box
-    leftID = _boundary->GetSideID(_c1.GetData());
+    leftID = box->GetSideID(_c1.GetData());
   if(_w2 == -1)  //the witness point is on the bounding box
-    rightID = _boundary->GetSideID(_c2.GetData());
+    rightID = box->GetSideID(_c2.GetData());
   if((_w1 == _w2) && (_w1 != -1)) {
     leftID = FindVertex(leftOI, left);
     if(leftID == 1) {
@@ -520,7 +533,7 @@ BinarySearch(const Boundary* const _boundary,
     //find triangle id
     int midID = midOI;
     if(midOI == -1)  //witness point is on the bounding box
-      midID = _boundary->GetSideID(mid.GetData());
+      midID = box->GetSideID(mid.GetData());
     if((_w1 == _w2) && (_w1 != -1)) {
       midID = FindVertex(midOI, mid);
       if(midID == 1) {

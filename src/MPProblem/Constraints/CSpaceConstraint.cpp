@@ -41,7 +41,7 @@ GetBoundary() const {
 bool
 CSpaceConstraint::
 Satisfied(const Cfg& _c) const {
-  return m_bbx.InCSpace(_c);
+  return m_bbx.InBoundary(_c);
 }
 
 /*--------------------------- Creation Interface -----------------------------*/

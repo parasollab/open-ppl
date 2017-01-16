@@ -1,6 +1,11 @@
 #ifndef BOUNDARY_H_
 #define BOUNDARY_H_
 
+#include <cstddef>
+#include <iostream>
+#include <string>
+#include <vector>
+
 #include "Vector.h"
 using namespace mathtool;
 
@@ -11,10 +16,12 @@ using namespace mathtool;
 #include <CGAL/Polyhedron_incremental_builder_3.h>
 
 class Cfg;
+template <typename T> class Range;
+
 
 ////////////////////////////////////////////////////////////////////////////////
+/// An abstract interface for a bounding volume in workspace or c-space.
 /// @ingroup Geometry
-/// A general boundary object.
 ////////////////////////////////////////////////////////////////////////////////
 class Boundary {
 
@@ -23,37 +30,42 @@ class Boundary {
     ///@name Construction
     ///@{
 
-    Boundary() = default;
-
     virtual ~Boundary() = default;
+
+    /// Duplicate this boundary and return a dynamically-allocated copy with the
+    /// same type.
+    /// @return A dynamically-allocated copy of this with the same type. Memory
+    ///         must be released by the user.
+    virtual Boundary* Clone() const = 0;
 
     ///@}
     ///@name Property Accessors
     ///@{
 
     /// Get the name of the boundary type.
-    virtual string Type() const noexcept = 0;
-
-    /// Get the center point of the boundary.
-    const Point3d& GetCenter() const noexcept;
+    virtual std::string Type() const noexcept = 0;
 
     /// Get the longest distance contained within the boundary. Supports any
     /// Minkowski distance.
     /// @param _r1 The term-wise power in the Minkowski difference.
     /// @param _r2 The whole expression power in the Minkowski difference.
-    virtual double GetMaxDist(double _r1 = 2., double _r2 = .5) const = 0;
+    virtual double GetMaxDist(const double _r1 = 2., const double _r2 = .5)
+        const = 0;
 
     /// Get the boundary range for a specific dimension.
     /// @param _i The dimension index.
     /// @return The range of values spanned by this boundary in dimension _i.
-    virtual pair<double, double> GetRange(size_t _i) const = 0;
+    virtual Range<double> GetRange(const size_t _i) const = 0;
+
+    /// Get the boundary's center point.
+    virtual const std::vector<double>& GetCenter() const noexcept = 0;
 
     ///@}
     ///@name Sampling
     ///@{
 
     /// Get a random point inside the boundary.
-    virtual Point3d GetRandomPoint() const = 0;
+    virtual std::vector<double> GetRandomPoint() const = 0;
 
     ///@}
     ///@name Containment Testing
@@ -62,29 +74,22 @@ class Boundary {
     /// Test if a specific point lies within the boundary.
     /// @param _p The point to test.
     /// @return True if _p lies inside this boundary.
-    virtual bool InBoundary(const Vector3d& _p) const = 0;
+    virtual bool InBoundary(const Vector3d& _p) const;
 
-    /// Test if every point of an object configuration lies within the boundary.
+    /// Test if a specific n-dimensional point lies within the boundary.
+    /// @param _v The point to test.
+    /// @return True if _v lies inside this boundary.
+    virtual bool InBoundary(const std::vector<double>& _v) const = 0;
+
+    /// Test if a configuration lies within the boundary.
     /// @param _cfg The configuration to test.
-    /// @return True if all points of the object represented by _c lies inside
-    ///         this boundary.
-    virtual bool InBoundary(const Cfg& _c) const;
-
-    /// Test if each DOF value of a given configuration lies within the
-    /// boundary. If the configuration has more DOF than the boundary has
-    /// dimensions, then the unbounded dimensions will be assumed infinite.
-    /// @warning This does NOT imply that the object is inside the boundary - it
-    ///          is a test for the c-space reference point only.
-    /// @param[in] _c The configuration to test.
-    /// @return True if _c's DOF values lie within this boundary.
-    virtual bool InCSpace(const Cfg& _c) const;
+    /// @return True if the configuration is considered to lie inside the
+    ///         boundary.
+    virtual bool InBoundary(const Cfg& _c) const = 0;
 
     ///@}
     ///@name Clearance Testing
     ///@{
-
-    /// Get the id of the
-    virtual int GetSideID(const vector<double>& _p) const = 0;
 
     /// Get the distance from a test point to the nearest point on the boundary.
     /// @param _p The test point.
@@ -109,7 +114,7 @@ class Boundary {
     /// @param _margin The additional margin for _bbx. Negative margins cause
     ///                shrinkage.
     virtual void ResetBoundary(const vector<pair<double, double>>& _bbx,
-        double _margin) = 0;
+        const double _margin) = 0;
 
     ///@}
     ///@name I/O
@@ -139,10 +144,19 @@ class Boundary {
 
   protected:
 
-    ///@name Internal State
+    ///@name Containment Helpers
     ///@{
 
-    Point3d m_center; ///< The center-point of the boundary.
+    /// Check that a configuration lies entirely within a workspace boundary.
+    /// @param _c The configuration of interest.
+    /// @return True if all of _c's geometry vertices lie within this boundary.
+    bool InWorkspace(const Cfg& _c) const;
+
+    /// Check that a configuration's DOF values lie entirely within a CSpace
+    /// boundary.
+    /// @param _c The configuration of interest.
+    /// @return True if all of _c's DOF values lie within this boundary.
+    bool InCSpace(const Cfg& _c) const;
 
     ///@}
 
@@ -154,9 +168,12 @@ class Boundary {
 
 };
 
-/*--------------------------------- Display ----------------------------------*/
+/*----------------------------------- I/O ------------------------------------*/
 
 ostream& operator<<(ostream& _os, const Boundary& _b);
+
+/// @TODO Move impl from environment to here.
+//istream& operator>>(istream& _is, const Boundary& _b);
 
 /*----------------------------------------------------------------------------*/
 

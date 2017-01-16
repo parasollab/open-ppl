@@ -1,21 +1,22 @@
-#include "Geometry/Bodies/ActiveMultiBody.h"
 #include "Geometry/Boundaries/Boundary.h"
+
 #include "ConfigurationSpace/Cfg.h"
+#include "Geometry/Bodies/ActiveMultiBody.h"
 
-
-/*--------------------------- Property Accessors -----------------------------*/
-
-const Point3d&
-Boundary::
-GetCenter() const noexcept {
-  return m_center;
-}
 
 /*--------------------------- Containment Testing ----------------------------*/
 
 bool
 Boundary::
-InBoundary(const Cfg& _cfg) const {
+InBoundary(const Vector3d& _p) const {
+  return InBoundary(std::vector<double>{_p[0], _p[1], _p[2]});
+}
+
+/*--------------------------- Containment Helpers ----------------------------*/
+
+bool
+Boundary::
+InWorkspace(const Cfg& _cfg) const {
   auto robot = _cfg.GetRobot();
 
   // If the robot's center is more than a bounding radius away from the wall, it
@@ -61,9 +62,25 @@ InBoundary(const Cfg& _cfg) const {
 
 bool
 Boundary::
-InCSpace(const Cfg& _cfg) const {
+InCSpace(const Cfg& _c) const {
+  return InBoundary(_c.GetData());
+}
+
+/*----------------------- Clearance Testing ----------------------------------*/
+
+double
+Boundary::
+GetClearance(const Vector3d& _p) const {
   throw RunTimeException(WHERE, "No base class implementation supported.");
-  return false;
+  return 0.;
+}
+
+
+Vector3d
+Boundary::
+GetClearancePoint(const Vector3d& _p) const {
+  throw RunTimeException(WHERE, "No base class implementation supported.");
+  return Vector3d();
 }
 
 /*-------------------------- CGAL Representations ----------------------------*/
@@ -75,12 +92,21 @@ CGAL() const {
   return CGALPolyhedron();
 }
 
-/*------------------------------- Display ------------------------------------*/
+/*----------------------------------- I/O ------------------------------------*/
 
-ostream&
-operator<<(ostream& _os, const Boundary& _b) {
+std::ostream&
+operator<<(std::ostream& _os, const Boundary& _b) {
+  /// @TODO Synchronize type printing with input parsing.
+  _os << _b.Type() << " ";
   _b.Write(_os);
   return _os;
 }
+
+
+/// @TODO Move implementation from Environment.cpp to here.
+//std::istream&
+//operator>>(std::istream& _is, const Boundary& _b) {
+//  return _is;
+//}
 
 /*----------------------------------------------------------------------------*/

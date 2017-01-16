@@ -116,8 +116,10 @@ Sampler(CfgType& _cfg, const Boundary* const _boundary,
     margin = _cfg.GetRobot()->GetMaxAxisRange();
 
   vector<pair<double, double> > origBoundary;
-  for(size_t i = 0; i < 3; i++)
-    origBoundary.push_back(_boundary->GetRange(i));
+  for(size_t i = 0; i < 3; i++) {
+    const auto& r = _boundary->GetRange(i);
+    origBoundary.emplace_back(r.min, r.max);
+  }
 
   env->ResetBoundary(margin, _cfg.GetRobot());
 

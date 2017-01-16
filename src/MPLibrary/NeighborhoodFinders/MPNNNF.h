@@ -74,7 +74,6 @@ class MPNNNF : public NeighborhoodFinderMethod<MPTraits> {
   double m_epsilon; // measure of approximateness used by internal kd-tree
   int m_use_scaling;
   int m_use_rotational;
-  double m_max_bbox_range;
   int m_max_points; // maximum number of points the internal kd-tree can store
   int m_max_neighbors; // maximum number of neighbors the internal kd-tree can find
   int m_lastRdmpSize;
@@ -117,40 +116,25 @@ UpdateInternalModel()
 	   topology[i] = 1;
   }
 
-  if(m_max_points<curRdmpSize) m_max_points = curRdmpSize;
+  if(m_max_points < curRdmpSize)
+    m_max_points = curRdmpSize;
 
   kdtree = new MPNNWrapper(topology, m_max_points, m_max_neighbors, m_epsilon);
 
   m_cur_roadmap_version = -1;
 
   //set bound
-  auto problem = this->GetMPProblem();
-  m_max_bbox_range = 0.0;
-  if( this->m_debug) {
-    cout << "setting bbox range: " << m_max_bbox_range << endl;
-    cout << " cur bounding box: " << endl;
-  }
-  if(problem->GetEnvironment()->GetBoundary() == NULL ) {
-     cout <<"env is null. " << endl;
-     exit(-1);
-  }
-  problem->GetEnvironment()->GetBoundary()->Write(cout);
-  for(size_t i=0; i< dim; ++i) {
-     std::pair<double,double> range = problem->GetEnvironment()->GetBoundary()->GetRange(i);
-     double tmp_range = range.second-range.first;
-     if(tmp_range > m_max_bbox_range) m_max_bbox_range = tmp_range;
-  }
-  if( this->m_debug ) { cout << "-done! setting bbox range: " << m_max_bbox_range << endl; }
+  if(this->m_debug)
+    cout << "Updating internal model rdmp size " << curRdmpSize << endl;
 
-  if( this->m_debug ) { cout << "Updating internal model rdmp size " << curRdmpSize << endl; }
   int vertexIndex=0;
   for(auto v=g->begin(); v!=g->end(); v++,vertexIndex++) {
      CfgType cfg = v->property();
-     this->AddPoint(cfg,v->descriptor());
+     this->AddPoint(cfg, v->descriptor());
   }
 
-  if( this->m_debug ) { cout << "-done! Updating internal model rdmp size " << curRdmpSize << endl; }
-
+  if(this->m_debug)
+    cout << "-done! Updating internal model rdmp size " << curRdmpSize << endl;
 }
 
 template <typename MPTraits>

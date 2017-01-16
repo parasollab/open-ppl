@@ -20,7 +20,7 @@ using namespace mathtool;
 class Environment;
 
 
-///\name MPUtils
+///@name MPUtils
 ///@{
 
 /*-------------------------------- Constants ---------------------------------*/
@@ -28,9 +28,8 @@ class Environment;
 #define MAX_INT  numeric_limits<int>::max()
 #define MAX_DBL  numeric_limits<double>::max()
 
-////////////////////////////////////////////////////////////////////////////////
-/// @brief Variable resolution epsilon for doubles and float. This number is
-///        based upon the resolution of the smaller value between _t1 and _t2.
+/// Variable resolution epsilon for doubles and float. This number is based upon
+/// the resolution of the smaller value between _t1 and _t2.
 template<typename T>
 const T
 Epsilon(const T& _t1, const T& _t2) {
@@ -39,38 +38,30 @@ Epsilon(const T& _t1, const T& _t2) {
 
 /*------------------------- Random Number Generation -------------------------*/
 
-////////////////////////////////////////////////////////////////////////////////
-/// @brief Return non-negative double-prevision floating-point values uniformly
-///        distributed over the interval [0.0, 1.0)
+/// Return non-negative double-prevision floating-point values uniformly
+/// distributed over the interval [0.0, 1.0).
 double DRand();
 
-////////////////////////////////////////////////////////////////////////////////
-/// @brief Return non-negative long integers uniformly distributed over the
-///        interval [0, 2**31)
+/// Return non-negative long integers uniformly distributed over the interval
+/// [0, 2**31).
 long LRand();
 
-////////////////////////////////////////////////////////////////////////////////
-/// @brief Return signed long integers uniformly distributed over the interval
-///        [-2**31, 2**31)
+/// Return signed long integers uniformly distributed over the interval
+/// [-2**31, 2**31).
 long MRand();
 
-////////////////////////////////////////////////////////////////////////////////
-/// @brief Return normally(gaussian) distributed random numbers via the
-///        Marsaglia polar method.
+/// Return normally(gaussian) distributed random numbers via the Marsaglia polar
+/// method.
 /// @param[in] _reset If true, clear internal cache and return 0.
 double GRand(bool _reset = false);
 
-////////////////////////////////////////////////////////////////////////////////
-/// @brief Same as GRand, but one can specify the mean and stdev of the
-///        distribution.
+/// Same as GRand, but one can specify the mean and stdev of the distribution.
 double GaussianDistribution(double _mean, double _stdev);
 
-////////////////////////////////////////////////////////////////////////////////
-/// @brief Use seedval as the seed.
+/// Use seedval as the seed.
 long SRand(long _seed = 0x1234ABCD);
 
-////////////////////////////////////////////////////////////////////////////////
-/// @brief Set the random seed.
+/// Set the random seed.
 ///
 /// Use methodName, nextNodeIndex, and base to generate a deterministic seed,
 /// then call seed48().
@@ -84,26 +75,21 @@ long SRand(string _methodName, int _nextNodeIndex, long _base = 0x1234ABCD,
 
 /*------------------------------ Geometry Utils ------------------------------*/
 
-////////////////////////////////////////////////////////////////////////////////
-/// @brief Normalize a value into the range [-1,1).
+/// Normalize a value into the range [-1,1).
 double Normalize(double _a);
 
-////////////////////////////////////////////////////////////////////////////////
-/// @brief Calculate the minimum DIRECTED angular distan between two angles
-///        normalized to 1.0.
+/// Calculate the minimum DIRECTED angular distan between two angles normalized
+/// to 1.0.
 double DirectedAngularDistance(double _a, double _b);
 
-////////////////////////////////////////////////////////////////////////////////
-/// @brief Determine height of triangle defined by three points.
+/// Determine height of triangle defined by three points.
 /// @param _a The first triangle vertex.
 /// @param _b The second triangle vertex.
 /// @param _c The third triangle vertex.
 /// @return The height of the triangle.
 double TriangleHeight(const Point3d& _a, const Point3d& _b, const Point3d& _c);
 
-////////////////////////////////////////////////////////////////////////////////
-/// @brief Check if a 2d point lies inside the triangle defined by three other
-///        points.
+/// Check if a 2d point lies inside the triangle defined by three other points.
 /// @param[in]  _a The first triangle vertex.
 /// @param[in]  _b The second triangle vertex.
 /// @param[in]  _c The third triangle vertex.
@@ -112,9 +98,7 @@ double TriangleHeight(const Point3d& _a, const Point3d& _b, const Point3d& _c);
 bool PtInTriangle(const Point2d& _a, const Point2d& _b, const Point2d& _c,
     const Point2d & _p);
 
-////////////////////////////////////////////////////////////////////////////////
-/// @brief Check if a 2d point lies inside the triangle defined by three other
-///        points.
+/// Check if a 2d point lies inside the triangle defined by three other points.
 /// @param[in]  _a The first triangle vertex.
 /// @param[in]  _b The second triangle vertex.
 /// @param[in]  _c The third triangle vertex.
@@ -125,14 +109,12 @@ bool PtInTriangle(const Point2d& _a, const Point2d& _b, const Point2d& _c,
 bool PtInTriangle(const Point2d& _a, const Point2d& _b, const Point2d& _c,
     const Point2d& _p, double& _u, double& _v);
 
-////////////////////////////////////////////////////////////////////////////////
-/// @brief Given triange defined by _a, _b, _c, return the point inside triangle
-///        defined by barycentric coordinates _u, _v.
+/// Given triange defined by _a, _b, _c, return the point inside triangle defined
+/// by barycentric coordinates _u, _v.
 Point3d GetPtFromBarycentricCoords(const Point3d& _a, const Point3d& _b,
     const Point3d& _c, double _u, double _v);
 
-////////////////////////////////////////////////////////////////////////////////
-/// @brief Normalize an angle to standard range.
+/// Normalize an angle to standard range.
 /// @param[in] _theta The angle to normalize.
 /// @return Normalized representation of _theta in the range -PI to PI.
 double NormalizeTheta(double _theta);
@@ -140,7 +122,7 @@ double NormalizeTheta(double _theta);
 /*---------------------------- Comparators -----------------------------------*/
 
 ////////////////////////////////////////////////////////////////////////////////
-/// @brief Compare the second of a pair
+/// Compare the second of a pair.
 /// @tparam T Type 1 of pair
 /// @tparam U Type 2 of pair
 ////////////////////////////////////////////////////////////////////////////////
@@ -154,7 +136,7 @@ struct CompareSecond {
 };
 
 ////////////////////////////////////////////////////////////////////////////////
-/// @brief Compare the second of a pair reversed
+/// Compare the second of a pair reversed.
 /// @tparam T Type 1 of pair
 /// @tparam U Type 2 of pair
 ////////////////////////////////////////////////////////////////////////////////
@@ -168,8 +150,8 @@ struct CompareSecondReverse {
 };
 
 ////////////////////////////////////////////////////////////////////////////////
-/// @brief Find the closer of two input configurations to an initial reference
-///        cfg, assuming that the inputs are given as a pair<Cfg, Something>.
+/// Find the closer of two input configurations to an initial reference cfg,
+/// assuming that the inputs are given as a pair<Cfg, Something>.
 ////////////////////////////////////////////////////////////////////////////////
 template <class MPTraits, class P>
 struct DistanceCompareFirst : public binary_function<P, P, bool> {
@@ -193,7 +175,7 @@ struct DistanceCompareFirst : public binary_function<P, P, bool> {
 /*----------------------------- Compose Functions ----------------------------*/
 
 ////////////////////////////////////////////////////////////////////////////////
-/// @brief TODO
+/// @TODO
 ////////////////////////////////////////////////////////////////////////////////
 template <typename InputIterator, typename BinaryOperator, typename UnaryOperator>
 struct Compose {
@@ -213,7 +195,7 @@ struct Compose {
 };
 
 ////////////////////////////////////////////////////////////////////////////////
-/// @brief TODO
+/// @TODO
 ////////////////////////////////////////////////////////////////////////////////
 template <typename InputIterator, typename UnaryOperator>
 struct Compose<InputIterator, logical_and<bool>, UnaryOperator> {
@@ -238,7 +220,7 @@ struct Compose<InputIterator, logical_and<bool>, UnaryOperator> {
 };
 
 ////////////////////////////////////////////////////////////////////////////////
-/// @brief TODO
+/// @TODO
 ////////////////////////////////////////////////////////////////////////////////
 template <typename InputIterator, typename UnaryOperator>
 struct Compose<InputIterator, logical_or<bool>, UnaryOperator> {
@@ -263,8 +245,7 @@ struct Compose<InputIterator, logical_or<bool>, UnaryOperator> {
 };
 
 ////////////////////////////////////////////////////////////////////////////////
-/// @brief Applies a unary operator to an input iterator and returns its
-///        negation.
+/// Applies a unary operator to an input iterator and returns its negation.
 ////////////////////////////////////////////////////////////////////////////////
 template <typename InputIterator, typename UnaryOperator>
 struct ComposeNegate {
@@ -277,9 +258,8 @@ struct ComposeNegate {
 
 /*------------------------------ Cfg Utilities -------------------------------*/
 
-////////////////////////////////////////////////////////////////////////////////
-/// @brief Determine whether two configurations are within a resolution unit of
-///        each other.
+/// Determine whether two configurations are within a resolution unit of each
+/// other.
 /// @param[in] _cfg1 The first configuration.
 /// @param[in] _cfg2 The second configuration.
 /// @return A bool indicating whether the two cfgs are separated by no more than
@@ -293,9 +273,9 @@ IsWithinResolution(const CfgType& _cfg1, const CfgType& _cfg2,
       && diff->OrientationMagnitude() <= _env->GetOrientationRes();
 }
 
-////////////////////////////////////////////////////////////////////////////////
-/// @brief Given a reference configuration and a line segment in C-space, find
-///        the closest point on the line segment to the reference configuration.
+
+/// Given a reference configuration and a line segment in C-space, find the
+/// closest point on the line segment to the reference configuration.
 /// @param[in] _ref The reference configuration.
 /// @param[in] _p1  The first endpoint of the line segment.
 /// @param[in] _p2  The second endpoint of the line segment.
@@ -326,9 +306,8 @@ ClosestPtOnLineSegment(const CfgType& _ref, const CfgType& _p1,
 
 /*------------------------------ Centroid Utils ------------------------------*/
 
-////////////////////////////////////////////////////////////////////////////////
-/// @brief Compute the C-space centroid of the configurations in a specific
-///        connected component of the roadmap.
+/// Compute the C-space centroid of the configurations in a specific connected
+/// component of the roadmap.
 /// @param[in] _graph A pointer to the roadmap graph.
 /// @param[in] _cc The connected component.
 /// @return The centroid configuration of _cc.
@@ -346,9 +325,8 @@ GetCentroid(Roadmap<CfgType, Weight>* _graph,
 };
 
 #ifndef _PARALLEL
-////////////////////////////////////////////////////////////////////////////////
-/// @brief Compute the graph of all connected component centroids. The output
-///        graph will contain only the centroids and no edges.
+/// Compute the graph of all connected component centroids. The output graph will
+/// contain only the centroids and no edges.
 /// @param[in] _graph The roadmap graph to analyze.
 /// @param[out] _centroidGraph The output centroid graph. It should be
 ///                            initialized prior to this call.
@@ -376,7 +354,7 @@ ComputeCCCentroidGraph(Roadmap<CfgType, Weight>* _graph,
 /*----------------------------- Other Random Stuff ---------------------------*/
 
 ////////////////////////////////////////////////////////////////////////////////
-/// @brief Functor for adding the second types of two pairs.
+/// Functor for adding the second types of two pairs.
 ////////////////////////////////////////////////////////////////////////////////
 template <class P>
 struct PlusSecond : public binary_function<typename P::second_type, P,
@@ -390,8 +368,8 @@ struct PlusSecond : public binary_function<typename P::second_type, P,
 };
 
 ////////////////////////////////////////////////////////////////////////////////
-/// @brief Used for discarding collision data for regular sampling/connecting
-///        classes. All operations are no-ops.
+/// Used for discarding collision data for regular sampling/connecting classes.
+/// All operations are no-ops.
 ////////////////////////////////////////////////////////////////////////////////
 struct NullOutputIterator : std::iterator<std::output_iterator_tag,
     NullOutputIterator> {

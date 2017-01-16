@@ -9,8 +9,7 @@
 #endif
 
 ////////////////////////////////////////////////////////////////////////////////
-/// @ingroup MotionPlanningStrategies
-/// @brief Base algorithm abstraction for \ref MotionPlanningStrategies.
+/// Base algorithm abstraction for \ref MotionPlanningStrategies.
 ///
 /// MPStrategyMethod has one main function, @c operator(), which
 /// performs preprocessing, processing, and postprocessing functionalities of
@@ -23,43 +22,40 @@
 /// mps->operator()(); //call with pointer notation
 /// @endcode
 ///
-/// \todo Once all MPStrategies have been configured to support pausible
-///       execution, the Iterate() method should be made pure virtual to reflect
-///       the lack of an appropriate default behavior. We will leave it with an
-///       empty implementation for now to give people time to update their code.
-///       We can then remove documentation notes related to this change.
+/// @ingroup MotionPlanningStrategies
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
 class MPStrategyMethod : public MPBaseObject<MPTraits> {
 
   public:
 
-    ///\name Motion Planning Types
+    ///@name Motion Planning Types
     ///@{
 
     typedef typename MPTraits::RoadmapType RoadmapType;
     typedef typename RoadmapType::VID      VID;
 
     ///@}
-    ///\name Construction
+    ///@name Construction
     ///@{
 
     MPStrategyMethod() = default;
+
     MPStrategyMethod(XMLNode& _node);
+
     virtual ~MPStrategyMethod() = default;
 
     ///@}
-    ///\name MPBaseObject Overrides
+    ///@name MPBaseObject Overrides
     ///@{
 
     virtual void Print(ostream& _os) const override;
 
     ///@}
-    ///\name Interface
+    ///@name Interface
     ///@{
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// \brief Execute the strategy by calling Initialize, Run, and Finalize.
+    /// Execute the strategy by calling Initialize, Run, and Finalize.
     void operator()();
 
     virtual void Initialize() = 0; ///< Set up the strategy.
@@ -68,20 +64,20 @@ class MPStrategyMethod : public MPBaseObject<MPTraits> {
     virtual void Iterate() {}      ///< Execute one iteration of the strategy.
     virtual void Finalize() = 0;   ///< Clean-up and output results.
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// \brief Determine if any of the map evaluators have "Query" in their
-    ///        label.
+    /// Determine if any of the map evaluators have "Query" in their label.
+    /// @TODO Remove this once we finish setting up the new query mechanism.
     bool UsingQuery() const;
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// \brief Virtual method used only in PRMWithRRTStrategy
+    /// Virtual method used only in PRMWithRRTStrategy
+    /// @TODO Remove this base-class clutter and find a more appropriate way to
+    ///       implement this.
     virtual bool CheckNarrowPassageSample(VID _vid) {return false;}
 
     ///@}
 
   protected:
 
-    ///\name Internal State
+    ///@name Internal State
     ///@{
 
     vector<string> m_meLabels;        ///< The list of map evaluators to use.
@@ -93,8 +89,7 @@ class MPStrategyMethod : public MPBaseObject<MPTraits> {
 
 template <typename MPTraits>
 MPStrategyMethod<MPTraits>::
-MPStrategyMethod(XMLNode& _node) : MPBaseObject<MPTraits>(_node) {
-}
+MPStrategyMethod(XMLNode& _node) : MPBaseObject<MPTraits>(_node) { }
 
 /*-------------------------- MPBaseObject Overrides --------------------------*/
 
@@ -114,6 +109,9 @@ operator()() {
   this->Initialize();
   this->Run();
   this->Finalize();
+#ifdef VIZMO
+    GetVizmo().GetMap()->RefreshMap();
+#endif
 }
 
 
