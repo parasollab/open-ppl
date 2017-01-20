@@ -73,7 +73,8 @@ Extend(const CfgType& _start, const CfgType& _end, CfgType& _new,
     LPOutput<MPTraits>& _lp) {
   // Setup MP Variables
   Environment* env = this->GetEnvironment();
-  CfgType innerCfg, newDir, newPos;
+  auto robot = this->GetTask()->GetRobot();
+  CfgType innerCfg(robot), newDir(robot), newPos(robot);
 
   // Rotate component
   if(this->m_debug)

@@ -11,9 +11,22 @@
 ///
 /// @c Distance takes as input two configurations \f$c_1\f$ and \f$c_2\f$ and
 /// returns the computed transition distance between them.
+/// @usage
+/// @code
+/// auto dm = this->GetDistanceMetric(m_dmLabel);
+/// CfgType c1, c2;
+/// double dist = dm->Distance(c1, c2);
+/// @endcode
 ///
 /// @c ScaleCfg is purposed to scale a \f$d\f$-dimensional ray in @cspace to a
 /// certain magnitude based upon a general @dm.
+/// @usage
+/// @code
+/// auto dm = this->GetDistanceMetric(m_dmLabel);
+/// CfgType ray, origin;
+/// double length;
+/// dm->ScaleCfg(length, ray, origin);
+/// @endcode
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
 class DistanceMetricMethod  : public MPBaseObject<MPTraits> {
@@ -37,38 +50,21 @@ class DistanceMetricMethod  : public MPBaseObject<MPTraits> {
     ///@name Distance Interface
     ///@{
 
-    ////////////////////////////////////////////////////////////////////////////
     /// @brief Compute a distance between two configurations
     /// @param _c1 Configuration 1
     /// @param _c2 Configuration 2
     /// @return Distance value
-    ///
-    /// @usage
-    /// @code
-    /// auto dm = this->GetDistanceMetric(m_dmLabel);
-    /// CfgType c1, c2;
-    /// double dist = dm->Distance(c1, c2);
-    /// @endcode
-    ////////////////////////////////////////////////////////////////////////////
     virtual double Distance(const CfgType& _c1, const CfgType& _c2) = 0;
 
-    ////////////////////////////////////////////////////////////////////////////
     /// @brief Scale a directional configuration to a certain magnitude
     /// @param _length Desired magnitude
     /// @param _c Configuration to be scaled
     /// @param _o Configuration to scale upon (origin of scaling)
     /// @return Distance value
-    ///
-    /// @usage
-    /// @code
-    /// auto dm = this->GetDistanceMetric(m_dmLabel);
-    /// CfgType ray, origin;
-    /// double length;
-    /// dm->ScaleCfg(length, ray, origin);
-    /// @endcode
-    ////////////////////////////////////////////////////////////////////////////
     virtual void ScaleCfg(double _length, CfgType& _c,
-        const CfgType& _o = CfgType());
+        const CfgType& _o);
+
+    void ScaleCfg(double _length, CfgType& _c);
 
     ///@}
 };
@@ -110,6 +106,14 @@ ScaleCfg(double _length, CfgType& _c, const CfgType& _o) {
   }
 
   _c = currentCfg;
+}
+
+
+template <typename MPTraits>
+void
+DistanceMetricMethod<MPTraits>::
+ScaleCfg(double _length, CfgType& _c) {
+  ScaleCfg(_length, _c, CfgType(_c.GetRobot()));
 }
 
 /*----------------------------------------------------------------------------*/

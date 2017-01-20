@@ -66,7 +66,7 @@ Uninitialize() {
 
   // Remove bullet model pointers from problem objects.
   for(size_t i = 0; i < m_problem->NumRobots(); ++i)
-    m_problem->GetNewRobot(i)->SetDynamicsModel(nullptr);
+    m_problem->GetRobot(i)->SetDynamicsModel(nullptr);
 }
 
 
@@ -99,7 +99,7 @@ Step() {
 
   // Step each Robot's agent.
   for(size_t i = 0; i < m_problem->NumRobots(); ++i)
-    m_problem->GetNewRobot(i)->Step(timestep);
+    m_problem->GetRobot(i)->Step(timestep);
 }
 
 /*------------------------ Visualization Interface ---------------------------*/
@@ -209,9 +209,10 @@ void
 Simulation::
 AddRobots() {
   for(size_t i = 0; i < m_problem->NumRobots(); ++i) {
-    MultiBody* body = m_problem->GetRobot(i);
+    auto robot = m_problem->GetRobot(i);
+    auto body = robot->GetMultiBody();
     auto bulletModel = m_engine->AddObject(body);
-    m_problem->GetNewRobot(i)->SetDynamicsModel(bulletModel);
+    robot->SetDynamicsModel(bulletModel);
     this->add_drawable(new Drawable(body));
   }
 }

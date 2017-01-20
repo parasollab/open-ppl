@@ -121,9 +121,9 @@ Sampler(CfgType& _cfg, const Boundary* const _boundary,
   }
 
   //Determine cfg2 attributes with similar consdirations/method to cfg1
-  CfgType cfg2;
+  auto robot = this->GetTask()->GetRobot();
+  CfgType cfg2(robot), incr(robot);
   bool cfg2Free;
-  CfgType incr;
   if(!m_useBoundary) {
     do {
       incr.GetRandomRay(fabs(GaussianDistribution(fabs(m_d), fabs(m_d))), dm);

@@ -2,34 +2,79 @@
 
 #include "Geometry/Bodies/ActiveMultiBody.h"
 #include "MPProblem/Environment/Environment.h"
+#include "MPProblem/Robot/Robot.h"
 #include "Utilities/MetricUtils.h"
 
 /*---------------------------- Clearance Info --------------------------------*/
+
+ClearanceInfo::
+ClearanceInfo(Cfg* _direction, const double _clearance) :
+    m_clearance(_clearance), m_direction(_direction) { }
+
 
 ClearanceInfo::
 ~ClearanceInfo() {
   delete m_direction;
 }
 
+
+double
+ClearanceInfo::
+GetClearance() const noexcept {
+  return m_clearance;
+}
+
+
+void
+ClearanceInfo::
+SetClearance(const double _clearance) noexcept {
+  m_clearance = _clearance;
+}
+
+
+Cfg*
+ClearanceInfo::
+GetDirection() const noexcept {
+  return m_direction;
+}
+
+
+void
+ClearanceInfo::
+SetDirection(Cfg* _direction) noexcept {
+  m_direction = _direction;
+}
+
+
+int
+ClearanceInfo::
+GetObstacleId() const noexcept {
+  return m_obstacleId;
+}
+
+
+void
+ClearanceInfo::
+SetObstacleId(const int _id) noexcept {
+  m_obstacleId = _id;
+}
+
 /*-------------------------------- Cfg ---------------------------------------*/
 
-vector<ActiveMultiBody*> Cfg::m_robots;
-ActiveMultiBody* Cfg::m_pointRobot;
-
-
 Cfg::
-Cfg(size_t _robotIndex) : m_robotIndex(_robotIndex) {
-  if(!m_robots.empty())
+Cfg(Robot* const _robot) : m_robot(_robot) {
+  if(m_robot)
     m_v.resize(DOF(), 0);
 }
 
 
 Cfg::
-Cfg(const Vector3d& _v, size_t _robotIndex) : m_robotIndex(_robotIndex) {
-  if(!m_robots.empty())
+Cfg(const Vector3d& _v, Robot* const _robot) : m_robot(_robot) {
+  if(m_robot) {
     m_v.resize(DOF(), 0);
-  for(size_t i = 0; i < PosDOF(); ++i)
-    m_v[i] = _v[i];
+    for(size_t i = 0; i < PosDOF(); ++i)
+      m_v[i] = _v[i];
+  }
 }
 
 
@@ -38,46 +83,43 @@ Cfg(const Cfg& _other) :
     m_clearanceInfo(_other.m_clearanceInfo),
     m_witnessCfg(_other.m_witnessCfg),
     m_v(_other.m_v),
-    m_robotIndex(_other.m_robotIndex),
+    m_robot(_other.m_robot),
     m_labelMap(_other.m_labelMap),
-    m_statMap(_other.m_statMap) {}
+    m_statMap(_other.m_statMap) { }
 
 
 size_t
 Cfg::
 DOF() const {
-  return GetRobot()->DOF();
+  return GetMultiBody()->DOF();
 }
 
 
 size_t
 Cfg::
 PosDOF() const {
-  return GetRobot()->PosDOF();
+  return GetMultiBody()->PosDOF();
 }
 
 
 size_t
 Cfg::
 GetNumOfJoints() const {
-  return GetRobot()->NumJoints();
+  return GetMultiBody()->NumJoints();
 }
 
 
-void
+Robot*
 Cfg::
-SetSize(size_t _size) {
-  m_robots.resize(_size);
+GetRobot() const noexcept {
+  return m_robot;
 }
 
 
-void
+ActiveMultiBody*
 Cfg::
-InitRobots(ActiveMultiBody* _robot, size_t _index) {
-  if(_index == size_t(-1))
-    m_pointRobot = _robot;
-  else
-    m_robots[_index] = _robot;
+GetMultiBody() const noexcept {
+  return m_robot->GetMultiBody();
 }
 
 
@@ -89,7 +131,7 @@ operator=(const Cfg& _cfg) {
     m_v = _cfg.GetData();
     m_labelMap = _cfg.m_labelMap;
     m_statMap = _cfg.m_statMap;
-    m_robotIndex = _cfg.m_robotIndex;
+    m_robot = _cfg.m_robot;
     m_clearanceInfo = _cfg.m_clearanceInfo;
     m_witnessCfg = _cfg.m_witnessCfg;
   }
@@ -100,11 +142,15 @@ operator=(const Cfg& _cfg) {
 bool
 Cfg::
 operator==(const Cfg& _cfg) const {
-  if(m_robotIndex != _cfg.m_robotIndex)
+  // First check for same robot pointer.
+  if(m_robot != _cfg.m_robot)
     return false;
+
+  // If not comparing to self or to a Cfg for a different robot, we need to
+  // check all the DOFs.
   for(size_t i = 0; i < DOF(); ++i) {
-    double eps = Epsilon(m_v[i], _cfg[i]);
-    switch(GetRobot()->GetDOFType(i)) {
+    const double eps = Epsilon(m_v[i], _cfg[i]);
+    switch(GetMultiBody()->GetDOFType(i)) {
       //regular types map to manifold R thus have no "wrap around"
       case DofType::Positional:
       case DofType::Joint:
@@ -120,6 +166,8 @@ operator==(const Cfg& _cfg) const {
         throw RunTimeException(WHERE, "Unknown joint type found");
     }
   }
+
+  // If we're still here, the Cfgs are equal.
   return true;
 }
 
@@ -164,8 +212,8 @@ Cfg&
 Cfg::
 operator-=(const Cfg& _cfg) {
   for(size_t i = 0; i < DOF(); ++i) {
-    if(GetRobot()->GetDOFType(i) == DofType::Positional ||
-        GetRobot()->GetDOFType(i) == DofType::Joint)
+    if(GetMultiBody()->GetDOFType(i) == DofType::Positional ||
+        GetMultiBody()->GetDOFType(i) == DofType::Joint)
       m_v[i] -= _cfg[i];
     else
       m_v[i] = DirectedAngularDistance(m_v[i], _cfg.m_v[i]);
@@ -248,12 +296,18 @@ operator[](size_t _dof) const {
 void
 Cfg::
 Read(istream& _is) {
-  //first read in robot index, and then read in DOF values
-  _is >> m_robotIndex;
-  //if this failed, then we're done reading Cfgs
-  if (_is.fail())
+  // Require the Cfg to already have a robot pointer for now.
+  if(!m_robot)
+    throw RunTimeException(WHERE, "Can't read in a Cfg without knowing what "
+        "robot it represents. Please set the robot pointer first.");
+
+  // Read one DOF first. If that fails, return and rely on checking _is.fail()
+  // from the call site to determine that no more Cfg's are available.
+  _is >> m_v[0];
+  if(_is.fail())
     return;
-  for(size_t i = 0; i < m_v.size(); ++i) {
+
+  for(size_t i = 1; i < DOF(); ++i) {
     _is >> m_v[i];
     if(_is.fail()) {
       // If we fail, print the DOFS we actually read with the error message.
@@ -271,10 +325,12 @@ Read(istream& _is) {
 void
 Cfg::
 Write(ostream& _os) const {
-  //write out robot index, and then dofs
-  _os << setw(4) << m_robotIndex << ' ' << scientific << setprecision(17);
-  for(vector<double>::const_iterator i = m_v.begin(); i != m_v.end(); ++i)
-    _os << setw(25) << *i << ' ';
+  // Write DOFs.
+  _os << scientific << setprecision(17);
+  for(auto i : m_v)
+    _os << setw(25) << i << ' ';
+
+  // Unset scientific/precision options.
   _os.unsetf(ios_base::floatfield);
   if(_os.fail())
     throw RunTimeException(WHERE, "Failed to write to file.");
@@ -298,19 +354,27 @@ operator<<(ostream& _os, const Cfg& _cfg) {
 
 Point3d
 Cfg::
-GetPoint() const {
+GetPoint() const noexcept {
   return Point3d(m_v[0], m_v[1], PosDOF() == 3 ? m_v[2] : 0);
+}
+
+
+const std::vector<double>&
+Cfg::
+GetData() const noexcept {
+  return m_v;
 }
 
 
 void
 Cfg::
 SetData(const vector<double>& _data) {
-  if(_data.size() != DOF()) {
-    string msg = "Tried to set data for " + to_string(_data.size()) +
-        " DOFs, but robot has " + to_string(DOF()) + " DOFs!";
-    throw RunTimeException(WHERE, msg);
-  }
+  // Assert that we got the correct number of DOFs.
+  if(_data.size() != DOF())
+    throw RunTimeException(WHERE, "Tried to set data for " +
+        std::to_string(_data.size()) + " DOFs, but robot has " +
+        std::to_string(DOF()) + " DOFs!");
+
   m_v = _data;
   m_witnessCfg.reset();
 }
@@ -319,18 +383,15 @@ SetData(const vector<double>& _data) {
 void
 Cfg::
 SetJointData(const vector<double>& _data) {
-  if(_data.size() != GetNumOfJoints()) {
-    string msg = "Tried to set data for " + to_string(_data.size()) +
-        " joints, but robot has " + to_string(GetNumOfJoints()) + " joints!";
-    throw RunTimeException(WHERE, msg);
-  }
-  unsigned int j = 0;
-  for(size_t i = 0; i < DOF(); ++i) {
-    if(GetRobot()->GetDOFType(i) == DofType::Joint) {
-      m_v[i]=_data[j];
-      j++;
-    }
-  }
+  // Assert that we got the correct number of DOFs.
+  if(_data.size() != GetNumOfJoints())
+    throw RunTimeException(WHERE, "Tried to set data for " +
+        std::to_string(_data.size()) + " joints, but robot has " +
+        std::to_string(GetNumOfJoints()) + " joints!");
+
+  for(size_t i = 0, j = 0; i < DOF(); ++i)
+    if(GetMultiBody()->GetDOFType(i) == DofType::Joint)
+      m_v[i] = _data[j++];
   m_witnessCfg.reset();
 }
 
@@ -338,11 +399,11 @@ SetJointData(const vector<double>& _data) {
 vector<double>
 Cfg::
 GetNormalizedData(const Boundary* const _b) const {
-  pair<vector<double>, vector<double>> range = GetRobot()->GetCfgLimits(_b);
+  pair<vector<double>, vector<double>> range = GetMultiBody()->GetCfgLimits(_b);
   vector<double> normed;
   for(size_t i = 0; i < DOF(); ++i) {
-    double radius = (range.second[i] - range.first[i]) / 2.;
-    double center = range.first[i] + radius;
+    const double radius = (range.second[i] - range.first[i]) / 2.;
+    const double center = range.first[i] + radius;
     normed.push_back((m_v[i] - center) / radius);
   }
   return move(normed);
@@ -352,15 +413,16 @@ GetNormalizedData(const Boundary* const _b) const {
 void
 Cfg::
 SetNormalizedData(const vector<double>& _data, const Boundary* const _b) {
-  if(_data.size() != DOF()) {
-    string msg = "Tried to set data for " + to_string(_data.size()) +
-        " DOFs, but robot has " + to_string(DOF()) + " DOFs!";
-    throw RunTimeException(WHERE, msg);
-  }
-  pair<vector<double>, vector<double>> range = GetRobot()->GetCfgLimits(_b);
+  // Assert that we got the right number of DOFs.
+  if(_data.size() != DOF())
+    throw RunTimeException(WHERE, "Tried to set data for " +
+        std::to_string(_data.size()) + " DOFs, but robot has " +
+        std::to_string(DOF()) + " DOFs!");
+
+  pair<vector<double>, vector<double>> range = GetMultiBody()->GetCfgLimits(_b);
   for(size_t i = 0; i < DOF(); ++i) {
-    double radius = (range.second[i] - range.first[i]) / 2.;
-    double center = range.first[i] + radius;
+    const double radius = (range.second[i] - range.first[i]) / 2.;
+    const double center = range.first[i] + radius;
     m_v[i] = _data[i] * radius + center;
   }
 }
@@ -368,30 +430,30 @@ SetNormalizedData(const vector<double>& _data, const Boundary* const _b) {
 
 bool
 Cfg::
-GetLabel(string _label) {
+GetLabel(const std::string& _label) const {
   if(!IsLabel(_label))
     throw RunTimeException(WHERE, "No label\'" + _label + "\' found.");
-  return m_labelMap[_label];
+  return m_labelMap.at(_label);
 }
 
 
 bool
 Cfg::
-IsLabel(string _label) {
-  return m_labelMap.count(_label) > 0;
+IsLabel(const std::string& _label) const noexcept {
+  return m_labelMap.count(_label);
 }
 
 
 void
 Cfg::
-SetLabel(string _label, bool _value) {
+SetLabel(const std::string& _label, const bool _value) noexcept {
   m_labelMap[_label] = _value;
 }
 
 
 double
 Cfg::
-GetStat(string _stat) const {
+GetStat(const std::string& _stat) const {
   if(!IsStat(_stat))
     throw RunTimeException(WHERE, "No stat \'" + _stat + "\' found.");
   return m_statMap.at(_stat);
@@ -400,21 +462,21 @@ GetStat(string _stat) const {
 
 bool
 Cfg::
-IsStat(string _stat) const {
+IsStat(const std::string& _stat) const noexcept {
   return m_statMap.count(_stat) > 0;
 }
 
 
 void
 Cfg::
-SetStat(string _stat, double _value) {
+SetStat(const std::string& _stat, const double _value) noexcept {
   m_statMap[_stat] = _value;
 }
 
 
 void
 Cfg::
-IncStat(string _stat, double _value) {
+IncStat(const std::string& _stat, const double _value) noexcept {
   m_statMap[_stat] += _value;
 }
 
@@ -424,7 +486,7 @@ Cfg::
 GetPosition() const {
   vector<double> ret;
   for(size_t i = 0; i < DOF(); ++i) {
-    if(GetRobot()->GetDOFType(i) == DofType::Positional)
+    if(GetMultiBody()->GetDOFType(i) == DofType::Positional)
       ret.push_back(m_v[i]);
   }
   return ret;
@@ -436,7 +498,7 @@ Cfg::
 GetOrientation() const {
   vector<double> ret;
   for(size_t i = 0; i < DOF(); ++i) {
-    if(GetRobot()->GetDOFType(i) != DofType::Positional)
+    if(GetMultiBody()->GetDOFType(i) != DofType::Positional)
       ret.push_back(m_v[i]);
   }
   return ret;
@@ -448,7 +510,7 @@ Cfg::
 GetNonJoints() const {
   vector<double> ret;
   for(size_t i = 0; i < DOF(); ++i) {
-    if(GetRobot()->GetDOFType(i) != DofType::Joint)
+    if(GetMultiBody()->GetDOFType(i) != DofType::Joint)
       ret.push_back(m_v[i]);
   }
   return ret;
@@ -460,7 +522,7 @@ Cfg::
 GetJoints() const {
   vector<double> ret;
   for(size_t i = 0; i < DOF(); ++i) {
-    if(GetRobot()->GetDOFType(i) == DofType::Joint)
+    if(GetMultiBody()->GetDOFType(i) == DofType::Joint)
       ret.push_back(m_v[i]);
   }
   return ret;
@@ -472,7 +534,7 @@ Cfg::
 GetRotation() const {
   vector<double> ret;
   for(size_t i = 0; i < DOF(); ++i) {
-    if(GetRobot()->GetDOFType(i) == DofType::Rotational)
+    if(GetMultiBody()->GetDOFType(i) == DofType::Rotational)
       ret.push_back(m_v[i]);
   }
   return ret;
@@ -483,7 +545,7 @@ void
 Cfg::
 ResetRigidBodyCoordinates() {
   for(size_t i = 0; i < DOF(); ++i) {
-    if(GetRobot()->GetDOFType(i) != DofType::Joint)
+    if(GetMultiBody()->GetDOFType(i) != DofType::Joint)
       m_v[i]=0;
   }
 }
@@ -504,7 +566,7 @@ Cfg::
 PositionMagnitude() const {
   double result = 0.0;
   for(size_t i = 0; i < DOF(); ++i)
-    if(GetRobot()->GetDOFType(i) == DofType::Positional)
+    if(GetMultiBody()->GetDOFType(i) == DofType::Positional)
       result += m_v[i]*m_v[i];
   return sqrt(result);
 }
@@ -515,7 +577,7 @@ Cfg::
 OrientationMagnitude() const {
   double result = 0.0;
   for(size_t i = 0; i < DOF(); ++i) {
-    if(GetRobot()->GetDOFType(i) != DofType::Positional)
+    if(GetMultiBody()->GetDOFType(i) != DofType::Positional)
       result += m_v[i]*m_v[i];
   }
   return sqrt(result);
@@ -527,7 +589,7 @@ Cfg::
 GetRobotCenterPosition() const {
   Vector3d v;
   for(size_t i = 0; i < 3 && i < DOF(); i++)
-    if(GetRobot()->GetDOFType(i) == DofType::Positional)
+    if(GetMultiBody()->GetDOFType(i) == DofType::Positional)
       v[i] = m_v[i];
   return v;
 }
@@ -537,7 +599,7 @@ Vector3d
 Cfg::
 GetRobotCenterofMass() const {
   ConfigureRobot();
-  return GetRobot()->GetCenterOfMass();
+  return GetMultiBody()->GetCenterOfMass();
 }
 
 void
@@ -566,7 +628,7 @@ GetRandomCfg(Environment* _env, const Boundary* const _b) {
   ostringstream oss;
   oss << "GetRandomCfg not able to find anything in boundary: "
       << *_b << ". Robot radius is "
-      << GetRobot()->GetBoundingSphereRadius() << ".";
+      << GetMultiBody()->GetBoundingSphereRadius() << ".";
   throw PMPLException("Boundary too small", WHERE, oss.str());
 }
 
@@ -574,7 +636,7 @@ GetRandomCfg(Environment* _env, const Boundary* const _b) {
 void
 Cfg::
 ConfigureRobot() const {
-  GetRobot()->Configure(m_v);
+  GetMultiBody()->Configure(m_v);
 }
 
 
@@ -586,7 +648,7 @@ GetResolutionCfg(Environment* _env) {
   double oriRes = _env->GetOrientationRes();
 
   for(size_t i = 0; i < DOF(); i++)
-    if(GetRobot()->GetDOFType(i) == DofType::Positional)
+    if(GetMultiBody()->GetDOFType(i) == DofType::Positional)
       m_v.push_back(posRes);
     else
       m_v.push_back(oriRes);
@@ -601,8 +663,8 @@ Cfg::
 IncrementTowardsGoal(const Cfg& _goal, const Cfg& _increment) {
   ///For Position
   for(size_t i = 0; i < DOF(); ++i) {
-    if(GetRobot()->GetDOFType(i) == DofType::Positional ||
-        GetRobot()->GetDOFType(i) == DofType::Joint) {
+    if(GetMultiBody()->GetDOFType(i) == DofType::Positional ||
+        GetMultiBody()->GetDOFType(i) == DofType::Joint) {
       //If the diff between _goal and c is smaller than _increment
       if(fabs(_goal.m_v[i]-m_v[i]) < fabs(_increment.m_v[i]))
         m_v[i] = _goal.m_v[i];
@@ -613,7 +675,7 @@ IncrementTowardsGoal(const Cfg& _goal, const Cfg& _increment) {
 
   ///For Oirentation
   for(size_t i = 0; i < DOF(); ++i) {
-    if(GetRobot()->GetDOFType(i) == DofType::Rotational) {
+    if(GetMultiBody()->GetDOFType(i) == DofType::Rotational) {
       if(m_v[i] != _goal.m_v[i]) {
         double orientationIncr = _increment.m_v[i];
         double tmp = DirectedAngularDistance(m_v[i], _goal.m_v[i]);
@@ -639,8 +701,8 @@ FindIncrement(const Cfg& _start, const Cfg& _goal, int* _nTicks,
   Cfg diff = _goal - _start;
 
   // adding two basically makes this a rough ceiling...
-  *_nTicks = max(1., ceil(max(diff.PositionMagnitude()/_positionRes,
-        diff.OrientationMagnitude()/_orientationRes)));
+  *_nTicks = max(1., ceil(max(diff.PositionMagnitude() / _positionRes,
+        diff.OrientationMagnitude() / _orientationRes)));
 
   this->FindIncrement(_start, _goal, *_nTicks);
 }
@@ -651,16 +713,16 @@ Cfg::
 FindIncrement(const Cfg& _start, const Cfg& _goal, int _nTicks) {
   vector<double> incr;
   for(size_t i = 0; i < DOF(); ++i) {
-    if(GetRobot()->GetDOFType(i) == DofType::Positional)
+    if(GetMultiBody()->GetDOFType(i) == DofType::Positional)
       incr.push_back((_goal.m_v[i] - _start.m_v[i])/_nTicks);
-    else if(GetRobot()->GetDOFType(i) == DofType::Joint) {
+    else if(GetMultiBody()->GetDOFType(i) == DofType::Joint) {
       double a = _start.m_v[i];
       double b = _goal.m_v[i];
       if(_nTicks == 0)
         throw PMPLException("Divide by 0", WHERE, "Divide by 0");
       incr.push_back((b-a)/_nTicks);
     }
-    else if(GetRobot()->GetDOFType(i) == DofType::Rotational) {
+    else if(GetMultiBody()->GetDOFType(i) == DofType::Rotational) {
       incr.push_back(DirectedAngularDistance(_start.m_v[i], _goal.m_v[i]) /
           _nTicks);
     }
@@ -689,7 +751,7 @@ Cfg::
 GetPositionOrientationFrom2Cfg(const Cfg& _c1, const Cfg& _c2) {
   vector<double> v;
   for(size_t i = 0; i < DOF(); ++i) {
-    if(GetRobot()->GetDOFType(i) == DofType::Positional)
+    if(GetMultiBody()->GetDOFType(i) == DofType::Positional)
       v.push_back(_c1.m_v[i]);
     else
       v.push_back(_c2.m_v[i]);
@@ -705,7 +767,7 @@ Cfg::
 PolyApprox() const {
   vector<Vector3d> result;
   ConfigureRobot();
-  GetRobot()->PolygonalApproximation(result);
+  GetMultiBody()->PolygonalApproximation(result);
   return result;
 }
 
@@ -716,11 +778,11 @@ NormalizeOrientation(int _index) {
   //Normalize the orientation to the range [-1, 1)
   if(_index == -1) {
     for(size_t i = 0; i < DOF(); ++i) {
-      if(GetRobot()->GetDOFType(i) == DofType::Rotational)
+      if(GetMultiBody()->GetDOFType(i) == DofType::Rotational)
         m_v[i] = Normalize(m_v[i]);
     }
   }
-  else if(GetRobot()->GetDOFType(_index) == DofType::Rotational) {
+  else if(GetMultiBody()->GetDOFType(_index) == DofType::Rotational) {
     // orientation index
     m_v[_index] = Normalize(m_v[_index]);
   }
@@ -730,7 +792,7 @@ NormalizeOrientation(int _index) {
 void
 Cfg::
 GetRandomCfgImpl(Environment* _env, const Boundary* const _b) {
-  m_v = GetRobot()->GetRandomCfg(_b);
+  m_v = GetMultiBody()->GetRandomCfg(_b);
   m_witnessCfg.reset();
 }
 

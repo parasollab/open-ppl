@@ -129,40 +129,49 @@ AddObject(MultiBody* _m) {
 
   StaticMultiBody* sbody = dynamic_cast<StaticMultiBody*>(_m);
   if(sbody) {//So it's a static body:
-    std::cout << "Working on a static body" << std::endl;
+    if(m_debug)
+      std::cout << "Working on a static body" << std::endl;
     auto body = sbody->GetFixedBody(0);
     transformations.push_back(ToBullet(body->GetWorldTransformation()));
     masses.push_back(0);
   }
   else {
     ActiveMultiBody* abody = dynamic_cast<ActiveMultiBody*>(_m);
-    std::cout << "Working on an active body with number of free bodies = "
+    if(m_debug)
+      std::cout << "Working on an active body with number of free bodies = "
                 << abody->NumFreeBody() << std::endl;
-    //Go through the bodies within the active body:
-    for(size_t i = 0; i < abody->NumFreeBody(); i++){
-      FreeBody* body = abody->GetFreeBody(i);//Get the ith body
-      //Push back this body's transformation:
+
+    // Collect the transformations for each body in the multibody.
+    for(size_t i = 0; i < abody->NumFreeBody(); i++) {
+      FreeBody* body = abody->GetFreeBody(i);
       transformations.push_back(ToBullet(body->GetWorldTransformation()));
-      //std::cout << "Pushed back translation: " << body->GetWorldTransformation() << std::endl;
       //coms.push_back(ToBullet(body->GetCenterOfMass()));
       masses.push_back(1); ///< @TODO change the mass to appropriate amount
-    } // end for (all bodies in the activeMultiBody)
+
+      if(m_debug)
+        std::cout << "\tParsed body " << i << " with mass " << 1
+                  << "and world transform " << body->GetWorldTransformation()
+                  << std::endl;
+    }
 
     //Next, go through the joints in this active body:
-    std::cout << "BulletEngine: about to loop through " << abody->NumJoints()
-                    << " joints" << std::endl;
+    if(m_debug)
+      std::cout << "BulletEngine: about to loop through " << abody->NumJoints()
+                << " joints" << std::endl;
     for(auto jointIt = abody->joints_begin();
           jointIt < abody->joints_end(); jointIt++){
       //the auto in this context is a
       //vector< std::shared_ptr<Connection> >::const_iterator
       //Or in other words, an iterator for a vector of pointers to Connections
       joints.push_back(*jointIt);//Dereference iterator and push back in joints
-      std::cout << "Pushed back joint: " << **jointIt << std::endl;
-    }//end for(all joints in the activeMultiBody)
-  }//end if (activeBody)
+      if(m_debug)
+        std::cout << "Pushed back joint: " << **jointIt << std::endl;
+    }
+  }
 
   //form each base/link's collision shape for Bullet:
-  std::cout << "About to enter BuildCollisionShape" << std::endl;
+  if(m_debug)
+    std::cout << "About to enter BuildCollisionShape" << std::endl;
   std::vector<btCollisionShape*> shapes = BuildCollisionShape(_m);
 
   return AddObject(shapes, transformations, masses, joints);
@@ -171,39 +180,41 @@ AddObject(MultiBody* _m) {
 btMultiBody*
 BulletEngine::
 AddObject(btCollisionShape* _shape, btTransform _transform, double _mass) {
-  std::cout << "BulletEngine: Entering using the old version of AddObject"
+  if(m_debug)
+    std::cout << "BulletEngine: Entering using the old version of AddObject"
               << std::endl;
+
   //this is basically just a wrapper overload to allow for
   //a more simplified AddObject call, so make objects into vectors and such:
   std::vector< btCollisionShape* > shapes = {_shape};
   std::vector< btTransform > transforms = {_transform};
   std::vector< double > masses = {_mass};
 
-  return AddObject(shapes, transforms, masses);//note default arg for _joints
+  return AddObject(shapes, transforms, masses);
 }
 
 
 btMultiBody*
 BulletEngine::
-AddObject(  std::vector< btCollisionShape* > _shapes,
-            std::vector< btTransform > _transforms,
-            std::vector< double > _masses,
-            std::vector< std::shared_ptr< Connection > > _joints) {
-  std::cout << "BulletEngine.cpp: entering final AddObject overload with "
-            << _joints.size() << " joints" << std::endl;
+AddObject(std::vector<btCollisionShape*> _shapes,
+          std::vector<btTransform> _transforms,
+          std::vector<double> _masses,
+          std::vector<std::shared_ptr<Connection>> _joints) {
+  if(m_debug)
+    std::cout << "BulletEngine.cpp: entering final AddObject overload with "
+              << _joints.size() << " joints" << std::endl;
 
   // This function is assuming the base is in the first element of the 3 args
   // First check that number of elements of each vector match:
-  if(_shapes.size() != _transforms.size() || _shapes.size() != _masses.size()
-      || _shapes.size() - 1 != _joints.size()) { // 1 more shape than joint
-    std::cout << "BulletEngine::AddObject: Warning! _shapes size must equal "
-        "size of _transforms, _masses, and _joints + 1" << std::endl;
-  }
+  if(_shapes.size() != _transforms.size()
+      || _shapes.size() != _masses.size()
+      || _shapes.size() - 1 != _joints.size()) // 1 more shape than joint
+    throw RunTimeException(WHERE, "_shapes size must equal size of _transforms,"
+        " _masses, and _joints + 1");
 
   // Add the shapes to a list of shapes to be deleted later.
-  for(size_t i = 0; i < _shapes.size(); i++) {
+  for(size_t i = 0; i < _shapes.size(); i++)
     m_collisionShapes.push_back(_shapes.at(i));
-  }
 
   //First Step: Handle the base and overall btMultiBody object.
   // Compute inertia for base.
@@ -214,17 +225,18 @@ AddObject(  std::vector< btCollisionShape* > _shapes,
     _shapes.at(0)->calculateLocalInertia(baseMass, inertia);
 
   // Make multi body.
-  const int links = _shapes.size() - 1; //Number of links excluding the base
-  const bool isFixedBase = !isDynamic; // Base is fixed?
+  const int links = _shapes.size() - 1;
+  const bool isFixedBase = !isDynamic;
   const bool canSleep = false; // Can this object sleep? Not sure what it means.
   btMultiBody* mb = new btMultiBody(links, baseMass, inertia,
                                     isFixedBase, canSleep);
 
   mb->setBaseWorldTransform(_transforms.at(0));
 
-  std::cout << "BulletEngine.cpp: Made a btMultiBody with number of joints/links = "
-            << mb->getNumLinks() << " and number of shapes (links + base) = "
-            << _shapes.size() << std::endl;
+  if(m_debug)
+    std::cout << "BulletEngine.cpp: Made a btMultiBody with number of joints/"
+              << "links = " << mb->getNumLinks() << " and number of shapes "
+              << "(links + base) = " << _shapes.size() << std::endl;
 
   //Adapted from Bullet example code TestJointTorqueSetup.cpp lines 297-298:
   short collisionFilterGroup, collisionFilterMask;
@@ -266,7 +278,10 @@ AddObject(  std::vector< btCollisionShape* > _shapes,
   // in Bullet, the joint number is always the CHILD's link number.
 
   for(size_t i = 0; i < _joints.size(); i++) {
-    std::cout << "BulletEngine.cpp: in AddObject working on joint " << i << std::endl;
+    if(m_debug)
+      std::cout << "BulletEngine.cpp: in AddObject working on joint " << i
+                << std::endl;
+
     //The data that applies to all links:
     int parentPmplIndex = _joints.at(i)->GetPreviousBodyIndex();
     int linkPmplIndex = _joints.at(i)->GetNextBodyIndex();
@@ -321,10 +336,12 @@ AddObject(  std::vector< btCollisionShape* > _shapes,
 
     //These show that we have the correct offset from the joint info in PMPL,
     // so it appears Bullet is doing exactly as PMPL is specifying.
-    std::cout << std::endl << "parentComToThisPivotOffset = ";
-    PrintbtVector3(parentComToThisPivotOffset);
-    std::cout << std::endl << "thisPivotToThisComOffset = ";
-    PrintbtVector3(thisPivotToThisComOffset);
+    if(m_debug) {
+      std::cout << std::endl << "parentComToThisPivotOffset = ";
+      PrintbtVector3(parentComToThisPivotOffset);
+      std::cout << std::endl << "thisPivotToThisComOffset = ";
+      PrintbtVector3(thisPivotToThisComOffset);
+    }
 
     //It looks like this should be true (disabled) if "the self-collision
     //has conflicting/non-resolvable contact normals"
@@ -355,8 +372,11 @@ AddObject(  std::vector< btCollisionShape* > _shapes,
             (_transforms.at(parentPmplIndex).getBasis() // parent's world trans.
                 * ToBullet(dhFrameTransform)) // move into the DH frame
                 * btVector3(0.,0.,1.); // grab the z-axis (DH axis of rotation)
-        std::cout << "jointAxis = ";
-        PrintbtVector3(jointAxis);
+
+        if(m_debug) {
+          std::cout << "jointAxis = ";
+          PrintbtVector3(jointAxis);
+        }
 
         mb->setupRevolute(linkIndex, mass, inertia, parentIndex,
                rotParentToThis, jointAxis, parentComToThisPivotOffset,
@@ -377,12 +397,13 @@ AddObject(  std::vector< btCollisionShape* > _shapes,
                                       //linkIndex, -PI / 2., PI / 2.);
 
         m_dynamicsWorld->addMultiBodyConstraint(con);
-        std::cout << "Set constraints on joint " << i << " to: "
-                  << limits.first * PI << " and " << limits.second * PI
-                  << std::endl;
-        break;
-      }// end revolute joint case
 
+        if(m_debug)
+          std::cout << "Set constraints on joint " << i << " to: "
+                    << limits.first * PI << " and " << limits.second * PI
+                    << std::endl;
+        break;
+      }
       case Connection::JointType::Spherical :
       {
         //This case can be used, but please note that NO constraints will
@@ -394,12 +415,11 @@ AddObject(  std::vector< btCollisionShape* > _shapes,
         mb->setupSpherical(linkIndex, mass, inertia, parentIndex,
               rotParentToThis, parentComToThisPivotOffset,
               thisPivotToThisComOffset, disableParentCollision);
-        ///< @TODO support spherical constraints. As per answers here:
+        /// @TODO support spherical constraints. As per answers here:
         /// http://www.bulletphysics.org/Bullet/phpBB3/viewtopic.php?f=9&t=10780
         /// Bullet doesn't support >1DOF joints on btMultiBodies.
         break;
-      }//end Spherical joint case
-
+      }
       case Connection::JointType::NonActuated :
       {
         mb->setupFixed(linkIndex, mass, inertia, parentIndex,
@@ -407,14 +427,11 @@ AddObject(  std::vector< btCollisionShape* > _shapes,
             thisPivotToThisComOffset, disableParentCollision);
         //Since it's fixed, there is no need for joint constraints.
         break;
-      } // end NonActuated joint case
+      }
       default:
-        std::cout << "BulletEngine.cpp: default case for connection type invoked; "
-                  << "unsupported joint type." << std::endl;
-        break;
-    } // end switch (on joint type)
-
-  } // end all joints setup loop
+        throw RunTimeException(WHERE, "Unsupported joint type.");
+    }
+  }
 
   //Do some of the final things:
   mb->finalizeMultiDof();
@@ -439,7 +456,7 @@ AddObject(  std::vector< btCollisionShape* > _shapes,
                                     collisionFilterGroup, collisionFilterMask);
     //Finally, set the link's actual collider:
     mb->getLink(i).m_collider = col;
-  } // end for (link collider setup loop)
+  }
 
   //Also from Pendulum.cpp:
   btAlignedObjectArray<btQuaternion> scratch_q;
@@ -471,35 +488,17 @@ BuildCollisionShape(MultiBody* _body) {
     filenames.push_back(sbody->GetFixedBody(0)->GetFilePath());
   else {
     ActiveMultiBody* abody = dynamic_cast<ActiveMultiBody*>(_body);
-    //std::cout << "BulletEngine: about to get file paths for active body" << std::endl;
-    for(size_t i = 0; i < abody->NumFreeBody(); i++) {
+    for(size_t i = 0; i < abody->NumFreeBody(); i++)
       filenames.push_back(abody->GetFreeBody(i)->GetFilePath());
-    }
   }
-
-//  std::cout << "About to loop through " << filenames.size()
-//                << " obj files for bodies." << std::endl;
 
   // Make simulator collision shape(s).
   for(size_t i = 0; i < filenames.size(); i++){
-//    std::cout << "BuildCollsionShape: About to open obj file " << filenames.at(i) << std::endl;
     btTriangleMesh* shapeMesh = BuildCollisionShape(filenames.at(i));
-
-//    if(shapeMesh)//if it's anything but null it was successful opening the file
-//      std::cout << "BuildCollisionShape: obj file opened successfully" << std::endl;
-//    std::cout << "BulletEngine: shapeMesh has " << shapeMesh->getNumTriangles()
-//                << " triangles" << std::endl;
 
     //Make the bullet impact shape:
     auto ptr = new btGImpactMeshShape(shapeMesh);
-//    if(!ptr)
-//      std::cout << "BulletEngine: btGImpactMeshShape failed to make mesh" << std::endl;
-//    else
-//      std::cout << "BulletEngine: btGImpactMeshShape success" << std::endl;
-//    std::cout << "BulletEngine: ptr has " << ptr->getMeshPartCount()
-//                    << " mesh parts" << std::endl;
     ptr->updateBound();
-//    std::cout << "BulletEngine: About to push back ptr to shapes..." << std::endl;
     shapes.push_back(ptr);
   }
 

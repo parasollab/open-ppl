@@ -334,7 +334,7 @@ class SimilarStructureSampler : public SamplerMethod<MPTraits> {
       altered_joints[j] += 0.5;
       altered_joints[j] -= floor(altered_joints[j]);
 
-      CfgType altered_cfg;
+      CfgType altered_cfg(this->GetTask()->GetRobot());
       altered_cfg.SetData(altered_joints);
       const vector<Vector3d> altered_coords = rmsd.GetCoordinatesForRMSD(altered_cfg);
 
@@ -382,7 +382,7 @@ class SimilarStructureSampler : public SamplerMethod<MPTraits> {
         similar_joints[j] -= floor(similar_joints[j]);
       }
     }
-    CfgType return_cfg;
+    CfgType return_cfg(this->GetTask()->GetRobot());
     return_cfg.SetData(similar_joints);
     return return_cfg;
   }

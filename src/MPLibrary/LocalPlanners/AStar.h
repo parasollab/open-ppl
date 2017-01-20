@@ -156,7 +156,7 @@ AStar<MPTraits>::IsConnectedOneWay(
   stats->IncLPAttempts(this->GetNameAndLabel());
 
   CfgType p = _c1;
-  CfgType incr;
+  CfgType incr(this->GetTask()->GetRobot());
   vector<CfgType> neighbors;
   int nTicks;
   bool connected = true;
@@ -259,9 +259,10 @@ AStar<MPTraits>::FindNeighbors(
       oriOnly.push_back(_increment.GetData()[i]);
     }
   }
-  CfgType posCfg;
+
+  auto robot = this->GetTask()->GetRobot();
+  CfgType posCfg(robot), oriCfg(robot);
   posCfg.SetData(posOnly);
-  CfgType oriCfg;
   oriCfg.SetData(oriOnly);
   neighbors.push_back(posCfg);
   neighbors.push_back(oriCfg);
@@ -274,7 +275,7 @@ AStar<MPTraits>::FindNeighbors(
   vector<double> oneDim;
   for(i = 0; i < _current.DOF(); i++)
     oneDim.push_back(0.0);
-  CfgType oneDimCfg, oneDimCfgNegative;
+  CfgType oneDimCfg(robot), oneDimCfgNegative(robot);
   for(i = 0; i < _current.DOF(); i++) {
     oneDim[i] = _increment.GetData()[i];
 
@@ -441,7 +442,7 @@ AStarClearance<MPTraits>::ChooseOptimalNeighbor(CfgType& _col,
   double value = 0;
 
   CDInfo tmpInfo;
-  CfgType tmp;
+  CfgType tmp(this->GetTask()->GetRobot());
 
   for(size_t i = 0; i < _neighbors.size(); i++) {
     m_clearanceUtility.CollisionInfo(_neighbors[i], tmp, env->GetBoundary(), tmpInfo);

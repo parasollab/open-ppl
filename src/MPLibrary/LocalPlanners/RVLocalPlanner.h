@@ -16,7 +16,9 @@
 ////////////////////////////////////////////////////////////////////////////////
 template <class MPTraits>
 class RVLocalPlanner: public LocalPlannerMethod<MPTraits> {
+
   public:
+
     typedef typename MPTraits::CfgType CfgType;
     typedef typename MPTraits::WeightType WeightType;
     ReachableVolumeRobot m_rvr;
@@ -44,18 +46,19 @@ class RVLocalPlanner: public LocalPlannerMethod<MPTraits> {
         bool _saveFailedPath = false){
 
       Environment* env = this->GetEnvironment();
+      auto robot = this->GetTask()->GetRobot();
       auto vcm = this->GetValidityChecker(m_vcLabel);
       string callee = this->GetName() + "::IsConnectedRV";
       CDInfo cdInfo;
-      CfgType tick;
+      CfgType tick(robot);
       int nTicks=0;
       int tick_num=0;
 
       tick = _c1;
       vector<double> incriment;
       if(!m_rvr.m_fixed){
-	CfgType diff=DifferenceCfg(_c1, _c2);
-	double d_pos=RVDistance<MPTraits>::PositionDistance(env, diff, 2, .5, true);
+	CfgType diff = DifferenceCfg(_c1, _c2);
+	double d_pos = RVDistance<MPTraits>::PositionDistance(env, diff, 2, .5, true);
 	int nTicksPos=floor(d_pos/_posRes);
         double d_rot=RVDistance<MPTraits>::RotationalDistance(diff, 2);
         int nTicksRot=floor(d_rot/_oriRes);
@@ -102,8 +105,8 @@ class RVLocalPlanner: public LocalPlannerMethod<MPTraits> {
 	  continue;
 	}
 
-	while(!stop){
-	  CfgType tickCopy=tick;
+	while(!stop) {
+	  CfgType tickCopy = tick;
 	  tickCopy.ResetRigidBodyCoordinates();
 	  tickCopy.ConfigureRobot();
 	  vector<Vector3d> jointsTick;

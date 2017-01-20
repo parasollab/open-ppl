@@ -9,10 +9,8 @@
 using namespace std;
 
 ////////////////////////////////////////////////////////////////////////////////
-/// @ingroup NeighborhoodFinders
-/// @brief TODO
-///
 /// TODO
+/// @ingroup NeighborhoodFinders
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
 class MPNNNF : public NeighborhoodFinderMethod<MPTraits> {
@@ -101,7 +99,7 @@ UpdateInternalModel()
   else m_lastRdmpSize = curRdmpSize; //continue to update model
 
   //create kdtree structure
-  CfgType temp;
+  CfgType temp(this->GetTask()->GetRobot());
   int dim = temp.DOF();
 
   // NOTE: everything after the 3rd DOF is rotational.

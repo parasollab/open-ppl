@@ -11,6 +11,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 template<class MPTraits>
 struct LPOutput {
+
   typedef typename MPTraits::CfgType CfgType;
   typedef typename MPTraits::WeightType WeightType;
   typedef pair<WeightType, WeightType> LPEdge;

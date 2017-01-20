@@ -79,7 +79,7 @@ Extend(const CfgType& _start, const CfgType& _end,
     CfgType& _new, LPOutput<MPTraits>& _lp) {
   // Setup MP Variables
   Environment* env = this->GetEnvironment();
-  CfgType innerCfg;
+  CfgType innerCfg(this->GetTask()->GetRobot());
 
   // The target configuration is pushed in the obstacle direction
   TraceObstacle<MPTraits>::Extend(_start, _end, innerCfg, _lp);

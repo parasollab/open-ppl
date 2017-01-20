@@ -203,7 +203,7 @@ IsTouching(const Cfg& _cfg, const Boundary* const _region,
   const Point3d regionCenter(rc[0], rc[1], rc[2]);
   const double dist = (regionCenter - robotCenter).norm();
 
-  const double robotRadius = _cfg.GetRobot()->GetBoundingSphereRadius();
+  const double robotRadius = _cfg.GetMultiBody()->GetBoundingSphereRadius();
   const double regionRadius = region->GetRadius();
 
   // The robot is touching if at least one robot factor of it's bounding sphere

@@ -100,7 +100,7 @@ IsValidImpl(CfgType& _cfg, CDInfo& _cdInfo, const string& _callName) {
   _cdInfo.m_retAllInfo = true;
 
   CfgType cfg = _cfg;
-  CfgType dummy;
+  CfgType dummy(cfg.GetRobot());
 
   bool valid = m_clearanceUtility.CollisionInfo(cfg, dummy, b, _cdInfo);
 

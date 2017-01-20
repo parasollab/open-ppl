@@ -191,12 +191,13 @@ CCsConnector<MPTraits>::ConnectCC(RoadmapType* _rm,
       _cc2Vec.end(), back_inserter(neighborPairs));
 
   // Begin the connection attempts
+  auto robot = this->GetTask()->GetRobot();
   for(auto npit = neighborPairs.begin(); npit != neighborPairs.end(); ++npit) {
 
     VID cc1Elem = npit->first.first;
     VID cc2Elem = npit->first.second;
 
-    CfgType _col;
+    CfgType _col(robot);
     if(lp->IsConnected(
           rgraph->GetVertex(cc1Elem),
           rgraph->GetVertex(cc2Elem),
@@ -205,7 +206,7 @@ CCsConnector<MPTraits>::ConnectCC(RoadmapType* _rm,
       rgraph->AddEdge(cc1Elem, cc2Elem, lpOutput.m_edge);
       return;
     }
-    if(_col != CfgType())
+    if(_col != CfgType(robot))
       *_collision++ = _col;
   }
 }
@@ -231,9 +232,8 @@ ComputeAllPairsCCDist(RoadmapType* _rm, vector<pair<size_t, VID> >& _ccs) {
 
   //dist between ccs
   m_ccDist.clear();
-  typedef typename map<VID, CfgType>::iterator IT;
-  for(IT i = coms.begin(); i != coms.end(); ++i)
-    for(IT j = i; j != coms.end(); ++j)
+  for(auto i = coms.begin(); i != coms.end(); ++i)
+    for(auto j = i; j != coms.end(); ++j)
       //dont track the CC distance if i and j are the same
       if(i != j){
         double dist = dmm->Distance(i->second, j->second);

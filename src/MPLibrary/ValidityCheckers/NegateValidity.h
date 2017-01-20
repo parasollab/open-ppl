@@ -19,10 +19,10 @@ class NegateValidity : public ValidityCheckerMethod<MPTraits> {
 
     NegateValidity(string _label = "");
     NegateValidity(XMLNode& _node);
-    virtual ~NegateValidity() { }
+    virtual ~NegateValidity() = default;
 
-    virtual bool
-      IsValidImpl(CfgType& _cfg, CDInfo& _cdInfo, const string& _callName);
+    virtual bool IsValidImpl(CfgType& _cfg, CDInfo& _cdInfo,
+        const string& _callName);
 
   private:
     string m_vcLabel;

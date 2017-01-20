@@ -4,11 +4,12 @@
 #include "SamplerMethod.h"
 
 ////////////////////////////////////////////////////////////////////////////////
-/// @ingroup Samplers
-/// @brief This sampler generates obstacle-based configurations that uniformly
-///        cover the contact surface.
+/// This sampler generates obstacle-based configurations that uniformly cover
+/// the contact surface.
 ///
 /// @TODO Add paper reference.
+///
+/// @ingroup Samplers
 ////////////////////////////////////////////////////////////////////////////////
 template<typename MPTraits>
 class UniformObstacleBasedSampler : public SamplerMethod<MPTraits> {
@@ -107,13 +108,14 @@ Sampler(CfgType& _cfg, const Boundary* const _boundary,
   string callee(this->GetNameAndLabel() + "::SampleImpl()");
   auto vc = this->GetValidityChecker(m_vcLabel);
   auto dm = this->GetDistanceMetric(m_dmLabel);
+  auto robot = this->GetTask()->GetRobot();
 
   bool generated = false;
   int attempts = 0;
   bool cfg1Free;
   double margin = m_margin;
   if(margin == 0)
-    margin = _cfg.GetRobot()->GetMaxAxisRange();
+    margin = _cfg.GetMultiBody()->GetMaxAxisRange();
 
   vector<pair<double, double> > origBoundary;
   for(size_t i = 0; i < 3; i++) {
@@ -121,7 +123,7 @@ Sampler(CfgType& _cfg, const Boundary* const _boundary,
     origBoundary.emplace_back(r.min, r.max);
   }
 
-  env->ResetBoundary(margin, _cfg.GetRobot());
+  env->ResetBoundary(margin, _cfg.GetMultiBody());
 
   attempts++;
   //Generate first cfg
@@ -129,8 +131,8 @@ Sampler(CfgType& _cfg, const Boundary* const _boundary,
 
   cfg1Free = (vc->IsValid(cfg1, callee)) && (!vc->IsInsideObstacle(cfg1));
 
-  CfgType cfg2;
-  CfgType incr;
+  CfgType cfg2(robot);
+  CfgType incr(robot);
 
   incr.GetRandomRay(margin, dm);
   cfg2 = cfg1 + incr;
@@ -147,7 +149,7 @@ Sampler(CfgType& _cfg, const Boundary* const _boundary,
   double r = margin/dist;
   cfg2 = cfg1 + incr*r;*/
 
-  CfgType inter;
+  CfgType inter(robot);
   CfgType tick = cfg1;
   int nTicks;
   double positionRes = env->GetPositionRes();

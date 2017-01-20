@@ -171,7 +171,7 @@ Sampler(CfgType& _cfg, const Boundary* const _boundary,
 
   // Try to generate a sample inside the tetrahedron.
   for(size_t i = 0; i < m_numAttempts[t]; ++i) {
-    CfgType cfg;
+    CfgType cfg(this->GetTask()->GetRobot());
     cfg.GetRandomCfg(this->GetEnvironment());
 
     const Point3d p = RandomPointInTetrahedron(o, a, b, c);

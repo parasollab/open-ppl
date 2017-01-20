@@ -4,10 +4,8 @@
 #include "LocalPlannerMethod.h"
 
 ////////////////////////////////////////////////////////////////////////////////
-/// @ingroup LocalPlanners
-/// @brief TODO
-///
 /// TODO
+/// @ingroup LocalPlanners
 ////////////////////////////////////////////////////////////////////////////////
 template<class MPTraits>
 class ApproxSpheres: public LocalPlannerMethod<MPTraits> {
@@ -89,7 +87,7 @@ IsConnected(const CfgType& _c1, const CfgType& _c2, CfgType& col,
   CDInfo c1Info, c2Info;
   CfgType c1 = _c1;
   CfgType c2 = _c2;
-  CfgType tmp;
+  CfgType tmp(this->GetTask()->GetRobot());
 
   //Get clearance for both cfgs
   m_clearUtil.CollisionInfo(c1, tmp, _env->GetBoundary(), c1Info);

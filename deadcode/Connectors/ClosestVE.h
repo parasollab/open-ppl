@@ -32,7 +32,7 @@ class CfgVEType {
     virtual ~CfgVEType();
 
     bool        m_cfg2IsOnEdge;
-    CfgType         m_cfgOnEdge;
+    CfgType     m_cfgOnEdge;
     VID         m_vid1, m_vid2; // VIDs for cfgs belonging to a potential new edge
     VID         m_endpt1, m_endpt2; // VIDs for cfgs along existing edge
 };
@@ -42,7 +42,7 @@ CfgVEType<MPTraits>::
 CfgVEType() {
   m_vid1 = INVALID_VID;
   m_vid2 = INVALID_VID;
-  m_cfgOnEdge = CfgType();
+  m_cfgOnEdge = CfgType(this->GetTask()->GetRobot());
   m_cfg2IsOnEdge = false;
 }
 
@@ -51,7 +51,7 @@ CfgVEType<MPTraits>::
 CfgVEType(VID _vid1, VID _vid2){
   m_vid1 = _vid1;
   m_vid2 = _vid2;
-  m_cfgOnEdge = CfgType();
+  m_cfgOnEdge = CfgType(this->GetTask()->GetRobot());
   m_cfg2IsOnEdge = false;
 }
 

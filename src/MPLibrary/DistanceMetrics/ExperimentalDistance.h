@@ -22,7 +22,7 @@ class ExperimentalDistance : public WeightedEuclideanDistance<MPTraits> {
     ///@name Local Types
     ///@{
 
-    typedef typename MPTraits::CfgType StateType;
+    typedef typename MPTraits::CfgType CfgType;
 
     ///@}
     ///@name Construction
@@ -36,7 +36,7 @@ class ExperimentalDistance : public WeightedEuclideanDistance<MPTraits> {
     ///@name Distance Interface
     ///@{
 
-    virtual double Distance(const StateType& _s1, const StateType& _s2) override;
+    virtual double Distance(const CfgType& _s1, const CfgType& _s2) override;
 
     ///@}
 
@@ -74,9 +74,9 @@ ExperimentalDistance(XMLNode& _node) :
 template <typename MPTraits>
 double
 ExperimentalDistance<MPTraits>::
-Distance(const StateType& _s1, const StateType& _s2) {
+Distance(const CfgType& _s1, const CfgType& _s2) {
   // Assume that _s1 will coast toward _s2 at its present velocity for m_timestep.
-  StateType s1 = _s1;
+  CfgType s1 = _s1;
   double dt = m_timestep * this->GetEnvironment()->GetTimeRes();
   s1.Apply(s1.GetVelocity(), dt);
   return WeightedEuclideanDistance<MPTraits>::Distance(s1, _s2);

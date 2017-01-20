@@ -18,6 +18,7 @@ using namespace mathtool;
 class ActiveMultiBody;
 class CollisionDetectionMethod;
 class MultiBody;
+class Robot;
 class StaticMultiBody;
 class WorkspaceDecomposition;
 
@@ -56,15 +57,15 @@ class Environment {
     const string& GetEnvFileName() const {return m_filename;}
 
     /// Parse environment file.
-    /// @param[in] _filename The name of the file to read.
+    /// @param _filename The name of the file to read.
     void Read(string _filename);
 
     /// Print environment resolutions and boundary information.
-    /// @param[in] _os The output stream to print to.
+    /// @param _os The output stream to print to.
     void Print(ostream& _os) const;
 
     /// Output environment to .env file format.
-    /// @param[in] _os The output stream to write to.
+    /// @param _os The output stream to write to.
     void Write(ostream& _os);
 
     ///@}
@@ -77,7 +78,7 @@ class Environment {
     /// based on minimum of max body spans multiplied by @c m_positionResFactor.
     /// Reachable distance resolution is computed based upon input res
     /// multiplied by the number of joints.
-    void ComputeResolution(vector<ActiveMultiBody*> _robots);
+    void ComputeResolution(const vector<Robot*>& _robots);
 
     double GetPositionRes() const {return m_positionRes;}
     void SetPositionRes(double _res) {m_positionRes = _res;}
@@ -184,7 +185,7 @@ class Environment {
     }
 
     /// Compute a decomposition of the workspace.
-    /// @param[in] _f The decomposition function to use.
+    /// @param _f The decomposition function to use.
     void Decompose(DecompositionFunction&& _f) {m_decomposition = _f(this);}
 
     ///@}
@@ -240,7 +241,8 @@ template<class CfgType>
 bool
 Environment::
 InBounds(const CfgType& _cfg, const Boundary* const _b) {
-  return _cfg.GetRobot()->InCSpace(_cfg.GetData(), _b) && _b->InBoundary(_cfg);
+  return _cfg.GetMultiBody()->InCSpace(_cfg.GetData(), _b)
+      && _b->InBoundary(_cfg);
 }
 
 /*----------------------------------------------------------------------------*/

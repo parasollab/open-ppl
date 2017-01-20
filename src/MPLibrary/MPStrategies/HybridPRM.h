@@ -229,7 +229,7 @@ void HybridPRM<MPTraits>::Run(){
       pNodeGen->Sample(1, 1, this->GetEnvironment()->GetBoundary(),
           back_inserter(vectorCfgs));
       unsigned long int numcdaftergen = stats->GetIsCollTotal();
-      for(typename vector<CfgType>::iterator C = vectorCfgs.begin(); C != vectorCfgs.end(); ++C) {
+      for(auto C = vectorCfgs.begin(); C != vectorCfgs.end(); ++C) {
         if(C->IsLabel("VALID") && C->GetLabel("VALID")) {
           cmap.reset();
           int nNumPrevCCs = get_cc_count(*(this->GetRoadmap()->GetGraph()), cmap);

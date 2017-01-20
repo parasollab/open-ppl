@@ -319,10 +319,11 @@ ConnectNeighbors(RoadmapType* _rm, VID _vid,
     CfgType& c1 = map->GetVertex(_vid);
     CfgType& c2 = map->GetVertex(v2);
 
-    CfgType col;
+    auto robot = this->GetTask()->GetRobot();
+    CfgType col(robot);
     bool connectable = lp->IsConnected(c1, c2, col, &lpOutput,
           env->GetPositionRes(), env->GetOrientationRes(), true);
-    if(col != CfgType())
+    if(col != CfgType(robot))
       *_collision++ = col;
 
     //add connection attempt to caches

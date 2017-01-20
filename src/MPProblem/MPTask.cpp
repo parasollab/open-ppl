@@ -13,6 +13,13 @@
 /*------------------------------ Construction --------------------------------*/
 
 MPTask::
+MPTask(Robot* const _robot) : m_robot(_robot) {
+  m_label = "null task";
+  m_robotLabel = m_robot->GetLabel();
+}
+
+
+MPTask::
 MPTask(MPProblem* const _problem, XMLNode& _node) {
   // Parse task and robot labels.
   m_label = _node.Read("label", true, "", "Unique label for this task");
@@ -20,7 +27,7 @@ MPTask(MPProblem* const _problem, XMLNode& _node) {
       " this task.");
 
   // Get the robot by label.
-  m_robot = _problem->GetNewRobot(m_robotLabel);
+  m_robot = _problem->GetRobot(m_robotLabel);
   auto mb = m_robot->GetMultiBody();
 
   // Parse constraints.
@@ -48,6 +55,14 @@ MPTask::
     delete c;
   for(auto c : m_goalConstraints)
     delete c;
+}
+
+/*--------------------------- Property Accessors -----------------------------*/
+
+Robot*
+MPTask::
+GetRobot() const noexcept {
+  return m_robot;
 }
 
 /*-------------------------- Constraint Accessors ----------------------------*/
@@ -181,6 +196,11 @@ MakeComposeBoundary(const std::vector<Constraint*>& _constraints) const noexcept
   //  /// @TODO Create a composed boundary from the constraint boundaries.
   //  constraint->GetBoundary();
   //return out;
+
+  // If the constraint set is empty, return a null boundary.
+  if(_constraints.empty())
+    return nullptr;
+
   cerr << "Warning: MPTask is currently creating constraint boundaries from "
        << "only the first constraint in each set!" << endl;
   return _constraints.front()->GetBoundary();

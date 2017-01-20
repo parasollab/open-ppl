@@ -54,12 +54,22 @@ class MPTask final {
     ///@name Construction
     ///@{
 
+    /// Create an empty task for a given robot.
+    MPTask(Robot* const _robot);
+
     /// Parse the set of task constraints described in an XML node.
-    /// @param[in] _problem The MPProblem for this task.
-    /// @param[in] _node The XML node to parse.
+    /// @param _problem The MPProblem for this task.
+    /// @param _node The XML node to parse.
     MPTask(MPProblem* const _problem, XMLNode& _node);
 
     ~MPTask();
+
+    ///@}
+    ///@name Property Accessors
+    ///@{
+
+    /// Get the robot associated with this task.
+    Robot* GetRobot() const noexcept;
 
     ///@}
     ///@name Constraint Accessors
@@ -85,22 +95,22 @@ class MPTask final {
     ///@{
 
     /// Evaluate a path to see if it meets the constraints.
-    /// @param[in] _p The path to validate.
+    /// @param _p The path to validate.
     /// @return The status of the task using _p as a solution.
     Status Evaluate(const std::vector<Cfg>& _p) const;
 
     /// Check if a path's starting point satisfies the start constraints.
-    /// @param[in] _p The potential solution to check.
+    /// @param _p The potential solution to check.
     /// @return True if the starting point of _p satisfies all start constraints.
     bool EvaluateStartConstraints(const std::vector<Cfg>& _p) const;
 
     /// Check if all points in the path satisfy the end constraints.
-    /// @param[in] _p The potential solution to check.
+    /// @param _p The potential solution to check.
     /// @return True if all points in _p satisfy all path constraints.
     bool EvaluatePathConstraints(const std::vector<Cfg>& _p) const;
 
     /// Check if a path's end point satisfies the goal constraints.
-    /// @param[in] _p The potential solution to check.
+    /// @param _p The potential solution to check.
     /// @return True if the ending point of _p satisfies all goal constraints.
     bool EvaluateGoalConstraints(const std::vector<Cfg>& _p) const;
 
@@ -112,14 +122,14 @@ class MPTask final {
     ///@{
 
     /// Evaluate a path against a set of constraints.
-    /// @param[in] _p The path to validate.
-    /// @param[in] _c The set of constraints to check.
+    /// @param _p The path to validate.
+    /// @param _c The set of constraints to check.
     /// @return True if all constraints in _c are satisfied by _p.
     bool EvaluateConstraints(const std::vector<Cfg>& _p,
         const std::vector<Constraint*>& _c) const;
 
     /// Create a compose boundary object from a set of constraints.
-    /// @param[in] _c The set of constraints to use.
+    /// @param _c The set of constraints to use.
     /// @return A boundary describing the spaces that satisfy _c.
     const Boundary* MakeComposeBoundary(const std::vector<Constraint*>& _c) const
         noexcept;

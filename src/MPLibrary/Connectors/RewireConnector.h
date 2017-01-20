@@ -123,7 +123,7 @@ ConnectNeighbors(RoadmapType* _rm, VID _vid,
   typedef typename vector<pair<VID, double> >::reverse_iterator RVIT;
   for(RVIT rvit = _closest.rbegin(); rvit!=_closest.rend(); rvit++) {
     VID neighbor = rvit->first;
-    CfgType col;
+    CfgType col(this->GetTask()->GetRobot());
     double neighborCost = GetShortestPath(root, neighbor, _rm);
     double neighborDistance = GetDistance(neighbor, _vid, _rm);
     if((m_distanceBased && neighborCost + neighborDistance < currentMin) ||
@@ -178,7 +178,7 @@ ConnectNeighbors(RoadmapType* _rm, VID _vid,
       continue;
 
     VID neighbor = rvit->first;
-    CfgType col;
+    CfgType col(this->GetTask()->GetRobot());
     double neighborCost = GetShortestPath(root, neighbor, _rm);
     double neighborDist = GetDistance(neighbor, _vid, _rm);
     if((m_distanceBased && vidCost + neighborDist < neighborCost) ||

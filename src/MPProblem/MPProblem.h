@@ -60,18 +60,14 @@ class MPProblem final
     ///@{
 
     /// @return Number of Active MultiBodies
-    size_t NumRobots() const;
+    size_t NumRobots() const noexcept;
 
-    Robot* GetNewRobot(size_t _index) const;
+    Robot* GetRobot(size_t _index) const;
 
     /// Fetch a robot by label.
-    Robot* GetNewRobot(const std::string& _label);
+    Robot* GetRobot(const std::string& _label) const;
 
-    /// @param _index Requested multibody
-    /// @return Pointer to active multibody
-    ActiveMultiBody* GetRobot(size_t _index) const;
-
-    std::vector<ActiveMultiBody*> GetRobots() const;
+    const std::vector<Robot*>& GetRobots() const noexcept;
 
     ///@}
     ///@name Task Accessors

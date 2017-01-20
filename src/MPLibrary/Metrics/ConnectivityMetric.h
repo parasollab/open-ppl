@@ -15,7 +15,6 @@ class ConnectivityMetric : public CoverageMetric<MPTraits, Set> {
 
   public:
 
-    typedef typename MPTraits::CfgType     CfgType;
     typedef typename MPTraits::RoadmapType RoadmapType;
     typedef typename RoadmapType::VID      VID;
 

@@ -10,15 +10,13 @@
 
 #include "Vector.h"
 
-#ifdef _PARALLEL
-#include "views/proxy.h"
-#endif
-
-enum class DofType;
-class Cfg;
-class Environment;
 class ActiveMultiBody;
 class Boundary;
+class Cfg;
+class Environment;
+class Robot;
+
+enum class DofType;
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -32,9 +30,9 @@ class ClearanceInfo final {
     ///@name Internal State
     ///@{
 
-    double m_clearance; ///< Distance to nearest c-space obstacle.
-    Cfg* m_direction;   ///< Direction to nearest c-obstacle configuration.
-    int m_obstacleId;   ///< The index of the nearest workspace obstacle?
+    double m_clearance;        ///< Distance to nearest c-space obstacle.
+    Cfg* m_direction{nullptr}; ///< Direction to nearest c-obstacle configuration.
+    int m_obstacleId;          ///< The index of the nearest workspace obstacle?
 
     ///@}
 
@@ -43,8 +41,7 @@ class ClearanceInfo final {
     ///@name Construction
     ///@{
 
-    ClearanceInfo(Cfg* _direction = nullptr, double _clearance = -1e10) :
-        m_clearance(_clearance), m_direction(_direction) { }
+    ClearanceInfo(Cfg* _direction = nullptr, const double _clearance = -1e10);
 
     ~ClearanceInfo();
 
@@ -52,14 +49,14 @@ class ClearanceInfo final {
     ///@name Clearance Interface
     ///@{
 
-    double GetClearance() {return m_clearance;};
-    void SetClearance(double _clearance) {m_clearance = _clearance;};
+    double GetClearance() const noexcept;
+    void SetClearance(const double _clearance) noexcept;
 
-    Cfg* GetDirection() {return m_direction;};
-    void SetDirection(Cfg* _direction) {m_direction = _direction;};
+    Cfg* GetDirection() const noexcept;
+    void SetDirection(Cfg* _direction) noexcept;
 
-    int GetObstacleId() { return m_obstacleId;};
-    void SetObstacleId(int _id) { m_obstacleId = _id;};
+    int GetObstacleId() const noexcept;
+    void SetObstacleId(const int _id) noexcept;
 
     ///@}
 
@@ -84,8 +81,8 @@ class Cfg {
     ///@name Construction
     ///@{
 
-    explicit Cfg(size_t _index = 0);
-    explicit Cfg(const Vector3d& _v, size_t _index = 0);
+    explicit Cfg(Robot* const _robot = nullptr);
+    explicit Cfg(const Vector3d& _v, Robot* const _robot = nullptr);
     Cfg(const Cfg& _other);
 
     virtual ~Cfg() = default;
@@ -136,10 +133,10 @@ class Cfg {
     virtual vector<double> GetRotation() const;
 
     /// Get the robot's reference point.
-    Point3d GetPoint() const;
+    Point3d GetPoint() const noexcept;
 
     /// Get the internal storage of DOF data.
-    const vector<double>& GetData() const {return m_v;}
+    const vector<double>& GetData() const noexcept;
 
     /// Set the internal storage of DOF data.
     virtual void SetData(const vector<double>& _data);
@@ -167,14 +164,14 @@ class Cfg {
     ///@{
 
     //labeling of the Cfg and statistics
-    bool GetLabel(string _label);
-    bool IsLabel(string _label);
-    void SetLabel(string _label, bool _value);
+    bool GetLabel(const std::string& _label) const;
+    bool IsLabel(const std::string& _label) const noexcept;
+    void SetLabel(const std::string& _label, const bool _value) noexcept;
 
-    double GetStat(string _stat) const;
-    bool IsStat(string _stat) const;
-    void SetStat(string _stat, double _value = 0.0);
-    void IncStat(string _stat, double _value = 1.0);
+    double GetStat(const std::string& _stat) const;
+    bool IsStat(const std::string& _stat) const noexcept;
+    void SetStat(const std::string& _stat, const double _value = 0.0) noexcept;
+    void IncStat(const std::string& _stat, const double _value = 1.0) noexcept;
 
     ///@}
     ///@name Robot Info
@@ -185,13 +182,10 @@ class Cfg {
     size_t GetNumOfJoints() const;
 
     /// Get the robot referenced by this configuration.
-    /// @param[in] _index The robot index of interest.
-    ActiveMultiBody* GetRobot() const {
-      return m_robotIndex == size_t(-1) ? m_pointRobot : m_robots[m_robotIndex];
-    }
+    Robot* GetRobot() const noexcept;
 
-    size_t GetRobotIndex() const {return m_robotIndex;}
-    void SetRobotIndex(size_t _i) {m_robotIndex = _i;}
+    /// Get the robot's multibody.
+    ActiveMultiBody* GetMultiBody() const noexcept;
 
     //Calculate the center position and center of mass of the robot configures
     //at this Cfg
@@ -202,13 +196,14 @@ class Cfg {
 
     void ResetRigidBodyCoordinates();
 
-    // Generation Related Methods : create Cfgs randomly
-    /**
-     * Configuration where workspace robot's EVERY VERTEX
-     * is guaranteed to lie within the environment specified bounding box If
-     * not, a cfg couldn't be found in the bbx, and the program will abort.
-     * The function will try a predefined number of times
-     */
+    ///@}
+    ///@name Generation Methods
+    ///@{
+
+    /// Create a configuration where workspace robot's EVERY VERTEX
+    /// is guaranteed to lie within the environment specified bounding box. If
+    /// a cfg couldn't be found in the bbx, the program will abort.
+    /// The function will try a predefined number of times
     virtual void GetRandomCfg(Environment* _env);
     virtual void GetRandomCfg(Environment* _env, const Boundary* const _b);
 
@@ -250,23 +245,6 @@ class Cfg {
     virtual void Write(ostream& _os) const;
 
     ///@}
-    ///@name Ugly Static Hacks
-    ///@{
-    /// @TODO Remove this junk and replace with a more elegant, instance-based
-    ///       solution. Storing an index is specifically less efficient than
-    ///       storing a robot pointer since we require an additional look-up
-    ///       (and also container) to get the desired object.
-
-    static vector<ActiveMultiBody*> m_robots;
-    static ActiveMultiBody* m_pointRobot;
-
-    static void InitRobots(ActiveMultiBody* _robot, size_t _index);
-
-    static void SetSize(size_t _size);
-
-    static vector<ActiveMultiBody*> GetRobots() {return m_robots;}
-
-    ///@}
     ///@name Internal State with poor encapsulation
     ///@{
     /// @TODO Fix encapsulation issues.
@@ -294,38 +272,13 @@ class Cfg {
     ///@{
 
     vector<double> m_v;  ///< The DOF values.
-    size_t m_robotIndex; ///< The ActiveBody this cfg refers to.
+    Robot* m_robot{nullptr}; ///< The robot this cfg refers to.
 
     map<string, bool> m_labelMap;  ///< A map of labels for this cfg.
     map<string, double> m_statMap; ///< A map of stats for this cfg.
 
     ///@}
 
-#ifdef _PARALLEL
-
-  public:
-
-    //parallel connected component
-    void active(bool _a) {m_active = _a;}
-    bool active() const {return m_active;}
-    void cc(size_t _c) {m_cc = _c;}
-    size_t cc() const {return m_cc;}
-
-    void define_type(stapl::typer& _t) {
-      _t.member(m_v);
-      _t.member(m_labelMap);
-      _t.member(m_statMap);
-      _t.member(m_robotIndex);
-      _t.member(m_active);
-      _t.member(m_cc);
-    }
-
-  private:
-
-    bool m_active;
-    size_t m_cc;
-
-#endif
 };
 
 //I/O for Cfg
@@ -362,111 +315,5 @@ GetSmoothingValue(ClearanceUtility<MPTraits>& _clearanceUtils,
   return cdInfo.m_minDist;
 }
 
-
-#ifdef _PARALLEL
-namespace stapl {
-
-  //////////////////////////////////////////////////////////////////////////////
-  /// @TODO
-  //////////////////////////////////////////////////////////////////////////////
-  template <typename Accessor>
-  class proxy<Cfg, Accessor> : public Accessor {
-
-    friend class proxy_core_access;
-    typedef Cfg target_t;
-
-    public:
-
-      //typedef target_t::parameter_type  parameter_type;
-      explicit proxy(Accessor const& acc) : Accessor(acc) { }
-      operator target_t() const {
-        return Accessor::read();
-      }
-
-      proxy const& operator=(proxy const& rhs) {
-        Accessor::write(rhs);
-        return *this;
-      }
-
-      proxy const& operator=(target_t const& rhs) {
-        Accessor::write(rhs);
-        return *this;
-      }
-
-      int DOF() const {
-        return Accessor::const_invoke(&target_t::DOF);
-      }
-
-      int PosDOF() const {
-        return Accessor::const_invoke(&target_t::PosDOF);
-      }
-
-      void Write(ostream& _os) const {
-        return Accessor::const_invoke(&target_t::Write, _os);
-      }
-
-      void Read(istream& _is) {
-        return Accessor::const_invoke(&target_t::Read, _is);
-      }
-
-      const vector<double>& GetData() const {
-        return Accessor::const_invoke(&target_t::GetData);
-      }
-
-      void SetData(vector<double>& _data) const {
-        return Accessor::const_invoke(&target_t::SetData, _data);
-      }
-
-      bool GetLabel(string _label) const {
-        return Accessor::const_invoke(&target_t::GetLabel, _label);
-      }
-
-      bool IsLabel(string _label) const {
-        return Accessor::const_invoke(&target_t::IsLabel, _label);
-      }
-
-      bool SetLabel(string _label) const {
-        return Accessor::const_invoke(&target_t::SetLabel, _label);
-      }
-
-      double GetStat(string _stat) const {
-        return Accessor::const_invoke(&target_t::GetStat, _stat);
-      }
-
-      bool IsStat(string _stat) const {
-        return Accessor::const_invoke(&target_t::IsStat, _stat);
-      }
-
-      void SetStat(string _stat, double _val) const {
-        return Accessor::const_invoke(&target_t::SetStat, _stat,_val);
-      }
-
-      void IncStat(string _stat, double _val) const {
-        return Accessor::const_invoke(&target_t::IncStat, _stat,_val);
-      }
-
-      static int GetNumOfJoints() {
-        return Accessor::const_invoke(&target_t::GetNumOfJoints);
-      }
-
-      void active(bool _a) {
-        return Accessor::invoke(&target_t::active, _a);
-      }
-
-      bool active() const {
-        return Accessor::const_invoke(&target_t::active);
-      }
-
-      void cc(size_t _c) {
-        return Accessor::invoke(&target_t::cc, _c);
-      }
-
-      size_t cc() const {
-        return Accessor::const_invoke(&target_t::cc);
-      }
-
-  };
-}
-#endif
 
 #endif

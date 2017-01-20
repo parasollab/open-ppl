@@ -42,6 +42,8 @@ class BulletEngine final {
   /// structures.
   btAlignedObjectArray<btCollisionShape*> m_collisionShapes;
 
+  bool m_debug{false};  ///< Show debug messages?
+
   ///@}
 
   public:

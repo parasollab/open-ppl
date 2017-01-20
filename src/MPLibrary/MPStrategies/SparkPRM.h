@@ -299,7 +299,7 @@ ConstructRRT(VID _root) {
 
     // Find growth direction
     double randomRatio = DRand();
-    CfgType dir;
+    CfgType dir(this->GetTask()->GetRobot());
     if(randomRatio < m_growthFocus)
       dir = this->GoalBiasedDirection(_root);
     else
@@ -702,7 +702,7 @@ typename MPTraits::CfgType
 SparkPRM<MPTraits, Strategy>::
 SelectDirection() {
   Environment* env = this->GetEnvironment();
-  CfgType dir;
+  CfgType dir(this->GetTask()->GetRobot());
   dir.GetRandomCfg(env);
   return dir;
 }
@@ -717,9 +717,10 @@ ExpandTree(CfgType& _dir, vector<VID>& _rrt, vector<VID>& _important) {
   GraphType* graph = this->GetRoadmap()->GetGraph();
   auto dm = this->GetDistanceMetric(m_dmLabel);
   auto nf = this->GetNeighborhoodFinder(m_nfLabel);
+  auto robot = this->GetTask()->GetRobot();
   VID recentVID = INVALID_VID;
   CDInfo cdInfo;
-  CfgType nearest, newCfg;
+  CfgType nearest(robot), newCfg(robot);
   int weight = 0;
   vector<pair<VID, double> > kClosest;
   vector<CfgType> cfgs;

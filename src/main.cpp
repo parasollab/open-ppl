@@ -10,18 +10,23 @@
 int
 main(int _argc, char** _argv) {
   try {
-    if(_argc < 3 || std::string(_argv[1]) != "-f")
+    if(_argc != 3 || std::string(_argv[1]) != "-f")
       throw ParseException(WHERE, "Incorrect usage. Usage: -f options.xml");
 
+    // Get the XML file name from the command line.
     std::string xmlFile = _argv[2];
 
+    // Parse the Problem node into an MPProblem object.
     MPProblem* problem = new MPProblem(xmlFile);
+
+    // Parse the Library node into an MPLibrary object.
     MPLibrary* pmpl = new MPLibrary(xmlFile);
+
+    // Create storage for the solution and ask the library to solve our problem.
     MPSolution* solution = new MPSolution;
+    pmpl->Solve(problem, problem->GetTasks().front(), solution);
 
-    //pmpl->Solve(problem, problem->GetTasks().front(), solution);
-    pmpl->Solve(problem, nullptr, solution);
-
+    // Release resources.
     delete problem;
     delete solution;
     delete pmpl;

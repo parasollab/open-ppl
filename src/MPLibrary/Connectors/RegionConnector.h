@@ -118,6 +118,7 @@ ConnectNeighbors(RoadmapType* _rm, VID _vid,
   Environment* env = this->GetEnvironment();
   auto lp = this->GetLocalPlanner(this->m_lpLabel);
   LPOutput <MPTraits> lpOutput;
+  auto robot = this->GetTask()->GetRobot();
 
   typedef typename vector<pair<VID, double>>::iterator VIT;
   for(VIT vit = _closest.begin(); vit != _closest.end(); ++vit) {
@@ -125,7 +126,7 @@ ConnectNeighbors(RoadmapType* _rm, VID _vid,
     if(!CheckEdge(_vid, vit->first, _rm))
       continue;
 
-    CfgType col;
+    CfgType col(robot);
     if(lp->IsConnected(_rm->GetGraph()->GetVertex(_vid),
           _rm->GetGraph()->GetVertex(vit->first),
           col, &lpOutput, env->GetPositionRes(), env->GetOrientationRes())) {
@@ -143,7 +144,7 @@ ConnectNeighbors(RoadmapType* _rm, VID _vid,
         cout << "| Connection failed" << endl;
     }
 
-    if(col != CfgType())
+    if(col != CfgType(robot))
       *_collision++ = col;
   }
 }

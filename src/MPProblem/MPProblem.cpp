@@ -25,11 +25,12 @@ MPProblem(const string& _filename) {
 MPProblem::
 ~MPProblem() {
   delete m_environment;
-  m_environment = nullptr;
 
-  for(auto& robot : m_robots)
+  for(auto robot : m_robots)
     delete robot;
-  m_robots.clear();
+
+  for(auto task : m_tasks)
+    delete task;
 }
 
 /*---------------------------- XML Helpers -----------------------------------*/
@@ -81,12 +82,21 @@ ReadXMLFile(const string& _filename) {
     throw ParseException(input.Where(), "No robots specified in the problem "
         "node.");
 
-  // Initialize the Cfg robot pointers.
-  /// @TODO Remove the need for this nonsense.
-  Cfg::m_robots.clear();
-  Cfg::SetSize(m_robots.size());
-  for(size_t i = 0; i < m_robots.size(); ++i)
-    Cfg::InitRobots(m_robots[i]->GetMultiBody(), i);
+  // If no tasks were specified, assume we want an unconstrained plan for the
+  // first robot.
+  if(m_tasks.empty()) {
+    if(m_robots.size() > 1)
+      throw ParseException(input.Where(), "No task was specified in the problem "
+          "node, but multiple robots are specified. Taskless execution only "
+          "supports single robot problems.");
+
+    auto robot = m_robots.front();
+    std::cout << "No task specified, assuming we want an unconstrained plan for "
+              << "the first robot, labeled \'" << robot->GetLabel() << "\'.\n";
+
+    MPTask* nullTask = new MPTask(robot);
+    m_tasks.push_back(nullTask);
+  }
 
   // Compute the environment resolution.
   GetEnvironment()->ComputeResolution(GetRobots());
@@ -145,14 +155,14 @@ SetEnvironment(Environment* _e) {
 
 size_t
 MPProblem::
-NumRobots() const {
+NumRobots() const noexcept {
   return m_robots.size();
 }
 
 
 Robot*
 MPProblem::
-GetNewRobot(size_t _index) const {
+GetRobot(size_t _index) const {
   if(_index >= m_robots.size())
     throw RunTimeException(WHERE, "Requested Robot " + std::to_string(_index) +
         ", but only " + std::to_string(m_robots.size()) +
@@ -163,7 +173,7 @@ GetNewRobot(size_t _index) const {
 
 Robot*
 MPProblem::
-GetNewRobot(const std::string& _label) {
+GetRobot(const std::string& _label) const {
   for(auto robot : m_robots)
     if(robot->GetLabel() == _label)
       return robot;
@@ -174,21 +184,10 @@ GetNewRobot(const std::string& _label) {
 }
 
 
-ActiveMultiBody*
+const std::vector<Robot*>&
 MPProblem::
-GetRobot(size_t _index) const {
-  return GetNewRobot(_index)->GetMultiBody();
-}
-
-
-vector<ActiveMultiBody*>
-MPProblem::
-GetRobots() const {
-  vector<ActiveMultiBody*> robots;
-  robots.reserve(m_robots.size());
-  for(const auto& ptr : m_robots)
-    robots.push_back(ptr->GetMultiBody());
-  return robots;
+GetRobots() const noexcept {
+  return m_robots;
 }
 
 /*----------------------------- Task Accessors -------------------------------*/

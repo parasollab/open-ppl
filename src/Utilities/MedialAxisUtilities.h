@@ -379,12 +379,13 @@ ExactCollisionInfo(CfgType& _cfg, CfgType& _clrCfg, const Boundary* const _b,
   // If not using the bbx, done
   if(m_useBBX) {
     // CfgType is now know as good, get BBX and ROBOT info
-    auto robot = _cfg.GetRobot();
+    auto multiBody = _cfg.GetMultiBody();
 
     // Find closest point between robot and bbx, set if less than min dist
     // from obstacles
-    for(size_t m = 0; m < robot->NumFreeBody(); ++m) {
-      const GMSPolyhedron& poly = robot->GetFreeBody(m)->GetWorldPolyhedron();
+    for(size_t m = 0; m < multiBody->NumFreeBody(); ++m) {
+      const GMSPolyhedron& poly = multiBody->GetFreeBody(m)->
+          GetWorldPolyhedron();
       for(size_t j = 0; j < poly.m_vertexList.size(); ++j) {
         double clr = _b->GetClearance(poly.m_vertexList[j]);
         if(clr < _cdInfo.m_minDist) {
@@ -398,7 +399,8 @@ ExactCollisionInfo(CfgType& _cfg, CfgType& _clrCfg, const Boundary* const _b,
   }
 
   Vector3d clrDir = _cdInfo.m_objectPoint - _cdInfo.m_robotPoint;
-  CfgType stepDir;
+  auto robot = this->GetTask()->GetRobot();
+  CfgType stepDir(robot);
   double factor = 0;
   for(size_t i = 0; i < _clrCfg.DOF(); ++i) {
     if(i < _clrCfg.PosDOF()) {
@@ -417,7 +419,7 @@ ExactCollisionInfo(CfgType& _cfg, CfgType& _clrCfg, const Boundary* const _b,
     return false;
 
   if(!initValidity) {
-    CfgType incr, tmpCfg = _clrCfg;
+    CfgType incr(robot), tmpCfg = _clrCfg;
     int nTicks;
     incr.FindIncrement(_cfg, _clrCfg, &nTicks,
         env->GetPositionRes(), env->GetOrientationRes());
@@ -494,7 +496,7 @@ ApproxCollisionInfo(CfgType& _cfg, CfgType& _clrCfg,
   vector<Ray<CfgType>> rays;
   double posRes = env->GetPositionRes();
   for(size_t i = 0; i < numRays; ++i) {
-    CfgType tmpDirection;
+    CfgType tmpDirection(this->GetTask()->GetRobot());
     tmpDirection.GetRandomRay(m_approxStepSize * env->GetPositionRes(),
         dm, false);
     if(this->m_debug)
@@ -908,6 +910,7 @@ MinEdgeClearance(const CfgType& _c1, const CfgType& _c2,
 
   Environment* env = this->GetEnvironment();
   auto dm = this->GetDistanceMetric(m_dmLabel);
+  auto robot = this->GetTask()->GetRobot();
   double minClearance = 1e6;
 
   //Reconstruct the path given the two nodes
@@ -929,7 +932,7 @@ MinEdgeClearance(const CfgType& _c1, const CfgType& _c2,
         ++cit) {
       StatClass dummyStats;
       LPOutput<MPTraits> lpOutput;
-      CfgType col;
+      CfgType col(robot);
       vector<CfgType> edge = sl.ReconstructPath(*cit, *(cit + 1), intermediates,
           env->GetPositionRes(), env->GetOrientationRes());
       reconEdge.insert(reconEdge.end(), edge.begin(), edge.end());
@@ -940,7 +943,7 @@ MinEdgeClearance(const CfgType& _c1, const CfgType& _c2,
   reconEdge.push_back(_c2);
   for(auto it = reconEdge.begin(); it != reconEdge.end(); ++it) {
     CDInfo collInfo;
-    CfgType clrCfg;
+    CfgType clrCfg(robot);
     //Decide which collision info function to use
     CollisionInfo(*it, clrCfg, env->GetBoundary(), collInfo);
     double currentClearance = collInfo.m_minDist;
@@ -1079,6 +1082,7 @@ PushCfgToMedialAxis(CfgType& _cfg, const Boundary* const _b) {
 
   Environment* env = this->GetEnvironment();
   auto vcm = this->GetValidityChecker(this->m_vcLabel);
+  auto robot = this->GetTask()->GetRobot();
 
   CDInfo tmpInfo;
   tmpInfo.ResetVars();
@@ -1089,13 +1093,13 @@ PushCfgToMedialAxis(CfgType& _cfg, const Boundary* const _b) {
     return false;
 
   // Determine positional direction to move
-  CfgType transCfg;
+  CfgType transCfg(robot);
   CDInfo prevInfo;
   if(!FindInitialDirection(_cfg, _b,
         env->GetPositionRes(), transCfg, prevInfo))
     return false;
 
-  CfgType startCfg, endingCfg;
+  CfgType startCfg(robot), endingCfg(robot);
   double upperBound = 0, lowerBound = 0, stepSize = 0;
   bool borderFound;
   if(this->m_exactClearance)
@@ -1120,7 +1124,7 @@ PushCfgToMedialAxis(CfgType& _cfg, const Boundary* const _b) {
   }
 
   vector<double> dists(5, 0);
-  CfgType tmpTransCfg;
+  CfgType tmpTransCfg(robot);
   bool passed = this->CollisionInfo(startCfg, tmpTransCfg, _b, tmpInfo);
   if(!passed)
     return false;
@@ -1153,7 +1157,7 @@ PushCfgToMedialAxis(CfgType& _cfg, const Boundary* const _b) {
   midMCfg = BinarySearchForPeaks(startCfg, midMCfg, endingCfg,
       lowerBound, upperBound, transCfg, _cfg, _b, dists);
 
-  if(midMCfg == CfgType())
+  if(midMCfg == CfgType(robot))
     return false;
 
   if(this->m_debug) {
@@ -1219,6 +1223,7 @@ FindMedialAxisBorderExact(const CfgType& _cfg, const Boundary* const _b,
     double& _stepSize) {
   Environment* env = this->GetEnvironment();
   auto robot = _cfg.GetRobot();
+  auto multiBody = _cfg.GetMultiBody();
   auto vcm = this->GetValidityChecker(this->m_vcLabel);
 
   CDInfo tmpInfo;
@@ -1227,7 +1232,7 @@ FindMedialAxisBorderExact(const CfgType& _cfg, const Boundary* const _b,
 
   // Determine gap for medial axis
   CfgType tmpCfg = _cfg;
-  CfgType heldCfg;
+  CfgType heldCfg(robot);
   _stepSize = 0.0;
   bool witnessPointMoved = false;
 
@@ -1260,7 +1265,7 @@ FindMedialAxisBorderExact(const CfgType& _cfg, const Boundary* const _b,
       // If tmp is valid, move on to next step
       if(this->m_debug)
         cout << "TMP Cfg: " << tmpCfg;
-      CfgType tmpTransCfg;
+      CfgType tmpTransCfg(robot);
       if(this->CollisionInfo(tmpCfg, tmpTransCfg, _b, tmpInfo)) {
         if(!tmpCfg.GetLabel("VALID"))
           return false;
@@ -1271,7 +1276,7 @@ FindMedialAxisBorderExact(const CfgType& _cfg, const Boundary* const _b,
         for(size_t i = 0; i < _transCfg.PosDOF(); ++i)
           tmpDist += transDir[i] * transDir[i];
         tmpDist = sqrt(tmpDist);
-        if(tmpDist > robot->GetBoundingSphereRadius() *
+        if(tmpDist > multiBody->GetBoundingSphereRadius() *
             (2. + numeric_limits<float>::epsilon())) { // TODO: better value
           if(this->m_debug)
             cout << "\n WP moved: " << tmpDist;
@@ -1318,6 +1323,7 @@ FindMedialAxisBorderApprox(const CfgType& _cfg, const Boundary* const _b,
     CfgType& _endingCfg, double& _upperBound, double& _lowerBound,
     double& _stepSize) {
   Environment* env = this->GetEnvironment();
+  auto robot = this->GetTask()->GetRobot();
   auto vcm = this->GetValidityChecker(this->m_vcLabel);
 
   CDInfo tmpInfo;
@@ -1326,7 +1332,7 @@ FindMedialAxisBorderApprox(const CfgType& _cfg, const Boundary* const _b,
 
   // Determine gap for medial axis
   CfgType tmpCfg = _cfg;
-  CfgType heldCfg;
+  CfgType heldCfg(robot);
   _stepSize = 0.0;
   double cbStepSize = 0.0;
   deque<double> segDists;
@@ -1368,7 +1374,7 @@ FindMedialAxisBorderApprox(const CfgType& _cfg, const Boundary* const _b,
       // If tmp is valid, move on to next step
       if(this->m_debug)
         cout << "TMP Cfg: " << tmpCfg;
-      CfgType tmpTransCfg;
+      CfgType tmpTransCfg(robot);
       if(this->CollisionInfo(tmpCfg, tmpTransCfg, _b, tmpInfo)) {
         _prevInfo = tmpInfo;
         if(this->m_debug)
@@ -1480,6 +1486,7 @@ BinarySearchForPeaks(CfgType& _startCfg, CfgType& _midMCfg, CfgType& _endingCfg,
     double _lowerBound, double _upperBound, CfgType& _transCfg, CfgType& _cfg,
     const Boundary* const _b, vector<double>& _dists) {
   auto dm = this->GetDistanceMetric(this->m_dmLabel);
+  auto robot = this->GetTask()->GetRobot();
 
   // Variables for modified binary search
   size_t attempts = 0, maxAttempts = 20, badPeaks = 0, maxBadPeaks = 10;
@@ -1505,16 +1512,16 @@ BinarySearchForPeaks(CfgType& _startCfg, CfgType& _midMCfg, CfgType& _endingCfg,
     CfgType midSCfg = _transCfg*middleS + _cfg;
     CfgType midECfg = _transCfg*middleE + _cfg;
 
-    CfgType tmpTransCfg;
+    CfgType tmpTransCfg(robot);
     CDInfo tmpInfo;
     bool passed = this->CollisionInfo(midSCfg, tmpTransCfg, _b, tmpInfo);
     if(!passed)
-      return CfgType();
+      return CfgType(robot);
     _dists[1] = tmpInfo.m_minDist;
 
     passed = this->CollisionInfo(midECfg, tmpTransCfg, _b, tmpInfo);
     if(!passed)
-      return CfgType();
+      return CfgType(robot);
     _dists[3] = tmpInfo.m_minDist;
 
     // Compute Deltas and Max Distance

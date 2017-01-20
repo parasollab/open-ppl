@@ -16,7 +16,7 @@ class PathModifierMethod : public MPBaseObject<MPTraits> {
 
   public:
 
-    ///@name Local Types
+    ///@name Motion Planning Types
     ///@{
 
     typedef typename MPTraits::CfgType      CfgType;

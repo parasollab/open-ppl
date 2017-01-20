@@ -289,7 +289,6 @@ PMPL_OBJS := \
 	Behaviors/Controllers/PIDFeedback.o \
 	Behaviors/Controllers/SimpleController.o \
 	ConfigurationSpace/Cfg.o \
-        ConfigurationSpace/State.o \
 	Geometry/GMSPolygon.o \
 	Geometry/GMSPolyhedron.o \
 	Geometry/Bodies/ActiveMultiBody.o \

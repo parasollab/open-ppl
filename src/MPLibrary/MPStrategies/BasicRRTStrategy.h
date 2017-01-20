@@ -6,28 +6,27 @@
 #include "MPLibrary/MapEvaluators/RRTQuery.h"
 
 ////////////////////////////////////////////////////////////////////////////////
-/// \ingroup MotionPlanningStrategies
-/// \brief   The RRT algorithm grows one or more trees from a set of root nodes
-///          to solve a single-query planning problem.
-/// \tparam  MPTraits Motion planning universe
+/// The RRT algorithm grows one or more trees from a set of root nodes to solve
+/// a single-query planning problem.
 ///
 /// Our not-so-basic RRT offers many variations by setting the appropriate
 /// options:
-/// \arg m_growGoals      Grow from goals?
-/// \arg m_gt             Indicates DIRECTED vs. UNDIRECTED and GRAPH vs. TREE.
+/// @arg m_growGoals      Grow from goals?
+/// @arg m_gt             Indicates DIRECTED vs. UNDIRECTED and GRAPH vs. TREE.
 ///
 /// The original RRT reference: LaValle, Steven M. "Rapidly-Exploring Random
 ///                             Trees: A New Tool for Path Planning." TR 98-11,
 ///                             Computer Science Dept., Iowa State Univ., 1998.
 ///
-/// \internal This strategy is configured for pausible execution.
+/// @ingroup MotionPlanningStrategies
+/// @internal This strategy is configured for pausible execution.
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
 class BasicRRTStrategy : public MPStrategyMethod<MPTraits> {
 
   public:
 
-    ///\name Motion Planning Types
+    ///@name Motion Planning Types
     ///@{
 
     typedef typename MPTraits::CfgType      CfgType;
@@ -37,14 +36,14 @@ class BasicRRTStrategy : public MPStrategyMethod<MPTraits> {
     typedef typename RoadmapType::VID       VID;
 
     ///@}
-    ///\name Local Types
+    ///@name Local Types
     ///@{
 
     typedef vector<VID>                         TreeType;
     typedef typename vector<TreeType>::iterator TreeIter;
 
     ///@}
-    ///\name Construction
+    ///@name Construction
     ///@{
 
     BasicRRTStrategy(string _dm = "euclidean", string _nf = "bfnf",
@@ -60,14 +59,14 @@ class BasicRRTStrategy : public MPStrategyMethod<MPTraits> {
     virtual ~BasicRRTStrategy() = default;
 
     ///@}
-    ///\name MPBaseObject overrides
+    ///@name MPBaseObject overrides
     ///@{
 
     virtual void ParseXML(XMLNode& _node, bool _child = false);
     virtual void Print(ostream& _os) const;
 
     ///@}
-    ///\name MPStrategy Overrides
+    ///@name MPStrategy Overrides
     ///@{
 
     virtual void Initialize() override;
@@ -78,106 +77,93 @@ class BasicRRTStrategy : public MPStrategyMethod<MPTraits> {
 
   protected:
 
-    ///\name Direction Helpers
+    ///@name Direction Helpers
     ///@{
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// \brief Get a random configuration to grow towards.
+    /// Get a random configuration to grow towards.
     virtual CfgType SelectDirection();
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// \brief Sample a target configuration to grow towards from an existing
+    /// Sample a target configuration to grow towards from an existing
     ///        configuration. m_maxTrial samples are attempted.
-    /// \param[in] _v The VID of the existing configuration.
-    /// \return The sample who's growth direction yields the greatest separation
+    /// @param _v The VID of the existing configuration.
+    /// @return The sample who's growth direction yields the greatest separation
     ///         from the existing configuration's neighbors.
     CfgType SelectDispersedDirection(VID _v);
 
     ///@}
-    ///\name Neighbor Helpers
+    ///@name Neighbor Helpers
     ///@{
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// \brief Get the configurations that are adjacent to _v in the map.
+    /// Get the configurations that are adjacent to _v in the map.
     vector<CfgType> SelectNeighbors(VID _v);
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// \brief Find the nearest configuration to the target _cfg within _tree.
+    /// Find the nearest configuration to the target _cfg within _tree.
     VID FindNearestNeighbor(const CfgType& _cfg, const TreeIter& _tree);
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// \brief If the graph type is GRAPH, try to connect a configuration to its
+    /// If the graph type is GRAPH, try to connect a configuration to its
     ///        neighbors. No-op for TREE type graph.
-    /// \param[in] _newVID The VID of the configuration to connect.
+    /// @param _newVID The VID of the configuration to connect.
     void ConnectNeighbors(VID _newVID);
 
     ///@}
-    ///\name Growth Helpers
+    ///@name Growth Helpers
     ///@{
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// \brief Extend a new configuration from a nearby configuration towards a
+    /// Extend a new configuration from a nearby configuration towards a
     ///        growth target.
-    /// \param[in]  _nearVID The nearby configuration's VID.
-    /// \param[in]  _qRand   The growth target.
-    /// \param[in]  _lp      This is a local plan: _qRand is already in the map.
-    /// \return The new node's VID.
+    /// @param  _nearVID The nearby configuration's VID.
+    /// @param  _qRand   The growth target.
+    /// @param  _lp      This is a local plan: _qRand is already in the map.
+    /// @return The new node's VID.
     virtual VID Extend(const VID _nearVID, const CfgType& _qRand,
         const bool _lp = false);
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// \brief Add a new configuration to the roadmap and current tree.
-    /// \param[in] _newCfg    The new configuration to add.
-    /// \return A pair with the added VID and a bool indicating whether the new
+    /// Add a new configuration to the roadmap and current tree.
+    /// @param _newCfg    The new configuration to add.
+    /// @return A pair with the added VID and a bool indicating whether the new
     ///         node was already in the map.
     virtual pair<VID, bool> AddNode(const CfgType& _newCfg);
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// \brief Add a new edge to the roadmap.
-    /// \param[in] _source   The source node.
-    /// \param[in] _target   The target node.
-    /// \param[in] _lpOutput The extender output.
+    /// Add a new edge to the roadmap.
+    /// @param _source   The source node.
+    /// @param _target   The target node.
+    /// @param _lpOutput The extender output.
     void AddEdge(VID _source, VID _target, const LPOutput<MPTraits>& _lpOutput);
 
     ///@}
-    ///\name Tree Helpers
+    ///@name Tree Helpers
     ///@{
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// \brief Attempt to expand the map by growing towards a target
+    /// Attempt to expand the map by growing towards a target
     ///        configuration from the nearest existing node in the current tree.
-    /// \param[in] _target The target configuration.
-    /// \return            The VID of a newly created Cfg if successful,
+    /// @param _target The target configuration.
+    /// @return            The VID of a newly created Cfg if successful,
     ///                    INVALID_VID otherwise.
     virtual VID ExpandTree(CfgType& _target);
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// \brief Attempt to expand the map by growing towards a target
+    /// Attempt to expand the map by growing towards a target
     ///        configuration from an arbitrary node.
-    /// \param[in] _nearestVID The VID to grow from.
-    /// \param[in] _target     The target configuration.
-    /// \return                The VID of a newly created Cfg if successful,
+    /// @param _nearestVID The VID to grow from.
+    /// @param _target     The target configuration.
+    /// @return                The VID of a newly created Cfg if successful,
     ///                        INVALID_VID otherwise.
     virtual VID ExpandTree(const VID _nearestVID, const CfgType& _target);
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// \brief If multiple trees exist, try to connect the current tree with the
+    /// If multiple trees exist, try to connect the current tree with the
     ///        one that is nearest to a recently grown configuration.
-    /// \param[in] _recentlyGrown The VID of the recently grown configuration.
+    /// @param _recentlyGrown The VID of the recently grown configuration.
     void ConnectTrees(VID _recentlyGrown);
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// \brief Check that each node in the graph is also in a tree, and that the
+    /// Check that each node in the graph is also in a tree, and that the
     ///        number of trees is equal to the number of connected components.
     ///        Calls RebuildTrees to correct if either check fails.
     void ValidateTrees();
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// \brief Reconstruct m_trees from the roadmap CC info.
+    /// Reconstruct m_trees from the roadmap CC info.
     void RebuildTrees();
 
     ///@}
-    ///\name MP Object Labels
+    ///@name MP Object Labels
     ///@{
 
     string m_dmLabel;       ///< The distance metric label.
@@ -188,7 +174,7 @@ class BasicRRTStrategy : public MPStrategyMethod<MPTraits> {
     string m_gt;            ///< The graph type.
 
     ///@}
-    ///\name RRT Properties
+    ///@name RRT Properties
     ///@{
 
     bool   m_growGoals;     ///< Grow trees from goals.
@@ -198,21 +184,21 @@ class BasicRRTStrategy : public MPStrategyMethod<MPTraits> {
     size_t m_maxTrial;      ///< The number of samples taken for disperse search.
 
     ///@}
-    ///\name Tree Data
+    ///@name Tree Data
     ///@{
 
     vector<TreeType> m_trees;                          ///< The current tree set.
     typename vector<TreeType>::iterator m_currentTree; ///< The working tree.
 
     ///@}
-    ///\name Extension Success Tracking
+    ///@name Extension Success Tracking
     ///@{
 
     size_t m_successes{0};  ///< The count of successful extensions.
     size_t m_trials{0};     ///< The count of attempted extensions.
 
     ///@}
-    ///\name Query
+    ///@name Query
     ///@{
 
     RRTQuery<MPTraits>* m_query{nullptr}; ///< The query object.
@@ -220,7 +206,7 @@ class BasicRRTStrategy : public MPStrategyMethod<MPTraits> {
     ///@}
 };
 
-/*----------------------------- construction ---------------------------------*/
+/*----------------------------- Construction ---------------------------------*/
 
 template <typename MPTraits>
 BasicRRTStrategy<MPTraits>::
@@ -347,7 +333,7 @@ Initialize() {
       auto env = this->GetEnvironment();
       auto vc  = this->GetValidityChecker(m_vcLabel);
 
-      CfgType root;
+      CfgType root(this->GetTask()->GetRobot());
       do {
         root.GetRandomCfg(env);
       } while(!env->InBounds(root) || !vc->IsValid(root, "BasicRRTStrategy"));
@@ -384,7 +370,7 @@ Iterate() {
 
   // Find my growth direction. Default is to randomly select node or bias
   // towards a goal.
-  CfgType target;
+  CfgType target(this->GetTask()->GetRobot());
   if(m_query && DRand() < m_growthFocus && !m_query->GetGoals().empty()) {
     target = m_query->GetRandomGoal();
     if(this->m_debug)
@@ -446,7 +432,7 @@ BasicRRTStrategy<MPTraits>::
 SelectDirection() {
   /// \warning Should be named something like SelectTarget or SelectQRand as
   ///          this does not return a direction.
-  CfgType target;
+  CfgType target(this->GetTask()->GetRobot());
   target.GetRandomCfg(this->GetEnvironment());
   return target;
 }
@@ -467,7 +453,7 @@ SelectDispersedDirection(VID _v) {
 
   // Look for the best extension directio, which is the direction with the
   // largest angular separation from any neighbor.
-  CfgType bestCfg;
+  CfgType bestCfg(this->GetTask()->GetRobot());
   double maxAngle = -MAX_DBL;
   for(size_t i = 0; i < m_maxTrial; ++i) {
     // Get a random configuration
@@ -571,7 +557,7 @@ Extend(const VID _nearVID, const CfgType& _qRand, const bool _lp) {
 
   auto e = this->GetExtender(m_exLabel);
   const CfgType& qNear = this->GetRoadmap()->GetGraph()->GetVertex(_nearVID);
-  CfgType qNew;
+  CfgType qNew(this->GetTask()->GetRobot());
   LPOutput<MPTraits> lp;
   pair<VID, bool> extension{INVALID_VID, false};
 

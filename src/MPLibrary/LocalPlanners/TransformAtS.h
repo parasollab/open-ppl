@@ -13,12 +13,16 @@
 ////////////////////////////////////////////////////////////////////////////////
 template<class MPTraits>
 class TransformAtS : public StraightLine<MPTraits> {
+
   public:
+
     typedef typename MPTraits::CfgType CfgType;
 
-    TransformAtS(double _s = 0.5, const string& _vcLabel = "", bool _evalation = false,
-        bool _saveIntermediates = false);
+    TransformAtS(double _s = 0.5, const string& _vcLabel = "",
+        bool _evalation = false, bool _saveIntermediates = false);
+
     TransformAtS(XMLNode& _node);
+
     virtual ~TransformAtS();
 
     virtual void Print(ostream& _os) const;
@@ -110,7 +114,7 @@ template <class MPTraits>
 void
 TransformAtS<MPTraits>::GetSequenceNodes(const CfgType& _c1, const CfgType& _c2,
     double _s, vector<CfgType>& _sequence, bool _reverse) {
-  CfgType thisCopy;
+  CfgType thisCopy(this->GetTask()->GetRobot());
   vector<double> _v1 = _c1.GetData();
   thisCopy.SetData(_v1);
   _sequence.push_back(thisCopy);
@@ -176,16 +180,13 @@ TransformAtS<MPTraits>::IsConnectedOneWay(
   int cdCounter = 0;
   GetSequenceNodes(_c1, _c2, this->m_sValue, sequence, _forward);
 
-  if(this->m_debug) {
-    //vector<double> tmp = _c1.GetData();
-    for(typename vector<CfgType>::iterator J = sequence.begin(); J != sequence.end(); J++) {
+  if(this->m_debug)
+    for(auto J = sequence.begin(); J != sequence.end(); J++)
       cout << "C" << distance(sequence.begin(), J) << ": " << *J << "end" << endl;
-    }
-  }
 
   // Check sequence nodes
   if(_checkCollision) {
-    for(typename vector<CfgType>::iterator I = sequence.begin() + 1; I != sequence.end() - 1; I++)
+    for(auto I = sequence.begin() + 1; I != sequence.end() - 1; I++)
     { // _c1 and _c2 not double checked
       cdCounter++;
       if(env->InBounds(*I)) {
@@ -194,7 +195,8 @@ TransformAtS<MPTraits>::IsConnectedOneWay(
           connected = false;
           break;
         }
-      } else {
+      }
+      else {
         connected = false;
         break;
       }
@@ -202,8 +204,7 @@ TransformAtS<MPTraits>::IsConnectedOneWay(
   }
 
   // Check between sequence nodes
-  for(typename vector<CfgType>::iterator I = sequence.begin();
-      connected && I != sequence.end() - 1; I++) {
+  for(auto I = sequence.begin(); connected && I != sequence.end() - 1; I++) {
     if(this->m_binaryEvaluation)
       connected = this->IsConnectedSLBinary(*I, *(I + 1), _col, _lpOutput,
           cdCounter, _posRes, _oriRes,_checkCollision, _savePath);
@@ -218,7 +219,7 @@ TransformAtS<MPTraits>::IsConnectedOneWay(
 
   // Output any good results
   if(connected)
-    for(typename vector<CfgType>::iterator I = sequence.begin(); I != sequence.end() - 1; I++) {
+    for(auto I = sequence.begin(); I != sequence.end() - 1; I++) {
       _lpOutput->m_intermediates.push_back(*(I + 1));
     }
   if(connected)
@@ -246,7 +247,7 @@ TransformAtS<MPTraits>::ReconstructPath(
   cfgList.insert(cfgList.end(), _intermediates.begin(), _intermediates.end());
   cfgList.push_back(_c2);
 
-  for(typename vector<CfgType>::iterator I = cfgList.begin(); I != cfgList.end() - 1; I++) {
+  for(auto I = cfgList.begin(); I != cfgList.end() - 1; I++) {
     if(this->m_binaryEvaluation)
       this->IsConnectedSLBinary(*I, *(I + 1), col, lpOutput,
           dummyCntr, _posRes, _oriRes, false, true);

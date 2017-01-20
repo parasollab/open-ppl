@@ -147,7 +147,7 @@ LocalPlannerMethod<MPTraits>::
 IsConnected(const CfgType& _start, const CfgType& _end,
     LPOutput<MPTraits>* _lpOutput, double _posRes, double _oriRes,
     bool _checkCollision, bool _savePath) {
-  CfgType col;
+  CfgType col(this->GetTask()->GetRobot());
   return IsConnected(_start, _end, col, _lpOutput, _posRes,
       _oriRes, _checkCollision, _savePath);
 }

@@ -31,9 +31,6 @@ Initialize() {
   auto problem = m_robot->GetMPProblem();
   const std::string& xmlFile = problem->GetXMLFilename();
 
-  /// @TODO Extract task properly. Currently we are using ye old query.
-  MPTask* task = nullptr;
-
   // Initialize the agent's planning library.
   m_library = new MPLibrary(xmlFile);
 
@@ -41,7 +38,8 @@ Initialize() {
   auto solution = new MPSolution;
 
   // Use the planning library to find a path.
-  m_library->Solve(problem, task, solution);
+  /// @TODO Choose the task rather than just taking the first one.
+  m_library->Solve(problem, problem->GetTasks().front(), solution);
 
   // Extract the path from the solution.
   m_path = solution->GetPath()->Cfgs();
@@ -59,7 +57,7 @@ Step(const double _dt) {
     return;
 
   // Get the current configuration.
-  Cfg current(m_path[m_pathIndex].GetRobotIndex());
+  Cfg current(m_path[m_pathIndex].GetRobot());
   current.SetData(m_robot->GetDynamicsModel()->GetSimulatedState());
 
   // Check if we've reached it. Advance the path index until the next subgoal is

@@ -6,14 +6,14 @@
 #include <containers/sequential/graph/algorithms/dijkstra.h>
 
 ////////////////////////////////////////////////////////////////////////////////
-/// @ingroup LocalPlanners
-/// @brief TODO
-///
 /// TODO
+/// @ingroup LocalPlanners
 ////////////////////////////////////////////////////////////////////////////////
 template<class MPTraits>
 class ToggleLP: public LocalPlannerMethod<MPTraits> {
+
   public:
+
     typedef typename MPTraits::CfgType      CfgType;
     typedef typename MPTraits::WeightType   WeightType;
     typedef typename MPTraits::RoadmapType  RoadmapType;
@@ -182,21 +182,23 @@ ToggleLP<MPTraits>::ChooseAlteredCfg(
     const CfgType& _c1, const CfgType& _c2,
     typename boost::disable_if<IsClosedChain<Enable> >::type* _dummy){
   Environment* env = this->GetEnvironment();
+  auto robot = this->GetTask()->GetRobot();
   auto dm = this->GetDistanceMetric(m_dmLabel);
   StatClass* stats = this->GetStatClass();
 
   size_t attempts = 0;
-  CfgType mid, temp;
+  CfgType mid(robot), temp(robot);
   mid = (_c1 + _c2)/2.0;
   do{
-    CfgType incr;
+    CfgType incr(robot);
     double dist = dm->Distance(_c1, _c2) * sqrt(2.0)/2.0;
     incr.GetRandomRay(dist, dm);
     temp = incr + mid;
   } while(!env->InBounds(temp) && attempts++ < 10);
   if(attempts == 10){
     stats->IncLPStat("Toggle::MaxAttemptsForRay", 1);
-    return CfgType();
+    /// @TODO Should this cfg have robot also?
+    return CfgType(robot);
   }
   return temp;
 }
@@ -209,9 +211,10 @@ ToggleLP<MPTraits>::ChooseAlteredCfg(
     const CfgType& _c1, const CfgType& _c2,
     typename boost::enable_if<IsClosedChain<Enable> >::type* _dummy) {
   Environment* env = this->GetEnvironment();
+  auto robot = this->GetTask()->GetRobot();
 
-  CfgType temp;
-  do{
+  CfgType temp(robot);
+  do {
     temp.GetRandomCfg(env);
   } while(!env->InBounds(temp));
   return temp;
@@ -245,7 +248,8 @@ ToggleLP<MPTraits>::IsConnectedToggle(
       _positionRes, _orientationRes, _checkCollision, _savePath))
     return true;
 
-  if(_col == CfgType())
+  auto robot = this->GetTask()->GetRobot();
+  if(_col == CfgType(robot))
     return false;
   if(this->m_debug)
     cout << "col::" << _col << endl;
@@ -254,13 +258,13 @@ ToggleLP<MPTraits>::IsConnectedToggle(
 
   CfgType temp = ChooseAlteredCfg<CfgType>(_c1, _c2);
   CfgType n = temp;
-  if(n == CfgType())
+  if(n == CfgType(robot))
     return false;
 
   bool isValid = vc->IsValid(n, callee);
   _cdCounter++;
 
-  if(this->m_debug){
+  if(this->m_debug) {
     cout << "N is " << isValid << "::" << n << endl;
     VDClearAll();
     VDComment("Start Local Plan");
@@ -271,9 +275,9 @@ ToggleLP<MPTraits>::IsConnectedToggle(
     VDAddTempCfg(n, isValid);
     VDAddTempCfg(_col, false);
   }
-  if(isValid){
+  if(isValid) {
     VID nvid = m_pathGraph.AddVertex(n);
-    CfgType c2, c3;
+    CfgType c2(robot), c3(robot);
     bool b1 = lp->IsConnected(_c1, n, c2, _lpOutput,
         _positionRes, _orientationRes, true, false);
     if(b1)
@@ -291,12 +295,12 @@ ToggleLP<MPTraits>::IsConnectedToggle(
       cout << "n-c2::" << b1 << "::" << c2 << endl
            << "n-c3::" << b2 << "::" << c3 << endl;
     }
-    if(!b1 && c2 != CfgType())
+    if(!b1 && c2 != CfgType(robot))
       b1 = ToggleConnect(_col, c2, _c1, n, false, _lpOutput,
           _positionRes, _orientationRes);
     else if(this->m_debug && b1)
       VDAddEdge(_c1, n);
-    if(!b2 && c3 != CfgType() && b1)
+    if(!b2 && c3 != CfgType(robot) && b1)
       b2 = ToggleConnect(_col, c3, _c2, n, false, _lpOutput,
           _positionRes, _orientationRes);
     else if(this->m_debug && b2)
@@ -409,7 +413,8 @@ ToggleLP<MPTraits>::ToggleConnect(
   if(this->m_debug) VDAddTempEdge(_s, _g);
 
   //check connection between source and goal
-  CfgType c; // collision CfgType
+  auto robot = this->GetTask()->GetRobot();
+  CfgType c(robot); // collision CfgType
   if(!_toggle)
     this->GetValidityChecker(m_vcLabel)->ToggleValidity();
   bool connect = lp->IsConnected(_s, _g, c, _lpOutput,
@@ -420,7 +425,7 @@ ToggleLP<MPTraits>::ToggleConnect(
   if(this->m_debug) cout << "connect::" << connect << "\n\tc::" << c << endl;
 
   //c is outside of the bounding box, degenerate case
-  if(!connect && c == CfgType()) return false;
+  if(!connect && c == CfgType(robot)) return false;
 
   //successful connection, add the edge and return validity state
   if(connect) {
@@ -475,7 +480,8 @@ ToggleLP<MPTraits>::ReconstructPath(
   auto lp = this->GetLocalPlanner(m_lpLabel);
   LPOutput<MPTraits>* lpOutput = new LPOutput<MPTraits>();
   LPOutput<MPTraits>* dummyLPOutput = new LPOutput<MPTraits>();
-  CfgType col;
+  auto robot = this->GetTask()->GetRobot();
+  CfgType col(robot);
   if(_intermediates.size() > 0) {
     lp->IsConnected(_c1, _intermediates[0], col,
         dummyLPOutput, _posRes, _oriRes, false, true);

@@ -80,9 +80,9 @@ KnotTheoryDistance<MPTraits>::
 GetCoordinatesForKnot(const CfgType& _c) {
   _c.ConfigureRobot();
   vector<Vector3d> coordinates;
-  for(size_t i = 0; i < _c.GetRobot()->NumFreeBody(); ++i)
-    coordinates.push_back(_c.GetRobot()->GetFreeBody(i)->GetWorldTransformation().
-        translation());
+  for(size_t i = 0; i < _c.GetMultiBody()->NumFreeBody(); ++i)
+    coordinates.push_back(_c.GetMultiBody()->GetFreeBody(i)->
+        GetWorldTransformation().translation());
   return coordinates;
 }
 

@@ -74,7 +74,7 @@ Extend(const CfgType& _start, const CfgType& _end, CfgType& _new,
     LPOutput<MPTraits>& _lp) {
   // Setup MP Variables
   Environment* env = this->GetEnvironment();
-  CfgType newDir;
+  CfgType newDir(this->GetTask()->GetRobot());
   CDInfo cdInfo;
   //VECTOR SCALE - THIS WILL BE HARD CODED BUT SHOULD PROBABLY BE MADE AN OPTION
   double vecScale = 10.0;

@@ -83,12 +83,12 @@ RVDistance<MPTraits>::InternalDistance(Environment* _env, CfgType _c1, CfgType _
   //get joint positions of _c1
   _c1.ConfigureRobot();
   shared_ptr<vector<Vector3d> > joints1 = shared_ptr<vector<Vector3d> >(new vector<Vector3d>);
-  _c1.GetRobot()->PolygonalApproximation(*joints1);
+  _c1.GetMultiBody()->PolygonalApproximation(*joints1);
 
   //get joint positions of _c2
   _c2.ConfigureRobot();
   shared_ptr<vector<Vector3d> > joints2 = shared_ptr<vector<Vector3d> >(new vector<Vector3d>);
-  _c2.GetRobot()->PolygonalApproximation(*joints2);
+  _c2.GetMultiBody()->PolygonalApproximation(*joints2);
 
 
   //compute sum of distances

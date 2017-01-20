@@ -167,7 +167,7 @@ Expand(const CfgType& _start, const CfgType& _end, CfgType& _newCfg,
   auto vc = this->GetValidityChecker(m_vcLabel);
   string callee("BasicExtender::Expand");
 
-  CfgType incr, tick = _start, previous = _start;
+  CfgType incr(this->GetTask()->GetRobot()), tick = _start, previous = _start;
   bool collision = false;
   int nTicks, ticker = 0;
 

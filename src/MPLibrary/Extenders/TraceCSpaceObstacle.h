@@ -73,7 +73,8 @@ Extend(const CfgType& _start, const CfgType& _end, CfgType& _new,
   // Setup MP Variables
   Environment* env = this->GetEnvironment();
   auto dm = this->GetDistanceMetric(this->m_dmLabel);
-  CfgType innerCfg, rDir, cspaceDir, newNear;
+  auto robot = this->GetTask()->GetRobot();
+  CfgType innerCfg(robot), rDir(robot), cspaceDir(robot), newNear(robot);
   //VECTOR SCALE - THIS WILL BE HARD CODED BUT SHOULD PROBABLY BE MADE AN OPTION
   double vecScale = 1.0;
 

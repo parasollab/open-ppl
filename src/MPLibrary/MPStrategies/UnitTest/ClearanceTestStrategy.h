@@ -112,6 +112,7 @@ Run() {
   StatClass *stats = this->GetStatClass();
   stats->StartClock("Clearance Test");
   auto boundary = this->GetEnvironment()->GetBoundary();
+  auto robot = this->GetTask()->GetRobot();
 
   //generate samples
   vector<CfgType> samples;
@@ -130,7 +131,7 @@ Run() {
 
     //compute baseline clearance
     double baselineClearance = MAX_INT;
-    CfgType baselineWitness;
+    CfgType baselineWitness(robot);
     CDInfo baselineInfo;
     if(m_clearanceUtilities.front().CollisionInfo(
           sample, baselineWitness, boundary, baselineInfo))
@@ -148,7 +149,7 @@ Run() {
         cit != m_clearanceUtilities.end(); ++cit) {
       //compute input clearance
       double approxClearance = MAX_INT;
-      CfgType approxWitness;
+      CfgType approxWitness(robot);
       CDInfo approxInfo;
       if(cit->CollisionInfo(sample, approxWitness,
             boundary, approxInfo))

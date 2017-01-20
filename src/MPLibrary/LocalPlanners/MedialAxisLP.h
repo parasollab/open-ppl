@@ -282,7 +282,7 @@ IsConnectedRec(const CfgType& _c1, const CfgType& _c2, CfgType& _col,
 
   LPOutput<MPTraits> maLPOutput, tmpLPOutput;
   int cdCounter = 0, nTicks = 0;
-  CfgType mid;
+  CfgType mid(this->GetTask()->GetRobot());
   CfgType diff = _c1 - _c2;
 
   nTicks = (int)max(diff.PositionMagnitude() / _posRes,
@@ -356,7 +356,8 @@ EpsilonClosePath(const CfgType& _c1, const CfgType& _c2, CfgType& _mid,
     cout << "MedialAxisLP::EpsilonClosePath()" << endl;
 
   LPOutput<MPTraits> maLPOutput, tmpLPOutput, testLPOutput;
-  CfgType col, tmp;
+  auto robot = this->GetTask()->GetRobot();
+  CfgType col(robot), tmp(robot);
   int nTicks;
   bool passed = true, found = false;
 
@@ -502,7 +503,8 @@ IsConnectedIter(const CfgType& _c1, const CfgType& _c2, CfgType& _col,
   }
 
 
-  CfgType curr = _c1, col;
+  auto robot = this->GetTask()->GetRobot();
+  CfgType curr = _c1, col(robot);
   LPOutput<MPTraits> lpOutput;
   int nticks;
   size_t iter = 0;
@@ -513,7 +515,7 @@ IsConnectedIter(const CfgType& _c1, const CfgType& _c2, CfgType& _col,
     CfgType prev = curr;
 
     //Find tick at resolution
-    CfgType tick;
+    CfgType tick(robot);
     tick.FindIncrement(curr, _c2, &nticks, r*_posRes, r*_oriRes);
     curr += tick;
 
@@ -613,6 +615,8 @@ IsConnectedBin(const CfgType& _c1, const CfgType& _c2, CfgType& _col,
     VDAddTempCfg(_c2, false);
   }
 
+  auto robot = this->GetTask()->GetRobot();
+
   typedef map<double, pair<CfgType, LPOutput<MPTraits>>> PathMap;
   PathMap path;
   typedef pair<pair<double, CfgType>, pair<double, CfgType> > Segment;
@@ -627,13 +631,13 @@ IsConnectedBin(const CfgType& _c1, const CfgType& _c2, CfgType& _col,
     segQueue.pop();
 
     int nTicks;
-    CfgType incr;
+    CfgType incr(robot);
     incr.FindIncrement(seg.first.second, seg.second.second,
         &nTicks, m_resFactor*_posRes, m_resFactor*_oriRes);
     //if pair is close enough, test a connection and add to final path
     if(nTicks <= 1) {
       LPOutput<MPTraits> lpOutput;
-      CfgType col;
+      CfgType col(robot);
       if(!m_envLP.IsConnected(seg.first.second, seg.second.second, col,
             &lpOutput, _posRes, _oriRes, true, true)) {
         if(this->m_debug)
@@ -695,7 +699,8 @@ ReconstructPath(const CfgType& _c1, const CfgType& _c2,
     double _posRes, double _oriRes) {
   LPOutput<MPTraits>* lpOutput = new LPOutput<MPTraits>();
   LPOutput<MPTraits>* dummyLPOutput = new LPOutput<MPTraits>();
-  CfgType col;
+  auto robot = this->GetTask()->GetRobot();
+  CfgType col(robot);
 
   if(_intermediates.size() > 0) {
     m_envLP.IsConnected(_c1, _intermediates[0], col,
@@ -808,7 +813,7 @@ ReduceNoise(const CfgType& _c1, const CfgType& _c2,
 
   LPOutput<MPTraits> lpOutput;
 
-  CfgType col;
+  CfgType col(this->GetTask()->GetRobot());
   CfgType prevMid = (_c1 + _lpOutput->m_intermediates[0])/2;
 
   vector<CfgType> newIntermediates;

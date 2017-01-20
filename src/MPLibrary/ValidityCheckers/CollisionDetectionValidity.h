@@ -185,13 +185,13 @@ IsInCollision(CDInfo& _cdInfo, const CfgType& _cfg, const string& _callName) {
   _cdInfo.ResetVars(_cdInfo.m_retAllInfo);
   bool retVal = false;
 
-  //get robot
+  //get multiBody
   Environment* env = this->GetEnvironment();
-  auto robot = _cfg.GetRobot();
+  auto multiBody = _cfg.GetMultiBody();
 
   //check self collision
-  if(!m_ignoreSelfCollision && robot->NumFreeBody() > 1 &&
-      IsInSelfCollision(_cdInfo, robot, _callName)) {
+  if(!m_ignoreSelfCollision && multiBody->NumFreeBody() > 1 &&
+      IsInSelfCollision(_cdInfo, multiBody, _callName)) {
     _cdInfo.m_collidingObstIndex = -1;
     return true;
   }
@@ -201,7 +201,7 @@ IsInCollision(CDInfo& _cdInfo, const CfgType& _cfg, const string& _callName) {
   for(size_t i = 0; i < numObst; ++i) {
     CDInfo cdInfo(_cdInfo.m_retAllInfo);
     bool coll = IsInObstCollision(
-        cdInfo, robot, env->GetObstacle(i), _callName);
+        cdInfo, multiBody, env->GetObstacle(i), _callName);
 
     //make sure to store closest obstacle information
     if(cdInfo < _cdInfo) {

@@ -9,6 +9,7 @@
 #include "Geometry/Boundaries/WorkspaceBoundingBox.h"
 #include "Geometry/Boundaries/WorkspaceBoundingSphere.h"
 #include "MPProblem/MPProblem.h"
+#include "MPProblem/Robot/Robot.h"
 
 
 /*------------------------------- Construction -------------------------------*/
@@ -142,10 +143,10 @@ Write(ostream & _os) {
 
 void
 Environment::
-ComputeResolution(vector<ActiveMultiBody*> _robots) {
+ComputeResolution(const std::vector<Robot*>& _robots) {
   double bodiesMinSpan = numeric_limits<double>::max();
-  for(auto& body : _robots)
-    bodiesMinSpan = min(bodiesMinSpan, body->GetMaxAxisRange());
+  for(auto& robot : _robots)
+    bodiesMinSpan = min(bodiesMinSpan, robot->GetMultiBody()->GetMaxAxisRange());
 
   for(auto& body : m_obstacles)
     bodiesMinSpan = min(bodiesMinSpan, body->GetMaxAxisRange());

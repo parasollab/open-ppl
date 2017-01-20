@@ -2,6 +2,7 @@
 #define MP_LIBRARY_H_
 
 #include "MPProblem/MPProblem.h"
+#include "MPProblem/Robot/Robot.h"
 
 #include "Utilities/MetricUtils.h"
 #include "Utilities/MPUtils.h"
@@ -397,8 +398,8 @@ SetMPProblem(MPProblem* _p) {
   }
 
   // Build CD models.
-  for(auto& body : m_problem->GetRobots())
-    body->BuildCDStructure();
+  for(auto robot : m_problem->GetRobots())
+    robot->GetMultiBody()->BuildCDStructure();
   m_problem->GetEnvironment()->BuildCDStructure();
 }
 

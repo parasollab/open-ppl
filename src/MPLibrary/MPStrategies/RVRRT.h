@@ -235,7 +235,7 @@ class ReachableVolumeRRT : public BasicRRTStrategy<MPTraits> {
 shared_ptr<vector<Vector3D> > convertToJointPositions(CfgType _cfg){
   shared_ptr<vector<Vector3D> > joints = shared_ptr<vector<Vector3D> >(new vector<Vector3D>);
   _cfg.ConfigureRobot();
-  _cfg.GetRobot()->PolygonalApproximation(*joints);
+  _cfg.GetMultiBody()->PolygonalApproximation(*joints);
   for(unsigned int i=1; i<joints->size();i++){
     (*joints)[i]=(*joints)[i]-(*joints)[0];
   }
@@ -300,7 +300,8 @@ ReachableVolumeRRT<MPTraits>::Run() {
 
   stats->StartClock("RRT Generation");
   auto dm = this->GetDistanceMetric(this->m_dmLabel);
-  CfgType dir;
+  auto robot = this->GetTask()->GetRobot();
+  CfgType dir(robot);
 
   bool mapPassedEvaluation = false;
   double minDist;
@@ -311,7 +312,7 @@ ReachableVolumeRRT<MPTraits>::Run() {
     dir.GetRandomCfg(this->GetEnvironment());
     if(this->m_debug) cout<<"dir = "<<dir<<endl;
     VID nnVid;
-    CfgType nn;
+    CfgType nn(robot);
     minDist=-1;
     //find nearest neibhbor to ran
     for(typename GraphType::VI i = this->GetRoadmap()->GetGraph()->begin();  i!=this->GetRoadmap()->GetGraph()->end(); i++){
@@ -430,7 +431,7 @@ ReachableVolumeRRT<MPTraits>::Run() {
       cfgData.push_back((*jointAngleCfg)[i]);
     }
     delete(jointAngleCfg);
-    CfgType newNodeCfg;  //convert new node to cfg
+    CfgType newNodeCfg(robot);  //convert new node to cfg
     newNodeCfg.SetData(cfgData);
     LPOutput<MPTraits> lpOutput;
     if(this->m_debug) cout<<"new node ="<<newNodeCfg<<endl;

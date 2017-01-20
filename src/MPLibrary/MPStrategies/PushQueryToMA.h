@@ -4,12 +4,9 @@
 #include "MPStrategyMethod.h"
 
 ////////////////////////////////////////////////////////////////////////////////
-/// @ingroup MotionPlanningStrategies
-/// @brief TODO
-///
 /// TODO
-///
-/// \internal This strategy is configured for pausible execution.
+/// @ingroup MotionPlanningStrategies
+/// @internal This strategy is configured for pausible execution.
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
 class PushQueryToMA : public MPStrategyMethod<MPTraits> {
@@ -68,12 +65,13 @@ template <typename MPTraits>
 void
 PushQueryToMA<MPTraits>::
 Initialize() {
+  /// @TODO Remove dependence on query file.
   if(!FileExists(m_inQueryFile))
     throw ParseException(WHERE,
         "Query file '" + m_inQueryFile + "' does not exist.");
 
   ifstream ifs(m_inQueryFile.c_str());
-  CfgType tmp;
+  CfgType tmp(this->GetTask()->GetRobot());
   while(ifs >> tmp)
     m_query.push_back(tmp);
 }

@@ -166,7 +166,7 @@ Sample(size_t _numNodes, size_t _maxAttempts,
   Environment* env = this->GetEnvironment();
 
   for(size_t i = 0; i < _numNodes; ++i) {
-    CfgType cfg;
+    CfgType cfg(this->GetTask()->GetRobot());
     cfg.GetRandomCfg(env, _boundary);
     vector<CfgType> result;
     vector<CfgType> collision;

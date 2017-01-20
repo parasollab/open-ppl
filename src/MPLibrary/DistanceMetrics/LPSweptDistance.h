@@ -108,9 +108,9 @@ template <typename MPTraits>
 double
 LPSweptDistance<MPTraits>::
 Distance(const CfgType& _c1, const CfgType& _c2) {
-  if (_c1.GetRobotIndex() != _c2.GetRobotIndex()){
+  if (_c1.GetRobot() != _c2.GetRobot()){
     cerr << "LPSweptDistance::Distance error - the cfgs reference different "
-         << "multibodies" << endl;
+         << "robots" << endl;
     exit(1);
   }
 
@@ -133,7 +133,7 @@ Distance(const CfgType& _c1, const CfgType& _c2) {
   cfgs.push_back(_c2);
   double d = 0;
   vector<GMSPolyhedron> poly2;
-  auto robot = _c1.GetRobot();
+  auto robot = _c1.GetMultiBody();
   int bodyCount = robot->NumFreeBody();
   cfgs.begin()->ConfigureRobot();
   for(int b=0; b<bodyCount; ++b) {

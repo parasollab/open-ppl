@@ -395,7 +395,7 @@ NodeEnhance() {
 
     // Get its midpoint and a random ray.
     CfgType midpoint = (m_edges[index].first + m_edges[index].second) / 2.;
-    CfgType ray;
+    CfgType ray(midpoint.GetRobot());
     ray.GetRandomRay(fabs(GaussianDistribution(fabs(m_d), fabs(m_d))), dm);
 
     // Create an enhancement cfg by adding the random ray to the midpoint.

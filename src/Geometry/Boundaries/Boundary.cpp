@@ -17,7 +17,7 @@ InBoundary(const Vector3d& _p) const {
 bool
 Boundary::
 InWorkspace(const Cfg& _cfg) const {
-  auto robot = _cfg.GetRobot();
+  auto robot = _cfg.GetMultiBody();
 
   // If the robot's center is more than a bounding radius away from the wall, it
   // is definitely inside.

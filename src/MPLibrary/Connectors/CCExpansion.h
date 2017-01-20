@@ -370,10 +370,12 @@ template<class MPTraits>
 void
 CCExpansion<MPTraits>::
 RandomExpand(RoadmapType* _rm, int _index) {
+  auto robot = this->GetTask()->GetRobot();
+
   bool good;
   LPOutput<MPTraits> lpOutput;
   CDInfo cdInfo;
-  CfgType prev, node, direction, bumpPoint;
+  CfgType prev(robot), node(robot), direction(robot), bumpPoint(robot);
   auto dm = this->GetNeighborhoodFinder(this->m_nfLabel)->GetDMMethod();
   BasicExtender<MPTraits> be(m_dmLabel, m_vcLabel);
   be.SetMPLibrary(this->GetMPLibrary());
@@ -413,11 +415,12 @@ template <class MPTraits>
 void
 CCExpansion<MPTraits>::
 ExpandFrom(RoadmapType* _rm, int _index) {
+  auto robot = this->GetTask()->GetRobot();
+
   bool good;
   LPOutput<MPTraits> lpOutput;
   CDInfo cdInfo;
-  CfgType prev, node, direction, bumpPoint;
-  CfgType away = m_srcCentroid;
+  CfgType prev(robot), node(robot), direction(robot), bumpPoint(robot);
   auto dm = this->GetNeighborhoodFinder(this->m_nfLabel)->GetDMMethod();
   BasicExtender<MPTraits> be(m_dmLabel, m_vcLabel);
   be.SetMPLibrary(this->GetMPLibrary());
@@ -428,11 +431,13 @@ ExpandFrom(RoadmapType* _rm, int _index) {
   for(int j = 0; j < m_nIterations; ++j){
     // CC might contain 1 node, this will handle the initial expansion step
     // Else, produce ray aiming directly from centroid to expansion node
-    if(away == CfgType()){
+    cerr << "There might be a problem here at " << WHERE << " due to changing "
+         << "from robot indexes to robot pointer, please verify and remove this"
+         << " message if you are using this code!" << std::endl;
+    if(m_srcCentroid == CfgType(robot))
       direction.GetRandomRay(m_maxStepDistance, dm);
-    }
     else {
-      direction = prev - away;
+      direction = prev - m_srcCentroid;
       dm->ScaleCfg(m_maxStepDistance, direction);
       direction = direction + prev;
     }
@@ -463,11 +468,12 @@ template<class MPTraits>
 void
 CCExpansion<MPTraits>::
 ExpandTo(RoadmapType* _rm, int _index) {
+  auto robot = this->GetTask()->GetRobot();
 
   bool good;
   LPOutput<MPTraits> lpOutput;
   CDInfo cdInfo;
-  CfgType prev, node, direction, bumpPoint;
+  CfgType prev(robot), node(robot), direction(robot), bumpPoint(robot);
   CfgType target = m_goalTargetNode;
   auto dm = this->GetNeighborhoodFinder(this->m_nfLabel)->GetDMMethod();
   BasicExtender<MPTraits> be(m_dmLabel, m_vcLabel);
@@ -511,9 +517,11 @@ template <class MPTraits>
 void
 CCExpansion<MPTraits>::
 MedialAxisExpand(RoadmapType* _rm, int _index) {
+  auto robot = this->GetTask()->GetRobot();
+
   LPOutput<MPTraits> lpOutput;
   CDInfo cdInfo;
-  CfgType prev, bump1, bump2, dir1, dir2;
+  CfgType prev(robot), bump1(robot), bump2(robot), dir1(robot), dir2(robot);
   auto dm = this->GetNeighborhoodFinder(this->m_nfLabel)->GetDMMethod();
   BasicExtender<MPTraits> be(m_dmLabel, m_vcLabel);
   be.SetMPLibrary(this->GetMPLibrary());
@@ -546,18 +554,17 @@ MedialAxisExpand(RoadmapType* _rm, int _index) {
     MedialRecurse(_rm, mid1, dir1, 0); // Kick-Off recursive expansion
   }
 
-  /// Expansion branch 2
+  // Expansion branch 2
   if(expand2) {
-    /// Record bump points
+    // Record bump points
     CfgType mid2 = bump2;
-    /// Push bump points to the medial axis
+    // Push bump points to the medial axis
     m_medialAxisUtility.PushToMedialAxis(mid2,
         this->GetEnvironment()->GetBoundary());
-    /// Update Roadmap
     UpdateRoadmap(_rm, prev, bump2, mid2);
-    /// Get approximate medial axis rays for the next iteration
+    // Get approximate medial axis rays for the next iteration
     GetMedialAxisRay(_rm, prev, bump2, mid2, dir2);
-    /// Recursively expand using our initial history
+    // Recursively expand using our initial history
     MedialRecurse(_rm, mid2, dir2, 0); // Kick-Off recursive expansion
   }
 }
@@ -569,7 +576,7 @@ template <class MPTraits>
 void
 CCExpansion<MPTraits>::
 MedialRecurse(RoadmapType* _rm, CfgType& _prev, CfgType& _dir, int _count) {
-  /// If we have reached the max number of iterations, return.
+  // If we have reached the max number of iterations, return.
   if(_count++ >= m_nIterations)
     return;
 
@@ -579,12 +586,13 @@ MedialRecurse(RoadmapType* _rm, CfgType& _prev, CfgType& _dir, int _count) {
   BasicExtender<MPTraits> be(m_dmLabel, m_vcLabel);
   be.SetMPLibrary(this->GetMPLibrary());
 
-  /// Compute new expansion directions
+  // Compute new expansion directions
   CfgType dir1 = _dir + _prev;
   CfgType dir2 = -_dir + _prev;
 
-  /// Perform expansion
-  CfgType bump1,bump2;
+  // Perform expansion
+  auto robot = this->GetTask()->GetRobot();
+  CfgType bump1(robot), bump2(robot);
   bool expand1 = be.Expand(_prev, dir1, bump1, m_maxStepDistance, lpOutput,
       cdInfo, this->GetEnvironment()->GetPositionRes(),
       this->GetEnvironment()->GetOrientationRes());
@@ -761,7 +769,9 @@ GetMedialAxisRay(RoadmapType* _rm, CfgType& _prev, CfgType& _bumpPoint,
   CfgType uA = _bumpPoint - _prev;
   CfgType uB = _curr - _bumpPoint;
 
-  if(uA == CfgType() || uB == CfgType()){
+  auto robot = this->GetTask()->GetRobot();
+
+  if(uA == CfgType(robot) || uB == CfgType(robot)) {
     uA.GetRandomRay(m_maxStepDistance, dm);
     _dir = uA;
   }
@@ -783,7 +793,7 @@ GetMedialAxisRay(RoadmapType* _rm, CfgType& _prev, CfgType& _bumpPoint,
   Vector3d n = u%v;
   Vector3d d = u%n;
 
-  CfgType dir;
+  CfgType dir(robot);
   dir[0] = d[0];
   dir[1] = d[1];
   if(_curr.PosDOF() == 3)
@@ -833,8 +843,9 @@ UpdateRoadmap(RoadmapType* _rm, CfgType& _prev,
   bool test = false;
 
   // If adding intermediate, ignore lp call
-  if(!m_addIntermediate){
-    CfgType col;
+  if(!m_addIntermediate) {
+    auto robot = this->GetTask()->GetRobot();
+    CfgType col(robot);
     auto dm = this->GetNeighborhoodFinder(this->m_nfLabel)->GetDMMethod();
     test = this->GetLocalPlanner(this->m_lpLabel)->
       IsConnected(_prev, _target, col, &lpOutput,

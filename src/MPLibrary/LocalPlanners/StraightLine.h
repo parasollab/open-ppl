@@ -173,7 +173,7 @@ StraightLine<MPTraits>::IsConnectedFunc(
 
   bool connected;
   if(CfgType::OrientationsDifferent(_c1, _c2)) {
-    CfgType intermediate;
+    CfgType intermediate(this->GetTask()->GetRobot());
     bool success = intermediate.GetIntermediate(_c1, _c2);
     if(_checkCollision){
       cdCounter++;
@@ -227,12 +227,12 @@ StraightLine<MPTraits>::IsConnectedSLSequential(
     bool _checkCollision, bool _savePath) {
 
   Environment* env = this->GetEnvironment();
+  auto robot = this->GetTask()->GetRobot();
   auto vc = this->GetValidityChecker(m_vcLabel);
 
   int nTicks;
-  CfgType tick;
+  CfgType tick(robot), incr(robot);
   tick = _c1;
-  CfgType incr;
 #if (defined(PMPReachDistCC) || defined(PMPReachDistCCFixed))
   incr.FindIncrement(_c1, _c2, &nTicks, _positionRes, _orientationRes, env->GetRdRes());
 #else
@@ -284,7 +284,7 @@ StraightLine<MPTraits>::IsConnectedSLBinary(
   string callee = this->GetNameAndLabel() + "::IsConnectedSLBinary";
 
   int nTicks;
-  CfgType incr;
+  CfgType incr(this->GetTask()->GetRobot());
 #if (defined(PMPReachDistCC) || defined(PMPReachDistCCFixed))
   incr.FindIncrement(_c1, _c2, &nTicks, _positionRes, _orientationRes, env->GetRdRes());
 #else

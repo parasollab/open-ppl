@@ -240,12 +240,13 @@ FindNeighbors(CfgType& _previous, CfgType& _current, CfgType& _next,
   GraphType* graph = this->GetRoadmap()->GetGraph();
   Environment* env = this->GetEnvironment();
   auto boundary = env->GetBoundary();
+  auto robot = this->GetTask()->GetRobot();
 
   oldConfigurationWeight = _current.GetSmoothingValue(m_clearanceUtils,
       boundary);
 
   for(size_t k=0; k < _maxAttempts && numOfSamples > 0; ++k) {
-    CfgType r, c;
+    CfgType r(robot), c(robot);
     r.GetRandomRay(m_stepSize, dm);
     c = r + _current;
     newConfigurationWeight = c.GetSmoothingValue(m_clearanceUtils, boundary);

@@ -44,7 +44,7 @@ class MinkowskiDistance : public DistanceMetricMethod<MPTraits> {
     virtual double Distance(const CfgType& _c1, const CfgType& _c2) override;
 
     virtual void ScaleCfg(double _length, CfgType& _c,
-        const CfgType& _o = CfgType()) override;
+        const CfgType& _o) override;
 
     static double PositionDistance(Environment *_env, const CfgType& _c,
         double _r1, double _r3, bool _normalize);

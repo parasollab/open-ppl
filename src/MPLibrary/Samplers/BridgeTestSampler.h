@@ -82,6 +82,7 @@ Sampler(CfgType& _cfg, const Boundary* const _boundary,
   Environment* env = this->GetEnvironment();
   auto vc = this->GetValidityChecker(m_vcLabel);
   auto dm = this->GetDistanceMetric(m_dmLabel);
+  auto robot = this->GetTask()->GetRobot();
   bool generated = false;
 
   if(this->m_debug)
@@ -96,7 +97,7 @@ Sampler(CfgType& _cfg, const Boundary* const _boundary,
     //at length Gaussian d/2
     if(env->InBounds(_cfg, _boundary) &&
         vc->IsValid(_cfg, callee)) {
-      CfgType mid = _cfg, incr, cfg1;
+      CfgType mid = _cfg, incr(robot), cfg1(robot);
       incr.GetRandomRay(fabs(GaussianDistribution(m_d, m_d))/2, dm);
       cfg1 = mid - incr;
       if(this->m_debug)
@@ -123,7 +124,7 @@ Sampler(CfgType& _cfg, const Boundary* const _boundary,
     //If _cfg not in Bbox and invalid, already have good cfg1 and
     //extend random ray at length Gaussian D
     else {
-      CfgType cfg1 = _cfg, incr, cfg2;
+      CfgType cfg1 = _cfg, incr(robot), cfg2(robot);
       incr.GetRandomRay(fabs(GaussianDistribution(m_d, m_d)), dm);
       cfg2 = cfg1 + incr;
       if(this->m_debug) {
@@ -134,7 +135,7 @@ Sampler(CfgType& _cfg, const Boundary* const _boundary,
       //successfully if mid is valid
       if(!env->InBounds(cfg2, _boundary) ||
           !vc->IsValid(cfg2, callee)) {
-        CfgType mid;
+        CfgType mid(robot);
         mid.WeightedSum(cfg1, cfg2, 0.5);
         if(env->InBounds(mid, _boundary) && (vc->IsValid(mid, callee))) {
           generated = true;
@@ -152,7 +153,7 @@ Sampler(CfgType& _cfg, const Boundary* const _boundary,
     //If _cfg is valid configuration extend rays in opposite directions
     //at length Gaussian d/2
     if(vc->IsValid(_cfg, callee)) {
-      CfgType mid = _cfg, incr, cfg1;
+      CfgType mid = _cfg, incr(robot), cfg1(robot);
       incr.GetRandomRay(fabs(GaussianDistribution(m_d, m_d))/2, dm);
       cfg1 = mid - incr;
       if(this->m_debug)
@@ -178,7 +179,7 @@ Sampler(CfgType& _cfg, const Boundary* const _boundary,
     //If _cfg not in Bbox and invalid, already have good cfg1 and
     //extend random ray at length Gaussian D
     else {
-      CfgType cfg1 = _cfg, incr, cfg2;
+      CfgType cfg1 = _cfg, incr(robot), cfg2(robot);
       incr.GetRandomRay(fabs(GaussianDistribution(m_d, m_d)), dm);
       cfg2 = cfg1 + incr;
       if(this->m_debug) {
@@ -188,7 +189,7 @@ Sampler(CfgType& _cfg, const Boundary* const _boundary,
 
       //If both cfg1 and cfg2 invalid, get midpoint
       if(!vc->IsValid(cfg2, callee)) {
-        CfgType mid;
+        CfgType mid(robot);
         mid.WeightedSum(cfg1, cfg2, 0.5);
 
         //If valid midpoint, successful node is generated

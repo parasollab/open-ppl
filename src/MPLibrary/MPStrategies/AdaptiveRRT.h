@@ -220,7 +220,7 @@ AdaptiveRRT<MPTraits>::ExpandTree(CfgType& _dir){
   //start timing from cycles
   uint64_t start = GetCycles();
 
-  CfgType newCfg;
+  CfgType newCfg(this->GetTask()->GetRobot());
   LPOutput<MPTraits> lpOutput;
   auto e = this->GetExtender(gm);
   bool verifiedValid = e->Extend(nearest, _dir, newCfg, lpOutput);
@@ -406,7 +406,7 @@ AdaptiveRRT<MPTraits>::UpdateTree(CfgType& _newCfg, VID _nearVID,
   if(this->m_debug)
     cout << "parentcfg::" << parentcfg << endl;
   int weight;
-  CfgType incr;
+  CfgType incr(this->GetTask()->GetRobot());
   Environment* env = this->GetEnvironment();
   incr.FindIncrement(parentcfg, _newCfg, &weight, env->GetPositionRes(),
       env->GetOrientationRes());

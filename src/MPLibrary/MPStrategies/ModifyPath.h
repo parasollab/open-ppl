@@ -4,12 +4,9 @@
 #include "MPStrategyMethod.h"
 
 ////////////////////////////////////////////////////////////////////////////////
-/// @ingroup MotionPlanningStrategies
-/// @brief TODO
-///
 /// TODO
-///
-/// \internal This strategy is configured for pausible execution.
+/// @ingroup MotionPlanningStrategies
+/// @internal This strategy is configured for pausible execution.
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
 class ModifyPath : public MPStrategyMethod<MPTraits> {
@@ -75,7 +72,7 @@ Initialize() {
   getline(ifs, tmp);
   getline(ifs, tmp);
   getline(ifs, tmp);
-  CfgType c;
+  CfgType c(this->GetTask()->GetRobot());
   while(ifs >> c)
     m_path.push_back(c);
 

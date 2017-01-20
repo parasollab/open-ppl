@@ -15,7 +15,6 @@ class CoverageMetric : public MetricMethod<MPTraits> {
 
   public:
 
-    typedef typename MPTraits::CfgType      CfgType;
     typedef typename MPTraits::RoadmapType  RoadmapType;
     typedef typename RoadmapType::VID       VID;
     typedef typename RoadmapType::GraphType GraphType;

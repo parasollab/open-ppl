@@ -173,7 +173,7 @@ UtilityGuidedGenerator<MPTraits>::Run() {
   bool mapPassedEvaluation = false;
   while(!mapPassedEvaluation) {
 
-    CfgType q;
+    CfgType q(this->GetTask()->GetRobot());
 
     //if roadmap empty, simply add a free random sample
     if(rmap->GetGraph()->get_num_vertices() < 1) {
@@ -280,8 +280,9 @@ GenerateEntropyGuidedSample() {
   auto bb = env->GetBoundary();
   auto nf = this->GetNeighborhoodFinder(m_nfLabel);
   auto dm = nf->GetDMMethod();
+  auto robot = this->GetTask()->GetRobot();
 
-  CfgType q1, q2;
+  CfgType q1(robot), q2(robot);
 
   stapl::sequential::vector_property_map<GraphType, size_t > cmap;
   vector<pair<size_t, VID> > ccs;

@@ -18,7 +18,7 @@ class WeightedEuclideanDistance : public DistanceMetricMethod<MPTraits> {
     ///@name Local Types
     ///@{
 
-    typedef typename MPTraits::CfgType StateType;
+    typedef typename MPTraits::CfgType CfgType;
 
     ///@}
     ///@name Construction
@@ -32,7 +32,7 @@ class WeightedEuclideanDistance : public DistanceMetricMethod<MPTraits> {
     ///@name Distance Interface
     ///@{
 
-    virtual double Distance(const StateType& _s1, const StateType& _s2) override;
+    virtual double Distance(const CfgType& _s1, const CfgType& _s2) override;
 
     ///@}
 
@@ -77,8 +77,8 @@ WeightedEuclideanDistance(XMLNode& _node) :
 template <typename MPTraits>
 double
 WeightedEuclideanDistance<MPTraits>::
-Distance(const StateType& _s1, const StateType& _s2) {
-  StateType diff = _s1 - _s2;
+Distance(const CfgType& _s1, const CfgType& _s2) {
+  CfgType diff = _s1 - _s2;
 
   Vector3d pos(diff[0], diff[1], diff[2]);
   Vector3d rot(diff[3], diff[4], diff[5]);

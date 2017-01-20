@@ -81,7 +81,6 @@
 #include "MPLibrary/Connectors/AdaptiveConnector.h"
 #include "MPLibrary/Connectors/CCExpansion.h"
 #include "MPLibrary/Connectors/CCsConnector.h"
-#include "MPLibrary/Connectors/ClosestVE.h"
 #include "MPLibrary/Connectors/NeighborhoodConnector.h"
 #include "MPLibrary/Connectors/RewireConnector.h"
 
@@ -247,7 +246,6 @@ struct MPTraits {
     AdaptiveConnector<MPTraits>,
     CCExpansion<MPTraits>,
     CCsConnector<MPTraits>,
-    ClosestVE<MPTraits>,
     NeighborhoodConnector<MPTraits>,
     RewireConnector<MPTraits>
       > ConnectorMethodList;

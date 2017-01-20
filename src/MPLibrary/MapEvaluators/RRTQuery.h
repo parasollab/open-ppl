@@ -319,7 +319,7 @@ ExtendToGoal(const pair<VID, double>& _nearest, const CfgType& _goal) const {
          << " toward goal.\n";
 
   // Otherwise, try to extend from _nearest to _goal.
-  CfgType qNew;
+  CfgType qNew(this->GetTask()->GetRobot());
   LPOutput<MPTraits> lpOutput;
   if(e->Extend(g->GetVertex(_nearest.first), _goal, qNew, lpOutput)) {
     distance = lpOutput.m_edge.first.GetWeight();

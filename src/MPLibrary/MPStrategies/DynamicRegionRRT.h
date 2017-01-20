@@ -163,7 +163,7 @@ Initialize() {
   //  m_skeleton.PushToMedialAxis();
 
   // Spark a region for each outgoing edge of start
-  const double robotRadius = s.GetRobot()->GetBoundingSphereRadius();
+  const double robotRadius = s.GetMultiBody()->GetBoundingSphereRadius();
   const double regionRadius = m_regionFactor * robotRadius;
   m_skeleton.MarkAllNodesUnvisited();
   m_skeleton.InitRegions(start, regionRadius);
@@ -193,10 +193,10 @@ Run() {
 
   const CfgType& s = this->m_query->GetQuery()[0];
   Vector3d start(s[0], s[1], s[2]);
-  const double robotRadius = s.GetRobot()->GetBoundingSphereRadius();
+  const double robotRadius = s.GetMultiBody()->GetBoundingSphereRadius();
   const double regionRadius = m_regionFactor * robotRadius;
 
-  CfgType target;
+  CfgType target(this->GetTask()->GetRobot());
   while(!this->EvaluateMap()) {
     // Find growth direction: either sample or bias towards a goal.
     if(this->m_query && DRand() < this->m_growthFocus &&
@@ -262,6 +262,7 @@ DynamicRegionRRT<MPTraits>::
 SelectDirection() {
   const Boundary* samplingBoundary;
   Environment* env = this->GetEnvironment();
+  auto robot = this->GetTask()->GetRobot();
 
   // Randomly select a sampling region.
   auto& regions = m_skeleton.GetRegions();
@@ -277,13 +278,13 @@ SelectDirection() {
 
   // Generate the target q_rand from within the selected region.
   try {
-    CfgType mySample;
+    CfgType mySample(robot);
     mySample.GetRandomCfg(env, samplingBoundary);
     return mySample;
   }
   // Catch Boundary too small exception.
   catch(PMPLException _e) {
-    CfgType mySample;
+    CfgType mySample(robot);
     mySample.GetRandomCfg(env);
     return mySample;
   }

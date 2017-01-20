@@ -54,27 +54,28 @@ template<class MPTraits>
 void
 RotateAtS<MPTraits>::GetSequenceNodes(const CfgType& _c1, const CfgType& _c2,
     double _s, vector<CfgType>& _sequence, bool _reverse) {
+  auto robot = this->GetTask()->GetRobot();
 
-  CfgType thisCopy;
+  CfgType thisCopy(robot);
   vector<double> _v1 = _c1.GetData();
   thisCopy.SetData(_v1);
   _sequence.push_back(thisCopy);
 
-  CfgType weightedSum;
+  CfgType weightedSum(robot);
   weightedSum.SetData(_v1);
   weightedSum.WeightedSum(_c1, _c2, _s);
 
-  CfgType s1;
+  CfgType s1(robot);
   s1.SetData(_v1);
   s1.GetPositionOrientationFrom2Cfg(weightedSum, _c1);
   _sequence.push_back(s1);
 
-  CfgType s2;
+  CfgType s2(robot);
   s2.SetData(_v1);
   s2.GetPositionOrientationFrom2Cfg(weightedSum, _c2);
   _sequence.push_back(s2);
 
-  CfgType otherCopy;
+  CfgType otherCopy(robot);
   vector<double> _v2 = _c2.GetData();
   otherCopy.SetData(_v2);
   _sequence.push_back(otherCopy);

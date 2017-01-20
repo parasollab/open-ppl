@@ -126,7 +126,7 @@ Extend(const CfgType& _start, const CfgType& _end, CfgType& _new,
 
   LPOutput<MPTraits> lpOutput;
 
-  CfgType tick = _start, curr;
+  CfgType tick = _start, curr(this->GetTask()->GetRobot());
   double positionRes = env->GetPositionRes();
   double orientationRes = env->GetOrientationRes();
   double dist = 0, length = 0;

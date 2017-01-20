@@ -45,8 +45,8 @@ PIDFeedback::
 Initialize(const Cfg& _target) {
   m_initialized   = true;
   m_target        = _target;
-  m_previousError = Cfg(_target.GetRobotIndex());
-  m_integral      = Cfg(_target.GetRobotIndex());
+  m_previousError = Cfg(_target.GetRobot());
+  m_integral      = Cfg(_target.GetRobot());
 }
 
 /*----------------------------------------------------------------------------*/

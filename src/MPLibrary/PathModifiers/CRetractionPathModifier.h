@@ -130,6 +130,7 @@ ModifyImpl(vector<CfgType>& _path, vector<CfgType>& _newPath) {
   this->RemoveBranches(m_clearanceUtility.GetDistanceMetricLabel(), _path, p);
 
   Environment* env = this->GetEnvironment();
+  auto robot = this->GetTask()->GetRobot();
   auto boundary = env->GetBoundary();
   auto dm = this->GetDistanceMetric(m_clearanceUtility.GetDistanceMetricLabel());
 
@@ -145,16 +146,15 @@ ModifyImpl(vector<CfgType>& _path, vector<CfgType>& _newPath) {
       cout << "CRetraction: Iteration: " << i++ << endl;
     vector<CfgType> p2 = p1;
 
-    CfgType dir;
+    CfgType dir(robot);
     dir.GetRandomRay(step, dm);
 
     int j = 0;
-    typedef typename vector<CfgType>::iterator CIT;
-    for(CIT cit = p2.begin()+1; cit+1 != p2.end(); ++cit) {
+    for(auto cit = p2.begin()+1; cit+1 != p2.end(); ++cit) {
 
       CfgType q = *cit + dir;
 
-      CfgType clr1, clr2;
+      CfgType clr1(robot), clr2(robot);
       CDInfo cdInfo1, cdInfo2;
 
       bool ci1 = m_clearanceUtility.CollisionInfo(q, clr1, boundary, cdInfo1);
@@ -176,9 +176,8 @@ ModifyImpl(vector<CfgType>& _path, vector<CfgType>& _newPath) {
 
     //calculate average clearance
     double avgClr = 0;
-    typedef typename vector<CfgType>::iterator CIT;
-    for(CIT cit = p1.begin(); cit != p1.end(); ++cit) {
-      CfgType clr;
+    for(auto cit = p1.begin(); cit != p1.end(); ++cit) {
+      CfgType clr(robot);
       CDInfo cdInfo;
       bool ci = m_clearanceUtility.CollisionInfo(*cit, clr, boundary, cdInfo);
       if(ci)
@@ -222,6 +221,7 @@ ValidatePath(vector<CfgType>& _path,
   //path'' <- RemoveBranches(path'')
 
   Environment* env = this->GetEnvironment();
+  auto robot = this->GetTask()->GetRobot();
   auto boundary = env->GetBoundary();
   auto dm = this->GetDistanceMetric(m_clearanceUtility.GetDistanceMetricLabel());
 
@@ -237,7 +237,7 @@ ValidatePath(vector<CfgType>& _path,
 
       CfgType q = (_path1[i] + _path1[i+1])/2;
 
-      CfgType clr1, clr2, clr3;
+      CfgType clr1(robot), clr2(robot), clr3(robot);
       CDInfo cdInfo1, cdInfo2, cdInfo3;
 
       //Must check both _path[i] and _path[i+1] as algorithm above

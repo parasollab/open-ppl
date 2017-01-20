@@ -139,7 +139,8 @@ Sampler(CfgType& _cfg, const Boundary* const _boundary,
   Environment* env = this->GetEnvironment();
   auto vc = this->GetValidityChecker(m_vcLabel);
   auto dm = this->GetDistanceMetric(m_dmLabel);
-  auto robot = _cfg.GetRobot();
+  auto robot = this->GetTask()->GetRobot();
+  auto multiBody = _cfg.GetMultiBody();
 
   string callee(this->GetNameAndLabel() + "::SampleImpl()");
   CDInfo cdInfo;
@@ -147,23 +148,24 @@ Sampler(CfgType& _cfg, const Boundary* const _boundary,
   bool generated = false;
   int cfg1Witness;
 
-  double length = m_length ? m_length : robot->GetMaxAxisRange();
+  double length = m_length ? m_length : multiBody->GetMaxAxisRange();
 
   //extend boundary
-  env->ExpandBoundary(length, robot);
+  env->ExpandBoundary(length, multiBody);
 
   //Generate first cfg
   CfgType& cfg1 = _cfg;
 
   //restore boundary
-  env->ExpandBoundary(-length - 2 * robot->GetBoundingSphereRadius(), robot);
+  env->ExpandBoundary(-length - 2 * multiBody->GetBoundingSphereRadius(),
+      multiBody);
 
-  CfgType tmp;
+  CfgType tmp(robot);
   m_clearanceUtility.CollisionInfo(cfg1, tmp, _boundary, cfg1.m_clearanceInfo);
   cfg1Witness = cfg1.m_clearanceInfo.m_nearestObstIndex;
 
-  CfgType cfg2;
-  CfgType incr;
+  CfgType cfg2(robot);
+  CfgType incr(robot);
 
   incr.GetRandomRay(length, dm);
   cfg2 = cfg1 + incr;
@@ -172,7 +174,7 @@ Sampler(CfgType& _cfg, const Boundary* const _boundary,
   int tickWitness, tempWitness = cfg1Witness;
 
   int nTicks;
-  CfgType inter;
+  CfgType inter(robot);
   inter.FindIncrement(cfg1, cfg2, &nTicks,
       m_stepSize * env->GetPositionRes(),
       m_stepSize * env->GetOrientationRes());
@@ -472,6 +474,7 @@ BinarySearch(const Boundary* const _boundary,
     vector<CfgType>& _result) {
 
   Environment* env = this->GetEnvironment();
+  auto robot = this->GetTask()->GetRobot();
 
   // Downcast the boundary to a workspace box or bust.
   auto box = dynamic_cast<const WorkspaceBoundingBox*>(_boundary);
@@ -502,7 +505,7 @@ BinarySearch(const Boundary* const _boundary,
 
   //iterate until distance between _c1 and _c2 is below
   //environment resolution
-  CfgType incr;
+  CfgType incr(robot);
   int nTicks;
   incr.FindIncrement(left, right, &nTicks,
       env->GetPositionRes(), env->GetOrientationRes());
@@ -512,7 +515,7 @@ BinarySearch(const Boundary* const _boundary,
     CfgType mid = (left + right) / 2;
 
     //grab witness id
-    CfgType tmp;
+    CfgType tmp(robot);
     m_clearanceUtility.CollisionInfo(mid, tmp, _boundary, mid.m_clearanceInfo);
     int midOI = mid.m_clearanceInfo.m_nearestObstIndex;
 

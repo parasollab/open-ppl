@@ -257,7 +257,7 @@ GenerateTrees() {
 
   for(size_t i = 0; i < m_numSamples; ++i) {
     // Generate random cfg in C-free.
-    CfgType cfg;
+    CfgType cfg(this->GetTask()->GetRobot());
     do {
       cfg.GetRandomCfg(env);
     } while(!env->InBounds(cfg) ||
@@ -420,7 +420,7 @@ Connect(VID _t1, VID _t2) {
   for(auto cit = closest.begin(); cit != closest.end(); ++cit) {
     CfgType& c1 = rdmp->GetGraph()->GetVertex(cit->first.first);
     CfgType& c2 = rdmp->GetGraph()->GetVertex(cit->first.second);
-    CfgType col;
+    CfgType col(this->GetTask()->GetRobot());
 
     if(lp->IsConnected(c1, c2, col,
           &lpOutput, env->GetPositionRes(), env->GetOrientationRes())) {
@@ -467,7 +467,7 @@ typename MPTraits::CfgType
 SRTStrategy<MPTraits>::
 SelectDirection(){
   Environment* env = this->GetEnvironment();
-  CfgType dir;
+  CfgType dir(this->GetTask()->GetRobot());
   dir.GetRandomCfg(env);
   return dir;
 }
@@ -497,7 +497,7 @@ ExpandTree(VID _tree, const CfgType& _dir) {
 
   CfgType& nearest = g->GetVertex(kClosest[0].first);
 
-  CfgType newCfg;
+  CfgType newCfg(this->GetTask()->GetRobot());
   int weight = 0;
 
   auto e = this->GetExtender(m_exLabel);

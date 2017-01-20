@@ -187,6 +187,7 @@ Sampler(CfgType& _cfg, const Boundary* const _boundary,
   string callee = this->GetNameAndLabel() + "::Sampler()";
   auto vcm = this->GetValidityChecker(m_vcLabel);
   auto dm = this->GetDistanceMetric(m_dmLabel);
+  auto robot = this->GetTask()->GetRobot();
 
   // Old state
   CfgType c1 = ChooseASample(_cfg);
@@ -199,9 +200,9 @@ Sampler(CfgType& _cfg, const Boundary* const _boundary,
   bool c2Free = c1Free;
 
   // Create a random ray
-  CfgType r;
+  CfgType r(robot);
   r.GetRandomRay(m_stepSize, dm);
-  if(r == CfgType()) {
+  if(r == CfgType(robot)) {
     if(this->m_debug)
       cerr << "Random ray in OBPRM Sampler is 0-valued!\
         Continuing with loop." << endl;
@@ -409,7 +410,7 @@ template <typename MPTraits>
 typename ObstacleBasedSampler<MPTraits>::CfgType
 ObstacleBasedSampler<MPTraits>::
 GetCfgWithParams(const Vector3d& _v) {
-  CfgType tmp;
+  CfgType tmp(this->GetTask()->GetRobot());
   for(int i = 0; i < 3; i++)
     tmp[i] = _v[i];
   for(int i = 3; i < 6; i++)

@@ -6,8 +6,9 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup MotionPlanningStrategies
-/// @brief Constructs roadmap based upon visibility
+/// Constructs roadmap based upon visibility
 ///
+/// @details
 ///  Nodes are sampled one at a time, and will be classified as either guards
 ///    or connections.
 ///  If the new node is not visible to any guard, it becomes a guard.  Guards map
@@ -19,6 +20,10 @@
 ///    Those CCs will then be merged into a single CC through the connection
 ///    node.
 ///  If the new node is visible from only one guard set, it is discarded.
+///
+/// Reference:
+///   Carole Nissoux, Thierry Simeon, and Jean-Paul Laumond. "Visibility based
+///   probabilistic roadmaps." IROS '99.
 ///
 /// \internal This strategy is configured for pausible execution.
 ////////////////////////////////////////////////////////////////////////////////
@@ -204,20 +209,21 @@ ConnectVisibleGuardSets(vector<CfgType>& _outNode) {
   GraphType* g = this->GetRoadmap()->GetGraph();
   Environment* env = this->GetEnvironment();
 
-  typedef typename vector<CfgType>::iterator CIT;
-  typedef typename vector<vector<CfgType> >::iterator GIT; //Guard subset iterator
   typedef pair<WeightType, WeightType> LPEdge;
 
   LPOutput<MPTraits> lpOutput;
-  CfgType col;
-  vector< pair<VID, LPEdge> > validEdges;
-  vector< GIT > visibleGuardSets;
+  CfgType col(this->GetTask()->GetRobot());
+  vector<pair<VID, LPEdge>> validEdges;
 
-  if(this->m_debug) VDAddNode(_outNode[0]);
+  typedef typename vector<vector<CfgType>>::iterator GIT; // Guard subset iterator
+  vector<GIT> visibleGuardSets;
+
+  if(this->m_debug)
+    VDAddNode(_outNode[0]);
 
   //find all guard subsets that are visible to _outNode
-  for(GIT git = m_guards.begin(); git != m_guards.end(); git++) {
-    for(CIT cit = git->begin(); cit != git->end(); cit++) {
+  for(auto git = m_guards.begin(); git != m_guards.end(); git++) {
+    for(auto cit = git->begin(); cit != git->end(); cit++) {
 
       if(this->m_debug)
         cout << "\n\tAttempting connection to node " << g->GetVID(*cit);
@@ -252,15 +258,13 @@ ConnectVisibleGuardSets(vector<CfgType>& _outNode) {
     VID newNode = g->AddVertex(_outNode[0]);
 
     //Add edges to graph
-    for(typename vector<pair<VID, LPEdge> >::iterator eit = validEdges.begin();
-        eit != validEdges.end(); eit++){
+    for(auto eit = validEdges.begin(); eit != validEdges.end(); eit++)
       g->AddEdge(newNode, eit->first, eit->second);
-    }
 
     //Merge guard subsets that are connected by _outNode
     vector<CfgType>* firstSet = &(**(visibleGuardSets.begin()));
-    for(typename vector< GIT >::iterator vit = visibleGuardSets.begin() + 1;
-        vit != visibleGuardSets.end(); vit++) {
+    for(auto vit = visibleGuardSets.begin() + 1; vit != visibleGuardSets.end();
+        vit++) {
       copy((*vit)->begin(), (*vit)->end(), back_inserter(*firstSet));
       m_guards.erase(*vit);
     }

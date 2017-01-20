@@ -216,7 +216,6 @@ TogglePRMStrategy<MPTraits>::GenerateNodes(deque<pair<string, CfgType> >& _queue
     }
 
     // Add nodes to queue
-    typedef typename vector<CfgType>::iterator CIT;
     for(auto&  sample : outNodes) {
 
       // If not validated yet, determine validity
@@ -277,8 +276,7 @@ TogglePRMStrategy<MPTraits>::Connect(pair<string, VID> _vid,
     }
 
     // Add witnesses to queue, saving their validities
-    typedef typename vector<CfgType>::iterator CIT;
-    for(CIT cit = collision.begin(); cit != collision.end(); ++cit) {
+    for(auto cit = collision.begin(); cit != collision.end(); ++cit) {
       if(cit->IsLabel("VALID") && cit->GetLabel("VALID")) {
         if(m_priority)
           _queue.push_front(make_pair("valid", *cit));

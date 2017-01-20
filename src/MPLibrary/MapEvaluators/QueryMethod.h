@@ -8,6 +8,7 @@
 #include "MPLibrary/LocalPlanners/StraightLine.h"
 #include "MPProblem/MPProblem.h"
 #include "MPProblem/MPTask.h"
+#include "MPProblem/Robot/Robot.h"
 #include "Utilities/MetricUtils.h"
 
 #include <containers/sequential/graph/algorithms/astar.h>
@@ -45,7 +46,7 @@ struct Heuristic {
     /// @return The estimated distance from _c to m_goal.
     WeightType operator()(const CfgType& _c) {
       int tick;
-      CfgType incr;
+      CfgType incr(_c.GetRobot());
       incr.FindIncrement(_c, m_goal, &tick, m_posRes, m_oriRes);
       return WeightType("", tick / 2);
     }
@@ -304,15 +305,17 @@ void
 QueryMethod<MPTraits>::
 ReadQuery(string _filename) {
   _filename = MPProblem::GetPath(_filename);
+  auto robot = this->GetTask()->GetRobot();
   if(this->m_debug)
-    cout << "Reading query file \'" << _filename << "\'..." << endl;
+    cout << "Reading query file \'" << _filename << "\'. Robot has "
+         << robot->GetMultiBody()->DOF() << " DOFs." << endl;
 
   ifstream in(_filename);
   if(!in.good())
     throw ParseException(WHERE, "Can't open query file '" + _filename + "'.");
 
   m_query.clear();
-  CfgType tempCfg;
+  CfgType tempCfg(robot);
   while(in >> tempCfg)
     m_query.push_back(tempCfg);
 

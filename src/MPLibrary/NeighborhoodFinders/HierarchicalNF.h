@@ -6,10 +6,8 @@
 #include <containers/sequential/graph/algorithms/connected_components.h>
 
 ////////////////////////////////////////////////////////////////////////////////
-/// @ingroup NeighborhoodFinders
-/// @brief TODO
-///
 /// TODO
+/// @ingroup NeighborhoodFinders
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
 class HierarchicalNF : public NeighborhoodFinderMethod<MPTraits> {
