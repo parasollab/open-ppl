@@ -114,8 +114,8 @@ AddObject(MultiBody* _m) {
 
   //The btTransform holds data for the basis and origin of the body, so it
   //defines where the object C.O.M. is and what its rotation is at that point.
-  std::vector< btTransform > transformations;
-  std::vector< std::shared_ptr< Connection > > joints;
+  std::vector<btTransform> transformations;
+  std::vector<std::shared_ptr<Connection>> joints;
   //std::vector< btVector3 > coms; //Center of mass vectors
 
   //Note that shape definition stuff is handled in the BuildCollisionShape()
@@ -186,9 +186,9 @@ AddObject(btCollisionShape* _shape, btTransform _transform, double _mass) {
 
   //this is basically just a wrapper overload to allow for
   //a more simplified AddObject call, so make objects into vectors and such:
-  std::vector< btCollisionShape* > shapes = {_shape};
-  std::vector< btTransform > transforms = {_transform};
-  std::vector< double > masses = {_mass};
+  std::vector<btCollisionShape*> shapes = {_shape};
+  std::vector<btTransform> transforms = {_transform};
+  std::vector<double> masses = {_mass};
 
   return AddObject(shapes, transforms, masses);
 }
@@ -250,7 +250,8 @@ AddObject(std::vector<btCollisionShape*> _shapes,
   if(isDynamic) {
     collisionFilterGroup = short(btBroadphaseProxy::DefaultFilter);
     collisionFilterMask = short(btBroadphaseProxy::AllFilter);
-  } else {
+  }
+  else {
     collisionFilterGroup = short(btBroadphaseProxy::StaticFilter);
     //This is logically equivalent to "All BUT StaticFilter":
     collisionFilterMask = short(btBroadphaseProxy::AllFilter
@@ -406,7 +407,7 @@ AddObject(std::vector<btCollisionShape*> _shapes,
       }
       case Connection::JointType::Spherical :
       {
-        //This case can be used, but please note that NO constraints will
+        // This case can be used, but please note that NO constraints will
         // be respected, and you must manually comment out this exception:
         RunTimeException(WHERE, "Spherical joints are supported, but spherical "
             "constraints are NOT! You can remove this exception if you need a "
@@ -458,16 +459,37 @@ AddObject(std::vector<btCollisionShape*> _shapes,
     mb->getLink(i).m_collider = col;
   }
 
-  //Also from Pendulum.cpp:
+  // Also from Pendulum.cpp:
   btAlignedObjectArray<btQuaternion> scratch_q;
   btAlignedObjectArray<btVector3> scratch_m;
-  mb->forwardKinematics(scratch_q,scratch_m);
+  mb->forwardKinematics(scratch_q, scratch_m);
   btAlignedObjectArray<btQuaternion> world_to_local;
   btAlignedObjectArray<btVector3> local_origin;
-  mb->updateCollisionObjectWorldTransforms(world_to_local,local_origin);
+  mb->updateCollisionObjectWorldTransforms(world_to_local, local_origin);
 
-  //After everything is set up, return the multibody pointer:
+  // After everything is set up, return the multibody pointer:
   return mb;
+
+  /// @TODO
+  // Code snippet on limiting velocity:
+  // The only way to limit the velocities in bullet is to do so manually on each
+  // internal sub-step. This is done by registering a call-back function like
+  // this:
+  //
+  // void callback(btDynamicsWorld* _dynamicsWorld, btScalar _timeStep) {
+  //   const btVector3 velocity = mb->getLinearVelocity();
+  //   const btScalar speed = velocity.length();
+  //   if(speed > maxSpeed)
+  //     mb->setLinearVelocity(velocity *= maxSpeed / speed);
+  // }
+  // m_dynamicsWorld->setInternalTickCallback(callback);
+  //
+  // Angular velocity limiting is likely to be similar.
+
+  /// @TODO
+  // We can force planar objects to stay on the plane like this:
+  // mb->setLinearFactor(btVector3(1, 1, 0));
+  // mb->setAngularFactor(btVector3(0, 0, 1));
 }
 
 /*------------------------------ Helpers -------------------------------------*/
@@ -476,13 +498,10 @@ vector<btCollisionShape*>
 BulletEngine::
 BuildCollisionShape(MultiBody* _body) {
   // Get the multibody's obj file and use it to create a bullet body.
-  /// @TODO Parse all components of the multibodies instead of just the first.
-  ///       Look at bullet/examples/MultiBody/MultiDofDemo.cpp
-  ///           and bullet/src/BulletDynamics/FeatherStone/btMultiBody.h
-  std::vector< std::string > filenames;
-  std::vector< btCollisionShape* > shapes;
+  std::vector<std::string> filenames;
+  std::vector<btCollisionShape*> shapes;
 
-  //Determine whether it's a static or active MultiBody based on casting result:
+  // Determine whether it's a static or active MultiBody based on casting result:
   StaticMultiBody* sbody = dynamic_cast<StaticMultiBody*>(_body);
   if(sbody)
     filenames.push_back(sbody->GetFixedBody(0)->GetFilePath());
@@ -509,6 +528,9 @@ BuildCollisionShape(MultiBody* _body) {
 btTriangleMesh*
 BulletEngine::
 BuildCollisionShape(const std::string& _filename) {
+  /// @TODO Change this to work from a polyhedron instead of an obj file.
+  ///       Also consider switching to mesh->addTriangle(btVector3, btVector3,
+  ///       btVector3).
   ConvexDecomposition::WavefrontObj obj;
   obj.loadObj(_filename.c_str());
 

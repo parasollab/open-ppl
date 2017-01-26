@@ -287,7 +287,7 @@ ConstructRRT(VID _root) {
   vector<VID> rrt, important, cc;
   vector<VID> notRRT; // Used only if m_biasConnect is false (connect to
                       // everything outside the RRT's CC)
-  RoadmapType centroidRdmp;
+  RoadmapType centroidRdmp(this->GetTask()->GetRobot());
 
   rrt.push_back(_root);
 

@@ -19,10 +19,9 @@ class MultiBody {
     /// The types of MultiBody that we can support.
     ////////////////////////////////////////////////////////////////////////////
     enum class MultiBodyType {
-      Active,       ///< Holonomic Robot
-      NonHolonomic, ///< Nonholonomic Robot
-      Passive,      ///< Visible Obstacle
-      Internal      ///< Invisible Obstacle
+      Active,       ///< Movable object.
+      Passive,      ///< Static visible object.
+      Internal      ///< Static invisible object.
     };
 
     ///@}

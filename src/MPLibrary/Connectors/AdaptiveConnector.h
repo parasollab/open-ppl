@@ -329,14 +329,14 @@ ConnectNeighbors(RoadmapType* _rm, VID _vid,
     //add connection attempt to caches
     this->AddConnectionAttempt(_vid, v2, connectable);
 
-    c1.IncStat("totalConnectionAttempts", 1);
-    c2.IncStat("totalConnectionAttempts", 1);
+    c1.IncrementStat("totalConnectionAttempts", 1);
+    c2.IncrementStat("totalConnectionAttempts", 1);
 
     if(connectable){
       if(this->m_debug) cout << " | connection was successful | success incremented" << endl;
       // increment # of successful connection attempts
-      c1.IncStat("succConnectionAttempts", 1);
-      c2.IncStat("succConnectionAttempts", 1);
+      c1.IncrementStat("succConnectionAttempts", 1);
+      c2.IncrementStat("succConnectionAttempts", 1);
       // if connection was made, add edge and record the successful connection
       _rm->GetGraph()->AddEdge(_vid, v2, lpOutput.m_edge);
     }

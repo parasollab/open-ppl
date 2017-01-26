@@ -6,16 +6,15 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #ifdef PMPCfg
+
 #include "ConfigurationSpace/Cfg.h"
 #include "Traits/CfgTraits.h"
 typedef MPTraits<Cfg> PMPLTraits;
 
-#elif (defined(PMPState))
-#include "Traits/StateTraits.h"
-typedef StateTraits PMPLTraits;
-
 #else
+
 #error "Error, must define a RobotType for PMPL application"
+
 #endif
 
 ////////////////////////////////////////////////////////////////////////////////

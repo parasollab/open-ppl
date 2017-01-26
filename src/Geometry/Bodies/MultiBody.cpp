@@ -23,8 +23,6 @@ GetMultiBodyTypeFromTag(const string& _tag, const string& _where) {
     return MultiBodyType::Passive;
   else if(_tag == "ACTIVE")
     return MultiBodyType::Active;
-  else if(_tag == "NONHOLONOMIC")
-    return MultiBodyType::NonHolonomic;
   else if(_tag == "INTERNAL")
     return MultiBodyType::Internal;
   else
@@ -39,8 +37,6 @@ GetTagFromMultiBodyType(MultiBodyType _b) {
   switch(_b) {
     case MultiBodyType::Active:
       return "Active";
-    case MultiBodyType::NonHolonomic:
-      return "NonHolonomic";
     case MultiBodyType::Passive:
       return "Passive";
     case MultiBodyType::Internal:

@@ -55,7 +55,11 @@ template <typename MPTraits>
 double
 CenterOfMassDistance<MPTraits>::
 Distance(const CfgType& _c1, const CfgType& _c2) {
-  return (_c1.GetRobotCenterofMass() - _c2.GetRobotCenterofMass()).norm();
+  _c1.ConfigureRobot();
+  const auto com1 = _c1.GetMultiBody()->GetCenterOfMass();
+  _c2.ConfigureRobot();
+  const auto com2 = _c2.GetMultiBody()->GetCenterOfMass();
+  return (com1 - com2).norm();
 }
 
 /*----------------------------------------------------------------------------*/

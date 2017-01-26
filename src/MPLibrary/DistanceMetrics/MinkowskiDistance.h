@@ -28,7 +28,9 @@ class MinkowskiDistance : public DistanceMetricMethod<MPTraits> {
 
     MinkowskiDistance(double _r1 = 3, double _r2 = 3, double _r3 = 1. / 3,
         bool _normalize = false);
+
     MinkowskiDistance(XMLNode& _node);
+
     virtual ~MinkowskiDistance() = default;
 
     ///@}
@@ -57,14 +59,14 @@ class MinkowskiDistance : public DistanceMetricMethod<MPTraits> {
     ///@{
 
     //default implementation
-    template<typename EnableCfg>
+    template <typename EnableCfg>
     EnableCfg DifferenceCfg(const EnableCfg& _c1, const EnableCfg& _c2,
         typename boost::disable_if<IsClosedChain<EnableCfg> >::type* _dummy = 0) {
       return _c1 - _c2;
     }
 
     //reachable distance implementation
-    template<typename EnableCfg>
+    template <typename EnableCfg>
     EnableCfg DifferenceCfg(const EnableCfg& _c1, const EnableCfg& _c2,
         typename boost::enable_if<IsClosedChain<EnableCfg> >::type* _dummy = 0) {
       cerr << "Error::DistanceMetrics for ReachableDistance disabled." << endl;
@@ -80,7 +82,7 @@ class MinkowskiDistance : public DistanceMetricMethod<MPTraits> {
 
     double m_r1{3};          ///< For position part.
     double m_r2{3};          ///< For rotation part.
-    double m_r3{1. / 3};     ///< For calculating root.
+    double m_r3{1. / 3.};    ///< For calculating root.
     bool m_normalize{false}; ///< Normalize distance w.r.t. environment?
 
     ///@}
@@ -103,9 +105,9 @@ MinkowskiDistance(XMLNode& _node) : DistanceMetricMethod<MPTraits>(_node),
     m_r1(3), m_r2(3), m_r3(1./3.), m_normalize(false) {
   this->SetName("Minkowski");
 
-  m_r1 = _node.Read<double>("r1", false, 3.0, 0.0, MAX_DBL, "r1");
-  m_r2 = _node.Read("r2", false, 3.0, 0.0, MAX_DBL, "r2");
-  m_r3 = _node.Read("r3", false, 1.0/3.0, 0.0, MAX_DBL, "r3");
+  m_r1 = _node.Read("r1", false, 3., 0., MAX_DBL, "r1");
+  m_r2 = _node.Read("r2", false, 3., 0., MAX_DBL, "r2");
+  m_r3 = _node.Read("r3", false, 1. / 3., 0., MAX_DBL, "r3");
   m_normalize = _node.Read("normalize", false, false, "flag if position dof "
       "should be normalized by environment diagonal");
 }
@@ -117,10 +119,10 @@ void
 MinkowskiDistance<MPTraits>::
 Print(ostream& _os) const {
   DistanceMetricMethod<MPTraits>::Print(_os);
-  _os << "\tr1 = " << m_r1 << endl;
-  _os << "\tr2 = " << m_r2 << endl;
-  _os << "\tr3 = " << m_r3 << endl;
-  _os << "\tnormalize = " << m_normalize << endl;
+  _os << "\tr1 = " << m_r1 << endl
+      << "\tr2 = " << m_r2 << endl
+      << "\tr3 = " << m_r3 << endl
+      << "\tnormalize = " << m_normalize << endl;
 }
 
 /*----------------------------- Distance Interface ---------------------------*/
@@ -132,7 +134,7 @@ Distance(const CfgType& _c1, const CfgType& _c2) {
   CfgType diff = DifferenceCfg(_c1, _c2);
   double pos = PositionDistance(diff);
   double orient = OrientationDistance(diff);
-  return pow(pos+orient, m_r3);
+  return pow(pos + orient, m_r3);
 }
 
 
@@ -155,7 +157,7 @@ template <typename MPTraits>
 double
 MinkowskiDistance<MPTraits>::
 PositionDistance(const CfgType& _c) {
-  return PositionDistance(this->GetEnvironment(),_c,m_r1,m_r3,m_normalize);
+  return PositionDistance(this->GetEnvironment(), _c, m_r1, m_r3, m_normalize);
 }
 
 
@@ -164,15 +166,19 @@ double
 MinkowskiDistance<MPTraits>::
 PositionDistance(Environment *_env,
     const CfgType& _c, double _r1, double _r3, bool _normalize) {
-  double diagonal = _env->GetBoundary()->GetMaxDist(_r1, _r3);
-  vector<double> p = _c.GetPosition();
-  double pos = 0;
-  for(size_t i=0; i<p.size(); ++i)
-    if(_normalize)
-      pos += pow(fabs(p[i])/diagonal, _r1);
-    else
-      pos += pow(fabs(p[i]), _r1);
-  return pos;
+  const vector<double> p = _c.GetPosition();
+  double distance = 0;
+
+  if(_normalize) {
+    const double diagonal = _env->GetBoundary()->GetMaxDist(_r1, _r3);
+    for(size_t i = 0; i < p.size(); ++i)
+      distance += pow(fabs(p[i]) / diagonal, _r1);
+  }
+  else
+    for(size_t i = 0; i < p.size(); ++i)
+      distance += pow(fabs(p[i]), _r1);
+
+  return distance;
 }
 
 
@@ -180,11 +186,11 @@ template <typename MPTraits>
 double
 MinkowskiDistance<MPTraits>::
 OrientationDistance(const CfgType& _c) {
-  vector<double> o = _c.GetOrientation();
-  double orient = 0;
-  for(size_t i=0; i<o.size(); ++i)
-    orient += pow(fabs(o[i]), m_r2);
-  return orient;
+  const vector<double> o = _c.GetOrientation();
+  double distance = 0;
+  for(size_t i = 0; i < o.size(); ++i)
+    distance += pow(fabs(o[i]), m_r2);
+  return distance;
 }
 
 /*----------------------------------------------------------------------------*/

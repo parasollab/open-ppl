@@ -34,12 +34,14 @@ Initialize() {
   // Initialize the agent's planning library.
   m_library = new MPLibrary(xmlFile);
 
+  /// @TODO Choose the task rather than just taking the first one.
+  auto task = problem->GetTasks().front();
+
   // Create a new solution object to hold a plan for this agent.
-  auto solution = new MPSolution;
+  auto solution = new MPSolution(task->GetRobot());
 
   // Use the planning library to find a path.
-  /// @TODO Choose the task rather than just taking the first one.
-  m_library->Solve(problem, problem->GetTasks().front(), solution);
+  m_library->Solve(problem, task, solution);
 
   // Extract the path from the solution.
   m_path = solution->GetPath()->Cfgs();
@@ -57,8 +59,7 @@ Step(const double _dt) {
     return;
 
   // Get the current configuration.
-  Cfg current(m_path[m_pathIndex].GetRobot());
-  current.SetData(m_robot->GetDynamicsModel()->GetSimulatedState());
+  Cfg current = m_robot->GetDynamicsModel()->GetSimulatedState();
 
   // Check if we've reached it. Advance the path index until the next subgoal is
   // at least .5 units away.

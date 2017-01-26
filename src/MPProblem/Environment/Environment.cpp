@@ -4,7 +4,6 @@
 #include "Geometry/Bodies/ActiveMultiBody.h"
 #include "Geometry/Bodies/FixedBody.h"
 #include "Geometry/Bodies/FreeBody.h"
-//#include "Geometry/Bodies/NonHolonomicMultiBody.h"
 #include "Geometry/Bodies/StaticMultiBody.h"
 #include "Geometry/Boundaries/WorkspaceBoundingBox.h"
 #include "Geometry/Boundaries/WorkspaceBoundingSphere.h"
@@ -66,10 +65,8 @@ Read(string _filename) {
       m_rdRes = ReadField<double>(ifs, cbs, "Failed reading Reachable Distance "
           "resolution");
 #endif
-#ifdef PMPState
     else if(resolution == "TIMERES")
       m_timeRes = ReadField<double>(ifs, cbs, "Failed reading Time resolution\n");
-#endif
     else
       throw ParseException(cbs.Where(), "Unknown resolution tag '" + resolution
           + "'");
@@ -90,12 +87,7 @@ Read(string _filename) {
     switch(bodyType) {
       case MultiBody::MultiBodyType::Active:
         {
-          /// @TODO: Add support for holonomic dynamic obstacles
-          break;
-        }
-      case MultiBody::MultiBodyType::NonHolonomic:
-        {
-          /// @TODO: Add support for non-holonomic dynamic obstacles
+          /// @TODO: Add support for dynamic obstacles
           break;
         }
       case MultiBody::MultiBodyType::Internal:
@@ -154,10 +146,6 @@ ComputeResolution(const std::vector<Robot*>& _robots) {
   // Set to XML input resolution if specified, else compute resolution factor
   if(m_positionRes < 0)
     m_positionRes = bodiesMinSpan * m_positionResFactor;
-
-#ifdef PMPState
-  State::SetTimeRes(m_timeRes);
-#endif
 }
 
 /*----------------------------- Boundary Functions ---------------------------*/
@@ -174,9 +162,12 @@ ResetBoundary(double _d, ActiveMultiBody* _robot) {
 
   for(auto& body : m_obstacles) {
     const double* tmp = body->GetBoundingBox();
-    minx = min(minx, tmp[0]);  maxx = max(maxx, tmp[1]);
-    miny = min(miny, tmp[2]);  maxy = max(maxy, tmp[3]);
-    minz = min(minz, tmp[4]);  maxz = max(maxz, tmp[5]);
+    minx = min(minx, tmp[0]);
+    maxx = max(maxx, tmp[1]);
+    miny = min(miny, tmp[2]);
+    maxy = max(maxy, tmp[3]);
+    minz = min(minz, tmp[4]);
+    maxz = max(maxz, tmp[5]);
   }
 
   vector<pair<double, double> > obstBBX(3);

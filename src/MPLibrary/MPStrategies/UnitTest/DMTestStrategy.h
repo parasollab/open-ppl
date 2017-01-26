@@ -88,7 +88,7 @@ Run()
   if(m_inputRoadmapFilename == "") {
     m_rdmp = this->GetRoadmap();
   } else {
-    m_rdmp = new RoadmapType();
+    m_rdmp = new RoadmapType(this->GetTask()->GetRobot());
     m_rdmp->Read(m_inputRoadmapFilename.c_str());
   }
 

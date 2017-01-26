@@ -1,5 +1,5 @@
-#ifndef MPUTILS_H_
-#define MPUTILS_H_
+#ifndef MP_UTILS_H_
+#define MP_UTILS_H_
 
 #include <functional>
 #include <iostream>
@@ -33,7 +33,8 @@ class Environment;
 template<typename T>
 const T
 Epsilon(const T& _t1, const T& _t2) {
-  return abs(min(_t1, _t2)) * 10 * numeric_limits<T>::epsilon();
+  static constexpr T tenEps = T(10) * std::numeric_limits<T>::epsilon();
+  return std::min(std::abs(_t1), std::abs(_t2)) * tenEps;
 }
 
 /*------------------------- Random Number Generation -------------------------*/

@@ -5,22 +5,18 @@
 #include<vector>
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Information returned by validity checkers, e.g., distance from obstacles.
 /// @ingroup ValidityCheckers
-/// @brief Information returned by validity checkers, e.g., distance from
-///        obstacles.
 ////////////////////////////////////////////////////////////////////////////////
 struct CDInfo {
 
-  //////////////////////////////////////////////////////////////////////////////
   /// @param _retAllInfo Compute distance information if possible
   CDInfo(bool _retAllInfo = false);
 
-  //////////////////////////////////////////////////////////////////////////////
   /// @brief Resets all data to default information
   /// @param _retAllInfo Compute distance information if possible
   void ResetVars(bool _retAllInfo = false);
 
-  //////////////////////////////////////////////////////////////////////////////
   /// @param _cdInfo Other CDInfo
   /// @return Is minimum distance less than other's minimum distance
   bool operator<(const CDInfo& _cdInfo);
@@ -38,9 +34,6 @@ struct CDInfo {
                                     ///< Robot
   int m_rapidContactID1;            ///< Triangle on robot in collision
   int m_rapidContactID2;            ///< Triangle on obstacle in collision
-
-  // The index for collided robots
-  std::vector<std::pair<size_t, size_t>> m_collidingRobtIndex;        
 };
 
 #endif

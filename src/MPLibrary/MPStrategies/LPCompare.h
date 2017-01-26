@@ -4,11 +4,9 @@
 #include "MPStrategyMethod.h"
 
 ////////////////////////////////////////////////////////////////////////////////
+/// @TODO
+///
 /// @ingroup MotionPlanningStrategies
-/// @brief TODO
-///
-/// TODO
-///
 /// \internal This strategy is configured for pausible execution.
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
@@ -35,7 +33,7 @@ class LPCompare : public MPStrategyMethod<MPTraits> {
     double ComparePaths2(vector<CfgType>& _p1, vector<CfgType>& _p2);
 
     string m_rdmp1in, m_rdmp2in, m_dmLabel, m_lpLabel1, m_lpLabel2;
-    Roadmap<MPTraits>* m_rdmp1,* m_rdmp2;
+    RoadmapType* m_rdmp1,* m_rdmp2;
 
     double m_q1, m_q2, m_q3;
     size_t m_numSimilar, m_numOnlyInR1, m_numOnlyInR2;
@@ -63,10 +61,12 @@ template <typename MPTraits>
 void
 LPCompare<MPTraits>::
 Initialize() {
-  m_rdmp1 = new Roadmap<MPTraits>();
+  auto robot = this->GetTask()->GetRobot();
+
+  m_rdmp1 = new RoadmapType(robot);
   m_rdmp1->Read(m_rdmp1in);
 
-  m_rdmp2 = new Roadmap<MPTraits>();
+  m_rdmp2 = new RoadmapType(robot);
   m_rdmp2->Read(m_rdmp2in);
 }
 

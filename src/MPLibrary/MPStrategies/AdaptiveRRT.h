@@ -200,7 +200,7 @@ AdaptiveRRT<MPTraits>::ExpandTree(CfgType& _dir){
   double minDist = this->GetExtender(this->m_exLabel)->GetMinDistance();
   if(dm->Distance(_dir, nearest) < minDist){
     //chosen a q_rand which is too close. Penalize nearest with 0.
-    nearest.IncStat("Fail");
+    nearest.IncrementStat("Fail");
     AvgVisibility(nearest, 0);
     return recentVID;
   }
@@ -239,7 +239,7 @@ AdaptiveRRT<MPTraits>::ExpandTree(CfgType& _dir){
     if(this->m_debug)
       cout << "Growth Failed on::" << nearest << ", with visibility::"
            << visibility << endl;
-    nearest.IncStat("Fail");
+    nearest.IncrementStat("Fail");
     AvgVisibility(nearest, 0);
 
     if(m_costMethod == REWARD)
@@ -260,7 +260,7 @@ AdaptiveRRT<MPTraits>::ExpandTree(CfgType& _dir){
 
   if(dist >= minDist) {
     //expansion success
-    nearest.IncStat("Success");
+    nearest.IncrementStat("Success");
     //update the tree
     //Generate Waypoints is from AdaptiveMultiResRRT, but this one does not
     //acutally add nodes.
@@ -278,7 +278,7 @@ AdaptiveRRT<MPTraits>::ExpandTree(CfgType& _dir){
   }
   else{
     //could not expand at least minDist. Penalize nearest with 0;
-    nearest.IncStat("Fail");
+    nearest.IncrementStat("Fail");
     AvgVisibility(nearest, 0);
     RewardGrowthMethod(-minDist, gm, rgsit->second);
   }

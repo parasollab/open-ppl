@@ -36,7 +36,7 @@ GenerateDiscreteSet(Robot* const _r) const {
 
   // Create coast action.
   Control c = {nullptr, Control::Signal(_r->GetMultiBody()->DOF(), 0)};
-  controls->insert(c);
+  controls->push_back(c);
 
   // Create forward and reverse controls for each actuator.
   for(auto& actuator : _r->GetActuators()) {
@@ -51,11 +51,11 @@ GenerateDiscreteSet(Robot* const _r) const {
 
       // Make a control for the forward signal.
       c.signal[i] = 1;
-      controls->insert(c);
+      controls->push_back(c);
 
       // Make a control for the reverse signal.
       c.signal[i] = -1;
-      controls->insert(c);
+      controls->push_back(c);
 
       c.signal[i] = 0;
     }

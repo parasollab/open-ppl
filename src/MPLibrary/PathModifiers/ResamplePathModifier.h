@@ -49,10 +49,19 @@ class ResamplePathModifier : public PathModifierMethod<MPTraits> {
 
   private:
 
+    ///@name Helpers
+    ///@{
+
     /// @TODO
     vector<pair<CfgType, double>> FindNeighbors(CfgType& _previous,
         CfgType& _current, CfgType& _next, size_t _maxAttempts);
 
+    /// Get the minimum clearance for a given configuration.
+    /// @param _c The configuration of interest.
+    /// @return The minimum clearance of _c.
+    double GetClearance(CfgType& _c);
+
+    ///@}
     ///@name Internal State
     ///@{
 
@@ -63,6 +72,7 @@ class ResamplePathModifier : public PathModifierMethod<MPTraits> {
     double m_stepSize;
     double m_userValue;
     string m_typeName;
+
     ClearanceUtility<MPTraits> m_clearanceUtils;
 
     ///@}
@@ -130,8 +140,6 @@ ModifyImpl(vector<CfgType>& _originalPath, vector<CfgType>& _newPath) {
   double temp = 0.0;
   size_t maxAttempts = 1000;
 
-  auto boundary = this->GetEnvironment()->GetBoundary();
-
   if(this->m_debug) {
     cout << "\ttypeName::" << m_typeName << endl;
     cout << "\tnumResamples::" << m_numResamples << endl;
@@ -151,16 +159,15 @@ ModifyImpl(vector<CfgType>& _originalPath, vector<CfgType>& _newPath) {
   _newPath.push_back(*cit);
 
   if(this->m_debug) {
-    temp = cit->GetSmoothingValue(m_clearanceUtils, boundary);
+    temp = GetClearance(*cit);
     cout << "\toldsmoothingvalues:" << endl << temp << ";";
     smoothingValues.push_back(temp);
   }
 
   ++cit;
 
-  for(; cit+1 != _originalPath.end(); ++cit) {
-    currentConfigurationWeight = cit->GetSmoothingValue(m_clearanceUtils,
-        boundary);
+  for(; cit + 1 != _originalPath.end(); ++cit) {
+    currentConfigurationWeight = GetClearance(*cit);
 
     if(this->m_debug)
       cout << currentConfigurationWeight << ";";
@@ -182,14 +189,14 @@ ModifyImpl(vector<CfgType>& _originalPath, vector<CfgType>& _newPath) {
         _newPath.push_back(nit->first);
         *cit = nit->first;
         if(this->m_debug) {
-          temp = nit->first.GetSmoothingValue(m_clearanceUtils, boundary);
+          temp = GetClearance(nit->first);
           smoothingValues.push_back(temp);
         }
       }
       else{
         _newPath.push_back(*cit);
         if(this->m_debug) {
-          temp = cit->GetSmoothingValue(m_clearanceUtils, boundary);
+          temp = GetClearance(*cit);
           smoothingValues.push_back(temp);
         }
       }
@@ -197,7 +204,7 @@ ModifyImpl(vector<CfgType>& _originalPath, vector<CfgType>& _newPath) {
     else {
       _newPath.push_back(*cit);
       if(this->m_debug) {
-        temp = cit->GetSmoothingValue(m_clearanceUtils, boundary);
+        temp = GetClearance(*cit);
         smoothingValues.push_back(temp);
       }
     }
@@ -205,7 +212,7 @@ ModifyImpl(vector<CfgType>& _originalPath, vector<CfgType>& _newPath) {
 
   _newPath.push_back(*cit);
   if(this->m_debug) {
-    temp = cit->GetSmoothingValue(m_clearanceUtils, boundary);
+    temp = GetClearance(*cit);
     smoothingValues.push_back(temp);
   }
 
@@ -239,17 +246,15 @@ FindNeighbors(CfgType& _previous, CfgType& _current, CfgType& _next,
   auto lp = this->GetLocalPlanner(this->m_lpLabel);
   GraphType* graph = this->GetRoadmap()->GetGraph();
   Environment* env = this->GetEnvironment();
-  auto boundary = env->GetBoundary();
   auto robot = this->GetTask()->GetRobot();
 
-  oldConfigurationWeight = _current.GetSmoothingValue(m_clearanceUtils,
-      boundary);
+  oldConfigurationWeight = GetClearance(_current);
 
   for(size_t k=0; k < _maxAttempts && numOfSamples > 0; ++k) {
     CfgType r(robot), c(robot);
     r.GetRandomRay(m_stepSize, dm);
     c = r + _current;
-    newConfigurationWeight = c.GetSmoothingValue(m_clearanceUtils, boundary);
+    newConfigurationWeight = GetClearance(c);
     if((newConfigurationWeight > oldConfigurationWeight
         && m_typeName == "MAX_CLEARANCE") ||
         (newConfigurationWeight < oldConfigurationWeight
@@ -290,6 +295,18 @@ FindNeighbors(CfgType& _previous, CfgType& _current, CfgType& _next,
   }
 
   return result;
+}
+
+
+template <typename MPTraits>
+double
+ResamplePathModifier<MPTraits>::
+GetClearance(CfgType& _c) {
+  CDInfo cdInfo;
+  CfgType null(_c.GetRobot());
+  m_clearanceUtils.CollisionInfo(_c, null,
+      this->GetEnvironment()->GetBoundary(), cdInfo);
+  return cdInfo.m_minDist;
 }
 
 /*----------------------------------------------------------------------------*/

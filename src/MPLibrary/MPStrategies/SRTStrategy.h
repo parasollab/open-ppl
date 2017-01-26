@@ -299,7 +299,7 @@ FindCandidateConnections(vector<pair<VID, VID> >& _candPairs) {
   _candPairs.clear();
 
   vector<VID> reps;
-  RoadmapType centRdmp;
+  RoadmapType centRdmp(this->GetTask()->GetRobot());
   for(auto& tree : m_trees) {
     reps.push_back(tree.first);
     centRdmp.GetGraph()->add_vertex(tree.first, tree.second.first);

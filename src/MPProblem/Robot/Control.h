@@ -7,6 +7,7 @@
 #include <vector>
 
 class Actuator;
+class btMultiBody;
 class Robot;
 
 
@@ -47,6 +48,10 @@ struct Control final {
   /// Tell the actuator to execute this control on the simulated robot.
   void Execute() const;
 
+  /// Tell the actuator to execute this control on an arbitrary simulated robot.
+  /// @param _model The simulated robot to use.
+  void Execute(btMultiBody* const _model) const;
+
   ///@}
   ///@name Ordering and Equality
   ///@{
@@ -65,7 +70,7 @@ struct Control final {
 /// Display function for debugging controls. Prints the signal.
 std::ostream& operator<<(std::ostream&, const Control&);
 
-typedef std::set<Control> ControlSet;
+typedef std::vector<Control> ControlSet;
 
 /// @TODO Add real abstraction for control space. This will probably look like a
 ///       boundary object for each actuator.

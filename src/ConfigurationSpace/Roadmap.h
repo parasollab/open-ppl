@@ -1,6 +1,8 @@
 #ifndef ROADMAP_H_
 #define ROADMAP_H_
 
+#include <unordered_map>
+
 #include "RoadmapGraph.h"
 #include "MPProblem/Environment/Environment.h"
 
@@ -11,104 +13,205 @@
 #endif
 
 ////////////////////////////////////////////////////////////////////////////////
-/// @ingroup Roadmap
-/// @brief Approximation of @cfree storing a graph and augmenting data
-///        structures for use by motion planning algorithms.
-///
-/// The Roadmap is essentially the graph $G=(V, E)$ which is used to approximate
-/// the planning space by sampling-based motion planning algorithms. \f$V\f$, or
-/// the set of vertices, are all of type CfgType and \f$E\f$, or the set of
-/// edges, are all of type WeightType.
+/// The Roadmap is essentially the graph G = (V, E) which is used to approximate
+/// the planning space by sampling-based motion planning algorithms. The set of
+/// vertices V are robot configurations, and the set of edges E are local plans
+/// between them.
 ////////////////////////////////////////////////////////////////////////////////
-template<class MPTraits>
-class Roadmap {
+template <typename MPTraits>
+class Roadmap final {
+
   public:
-    typedef typename MPTraits::CfgType CfgType;
-    typedef typename MPTraits::WeightType WeightType;
-    typedef RoadmapGraph<CfgType, WeightType> GraphType;
+
+    ///@name Motion Planning Types
+    ///@{
+
+    typedef typename MPTraits::CfgType            CfgType;
+    typedef typename MPTraits::WeightType         WeightType;
+    typedef RoadmapGraph<CfgType, WeightType>     GraphType;
     typedef typename GraphType::vertex_descriptor VID;
 
-    Roadmap();
-    Roadmap(const Roadmap& _rdmp);
+    ///@}
+    ///@name Construction
+    ///@{
+
+    Roadmap(Robot* const _r);
+
+    Roadmap(const Roadmap& _r);
+
+    Roadmap(Roadmap&& _r);
+
     ~Roadmap();
 
-    //Read graph information from roadmap file.
-    void Read(string _filename);
-    void Write(const string& _os, Environment* _env);
+    ///@}
+    ///@name Graph Accessors
+    ///@{
 
-    //Append nodes and edges from one roadmap (_rdmp) into
-    //another roadmap (to_rdmp)
-    vector<VID> AppendRoadmap(const Roadmap& _rdmp);
+    GraphType* GetGraph() noexcept;
+    const GraphType* GetGraph() const noexcept;
 
-    //access the roadmap graph
-    GraphType* GetGraph() {return m_graph;}
-    const GraphType* GetGraph() const {return m_graph;}
-    void SetGraph(GraphType* _graph) { m_graph = _graph; }
+    /// Set the graph object. The previous graph will be deleted, and the
+    /// roadmap will take ownership of the new one.
+    /// @param _g The new graph to use.
+    void SetGraph(GraphType* const _g) noexcept;
+
+    /// Copy the nodes and edges from another roadmap and append them to this.
+    /// @param _r The roadmap to copy from.
+    void AppendRoadmap(const Roadmap& _r);
+
+    ///@}
+    ///@name I/O
+    ///@{
+
+    /// Read in a roadmap (.map) file.
+    /// @param _filename The name of the map file to read.
+    void Read(const std::string& _filename);
+
+    /// Write the current roadmap out to a roadmap (.map) file.
+    /// @param _filename The name of the map file to write to.
+    /// @param _env The environment for which this map was constructed.
+    void Write(const std::string& _filename, Environment* _env);
+
+    ///@}
 
   private:
-    GraphType* m_graph;
+
+    ///@name Internal State
+    ///@{
+
+    Robot* const m_robot;          ///< The robot this roadmap is for.
+    GraphType* m_graph{nullptr};   ///< Graph of configurations and edges.
+
+    ///@}
+
 };
 
-template<class MPTraits>
-Roadmap<MPTraits>::
-Roadmap() : m_graph(new GraphType()){}
+/*------------------------------ Construction --------------------------------*/
 
-template<class MPTraits>
+template <typename MPTraits>
 Roadmap<MPTraits>::
-Roadmap(const Roadmap& _rdmp) : m_graph(new GraphType()) {
-  AppendRoadmap(_rdmp);
+Roadmap(Robot* const _r) : m_robot(_r), m_graph(new GraphType()) { }
+
+
+template <typename MPTraits>
+Roadmap<MPTraits>::
+Roadmap(const Roadmap& _r) : m_robot(_r.m_robot), m_graph(new GraphType()) {
+  AppendRoadmap(_r);
 }
 
-template<class MPTraits>
-Roadmap<MPTraits>::~Roadmap(){
+
+template <typename MPTraits>
+Roadmap<MPTraits>::
+Roadmap(Roadmap&& _r) : m_robot(_r.m_robot), m_graph(std::move(_r.m_graph)) {
+  _r.m_graph = nullptr;
+}
+
+
+template <typename MPTraits>
+Roadmap<MPTraits>::
+~Roadmap() {
   delete m_graph;
-  m_graph = NULL;
 }
+
+/*----------------------------- Graph Accessors ------------------------------*/
+
+template <typename MPTraits>
+typename Roadmap<MPTraits>::GraphType*
+Roadmap<MPTraits>::
+GetGraph() noexcept {
+  return m_graph;
+}
+
+
+template <typename MPTraits>
+const typename Roadmap<MPTraits>::GraphType*
+Roadmap<MPTraits>::
+GetGraph() const noexcept {
+  return m_graph;
+}
+
+
+template <typename MPTraits>
+void
+Roadmap<MPTraits>::
+SetGraph(GraphType* const _g) noexcept {
+  delete m_graph;
+  m_graph = _g;
+}
+
+
+template <typename MPTraits>
+void
+Roadmap<MPTraits>::
+AppendRoadmap(const Roadmap& _r) {
+  // Copy vertices and map the change in VIDs.
+  std::unordered_map<VID, VID> oldToNew;
+  for(auto vit = _r.m_graph->begin(); vit != _r.m_graph->end(); ++vit) {
+    const VID oldVID = vit->descriptor();
+    const VID newVID = m_graph->AddVertex(vit->property());
+    oldToNew[oldVID] = newVID;
+  }
+
+  // Copy edges.
+  for(auto vit = _r.m_graph->begin(); vit != _r.m_graph->end(); ++vit) {
+    for(auto eit = vit->begin(); eit != vit->end(); ++eit) {
+      const VID source = oldToNew[eit->source()];
+      const VID target = oldToNew[eit->target()];
+      if(!m_graph->IsEdge(source, target))
+        m_graph->AddEdge(source, target, eit->property());
+    }
+  }
+}
+
+/*----------------------------------- I/O ------------------------------------*/
 
 template <class MPTraits>
 void
-Roadmap<MPTraits>::Read(string _filename) {
-#ifndef _PARALLEL
-  ifstream  ifs(_filename.c_str());
-  if(!ifs) {
-    cerr << "Warning::Cannot open file " << _filename << " in Roadmap::Read." << endl;
-    return;
-  }
-  string tag;
-  bool moreFile = true;
-  size_t count = 0;
-  while(moreFile && (ifs >> tag)) {
-    count++;
-    if(tag.find("GRAPHSTART") != string::npos)
-      moreFile = false;
-  }
-  ifs.close();
+Roadmap<MPTraits>::
+Read(const std::string& _filename) {
+  ifstream ifs(_filename.c_str());
+  if(!ifs)
+    throw ParseException(WHERE, "Cannot open file " + _filename + ".");
 
-  if(!moreFile) {
-    ifstream ifs2(_filename.c_str());
-    for(size_t i=0; i<count-1; ++i)
-      ifs2 >> tag;
-    stapl::sequential::read_graph(*m_graph, ifs2);
-    ifs2.close();
+  std::string tag;
+  bool headerParsed = false;
+  int graphStart = 0;
+  // Read the file until we find the GRAPHSTART tag.
+  while(!headerParsed) {
+    // Mark our position and read the next line.
+    graphStart = ifs.tellg();
+    if(!(ifs >> tag))
+      throw ParseException(WHERE, "Error reading map file '" + _filename + "' - "
+          "GRAPHSTART tag is missing.");
+
+    // If we find the GRAPHSTART tag, we are done.
+    if(tag.find("GRAPHSTART") != string::npos)
+      headerParsed = true;
   }
-  else {
-    cerr << "Warning::Did not read GRAPHSTART tag in Roadmap::Read." << endl;
-    return;
-  }
-#endif
+
+  // Set the input robot for our edge class.
+  WeightType::SetInputRobot(m_robot);
+
+  // Set ifs back to the line with the GRAPHSTART tag and read in the graph.
+  ifs.seekg(graphStart, ifs.beg);
+  stapl::sequential::read_graph(*m_graph, ifs);
+
+  // Unset the input robot for our edge class.
+  WeightType::SetInputRobot(nullptr);
 }
 
-template<class MPTraits>
-void
-Roadmap<MPTraits>::Write(const string& _filename, Environment* _env){
 
-  ofstream ofs(_filename);
-  ofs << "#####ENVFILESTART#####" << endl
-    << _env->GetEnvFileName() << endl
-    << "#####ENVFILESTOP#####" << endl;
+template <typename MPTraits>
+void
+Roadmap<MPTraits>::
+Write(const std::string& _filename, Environment* _env) {
+  std::ofstream ofs(_filename);
+  ofs << "#####ENVFILESTART#####" << std::endl
+      << _env->GetEnvFileName() << std::endl
+      << "#####ENVFILESTOP#####" << std::endl;
 
 #ifndef _PARALLEL
-  stapl::sequential::write_graph(*m_graph, ofs);         // writes verts & adj lists
+  stapl::sequential::write_graph(*m_graph, ofs);
 #else
   ofs.close();
   stapl::graph_view<GraphType> gv(*m_graph);
@@ -116,35 +219,6 @@ Roadmap<MPTraits>::Write(const string& _filename, Environment* _env){
 #endif
 }
 
-template <class MPTraits>
-vector<typename Roadmap<MPTraits>::VID>
-Roadmap<MPTraits>::AppendRoadmap(const Roadmap& _rdmp) {
-  vector<VID> toVIDs;
-  typename vector<VID>::iterator vit;
-  //copy vertices
-  typedef typename GraphType::VI VI;
-  for(VI vit = _rdmp.m_graph->begin(); vit!=_rdmp.m_graph->end(); ++vit){
-    toVIDs.push_back(m_graph->AddVertex(m_graph->GetVertex(vit)));
-  }
-  vector<pair<pair<VID,VID>, WeightType> > edges;
-  typename vector<pair<pair<VID,VID>, WeightType> >::iterator eit;
-  for(VI vit = _rdmp.m_graph->begin(); vit!=_rdmp.m_graph->end(); ++vit) {
-    edges.clear();
-    //use iterator to traverse the adj edges and then put the data into edges
-    for(typename RoadmapGraph<CfgType, WeightType>::adj_edge_iterator ei =(*vit).begin(); ei!=(*vit).end(); ei++ ){
-      pair<pair<VID,VID>, WeightType> singleEdge;
-      singleEdge.first.first=(*ei).source();
-      singleEdge.first.second=(*ei).target();
-      singleEdge.second = (*ei).property();
-      edges.push_back(singleEdge); //put the edge into edges
-    }
-    for(eit = edges.begin(); eit < edges.end(); eit++) {
-      if(!m_graph->IsEdge((*eit).first.first, (*eit).first.second)) { //add an edge if it is not yet in m_graph
-        m_graph->AddEdge((*eit).first.first, (*eit).first.second, (*eit).second);
-      }
-    } //endfor eit
-  } //endfor vit
-  return toVIDs;
-}
+/*----------------------------------------------------------------------------*/
 
 #endif

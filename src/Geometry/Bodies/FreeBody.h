@@ -14,6 +14,9 @@ class FreeBody : public Body {
 
   public:
 
+    ///@name Local Types
+    ///@{
+
     ////////////////////////////////////////////////////////////////////////////
     /// Body type
     ////////////////////////////////////////////////////////////////////////////
@@ -32,6 +35,7 @@ class FreeBody : public Body {
       Translational ///< Just translation
     };
 
+    ///@}
     ///@name Construction
     ///@{
 

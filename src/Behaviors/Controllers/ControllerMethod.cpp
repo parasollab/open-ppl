@@ -1,6 +1,7 @@
 #include "ControllerMethod.h"
 
 #include "ConfigurationSpace/Cfg.h"
+#include "MPProblem/Robot/Actuator.h"
 #include "MPProblem/Robot/Robot.h"
 #include "Utilities/PMPLExceptions.h"
 
@@ -51,7 +52,6 @@ ComputeNearestContinuousControl(const Cfg& _current,
       " a discretized control set.");
 }
 
-#include "MPProblem/Robot/Actuator.h"
 
 Control
 ControllerMethod::
@@ -59,7 +59,6 @@ ComputeNearestDiscreteControl(const Cfg& _current, std::vector<double>&& _force)
   Control best;
   double bestDot = -1;
   auto desired = nonstd::unit(_force);
-  std::cout << "desired force:" << desired << std::endl;
 
   // Rank force similarity first by direction and then by magnitude.
   for(const auto& control : *m_robot->GetControlSet()) {
@@ -71,9 +70,16 @@ ComputeNearestDiscreteControl(const Cfg& _current, std::vector<double>&& _force)
     }
   }
 
-  std::cout << "best control/force:\n\t" << best << "\n\t";
-  if(best.actuator)
-    std::cout << best.actuator->ComputeForce(best.signal) << std::endl;
+  if(m_debug) {
+    std::cout << "Computing best control..." << std::endl
+              << "\tdesired force: " << desired << std::endl
+              << "\tbest control:  " << best << std::endl;
+    if(best.actuator)
+      std::cout << "\tbest force:    "
+                << best.actuator->ComputeForce(best.signal) << std::endl;
+    std::cout << "\tnearest control has directional similarity " << bestDot
+              << std::endl;
+  }
 
   // Assert that the selected control is sensible.
   if(bestDot == -1)

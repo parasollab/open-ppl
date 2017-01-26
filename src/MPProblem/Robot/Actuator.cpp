@@ -62,6 +62,9 @@ ControlMask() const {
 std::vector<double>
 Actuator::
 ComputeForce(const Control::Signal& _s) const {
+  /// @TODO Generalize this so that the robot's starting point can be taken into
+  ///       account. Currently we assume that the generated force is independent
+  ///       of starting state.
   const size_t dof = m_mask.size();
 
   // Compute the generalized force vector and total force.
@@ -89,16 +92,45 @@ ComputeForce(const Control::Signal& _s) const {
 void
 Actuator::
 Execute(const Control::Signal& _s) const {
-  /// @TODO Generalize this so that the robot's starting point can be taken into
-  ///       account. Currently we assume that the generated force is independent
-  ///       of starting state.
-  auto f = ComputeForce(_s);
+  Execute(_s, m_robot->GetDynamicsModel()->Get());
+}
 
-  /// @TODO Generalize this to accomodate multi-link robots. We are assuming
-  ///       robot is 6-dof rigid body for the moment
-  auto model = m_robot->GetDynamicsModel();
-  model->Get()->addBaseForce(btVector3(f[0], f[1], f[2]));
-  model->Get()->addBaseTorque(btVector3(f[3], f[4], f[5]));
+
+void
+Actuator::
+Execute(const Control::Signal& _s, btMultiBody* const _model) const {
+  auto f = ComputeForce(_s);
+  auto iter = f.begin();
+
+  auto mb = m_robot->GetMultiBody();
+  const size_t numPos = mb->PosDOF();
+  const size_t numJoints = mb->NumJoints();
+  const size_t numOri = mb->DOF() - numJoints - numPos;
+  btVector3 scratch(0, 0, 0);
+
+  // Set base force.
+  for(size_t i = 0; i < numPos; ++i, ++iter)
+    scratch[i] = *iter;
+  _model->addBaseForce(scratch);
+
+  // Set base torque.
+  scratch.setValue(0, 0, 0);
+  if(numOri == 1) {
+    // This is a planar rotational robot. We only want a torque in the Z
+    // direction.
+    scratch[2] = *iter++;
+  }
+  else {
+    // This is a volumetric rotational robot. We need all three torque
+    // directions.
+    for(size_t i = 0; i < numOri; ++i, ++iter)
+      scratch[i] = *iter;
+  }
+  _model->addBaseTorque(scratch);
+
+  for(size_t i = 0; i < numJoints; ++i, ++iter)
+    // Multiply by PI because bullet uses [ -PI : PI ].
+    _model->addJointTorque(i, *iter * PI);
 }
 
 /*----------------------------------------------------------------------------*/

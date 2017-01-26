@@ -82,6 +82,7 @@ class ControllerMethod {
     ///@{
 
     Robot* const m_robot; ///< The robot that owns this controller.
+    bool m_debug{false};  ///< Show debug messages?
 
     ///@}
 

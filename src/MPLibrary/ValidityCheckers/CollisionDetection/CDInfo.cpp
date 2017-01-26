@@ -18,7 +18,6 @@ ResetVars(bool _retAllInfo) {
   m_objectPoint(0, 0, 0);
   m_rapidContactID1 = -1;
   m_rapidContactID2 = -1;
-  m_collidingRobtIndex.clear();
 }
 
 bool

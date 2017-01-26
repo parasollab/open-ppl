@@ -13,7 +13,6 @@ Drawable::
 Drawable(MultiBody* _m) {
   switch(_m->GetType()) {
     case MultiBody::MultiBodyType::Active:
-    case MultiBody::MultiBodyType::NonHolonomic:
       {
         ActiveMultiBody* aMB = dynamic_cast<ActiveMultiBody*>(_m);
         for(size_t i = 0; i < aMB->GetNumBodies(); ++i)

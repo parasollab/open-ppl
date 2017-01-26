@@ -21,8 +21,7 @@ InWorkspace(const Cfg& _cfg) const {
 
   // If the robot's center is more than a bounding radius away from the wall, it
   // is definitely inside.
-  if(GetClearance(_cfg.GetRobotCenterPosition()) >=
-      robot->GetBoundingSphereRadius())
+  if(GetClearance(_cfg.GetPoint()) >= robot->GetBoundingSphereRadius())
     return true;
 
   // Robot is close to wall, have a strict check.

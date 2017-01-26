@@ -4,50 +4,76 @@
 #include "CoverageMetric.h"
 
 ////////////////////////////////////////////////////////////////////////////////
+/// @TODO
 /// @ingroup Metrics
-/// @brief TODO.
-/// @tparam Set Container type of Cfgs to compare against
-///
-/// TODO.
 ////////////////////////////////////////////////////////////////////////////////
 template<class MPTraits, class Set>
 class ConnectivityMetric : public CoverageMetric<MPTraits, Set> {
 
   public:
 
+    ///@name Motion Planning Types
+    ///@{
+
     typedef typename MPTraits::RoadmapType RoadmapType;
     typedef typename RoadmapType::VID      VID;
+
+    ///@}
+    ///@name Construction
+    ///@{
 
     ConnectivityMetric(const Set& _samples = Set(),
         const vector<string>& _connectorLabels = vector<string>(),
         bool _computeAllCCs = false);
+
     ConnectivityMetric(XMLNode& _node, bool _computeAllCCs = false);
 
-    virtual ~ConnectivityMetric() {}
+    virtual ~ConnectivityMetric() = default;
 
-    virtual void Print(ostream& _os) const;
+    ///@}
+    ///@name MPBaseObject Overrides
+    ///@{
 
-    double operator()();
+    virtual void Print(ostream& _os) const override;
+
+    ///@}
+    ///@name Metric Interface
+    ///@{
+
+    virtual double operator()() override;
+
+    ///@}
 
   private:
 
+    ///@name Internal State
+    ///@{
+
     ofstream m_history;
+
+    ///@}
 
 };
 
-template<class MPTraits, class Set>
-ConnectivityMetric<MPTraits, Set>::
-ConnectivityMetric(const Set& _samples, const vector<string>& _connectorLabels, bool _computeAllCCs)
-  : CoverageMetric<MPTraits, Set>(_samples, _connectorLabels, _computeAllCCs){
-  this->SetName("ConnectivityMetric" + Set::GetName());
-}
+/*------------------------------ Construction --------------------------------*/
 
 template<class MPTraits, class Set>
 ConnectivityMetric<MPTraits, Set>::
-ConnectivityMetric(XMLNode& _node, bool _computeAllCCs)
-  : CoverageMetric<MPTraits, Set>(_node, _computeAllCCs) {
-    this->SetName("ConnectivityMetric" + Set::GetName());
+ConnectivityMetric(const Set& _samples, const vector<string>& _connectorLabels,
+    bool _computeAllCCs) :
+    CoverageMetric<MPTraits, Set>(_samples, _connectorLabels, _computeAllCCs) {
+  this->SetName("ConnectivityMetric" + Set::GetName());
 }
+
+
+template<class MPTraits, class Set>
+ConnectivityMetric<MPTraits, Set>::
+ConnectivityMetric(XMLNode& _node, bool _computeAllCCs) :
+    CoverageMetric<MPTraits, Set>(_node, _computeAllCCs) {
+  this->SetName("ConnectivityMetric" + Set::GetName());
+}
+
+/*------------------------- MPBaseObject Overrides ---------------------------*/
 
 template<class MPTraits, class Set>
 void
@@ -56,12 +82,13 @@ Print(ostream& _os) const {
   _os << "Percentage of queries solved" << endl;
 }
 
+/*---------------------------- Metric Interface ------------------------------*/
+
 template<class MPTraits, class Set>
 double
 ConnectivityMetric<MPTraits, Set>::
 operator()() {
-  CoverageMetric<MPTraits, Set>::
-    operator()(); // Call CoverageMetric first
+  CoverageMetric<MPTraits, Set>::operator()(); // Call CoverageMetric first
 
   static size_t numCalls = 0;
   if(numCalls == 0)
@@ -70,24 +97,26 @@ operator()() {
   int numQueries = 0;
   size_t sz = this->m_connections.size();
 
-  for(size_t i=0; i<sz; ++i)
+  for(size_t i = 0; i < sz; ++i)
     sort(this->m_connections[i].begin(), this->m_connections[i].end());
-  for(size_t i=0; i<sz; ++i) {
-    for(size_t j=i+1; j<sz; ++j) {
+  for(size_t i = 0; i < sz; ++i) {
+    for(size_t j = i + 1; j < sz; ++j) {
       vector<VID> intersection;
       set_intersection(
           this->m_connections[i].begin(), this->m_connections[i].end(),
           this->m_connections[j].begin(), this->m_connections[j].end(),
-          back_insert_iterator<vector<VID> >(intersection));
+          back_insert_iterator<vector<VID>>(intersection));
       if(!(intersection.empty()))
-        numQueries++;
+        ++numQueries;
     }
   }
 
-  double connectivityAmt = (double(numQueries))/(double(sz*(sz-1))/2.0);
-  m_history << numCalls++ << "\t" << connectivityAmt << endl;
+  const double connectivityAmt = numQueries / ((sz * (sz - 1)) / 2.);
+  m_history << ++numCalls << "\t" << connectivityAmt << endl;
 
   return connectivityAmt;
 }
+
+/*----------------------------------------------------------------------------*/
 
 #endif

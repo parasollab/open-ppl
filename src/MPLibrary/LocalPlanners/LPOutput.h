@@ -1,45 +1,95 @@
 #ifndef LP_OUTPUT_H_
 #define LP_OUTPUT_H_
 
+#include <string>
+#include <utility>
+#include <vector>
+
 ////////////////////////////////////////////////////////////////////////////////
-/// @ingroup LocalPlanners
-/// @brief Computed information from a local plan
+/// Computed information from a local plan.
 ///
-/// This struct stores all information available from local plan computations.
-/// Namely, it stores intermediates along edges (not straight line), the path
+/// Stores all information available from local plan computations, including
+/// intermediates along edges (not straight line), the path
 /// generated, and the edge weights to be added to the RoadmapGraph.
+/// @ingroup LocalPlanners
 ////////////////////////////////////////////////////////////////////////////////
-template<class MPTraits>
+template <typename MPTraits>
 struct LPOutput {
 
-  typedef typename MPTraits::CfgType CfgType;
-  typedef typename MPTraits::WeightType WeightType;
-  typedef pair<WeightType, WeightType> LPEdge;
+  ///@name Motion Planning Types
+  ///@{
 
-  vector<CfgType> m_path;           // Path found by local planner.
-  vector<CfgType> m_intermediates;
+  typedef typename MPTraits::CfgType    CfgType;
+  typedef typename MPTraits::WeightType WeightType;
+
+  ///@}
+  ///@name Local Types
+  ///@{
+
+  typedef std::pair<WeightType, WeightType> LPEdge;
+
+  ///@}
+  ///@name Internal State
+  ///@{
+
+  std::vector<CfgType> m_path;           // Path found by local planner.
+  std::vector<CfgType> m_intermediates;
+
   LPEdge m_edge;                    // Contains weights of edges defined in path.
 
-  void Clear() {
-    m_path.clear();
-    m_intermediates.clear();
-    m_edge.first.SetWeight(0);
-    m_edge.second.SetWeight(0);
-  }
+  ///@}
+  ///@name Interface
+  ///@{
 
-  void SetLPLabel(string _l) {
-    m_edge.first.SetLPLabel(_l);
-    m_edge.second.SetLPLabel(_l);
-  }
+  void Clear();
 
-  void AddIntermediatesToWeights(bool _saveIntermediates) {
-    if(_saveIntermediates) {
-      m_edge.first.SetIntermediates(m_intermediates);
-      vector<CfgType> tmp = m_intermediates;
-      reverse(tmp.begin(), tmp.end());
-      m_edge.second.SetIntermediates(tmp);
-    }
-  }
+  void SetLPLabel(const std::string& _label);
+
+  void AddIntermediatesToWeights(const bool _saveIntermediates);
+
+  ///@}
+
 };
+
+/*----------------------------------------------------------------------------*/
+
+template <typename MPTraits>
+void
+LPOutput<MPTraits>::
+Clear() {
+  m_path.clear();
+  m_intermediates.clear();
+  m_edge.first.SetWeight(0);
+  m_edge.second.SetWeight(0);
+}
+
+
+template <typename MPTraits>
+void
+LPOutput<MPTraits>::
+SetLPLabel(const std::string& _label) {
+  m_edge.first.SetLPLabel(_label);
+  m_edge.second.SetLPLabel(_label);
+}
+
+
+template <typename MPTraits>
+void
+LPOutput<MPTraits>::
+AddIntermediatesToWeights(const bool _saveIntermediates) {
+  if(!_saveIntermediates)
+    return;
+
+  // Make a copy of the intermediates in reverse order for the backward edge.
+  std::vector<CfgType> tmp;
+  tmp.reserve(m_intermediates.size());
+  std::copy(m_intermediates.rend(), m_intermediates.rbegin(), back_inserter(tmp));
+
+  // Set both edges.
+  m_edge.first.SetIntermediates(m_intermediates);
+  m_edge.second.SetIntermediates(tmp);
+}
+
+/*----------------------------------------------------------------------------*/
 
 #endif

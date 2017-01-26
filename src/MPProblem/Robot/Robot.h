@@ -55,7 +55,12 @@ class Robot {
   ControlSpace* m_controlSpace{nullptr};   ///< Continuous control space, if any.
   ControllerMethod* m_controller{nullptr}; ///< Low-level controller.
 
+  bool m_nonholonomic{false};              ///< Is the robot nonholonomic?
   DynamicsModel* m_dynamicsModel{nullptr}; ///< The bullet dynamics model.
+
+  /// @TODO Should these live somewhere else? Parse them from input file.
+  double m_maxLinearVelocity{10};
+  double m_maxAngularVelocity{1};
 
   std::string m_label;                     ///< The robot's unique label.
 
@@ -66,9 +71,9 @@ class Robot {
     ///@name Construction
     ///@{
 
-    Robot(MPProblem* _p, XMLNode& _node, const Boundary* const _b);
+    Robot(MPProblem* const _p, XMLNode& _node, const Boundary* const _b);
 
-    virtual ~Robot();
+    virtual ~Robot() noexcept;
 
     ///@}
     ///@name Simulation Interface
@@ -80,7 +85,7 @@ class Robot {
     void Step(const double _dt);
 
     /// Enable the Robot's agent to access the problem data.
-    MPProblem* GetMPProblem() const;
+    MPProblem* GetMPProblem() const noexcept;
 
     ///@}
     ///@name Geometry Accessors
@@ -88,8 +93,8 @@ class Robot {
     /// Access the robot's geometric representation. The robot will take
     /// ownership of its ActiveMultiBody and delete it when necessary.
 
-    ActiveMultiBody* GetMultiBody();
-    const ActiveMultiBody* GetMultiBody() const;
+    ActiveMultiBody* GetMultiBody() noexcept;
+    const ActiveMultiBody* GetMultiBody() const noexcept;
 
     ///@}
     ///@name Agent Accessors
@@ -97,8 +102,8 @@ class Robot {
     /// Access the robot's agent. The robot will take ownership of its agent and
     /// delete it when necessary.
 
-    Agent* GetAgent();
-    void SetAgent(Agent* const _a);
+    Agent* GetAgent() noexcept;
+    void SetAgent(Agent* const _a) noexcept;
 
     ///@}
     ///@name Control Accessors
@@ -106,14 +111,14 @@ class Robot {
     /// Access the robot's control structures. The robot will take ownership of
     /// these and delete them when necessary.
 
-    ControlSet* GetControlSet();
-    void SetControlSet(ControlSet* const _c);
+    ControlSet* GetControlSet() noexcept;
+    void SetControlSet(ControlSet* const _c) noexcept;
 
-    ControlSpace* GetControlSpace();
-    void SetControlSpace(ControlSpace* const _c);
+    ControlSpace* GetControlSpace() noexcept;
+    void SetControlSpace(ControlSpace* const _c) noexcept;
 
-    ControllerMethod* GetController();
-    void SetController(ControllerMethod* const _c);
+    ControllerMethod* GetController() noexcept;
+    void SetController(ControllerMethod* const _c) noexcept;
 
     ///@}
     ///@name Actuator Accessors
@@ -121,8 +126,8 @@ class Robot {
     /// Access the robot's actuators. These are set during input file parsing
     /// and cannot be changed otherwise.
 
-    Actuator* GetActuator(const size_t _i);
-    const std::vector<Actuator*>& GetActuators();
+    Actuator* GetActuator(const size_t _i) noexcept;
+    const std::vector<Actuator*>& GetActuators() noexcept;
 
     ///@}
     ///@name Dynamics Accessors
@@ -130,12 +135,19 @@ class Robot {
     /// Access the robot's dynamics model. The robot will take ownership of it
     /// and delete it when necessary.
 
-    DynamicsModel* GetDynamicsModel();
+    DynamicsModel* GetDynamicsModel() noexcept;
     void SetDynamicsModel(btMultiBody* const _m);
 
     ///@}
     ///@name Other
     ///@{
+
+    /// Check if the robot is nonholonomic.
+    bool IsNonholonomic() const noexcept;
+
+    double GetMaxLinearVelocity() const noexcept;
+
+    double GetMaxAngularVelocity() const noexcept;
 
     /// Get the unique label for this instance.
     const std::string& GetLabel() const noexcept;

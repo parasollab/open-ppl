@@ -1,60 +1,83 @@
 #ifndef ROADMAP_SET_H
 #define ROADMAP_SET_H
 
+class Robot;
+
+
 ////////////////////////////////////////////////////////////////////////////////
-/// @TODO
+/// @TODO This class is an artifact of old code. If anyone actually wants to use
+///       it, please take responsibility for re-designing it intelligently.
 /// @ingroup Metrics
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
-class RoadmapSet {
+class RoadmapSet final {
 
   public:
 
     typedef typename MPTraits::RoadmapType  RoadmapType;
     typedef typename RoadmapType::GraphType GraphType;
-    typedef typename GraphType::VPI Iterator;
-    typedef typename GraphType::CVPI ConstIterator;
+    typedef typename GraphType::VPI         Iterator;
+    typedef typename GraphType::CVPI        ConstIterator;
 
-    RoadmapSet() {}
-
-    RoadmapSet(const RoadmapType& _roadmap) :
-      m_roadmap(_roadmap) {}
+    RoadmapSet() = default;
 
     RoadmapSet(XMLNode& _node) {
-      string filename = _node.Read("filename", true, "", "filename containing witness samples");
-      m_roadmap.Read(filename.c_str());
+      m_filename = _node.Read("filename", true, "", "filename containing "
+          "witness samples");
     }
 
+    ~RoadmapSet() noexcept {
+      delete m_roadmap;
+    }
+
+    /// Returns the number of nodes in m_roadmap
     size_t size() const {
-      //returns the number of nodes in m_roadmap
-      return m_roadmap.GetGraph()->get_num_vertices();
+      CheckMap();
+      return m_roadmap->GetGraph()->get_num_vertices();
     }
 
+    /// Returns a cfg iterator from m_roadmap begin
     Iterator begin() {
-      //returns a cfg iterator from m_roadmap begin
-      return m_roadmap.GetGraph()->begin();
+      CheckMap();
+      return m_roadmap->GetGraph()->begin();
     }
 
+    /// Returns a cfg iterator from m_roadmap end
     Iterator end() {
-      //returns a cfg iterator from m_roadmap end
-      return m_roadmap.GetGraph()->end();
+      CheckMap();
+      return m_roadmap->GetGraph()->end();
     }
 
+    /// Returns a const cfg iterator from m_roadmap begin
     ConstIterator begin() const {
-      //returns a const cfg iterator from m_roadmap begin
-      return m_roadmap.GetGraph()->begin();
+      CheckMap();
+      return m_roadmap->GetGraph()->begin();
     }
 
+    /// Returns a const cfg iterator from m_roadmap end
     ConstIterator end() const {
-      //returns a const cfg iterator from m_roadmap end
-      return m_roadmap.GetGraph()->end();
+      CheckMap();
+      return m_roadmap->GetGraph()->end();
     }
 
     static string GetName() { return "RoadmapSet"; }
 
+    void CheckMap() const {
+      if(!m_roadmap)
+        throw RunTimeException(WHERE, "Need to call ReadMap first.");
+    }
+
+    void ReadMap(Robot* const _r) {
+      if(m_roadmap)
+        return;
+      m_roadmap = new RoadmapType(_r);
+      m_roadmap->Read(m_filename);
+    }
+
   private:
 
-    RoadmapType m_roadmap;
+    RoadmapType* m_roadmap{nullptr};
+    std::string m_filename;
 };
 
 #endif

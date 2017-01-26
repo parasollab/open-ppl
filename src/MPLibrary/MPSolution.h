@@ -23,7 +23,8 @@ class MPSolutionType final {
     ///@name Construction
     ///@{
 
-    MPSolutionType();
+    MPSolutionType(Robot* const _r);
+
     ~MPSolutionType();
 
     ///@}
@@ -52,6 +53,7 @@ class MPSolutionType final {
     ///@name Internal State
     ///@{
 
+    Robot* const m_robot;            ///< The robot executing this task.
     RoadmapType* m_freeMap{nullptr}; ///< The free-space roadmap.
     RoadmapType* m_obstMap{nullptr}; ///< The obstacle-space roadmap.
     Path*        m_path{nullptr};    ///< The current solution path.
@@ -64,9 +66,9 @@ class MPSolutionType final {
 
 template <typename MPTraits>
 MPSolutionType<MPTraits>::
-MPSolutionType() {
-  m_freeMap = new RoadmapType();
-  m_obstMap = new RoadmapType();
+MPSolutionType(Robot* const _r) : m_robot(_r) {
+  m_freeMap = new RoadmapType(_r);
+  m_obstMap = new RoadmapType(_r);
   m_path = new Path(m_freeMap);
   m_stats = new StatClass();
 }

@@ -6,8 +6,9 @@
 
     <Environment filename="3D/3d.env"/>
 
-    <!--Robot label="links" filename="3D/linked.robot"/-->
     <Robot label="boxy" filename="3D/boxy.robot"/>
+    <!--Robot label="links" filename="3D/linked.robot"/-->
+    <!--Robot label="boxy" filename="3D/boxy.robot" nonholonomic="true"/-->
 
     <Query filename="3D/3d.query"/>
 
@@ -181,10 +182,13 @@
     </LocalPlanners>
 
     <Extenders>
-      <BasicExtender label="BERO" debug="false" dmLabel="euclidean" vcLabel="rapid"
-        maxDist="1." minDist=".001"/>
-      <BasicExtender label="BESO" debug="false" dmLabel="euclidean" vcLabel="rapid"
-        maxDist="10." minDist=".001" randomOrientation="false"/>
+      <BasicExtender label="BERO" debug="false" dmLabel="euclidean"
+        vcLabel="rapid" maxDist="1." minDist=".001"/>
+      <BasicExtender label="BESO" debug="false" dmLabel="euclidean"
+        vcLabel="rapid" maxDist="10." minDist=".001" randomOrientation="false"/>
+      <KinodynamicExtender label="KinoExtender" debug="false"
+        dmLabel="euclidean" vcLabel="rapid" fixed="false" best="false"
+        numSteps="10" minDist=".01"/>
       <MedialAxisExtender label="MAE" maxDist="10.0" minDist="0.01"
         extendDist="0.5" maxIntermediates="10" lpLabel="sl" vcLabel="pqp_solid"
         dmLabel="euclidean" clearanceType="exact" penetrationType="exact"
@@ -293,8 +297,10 @@
       <PRMQuery label="PRMQuery" debug="false">
         <NodeConnectionMethod method="Closest"/>
       </PRMQuery>
-      <RRTQuery label="RRTQuery" goalDist=".3"
+      <RRTQuery label="RRTQuery" goalDist="0"
         nfLabel="Nearest" exLabel="BERO" debug="false"/>
+      <RRTQuery label="KinoRRTQuery" goalDist=".3"
+        nfLabel="Nearest" exLabel="KinoExtender" debug="false"/>
       <LazyQuery label="LazyQuery"
         lpLabel="sl" dmLabel="euclidean" vcMethod="rapid" graphSearchAlg="astar"
         debug="false" numEnhance="10" d="0.5">
@@ -405,6 +411,15 @@
         nfLabel="Nearest" vcLabel="rapid" connectorLabel="Closest"
         gtype="UNDIRECTED_TREE" debug="false"
         growGoals="true" extenderLabel="BERO">
+        <Evaluator label="NodesEval"/>
+      </BasicRRTStrategy>
+
+      <!-- Kindodynamic RRT -->
+      <BasicRRTStrategy label="KinoRRT"
+        numRoots="1" m="1" growthFocus="0.01" dmLabel="euclidean"
+        nfLabel="Nearest" vcLabel="rapid" connectorLabel="Closest"
+        gtype="DIRECTED_TREE" debug="false"
+        growGoals="false" extenderLabel="KinoExtender">
         <Evaluator label="NodesEval"/>
       </BasicRRTStrategy>
 
@@ -587,8 +602,8 @@
 
     <Solver mpStrategyLabel="BasicPRM1" seed="12345678"
       baseFilename="Basic" vizmoDebug="true"/>
-    <!--Solver mpStrategyLabel="BasicPRM2" seed="12345678"
-         baseFilename="Basic2" vizmoDebug="true"/-->
+    <!--Solver mpStrategyLabel="KinoRRT" seed="12345678"
+      baseFilename="Basic" vizmoDebug="true"/-->
 
   </Library>
 

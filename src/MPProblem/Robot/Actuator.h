@@ -6,6 +6,7 @@
 #include "Control.h"
 #include "Geometry/Boundaries/Range.h"
 
+class btMultiBody;
 class Robot;
 
 
@@ -94,7 +95,13 @@ class Actuator {
     ///@{
 
     /// Apply a control signal to the robot's bullet model.
+    /// @param _s The control signal to apply.
     void Execute(const Control::Signal& _s) const;
+
+    /// Apply a control signal to a bullet model of the owning robot.
+    /// @param _s The control signal to apply.
+    /// @param _model The bullet model of m_robot to control.
+    void Execute(const Control::Signal& _s, btMultiBody* const _model) const;
 
     ///@}
 };

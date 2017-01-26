@@ -4,7 +4,7 @@
 #include "MetricMethod.h"
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Get number of nodes in roadmap.
+/// Evaluates the number of nodes in the current roadmap.
 /// @ingroup Metrics
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
@@ -12,19 +12,48 @@ class NumNodesMetric : public MetricMethod<MPTraits> {
 
   public:
 
-    NumNodesMetric(){
-      this->SetName("NumNodesMetric");
-    }
+    ///@name Construction
+    ///@{
 
-    NumNodesMetric(XMLNode& _node) : MetricMethod<MPTraits>(_node){
-      this->SetName("NumNodesMetric");
-    }
+    NumNodesMetric();
 
-    virtual ~NumNodesMetric(){}
+    NumNodesMetric(XMLNode& _node);
 
-    virtual double operator()(){
-      return this->GetRoadmap()->GetGraph()->get_num_vertices();
-    }
+    virtual ~NumNodesMetric() = default;
+
+    ///@}
+    ///@name Metric Interface
+    ///@{
+
+    virtual double operator()() override;
+
+    ///@}
 };
+
+/*------------------------------ Construction --------------------------------*/
+
+template <typename MPTraits>
+NumNodesMetric<MPTraits>::
+NumNodesMetric() {
+  this->SetName("NumNodesMetric");
+}
+
+
+template <typename MPTraits>
+NumNodesMetric<MPTraits>::
+NumNodesMetric(XMLNode& _node) : MetricMethod<MPTraits>(_node){
+  this->SetName("NumNodesMetric");
+}
+
+/*---------------------------- Metric Interface ------------------------------*/
+
+template <typename MPTraits>
+double
+NumNodesMetric<MPTraits>::
+operator()() {
+  return this->GetRoadmap()->GetGraph()->get_num_vertices();
+}
+
+/*----------------------------------------------------------------------------*/
 
 #endif

@@ -59,9 +59,9 @@ class BulletEngine final {
     ///@{
 
     /// Step the simulation forward.
-    /// @param[in] _timestep The total length of time to advance the simulation.
-    /// @param[in] _maxSubSteps The maximum number of sub-intervals to use.
-    /// @param[in] _resolution The length of a sub interval.
+    /// @param _timestep The total length of time to advance the simulation.
+    /// @param _maxSubSteps The maximum number of sub-intervals to use.
+    /// @param _resolution The length of a sub interval.
     void Step(const btScalar _timestep, const int _maxSubSteps,
         const btScalar _resolution);
 
@@ -70,8 +70,8 @@ class BulletEngine final {
     ///@{
 
     /// Get the current transform for a given object.
-    /// @param[in] _i The object's index.
-    /// @param[in] _j The component index (0 for base by default).
+    /// @param _i The object's index.
+    /// @param _j The component index (0 for base by default).
     /// @return An OpenGL transform matrix describing object _i's current
     ///         position and orientation.
     glutils::transform GetObjectTransform(const size_t _i, const size_t _j = 0)
@@ -82,7 +82,7 @@ class BulletEngine final {
     ///@{
 
     /// Add a PMPL multibody to the simulation.
-    /// @param[in] _m The multibody to add.
+    /// @param _m The multibody to add.
     btMultiBody* AddObject(MultiBody* _m);
 
     /// Add an object to the world,
@@ -100,11 +100,11 @@ class BulletEngine final {
     /// @param _joints The list of connections between links. Default is an
     ///                empty vector.
     //TODO: make this one private?
-    btMultiBody* AddObject(std::vector< btCollisionShape* > _shapes,
-        std::vector< btTransform > _transforms,
-        std::vector< double > _masses,
-        std::vector< std::shared_ptr< Connection > > _joints =
-            std::vector< std::shared_ptr< Connection > >());
+    btMultiBody* AddObject(std::vector<btCollisionShape*> _shapes,
+        std::vector<btTransform> _transforms,
+        std::vector<double> _masses,
+        std::vector<std::shared_ptr<Connection>> _joints =
+            std::vector<std::shared_ptr<Connection>>());
 
     ///@}
 
@@ -114,12 +114,12 @@ class BulletEngine final {
     ///@{
 
     /// Build a bullet collision shape from a pmpl MultiBody.
-    /// @param[in] _body The pmpl MultiBody.
+    /// @param _body The pmpl MultiBody.
     /// @return A bullet collision shape.
     std::vector<btCollisionShape*> BuildCollisionShape(MultiBody* _body);
 
     /// Build a bullet collision shape from an obj file.
-    /// @param[in] _filename The obj file to use.
+    /// @param _filename The obj file to use.
     /// @return A bullet triangle mesh collision shape.
     btTriangleMesh* BuildCollisionShape(const std::string& _filename);
 

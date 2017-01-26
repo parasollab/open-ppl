@@ -5,6 +5,7 @@
 #include "MPStrategyMethod.h"
 #include "MPLibrary/MapEvaluators/RRTQuery.h"
 
+
 ////////////////////////////////////////////////////////////////////////////////
 /// The RRT algorithm grows one or more trees from a set of root nodes to solve
 /// a single-query planning problem.
@@ -366,7 +367,9 @@ Iterate() {
   ++m_trials;
   if(this->m_debug)
     cout << "*** Starting iteration " << m_trials << " "
-         << "***************************************************" << endl;
+         << "***************************************************" << endl
+         << "Graph has " << this->GetRoadmap()->GetGraph()->get_num_vertices()
+         << " vertices." << std::endl;
 
   // Find my growth direction. Default is to randomly select node or bias
   // towards a goal.
@@ -374,12 +377,12 @@ Iterate() {
   if(m_query && DRand() < m_growthFocus && !m_query->GetGoals().empty()) {
     target = m_query->GetRandomGoal();
     if(this->m_debug)
-      cout << "Goal-biased direction selected: " << target << endl;
+      std::cout << "Goal-biased direction selected: " << target << std::endl;
   }
   else {
     target = this->SelectDirection();
     if(this->m_debug)
-      cout << "Random direction selected: " << target << endl;
+      std::cout << "Random direction selected: " << target << std::endl;
   }
 
   // Randomize Current Tree
@@ -387,7 +390,8 @@ Iterate() {
   if(this->m_debug)
     cout << "Randomizing current tree:" << endl
          << "\tm_trees.size() = " << m_trees.size() << ", currentTree = "
-         << distance(m_trees.begin(), m_currentTree) << endl;
+         << distance(m_trees.begin(), m_currentTree) << ", |currentTree| = "
+         << m_currentTree->size() << endl;
 
   // Ensure that all nodes in the graph are also in the RRT trees, and that
   // numTrees == numCCs

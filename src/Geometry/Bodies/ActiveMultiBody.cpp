@@ -479,10 +479,11 @@ InCSpace(const vector<double>& _cfg, const Boundary* const _b) {
   }
 
   // Check that all orientation DOF's lie within [-1, 1].
-  for(size_t i = 0; i < OrientationDOF(); ++i)
-    if(fabs(_cfg[index]) > 1)
+  for(size_t i = 0; i < OrientationDOF(); ++i, ++index)
+    if(std::abs(_cfg[index]) > 1) {
+      cout << "orientation fail" << endl;
       return false;
-  index += OrientationDOF();
+    }
 
   // Check that all joint DOF's lie within their limits.
   for(auto& joint : m_joints) {

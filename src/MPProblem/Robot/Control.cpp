@@ -28,6 +28,14 @@ Execute() const {
   // Otherwise this is a coast control - we don't need to do anything.
 }
 
+
+void
+Control::
+Execute(btMultiBody* const _model) const {
+  if(actuator)
+    actuator->Execute(signal, _model);
+}
+
 /*-------------------------- Ordering and Equality ---------------------------*/
 
 bool

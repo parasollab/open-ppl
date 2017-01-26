@@ -90,12 +90,12 @@ DirectedAngularDistance(double _a, double _b) {
   _a = Normalize(_a);
   _b = Normalize(_b);
 
-  if( _b - _a  > 1.0 )
-    _a+=2.0;
-  else if ( _a - _b > 1.0 )
-    _b+=2.0;
+  if(_b - _a > 1.)
+    _a += 2.;
+  else if(_a - _b > 1.)
+    _b += 2.;
 
-  return _b-_a;
+  return _b - _a;
 }
 
 
