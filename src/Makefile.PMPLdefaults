@@ -303,6 +303,7 @@ PMPL_OBJS := \
 	Geometry/Boundaries/AbstractBoundingSphere.o \
 	Geometry/Boundaries/CSpaceBoundingBox.o \
 	Geometry/Boundaries/CSpaceBoundingSphere.o \
+	Geometry/Boundaries/TetrahedralBoundary.o \
 	Geometry/Boundaries/WorkspaceBoundingBox.o \
 	Geometry/Boundaries/WorkspaceBoundingSphere.o \
 	Geometry/Shapes/NBox.o \
@@ -332,6 +333,7 @@ PMPL_OBJS := \
         Utilities/MPUtils.o \
 	Utilities/ReebGraphConstruction.o \
 	Utilities/TetGenDecomposition.o \
+	Workspace/GridOverlay.o \
 	Workspace/WorkspaceDecomposition.o \
 	Workspace/WorkspacePortal.o \
 	Workspace/WorkspaceRegion.o \

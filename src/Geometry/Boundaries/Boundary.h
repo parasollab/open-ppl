@@ -9,6 +9,7 @@
 #include "Vector.h"
 using namespace mathtool;
 
+#include "Range.h"
 #include "Utilities/IOUtils.h"
 
 #include <CGAL/Exact_predicates_exact_constructions_kernel.h>
@@ -16,7 +17,6 @@ using namespace mathtool;
 #include <CGAL/Polyhedron_incremental_builder_3.h>
 
 class Cfg;
-template <typename T> class Range;
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -113,7 +113,7 @@ class Boundary {
     /// @param _bbx The new base bounding box.
     /// @param _margin The additional margin for _bbx. Negative margins cause
     ///                shrinkage.
-    virtual void ResetBoundary(const vector<pair<double, double>>& _bbx,
+    virtual void ResetBoundary(const std::vector<pair<double, double>>& _bbx,
         const double _margin) = 0;
 
     ///@}
@@ -124,11 +124,11 @@ class Boundary {
     /// @param _is The input stream to read from.
     /// @param _cbs The counting stream buffer for keeping track of where we are
     ///             in the input stream.
-    virtual void Read(istream& _is, CountingStreamBuffer& _cbs) = 0;
+    virtual void Read(std::istream& _is, CountingStreamBuffer& _cbs) = 0;
 
     /// Write out a boundary.
     /// @param _os The output stream to write to.
-    virtual void Write(ostream& _os) const = 0 ;
+    virtual void Write(std::ostream& _os) const = 0 ;
 
     ///@}
     ///@name CGAL Representations

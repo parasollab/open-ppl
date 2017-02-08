@@ -1,5 +1,8 @@
 #include "WorkspaceDecomposition.h"
 
+#include "Geometry/Boundaries/TetrahedralBoundary.h"
+
+
 /*----------------------------- Accessors ------------------------------------*/
 
 const WorkspacePortal&
@@ -16,7 +19,7 @@ GetPortal(const size_t _i1, const size_t _i2) const {
 
 void
 WorkspaceDecomposition::
-AddPoint(const Point3d& _p) throw(PMPLException) {
+AddPoint(const Point3d& _p) {
   AssertMutable();
   m_points.push_back(_p);
 }
@@ -24,7 +27,7 @@ AddPoint(const Point3d& _p) throw(PMPLException) {
 
 void
 WorkspaceDecomposition::
-AddTetrahedralRegion(const int _pts[4]) throw(PMPLException) {
+AddTetrahedralRegion(const int _pts[4]) {
   AssertMutable();
   WorkspaceRegion wr(this);
 
@@ -44,14 +47,19 @@ AddTetrahedralRegion(const int _pts[4]) throw(PMPLException) {
     wr.AddFacet(move(f));
   }
 
+  // Create a tetrahedral boundary object for the region.
+  /// @TODO The boundary currently double-stores the points. We would like to
+  /// have a non-mutable boundary that holds only references to the points.
+  wr.AddBoundary(new TetrahedralBoundary(wr.GetPoints()));
+
   // Add region to the graph.
-  add_vertex(wr);
+  add_vertex(move(wr));
 }
 
 
 void
 WorkspaceDecomposition::
-AddPortal(const size_t _s, const size_t _t) throw(PMPLException) {
+AddPortal(const size_t _s, const size_t _t) {
   AssertMutable();
   add_edge(_s, _t, WorkspacePortal(this, _s, _t));
 }
@@ -68,7 +76,7 @@ Finalize() {
 
 void
 WorkspaceDecomposition::
-AssertMutable() const throw(PMPLException) {
+AssertMutable() const {
   if(m_finalized)
     throw PMPLException("WorkspaceDecomposition error", WHERE, "Can't modify "
         "the decomposition after it has been finalized.");

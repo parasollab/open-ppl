@@ -1,7 +1,19 @@
+#include <algorithm>
+
 #include "WorkspaceRegion.h"
 #include "WorkspaceDecomposition.h"
 
-#include <algorithm>
+#include "Geometry/Boundaries/Boundary.h"
+
+
+/*------------------------------ Construction --------------------------------*/
+
+WorkspaceRegion::
+WorkspaceRegion() : m_decomposition(nullptr) {}
+
+
+WorkspaceRegion::
+WorkspaceRegion(WorkspaceDecomposition* const _wd) : m_decomposition(_wd) {}
 
 /*--------------------------------- Modifiers --------------------------------*/
 
@@ -18,22 +30,57 @@ AddFacet(Facet&& _f) {
   m_facets.emplace_back(move(_f));
 }
 
+
+void
+WorkspaceRegion::
+AddBoundary(Boundary* const _b) {
+  m_boundary = shared_ptr<Boundary>(_b);
+}
+
 /*--------------------------------- Accessors --------------------------------*/
+
+const size_t
+WorkspaceRegion::
+GetNumPoints() const noexcept {
+  return m_points.size();
+}
+
+
+const size_t
+WorkspaceRegion::
+GetNumFacets() const noexcept {
+  return m_facets.size();
+}
+
 
 const Point3d&
 WorkspaceRegion::
-GetPoint(const size_t _i) const {
+GetPoint(const size_t _i) const noexcept {
   return m_decomposition->GetPoint(m_points[_i]);
 }
 
 
 const vector<Point3d>
 WorkspaceRegion::
-GetPoints() const {
+GetPoints() const noexcept {
   vector<Point3d> out;
   for(const auto& index : m_points)
     out.push_back(m_decomposition->GetPoint(index));
   return out;
+}
+
+
+const std::vector<WorkspaceRegion::Facet>&
+WorkspaceRegion::
+GetFacets() const noexcept {
+  return m_facets;
+}
+
+
+const Boundary*
+WorkspaceRegion::
+GetBoundary() const noexcept {
+  return m_boundary.get();
 }
 
 /*---------------------------------- Queries ---------------------------------*/

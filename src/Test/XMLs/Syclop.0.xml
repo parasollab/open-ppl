@@ -1,9 +1,9 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <MotionPlanning warnings="true" warningsAsErrors="true" print="false">
   <Problem>
-    <Environment filename="../Envs/2D/2d.env" saveDofs="false"/>
-    <Robot label="boxy" filename="../Envs/2D/boxy.robot"/>
-    <Query filename="../Envs/2D/2d.query"/>
+    <Environment filename="../Envs/3D/3d.env" saveDofs="false"/>
+    <Robot label="boxy" filename="../Envs/3D/boxy.robot"/>
+    <Query filename="../Envs/3D/3d.query"/>
   </Problem>
 
   <Library>
@@ -12,31 +12,35 @@
     </DistanceMetrics>
 
     <ValidityCheckers>
-      <CollisionDetection label="cd" method="RAPID"/>
+      <CollisionDetection label="rapid" method="RAPID"/>
+      <CollisionDetection label="pqp" method="PQP"/>
+      <CollisionDetection label="pqp_solid" method="PQP_SOLID"/>
+      <AlwaysTrueValidity label="alwaysTrue"/>
     </ValidityCheckers>
 
     <NeighborhoodFinders>
       <BruteForceNF label="BFNF" dmLabel="euclidean" unconnected="false" k="5"/>
       <BruteForceNF label="Nearest" dmLabel="euclidean" unconnected="false"
-          k="1"/>
+        k="1"/>
     </NeighborhoodFinders>
 
     <Samplers>
-      <UniformRandomSampler label="UniformRandomFree" vcLabel="cd"/>
+      <UniformRandomSampler label="UniformRandom" vcLabel="alwaysTrue"/>
+      <UniformRandomSampler label="UniformRandomFree" vcLabel="rapid"/>
     </Samplers>
 
     <LocalPlanners>
-      <StraightLine label="sl" binaryEvaluation="true" vcLabel="cd"/>
+      <StraightLine label="sl" binaryEvaluation="true" vcLabel="rapid"/>
     </LocalPlanners>
 
     <Extenders>
-      <BasicExtender label="BERO" debug="false" dmLabel="euclidean" vcLabel="cd"
-        maxDist="1" minDist=".001"/>
+      <BasicExtender label="BERO" debug="true" dmLabel="euclidean"
+        vcLabel="rapid" maxDist="10." minDist=".01"/>
     </Extenders>
 
     <Connectors>
       <NeighborhoodConnector label="Closest" nfLabel="BFNF" lpLabel="sl"
-        checkIfSameCC="false" debug="false"/>
+        checkIfSameCC="false" debug="true"/>
     </Connectors>
 
     <Metrics>
@@ -51,18 +55,16 @@
     </MapEvaluators>
 
     <MPStrategies>
-      <BasicRRTStrategy label="BasicRRT"
+      <Syclop label="Syclop"
         numRoots="1" m="1" growthFocus="0.01" dmLabel="euclidean"
-        nfLabel="Nearest" vcLabel="cd" connectorLabel="Closest"
-        gtype="UNDIRECTED_TREE" debug="true" growGoals="true"
-        extenderLabel="BERO">
-        <!--Evaluator label="NodesEval"/-->
+        nfLabel="Nearest" vcLabel="rapid" connectorLabel="Closest"
+        gtype="UNDIRECTED_TREE" debug="true" extenderLabel="BERO">
         <Evaluator label="RRTQuery"/>
-      </BasicRRTStrategy>
+      </Syclop>
     </MPStrategies>
 
-    <Solver mpStrategyLabel="BasicRRT" seed="0"
-        baseFilename="../Scratch/BasicRRT"/>
+    <Solver mpStrategyLabel="Syclop" seed="0" baseFilename="../Scratch/Syclop"/>
 
   </Library>
+
 </MotionPlanning>
