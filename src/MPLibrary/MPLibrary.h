@@ -6,6 +6,7 @@
 
 #include "Utilities/MetricUtils.h"
 #include "Utilities/MPUtils.h"
+#include "Utilities/XMLNode.h"
 
 #include "MPLibrary/Connectors/ConnectorMethod.h"
 #include "MPLibrary/DistanceMetrics/DistanceMetricMethod.h"
@@ -47,7 +48,12 @@ class MPLibraryType final
 
     /// Solver represents an input set to MPLibraryType. It includes an
     /// MPStrategy label, seed, base file name, and vizmo debug option.
-    typedef tuple<string, long, string, bool> Solver;
+    struct Solver {
+      std::string label;
+      long seed;
+      std::string baseFilename;
+      bool vizmoDebug;
+    };
 
     ///@}
     ///@name Method Set Types
@@ -263,7 +269,7 @@ class MPLibraryType final
     /// @param[in] _vizmoDebug   Enable/disable vizmo debug.
     void AddSolver(const string& _label, long _seed,
         const string& _baseFileName, bool _vizmoDebug = false) {
-      m_solvers.push_back(Solver(_label, _seed, _baseFileName, _vizmoDebug));
+      m_solvers.push_back(Solver{_label, _seed, _baseFileName, _vizmoDebug});
     }
 
     /// Run each input (solver) in sequence.
@@ -536,7 +542,7 @@ ParseChild(XMLNode& _node) {
     baseFilename = oss.str();
     bool vdOutput = _node.Read("vizmoDebug", false, false,
         "True yields VizmoDebug output for the solver.");
-    m_solvers.push_back(Solver(label, seed, baseFilename, vdOutput));
+    m_solvers.push_back(Solver{label, seed, baseFilename, vdOutput});
     return true;
   }
   else
@@ -573,29 +579,29 @@ Solve(MPProblem* _problem, MPTask* _task, MPSolution* _solution) {
   m_solution = _solution;
   SetMPProblem(_problem);
 
-  for(auto& sit : m_solvers) {
+  for(auto& solver : m_solvers) {
 
     // Call solver
     cout << "\n\nMPLibrary is solving with MPStrategyMethod labeled "
-         << get<0>(sit) << " using seed " << get<1>(sit) << "." << endl;
+         << solver.label << " using seed " << solver.seed << "." << endl;
 
 #ifdef _PARALLEL
-    SRand(get<1>(sit) + get_location_id());
+    SRand(solver.seed + get_location_id());
 #else
-    SRand(get<1>(sit));
+    SRand(solver.seed);
 #endif
 
-    SetBaseFilename(GetMPProblem()->GetPath(get<2>(sit)));
+    SetBaseFilename(GetMPProblem()->GetPath(solver.baseFilename));
     GetStatClass()->SetAuxDest(GetBaseFilename());
 
     // Initialize vizmo debug if there is a valid filename
-    if(get<3>(sit))
+    if(solver.vizmoDebug)
         VDInit(GetBaseFilename() + ".vd");
 
-    GetMPStrategy(get<0>(sit))->operator()();
+    GetMPStrategy(solver.label)->operator()();
 
     // Close vizmo debug if necessary
-    if(get<3>(sit))
+    if(solver.vizmoDebug)
       VDClose();
   }
 }

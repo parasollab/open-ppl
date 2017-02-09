@@ -254,7 +254,7 @@ ExtendRandomControl(const CfgType& _start, const CfgType& _end, CfgType& _new,
   // Get a random control.
   auto robot = _start.GetRobot();
   auto controls = robot->GetControlSet();
-  const size_t controlIndex = rand() % controls->size();
+  const size_t controlIndex = LRand() % controls->size();
 
   // Apply the control.
   return ApplyControl(_start, _end, _new, _lp, _steps, (*controls)[controlIndex]);

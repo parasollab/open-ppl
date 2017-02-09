@@ -8,6 +8,7 @@
 #include "MPProblem/Robot/Robot.h"
 #include "Utilities/IOUtils.h"
 #include "Utilities/PMPLExceptions.h"
+#include "Utilities/XMLNode.h"
 
 
 /*------------------------------ Construction --------------------------------*/

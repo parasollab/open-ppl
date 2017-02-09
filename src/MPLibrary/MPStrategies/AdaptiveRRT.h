@@ -49,7 +49,6 @@ class AdaptiveRRT : public BasicRRTStrategy<MPTraits> {
 
     virtual void Initialize();
 
-    virtual void ParseXML(XMLNode& _node);
     virtual void Print(ostream& _os) const;
 
   protected:
@@ -91,16 +90,9 @@ AdaptiveRRT(double _wallPenalty, double _gamma, const GrowthSets& _growthSets,
 
 template <typename MPTraits>
 AdaptiveRRT<MPTraits>::
-AdaptiveRRT(XMLNode& _node) :
-    BasicRRTStrategy<MPTraits>(_node, true){
+AdaptiveRRT(XMLNode& _node) : BasicRRTStrategy<MPTraits>(_node){
   this->SetName("AdaptiveRRT");
-  ParseXML(_node);
-}
 
-template <typename MPTraits>
-void
-AdaptiveRRT<MPTraits>::
-ParseXML(XMLNode& _node) {
   for(auto& child : _node) {
     if(child.Name() == "GrowthSet"){
       double threshold = child.Read("threshold", true, 0.0, 0.0,

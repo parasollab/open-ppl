@@ -5,6 +5,7 @@
 #include "Geometry/Boundaries/Range.h"
 #include "Utilities/IOUtils.h"
 #include "Utilities/PMPLExceptions.h"
+#include "Utilities/XMLNode.h"
 
 #include "Transformation.h"
 

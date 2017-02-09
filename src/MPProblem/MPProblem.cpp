@@ -6,6 +6,7 @@
 #include "MPProblem/Robot/Robot.h"
 #include "Utilities/MPUtils.h"
 #include "Utilities/PMPLExceptions.h"
+#include "Utilities/XMLNode.h"
 
 using namespace std;
 

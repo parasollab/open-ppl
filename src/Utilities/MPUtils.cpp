@@ -1,6 +1,7 @@
 #include "MPUtils.h"
 #include "MetricUtils.h"
 
+
 /*------------------------- Random Number Generation -------------------------*/
 
 double DRand() {return drand48();}
@@ -44,33 +45,10 @@ GaussianDistribution(double _mean, double _stdev) {
 }
 
 
-long
-SRand(long _seedVal) {
-  static long oldSeed = _seedVal;
-  if(oldSeed == _seedVal)
-    return SRand("NONE", 0, _seedVal);
-  oldSeed = _seedVal;
-  return SRand("NONE", 0, _seedVal, true);
-}
-
-
-long
-SRand(string _methodName, int _nextNodeIndex, long _base, bool _reset) {
-  static long baseSeed = _base;
-  if(_reset)
-    baseSeed = _base;
-  if(_methodName != "NONE") {
-    long methodID = 0;
-    for(size_t i = 0; i < _methodName.length(); ++i) {
-      int tmp = _methodName[i];
-      methodID += tmp * (i + 1) * (i + 2);
-    }
-    srand48(static_cast<long>(baseSeed * (_nextNodeIndex + 1) + methodID));
-  }
-  else {
-    srand48(baseSeed);
-  }
-  return baseSeed;
+void
+SRand(const unsigned long _seed) {
+  srand(_seed);
+  srand48(_seed);
 }
 
 /*------------------------------ Geometry Utils ------------------------------*/

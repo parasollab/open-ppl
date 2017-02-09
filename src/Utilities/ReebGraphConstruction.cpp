@@ -9,6 +9,7 @@
 #include "MPProblem/Environment/Environment.h"
 #include "MPProblem/MPProblem.h"
 #include "Workspace/WorkspaceDecomposition.h"
+#include "Utilities/XMLNode.h"
 
 #include "TetGenDecomposition.h"
 #include "Workspace/WorkspaceSkeleton.h"

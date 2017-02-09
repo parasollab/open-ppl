@@ -7,6 +7,7 @@
 #include "MPProblem/Environment/Environment.h"
 #include "MPProblem/MPProblem.h"
 #include "Workspace/WorkspaceDecomposition.h"
+#include "Utilities/XMLNode.h"
 
 #include <CGAL/IO/io.h>
 
@@ -17,7 +18,12 @@ TetGenDecomposition::
 TetGenDecomposition(const string& _baseFilename, const string& _switches,
     bool _writeFreeModel, bool _writeDecompModel) :
     m_baseFilename(_baseFilename), m_switches(_switches),
-    m_writeFreeModel(_writeFreeModel), m_writeDecompModel(_writeDecompModel) { }
+    m_writeFreeModel(_writeFreeModel), m_writeDecompModel(_writeDecompModel) {
+  if(!m_switches.find('p'))
+    m_switches += 'p';
+  if(!m_switches.find('n'))
+    m_switches += 'n';
+}
 
 
 TetGenDecomposition::

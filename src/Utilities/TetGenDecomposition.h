@@ -21,10 +21,12 @@ using namespace mathtool;
 class Environment;
 class StaticMultiBody;
 class WorkspaceDecomposition;
+class XMLNode;
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup Utilities
-/// @brief Tetrahedralization of workspace using TetGen library
+/// Tetrahedralization of workspace using TetGen library
 ////////////////////////////////////////////////////////////////////////////////
 class TetGenDecomposition {
 
@@ -41,10 +43,9 @@ class TetGenDecomposition {
     ///@name Construction
     ///@{
 
-    ////////////////////////////////////////////////////////////////////////////
+    /// @param _baseFilename Base filename used for saving models
     /// @param _switches Switches for TetGen. See TetGen manual. Need 'pn' at a
     ///                  minimum.
-    /// @param _baseFilename Base filename used for saving models
     /// @param _writeFreeModel Output TetGen model of workspace
     /// @param _writeDecompModel Output TetGen model of tetrahedralization
     TetGenDecomposition(const string& _baseFilename = "",
@@ -59,68 +60,55 @@ class TetGenDecomposition {
     ///@name Decomposition
     ///@{
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// @brief Use tetgen to decompose a given environment.
+    /// Use tetgen to decompose a given environment.
     /// @param _env PMPL Environment as workspace.
     shared_ptr<WorkspaceDecomposition> operator()(const Environment* _env);
 
   private:
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// @brief Make a workspace decomposition object from the completed tetgen
-    ///        model.
+    /// Make a workspace decomposition object from the completed tetgen model.
     shared_ptr<WorkspaceDecomposition> MakeDecomposition();
 
     ///@}
     ///@name Freespace Model Creation
     ///@{
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// @brief Reset the internal structures.
+    /// Reset the internal structures.
     void Initialize();
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// @brief Add all vertices and facets to free workspace model
+    /// Add all vertices and facets to free workspace model
     ///
     /// Add obstacles at holes in free workspace model and boundary as the
     /// actual polyhedron.
     void MakeFreeModel();
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// @brief Add the vertices to the free model.
+    /// Add the vertices to the free model.
     void AddVertices(const NefPolyhedron& _freespace);
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// @brief Add the facets to the free model.
+    /// Add the facets to the free model.
     void AddFacets(const NefPolyhedron& _freespace);
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// @brief Add holes to the free model for each obstacle touching the final'
+    /// Add holes to the free model for each obstacle touching the final'
     ///        boundary.
     void AddHoles(const NefPolyhedron& _freespace);
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// @brief Get the index of a point in the freespace nef poly.
+    /// Get the index of a point in the freespace nef poly.
     size_t PointIndex(const NefPolyhedron& _freespace, const CGALPoint& _p) const;
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// @brief Extract facet info from the freespace nef poly.
+    /// Extract facet info from the freespace nef poly.
     vector<vector<vector<size_t>>> ExtractFacets(const NefPolyhedron& _freespace);
 
     ///@}
     ///@name IO Helpers
     ///@{
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// @brief Output free workspace TetGen model
+    /// Output free workspace TetGen model
     void SaveFreeModel();
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// @brief Output tetrahedralization TetGen model
+    /// Output tetrahedralization TetGen model
     void SaveDecompModel();
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// @brief Input tetrahedralization TetGen model
+    /// Input tetrahedralization TetGen model
     void LoadDecompModel();
 
     ///@}

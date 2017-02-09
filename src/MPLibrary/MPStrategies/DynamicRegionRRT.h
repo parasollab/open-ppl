@@ -266,7 +266,7 @@ SelectDirection() {
 
   // Randomly select a sampling region.
   auto& regions = m_skeleton.GetRegions();
-  size_t index = rand() % (regions.size() + 1);
+  size_t index = LRand() % (regions.size() + 1);
   if(index == regions.size()) {
     m_samplingRegion = nullptr;
     samplingBoundary = env->GetBoundary();

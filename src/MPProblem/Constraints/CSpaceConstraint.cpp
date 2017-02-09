@@ -6,6 +6,7 @@
 #include "Geometry/Bodies/ActiveMultiBody.h"
 #include "Utilities/IOUtils.h"
 #include "Utilities/PMPLExceptions.h"
+#include "Utilities/XMLNode.h"
 
 
 /*------------------------------ Construction --------------------------------*/

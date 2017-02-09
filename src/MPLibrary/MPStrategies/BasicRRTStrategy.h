@@ -40,8 +40,7 @@ class BasicRRTStrategy : public MPStrategyMethod<MPTraits> {
     ///@name Local Types
     ///@{
 
-    typedef vector<VID>                         TreeType;
-    typedef typename vector<TreeType>::iterator TreeIter;
+    typedef std::vector<VID> TreeType;
 
     ///@}
     ///@name Construction
@@ -54,8 +53,7 @@ class BasicRRTStrategy : public MPStrategyMethod<MPTraits> {
         double _growthFocus = .05, size_t _numRoots = 1,
         size_t _numDirections = 1, size_t _maxTrial = 3);
 
-    BasicRRTStrategy(XMLNode& _node,
-        bool _child = false);
+    BasicRRTStrategy(XMLNode& _node);
 
     virtual ~BasicRRTStrategy() = default;
 
@@ -63,7 +61,6 @@ class BasicRRTStrategy : public MPStrategyMethod<MPTraits> {
     ///@name MPBaseObject overrides
     ///@{
 
-    virtual void ParseXML(XMLNode& _node, bool _child = false);
     virtual void Print(ostream& _os) const;
 
     ///@}
@@ -226,18 +223,9 @@ BasicRRTStrategy(string _dm, string _nf, string _vc, string _nc,
 
 template <typename MPTraits>
 BasicRRTStrategy<MPTraits>::
-BasicRRTStrategy(XMLNode& _node, bool _child) :
-    MPStrategyMethod<MPTraits>(_node) {
+BasicRRTStrategy(XMLNode& _node) : MPStrategyMethod<MPTraits>(_node) {
   this->SetName("BasicRRTStrategy");
-  ParseXML(_node, _child);
-}
 
-/*------------------------- MPBaseObject overrides ---------------------------*/
-
-template <typename MPTraits>
-void
-BasicRRTStrategy<MPTraits>::
-ParseXML(XMLNode& _node, bool _child) {
   // Parse RRT parameters
   m_gt = _node.Read("gtype", true, "", "Graph type dir/undirected tree/graph");
   m_numRoots = _node.Read("numRoots", false, 1, 0, MAX_INT, "Number of Roots");
@@ -255,8 +243,7 @@ ParseXML(XMLNode& _node, bool _child) {
   m_nfLabel = _node.Read("nfLabel", true, "", "Neighborhood Finder");
   m_dmLabel = _node.Read("dmLabel",true,"","Distance Metric");
   m_ncLabel = _node.Read("connectorLabel", false, "", "Node Connection Method");
-  if(!_child)
-    m_exLabel = _node.Read("extenderLabel", true, "", "Extender label");
+  m_exLabel = _node.Read("extenderLabel", true, "", "Extender label");
 
   // Parse child nodes.
   for(auto& child : _node)
@@ -265,6 +252,7 @@ ParseXML(XMLNode& _node, bool _child) {
           "Evaluation Method"));
 }
 
+/*------------------------- MPBaseObject Overrides ---------------------------*/
 
 template <typename MPTraits>
 void

@@ -270,7 +270,8 @@ SIM_OBJS := \
   $(PMPL_DIR)/sim_main.o \
   Simulator/Drawable.o \
   Simulator/DrawableBody.o \
-  Simulator/Simulation.o
+  Simulator/Simulation.o \
+  Behaviors/Agents/PathFollowingAgent.o
 
 ################################################################################
 # PMPL
@@ -328,14 +329,15 @@ PMPL_OBJS := \
 	MPProblem/Robot/DynamicsModel.o \
 	MPProblem/Robot/Robot.o \
 	Simulator/BulletEngine.o \
+	Utilities/CountingStreamBuffer.o \
         Utilities/IOUtils.o \
         Utilities/MetricUtils.o \
         Utilities/MPUtils.o \
 	Utilities/ReebGraphConstruction.o \
 	Utilities/TetGenDecomposition.o \
+	Utilities/XMLNode.o \
 	Workspace/GridOverlay.o \
 	Workspace/WorkspaceDecomposition.o \
 	Workspace/WorkspacePortal.o \
 	Workspace/WorkspaceRegion.o \
-	Workspace/WorkspaceSkeleton.o \
-  	Behaviors/Agents/PathFollowingAgent.o
+	Workspace/WorkspaceSkeleton.o

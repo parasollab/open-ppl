@@ -60,19 +60,7 @@ double GRand(bool _reset = false);
 double GaussianDistribution(double _mean, double _stdev);
 
 /// Use seedval as the seed.
-long SRand(long _seed = 0x1234ABCD);
-
-/// Set the random seed.
-///
-/// Use methodName, nextNodeIndex, and base to generate a deterministic seed,
-/// then call seed48().
-/// @param[in] _methodName A string to use in generating the seed. Just use base
-///                        value if this is "NONE".
-/// @param[in] _nextNodeIndex Another input for seed generation.
-/// @param[in] _base  Base seed value, saved after first use until reset.
-/// @param[in] _reset Use new value of _base.
-long SRand(string _methodName, int _nextNodeIndex, long _base = 0x1234ABCD,
-    bool _reset = false);
+void SRand(const unsigned long _seed);
 
 /*------------------------------ Geometry Utils ------------------------------*/
 

@@ -21,6 +21,7 @@ main(int _argc, char** _argv) {
 
     // Parse the Library node into an MPLibrary object.
     MPLibrary* pmpl = new MPLibrary(xmlFile);
+    pmpl->Print(cout);
 
     // Create storage for the solution and ask the library to solve our problem.
     /// @TODO Generalize this to handle more than just the first task.

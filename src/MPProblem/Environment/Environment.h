@@ -20,6 +20,7 @@ class MultiBody;
 class Robot;
 class StaticMultiBody;
 class WorkspaceDecomposition;
+class XMLNode;
 
 
 ////////////////////////////////////////////////////////////////////////////////

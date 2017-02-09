@@ -9,6 +9,7 @@
 #include "Geometry/Boundaries/WorkspaceBoundingSphere.h"
 #include "MPProblem/MPProblem.h"
 #include "MPProblem/Robot/Robot.h"
+#include "Utilities/XMLNode.h"
 
 
 /*------------------------------- Construction -------------------------------*/

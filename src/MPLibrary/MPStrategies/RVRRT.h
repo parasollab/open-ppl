@@ -47,7 +47,7 @@ class PerturbOneRandomJoint : public PerturbJoints{
     vector<Vector3D> *newNode= new vector<Vector3D>(_node->begin(),_node->end());
 
     for(int i=0; i<=_rvr.m_nAttempts; i++){
-      int jointId = 1 + rand() % (_node->size()-2);
+      int jointId = 1 + LRand() % (_node->size()-2);
       Vector3D perturbTowards;
       if(_perturbDir.compare("WorkspaceDir")==0){
 	perturbTowards=(*_perturbTowards)[jointId];

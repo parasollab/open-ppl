@@ -6,6 +6,7 @@
 
 #include "Utilities/IOUtils.h"
 #include "Utilities/PMPLExceptions.h"
+#include "Utilities/XMLNode.h"
 
 
 Constraint*

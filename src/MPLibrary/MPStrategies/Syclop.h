@@ -45,8 +45,7 @@ class Syclop : public BasicRRTStrategy<MPTraits> {
     ///@name Local Types
     ///@{
 
-    typedef std::vector<VID>                         TreeType;
-    typedef typename std::vector<TreeType>::iterator TreeIter;
+    using typename BasicRRTStrategy<MPTraits>::TreeType;
 
     ///@}
     ///@name Construction
@@ -384,7 +383,7 @@ Initialize() {
   // Decompose workspace.
   this->GetStatClass()->StartClock("Decomposition");
   auto env = this->GetEnvironment();
-  env->Decompose(TetGenDecomposition(this->GetBaseFilename()));
+  env->Decompose(TetGenDecomposition(this->GetBaseFilename(), "pnqQ"));
   this->GetStatClass()->StopClock("Decomposition");
 
 #ifdef VIZMO
@@ -737,7 +736,7 @@ SelectVertex(RegionPointer _r) {
     throw RunTimeException(WHERE, "Tried to select a vertex from a region with "
         "no vertices.");
 
-  const size_t randomIndex = rand() % vertices.size();
+  const size_t randomIndex = LRand() % vertices.size();
   const VID selected = vertices[randomIndex];
 
   if(this->m_debug)

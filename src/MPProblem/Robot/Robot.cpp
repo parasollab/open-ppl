@@ -6,10 +6,11 @@
 #include "Behaviors/Controllers/ControllerMethod.h"
 #include "Geometry/Bodies/ActiveMultiBody.h"
 #include "Geometry/Boundaries/Boundary.h"
+#include "Utilities/XMLNode.h"
 
 // Temporaries for hard-coded stuff
 #include "ControlGenerators.h"
-#include "Behaviors/Agents/PathFollowingAgent.h"
+//#include "Behaviors/Agents/PathFollowingAgent.h"
 #include "Behaviors/Controllers/SimpleController.h"
 
 
@@ -71,7 +72,7 @@ Robot(MPProblem* const _p, XMLNode& _node, const Boundary* const _b) :
   // Create agent.
   /// @TODO Read in agent type instead of hard-coding. Currently we assume a
   ///       path-following agent.
-  m_agent = new PathFollowingAgent(this);
+  //m_agent = new PathFollowingAgent(this);
 
   // Create default (unattached to any simulator) dynamics model if the robot is
   // nonholonomic.

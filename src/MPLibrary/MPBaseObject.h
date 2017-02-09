@@ -8,6 +8,7 @@ using namespace std;
 #include "MPProblem/MPProblem.h"
 #include "Utilities/IOUtils.h"
 #include "Utilities/MethodSet.h"
+#include "Utilities/XMLNode.h"
 
 class Environment;
 class MPTask;

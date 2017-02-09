@@ -13,24 +13,20 @@
 
     <ValidityCheckers>
       <CollisionDetection label="rapid" method="RAPID"/>
-      <CollisionDetection label="pqp_solid" method="PQP_SOLID"/>
-      <AlwaysTrueValidity label="alwaysTrue"/>
     </ValidityCheckers>
 
     <NeighborhoodFinders>
-      <BruteForceNF label="Nearest"
-        dmLabel="euclidean" unconnected="false" k="1"/>
+      <BruteForceNF label="Nearest" dmLabel="euclidean" unconnected="false"
+        k="1"/>
     </NeighborhoodFinders>
 
     <Samplers>
-      <UniformRandomSampler label="UniformRandom" vcLabel="alwaysTrue"/>
       <UniformRandomSampler label="UniformRandomFree" vcLabel="rapid"/>
     </Samplers>
 
     <Extenders>
-      <BasicExtender label="BERO"
-        dmLabel="euclidean" vcLabel="rapid" maxDist="10." minDist=".01"
-        debug="true"/>
+      <BasicExtender label="BERO" debug="true" dmLabel="euclidean"
+        vcLabel="rapid" maxDist="10." minDist=".01"/>
     </Extenders>
 
     <MapEvaluators>
@@ -39,15 +35,16 @@
     </MapEvaluators>
 
     <MPStrategies>
-      <Syclop label="Syclop"
-        numRoots="1" m="1" growthFocus="0.01" dmLabel="euclidean"
-        nfLabel="Nearest" vcLabel="rapid" gtype="UNDIRECTED_TREE" debug="true"
+      <DynamicRegionRRT label="DynamicRegionRRT"
+        growthFocus="0.01" dmLabel="euclidean" nfLabel="Nearest" vcLabel="rapid"
+        gtype="UNDIRECTED_TREE" debug="true" growGoals="false"
         extenderLabel="BERO">
         <Evaluator label="RRTQuery"/>
-      </Syclop>
+      </DynamicRegionRRT>
     </MPStrategies>
 
-    <Solver mpStrategyLabel="Syclop" seed="0" baseFilename="../Scratch/Syclop"/>
+    <Solver mpStrategyLabel="DynamicRegionRRT" seed="0"
+      baseFilename="../Scratch/DynamicRegionRRT"/>
 
   </Library>
 
