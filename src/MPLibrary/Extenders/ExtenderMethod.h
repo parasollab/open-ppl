@@ -12,93 +12,125 @@
 /// ExtenderMethod has one main method, @c Extend, to grow a simple path from a
 /// starting node in some input direction - note that not all expansion
 /// methods go in straight lines through @cspace.
+///
+/// @usage
+/// @code
+/// ExtenderPointer e = this->GetExtender(m_exLabel);
+/// CfgType start, goal, new;
+/// LPOutput<MPTraits> lp;
+/// bool pass = e->Extend(start, goal, new, lp);
+/// @endcode
 ////////////////////////////////////////////////////////////////////////////////
 template <class MPTraits>
 class ExtenderMethod : public MPBaseObject<MPTraits> {
 
   protected:
 
-    ///\name Extender Properties
+    ///@name Extender Properties
     ///@{
 
-    double m_minDist;
-    double m_maxDist;
+    double m_minDist;  ///< The minimum valid extension distance.
+    double m_maxDist;  ///< The maximum valid extension distance.
 
     ///@}
 
   public:
 
-    ///\name Motion Planning Types
+    ///@name Motion Planning Types
     ///@{
 
     typedef typename MPTraits::CfgType CfgType;
 
     ///@}
-    ///\name Construction
+    ///@name Construction
     ///@{
 
-    ExtenderMethod(double _min = .001, double _max = 1) :
-        m_minDist(_min), m_maxDist(_max) { }
+    ExtenderMethod(const double _min = .001, const double _max = 1);
 
-    ExtenderMethod(XMLNode& _node) :
-        MPBaseObject<MPTraits>(_node) {
-      ParseXML(_node);
-    }
+    ExtenderMethod(XMLNode& _node);
 
     virtual ~ExtenderMethod() = default;
 
     ///@}
-    ///\name MPBaseObject Overrides
+    ///@name MPBaseObject Overrides
     ///@{
 
-    virtual void Print(ostream& _os) const override {
-      MPBaseObject<MPTraits>::Print(_os);
-      _os << "\tMin distance: " << m_minDist << endl
-          << "\tMax distance: " << m_maxDist << endl;
-    }
-
-    void ParseXML(XMLNode& _node) {
-      m_maxDist = _node.Read("maxDist", false, 1., 0.,
-          std::numeric_limits<double>::max(), "Maximum extension distance");
-      m_minDist = _node.Read("minDist", false, .001, 0.,
-          std::numeric_limits<double>::max(), "Minimum extension distance.");
-    }
+    virtual void Print(ostream& _os) const override;
 
     ///@}
-    ///\name Required Interface
+    ///@name Required Interface
     ///@{
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// @return Maximum extension distance
-    virtual double GetMinDistance() const {return m_minDist;}
+    /// Get the minimum extension distance.
+    virtual double GetMinDistance() const;
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// @return Maximum extension distance
-    virtual double GetMaxDistance() const {return m_maxDist;}
+    /// Get the maximum extension distance.
+    virtual double GetMaxDistance() const;
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// @brief Extends a path from an input configuration towards a given
-    ///        direction
+    /// Extends a local plan from a starting configuration towards a target
+    /// configuration.
     /// @param _start Initial configuration to grow from.
-    /// @param _end   Direction configuration to grow to.
+    /// @param _end   Target configuration to grow towards.
     /// @param _new   Placeholder for resulting configuration.
     /// @param _lp    Placeholder for polygonal chain configurations for
     ///               non-straight-line extention operations and associated
     ///               weight.
-    /// @return Success/fail for extention operation
-    ///
-    /// @usage
-    /// @code
-    /// ExtenderPointer e = this->GetExtender(m_exLabel);
-    /// CfgType start, goal, new;
-    /// LPOutput<MPTraits> lp;
-    /// bool pass = e->Extend(start, goal, new, lp);
-    /// @endcode
-    ////////////////////////////////////////////////////////////////////////////
+    /// @return True if the extension produced a valid configuration that was
+    ///         at least the minimum distance away from the starting point.
     virtual bool Extend(const CfgType& _start, const CfgType& _end,
         CfgType& _new, LPOutput<MPTraits>& _lp) = 0;
 
     ///@}
 };
+
+/*------------------------------ Construction --------------------------------*/
+
+template <typename MPTraits>
+ExtenderMethod<MPTraits>::
+ExtenderMethod(const double _min, const double _max) :
+    m_minDist(_min), m_maxDist(_max) { }
+
+
+template <typename MPTraits>
+ExtenderMethod<MPTraits>::
+ExtenderMethod(XMLNode& _node) : MPBaseObject<MPTraits>(_node) {
+  m_maxDist = _node.Read("maxDist", false, 1., 0.,
+      std::numeric_limits<double>::max(), "The maximum allowed distance to "
+      "expand from the starting node to the target node.");
+  m_minDist = _node.Read("minDist", false, 0., 0.,
+      std::numeric_limits<double>::max(), "The minimum valid distance when "
+      "expanding from the starting node to the target node (shorter extensions "
+      "are considered invalid)");
+}
+
+/*------------------------- MPBaseObject Overrides ---------------------------*/
+
+template <typename MPTraits>
+void
+ExtenderMethod<MPTraits>::
+Print(ostream& _os) const {
+  MPBaseObject<MPTraits>::Print(_os);
+  _os << "\tMin distance: " << m_minDist << endl
+      << "\tMax distance: " << m_maxDist << endl;
+}
+
+/*------------------------- ExtenderMethod Interface -------------------------*/
+
+template <typename MPTraits>
+double
+ExtenderMethod<MPTraits>::
+GetMinDistance() const {
+  return m_minDist;
+}
+
+
+template <typename MPTraits>
+double
+ExtenderMethod<MPTraits>::
+GetMaxDistance() const {
+  return m_maxDist;
+}
+
+/*----------------------------------------------------------------------------*/
 
 #endif

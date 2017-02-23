@@ -1,18 +1,19 @@
+#include "Behaviors/Agents/PathFollowingAgent.h"
 #include "MPLibrary/PMPL.h"
-
 #include "Simulator/Simulation.h"
 #include "sandbox/gui/main_window.h"
 
-using namespace std;
 
 int
 main(int _argc, char** _argv) {
   try {
-    if(_argc < 3 || string(_argv[1]) != "-f")
+    if(_argc < 3 || std::string(_argv[1]) != "-f")
       throw ParseException(WHERE, "Incorrect usage. Usage: -f options.xml");
 
     // Make problem object.
     MPProblem* problem = new MPProblem(_argv[2]);
+    auto robot = problem->GetRobot(0);
+    robot->SetAgent(new PathFollowingAgent(robot));
 
     // Make simulation object.
     Simulation simulation(problem);
@@ -33,8 +34,7 @@ main(int _argc, char** _argv) {
     return 0;
   }
   catch(const std::runtime_error& e) {
-    cerr << endl << e.what() << endl;
+    std::cerr << std::endl << e.what() << std::endl;
     return 1;
   }
 }
-

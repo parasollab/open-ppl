@@ -52,30 +52,38 @@ class MPProblem final
     ///@name Environment Accessors
     ///@{
 
+    /// Get the environment object.
     Environment* GetEnvironment();
+
+    /// Set the environment object.
     void SetEnvironment(Environment* _e);
 
     ///@}
     ///@name Robot Accessors
     ///@{
 
-    /// @return Number of Active MultiBodies
+    /// Get the number of robots in our problem.
     size_t NumRobots() const noexcept;
 
+    /// Get a specific robot by index.
     Robot* GetRobot(size_t _index) const;
 
-    /// Fetch a robot by label.
+    /// Get a specific robot by label.
     Robot* GetRobot(const std::string& _label) const;
 
+    /// Get all robots in this problem.
     const std::vector<Robot*>& GetRobots() const noexcept;
 
     ///@}
     ///@name Task Accessors
     ///@{
+    /// @TODO Add support for dynamically adding and removing tasks.
 
+    /// Ye olde query. To be removed.
     const std::string& GetQueryFilename() const {return m_queryFilename;}
     void SetQueryFilename(const std::string& _s) {m_queryFilename = _s;}
 
+    /// Get all of the tasks in this problem.
     const std::vector<MPTask*>& GetTasks() const noexcept;
 
     ///@}

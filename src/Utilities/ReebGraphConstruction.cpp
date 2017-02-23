@@ -68,7 +68,7 @@ ReebGraphConstruction(XMLNode& _node) {
         "Write Reeb Graph to file");
 }
 
-/*----------------------------------------------------------------------------*/
+/*------------------------------- Operations ---------------------------------*/
 
 void
 ReebGraphConstruction::
@@ -85,112 +85,29 @@ Construct(Environment* _env, const string& _baseFilename) {
     Read(MPProblem::GetPath(m_reebFilename));
 }
 
+
 WorkspaceSkeleton
 ReebGraphConstruction::
 GetSkeleton() {
   WorkspaceSkeleton skeleton;
   typedef WorkspaceSkeleton::GraphType Graph;
   Graph g;
-  // Copy vertices from reeb graph to skeleton
+
+  // Copy vertices.
   for(auto vit = m_reebGraph.begin(); vit != m_reebGraph.end(); ++vit) {
     Vector3d& v = vit->property().m_vertex;
-    g.add_vertex(v);
+    g.add_vertex(vit->descriptor(), v);
   }
-  // Copy edges
-  for(auto eit = m_reebGraph.edges_begin(); eit != m_reebGraph.edges_end(); ++eit){
+
+  // Copy edges.
+  for(auto eit = m_reebGraph.edges_begin(); eit != m_reebGraph.edges_end(); ++eit)
     g.add_edge(eit->descriptor(), eit->property().m_path);
-  }
+
   skeleton.SetGraph(g);
   return skeleton;
 }
 
-pair<ReebGraphConstruction::FlowGraph, size_t>
-ReebGraphConstruction::
-GetFlowGraph(const Vector3d& _p, double _posRes) {
-  typedef FlowGraph::vertex_descriptor FVD;
-  FlowGraph f;
-
-  enum Color {White, Gray, Black};
-  unordered_map<FVD, Color> visited;
-
-  //add vertices of reeb graph and find closest
-  double closestDist = numeric_limits<double>::max();
-  FVD closestID = -1;
-  for(auto vit = m_reebGraph.begin(); vit != m_reebGraph.end(); ++vit) {
-    /// @TODO Make v a const-ref when stapl fixes sequential graph.
-    Vector3d& v = vit->property().m_vertex;
-    FVD vd = vit->descriptor();
-    f.add_vertex(vd, v);
-    visited[vd] = White;
-    double dist = (v - _p).norm();
-    if(dist < closestDist) {
-      closestDist = dist;
-      closestID = vd;
-    }
-  }
-
-  //Specialized BFS to make flow network
-  //
-  //Differs from regular BFS because:
-  //  - Treats ReebGraph as undirected graph even though it is directed
-  //  - Computes a graph instead of BFS tree, i.e., cross edges are added
-  queue<FVD> q;
-  q.push(closestID);
-  visited[closestID] = Gray;
-  while(!q.empty()) {
-    FVD u = q.front();
-    q.pop();
-    auto uit = m_reebGraph.find_vertex(u);
-
-    //process outgoing edges
-    for(auto eit = uit->begin(); eit != uit->end(); ++eit) {
-      FVD v = eit->target();
-      switch(visited[v]) {
-        case White:
-          visited[v] = Gray;
-          q.push(v);
-        case Gray:
-          f.add_edge(eit->descriptor(), eit->property().m_path);
-          break;
-        default:
-          break;
-      }
-    }
-
-    //process incoming edges
-    set<FVD> processed;
-    for(auto pit = uit->predecessors().begin();
-        pit != uit->predecessors().end(); ++pit) {
-      FVD v = *pit;
-      if(processed.count(v) == 0) {
-        auto vit = m_reebGraph.find_vertex(v);
-        for(auto eit = vit->begin(); eit != vit->end(); ++eit) {
-          if(eit->target() == u) {
-            switch(visited[v]) {
-              case White:
-                visited[v] = Gray;
-                q.push(v);
-              case Gray:
-                {
-                  const vector<Vector3d>& opath = eit->property().m_path;
-                  vector<Vector3d> path(opath.rbegin(), opath.rend());
-                  f.add_edge(ReebGraph::edge_descriptor(u, v, eit->descriptor().id()), path);
-                  break;
-                }
-              default:
-                break;
-            }
-          }
-        }
-      }
-      processed.emplace(v);
-    }
-    visited[u] = Black;
-  }
-
-  return make_pair(f, closestID);
-}
-
+/*----------------------------------- I/O ------------------------------------*/
 
 void
 ReebGraphConstruction::
@@ -210,6 +127,7 @@ Write(const string& _filename) {
   stapl::sequential::write_graph(m_reebGraph, ofs);
 }
 
+/*----------------------------------- I/O ------------------------------------*/
 
 void
 ReebGraphConstruction::
@@ -246,8 +164,7 @@ Tetrahedralize(Environment* _env, const string& _baseFilename) {
 void
 ReebGraphConstruction::
 Construct() {
-  //////////////////////////////////////////////////////////////////////////////
-  /// @brief Morse function over model (currently height)
+  /// Morse function over model (currently height)
   /// @param _v Vertex
   /// @todo Generalize to allow something other than height
   auto f = [](const Vector3d& _v) {

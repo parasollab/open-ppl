@@ -253,12 +253,13 @@ struct MPTraits {
     RewireConnector<MPTraits>
       > ConnectorMethodList;
 
-  typedef ConnectivityMetric<MPTraits, RoadmapSet<MPTraits>>
-      ConnectivityMetricRoadmapSet;
-  typedef CoverageDistanceMetric<MPTraits, RoadmapSet<MPTraits>>
-      CoverageDistanceMetricRoadmapSet;
-  typedef CoverageMetric<MPTraits, RoadmapSet<MPTraits>>
-      CoverageMetricRoadmapSet;
+  // RoadmapSet must be re-written before use.
+  //typedef ConnectivityMetric<MPTraits, RoadmapSet<MPTraits>>
+  //    ConnectivityMetricRoadmapSet;
+  //typedef CoverageDistanceMetric<MPTraits, RoadmapSet<MPTraits>>
+  //    CoverageDistanceMetricRoadmapSet;
+  //typedef CoverageMetric<MPTraits, RoadmapSet<MPTraits>>
+  //    CoverageMetricRoadmapSet;
 
   typedef ConnectivityMetric<MPTraits, VectorSet<MPTraits>>
       ConnectivityMetricVectorSet;
@@ -270,9 +271,9 @@ struct MPTraits {
   //types of metrics available in our world
   typedef boost::mpl::list<
     CCDistanceMetric<MPTraits>,
-    ConnectivityMetricRoadmapSet,
-    CoverageDistanceMetricRoadmapSet,
-    CoverageMetricRoadmapSet,
+    //ConnectivityMetricRoadmapSet,
+    //CoverageDistanceMetricRoadmapSet,
+    //CoverageMetricRoadmapSet,
     ConnectivityMetricVectorSet,
     CoverageDistanceMetricVectorSet,
     CoverageMetricVectorSet,

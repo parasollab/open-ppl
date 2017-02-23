@@ -16,13 +16,13 @@ class MedialAxisExtender : public ExtenderMethod<MPTraits> {
 
   public:
 
-    ///\name Motion Planning Types
+    ///@name Motion Planning Types
     ///@{
 
     typedef typename MPTraits::CfgType CfgType;
 
     ///@}
-    ///\name Construction
+    ///@name Construction
     ///@{
 
     MedialAxisExtender(const MedialAxisUtility<MPTraits>& _medialAxisUtility =
@@ -35,14 +35,13 @@ class MedialAxisExtender : public ExtenderMethod<MPTraits> {
     virtual ~MedialAxisExtender() = default;
 
     ///@}
-    ///\name MPBaseObject Overrides
+    ///@name MPBaseObject Overrides
     ///@{
 
-    void ParseXML(XMLNode& _node);
     virtual void Print(ostream& _os) const override;
 
     ///@}
-    ///\name ExtenderMethod Overrides
+    ///@name ExtenderMethod Overrides
     ///@{
 
     virtual bool Extend(const CfgType& _start, const CfgType& _end,
@@ -52,7 +51,7 @@ class MedialAxisExtender : public ExtenderMethod<MPTraits> {
 
   private:
 
-    ///\name Internal State
+    ///@name Internal State
     ///@{
 
     MedialAxisUtility<MPTraits> m_medialAxisUtility;
@@ -84,15 +83,7 @@ MedialAxisExtender<MPTraits>::
 MedialAxisExtender(XMLNode& _node) : ExtenderMethod<MPTraits>(_node),
     m_medialAxisUtility(_node) {
   this->SetName("MedialAxisExtender");
-  ParseXML(_node);
-}
 
-/*--------------------------- MPBaseObject Overrides -------------------------*/
-
-template <typename MPTraits>
-void
-MedialAxisExtender<MPTraits>::
-ParseXML(XMLNode& _node) {
   m_extendDist = _node.Read("extendDist", true, 0.5, 0.0, MAX_DBL, "Step size");
   m_maxIntermediates = _node.Read("maxIntermediates", false, 10, 1, MAX_INT,
       "Maximum number of intermediates on an edge");
@@ -100,6 +91,7 @@ ParseXML(XMLNode& _node) {
       "Local Planner between intermediates");
 }
 
+/*--------------------------- MPBaseObject Overrides -------------------------*/
 
 template <typename MPTraits>
 void

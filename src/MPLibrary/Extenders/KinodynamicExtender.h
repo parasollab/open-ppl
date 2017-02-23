@@ -38,7 +38,6 @@ class KinodynamicExtender : public ExtenderMethod<MPTraits> {
     ///@name MPBaseObject Overrides
     ///@{
 
-    void ParseXML(XMLNode& _node);
     virtual void Print(ostream& _os) const override;
 
     ///@}
@@ -126,15 +125,7 @@ template <typename MPTraits>
 KinodynamicExtender<MPTraits>::
 KinodynamicExtender(XMLNode& _node) : ExtenderMethod<MPTraits>(_node) {
   this->SetName("KinodynamicExtender");
-  ParseXML(_node);
-}
 
-/*---------------------------- MPBaseObject Overrides ------------------------*/
-
-template <typename MPTraits>
-void
-KinodynamicExtender<MPTraits>::
-ParseXML(XMLNode& _node) {
   m_dmLabel = _node.Read("dmLabel",true,"", "Distance metric label");
   m_vcLabel = _node.Read("vcLabel", true, "", "Validity checker label");
   m_numSteps = _node.Read("numSteps", true, size_t(10), size_t(1),
@@ -149,6 +140,7 @@ ParseXML(XMLNode& _node) {
       "for this object, it is computed automatically");
 }
 
+/*---------------------------- MPBaseObject Overrides ------------------------*/
 
 template <typename MPTraits>
 void

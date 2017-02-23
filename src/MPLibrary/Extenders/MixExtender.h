@@ -4,24 +4,24 @@
 #include "ExtenderMethod.h"
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Randomly choose an extender from a set of extenders.
 /// @ingroup Extenders
-/// @brief Randomly choose an extender from a set of extenders.
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
 class MixExtender : public ExtenderMethod<MPTraits> {
 
   public:
 
-    ///\name Motion Planning Types
+    ///@name Motion Planning Types
     ///@{
 
     typedef typename MPTraits::CfgType CfgType;
 
-    /// \brief Extender label, probability, normalize probability
+    /// Extender label, probability, normalize probability
     typedef vector<pair<string, pair<double, double>>> ExpanderSet;
 
     ///@}
-    ///\name Construction
+    ///@name Construction
     ///@{
 
     MixExtender();
@@ -31,14 +31,13 @@ class MixExtender : public ExtenderMethod<MPTraits> {
     virtual ~MixExtender() = default;
 
     ///@}
-    ///\name MPBaseObject Overrides
+    ///@name MPBaseObject Overrides
     ///@{
 
-    void ParseXML(XMLNode& _node);
     virtual void Print(ostream& _os) const override;
 
     ///@{
-    ///\name ExtenderMethod Overrides
+    ///@name ExtenderMethod Overrides
     ///@{
 
     virtual double GetMinDistance() const override;
@@ -51,15 +50,14 @@ class MixExtender : public ExtenderMethod<MPTraits> {
 
   private:
 
-    ///\name Helpers
+    ///@name Helpers
     ///@{
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// \brief Compute the minimum and maximum distances over the extender set.
+    /// Compute the minimum and maximum distances over the extender set.
     void ComputeLimits() const;
 
     ///@}
-    ///\name MixExtender State
+    ///@name MixExtender State
     ///@{
 
     ExpanderSet m_growSet;
@@ -81,15 +79,7 @@ template <typename MPTraits>
 MixExtender<MPTraits>::
 MixExtender(XMLNode& _node) : ExtenderMethod<MPTraits>(_node) {
   this->SetName("MixExtender");
-  ParseXML(_node);
-}
 
-/*---------------------------- MPBaseObject Overrides ------------------------*/
-
-template <typename MPTraits>
-void
-MixExtender<MPTraits>::
-ParseXML(XMLNode& _node) {
   // Get RRT Extender label and probability
   for(auto& child : _node) {
     if(child.Name() == "Extender"){
@@ -126,6 +116,7 @@ ParseXML(XMLNode& _node) {
   }
 }
 
+/*---------------------------- MPBaseObject Overrides ------------------------*/
 
 template <typename MPTraits>
 void

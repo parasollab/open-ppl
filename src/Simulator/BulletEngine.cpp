@@ -14,9 +14,11 @@
 #include "Conversions.h"
 
 #include "Geometry/Bodies/ActiveMultiBody.h"
+#include "Geometry/Bodies/Body.h"
 #include "Geometry/Bodies/FixedBody.h"
 #include "Geometry/Bodies/FreeBody.h"
 #include "Geometry/Bodies/StaticMultiBody.h"
+#include "Geometry/GMSPolyhedron.h"
 
 
 /*------------------------------ Construction --------------------------------*/
@@ -496,24 +498,13 @@ AddObject(std::vector<btCollisionShape*> _shapes,
 
 vector<btCollisionShape*>
 BulletEngine::
-BuildCollisionShape(MultiBody* _body) {
-  // Get the multibody's obj file and use it to create a bullet body.
-  std::vector<std::string> filenames;
+BuildCollisionShape(MultiBody* _multibody) {
   std::vector<btCollisionShape*> shapes;
 
-  // Determine whether it's a static or active MultiBody based on casting result:
-  StaticMultiBody* sbody = dynamic_cast<StaticMultiBody*>(_body);
-  if(sbody)
-    filenames.push_back(sbody->GetFixedBody(0)->GetFilePath());
-  else {
-    ActiveMultiBody* abody = dynamic_cast<ActiveMultiBody*>(_body);
-    for(size_t i = 0; i < abody->NumFreeBody(); i++)
-      filenames.push_back(abody->GetFreeBody(i)->GetFilePath());
-  }
-
   // Make simulator collision shape(s).
-  for(size_t i = 0; i < filenames.size(); i++){
-    btTriangleMesh* shapeMesh = BuildCollisionShape(filenames.at(i));
+  for(size_t i = 0; i < _multibody->GetNumBodies(); i++) {
+    const Body* body = _multibody->GetBody(i);
+    btTriangleMesh* shapeMesh = BuildCollisionShape(body);
 
     //Make the bullet impact shape:
     auto ptr = new btGImpactMeshShape(shapeMesh);
@@ -527,33 +518,24 @@ BuildCollisionShape(MultiBody* _body) {
 
 btTriangleMesh*
 BulletEngine::
-BuildCollisionShape(const std::string& _filename) {
-  /// @TODO Change this to work from a polyhedron instead of an obj file.
-  ///       Also consider switching to mesh->addTriangle(btVector3, btVector3,
-  ///       btVector3).
-  ConvexDecomposition::WavefrontObj obj;
-  obj.loadObj(_filename.c_str());
+BuildCollisionShape(const Body* _body) {
+  // Get the body's polyhedron, vertices, and facets.
+  const GMSPolyhedron& poly = _body->GetPolyhedron();
+  const auto& vertices = poly.GetVertexList();
+  const auto& facets = poly.GetPolygonList();
 
   // Build a btTriangleMesh from an obj file.
   btTriangleMesh* mesh = new btTriangleMesh();
-  mesh->preallocateVertices(obj.mVertexCount);
-  mesh->preallocateIndices(obj.mTriCount);
+  mesh->preallocateVertices(vertices.size());
+  mesh->preallocateIndices(facets.size());
 
-  // Add vertices.
-  for(int i = 0; i < obj.mVertexCount; ++i) {
-    int start = i * 3;
-    mesh->findOrAddVertex(btVector3(obj.mVertices[start],
-                                    obj.mVertices[start + 1],
-                                    obj.mVertices[start + 2]), false);
-  }
+  // Add vertices, don't remove duplicates.
+  for(const auto& v : vertices)
+    mesh->findOrAddVertex(btVector3(v[0], v[1], v[2]), false);
 
   // Add facets.
-  for(int i = 0; i < obj.mTriCount; ++i) {
-    int start = i * 3;
-    mesh->addTriangleIndices(obj.mIndices[start],
-                             obj.mIndices[start + 1],
-                             obj.mIndices[start + 2]);
-  }
+  for(const auto& f : facets)
+    mesh->addTriangleIndices(f[0], f[1], f[2]);
 
   return mesh;
 }

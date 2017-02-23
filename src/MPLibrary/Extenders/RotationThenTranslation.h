@@ -4,8 +4,7 @@
 #include "BasicExtender.h"
 
 ////////////////////////////////////////////////////////////////////////////////
-/// @ingroup Extenders
-/// @brief Extend all rotational DOF before extending all translational DOF.
+/// Extend all rotational DOF before extending all translational DOF.
 ///
 /// Rotation followed by Extension. In this way of extending the source
 /// configuration is first rotated to align with the target configuration until
@@ -15,19 +14,20 @@
 /// \f$s = 0\f$. Growing toward \f$q_{dir}\f$ can be seen as extending from
 /// \f$q_{near}\f$ to \f$q_{rand1}\f$ which is only a change in orientation
 /// followed by a translation from \f$q_{rand1}\f$ to \f$q_{rand}\f$.
+/// @ingroup Extenders
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
 class RotationThenTranslation : public BasicExtender<MPTraits> {
 
   public:
 
-    ///\name Motion Planning Types
+    ///@name Motion Planning Types
     ///@{
 
     typedef typename MPTraits::CfgType CfgType;
 
     ///@}
-    ///\name Construction
+    ///@name Construction
     ///@{
 
     RotationThenTranslation(const string& _dmLabel = "",
@@ -38,7 +38,7 @@ class RotationThenTranslation : public BasicExtender<MPTraits> {
     virtual ~RotationThenTranslation() = default;
 
     ///@}
-    ///\name ExtenderMethod Overrides
+    ///@name ExtenderMethod Overrides
     ///@{
 
     virtual bool Extend(const CfgType& _start, const CfgType& _end,

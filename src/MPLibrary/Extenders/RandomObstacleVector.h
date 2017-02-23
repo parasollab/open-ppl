@@ -7,25 +7,25 @@
 #include "Geometry/Bodies/StaticMultiBody.h"
 
 ////////////////////////////////////////////////////////////////////////////////
-/// @ingroup Extenders
-/// @brief Extend in a direction based upon a random obstacle vector.
+/// Extend in a direction based upon a random obstacle vector.
 ///
 /// In this extend method, \f$q_{dir} = q_{near} + O\f$ where \f$O\f$ is a
 /// random obstacle vector from all of the triangles in the environment. The
 /// oriantation DOFs are set randomly.
+/// @ingroup Extenders
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
 class RandomObstacleVector : public BasicExtender<MPTraits> {
 
   public:
 
-    ///\name Motion Planning Types
+    ///@name Motion Planning Types
     ///@{
 
     typedef typename MPTraits::CfgType CfgType;
 
     ///@}
-    ///\name Construction
+    ///@name Construction
     ///@{
 
     RandomObstacleVector(const string& _dmLabel = "", const string& _vcLabel = "",
@@ -36,7 +36,7 @@ class RandomObstacleVector : public BasicExtender<MPTraits> {
     virtual ~RandomObstacleVector() = default;
 
     ///@}
-    ///\name ExtenderMethod Overrides
+    ///@name ExtenderMethod Overrides
     ///@{
 
     virtual bool Extend(const CfgType& _start, const CfgType& _end,
@@ -62,6 +62,7 @@ RandomObstacleVector(XMLNode& _node) : BasicExtender<MPTraits>(_node) {
   this->SetName("RandomObstacleVector");
 }
 
+/*------------------------ ExtenderMethod Overrides --------------------------*/
 
 template <typename MPTraits>
 bool
@@ -104,5 +105,7 @@ Extend(const CfgType& _start, const CfgType& _end, CfgType& _new,
 
   return false;
 }
+
+/*----------------------------------------------------------------------------*/
 
 #endif

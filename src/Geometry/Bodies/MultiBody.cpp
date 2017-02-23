@@ -16,6 +16,20 @@ GetNumBodies() const noexcept {
 }
 
 
+Body*
+MultiBody::
+GetBody(const size_t _i) noexcept {
+  return m_bodies[_i].get();
+}
+
+
+const Body*
+MultiBody::
+GetBody(const size_t _i) const noexcept {
+  return m_bodies[_i].get();
+}
+
+
 MultiBody::MultiBodyType
 MultiBody::
 GetMultiBodyTypeFromTag(const string& _tag, const string& _where) {

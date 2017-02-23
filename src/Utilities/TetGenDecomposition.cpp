@@ -19,9 +19,9 @@ TetGenDecomposition(const string& _baseFilename, const string& _switches,
     bool _writeFreeModel, bool _writeDecompModel) :
     m_baseFilename(_baseFilename), m_switches(_switches),
     m_writeFreeModel(_writeFreeModel), m_writeDecompModel(_writeDecompModel) {
-  if(!m_switches.find('p'))
+  if(m_switches.find('p') == string::npos)
     m_switches += 'p';
-  if(!m_switches.find('n'))
+  if(m_switches.find('n') == string::npos)
     m_switches += 'n';
 }
 
@@ -38,9 +38,9 @@ TetGenDecomposition(XMLNode& _node) {
         "Output TetGen model of workspace");
     m_writeDecompModel = _node.Read("writeDecompModel", false, false,
         "Output TetGen model of tetrahedralization");
-    if(!m_switches.find('p'))
+    if(m_switches.find('p') == string::npos)
       m_switches += 'p';
-    if(!m_switches.find('n'))
+    if(m_switches.find('n') == string::npos)
       m_switches += 'n';
   }
   m_debug = _node.Read("debug", false, false, "Show debug messages");
@@ -133,6 +133,10 @@ MakeDecomposition() {
     }
   }
 
+  if(m_debug)
+    std::cout << "\tNumber of points: " << numPoints << std::endl
+              << "\tNumber of tetras: " << numTetras << std::endl;
+
   decomposition->Finalize();
   return decomposition;
 }
@@ -190,7 +194,8 @@ void
 TetGenDecomposition::
 AddVertices(const NefPolyhedron& _freespace) {
   if(m_debug)
-    cout << "Adding vertices..." << endl;
+    cout << "Adding " << _freespace.number_of_vertices() << " vertices..."
+         << endl;
 
   m_freeModel->numberofpoints = _freespace.number_of_vertices();
   m_freeModel->pointlist = new double[m_freeModel->numberofpoints * 3];
@@ -209,10 +214,10 @@ AddVertices(const NefPolyhedron& _freespace) {
 void
 TetGenDecomposition::
 AddFacets(const NefPolyhedron& _freespace) {
-  if(m_debug)
-    cout << "Adding facets..." << endl;
-
   auto facets = ExtractFacets(_freespace);
+
+  if(m_debug)
+    cout << "Adding " << facets.size() << " facets..." << endl;
 
   m_freeModel->numberoffacets = facets.size();
   m_freeModel->facetlist = new tetgenio::facet[m_freeModel->numberoffacets];

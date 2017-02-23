@@ -34,8 +34,7 @@ class GMSPolyhedron final {
     typedef CGAL::Polyhedron_3<CGALKernel>                    CGALPolyhedron;
 
     ////////////////////////////////////////////////////////////////////////////
-    /// @ingroup Environment
-    /// @brief Center of mass adjustment approaches
+    /// Center of mass adjustment approaches
     ///
     /// This enum lists the method to adjust all vertices of a model. 'COM' will
     /// subtract the center of mass (com) from all vertices. 'Surface' will

@@ -123,6 +123,7 @@ ParseChild(XMLNode& _node) {
     return true;
   }
   else if(_node.Name() == "Query") {
+    /// @TODO Remove this as part of deleting ye olde query.
     // Ignore this node if we already have a query file.
     if(m_queryFilename.empty())
       m_queryFilename = _node.Read("filename", true, "", "Query file name");

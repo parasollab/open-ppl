@@ -4,27 +4,26 @@
 #include "TraceObstacle.h"
 
 ////////////////////////////////////////////////////////////////////////////////
-/// @ingroup Extenders
-/// @brief Extend tangent to a workspace obstacle and then push to the medial
-///        axis.
+/// Extend tangent to a workspace obstacle and then push to the medial axis.
 ///
 /// This performs the same as @c TraceObstacle but after the target
 /// configuration has been pushed in the obstacle direction, it is then pushed
 /// toward the medial axis of @cfree. In this way \f$q_{near}\f$ is extended
 /// toward a \f$q_{dir}\f$ which is near the medial axis.
+/// @ingroup Extenders
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
 class TraceMAPush : public TraceObstacle<MPTraits> {
 
   public:
 
-    ///\name Motion Planning Types
+    ///@name Motion Planning Types
     ///@{
 
     typedef typename MPTraits::CfgType CfgType;
 
     ///@}
-    ///\name Construction
+    ///@name Construction
     ///@{
 
     TraceMAPush(const string& _dmLabel = "", const string& _vcLabel = "",
@@ -35,19 +34,20 @@ class TraceMAPush : public TraceObstacle<MPTraits> {
     virtual ~TraceMAPush() = default;
 
     ///@}
-    ///\name ExtenderMethod Overrides
+    ///@name ExtenderMethod Overrides
     ///@{
 
     virtual bool Extend(const CfgType& _start, const CfgType& _end,
-        CfgType& _new, LPOutput<MPTraits>& _lp);
+        CfgType& _new, LPOutput<MPTraits>& _lp) override;
 
     ///@}
 
   private:
 
-    ///\name Internal State
+    ///@name Internal State
     ///@{
 
+    /// A utility object for pushing configurations to the medial axis.
     MedialAxisUtility<MPTraits> m_medialAxisUtility;
 
     ///@}

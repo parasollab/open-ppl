@@ -17,6 +17,7 @@ class btMultiBodyConstraintSolver;
 class btMultiBody;
 
 // PMPL forward-declarations.
+class Body;
 class MultiBody;
 
 
@@ -118,10 +119,10 @@ class BulletEngine final {
     /// @return A bullet collision shape.
     std::vector<btCollisionShape*> BuildCollisionShape(MultiBody* _body);
 
-    /// Build a bullet collision shape from an obj file.
-    /// @param _filename The obj file to use.
+    /// Build a bullet collision shape from a pmpl Body.
+    /// @param _body The pmpl Body to use.
     /// @return A bullet triangle mesh collision shape.
-    btTriangleMesh* BuildCollisionShape(const std::string& _filename);
+    btTriangleMesh* BuildCollisionShape(const Body* _body);
 
     ///@}
 

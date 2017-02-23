@@ -22,7 +22,7 @@ class XMLNode;
 
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup Utilities
-/// @brief Compute an embedded reeb graph of free workspace.
+/// Compute an embedded reeb graph of free workspace.
 ///
 /// Computation requires a proper tetrahedralization for the computation to
 /// work. ReebGraph comprises of ReebNodes and ReebArcs. Nodes represent the
@@ -45,7 +45,7 @@ class ReebGraphConstruction {
                                                     ///< vertex array.
 
     ////////////////////////////////////////////////////////////////////////////
-    /// @brief Vertex property of ReebGraph
+    /// Vertex property of ReebGraph
     ////////////////////////////////////////////////////////////////////////////
     struct ReebNode {
 
@@ -67,8 +67,8 @@ class ReebGraphConstruction {
     };
 
     ////////////////////////////////////////////////////////////////////////////
-    /// @brief Comparator of ReebNodes. Ordering like tuple: (1) morse function
-    ///        value (2-4) vertex[x-z] (5) vertex index
+    /// Comparator of ReebNodes. Ordering like tuple: (1) morse function
+    /// value (2-4) vertex[x-z] (5) vertex index
     ////////////////////////////////////////////////////////////////////////////
     struct ReebNodeComp {
 
@@ -77,7 +77,7 @@ class ReebGraphConstruction {
       /// @return _a < _b
       bool operator()(const ReebNode& _a, const ReebNode& _b) {
 
-        /// @brief Vertex x, y, z ordering
+        /// Vertex x, y, z ordering
         /// @param _a Vertex 1
         /// @param _b Vertex 2
         /// @return _a < _b
@@ -104,8 +104,8 @@ class ReebGraphConstruction {
     struct MeshEdge;
 
     ////////////////////////////////////////////////////////////////////////////
-    /// @brief Edge property of ReebGraph. Arc stores set of MeshEdges and
-    ///        tetrahedron correspondingly.
+    /// Edge property of ReebGraph. Arc stores set of MeshEdges and
+    /// tetrahedron correspondingly.
     ////////////////////////////////////////////////////////////////////////////
     struct ReebArc {
 
@@ -135,8 +135,8 @@ class ReebGraphConstruction {
     typedef ReebGraph::edge_descriptor RGEID; ///< ReebGraph edge descriptor
 
     ////////////////////////////////////////////////////////////////////////////
-    /// @brief Comparator of reeb arcs. Provides total ordering based on (1)
-    ///        Source vertex ordering (2) target vertex ordering (3) Edge id
+    /// Comparator of reeb arcs. Provides total ordering based on (1) source
+    /// vertex ordering (2) target vertex ordering (3) Edge id
     ////////////////////////////////////////////////////////////////////////////
     struct ReebArcComp {
 
@@ -170,7 +170,7 @@ class ReebGraphConstruction {
     typedef set<RGEID, ReebArcComp> ArcSet; ///< Set of ReebArcs
 
     ////////////////////////////////////////////////////////////////////////////
-    /// @brief Tetrahedralization edge. Stores associates ReebEdges
+    /// Tetrahedralization edge. Stores associates ReebEdges
     ////////////////////////////////////////////////////////////////////////////
     struct MeshEdge {
 
@@ -188,7 +188,7 @@ class ReebGraphConstruction {
     };
 
     ////////////////////////////////////////////////////////////////////////////
-    /// @brief Hash function for MeshEdge. Hash based on source/target pair.
+    /// Hash function for MeshEdge. Hash based on source/target pair.
     ////////////////////////////////////////////////////////////////////////////
     struct MeshEdgeHash {
 
@@ -202,7 +202,7 @@ class ReebGraphConstruction {
     };
 
     ////////////////////////////////////////////////////////////////////////////
-    /// @brief Mesh edge equivalence. Based on source/target pair.
+    /// Mesh edge equivalence. Based on source/target pair.
     ////////////////////////////////////////////////////////////////////////////
     struct MeshEdgeEq {
 
@@ -232,13 +232,15 @@ class ReebGraphConstruction {
     ///@name Operations
     ///@{
 
-    /// @brief basically copy all the vertices and edges from reeb graph to
-    /// skeleton
-    WorkspaceSkeleton GetSkeleton();
-
-    /// @param _env PMPL Environment as workspace
+    /// Construct a Reeb graph of an environment.
+    /// @param _env The PMPL environment.
     /// @param _baseFilename Base filename used for saving models
     void Construct(Environment* _env, const string& _baseFilename = "");
+
+    /// Extract a workspace skeleton from the Reeb graph.
+    /// @TODO Make this a const function if STAPL ever fixes the sequential
+    ///       graph.
+    WorkspaceSkeleton GetSkeleton();
 
     ///@}
     ///@name Accessors
@@ -247,25 +249,15 @@ class ReebGraphConstruction {
 
     ReebGraph& GetReebGraph() {return m_reebGraph;}
 
-    /// @brief Compute Flow graph (directed) of ReebGraph from source point
-    /// @param _p Start point
-    /// @param _posRes Position resolution of edge paths
-    /// @return Flow graph and source vertex of Flow Graph related to \c _p
-    ///
-    /// Computed with modified BFS on Reeb Graph. First, finds closest Reeb Node
-    /// to \c p. Second, uses BFS to get directed flow. Note BFS considers cross
-    /// edges in the flow, it is not just a BFS tree.
-    pair<FlowGraph, size_t> GetFlowGraph(const Vector3d& _p, double _posRes);
-
     ///@}
     ///@name I/O
     ///@{
 
-    /// @brief Read embedding graph from file
+    /// Read embedding graph from file
     /// @param _filename Filename
     void Read(const string& _filename);
 
-    /// @brief Write embedding graph to file
+    /// Write embedding graph to file
     /// @param _filename Filename
     void Write(const string& _filename);
 
@@ -276,14 +268,13 @@ class ReebGraphConstruction {
     ///@name Construction Helpers
     ///@{
 
-    /// @brief Tetrahedralize environment and populate ReebGraph structures for
-    ///        construction
+    /// Tetrahedralize environment and populate ReebGraph structures for
+    /// construction
     /// @param _env Environment
     /// @param _baseFilename Base filename for output
     void Tetrahedralize(Environment* _env, const string& _baseFilename);
 
-    /// @brief Construct Reeb Graph based on algorithm presented in class
-    ///        description
+    /// Construct Reeb Graph based on algorithm presented in class description
     ///
     /// Construction Algorithm
     /// - Input: Tetrahedralization t
@@ -296,13 +287,13 @@ class ReebGraphConstruction {
     /// - 6. Return Reeb Graph
     void Construct();
 
-    /// @brief Add ReebNode for vertex \c _v
+    /// Add ReebNode for vertex \c _v
     /// @param _i Index of vertex
     /// @param _v Vertex point
     /// @param _w Morse function value of vertex
     void CreateNode(size_t _i, const Vector3d& _v, double _w);
 
-    /// @brief Add ReebArc to graph for mesh edge
+    /// Add ReebArc to graph for mesh edge
     /// @param _s Source vertex index
     /// @param _t Target vertex index
     /// @param _tetra Subset of tetrahedrons adjecent to edge
@@ -315,7 +306,7 @@ class ReebGraphConstruction {
     MeshEdge* CreateArc(size_t _s, size_t _t,
         const unordered_set<size_t>& _tetra = unordered_set<size_t>());
 
-    /// @brief Merge triangle of tetrahedralization
+    /// Merge triangle of tetrahedralization
     /// @param _e0 Edge 1
     /// @param _e1 Edge 2
     /// @param _e2 Edge 3
@@ -329,7 +320,7 @@ class ReebGraphConstruction {
     /// - 3. GlueByMergeSorting(a0, a1, e0, e2)
     void MergePaths(MeshEdge* _e0, MeshEdge* _e1, MeshEdge* _e2);
 
-    /// @brief Merge two ReebArcs. Similar process to merging two arrays in
+    /// Merge two ReebArcs. Similar process to merging two arrays in
     ///        MergeSort
     /// @param _a0 ArcSet 1
     /// @param _e0 Edge 1
@@ -349,7 +340,7 @@ class ReebGraphConstruction {
     void GlueByMergeSorting(ArcSet& _a0, MeshEdge* _e0,
         ArcSet& _a1, MeshEdge* _e1);
 
-    /// @brief Merge second reeb arc into first
+    /// Merge second reeb arc into first
     /// @param _a0 ReebArc 1
     /// @param _a1 ReebArc 2
     ///
@@ -364,14 +355,14 @@ class ReebGraphConstruction {
     /// @return ReebArc
     ReebArc& GetReebArc(RGEID _a);
 
-    /// @brief Remove edge from all associated ReebArcs
+    /// Remove edge from all associated ReebArcs
     /// @param _e Edge of tetrahedralization
     void DeleteMeshEdge(MeshEdge* _e);
 
-    /// @brief Remove 2-nodes from ReebGraph to reduce size of graph
+    /// Remove 2-nodes from ReebGraph to reduce size of graph
     void Remove2Nodes();
 
-    /// @brief Spatially embed reeb graph based on algorithm presented in class
+    /// Spatially embed reeb graph based on algorithm presented in class
     ///        description
     ///
     /// Embedding algorithm relates each Reeb Node to its closest tetrahedron

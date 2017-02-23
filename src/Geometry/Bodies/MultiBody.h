@@ -36,10 +36,18 @@ class MultiBody {
     virtual ~MultiBody() = default;
 
     ///@}
-    ///@name MultiBody Info
+    ///@name Body Accessors
     ///@{
 
     size_t GetNumBodies() const noexcept;
+
+    /// Get an internal body.
+    Body* GetBody(const size_t _i) noexcept;
+    const Body* GetBody(const size_t _i) const noexcept;
+
+    ///@}
+    ///@name MultiBody Info
+    ///@{
 
     /// Parse a string into a MultiBodyType.
     /// @param[in] _tag The string to parse.

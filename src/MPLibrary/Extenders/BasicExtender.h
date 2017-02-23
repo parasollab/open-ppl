@@ -16,13 +16,13 @@ class BasicExtender : public ExtenderMethod<MPTraits> {
 
   public:
 
-    ///\name Motion Planning Types
+    ///@name Motion Planning Types
     ///@{
 
     typedef typename MPTraits::CfgType CfgType;
 
     ///@}
-    ///\name Construction
+    ///@name Construction
     ///@{
 
     BasicExtender(const string& _dmLabel = "", const string& _vcLabel = "",
@@ -33,31 +33,31 @@ class BasicExtender : public ExtenderMethod<MPTraits> {
     virtual ~BasicExtender() = default;
 
     ///@}
-    ///\name MPBaseObject Overrides
+    ///@name MPBaseObject Overrides
     ///@{
 
-    void ParseXML(XMLNode& _node);
     virtual void Print(ostream& _os) const override;
 
     ///@}
-    ///\name ExtenderMethod Overrides
+    ///@name ExtenderMethod Overrides
     ///@{
 
     virtual bool Extend(const CfgType& _start, const CfgType& _end,
         CfgType& _new, LPOutput<MPTraits>& _lp) override;
 
     ///@}
-    ///\name Helpers
+    ///@name Helpers
     ///@{
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// \brief Basic utility for "extend" a RRT tree. Assumed to be given a start
-    ///        node and a goal node to grow towards. Resulting node extended
-    ///        towards the goal is passed by reference and modified.
-    /// \param[in]  _start  Cfg to grow from.
-    /// \param[in]  _end    Cfg to grow toward.
-    /// \param[out] _newCfg Return for newly created cfg.
-    /// \param[in]  _delta  Maximum distance to grow
+    /// Basic utility for "extend" a RRT tree. Assumed to be given a start node
+    /// and a goal node to grow towards. Resulting node extended towards the
+    /// goal is passed by reference and modified.
+    /// @param _start  Cfg to grow from.
+    /// @param _end    Cfg to grow toward.
+    /// @param _newCfg Return for newly created cfg.
+    /// @param _delta  Maximum distance to grow
+    /// @return True if the extension produced a valid configuration that is at
+    ///         least the minimum distance away from the starting point.
     bool Expand(const CfgType& _start, const CfgType& _end, CfgType& _newCfg,
         double _delta, LPOutput<MPTraits>& _lp,
         double _posRes, double _oriRes);
@@ -69,7 +69,7 @@ class BasicExtender : public ExtenderMethod<MPTraits> {
 
   protected:
 
-    ///\name Internal State
+    ///@name Internal State
     ///@{
 
     string m_dmLabel;         ///< The distance metric to use.
@@ -95,21 +95,14 @@ template <typename MPTraits>
 BasicExtender<MPTraits>::
 BasicExtender(XMLNode& _node) : ExtenderMethod<MPTraits>(_node) {
   this->SetName("BasicExtender");
-  ParseXML(_node);
-}
 
-/*-------------------------- MPBaseObject Overrides --------------------------*/
-
-template <typename MPTraits>
-void
-BasicExtender<MPTraits>::
-ParseXML(XMLNode& _node) {
   m_dmLabel = _node.Read("dmLabel", true, "", "Distance metric label");
   m_vcLabel = _node.Read("vcLabel", true, "", "Validity checker label");
   m_randomOrientation = _node.Read("randomOrientation", false, true,
       "Random orientation");
 }
 
+/*-------------------------- MPBaseObject Overrides --------------------------*/
 
 template <typename MPTraits>
 void

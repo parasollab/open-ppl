@@ -22,13 +22,13 @@ class TraceObstacle : public BasicExtender<MPTraits> {
 
   public:
 
-    ///\name Motion Planning Types
+    ///@name Motion Planning Types
     ///@{
 
     typedef typename MPTraits::CfgType CfgType;
 
     ///@}
-    ///\name Construction
+    ///@name Construction
     ///@{
 
     TraceObstacle(const string& _dmLabel = "", const string& _vcLabel = "",
@@ -39,7 +39,7 @@ class TraceObstacle : public BasicExtender<MPTraits> {
     virtual ~TraceObstacle() = default;
 
     ///@}
-    ///\name ExtenderMethod Overrides
+    ///@name ExtenderMethod Overrides
     ///@{
 
     virtual bool Extend(const CfgType& _start, const CfgType& _end,
