@@ -181,10 +181,10 @@ $(KMEANS_LIBFILE):
 # TetGen
 ################################################################################
 TETGEN_DIR  := $(UTILS_DIR)/tetgen1.5.0
-TETGEN_LIB  := -L$(TETGEN_DIR) -ltet
+TETGEN_LIB  := $(TETGEN_DIR)/libtet.a
 TETGEN_INCL := -I$(TETGEN_DIR)
 
-TETGEN_LIBFILE := $(TETGEN_DIR)/libtet.a
+TETGEN_LIBFILE := $(TETGEN_LIB)
 $(TETGEN_LIBFILE):
 	@echo Building tetgen library...
 	@cd $(TETGEN_DIR) && $(MAKE) platform=$(platform) debug=$(debug)
