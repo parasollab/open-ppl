@@ -72,7 +72,7 @@ ComputeForce(const Control::Signal& _s) const {
   double total = 0;
   for(size_t i = 0; i < dof; ++i) {
     auto limit = _s[i] > 0 ? m_limits[i].max : m_limits[i].min ;
-    force[i] = _s[i] * limit;
+    force[i] = std::abs(_s[i]) * limit;
     total += force[i] * force[i];
   }
   total = std::sqrt(total);
@@ -111,6 +111,7 @@ Execute(const Control::Signal& _s, btMultiBody* const _model) const {
   // Set base force.
   for(size_t i = 0; i < numPos; ++i, ++iter)
     scratch[i] = *iter;
+  _model->worldDirToLocal(-1, scratch);
   _model->addBaseForce(scratch);
 
   // Set base torque.
@@ -126,6 +127,7 @@ Execute(const Control::Signal& _s, btMultiBody* const _model) const {
     for(size_t i = 0; i < numOri; ++i, ++iter)
       scratch[i] = *iter;
   }
+  _model->worldDirToLocal(-1, scratch);
   _model->addBaseTorque(scratch);
 
   for(size_t i = 0; i < numJoints; ++i, ++iter)
