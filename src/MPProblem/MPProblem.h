@@ -113,6 +113,9 @@ class MPProblem final
     /// @param[in] _node The child node to be parsed.
     bool ParseChild(XMLNode& _node);
 
+    /// Create a pseudo-point robot.
+    void MakePointRobot();
+
     ///@}
     ///@name Core Properties
     ///@{

@@ -622,4 +622,20 @@ ComputeCentroid() const {
   m_centroidCached = true;
 }
 
+
+void
+GMSPolyhedron::
+UpdateCGALPoints() {
+  // If the sizes are the same, it's probably safe to assume the CGAL points are
+  // already correct (usually this function is called for polys where the
+  // vertexList has been set explicitly and the CGAL points haven't been set at
+  // all).
+  if(m_vertexList.size() == m_cgalPoints.size())
+    return;
+
+  m_cgalPoints.clear();
+  for(const auto& v : m_vertexList)
+    m_cgalPoints.emplace_back(v[0], v[1], v[2]);
+}
+
 /*----------------------------------------------------------------------------*/

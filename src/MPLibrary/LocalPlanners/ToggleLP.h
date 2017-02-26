@@ -196,7 +196,7 @@ ToggleLP<MPTraits>::ChooseAlteredCfg(
     temp = incr + mid;
   } while(!env->InBounds(temp) && attempts++ < 10);
   if(attempts == 10){
-    stats->IncLPStat("Toggle::MaxAttemptsForRay", 1);
+    stats->IncStat("Toggle::MaxAttemptsForRay", 1);
     /// @TODO Should this cfg have robot also?
     return CfgType(robot);
   }
@@ -233,10 +233,10 @@ ToggleLP<MPTraits>::IsConnectedToggle(
   m_degeneracyReached = false;
   m_colHist.clear();
 
-  stats->IncLPStat("Toggle::TotalLP");
+  stats->IncStat("Toggle::TotalLP");
 
   if(this->m_debug) {
-    cout << "Total LP::" << stats->GetLPStat("Toggle::TotalLP") << endl
+    cout << "Total LP::" << stats->GetStat("Toggle::TotalLP") << endl
          << "ToggleLP LP::" << "\n\t" << _c1 << "\n\t" << _c2 << endl;
   }
 
@@ -254,7 +254,7 @@ ToggleLP<MPTraits>::IsConnectedToggle(
   if(this->m_debug)
     cout << "col::" << _col << endl;
 
-  stats->IncLPStat("Toggle::TotalCalls");
+  stats->IncStat("Toggle::TotalCalls");
 
   CfgType temp = ChooseAlteredCfg<CfgType>(_c1, _c2);
   CfgType n = temp;
@@ -339,53 +339,53 @@ ToggleLP<MPTraits>::CalcStats(bool _val, bool _toggle) {
 
   if(_val) {
     if(_toggle)
-      stats->IncLPStat("Toggle::FreeSuccess");
+      stats->IncStat("Toggle::FreeSuccess");
     else
-      stats->IncLPStat("Toggle::CollisionSuccess");
+      stats->IncStat("Toggle::CollisionSuccess");
     stats->AddToHistory("Toggle::IterationSuccess", m_iterations);
   }
   else {
     if(_toggle)
-      stats->IncLPStat("Toggle::FreeFailure");
+      stats->IncStat("Toggle::FreeFailure");
     else
-      stats->IncLPStat("Toggle::CollisionFailure");
+      stats->IncStat("Toggle::CollisionFailure");
     stats->AddToHistory("Toggle::IterationFailure", m_iterations);
     if(m_degeneracyReached) {
-      stats->IncLPStat("Toggle::DegenerateFailure");
-      stats->IncLPStat("Toggle::DegenerateFailureIter", m_iterations);
+      stats->IncStat("Toggle::DegenerateFailure");
+      stats->IncStat("Toggle::DegenerateFailureIter", m_iterations);
     }
     else {
-      stats->IncLPStat("Toggle::BlockingFailure");
-      stats->IncLPStat("Toggle::BlockingFailureIter", m_iterations);
+      stats->IncStat("Toggle::BlockingFailure");
+      stats->IncStat("Toggle::BlockingFailureIter", m_iterations);
     }
   }
   stats->AddToHistory("Toggle::Iteration", m_iterations);
-  stats->IncLPStat("Toggle::TotalIterations", m_iterations);
-  if(m_iterations > stats->GetLPStat("Toggle::MaxIterations"))
-    stats->SetLPStat("Toggle::MaxIterations", m_iterations);
+  stats->IncStat("Toggle::TotalIterations", m_iterations);
+  if(m_iterations > stats->GetStat("Toggle::MaxIterations"))
+    stats->SetStat("Toggle::MaxIterations", m_iterations);
 
 
-  double freeSuccess = stats->GetLPStat("Toggle::FreeSuccess");
-  double collisionSuccess = stats->GetLPStat("Toggle::CollisionSuccess");
-  double freeFailure = stats->GetLPStat("Toggle::FreeFailure");
-  double collisionFailure = stats->GetLPStat("Toggle::CollisionFailure");
-  double degenerateFailure = stats->GetLPStat("Toggle::DegenerateFailure");
-  double blockingFailure = stats->GetLPStat("Toggle::BlockingFailure");
-  stats->SetLPStat("Toggle::FreeSuccess%", freeSuccess / (freeSuccess + freeFailure));
-  stats->SetLPStat("Toggle::CollisionSuccess%",
+  double freeSuccess = stats->GetStat("Toggle::FreeSuccess");
+  double collisionSuccess = stats->GetStat("Toggle::CollisionSuccess");
+  double freeFailure = stats->GetStat("Toggle::FreeFailure");
+  double collisionFailure = stats->GetStat("Toggle::CollisionFailure");
+  double degenerateFailure = stats->GetStat("Toggle::DegenerateFailure");
+  double blockingFailure = stats->GetStat("Toggle::BlockingFailure");
+  stats->SetStat("Toggle::FreeSuccess%", freeSuccess / (freeSuccess + freeFailure));
+  stats->SetStat("Toggle::CollisionSuccess%",
       collisionSuccess / (collisionSuccess + collisionFailure));
-  stats->SetLPStat("Toggle::TotalSuccess%", (freeSuccess + collisionSuccess) /
+  stats->SetStat("Toggle::TotalSuccess%", (freeSuccess + collisionSuccess) /
       (collisionSuccess + collisionFailure + freeSuccess + freeFailure));
-  stats->SetLPStat("Toggle::IterAvg",
-      stats->GetLPStat("Toggle::TotalIterations") / stats->GetLPStat("Toggle::TotalCalls"));
-  stats->SetLPStat("Toggle::DegeneracyFailure%",
+  stats->SetStat("Toggle::IterAvg",
+      stats->GetStat("Toggle::TotalIterations") / stats->GetStat("Toggle::TotalCalls"));
+  stats->SetStat("Toggle::DegeneracyFailure%",
       degenerateFailure / (collisionFailure + freeFailure));
-  stats->SetLPStat("Toggle::BlockingFailure%",
+  stats->SetStat("Toggle::BlockingFailure%",
       blockingFailure / (collisionFailure + freeFailure));
-  stats->SetLPStat("Toggle::DegenerateIterAvg",
-      stats->GetLPStat("Toggle::DegenerateFailureIter") / degenerateFailure);
-  stats->SetLPStat("Toggle::BlockingIterAvg",
-      stats->GetLPStat("Toggle::BlockingFailureIter") / blockingFailure);
+  stats->SetStat("Toggle::DegenerateIterAvg",
+      stats->GetStat("Toggle::DegenerateFailureIter") / degenerateFailure);
+  stats->SetStat("Toggle::BlockingIterAvg",
+      stats->GetStat("Toggle::BlockingFailureIter") / blockingFailure);
 }
 
 template<class MPTraits>

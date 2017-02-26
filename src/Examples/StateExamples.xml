@@ -1,8 +1,52 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <MotionPlanning warnings="true" warningsAsErrors="true" print="false">
-  <MPProblem>
 
-    <Environment filename="2DState/2d.env"/>
+  <!-- Here we specify input files, such as environment and query. -->
+  <Problem>
+
+    <Environment filename="3D/3d.env"/>
+
+    <!--Robot label="boxy" filename="3D/boxy.robot"/-->
+    <!--Robot label="links" filename="3D/linked.robot"/-->
+    <Robot label="boxy" filename="3D/boxy.robot" nonholonomic="true"/>
+
+    <Query filename="3D/3d.query"/>
+
+    <Task label="point-to-point" robot="boxy">
+      <StartConstraints>
+        <!-- require an exact starting configuration -->
+        <CSpaceConstraint>
+          <Limit dof="0" min="0" max="0"/>
+          <Limit dof="1" min="0" max="0"/>
+          <Limit dof="2" min="0" max="0"/>
+          <Limit dof="3" min="0" max="0"/>
+          <Limit dof="4" min="0" max="0"/>
+          <Limit dof="5" min="0" max="0"/>
+        </CSpaceConstraint>
+      </StartConstraints>
+
+      <PathConstraints>
+        <!-- no path constraints -->
+      </PathConstraints>
+
+      <GoalConstraints>
+      <!--
+        <CSpaceConstraint>
+          <Limit dof="0" min="20" max="20"/>
+          <Limit dof="1" min="5" max="5"/>
+          <Limit dof="2" min="10" max="10"/>
+          <Limit dof="3" min=".2" max=".2"/>
+          <Limit dof="4" min=".8" max=".8"/>
+          <Limit dof="5" min=".5" max=".5"/>
+        </CSpaceConstraint>
+      -->
+      </GoalConstraints>
+    </Task>
+
+  </Problem>
+
+  <Library>
+
     <DistanceMetrics>
       <WeightedEuclidean label="weuclidean" posWeight="0.4" rotWeight="0.4"
         velWeight="0.1" avlWeight="0.1"/>
@@ -23,29 +67,29 @@
 
     <Extenders>
       <KinodynamicExtender label="FixedBest" dmLabel="weuclidean" vcLabel="rapid"
-        timeStep="30" fixed="true" best="true" minDist=".01"/>
+        fixed="true" best="true" minDist=".01" numSteps="20"/>
       <KinodynamicExtender label="FixedRandom" dmLabel="weuclidean" vcLabel="rapid"
-        timeStep="30" fixed="true" best="false" minDist=".01"/>
+        fixed="true" best="false" minDist=".01" numSteps="20"/>
       <KinodynamicExtender label="VaryBest" dmLabel="weuclidean" vcLabel="rapid"
-        timeStep="30" fixed="false" best="true" minDist=".01"/>
+        fixed="false" best="true" minDist=".01" numSteps="20"/>
       <KinodynamicExtender label="VaryRandom" dmLabel="weuclidean" vcLabel="rapid"
-        timeStep="30" fixed="false" best="false" minDist=".01"/>
+        fixed="false" best="false" minDist=".01" numSteps="20"/>
     </Extenders>
-
-    <Metrics>
-      <NumNodesMetric label="NumNodes"/>
-    </Metrics>
 
     <MapEvaluators>
       <ConditionalEvaluator label="NodesEval" metric_method="NumNodes"
         value="100" operator=">="/>
-      <RRTQuery label="RRTQuery" queryFile="2DState/2d.query" goalDist=".3"
+      <RRTQuery label="RRTQuery" goalDist=".3"
         nfLabel="NearestPosition" exLabel="FixedRandom" debug="false"/>
       <ComposeEvaluator label="BoundedQuery" operator="OR">
         <Evaluator label="RRTQuery"/>
         <Evaluator label="NodesEval"/>
       </ComposeEvaluator>
     </MapEvaluators>
+
+    <Metrics>
+      <NumNodesMetric label="NumNodes"/>
+    </Metrics>
 
     <MPStrategies>
       <!-- KinodynamicRRT -->
@@ -66,5 +110,5 @@
     <Solver mpStrategyLabel="KRRTQuery" seed="12345678"
       baseFilename="KRRT" vizmoDebug="true"/>
 
-  </MPProblem>
+  </Library>
 </MotionPlanning>

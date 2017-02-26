@@ -213,7 +213,7 @@ vector<pair<size_t, typename PRMQuery<MPTraits>::VID>>
 PRMQuery<MPTraits>::
 FindCCs() {
   auto stats = this->GetStatClass();
-  stats->IncGOStat("CC Operations");
+  stats->IncStat("CC Operations");
 
   stats->StartClock("PRMQuery::FindCCs");
   vector<pair<size_t, VID>> ccs;
@@ -241,7 +241,7 @@ ConnectToCC(const VID _toConnect, const VID _inCC) {
   }
 
   auto stats = this->GetStatClass();
-  stats->IncGOStat("CC Operations");
+  stats->IncStat("CC Operations");
   stats->StartClock("PRMQuery::ConnectToCC");
 
   // Get the CC containing _inCC.

@@ -417,13 +417,13 @@ ConstructRRT(VID _root) {
   int numDeleted = TrimRRT(rrt, important, connectedCCs);
 
   if(rrt.size() > 3) {
-    stats->IncRRTStat("Number of RRTs");
-    stats->IncRRTStat("RRT Vertices", rrt.size()-numDeleted);
-    stats->IncRRTStat("Deleted Vertices", numDeleted);
+    stats->IncStat("Number of RRTs");
+    stats->IncStat("RRT Vertices", rrt.size()-numDeleted);
+    stats->IncStat("Deleted Vertices", numDeleted);
   }
 
   stats->StopClock("Total RRT");
-  stats->IncRRTStat("RRT CD Calls", stats->GetIsCollTotal() - initialCD);
+  stats->IncStat("RRT CD Calls", stats->GetIsCollTotal() - initialCD);
   if(this->m_rrtDebug)
     cout << "End constructing RRT. Size = " << (rrt.size()-numDeleted)
          << ", connected CCs = " << connectedCCs << endl;
@@ -541,7 +541,7 @@ TrimRRT(vector<VID>& _rrt, vector<VID>& _important, int _connectedCCs) {
       vector<VID> path;
       find_path_dijkstra(*graph, _important[0], _important[1], path,
           WeightType::MaxWeight());
-      stats->IncGOStat("Graph Search");
+      stats->IncStat("Graph Search");
 
       queue<pair<VID, size_t> > q;
 

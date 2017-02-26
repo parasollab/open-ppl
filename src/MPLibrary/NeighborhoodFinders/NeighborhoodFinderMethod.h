@@ -372,7 +372,7 @@ NeighborhoodFinderMethod<MPTraits>::GetConstructionTime() const{
 template <typename MPTraits>
 size_t
 NeighborhoodFinderMethod<MPTraits>::GetNumQueries() const{
-  return this->GetStatClass()->GetNFStat(this->GetNameAndLabel()+"::NumQueries");
+  return this->GetStatClass()->GetStat(this->GetNameAndLabel()+"::NumQueries");
 }
 
 template <typename MPTraits>
@@ -414,7 +414,7 @@ NeighborhoodFinderMethod<MPTraits>::EndConstructionTime(){
 template <typename MPTraits>
 void
 NeighborhoodFinderMethod<MPTraits>::IncrementNumQueries(){
-  this->GetStatClass()->IncNFStat(this->GetNameAndLabel()+"::NumQueries");
+  this->GetStatClass()->IncStat(this->GetNameAndLabel()+"::NumQueries");
 }
 
 #endif

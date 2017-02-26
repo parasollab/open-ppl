@@ -638,7 +638,10 @@ typename BasicRRTStrategy<MPTraits>::VID
 BasicRRTStrategy<MPTraits>::
 ExpandTree(const VID _nearestVID, const CfgType& _target) {
   if(this->m_debug)
-    cout << "Trying expansion from " << _nearestVID << "..." << endl;
+    cout << "Trying expansion from node " << _nearestVID
+         << " at workspace point "
+         << this->GetRoadmap()->GetGraph()->GetVertex(_nearestVID).GetPoint()
+         << "..." << endl;
 
   // Try to extend from the _nearestVID to _target
   VID newVID = this->Extend(_nearestVID, _target);

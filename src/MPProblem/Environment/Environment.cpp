@@ -21,17 +21,20 @@ Environment(XMLNode& _node) {
   m_filename = MPProblem::GetPath(m_filename);
 
   // Read the friction coefficient (to be used uniformly for now)
-  m_frictionCoefficient = _node.Read("frictionCoefficient", false,
-            0, 0.0, DBL_MAX, "friction coefficient (uniform)");
+  m_frictionCoefficient = _node.Read("frictionCoefficient", false, 0., 0.,
+      std::numeric_limits<double>::max(), "friction coefficient (uniform)");
 
   // Read in the gravity (all three directions)
   double gravityX, gravityY, gravityZ;
-  gravityX = _node.Read(
-      "gravityX", false, 0, -DBL_MAX, DBL_MAX, "X gravity component");
-  gravityY = _node.Read(
-      "gravityY", false, 0, -DBL_MAX, DBL_MAX, "Y gravity component");
-  gravityZ = _node.Read(
-      "gravityZ", false, 0, -DBL_MAX, DBL_MAX, "Z gravity component");
+  gravityX = _node.Read("gravityX", false, 0.,
+      std::numeric_limits<double>::lowest(),
+      std::numeric_limits<double>::max(), "X gravity component");
+  gravityY = _node.Read("gravityY", false, 0.,
+      std::numeric_limits<double>::lowest(),
+      std::numeric_limits<double>::max(), "Y gravity component");
+  gravityZ = _node.Read("gravityZ", false, 0.,
+      std::numeric_limits<double>::lowest(),
+      std::numeric_limits<double>::max(), "Z gravity component");
 
   //Put into the member gravity vector:
   m_gravity(gravityX, gravityY, gravityZ);

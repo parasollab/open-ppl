@@ -14,43 +14,6 @@
 #include "TetGenDecomposition.h"
 #include "Workspace/WorkspaceSkeleton.h"
 
-/*---------------------------- iostream Operators ----------------------------*/
-
-istream&
-operator>>(istream& _is, ReebGraphConstruction::ReebNode& _rn) {
-  return _is >> _rn.m_vertexIndex >> _rn.m_vertex >> _rn.m_w >> _rn.m_order;
-}
-
-
-ostream&
-operator<<(ostream& _os, const ReebGraphConstruction::ReebNode& _rn) {
-  return _os << _rn.m_vertexIndex << " " << _rn.m_vertex << " " << _rn.m_w << " "
-             << _rn.m_order;
-}
-
-
-istream&
-operator>>(istream& _is, ReebGraphConstruction::ReebArc& _ra) {
-  size_t sz;
-  _is >> _ra.m_source >> _ra.m_target >> sz;
-  Vector3d p;
-  _ra.m_path.clear();
-  _ra.m_path.reserve(sz);
-  for(size_t i = 0; i < sz; ++i) {
-    _is >> p;
-    _ra.m_path.push_back(p);
-  }
-  return _is;
-}
-
-
-ostream&
-operator<<(ostream& _os, const ReebGraphConstruction::ReebArc& _ra) {
-  _os << _ra.m_source << " " << _ra.m_target << " " << _ra.m_path.size();
-  for(const auto& p : _ra.m_path)
-    _os << " " << p;
-  return _os;
-}
 
 /*------------------------------- Construction -------------------------------*/
 
@@ -60,10 +23,12 @@ ReebGraphConstruction(const string& _filename) : m_reebFilename(_filename) { }
 
 ReebGraphConstruction::
 ReebGraphConstruction(XMLNode& _node) {
-  /// @TODO Add real XML parsing that doesn't depend on other objects.
+  /// @TODO Add a way to actually read these parameters from an XML file.
+  ///       Currently this is not supported for anything outside the MPProblem or
+  ///       MPLibrary.
   m_reebFilename = _node.Read("reebFilename", false, "", "Filename for Read "
       "or write ReebGraph operations.");
-  if(m_reebFilename.empty())
+  if(!m_reebFilename.empty())
     m_writeReeb = _node.Read("writeReeb", false, false,
         "Write Reeb Graph to file");
 }
@@ -89,20 +54,18 @@ Construct(Environment* _env, const string& _baseFilename) {
 WorkspaceSkeleton
 ReebGraphConstruction::
 GetSkeleton() {
-  WorkspaceSkeleton skeleton;
   typedef WorkspaceSkeleton::GraphType Graph;
   Graph g;
 
   // Copy vertices.
-  for(auto vit = m_reebGraph.begin(); vit != m_reebGraph.end(); ++vit) {
-    Vector3d& v = vit->property().m_vertex;
-    g.add_vertex(vit->descriptor(), v);
-  }
+  for(auto vit = m_reebGraph.begin(); vit != m_reebGraph.end(); ++vit)
+    g.add_vertex(vit->descriptor(), vit->property().m_vertex);
 
   // Copy edges.
   for(auto eit = m_reebGraph.edges_begin(); eit != m_reebGraph.edges_end(); ++eit)
     g.add_edge(eit->descriptor(), eit->property().m_path);
 
+  WorkspaceSkeleton skeleton;
   skeleton.SetGraph(g);
   return skeleton;
 }
@@ -448,7 +411,16 @@ Embed(const Environment* _env) {
   for(auto eit = m_reebGraph.edges_begin(); eit != m_reebGraph.edges_end();
       ++eit) {
     ReebArc& arc = eit->property();
+    arc.m_path.clear();
 
+    // Get start and end vertices. Skip this iteration if they are the same.
+    auto sourceit = m_reebGraph.find_vertex(eit->source());
+    auto targetit = m_reebGraph.find_vertex(eit->target());
+    if(sourceit->property().m_tetra == targetit->property().m_tetra)
+      continue;
+
+    // @TODO Disabled as suspect for causing long paths with loops.
+    // Weight all tetrahedron on reeb arc to bias search.
     //auto WeightGraph = [&](double _factor) {
     //  for(auto& tetraid : arc.m_tetra) {
     //    auto vit = dualGraph.find_vertex(tetraid);
@@ -459,53 +431,88 @@ Embed(const Environment* _env) {
     //    }
     //  }
     //};
-
-    // Get start and end vertices. Skip this iteration if they are the same.
-    auto sourceit = m_reebGraph.find_vertex(eit->source());
-    auto targetit = m_reebGraph.find_vertex(eit->target());
-    if(sourceit->property().m_tetra == targetit->property().m_tetra)
-      continue;
-
-    //weight all tetrahedron on reeb arc to bias search
+    //
     //WeightGraph(0.01);
 
-    //find path
-    vector<size_t> pathVID;
-    /// @TODO Remove the const-cast once the stapl sequential graph interface
+    // Find path in the dual graph from the start to end node.
+    /// @TODO Remove the const-cast when the stapl sequential graph interface
     ///       allows calling dijkstra's on a const ref to the graph.
+    vector<size_t> pathVID;
     stapl::sequential::find_path_dijkstra(
         const_cast<WorkspaceDecomposition::DualGraph&>(dualGraph),
         sourceit->property().m_tetra, targetit->property().m_tetra,
         pathVID, numeric_limits<double>::max());
 
-    //unweight all
+    // Unweight the tetrahedron.
     //WeightGraph(1);
 
-    // for each tetrahedron pair in path, find common triangle and insert middle
-    // of triangle into path for proper transition between the two tetrahedron
-    if(!pathVID.empty()) {
-      arc.m_path.clear();
-      for(auto current = pathVID.begin(), next = current + 1;
-          next != pathVID.end(); ++current, ++next) {
-        // Add the center of the current tetrahedron to the path.
-        arc.m_path.push_back(dualGraph.find_vertex(*current)->property());
+    // If the path is empty, something is wrong.
+    if(pathVID.empty())
+      throw PMPLException("ReebGraph error", WHERE, "Could not find a path "
+          "between distinct tetrahera in the dual graph.");
 
-        // Get the facets that join the current and next tetrahedron.
-        const auto& portal = tetrahedralization->GetPortal(*current, *next);
-        const auto facets = portal.FindFacets();
-        if(facets.size() > 1)
-          throw PMPLException("ReebGraph error", WHERE, "A portal between "
-              "workspace regions has more than one facet, which isn't possible "
-              "for tetrahedral regions.");
+    // For each tetrahedron pair in the path, find their shared facet and insert
+    // its mid point into the path for proper transition between the two. This
+    // avoids the possibility of clipping obstacles when jumping between
+    // tetrahedron midpoints.
+    for(auto current = pathVID.begin(), next = current + 1;
+        next != pathVID.end(); ++current, ++next) {
+      // Add the center of the current tetrahedron to the path.
+      arc.m_path.push_back(dualGraph.find_vertex(*current)->property());
 
-        // Add the centroid of the joining facet to the path.
-        arc.m_path.push_back(facets.front()->FindCenter());
-      }
+      // Get the facets that join the current and next tetrahedron.
+      const auto& portal = tetrahedralization->GetPortal(*current, *next);
+      const auto facets = portal.FindFacets();
+      if(facets.size() > 1)
+        throw PMPLException("ReebGraph error", WHERE, "A portal between "
+            "workspace regions has more than one facet, which isn't possible "
+            "for tetrahedral regions.");
 
-      // Add the center of the last tetrahedron as the end of the path.
-      arc.m_path.push_back(dualGraph.find_vertex(pathVID.back())->property());
+      // Add the centroid of the joining facet to the path.
+      arc.m_path.push_back(facets.front()->FindCenter());
     }
+
+    // Add the center of the last tetrahedron as the end of the path.
+    arc.m_path.push_back(dualGraph.find_vertex(pathVID.back())->property());
   }
+}
+
+/*---------------------------- iostream Operators ----------------------------*/
+
+istream&
+operator>>(istream& _is, ReebGraphConstruction::ReebNode& _rn) {
+  return _is >> _rn.m_vertexIndex >> _rn.m_vertex >> _rn.m_w >> _rn.m_order;
+}
+
+
+ostream&
+operator<<(ostream& _os, const ReebGraphConstruction::ReebNode& _rn) {
+  return _os << _rn.m_vertexIndex << " " << _rn.m_vertex << " " << _rn.m_w << " "
+             << _rn.m_order;
+}
+
+
+istream&
+operator>>(istream& _is, ReebGraphConstruction::ReebArc& _ra) {
+  size_t sz;
+  _is >> _ra.m_source >> _ra.m_target >> sz;
+  Vector3d p;
+  _ra.m_path.clear();
+  _ra.m_path.reserve(sz);
+  for(size_t i = 0; i < sz; ++i) {
+    _is >> p;
+    _ra.m_path.push_back(p);
+  }
+  return _is;
+}
+
+
+ostream&
+operator<<(ostream& _os, const ReebGraphConstruction::ReebArc& _ra) {
+  _os << _ra.m_source << " " << _ra.m_target << " " << _ra.m_path.size();
+  for(const auto& p : _ra.m_path)
+    _os << " " << p;
+  return _os;
 }
 
 /*----------------------------------------------------------------------------*/

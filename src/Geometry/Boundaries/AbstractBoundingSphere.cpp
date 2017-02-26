@@ -14,7 +14,7 @@ AbstractBoundingSphere(const size_t _n, const double _radius) :
 
 AbstractBoundingSphere::
 AbstractBoundingSphere(const std::vector<double>& _center, const double _radius) :
-    NSphere(_center.size(), _radius) { }
+    NSphere(_center, _radius) { }
 
 /*---------------------------- Property Accessors ----------------------------*/
 

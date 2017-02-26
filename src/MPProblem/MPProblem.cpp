@@ -101,6 +101,7 @@ ReadXMLFile(const string& _filename) {
 
   // Compute the environment resolution.
   GetEnvironment()->ComputeResolution(GetRobots());
+  MakePointRobot();
 }
 
 
@@ -245,3 +246,43 @@ SetPath(const string& _filename) {
 }
 
 /*----------------------------------------------------------------------------*/
+
+void
+MPProblem::
+MakePointRobot() {
+  // Make robot's multibody.
+  ActiveMultiBody* point = new ActiveMultiBody();
+
+  shared_ptr<FreeBody> free(new FreeBody(point, 0));
+  free->SetBodyType(FreeBody::BodyType::Volumetric);
+  free->SetMovementType(FreeBody::MovementType::Translational);
+
+  // Create body geometry. Use a single, open triangle.
+  GMSPolyhedron poly;
+  poly.GetVertexList() = vector<Vector3d>{{1e-8, 0, 0},
+      {0, 0, 1e-8}, {-1e-8, 0, 0}};
+  poly.GetPolygonList() = vector<GMSPolygon>{GMSPolygon(0, 1, 2,
+      poly.GetVertexList())};
+  free->SetPolyhedron(poly);
+
+  // Add body geometry to multibody.
+  point->AddBody(free);
+  point->SetBaseBody(free);
+
+  // Make sure we didn't accidentally call another robot 'point'.
+  bool check = false;
+  try {
+    GetRobot("point");
+  }
+  catch(...) {
+    check = true;
+  }
+  if(!check)
+    throw RunTimeException(WHERE, "A robot in the problem is named 'point'. "
+        "This name is reserved for the internal point robot.");
+
+  // Create the robot object.
+  Robot* pointRobot = new Robot(this, point, "point",
+      this->GetEnvironment()->GetBoundary());
+  m_robots.push_back(pointRobot);
+}

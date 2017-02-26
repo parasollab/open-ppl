@@ -158,6 +158,11 @@ class GMSPolyhedron final {
     /// Get a CGAL polyhedron representation of this object.
     CGALPolyhedron CGAL() const;
 
+    /// Make sure the CGAL points match the vertex list. This is only needed for
+    /// polys that are created manually rather than from file. The points will
+    /// not be exact as they are copied from doubles.
+    void UpdateCGALPoints();
+
     ///@}
     ///@name Internal State
     ///@{

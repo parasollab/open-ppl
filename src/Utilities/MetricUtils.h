@@ -81,19 +81,23 @@ class StatClass {
     int IncLPCollDetCalls(string _lpName, int _incr=1);
 
     static const int ALL;
-    template<class RoadmapType>
-      void PrintAllStats(ostream& _os, RoadmapType* _rmap);
-    template<class RoadmapType>
-      void PrintAllStats(ostream& _os, RoadmapType* _rmap, int _numCCs);
 
     template<class RoadmapType>
-      void PrintDataLine(ostream&, RoadmapType*, int _showColumnHeaders=0);
+    void PrintAllStats(ostream& _os, RoadmapType* _rmap);
+
+    template<class RoadmapType>
+    void PrintAllStats(ostream& _os, RoadmapType* _rmap, int _numCCs);
+
+    template<class RoadmapType>
+    void PrintDataLine(ostream&, RoadmapType*, int _showColumnHeaders=0);
 
     template<class RoadmapType, class DistanceMetricPointer>
-      void ComputeIntraCCFeatures(RoadmapType* _rdmp, Environment* _env, DistanceMetricPointer _dm);
+    void ComputeIntraCCFeatures(RoadmapType* _rdmp, Environment* _env,
+        DistanceMetricPointer _dm);
 
     template<class MPProblemType, class RoadmapType>
-      void ComputeInterCCFeatures(MPProblemType* _problem, RoadmapType* _rdmp, string _nfMethod, string _dmMethod);
+    void ComputeInterCCFeatures(MPProblemType* _problem, RoadmapType* _rdmp,
+        string _nfMethod, string _dmMethod);
 
     void PrintFeatures(ostream& _os);
     void IncNodesGenerated(string _samplerName, size_t _incr=1);
@@ -108,25 +112,10 @@ class StatClass {
     double GetSeconds(string _name);
     int GetUSeconds(string _name);
 
-    // Graph Operation Statistics Accessors/Modifiers
-    int GetGOStat(string _s) {return m_goStats[_s];}
-    void SetGOStat(string _s, int _v) {m_goStats[_s]=_v;}
-    void IncGOStat(string _s, int _v = 1) {m_goStats[_s]+=_v;}
-
-    // RRT Statistics Accessors/Modifiers
-    int GetRRTStat(string _s) {return m_rrtStats[_s];}
-    void SetRRTStat(string _s, int _v) {m_rrtStats[_s]=_v;}
-    void IncRRTStat(string _s, int _v = 1) {m_rrtStats[_s]+=_v;}
-
-    //Local Planner Statistics Accessors/Modifiers
-    double GetLPStat(string _s){return m_lpStats[_s];}
-    void SetLPStat(string _s, double _v) {m_lpStats[_s]=_v;}
-    void IncLPStat(string _s, double _v = 1.0) {m_lpStats[_s]+=_v;}
-
-    //Neighborhood Finder Statistics Accessors/Modifiers
-    double GetNFStat(string _s){return m_nfStats[_s];}
-    void SetNFStat(string _s, double _v) {m_nfStats[_s]=_v;}
-    void IncNFStat(string _s, double _v = 1.0) {m_nfStats[_s]+=_v;}
+    // Statistics Accessors/Modifiers
+    double GetStat(const string& _s) {return m_stats[_s];}
+    void SetStat(const string& _s, const double _v) {m_stats[_s] = _v;}
+    void IncStat(const string& _s, const double _v = 1) {m_stats[_s] += _v;}
 
     //histories of numbers
     vector<double>& GetHistory(string _s){return m_histories[_s];}
@@ -135,7 +124,7 @@ class StatClass {
 
     //help
     template<class GraphType>
-      void DisplayCCStats(ostream& _os, GraphType&);
+    void DisplayCCStats(ostream& _os, GraphType&);
 
     // m_lpInfo represents information about the Local Planners, referenced by
     // name
@@ -190,13 +179,10 @@ class StatClass {
     double m_avgCCSize;
     double m_sigmaCCSize;
 
-  protected:
-    map<string, unsigned long int> m_numCollDetCalls;
-
   private:
-    //LP Statistics
-    map<string, int> m_goStats, m_rrtStats;
-    map<string, double> m_lpStats, m_nfStats;
+
+    map<string, unsigned long int> m_numCollDetCalls;
+    map<string, double> m_stats;
     map<string, vector<double> > m_histories;
     string m_auxFileDest;
 
@@ -243,68 +229,27 @@ StatClass::PrintAllStats(ostream& _os, RoadmapType* _rmap, int _numCCs) {
     <<setw(15) << "Connections"
     <<setw(15) << "Coll Det Calls" << endl;
 
-  std::map<string, tuple<unsigned long int, unsigned long int, unsigned long int> >::const_iterator lpIter;
-  for(lpIter = m_lpInfo.begin(); lpIter != m_lpInfo.end(); ++lpIter) {
+  for(auto lpIter = m_lpInfo.begin(); lpIter != m_lpInfo.end(); ++lpIter) {
     _os << setw(20) << lpIter->first;
     _os << setw(15) << get<0>(lpIter->second);
     _os << setw(15) << get<1>(lpIter->second);
     _os << setw(15) << get<2>(lpIter->second) << endl;
   }
 
-  //output for graph operation statistics.
-  if(m_goStats.size()>0){
-    _os<<"\n\n Graph Operation Statistics:\n\n";
-    _os<< setw(40) << "Statistic"
-      << setw(40) << "Value" << endl << endl;
-    typedef map<string, int>::iterator GOSIT;
-    for(GOSIT gosit=m_goStats.begin(); gosit!=m_goStats.end(); gosit++){
-      _os << setw(40) << gosit->first
-        << setw(40) << gosit->second << endl;
-    }
-  }
-
-  // output for RRT statistics.
-  if(m_rrtStats.size()>0){
-    _os<<"\n\n RRT Statistics:\n\n";
-    _os<< setw(40) << "Statistic"
-      << setw(40) << "Value" << endl << endl;
-    typedef map<string, int>::iterator RRTSIT;
-    for(RRTSIT rrtsit=m_rrtStats.begin(); rrtsit!=m_rrtStats.end(); rrtsit++){
-      _os << setw(40) << rrtsit->first
-        << setw(40) << rrtsit->second << endl;
-    }
-  }
-
-  //output for local planner statistics. Only output if map is populated
-  if(m_lpStats.size()>0){
-    _os<<"\n\n Local Planner Statistics:\n\n";
-    _os<< setw(40) << "Statistic"
-      << setw(40) << "Value" << endl << endl;
-    typedef map<string, double>::iterator LPSIT;
-    for(LPSIT lpsit=m_lpStats.begin(); lpsit!=m_lpStats.end(); lpsit++){
-      _os << setw(40) << lpsit->first
-        << setw(40) << lpsit->second << endl;
-    }
-  }
-
-  //output for neighborhood finder statistics. Only output if map is populated
-  if(m_nfStats.size()>0){
-    _os<<"\n\n Neighborhood Finder Statistics:\n\n";
-    _os<< setw(40) << "Statistic"
-      << setw(40) << "Value" << endl << endl;
-    typedef map<string, double>::iterator NFSIT;
-    for(NFSIT nfsit=m_nfStats.begin(); nfsit!=m_nfStats.end(); nfsit++){
-      _os << setw(40) << nfsit->first
-        << setw(40) << nfsit->second << endl;
-    }
+  // Output statistics.
+  if(!m_stats.empty()) {
+    _os << "\n\nStatistics:\n\n";
+    _os << setw(40) << "Statistic"
+        << setw(40) << "Value\n\n";
+    for(const auto& stat : m_stats)
+      _os << setw(40) << stat.first
+          << setw(40) << stat.second << endl;
   }
 
   //output history statistics
-  typedef map<string, vector<double> >::iterator HIT;
-  for(HIT hit = m_histories.begin(); hit!=m_histories.end(); hit++){
+  for(auto hit = m_histories.begin(); hit!=m_histories.end(); hit++){
     ofstream ofs((m_auxFileDest+"."+hit->first+".hist").c_str());
-    typedef vector<double>::iterator DIT;
-    for(DIT dit = hit->second.begin(); dit!=hit->second.end(); dit++){
+    for(auto dit = hit->second.begin(); dit!=hit->second.end(); dit++){
       ofs << *dit << endl;
     }
     ofs.close();
@@ -374,8 +319,7 @@ PrintDataLine(ostream& _myostream, RoadmapType* _rmap, int _showColumnHeaders) {
   int sumAtt=0;
   int sumCD =0;
 
-  map<string, tuple<unsigned long int, unsigned long int, unsigned long int> >::const_iterator iter1;
-  for(iter1 = m_lpInfo.begin(); iter1 != m_lpInfo.end(); ++iter1) {
+  for(auto iter1 = m_lpInfo.begin(); iter1 != m_lpInfo.end(); ++iter1) {
     sumAtt += get<0>(iter1->second);
     sumCD += get<2>(iter1->second);
   }

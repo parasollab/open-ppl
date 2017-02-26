@@ -191,6 +191,10 @@ class ActiveMultiBody : public MultiBody {
     /// @param _body The free body to add.
     void AddBody(const shared_ptr<FreeBody>& _body);
 
+    /// Set the base body.
+    /// @param _body The free body to use as the base.
+    void SetBaseBody(const shared_ptr<FreeBody>& _body);
+
     ///@}
 
   private:

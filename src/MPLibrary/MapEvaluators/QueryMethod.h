@@ -377,7 +377,7 @@ SameCC(const VID _start, const VID _end) const {
   auto g = this->GetRoadmap()->GetGraph();
   auto stats = this->GetStatClass();
 
-  stats->IncGOStat("CC Operations");
+  stats->IncStat("CC Operations");
 
   stats->StartClock("QueryMethod::CCTesting");
   stapl::sequential::vector_property_map<GraphType, size_t> cmap;
@@ -398,7 +398,7 @@ QueryMethod<MPTraits>::
 GeneratePath(const VID _start, const VID _end) {
   auto g = this->GetRoadmap()->GetGraph();
   auto stats = this->GetStatClass();
-  stats->IncGOStat("Graph Search");
+  stats->IncStat("Graph Search");
   stats->StartClock("QueryMethod::GraphSearch");
   vector<VID> path;
   switch(m_searchAlg) {

@@ -84,6 +84,13 @@ Robot(MPProblem* const _p, XMLNode& _node, const Boundary* const _b) :
 
 
 Robot::
+Robot(MPProblem* const _p, ActiveMultiBody* _mb, const std::string& _label,
+    const Boundary* const _b) :
+    m_problem(_p), m_multibody(_mb), m_label(_label) {
+  m_multibody->InitializeDOFs(_b);
+}
+
+Robot::
 ~Robot() noexcept {
   delete m_multibody;
   delete m_agent;

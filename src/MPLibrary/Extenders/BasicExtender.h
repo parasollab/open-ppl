@@ -164,7 +164,7 @@ Expand(const CfgType& _start, const CfgType& _end, CfgType& _newCfg,
   bool collision = false;
   int nTicks, ticker = 0;
 
-  incr.FindIncrement(tick,_end,&nTicks, _posRes, _oriRes);
+  incr.FindIncrement(tick, _end, &nTicks, _posRes, _oriRes);
 
   // Move out from start towards dir, bounded by number of ticks allowed at a
   // given resolution and the distance _delta: the maximum distance to grow

@@ -127,8 +127,7 @@ StatClass::IncLPCollDetCalls(string _lpName, int _incr) {
 void
 StatClass::PrintFeatures(ostream& _os) {
   unsigned long int connectionsAttempted = 0, connectionsMade = 0;
-  std::map<std::string, tuple<unsigned long int,unsigned long int, unsigned long int> >::iterator sumIter;
-  for(sumIter=m_lpInfo.begin();sumIter!=m_lpInfo.end();sumIter++) {
+  for(auto sumIter=m_lpInfo.begin();sumIter!=m_lpInfo.end();sumIter++) {
     connectionsAttempted += get<0>(sumIter->second);
     connectionsMade += get<1>(sumIter->second);
   }

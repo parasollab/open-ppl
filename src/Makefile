@@ -10,7 +10,6 @@ vizmo_map := #-DVIZMO_MAP
 
 # Define robot type if it isn't already set.
 ROBOT_DEF ?= PMPCfg
-#ROBOT_DEF ?= PMPReachableVolume
 
 # Directory Layout ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 

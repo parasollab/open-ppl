@@ -111,6 +111,7 @@ GetInsideSphereRadius() const {
 void
 Body::
 SetPolyhedron(GMSPolyhedron& _poly) {
+  _poly.UpdateCGALPoints();
   m_polyhedron = _poly;
   m_worldPolyhedron = _poly;
   MarkDirty();

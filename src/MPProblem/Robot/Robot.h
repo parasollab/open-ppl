@@ -73,6 +73,9 @@ class Robot {
 
     Robot(MPProblem* const _p, XMLNode& _node, const Boundary* const _b);
 
+    Robot(MPProblem* const _p, ActiveMultiBody* _mb, const std::string& _label,
+        const Boundary* const _b);
+
     virtual ~Robot() noexcept;
 
     ///@}
