@@ -151,7 +151,6 @@ class Robot {
 
     /// Get the unique label for this instance.
     const std::string& GetLabel() const noexcept;
-
     ///@}
 
 };

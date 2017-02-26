@@ -2,6 +2,7 @@
 #define SIMULATOR_CONVERSIONS_H_
 
 #include "btBulletDynamicsCommon.h"
+#include "BulletDynamics/Featherstone/btMultiBodyLinkCollider.h"
 
 #include "Transformation.h"
 #include "Vector.h"
@@ -11,6 +12,20 @@
 #include <iostream>
 
 using namespace mathtool;
+
+//For changing the friction of an entire btMultiBody (all links + base):
+inline
+void
+SetUniformFrictionOnBulletMultiBody(
+    btMultiBody* _body, const double _frictionCoeff) {
+  //Note that btMultiBody has links, and each link (including the base) will
+  // have its own btMultiBodyLinkCollider, and each one has its own friction
+  // setting. This means we must hit each one and update our uniform friction:
+  _body->getBaseCollider()->setFriction(_frictionCoeff);
+  for (int i = 0; i < _body->getNumLinks(); i++) {
+    _body->getLink(i).m_collider->setFriction(_frictionCoeff);
+  }
+}
 
 inline
 void

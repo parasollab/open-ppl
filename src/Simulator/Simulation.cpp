@@ -3,6 +3,7 @@
 #include <iostream>
 
 #include "BulletEngine.h"
+#include "Conversions.h"
 #include "Drawable.h"
 #include "Geometry/Bodies/ActiveMultiBody.h"
 #include "Geometry/Bodies/StaticMultiBody.h"
@@ -39,7 +40,14 @@ Initialize() {
       "null problem!");
 
   // Create a bullet engine.
-  m_engine = new BulletEngine;
+  m_engine = new BulletEngine(m_problem);
+
+  //Note: The following was commented out because we now set gravity in the
+  // constructor for BulletEngine, which gets its values from MPProblem.
+  // Add gravity in the model.
+  // Note that using the dynamicsWorld->setGravity, it loops through and
+  // updates all bodies in the world, and should update future bodies added.
+  //m_engine->SetGravity(ToBullet(m_problem->GetEnvironment()->GetGravity()));
 
   // Add the problem objects to the simulation.
   AddBBX();

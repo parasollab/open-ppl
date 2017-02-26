@@ -19,6 +19,7 @@ class btMultiBody;
 // PMPL forward-declarations.
 class Body;
 class MultiBody;
+class MPProblem;
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -47,12 +48,18 @@ class BulletEngine final {
 
   ///@}
 
+  /// A pointer to the MPProblem, mostly for Environment access for gravity
+  ///  and friction values.
+  MPProblem* m_problem;
+
   public:
 
     ///@name Construction
     ///@{
+    /// There is no default constructor because we require access to the
+    ///  MPProblem for gravity and friction information.
 
-    BulletEngine();
+    BulletEngine(MPProblem* _problem);
     ~BulletEngine();
 
     ///@}
@@ -106,6 +113,13 @@ class BulletEngine final {
         std::vector<double> _masses,
         std::vector<std::shared_ptr<Connection>> _joints =
             std::vector<std::shared_ptr<Connection>>());
+
+    /// Set the gravity in the world (this will also set it for all bodies)
+    /// @param _gravityVec Is simply the 3-vector representing (x,y,z) gravity
+
+    void SetGravity(btVector3 _gravityVec);
+
+    btVector3 GetGravity();
 
     ///@}
 

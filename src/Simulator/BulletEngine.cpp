@@ -20,11 +20,14 @@
 #include "Geometry/Bodies/StaticMultiBody.h"
 #include "Geometry/GMSPolyhedron.h"
 
+#include "MPProblem/Environment/Environment.h"
+#include "MPProblem/MPProblem.h"
+
 
 /*------------------------------ Construction --------------------------------*/
 
 BulletEngine::
-BulletEngine() {
+BulletEngine(MPProblem* _problem) : m_problem(_problem) {
   // Create the bullet objects needed for a dynamic rigid body simulation.
   m_collisionConfiguration = new btDefaultCollisionConfiguration();
   m_dispatcher = new btCollisionDispatcher(m_collisionConfiguration);
@@ -37,8 +40,9 @@ BulletEngine() {
   // This is needed to get gimpact shapes to respond to collisions.
   btGImpactCollisionAlgorithm::registerAlgorithm(m_dispatcher);
 
-  // Set the gravity in our world.
-  m_dynamicsWorld->setGravity(btVector3(0, 0, 0));
+  // Set the gravity in our world, based off of MPProblem:
+  m_dynamicsWorld->setGravity(ToBullet(
+                              m_problem->GetEnvironment()->GetGravity()));
 }
 
 
@@ -118,16 +122,9 @@ AddObject(MultiBody* _m) {
   //defines where the object C.O.M. is and what its rotation is at that point.
   std::vector<btTransform> transformations;
   std::vector<std::shared_ptr<Connection>> joints;
-  //std::vector< btVector3 > coms; //Center of mass vectors
 
   //Note that shape definition stuff is handled in the BuildCollisionShape()
   //function, using btMesh type stuff
-
-  //Tim's Temp Note: I probably have to first loop through all bodies in here
-  //and get the Bullet versions of world transforms for each body.
-  //Then I'll also be handling all of them inside of BuildCollisionShape,
-  //and everything should correlate in the end (just as it does now for the
-  //first element)
 
   StaticMultiBody* sbody = dynamic_cast<StaticMultiBody*>(_m);
   if(sbody) {//So it's a static body:
@@ -182,12 +179,12 @@ AddObject(MultiBody* _m) {
 btMultiBody*
 BulletEngine::
 AddObject(btCollisionShape* _shape, btTransform _transform, double _mass) {
+  //this is just a wrapper overload for a more simplified AddObject call.
   if(m_debug)
     std::cout << "BulletEngine: Entering using the old version of AddObject"
               << std::endl;
 
-  //this is basically just a wrapper overload to allow for
-  //a more simplified AddObject call, so make objects into vectors and such:
+  // make objects into vectors and such:
   std::vector<btCollisionShape*> shapes = {_shape};
   std::vector<btTransform> transforms = {_transform};
   std::vector<double> masses = {_mass};
@@ -202,6 +199,10 @@ AddObject(std::vector<btCollisionShape*> _shapes,
           std::vector<btTransform> _transforms,
           std::vector<double> _masses,
           std::vector<std::shared_ptr<Connection>> _joints) {
+  // This function makes a multibody and all of its links and collider objects.
+  //  it also sets friction (defaulted to the uniform Environment value) for
+  //  every single link collider.
+
   if(m_debug)
     std::cout << "BulletEngine.cpp: entering final AddObject overload with "
               << _joints.size() << " joints" << std::endl;
@@ -265,6 +266,7 @@ AddObject(std::vector<btCollisionShape*> _shapes,
   btMultiBodyLinkCollider* col = new btMultiBodyLinkCollider(mb, -1);
   col->setCollisionShape(_shapes.at(0));
   col->setWorldTransform(_transforms.at(0));
+  col->setFriction(m_problem->GetEnvironment()->GetFrictionCoefficient());
 
   m_dynamicsWorld->addCollisionObject(col,
                                 collisionFilterGroup, collisionFilterMask);
@@ -457,6 +459,7 @@ AddObject(std::vector<btCollisionShape*> _shapes,
         : short(btBroadphaseProxy::AllFilter ^ btBroadphaseProxy::StaticFilter);
     m_dynamicsWorld->addCollisionObject(col,
                                     collisionFilterGroup, collisionFilterMask);
+    col->setFriction(m_problem->GetEnvironment()->GetFrictionCoefficient());
     //Finally, set the link's actual collider:
     mb->getLink(i).m_collider = col;
   }
@@ -492,6 +495,23 @@ AddObject(std::vector<btCollisionShape*> _shapes,
   // We can force planar objects to stay on the plane like this:
   // mb->setLinearFactor(btVector3(1, 1, 0));
   // mb->setAngularFactor(btVector3(0, 0, 1));
+}
+
+void
+BulletEngine::
+SetGravity(btVector3 _gravityVec) {
+  if(m_dynamicsWorld)
+    m_dynamicsWorld->setGravity(_gravityVec);
+}
+
+
+btVector3
+BulletEngine::
+GetGravity() {
+  if(m_dynamicsWorld)
+      return m_dynamicsWorld->getGravity();
+  else
+    return btVector3();
 }
 
 /*------------------------------ Helpers -------------------------------------*/

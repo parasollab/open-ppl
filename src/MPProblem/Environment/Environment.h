@@ -190,6 +190,13 @@ class Environment {
 
     ///@}
 
+
+    /// Get the friction coefficient
+    double GetFrictionCoefficient(){ return m_frictionCoefficient; }
+
+    /// Get the gravity 3-vector
+    Vector3d GetGravity(){ return m_gravity; }
+
   protected:
 
     ///@name Helpers
@@ -233,6 +240,16 @@ class Environment {
     shared_ptr<WorkspaceDecomposition> m_decomposition;
 
     ///@}
+
+
+    /// The uniform friction coefficient, applied to all btMultiBodies created
+    double m_frictionCoefficient;
+
+    /// These are the three components of gravity, so we can make our gravity
+    ///  variable in all directions.
+    Vector3d m_gravity;
+
+
 };
 
 /*----------------------------- Boundary Functions ---------------------------*/
