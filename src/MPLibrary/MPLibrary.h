@@ -2,6 +2,7 @@
 #define MP_LIBRARY_H_
 
 #include "MPProblem/MPProblem.h"
+#include "MPProblem/MPTask.h"
 #include "MPProblem/Robot/Robot.h"
 
 #include "Utilities/MetricUtils.h"
@@ -272,13 +273,18 @@ class MPLibraryType final
       m_solvers.push_back(Solver{_label, _seed, _baseFileName, _vizmoDebug});
     }
 
-    /// Run each input (solver) in sequence.
+    /// Run a single input (solver) and get back its solution.
     /// @param[in] _problem The problem representation.
     /// @param[in] _task The task representation.
     /// @param[in/out] _solution The solution container, which may or may not
     ///                          already be populated. Existing solutions should
     ///                          be extended, not overwritten.
     void Solve(MPProblem* _problem, MPTask* _task, MPSolution* _solution);
+
+    /// Run each input (solver) in sequence.
+    /// @param[in] _problem The problem representation.
+    /// @param[in] _task The task representation.
+    void Solve(MPProblem* _problem, MPTask* _task);
 
     ///@}
     ///@name Debugging
@@ -603,6 +609,45 @@ Solve(MPProblem* _problem, MPTask* _task, MPSolution* _solution) {
     // Close vizmo debug if necessary
     if(solver.vizmoDebug)
       VDClose();
+  }
+}
+
+
+template <typename MPTraits>
+void
+MPLibraryType<MPTraits>::
+Solve(MPProblem* _problem, MPTask* _task) {
+  m_task = _task;
+  SetMPProblem(_problem);
+
+  for(auto& solver : m_solvers) {
+    m_solution = new MPSolution(m_task->GetRobot());
+
+    // Call solver
+    cout << "\n\nMPLibrary is solving with MPStrategyMethod labeled "
+         << solver.label << " using seed " << solver.seed << "." << endl;
+
+#ifdef _PARALLEL
+    SRand(solver.seed + get_location_id());
+#else
+    SRand(solver.seed);
+#endif
+
+    SetBaseFilename(GetMPProblem()->GetPath(solver.baseFilename));
+    GetStatClass()->SetAuxDest(GetBaseFilename());
+
+    // Initialize vizmo debug if there is a valid filename
+    if(solver.vizmoDebug)
+        VDInit(GetBaseFilename() + ".vd");
+
+    GetMPStrategy(solver.label)->operator()();
+
+    // Close vizmo debug if necessary
+    if(solver.vizmoDebug)
+      VDClose();
+
+    delete m_solution;
+    m_solution = nullptr;
   }
 }
 

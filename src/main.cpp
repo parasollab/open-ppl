@@ -25,12 +25,10 @@ main(int _argc, char** _argv) {
     // Create storage for the solution and ask the library to solve our problem.
     /// @TODO Generalize this to handle more than just the first task.
     MPTask* task = problem->GetTasks().front();
-    MPSolution* solution = new MPSolution(task->GetRobot());
-    pmpl->Solve(problem, task, solution);
+    pmpl->Solve(problem, task);
 
     // Release resources.
     delete problem;
-    delete solution;
     delete pmpl;
 
     return 0;
