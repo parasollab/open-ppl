@@ -120,10 +120,6 @@ class WorkspaceSkeleton {
     //void FlowToMedialAxis(GraphType& _f) const;
 
     ///
-    void MarkAllNodesUnvisited();
-
-    ///
-    void SetFailedAttempts(const Boundary* const _region, const size_t _num);
 
     const unordered_map<Boundary*, RegionData>& GetRegionMap() {
       return m_regionData;
@@ -139,9 +135,16 @@ class WorkspaceSkeleton {
 
   private:
 
+    ///@name Helpers
+    ///@{
+
+    /// Mark all nodes as being unvisited.
+    void MarkAllNodesUnvisited();
+
     /// Update the probability of selecting each sampling region.
     void ComputeProbability();
 
+    ///@}
     ///@name Internal State
     ///@{
 

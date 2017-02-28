@@ -75,6 +75,7 @@ class WorkspaceDecomposition : public stapl::sequential::graph<stapl::DIRECTED,
     ///@name Dual Graph Accessors
     ///@{
 
+    DualGraph& GetDualGraph() {return m_dual;}
     const DualGraph& GetDualGraph() const {return m_dual;}
 
     ///@}

@@ -110,7 +110,7 @@ operator()() {
   this->Run();
   this->Finalize();
 #ifdef VIZMO
-    GetVizmo().GetMap()->RefreshMap();
+  GetVizmo().GetMap()->RefreshMap();
 #endif
 }
 
@@ -119,7 +119,7 @@ template <typename MPTraits>
 void
 MPStrategyMethod<MPTraits>::
 Run() {
-  string clockName = this->GetNameAndLabel() + "::Run()";
+  string clockName = this->GetNameAndLabel() + "::Run";
   if(this->m_debug)
     cout << clockName << endl;
   this->GetStatClass()->StartClock(clockName);
@@ -147,7 +147,7 @@ EvaluateMap() {
     StatClass* stats = this->GetStatClass();
 
     bool passed = true;
-    string clockName = this->GetNameAndLabel() + "::EvaluateMap()";
+    string clockName = this->GetNameAndLabel() + "::EvaluateMap";
     stats->StartClock(clockName);
 
     for(auto& label : m_meLabels) {

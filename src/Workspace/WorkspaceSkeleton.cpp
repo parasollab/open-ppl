@@ -165,6 +165,9 @@ Direct(const Point3d& _start) {
 void
 WorkspaceSkeleton::
 InitRegions(const Point3d& _start, const double _regionRadius) {
+  // Clear all internal state.
+  MarkAllNodesUnvisited();
+
   // Find the vertex nearest to start.
   auto sit = FindNearestVertex(_start);
 

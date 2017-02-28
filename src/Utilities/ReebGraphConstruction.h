@@ -368,7 +368,10 @@ class ReebGraphConstruction {
     /// Embedding algorithm relates each Reeb Node to its closest tetrahedron
     /// and finds an embedded ReebArc by biasing a path search in the
     /// tetrahedralization's dual graph.
-    void Embed(const Environment* _env);
+    void Embed(Environment* _env);
+
+    /// Make sure every node is unique.
+    void Uniqueify();
 
     ///@}
     ///@name Internal State
@@ -386,6 +389,8 @@ class ReebGraphConstruction {
     vector<pair<Triangle, unordered_set<size_t>>> m_triangles;
 
     ReebGraph m_reebGraph;       ///< Reeb Graph
+
+    bool m_debug{true};
 
     ///@}
 };

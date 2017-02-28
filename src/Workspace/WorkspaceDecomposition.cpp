@@ -86,9 +86,9 @@ AssertMutable() const {
 void
 WorkspaceDecomposition::
 ComputeDualGraph() {
-  // Make vertices.
+  // Make vertices, ensuring that descriptors match.
   for(const_vertex_iterator vit = begin(); vit != end(); ++vit)
-    m_dual.add_vertex(vit->property().FindCenter());
+    m_dual.add_vertex(vit->descriptor(), vit->property().FindCenter());
 
   // Make edges.
   for(const_edge_iterator iter = edges_begin(); iter != edges_end(); ++iter) {

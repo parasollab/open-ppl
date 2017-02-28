@@ -34,7 +34,8 @@ main(int _argc, char** _argv) {
     return 0;
   }
   catch(const std::runtime_error& e) {
-    std::cerr << std::endl << e.what() << std::endl;
+    // Write exception to cout so that we still get it when piping stdout.
+    std::cout << std::endl << e.what() << std::endl;
     return 1;
   }
 }

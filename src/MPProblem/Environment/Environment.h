@@ -180,6 +180,10 @@ class Environment {
     ///@name Decomposition
     ///@{
 
+    WorkspaceDecomposition* GetDecomposition() {
+      return m_decomposition.get();
+    }
+
     const WorkspaceDecomposition* GetDecomposition() const {
       return m_decomposition.get();
     }

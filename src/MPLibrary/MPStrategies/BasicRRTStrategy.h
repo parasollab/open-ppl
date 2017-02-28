@@ -413,7 +413,7 @@ Finalize() {
        << setprecision(3) << static_cast<double>(m_successes) /
                              static_cast<double>(m_trials)
        << " (" << m_successes << "/" << m_trials << ")" << endl;
-  this->GetStatClass()->PrintClock(this->GetNameAndLabel() + "::Run()", cout);
+  this->GetStatClass()->PrintClock(this->GetNameAndLabel() + "::Run", cout);
 }
 
 /*--------------------------- Direction Helpers ------------------------------*/
@@ -437,7 +437,7 @@ SelectDispersedDirection(VID _v) {
   /// \warning Should be named something like SelectDispersionTarget as this does
   ///          not return a direction.
   StatClass* stats = this->GetStatClass();
-  stats->StartClock("disperse sampling time");
+  stats->StartClock("BasicRRT::DisperseSampling");
 
   // Get original cfg with vid _v and its neighbors
   CfgType originalCfg = this->GetRoadmap()->GetGraph()->GetVertex(_v);
@@ -481,7 +481,7 @@ SelectDispersedDirection(VID _v) {
     }
   }
 
-  stats->StopClock("disperse sampling time");
+  stats->StopClock("BasicRRT::DisperseSampling");
   return bestCfg;
 }
 
@@ -504,7 +504,7 @@ template <typename MPTraits>
 typename BasicRRTStrategy<MPTraits>::VID
 BasicRRTStrategy<MPTraits>::
 FindNearestNeighbor(const CfgType& _cfg, const TreeType& _tree) {
-  this->GetStatClass()->StartClock("NeighborhoodFinding");
+  this->GetStatClass()->StartClock("BasicRRT::NeighborhoodFinding");
 
   vector<pair<VID, double>> neighbors;
   auto nf = this->GetNeighborhoodFinder(m_nfLabel);
@@ -514,7 +514,7 @@ FindNearestNeighbor(const CfgType& _cfg, const TreeType& _tree) {
       _cfg, back_inserter(neighbors));
   VID nearestVID = neighbors[0].first;
 
-  this->GetStatClass()->StopClock("NeighborhoodFinding");
+  this->GetStatClass()->StopClock("BasicRRT::NeighborhoodFinding");
   return nearestVID;
 }
 
@@ -527,7 +527,7 @@ ConnectNeighbors(VID _newVID) {
   if(_newVID == INVALID_VID || m_gt.find("GRAPH") == std::string::npos)
     return;
 
-  this->GetStatClass()->StartClock("Total Connection time");
+  this->GetStatClass()->StartClock("BasicRRT::ConnectNeighbors");
 
   vector<VID> currentVID(1, _newVID);
   this->GetConnector(m_ncLabel)->Connect(this->GetRoadmap(),
@@ -536,7 +536,7 @@ ConnectNeighbors(VID _newVID) {
       m_currentTree->size() ==
       this->GetRoadmap()->GetGraph()->get_num_vertices());
 
-  this->GetStatClass()->StopClock("Total Connection time");
+  this->GetStatClass()->StopClock("BasicRRT::ConnectNeighbors");
 }
 
 /*----------------------------- Growth Helpers -------------------------------*/

@@ -39,9 +39,9 @@ class InternalSimulator final {
   ///@name Internal State
   ///@{
 
+  Robot* const m_robot;   ///< Our pmpl robot.
   BulletEngine m_engine;  ///< The engine for this micro-simulator.
   btMultiBody* m_model;   ///< The bullet body for our robot.
-  Robot* const m_robot;   ///< Our pmpl robot.
 
   const btScalar m_timestep; ///< The smallest timestep to use.
 
@@ -68,7 +68,7 @@ class InternalSimulator final {
 
 InternalSimulator::
 InternalSimulator(Robot* const _robot) :
-    m_engine(m_robot->GetMPProblem()), m_robot(_robot),
+    m_robot(_robot), m_engine(m_robot->GetMPProblem()),
     m_timestep(m_robot->GetMPProblem()->GetEnvironment()->GetTimeRes()) {
   //m_engine = new BulletEngine(m_robot->GetMPProblem());
   m_model = m_engine.AddObject(m_robot->GetMultiBody());

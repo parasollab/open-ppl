@@ -63,7 +63,16 @@ GetSkeleton() {
 
   // Copy edges.
   for(auto eit = m_reebGraph.edges_begin(); eit != m_reebGraph.edges_end(); ++eit)
+  {
+    // Make sure this is a real path.
+    if(eit->property().m_path.empty()) {
+      if(m_debug)
+        std::cout << "ReebGraph:: skipping empty path when building skeleton."
+                  << std::endl;
+      continue;
+    }
     g.add_edge(eit->descriptor(), eit->property().m_path);
+  }
 
   WorkspaceSkeleton skeleton;
   skeleton.SetGraph(g);
@@ -384,12 +393,11 @@ Remove2Nodes() {
 
 void
 ReebGraphConstruction::
-Embed(const Environment* _env) {
-  const auto& tetrahedralization = _env->GetDecomposition();
-  const auto& dualGraph = tetrahedralization->GetDualGraph();
+Embed(Environment* _env) {
+  auto tetrahedralization = _env->GetDecomposition();
+  auto& dualGraph = tetrahedralization->GetDualGraph();
 
-  // Embed ReebNodes in freespace by finding its closest tetrahedron.
-  // TODO require that the reeb vertex also touches its 'nearest' tetrahedron.
+  // Embed ReebNodes in freespace by finding its closest adjacent tetrahedron.
   for(auto rit = m_reebGraph.begin(); rit != m_reebGraph.end(); ++rit) {
     double minDist = numeric_limits<double>::max();
     size_t closestID = -1;
@@ -397,15 +405,24 @@ Embed(const Environment* _env) {
 
     // Check each dual graph node for proximity to this reeb graph node.
     for(auto dit = dualGraph.begin(); dit != dualGraph.end(); ++dit) {
-      double dist = (dit->property() - reebNode).norm();
+      // Make sure the associated workspace region includes this reebNode.
+      if(!tetrahedralization->GetRegion(dit->descriptor()).HasPoint(reebNode))
+        continue;
+      const double dist = (dit->property() - reebNode).norm();
       if(dist < minDist) {
         minDist = dist;
         closestID = dit->descriptor();
       }
     }
+    if(closestID == size_t(-1))
+      throw RunTimeException(WHERE, "Could not embed reeb node " +
+          std::to_string(rit->descriptor()) + ", which shouldn't happen!");
     rit->property().m_tetra = closestID;
     rit->property().m_vertex = dualGraph.find_vertex(closestID)->property();
   }
+
+  std::set<vector<size_t>> uniquePaths;
+  size_t duplicatePathCount = 0;
 
   // Embed ReebArcs in freespace.
   for(auto eit = m_reebGraph.edges_begin(); eit != m_reebGraph.edges_end();
@@ -421,35 +438,52 @@ Embed(const Environment* _env) {
 
     // @TODO Disabled as suspect for causing long paths with loops.
     // Weight all tetrahedron on reeb arc to bias search.
-    //auto WeightGraph = [&](double _factor) {
-    //  for(auto& tetraid : arc.m_tetra) {
-    //    auto vit = dualGraph.find_vertex(tetraid);
-    //    for(auto adjEI = vit->begin(); adjEI != vit->end(); ++adjEI) {
-    //      auto targetit = dualGraph.find_vertex(adjEI->target());
-    //      adjEI->property() = _factor *
-    //        (vit->property() - targetit->property()).norm();
-    //    }
-    //  }
-    //};
-    //
-    //WeightGraph(0.01);
+    auto WeightGraph = [&](const double _factor) {
+      // Iterate over all tetrahedra in this reeb arc's path.
+      for(auto tetraid : arc.m_tetra) {
+        auto vit = dualGraph.find_vertex(tetraid);
+
+        // Iterate over all outoing edges in the dual graph.
+        for(auto eit = vit->begin(); eit != vit->end(); ++eit) {
+          // Skip neighbors that aren't in this reeb arc's tetrahedra.
+          if(std::find(arc.m_tetra.begin(), arc.m_tetra.end(), eit->target()) ==
+              arc.m_tetra.end())
+            continue;
+
+          // Weight the edge to the dualgraph neighbor.
+          auto targetit = dualGraph.find_vertex(eit->target());
+          eit->property() = _factor *
+            (vit->property() - targetit->property()).norm();
+        }
+      }
+    };
+
+    WeightGraph(0.0001);
 
     // Find path in the dual graph from the start to end node.
-    /// @TODO Remove the const-cast when the stapl sequential graph interface
-    ///       allows calling dijkstra's on a const ref to the graph.
     vector<size_t> pathVID;
     stapl::sequential::find_path_dijkstra(
-        const_cast<WorkspaceDecomposition::DualGraph&>(dualGraph),
+        dualGraph,
         sourceit->property().m_tetra, targetit->property().m_tetra,
         pathVID, numeric_limits<double>::max());
 
     // Unweight the tetrahedron.
-    //WeightGraph(1);
+    WeightGraph(1);
 
     // If the path is empty, something is wrong.
     if(pathVID.empty())
       throw PMPLException("ReebGraph error", WHERE, "Could not find a path "
           "between distinct tetrahera in the dual graph.");
+
+    // Check that we haven't already embedded this path. If so, move on to the
+    // next one.
+    /// @TODO This really shouldn't be necessary. Needs further investigation
+    ///       when time allows.
+    const auto check = uniquePaths.insert(pathVID);
+    if(!check.second) {
+      ++duplicatePathCount;
+      continue;
+    }
 
     // For each tetrahedron pair in the path, find their shared facet and insert
     // its mid point into the path for proper transition between the two. This
@@ -475,7 +509,114 @@ Embed(const Environment* _env) {
     // Add the center of the last tetrahedron as the end of the path.
     arc.m_path.push_back(dualGraph.find_vertex(pathVID.back())->property());
   }
+
+  if(m_debug)
+    cout << "ReebGraph:: duplicated path count: " << duplicatePathCount << endl;
+
+  // After embedding the reeb graph, it is possible for multiple reeb graph
+  // vertices to be mapped to the same tetrahedron. Resulting in duplicate
+  // vertices.
+  Uniqueify();
 }
+
+
+void
+ReebGraphConstruction::
+Uniqueify() {
+  typedef ReebGraph::vertex_descriptor VID;
+  size_t deletedVertices = 0, deletedEdges = 0;
+
+  // Make a helper to identify incoming edges (stapl's directed_preds graph
+  // offers no easy way to do this for multigraphs).
+  auto FindInboundEdges = [this](const ReebGraph::vertex_iterator _vertex) {
+    std::vector<ReebGraph::adj_edge_iterator> inEdges;
+
+    const auto& predecessors = _vertex->predecessors();
+    for(const auto pred : predecessors) {
+      auto predIter = m_reebGraph.find_vertex(pred);
+      for(auto eit = predIter->begin(); eit != predIter->end(); ++eit)
+        if(eit->target() == _vertex->descriptor())
+          inEdges.push_back(eit);
+    }
+
+    return inEdges;
+  };
+
+  // Construct a map of all vertices that have the same embedded point.
+  map<Point3d, vector<VID>> duplicateMap;
+  for(const auto it : m_reebGraph)
+    duplicateMap[it.property().m_vertex].push_back(it.descriptor());
+
+  // Combine all duplicates into one unique vertex.
+  for(const auto& it : duplicateMap) {
+    // Pick the unique vertex's descriptor as the front of the duplicate set and
+    // call it theVID.
+    const auto& duplicateVIDs = it.second;
+    const auto theVID = duplicateVIDs.front();
+
+    // Re-target all edges touching the duplicates so that all outgoing edges
+    // leave theVID and all incoming edges land on theVID.
+    for(auto vit = duplicateVIDs.begin() + 1; vit != duplicateVIDs.end(); ++vit) {
+      const auto vertex = m_reebGraph.find_vertex(*vit);
+
+      // Add vertex's out-edges to theVID.
+      for(auto eit = vertex->begin(); eit != vertex->end(); ++eit)
+        m_reebGraph.add_edge(theVID, eit->target(), eit->property());
+
+      // Add vertex's in-edges to theVID.
+      auto inEdges = FindInboundEdges(vertex);
+      for(auto eit : inEdges)
+        m_reebGraph.add_edge(eit->source(), theVID, eit->property());
+
+      // Now the duplicate's edges have been copied to theVID, so we can
+      // delete the duplicate vertex (also takes care of its edges).
+      m_reebGraph.delete_vertex(*vit);
+    }
+    deletedVertices += duplicateVIDs.size() - 1;
+  }
+
+  // We might now have multiple copies of the same edge leaving the combined
+  // vertices. Check for those and remove any we find.
+  for(const auto& it : duplicateMap) {
+    // Get the surviving vertex from this duplicate set.
+    const auto vid = it.second.front();
+    const auto vertex = m_reebGraph.find_vertex(vid);
+
+    vector<ReebGraph::edge_descriptor> edgesToDelete;
+    std::set<std::vector<Vector3d>> uniquePaths;
+
+    // Check all the outgoing edges and collect the descriptors of those with
+    // non-unique paths.
+    for(auto eit = vertex->begin(); eit != vertex->end(); ++eit) {
+      const auto it = uniquePaths.emplace(eit->property().m_path);
+      if(!it.second)
+        edgesToDelete.push_back(eit->descriptor());
+    }
+
+    uniquePaths.clear();
+
+    // Check all the incoming edges and collect the descriptors of those with
+    // non-unique paths.
+    auto inEdges = FindInboundEdges(vertex);
+    for(auto eit : inEdges) {
+      const auto it = uniquePaths.emplace(eit->property().m_path);
+      if(!it.second)
+        edgesToDelete.push_back(eit->descriptor());
+    }
+
+    // Remove edges with non-unique paths.
+    for(const auto edgeDescriptor : edgesToDelete)
+      m_reebGraph.delete_edge(edgeDescriptor);
+    deletedEdges += edgesToDelete.size();
+  }
+
+  if(m_debug)
+    std::cout << "ReebGraph::Uniqueify:: deleted " << deletedVertices
+              << " duplicate vertices and " << deletedEdges
+              << " duplicate edges."
+              << std::endl;
+}
+
 
 /*---------------------------- iostream Operators ----------------------------*/
 

@@ -68,6 +68,12 @@ class DynamicRegionRRT : public BasicRRTStrategy<MPTraits> {
     virtual ~DynamicRegionRRT() = default;
 
     ///@}
+    ///@name MPBaseObject overrides
+    ///@{
+
+    virtual void Print(ostream& _os) const override;
+
+    ///@}
     ///@name MPStrategyMethod Overrides
     ///@{
 
@@ -117,10 +123,10 @@ class DynamicRegionRRT : public BasicRRTStrategy<MPTraits> {
     void BackTrackSkeletonEdge(vector<VID>& _candidates, SkeletonEdgeIter _edge,
         size_t _edgeIndex, double _distance, const double _maxDistance);
 
-    /// Returns the direction of the next point in the edge path
-    /// @param _region the reference region
-    /// @return A unit vector if the direction the region is moving
-    Vector3d RegionDirection(Boundary* _region);
+    /// Get a biasing direction for the next sample's velocity based on where
+    /// the current region is headed next.
+    /// @return A unit vector in the direction the region is moving.
+    const Vector3d GetVelocityBias();
 
     void FixSkeletonClearance();
 
@@ -133,6 +139,8 @@ class DynamicRegionRRT : public BasicRRTStrategy<MPTraits> {
     ///@{
 
     bool m_prune{true};          ///< Prune the flow graph?
+    bool m_bucketing{false};        ///< Use bucketing?
+    bool m_biasing{false};          ///< Use velocity biasing?
 
     double m_regionFactor{2.5};  ///< The region radius is this * robot radius.
     double m_robotFactor{1.};
@@ -142,6 +150,7 @@ class DynamicRegionRRT : public BasicRRTStrategy<MPTraits> {
 
     ReebGraphConstruction* m_reebGraph{nullptr}; ///< Embedded reeb graph
     WorkspaceSkeleton m_skeleton;                ///< Workspace skeleton
+    double m_velocityAlignment{.1};  ///< Strength of velocity biasing.
 
     /// Association between a flow graph vertex and a set of VIDs that were
     /// sampled the region centered on that vertex.
@@ -179,7 +188,29 @@ DynamicRegionRRT(XMLNode& _node) :
       "graph pruning");
   m_robotFactor = _node.Read("robotFactor", false, 1., 0., 1., "The robot is "
       "touch if inside by this amount");
+  m_velocityAlignment = _node.Read("velocityAlignment", false, .1, -1., .99,
+      "Minimum dot product for sampled velocity and biasing direction.");
+  m_bucketing = _node.Read("bucketing", false, false,
+      "Use topological bucketing");
+  m_biasing = _node.Read("biasing", false, false,
+      "Use topological velocity biasing for nonholonomic robots");
 }
+
+/*------------------------- MPBaseObject Overriddes --------------------------*/
+
+template <typename MPTraits>
+void
+DynamicRegionRRT<MPTraits>::
+Print(std::ostream& _os) const {
+  BasicRRTStrategy<MPTraits>::Print(_os);
+  _os << "  Dynamic Regions properties:"
+      << "\n\tRegion factor: " << m_regionFactor
+      << "\n\tRobot factor: " << m_robotFactor
+      << "\n\tPruning: " << (m_prune ? "enabled" : "disabled")
+      << "\n\tVelocity Alignment: " << m_velocityAlignment
+      << std::endl;
+}
+
 
 /*----------------------- MPStrategyMethod Overriddes ------------------------*/
 
@@ -187,6 +218,9 @@ template <typename MPTraits>
 void
 DynamicRegionRRT<MPTraits>::
 Initialize() {
+  if(this->m_debug)
+    Print(cout);
+
   BasicRRTStrategy<MPTraits>::Initialize();
 
   auto env = this->GetEnvironment();
@@ -214,7 +248,6 @@ Initialize() {
   const double robotRadius = this->GetTask()->GetRobot()->GetMultiBody()->
       GetBoundingSphereRadius();
   const double regionRadius = m_regionFactor * robotRadius;
-  m_skeleton.MarkAllNodesUnvisited();
   m_skeleton.InitRegions(start, regionRadius);
 
   stats->StopClock("SkeletonConstruction");
@@ -223,11 +256,14 @@ Initialize() {
   FixSkeletonClearance();
 
   // Initialize bucket map.
-  for(auto eit = m_skeleton.GetGraph().edges_begin();
-      eit != m_skeleton.GetGraph().edges_end(); eit++) {
-    const auto& path = eit->property();
-    for(auto& n : path)
-      m_buckets.emplace(n, vector<VID>());
+  if(m_bucketing) {
+    m_buckets.clear();
+    for(auto eit = m_skeleton.GetGraph().edges_begin();
+        eit != m_skeleton.GetGraph().edges_end(); eit++) {
+      const auto& path = eit->property();
+      for(auto& n : path)
+        m_buckets.emplace(n, vector<VID>());
+    }
   }
 
   m_buckets[to_point(m_skeleton.GetRegionMap().begin()->first->GetCenter())].push_back(0);
@@ -325,31 +361,31 @@ SelectDirection() {
     samplingBoundary = m_samplingRegion;
 
   // Generate the target q_rand from within the selected region.
-  try {
-    CfgType mySample(robot);
+  CfgType mySample(robot);
+  mySample.GetRandomCfg(env, samplingBoundary);
 
-// velocity correction
-#if 0
-    Vector3d dir = RegionDirection(samplingBoundary);
-    double alpha = -1;
-    while(alpha <= m_velLimit) {
-      mySample.GetRandomCfg(env, samplingBoundary);
-      const auto& vels = mySample.GetVelocity();
-      Vector3d velDir{vels[0], vels[1], vels[2]};
-      alpha = dir * velDir;
-    }
-#else
-    mySample.GetRandomCfg(env, samplingBoundary);
-#endif
-    return mySample;
+  // Bias sample velocity.
+  if(m_biasing and robot->IsNonholonomic() and m_samplingRegion) {
+    // Resample until the new Cfg aims relatively along the biasing direction.
+    const Vector3d bias = GetVelocityBias();
+    if(bias.norm() == 0)
+      throw RunTimeException(WHERE, "Bias cannot be zero.");
+    Vector3d velocity;
+    do {
+      mySample.GetRandomVelocity();
+      velocity = mySample.LinearVelocity().normalize();
+      if(this->m_debug)
+        std::cout << "\tSampled velocity direction: " << velocity
+                  << "\n\t\tDot product with bias: " << velocity * bias
+                  << (velocity * bias < m_velocityAlignment ? " < " : " >= ")
+                  << m_velocityAlignment
+                  << std::endl;
+    } while(velocity * bias < m_velocityAlignment);
   }
-  // Catch Boundary too small exception.
-  catch(PMPLException _e) {
-    CfgType mySample(robot);
-    mySample.GetRandomCfg(env);
-    return mySample;
-  }
+
+  return mySample;
 }
+
 
 template<class MPTraits>
 typename DynamicRegionRRT<MPTraits>::VID
@@ -359,8 +395,8 @@ FindNearestNeighbor(const CfgType& _cfg, const TreeType& _tree) {
 
   // Use regular neighborhood finding if there is no region (i.e., we are
   // sampling from the whole environment).
-  if(!m_samplingRegion) {
-    stats->IncStat("No Sampling Region");
+  if(!m_bucketing or !m_samplingRegion) {
+    stats->IncStat("NF::NoBucket");
     return BasicRRTStrategy<MPTraits>::FindNearestNeighbor(_cfg, _tree);
   }
 
@@ -369,13 +405,13 @@ FindNearestNeighbor(const CfgType& _cfg, const TreeType& _tree) {
 
   // If there are no candidates, then search the whole tree.
   if(candidates.empty()) {
-    stats->IncStat("No Candidates");
+    stats->IncStat("NF::NoCandidates");
     return BasicRRTStrategy<MPTraits>::FindNearestNeighbor(_cfg, _tree);
   }
 
   auto nf = this->GetNeighborhoodFinder(this->m_nfLabel);
 
-  stats->IncStat("BucketNF Call");
+  stats->IncStat("NF::BucketUsed");
   stats->StartClock("BucketNF");
   vector<pair<VID, double>> neighbors;
   nf->FindNeighbors(this->GetRoadmap(),
@@ -417,7 +453,7 @@ Extend(const VID _nearVID, const CfgType& _qrand, const bool _lp) {
   const VID newVID = BasicRRTStrategy<MPTraits>::Extend(_nearVID, _qrand, _lp);
 
   // If we produced a valid extension, add the new node to the bucket map.
-  if(newVID != INVALID_VID) {
+  if(m_bucketing and newVID != INVALID_VID) {
     auto stats = this->GetStatClass();
     stats->StartClock("BucketNewCfg");
 
@@ -517,70 +553,64 @@ BackTrackSkeletonEdge(vector<VID>& _candidates, SkeletonEdgeIter _edge,
 
 
 template <typename MPTraits>
-Vector3d
+const Vector3d
 DynamicRegionRRT<MPTraits>::
-RegionDirection(Boundary* _region) {
-  // if the region isn't in the list (i.e. the environment) then a normalized
-  // random vector is returned
-  if(!m_samplingRegion)
-    return Vector3d{DRand()}.normalize();
+GetVelocityBias() {
+  // Get the region data.
+  const auto& regionData = m_skeleton.GetRegionData(m_samplingRegion);
+  const size_t index = regionData.edgeIndex;
 
-  //this->GetStatClass()->StartClock("VelocityBiasing");
-  //this->GetStatClass()->StopClock("VelocityBiasing");
+  // Find the skeleton edge path the region is traversing.
+  auto edge = m_skeleton.FindEdge(regionData.edgeDescriptor);
+  const auto& path = edge->property();
 
-  const auto& regionMap = m_skeleton.GetRegionMap();
-  auto iter = regionMap.find(m_samplingRegion);
+  // Helper to make the biasing direction and print debug info.
+  auto makeBias = [&](const Vector3d& _start, const Vector3d& _end) {
+    if(this->m_debug)
+      std::cout << "Computed velocity bias: " << (_end - _start).normalize()
+                << "\n\tStart: " << _start
+                << "\n\tEnd:   " << _end
+                << std::endl;
+    return (_end - _start).normalize();
+  };
 
-  const auto& regionData = iter->second;
-  size_t pointIndex = regionData.edgeIndex;
-
-  // find the edge
-  decltype(m_skeleton.GetGraph().begin()) vi;
-  decltype(vi->begin()) ei;
-  m_skeleton.GetGraph().find_edge(regionData.edgeDescriptor, vi, ei);
-
-  const auto& path = ei->property();
-
-  // get the edge of the current region
-  Point3d rCenter = path[pointIndex];
-
-  // get the target of the current path
-  Point3d target;
-  if(pointIndex >= path.size() - 1) {
-    // find the vertex
-    auto vit = m_skeleton.GetGraph().find_vertex(ei->target());
-    std::vector<decltype(vit->begin())> li;
-    // if the vertex is found, then loop through all incident edges.
-    // If the edge is an out edge then add to list otherwise ignore.
-    if(vit != m_skeleton.GetGraph().end()) {
-      for(auto iter = vit->begin(); iter != vit->end(); ++iter)
-        if(iter->source() == vi->descriptor())
-          li.push_back(iter);
-      // if list not empty then select a random edge and bias in that direction.
-      // other wise return random vector
-      if(!li.empty()) {
-        size_t index = rand() % li.size();
-        target = li[index]->property()[2];
-      }
-      else
-        return Vector3d{DRand()}.normalize();
-    }
-    else
-      // other wise return random vector
-      return Vector3d{DRand()}.normalize();
+  // If there is at least one valid path point after the current path index,
+  // then return the direction to the next point.
+  if(index < path.size() - 1) {
+    if(this->m_debug)
+      std::cout << "Biasing velocity along next path step"
+                << "\n\tPath index: " << index
+                << "\n\tPath size:  " << path.size()
+                << std::endl;
+    return makeBias(path[index], path[index + 1]);
   }
-  else
-    target = path[pointIndex + 1];
 
+  // Otherwise, the region has reached a skeleton vertex.
+  auto vertex = m_skeleton.GetGraph().find_vertex(edge->target());
 
+  // If the vertex has no outgoing edges, this is the end of the skeleton. In
+  // that case, use the previous biasing direction. All paths have at least two
+  // points so this is safe.
+  if(vertex->size() == 0) {
+    if(this->m_debug)
+      std::cout << "Biasing velocity along previous path step"
+                << "\n\tPath index: " << index
+                << "\n\tPath size:  " << path.size()
+                << std::endl;
+    return makeBias(path[index - 1], path[index]);
+  }
+
+  // Otherwise, randomly select an outgoing and use it's next point.
+  auto eit = vertex->begin();
+  const size_t nextEdgeIndex = LRand() % vertex->size();
+  std::advance(eit, nextEdgeIndex);
   if(this->m_debug)
-    std::cout << "Region Center:\t" << rCenter
-              << "\nTarget Center:\t" << target
-              << "\nVel Unit Vector:\t" << (target - rCenter).normalize()
+    std::cout << "Biasing velocity along next edge (index " << nextEdgeIndex
+              << ")\n\tPath index: " << index
+              << "\n\tPath size:  " << path.size()
+              << "\n\tNext edge path size: " << eit->property().size()
               << std::endl;
-
-  // returns a unit vector
-  return (target - rCenter).normalize();
+  return makeBias(path[index], eit->property()[1]);
 }
 
 
