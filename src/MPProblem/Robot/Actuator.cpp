@@ -2,11 +2,14 @@
 
 #include <algorithm>
 #include <limits>
+#include <sstream>
+#include <string>
 
 #include "DynamicsModel.h"
 #include "Robot.h"
 #include "Geometry/Bodies/ActiveMultiBody.h"
 #include "Utilities/PMPLExceptions.h"
+#include "Utilities/XMLNode.h"
 
 #include "BulletDynamics/Featherstone/btMultiBody.h"
 
@@ -21,6 +24,34 @@ Actuator(Robot* const _r) : m_robot(_r) {
   m_maxForce = std::numeric_limits<double>::max();
 }
 
+
+Actuator::
+Actuator(Robot* const _r, XMLNode& _node) : m_robot(_r) {
+  const size_t dof = _r->GetMultiBody()->DOF();
+
+  // Read the force limits.
+  const std::string limitString = _node.Read("limits", true, "", "Force limits "
+      "of this actuator");
+  std::istringstream limits(limitString);
+  Range<double> temp;
+  while(limits >> temp)
+    m_limits.push_back(temp);
+
+  // Assert that we read a limit for each DOF.
+  if(m_limits.size() != dof)
+    throw ParseException(WHERE, "Read a different number of force limits (" +
+        std::to_string(m_limits.size()) + ") than DOFs (" + std::to_string(dof) +
+        ").");
+
+  // Set the mask based on the force limits.
+  for(const auto& limit : m_limits)
+    m_mask.push_back(limit.Length() != 0 or limit.Center() != 0);
+
+  // Read the maximum magnitude.
+  m_maxForce = _node.Read("maxMagnitude", true, 0., 0.,
+      std::numeric_limits<double>::max(), "The maximum total force that this "
+      "actuator can produce");
+}
 
 Actuator::
 ~Actuator() = default;
@@ -103,12 +134,10 @@ Execute(const Control::Signal& _s, btMultiBody* const _model) const {
   auto iter = f.begin();
 
   auto mb = m_robot->GetMultiBody();
-  const size_t numPos = mb->PosDOF();
-  const size_t numJoints = mb->NumJoints();
-  const size_t numOri = mb->DOF() - numJoints - numPos;
   btVector3 scratch(0, 0, 0);
 
   // Set base force.
+  const size_t numPos = mb->PosDOF();
   for(size_t i = 0; i < numPos; ++i, ++iter)
     scratch[i] = *iter;
   _model->worldDirToLocal(-1, scratch);
@@ -116,23 +145,43 @@ Execute(const Control::Signal& _s, btMultiBody* const _model) const {
 
   // Set base torque.
   scratch.setValue(0, 0, 0);
-  if(numOri == 1) {
-    // This is a planar rotational robot. We only want a torque in the Z
-    // direction.
-    scratch[2] = *iter++;
-  }
-  else {
-    // This is a volumetric rotational robot. We need all three torque
-    // directions.
-    for(size_t i = 0; i < numOri; ++i, ++iter)
-      scratch[i] = *iter;
+  switch(mb->OrientationDOF()) {
+    case 1:
+      // This is a planar rotational robot. We only want a torque in the Z
+      // direction.
+      scratch[2] = *iter++;
+      break;
+    case 3:
+      // This is a volumetric rotational robot. We need all three torque
+      // directions.
+      for(size_t i = 0; i < 3; ++i, ++iter)
+        scratch[i] = *iter;
+      break;
+    default:
+      break;
   }
   _model->worldDirToLocal(-1, scratch);
   _model->addBaseTorque(scratch);
 
+  const size_t numJoints = mb->JointDOF();
   for(size_t i = 0; i < numJoints; ++i, ++iter)
     // Multiply by PI because bullet uses [ -PI : PI ].
     _model->addJointTorque(i, *iter * PI);
+}
+
+/*---------------------------------- Debug -----------------------------------*/
+
+std::ostream&
+operator<<(std::ostream& _os, const Actuator& _a) {
+  _os << "Actuator (robot " << _a.m_robot << "):"
+      << "\n\tMaxForce: " << _a.m_maxForce
+      << "\n\tMask: ";
+  for(const auto& m : _a.m_mask)
+    _os << " " << m;
+  _os << "\n\tLimits:";
+  for(const auto& limit : _a.m_limits)
+    _os << " " << limit;
+  return _os << std::endl;
 }
 
 /*----------------------------------------------------------------------------*/

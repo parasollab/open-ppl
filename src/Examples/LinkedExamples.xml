@@ -6,7 +6,7 @@
 
     <Environment filename="3D/3d.env"/>
 
-    <Robot label="linked" filename="3D/linked.robot"/>
+    <Robot label="linked" filename="3D/linked.xml"/>
 
     <Query filename="3D/linked.query"/>
 
@@ -571,7 +571,7 @@
     <!-- MPProblem allows multiple solvers to be specified and executed. -->
 
     <Solver mpStrategyLabel="BasicPRM1" seed="12345678"
-      baseFilename="Basic" vizmoDebug="true"/>
+      baseFilename="linked" vizmoDebug="true"/>
     <!--Solver mpStrategyLabel="KinoRRT" seed="12345678"
       baseFilename="Basic" vizmoDebug="true"/-->
 

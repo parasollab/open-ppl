@@ -265,6 +265,21 @@ PosDOF() const {
 }
 
 
+size_t
+Cfg::
+OriDOF() const {
+  return GetMultiBody()->OrientationDOF();
+}
+
+
+size_t
+Cfg::
+JointDOF() const {
+  return GetMultiBody()->JointDOF();
+}
+
+
+
 Robot*
 Cfg::
 GetRobot() const noexcept {
@@ -355,10 +370,10 @@ void
 Cfg::
 SetJointData(const vector<double>& _data) {
   // Assert that we got the correct number of DOFs.
-  if(_data.size() != GetMultiBody()->NumJoints())
+  if(_data.size() != JointDOF())
     throw RunTimeException(WHERE, "Tried to set data for " +
-        std::to_string(_data.size()) + " joints, but robot has " +
-        std::to_string(GetMultiBody()->NumJoints()) + " joints!");
+        std::to_string(_data.size()) + " joint DOFs, but robot has " +
+        std::to_string(JointDOF()) + " joint DOFs!");
 
   for(size_t i = 0, j = 0; i < DOF(); ++i)
     if(GetMultiBody()->GetDOFType(i) == DofType::Joint)
@@ -496,6 +511,31 @@ OrientationMagnitude() const {
 
 Vector3d
 Cfg::
+LinearPosition() const {
+  Vector3d out;
+  for(size_t i = 0; i < PosDOF(); ++i)
+    out[i] = m_dofs[i];
+  return out;
+}
+
+
+Vector3d
+Cfg::
+AngularPosition() const {
+  const size_t i = PosDOF();
+  switch(OriDOF()) {
+    case 1:
+      return Vector3d(0, 0, m_dofs[i]);
+    case 3:
+      return Vector3d(m_dofs[i], m_dofs[i + 1], m_dofs[i + 2]);
+    default:
+      return Vector3d();
+  }
+}
+
+
+Vector3d
+Cfg::
 LinearVelocity() const {
   if(m_vel.empty())
     return Vector3d();
@@ -513,11 +553,15 @@ AngularVelocity() const {
   if(m_vel.empty())
     return Vector3d();
 
-  Vector3d out;
-  const size_t maxIndex = DOF() - PosDOF() - GetMultiBody()->NumJoints();
-  for(size_t i = PosDOF(); i < maxIndex; ++i)
-    out[i] = m_vel[i];
-  return out;
+  const size_t i = PosDOF();
+  switch(OriDOF()) {
+    case 1:
+      return Vector3d(0, 0, m_vel[i]);
+    case 3:
+      return Vector3d(m_vel[i], m_vel[i + 1], m_vel[i + 2]);
+    default:
+      return Vector3d();
+  }
 }
 
 /*------------------------- Labels and Stats ---------------------------------*/
@@ -657,7 +701,7 @@ GetRandomVelocity() {
       throw RunTimeException(WHERE, "Unrecognized base type.");
   }
 
-  const size_t firstJointIndex = DOF() - GetMultiBody()->NumJoints();
+  const size_t firstJointIndex = DOF() - JointDOF();
   const size_t lastJointIndex = DOF();
   for(size_t i = firstJointIndex; i != lastJointIndex; ++i) {
     /// @TODO Extract this from robot properly.

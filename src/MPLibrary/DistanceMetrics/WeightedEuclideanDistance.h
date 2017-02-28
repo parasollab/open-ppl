@@ -3,19 +3,18 @@
 
 #include "DistanceMetricMethod.h"
 
+
 ////////////////////////////////////////////////////////////////////////////////
-/// @ingroup DistanceMetrics
-/// @brief Weighted Euclidean distance for State space
-///
 /// Weighted Euclidean distance in State space will have four weight components:
 /// position, rotation, velocity, and angular velocity.
+/// @ingroup DistanceMetrics
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
 class WeightedEuclideanDistance : public DistanceMetricMethod<MPTraits> {
 
   public:
 
-    ///@name Local Types
+    ///@name Motion Planning Types
     ///@{
 
     typedef typename MPTraits::CfgType CfgType;
@@ -25,14 +24,16 @@ class WeightedEuclideanDistance : public DistanceMetricMethod<MPTraits> {
     ///@{
 
     WeightedEuclideanDistance();
+
     WeightedEuclideanDistance(XMLNode& _node);
+
     virtual ~WeightedEuclideanDistance() = default;
 
     ///@}
     ///@name Distance Interface
     ///@{
 
-    virtual double Distance(const CfgType& _s1, const CfgType& _s2) override;
+    virtual double Distance(const CfgType& _c1, const CfgType& _c2) override;
 
     ///@}
 
@@ -70,6 +71,16 @@ WeightedEuclideanDistance(XMLNode& _node) :
       "Linear velocity weight");
   m_avlW = _node.Read("avlWeight", true, m_avlW, 0.0, 1.0,
       "Angular velocity weight");
+
+  // Normalize weights.
+  const double sum = m_posW + m_rotW + m_velW + m_avlW;
+  if(sum <= 0)
+    throw ParseException(_node.Where(), "Sum of weights are non-positive.");
+
+  m_posW /= sum;
+  m_rotW /= sum;
+  m_velW /= sum;
+  m_avlW /= sum;
 }
 
 /*----------------------------- Distance Interface ---------------------------*/
@@ -77,18 +88,13 @@ WeightedEuclideanDistance(XMLNode& _node) :
 template <typename MPTraits>
 double
 WeightedEuclideanDistance<MPTraits>::
-Distance(const CfgType& _s1, const CfgType& _s2) {
-  CfgType diff = _s1 - _s2;
+Distance(const CfgType& _c1, const CfgType& _c2) {
+  const CfgType diff = _c1 - _c2;
 
-  Vector3d pos(diff[0], diff[1], diff[2]);
-  Vector3d rot(diff[3], diff[4], diff[5]);
-  const vector<double>& velocity = diff.GetVelocity();
-  Vector3d vel(velocity[0], velocity[1], velocity[2]);
-  Vector3d avl(velocity[3], velocity[4], velocity[5]);
-
-  double dist = m_posW*pos.norm() + m_rotW*rot.norm() +
-    m_velW*vel.norm() + m_avlW*avl.norm();
-  return dist;
+  return m_posW * diff.LinearPosition().norm()
+       + m_rotW * diff.AngularPosition().norm()
+       + m_velW * diff.LinearVelocity().norm()
+       + m_avlW * diff.AngularVelocity().norm();
 }
 
 /*----------------------------------------------------------------------------*/

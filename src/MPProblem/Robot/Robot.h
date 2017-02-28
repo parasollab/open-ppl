@@ -1,6 +1,7 @@
 #ifndef ROBOT_H_
 #define ROBOT_H_
 
+#include <iostream>
 #include <string>
 #include <vector>
 
@@ -48,6 +49,7 @@ class Robot {
 
   ActiveMultiBody* m_multibody{nullptr};   ///< Robot's geometric representation.
 
+  std::string m_agentLabel;                ///< Agent type label.
   Agent* m_agent{nullptr};                 ///< High-level decision-making agent.
 
   std::vector<Actuator*> m_actuators;      ///< Actuators.
@@ -58,9 +60,8 @@ class Robot {
   bool m_nonholonomic{false};              ///< Is the robot nonholonomic?
   DynamicsModel* m_dynamicsModel{nullptr}; ///< The bullet dynamics model.
 
-  /// @TODO Should these live somewhere else? Parse them from input file.
-  double m_maxLinearVelocity{10};
-  double m_maxAngularVelocity{1};
+  double m_maxLinearVelocity{10};          ///< Max linear velocity.
+  double m_maxAngularVelocity{1};          ///< Max angular velocity.
 
   std::string m_label;                     ///< The robot's unique label.
 
@@ -79,6 +80,27 @@ class Robot {
     virtual ~Robot() noexcept;
 
     ///@}
+
+  protected:
+
+    ///@name I/O
+    ///@{
+
+    /// Parse an XML robot file.
+    /// @param _filename The file name.
+    /// @param _b The problem boundary.
+    void ReadXMLFile(const std::string& _filename, const Boundary* const _b);
+
+    /// Parse a multibody file describing this robot.
+    /// @param _filename The file name.
+    /// @param _b The problem boundary.
+    void ReadMultibodyFile(const std::string& _filename,
+        const Boundary* const _b);
+
+    ///@}
+
+  public:
+
     ///@name Simulation Interface
     ///@{
 
@@ -154,6 +176,13 @@ class Robot {
 
     /// Get the unique label for this instance.
     const std::string& GetLabel() const noexcept;
+
+    ///@}
+    ///@name Debug
+    ///@{
+
+    friend std::ostream& operator<<(std::ostream&, const Robot&);
+
     ///@}
 
 };

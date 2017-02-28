@@ -85,6 +85,8 @@ class Cfg {
 
     size_t DOF() const;
     size_t PosDOF() const;
+    size_t OriDOF() const;
+    size_t JointDOF() const;
 
     ///@}
     ///@name DOF Accessors
@@ -138,6 +140,8 @@ class Cfg {
     virtual double PositionMagnitude() const;
     virtual double OrientationMagnitude() const;
 
+    Vector3d LinearPosition() const;
+    Vector3d AngularPosition() const;
     Vector3d LinearVelocity() const;
     Vector3d AngularVelocity() const;
 

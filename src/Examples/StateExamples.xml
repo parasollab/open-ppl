@@ -6,8 +6,6 @@
 
     <Environment filename="3D/3d.env"/>
 
-    <!--Robot label="boxy" filename="3D/boxy.robot"/-->
-    <!--Robot label="links" filename="3D/linked.robot"/-->
     <Robot label="boxy" filename="3D/boxy.robot" nonholonomic="true"/>
 
     <Query filename="3D/3d.query"/>
@@ -30,7 +28,7 @@
       </PathConstraints>
 
       <GoalConstraints>
-      <!--
+        <!-- require an exact goal configuration -->
         <CSpaceConstraint>
           <Limit dof="0" min="20" max="20"/>
           <Limit dof="1" min="5" max="5"/>
@@ -39,7 +37,6 @@
           <Limit dof="4" min=".8" max=".8"/>
           <Limit dof="5" min=".5" max=".5"/>
         </CSpaceConstraint>
-      -->
       </GoalConstraints>
     </Task>
 
@@ -48,40 +45,53 @@
   <Library>
 
     <DistanceMetrics>
-      <WeightedEuclidean label="weuclidean" posWeight="0.4" rotWeight="0.4"
-        velWeight="0.1" avlWeight="0.1"/>
-      <WeightedEuclidean label="weuclidean-pos" posWeight="0.5"
-        rotWeight="0.5" velWeight="0" avlWeight="0"/>
+      <Euclidean label="euclidean"/>
+      <WeightedEuclidean label="weuclidean"
+        posWeight="0.4" rotWeight="0.4" velWeight="0.1" avlWeight="0.1"/>
     </DistanceMetrics>
 
     <ValidityCheckers>
-      <CollisionDetection label="rapid" method="RAPID"/>
+      <CollisionDetection label="rapid"
+        method="RAPID"/>
     </ValidityCheckers>
 
     <NeighborhoodFinders>
-      <BruteForceNF label="Nearest" dmLabel="weuclidean" unconnected="false"
-        k="1"/>
-      <BruteForceNF label="NearestPosition" dmLabel="weuclidean-pos"
-        unconnected="false" k="1"/>
+      <BruteForceNF label="NearestPosition"
+        dmLabel="euclidean" unconnected="false" k="1"/>
+      <BruteForceNF label="NearestState"
+        dmLabel="weuclidean" unconnected="false" k="1"/>
     </NeighborhoodFinders>
 
     <Extenders>
-      <KinodynamicExtender label="FixedBest" dmLabel="weuclidean" vcLabel="rapid"
-        fixed="true" best="true" minDist=".01" numSteps="20"/>
-      <KinodynamicExtender label="FixedRandom" dmLabel="weuclidean" vcLabel="rapid"
-        fixed="true" best="false" minDist=".01" numSteps="20"/>
-      <KinodynamicExtender label="VaryBest" dmLabel="weuclidean" vcLabel="rapid"
-        fixed="false" best="true" minDist=".01" numSteps="20"/>
-      <KinodynamicExtender label="VaryRandom" dmLabel="weuclidean" vcLabel="rapid"
-        fixed="false" best="false" minDist=".01" numSteps="20"/>
+      <KinodynamicExtender label="FixedBest"
+        dmLabel="weuclidean" vcLabel="rapid" numSteps="10"
+        fixed="true" best="true" minDist=".01"/>
+      <KinodynamicExtender label="FixedRandom"
+        dmLabel="weuclidean" vcLabel="rapid" numSteps="10"
+        fixed="true" best="false" minDist=".01"/>
+      <KinodynamicExtender label="VaryBest"
+        dmLabel="weuclidean" vcLabel="rapid" numSteps="10"
+        fixed="false" best="true" minDist=".01"/>
+      <KinodynamicExtender label="VaryRandom"
+        dmLabel="weuclidean" vcLabel="rapid" numSteps="30"
+        fixed="false" best="false" minDist=".01"/>
+
+      <MixExtender label="KinoExtender">
+        <Extender label="FixedBest" probability=".5"/>
+        <Extender label="FixedRandom" probability=".5"/>
+        <Extender label="VaryBest" probability="1"/>
+        <Extender label="VaryRandom" probability="1"/>
+      </MixExtender>
     </Extenders>
 
     <MapEvaluators>
-      <ConditionalEvaluator label="NodesEval" metric_method="NumNodes"
-        value="100" operator=">="/>
-      <RRTQuery label="RRTQuery" goalDist=".3"
-        nfLabel="NearestPosition" exLabel="FixedRandom" debug="false"/>
-      <ComposeEvaluator label="BoundedQuery" operator="OR">
+      <ConditionalEvaluator label="NodesEval"
+        metric_method="NumNodes" value="100" operator=">="/>
+      <RRTQuery label="RRTQuery"
+        goalDist=".3" nfLabel="NearestPosition" exLabel="FixedRandom"
+        debug="false"/>
+      <ComposeEvaluator label="BoundedRRTQuery"
+        operator="OR">
         <Evaluator label="RRTQuery"/>
         <Evaluator label="NodesEval"/>
       </ComposeEvaluator>
@@ -92,23 +102,32 @@
     </Metrics>
 
     <MPStrategies>
-      <!-- KinodynamicRRT -->
-      <BasicRRTStrategy label="KRRTQuery" growthFocus="0.05"
-        dmLabel="weuclidean" nfLabel="Nearest" vcLabel="rapid"
-        gtype="UNDIRECTED_TREE" extenderLabel="FixedRandom" debug="true">
-        <Evaluator label="BoundedQuery"/>
+      <BasicRRTStrategy label="RRT"
+        growthFocus="0.01" dmLabel="weuclidean" nfLabel="NearestState"
+        vcLabel="rapid" extenderLabel="KinoExtender" gtype="DIRECTED_TREE"
+        growGoals="false" debug="false">
+        <Evaluator label="BoundedRRTQuery"/>
       </BasicRRTStrategy>
 
-      <!-- KinodynamicRRT -->
-      <BasicRRTStrategy label="KRRTNodes" growthFocus="0.05"
-        dmLabel="weuclidean" nfLabel="Nearest" vcLabel="rapid"
-        gtype="UNDIRECTED_TREE" extenderLabel="FixedRandom" debug="false">
-        <Evaluator label="NodesEval"/>
-      </BasicRRTStrategy>
+      <DynamicDomainRRT label="DynamicDomainRRT"
+        growthFocus="0.01" dmLabel="weuclidean" nfLabel="NearestState"
+        vcLabel="rapid" extenderLabel="KinoExtender" gtype="DIRECTED_TREE"
+        growGoals="false" r="2" debug="false">
+        <Evaluator label="BoundedRRTQuery"/>
+      </DynamicDomainRRT>
+
+      <DynamicRegionRRT label="DynamicRegionRRT"
+        growthFocus="0.01" dmLabel="weuclidean" nfLabel="NearestState"
+        vcLabel="rapid" extenderLabel="KinoExtender" gtype="DIRECTED_TREE"
+        growGoals="false" debug="false">
+        <Evaluator label="BoundedRRTQuery"/>
+      </DynamicRegionRRT>
+
     </MPStrategies>
 
-    <Solver mpStrategyLabel="KRRTQuery" seed="12345678"
+    <Solver mpStrategyLabel="RRT" seed="12345678"
       baseFilename="KRRT" vizmoDebug="true"/>
 
   </Library>
+
 </MotionPlanning>

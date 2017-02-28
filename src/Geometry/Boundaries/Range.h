@@ -227,10 +227,8 @@ operator<<(std::ostream& _os, const Range<T>& _r) {
 template <typename T>
 std::istream&
 operator>>(std::istream& _is, Range<T>& _r) {
-  _is >> _r.min;
-  while(!isdigit(_is.peek()))
-    _is.get();
-  return _is >> _r.max;
+  char delim;
+  return _is >> _r.min >> std::skipws >> delim >> _r.max;
 }
 
 /*----------------------------------------------------------------------------*/

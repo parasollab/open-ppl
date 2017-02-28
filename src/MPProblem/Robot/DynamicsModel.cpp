@@ -217,7 +217,7 @@ ExtractSimulatedState(Robot* const _robot, btMultiBody* const _model) {
       out.Velocity(i) = linear[i];
 
     const btVector3 angular = _model->getBaseOmega();
-    const size_t firstJointIndex = mb->DOF() - mb->NumJoints();
+    const size_t firstJointIndex = mb->DOF() - mb->JointDOF();
     int count = -1;
     for(size_t i = mb->PosDOF(); i < firstJointIndex; ++i)
       out.Velocity(i) = angular[++count];
@@ -225,7 +225,7 @@ ExtractSimulatedState(Robot* const _robot, btMultiBody* const _model) {
 
   // Get joint positions.
   {
-    const size_t firstJointIndex = mb->DOF() - mb->NumJoints();
+    const size_t firstJointIndex = mb->DOF() - mb->JointDOF();
     const size_t lastJointIndex = mb->DOF();
 
     int count = -1;
@@ -260,7 +260,7 @@ ConfigureSimulatedState(const Cfg& _c, btMultiBody* const _model) {
 
   // Set the joint DOFs.
   int index = 0;
-  const size_t firstJointIndex = mb->DOF() - mb->NumJoints();
+  const size_t firstJointIndex = mb->DOF() - mb->JointDOF();
   const size_t lastJointIndex = mb->DOF();
   for(size_t i = firstJointIndex; i < lastJointIndex; ++i, ++index) {
     // Bullet uses [ -PI : PI ].

@@ -85,7 +85,7 @@ MixExtender(XMLNode& _node) : ExtenderMethod<MPTraits>(_node) {
     if(child.Name() == "Extender"){
       string label = child.Read("label", true, "",
           "Extender label");
-      double probability = child.Read("probability", true, 0.0,
+      const double probability = child.Read("probability", true, 0.0,
           0.0, 1.0, "Extender probability");
       m_growSet.push_back(make_pair(label, make_pair(probability, 0)));
     }

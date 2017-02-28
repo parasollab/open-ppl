@@ -160,6 +160,9 @@ template <typename MPTraits>
 const vector<typename MPTraits::CfgType>
 PathType<MPTraits>::
 FullCfgs(MPLibrary* _lib, const string& _lp) const {
+  if(m_vids.empty())
+    return std::vector<CfgType>();
+
   GraphType* g = m_roadmap->GetGraph();
   vector<CfgType> out = {g->GetVertex(m_vids.front())};
 

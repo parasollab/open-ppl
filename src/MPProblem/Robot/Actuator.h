@@ -1,6 +1,7 @@
 #ifndef ACTUATOR_H_
 #define ACTUATOR_H_
 
+#include <iostream>
 #include <vector>
 
 #include "Control.h"
@@ -8,6 +9,7 @@
 
 class btMultiBody;
 class Robot;
+class XMLNode;
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -54,7 +56,14 @@ class Actuator {
     ///@name Construction
     ///@{
 
+    /// Construct an empty actuator for a given robot.
+    /// @param _r The owning robot.
     Actuator(Robot* const _r);
+
+    /// Construct an actuator for a given robot from an XML input.
+    /// @param _r The owning robot.
+    /// @param _node The XML input node.
+    Actuator(Robot* const _r, XMLNode& _node);
 
     virtual ~Actuator();
 
@@ -102,6 +111,13 @@ class Actuator {
     /// @param _s The control signal to apply.
     /// @param _model The bullet model of m_robot to control.
     void Execute(const Control::Signal& _s, btMultiBody* const _model) const;
+
+    ///@}
+    ///@name Debug
+    ///@{
+
+    /// Print an actuator's state to an ostream.
+    friend std::ostream& operator<<(std::ostream&, const Actuator&);
 
     ///@}
 };
