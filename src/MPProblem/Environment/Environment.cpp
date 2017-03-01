@@ -58,8 +58,8 @@ Read(string _filename) {
 
   m_filename = _filename;
   size_t sl = m_filename.rfind('/');
-  m_modelDataDir = m_filename.substr(0, sl == string::npos ? 0 : sl);
-  Body::m_modelDataDir = m_modelDataDir + "/";
+  m_modelDataDir = m_filename.substr(0, sl == string::npos ? 0 : sl) + "/";
+  Body::m_modelDataDir = m_modelDataDir;
 
   m_obstacles.clear();
 

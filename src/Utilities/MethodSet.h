@@ -99,6 +99,11 @@ class MethodSet final {
     /// @return The corresponding method pointer.
     MethodPointer GetMethod(const std::string& _label);
 
+    /// Find a method iterator.
+    /// @param _label The method label.
+    /// @return The iterator to that method, or nullptr if it is not found.
+    iterator FindMethod(std::string _label);
+
     /// Prepare all methods in this set for execution on the owning MPLibrary's
     /// current MPProblem.
     void Initialize();
@@ -224,6 +229,16 @@ GetMethod(const std::string& _label) {
     throw RunTimeException(WHERE, err);
   }
   return element;
+}
+
+
+template <typename MPTraits, typename Method>
+typename MethodSet<MPTraits, Method>::iterator
+MethodSet<MPTraits, Method>::
+FindMethod(std::string _label) {
+  if(_label == "")
+    _label = m_default;
+  return m_elements.find(_label);
 }
 
 

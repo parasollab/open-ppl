@@ -121,7 +121,7 @@ ReadXMLFile(const std::string& _filename, const Boundary* const _b) {
       // child node directly to the multibody instead.
       const std::string mbFile = child.Read("filename", true, "", "Name of the "
           "robot's multibody file");
-      ReadMultibodyFile(mbFile, _b);
+      ReadMultibodyFile(GetPathName(_filename) + mbFile, _b);
     }
     else if(child.Name() == "Actuators") {
       // If we read an actuators section then we must have controls. We should

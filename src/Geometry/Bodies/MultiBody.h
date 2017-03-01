@@ -130,8 +130,6 @@ class MultiBody {
     array<double, 6> m_boundingBox;    ///< Bounding Box
     double m_maxAxisRange;             ///< Max axis range
 
-    string m_modelDataDir;             ///< Directory of environment file
-
     ///@}
 };
 

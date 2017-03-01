@@ -193,13 +193,16 @@ class Environment {
     void Decompose(DecompositionFunction&& _f) {m_decomposition = _f(this);}
 
     ///@}
-
+    ///@name Physical Properties
+    ///@{
 
     /// Get the friction coefficient
     double GetFrictionCoefficient(){ return m_frictionCoefficient; }
 
     /// Get the gravity 3-vector
     Vector3d GetGravity(){ return m_gravity; }
+
+    ///@}
 
   protected:
 
