@@ -259,6 +259,8 @@ KinodynamicExtender<MPTraits>::
 ApplyControl(const CfgType& _start, const CfgType& _end, CfgType& _new,
     LPOutput<MPTraits>& _lp, const size_t _steps, const Control& _control)
     const {
+  this->GetStatClass()->StartClock("KinodynamicExtender::ApplyControl");
+
   if(this->m_debug)
     std::cout << "\tTrying control " << _control << std::endl;
 
@@ -305,6 +307,8 @@ ApplyControl(const CfgType& _start, const CfgType& _end, CfgType& _new,
     std::cout << "\t\tExtension was " << (valid ? "valid" : "invalid") << "."
               << "\n\t\tExtended " << distance << " >= " << this->m_minDist
               << " units." << std::endl;
+
+  this->GetStatClass()->StopClock("KinodynamicExtender::ApplyControl");
   return valid;
 }
 

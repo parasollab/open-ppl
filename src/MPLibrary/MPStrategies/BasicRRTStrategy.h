@@ -592,6 +592,8 @@ template <typename MPTraits>
 pair<typename BasicRRTStrategy<MPTraits>::VID, bool>
 BasicRRTStrategy<MPTraits>::
 AddNode(const CfgType& _newCfg) {
+  this->GetStatClass()->StartClock("AddNode");
+
   GraphType* g = this->GetRoadmap()->GetGraph();
   VID newVID = g->AddVertex(_newCfg);
   bool nodeIsNew = newVID == g->get_num_vertices() - 1;
@@ -603,6 +605,8 @@ AddNode(const CfgType& _newCfg) {
   }
   else if(this->m_debug)
     cout << "\tVID " << newVID << " already exists, not adding." << endl;
+
+  this->GetStatClass()->StopClock("AddNode");
   return make_pair(newVID, nodeIsNew);
 }
 
