@@ -135,7 +135,7 @@ class QueryMethod : public MapEvaluatorMethod<MPTraits> {
     void WritePath() const;
 
     /// Reset the path and list of undiscovered goals.
-    virtual void Reset();
+    virtual void Reset(RoadmapType* const _r);
 
     ///@}
 
@@ -168,6 +168,8 @@ class QueryMethod : public MapEvaluatorMethod<MPTraits> {
     vector<CfgType> m_goals;    ///< The undiscovered goal configurations.
 
     bool m_fullRecreatePath{true};     ///< Create full paths or just VIDs?
+
+    RoadmapType* m_roadmap{nullptr};   ///< Last roadmap queried.
 
     ///@}
     ///@name Graph Search
@@ -277,9 +279,10 @@ PerformQuery(RoadmapType* const _r) {
     cout << "Evaluating query, " << m_goals.size() << " goals not connected.\n";
 
   // If no goals remain, then this must be a refinement step (as in optimal
-  // planning). In this case, reinitialize and rebuild the whole path.
-  if(m_goals.empty())
-    Reset();
+  // planning). In this case or the roadmap has changed, reinitialize and
+  // rebuild the whole path.
+  if(m_goals.empty() || _r != m_roadmap)
+    Reset(_r);
 
   // Search for a sequential path through each query point in order.
   for(auto it = m_goals.begin(); it < m_goals.end();) {
@@ -341,10 +344,13 @@ WritePath() const {
 template <typename MPTraits>
 void
 QueryMethod<MPTraits>::
-Reset() {
+Reset(RoadmapType* const _r) {
+  // Set the roadmap.
+  m_roadmap = _r;
+
   // Reset the goals.
   m_goals.clear();
-  copy(m_query.begin() + 1, m_query.end(), back_inserter(m_goals));
+  std::copy(m_query.begin() + 1, m_query.end(), back_inserter(m_goals));
 
   // Reset the path.
   this->GetPath()->Clear();

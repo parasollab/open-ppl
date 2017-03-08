@@ -62,7 +62,7 @@ class RRTQuery : public QueryMethod<MPTraits> {
         override;
 
     /// Reset the path and list of undiscovered goals.
-    virtual void Reset() override;
+    virtual void Reset(RoadmapType* const _r) override;
 
     ///@}
 
@@ -217,9 +217,11 @@ PerformSubQuery(const CfgType& _start, const CfgType& _goal) {
 template <typename MPTraits>
 void
 RRTQuery<MPTraits>::
-Reset() {
-  QueryMethod<MPTraits>::Reset();
-  m_highestCheckedVID = 0;
+Reset(RoadmapType* const _r) {
+  // Reset the highest checked VID if the roadmap has changed.
+  if(_r != this->m_roadmap)
+    m_highestCheckedVID = 0;
+  QueryMethod<MPTraits>::Reset(_r);
 }
 
 /*------------------------------- Helpers ------------------------------------*/
