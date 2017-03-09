@@ -583,9 +583,10 @@ MPLibraryType<MPTraits>::
 Solve(MPProblem* _problem, MPTask* _task, MPSolution* _solution) {
   m_task = _task;
   m_solution = _solution;
-  SetMPProblem(_problem);
 
   for(auto& solver : m_solvers) {
+    // Set the problem and initialize all algorithms.
+    SetMPProblem(_problem);
 
     // Call solver
     cout << "\n\nMPLibrary is solving with MPStrategyMethod labeled "
@@ -618,9 +619,12 @@ void
 MPLibraryType<MPTraits>::
 Solve(MPProblem* _problem, MPTask* _task) {
   m_task = _task;
-  SetMPProblem(_problem);
 
   for(auto& solver : m_solvers) {
+    // Set the problem and initialize all algorithms.
+    SetMPProblem(_problem);
+
+    // Create storage for the solution.
     m_solution = new MPSolution(m_task->GetRobot());
 
     // Call solver

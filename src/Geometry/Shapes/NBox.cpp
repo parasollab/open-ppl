@@ -29,6 +29,19 @@ GetDimension() const noexcept {
 }
 
 
+void
+NBox::
+SetCenter(const std::vector<double>& _c) noexcept {
+  const size_t maxIndex = std::min(_c.size(), GetDimension());
+  for(size_t i = 0; i < maxIndex; ++i) {
+    const double offset = _c[i] - m_center[i];
+    m_range[i].min += offset;
+    m_range[i].max += offset;
+    m_center[i] = _c[i];
+  }
+}
+
+
 const std::vector<double>&
 NBox::
 GetCenter() const noexcept {

@@ -36,6 +36,9 @@ class NBox {
     /// Get the dimension of this box.
     size_t GetDimension() const noexcept;
 
+    /// Set the center point.
+    void SetCenter(const std::vector<double>& _c) noexcept;
+
     /// Get the center point.
     const std::vector<double>& GetCenter() const noexcept;
 

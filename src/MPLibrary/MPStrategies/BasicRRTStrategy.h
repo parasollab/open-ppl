@@ -99,7 +99,7 @@ class BasicRRTStrategy : public MPStrategyMethod<MPTraits> {
     virtual VID FindNearestNeighbor(const CfgType& _cfg, const TreeType& _tree);
 
     /// If the graph type is GRAPH, try to connect a configuration to its
-    ///        neighbors. No-op for TREE type graph.
+    /// neighbors. No-op for TREE type graph.
     /// @param _newVID The VID of the configuration to connect.
     void ConnectNeighbors(VID _newVID);
 
@@ -107,8 +107,8 @@ class BasicRRTStrategy : public MPStrategyMethod<MPTraits> {
     ///@name Growth Helpers
     ///@{
 
-    /// Extend a new configuration from a nearby configuration towards a
-    ///        growth target.
+    /// Extend a new configuration from a nearby configuration towards a growth
+    /// target.
     /// @param  _nearVID The nearby configuration's VID.
     /// @param  _qRand   The growth target.
     /// @param  _lp      This is a local plan: _qRand is already in the map.
@@ -407,13 +407,6 @@ Finalize() {
   // Output stats
   ofstream osStat(baseFilename + ".stat");
   this->GetStatClass()->PrintAllStats(osStat, map);
-
-  // Output extension success rate
-  cout << "Extension success rate: "
-       << setprecision(3) << static_cast<double>(m_successes) /
-                             static_cast<double>(m_trials)
-       << " (" << m_successes << "/" << m_trials << ")" << endl;
-  this->GetStatClass()->PrintClock(this->GetNameAndLabel() + "::Run", cout);
 }
 
 /*--------------------------- Direction Helpers ------------------------------*/
@@ -545,7 +538,7 @@ template <typename MPTraits>
 typename BasicRRTStrategy<MPTraits>::VID
 BasicRRTStrategy<MPTraits>::
 Extend(const VID _nearVID, const CfgType& _qRand, const bool _lp) {
-  this->GetStatClass()->StartClock("Extend");
+  this->GetStatClass()->StartClock("BasicRRT::Extend");
 
   auto e = this->GetExtender(m_exLabel);
   const CfgType& qNear = this->GetRoadmap()->GetGraph()->GetVertex(_nearVID);
@@ -556,7 +549,7 @@ Extend(const VID _nearVID, const CfgType& _qRand, const bool _lp) {
   if(e->Extend(qNear, _qRand, qNew, lp))
     extension = AddNode(qNew);
 
-  this->GetStatClass()->StopClock("Extend");
+  this->GetStatClass()->StopClock("BasicRRT::Extend");
 
   VID& newVID = extension.first;
   bool nodeIsNew = extension.second;
@@ -584,7 +577,7 @@ Extend(const VID _nearVID, const CfgType& _qRand, const bool _lp) {
   if(_lp && !validLP)
     newVID = INVALID_VID;
 
-  return newVID;
+  return nodeIsNew ? newVID : INVALID_VID;
 }
 
 
@@ -596,7 +589,7 @@ AddNode(const CfgType& _newCfg) {
 
   GraphType* g = this->GetRoadmap()->GetGraph();
   VID newVID = g->AddVertex(_newCfg);
-  bool nodeIsNew = newVID == g->get_num_vertices() - 1;
+  const bool nodeIsNew = newVID == g->get_num_vertices() - 1;
   if(nodeIsNew) {
     m_currentTree->push_back(newVID);
     if(this->m_debug)

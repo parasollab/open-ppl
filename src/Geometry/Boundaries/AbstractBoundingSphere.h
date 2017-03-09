@@ -67,6 +67,8 @@ class AbstractBoundingSphere : public Boundary, public NSphere {
     ///@name Modifiers
     ///@{
 
+    virtual void SetCenter(const std::vector<double>& _c) noexcept override;
+
     virtual void ApplyOffset(const Vector3d& _v) override;
 
     virtual void ResetBoundary(const vector<pair<double, double>>& _bbx,

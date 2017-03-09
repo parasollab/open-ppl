@@ -80,6 +80,8 @@ class TetrahedralBoundary : public Boundary {
     ///@name Modifiers
     ///@}
 
+    virtual void SetCenter(const std::vector<double>& _c) noexcept override;
+
     virtual void ApplyOffset(const Vector3d& _v) override;
 
     virtual void ResetBoundary(const std::vector<pair<double, double>>& _bbx,

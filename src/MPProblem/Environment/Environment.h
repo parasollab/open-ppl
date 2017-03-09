@@ -247,15 +247,15 @@ class Environment {
     shared_ptr<WorkspaceDecomposition> m_decomposition;
 
     ///@}
+    ///@name Physical Properties
+    ///@{
 
-
-    /// The uniform friction coefficient, applied to all btMultiBodies created
+    /// The uniform friction coefficient for all bodies.
     double m_frictionCoefficient;
 
-    /// These are the three components of gravity, so we can make our gravity
-    ///  variable in all directions.
-    Vector3d m_gravity;
+    Vector3d m_gravity; ///< The gravity direction and magnitude.
 
+    ///@}
 
 };
 

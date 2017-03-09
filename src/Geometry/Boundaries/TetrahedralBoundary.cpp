@@ -178,6 +178,19 @@ GetClearancePoint(const Vector3d& _p) const {
 
 void
 TetrahedralBoundary::
+SetCenter(const std::vector<double>& _c) noexcept {
+  const size_t maxIndex = std::min(_c.size(), size_t(3));
+  for(size_t i = 0; i < maxIndex; ++i) {
+    const double offset = _c[i] - m_center[i];
+    for(size_t j = 0; j < 4; ++j)
+      m_points[j][i] += offset;
+    m_center[i] = _c[i];
+  }
+}
+
+
+void
+TetrahedralBoundary::
 ApplyOffset(const Vector3d& _v) {
   for(size_t i = 0; i < 3; ++i)
     m_center[i] += _v[i];

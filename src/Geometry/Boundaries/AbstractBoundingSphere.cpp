@@ -78,6 +78,13 @@ GetClearancePoint(const Vector3d& _p) const {
 
 void
 AbstractBoundingSphere::
+SetCenter(const std::vector<double>& _c) noexcept {
+  NSphere::SetCenter(_c);
+}
+
+
+void
+AbstractBoundingSphere::
 ApplyOffset(const Vector3d& _v) {
   NSphere::Translate(std::vector<double>{_v[0], _v[1], _v[2]});
 }

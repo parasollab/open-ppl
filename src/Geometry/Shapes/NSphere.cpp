@@ -25,6 +25,15 @@ GetDimension() const noexcept {
 }
 
 
+void
+NSphere::
+SetCenter(const std::vector<double>& _c) noexcept {
+  const size_t maxIndex = std::min(_c.size(), GetDimension());
+  for(size_t i = 0; i < maxIndex; ++i)
+    m_center[i] = _c[i];
+}
+
+
 const std::vector<double>&
 NSphere::
 GetCenter() const noexcept {

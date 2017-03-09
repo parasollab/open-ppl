@@ -39,6 +39,10 @@ class NSphere {
     /// Get the dimension of this sphere.
     size_t GetDimension() const noexcept;
 
+    /// Set the center point.
+    /// @param _c The new center point.
+    void SetCenter(const std::vector<double>& _c) noexcept;
+
     /// Get the center point.
     const std::vector<double>& GetCenter() const noexcept;
 

@@ -79,6 +79,7 @@ class DynamicRegionRRT : public BasicRRTStrategy<MPTraits> {
 
     virtual void Initialize() override;
     virtual void Run() override;
+    virtual void Finalize() override;
 
     ///@}
 
@@ -252,16 +253,17 @@ Initialize() {
   if(m_prune)
     m_skeleton.Prune(this->m_query->GetQuery()[1].GetPoint());
 
-  // Spark a region for each outgoing edge of start
-  const double robotRadius = this->GetTask()->GetRobot()->GetMultiBody()->
-      GetBoundingSphereRadius();
-  const double regionRadius = m_regionFactor * robotRadius;
-  m_skeleton.InitRegions(start, regionRadius);
-
   stats->StopClock("SkeletonConstruction");
 
   // Fix the skelton clearance.
   FixSkeletonClearance();
+
+  // Spark a region for each outgoing edge of start
+  m_samplingRegion = nullptr;
+  const double robotRadius = this->GetTask()->GetRobot()->GetMultiBody()->
+      GetBoundingSphereRadius();
+  const double regionRadius = m_regionFactor * robotRadius;
+  m_skeleton.InitRegions(start, regionRadius);
 
   // Initialize bucket map.
   if(m_bucketing) {
@@ -269,12 +271,13 @@ Initialize() {
     for(auto eit = m_skeleton.GetGraph().edges_begin();
         eit != m_skeleton.GetGraph().edges_end(); eit++) {
       const auto& path = eit->property();
-      for(auto& n : path)
-        m_buckets.emplace(n, vector<VID>());
+      for(const auto& point : path)
+        m_buckets.emplace(point, vector<VID>());
     }
+    m_buckets[to_point(m_skeleton.GetRegionMap().begin()->first->GetCenter())].
+        push_back(0);
   }
 
-  m_buckets[to_point(m_skeleton.GetRegionMap().begin()->first->GetCenter())].push_back(0);
 
 #ifdef VIZMO
   GetVizmo().GetEnv()->AddWorkspaceDecompositionModel(env->GetDecomposition());
@@ -352,9 +355,21 @@ Run() {
 
   if(this->m_debug)
     std::cout << "\nEnd DynamicRegionRRT::Run" << std::endl;
+}
+
+
+template <typename MPTraits>
+void
+DynamicRegionRRT<MPTraits>::
+Finalize() {
+  auto stats = this->GetStatClass();
 
   stats->SetStat("CandidateFraction",
       stats->GetStat("CandidateFraction") / stats->GetStat("NF::BucketUsed"));
+  stats->SetStat("SampleTarget::AvgTime",
+      stats->GetSeconds("SampleTarget") / stats->GetStat("SampleTarget::Num"));
+
+  BasicRRTStrategy<MPTraits>::Finalize();
 }
 
 
@@ -382,6 +397,7 @@ SelectDirection() {
 
   // Generate the target q_rand from within the selected region.
   stats->StartClock("SampleTarget");
+  stats->IncStat("SampleTarget::Num");
   CfgType mySample(robot);
   mySample.GetRandomCfg(env, samplingBoundary);
   stats->StopClock("SampleTarget");

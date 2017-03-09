@@ -9,7 +9,9 @@
 
 #include "MPLibrary/MPBaseObject.h"
 #include "Utilities/MetricUtils.h"
+#include "Utilities/MPUtils.h"
 
+class Boundary;
 class Environment;
 template <typename MPTraits> class MixSampler;
 

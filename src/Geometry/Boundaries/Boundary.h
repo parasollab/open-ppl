@@ -105,6 +105,10 @@ class Boundary {
     ///@name Modifiers
     ///@{
 
+    /// Move the boundary to a new center point.
+    /// @param _c The new center point for the boundary.
+    virtual void SetCenter(const std::vector<double>& _c) noexcept = 0;
+
     /// Translate the boundary by an offset vector.
     /// @param _v The offset to apply.
     virtual void ApplyOffset(const Vector3d& _v) = 0;

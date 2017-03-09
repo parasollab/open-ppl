@@ -107,6 +107,13 @@ GetSideID(const vector<double>& _p) const {
 
 void
 AbstractBoundingBox::
+SetCenter(const std::vector<double>& _c) noexcept {
+  NBox::SetCenter(_c);
+}
+
+
+void
+AbstractBoundingBox::
 ApplyOffset(const Vector3d& _v) {
   NBox::Translate(std::vector<double>{_v[0], _v[1], _v[2]});
 }

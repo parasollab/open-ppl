@@ -253,7 +253,7 @@ AdvanceRegions(const Cfg& _cfg) {
       if(i < path.size() - 1) {
         const Point3d& current = path[i];
         const Point3d& next = path[++i];
-        region->ApplyOffset(next - current);
+        region->SetCenter({next[0], next[1], next[2]});
 
         if(m_debug)
           std::cout << "\tAdvancing region " << region << " from index "
