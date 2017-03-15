@@ -1,4 +1,4 @@
-#include "Drawable.h"
+#include "DrawableMultiBody.h"
 
 #include "Geometry/Bodies/ActiveMultiBody.h"
 #include "Geometry/Bodies/FixedBody.h"
@@ -9,8 +9,8 @@
 
 /*------------------------------- Construction -------------------------------*/
 
-Drawable::
-Drawable(MultiBody* _m) {
+DrawableMultiBody::
+DrawableMultiBody(MultiBody* _m) {
   switch(_m->GetType()) {
     case MultiBody::MultiBodyType::Active:
       {
@@ -36,21 +36,21 @@ Drawable(MultiBody* _m) {
 /*---------------------------- MultiBody Support -----------------------------*/
 
 size_t
-Drawable::
+DrawableMultiBody::
 GetNumBodies() const noexcept {
   return m_bodies.size();
 }
 
 
 void
-Drawable::
+DrawableMultiBody::
 PushTransform(const size_t _i, const glutils::transform& _t) {
   m_bodies[_i].push_transform(_t);
 }
 
 
 void
-Drawable::
+DrawableMultiBody::
 UpdateTransform() {
   for(auto& b : m_bodies)
     b.update_transform();
@@ -59,7 +59,7 @@ UpdateTransform() {
 /*--------------------------- Drawable Overrides -----------------------------*/
 
 void
-Drawable::
+DrawableMultiBody::
 draw() {
   for(auto& b : m_bodies)
     b.render();
@@ -67,7 +67,7 @@ draw() {
 
 
 void
-Drawable::
+DrawableMultiBody::
 draw_select() {
   for(auto& b : m_bodies)
     b.render_select();
@@ -75,21 +75,21 @@ draw_select() {
 
 
 void
-Drawable::
+DrawableMultiBody::
 draw_selected() {
   /// @TODO
 }
 
 
 void
-Drawable::
+DrawableMultiBody::
 draw_highlighted() {
   /// @TODO
 }
 
 
 void
-Drawable::
+DrawableMultiBody::
 select() noexcept {
   for(auto& body : m_bodies)
     body.glutils::drawable::select();
@@ -97,7 +97,7 @@ select() noexcept {
 
 
 void
-Drawable::
+DrawableMultiBody::
 deselect() noexcept {
   for(auto& body : m_bodies)
     body.glutils::drawable::deselect();
@@ -105,7 +105,7 @@ deselect() noexcept {
 
 
 void
-Drawable::
+DrawableMultiBody::
 highlight() noexcept {
   for(auto& body : m_bodies)
     body.glutils::drawable::highlight();
@@ -113,7 +113,7 @@ highlight() noexcept {
 
 
 void
-Drawable::
+DrawableMultiBody::
 unhighlight() noexcept {
   for(auto& body : m_bodies)
     body.glutils::drawable::unhighlight();

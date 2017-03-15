@@ -4,7 +4,7 @@
 #include "glutils/drawable_call_list.h"
 
 class Body;
-class Drawable;
+class DrawableMultiBody;
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -15,8 +15,8 @@ class DrawableBody final : public glutils::drawable_call_list {
   ///@name Internal State
   ///@{
 
-  Drawable* const m_parent; ///< The owning Drawable object.
-  const Body* const m_body; ///< The Body to draw.
+  DrawableMultiBody* const m_parent; ///< The owning Drawable object.
+  const Body* const m_body;          ///< The Body to draw.
 
   ///@}
 
@@ -25,7 +25,7 @@ class DrawableBody final : public glutils::drawable_call_list {
     ///@name Construction
     ///@{
 
-    DrawableBody(Drawable* const _parent, const Body* const _body);
+    DrawableBody(DrawableMultiBody* const _parent, const Body* const _body);
 
     virtual ~DrawableBody() = default;
 

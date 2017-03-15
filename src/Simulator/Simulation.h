@@ -75,12 +75,14 @@ class Simulation : public base_visualization {
 
     mutable std::mutex m_guard;        ///< Lock for updating object transforms.
 
+    std::thread m_worker;                  ///< Thread for stepping simulation.
     std::atomic<bool> m_running{false};    ///< Is the simulation running?
+
     volatile size_t m_backloggedSteps{0};  ///< Number of precomputed steps.
     const size_t m_backlogMax{100};        ///< Max number of precomputed steps.
-    std::thread m_worker;                  ///< Thread for stepping simulation.
 
     ///@}
+
 };
 
 #endif

@@ -235,7 +235,7 @@ Initialize() {
   auto env = this->GetEnvironment();
 
   StatClass* stats = this->GetStatClass();
-  stats->StartClock("SkeletonConstruction");
+  stats->StartClock("DynamicRegionRRT::SkeletonConstruction");
 
   //Embed ReebGraph
   delete m_reebGraph;
@@ -253,7 +253,7 @@ Initialize() {
   if(m_prune)
     m_skeleton.Prune(this->m_query->GetQuery()[1].GetPoint());
 
-  stats->StopClock("SkeletonConstruction");
+  stats->StopClock("DynamicRegionRRT::SkeletonConstruction");
 
   // Fix the skelton clearance.
   FixSkeletonClearance();
@@ -328,17 +328,17 @@ Run() {
         m_skeleton.IncrementSuccess(m_samplingRegion);
 
       // Move existing regions along.
-      stats->StartClock("AdvanceRegions");
+      stats->StartClock("DynamicRegionRRT::AdvanceRegions");
       m_skeleton.AdvanceRegions(newest);
-      stats->StopClock("AdvanceRegions");
+      stats->StopClock("DynamicRegionRRT::AdvanceRegions");
 
       // Safety check
       m_samplingRegion = nullptr;
 
       // Create new regions near newest.
-      stats->StartClock("CreateRegions");
+      stats->StartClock("DynamicRegionRRT::CreateRegions");
       m_skeleton.CreateRegions(newest.GetPoint(), regionRadius);
-      stats->StopClock("CreateRegions");
+      stats->StopClock("DynamicRegionRRT::CreateRegions");
 
       // Connect trees if there are more than one.
       this->ConnectTrees(recent);
@@ -367,7 +367,8 @@ Finalize() {
   stats->SetStat("CandidateFraction",
       stats->GetStat("CandidateFraction") / stats->GetStat("NF::BucketUsed"));
   stats->SetStat("SampleTarget::AvgTime",
-      stats->GetSeconds("SampleTarget") / stats->GetStat("SampleTarget::Num"));
+      stats->GetSeconds("DynamicRegionRRT::SampleTarget") /
+      stats->GetStat("SampleTarget::Num"));
 
   BasicRRTStrategy<MPTraits>::Finalize();
 }
@@ -386,9 +387,9 @@ SelectDirection() {
   auto robot = this->GetTask()->GetRobot();
 
   // Randomly select a sampling region.
-  stats->StartClock("SelectRegion");
+  stats->StartClock("DynamicRegionRRT::SelectRegion");
   m_samplingRegion = m_skeleton.SelectRegion();
-  stats->StopClock("SelectRegion");
+  stats->StopClock("DynamicRegionRRT::SelectRegion");
 
   if(!m_samplingRegion)
     samplingBoundary = this->GetEnvironment()->GetBoundary();
@@ -396,15 +397,15 @@ SelectDirection() {
     samplingBoundary = m_samplingRegion;
 
   // Generate the target q_rand from within the selected region.
-  stats->StartClock("SampleTarget");
+  stats->StartClock("DynamicRegionRRT::SampleTarget");
   stats->IncStat("SampleTarget::Num");
   CfgType mySample(robot);
   mySample.GetRandomCfg(env, samplingBoundary);
-  stats->StopClock("SampleTarget");
+  stats->StopClock("DynamicRegionRRT::SampleTarget");
 
   // Bias sample velocity.
   if(m_biasing and robot->IsNonholonomic() and m_samplingRegion) {
-    stats->StartClock("VelocityBiasing");
+    stats->StartClock("DynamicRegionRRT::VelocityBiasing");
     // Resample until the new Cfg aims relatively along the biasing direction.
     const Vector3d bias = GetVelocityBias();
     if(bias.norm() == 0)
@@ -420,7 +421,7 @@ SelectDirection() {
                   << m_velocityAlignment
                   << std::endl;
     } while(velocity * bias < m_velocityAlignment);
-    this->GetStatClass()->StopClock("VelocityBiasing");
+    this->GetStatClass()->StopClock("DynamicRegionRRT::VelocityBiasing");
   }
 
   return mySample;
@@ -456,7 +457,7 @@ FindNearestNeighbor(const CfgType& _cfg, const TreeType& _tree) {
   stats->IncStat("CandidateFraction", static_cast<double>(candidates.size()) /
       g->get_num_vertices());
   stats->IncStat("NF::BucketUsed");
-  stats->StartClock("BucketNF");
+  stats->StartClock("DynamicRegionRRT::BucketNF");
 
   vector<pair<VID, double>> neighbors;
   auto nf = this->GetNeighborhoodFinder(this->m_nfLabel);
@@ -465,13 +466,13 @@ FindNearestNeighbor(const CfgType& _cfg, const TreeType& _tree) {
       candidates.size() == g->get_num_vertices(),
       _cfg, std::back_inserter(neighbors));
 
-  stats->StopClock("BucketNF");
+  stats->StopClock("DynamicRegionRRT::BucketNF");
 
-#if 0
+#if 1
   // Validation test to check if we are finding the right nearest neighbor.
   // Make sure this is off when running time experiments.
   {
-    stats->StartClock("CheckNF");
+    stats->StartClock("DynamicRegionRRT::CheckNF");
 
     vector<pair<VID, double>> neighbors2;
     nf->FindNeighbors(this->GetRoadmap(),
@@ -489,7 +490,7 @@ FindNearestNeighbor(const CfgType& _cfg, const TreeType& _tree) {
       stats->SetStat("NeighborDistance", neighborDistance);
     }
 
-    stats->StopClock("CheckNF");
+    stats->StopClock("DynamicRegionRRT::CheckNF");
   }
 #endif
 
@@ -508,7 +509,7 @@ Extend(const VID _nearVID, const CfgType& _qrand, const bool _lp) {
   if(m_bucketing and newVID != INVALID_VID and
       newVID == this->GetRoadmap()->GetGraph()->get_num_vertices() - 1) {
     auto stats = this->GetStatClass();
-    stats->StartClock("BucketNewCfg");
+    stats->StartClock("DynamicRegionRRT::BucketNewCfg");
     stats->IncStat("BucketNodes");
 
     // If this node was sampled from a dynamic region, add it to the bucket at
@@ -516,23 +517,23 @@ Extend(const VID _nearVID, const CfgType& _qrand, const bool _lp) {
     if(m_samplingRegion)
       m_buckets[to_point(m_samplingRegion->GetCenter())].push_back(newVID);
     // Otherwise, use the nearest bucket.
-    else {
-      const CfgType& cfg = this->GetRoadmap()->GetGraph()->GetVertex(newVID);
-      const Point3d p = cfg.GetPoint();
+    //else {
+    //  const CfgType& cfg = this->GetRoadmap()->GetGraph()->GetVertex(newVID);
+    //  const Point3d p = cfg.GetPoint();
 
-      auto bestBucket = m_buckets.end();
-      double bestDist = numeric_limits<double>::infinity();
+    //  auto bestBucket = m_buckets.end();
+    //  double bestDist = numeric_limits<double>::infinity();
 
-      for(auto iter = m_buckets.begin(); iter != m_buckets.end(); ++iter) {
-        const double dist = (p - iter->first).norm();
-        if(bestDist > dist) {
-          bestDist = dist;
-          bestBucket = iter;
-        }
-      }
-      bestBucket->second.push_back(newVID);
-    }
-    stats->StopClock("BucketNewCfg");
+    //  for(auto iter = m_buckets.begin(); iter != m_buckets.end(); ++iter) {
+    //    const double dist = (p - iter->first).norm();
+    //    if(bestDist > dist) {
+    //      bestDist = dist;
+    //      bestBucket = iter;
+    //    }
+    //  }
+    //  bestBucket->second.push_back(newVID);
+    //}
+    stats->StopClock("DynamicRegionRRT::BucketNewCfg");
   }
 
   return newVID;
@@ -545,7 +546,7 @@ std::vector<typename MPTraits::RoadmapType::VID>
 DynamicRegionRRT<MPTraits>::
 CollectCandidates(const CfgType& _cfg) {
   auto stats = this->GetStatClass();
-  stats->StartClock("CollectCandidates");
+  stats->StartClock("DynamicRegionRRT::CollectCandidates");
 
   // Initialize the candidate set with the bucket at the region's center.
   const Point3d currentPoint = to_point(m_samplingRegion->GetCenter());
@@ -564,7 +565,7 @@ CollectCandidates(const CfgType& _cfg) {
       m_backtrackFactor;
   BackTrackSkeletonEdge(candidates, edge, currentIndex, 0, maxDist);
 
-  stats->StopClock("CollectCandidates");
+  stats->StopClock("DynamicRegionRRT::CollectCandidates");
   return candidates;
 }
 
@@ -673,7 +674,7 @@ template <typename MPTraits>
 void
 DynamicRegionRRT<MPTraits>::
 FixSkeletonClearance() {
-  this->GetStatClass()->StartClock("FixSkeletonClearance");
+  this->GetStatClass()->StartClock("DynamicRegionRRT::FixSkeletonClearance");
 
   auto g = m_skeleton.GetGraph();
 
@@ -762,7 +763,7 @@ FixSkeletonClearance() {
   if(this->m_debug)
     cout << "\n\tSkeleton clearance adjustment complete." << endl;
 
-  this->GetStatClass()->StopClock("FixSkeletonClearance");
+  this->GetStatClass()->StopClock("DynamicRegionRRT::FixSkeletonClearance");
 }
 
 /*----------------------------------------------------------------------------*/

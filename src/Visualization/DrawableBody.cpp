@@ -3,13 +3,13 @@
 #include "glutils/color.h"
 
 #include "Geometry/Bodies/Body.h"
-#include "Simulator/Drawable.h"
+#include "Visualization/DrawableMultiBody.h"
 
 
 /*------------------------------ Construction --------------------------------*/
 
 DrawableBody::
-DrawableBody(Drawable* const _parent, const Body* const _body)
+DrawableBody(DrawableMultiBody* const _parent, const Body* const _body)
   : m_parent(_parent), m_body(_body) { }
 
 /*--------------------------- drawable Overrides -----------------------------*/

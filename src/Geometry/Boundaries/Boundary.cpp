@@ -3,6 +3,7 @@
 #include "ConfigurationSpace/Cfg.h"
 #include "Geometry/Bodies/ActiveMultiBody.h"
 
+#include "Utilities/MetricUtils.h"
 
 /*--------------------------- Containment Testing ----------------------------*/
 
@@ -17,19 +18,19 @@ InBoundary(const Vector3d& _p) const {
 bool
 Boundary::
 InWorkspace(const Cfg& _cfg) const {
-  auto robot = _cfg.GetMultiBody();
+  auto multiBody = _cfg.GetMultiBody();
 
-  // If the robot's center is more than a bounding radius away from the wall, it
-  // is definitely inside.
-  if(GetClearance(_cfg.GetPoint()) >= robot->GetBoundingSphereRadius())
+  // If the multiBody's center is more than a bounding radius away from the
+  // wall, it is definitely inside.
+  if(GetClearance(_cfg.GetPoint()) >= multiBody->GetBoundingSphereRadius())
     return true;
 
-  // Robot is close to wall, have a strict check.
+  // Robot is close to wall, have to perform strict check.
   _cfg.ConfigureRobot();
 
-  // Check each part of the robot multibody for being inside of the boundary.
-  for(size_t m = 0; m < robot->NumFreeBody(); ++m) {
-    const auto body = robot->GetFreeBody(m);
+  // Check each part of the multibody for being inside of the boundary.
+  for(size_t m = 0; m < multiBody->NumFreeBody(); ++m) {
+    const auto body = multiBody->GetFreeBody(m);
 
     // First check if the body's bounding box intersects the boundary.
     bool bbxGood = true;
@@ -47,14 +48,16 @@ InWorkspace(const Cfg& _cfg) const {
       continue;
 
     // If the bounding box touches the boundary, we need to check each vertex in
-    // the body geometry.
-    const GMSPolyhedron& poly = body->GetWorldPolyhedron();
+    // the body geometry. Doing this one vertex at a time allows us to avoid
+    // extraneously transforming the remaining vertices.
+    const GMSPolyhedron& poly = body->GetPolyhedron();
+    const Transformation& trans = body->GetWorldTransformation();
     for(const auto& v : poly.m_vertexList)
-      if(!InBoundary(v))
+      if(!InBoundary(trans * v))
         return false;
   }
 
-  // None of the robot parts touched the boundary, so we are inside.
+  // None of the multiBody parts touched the boundary, so we are inside.
   return true;
 }
 

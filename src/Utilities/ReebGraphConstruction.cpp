@@ -437,28 +437,28 @@ Embed(Environment* _env) {
       continue;
 
     // @TODO Disabled as suspect for causing long paths with loops.
-    // Weight all tetrahedron on reeb arc to bias search.
-    auto WeightGraph = [&](const double _factor) {
-      // Iterate over all tetrahedra in this reeb arc's path.
-      for(auto tetraid : arc.m_tetra) {
-        auto vit = dualGraph.find_vertex(tetraid);
+    //// Weight all tetrahedron on reeb arc to bias search.
+    //auto WeightGraph = [&](const double _factor) {
+    //  // Iterate over all tetrahedra in this reeb arc's path.
+    //  for(auto tetraid : arc.m_tetra) {
+    //    auto vit = dualGraph.find_vertex(tetraid);
 
-        // Iterate over all outoing edges in the dual graph.
-        for(auto eit = vit->begin(); eit != vit->end(); ++eit) {
-          // Skip neighbors that aren't in this reeb arc's tetrahedra.
-          if(std::find(arc.m_tetra.begin(), arc.m_tetra.end(), eit->target()) ==
-              arc.m_tetra.end())
-            continue;
+    //    // Iterate over all outoing edges in the dual graph.
+    //    for(auto eit = vit->begin(); eit != vit->end(); ++eit) {
+    //      // Skip neighbors that aren't in this reeb arc's tetrahedra.
+    //      if(std::find(arc.m_tetra.begin(), arc.m_tetra.end(), eit->target()) ==
+    //          arc.m_tetra.end())
+    //        continue;
 
-          // Weight the edge to the dualgraph neighbor.
-          auto targetit = dualGraph.find_vertex(eit->target());
-          eit->property() = _factor *
-            (vit->property() - targetit->property()).norm();
-        }
-      }
-    };
+    //      // Weight the edge to the dualgraph neighbor.
+    //      auto targetit = dualGraph.find_vertex(eit->target());
+    //      eit->property() = _factor *
+    //        (vit->property() - targetit->property()).norm();
+    //    }
+    //  }
+    //};
 
-    WeightGraph(0.0001);
+    //WeightGraph(1e-4);
 
     // Find path in the dual graph from the start to end node.
     vector<size_t> pathVID;
@@ -468,7 +468,7 @@ Embed(Environment* _env) {
         pathVID, numeric_limits<double>::max());
 
     // Unweight the tetrahedron.
-    WeightGraph(1);
+    //WeightGraph(1e4);
 
     // If the path is empty, something is wrong.
     if(pathVID.empty())

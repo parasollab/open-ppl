@@ -1,13 +1,13 @@
-#ifndef GMSPOLYHEDRON_H_
-#define GMSPOLYHEDRON_H_
+#ifndef GMS_POLYHEDRON_H_
+#define GMS_POLYHEDRON_H_
 
 #include <iostream>
 #include <string>
+#include <utility>
 #include <vector>
-using namespace std;
 
+#include "Transformation.h"
 #include "Vector.h"
-using namespace mathtool;
 
 #include <CGAL/Exact_predicates_exact_constructions_kernel.h>
 #include <CGAL/Polyhedron_3.h>
@@ -16,10 +16,11 @@ class IModel;
 
 #include "GMSPolygon.h"
 
+using namespace mathtool;
+
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Geometric structure for polyhedra including vertices, faces, normals, and
-/// surface area.
+/// Geometric structure for polyhedra including vertices, faces, and surface area.
 /// @ingroup Geometry
 ////////////////////////////////////////////////////////////////////////////////
 class GMSPolyhedron final {
@@ -61,6 +62,13 @@ class GMSPolyhedron final {
     GMSPolyhedron& operator=(GMSPolyhedron&& _p);
 
     ///@}
+    ///@name Transformation
+    ///@{
+
+    /// Apply a transformation to the polyhedron.
+    GMSPolyhedron& operator*=(const Transformation& _t);
+
+    ///@}
     ///@name Equality
     ///@{
 
@@ -75,7 +83,7 @@ class GMSPolyhedron final {
     /// @param[in] _fileName The name of the file to read.
     /// @param[in] _comAdjust The type of COM adjustment to use.
     /// @return The parsed model's center of mass.
-    Vector3d Read(string _fileName, COMAdjust _comAdjust);
+    Vector3d Read(std::string _fileName, COMAdjust _comAdjust);
 
     /// Load vertices and triangles from the IModel, which loads all types
     /// of models.
@@ -86,21 +94,21 @@ class GMSPolyhedron final {
 
     /// Output the model to a BYU-format file.
     /// @param[in] _os The output stream to use.
-    void WriteBYU(ostream& _os) const;
+    void WriteBYU(std::ostream& _os) const;
 
     ///@}
     ///@name Accessors
     ///@{
 
-    vector<Vector3d>& GetVertexList() noexcept;
-    vector<GMSPolygon>& GetPolygonList() noexcept;
+    std::vector<Vector3d>& GetVertexList() noexcept;
+    std::vector<GMSPolygon>& GetPolygonList() noexcept;
 
-    const vector<Vector3d>& GetVertexList() const noexcept;
-    const vector<GMSPolygon>& GetPolygonList() const noexcept;
+    const std::vector<Vector3d>& GetVertexList() const noexcept;
+    const std::vector<GMSPolygon>& GetPolygonList() const noexcept;
 
     /// Get the boundary edges for this polyhedron. The edges will be computed
     /// if they haven't been already.
-    vector<pair<int,int>>& GetBoundaryLines();
+    std::vector<std::pair<int,int>>& GetBoundaryLines();
 
     ///@}
     ///@name Geometry Functions
@@ -171,9 +179,9 @@ class GMSPolyhedron final {
     ///       wrong for a very long time. Also need to mark centroid as uncached
     ///       whenver vertex list changes.
 
-    vector<Vector3d> m_vertexList;    ///< Vertices in this polyhedron.
-    vector<CGALPoint> m_cgalPoints;   ///< Exact CGAL representation of vertices.
-    vector<GMSPolygon> m_polygonList; ///< Boundary faces of this polyhedron.
+    std::vector<Vector3d> m_vertexList;    ///< Vertices in this polyhedron.
+    std::vector<CGALPoint> m_cgalPoints;   ///< Exact representation of vertices.
+    std::vector<GMSPolygon> m_polygonList; ///< Boundary faces of this polyhedron.
 
     Vector3d m_centroid;          ///< The polyhedron centroid (avg of vertices).
     mutable bool m_centroidCached{false}; ///< Is the centroid cached?
@@ -182,7 +190,7 @@ class GMSPolyhedron final {
     double m_maxRadius{0}; ///< The maximum distance from a vertex to COM.
     double m_minRadius{0}; ///< The minimum distance from a vertex to COM.
 
-    vector<pair<int,int>> m_boundaryLines; ///< Surface edges.
+    std::vector<std::pair<int,int>> m_boundaryLines; ///< Surface edges.
 
     bool m_boundaryBuilt{false};    ///< Is the boundary initialized?
     bool m_force2DBoundary{false};  ///< Require a 2d boundary.
@@ -205,5 +213,12 @@ class GMSPolyhedron final {
 
     ///@}
 };
+
+/*----------------------------- Transformation -------------------------------*/
+
+GMSPolyhedron
+operator*(const Transformation& _t, const GMSPolyhedron& _poly);
+
+/*----------------------------------------------------------------------------*/
 
 #endif

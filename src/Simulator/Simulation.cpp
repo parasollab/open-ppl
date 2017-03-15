@@ -4,15 +4,15 @@
 
 #include "BulletEngine.h"
 #include "Conversions.h"
-#include "Drawable.h"
 #include "Geometry/Bodies/ActiveMultiBody.h"
 #include "Geometry/Bodies/StaticMultiBody.h"
 #include "MPProblem/Environment/Environment.h"
 #include "MPProblem/MPProblem.h"
 #include "MPProblem/Robot/Robot.h"
+#include "Utilities/PMPLExceptions.h"
+#include "Visualization/DrawableMultiBody.h"
 
 #include "nonstd/io.h"
-#include "nonstd/runtime.h"
 
 
 /*---------------------------- Construction ----------------------------------*/
@@ -36,18 +36,12 @@ Initialize() {
     return;
 
   // Require a non-null problem to initialize.
-  nonstd::assert_msg(m_problem, "Simulation error: cannot initialize with a "
+  if(!m_problem)
+    throw RunTimeException(WHERE, "Simulation error: cannot initialize with a "
       "null problem!");
 
   // Create a bullet engine.
   m_engine = new BulletEngine(m_problem);
-
-  //Note: The following was commented out because we now set gravity in the
-  // constructor for BulletEngine, which gets its values from MPProblem.
-  // Add gravity in the model.
-  // Note that using the dynamicsWorld->setGravity, it loops through and
-  // updates all bodies in the world, and should update future bodies added.
-  //m_engine->SetGravity(ToBullet(m_problem->GetEnvironment()->GetGravity()));
 
   // Add the problem objects to the simulation.
   AddBBX();
@@ -92,13 +86,14 @@ Step() {
     for(size_t i = 0; i < this->m_drawables.size(); ++i) {
       /// @TODO Fix this to the transform of object i once we make the bbx
       ///       drawable.
-      auto d = static_cast<Drawable*>(this->m_drawables[i]);
+      auto d = static_cast<DrawableMultiBody*>(this->m_drawables[i]);
       for(size_t j = 0; j < d->GetNumBodies(); ++j)
         d->PushTransform(j, m_engine->GetObjectTransform(i + 1, j));
     }
   }
 
   // Step the simulation forward with a fixed timestep.
+  /// @TODO Synchronize this with the environment's time resolution.
   static constexpr btScalar timestep = 2.f / 60.f;   // Advance by this much...
   static constexpr btScalar resolution = 1.f / 60.f; // Using tics this long...
   static constexpr int maxSubSteps = 2;              // Up to this many ticks.
@@ -126,7 +121,7 @@ render() {
 
     // Otherwise, update objects to the next queued positions.
     for(auto d : m_drawables)
-      static_cast<Drawable*>(d)->UpdateTransform();
+      static_cast<DrawableMultiBody*>(d)->UpdateTransform();
   }
 
   // Rrrrrender.
@@ -137,6 +132,7 @@ render() {
 void
 Simulation::
 start() {
+  // The simulation is already started if we are running.
   if(m_running)
     return;
   m_running = true;
@@ -155,6 +151,7 @@ start() {
 void
 Simulation::
 reset() {
+  // The simulation is already reset if we are not running.
   if(!m_running)
     return;
   m_running = false;
@@ -205,9 +202,9 @@ AddObstacles() {
   Environment* env = m_problem->GetEnvironment();
 
   for(size_t i = 0; i < env->NumObstacles(); ++i) {
-    MultiBody* body = env->GetObstacle(i);
-    m_engine->AddObject(body);
-    this->add_drawable(new Drawable(body));
+    MultiBody* multiBody = env->GetObstacle(i);
+    m_engine->AddObject(multiBody);
+    this->add_drawable(new DrawableMultiBody(multiBody));
   }
 }
 
@@ -217,10 +214,10 @@ Simulation::
 AddRobots() {
   for(size_t i = 0; i < m_problem->NumRobots(); ++i) {
     auto robot = m_problem->GetRobot(i);
-    auto body = robot->GetMultiBody();
-    auto bulletModel = m_engine->AddObject(body);
+    auto multiBody = robot->GetMultiBody();
+    auto bulletModel = m_engine->AddObject(multiBody);
     robot->SetDynamicsModel(bulletModel);
-    this->add_drawable(new Drawable(body));
+    this->add_drawable(new DrawableMultiBody(multiBody));
   }
 }
 

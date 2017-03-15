@@ -114,6 +114,9 @@ SetPolyhedron(GMSPolyhedron& _poly) {
   _poly.UpdateCGALPoints();
   m_polyhedron = _poly;
   m_worldPolyhedron = _poly;
+
+  ComputeMomentOfInertia();
+  ComputeBoundingBox();
   MarkDirty();
 }
 
@@ -134,10 +137,17 @@ GetWorldPolyhedron() const {
 }
 
 
+const GMSPolyhedron&
+Body::
+GetBoundingBox() const {
+  return m_boundingBox;
+}
+
+
 GMSPolyhedron
 Body::
 GetWorldBoundingBox() const {
-  return GetWorldPolyhedron().ComputeBoundingPolyhedron();
+  return GetWorldTransformation() * m_boundingBox;
 }
 
 
@@ -167,6 +177,8 @@ Read(GMSPolyhedron::COMAdjust _comAdjust) {
   m_worldPolyhedron = m_polyhedron;
 
   ComputeMomentOfInertia();
+  ComputeBoundingBox();
+  MarkDirty();
 }
 
 
@@ -297,6 +309,14 @@ ComputeMomentOfInertia() const {
 
 void
 Body::
+ComputeBoundingBox() const {
+  auto& bbx = const_cast<GMSPolyhedron&>(m_boundingBox);
+  bbx = GetPolyhedron().ComputeBoundingPolyhedron();
+}
+
+
+void
+Body::
 ComputeConvexHull() const {
   using Kernel = GMSPolyhedron::CGALKernel;
   using CGALPolyhedron = CGAL::Polyhedron_3<Kernel>;
@@ -324,37 +344,7 @@ ComputeWorldPolyhedron() const {
   ///       when we change the world transform and completed when we access
   ///       anything affected by that change.
   auto& poly = const_cast<GMSPolyhedron&>(m_worldPolyhedron);
-
-  using CGAL::to_double;
-  using Kernel = GMSPolyhedron::CGALKernel;
-
-  // Get the world transform.
-  const auto& transform = GetWorldTransformation();
-  const auto& r = transform.rotation().matrix();
-  const auto& t = transform.translation();
-
-  // Create a CGAL representation of the world transform.
-  CGAL::Aff_transformation_3<Kernel>
-      cgalTransform(r[0][0], r[0][1], r[0][2], t[0],
-                    r[1][0], r[1][1], r[1][2], t[1],
-                    r[2][0], r[2][1], r[2][2], t[2]);
-
-  // Update the vertices.
-  const auto& c = m_polyhedron.m_cgalPoints;
-  for(size_t i = 0; i < m_polyhedron.m_vertexList.size(); ++i) {
-    poly.m_cgalPoints[i] = cgalTransform(c[i]);
-    poly.m_vertexList[i] = transform * m_polyhedron.m_vertexList[i];
-    /// @TODO Fix CGAL transformation issues and use the same computation for
-    ///       transforming both CGAL points and our points.
-    //auto x = cgalTransform(c[i]);
-    //m_worldPolyhedron.m_vertexList[i](to_double(x[0]), to_double(x[1]),
-    //    to_double(x[2]));
-  }
-
-  // Update the face normals.
-  for(size_t i = 0; i < m_polyhedron.m_polygonList.size(); ++i)
-    poly.m_polygonList[i].GetNormal() =
-        transform.rotation() * m_polyhedron.m_polygonList[i].GetNormal();
+  poly = GetWorldTransformation() * m_polyhedron;
 
   m_worldPolyhedronCached = true;
 }

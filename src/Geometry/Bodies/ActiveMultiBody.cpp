@@ -394,7 +394,6 @@ GetRandomCfg(const Boundary* const _b) {
     v.push_back(2. * DRand() - 1.);
 
   // Sample any joint DOFs.
-  for(size_t i = 0; i < JointDOF(); ++i)
   for(auto& joint : m_joints) {
     if(joint->GetConnectionType() == Connection::JointType::Revolute) {
       pair<double, double> r = joint->GetJointLimits(0);

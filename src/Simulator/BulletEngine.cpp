@@ -336,17 +336,14 @@ AddObject(std::vector<btCollisionShape*> _shapes,
 //    std::cout << "dhFrameTransform = " <<dhFrameTransform << std::endl << std::endl;
 //    std::cout << "fullRotation =  "<< fullRotation << std::endl << std::endl;
 //    std::cout << "pmplRotParentToThis = " << pmplRotParentToThis << std::endl << std::endl;
-//    std::cout << "rotParentToThis = ";
-//    PrintbtQuaternion(rotParentToThis);
+//    std::cout << "rotParentToThis = " << rotParentToThis << std::endl;
 
     //These show that we have the correct offset from the joint info in PMPL,
     // so it appears Bullet is doing exactly as PMPL is specifying.
-    if(m_debug) {
-      std::cout << std::endl << "parentComToThisPivotOffset = ";
-      PrintbtVector3(parentComToThisPivotOffset);
-      std::cout << std::endl << "thisPivotToThisComOffset = ";
-      PrintbtVector3(thisPivotToThisComOffset);
-    }
+    if(m_debug)
+      std::cout << "\nparentComToThisPivotOffset = "<< parentComToThisPivotOffset
+                << "\nthisPivotToThisComOffset = " << thisPivotToThisComOffset
+                << std::endl;
 
     //It looks like this should be true (disabled) if "the self-collision
     //has conflicting/non-resolvable contact normals"
@@ -378,10 +375,8 @@ AddObject(std::vector<btCollisionShape*> _shapes,
                 * ToBullet(dhFrameTransform)) // move into the DH frame
                 * btVector3(0.,0.,1.); // grab the z-axis (DH axis of rotation)
 
-        if(m_debug) {
-          std::cout << "jointAxis = ";
-          PrintbtVector3(jointAxis);
-        }
+        if(m_debug)
+          std::cout << "jointAxis = " << jointAxis << std::endl;
 
         mb->setupRevolute(linkIndex, mass, inertia, parentIndex,
                rotParentToThis, jointAxis, parentComToThisPivotOffset,

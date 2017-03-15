@@ -653,10 +653,7 @@ GetRandomVelocity() {
     return;
 
   const double maxLinearVel = GetRobot()->GetMaxLinearVelocity();
-  /// @TODO Using this part seems to make things suck pretty bad. Need to figure
-  ///       out why.
-  //const double maxAngularVel = GetRobot()->GetMaxAngularVelocity();
-  const double maxAngularVel = 0;
+  const double maxAngularVel = GetRobot()->GetMaxAngularVelocity();
 
   // Sample the base velocity.
   const auto baseType = GetMultiBody()->GetBaseType();
@@ -704,9 +701,9 @@ GetRandomVelocity() {
   const size_t firstJointIndex = DOF() - JointDOF();
   const size_t lastJointIndex = DOF();
   for(size_t i = firstJointIndex; i != lastJointIndex; ++i) {
-    /// @TODO Extract this from robot properly.
+    /// @TODO Extract max joint velocity from robot properly.
     const double maxJointVelocity = 1;
-    m_vel[i] = (2. * DRand() - 1.) * maxJointVelocity;
+    m_vel[i] = dofRand() * maxJointVelocity;
   }
 }
 

@@ -1,5 +1,5 @@
-#ifndef DRAWABLE_H_
-#define DRAWABLE_H_
+#ifndef DRAWABLE_MULTIBODY_H_
+#define DRAWABLE_MULTIBODY_H_
 
 #include <cstddef>
 #include <string>
@@ -15,7 +15,7 @@ class MultiBody;
 ////////////////////////////////////////////////////////////////////////////////
 /// Instructions for drawing a pmpl MultiBody in the Simulator.
 ////////////////////////////////////////////////////////////////////////////////
-class Drawable final : public glutils::drawable {
+class DrawableMultiBody final : public glutils::drawable {
 
   ///@name Internal State
   ///@{
@@ -31,9 +31,9 @@ class Drawable final : public glutils::drawable {
 
     /// Construct a drawable representation of a PMPL multibody.
     /// @param[in] _m The PMPL multibody to draw.
-    Drawable(MultiBody* _m);
+    DrawableMultiBody(MultiBody* _m);
 
-    virtual ~Drawable() = default;
+    virtual ~DrawableMultiBody() = default;
 
     ///@}
     ///@name MultiBody Support

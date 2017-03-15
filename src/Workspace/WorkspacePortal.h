@@ -28,14 +28,12 @@ class WorkspacePortal {
     ///@name Construction
     ///@{
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// @brief Default construction makes no sense for this object, but the
-    ///        stapl graph requires it anyway.
+    /// Default construction makes no sense for this object, but the stapl graph
+    /// requires it anyway.
     WorkspacePortal();
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// @brief Construct a workspace portal between a source and target region
-    ///        in a given workspace decomposition.
+    /// Construct a workspace portal between a source and target region in a
+    /// given workspace decomposition.
     /// @param _wd The owning decomposition.
     /// @param _s The source region descriptor.
     /// @param _t the Target region descriptor.
@@ -56,15 +54,12 @@ class WorkspacePortal {
     ///@name Queries
     ///@{
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// @brief Find the set of points that are common to both source and target
-    ///        region.
-    const vector<Point3d> FindPoints() const;
+    /// Find the set of points that are common to both source and target region.
+    const std::vector<Point3d> FindPoints() const;
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// @brief Find the set of facets from the source region that connect the
-    ///        source to the target.
-    const vector<const Facet*> FindFacets() const;
+    /// Find the set of facets from the source region that connect the source to
+    /// the target.
+    const std::vector<const Facet*> FindFacets() const;
 
     ///@}
 

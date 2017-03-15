@@ -265,8 +265,9 @@ template<class CfgType>
 bool
 Environment::
 InBounds(const CfgType& _cfg, const Boundary* const _b) {
-  return _cfg.GetMultiBody()->InCSpace(_cfg.GetData(), _b)
-      && _b->InBoundary(_cfg);
+  const bool inCspace = _cfg.GetMultiBody()->InCSpace(_cfg.GetData(), _b);
+  const bool inWorkspace = _b->InBoundary(_cfg);
+  return inCspace && inWorkspace;
 }
 
 /*----------------------------------------------------------------------------*/

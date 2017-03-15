@@ -194,7 +194,7 @@ PrintAllStats(std::ostream& _os, RoadmapType* _rmap) {
 
     if(totalAttempts > 0)
       _os << "  "
-          << std::setw(58) << std::left << "Total"
+          << std::setw(58) << std::left << "All Samplers"
           << std::setw(10) << std::right << totalAttempts
           << std::setw(10) << std::right << totalGenerated
           << "\n  Success Rate: "
@@ -232,7 +232,7 @@ PrintAllStats(std::ostream& _os, RoadmapType* _rmap) {
           << std::setw(10) << std::right << info.second
           << std::endl;
     _os << "  "
-        << std::setw(68) << std::left  << "Total"
+        << std::setw(68) << std::left  << "All Collision Detectors"
         << std::setw(10) << std::right << m_isCollTotal
         << std::endl;
   }

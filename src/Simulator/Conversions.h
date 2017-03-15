@@ -1,44 +1,35 @@
 #ifndef SIMULATOR_CONVERSIONS_H_
 #define SIMULATOR_CONVERSIONS_H_
 
+#include <iostream>
+
 #include "btBulletDynamicsCommon.h"
 #include "BulletDynamics/Featherstone/btMultiBodyLinkCollider.h"
 
-#include "Transformation.h"
-#include "Vector.h"
 #include "Matrix.h"
 #include "Quaternion.h"
-
-#include <iostream>
+#include "Transformation.h"
+#include "Vector.h"
 
 using namespace mathtool;
+
+
+/*----------------------------- Bullet Helpers -------------------------------*/
 
 //For changing the friction of an entire btMultiBody (all links + base):
 inline
 void
 SetUniformFrictionOnBulletMultiBody(
     btMultiBody* _body, const double _frictionCoeff) {
-  //Note that btMultiBody has links, and each link (including the base) will
+  // Note that btMultiBody has links, and each link (including the base) will
   // have its own btMultiBodyLinkCollider, and each one has its own friction
   // setting. This means we must hit each one and update our uniform friction:
   _body->getBaseCollider()->setFriction(_frictionCoeff);
-  for (int i = 0; i < _body->getNumLinks(); i++) {
+  for(int i = 0; i < _body->getNumLinks(); i++)
     _body->getLink(i).m_collider->setFriction(_frictionCoeff);
-  }
 }
 
-inline
-void
-PrintbtVector3(btVector3& _vec) {
-  std::cout << _vec[0] << ", " << _vec[1] << ", " << _vec[2] << std::endl;
-}
-
-inline
-void
-PrintbtQuaternion(btQuaternion& _quat) {
-  std::cout << _quat.getX() << ", " << _quat.getY() << ", " << _quat.getZ()
-      << ", " << _quat.getW() << std::endl;
-}
+/*--------------------- Conversion from PMPL to Bullet -----------------------*/
 
 inline
 btVector3
@@ -74,6 +65,7 @@ ToBullet(const Transformation& _t) {
       ToBullet(_t.translation()));
 }
 
+/*--------------------- Conversion from Bullet to PMPL -----------------------*/
 
 inline
 Vector3d
@@ -98,12 +90,24 @@ ToPMPL(const btTransform& _t) {
   return Transformation(ToPMPL(_t.getOrigin()), ToPMPL(_t.getBasis()));
 }
 
+/*------------------------ Output for Bullet Objects -------------------------*/
 
 inline
 std::ostream&
 operator<<(std::ostream& _out, const btVector3& _v) {
-  _out << _v[0] << ',' << _v[1] << ',' << _v[2];
+  _out << "(" << _v[0] << ", " << _v[1] << ", " << _v[2] << ")";
   return _out;
 }
+
+
+inline
+std::ostream&
+operator<<(std::ostream& _out, const btQuaternion& _q) {
+  _out << "(" << _q.getX() << ", " << _q.getY() << ", " << _q.getZ() << ", "
+       << _q.getW() << ")";
+  return _out;
+}
+
+/*----------------------------------------------------------------------------*/
 
 #endif

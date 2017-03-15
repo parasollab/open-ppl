@@ -5,15 +5,16 @@
 #include <set>
 #include <unordered_map>
 
-using namespace std;
-
 #include "ConfigurationSpace/Cfg.h"
-#include <containers/sequential/graph/directed_preds_graph.h>
 #include "Geometry/Bodies/ActiveMultiBody.h"
 #include "Geometry/Boundaries/Boundary.h"
 
-#include <Vector.h>
+#include <containers/sequential/graph/directed_preds_graph.h>
+
+#include "Vector.h"
+
 using namespace mathtool;
+using namespace std;
 
 class ActiveMultiBody;
 class Cfg;

@@ -101,6 +101,9 @@ class Body {
     /// Get the polyhedron in world coordinates.
     const GMSPolyhedron& GetWorldPolyhedron() const;
 
+    /// Get the bounding box in model coordinates.
+    const GMSPolyhedron& GetBoundingBox() const;
+
     /// Compute the bounding box in world coordinates.
     GMSPolyhedron GetWorldBoundingBox() const;
 
@@ -159,10 +162,14 @@ class Body {
     /// Approximate moment of inertia in model coordinates.
     void ComputeMomentOfInertia() const;
 
-    /// Compute convex hull of body in model coordinates.
+    /// Compute the axis-aligned bounding box in model coordinates.
+    void ComputeBoundingBox() const;
+
+    /// Compute the convex hull in model coordinates.
     void ComputeConvexHull() const;
 
-    /// Compute the world polyhedron from the model-coordinate version.
+    /// Compute the world-coordinate polyhedron by applying the world transform
+    /// to the model-coordinate version.
     void ComputeWorldPolyhedron() const;
 
     ///@}
@@ -179,6 +186,7 @@ class Body {
     bool m_textureLoaded{false};             ///< Was texture option set?
 
     GMSPolyhedron m_polyhedron;              ///< Model in model coordinates.
+    GMSPolyhedron m_boundingBox;             ///< AABB in model coordinates.
     GMSPolyhedron m_convexHull;              ///< Convex hull in model frame.
     mutable bool m_convexHullCached{false};  ///< Is convex hull cached?
 

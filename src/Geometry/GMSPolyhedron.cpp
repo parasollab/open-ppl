@@ -72,6 +72,7 @@ operator=(const GMSPolyhedron& _p) {
 
   // Need to manually copy the polygons so that they refer to this polyhedron's
   // point list and not _p's.
+  m_polygonList.clear();
   m_polygonList.reserve(_p.m_polygonList.size());
   for(const auto& p : _p.m_polygonList)
     m_polygonList.emplace_back(p[0], p[1], p[2], m_vertexList);
@@ -94,9 +95,40 @@ operator=(GMSPolyhedron&& _p) {
 
   // Need to manually copy the polygons so that they refer to this polyhedron's
   // point list and not _p's.
+  m_polygonList.clear();
   m_polygonList.reserve(_p.m_polygonList.size());
   for(const auto& p : _p.m_polygonList)
     m_polygonList.emplace_back(p[0], p[1], p[2], m_vertexList);
+
+  return *this;
+}
+
+/*----------------------------- Transformation -------------------------------*/
+
+GMSPolyhedron&
+GMSPolyhedron::
+operator*=(const Transformation& _t) {
+  // Update the vertices.
+  for(auto& point : m_vertexList)
+    point = _t * point;
+
+  // Update the face normals.
+  for(auto& facet : m_polygonList)
+    facet.GetNormal() = _t.rotation() * facet.GetNormal();
+
+  // Update the CGAL points (if any).
+  if(!m_cgalPoints.empty()) {
+    // Create a CGAL representation of the world transform.
+    const auto& r = _t.rotation().matrix();
+    const auto& t = _t.translation();
+    CGAL::Aff_transformation_3<GMSPolyhedron::CGALKernel>
+        cgalTransform(r[0][0], r[0][1], r[0][2], t[0],
+                      r[1][0], r[1][1], r[1][2], t[1],
+                      r[2][0], r[2][1], r[2][2], t[2]);
+
+    for(auto& point : m_cgalPoints)
+      point = cgalTransform(point);
+  }
 
   return *this;
 }
@@ -636,6 +668,14 @@ UpdateCGALPoints() {
   m_cgalPoints.clear();
   for(const auto& v : m_vertexList)
     m_cgalPoints.emplace_back(v[0], v[1], v[2]);
+}
+
+/*----------------------------- Transformation -------------------------------*/
+
+GMSPolyhedron
+operator*(const Transformation& _t, const GMSPolyhedron& _poly) {
+  GMSPolyhedron poly = _poly;
+  return poly *= _t;
 }
 
 /*----------------------------------------------------------------------------*/
