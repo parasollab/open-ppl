@@ -140,7 +140,7 @@ Execute(const Control::Signal& _s, btMultiBody* const _model) const {
   const size_t numPos = mb->PosDOF();
   for(size_t i = 0; i < numPos; ++i, ++iter)
     scratch[i] = *iter;
-  _model->worldDirToLocal(-1, scratch);
+  scratch = _model->worldDirToLocal(-1, scratch);
   _model->addBaseForce(scratch);
 
   // Set base torque.
@@ -160,7 +160,7 @@ Execute(const Control::Signal& _s, btMultiBody* const _model) const {
     default:
       break;
   }
-  _model->worldDirToLocal(-1, scratch);
+  scratch = _model->worldDirToLocal(-1, scratch);
   _model->addBaseTorque(scratch);
 
   const size_t numJoints = mb->JointDOF();

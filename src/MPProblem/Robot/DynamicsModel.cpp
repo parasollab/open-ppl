@@ -175,7 +175,7 @@ ExtractSimulatedState(Robot* const _robot, btMultiBody* const _model) {
           case FreeBody::MovementType::Rotational:
             out[0] = cfg[0];
             out[1] = cfg[1];
-            out[2] = cfg[5];
+            out[2] = cfg[3];
             break;
           default:
             throw RunTimeException(WHERE, "Unrecognized base movement type.");
