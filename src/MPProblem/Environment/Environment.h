@@ -24,10 +24,8 @@ class XMLNode;
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Workspace for the motion planning problem.
-///
-/// @details The Environment is essentially the workspace of a motion planning
-///          problem, and includes a boundary and zero or more obstacles.
+/// Workspace for the motion planning problem, including a boundary and zero or
+/// more obstacles.
 ////////////////////////////////////////////////////////////////////////////////
 class Environment {
 
@@ -105,6 +103,12 @@ class Environment {
     /// Test whether input configuration satisfies joint constraints  (i.e., is
     /// inside of C-Space) and lies inside of the workspace boundary (i.e., the
     /// robot at that configuration is inside of the workspace).
+    ///
+    /// @TODO Remove this from the environment class as it doesn't belong here.
+    ///       Boundary containment is a function of the boundary object only,
+    ///       and satisfying joint constraints is a property of only the
+    ///       multibody. Additional constraints (like velocity) belong in the
+    ///       robot object.
     template<class CfgType>
     bool InBounds(const CfgType& _cfg, const Boundary* const _b);
 
@@ -180,27 +184,27 @@ class Environment {
     ///@name Decomposition
     ///@{
 
-    WorkspaceDecomposition* GetDecomposition() {
-      return m_decomposition.get();
-    }
+    /// Get the decomposition model if this workspace. If it has not been
+    /// created yet, a null pointer will be returned.
+    WorkspaceDecomposition* GetDecomposition();
 
-    const WorkspaceDecomposition* GetDecomposition() const {
-      return m_decomposition.get();
-    }
+    /// Get the decomposition model if this workspace. If it has not been
+    /// created yet, a null pointer will be returned.
+    const WorkspaceDecomposition* GetDecomposition() const;
 
     /// Compute a decomposition of the workspace.
     /// @param _f The decomposition function to use.
-    void Decompose(DecompositionFunction&& _f) {m_decomposition = _f(this);}
+    void Decompose(DecompositionFunction&& _f);
 
     ///@}
     ///@name Physical Properties
     ///@{
 
     /// Get the friction coefficient
-    double GetFrictionCoefficient(){ return m_frictionCoefficient; }
+    double GetFrictionCoefficient() const noexcept;
 
     /// Get the gravity 3-vector
-    Vector3d GetGravity(){ return m_gravity; }
+    const Vector3d& GetGravity() const noexcept;
 
     ///@}
 
@@ -212,6 +216,7 @@ class Environment {
     /// Read boundary information.
     /// @param _is Input stream
     /// @param _cbs Counting stream buffer for accurate error reporting
+    /// @TODO Move this into the boundary classes where it belongs.
     void ReadBoundary(istream& _is, CountingStreamBuffer& _cbs);
 
     ///@}
@@ -250,10 +255,8 @@ class Environment {
     ///@name Physical Properties
     ///@{
 
-    /// The uniform friction coefficient for all bodies.
-    double m_frictionCoefficient;
-
-    Vector3d m_gravity; ///< The gravity direction and magnitude.
+    double m_frictionCoefficient{0}; ///< The uniform friction coefficient.
+    Vector3d m_gravity;              ///< The gravity direction and magnitude.
 
     ///@}
 
@@ -265,9 +268,8 @@ template<class CfgType>
 bool
 Environment::
 InBounds(const CfgType& _cfg, const Boundary* const _b) {
-  const bool inCspace = _cfg.GetMultiBody()->InCSpace(_cfg.GetData(), _b);
-  const bool inWorkspace = _b->InBoundary(_cfg);
-  return inCspace && inWorkspace;
+  return _cfg.GetMultiBody()->InCSpace(_cfg.GetData(), _b)
+      && _b->InBoundary(_cfg);
 }
 
 /*----------------------------------------------------------------------------*/

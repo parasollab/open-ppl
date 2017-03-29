@@ -44,22 +44,25 @@ class BulletEngine final {
   /// structures.
   btAlignedObjectArray<btCollisionShape*> m_collisionShapes;
 
+  ///@}
+  ///@name Other Internal State
+  ///@{
+
+  /// A pointer to the MPProblem, mostly for Environment access for gravity
+  /// and friction values.
+  MPProblem* const m_problem;
+
   bool m_debug{false};  ///< Show debug messages?
 
   ///@}
-
-  /// A pointer to the MPProblem, mostly for Environment access for gravity
-  ///  and friction values.
-  MPProblem* m_problem;
 
   public:
 
     ///@name Construction
     ///@{
-    /// There is no default constructor because we require access to the
-    ///  MPProblem for gravity and friction information.
 
-    BulletEngine(MPProblem* _problem);
+    BulletEngine(MPProblem* const _problem);
+
     ~BulletEngine();
 
     ///@}
@@ -67,9 +70,9 @@ class BulletEngine final {
     ///@{
 
     /// Step the simulation forward.
-    /// @param _timestep The total length of time to advance the simulation.
+    /// @param _timestep    The total length of time to advance the simulation.
     /// @param _maxSubSteps The maximum number of sub-intervals to use.
-    /// @param _resolution The length of a sub interval.
+    /// @param _resolution  The length of a sub interval.
     void Step(const btScalar _timestep, const int _maxSubSteps,
         const btScalar _resolution);
 
@@ -98,28 +101,11 @@ class BulletEngine final {
     /// @param _transform The world tranform of object.
     /// @param _mass The mass of _shape in the world.
     btMultiBody* AddObject(btCollisionShape* _shape, btTransform _transform,
-                            double _mass);
-
-    /// Add an object to the world.
-    /// @param _shapes The bullet collision shapes that reprsents the object
-    ///                with or without multiple links
-    /// @param _transforms The world tranform of each object.
-    /// @param _masses The mass of each of _shapes in the world.
-    /// @param _joints The list of connections between links. Default is an
-    ///                empty vector.
-    //TODO: make this one private?
-    btMultiBody* AddObject(std::vector<btCollisionShape*> _shapes,
-        std::vector<btTransform> _transforms,
-        std::vector<double> _masses,
-        std::vector<std::shared_ptr<Connection>> _joints =
-            std::vector<std::shared_ptr<Connection>>());
+        const double _mass);
 
     /// Set the gravity in the world (this will also set it for all bodies)
     /// @param _gravityVec Is simply the 3-vector representing (x,y,z) gravity
-
-    void SetGravity(btVector3 _gravityVec);
-
-    btVector3 GetGravity();
+    void SetGravity(const btVector3& _gravityVec);
 
     ///@}
 
@@ -127,6 +113,16 @@ class BulletEngine final {
 
     ///@name Helpers
     ///@{
+
+    /// Add an object to the world.
+    /// @param _shapes The bullet collision shapes that reprsents the object
+    ///                with or without multiple links
+    /// @param _baseTransform The world transform for the base.
+    /// @param _baseMass The mass for the base.
+    /// @param _joints The list of connections between links.
+    btMultiBody* AddObject(std::vector<btCollisionShape*>&& _shapes,
+        btTransform&& _baseTransform, const double _baseMass,
+        std::vector<std::shared_ptr<Connection>>&& _joints);
 
     /// Build a bullet collision shape from a pmpl MultiBody.
     /// @param _body The pmpl MultiBody.

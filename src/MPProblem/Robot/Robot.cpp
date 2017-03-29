@@ -13,7 +13,6 @@
 
 // Temporaries for hard-coded stuff
 #include "ControlGenerators.h"
-//#include "Behaviors/Agents/PathFollowingAgent.h"
 #include "Behaviors/Controllers/SimpleController.h"
 
 
@@ -67,9 +66,6 @@ Robot(MPProblem* const _p, XMLNode& _node, const Boundary* const _b) :
 
     // Create controller. Assume the simplest controller.
     m_controller = new SimpleController(this, .1);
-
-    // Create agent. Assume a path-following agent.
-    //m_agent = new PathFollowingAgent(this);
   }
 
   // Create dynamics model if the robot is nonholonomic.

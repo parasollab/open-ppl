@@ -5,10 +5,7 @@
   <Problem>
 
     <Environment filename="3D/3d.env"
-        frictionCoefficient=".7"
-        gravityX="0"
-        gravityY="-10"
-        gravityZ="0"/>
+        frictionCoefficient=".7" gravityX="0" gravityY="0" gravityZ="0"/>
 
     <Robot label="boxy" filename="3D/boxy.robot"/>
     <!--Robot label="links" filename="3D/linked.robot"/-->

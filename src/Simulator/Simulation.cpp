@@ -79,10 +79,13 @@ Step() {
   {
     std::lock_guard<std::mutex> lock(m_guard);
 
-    if(m_backloggedSteps > m_backlogMax)
+    // If we have already pre-computed the maximum number of steps allowed,
+    // don't do anything.
+    if(m_backloggedSteps >= m_backlogMax)
       return;
     ++m_backloggedSteps;
 
+    // Enqueue the current position of each mobile object in the scene.
     for(size_t i = 0; i < this->m_drawables.size(); ++i) {
       /// @TODO Fix this to the transform of object i once we make the bbx
       ///       drawable.

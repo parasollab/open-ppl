@@ -11,17 +11,26 @@ class Robot;
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Represents the bullet physics engine representation of a robot. Also
-/// supports an internal simulator that models the robot without collisions in
-/// an empty space
+/// A dynamics model for a robot.
+///
+/// This model represents two things:
+/// 1. The robot's representation in the global physics simulation.
+/// 2. An internal simulator for estimating the effect of applying a control to
+///    the robot from a given configuration.
+///
+/// Agents use the model from the global physics simulation to estimate the
+/// robot's state in the simulated world.
+///
+/// Controllers and nonholonomic planning methods use the internal simulator to
+/// compute the result of a control application.
 ////////////////////////////////////////////////////////////////////////////////
 class DynamicsModel final {
 
   ///@name Internal State
   ///@{
 
-  Robot* const m_robot;                    ///< The robot this model represents.
-  btMultiBody* const m_model;              ///< The physics engine model.
+  Robot* const m_robot;       ///< The robot this model represents.
+  btMultiBody* const m_model; ///< The robot model in the global physics engine.
 
   mutable InternalSimulator* m_simulator{nullptr}; ///< The internal simulator.
 

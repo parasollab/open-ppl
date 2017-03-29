@@ -27,7 +27,7 @@
 /*------------------------------ Construction --------------------------------*/
 
 BulletEngine::
-BulletEngine(MPProblem* _problem) : m_problem(_problem) {
+BulletEngine(MPProblem* const _problem) : m_problem(_problem) {
   // Create the bullet objects needed for a dynamic rigid body simulation.
   m_collisionConfiguration = new btDefaultCollisionConfiguration();
   m_dispatcher = new btCollisionDispatcher(m_collisionConfiguration);
@@ -115,317 +115,224 @@ GetObjectTransform(const size_t _i, const size_t _j) const {
 btMultiBody*
 BulletEngine::
 AddObject(MultiBody* _m) {
-  // Get base transform and mass.
-  std::vector< double > masses;
-
-  //The btTransform holds data for the basis and origin of the body, so it
-  //defines where the object C.O.M. is and what its rotation is at that point.
-  std::vector<btTransform> transformations;
-  std::vector<std::shared_ptr<Connection>> joints;
-
-  //Note that shape definition stuff is handled in the BuildCollisionShape()
-  //function, using btMesh type stuff
-
+  // Static and active bodies must be handled slightly differently. Try first
+  // for downcast to static body.
   StaticMultiBody* sbody = dynamic_cast<StaticMultiBody*>(_m);
-  if(sbody) {//So it's a static body:
-    if(m_debug)
-      std::cout << "Working on a static body" << std::endl;
-    auto body = sbody->GetFixedBody(0);
-    transformations.push_back(ToBullet(body->GetWorldTransformation()));
-    masses.push_back(0);
+  if(sbody) {
+    // This is a static body.
+    // For now, assume that static multibodies have no links. We should expand
+    // this in the future though to support fixed joints.
+    auto base = sbody->GetFixedBody(0);
+
+    return AddObject(BuildCollisionShape(_m),
+        ToBullet(base->GetWorldTransformation()), 0, {});
   }
   else {
+    // This is an active body.
     ActiveMultiBody* abody = dynamic_cast<ActiveMultiBody*>(_m);
-    if(m_debug)
-      std::cout << "Working on an active body with number of free bodies = "
-                << abody->NumFreeBody() << std::endl;
+    auto base = abody->GetFreeBody(0);
 
-    // Collect the transformations for each body in the multibody.
-    for(size_t i = 0; i < abody->NumFreeBody(); i++) {
-      FreeBody* body = abody->GetFreeBody(i);
-      transformations.push_back(ToBullet(body->GetWorldTransformation()));
-      //coms.push_back(ToBullet(body->GetCenterOfMass()));
-      masses.push_back(1); ///< @TODO change the mass to appropriate amount
+    // Collect joint connection objects.
+    std::vector<std::shared_ptr<Connection>> joints;
+    std::copy(abody->joints_begin(), abody->joints_end(),
+        std::back_inserter(joints));
 
-      if(m_debug)
-        std::cout << "\tParsed body " << i << " with mass " << 1
-                  << "and world transform " << body->GetWorldTransformation()
-                  << std::endl;
-    }
-
-    //Next, go through the joints in this active body:
-    if(m_debug)
-      std::cout << "BulletEngine: about to loop through " << abody->NumJoints()
-                << " joints" << std::endl;
-    for(auto jointIt = abody->joints_begin();
-          jointIt < abody->joints_end(); jointIt++){
-      //the auto in this context is a
-      //vector< std::shared_ptr<Connection> >::const_iterator
-      //Or in other words, an iterator for a vector of pointers to Connections
-      joints.push_back(*jointIt);//Dereference iterator and push back in joints
-      if(m_debug)
-        std::cout << "Pushed back joint: " << **jointIt << std::endl;
-    }
+    return AddObject(BuildCollisionShape(_m),
+        ToBullet(base->GetWorldTransformation()), base->GetMass(),
+        std::move(joints));
   }
-
-  //form each base/link's collision shape for Bullet:
-  if(m_debug)
-    std::cout << "About to enter BuildCollisionShape" << std::endl;
-  std::vector<btCollisionShape*> shapes = BuildCollisionShape(_m);
-
-  return AddObject(shapes, transformations, masses, joints);
-}
-
-btMultiBody*
-BulletEngine::
-AddObject(btCollisionShape* _shape, btTransform _transform, double _mass) {
-  //this is just a wrapper overload for a more simplified AddObject call.
-  if(m_debug)
-    std::cout << "BulletEngine: Entering using the old version of AddObject"
-              << std::endl;
-
-  // make objects into vectors and such:
-  std::vector<btCollisionShape*> shapes = {_shape};
-  std::vector<btTransform> transforms = {_transform};
-  std::vector<double> masses = {_mass};
-
-  return AddObject(shapes, transforms, masses);
 }
 
 
 btMultiBody*
 BulletEngine::
-AddObject(std::vector<btCollisionShape*> _shapes,
-          std::vector<btTransform> _transforms,
-          std::vector<double> _masses,
-          std::vector<std::shared_ptr<Connection>> _joints) {
-  // This function makes a multibody and all of its links and collider objects.
-  //  it also sets friction (defaulted to the uniform Environment value) for
-  //  every single link collider.
+AddObject(btCollisionShape* _shape, btTransform _transform, const double _mass) {
+  return AddObject({_shape}, std::move(_transform), _mass, {});
+}
 
+
+btMultiBody*
+BulletEngine::
+AddObject(std::vector<btCollisionShape*>&& _shapes, btTransform&& _baseTransform,
+    const double _baseMass, std::vector<std::shared_ptr<Connection>>&& _joints) {
   if(m_debug)
-    std::cout << "BulletEngine.cpp: entering final AddObject overload with "
-              << _joints.size() << " joints" << std::endl;
+    std::cout << "BulletEngine.cpp: adding object with "
+              << _shapes.size() << " components and "
+              << _joints.size() << " joints." << std::endl;
 
-  // This function is assuming the base is in the first element of the 3 args
-  // First check that number of elements of each vector match:
-  if(_shapes.size() != _transforms.size()
-      || _shapes.size() != _masses.size()
-      || _shapes.size() - 1 != _joints.size()) // 1 more shape than joint
-    throw RunTimeException(WHERE, "_shapes size must equal size of _transforms,"
-        " _masses, and _joints + 1");
+  // First check that number of elements of each vector match. We need one less
+  // joint as the base is not considered a joint.
+  if(_shapes.size() - 1 != _joints.size())
+    throw RunTimeException(WHERE, "Expected the number of shapes (" +
+        std::to_string(_shapes.size()) + ") to be equal to the number of "
+        "joints (" + std::to_string(_joints.size()) + ") plus 1.");
 
   // Add the shapes to a list of shapes to be deleted later.
-  for(size_t i = 0; i < _shapes.size(); i++)
-    m_collisionShapes.push_back(_shapes.at(i));
+  for(auto shape : _shapes)
+    m_collisionShapes.push_back(shape);
 
-  //First Step: Handle the base and overall btMultiBody object.
-  // Compute inertia for base.
-  const double baseMass = _masses.at(0);
-  btVector3 inertia(0, 0, 0);
-  const bool isDynamic(baseMass != 0.);
-  if(isDynamic) // Then calculate the moment of inertia if dynamic
-    _shapes.at(0)->calculateLocalInertia(baseMass, inertia);
-
-  // Make multi body.
-  const int links = _shapes.size() - 1;
-  const bool isFixedBase = !isDynamic;
-  const bool canSleep = false; // Can this object sleep? Not sure what it means.
-  btMultiBody* mb = new btMultiBody(links, baseMass, inertia,
-                                    isFixedBase, canSleep);
-
-  mb->setBaseWorldTransform(_transforms.at(0));
+  // Compute the dynamics properties of this object. It is dynamic if the base
+  // has non-zero mass.
+  const bool isDynamic = _baseMass != 0.;
 
   if(m_debug)
-    std::cout << "BulletEngine.cpp: Made a btMultiBody with number of joints/"
-              << "links = " << mb->getNumLinks() << " and number of shapes "
-              << "(links + base) = " << _shapes.size() << std::endl;
+    std::cout << "\tObject is " << (isDynamic ? "" : "not ") << "dynamic."
+              << std::endl;
 
-  //Adapted from Bullet example code TestJointTorqueSetup.cpp lines 297-298:
-  short collisionFilterGroup, collisionFilterMask;
-  // Noting from BulletCollision/BroadphaseCollision/btBroadphaseProxy.h,
-  // the second arg is selecting the collisionFilterGroup ("StaticFilter" = 2)
-  // the third arg is selecting the collisionFilterMask ("DefaultFilter" = 1)
-  // Also see BulletCollision/CollisionDispatch/btCollisionWorld.h for info
-  //  collisionFilterGroup = 2; // static filter
-  //  collisionFilterMask = 1 + 2; // default and static filter
-  //Doing some light verification, these worked as well as the hardcoded values:
-  if(isDynamic) {
-    collisionFilterGroup = short(btBroadphaseProxy::DefaultFilter);
-    collisionFilterMask = short(btBroadphaseProxy::AllFilter);
+  // See BulletCollision/BroadphaseCollision/btBroadphaseProxy.h
+  // and BulletCollision/CollisionDispatch/btCollisionWorld.h
+  // for more info on these.
+  auto collisionFilterGroup = isDynamic ? btBroadphaseProxy::DefaultFilter
+                                        : btBroadphaseProxy::StaticFilter;
+  auto collisionFilterMask = isDynamic ? btBroadphaseProxy::AllFilter
+      : btBroadphaseProxy::AllFilter ^ btBroadphaseProxy::StaticFilter;
+        // This is logically equivalent to "All BUT StaticFilter":
+
+  // Create the base and overall btMultiBody object.
+  btMultiBody* mb;
+  {
+    // Compute inertia for base.
+    btVector3 inertia(0, 0, 0);
+    if(isDynamic)
+      _shapes[0]->calculateLocalInertia(_baseMass, inertia);
+
+    // Compute other properties that apply to the whole multibody object.
+    const int links = _shapes.size() - 1;
+    const bool fixedBase = !isDynamic;
+    const bool canSleep = false; // Can this object sleep? Not sure what it means.
+
+    // Make multibody.
+    mb = new btMultiBody(links, _baseMass, inertia, fixedBase, canSleep);
+    mb->setBaseWorldTransform(_baseTransform);
+
+    // The multibody on its own doesn't process collisions. Create a collider
+    // object for each component to handle this. The base has id -1.
+    btMultiBodyLinkCollider* col = new btMultiBodyLinkCollider(mb, -1);
+    col->setCollisionShape(_shapes[0]);
+    col->setWorldTransform(_baseTransform);
+    col->setFriction(m_problem->GetEnvironment()->GetFrictionCoefficient());
+
+    // Attach the collider to the dynamics world and multibody.
+    m_dynamicsWorld->addCollisionObject(col, collisionFilterGroup,
+        collisionFilterMask);
+    mb->setBaseCollider(col);
+
+    if(m_debug)
+      std::cout << "\tAdded base with mass " << _baseMass << "."
+                << std::endl;
   }
-  else {
-    collisionFilterGroup = short(btBroadphaseProxy::StaticFilter);
-    //This is logically equivalent to "All BUT StaticFilter":
-    collisionFilterMask = short(btBroadphaseProxy::AllFilter
-                                ^ btBroadphaseProxy::StaticFilter);
-  }
 
-  // The multibody on its own doesn't process collisions. Add a collider for
-  // each link. The base collider has link id -1.
-  btMultiBodyLinkCollider* col = new btMultiBodyLinkCollider(mb, -1);
-  col->setCollisionShape(_shapes.at(0));
-  col->setWorldTransform(_transforms.at(0));
-  col->setFriction(m_problem->GetEnvironment()->GetFrictionCoefficient());
-
-  m_dynamicsWorld->addCollisionObject(col,
-                                collisionFilterGroup, collisionFilterMask);
-  mb->setBaseCollider(col);
-
-  //NOTE: from btMultiBody.cpp, m_links is described as:
-  // array of m_links, excluding the base. index from 0 to num_links-1.
-  //This means that the base in Bullet is stored separately from any links,
-  // and so all of the indexing will reflect that.
-  //This really means that PMPL link index is one off of the Bullet link index.
-
-  //Note a pretty big assumption, but one that is safe for now: in PMPL, joint
-  // number is always the same as the parent's link number.
-  // in Bullet, the joint number is always the CHILD's link number.
-
+  // Create the links.
   for(size_t i = 0; i < _joints.size(); i++) {
     if(m_debug)
-      std::cout << "BulletEngine.cpp: in AddObject working on joint " << i
-                << std::endl;
+      std::cout << "\tAdding joint " << i << "..." << std::endl;
 
-    //The data that applies to all links:
-    int parentPmplIndex = _joints.at(i)->GetPreviousBodyIndex();
-    int linkPmplIndex = _joints.at(i)->GetNextBodyIndex();
-    FreeBody* linkBody = _joints.at(i)->GetNextBody();
+    // Get the PMPL link.
+    /// @TODO This assumes that the PMPL body is an ActiveMultiBody. Generalize
+    ///       our bodies so that there is no such artificial distinction.
+    FreeBody* const link = _joints[i]->GetNextBody();
 
-    //The indices according to how Bullet stores the links:
-    int linkIndex = linkPmplIndex - 1;// should be >= 0 (should be equal to i)
-    int parentIndex = parentPmplIndex - 1;// >= -1 index is perfectly valid here
+    // Get the PMPL indexes for this link.
+    const int parentPmplIndex = _joints[i]->GetPreviousBodyIndex();
+    const int linkPmplIndex = _joints[i]->GetNextBodyIndex();
 
-    //Get the mass for the link:
-    btScalar mass = linkBody->GetMass();
+    // The indices according to how Bullet stores the links (from 0 to
+    // num_links - 1).
+    const int parentIndex = parentPmplIndex - 1;
+    const int linkIndex = linkPmplIndex - 1;
+
+    // Get the mass for the link:
+    const btScalar mass = link->GetMass();
 
     btVector3 inertia(0, 0, 0);
-    if(isDynamic) // Calculate the moment of inertia if base is dynamic
-      _shapes.at(linkPmplIndex)->calculateLocalInertia(mass, inertia);
+    if(isDynamic)
+      _shapes[linkPmplIndex]->calculateLocalInertia(mass, inertia);
 
+    // Get the transformations between the parent frame, the joint frame, and the
+    // link frame.
+    Transformation parentToJoint = _joints[i]->GetTransformationToDHFrame();
+    Transformation jointActuation = _joints[i]->GetDHParameters().
+        GetTransformation();
+    Transformation jointToLink = _joints[i]->GetTransformationToBody2();
 
-    //NOTE: I'm ASSUMING that the data in transToDHFrame is the body1->Joint
-    //transform and then the transToBody2 is Joint->Body2 (not body1->body2)
+    // Compute the transformations from (parent to joint actuation) and
+    // (parent to link) frames.
+    Transformation parentToJointActuation = parentToJoint * jointActuation;
+    Transformation parentToLink = parentToJointActuation * jointToLink;
 
-    //These are the 3 members that may be needed for the next data:
-    DHParameters& dhParams = _joints.at(i)->GetDHParameters();
-    //Transformation objects have a translation vec and a Orientation (3x3 mat)
-    Transformation transToBody2 = _joints.at(i)->GetTransformationToBody2();
-    Transformation transToDHFrame = _joints.at(i)->GetTransformationToDHFrame();
+    // Compute the rotation from parent frame to link frame in bullet
+    // quaternion representation.
+    btQuaternion parentToLinkRotation;
+    {
+      Quaternion temp;
+      mathtool::convertFromMatrix(temp, parentToLink.rotation().matrix());
+      parentToLinkRotation = ToBullet(temp);
+    }
 
-    //Due to my above assumption, I'm also using the product to two matrices
-    //to represent the full rotation from parent body -> new link
-    //TODO should dhFrameTransform be just the first matrix? Look at future use for more info
-    mathtool::Matrix3x3 dhFrameTransform = transToDHFrame.rotation().matrix()
-                            * dhParams.GetTransformation().rotation().matrix();
-    //Combine the matrices so that it's body1 -> body2 transform:
-    mathtool::Matrix3x3 fullRotation = dhFrameTransform
-                                      * transToBody2.rotation().matrix();
-    //Convert into quaternion from matrix:
-    Quaternion pmplRotParentToThis = Quaternion();
-    mathtool::convertFromMatrix(pmplRotParentToThis, fullRotation);
-    //Convert to btQuaternion from PMPL quaternion:
-    btQuaternion rotParentToThis = ToBullet(pmplRotParentToThis);
+    // Compute the translations from (parent to joint) and (joint to link).
+    btVector3 parentToJointTranslation = ToBullet(parentToJoint.translation());
+    btVector3 jointToLinkTranslation   = ToBullet(jointToLink.translation());
 
-    //vector between parent COM and joint:
-    btVector3 parentComToThisPivotOffset = ToBullet(transToDHFrame.translation());
-    //vector between link COM and joint:
-    btVector3 thisPivotToThisComOffset = ToBullet(transToBody2.translation());
-
-//    std::cout << std::endl<< std::endl<< std::endl<<"BULLETENGINE.CPP: ABOUT TO PRINT A BUNCH OF STUFF!!!" << std::endl;
-//    std::cout << "dhFrameTransform = " <<dhFrameTransform << std::endl << std::endl;
-//    std::cout << "fullRotation =  "<< fullRotation << std::endl << std::endl;
-//    std::cout << "pmplRotParentToThis = " << pmplRotParentToThis << std::endl << std::endl;
-//    std::cout << "rotParentToThis = " << rotParentToThis << std::endl;
-
-    //These show that we have the correct offset from the joint info in PMPL,
-    // so it appears Bullet is doing exactly as PMPL is specifying.
-    if(m_debug)
-      std::cout << "\nparentComToThisPivotOffset = "<< parentComToThisPivotOffset
-                << "\nthisPivotToThisComOffset = " << thisPivotToThisComOffset
-                << std::endl;
-
-    //It looks like this should be true (disabled) if "the self-collision
-    //has conflicting/non-resolvable contact normals"
+    // It looks like this should be true (disabled) if "the self-collision
+    // has conflicting/non-resolvable contact normals".
     const bool disableParentCollision = true;
 
-    //NOTE! Link means the body! Not the joint.
-
-    // Determine joint type (Revolute, Prismatic, Spherical, Planar, or Fixed)
-    //Note, PMPL only does Revolute, Spherical, or NonActuated/Fixed right now
-    switch(_joints.at(i)->GetConnectionType()) {
-      case Connection::JointType::Revolute :
+    // Set up the connection between this link and its parent based on the joint
+    // type.
+    switch(_joints[i]->GetConnectionType()) {
+      case Connection::JointType::Revolute:
       {
-        //jointAxis should be what axis the rotation is about
-        //jointAxis should simply be the z-axis from the DH frame (from PMPL)
-
-        //I'm not sure if the joint axis would need to include that 'internal' transform
-        //for DH or not... I'm assuming it does for now. If not, change
-        //dhFrameTransform as mentioned near definition
-        //Note: The above comment shouldn't matter actually, since that DH frame
-        //transform should be limited to rotations ABOUT the z direction.
-
-        //Justification for jointAxis calculation:
-        //world transform of parent * transform to joint * vector that grabs the z-axis of that frame.
-        //Note that this is STILL assuming that jointAxis is not relative to anything but WORLD frame,
-        //instead of the link/joint frame... Which is probably going to be incorrect.
-        //HOWEVER, if it's actually wrong in the end, the correct one should just be (0,0,1).
-        btVector3 jointAxis =
-            (_transforms.at(parentPmplIndex).getBasis() // parent's world trans.
-                * ToBullet(dhFrameTransform)) // move into the DH frame
-                * btVector3(0.,0.,1.); // grab the z-axis (DH axis of rotation)
-
-        if(m_debug)
-          std::cout << "jointAxis = " << jointAxis << std::endl;
+        // Compute the joint's axis of rotation.
+        const Transformation& parent = link->GetWorldTransformation();
+        btVector3 jointAxis = ToBullet(
+            (parent * parentToJointActuation) * Vector3d(0, 0, 1));
 
         mb->setupRevolute(linkIndex, mass, inertia, parentIndex,
-               rotParentToThis, jointAxis, parentComToThisPivotOffset,
-               thisPivotToThisComOffset, disableParentCollision);
+               parentToLinkRotation, jointAxis, parentToJointTranslation,
+               jointToLinkTranslation, disableParentCollision);
 
-        //Handle joint constraints/limits:
-        //First get PMPL's copy of the limits.
-        const pair<double, double> limits = _joints.at(i)->GetJointLimits(0);
-        //Bullet uses [-PI, PI], PMPL uses [-1, 1].
-
-        //So from how btMultiBodyJointLimitConstraint uses btMultiBodyConstraint
-        // in its constructor, it's clear you pass the child's link number
-        // (recall: link = body, not joint) and it grabs the parent automatically
-        // Note that linkIndex should equal i
+        // Add joint limits as a bullet constraint.
+        const pair<double, double> limits = _joints[i]->GetJointLimits(0);
         btMultiBodyConstraint* con = new btMultiBodyJointLimitConstraint(mb,
-                                      linkIndex, limits.first*PI, limits.second*PI);
-                                      //linkIndex, 1., 0.);
-                                      //linkIndex, -PI / 2., PI / 2.);
-
+            linkIndex, limits.first * PI, limits.second * PI);
         m_dynamicsWorld->addMultiBodyConstraint(con);
 
         if(m_debug)
-          std::cout << "Set constraints on joint " << i << " to: "
-                    << limits.first * PI << " and " << limits.second * PI
+          std::cout << "\t\tAdded revolute joint " << linkIndex
+                    << "with range of motion ["
+                    << std::setprecision(3) << limits.first * PI << " : "
+                    << std::setprecision(3) << limits.second * PI << "]."
                     << std::endl;
         break;
       }
-      case Connection::JointType::Spherical :
+      case Connection::JointType::Spherical:
       {
-        // This case can be used, but please note that NO constraints will
-        // be respected, and you must manually comment out this exception:
-        RunTimeException(WHERE, "Spherical joints are supported, but spherical "
-            "constraints are NOT! You can remove this exception if you need a "
-            "spherical joint with no constraints.");
-
-        mb->setupSpherical(linkIndex, mass, inertia, parentIndex,
-              rotParentToThis, parentComToThisPivotOffset,
-              thisPivotToThisComOffset, disableParentCollision);
         /// @TODO support spherical constraints. As per answers here:
         /// http://www.bulletphysics.org/Bullet/phpBB3/viewtopic.php?f=9&t=10780
-        /// Bullet doesn't support >1DOF joints on btMultiBodies.
+        /// Until then, warn the user that their constraints won't be respected.
+        std::cerr << "Bullet supports spherical joints, but not constraints for "
+                  << "them. Any constraints on this joint will be ignored!"
+                  << std::endl;
+
+        mb->setupSpherical(linkIndex, mass, inertia, parentIndex,
+              parentToLinkRotation, parentToJointTranslation,
+              jointToLinkTranslation, disableParentCollision);
+
+        if(m_debug)
+          std::cout << "\t\tAdded spherical joint " << linkIndex << "."
+                    << std::endl;
         break;
       }
-      case Connection::JointType::NonActuated :
+      case Connection::JointType::NonActuated:
       {
+        // Since this is a fixed joint, there is no need for joint constraints.
         mb->setupFixed(linkIndex, mass, inertia, parentIndex,
-            rotParentToThis, parentComToThisPivotOffset,
-            thisPivotToThisComOffset, disableParentCollision);
-        //Since it's fixed, there is no need for joint constraints.
+            parentToLinkRotation, parentToJointTranslation,
+            jointToLinkTranslation, disableParentCollision);
+
+        if(m_debug)
+          std::cout << "\t\tAdded fixed joint " << linkIndex << "."
+                    << std::endl;
         break;
       }
       default:
@@ -433,29 +340,21 @@ AddObject(std::vector<btCollisionShape*> _shapes,
     }
   }
 
-  //Do some of the final things:
+  // Finalize the multibody.
   mb->finalizeMultiDof();
-  mb->setBaseVel(btVector3(0, 0, 0));//important to have this after finalizeMultiDof()
+  mb->setBaseVel({0, 0, 0}); // Must happen after finalizeMultiDof().
   m_dynamicsWorld->addMultiBody(mb);
 
-  //Using the Bullet example file in examples/MultiBody/Pendulum.cpp
-  //as the basis for this (that's why this is very last):
-  for (int i = 0; i < mb->getNumLinks(); i++) {
-    //This loop, like in the example, is assuming that i represents the child
-    //link of each joint (make sense since base, the -1 index, is already set up)
+  // Create a collider for each joint.
+  // See examples/MultiBody/Pendulum.cpp for related example code.
+  for(int i = 0; i < mb->getNumLinks(); i++) {
     btMultiBodyLinkCollider* col = new btMultiBodyLinkCollider(mb, i);
-    col->setCollisionShape(_shapes.at(i+1));
-    bool isDynamic = 1;
-    short collisionFilterGroup = isDynamic ?
-        short(btBroadphaseProxy::DefaultFilter)
-        : short(btBroadphaseProxy::StaticFilter);
-    short collisionFilterMask = isDynamic ?
-        short(btBroadphaseProxy::AllFilter)
-        : short(btBroadphaseProxy::AllFilter ^ btBroadphaseProxy::StaticFilter);
-    m_dynamicsWorld->addCollisionObject(col,
-                                    collisionFilterGroup, collisionFilterMask);
+    col->setCollisionShape(_shapes[i + 1]);
     col->setFriction(m_problem->GetEnvironment()->GetFrictionCoefficient());
-    //Finally, set the link's actual collider:
+
+    m_dynamicsWorld->addCollisionObject(col, collisionFilterGroup,
+        collisionFilterMask);
+
     mb->getLink(i).m_collider = col;
   }
 
@@ -467,46 +366,14 @@ AddObject(std::vector<btCollisionShape*> _shapes,
   btAlignedObjectArray<btVector3> local_origin;
   mb->updateCollisionObjectWorldTransforms(world_to_local, local_origin);
 
-  // After everything is set up, return the multibody pointer:
   return mb;
-
-  /// @TODO
-  // Code snippet on limiting velocity:
-  // The only way to limit the velocities in bullet is to do so manually on each
-  // internal sub-step. This is done by registering a call-back function like
-  // this:
-  //
-  // void callback(btDynamicsWorld* _dynamicsWorld, btScalar _timeStep) {
-  //   const btVector3 velocity = mb->getLinearVelocity();
-  //   const btScalar speed = velocity.length();
-  //   if(speed > maxSpeed)
-  //     mb->setLinearVelocity(velocity *= maxSpeed / speed);
-  // }
-  // m_dynamicsWorld->setInternalTickCallback(callback);
-  //
-  // Angular velocity limiting is likely to be similar.
-
-  /// @TODO
-  // We can force planar objects to stay on the plane like this:
-  // mb->setLinearFactor(btVector3(1, 1, 0));
-  // mb->setAngularFactor(btVector3(0, 0, 1));
 }
+
 
 void
 BulletEngine::
-SetGravity(btVector3 _gravityVec) {
-  if(m_dynamicsWorld)
-    m_dynamicsWorld->setGravity(_gravityVec);
-}
-
-
-btVector3
-BulletEngine::
-GetGravity() {
-  if(m_dynamicsWorld)
-      return m_dynamicsWorld->getGravity();
-  else
-    return btVector3();
+SetGravity(const btVector3& _gravityVec) {
+  m_dynamicsWorld->setGravity(_gravityVec);
 }
 
 /*------------------------------ Helpers -------------------------------------*/
@@ -539,12 +406,13 @@ BuildCollisionShape(const Body* _body) {
   const auto& vertices = poly.GetVertexList();
   const auto& facets = poly.GetPolygonList();
 
-  // Build a btTriangleMesh from an obj file.
+  // Initialize a btTriangleMesh with enough space for our model.
   btTriangleMesh* mesh = new btTriangleMesh();
   mesh->preallocateVertices(vertices.size());
   mesh->preallocateIndices(facets.size());
 
-  // Add vertices, don't remove duplicates.
+  // Add vertices, don't remove duplicates (because PMPL doesn't, and this will
+  // mess up the facet indexes).
   for(const auto& v : vertices)
     mesh->findOrAddVertex(btVector3(v[0], v[1], v[2]), false);
 
@@ -554,5 +422,17 @@ BuildCollisionShape(const Body* _body) {
 
   return mesh;
 }
+
+
+// Note for adding velocity limits:
+// The only way to limit the velocities in bullet is to do so manually on
+// each internal sub-step. This is done by registering a call-back function.
+//void callback(btDynamicsWorld*, btScalar) {
+//  const btVector3 velocity = mb->getLinearVelocity();
+//  const btScalar speed = velocity.length();
+//  if(speed > maxSpeed)
+//    mb->setLinearVelocity(velocity *= maxSpeed / speed);
+//}
+//m_dynamicsWorld->setInternalTickCallback(callback);
 
 /*----------------------------------------------------------------------------*/

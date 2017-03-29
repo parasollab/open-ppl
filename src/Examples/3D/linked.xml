@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <Robot maxLinearVelocity="10" maxAngularVelocity="1">
 
-  <Multibody filename="Examples/3D/linked.robot"/>
+  <Multibody filename="linked.robot"/>
 
   <!-- Eventually we will go full XML and remove our custom parser because XML
        is easier to extend and maintain.

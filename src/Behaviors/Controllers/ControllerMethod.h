@@ -45,8 +45,8 @@ class ControllerMethod {
     ///@name Control Selection
     ///@{
 
-    /// Compute the desired generalized force to move from the current position
-    /// to the target.
+    /// Compute the desired generalized force in world coordinates to move from
+    /// the current position to the target.
     /// @param[in] _current The current configuration.
     /// @param[in] _target The target configuration.
     /// @param[in] _dt The timestep length.
@@ -82,7 +82,7 @@ class ControllerMethod {
     ///@{
 
     Robot* const m_robot; ///< The robot that owns this controller.
-    bool m_debug{false};  ///< Show debug messages?
+    bool m_debug{true };  ///< Show debug messages?
 
     ///@}
 

@@ -18,6 +18,10 @@ ControllerMethod(Robot* const _r) : m_robot(_r) { }
 Control
 ControllerMethod::
 operator()(const Cfg& _current, const Cfg& _target, const double _dt) {
+  if(m_debug)
+    std::cout << "Computing desired force to go from " << _current << " to "
+              << _target << std::endl;
+
   // Compute the ideal force.
   auto force = this->ComputeDesiredForce(_current, _target, _dt);
 

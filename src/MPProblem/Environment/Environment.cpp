@@ -307,6 +307,43 @@ BuildCDStructure() {
     body->BuildCDStructure();
 }
 
+/*------------------------------- Decomposition ------------------------------*/
+
+WorkspaceDecomposition*
+Environment::
+GetDecomposition() {
+  return m_decomposition.get();
+}
+
+
+const WorkspaceDecomposition*
+Environment::
+GetDecomposition() const {
+  return m_decomposition.get();
+}
+
+
+void
+Environment::
+Decompose(DecompositionFunction&& _f) {
+  m_decomposition = _f(this);
+}
+
+/*-------------------------- Physical Properties -----------------------------*/
+
+double
+Environment::
+GetFrictionCoefficient() const noexcept {
+  return m_frictionCoefficient;
+}
+
+
+const Vector3d&
+Environment::
+GetGravity() const noexcept {
+  return m_gravity;
+}
+
 /*------------------------------- Helpers ------------------------------------*/
 
 void

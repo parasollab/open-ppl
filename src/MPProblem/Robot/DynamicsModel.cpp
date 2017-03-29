@@ -70,15 +70,7 @@ InternalSimulator::
 InternalSimulator(Robot* const _robot) :
     m_robot(_robot), m_engine(m_robot->GetMPProblem()),
     m_timestep(m_robot->GetMPProblem()->GetEnvironment()->GetTimeRes()) {
-  //m_engine = new BulletEngine(m_robot->GetMPProblem());
   m_model = m_engine.AddObject(m_robot->GetMultiBody());
-
-  // Add gravity in the model.
-  // Note that using the dynamicsWorld->setGravity, it loops through and
-  // updates all bodies in the world, and should update future bodies added.
-  //m_engine.SetGravity(
-  //    ToBullet(m_robot->GetMPProblem()->GetEnvironment()->GetGravity()));
-  // Can get InternalSimulator gravity using m_engine.GetGravity()
 }
 
 /*-------------------------------- Interface ---------------------------------*/
