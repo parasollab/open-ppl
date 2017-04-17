@@ -28,6 +28,9 @@ Robot(MPProblem* const _p, XMLNode& _node, const Boundary* const _b) :
   m_nonholonomic = _node.Read("nonholonomic", false, false, "Is the robot "
       "nonholonomic?");
 
+  // Get the (optional) car-likeness, assuming not car-like.
+  m_carlike = _node.Read("carlike", false, false, "Is the robot car-like?");
+
   // Get the robot file name and make sure it exists.
   const std::string path = GetPathName(_node.Filename());
   const std::string file = _node.Read("filename", true, "", "Robot file name");
@@ -352,6 +355,13 @@ bool
 Robot::
 IsNonholonomic() const noexcept {
   return m_nonholonomic;
+}
+
+
+bool
+Robot::
+IsCarlike() const noexcept {
+  return m_carlike;
 }
 
 

@@ -13,7 +13,7 @@
 #include "BulletDynamics/Featherstone/btMultiBody.h"
 
 
-/*------------------------------ Local Helpers -------------------------------*/
+/*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Local Helpers ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
 
 /// Extract the configuration from a simulated robot.
 /// @param _robot A PMPL robot.
@@ -31,7 +31,7 @@ void ConfigureSimulatedState(const Cfg& _c, btMultiBody* const _model);
 ////////////////////////////////////////////////////////////////////////////////
 /// A micro simulator for a single robot.
 ///
-/// @details This object outsources forward dynamics computations to the bullet
+/// @details This object outsources forward dynamics computations to a bullet
 ///          physics engine.
 ////////////////////////////////////////////////////////////////////////////////
 class InternalSimulator final {
@@ -39,11 +39,11 @@ class InternalSimulator final {
   ///@name Internal State
   ///@{
 
-  Robot* const m_robot;   ///< Our pmpl robot.
-  BulletEngine m_engine;  ///< The engine for this micro-simulator.
-  btMultiBody* m_model;   ///< The bullet body for our robot.
+  Robot* const m_robot;       ///< Our pmpl robot.
+  BulletEngine m_engine;      ///< The engine for this micro-simulator.
+  btMultiBody* const m_model; ///< The bullet body for our robot.
 
-  const btScalar m_timestep; ///< The smallest timestep to use.
+  const btScalar m_timestep;  ///< The smallest timestep to use.
 
   ///@}
 
@@ -52,6 +52,8 @@ class InternalSimulator final {
     ///@name Construction
     ///@{
 
+    /// Construct a self-simulator for a robot.
+    /// @param _robot The robot to simulate.
     InternalSimulator(Robot* const _robot);
 
     ///@}
@@ -68,9 +70,12 @@ class InternalSimulator final {
 
 InternalSimulator::
 InternalSimulator(Robot* const _robot) :
-    m_robot(_robot), m_engine(m_robot->GetMPProblem()),
+    m_robot(_robot),
+    m_engine(m_robot->GetMPProblem()),
+    m_model(m_engine.AddObject(m_robot->GetMultiBody())),
     m_timestep(m_robot->GetMPProblem()->GetEnvironment()->GetTimeRes()) {
-  m_model = m_engine.AddObject(m_robot->GetMultiBody());
+  if(m_robot->IsCarlike())
+    m_engine.CreateCarlikeCallback(m_model);
 }
 
 /*-------------------------------- Interface ---------------------------------*/
@@ -142,7 +147,7 @@ Test(const Cfg& _start, const Control& _c, const double _dt) const {
   return m_simulator->Test(_start, _c, _dt);
 }
 
-/*--------------------------------- Helpers ----------------------------------*/
+/*~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Internal Helpers ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
 
 Cfg
 ExtractSimulatedState(Robot* const _robot, btMultiBody* const _model) {

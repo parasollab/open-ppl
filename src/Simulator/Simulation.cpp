@@ -219,6 +219,8 @@ AddRobots() {
     auto robot = m_problem->GetRobot(i);
     auto multiBody = robot->GetMultiBody();
     auto bulletModel = m_engine->AddObject(multiBody);
+    if(robot->IsCarlike())
+      m_engine->CreateCarlikeCallback(bulletModel);
     robot->SetDynamicsModel(bulletModel);
     this->add_drawable(new DrawableMultiBody(multiBody));
   }

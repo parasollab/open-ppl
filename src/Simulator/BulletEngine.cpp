@@ -23,6 +23,10 @@
 #include "MPProblem/Environment/Environment.h"
 #include "MPProblem/MPProblem.h"
 
+/*--------------------------- Static Initialization --------------------------*/
+
+std::map<btDynamicsWorld*, BulletEngine::CallbackSet&>
+BulletEngine::s_callbackMap;
 
 /*------------------------------ Construction --------------------------------*/
 
@@ -43,6 +47,10 @@ BulletEngine(MPProblem* const _problem) : m_problem(_problem) {
   // Set the gravity in our world, based off of MPProblem:
   m_dynamicsWorld->setGravity(ToBullet(
                               m_problem->GetEnvironment()->GetGravity()));
+
+  // Add this engine's call-back set to the call-back map.
+  s_callbackMap.emplace(m_dynamicsWorld, m_callbacks);
+  m_dynamicsWorld->setInternalTickCallback(ExecuteCallbacks);
 }
 
 
@@ -66,6 +74,10 @@ BulletEngine::
   for(int i = 0; i < m_collisionShapes.size(); ++i)
     delete m_collisionShapes[i];
   m_collisionShapes.clear();
+
+  // Remove this engine's dynamics world and call-back set from the call-back
+  // map.
+  s_callbackMap.erase(m_dynamicsWorld);
 
   // Delete the remaining bullet objects.
   delete m_dynamicsWorld;
@@ -376,6 +388,37 @@ SetGravity(const btVector3& _gravityVec) {
   m_dynamicsWorld->setGravity(_gravityVec);
 }
 
+/*--------------------------- Callback Functions -----------------------------*/
+
+void
+BulletEngine::
+CreateCarlikeCallback(btMultiBody* const _model) {
+  // Create a call-back function to make _model appear car-like. For now we will
+  // always assume that _model's forward direction is (1, 0, 0) in its local
+  // frame.
+  CallbackFunction f = [_model]() {
+    const btVector3 velocity = _model->getBaseVel();
+    const btVector3 heading = _model->localDirToWorld(-1, {1, 0, 0});
+    const btScalar sign = velocity * heading < 0 ? -1 : 1;
+    _model->setBaseVel(heading * sign * velocity.length());
+  };
+
+  // Add this to the set of callbacks for this simulation engine.
+  m_callbacks.push_back(f);
+}
+
+
+void
+BulletEngine::
+ExecuteCallbacks(btDynamicsWorld* _world, btScalar _timeStep) {
+  // Get the call-back set associated with this dynamics world.
+  CallbackSet& callbacks = s_callbackMap.at(_world);
+
+  // Execute each call-back in the set.
+  for(auto& callback : callbacks)
+    callback();
+}
+
 /*------------------------------ Helpers -------------------------------------*/
 
 vector<btCollisionShape*>
@@ -422,17 +465,5 @@ BuildCollisionShape(const Body* _body) {
 
   return mesh;
 }
-
-
-// Note for adding velocity limits:
-// The only way to limit the velocities in bullet is to do so manually on
-// each internal sub-step. This is done by registering a call-back function.
-//void callback(btDynamicsWorld*, btScalar) {
-//  const btVector3 velocity = mb->getLinearVelocity();
-//  const btScalar speed = velocity.length();
-//  if(speed > maxSpeed)
-//    mb->setLinearVelocity(velocity *= maxSpeed / speed);
-//}
-//m_dynamicsWorld->setInternalTickCallback(callback);
 
 /*----------------------------------------------------------------------------*/

@@ -58,6 +58,7 @@ class Robot {
   ControllerMethod* m_controller{nullptr}; ///< Low-level controller.
 
   bool m_nonholonomic{false};              ///< Is the robot nonholonomic?
+  bool m_carlike{false};                   ///< Is the robot car-like?
   DynamicsModel* m_dynamicsModel{nullptr}; ///< The bullet dynamics model.
 
   double m_maxLinearVelocity{10};          ///< Max linear velocity.
@@ -169,6 +170,9 @@ class Robot {
 
     /// Check if the robot is nonholonomic.
     bool IsNonholonomic() const noexcept;
+
+    /// Check if the robot is car-like.
+    bool IsCarlike() const noexcept;
 
     double GetMaxLinearVelocity() const noexcept;
 

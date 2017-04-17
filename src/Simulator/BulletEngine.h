@@ -1,6 +1,10 @@
 #ifndef BULLET_ENGINE_H_
 #define BULLET_ENGINE_H_
 
+#include <functional>
+#include <map>
+#include <vector>
+
 #include "Geometry/Bodies/Connection.h"
 
 #include "btBulletDynamicsCommon.h"
@@ -45,11 +49,30 @@ class BulletEngine final {
   btAlignedObjectArray<btCollisionShape*> m_collisionShapes;
 
   ///@}
+  ///@name Call-back Functions
+  ///@}
+
+  /// A call-back function can be used to modify the physics engine behavior for
+  /// a dynamic object. It will be executed by the bullet engine after each
+  /// internal timestep.
+  typedef std::function<void(void)> CallbackFunction;
+
+  /// A set of call-back functions that are used for this engine object.
+  typedef std::vector<CallbackFunction> CallbackSet;
+
+  /// The set of all call-back functions for this simulation.
+  CallbackSet m_callbacks;
+
+  /// A map from all dynamics worlds (one per engine object) to their call-back
+  /// sets. This is needed to get bullet to call the appropriate call-back set
+  /// from a single, universal function.
+  static std::map<btDynamicsWorld*, CallbackSet&> s_callbackMap;
+
+  ///@}
   ///@name Other Internal State
   ///@{
 
-  /// A pointer to the MPProblem, mostly for Environment access for gravity
-  /// and friction values.
+  /// A pointer to the MPProblem being simulated.
   MPProblem* const m_problem;
 
   bool m_debug{false};  ///< Show debug messages?
@@ -106,6 +129,18 @@ class BulletEngine final {
     /// Set the gravity in the world (this will also set it for all bodies)
     /// @param _gravityVec Is simply the 3-vector representing (x,y,z) gravity
     void SetGravity(const btVector3& _gravityVec);
+
+    ///@}
+    ///@name Call-back Function Interface
+    ///@{
+
+    /// Create a call-back to make a multibody behave like a car with perfect
+    /// friction.
+    /// @param _model The multibody to affect.
+    void CreateCarlikeCallback(btMultiBody* const _model);
+
+    /// Execute all call-backs for a given dynamics world.
+    static void ExecuteCallbacks(btDynamicsWorld* _world, btScalar _timeStep);
 
     ///@}
 
