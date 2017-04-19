@@ -463,7 +463,7 @@ FixFlowgraphClearance(FlowGraph* _f) const {
   auto getClearanceInfo = [&](const Point3d& _p) -> pair<double, Point3d> {
     // Check against obstacles using a point robot.
     CfgType cfg(_p, size_t(-1));
-    CDInfo cdInfo;
+    CDInfo cdInfo(true);
     vc->IsValid(cfg, cdInfo, "Flowgraph Push");
 
     // Check against boundary.
