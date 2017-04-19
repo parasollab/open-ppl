@@ -696,7 +696,7 @@ FixSkeletonClearance() {
   auto getClearanceInfo = [&](const Point3d& _p) -> pair<double, Point3d> {
     // Check against obstacles using a point robot.
     CfgType cfg(_p, pointRobot);
-    CDInfo cdInfo;
+    CDInfo cdInfo(true);
     vc->IsValid(cfg, cdInfo, "Skeleton Push");
 
     // Check against boundary.
