@@ -61,6 +61,12 @@ class CollisionDetectionValidity : public ValidityCheckerMethod<MPTraits> {
 
     virtual bool IsInsideObstacle(const CfgType& _cfg);
 
+    /// Check if two workspace points are mutually visible.
+    /// @param _a The first point.
+    /// @param _b The second point.
+    /// @return True if _a is visible from _b and vice versa.
+    virtual bool WorkspaceVisibility(const Point3d& _a, const Point3d& _b);
+
     ///@}
 
   private:
@@ -317,6 +323,15 @@ IsInsideObstacle(const CfgType& _cfg) {
           robotPt, env->GetObstacle(i)->GetFixedBody(0)))
       return true;
   return false;
+}
+
+
+template <typename MPTraits>
+bool
+CollisionDetectionValidity<MPTraits>::
+WorkspaceVisibility(const Point3d& _a, const Point3d& _b) {
+  throw RunTimeException(WHERE, "No base-class implementation: you must override "
+      "this method in the derived class.");
 }
 
 /*----------------------------------------------------------------------------*/
