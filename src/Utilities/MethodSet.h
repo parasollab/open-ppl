@@ -23,14 +23,13 @@ struct MethodFactory final {
   ///@name Local Types
   ///@{
 
-  typedef std::shared_ptr<Method>          MethodPointer;
+  typedef std::shared_ptr<Method> MethodPointer;
 
   ///@}
   ///@name Operator
   ///@{
 
-  MethodPointer
-  operator()(XMLNode& _node) const {
+  MethodPointer operator()(XMLNode& _node) const {
     return MethodPointer(new Method(_node));
   }
 
@@ -61,7 +60,7 @@ class MethodSet final {
     ///@name Local Types
     ///@{
 
-    typedef typename MPTraits::MPLibrary              MPLibrary;
+    typedef typename MPTraits::MPLibrary                  MPLibrary;
 
     typedef std::shared_ptr<Method>                       MethodPointer;
     typedef typename std::map<std::string, MethodPointer> MethodMap;

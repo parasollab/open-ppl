@@ -334,7 +334,7 @@ WorkspaceVisibility(const Point3d& _a, const Point3d& _b) {
   Vector3d p;
   auto direction = (_b -_a).normalize();
 
-  // If line segment is not parallel to z-axis 
+  // If line segment is not parallel to z-axis
   if(abs(direction*Vector3d(0,0,1))< 0.9)
     p = _a + Vector3d(0,0,1e-8);
   else
@@ -352,16 +352,23 @@ WorkspaceVisibility(const Point3d& _a, const Point3d& _b) {
   m_cdMethod->Build(lineBody);
 
   // Default behaviour do not store the cd info
-  CDInfo cdInfo; 
+  CDInfo cdInfo;
   // Check collision of the triangle against every obstacle in the environment
   Environment* env = this->GetEnvironment();
-  size_t nMulti = env->NumObstacles();
+  const size_t num = env->NumObstacles();
 
-  for(size_t i = 0; i < nMulti; ++i)
-    if(m_cdMethod->IsInCollision(lineBody, 
-				env->GetObstacle(i)->GetFixedBody(0),cdInfo))
-      return false;
-  return true;
+  bool visible = true;
+
+  for(size_t i = 0; i < num; ++i) {
+    if(m_cdMethod->IsInCollision(lineBody, env->GetObstacle(i)->GetFixedBody(0),
+        cdInfo)) {
+      visible = false;
+      break;
+    }
+  }
+
+  delete lineBody;
+  return visible;
 }
 
 /*----------------------------------------------------------------------------*/

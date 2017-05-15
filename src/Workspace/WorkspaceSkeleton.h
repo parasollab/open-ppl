@@ -130,6 +130,7 @@ class WorkspaceSkeleton {
       return m_regionData[_boundary];
     }
 
+    // Select a region based on its ratio of successful samples to total samples.
     Boundary* SelectRegion();
 
     void IncrementSuccess(Boundary* _region);
@@ -152,10 +153,10 @@ class WorkspaceSkeleton {
     vector<Boundary*> m_regions;  ///< The set of active regions.
     GraphType m_graph;            ///< The skeleton graph.
 
+    double m_explore{0.5};  ///< Probability of explore.
+
     unordered_map<Boundary*, RegionData> m_regionData;
     unordered_map<VD, bool> m_visited;
-
-    double m_gamma{0.5};  ///< Probability of explore.
 
     bool m_debug{false};  ///< Show debug messages?
 

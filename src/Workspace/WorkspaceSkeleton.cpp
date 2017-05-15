@@ -464,8 +464,8 @@ ComputeProbability() {
     auto& regionInfo = info.second;
 
     // Compute the probability for this region.
-    regionInfo.probability = (1 - m_gamma) * (regionInfo.weight / totalWeight)
-                           + (m_gamma / (m_regionData.size() + 1));
+    regionInfo.probability = (1 - m_explore) * (regionInfo.weight / totalWeight)
+                           + (m_explore / (m_regionData.size() + 1));
   }
 }
 
@@ -473,12 +473,6 @@ ComputeProbability() {
 Boundary*
 WorkspaceSkeleton::
 SelectRegion() {
-  // Region weighting scheme.
-  // Select a region based on its ratio of successful samples to total samples.
-  // The entire environment is a region added to m_currentRegions.
-  // Equation or probability of region i:
-  // p_i = (1 - m_gamma)(weight_i / (sum of all weights)) + (m_gamma(1/(K + 1)))
-
   // Update all region probabilities.
   ComputeProbability();
 
@@ -488,7 +482,7 @@ SelectRegion() {
     probabilities.push_back(it.second.probability);
 
   // Get the probability for the whole environment.
-  probabilities.push_back(m_gamma / (m_regionData.size() + 1));
+  probabilities.push_back(m_explore / (m_regionData.size() + 1));
 
   // Construct with random number generator with the region probabilities.
   static std::default_random_engine generator(0);

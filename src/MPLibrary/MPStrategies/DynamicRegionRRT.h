@@ -129,6 +129,10 @@ class DynamicRegionRRT : public BasicRRTStrategy<MPTraits> {
     /// @return A unit vector in the direction the region is moving.
     const Vector3d GetVelocityBias();
 
+    /// Add a new vertex to the nearest visible bucket.
+    /// @param _vid The new vertex to bucket.
+    void AddToNearestVisibleBucket(const VID _vid);
+
     void FixSkeletonClearance();
 
     ///@}
@@ -182,14 +186,15 @@ DynamicRegionRRT(string _dm, string _nf, string _vc, string _nc, string _ex,
 
 template <typename MPTraits>
 DynamicRegionRRT<MPTraits>::
-DynamicRegionRRT(XMLNode& _node) :
-    BasicRRTStrategy<MPTraits>(_node) {
+DynamicRegionRRT(XMLNode& _node) : BasicRRTStrategy<MPTraits>(_node) {
   this->SetName("DynamicRegionRRT");
+
   // Parameters.
   m_regionFactor = _node.Read("regionFactor", false, 2.5, 1., 4., "The region "
       "radius is this * robot radius");
   m_robotFactor = _node.Read("robotFactor", false, 1., 0., 1., "The robot is "
-      "touch if inside by this amount");
+      "touching a region if its bounding sphere is at least this fraction "
+      "into the region");
   m_velocityAlignment = _node.Read("velocityAlignment", false, .1, -1., .99,
       "Minimum dot product for sampled velocity and biasing direction.");
   m_backtrackFactor = _node.Read("backtrackFactor", false, .5, 0., 1.,
@@ -468,7 +473,7 @@ FindNearestNeighbor(const CfgType& _cfg, const TreeType& _tree) {
 
   stats->StopClock("DynamicRegionRRT::BucketNF");
 
-#if 1
+#if 0
   // Validation test to check if we are finding the right nearest neighbor.
   // Make sure this is off when running time experiments.
   {
@@ -517,22 +522,9 @@ Extend(const VID _nearVID, const CfgType& _qrand, const bool _lp) {
     if(m_samplingRegion)
       m_buckets[to_point(m_samplingRegion->GetCenter())].push_back(newVID);
     // Otherwise, use the nearest bucket.
-    //else {
-    //  const CfgType& cfg = this->GetRoadmap()->GetGraph()->GetVertex(newVID);
-    //  const Point3d p = cfg.GetPoint();
+    else
+      AddToNearestVisibleBucket(newVID);
 
-    //  auto bestBucket = m_buckets.end();
-    //  double bestDist = numeric_limits<double>::infinity();
-
-    //  for(auto iter = m_buckets.begin(); iter != m_buckets.end(); ++iter) {
-    //    const double dist = (p - iter->first).norm();
-    //    if(bestDist > dist) {
-    //      bestDist = dist;
-    //      bestBucket = iter;
-    //    }
-    //  }
-    //  bestBucket->second.push_back(newVID);
-    //}
     stats->StopClock("DynamicRegionRRT::BucketNewCfg");
   }
 
@@ -667,6 +659,46 @@ GetVelocityBias() {
               << "\n\tNext edge path size: " << eit->property().size()
               << std::endl;
   return makeBias(path[index], eit->property()[1]);
+}
+
+
+template <typename MPTraits>
+void
+DynamicRegionRRT<MPTraits>::
+AddToNearestVisibleBucket(const VID _vid) {
+  this->GetStatClass()->StartClock("DynamicRegionRRT::FindNearestBucket");
+
+  const CfgType& cfg = this->GetRoadmap()->GetGraph()->GetVertex(_vid);
+  const Point3d p = cfg.GetPoint();
+
+  auto bestBucket = m_buckets.end();
+  double bestDist = numeric_limits<double>::infinity();
+
+  using CDType = CollisionDetectionValidity<MPTraits>;
+  auto vc = static_cast<CDType*>(this->GetValidityChecker("rapid").get());
+
+  // Check each bucket to find the closest visible one.
+  for(auto iter = m_buckets.begin(); iter != m_buckets.end(); ++iter) {
+    // Check distance from configuration to bucket point.
+    const double dist = (p - iter->first).norm();
+
+    // If this bucket point is closer than the current best and also visible, it
+    // is the new best.
+    if(bestDist > dist and vc->WorkspaceVisibility(p, iter->first)) {
+      bestDist = dist;
+      bestBucket = iter;
+    }
+  }
+
+  this->GetStatClass()->StopClock("DynamicRegionRRT::FindNearestBucket");
+
+  if(bestBucket != m_buckets.end()) {
+    bestBucket->second.push_back(_vid);
+    if(this->m_debug)
+      std::cout << "Found nearest bucket at " << bestDist << std::endl;
+  }
+  else if(this->m_debug)
+    std::cout << "No visible bucket found!" << std::endl;
 }
 
 
