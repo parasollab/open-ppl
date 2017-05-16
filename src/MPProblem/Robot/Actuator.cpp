@@ -51,10 +51,19 @@ Actuator(Robot* const _r, XMLNode& _node) : m_robot(_r) {
   m_maxForce = _node.Read("maxMagnitude", true, 0., 0.,
       std::numeric_limits<double>::max(), "The maximum total force that this "
       "actuator can produce");
-}
 
-Actuator::
-~Actuator() = default;
+  // Read the type.
+  std::string type = _node.Read("type", false, "force", "The type of "
+      "dynamics modeled {force, velocity}");
+  std::transform(type.begin(), type.end(), type.begin(), ::tolower);
+
+  if(type == "force")
+    m_type = Force;
+  else if(type == "velocity")
+    m_type = Velocity;
+  else
+    throw ParseException(_node.Where(), "Unknown dynamics type '" + type + "'.");
+}
 
 /*-------------------------- Actuator Properties -----------------------------*/
 
@@ -141,7 +150,16 @@ Execute(const Control::Signal& _s, btMultiBody* const _model) const {
   for(size_t i = 0; i < numPos; ++i, ++iter)
     scratch[i] = *iter;
   scratch = _model->localDirToWorld(-1, scratch);
-  _model->addBaseForce(scratch);
+
+  switch(m_type) {
+    case Force:
+      _model->addBaseForce(scratch);
+      break;
+    case Velocity:
+      _model->setBaseVel(scratch);
+      break;
+    default:;
+  }
 
   // Set base torque.
   scratch.setValue(0, 0, 0);
@@ -157,16 +175,34 @@ Execute(const Control::Signal& _s, btMultiBody* const _model) const {
       for(size_t i = 0; i < 3; ++i, ++iter)
         scratch[i] = *iter;
       break;
-    default:
-      break;
+    default:;
   }
   scratch = _model->localDirToWorld(-1, scratch);
-  _model->addBaseTorque(scratch);
+
+  switch(m_type) {
+    case Force:
+      _model->addBaseTorque(scratch);
+      break;
+    case Velocity:
+      _model->setBaseOmega(scratch);
+      break;
+    default:;
+  }
 
   const size_t numJoints = mb->JointDOF();
-  for(size_t i = 0; i < numJoints; ++i, ++iter)
-    // Multiply by PI because bullet uses [ -PI : PI ].
-    _model->addJointTorque(i, *iter * PI);
+
+  // Multiply by PI because bullet uses [ -PI : PI ].
+  switch(m_type) {
+    case Force:
+      for(size_t i = 0; i < numJoints; ++i, ++iter)
+        _model->addJointTorque(i, *iter * PI);
+      break;
+    case Velocity:
+      for(size_t i = 0; i < numJoints; ++i, ++iter)
+        _model->setJointVel(i, *iter * PI);
+      break;
+    default:;
+  }
 }
 
 /*---------------------------------- Debug -----------------------------------*/
@@ -174,6 +210,7 @@ Execute(const Control::Signal& _s, btMultiBody* const _model) const {
 std::ostream&
 operator<<(std::ostream& _os, const Actuator& _a) {
   _os << "Actuator (robot " << _a.m_robot << "):"
+      << "\n\tType: " << _a.m_type
       << "\n\tMaxForce: " << _a.m_maxForce
       << "\n\tMask: ";
   for(const auto& m : _a.m_mask)
