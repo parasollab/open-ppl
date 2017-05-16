@@ -66,6 +66,8 @@ class SamplerMethod : public MPBaseObject<MPTraits> {
     ///@{
 
     typedef typename MPTraits::CfgType CfgType;
+    typedef typename std::vector<CfgType>::iterator InputIterator;
+    typedef typename std::back_insert_iterator<std::vector<CfgType>> OutputIterator;
 
     ///@}
     ///@name Construction
@@ -92,11 +94,13 @@ class SamplerMethod : public MPBaseObject<MPTraits> {
     /// @param[out] _result An iterator to storage for the new configurations.
     /// @param[out] _collision An (optional) iterator to storage for failed
     ///                        attempts.
-    template <typename ResultOutputIterator,
-        typename ColOutputIterator = NullOutputIterator>
-    ResultOutputIterator Sample(size_t _numNodes, size_t _maxAttempts,
-        const Boundary* const _boundary, ResultOutputIterator _result,
-        ColOutputIterator _collision = ColOutputIterator());
+    virtual void Sample(size_t _numNodes, size_t _maxAttempts,
+        const Boundary* const _boundary, OutputIterator _result,
+        OutputIterator _collision);
+
+    /// \overload
+    virtual void Sample(size_t _numNodes, size_t _maxAttempts,
+        const Boundary* const _boundary, OutputIterator _result);
 
     /// Apply the sampler rule to a set of existing configurations. The output
     /// will generally be a filtered or perturbed version of the input set.
@@ -110,12 +114,15 @@ class SamplerMethod : public MPBaseObject<MPTraits> {
     /// @param[out] _result An iterator to storage for the output configurations.
     /// @param[out] _collision An (optional) iterator to storage for failed
     ///                        attempts.
-    template <typename InputIterator, typename ResultOutputIterator,
-        typename ColOutputIterator = NullOutputIterator>
-    ResultOutputIterator Sample(InputIterator _first, InputIterator _last,
+    void Sample(InputIterator _first, InputIterator _last,
         size_t _maxAttempts, const Boundary* const _boundary,
-        ResultOutputIterator _result,
-        ColOutputIterator _collision = ColOutputIterator());
+        OutputIterator _result,
+        OutputIterator _collision);
+
+    /// \overload
+    void Sample(InputIterator _first, InputIterator _last,
+        size_t _maxAttempts, const Boundary* const _boundary,
+        OutputIterator _result);
 
     ///@}
 
@@ -158,12 +165,11 @@ Print(ostream& _os) const {
 /*---------------------------- Sampler Interface -----------------------------*/
 
 template <typename MPTraits>
-template <typename ResultOutputIterator, typename ColOutputIterator>
-ResultOutputIterator
+void
 SamplerMethod<MPTraits>::
 Sample(size_t _numNodes, size_t _maxAttempts,
     const Boundary* const _boundary,
-    ResultOutputIterator _result, ColOutputIterator _collision) {
+    OutputIterator _result, OutputIterator _collision) {
 
   Environment* env = this->GetEnvironment();
 
@@ -184,19 +190,28 @@ Sample(size_t _numNodes, size_t _maxAttempts,
     _result = copy(result.begin(), result.end(), _result);
     _collision = copy(collision.begin(), collision.end(), _collision);
   }
-
-  return _result;
 }
 
 
 template <typename MPTraits>
-template <typename InputIterator, typename ResultOutputIterator,
-          typename ColOutputIterator>
-ResultOutputIterator
+void
+SamplerMethod<MPTraits>::
+Sample(size_t _numNodes, size_t _maxAttempts,
+    const Boundary* const _boundary,
+    OutputIterator _result) {
+  vector<CfgType> collision;
+
+  Sample(_numNodes, _maxAttempts, _boundary, _result, back_inserter(collision));
+}
+
+
+template <typename MPTraits>
+void
 SamplerMethod<MPTraits>::
 Sample(InputIterator _first, InputIterator _last,
     size_t _maxAttempts, const Boundary* const _boundary,
-    ResultOutputIterator _result, ColOutputIterator _collision) {
+    OutputIterator _result,
+    OutputIterator _collision) {
 
   while(_first != _last) {
     vector<CfgType> result;
@@ -216,6 +231,19 @@ Sample(InputIterator _first, InputIterator _last,
   }
 
   return _result;
+}
+
+
+template <typename MPTraits>
+void
+SamplerMethod<MPTraits>::
+Sample(InputIterator _first, InputIterator _last,
+    size_t _maxAttempts, const Boundary* const _boundary,
+    OutputIterator _result)
+{
+  std::vector<CfgType> collision;
+  Sample(_first, _last, _maxAttempts, _boundary, _result,
+      back_inserter(collision));
 }
 
 /*----------------------------------------------------------------------------*/
