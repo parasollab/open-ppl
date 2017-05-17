@@ -122,6 +122,7 @@
 #include "MPLibrary/MPStrategies/LPCompare.h"
 #include "MPLibrary/MPStrategies/ModifyPath.h"
 #include "MPLibrary/MPStrategies/MultiStrategy.h"
+#include "MPLibrary/MPStrategies/PushCfgToMATest.h"
 #include "MPLibrary/MPStrategies/PushQueryToMA.h"
 #include "MPLibrary/MPStrategies/SparkPRM.h"
 #include "MPLibrary/MPStrategies/SRTStrategy.h"
@@ -316,6 +317,7 @@ struct MPTraits {
     LPCompare<MPTraits>,
     ModifyPath<MPTraits>,
     MultiStrategy<MPTraits>,
+    PushCfgToMATest<MPTraits>,
     PushQueryToMA<MPTraits>,
     SparkPRM<MPTraits, BasicPRM>,
     SparkPRM<MPTraits, TogglePRMStrategy>,
