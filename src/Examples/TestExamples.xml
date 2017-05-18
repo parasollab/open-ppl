@@ -93,8 +93,6 @@
       <RadiusNF label="RadiusNF" dmLabel="euclidean" radius="5"/>
       <RandomNF label="RandomNF" dmLabel="euclidean" k="5"/>
       <DPESNF label="DPESNF" dmLabel="euclidean" k="5" m="3"/>
-      <!--MPNNNF label="BFNF" dmLabel="euclidean" use_rotational="0"
-           use_scaling="0"/-->
       <BandsNF label="RbandNF_2bands_4k" debug="false" dmLabel="euclidean">
         <RBand label="first" max = '8' k='8' policy='closest'
           dmLabel="euclidean"/>
@@ -150,7 +148,8 @@
         maxTries="6" numNeighbors="10" histLength="10" debug="true"/>
       <AStarClearance label="asc" vcLabel="pqp_solid" maxTries="6" numNeighbors="3"
         histLength="10" dmLabel="euclidean" clearanceType="exact"
-        penetrationType="exact" useBBX="true" positional="true" debug="false"/>
+        penetrationType="exact"
+        useBBX="true" positional="true" debug="false"/>
       <MedialAxisLP label="malpr" controller="recursive"
         macEpsilon="0.1" maxIter="10"
         vcLabel="pqp_solid" dmLabel="euclidean"
@@ -251,8 +250,6 @@
         <NeighborFinder Method="BFNFAll"/>
       </AdaptiveConnector>
       <CCsConnector label="ConnectCCs" nfLabel="BFNF" lpLabel="sl" k="5"/>
-      <!--ClosestVE label="ClosestVE" kClosest="3" nfLabel="BFNF"
-           lpLabel="sl"/-->
       <NeighborhoodConnector label="Closest" nfLabel="BFNF" lpLabel="sl"
         checkIfSameCC="false" debug="false"/>
       <NeighborhoodConnector label="SparkPRMConnector" nfLabel="Nearest"
@@ -269,18 +266,6 @@
     <Metrics>
       <NumNodesMetric label="NumNodes"/>
       <NumEdgesMetric label="NumEdges"/>
-      <!--
-      <CoverageMetricRoadmapSet label="CoverageRoadmapSet" filename="3D/3d.map"
-        computeAllCCs="false">
-        <Connector label="Closest"/>
-      </CoverageMetricRoadmapSet>
-      <CoverageDistanceMetricRoadmapSet label="CoverageDistance"
-        filename="3D/3d.map" dmLabel="euclidean"/>
-      <ConnectivityMetricRoadmapSet label="ConnectivityRoadmapSet"
-        filename="3D/3d.map">
-        <Connector label="Closest"/>
-      </ConnectivityMetricRoadmapSet>
-      -->
       <CoverageMetricVectorSet label="CoverageVectorSet" filename="coverage"
         computeAllCCs="false">
         <Connector label="Closest"/>
@@ -343,255 +328,42 @@
       <TimeEvaluator label="TimeEval" timeout="10"/>
     </MapEvaluators>
 
-    <!-- For **UAStrategy use** -->
-    <!--partitioning_methods>
-      <Kmeans label="kmeans" destination="uas/">
-        <Feature Name="X" Weight="1"/>
-        <Feature Name="Y" Weight="1"/>
-        <Feature Name="Z" Weight="1"/>
-        <Feature Name="visibility" Weight="1"/>
-      </Kmeans>
-      <Growable label="growable" destination="uas/">
-        <Feature Name="visibility" Weight="1"/>
-      </Growable>
-      <Hierarchical label="hierarchical" destination="uas/">
-        <Feature Name="X" Weight="1"/>
-        <Feature Name="Y" Weight="1"/>
-        <Feature Name="Z" Weight="1"/>
-        <Feature Name="visibility" Weight="1"/>
-      </Hierarchical>
-      <PGmeans label="pgmeans" destination="uas/">
-        <Feature Name="X" Weight="1"/>
-        <Feature Name="Y" Weight="1"/>
-        <Feature Name="Z" Weight="1"/>
-        <Feature Name="visibility" Weight="1"/>
-      </PGmeans>
-      <Successive label="successive" destination="uas/">
-        <PartitioningMethod Method="kmeans"/>
-        <PartitioningMethod Method="kmeans"/>
-      </Successive>
-    </partitioning_methods>
-
-    <partitioning_evaluators>
-      <AVGEvaluator label="avg" Feature="visibility"/>
-      <STDEvaluator label="std" Feature="visibility"/>
-    </partitioning_evaluators-->
-
     <MPStrategies>
 
-      <!-- Basic PRM where num samples is based on Number -->
-      <BasicPRM label="BasicPRM1">
-        <Sampler method="UniformRandomFree" number="1" attempts="1"/>
-        <!--Sampler Method="Gauss" number="10" attempts="10"/-->
-        <!--Sampler Method="OBPRM" number="10" attempts="10"/-->
-        <!--Sampler Method="MAPRM" number="10" attempts="10"/-->
-        <Connector method="Closest"/>
-        <!--ComponentConnector method="ConnectCCs"/-->
-        <Evaluator method="PRMQuery"/>
-      </BasicPRM>
+      <!-- Clearance Test -->
+      <ClearanceTest label="ClearanceTest" dmLabel="euclidean" debug="true">
+        <Sampler label="UniformRandomFree" number="5" attempts="100"/>
+        <Clearance label="c1" vcLabel="pqp_solid" dmLabel="euclidean"
+          clearanceType="exact" penetrationType="exact"
+          useBBX="true" positional="false"/>
+        <Clearance label="c2" vcLabel="pqp_solid" dmLabel="euclidean"
+          clearanceType="approx" clearanceRays="10"
+          penetrationType="approx" penetrationRayFactor="1"
+          rayTickPosResolutionFactor="1.0" orientationResolutionFactor="1.0"
+          maxRayTickMagnitude="15"
+          useBBX="true" positional="false"/>
+      </ClearanceTest>
 
-      <!-- Basic PRM restarted from an input roadmap input.map at the beginning
-           of node connection -->
-      <BasicPRM label="BasicPRM2"
-        inputMap="input.map" startAt="connecting">
-        <Sampler method="UniformRandomFree" number="10" attempts="10"/>
-        <Connector method="Closest"/>
-        <ComponentConnector method="ConnectCCs"/>
-        <Evaluator method="NodesEval"/>
-      </BasicPRM>
-
-      <!-- PRM* -->
-      <BasicPRM label="OptimalPRM">
-        <Sampler method="UniformRandomFree" number="100" attempts="100"/>
-        <Connector method="OptimalConnector"/>
-        <Evaluator method="NodesEval"/>
-      </BasicPRM>
-
-      <!-- BasicRRT -->
-      <BasicRRTStrategy label="BasicRRT"
-        numRoots="1" m="1" growthFocus="0.01" dmLabel="euclidean"
-        nfLabel="Nearest" vcLabel="rapid" connectorLabel="Closest"
-        gtype="UNDIRECTED_TREE" debug="false"
-        growGoals="true" extenderLabel="BERO">
-        <Evaluator label="NodesEval"/>
-      </BasicRRTStrategy>
-
-      <!-- Kindodynamic RRT -->
-      <BasicRRTStrategy label="KinoRRT"
-        numRoots="1" m="1" growthFocus="0.01" dmLabel="euclidean"
-        nfLabel="Nearest" vcLabel="rapid" connectorLabel="Closest"
-        gtype="DIRECTED_TREE" debug="false"
-        growGoals="false" extenderLabel="KinoExtender">
-        <Evaluator label="NodesEval"/>
-      </BasicRRTStrategy>
-
-      <!-- If optimal connection is wanted, the correct connector needs to be
-           selected -->
-      <BasicRRTStrategy label="RRG"
-        numRoots="1" m="1" growthFocus="0.01" dmLabel="euclidean"
-        nfLabel="Nearest" vcLabel="rapid" extenderLabel="BERO"
-        connectorLabel="OptimalConnector" gtype="UNDIRECTED_GRAPH">
-        <Evaluator label="NodesEval"/>
-      </BasicRRTStrategy>
-
-      <!-- The connector needs to be OptimalRewire for RRT* -->
-      <BasicRRTStrategy label="RRTstar"
-        numRoots="1" m="1" growthFocus="0.01" dmLabel="euclidean"
-        nfLabel="Nearest" vcLabel="rapid" extenderLabel="BERO"
-        connectorLabel="OptimalRewire" gtype="UNDIRECTED_GRAPH">
-        <Evaluator label="NodesEval"/>
-      </BasicRRTStrategy>
-
-      <SRTStrategy label="SRT"
-        lpLabel="sl" dmLabel="euclidean" nfLabel="Nearest"
-        vcLabel="rapid" exLabel="BERO" debug="false" samples="5"
-        expansions="10" closeCent="1" randCent="2" closePairs="2" connIter="5">
-        <Evaluator label="ModQuery"/>
-      </SRTStrategy>
-
-      <!-- ObstacleBasedRRT -->
-      <!-- The extender needs to be MixExtender for OBRRT -->
-      <BasicRRTStrategy label="OBRRT"
-        numRoots="1" m="1" growthFocus="0.01" dmLabel="euclidean"
-        nfLabel="Nearest" vcLabel="rapid" connectorLabel="Closest"
-        gtype="UNDIRECTED_TREE" debug="false"
-        growGoals="true" extenderLabel="ME">
-        <Evaluator label="NodesEval"/>
-      </BasicRRTStrategy>
-
-      <!-- Adaptive RRT -->
-      <AdaptiveRRT label="AdaptiveRRT"
-        numRoots="1" growthFocus="0.01" dmLabel="euclidean"
-        nfLabel="BFNF" vcLabel="rapid" extenderLabel="BERO"
-        gtype="UNDIRECTED_TREE" gamma="0.1" cost="reward" debug="true">
-        <Evaluator label="NodesEval"/>
-        <GrowthSet threshold="0.0">
-          <Extender label="BERO"/>
-          <Extender label="BESO"/>
-          <Extender label="ROVRO"/>
-        </GrowthSet>
-      </AdaptiveRRT>
-
-      <!-- DynamicDomainRRT -->
-      <DynamicDomainRRT label="DynamicDomainRRT"
-        growthFocus="0.01" dmLabel="euclidean" nfLabel="Nearest" vcLabel="rapid"
-        gtype="UNDIRECTED_TREE" debug="false" growGoals="false"
-        extenderLabel="BERO" r="2">
-        <Evaluator label="BoundedRRTQuery"/>
-      </DynamicDomainRRT>
-
-      <!-- DynamicRegionRRT -->
-      <DynamicRegionRRT label="DynamicRegionRRT"
-        growthFocus="0.01" dmLabel="euclidean"
-        nfLabel="Nearest" vcLabel="rapid"
-        gtype="UNDIRECTED_TREE" debug="false"
-        growGoals="false" extenderLabel="BERO">
-        <Evaluator label="BoundedRRTQuery"/>
-      </DynamicRegionRRT>
-
-      <!-- Toggle PRM -->
-      <TogglePRMStrategy label="TogglePRM" priority="true">
-        <Sampler methodLabel="UniformRandomFree" number="10" attempts="1"/>
-        <Connector methodLabel="Closest"/>
-        <ColConnector methodLabel="ToggleConnect"/>
-        <Evaluator methodLabel="PRMQuery"/>
-      </TogglePRMStrategy>
-
-      <!-- Hybrid PRM -->
-      <HybridPRM label="HybridPRM" percent_random="0.5" bin_size="20"
-        window_percent="0.5" Count_Cost="false" fixed_cost="false"
-        resetting_learning="false" sampler_selection_distribution="window_hybrid">
-        <node_generation_method Method="Uniform" initialCost="1"/>
-        <node_generation_method Method="Gauss" initialCost="1"/>
-        <node_connection_method Method="Closest"/>
-        <evaluation_method Method="PRMQuery"/>
-      </HybridPRM>
-
-      <!-- UAStrategy -->
-      <!--UAStrategy label="UAPRM" iterations="10" num_samples="10">
-        <training_strategy Strategy="PRM1"/>
-        <region_identifier Method="kmeans"/>
-        <distribution_feature Feature="visibility"/>
-        <region_strategy Strategy="Hybrid"/>
-        <evaluation_method Method="NodesEval"/>
-        <evaluation_method Method="PRMQuery"/>
-      </UAStrategy-->
-
-      <!-- EvaluateMapStrategy -->
-      <EvaluateMapStrategy label="EvaluateMapStrategy" mapFilename="3D/3d.map">
-        <Evaluator label="NodesEval"/>
-      </EvaluateMapStrategy>
-
-      <UtilityGuidedGenerator label="UtilityGuided" vcLabel="rapid" nfLabel="BFNF"
-        connectorLabel="Closest">
-        <Evaluator label="NodesEval"/>
-      </UtilityGuidedGenerator>
-
-      <!-- Push Query to MA -->
-      <PushQueryToMA label="PushQueryToMA"
-        inFilename="3D/3d.query" outFilename="3D/3d.ma.query"
+      <!-- MA Pushing Test -->
+      <PushCfgToMATest label="PushCfgToMATest1"
         vcLabel="pqp_solid" dmLabel="euclidean"
-        clearanceType="exact" penetrationType="exact" useBBX="true"
-        epsilon="0.01" historyLength="5" positional="true"/>
-
-      <!-- Modify Path -->
-      <ModifyPath label="ModifyPath" pmLabel="CR" pathFile="3D/3d.path"/>
-
-      <!-- LP Compare - Compare edges between two roadmaps. -->
-      <LPCompare label="LPCompare" dmLabel="euclidean"
-        rdmp1="Map1.map" lpLabel1="sl"
-        rdmp2="Map2.map" lpLabel2="malpi"/>
-
-      <!-- MultiStrategy -->
-      <MultiStrategy label="MultiStrategy">
-        <MPStrategy method="BasicPRM1"/>
-        <MPStrategy method="AdaptiveRRT"/>
-      </MultiStrategy>
-
-      <!-- BlindRRT
-      <BlindRRT label="BlindRRT" delta="2.0" minDist="0.1"
-        CCconnection="NodeToNode" lpLabel="sl" dmLabel="euclidean"
-        initialSamples="200" ccIters="100" nfLabel="BFNF" vcLabel="rapid"
-        connectorLabel="RRTConnect" debug="false"/>-->
-
-      <!-- Spark PRM Examples -->
-      <SparkTogglePRMStrategy label="SparkToggle" maxNPCCSize="2"
-        initSamples="10" maxRRTSize="100" attemptRatio="10" delta="5"
-        minDist="0.1" vcLabel="rapid" nfLabel="BFNF" nfVertexLabel="Nearest"
-        trimDepth="2" dmLabel="euclidean" cLabel="SparkPRMConnector"
-        eLabel="BERO" priority="false" growthFocus="0.25" checkEdgeCases="true"
-        checkImportant="true" trimAll="true" biasConnect="true"
-        rrtDebug="false">
-        <Sampler methodLabel="UniformRandomFree" number="10" attempts="10"/>
-        <Connector methodLabel="ToggleConnect"/>
-        <ColConnector methodLabel="ToggleConnect"/>
-        <Evaluator methodLabel="ModQuery"/>
-      </SparkTogglePRMStrategy>
-
-      <SparkBasicPRM label="SparkUniform" maxNPCCSize="2" initSamples="10"
-        maxRRTSize="100" attemptRatio="10" delta="5" minDist="0.1" vcLabel="rapid"
-        nfLabel="BFNF" nfVertexLabel="Nearest" trimDepth="2" dmLabel="euclidean"
-        cLabel="SparkPRMConnector" eLabel="BERO" growthFocus="0.25"
-        checkEdgeCases="true" checkImportant="true" trimAll="true"
-        biasConnect="true" rrtDebug="false">
-        <Sampler method="UniformRandomFree" number="10" attempts="10"/>
-        <Connector method="Closest"/>
-        <Evaluator method="ModQuery"/>
-      </SparkBasicPRM>
-
-      <!-- Visibility Based PRM Strategy -->
-      <VisibilityBasedPRM label="VBPRM" sampler="UniformRandomFree"
-        vcLabel="rapid" lpLabel="sl"
-        maxFailedIterations="20" debug="false"/>
+        clearanceType="approx" clearanceRays="4"
+        penetrationType="approx" penetrationRayFactor="1"
+        rayTickPosResolutionFactor="1.0" orientationResolutionFactor="1.0"
+        maxRayTickMagnitude="15"
+        useBBX="true" debug="false"
+        historyLength="5" positional="true"
+        attemptInvalidSamples="true"
+        do2dEnvTests="true" forceNarrowPassageSamples2dEnv="false">
+        <Sampler method="UniformRandom" number="500" attempts="5"/>
+      </PushCfgToMATest>
 
     </MPStrategies>
 
     <!-- MPProblem allows multiple solvers to be specified and executed. -->
 
-    <Solver mpStrategyLabel="BasicPRM1" seed="12345678"
-      baseFilename="Basic" vizmoDebug="true"/>
-    <!--Solver mpStrategyLabel="KinoRRT" seed="12345678"
-      baseFilename="Basic" vizmoDebug="true"/-->
+    <Solver mpStrategyLabel="PushCfgToMATest1" seed="12345678"
+      baseFilename="PushToMATest" vizmoDebug="true"/>
 
   </Library>
 
