@@ -499,7 +499,6 @@ ClearanceUtility<MPTraits>::
 ApproxCollisionInfo(CfgType& _cfg, CfgType& _clrCfg,
     const Boundary* const _b, CDInfo& _cdInfo) {
   const string fName = "ApproxCollisionInfo: ";
-  StatClass* stats = this->GetStatClass();
 
   // Check computation cache
   if(_cfg.m_witnessCfg.get() != 0) {
@@ -511,7 +510,9 @@ ApproxCollisionInfo(CfgType& _cfg, CfgType& _clrCfg,
   // If in BBX, check validity to get _cdInfo, return false if not valid
   Environment* env = this->GetEnvironment();
   if(!env->InBounds(_cfg, _b)) {
-    std::cout << fName + "returning false from not being in bounds initially" << std::endl;
+    if(this->m_debug)
+      std::cout << fName + "returning false from not being in bounds initially"
+                << std::endl;
     return false;
   }
 
@@ -597,7 +598,7 @@ ApproxCollisionInfo(CfgType& _cfg, CfgType& _clrCfg,
   }
 
   // Step out along each direction to determine the candidates
-  vector<pair<size_t, CfgType>> candidates;  stats->StartClock(fName + "Everything after ray ticking timer");
+  vector<pair<size_t, CfgType>> candidates;
 
   bool stateChangedFlag = false;
   size_t iterations = 0;
@@ -609,7 +610,6 @@ ApproxCollisionInfo(CfgType& _cfg, CfgType& _clrCfg,
   //or not free->free or iterates n times. Within it, it loops through all
   //rays each time, moving outward along these and checking that condition.
   //m_maxRayIterations is calculated by maxRayMagnitude/rayTickResolution
-  stats->StartClock(fName+"Ray iteration clock (finding candidates)");
   while(!stateChangedFlag && iterations++ < m_maxRayIterations) {
     if(this->m_debug)
       cout << "\n\t" << iterations;
@@ -1065,10 +1065,11 @@ PushToMedialAxis(CfgType& _cfg, const Boundary* const _b) {
 
 
   if(!pushed) {
-    if(this->m_debug)
+    if(this->m_debug) {
       cout << "Not found!! ERR in pushtomedialaxis" << endl;
-    std::cout << callee << "Returning false from not "
-                           "being able to push to MA" << std::endl;
+      std::cout << callee << "Returning false from not "
+                             "being able to push to MA" << std::endl;
+    }
     return false;
   }
 
@@ -1137,15 +1138,19 @@ PushCfgToMedialAxisMidpointRule(CfgType& _cfg, const Boundary* const _b) {
 
   // Should already be in free space
   if(vcm->IsInsideObstacle(_cfg)) {
-    std::cout << callee <<" Returning false due to already in obstacle" << std::endl;
+    if(this->m_debug)
+      std::cout << callee <<" Returning false due to already in obstacle"
+                << std::endl;
     return false;
   }
 
   //first, get the witness that I need
   CfgType firstWitnessCfg = _cfg;//assignment necessary for robot pointer
   if(!this->CollisionInfo(_cfg, firstWitnessCfg, _b, tmpInfo)) {
-    std::cout << callee << "Returning false from not being able to"
-                           " find first witness" << std::endl;
+    if(this->m_debug) {
+      std::cout << callee << "Returning false from not being able to"
+                             " find first witness" << std::endl;
+    }
   }
 
   //second, find the unit normal
@@ -1188,16 +1193,29 @@ PushCfgToMedialAxisMidpointRule(CfgType& _cfg, const Boundary* const _b) {
   if(!inBounds || !valid) {
     //Note that i, inBounds, and valid are all preserved from the last
     // run of the loop.
-    finalWitnessCfg = _cfg + magnitudeAndDirectionToTick*(double)i;
+    finalWitnessCfg += magnitudeAndDirectionToTick*(double)i;
   }
   else {
-    std::cout << callee << " Returning false as no second witness could "
-                            "be found" << std::endl;
+    if(this->m_debug)
+      std::cout << callee << " Returning false as no second witness could "
+                              "be found" << std::endl;
     return false;
   }
 
   //fourth, get the midpoint of the two witness cfgs and return it as the MA cfg:
   CfgType cfgMA = (firstWitnessCfg + finalWitnessCfg)/2.0;
+
+  //Now we have to double check that it's valid, since it's possible that it's
+  // not, especially with increase in complexity of environment/narrow passages
+  if(!env->InBounds(cfgMA, _b)
+      || !vcm->IsValid(cfgMA, tmpInfo, callee)) {
+    //It's either OOB or it's invalid, this pair of witness won't work for a
+    // MA sample, so return false.
+    if(this->m_debug)
+      std::cout << callee << "Returning false due to invalid midpoint cfg"
+                << std::endl;
+    return false;
+  }
 
   if(this->m_debug) {
     VDComment("Final CFG");
