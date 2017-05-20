@@ -189,15 +189,23 @@ Read(const std::string& _filename) {
       headerParsed = true;
   }
 
+  if(!m_robot)
+    RunTimeException(WHERE, "Must specify robot when reading in roadmaps."
+        " m_robot was null.");
+
   // Set the input robot for our edge class.
-  WeightType::SetInputRobot(m_robot);
+  /// @TODO this is a bad way to handle the fact that it's necessary to know
+  /// the robot type (non/holonomic) when reading and writing.
+  WeightType::inputRobot = m_robot;
+  CfgType::inputRobot = m_robot;
 
   // Set ifs back to the line with the GRAPHSTART tag and read in the graph.
   ifs.seekg(graphStart, ifs.beg);
   stapl::sequential::read_graph(*m_graph, ifs);
 
   // Unset the input robot for our edge class.
-  WeightType::SetInputRobot(nullptr);
+  WeightType::inputRobot = nullptr;
+  CfgType::inputRobot = nullptr;
 }
 
 
@@ -217,6 +225,7 @@ Write(const std::string& _filename, Environment* _env) {
   stapl::graph_view<GraphType> gv(*m_graph);
   write_PMPL_graph(gv, _filename);
 #endif
+
 }
 
 /*----------------------------------------------------------------------------*/

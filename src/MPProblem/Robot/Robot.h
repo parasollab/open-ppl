@@ -4,6 +4,7 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <unordered_map>
 
 #include "Control.h"
 
@@ -52,7 +53,13 @@ class Robot {
   std::string m_agentLabel;                ///< Agent type label.
   Agent* m_agent{nullptr};                 ///< High-level decision-making agent.
 
-  std::vector<Actuator*> m_actuators;      ///< Actuators.
+
+  /// m_actuators is a map between string actuator labels, and the pointer to
+  /// the actuator itself. Due to the map, labels are doubly stored: once
+  /// in the map as the key, and once in the Actuator object itself. This is
+  /// done becuase we desire a constant-time accessing of actuators, given a
+  /// string key, and the Actuator must hold its own label.
+  std::unordered_map<std::string, Actuator*> m_actuators; ///< Actuators.
   ControlSet* m_controlSet{nullptr};       ///< Discrete control set, if any.
   ControlSpace* m_controlSpace{nullptr};   ///< Continuous control space, if any.
   ControllerMethod* m_controller{nullptr}; ///< Low-level controller.
@@ -152,8 +159,8 @@ class Robot {
     /// Access the robot's actuators. These are set during input file parsing
     /// and cannot be changed otherwise.
 
-    Actuator* GetActuator(const size_t _i) noexcept;
-    const std::vector<Actuator*>& GetActuators() noexcept;
+    Actuator* GetActuator(const std::string& _label) noexcept;
+    const std::unordered_map<std::string, Actuator*>& GetActuators() noexcept;
 
     ///@}
     ///@name Dynamics Accessors

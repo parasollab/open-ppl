@@ -37,7 +37,13 @@ class Cfg {
     ///@name Construction
     ///@{
 
-    explicit Cfg(Robot* const _robot = nullptr);
+    // Static pointer for reading roadmaps. It should be set to the relevant
+    // robot before reading in the map file, and nullptr otherwise.
+    static Robot* inputRobot;
+
+    explicit Cfg();
+
+    explicit Cfg(Robot* const _robot);
     explicit Cfg(const Vector3d& _v, Robot* const _robot = nullptr);
 
     Cfg(const Cfg& _other);

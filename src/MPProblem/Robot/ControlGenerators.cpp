@@ -39,7 +39,8 @@ GenerateDiscreteSet(Robot* const _r) const {
   controls->push_back(c);
 
   // Create forward and reverse controls for each actuator.
-  for(auto& actuator : _r->GetActuators()) {
+  for(auto& actuatorPair : _r->GetActuators()) {
+    Actuator* actuator = actuatorPair.second;
     auto mask = actuator->ControlMask();
     c.actuator = actuator;
 

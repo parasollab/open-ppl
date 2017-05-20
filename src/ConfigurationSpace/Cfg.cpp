@@ -9,6 +9,10 @@
 /*-------------------------------- Construction ------------------------------*/
 
 Cfg::
+Cfg() : Cfg(inputRobot) { }
+
+
+Cfg::
 Cfg(Robot* const _robot) : m_robot(_robot) {
   if(m_robot) {
     m_dofs.resize(DOF(), 0);
@@ -815,13 +819,15 @@ GetPositionOrientationFrom2Cfg(const Cfg& _pos, const Cfg& _ori) {
 
 /*----------------------------------- I/O ------------------------------------*/
 
+Robot* Cfg::inputRobot = nullptr;
+
 void
 Cfg::
 Read(istream& _is) {
   // Require the Cfg to already have a robot pointer for now.
   if(!m_robot)
-    throw RunTimeException(WHERE, "Can't read in a Cfg without knowing what "
-        "robot it represents. Please set the robot pointer first.");
+    throw RunTimeException(WHERE, "Cannot read in a Cfg without knowing the "
+        "robot. Use inputRobot member to specify the default robot pointer.");
 
   // Read one DOF first. If that fails, return and rely on checking _is.fail()
   // from the call site to determine that no more Cfg's are available.

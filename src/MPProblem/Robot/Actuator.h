@@ -59,6 +59,8 @@ class Actuator final {
 
     DynamicsType m_type{Force};          ///< The dynamics type.
 
+    std::string m_label;                 ///< Label for the actuator used
+
     ///@}
 
   public:
@@ -68,7 +70,7 @@ class Actuator final {
 
     /// Construct an empty actuator for a given robot.
     /// @param _r The owning robot.
-    Actuator(Robot* const _r);
+    Actuator(Robot* const _r, const std::string& _label);
 
     /// Construct an actuator for a given robot from an XML input.
     /// @param _r The owning robot.
@@ -119,6 +121,14 @@ class Actuator final {
     /// @param _s The control signal to apply.
     /// @param _model The bullet model of m_robot to control.
     void Execute(const Control::Signal& _s, btMultiBody* const _model) const;
+
+
+    /// Get the label for this actuator
+    std::string GetLabel() const;
+
+
+    /// Get the robot that the actuator is on
+    Robot* GetRobot() const;
 
     ///@}
     ///@name Debug

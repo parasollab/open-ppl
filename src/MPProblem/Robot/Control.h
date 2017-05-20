@@ -67,7 +67,7 @@ struct Control final {
 
 };
 
-/// Display function for debugging controls. Prints the signal.
+/// Display function for debugging controls and roadmap output. Prints the signal.
 std::ostream& operator<<(std::ostream&, const Control&);
 
 typedef std::vector<Control> ControlSet;

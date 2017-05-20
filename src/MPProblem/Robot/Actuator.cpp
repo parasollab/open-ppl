@@ -17,17 +17,21 @@
 /*------------------------------- Construction -------------------------------*/
 
 Actuator::
-Actuator(Robot* const _r) : m_robot(_r) {
+Actuator(Robot* const _r, const std::string& _label) : m_robot(_r) {
   const size_t dof = _r->GetMultiBody()->DOF();
   m_mask.resize(dof, false);
   m_limits.resize(dof, Range<double>(0, 0));
   m_maxForce = std::numeric_limits<double>::max();
+  m_label = _label;
 }
 
 
 Actuator::
 Actuator(Robot* const _r, XMLNode& _node) : m_robot(_r) {
   const size_t dof = _r->GetMultiBody()->DOF();
+
+  // Get the label
+  m_label = _node.Read("label", true, "unlabeled", "Label of this actuator");
 
   // Read the force limits.
   const std::string limitString = _node.Read("limits", true, "", "Force limits "
@@ -89,6 +93,21 @@ Actuator::
 SetMaxForce(const double _total) {
   m_maxForce = _total;
 }
+
+
+std::string
+Actuator::
+GetLabel() const {
+  return m_label;
+}
+
+
+Robot*
+Actuator::
+GetRobot() const {
+  return m_robot;
+}
+
 
 /*--------------------------- Planning Interface -----------------------------*/
 

@@ -299,7 +299,7 @@ ApplyControl(const CfgType& _start, const CfgType& _end, CfgType& _new,
   _lp.AddIntermediatesToWeights(true);
   _lp.m_edge.first.SetWeight(distance);
   _lp.m_edge.first.SetControl(_control);
-//  _lp.m_edge.first.SetTimeStep(_steps);
+  _lp.m_edge.first.SetTimeSteps(_steps);
 
 
   const bool valid = distance >= this->m_minDist;

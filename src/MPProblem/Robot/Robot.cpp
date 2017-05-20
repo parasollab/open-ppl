@@ -59,9 +59,12 @@ Robot(MPProblem* const _p, XMLNode& _node, const Boundary* const _b) :
       reverse[i] = -.3;
       forward[i] = .3;
     }
-    m_actuators.push_back(new Actuator(this));
-    m_actuators.back()->SetLimits(reverse, forward);
-    m_actuators.back()->SetMaxForce(.5);
+    const std::string holoActLabel = "holonomic";
+    Actuator* actuator = new Actuator(this, holoActLabel);
+    actuator->SetLimits(reverse, forward);
+    actuator->SetMaxForce(.5);
+    std::pair<std::string, Actuator*> actuatorPair(holoActLabel, actuator);
+    m_actuators.insert(actuatorPair);
 
     // Create control set. Assume a simple discrete control set.
     SimpleControlGenerator simple;
@@ -96,7 +99,7 @@ Robot::
   delete m_dynamicsModel;
 
   for(auto a : m_actuators)
-    delete a;
+    delete a.second;
 }
 
 /*---------------------------------- I/O -------------------------------------*/
@@ -134,7 +137,8 @@ ReadXMLFile(const std::string& _filename, const Boundary* const _b) {
       for(auto& grandChild : child) {
         // Parse the actuator.
         auto actuator = new Actuator(this, grandChild);
-        m_actuators.push_back(actuator);
+        m_actuators.insert(
+            std::pair<std::string, Actuator*>(actuator->GetLabel(), actuator));
 
         // Parse its controls.
         for(auto& greatGrandChild : grandChild) {
@@ -322,12 +326,12 @@ SetController(ControllerMethod* const _c) noexcept {
 
 Actuator*
 Robot::
-GetActuator(const size_t _i) noexcept {
-  return m_actuators[_i];
+GetActuator(const std::string& _label) noexcept {
+  return m_actuators[_label];
 }
 
 
-const std::vector<Actuator*>&
+const std::unordered_map<std::string, Actuator*>&
 Robot::
 GetActuators() noexcept {
   return m_actuators;
@@ -396,10 +400,10 @@ operator<<(std::ostream& _os, const Robot& _r) {
       << "\n\tJointDOF: " << _r.GetMultiBody()->JointDOF()
       << "\nActuators:\n";
   for(const auto a : _r.m_actuators) {
-    _os << *a
+    _os << *(a.second)
         << "\tControls";
     for(const auto& c : *_r.m_controlSet) {
-      if(c.actuator != a)
+      if(c.actuator != a.second)
         continue;
       _os << "\n\t\t";
       for(const auto v : c.signal)
