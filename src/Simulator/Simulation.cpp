@@ -98,8 +98,12 @@ Step() {
   // Step the simulation forward with a fixed timestep.
   /// @TODO Synchronize this with the environment's time resolution.
   static constexpr btScalar timestep = 2.f / 60.f;   // Advance by this much...
-  static constexpr btScalar resolution = 1.f / 60.f; // Using tics this long...
-  static constexpr int maxSubSteps = 2;              // Up to this many ticks.
+
+  //These were 1./60. and maxSubSteps was 2
+  //Right now, this is hardcoded and synced up with PMPL's resolution.
+  ///@TODO formally synchronize time resolution between Environment and Bullet.
+  static constexpr btScalar resolution = 2.f / 60.f; // Using tics this long...
+  static constexpr int maxSubSteps = 1;              // Up to this many ticks.
   m_engine->Step(timestep, maxSubSteps, resolution);
 
   // Step each Robot's agent.

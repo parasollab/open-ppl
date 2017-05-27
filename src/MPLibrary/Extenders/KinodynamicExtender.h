@@ -248,8 +248,10 @@ ExtendRandomControl(const CfgType& _start, const CfgType& _end, CfgType& _new,
   auto controls = robot->GetControlSet();
   const size_t controlIndex = LRand() % controls->size();
 
+  Control c = (*controls)[controlIndex];
+
   // Apply the control.
-  return ApplyControl(_start, _end, _new, _lp, _steps, (*controls)[controlIndex]);
+  return ApplyControl(_start, _end, _new, _lp, _steps, c);
 }
 
 

@@ -1,4 +1,5 @@
 #include "Behaviors/Agents/PathFollowingAgent.h"
+#include "Behaviors/Agents/RoadmapFollowingAgent.h"
 #include "MPLibrary/PMPL.h"
 #include "Simulator/Simulation.h"
 #include "sandbox/gui/main_window.h"
@@ -13,7 +14,15 @@ main(int _argc, char** _argv) {
     // Make problem object.
     MPProblem* problem = new MPProblem(_argv[2]);
     auto robot = problem->GetRobot(0);
-    robot->SetAgent(new PathFollowingAgent(robot));
+
+    //If it's a nonholonomic robot, use the nonholonomic agent to correctly
+    // use the roadmap data (control sets between each pair of cfgs in roadmap).
+    if(robot->IsNonholonomic()) {
+      robot->SetAgent(new RoadmapFollowingAgent(robot));
+    }
+    else {
+      robot->SetAgent(new PathFollowingAgent(robot));
+    }
 
     // Make simulation object.
     Simulation simulation(problem);

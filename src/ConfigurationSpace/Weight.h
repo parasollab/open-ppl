@@ -72,7 +72,8 @@ class DefaultWeight {
     void SetWeight(const double _w) noexcept;
 
     void SetControl(const Control& _c) noexcept; /// Wrapper for SetControlSet()
-    ControlSet& GetControlSet() const noexcept;
+    const ControlSet& GetControlSet() const noexcept;
+    ControlSet& GetControlSet() noexcept;
     void SetControlSet(const ControlSet& _c) noexcept;
 
     bool IsChecked(const int _mult) const noexcept;
@@ -128,7 +129,7 @@ class DefaultWeight {
 
     double m_weight;
     std::vector<CfgType> m_intermediates;
-    std::vector<Control> m_controls;
+    ControlSet m_controls;
 
     int m_checkedMult;
     bool m_hasClearance;
@@ -172,6 +173,9 @@ operator=(const DefaultWeight<CfgType>& _w) {
     m_checkedMult = _w.m_checkedMult;
     m_hasClearance = _w.HasClearance();
     m_clearance = _w.GetClearance();
+    m_controls = _w.GetControlSet();
+    m_timeSteps = _w.GetTimeSteps();
+    inputRobot = _w.inputRobot;
   }
   return *this;
 }
@@ -279,9 +283,16 @@ SetControl(const Control& _c) noexcept {
 }
 
 template <typename CfgType>
-ControlSet&
+const ControlSet&
 DefaultWeight<CfgType>::
 GetControlSet() const noexcept {
+  return m_controls;
+}
+
+template <typename CfgType>
+ControlSet&
+DefaultWeight<CfgType>::
+GetControlSet() noexcept {
   return m_controls;
 }
 
@@ -417,7 +428,16 @@ Read(std::istream& _is) {
         Control con;
         std::string label;
         _is >> label;
-        con.actuator = inputRobot->GetActuator(label);
+
+        /// @TODO an easy optimization would be to make coast controls not print
+        /// the 0's signal, it could reduce some roadmaps significantly, I'd bet
+
+        //If the label is "Coast" then we need to put a nullptr for the actuator
+        // since that's what is used for a coast control.
+        if(label.compare("Coast") == 0) // Note compare() returns 0 if equal.
+          con.actuator = nullptr;
+        else
+          con.actuator = inputRobot->GetActuator(label);
 
         //Loop through and get all of the control signal's values.
         //The number of values in the signal is equal to the robot's DOF.
@@ -428,6 +448,9 @@ Read(std::istream& _is) {
           _is >> val;
           con.signal[j] = val;
         }
+
+        //It wouldn't be a bad idea to put in a check here to ensure that if
+        // the actuator is a nullptr, then all of the signal is 0.
 
         //finally push back the read-in control signal:
         m_controls.push_back(con);
@@ -447,7 +470,7 @@ Write(std::ostream& _os) const {
   /// @TODO Now that we read/write the control signals for nonholonomic, we
   ///  should remove the writing of intermediates for conciseness.
 
-  //Write the data needed whether holonomic robot or not:
+  //Write the data that's needed whether it's a holonomic robot or not:
   _os << m_intermediates.size() << " ";
   for(auto&  cfg : m_intermediates)
     _os << cfg;
@@ -463,9 +486,14 @@ Write(std::ostream& _os) const {
       // and label for that control:
       for(auto control : m_controls) {
         //Output the actuator label:
-        _os << control.actuator->GetLabel() << " ";
+        if(control.actuator)
+          _os << control.actuator->GetLabel() << " ";
+        else
+          _os << "Coast ";// if actuator is nullptr, it's a coast control.
 
-        //Then each of the control signal's values:
+        /// @TODO an easy optimization would be to make coast controls not print
+        /// the 0 signal, it could reduce some roadmaps significantly, I'd bet.
+        //Write each of the control signal's values:
         for (double& val : control.signal)
           _os << val << " ";
       }

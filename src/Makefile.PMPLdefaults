@@ -272,6 +272,7 @@ SIM_OBJS := \
   Behaviors/Agents/Agent.o \
   Behaviors/Agents/NullAgent.o \
   Behaviors/Agents/PathFollowingAgent.o \
+  Behaviors/Agents/RoadmapFollowingAgent.o \
   Simulator/Simulation.o \
   Visualization/DrawableBody.o \
   Visualization/DrawableMultiBody.o

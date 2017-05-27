@@ -208,6 +208,7 @@ Execute(const Control::Signal& _s, btMultiBody* const _model) const {
     default:;
   }
 
+  // Finally, add forces/velocities to the joints.
   const size_t numJoints = mb->JointDOF();
 
   // Multiply by PI because bullet uses [ -PI : PI ].

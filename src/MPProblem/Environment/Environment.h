@@ -235,7 +235,9 @@ class Environment {
     double m_positionResFactor;      ///< Factor of body span to use as auto-
                                      ///< computed positional resolution.
     double m_orientationRes{.05};    ///< Rotational resolution of movement.
-    double m_timeRes{.05};           ///< Resolution for time.
+//    double m_timeRes{.05};           ///< Resolution for time.
+    double m_timeRes{1. / 30.}; ///@TODO Synchronize with Bullet time resolution
+    // right now, 1/30 is hardcoded as the resolution for both though.
 
     ///@}
     ///@name Models

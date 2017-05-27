@@ -101,6 +101,9 @@ ReadXMLFile(const string& _filename) {
 
   // Compute the environment resolution.
   GetEnvironment()->ComputeResolution(GetRobots());
+
+  // Make a point robot that can do volumetric translational movement.
+  // It shouldn't be counted in the number of robots for MPProblem.
   MakePointRobot();
 }
 

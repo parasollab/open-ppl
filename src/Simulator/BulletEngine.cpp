@@ -435,6 +435,11 @@ BuildCollisionShape(MultiBody* _multibody) {
     auto ptr = new btGImpactMeshShape(shapeMesh);
     ptr->updateBound();
     shapes.push_back(ptr);
+
+    //Very important for the controls that PMPL plans for to match up with how
+    // they are simulated. If not done, getting very close to an obstacle will
+    // cause a collision and Bullet will throw off the results.
+    shapes.back()->setMargin(0);
   }
 
   return shapes;
