@@ -137,6 +137,16 @@ class ActiveMultiBody : public MultiBody {
     void ConfigureRender(const vector<double>& _v);
 
     ////////////////////////////////////////////////////////////////////////////
+    /// @brief Compute the transformation for robot at @_index _v
+    /// @param _v Configuration DOF parameters
+    /// @param _index current index of _v
+    /// @param _bodyType FreeBody::BodyType of the robot
+    /// @param _movementType FreeBody::MovementType of the robot
+    Transformation GenerateModelTransformation(const vector<double>& _v, 
+        int& _index, FreeBody::BodyType _bodyType, 
+        FreeBody::MovementType _movementType);
+
+    ////////////////////////////////////////////////////////////////////////////
     /// @brief Sample random configuration in boundary
     /// @param _boundary Boundary
     vector<double> GetRandomCfg(shared_ptr<Boundary>& _boundary);
@@ -188,6 +198,8 @@ class ActiveMultiBody : public MultiBody {
     FreeBody::BodyType m_baseType;           ///< Type of base
     FreeBody::MovementType m_baseMovement;   ///< Type of movement for base
     vector<Joint> m_joints;                  ///< All Connections
+    vector<FreeBody::BodyType> m_bodyTypes;
+    vector<FreeBody::MovementType> m_movementTypes;
 };
 
 #endif
