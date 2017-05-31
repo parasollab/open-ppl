@@ -54,7 +54,7 @@ class RoadmapFollowingAgent : public Agent {
     //I believe the MPSolution needs to be kept as well, since when deleting
     // it, the Path we save will be thrown away too. This could probably be
     // solved using a shared_ptr or something, but for now I'll do this.
-    MPSolution* m_solution;
+    MPSolution* m_solution{nullptr};
 
     //Path type seems necessary, as I need that list of VIDs to get edges
     Path* m_roadmap{nullptr}; ///< The roadmap to follow
@@ -69,7 +69,14 @@ class RoadmapFollowingAgent : public Agent {
     /// (in m_delayControl) should be repeated.
     std::size_t m_delayStepCount{0};
 
-    Control* m_delayControl{nullptr};
+    /// m_delayControls is the set of all controls that should all be applied
+    /// to the robot on each m_delayStepCount Step. Hasn't yet been tested for
+    /// more than one control on an edge.
+    ControlSet m_delayControls;
+
+    /// A flag to determine whether the simulation has already before been
+    /// determined as completed (when reaching the end of the roadmap path)
+    bool m_simulationDone{false};
 
     MPLibrary* m_library{nullptr}; ///< This agent's planning library.
 

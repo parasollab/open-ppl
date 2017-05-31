@@ -242,6 +242,16 @@ class Cfg {
     /// @param _os The output stream to write to.
     virtual void Write(ostream& _os) const;
 
+    /// Writes very helpful info when comparing two cfgs, like their euclidean
+    /// distance, their positions, velocities, and the difference. This is
+    /// especially helpful for debugging nonholonomic control-following from
+    /// a roadmap while simulating.
+    /// @param _os The output stream to write to.
+    /// @param _shouldBe The cfg that is where the cfg is supposed to be.
+    /// @param _current The cfg that is where the cfg actually is.
+    static void PrintRobotCfgComparisonInfo(
+        std::ostream& _out, const Cfg& _shouldBe, const Cfg& _current);
+
     ///@}
     ///@name Internal State with poor encapsulation
     ///@{

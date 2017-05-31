@@ -4,6 +4,7 @@
 #include "MPProblem/Environment/Environment.h"
 #include "MPProblem/Robot/Robot.h"
 #include "Utilities/MetricUtils.h"
+#include "nonstd.h"
 
 
 /*-------------------------------- Construction ------------------------------*/
@@ -889,6 +890,26 @@ Write(ostream& _os) const {
   _os.unsetf(ios_base::floatfield);
   if(_os.fail())
     throw RunTimeException(WHERE, "Failed to write to file.");
+}
+
+void
+Cfg::
+PrintRobotCfgComparisonInfo(
+    std::ostream& _out, const Cfg& _shouldBe, const Cfg& _current)
+{
+  //Extremely helpful debugging output:
+  _out << std::endl <<"--------------------------------------------------";
+  _out << std::endl << "Robot is currently at        "
+            << nonstd::print_container(_current.GetData()) << ", "
+            << nonstd::print_container(_current.GetVelocity()) << std::endl;
+  _out << "Robot SHOULD currently be at "
+            << nonstd::print_container(_shouldBe.GetData()) << ", "
+            << nonstd::print_container(_shouldBe.GetVelocity())
+            << std::endl
+            << "Desired Robot cfg minus current cfg = " << _shouldBe - _current
+            << std::endl
+            << "Euclidian distance = " << (_shouldBe-_current).Magnitude()
+            << std::endl << std::endl;
 }
 
 

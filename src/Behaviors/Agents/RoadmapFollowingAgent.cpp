@@ -50,14 +50,16 @@ Initialize() {
 
   // Save the roadmap.
   m_roadmap = m_solution->GetPath(); //I've verified this is the solution path
-  //std::cout << "MPSolution found! Now simulating the solution path of length "
-  //            << m_roadmap->VIDs().size() << std::endl;
+//  std::cout << "MPSolution found! Now simulating the solution path of length "
+//              << m_roadmap->VIDs().size() << std::endl;
 
   //initialize the path iterator:
   m_currentVID = m_roadmap->VIDs().begin();
   m_currentVertexPathIndex = 0;
 }
 
+
+//Helper data printing function:
 void PrintRobotBaseForceVector(Robot* robot) {
   auto task = robot->GetMPProblem()->GetTasks().front();
   btMultiBody* mBody = task->GetRobot()->GetDynamicsModel()->Get();
@@ -69,6 +71,7 @@ void PrintRobotBaseForceVector(Robot* robot) {
             << printData.m_floats[2] << ", " << printData.m_floats[3] << "}"
             << std::endl;
 }
+
 
 
 void
@@ -86,10 +89,11 @@ Step(const double _dt) {
 
   //Execute the control that should be for m_delayStepCount more times:
   if(m_delayStepCount > 0) {
-    if(!m_delayControl) {
-      RunTimeException(WHERE, "Roadmap following agent was given a null control"
-          " (note this is different from a null actuator in a control) with a "
-          "deisred number of time steps. This sholdn't happen!");
+    if(m_delayControls.empty()) {
+      RunTimeException(WHERE, "Roadmap following agent was given an empty "
+          "control set. (note this is different from a null actuator in a "
+          "control) with a "
+          "desired number of time steps. This sholdn't happen!");
     }
 
     m_delayStepCount--; //count down to 0, which is when we move to next control
@@ -97,14 +101,16 @@ Step(const double _dt) {
     //std::cout << "RoadmapFollowingAgent::Step() continuing same control. "
     //          "Remaining delay count = " << m_delayStepCount << std::endl;
 
-    //TODO Confirm this is correct, but I assume I must execute the control
-    // each time this is "delayed"
-    if(m_delayControl->actuator) // If actuator is null, we are coasting.
-      m_delayControl->Execute();
+    //If there are multiple controls, they should ALL be applied each
+    // "delay" step:
+    for(Control& control : m_delayControls) {
+      // If actuator is null, do nothing (this is a coast control)
+      if(control.actuator)
+        control.Execute();
+    }
 
     if(m_delayStepCount == 0) {
-      delete m_delayControl; // Clean up the copied control
-      m_delayControl = nullptr;
+      m_delayControls.clear(); // Clean up the copied control
     }
 
 //    PrintRobotBaseForceVector(m_robot);//should have forces here
@@ -123,11 +129,38 @@ Step(const double _dt) {
 //  PrintRobotBaseForceVector(m_robot);//should have a purely 0 vector here
 
 
-  // Check if out of path.
+  // Check if out of path configurations:
   if(m_currentVID + 1 >= m_roadmap->VIDs().end()) {
-    m_currentVID = m_roadmap->VIDs().end(); // Make it clear the path is done.
-    /// @TODO Force the agent to stop the robot here, as right now the agent
-    ///  just floats off forever after controls stop being applied.
+    if(!m_simulationDone) {
+      m_simulationDone = true; // So we only do this stuff once.
+      m_currentVID = m_roadmap->VIDs().end(); // Make it clear the path is done.
+
+      /// IMPORTANT: This creates disconinuity between PMPL and the simulation,
+      /// but as RoadmapFollowingAgent is first for validation,
+      /// it's very helpful to see it stop after reaching the final cfg in the
+      /// roadmap. Because of this, I am forcing the agent to stop the robot
+      /// here. For more complex behavior (like TMP type problems) this will
+      /// likely need to be removed.
+      /// Force the agent to stop the robot here, since otherwise the simulation
+      /// will continue moving the robot, given its final velocity.
+      m_robot->GetDynamicsModel()->Get()->setBaseVel({0,0,0});
+      m_robot->GetDynamicsModel()->Get()->setBaseOmega({0,0,0});
+
+      //Always print this (also serves as a warning about velocity).
+      std::cout << std::endl << "Roadmap finished. Robot's base velocity and"
+          " omega have been set to 0." << std::endl;
+
+//      std::cout << "Final robot configuration:" << std::endl;
+//      Cfg shouldBe = m_roadmap->Cfgs().at(m_currentVertexPathIndex);
+//      Cfg current = m_robot->GetDynamicsModel()->GetSimulatedState();
+      /// Note that if you were to check if(shouldBe == current), it would
+      /// FAIL here. This is because of the 0-ing of the velocity of the robot,
+      /// which is explained just a few lines above. All non-velocity DOFs
+      /// should still EXACTLY match up right here though.
+
+      //if you want to print the final info:
+//      Cfg::PrintRobotCfgComparisonInfo(std::cout, shouldBe, current);
+    }
     return;
   }
 
@@ -154,27 +187,17 @@ Step(const double _dt) {
     throw RunTimeException(WHERE, "Couldn't find next edge in roadmap for "
         "the roadmap following agent.");
 
-  //Print some info:
+  //Ensure that the simulated version is EXACTLY the same as the configuration
+  // in this spot of the roadmap.
   Cfg shouldBe = m_roadmap->Cfgs().at(m_currentVertexPathIndex);
   Cfg current = m_robot->GetDynamicsModel()->GetSimulatedState();
-  //Extremely helpful debugging output:
-//  std::cout << std::endl <<"--------------------------------------------------";
-//  std::cout << std::endl << "Robot is currently at        "
-//            << nonstd::print_container(current.GetData()) << ", "
-//            << nonstd::print_container(current.GetVelocity()) << std::endl;
-//  std::cout << "Robot SHOULD currently be at "
-//            << nonstd::print_container(shouldBe.GetData()) << ", "
-//            << nonstd::print_container(shouldBe.GetVelocity())
-//            << std::endl
-//            << "Desired Robot cfg minus current cfg = " << shouldBe - current
-//            << std::endl
-//            << "Euclidian distance = " << (shouldBe-current).Magnitude()
-//            << std::endl << std::endl;
+//  Cfg::PrintRobotCfgComparisonInfo(std::cout, shouldBe, current);
+
 
   if(shouldBe != current) {
     RunTimeException(WHERE, "The simulated configuration is off from the "
         "planned configuration! This means that a test for the test suite has "
-        "failed if this is a test, and the roadmap will not be followed "
+        "failed (if this is a test). The roadmap will not be followed "
         "perfectly whether or not this is a test.");
   }
 
@@ -186,7 +209,6 @@ Step(const double _dt) {
         "More than one control per edge is not yet supported!");
 
   //Set the number of delay steps that the control should be applied for:
-  //TODO this needs to eventually be vectorized
   m_delayStepCount = weight.GetTimeSteps() - 1;
   //minus 1 because we are about to execute it THIS time step, then the
   // remaining executions will happen the next m_delayStepCount times Step()
@@ -196,27 +218,25 @@ Step(const double _dt) {
   //          << " from vertex " << *m_currentVID << std::endl;
 
   for(std::size_t i = 0; i < controls.size(); i++) {
-
-    //Update the control that will be repeated m_delayStepCount times. This
+    //Update the control(s) that will be repeated m_delayStepCount times. This
     // needs to happen whether coast or normal control, so do it first:
-    //TODO vectorize this part, but it's pointless now since I require one control
-    m_delayControl = new Control(controls.at(i));
+    m_delayControls.push_back(Control(controls.at(i)));
 
-
-    //Very important! If the actuator is null, it's a coast control.
-    if(!m_delayControl->actuator) {
+    //Very important: If the actuator is null, it's a coast control.
+    if(!m_delayControls.back().actuator) {
       //std::cout << "Coast control applied. There are " << m_delayStepCount
       //          << " remaining coast controls to be applied"<< std::endl;
       continue;
     }
+    else {
+      //Non-null actuator, so execute it (has robot/actuator info)
+      m_delayControls.back().Execute();
 
-    //Non-null actuator, so execute it:
-    m_delayControl->Execute(); // Execute the control (has robot/actuator info)
-
-    //std::cout << "Applying control " << i+1 << "/" << controls.size()
-    //          << " from MPSolution roadmap." << std::endl
-    //          << "Control = " << controls.at(i) << " will be repeated "
-    //          << m_delayStepCount << " more times." << std::endl;
+      //std::cout << "Applying control " << i+1 << "/" << controls.size()
+      //          << " from MPSolution roadmap." << std::endl
+      //          << "Control = " << controls.at(i) << " will be repeated "
+      //          << m_delayStepCount << " more times." << std::endl;
+    }
   }
 
 //  PrintRobotBaseForceVector(m_robot);//should have forces added here

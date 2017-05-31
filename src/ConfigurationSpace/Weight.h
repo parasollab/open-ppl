@@ -175,7 +175,6 @@ operator=(const DefaultWeight<CfgType>& _w) {
     m_clearance = _w.GetClearance();
     m_controls = _w.GetControlSet();
     m_timeSteps = _w.GetTimeSteps();
-    inputRobot = _w.inputRobot;
   }
   return *this;
 }
