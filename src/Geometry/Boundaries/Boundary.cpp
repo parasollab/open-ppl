@@ -99,7 +99,7 @@ CGAL() const {
 std::ostream&
 operator<<(std::ostream& _os, const Boundary& _b) {
   /// @TODO Synchronize type printing with input parsing.
-  _os << _b.Type() << " ";
+  _os << _b.Name() << " ";
   _b.Write(_os);
   return _os;
 }

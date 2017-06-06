@@ -8,35 +8,13 @@
 
     <Robot label="boxy" filename="3D/boxy.robot" nonholonomic="true"/>
 
-    <Query filename="3D/3d.query"/>
-
-    <Task label="point-to-point" robot="boxy">
+    <Task label="query" robot="boxy">
       <StartConstraints>
-        <!-- require an exact starting configuration -->
-        <CSpaceConstraint>
-          <Limit dof="0" min="0" max="0"/>
-          <Limit dof="1" min="0" max="0"/>
-          <Limit dof="2" min="0" max="0"/>
-          <Limit dof="3" min="0" max="0"/>
-          <Limit dof="4" min="0" max="0"/>
-          <Limit dof="5" min="0" max="0"/>
-        </CSpaceConstraint>
+        <CSpaceConstraint point="0 0 0 0 0 0   0 0 0 0 0 0"/>
       </StartConstraints>
 
-      <PathConstraints>
-        <!-- no path constraints -->
-      </PathConstraints>
-
       <GoalConstraints>
-        <!-- require an exact goal configuration -->
-        <CSpaceConstraint>
-          <Limit dof="0" min="20" max="20"/>
-          <Limit dof="1" min="5" max="5"/>
-          <Limit dof="2" min="10" max="10"/>
-          <Limit dof="3" min=".2" max=".2"/>
-          <Limit dof="4" min=".8" max=".8"/>
-          <Limit dof="5" min=".5" max=".5"/>
-        </CSpaceConstraint>
+        <CSpaceConstraint point="20 5 10 0.2 0.8 0.5   0 0 0 0 0 0"/>
       </GoalConstraints>
     </Task>
 
@@ -53,7 +31,14 @@
     <ValidityCheckers>
       <CollisionDetection label="rapid"
         method="RAPID"/>
+      <CollisionDetection label="pqp_solid"
+        method="PQP_SOLID"/>
     </ValidityCheckers>
+
+    <Samplers>
+      <UniformRandomSampler label="UniformRandomFree"
+        vcLabel="pqp_solid"/>
+    </Samplers>
 
     <NeighborhoodFinders>
       <BruteForceNF label="NearestPosition"
@@ -86,10 +71,10 @@
 
     <MapEvaluators>
       <ConditionalEvaluator label="NodesEval"
-        metric_method="NumNodes" value="100" operator=">="/>
+        metric_method="NumNodes" value="8000" operator=">="/>
       <RRTQuery label="RRTQuery"
-        goalDist=".3" nfLabel="NearestPosition" exLabel="FixedRandom"
-        debug="false"/>
+        goalDist="5" nfLabel="NearestPosition" exLabel="FixedRandom"
+        fullRecreatePath="false" debug="false"/>
       <ComposeEvaluator label="BoundedRRTQuery"
         operator="OR">
         <Evaluator label="RRTQuery"/>
@@ -125,8 +110,8 @@
 
     </MPStrategies>
 
-    <Solver mpStrategyLabel="RRT" seed="12345678"
-      baseFilename="KRRT" vizmoDebug="true"/>
+    <Solver mpStrategyLabel="RRT" seed="12345678" baseFilename="KRRT"
+      vizmoDebug="false"/>
 
   </Library>
 

@@ -164,7 +164,7 @@ Sampler(CfgType& _cfg, const Boundary* const _boundary,
     tick += inter;
     tickFree = (vc->IsValid(tick, callee)) && (!vc->IsInsideObstacle(tick));
     if(m_useBoundary)
-      tickFree = tickFree && env->InBounds(tick, _boundary);
+      tickFree = tickFree && tick.InBounds(_boundary);
 
     if(tempFree == tickFree) {
       tempFree = tickFree;
@@ -172,12 +172,12 @@ Sampler(CfgType& _cfg, const Boundary* const _boundary,
     }
     else {	//tempFree != tickFree
       generated = true;
-      if(tempFree && env->InBounds(temp, _boundary)) {
+      if(tempFree and temp.InBounds(_boundary)) {
         _result.push_back(temp);
         tempFree = tickFree;
         temp = tick;
       }
-      else if(tickFree && env->InBounds(tick, _boundary)) { //tickFree
+      else if(tickFree and tick.InBounds(_boundary)) { //tickFree
         _result.push_back(tick);
         tempFree = tickFree;
         temp = tick;

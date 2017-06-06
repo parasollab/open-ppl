@@ -181,8 +181,8 @@ UtilityGuidedGenerator<MPTraits>::Run() {
       bool inBBX = false, isValid = false;
       while(!inBBX && !isValid) {
         stats->IncNodesAttempted(this->GetNameAndLabel());
-        q.GetRandomCfg(env, bb);
-        inBBX = env->InBounds(q, bb);
+        q.GetRandomCfg(bb);
+        inBBX = q.InBounds(bb);
         if(inBBX) {
           isValid = vcm->IsValid(q, callee);
           if(isValid)
@@ -220,7 +220,7 @@ UtilityGuidedGenerator<MPTraits>::Run() {
       //add the sample to the model and roadmap (if free)
       stats->IncNodesAttempted(this->GetNameAndLabel());
       stats->StopClock("Total Sampling Time");
-      bool isColl = !env->InBounds(q, bb) || !vcm->IsValid(q, callee);
+      bool isColl = !q.InBounds(bb) || !vcm->IsValid(q, callee);
       if(!isColl) {
         if(this->m_debug) cout << "valid, adding to roadmap and model\n";
         stats->IncNodesGenerated(this->GetNameAndLabel());
@@ -289,7 +289,7 @@ GenerateEntropyGuidedSample() {
   if(get_cc_stats(*rmap->GetGraph(), cmap, ccs) == 1) {
     int index = (int)floor((double)DRand()*(double)rmap->GetGraph()->get_num_vertices());
     q1 = (rmap->GetGraph()->begin() + index)->property();
-    q2.GetRandomCfg(env, bb);
+    q2.GetRandomCfg(bb);
     if(this->m_debug)
       cout << "\t\tIn GenerateEntropyGuidedSample: only 1 cc, randomly selected vertex " << (rmap->GetGraph()->begin() + index)->descriptor() << " and a random sample\n";
   }

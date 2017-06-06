@@ -93,29 +93,6 @@ class Environment {
     const Boundary* GetBoundary() const {return m_boundary;}
     void SetBoundary(Boundary* const _b) {m_boundary = _b;}
 
-    /// Test if a configuration lies inside of the workspace and satisfies
-    /// physical robot constraints.
-    /// @param _cfg The configuration to test.
-    /// @param _b The enclosing boundary of the workspace region.
-    /// @return True if the configuration is inside the boundary and satisfies
-    ///         contraints.
-    ///
-    /// Test whether input configuration satisfies joint constraints  (i.e., is
-    /// inside of C-Space) and lies inside of the workspace boundary (i.e., the
-    /// robot at that configuration is inside of the workspace).
-    ///
-    /// @TODO Remove this from the environment class as it doesn't belong here.
-    ///       Boundary containment is a function of the boundary object only,
-    ///       and satisfying joint constraints is a property of only the
-    ///       multibody. Additional constraints (like velocity) belong in the
-    ///       robot object.
-    template<class CfgType>
-    bool InBounds(const CfgType& _cfg, const Boundary* const _b);
-
-    /// @overload
-    template<class CfgType>
-    bool InBounds(const CfgType& _cfg) {return InBounds(_cfg, m_boundary);}
-
     /// Resize the boundary to the minimum bounding box surrounding the obstacles
     /// increased by a margin of _d + robotRadius.
     /// @param _d Margin to increase minimum bounding box
@@ -235,9 +212,7 @@ class Environment {
     double m_positionResFactor;      ///< Factor of body span to use as auto-
                                      ///< computed positional resolution.
     double m_orientationRes{.05};    ///< Rotational resolution of movement.
-//    double m_timeRes{.05};           ///< Resolution for time.
-    double m_timeRes{1. / 30.}; ///@TODO Synchronize with Bullet time resolution
-    // right now, 1/30 is hardcoded as the resolution for both though.
+    double m_timeRes{.05};           ///< Resolution for time.
 
     ///@}
     ///@name Models
@@ -263,17 +238,5 @@ class Environment {
     ///@}
 
 };
-
-/*----------------------------- Boundary Functions ---------------------------*/
-
-template<class CfgType>
-bool
-Environment::
-InBounds(const CfgType& _cfg, const Boundary* const _b) {
-  return _cfg.GetMultiBody()->InCSpace(_cfg.GetData(), _b)
-      && _b->InBoundary(_cfg);
-}
-
-/*----------------------------------------------------------------------------*/
 
 #endif

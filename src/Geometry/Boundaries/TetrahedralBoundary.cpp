@@ -42,10 +42,24 @@ Clone() const {
 
 /*---------------------------- Property Accessors ----------------------------*/
 
-std::string
+Boundary::Space
 TetrahedralBoundary::
 Type() const noexcept {
+  return Boundary::Space::Workspace;
+}
+
+
+std::string
+TetrahedralBoundary::
+Name() const noexcept {
   return "Tetrahedral";
+}
+
+
+size_t
+TetrahedralBoundary::
+GetDimension() const noexcept {
+  return 3;
 }
 
 
@@ -123,6 +137,14 @@ GetRandomPoint() const {
                         + u * (m_points[3] - m_points[0]);
 
   return std::vector<double>{pt[0], pt[1], pt[2]};
+}
+
+
+void
+TetrahedralBoundary::
+PushInside(std::vector<double>& _sample) const noexcept {
+  throw RunTimeException(WHERE, "Not yet implemented");
+  // if not in boundary, _sample = clearance point.
 }
 
 /*--------------------------- Containment Testing ----------------------------*/

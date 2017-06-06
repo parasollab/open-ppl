@@ -6,6 +6,8 @@
 #include <set>
 #include <vector>
 
+#include "Geometry/Shapes/NBox.h"
+
 class Actuator;
 class btMultiBody;
 class Robot;
@@ -31,8 +33,25 @@ struct Control final {
   ///@name Public Data
   ///@{
 
-  Actuator* actuator; ///< The actuator for this control.
-  Signal signal;      ///< The signal for this control.
+  Actuator* actuator{nullptr}; ///< The actuator for this control.
+  Signal signal;               ///< The signal for this control.
+
+  ///@}
+  ///@name Construction
+  ///@{
+
+  Control();
+  Control(Actuator* const _actuator, const Signal& _signal = Signal());
+
+  Control(const Control&) = default;
+  Control(Control&&) = default;
+
+  ///@}
+  ///@name Assignment
+  ///@{
+
+  Control& operator=(const Control&) = default;
+  Control& operator=(Control&&) = default;
 
   ///@}
   ///@name Planning Interface
@@ -70,10 +89,12 @@ struct Control final {
 /// Display function for debugging controls and roadmap output. Prints the signal.
 std::ostream& operator<<(std::ostream&, const Control&);
 
+
+/// A discrete set of controls can be defined by a sequence of allowed controls.
 typedef std::vector<Control> ControlSet;
 
-/// @TODO Add real abstraction for control space. This will probably look like a
-///       boundary object for each actuator.
-typedef int ControlSpace;
+/// A continuous space of controls can be defined by an N-dimensional box in
+/// C-space.
+typedef NBox ControlSpace;
 
 #endif

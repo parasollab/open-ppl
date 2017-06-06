@@ -194,7 +194,7 @@ ToggleLP<MPTraits>::ChooseAlteredCfg(
     double dist = dm->Distance(_c1, _c2) * sqrt(2.0)/2.0;
     incr.GetRandomRay(dist, dm);
     temp = incr + mid;
-  } while(!env->InBounds(temp) && attempts++ < 10);
+  } while(!temp.InBounds(env) && attempts++ < 10);
   if(attempts == 10){
     stats->IncStat("Toggle::MaxAttemptsForRay", 1);
     /// @TODO Should this cfg have robot also?
@@ -216,7 +216,7 @@ ToggleLP<MPTraits>::ChooseAlteredCfg(
   CfgType temp(robot);
   do {
     temp.GetRandomCfg(env);
-  } while(!env->InBounds(temp));
+  } while(!temp.InBounds(env));
   return temp;
 }
 

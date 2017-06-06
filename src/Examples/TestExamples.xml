@@ -8,38 +8,14 @@
         frictionCoefficient=".7" gravityX="0" gravityY="0" gravityZ="0"/>
 
     <Robot label="boxy" filename="3D/boxy.robot"/>
-    <!--Robot label="links" filename="3D/linked.robot"/-->
-    <!--Robot label="boxy" filename="3D/boxy.robot" nonholonomic="true"/-->
 
-    <Query filename="3D/3d.query"/>
-
-    <Task label="point-to-point" robot="boxy">
+    <Task label="query" robot="boxy">
       <StartConstraints>
-        <!-- require an exact starting configuration -->
-        <CSpaceConstraint>
-          <Limit dof="0" min="0" max="0"/>
-          <Limit dof="1" min="0" max="0"/>
-          <Limit dof="2" min="0" max="0"/>
-          <Limit dof="3" min="0" max="0"/>
-          <Limit dof="4" min="0" max="0"/>
-          <Limit dof="5" min="0" max="0"/>
-        </CSpaceConstraint>
+        <CSpaceConstraint point="0 0 0 0 0 0"/>
       </StartConstraints>
 
-      <PathConstraints>
-        <!-- no path constraints -->
-      </PathConstraints>
-
       <GoalConstraints>
-        <!-- require an exact goal configuration -->
-        <CSpaceConstraint>
-          <Limit dof="0" min="20" max="20"/>
-          <Limit dof="1" min="5" max="5"/>
-          <Limit dof="2" min="10" max="10"/>
-          <Limit dof="3" min=".2" max=".2"/>
-          <Limit dof="4" min=".8" max=".8"/>
-          <Limit dof="5" min=".5" max=".5"/>
-        </CSpaceConstraint>
+        <CSpaceConstraint point="20 5 10 0.2 0.8 0.5"/>
       </GoalConstraints>
     </Task>
 

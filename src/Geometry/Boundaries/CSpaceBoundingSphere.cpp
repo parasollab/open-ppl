@@ -21,9 +21,16 @@ Clone() const {
 
 /*---------------------------- Property Accessors ----------------------------*/
 
-std::string
+Boundary::Space
 CSpaceBoundingSphere::
 Type() const noexcept {
+  return Boundary::Space::CSpace;
+}
+
+
+std::string
+CSpaceBoundingSphere::
+Name() const noexcept {
   return "CSpaceBoundingSphere";
 }
 

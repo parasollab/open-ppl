@@ -91,13 +91,18 @@ BulletEngine::
 
 void
 BulletEngine::
-Step(const btScalar _timestep, const int _maxSubSteps,
-    const btScalar _resolution) {
+Step(const btScalar _timestep) {
   // This doesn't seem to be required in the examples, testing without it for
   // now.
   //m_dynamicsWorld->updateAabbs();
   //m_dynamicsWorld->computeOverlappingPairs();
-  m_dynamicsWorld->stepSimulation(_timestep, _maxSubSteps, _resolution);
+
+  // Advance the simulation by '_timestep' units using up to 'maxSubSteps' sub
+  // steps of length 'resolution'.
+  const btScalar resolution = m_problem->GetEnvironment()->GetTimeRes();
+  const int maxSubSteps = std::ceil(_timestep / resolution);
+
+  m_dynamicsWorld->stepSimulation(_timestep, maxSubSteps, resolution);
 }
 
 /*----------------------------- Transform Access -----------------------------*/
@@ -112,12 +117,17 @@ GetObjectTransform(const size_t _i, const size_t _j) const {
       std::to_string(m_dynamicsWorld->getNumMultibodies()) +
       " objects in the simulation.");
 
-  glutils::transform t;
   btMultiBody* mb = m_dynamicsWorld->getMultiBody(_i);
+
+  std::array<double, 16> buffer;
   if(_j == 0)
-    mb->getBaseWorldTransform().getOpenGLMatrix(t.data());
+    mb->getBaseWorldTransform().getOpenGLMatrix(buffer.data());
   else
-    mb->getLink(int(_j-1)).m_cachedWorldTransform.getOpenGLMatrix(t.data());
+    mb->getLink(int(_j-1)).m_cachedWorldTransform.getOpenGLMatrix(buffer.data());
+
+  /// @TODO Fix this to avoid the extra copy.
+  glutils::transform t;
+  std::copy(buffer.begin(), buffer.end(), t.begin());
 
   return t;
 }

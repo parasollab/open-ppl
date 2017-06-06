@@ -3,7 +3,16 @@
   <Problem>
     <Environment filename="../Envs/2D/2d.env" saveDofs="false"/>
     <Robot label="boxy" filename="../Envs/2D/boxy.robot"/>
-    <Query filename="../Envs/2D/2d.query"/>
+
+    <Task label="query" robot="boxy">
+      <StartConstraints>
+        <CSpaceConstraint point="-10 -10"/>
+      </StartConstraints>
+
+      <GoalConstraints>
+        <CSpaceConstraint point="10 10"/>
+      </GoalConstraints>
+    </Task>
   </Problem>
 
   <Library>
@@ -22,6 +31,7 @@
 
     <Samplers>
       <UniformRandomSampler label="UniformRandom" vcLabel="alwaysTrue"/>
+      <UniformRandomSampler label="UniformRandomFree" vcLabel="pqp_solid"/>
     </Samplers>
 
     <LocalPlanners>

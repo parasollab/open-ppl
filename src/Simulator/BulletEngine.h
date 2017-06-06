@@ -94,10 +94,7 @@ class BulletEngine final {
 
     /// Step the simulation forward.
     /// @param _timestep    The total length of time to advance the simulation.
-    /// @param _maxSubSteps The maximum number of sub-intervals to use.
-    /// @param _resolution  The length of a sub interval.
-    void Step(const btScalar _timestep, const int _maxSubSteps,
-        const btScalar _resolution);
+    void Step(const btScalar _timestep);
 
     ///@}
     ///@name Transform Access

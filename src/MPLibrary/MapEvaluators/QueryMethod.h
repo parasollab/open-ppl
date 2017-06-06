@@ -224,35 +224,41 @@ Initialize() {
   m_query.clear();
   m_goals.clear();
 
-  //// Get current task
-  //auto task = this->GetTask();
+  // Get current task
+  auto task = this->GetTask();
 
-  //// Sample start and end points
-  //auto startBoundary = task->GetStartBoundary();
-  //auto goalBoundary = task->GetGoalBoundary();
-  ///// @TODO Also incorporate path constraints? Here or in task's representation
-  /////       of start/goal boundaries?
-  ///// @TODO Also incorporate env boundaries? Here or in task's representation?
+  // Sample start and end points
+  auto startBoundary = task->GetStartBoundary();
+  auto goalBoundary = task->GetGoalBoundary();
+  /// @TODO Also incorporate path constraints? Here or in task's representation
+  ///       of start/goal boundaries?
+  /// @TODO Also incorporate env boundaries? Here or in task's representation?
 
-  //// Set query cfgs
-  //this->GetStatClass()->StartClock("QueryMethod::GeneratingQuery");
+  // Set query cfgs
+  this->GetStatClass()->StartClock("QueryMethod::GeneratingQuery");
 
-  ///// @TODO Think about how this will work with chains of tasks and non-exact
-  /////       boundaries. Perhaps we want to initialize with some starting
-  /////       configuration as an input parameter? Or maybe an overload for that?
-  ///// @TODO Either fix a set of required labels for all PMPL or find a better
-  /////       way to create the uniform random sampler here.
-  //auto s = this->GetSampler("UniformRandomFree");
-  //while(m_query.size() != 1)
-  //  s->Sample(1, 100, startBoundary, back_inserter(m_query));
-  //while(m_query.size() != 2)
-  //  s->Sample(1, 100, goalBoundary, back_inserter(m_query));
+  /// @TODO Think about how this will work with chains of tasks and non-exact
+  ///       boundaries. Perhaps we want to initialize with some starting
+  ///       configuration as an input parameter? Or maybe an overload for that?
+  /// @TODO Either fix a set of required labels for all PMPL or find a better
+  ///       way to create the uniform random sampler here.
+  auto s = this->GetSampler("UniformRandomFree");
+  while(m_query.size() != 1)
+    s->Sample(1, 100, startBoundary, back_inserter(m_query));
+  while(m_query.size() != 2)
+    s->Sample(1, 100, goalBoundary, back_inserter(m_query));
 
-  //this->GetStatClass()->StopClock("QueryMethod::GeneratingQuery");
+  this->GetStatClass()->StopClock("QueryMethod::GeneratingQuery");
 
-  string queryFile = this->GetQueryFilename();
-  if(!queryFile.empty())
-    ReadQuery(queryFile);
+  if(this->m_debug)
+    std::cout << "Query generation:"
+              << "\n\tStart boundary : " << *startBoundary
+              << "\n\tStart cfg: " << m_query.front()
+              << "\n\tGoal boundary  : " << *goalBoundary
+              << "\n\tGoal cfg: " << m_query.back()
+              << std::endl;
+
+  Reset(nullptr);
 }
 
 /*-------------------------- MapEvaluator Interface --------------------------*/

@@ -5,41 +5,23 @@
   <Problem>
 
     <Environment filename="3D/3d.env"
-        frictionCoefficient=".7" gravityX="0" gravityY="0" gravityZ="0"/>
+        frictionCoefficient="0" gravityX="0" gravityY="0" gravityZ="0"/>
 
     <Robot label="boxy" filename="3D/boxy.robot"/>
-    <!--Robot label="links" filename="3D/linked.robot"/-->
-    <!--Robot label="boxy" filename="3D/boxy.robot" nonholonomic="true"/-->
 
-    <Query filename="3D/3d.query"/>
+    <!-- WARNING Support for multiple constraints is not yet implemented! -->
+    <!-- WARNING Workspace constraints are not finished and untested! -->
+    <!-- WARNING CSpace bounding box constraints are supported, but currently
+         the query method will just use the bounding box to sample a specific
+         goal configuration. -->
 
-    <Task label="point-to-point" robot="boxy">
+    <Task label="query" robot="boxy">
       <StartConstraints>
-        <!-- require an exact starting configuration -->
-        <CSpaceConstraint>
-          <Limit dof="0" min="0" max="0"/>
-          <Limit dof="1" min="0" max="0"/>
-          <Limit dof="2" min="0" max="0"/>
-          <Limit dof="3" min="0" max="0"/>
-          <Limit dof="4" min="0" max="0"/>
-          <Limit dof="5" min="0" max="0"/>
-        </CSpaceConstraint>
+        <CSpaceConstraint point="0 0 0 0 0 0"/>
       </StartConstraints>
 
-      <PathConstraints>
-        <!-- no path constraints -->
-      </PathConstraints>
-
       <GoalConstraints>
-        <!-- require an exact goal configuration -->
-        <CSpaceConstraint>
-          <Limit dof="0" min="20" max="20"/>
-          <Limit dof="1" min="5" max="5"/>
-          <Limit dof="2" min="10" max="10"/>
-          <Limit dof="3" min=".2" max=".2"/>
-          <Limit dof="4" min=".8" max=".8"/>
-          <Limit dof="5" min=".5" max=".5"/>
-        </CSpaceConstraint>
+        <CSpaceConstraint point="20 5 10 0.2 0.8 0.5"/>
       </GoalConstraints>
     </Task>
 
@@ -109,7 +91,7 @@
 
     <Samplers>
       <UniformRandomSampler label="UniformRandom" vcLabel="alwaysTrue"/>
-      <UniformRandomSampler label="UniformRandomFree" vcLabel="rapid"/>
+      <UniformRandomSampler label="UniformRandomFree" vcLabel="pqp_solid"/>
       <ObstacleBasedSampler label="OBPRM" vcLabel="rapid" useBBX="false"
         pointSelection="cspace" dmLabel="euclidean" stepSize="0.0"
         nShellsColl="0" nShellsFree="1" debug="false"/>
@@ -187,7 +169,7 @@
       <BasicExtender label="BESO" debug="false" dmLabel="euclidean"
         vcLabel="rapid" maxDist="10." minDist=".001" randomOrientation="false"/>
       <KinodynamicExtender label="KinoExtender" debug="false"
-        dmLabel="euclidean" vcLabel="rapid" fixed="false" best="false"
+        dmLabel="euclidean" vcLabel="rapid" fixed="false" best="true"
         numSteps="10" minDist=".01"/>
       <MedialAxisExtender label="MAE" maxDist="10.0" minDist="0.01"
         extendDist="0.5" maxIntermediates="10" lpLabel="sl" vcLabel="pqp_solid"
@@ -422,7 +404,7 @@
         nfLabel="Nearest" vcLabel="rapid" connectorLabel="Closest"
         gtype="DIRECTED_TREE" debug="false"
         growGoals="false" extenderLabel="KinoExtender">
-        <Evaluator label="NodesEval"/>
+        <Evaluator label="KinoRRTQuery"/>
       </BasicRRTStrategy>
 
       <!-- If optimal connection is wanted, the correct connector needs to be
@@ -590,8 +572,6 @@
 
     <Solver mpStrategyLabel="BasicPRM1" seed="12345678"
       baseFilename="Basic" vizmoDebug="true"/>
-    <!--Solver mpStrategyLabel="KinoRRT" seed="12345678"
-      baseFilename="Basic" vizmoDebug="true"/-->
 
   </Library>
 

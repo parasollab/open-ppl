@@ -15,14 +15,19 @@ main(int _argc, char** _argv) {
     MPProblem* problem = new MPProblem(_argv[2]);
     auto robot = problem->GetRobot(0);
 
-    //If it's a nonholonomic robot, use the nonholonomic agent to correctly
+    // If it's a nonholonomic robot, use the nonholonomic agent to correctly
     // use the roadmap data (control sets between each pair of cfgs in roadmap).
-    if(robot->IsNonholonomic()) {
+    if(robot->IsNonholonomic())
       robot->SetAgent(new RoadmapFollowingAgent(robot));
-    }
-    else {
+    else
       robot->SetAgent(new PathFollowingAgent(robot));
-    }
+
+    // Position the robot by sampling from the first task.
+    /// @TODO Decide on a way to declare the starting configuration either
+    ///       explicitly or from a specific task. For now we will assume that
+    ///       the first task is a query and its start boundary is a single point.
+    auto startBoundary = problem->GetTasks().front()->GetStartBoundary();
+    robot->GetMultiBody()->Configure(startBoundary->GetCenter());
 
     // Make simulation object.
     Simulation simulation(problem);

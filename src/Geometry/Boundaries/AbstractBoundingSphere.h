@@ -20,14 +20,14 @@ class AbstractBoundingSphere : public Boundary, public NSphere {
     /// dimensions and radius.
     /// @param _n The number of dimensions to use.
     /// @param _radius The radius (infinite by default).
-    AbstractBoundingSphere(const size_t _n,
+    explicit AbstractBoundingSphere(const size_t _n,
         const double _radius = std::numeric_limits<double>::max());
 
     /// Construct a bounding sphere with a given center point and radius.
     /// @param _center The center point, which is assumed to be of full
     ///                dimension.
     /// @param _radius The radius (infinite by default).
-    AbstractBoundingSphere(const std::vector<double>& _center,
+    explicit AbstractBoundingSphere(const std::vector<double>& _center,
         const double _radius = std::numeric_limits<double>::max());
 
     virtual ~AbstractBoundingSphere() = default;
@@ -35,6 +35,8 @@ class AbstractBoundingSphere : public Boundary, public NSphere {
     ///@}
     ///@name Boundary Properties
     ///@{
+
+    virtual size_t GetDimension() const noexcept override;
 
     virtual double GetMaxDist(const double _r1 = 2.0, const double _r2 = 0.5)
         const override;
@@ -49,9 +51,13 @@ class AbstractBoundingSphere : public Boundary, public NSphere {
 
     virtual std::vector<double> GetRandomPoint() const override;
 
+    virtual void PushInside(std::vector<double>& _sample) const noexcept override;
+
     ///@}
     ///@name Containment Testing
     ///@{
+
+    using Boundary::InBoundary;
 
     virtual bool InBoundary(const std::vector<double>& _p) const override;
 
@@ -85,5 +91,14 @@ class AbstractBoundingSphere : public Boundary, public NSphere {
     ///@}
 
 };
+
+/*----------------------------------- I/O ------------------------------------*/
+
+std::ostream& operator<<(std::ostream& _os, const AbstractBoundingSphere& _b);
+
+/// @TODO Move impl from environment to here.
+//std::istream& operator>>(std::istream& _is, const Boundary& _b);
+
+/*----------------------------------------------------------------------------*/
 
 #endif

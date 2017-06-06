@@ -24,6 +24,11 @@ class PIDFeedback : public ControllerMethod {
     PIDFeedback(Robot* const _r, const double _p, const double _i,
         const double _d);
 
+    /// Construct a PID feedback controller from an XML node.
+    /// @param[in] _r The robot to control.
+    /// @param[in] _node The XML node to parse.
+    PIDFeedback(Robot* const _r, XMLNode& _node);
+
     virtual ~PIDFeedback() = default;
 
     ///@}
@@ -55,14 +60,13 @@ class PIDFeedback : public ControllerMethod {
     ///@name Internal State
     ///@{
 
-    const double m_p;  ///< The gain for proportional error.
-    const double m_i;  ///< The gain for integral error.
-    const double m_d;  ///< The gain for derivative error.
+    double m_p;          ///< The gain for proportional error.
+    double m_i;          ///< The gain for integral error.
+    double m_d;          ///< The gain for derivative error.
 
-    Cfg m_previousError;       ///< The last step's error value.
-    Cfg m_integral;            ///< The integrated error history.
-    Cfg m_target;              ///< The previous target.
-    bool m_initialized{false}; ///< Is previous error available?
+    Cfg m_previousError; ///< The last step's error value.
+    Cfg m_integral;      ///< The integrated error history.
+    Cfg m_target;        ///< The previous target.
 
     ///@}
 

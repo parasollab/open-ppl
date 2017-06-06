@@ -1,12 +1,17 @@
 #ifndef DYNAMICS_MODEL_H_
 #define DYNAMICS_MODEL_H_
 
+#include <functional>
 #include <vector>
 
+#include "Control.h"
+
+class BulletEngine;
 class btMultiBody;
+class btVector3;
 class Cfg;
 class Control;
-class InternalSimulator;
+class MicroSimulator;
 class Robot;
 
 
@@ -32,7 +37,7 @@ class DynamicsModel final {
   Robot* const m_robot;       ///< The robot this model represents.
   btMultiBody* const m_model; ///< The robot model in the global physics engine.
 
-  mutable InternalSimulator* m_simulator{nullptr}; ///< The internal simulator.
+  mutable MicroSimulator* m_simulator{nullptr}; ///< The internal simulator.
 
   ///@}
 
@@ -65,6 +70,9 @@ class DynamicsModel final {
     /// Get the state of the robot in the external simulation.
     Cfg GetSimulatedState() const;
 
+    /// Get the forces and torques on the robot in the external simulation.
+    std::vector<double> GetSimulatedForces() const;
+
     /// Test the result of applying a control to a given start configuration
     /// using the internal simulator.
     /// @param _start The starting configuration.
@@ -74,8 +82,104 @@ class DynamicsModel final {
     ///         starting from _start.
     Cfg Test(const Cfg& _start, const Control& _c, const double _dt) const;
 
+    /// Convert a generalized force from the robot's local frame to the world
+    /// frame.
+    /// @param _force The generalized force to convert.
+    /// @param _model The bullet model of m_robot that defines the
+    ///               transformation of interest.
+    void LocalToWorld(std::vector<double>& _force, btMultiBody* const _model)
+        const;
+
+    /// @overload
+    /// Convert from local to world frame using m_model.
+    void LocalToWorld(std::vector<double>& _force) const;
+
+    /// Convert a generalized force from the world frame to the robot's local
+    /// frame.
+    /// @param _force The generalized force to convert.
+    /// @param _model The bullet model of m_robot that defines the
+    ///               transformation of interest.
+    void WorldToLocal(std::vector<double>& _force, btMultiBody* const _model)
+        const;
+
+    /// @overload
+    /// Convert from world to local frame using m_model.
+    void WorldToLocal(std::vector<double>& _force) const;
+
+    ///@}
+
+  private:
+
+    ///@name Helpers
+    ///@{
+
+    /// Transform a generalized force vector to a different coordinate frame with
+    /// an arbitrary function. The function will be applied separately to the
+    /// linear and angular components.
+    /// @param[in] _force The generalized force vector to transform.
+    /// @param[in] _f The transformation function.
+    void Transform(std::vector<double>& _force,
+        std::function<void(btVector3&)>&& _f) const;
+
     ///@}
 
 };
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// A micro simulator for a single robot. It tests the result of applying a
+/// control to a robot in a given configuration.
+///
+/// @details This object outsources forward dynamics computations to a bullet
+///          physics engine.
+////////////////////////////////////////////////////////////////////////////////
+class MicroSimulator final {
+
+  ///@name Internal State
+  ///@{
+
+  Robot* const m_robot;         ///< Our pmpl robot.
+  BulletEngine* const m_engine; ///< The engine for this micro-simulator.
+  btMultiBody* const m_model;   ///< The bullet body for our robot.
+
+  ///@}
+
+  public:
+
+    ///@name Construction
+    ///@{
+
+    /// Construct a self-simulator for a robot.
+    /// @param _robot The robot to simulate.
+    MicroSimulator(Robot* const _robot);
+
+    ~MicroSimulator();
+
+    ///@}
+    ///@name Interface
+    ///@{
+
+    /// Test the result of applying a control to the robot from a designated
+    /// starting configuration.
+    /// @param _start The starting configuration.
+    /// @param _control The control to apply.
+    /// @param _dt The length of time to apply the control.
+    /// @return The result of applying control _c to the robot for _dt seconds,
+    ///         starting from _start.
+    Cfg Test(const Cfg& _start, const Control& _control, const double _dt);
+
+    /// Test the result of applying a set of controls to the robot from a
+    /// designated starting configuration.
+    /// @param _start The starting configuration.
+    /// @param _controlSet The set of controls to apply.
+    /// @param _dt The length of time to apply the control.
+    /// @return The result of applying control _c to the robot for _dt seconds,
+    ///         starting from _start.
+    Cfg Test(const Cfg& _start, const ControlSet& _controlSet, const double _dt);
+
+    ///@}
+
+};
+
 
 #endif

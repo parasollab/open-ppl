@@ -172,7 +172,7 @@ Expand(const CfgType& _start, const CfgType& _end, CfgType& _newCfg,
         ticker <= nTicks) {
     previous = tick;
     tick += incr;
-    if(!env->InBounds(tick) || !(vc->IsValid(tick, _cdInfo, callee)))
+    if(!tick.InBounds(env) || !(vc->IsValid(tick, _cdInfo, callee)))
       collision = true; //return previous tick, as it is collision-free
     ++ticker;
   }

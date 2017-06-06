@@ -11,12 +11,12 @@
 
 Constraint*
 ConstraintFactory::
-operator()(ActiveMultiBody* const _m, XMLNode& _node) const {
+operator()(Robot* const _r, XMLNode& _node) const {
   if(_node.Name() == "CSpaceConstraint")
-    return new CSpaceConstraint(_m, _node);
+    return new CSpaceConstraint(_r, _node);
 
   else if(_node.Name() == "WorkspaceConstraint")
-    return new WorkspaceConstraint(_m, _node);
+    return new WorkspaceConstraint(_r, _node);
 
   else
     throw RunTimeException(WHERE, "Unrecognized constraint type '" +

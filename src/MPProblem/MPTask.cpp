@@ -29,7 +29,6 @@ MPTask(MPProblem* const _problem, XMLNode& _node) {
 
   // Get the robot by label.
   m_robot = _problem->GetRobot(m_robotLabel);
-  auto mb = m_robot->GetMultiBody();
 
   // Parse constraints.
   ConstraintFactory factory;
@@ -37,13 +36,13 @@ MPTask(MPProblem* const _problem, XMLNode& _node) {
   for(auto& typeNode : _node) {
     if(typeNode.Name() == "StartConstraints")
       for(auto& constraintNode : typeNode)
-        m_startConstraints.push_back(factory(mb, constraintNode));
+        m_startConstraints.push_back(factory(m_robot, constraintNode));
     else if(typeNode.Name() == "PathConstraints")
       for(auto& constraintNode : typeNode)
-        m_pathConstraints.push_back(factory(mb, constraintNode));
+        m_pathConstraints.push_back(factory(m_robot, constraintNode));
     else if(typeNode.Name() == "GoalConstraints")
       for(auto& constraintNode : typeNode)
-        m_goalConstraints.push_back(factory(mb, constraintNode));
+        m_goalConstraints.push_back(factory(m_robot, constraintNode));
   }
 }
 
@@ -202,8 +201,8 @@ MakeComposeBoundary(const std::vector<Constraint*>& _constraints) const noexcept
   if(_constraints.empty())
     return nullptr;
 
-  cerr << "Warning: MPTask is currently creating constraint boundaries from "
-       << "only the first constraint in each set!" << endl;
+  std::cout << "Warning: MPTask is currently creating constraint boundaries from "
+            << "only the first constraint in each set!" << endl;
   return _constraints.front()->GetBoundary();
 }
 

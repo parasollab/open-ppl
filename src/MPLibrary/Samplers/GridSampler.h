@@ -134,8 +134,7 @@ Sampler(CfgType& _cfg, const Boundary* const _boundary,
       _cfg[location.first] = location.second;
 
     // Is _cfg a valid configuration?
-    if(this->GetEnvironment()->InBounds(_cfg, _boundary) &&
-        vc->IsValid(_cfg, callee)) {
+    if(_cfg.InBounds(_boundary) and vc->IsValid(_cfg, callee)) {
       // Yes (sampler successful)
       _result.push_back(_cfg);
     }

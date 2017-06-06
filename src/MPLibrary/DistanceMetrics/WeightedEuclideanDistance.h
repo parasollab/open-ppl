@@ -91,10 +91,10 @@ WeightedEuclideanDistance<MPTraits>::
 Distance(const CfgType& _c1, const CfgType& _c2) {
   const CfgType diff = _c1 - _c2;
 
-  return m_posW * diff.LinearPosition().norm()
-       + m_rotW * diff.AngularPosition().norm()
-       + m_velW * diff.LinearVelocity().norm()
-       + m_avlW * diff.AngularVelocity().norm();
+  return m_posW * diff.GetLinearPosition().norm()
+       + m_rotW * diff.GetAngularPosition().norm()
+       + m_velW * diff.GetLinearVelocity().norm()
+       + m_avlW * diff.GetAngularVelocity().norm();
 }
 
 /*----------------------------------------------------------------------------*/

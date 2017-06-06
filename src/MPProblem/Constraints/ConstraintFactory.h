@@ -1,8 +1,8 @@
 #ifndef CONSTRAINT_FACTORY_H_
 #define CONSTRAINT_FACTORY_H_
 
-class ActiveMultiBody;
 class Constraint;
+class Robot;
 class XMLNode;
 
 
@@ -13,10 +13,10 @@ struct ConstraintFactory {
 
   /// Construct a constraint of the appropriate type from an XML node describing
   /// any constraint.
-  /// @param[in] _m The ActiveMultiBody to which the constraint applies.
+  /// @param[in] _r The robot to which the constraint applies.
   /// @param[in] _node The XML node to parse.
   /// @return A constraint for _m of the type/parameters described by _node.
-  Constraint* operator()(ActiveMultiBody* const _m, XMLNode& _node) const;
+  Constraint* operator()(Robot* const _r, XMLNode& _node) const;
 
 };
 

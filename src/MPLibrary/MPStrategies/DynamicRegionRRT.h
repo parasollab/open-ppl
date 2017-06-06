@@ -388,7 +388,6 @@ SelectDirection() {
   auto stats = this->GetStatClass();
 
   const Boundary* samplingBoundary{nullptr};
-  Environment* env = this->GetEnvironment();
   auto robot = this->GetTask()->GetRobot();
 
   // Randomly select a sampling region.
@@ -405,7 +404,7 @@ SelectDirection() {
   stats->StartClock("DynamicRegionRRT::SampleTarget");
   stats->IncStat("SampleTarget::Num");
   CfgType mySample(robot);
-  mySample.GetRandomCfg(env, samplingBoundary);
+  mySample.GetRandomCfg(samplingBoundary);
   stats->StopClock("DynamicRegionRRT::SampleTarget");
 
   // Bias sample velocity.
@@ -418,7 +417,7 @@ SelectDirection() {
     Vector3d velocity;
     do {
       mySample.GetRandomVelocity();
-      velocity = mySample.LinearVelocity().normalize();
+      velocity = mySample.GetLinearVelocity().normalize();
       if(this->m_debug)
         std::cout << "\tSampled velocity direction: " << velocity
                   << "\n\t\tDot product with bias: " << velocity * bias

@@ -20,15 +20,13 @@ enum class DofType;
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Default @cspace configuration definition.
+/// A point in configuration space.
 ///
-/// @ingroup Cfgs
-/// @details Cfg is the core class which defines a configuration, or a vector of
-///          values representing all the degrees of freedom of a robot. This is
-///          the abstraction of @cspace essentially, and thus Cfg is a point or
-///          vector inside of @cspace. Most mathematical operations are defined
-///          over this class, i.e., @c operator+ and @c operator-, reading and
-///          writing to streams, accessing, random sampling, etc.
+/// @details Each instance holds an array of values representing all the degrees
+///          of freedom of a robot. Translational DOFs represent the position of
+///          a reference point on the robot relative to the world origin. Angular
+///          and joint DOFs are normalized to the range [-1, 1), so this object
+///          can only reliably represent points in @cspace and not directions.
 ////////////////////////////////////////////////////////////////////////////////
 class Cfg {
 
@@ -37,13 +35,22 @@ class Cfg {
     ///@name Construction
     ///@{
 
-    // Static pointer for reading roadmaps. It should be set to the relevant
-    // robot before reading in the map file, and nullptr otherwise.
-    static Robot* inputRobot;
-
+    /// Construct a configuration for Cfg::inputRobot.
+    /// @details This constructor is provided for two cases: allocating storage
+    ///          for Cfgs without knowing the robot in advance, and reading in
+    ///          roadmaps. The robot pointer will be Cfg::inputRobot, which can
+    ///          be thought of as a variable default for the Cfg(Robot* const)
+    ///          constructor.
     explicit Cfg();
 
+    /// Construct a configuration for a given robot.
+    /// @param[in] _robot The robot this represents.
     explicit Cfg(Robot* const _robot);
+
+    /// Construct a configuration for a given robot at a specified point in
+    /// workspace.
+    /// @param[in] _v The workspace location of the robot's reference point.
+    /// @param[in] _robot The robot to represent.
     explicit Cfg(const Vector3d& _v, Robot* const _robot = nullptr);
 
     Cfg(const Cfg& _other);
@@ -57,8 +64,12 @@ class Cfg {
 
     Cfg& operator=(const Cfg& _cfg);
     Cfg& operator=(Cfg&& _cfg);
+
     Cfg& operator+=(const Cfg& _cfg);
     Cfg& operator-=(const Cfg& _cfg);
+    Cfg& operator*=(const Cfg& _cfg);
+    Cfg& operator/=(const Cfg& _cfg);
+
     Cfg& operator*=(const double _d);
     Cfg& operator/=(const double _d);
 
@@ -66,9 +77,13 @@ class Cfg {
     ///@name Arithmetic
     ///@{
 
+    Cfg operator-() const;
+
     Cfg operator+(const Cfg& _cfg) const;
     Cfg operator-(const Cfg& _cfg) const;
-    Cfg operator-() const;
+    Cfg operator*(const Cfg& _cfg) const;
+    Cfg operator/(const Cfg& _cfg) const;
+
     Cfg operator*(const double _d) const;
     Cfg operator/(const double _d) const;
 
@@ -89,10 +104,12 @@ class Cfg {
     /// Get the robot's multibody.
     ActiveMultiBody* GetMultiBody() const noexcept;
 
-    size_t DOF() const;
-    size_t PosDOF() const;
-    size_t OriDOF() const;
-    size_t JointDOF() const;
+    size_t DOF() const noexcept;
+    size_t PosDOF() const noexcept;
+    size_t OriDOF() const noexcept;
+    size_t JointDOF() const noexcept;
+
+    bool IsNonholonomic() const noexcept;
 
     ///@}
     ///@name DOF Accessors
@@ -119,20 +136,6 @@ class Cfg {
     /// Set the joint DOF data. Other DOFs will remain unchanged.
     void SetJointData(const vector<double>& _data);
 
-    /// Compute the normalized representation relative to the environment bounds.
-    /// @warning This is not a normalization to length 1!
-    /// @param[in] _b The boundary to normalize against.
-    /// @return  A copy of this with each DOF scaled from [_b.min, _b.max] to
-    ///          [-1, 1].
-    vector<double> GetNormalizedData(const Boundary* const _b) const;
-
-    /// Compute the standard representation from a form normalized relative to
-    /// the environment bounds. This is the inverse of GetNormalizedData.
-    /// @param[in] _data The normalized DOF data relative to _b.
-    /// @param[in] _b    The normalization boundary.
-    void SetNormalizedData(const vector<double>& _data,
-        const Boundary* const _b);
-
     /// Get the robot's reference point.
     Point3d GetPoint() const noexcept;
 
@@ -146,10 +149,15 @@ class Cfg {
     virtual double PositionMagnitude() const;
     virtual double OrientationMagnitude() const;
 
-    Vector3d LinearPosition() const;
-    Vector3d AngularPosition() const;
-    Vector3d LinearVelocity() const;
-    Vector3d AngularVelocity() const;
+    Vector3d GetLinearPosition() const;
+    Vector3d GetAngularPosition() const;
+    Vector3d GetLinearVelocity() const;
+    Vector3d GetAngularVelocity() const;
+
+    void SetLinearPosition(const Vector3d& _v);
+    void SetAngularPosition(const Vector3d& _v);
+    void SetLinearVelocity(const Vector3d& _v);
+    void SetAngularVelocity(const Vector3d& _v);
 
     ///@}
     ///@name Labels and Stats
@@ -171,11 +179,23 @@ class Cfg {
     ///@name Generation Methods
     ///@{
 
+    /// Set all DOFs to zero.
+    void Zero() noexcept;
+
+    /// Test if a configuration lies within a boundary and also within the
+    /// robot's c-space limits.
+    /// @param[in] _boundary The boundary to check.
+    /// @return True if the configuration places the robot inside both the
+    ///         boundary and its DOF limits.
+    bool InBounds(const Boundary* const _b) const noexcept;
+    /// @overload
+    bool InBounds(const Environment* const _env) const noexcept;
+
     /// Create a configuration where workspace robot's EVERY VERTEX
-    /// is guaranteed to lie within the environment specified bounding box. If
-    /// a cfg couldn't be found in the bbx, the program will abort.
+    /// is guaranteed to lie within the specified boundary. If
+    /// a cfg can't be found, the program will abort.
     /// The function will try a predefined number of times
-    virtual void GetRandomCfg(Environment* _env, const Boundary* const _b);
+    virtual void GetRandomCfg(const Boundary* const _b);
     virtual void GetRandomCfg(Environment* _env);
 
     /// Randomly sample the velocity for this configuration.
@@ -231,8 +251,32 @@ class Cfg {
     virtual void GetPositionOrientationFrom2Cfg(const Cfg& _pos, const Cfg& _ori);
 
     ///@}
+    ///@name C-Space Directions
+    ///@{
+
+    /// Compute the direction in C-Space between two Cfgs. This is equivalent
+    /// to subtraction without normalization.
+    /// @WARNING This function produces a non-normalized Cfg. Applying any Cfg
+    ///          arithmetic operations to it will then normalize it. We should
+    ///          eventually fix this by implementing Cfg's with a generic
+    ///          n-vector object that represents directions. Then, our Cfg
+    ///          arithmetic can normalize the values for point representation and
+    ///          return the non-normalized vector objects for directions.
+    /// @param[in] _target The destination point in C-Space.
+    /// @return The direction (_target - *this).
+    Cfg FindDirectionTo(const Cfg& _target) const;
+
+    ///@}
     ///@name I/O
     ///@{
+
+    // Static pointer for reading roadmaps. It should be set to the relevant
+    // robot before reading in the map file, and nullptr otherwise.
+    /// @TODO This is needed because we use stapl's graph reading function,
+    ///       which does not allow us to set the robot pointers on construction.
+    ///       Devise a better scheme for doing this that does not involve static
+    ///       data.
+    static Robot* inputRobot;
 
     /// Read a configuration from an input stream.
     /// @param _is The input stream to read from.
@@ -269,6 +313,9 @@ class Cfg {
     /// @param[in] _index The index of the DOF to normalize. If it is -1, all
     ///                   orientation DOFs will be normalized.
     virtual void NormalizeOrientation(const int _index = -1) noexcept;
+
+    /// Ensure that this Cfg respects the robot's velocity limits.
+    void EnforceVelocityLimits() noexcept;
 
     ///@}
 

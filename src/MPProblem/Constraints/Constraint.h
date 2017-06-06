@@ -1,15 +1,15 @@
 #ifndef CONSTRAINT_H_
 #define CONSTRAINT_H_
 
-class ActiveMultiBody;
 class Boundary;
 class Cfg;
+class Robot;
 
 
 ////////////////////////////////////////////////////////////////////////////////
 /// An abstract base class representing the required interface for a constraint
-/// on the state of a movable object. The Constraint interface requires plain
-/// jane Cfg's to ensure that they are usable by reactive agents.
+/// on the state of a robot. The Constraint interface requires plain jane Cfg's
+/// to ensure that they are usable by reactive agents.
 ////////////////////////////////////////////////////////////////////////////////
 class Constraint {
 
@@ -18,9 +18,9 @@ class Constraint {
     ///@name Construction
     ///@{
 
-    /// Create a constraint for a movable object.
-    /// @param _m The movable object to constrain.
-    Constraint(ActiveMultiBody* const _m);
+    /// Create a constraint for a robot.
+    /// @param _r The robot to constrain.
+    Constraint(Robot* const _r);
 
     virtual ~Constraint() = default;
 
@@ -32,7 +32,7 @@ class Constraint {
     /// this constraint.
     virtual const Boundary* GetBoundary() const = 0;
 
-    /// Determine whether a given configuration of the object satisfies this
+    /// Determine whether a given configuration of the robot satisfies this
     /// constraint.
     /// @param _c The configuration to check.
     /// @return   True if _c satisfies this constraint.
@@ -45,7 +45,7 @@ class Constraint {
     ///@name Internal State
     ///@{
 
-    ActiveMultiBody* const m_multibody; ///< The subject of this constraint.
+    Robot* const m_robot; ///< The subject of this constraint.
 
     ///@}
 

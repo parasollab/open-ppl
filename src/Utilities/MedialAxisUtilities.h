@@ -473,7 +473,7 @@ ExactCollisionInfo(CfgType& _cfg, CfgType& _clrCfg, const Boundary* const _b,
 
       tmpValidity = vcm->IsValid(tmpCfg, callee);
       tmpValidity = tmpValidity && !vcm->IsInsideObstacle(tmpCfg);
-      bool inBBX = env->InBounds(tmpCfg, _b);
+      bool inBBX = tmpCfg.InBounds(_b);
       if(!inBBX) {
         if(this->m_debug)
           cout << "ERROR: Fell out of BBX, error out... " << endl;
@@ -508,8 +508,7 @@ ApproxCollisionInfo(CfgType& _cfg, CfgType& _clrCfg,
   }
 
   // If in BBX, check validity to get _cdInfo, return false if not valid
-  Environment* env = this->GetEnvironment();
-  if(!env->InBounds(_cfg, _b)) {
+  if(!_cfg.InBounds(_b)) {
     if(this->m_debug)
       std::cout << fName + "returning false from not being in bounds initially"
                 << std::endl;
@@ -624,7 +623,7 @@ ApproxCollisionInfo(CfgType& _cfg, CfgType& _clrCfg,
       bool currValidity;//will get overwritten
 
       //Block the expensive validity check by first doing faster boundary check:
-      if(m_useBBX && !env->InBounds(rit->m_tick, _b)) {
+      if(m_useBBX && !rit->m_tick.InBounds(_b)) {
         //OOB, so we ALWAYS want to trigger a candidate, explicity force it:
         currValidity = !initValidity;
       }
@@ -664,7 +663,7 @@ ApproxCollisionInfo(CfgType& _cfg, CfgType& _clrCfg,
       bool currValidity = vcm->IsValid(cand.second, tmpInfo, callee);
       currValidity = currValidity && !currInside;
       if(m_useBBX)
-        currValidity = (currValidity && env->InBounds(cand.second, _b));
+        currValidity = (currValidity && cand.second.InBounds(_b));
       cout << " (currValidity = " << currValidity << ")" << endl;
     }
   }
@@ -689,7 +688,7 @@ ApproxCollisionInfo(CfgType& _cfg, CfgType& _clrCfg,
     CfgType lowCfg = rays[cand.first].m_incr * 0.0 + cand.second;
     bool lowValidity = vcm->IsValid(lowCfg, tmpInfo, callee);
     if(m_useBBX)
-      lowValidity = (lowValidity && env->InBounds(lowCfg, _b));
+      lowValidity = (lowValidity && lowCfg.InBounds(_b));
 
     if(this->m_debug)
       cout << " (lowValidity = " << lowValidity << ")" << endl;
@@ -697,7 +696,7 @@ ApproxCollisionInfo(CfgType& _cfg, CfgType& _clrCfg,
     CfgType highCfg = rays[cand.first].m_incr * 1.0 + cand.second;
     bool highValidity = vcm->IsValid(highCfg, tmpInfo, callee);
     if(m_useBBX)
-      highValidity = (highValidity && env->InBounds(highCfg, _b));
+      highValidity = (highValidity && highCfg.InBounds(_b));
 
     if(this->m_debug)
       cout << " (highValidity = " << highValidity << ")" << endl;
@@ -725,7 +724,7 @@ ApproxCollisionInfo(CfgType& _cfg, CfgType& _clrCfg,
       bool currValidity = vcm->IsValid(cand.second, tmpInfo, callee);
       currValidity = currValidity && !currInside;
       if(m_useBBX)
-        currValidity = (currValidity && env->InBounds(cand.second, _b));
+        currValidity = (currValidity && cand.second.InBounds(_b));
       cout << " (currValidity = " << currValidity << ")";
       cout << endl;
     }
@@ -768,7 +767,7 @@ ApproxCollisionInfo(CfgType& _cfg, CfgType& _clrCfg,
   CDInfo tmpInfo;
   //check that it's NOT in bounds or that the witness validity is different
   // than the validity initially:
-  if(!env->InBounds(_clrCfg, _b) ||
+  if(!_clrCfg.InBounds(_b) ||
       (initValidity != vcm->IsValid(_clrCfg, tmpInfo, callee))) {
     //do all of the stuff for a successful push:
     _cfg.m_clearanceInfo = _cdInfo;
@@ -1129,7 +1128,6 @@ PushCfgToMedialAxisMidpointRule(CfgType& _cfg, const Boundary* const _b) {
   if(this->m_debug)
     cout << callee << endl << "Cfg: " << _cfg << " eps: " << m_epsilon << endl;
 
-  Environment* env = this->GetEnvironment();
   auto vcm = this->GetValidityChecker(this->m_vcLabel);
 
   CDInfo tmpInfo;
@@ -1182,7 +1180,7 @@ PushCfgToMedialAxisMidpointRule(CfgType& _cfg, const Boundary* const _b) {
     //check validity and if in bounds:
     CDInfo tmpInfo;
     valid = vcm->IsValid(tickedCfg, tmpInfo, callee);
-    inBounds = env->InBounds(tickedCfg, _b);
+    inBounds = tickedCfg.InBounds(_b);
     if(!inBounds || !valid) {
       break;// we have found the second and final witness
     }
@@ -1207,7 +1205,7 @@ PushCfgToMedialAxisMidpointRule(CfgType& _cfg, const Boundary* const _b) {
 
   //Now we have to double check that it's valid, since it's possible that it's
   // not, especially with increase in complexity of environment/narrow passages
-  if(!env->InBounds(cfgMA, _b)
+  if(!cfgMA.InBounds(_b)
       || !vcm->IsValid(cfgMA, tmpInfo, callee)) {
     //It's either OOB or it's invalid, this pair of witness won't work for a
     // MA sample, so return false.

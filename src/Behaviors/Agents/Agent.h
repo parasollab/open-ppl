@@ -21,6 +21,8 @@ class Agent {
     Robot* const m_robot;              ///< The robot that this agent controls.
     mutable bool m_initialized{false}; ///< Is the agent initialized?
 
+    bool m_debug{false};               ///< Toggle debug messages.
+
     ///@}
 
   public:

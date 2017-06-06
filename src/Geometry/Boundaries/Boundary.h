@@ -27,6 +27,13 @@ class Boundary {
 
   public:
 
+    ///@name Local Types
+    ///@{
+
+    /// The types of space that can be modeled with boundaries.
+    enum Space {Workspace, CSpace};
+
+    ///@}
     ///@name Construction
     ///@{
 
@@ -42,8 +49,14 @@ class Boundary {
     ///@name Property Accessors
     ///@{
 
+    /// Get the space type.
+    virtual Space Type() const noexcept = 0;
+
     /// Get the name of the boundary type.
-    virtual std::string Type() const noexcept = 0;
+    virtual std::string Name() const noexcept = 0;
+
+    /// Get the dimension of this boundary.
+    virtual size_t GetDimension() const noexcept = 0;
 
     /// Get the longest distance contained within the boundary. Supports any
     /// Minkowski distance.
@@ -66,6 +79,9 @@ class Boundary {
 
     /// Get a random point inside the boundary.
     virtual std::vector<double> GetRandomPoint() const = 0;
+
+    /// Minimally push a sampled point so that it lies within the boundary.
+    virtual void PushInside(std::vector<double>& _sample) const noexcept = 0;
 
     ///@}
     ///@name Containment Testing
@@ -174,10 +190,10 @@ class Boundary {
 
 /*----------------------------------- I/O ------------------------------------*/
 
-ostream& operator<<(ostream& _os, const Boundary& _b);
+std::ostream& operator<<(std::ostream& _os, const Boundary& _b);
 
 /// @TODO Move impl from environment to here.
-//istream& operator>>(istream& _is, const Boundary& _b);
+//std::istream& operator>>(std::istream& _is, const Boundary& _b);
 
 /*----------------------------------------------------------------------------*/
 

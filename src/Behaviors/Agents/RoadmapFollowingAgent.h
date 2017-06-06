@@ -11,18 +11,17 @@
 /// This agent calls pmpl once and then follows the resulting path.
 ////////////////////////////////////////////////////////////////////////////////
 class RoadmapFollowingAgent : public Agent {
+
   public:
 
     ///@name Motion Planning Types
     ///@{
 
-    //Stolen from Roadmap.h:
-    typedef RoadmapGraph<CfgType, WeightType>     GraphType;
-    typedef typename GraphType::vertex_descriptor VID;
+    typedef RoadmapGraph<CfgType, WeightType>         GraphType;
+    typedef typename GraphType::vertex_descriptor     VID;
     typedef typename std::vector<VID>::const_iterator VIDIterator;
 
     ///@}
-
     ///@name Construction
     ///@{
 
@@ -35,7 +34,6 @@ class RoadmapFollowingAgent : public Agent {
     ///@{
 
     /// Call PMPL to create a path for the agent to follow.
-    /// @TODO can also have an istream version that reads in roadmap from file.
     virtual void Initialize() override;
 
     /// Follow the roadmap.
@@ -46,39 +44,47 @@ class RoadmapFollowingAgent : public Agent {
 
     ///@}
 
+  private:
+
+    ///@name Helpers
+    ///@{
+
+    /// Check that the simulated robot state matches the expected state from the
+    /// roadmap.
+    void CheckRobot() const;
+
+    /// Continue following the current controls.
+    void ApplyCurrentControls();
+
+    /// Set the next subgoal in the path.
+    void SetNextSubgoal();
+
+    /// Set the next set of controls to follow.
+    void SetNextControls();
+
+    /// Check if the path traversal is complete.
+    bool PathCompleted() const noexcept;
+
+    /// Stop following the roadmap and hard-stop the robot.
+    void Halt();
+
+    ///@}
+
   protected:
 
     ///@name Internal State
     ///@{
 
-    //I believe the MPSolution needs to be kept as well, since when deleting
-    // it, the Path we save will be thrown away too. This could probably be
-    // solved using a shared_ptr or something, but for now I'll do this.
-    MPSolution* m_solution{nullptr};
+    MPLibrary* m_library{nullptr};   ///< This agent's planning library.
 
-    //Path type seems necessary, as I need that list of VIDs to get edges
-    Path* m_roadmap{nullptr}; ///< The roadmap to follow
+    MPSolution* m_solution{nullptr}; ///< The solution with the roadmap to follow.
 
-    /// These are both similar measures, one is the iterator that is set to the
-    /// current vertex that we are on. The path index is just a counter so to
-    /// easily know the index of the vertex we are on.
-    VIDIterator m_currentVID{0};   ///< The path iterator that is set to current Cfg.
-    std::size_t m_currentVertexPathIndex{0};
+    VIDIterator m_currentSubgoal;    ///< The current subgoal in the path.
 
-    /// This is the number of Step() calls that the same control
-    /// (in m_delayControl) should be repeated.
-    std::size_t m_delayStepCount{0};
+    /// The number of steps left to repeat the current control(s).
+    size_t m_stepsRemaining{0};
 
-    /// m_delayControls is the set of all controls that should all be applied
-    /// to the robot on each m_delayStepCount Step. Hasn't yet been tested for
-    /// more than one control on an edge.
-    ControlSet m_delayControls;
-
-    /// A flag to determine whether the simulation has already before been
-    /// determined as completed (when reaching the end of the roadmap path)
-    bool m_simulationDone{false};
-
-    MPLibrary* m_library{nullptr}; ///< This agent's planning library.
+    const WeightType* m_edge{nullptr}; ///< The current edge being traversed.
 
     ///@}
 

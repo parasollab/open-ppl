@@ -20,12 +20,12 @@ class NBox {
 
     /// Construct an infinite box centered at the origin in _n dimensions.
     /// @param _n The number of dimensions.
-    NBox(const size_t _n);
+    explicit NBox(const size_t _n);
 
     /// Construct an infinite box with a designated center point.
     /// @param _center The center point, which is assumed to be of full
     ///                dimension.
-    NBox(const std::vector<double>& _center);
+    explicit NBox(const std::vector<double>& _center);
 
     virtual ~NBox() = default;
 
@@ -69,23 +69,27 @@ class NBox {
     void Translate(const std::vector<double>& _v) noexcept;
 
     ///@}
-    ///@name Testing
+    ///@name Point Testing
     ///@{
+    /// If the box and point have different dimensions, the missing values will
+    /// be assumed to be 0.
 
-    /// Test if a given point lies within the n-sphere.
+    /// Test if a given point lies within the box.
     /// @param _p The point to test.
-    /// @return True if _p lies within the n-sphere.
-    bool Contains(const std::vector<double>& _p) const;
+    /// @return True if _p lies within the box.
+    bool Contains(const std::vector<double>& _p) const noexcept;
 
     /// Compute the minimum distance to the box's surface from a given point.
+    /// This is bounding-box style, so clearance is positive if the point is
+    /// inside the box and negative if it is outside.
     /// @param _p The point of interest.
     /// @return The minimum distance from _p to the box's surface.
-    double Clearance(const std::vector<double>& _p) const;
+    double Clearance(const std::vector<double>& _p) const noexcept;
 
     /// Find the point on the box that is nearest to a given reference point.
     /// @param _p The reference point.
     /// @return The point on the surface that is nearest to _p.
-    std::vector<double> ClearancePoint(std::vector<double> _p) const;
+    std::vector<double> ClearancePoint(std::vector<double> _p) const noexcept;
 
     ///@}
     ///@name Sampling

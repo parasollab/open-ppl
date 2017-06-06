@@ -171,11 +171,10 @@ Sample(size_t _numNodes, size_t _maxAttempts,
     const Boundary* const _boundary,
     OutputIterator _result, OutputIterator _collision) {
 
-  Environment* env = this->GetEnvironment();
-
   for(size_t i = 0; i < _numNodes; ++i) {
     CfgType cfg(this->GetTask()->GetRobot());
-    cfg.GetRandomCfg(env, _boundary);
+    cfg.GetRandomCfg(_boundary);
+
     vector<CfgType> result;
     vector<CfgType> collision;
     //Terminate when node generated or attempts exhausted

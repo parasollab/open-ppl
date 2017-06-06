@@ -258,24 +258,21 @@ ComputeWorldTransformation(set<size_t>& _visited) const {
   if(_visited.find(m_index) != _visited.end())
     return m_transform;
 
-  // Otherwise, visit this link.
-  _visited.insert(m_index);
-
   // The transform is already correct if there are no backward connections
-  // (this is a base link) or if we have already computed it.
-  if(m_backwardConnections.empty() || m_transformCached)
-    return m_transform;
+  // (this is a base link) or if we have already computed it. Otherwise, compute
+  // the transform of this link from its backward connection.
+  if(!m_backwardConnections.empty() and !m_transformCached) {
+    const Connection& back = *m_backwardConnections[0];
+    auto& transform = const_cast<Transformation&>(m_transform);
+    transform =
+        back.GetPreviousBody()->ComputeWorldTransformation(_visited) *
+        back.GetTransformationToDHFrame() *
+        back.GetDHParameters().GetTransformation() *
+        back.GetTransformationToBody2();
+  }
 
-  // Otherwise, compute the transform of this link from its backward
-  // connection.
-  const Connection& back = *m_backwardConnections[0];
-  auto& transform = const_cast<Transformation&>(m_transform);
-  transform =
-      back.GetPreviousBody()->ComputeWorldTransformation(_visited) *
-      back.GetTransformationToDHFrame() *
-      back.GetDHParameters().GetTransformation() *
-      back.GetTransformationToBody2();
-
+  // Mark this link as visited.
+  _visited.insert(m_index);
   m_transformCached = true;
 
   return m_transform;

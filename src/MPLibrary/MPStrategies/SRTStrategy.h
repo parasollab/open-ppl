@@ -260,7 +260,7 @@ GenerateTrees() {
     CfgType cfg(this->GetTask()->GetRobot());
     do {
       cfg.GetRandomCfg(env);
-    } while(!env->InBounds(cfg) ||
+    } while(!cfg.InBounds(env) ||
         !vc->IsValid(cfg, "SRTStrategy::GenerateTrees"));
 
     // Create a new tree rooted at cfg.

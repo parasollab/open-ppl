@@ -98,11 +98,11 @@ Translate(const std::vector<double>& _v) noexcept {
   }
 }
 
-/*--------------------------------- Testing ----------------------------------*/
+/*------------------------------ Point Testing -------------------------------*/
 
 bool
 NBox::
-Contains(const std::vector<double>& _p) const {
+Contains(const std::vector<double>& _p) const noexcept {
   const size_t maxIndex = std::min(_p.size(), GetDimension());
   for(size_t i = 0; i < maxIndex; ++i)
     if(!m_range[i].Contains(_p[i]))
@@ -113,7 +113,7 @@ Contains(const std::vector<double>& _p) const {
 
 double
 NBox::
-Clearance(const std::vector<double>& _p) const {
+Clearance(const std::vector<double>& _p) const noexcept {
   double minClearance = std::numeric_limits<double>::max();
 
   const size_t maxIndex = std::min(_p.size(), GetDimension());
@@ -125,33 +125,43 @@ Clearance(const std::vector<double>& _p) const {
 
 std::vector<double>
 NBox::
-ClearancePoint(std::vector<double> _p) const {
-  // Ensure _p has full dimension.
-  if(_p.size() != GetDimension())
-    throw RunTimeException(WHERE, "The point and boundary must have the same "
-        "dimension for this function!");
+ClearancePoint(std::vector<double> _p) const noexcept {
+  // Only consider dimensions that are in both _p and this.
+  const size_t maxIndex = std::min(_p.size(), GetDimension());
+  auto point = _p;
+  point.resize(maxIndex, 0);
 
+  // Find the clearance in each dimension.
   double minClearance = numeric_limits<double>::max();
   size_t index = -1;
-  double val = std::nan("");
 
-  const size_t maxIndex = GetDimension();
   for(size_t i = 0; i < maxIndex; ++i) {
-    // Compute clearance in this dimension.
     const auto& r = m_range[i];
-    const double clearance = r.Clearance(_p[i]);
+    auto& val = point[i];
 
-    // If the clearance isn't better, continue.
-    if(clearance >= minClearance)
-      continue;
+    // Compute clearance in this dimension.
+    const double clearance = r.Clearance(val);
 
-    // Otherwise, the clearance point is the original point pushed to the closer
-    // of the two boundaries in this dimension.
-    index = i;
-    val = (_p[i] - r.min) < (r.max - _p[i]) ? r.min : r.max;
+    if(clearance < 0)
+      // _p lies outside the range in this dimension. use the closest endpoint.
+      val = r.ClearancePoint(val);
+
+    else if(clearance < minClearance) {
+      // _p lies inside the range in this dimension and is closer than previous
+      // best.
+      index = i;
+      minClearance = clearance;
+    }
   }
 
-  _p[index] = val;
+  // If at least one dimension of _p was inside the range, push _p to the
+  // boundary in the closest dimension.
+  if(index != size_t(-1))
+    point[index] = m_range[index].ClearancePoint(point[index]);
+
+  // Copy new values back to the original point.
+  std::copy(point.begin(), point.begin() + maxIndex, _p.begin());
+
   return _p;
 }
 

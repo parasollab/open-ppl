@@ -179,7 +179,7 @@ Sampler(CfgType& _cfg, const Boundary* const _boundary,
       cfg[j] = p[j];
 
     // Check if the new configuration is valid.
-    if(env->InBounds(cfg)) {
+    if(cfg.InBounds(env)) {
       if(vc->IsValid(cfg, callee)) {
         _result.push_back(cfg);
         return true;

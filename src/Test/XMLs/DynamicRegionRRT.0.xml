@@ -3,7 +3,16 @@
   <Problem>
     <Environment filename="../Envs/3D/3d.env" saveDofs="false"/>
     <Robot label="boxy" filename="../Envs/3D/boxy.robot"/>
-    <Query filename="../Envs/3D/3d.query"/>
+
+    <Task label="query" robot="boxy">
+      <StartConstraints>
+        <CSpaceConstraint point="0 0 0 0 0 0"/>
+      </StartConstraints>
+
+      <GoalConstraints>
+        <CSpaceConstraint point="20 5 10 0.2 0.8 0.5"/>
+      </GoalConstraints>
+    </Task>
   </Problem>
 
   <Library>

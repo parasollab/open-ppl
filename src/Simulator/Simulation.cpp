@@ -95,20 +95,14 @@ Step() {
     }
   }
 
-  // Step the simulation forward with a fixed timestep.
-  /// @TODO Synchronize this with the environment's time resolution.
-  static constexpr btScalar timestep = 2.f / 60.f;   // Advance by this much...
+  const double timestep = m_problem->GetEnvironment()->GetTimeRes();
 
-  //These were 1./60. and maxSubSteps was 2
-  //Right now, this is hardcoded and synced up with PMPL's resolution.
-  ///@TODO formally synchronize time resolution between Environment and Bullet.
-  static constexpr btScalar resolution = 2.f / 60.f; // Using tics this long...
-  static constexpr int maxSubSteps = 1;              // Up to this many ticks.
-  m_engine->Step(timestep, maxSubSteps, resolution);
-
-  // Step each Robot's agent.
+  // Step each Robot's agent to set the forces for the next step.
   for(size_t i = 0; i < m_problem->NumRobots(); ++i)
     m_problem->GetRobot(i)->Step(timestep);
+
+  // Step the simulation.
+  m_engine->Step(timestep);
 }
 
 /*------------------------ Visualization Interface ---------------------------*/
@@ -223,9 +217,12 @@ AddRobots() {
     auto robot = m_problem->GetRobot(i);
     auto multiBody = robot->GetMultiBody();
     auto bulletModel = m_engine->AddObject(multiBody);
+
+    robot->SetDynamicsModel(bulletModel);
+
     if(robot->IsCarlike())
       m_engine->CreateCarlikeCallback(bulletModel);
-    robot->SetDynamicsModel(bulletModel);
+
     this->add_drawable(new DrawableMultiBody(multiBody));
   }
 }

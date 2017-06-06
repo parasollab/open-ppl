@@ -296,10 +296,19 @@ class MPLibraryType final
 
   private:
 
+    ///@name Execution Helpers
+    ///@{
+
+    /// Execute a solver with the current problem, task, and solution.
+    /// @param _s The solver to execute.
+    void RunSolver(const Solver& _s);
+
+    ///@}
     ///@name Construction Helpers
     ///@{
 
-    void Initialize(); ///< Initialize all local method sets and data.
+    /// Initialize all algorithms in each method set.
+    void Initialize();
 
     /// Helper for parsing XML nodes.
     /// @param[in] _node The child node to be parsed.
@@ -344,14 +353,34 @@ class MPLibraryType final
 template <typename MPTraits>
 MPLibraryType<MPTraits>::
 MPLibraryType() {
-  Initialize();
-};
+  m_distanceMetrics = new DistanceMetricSet(this,
+      typename MPTraits::DistanceMetricMethodList(), "DistanceMetrics");
+  m_validityCheckers = new ValidityCheckerSet(this,
+      typename MPTraits::ValidityCheckerMethodList(), "ValidityCheckers");
+  m_neighborhoodFinders = new NeighborhoodFinderSet(this,
+      typename MPTraits::NeighborhoodFinderMethodList(), "NeighborhoodFinders");
+  m_samplers = new SamplerSet(this,
+      typename MPTraits::SamplerMethodList(), "Samplers");
+  m_localPlanners = new LocalPlannerSet(this,
+      typename MPTraits::LocalPlannerMethodList(), "LocalPlanners");
+  m_extenders = new ExtenderSet(this,
+      typename MPTraits::ExtenderMethodList(), "Extenders");
+  m_pathModifiers = new PathModifierSet(this,
+      typename MPTraits::PathModifierMethodList(), "PathModifiers");
+  m_connectors = new ConnectorSet(this,
+      typename MPTraits::ConnectorMethodList(), "Connectors");
+  m_metrics = new MetricSet(this,
+      typename MPTraits::MetricMethodList(), "Metrics");
+  m_mapEvaluators = new MapEvaluatorSet(this,
+      typename MPTraits::MapEvaluatorMethodList(), "MapEvaluators");
+  m_mpStrategies = new MPStrategySet(this,
+      typename MPTraits::MPStrategyMethodList(), "MPStrategies");
+}
 
 
 template <typename MPTraits>
 MPLibraryType<MPTraits>::
-MPLibraryType(const string& _filename) {
-  Initialize();
+MPLibraryType(const string& _filename) : MPLibraryType() {
   ReadXMLFile(_filename);
 }
 
@@ -378,18 +407,6 @@ void
 MPLibraryType<MPTraits>::
 SetMPProblem(MPProblem* _p) {
   m_problem = _p;
-
-  // Set the current MPProblem for all algorithms.
-  m_distanceMetrics->Initialize();
-  m_validityCheckers->Initialize();
-  m_neighborhoodFinders->Initialize();
-  m_samplers->Initialize();
-  m_localPlanners->Initialize();
-  m_extenders->Initialize();
-  m_pathModifiers->Initialize();
-  m_connectors->Initialize();
-  m_metrics->Initialize();
-  m_mapEvaluators->Initialize();
 
   // Ensure that the compiled CD methods are available for the bodies.
   auto& cdMethods = Body::m_cdMethods;
@@ -420,28 +437,16 @@ template <typename MPTraits>
 void
 MPLibraryType<MPTraits>::
 Initialize() {
-  m_distanceMetrics = new DistanceMetricSet(this,
-      typename MPTraits::DistanceMetricMethodList(), "DistanceMetrics");
-  m_validityCheckers = new ValidityCheckerSet(this,
-      typename MPTraits::ValidityCheckerMethodList(), "ValidityCheckers");
-  m_neighborhoodFinders = new NeighborhoodFinderSet(this,
-      typename MPTraits::NeighborhoodFinderMethodList(), "NeighborhoodFinders");
-  m_samplers = new SamplerSet(this,
-      typename MPTraits::SamplerMethodList(), "Samplers");
-  m_localPlanners = new LocalPlannerSet(this,
-      typename MPTraits::LocalPlannerMethodList(), "LocalPlanners");
-  m_extenders = new ExtenderSet(this,
-      typename MPTraits::ExtenderMethodList(), "Extenders");
-  m_pathModifiers = new PathModifierSet(this,
-      typename MPTraits::PathModifierMethodList(), "PathModifiers");
-  m_connectors = new ConnectorSet(this,
-      typename MPTraits::ConnectorMethodList(), "Connectors");
-  m_metrics = new MetricSet(this,
-      typename MPTraits::MetricMethodList(), "Metrics");
-  m_mapEvaluators = new MapEvaluatorSet(this,
-      typename MPTraits::MapEvaluatorMethodList(), "MapEvaluators");
-  m_mpStrategies = new MPStrategySet(this,
-      typename MPTraits::MPStrategyMethodList(), "MPStrategies");
+  m_distanceMetrics->Initialize();
+  m_validityCheckers->Initialize();
+  m_neighborhoodFinders->Initialize();
+  m_samplers->Initialize();
+  m_localPlanners->Initialize();
+  m_extenders->Initialize();
+  m_pathModifiers->Initialize();
+  m_connectors->Initialize();
+  m_metrics->Initialize();
+  m_mapEvaluators->Initialize();
 }
 
 /*---------------------------- XML Helpers -----------------------------------*/
@@ -581,36 +586,12 @@ template <typename MPTraits>
 void
 MPLibraryType<MPTraits>::
 Solve(MPProblem* _problem, MPTask* _task, MPSolution* _solution) {
+  SetMPProblem(_problem);
   m_task = _task;
   m_solution = _solution;
 
-  for(auto& solver : m_solvers) {
-    // Set the problem and initialize all algorithms.
-    SetMPProblem(_problem);
-
-    // Call solver
-    cout << "\n\nMPLibrary is solving with MPStrategyMethod labeled "
-         << solver.label << " using seed " << solver.seed << "." << endl;
-
-#ifdef _PARALLEL
-    SRand(solver.seed + get_location_id());
-#else
-    SRand(solver.seed);
-#endif
-
-    SetBaseFilename(GetMPProblem()->GetPath(solver.baseFilename));
-    GetStatClass()->SetAuxDest(GetBaseFilename());
-
-    // Initialize vizmo debug if there is a valid filename
-    if(solver.vizmoDebug)
-        VDInit(GetBaseFilename() + ".vd");
-
-    GetMPStrategy(solver.label)->operator()();
-
-    // Close vizmo debug if necessary
-    if(solver.vizmoDebug)
-      VDClose();
-  }
+  for(auto& solver : m_solvers)
+    RunSolver(solver);
 }
 
 
@@ -618,41 +599,50 @@ template <typename MPTraits>
 void
 MPLibraryType<MPTraits>::
 Solve(MPProblem* _problem, MPTask* _task) {
+  SetMPProblem(_problem);
   m_task = _task;
 
   for(auto& solver : m_solvers) {
-    // Set the problem and initialize all algorithms.
-    SetMPProblem(_problem);
-
     // Create storage for the solution.
     m_solution = new MPSolution(m_task->GetRobot());
 
-    // Call solver
-    cout << "\n\nMPLibrary is solving with MPStrategyMethod labeled "
-         << solver.label << " using seed " << solver.seed << "." << endl;
-
-#ifdef _PARALLEL
-    SRand(solver.seed + get_location_id());
-#else
-    SRand(solver.seed);
-#endif
-
-    SetBaseFilename(GetMPProblem()->GetPath(solver.baseFilename));
-    GetStatClass()->SetAuxDest(GetBaseFilename());
-
-    // Initialize vizmo debug if there is a valid filename
-    if(solver.vizmoDebug)
-        VDInit(GetBaseFilename() + ".vd");
-
-    GetMPStrategy(solver.label)->operator()();
-
-    // Close vizmo debug if necessary
-    if(solver.vizmoDebug)
-      VDClose();
+    RunSolver(solver);
 
     delete m_solution;
-    m_solution = nullptr;
   }
+
+  m_solution = nullptr;
+}
+
+
+template <typename MPTraits>
+void
+MPLibraryType<MPTraits>::
+RunSolver(const Solver& _solver) {
+  Initialize();
+
+  // Call solver
+  cout << "\n\nMPLibrary is solving with MPStrategyMethod labeled "
+       << _solver.label << " using seed " << _solver.seed << "." << endl;
+
+#ifdef _PARALLEL
+  SRand(_solver.seed + get_location_id());
+#else
+  SRand(_solver.seed);
+#endif
+
+  SetBaseFilename(GetMPProblem()->GetPath(_solver.baseFilename));
+  GetStatClass()->SetAuxDest(GetBaseFilename());
+
+  // Initialize vizmo debug if there is a valid filename
+  if(_solver.vizmoDebug)
+    VDInit(GetBaseFilename() + ".vd");
+
+  GetMPStrategy(_solver.label)->operator()();
+
+  // Close vizmo debug if necessary
+  if(_solver.vizmoDebug)
+    VDClose();
 }
 
 /*----------------------------------------------------------------------------*/

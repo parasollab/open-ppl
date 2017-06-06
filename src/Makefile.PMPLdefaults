@@ -14,7 +14,7 @@
 ################################################################################
 # Default system variables
 ################################################################################
-UTILS_DEF  = $(CD_DEF) $(CGAL_DEF)
+UTILS_DEF  = $(CD_DEF) $(STAPL_DEF) $(CGAL_DEF) $(BOOST_DEF) $(BULLET_DEF)
 UTILS_INCL = $(CD_INCL) $(TINYXML_INCL) $(MATHTOOL_INCL) $(MODELLOADER_INCL) \
 	     $(MPNN_INCL) $(TETGEN_INCL)
 UTILS_LIB  = $(CD_LIB) $(CGAL_LIB) $(TINYXML_LIB) $(MODELLOADER_LIB) \
@@ -228,6 +228,7 @@ BULLET_LIB  := -L$(BULLET_DIR)/build/install/lib \
                -lBulletInverseDynamics -lBulletDynamics -lBulletCollision \
 	       -lLinearMath -lConvexDecomposition
 BULLET_INCL := -I$(BULLET_DIR)/build/install/include/bullet
+BULLET_DEF  := -DBT_USE_DOUBLE_PRECISION
 
 BULLET_LIBFILE := $(BULLET_DIR)/build
 $(BULLET_LIBFILE):
@@ -269,10 +270,10 @@ SIM_LIBS := $(BULLET_LIB) $(GLVIS_LIBS) $(QT_LIBS) $(GL_LIBS) -lpthread
 
 SIM_OBJS := \
   $(PMPL_DIR)/sim_main.o \
-  Behaviors/Agents/Agent.o \
-  Behaviors/Agents/NullAgent.o \
   Behaviors/Agents/PathFollowingAgent.o \
   Behaviors/Agents/RoadmapFollowingAgent.o \
+  Behaviors/Agents/Agent.o \
+  Behaviors/Agents/NullAgent.o \
   Simulator/Simulation.o \
   Visualization/DrawableBody.o \
   Visualization/DrawableMultiBody.o
@@ -288,6 +289,7 @@ PMPL_LIBFILE := $(PMPL_DIR)/libobprm.a
 
 PMPL_OBJS := \
   Behaviors/Controllers/ControllerMethod.o \
+  Behaviors/Controllers/ControlSetGenerators.o \
   Behaviors/Controllers/PIDFeedback.o \
   Behaviors/Controllers/SimpleController.o \
   ConfigurationSpace/Cfg.o \
@@ -327,7 +329,6 @@ PMPL_OBJS := \
   MPProblem/Environment/Environment.o \
   MPProblem/Robot/Actuator.o \
   MPProblem/Robot/Control.o \
-  MPProblem/Robot/ControlGenerators.o \
   MPProblem/Robot/DynamicsModel.o \
   MPProblem/Robot/Robot.o \
   Simulator/BulletEngine.o \

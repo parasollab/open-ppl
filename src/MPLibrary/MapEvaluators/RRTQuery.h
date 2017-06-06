@@ -208,7 +208,7 @@ PerformSubQuery(const CfgType& _start, const CfgType& _goal) {
            << " from the goal." << endl;
   }
   else if(this->m_debug)
-    cout << "\tFailed to connect (goal distance is " << m_goalDist << ").\n";
+    cout << "\tFailed to connect (distance threshold is " << m_goalDist << ").\n";
 
   return success;
 }

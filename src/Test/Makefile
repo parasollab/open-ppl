@@ -5,7 +5,6 @@ endif
 ifndef Test
   Test = CfgTests
   #Test = ParallelCfgTests
-  #Test = ReachableVolumeTests
 endif
 
 test:

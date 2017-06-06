@@ -42,7 +42,7 @@ class WorkspaceConstraint : public Constraint {
     ///@name Construction
     ///@{
 
-    WorkspaceConstraint(ActiveMultiBody* const, XMLNode&);
+    WorkspaceConstraint(Robot* const, XMLNode&);
 
     virtual ~WorkspaceConstraint() = default;
 

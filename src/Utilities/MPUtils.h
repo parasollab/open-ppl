@@ -34,7 +34,7 @@ template<typename T>
 const T
 Epsilon(const T& _t1, const T& _t2) {
   static constexpr T tenEps = T(10) * std::numeric_limits<T>::epsilon();
-  return std::min(std::abs(_t1), std::abs(_t2)) * tenEps;
+  return std::abs(_t1 + _t2) * tenEps;
 }
 
 /*------------------------- Random Number Generation -------------------------*/

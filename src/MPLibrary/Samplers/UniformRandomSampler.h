@@ -88,52 +88,39 @@ bool
 UniformRandomSampler<MPTraits>::
 Sampler(CfgType& _cfg, const Boundary* const _boundary,
     vector<CfgType>& _result, vector<CfgType>& _collision) {
+  // Check containment within environment boundary.
+  const bool inBounds = _cfg.InBounds(this->GetEnvironment());
 
-  string callee(this->GetNameAndLabel() + "::SampleImpl()");
-  Environment* env = this->GetEnvironment();
+  // Check Validity.
   auto vcm = this->GetValidityChecker(m_vcLabel);
+  const std::string callee = this->GetNameAndLabel() + "::SampleImpl()";
 
-  if(this->m_debug)
-    VDClearAll();
+  const bool isValid = inBounds and vcm->IsValid(_cfg, callee);
 
-  //Is configuration within environment boundary?
-  bool inBBX = env->InBounds(_cfg);
+  // Store result.
+  if(isValid)
+    _result.push_back(_cfg);
+  else
+    _collision.push_back(_cfg);
+
+  // Debug.
   if(this->m_debug) {
-    cout << "_cfg::" << _cfg << endl;
-    cout << "InBoudary::" << inBBX << endl;
+    std::cout << "Sampled Cfg: " << _cfg
+              << "Boundary: " << *_boundary
+              << "\n\tIn bounds: " << inBounds
+              << "\n\tValidity:  " << isValid
+              << std::endl;
+
+    VDClearAll();
+    VDAddTempCfg(_cfg, isValid);
+    if(!inBounds)
+      VDComment("UniformSampling::Cfg outside of boundary");
+    else
+      VDComment("UniformSampling::Cfg " + std::string(isValid ? "" : "in") +
+          "valid");
   }
 
-  //Good. Now determine validity.
-  if(inBBX) {
-    bool isValid = vcm->IsValid(_cfg, callee);
-    if(this->m_debug) {
-      cout << "IsValid::" << isValid << endl;
-      VDAddTempCfg(_cfg, isValid);
-      if(isValid)
-        VDComment("UniformSampling::Cfg valid");
-      else
-        VDComment("UniformSampling::Cfg invalid");
-    }
-    //Record valid node and confirm successful generation.
-    if(isValid) {
-      if(this->m_debug)
-        cout << "Generated::" << _cfg << endl;
-      _result.push_back(_cfg);
-      return true;
-    }
-    //Otherwise, unsuccessful.
-    else {
-      _collision.push_back(_cfg);
-      return false;
-    }
-  }
-  //Sampled outside of boundary
-  else if(this->m_debug) {
-    cout << "Attempt outside of boundary" << endl;
-    VDAddTempCfg(_cfg, false);
-    VDComment("UniformSampling::Cfg outside of boundary");
-  }
-  return false;
+  return isValid;
 }
 
 /*----------------------------------------------------------------------------*/

@@ -177,9 +177,9 @@ StraightLine<MPTraits>::IsConnectedFunc(
     bool success = intermediate.GetIntermediate(_c1, _c2);
     if(_checkCollision){
       cdCounter++;
-      if(!env->InBounds(intermediate) ||
+      if(!intermediate.InBounds(env) ||
           !vc->IsValid(intermediate, callee)) {
-        if(env->InBounds(intermediate))
+        if(intermediate.InBounds(env))
           _col = intermediate;
         return false;
       }
@@ -245,8 +245,8 @@ StraightLine<MPTraits>::IsConnectedSLSequential(
     tick += incr;
     _cdCounter++;
     if(_checkCollision){
-      if(!env->InBounds(tick) || !vc->IsValid(tick, callee)) {
-        if(env->InBounds(tick))
+      if(!tick.InBounds(env) || !vc->IsValid(tick, callee)) {
+        if(tick.InBounds(env))
           _col = tick;
         CfgType negIncr = -incr;
         tick += negIncr;
@@ -310,8 +310,8 @@ StraightLine<MPTraits>::IsConnectedSLBinary(
 
     _cdCounter++;
 
-    if(!env->InBounds(midCfg) || !vc->IsValid(midCfg, callee) ) {
-      if(env->InBounds(midCfg))
+    if(!midCfg.InBounds(env) || !vc->IsValid(midCfg, callee) ) {
+      if(midCfg.InBounds(env))
         _col = midCfg;
       return false;
     }

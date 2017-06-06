@@ -68,6 +68,8 @@ class ActiveMultiBody : public MultiBody {
     ActiveMultiBody(const ActiveMultiBody&) = delete;            ///< No copy
     ActiveMultiBody& operator=(const ActiveMultiBody&) = delete; ///< No assign
 
+    virtual ~ActiveMultiBody() noexcept = default;
+
     ///@}
     ///@name MultiBody Info
     ///@{
@@ -161,22 +163,6 @@ class ActiveMultiBody : public MultiBody {
     /// @param _v Configuration DOF parameters
     void ConfigureRender(const vector<double>& _v);
 
-    /// Sample random configuration in boundary
-    /// @param[in] _b The sampling boundary to use.
-    vector<double> GetRandomCfg(const Boundary* const _b);
-
-    /// Get the DOF ranges for a given boundary.
-    /// @param[in] _b The boundary in question.
-    /// @return  A pair of configurations representing the minimum and maximum
-    ///          DOF values allowed within the boundary.
-    pair<vector<double>, vector<double>> GetCfgLimits(
-        const Boundary* const _b) const;
-
-    /// @param _cfg Configuration dofs
-    /// @param _b Workspace bounds
-    /// @return True if @p _cfg is inside physical robot constraints
-    bool InCSpace(const vector<double>& _cfg, const Boundary* const _b);
-
     /// @param[out] _result Polygonal Approximation
     void PolygonalApproximation(vector<Vector3d>& _result);
 
@@ -211,12 +197,15 @@ class ActiveMultiBody : public MultiBody {
     ///@{
 
     vector<shared_ptr<FreeBody>> m_freeBody; ///< All free body
+
     vector<DofType> m_dofTypes;              ///< DOF type of robot motions
     vector<DofInfo> m_dofInfo;               ///< DofInfo for each motion
+
     size_t m_baseIndex;                      ///< Free body index for base
     shared_ptr<FreeBody> m_baseBody;         ///< Body of base
     FreeBody::BodyType m_baseType;           ///< Type of base
     FreeBody::MovementType m_baseMovement;   ///< Type of movement for base
+
     vector<Joint> m_joints;                  ///< All Connections
 
     ///@}

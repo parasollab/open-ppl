@@ -1,6 +1,7 @@
 #include "Cfg.h"
 
 #include "Geometry/Bodies/ActiveMultiBody.h"
+#include "Geometry/Boundaries/CSpaceBoundingBox.h"
 #include "MPProblem/Environment/Environment.h"
 #include "MPProblem/Robot/Robot.h"
 #include "Utilities/MetricUtils.h"
@@ -134,6 +135,34 @@ operator-=(const Cfg& _cfg) {
 
 Cfg&
 Cfg::
+operator*=(const Cfg& _cfg) {
+  for(size_t i = 0; i < DOF(); ++i)
+    m_dofs[i] *= _cfg[i];
+  for(size_t i = 0; i < m_vel.size(); ++i)
+    m_vel[i] *= _cfg.m_vel[i];
+
+  NormalizeOrientation();
+  m_witnessCfg.reset();
+  return *this;
+}
+
+
+Cfg&
+Cfg::
+operator/=(const Cfg& _cfg) {
+  for(size_t i = 0; i < DOF(); ++i)
+    m_dofs[i] /= _cfg[i];
+  for(size_t i = 0; i < m_vel.size(); ++i)
+    m_vel[i] /= _cfg.m_vel[i];
+
+  NormalizeOrientation();
+  m_witnessCfg.reset();
+  return *this;
+}
+
+
+Cfg&
+Cfg::
 operator*=(const double _d) {
   for(size_t i = 0; i < DOF(); ++i)
     m_dofs[i] *= _d;
@@ -163,6 +192,21 @@ operator/=(const double _d) {
 
 Cfg
 Cfg::
+operator-() const {
+  Cfg result = *this;
+  for(size_t i = 0; i < DOF(); ++i)
+    result[i] *= -1;
+  for(size_t i = 0; i < m_vel.size(); ++i)
+    result.m_vel[i] *= -1;
+
+  result.NormalizeOrientation();
+  result.m_witnessCfg.reset();
+  return result;
+}
+
+
+Cfg
+Cfg::
 operator+(const Cfg& _cfg) const {
   Cfg result = *this;
   return result += _cfg;
@@ -179,16 +223,17 @@ operator-(const Cfg& _cfg) const {
 
 Cfg
 Cfg::
-operator-() const {
+operator*(const Cfg& _cfg) const {
   Cfg result = *this;
-  for(size_t i = 0; i < DOF(); ++i)
-    result[i] *= -1;
-  for(size_t i = 0; i < m_vel.size(); ++i)
-    result.m_vel[i] *= -1;
+  return result *= _cfg;
+}
 
-  result.NormalizeOrientation();
-  result.m_witnessCfg.reset();
-  return result;
+
+Cfg
+Cfg::
+operator/(const Cfg& _cfg) const {
+  Cfg result = *this;
+  return result /= _cfg;
 }
 
 
@@ -216,32 +261,18 @@ operator==(const Cfg& _cfg) const {
   if(m_robot != _cfg.m_robot)
     return false;
 
+  const Cfg delta = *this - _cfg;
+  const double tolerance = 100 * std::numeric_limits<double>::epsilon();
+
   // Check all the DOFs.
-  for(size_t i = 0; i < DOF(); ++i) {
-    const double eps = Epsilon(m_dofs[i], _cfg[i]);
-    switch(GetMultiBody()->GetDOFType(i)) {
-      //regular types map to manifold R thus have no "wrap around"
-      case DofType::Positional:
-      case DofType::Joint:
-        if(abs(m_dofs[i] - _cfg[i]) > eps)
-          return false;
-        break;
-      //rotational types map to manifold S thus have a "wrap around"
-      case DofType::Rotational:
-        if(abs(DirectedAngularDistance(m_dofs[i], _cfg[i])) > eps)
-          return false;
-        break;
-      default:
-        throw RunTimeException(WHERE, "Unknown joint type found");
-    }
-  }
+  for(size_t i = 0; i < DOF(); ++i)
+    if(std::abs(delta.m_dofs[i]) > tolerance)
+      return false;
 
   // Check the velocities.
-  for(size_t i = 0; i < m_vel.size(); ++i) {
-    const double eps = Epsilon(m_vel[i], _cfg.m_vel[i]);
-    if(std::abs(m_vel[i] - _cfg.m_vel[i]) > eps)
+  for(size_t i = 0; i < m_vel.size(); ++i)
+    if(std::abs(delta.m_vel[i]) > tolerance)
       return false;
-  }
 
   // If we're still here, the Cfgs are equal.
   return true;
@@ -258,29 +289,36 @@ operator!=(const Cfg& _cfg) const {
 
 size_t
 Cfg::
-DOF() const {
+DOF() const noexcept {
   return GetMultiBody()->DOF();
 }
 
 
 size_t
 Cfg::
-PosDOF() const {
+PosDOF() const noexcept {
   return GetMultiBody()->PosDOF();
 }
 
 
 size_t
 Cfg::
-OriDOF() const {
+OriDOF() const noexcept {
   return GetMultiBody()->OrientationDOF();
 }
 
 
 size_t
 Cfg::
-JointDOF() const {
+JointDOF() const noexcept {
   return GetMultiBody()->JointDOF();
+}
+
+
+bool
+Cfg::
+IsNonholonomic() const noexcept {
+  return GetRobot()->IsNonholonomic();
 }
 
 
@@ -387,38 +425,6 @@ SetJointData(const vector<double>& _data) {
 }
 
 
-vector<double>
-Cfg::
-GetNormalizedData(const Boundary* const _b) const {
-  pair<vector<double>, vector<double>> range = GetMultiBody()->GetCfgLimits(_b);
-  vector<double> normed;
-  for(size_t i = 0; i < DOF(); ++i) {
-    const double radius = (range.second[i] - range.first[i]) / 2.;
-    const double center = range.first[i] + radius;
-    normed.push_back((m_dofs[i] - center) / radius);
-  }
-  return move(normed);
-}
-
-
-void
-Cfg::
-SetNormalizedData(const vector<double>& _data, const Boundary* const _b) {
-  // Assert that we got the right number of DOFs.
-  if(_data.size() != DOF())
-    throw RunTimeException(WHERE, "Tried to set data for " +
-        std::to_string(_data.size()) + " DOFs, but robot has " +
-        std::to_string(DOF()) + " DOFs!");
-
-  pair<vector<double>, vector<double>> range = GetMultiBody()->GetCfgLimits(_b);
-  for(size_t i = 0; i < DOF(); ++i) {
-    const double radius = (range.second[i] - range.first[i]) / 2.;
-    const double center = range.first[i] + radius;
-    m_dofs[i] = _data[i] * radius + center;
-  }
-}
-
-
 Point3d
 Cfg::
 GetPoint() const noexcept {
@@ -516,7 +522,7 @@ OrientationMagnitude() const {
 
 Vector3d
 Cfg::
-LinearPosition() const {
+GetLinearPosition() const {
   Vector3d out;
   for(size_t i = 0; i < PosDOF(); ++i)
     out[i] = m_dofs[i];
@@ -526,7 +532,10 @@ LinearPosition() const {
 
 Vector3d
 Cfg::
-AngularPosition() const {
+GetAngularPosition() const {
+  /// @BUG This isn't right - the DOFs are specified in Euler angles, so we need
+  ///      to convert to that and then make a rotation vector (rodrigues?) from
+  ///      that.
   const size_t i = PosDOF();
   switch(OriDOF()) {
     case 1:
@@ -541,7 +550,7 @@ AngularPosition() const {
 
 Vector3d
 Cfg::
-LinearVelocity() const {
+GetLinearVelocity() const {
   if(m_vel.empty())
     return Vector3d();
 
@@ -554,7 +563,7 @@ LinearVelocity() const {
 
 Vector3d
 Cfg::
-AngularVelocity() const {
+GetAngularVelocity() const {
   if(m_vel.empty())
     return Vector3d();
 
@@ -566,6 +575,54 @@ AngularVelocity() const {
       return Vector3d(m_vel[i], m_vel[i + 1], m_vel[i + 2]);
     default:
       return Vector3d();
+  }
+}
+
+
+void
+Cfg::
+SetLinearPosition(const Vector3d& _v) {
+  for(size_t i = 0; i < PosDOF(); ++i)
+    m_dofs[i] = _v[i];
+}
+
+
+void
+Cfg::
+SetAngularPosition(const Vector3d& _v) {
+  throw RunTimeException(WHERE, "Not yet implemented - need a conversion "
+      "function for Euler angles <-> rotation vector.");
+}
+
+
+void
+Cfg::
+SetLinearVelocity(const Vector3d& _v) {
+  if(m_vel.empty())
+    return;
+
+  for(size_t i = 0; i < PosDOF(); ++i)
+    m_vel[i] = _v[i];
+}
+
+
+void
+Cfg::
+SetAngularVelocity(const Vector3d& _v) {
+  if(m_vel.empty())
+    return;
+
+  const size_t i = PosDOF();
+  switch(OriDOF()) {
+    case 1:
+      m_vel[i] = _v[2];
+      return;
+    case 3:
+      m_vel[i] = _v[0];
+      m_vel[i + 1] = _v[1];
+      m_vel[i + 2] = _v[2];
+      return;
+    default:;
   }
 }
 
@@ -623,30 +680,99 @@ IncrementStat(const std::string& _stat, const double _value) noexcept {
 
 void
 Cfg::
-GetRandomCfg(Environment* _env, const Boundary* const _b) {
+Zero() noexcept {
   m_witnessCfg.reset();
-  size_t tries = 100;
-  while(tries-- > 0) {
-    m_dofs = GetMultiBody()->GetRandomCfg(_b);
-    if(_env->InBounds(*this, _b)) {
-      GetRandomVelocity();
-      return;
+
+  for(auto& v : m_dofs)
+    v = 0;
+  for(auto& v : m_vel)
+    v = 0;
+}
+
+
+bool
+Cfg::
+InBounds(const Boundary* const _b) const noexcept {
+  return GetRobot()->GetCSpace()->InBoundary(*this)
+      and _b->InBoundary(*this);
+}
+
+
+bool
+Cfg::
+InBounds(const Environment* const _env) const noexcept {
+  return InBounds(_env->GetBoundary());
+}
+
+
+void
+Cfg::
+GetRandomCfg(const Boundary* const _b) {
+  // Zero the cfg and fetch both sampling spaces.
+  Zero();
+  auto cspace = GetRobot()->GetCSpace();
+  auto vspace = GetRobot()->GetVSpace(); // Null for holonomic robots.
+
+  const size_t dof = DOF();
+
+  // Determine how many DOF and velocity values will be generated from _b.
+  size_t numDof = std::min(_b->GetDimension(), dof),
+         numVel = _b->GetDimension() > dof ? _b->GetDimension() - dof : 0;
+
+  // If _b is a workspace boundary, use no more values than boundary size.
+  if(_b->Type() == Boundary::Space::Workspace) {
+    numDof = std::min(numDof, PosDOF());
+    numVel = 0;
+  }
+
+  for(size_t tries = 100; tries > 0; --tries) {
+    // Generate a point in the boundary.
+    auto sample = _b->GetRandomPoint();
+
+    // Copy generated DOF values to m_dof.
+    for(size_t i = 0; i < numDof; ++i)
+      m_dofs[i] = sample[i];
+
+    // For each DOF that was not generated inside the sampling boundary,
+    // generate a value from the robot's c-space.
+    for(size_t i = numDof; i < dof; ++i)
+      m_dofs[i] = cspace->GetRange(i).Sample();
+
+    if(vspace) {
+      // Copy generated velocity values to m_vel.
+      for(size_t j = 0; j < numVel; ++j)
+        m_vel[j] = sample[j + dof];
+
+      // For each velocity that was not generated inside the sampling boundary,
+      // generate a value from the robot's velocity space.
+      for(size_t j = numVel; j < dof; ++j)
+        m_vel[j] = vspace->GetRange(j).Sample();
+
+      EnforceVelocityLimits();
     }
+
+    // The result is valid if it satisfies all three boundaries.
+    if(_b->InBoundary(*this)
+        and cspace->InBoundary(m_dofs)
+        and (!vspace or vspace->InBoundary(m_vel)))
+      return;
   }
 
   // throw error message and some helpful statistics
   ostringstream oss;
-  oss << "GetRandomCfg not able to find anything in boundary: "
-      << *_b << ". Robot radius is "
-      << GetMultiBody()->GetBoundingSphereRadius() << ".";
-  throw PMPLException("Boundary too small", WHERE, oss.str());
+  oss << "GetRandomCfg could not generate a sample.\n"
+      << "\nRobot C-Space: " << *cspace
+      << "\nRobot V-Space: " << *vspace
+      << "\nSampling boundary: " << *_b
+      << "\nRobot radius: " << GetMultiBody()->GetBoundingSphereRadius() << ".";
+  throw PMPLException("Sampling Failure", WHERE, oss.str());
 }
 
 
 void
 Cfg::
 GetRandomCfg(Environment* _env) {
-  GetRandomCfg(_env, _env->GetBoundary());
+  GetRandomCfg(_env->GetBoundary());
 }
 
 
@@ -657,59 +783,8 @@ GetRandomVelocity() {
   if(m_vel.empty())
     return;
 
-  const double maxLinearVel = GetRobot()->GetMaxLinearVelocity();
-  const double maxAngularVel = GetRobot()->GetMaxAngularVelocity();
-
-  // Sample the base velocity.
-  const auto baseType = GetMultiBody()->GetBaseType();
-  const auto mvmtType = GetMultiBody()->GetBaseMovementType();
-
-  auto dofRand = []() {return 2. * DRand() - 1.;};
-
-  switch(baseType) {
-    case FreeBody::BodyType::Fixed:
-      break;
-    case FreeBody::BodyType::Planar:
-      {
-        Vector2d l(dofRand);
-        l = l.normalize() * DRand() * maxLinearVel;
-        m_vel[0] = l[0];
-        m_vel[1] = l[1];
-
-        // If the base rotates, also sample its angular velocity.
-        if(mvmtType == FreeBody::MovementType::Rotational)
-          m_vel[2] = dofRand() * maxAngularVel;
-      }
-      break;
-    case FreeBody::BodyType::Volumetric:
-      {
-        Vector3d l(dofRand);
-        l = l.normalize() * DRand() * maxLinearVel;
-        m_vel[0] = l[0];
-        m_vel[1] = l[1];
-        m_vel[2] = l[2];
-
-        // If the base rotates, also sample its angular velocity.
-        if(mvmtType == FreeBody::MovementType::Rotational) {
-          Vector3d a(dofRand);
-          a = a.normalize() * DRand() * maxAngularVel;
-          m_vel[3] = a[0];
-          m_vel[4] = a[1];
-          m_vel[5] = a[2];
-        }
-      }
-      break;
-    default:
-      throw RunTimeException(WHERE, "Unrecognized base type.");
-  }
-
-  const size_t firstJointIndex = DOF() - JointDOF();
-  const size_t lastJointIndex = DOF();
-  for(size_t i = firstJointIndex; i != lastJointIndex; ++i) {
-    /// @TODO Extract max joint velocity from robot properly.
-    const double maxJointVelocity = 1;
-    m_vel[i] = dofRand() * maxJointVelocity;
-  }
+  m_vel = GetRobot()->GetVSpace()->GetRandomPoint();
+  EnforceVelocityLimits();
 }
 
 
@@ -818,9 +893,28 @@ GetPositionOrientationFrom2Cfg(const Cfg& _pos, const Cfg& _ori) {
   m_witnessCfg.reset();
 }
 
+/*--------------------------- C-Space Directions -----------------------------*/
+
+Cfg
+Cfg::
+FindDirectionTo(const Cfg& _target) const {
+  Cfg output = _target;
+  output.m_witnessCfg.reset();
+
+  for(size_t i = 0; i < DOF(); ++i)
+    output.m_dofs[i] -= m_dofs[i];
+
+  if(!m_vel.empty())
+    for(size_t i = 0; i < DOF(); ++i)
+      output.m_vel[i] -= m_vel[i];
+
+  return output;
+}
+
 /*----------------------------------- I/O ------------------------------------*/
 
 Robot* Cfg::inputRobot = nullptr;
+
 
 void
 Cfg::
@@ -892,6 +986,7 @@ Write(ostream& _os) const {
     throw RunTimeException(WHERE, "Failed to write to file.");
 }
 
+
 void
 Cfg::
 PrintRobotCfgComparisonInfo(
@@ -940,6 +1035,35 @@ NormalizeOrientation(const int _index) noexcept {
     // orientation index
     m_dofs[_index] = Normalize(m_dofs[_index]);
   }
+}
+
+
+void
+Cfg::
+EnforceVelocityLimits() noexcept {
+  if(m_vel.empty())
+    return;
+
+  // First push the velocity vector into the robot's velocity space.
+  GetRobot()->GetVSpace()->PushInside(m_vel);
+
+  // Ensure that the linear velocity is not greater than the max.
+  auto linear = GetLinearVelocity();
+  const double maxLinearVel = GetRobot()->GetMaxLinearVelocity();
+  const double linearVel = linear.norm();
+
+  if(linearVel > maxLinearVel)
+    for(size_t i = 0; i < PosDOF(); ++i)
+      m_vel[i] *= maxLinearVel / linearVel;
+
+  // Ensure that the angular velocity is not greater than the max.
+  auto angular = GetAngularVelocity();
+  const double maxAngularVel = GetRobot()->GetMaxAngularVelocity();
+  const double angularVel = angular.norm();
+
+  if(angularVel > maxAngularVel)
+    for(size_t i = PosDOF(); i < OriDOF(); ++i)
+      m_vel[i] *= maxAngularVel / angularVel;
 }
 
 /*----------------------------------------------------------------------------*/

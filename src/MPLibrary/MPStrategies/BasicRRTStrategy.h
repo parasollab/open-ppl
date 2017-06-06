@@ -325,7 +325,7 @@ Initialize() {
       CfgType root(this->GetTask()->GetRobot());
       do {
         root.GetRandomCfg(env);
-      } while(!env->InBounds(root) || !vc->IsValid(root, "BasicRRTStrategy"));
+      } while(!root.InBounds(env) || !vc->IsValid(root, "BasicRRTStrategy"));
 
       VID rootVID = g->AddVertex(root);
       m_trees.push_back(vector<VID>(1, rootVID));

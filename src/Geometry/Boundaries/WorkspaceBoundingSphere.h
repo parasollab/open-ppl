@@ -31,11 +31,15 @@ class WorkspaceBoundingSphere : public AbstractBoundingSphere {
     ///@name Property Accessors
     ///@{
 
-    virtual std::string Type() const noexcept override;
+    virtual Boundary::Space Type() const noexcept override;
+
+    virtual std::string Name() const noexcept override;
 
     ///@}
     ///@name Containment Testing
     ///@{
+
+    using Boundary::InBoundary;
 
     virtual bool InBoundary(const Cfg& _cfg) const override;
 

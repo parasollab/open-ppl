@@ -584,7 +584,7 @@ BinarySearch(const Boundary* const _boundary,
     auto vc = this->GetValidityChecker(m_vcLabel);
     CDInfo cdInfo;
     string callee = this->GetNameAndLabel() + "::BinS";
-    bool cfgFree = env->InBounds(higher)
+    bool cfgFree = higher.InBounds(env)
       && vc->IsValid(higher, cdInfo, callee)
       && !vc->IsInsideObstacle(higher);
 

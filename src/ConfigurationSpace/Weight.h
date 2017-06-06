@@ -71,7 +71,7 @@ class DefaultWeight {
     double GetWeight() const noexcept;
     void SetWeight(const double _w) noexcept;
 
-    void SetControl(const Control& _c) noexcept; /// Wrapper for SetControlSet()
+    void SetControl(const Control& _c) noexcept;
     const ControlSet& GetControlSet() const noexcept;
     ControlSet& GetControlSet() noexcept;
     void SetControlSet(const ControlSet& _c) noexcept;
@@ -84,7 +84,7 @@ class DefaultWeight {
     void SetClearance(const double _c) noexcept;
 
     // The number of timesteps that the local plan on this edge cares about.
-    std::size_t GetTimeSteps() const noexcept;
+    size_t GetTimeSteps() const noexcept;
     void SetTimeSteps(std::size_t _steps) noexcept;
 
 
@@ -125,17 +125,18 @@ class DefaultWeight {
     ///@name Internal State
     ///@{
 
-    std::string m_lpLabel;
+    std::string m_lpLabel;   ///< Label of local planner that built this edge.
 
-    double m_weight;
-    std::vector<CfgType> m_intermediates;
-    ControlSet m_controls;
+    double m_weight;         ///< The edge length.
+    std::vector<CfgType> m_intermediates; ///< Intermediate configurations.
 
     int m_checkedMult;
     bool m_hasClearance;
     double m_clearance;
 
-    std::size_t m_timeSteps;
+    // For nonholonomic robots.
+    ControlSet m_controls;   ///< The controls used.
+    size_t m_timeSteps;      ///< The number of timesteps to apply the controls.
 
     ///@}
 

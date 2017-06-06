@@ -112,8 +112,15 @@ struct Range final {
   /// distance to a boundary value, and will be negative if the test value falls
   /// outside the range.
   /// @param _val The value to test.
+  /// @return The distance of _val from the nearest endpoint.
   template <typename U>
   T Clearance(const U& _val) const noexcept;
+
+  /// Find the range endpoint that is closest to a target value.
+  /// @param _val The target value.
+  /// @return The endpoint of this that is closest to _val.
+  template <typename U>
+  T ClearancePoint(const U& _val) const noexcept;
 
   /// Sample the range for a random contained value with uniform probability.
   T Sample() const noexcept;
@@ -193,6 +200,21 @@ Clearance(const U& _val) const noexcept {
       "unsigned ranges as the return would be negative if the test value "
       "lies outside the range.");
   return std::min(_val - min, max - _val);
+}
+
+
+template <typename T>
+template <typename U>
+inline
+T
+Range<T>::
+ClearancePoint(const U& _val) const noexcept {
+  static_assert(!std::is_unsigned<T>::value, "Can't compute clearance for "
+      "unsigned ranges as the return would be negative if the test value "
+      "lies outside the range.");
+  const T distToMin = std::abs(min - _val),
+          distToMax = std::abs(max - _val);
+  return distToMin < distToMax ? min : max;
 }
 
 

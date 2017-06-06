@@ -189,7 +189,7 @@ TransformAtS<MPTraits>::IsConnectedOneWay(
     for(auto I = sequence.begin() + 1; I != sequence.end() - 1; I++)
     { // _c1 and _c2 not double checked
       cdCounter++;
-      if(env->InBounds(*I)) {
+      if(I->InBounds(env)) {
         if(!vcm->IsValid(*I, callee)) {
           _col = *I;
           connected = false;

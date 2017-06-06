@@ -79,7 +79,6 @@ Sampler(CfgType& _cfg, const Boundary* const _boundary,
     vector<CfgType>& _result, vector<CfgType>& _collision) {
 
   string callee(this->GetNameAndLabel() + "::SampleImpl()");
-  Environment* env = this->GetEnvironment();
   auto vc = this->GetValidityChecker(m_vcLabel);
   auto dm = this->GetDistanceMetric(m_dmLabel);
   auto robot = this->GetTask()->GetRobot();
@@ -95,8 +94,7 @@ Sampler(CfgType& _cfg, const Boundary* const _boundary,
   if(m_useBoundary) {
     //If _cfg is valid configuration extend rays in opposite directions
     //at length Gaussian d/2
-    if(env->InBounds(_cfg, _boundary) &&
-        vc->IsValid(_cfg, callee)) {
+    if(_cfg.InBounds(_boundary) and vc->IsValid(_cfg, callee)) {
       CfgType mid = _cfg, incr(robot), cfg1(robot);
       incr.GetRandomRay(fabs(GaussianDistribution(m_d, m_d))/2, dm);
       cfg1 = mid - incr;
@@ -104,15 +102,13 @@ Sampler(CfgType& _cfg, const Boundary* const _boundary,
         cout << "cfg1::" << cfg1 << endl;
 
       //If cfg1 is invalid (including Bbox) after adjustment, create cfg2
-      if(!env->InBounds(cfg1, _boundary) ||
-          !vc->IsValid(cfg1, callee)) {
+      if(!cfg1.InBounds(_boundary) or !vc->IsValid(cfg1, callee)) {
         CfgType cfg2 = mid + incr;
         if(this->m_debug)
           cout << "cfg2::" << cfg2 << endl;
 
         //If cfg2 also invalid, node generation successful
-        if(!env->InBounds(cfg2, _boundary) ||
-            !vc->IsValid(cfg2, callee)) {
+        if(!cfg2.InBounds(_boundary) or !vc->IsValid(cfg2, callee)) {
           generated = true;
           if(this->m_debug)
             cout << "Generated::" << _cfg << endl;
@@ -133,11 +129,10 @@ Sampler(CfgType& _cfg, const Boundary* const _boundary,
       }
       //If both cfg1 and cfg2 invalid, create mid and generate node
       //successfully if mid is valid
-      if(!env->InBounds(cfg2, _boundary) ||
-          !vc->IsValid(cfg2, callee)) {
+      if(!cfg2.InBounds(_boundary) or !vc->IsValid(cfg2, callee)) {
         CfgType mid(robot);
         mid.WeightedSum(cfg1, cfg2, 0.5);
-        if(env->InBounds(mid, _boundary) && (vc->IsValid(mid, callee))) {
+        if(mid.InBounds(_boundary) and vc->IsValid(mid, callee)) {
           generated = true;
           if(this->m_debug)
             cout << "Generated::" << mid << endl;

@@ -58,19 +58,42 @@ Step(const double _dt) {
   if(m_pathIndex >= m_path.size())
     return;
 
-  // Get the current configuration.
-  Cfg current = m_robot->GetDynamicsModel()->GetSimulatedState();
+  if(m_debug)
+    std::cout << "Approaching waypoint " << m_pathIndex << " / "
+              << m_path.size() - 1 << ".\n";
 
-  // Check if we've reached it. Advance the path index until the next subgoal is
-  // at least .5 units away.
+  // Get the current configuration.
+  const Cfg current = m_robot->GetDynamicsModel()->GetSimulatedState();
+
+  // We consider the robot to have reached the next subgoal if it is within a
+  // threshold distance. Advance the path index until the next subgoal is
+  // at least one threshold away.
   auto dm = m_library->GetDistanceMetric("euclidean");
-  while(dm->Distance(current, m_path[m_pathIndex]) < .5
-      && m_pathIndex < m_path.size())
+  const double threshold = .5;
+
+  double distance = dm->Distance(current, m_path[m_pathIndex]);
+
+  if(m_debug)
+    std::cout << "\tDistance from current configuration: "
+              << distance << "/" << threshold
+              << std::endl;
+
+  while(distance < threshold and m_pathIndex < m_path.size()) {
+    if(m_debug)
+      std::cout << "\tReached waypoint " << m_pathIndex << " at "
+                << distance << "/" << threshold
+                << std::endl;
+
     ++m_pathIndex;
+    distance = dm->Distance(current, m_path[m_pathIndex]);
+  }
 
   // If we hit the end, return.
-  if(m_pathIndex >= m_path.size())
+  if(m_pathIndex >= m_path.size()) {
+    if(m_debug)
+      std::cout << "Reached the end of the path." << std::endl;
     return;
+  }
 
   // Otherwise, execute the control that is nearest to the desired force.
   auto bestControl = m_robot->GetController()->operator()(current,

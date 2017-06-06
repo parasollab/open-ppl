@@ -43,7 +43,11 @@ class TetrahedralBoundary : public Boundary {
     ///@name Property Accessors
     ///@{
 
-    virtual std::string Type() const noexcept override;
+    virtual Boundary::Space Type() const noexcept override;
+
+    virtual std::string Name() const noexcept override;
+
+    virtual size_t GetDimension() const noexcept override;
 
     virtual double GetMaxDist(const double _r1 = 2., const double _r2 = .5)
         const override;
@@ -57,6 +61,8 @@ class TetrahedralBoundary : public Boundary {
     ///@{
 
     virtual std::vector<double> GetRandomPoint() const override;
+
+    virtual void PushInside(std::vector<double>& _sample) const noexcept override;
 
     ///@}
     ///@name Containment Testing

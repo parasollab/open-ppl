@@ -4,6 +4,6 @@
 /*--------------------------------- Construction -----------------------------*/
 
 Constraint::
-Constraint(ActiveMultiBody* const _m) : m_multibody(_m) { }
+Constraint(Robot* const _r) : m_robot(_r) { }
 
 /*----------------------------------------------------------------------------*/

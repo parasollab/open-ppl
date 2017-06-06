@@ -3,7 +3,7 @@
 
 #include "ControllerMethod.h"
 
-class Cfg;
+#include <limits>
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -19,7 +19,14 @@ class SimpleController : public ControllerMethod {
     /// Construct a simple controller.
     /// @param[in] _r The robot to control.
     /// @param[in] _gain The direct error gain.
-    SimpleController(Robot* const _r, const double _gain);
+    /// @param[in] _max  The maximum force to request.
+    SimpleController(Robot* const _r, const double _gain,
+        const double _max = std::numeric_limits<double>::infinity());
+
+    /// Construct a simple controller from an XML node.
+    /// @param[in] _r The robot to control.
+    /// @param[in] _node The XML node to parse.
+    SimpleController(Robot* const _r, XMLNode& _node);
 
     virtual ~SimpleController() = default;
 
@@ -37,7 +44,8 @@ class SimpleController : public ControllerMethod {
     ///@name Internal State
     ///@{
 
-    const double m_gain; ///< The proportional error gain.
+    double m_gain; ///< The proportional error gain.
+    double m_max;  ///< The maximum force to exert.
 
     ///@}
 

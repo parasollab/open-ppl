@@ -5,10 +5,16 @@
 
 #include "MPProblem/Robot/Control.h"
 #include "MPProblem/Robot/DynamicsModel.h"
+#include "Behaviors/Controllers/ControllerMethod.h"
 
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Extender for nonholonomic robots.
+///
+/// @TODO Currently this method requires the robot's controller to have a discrete
+///       control set. We should re-write this class so that it asks the
+///       controller to determine the control, and let all of the details be
+///       handled in the ControllerMethod classes.
 ///
 /// @ingroup Extenders
 ////////////////////////////////////////////////////////////////////////////////
@@ -204,7 +210,7 @@ ExtendBestControl(const CfgType& _start, const CfgType& _end, CfgType& _new,
 
   // Get the set of controls.
   auto robot = _start.GetRobot();
-  auto controls = robot->GetControlSet();
+  auto controls = robot->GetController()->GetControlSet();
 
   // Find the best control.
   double bestDistance = numeric_limits<double>::infinity();
@@ -245,13 +251,13 @@ ExtendRandomControl(const CfgType& _start, const CfgType& _end, CfgType& _new,
     LPOutput<MPTraits>& _lp, const size_t _steps) const {
   // Get a random control.
   auto robot = _start.GetRobot();
-  auto controls = robot->GetControlSet();
+  auto controls = robot->GetController()->GetControlSet();
   const size_t controlIndex = LRand() % controls->size();
 
-  Control c = (*controls)[controlIndex];
+  const Control& randomControl = (*controls)[controlIndex];
 
   // Apply the control.
-  return ApplyControl(_start, _end, _new, _lp, _steps, c);
+  return ApplyControl(_start, _end, _new, _lp, _steps, randomControl);
 }
 
 
@@ -282,17 +288,18 @@ ApplyControl(const CfgType& _start, const CfgType& _end, CfgType& _new,
   // a) We collide
   // b) We've done it _steps times
   double distance = 0;
-  for(size_t i = 0; i < _steps; ++i) {
+  size_t i = 0;
+  for(; i < _steps; ++i) {
     // Advance from the last known good cfg.
     CfgType temp = dynamicsModel->Test(_new, _control, dt);
 
     // Quit if we collided.
-    if(!env->InBounds(temp) or !vc->IsValid(temp, "KinodynamicExtender"))
+    if(!temp.InBounds(env) or !vc->IsValid(temp, "KinodynamicExtender"))
       break;
 
     // Update distance, intermediates, and last known good cfg.
     distance += dm->Distance(_new, temp);
-    if(i > 0)
+    if(i > 0 and i < _steps)
       _lp.m_intermediates.push_back(_new);
     _new = temp;
   }
@@ -301,13 +308,14 @@ ApplyControl(const CfgType& _start, const CfgType& _end, CfgType& _new,
   _lp.AddIntermediatesToWeights(true);
   _lp.m_edge.first.SetWeight(distance);
   _lp.m_edge.first.SetControl(_control);
-  _lp.m_edge.first.SetTimeSteps(_steps);
+  _lp.m_edge.first.SetTimeSteps(i);
 
 
   const bool valid = distance >= this->m_minDist;
   if(this->m_debug)
     std::cout << "\t\tExtension was " << (valid ? "valid" : "invalid") << "."
-              << "\n\t\tExtended " << distance << " >= " << this->m_minDist
+              << "\n\t\tExtended " << distance
+              << (valid ? " >= " : " < ") << this->m_minDist
               << " units." << std::endl;
 
   this->GetStatClass()->StopClock("KinodynamicExtender::ApplyControl");

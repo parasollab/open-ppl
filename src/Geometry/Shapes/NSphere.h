@@ -20,14 +20,14 @@ class NSphere {
     /// Construct an n-sphere at the origin with a given dimension and radius.
     /// @param _n The dimension of the n-sphere.
     /// @param _r The sphere radius (infinite by default).
-    NSphere(const size_t _n,
+    explicit NSphere(const size_t _n,
         const double _r = std::numeric_limits<double>::max());
 
     /// Construct an n-sphere with a given center point and radius.
     /// @param _c The center point of the n-sphere, which is assumed to be of
     ///           full dimension.
     /// @param _r The sphere radius (infinite by default).
-    NSphere(const std::vector<double>& _center,
+    explicit NSphere(const std::vector<double>& _center,
         const double _r = std::numeric_limits<double>::max());
 
     virtual ~NSphere() = default;
@@ -57,23 +57,27 @@ class NSphere {
     void Translate(const std::vector<double>& _v) noexcept;
 
     ///@}
-    ///@name Testing
+    ///@name Point Testing
     ///@{
+    /// If the sphere and point have different dimensions, the missing values
+    /// will be assumed to be 0.
 
     /// Test if a given point lies within the n-sphere.
     /// @param _p The point to test.
     /// @return True if _p lies within the n-sphere.
-    bool Contains(const std::vector<double>& _p) const;
+    bool Contains(const std::vector<double>& _p) const noexcept;
 
     /// Compute the minimum distance to the sphere's surface from a given point.
+    /// This is bounding-sphere style, so clearance is positive if the point is
+    /// inside the sphere and negative if it is outside.
     /// @param _p The point of interest.
     /// @return The minimum distance from _p to the sphere's surface.
-    double Clearance(std::vector<double> _p) const;
+    double Clearance(std::vector<double> _p) const noexcept;
 
     /// Find the point on the sphere that is nearest to a given reference point.
     /// @param _p The reference point.
     /// @return The point on the surface that is nearest to _p.
-    std::vector<double> ClearancePoint(std::vector<double> _p) const;
+    std::vector<double> ClearancePoint(std::vector<double> _p) const noexcept;
 
     ///@}
     ///@name Sampling

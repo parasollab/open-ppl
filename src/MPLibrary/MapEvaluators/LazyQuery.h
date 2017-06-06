@@ -403,7 +403,7 @@ NodeEnhance() {
     enhance.SetLabel("Enhance", true);
 
     // If enchancement cfg is in bounds, add it to the roadmap and connect.
-    if(this->GetEnvironment()->InBounds(enhance)) {
+    if(enhance.InBounds(this->GetEnvironment())) {
       VID newVID = roadmap->GetGraph()->AddVertex(enhance);
       for(auto& label : this->m_ncLabels)
         this->GetConnector(label)->Connect(roadmap, newVID);

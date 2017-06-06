@@ -14,6 +14,7 @@ class Agent;
 class btMultiBody;
 class Boundary;
 class ControllerMethod;
+class CSpaceBoundingBox;
 class DynamicsModel;
 class MPProblem;
 class XMLNode;
@@ -29,10 +30,6 @@ class XMLNode;
 ///               only in simulations.
 ///   @arg Actuators: The robot's motors/effectors. Translates control commands
 ///                   into generalized forces.
-///   @arg ControlSet: The discrete set of controls that the robot can use, if
-///                    any.
-///   @arg ControlSpace: The continuous space of controls that the robot can use,
-///                      if any.
 ///   @arg Controller: The robot's low-level controller, which determines what
 ///                    control should be applied to move from point to point.
 ///   @arg DynamicsModel: Simulation model of the robot. Represents the robot in
@@ -48,20 +45,15 @@ class Robot {
 
   MPProblem* const m_problem;              ///< The owning problem object.
 
+  std::string m_label;                     ///< The robot's unique label.
+
   ActiveMultiBody* m_multibody{nullptr};   ///< Robot's geometric representation.
 
   std::string m_agentLabel;                ///< Agent type label.
   Agent* m_agent{nullptr};                 ///< High-level decision-making agent.
 
-
-  /// m_actuators is a map between string actuator labels, and the pointer to
-  /// the actuator itself. Due to the map, labels are doubly stored: once
-  /// in the map as the key, and once in the Actuator object itself. This is
-  /// done becuase we desire a constant-time accessing of actuators, given a
-  /// string key, and the Actuator must hold its own label.
   std::unordered_map<std::string, Actuator*> m_actuators; ///< Actuators.
-  ControlSet* m_controlSet{nullptr};       ///< Discrete control set, if any.
-  ControlSpace* m_controlSpace{nullptr};   ///< Continuous control space, if any.
+
   ControllerMethod* m_controller{nullptr}; ///< Low-level controller.
 
   bool m_nonholonomic{false};              ///< Is the robot nonholonomic?
@@ -71,7 +63,8 @@ class Robot {
   double m_maxLinearVelocity{10};          ///< Max linear velocity.
   double m_maxAngularVelocity{1};          ///< Max angular velocity.
 
-  std::string m_label;                     ///< The robot's unique label.
+  CSpaceBoundingBox* m_cspace{nullptr};    ///< The robot's configuration space.
+  CSpaceBoundingBox* m_vspace{nullptr};    ///< The robot's velocity space.
 
   ///@}
 
@@ -80,10 +73,16 @@ class Robot {
     ///@name Construction
     ///@{
 
-    Robot(MPProblem* const _p, XMLNode& _node, const Boundary* const _b);
+    /// Construct a robot from an XML node.
+    /// @param[in] _p The owning MPProblem.
+    /// @param[in] _node The XML node to parse.
+    Robot(MPProblem* const _p, XMLNode& _node);
 
-    Robot(MPProblem* const _p, ActiveMultiBody* _mb, const std::string& _label,
-        const Boundary* const _b);
+    /// Construct a robot from a multibody.
+    /// @param[in] _p The owning MPProblem.
+    /// @param[in] _label The unique label for this robot.
+    Robot(MPProblem* const _p, ActiveMultiBody* const _mb,
+        const std::string& _label);
 
     virtual ~Robot() noexcept;
 
@@ -95,29 +94,39 @@ class Robot {
     ///@{
 
     /// Parse an XML robot file.
-    /// @param _filename The file name.
-    /// @param _b The problem boundary.
-    void ReadXMLFile(const std::string& _filename, const Boundary* const _b);
+    /// @param[in] _filename The file name.
+    void ReadXMLFile(const std::string& _filename);
 
     /// Parse a multibody file describing this robot.
-    /// @param _filename The file name.
-    /// @param _b The problem boundary.
-    void ReadMultibodyFile(const std::string& _filename,
-        const Boundary* const _b);
+    /// @param[in] _filename The file name.
+    void ReadMultibodyFile(const std::string& _filename);
+
+    /// Compute the configuration and velocity spaces for this robot.
+    void InitializePlanningSpaces();
 
     ///@}
 
   public:
 
+    ///@name Planning Interface
+    ///@{
+
+    /// Get the configuration space boundary for this robot.
+    const CSpaceBoundingBox* GetCSpace() const noexcept;
+
+    /// Get the velocity space boundary for this robot.
+    const CSpaceBoundingBox* GetVSpace() const noexcept;
+
+    ///@}
     ///@name Simulation Interface
     ///@{
 
     /// Execute a simulation step: update the percept model, have the agent make
     /// a decision, and send the resulting controls to the actuators.
-    /// @param _dt The timestep length.
+    /// @param[in] _dt The timestep length.
     void Step(const double _dt);
 
-    /// Enable the Robot's agent to access the problem data.
+    /// Get the MPProblem which owns this robot.
     MPProblem* GetMPProblem() const noexcept;
 
     ///@}
@@ -144,12 +153,6 @@ class Robot {
     /// Access the robot's control structures. The robot will take ownership of
     /// these and delete them when necessary.
 
-    ControlSet* GetControlSet() noexcept;
-    void SetControlSet(ControlSet* const _c) noexcept;
-
-    ControlSpace* GetControlSpace() noexcept;
-    void SetControlSpace(ControlSpace* const _c) noexcept;
-
     ControllerMethod* GetController() noexcept;
     void SetController(ControllerMethod* const _c) noexcept;
 
@@ -172,7 +175,7 @@ class Robot {
     void SetDynamicsModel(btMultiBody* const _m);
 
     ///@}
-    ///@name Other
+    ///@name Other Properties
     ///@{
 
     /// Check if the robot is nonholonomic.
@@ -181,11 +184,13 @@ class Robot {
     /// Check if the robot is car-like.
     bool IsCarlike() const noexcept;
 
+    /// Get the maximum translational velocity for this robot.
     double GetMaxLinearVelocity() const noexcept;
 
+    /// Get the maximum angular velocity for this robot.
     double GetMaxAngularVelocity() const noexcept;
 
-    /// Get the unique label for this instance.
+    /// Get the unique label for this robot.
     const std::string& GetLabel() const noexcept;
 
     ///@}

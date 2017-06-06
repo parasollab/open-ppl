@@ -20,9 +20,16 @@ Clone() const {
 
 /*--------------------------- Property Accessors -----------------------------*/
 
-std::string
+Boundary::Space
 WorkspaceBoundingBox::
 Type() const noexcept {
+  return Boundary::Space::Workspace;
+}
+
+
+std::string
+WorkspaceBoundingBox::
+Name() const noexcept {
   return "WorkspaceBoundingBox";
 }
 

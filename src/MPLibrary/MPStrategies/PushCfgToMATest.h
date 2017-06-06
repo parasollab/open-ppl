@@ -180,7 +180,7 @@ Iterate() {
 
     if(!m_attemptInvalidSamples) {
       while(!initiallyValid) {
-        cfg.GetRandomCfg(env, boundary);
+        cfg.GetRandomCfg(boundary);
         initiallyValid = vcm->IsValid(cfg, tmpInfo, callee);
       }
     }

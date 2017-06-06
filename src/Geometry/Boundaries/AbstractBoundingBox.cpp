@@ -16,6 +16,13 @@ AbstractBoundingBox(const std::vector<double>& _center) : NBox(_center) { }
 
 /*---------------------------- Property Accessors ----------------------------*/
 
+size_t
+AbstractBoundingBox::
+GetDimension() const noexcept {
+  return NBox::GetDimension();
+}
+
+
 double
 AbstractBoundingBox::
 GetMaxDist(const double _r1, const double _r2) const {
@@ -53,6 +60,14 @@ GetRandomPoint() const {
   return NBox::Sample();
 }
 
+
+void
+AbstractBoundingBox::
+PushInside(std::vector<double>& _sample) const noexcept {
+  if(!NBox::Contains(_sample))
+    _sample = NBox::ClearancePoint(_sample);
+}
+
 /*----------------------------- Containment Testing --------------------------*/
 
 bool
@@ -75,10 +90,9 @@ AbstractBoundingBox::
 GetClearancePoint(const Vector3d& _p) const {
   const size_t maxIndex = std::min(size_t(3), NBox::GetDimension());
 
-  std::vector<double> input;
-  input.reserve(maxIndex);
+  std::vector<double> input(maxIndex);
   for(size_t i = 0; i < maxIndex; ++i)
-    input.push_back(_p[i]);
+    input[i] = _p[i];
 
   auto p = NBox::ClearancePoint(input);
   return Vector3d{p[0], p[1], NBox::GetDimension() > 2 ? p[2] : 0};
@@ -147,6 +161,12 @@ void
 AbstractBoundingBox::
 Write(ostream& _os) const {
   _os << static_cast<const NBox&>(*this);
+}
+
+
+std::ostream&
+operator<<(std::ostream& _os, const AbstractBoundingBox& _b) {
+  return _os << static_cast<const Boundary&>(_b);
 }
 
 /*----------------------------------------------------------------------------*/

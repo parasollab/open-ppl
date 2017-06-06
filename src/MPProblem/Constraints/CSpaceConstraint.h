@@ -2,6 +2,7 @@
 #define C_SPACE_CONSTRAINT_H_
 
 #include <cstddef>
+#include <iostream>
 #include <map>
 
 #include "Constraint.h"
@@ -20,7 +21,7 @@ class CSpaceConstraint : public Constraint {
     ///@name Construction
     ///@{
 
-    CSpaceConstraint(ActiveMultiBody* const, XMLNode&);
+    CSpaceConstraint(Robot* const, XMLNode&);
 
     virtual ~CSpaceConstraint() = default;
 
@@ -51,6 +52,12 @@ class CSpaceConstraint : public Constraint {
     ///@{
 
     CSpaceBoundingBox m_bbx;   ///< The C-Space bounding box for this constraint.
+
+    ///@}
+    ///@name Debugging
+    ///@{
+
+    friend std::ostream& operator<<(std::ostream&, const CSpaceConstraint&);
 
     ///@}
 

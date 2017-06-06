@@ -67,14 +67,14 @@ Translate(const std::vector<double>& _v) noexcept {
 
 bool
 NSphere::
-Contains(const std::vector<double>& _p) const {
+Contains(const std::vector<double>& _p) const noexcept {
   return Clearance(_p) >= 0;
 }
 
 
 double
 NSphere::
-Clearance(std::vector<double> _p) const {
+Clearance(std::vector<double> _p) const noexcept {
   const size_t maxIndex = std::min(_p.size(), GetDimension());
   for(size_t i = 0; i < maxIndex; ++i)
     _p[i] -= m_center[i];
@@ -84,21 +84,27 @@ Clearance(std::vector<double> _p) const {
 
 std::vector<double>
 NSphere::
-ClearancePoint(std::vector<double> _p) const {
-  // Ensure _p has full dimension.
-  if(_p.size() != GetDimension())
-    throw RunTimeException(WHERE, "The point and boundary must have the same "
-        "dimension for this function!");
+ClearancePoint(std::vector<double> _p) const noexcept {
+  // Only consider dimensions that are in both _p and this.
+  const size_t maxIndex = std::min(_p.size(), GetDimension());
+  auto point = _p;
+  point.resize(maxIndex, 0);
 
-  // Find the vector from m_center to _p.
-  const size_t maxIndex = GetDimension();
+  // Transform point to the coordinate frame at the sphere's center.
   for(size_t i = 0; i < maxIndex; ++i)
-    _p[i] -= m_center[i];
+    point[i] -= m_center[i];
 
-  // Scale the vector to length m_radius.
-  const double scale = m_radius / nonstd::magnitude<double>(_p);
-  for(auto& v : _p)
-    v *= scale;
+  // Find the scaling factor that places point on the sphere's boundary.
+  const double scale = m_radius / nonstd::magnitude<double>(point);
+
+  // Scale the values in point and return to original coordinate frame.
+  for(size_t i = 0; i < maxIndex; ++i) {
+    point[i] *= scale;
+    point[i] += m_center[i];
+  }
+
+  // Copy the modified values back to the original point.
+  std::copy(point.begin(), point.begin() + maxIndex, _p.begin());
 
   return _p;
 }

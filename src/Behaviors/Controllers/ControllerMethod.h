@@ -7,12 +7,15 @@
 
 class Cfg;
 class Robot;
+class XMLNode;
 
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Controllers determine the best control needed to move a robot from one
 /// configuration to another. They require the standard Cfg as the planning space
 /// representation because that's what we can support in simulation.
+///
+/// @TODO Implement simultaneous use of controls from more than one actuator.
 ////////////////////////////////////////////////////////////////////////////////
 class ControllerMethod {
 
@@ -21,9 +24,16 @@ class ControllerMethod {
     ///@name Construction
     ///@{
 
+    /// Construct a controller for a given robot.
+    /// @param _r The robot to control.
     ControllerMethod(Robot* const _r);
 
-    virtual ~ControllerMethod() = default;
+    /// Construct a controller for a given robot from an XML node.
+    /// @param _r The robot to control.
+    /// @param _node The XML node to read parameters from.
+    ControllerMethod(Robot* const _r, XMLNode& _node);
+
+    virtual ~ControllerMethod();
 
     ///@}
     ///@name Interface
@@ -37,6 +47,17 @@ class ControllerMethod {
     /// @return The best available control for steering from _current to _target.
     virtual Control operator()(const Cfg& _current, const Cfg& _target,
         const double _dt);
+
+    /// Get the discrete set of controls that this controller can use, if any.
+    /// @return The discrete set of controls for this controller, or null if it
+    ///         uses a continuous space(s) of controls.
+    ControlSet* GetControlSet() noexcept;
+
+    /// Set a discrete set of controls for this controller to use. This limits
+    /// the controller to a subset of all possible controls accepted by a
+    /// robot's actuators.
+    /// @param _c The control set to use.
+    void SetControlSet(ControlSet* const _c) noexcept;
 
     ///@}
 
@@ -81,8 +102,11 @@ class ControllerMethod {
     ///@name Internal State
     ///@{
 
-    Robot* const m_robot; ///< The robot that owns this controller.
-    bool m_debug{true };  ///< Show debug messages?
+    Robot* const m_robot; ///< The owning robot object.
+
+    ControlSet* m_controls{nullptr}; ///< The discrete controls, if any.
+
+    bool m_debug{false};  ///< Show debug messages?
 
     ///@}
 

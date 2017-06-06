@@ -5,6 +5,18 @@
 #include "nonstd/io.h"
 
 
+/*------------------------------ Construction --------------------------------*/
+
+Control::
+Control() {
+}
+
+
+Control::
+Control(Actuator* const _actuator, const Signal& _signal)
+  : actuator(_actuator), signal(_signal) {
+}
+
 /*--------------------------- Simulation Interface ---------------------------*/
 
 std::vector<double>
@@ -76,7 +88,7 @@ std::ostream&
 operator<<(std::ostream& _os, const Control& _c) {
   if(_c.signal.empty())
     return _os;
-  _os << _c.actuator->GetLabel() << " ";
+  _os << (_c.actuator ? _c.actuator->GetLabel() : "coast") << " ";
   return _os << nonstd::print_container(_c.signal);
 }
 

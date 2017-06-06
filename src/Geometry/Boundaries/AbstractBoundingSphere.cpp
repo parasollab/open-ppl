@@ -18,6 +18,13 @@ AbstractBoundingSphere(const std::vector<double>& _center, const double _radius)
 
 /*---------------------------- Property Accessors ----------------------------*/
 
+size_t
+AbstractBoundingSphere::
+GetDimension() const noexcept {
+  return NSphere::GetDimension();
+}
+
+
 double
 AbstractBoundingSphere::
 GetMaxDist(const double _r1, const double _r2) const {
@@ -48,6 +55,14 @@ std::vector<double>
 AbstractBoundingSphere::
 GetRandomPoint() const {
   return NSphere::Sample();
+}
+
+
+void
+AbstractBoundingSphere::
+PushInside(std::vector<double>& _sample) const noexcept {
+  if(!NSphere::Contains(_sample))
+    _sample = NSphere::ClearancePoint(_sample);
 }
 
 /*----------------------------- Containment Testing --------------------------*/
@@ -117,6 +132,12 @@ void
 AbstractBoundingSphere::
 Write(ostream& _os) const {
   _os << static_cast<const NSphere&>(*this);
+}
+
+
+std::ostream&
+operator<<(std::ostream& _os, const AbstractBoundingSphere& _b) {
+  return _os << static_cast<const Boundary&>(_b);
 }
 
 /*----------------------------------------------------------------------------*/

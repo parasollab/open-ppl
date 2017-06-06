@@ -3,6 +3,7 @@
 #include "Geometry/Bodies/ActiveMultiBody.h"
 #include "Geometry/Bodies/FreeBody.h"
 #include "Geometry/Boundaries/Range.h"
+#include "MPProblem/Robot/Robot.h"
 #include "Utilities/IOUtils.h"
 #include "Utilities/PMPLExceptions.h"
 #include "Utilities/XMLNode.h"
@@ -13,16 +14,18 @@
 /*--------------------------------- Construction -----------------------------*/
 
 WorkspaceConstraint::
-WorkspaceConstraint(ActiveMultiBody* const _m, XMLNode& _node) : Constraint(_m) {
+WorkspaceConstraint(Robot* const _r, XMLNode& _node) : Constraint(_r) {
   throw RunTimeException(WHERE, "Not yet implemented");
 
   // Parse the label for the part we need to constrain.
   std::string partLabel = _node.Read("part", true, "", "The label for the robot "
       "part to constrain.");
 
+  auto mb = m_robot->GetMultiBody();
+
   // Find the part.
-  for(size_t i = 0; i < m_multibody->NumFreeBody(); ++i) {
-    auto body = m_multibody->GetFreeBody(i);
+  for(size_t i = 0; i < mb->NumFreeBody(); ++i) {
+    auto body = mb->GetFreeBody(i);
     if(body->Label() == partLabel) {
       m_freeBody = body;
       break;
@@ -53,7 +56,7 @@ WorkspaceConstraint::
 Satisfied(const Cfg& _c) const {
   // Configure the object at _c and get the transformation for the constrained
   // free body.
-  m_multibody->Configure(_c);
+  m_robot->GetMultiBody()->Configure(_c);
   const auto& currentTransform = m_freeBody->GetWorldTransformation();
 
   // Check the current transform against each constraint function. If any fail,
@@ -76,12 +79,14 @@ AddFunction(ConstraintFunction&& _f) {
 void
 WorkspaceConstraint::
 SetPositionalBound(const size_t _i, const double _min, const double _max) {
+  auto mb = m_robot->GetMultiBody();
+
   // Check that the requested DOF index is valid.
-  const bool outOfRange = _i >= m_multibody->DOF();
+  const bool outOfRange = _i >= mb->DOF();
   if(outOfRange)
     throw RunTimeException(WHERE, "Can't set a positional bound on index " +
         std::to_string(_i) + " for a multibody that has only " +
-        std::to_string(m_multibody->PosDOF()) + " positional DOFs.");
+        std::to_string(mb->PosDOF()) + " positional DOFs.");
 
   m_constraints.push_back(
       [_i, _min, _max](const Transformation& _t) {

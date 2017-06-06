@@ -80,8 +80,7 @@ GaussianSampler<MPTraits>::
 Sampler(CfgType& _cfg, const Boundary* const _boundary,
     vector<CfgType>& _result, vector<CfgType>& _collision) {
 
-  string callee(this->GetNameAndLabel() + "::SampleImpl()");
-  Environment* env = this->GetEnvironment();
+  const std::string callee = this->GetNameAndLabel() + "::SampleImpl()";
   auto vc = this->GetValidityChecker(m_vcLabel);
   auto dm = this->GetDistanceMetric(m_dmLabel);
 
@@ -95,7 +94,7 @@ Sampler(CfgType& _cfg, const Boundary* const _boundary,
   //and only check validity with obstacles. Otherwise have both conditions.
   bool cfg1Free;
   if(!m_useBoundary) {
-    if(!env->InBounds(cfg1, _boundary)) {
+    if(!cfg1.InBounds(_boundary)) {
       if(this->m_debug){
         VDAddTempCfg(cfg1, false);
         VDComment("GaussianSampler::Attempt out of bounds.");
@@ -105,10 +104,8 @@ Sampler(CfgType& _cfg, const Boundary* const _boundary,
     //We are in the box
     cfg1Free = vc->IsValid(cfg1, callee);
   }
-  else {
-    cfg1Free = env->InBounds(cfg1, _boundary) &&
-      vc->IsValid(cfg1, callee);
-  }
+  else
+    cfg1Free = cfg1.InBounds(_boundary) && vc->IsValid(cfg1, callee);
 
   if(this->m_debug) {
     cout << "cfg1::" << cfg1 << endl;
@@ -128,7 +125,7 @@ Sampler(CfgType& _cfg, const Boundary* const _boundary,
     do {
       incr.GetRandomRay(fabs(GaussianDistribution(fabs(m_d), fabs(m_d))), dm);
       cfg2 = cfg1 + incr;
-    } while(!env->InBounds(cfg2, _boundary));
+    } while(!cfg2.InBounds(_boundary));
 
     cfg2Free = vc->IsValid(cfg2, callee);
   }
@@ -136,7 +133,7 @@ Sampler(CfgType& _cfg, const Boundary* const _boundary,
     incr.GetRandomRay(fabs(GaussianDistribution(fabs(m_d), fabs(m_d))), dm);
     cfg2 = cfg1 + incr;
 
-    cfg2Free = env->InBounds(cfg2, _boundary) &&
+    cfg2Free = cfg2.InBounds(_boundary) &&
       vc->IsValid(cfg2, callee);
   }
 

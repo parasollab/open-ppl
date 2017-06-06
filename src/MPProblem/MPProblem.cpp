@@ -95,6 +95,8 @@ ReadXMLFile(const string& _filename) {
     std::cout << "No task specified, assuming we want an unconstrained plan for "
               << "the first robot, labeled \'" << robot->GetLabel() << "\'.\n";
 
+    std::cout << *robot << std::endl;
+
     MPTask* nullTask = new MPTask(robot);
     m_tasks.push_back(nullTask);
   }
@@ -120,9 +122,7 @@ ParseChild(XMLNode& _node) {
   else if(_node.Name() == "Robot") {
     /// @TODO We currently assume that the environment is parsed first. Need to
     ///       make sure this always happens regardless of the XML file ordering.
-    /// @TODO Move the DOF parsing into MultiBody's read so that we don't have
-    ///       to pass the boundary with the robot constructor.
-    auto robot = new Robot(this, _node, GetEnvironment()->GetBoundary());
+    auto robot = new Robot(this, _node);
     m_robots.push_back(robot);
     return true;
   }
@@ -285,7 +285,6 @@ MakePointRobot() {
         "This name is reserved for the internal point robot.");
 
   // Create the robot object.
-  Robot* pointRobot = new Robot(this, point, "point",
-      this->GetEnvironment()->GetBoundary());
+  Robot* pointRobot = new Robot(this, point, "point");
   m_robots.push_back(pointRobot);
 }

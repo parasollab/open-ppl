@@ -23,7 +23,7 @@ include $(PMPL_DIR)/Makefile.PMPLdefaults
 
 # Compiler Configuration ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
-DEFS := $(PMPL_DEF) $(UTILS_DEF) $(STAPL_DEF) $(BOOST_DEF) $(vizmo_map)
+DEFS := $(PMPL_DEF) $(UTILS_DEF) $(vizmo_map)
 INCL := $(PMPL_INCL) $(UTILS_INCL) $(STAPL_INCL) $(BOOST_INCL) $(SIM_INCL)
 LIBS := $(PMPL_LIB) $(UTILS_LIB) $(STAPL_LIB) $(BOOST_LIB) $(SIM_LIBS)
 DEPS = -MMD -MF $*.d
@@ -51,7 +51,7 @@ $(PMPL_LIBFILE): $(PMPL_OBJS)
 # Executable Recipes ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
 # Build the traditional pmpl executable.
-pmpl: $(PMPL_LIBFILE) $(MAIN)
+pmpl: $(MAIN) $(PMPL_LIBFILE)
 	@echo Linking $@...
 	@$(CXX) $(CXXFLAGS) $(OPTS) $(MAIN) $(LIBS) -o $@
 

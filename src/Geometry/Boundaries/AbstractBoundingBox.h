@@ -18,17 +18,19 @@ class AbstractBoundingBox :  public Boundary, public NBox {
 
     /// Construct an infinite bounding box in n dimensions.
     /// @param[in] _n The number of dimensions.
-    AbstractBoundingBox(const size_t _n);
+    explicit AbstractBoundingBox(const size_t _n);
 
     /// Construct an infinite bounding box in n dimensions.
     /// @param[in] _n The number of dimensions.
-    AbstractBoundingBox(const std::vector<double>& _center);
+    explicit AbstractBoundingBox(const std::vector<double>& _center);
 
     virtual ~AbstractBoundingBox() = default;
 
     ///@}
     ///@name Property Accesors
     ///@}
+
+    virtual size_t GetDimension() const noexcept override;
 
     virtual double GetMaxDist(const double _r1 = 2., const double _r2 = .5)
         const override;
@@ -43,9 +45,13 @@ class AbstractBoundingBox :  public Boundary, public NBox {
 
     virtual std::vector<double> GetRandomPoint() const override;
 
+    virtual void PushInside(std::vector<double>& _sample) const noexcept override;
+
     ///@}
     ///@name Containment Testing
     ///@{
+
+    using Boundary::InBoundary;
 
     virtual bool InBoundary(const std::vector<double>& _p) const override;
 
@@ -85,5 +91,14 @@ class AbstractBoundingBox :  public Boundary, public NBox {
     ///@}
 
 };
+
+/*----------------------------------- I/O ------------------------------------*/
+
+std::ostream& operator<<(std::ostream& _os, const AbstractBoundingBox& _b);
+
+/// @TODO Move impl from environment to here.
+//istream& operator>>(istream& _is, const Boundary& _b);
+
+/*----------------------------------------------------------------------------*/
 
 #endif

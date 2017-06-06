@@ -143,7 +143,6 @@ GenerateShells(const Boundary* const _boundary,
     CfgType& _cFree, CfgType& _cColl, CfgType& _incr,
     vector<CfgType>& _result, vector<CfgType>& _collision) {
 
-  Environment* env = this->GetEnvironment();
   string callee = this->GetNameAndLabel() + "::GenerateShells()";
   auto vcm = this->GetValidityChecker(m_vcLabel);
   if(this->m_debug)
@@ -152,8 +151,7 @@ GenerateShells(const Boundary* const _boundary,
   // Add free shells
   for(int i = 0; i < m_nShellsFree; i++) {
     // If the shell is valid
-    if(env->InBounds(_cFree, _boundary) &&
-        vcm->IsValid(_cFree, callee))
+    if(_cFree.InBounds(_boundary) and vcm->IsValid(_cFree, callee))
       _result.push_back(_cFree);
     // Get next shell
     _cFree += _incr;
@@ -165,8 +163,7 @@ GenerateShells(const Boundary* const _boundary,
   // Add collision shells
   for(int i = 0; i < m_nShellsColl; i++) {
     // If the shell is valid
-    if(env->InBounds(_cColl, _boundary) &&
-        !vcm->IsValid(_cColl, callee))
+    if(_cColl.InBounds(_boundary) and !vcm->IsValid(_cColl, callee))
       _collision.push_back(_cColl);
     // Get next shell
     _cColl += _incr;
@@ -191,7 +188,7 @@ Sampler(CfgType& _cfg, const Boundary* const _boundary,
 
   // Old state
   CfgType c1 = ChooseASample(_cfg);
-  bool c1BBox = env->InBounds(c1, _boundary);
+  bool c1BBox = c1.InBounds(_boundary);
   bool c1Free = vcm->IsValid(c1, callee);
 
   // New state
@@ -216,7 +213,7 @@ Sampler(CfgType& _cfg, const Boundary* const _boundary,
     c1Free = c2Free;
     // Update new state
     c2 += r;
-    c2BBox = env->InBounds(c2, _boundary);
+    c2BBox = c2.InBounds(_boundary);
     c2Free = vcm->IsValid(c2, callee);
   }
   // If new state is in BBox (there must be a validity change)
