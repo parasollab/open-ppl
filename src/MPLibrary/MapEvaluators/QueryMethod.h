@@ -243,10 +243,12 @@ Initialize() {
   /// @TODO Either fix a set of required labels for all PMPL or find a better
   ///       way to create the uniform random sampler here.
   auto s = this->GetSampler("UniformRandomFree");
-  while(m_query.size() != 1)
-    s->Sample(1, 100, startBoundary, back_inserter(m_query));
-  while(m_query.size() != 2)
-    s->Sample(1, 100, goalBoundary, back_inserter(m_query));
+  if(startBoundary)
+    while(m_query.size() != 1)
+      s->Sample(1, 100, startBoundary, back_inserter(m_query));
+  if(goalBoundary)
+    while(m_query.size() != 2)
+      s->Sample(1, 100, goalBoundary, back_inserter(m_query));
 
   this->GetStatClass()->StopClock("QueryMethod::GeneratingQuery");
 
