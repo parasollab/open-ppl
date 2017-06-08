@@ -84,7 +84,14 @@ Step(const double _dt) {
                 << distance << "/" << threshold
                 << std::endl;
 
+    // Move to next cfg in path since the distance is within the threshold.
     ++m_pathIndex;
+
+    // Break if we try to go beyond the path's end. Necessary as calculating
+    // the distance on an undefined cfg will crash some systems.
+    if(m_pathIndex >= m_path.size())
+      break;
+
     distance = dm->Distance(current, m_path[m_pathIndex]);
   }
 
