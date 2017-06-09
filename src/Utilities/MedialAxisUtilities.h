@@ -97,7 +97,7 @@ class ClearanceUtility : public MPBaseObject<MPTraits> {
 
     /// Calculate clearance information for the medial axis computation.
     bool CollisionInfo(CfgType& _cfg, CfgType& _clrCfg,
-        const Boundary* const _b, CDInfo& _cdInfo);
+        const Boundary* const _b, CDInfo& _cdInfo, bool _validWitness = false);
 
     /// Calculate clearance information exactly by taking the validity
     ///        checker results against obstacles to the bounding box.
@@ -108,7 +108,7 @@ class ClearanceUtility : public MPBaseObject<MPTraits> {
     ///        specified number of rays are pushed outward until they change in
     ///        validity. The shortest ray is then considered the best candidate.
     bool ApproxCollisionInfo(CfgType& _cfg, CfgType& _clrCfg,
-        const Boundary* const _b, CDInfo& _cdInfo);
+        const Boundary* const _b, CDInfo& _cdInfo, bool _validWitness);
 
     /// Calculate roadmap clearance statistics including averages, mins,
     ///        and maxes for clearance across roadmaps, paths, and edges.
@@ -367,14 +367,14 @@ template<class MPTraits>
 bool
 ClearanceUtility<MPTraits>::
 CollisionInfo(CfgType& _cfg, CfgType& _clrCfg, const Boundary* const _b,
-    CDInfo& _cdInfo) {
+    CDInfo& _cdInfo, bool _validWitness) {
   if(m_exactClearance)
     return ExactCollisionInfo(_cfg, _clrCfg, _b, _cdInfo);
   else
   {
     if(this->m_debug)
       std::cout << "entering ApproxCollisionInfo" << std::endl;
-    auto a = ApproxCollisionInfo(_cfg, _clrCfg, _b, _cdInfo);
+    auto a = ApproxCollisionInfo(_cfg, _clrCfg, _b, _cdInfo, _validWitness);
     if(this->m_debug)
       std::cout << "exited ApproxCollisionInfo" << std::endl;
     return a;
@@ -497,7 +497,7 @@ template<class MPTraits>
 bool
 ClearanceUtility<MPTraits>::
 ApproxCollisionInfo(CfgType& _cfg, CfgType& _clrCfg,
-    const Boundary* const _b, CDInfo& _cdInfo) {
+    const Boundary* const _b, CDInfo& _cdInfo, bool _validWitness) {
   const string fName = "ApproxCollisionInfo: ";
 
   // Check computation cache
@@ -522,10 +522,12 @@ ApproxCollisionInfo(CfgType& _cfg, CfgType& _clrCfg,
   _cdInfo.ResetVars();
   _cdInfo.m_retAllInfo = true;
 
+  std::cout << "Witness Validity: " << (_validWitness? "true" : "false") << std::endl;
   // Compute initial validity state
   const bool initValidity = vcm->IsValid(_cfg, _cdInfo, callee);
-  if(this->m_debug)
+  if(this->m_debug) {
     std::cout << "\tinitValidity = " << initValidity;
+  }
 
   // Setup random rays
   size_t numRays;
@@ -613,7 +615,7 @@ ApproxCollisionInfo(CfgType& _cfg, CfgType& _clrCfg,
     if(this->m_debug)
       cout << "\n\t" << iterations;
 
-    for(auto rit = rays.begin(); rit != rays.end(); ++rit) {
+    for(auto rit = rays.begin(); rit != rays.end(); ) {
       //step out
       rit->m_tick += rit->m_incr;
 
@@ -621,14 +623,43 @@ ApproxCollisionInfo(CfgType& _cfg, CfgType& _clrCfg,
       CDInfo tmpInfo;
 
       bool currValidity;//will get overwritten
+      bool outBounds = !rit->m_tick.InBounds(_b);
+      // If the flag is set and out of bounds, regardless of the bbox 
+      // flag, remove the current ray and continue.
+      // If there are zero rays left after removing them return false.
+      if(_validWitness && outBounds) {
+        // cheap operations first
+        if(this->m_debug) {
+          cout << "Ray is out of bounds: " << rit->m_tick << endl;
+        }
+        // only one ray
+        if(rays.size() == 1) {
+          if(this->m_debug)
+            cout << "Current ray is last valid ray: Returning false" << endl;
+          return false;
+        }
 
+        if(rit == rays.end() - 1){
+          if(this->m_debug)
+            cout<<"Last Ray is out of bounds: removing"<<endl;
+          rays.pop_back();
+          break;
+        }
+
+        else { 
+          auto eit = rays.end() - 1;
+          swap(*rit, *eit);
+          rays.pop_back();
+        }
+      
+      }
       //Block the expensive validity check by first doing faster boundary check:
-      if(m_useBBX && !rit->m_tick.InBounds(_b)) {
+      else if(m_useBBX && outBounds) {
         //OOB, so we ALWAYS want to trigger a candidate, explicity force it:
         currValidity = !initValidity;
       }
       else {
-        //Validity check, but only if we were in bounds for this tick:
+        // Validity check, but only if we were in bounds for this tick:
         currValidity = vcm->IsValid(rit->m_tick, tmpInfo, callee);
       }
 
@@ -649,6 +680,7 @@ ApproxCollisionInfo(CfgType& _cfg, CfgType& _clrCfg,
         // quit after 1 since we just take the first witness found
         break;
       }
+      ++rit;
     }
   }//end while (!stateChangedFlag && iterations < max)
 
@@ -1094,7 +1126,7 @@ PushFromInsideObstacle(CfgType& _cfg, const Boundary* const _b) {
   tmpInfo.m_retAllInfo = true;
 
   // Determine direction to move.
-  if(this->CollisionInfo(_cfg, transCfg, _b, tmpInfo)) {
+  if(this->CollisionInfo(_cfg, transCfg, _b, tmpInfo, true)) {
     if(this->m_debug)
       cout << "Clearance Cfg: " << transCfg << endl;
   }
