@@ -68,7 +68,9 @@ Step(const double _dt) {
 
     // If we have reached the end of the path, halt the robot and return.
     if(PathCompleted()) {
-      Halt();
+      // Warning: Halt() doesn't respect the dynamics of the simulation and is
+      // only to be used for visual verification of the path in the simulator.
+      this->Halt();
       return;
     }
 
@@ -196,26 +198,6 @@ bool
 RoadmapFollowingAgent::
 PathCompleted() const noexcept {
   return m_currentSubgoal == m_solution->GetPath()->VIDs().end();
-}
-
-
-void
-RoadmapFollowingAgent::
-Halt() {
-  // Zero the robot's velocity so that we can tell that it has completed its
-  // path by visual inspection.
-  /// @WARNING Arbitrarilly setting the velocity does not respect the robot's
-  ///          dynamics. It is OK for now because we have not yet tried to make
-  ///          the robot do anything after traveling one path. For more complex
-  ///          behavior (like TMP type problems) where the robot will travel
-  ///          multiple paths, this will need to be removed.
-  m_robot->GetDynamicsModel()->Get()->setBaseVel({0,0,0});
-  m_robot->GetDynamicsModel()->Get()->setBaseOmega({0,0,0});
-
-  if(m_debug)
-    std::cout << "\nRoadmap finished."
-              << "\nBase velocity and omega set to 0 for visual inspection."
-              << std::endl;
 }
 
 /*----------------------------------------------------------------------------*/

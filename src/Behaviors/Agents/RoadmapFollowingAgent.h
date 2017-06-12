@@ -65,9 +65,6 @@ class RoadmapFollowingAgent : public Agent {
     /// Check if the path traversal is complete.
     bool PathCompleted() const noexcept;
 
-    /// Stop following the roadmap and hard-stop the robot.
-    void Halt();
-
     ///@}
 
   protected:

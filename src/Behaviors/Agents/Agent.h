@@ -51,6 +51,11 @@ class Agent {
     /// pre-initialize state.
     virtual void Uninitialize() = 0;
 
+    /// Stop the robot in simulation (places 0s in all 6 velocity dofs).
+    /// Currently used for stopping the robot after reaching the end of
+    /// a roadmap path.
+    virtual void Halt();
+
     ///@}
 
 };

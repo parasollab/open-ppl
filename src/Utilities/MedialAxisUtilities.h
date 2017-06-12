@@ -622,9 +622,9 @@ ApproxCollisionInfo(CfgType& _cfg, CfgType& _clrCfg,
       //determine new state
       CDInfo tmpInfo;
 
-      bool currValidity;//will get overwritten
+      bool currValidity{false};//will get overwritten
       bool outBounds = !rit->m_tick.InBounds(_b);
-      // If the flag is set and out of bounds, regardless of the bbox 
+      // If the flag is set and out of bounds, regardless of the bbox
       // flag, remove the current ray and continue.
       // If there are zero rays left after removing them return false.
       if(_validWitness && outBounds) {
@@ -646,12 +646,11 @@ ApproxCollisionInfo(CfgType& _cfg, CfgType& _clrCfg,
           break;
         }
 
-        else { 
+        else {
           auto eit = rays.end() - 1;
           swap(*rit, *eit);
           rays.pop_back();
         }
-      
       }
       //Block the expensive validity check by first doing faster boundary check:
       else if(m_useBBX && outBounds) {
