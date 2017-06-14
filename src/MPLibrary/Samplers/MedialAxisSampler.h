@@ -59,10 +59,14 @@ MedialAxisSampler<MPTraits>::
 Sampler(CfgType& _cfg, const Boundary* const _boundary,
     vector<CfgType>& _result, vector<CfgType>& _collision) {
 
-  string call = "MedialAxisSampler::sampler()";
+  if(!m_medialAxisUtility.IsInitialized()) {
+    m_medialAxisUtility.SetMPLibrary(this->GetMPLibrary());
+    m_medialAxisUtility.Initialize();
+  }
+
   bool generated = false;
 
-  // If pushed properly and the new CfgType is valid, increment generated
+  // If pushed properly and the new CfgType is valid, set generated to true.
   if(m_medialAxisUtility.PushToMedialAxis(_cfg, _boundary)) {
     generated = true;
     _result.push_back(_cfg);

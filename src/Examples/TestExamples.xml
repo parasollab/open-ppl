@@ -9,6 +9,7 @@
 
     <Robot label="boxy" filename="3D/boxy.robot"/>
 
+<!-- Note: the PushCfgToMATest strategy doesn't need a query.
     <Task label="query" robot="boxy">
       <StartConstraints>
         <CSpaceConstraint point="0 0 0 0 0 0"/>
@@ -18,6 +19,7 @@
         <CSpaceConstraint point="20 5 10 0.2 0.8 0.5"/>
       </GoalConstraints>
     </Task>
+-->
 
   </Problem>
 
@@ -321,15 +323,14 @@
       </ClearanceTest>
 
       <!-- MA Pushing Test -->
-      <PushCfgToMATest label="PushCfgToMATest1"
+      <PushCfgToMATest label="PushCfgToMATest1" debug="false"
         vcLabel="pqp_solid" dmLabel="euclidean"
         clearanceType="approx" clearanceRays="4"
         penetrationType="approx" penetrationRayFactor="1"
         rayTickPosResolutionFactor="1.0" orientationResolutionFactor="1.0"
-        maxRayTickMagnitude="15"
-        useBBX="true" debug="false"
-        historyLength="5" positional="true"
-        attemptInvalidSamples="true"
+        maxRayTickMagnitude="15" useBBX="true"
+        sameValidityWitnessTest="false"
+        positional="true" attemptInvalidSamples="true"
         do2dEnvTests="true" forceNarrowPassageSamples2dEnv="false">
         <Sampler method="UniformRandom" number="500" attempts="5"/>
       </PushCfgToMATest>

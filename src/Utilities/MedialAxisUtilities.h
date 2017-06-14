@@ -91,13 +91,16 @@ class ClearanceUtility : public MPBaseObject<MPTraits> {
     double GetPositionResolution() const {return m_rayTickResolution;}
     double GetOrientationResolution() const {return m_orientationResolution;}
 
+    bool IsInitialized() const {return m_initialized;}
+
     ///@}
     ///@name Clearance Functions
     ///@{
 
     /// Calculate clearance information for the medial axis computation.
     bool CollisionInfo(CfgType& _cfg, CfgType& _clrCfg,
-        const Boundary* const _b, CDInfo& _cdInfo, bool _validWitness = false);
+        const Boundary* const _b, CDInfo& _cdInfo,
+        const bool& _useOppValidityWitness = true);
 
     /// Calculate clearance information exactly by taking the validity
     ///        checker results against obstacles to the bounding box.
@@ -108,7 +111,28 @@ class ClearanceUtility : public MPBaseObject<MPTraits> {
     ///        specified number of rays are pushed outward until they change in
     ///        validity. The shortest ray is then considered the best candidate.
     bool ApproxCollisionInfo(CfgType& _cfg, CfgType& _clrCfg,
-        const Boundary* const _b, CDInfo& _cdInfo, bool _validWitness);
+        const Boundary* const _b, CDInfo& _cdInfo,
+        const bool& _useOppValidityWitness = true);
+
+    /// Helpers for ApproxCollisionInfo (should maybe be protected):
+    /// Find the witness of an initial sample of any validity. A witness here is
+    /// defined as the nearest point of obstacle boundary.
+    ///@TODO Make the user have the option to have same or opposite validity
+    /// for witnesses.
+    bool FindApproximateWitness(const std::size_t& _numRays,
+        std::vector<Ray<CfgType> >& _rays, const CfgType& _sampledCfg,
+        const bool& _initValidity, const Boundary* const _b,
+        std::pair<size_t, CfgType>& _candidate,
+        const bool& _useOppValidityWitness = true);
+
+    /// Generates the rays for the witness finding.
+    void MakeRays(const CfgType& _sampledCfg, const std::size_t& _numRays,
+        std::vector<Ray<CfgType> >& _rays);
+
+    /// A final sanity check to be performed on the witness candidate
+    bool ValidateCandidate(const std::pair<size_t, CfgType>& _cand,
+        const std::vector<Ray<CfgType> >& _rays,
+        const Boundary* const _b, const bool& _useOppValidityWitness = true);
 
     /// Calculate roadmap clearance statistics including averages, mins,
     ///        and maxes for clearance across roadmaps, paths, and edges.
@@ -154,6 +178,11 @@ class ClearanceUtility : public MPBaseObject<MPTraits> {
     // and should only really be used there. See Initialize() for more info.
     double m_orientationResFactor{0.};
     double m_positionalResFactor{0.};
+
+    /// A boolean to determine whether initialize has been called on the
+    /// utility or not yet. This is important, as there are MPLibrary things
+    /// we need that are not available at construction time:
+    bool m_initialized{false};
 
     ///@}
 };
@@ -367,14 +396,14 @@ template<class MPTraits>
 bool
 ClearanceUtility<MPTraits>::
 CollisionInfo(CfgType& _cfg, CfgType& _clrCfg, const Boundary* const _b,
-    CDInfo& _cdInfo, bool _validWitness) {
+    CDInfo& _cdInfo, const bool& _useOppValidityWitness) {
   if(m_exactClearance)
     return ExactCollisionInfo(_cfg, _clrCfg, _b, _cdInfo);
   else
   {
     if(this->m_debug)
       std::cout << "entering ApproxCollisionInfo" << std::endl;
-    auto a = ApproxCollisionInfo(_cfg, _clrCfg, _b, _cdInfo, _validWitness);
+    auto a = ApproxCollisionInfo(_cfg, _clrCfg, _b, _cdInfo, _useOppValidityWitness);
     if(this->m_debug)
       std::cout << "exited ApproxCollisionInfo" << std::endl;
     return a;
@@ -496,8 +525,21 @@ ExactCollisionInfo(CfgType& _cfg, CfgType& _clrCfg, const Boundary* const _b,
 template<class MPTraits>
 bool
 ClearanceUtility<MPTraits>::
-ApproxCollisionInfo(CfgType& _cfg, CfgType& _clrCfg,
-    const Boundary* const _b, CDInfo& _cdInfo, bool _validWitness) {
+ApproxCollisionInfo(CfgType& _cfg, CfgType& _clrCfg, const Boundary* const _b,
+                    CDInfo& _cdInfo, const bool& _useOppValidityWitness) {
+  // First check that the utility has been properly initialized:
+  if(!this->m_initialized) {
+    if(this->GetMPLibrary()) {
+      //If we have a valid library, call Initialize. Otherwise throw an error.
+      Initialize();
+    }
+    else {
+      RunTimeException(WHERE, "Cannot use approximate methods for witness "
+          "finding, or clearance or penetration measurements without calling "
+          "Initialize on the ClearanceUtility (or MedialAxisUtility) "
+          "beforehand");
+    }
+  }
   const string fName = "ApproxCollisionInfo: ";
 
   // Check computation cache
@@ -522,87 +564,84 @@ ApproxCollisionInfo(CfgType& _cfg, CfgType& _clrCfg,
   _cdInfo.ResetVars();
   _cdInfo.m_retAllInfo = true;
 
-  std::cout << "Witness Validity: " << (_validWitness? "true" : "false") << std::endl;
   // Compute initial validity state
   const bool initValidity = vcm->IsValid(_cfg, _cdInfo, callee);
   if(this->m_debug) {
-    std::cout << "\tinitValidity = " << initValidity;
+    std::cout << "initial cfg = " << std::endl << _cfg << std::endl;
+    std::cout << "\tinitValidity = " << initValidity << std::endl;
   }
 
-  // Setup random rays
+  // Make a container for our rays. FindApproximateWitness will generate them
+  // when given an empty vector.
   size_t numRays;
   if(initValidity)
     numRays = m_clearanceRays;
   else
     numRays = m_penetrationRays;
-  if(this->m_debug)
-    cout << "DEBUG:: numRays = " << numRays << endl;
   vector<Ray<CfgType>> rays;
+  std::pair<size_t, CfgType> cand;
 
-  //initial ray starts at rand angle, then all others are uniformly distributed:
-  double angleRad = 2.*PI*rand()/(double)RAND_MAX;
-
-  for(size_t i = 0; i < numRays; ++i) {
-    CfgType tmpDirection(this->GetTask()->GetRobot());
-
-    //TODO expand to 3D, and then to any Dimensions for uniform distribution:
-    if(_cfg.PosDOF() == 2)
-    {
-      // This evenly divides up the rest of the angles all the way around,
-      // starting from the random initial angle from above.
-      angleRad += 2. * PI * (1. / numRays);//note this happens numRays times
-      std::vector<double> dofData = {cos(angleRad), sin(angleRad)};
-      tmpDirection.SetData(dofData); // There's likely a better way to do this
-    }
-    else
-    {
-      //The old, non-uniform way to get each ray:
-      tmpDirection.GetRandomRay(m_rayTickResolution, dm, false);
-      //This was m_approxStepSize*m_rayTickResolution, but
-      // I'm pretty sure the intention was to use a certain multiple of the
-      // CD/environment resolution, but that's now built into rayTickRes.
-    }
-
+  if(!FindApproximateWitness(
+        numRays, rays, _cfg, initValidity, _b, cand, _useOppValidityWitness)) {
     if(this->m_debug)
-      cout << "DEBUG:: tmpDirection " << i << " is " << tmpDirection << endl;
-
-    if(m_positional) { // Use only positional dofs
-      double factor = 0.0;
-      for(size_t j = 0; j<tmpDirection.DOF(); j++) {
-        if(j < tmpDirection.PosDOF())
-          factor += tmpDirection[j] * tmpDirection[j];
-        else
-          tmpDirection[j] = 0.0;
-      }
-      tmpDirection *= m_rayTickResolution / sqrt(factor);
-    }
-    if(this->m_debug)
-    {
-      cout << "DEBUG:: tmpDirection " << i << " is " << tmpDirection << endl;
-      cout << "DEBUG:: \tdistance(_cfg, _cfg+tmpDirection) = "
-        << dm->Distance(_cfg, _cfg + tmpDirection) << endl;
-    }
-
-    rays.push_back(Ray<CfgType>(tmpDirection, _cfg));
-  }// end for (numRays)
-
-  if(this->m_debug) {
-    cout << "DEBUG:: rays initialized\n";
-    cout << "DEBUG:: \ttick are:\n\t\t";
-    for(auto&  ray : rays)
-      cout << ray.m_tick << "\n\t\t";
-    cout << endl;
-    cout << "DEBUG:: \tincr are:\n\t\t";
-    for(auto&  ray : rays)
-      cout << ray.m_incr << "\n\t\t";
-    cout << endl;
+      std::cout << fName + "Returning false from not finding any witness "
+                "candidate" << std::endl;
+    return false;
   }
 
-  // Step out along each direction to determine the candidates
-  vector<pair<size_t, CfgType>> candidates;
+  if(this->m_debug) {
+    cout << "found candidate:\n";
+    cout << "\t" << cand.first << ": " << cand.second;
 
-  bool stateChangedFlag = false;
+    CDInfo tmpInfo;
+    bool currValidity = vcm->IsValid(cand.second, tmpInfo, callee);
+    if(m_useBBX)
+      currValidity = (currValidity && cand.second.InBounds(_b));
+    cout << " (currValidity = " << currValidity << ")";
+    cout << endl;
+    cout << "DEBUG:: setting info, returning" << std::endl;
+  }
+
+  //Next, we will set the final info to return:
+  //give the invalid (one more tick ahead) cfg back as the witness:
+  _clrCfg = cand.second;
+  // Note cadidates[0].second is the point before collision, and we know that
+  // adding one more m_incr will put us at opposite validity (or OOB)
+
+  _cdInfo.m_minDist = (initValidity ? 1.0 : -1.0) * dm->Distance(_clrCfg, _cfg);
+  _cfg.m_clearanceInfo = _cdInfo;
+  _cfg.m_witnessCfg = shared_ptr<Cfg>(new CfgType(_clrCfg));
+  return true;
+}
+
+
+template<class MPTraits>
+bool
+ClearanceUtility<MPTraits>::
+FindApproximateWitness(const std::size_t& _numRays,
+            std::vector<Ray<CfgType> >& _rays, const CfgType& _sampledCfg,
+            const bool& _initValidity, const Boundary* const _b,
+            //TODO make a flag for same/opposite validity witnesses.
+            std::pair<size_t, CfgType>& _candidate,
+            const bool& _useOppValidityWitness) {
+  if(this->m_debug)
+    cout << "FindApproximateWitness: numRays = " << _numRays << endl;
+  auto dm  = this->GetDistanceMetric(m_dmLabel);
+  auto vcm = this->GetValidityChecker(m_vcLabel);
+
+  string callee = this->GetNameAndLabel() + "::FindApproximateWitness()";
+
+  //Assume that the directions have been populated already if _rays isn't empty.
+  if(_rays.empty()) {
+    //Reserve the number of rays that we need for faster push_back later
+    _rays.reserve(_numRays);
+    MakeRays(_sampledCfg, _numRays, _rays);
+  }
+
+  // Step out along each direction to determine the candidate
+  bool candidateFound = false;
   size_t iterations = 0;
+  CfgType candidateCfg;
 
   if(this->m_debug)
     cout << "DEBUG:: stepping out along each direction to find candidates";
@@ -611,11 +650,11 @@ ApproxCollisionInfo(CfgType& _cfg, CfgType& _clrCfg,
   //or not free->free or iterates n times. Within it, it loops through all
   //rays each time, moving outward along these and checking that condition.
   //m_maxRayIterations is calculated by maxRayMagnitude/rayTickResolution
-  while(!stateChangedFlag && iterations++ < m_maxRayIterations) {
+  while(!candidateFound && iterations++ < m_maxRayIterations) {
     if(this->m_debug)
       cout << "\n\t" << iterations;
 
-    for(auto rit = rays.begin(); rit != rays.end(); ) {
+    for(auto rit = _rays.begin(); rit != _rays.end();) {
       //step out
       rit->m_tick += rit->m_incr;
 
@@ -623,171 +662,113 @@ ApproxCollisionInfo(CfgType& _cfg, CfgType& _clrCfg,
       CDInfo tmpInfo;
 
       bool currValidity{false};//will get overwritten
-      bool outBounds = !rit->m_tick.InBounds(_b);
-      // If the flag is set and out of bounds, regardless of the bbox
-      // flag, remove the current ray and continue.
-      // If there are zero rays left after removing them return false.
-      if(_validWitness && outBounds) {
-        // cheap operations first
-        if(this->m_debug) {
-          cout << "Ray is out of bounds: " << rit->m_tick << endl;
-        }
+      const bool inBounds = rit->m_tick.InBounds(_b);
+
+      // If doing the opposite validity witness, then it's the case that if
+      // we are out of bounds and initially invalid, this ray can never lead
+      // to a successful witness of opposite validity, so remove the ray.
+      //Note: this is not taking into account whether or not m_useBBX is true.
+      // If doing the same-validity witness, then we still will count the tick
+      // before going out of bounds as the nearest witness, since it still must
+      // correspond to an obstacle's boundry being crossed.
+      if(!inBounds && !_initValidity && _useOppValidityWitness) {
+        if(this->m_debug)
+          cout << "Ray is out of bounds at: " << rit->m_tick << endl;
+
         // only one ray
-        if(rays.size() == 1) {
+        if(_rays.size() == 1) {
           if(this->m_debug)
-            cout << "Current ray is last valid ray: Returning false" << endl;
+            cout << "Last valid ray just failed, Returning false" << endl;
           return false;
         }
-
-        if(rit == rays.end() - 1){
-          if(this->m_debug)
-            cout<<"Last Ray is out of bounds: removing"<<endl;
-          rays.pop_back();
-          break;
-        }
-
         else {
-          auto eit = rays.end() - 1;
-          swap(*rit, *eit);
-          rays.pop_back();
+          //Swap the ray leading to an invalid OOB cfg to the back of the vector
+          // and then pop from back of vector:
+          if(rit != _rays.end() - 1) { //Don't swap if it's already the last ray
+            auto eit = _rays.end() - 1;
+            swap(*rit, *eit);
+          }
+
+          //Remove the ray that cannot lead to a valid witness.
+          _rays.pop_back();
+          continue; //move to next ray (note: won't advance the iterator)
         }
       }
-      //Block the expensive validity check by first doing faster boundary check:
-      else if(m_useBBX && outBounds) {
-        //OOB, so we ALWAYS want to trigger a candidate, explicity force it:
-        currValidity = !initValidity;
+      //If we are doing the same validity witness, then the same triggers for a
+      // witness still apply, except that the condition above should also
+      // trigger a witness instead of disqualifying a ray.
+      else if (!inBounds && !_initValidity && !_useOppValidityWitness) {
+        // Force a change in validity, since we have found the edge of the
+        // obstacle we are in and it happens to border the BBX boundary.
+        currValidity = !_initValidity;
       }
+      //So now we know that we have a ray tick that is either OOB and was an
+      // initially valid sample, or we are in bounds and initial state is N/A.
       else {
-        // Validity check, but only if we were in bounds for this tick:
         currValidity = vcm->IsValid(rit->m_tick, tmpInfo, callee);
+        if(m_useBBX) // Only consider bounds here if using it as obstacle
+          currValidity = inBounds && currValidity;
       }
 
       if(this->m_debug)
-        cout << " (currValidity for direction " << distance(rays.begin(), rit)
+        cout << " (currValidity for direction " << distance(_rays.begin(), rit)
              << " = " << currValidity << ")";
 
-      //if state has changed, add to candidate list
-      if(currValidity != initValidity) {
-        stateChangedFlag = true;
-        CfgType candidate = rit->m_tick - rit->m_incr;
+      //if validity state has changed, save the candidate and stop searching:
+      //Note that OOB is of the same invalid status here as in collision.
+      if(currValidity != _initValidity) {
+        candidateFound = true; // So the while loop will exit
+
+        candidateCfg = rit->m_tick;
+        //tick back the current cfg only if using the same validity witness:
+        if(!_useOppValidityWitness)
+          candidateCfg -= rit->m_incr;
 
         //Note: this is pushing back the index of the candidate ray (what
         // distance() returns) and the actual location that we have found
         // right BEFORE the collision configuration was found.
-        candidates.push_back(make_pair(distance(rays.begin(), rit), candidate));
+        _candidate = make_pair(
+            distance(_rays.begin(), rit), candidateCfg);
 
-        // quit after 1 since we just take the first witness found
+        //Quit the loop since the witness has been found.
         break;
       }
+      //Must increment the iterator here due to the flow of the for loop:
       ++rit;
     }
   }//end while (!stateChangedFlag && iterations < max)
 
-  if(this->m_debug) {
-    cout << "\nDEBUG:: done stepping out along rays\n"
-         << "   found " << candidates.size() << " candidates:\n";
-    for(auto& cand : candidates) {
-      cout << "\t" << cand.first << ": " << cand.second;
-
-      CDInfo tmpInfo;
-      bool currInside = vcm->IsInsideObstacle(cand.second);
-      bool currValidity = vcm->IsValid(cand.second, tmpInfo, callee);
-      currValidity = currValidity && !currInside;
-      if(m_useBBX)
-        currValidity = (currValidity && cand.second.InBounds(_b));
-      cout << " (currValidity = " << currValidity << ")" << endl;
-    }
-  }
-
-
-  // Remove spurious candidate(s):
-  // This code is checking whether there are any "incorrect" candidates, meaning
-  // that if a witness was found, then the candidate should have an initial cfg
-  // position that is valid, and then ticking forward once  should be invalid.
-  //I think it's pointless, but it's not a terrible thing to verify, and it's a
-  //pretty simple/fast check in the end. It looks a little more complicated than
-  //it is, since it is made for there being more than one candidate (now just 1)
-  if(this->m_debug)
-    cout << "DEBUG:: Verifying candidate is valid\n";
-
-  // This could justifiably be removed, but it's also not a bad verification
-  for(auto& cand : candidates) {
+  //Check that we actually found a candidate
+  if(!candidateFound) {
     if(this->m_debug)
-      cout << "\t" << cand.first;
-    CDInfo tmpInfo;
-
-    CfgType lowCfg = rays[cand.first].m_incr * 0.0 + cand.second;
-    bool lowValidity = vcm->IsValid(lowCfg, tmpInfo, callee);
-    if(m_useBBX)
-      lowValidity = (lowValidity && lowCfg.InBounds(_b));
-
-    if(this->m_debug)
-      cout << " (lowValidity = " << lowValidity << ")" << endl;
-
-    CfgType highCfg = rays[cand.first].m_incr * 1.0 + cand.second;
-    bool highValidity = vcm->IsValid(highCfg, tmpInfo, callee);
-    if(m_useBBX)
-      highValidity = (highValidity && highCfg.InBounds(_b));
-
-    if(this->m_debug)
-      cout << " (highValidity = " << highValidity << ")" << endl;
-
-    if(lowValidity == highValidity) {
-      //there was a problem, but still give the best data while returning false
-      _clrCfg = highCfg;
-      _cdInfo.m_minDist =
-          (initValidity ? 1.0 : -1.0) * dm->Distance(_clrCfg, _cfg);
-      if(this->m_debug)
-        std::cout << "Returning false from invalid witness candidate"
-                  << std::endl;
-      return false;
-    }
-  }
-
-
-  if(this->m_debug) {
-    cout << "   found " << candidates.size() << " candidates:\n";
-    for(auto& cand : candidates) {
-      cout << "\t" << cand.first << ": " << cand.second;
-
-      CDInfo tmpInfo;
-      bool currInside = vcm->IsInsideObstacle(cand.second);
-      bool currValidity = vcm->IsValid(cand.second, tmpInfo, callee);
-      currValidity = currValidity && !currInside;
-      if(m_useBBX)
-        currValidity = (currValidity && cand.second.InBounds(_b));
-      cout << " (currValidity = " << currValidity << ")";
-      cout << endl;
-    }
-  }
-
-  //This is needed, in case a candidate was never found.
-  if(candidates.size() == 0) {
-    if(this->m_debug)
-      std::cout << fName + "returning false from not having any ray candidates"
-                << std::endl;
+      std::cout << callee + "Returning false after not finding a witness "
+                "candidate" << std::endl;
     return false;
   }
 
-  // Set return info
-  if(this->m_debug)
-    cout << "DEBUG:: setting info, returning\n";
+  if(this->m_debug) {
+    cout << "\nDEBUG:: done stepping out along rays. Candidate = " << std::endl;
+    cout << "\tray " << _candidate.first << ": " << _candidate.second;
 
-  //give the invalid (one more tick ahead) cfg back as the witness:
-  _clrCfg = candidates[0].second + rays[candidates[0].first].m_incr;
-  // Note cadidates[0].second is the point before collision, and we know that
-  // adding one more m_incr will put us at opposite validity (or OOB)
+    CDInfo tmpInfo;
+    bool currValidity = vcm->IsValid(_candidate.second, tmpInfo, callee);
+    if(m_useBBX)
+      currValidity = (currValidity && _candidate.second.InBounds(_b));
+    cout << " (currValidity = " << currValidity << ")" << endl;
+  }
 
-  _cdInfo.m_minDist = (initValidity ? 1.0 : -1.0) * dm->Distance(_clrCfg, _cfg);
-
+  // Ensure the candidate is valid:
+  // Note: this is something we could remove for optimization
+  if(!ValidateCandidate(_candidate, _rays, _b, _useOppValidityWitness))
+    return false;
 
   //This check used to fail a lot of samples after turning off the binary witness
   //refining. This makes sense since the old version relied on the binary search
   //to guarantee a change to _clrCfg, but now we require witnesses of opposite
   //validity, so this is again impossible to trigger (still a good check though)
-  if(_clrCfg == _cfg) {//shouldn't happen, but should return an error
+  if(candidateCfg == _sampledCfg) {//shouldn't happen, but should return an error
     if(this->m_debug)
-      std::cout << fName + "returning false from _clrCfg == _cfg" << std::endl;
+      std::cout << callee + "returning false from _clrCfg == _cfg" << std::endl;
     return false;
   }
 
@@ -798,20 +779,151 @@ ApproxCollisionInfo(CfgType& _cfg, CfgType& _clrCfg,
   CDInfo tmpInfo;
   //check that it's NOT in bounds or that the witness validity is different
   // than the validity initially:
-  if(!_clrCfg.InBounds(_b) ||
-      (initValidity != vcm->IsValid(_clrCfg, tmpInfo, callee))) {
-    //do all of the stuff for a successful push:
-    _cfg.m_clearanceInfo = _cdInfo;
-    _cfg.m_witnessCfg = shared_ptr<Cfg>(new CfgType(_clrCfg));
-    return true;
-  }
-  else {
-    //Then the cfg was either in bounds and of the same validity as _cfg:
+  bool currValidity = vcm->IsValid(candidateCfg, tmpInfo, callee);
+  if(this->m_useBBX)
+    currValidity = currValidity && candidateCfg.InBounds(_b);
+
+  // will need to handle the condition about same vs opposite validity witness.
+  if(((_initValidity == currValidity) && _useOppValidityWitness) ||
+      ((_initValidity != currValidity) && !_useOppValidityWitness)) {
     if(this->m_debug)
-      std::cout << fName + "returning false from _clrCfg being out of bounds or"
-            " of opposite validity" << std::endl;
+      std::cout << callee + "returning false from candidate being of wrong "
+                "validity" << std::endl;
     return false;
   }
+
+  //If we make it here, we have a successful witness.
+  return true;
+}
+
+
+template<class MPTraits>
+void
+ClearanceUtility<MPTraits>::
+MakeRays(const CfgType& _sampledCfg, const std::size_t& _numRays,
+         std::vector<Ray<CfgType> >& _rays) {
+  auto dm  = this->GetDistanceMetric(m_dmLabel);
+  string callee = this->GetNameAndLabel() + "::MakeRays()";
+
+  //For 2d:
+  //initial ray starts at rand angle, then all others are uniformly distributed:
+  double angleRad = 2.*PI*rand()/(double)RAND_MAX;//Note 2d case only currently
+
+  for(size_t i = 0; i < _numRays; ++i) {
+    CfgType tmpDirection(this->GetTask()->GetRobot());
+
+    ///@TODO expand to 3D, and then to N dimensions for uniform distribution:
+    if(_sampledCfg.DOF() == 2) {
+      // This evenly divides up the rest of the angles all the way around,
+      // starting from the random initial angle.
+      angleRad += 2. * PI * (1. / _numRays);//note this happens numRays times
+      std::vector<double> dofData = {cos(angleRad), sin(angleRad)};
+      tmpDirection.SetData(dofData); // There's likely a better way to do this
+    }
+    else {
+      //The non-uniform way to get each ray:
+      tmpDirection.GetRandomRay(m_rayTickResolution, dm, false);
+    }
+
+    if(this->m_debug)
+      cout << "DEBUG:: tmpDirection " << i << " is " << tmpDirection << endl;
+
+    if(m_positional) { // Use only positional dofs
+      double factor = 0.0;
+      for(size_t j = 0; j < tmpDirection.DOF(); j++) {
+        if(j < tmpDirection.PosDOF())
+          factor += tmpDirection[j] * tmpDirection[j];
+        else
+          tmpDirection[j] = 0.0;
+      }
+      tmpDirection *= m_rayTickResolution / sqrt(factor);
+    }
+    if(this->m_debug) {
+      cout << "DEBUG:: tmpDirection " << i << " is " << tmpDirection << endl;
+      cout << "DEBUG:: \tdistance(_sampledCfg, _sampledCfg+tmpDirection) = "
+        << dm->Distance(_sampledCfg, _sampledCfg + tmpDirection) << endl;
+    }
+
+    _rays.push_back(Ray<CfgType>(tmpDirection, _sampledCfg));
+  }// end for (_numRays)
+
+  if(this->m_debug) {
+    cout << "DEBUG:: rays initialized\n";
+    cout << "DEBUG:: \ttick are:\n\t\t";
+    for(auto&  ray : _rays)
+      cout << ray.m_tick << "\n\t\t";
+    cout << endl;
+    cout << "DEBUG:: \tincr are:\n\t\t";
+    for(auto&  ray : _rays)
+      cout << ray.m_incr << "\n\t\t";
+    cout << endl;
+  }
+  return;
+}
+
+template<class MPTraits>
+bool
+ClearanceUtility<MPTraits>::
+ValidateCandidate(const std::pair<size_t, CfgType>& _cand,
+                  const std::vector<Ray<CfgType> >& _rays,
+                  const Boundary* const _b, const bool& _useOppValidityWitness){
+  string callee = this->GetNameAndLabel() + "::ValidateCandidate()";
+  auto vcm = this->GetValidityChecker(m_vcLabel);
+
+  // This is checking whether if we have an "incorrect" candidate, meaning
+  // that if a witness was found, then the candidate should have an initial cfg
+  // position that is valid, and then ticking forward once  should be invalid.
+  if(this->m_debug) {
+    cout << "DEBUG:: Verifying candidate is valid\n";
+    cout << _cand.first << std::endl;
+  }
+  CDInfo tmpInfo;
+
+  //Note: the "low" and "high" names are due to this before being a step of a
+  // binary search step for refining the witness location. The binary search has
+  // been removed, but the names remain.
+  //lowCfg is the one before the witness (for opposite-validity witnesses), so
+  // it must get ticked back unless we're doing same-validity witness.
+  CfgType lowCfg, highCfg;
+  if(_useOppValidityWitness)
+    lowCfg = _rays[_cand.first].m_incr * -1.0 + _cand.second;
+  else
+    lowCfg = _cand.second;
+
+
+  bool lowValidity = vcm->IsValid(lowCfg, tmpInfo, callee);
+  if(m_useBBX)
+    lowValidity = (lowValidity && lowCfg.InBounds(_b));
+
+  //highCfg is the witness (for opposite-validity witnesses) and is one tick
+  // past the witness for same-validity witnesses.
+  if(_useOppValidityWitness)
+    highCfg = _cand.second;
+  else
+    highCfg = _rays[_cand.first].m_incr + _cand.second;
+
+  bool highValidity = vcm->IsValid(highCfg, tmpInfo, callee);
+  if(m_useBBX)
+    highValidity = (highValidity && highCfg.InBounds(_b));
+
+  if(this->m_debug) {
+    cout << "lowCfg =" << std::endl << lowCfg << std::endl;
+    cout << " (lowValidity = " << lowValidity << ")" << endl;
+    cout << "highCfg =" << std::endl << highCfg << std::endl;
+    cout << " (highValidity = " << highValidity << ")" << endl;
+  }
+
+  //Do the validity check, this actually needs no condition on the flag, since
+  // the two ticks should be of opposite validity no matter the flag. We just
+  // have to handle the case if we have an OOB witness and invalid initial
+  // validity. The check conditioned on the flag is outside ValidateCandidate().
+  if(lowValidity == highValidity && !highCfg.InBounds(_b) && !lowValidity) {
+    if(this->m_debug)
+      std::cout << "Returning false from invalid witness candidate"
+                << std::endl;
+    return false;
+  }
+  return true;
 }
 
 
@@ -1093,19 +1205,16 @@ PushToMedialAxis(CfgType& _cfg, const Boundary* const _b) {
   bool pushed = false;
   pushed = PushCfgToMedialAxisMidpointRule(_cfg, _b);
 
-
   if(!pushed) {
-    if(this->m_debug) {
-      cout << "Not found!! ERR in pushtomedialaxis" << endl;
-      std::cout << callee << "Returning false from not "
-                             "being able to push to MA" << std::endl;
-    }
+    if(this->m_debug)
+      std::cout << callee << "Returning false from not being able to push to MA"
+                << std::endl;
     return false;
   }
 
   if(this->m_debug)
-    cout << "FINAL CfgType: " << _cfg << endl
-         << callee << "::END" << endl << endl;
+    cout << "Successfully got MA sample: " << _cfg << endl << callee << "::END"
+         << endl << endl;
 
   return true;
 }
@@ -1124,40 +1233,42 @@ PushFromInsideObstacle(CfgType& _cfg, const Boundary* const _b) {
   tmpInfo.ResetVars();
   tmpInfo.m_retAllInfo = true;
 
-  // Determine direction to move.
-  if(this->CollisionInfo(_cfg, transCfg, _b, tmpInfo, true)) {
+  // Determine direction to move. Note that passing true to CollisionInfo means
+  // for approximate witnesses, they will be of opposite validity of the sample.
+  // This is what we need for pushing from the obstacle.
+  if(!this->CollisionInfo(_cfg, transCfg, _b, tmpInfo, true)) {
     if(this->m_debug)
-      cout << "Clearance Cfg: " << transCfg << endl;
-  }
-  else
+      std::cout << callee + "Returning false from failing to get a witness"
+                << std::endl;
     return false;
+  }
 
   // _cfg cannot equal transCfg here, as CollisionInfo would have returned false
   _cfg = transCfg;
 
-  if(this->m_debug)
+  if(this->m_debug) {
+    cout << "Clearance Cfg: " << transCfg << endl;
     cout << "FINAL CfgType: " << _cfg << endl << callee << "::END " << endl;
+  }
 
   return true;
 }
 
-
-// Tim's note:
-//This version of PushCfg...() is using the premise of taking the midpoint of
-// lines in the C-Space and calling it the MA. Basically the witness point and
-// the normal to push the cfg along are found as normal, but this normal is
-// simply pushed along until another collision is found, then the midpoint
-// between the two is called the MA cfg.
-//This method means that the witness only needs to be found at the beginning,
-// then the cfg is pushed (checking collisions still) along that line. Only
-// doing the witness/ray shooting a single time is a HUGE benefit.
 template<class MPTraits>
 bool
 MedialAxisUtility<MPTraits>::
 PushCfgToMedialAxisMidpointRule(CfgType& _cfg, const Boundary* const _b) {
+  //This version of PushCfg...() is using the premise of taking the midpoint of
+  // lines in the C-Space and calling it the MA. Basically the witness point and
+  // the normal to push the cfg along are found as normal, but this normal is
+  // simply pushed along until another collision is found, then the midpoint
+  // between the two is called the MA cfg.
+  //This method means that the witness only needs to be found at the beginning,
+  // then the cfg is pushed (checking collisions still) along that line. Only
+  // doing the witness/ray shooting a single time is a HUGE benefit.
   string callee = this->GetNameAndLabel() + "::PushCfgToMedialAxisMidpointRule";
   if(this->m_debug)
-    cout << callee << endl << "Cfg: " << _cfg << " eps: " << m_epsilon << endl;
+    cout << callee << endl << "Cfg: " << _cfg << endl;
 
   auto vcm = this->GetValidityChecker(this->m_vcLabel);
 
@@ -1166,9 +1277,9 @@ PushCfgToMedialAxisMidpointRule(CfgType& _cfg, const Boundary* const _b) {
   tmpInfo.m_retAllInfo = true;
 
   // Should already be in free space
-  if(vcm->IsInsideObstacle(_cfg)) {
+  if(!vcm->IsValid(_cfg, tmpInfo, callee)) {
     if(this->m_debug)
-      std::cout << callee <<" Returning false due to already in obstacle"
+      std::cout << callee <<" Returning false due to already invalid"
                 << std::endl;
     return false;
   }
@@ -1184,7 +1295,6 @@ PushCfgToMedialAxisMidpointRule(CfgType& _cfg, const Boundary* const _b) {
 
   //second, find the unit normal
   CfgType unitDirectionToTickCfgAlong = _cfg - firstWitnessCfg;
-//  mathtool::Vector<double> normalData(unitDirectionToTickCfgAlong.GetData());
   unitDirectionToTickCfgAlong /= (unitDirectionToTickCfgAlong.Magnitude());
 
 
@@ -1195,7 +1305,7 @@ PushCfgToMedialAxisMidpointRule(CfgType& _cfg, const Boundary* const _b) {
   //It's important to note there that, unlike ApproxCollisionInfo(), we don't
   // care about arbitrary state change, we are requiring that _cfg is valid, and
   // as such, both of the witness cfgs SHOULD BE invalid or out of bounds.
-  //A better maxIterations might be in order, but this should be fine
+  //A better maxIterations might be in order, but this should be fine for now.
   const size_t maxIterations = _b->GetMaxDist()/this->m_rayTickResolution;
   CfgType magnitudeAndDirectionToTick = unitDirectionToTickCfgAlong *
                                                 this->m_rayTickResolution;
@@ -1209,7 +1319,7 @@ PushCfgToMedialAxisMidpointRule(CfgType& _cfg, const Boundary* const _b) {
     //tick
     CfgType tickedCfg = _cfg + magnitudeAndDirectionToTick*(double)i;
     //check validity and if in bounds:
-    CDInfo tmpInfo;
+    tmpInfo.ResetVars();
     valid = vcm->IsValid(tickedCfg, tmpInfo, callee);
     inBounds = tickedCfg.InBounds(_b);
     if(!inBounds || !valid) {
@@ -1236,8 +1346,9 @@ PushCfgToMedialAxisMidpointRule(CfgType& _cfg, const Boundary* const _b) {
 
   //Now we have to double check that it's valid, since it's possible that it's
   // not, especially with increase in complexity of environment/narrow passages
+  tmpInfo.ResetVars();
   if(!cfgMA.InBounds(_b)
-      || !vcm->IsValid(cfgMA, tmpInfo, callee)) {
+     || !vcm->IsValid(cfgMA, tmpInfo, callee)) {
     //It's either OOB or it's invalid, this pair of witness won't work for a
     // MA sample, so return false.
     if(this->m_debug)
