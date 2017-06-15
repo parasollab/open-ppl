@@ -167,7 +167,7 @@ inline
 T
 Range<T>::
 Length() const noexcept {
-  return max - min;
+  return max -  min;
 }
 
 
@@ -176,7 +176,7 @@ inline
 T
 Range<T>::
 Center() const noexcept {
-  return Length() / T(2);
+  return (max + min) / T(2);
 }
 
 
