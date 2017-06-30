@@ -64,14 +64,12 @@ Sampler(CfgType& _cfg, const Boundary* const _boundary,
     m_medialAxisUtility.Initialize();
   }
 
-  bool generated = false;
-
-  // If pushed properly and the new CfgType is valid, set generated to true.
   if(m_medialAxisUtility.PushToMedialAxis(_cfg, _boundary)) {
-    generated = true;
     _result.push_back(_cfg);
+    return true;
   }
-  return generated;
+  _collision.push_back(_cfg);
+  return false;
 }
 
 #endif

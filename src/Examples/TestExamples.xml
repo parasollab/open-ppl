@@ -334,13 +334,40 @@
         do2dEnvTests="true" forceNarrowPassageSamples2dEnv="false">
         <Sampler method="UniformRandom" number="500" attempts="5"/>
       </PushCfgToMATest>
+      
+      <PushCfgToMATest label="PushCfgToMATestApprox"
+        vcLabel="pqp_solid" dmLabel="euclidean"
+        clearanceType="approx" clearanceRays="16"
+        penetrationType="approx" penetrationRayFactor="1"
+        rayTickPosResolutionFactor=".5" orientationResolutionFactor="1.0"
+        maxRayTickMagnitude="50"
+        useBBX="true" debug="false"
+        historyLength="5" positional="true"
+        attemptInvalidSamples="true"
+        do2dEnvTests="false" forceNarrowPassageSamples2dEnv="false">
+        <Sampler method="UniformRandom" number="500" attempts="5"/>
+      </PushCfgToMATest>
+
+      <PushCfgToMATest label="PushCfgToMATestExact"
+        vcLabel="pqp_solid" dmLabel="euclidean"
+        clearanceType="exact"
+        penetrationType="exact"
+        useBBX="true" debug="false"
+        sameValidityWitnessTest="true"
+        historyLength="5" positional="true"
+        attemptInvalidSamples="true"
+        do2dEnvTests="false" forceNarrowPassageSamples2dEnv="false">
+        <Sampler method="UniformRandom" number="1000" attempts="5"/>
+      </PushCfgToMATest>
 
     </MPStrategies>
 
     <!-- MPProblem allows multiple solvers to be specified and executed. -->
 
-    <Solver mpStrategyLabel="PushCfgToMATest1" seed="12345678"
-      baseFilename="PushToMATest" vizmoDebug="true"/>
+<!--     <Solver mpStrategyLabel="PushCfgToMATestApprox" seed="12345678" -->
+<!--       baseFilename="PushToMATestApprox" vizmoDebug="true"/> -->
+    <Solver mpStrategyLabel="PushCfgToMATestExact" seed="12345678"
+      baseFilename="PushToMATestExact" vizmoDebug="true"/>
 
   </Library>
 

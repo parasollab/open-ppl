@@ -105,7 +105,8 @@ class ClearanceUtility : public MPBaseObject<MPTraits> {
     /// Calculate clearance information exactly by taking the validity
     ///        checker results against obstacles to the bounding box.
     bool ExactCollisionInfo(CfgType& _cfg, CfgType& _clrCfg,
-        const Boundary* const _b, CDInfo& _cdInfo);
+        const Boundary* const _b, CDInfo& _cdInfo,
+        const bool _useOppValidityWitness = true);
 
     /// Calculate the approximate clearance using a series of rays. The
     ///        specified number of rays are pushed outward until they change in
@@ -185,6 +186,18 @@ class ClearanceUtility : public MPBaseObject<MPTraits> {
     bool m_initialized{false};
 
     ///@}
+
+    /// Adjusts a witness from a nearby witness point to a point of guranteed
+    /// validity, based on _initValidity and _useOppValidityWitness.
+    bool AdjustWitnessToEnsureValidity(
+                                const CfgType& _cfg, const bool _initValidity,
+                                CfgType& _witnessCfg, const Boundary* const _b,
+                                const bool _useOppValidityWitness = true);
+
+    /// GetNearestVertexWitness will do this for us, including boundary witness
+    /// information, if BBX is active as an obstacle.
+    const bool GetNearestVertexWitness(CfgType& _cfg, CDInfo& _cdInfo,
+                                       const Boundary* const _b);
 };
 
 
@@ -258,6 +271,11 @@ class MedialAxisUtility : public ClearanceUtility<MPTraits> {
     size_t m_historyLength{5};
 
     ///@}
+
+    //Does a fuzzy equals using the minimum epsilon of _tolerance,
+    // for _v1 == _v2.
+    bool FuzzyVectorEquality(mathtool::Vector3d _v1, mathtool::Vector3d _v2,
+      const double _tolerance = 10.*std::numeric_limits<double>::epsilon());
 };
 
 /*---------------------------- Clearance Utility -----------------------------*/
@@ -398,16 +416,9 @@ ClearanceUtility<MPTraits>::
 CollisionInfo(CfgType& _cfg, CfgType& _clrCfg, const Boundary* const _b,
     CDInfo& _cdInfo, const bool& _useOppValidityWitness) {
   if(m_exactClearance)
-    return ExactCollisionInfo(_cfg, _clrCfg, _b, _cdInfo);
+    return ExactCollisionInfo(_cfg, _clrCfg, _b, _cdInfo, _useOppValidityWitness);
   else
-  {
-    if(this->m_debug)
-      std::cout << "entering ApproxCollisionInfo" << std::endl;
-    auto a = ApproxCollisionInfo(_cfg, _clrCfg, _b, _cdInfo, _useOppValidityWitness);
-    if(this->m_debug)
-      std::cout << "exited ApproxCollisionInfo" << std::endl;
-    return a;
-  }
+    return ApproxCollisionInfo(_cfg, _clrCfg, _b, _cdInfo, _useOppValidityWitness);
 }
 
 
@@ -415,11 +426,19 @@ template<class MPTraits>
 bool
 ClearanceUtility<MPTraits>::
 ExactCollisionInfo(CfgType& _cfg, CfgType& _clrCfg, const Boundary* const _b,
-    CDInfo& _cdInfo) {
+                   CDInfo& _cdInfo, const bool _useOppValidityWitness) {
   if(_cfg.m_witnessCfg.get() != 0) {
     _cdInfo = _cfg.m_clearanceInfo;
     _clrCfg = CfgType(*_cfg.m_witnessCfg);
     return true;
+  }
+
+  const string callee = this->GetNameAndLabel() + "::ExactCollisionInfo";
+
+  if(!_cfg.InBounds(_b)) {
+    if(this->m_debug)
+      std::cout << callee << "Returning false due to _cfg being OOB initially."
+                << std::endl;
   }
 
   if(this->m_debug) {
@@ -427,36 +446,77 @@ ExactCollisionInfo(CfgType& _cfg, CfgType& _clrCfg, const Boundary* const _b,
     VDAddTempCfg(_cfg, false);
   }
 
-  // ClearanceUtility variables
-  Environment* env = this->GetEnvironment();
 
-  // Setup Validity Checker
-  string callee = this->GetNameAndLabel() + "::ExactCollisionInfo";
-  auto vcm = this->GetValidityChecker(m_vcLabel);
-  _cdInfo.ResetVars();
-  _cdInfo.m_retAllInfo = true;
+  const bool initValidity = GetNearestVertexWitness(_cfg, _cdInfo, _b);
 
-  // If not in BBX or valid, return false (IsValid gets _cdInfo)
-  bool initInside = vcm->IsInsideObstacle(_cfg);         // Initially Inside Obst
-  bool initValidity = vcm->IsValid(_cfg, _cdInfo, callee); // Initial Validity
-  initValidity = initValidity && !initInside;
+  auto robot = _cfg.GetRobot();
+  //Use the vector constructor (positional dofs set to vector, all others are 0)
+  // so this creates a witness that is translated from the sample by the vector
+  // from the sample cfg's closest vertex to the witness vertex.
+  _clrCfg = _cfg +
+            CfgType((_cdInfo.m_objectPoint - _cdInfo.m_robotPoint), robot);
 
-  if(!initValidity) {
-    _cdInfo.m_minDist = -_cdInfo.m_minDist;
+  if(_clrCfg == _cfg) {
+    if(this->m_debug)
+      std::cout << callee << ": Returning false from _clrCfg == _cfg."
+                << std::endl;
+    return false;
   }
 
-  // If not using the bbx, done
-  if(m_useBBX) {
+  if(!AdjustWitnessToEnsureValidity(_cfg, initValidity, _clrCfg,
+                                    _b, _useOppValidityWitness)) {
+    if(this->m_debug)
+      std::cout << callee << "Returning false from witness adjustment failing"
+                << std::endl;
+    return false;
+  }
+
+  if(this->m_debug)
+    VDAddTempCfg(_clrCfg, true);
+
+  //Final data to set for successful witness found:
+  _cfg.m_witnessCfg = shared_ptr<Cfg>(new CfgType(_clrCfg));
+  _cfg.m_clearanceInfo = _cdInfo;
+
+  return true;
+}
+
+template<class MPTraits>
+const bool
+ClearanceUtility<MPTraits>::
+GetNearestVertexWitness(CfgType& _cfg, CDInfo& _cdInfo,
+                        const Boundary* const _b) {
+  //This function places the nearest vertex of the environment and the nearest
+  // robot vertex into _cdInfo.
+  //Returns the validity of _cfg provided.
+
+  // Setup Validity Checker
+  auto vcm = this->GetValidityChecker(m_vcLabel);
+
+  _cdInfo.ResetVars(true);//true so we get all data back
+
+  const string callee = this->GetNameAndLabel() + "::GetNearestVertexWitness";
+
+  // Checking the validity here populates the _cdInfo object.
+  const bool initValidity = vcm->IsValid(_cfg, _cdInfo, callee); // Initial Validity
+
+  //If initially invalid, then we are doing penetration. Return a negative
+  // distance in order to indicate this.
+  if(!initValidity)
+    _cdInfo.m_minDist = -_cdInfo.m_minDist;
+
+  // If not using the bbx, we have the closest obstacle point already.
+
+  if(this->m_useBBX) {
     // CfgType is now know as good, get BBX and ROBOT info
     auto multiBody = _cfg.GetMultiBody();
 
     // Find closest point between robot and bbx, set if less than min dist
     // from obstacles
     for(size_t m = 0; m < multiBody->NumFreeBody(); ++m) {
-      const GMSPolyhedron& poly = multiBody->GetFreeBody(m)->
-          GetWorldPolyhedron();
+      const GMSPolyhedron& poly = multiBody->GetFreeBody(m)->GetWorldPolyhedron();
       for(size_t j = 0; j < poly.m_vertexList.size(); ++j) {
-        double clr = _b->GetClearance(poly.m_vertexList[j]);
+        const double clr = _b->GetClearance(poly.m_vertexList[j]);
         if(clr < _cdInfo.m_minDist) {
           _cdInfo.m_robotPoint = poly.m_vertexList[j];
           _cdInfo.m_objectPoint = _b->GetClearancePoint(poly.m_vertexList[j]);
@@ -466,80 +526,88 @@ ExactCollisionInfo(CfgType& _cfg, CfgType& _clrCfg, const Boundary* const _b,
       }
     }
   }
-
-  Vector3d clrDir = _cdInfo.m_objectPoint - _cdInfo.m_robotPoint;
-  auto robot = this->GetTask()->GetRobot();
-  CfgType stepDir(robot);
-  double factor = 0;
-  for(size_t i = 0; i < _clrCfg.DOF(); ++i) {
-    if(i < _clrCfg.PosDOF()) {
-      _clrCfg[i] = _cfg[i] + clrDir[i];
-      stepDir[i] = clrDir[i];
-      factor += clrDir[i] * clrDir[i];
-    }
-    else {
-      _clrCfg[i] = _cfg[i];
-      stepDir[i] = 0.0;
-    }
-
-    stepDir *= env->GetPositionRes() / sqrt(factor);
-  }
-
-  if(_clrCfg == _cfg)
-    return false;
-
-  //if initially invalid, it appears this returns a valid witness cfg anyways
-  if(!initValidity) {
-    CfgType incr(robot), tmpCfg = _clrCfg;
-    int nTicks;
-    incr.FindIncrement(_cfg, _clrCfg, &nTicks,
-        env->GetPositionRes(), env->GetOrientationRes());
-
-    bool tmpValidity = vcm->IsValid(tmpCfg, callee);
-    tmpValidity = tmpValidity && !vcm->IsInsideObstacle(tmpCfg);
-    while(!tmpValidity) {//increment until validity acheived
-      tmpCfg += incr;
-
-      tmpValidity = vcm->IsValid(tmpCfg, callee);
-      tmpValidity = tmpValidity && !vcm->IsInsideObstacle(tmpCfg);
-      bool inBBX = tmpCfg.InBounds(_b);
-      if(!inBBX) {
-        if(this->m_debug)
-          cout << "ERROR: Fell out of BBX, error out... " << endl;
-        return false;
-      }
-    }
-    _clrCfg = tmpCfg;
-  }
-
-  if(this->m_debug)
-    VDAddTempCfg(_clrCfg, true);
-
-  _cfg.m_clearanceInfo = _cdInfo;
-  _cfg.m_witnessCfg = shared_ptr<Cfg>(new CfgType(_clrCfg));
-
-  return true;
+  return initValidity;
 }
 
 
 template<class MPTraits>
 bool
 ClearanceUtility<MPTraits>::
-ApproxCollisionInfo(CfgType& _cfg, CfgType& _clrCfg, const Boundary* const _b,
-                    CDInfo& _cdInfo, const bool& _useOppValidityWitness) {
-  // First check that the utility has been properly initialized:
-  if(!this->m_initialized) {
-    if(this->GetMPLibrary()) {
-      //If we have a valid library, call Initialize. Otherwise throw an error.
-      Initialize();
-    }
-    else {
-      RunTimeException(WHERE, "Cannot use approximate methods for witness "
-          "finding, or clearance or penetration measurements without calling "
-          "Initialize on the ClearanceUtility (or MedialAxisUtility) "
-          "beforehand");
+AdjustWitnessToEnsureValidity(const CfgType& _cfg, const bool _initValidity,
+                              CfgType& _witnessCfg, const Boundary* const _b,
+                              const bool _useOppValidityWitness) {
+  //_cfg is the sample configuration of _initValidity. _witnessCfg is its
+  // initial witness, which is just the translated _cfg from its nearest vertex
+  // to the nearest obstacle vertex.
+  Environment* env = this->GetEnvironment();
+  // Setup Validity Checker
+  auto vcm = this->GetValidityChecker(m_vcLabel);
+
+  //See if the current _witnessCfg is a passing witness.
+  const string callee = this->GetNameAndLabel()+"::AdjustWitnessToEnsureValidity";
+  bool currValidity = vcm->IsValid(_witnessCfg, callee);
+  if(this->m_useBBX)
+    currValidity = currValidity && _witnessCfg.InBounds(_b);
+
+  const bool witnessIsSameValidity = (_initValidity == currValidity);
+  bool passed = _useOppValidityWitness ? !witnessIsSameValidity :
+                                          witnessIsSameValidity;
+
+  if(!passed) {
+    auto robot = _cfg.GetRobot();
+    //Get the increment:
+    CfgType incr(robot);
+    int nTicks; //This is used as the maximum number of adjustments possible.
+    incr.FindIncrement(_cfg, _witnessCfg, &nTicks,
+        env->GetPositionRes(), env->GetOrientationRes());
+
+    int count = 0;
+    while(!passed) {
+      //All of the cases boil down to this condition wrt which direction to move
+      // (think about it in terms of the _useOppValidityWitness value, if it's
+      // set to true, then the only condition that could be in here is if they
+      // have the same validity, otherwise it's false and they are opposite).
+      if(witnessIsSameValidity)
+        _witnessCfg += incr;//Push out until validity changes.
+      else
+        _witnessCfg -= incr;//Pull cfg back until validity changes.
+
+      //Note: a potential optimization is to only do a validity check against
+      // the obstacle originally colliding with the witness, as that shouldn't
+      // change when adjusting. It would only help certain cases though.
+      currValidity = vcm->IsValid(_witnessCfg, callee);
+      const bool inBounds = _witnessCfg.InBounds(_b);
+      if(this->m_useBBX)
+        currValidity = currValidity && inBounds;
+      passed = _useOppValidityWitness ? (_initValidity != currValidity) :
+                                        (_initValidity == currValidity);
+
+      //If we go out of bounds while adjusting a witness, call it a failure.
+      // (Note that an acceptable OOB witness would have already been caught)
+      // Checking not passed here is very important!
+      if(!inBounds && !passed) {
+        if(this->m_debug)
+          cout << callee << ": Fell out of BBX after " << count << " steps, "
+               "returning false" << endl;
+        return false;
+      }
+      if(++count >= nTicks) {
+        if(this->m_debug)
+          std::cout << callee << ": Tried more than nTicks = " << nTicks <<
+                    " when adjusting witness, returning false" << std::endl;
+        return false;
+      }
     }
   }
+
+  return passed;
+}
+
+template<class MPTraits>
+bool
+ClearanceUtility<MPTraits>::
+ApproxCollisionInfo(CfgType& _cfg, CfgType& _clrCfg, const Boundary* const _b,
+                    CDInfo& _cdInfo, const bool& _useOppValidityWitness) {
   const string fName = "ApproxCollisionInfo: ";
 
   // Check computation cache
@@ -602,11 +670,10 @@ ApproxCollisionInfo(CfgType& _cfg, CfgType& _clrCfg, const Boundary* const _b,
     cout << "DEBUG:: setting info, returning" << std::endl;
   }
 
-  //Next, we will set the final info to return:
-  //give the invalid (one more tick ahead) cfg back as the witness:
+  //Set the final info to return. Note that the witness here needs
+  // not be ticked either direction, as FindApproximateWitness handles all of
+  // the witness validity logic.
   _clrCfg = cand.second;
-  // Note cadidates[0].second is the point before collision, and we know that
-  // adding one more m_incr will put us at opposite validity (or OOB)
 
   _cdInfo.m_minDist = (initValidity ? 1.0 : -1.0) * dm->Distance(_clrCfg, _cfg);
   _cfg.m_clearanceInfo = _cdInfo;
@@ -621,7 +688,6 @@ ClearanceUtility<MPTraits>::
 FindApproximateWitness(const std::size_t& _numRays,
             std::vector<Ray<CfgType> >& _rays, const CfgType& _sampledCfg,
             const bool& _initValidity, const Boundary* const _b,
-            //TODO make a flag for same/opposite validity witnesses.
             std::pair<size_t, CfgType>& _candidate,
             const bool& _useOppValidityWitness) {
   if(this->m_debug)
@@ -717,7 +783,7 @@ FindApproximateWitness(const std::size_t& _numRays,
       //if validity state has changed, save the candidate and stop searching:
       //Note that OOB is of the same invalid status here as in collision.
       if(currValidity != _initValidity) {
-        candidateFound = true; // So the while loop will exit
+        candidateFound = true; // So the enveloping while loop will exit
 
         candidateCfg = rit->m_tick;
         //tick back the current cfg only if using the same validity witness:
@@ -725,10 +791,9 @@ FindApproximateWitness(const std::size_t& _numRays,
           candidateCfg -= rit->m_incr;
 
         //Note: this is pushing back the index of the candidate ray (what
-        // distance() returns) and the actual location that we have found
-        // right BEFORE the collision configuration was found.
-        _candidate = make_pair(
-            distance(_rays.begin(), rit), candidateCfg);
+        // distance() returns) and the actual location that we have found. The
+        // location's validity is determined by the type of witness desired.
+        _candidate = make_pair(distance(_rays.begin(), rit), candidateCfg);
 
         //Quit the loop since the witness has been found.
         break;
@@ -762,30 +827,22 @@ FindApproximateWitness(const std::size_t& _numRays,
   if(!ValidateCandidate(_candidate, _rays, _b, _useOppValidityWitness))
     return false;
 
-  //This check used to fail a lot of samples after turning off the binary witness
-  //refining. This makes sense since the old version relied on the binary search
-  //to guarantee a change to _clrCfg, but now we require witnesses of opposite
-  //validity, so this is again impossible to trigger (still a good check though)
-  if(candidateCfg == _sampledCfg) {//shouldn't happen, but should return an error
+  // This check should be impossible to trigger, but it's a good thing to ensure
+  if(candidateCfg == _sampledCfg) {
     if(this->m_debug)
       std::cout << callee + "returning false from _clrCfg == _cfg" << std::endl;
     return false;
   }
 
-  //Since we want witnesses to now be the opposite validity, if it's
-  // a clearance calculation, it should either be out of bounds or invalid,
-  //If penetration, then either out of bounds or valid.
-  //Note that being out of bounds is ALWAYS a witness trigger.
   CDInfo tmpInfo;
-  //check that it's NOT in bounds or that the witness validity is different
-  // than the validity initially:
   bool currValidity = vcm->IsValid(candidateCfg, tmpInfo, callee);
   if(this->m_useBBX)
     currValidity = currValidity && candidateCfg.InBounds(_b);
 
-  // will need to handle the condition about same vs opposite validity witness.
-  if(((_initValidity == currValidity) && _useOppValidityWitness) ||
-      ((_initValidity != currValidity) && !_useOppValidityWitness)) {
+  //Final check to make sure the witness is of correct validity.
+  bool passed = _useOppValidityWitness ? (_initValidity != currValidity) :
+                                         (_initValidity == currValidity);
+  if(!passed) {
     if(this->m_debug)
       std::cout << callee + "returning false from candidate being of wrong "
                 "validity" << std::endl;
@@ -1230,15 +1287,14 @@ PushFromInsideObstacle(CfgType& _cfg, const Boundary* const _b) {
 
   CfgType transCfg = _cfg;
   CDInfo tmpInfo;
-  tmpInfo.ResetVars();
-  tmpInfo.m_retAllInfo = true;
+  tmpInfo.ResetVars(true);//true so it returns all info.
 
   // Determine direction to move. Note that passing true to CollisionInfo means
-  // for approximate witnesses, they will be of opposite validity of the sample.
+  // all witnesses will be of opposite validity of the sample (_cfg).
   // This is what we need for pushing from the obstacle.
   if(!this->CollisionInfo(_cfg, transCfg, _b, tmpInfo, true)) {
     if(this->m_debug)
-      std::cout << callee + "Returning false from failing to get a witness"
+      std::cout << callee + " Returning false from failing to get a witness"
                 << std::endl;
     return false;
   }
@@ -1255,6 +1311,20 @@ PushFromInsideObstacle(CfgType& _cfg, const Boundary* const _b) {
 }
 
 template<class MPTraits>
+inline bool
+MedialAxisUtility<MPTraits>::
+FuzzyVectorEquality(mathtool::Vector3d _v1, mathtool::Vector3d _v2,
+                    double _tolerance) {
+  for(std::size_t i = 0; i < 3; i++) {
+    if(!mathtool::approx(_v1[i], _v2[i], _tolerance))
+      return false;
+  }
+  return true;
+}
+
+
+
+template<class MPTraits>
 bool
 MedialAxisUtility<MPTraits>::
 PushCfgToMedialAxisMidpointRule(CfgType& _cfg, const Boundary* const _b) {
@@ -1266,6 +1336,9 @@ PushCfgToMedialAxisMidpointRule(CfgType& _cfg, const Boundary* const _b) {
   //This method means that the witness only needs to be found at the beginning,
   // then the cfg is pushed (checking collisions still) along that line. Only
   // doing the witness/ray shooting a single time is a HUGE benefit.
+  //When using Exact clearance/witness finding, the iterations stop when the
+  // witness changes. We can only do this in exact since the approximate witness
+  // finding is extremely noise-prone and slow.
   string callee = this->GetNameAndLabel() + "::PushCfgToMedialAxisMidpointRule";
   if(this->m_debug)
     cout << callee << endl << "Cfg: " << _cfg << endl;
@@ -1273,37 +1346,49 @@ PushCfgToMedialAxisMidpointRule(CfgType& _cfg, const Boundary* const _b) {
   auto vcm = this->GetValidityChecker(this->m_vcLabel);
 
   CDInfo tmpInfo;
-  tmpInfo.ResetVars();
-  tmpInfo.m_retAllInfo = true;
+  tmpInfo.ResetVars(true);//true so it returns all info.
 
   // Should already be in free space
   if(!vcm->IsValid(_cfg, tmpInfo, callee)) {
     if(this->m_debug)
-      std::cout << callee <<" Returning false due to already invalid"
+      std::cout << callee <<": Returning false due to already invalid"
                 << std::endl;
     return false;
   }
 
   //first, get the witness that I need
-  CfgType firstWitnessCfg = _cfg;//assignment necessary for robot pointer
-  if(!this->CollisionInfo(_cfg, firstWitnessCfg, _b, tmpInfo)) {
-    if(this->m_debug) {
-      std::cout << callee << "Returning false from not being able to"
+  CfgType firstWitnessCfg(_cfg.GetRobot());
+  if(!this->CollisionInfo(_cfg, firstWitnessCfg, _b, tmpInfo, true)) {
+    if(this->m_debug)
+      std::cout << callee << ": Returning false from not being able to"
                              " find first witness" << std::endl;
-    }
+    return false;
   }
 
-  //second, find the unit normal
+  //Needed when using exact witnesses:
+  mathtool::Vector3d firstWitnessVertex = tmpInfo.m_objectPoint;
+
+  if(this->m_debug) {
+    mathtool::Vector3d firstNormalDirection =
+                                  tmpInfo.m_robotPoint - firstWitnessVertex;
+    firstNormalDirection /= firstNormalDirection.norm();
+    std::cout << callee << ": first normal direction from witness = "
+              << firstNormalDirection << std::endl;
+    std::cout << "_cfg = " << _cfg << std::endl << "firstWitnessCfg = "
+              << firstWitnessCfg << std::endl;
+  }
+
+  //Find the unit normal:
   CfgType unitDirectionToTickCfgAlong = _cfg - firstWitnessCfg;
   unitDirectionToTickCfgAlong /= (unitDirectionToTickCfgAlong.Magnitude());
 
+  if(this->m_debug)
+    std::cout << callee << ": Unit cfg to tick along = " <<
+              unitDirectionToTickCfgAlong << std::endl;
 
-  //third, move along normal until anther "witness" is found
-  //we don't need to go any farther than the max boundary, and the number of
-  // iterations to go that far is computed here:
-
-  //It's important to note there that, unlike ApproxCollisionInfo(), we don't
-  // care about arbitrary state change, we are requiring that _cfg is valid, and
+  //Move along normal until anther witness is found.
+  //It's important to note that, unlike ApproxCollisionInfo(), we don't
+  // care about arbitrary state change. We are requiring that _cfg is valid, and
   // as such, both of the witness cfgs SHOULD BE invalid or out of bounds.
   //A better maxIterations might be in order, but this should be fine for now.
   const size_t maxIterations = _b->GetMaxDist()/this->m_rayTickResolution;
@@ -1313,49 +1398,104 @@ PushCfgToMedialAxisMidpointRule(CfgType& _cfg, const Boundary* const _b) {
   //declare these outside so I can reuse them after breaking/finishing the loop:
   bool inBounds = true;
   bool valid = true;
-  size_t i;
+  bool passed = false;
+  CfgType tickedCfg = _cfg;
 
-  for(i = 0; i < maxIterations; i++) {
-    //tick
-    CfgType tickedCfg = _cfg + magnitudeAndDirectionToTick*(double)i;
-    //check validity and if in bounds:
-    tmpInfo.ResetVars();
-    valid = vcm->IsValid(tickedCfg, tmpInfo, callee);
+  //Start with tick = 1, since tick 0 is just the initial sample.
+  for(size_t tick = 1; tick < maxIterations; tick++) {
+    //Tick the cfg:
+    tickedCfg += magnitudeAndDirectionToTick;
+
+    //Check if in bounds:
     inBounds = tickedCfg.InBounds(_b);
-    if(!inBounds || !valid) {
-      break;// we have found the second and final witness
+    if(!inBounds && !this->m_useBBX) {
+      if(this->m_debug)
+        std::cout << "Returning false from going OOB but not using BBX as "
+                     "obstacle" << std::endl;
+      return false;
+    }
+
+    if(this->m_exactClearance) {
+      this->GetStatClass()->StartClock("Exact MA iterate timer");
+      //Exact, so we want all CD info, specifically the witness point.
+      // GetNearestVertexWitness will do this for us, including boundary witness
+      // information, if BBX is active as an obstacle. It also returns the
+      // IsValid() boolean for _cfg and puts all data in tmpInfo:
+      valid = this->GetNearestVertexWitness(tickedCfg, tmpInfo, _b);
+
+      if(!valid || !inBounds) {
+        if(this->m_debug)
+          std::cout << "Returning false from going invalid when looking for "
+                       "second exact witness." << std::endl
+                    << "_cfg = " << _cfg << std::endl << "first witness cfg = "
+                    << firstWitnessCfg << std::endl << "unit tick direction = "
+                    << unitDirectionToTickCfgAlong << std::endl << "Current "
+                    "ticked cfg = " << tickedCfg << std::endl << std::endl;
+        return false;
+      }
+      //For exact, we can quit as soon as we have a witness change.
+      //Note: a more exact equality will have problems with semi-noisy witnesses!
+      // I'm not sure where the noise is from, but there seems to be very small
+      // numerical instability in the vertex finding of nearest witness for some
+      // cases, so using a 10^(-5) threshold difference fixes it really well.
+      const double threshold = .00001;
+      passed = !FuzzyVectorEquality(
+                tmpInfo.m_objectPoint, firstWitnessVertex, threshold);
+      this->GetStatClass()->StopClock("Exact MA iterate timer");
+    }
+    else {
+      this->GetStatClass()->StartClock("Approx MA iterate timer");
+      //Do the most simple validity check (not returning all info).
+      valid = vcm->IsValid(tickedCfg, callee);
+      //For approximate, we go until a validity change occurs:
+      passed = !inBounds || !valid;
+      //Note that if we are OOB and not using BBX as an obstacle, it would have
+      // already been caught/handled after populating inBounds this iteration.
+      this->GetStatClass()->StopClock("Approx MA iterate timer");
+    }
+
+    if(passed) {
+      if(this->m_debug && this->m_exactClearance)
+        std::cout << callee << ": passed on tick " << tick << " with original "
+                  << "witness vertex = " << firstWitnessVertex << " and second "
+                  "witness vertex = " << tmpInfo.m_objectPoint
+                  << std::endl << std::endl;
+      break;// we have found the second and final witness, break out of the loop
     }
   }
 
-  //check that it's truly what we wanted:
-  CfgType finalWitnessCfg = _cfg;//assignment necessary for robot pointer
-  if(!inBounds || !valid) {
-    //Note that i, inBounds, and valid are all preserved from the last
-    // run of the loop.
-    finalWitnessCfg += magnitudeAndDirectionToTick*(double)i;
-  }
-  else {
+  //check that it passed, and didn't just time out.
+  if(!passed) {
     if(this->m_debug)
       std::cout << callee << " Returning false as no second witness could "
                               "be found" << std::endl;
     return false;
   }
 
-  //fourth, get the midpoint of the two witness cfgs and return it as the MA cfg:
-  CfgType cfgMA = (firstWitnessCfg + finalWitnessCfg)/2.0;
+  //If doing exact, then the MA sample is the midpoint of the two last ticks.
+  // Note that "witness cfg" is inaccurate for what it is, but it should be
+  // clear enough.
+  if(this->m_exactClearance)
+    firstWitnessCfg = tickedCfg - magnitudeAndDirectionToTick;
+
+  //If doing approx, the first witness is already set, and the last witness is
+  // simply the tickedCfg.
+
+  //Find the midpoint of the two cfgs and return it as the MA cfg:
+  CfgType cfgMA = (firstWitnessCfg + tickedCfg)/2.0;
 
   //Now we have to double check that it's valid, since it's possible that it's
-  // not, especially with increase in complexity of environment/narrow passages
-  tmpInfo.ResetVars();
-  if(!cfgMA.InBounds(_b)
-     || !vcm->IsValid(cfgMA, tmpInfo, callee)) {
-    //It's either OOB or it's invalid, this pair of witness won't work for a
+  // not, especially with increase in complexity of environment/narrow passages.
+  if(!cfgMA.InBounds(_b) || !vcm->IsValid(cfgMA, callee)) {
+    //It's either OOB or it's invalid. This pair of witness won't work for a
     // MA sample, so return false.
     if(this->m_debug)
       std::cout << callee << "Returning false due to invalid midpoint cfg"
                 << std::endl;
     return false;
   }
+
+  _cfg = cfgMA;
 
   if(this->m_debug) {
     VDComment("Final CFG");
@@ -1364,12 +1504,8 @@ PushCfgToMedialAxisMidpointRule(CfgType& _cfg, const Boundary* const _b) {
     VDClearComments();
     VDClearLastTemp();
     VDClearLastTemp();
-  }
-
-  _cfg = cfgMA;
-
-  if(this->m_debug)
     cout << "FINAL Cfg: " << _cfg << endl;
+  }
 
   return true;
 }

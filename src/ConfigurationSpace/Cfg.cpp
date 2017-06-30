@@ -761,9 +761,10 @@ GetRandomCfg(const Boundary* const _b) {
   // throw error message and some helpful statistics
   ostringstream oss;
   oss << "GetRandomCfg could not generate a sample.\n"
-      << "\nRobot C-Space: " << *cspace
-      << "\nRobot V-Space: " << *vspace
-      << "\nSampling boundary: " << *_b
+      << "\nRobot C-Space: " << *cspace;
+  if(vspace)
+    oss << "\nRobot V-Space: " << *vspace;
+  oss << "\nSampling boundary: " << *_b
       << "\nRobot radius: " << GetMultiBody()->GetBoundingSphereRadius() << ".";
   throw PMPLException("Sampling Failure", WHERE, oss.str());
 }

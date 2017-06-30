@@ -156,7 +156,7 @@ Iterate() {
   }
 
   //Note that m_samplerIndices holds the STRING key to get the sampler.
-  auto s = this->GetSampler(m_samplerIndices.at(0));
+  auto sampler = this->GetSampler(m_samplerIndices.at(0));
   auto samplerPair = m_samplerLabels[m_samplerIndices.at(0)];
   size_t numSamples = samplerPair.first;
   int maxAttempts = samplerPair.second;
@@ -178,12 +178,13 @@ Iterate() {
         && (numAdded + m_numSamplesFailed) < m_maxSamplesToAttempt){
     CfgType cfg;
     CDInfo tmpInfo;
-    tmpInfo.ResetVars();
-    tmpInfo.m_retAllInfo = true;
+    tmpInfo.ResetVars(true);
     StatClass* stats = this->GetStatClass();
 
     //Get 1 sample
-    s->Sample(1, maxAttempts, boundary, back_inserter(samples));
+    sampler->Sample(1, maxAttempts, boundary, back_inserter(samples));
+    if(samples.empty())
+      continue;
     cfg = samples.at(samples.size()-1);
 
     if(this->m_forceNarrowPassageSamples2dEnv) {
@@ -195,12 +196,12 @@ Iterate() {
       cfg.SetData(scaledData);
     }
 
-    bool initiallyValid = vcm->IsValid(cfg, tmpInfo, callee);
+    bool initiallyValid = vcm->IsValid(cfg, callee);
 
     if(!m_attemptInvalidSamples) {
       while(!initiallyValid) {
         cfg.GetRandomCfg(boundary);
-        initiallyValid = vcm->IsValid(cfg, tmpInfo, callee);
+        initiallyValid = vcm->IsValid(cfg, callee);
       }
     }
     if(!initiallyValid) {
@@ -212,16 +213,7 @@ Iterate() {
     if(m_doSameValidityWitness) {
       //Don't push to the MA, just get a witness of same validity and add to map
       CfgType witness = cfg;
-      if(m_medialAxisUtility.CollisionInfo(cfg, witness, boundary, tmpInfo, false)){
-        //Successful witness found, add to roadmap and update stats.
-        //First, check if we have the case that the validity is NOT the same
-        // (like it should be) and the only time that's okay is for an OOB witness
-        if((vcm->IsValid(witness, tmpInfo, callee) != initiallyValid) &&
-            witness.InBounds(boundary))
-          RunTimeException(WHERE, "Error in same-validity witness finding test:"
-              " A witness of opposite-validity was found and it wansn't OOB.");
-      }
-      else {
+      if(!m_medialAxisUtility.CollisionInfo(cfg, witness, boundary, tmpInfo, false)){
         //Update failure stats:
         this->m_numSamplesFailed++;
         if(!initiallyValid)
@@ -229,6 +221,20 @@ Iterate() {
 
         continue; // Try new sample
       }
+
+      //Successful witness found, add to roadmap and update stats.
+      //First, check if we have the case that the validity is NOT the same
+      // (like it should be) and the only time that's okay is for an OOB witness
+      //NOTE: this is assuming that useBBX is true!
+      const bool witnessValid = vcm->IsValid(witness, callee),
+                 witnessInBounds = witness.InBounds(boundary);
+      const bool witnessValidity = witnessValid && witnessInBounds;
+      if(witnessValidity != initiallyValid) {
+        std::cout << "Error! Witness was wrong validity!!!" << std::endl;
+        throw RunTimeException(WHERE, "Error in same-validity witness finding "
+          "test: A witness of opposite-validity was found and it wansn't OOB.");
+      }
+
       //add valid sample to roadmap
       this->GetRoadmap()->GetGraph()->AddVertex(witness);
     }
