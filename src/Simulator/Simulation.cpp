@@ -216,7 +216,7 @@ AddRobots() {
   for(size_t i = 0; i < m_problem->NumRobots(); ++i) {
     auto robot = m_problem->GetRobot(i);
     auto multiBody = robot->GetMultiBody();
-    auto bulletModel = m_engine->AddObject(multiBody);
+    auto bulletModel = m_engine->AddRobot(robot);
 
     robot->SetDynamicsModel(bulletModel);
 

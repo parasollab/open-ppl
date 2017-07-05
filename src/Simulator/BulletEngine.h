@@ -24,6 +24,7 @@ class btMultiBody;
 class Body;
 class MultiBody;
 class MPProblem;
+class Robot;
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -111,6 +112,10 @@ class BulletEngine final {
     ///@}
     ///@name Modifiers
     ///@{
+
+    /// Add a PMPL robot to the simulation.
+    /// @param _robot The robot to add.
+    btMultiBody* AddRobot(Robot* const _robot);
 
     /// Add a PMPL multibody to the simulation.
     /// @param _m The multibody to add.

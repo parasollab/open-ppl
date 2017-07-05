@@ -3,6 +3,7 @@
 #include <iostream>
 
 #include "BulletDynamics/Featherstone/btMultiBody.h"
+#include "BulletDynamics/Featherstone/btMultiBodyLink.h"
 #include "MPProblem/Robot/DynamicsModel.h"
 #include "MPProblem/Robot/Robot.h"
 
@@ -32,12 +33,27 @@ Halt() {
   ///          the robot do anything after traveling one path. For more complex
   ///          behavior (like TMP type problems) where the robot will travel
   ///          multiple paths, this will need to be removed.
-  m_robot->GetDynamicsModel()->Get()->setBaseVel({0,0,0});
-  m_robot->GetDynamicsModel()->Get()->setBaseOmega({0,0,0});
+  btMultiBody* body = m_robot->GetDynamicsModel()->Get();
+  body->setBaseVel({0,0,0});
+  body->setBaseOmega({0,0,0});
+  for(int i = 0; i < body->getNumLinks(); i++) {
+    //If it's a spherical (2 dof) joint, then we must use the other version of
+    // setting the link velocity dofs for each value of desired velocity.
+    if(body->getLink(i).m_jointType ==
+        btMultibodyLink::eFeatherstoneJointType::eSpherical) {
+      btScalar temp[] = {0,0};
+      body->setJointVelMultiDof(i, temp);
+    }
+    //Do nothing if the joint was a non-actuated joint.
+    else if (body->getLink(i).m_jointType !=
+        btMultibodyLink::eFeatherstoneJointType::eFixed) {
+      body->setJointVel(i, 0);
+    }
+  }
 
   if(m_debug)
     std::cout << "\nRoadmap finished."
-              << "\nBase velocity and omega set to 0 for visual inspection."
+              << "\nAll velocity DOFs set to 0 for visual inspection."
               << std::endl;
 }
 

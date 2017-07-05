@@ -10,8 +10,11 @@
 #include "ConvexDecomposition/cd_wavefront.h"
 
 #include "nonstd/runtime.h"
+#include "nonstd/io.h"
 
 #include "Conversions.h"
+
+#include "ConfigurationSpace/Cfg.h"
 
 #include "Geometry/Bodies/ActiveMultiBody.h"
 #include "Geometry/Bodies/Body.h"
@@ -22,6 +25,8 @@
 
 #include "MPProblem/Environment/Environment.h"
 #include "MPProblem/MPProblem.h"
+#include "MPProblem/Robot/Robot.h"
+#include "MPProblem/Robot/DynamicsModel.h"
 
 /*--------------------------- Static Initialization --------------------------*/
 
@@ -133,6 +138,35 @@ GetObjectTransform(const size_t _i, const size_t _j) const {
 }
 
 /*----------------------------- Modifiers ------------------------------------*/
+
+btMultiBody*
+BulletEngine::
+AddRobot(Robot* const _robot) {
+  // This is an active body.
+  ActiveMultiBody* activeBody = _robot->GetMultiBody();
+  //Save the dofs that PMPL set the active body to for the first query cfg.
+  std::vector<double> startDofs = activeBody->GetCurrentDOFs();
+
+  if(m_debug)
+    std::cout << "Saved startDofs = " << startDofs << std::endl;
+
+  //Re-configure the multibody so that Bullet is setting up based on the
+  // correct 0-configuration information.
+  activeBody->Configure(std::vector<double>(startDofs.size(), 0));
+
+  btMultiBody* result = AddObject(activeBody);
+
+  //Set the PMPL cfg back to its original DOFs.
+  activeBody->Configure(startDofs);
+
+  //Configure the Bullet body to be in the same state as the initial PMPL body:
+  Cfg cfg(_robot);
+  cfg.SetData(startDofs);
+  ConfigureSimulatedState(cfg, result);
+
+  return result;
+}
+
 
 btMultiBody*
 BulletEngine::
@@ -252,9 +286,9 @@ AddObject(std::vector<btCollisionShape*>&& _shapes, btTransform&& _baseTransform
     // Get the PMPL link.
     /// @TODO This assumes that the PMPL body is an ActiveMultiBody. Generalize
     ///       our bodies so that there is no such artificial distinction.
-    FreeBody* const link = _joints[i]->GetNextBody();
+    FreeBody* const linkBody = _joints[i]->GetNextBody();
 
-    // Get the PMPL indexes for this link.
+    // Get the PMPL indices for this link and its parent.
     const int parentPmplIndex = _joints[i]->GetPreviousBodyIndex();
     const int linkPmplIndex = _joints[i]->GetNextBodyIndex();
 
@@ -263,25 +297,44 @@ AddObject(std::vector<btCollisionShape*>&& _shapes, btTransform&& _baseTransform
     const int parentIndex = parentPmplIndex - 1;
     const int linkIndex = linkPmplIndex - 1;
 
+    if(m_debug)
+      std::cout << std::endl << std::endl
+                << "-----------------------------------------------------------"
+                << std::endl << "Joint " << i << ": Connecting Bullet body "
+                << parentIndex << " to body " << linkIndex << std::endl;
+
     // Get the mass for the link:
-    const btScalar mass = link->GetMass();
+    const btScalar mass = linkBody->GetMass();
 
     btVector3 inertia(0, 0, 0);
     if(isDynamic)
       _shapes[linkPmplIndex]->calculateLocalInertia(mass, inertia);
 
-    // Get the transformations between the parent frame, the joint frame, and the
-    // link frame.
+
+    //This should transform parent -> joint frame BEFORE joint actuation is applied
     Transformation parentToJoint = _joints[i]->GetTransformationToDHFrame();
-    Transformation jointActuation = _joints[i]->GetDHParameters().
-        GetTransformation();
+
+    //This should be the transform for jointActuation -> DH Frame.
+    Transformation jointActuation =
+        _joints[i]->GetDHParameters().GetTransformation();
+
+    //The transform from the parent frame to the joint frame after applying
+    // the joint's current actuation.
+    Transformation parentToJointActuation = parentToJoint * jointActuation;
+
+    // Get the transform from the joint to the link.
     Transformation jointToLink = _joints[i]->GetTransformationToBody2();
 
-    // Compute the transformations from (parent to joint actuation) and
-    // (parent to link) frames.
-    Transformation parentToJointActuation = parentToJoint * jointActuation;
+    //The parent frame to the link frame entire transform.
     Transformation parentToLink = parentToJointActuation * jointToLink;
 
+    if(m_debug)
+      std::cout << std::endl << "parentToJointActuation = "
+                << parentToJointActuation << std::endl << "jointToLink = "
+                << jointToLink << std::endl << "parentToLink = " << parentToLink
+                << std::endl << std::endl;
+
+    //----------------------parentToLinkRotation--------------------------------
     // Compute the rotation from parent frame to link frame in bullet
     // quaternion representation.
     btQuaternion parentToLinkRotation;
@@ -290,24 +343,59 @@ AddObject(std::vector<btCollisionShape*>&& _shapes, btTransform&& _baseTransform
       mathtool::convertFromMatrix(temp, parentToLink.rotation().matrix());
       parentToLinkRotation = ToBullet(temp);
     }
+    //--------------------------------------------------------------------------
 
-    // Compute the translations from (parent to joint) and (joint to link).
+
+    //--------------------------parentToJointTranslation------------------------
+    //Here it shouldn't matter between parentToJoint or parentToJointActuation
+    // since they should only differ by at most a rotation.
     btVector3 parentToJointTranslation = ToBullet(parentToJoint.translation());
-    btVector3 jointToLinkTranslation   = ToBullet(jointToLink.translation());
+    //--------------------------------------------------------------------------
+
+
+    //--------------------------jointToLinkTranslation--------------------------
+    //Note: we appear to need the inverse rotation here.
+    mathtool::Vector3d jointToLinkTranslationInLinkFrame =
+                           -jointToLink.rotation() * jointToLink.translation();
+    //This is a place where I think it's possible that something could be wrong,
+    // but so far all tests suggest that this is correct.
+    btVector3 jointToLinkTranslation =
+                                  ToBullet(jointToLinkTranslationInLinkFrame);
+    //--------------------------------------------------------------------------
 
     // It looks like this should be true (disabled) if "the self-collision
     // has conflicting/non-resolvable contact normals".
+    // A further justification for this to be true is that we cannot perfectly
+    // convert angles between PMPL and Bullet, so it's possible that joints on
+    // tight-fitting parts would endlessly self-collide, if this was false.
     const bool disableParentCollision = true;
 
     // Set up the connection between this link and its parent based on the joint
-    // type.
     switch(_joints[i]->GetConnectionType()) {
       case Connection::JointType::Revolute:
       {
-        // Compute the joint's axis of rotation.
-        const Transformation& parent = link->GetWorldTransformation();
-        btVector3 jointAxis = ToBullet(
-            (parent * parentToJointActuation) * Vector3d(0, 0, 1));
+        //For a revolute link, the last piece now is to set the jointAxis from
+        // the link's frame.
+        mathtool::Vector3d jointAxisInLinkFrame = jointToLink.rotation() * Vector3d(0, 0, 1);
+        btVector3 jointAxis =
+            ToBullet(jointAxisInLinkFrame.selfNormalize());
+
+        if(m_debug)
+          std::cout << std::endl << "jointAxisInLinkFrame (not normalized) = "
+                    << jointAxisInLinkFrame << std::endl
+                    << "jointAxis = " << jointAxis << std::endl
+                    << "Parent to link full transform = " << parentToLink
+                    << std::endl << std::endl
+                    << "Creating revolute joint for link index "
+                    << linkIndex << std::endl << "Parent to link rotation = "
+                    << parentToLinkRotation << std::endl
+                    << "Joint Axis (link's frame) = "
+                    << jointAxis << std::endl
+                    << "Parent to joint translation (parent frame) = "
+                    << parentToJointTranslation << std::endl
+                    << "Joint to link translation (link's frame) = "
+                    << jointToLinkTranslation
+                    << std::endl << std::endl;
 
         mb->setupRevolute(linkIndex, mass, inertia, parentIndex,
                parentToLinkRotation, jointAxis, parentToJointTranslation,
@@ -316,12 +404,13 @@ AddObject(std::vector<btCollisionShape*>&& _shapes, btTransform&& _baseTransform
         // Add joint limits as a bullet constraint.
         const pair<double, double> limits = _joints[i]->GetJointLimits(0);
         btMultiBodyConstraint* con = new btMultiBodyJointLimitConstraint(mb,
-            linkIndex, limits.first * PI, limits.second * PI);
+                              linkIndex, limits.first * PI, limits.second * PI);
+
         m_dynamicsWorld->addMultiBodyConstraint(con);
 
         if(m_debug)
           std::cout << "\t\tAdded revolute joint " << linkIndex
-                    << "with range of motion ["
+                    << "with joint limits ["
                     << std::setprecision(3) << limits.first * PI << " : "
                     << std::setprecision(3) << limits.second * PI << "]."
                     << std::endl;

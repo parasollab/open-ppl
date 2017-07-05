@@ -198,6 +198,13 @@ JointDOF() const noexcept {
   return DOF() - PosDOF() - OrientationDOF();
 }
 
+const std::vector<double>&
+ActiveMultiBody::
+GetCurrentDOFs() const noexcept {
+  return m_currentDofs;
+}
+
+
 /*------------------------- Configuration Methods ----------------------------*/
 
 void
@@ -211,6 +218,8 @@ void
 ActiveMultiBody::
 Configure(const vector<double>& _v) {
   int index = 0;
+
+  m_currentDofs = _v;
 
   // Configure the base.
   if(m_baseType != FreeBody::BodyType::Fixed) {
@@ -267,6 +276,8 @@ ActiveMultiBody::
 Configure(const vector<double>& _v, const vector<double>& _t) {
   int index = 0, t_index = 0;
 
+  m_currentDofs = _v;
+
   // Configure the base.
   if(m_baseType != FreeBody::BodyType::Fixed) {
     double x = 0, y = 0, z = 0, alpha = 0, beta = 0, gamma = 0;
@@ -308,7 +319,7 @@ Configure(const vector<double>& _v, const vector<double>& _t) {
     auto& dh = connection.GetDHParameters();
 
     // Adjust connection to reflect new configuration.
-    ++index; // Skip the theta value in _v as we will use _t instead.
+    m_currentDofs[index++] = _t[t_index]/PI; // Skip the theta value in _v as we will use _t instead.
     dh.m_theta = _t[t_index++];
     if(joint->GetConnectionType() == Connection::JointType::Spherical)
       dh.m_alpha = _v[index++] * PI;

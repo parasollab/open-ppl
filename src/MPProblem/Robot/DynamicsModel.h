@@ -182,4 +182,16 @@ class MicroSimulator final {
 };
 
 
+/// Extract the configuration from a simulated robot.
+/// @param _robot A PMPL robot.
+/// @param _model A bullet model of _robot.
+/// @return The configuration data of _model in its simulation.
+Cfg ExtractSimulatedState(Robot* const _robot, const btMultiBody* const _model);
+
+/// Configure a simulated robot.
+/// @param _c The configuration to set.
+/// @param _model A bullet model of _c's robot.
+void ConfigureSimulatedState(const Cfg& _c, btMultiBody* const _model);
+
+
 #endif

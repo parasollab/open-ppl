@@ -69,7 +69,7 @@ Step(const double _dt) {
   // threshold distance. Advance the path index until the next subgoal is
   // at least one threshold away.
   auto dm = m_library->GetDistanceMetric("euclidean");
-  const double threshold = .5;
+  const double threshold = .05;
 
   double distance = dm->Distance(current, m_path[m_pathIndex]);
 
@@ -81,8 +81,8 @@ Step(const double _dt) {
   while(distance < threshold and m_pathIndex < m_path.size()) {
     if(m_debug)
       std::cout << "\tReached waypoint " << m_pathIndex << " at "
-                << distance << "/" << threshold
-                << std::endl;
+                << distance << "/" << threshold << std::endl
+                << "Waypoint = " << m_path[m_pathIndex] << std::endl;
 
     // Move to next cfg in path since the distance is within the threshold.
     ++m_pathIndex;

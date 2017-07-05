@@ -103,8 +103,9 @@ operator<<(std::ostream& _out, const btVector3& _v) {
 inline
 std::ostream&
 operator<<(std::ostream& _out, const btQuaternion& _q) {
-  _out << "(" << _q.getX() << ", " << _q.getY() << ", " << _q.getZ() << ", "
-       << _q.getW() << ")";
+  //Printing real part, then x, y, z matches up with PMPL's version.
+  _out << "(" << _q.getW() << ", " << _q.getX() << ", " << _q.getY() << ", "
+       << _q.getZ() << ")";
   return _out;
 }
 

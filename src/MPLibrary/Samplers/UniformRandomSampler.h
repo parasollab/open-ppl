@@ -106,7 +106,8 @@ Sampler(CfgType& _cfg, const Boundary* const _boundary,
   // Debug.
   if(this->m_debug) {
     std::cout << "Sampled Cfg: " << _cfg
-              << "Boundary: " << *_boundary
+              << "\n\tEnvironment boundary: " << *this->GetEnvironment()->GetBoundary()
+              << "\n\tBoundary: " << *_boundary
               << "\n\tIn bounds: " << inBounds
               << "\n\tValidity:  " << isValid
               << std::endl;

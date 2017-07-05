@@ -137,6 +137,9 @@ class ActiveMultiBody : public MultiBody {
     /// Get the number of joint DOF for this robot.
     size_t JointDOF() const noexcept;
 
+    /// Get the current DOFs for this configuration, as set by Configure().
+    const std::vector<double>& GetCurrentDOFs() const noexcept;
+
     ///@}
     ///@name Configuration Methods
     ///@{
@@ -207,6 +210,8 @@ class ActiveMultiBody : public MultiBody {
     FreeBody::MovementType m_baseMovement;   ///< Type of movement for base
 
     vector<Joint> m_joints;                  ///< All Connections
+
+    vector<double> m_currentDofs;            ///< The current configuration DOFs
 
     ///@}
 
