@@ -18,17 +18,14 @@ Agent(Robot* const _r) : m_robot(_r) { }
 Agent::
 ~Agent() = default;
 
-/*----------------------------------------------------------------------------*/
-
-
-/*------------------------------Model Affectors-------------------------------*/
+/*----------------------------- Model Affectors ------------------------------*/
 
 void
 Agent::
 Halt() {
   // Zero the robot's velocity so that we can tell that it has completed its
   // path by visual inspection.
-  /// @WARNING Arbitrarilly setting the velocity does not respect the robot's
+  /// @WARNING Arbitrarily setting the velocity does not respect the robot's
   ///          dynamics. It is OK for now because we have not yet tried to make
   ///          the robot do anything after traveling one path. For more complex
   ///          behavior (like TMP type problems) where the robot will travel

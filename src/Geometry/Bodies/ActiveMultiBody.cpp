@@ -158,6 +158,8 @@ InitializeDOFs(const Boundary* _b, ostream* _os) {
         break;
     }
   }
+
+  m_currentDofs.resize(DOF(), 0);
 }
 
 
@@ -219,7 +221,8 @@ ActiveMultiBody::
 Configure(const vector<double>& _v) {
   int index = 0;
 
-  m_currentDofs = _v;
+  std::copy(_v.begin(), _v.begin() + std::min(_v.size(), DOF()),
+      m_currentDofs.begin());
 
   // Configure the base.
   if(m_baseType != FreeBody::BodyType::Fixed) {
@@ -276,7 +279,8 @@ ActiveMultiBody::
 Configure(const vector<double>& _v, const vector<double>& _t) {
   int index = 0, t_index = 0;
 
-  m_currentDofs = _v;
+  std::copy(_v.begin(), _v.begin() + std::min(_v.size(), DOF()),
+      m_currentDofs.begin());
 
   // Configure the base.
   if(m_baseType != FreeBody::BodyType::Fixed) {

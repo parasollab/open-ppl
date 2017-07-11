@@ -146,6 +146,8 @@ start() {
       this->Step();
   };
   m_worker = std::thread(workFunction);
+  if(!m_worker.joinable())
+    throw RunTimeException(WHERE, "Could not create worker thread.");
 }
 
 
@@ -158,7 +160,8 @@ reset() {
   m_running = false;
 
   // Wait for the worker thread to stop before uninitializing.
-  m_worker.join();
+  if(m_worker.joinable())
+    m_worker.join();
 
   Uninitialize();
 }
