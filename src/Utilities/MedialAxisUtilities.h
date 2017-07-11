@@ -560,7 +560,7 @@ AdjustWitnessToEnsureValidity(const CfgType& _cfg, const bool _initValidity,
     int nTicks; //This is used as the maximum number of adjustments possible.
     incr.FindIncrement(_cfg, _witnessCfg, &nTicks,
         env->GetPositionRes(), env->GetOrientationRes());
-
+    nTicks = max(nTicks,100);
     int count = 0;
     while(!passed) {
       //All of the cases boil down to this condition wrt which direction to move
