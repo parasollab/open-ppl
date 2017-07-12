@@ -35,8 +35,8 @@ void ICreateAgent::ApplyCurrentControls() {
     throw RunTimeException(WHERE, "Multiple controls are not supported.");
 
   const Control::Signal& s = controls.front().signal;
-  const double translation = s[0],
-               rotation    = s[2];
+  const double translation = s[0] / 2.,
+               rotation    = s[2] / 2.;
 
   // Determine the length of time to execute the controls.
   const double time = m_robot->GetMPProblem()->GetEnvironment()->GetTimeRes();
