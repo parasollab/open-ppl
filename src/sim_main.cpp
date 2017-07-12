@@ -1,5 +1,6 @@
 #include "Behaviors/Agents/PathFollowingAgent.h"
 #include "Behaviors/Agents/RoadmapFollowingAgent.h"
+#include "Behaviors/Agents/ICreateAgent.h"
 #include "MPLibrary/PMPL.h"
 #include "Simulator/Simulation.h"
 #include "sandbox/gui/main_window.h"
@@ -17,10 +18,12 @@ main(int _argc, char** _argv) {
 
     // If it's a nonholonomic robot, use the nonholonomic agent to correctly
     // use the roadmap data (control sets between each pair of cfgs in roadmap).
-    if(robot->IsNonholonomic())
-      robot->SetAgent(new RoadmapFollowingAgent(robot));
-    else
+    if(!robot->IsNonholonomic())
       robot->SetAgent(new PathFollowingAgent(robot));
+    else if(_argc == 4)
+      robot->SetAgent(new ICreateAgent(robot, _argv[3]));
+    else
+      robot->SetAgent(new RoadmapFollowingAgent(robot));
 
     // Position the robot by sampling from the first task.
     /// @TODO Decide on a way to declare the starting configuration either

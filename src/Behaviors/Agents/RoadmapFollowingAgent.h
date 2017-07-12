@@ -53,8 +53,6 @@ class RoadmapFollowingAgent : public Agent {
     /// roadmap.
     void CheckRobot() const;
 
-    /// Continue following the current controls.
-    void ApplyCurrentControls();
 
     /// Set the next subgoal in the path.
     void SetNextSubgoal();
@@ -68,6 +66,9 @@ class RoadmapFollowingAgent : public Agent {
     ///@}
 
   protected:
+
+    /// Continue following the current controls.
+    virtual void ApplyCurrentControls();
 
     ///@name Internal State
     ///@{

@@ -21,7 +21,7 @@ UTILS_LIB  = $(CD_LIB) $(CGAL_LIB) $(TINYXML_LIB) $(MODELLOADER_LIB) \
 	     $(MPNN_LIB) $(KMEANS_LIB) $(TETGEN_LIB)
 UTILS_LIBFILE = $(CD_LIBFILE) $(TINYXML_LIBFILE) $(MODELLOADER_LIBFILE) \
 		$(MPNN_LIBFILE) $(KMEANS_LIBFILE) $(TETGEN_LIBFILE) \
-		$(BULLET_LIBFILE) $(GLVIS_LIBFILE)
+		$(BULLET_LIBFILE) $(GLVIS_LIBFILE) $(PHYSICAL_ROBOTS_LIBFILE)
 
 ifeq ($(parallel), 1)
   BOOST_INCL = -I$(BOOST_ROOT)/include
@@ -262,16 +262,37 @@ $(GLVIS_LIBFILE):
 	@cd $(SANDBOX_DIR) && $(MAKE)
 
 ################################################################################
+# physicalrobots
+################################################################################
+
+PHYSICAL_ROBOTS_DIR  := $(UTILS_DIR)/physicalrobots
+PHYSICAL_ROBOTS_INCL := -I$(PHYSICAL_ROBOTS_DIR)/src
+PHYSICAL_ROBOTS_LIBS := -L$(PHYSICAL_ROBOTS_DIR)/src -lcreate_controller \
+			-L$(PHYSICAL_ROBOTS_DIR)/player_client/libs \
+			-lplayerc++ -lplayerc -lplayercommon -lplayercore \
+			-lplayerinterface -lplayerjpeg -lplayertcp -lplayerudp \
+			-lplayerwkb \
+			-lopencv_core -lopencv_calib3d \
+			-lboost_system -lboost_thread -lboost_signals
+
+PHYSICAL_ROBOTS_LIBFILE := $(PHYSICAL_ROBOTS_DIR)/src/libcreate_controller.a
+$(PHYSICAL_ROBOTS_LIBFILE):
+	@echo Building physicalrobots library...
+	@cd $(PHYSICAL_ROBOTS_DIR) && $(MAKE)
+
+
+################################################################################
 # Simulator
 ################################################################################
-SIM_INCL := $(BULLET_INCL) $(GLVIS_INCL) $(QT_INCL)
-SIM_LIBS := $(BULLET_LIB) $(GLVIS_LIBS) $(QT_LIBS) $(GL_LIBS) -lpthread
+SIM_INCL := $(BULLET_INCL) $(GLVIS_INCL) $(PHYSICAL_ROBOTS_INCL) $(QT_INCL)
+SIM_LIBS := $(BULLET_LIB) $(GLVIS_LIBS) $(PHYSICAL_ROBOTS_LIBS) $(QT_LIBS) $(GL_LIBS) -lpthread
 
 
 SIM_OBJS := \
   $(PMPL_DIR)/sim_main.o \
   Behaviors/Agents/PathFollowingAgent.o \
   Behaviors/Agents/RoadmapFollowingAgent.o \
+  Behaviors/Agents/ICreateAgent.o \
   Behaviors/Agents/Agent.o \
   Behaviors/Agents/NullAgent.o \
   Simulator/Simulation.o \
