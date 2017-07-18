@@ -31,6 +31,7 @@ DEPS = -MMD -MF $*.d
 # Object File Configuration ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
 $(PMPL_OBJS): $(UTILS_LIBFILE) $(STAPL_LIBFILE)
+$(SIM_OBJS): $(UTILS_LIBFILE) $(STAPL_LIBFILE)
 
 ifeq ($(parallel), 1)
   MAIN = parallel_main.o
