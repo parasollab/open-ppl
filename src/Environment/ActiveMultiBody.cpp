@@ -130,64 +130,6 @@ InitializeDOFs(shared_ptr<Boundary>& _b, ostream* _os) {
         break;
     }
   }
-
-// add dof of multiply free bodies without connection
-  if (m_joints.empty() && m_freeBody.size() > 1) {
-    for (size_t i = 1; i < m_freeBody.size(); ++i) {
-      if(m_bodyTypes[i] == FreeBody::BodyType::Planar) {
-        m_dofTypes.push_back(DofType::Positional);
-        m_dofTypes.push_back(DofType::Positional);
-        m_dofInfo.push_back(DOFInfo("Base X Translation ",
-	      _b->GetRange(0).first, _b->GetRange(0).second));
-        m_dofInfo.push_back(DOFInfo("Base Y Translation ",
-	      _b->GetRange(1).first, _b->GetRange(1).second));
-
-        if(_os) {
-          *_os << "\t\t" << dof++ << ": X position" << endl;
-          *_os << "\t\t" << dof++ << ": Y position" << endl;
-        }
-
-        if(m_movementTypes[i] == FreeBody::MovementType::Rotational) {
-          m_dofTypes.push_back(DofType::Rotational);
-          m_dofInfo.push_back(DOFInfo("Base Rotation ", -1.0, 1.0));
-
-        if(_os)
-	        *_os << "\t\t" << dof++ << ": Rotation about Z" << endl;
-        }
-      }
-      else if(m_bodyTypes[i] == FreeBody::BodyType::Volumetric) {
-        m_dofTypes.push_back(DofType::Positional);
-        m_dofTypes.push_back(DofType::Positional);
-        m_dofTypes.push_back(DofType::Positional);
-        m_dofInfo.push_back(DOFInfo("Base X Translation ",
-	      _b->GetRange(0).first, _b->GetRange(0).second));
-        m_dofInfo.push_back(DOFInfo("Base Y Translation ",
-	      _b->GetRange(1).first, _b->GetRange(1).second));
-        m_dofInfo.push_back(DOFInfo("Base Z Translation ",
-	      _b->GetRange(2).first, _b->GetRange(2).second));
-
-        if(_os) {
-          *_os << "\t\t" << dof++ << ": X position" << endl;
-          *_os << "\t\t" << dof++ << ": Y position" << endl;
-          *_os << "\t\t" << dof++ << ": Z position" << endl;
-        }
-        if(m_movementTypes[i] == FreeBody::MovementType::Rotational) {
-          m_dofTypes.push_back(DofType::Rotational);
-          m_dofTypes.push_back(DofType::Rotational);
-          m_dofTypes.push_back(DofType::Rotational);
-          m_dofInfo.push_back(DOFInfo("Base X Rotation ", -1.0, 1.0));
-          m_dofInfo.push_back(DOFInfo("Base Y Rotation ", -1.0, 1.0));
-          m_dofInfo.push_back(DOFInfo("Base Z Rotation ", -1.0, 1.0));
-
-          if(_os) {
-	          *_os << "\t\t" << dof++ << ": Rotation about X" << endl;
-	          *_os << "\t\t" << dof++ << ": Rotation about Y" << endl;
-	          *_os << "\t\t" << dof++ << ": Rotation about Z" << endl;
-          }
-        }
-      }
-    }
-  }
 }
 
 size_t
@@ -207,18 +149,33 @@ void
 ActiveMultiBody::
 Configure(const vector<double>& _v) {
   int index = 0;
-
-  Transformation t = GenerateModelTransformation(_v, index, m_baseType, m_baseMovement);
-  m_baseBody->Configure(t);
-
-  if (m_joints.empty() && m_freeBody.size() > 1) {
-    for (size_t i = 1; i < m_freeBody.size(); ++i) {
-      t = GenerateModelTransformation(_v, index, m_bodyTypes[i], m_movementTypes[i]);
-      m_freeBody[i]->Configure(t);
+  int posIndex = index;
+  double x = 0, y = 0, z = 0, alpha = 0, beta = 0, gamma = 0;
+  if(m_baseType != FreeBody::BodyType::Fixed) {
+    x = _v[posIndex];
+    y = _v[posIndex + 1];
+    index += 2;
+    if(m_baseType == FreeBody::BodyType::Volumetric) {
+      index++;
+      z = _v[posIndex + 2];
     }
+    if(m_baseMovement == FreeBody::MovementType::Rotational) {
+      if(m_baseType == FreeBody::BodyType::Planar) {
+        index++;
+        gamma = _v[posIndex + 2];
+      }
+      else {
+        index += 3;
+        alpha = _v[posIndex + 3];
+        beta = _v[posIndex + 4];
+        gamma = _v[posIndex + 5];
+      }
+    }
+    // configure the robot according to current Cfg: joint parameters
+    // (and base locations/orientations for free flying robots.)
+    Transformation t1(Vector3d(x, y, z), Orientation(EulerAngle(gamma*PI, beta*PI, alpha*PI)));
+    m_baseBody->Configure(t1);
   }
-
-  
   for(auto& joint : m_joints) {
     if(joint->GetConnectionType() != Connection::JointType::NonActuated) {
       size_t second = joint->GetNextBodyIndex();
@@ -236,19 +193,34 @@ Configure(const vector<double>& _v) {
 void
 ActiveMultiBody::
 Configure(const vector<double>& _v, const vector<double>& _t) {
-  int index = 0;
-  int t_index = 0;
-
-  Transformation t = GenerateModelTransformation(_v, index, m_baseType, m_baseMovement);
-  m_baseBody->Configure(t);
-
-  if (m_joints.empty() && m_freeBody.size() > 1) {
-     for (size_t i = 1; i < m_freeBody.size(); ++i) {
-       t = GenerateModelTransformation(_v, index, m_bodyTypes[i], m_movementTypes[i]);
-       m_freeBody[i]->Configure(t);
-     }
-   }
-
+  int index = 0, t_index = 0;
+  int posIndex = index;
+  double x = 0, y = 0, z = 0, alpha = 0, beta = 0, gamma = 0;
+  if(m_baseType != FreeBody::BodyType::Fixed) {
+    x = _v[posIndex];
+    y = _v[posIndex + 1];
+    index += 2;
+    if(m_baseType == FreeBody::BodyType::Volumetric) {
+      index++;
+      z = _v[posIndex + 2];
+    }
+    if(m_baseMovement == FreeBody::MovementType::Rotational) {
+      if(m_baseType == FreeBody::BodyType::Planar) {
+        index++;
+        gamma = _v[posIndex + 2];
+      }
+      else {
+        index += 3;
+        alpha = _v[posIndex + 3];
+        beta = _v[posIndex + 4];
+        gamma = _v[posIndex + 5];
+      }
+    }
+    // configure the robot according to current Cfg: joint parameters
+    // (and base locations/orientations for free flying robots.)
+    Transformation t1(Vector3d(x, y, z), Orientation(EulerAngle(gamma*PI, beta*PI, alpha*PI)));
+    m_baseBody->Configure(t1);
+  }
   for(auto& joint : m_joints) {
     if(joint->GetConnectionType() != Connection::JointType::NonActuated) {
       size_t second = joint->GetNextBodyIndex();
@@ -268,17 +240,34 @@ void
 ActiveMultiBody::
 ConfigureRender(const vector<double>& _v) {
   int index = 0;
-
-  Transformation t = GenerateModelTransformation(_v, index, m_baseType, m_baseMovement);
-  m_baseBody->ConfigureRender(t);
-
-  if (m_joints.empty() && m_freeBody.size() > 1) {
-     for (size_t i = 1; i < m_freeBody.size(); ++i) {
-       t = GenerateModelTransformation(_v, index, m_bodyTypes[i], m_movementTypes[i]);
-       m_freeBody[i]->ConfigureRender(t);
-     }
-   }
-
+  int posIndex = index;
+  double x = 0, y = 0, z = 0, alpha = 0, beta = 0, gamma = 0;
+  if(m_baseType != FreeBody::BodyType::Fixed) {
+    x = _v[posIndex];
+    y = _v[posIndex + 1];
+    index += 2;
+    if(m_baseType == FreeBody::BodyType::Volumetric) {
+      index++;
+      z = _v[posIndex + 2];
+    }
+    if(m_baseMovement == FreeBody::MovementType::Rotational) {
+      if(m_baseType == FreeBody::BodyType::Planar) {
+        index++;
+        gamma = _v[posIndex + 2];
+      }
+      else {
+        index += 3;
+        alpha = _v[posIndex + 3];
+        beta = _v[posIndex + 4];
+        gamma = _v[posIndex + 5];
+      }
+    }
+    // configure the robot according to current Cfg: joint parameters
+    // (and base locations/orientations for free flying robots.)
+    Transformation t1(Vector3d(x, y, z),
+        Orientation(EulerAngle(gamma*PI, beta*PI, alpha*PI)));
+    m_baseBody->ConfigureRender(t1);
+  }
   for(auto& joint : m_joints) {
     if(joint->GetConnectionType() != Connection::JointType::NonActuated) {
       size_t second = joint->GetNextBodyIndex();
@@ -293,34 +282,6 @@ ConfigureRender(const vector<double>& _v) {
   for(auto& body : m_freeBody)
     if(body->ForwardConnectionCount() == 0)  // tree tips: leaves.
       body->GetRenderTransformation();
-}
-
-Transformation
-ActiveMultiBody::
-GenerateModelTransformation(const vector<double>& _v, int& _index, FreeBody::BodyType _bodyType, FreeBody::MovementType _movementType) {
-  Transformation t1;
-  if(_bodyType != FreeBody::BodyType::Fixed) {
-    double x = 0, y = 0, z = 0, alpha = 0, beta = 0, gamma = 0;
-    x = _v[_index++];
-    y = _v[_index++];
-    if(_bodyType == FreeBody::BodyType::Volumetric) {
-      z = _v[_index++];
-    }
-    if(_movementType == FreeBody::MovementType::Rotational) {
-      if(_bodyType == FreeBody::BodyType::Planar) {
-        _index++;
-        gamma = _v[_index++];
-      }
-      else {
-        alpha = _v[_index++];
-        beta = _v[_index++];
-        gamma = _v[_index++];
-      }
-    }
-    t1 = Transformation(Vector3d(x, y, z),
-        Orientation(EulerAngle(gamma * PI, beta * PI, alpha * PI)));
-  }
-  return t1;
 }
 
 vector<double>
@@ -610,8 +571,6 @@ ActiveMultiBody::
 AddBody(const shared_ptr<FreeBody>& _body) {
   m_freeBody.push_back(_body);
   MultiBody::AddBody(_body);
-  m_bodyTypes.push_back(_body->GetBodyType());
-  m_movementTypes.push_back(_body->GetMovementType());
 }
 
 void
