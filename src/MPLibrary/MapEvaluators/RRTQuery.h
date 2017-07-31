@@ -185,6 +185,7 @@ PerformSubQuery(const CfgType& _start, const CfgType& _goal) {
 
   // Find the nearest node to _goal that is also connected to _start.
   nearest = FindNearestConnectedNeighbor(start, _goal);
+
   if(nearest.first == INVALID_VID)
     // If the nearest node is invalid, it means that the goal is in the map and
     // not connected to start. In this case, we can't connect.
@@ -264,7 +265,10 @@ FindNearestNeighbor(const CfgType& _goal) {
     cout << "\t\t\tFound nearest node " << neighbors.back().first << " at "
          << "distance " << neighbors.back().second << "." << endl;
 
-  return neighbors.back();
+  if(neighbors.empty())
+    return make_pair(INVALID_VID, numeric_limits<double>::max());
+  else
+    return neighbors.back();
 }
 
 

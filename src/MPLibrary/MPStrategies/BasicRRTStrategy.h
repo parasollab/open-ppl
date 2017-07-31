@@ -500,12 +500,17 @@ FindNearestNeighbor(const CfgType& _cfg, const TreeType& _tree) {
   this->GetStatClass()->StartClock("BasicRRT::NeighborhoodFinding");
 
   vector<pair<VID, double>> neighbors;
+
   auto nf = this->GetNeighborhoodFinder(m_nfLabel);
   nf->FindNeighbors(this->GetRoadmap(),
       _tree.begin(), _tree.end(),
       _tree.size() == this->GetRoadmap()->GetGraph()->get_num_vertices(),
       _cfg, back_inserter(neighbors));
-  VID nearestVID = neighbors[0].first;
+
+  VID nearestVID = INVALID_VID;
+
+  if(!neighbors.empty())
+    nearestVID = neighbors[0].first;
 
   this->GetStatClass()->StopClock("BasicRRT::NeighborhoodFinding");
   return nearestVID;
@@ -546,8 +551,10 @@ Extend(const VID _nearVID, const CfgType& _qRand, const bool _lp) {
   LPOutput<MPTraits> lp;
   pair<VID, bool> extension{INVALID_VID, false};
 
-  if(e->Extend(qNear, _qRand, qNew, lp))
+  this->GetStatClass()->IncStat("BasicRRTExtend");
+  if(e->Extend(qNear, _qRand, qNew, lp)) {
     extension = AddNode(qNew);
+  }
 
   this->GetStatClass()->StopClock("BasicRRT::Extend");
 
@@ -626,6 +633,10 @@ typename BasicRRTStrategy<MPTraits>::VID
 BasicRRTStrategy<MPTraits>::
 ExpandTree(CfgType& _target) {
   VID nearestVID = FindNearestNeighbor(_target, *m_currentTree);
+
+  if(nearestVID == INVALID_VID)
+    return false;
+
   return this->ExpandTree(nearestVID, _target);
 }
 

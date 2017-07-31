@@ -95,6 +95,11 @@ class Cfg {
     bool operator!=(const Cfg& _cfg) const;
 
     ///@}
+    ///@name Comparison
+    ///@{
+
+    bool operator<(const Cfg& _cfg) const;
+    ///@}
     ///@name Robot Info
     ///@{
 

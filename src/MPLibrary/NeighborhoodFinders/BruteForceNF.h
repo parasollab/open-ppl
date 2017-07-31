@@ -63,7 +63,7 @@ FindNeighbors(RoadmapType* _rmp,
     for(InputIterator it = _first; it != _last; ++it)
       if(map->GetVertex(it) != _cfg)
         *_out++ = make_pair(_rmp->GetGraph()->GetVID(it),
-            dmm->Distance(map->GetVertex(it), _cfg));
+            dmm->Distance(_cfg, map->GetVertex(it)));
     return _out;
   }
 
@@ -83,7 +83,10 @@ FindNeighbors(RoadmapType* _rmp,
     if(node == _cfg) // Don't connect to self
       continue;
 
-    double dist = dmm->Distance(_cfg, node);
+    double dist = dmm->Distance(node, _cfg);
+
+    if(std::isinf(dist))
+      continue;
 
     if(pq.size() < this->m_k){
       VID vid = map->GetVID(it);
@@ -106,6 +109,9 @@ FindNeighbors(RoadmapType* _rmp,
 
   this->EndQueryTime();
   this->EndTotalTime();
+
+  if(closest.empty())
+    cout << "closests is empty." << endl;
 
   // Reverse order
   return copy(closest.rbegin(), closest.rend(), _out);

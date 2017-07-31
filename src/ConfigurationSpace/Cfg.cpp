@@ -285,6 +285,30 @@ operator!=(const Cfg& _cfg) const {
   return !(*this == _cfg);
 }
 
+/*-------------------------------Comparison-----------------------------------*/
+
+bool
+Cfg::
+operator<(const Cfg& _cfg) const {
+  // Check DOFs.
+  for(size_t i = 0; i < m_dofs.size(); ++i) {
+    if(m_dofs[i] < _cfg.m_dofs[i])
+      return true;
+    else if(m_dofs[i] > _cfg.m_dofs[i])
+      return false;
+  }
+
+  // Check velocities.
+  for(size_t i = 0; i < m_vel.size(); ++i) {
+    if(m_vel[i] < _cfg.m_vel[i])
+      return true;
+    else if(m_vel[i] > _cfg.m_vel[i])
+      return false;
+  }
+
+  return false;
+}
+
 /*------------------------------- Robot Info ---------------------------------*/
 
 size_t

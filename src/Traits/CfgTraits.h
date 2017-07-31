@@ -17,7 +17,6 @@
 #include "MPLibrary/DistanceMetrics/ManhattanDistance.h"
 #include "MPLibrary/DistanceMetrics/RMSDDistance.h"
 #include "MPLibrary/DistanceMetrics/ScaledEuclideanDistance.h"
-//#include "MPLibrary/DistanceMetrics/ReachabilityDistance.h"
 #include "MPLibrary/DistanceMetrics/WeightedEuclideanDistance.h"
 
 //validity checker includes
@@ -166,7 +165,6 @@ struct MPTraits {
     LPSweptDistance<MPTraits>,
     ManhattanDistance<MPTraits>,
     MinkowskiDistance<MPTraits>,
- //   ReachabilityDistance<MPTraits>,
     RMSDDistance<MPTraits>,
     ScaledEuclideanDistance<MPTraits>,
     WeightedEuclideanDistance<MPTraits>
