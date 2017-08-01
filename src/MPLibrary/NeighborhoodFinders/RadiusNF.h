@@ -17,11 +17,13 @@ class RadiusNF: public NeighborhoodFinderMethod<MPTraits> {
     typedef typename RoadmapType::VID       VID;
     typedef typename RoadmapType::GraphType GraphType;
 
-    RadiusNF(string _dmLabel = "", bool _unconnected = false, double _r = 1.0) :
+    RadiusNF(string _dmLabel = "", bool _unconnected = false, double _r = 1.0,
+        bool _useFallback = false) :
       NeighborhoodFinderMethod<MPTraits>(_dmLabel, _unconnected) {
         this->SetName("RadiusNF");
         this->m_nfType = RADIUS;
         this->m_radius = _r;
+        m_useFallback = _useFallback;
       }
 
     RadiusNF(XMLNode& _node) :
@@ -29,11 +31,14 @@ class RadiusNF: public NeighborhoodFinderMethod<MPTraits> {
         this->SetName("RadiusNF");
         this->m_nfType = RADIUS;
         this->m_radius = _node.Read("radius", true, 0.5, 0.0, MAX_DBL, "Radius");
+        m_useFallback = _node.Read("useFallback", false, false,
+            "Use nearest node if none are found within the radius.");
       }
 
     virtual void Print(ostream& _os) const {
       NeighborhoodFinderMethod<MPTraits>::Print(_os);
       _os << "\tradius: " << this->m_radius << endl;
+      _os << "\tuse nearest: " << m_useFallback << endl;
     }
 
     template<typename InputIterator, typename OutputIterator>
@@ -46,6 +51,11 @@ class RadiusNF: public NeighborhoodFinderMethod<MPTraits> {
           InputIterator _first1, InputIterator _last1,
           InputIterator _first2, InputIterator _last2,
           OutputIterator _out);
+
+  private:
+
+    bool m_useFallback{false}; ///< Use the nearest node if no nodes are found
+                               ///< within the radius.
 };
 
 template <typename MPTraits>
@@ -64,6 +74,15 @@ FindNeighbors(RoadmapType* _rmp,
   auto dmm = this->GetDistanceMetric(this->m_dmLabel);
   set<pair<VID, double>, CompareSecond<VID, double> > inRadius;
 
+  // The node used as a fallback if m_useFallback is set. Pair of VID and
+  // distance from _cfg. This is returned if no nodes are found within the
+  // radius.
+  pair<VID, double> fallback;
+
+  // Distance used when tracking the fallback node. Will always be larger than
+  // the radius.
+  double fallbackDist = std::numeric_limits<double>::max();
+
   // Find all nodes within radius
   for(InputIterator it = _first; it != _last; it++) {
 
@@ -78,10 +97,19 @@ FindNeighbors(RoadmapType* _rmp,
     double dist = dmm->Distance(_cfg, node);
     if(dist <= this->m_radius)
       inRadius.insert(make_pair(map->GetVID(it), dist));
+    // Track nearest node outside of radius and its distance.
+    else if(m_useFallback and dist < fallbackDist) {
+      fallbackDist = dist;
+      fallback = make_pair(map->GetVID(it), fallbackDist);
+    }
   }
 
   this->EndQueryTime();
   this->EndTotalTime();
+
+  // Return fallback if no nodes were found within the radius.
+  if(m_useFallback and inRadius.empty())
+    inRadius.insert(fallback);
 
   return copy(inRadius.begin(), inRadius.end(), _out);
 }
