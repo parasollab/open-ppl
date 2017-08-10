@@ -11,6 +11,9 @@ vizmo_map := #-DVIZMO_MAP
 # Define robot type if it isn't already set.
 ROBOT_DEF ?= PMPCfg
 
+# Build the controller for iCreate?
+icreate ?= 0
+
 # Directory Layout ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
 PMPL_DIR  ?= .
@@ -96,6 +99,7 @@ reallyreallyclean: reallyclean
 	@cd $(TETGEN_DIR) && $(MAKE) clean
 	@cd $(SANDBOX_DIR) && $(MAKE) clean
 	@cd $(BULLET_DIR) && $(MAKE) clean
+	@cd $(PHYSICAL_ROBOTS_DIR) && $(MAKE) clean
 
 # Other Stuff ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 

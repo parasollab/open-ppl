@@ -14,7 +14,8 @@
 ################################################################################
 # Default system variables
 ################################################################################
-UTILS_DEF  = $(CD_DEF) $(STAPL_DEF) $(CGAL_DEF) $(BOOST_DEF) $(BULLET_DEF)
+UTILS_DEF  = $(CD_DEF) $(STAPL_DEF) $(CGAL_DEF) $(BOOST_DEF) $(BULLET_DEF) \
+             $(PHYSICAL_ROBOTS_DEF)
 UTILS_INCL = $(CD_INCL) $(TINYXML_INCL) $(MATHTOOL_INCL) $(MODELLOADER_INCL) \
 	     $(MPNN_INCL) $(TETGEN_INCL)
 UTILS_LIB  = $(CD_LIB) $(CGAL_LIB) $(TINYXML_LIB) $(MODELLOADER_LIB) \
@@ -265,21 +266,25 @@ $(GLVIS_LIBFILE):
 # physicalrobots
 ################################################################################
 
-PHYSICAL_ROBOTS_DIR  := $(UTILS_DIR)/physicalrobots
-PHYSICAL_ROBOTS_INCL := -I$(PHYSICAL_ROBOTS_DIR)/src
-PHYSICAL_ROBOTS_LIBS := -L$(PHYSICAL_ROBOTS_DIR)/src -lcreate_controller \
-			-L$(PHYSICAL_ROBOTS_DIR)/player_client/libs \
-			-lplayerc++ -lplayerc -lplayercommon -lplayercore \
-			-lplayerinterface -lplayerjpeg -lplayertcp -lplayerudp \
-			-lplayerwkb \
-			-lopencv_core -lopencv_calib3d \
-			-lboost_system -lboost_thread -lboost_signals
+PHYSICAL_ROBOTS_DIR := $(UTILS_DIR)/physicalrobots
 
-PHYSICAL_ROBOTS_LIBFILE := $(PHYSICAL_ROBOTS_DIR)/src/libcreate_controller.a
+ifneq ($(icreate), 0)
+  PHYSICAL_ROBOTS_DEF  := -DPMPL_USE_ICREATE
+  PHYSICAL_ROBOTS_INCL := -I$(PHYSICAL_ROBOTS_DIR)/src
+  PHYSICAL_ROBOTS_LIBS := -L$(PHYSICAL_ROBOTS_DIR)/src -lcreate_controller \
+			  -L$(PHYSICAL_ROBOTS_DIR)/player/build/install/lib64 \
+			  -lplayerc++ -lplayerc -lplayercommon -lplayercore \
+			  -lplayerinterface -lplayerjpeg -lplayertcp -lplayerudp \
+			  -lplayerwkb \
+			  -lopencv_core -lopencv_calib3d \
+			  -lboost_system -lboost_thread -lboost_signals
+
+  PHYSICAL_ROBOTS_LIBFILE := $(PHYSICAL_ROBOTS_DIR)/src/libcreate_controller.a
+endif
+
 $(PHYSICAL_ROBOTS_LIBFILE):
 	@echo Building physicalrobots library...
 	@cd $(PHYSICAL_ROBOTS_DIR) && $(MAKE)
-
 
 ################################################################################
 # Simulator
@@ -292,12 +297,15 @@ SIM_OBJS := \
   $(PMPL_DIR)/sim_main.o \
   Behaviors/Agents/PathFollowingAgent.o \
   Behaviors/Agents/RoadmapFollowingAgent.o \
-  Behaviors/Agents/ICreateAgent.o \
   Behaviors/Agents/Agent.o \
   Behaviors/Agents/NullAgent.o \
   Simulator/Simulation.o \
   Visualization/DrawableBody.o \
   Visualization/DrawableMultiBody.o
+
+ifneq ($(icreate), 0)
+  SIM_OBJS += Behaviors/Agents/ICreateAgent.o
+endif
 
 ################################################################################
 # PMPL
