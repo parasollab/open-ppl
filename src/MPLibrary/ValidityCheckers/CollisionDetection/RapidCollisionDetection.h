@@ -15,7 +15,7 @@ class Rapid: public CollisionDetectionMethod {
 
     Rapid();
 
-    virtual void Build(Body* _body);
+    static void Build(Body* const _body);
 
     virtual bool IsInCollision(const Body* const _body1,
         const Body* const _body2, CDInfo& _cdInfo);

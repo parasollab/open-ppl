@@ -28,7 +28,7 @@ class PQP : public CollisionDetectionMethod {
     ///@name CollisionDetectionMethod Overrides
     ///@{
 
-    virtual void Build(Body* _body) override;
+    static void Build(Body* const _body);
 
     virtual bool IsInCollision(const Body* const _body1,
         const Body* const _body2, CDInfo& _cdInfo) override;

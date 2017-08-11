@@ -17,7 +17,7 @@ Rapid() : CollisionDetectionMethod("RAPID") { }
 
 void
 Rapid::
-Build(Body* _body) {
+Build(Body* const _body) {
   const GMSPolyhedron& poly = _body->GetPolyhedron();
   unique_ptr<RAPID_model> rapidBody(new RAPID_model);
   rapidBody->BeginModel();

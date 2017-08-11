@@ -156,7 +156,7 @@ operator!=(const GMSPolyhedron& _p) const {
 
 Vector3d
 GMSPolyhedron::
-Read(string _fileName, COMAdjust _comAdjust) {
+Read(const std::string& _fileName, COMAdjust _comAdjust) {
   if(!FileExists(_fileName))
     throw ParseException(WHERE, "Geometry file '" + _fileName + "' not found.");
 

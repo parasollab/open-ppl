@@ -13,7 +13,7 @@ class CDInfo;
 
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup CollisionDetection
-/// @brief Base abstraction for \ref CollisionDetection.
+/// Base abstraction for \ref CollisionDetection.
 ///
 /// CollisionDetectionMethod is a base class for geometric collision detection
 /// methods. Mostly these serve as middleware to interface with external
@@ -41,7 +41,7 @@ class CollisionDetectionMethod {
     /// @return Name of CD Method
     const string& GetName() const {return m_name;}
 
-    /// @brief Output class information
+    /// Output class information
     /// @param _os Output stream
     virtual void Print(ostream& _os) const;
 
@@ -49,11 +49,7 @@ class CollisionDetectionMethod {
     ///@name CD Interface
     ///@{
 
-    /// @brief Build a representation of a body for this CD library.
-    /// @param _body The body of interest.
-    virtual void Build(Body* _body) = 0;
-
-    /// @brief Check if two bodies are in collision.
+    /// Check if two bodies are in collision.
     /// @param[in]  _body1  The first Body.
     /// @param[in]  _body2  The second Body.
     /// @param[out] _cdInfo Output information from the collision computation.
@@ -61,7 +57,7 @@ class CollisionDetectionMethod {
     virtual bool IsInCollision(const Body* const _body1,
         const Body* const _body2, CDInfo& _cdInfo) = 0;
 
-    /// @brief Check if a point is inside of a body.
+    /// Check if a point is inside of a body.
     /// @param[in] _pt   The point to check.
     /// @param[in] _body The body to check against.
     /// @return Is the point inside the body?

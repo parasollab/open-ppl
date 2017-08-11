@@ -17,7 +17,7 @@ PQP() : CollisionDetectionMethod("PQP") { }
 
 void
 PQP::
-Build(Body* _body) {
+Build(Body* const _body) {
   const GMSPolyhedron& poly = _body->GetPolyhedron();
   unique_ptr<PQP_Model> pqpBody(new PQP_Model);
   pqpBody->BeginModel();

@@ -62,13 +62,6 @@ GetTagFromMultiBodyType(MultiBodyType _b) {
 
 void
 MultiBody::
-BuildCDStructure() {
-  for(auto& body : m_bodies)
-    body->BuildCDStructure();
-}
-
-void
-MultiBody::
 AddBody(const shared_ptr<Body>& _body) {
   m_bodies.push_back(_body);
 }

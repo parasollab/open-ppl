@@ -349,7 +349,6 @@ WorkspaceVisibility(const Point3d& _a, const Point3d& _b) {
   poly.GetPolygonList() = vector<GMSPolygon>{GMSPolygon(0, 1, 2,
       poly.GetVertexList())};
   lineBody->SetPolyhedron(poly);
-  m_cdMethod->Build(lineBody);
 
   // Default behaviour do not store the cd info
   CDInfo cdInfo;

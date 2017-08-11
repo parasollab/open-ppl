@@ -407,29 +407,6 @@ void
 MPLibraryType<MPTraits>::
 SetMPProblem(MPProblem* _p) {
   m_problem = _p;
-
-  // Ensure that the compiled CD methods are available for the bodies.
-  auto& cdMethods = Body::m_cdMethods;
-  for(auto& vc : *m_validityCheckers) {
-    // Try to cast each validity checker to the collision detection base class.
-    auto method =
-        dynamic_pointer_cast<CollisionDetectionValidity<MPTraits>>(vc.second);
-
-    // If the cast failed, then this isn't a CD method and we can move on.
-    if(!method) continue;
-
-    // Check if the method was already added.
-    const auto& cd = method->GetCDMethod();
-    const bool alreadyAdded = find(cdMethods.begin(), cdMethods.end(), cd) !=
-        cdMethods.end();
-    if(!alreadyAdded)
-      cdMethods.push_back(cd);
-  }
-
-  // Build CD models.
-  for(auto robot : m_problem->GetRobots())
-    robot->GetMultiBody()->BuildCDStructure();
-  m_problem->GetEnvironment()->BuildCDStructure();
 }
 
 

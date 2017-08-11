@@ -29,12 +29,12 @@ class Environment;
 #define MAX_DBL  numeric_limits<double>::max()
 
 /// Variable resolution epsilon for doubles and float. This number is based upon
-/// the resolution of the smaller value between _t1 and _t2.
+/// the resolution of the lower magnitude value between _t1 and _t2.
 template<typename T>
 const T
 Epsilon(const T& _t1, const T& _t2) {
-  static constexpr T tenEps = T(10) * std::numeric_limits<T>::epsilon();
-  return std::abs(_t1 + _t2) * tenEps;
+  static constexpr T tenEpsilon = T(10) * std::numeric_limits<T>::epsilon();
+  return std::min(std::abs(_t1), std::abs(_t2)) * tenEpsilon;
 }
 
 /*------------------------- Random Number Generation -------------------------*/

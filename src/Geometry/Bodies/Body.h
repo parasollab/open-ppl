@@ -45,6 +45,18 @@ class Body {
     virtual ~Body() = default;
 
     ///@}
+    ///@name Validation
+    ///@{
+
+    /// Determine if the polyhedron is valid, triangulated, closed, and having
+    /// all normals facing a consistent 'outward' direction.
+    /// @param _report Print warnings to cerr if any checks fail.
+    /// @return True if the model is closed and consistent.
+    /// @note Uses a combination of the regular and CGAL points as we use CGAL
+    ///       for some of these checks.
+    bool Validate(const bool _report = true) const;
+
+    ///@}
     ///@name Metadata Accessors
     ///@{
 
@@ -127,10 +139,8 @@ class Body {
     ///@name Collision Detection Models
     ///@{
 
-    static vector<CollisionDetectionMethod*> m_cdMethods; ///< All CD Methods
-
-    /// Build appropriate collision detection models.
-    void BuildCDStructure();
+    /// Build rapid and PQP models of this body.
+    void BuildCDModels();
 
     RAPID_model* GetRapidBody() const {return m_rapidBody.get();}
     void SetRapidBody(unique_ptr<RAPID_model>&& _r) {m_rapidBody = move(_r);}

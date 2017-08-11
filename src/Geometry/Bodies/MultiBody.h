@@ -77,13 +77,6 @@ class MultiBody {
     const double* GetBoundingBox() const {return m_boundingBox.data();}
 
     ///@}
-    ///@name Collision Detection
-    ///@{
-
-    /// Build collision detection representations.
-    void BuildCDStructure();
-
-    ///@}
     ///@name I/O
     ///@{
 

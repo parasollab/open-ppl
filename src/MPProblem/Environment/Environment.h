@@ -154,9 +154,6 @@ class Environment {
     /// @return A map from obstacle points to obstacle indexes.
     map<Vector3d, vector<size_t>> ComputeObstacleVertexMap() const;
 
-    /// Build collision detection models for external libraries
-    void BuildCDStructure();
-
     ///@}
     ///@name Decomposition
     ///@{

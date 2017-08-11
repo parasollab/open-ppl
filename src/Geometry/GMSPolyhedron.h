@@ -83,7 +83,7 @@ class GMSPolyhedron final {
     /// @param[in] _fileName The name of the file to read.
     /// @param[in] _comAdjust The type of COM adjustment to use.
     /// @return The parsed model's center of mass.
-    Vector3d Read(std::string _fileName, COMAdjust _comAdjust);
+    Vector3d Read(const std::string& _fileName, COMAdjust _comAdjust);
 
     /// Load vertices and triangles from the IModel, which loads all types
     /// of models.

@@ -7,17 +7,81 @@
 #include <CGAL/Polyhedron_3.h>
 #include <CGAL/convex_hull_3.h>
 
-#include "MPLibrary/ValidityCheckers/CollisionDetection/CollisionDetectionMethod.h"
+#include "MPLibrary/ValidityCheckers/CollisionDetection/RapidCollisionDetection.h"
+#include "MPLibrary/ValidityCheckers/CollisionDetection/PQPCollisionDetection.h"
+
 
 /*---------------------------- Static Initializers ---------------------------*/
 
 string Body::m_modelDataDir;
-vector<CollisionDetectionMethod*> Body::m_cdMethods;
 
 /*------------------------------ Construction --------------------------------*/
 
 Body::
 Body(MultiBody* _owner) : m_multibody(_owner) { }
+
+/*------------------------------- Validation ---------------------------------*/
+
+bool
+Body::
+Validate(const bool _report) const {
+  using CGALPolyhedron = GMSPolyhedron::CGALPolyhedron;
+
+  // First use CGAL to check valid, triangular, and closed.
+  CGALPolyhedron mesh;
+  try {
+    mesh = m_polyhedron.CGAL();
+  } catch(std::exception& _e) {
+    if(_report)
+      std::cerr << "Warning: invalid polyhedron detected from file '"
+                << m_filename << "'."
+                << "\n\tCould not build a CGAL model of this, which usually "
+                << "means that the normals are inconsistent or the file is "
+                << "corrupted."
+                << std::endl;
+    return false;
+  }
+
+  const bool valid      = mesh.is_valid(),
+             triangular = mesh.is_pure_triangle(),
+             closed     = mesh.is_closed();
+
+  // Now use PQP to determine that the polygon is outward-facing.
+  bool outward = true;
+  {
+    PQPSolid pqp;
+
+    // For each facet, make sure that the point just behind the center is inside.
+    for(const auto& poly : m_polyhedron.GetPolygonList())
+    {
+      const Vector3d point = poly.FindCenter() - (1e-6 * poly.GetNormal());
+
+      outward &= pqp.IsInsideObstacle(point, this);
+      if(!outward)
+        break;
+    }
+  }
+
+  // The polyhedron is good if it is valid, triangular, closed, and
+  // outward-facing.
+  if(valid and triangular and closed and outward)
+    return true;
+
+  // Something isn't good - report errors if requested.
+  if(_report)
+    std::cerr << "Warning: invalid polyhedron detected from file '"
+              << m_filename << "'."
+              << "\n\tnum vertices: " << mesh.size_of_vertices()
+              << "\n\tnum facets: " << mesh.size_of_facets()
+              << "\n\tvalid: " << valid
+              << "\n\ttriangular: " << triangular
+              << "\n\tclosed: " << closed
+              << "\n\toutward: " << outward
+              << std::endl;
+
+  return false;
+}
+
 
 /*--------------------------- Metadata Accessors -----------------------------*/
 
@@ -118,6 +182,7 @@ SetPolyhedron(GMSPolyhedron& _poly) {
   ComputeMomentOfInertia();
   ComputeBoundingBox();
   MarkDirty();
+  BuildCDModels();
 }
 
 
@@ -179,6 +244,8 @@ Read(GMSPolyhedron::COMAdjust _comAdjust) {
   ComputeMomentOfInertia();
   ComputeBoundingBox();
   MarkDirty();
+  BuildCDModels();
+  Validate(true);
 }
 
 
@@ -266,9 +333,9 @@ ReadOptions(istream& _is, CountingStreamBuffer& _cbs) {
 
 void
 Body::
-BuildCDStructure() {
-  for(auto& cd : m_cdMethods)
-    cd->Build(this);
+BuildCDModels() {
+  Rapid::Build(this);
+  PQP::Build(this);
 }
 
 /*----------------------------- Computation Helpers --------------------------*/
@@ -319,7 +386,7 @@ void
 Body::
 ComputeConvexHull() const {
   using Kernel = GMSPolyhedron::CGALKernel;
-  using CGALPolyhedron = CGAL::Polyhedron_3<Kernel>;
+  using CGALPolyhedron = GMSPolyhedron::CGALPolyhedron;
 
   // Compute convex hull of non-collinear points with CGAL.
   const auto& points = m_polyhedron.m_cgalPoints;

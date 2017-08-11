@@ -253,7 +253,6 @@ AddObstacle(const string& _dir, const string& _filename,
       new StaticMultiBody(MultiBody::MultiBodyType::Passive));
 
   mb->Initialize(_dir == "" ? _filename : _dir + '/' + _filename, _t);
-  mb->BuildCDStructure();
 
   m_obstacles.push_back(mb);
   return make_pair(m_obstacles.size() - 1, m_obstacles.back());
@@ -297,14 +296,6 @@ ComputeObstacleVertexMap() const {
   }
 
   return out;
-}
-
-
-void
-Environment::
-BuildCDStructure() {
-  for(auto& body : m_obstacles)
-    body->BuildCDStructure();
 }
 
 /*------------------------------- Decomposition ------------------------------*/
