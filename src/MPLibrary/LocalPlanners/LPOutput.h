@@ -83,7 +83,8 @@ AddIntermediatesToWeights(const bool _saveIntermediates) {
   // Make a copy of the intermediates in reverse order for the backward edge.
   std::vector<CfgType> tmp;
   tmp.reserve(m_intermediates.size());
-  std::copy(m_intermediates.rend(), m_intermediates.rbegin(), back_inserter(tmp));
+  std::copy(m_intermediates.rbegin(), m_intermediates.rend(),
+            std::back_inserter(tmp));
 
   // Set both edges.
   m_edge.first.SetIntermediates(m_intermediates);
