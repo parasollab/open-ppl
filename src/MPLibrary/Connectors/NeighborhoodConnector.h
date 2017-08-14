@@ -136,9 +136,9 @@ template<class MPTraits>
 template<typename InputIterator, typename OutputIterator>
 void
 NeighborhoodConnector<MPTraits>::
-ConnectNeighbors(RoadmapType* _rm,VID _vid,
-    InputIterator _first, InputIterator _last,
-    OutputIterator _collision) {
+ConnectNeighbors(RoadmapType* _rm, VID _vid,
+                 InputIterator _first, InputIterator _last,
+                 OutputIterator _collision) {
 
   Environment* env = this->GetEnvironment();
   auto lp = this->GetLocalPlanner(this->m_lpLabel);
@@ -154,12 +154,13 @@ ConnectNeighbors(RoadmapType* _rm,VID _vid,
 
     if(this->m_debug)
       cout << "\tfailures = " << failure
-        << " | VID = " << v2
-        << " | dist = " << itr2->second;
+           << " | VID = " << v2
+           << " | dist = " << itr2->second;
 
     // stopping conditions
-    if(this->m_countFailures && failure >= m_fail){
-      if(this->m_debug) cout << " | stopping... failures exceeded" << endl;
+    if(this->m_countFailures && failure >= m_fail) {
+      if(this->m_debug)
+        cout << " | stopping... failures exceeded" << endl;
       break;
     }
 
@@ -167,20 +168,20 @@ ConnectNeighbors(RoadmapType* _rm,VID _vid,
     if(this->IsCached(_vid, v2) && !this->GetCached(_vid, v2)){
       if(this->m_debug) {
         cout << " | skipping... this connection already failed once"
-          << " | failure incremented" << endl;
+             << " | failure incremented" << endl;
       }
       failure++;
       continue;
     }
 
     // if the edge already exists, so no need to call LP. Count as success.
-    if(map->IsEdge(_vid, v2)){
+    if(map->IsEdge(_vid, v2)) {
       if(this->m_debug)
         cout << " | edge already exists in roadmap | skipping" << endl;
       continue;
     }
 
-    if(m_checkIfSameCC){
+    if(m_checkIfSameCC) {
       // if the nodes are in the same connected component count as success
       typename GraphType::ColorMap colorMap;
       if(stapl::sequential::is_same_cc(*map, colorMap, _vid, v2)){
@@ -207,7 +208,7 @@ ConnectNeighbors(RoadmapType* _rm,VID _vid,
     c1.IncrementStat("totalConnectionAttempts", 1);
     c2.IncrementStat("totalConnectionAttempts", 1);
 
-    if(connectable){
+    if(connectable) {
       if(this->m_debug) cout << " | connection was successful | success incremented" << endl;
       // increment # of successful connection attempts
       c1.IncrementStat("succConnectionAttempts", 1);

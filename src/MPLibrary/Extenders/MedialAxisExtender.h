@@ -112,6 +112,12 @@ MedialAxisExtender<MPTraits>::
 Extend(const CfgType& _start, const CfgType& _end, CfgType& _new,
     LPOutput<MPTraits>& _lp) {
   //Setup
+
+  if(!m_medialAxisUtility.IsInitialized()) {
+    m_medialAxisUtility.SetMPLibrary(this->GetMPLibrary());
+    m_medialAxisUtility.Initialize();
+  }
+
   Environment* env = this->GetEnvironment();
   auto dm = this->GetDistanceMetric(m_medialAxisUtility.GetDistanceMetricLabel());
   auto lp = this->GetLocalPlanner(m_lpLabel);

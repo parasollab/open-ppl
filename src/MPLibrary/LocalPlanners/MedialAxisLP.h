@@ -77,21 +77,22 @@ class MedialAxisLP : public LocalPlannerMethod<MPTraits> {
     void ReduceNoise(const CfgType& _c1, const CfgType& _c2,
         LPOutput<MPTraits>* _lpOutput, double _posRes, double _oriRes);
 
-    Controller m_controller;
+    Controller m_controller{Controller::Iterative};
 
     MedialAxisUtility<MPTraits> m_medialAxisUtility; //stores operations and
     //variables for medial axis
     double m_macEpsilon; //some epsilon
     size_t m_maxIter; //maximum depth of recursion
-    double m_resFactor; //factor of the resolution
+    double m_resFactor{1.0}; //factor of the resolution
 
-    MedialAxisClearanceValidity<MPTraits>* m_macVC;  //mac validity checker
+    MedialAxisClearanceValidity<MPTraits>* m_macVC{nullptr};  //mac validity checker
     StraightLine<MPTraits> m_envLP, m_macLP;     //straight line local planners
 
-    bool m_macVCAdded;
+    bool m_macVCAdded{false};
 
-  private:
-    string m_dmLabel;
+    string m_dmLabel{""};
+
+    bool m_initialized{false};
 };
 
 
@@ -102,7 +103,7 @@ MedialAxisLP(MedialAxisUtility<MPTraits> _medialAxisUtility,
     LocalPlannerMethod<MPTraits>(),
     m_medialAxisUtility(_medialAxisUtility),
     m_macEpsilon(_macEpsilon), m_maxIter(_maxIter) {
-  Init();
+  this->SetName("MedialAxisLP");
 }
 
 
@@ -110,6 +111,7 @@ template<class MPTraits>
 MedialAxisLP<MPTraits>::
 MedialAxisLP(XMLNode& _node) : LocalPlannerMethod<MPTraits>(_node),
     m_medialAxisUtility(_node) {
+  this->SetName("MedialAxisLP");
   string controller = _node.Read("controller", true, "",
       "Which algorithm to run?");
   transform(controller.begin(), controller.end(),
@@ -124,14 +126,13 @@ MedialAxisLP(XMLNode& _node) : LocalPlannerMethod<MPTraits>(_node),
   else if(controller == "ITERATIVE" || controller == "BINARY") {
     m_controller = controller == "ITERATIVE" ?
       Controller::Iterative : Controller::Binary;
-    m_resFactor = _node.Read("resFactor", true, 1.0, 0.0,
+    m_resFactor = _node.Read("resFactor", true, m_resFactor, 0.0,
         MAX_DBL, "Resolution for Iter and Bin");
   }
   else
     throw ParseException(_node.Where(),
         "Unknown controller '" + controller +
         "'. Choices are 'RECURSIVE', 'ITERATIVE', or 'BINARY'.");
-  Init();
 }
 
 
@@ -142,7 +143,6 @@ Init() {
   this->SetName("MedialAxisLP");
 
   //Construct a medial axis clearance validity
-  m_macVCAdded = false;
   m_macVC = new MedialAxisClearanceValidity<MPTraits>(
       m_medialAxisUtility, m_macEpsilon);
 
@@ -155,6 +155,9 @@ Init() {
   m_macVC->SetMPLibrary(this->GetMPLibrary());
   m_envLP.SetMPLibrary(this->GetMPLibrary());
   m_macLP.SetMPLibrary(this->GetMPLibrary());
+  m_medialAxisUtility.SetMPLibrary(this->GetMPLibrary());
+  m_medialAxisUtility.Initialize();
+  m_initialized = true;
 }
 
 template<class MPTraits>
@@ -175,9 +178,11 @@ template<class MPTraits>
 bool
 MedialAxisLP<MPTraits>::
 IsConnected(const CfgType& _c1, const CfgType& _c2, CfgType& _col,
-    LPOutput<MPTraits>* _lpOutput,
-    double _positionRes, double _orientationRes,
-    bool _checkCollision, bool _savePath) {
+            LPOutput<MPTraits>* _lpOutput,
+            double _positionRes, double _orientationRes,
+            bool _checkCollision, bool _savePath) {
+  if(!m_initialized)
+    Init();
   StatClass* stats = this->GetStatClass();
 
   if(!m_macVCAdded) {
@@ -189,30 +194,27 @@ IsConnected(const CfgType& _c1, const CfgType& _c2, CfgType& _col,
 
   //Check that appropriate save path variables are set
   if(!_checkCollision) {
-    if(this->m_debug) {
+    if(this->m_debug)
       cerr << "WARNING, in MedialAxisLP::IsConnected: checkCollision should be "
         << "set to true (false is not applicable for this local planner), "
         << "setting to true.\n";
-    }
     _checkCollision = true;
   }
   if(!_savePath) {
-    if(this->m_debug) {
+    if(this->m_debug)
       cerr << "WARNING, in MedialAxisLP::IsConnected: savePath should be set "
-        << "to true (false is not applicable for this local planner), "
-        << "setting to true.\n";
-    }
+           << "to true (false is not applicable for this local planner), "
+           << "setting to true.\n";
     _savePath = true;
   }
 
   //Clear lpOutput
   _lpOutput->Clear();
 
-  if(this->m_debug) {
+  if(this->m_debug)
     cout << "\nMedialAxisLP::IsConnected" << endl
-      << "Start: " << _c1 << endl
-      << "End  : " << _c2 << endl;
-  }
+         << "Start: " << _c1 << endl
+         << "End  : " << _c2 << endl;
 
   bool connected = false;
   stats->IncLPAttempts(this->GetNameAndLabel());
@@ -271,11 +273,10 @@ IsConnectedRec(const CfgType& _c1, const CfgType& _c2, CfgType& _col,
     double _posRes, double _oriRes, size_t _itr) {
   StatClass* stats = this->GetStatClass();
 
-  if(this->m_debug) {
+  if(this->m_debug)
     cout << "  MedialAxisLP::IsConnectedRec" << endl
-      << "  Start  : " << _c1 << endl
-      << "  End    : " << _c2 << endl;
-  }
+         << "  Start  : " << _c1 << endl
+         << "  End    : " << _c2 << endl;
 
   if(_itr > m_maxIter)
     return false;
@@ -473,7 +474,7 @@ EpsilonClosePath(const CfgType& _c1, const CfgType& _c2, CfgType& _mid,
     if(passed == true) {
       if(this->m_debug)
         cout << "envLP.IsConnected Passed: tmpLPOutput.size: "
-          << tmpLPOutput.m_path.size() << endl;
+             << tmpLPOutput.m_path.size() << endl;
       copy(tmpLPOutput.m_path.begin(), tmpLPOutput.m_path.end(),
           back_inserter(_lpOutput->m_path));
       return true;
@@ -489,22 +490,21 @@ template<class MPTraits>
 bool
 MedialAxisLP<MPTraits>::
 IsConnectedIter(const CfgType& _c1, const CfgType& _c2, CfgType& _col,
-    LPOutput<MPTraits>* _lpOutput,
-    double _posRes, double _oriRes) {
+                LPOutput<MPTraits>* _lpOutput,
+                double _posRes, double _oriRes) {
 
   if(this->m_debug) {
     cout << "  MedialAxisLP::IsConnectedIter" << endl
-      << "  Start  : " << _c1 << endl
-      << "  End    : " << _c2 << endl;
+         << "  Start  : " << _c1 << endl
+         << "  End    : " << _c2 << endl;
 
     VDClearAll();
     VDAddTempCfg(_c1, false);
     VDAddTempCfg(_c2, false);
   }
 
-
   auto robot = this->GetTask()->GetRobot();
-  CfgType curr = _c1, col(robot);
+  CfgType curr = _c1;
   LPOutput<MPTraits> lpOutput;
   int nticks;
   size_t iter = 0;
@@ -523,11 +523,11 @@ IsConnectedIter(const CfgType& _c1, const CfgType& _c2, CfgType& _col,
     if(curr == _c2) {
       //check for valid connection between previous cfg and final cfg
       //if valid, save path.
-      if(!m_envLP.IsConnected(prev, _c2, col, &lpOutput,
-            _posRes, _oriRes, true, true)) {
+      if(!m_envLP.IsConnected(prev, _c2, _col, &lpOutput,
+                              _posRes, _oriRes, true, true)) {
         if(this->m_debug)
           cout << "Couldn't connect prev: " << prev
-            << " to final: " << _c2 << endl;
+               << " to final: " << _c2 << endl;
         return false;
       }
 
@@ -542,23 +542,23 @@ IsConnectedIter(const CfgType& _c1, const CfgType& _c2, CfgType& _col,
     }
 
     if(this->m_debug)
-      cout << "Next::" << curr << endl;
+      cout << "Curr before pushing = " << curr << endl;
 
     //Push to medial axis
     if(!m_medialAxisUtility.PushToMedialAxis(curr,
           this->GetEnvironment()->GetBoundary())) {
-      if(this->m_debug)
-        cout << "Push failed. Return false." << endl;
-      //return false;
       curr = prev;
       r *= 2;
+      if(this->m_debug)
+        std::cout << "MA Push failed. Position resolution for connecting set to "
+                  << r*_posRes << std::endl;
       continue;
     }
 
     r = m_resFactor;
 
     if(this->m_debug) {
-      cout << "Pushed::" << curr << endl;
+      cout << "curr after pushing = " << curr << endl;
       VDAddTempCfg(curr, true);
     }
 
@@ -571,11 +571,11 @@ IsConnectedIter(const CfgType& _c1, const CfgType& _c2, CfgType& _col,
 
     //check for valid connection between previous cfg and pushed cfg
     //if valid, save path.
-    if(!m_envLP.IsConnected(prev, curr, col, &lpOutput,
+    if(!m_envLP.IsConnected(prev, curr, _col, &lpOutput,
           _posRes, _oriRes, true, true)) {
       if(this->m_debug)
         cout << "Couldn't connect prev: " << prev
-          << " to curr: " << curr << endl;
+             << " to curr: " << curr << endl;
       return false;
     }
 
@@ -697,6 +697,8 @@ MedialAxisLP<MPTraits>::
 ReconstructPath(const CfgType& _c1, const CfgType& _c2,
     const vector<CfgType>& _intermediates,
     double _posRes, double _oriRes) {
+  if(!m_initialized)
+    Init();
   LPOutput<MPTraits>* lpOutput = new LPOutput<MPTraits>();
   LPOutput<MPTraits>* dummyLPOutput = new LPOutput<MPTraits>();
   auto robot = this->GetTask()->GetRobot();

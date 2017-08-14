@@ -40,6 +40,15 @@ Environment(XMLNode& _node) {
   m_gravity(gravityX, gravityY, gravityZ);
 
   Read(m_filename);
+
+  //If the position or orientation resolution is provided in the xml, overwrite
+  // any previous value that could have been set in the env file.
+  m_positionRes = _node.Read("positionRes", false, m_positionRes,
+        std::numeric_limits<double>::lowest(), std::numeric_limits<double>::max(),
+        "Positional resolution of environment");
+  m_orientationRes = _node.Read("orientationRes", false, m_orientationRes,
+      std::numeric_limits<double>::lowest(), std::numeric_limits<double>::max(),
+      "Orientation resolution of environment");
 }
 
 
@@ -157,6 +166,9 @@ Write(ostream & _os) {
 void
 Environment::
 ComputeResolution(const std::vector<Robot*>& _robots) {
+  if(m_positionRes >= 0.)
+    return; // Do not compute it.
+
   double bodiesMinSpan = numeric_limits<double>::max();
   for(auto& robot : _robots)
     bodiesMinSpan = min(bodiesMinSpan, robot->GetMultiBody()->GetMaxAxisRange());
@@ -165,8 +177,7 @@ ComputeResolution(const std::vector<Robot*>& _robots) {
     bodiesMinSpan = min(bodiesMinSpan, body->GetMaxAxisRange());
 
   // Set to XML input resolution if specified, else compute resolution factor
-  if(m_positionRes < 0)
-    m_positionRes = bodiesMinSpan * m_positionResFactor;
+  m_positionRes = bodiesMinSpan * m_positionResFactor;
 }
 
 /*----------------------------- Boundary Functions ---------------------------*/

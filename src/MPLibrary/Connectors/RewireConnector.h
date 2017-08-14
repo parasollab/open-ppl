@@ -247,7 +247,7 @@ RewireConnector<MPTraits>::
 GetDistance(VID _vid1, VID _vid2, RoadmapType* _rm) {
   typedef typename RoadmapType::GraphType::EI EI;
   EI ei;
-  if(!m_distanceBased && _rm->GetGraph()->IsEdge(_vid1, _vid2, ei) &&
+  if(!m_distanceBased && _rm->GetGraph()->GetEdge(_vid1, _vid2, ei) &&
       (*ei).property().HasClearance()) {
     //return weight for this edge based on clearance
     return (*ei).property().GetClearance();

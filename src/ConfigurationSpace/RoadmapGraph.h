@@ -113,7 +113,7 @@ class RoadmapGraph : public
     void AddEdge(VID _v1, VID _v2, const pair<WEIGHT,WEIGHT>& _w);
 
     bool IsEdge(VID _v1, VID _v2);
-    bool IsEdge(VID _v1, VID _v2, EI& _ei);
+    bool GetEdge(VID _v1, VID _v2, EI& _ei);
 
     //////////////////////////////////
     // CC Operations
@@ -148,7 +148,8 @@ class RoadmapGraph : public
 
 template<class VERTEX, class WEIGHT>
 typename RoadmapGraph<VERTEX, WEIGHT>::VID
-RoadmapGraph<VERTEX,WEIGHT>::AddVertex(const VERTEX& _v) {
+RoadmapGraph<VERTEX,WEIGHT>::
+AddVertex(const VERTEX& _v) {
 #ifndef _PARALLEL
   CVI vi;
   if(IsVertex(_v, vi)){
@@ -166,14 +167,16 @@ RoadmapGraph<VERTEX,WEIGHT>::AddVertex(const VERTEX& _v) {
 
 template<class VERTEX, class WEIGHT>
 bool
-RoadmapGraph<VERTEX,WEIGHT>::IsVertex(const VERTEX& _v){
+RoadmapGraph<VERTEX,WEIGHT>::
+IsVertex(const VERTEX& _v){
   CVI vi;
   return IsVertex(_v, vi);
 }
 
 template<class VERTEX, class WEIGHT>
 bool
-RoadmapGraph<VERTEX,WEIGHT>::IsVertex(const VERTEX& _v, CVI& _vi)  {
+RoadmapGraph<VERTEX,WEIGHT>::
+IsVertex(const VERTEX& _v, CVI& _vi)  {
 #ifndef _PARALLEL
   for(CVI vi = this->begin(); vi != this->end(); ++vi){
     if(vi->property() == _v){
@@ -192,14 +195,16 @@ RoadmapGraph<VERTEX,WEIGHT>::IsVertex(const VERTEX& _v, CVI& _vi)  {
 template<class VERTEX, class WEIGHT>
 template<typename T>
 typename RoadmapGraph<VERTEX, WEIGHT>::VP
-RoadmapGraph<VERTEX, WEIGHT>::GetVertex(T& _t) {
+RoadmapGraph<VERTEX, WEIGHT>::
+GetVertex(T& _t) {
   return (*(this->find_vertex(*_t))).property();
 }
 
 //specialization for a roadmap graph iterator, calls property()
 template<class VERTEX, class WEIGHT>
 typename RoadmapGraph<VERTEX, WEIGHT>::VP
-RoadmapGraph<VERTEX, WEIGHT>::GetVertex(VI& _t) {
+RoadmapGraph<VERTEX, WEIGHT>::
+GetVertex(VI& _t) {
   return (*_t).property();
 }
 
@@ -207,7 +212,8 @@ RoadmapGraph<VERTEX, WEIGHT>::GetVertex(VI& _t) {
 //calls find_vertex(..) on VID to call property()
 template<class VERTEX, class WEIGHT>
 typename RoadmapGraph<VERTEX, WEIGHT>::VP
-RoadmapGraph<VERTEX, WEIGHT>::GetVertex(VID _t)  {
+RoadmapGraph<VERTEX, WEIGHT>::
+GetVertex(VID _t)  {
   return (*this->find_vertex(_t)).property();
 }
 
@@ -217,21 +223,24 @@ RoadmapGraph<VERTEX, WEIGHT>::GetVertex(VID _t)  {
 template<class VERTEX, class WEIGHT>
 template<typename T>
 typename RoadmapGraph<VERTEX, WEIGHT>::VID
-RoadmapGraph<VERTEX, WEIGHT>::GetVID(const T& _t) {
+RoadmapGraph<VERTEX, WEIGHT>::
+GetVID(const T& _t) {
   return *_t;
 }
 
 //specialization for a roadmap graph iterator, calls descriptor()
 template<class VERTEX, class WEIGHT>
 typename RoadmapGraph<VERTEX, WEIGHT>::VID
-RoadmapGraph<VERTEX, WEIGHT>::GetVID(const VI& _t) {
+RoadmapGraph<VERTEX, WEIGHT>::
+GetVID(const VI& _t) {
   return (*_t).descriptor();
 }
 
 //specialization for a Vertex type
 template<class VERTEX, class WEIGHT>
 typename RoadmapGraph<VERTEX, WEIGHT>::VID
-RoadmapGraph<VERTEX,WEIGHT>::GetVID(const VERTEX& _t) {
+RoadmapGraph<VERTEX,WEIGHT>::
+GetVID(const VERTEX& _t) {
   CVI vi;
   if(IsVertex(_t, vi))
     return (*vi).descriptor();
@@ -244,7 +253,8 @@ RoadmapGraph<VERTEX,WEIGHT>::GetVID(const VERTEX& _t) {
 
 template <class VERTEX, class WEIGHT>
 void
-RoadmapGraph<VERTEX,WEIGHT>::AddEdge(VID _v1, VID _v2, const WEIGHT& _w) {
+RoadmapGraph<VERTEX,WEIGHT>::
+AddEdge(VID _v1, VID _v2, const WEIGHT& _w) {
 #ifdef VIZMO
   GetVertex(_v1).Lock();
 #endif
@@ -257,7 +267,8 @@ RoadmapGraph<VERTEX,WEIGHT>::AddEdge(VID _v1, VID _v2, const WEIGHT& _w) {
 
 template <class VERTEX, class WEIGHT>
 void
-RoadmapGraph<VERTEX,WEIGHT>::AddEdge(VID _v1, VID _v2, const pair<WEIGHT,WEIGHT>& _w) {
+RoadmapGraph<VERTEX,WEIGHT>::
+AddEdge(VID _v1, VID _v2, const pair<WEIGHT,WEIGHT>& _w) {
 #ifdef VIZMO
   GetVertex(_v1).Lock();
   GetVertex(_v2).Lock();
@@ -273,15 +284,16 @@ RoadmapGraph<VERTEX,WEIGHT>::AddEdge(VID _v1, VID _v2, const pair<WEIGHT,WEIGHT>
 
 template<class VERTEX, class WEIGHT>
 bool
-RoadmapGraph<VERTEX,WEIGHT>::IsEdge(VID _v1, VID _v2) {
+RoadmapGraph<VERTEX,WEIGHT>::
+IsEdge(VID _v1, VID _v2) {
   EI ei;
-  return IsEdge(_v1, _v2, ei);
+  return GetEdge(_v1, _v2, ei);
 }
 
 template<class VERTEX, class WEIGHT>
 bool
 RoadmapGraph<VERTEX,WEIGHT>::
-IsEdge(VID _v1, VID _v2, EI& _ei) {
+GetEdge(VID _v1, VID _v2, EI& _ei) {
 #ifndef _PARALLEL
   VI vi;
   return this->find_edge(EID(_v1, _v2), vi, _ei);
@@ -293,7 +305,8 @@ IsEdge(VID _v1, VID _v2, EI& _ei) {
 #ifndef _PARALLEL
 template<class VERTEX, class WEIGHT>
 size_t
-RoadmapGraph<VERTEX, WEIGHT>::GetNumCCs() {
+RoadmapGraph<VERTEX, WEIGHT>::
+GetNumCCs() {
   ColorMap c;
   return get_cc_count(*this, c);
 }

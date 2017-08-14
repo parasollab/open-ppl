@@ -91,7 +91,7 @@ IsInCollision(const Body* const _body1, const Body* const _body2,
   bool collision = PQP::IsInCollision(_body1, _body2, _cdInfo);
   if(!collision)
     collision = IsInsideObstacle(_body1->GetWorldPolyhedron().m_vertexList[0],
-        _body2);
+                                 _body2);
   return collision;
 }
 
@@ -150,7 +150,7 @@ IsInsideObstacle(const Vector3d& _pt, const Body* const _body) {
 
     // The collision occurs at some fraction of r. This fraction is the ratio of
     // |pt to the triangle plane| over |r's projection along n|.
-    double alpha = ((v - _pt) * n) / (r * n);
+    const double alpha = ((v - _pt) * n) / (r * n);
 
     // We are exiting the triangle if the normal has positive x value and
     // entering it otherwise (zero x values handled above).

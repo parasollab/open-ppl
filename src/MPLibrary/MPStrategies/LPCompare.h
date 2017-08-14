@@ -92,7 +92,7 @@ Iterate() {
   typedef typename GraphType::EI AEI;
   for(EI ei1 = g1->edges_begin(); ei1 != g1->edges_end(); ++ei1) {
     AEI ei2;
-    if(g2->IsEdge((*ei1).source(), (*ei1).target(), ei2)) {
+    if(g2->GetEdge((*ei1).source(), (*ei1).target(), ei2)) {
       m_numSimilar++;
 
       //compare quality

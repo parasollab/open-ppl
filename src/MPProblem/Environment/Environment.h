@@ -205,7 +205,9 @@ class Environment {
     ///@name Resolution Info
     ///@{
 
-    double m_positionRes{.05};       ///< Positional resolution of movement.
+    /// The position resolution is set below 0 to trigger a formal computation
+    /// of it, if it's not provided in either the XML or env file.
+    double m_positionRes{-1.};       ///< Positional resolution of movement.
     double m_positionResFactor;      ///< Factor of body span to use as auto-
                                      ///< computed positional resolution.
     double m_orientationRes{.05};    ///< Rotational resolution of movement.

@@ -156,7 +156,8 @@ class ClearanceUtility : public MPBaseObject<MPTraits> {
     string m_dmLabel{"euclidean"};  ///< Distance metric method label.
 
     bool m_useBBX{true};            ///< Use bounding box as obstacle?
-    bool m_positional{true};        ///< Use only positional dofs?
+
+    bool m_positionalDofsOnly{true};        ///< Use only positional dofs?
 
     bool m_exactClearance{false};   ///< Use exact clearance calculations?
     bool m_exactPenetration{false}; ///< Use exact penetration calculations?
@@ -179,6 +180,7 @@ class ClearanceUtility : public MPBaseObject<MPTraits> {
     // and should only really be used there. See Initialize() for more info.
     double m_orientationResFactor{0.};
     double m_positionalResFactor{0.};
+    double m_maSearchResolutionFactor{0.};
 
     /// A boolean to determine whether initialize has been called on the
     /// utility or not yet. This is important, as there are MPLibrary things
@@ -187,7 +189,7 @@ class ClearanceUtility : public MPBaseObject<MPTraits> {
 
     ///@}
 
-    /// Adjusts a witness from a nearby witness point to a point of guranteed
+    /// Adjusts a witness from a nearby witness point to a point of guaranteed
     /// validity, based on _initValidity and _useOppValidityWitness.
     bool AdjustWitnessToEnsureValidity(
                                 const CfgType& _cfg, const bool _initValidity,
@@ -236,6 +238,8 @@ class MedialAxisUtility : public ClearanceUtility<MPTraits> {
 
     virtual void Print(ostream& _os) const override;
 
+    void SetDebug(const bool _debug) { this->m_debug = _debug; }
+
     ///@}
     ///@name Property Accessors
     ///@{
@@ -275,7 +279,7 @@ class MedialAxisUtility : public ClearanceUtility<MPTraits> {
     //Does a fuzzy equals using the minimum epsilon of _tolerance,
     // for _v1 == _v2.
     bool FuzzyVectorEquality(mathtool::Vector3d _v1, mathtool::Vector3d _v2,
-      const double _tolerance = 10.*std::numeric_limits<double>::epsilon());
+        const double _tolerance = 10.*std::numeric_limits<double>::epsilon());
 };
 
 /*---------------------------- Clearance Utility -----------------------------*/
@@ -288,7 +292,7 @@ ClearanceUtility(
     double _approxStepSize, double _approxResolution, bool _useBBX,
     bool _positional, bool _debug):
     m_vcLabel(_vcLabel), m_dmLabel(_dmLabel),
-    m_useBBX(_useBBX), m_positional(_positional),
+    m_useBBX(_useBBX), m_positionalDofsOnly(_positional),
     m_exactClearance(_exactClearance), m_exactPenetration(_exactPenetration),
     m_clearanceRays(_clearanceRays), m_penetrationRays(_penetrationRays)
     {
@@ -297,6 +301,7 @@ ClearanceUtility(
   this->m_rayTickResolution = 0.;
   this->m_orientationResolution = 0.;
   this->m_maxRayMagnitude = DBL_MAX;//So that Initialize() will update this.
+  this->m_maxRayIterations = 0;
 }
 
 
@@ -333,6 +338,7 @@ ClearanceUtility(XMLNode& _node) : MPBaseObject<MPTraits>(_node) {
   // then we SHOULD have problems, which is why I'm setting these to 0.
   m_rayTickResolution = 0.;
   m_orientationResolution = 0.;
+  this->m_maxRayIterations = 0;
 
   //get the max distance rays can go to find a witness:
   m_maxRayMagnitude = _node.Read(
@@ -353,8 +359,14 @@ ClearanceUtility(XMLNode& _node) : MPBaseObject<MPTraits>(_node) {
 
   m_useBBX = _node.Read("useBBX", false, m_useBBX, "Use the Bounding Box as an "
       "obstacle");
-  m_positional = _node.Read("positional", false, m_positional, "Use only "
-      "positional DOFs");
+
+  ///@TODO: change the name of the XML variable to "positionalDofsOnly" as well.
+  m_positionalDofsOnly = _node.Read("positional", false, m_positionalDofsOnly,
+      "Use only positional DOFs, ignoring all others");
+
+  m_maSearchResolutionFactor = _node.Read("maSearchResFactor", true,
+                                m_maSearchResolutionFactor, .0000001, 10e10,
+                                "Use only positional DOFs, ignoring all others");
 }
 
 
@@ -365,7 +377,7 @@ Print(ostream& _os) const {
   MPBaseObject<MPTraits>::Print(_os);
   _os << "\tvcLabel = " << m_vcLabel << endl
       << "\tdmLabel = " << m_dmLabel << endl
-      << "\tpositional = " << m_positional << endl
+      << "\tpositional = " << m_positionalDofsOnly << endl
       << "\tuseBBX = " << m_useBBX << endl
       << "\tclearance = " << (m_exactClearance ? "exact" :
          "approx, " + to_string(m_clearanceRays) + " rays") << endl
@@ -559,8 +571,8 @@ AdjustWitnessToEnsureValidity(const CfgType& _cfg, const bool _initValidity,
     CfgType incr(robot);
     int nTicks; //This is used as the maximum number of adjustments possible.
     incr.FindIncrement(_cfg, _witnessCfg, &nTicks,
-        env->GetPositionRes(), env->GetOrientationRes());
-    nTicks = max(nTicks,100);
+                       env->GetPositionRes(), env->GetOrientationRes());
+    nTicks = max(nTicks,100); // Minimum allowable ticks bound is 100 for now.
     int count = 0;
     while(!passed) {
       //All of the cases boil down to this condition wrt which direction to move
@@ -646,7 +658,7 @@ ApproxCollisionInfo(CfgType& _cfg, CfgType& _clrCfg, const Boundary* const _b,
     numRays = m_clearanceRays;
   else
     numRays = m_penetrationRays;
-  vector<Ray<CfgType>> rays;
+  std::vector<Ray<CfgType>> rays;
   std::pair<size_t, CfgType> cand;
 
   if(!FindApproximateWitness(
@@ -736,7 +748,7 @@ FindApproximateWitness(const std::size_t& _numRays,
       //Note: this is not taking into account whether or not m_useBBX is true.
       // If doing the same-validity witness, then we still will count the tick
       // before going out of bounds as the nearest witness, since it still must
-      // correspond to an obstacle's boundry being crossed.
+      // correspond to an obstacle's boundary being crossed.
       if(!inBounds && !_initValidity && _useOppValidityWitness) {
         if(this->m_debug)
           cout << "Ray is out of bounds at: " << rit->m_tick << endl;
@@ -885,9 +897,12 @@ MakeRays(const CfgType& _sampledCfg, const std::size_t& _numRays,
     if(this->m_debug)
       cout << "DEBUG:: tmpDirection " << i << " is " << tmpDirection << endl;
 
-    if(m_positional) { // Use only positional dofs
+    if(m_positionalDofsOnly) { // Use only positional dofs
+      if(tmpDirection.PosDOF() == 0)
+        throw RunTimeException(WHERE, "Attempting to only use positional DOFs "
+                           "for a fixed-base robot, this is invalid behavior!");
       double factor = 0.0;
-      for(size_t j = 0; j < tmpDirection.DOF(); j++) {
+      for(size_t j = 0; j < tmpDirection.DOF(); ++j) {
         if(j < tmpDirection.PosDOF())
           factor += tmpDirection[j] * tmpDirection[j];
         else
@@ -963,12 +978,11 @@ ValidateCandidate(const std::pair<size_t, CfgType>& _cand,
   if(m_useBBX)
     highValidity = (highValidity && highCfg.InBounds(_b));
 
-  if(this->m_debug) {
-    cout << "lowCfg =" << std::endl << lowCfg << std::endl;
-    cout << " (lowValidity = " << lowValidity << ")" << endl;
-    cout << "highCfg =" << std::endl << highCfg << std::endl;
-    cout << " (highValidity = " << highValidity << ")" << endl;
-  }
+  if(this->m_debug)
+    std::cout << "lowCfg =" << std::endl << lowCfg << std::endl
+              << " (lowValidity = " << lowValidity << ")" << std::endl
+              << "highCfg =" << std::endl << highCfg << std::endl
+              << " (highValidity = " << highValidity << ")" << endl;
 
   //Do the validity check, this actually needs no condition on the flag, since
   // the two ticks should be of opposite validity no matter the flag. We just
@@ -1209,10 +1223,11 @@ MedialAxisUtility<MPTraits>::
 MedialAxisUtility(XMLNode& _node) : ClearanceUtility<MPTraits>(_node) {
   this->SetName("MedialAxisUtility");
 
-  m_epsilon = _node.Read("epsilon", false, m_epsilon, 0.0, 1.0,
-      "Epsilon-Close to the MA (fraction of the resolution)");
-  m_historyLength = _node.Read("historyLength", false, m_historyLength,
-      size_t(3), size_t(100), "History Length");
+  //These are now unused in MedialAxisUtilities.
+//  m_epsilon = _node.Read("epsilon", false, m_epsilon, 0.0, 1.0,
+//      "Epsilon-Close to the MA (fraction of the resolution)");
+//  m_historyLength = _node.Read("historyLength", false, m_historyLength,
+//      size_t(3), size_t(100), "History Length");
 
   // Note that all necessary initialization is done in ClearanceUtility
 }
@@ -1240,8 +1255,7 @@ PushToMedialAxis(CfgType& _cfg, const Boundary* const _b) {
   auto vcm = this->GetValidityChecker(this->m_vcLabel);
 
   CDInfo tmpInfo;
-  tmpInfo.ResetVars();
-  tmpInfo.m_retAllInfo = true;
+  tmpInfo.ResetVars(true);//sets m_retAllInfo to true.
 
   // If invalid, push to the outside of the obstacle
   bool inCollision = !(vcm->IsValid(_cfg, tmpInfo, callee));
@@ -1259,8 +1273,7 @@ PushToMedialAxis(CfgType& _cfg, const Boundary* const _b) {
     }
   }
 
-  bool pushed = false;
-  pushed = PushCfgToMedialAxisMidpointRule(_cfg, _b);
+  bool pushed = PushCfgToMedialAxisMidpointRule(_cfg, _b);
 
   if(!pushed) {
     if(this->m_debug)
@@ -1328,9 +1341,9 @@ template<class MPTraits>
 bool
 MedialAxisUtility<MPTraits>::
 PushCfgToMedialAxisMidpointRule(CfgType& _cfg, const Boundary* const _b) {
-  //This version of PushCfg...() is using the premise of taking the midpoint of
-  // lines in the C-Space and calling it the MA. Basically the witness point and
-  // the normal to push the cfg along are found as normal, but this normal is
+  //This function is using the premise of taking the midpoint of
+  // 2 cfgs in C-Space and calling it the MA. Basically the witness point and
+  // the normal to push the cfg along are found as usual, but this normal is
   // simply pushed along until another collision is found, then the midpoint
   // between the two is called the MA cfg.
   //This method means that the witness only needs to be found at the beginning,
@@ -1356,7 +1369,7 @@ PushCfgToMedialAxisMidpointRule(CfgType& _cfg, const Boundary* const _b) {
     return false;
   }
 
-  //first, get the witness that I need
+  //Get the first witness:
   CfgType firstWitnessCfg(_cfg.GetRobot());
   if(!this->CollisionInfo(_cfg, firstWitnessCfg, _b, tmpInfo, true)) {
     if(this->m_debug)
@@ -1365,43 +1378,33 @@ PushCfgToMedialAxisMidpointRule(CfgType& _cfg, const Boundary* const _b) {
     return false;
   }
 
-  //Needed when using exact witnesses:
-  mathtool::Vector3d firstWitnessVertex = tmpInfo.m_objectPoint;
-
-  if(this->m_debug) {
-    mathtool::Vector3d firstNormalDirection =
-                                  tmpInfo.m_robotPoint - firstWitnessVertex;
-    firstNormalDirection /= firstNormalDirection.norm();
-    std::cout << callee << ": first normal direction from witness = "
-              << firstNormalDirection << std::endl;
-    std::cout << "_cfg = " << _cfg << std::endl << "firstWitnessCfg = "
-              << firstWitnessCfg << std::endl;
-  }
-
+  ///@TODO: For exact (and perhaps for approx) we should consider using face
+  // normals as the direction to move in.
   //Find the unit normal:
   CfgType unitDirectionToTickCfgAlong = _cfg - firstWitnessCfg;
   unitDirectionToTickCfgAlong /= (unitDirectionToTickCfgAlong.Magnitude());
 
   if(this->m_debug)
-    std::cout << callee << ": Unit cfg to tick along = " <<
-              unitDirectionToTickCfgAlong << std::endl;
+    std::cout << callee << ": first normal directional cfg from witness = "
+              << unitDirectionToTickCfgAlong << std::endl
+              << "_cfg = " << _cfg << std::endl << "firstWitnessCfg = "
+              << firstWitnessCfg << std::endl;
 
   //Move along normal until anther witness is found.
-  //It's important to note that, unlike ApproxCollisionInfo(), we don't
-  // care about arbitrary state change. We are requiring that _cfg is valid, and
-  // as such, both of the witness cfgs SHOULD BE invalid or out of bounds.
   //A better maxIterations might be in order, but this should be fine for now.
+  const double maSearchResolution = this->GetEnvironment()->GetPositionRes()
+                                    * this->m_maSearchResolutionFactor;
   const size_t maxIterations = _b->GetMaxDist()/this->m_rayTickResolution;
-  CfgType magnitudeAndDirectionToTick = unitDirectionToTickCfgAlong *
-                                                this->m_rayTickResolution;
+  CfgType magnitudeAndDirectionToTick = unitDirectionToTickCfgAlong
+                                        * maSearchResolution;
 
-  //declare these outside so I can reuse them after breaking/finishing the loop:
   bool inBounds = true;
   bool valid = true;
   bool passed = false;
   CfgType tickedCfg = _cfg;
+  mathtool::Vector3d firstWitnessVertex = tmpInfo.m_objectPoint;
 
-  //Start with tick = 1, since tick 0 is just the initial sample.
+  //The MA search loop:
   for(size_t tick = 1; tick < maxIterations; tick++) {
     //Tick the cfg:
     tickedCfg += magnitudeAndDirectionToTick;
@@ -1416,7 +1419,6 @@ PushCfgToMedialAxisMidpointRule(CfgType& _cfg, const Boundary* const _b) {
     }
 
     if(this->m_exactClearance) {
-      this->GetStatClass()->StartClock("Exact MA iterate timer");
       //Exact, so we want all CD info, specifically the witness point.
       // GetNearestVertexWitness will do this for us, including boundary witness
       // information, if BBX is active as an obstacle. It also returns the
@@ -1434,24 +1436,16 @@ PushCfgToMedialAxisMidpointRule(CfgType& _cfg, const Boundary* const _b) {
         return false;
       }
       //For exact, we can quit as soon as we have a witness change.
-      //Note: a more exact equality will have problems with semi-noisy witnesses!
-      // I'm not sure where the noise is from, but there seems to be very small
-      // numerical instability in the vertex finding of nearest witness for some
-      // cases, so using a 10^(-5) threshold difference fixes it really well.
+      //I found some issues initially when  doing a pure equality, so check
+      // the two witness vertices are sufficiently different.
       const double threshold = .00001;
       passed = !FuzzyVectorEquality(
                 tmpInfo.m_objectPoint, firstWitnessVertex, threshold);
-      this->GetStatClass()->StopClock("Exact MA iterate timer");
     }
     else {
-      this->GetStatClass()->StartClock("Approx MA iterate timer");
       //Do the most simple validity check (not returning all info).
       valid = vcm->IsValid(tickedCfg, callee);
-      //For approximate, we go until a validity change occurs:
       passed = !inBounds || !valid;
-      //Note that if we are OOB and not using BBX as an obstacle, it would have
-      // already been caught/handled after populating inBounds this iteration.
-      this->GetStatClass()->StopClock("Approx MA iterate timer");
     }
 
     if(passed) {
@@ -1473,15 +1467,13 @@ PushCfgToMedialAxisMidpointRule(CfgType& _cfg, const Boundary* const _b) {
   }
 
   //If doing exact, then the MA sample is the midpoint of the two last ticks.
-  // Note that "witness cfg" is inaccurate for what it is, but it should be
-  // clear enough.
   if(this->m_exactClearance)
     firstWitnessCfg = tickedCfg - magnitudeAndDirectionToTick;
 
   //If doing approx, the first witness is already set, and the last witness is
   // simply the tickedCfg.
 
-  //Find the midpoint of the two cfgs and return it as the MA cfg:
+  //Find the midpoint of the two cfgs as the MA cfg:
   CfgType cfgMA = (firstWitnessCfg + tickedCfg)/2.0;
 
   //Now we have to double check that it's valid, since it's possible that it's

@@ -64,7 +64,8 @@ ParseXML(XMLNode& _node) {
 
 template <typename MPTraits>
 void
-MedialAxisClearanceValidity<MPTraits>::Print(ostream& _os) const {
+MedialAxisClearanceValidity<MPTraits>::
+Print(ostream& _os) const {
   ValidityCheckerMethod<MPTraits>::Print(_os);
   _os << "\tMaximum distance from medial axis::" << m_clearance << endl;
   _os << "\tMedialAxisUtility::" << endl;
@@ -74,14 +75,16 @@ MedialAxisClearanceValidity<MPTraits>::Print(ostream& _os) const {
 
 template <typename MPTraits>
 bool
-MedialAxisClearanceValidity<MPTraits>::IsInsideObstacle(const CfgType& _cfg){
+MedialAxisClearanceValidity<MPTraits>::
+IsInsideObstacle(const CfgType& _cfg) {
   auto vcm = this->GetValidityChecker(m_medialAxisUtility.GetValidityCheckerLabel());
   return vcm->IsInsideObstacle(_cfg);
 }
 
 template <typename MPTraits>
 bool
-MedialAxisClearanceValidity<MPTraits>::IsValidImpl(CfgType& _cfg,
+MedialAxisClearanceValidity<MPTraits>::
+IsValidImpl(CfgType& _cfg,
     CDInfo& _cdInfo, const string& _callName) {
   Environment* env = this->GetEnvironment();
 
@@ -113,13 +116,15 @@ MedialAxisClearanceValidity<MPTraits>::IsValidImpl(CfgType& _cfg,
 
 template <typename MPTraits>
 vector< pair<typename MPTraits::CfgType, typename MPTraits::CfgType> >&
-MedialAxisClearanceValidity<MPTraits>::GetHistory() {
+MedialAxisClearanceValidity<MPTraits>::
+GetHistory() {
   return m_history;
 }
 
 template <typename MPTraits>
 void
-MedialAxisClearanceValidity<MPTraits>::ClearHistory() {
+MedialAxisClearanceValidity<MPTraits>::
+ClearHistory() {
   m_history.clear();
 }
 

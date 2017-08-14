@@ -18,7 +18,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup ValidityCheckers
 /// Validation here means collision-free. This class interfaces with external CD
-/// libraries to determing collision information -- sometimes including
+/// libraries to determine collision information -- sometimes including
 /// clearance and penetration information.
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
@@ -176,11 +176,11 @@ IsValidImpl(CfgType& _cfg, CDInfo& _cdInfo, const string& _callName) {
   _cfg.ConfigureRobot();
 
   //check collision
-  bool answer = IsInCollision(_cdInfo, _cfg, _callName);
+  bool inCollision = IsInCollision(_cdInfo, _cfg, _callName);
 
-  _cfg.SetLabel("VALID", !answer);
+  _cfg.SetLabel("VALID", !inCollision);
 
-  return !answer;
+  return !inCollision;
 }
 
 
