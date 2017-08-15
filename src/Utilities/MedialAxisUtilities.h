@@ -180,7 +180,7 @@ class ClearanceUtility : public MPBaseObject<MPTraits> {
     // and should only really be used there. See Initialize() for more info.
     double m_orientationResFactor{0.};
     double m_positionalResFactor{0.};
-    double m_maSearchResolutionFactor{0.};
+    double m_maSearchResolutionFactor{1};
 
     /// A boolean to determine whether initialize has been called on the
     /// utility or not yet. This is important, as there are MPLibrary things
@@ -363,8 +363,9 @@ ClearanceUtility(XMLNode& _node) : MPBaseObject<MPTraits>(_node) {
   ///@TODO: change the name of the XML variable to "positionalDofsOnly" as well.
   m_positionalDofsOnly = _node.Read("positional", false, m_positionalDofsOnly,
       "Use only positional DOFs, ignoring all others");
-
-  m_maSearchResolutionFactor = _node.Read("maSearchResFactor", true,
+  
+  // @TODO: change to a required attribute.
+  m_maSearchResolutionFactor = _node.Read("maSearchResFactor", false,
                                 m_maSearchResolutionFactor, .0000001, 10e10,
                                 "Use only positional DOFs, ignoring all others");
 }
@@ -1262,17 +1263,14 @@ PushToMedialAxis(CfgType& _cfg, const Boundary* const _b) {
 
   if(this->m_debug)
     cout << "In-Collision: " << inCollision << endl;
-
   if(inCollision) {
     if(!PushFromInsideObstacle(_cfg, _b)) {
       if(this->m_debug)
         std::cout << callee << "Returning false from not being able to push "
             "from obstacle" << std::endl;
-
       return false;
     }
   }
-
   bool pushed = PushCfgToMedialAxisMidpointRule(_cfg, _b);
 
   if(!pushed) {
@@ -1328,13 +1326,8 @@ inline bool
 MedialAxisUtility<MPTraits>::
 FuzzyVectorEquality(mathtool::Vector3d _v1, mathtool::Vector3d _v2,
                     double _tolerance) {
-  for(std::size_t i = 0; i < 3; i++) {
-    if(!mathtool::approx(_v1[i], _v2[i], _tolerance))
-      return false;
-  }
-  return true;
+  return (_v1 - _v2).norm() <= _tolerance;
 }
-
 
 
 template<class MPTraits>
@@ -1378,12 +1371,20 @@ PushCfgToMedialAxisMidpointRule(CfgType& _cfg, const Boundary* const _b) {
     return false;
   }
 
-  ///@TODO: For exact (and perhaps for approx) we should consider using face
-  // normals as the direction to move in.
+  Vector3d normalDirection = (tmpInfo.m_robotPoint - tmpInfo.m_objectPoint).normalize();
+  
   //Find the unit normal:
-  CfgType unitDirectionToTickCfgAlong = _cfg - firstWitnessCfg;
-  unitDirectionToTickCfgAlong /= (unitDirectionToTickCfgAlong.Magnitude());
-
+//  CfgType unitDirectionToTickCfgAlong = _Cfg - firstWitnessCfg;
+//  unitDirectionToTickCfgAlong /= (unitDirectionToTickCfgAlong.Magnitude());
+  CfgType unitDirectionToTickCfgAlong;
+  
+  if(this->m_exactClearance)
+    unitDirectionToTickCfgAlong = CfgType(normalDirection, _cfg.GetRobot());
+  else {
+    unitDirectionToTickCfgAlong = _cfg - firstWitnessCfg;
+    unitDirectionToTickCfgAlong /= unitDirectionToTickCfgAlong.Magnitude();
+  }
+  
   if(this->m_debug)
     std::cout << callee << ": first normal directional cfg from witness = "
               << unitDirectionToTickCfgAlong << std::endl
@@ -1438,7 +1439,13 @@ PushCfgToMedialAxisMidpointRule(CfgType& _cfg, const Boundary* const _b) {
       //For exact, we can quit as soon as we have a witness change.
       //I found some issues initially when  doing a pure equality, so check
       // the two witness vertices are sufficiently different.
-      const double threshold = .00001;
+      static const double threshold = this->GetEnvironment()->GetPositionRes() * 2;
+
+      // @TODO: check the witnesses are sufficiently different before it is
+      // considered valid. Currently, using double the environment resolution is
+      // a quick fix; however, we should be checking the relative difference
+      // between the cfg and its witness to check if the witnesses are
+      // sufficiently different from the first witness.
       passed = !FuzzyVectorEquality(
                 tmpInfo.m_objectPoint, firstWitnessVertex, threshold);
     }
