@@ -44,8 +44,8 @@ Environment(XMLNode& _node) {
   //If the position or orientation resolution is provided in the xml, overwrite
   // any previous value that could have been set in the env file.
   m_positionRes = _node.Read("positionRes", false, m_positionRes,
-        std::numeric_limits<double>::lowest(), std::numeric_limits<double>::max(),
-        "Positional resolution of environment");
+      std::numeric_limits<double>::lowest(), std::numeric_limits<double>::max(),
+      "Positional resolution of environment");
   m_orientationRes = _node.Read("orientationRes", false, m_orientationRes,
       std::numeric_limits<double>::lowest(), std::numeric_limits<double>::max(),
       "Orientation resolution of environment");
