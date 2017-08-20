@@ -98,12 +98,21 @@ operator=(Cfg&& _cfg) {
 Cfg&
 Cfg::
 operator+=(const Cfg& _cfg) {
-  for(size_t i = 0; i < DOF(); ++i)
+  const size_t posDOF = PosDOF(), oriDOF = OriDOF(), dof = DOF();
+
+  // Positional dofs
+  for(size_t i = 0; i < posDOF; ++i)
     m_dofs[i] += _cfg[i];
+  // Orientation dofs
+  for(size_t i = posDOF; i < posDOF + oriDOF; ++i)
+    m_dofs[i] = Normalize(m_dofs[i] + _cfg[i]);
+  // Joint dofs
+  for(size_t i = posDOF + oriDOF; i < dof; ++i)
+    m_dofs[i] += _cfg[i];
+
   for(size_t i = 0; i < m_vel.size(); ++i)
     m_vel[i] += _cfg.m_vel[i];
 
-  NormalizeOrientation();
   m_witnessCfg.reset();
   return *this;
 }
@@ -112,22 +121,21 @@ operator+=(const Cfg& _cfg) {
 Cfg&
 Cfg::
 operator-=(const Cfg& _cfg) {
-  for(size_t i = 0; i < DOF(); ++i) {
-    switch(GetMultiBody()->GetDOFType(i)) {
-      case DofType::Positional:
-      case DofType::Joint:
-        m_dofs[i] -= _cfg[i];
-        break;
-      case DofType::Rotational:
-        m_dofs[i] = DirectedAngularDistance(m_dofs[i], _cfg[i]);
-        break;
-    }
-  }
+  const size_t posDOF = PosDOF(), oriDOF = OriDOF(), dof = DOF();
+
+  // Positional dofs
+  for(size_t i = 0; i < posDOF; ++i)
+    m_dofs[i] -= _cfg[i];
+  // Orientation dofs
+  for(size_t i = posDOF; i < posDOF + oriDOF; ++i)
+    m_dofs[i] = DirectedAngularDistance(m_dofs[i], _cfg[i]);
+  // Joint dofs
+  for(size_t i = posDOF + oriDOF; i < dof; ++i)
+    m_dofs[i] -= _cfg[i];
 
   for(size_t i = 0; i < m_vel.size(); ++i)
     m_vel[i] -= _cfg.m_vel[i];
 
-  NormalizeOrientation();
   m_witnessCfg.reset();
   return *this;
 }
@@ -136,12 +144,21 @@ operator-=(const Cfg& _cfg) {
 Cfg&
 Cfg::
 operator*=(const Cfg& _cfg) {
-  for(size_t i = 0; i < DOF(); ++i)
+  const size_t posDOF = PosDOF(), oriDOF = OriDOF(), dof = DOF();
+
+  // Positional dofs
+  for(size_t i = 0; i < posDOF; ++i)
     m_dofs[i] *= _cfg[i];
+  // Orientation dofs
+  for(size_t i = posDOF; i < posDOF + oriDOF; ++i)
+    m_dofs[i] = Normalize(m_dofs[i] * _cfg[i]);
+  // Joint dofs
+  for(size_t i = posDOF + oriDOF; i < dof; ++i)
+    m_dofs[i] *= _cfg[i];
+
   for(size_t i = 0; i < m_vel.size(); ++i)
     m_vel[i] *= _cfg.m_vel[i];
 
-  NormalizeOrientation();
   m_witnessCfg.reset();
   return *this;
 }
@@ -150,12 +167,21 @@ operator*=(const Cfg& _cfg) {
 Cfg&
 Cfg::
 operator/=(const Cfg& _cfg) {
-  for(size_t i = 0; i < DOF(); ++i)
+  const size_t posDOF = PosDOF(), oriDOF = OriDOF(), dof = DOF();
+
+  // Positional dofs
+  for(size_t i = 0; i < posDOF; ++i)
     m_dofs[i] /= _cfg[i];
+  // Orientation dofs
+  for(size_t i = posDOF; i < posDOF + oriDOF; ++i)
+    m_dofs[i] = Normalize(m_dofs[i] / _cfg[i]);
+  // Joint dofs
+  for(size_t i = posDOF + oriDOF; i < dof; ++i)
+    m_dofs[i] /= _cfg[i];
+
   for(size_t i = 0; i < m_vel.size(); ++i)
     m_vel[i] /= _cfg.m_vel[i];
 
-  NormalizeOrientation();
   m_witnessCfg.reset();
   return *this;
 }
@@ -164,12 +190,21 @@ operator/=(const Cfg& _cfg) {
 Cfg&
 Cfg::
 operator*=(const double _d) {
-  for(size_t i = 0; i < DOF(); ++i)
+  const size_t posDOF = PosDOF(), oriDOF = OriDOF(), dof = DOF();
+
+  // Positional dofs
+  for(size_t i = 0; i < posDOF; ++i)
     m_dofs[i] *= _d;
+  // Orientation dofs
+  for(size_t i = posDOF; i < posDOF + oriDOF; ++i)
+    m_dofs[i] = Normalize(m_dofs[i] * _d);
+  // Joint dofs
+  for(size_t i = posDOF + oriDOF; i < dof; ++i)
+    m_dofs[i] *= _d;
+
   for(size_t i = 0; i < m_vel.size(); ++i)
     m_vel[i] *= _d;
 
-  NormalizeOrientation();
   m_witnessCfg.reset();
   return *this;
 }
@@ -178,12 +213,21 @@ operator*=(const double _d) {
 Cfg&
 Cfg::
 operator/=(const double _d) {
-  for(size_t i = 0; i < DOF(); ++i)
+  const size_t posDOF = PosDOF(), oriDOF = OriDOF(), dof = DOF();
+
+  // Positional dofs
+  for(size_t i = 0; i < posDOF; ++i)
     m_dofs[i] /= _d;
+  // Orientation dofs
+  for(size_t i = posDOF; i < posDOF + oriDOF; ++i)
+    m_dofs[i] = Normalize(m_dofs[i] / _d);
+  // Joint dofs
+  for(size_t i = posDOF + oriDOF; i < dof; ++i)
+    m_dofs[i] /= _d;
+
   for(size_t i = 0; i < m_vel.size(); ++i)
     m_vel[i] /= _d;
 
-  NormalizeOrientation();
   m_witnessCfg.reset();
   return *this;
 }
@@ -194,14 +238,7 @@ Cfg
 Cfg::
 operator-() const {
   Cfg result = *this;
-  for(size_t i = 0; i < DOF(); ++i)
-    result[i] *= -1;
-  for(size_t i = 0; i < m_vel.size(); ++i)
-    result.m_vel[i] *= -1;
-
-  result.NormalizeOrientation();
-  result.m_witnessCfg.reset();
-  return result;
+  return result *= -1;
 }
 
 
@@ -261,17 +298,29 @@ operator==(const Cfg& _cfg) const {
   if(m_robot != _cfg.m_robot)
     return false;
 
-  const Cfg delta = *this - _cfg;
-  const double tolerance = 100 * std::numeric_limits<double>::epsilon();
+  static constexpr double tolerance = 100 * std::numeric_limits<double>::epsilon();
 
-  // Check all the DOFs.
-  for(size_t i = 0; i < DOF(); ++i)
-    if(std::abs(delta.m_dofs[i]) > tolerance)
+  // Check all the DOFs and return on first failure.
+  const size_t posDOF = PosDOF(), oriDOF = OriDOF(), dof = DOF();
+
+  // Positional dofs
+  for(size_t i = 0; i < posDOF; ++i)
+    if(std::abs(m_dofs[i] - _cfg[i]) > tolerance)
+      return false;
+
+  // Orientation dofs
+  for(size_t i = posDOF; i < posDOF + oriDOF; ++i)
+    if(std::abs(DirectedAngularDistance(m_dofs[i], _cfg[i])) > tolerance)
+      return false;
+
+  // Joint dofs
+  for(size_t i = posDOF + oriDOF; i < dof; ++i)
+    if(std::abs(m_dofs[i] - _cfg[i]) > tolerance)
       return false;
 
   // Check the velocities.
   for(size_t i = 0; i < m_vel.size(); ++i)
-    if(std::abs(delta.m_vel[i]) > tolerance)
+    if(std::abs(m_vel[i] - _cfg.m_vel[i]) > tolerance)
       return false;
 
   // If we're still here, the Cfgs are equal.
@@ -676,6 +725,8 @@ SetLabel(const std::string& _label, const bool _value) noexcept {
 double
 Cfg::
 GetStat(const std::string& _stat) const {
+  if(!IsStat(_stat))
+    return 0;
   return m_statMap.at(_stat);
 }
 

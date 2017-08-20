@@ -52,7 +52,7 @@
       <NegateValidity label="nv" vcLabel="rapid"/>
       <MedialAxisClearance label="mac" maClearance="0.5" vcLabel="pqp_solid"
         dmLabel="euclidean" clearanceType="exact" penetrationType="exact"
-        useBBX="true" positional="true" epsilon="0.01" historyLength="5"/>
+        useBBX="true" positional="true"/>
       <ComposeValidity label="cv" operator="AND">
         <ValidityChecker label="pqp_solid"/>
         <ValidityChecker label="mac"/>
@@ -101,8 +101,7 @@
         dmLabel="euclidean" useBBX="true"/>
       <MedialAxisSampler label="MAPRM" vcLabel="pqp_solid" dmLabel="euclidean"
         clearanceType="exact" penetrationType="exact"
-        useBBX="true" debug="false" positional="true"
-        epsilon="0.01" historyLength="100"/>
+        useBBX="true" debug="false" positional="true"/>
       <GridSampler label="Grid" vcLabel="rapid">
         <Dimension index="0" points="10"/>
         <Dimension index="1" points="5"/>
@@ -137,19 +136,19 @@
         macEpsilon="0.1" maxIter="10"
         vcLabel="pqp_solid" dmLabel="euclidean"
         clearanceType="exact" penetrationType="exact" useBBX="true"
-        epsilon="0.01" historyLength="5" positional="true"
+        positional="true"
         debug="true" saveIntermediates="true"/>
       <MedialAxisLP label="malpi" controller="iterative"
         resFactor="20" maxIter="100"
         vcLabel="pqp_solid" dmLabel="euclidean"
         clearanceType="exact" penetrationType="exact" useBBX="true"
-        epsilon="0.01" historyLength="5" positional="true"
+        positional="true"
         debug="true" saveIntermediates="true"/>
       <MedialAxisLP label="malpb" controller="binary"
         resFactor="20" maxIter="100"
         vcLabel="pqp_solid" dmLabel="euclidean"
         clearanceType="exact" penetrationType="exact" useBBX="true"
-        epsilon="0.01" historyLength="5" positional="true"
+        positional="true"
         debug="true" saveIntermediates="true"/>
       <ToggleLP label="togglelp" vcLabel="rapid" dmLabel="euclidean"
         lpLabel="sl" maxIter="5"/>
@@ -174,7 +173,7 @@
       <MedialAxisExtender label="MAE" maxDist="10.0" minDist="0.01"
         extendDist="0.5" maxIntermediates="10" lpLabel="sl" vcLabel="pqp_solid"
         dmLabel="euclidean" clearanceType="exact" penetrationType="exact"
-        useBBX="true" epsilon="0.01" historyLength="5" positional="true"/>
+        useBBX="true" positional="true"/>
       <RandomObstacleVector label="ROVRO" debug="false" dmLabel="euclidean"
         vcLabel="rapid" maxDist="10.0" minDist=".001"/>
       <RandomObstacleVector label="ROVSO" debug="false" dmLabel="euclidean"
@@ -514,7 +513,7 @@
         inFilename="3D/3d.query" outFilename="3D/3d.ma.query"
         vcLabel="pqp_solid" dmLabel="euclidean"
         clearanceType="exact" penetrationType="exact" useBBX="true"
-        epsilon="0.01" historyLength="5" positional="true"/>
+        positional="true"/>
 
       <!-- Modify Path -->
       <ModifyPath label="ModifyPath" pmLabel="CR" pathFile="3D/3d.path"/>
@@ -560,6 +559,15 @@
         <Connector method="Closest"/>
         <Evaluator method="ModQuery"/>
       </SparkBasicPRM>
+
+      <!-- Syclop -->
+      <Syclop label="Syclop"
+        numRoots="1" m="1" growthFocus="0.01" dmLabel="euclidean"
+        nfLabel="Nearest" vcLabel="rapid" connectorLabel="Closest"
+        gtype="UNDIRECTED_TREE" debug="false"
+        growGoals="false" extenderLabel="BERO">
+        <Evaluator label="RRTQuery"/>
+      </Syclop>
 
       <!-- Visibility Based PRM Strategy -->
       <VisibilityBasedPRM label="VBPRM" sampler="UniformRandomFree"
