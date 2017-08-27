@@ -9,45 +9,60 @@
 #include "MPProblem/Environment/Environment.h"
 #include "MPProblem/MPProblem.h"
 #include "Workspace/WorkspaceDecomposition.h"
+#include "Workspace/WorkspaceSkeleton.h"
 #include "Utilities/XMLNode.h"
 
-#include "TetGenDecomposition.h"
-#include "Workspace/WorkspaceSkeleton.h"
+#include "MPLibrary/MPTools/TetGenDecomposition.h"
 
+
+/*------------------------- Static Initializers ------------------------------*/
+
+ReebGraphConstruction::Parameters ReebGraphConstruction::m_defaultParams;
 
 /*------------------------------- Construction -------------------------------*/
 
 ReebGraphConstruction::
-ReebGraphConstruction(const string& _filename) : m_reebFilename(_filename) { }
+ReebGraphConstruction() : m_params(m_defaultParams) {}
 
 
 ReebGraphConstruction::
-ReebGraphConstruction(XMLNode& _node) {
-  /// @TODO Add a way to actually read these parameters from an XML file.
-  ///       Currently this is not supported for anything outside the MPProblem or
-  ///       MPLibrary.
-  m_reebFilename = _node.Read("reebFilename", false, "", "Filename for Read "
-      "or write ReebGraph operations.");
-  if(!m_reebFilename.empty())
-    m_writeReeb = _node.Read("writeReeb", false, false,
+ReebGraphConstruction(const std::string& _filename, const bool _write) :
+    ReebGraphConstruction() {
+  m_params.filename = _filename;
+  m_params.write = _write;
+}
+
+
+void
+ReebGraphConstruction::
+SetDefaultParameters(XMLNode& _node) {
+  m_defaultParams.filename = _node.Read("filename", false,
+      m_defaultParams.filename,
+      "Filename for read or write ReebGraph operations.");
+
+  if(!m_defaultParams.filename.empty())
+    m_defaultParams.write = _node.Read("write", false, m_defaultParams.write,
         "Write Reeb Graph to file");
+
+  m_defaultParams.debug = _node.Read("debug", false, m_defaultParams.debug,
+      "Show debug messages?");
 }
 
 /*------------------------------- Operations ---------------------------------*/
 
 void
 ReebGraphConstruction::
-Construct(Environment* _env, const string& _baseFilename) {
-  if(m_reebFilename.empty()) {
+Construct(Environment* const _env, const string& _baseFilename) {
+  if(m_params.filename.empty()) {
     Tetrahedralize(_env, _baseFilename);
     Construct();
     Embed(_env);
 
-    if(m_writeReeb)
+    if(m_params.write)
       Write(_baseFilename + ".reeb");
   }
   else
-    Read(MPProblem::GetPath(m_reebFilename));
+    Read(MPProblem::GetPath(m_params.filename));
 }
 
 
@@ -66,7 +81,7 @@ GetSkeleton() {
   {
     // Make sure this is a real path.
     if(eit->property().m_path.empty()) {
-      if(m_debug)
+      if(m_params.debug)
         std::cout << "ReebGraph:: skipping empty path when building skeleton."
                   << std::endl;
       continue;
@@ -103,7 +118,7 @@ Write(const string& _filename) {
 
 void
 ReebGraphConstruction::
-Tetrahedralize(Environment* _env, const string& _baseFilename) {
+Tetrahedralize(Environment* const _env, const string& _baseFilename) {
   // Get tetrahedral decomposition from environment.
   if(!_env->GetDecomposition())
     _env->Decompose(TetGenDecomposition(_baseFilename));
@@ -510,7 +525,7 @@ Embed(Environment* _env) {
     arc.m_path.push_back(dualGraph.find_vertex(pathVID.back())->property());
   }
 
-  if(m_debug)
+  if(m_params.debug)
     cout << "ReebGraph:: duplicated path count: " << duplicatePathCount << endl;
 
   // After embedding the reeb graph, it is possible for multiple reeb graph
@@ -610,7 +625,7 @@ Uniqueify() {
     deletedEdges += edgesToDelete.size();
   }
 
-  if(m_debug)
+  if(m_params.debug)
     std::cout << "ReebGraph::Uniqueify:: deleted " << deletedVertices
               << " duplicate vertices and " << deletedEdges
               << " duplicate edges."

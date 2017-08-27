@@ -16,6 +16,7 @@
 #include "MPLibrary/MapEvaluators/MapEvaluatorMethod.h"
 #include "MPLibrary/Metrics/MetricMethod.h"
 #include "MPLibrary/MPStrategies/MPStrategyMethod.h"
+#include "MPLibrary/MPTools/MPTools.h"
 #include "MPLibrary/NeighborhoodFinders/NeighborhoodFinderMethod.h"
 #include "MPLibrary/PathModifiers/PathModifierMethod.h"
 #include "MPLibrary/Samplers/SamplerMethod.h"
@@ -42,6 +43,7 @@ class MPLibraryType final
     typedef typename MPTraits::MPSolution  MPSolution;
     typedef typename MPTraits::RoadmapType RoadmapType;
     typedef typename MPTraits::Path        Path;
+    typedef typename MPTraits::MPTools     MPTools;
 
     ///@}
     ///@name Local Types
@@ -242,6 +244,12 @@ class MPLibraryType final
     }
 
     ///@}
+    ///@name MPTools Accessors
+    ///@{
+
+    MPTools* GetMPTools() {return m_mpTools;}
+
+    ///@}
     ///@name Task Accessors
     ///@{
 
@@ -345,6 +353,14 @@ class MPLibraryType final
     MPStrategySet*         m_mpStrategies{nullptr};
 
     ///@}
+    ///@name Other Library Objects
+    ///@{
+    /// These do not use method sets because the sub-objects are not expected to
+    /// share a common interface.
+
+    MPTools* m_mpTools{nullptr};
+
+    ///@}
 
 };
 
@@ -375,6 +391,7 @@ MPLibraryType() {
       typename MPTraits::MapEvaluatorMethodList(), "MapEvaluators");
   m_mpStrategies = new MPStrategySet(this,
       typename MPTraits::MPStrategyMethodList(), "MPStrategies");
+  m_mpTools = new MPTools(this);
 }
 
 
@@ -399,6 +416,7 @@ MPLibraryType<MPTraits>::
   delete m_metrics;
   delete m_mapEvaluators;
   delete m_mpStrategies;
+  delete m_mpTools;
 }
 
 
@@ -424,6 +442,7 @@ Initialize() {
   m_connectors->Initialize();
   m_metrics->Initialize();
   m_mapEvaluators->Initialize();
+  m_mpTools->Initialize();
 }
 
 /*---------------------------- XML Helpers -----------------------------------*/
@@ -516,6 +535,10 @@ ParseChild(XMLNode& _node) {
   }
   else if(_node.Name() == "MPStrategies") {
     m_mpStrategies->ParseXML(_node);
+    return true;
+  }
+  else if(_node.Name() == "MPTools") {
+    m_mpTools->ParseXML(_node);
     return true;
   }
   else if(_node.Name() == "Solver") {

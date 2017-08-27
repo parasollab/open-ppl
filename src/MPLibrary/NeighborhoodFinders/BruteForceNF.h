@@ -110,11 +110,11 @@ FindNeighbors(RoadmapType* _rmp,
   this->EndQueryTime();
   this->EndTotalTime();
 
-  if(closest.empty())
-    cout << "closests is empty." << endl;
+  if(this->m_debug and closest.empty())
+    std::cout << "closests is empty." << std::endl;
 
   // Reverse order
-  return copy(closest.rbegin(), closest.rend(), _out);
+  return std::copy(closest.rbegin(), closest.rend(), _out);
 }
 
 template <typename MPTraits>

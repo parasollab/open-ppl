@@ -6,22 +6,17 @@ using namespace std;
 
 #include <containers/sequential/graph/graph.h>
 
-#define TETLIBRARY
-#undef PI
-#include "tetgen.h"
-
-#include <CGAL/Exact_predicates_exact_constructions_kernel.h>
-#include <CGAL/Nef_polyhedron_3.h>
-
 #include <Vector.h>
 using namespace mathtool;
 
-#include "IOUtils.h"
+#include "Utilities/IOUtils.h"
 
 class Environment;
 class StaticMultiBody;
 class WorkspaceDecomposition;
 class XMLNode;
+
+class tetgenio;
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -35,24 +30,39 @@ class TetGenDecomposition {
     ///@name Types
     ///@{
 
-    using CGALKernel    = CGAL::Exact_predicates_exact_constructions_kernel;
-    using NefPolyhedron = CGAL::Nef_polyhedron_3<CGALKernel>;
-    using CGALPoint     = NefPolyhedron::Point_3;
+    /// The input parameters for this object.
+    struct Parameters {
+      std::string inputFilename;    ///< Input file name, if any.
+      std::string switches{"pnQ"};  ///< See TetGen manual, need at least 'pn'.
+      bool writeFreeModel{false};   ///< Output model of free workspace.
+      bool writeDecompModel{false}; ///< Output tetrahedralization.
+      bool debug{false};            ///< Toggle debug messages.
+    };
+
+    static Parameters m_defaultParams; ///< The default parameters.
 
     ///@}
     ///@name Construction
     ///@{
 
-    /// @param _baseFilename Base filename used for saving models
+    /// @param _baseFilename Base filename used for all pmpl outputs.
+    TetGenDecomposition(const std::string& _baseFilename);
+
+    /// @param _baseFilename Base filename used for all pmpl outputs.
     /// @param _switches Switches for TetGen. See TetGen manual. Need 'pn' at a
     ///                  minimum.
     /// @param _writeFreeModel Output TetGen model of workspace
     /// @param _writeDecompModel Output TetGen model of tetrahedralization
-    TetGenDecomposition(const string& _baseFilename = "",
-        const string& _switches = "pnqQ",
-        bool _writeFreeModel = false, bool _writeDecompModel = false);
+    /// @param _inputFilename Input filename for the decomposition model. Empty
+    ///                       means do not read input.
+    TetGenDecomposition(const string& _baseFilename,
+        const std::string& _switches,
+        const bool _writeFreeModel, const bool _writeDecompModel,
+        const std::string& _inputFilename = "");
 
-    TetGenDecomposition(XMLNode& _node); ///< @TODO Add XML parsing.
+    /// Set the default parameters from an XML node.
+    /// @param _node The XML node to parse.
+    static void SetDefaultParameters(XMLNode& _node);
 
     ~TetGenDecomposition();
 
@@ -82,25 +92,14 @@ class TetGenDecomposition {
     /// actual polyhedron.
     void MakeFreeModel();
 
-    /// Add the vertices to the free model.
-    void AddVertices(const NefPolyhedron& _freespace);
-
-    /// Add the facets to the free model.
-    void AddFacets(const NefPolyhedron& _freespace);
-
-    /// Add holes to the free model for each obstacle touching the final'
-    ///        boundary.
-    void AddHoles(const NefPolyhedron& _freespace);
-
-    /// Get the index of a point in the freespace nef poly.
-    size_t PointIndex(const NefPolyhedron& _freespace, const CGALPoint& _p) const;
-
-    /// Extract facet info from the freespace nef poly.
-    vector<vector<vector<size_t>>> ExtractFacets(const NefPolyhedron& _freespace);
-
     ///@}
     ///@name IO Helpers
     ///@{
+
+    /// Ensure that a switch string contains at least 'p' and 'n'. Add them if
+    /// not found.
+    /// @param _switches The string to validate.
+    static void ValidateSwitches(std::string& _switches);
 
     /// Output free workspace TetGen model
     void SaveFreeModel();
@@ -115,20 +114,13 @@ class TetGenDecomposition {
     ///@name Internal State
     ///@{
 
+    Parameters m_params;               ///< Input parameters for this instance.
+
     const Environment* m_env{nullptr}; ///< PMPL Environment.
-    string m_baseFilename;             ///< PMPL base filename.
+    std::string m_baseFilename;        ///< PMPL base filename.
 
     tetgenio* m_freeModel{nullptr};    ///< TetGen model of free workspace.
     tetgenio* m_decompModel{nullptr};  ///< TetGen model of tetrahedralization.
-
-    string m_tetGenFilename;     ///< TetGen model input base filename.
-
-    string m_switches;           ///< Switches for TetGen. See TetGen manual for
-                                 ///< details. Need 'pn' at a minimum.
-    bool m_writeFreeModel;       ///< Output TetGen model of free workspace.
-    bool m_writeDecompModel;     ///< Output TetGen model of tetrahedralization.
-
-    bool m_debug{true};         ///< Toggle debug messages.
 
     ///@}
 };

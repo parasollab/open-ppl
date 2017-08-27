@@ -2,7 +2,7 @@
 #define REWIRE_CONNECTOR_H_
 
 #include "ConnectorMethod.h"
-#include "Utilities/MedialAxisUtilities.h"
+#include "MPLibrary/MPTools/MedialAxisUtilities.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup Connectors

@@ -2,7 +2,7 @@
 #define OBSTACLE_CLEARANCE_VALIDITY_H_
 
 #include "ValidityCheckerMethod.h"
-#include "Utilities/MedialAxisUtilities.h"
+#include "MPLibrary/MPTools/MedialAxisUtilities.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup ValidityCheckers

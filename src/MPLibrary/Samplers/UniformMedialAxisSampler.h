@@ -4,7 +4,7 @@
 #include "SamplerMethod.h"
 
 #include "Geometry/Boundaries/WorkspaceBoundingBox.h"
-#include "Utilities/MedialAxisUtilities.h"
+#include "MPLibrary/MPTools/MedialAxisUtilities.h"
 
 
 ////////////////////////////////////////////////////////////////////////////////

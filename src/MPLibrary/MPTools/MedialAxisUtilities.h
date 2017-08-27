@@ -1,16 +1,16 @@
 #ifndef MEDIAL_AXIS_UTILITY_H_
 #define MEDIAL_AXIS_UTILITY_H_
 
-#include "MPUtils.h"
-
 #include <ctgmath>
 #include <deque>
 
-#include "MetricUtils.h"
 #include "Geometry/Bodies/ActiveMultiBody.h"
 #include "Geometry/Bodies/FixedBody.h"
 #include "MPLibrary/LocalPlanners/StraightLine.h"
 #include "MPLibrary/ValidityCheckers/CollisionDetection/CDInfo.h"
+#include "Utilities/MetricUtils.h"
+#include "Utilities/MPUtils.h"
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup Utilities
@@ -363,7 +363,7 @@ ClearanceUtility(XMLNode& _node) : MPBaseObject<MPTraits>(_node) {
   ///@TODO: change the name of the XML variable to "positionalDofsOnly" as well.
   m_positionalDofsOnly = _node.Read("positional", false, m_positionalDofsOnly,
       "Use only positional DOFs, ignoring all others");
-  
+
   // @TODO: change to a required attribute.
   m_maSearchResolutionFactor = _node.Read("maSearchResFactor", false,
                                 m_maSearchResolutionFactor, .0000001, 10e10,
@@ -1372,19 +1372,19 @@ PushCfgToMedialAxisMidpointRule(CfgType& _cfg, const Boundary* const _b) {
   }
 
   Vector3d normalDirection = (tmpInfo.m_robotPoint - tmpInfo.m_objectPoint).normalize();
-  
+
   //Find the unit normal:
 //  CfgType unitDirectionToTickCfgAlong = _Cfg - firstWitnessCfg;
 //  unitDirectionToTickCfgAlong /= (unitDirectionToTickCfgAlong.Magnitude());
   CfgType unitDirectionToTickCfgAlong;
-  
+
   if(this->m_exactClearance)
     unitDirectionToTickCfgAlong = CfgType(normalDirection, _cfg.GetRobot());
   else {
     unitDirectionToTickCfgAlong = _cfg - firstWitnessCfg;
     unitDirectionToTickCfgAlong /= unitDirectionToTickCfgAlong.Magnitude();
   }
-  
+
   if(this->m_debug)
     std::cout << callee << ": first normal directional cfg from witness = "
               << unitDirectionToTickCfgAlong << std::endl

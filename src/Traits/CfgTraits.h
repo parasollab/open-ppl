@@ -3,6 +3,7 @@
 
 #include "MPLibrary/MPLibrary.h"
 #include "MPLibrary/MPSolution.h"
+#include "MPLibrary/MPTools/MPTools.h"
 
 #include "ConfigurationSpace/Path.h"
 #include "ConfigurationSpace/Roadmap.h"
@@ -155,6 +156,7 @@ struct MPTraits {
   typedef Roadmap<MPTraits>        RoadmapType;
   typedef MPLibraryType<MPTraits>  MPLibrary;
   typedef MPSolutionType<MPTraits> MPSolution;
+  typedef MPToolsType<MPTraits>    MPTools;
 
   //types of distance metrics available in our world
   typedef boost::mpl::list<

@@ -576,6 +576,30 @@
 
     </MPStrategies>
 
+    <MPTools>
+      <ClearanceUtility label="clearanceUtil" vcLabel="pqp_solid"
+        dmLabel="euclidean" clearanceType="exact" penetrationType="exact"
+        useBBX="true" positional="true"/>
+
+      <MedialAxisUtility label="maUtil" vcLabel="pqp_solid"
+        dmLabel="euclidean" clearanceType="exact" penetrationType="exact"
+        useBBX="true" positional="true"/>
+
+      <ReebGraphConstruction debug="false" write="false" filename=""/>
+
+      <TetGenDecomposition debug="false" switches="pnQ"
+        writeFreeModel="false" writeDecompModel="false"
+        decompModelFilename=""/>
+
+      <!-- If we were going to load a pair of tetgen files in the 3D dir called
+           'decomposed.ele' and 'decomposed.node', this is what the tetgen node
+           would look like.
+      <TetGenDecomposition debug="false" switches="pnQ"
+        writeFreeModel="false" writeDecompModel="false"
+        decompModelFilename="3D/decomposed"/>
+      -->
+    </MPTools>
+
     <!-- MPProblem allows multiple solvers to be specified and executed. -->
 
     <Solver mpStrategyLabel="BasicPRM1" seed="12345678"

@@ -8,7 +8,7 @@
 #include <vector>
 
 #include "BasicRRTStrategy.h"
-#include "Utilities/TetGenDecomposition.h"
+#include "MPLibrary/MPTools/TetGenDecomposition.h"
 #include "Workspace/GridOverlay.h"
 #include "Workspace/WorkspaceDecomposition.h"
 #include "Workspace/WorkspaceRegion.h"
@@ -383,7 +383,7 @@ Initialize() {
   // Decompose workspace.
   this->GetStatClass()->StartClock("Decomposition");
   auto env = this->GetEnvironment();
-  env->Decompose(TetGenDecomposition(this->GetBaseFilename(), "pnqQ"));
+  env->Decompose(TetGenDecomposition(this->GetBaseFilename()));
   this->GetStatClass()->StopClock("Decomposition");
 
 #ifdef VIZMO

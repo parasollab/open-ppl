@@ -3,7 +3,7 @@
 
 #include "LocalPlannerMethod.h"
 #include "Utilities/MPUtils.h"
-#include "Utilities/MedialAxisUtilities.h"
+#include "MPLibrary/MPTools/MedialAxisUtilities.h"
 #include "MPLibrary/ValidityCheckers/CollisionDetection/CDInfo.h"
 
 ////////////////////////////////////////////////////////////////////////////////

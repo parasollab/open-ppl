@@ -4,7 +4,7 @@
 #include "PathModifierMethod.h"
 
 #include "MPLibrary/LocalPlanners/MedialAxisLP.h"
-#include "Utilities/MedialAxisUtilities.h"
+#include "MPLibrary/MPTools/MedialAxisUtilities.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup PathModifiers

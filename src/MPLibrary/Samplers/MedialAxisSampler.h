@@ -2,7 +2,7 @@
 #define MEDIAL_AXIS_SAMPLERS_H_
 
 #include "SamplerMethod.h"
-#include "Utilities/MedialAxisUtilities.h"
+#include "MPLibrary/MPTools/MedialAxisUtilities.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup Samplers

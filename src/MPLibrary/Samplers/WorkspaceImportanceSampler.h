@@ -3,7 +3,7 @@
 
 #include "SamplerMethod.h"
 
-#include "Utilities/TetGenDecomposition.h"
+#include "MPLibrary/MPTools/TetGenDecomposition.h"
 #include "Workspace/WorkspaceDecomposition.h"
 
 ////////////////////////////////////////////////////////////////////////////////

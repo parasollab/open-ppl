@@ -8,9 +8,8 @@
 
 #include "Geometry/Boundaries/Boundary.h"
 #include "Geometry/Boundaries/WorkspaceBoundingSphere.h"
-#include "Utilities/ReebGraphConstruction.h"
-
-#include "Utilities/MedialAxisUtilities.h"
+#include "MPLibrary/MPTools/ReebGraphConstruction.h"
+#include "MPLibrary/MPTools/MedialAxisUtilities.h"
 #include "Workspace/WorkspaceSkeleton.h"
 
 #ifdef VIZMO

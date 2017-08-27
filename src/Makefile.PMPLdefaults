@@ -342,6 +342,8 @@ PMPL_OBJS := \
   Geometry/Boundaries/WorkspaceBoundingSphere.o \
   Geometry/Shapes/NBox.o \
   Geometry/Shapes/NSphere.o \
+  MPLibrary/MPTools/ReebGraphConstruction.o \
+  MPLibrary/MPTools/TetGenDecomposition.o \
   MPLibrary/NeighborhoodFinders/MPNNWrapper.o \
   MPLibrary/Samplers/SimilarStructureSampler.o \
   MPLibrary/ValidityCheckers/CollisionDetection/CDInfo.o \
@@ -365,8 +367,6 @@ PMPL_OBJS := \
   Utilities/IOUtils.o \
   Utilities/MetricUtils.o \
   Utilities/MPUtils.o \
-  Utilities/ReebGraphConstruction.o \
-  Utilities/TetGenDecomposition.o \
   Utilities/XMLNode.o \
   Workspace/GridOverlay.o \
   Workspace/WorkspaceDecomposition.o \

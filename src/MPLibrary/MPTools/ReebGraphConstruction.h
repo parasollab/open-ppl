@@ -12,16 +12,15 @@ using namespace std;
 #include <Vector.h>
 using namespace mathtool;
 
-#include "IOUtils.h"
+#include "Utilities/IOUtils.h"
 
 class Environment;
-class TetGenDecomposition;
 class WorkspaceSkeleton;
 class XMLNode;
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// @ingroup Utilities
+/// @ingroup MPTools
 /// Compute an embedded reeb graph of free workspace.
 ///
 /// Computation requires a proper tetrahedralization for the computation to
@@ -40,6 +39,15 @@ class ReebGraphConstruction {
 
     ///@name Local Types
     ///@{
+
+    /// The parameters for this object.
+    struct Parameters {
+      std::string filename;  ///< Input/output filename for embedded reeb graph.
+      bool write{false};     ///< Output embedded reeb graph?
+      bool debug{false};     ///< Show debug messages?
+    };
+
+    static Parameters m_defaultParams; ///< The default parameters.
 
     typedef tuple<size_t, size_t, size_t> Triangle; ///< Triangle: 3 indices for
                                                     ///< vertex array.
@@ -223,10 +231,16 @@ class ReebGraphConstruction {
     ///@name Construction
     ///@{
 
-    /// @param _filename Filename to read embedded reeb graph
-    ReebGraphConstruction(const string& _filename = "");
+    ReebGraphConstruction();
 
-    ReebGraphConstruction(XMLNode& _node); ///< @TODO Add XML parsing.
+    /// @param _filename Filename to read or write embedded reeb graph.
+    /// @param _write Write the graph to _filename?
+    ReebGraphConstruction(const std::string& _filename,
+        const bool _write);
+
+    /// Set the default parameters from an XML node.
+    /// @param _node The XML node to parse.
+    static void SetDefaultParameters(XMLNode& _node);
 
     ///@}
     ///@name Operations
@@ -235,7 +249,7 @@ class ReebGraphConstruction {
     /// Construct a Reeb graph of an environment.
     /// @param _env The PMPL environment.
     /// @param _baseFilename Base filename used for saving models
-    void Construct(Environment* _env, const string& _baseFilename = "");
+    void Construct(Environment* const _env, const string& _baseFilename = "");
 
     /// Extract a workspace skeleton from the Reeb graph.
     /// @TODO Make this a const function if STAPL ever fixes the sequential
@@ -271,8 +285,9 @@ class ReebGraphConstruction {
     /// Tetrahedralize environment and populate ReebGraph structures for
     /// construction
     /// @param _env Environment
-    /// @param _baseFilename Base filename for output
-    void Tetrahedralize(Environment* _env, const string& _baseFilename);
+    /// @param _baseFilename Base filename used for saving models
+    void Tetrahedralize(Environment* const _env,
+        const std::string& _baseFilename);
 
     /// Construct Reeb Graph based on algorithm presented in class description
     ///
@@ -377,8 +392,7 @@ class ReebGraphConstruction {
     ///@name Internal State
     ///@{
 
-    string m_reebFilename;       ///< Input filename for embedded reeb graph
-    bool m_writeReeb{false};     ///< Output embedded reeb graph
+    Parameters m_params; ///< The input parameters for this instance.
 
     vector<Vector3d> m_vertices; ///< Vertices of tetrahedralization
 
@@ -389,8 +403,6 @@ class ReebGraphConstruction {
     vector<pair<Triangle, unordered_set<size_t>>> m_triangles;
 
     ReebGraph m_reebGraph;       ///< Reeb Graph
-
-    bool m_debug{true};
 
     ///@}
 };
