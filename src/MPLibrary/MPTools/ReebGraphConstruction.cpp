@@ -40,9 +40,8 @@ SetDefaultParameters(XMLNode& _node) {
       m_defaultParams.filename,
       "Filename for read or write ReebGraph operations.");
 
-  if(!m_defaultParams.filename.empty())
-    m_defaultParams.write = _node.Read("write", false, m_defaultParams.write,
-        "Write Reeb Graph to file");
+  m_defaultParams.write = _node.Read("write", false, m_defaultParams.write,
+      "Write Reeb Graph to file");
 
   m_defaultParams.debug = _node.Read("debug", false, m_defaultParams.debug,
       "Show debug messages?");
