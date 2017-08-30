@@ -126,6 +126,7 @@
 #include "MPLibrary/MPStrategies/PushQueryToMA.h"
 #include "MPLibrary/MPStrategies/SparkPRM.h"
 #include "MPLibrary/MPStrategies/SRTStrategy.h"
+#include "MPLibrary/MPStrategies/StableSparseRRT.h"
 #include "MPLibrary/MPStrategies/Syclop.h"
 #include "MPLibrary/MPStrategies/TogglePRMStrategy.h"
 #include "MPLibrary/MPStrategies/UnitTest/ClearanceTestStrategy.h"
@@ -322,6 +323,7 @@ struct MPTraits {
     SparkPRM<MPTraits, BasicPRM>,
     SparkPRM<MPTraits, TogglePRMStrategy>,
     SRTStrategy<MPTraits>,
+    StableSparseRRT<MPTraits>,
     Syclop<MPTraits>,
     TogglePRMStrategy<MPTraits>,
     UtilityGuidedGenerator<MPTraits>,

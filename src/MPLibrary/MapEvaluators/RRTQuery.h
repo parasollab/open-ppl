@@ -231,12 +231,14 @@ template <typename MPTraits>
 pair<typename RRTQuery<MPTraits>::VID, double>
 RRTQuery<MPTraits>::
 FindNearestNeighbor(const CfgType& _goal) {
+  MethodTimer mt(this->GetStatClass(), "RRTQuery::FindNearestNeighbor");
+
   if(this->m_debug)
     cout << "\t\tFinding the nearest node to the goal..." << endl;
 
   auto g = this->GetRoadmap()->GetGraph();
 
-  VID highestVID = g->get_num_vertices() - 1;
+  const VID highestVID = (--g->end())->descriptor();
 
   // Quit if we have already tried with the current set of vertices.
   if(m_highestCheckedVID == highestVID) {
@@ -250,16 +252,25 @@ FindNearestNeighbor(const CfgType& _goal) {
          << "\t\t\tSearching nodes " << m_highestCheckedVID + 1 << " through "
          << highestVID << "..." << endl;
 
-  auto stats = this->GetStatClass();
-
   // If we haven't tried all vertexes, find the nearest untried vertex.
-  stats->StartClock("RRTQuery::NeighborhoodFinding");
+  // Start by getting the last checked node.
+  auto lastChecked = g->find_vertex(m_highestCheckedVID);
+
+  // If the node was deleted, scan backwards through the graph until we find the
+  // first node that needs checked.
+  if(lastChecked == g->end())
+    do {
+      --lastChecked;
+    } while(lastChecked->descriptor() > m_highestCheckedVID);
+  auto firstUnchecked = ++lastChecked;
+
+  // Now check the nodes that haven't been checked yet.
   vector<pair<VID, double>> neighbors;
+  const bool wholeRoadmap = firstUnchecked == g->begin();
   this->GetNeighborhoodFinder(m_nfLabel)->FindNeighbors(this->GetRoadmap(),
-      ++g->find_vertex(m_highestCheckedVID), g->end(), true, _goal,
+      firstUnchecked, g->end(), wholeRoadmap, _goal,
       back_inserter(neighbors));
   m_highestCheckedVID = highestVID;
-  stats->StopClock("RRTQuery::NeighborhoodFinding");
 
   if(this->m_debug)
     cout << "\t\t\tFound nearest node " << neighbors.back().first << " at "
@@ -276,6 +287,8 @@ template <typename MPTraits>
 pair<typename RRTQuery<MPTraits>::VID, double>
 RRTQuery<MPTraits>::
 FindNearestConnectedNeighbor(const VID _start, const CfgType& _goal) {
+  MethodTimer mt(this->GetStatClass(), "RRTQuery::FindNearestConnectedNeighbor");
+
   if(this->m_debug)
     cout << "\tSearching for the nearest connected neighbor..." << endl;
 
@@ -310,6 +323,8 @@ template <typename MPTraits>
 pair<typename RRTQuery<MPTraits>::VID, double>
 RRTQuery<MPTraits>::
 ExtendToGoal(const pair<VID, double>& _nearest, const CfgType& _goal) const {
+  MethodTimer mt(this->GetStatClass(), "RRTQuery::ExtendToGoal");
+
   auto g = this->GetRoadmap()->GetGraph();
   auto e = this->GetExtender(m_exLabel);
 

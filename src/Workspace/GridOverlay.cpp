@@ -4,6 +4,8 @@
 
 #include "Geometry/Boundaries/Boundary.h"
 #include "Utilities/MPUtils.h"
+#include "Workspace/WorkspaceDecomposition.h"
+
 
 /*------------------------------- Construction -------------------------------*/
 
@@ -13,6 +15,12 @@ GridOverlay(const Boundary* const _b, const double _length):
   // Compute the number of cells in each dimension.
   for(size_t i = 0; i < 3; ++i)
     m_num[i] = std::ceil(m_boundary->GetRange(i).Length() / m_length);
+
+  if(m_debug)
+    std::cout << "Computed grid overlay with " << Size() << " cells "
+              << "(" << Size(0) << "x" << Size(1) << "x" << Size(2) << ") "
+              << "of length " << m_length << "."
+              << std::endl;
 }
 
 /*------------------------------- Cell Finding -------------------------------*/
@@ -83,6 +91,27 @@ LocateBBXCells(const Point3d& _min, const Point3d& _max) const {
   }
 
   return output;
+}
+
+/*-------------------------- Decomposition Mapping ---------------------------*/
+
+GridOverlay::DecompositionMap
+GridOverlay::
+ComputeDecompositionMap(const WorkspaceDecomposition* const _decomposition) const
+{
+  DecompositionMap map(this->Size());
+
+  // For each region, find the grid cells that are associated with it.
+  for(auto iter = _decomposition->begin(); iter != _decomposition->end(); ++iter)
+  {
+    auto region = &iter->property();
+    /// @TODO Support locating the colliding cells using PQP Solid.
+    auto cells = LocateBBXCells(region->GetBoundary());
+    for(auto index : cells)
+      map[index].push_back(region);
+  }
+
+  return map;
 }
 
 /*------------------------------- Helpers ------------------------------------*/

@@ -5,6 +5,8 @@
 #include "Vector.h"
 
 class Boundary;
+class WorkspaceDecomposition;
+class WorkspaceRegion;
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -20,6 +22,13 @@ class GridOverlay {
 
   public:
 
+    ///@name Local Types
+    ///@{
+
+    /// A mapping from a grid cell index to a set of workspace regions.
+    typedef std::vector<std::vector<const WorkspaceRegion*>> DecompositionMap;
+
+    ///@}
     ///@name Construction
     ///@{
 
@@ -60,6 +69,18 @@ class GridOverlay {
         const;
 
     ///@}
+    ///@name Decomposition Mapping
+    ///@{
+
+    /// Create a map from grid cell index to the set of decomposition regions
+    /// whos BBXs' touch the grid cell.
+    /// @param _decomposition The workspace decomposition object to map.
+    /// @return A mapping m, where m[i] gives the set of _decomposition regions
+    ///         whos BBXs' touch grid cell i.
+    DecompositionMap ComputeDecompositionMap(
+        const WorkspaceDecomposition* const _decomposition) const;
+
+    ///@}
 
   private:
 
@@ -95,6 +116,8 @@ class GridOverlay {
 
     const double m_length;            ///< Length of a cell.
     size_t m_num[3];                  ///< The number of cells in each dimension.
+
+    static constexpr bool m_debug{false}; ///< Enable debugging messages?
 
     ///@}
 };

@@ -38,6 +38,12 @@ struct LPOutput {
   LPEdge m_edge;                    // Contains weights of edges defined in path.
 
   ///@}
+  ///@name Construction
+  ///@{
+
+  LPOutput();
+
+  ///@}
   ///@name Interface
   ///@{
 
@@ -52,6 +58,13 @@ struct LPOutput {
 };
 
 /*----------------------------------------------------------------------------*/
+
+template <typename MPTraits>
+LPOutput<MPTraits>::
+LPOutput() {
+  Clear();
+}
+
 
 template <typename MPTraits>
 void

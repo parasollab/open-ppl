@@ -79,14 +79,14 @@ class BasicRRTStrategy : public MPStrategyMethod<MPTraits> {
     ///@{
 
     /// Get a random configuration to grow towards.
-    virtual CfgType SelectDirection();
+    virtual CfgType SelectTarget();
 
     /// Sample a target configuration to grow towards from an existing
     ///        configuration. m_maxTrial samples are attempted.
     /// @param _v The VID of the existing configuration.
     /// @return The sample who's growth direction yields the greatest separation
     ///         from the existing configuration's neighbors.
-    CfgType SelectDispersedDirection(VID _v);
+    CfgType SelectDispersedTarget(VID _v);
 
     ///@}
     ///@name Neighbor Helpers
@@ -109,12 +109,22 @@ class BasicRRTStrategy : public MPStrategyMethod<MPTraits> {
 
     /// Extend a new configuration from a nearby configuration towards a growth
     /// target.
-    /// @param  _nearVID The nearby configuration's VID.
-    /// @param  _qRand   The growth target.
-    /// @param  _lp      This is a local plan: _qRand is already in the map.
+    /// @param _nearVID The nearby configuration's VID.
+    /// @param _target  The growth target.
+    /// @param _lp An LPOutput for returning local planner info.
     /// @return The new node's VID.
-    virtual VID Extend(const VID _nearVID, const CfgType& _qRand,
-        const bool _lp = false);
+    virtual VID Extend(const VID _nearVID, const CfgType& _target,
+        LPOutput<MPTraits>& _lp);
+
+    /// @overload
+    VID Extend(const VID _nearVID, const CfgType& _target);
+
+    /// Attempt to connect one roadmap configuration to another with the extender.
+    /// @param _start The starting node.
+    /// @param _target The desired ending node.
+    /// @return True if the edge between _start and _target was created
+    ///         successfully.
+    virtual bool ExtendLP(const VID _start, const VID _target);
 
     /// Add a new configuration to the roadmap and current tree.
     /// @param _newCfg    The new configuration to add.
@@ -359,19 +369,8 @@ Iterate() {
          << "Graph has " << this->GetRoadmap()->GetGraph()->get_num_vertices()
          << " vertices." << std::endl;
 
-  // Find my growth direction. Default is to randomly select node or bias
-  // towards a goal.
-  CfgType target(this->GetTask()->GetRobot());
-  if(m_query && DRand() < m_growthFocus && !m_query->GetGoals().empty()) {
-    target = m_query->GetRandomGoal();
-    if(this->m_debug)
-      std::cout << "Goal-biased direction selected: " << target << std::endl;
-  }
-  else {
-    target = this->SelectDirection();
-    if(this->m_debug)
-      std::cout << "Random direction selected: " << target << std::endl;
-  }
+  // Find my growth direction.
+  CfgType target = this->SelectTarget();
 
   // Randomize Current Tree
   m_currentTree = m_trees.begin() + LRand() % m_trees.size();
@@ -414,11 +413,25 @@ Finalize() {
 template <typename MPTraits>
 typename MPTraits::CfgType
 BasicRRTStrategy<MPTraits>::
-SelectDirection() {
-  /// \warning Should be named something like SelectTarget or SelectQRand as
-  ///          this does not return a direction.
+SelectTarget() {
   CfgType target(this->GetTask()->GetRobot());
-  target.GetRandomCfg(this->GetEnvironment());
+
+  // Select goal growth with probability m_growthFocus.
+  const bool unreachedGoals = m_query && !m_query->GetGoals().empty();
+  if(unreachedGoals && DRand() < m_growthFocus) {
+    target = m_query->GetRandomGoal();
+    if(this->m_debug)
+      std::cout << "Goal-biased growth target selected: " << target.PrettyPrint()
+                << std::endl;
+  }
+  // Otherwise, use uniform random sampling.
+  else {
+    target.GetRandomCfg(this->GetEnvironment());
+    if(this->m_debug)
+      std::cout << "Random growth target selected: " << target.PrettyPrint()
+                << std::endl;
+  }
+
   return target;
 }
 
@@ -426,7 +439,7 @@ SelectDirection() {
 template <typename MPTraits>
 typename MPTraits::CfgType
 BasicRRTStrategy<MPTraits>::
-SelectDispersedDirection(VID _v) {
+SelectDispersedTarget(VID _v) {
   /// \warning Should be named something like SelectDispersionTarget as this does
   ///          not return a direction.
   StatClass* stats = this->GetStatClass();
@@ -442,7 +455,8 @@ SelectDispersedDirection(VID _v) {
   double maxAngle = -MAX_DBL;
   for(size_t i = 0; i < m_maxTrial; ++i) {
     // Get a random configuration
-    CfgType randCfg = SelectDirection();
+    CfgType randCfg(this->GetTask()->GetRobot());
+    randCfg.GetRandomCfg(this->GetEnvironment());
 
     // Get the unit direction toward randCfg
     CfgType randDir = randCfg - originalCfg;
@@ -542,49 +556,97 @@ ConnectNeighbors(VID _newVID) {
 template <typename MPTraits>
 typename BasicRRTStrategy<MPTraits>::VID
 BasicRRTStrategy<MPTraits>::
-Extend(const VID _nearVID, const CfgType& _qRand, const bool _lp) {
-  this->GetStatClass()->StartClock("BasicRRT::Extend");
+Extend(const VID _nearVID, const CfgType& _target) {
+  LPOutput<MPTraits> dummyLP;
+  return this->Extend(_nearVID, _target, dummyLP);
+}
+
+
+template <typename MPTraits>
+typename BasicRRTStrategy<MPTraits>::VID
+BasicRRTStrategy<MPTraits>::
+Extend(const VID _nearVID, const CfgType& _target, LPOutput<MPTraits>& _lp) {
+  MethodTimer mt(this->GetStatClass(), "BasicRRT::Extend");
+  this->GetStatClass()->IncStat("BasicRRTExtend");
 
   auto e = this->GetExtender(m_exLabel);
   const CfgType& qNear = this->GetRoadmap()->GetGraph()->GetVertex(_nearVID);
   CfgType qNew(this->GetTask()->GetRobot());
-  LPOutput<MPTraits> lp;
-  pair<VID, bool> extension{INVALID_VID, false};
 
-  this->GetStatClass()->IncStat("BasicRRTExtend");
-  if(e->Extend(qNear, _qRand, qNew, lp)) {
-    extension = AddNode(qNew);
-  }
+  const bool success = e->Extend(qNear, _target, qNew, _lp);
+  if(this->m_debug)
+    std::cout << "\tExtended "
+              << std::setprecision(4) << _lp.m_edge.first.GetWeight()
+              << " units."
+              << std::endl;
 
-  this->GetStatClass()->StopClock("BasicRRT::Extend");
-
-  VID& newVID = extension.first;
-  bool nodeIsNew = extension.second;
-
-  if(newVID == INVALID_VID) {
-    // The extension failed to reach a valid node.
+  if(!success) {
+    // The extension failed to exceed the minimum distance.
     if(this->m_debug)
-      cout << "\tNode too close, not adding." << endl;
+      std::cout << "\tNode too close, not adding." << std::endl;
     return INVALID_VID;
   }
-  else if(this->m_debug)
-    cout << "\tExtended " << lp.m_edge.first.GetWeight() << " units." << endl;
 
-  // If we are local planning, reached the goal, and haven't added the edge,
-  // this is a valid local plan.
-  bool validLP = _lp && qNew == _qRand &&
-      !this->GetRoadmap()->GetGraph()->IsEdge(_nearVID, newVID);
+  // The extension succeeded. Try to add the node.
+  const auto extension = AddNode(qNew);
 
-  if(nodeIsNew || validLP)
-    AddEdge(_nearVID, newVID, lp);
+  const bool nodeIsNew = extension.second;
+  if(!nodeIsNew) {
+    // The extension reproduced an existing node.
+    if(this->m_debug)
+      std::cout << "\tNode already exists, not adding." << std::endl;
+    return INVALID_VID;
+  }
 
-  if(nodeIsNew && !_lp)
-    ConnectNeighbors(newVID);
+  // The extension was ok.
+  const VID& newVID = extension.first;
 
-  if(_lp && !validLP)
-    newVID = INVALID_VID;
+  AddEdge(_nearVID, newVID, _lp);
+  ConnectNeighbors(newVID);
 
-  return nodeIsNew ? newVID : INVALID_VID;
+  return newVID;
+}
+
+
+template <typename MPTraits>
+bool
+BasicRRTStrategy<MPTraits>::
+ExtendLP(const VID _start, const VID _target) {
+  MethodTimer mt(this->GetStatClass(), "BasicRRT::ExtendLP");
+  this->GetStatClass()->IncStat("BasicRRTExtendLP");
+
+  auto e = this->GetExtender(m_exLabel);
+  const CfgType& start  = this->GetRoadmap()->GetGraph()->GetVertex(_start);
+  const CfgType& target = this->GetRoadmap()->GetGraph()->GetVertex(_target);
+  CfgType qNew(this->GetTask()->GetRobot());
+  LPOutput<MPTraits> lp;
+
+  const bool success = e->Extend(start, target, qNew, lp);
+  if(this->m_debug)
+    std::cout << "\tExtended "
+              << std::setprecision(4) << lp.m_edge.first.GetWeight()
+              << " units."
+              << std::endl;
+
+  if(!success) {
+    if(this->m_debug)
+      cout << "\tLP extension failed." << endl;
+    return false;
+  }
+
+  // If we arrived at the goal, this is a valid local plan.
+  const bool validLP = qNew == target;
+
+  if(validLP)
+    AddEdge(_start, _target, lp);
+  else {
+    const auto add = AddNode(qNew);
+    const bool nodeIsNew = add.second;
+    if(nodeIsNew)
+      AddEdge(_start, add.first, lp);
+  }
+
+  return validLP;
 }
 
 
@@ -592,11 +654,11 @@ template <typename MPTraits>
 pair<typename BasicRRTStrategy<MPTraits>::VID, bool>
 BasicRRTStrategy<MPTraits>::
 AddNode(const CfgType& _newCfg) {
-  this->GetStatClass()->StartClock("AddNode");
+  MethodTimer mt(this->GetStatClass(), "BasicRRT::AddNode");
 
   GraphType* g = this->GetRoadmap()->GetGraph();
   VID newVID = g->AddVertex(_newCfg);
-  const bool nodeIsNew = newVID == g->get_num_vertices() - 1;
+  const bool nodeIsNew = newVID == (--g->end())->descriptor();
   if(nodeIsNew) {
     m_currentTree->push_back(newVID);
     if(this->m_debug)
@@ -606,7 +668,6 @@ AddNode(const CfgType& _newCfg) {
   else if(this->m_debug)
     cout << "\tVID " << newVID << " already exists, not adding." << endl;
 
-  this->GetStatClass()->StopClock("AddNode");
   return make_pair(newVID, nodeIsNew);
 }
 
@@ -646,9 +707,8 @@ typename BasicRRTStrategy<MPTraits>::VID
 BasicRRTStrategy<MPTraits>::
 ExpandTree(const VID _nearestVID, const CfgType& _target) {
   if(this->m_debug)
-    cout << "Trying expansion from node " << _nearestVID
-         << " at workspace point "
-         << this->GetRoadmap()->GetGraph()->GetVertex(_nearestVID).GetPoint()
+    cout << "Trying expansion from node " << _nearestVID << " "
+         << this->GetRoadmap()->GetGraph()->GetVertex(_nearestVID).PrettyPrint()
          << "..." << endl;
 
   // Try to extend from the _nearestVID to _target
@@ -663,7 +723,7 @@ ExpandTree(const VID _nearestVID, const CfgType& _target) {
     if(this->m_debug)
       cout << "Expanding to other directions (" << i << "/"
            << m_numDirections - 1 << "):: ";
-    CfgType randCfg = this->SelectDispersedDirection(_nearestVID);
+    CfgType randCfg = SelectDispersedTarget(_nearestVID);
     VID otherVID = this->Extend(_nearestVID, randCfg);
     if(otherVID != INVALID_VID)
       ConnectTrees(otherVID);
@@ -693,8 +753,8 @@ ConnectTrees(VID _recentlyGrown) {
   VID closestVID = INVALID_VID;
   auto closestTree = m_currentTree;
   for(auto trit = m_trees.begin(); trit != m_trees.end(); ++trit) {
-    // Skip current tree
-    if(trit == m_currentTree)
+    // Skip current tree and empty trees.
+    if(trit == m_currentTree or trit->empty())
       continue;
 
     // Find nearest neighbor to qNew in other tree
@@ -710,6 +770,14 @@ ConnectTrees(VID _recentlyGrown) {
     }
   }
 
+  // If the closest VID is still invalid, abort.
+  if(closestVID == INVALID_VID) {
+    if(this->m_debug)
+      std::cout << "Connecting trees, all trees except current are empty!"
+                << std::endl;
+    return;
+  }
+
   if(this->m_debug)
     cout << "Connecting trees: from (tree "
          << distance(m_trees.begin(), closestTree) << ", VID "
@@ -720,9 +788,8 @@ ConnectTrees(VID _recentlyGrown) {
   // Try to expand from closestVID (in closestTree) to qNew (in m_currentTree)
   // in order to connect the trees.
   swap(m_currentTree, closestTree);
-  VID newVID = this->Extend(closestVID, qNew, true);
 
-  if(newVID != INVALID_VID) {
+  if(this->ExtendLP(closestVID, _recentlyGrown)) {
     // The extension reached all the way to qNew. Merge the closest and current
     // trees.
     if(this->m_debug)

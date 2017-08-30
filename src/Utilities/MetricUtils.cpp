@@ -270,4 +270,18 @@ SetAuxDest(const std::string& _s) {
   m_auxFileDest = _s;
 }
 
+/*------------------------------- MethodTimer --------------------------------*/
+
+MethodTimer::
+MethodTimer(StatClass* const _stats, const std::string& _label)
+  : m_stats(_stats), m_label(_label) {
+  m_stats->StartClock(m_label);
+}
+
+
+MethodTimer::
+~MethodTimer() {
+  m_stats->StopClock(m_label);
+}
+
 /*----------------------------------------------------------------------------*/

@@ -74,8 +74,8 @@ class SRTStrategy : public MPStrategyMethod<MPTraits> {
     bool RRTConnect(VID _t1, VID _t2);
 
     //RRT helpers
-    CfgType SelectDirection();
-    virtual VID ExpandTree(VID _tree, const CfgType& _dir);
+    virtual CfgType SelectTarget();
+    virtual VID ExpandTree(const VID _tree, const CfgType& _dir);
 
     ///@}
     ///\name MP Object Labels
@@ -282,7 +282,7 @@ ExpandTrees() {
 
   for(auto& tree : m_trees)
     while(tree.second.second.size() < m_numExpansions)
-      this->ExpandTree(tree.first, this->SelectDirection());
+      this->ExpandTree(tree.first, this->SelectTarget());
 
   if(this->m_debug)
     cout << "\nEnd ExpandTrees" << endl;
@@ -440,7 +440,7 @@ bool
 SRTStrategy<MPTraits>::
 RRTConnect(VID _t1, VID _t2) {
   for(size_t i = 0; i < m_numConnIter; ++i) {
-    CfgType dir = SelectDirection();
+    CfgType dir = this->SelectTarget();
 
     //if not trapped (RRTExtend is successful)
     VID v = ExpandTree(_t1, dir);
@@ -465,18 +465,20 @@ RRTConnect(VID _t1, VID _t2) {
 template <typename MPTraits>
 typename MPTraits::CfgType
 SRTStrategy<MPTraits>::
-SelectDirection(){
-  Environment* env = this->GetEnvironment();
-  CfgType dir(this->GetTask()->GetRobot());
-  dir.GetRandomCfg(env);
-  return dir;
+SelectTarget() {
+  CfgType target(this->GetTask()->GetRobot());
+  target.GetRandomCfg(this->GetEnvironment());
+
+  if(this->m_debug)
+    std::cout << "Random growth target selected: " << target << std::endl;
+  return target;
 }
 
 
 template <typename MPTraits>
 typename SRTStrategy<MPTraits>::VID
 SRTStrategy<MPTraits>::
-ExpandTree(VID _tree, const CfgType& _dir) {
+ExpandTree(const VID _tree, const CfgType& _dir) {
   // Setup MP Variables
   auto dm = this->GetDistanceMetric(m_dmLabel);
   auto nf = this->GetNeighborhoodFinder(m_nfLabel);

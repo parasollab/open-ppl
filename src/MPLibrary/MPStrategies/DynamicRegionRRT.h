@@ -91,7 +91,7 @@ class DynamicRegionRRT : public BasicRRTStrategy<MPTraits> {
     /// environment and each attract region with uniform probability to generate
     /// q_rand.
     /// @return The resulting growth direction.
-    virtual CfgType SelectDirection() override;
+    virtual CfgType SelectTarget() override;
 
     /// Find the nearest configuration to the target configuration (_cfg) in the
     /// tree (_tree).
@@ -100,8 +100,8 @@ class DynamicRegionRRT : public BasicRRTStrategy<MPTraits> {
     virtual VID FindNearestNeighbor(const CfgType& _cfg, const TreeType& _tree)
         override;
 
-    virtual VID Extend(const VID _nearVID, const CfgType& _qrand, const bool _lp)
-        override;
+    virtual VID Extend(const VID _nearVID, const CfgType& _qrand,
+        LPOutput<MPTraits>& _lp) override;
 
     ///@}
     ///@name Helpers
@@ -315,7 +315,7 @@ Run() {
         !this->m_query->GetGoals().empty())
       target = this->m_query->GetRandomGoal();
     else
-      target = this->SelectDirection();
+      target = this->SelectTarget();
 
     // Randomize Current Tree
     this->m_currentTree = this->m_trees.begin() + LRand() % this->m_trees.size();
@@ -383,7 +383,7 @@ Finalize() {
 template <typename MPTraits>
 typename DynamicRegionRRT<MPTraits>::CfgType
 DynamicRegionRRT<MPTraits>::
-SelectDirection() {
+SelectTarget() {
   auto stats = this->GetStatClass();
 
   const Boundary* samplingBoundary{nullptr};
@@ -504,7 +504,7 @@ FindNearestNeighbor(const CfgType& _cfg, const TreeType& _tree) {
 template<typename MPTraits>
 typename MPTraits::RoadmapType::VID
 DynamicRegionRRT<MPTraits>::
-Extend(const VID _nearVID, const CfgType& _qrand, const bool _lp) {
+Extend(const VID _nearVID, const CfgType& _qrand, LPOutput<MPTraits>& _lp) {
   // First extend as usual.
   const VID newVID = BasicRRTStrategy<MPTraits>::Extend(_nearVID, _qrand, _lp);
 

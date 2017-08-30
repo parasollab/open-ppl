@@ -178,6 +178,16 @@ ComputeResolution(const std::vector<Robot*>& _robots) {
 
   // Set to XML input resolution if specified, else compute resolution factor
   m_positionRes = bodiesMinSpan * m_positionResFactor;
+
+  /// @TODO Add an automatic computation of the orientation resolution here.
+  ///       This should be done so that rotating the robot base by one orientation
+  ///       resolution makes a point on the bounding sphere move by one position
+  ///       resolution.
+
+  // This is a very important parameter - always report a notice when we compute
+  // it automatically.
+  std::cout << "Automatically computed position resolution as " << m_positionRes
+            << std::endl;
 }
 
 /*----------------------------- Boundary Functions ---------------------------*/

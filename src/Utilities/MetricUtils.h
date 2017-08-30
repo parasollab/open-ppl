@@ -160,6 +160,34 @@ class StatClass final {
 };
 
 
+////////////////////////////////////////////////////////////////////////////////
+/// A timer object for functions that starts a clock on construction and stops
+/// it on destruction.
+////////////////////////////////////////////////////////////////////////////////
+class MethodTimer final {
+
+  ///@name Internal State
+  ///@{
+
+  StatClass* const m_stats;
+  const std::string m_label;
+
+  ///@}
+
+  public:
+
+    ///@name Construction
+    ///@{
+
+    MethodTimer(StatClass* const _stats, const std::string& _label);
+
+    ~MethodTimer();
+
+    ///@}
+
+};
+
+
 template <typename RoadmapType>
 void
 StatClass::

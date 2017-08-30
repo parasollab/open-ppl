@@ -301,6 +301,13 @@ class Cfg {
     static void PrintRobotCfgComparisonInfo(
         std::ostream& _out, const Cfg& _shouldBe, const Cfg& _current);
 
+    /// Print the Cfg's dofs and velocities with limited precision for terminal
+    /// debugging.
+    /// @param _precision The display precision.
+    /// @return A string of [dof1, dof2, ..., dofn] for holonomic robots, or
+    ///         {[dof1, ..., dofn], <vel1, ..., veln>} for nonholonomic robots.
+    std::string PrettyPrint(const size_t _precision = 4) const;
+
     ///@}
     ///@name Internal State with poor encapsulation
     ///@{

@@ -155,16 +155,25 @@ BasicExtender<MPTraits>::
 Expand(const CfgType& _start, const CfgType& _end, CfgType& _newCfg,
     double _delta, LPOutput<MPTraits>& _lp, CDInfo& _cdInfo,
     double _posRes, double _oriRes) {
+  _lp.Clear();
   Environment* env = this->GetEnvironment();
   auto dm = this->GetDistanceMetric(m_dmLabel);
   auto vc = this->GetValidityChecker(m_vcLabel);
-  string callee("BasicExtender::Expand");
+  const std::string callee("BasicExtender::Expand");
 
   CfgType incr(this->GetTask()->GetRobot()), tick = _start, previous = _start;
   bool collision = false;
   int nTicks, ticker = 0;
 
   incr.FindIncrement(tick, _end, &nTicks, _posRes, _oriRes);
+
+  if(this->m_debug)
+    std::cout << "Trying extension:"
+              << "\n\tFrom: " << _start.PrettyPrint()
+              << "\n\tTo:   " << _end.PrettyPrint()
+              << "\n\tIncr: " << incr.PrettyPrint()
+              << "\n\tNum ticks: " << nTicks
+              << std::endl;
 
   // Move out from start towards dir, bounded by number of ticks allowed at a
   // given resolution and the distance _delta: the maximum distance to grow
@@ -180,7 +189,7 @@ Expand(const CfgType& _start, const CfgType& _end, CfgType& _newCfg,
   // Quit if we didn't expand at all.
   if(previous == _start) {
     if(this->m_debug)
-      cout << "Could not expand !" << endl;
+      std::cout << "Could not expand !" << std::endl;
     return false;
   }
 
@@ -197,9 +206,16 @@ Expand(const CfgType& _start, const CfgType& _end, CfgType& _newCfg,
     _newCfg = previous;
 
   // Set edge weight according to distance metric.
-  double distance = dm->Distance(_start, _newCfg);
+  const double distance = dm->Distance(_start, _newCfg);
   _lp.m_edge.first.SetWeight(distance);
   _lp.m_edge.second.SetWeight(distance);
+
+  if(this->m_debug)
+    std::cout << "Extended: " << std::setprecision(4) << distance << " units."
+              << "\n\tMin:Max distance: "
+              << this->GetMinDistance() << " : " << this->GetMaxDistance()
+              << "\n\tend: " << _newCfg.PrettyPrint()
+              << std::endl;
 
   return distance >= this->m_minDist;
 }

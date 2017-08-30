@@ -1084,6 +1084,31 @@ PrintRobotCfgComparisonInfo(
 }
 
 
+std::string
+Cfg::
+PrettyPrint(const size_t _precision) const {
+  std::ostringstream oss;
+  oss.precision(_precision);
+
+  if(IsNonholonomic())
+    oss << "{";
+
+  oss << "[";
+  for(size_t i = 0; i < DOF() - 1; ++i)
+    oss << m_dofs[i] << ", ";
+  oss << m_dofs[DOF() - 1] << "]";
+
+  if(IsNonholonomic()) {
+    oss << ", <";
+    for(size_t i = 0; i < DOF() - 1; ++i)
+      oss << m_vel[i] << ", ";
+    oss << m_vel[DOF() - 1] << ">}";
+  }
+
+  return oss.str();
+}
+
+
 istream&
 operator>>(istream& _is, Cfg& _cfg) {
   _cfg.Read(_is);

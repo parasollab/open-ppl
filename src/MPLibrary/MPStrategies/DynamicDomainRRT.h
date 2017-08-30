@@ -71,7 +71,7 @@ class DynamicDomainRRT : public BasicRRTStrategy<MPTraits> {
         override;
 
     virtual VID Extend(const VID _nearVID, const CfgType& _qRand,
-        const bool _lp = false) override;
+        LPOutput<MPTraits>& _lp) override;
 
     ///@}
     ///@name Helpers
@@ -144,7 +144,7 @@ Initialize() {
 template <typename MPTraits>
 typename DynamicDomainRRT<MPTraits>::VID
 DynamicDomainRRT<MPTraits>::
-Extend(const VID _nearVID, const CfgType& _qRand, const bool _lp) {
+Extend(const VID _nearVID, const CfgType& _qRand, LPOutput<MPTraits>& _lp) {
   // As basic RRT's extend, but do some stuff on failure.
   VID newVID = BasicRRTStrategy<MPTraits>::Extend(_nearVID, _qRand, _lp);
 
