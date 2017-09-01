@@ -194,8 +194,23 @@ pair<typename PRMQuery<MPTraits>::VID, bool>
 PRMQuery<MPTraits>::
 EnsureCfgInMap(const CfgType& _cfg) {
   auto g = this->GetRoadmap()->GetGraph();
-  return g->IsVertex(_cfg) ? make_pair(g->GetVID(_cfg), false) :
-                             make_pair(g->AddVertex(_cfg), true) ;
+
+  const bool exists = g->IsVertex(_cfg);
+
+  if(exists)
+    // The vertex already exists.
+    return std::make_pair(g->GetVID(_cfg), false);
+  else if(!m_deleteNodes)
+    // The vertex is new.
+    return std::make_pair(g->AddVertex(_cfg), true);
+  else {
+    // The vertex is new, but we are adding a temporary node. Do not run the hook
+    // functions.
+    g->DisableHooks();
+    auto out = std::make_pair(g->AddVertex(_cfg), true) ;
+    g->EnableHooks();
+    return out;
+  }
 }
 
 
@@ -203,8 +218,14 @@ template <typename MPTraits>
 void
 PRMQuery<MPTraits>::
 RemoveTempCfg(pair<VID, bool> _temp) {
-  if(_temp.second)
-    this->GetRoadmap()->GetGraph()->delete_vertex(_temp.first);
+  // Return if this wasn't added as a temporary cfg.
+  if(!_temp.second)
+    return;
+
+  auto g = this->GetRoadmap()->GetGraph();
+  g->DisableHooks();
+  g->DeleteVertex(_temp.first);
+  g->EnableHooks();
 }
 
 

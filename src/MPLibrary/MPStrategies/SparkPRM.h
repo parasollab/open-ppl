@@ -450,12 +450,14 @@ ComputeCentroids(RoadmapType* _centroidRdmp, vector<VID>& _notRRT, VID _root) {
   get_cc_stats(*graph, cMap, allCCs);
 
   // Get centroids, remove the RRT's CC
+  /// @TODO This looks like an iterator invalidation bug. Next person to use
+  ///       this should check that deleting the vertex doesn't have ill effects.
   ComputeCCCentroidGraph(graph, centroidGraph);
   for(auto it = centroidGraph->begin(); it != centroidGraph->end(); it++) {
     cMap.reset();
     if(is_same_cc(*graph, cMap, _root,
         (VID)((CfgType)it->property()).GetStat("ccVID"))) {
-      centroidGraph->delete_vertex(it->descriptor());
+      centroidGraph->DeleteVertex(it->descriptor());
       break;
     }
   }
@@ -595,7 +597,7 @@ TrimRRT(vector<VID>& _rrt, vector<VID>& _important, int _connectedCCs) {
           if(this->m_rrtDebug)
             cout << " " << *it;
           numDeleted++;
-          graph->delete_vertex(*it);
+          graph->DeleteVertex(*it);
         }
       }
 
@@ -627,7 +629,7 @@ UpdateCentroids(RoadmapType* _centroidRdmp, vector<VID>& _notRRT, VID _root) {
     cMap.reset();
     if(is_same_cc(*graph, cMap, _root,
         (VID)((CfgType)it->property()).GetStat("ccVID"))) {
-      centroidGraph->delete_vertex(it->descriptor());
+      centroidGraph->DeleteVertex(it->descriptor());
       it = centroidGraph->begin();
       needUpdate = true;
     }
@@ -639,7 +641,7 @@ UpdateCentroids(RoadmapType* _centroidRdmp, vector<VID>& _notRRT, VID _root) {
     cMap.reset();
     if(is_same_cc(*graph, cMap, _root,
         (VID)((CfgType)it->property()).GetStat("ccVID"))) {
-      centroidGraph->delete_vertex(it->descriptor());
+      centroidGraph->DeleteVertex(it->descriptor());
       it--;
       needUpdate = true;
     }

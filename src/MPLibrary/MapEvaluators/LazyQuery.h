@@ -285,7 +285,7 @@ PruneInvalidVertices() {
 
     // Delete invalid vertex.
     this->ProcessInvalidNode(cfg);
-    g->delete_vertex(vid);
+    g->DeleteVertex(vid);
     return true;
   }
 
@@ -359,8 +359,8 @@ PruneInvalidEdges() {
 
         // Delete invalid (bidirectional) edge.
         this->ProcessInvalidNode(witness);
-        g->delete_edge(v1, v2);
-        g->delete_edge(v2, v1);
+        g->DeleteEdge(v1, v2);
+        g->DeleteEdge(v2, v1);
         return true;
       }
     }

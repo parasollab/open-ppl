@@ -6,6 +6,7 @@
 #include <vector>
 using namespace std;
 
+
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup Roadmap
 /// @brief Roadmap event version tracker
@@ -13,15 +14,15 @@ using namespace std;
 /// This class is like a version control system for roadmaps. It aids in
 /// tracking changes to the roadmap.
 ////////////////////////////////////////////////////////////////////////////////
-template<typename GraphType>
+template <typename GraphType>
 class RoadmapVCS {
+
   public:
+
     typedef RoadmapChangeEvent<GraphType> Event;
     typedef pair<size_t, Event> ChangeEvent;
     typedef vector<ChangeEvent> ChangeEvents;
     typedef typename ChangeEvents::const_iterator const_iterator;
-
-    RoadmapVCS() {}
 
     const_iterator begin() const {return m_changes.cbegin();}
     const_iterator end() const {return m_changes.cend();}

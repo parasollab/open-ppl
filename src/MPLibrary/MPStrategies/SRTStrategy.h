@@ -302,7 +302,7 @@ FindCandidateConnections(vector<pair<VID, VID> >& _candPairs) {
   RoadmapType centRdmp(this->GetTask()->GetRobot());
   for(auto& tree : m_trees) {
     reps.push_back(tree.first);
-    centRdmp.GetGraph()->add_vertex(tree.first, tree.second.first);
+    centRdmp.GetGraph()->AddVertex(tree.first, tree.second.first);
   }
 
   auto nf = this->GetNeighborhoodFinder(m_nfLabel);
@@ -340,7 +340,8 @@ ConnectTrees(vector<pair<VID, VID>>& _candPairs) {
   if(this->m_debug)
     cout << "\nBegin ConnectTrees" << endl;
 
-  stapl::sequential::vector_property_map<typename GraphType::GRAPH, size_t> cMap;
+  stapl::sequential::vector_property_map<typename GraphType::STAPLGraph, size_t>
+      cMap;
   GraphType* g = this->GetRoadmap()->GetGraph();
   vector<pair<VID, VID> > succPair;
 

@@ -210,7 +210,8 @@ void HybridPRM<MPTraits>::Run(){
   bool mapPassedEvaluation = this->EvaluateMap();
   map<VID, Visibility> visMap;
    NodeTypeCounts nodeTypes;
-   stapl::sequential::vector_property_map<typename GraphType::GRAPH,size_t > cmap;
+   stapl::sequential::vector_property_map<typename GraphType::STAPLGraph, size_t>
+       cmap;
    stats->StartClock("Total Node Generation");
    while(!mapPassedEvaluation){
 

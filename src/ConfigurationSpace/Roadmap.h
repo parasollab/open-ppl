@@ -201,7 +201,8 @@ Read(const std::string& _filename) {
 
   // Set ifs back to the line with the GRAPHSTART tag and read in the graph.
   ifs.seekg(graphStart, ifs.beg);
-  stapl::sequential::read_graph(*m_graph, ifs);
+  typename GraphType::STAPLGraph& graph = *m_graph;
+  stapl::sequential::read_graph(graph, ifs);
 
   // Unset the input robot for our edge class.
   WeightType::inputRobot = nullptr;

@@ -161,7 +161,7 @@ FindNeighbors(RoadmapType* _rmp,
   size_t& currRdmp = m_dpesInfo[_rmp].m_currentRoadmapVersion;
   if(_fromFullRoadmap) {
     m_queryInfo = &m_dpesInfo[_rmp];
-    size_t rdmp = _rmp->GetGraph()->GetRoadmapVCS().GetVersionNumber();
+    size_t rdmp = _rmp->GetGraph()->GetTimestamp();
     if(currRdmp == size_t(-1) ||
         currRdmp < rdmp) {
       CreatePivots(_rmp, _first, _last);

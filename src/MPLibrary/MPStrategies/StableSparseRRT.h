@@ -368,7 +368,7 @@ PruneInactiveLeaves() {
     const VID parent = m_parent[*leaf];
 
     // Remove leaf.
-    g->delete_vertex(*leaf);
+    g->DeleteVertex(*leaf);
     m_inactiveLeaves.erase(leaf);
 
     // If parent is now an inactive leaf, add it to m_inactiveLeaves.

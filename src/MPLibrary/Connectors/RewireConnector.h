@@ -154,8 +154,8 @@ ConnectNeighbors(RoadmapType* _rm, VID _vid,
     CfgType& cfg2 = _rm->GetGraph()->GetVertex(_vid);
     VDRemoveEdge(cfg1, cfg2);     // for vizmo
     VDRemoveEdge(cfg2, cfg1);
-    _rm->GetGraph()->delete_edge(parent, _vid);
-    _rm->GetGraph()->delete_edge(_vid, parent);
+    _rm->GetGraph()->DeleteEdge(parent, _vid);
+    _rm->GetGraph()->DeleteEdge(_vid, parent);
   }
   if(this->m_debug)
     cout << "Connected to Optimal Neighbor" << endl;
@@ -196,9 +196,9 @@ ConnectNeighbors(RoadmapType* _rm, VID _vid,
         // Removing the parent-child edge
         CfgType& cfg1 = _rm->GetGraph()->GetVertex(parent);
         CfgType& cfg2 = _rm->GetGraph()->GetVertex(neighbor);
-        _rm->GetGraph()->delete_edge(parent, neighbor);
+        _rm->GetGraph()->DeleteEdge(parent, neighbor);
         VDRemoveEdge(cfg1, cfg2);
-        _rm->GetGraph()->delete_edge(neighbor, parent);
+        _rm->GetGraph()->DeleteEdge(neighbor, parent);
         VDRemoveEdge(cfg2, cfg1);
         // Add edge to optimal path to neighbor
         if(!m_distanceBased){

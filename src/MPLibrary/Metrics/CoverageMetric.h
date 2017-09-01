@@ -129,6 +129,9 @@ operator()() {
   vector<VID> sampleList, cc;
   StatClass stats;
 
+  // Temporarily disable roadmap hooks while we make some test vertices and
+  // edges.
+  rgraph->DisableHooks();
   int index = 0;
   for(auto i = m_samples.begin(); i != m_samples.end(); ++i) {
     VID sampleVID = rgraph->AddVertex(*i);
@@ -154,9 +157,10 @@ operator()() {
           break;
       }
     }
-    rgraph->delete_vertex(sampleVID);
+    rgraph->DeleteVertex(sampleVID);
     index++;
   }
+  rgraph->EnableHooks();
   int numConnections = 0;
   for(size_t i=0; i<m_connections.size(); ++i) {
     if(!(m_connections[i].empty()))

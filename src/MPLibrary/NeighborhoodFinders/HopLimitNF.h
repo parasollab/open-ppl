@@ -78,10 +78,12 @@ FindNeighbors(RoadmapType* _rmp,
   VID parent = vi->property().GetStat("Parent");
 
   vector<VID> vRes;
-  typedef stapl::sequential::map_property_map<typename GraphType::GRAPH, size_t> ColorMap;
+  typedef stapl::sequential::map_property_map<typename GraphType::STAPLGraph,
+      size_t> ColorMap;
   ColorMap hopMap, colorMap;
   hopMap.put(parent, 0);
-  stapl::sequential::hops_detail::hops_visitor<typename GraphType::GRAPH> vis(*graph, hopMap, m_h, vRes);
+  stapl::sequential::hops_detail::hops_visitor<typename GraphType::STAPLGraph>
+      vis(*graph, hopMap, m_h, vRes);
   breadth_first_search_early_quit(*graph, parent, vis, colorMap);
   nf->FindNeighbors(_rmp, vRes.begin(), vRes.end(),
       vRes.size() == graph->get_num_vertices(), _cfg, _out);
