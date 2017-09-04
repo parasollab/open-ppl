@@ -247,6 +247,8 @@ UpdateSSTStructures(const VID _nearestVID, const VID _newVID,
     const LPOutput<MPTraits>& _lp) {
   MethodTimer mt(this->GetStatClass(), "SST::UpdateSSTStructures");
 
+  auto g = this->GetRoadmap()->GetGraph();
+
   // The nearest node is now the parent of the new node.
   m_parent[_newVID] = _nearestVID;
 
@@ -259,7 +261,6 @@ UpdateSSTStructures(const VID _nearestVID, const VID _newVID,
   }
 
   // Set the cost of the new node based on the previous node plus lp info.
-  auto g = this->GetRoadmap()->GetGraph();
   CfgType& nearest = g->GetVertex(_nearestVID);
   CfgType& newNode = g->GetVertex(_newVID);
 
@@ -359,8 +360,7 @@ PruneInactiveLeaves() {
   auto g = this->GetRoadmap()->GetGraph();
 
   // Prune the inactive leaves until there are none.
-  while(!m_inactiveLeaves.empty())
-  {
+  while(!m_inactiveLeaves.empty()) {
     // Get the next leaf.
     auto leaf = m_inactiveLeaves.end() - 1;
 

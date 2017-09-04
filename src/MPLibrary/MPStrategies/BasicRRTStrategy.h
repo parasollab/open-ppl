@@ -657,8 +657,11 @@ AddNode(const CfgType& _newCfg) {
   MethodTimer mt(this->GetStatClass(), "BasicRRT::AddNode");
 
   GraphType* g = this->GetRoadmap()->GetGraph();
+
+  VID lastVID = g->GetLastVID();
   VID newVID = g->AddVertex(_newCfg);
-  const bool nodeIsNew = newVID == (--g->end())->descriptor();
+
+  const bool nodeIsNew = lastVID != g->GetLastVID();
   if(nodeIsNew) {
     m_currentTree->push_back(newVID);
     if(this->m_debug)

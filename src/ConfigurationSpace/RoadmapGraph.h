@@ -165,6 +165,9 @@ class RoadmapGraph : public
     VID GetVID(const VI& _t) noexcept;
     VID GetVID(const Vertex& _t) noexcept;
 
+    /// Get the descriptor of the last vertex added to the graph.
+    VID GetLastVID() noexcept;
+
 #ifndef _PARALLEL
     /// Get the number of CCs in the graph.
     /// @return The CC count.
@@ -321,7 +324,8 @@ AddVertex(const Vertex& _v) noexcept {
   // Find the vertex and ensure it does not already exist.
   CVI vi;
   if(IsVertex(_v, vi)) {
-    std::cerr << "\nRoadmapGraph::AddVertex: already in graph" << std::endl;
+    std::cerr << "\nRoadmapGraph::AddVertex: vertex " << vi->descriptor()
+      << " already in graph" << std::endl;
     return vi->descriptor();
   }
 
@@ -556,6 +560,17 @@ GetVID(const Vertex& _t) noexcept {
   if(IsVertex(_t, vi))
     return vi->descriptor();
   return INVALID_VID;
+}
+
+
+template <typename Vertex, typename Edge>
+typename RoadmapGraph<Vertex, Edge>::VID
+RoadmapGraph<Vertex, Edge>::
+GetLastVID() noexcept {
+  if(this->get_num_vertices() == 0)
+    return INVALID_VID;
+
+  return (--this->end())->descriptor();
 }
 
 
