@@ -365,6 +365,7 @@ PMPL_OBJS := \
   Simulator/BulletEngine.o \
   Utilities/CountingStreamBuffer.o \
   Utilities/IOUtils.o \
+  Utilities/MedialAxis2D.o \
   Utilities/MetricUtils.o \
   Utilities/MPUtils.o \
   Utilities/XMLNode.o \
