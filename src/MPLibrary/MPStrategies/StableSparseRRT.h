@@ -153,6 +153,13 @@ StableSparseRRT<MPTraits>::
 Initialize() {
   BasicRRTStrategy<MPTraits>::Initialize();
 
+  // Clear SST structures.
+  m_active.clear();
+  m_witnesses.clear();
+  m_inactiveLeaves.clear();
+  m_parent.clear();
+  m_representatives.clear();
+
   if(this->m_debug)
     std::cout << "Initializing StableSparseRRT" << std::endl;
 

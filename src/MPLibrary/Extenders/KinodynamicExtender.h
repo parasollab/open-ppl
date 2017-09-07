@@ -93,16 +93,16 @@ class KinodynamicExtender : public ExtenderMethod<MPTraits> {
     /// @param _steps The number of timesteps to use.
     /// @param _control The control to use.
     /// @return True if the extension went at least the minimum distance.
-    bool ApplyControl(const CfgType& _start, const CfgType& _end, CfgType& _new,
-        LPOutput<MPTraits>& _lp, const size_t _steps, const Control& _control)
-        const;
+    virtual bool ApplyControl(const CfgType& _start, const CfgType& _end,
+        CfgType& _new, LPOutput<MPTraits>& _lp, const size_t _steps,
+        const Control& _control) const;
 
     ///@}
     ///@name MPObject Labels
     ///@{
 
-    string m_dmLabel;  ///< The distance metric to use.
-    string m_vcLabel;  ///< The validity checker to use.
+    std::string m_dmLabel;  ///< The distance metric to use.
+    std::string m_vcLabel;  ///< The validity checker to use.
 
     ///@}
     ///@name Extender Properties
@@ -132,18 +132,19 @@ KinodynamicExtender<MPTraits>::
 KinodynamicExtender(XMLNode& _node) : ExtenderMethod<MPTraits>(_node) {
   this->SetName("KinodynamicExtender");
 
-  m_dmLabel = _node.Read("dmLabel",true,"", "Distance metric label");
-  m_vcLabel = _node.Read("vcLabel", true, "", "Validity checker label");
-  m_numSteps = _node.Read("numSteps", true, size_t(10), size_t(1),
-      std::numeric_limits<size_t>::max(), "Maximum number of timesteps to take "
-      "for each extension");
-  m_fixed = _node.Read("fixed", true, true, "Fixed time-step or variable "
-      "time-step");
-  m_best = _node.Read("best", true, false, "Best control or random control");
+  m_dmLabel = _node.Read("dmLabel",true,"", "Distance metric label.");
+  m_vcLabel = _node.Read("vcLabel", true, "", "Validity checker label.");
+  /// @TODO Ensure that numSteps is used.
+  m_numSteps = _node.Read("numSteps", false, size_t(10), size_t(1),
+      std::numeric_limits<size_t>::max(), "Maximum number of time steps to take "
+      "for each extension.");
+  m_fixed = _node.Read("fixed", true, true, "Fixed or variable number of time "
+      "steps.");
+  m_best = _node.Read("best", true, false, "Best control or random control.");
 
-  // Ensure maxDist isn't used by requiring an impossible bound during parsing.
-  _node.Read("maxDist", false, 0., 0., -1., "Max distance can't be specified "
-      "for this object, it is computed automatically");
+  /// @TODO Ensure maxDist isn't used.
+  //_node.Read("maxDist", true, 0., 0., -1., "Max distance can't be specified "
+  //    "for this object, it is computed automatically.");
 }
 
 /*---------------------------- MPBaseObject Overrides ------------------------*/

@@ -65,6 +65,7 @@
 //extenders includes
 #include "MPLibrary/Extenders/BasicExtender.h"
 #include "MPLibrary/Extenders/KinodynamicExtender.h"
+#include "MPLibrary/Extenders/LimitedDistanceExtender.h"
 #include "MPLibrary/Extenders/MedialAxisExtender.h"
 #include "MPLibrary/Extenders/MixExtender.h"
 #include "MPLibrary/Extenders/RandomObstacleVector.h"
@@ -231,6 +232,7 @@ struct MPTraits {
   typedef boost::mpl::list<
     BasicExtender<MPTraits>,
     KinodynamicExtender<MPTraits>,
+    LimitedDistanceExtender<MPTraits>,
     MedialAxisExtender<MPTraits>,
     MixExtender<MPTraits>,
     RandomObstacleVector<MPTraits>,

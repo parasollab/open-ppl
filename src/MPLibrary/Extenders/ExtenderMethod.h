@@ -94,13 +94,15 @@ ExtenderMethod(const double _min, const double _max) :
 template <typename MPTraits>
 ExtenderMethod<MPTraits>::
 ExtenderMethod(XMLNode& _node) : MPBaseObject<MPTraits>(_node) {
+  // We do not require these to be specified because some extenders don't use
+  // them (like KinodynamicExtender).
   m_maxDist = _node.Read("maxDist", false, 1., 0.,
       std::numeric_limits<double>::max(), "The maximum allowed distance to "
       "expand from the starting node to the target node.");
-  m_minDist = _node.Read("minDist", false, 0., 0.,
+  m_minDist = _node.Read("minDist", false, .1, std::numeric_limits<double>::min(),
       std::numeric_limits<double>::max(), "The minimum valid distance when "
       "expanding from the starting node to the target node (shorter extensions "
-      "are considered invalid)");
+      "are considered invalid).");
 }
 
 /*------------------------- MPBaseObject Overrides ---------------------------*/

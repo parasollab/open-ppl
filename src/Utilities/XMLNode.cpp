@@ -201,7 +201,7 @@ XMLNode::
 AttrWrongType(const std::string& _name, const std::string& _desc) const {
   std::ostringstream oss;
   oss << "Wrong attribute type requested on '" << _name << "'." << endl
-      << "\tAttribute description: " << _desc << ".";
+      << "\tAttribute description: " << _desc;
   return oss.str();
 }
 
@@ -211,7 +211,7 @@ XMLNode::
 AttrMissing(const std::string& _name, const std::string& _desc) const {
   std::ostringstream oss;
   oss << "Missing required attribute '" << _name << "'." << std::endl
-      << "\tAttribute description: " << _desc << ".";
+      << "\tAttribute description: " << _desc;
   return oss.str();
 }
 
