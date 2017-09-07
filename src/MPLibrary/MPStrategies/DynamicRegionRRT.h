@@ -10,6 +10,7 @@
 #include "Geometry/Boundaries/WorkspaceBoundingSphere.h"
 #include "MPLibrary/MPTools/ReebGraphConstruction.h"
 #include "MPLibrary/MPTools/MedialAxisUtilities.h"
+#include "Utilities/MedialAxis2D.h"
 #include "Workspace/WorkspaceSkeleton.h"
 
 #ifdef VIZMO
@@ -237,17 +238,33 @@ Initialize() {
   BasicRRTStrategy<MPTraits>::Initialize();
 
   auto env = this->GetEnvironment();
+  auto robot = this->GetTask()->GetRobot();
+
+  const bool threeD = robot->GetMultiBody()->GetBaseType() ==
+      FreeBody::BodyType::Volumetric;
 
   StatClass* stats = this->GetStatClass();
   stats->StartClock("DynamicRegionRRT::SkeletonConstruction");
 
   //Embed ReebGraph
-  delete m_reebGraph;
-  m_reebGraph = new ReebGraphConstruction();
-  m_reebGraph->Construct(env, this->GetBaseFilename());
+  if(threeD) {
+    delete m_reebGraph;
+    m_reebGraph = new ReebGraphConstruction();
+    m_reebGraph->Construct(env, this->GetBaseFilename());
 
-  // Create the workspace skeleton.
-  m_skeleton = m_reebGraph->GetSkeleton();
+    // Create the workspace skeleton.
+    m_skeleton = m_reebGraph->GetSkeleton();
+  }
+  else {
+    vector<GMSPolyhedron> polyhedra;
+    for(size_t i = 0; i < env->NumObstacles(); ++i) {
+      auto obstacle = env->GetObstacle(i);
+      polyhedra.emplace_back(obstacle->GetFixedBody(0)->GetWorldPolyhedron());
+    }
+    MedialAxis2D ma(polyhedra, env->GetBoundary());
+    ma.BuildMedialAxis();
+    m_skeleton = get<0>(ma.GetSkeleton(1)); // 1 for free space.
+  }
 
   // Direct the workspace skeleton outward from the starting point.
   const Point3d start = this->m_query->GetQuery()[0].GetPoint();
@@ -260,12 +277,12 @@ Initialize() {
   stats->StopClock("DynamicRegionRRT::SkeletonConstruction");
 
   // Fix the skelton clearance.
-  FixSkeletonClearance();
+  if(threeD)
+    FixSkeletonClearance();
 
   // Spark a region for each outgoing edge of start
   m_samplingRegion = nullptr;
-  const double robotRadius = this->GetTask()->GetRobot()->GetMultiBody()->
-      GetBoundingSphereRadius();
+  const double robotRadius = robot->GetMultiBody()->GetBoundingSphereRadius();
   const double regionRadius = m_regionFactor * robotRadius;
   m_skeleton.InitRegions(start, regionRadius);
 

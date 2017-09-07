@@ -32,7 +32,7 @@ using namespace mathtool;
 /// 2D Medial Axis construction using Segment Delaunay Graph
 /////////////////////////////////////////////////////////////////////////////
 class MedialAxis2D {
-  
+
   public:
     ///@name Local types
     ///{
@@ -50,9 +50,9 @@ class MedialAxis2D {
     typedef pair<double,Point3d> ClearanceType;
     // Types for skeleton and its annotations
     typedef WorkspaceSkeleton::GraphType SkeletonGraphType;
-    typedef unordered_map<WorkspaceSkeleton::VD, ClearanceType> 
+    typedef unordered_map<WorkspaceSkeleton::VD, ClearanceType>
       VertexClearanceMapType;
-		
+
     /// Medial axis edge structure
     struct MedialEdge {
       /// Constructors from line segment and parabola segment
@@ -69,17 +69,17 @@ class MedialAxis2D {
       /// To interpolate the line segment into set of points
       void InterpolateSegment(double _step);
 
-      vector<Point2> m_interpolated;  ///< Interpolated points 
-                                      /// approximating edge
+      vector<Point2> m_interpolated;  ///< Interpolated points
+      /// approximating edge
       Site2 m_site1, m_site2;	///< Witness sites
-      bool m_isLine{true};      ///< Flag indicating line segment/parabola 
+      bool m_isLine{true};      ///< Flag indicating line segment/parabola
       bool m_isFree{false};	///< Flag indicating edge in free or obstacle space
       friend class MedialAxis2D;
     };
 
     /// Underlying medial axis graph type
-    typedef stapl::sequential::graph<stapl::UNDIRECTED,stapl::MULTIEDGES, 
-            Point2, MedialEdge>  MedialAxisGraph; 
+    typedef stapl::sequential::graph<stapl::UNDIRECTED,stapl::MULTIEDGES,
+            Point2, MedialEdge>  MedialAxisGraph;
 
     /// Input polygon segment
     /// Structure defined to expedite point in polygon test
@@ -95,9 +95,9 @@ class MedialAxis2D {
       Point2 m_end[2];  ///< End points of the segment
       double m_constant;  ///< Constant for the line equation
       double m_multiple;	///< Multiple for the line equation
-    }; 
+    };
     typedef vector<PolygonSegment> PolygonSegments;
-		
+
     struct edgeHash {
       size_t operator()(const WorkspaceSkeleton::ED& _ed) const {
         size_t seed = 0;
@@ -109,16 +109,15 @@ class MedialAxis2D {
       }
     };
     // Clearance map type for skeleton edges
-    typedef unordered_map<WorkspaceSkeleton::ED,vector<ClearanceType>, 
+    typedef unordered_map<WorkspaceSkeleton::ED,vector<ClearanceType>,
             edgeHash> EdgeClearanceMapType;
     ///@}
     ///@name Construction
     ///@{
 
     MedialAxis2D() : m_segTree(2){}
-    MedialAxis2D(vector<GMSPolyhedron>& _polys, const Boundary* _b, 
-       vector<Boundary*> _bndrys=vector<Boundary*>());
-    ~MedialAxis2D();
+    MedialAxis2D(vector<GMSPolyhedron>& _polys, const Boundary* _b,
+        vector<Boundary*> _bndrys=vector<Boundary*>());
 
     ///@}
     ///@name Modifiers
@@ -147,7 +146,7 @@ class MedialAxis2D {
     /// Get the workspace skeleton from the medial axis
     /// @param _t Pass 0 for entire graph,
     ///     1 for free space and 2 for obstacle space
-    tuple<WorkspaceSkeleton,VertexClearanceMapType,EdgeClearanceMapType> 
+    tuple<WorkspaceSkeleton,VertexClearanceMapType,EdgeClearanceMapType>
       GetSkeleton(size_t _t=0);
 
     /// Calculete the clearance annotation of the interpolated points
@@ -163,18 +162,18 @@ class MedialAxis2D {
     ///@{
 
     /// Add polygon
-    void AddPolygon(const GMSPolyhedron& _p, 
+    void AddPolygon(const GMSPolyhedron& _p,
         vector<pair<Point3d,Point3d>>& _s, Boundary* _b = nullptr);
-		
+
     /// Checks whether the edge is a skeleton edge
     bool IsSkeletonEdge(Edge2& _e);
 
     /// Checks whether the edge is a medial axis edge
     bool IsMedialAxisEdge(Edge2& _e, bool k=false);
     /// Checks whether the edge by end points is a bisector edge
-    bool IsReflexBisector(const Point2& _p1, const Point2& _p2, 
+    bool IsReflexBisector(const Point2& _p1, const Point2& _p2,
         Site2& _s1, Site2& _s2);
-			
+
     /// Get minimum distance of the point from two respective sites
     ClearanceType GetMinDistance(const Point2& _p, Site2& _s1, Site2& _s2);
 
@@ -182,7 +181,7 @@ class MedialAxis2D {
     ClearanceType DistanceToSite(const Point2& _p, Site2& _s);
 
     /// Get the minimum distance along the medial axis segment from the sites
-    double GetMinDistance(MedialEdge& _e); 
+    double GetMinDistance(MedialEdge& _e);
 
     /// Get the maximum distance along the medial axis segment from the sites
     double GetMaxDistance(MedialEdge& _e);
@@ -198,7 +197,7 @@ class MedialAxis2D {
     void ValidateEdge(MedialEdge& _e);
 
     /// Function to find the circumcenter of a triangle
-    /// This function is used only when the cgal sdg cannot determine 
+    /// This function is used only when the cgal sdg cannot determine
     /// the center
     Point2 MidPoint(Site2& _o, Site2& _p, Site2& _q, Point2& _fp);
 
