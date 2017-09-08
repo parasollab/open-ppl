@@ -8,6 +8,7 @@
 #include "ReebGraphConstruction.h"
 #include "SkeletonClearanceUtility.h"
 #include "TetGenDecomposition.h"
+#include "TopologicalMap.h"
 
 #include "Utilities/XMLNode.h"
 
@@ -38,17 +39,22 @@ class MPToolsType final {
   typedef typename MPTraits::MPLibrary MPLibrary;
 
   ///@}
+  ///@name Local Types
+  ///@{
+
+  template <template <typename> typename Utility>
+  using LabelMap = std::unordered_map<std::string, Utility<MPTraits>*>;
+
+  ///@}
   ///@name Internal State
   ///@{
 
   MPLibrary* const m_library; ///< The owning library.
 
-  template <template <typename> typename Utility>
-  using LabelMap = std::unordered_map<std::string, Utility<MPTraits>*>;
-
   LabelMap<ClearanceUtility> m_clearanceUtils;
   LabelMap<MedialAxisUtility> m_medialAxisUtils;
   LabelMap<SkeletonClearanceUtility> m_skeletonUtils;
+  LabelMap<TopologicalMap> m_topologicalMaps;
 
   ///@}
 
@@ -81,7 +87,7 @@ class MPToolsType final {
     ClearanceUtility<MPTraits>* GetClearanceUtility(const std::string& _label)
         const;
 
-    /// Set the ClearanceUtility. This object will take ownership of the utility
+    /// Set a ClearanceUtility. This object will take ownership of the utility
     /// and delete it when necessary.
     /// @param _label The string label for the new utility.
     /// @param _utility The ClearanceUtility to use.
@@ -99,7 +105,7 @@ class MPToolsType final {
     MedialAxisUtility<MPTraits>* GetMedialAxisUtility(const std::string& _label)
         const;
 
-    /// Set the MedialAxisUtility. This object will take ownership of the utility
+    /// Set a MedialAxisUtility. This object will take ownership of the utility
     /// and delete it when necessary.
     /// @param _label The string label for the new utility.
     /// @param _utility The MedialAxisUtility to use.
@@ -114,15 +120,32 @@ class MPToolsType final {
     /// @param _label The string label of the desired utility as defined in the
     ///               XML file.
     /// @return The labeled utility.
-    SkeletonClearanceUtility<MPTraits>* GetSkeletonClearanceUtility(const
-        std::string& _label) const;
+    SkeletonClearanceUtility<MPTraits>* GetSkeletonClearanceUtility(
+        const std::string& _label) const;
 
-    /// Set the SkeletonClearanceUtility. This object will take ownership of the
+    /// Set a SkeletonClearanceUtility. This object will take ownership of the
     /// utility and delete it when necessary.
     /// @param _label The string label for the new utility.
     /// @param _utility The SkeletonClearanceUtility to use.
     void SetSkeletonClearanceUtility(const std::string& _label,
         SkeletonClearanceUtility<MPTraits>* const _utility);
+
+    ///@}
+    ///@name Topological Map
+    ///@{
+
+    /// Get a TopologicalMap by label.
+    /// @param _label The string label of the desired utility as defined in the
+    ///               XML file.
+    /// @return The labeled utility.
+    TopologicalMap<MPTraits>* GetTopologicalMap(const std::string& _label) const;
+
+    /// Set a TopologicalMap. This object will take ownership of the utility and
+    /// delete it when necessary.
+    /// @param _label The string label for the new utility.
+    /// @param _utility The TopologicalMap to use.
+    void SetTopologicalMap(const std::string& _label,
+        TopologicalMap<MPTraits>* const _utility);
 
     ///@}
 
@@ -140,6 +163,7 @@ class MPToolsType final {
         LabelMap<Utility>& _map) const;
 
     ///@}
+
 };
 
 /*------------------------------ Construction --------------------------------*/
@@ -184,12 +208,23 @@ ParseXML(XMLNode& _node) {
       auto utility = new SkeletonClearanceUtility<MPTraits>(child);
 
       // A second node with the same label is an error during XML parsing.
-      if(m_medialAxisUtils.count(utility->GetLabel()))
+      if(m_skeletonUtils.count(utility->GetLabel()))
         throw ParseException(child.Where(), "Second SkeletonClearanceUtility "
             "node with the label '" + utility->GetLabel() + "'. Labels must be "
             "unique.");
 
       SetSkeletonClearanceUtility(utility->GetLabel(), utility);
+    }
+    else if(child.Name() == "TopologicalMap") {
+      auto utility = new TopologicalMap<MPTraits>(child);
+
+      // A second node with the same label is an error during XML parsing.
+      if(m_topologicalMaps.count(utility->GetLabel()))
+        throw ParseException(child.Where(), "Second TopologicalMap "
+            "node with the label '" + utility->GetLabel() + "'. Labels must be "
+            "unique.");
+
+      SetTopologicalMap(utility->GetLabel(), utility);
     }
     else if(child.Name() == "TetGenDecomposition") {
       if(parsedTetGen)
@@ -223,6 +258,8 @@ Initialize() {
     pair.second->Initialize();
   for(auto& pair : m_skeletonUtils)
     pair.second->Initialize();
+  for(auto& pair : m_topologicalMaps)
+    pair.second->Initialize();
 }
 
 
@@ -234,6 +271,8 @@ MPToolsType<MPTraits>::
   for(auto& pair : m_medialAxisUtils)
     delete pair.second;
   for(auto& pair : m_skeletonUtils)
+    delete pair.second;
+  for(auto& pair : m_topologicalMaps)
     delete pair.second;
 }
 
@@ -288,8 +327,26 @@ template <typename MPTraits>
 void
 MPToolsType<MPTraits>::
 SetSkeletonClearanceUtility(const std::string& _label,
-    SkeletonClearanceUtility<MPTraits>* const _kit) {
-  SetUtility(_label, _kit, m_skeletonUtils);
+    SkeletonClearanceUtility<MPTraits>* const _utility) {
+  SetUtility(_label, _utility, m_skeletonUtils);
+}
+
+/*------------------------------ Topological Map -----------------------------*/
+
+template <typename MPTraits>
+TopologicalMap<MPTraits>*
+MPToolsType<MPTraits>::
+GetTopologicalMap(const std::string& _label) const {
+  return m_topologicalMaps.at(_label);
+}
+
+
+template <typename MPTraits>
+void
+MPToolsType<MPTraits>::
+SetTopologicalMap(const std::string& _label,
+    TopologicalMap<MPTraits>* const _utility) {
+  SetUtility(_label, _utility, m_topologicalMaps);
 }
 
 /*---------------------------------- Helpers ---------------------------------*/

@@ -55,7 +55,7 @@ class Syclop : public BasicRRTStrategy<MPTraits> {
 
     Syclop(XMLNode& _node);
 
-    virtual ~Syclop();
+    virtual ~Syclop() = default;
 
     ///@}
     ///@name MPStrategy Overrides
@@ -106,16 +106,6 @@ class Syclop : public BasicRRTStrategy<MPTraits> {
     /// Select a vertex from within a given region.
     VID SelectVertex(const WorkspaceRegion* const _r);
 
-    /// Find the workspace region that holds a given configuration.
-    const WorkspaceRegion* LocateRegion(const VID _v) const;
-    const WorkspaceRegion* LocateRegion(const CfgType& _c) const; ///< @overload
-    const WorkspaceRegion* LocateRegion(const Point3d& _p) const; ///< @overload
-
-    /// Find the coverage cell index that holds a given configuration.
-    size_t LocateCoverageCell(const VID _v) const;
-    size_t LocateCoverageCell(const CfgType& _c) const; ///< @overload
-    size_t LocateCoverageCell(const Point3d& _p) const; ///< @overload
-
     ///@}
     ///@name Syclop Helpers
     ///@}
@@ -139,8 +129,6 @@ class Syclop : public BasicRRTStrategy<MPTraits> {
     ///@{
 
     void ComputeFreeVolumes(); ///< Estimate the free volume of each region.
-
-    void ComputeGridMap(); ///< Compute map from coverage grid to regions.
 
     ///@}
     ///@name Auxiliary Classes
@@ -312,11 +300,7 @@ class Syclop : public BasicRRTStrategy<MPTraits> {
     std::map<pair<const WorkspaceRegion*, const WorkspaceRegion*>, RegionPairData>
         m_regionPairData;
 
-    /// The coverage grid.
-    GridOverlay* m_grid{nullptr};
-
-    /// A map from grid cells to regions.
-    GridOverlay::DecompositionMap m_gridMap;
+    std::string m_tmLabel; ///< The topological map label.
 
     /// The currently available regions.
     set<const WorkspaceRegion*> m_availableRegions;
@@ -361,16 +345,10 @@ Syclop(XMLNode& _node) : BasicRRTStrategy<MPTraits>(_node) {
   const size_t max = numeric_limits<size_t>::max();
 
   m_maxLeadUses = _node.Read("maxLeadUses", false, m_maxLeadUses, min, max,
-      "Number of times to use a discrete lead");
+      "Number of times to use a discrete lead.");
   m_maxRegionUses = _node.Read("maxRegionUses", false, m_maxRegionUses, min, max,
-      "Number of times to use a region");
-}
-
-
-template <typename MPTraits>
-Syclop<MPTraits>::
-~Syclop() {
-  delete m_grid;
+      "Number of times to use a region.");
+  m_tmLabel = _node.Read("tmLabel", true, "", "The topological map label.");
 }
 
 /*-------------------------- MPStrategy overrides ----------------------------*/
@@ -382,12 +360,6 @@ Initialize() {
   // Standard RRT initialization.
   BasicRRTStrategy<MPTraits>::Initialize();
 
-  // Decompose workspace.
-  this->GetStatClass()->StartClock("Decomposition");
-  auto env = this->GetEnvironment();
-  env->Decompose(TetGenDecomposition(this->GetBaseFilename()));
-  this->GetStatClass()->StopClock("Decomposition");
-
 #ifdef VIZMO
   // Add workspace model if we are in vizmo land.
   GetVizmo().GetEnv()->AddWorkspaceDecompositionModel(env->GetDecomposition());
@@ -398,27 +370,17 @@ Initialize() {
   m_regionData.clear();
   m_regionPairData.clear();
   m_availableRegions.clear();
-  m_gridMap.clear();
   m_currentRegion = nullptr;
   m_currentRegionUses = 0;
   m_currentLeadUses = 0;
   m_improvement = false;
 
-  // Create coverage grid.
-  //const double gridLength = this->GetTask()->GetRobot()->GetMultiBody()->
-  //    GetBoundingSphereRadius();
-  const double gridLength = env->GetPositionRes() * 10;
-  delete m_grid;
-  m_grid = new GridOverlay(env->GetBoundary(), gridLength);
-
-  // Map the coverage grid cells to the workspace regions.
-  ComputeGridMap();
-
   // Estimate the free c-space volume of each region.
   ComputeFreeVolumes();
 
   // Add start vertex to regionData.
-  auto startRegion = LocateRegion(0);
+  auto tm = this->GetMPTools()->GetTopologicalMap(m_tmLabel);
+  auto startRegion = tm->LocateRegion(0);
   m_regionData[startRegion].vertices.push_back(0);
 }
 
@@ -443,8 +405,9 @@ typename Syclop<MPTraits>::VID
 Syclop<MPTraits>::
 Extend(const VID _nearVID, const CfgType& _qRand, LPOutput<MPTraits>& _lp) {
   // Log this extension attempt.
-  const WorkspaceRegion* r1 = LocateRegion(_nearVID);
-  const WorkspaceRegion* r2 = LocateRegion(_qRand);
+  auto tm = this->GetMPTools()->GetTopologicalMap(m_tmLabel);
+  const WorkspaceRegion* r1 = tm->LocateRegion(_nearVID);
+  const WorkspaceRegion* r2 = tm->LocateRegion(_qRand);
   ++(m_regionPairData[make_pair(r1, r2)].numAttempts);
 
   return BasicRRTStrategy<MPTraits>::Extend(_nearVID, _qRand, _lp);
@@ -460,8 +423,9 @@ AddNode(const CfgType& _newCfg) {
   // If node is new and not invalid, update region data.
   if(added.second) {
     // Find the region and coverage cell for this node.
-    const WorkspaceRegion* r = LocateRegion(added.first);
-    const size_t cellIndex = LocateCoverageCell(_newCfg.GetPoint());
+    auto tm = this->GetMPTools()->GetTopologicalMap(m_tmLabel);
+    const WorkspaceRegion* r = tm->LocateRegion(added.first);
+    const size_t cellIndex = tm->LocateCell(_newCfg.GetPoint());
     auto& data = m_regionData[r];
 
     size_t previousCoverage = data.Coverage();
@@ -493,9 +457,10 @@ AddEdge(VID _source, VID _target, const LPOutput<MPTraits>& _lpOutput) {
 
   // Update the list of cells in the target region that were reached by
   // extending from the source region.
-  const WorkspaceRegion* r1 = LocateRegion(_source);
-  const WorkspaceRegion* r2 = LocateRegion(_target);
-  const size_t cellIndex = LocateCoverageCell(_target);
+  auto tm = this->GetMPTools()->GetTopologicalMap(m_tmLabel);
+  const WorkspaceRegion* r1 = tm->LocateRegion(_source);
+  const WorkspaceRegion* r2 = tm->LocateRegion(_target);
+  const size_t cellIndex = tm->LocateCell(_target);
 
   m_regionPairData[make_pair(r1, r2)].AddCell(cellIndex);
 }
@@ -514,14 +479,15 @@ DiscreteLead() {
     cout << "Generating new discrete lead..." << endl;
 
   auto regionGraph = this->GetEnvironment()->GetDecomposition();
+  auto tm = this->GetMPTools()->GetTopologicalMap(m_tmLabel);
 
   // Get start and goal configurations from the query.
   const CfgType& startCfg = this->m_query->GetQuery()[0];
   const CfgType& goalCfg = this->m_query->GetQuery()[1];
 
   // Find the start and goal regions.
-  auto startRegion = LocateRegion(startCfg);
-  auto goalRegion = LocateRegion(goalCfg);
+  auto startRegion = tm->LocateRegion(startCfg);
+  auto goalRegion = tm->LocateRegion(goalCfg);
 
   // Find the start and goal in the graph
   size_t start, goal;
@@ -749,68 +715,6 @@ SelectVertex(const WorkspaceRegion* const _r) {
   return selected;
 }
 
-
-template <typename MPTraits>
-const WorkspaceRegion*
-Syclop<MPTraits>::
-LocateRegion(const VID _v) const {
-  return LocateRegion(this->GetRoadmap()->GetGraph()->GetVertex(_v));
-}
-
-
-template <typename MPTraits>
-const WorkspaceRegion*
-Syclop<MPTraits>::
-LocateRegion(const CfgType& _c) const {
-  return LocateRegion(_c.GetPoint());
-}
-
-
-template <typename MPTraits>
-const WorkspaceRegion*
-Syclop<MPTraits>::
-LocateRegion(const Point3d& _p) const {
-  MethodTimer mt(this->GetStatClass(), "Syclop::LocateRegion");
-
-  // Find the coverage grid cell that holds this vertex, then use the grid map
-  // to find the set of regions that touch the grid cell.
-  const size_t cell = LocateCoverageCell(_p);
-  auto candidateRegions = m_gridMap.at(cell);
-
-  // Scan through the candidate regions and return the first one that contains
-  // our point.
-  for(auto region : candidateRegions)
-    if(region->GetBoundary()->InBoundary(_p))
-      return region;
-
-  return nullptr;
-}
-
-
-template <typename MPTraits>
-size_t
-Syclop<MPTraits>::
-LocateCoverageCell(const VID _v) const {
-  return LocateCoverageCell(this->GetRoadmap()->GetGraph()->GetVertex(_v));
-}
-
-
-template <typename MPTraits>
-size_t
-Syclop<MPTraits>::
-LocateCoverageCell(const CfgType& _c) const {
-  return LocateCoverageCell(_c.GetPoint());
-}
-
-
-template <typename MPTraits>
-size_t
-Syclop<MPTraits>::
-LocateCoverageCell(const Point3d& _p) const {
-  MethodTimer mt(this->GetStatClass(), "Syclop::LocateCoverageCell");
-  return m_grid->LocateCell(_p);
-}
-
 /*------------------------------ Syclop Helpers ------------------------------*/
 
 template <typename MPTraits>
@@ -862,7 +766,7 @@ template <typename MPTraits>
 void
 Syclop<MPTraits>::
 ComputeFreeVolumes() {
-  this->GetStatClass()->StartClock("ComputeFreeVolumes");
+  MethodTimer mt(this->GetStatClass(), "ComputeFreeVolumes");
 
   if(this->m_debug)
     cout << "Computing region volumes and initializing region data...\n";
@@ -884,10 +788,11 @@ ComputeFreeVolumes() {
 
   // Count the number of valid and invalid samples in each region.
   auto vc = this->GetValidityChecker("pqp_solid");
+  auto tm = this->GetMPTools()->GetTopologicalMap(m_tmLabel);
 
   map<const WorkspaceRegion*, pair<size_t, size_t>> results;
   for(auto& sample : samples) {
-    const WorkspaceRegion* r = LocateRegion(sample);
+    const WorkspaceRegion* r = tm->LocateRegion(sample);
     if(!r)
       continue; // Skip samples whos projection is outside any region.
     else if(vc->IsValid(sample, "Syclop::ComputeFreeVolumes"))
@@ -923,22 +828,6 @@ ComputeFreeVolumes() {
 
   if(this->m_debug)
     cout << "\tThere are " << regionGraph->GetNumRegions() << " regions.\n";
-
-  this->GetStatClass()->StopClock("ComputeFreeVolumes");
-}
-
-
-template <typename MPTraits>
-void
-Syclop<MPTraits>::
-ComputeGridMap() {
-  this->GetStatClass()->StartClock("ComputeGridMap");
-
-  auto decomposition = this->GetEnvironment()->GetDecomposition();
-
-  m_gridMap = m_grid->ComputeDecompositionMap(decomposition);
-
-  this->GetStatClass()->StopClock("ComputeGridMap");
 }
 
 /*----------------------------------------------------------------------------*/
