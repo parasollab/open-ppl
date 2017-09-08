@@ -175,6 +175,7 @@ class BasicRRTStrategy : public MPStrategyMethod<MPTraits> {
     ///@{
 
     string m_dmLabel;       ///< The distance metric label.
+    string m_samplerLabel;  ///< The sampler label.
     string m_nfLabel;       ///< The neighborhood finder label.
     string m_vcLabel;       ///< The validity checker label.
     string m_ncLabel;       ///< The connector label.
@@ -254,6 +255,7 @@ BasicRRTStrategy(XMLNode& _node) : MPStrategyMethod<MPTraits>(_node) {
   m_dmLabel = _node.Read("dmLabel",true,"","Distance Metric");
   m_ncLabel = _node.Read("connectorLabel", false, "", "Node Connection Method");
   m_exLabel = _node.Read("extenderLabel", true, "", "Extender label");
+  m_samplerLabel = _node.Read("samplerLabel", true, "", "Sampler Label");
 
   // Parse child nodes.
   for(auto& child : _node)
@@ -271,6 +273,7 @@ Print(ostream& _os) const {
   _os << "BasicRRTStrategy::Print" << endl
       << "  MP objects:" << endl
       << "\tDistance Metric:: " << m_dmLabel << endl
+      << "\tSampler:: " << m_samplerLabel << endl
       << "\tNeighborhood Finder:: " << m_nfLabel << endl
       << "\tValidity Checker:: " << m_vcLabel << endl
       << "\tConnection Method:: " << m_ncLabel << endl
@@ -426,7 +429,13 @@ SelectTarget() {
   }
   // Otherwise, use uniform random sampling.
   else {
-    target.GetRandomCfg(this->GetEnvironment());
+    auto s = this->GetSampler(m_samplerLabel);
+
+    std::vector<CfgType> samples;
+    s->Sample(1, 1, this->GetEnvironment()->GetBoundary(),
+        std::back_inserter(samples));
+    target = samples.front();
+
     if(this->m_debug)
       std::cout << "Random growth target selected: " << target.PrettyPrint()
                 << std::endl;

@@ -117,6 +117,10 @@
         dmLabel="euclidean" d="2.00" t="10" clearanceType="exact"
         penetrationType="exact" debug="false" positional="true"/>
       <WorkspaceImportanceSampler label="WIS" vcLabel="rapid" alpha="0.2"/>
+      <DynamicRegionSampler label="DynamicRegionSampler"
+        samplerLabel="UniformRandom"
+        explore=".2" regionFactor="2.5" penetration="1"
+        velocityBiasing="false" velocityAlignment=".4"/>
     </Samplers>
 
     <LocalPlanners>
@@ -393,7 +397,7 @@
         numRoots="1" m="1" growthFocus="0.01" dmLabel="euclidean"
         nfLabel="Nearest" vcLabel="rapid" connectorLabel="Closest"
         gtype="UNDIRECTED_TREE" debug="false"
-        growGoals="true" extenderLabel="BERO">
+        growGoals="true" extenderLabel="BERO" samplerLabel="UniformRandom">
         <Evaluator label="NodesEval"/>
       </BasicRRTStrategy>
 
@@ -402,7 +406,8 @@
         numRoots="1" m="1" growthFocus="0.01" dmLabel="euclidean"
         nfLabel="Nearest" vcLabel="rapid" connectorLabel="Closest"
         gtype="DIRECTED_TREE" debug="false"
-        growGoals="false" extenderLabel="KinoExtender">
+        growGoals="false" extenderLabel="KinoExtender"
+        samplerLabel="UniformRandom">
         <Evaluator label="KinoRRTQuery"/>
       </BasicRRTStrategy>
 
@@ -411,7 +416,8 @@
       <BasicRRTStrategy label="RRG"
         numRoots="1" m="1" growthFocus="0.01" dmLabel="euclidean"
         nfLabel="Nearest" vcLabel="rapid" extenderLabel="BERO"
-        connectorLabel="OptimalConnector" gtype="UNDIRECTED_GRAPH">
+        connectorLabel="OptimalConnector" gtype="UNDIRECTED_GRAPH"
+        samplerLabel="UniformRandom">
         <Evaluator label="NodesEval"/>
       </BasicRRTStrategy>
 
@@ -419,7 +425,8 @@
       <BasicRRTStrategy label="RRTstar"
         numRoots="1" m="1" growthFocus="0.01" dmLabel="euclidean"
         nfLabel="Nearest" vcLabel="rapid" extenderLabel="BERO"
-        connectorLabel="OptimalRewire" gtype="UNDIRECTED_GRAPH">
+        connectorLabel="OptimalRewire" gtype="UNDIRECTED_GRAPH"
+        samplerLabel="UniformRandom">
         <Evaluator label="NodesEval"/>
       </BasicRRTStrategy>
 
@@ -436,7 +443,7 @@
         numRoots="1" m="1" growthFocus="0.01" dmLabel="euclidean"
         nfLabel="Nearest" vcLabel="rapid" connectorLabel="Closest"
         gtype="UNDIRECTED_TREE" debug="false"
-        growGoals="true" extenderLabel="ME">
+        growGoals="true" extenderLabel="ME" samplerLabel="UniformRandom">
         <Evaluator label="NodesEval"/>
       </BasicRRTStrategy>
 
@@ -444,7 +451,8 @@
       <AdaptiveRRT label="AdaptiveRRT"
         numRoots="1" growthFocus="0.01" dmLabel="euclidean"
         nfLabel="BFNF" vcLabel="rapid" extenderLabel="BERO"
-        gtype="UNDIRECTED_TREE" gamma="0.1" cost="reward" debug="true">
+        gtype="UNDIRECTED_TREE" gamma="0.1" cost="reward" debug="true"
+        samplerLabel="UniformRandom">
         <Evaluator label="NodesEval"/>
         <GrowthSet threshold="0.0">
           <Extender label="BERO"/>
@@ -457,18 +465,19 @@
       <DynamicDomainRRT label="DynamicDomainRRT"
         growthFocus="0.01" dmLabel="euclidean" nfLabel="Nearest" vcLabel="rapid"
         gtype="UNDIRECTED_TREE" debug="false" growGoals="false"
-        extenderLabel="BERO" r="2">
+        extenderLabel="BERO" samplerLabel="UniformRandom" r="2">
         <Evaluator label="BoundedRRTQuery"/>
       </DynamicDomainRRT>
 
       <!-- DynamicRegionRRT -->
-      <DynamicRegionRRT label="DynamicRegionRRT"
+      <BasicRRTStrategy label="DynamicRegionRRT"
         growthFocus="0.01" dmLabel="euclidean"
         nfLabel="Nearest" vcLabel="rapid"
         gtype="UNDIRECTED_TREE" debug="false"
-        growGoals="false" extenderLabel="BERO">
+        growGoals="false" extenderLabel="BERO"
+        samplerLabel="DynamicRegionSampler">
         <Evaluator label="BoundedRRTQuery"/>
-      </DynamicRegionRRT>
+      </BasicRRTStrategy>
 
       <!-- Toggle PRM -->
       <TogglePRMStrategy label="TogglePRM" priority="true">
@@ -565,7 +574,7 @@
         numRoots="1" m="1" growthFocus="0.01" dmLabel="euclidean"
         nfLabel="Nearest" vcLabel="rapid" connectorLabel="Closest"
         gtype="UNDIRECTED_TREE" debug="false"
-        growGoals="false" extenderLabel="BERO">
+        growGoals="false" extenderLabel="BERO" samplerLabel="UniformRandom">
         <Evaluator label="RRTQuery"/>
       </Syclop>
 

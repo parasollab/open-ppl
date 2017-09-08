@@ -22,6 +22,7 @@
 
     <ValidityCheckers>
       <CollisionDetection label="cd" method="RAPID"/>
+      <AlwaysTrueValidity label="AlwaysTrue"/>
     </ValidityCheckers>
 
     <NeighborhoodFinders>
@@ -31,6 +32,7 @@
 
     <Samplers>
       <UniformRandomSampler label="UniformRandomFree" vcLabel="cd"/>
+      <UniformRandomSampler label="UniformRandom" vcLabel="AlwaysTrue"/>
     </Samplers>
 
     <Extenders>
@@ -47,7 +49,7 @@
       <BasicRRTStrategy label="BasicRRT"
         numRoots="1" m="1" growthFocus="0.01" dmLabel="euclidean"
         nfLabel="Nearest" vcLabel="cd" gtype="UNDIRECTED_TREE" debug="true"
-        growGoals="true" extenderLabel="BERO">
+        growGoals="true" extenderLabel="BERO" samplerLabel="UniformRandom">
         <Evaluator label="RRTQuery"/>
       </BasicRRTStrategy>
     </MPStrategies>

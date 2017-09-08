@@ -155,6 +155,9 @@ class MPBaseObject {
     /// Get a strategy by label from the owning MPLibrary.
     MPStrategyPointer GetMPStrategy(const string&) const noexcept;
 
+    /// Get the MPTools container from the owning MPLibrary.
+    typename MPTraits::MPTools* GetMPTools() const noexcept;
+
     ///@}
     ///@name Problem Accessors
     ///@{
@@ -369,6 +372,15 @@ typename MPBaseObject<MPTraits>::MPStrategyPointer
 MPBaseObject<MPTraits>::
 GetMPStrategy(const string& _label) const noexcept {
   return m_library->GetMPStrategy(_label);
+}
+
+
+template <typename MPTraits>
+inline
+typename MPTraits::MPTools*
+MPBaseObject<MPTraits>::
+GetMPTools() const noexcept {
+  return m_library->GetMPTools();
 }
 
 /*------------------------------ Problem Accessors ---------------------------*/

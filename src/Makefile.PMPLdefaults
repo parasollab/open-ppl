@@ -343,6 +343,7 @@ PMPL_OBJS := \
   Geometry/Shapes/NBox.o \
   Geometry/Shapes/NSphere.o \
   MPLibrary/MPTools/ReebGraphConstruction.o \
+  MPLibrary/MPTools/RegionKit.o \
   MPLibrary/MPTools/TetGenDecomposition.o \
   MPLibrary/NeighborhoodFinders/MPNNWrapper.o \
   MPLibrary/Samplers/SimilarStructureSampler.o \

@@ -88,14 +88,11 @@ bool
 UniformRandomSampler<MPTraits>::
 Sampler(CfgType& _cfg, const Boundary* const _boundary,
     vector<CfgType>& _result, vector<CfgType>& _collision) {
-  // Check containment within environment boundary.
-  const bool inBounds = _cfg.InBounds(this->GetEnvironment());
-
   // Check Validity.
   auto vcm = this->GetValidityChecker(m_vcLabel);
   const std::string callee = this->GetNameAndLabel() + "::SampleImpl()";
 
-  const bool isValid = inBounds and vcm->IsValid(_cfg, callee);
+  const bool isValid = vcm->IsValid(_cfg, callee);
 
   // Store result.
   if(isValid)
@@ -106,19 +103,14 @@ Sampler(CfgType& _cfg, const Boundary* const _boundary,
   // Debug.
   if(this->m_debug) {
     std::cout << "Sampled Cfg: " << _cfg
-              << "\n\tEnvironment boundary: " << *this->GetEnvironment()->GetBoundary()
               << "\n\tBoundary: " << *_boundary
-              << "\n\tIn bounds: " << inBounds
               << "\n\tValidity:  " << isValid
               << std::endl;
 
     VDClearAll();
     VDAddTempCfg(_cfg, isValid);
-    if(!inBounds)
-      VDComment("UniformSampling::Cfg outside of boundary");
-    else
-      VDComment("UniformSampling::Cfg " + std::string(isValid ? "" : "in") +
-          "valid");
+    VDComment("UniformSampling::Cfg " + std::string(isValid ? "" : "in") +
+        "valid");
   }
 
   return isValid;

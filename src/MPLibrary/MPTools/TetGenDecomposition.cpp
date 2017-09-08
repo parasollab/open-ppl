@@ -310,9 +310,9 @@ operator()(const Environment* _env) {
     LoadDecompModel();
 
     if(m_params.debug)
-      cout << "\tRunning tetgen with switches 'rn'..." << endl;
+      cout << "\tRunning tetgen with switches 'rnQ'..." << endl;
 
-    tetrahedralize(const_cast<char*>("rn"), m_decompModel, m_decompModel);
+    tetrahedralize(const_cast<char*>("rnQ"), m_decompModel, m_decompModel);
   }
   else {
     if(m_params.debug)

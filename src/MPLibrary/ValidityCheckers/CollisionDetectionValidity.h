@@ -202,6 +202,14 @@ IsInCollision(CDInfo& _cdInfo, const CfgType& _cfg, const string& _callName) {
     return true;
   }
 
+  // Check boundary collision.
+  const bool inBounds = _cfg.InBounds(this->GetEnvironment());
+  if(!inBounds) {
+    _cdInfo.m_collidingObstIndex = -1;
+    return true;
+  }
+
+
   //check obstacle collisions
   size_t numObst = env->NumObstacles();
   for(size_t i = 0; i < numObst; ++i) {

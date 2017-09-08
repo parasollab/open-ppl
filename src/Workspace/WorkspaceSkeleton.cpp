@@ -1,9 +1,7 @@
 #include "WorkspaceSkeleton.h"
 
-#include "Geometry/Boundaries/WorkspaceBoundingSphere.h"
-#include <random>
 
-/*----------------------------------------------------------------------------*/
+/*--------------------------------- Locators ---------------------------------*/
 
 WorkspaceSkeleton::vertex_iterator
 WorkspaceSkeleton::
@@ -59,6 +57,7 @@ FindInboundEdges(const vertex_iterator& _vertexIter) {
   return inEdges;
 }
 
+/*--------------------------------- Modifiers --------------------------------*/
 
 WorkspaceSkeleton
 WorkspaceSkeleton::
@@ -164,169 +163,13 @@ Direct(const Point3d& _start) {
 
 void
 WorkspaceSkeleton::
-InitRegions(const Point3d& _start, const double _regionRadius) {
-  // Clear all internal state.
-  MarkAllNodesUnvisited();
-
-  // Find the vertex nearest to start.
-  auto sit = FindNearestVertex(_start);
-
-  // Spark a region for each outgoing edge from _start.
-  for(auto eit = sit->begin(); eit != sit->end(); ++eit) {
-    auto r = new WorkspaceBoundingSphere(sit->property(), _regionRadius);
-    m_regionData.emplace(r, RegionData{eit->descriptor(), 0, 0, 0, 1, 0.0, 0.0});
-    m_regions.push_back(r);
-  }
-  m_visited[sit->descriptor()] = true;
-
-  if(m_debug)
-    std::cout << "WorkspaceSkeleton:: initialized new region with radius "
-              << std::setprecision(4) << _regionRadius
-              << " at vertex " << sit->descriptor()
-              << " nearest to point " << _start << "."
-              << std::endl;
-}
-
-
-void
-WorkspaceSkeleton::
-CreateRegions(const Point3d& _p, const double _regionRadius) {
-  // Check each skeleton node to see if a new region should be created.
-  for(auto vit = m_graph.begin(); vit != m_graph.end(); ++vit) {
-    // Skip skeleton nodes that are already visited.
-    if(m_visited[vit->descriptor()])
-      continue;
-
-    // Skip skeleton nodes that are too far away.
-    const double dist = (vit->property() - _p).norm();
-    if(dist >= _regionRadius)
-      continue;
-
-    // If we're still here, the region is in range and unvisited.
-    // Create a new region for each outgoing edge of this skeleton node.
-    for(auto eit = vit->begin(); eit != vit->end(); ++eit) {
-      auto r = new WorkspaceBoundingSphere(vit->property(), _regionRadius);
-      m_regionData.emplace(r, RegionData{eit->descriptor(), 0, 0, 0, 1, 0.0, 0.0});
-      m_regions.push_back(r);
-
-      if(m_debug)
-        std::cout << "WorkspaceSkeleton:: created new region with radius "
-                  << std::setprecision(4) << _regionRadius
-                  << " on edge (" << eit->source() << ", "
-                  << eit->target() << ", " << eit->id() << ") "
-                  << "nearest to point " << _p << "."
-                  << std::endl;
-    }
-    m_visited[vit->descriptor()] = true;
-  }
-}
-
-
-void
-WorkspaceSkeleton::
-AdvanceRegions(const Cfg& _cfg) {
-  // Iterate all regions and see if any regions contain the new cfg
-  // If a region contains the new cfg, advance it along the flow edge and
-  // until the new region we get from this is at the end of the flow edge or
-  // it no longer contains the cfg
-
-  if(m_debug)
-    std::cout << "WorkspaceSkeleton:: checking " << m_regions.size()
-              << " regions for contact with new configuration."
-              << std::endl;
-
-  // Iterate through all regions to see which should be advanced.
-  for(auto iter = m_regions.begin(); iter != m_regions.end(); ) {
-    Boundary* region = *iter;
-    bool increment = true;
-
-    // Advance this region until the robot at _cfg is no longer touching it.
-    while(IsTouching(_cfg, region)) {
-      // Get region data and the edge path it is traversing.
-      auto& regionData = m_regionData[region];
-      const vector<Point3d>& path = FindEdge(regionData.edgeDescriptor)->
-          property();
-      size_t& i = regionData.edgeIndex;
-
-      // If there are more points left on this edge, advance the region and
-      // index.
-      if(i < path.size() - 1) {
-        const Point3d& current = path[i];
-        const Point3d& next = path[++i];
-        region->SetCenter({next[0], next[1], next[2]});
-
-        if(m_debug)
-          std::cout << "\tAdvancing region " << region << " from index "
-                    << i - 1 << " to " << i << " / " << path.size()
-                    << "(" << (next - current).norm() << " units)."
-                    << std::endl;
-      }
-      // If not, the region has finished traversing its edge and must be
-      // deleted.
-      else {
-        if(m_debug)
-          std::cout << "\tRegion " << region << " has reached the end of its "
-                    << "path, erasing it now. " << m_regions.size() - 1
-                    << " regions remain."
-                    << std::endl;
-
-        iter = m_regions.erase(iter);
-        m_regionData.erase(region);
-
-        delete region;
-        region = nullptr;
-        increment = false;
-
-        break;
-      }
-    }
-    if(increment && iter != m_regions.end())
-      ++iter;
-  }
-}
-
-/*-------------------------------- Helpers -----------------------------------*/
-
-bool
-WorkspaceSkeleton::
-IsTouching(const Cfg& _cfg, const Boundary* const _region,
-    const double _robotFactor) {
-  auto region = static_cast<const WorkspaceBoundingSphere*>(_region);
-
-  // Compute the distance between the robot's reference point and the region
-  // center.
-  const Point3d& robotCenter = _cfg.GetPoint();
-  const auto& rc = region->GetCenter();
-  const Point3d regionCenter(rc[0], rc[1], rc[2]);
-
-  const double distance = (regionCenter - robotCenter).norm();
-
-  const double robotRadius = _cfg.GetMultiBody()->GetBoundingSphereRadius();
-  const double regionRadius = region->GetRadius();
-
-  // The robot is touching if at least one robot factor of it's bounding sphere
-  // penetrates into the region.
-  const double maxPenetration = robotRadius + regionRadius - distance;
-
-  if(m_debug)
-    std::cout << "\tNew Cfg's center is " << distance << " units from the "
-              << "region center."
-              << "\n\t  New Cfg is potentially overlapping by up to "
-              << std::setprecision(4) << maxPenetration << " units."
-              << "\n\t  Robot is "
-              << (maxPenetration >= 2 * robotRadius * _robotFactor ? "" : "not")
-              << " within 'touching' criterion of "
-              << std::setprecision(4) << 2 * robotRadius * _robotFactor
-              << " units."
-              << std::endl;
-
-  return maxPenetration >= 2 * robotRadius * _robotFactor;
-}
-
-
-void
-WorkspaceSkeleton::
 Prune(const Point3d& _goal) {
+  // This function only makes sense after calling Direct. Ensure that we've set
+  // m_start to something valid.
+  if(m_start == std::numeric_limits<VD>::max())
+    throw RunTimeException(WHERE, "Cannot prune the skeleton without directing "
+        "it first.");
+
   // Find the vertex in the skeleton that is closest to the goal point.
   auto iter = FindNearestVertex(_goal);
   if(iter->descriptor() == m_start)
@@ -378,177 +221,26 @@ Prune(const Point3d& _goal) {
               << std::endl;
 }
 
-
-//void
-//WorkspaceSkeleton::
-//FlowToMedialAxis(GraphType& _f) const {
-//  // use euclidean as default
-//  // @TODO how to use the MAUtility here
-//  if(this->m_debug)
-//    cout << "Flow graph has " << _f.get_num_vertices() << " vertices "
-//         << " and " << _f.get_num_edges() << " edges."
-//         << "\n\tPushing to medial axis:";
-//
-//  MedialAxisUtility<MPTraits> mau("pqp_solid", "euclidean",
-//      true, true, 10, 10, true, true);
-//  auto boundary = this->GetEnvironment()->GetBoundary();
-//
-//  // Define the push function
-//  auto push = [&](Point3d& _p) {
-//    Cfg cfg(_p);
-//
-//    // @TODO how do we get the boundary
-//    // If success we use the new point instead
-//    if(mau.PushToMedialAxis(cfg, boundary)) {
-//      _p = cfg.GetPoint();
-//    }
-//    // Else we failed to push current vertex to MA
-//  };
-//
-//  // Push flow graph vertices.
-//  for(auto vit = _f.begin(); vit != _f.end(); ++vit)
-//    push(vit->property());
-//
-//  // Push flowgraph edges.
-//  for(auto eit = _f.edges_begin(); eit != _f.edges_end(); ++eit)
-//    for(auto pit = eit->property().begin(); pit < eit->property().end(); ++pit)
-//      push(*pit);
-//
-//  if(this->m_debug)
-//    cout << "\n\tMedial axis push complete." << endl;
-//}
-
-
-void
-WorkspaceSkeleton::
-MarkAllNodesUnvisited() {
-  m_visited.clear();
-  for(auto vit = m_graph.begin(); vit != m_graph.end(); ++vit)
-    m_visited[vit->descriptor()] = false;
-}
-
-
 /*--------------------------- Setters & Getters ------------------------------*/
 
 void
 WorkspaceSkeleton::
-SetGraph(GraphType& _graph) {
+SetGraph(GraphType& _graph) noexcept {
   this->m_graph = _graph;
 }
 
 
-const std::vector<Boundary*>&
+WorkspaceSkeleton::GraphType&
 WorkspaceSkeleton::
-GetRegions() const {
-  return m_regions;
+GetGraph() noexcept {
+  return m_graph;
 }
 
 
-void
+const WorkspaceSkeleton::GraphType&
 WorkspaceSkeleton::
-ComputeProbability() {
-  // Sum all weights of all current regions.
-  double totalWeight = 0.;
-  for(auto& info : m_regionData) {
-    auto& regionInfo = info.second;
-
-    // Compute weight of this region.
-    regionInfo.weight = regionInfo.successSamples /
-        static_cast<double>(regionInfo.totalSamples);
-
-    // sum all weights
-    totalWeight += regionInfo.weight;
-  }
-
-  for(auto& info : m_regionData) {
-    auto& regionInfo = info.second;
-
-    // Compute the probability for this region.
-    regionInfo.probability = (1 - m_explore) * (regionInfo.weight / totalWeight)
-                           + (m_explore / (m_regionData.size() + 1));
-  }
-}
-
-
-Boundary*
-WorkspaceSkeleton::
-SelectRegion() {
-  // Update all region probabilities.
-  ComputeProbability();
-
-  // Get the probabilities for the current regions.
-  vector<double> probabilities;
-  for(const auto& it : m_regionData)
-    probabilities.push_back(it.second.probability);
-
-  // Get the probability for the whole environment.
-  probabilities.push_back(m_explore / (m_regionData.size() + 1));
-
-  // Construct with random number generator with the region probabilities.
-  static std::default_random_engine generator(0);
-  std::discrete_distribution<size_t> distribution(probabilities.begin(),
-      probabilities.end());
-
-  const size_t index = distribution(generator);
-  const bool envSelected = index == m_regionData.size();
-
-  if(m_debug) {
-    std::cout << "WorkspaceSkeleton:: updated region selection probabilities ("
-              << "last is whole env):\n\t";
-
-    for(auto p : distribution.probabilities())
-      std::cout << std::setprecision(4) << p << " ";
-
-    std::cout << "\n\tSelected index " << index
-              << (envSelected ? " (whole env)." : " ");
-    if(envSelected)
-      std::cout << std::endl;
-  }
-
-  if(envSelected)
-    return nullptr;
-
-  // Get the selected region.
-  auto it = m_regionData.begin();
-  advance(it, index);
-
-  if(m_debug) {
-    auto c = it->first->GetCenter();
-    std::cout << "(region " << it->first << " with center at "
-              << Vector3d(c[0], c[1], c[2]) << ", success rate so far "
-              << it->second.successSamples << " / " << it->second.totalSamples
-              << ")." << std::endl;
-  }
-
-  // total samples increment
-  ++it->second.totalSamples;
-
-  return it->first;
-}
-
-void
-WorkspaceSkeleton::
-IncrementSuccess(Boundary* _region) {
-  auto& regionInfo = GetRegionData(_region);
-
-  // Increment number of successful samples.
-  ++regionInfo.successSamples;
+GetGraph() const noexcept {
+  return m_graph;
 }
 
 /*----------------------------------------------------------------------------*/
-
-/// @TODO Revisit visual debugging later.
-
-// Creating the model storage:
-//#ifdef VIZMO
-//  // Make temporary models for the regions.
-//  map<Boundary*, Model*> models;
-//  TempObjsModel tom;
-//#endif
-
-// Initializing a new model:
-//#ifdef VIZMO
-//    models[m_regions.back()] = new ThreadSafeSphereModel(
-//        m_regions.back()->GetCenter(), regionRadius);
-//    tom.AddModel(models[m_regions.back()]);
-//#endif

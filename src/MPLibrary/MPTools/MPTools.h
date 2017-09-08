@@ -6,6 +6,7 @@
 
 #include "MedialAxisUtilities.h"
 #include "ReebGraphConstruction.h"
+#include "SkeletonClearanceUtility.h"
 #include "TetGenDecomposition.h"
 
 #include "Utilities/XMLNode.h"
@@ -42,8 +43,12 @@ class MPToolsType final {
 
   MPLibrary* const m_library; ///< The owning library.
 
-  std::unordered_map<std::string, ClearanceUtility<MPTraits>*>  m_clearanceUtils;
-  std::unordered_map<std::string, MedialAxisUtility<MPTraits>*> m_medialAxisUtils;
+  template <template <typename> typename Utility>
+  using LabelMap = std::unordered_map<std::string, Utility<MPTraits>*>;
+
+  LabelMap<ClearanceUtility> m_clearanceUtils;
+  LabelMap<MedialAxisUtility> m_medialAxisUtils;
+  LabelMap<SkeletonClearanceUtility> m_skeletonUtils;
 
   ///@}
 
@@ -102,7 +107,39 @@ class MPToolsType final {
         MedialAxisUtility<MPTraits>* const _utility);
 
     ///@}
+    ///@name Skeleton Clearance Utility
+    ///@{
 
+    /// Get a SkeletonClearanceUtility by label.
+    /// @param _label The string label of the desired utility as defined in the
+    ///               XML file.
+    /// @return The labeled utility.
+    SkeletonClearanceUtility<MPTraits>* GetSkeletonClearanceUtility(const
+        std::string& _label) const;
+
+    /// Set the SkeletonClearanceUtility. This object will take ownership of the
+    /// utility and delete it when necessary.
+    /// @param _label The string label for the new utility.
+    /// @param _utility The SkeletonClearanceUtility to use.
+    void SetSkeletonClearanceUtility(const std::string& _label,
+        SkeletonClearanceUtility<MPTraits>* const _utility);
+
+    ///@}
+
+  private:
+
+    ///@name Helpers
+    ///@{
+
+    /// Set a utility in a label map.
+    /// @param _label The utility label.
+    /// @param _utility The utility to set.
+    /// @param _map The label map which holds _utility.
+    template <template <typename> typename Utility>
+    void SetUtility(const std::string& _label, Utility<MPTraits>* _utility,
+        LabelMap<Utility>& _map) const;
+
+    ///@}
 };
 
 /*------------------------------ Construction --------------------------------*/
@@ -143,6 +180,17 @@ ParseXML(XMLNode& _node) {
 
       SetMedialAxisUtility(utility->GetLabel(), utility);
     }
+    else if(child.Name() == "SkeletonClearanceUtility") {
+      auto utility = new SkeletonClearanceUtility<MPTraits>(child);
+
+      // A second node with the same label is an error during XML parsing.
+      if(m_medialAxisUtils.count(utility->GetLabel()))
+        throw ParseException(child.Where(), "Second SkeletonClearanceUtility "
+            "node with the label '" + utility->GetLabel() + "'. Labels must be "
+            "unique.");
+
+      SetSkeletonClearanceUtility(utility->GetLabel(), utility);
+    }
     else if(child.Name() == "TetGenDecomposition") {
       if(parsedTetGen)
         throw ParseException(child.Where(),
@@ -173,6 +221,8 @@ Initialize() {
     pair.second->Initialize();
   for(auto& pair : m_medialAxisUtils)
     pair.second->Initialize();
+  for(auto& pair : m_skeletonUtils)
+    pair.second->Initialize();
 }
 
 
@@ -182,6 +232,8 @@ MPToolsType<MPTraits>::
   for(auto& pair : m_clearanceUtils)
     delete pair.second;
   for(auto& pair : m_medialAxisUtils)
+    delete pair.second;
+  for(auto& pair : m_skeletonUtils)
     delete pair.second;
 }
 
@@ -200,19 +252,7 @@ void
 MPToolsType<MPTraits>::
 SetClearanceUtility(const std::string& _label,
     ClearanceUtility<MPTraits>* const _utility) {
-  _utility->SetMPLibrary(m_library);
-
-  // Check if this label is already in use.
-  auto iter = m_clearanceUtils.find(_label);
-  const bool alreadyExists = iter != m_clearanceUtils.end();
-
-  // If the label already exists, we need to release the previous utility first.
-  if(alreadyExists) {
-    delete iter->second;
-    iter->second = _utility;
-  }
-  else
-    m_clearanceUtils.insert({_label, _utility});
+  SetUtility(_label, _utility, m_clearanceUtils);
 }
 
 
@@ -231,11 +271,41 @@ void
 MPToolsType<MPTraits>::
 SetMedialAxisUtility(const std::string& _label,
     MedialAxisUtility<MPTraits>* const _utility) {
+  SetUtility(_label, _utility, m_medialAxisUtils);
+}
+
+/*----------------------------- Skeleton Tools -------------------------------*/
+
+template <typename MPTraits>
+SkeletonClearanceUtility<MPTraits>*
+MPToolsType<MPTraits>::
+GetSkeletonClearanceUtility(const std::string& _label) const {
+  return m_skeletonUtils.at(_label);
+}
+
+
+template <typename MPTraits>
+void
+MPToolsType<MPTraits>::
+SetSkeletonClearanceUtility(const std::string& _label,
+    SkeletonClearanceUtility<MPTraits>* const _kit) {
+  SetUtility(_label, _kit, m_skeletonUtils);
+}
+
+/*---------------------------------- Helpers ---------------------------------*/
+
+template <typename MPTraits>
+template <template <typename> typename Utility>
+void
+MPToolsType<MPTraits>::
+SetUtility(const std::string& _label, Utility<MPTraits>* _utility,
+    LabelMap<Utility>& _map) const {
+  // Set the library pointer.
   _utility->SetMPLibrary(m_library);
 
   // Check if this label is already in use.
-  auto iter = m_medialAxisUtils.find(_label);
-  const bool alreadyExists = iter != m_medialAxisUtils.end();
+  auto iter = _map.find(_label);
+  const bool alreadyExists = iter != _map.end();
 
   // If the label already exists, we need to release the previous utility first.
   if(alreadyExists) {
@@ -243,7 +313,7 @@ SetMedialAxisUtility(const std::string& _label,
     iter->second = _utility;
   }
   else
-    m_medialAxisUtils.insert({_label, _utility});
+    _map.insert({_label, _utility});
 }
 
 /*----------------------------------------------------------------------------*/

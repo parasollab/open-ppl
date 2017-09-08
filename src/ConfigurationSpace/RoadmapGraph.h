@@ -247,6 +247,10 @@ class RoadmapGraph : public
     /// Enable the hook functions (default).
     void EnableHooks() noexcept;
 
+    /// Uninstall all hooks. Should only be used at the end of a library run to
+    /// clean the roadmap object.
+    void ClearHooks() noexcept;
+
     ///@}
 
 #ifdef _PARALLEL
@@ -750,6 +754,17 @@ void
 RoadmapGraph<Vertex, Edge>::
 EnableHooks() noexcept {
   m_enableHooks = true;
+}
+
+
+template <typename Vertex, typename Edge>
+void
+RoadmapGraph<Vertex, Edge>::
+ClearHooks() noexcept {
+  m_addVertexHooks.clear();
+  m_deleteVertexHooks.clear();
+  m_addEdgeHooks.clear();
+  m_deleteEdgeHooks.clear();
 }
 
 /*-------------------------------- Helpers -----------------------------------*/

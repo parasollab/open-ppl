@@ -41,6 +41,7 @@
 
 //sampler includes
 #include "MPLibrary/Samplers/BridgeTestSampler.h"
+#include "MPLibrary/Samplers/DynamicRegionSampler.h"
 #include "MPLibrary/Samplers/GaussianSampler.h"
 #include "MPLibrary/Samplers/GridSampler.h"
 #include "MPLibrary/Samplers/MedialAxisSampler.h"
@@ -117,7 +118,6 @@
 #include "MPLibrary/MPStrategies/BasicPRM.h"
 #include "MPLibrary/MPStrategies/BasicRRTStrategy.h"
 #include "MPLibrary/MPStrategies/DynamicDomainRRT.h"
-#include "MPLibrary/MPStrategies/DynamicRegionRRT.h"
 #include "MPLibrary/MPStrategies/EvaluateMapStrategy.h"
 #include "MPLibrary/MPStrategies/HybridPRM.h"
 #include "MPLibrary/MPStrategies/LPCompare.h"
@@ -203,6 +203,7 @@ struct MPTraits {
   //types of samplers available in our world
   typedef boost::mpl::list<
     BridgeTestSampler<MPTraits>,
+    DynamicRegionSampler<MPTraits>,
     GaussianSampler<MPTraits>,
     GridSampler<MPTraits>,
     MedialAxisSampler<MPTraits>,
@@ -314,7 +315,6 @@ struct MPTraits {
     ClearanceTestStrategy<MPTraits>,
     DMTestStrategy<MPTraits>,
     DynamicDomainRRT<MPTraits>,
-    DynamicRegionRRT<MPTraits>,
     EvaluateMapStrategy<MPTraits>,
     HybridPRM<MPTraits>,
     LPCompare<MPTraits>,

@@ -318,6 +318,9 @@ class MPLibraryType final
     /// Initialize all algorithms in each method set.
     void Initialize();
 
+    /// Clear temporary states and variables.
+    void Uninitialize();
+
     /// Helper for parsing XML nodes.
     /// @param[in] _node The child node to be parsed.
     bool ParseChild(XMLNode& _node);
@@ -443,6 +446,14 @@ Initialize() {
   m_metrics->Initialize();
   m_mapEvaluators->Initialize();
   m_mpTools->Initialize();
+}
+
+
+template <typename MPTraits>
+void
+MPLibraryType<MPTraits>::
+Uninitialize() {
+  this->GetRoadmap()->GetGraph()->ClearHooks();
 }
 
 /*---------------------------- XML Helpers -----------------------------------*/
@@ -643,6 +654,8 @@ RunSolver(const Solver& _solver) {
   // Close vizmo debug if necessary
   if(_solver.vizmoDebug)
     VDClose();
+
+  Uninitialize();
 }
 
 /*----------------------------------------------------------------------------*/
