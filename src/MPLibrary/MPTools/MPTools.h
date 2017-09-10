@@ -42,7 +42,7 @@ class MPToolsType final {
   ///@name Local Types
   ///@{
 
-  template <template <typename> typename Utility>
+  template <template <typename> class Utility>
   using LabelMap = std::unordered_map<std::string, Utility<MPTraits>*>;
 
   ///@}
@@ -158,7 +158,7 @@ class MPToolsType final {
     /// @param _label The utility label.
     /// @param _utility The utility to set.
     /// @param _map The label map which holds _utility.
-    template <template <typename> typename Utility>
+    template <template <typename> class Utility>
     void SetUtility(const std::string& _label, Utility<MPTraits>* _utility,
         LabelMap<Utility>& _map) const;
 
@@ -352,7 +352,7 @@ SetTopologicalMap(const std::string& _label,
 /*---------------------------------- Helpers ---------------------------------*/
 
 template <typename MPTraits>
-template <template <typename> typename Utility>
+template <template <typename> class Utility>
 void
 MPToolsType<MPTraits>::
 SetUtility(const std::string& _label, Utility<MPTraits>* _utility,
