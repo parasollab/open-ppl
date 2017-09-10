@@ -122,6 +122,7 @@ class MPProblem final
 
     Environment* m_environment{nullptr};  ///< The planning environment.
     std::vector<Robot*> m_robots;         ///< The robots in our problem.
+    Robot* m_pointRobot{nullptr};         ///< A pseudo point-robot.
     std::vector<MPTask*> m_tasks;         ///< The tasks in our problem.
 
     ///@}

@@ -27,6 +27,7 @@ MPProblem::
 ~MPProblem() {
   delete m_environment;
 
+  delete m_pointRobot;
   for(auto robot : m_robots)
     delete robot;
 
@@ -180,6 +181,9 @@ GetRobot(size_t _index) const {
 Robot*
 MPProblem::
 GetRobot(const std::string& _label) const {
+  if(_label == "point")
+    return m_pointRobot;
+
   for(auto robot : m_robots)
     if(robot->GetLabel() == _label)
       return robot;
@@ -273,18 +277,10 @@ MakePointRobot() {
   point->SetBaseBody(free);
 
   // Make sure we didn't accidentally call another robot 'point'.
-  bool check = false;
-  try {
-    GetRobot("point");
-  }
-  catch(...) {
-    check = true;
-  }
-  if(!check)
+  if(GetRobot("point"))
     throw RunTimeException(WHERE, "A robot in the problem is named 'point'. "
         "This name is reserved for the internal point robot.");
 
   // Create the robot object.
-  Robot* pointRobot = new Robot(this, point, "point");
-  m_robots.push_back(pointRobot);
+  m_pointRobot = new Robot(this, point, "point");
 }
