@@ -3,6 +3,18 @@
 #include "Geometry/Boundaries/TetrahedralBoundary.h"
 
 
+/*----------------------------- Region Accessors -----------------------------*/
+
+const WorkspaceDecomposition::vertex_descriptor
+WorkspaceDecomposition::
+GetDescriptor(const WorkspaceRegion& _region) const {
+  for(const_vertex_iterator iter = this->begin(); iter != this->end(); ++iter)
+    if(iter->property() == _region)
+      return iter->descriptor();
+
+  return std::numeric_limits<vertex_descriptor>::max();
+}
+
 /*----------------------------- Accessors ------------------------------------*/
 
 const WorkspacePortal&

@@ -160,7 +160,7 @@ class RoadmapGraph : public
 
     /// Get the descriptor of a vertex property if it exists in the graph, or
     /// INVALID_VID otherwise.
-    template<typename T>
+    template <typename T>
     VID GetVID(const T& _t) noexcept;
     VID GetVID(const VI& _t) noexcept;
     VID GetVID(const Vertex& _t) noexcept;

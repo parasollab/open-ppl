@@ -84,11 +84,19 @@ class TopologicalMap final : public MPBaseObject<MPTraits> {
     ///@name Region and Cell Location
     ///@{
 
+    /// Let it be a light for you in dark places, when all other lights go out.
+    const WorkspaceRegion* GetRandomRegion() const;
+
     /// Find the workspace region that contains a configuration's reference
-    /// point.
+    /// point. Will return null for configurations in obstacle space.
     const WorkspaceRegion* LocateRegion(const VID _vid) const;
     const WorkspaceRegion* LocateRegion(const CfgType& _c) const; ///< @overload
     const WorkspaceRegion* LocateRegion(const Point3d& _p) const; ///< @overload
+
+    /// Try to find the nearest region for a point in obstacle space. Will
+    /// return null if it cannot be found.
+    const WorkspaceRegion* LocateNearestRegion(const CfgType& _c) const;
+    const WorkspaceRegion* LocateNearestRegion(const Point3d& _p) const;
 
     /// Find the grid cell index that holds a given configuration.
     size_t LocateCell(const VID _v) const;
@@ -206,7 +214,8 @@ template <typename MPTraits>
 std::vector<typename TopologicalMap<MPTraits>::VID>
 TopologicalMap<MPTraits>::
 GetMappedVIDs(const WorkspaceRegion* const _region) const {
-  return m_regionToVIDs.at(_region);
+  auto iter = m_regionToVIDs.find(_region);
+  return iter == m_regionToVIDs.end() ? std::vector<VID>() : iter->second;
 }
 
 
@@ -219,7 +228,13 @@ GetMappedVIDs(const std::vector<const WorkspaceRegion*>& _regions) const {
   // Find all VIDs that live within the region set.
   std::vector<VID> all;
   for(const auto& region : _regions) {
-    const std::vector<VID>& vids = m_regionToVIDs.at(region);
+    // Skip empty regions.
+    auto iter = m_regionToVIDs.find(region);
+    if(iter == m_regionToVIDs.end())
+      continue;
+
+    // Copy these VIDs.
+    const auto& vids = iter->second;
     std::copy(vids.begin(), vids.end(), std::back_inserter(all));
   }
 
@@ -243,6 +258,16 @@ const WorkspaceRegion*
 TopologicalMap<MPTraits>::
 GetMappedRegion(const VID _vid) const {
   return m_vidToRegion.at(_vid);
+}
+
+
+template <typename MPTraits>
+const WorkspaceRegion*
+TopologicalMap<MPTraits>::
+GetRandomRegion() const {
+  MethodTimer mt(this->GetStatClass(), "TopologicalMap::GetRandomRegion");
+  auto decomposition = this->GetEnvironment()->GetDecomposition();
+  return &decomposition->GetRegion(LRand() % decomposition->GetNumRegions());
 }
 
 
@@ -280,6 +305,42 @@ LocateRegion(const Point3d& _point) const {
 
   // If we get here, we didn't find a region.
   return nullptr;
+}
+
+
+template <typename MPTraits>
+const WorkspaceRegion*
+TopologicalMap<MPTraits>::
+LocateNearestRegion(const CfgType& _c) const {
+  return LocateNearestRegion(_c.GetPoint());
+}
+
+
+template <typename MPTraits>
+const WorkspaceRegion*
+TopologicalMap<MPTraits>::
+LocateNearestRegion(const Point3d& _p) const {
+  MethodTimer mt(this->GetStatClass(), "TopologicalMap::LocateNearestRegion");
+
+  // Put the point robot here.
+  auto pointRobot = this->GetMPProblem()->GetRobot("point");
+  CfgType temp(_p, pointRobot);
+
+  // Use PQPSolid to get the CD info. If the check is valid, this was already in
+  // free space.
+  /// @TODO This relies on magic strings in the XML. Make it more robust.
+  CDInfo cdInfo(true);
+  auto vc = this->GetValidityChecker("pqp_solid");
+  if(vc->IsValid(temp, cdInfo, "TopologicalFilter::FindCandidateRegions"))
+    return LocateRegion(_p);
+
+  // Compute the vector from the sampled point to the outside of the obstacle.
+  const Vector3d delta = cdInfo.m_objectPoint - cdInfo.m_robotPoint;
+
+  // The nearest possible free point is just outside of the obstacle along
+  // delta.
+  auto env = this->GetEnvironment();
+  return LocateRegion(cdInfo.m_objectPoint + delta.scale(env->GetPositionRes()));
 }
 
 

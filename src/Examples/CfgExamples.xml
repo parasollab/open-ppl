@@ -87,6 +87,8 @@
         <DBand label="first" min='.1' max='.3' k='16' policy='closest'
           dmLabel="euclidean"/>
       </BandsNF>
+      <TopologicalFilter label="TopologicalNF" nfLabel="BFNF" tmLabel="tm"
+        backtrackDistance="6" debug="true"/>
     </NeighborhoodFinders>
 
     <Samplers>
@@ -236,8 +238,6 @@
         <NeighborFinder Method="BFNFAll"/>
       </AdaptiveConnector>
       <CCsConnector label="ConnectCCs" nfLabel="BFNF" lpLabel="sl" k="5"/>
-      <!--ClosestVE label="ClosestVE" kClosest="3" nfLabel="BFNF"
-           lpLabel="sl"/-->
       <NeighborhoodConnector label="Closest" nfLabel="BFNF" lpLabel="sl"
         checkIfSameCC="false" debug="false"/>
       <NeighborhoodConnector label="SparkPRMConnector" nfLabel="Nearest"

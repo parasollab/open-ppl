@@ -73,8 +73,12 @@ class StableSparseRRT : public BasicRRTStrategy<MPTraits> {
 
     /// SST's version of this function requires a radius NF and only searches
     /// the active set.
+#if 0
     virtual VID FindNearestNeighbor(const CfgType& _cfg, const TreeType& _tree)
         override;
+#else
+    virtual VID FindNearestNeighbor(const CfgType& _cfg) override;
+#endif
 
     /// SST's version of this function calls the base class version and then
     /// updates metadata specific to this method.
@@ -112,6 +116,7 @@ class StableSparseRRT : public BasicRRTStrategy<MPTraits> {
     unordered_map<VID, VID> m_representatives; ///< Maps a representative node
                                                ///< to a witness.
 
+    std::string m_witnessNfLabel; ///< NF to use for finding witness nodes.
     double m_witnessRadius{.5}; ///< Distance between witness nodes.
 
     bool m_prune{false};
@@ -139,6 +144,8 @@ StableSparseRRT<MPTraits>::
 StableSparseRRT(XMLNode& _node) : BasicRRTStrategy<MPTraits>(_node) {
   this->SetName("StableSparseRRT");
 
+  m_witnessNfLabel = _node.Read("witnessNfLabel", false, this->m_nfLabel,
+      "Optional different NF to use for witnesses.");
   m_witnessRadius = _node.Read("witnessRadius", true, 0.5, .01,
       std::numeric_limits<double>::max(), "Distance between witnesses.");
   m_prune = _node.Read("prune", false, false,
@@ -176,12 +183,17 @@ Initialize() {
 template <typename MPTraits>
 typename StableSparseRRT<MPTraits>::VID
 StableSparseRRT<MPTraits>::
+#if 0
 FindNearestNeighbor(const CfgType& _cfg, const TreeType& _tree) {
+#else
+FindNearestNeighbor(const CfgType& _cfg) {
+#endif
   MethodTimer mt(this->GetStatClass(), "SST::FindNearestNeighbor");
   auto g = this->GetRoadmap()->GetGraph();
 
   std::vector<std::pair<VID, double>> neighbors;
 
+#if 0
   // The candidate neighbors are those in both the current tree and the active
   // set.
   std::vector<VID> candidates;
@@ -196,6 +208,12 @@ FindNearestNeighbor(const CfgType& _cfg, const TreeType& _tree) {
   nf->FindNeighbors(this->GetRoadmap(), candidates.begin(), candidates.end(),
       candidates.size() == g->get_num_vertices(),
       _cfg, back_inserter(neighbors));
+#else
+  auto nf = this->GetNeighborhoodFinder(this->m_nfLabel);
+  nf->FindNeighbors(this->GetRoadmap(), g->begin(), g->end(),
+      true,
+      _cfg, back_inserter(neighbors));
+#endif
 
   // Of the nodes in the radius, select the one with the best path cost.
   VID bestVID = INVALID_VID;
@@ -339,13 +357,16 @@ StableSparseRRT<MPTraits>::
 FindNearestWitness(const CfgType& _cfg) {
   MethodTimer mt(this->GetStatClass(), "SST::FindNearestWitness");
 
-  /// @TODO This should use the 'nearest' nf.
-  const auto nf = this->GetNeighborhoodFinder(this->m_nfLabel);
-
   vector<pair<VID, double>> witnessNeighbors;
 
+  // Search with the witness NF.
+  const auto nf = this->GetNeighborhoodFinder(this->m_witnessNfLabel);
   nf->FindNeighbors(this->GetRoadmap(), m_witnesses.begin(), m_witnesses.end(),
       false, _cfg, back_inserter(witnessNeighbors));
+
+  // If that failed, return a null result.
+  if(witnessNeighbors.empty())
+    return {INVALID_VID, std::numeric_limits<double>::max()};
 
   if(this->m_debug)
     std::cout << "Found nearest witness " << witnessNeighbors.begin()->first

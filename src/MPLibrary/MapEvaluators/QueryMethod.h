@@ -224,41 +224,40 @@ Initialize() {
   m_query.clear();
   m_goals.clear();
 
-  // Get current task
-  auto task = this->GetTask();
+  // Generate the query configurations.
+  /// @TODO Incorporate path constraints when generating the start and goal.
+  ///       This should probably be done in the task's representation of the
+  ///       start/goal boundaries. I.e., GetStartBoundary should return the
+  ///       intersection of the actual start constraint boundary and the path
+  ///       constraint boundaries.
+  /// @TODO Also incorporate env boundaries. That is not a property of the task
+  ///       and should be done here.
+  MethodTimer mt(this->GetStatClass(), "QueryMethod::GeneratingQuery");
 
-  // Sample start and end points
+  auto task = this->GetTask();
+  auto robot = task->GetRobot();
   auto startBoundary = task->GetStartBoundary();
   auto goalBoundary = task->GetGoalBoundary();
-  /// @TODO Also incorporate path constraints? Here or in task's representation
-  ///       of start/goal boundaries?
-  /// @TODO Also incorporate env boundaries? Here or in task's representation?
 
-  // Set query cfgs
-  this->GetStatClass()->StartClock("QueryMethod::GeneratingQuery");
+  if(startBoundary) {
+    m_query.push_back(CfgType(robot));
+    m_query.back().GetRandomCfg(startBoundary);
+  }
+  if(goalBoundary) {
+    m_query.push_back(CfgType(robot));
+    m_query.back().GetRandomCfg(goalBoundary);
+  }
 
-  /// @TODO Think about how this will work with chains of tasks and non-exact
-  ///       boundaries. Perhaps we want to initialize with some starting
-  ///       configuration as an input parameter? Or maybe an overload for that?
-  /// @TODO Either fix a set of required labels for all PMPL or find a better
-  ///       way to create the uniform random sampler here.
-  auto s = this->GetSampler("UniformRandomFree");
-  if(startBoundary)
-    while(m_query.size() != 1)
-      s->Sample(1, 100, startBoundary, back_inserter(m_query));
-  if(goalBoundary)
-    while(m_query.size() != 2)
-      s->Sample(1, 100, goalBoundary, back_inserter(m_query));
-
-  this->GetStatClass()->StopClock("QueryMethod::GeneratingQuery");
-
-  if(this->m_debug)
-    std::cout << "Query generation:"
-              << "\n\tStart boundary : " << *startBoundary
-              << "\n\tStart cfg: " << m_query.front()
-              << "\n\tGoal boundary  : " << *goalBoundary
-              << "\n\tGoal cfg: " << m_query.back()
-              << std::endl;
+  if(this->m_debug and (startBoundary or goalBoundary)) {
+    std::cout << "Query generation:";
+    if(startBoundary)
+      std::cout << "\n\tStart boundary : " << *startBoundary
+                << "\n\tStart cfg: " << m_query.front();
+    if(goalBoundary)
+      std::cout << "\n\tGoal boundary  : " << *goalBoundary
+                << "\n\tGoal cfg: " << m_query.back();
+    std::cout << std::endl;
+  }
 
   Reset(nullptr);
 }

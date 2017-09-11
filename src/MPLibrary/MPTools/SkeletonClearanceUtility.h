@@ -90,15 +90,21 @@ operator()(WorkspaceSkeleton& _skeleton) const {
 
   auto mau = this->GetMPTools()->GetMedialAxisUtility(m_mauLabel);
   auto boundary = this->GetEnvironment()->GetBoundary();
+  auto robot = this->GetMPProblem()->GetRobot("point");
 
   // Define the push function
   auto push = [&](Point3d& _p) {
-    CfgType cfg(_p);
+    CfgType cfg(_p, robot);
 
     // If success we use the new point instead
     // Else we failed to push current vertex to MA
-    if(mau.PushToMedialAxis(cfg, boundary))
+    if(mau->PushToMedialAxis(cfg, boundary)) {
+      if(this->m_debug)
+        std::cout << "\tPushed " << _p << " to " << cfg.GetPoint() << ".\n";
       _p = cfg.GetPoint();
+    }
+    else if(this->m_debug)
+      std::cout << "\tFailed to push " << _p << " to the medial axis.\n";
   };
 
   // Push flow graph vertices.

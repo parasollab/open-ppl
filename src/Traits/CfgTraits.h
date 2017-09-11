@@ -38,6 +38,7 @@
 #include "MPLibrary/NeighborhoodFinders/OptimalNF.h"
 #include "MPLibrary/NeighborhoodFinders/RadiusNF.h"
 #include "MPLibrary/NeighborhoodFinders/RandomNF.h"
+#include "MPLibrary/NeighborhoodFinders/TopologicalFilter.h"
 
 //sampler includes
 #include "MPLibrary/Samplers/BridgeTestSampler.h"
@@ -192,13 +193,11 @@ struct MPTraits {
     DPESNF<MPTraits>,
     HierarchicalNF<MPTraits>,
     HopLimitNF<MPTraits>,
-    //MetricTreeNF<MPTraits>,
-    //MPNNNF<MPTraits>,
     OptimalNF<MPTraits>,
     RadiusNF<MPTraits>,
-    RandomNF<MPTraits>//,
-    //SpillTreeNF<MPTraits>
-    > NeighborhoodFinderMethodList;
+    RandomNF<MPTraits>,
+    TopologicalFilter<MPTraits>
+      > NeighborhoodFinderMethodList;
 
   //types of samplers available in our world
   typedef boost::mpl::list<
@@ -309,7 +308,9 @@ struct MPTraits {
 
   //types of motion planning strategies available in our world
   typedef boost::mpl::list<
-    AdaptiveRRT<MPTraits>,
+#if 0
+    AdaptiveRRT<MPTraits>, Fix after ICRA 18
+#endif
     BasicPRM<MPTraits>,
     BasicRRTStrategy<MPTraits>,
     ClearanceTestStrategy<MPTraits>,

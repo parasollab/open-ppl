@@ -39,6 +39,13 @@ class WorkspaceRegion final {
     WorkspaceRegion(WorkspaceDecomposition* const _wd);
 
     ///@}
+    ///@name Equality
+    ///@{
+
+    bool operator==(const WorkspaceRegion& _region) const;
+    bool operator!=(const WorkspaceRegion& _region) const;
+
+    ///@}
     ///@name Modifiers
     ///@{
 

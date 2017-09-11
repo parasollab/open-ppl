@@ -25,7 +25,7 @@ class WorkspaceDecomposition : public stapl::sequential::graph<stapl::DIRECTED,
 
   public:
 
-    ///\name Local Types
+    ///@name Local Types
     ///@{
 
     typedef stapl::sequential::graph<stapl::DIRECTED, stapl::NONMULTIEDGES,
@@ -43,6 +43,10 @@ class WorkspaceDecomposition : public stapl::sequential::graph<stapl::DIRECTED,
     typedef typename RegionGraph::vertex_descriptor       vertex_descriptor;
     typedef typename RegionGraph::edge_descriptor         edge_descriptor;
 
+    /// Terminology blunder: this isn't really a dual graph. It is a 1-reduction
+    /// of the region graph instead. Each region is represented as a point, and
+    /// each portal is represented as a euclidean straight-line distance between
+    /// vertices.
     typedef stapl::sequential::graph<stapl::DIRECTED, stapl::NONMULTIEDGES,
         Vector3d, double> DualGraph;
 
@@ -64,6 +68,8 @@ class WorkspaceDecomposition : public stapl::sequential::graph<stapl::DIRECTED,
     const WorkspaceRegion& GetRegion(const size_t _i) const {
       return find_vertex(_i)->property();
     }
+
+    const vertex_descriptor GetDescriptor(const WorkspaceRegion& _region) const;
 
     ///@}
     ///@name Portal Accessors

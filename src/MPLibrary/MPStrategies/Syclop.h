@@ -72,8 +72,12 @@ class Syclop : public BasicRRTStrategy<MPTraits> {
 
     /// As basic RRT, but picks nearest neighbor from only the available
     /// regions.
+#if 0
     virtual VID FindNearestNeighbor(const CfgType& _cfg, const TreeType& _tree)
         override;
+#else
+    virtual VID FindNearestNeighbor(const CfgType& _cfg) override;
+#endif
 
     ///@}
     ///@name Growth Helpers
@@ -389,6 +393,7 @@ Initialize() {
 template <typename MPTraits>
 typename Syclop<MPTraits>::VID
 Syclop<MPTraits>::
+#if 0
 FindNearestNeighbor(const CfgType& _cfg, const TreeType&) {
   // Select an available region and get the vertices within.
   const WorkspaceRegion* r = SelectRegion();
@@ -397,6 +402,35 @@ FindNearestNeighbor(const CfgType& _cfg, const TreeType&) {
   // Find the nearest neighbor from within the selected region.
   return BasicRRTStrategy<MPTraits>::FindNearestNeighbor(_cfg, vertices);
 }
+#else
+FindNearestNeighbor(const CfgType& _cfg) {
+  // Select an available region and get the vertices within.
+  const WorkspaceRegion* r = SelectRegion();
+  const auto& vertices = m_regionData[r].vertices;
+
+  // Find the nearest neighbor from within the selected region.
+  auto stats = this->GetStatClass();
+  MethodTimer mt(stats, "BasicRRT::FindNearestNeighbor");
+
+  vector<pair<VID, double>> neighbors;
+
+  auto nf = this->GetNeighborhoodFinder(this->m_nfLabel);
+  nf->FindNeighbors(this->GetRoadmap(),
+      vertices.begin(), vertices.end(),
+      true, _cfg, back_inserter(neighbors));
+
+  VID nearestVID = INVALID_VID;
+
+  if(!neighbors.empty())
+    nearestVID = neighbors[0].first;
+  else
+    // We really don't want this to happen. If you see high numbers for this,
+    // you likely have problems with parameter or algorithm selection.
+    stats->IncStat("BasicRRT::FailedNF");
+
+  return nearestVID;
+}
+#endif
 
 /*----------------------------- Growth Helpers -------------------------------*/
 

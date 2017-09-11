@@ -15,6 +15,23 @@ WorkspaceRegion() : m_decomposition(nullptr) {}
 WorkspaceRegion::
 WorkspaceRegion(WorkspaceDecomposition* const _wd) : m_decomposition(_wd) {}
 
+/*--------------------------------- Equality ---------------------------------*/
+
+bool
+WorkspaceRegion::
+operator==(const WorkspaceRegion& _region) const {
+  return m_decomposition == _region.m_decomposition
+     and m_points == _region.m_points
+     and m_facets == _region.m_facets;
+}
+
+
+bool
+WorkspaceRegion::
+operator!=(const WorkspaceRegion& _region) const {
+  return !(*this == _region);
+}
+
 /*--------------------------------- Modifiers --------------------------------*/
 
 void

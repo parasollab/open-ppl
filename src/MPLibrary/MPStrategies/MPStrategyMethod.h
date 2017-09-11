@@ -181,6 +181,8 @@ template <typename MPTraits>
 bool
 MPStrategyMethod<MPTraits>::
 UsingQuery() const {
+  /// @TODO This is horribly brittle and depends on magic XML values. Let's find
+  ///       a better way.
   for(const auto& label : m_meLabels)
     if(label.find("Query", 0) != string::npos)
       return true;
