@@ -34,7 +34,7 @@ while read p; do
         fi
 
         # Next, check that the generated file matches the gold standard in Outputs.
-        diffOut=$(diff Scratch/${file} Outputs/${file})
+        diffOut=$(diff Scratch/${file} Outputs/${file} 2>&1)
         if [ "${diffOut}" == "" ]; then
           # Diff is empty so test passed.
           echo "Success: Test ${input} on output ${file}"
