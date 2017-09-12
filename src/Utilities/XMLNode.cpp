@@ -14,7 +14,9 @@ XMLNode(const std::string& _filename, const std::string& _desiredNode) :
   if(!m_doc->LoadFile())
     throw ParseException(
         Where(_filename, m_doc->ErrorRow(), m_doc->ErrorCol(), false),
-        m_doc->ErrorDesc());
+        "TinyXML failed to load file: " + std::string(m_doc->ErrorDesc()) +
+        " Note that TinyXML's error reporting is really terrible. This could "
+        "mean anything from encoding problems to duplicated node attributes.");
 
   // Define a DFS search to locate the desired node in the XML tree.
   std::function<TiXmlNode*(TiXmlNode* const)> findNode =

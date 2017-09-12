@@ -244,14 +244,14 @@ FindNeighbors(RoadmapType* _rmp,
       stats->IncStat("TopologicalFilter::NoTopologicalCandidates");
 
       if(this->m_debug)
-        std::cout << "No vertices found in candidate cells."
+        std::cout << "\tNo vertices found in candidate cells."
                   << std::endl;
     }
     else {
       stats->IncStat("TopologicalFilter::NoInputCandidates");
 
       if(this->m_debug)
-        std::cout << "Found " << topologicalCandidates.size() << " vertices in "
+        std::cout << "\tFound " << topologicalCandidates.size() << " vertices in "
                   << "candidate cells, but none were in the input range."
                   << std::endl;
     }
@@ -415,26 +415,50 @@ ComputePopulatedFrontier(const VD _root) const {
   std::queue<VD> frontier;
   frontier.push(_root);
 
+  if(this->m_debug)
+    std::cout << "\tSearching for sampling frontier from node " << _root
+              << " with score " << m_scores.at(_root) << "..."
+              << std::endl;
+
   while(!frontier.empty()) {
     // Get the next node.
     const VD current = frontier.front();
     frontier.pop();
 
     // We've already checked this node if it's populated value is set.
-    if(populated.count(current))
+    if(populated.count(current)) {
+      if(this->m_debug)
+        std::cout << "\t  Already checked node " << current << ".\n";
       continue;
+    }
 
     populated[current] = tm->GetMappedVIDs(&decomposition->GetRegion(current)).
         size();
 
     // If the node is populated, add it to the result set.
-    if(populated[current])
+    if(populated[current]) {
       result.push_back(current);
+
+      if(this->m_debug)
+        std::cout << "\t  Found populated node " << current
+                  << " with score " << m_scores.at(current) << "."
+                  << std::endl;
+    }
     // If the node is not populated, add its children to the search frontier.
-    else if(m_dagMap.count(current))
+    else if(m_dagMap.count(current)) {
+      if(this->m_debug)
+        std::cout << "\t  Found unpopulated node " << current
+                  << " with score " << m_scores.at(current)
+                  << " and " << m_dagMap.at(current).size() << " children."
+                  << std::endl;
       for(VD child : m_dagMap.at(current))
         frontier.push(child);
+    }
     // Else this is an unpopulated leaf.
+    else if(this->m_debug)
+      std::cout << "\t  Found unpopulated leaf " << current
+                << " with score " << m_scores.at(current) << "."
+                << std::endl;
   }
 
   // Sort the result set according to decreasing SSSP score.
@@ -442,6 +466,13 @@ ComputePopulatedFrontier(const VD _root) const {
       [&](const VD& _a, const VD& _b) {
         return m_scores.at(_a) > m_scores.at(_b);
       });
+
+  if(this->m_debug) {
+    std::cout << "\tComputed sampling frontier:";
+    for(const auto& vd : result)
+      std::cout << "\n\t  " << vd << " at distance " <<  m_scores.at(vd);
+    std::cout << std::endl;
+  }
 
   return result;
 }

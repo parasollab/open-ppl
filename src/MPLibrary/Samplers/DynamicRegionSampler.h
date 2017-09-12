@@ -95,6 +95,7 @@ class DynamicRegionSampler : public SamplerMethod<MPTraits> {
     RegionKit m_regionKit;         ///< Manages regions following the skeleton.
 
     std::string m_samplerLabel;    ///< The sampler label.
+    std::string m_scuLabel;        ///< The skeleton clearance utility label.
 
     bool m_velocityBiasing{false};  ///< Use velocity biasing?
     double m_velocityAlignment{.1}; ///< Strength of velocity biasing.
@@ -123,6 +124,9 @@ DynamicRegionSampler(XMLNode& _node) : SamplerMethod<MPTraits>(_node) {
 
   m_samplerLabel = _node.Read("samplerLabel", true, "", "The sampler to use "
       "within regions.");
+
+  m_scuLabel = _node.Read("scuLabel", false, "", "The skeleton clearance utility "
+      "to use. If not specified, we use the hack-fix from wafr16.");
 
   m_velocityBiasing = _node.Read("velocityBiasing", false, m_velocityBiasing,
       "Bias nonholonomic samples along the skeleton?");
@@ -294,9 +298,21 @@ LazyInitialize() {
 
   // Fix the skelton clearance for 3D.
   if(threeD) {
-    SkeletonClearanceUtility<MPTraits> util;
-    util.SetMPLibrary(this->GetMPLibrary());
-    util.HackFix(m_skeleton);
+    if(!m_scuLabel.empty()) {
+      auto util = this->GetMPTools()->GetSkeletonClearanceUtility(m_scuLabel);
+      (*util)(m_skeleton);
+    }
+    else {
+      SkeletonClearanceUtility<MPTraits> util;
+      util.SetMPLibrary(this->GetMPLibrary());
+      util.HackFix(m_skeleton);
+    }
+
+    // Print skeleton when debugging.
+    //if(this->m_debug) {
+    //  std::ofstream outfile(this->GetBaseFilename() + ".skeleton");
+    //  m_skeleton.Print(outfile);
+    //}
   }
 
   // Initialize the region kit.

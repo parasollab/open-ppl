@@ -67,9 +67,8 @@ SelectRegion() {
       std::cout << std::setprecision(4) << p << " ";
 
     std::cout << "\n\tSelected index " << index
-              << (envSelected ? " (whole env)." : " ");
-    if(envSelected)
-      std::cout << std::endl;
+              << (envSelected ? " (whole env)." : " ")
+              << std::endl;
   }
 
   if(envSelected)
@@ -81,10 +80,10 @@ SelectRegion() {
 
   if(m_debug) {
     auto c = it->first->GetCenter();
-    std::cout << "(region " << it->first << " with center at "
+    std::cout << "\tRegion is " << it->first << " with center at "
               << Vector3d(c[0], c[1], c[2]) << ", success rate so far "
               << it->second.successes << " / " << it->second.attempts
-              << ")." << std::endl;
+              << "." << std::endl;
   }
 
   // total samples increment
@@ -358,6 +357,8 @@ IsTouching(const Cfg& _cfg, const Boundary* const _region) const {
     std::cout << "\tNew Cfg's center penetrates "
               << std::setprecision(4) << _region->GetClearance(robotCenter)
               << " units into the region center."
+              << "\n\t  Bounding sphere radius: " << robotRadius
+              << "\n\t  Region radius: " << m_regionRadius
               << "\n\t  Bounding sphere penetrates by "
               << std::setprecision(4) << penetration << " units."
               << "\n\t  Robot is" << (touching ? "" : " not")
