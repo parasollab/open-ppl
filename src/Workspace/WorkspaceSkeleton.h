@@ -4,6 +4,7 @@
 #include <queue>
 #include <set>
 #include <unordered_map>
+#include <string>
 
 #include "ConfigurationSpace/Cfg.h"
 #include "Geometry/Boundaries/Boundary.h"
@@ -89,6 +90,10 @@ class WorkspaceSkeleton {
 
     ///@}
 
+    /// Writes the graph to a file
+    /// @param _file the output file name
+    void Write(const string& _file);
+  
   private:
 
     ///@name Internal State

@@ -1,5 +1,6 @@
 #include "WorkspaceSkeleton.h"
 
+//#include <containers/sequential/graph/algorithms/graph_input_output.h>
 
 /*--------------------------------- Locators ---------------------------------*/
 
@@ -241,6 +242,26 @@ const WorkspaceSkeleton::GraphType&
 WorkspaceSkeleton::
 GetGraph() const noexcept {
   return m_graph;
+}
+
+void
+WorkspaceSkeleton::
+Write(const std::string& _file) {
+  // stapl::sequential::write_graph(m_graph, _file.c_str());
+  /// @Todo: Replace with stapl version.
+  ofstream ff(_file);
+  auto& g = m_graph;
+  ff<<g.get_num_vertices()<<" "<<g.get_num_edges()<<endl;
+	for(auto vit = g.begin(); vit != g.end(); ++vit)
+		ff<<vit->descriptor()<<" "<<vit->property()<<endl;
+	for(auto eit = g.edges_begin(); eit != g.edges_end(); ++eit)	{
+		ff<<eit->source()<<" "<<eit->target()<<" ";
+		auto prop = eit->property();
+		ff<<prop.size()<<" ";
+		for(auto v: prop)
+			ff<<v<<" ";
+		ff<<endl;
+	}
 }
 
 /*----------------------------------------------------------------------------*/
