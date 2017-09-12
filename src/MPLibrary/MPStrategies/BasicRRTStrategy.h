@@ -340,18 +340,22 @@ Initialize() {
     // If growing goals, set each query cfg as its own tree
     if(m_growGoals) {
       for(auto& cfg : queryCfgs) {
-        VID add = g->AddVertex(cfg);
 #if 0
+        VID add = g->AddVertex(cfg);
         m_trees.push_back(vector<VID>(1, add));
+#else
+        g->AddVertex(cfg);
 #endif
       }
     }
 
     // If not growing goals, add only the start to map.
     else {
-      VID start = g->AddVertex(queryCfgs.front());
 #if 0
+      VID start = g->AddVertex(queryCfgs.front());
       m_trees.push_back(vector<VID>(1, start));
+#else
+      g->AddVertex(queryCfgs.front());
 #endif
     }
   }
@@ -366,9 +370,11 @@ Initialize() {
         root.GetRandomCfg(env);
       } while(!root.InBounds(env) || !vc->IsValid(root, "BasicRRTStrategy"));
 
-      VID rootVID = g->AddVertex(root);
 #if 0
+      VID rootVID = g->AddVertex(root);
       m_trees.push_back(vector<VID>(1, rootVID));
+#else
+      g->AddVertex(root);
 #endif
     }
   }
