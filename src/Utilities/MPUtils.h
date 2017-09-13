@@ -372,6 +372,24 @@ struct NullOutputIterator : std::iterator<std::output_iterator_tag,
 
 };
 
+template <class RandomIterator, class T, class Compare = std::less<T> >
+RandomIterator BinarySearch(RandomIterator _start, RandomIterator _end, const T& _val, Compare _cmp = Compare()) {
+  auto start = _start;
+  auto end = _end;
+  while(start != end) {
+    size_t mid = (size_t) (end - start) / 2;
+    RandomIterator midIter =  start;
+    std::advance(midIter, mid);
+    if(_val == *midIter)
+      return midIter;
+    if(_cmp(_val, *midIter))
+      end = midIter;
+    else
+      start = midIter;
+  }
+  return _end;
+}
+
 /*----------------------------------------------------------------------------*/
 
 ///@}

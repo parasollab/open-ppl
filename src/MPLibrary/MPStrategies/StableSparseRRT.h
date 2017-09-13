@@ -196,10 +196,11 @@ FindNearestNeighbor(const CfgType& _cfg) {
 #if 0
   // The candidate neighbors are those in both the current tree and the active
   // set.
+  
   std::vector<VID> candidates;
   std::set_intersection(_tree.begin(), _tree.end(),
       m_active.begin(), m_active.end(), std::back_inserter(candidates));
-
+  
   if(candidates.empty())
     throw RunTimeException(WHERE, "SST can't find any candidates.");
 
@@ -230,7 +231,6 @@ FindNearestNeighbor(const CfgType& _cfg) {
       bestVID = n.first;
     }
   }
-
   if(this->m_debug and !neighbors.empty()) {
     const VID nearest = neighbors[0].first;
     std::cout << "Found best active neighbor " << bestVID
@@ -304,6 +304,7 @@ UpdateSSTStructures(const VID _nearestVID, const VID _newVID,
 
   // If nearest witness is invalid or more than m_witnessRadius away from
   // newNode, then newNode is a new witness and its own representative.
+
   if(witness == INVALID_VID or distance > m_witnessRadius) {
     m_witnesses.push_back(_newVID);
     m_active.push_back(_newVID);
@@ -337,7 +338,7 @@ UpdateSSTStructures(const VID _nearestVID, const VID _newVID,
   ///          guaranteed for now because new configurations always have the
   ///          largest VID. If STAPL changes that, we need to sort the active
   ///          set first or use a linear scan.
-  auto cit = std::find(m_active.begin(), m_active.end(), representative);
+  auto cit = BinarySearch(m_active.begin(), m_active.end(), representative);
   if(cit == m_active.end())
     throw RunTimeException(WHERE, "Could not find representative '"
         + std::to_string(representative) + "' in the active set.");
@@ -403,7 +404,7 @@ PruneInactiveLeaves() {
 
     // If parent is now an inactive leaf, add it to m_inactiveLeaves.
     if(g->get_out_degree(parent) == 0) {
-      auto iter = std::find(m_active.begin(), m_active.end(), parent);
+      auto iter = BinarySearch(m_active.begin(), m_active.end(), parent);
       const bool inactive = iter == m_active.end();
       if(inactive)
         m_inactiveLeaves.push_back(parent);
