@@ -107,7 +107,7 @@ class StableSparseRRT : public BasicRRTStrategy<MPTraits> {
     ///@name Internal State
     ///@{
 
-    set<VID> m_active; ///< The active set represents the 'sparse' tree.
+    vector<VID> m_active; ///< The active set represents the 'sparse' tree.
     vector<VID> m_witnesses; ///< Set of witnesses for enforcing sparseness.
 
     vector<VID> m_inactiveLeaves; ///< The inactive nodes with no children.
@@ -173,7 +173,7 @@ Initialize() {
   const auto graph = this->GetRoadmap()->GetGraph();
   const VID start = graph->GetVID(this->m_query->GetQuery()[0]);
 
-  m_active.insert(start);
+  m_active.push_back(start);
   m_witnesses.push_back(start);
   m_representatives.emplace(make_pair(start, start));
 }
@@ -306,7 +306,7 @@ UpdateSSTStructures(const VID _nearestVID, const VID _newVID,
   // newNode, then newNode is a new witness and its own representative.
   if(witness == INVALID_VID or distance > m_witnessRadius) {
     m_witnesses.push_back(_newVID);
-    m_active.insert(_newVID);
+    m_active.push_back(_newVID);
     m_representatives[_newVID] = _newVID;
 
     if(this->m_debug)
@@ -333,13 +333,17 @@ UpdateSSTStructures(const VID _nearestVID, const VID _newVID,
   }
 
   // The new node is a better representative.
-  auto cit = find(m_active.begin(), m_active.end(), representative);
+  /// @WARNING This depends on the active set being in sorted order. That is
+  ///          guaranteed for now because new configurations always have the
+  ///          largest VID. If STAPL changes that, we need to sort the active
+  ///          set first or use a linear scan.
+  auto cit = std::find(m_active.begin(), m_active.end(), representative);
   if(cit == m_active.end())
     throw RunTimeException(WHERE, "Could not find representative '"
         + std::to_string(representative) + "' in the active set.");
 
   m_active.erase(cit);
-  m_active.insert(_newVID);
+  m_active.push_back(_newVID);
   m_representatives[witness] = _newVID;
 
   // Prune leaf nodes that are inactive.
