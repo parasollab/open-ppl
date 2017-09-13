@@ -210,9 +210,8 @@ FindNearestNeighbor(const CfgType& _cfg) {
       _cfg, back_inserter(neighbors));
 #else
   auto nf = this->GetNeighborhoodFinder(this->m_nfLabel);
-  nf->FindNeighbors(this->GetRoadmap(), g->begin(), g->end(),
-      true,
-      _cfg, back_inserter(neighbors));
+  nf->FindNeighbors(this->GetRoadmap(), m_active.begin(), m_active.end(),
+      true, _cfg, back_inserter(neighbors));
 #endif
 
   // Of the nodes in the radius, select the one with the best path cost.
@@ -225,8 +224,7 @@ FindNearestNeighbor(const CfgType& _cfg) {
       throw RunTimeException(WHERE, "NF should not return bogus nodes.");
 
     // Check if this neighbor has the best cost so far.
-    const double cost = g->GetVertex(n.first).
-        GetStat("cost");
+    const double cost = g->GetVertex(n.first).GetStat("cost");
     if(cost < bestCost) {
       bestCost = cost;
       bestVID = n.first;
