@@ -239,56 +239,43 @@ AddHoles(tetgenio* const _freeModel, const NefPolyhedron& _freespace,
   }
 }
 
-/*-------------------------- Static Initializers -----------------------------*/
-
-TetGenDecomposition::Parameters TetGenDecomposition::m_defaultParams;
-
 /*------------------------------- Construction -------------------------------*/
 
 TetGenDecomposition::
 TetGenDecomposition(const string& _baseFilename)
-    : m_params(m_defaultParams), m_baseFilename(_baseFilename) {}
+    : m_baseFilename(_baseFilename) {}
 
 
 TetGenDecomposition::
-TetGenDecomposition(const string& _baseFilename, const string& _switches,
-    const bool _writeFreeModel, const bool _writeDecompModel,
-    const string& _inputFilename)
-    : TetGenDecomposition(_baseFilename) {
-
-  m_params.inputFilename    = _inputFilename;
-  m_params.switches         = _switches;
-  m_params.writeFreeModel   = _writeFreeModel;
-  m_params.writeDecompModel = _writeDecompModel;
-
+TetGenDecomposition(const string& _baseFilename, Parameters&& _params)
+    : m_params(std::move(_params)), m_baseFilename(_baseFilename) {
   ValidateSwitches(m_params.switches);
 }
 
 
-void
 TetGenDecomposition::
-SetDefaultParameters(XMLNode& _node) {
-  m_defaultParams.inputFilename = _node.Read("decompModelFilename", false,
-      m_defaultParams.inputFilename,
+TetGenDecomposition(XMLNode& _node) {
+  m_params.inputFilename = _node.Read("decompModelFilename", false,
+      m_params.inputFilename,
       "Input filename for reading TetGen models from file");
 
-  m_defaultParams.switches = _node.Read("switches", false,
-      m_defaultParams.switches,
+  m_params.switches = _node.Read("switches", false,
+      m_params.switches,
       "TetGen input parameters. See TetGen manual. Need 'pn' at a minimum");
 
-  m_defaultParams.writeFreeModel = _node.Read("writeFreeModel", false,
-      m_defaultParams.writeFreeModel,
+  m_params.writeFreeModel = _node.Read("writeFreeModel", false,
+      m_params.writeFreeModel,
       "Output TetGen model of workspace");
 
-  m_defaultParams.writeDecompModel = _node.Read("writeDecompModel", false,
-      m_defaultParams.writeDecompModel,
+  m_params.writeDecompModel = _node.Read("writeDecompModel", false,
+      m_params.writeDecompModel,
       "Output TetGen model of tetrahedralization");
 
-  m_defaultParams.debug = _node.Read("debug", false,
-      m_defaultParams.debug,
+  m_params.debug = _node.Read("debug", false,
+      m_params.debug,
       "Show debugging messages");
 
-  ValidateSwitches(m_defaultParams.switches);
+  ValidateSwitches(m_params.switches);
 }
 
 
@@ -300,10 +287,13 @@ TetGenDecomposition::
 
 /*----------------------------- Decomposition --------------------------------*/
 
-shared_ptr<WorkspaceDecomposition>
+const WorkspaceDecomposition*
 TetGenDecomposition::
 operator()(const Environment* _env) {
-  Initialize();
+  // Allocate tetgen structures.
+  m_freeModel = new tetgenio();
+  m_decompModel = new tetgenio();
+
   m_env = _env;
 
   if(!m_params.inputFilename.empty()) {
@@ -338,11 +328,19 @@ operator()(const Environment* _env) {
   if(m_params.debug)
     cout << "Decomposition complete." << endl;
 
-  return MakeDecomposition();
+  auto decomposition = MakeDecomposition();
+
+  // Release tetgen structures.
+  delete m_freeModel;
+  delete m_decompModel;
+  m_freeModel = nullptr;
+  m_decompModel = nullptr;
+
+  return decomposition;
 }
 
 
-shared_ptr<WorkspaceDecomposition>
+const WorkspaceDecomposition*
 TetGenDecomposition::
 MakeDecomposition() {
   // Assert that tetgen actually produced a tetrahedralization and not something
@@ -354,7 +352,7 @@ MakeDecomposition() {
         to_string(numCorners) + ".");
 
   // Make decomposition object.
-  shared_ptr<WorkspaceDecomposition> decomposition(new WorkspaceDecomposition());
+  WorkspaceDecomposition* decomposition(new WorkspaceDecomposition());
 
   // Add points.
   const size_t numPoints = m_decompModel->numberofpoints;
@@ -389,16 +387,6 @@ MakeDecomposition() {
 }
 
 /*------------------------ Freespace Model Creation --------------------------*/
-
-void
-TetGenDecomposition::
-Initialize() {
-  delete m_freeModel;
-  delete m_decompModel;
-  m_freeModel = new tetgenio();
-  m_decompModel = new tetgenio();
-}
-
 
 void
 TetGenDecomposition::

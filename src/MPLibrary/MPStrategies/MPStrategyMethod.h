@@ -119,6 +119,8 @@ template <typename MPTraits>
 void
 MPStrategyMethod<MPTraits>::
 Run() {
+  this->Print(std::cout);
+
   string clockName = this->GetNameAndLabel() + "::Run";
   if(this->m_debug)
     cout << clockName << endl;

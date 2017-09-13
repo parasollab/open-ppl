@@ -91,14 +91,15 @@ class DynamicRegionSampler : public SamplerMethod<MPTraits> {
     ///@name Internal State
     ///@{
 
-    WorkspaceSkeleton m_skeleton;  ///< The workspace skeleton.
-    RegionKit m_regionKit;         ///< Manages regions following the skeleton.
+    WorkspaceSkeleton m_skeleton;     ///< The workspace skeleton.
+    RegionKit m_regionKit;            ///< Manages regions following the skeleton.
 
-    std::string m_samplerLabel;    ///< The sampler label.
-    std::string m_scuLabel;        ///< The skeleton clearance utility label.
+    std::string m_samplerLabel;       ///< The sampler label.
+    std::string m_decompositionLabel; ///< The workspace decomposition label.
+    std::string m_scuLabel;           ///< The skeleton clearance utility label.
 
-    bool m_velocityBiasing{false};  ///< Use velocity biasing?
-    double m_velocityAlignment{.1}; ///< Strength of velocity biasing.
+    bool m_velocityBiasing{false};    ///< Use velocity biasing?
+    double m_velocityAlignment{.1};   ///< Strength of velocity biasing.
 
     bool m_initialized{false};    ///< Have auxiliary structures been initialized?
 
@@ -124,6 +125,9 @@ DynamicRegionSampler(XMLNode& _node) : SamplerMethod<MPTraits>(_node) {
 
   m_samplerLabel = _node.Read("samplerLabel", true, "", "The sampler to use "
       "within regions.");
+
+  m_decompositionLabel = _node.Read("decompositionLabel", true, "",
+      "The workspace decomposition to use.");
 
   m_scuLabel = _node.Read("scuLabel", false, "", "The skeleton clearance utility "
       "to use. If not specified, we use the hack-fix from wafr16.");
@@ -263,8 +267,9 @@ LazyInitialize() {
 
   if(threeD) {
     // Create a workspace skeleton using a reeb graph.
+    auto decomposition = this->GetMPTools()->GetDecomposition(m_decompositionLabel);
     ReebGraphConstruction reeb;
-    reeb.Construct(env, this->GetBaseFilename());
+    reeb.Construct(decomposition, this->GetBaseFilename());
 
     // Create the workspace skeleton.
     m_skeleton = reeb.GetSkeleton();
@@ -297,6 +302,7 @@ LazyInitialize() {
   m_skeleton.Prune(goal);
 
   // Fix the skelton clearance for 3D.
+#if 0 // Broken. Pushing the skeleton should not be done blindly.
   if(threeD) {
     if(!m_scuLabel.empty()) {
       auto util = this->GetMPTools()->GetSkeletonClearanceUtility(m_scuLabel);
@@ -307,13 +313,8 @@ LazyInitialize() {
       util.SetMPLibrary(this->GetMPLibrary());
       util.HackFix(m_skeleton);
     }
-
-    // Print skeleton when debugging.
-    //if(this->m_debug) {
-    //  std::ofstream outfile(this->GetBaseFilename() + ".skeleton");
-    //  m_skeleton.Print(outfile);
-    //}
   }
+#endif
 
   // Initialize the region kit.
   const double robotRadius = this->GetTask()->GetRobot()->GetMultiBody()->

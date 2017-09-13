@@ -366,7 +366,9 @@ Initialize() {
 
 #ifdef VIZMO
   // Add workspace model if we are in vizmo land.
-  GetVizmo().GetEnv()->AddWorkspaceDecompositionModel(env->GetDecomposition());
+  auto regionGraph = this->GetMPTools()->GetTopologicalMap(m_tmLabel)->
+      GetDecomposition();
+  GetVizmo().GetEnv()->AddWorkspaceDecompositionModel(regionGraph);
   GetMainWindow()->GetModelSelectionWidget()->CallResetLists();
 #endif
 
@@ -512,7 +514,8 @@ DiscreteLead() {
   if(this->m_debug)
     cout << "Generating new discrete lead..." << endl;
 
-  auto regionGraph = this->GetEnvironment()->GetDecomposition();
+  auto regionGraph = this->GetMPTools()->GetTopologicalMap(m_tmLabel)->
+      GetDecomposition();
   auto tm = this->GetMPTools()->GetTopologicalMap(m_tmLabel);
 
   // Get start and goal configurations from the query.
@@ -609,7 +612,8 @@ FindAvailableRegions(vector<VID> _lead) {
 
   m_availableRegions.clear();
 
-  auto regionGraph = this->GetEnvironment()->GetDecomposition();
+  auto regionGraph = this->GetMPTools()->GetTopologicalMap(m_tmLabel)->
+      GetDecomposition();
 
   // Work backwards through the lead, adding non-empty regions until we quit or
   // hit the end.
@@ -836,7 +840,8 @@ ComputeFreeVolumes() {
   }
 
   // For each region, compute the approximate free volume using the samples.
-  auto regionGraph = this->GetEnvironment()->GetDecomposition();
+  auto regionGraph = this->GetMPTools()->GetTopologicalMap(m_tmLabel)->
+      GetDecomposition();
   for(auto iter = regionGraph->begin(); iter != regionGraph->end(); ++iter) {
     auto region = &iter->property();
     auto& data = m_regionData[region];

@@ -94,7 +94,8 @@ class WorkspaceImportanceSampler : public SamplerMethod<MPTraits> {
     ///@name Internal State
     ///@{
 
-    string m_vcLabel{"pqp_solid"}; ///< Validity checker label.
+    std::string m_vcLabel{"pqp_solid"}; ///< Validity checker label.
+    std::string m_decompositionLabel;   ///< The workspace decomposition label.
 
     vector<size_t> m_numAttempts;  ///< Number of attempts per tetrahedron
 
@@ -120,7 +121,12 @@ WorkspaceImportanceSampler<MPTraits>::
 WorkspaceImportanceSampler(XMLNode& _node) :
     SamplerMethod<MPTraits>(_node) {
   this->SetName("WorkspaceImportanceSampler");
+
   m_vcLabel = _node.Read("vcLabel", false, m_vcLabel, "Validity Test Method");
+
+  m_decompositionLabel = _node.Read("decompositionLabel", true, "",
+      "The workspace decomposition to use.");
+
   m_alpha = _node.Read("alpha", false,
       m_alpha, numeric_limits<double>::epsilon(), 1.,
       "Eagerness in obtaining one milestone for each tetrahedron");
@@ -156,7 +162,8 @@ Sampler(CfgType& _cfg, const Boundary* const _boundary,
 
   string callee(this->GetNameAndLabel() + "::SampleImpl()");
   Environment* env = this->GetEnvironment();
-  const auto& tetrahedralization = env->GetDecomposition();
+  auto tetrahedralization = this->GetMPTools()->
+      GetDecomposition(m_decompositionLabel);
   auto vc = this->GetValidityChecker(m_vcLabel);
 
   // Pick a tetrahedron with uniform random probability.
@@ -197,11 +204,9 @@ template <typename MPTraits>
 void
 WorkspaceImportanceSampler<MPTraits>::
 InitDecomposition() {
-  // Get the tetrahedralization from the environment.
-  auto env = this->GetEnvironment();
-  if(!env->GetDecomposition())
-    env->Decompose(TetGenDecomposition(this->GetBaseFilename()));
-  auto tetrahedralization = env->GetDecomposition();
+  // Get the tetrahedralization.
+  auto tetrahedralization = this->GetMPTools()->
+      GetDecomposition(m_decompositionLabel);
 
   // Compute tetrahedron importance values.
   const size_t numTetras = tetrahedralization->GetNumRegions();
@@ -270,7 +275,9 @@ ComputeTetrahedronImportance(const size_t _i) const {
   // using that facet as the base.
 
   // Find number of neighbors.
-  auto iter = this->GetEnvironment()->GetDecomposition()->find_vertex(_i);
+  auto tetrahedralization = this->GetMPTools()->
+      GetDecomposition(m_decompositionLabel);
+  auto iter = tetrahedralization->find_vertex(_i);
   size_t numNeighbors = iter->size();
   if(numNeighbors > 4)
     throw PMPLException("Tetrahedralization error", WHERE, "Can't have more than"

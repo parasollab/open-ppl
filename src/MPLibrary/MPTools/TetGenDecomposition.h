@@ -1,7 +1,6 @@
 #ifndef TET_GEN_DECOMPOSITION_H_
 #define TET_GEN_DECOMPOSITION_H_
 
-#include <memory>
 using namespace std;
 
 #include <containers/sequential/graph/graph.h>
@@ -22,6 +21,9 @@ class tetgenio;
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup Utilities
 /// Tetrahedralization of workspace using TetGen library
+///
+/// TetGen offers two levels of courseness - maximally course (default) and
+/// 'quality' (use 'q' in switches.
 ////////////////////////////////////////////////////////////////////////////////
 class TetGenDecomposition {
 
@@ -39,30 +41,23 @@ class TetGenDecomposition {
       bool debug{false};            ///< Toggle debug messages.
     };
 
-    static Parameters m_defaultParams; ///< The default parameters.
-
     ///@}
     ///@name Construction
     ///@{
 
+    TetGenDecomposition() = default;
+
     /// @param _baseFilename Base filename used for all pmpl outputs.
     TetGenDecomposition(const std::string& _baseFilename);
 
-    /// @param _baseFilename Base filename used for all pmpl outputs.
-    /// @param _switches Switches for TetGen. See TetGen manual. Need 'pn' at a
-    ///                  minimum.
-    /// @param _writeFreeModel Output TetGen model of workspace
-    /// @param _writeDecompModel Output TetGen model of tetrahedralization
-    /// @param _inputFilename Input filename for the decomposition model. Empty
-    ///                       means do not read input.
-    TetGenDecomposition(const string& _baseFilename,
-        const std::string& _switches,
-        const bool _writeFreeModel, const bool _writeDecompModel,
-        const std::string& _inputFilename = "");
+    /// Construct a TetGen decomposer with designated parameters.
+    /// @param _baseFilename Base filename used for output files.
+    /// @param _params The input parameters for tetgen.
+    TetGenDecomposition(const std::string& _baseFilename, Parameters&& _params);
 
-    /// Set the default parameters from an XML node.
+    /// Construct a TetGen decomposer from an XML node.
     /// @param _node The XML node to parse.
-    static void SetDefaultParameters(XMLNode& _node);
+    TetGenDecomposition(XMLNode& _node);
 
     ~TetGenDecomposition();
 
@@ -72,19 +67,16 @@ class TetGenDecomposition {
 
     /// Use tetgen to decompose a given environment.
     /// @param _env PMPL Environment as workspace.
-    shared_ptr<WorkspaceDecomposition> operator()(const Environment* _env);
+    const WorkspaceDecomposition* operator()(const Environment* _env);
 
   private:
 
     /// Make a workspace decomposition object from the completed tetgen model.
-    shared_ptr<WorkspaceDecomposition> MakeDecomposition();
+    const WorkspaceDecomposition* MakeDecomposition();
 
     ///@}
     ///@name Freespace Model Creation
     ///@{
-
-    /// Reset the internal structures.
-    void Initialize();
 
     /// Add all vertices and facets to free workspace model
     ///

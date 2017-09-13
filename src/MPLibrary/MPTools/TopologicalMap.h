@@ -5,7 +5,6 @@
 #include <vector>
 
 #include "MPLibrary/MPBaseObject.h"
-#include "MPLibrary/MPTools/TetGenDecomposition.h"
 #include "Utilities/XMLNode.h"
 #include "Workspace/GridOverlay.h"
 #include "Workspace/WorkspaceDecomposition.h"
@@ -104,6 +103,13 @@ class TopologicalMap final : public MPBaseObject<MPTraits> {
     size_t LocateCell(const Point3d& _p) const; ///< @overload
 
     ///@}
+    ///@name Decomposition Access
+    ///@{
+
+    /// Get the decomposition used by this map.
+    const WorkspaceDecomposition* GetDecomposition() const;
+
+    ///@}
 
   private:
 
@@ -125,6 +131,8 @@ class TopologicalMap final : public MPBaseObject<MPTraits> {
     ///@}
     ///@name Internal State
     ///@{
+
+    std::string m_decompositionLabel; ///< The workspace decomposition to use.
 
     /// A grid matrix overlaid on the workspace.
     const GridOverlay* m_grid{nullptr};
@@ -163,6 +171,9 @@ TopologicalMap(XMLNode& _node) : MPBaseObject<MPTraits>(_node) {
       "as we try to map huge quantities of grid cell to workspace region "
       "relations. Over-large values will cause slow mappings as we will need "
       "to check many candidate regions.");
+
+  m_decompositionLabel = _node.Read("decompositionLabel", true, "",
+      "The workspace decomposition to use.");
 }
 
 
@@ -182,19 +193,14 @@ Initialize() {
 
   auto env = this->GetEnvironment();
   auto stats = this->GetStatClass();
-
-  // Make sure the decomposition is available.
-  if(!env->GetDecomposition()) {
-    MethodTimer mt(stats, "TetGenDecomposition");
-    env->Decompose(TetGenDecomposition(this->GetBaseFilename()));
-  }
+  auto decomposition = this->GetMPTools()->GetDecomposition(m_decompositionLabel);
 
   // Initialize the grid and decomposition map.
   delete m_grid;
   m_grid = new GridOverlay(env->GetBoundary(), m_gridSize);
   {
     MethodTimer mt(stats, "GridOverlay::ComputeDecompositionMap");
-    m_cellToRegions = m_grid->ComputeDecompositionMap(env->GetDecomposition());
+    m_cellToRegions = m_grid->ComputeDecompositionMap(decomposition);
   }
 
   // Install roadmap hooks if needed.
@@ -266,7 +272,7 @@ const WorkspaceRegion*
 TopologicalMap<MPTraits>::
 GetRandomRegion() const {
   MethodTimer mt(this->GetStatClass(), "TopologicalMap::GetRandomRegion");
-  auto decomposition = this->GetEnvironment()->GetDecomposition();
+  auto decomposition = this->GetMPTools()->GetDecomposition(m_decompositionLabel);
   return &decomposition->GetRegion(LRand() % decomposition->GetNumRegions());
 }
 
@@ -365,6 +371,14 @@ size_t
 TopologicalMap<MPTraits>::
 LocateCell(const Point3d& _p) const {
   return m_grid->LocateCell(_p);
+}
+
+
+template <typename MPTraits>
+const WorkspaceDecomposition*
+TopologicalMap<MPTraits>::
+GetDecomposition() const {
+  return this->GetMPTools()->GetDecomposition(m_decompositionLabel);
 }
 
 /*-------------------------------- Cfg Mapping -------------------------------*/

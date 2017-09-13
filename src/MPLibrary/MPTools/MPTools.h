@@ -12,6 +12,8 @@
 
 #include "Utilities/XMLNode.h"
 
+class WorkspaceDecomposition;
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// This class is a general tool box for stateful objects that don't belong
@@ -55,6 +57,11 @@ class MPToolsType final {
   LabelMap<MedialAxisUtility> m_medialAxisUtils;
   LabelMap<SkeletonClearanceUtility> m_skeletonUtils;
   LabelMap<TopologicalMap> m_topologicalMaps;
+
+  // Handling of tetgens is really hacky, need to streamline after current
+  // ICRA deadline.
+  std::unordered_map<std::string, TetGenDecomposition> m_tetgens;
+  std::unordered_map<std::string, const WorkspaceDecomposition*> m_decompositions;
 
   ///@}
 
@@ -148,6 +155,21 @@ class MPToolsType final {
         TopologicalMap<MPTraits>* const _utility);
 
     ///@}
+    ///@name Decompositions
+    ///@{
+
+    /// Get a decomposition.
+    /// @param _label The label of the decomposition to use.
+    const WorkspaceDecomposition* GetDecomposition(const std::string& _label);
+
+    /// Set a workspace decomposition by label. This object will take ownership
+    /// the decomposition and delete it when necessary.
+    /// @param _label The label for this decomposition.
+    /// @param _decomposition The decomposition object to set.
+    void SetDecomposition(const std::string& _label,
+        const WorkspaceDecomposition* _decomposition);
+
+    ///@}
 
   private:
 
@@ -179,8 +201,7 @@ MPToolsType<MPTraits>::
 ParseXML(XMLNode& _node) {
   // For the tools that use the XML to set defaults, keep track of whether we've
   // seen them before.
-  bool parsedTetGen = false,
-       parsedReebGraph = false;
+  bool parsedReebGraph = false;
 
   // MPTools shouldn't have any data of its own, only child nodes.
   for(auto& child : _node) {
@@ -227,13 +248,17 @@ ParseXML(XMLNode& _node) {
       SetTopologicalMap(utility->GetLabel(), utility);
     }
     else if(child.Name() == "TetGenDecomposition") {
-      if(parsedTetGen)
-        throw ParseException(child.Where(),
-            "Second TetGenDecomposition node detected. This node sets default "
-            "parameters - only one is allowed.");
-      parsedTetGen = true;
+      // Parse the label and check that it is unique.
+      const std::string label = child.Read("label", true, "",
+          "The label for this decomposition.");
 
-      TetGenDecomposition::SetDefaultParameters(child);
+      if(m_decompositions.count(label))
+        throw ParseException(child.Where(), "Second decomposition node "
+            "with the label " + label + ". Labels must be unique across all "
+            "types of decomposition.");
+
+      m_tetgens[label] = TetGenDecomposition(child);
+      SetDecomposition(label, nullptr);
     }
     else if(child.Name() == "ReebGraphConstruction") {
       if(parsedReebGraph)
@@ -347,6 +372,40 @@ MPToolsType<MPTraits>::
 SetTopologicalMap(const std::string& _label,
     TopologicalMap<MPTraits>* const _utility) {
   SetUtility(_label, _utility, m_topologicalMaps);
+}
+
+/*----------------------------- Decompositions -------------------------------*/
+
+template <typename MPTraits>
+const WorkspaceDecomposition*
+MPToolsType<MPTraits>::
+GetDecomposition(const std::string& _label) {
+  // Initialize the decomposition if not already.
+  auto iter = m_decompositions.find(_label);
+  if(iter->second == nullptr) {
+    MethodTimer mt(m_library->GetStatClass(), "TetGenDecomposition::" + _label);
+    iter->second = m_tetgens[_label](m_library->GetMPProblem()->GetEnvironment());
+  }
+  return iter->second;
+}
+
+
+template <typename MPTraits>
+void
+MPToolsType<MPTraits>::
+SetDecomposition(const std::string& _label,
+    const WorkspaceDecomposition* _decomposition) {
+  // If a decomposition was already assigned to this label, delete it before
+  // storing the new one.
+  auto iter = m_decompositions.find(_label);
+  const bool alreadyExists = iter != m_decompositions.end();
+
+  if(alreadyExists) {
+    delete iter->second;
+    iter->second = _decomposition;
+  }
+  else
+    m_decompositions[_label] = _decomposition;
 }
 
 /*---------------------------------- Helpers ---------------------------------*/

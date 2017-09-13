@@ -317,10 +317,9 @@ FindCandidateRegions(const CfgType& _cfg) const {
     std::cout << "Locating regions for cfg at " << _cfg.GetPoint()
               << std::endl;
 
-  auto decomposition = this->GetEnvironment()->GetDecomposition();
-
   // Find the cell that _cfg lives in.
   auto tm = this->GetMPTools()->GetTopologicalMap(m_tmLabel);
+  auto decomposition = tm->GetDecomposition();
   const WorkspaceRegion* rootRegion = tm->LocateRegion(_cfg);
 
   // Check for invalid region. If so, _cfg is in obstacle space. Don't bother
@@ -408,7 +407,7 @@ ComputePopulatedFrontier(const VD _root) const {
       "TopologicalFilter::ComputePopulatedFrontier");
 
   auto tm = this->GetMPTools()->GetTopologicalMap(m_tmLabel);
-  auto decomposition = this->GetEnvironment()->GetDecomposition();
+  auto decomposition = tm->GetDecomposition();
 
   std::unordered_map<VD, bool> populated;
   std::vector<VD> result;
@@ -549,7 +548,9 @@ ComputeSSSP(const WorkspaceRegion& _goalRegion) {
   m_scores.clear();
   m_childMap.clear();
   m_dagMap.clear();
-  auto decomposition = this->GetEnvironment()->GetDecomposition();
+
+  auto decomposition = this->GetMPTools()->GetTopologicalMap(m_tmLabel)->
+      GetDecomposition();
 
   // Build a weight map to represent the distances between decomposition regions,
   // where the weight between cells is the euclidean distance from cell center ->
@@ -559,7 +560,7 @@ ComputeSSSP(const WorkspaceRegion& _goalRegion) {
   for(auto edge = decomposition->edges_begin();
       edge != decomposition->edges_end(); ++edge) {
     // Ensure there is exactly one facet between each pair of regions.
-    WorkspacePortal& portal = edge->property();
+    const WorkspacePortal& portal = edge->property();
     auto facets = portal.FindFacets();
     if(facets.size() > 1)
       throw RunTimeException(WHERE, "This implementation assumes that the "

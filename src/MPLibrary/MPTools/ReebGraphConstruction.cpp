@@ -12,8 +12,6 @@
 #include "Workspace/WorkspaceSkeleton.h"
 #include "Utilities/XMLNode.h"
 
-#include "MPLibrary/MPTools/TetGenDecomposition.h"
-
 
 /*------------------------- Static Initializers ------------------------------*/
 
@@ -51,11 +49,12 @@ SetDefaultParameters(XMLNode& _node) {
 
 void
 ReebGraphConstruction::
-Construct(Environment* const _env, const string& _baseFilename) {
+Construct(const WorkspaceDecomposition* _decomposition,
+    const string& _baseFilename) {
   if(m_params.filename.empty()) {
-    Tetrahedralize(_env, _baseFilename);
+    Initialize(_decomposition);
     Construct();
-    Embed(_env);
+    Embed(_decomposition);
 
     if(m_params.write)
       Write(_baseFilename + ".reeb");
@@ -117,21 +116,16 @@ Write(const string& _filename) {
 
 void
 ReebGraphConstruction::
-Tetrahedralize(Environment* const _env, const string& _baseFilename) {
-  // Get tetrahedral decomposition from environment.
-  if(!_env->GetDecomposition())
-    _env->Decompose(TetGenDecomposition(_baseFilename));
-  auto tetrahedralization = _env->GetDecomposition();
-
+Initialize(const WorkspaceDecomposition* _tetrahedralization) {
   // Copy vertices.
-  m_vertices = tetrahedralization->GetPoints();
+  m_vertices = _tetrahedralization->GetPoints();
 
   // Copy triangular faces from tetrahedrons. We want a mapping from each
   // triangle to the pair of tetrahedra bordering it.
   map<Triangle, unordered_set<size_t>> triangles;
   size_t count = 0;
-  for(auto tetra = tetrahedralization->begin();
-      tetra != tetrahedralization->end(); ++tetra) {
+  for(auto tetra = _tetrahedralization->begin();
+      tetra != _tetrahedralization->end(); ++tetra) {
     for(const auto& facet : tetra->property().GetFacets()) {
       // Sort point indexes so opposite-facing triangles have the same
       // representation.
@@ -407,9 +401,12 @@ Remove2Nodes() {
 
 void
 ReebGraphConstruction::
-Embed(Environment* _env) {
-  auto tetrahedralization = _env->GetDecomposition();
-  auto& dualGraph = tetrahedralization->GetDualGraph();
+Embed(const WorkspaceDecomposition* _tetrahedralization) {
+  /// @TODO We must cast away the constness here due to STAPL problems with
+  ///       const-qualified vertex references. If STAPL ever fixes that, we can
+  ///       get rid of this.
+  WorkspaceDecomposition* t = const_cast<WorkspaceDecomposition*>(_tetrahedralization);
+  auto& dualGraph = t->GetDualGraph();
 
   // Embed ReebNodes in freespace by finding its closest adjacent tetrahedron.
   for(auto rit = m_reebGraph.begin(); rit != m_reebGraph.end(); ++rit) {
@@ -420,7 +417,7 @@ Embed(Environment* _env) {
     // Check each dual graph node for proximity to this reeb graph node.
     for(auto dit = dualGraph.begin(); dit != dualGraph.end(); ++dit) {
       // Make sure the associated workspace region includes this reebNode.
-      if(!tetrahedralization->GetRegion(dit->descriptor()).HasPoint(reebNode))
+      if(!_tetrahedralization->GetRegion(dit->descriptor()).HasPoint(reebNode))
         continue;
       const double dist = (dit->property() - reebNode).norm();
       if(dist < minDist) {
@@ -509,7 +506,7 @@ Embed(Environment* _env) {
       arc.m_path.push_back(dualGraph.find_vertex(*current)->property());
 
       // Get the facets that join the current and next tetrahedron.
-      const auto& portal = tetrahedralization->GetPortal(*current, *next);
+      const auto& portal = _tetrahedralization->GetPortal(*current, *next);
       const auto facets = portal.FindFacets();
       if(facets.size() > 1)
         throw PMPLException("ReebGraph error", WHERE, "A portal between "

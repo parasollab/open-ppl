@@ -15,6 +15,7 @@ using namespace mathtool;
 #include "Utilities/IOUtils.h"
 
 class Environment;
+class WorkspaceDecomposition;
 class WorkspaceSkeleton;
 class XMLNode;
 
@@ -246,10 +247,11 @@ class ReebGraphConstruction {
     ///@name Operations
     ///@{
 
-    /// Construct a Reeb graph of an environment.
-    /// @param _env The PMPL environment.
+    /// Construct a Reeb graph of an environment decomposition.
+    /// @param _decomposition The workspace decomposition to use.
     /// @param _baseFilename Base filename used for saving models
-    void Construct(Environment* const _env, const string& _baseFilename = "");
+    void Construct(const WorkspaceDecomposition* _decomposition,
+        const string& _baseFilename = "");
 
     /// Extract a workspace skeleton from the Reeb graph.
     /// @TODO Make this a const function if STAPL ever fixes the sequential
@@ -282,12 +284,9 @@ class ReebGraphConstruction {
     ///@name Construction Helpers
     ///@{
 
-    /// Tetrahedralize environment and populate ReebGraph structures for
-    /// construction
-    /// @param _env Environment
-    /// @param _baseFilename Base filename used for saving models
-    void Tetrahedralize(Environment* const _env,
-        const std::string& _baseFilename);
+    /// Populate ReebGraph structures for construction
+    /// @param _decomposition The workspace decomposition to use.
+    void Initialize(const WorkspaceDecomposition* _decomposition);
 
     /// Construct Reeb Graph based on algorithm presented in class description
     ///
@@ -383,7 +382,7 @@ class ReebGraphConstruction {
     /// Embedding algorithm relates each Reeb Node to its closest tetrahedron
     /// and finds an embedded ReebArc by biasing a path search in the
     /// tetrahedralization's dual graph.
-    void Embed(Environment* _env);
+    void Embed(const WorkspaceDecomposition* _tetrahedralization);
 
     /// Make sure every node is unique.
     void Uniqueify();

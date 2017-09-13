@@ -147,7 +147,8 @@ HackFix(WorkspaceSkeleton& _skeleton) const {
   auto getClearanceInfo = [&](const Point3d& _p) -> pair<double, Point3d> {
     // Check against obstacles using a point robot.
     CfgType cfg(_p, pointRobot);
-    CDInfo cdInfo(true);
+    const bool onlyConsiderBoundary = true;
+    CDInfo cdInfo(!onlyConsiderBoundary);
     vc->IsValid(cfg, cdInfo, "Skeleton Push");
 
     // Check against boundary.
