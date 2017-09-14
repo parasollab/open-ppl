@@ -262,7 +262,7 @@ TetGenDecomposition(XMLNode& _node) {
       "files for a decomposition with .node and .ele extensions. This is the "
       "base name for those files.");
 
-  std::string ioType = _node.Read("io", false, "", "The I/O operation to use "
+  std::string ioType = _node.Read("io", false, "none", "The I/O operation to use "
       "(read, write, none).");
 
   // Parse the string into an enumerated type and check for errors.
@@ -454,13 +454,12 @@ SaveFreeModel() {
 void
 TetGenDecomposition::
 SaveDecompModel() {
-  string basename = m_baseFilename + ".decomposed";
-
   if(m_debug)
-    cout << "Saving tetgen decomposition model with base name '" << basename
-         << "'" << endl;
+    cout << "Saving tetgen decomposition model with base name '"
+         << m_baseFilename << "'"
+         << endl;
 
-  char* b = const_cast<char*>(basename.c_str());
+  char* b = const_cast<char*>(m_baseFilename.c_str());
   m_decompModel->save_nodes(b);
   m_decompModel->save_elements(b);
   //m_decompModel->save_neighbors(b);
