@@ -42,7 +42,7 @@ class RegionKit final {
       ED edgeDescriptor;     ///< Descriptor of the edge the region is traveling.
       size_t edgeIndex{0};   ///< Region is at this index on the skeleton edge.
       size_t successes{0};   ///< Number of valid samples in this region.
-      size_t attempts{0};    ///< Number of sampling attempts in this region.
+      size_t attempts{1};    ///< Number of sampling attempts in this region.
       double weight{0};      ///< Ratio of successful samples to total samples.
 
       ///@}
