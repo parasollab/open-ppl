@@ -242,47 +242,43 @@ AddHoles(tetgenio* const _freeModel, const NefPolyhedron& _freespace,
 /*------------------------------- Construction -------------------------------*/
 
 TetGenDecomposition::
-TetGenDecomposition(const string& _baseFilename)
-    : m_baseFilename(_baseFilename) {}
-
-
-TetGenDecomposition::
-TetGenDecomposition(const string& _baseFilename, Parameters&& _params)
-    : m_params(std::move(_params)), m_baseFilename(_baseFilename) {
-  ValidateSwitches(m_params.switches);
+TetGenDecomposition(const string& _switches, const std::string& _baseFilename)
+    : m_switches(_switches), m_baseFilename(_baseFilename) {
+  ValidateSwitches(m_switches);
+  if(!m_baseFilename.empty())
+    m_ioType = Read;
 }
 
 
 TetGenDecomposition::
 TetGenDecomposition(XMLNode& _node) {
-  m_params.inputFilename = _node.Read("decompModelFilename", false,
-      m_params.inputFilename,
-      "Input filename for reading TetGen models from file");
+  m_switches = _node.Read("switches", false, m_switches,
+      "TetGen input parameters. See TetGen manual. Need 'pn' at a minimum. "
+      "Use 'q' for quality (finer-grained) tetrahedra. 'Q' for quiet. "
+      "'r' for read input.");
 
-  m_params.switches = _node.Read("switches", false,
-      m_params.switches,
-      "TetGen input parameters. See TetGen manual. Need 'pn' at a minimum");
+  m_baseFilename = _node.Read("baseFilename", false, m_baseFilename,
+      "Specify a file name to read or write a decomposition. There are two "
+      "files for a decomposition with .node and .ele extensions. This is the "
+      "base name for those files.");
 
-  m_params.writeFreeModel = _node.Read("writeFreeModel", false,
-      m_params.writeFreeModel,
-      "Output TetGen model of workspace");
+  std::string ioType = _node.Read("io", false, "", "The I/O operation to use "
+      "(read, write, none).");
 
-  m_params.writeDecompModel = _node.Read("writeDecompModel", false,
-      m_params.writeDecompModel,
-      "Output TetGen model of tetrahedralization");
+  // Parse the string into an enumerated type and check for errors.
+  std::transform(ioType.begin(), ioType.end(), ioType.begin(), ::tolower);
+  if(ioType == "read")
+    m_ioType = Read;
+  else if(ioType == "write")
+    m_ioType = Write;
+  else if(ioType != "none")
+    throw ParseException(_node.Where(), "Unrecognized IO operation '" + ioType +
+        "'.");
 
-  m_params.debug = _node.Read("debug", false,
-      m_params.debug,
-      "Show debugging messages");
+  m_debug = _node.Read("debug", false, m_debug, "Show debugging messages, "
+      "and also write the freespace model if we are writing.");
 
-  ValidateSwitches(m_params.switches);
-}
-
-
-TetGenDecomposition::
-~TetGenDecomposition() {
-  delete m_freeModel;
-  delete m_decompModel;
+  ValidateSwitches(m_switches);
 }
 
 /*----------------------------- Decomposition --------------------------------*/
@@ -290,42 +286,45 @@ TetGenDecomposition::
 const WorkspaceDecomposition*
 TetGenDecomposition::
 operator()(const Environment* _env) {
+  const bool readFile  = !m_baseFilename.empty() and m_ioType == Read,
+             writeFile = !m_baseFilename.empty() and m_ioType == Write;
+
   // Allocate tetgen structures.
   m_freeModel = new tetgenio();
   m_decompModel = new tetgenio();
 
-  m_env = _env;
-
-  if(!m_params.inputFilename.empty()) {
+  if(readFile) {
     LoadDecompModel();
 
-    if(m_params.debug)
+    if(m_debug)
       cout << "\tRunning tetgen with switches 'rnQ'..." << endl;
 
     tetrahedralize(const_cast<char*>("rnQ"), m_decompModel, m_decompModel);
   }
   else {
-    if(m_params.debug)
+    if(m_debug)
       cout << "Decomposing environment with tetgen..."
            << endl;
 
-    MakeFreeModel();
-    if(m_params.writeFreeModel)
+    MakeFreeModel(_env);
+
+    // We usually don't want to write the free space - only do this in debug
+    // mode.
+    if(writeFile and m_debug)
       SaveFreeModel();
 
-    if(m_params.debug)
-      std::cout << "\tRunning tetgen with switches '" << m_params.switches
+    if(m_debug)
+      std::cout << "\tRunning tetgen with switches '" << m_switches
                 << "'..." << std::endl;
 
-    tetrahedralize(const_cast<char*>(m_params.switches.c_str()),
+    tetrahedralize(const_cast<char*>(m_switches.c_str()),
         m_freeModel, m_decompModel);
-    if(m_params.writeDecompModel)
+
+    if(writeFile)
       SaveDecompModel();
   }
 
-  m_env = nullptr;
-
-  if(m_params.debug)
+  if(m_debug)
     cout << "Decomposition complete." << endl;
 
   auto decomposition = MakeDecomposition();
@@ -378,7 +377,7 @@ MakeDecomposition() {
     }
   }
 
-  if(m_params.debug)
+  if(m_debug)
     std::cout << "\tNumber of points: " << numPoints << std::endl
               << "\tNumber of tetras: " << numTetras << std::endl;
 
@@ -390,26 +389,26 @@ MakeDecomposition() {
 
 void
 TetGenDecomposition::
-MakeFreeModel() {
-  if(m_params.debug)
+MakeFreeModel(const Environment* _env) {
+  if(m_debug)
     cout << "Creating free model..." << endl
          << "\tAdding boundary..." << endl;
 
   // Initialize the freespace model as an outward-facing boundary.
-  auto cp = m_env->GetBoundary()->CGAL();
+  auto cp = _env->GetBoundary()->CGAL();
   NefPolyhedron freespace(cp);
 
   // Subtract each obstacle from the freespace.
-  for(size_t i = 0; i < m_env->NumObstacles(); ++i) {
-    if(m_params.debug)
+  for(size_t i = 0; i < _env->NumObstacles(); ++i) {
+    if(m_debug)
       cout << "\tAdding obstacle " << i << "..." << endl;
 
-    StaticMultiBody* obst = m_env->GetObstacle(i);
+    StaticMultiBody* obst = _env->GetObstacle(i);
     if(!obst->IsInternal()) {
       // Make CGAL representation of this obstacle.
       auto ocp = obst->GetFixedBody(0)->GetWorldPolyhedron().CGAL();
 
-      if(m_params.debug)
+      if(m_debug)
         cout << "\t\tobstacle is " << (ocp.is_closed() ? "" : "not ")
              << "closed" << endl;
 
@@ -419,9 +418,9 @@ MakeFreeModel() {
   }
 
   // Add free model to tetgen structure.
-  AddVertices(m_freeModel, freespace, m_params.debug);
-  AddFacets(m_freeModel, freespace, m_params.debug);
-  AddHoles(m_freeModel, freespace, m_env, m_params.debug);
+  AddVertices(m_freeModel, freespace, m_debug);
+  AddFacets(m_freeModel, freespace, m_debug);
+  AddHoles(m_freeModel, freespace, _env, m_debug);
 }
 
 
@@ -442,7 +441,7 @@ TetGenDecomposition::
 SaveFreeModel() {
   string basename = m_baseFilename + ".freespace";
 
-  if(m_params.debug)
+  if(m_debug)
     cout << "Saving tetgen free space model with base name '" << basename << "'"
          << endl;
 
@@ -457,7 +456,7 @@ TetGenDecomposition::
 SaveDecompModel() {
   string basename = m_baseFilename + ".decomposed";
 
-  if(m_params.debug)
+  if(m_debug)
     cout << "Saving tetgen decomposition model with base name '" << basename
          << "'" << endl;
 
@@ -471,9 +470,9 @@ SaveDecompModel() {
 void
 TetGenDecomposition::
 LoadDecompModel() {
-  string basename = MPProblem::GetPath(m_params.inputFilename);
+  string basename = MPProblem::GetPath(m_baseFilename);
 
-  if(m_params.debug)
+  if(m_debug)
     cout << "Loading tetgen files with base name '" << basename << "'"
          << endl;
 

@@ -23,23 +23,11 @@ class tetgenio;
 /// Tetrahedralization of workspace using TetGen library
 ///
 /// TetGen offers two levels of courseness - maximally course (default) and
-/// 'quality' (use 'q' in switches.
+/// 'quality' (use 'q' in switches).
 ////////////////////////////////////////////////////////////////////////////////
 class TetGenDecomposition {
 
   public:
-
-    ///@name Types
-    ///@{
-
-    /// The input parameters for this object.
-    struct Parameters {
-      std::string inputFilename;    ///< Input file name, if any.
-      std::string switches{"pnQ"};  ///< See TetGen manual, need at least 'pn'.
-      bool writeFreeModel{false};   ///< Output model of free workspace.
-      bool writeDecompModel{false}; ///< Output tetrahedralization.
-      bool debug{false};            ///< Toggle debug messages.
-    };
 
     ///@}
     ///@name Construction
@@ -47,19 +35,16 @@ class TetGenDecomposition {
 
     TetGenDecomposition() = default;
 
-    /// @param _baseFilename Base filename used for all pmpl outputs.
-    TetGenDecomposition(const std::string& _baseFilename);
-
-    /// Construct a TetGen decomposer with designated parameters.
-    /// @param _baseFilename Base filename used for output files.
-    /// @param _params The input parameters for tetgen.
-    TetGenDecomposition(const std::string& _baseFilename, Parameters&& _params);
+    /// Create a TetGen decomposer manually. If a base file name is provided,
+    /// output the decomposed model.
+    /// @param _switches The switches to use.
+    /// @param _baseFilename Base filename for output files.
+    TetGenDecomposition(const std::string& _switches,
+        const std::string& _baseFilename = "");
 
     /// Construct a TetGen decomposer from an XML node.
     /// @param _node The XML node to parse.
     TetGenDecomposition(XMLNode& _node);
-
-    ~TetGenDecomposition();
 
     ///@}
     ///@name Decomposition
@@ -82,7 +67,7 @@ class TetGenDecomposition {
     ///
     /// Add obstacles at holes in free workspace model and boundary as the
     /// actual polyhedron.
-    void MakeFreeModel();
+    void MakeFreeModel(const Environment* _env);
 
     ///@}
     ///@name IO Helpers
@@ -106,10 +91,13 @@ class TetGenDecomposition {
     ///@name Internal State
     ///@{
 
-    Parameters m_params;               ///< Input parameters for this instance.
+    std::string m_switches{"pnQ"};  ///< See TetGen manual, need at least 'pn'.
 
-    const Environment* m_env{nullptr}; ///< PMPL Environment.
-    std::string m_baseFilename;        ///< PMPL base filename.
+    enum IOOperation {Read, Write, None}; ///< Types of I/O operation.
+    IOOperation m_ioType{None};           ///< Read or write model to file?
+    std::string m_baseFilename;           ///< Base file name for I/O.
+
+    bool m_debug{false};               ///< Toggle debug messages.
 
     tetgenio* m_freeModel{nullptr};    ///< TetGen model of free workspace.
     tetgenio* m_decompModel{nullptr};  ///< TetGen model of tetrahedralization.
