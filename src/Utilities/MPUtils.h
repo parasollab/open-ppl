@@ -372,20 +372,30 @@ struct NullOutputIterator : std::iterator<std::output_iterator_tag,
 
 };
 
-template <class RandomIterator, class T, class Compare = std::less<T> >
-RandomIterator BinarySearch(RandomIterator _start, RandomIterator _end, const T& _val, Compare _cmp = Compare()) {
-  auto start = _start;
+
+////////////////////////////////////////////////////////////////////////////////
+/// Search a random-access container using binary search. Needed for std::vector
+/// because std::find cannot know whether the elements are sorted without doing
+/// a linear scan.
+////////////////////////////////////////////////////////////////////////////////
+template <class RandomIterator, class T, class Compare = std::less<T>>
+RandomIterator
+BinarySearch(RandomIterator _begin, RandomIterator _end, const T& _value,
+    Compare _comparator = Compare()) {
+  auto start = _begin;
   auto end = _end;
+
   while(start != end) {
-    size_t mid = (size_t) (end - start) / 2;
-    RandomIterator midIter =  start;
-    std::advance(midIter, mid);
-    if(_val == *midIter)
-      return midIter;
-    if(_cmp(_val, *midIter))
-      end = midIter;
+    const size_t mid = (size_t) (end - start) / 2;
+    RandomIterator middle = start;
+    std::advance(middle, mid);
+
+    if(_value == *middle)
+      return middle;
+    if(_comparator(_value, *middle))
+      end = middle;
     else
-      start = midIter;
+      start = middle;
   }
   return _end;
 }

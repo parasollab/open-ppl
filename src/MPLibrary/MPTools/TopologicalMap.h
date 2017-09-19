@@ -21,12 +21,6 @@
 ///
 /// @WARNING The current implementation assumes that the workspace decomposition
 ///          will not change once created. If this occurs, the maps must be reset.
-///
-/// @TODO Eventually we should add support for multiple decompositions so that
-///       we can make use of different topological maps. Parse/access support is
-///       there in MPTools, we just need a way to use something other than one
-///       decomposition in the environment. Maybe decompositions should live
-///       here, and we should make enabling the map a flag?
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
 class TopologicalMap final : public MPBaseObject<MPTraits> {
@@ -78,6 +72,11 @@ class TopologicalMap final : public MPBaseObject<MPTraits> {
     /// @param _vid The VID of interest.
     /// @return The workspace region in which _vid resides.
     const WorkspaceRegion* GetMappedRegion(const VID _vid) const;
+
+    /// Check if a region is populated.
+    /// @param _region The region to check.
+    /// @return True if the region is populated.
+    bool IsPopulated(const WorkspaceRegion* const _region) const;
 
     ///@}
     ///@name Region and Cell Location
@@ -264,6 +263,15 @@ const WorkspaceRegion*
 TopologicalMap<MPTraits>::
 GetMappedRegion(const VID _vid) const {
   return m_vidToRegion.at(_vid);
+}
+
+
+template <typename MPTraits>
+bool
+TopologicalMap<MPTraits>::
+IsPopulated(const WorkspaceRegion* const _region) const {
+  auto iter = m_regionToVIDs.find(_region);
+  return iter != m_regionToVIDs.end() and !iter->second.empty();
 }
 
 

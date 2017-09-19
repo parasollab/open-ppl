@@ -111,6 +111,13 @@ class WorkspaceDecomposition : public stapl::sequential::graph<stapl::DIRECTED,
     void Finalize();
 
     ///@}
+    ///@name I/O
+    ///@{
+
+    /// Write the decomposition graph to an output stream.
+    void Print(std::ostream& _os) const;
+
+    ///@}
 
   private:
 

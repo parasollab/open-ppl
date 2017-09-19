@@ -84,6 +84,24 @@ Finalize() {
   m_finalized = true;
 }
 
+
+void
+WorkspaceDecomposition::
+Print(std::ostream& _os) const {
+  // Print counts.
+  _os << "WorkspaceDecomposition " << this
+      << "\n\tNum vertices: " << this->get_num_vertices()
+      << "\n\tNum edges: " << this->get_num_edges();
+
+  for(auto vi = this->begin(); vi != this->end(); ++vi) {
+    _os << "\n\t  Vertex " << vi->descriptor() << " " << &vi->property(); /// @TODO print properties
+    for(auto ei = vi->begin(); ei != vi->end(); ++ei)
+      _os << "\n\t    Edge to " << ei->target();
+  }
+
+  _os << std::endl;
+}
+
 /*------------------------------ Helpers -------------------------------------*/
 
 void

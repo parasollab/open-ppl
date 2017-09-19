@@ -273,8 +273,13 @@ FindNearestNeighbor(const CfgType& _goal) {
   m_highestCheckedVID = highestVID;
 
   if(this->m_debug)
-    cout << "\t\t\tFound nearest node " << neighbors.back().first << " at "
-         << "distance " << neighbors.back().second << "." << endl;
+    if(neighbors.empty())
+      std::cout << "\t\t\tNo nearest neighbor found."
+                << std::endl;
+    else
+      std::cout << "\t\t\tFound nearest node " << neighbors.back().first << " at "
+                << "distance " << neighbors.back().second << "."
+                << std::endl;
 
   if(neighbors.empty())
     return make_pair(INVALID_VID, numeric_limits<double>::max());
