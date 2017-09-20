@@ -395,8 +395,11 @@ FindCandidateRegions(const CfgType& _cfg) {
   if(this->m_debug)
     std::cout << "\tFirst populated cell " << *beginIter
               << " in order " << std::distance(ordering.begin(), beginIter)
-              << " has distance " << std::setprecision(4) << distances.at(*beginIter)
-              << ", max distance is " << std::setprecision(4) << maxDistance
+              << " has distance "
+              << std::setprecision(4) << distances.at(*beginIter)
+              << ", max distance is "
+              << std::setprecision(4) << maxDistance
+              << ".\n\tSearching for new last cell."
               << std::endl;
 
   auto endIter = ordering.end();
@@ -405,16 +408,19 @@ FindCandidateRegions(const CfgType& _cfg) {
     auto midpoint = iter;
     midpoint += (endIter - iter) / 2;
 
-    std::cout << "\titer: " << *iter
-              << ", " << std::setprecision(4) << distances.at(*iter)
-              << "\tmid:  " << *midpoint
-              << ", " << std::setprecision(4) << distances.at(*midpoint);
-    if(endIter == ordering.end())
-      std::cout << "\tend = end iter";
-    else
-      std::cout << "\tend:  " << *endIter
-                << ", " << std::setprecision(4) << distances.at(*endIter);
-    std::cout << std::endl;
+    if(this->m_debug) {
+      std::cout << "\titer: " << *iter
+                << ", " << std::setprecision(4) << distances.at(*iter)
+                << "\tmid:  " << *midpoint
+                << ", " << std::setprecision(4) << distances.at(*midpoint)
+                << "\tend:  ";
+      if(endIter == ordering.end())
+        std::cout << "end iter";
+      else
+        std::cout << *endIter
+                  << ", " << std::setprecision(4) << distances.at(*endIter);
+      std::cout << std::endl;
+    }
 
     if(distances.at(*midpoint) > maxDistance)
       endIter = midpoint;
@@ -546,7 +552,9 @@ LazyInitialize() {
                  target = ei->target();
         // If the target has a higher score, it is a child in the successor
         // pseudo-DAG.
-        if(sssp.distances.at(source) <= sssp.distances.at(target))
+        if(sssp.distances.count(source) and
+            sssp.distances.count(target) and
+            sssp.distances.at(source) <= sssp.distances.at(target))
           m_queryMap[source].push_back(target);
       }
     }
