@@ -85,7 +85,7 @@ Extend(const CfgType& _start, const CfgType& _end, CfgType& _new,
 
   // Get an obstacle vector from the colliding triangle
   int cIndex = cdInfo.m_collidingObstIndex;
-  int obsContactIndex = cdInfo.m_rapidContactID2;
+  int obsContactIndex = cdInfo.m_trianglePairs[0].second;
   if( cIndex == -1 ) {
     cIndex = LRand() % env->NumObstacles();
     obsContactIndex = -1;

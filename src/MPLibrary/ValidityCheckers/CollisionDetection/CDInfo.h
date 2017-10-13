@@ -1,8 +1,11 @@
 #ifndef CD_INFO_H_
 #define CD_INFO_H_
 
+#include <utility>
+#include <vector>
+
 #include "Vector.h"
-#include<vector>
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Information returned by validity checkers, e.g., distance from obstacles.
@@ -32,8 +35,10 @@ struct CDInfo {
                                     ///< obstacle
   mathtool::Vector3d m_objectPoint; ///< Closest point on closest obstacle to
                                     ///< Robot
-  int m_rapidContactID1;            ///< Triangle on robot in collision
-  int m_rapidContactID2;            ///< Triangle on obstacle in collision
+
+  typedef std::pair<int, int> CollisionPair;
+
+  std::vector<CollisionPair> m_trianglePairs; ///< All colliding triangle pairs.
 };
 
 #endif

@@ -16,8 +16,7 @@ ResetVars(bool _retAllInfo) {
   m_minDist = std::numeric_limits<double>::max();
   m_robotPoint(0, 0, 0);
   m_objectPoint(0, 0, 0);
-  m_rapidContactID1 = -1;
-  m_rapidContactID2 = -1;
+  m_trianglePairs.clear();
 }
 
 bool

@@ -60,7 +60,22 @@ IsInCollision(const Body* const _body1, const Body* const _body2,
     _cdInfo.m_robotPoint = t1 * result.P1();
     _cdInfo.m_objectPoint = t2 * result.P2();
 
-    return result.Distance() <= 0.0;
+    const bool inCollision = result.Distance() <= 0.0;
+
+    if(inCollision) {
+      // Now do a collision check to get all colliding triangle pairs.
+      PQP_CollideResult result;
+      if(PQP_Collide(&result,
+            t1.rotation().matrix(), t1.translation(), body1,
+            t2.rotation().matrix(), t2.translation(), body2,
+            PQP_ALL_CONTACTS))
+        throw RunTimeException(WHERE, "PQP_ERR_COLLIDE_OUT_OF_MEMORY");
+
+      for(int i = 0; i < result.NumPairs(); ++i)
+        _cdInfo.m_trianglePairs.emplace_back(result.Id1(i), result.Id2(i));
+    }
+
+    return inCollision;
   }
   else {
     PQP_CollideResult result;
@@ -69,6 +84,9 @@ IsInCollision(const Body* const _body1, const Body* const _body2,
           t2.rotation().matrix(), t2.translation(), body2,
           PQP_FIRST_CONTACT))
       throw RunTimeException(WHERE, "PQP_ERR_COLLIDE_OUT_OF_MEMORY");
+
+    if(result.Colliding())
+      _cdInfo.m_trianglePairs.emplace_back(result.Id1(0), result.Id2(0));
 
     return result.Colliding();
   }

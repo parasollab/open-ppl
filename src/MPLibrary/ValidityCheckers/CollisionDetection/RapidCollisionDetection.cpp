@@ -42,26 +42,28 @@ IsInCollision(const Body* const _body1, const Body* const _body2,
 
   auto body1 = _body1->GetRapidBody();
   auto body2 = _body2->GetRapidBody();
-  /// @TODO See if we can modify RAPID_Collide to take const double arrays
-  ///       instead of just double arrays so we don't have to copy.
+  /// @TODO See if we can avoid the copy here with a const cast.
   //const Transformation& t1 = _body1->GetWorldTransformation();
   //const Transformation& t2 = _body2->GetWorldTransformation();
   Transformation t1 = _body1->GetWorldTransformation();
   Transformation t2 = _body2->GetWorldTransformation();
 
+  const int flag = _cdInfo.m_retAllInfo ? RAPID_ALL_CONTACTS
+                                        : RAPID_FIRST_CONTACT;
+
   if(RAPID_Collide(
         t1.rotation().matrix(), t1.translation(), body1,
         t2.rotation().matrix(), t2.translation(), body2,
-        RAPID_FIRST_CONTACT))
+        flag))
+  {
     throw RunTimeException(WHERE, "RAPID_ERR_COLLIDE_OUT_OF_MEMORY");
-
-  if(RAPID_num_contacts) {
-    _cdInfo.m_rapidContactID1 = RAPID_contact[0].id1;
-    _cdInfo.m_rapidContactID2 = RAPID_contact[0].id2;
-    return true;
   }
 
-  return false;
+  for(int i = 0; i < RAPID_num_contacts; ++i)
+    _cdInfo.m_trianglePairs.emplace_back(RAPID_contact[i].id1,
+                                         RAPID_contact[i].id2);
+
+  return RAPID_num_contacts;
 }
 
 /*----------------------------------------------------------------------------*/
