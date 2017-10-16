@@ -6,6 +6,7 @@
 #include "BulletDynamics/Featherstone/btMultiBody.h"
 #include "MPProblem/Robot/Robot.h"
 #include "MPProblem/Robot/DynamicsModel.h"
+#include "MPProblem/Robot/HardwareInterfaces/HardwareInterface.h"
 
 
 /*------------------------------ Construction --------------------------------*/
@@ -183,6 +184,13 @@ SetNextControls() {
   // Store the edge and set the number of steps.
   m_edge = &ei->property();
   m_stepsRemaining = m_edge->GetTimeSteps();
+
+  // If there is a hardware robot attached to our simulation, send it the
+  // commands also.
+  auto hardwareInterface = m_robot->GetHardwareInterface();
+  if(hardwareInterface)
+    hardwareInterface->EnqueueCommand(m_edge->GetControlSet(),
+        m_stepsRemaining * m_robot->GetMPProblem()->GetEnvironment()->GetTimeRes());
 
   if(m_debug) {
     std::cout << "New controls selected for the next " << m_stepsRemaining

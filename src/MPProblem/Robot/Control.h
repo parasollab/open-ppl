@@ -58,6 +58,9 @@ struct Control final {
   ///@{
 
   /// Ask the actuator to compute the generalized force for this control.
+  /// @TODO We now support more dynamics models, so this is not always a force.
+  ///       It needs to be renamed to 'GetOutput' or 'GetDelta' or something
+  ///       else that doesn't imply it is always a force.
   std::vector<double> GetForce() const;
 
   ///@}

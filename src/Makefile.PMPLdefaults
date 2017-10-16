@@ -267,12 +267,13 @@ $(GLVIS_LIBFILE):
 ################################################################################
 
 PHYSICAL_ROBOTS_DIR := $(UTILS_DIR)/physicalrobots
+PLAYER_DIR          := $(PHYSICAL_ROBOTS_DIR)/player/build/install
 
 ifneq ($(icreate), 0)
-  PHYSICAL_ROBOTS_DEF  := -DPMPL_USE_ICREATE
-  PHYSICAL_ROBOTS_INCL := -I$(PHYSICAL_ROBOTS_DIR)/src
-  PHYSICAL_ROBOTS_LIBS := -L$(PHYSICAL_ROBOTS_DIR)/src -lcreate_controller \
-			  -L$(PHYSICAL_ROBOTS_DIR)/player/build/install/lib64 \
+  PHYSICAL_ROBOTS_DEF  := -DPMPL_USE_ICREATE \
+                          -DBOOST_SIGNALS_NO_DEPRECATION_WARNING
+  PHYSICAL_ROBOTS_INCL := -I$(PLAYER_DIR)/include/player-3.0
+  PHYSICAL_ROBOTS_LIBS := -L$(PLAYER_DIR)/lib64 \
 			  -lplayerc++ -lplayerc -lplayercommon -lplayercore \
 			  -lplayerinterface -lplayerjpeg -lplayertcp -lplayerudp \
 			  -lplayerwkb \
@@ -290,7 +291,8 @@ $(PHYSICAL_ROBOTS_LIBFILE):
 # Simulator
 ################################################################################
 SIM_INCL := $(BULLET_INCL) $(GLVIS_INCL) $(PHYSICAL_ROBOTS_INCL) $(QT_INCL)
-SIM_LIBS := $(BULLET_LIB) $(GLVIS_LIBS) $(PHYSICAL_ROBOTS_LIBS) $(QT_LIBS) $(GL_LIBS) -lpthread
+SIM_LIBS := $(BULLET_LIB) $(GLVIS_LIBS) $(PHYSICAL_ROBOTS_LIBS) $(QT_LIBS) \
+            $(GL_LIBS) -lpthread
 
 
 SIM_OBJS := \
@@ -298,14 +300,9 @@ SIM_OBJS := \
   Behaviors/Agents/PathFollowingAgent.o \
   Behaviors/Agents/RoadmapFollowingAgent.o \
   Behaviors/Agents/Agent.o \
-  Behaviors/Agents/NullAgent.o \
   Simulator/Simulation.o \
   Visualization/DrawableBody.o \
   Visualization/DrawableMultiBody.o
-
-ifneq ($(icreate), 0)
-  SIM_OBJS += Behaviors/Agents/ICreateAgent.o
-endif
 
 ################################################################################
 # PMPL
@@ -363,6 +360,8 @@ PMPL_OBJS := \
   MPProblem/Robot/Control.o \
   MPProblem/Robot/DynamicsModel.o \
   MPProblem/Robot/Robot.o \
+  MPProblem/Robot/HardwareInterfaces/HardwareInterface.o \
+  MPProblem/Robot/HardwareInterfaces/ServerQueueInterface.o \
   Simulator/BulletEngine.o \
   Utilities/CountingStreamBuffer.o \
   Utilities/IOUtils.o \
@@ -375,3 +374,7 @@ PMPL_OBJS := \
   Workspace/WorkspacePortal.o \
   Workspace/WorkspaceRegion.o \
   Workspace/WorkspaceSkeleton.o
+
+ifneq ($(icreate), 0)
+  PMPL_OBJS += MPProblem/Robot/HardwareInterfaces/ICreateInterface.o
+endif

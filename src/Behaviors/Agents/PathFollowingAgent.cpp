@@ -5,6 +5,7 @@
 #include "Behaviors/Controllers/ControllerMethod.h"
 #include "MPProblem/Robot/Robot.h"
 #include "MPProblem/Robot/DynamicsModel.h"
+#include "MPProblem/Robot/HardwareInterfaces/HardwareInterface.h"
 
 
 /*------------------------------ Construction --------------------------------*/
@@ -110,6 +111,12 @@ Step(const double _dt) {
   auto bestControl = m_robot->GetController()->operator()(current,
       m_path[m_pathIndex], _dt);
   bestControl.Execute();
+
+  // If there is a hardware robot attached to our simulation, send it the
+  // commands also.
+  auto hardwareInterface = m_robot->GetHardwareInterface();
+  if(hardwareInterface)
+    hardwareInterface->EnqueueCommand({bestControl}, _dt);
 }
 
 

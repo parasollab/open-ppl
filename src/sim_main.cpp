@@ -1,6 +1,5 @@
 #include "Behaviors/Agents/PathFollowingAgent.h"
 #include "Behaviors/Agents/RoadmapFollowingAgent.h"
-#include "Behaviors/Agents/ICreateAgent.h"
 #include "MPLibrary/PMPL.h"
 #include "Simulator/Simulation.h"
 #include "sandbox/gui/main_window.h"
@@ -20,10 +19,6 @@ main(int _argc, char** _argv) {
     // use the roadmap data (control sets between each pair of cfgs in roadmap).
     if(!robot->IsNonholonomic())
       robot->SetAgent(new PathFollowingAgent(robot));
-#ifdef PMPL_USE_ICREATE
-    else if(_argc == 4)
-      robot->SetAgent(new ICreateAgent(robot, _argv[3]));
-#endif
     else
       robot->SetAgent(new RoadmapFollowingAgent(robot));
 

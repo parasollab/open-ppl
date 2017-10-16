@@ -16,6 +16,7 @@ class Boundary;
 class ControllerMethod;
 class CSpaceBoundingBox;
 class DynamicsModel;
+class HardwareInterface;
 class MPProblem;
 class XMLNode;
 
@@ -65,6 +66,8 @@ class Robot {
 
   CSpaceBoundingBox* m_cspace{nullptr};    ///< The robot's configuration space.
   CSpaceBoundingBox* m_vspace{nullptr};    ///< The robot's velocity space.
+
+  HardwareInterface* m_hardware{nullptr};  ///< An interface to a hardware robot.
 
   ///@}
 
@@ -173,6 +176,14 @@ class Robot {
 
     DynamicsModel* GetDynamicsModel() noexcept;
     void SetDynamicsModel(btMultiBody* const _m);
+
+    ///@}
+    ///@name Hardware Interface
+    ///@{
+    /// Access the interface to the hardware robot (if any).
+
+    HardwareInterface* GetHardwareInterface() const noexcept;
+    void SetHardwareInterface(HardwareInterface* const _i) noexcept;
 
     ///@}
     ///@name Other Properties

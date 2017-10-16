@@ -5,6 +5,8 @@
 
 #include "Actuator.h"
 #include "DynamicsModel.h"
+#include "HardwareInterfaces/HardwareInterface.h"
+
 #include "Behaviors/Agents/Agent.h"
 #include "Behaviors/Controllers/ControllerMethod.h"
 #include "ConfigurationSpace/Cfg.h"
@@ -71,6 +73,11 @@ Robot(MPProblem* const _p, XMLNode& _node) : m_problem(_p) {
   if(IsNonholonomic())
     m_dynamicsModel = new DynamicsModel(this, nullptr);
 
+  for(auto& child : _node) {
+    if(child.Name() == "HardwareInterface")
+      SetHardwareInterface(HardwareInterfaceFactory(child));
+  }
+
   // The agent should be initialized by the Simulation object to avoid long
   // compile times for this object.
   m_agentLabel = _node.Read("agent", false, "", "Label for the agent type");
@@ -89,10 +96,11 @@ Robot(MPProblem* const _p, ActiveMultiBody* const _mb, const std::string& _label
 
 Robot::
 ~Robot() noexcept {
-  delete m_multibody;
+  delete m_hardware;
   delete m_agent;
   delete m_controller;
   delete m_dynamicsModel;
+  delete m_multibody;
 
   for(auto& a : m_actuators)
     delete a.second;
@@ -314,6 +322,22 @@ Robot::
 SetDynamicsModel(btMultiBody* const _m) {
   delete m_dynamicsModel;
   m_dynamicsModel = new DynamicsModel(this, _m);
+}
+
+/*---------------------------- Hardware Interface ----------------------------*/
+
+HardwareInterface*
+Robot::
+GetHardwareInterface() const noexcept {
+  return m_hardware;
+}
+
+
+void
+Robot::
+SetHardwareInterface(HardwareInterface* const _i) noexcept {
+  delete m_hardware;
+  m_hardware = _i;
 }
 
 /*------------------------------- Other --------------------------------------*/
