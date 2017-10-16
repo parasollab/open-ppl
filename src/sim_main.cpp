@@ -22,6 +22,7 @@ main(int _argc, char** _argv) {
     else
       robot->SetAgent(new RoadmapFollowingAgent(robot));
 
+    // Test commit mailer.
     // Position the robot by sampling from the first task.
     /// @TODO Decide on a way to declare the starting configuration either
     ///       explicitly or from a specific task. For now we will assume that
