@@ -180,6 +180,7 @@ PerformSubQuery(const CfgType& _start, const CfgType& _goal) {
          << "\tto   " << _goal << endl;
 
   VID start = this->GetRoadmap()->GetGraph()->GetVID(_start);
+  cout << "VID of start " << start << endl;
   pair<VID, double> nearest;
   bool success = false;
 
@@ -200,7 +201,6 @@ PerformSubQuery(const CfgType& _start, const CfgType& _goal) {
     nearest = ExtendToGoal(nearest, _goal);
     success = nearest.first != INVALID_VID && nearest.second <= m_goalDist;
   }
-
   if(success) {
     this->GeneratePath(start, nearest.first);
     if(this->m_debug)

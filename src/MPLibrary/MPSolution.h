@@ -31,8 +31,10 @@ class MPSolutionType final {
     ///@name Roadmap Accessors
     ///@{
 
-    RoadmapType* GetRoadmap() noexcept;
-    RoadmapType* GetBlockRoadmap() noexcept;
+    void SetRoadmap(RoadmapType* const _r) noexcept;
+    RoadmapType* GetRoadmap() const noexcept;
+    Robot* GetRobot() const noexcept;   ///< Probably will be deleted, not sure yet.
+    RoadmapType* GetBlockRoadmap() const noexcept;
 
     ///@}
     ///@name Path Accessors
@@ -87,10 +89,10 @@ MPSolutionType<MPTraits>::
 
 template <typename MPTraits>
 inline
-typename MPTraits::RoadmapType*
+void
 MPSolutionType<MPTraits>::
-GetRoadmap() noexcept {
-  return m_freeMap;
+SetRoadmap(RoadmapType* const _r) noexcept {
+  m_freeMap->SetGraph(_r->GetGraph());
 }
 
 
@@ -98,7 +100,25 @@ template <typename MPTraits>
 inline
 typename MPTraits::RoadmapType*
 MPSolutionType<MPTraits>::
-GetBlockRoadmap() noexcept {
+GetRoadmap() const noexcept {
+  return m_freeMap;
+}
+
+
+template <typename MPTraits>
+inline
+Robot*
+MPSolutionType<MPTraits>::
+GetRobot() const noexcept {
+  return m_robot;
+}
+
+
+template <typename MPTraits>
+inline
+typename MPTraits::RoadmapType*
+MPSolutionType<MPTraits>::
+GetBlockRoadmap() const noexcept {
   return m_obstMap;
 }
 

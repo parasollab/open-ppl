@@ -2,6 +2,7 @@
 #define MULTI_BODY_H_
 
 #include "Body.h"
+#include "glutils/color.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 /// A geometric object in workspace (such as an obstacle or robot) with one or
@@ -107,6 +108,7 @@ class MultiBody {
     ///          configuration.
     void FindMultiBodyInfo();
 
+    glutils::color m_color = glutils::color::blue;
   protected:
 
     ///@name Internal State

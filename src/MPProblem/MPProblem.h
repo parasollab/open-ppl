@@ -4,6 +4,7 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <unordered_map>
 
 class ActiveMultiBody;
 class Environment;
@@ -85,6 +86,12 @@ class MPProblem final
 
     /// Get all of the tasks in this problem.
     const std::vector<MPTask*>& GetTasks() const noexcept;
+    const std::vector<MPTask*>& GetTasks(Robot* const) const noexcept;
+
+    /// Add a task to the problem for a given robot.
+    /// @param _robot The robot to which the new task is assigned.
+    /// @param _task The new task.
+    void AddTask(Robot* const _robot, MPTask* const _task);
 
     ///@}
     ///@name Debugging
@@ -124,6 +131,9 @@ class MPProblem final
     std::vector<Robot*> m_robots;         ///< The robots in our problem.
     Robot* m_pointRobot{nullptr};         ///< A pseudo point-robot.
     std::vector<MPTask*> m_tasks;         ///< The tasks in our problem.
+
+    /// @TODO Replace m_tasks with this when it is at 100%.
+    std::unordered_map<Robot*, std::vector<MPTask*>> m_taskMap;   /// Map to keep track of the tasks assigned to robots
 
     ///@}
     ///@name Files

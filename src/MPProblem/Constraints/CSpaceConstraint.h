@@ -21,6 +21,8 @@ class CSpaceConstraint : public Constraint {
     ///@name Construction
     ///@{
 
+    CSpaceConstraint(Robot* const, const Cfg&);
+    CSpaceConstraint(Robot* const, const std::string&);
     CSpaceConstraint(Robot* const, XMLNode&);
 
     virtual ~CSpaceConstraint() = default;

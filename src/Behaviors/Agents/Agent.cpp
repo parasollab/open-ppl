@@ -1,7 +1,6 @@
 #include "Agent.h"
 
 #include <iostream>
-
 #include "BulletDynamics/Featherstone/btMultiBody.h"
 #include "BulletDynamics/Featherstone/btMultiBodyLink.h"
 #include "MPProblem/Robot/DynamicsModel.h"
@@ -16,9 +15,19 @@ Agent(Robot* const _r) : m_robot(_r) { }
 
 
 Agent::
-~Agent() = default;
+~Agent() {
+  delete m_task;
+}
 
-/*----------------------------- Model Affectors ------------------------------*/
+/*----------------------------- Accessors ------------------------------------*/
+
+Robot*
+Agent::
+GetRobot() const noexcept {
+  return m_robot;
+}
+
+/*---------------------------- Simulation Interface --------------------------*/
 
 void
 Agent::
@@ -52,6 +61,21 @@ Halt() {
     std::cout << "\nRoadmap finished."
               << "\nAll velocity DOFs set to 0 for visual inspection."
               << std::endl;
+}
+
+
+void
+Agent::
+SetCurrentTask(MPTask* const _task) {
+  delete m_task;
+  m_task = _task;
+}
+
+
+const MPTask*
+Agent::
+GetCurrentTask() const noexcept {
+  return m_task;
 }
 
 /*----------------------------------------------------------------------------*/

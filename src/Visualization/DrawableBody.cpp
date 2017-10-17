@@ -47,7 +47,8 @@ void
 DrawableBody::
 build() {
   /// @TODO Set color from pmpl body.
-  glColor3fv(glutils::color::blue);
+  auto color = m_body->GetBodyColor();
+  glColor3fv(color);
   build_select();
 }
 

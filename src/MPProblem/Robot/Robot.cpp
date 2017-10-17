@@ -36,6 +36,9 @@ Robot(MPProblem* const _p, XMLNode& _node) : m_problem(_p) {
   // Get the (optional) car-likeness, assuming not car-like.
   m_carlike = _node.Read("carlike", false, false, "Is the robot car-like?");
 
+  //std::string color = _node.Read("color", false, "1 0 0 1", "Color of the robot in simulation");
+  //this->GetMultiBody()->GetBody(i)->SetBodyColor(color);
+
   // Get the multibody file name and make sure it exists.
   const std::string path = GetPathName(_node.Filename());
   const std::string file = _node.Read("filename", true, "", "Robot file name");
@@ -374,6 +377,13 @@ const std::string&
 Robot::
 GetLabel() const noexcept {
   return m_label;
+}
+
+
+void
+Robot::
+SetLabel(const std::string& _l) {
+  m_label = _l;
 }
 
 /*---------------------------------- Debug -----------------------------------*/

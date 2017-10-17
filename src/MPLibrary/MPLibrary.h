@@ -603,6 +603,7 @@ Solve(MPProblem* _problem, MPTask* _task, MPSolution* _solution) {
 
   for(auto& solver : m_solvers)
     RunSolver(solver);
+  cout << "Done solving :D " << endl;
 }
 
 

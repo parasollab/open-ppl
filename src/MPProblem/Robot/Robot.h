@@ -204,6 +204,9 @@ class Robot {
     /// Get the unique label for this robot.
     const std::string& GetLabel() const noexcept;
 
+    /// Change the robot's unique label.
+    void SetLabel(const std::string&);
+
     ///@}
     ///@name Debug
     ///@{

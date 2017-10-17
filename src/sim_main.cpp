@@ -1,5 +1,7 @@
+#include "MPProblem/Constraints/CSpaceConstraint.h"
 #include "Behaviors/Agents/PathFollowingAgent.h"
 #include "Behaviors/Agents/RoadmapFollowingAgent.h"
+#include "Behaviors/Agents/AgentGroup.h"
 #include "MPLibrary/PMPL.h"
 #include "Simulator/Simulation.h"
 #include "sandbox/gui/main_window.h"
@@ -18,17 +20,28 @@ main(int _argc, char** _argv) {
     // If it's a nonholonomic robot, use the nonholonomic agent to correctly
     // use the roadmap data (control sets between each pair of cfgs in roadmap).
     if(!robot->IsNonholonomic())
-      robot->SetAgent(new PathFollowingAgent(robot));
+      //robot->SetAgent(new PathFollowingAgent(robot));
+      robot->SetAgent(new AgentGroup(robot));
     else
-      robot->SetAgent(new RoadmapFollowingAgent(robot));
+      robot->SetAgent(new AgentGroup(robot));
+      //robot->SetAgent(new RoadmapFollowingAgent(robot));
 
-    // Test commit mailer.
     // Position the robot by sampling from the first task.
     /// @TODO Decide on a way to declare the starting configuration either
     ///       explicitly or from a specific task. For now we will assume that
     ///       the first task is a query and its start boundary is a single point.
-    auto startBoundary = problem->GetTasks().front()->GetStartBoundary();
-    robot->GetMultiBody()->Configure(startBoundary->GetCenter());
+    
+    for(auto r: problem->GetRobots()) {
+      auto startBoundary = problem->GetTasks(r).front()->GetStartBoundary();
+      r->GetMultiBody()->Configure(startBoundary->GetCenter());
+      for(size_t i=0; i< r->GetMultiBody()->GetNumBodies();i++) {
+        float c1 = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
+        float c2 = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
+        float c3 = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
+        glutils::color c = {c1, c2, c3, 1.};
+        r->GetMultiBody()->GetBody(i)->SetBodyColor(c);
+      }
+    }
 
     // Make simulation object.
     Simulation simulation(problem);

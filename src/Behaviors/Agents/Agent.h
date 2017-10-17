@@ -1,6 +1,8 @@
 #ifndef AGENT_H_
 #define AGENT_H_
 
+#include "MPProblem/MPTask.h"
+
 class Robot;
 
 
@@ -20,6 +22,7 @@ class Agent {
 
     Robot* const m_robot;              ///< The robot that this agent controls.
     mutable bool m_initialized{false}; ///< Is the agent initialized?
+    MPTask* m_task{nullptr};    ///< The current task this agent is working on.
 
     bool m_debug{false};               ///< Toggle debug messages.
 
@@ -33,6 +36,13 @@ class Agent {
     Agent(Robot* const _r);
 
     virtual ~Agent();
+
+    ///@}
+    ///@name Accessors
+    ///@{
+
+    /// Get the robot object which this agent belongs to.
+    virtual Robot* GetRobot() const noexcept;
 
     ///@}
     ///@name Simulation Interface
@@ -56,6 +66,14 @@ class Agent {
     /// a roadmap path.
     virtual void Halt();
 
+    /// Set the current task for this agent. The agent will take ownership of
+    /// the task and delete it when appropriate.
+    /// @param _task The new current task for this agent.
+    /// @TODO Make sure we handle transfering tasks from problem -> agent
+    ///       correctly.
+    virtual void SetCurrentTask(MPTask* const _task);
+
+    const MPTask* GetCurrentTask() const noexcept;
     ///@}
 
 };

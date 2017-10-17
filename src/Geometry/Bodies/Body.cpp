@@ -121,6 +121,18 @@ GetColor() const {
   return m_color;
 }
 
+const glutils::color&
+Body::
+GetBodyColor() const {
+  return m_bodyColor;
+}
+
+void
+Body::
+SetBodyColor(const glutils::color& _m) {
+  m_bodyColor = _m;
+}
+
 
 bool
 Body::

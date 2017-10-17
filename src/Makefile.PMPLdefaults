@@ -272,7 +272,8 @@ PLAYER_DIR          := $(PHYSICAL_ROBOTS_DIR)/player/build/install
 ifneq ($(icreate), 0)
   PHYSICAL_ROBOTS_DEF  := -DPMPL_USE_ICREATE \
                           -DBOOST_SIGNALS_NO_DEPRECATION_WARNING
-  PHYSICAL_ROBOTS_INCL := -I$(PLAYER_DIR)/include/player-3.0
+  PHYSICAL_ROBOTS_INCL := -I$(PLAYER_DIR)/include/player-3.0 \
+                          -I$(PHYSICAL_ROBOTS_DIR)/tcp
   PHYSICAL_ROBOTS_LIBS := -L$(PLAYER_DIR)/lib64 \
 			  -lplayerc++ -lplayerc -lplayercommon -lplayercore \
 			  -lplayerinterface -lplayerjpeg -lplayertcp -lplayerudp \
@@ -298,8 +299,12 @@ SIM_LIBS := $(BULLET_LIB) $(GLVIS_LIBS) $(PHYSICAL_ROBOTS_LIBS) $(QT_LIBS) \
 SIM_OBJS := \
   $(PMPL_DIR)/sim_main.o \
   Behaviors/Agents/PathFollowingAgent.o \
+  Behaviors/Agents/PathFollowingChildAgent.o \
   Behaviors/Agents/RoadmapFollowingAgent.o \
   Behaviors/Agents/Agent.o \
+  Behaviors/Agents/Battery.o \
+  Behaviors/Agents/ICreateChildAgent.o \
+  Behaviors/Agents/AgentGroup.o \
   Simulator/Simulation.o \
   Visualization/DrawableBody.o \
   Visualization/DrawableMultiBody.o
@@ -318,6 +323,7 @@ PMPL_OBJS := \
   Behaviors/Controllers/ControlSetGenerators.o \
   Behaviors/Controllers/PIDFeedback.o \
   Behaviors/Controllers/SimpleController.o \
+  Behaviors/Controllers/ICreateController.o \
   ConfigurationSpace/Cfg.o \
   Geometry/GMSPolygon.o \
   Geometry/GMSPolyhedron.o \

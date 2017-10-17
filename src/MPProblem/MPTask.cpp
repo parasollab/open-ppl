@@ -65,6 +65,20 @@ GetRobot() const noexcept {
   return m_robot;
 }
 
+
+const std::string&
+MPTask::
+GetLabel() const noexcept {
+  return m_label;
+}
+
+
+void
+MPTask::
+SetLabel(const std::string& _label) {
+  m_label = _label;
+}
+
 /*-------------------------- Constraint Accessors ----------------------------*/
 
 void
@@ -129,6 +143,30 @@ GetGoalBoundary() const noexcept {
   return MakeComposeBoundary(m_goalConstraints);
 }
 
+
+void
+MPTask::
+SetCompleted(bool _v) {
+  m_completed = _v;
+}
+
+bool
+MPTask::
+IsCompleted() {
+  return m_completed;
+}
+
+bool
+MPTask::
+Started() {
+  return m_started;
+}
+
+void
+MPTask::
+SetStarted(bool _v) {
+  m_started = _v;
+}
 /*---------------------------- Constraint Evaluation -------------------------*/
 
 MPTask::Status

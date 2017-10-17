@@ -71,6 +71,12 @@ class MPTask final {
     /// Get the robot associated with this task.
     Robot* GetRobot() const noexcept;
 
+    /// Get the unique label for this task.
+    const std::string& GetLabel() const noexcept;
+
+    /// Set the unique label for this task.
+    void SetLabel(const std::string& _label);
+
     ///@}
     ///@name Constraint Accessors
     ///@{
@@ -114,6 +120,14 @@ class MPTask final {
     /// @return True if the ending point of _p satisfies all goal constraints.
     bool EvaluateGoalConstraints(const std::vector<Cfg>& _p) const;
 
+    void SetCompleted(bool _v);
+
+    void SetStarted(bool _v);
+
+    bool IsCompleted();
+
+    bool Started();
+
     ///@}
 
   private:
@@ -144,6 +158,9 @@ class MPTask final {
     Robot* m_robot{nullptr};      ///< The robot (group) assigned to this task.
     /// @TODO Change this to a robot group when that code is ready.
     //RobotGroup* m_group{nullptr}; ///< The robot group assigned to this task.
+
+    bool m_completed{false};             /// See if the task has been completed
+    bool m_started{false};
 
     std::vector<Constraint*> m_startConstraints; ///< Req'd to start task.
     std::vector<Constraint*> m_pathConstraints;  ///< Req'd during whole task.

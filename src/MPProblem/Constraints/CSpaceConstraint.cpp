@@ -12,6 +12,30 @@
 
 
 /*------------------------------ Construction --------------------------------*/
+CSpaceConstraint::
+CSpaceConstraint(Robot* const _r, const Cfg& _cfg)
+  : Constraint(_r),
+    m_bbx(_r->GetMultiBody()->DOF() * (_r->IsNonholonomic() ? 2 : 1))
+{
+    // This is a point constraint.
+    Cfg point(_r);
+    point = _cfg;
+
+    m_bbx.ShrinkToPoint(point);
+}
+
+CSpaceConstraint::
+CSpaceConstraint(Robot* const _r, const std::string& _pointString)
+  : Constraint(_r),
+    m_bbx(_r->GetMultiBody()->DOF() * (_r->IsNonholonomic() ? 2 : 1))
+{
+    // This is a point constraint.
+    Cfg point(_r);
+    std::istringstream pointStream(_pointString);
+    point.Read(pointStream);
+
+    m_bbx.ShrinkToPoint(point);
+}
 
 CSpaceConstraint::
 CSpaceConstraint(Robot* const _r, XMLNode& _node)

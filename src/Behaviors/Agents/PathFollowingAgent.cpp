@@ -44,9 +44,26 @@ Initialize() {
   // Use the planning library to find a path.
   m_library->Solve(problem, task, solution);
 
+  m_hardwareController = new ICreateController(m_robot, 1,1);
   // Extract the path from the solution.
   m_path = solution->GetPath()->Cfgs();
   delete solution;
+}
+
+
+void 
+PathFollowingAgent::
+UpdateOdometry(const double& _x, const double& _y, const double& _angle) {
+  m_odometry[0] = _x;
+  m_odometry[1] = _y;
+  m_odometry[2] += _angle;
+
+  //If angle is greater than 2pi then subtract 2pi from the angle.
+  if(m_odometry[2] >= 2*M_PI)
+    m_odometry[2] = m_odometry[2] - 2*M_PI;
+  //If angle is less than 2pi then add 2pi to the angle.
+  else if(m_odometry[2] <= -2*M_PI)
+    m_odometry[2] = m_odometry[2] + 2*M_PI;
 }
 
 
@@ -114,9 +131,10 @@ Step(const double _dt) {
 
   // If there is a hardware robot attached to our simulation, send it the
   // commands also.
+  auto hardwareControl = m_hardwareController->operator()(current, m_path[m_pathIndex], m_odometry[2]);
   auto hardwareInterface = m_robot->GetHardwareInterface();
   if(hardwareInterface)
-    hardwareInterface->EnqueueCommand({bestControl}, _dt);
+    hardwareInterface->EnqueueCommand({hardwareControl}, _dt);
 }
 
 

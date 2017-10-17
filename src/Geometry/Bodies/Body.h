@@ -7,6 +7,7 @@
 #include "Transformation.h"
 using namespace mathtool;
 
+#include "glutils/color.h"
 #include "Geometry/GMSPolyhedron.h"
 #include "Utilities/Color.h"
 #include "Utilities/MPUtils.h"
@@ -79,6 +80,9 @@ class Body {
     /// Get the loaded color.
     const Color4& GetColor() const;
 
+    const glutils::color& GetBodyColor() const;
+    /// Set the color for the body
+    void SetBodyColor(const glutils::color& _c);
     /// Check if a texture was loaded.
     bool IsTextureLoaded() const;
 
@@ -190,6 +194,7 @@ class Body {
     string m_filename;                       ///< Geometry filename.
 
     Color4 m_color;                          ///< Optionally specified color
+    glutils::color m_bodyColor = glutils::color::blue;                          ///< Optionally specified color
     bool m_colorLoaded{false};               ///< Was color option set?
 
     string m_textureFile;                    ///< Optionally specified texture

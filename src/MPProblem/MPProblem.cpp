@@ -111,6 +111,14 @@ ReadXMLFile(const string& _filename) {
 }
 
 
+void
+MPProblem::
+AddTask(Robot* const _robot, MPTask* const _task) {
+  m_tasks.push_back(_task);
+  m_taskMap[_robot].push_back(_task);
+}
+
+
 bool
 MPProblem::
 ParseChild(XMLNode& _node) {
@@ -137,6 +145,9 @@ ParseChild(XMLNode& _node) {
   else if(_node.Name() == "Task") {
     MPTask* newTask = new MPTask(this, _node);
     m_tasks.push_back(newTask);
+    auto label = _node.Read("robot", true, "", "Label for the robot assigned to"
+      " this task.");
+    m_taskMap[this->GetRobot(label)].push_back(newTask);
     return true;
   }
   else
@@ -207,6 +218,13 @@ MPProblem::
 GetTasks() const noexcept {
   return m_tasks;
 }
+
+const std::vector<MPTask*>&
+MPProblem::
+GetTasks(Robot* const _robot) const noexcept {
+  return m_taskMap.at(_robot);
+}
+
 
 /*-------------------------------- Debugging ---------------------------------*/
 

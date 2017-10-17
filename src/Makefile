@@ -2,7 +2,7 @@
 
 # Set platform, debug mode, and parallel compile if not already set.
 platform ?= LINUX_gcc
-debug    ?= 0
+debug    ?= 1
 parallel ?= 0
 
 # Temporary setting for making vizmo-compatible maps for nonholonomic robots.
@@ -12,7 +12,7 @@ vizmo_map := #-DVIZMO_MAP
 ROBOT_DEF ?= PMPCfg
 
 # Build the controller for iCreate?
-icreate ?= 0
+icreate ?= 1
 
 # Directory Layout ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
