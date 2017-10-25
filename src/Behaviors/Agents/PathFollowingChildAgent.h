@@ -54,6 +54,8 @@ class PathFollowingChildAgent : public Agent {
 
     bool IsAtChargingStation();
 
+    void ClearChargingStation();
+
     void FindNearestChargingLocation();
 
     void ExecuteTask(double _dt);
@@ -101,6 +103,10 @@ class PathFollowingChildAgent : public Agent {
 
     void AvoidCollision();
 
+    double GetPathLength(vector<Cfg>& path);
+
+    double EuclideanDistance(Cfg point1, Cfg point2);
+
     //@}
 
   protected:
@@ -120,8 +126,6 @@ class PathFollowingChildAgent : public Agent {
     static vector<Cfg> m_AllRoadmapPoints;
 
     static unordered_map<Robot*, Cfg> m_HelpersAvailable;
-
-    static vector<std::string> m_chargingLocations;
 
     bool m_done{false};
 

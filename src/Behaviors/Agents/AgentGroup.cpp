@@ -43,7 +43,7 @@ GetHelpers() {
 }
 
 
-std::vector<Cfg>&
+std::vector<pair<Cfg, bool>>&
 AgentGroup::
 GetChargingLocations() {
   return m_chargingLocations;
@@ -76,15 +76,15 @@ Initialize() {
   int priority = 1;
   for (auto robot : childRobots){
     auto agent = new PathFollowingChildAgent(robot);
-    if(robot->GetLabel() == "helper") {
+    if(robot->GetLabel().compare(0, 6, "helper") == 0) {
       cout << "Agent group is adding helpers " << endl;
       auto helperPos = robot->GetDynamicsModel()->GetSimulatedState();
-      m_chargingLocations.push_back(helperPos);
+      m_chargingLocations.push_back(make_pair(helperPos, true));
       m_availableHelpers.push_back(robot);
-      agent->m_priority = priority++;
+      agent->m_priority = 0;
     }
     else{
-      agent->m_priority = 1000 + priority;
+      agent->m_priority = 1000 + priority++;
     }
     agent->InitializeMpSolution(m_solution);
     agent->m_parentRobot = m_robot;
@@ -92,9 +92,6 @@ Initialize() {
     m_RobotGroup.push_back(agent);
     robot->SetAgent(agent);
   }
-
-  for(auto chargingLocation : m_chargingLocations)
-    cout << "Charging Location: " << chargingLocation << endl;
 
 }
 
