@@ -2,6 +2,7 @@
 
 #include <limits>
 #include <unordered_map>
+#include <algorithm>
 #include "ConfigurationSpace/Cfg.h"
 #include "Behaviors/Agents/AgentGroup.h"
 #include "Behaviors/Controllers/ControllerMethod.h"
@@ -90,34 +91,31 @@ GetCoordinatesFromMarker() {
 //case where the robot is going to collide with other robot's side. Need to take
 //care of deadlock scenarios. Also figure out what path to take to avoid
 //collision.
-bool 
+bool
 PathFollowingChildAgent::
 InCollision() {
   auto dm = m_library->GetDistanceMetric("euclidean");
-  const double threshold = 0.1;
-  
+
   auto problem = m_robot->GetMPProblem();
-  
+
+  bool inCollision = false;
   for(auto& robot : problem->GetRobots()) {
-    if(robot != m_robot && (m_pathIndex < m_path.size()) ) {
-      auto current = m_robot->GetDynamicsModel()->GetSimulatedState();
-      auto robotPos = robot->GetDynamicsModel()->GetSimulatedState();
-      double distanceToSubgoal = dm->Distance(current, m_path[m_pathIndex]);
-      double distance1 = dm->Distance(current, robotPos);
-      double distance2 = dm->Distance(m_path[m_pathIndex], robotPos);
-      if(((distance1 + distance2) - distanceToSubgoal) < threshold) {
-       /* cout << m_robot->GetLabel() << " is in collision with " << m.first->GetLabel() << endl;
-        cout << "Current position: " << current << " robots position: " << m.second << " subgoal: " << m_path[m_pathIndex] << endl;
-        cout << "Distance to subgoal: " << distanceToSubgoal << endl;
-        cout << "Distance from current to colliding robot " << distance1 << endl;
-        cout << "Distance from subgoal to colliding robot " << distance2 << endl;
-        cout << "Difference: " << (distance1 + distance2) - distanceToSubgoal << endl;*/
-        return true;
+    if(robot != m_robot) {
+      auto robotPosition = robot->GetDynamicsModel()->GetSimulatedState();
+      auto myPosition = m_robot->GetDynamicsModel()->GetSimulatedState();
+      double distance = dm->Distance(robotPosition, myPosition);
+      // If the other robot has higher priority, halt this robot.
+      if(distance < 3){
+        inCollision = true;
+        if(m_robot->GetAgent()->m_priority < robot->GetAgent()->m_priority){
+          m_shouldHalt = true;
+        }
       }
     }
   }
-  return false;
+  return inCollision;
 }
+
 
 Cfg
 PathFollowingChildAgent::
@@ -131,7 +129,7 @@ GetRandomRoadmapPoint() {
 }
 
 //Go to a random point in the roadmap
-MPTask* 
+MPTask*
 PathFollowingChildAgent::
 GetNewTask() {
   //use the parent robot
@@ -160,8 +158,10 @@ CallForHelp() {
 
   //item = m_parentAgent->GetHelpers().begin();
   //TODO: change this to get closest helper
+  if(m_parentAgent->GetHelpers().empty())
+    return false;
   auto helper = m_parentAgent->GetHelpers().front();
-  cout << "This is the helper " << helper->GetLabel() << endl;
+  cout << "HELPER: " << helper->GetLabel() << " M_ROBOT: " << m_robot->GetLabel() << endl;
   //if(item != m_parentAgent->GetHelpers().end()) {
   //int random_index = rand() % m_parentAgent->GetHelpers().size();
   //std::advance(item, random_index);
@@ -172,8 +172,8 @@ CallForHelp() {
     auto helperPos = helper->GetDynamicsModel()->GetSimulatedState();
     cout << "helper Robot position in call for help " << helperPos << endl;
     //auto helperTask = CreateNewTask(helperPos, workerPos, "label");
-    auto helperTask = new MPTask(m_parentRobot); 
-    //auto helperPos = m_myHelper->GetDynamicsModel()->GetSimulatedState(); 
+    auto helperTask = new MPTask(m_parentRobot);
+    //auto helperPos = m_myHelper->GetDynamicsModel()->GetSimulatedState();
     auto start = new CSpaceConstraint(m_parentRobot, helperPos);
     auto goal = new CSpaceConstraint(m_parentRobot, workerPos);
     //auto goal = m_robot()->GetAgent()->GetTask()->GetGoalConstraint();
@@ -187,15 +187,19 @@ CallForHelp() {
     m_path.clear();
     helper->GetAgent()->SetCurrentTask(helperTask);
     m_myHelper = helper;
+    cout << "SIZE BEFORE: " << m_parentAgent->GetHelpers().size() << endl;
     m_parentAgent->GetHelpers().erase(m_parentAgent->GetHelpers().begin()+0);
+    cout << "SIZE AFTER: " << m_parentAgent->GetHelpers().size() << endl;
     //let helper get close enough to worker
     //assign worker's old goal to new worker
   }
-  else
+  else{
     helper->SetLabel("worker");
+    //TODO: Maybe need to swap goals / priorities here.
+  }
   return true;
   //}
-  return false;
+  //return false;
 }
 
 bool
@@ -209,7 +213,7 @@ IsAtChargingStation() {
     std::istringstream pointStream(x);
     point.Read(pointStream);
     double distance = dm->Distance(currentPos, point);
-    if(distance <= threshold) 
+    if(distance <= threshold)
       return true;
   }
   return false;
@@ -220,7 +224,7 @@ PathFollowingChildAgent::
 InitializePointsVector() {
   for(typename GraphType::VI i = m_solution->GetRoadmap()->GetGraph()->begin();
       i!=m_solution->GetRoadmap()->GetGraph()->end(); i++) {
-    Cfg cfg =  m_solution->GetRoadmap()->GetGraph()->GetVertex(i); 
+    Cfg cfg =  m_solution->GetRoadmap()->GetGraph()->GetVertex(i);
     if (!(std::find(m_AllRoadmapPoints.begin(), m_AllRoadmapPoints.end(),cfg)!=m_AllRoadmapPoints.end()))
       m_AllRoadmapPoints.push_back(cfg);
   }
@@ -232,6 +236,7 @@ PathFollowingChildAgent::
 FindNearestChargingLocation() {
   if(m_task->GetLabel() == "GettingToChargingLocation")
     return;
+  cout << "Going to charging location " << endl;
   m_task = new MPTask(m_parentRobot);
   auto currentPos = m_robot->GetDynamicsModel()->GetSimulatedState();
   auto randN = rand() % m_chargingLocations.size();
@@ -254,13 +259,13 @@ FindNearestChargingLocation() {
 
 /*------------------------------ Functions for ICreate ------------------------*/
 
-vector<double>  
+vector<double>
 PathFollowingChildAgent::
 GetRotationAndTranslationAmt(const Cfg& _current, const Cfg& _goal) {
 
   vector<double> curPoints = _current.GetData();
   vector<double> goalPoints = _goal.GetData();
-  
+
   double xDist = (goalPoints[0] - curPoints[0]);
   double yDist = (goalPoints[1] - curPoints[1]);
   double translateAmt = sqrt(pow(xDist,2) + pow(yDist,2));
@@ -282,7 +287,7 @@ GetRotationAndTranslationAmt(const Cfg& _current, const Cfg& _goal) {
   return RotationAndTranslation;
 }
 
-void 
+void
 PathFollowingChildAgent::
 UpdateOdometry(const double& _x, const double& _y, const double& _angle) {
   m_odometry[0] = _x;
@@ -323,7 +328,7 @@ Initialize() {
   m_path = m_solution->GetPath()->Cfgs();
 
   InitializePointsVector();
- 
+
   std::string charginL = "3 0 0 0 0 0";
   m_chargingLocations.push_back(charginL);
 
@@ -350,7 +355,7 @@ ExecuteTask(double _dt) {
   auto data = current.GetData();
 
   ////=============================================================================////
-  
+
   // Ensure we have a create controller.
   /*if(m_robot->GetLabel() == "worker" && m_robot->GetIPAddress() != "") {
     static RobotController createController(m_robot->GetIPAddress());
@@ -365,8 +370,8 @@ ExecuteTask(double _dt) {
       m_goalTaken.push_back(m_path[m_pathIndex]);
     }
   }*/
-  ////=============================================================================//// 
-  
+  ////=============================================================================////
+
   // We consider the robot to have reached the next subgoal if it is within a
   // threshold distance. Advance the path index until the next subgoal is
   // at least one threshold away.
@@ -428,7 +433,6 @@ Step(const double _dt) {
     return;
   }
   Initialize();
-  //if(!InCollision())
   //cout << "I am a " << m_robot->GetLabel() << " my current task is " << m_task->GetLabel() << endl;
   //cout << "value of started " << m_task->Started() << endl;
   if(!m_task->Started()) {
@@ -438,92 +442,150 @@ Step(const double _dt) {
     m_path = m_solution->GetPath()->Cfgs();
     m_task->SetStarted(true);
   }
-  if(!InCollision())
+  if(!InCollision()){
+    m_shouldHalt = false;
     ExecuteTask(_dt);
-  else 
-    this->Halt();
-  //auto coordinates = GetCoordinatesFromMarker();
+  }
+  else{
+    if(m_shouldHalt)
+      this->Halt();
+    else{
+      AvoidCollision();
+    }
+  }
 
-  if(m_robot->GetLabel() == "worker") {
-    m_battery->UpdateValue(0.01);
-    if(m_task->IsCompleted()) {
+  if(m_robot->GetLabel() == "worker")
+    WorkerStep(_dt);
+  else
+    HelperStep(_dt);
+}
+
+void
+PathFollowingChildAgent::
+WorkerStep(const double _dt) {
+  //cout << "Worker Doing Stuff" << endl;
+  m_battery->UpdateValue(0.01);
+  if(m_task->IsCompleted()) {
+    m_pathIndex = 0;
+    m_path.clear();
+    m_task = GetNewTask();
+
+    // Use the planning library to find a path.
+  }
+  if((m_battery->GetCurLevel() < 0.2*m_battery->GetMaxLevel())) {
+    // if you don't have a helper yet, call for help
+    if(!m_myHelper) {
+      cout << "Calling for Help " << endl;
       m_pathIndex = 0;
       m_path.clear();
-      m_task = GetNewTask();
-
-      // Use the planning library to find a path.
+      this->Halt();
+      CallForHelp();
     }
-    if((m_battery->GetCurLevel() < 0.2*m_battery->GetMaxLevel())) {
-      // if you don't have a helper yet, call for help
-      if(!m_myHelper) {
-        cout << "Calling for Help " << endl;
+    // else check if the helper is close enough to you to take over
+    else if(m_myHelper) {
+      auto helperPos = m_myHelper->GetDynamicsModel()->GetSimulatedState();
+      auto myPos = m_robot->GetDynamicsModel()->GetSimulatedState();
+      auto dm = m_library->GetDistanceMetric("euclidean");
+
+      //cout << m_robot->GetLabel() << " path index " << m_pathIndex << " size " << m_path.size() << endl;
+      cout << m_robot->GetLabel() << " my position: " << myPos << endl;
+      cout << m_myHelper->GetLabel() << " my position: " << helperPos << endl;
+
+      double distance = dm->Distance(myPos, helperPos);
+      cout << "distance: " << distance << endl;
+      if(distance < 3.0) {
+        cout << "Changing with helper " << endl;
+        // Get this robot's task and assign it to worker. However, we need to
+        // change the start constraints, so get the goal constraint from the
+        // worker's task
+        // TODO: Figure out what m_parentRobot is
+        auto newTask = new MPTask(m_parentRobot);
+        auto helperPos = m_myHelper->GetDynamicsModel()->GetSimulatedState();
+        auto start = new CSpaceConstraint(m_parentRobot, helperPos);
+        auto goal = m_robot->GetAgent()->GetCurrentTask()->GetGoalConstraints().front();
+
+        m_myHelper->SetLabel("worker");
+        newTask->AddStartConstraint(start);
+        newTask->AddGoalConstraint(goal);
+        newTask->SetLabel("WorkerTask");
+
+        m_myHelper->GetAgent()->SetCurrentTask(newTask);
+
+        // Swap the helper's and the worker's priority.
+        int temp = m_myHelper->GetAgent()->m_priority;
+        m_myHelper->GetAgent()->m_priority = m_robot->GetAgent()->m_priority;
+        m_robot->GetAgent()->m_priority = temp;
+
+        cout << m_robot << " Priority: " << m_robot->GetAgent()->m_priority << endl;
+        cout << m_myHelper << " Priority: " << m_myHelper->GetAgent()->m_priority << endl;
         m_pathIndex = 0;
         m_path.clear();
-        this->Halt();
-        CallForHelp();
-      }
-      // else check if the helper is close enough to you to take over
-      else if(m_myHelper) {
-        auto helperPos = m_myHelper->GetDynamicsModel()->GetSimulatedState();
-        auto myPos = m_robot->GetDynamicsModel()->GetSimulatedState();
-        auto dm = m_library->GetDistanceMetric("euclidean");
-
-        //cout << m_robot->GetLabel() << " path index " << m_pathIndex << " size " << m_path.size() << endl;
-        cout << m_robot->GetLabel() << " my position: " << myPos << endl;
-        cout << m_myHelper->GetLabel() << " my position: " << helperPos << endl;
-
-        double distance = dm->Distance(myPos, helperPos);
-        cout << "distance: " << distance << endl;
-        if(distance < 3.0) {
-          cout << "Changing with helper " << endl;
-          // Get this robot's task and assign it to worker. However, we need to
-          // change the start constraints, so get the goal constraint from the
-          // worker's task
-          auto newTask = new MPTask(m_parentRobot); 
-          auto helperPos = m_myHelper->GetDynamicsModel()->GetSimulatedState(); 
-          auto start = new CSpaceConstraint(m_parentRobot, helperPos);
-          auto goal = m_robot->GetAgent()->GetCurrentTask()->GetGoalConstraints().front();
-
-          m_myHelper->SetLabel("worker");
-          newTask->AddStartConstraint(start);
-          newTask->AddGoalConstraint(goal);
-          newTask->SetLabel("WorkerTask");
-
-          m_myHelper->GetAgent()->SetCurrentTask(newTask);
-          m_pathIndex = 0;
-          m_path.clear();
-          m_myHelper = nullptr;
-          // Use the planning library to find a path.
-          //
-          m_robot->SetLabel("helper");
-        }
-        else
-          return;
-        cout << "Are we stuck here? " << endl;
+        m_myHelper = nullptr;
+        // Use the planning library to find a path.
+        m_robot->SetLabel("helper");
       }
       else
         return;
     }
+    else
+      return;
   }
-  else if(m_robot->GetLabel() == "helper" && !IsAtChargingStation() && m_task->GetLabel() != "GoingToHelp") {
+}
+
+
+void
+PathFollowingChildAgent::
+HelperStep(const double _dt) {
+  //cout << "Helper Doing Stuff" << endl;
+  if(m_robot->GetLabel() == "helper" && !IsAtChargingStation() && m_task->GetLabel() != "GoingToHelp") {
     FindNearestChargingLocation();
-    cout << "Going to charging location " << endl;
   }
   else if(m_robot->GetLabel() == "helper" && IsAtChargingStation()) {
     m_path.clear();
     m_pathIndex = 0;
-    //if battery is low, charge 
+    //if battery is low, charge
     m_battery->Charge(5);
     //if battery is full (more than 90%) , available to help
     if(m_battery->GetCurLevel() >= 0.9*m_battery->GetMaxLevel()){
       auto curPos = m_robot->GetDynamicsModel()->GetSimulatedState();
       //TODO: change this so that you don't keep pushing back the same robot
       //maybe use an unordered set?
-      m_parentAgent->GetHelpers().push_back(m_robot);
-      cout << "Done charging, available to help " << endl;
+      auto helpers = m_parentAgent->GetHelpers();
+      // If m_robot is not on the helpers list, push it back
+      if(find(helpers.begin(), helpers.end(), m_robot) == helpers.end() && m_task->GetLabel() != "GoingToHelp"){
+        m_parentAgent->GetHelpers().push_back(m_robot);
+      }
+      //cout << "Done charging, available to help " << endl;
     }
   }
 }
+
+
+void
+PathFollowingChildAgent::
+AvoidCollision() {
+  auto dm = m_library->GetDistanceMetric("euclidean");
+
+  auto problem = m_robot->GetMPProblem();
+  for(auto& robot : problem->GetRobots()) {
+    if(robot != m_robot && (m_pathIndex < m_path.size()) ) {
+      auto current = m_robot->GetDynamicsModel()->GetSimulatedState();
+      auto robotPos = robot->GetDynamicsModel()->GetSimulatedState();
+      double distanceToSubgoal = dm->Distance(current, m_path[m_pathIndex]);
+      double distance1 = dm->Distance(current, robotPos);
+      double distance2 = dm->Distance(m_path[m_pathIndex], robotPos);
+      //TODO: Pick more accurate threshold than 3
+      //TODO: Change the task of the robot with higher priority
+      if(((distance1 + distance2) - distanceToSubgoal) < 3) {
+        //cout << "TODO: Avoid Collision" << endl;
+        //m_path.clear();
+        //m_pathIndex = 0;
+        //SetTask(GetNewTask());
+      }
+    }
+  }
+}
+
 
 void
 PathFollowingChildAgent::

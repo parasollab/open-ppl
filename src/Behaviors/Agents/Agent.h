@@ -76,6 +76,8 @@ class Agent {
     const MPTask* GetCurrentTask() const noexcept;
     ///@}
 
+    int m_priority = -1;               ///< The agent's priority in its group.
+
 };
 
 #endif

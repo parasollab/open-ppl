@@ -7,6 +7,7 @@
 #include "ConfigurationSpace/Cfg.h"
 #include "MPLibrary/PMPL.h"
 #include "Battery.h"
+#include "packet.h"
 
 class AgentGroup;
 ////////////////////////////////////////////////////////////////////////////////
@@ -38,25 +39,25 @@ class PathFollowingChildAgent : public Agent {
 
     ///Initialize the mp solution object
     void InitializeMpSolution(MPSolution*);
-    
+
     void InitializePointsVector();
-    
+
     void SetMPRoadmap(RoadmapType* _solution);
 
     void SetTask(MPTask* _task);
 
     Cfg GetRandomRoadmapPoint();
-    
+
     MPTask* GetNewTask();
 
     bool CallForHelp();
 
     bool IsAtChargingStation();
-    
+
     void FindNearestChargingLocation();
 
     void ExecuteTask(double _dt);
-    
+
     bool InCollision();
 
     void SetParentRobot(Robot*);
@@ -64,7 +65,7 @@ class PathFollowingChildAgent : public Agent {
     Robot* GetParentRobot();
 
     //TODO: move this to protected and add getters and setters.
-    Robot* m_parentRobot{nullptr}; 
+    Robot* m_parentRobot{nullptr};
 
     AgentGroup* m_parentAgent{nullptr};
 
@@ -77,17 +78,30 @@ class PathFollowingChildAgent : public Agent {
     vector<double> GetOdometry();
 
     void SetOdometry(const vector<double>&);
-    
+
     void UpdateOdometry(const double&, const double&, const double&);
 
     void CreateNewTask(Cfg& _start, Cfg& _goal, std::string _label);
-    
+
     typedef RoadmapGraph<CfgType, WeightType>         GraphType;
     typedef typename GraphType::vertex_descriptor     VID;
     typedef typename std::vector<VID>::const_iterator VIDIterator;
 
 
     ///@}
+
+  private :
+
+    ///@name Helper Functions
+    ///@{
+
+    void WorkerStep(const double _dt);
+
+    void HelperStep(const double _dt);
+
+    void AvoidCollision();
+
+    //@}
 
   protected:
 
@@ -98,21 +112,21 @@ class PathFollowingChildAgent : public Agent {
     size_t m_pathIndex{0};   ///< The path node that is the current subgoal.
 
     MPLibrary* m_library{nullptr}; ///< This agent's planning library.
-    
+
     MPSolution* m_solution{nullptr}; ///< The solution with the roadmap to follow.
-    
+
     //MPTask* m_task{nullptr};
 
     static vector<Cfg> m_AllRoadmapPoints;
 
     static unordered_map<Robot*, Cfg> m_HelpersAvailable;
-    
+
     static vector<std::string> m_chargingLocations;
 
     bool m_done{false};
 
     std::vector<Cfg> m_goalTaken;
-    
+
     Battery* m_battery{nullptr};
 
     std::vector<double> m_odometry{0.0,0.0,0.0};
@@ -120,6 +134,8 @@ class PathFollowingChildAgent : public Agent {
     Robot* m_myHelper{nullptr};
 
     bool m_waitForHelp{true};
+
+    bool m_shouldHalt{false}; ///< The robot should halt if inCollision & lower priority.
     ///@}
 
 };

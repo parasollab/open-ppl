@@ -47,6 +47,9 @@ class AgentGroup : public Agent {
     /// Get a helpers robot for the worker robot
     std::vector<Robot*>& GetHelpers();
 
+    /// Get the charging locations for problem
+    std::vector<Cfg>& GetChargingLocations();
+
     /// Clean up.
     virtual void Uninitialize() override;
 
@@ -79,7 +82,7 @@ class AgentGroup : public Agent {
 
     std::vector<Cfg> m_chargingLocations;  ///< The charging locations for the robots
 
-    //std::unordered_map<Robot*, Cfg> m_availableHelpers; ///< Helper robots avaialable 
+    //std::unordered_map<Robot*, Cfg> m_availableHelpers; ///< Helper robots avaialable
 
     std::vector<Robot*> m_availableHelpers;
     //std::vector<ICreateChildAgent*> m_RobotGroup;

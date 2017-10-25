@@ -41,8 +41,14 @@ AgentGroup::
 GetHelpers() {
   return m_availableHelpers;
 }
-  
-    
+
+
+std::vector<Cfg>&
+AgentGroup::
+GetChargingLocations() {
+  return m_chargingLocations;
+}
+
 void
 AgentGroup::
 Initialize() {
@@ -54,6 +60,8 @@ Initialize() {
   auto problem = m_robot->GetMPProblem();
   const std::string& xmlFile = problem->GetXMLFilename();
 
+  //TODO: Get distance thresholds from XML
+
   // Initialize the agent's planning library.
   m_library = new MPLibrary(xmlFile);
 
@@ -64,34 +72,30 @@ Initialize() {
   m_solution = new MPSolution(task->GetRobot());
   m_library->Solve(problem, task, m_solution);
 
-
-  //TODO: Set the number of agents in the xml file
-  for(auto robot : problem->GetRobots()) {
-    if(robot->GetLabel() != m_robot->GetLabel()) {
-      m_RobotGroup.push_back(new PathFollowingChildAgent(robot));
-      //m_RobotGroup.push_back(new ICreateChildAgent(robot));
-      if(robot->GetLabel() == "helper") { 
-        cout << "Agent group is adding helpers " << endl;
-        auto helperPos = robot->GetDynamicsModel()->GetSimulatedState();
-        //m_availableHelpers[robot] = helperPos;
-        m_availableHelpers.push_back(robot);
-        cout << "let's put a breakpoint here " << endl;
-      }
+  auto childRobots = GetChildRobots();
+  int priority = 1;
+  for (auto robot : childRobots){
+    auto agent = new PathFollowingChildAgent(robot);
+    if(robot->GetLabel() == "helper") {
+      cout << "Agent group is adding helpers " << endl;
+      auto helperPos = robot->GetDynamicsModel()->GetSimulatedState();
+      m_chargingLocations.push_back(helperPos);
+      m_availableHelpers.push_back(robot);
+      agent->m_priority = priority++;
     }
-  }
-  for(auto agent : m_RobotGroup) {
+    else{
+      agent->m_priority = 1000 + priority;
+    }
     agent->InitializeMpSolution(m_solution);
     agent->m_parentRobot = m_robot;
     agent->m_parentAgent = this;
+    m_RobotGroup.push_back(agent);
+    robot->SetAgent(agent);
   }
 
-  auto childRobots = GetChildRobots();
-  if(childRobots.size() != m_RobotGroup.size())
-    throw RunTimeException(WHERE, "Number of loaded child robots is not equal to"
-        "the number of child agents.");
+  for(auto chargingLocation : m_chargingLocations)
+    cout << "Charging Location: " << chargingLocation << endl;
 
-  for(size_t i = 0; i < childRobots.size(); ++i)
-    childRobots[i]->SetAgent(m_RobotGroup[i]);
 }
 
 
