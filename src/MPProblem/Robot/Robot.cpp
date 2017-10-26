@@ -20,6 +20,7 @@
 // Temporaries for hard-coded stuff
 #include "Behaviors/Controllers/ControlSetGenerators.h"
 #include "Behaviors/Controllers/SimpleController.h"
+#include "Behaviors/Controllers/ICreateController.h"
 #include "nonstd/io.h"
 
 /*------------------------------ Construction --------------------------------*/
@@ -145,6 +146,8 @@ ReadXMLFile(const std::string& _filename) {
       // Setup the appropriate controller type.
       if(controllerType == "simple")
         m_controller = new SimpleController(this, child);
+      else if(controllerType == "icreatecontroller")
+        m_controller = new ICreateController(this, child);
       else
         throw ParseException(child.Where(), "Unknown controller label '" +
             controllerType + "'. Currently only 'simple' is supported.");
