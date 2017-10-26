@@ -1,5 +1,5 @@
-#ifndef SIMPLE_CONTROLLER_H_
-#define SIMPLE_CONTROLLER_H_
+#ifndef ICREATE_CONTROLLER_H_
+#define ICREATE_CONTROLLER_H_
 
 #include "ControllerMethod.h"
 

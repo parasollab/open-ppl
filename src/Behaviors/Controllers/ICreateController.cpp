@@ -5,7 +5,8 @@
 #include "ConfigurationSpace/Cfg.h"
 #include "Utilities/XMLNode.h"
 
-
+//TEMP
+#include <unistd.h>
 /*------------------------------ Construction --------------------------------*/
 
 ICreateController::
@@ -15,7 +16,7 @@ ICreateController(Robot* const _r, const double _gain, const double _max)
 
 ICreateController::
 ICreateController(Robot* const _r, XMLNode& _node) : ControllerMethod(_r, _node) {
-  m_gain = _node.Read("gain", true, 0.,
+  m_gain = _node.Read("gain", false, 0.,
       std::numeric_limits<double>::min(), std::numeric_limits<double>::max(),
       "The proportional gain");
 
@@ -29,15 +30,15 @@ ICreateController(Robot* const _r, XMLNode& _node) : ControllerMethod(_r, _node)
 
 std::vector<double>
 ICreateController::
-ComputeDesiredForce(const Cfg& _current, const Cfg& _target, const double headingAngle) {
+ComputeDesiredForce(const Cfg& _current, const Cfg& _target, const double) {
 
   vector<double> curPoints = _current.GetData();
   vector<double> goalPoints = _target.GetData();
-  
+ 
   double xDist = (goalPoints[0] - curPoints[0]);
   double yDist = (goalPoints[1] - curPoints[1]);
   double translateAmt = sqrt(pow(xDist,2) + pow(yDist,2));
-  double rotAmt = atan2(yDist,xDist) - headingAngle;
+  double rotAmt = atan2(yDist,xDist) - curPoints[2]*M_PI;
 
   //Normalize rotAmt
   if (rotAmt > PI)
@@ -45,12 +46,24 @@ ComputeDesiredForce(const Cfg& _current, const Cfg& _target, const double headin
   else if (rotAmt < -PI)
     rotAmt += (2.0 * PI);
 
-  cout << "cur point " << curPoints[0] <<", " << curPoints[1] << " goal: " << goalPoints[0] << ", " << goalPoints[1]\
-    << " \nx dist " << xDist << "\ny dist " << yDist << "\nRoation amount: " << rotAmt << "\nTranslation amount: " << translateAmt << endl;
+  //cout << "cur point " << curPoints[0] <<", " << curPoints[1] << " goal: " << goalPoints[0] << ", " << goalPoints[1]\
+    << " \nx dist " << xDist << "\ny dist " << yDist << "\nRotation amount: " << rotAmt << "\nTranslation amount: " << translateAmt << endl;
   
   vector<double> RotationAndTranslation;
-  RotationAndTranslation.push_back(rotAmt);
-  RotationAndTranslation.push_back(translateAmt);
+  if(abs(rotAmt) > 0.02) { 
+    RotationAndTranslation.push_back(0);
+    RotationAndTranslation.push_back(0);
+    RotationAndTranslation.push_back(rotAmt);
+  }
+  else {
+    //throw RunTimeException(WHERE, "STOPPING AFTER ROTATION");
+    //usleep(100e6);
+    RotationAndTranslation.push_back(translateAmt);
+    RotationAndTranslation.push_back(0);
+    RotationAndTranslation.push_back(0);
+  }
+
+  //cout << "Setting the force {" << RotationAndTranslation[0] << ", " << RotationAndTranslation[1] << ", " << RotationAndTranslation[2] << "}" << endl;
   
   return RotationAndTranslation;
 }
