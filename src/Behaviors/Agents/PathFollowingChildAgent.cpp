@@ -19,7 +19,8 @@ vector<Cfg> PathFollowingChildAgent::m_AllRoadmapPoints;
 /*------------------------------ Construction --------------------------------*/
 
 PathFollowingChildAgent::
-PathFollowingChildAgent(Robot* const _r) : Agent(_r) { }
+PathFollowingChildAgent(Robot* const _r) : Agent(_r) {
+}
 
 PathFollowingChildAgent::
 ~PathFollowingChildAgent() {
@@ -70,6 +71,7 @@ InCollision() {
         inCollision = true;
         if(m_robot->GetAgent()->m_priority < robot->GetAgent()->m_priority){
           m_shouldHalt = true;
+          return inCollision;
         }
       }
     }
@@ -156,8 +158,9 @@ IsAtChargingStation() {
   const double threshold = .5;
   for(const auto& chargingLocation : m_parentAgent->GetChargingLocations()) {
     double distance = EuclideanDistance(currentPos, chargingLocation.first);
-    if(distance <= threshold)
+    if(distance <= threshold){
       return true;
+    }
   }
   return false;
 }
@@ -354,12 +357,15 @@ Step(const double _dt) {
   if(!InCollision()){
     m_shouldHalt = false;
     ExecuteTask(_dt);
+    m_avoidCollisionHalt = 0;
   }
   else{
     if(m_shouldHalt)
       this->Halt();
     else{
       AvoidCollision();
+      m_avoidCollisionHalt++;
+      ExecuteTask(_dt);
     }
   }
 
@@ -471,12 +477,15 @@ HelperStep(const double _dt) {
 }
 
 
-void
+bool
 PathFollowingChildAgent::
 AvoidCollision() {
+  bool valid = false;
+  auto dm = m_library->GetDistanceMetric("euclidean");
   auto problem = m_robot->GetMPProblem();
   for(auto& robot : problem->GetRobots()) {
-    if(robot != m_robot && (m_pathIndex < m_path.size()) ) {
+    if(robot != m_robot && (m_pathIndex < m_path.size())
+        && robot->GetLabel() != "coordinator") {
       auto current = m_robot->GetDynamicsModel()->GetSimulatedState();
       auto robotPos = robot->GetDynamicsModel()->GetSimulatedState();
       double distanceToSubgoal = EuclideanDistance(current, m_path[m_pathIndex]);
@@ -484,12 +493,39 @@ AvoidCollision() {
       double distance2 = EuclideanDistance(m_path[m_pathIndex], robotPos);
       //TODO: Pick more accurate threshold than 3
       if(((distance1 + distance2) - distanceToSubgoal) < 3) {
-        //m_path.clear();
-        //m_pathIndex = 0;
-        //SetTask(GetNewTask());
+        if(m_avoidCollisionHalt == 0) this->Halt();
+
+        CfgType last = m_path[m_pathIndex-1];
+        CfgType next = m_path[m_pathIndex];
+        CfgType newCfg = next;
+
+        Vector3d myV = current.GetLinearPosition();
+        Vector3d nextV = next.GetLinearPosition();
+        Vector3d otherV = robotPos.GetLinearPosition();
+
+
+        if(abs(myV[0]-otherV[0]) < 2){
+          nextV[0] = otherV[0]+4;
+        }
+        if(abs(myV[1]-otherV[1]) < 2){
+          nextV[1] = otherV[1]+4;
+        }
+        newCfg.SetLinearPosition(nextV);
+
+        if(newCfg.InBounds(m_robot->GetMPProblem()->GetEnvironment())) {
+          //cout << m_robot->GetLabel() << " Cfg is in free space " << endl;
+          valid = true;
+          m_path.insert(m_path.begin()+m_pathIndex,newCfg);
+        }
+        else {
+          valid = false;
+        }
+
+        
       }
     }
   }
+  return valid;
 }
 
 double

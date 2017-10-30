@@ -84,11 +84,13 @@ class PathFollowingChildAgent : public Agent {
     void UpdateOdometry(const double&, const double&, const double&);
 
     void CreateNewTask(Cfg& _start, Cfg& _goal, std::string _label);
+   
+    void SetPriority(size_t _priority);
+
 
     typedef RoadmapGraph<CfgType, WeightType>         GraphType;
     typedef typename GraphType::vertex_descriptor     VID;
     typedef typename std::vector<VID>::const_iterator VIDIterator;
-
 
     ///@}
 
@@ -101,7 +103,7 @@ class PathFollowingChildAgent : public Agent {
 
     void HelperStep(const double _dt);
 
-    void AvoidCollision();
+    bool AvoidCollision();
 
     double GetPathLength(vector<Cfg>& path);
 
@@ -140,6 +142,9 @@ class PathFollowingChildAgent : public Agent {
     bool m_waitForHelp{true};
 
     bool m_shouldHalt{false}; ///< The robot should halt if inCollision & lower priority.
+    
+    size_t m_avoidCollisionHalt{0}; //Used to have higher priority robot halt a single time in instance of collision
+    //Think of better solution
     ///@}
 
 };
