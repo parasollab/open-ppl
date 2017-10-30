@@ -55,7 +55,6 @@ InCollision() {
 
   auto problem = m_robot->GetMPProblem();
 
-  bool inCollision = false;
   for(auto& robot : problem->GetRobots()) {
     if(robot != m_robot) {
       auto robotPosition = robot->GetDynamicsModel()->GetSimulatedState();
@@ -63,15 +62,15 @@ InCollision() {
       double distance = EuclideanDistance(robotPosition, myPosition);
       // If the other robot has higher priority, halt this robot.
       if(distance < 3){
-        inCollision = true;
-        if(m_robot->GetAgent()->m_priority < robot->GetAgent()->m_priority){
+        if(m_robot->GetAgent()->m_priority < robot->GetAgent()->m_priority)
           m_shouldHalt = true;
-          return inCollision;
-        }
+        else
+          m_shouldHalt = false;
+        return true;
       }
     }
   }
-  return inCollision;
+  return false;
 }
 
 
@@ -109,7 +108,6 @@ CallForHelp() {
 
   if(m_parentAgent->GetHelpers().empty())
     return false;
-  //TODO: Change this to get closest helper
   int nearestIndex = GetNearestHelper();
   auto helper = m_parentAgent->GetHelpers().at(nearestIndex);
   if(m_waitForHelp) {
@@ -362,6 +360,7 @@ Step(const double _dt) {
   Initialize();
 
   //cout << m_robot << " Priority: " << m_robot->GetAgent()->m_priority << endl;
+  //cout << m_robot << " m_avoidCollisionHalt: " << m_avoidCollisionHalt << endl;
 
   if(!m_task->Started()) {
     auto problem = m_robot->GetMPProblem();
@@ -377,8 +376,10 @@ Step(const double _dt) {
     m_avoidCollisionHalt = 0;
   }
   else{
-    if(m_shouldHalt)
+    if(m_shouldHalt){
+      m_avoidCollisionHalt = 0;
       this->Halt();
+    }
     else{
       AvoidCollision();
       m_avoidCollisionHalt++;
@@ -402,8 +403,6 @@ WorkerStep(const double _dt) {
     //SetCurrentTask(GetNewTask());
     //TODO: Use SetCurrentTask
     m_task = GetNewTask();
-
-    // Use the planning library to find a path.
   }
   if((m_battery->GetCurLevel() < 0.2*m_battery->GetMaxLevel())) {
     // if you don't have a helper yet, call for help
@@ -456,14 +455,13 @@ WorkerStep(const double _dt) {
         m_myHelper->GetAgent()->m_priority = m_robot->GetAgent()->m_priority;
         m_robot->GetAgent()->m_priority = temp;
 
-        cout << "Worker Position: " << m_robot->GetDynamicsModel()->GetSimulatedState() << endl;
-        cout << "Helper Position: " << m_myHelper->GetDynamicsModel()->GetSimulatedState() << endl;
-
         m_pathIndex = 0;
         m_path.clear();
-        m_myHelper = nullptr;
-        // Use the planning library to find a path.
 
+        // Halt once before reaching old worker
+        //m_myHelper->GetAgent()->Halt();
+
+        m_myHelper = nullptr;
       }
       else
         return;
@@ -507,8 +505,8 @@ bool
 PathFollowingChildAgent::
 AvoidCollision() {
   bool valid = false;
-  auto dm = m_library->GetDistanceMetric("euclidean");
   auto problem = m_robot->GetMPProblem();
+  //cout << "m_pathIndex: " << m_pathIndex << " m_path.size(): " << m_path.size() << endl;
   for(auto& robot : problem->GetRobots()) {
     if(robot != m_robot && (m_pathIndex < m_path.size())
         && robot->GetLabel() != "coordinator") {
@@ -520,7 +518,7 @@ AvoidCollision() {
       //TODO: Pick more accurate threshold than 3
       if(((distance1 + distance2) - distanceToSubgoal) < 3) {
         if(m_avoidCollisionHalt == 0){
-          cout << "@@@@@@@@@@@@@@@@@@ Halting @@@@@@@@@@@@@@@@@@@@" << endl;
+          cout << "@@@@@@@@@@@@@@@@@@ " << m_robot << " Halting @@@@@@@@@@@@@@@@@@@@" << endl;
           this->Halt();
         }
 
@@ -543,8 +541,11 @@ AvoidCollision() {
         if(newCfg.InBounds(m_robot->GetMPProblem()->GetEnvironment())) {
           //cout << m_robot->GetLabel() << " Cfg is in free space " << endl;
           valid = true;
-          m_path.insert(m_path.begin()+m_pathIndex,newCfg);
-          cout << "***********************VALID*********************" << endl;
+          // Checking the Cfg to ensure it does not get added more than once
+          if(find(m_path.begin(), m_path.end(), newCfg) == m_path.end()){
+            cout << "***********************VALID*********************" << endl;
+            m_path.insert(m_path.begin()+m_pathIndex,newCfg);
+          }
         }
         else {
           cout << "=====================INVALID=======================" << endl;
