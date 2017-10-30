@@ -110,17 +110,22 @@ CallForHelp() {
   if(m_parentAgent->GetHelpers().empty())
     return false;
   //TODO: Change this to get closest helper
-  auto helper = GetNearestHelper();
+  int nearestIndex = GetNearestHelper();
+  auto helper = m_parentAgent->GetHelpers().at(nearestIndex);
   if(m_waitForHelp) {
     //Set new task for helper to get to worker position
     auto workerPos = m_robot->GetDynamicsModel()->GetSimulatedState();
-    cout << "worker Robot position in call for help " << workerPos << endl;
+    //cout << "worker Robot position in call for help " << workerPos << endl;
     auto helperPos = helper->GetDynamicsModel()->GetSimulatedState();
-    cout << "helper Robot position in call for help " << helperPos << endl;
+    //cout << "helper Robot position in call for help " << helperPos << endl;
 
     auto helperTask = new MPTask(m_parentRobot);
     auto start = new CSpaceConstraint(m_parentRobot, helperPos);
     auto goal = new CSpaceConstraint(m_parentRobot, workerPos);
+
+
+    //cout << helper << " Label: " << helper->GetLabel() << endl;
+    //cout << m_robot << " Label: " << m_robot->GetLabel() << endl;
 
     //let helper get close enough to worker
     //assign worker's old goal to new worker
@@ -134,7 +139,7 @@ CallForHelp() {
     m_myHelper = helper;
     //TODO Find a better way to assign priorities
     m_myHelper->GetAgent()->m_priority = m_robot->GetAgent()->m_priority-100;
-    m_parentAgent->GetHelpers().erase(m_parentAgent->GetHelpers().begin());
+    m_parentAgent->GetHelpers().erase(m_parentAgent->GetHelpers().begin() + nearestIndex);
 
     // Set the helper's charging station to open
     ClearChargingStation();
@@ -145,20 +150,21 @@ CallForHelp() {
   return true;
 }
 
-Robot*
+int
 PathFollowingChildAgent::
 GetNearestHelper(){
-  Robot* nearestHelper;
+  int count = 0, index = 0;
   auto workerPos = m_robot->GetDynamicsModel()->GetSimulatedState();
   double distance = 0, nearestDistance = 0;
   for(auto helper : m_parentAgent->GetHelpers()){
     distance = EuclideanDistance(workerPos, helper->GetDynamicsModel()->GetSimulatedState());
     if(distance < nearestDistance || nearestDistance == 0){
       nearestDistance = distance;
-      nearestHelper = helper;
+      index = count;
     }
+    count++;
   }
-  return nearestHelper;
+  return index;
 }
 
 bool
@@ -313,7 +319,7 @@ ExecuteTask(double _dt) {
                 << distance << "/" << threshold << std::endl
                 << "Waypoint = " << m_path[m_pathIndex] << std::endl;
 
-    cout << m_robot->GetLabel() << " This is the current goal " << m_path[m_pathIndex] << endl;
+    // cout << m_robot->GetLabel() << " This is the current goal " << m_path[m_pathIndex] << endl;
     // Move to next cfg in path since the distance is within the threshold.
     ++m_pathIndex;
     m_goalTaken.clear();
@@ -393,8 +399,9 @@ WorkerStep(const double _dt) {
   if(m_task->IsCompleted()) {
     m_pathIndex = 0;
     m_path.clear();
-    SetCurrentTask(GetNewTask());
-    //m_task = GetNewTask();
+    //SetCurrentTask(GetNewTask());
+    //TODO: Use SetCurrentTask
+    m_task = GetNewTask();
 
     // Use the planning library to find a path.
   }
@@ -423,6 +430,11 @@ WorkerStep(const double _dt) {
         // Get this robot's task and assign it to worker. However, we need to
         // change the start constraints, so get the goal constraint from the
         // worker's task
+
+        //TODO: Put task switching in a function
+        //TODO: Figure out why switching is failing
+        //TODO: Maybe put m_robot->FindNearestChargingLocation here
+
         auto newTask = new MPTask(m_parentRobot);
         auto helperPos = m_myHelper->GetDynamicsModel()->GetSimulatedState();
         auto start = new CSpaceConstraint(m_parentRobot, helperPos);
@@ -507,7 +519,10 @@ AvoidCollision() {
       double distance2 = EuclideanDistance(m_path[m_pathIndex], robotPos);
       //TODO: Pick more accurate threshold than 3
       if(((distance1 + distance2) - distanceToSubgoal) < 3) {
-        if(m_avoidCollisionHalt == 0) this->Halt();
+        if(m_avoidCollisionHalt == 0){
+          cout << "@@@@@@@@@@@@@@@@@@ Halting @@@@@@@@@@@@@@@@@@@@" << endl;
+          this->Halt();
+        }
 
         CfgType last = m_path[m_pathIndex-1];
         CfgType next = m_path[m_pathIndex];
@@ -516,7 +531,6 @@ AvoidCollision() {
         Vector3d myV = current.GetLinearPosition();
         Vector3d nextV = next.GetLinearPosition();
         Vector3d otherV = robotPos.GetLinearPosition();
-
 
         if(abs(myV[0]-otherV[0]) < 2){
           nextV[0] = otherV[0]+4;
@@ -530,8 +544,10 @@ AvoidCollision() {
           //cout << m_robot->GetLabel() << " Cfg is in free space " << endl;
           valid = true;
           m_path.insert(m_path.begin()+m_pathIndex,newCfg);
+          cout << "***********************VALID*********************" << endl;
         }
         else {
+          cout << "=====================INVALID=======================" << endl;
           valid = false;
         }
       }
