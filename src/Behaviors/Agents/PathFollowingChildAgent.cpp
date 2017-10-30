@@ -34,11 +34,6 @@ SetMPRoadmap(RoadmapType* _rMap) {
   m_solution->SetRoadmap(_rMap);
 }
 
-void PathFollowingChildAgent::
-SetTask(MPTask* _task) {
-  m_task = _task;
-}
-
 void
 PathFollowingChildAgent::
 InitializeMpSolution(MPSolution* _s) {
@@ -115,7 +110,7 @@ CallForHelp() {
   if(m_parentAgent->GetHelpers().empty())
     return false;
   //TODO: Change this to get closest helper
-  auto helper = m_parentAgent->GetHelpers().front();
+  auto helper = GetNearestHelper();
   if(m_waitForHelp) {
     //Set new task for helper to get to worker position
     auto workerPos = m_robot->GetDynamicsModel()->GetSimulatedState();
@@ -133,7 +128,6 @@ CallForHelp() {
     helperTask->AddGoalConstraint(goal);
     helperTask->SetLabel("GoingToHelp");
 
-    cout << "Setting this task for helper " << start << " ----- " << goal << endl;
     m_pathIndex = 0;
     m_path.clear();
     helper->GetAgent()->SetCurrentTask(helperTask);
@@ -149,6 +143,22 @@ CallForHelp() {
     //helper->SetLabel("worker");
   }
   return true;
+}
+
+Robot*
+PathFollowingChildAgent::
+GetNearestHelper(){
+  Robot* nearestHelper;
+  auto workerPos = m_robot->GetDynamicsModel()->GetSimulatedState();
+  double distance = 0, nearestDistance = 0;
+  for(auto helper : m_parentAgent->GetHelpers()){
+    distance = EuclideanDistance(workerPos, helper->GetDynamicsModel()->GetSimulatedState());
+    if(distance < nearestDistance || nearestDistance == 0){
+      nearestDistance = distance;
+      nearestHelper = helper;
+    }
+  }
+  return nearestHelper;
 }
 
 bool
@@ -216,7 +226,7 @@ FindNearestChargingLocation() {
     tempTask->AddGoalConstraint(tempGoal);
     m_library->Solve(problem, tempTask, m_solution);
     tempPath = m_solution->GetPath()->Cfgs();
-    // If the temp task has the shortest path length, store the task
+    // If the temp task has the shortest path length and it is free, store the task
     double tempLength = GetPathLength(tempPath);
     cout << "Charging Location: " << tempLocation.first << " Length: " << tempLength << endl;
     if((tempLength < pathLength || pathLength == 0) && tempLocation.second == false){
@@ -228,7 +238,7 @@ FindNearestChargingLocation() {
 
   task->SetLabel("GettingToChargingLocation");
 
-  this->SetTask(task);
+  SetCurrentTask(task);
 
   m_pathIndex = 0;
   m_path.clear();
@@ -345,10 +355,11 @@ Step(const double _dt) {
   }
   Initialize();
 
-  cout << m_robot << " Priority: " << m_robot->GetAgent()->m_priority << endl;
+  //cout << m_robot << " Priority: " << m_robot->GetAgent()->m_priority << endl;
 
   if(!m_task->Started()) {
     auto problem = m_robot->GetMPProblem();
+    //cout << "Task Failing For Robot: " << m_robot->GetLabel() << endl;
     m_library->Solve(problem, m_task, m_solution);
 
     m_path = m_solution->GetPath()->Cfgs();
@@ -382,7 +393,8 @@ WorkerStep(const double _dt) {
   if(m_task->IsCompleted()) {
     m_pathIndex = 0;
     m_path.clear();
-    m_task = GetNewTask();
+    SetCurrentTask(GetNewTask());
+    //m_task = GetNewTask();
 
     // Use the planning library to find a path.
   }
@@ -432,6 +444,9 @@ WorkerStep(const double _dt) {
         m_myHelper->GetAgent()->m_priority = m_robot->GetAgent()->m_priority;
         m_robot->GetAgent()->m_priority = temp;
 
+        cout << "Worker Position: " << m_robot->GetDynamicsModel()->GetSimulatedState() << endl;
+        cout << "Helper Position: " << m_myHelper->GetDynamicsModel()->GetSimulatedState() << endl;
+
         m_pathIndex = 0;
         m_path.clear();
         m_myHelper = nullptr;
@@ -465,7 +480,6 @@ HelperStep(const double _dt) {
     if(m_battery->GetCurLevel() >= 0.9*m_battery->GetMaxLevel()){
       auto curPos = m_robot->GetDynamicsModel()->GetSimulatedState();
       //TODO: change this so that you don't keep pushing back the same robot
-      //maybe use an unordered set?
       auto helpers = m_parentAgent->GetHelpers();
       // If m_robot is not on the helpers list, push it back
       if(find(helpers.begin(), helpers.end(), m_robot) == helpers.end()){
@@ -520,8 +534,6 @@ AvoidCollision() {
         else {
           valid = false;
         }
-
-        
       }
     }
   }

@@ -44,13 +44,13 @@ class PathFollowingChildAgent : public Agent {
 
     void SetMPRoadmap(RoadmapType* _solution);
 
-    void SetTask(MPTask* _task);
-
     Cfg GetRandomRoadmapPoint();
 
     MPTask* GetNewTask();
 
     bool CallForHelp();
+
+    Robot* GetNearestHelper();
 
     bool IsAtChargingStation();
 
