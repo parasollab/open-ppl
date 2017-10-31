@@ -22,8 +22,10 @@ main(int _argc, char** _argv) {
     if(!robot->IsNonholonomic())
       //robot->SetAgent(new PathFollowingAgent(robot));
       robot->SetAgent(new AgentGroup(robot));
+      //robot->SetAgent(new PathFollowingChildAgent(robot));
     else
-      robot->SetAgent(new AgentGroup(robot));
+      robot->SetAgent(new PathFollowingAgent(robot));
+      //robot->SetAgent(new AgentGroup(robot));
       //robot->SetAgent(new RoadmapFollowingAgent(robot));
 
     // Position the robot by sampling from the first task.

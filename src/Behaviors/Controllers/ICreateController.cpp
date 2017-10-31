@@ -32,13 +32,12 @@ std::vector<double>
 ICreateController::
 ComputeDesiredForce(const Cfg& _current, const Cfg& _target, const double) {
 
-  vector<double> curPoints = _current.GetData();
-  vector<double> goalPoints = _target.GetData();
  
-  double xDist = (goalPoints[0] - curPoints[0]);
-  double yDist = (goalPoints[1] - curPoints[1]);
+  double xDist = (_target[0] - _current[0]);
+  double yDist = (_target[1] - _current[1]);
   double translateAmt = sqrt(pow(xDist,2) + pow(yDist,2));
-  double rotAmt = atan2(yDist,xDist) - curPoints[2]*M_PI;
+  translateAmt = translateAmt;
+  double rotAmt = atan2(yDist,xDist) - _current[2]*M_PI;
 
   //Normalize rotAmt
   if (rotAmt > PI)
@@ -50,7 +49,7 @@ ComputeDesiredForce(const Cfg& _current, const Cfg& _target, const double) {
     << " \nx dist " << xDist << "\ny dist " << yDist << "\nRotation amount: " << rotAmt << "\nTranslation amount: " << translateAmt << endl;
   
   vector<double> RotationAndTranslation;
-  if(abs(rotAmt) > 0.02) { 
+  if(abs(rotAmt) > 0.06) { 
     RotationAndTranslation.push_back(0);
     RotationAndTranslation.push_back(0);
     RotationAndTranslation.push_back(rotAmt);

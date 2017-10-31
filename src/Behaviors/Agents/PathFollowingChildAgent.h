@@ -8,10 +8,12 @@
 #include "MPLibrary/PMPL.h"
 #include "Battery.h"
 #include "packet.h"
+#include "MPProblem/Robot/HardwareInterfaces/HardwareInterface.h"
+#include "MPProblem/Robot/HardwareInterfaces/NetbookInterface.h"
 
 class AgentGroup;
 ////////////////////////////////////////////////////////////////////////////////
-/// This agent calls pmpl once and then follows the resulting path.
+/// This agent follows a set of tasks and executes the helper worker behavior.
 ////////////////////////////////////////////////////////////////////////////////
 class PathFollowingChildAgent : public Agent {
 
@@ -40,6 +42,8 @@ class PathFollowingChildAgent : public Agent {
     ///Initialize the mp solution object
     void InitializeMpSolution(MPSolution*);
 
+    //TEMP: Initialize goals to visit. TODO:
+    //Add this to the group agent class.
     void InitializePointsVector();
 
     void SetMPRoadmap(RoadmapType* _solution);
@@ -50,7 +54,7 @@ class PathFollowingChildAgent : public Agent {
 
     bool CallForHelp();
 
-    Robot* GetNearestHelper();
+    int GetNearestHelper();
 
     bool IsAtChargingStation();
 
@@ -71,26 +75,13 @@ class PathFollowingChildAgent : public Agent {
 
     AgentGroup* m_parentAgent{nullptr};
 
-    ///Get the information about coordinates and orientation of robot from
-    ///markers
-    vector<double> GetCoordinatesFromMarker();
-
-    vector<double> GetRotationAndTranslationAmt(const Cfg&, const Cfg&);
-
-    vector<double> GetOdometry();
-
-    void SetOdometry(const vector<double>&);
-
-    void UpdateOdometry(const double&, const double&, const double&);
-
-    void CreateNewTask(Cfg& _start, Cfg& _goal, std::string _label);
-   
-    void SetPriority(size_t _priority);
-
+    NetbookInterface* m_netbook;
 
     typedef RoadmapGraph<CfgType, WeightType>         GraphType;
     typedef typename GraphType::vertex_descriptor     VID;
     typedef typename std::vector<VID>::const_iterator VIDIterator;
+
+  
 
     ///@}
 
@@ -99,15 +90,15 @@ class PathFollowingChildAgent : public Agent {
     ///@name Helper Functions
     ///@{
 
-    void WorkerStep(const double _dt);
+    void WorkerStep();
 
-    void HelperStep(const double _dt);
+    void HelperStep();
 
     bool AvoidCollision();
 
-    double GetPathLength(vector<Cfg>& path);
+    double GetPathLength(const vector<Cfg>& path);
 
-    double EuclideanDistance(Cfg point1, Cfg point2);
+    double EuclideanDistance(const Cfg& point1, const Cfg& point2);
 
     //@}
 
@@ -142,9 +133,13 @@ class PathFollowingChildAgent : public Agent {
     bool m_waitForHelp{true};
 
     bool m_shouldHalt{false}; ///< The robot should halt if inCollision & lower priority.
+
+    bool m_waitingForHardware{false};  ///< Wait for the hardware to send back information (marker info)
     
     size_t m_avoidCollisionHalt{0}; //Used to have higher priority robot halt a single time in instance of collision
     //Think of better solution
+    
+    double m_dt{0.0};                         ///< Track the amount of _dt steps taken
     ///@}
 
 };

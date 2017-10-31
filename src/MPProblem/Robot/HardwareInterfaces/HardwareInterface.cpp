@@ -123,6 +123,7 @@ AggregatedControlVector(const ControlSet& _controls) const {
 
 #ifdef PMPL_USE_ICREATE
 #include "ICreateInterface.h"
+#include "NetbookInterface.h"
 #endif
 
 HardwareInterface*

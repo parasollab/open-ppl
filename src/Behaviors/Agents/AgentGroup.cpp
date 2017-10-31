@@ -86,8 +86,8 @@ Initialize() {
     else{
       agent->m_priority = 1000 + priority++;
     }
-    agent->InitializeMpSolution(m_solution);
-    agent->m_parentRobot = m_robot;
+    //agent->InitializeMpSolution(m_solution);
+    //agent->m_parentRobot = m_robot;
     agent->m_parentAgent = this;
     m_RobotGroup.push_back(agent);
     robot->SetAgent(agent);
@@ -111,8 +111,10 @@ void
 AgentGroup::
 Step(const double _dt) {
   Initialize();
-  for(auto agent : m_RobotGroup)
-    agent->Step(_dt);
+  //for(auto agent : m_RobotGroup) {
+    //cout << "Calling step for agent: " << agent->GetRobot()->GetLabel() << " with dt: " << _dt << endl;
+    //agent->Step(_dt);
+  //}
 }
 
 

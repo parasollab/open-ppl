@@ -296,6 +296,7 @@ GetControlSet() noexcept {
   return m_controls;
 }
 
+
 // We can potentially have multiple controls to get from one configuration to
 // the next, so the entire set of those controls can be set here.
 template <typename CfgType>

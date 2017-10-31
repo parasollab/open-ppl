@@ -49,6 +49,8 @@ Environment(XMLNode& _node) {
   m_orientationRes = _node.Read("orientationRes", false, m_orientationRes,
       std::numeric_limits<double>::lowest(), std::numeric_limits<double>::max(),
       "Orientation resolution of environment");
+  m_timeRes = _node.Read("timeRes", false, m_timeRes, .05, 10.,
+      "Time resolution in seconds");
 }
 
 

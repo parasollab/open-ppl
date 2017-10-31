@@ -3,6 +3,7 @@
 #include <unistd.h>
 
 #include "nonstd/numerics.h"
+#include "nonstd/timer.h"
 
 
 /*------------------------------- Construction -------------------------------*/
@@ -45,6 +46,14 @@ ClearCommandQueue() {
 }
 
 
+bool
+ServerQueueInterface::
+AllCommandsDone() {
+  std::lock_guard<std::mutex> guard(m_lock);
+  return m_commandFinished;
+}
+
+
 void
 ServerQueueInterface::
 StartQueue() {
@@ -58,8 +67,14 @@ StartQueue() {
     auto& current = this->m_currentCommand;
     const auto& period = this->m_period;
 
+    //double totalSleepTime = 0.0;
+
+    nonstd::timer clock;
+
     while(this->m_running)
     {
+      clock.restart();
+
       bool update = false;
 
       // Lock the queue while we check it and pull the next command.
@@ -72,16 +87,20 @@ StartQueue() {
         queue.push({ControlSet(), period});
         current = queue.front();
         update = true;
+        m_commandFinished = true;
       }
       else {
         // Get next command from the queue.
         const Command& front = queue.front();
-
+        m_commandFinished = false;
         // If we changed commands, an update is needed.
         const bool sameCommand = current == front;
         if(!sameCommand) {
           current = front;
           update = true;
+
+          //std::cerr << "Changing command.";
+
         }
       }
 
@@ -117,12 +136,22 @@ StartQueue() {
       queue.front().seconds = timeLeft;
 
       // If there is no time remaining on this command, pop it from the queue.
-      if(nonstd::approx(timeLeft, 0.))
+      if(nonstd::approx(timeLeft, 0.)) 
         queue.pop();
 
       lock.unlock();
 
-      usleep(sleepTime * 1e6);
+      //cout << "sleeping for " << sleepTime << endl;
+      //cout << "total sleep time so far " << totalSleepTime << endl;
+      //totalSleepTime += sleepTime;
+
+      clock.stop();
+      const double remainingSleep = sleepTime - (clock.elapsed() / 1e9);
+      if(remainingSleep <= 0)
+        std::cerr << "WARNING: ServerQueueInterface taking longer to talk to "
+                  << "robot than the polling period!\n";
+      else
+        usleep(remainingSleep * 1e6);
     }
   };
 

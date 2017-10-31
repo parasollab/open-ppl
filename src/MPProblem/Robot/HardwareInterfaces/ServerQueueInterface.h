@@ -41,6 +41,8 @@ class ServerQueueInterface : public HardwareInterface
 
     virtual void ClearCommandQueue();
 
+    virtual bool AllCommandsDone();
+
   protected:
 
     /// Initialize the command queue and start it in a separate thread.
@@ -68,6 +70,7 @@ class ServerQueueInterface : public HardwareInterface
     Command m_currentCommand;    ///< The current command being exeeuted.
     std::queue<Command> m_queue; ///< The command queue.
     const double m_period{.01};  ///< The polling period.
+    bool m_commandFinished{true};
 
     mutable std::atomic<bool> m_running; ///< Keep running the queue?
     std::thread m_thread;        ///< A thread for running the command queue.

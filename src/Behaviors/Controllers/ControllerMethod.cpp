@@ -107,7 +107,7 @@ ComputeNearestContinuousControl(const Cfg& _current,
   // Find the unit vector of the desired force in the robot's local coordinates.
   auto world = _force;
   auto desired = _force;
-  m_robot->GetDynamicsModel()->WorldToLocal(desired);
+  //m_robot->GetDynamicsModel()->WorldToLocal(desired);
   auto desiredDirection = nonstd::unit(desired);
 
   // Check each actuator and find the nearest control.
@@ -155,7 +155,11 @@ ComputeNearestDiscreteControl(const Cfg& _current, std::vector<double>&& _force)
 
   // Find the unit vector of the desired force in the robot's local coordinates.
   auto desired = nonstd::unit(_force);
+  //cout << "Desired force before world to local: " << desired << endl;
   m_robot->GetDynamicsModel()->WorldToLocal(desired);
+  desired = nonstd::unit(desired);
+
+  desired[0] = abs(desired[0]);
 
   // Rank force similarity first by direction and then by magnitude.
   for(const auto& control : *GetControlSet()) {
@@ -185,6 +189,7 @@ ComputeNearestDiscreteControl(const Cfg& _current, std::vector<double>&& _force)
         "This is probably an error in the control set definition.");
 
   return best;
+
 }
 
 /*----------------------------------------------------------------------------*/

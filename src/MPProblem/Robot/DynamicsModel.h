@@ -70,6 +70,9 @@ class DynamicsModel final {
     /// Get the state of the robot in the external simulation.
     Cfg GetSimulatedState() const;
 
+    /// Set the state of the robot in the external simulation.
+    void SetSimulatedState(const Cfg&);
+    
     /// Get the forces and torques on the robot in the external simulation.
     std::vector<double> GetSimulatedForces() const;
 

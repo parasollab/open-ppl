@@ -346,6 +346,14 @@ SetHardwareInterface(HardwareInterface* const _i) noexcept {
   m_hardware = _i;
 }
 
+
+double
+Robot::
+GetHardwareTime() noexcept {
+  return m_hardwareTime;
+}
+
+
 /*------------------------------- Other --------------------------------------*/
 
 bool

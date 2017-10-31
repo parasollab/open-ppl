@@ -69,6 +69,8 @@ class Robot {
 
   HardwareInterface* m_hardware{nullptr};  ///< An interface to a hardware robot.
 
+  double m_hardwareTime{0.4};               ///< Minimum time required to send command to the robot
+
   ///@}
 
   public:
@@ -184,6 +186,7 @@ class Robot {
 
     HardwareInterface* GetHardwareInterface() const noexcept;
     void SetHardwareInterface(HardwareInterface* const _i) noexcept;
+    double GetHardwareTime() noexcept;
 
     ///@}
     ///@name Other Properties

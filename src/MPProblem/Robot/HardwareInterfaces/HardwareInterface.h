@@ -92,6 +92,8 @@ class HardwareInterface
     ///                 execute the control.
     void EnqueueCommand(const ControlSet& _controls, const double _seconds);
 
+    // Check if the queue is empty and all commands have been finished
+    virtual bool AllCommandsDone() = 0;
     /// @overload
     virtual void EnqueueCommand(const Command& _command) = 0;
 

@@ -26,7 +26,8 @@ class PathFollowingAgent : public Agent {
     ///@name Agent Interface
     ///@{
 
-    /// Call PMPL to create a path for the agent to follow.
+    vector<double> GetCoordinatesFromMarker();
+     /// Call PMPL to create a path for the agent to follow.
     virtual void Initialize() override;
 
     /// Follow the path.
@@ -51,6 +52,10 @@ class PathFollowingAgent : public Agent {
     size_t m_pathIndex{0};   ///< The path node that is the current subgoal.
 
     MPLibrary* m_library{nullptr}; ///< This agent's planning library.
+
+    int m_timeSteps{0};
+
+    double m_dt{0.0};
 
     ///@}
 

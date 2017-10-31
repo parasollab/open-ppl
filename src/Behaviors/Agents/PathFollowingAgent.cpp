@@ -6,7 +6,11 @@
 #include "MPProblem/Robot/Robot.h"
 #include "MPProblem/Robot/DynamicsModel.h"
 #include "MPProblem/Robot/HardwareInterfaces/HardwareInterface.h"
+#include "utils/tcp_socket.h"
+#include "packet.h"
+#include "MPProblem/Robot/HardwareInterfaces/NetbookInterface.h"
 
+std::queue<Control> tempQueue;
 
 /*------------------------------ Construction --------------------------------*/
 
@@ -44,26 +48,12 @@ Initialize() {
   // Use the planning library to find a path.
   m_library->Solve(problem, task, solution);
 
-  m_hardwareController = new ICreateController(m_robot, 1,1);
+  //m_hardwareController = new ICreateController(m_robot, 1,1);
+
+  //m_robot->SetController(m_hardwareController);
   // Extract the path from the solution.
   m_path = solution->GetPath()->Cfgs();
   delete solution;
-}
-
-
-void 
-PathFollowingAgent::
-UpdateOdometry(const double& _x, const double& _y, const double& _angle) {
-  m_odometry[0] = _x;
-  m_odometry[1] = _y;
-  m_odometry[2] += _angle;
-
-  //If angle is greater than 2pi then subtract 2pi from the angle.
-  if(m_odometry[2] >= 2*M_PI)
-    m_odometry[2] = m_odometry[2] - 2*M_PI;
-  //If angle is less than 2pi then add 2pi to the angle.
-  else if(m_odometry[2] <= -2*M_PI)
-    m_odometry[2] = m_odometry[2] + 2*M_PI;
 }
 
 
@@ -71,6 +61,8 @@ void
 PathFollowingAgent::
 Step(const double _dt) {
   Initialize();
+  m_timeSteps++;
+  m_dt += _dt;
 
   // Do nothing if there are no unvisited points left.
   if(m_pathIndex >= m_path.size())
@@ -89,7 +81,10 @@ Step(const double _dt) {
   auto dm = m_library->GetDistanceMetric("euclidean");
   const double threshold = .05;
 
-  double distance = dm->Distance(current, m_path[m_pathIndex]);
+  auto cur = current.GetData();
+  auto gol = m_path[m_pathIndex].GetData();
+  double distance = sqrt(pow((cur[0] -gol[0]),2) + pow((cur[1]-gol[1]),2));
+  //double distance = dm->Distance(current, m_path[m_pathIndex]);
 
   if(m_debug)
     std::cout << "\tDistance from current configuration: "
@@ -120,6 +115,16 @@ Step(const double _dt) {
 
     // Warning: Halt() doesn't respect the dynamics of the simulation and is
     // only to be used for visual verification of the path in the simulator.
+    cout << "Reached end of path " << endl;
+    //auto netbookInterface = new NetbookInterface("netbook", m_robot->GetHardwareInterface()->GetIP(), 4002);
+    //auto orientation = netbookInterface->GetCoordinatesFromMarker();
+    //auto orientation = GetCoordinatesFromMarker();
+    cout << "Position in simulator: " << m_robot->GetDynamicsModel()->GetSimulatedState() << endl;
+    cout << "Total controls: " << tempQueue.size() << endl;
+    //cout << "Position in physical world:";
+    //for(auto x : orientation) 
+      //cout << " " << x << " ";
+    //cout << endl;
     this->Halt();
     return;
   }
@@ -128,13 +133,19 @@ Step(const double _dt) {
   auto bestControl = m_robot->GetController()->operator()(current,
       m_path[m_pathIndex], _dt);
   bestControl.Execute();
+  tempQueue.push(bestControl);
 
+  //cout << "Time steps elapased: " << m_timeSteps << endl;
+  //cout << "Total dt: " << m_dt << endl;
+  //cout << "Current position in the Simulator: " << m_robot->GetDynamicsModel()->GetSimulatedState() << endl; 
   // If there is a hardware robot attached to our simulation, send it the
   // commands also.
-  auto hardwareControl = m_hardwareController->operator()(current, m_path[m_pathIndex], m_odometry[2]);
+  //auto hardwareControl = m_hardwareController->operator()(current, m_path[m_pathIndex], _dt);
+  //auto netbook = new NetbookInterface("netbook", m_robot->GetHardwareInterface()->GetIP(), 4002);
+  //netbook->GetCoordinatesFromMarker();
   auto hardwareInterface = m_robot->GetHardwareInterface();
-  if(hardwareInterface)
-    hardwareInterface->EnqueueCommand({hardwareControl}, _dt);
+  if(hardwareInterface) 
+    hardwareInterface->EnqueueCommand({bestControl}, _dt);
 }
 
 

@@ -58,6 +58,8 @@ class ICreateInterface : public ServerQueueInterface
     PlayerCc::PlayerClient* m_client{nullptr};        ///< Player client object.
     PlayerCc::Position2dProxy* m_position2d{nullptr}; ///< Position control.
 
+    ControlSet m_lastControls;   ///< Last sent controls.
+
     ///@}
 
 };

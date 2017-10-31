@@ -179,7 +179,10 @@ ComputeNearestSignal(const std::vector<double>& _force) const {
   double largestSignal = 0;
   for(size_t i = 0; i < _force.size(); ++i) {
     const auto limit = _force[i] > 0 ? m_limits[i].max : m_limits[i].min ;
-    signal[i] = std::abs(_force[i]) / limit;
+    if(_force[i] == 0)
+      signal[i] = 0;
+    else
+      signal[i] = std::abs(_force[i]) / limit;
 
     largestSignal = std::max(largestSignal, std::abs(signal[i]));
   }

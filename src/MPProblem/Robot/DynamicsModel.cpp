@@ -136,6 +136,12 @@ GetSimulatedState() const {
   return ExtractSimulatedState(m_robot, m_model);
 }
 
+void
+DynamicsModel::
+SetSimulatedState(const Cfg& _cfg) {
+  ConfigureSimulatedState(_cfg, m_model);
+}
+
 
 std::vector<double>
 DynamicsModel::
