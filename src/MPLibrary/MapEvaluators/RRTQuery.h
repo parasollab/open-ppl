@@ -180,7 +180,6 @@ PerformSubQuery(const CfgType& _start, const CfgType& _goal) {
          << "\tto   " << _goal << endl;
 
   VID start = this->GetRoadmap()->GetGraph()->GetVID(_start);
-  cout << "VID of start " << start << endl;
   pair<VID, double> nearest;
   bool success = false;
 

@@ -1,62 +1,64 @@
 #include "Battery.h"
 
+using namespace std;
+
+
 Battery::
 Battery() {
   SetValues(30,30);
 }
 
-void 
+void
 Battery::
 SetValues(double _max, double _cur) {
-  m_MaxLevel = _max;
-  m_CurLevel = _cur;
+  m_maxLevel = _max;
+  m_curLevel = _cur;
 }
 
-void 
+void
 Battery::
 SetToMax() {
-  m_CurLevel = m_MaxLevel; 
+  m_curLevel = m_maxLevel;
 }
 
-void 
+void
 Battery::
-Print() { 
-  cout << " current battery level: " << m_CurLevel << " max level: " << m_MaxLevel << endl; 
+Print() {
+  cout << " current battery level: " << m_curLevel << " max level: " << m_maxLevel << endl;
 }
 
 double
 Battery::
-GetCurLevel() { 
-  return m_CurLevel; 
+GetCurLevel() {
+  return m_curLevel;
 }
 
-double 
+double
 Battery::
-GetMaxLevel() { 
-  return m_MaxLevel; 
+GetMaxLevel() {
+  return m_maxLevel;
 }
 
-void 
+void
 Battery::
 Charge(double _increaseRate) {
-  m_CurLevel += _increaseRate;
-  if( m_CurLevel > m_MaxLevel ) 
-    m_CurLevel = m_MaxLevel;
+  m_curLevel += _increaseRate;
+  if( m_curLevel > m_maxLevel )
+    m_curLevel = m_maxLevel;
 }
 
-void 
+void
 Battery::
 UpdateValue(double _depletionRateBase, double _depletionRateMoving) {
-  m_CurLevel -= _depletionRateBase + _depletionRateMoving;
-  if( m_CurLevel < 0 ) 
-    m_CurLevel = 0;
+  m_curLevel -= _depletionRateBase + _depletionRateMoving;
+  if( m_curLevel < 0 )
+    m_curLevel = 0;
 }
 
-void 
+void
 Battery::
 UpdateValue(double _depletionRateBase){
-  m_CurLevel -= _depletionRateBase;
-  if( m_CurLevel < 0 ) 
-    m_CurLevel = 0;
+  m_curLevel -= _depletionRateBase;
+  if( m_curLevel < 0 )
+    m_curLevel = 0;
 }
-

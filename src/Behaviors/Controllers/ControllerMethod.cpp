@@ -105,20 +105,17 @@ ComputeNearestContinuousControl(const Cfg& _current,
   double bestDot = -1;
 
   // Find the unit vector of the desired force in the robot's local coordinates.
-  auto world = _force;
-  auto desired = _force;
-  //m_robot->GetDynamicsModel()->WorldToLocal(desired);
-  auto desiredDirection = nonstd::unit(desired);
+  auto desiredDirection = nonstd::unit(_force);
 
   // Check each actuator and find the nearest control.
   for(const auto& actuatorPair : m_robot->GetActuators()) {
     const auto& actuator = actuatorPair.second;
 
     // Compute the nearest
-    const auto signal = actuator->ComputeNearestSignal(desired);
-    const auto force = nonstd::unit(actuator->ComputeForce(signal));
+    const auto signal = actuator->ComputeNearestSignal(_force);
+    const auto unitForce = nonstd::unit(actuator->ComputeForce(signal));
 
-    const double dot = nonstd::dot<double>(desiredDirection, force);
+    const double dot = nonstd::dot<double>(desiredDirection, unitForce);
     if(dot >= bestDot) {
       best = Control{actuator, signal};
       bestDot = dot;
@@ -128,8 +125,7 @@ ComputeNearestContinuousControl(const Cfg& _current,
   // Debug.
   if(m_debug) {
     std::cout << "Computing best continuous control...\n" << std::endl
-              << "\tdesired force (world): " << world << std::endl
-              << "\tdesired force (local): " << desired << std::endl
+              << "\tdesired force (local): " << _force << std::endl
               << "\tbest control:          " << best << std::endl;
     if(best.actuator)
       std::cout << "\tbest force (local):    "
@@ -154,17 +150,12 @@ ComputeNearestDiscreteControl(const Cfg& _current, std::vector<double>&& _force)
   double bestDot = -1;
 
   // Find the unit vector of the desired force in the robot's local coordinates.
-  auto desired = nonstd::unit(_force);
-  //cout << "Desired force before world to local: " << desired << endl;
-  m_robot->GetDynamicsModel()->WorldToLocal(desired);
-  desired = nonstd::unit(desired);
-
-  desired[0] = abs(desired[0]);
+  auto desiredDirection = nonstd::unit(_force);
 
   // Rank force similarity first by direction and then by magnitude.
   for(const auto& control : *GetControlSet()) {
-    const auto force = nonstd::unit(control.GetForce());
-    const double dot = nonstd::dot<double>(desired, force);
+    const auto unifForce = nonstd::unit(control.GetForce());
+    const double dot = nonstd::dot<double>(desiredDirection, unifForce);
     if(dot > bestDot) {
       best = control;
       bestDot = dot;
@@ -174,8 +165,8 @@ ComputeNearestDiscreteControl(const Cfg& _current, std::vector<double>&& _force)
   // Debug.
   if(m_debug) {
     std::cout << "Computing best discrete control..." << std::endl
-              << "\tdesired force: " << desired << std::endl
-              << "\tbest control:  " << best << std::endl;
+              << "\tdesired force (local): " << desiredDirection << std::endl
+              << "\tbest control:          " << best << std::endl;
     if(best.actuator)
       std::cout << "\tbest force:    "
                 << best.actuator->ComputeForce(best.signal) << std::endl;

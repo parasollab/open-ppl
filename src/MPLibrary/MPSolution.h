@@ -28,25 +28,20 @@ class MPSolutionType final {
     ~MPSolutionType();
 
     ///@}
-    ///@name Roadmap Accessors
+    ///@name Accessors
     ///@{
 
     void SetRoadmap(RoadmapType* const _r) noexcept;
     RoadmapType* GetRoadmap() const noexcept;
-    Robot* GetRobot() const noexcept;   ///< Probably will be deleted, not sure yet.
+
     RoadmapType* GetBlockRoadmap() const noexcept;
 
-    ///@}
-    ///@name Path Accessors
-    ///@{
 
-    Path* GetPath() noexcept;
+    Robot* GetRobot() const noexcept;
 
-    ///@}
-    ///@name StatClass Accessor
-    ///@{
+    Path* GetPath() const noexcept;
 
-    StatClass* GetStatClass() noexcept;
+    StatClass* GetStatClass() const noexcept;
 
     ///@}
 
@@ -107,6 +102,15 @@ GetRoadmap() const noexcept {
 
 template <typename MPTraits>
 inline
+typename MPTraits::RoadmapType*
+MPSolutionType<MPTraits>::
+GetBlockRoadmap() const noexcept {
+  return m_obstMap;
+}
+
+
+template <typename MPTraits>
+inline
 Robot*
 MPSolutionType<MPTraits>::
 GetRobot() const noexcept {
@@ -116,29 +120,18 @@ GetRobot() const noexcept {
 
 template <typename MPTraits>
 inline
-typename MPTraits::RoadmapType*
-MPSolutionType<MPTraits>::
-GetBlockRoadmap() const noexcept {
-  return m_obstMap;
-}
-
-/*------------------------------ Path Accessors ------------------------------*/
-
-template <typename MPTraits>
-inline
 typename MPTraits::Path*
 MPSolutionType<MPTraits>::
-GetPath() noexcept {
+GetPath() const noexcept {
   return m_path;
 }
 
-/*------------------------------ Stats Accessors -----------------------------*/
 
 template <typename MPTraits>
 inline
 StatClass*
 MPSolutionType<MPTraits>::
-GetStatClass() noexcept {
+GetStatClass() const noexcept {
   return m_stats;
 }
 

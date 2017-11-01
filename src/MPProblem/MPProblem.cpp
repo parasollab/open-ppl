@@ -25,14 +25,18 @@ MPProblem(const string& _filename) {
 
 MPProblem::
 ~MPProblem() {
-  delete m_environment;
+  for(auto robotTasks : m_taskMap)
+  {
+    auto& tasks = robotTasks.second;
+    for(auto task : tasks)
+      delete task;
+  }
 
   delete m_pointRobot;
   for(auto robot : m_robots)
     delete robot;
 
-  for(auto task : m_tasks)
-    delete task;
+  delete m_environment;
 }
 
 /*---------------------------- XML Helpers -----------------------------------*/
@@ -86,7 +90,7 @@ ReadXMLFile(const string& _filename) {
 
   // If no tasks were specified, assume we want an unconstrained plan for the
   // first robot.
-  if(m_tasks.empty()) {
+  if(m_taskMap.empty()) {
     if(m_robots.size() > 1)
       throw ParseException(input.Where(), "No task was specified in the problem "
           "node, but multiple robots are specified. Taskless execution only "
@@ -98,8 +102,7 @@ ReadXMLFile(const string& _filename) {
 
     std::cout << *robot << std::endl;
 
-    MPTask* nullTask = new MPTask(robot);
-    m_tasks.push_back(nullTask);
+    m_taskMap[robot].push_back(new MPTask(robot));
   }
 
   // Compute the environment resolution.
@@ -114,7 +117,6 @@ ReadXMLFile(const string& _filename) {
 void
 MPProblem::
 AddTask(Robot* const _robot, MPTask* const _task) {
-  m_tasks.push_back(_task);
   m_taskMap[_robot].push_back(_task);
 }
 
@@ -144,7 +146,6 @@ ParseChild(XMLNode& _node) {
   }
   else if(_node.Name() == "Task") {
     MPTask* newTask = new MPTask(this, _node);
-    m_tasks.push_back(newTask);
     auto label = _node.Read("robot", true, "", "Label for the robot assigned to"
       " this task.");
     m_taskMap[this->GetRobot(label)].push_back(newTask);
@@ -215,16 +216,9 @@ GetRobots() const noexcept {
 
 const std::vector<MPTask*>&
 MPProblem::
-GetTasks() const noexcept {
-  return m_tasks;
-}
-
-const std::vector<MPTask*>&
-MPProblem::
 GetTasks(Robot* const _robot) const noexcept {
   return m_taskMap.at(_robot);
 }
-
 
 /*-------------------------------- Debugging ---------------------------------*/
 

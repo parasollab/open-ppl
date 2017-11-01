@@ -271,7 +271,7 @@ PLAYER_DIR          := $(PHYSICAL_ROBOTS_DIR)/player/build/install
 ifneq ($(icreate), 0)
   PHYSICAL_ROBOTS_DEF  := -DPMPL_USE_ICREATE
   PHYSICAL_ROBOTS_INCL := -I$(PHYSICAL_ROBOTS_DIR)/src -I$(PHYSICAL_ROBOTS_DIR)/tcp \
-		                      -I$(PLAYER_DIR)/include/player-3.0 
+		                      -I$(PLAYER_DIR)/include/player-3.0
   PHYSICAL_ROBOTS_LIBS := -L$(PHYSICAL_ROBOTS_DIR)/src -lcreate_controller \
 			  -L$(PHYSICAL_ROBOTS_DIR)/player/build/install/lib64 \
 			  -lplayerc++ -lplayerc -lplayercommon -lplayercore \
@@ -303,8 +303,7 @@ SIM_OBJS := \
   Behaviors/Agents/RoadmapFollowingAgent.o \
   Behaviors/Agents/Agent.o \
   Behaviors/Agents/Battery.o \
-  Behaviors/Agents/ICreateChildAgent.o \
-  Behaviors/Agents/AgentGroup.o \
+  Behaviors/Agents/BatteryConstrainedGroup.o \
   Simulator/Simulation.o \
   Visualization/DrawableBody.o \
   Visualization/DrawableMultiBody.o
@@ -366,9 +365,10 @@ PMPL_OBJS := \
   MPProblem/Robot/Control.o \
   MPProblem/Robot/DynamicsModel.o \
   MPProblem/Robot/Robot.o \
+  MPProblem/Robot/HardwareInterfaces/ArucoDetectorInterface.o \
   MPProblem/Robot/HardwareInterfaces/HardwareInterface.o \
+  MPProblem/Robot/HardwareInterfaces/QueuedHardwareInterface.o \
   MPProblem/Robot/HardwareInterfaces/ServerQueueInterface.o \
-  MPProblem/Robot/HardwareInterfaces/NetbookInterface.o \
   Simulator/BulletEngine.o \
   Utilities/CountingStreamBuffer.o \
   Utilities/IOUtils.o \

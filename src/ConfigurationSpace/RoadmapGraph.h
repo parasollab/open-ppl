@@ -328,8 +328,9 @@ AddVertex(const Vertex& _v) noexcept {
   // Find the vertex and ensure it does not already exist.
   CVI vi;
   if(IsVertex(_v, vi)) {
-    //std::cerr << "\nRoadmapGraph::AddVertex: vertex " << vi->descriptor()
-      //<< " already in graph" << std::endl;
+    std::cerr << "\nRoadmapGraph::AddVertex: vertex " << vi->descriptor()
+              << " already in graph"
+              << std::endl;
     return vi->descriptor();
   }
 

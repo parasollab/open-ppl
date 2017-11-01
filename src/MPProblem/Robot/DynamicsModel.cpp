@@ -136,6 +136,7 @@ GetSimulatedState() const {
   return ExtractSimulatedState(m_robot, m_model);
 }
 
+
 void
 DynamicsModel::
 SetSimulatedState(const Cfg& _cfg) {

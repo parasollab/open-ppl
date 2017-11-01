@@ -120,13 +120,20 @@ class MPTask final {
     /// @return True if the ending point of _p satisfies all goal constraints.
     bool EvaluateGoalConstraints(const std::vector<Cfg>& _p) const;
 
-    void SetCompleted(bool _v);
+    ///@}
+    ///@name Task Status
+    ///@{
+    /// Check/set the status of this task manually (as opposed to the Evaluate
+    /// function).
 
-    void SetStarted(bool _v);
+    bool IsCompleted() const;
+    void SetCompleted();
 
-    bool IsCompleted();
+    bool IsStarted() const;
+    void SetStarted();
 
-    bool Started();
+    /// Reset the task as not started.
+    void Reset();
 
     ///@}
 
@@ -153,14 +160,12 @@ class MPTask final {
     ///@{
 
     std::string m_label;          ///< The unique task label.
-    std::string m_robotLabel;     ///< The robot (group) label.
 
     Robot* m_robot{nullptr};      ///< The robot (group) assigned to this task.
     /// @TODO Change this to a robot group when that code is ready.
     //RobotGroup* m_group{nullptr}; ///< The robot group assigned to this task.
 
-    bool m_completed{false};             /// See if the task has been completed
-    bool m_started{false};
+    Status m_status{OnDeck};      ///< The status of the current task.
 
     std::vector<Constraint*> m_startConstraints; ///< Req'd to start task.
     std::vector<Constraint*> m_pathConstraints;  ///< Req'd during whole task.

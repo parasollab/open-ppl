@@ -3,11 +3,23 @@
 
 #include <iostream>
 
-using namespace std;
 
+////////////////////////////////////////////////////////////////////////////////
+/// Models a battery with a finite amount of charge.
+////////////////////////////////////////////////////////////////////////////////
 class Battery {
+
   public:
-    Battery(); 
+
+    ///@name Construction
+    ///@{
+
+    Battery();
+
+    ///@}
+    ///@name Battery Interface
+    ///@{
+    /// @TODO Document these functions.
 
     void SetValues(double, double);
     void SetToMax();
@@ -18,29 +30,18 @@ class Battery {
     void UpdateValue(double _depletionRateBase, double _depletionRateMoving);
     void UpdateValue(double _depletionRateBase);
 
+    ///@}
+
   protected:
-    double m_MaxLevel;
-    double m_CurLevel;
 
-};
+    ///@name Internal State
+    ///@{
 
-class BatteryBattery: public Battery {
-  public:
-    using Battery::UpdateValue;
-    BatteryBattery() : Battery() {}
-    void UpdateValue(double _depletionRateBase, double _depletionRateMoving) {
-      m_CurLevel -= _depletionRateBase + _depletionRateMoving;
-      if( m_CurLevel < 0 ) m_CurLevel = 0;
-    }
-};
+    double m_maxLevel;  ///< Maximum charge the battery can hold.
+    double m_curLevel;  ///< Current charge in the battery.
 
-class WaterBattery: public Battery {
-  public:
-    using Battery::UpdateValue;
-    void UpdateValue(double _depletionRateBase) {
-      m_CurLevel -= _depletionRateBase;
-      if( m_CurLevel < 0 ) m_CurLevel = 0;
-    }
+    ///@}
+
 };
 
 #endif

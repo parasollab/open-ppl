@@ -16,7 +16,6 @@
 MPTask::
 MPTask(Robot* const _robot) : m_robot(_robot) {
   m_label = "null task";
-  m_robotLabel = m_robot->GetLabel();
 }
 
 
@@ -24,11 +23,11 @@ MPTask::
 MPTask(MPProblem* const _problem, XMLNode& _node) {
   // Parse task and robot labels.
   m_label = _node.Read("label", true, "", "Unique label for this task");
-  m_robotLabel = _node.Read("robot", true, "", "Label for the robot assigned to"
-      " this task.");
 
   // Get the robot by label.
-  m_robot = _problem->GetRobot(m_robotLabel);
+  const std::string robotLabel = _node.Read("robot", true, "", "Label for the "
+      "robot assigned to this task.");
+  m_robot = _problem->GetRobot(robotLabel);
 
   // Parse constraints.
   ConstraintFactory factory;
@@ -143,30 +142,43 @@ GetGoalBoundary() const noexcept {
   return MakeComposeBoundary(m_goalConstraints);
 }
 
-
-void
-MPTask::
-SetCompleted(bool _v) {
-  m_completed = _v;
-}
+/*------------------------------- Task Status --------------------------------*/
 
 bool
 MPTask::
-IsCompleted() {
-  return m_completed;
+IsCompleted() const {
+  return m_status == Complete;
 }
 
-bool
-MPTask::
-Started() {
-  return m_started;
-}
 
 void
 MPTask::
-SetStarted(bool _v) {
-  m_started = _v;
+SetCompleted() {
+  m_status = Complete;
 }
+
+
+bool
+MPTask::
+IsStarted() const {
+  return m_status == InProgress or IsCompleted();
+}
+
+
+void
+MPTask::
+SetStarted() {
+  if(!IsStarted())
+    m_status = InProgress;
+}
+
+
+void
+MPTask::
+Reset() {
+  m_status = OnDeck;
+}
+
 /*---------------------------- Constraint Evaluation -------------------------*/
 
 MPTask::Status

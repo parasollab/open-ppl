@@ -1,8 +1,7 @@
 #ifndef AGENT_H_
 #define AGENT_H_
 
-#include "MPProblem/MPTask.h"
-
+class MPTask;
 class Robot;
 
 
@@ -73,9 +72,12 @@ class Agent {
     ///       correctly.
     virtual void SetCurrentTask(MPTask* const _task);
 
+    /// Get the current task that the agent is working on.
     const MPTask* GetCurrentTask() const noexcept;
+
     ///@}
 
+    /// TODO probably move
     int m_priority = -1;               ///< The agent's priority in its group.
 
 };

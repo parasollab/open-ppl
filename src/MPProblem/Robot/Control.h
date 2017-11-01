@@ -22,7 +22,6 @@ class Robot;
 ///          mechanism for that DOF, with -1 representing full reverse and 1
 ///          representing full forward.
 ////////////////////////////////////////////////////////////////////////////////
-
 struct Control final {
 
   ///@name Local Types

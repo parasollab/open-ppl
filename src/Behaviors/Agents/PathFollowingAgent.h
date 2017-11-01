@@ -5,9 +5,8 @@
 
 #include "ConfigurationSpace/Cfg.h"
 #include "MPLibrary/PMPL.h"
-#include "Behaviors/Controllers/ICreateController.h"
 
-class ControllerMethod;
+
 ////////////////////////////////////////////////////////////////////////////////
 /// This agent calls pmpl once and then follows the resulting path.
 ////////////////////////////////////////////////////////////////////////////////
@@ -26,8 +25,7 @@ class PathFollowingAgent : public Agent {
     ///@name Agent Interface
     ///@{
 
-    vector<double> GetCoordinatesFromMarker();
-     /// Call PMPL to create a path for the agent to follow.
+    /// Call PMPL to create a path for the agent to follow.
     virtual void Initialize() override;
 
     /// Follow the path.
@@ -36,9 +34,6 @@ class PathFollowingAgent : public Agent {
     /// Clean up.
     virtual void Uninitialize() override;
 
-    ControllerMethod* m_hardwareController{nullptr}; ///< Low-level controller.
-    
-    void UpdateOdometry(const double&, const double&, const double&);
     ///@}
 
   protected:
@@ -46,16 +41,10 @@ class PathFollowingAgent : public Agent {
     ///@name Internal State
     ///@{
 
-    std::vector<double> m_odometry{0.0,0.0,0.0};
-
     std::vector<Cfg> m_path; ///< The path to follow.
     size_t m_pathIndex{0};   ///< The path node that is the current subgoal.
 
     MPLibrary* m_library{nullptr}; ///< This agent's planning library.
-
-    int m_timeSteps{0};
-
-    double m_dt{0.0};
 
     ///@}
 

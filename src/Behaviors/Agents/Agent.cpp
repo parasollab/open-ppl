@@ -5,7 +5,7 @@
 #include "BulletDynamics/Featherstone/btMultiBodyLink.h"
 #include "MPProblem/Robot/DynamicsModel.h"
 #include "MPProblem/Robot/Robot.h"
-
+#include "MPProblem/MPTask.h"
 
 
 /*------------------------------ Construction --------------------------------*/

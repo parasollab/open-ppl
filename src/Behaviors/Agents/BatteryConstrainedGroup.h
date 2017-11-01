@@ -1,21 +1,28 @@
-#ifndef AGENT_GROUP_H_
-#define AGENT_GROUP_H_
+#ifndef BATTERY_CONSTRAINED_GROUP_H_
+#define BATTERY_CONSTRAINED_GROUP_H_
 
 #include "Agent.h"
 
 #include "ConfigurationSpace/Cfg.h"
-#include "Behaviors/Agents/ICreateChildAgent.h"
 #include "Behaviors/Agents/PathFollowingChildAgent.h"
 #include "MPLibrary/PMPL.h"
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// This agent calls pmpl once and then follows the resulting path.
+/// This agent represents the battery constrained coverage behavior presented in
+/// the following paper:
+///
+///   S. Mishra et. al. "Battery Constrained Coverage" ...
+///
+/// This agent represents a coordinator and does not correspond to a physical
+/// robot. Its job is to coordinate the children and hold shared data structures
+/// for their use. It has a robot pointer purely for the purpose of building the
+/// shared roadmap.
 ///
 /// @WARNING This object currently only supports homogeneous robot teams, and
 ///          assumes a shared roadmap model.
 ////////////////////////////////////////////////////////////////////////////////
-class AgentGroup : public Agent {
+class BatteryConstrainedGroup : public Agent {
 
   public:
 
@@ -30,9 +37,11 @@ class AgentGroup : public Agent {
     ///@name Construction
     ///@{
 
-    AgentGroup(Robot* const _r);
+    /// Create an agent group with some robot as the coordinator.
+    /// @param _r The coordinator robot.
+    BatteryConstrainedGroup(Robot* const _r);
 
-    virtual ~AgentGroup();
+    virtual ~BatteryConstrainedGroup();
 
     ///@}
     ///@name Agent Interface
@@ -44,28 +53,41 @@ class AgentGroup : public Agent {
     /// Follow the roadmap.
     virtual void Step(const double _dt) override;
 
+    /// Clean up.
+    virtual void Uninitialize() override;
+
+    ///@}
+    ///@name Coordinator Interface
+    ///@{
+
     /// Get a helpers robot for the worker robot
     std::vector<Robot*>& GetHelpers();
 
     /// Get the charging locations for problem
     std::vector<pair<Cfg, bool>>& GetChargingLocations();
 
-    /// Clean up.
-    virtual void Uninitialize() override;
+    /// Check a robot label to see if it is currently a helper.
+    bool IsHelper(Robot* const _r) const;
+
+    /// Get a random unvisited vertex from the roadmap.
+    const Cfg GetRandomRoadmapPoint();
 
     ///@}
 
   private:
 
-    ///@name
+    ///@name Coordinator Helpers
     ///@{
 
     /// Set the next task for each child agent.
     void SetNextChildTask();
 
-    const Cfg& GetRandomRoadmapPoint() const;
+    /// Get all robots in the problem that are not the coordinator agent.
+    std::vector<Robot*> GetChildRobots() const;
 
-    std::vector<Robot*> GetChildRobots();
+    /// Create a vector of all cfgs that are not yet visited. We want to visit
+    /// each one exactly once with any one worker robot.
+    void InitializeUnvisitedCfgs();
 
     ///@}
 
@@ -78,14 +100,15 @@ class AgentGroup : public Agent {
 
     MPSolution* m_solution{nullptr}; ///< The shared-roadmap solution.
 
-    std::vector<PathFollowingChildAgent*> m_RobotGroup;
+    std::vector<PathFollowingChildAgent*> m_childAgents;  ///< All robots in the group.
 
     std::vector<pair<Cfg, bool>> m_chargingLocations;  ///< pair of <chargingLocation, isFree>
 
-    //std::unordered_map<Robot*, Cfg> m_availableHelpers; ///< Helper robots avaialable
-
+    /// The helper robots which are currently idle.
     std::vector<Robot*> m_availableHelpers;
-    //std::vector<ICreateChildAgent*> m_RobotGroup;
+
+    /// The set of Cfgs that need to be visited by a worker.
+    std::vector<Cfg> m_unvisitedCfgs;
 
     ///@}
 

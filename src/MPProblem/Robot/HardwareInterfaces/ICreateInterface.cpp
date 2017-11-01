@@ -10,13 +10,15 @@
 /// The polling period to use for all iCreate interfaces, named here so that
 /// it is not a magic number. We set this equal to 300ms because we have
 /// observed that m_position2d->SetSpeed takes about 200ms to return.
-static constexpr double iCreatePollingPeriod = .3;
+static constexpr double iCreateCommunicationTime = .3,
+                        iCreatePollingPeriod = .3;
 
 /*------------------------------- Construction -------------------------------*/
 
 ICreateInterface::
 ICreateInterface(const std::string& _ip, const unsigned short _port)
-    : ServerQueueInterface(iCreatePollingPeriod, "iCreate", _ip, _port) {
+    : ServerQueueInterface(iCreatePollingPeriod, "iCreate", _ip, _port,
+        iCreateCommunicationTime) {
   // Create connections to the iCreate's onboard controller (i.e., the netbook
   // sitting on top of it running player).
   m_client = new PlayerCc::PlayerClient(_ip, _port);
@@ -75,7 +77,7 @@ SendToRobot(const Command& _command) {
   const auto& controlSet = _command.controls;
 
   // If we are requesting the same action, do not resend.
-  if(controlSet == m_lastControls) 
+  if(controlSet == m_lastControls)
     return;
   // If we received an empty control set, this is a wait command.
   else if(controlSet.empty()) {

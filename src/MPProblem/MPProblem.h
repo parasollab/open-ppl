@@ -84,8 +84,9 @@ class MPProblem final
     const std::string& GetQueryFilename() const {return m_queryFilename;}
     void SetQueryFilename(const std::string& _s) {m_queryFilename = _s;}
 
-    /// Get all of the tasks in this problem.
-    const std::vector<MPTask*>& GetTasks() const noexcept;
+    /// Get the tasks currently assigned to a given robot.
+    /// @param _robot The robot to retrieve tasks for.
+    /// @return The set of tasks currently assigned to _robot.
     const std::vector<MPTask*>& GetTasks(Robot* const) const noexcept;
 
     /// Add a task to the problem for a given robot.
@@ -128,12 +129,12 @@ class MPProblem final
     ///@{
 
     Environment* m_environment{nullptr};  ///< The planning environment.
+
     std::vector<Robot*> m_robots;         ///< The robots in our problem.
     Robot* m_pointRobot{nullptr};         ///< A pseudo point-robot.
-    std::vector<MPTask*> m_tasks;         ///< The tasks in our problem.
 
-    /// @TODO Replace m_tasks with this when it is at 100%.
-    std::unordered_map<Robot*, std::vector<MPTask*>> m_taskMap;   /// Map to keep track of the tasks assigned to robots
+    /// Map the tasks assigned to each robot.
+    std::unordered_map<Robot*, std::vector<MPTask*>> m_taskMap;
 
     ///@}
     ///@name Files

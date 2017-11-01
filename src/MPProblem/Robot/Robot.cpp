@@ -78,8 +78,18 @@ Robot(MPProblem* const _p, XMLNode& _node) : m_problem(_p) {
     m_dynamicsModel = new DynamicsModel(this, nullptr);
 
   for(auto& child : _node) {
-    if(child.Name() == "HardwareInterface")
-      SetHardwareInterface(HardwareInterfaceFactory(child));
+    if(child.Name() == "HardwareInterface") {
+      const std::string label = child.Read("label", true, "",
+          "A unique label for this hardware.");
+
+      // Make sure we don't allow duplicate labels.
+      const bool duplicate = m_hardware.count(label);
+      if(duplicate)
+        throw RunTimeException(WHERE, "Hardware labels must be unique for a "
+            "given robot.");
+
+      SetHardwareInterface(label, HardwareInterfaceFactory(child));
+    }
   }
 
   // The agent should be initialized by the Simulation object to avoid long
@@ -100,7 +110,9 @@ Robot(MPProblem* const _p, ActiveMultiBody* const _mb, const std::string& _label
 
 Robot::
 ~Robot() noexcept {
-  delete m_hardware;
+  for(auto& hardware : m_hardware)
+    delete hardware.second;
+
   delete m_agent;
   delete m_controller;
   delete m_dynamicsModel;
@@ -233,12 +245,6 @@ GetVSpace() const noexcept {
 void
 Robot::
 Step(const double _dt) {
-  // Update the agent's perception of the world.
-  /// @TODO Add percept model
-  //if(m_percept)
-  //  m_percept->Update();
-
-
   // Run the agent's decision-making routine. The agent will apply controls as
   // required to execute its decision.
   if(m_agent)
@@ -334,25 +340,21 @@ SetDynamicsModel(btMultiBody* const _m) {
 
 HardwareInterface*
 Robot::
-GetHardwareInterface() const noexcept {
-  return m_hardware;
+GetHardwareInterface(const std::string& _label) const noexcept {
+  if(m_hardware.count(_label))
+    return m_hardware.at(_label);
+  return nullptr;
 }
 
 
 void
 Robot::
-SetHardwareInterface(HardwareInterface* const _i) noexcept {
-  delete m_hardware;
-  m_hardware = _i;
+SetHardwareInterface(const std::string& _label, HardwareInterface* const _i)
+    noexcept {
+  if(m_hardware.count(_label))
+    delete m_hardware[_label];
+  m_hardware[_label] = _i;
 }
-
-
-double
-Robot::
-GetHardwareTime() noexcept {
-  return m_hardwareTime;
-}
-
 
 /*------------------------------- Other --------------------------------------*/
 

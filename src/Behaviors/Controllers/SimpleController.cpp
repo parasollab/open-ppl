@@ -3,6 +3,8 @@
 #include <algorithm>
 
 #include "ConfigurationSpace/Cfg.h"
+#include "MPProblem/Robot/DynamicsModel.h"
+#include "MPProblem/Robot/Robot.h"
 #include "Utilities/XMLNode.h"
 
 
@@ -45,6 +47,9 @@ ComputeDesiredForce(const Cfg& _current, const Cfg& _target, const double) {
   std::vector<double> desired = delta.GetData();
   std::for_each(desired.begin(), desired.end(),
       [coefficient](double& _val) {_val *= coefficient;});
+
+  // Put the force into the robot's local frame.
+  m_robot->GetDynamicsModel()->WorldToLocal(desired);
 
   return desired;
 }

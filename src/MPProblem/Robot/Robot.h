@@ -67,9 +67,8 @@ class Robot {
   CSpaceBoundingBox* m_cspace{nullptr};    ///< The robot's configuration space.
   CSpaceBoundingBox* m_vspace{nullptr};    ///< The robot's velocity space.
 
-  HardwareInterface* m_hardware{nullptr};  ///< An interface to a hardware robot.
-
-  double m_hardwareTime{0.4};               ///< Minimum time required to send command to the robot
+  /// Interfaces the robot's hardware, mapped by label.
+  std::unordered_map<std::string, HardwareInterface*> m_hardware;
 
   ///@}
 
@@ -184,9 +183,13 @@ class Robot {
     ///@{
     /// Access the interface to the hardware robot (if any).
 
-    HardwareInterface* GetHardwareInterface() const noexcept;
-    void SetHardwareInterface(HardwareInterface* const _i) noexcept;
-    double GetHardwareTime() noexcept;
+    HardwareInterface* GetHardwareInterface(const std::string& _label) const
+        noexcept;
+    void SetHardwareInterface(const std::string& _label,
+        HardwareInterface* const _i) noexcept;
+
+    /// Get the minimum time between commands sent to the hardware, in seconds.
+    double GetHardwareTime() const noexcept;
 
     ///@}
     ///@name Other Properties

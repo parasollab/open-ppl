@@ -41,13 +41,6 @@ class ICreateController : public ControllerMethod {
         const Cfg& _target, const double _dt) override;
 
     ///@}
-    ///@name Internal State
-    ///@{
-
-    double m_gain; ///< The proportional error gain.
-    double m_max;  ///< The maximum force to exert.
-
-    ///@}
 
 };
 

@@ -77,12 +77,13 @@ class Body {
     /// Check if a color was loaded.
     bool IsColorLoaded() const;
 
-    /// Get the loaded color.
+    /// Get the loaded color (vizmo version).
     const Color4& GetColor() const;
 
+    /// Get/set the color for the body (simulator version).
     const glutils::color& GetBodyColor() const;
-    /// Set the color for the body
     void SetBodyColor(const glutils::color& _c);
+
     /// Check if a texture was loaded.
     bool IsTextureLoaded() const;
 

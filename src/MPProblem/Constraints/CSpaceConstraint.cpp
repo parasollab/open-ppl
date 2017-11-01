@@ -12,36 +12,46 @@
 
 
 /*------------------------------ Construction --------------------------------*/
+
 CSpaceConstraint::
 CSpaceConstraint(Robot* const _r, const Cfg& _cfg)
   : Constraint(_r),
     m_bbx(_r->GetMultiBody()->DOF() * (_r->IsNonholonomic() ? 2 : 1))
 {
-    // This is a point constraint.
-    Cfg point(_r);
-    point = _cfg;
+  // Ensure that _cfg goes with _r.
+  if(_r != _cfg.GetRobot())
+    throw RunTimeException(WHERE, "Cannot create point task with "
+        "configuration for a different robot.");
 
-    m_bbx.ShrinkToPoint(point);
+  m_bbx.ShrinkToPoint(_cfg);
 }
+
 
 CSpaceConstraint::
 CSpaceConstraint(Robot* const _r, const std::string& _pointString)
   : Constraint(_r),
     m_bbx(_r->GetMultiBody()->DOF() * (_r->IsNonholonomic() ? 2 : 1))
 {
-    // This is a point constraint.
-    Cfg point(_r);
-    std::istringstream pointStream(_pointString);
-    point.Read(pointStream);
+  /// @TODO Verify that this works with constraints of lower dimension than the
+  ///       robot's cspace (for partial constraint), or decide that we will not
+  ///       support this and throw an error if requested.
 
-    m_bbx.ShrinkToPoint(point);
+  // This is a point constraint.
+  Cfg point(_r);
+  std::istringstream pointStream(_pointString);
+  pointStream >> m_bbx;
 }
+
 
 CSpaceConstraint::
 CSpaceConstraint(Robot* const _r, XMLNode& _node)
   : Constraint(_r),
     m_bbx(_r->GetMultiBody()->DOF() * (_r->IsNonholonomic() ? 2 : 1))
 {
+  /// @TODO Verify that this works with constraints of lower dimension than the
+  ///       robot's cspace (for partial constraint), or decide that we will not
+  ///       support this and throw an error if requested.
+
   // The XML node will either describe a point or a bounding box.
   const std::string pointString = _node.Read("point", false, "", "The Cfg point"),
                     bbxString = _node.Read("bbx", false, "", "The Cfg box");
