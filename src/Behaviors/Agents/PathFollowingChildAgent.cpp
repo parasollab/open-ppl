@@ -46,18 +46,21 @@ Initialize() {
   auto problem = m_robot->GetMPProblem();
   const std::string& xmlFile = problem->GetXMLFilename();
 
-  m_task = problem->GetTasks(m_robot).front();
+  // Copy this robot's first task so that it uses the parent robot pointer.
+  auto firstTask = problem->GetTasks(m_robot).front();
+  m_task = new MPTask(m_parentRobot);
+  for(auto& constraint : firstTask->GetStartConstraints())
+    m_task->AddStartConstraint(constraint);
+  for(auto& constraint : firstTask->GetPathConstraints())
+    m_task->AddPathConstraint(constraint);
+  for(auto& constraint : firstTask->GetGoalConstraints())
+    m_task->AddGoalConstraint(constraint);
+
   // Initialize the agent's planning library.
   m_library = new MPLibrary(xmlFile);
 
-  m_solution = new MPSolution(m_robot);
-  // Use the planning library to find a path.
-  m_library->Solve(problem, m_task, m_solution);
-
-  // Extract the path from the solution.
-  m_path = m_solution->GetPath()->Cfgs();
-
-  m_parentRobot = m_robot;
+  // Get the next path.
+  GetNextPath(m_task);
 }
 
 
@@ -83,11 +86,12 @@ Step(const double _dt) {
   if(m_task && !m_task->IsStarted()) {
     m_path.clear();
     m_pathIndex = 0;
-    auto problem = m_robot->GetMPProblem();
-    //cout << "Task Failing For Robot: " << m_robot->GetLabel() << endl;
-    m_library->Solve(problem, m_task, m_solution);
+    //auto problem = m_robot->GetMPProblem();
+    ////cout << "Task Failing For Robot: " << m_robot->GetLabel() << endl;
+    //m_library->Solve(problem, m_task, m_solution);
 
-    m_path = m_solution->GetPath()->Cfgs();
+    //m_path = m_solution->GetPath()->Cfgs();
+    GetNextPath(m_task);
     m_task->SetStarted();
   }
 
@@ -139,10 +143,13 @@ Uninitialize() {
 
 void
 PathFollowingChildAgent::
-InitializeMPSolution(MPSolution* const _s) {
-  // Create a new solution object to hold a plan for this agent.
-  m_solution = new MPSolution(_s->GetRobot());
-  m_solution->SetRoadmap(_s->GetRoadmap());
+GetNextPath(MPTask* const _task) {
+  // Use the planning library to find a path.
+  MPSolution solution(m_parentRobot);
+  m_library->Solve(m_robot->GetMPProblem(), _task, &solution);
+
+  // Extract the path from the solution.
+  m_path = solution.GetPath()->Cfgs();
 }
 
 
@@ -311,7 +318,7 @@ FindNearestChargingLocation() {
     return;
 
   auto task = new MPTask(m_parentRobot);
-  auto problem = m_robot->GetMPProblem();
+  //auto problem = m_robot->GetMPProblem();
 
   auto currentPos = m_robot->GetDynamicsModel()->GetSimulatedState();
   auto start = new CSpaceConstraint(m_parentRobot, currentPos);
@@ -327,8 +334,10 @@ FindNearestChargingLocation() {
     // Create a temporary task and solve it to get path length
     tempTask->AddStartConstraint(start);
     tempTask->AddGoalConstraint(tempGoal);
-    m_library->Solve(problem, tempTask, m_solution);
-    tempPath = m_solution->GetPath()->Cfgs();
+    //m_library->Solve(problem, tempTask, m_solution);
+    //tempPath = m_solution->GetPath()->Cfgs();
+    GetNextPath(tempTask);
+    tempPath = m_path;
 
     // If the temp task has the shortest path length and it is free, store the task
     /// @TODO Switch planning to weighted euclidean distance which ignores
@@ -350,10 +359,11 @@ FindNearestChargingLocation() {
 
   m_pathIndex = 0;
   m_path.clear();
-  // Use the planning library to find a path.
-  m_library->Solve(problem, m_task, m_solution);
+  //// Use the planning library to find a path.
+  //m_library->Solve(problem, m_task, m_solution);
 
-  m_path = m_solution->GetPath()->Cfgs();
+  //m_path = m_solution->GetPath()->Cfgs();
+  GetNextPath(task);
 
   cout << "Going To Charging Location: " << chargingLocation << endl;
 }

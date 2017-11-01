@@ -72,7 +72,7 @@ Initialize() {
     }
 
     // Set up the shared roadmap and parent/child relationship.
-    agent->InitializeMPSolution(m_solution);
+    //agent->InitializeMPSolution(m_solution);
     agent->m_parentRobot = m_robot;
     agent->m_parentAgent = this;
     m_childAgents.push_back(agent);

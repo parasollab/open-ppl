@@ -40,10 +40,9 @@ class PathFollowingChildAgent : public Agent {
     ///@name Child Interface
     ///@{
 
-    /// Initializing the solution for this robot based on the parent's
-    /// shared roadmap.
-    /// @param _s The parent's solution object.
-    void InitializeMPSolution(MPSolution* const _s);
+    /// Get the next path for this child. Sets m_path.
+    /// @param _s The task defining the next goal.
+    void GetNextPath(MPTask* const _t);
 
     Cfg GetRandomRoadmapPoint();
 
@@ -110,10 +109,6 @@ class PathFollowingChildAgent : public Agent {
     size_t m_pathIndex{0};   ///< The path node that is the current subgoal.
 
     MPLibrary* m_library{nullptr}; ///< This agent's planning library.
-
-    MPSolution* m_solution{nullptr}; ///< The solution with the roadmap to follow.
-
-    //MPTask* m_task{nullptr};
 
     static unordered_map<Robot*, Cfg> m_HelpersAvailable;
 
