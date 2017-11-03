@@ -50,6 +50,8 @@ class Robot {
 
   ActiveMultiBody* m_multibody{nullptr};   ///< Robot's geometric representation.
 
+  bool m_virtual{false};                   ///< Is this an imaginary robot?
+
   std::string m_agentLabel;                ///< Agent type label.
   Agent* m_agent{nullptr};                 ///< High-level decision-making agent.
 
@@ -194,6 +196,11 @@ class Robot {
     ///@}
     ///@name Other Properties
     ///@{
+
+    /// Check if this is a 'virtual' robot. These do not represent physical
+    /// robots, and will be ignored by other robots in collision detection.
+    /// Virtual robots will not appear at all in any simulations.
+    bool IsVirtual() const noexcept;
 
     /// Check if the robot is nonholonomic.
     bool IsNonholonomic() const noexcept;

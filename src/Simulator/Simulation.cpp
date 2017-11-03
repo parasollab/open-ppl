@@ -218,6 +218,11 @@ Simulation::
 AddRobots() {
   for(size_t i = 0; i < m_problem->NumRobots(); ++i) {
     auto robot = m_problem->GetRobot(i);
+
+    // Do not add virtual robots to the simulation.
+    if(robot->IsVirtual())
+      continue;
+
     auto multiBody = robot->GetMultiBody();
     auto bulletModel = m_engine->AddRobot(robot);
 

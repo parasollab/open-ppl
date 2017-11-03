@@ -37,6 +37,10 @@ Robot(MPProblem* const _p, XMLNode& _node) : m_problem(_p) {
   // Get the (optional) car-likeness, assuming not car-like.
   m_carlike = _node.Read("carlike", false, false, "Is the robot car-like?");
 
+  // Check if this robot is flagged as virtual.
+  m_virtual = _node.Read("virtual", false, false, "Virtual robots are imaginary "
+      "and will not be included in the simulation or CD checks.");
+
   //std::string color = _node.Read("color", false, "1 0 0 1", "Color of the robot in simulation");
   //this->GetMultiBody()->GetBody(i)->SetBodyColor(color);
 
@@ -357,6 +361,13 @@ SetHardwareInterface(const std::string& _label, HardwareInterface* const _i)
 }
 
 /*------------------------------- Other --------------------------------------*/
+
+bool
+Robot::
+IsVirtual() const noexcept {
+  return m_virtual;
+}
+
 
 bool
 Robot::
