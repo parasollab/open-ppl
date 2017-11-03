@@ -5,7 +5,7 @@
 
 #include <vector>
 
-namespace utils {
+namespace nonstd {
   class tcp_socket;
 }
 
@@ -40,7 +40,7 @@ class ArucoDetectorInterface : public HardwareInterface
     ///@name Internal State
     ///@{
 
-    utils::tcp_socket* m_socket{nullptr}; ///< The TCP connection object.
+    nonstd::tcp_socket* m_socket{nullptr}; ///< The TCP connection object.
 
     ///@}
 

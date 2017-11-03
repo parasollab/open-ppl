@@ -4,7 +4,7 @@
 
 #include "nonstd/numerics.h"
 
-#include "utils/tcp_socket.h"
+#include "nonstd/tcp_socket.h"
 
 #include "HardwareInterface.h"
 
@@ -21,7 +21,7 @@ ArucoDetectorInterface(const std::string& _ip, const unsigned short _port)
     : HardwareInterface("ArucoDetector", _ip, _port,
         arucoDetectorCommunicationTime) {
   // Connect to the netbook's socket for aruco data.
-  m_socket = new utils::tcp_socket(m_ip, std::to_string(m_port));
+  m_socket = new nonstd::tcp_socket(m_ip, std::to_string(m_port));
 }
 
 
