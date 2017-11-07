@@ -14,7 +14,7 @@
 /// The corresponding configurations are computed lazily upon request.
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
-class PathType {
+class PathType final {
 
   public:
 
@@ -236,9 +236,11 @@ template <typename MPTraits>
 PathType<MPTraits>&
 PathType<MPTraits>::
 operator+=(const vector<VID>& _vids) {
-  std::copy(_vids.begin(), _vids.end(), back_inserter(m_vids));
-  m_lengthCached = false;
-  m_cfgsCached = false;
+  if(_vids.size()) {
+    std::copy(_vids.begin(), _vids.end(), back_inserter(m_vids));
+    m_lengthCached = false;
+    m_cfgsCached = false;
+  }
   return *this;
 }
 

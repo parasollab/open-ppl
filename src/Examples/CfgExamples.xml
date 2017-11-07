@@ -291,7 +291,7 @@
         nfLabel="Nearest" exLabel="KinoExtender" debug="false"/>
       <LazyQuery label="LazyQuery"
         lpLabel="sl" dmLabel="euclidean" vcMethod="rapid" graphSearchAlg="astar"
-        debug="false" numEnhance="10" d="0.5">
+        debug="false" numEnhance="10" d="0.5" deleteInvalid="true">
         <NodeConnectionMethod method="ClosestAlwaysTrue"/>
         <Resolution mult="27"/>
         <Resolution mult="16"/>
