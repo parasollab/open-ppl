@@ -2,6 +2,7 @@
 #define FIXED_BODY_H_
 
 #include "Body.h"
+#include "Utilities/XMLNode.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 /// A stationary object in workspace.
@@ -17,6 +18,11 @@ class FixedBody : public Body {
     /// @param _owner The owning multibody.
     /// @param _filename Filename
     FixedBody(MultiBody* _owner, const string& _filename = "");
+
+    /// Construct base class from XML node.
+    /// @param _owner The owning multibody.
+    /// @param _node The XML node containing the body information.
+    FixedBody(MultiBody* _owner, XMLNode& _node);
 
     FixedBody(const FixedBody&) = delete;            ///< No copy
     FixedBody& operator=(const FixedBody&) = delete; ///< No assign
@@ -38,6 +44,10 @@ class FixedBody : public Body {
     ///@{
 
     using Body::Read;
+
+    /// @brief Parse XML node.
+    /// @param _node XMLNode to parse.
+    void ReadXML(XMLNode& _node);
 
     /// @brief Parse
     /// @param _is Stream

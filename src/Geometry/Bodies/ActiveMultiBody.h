@@ -7,6 +7,7 @@
 
 class Boundary;
 class Cfg;
+class XMLNode;
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -64,6 +65,8 @@ class ActiveMultiBody : public MultiBody {
     ///@{
 
     ActiveMultiBody();
+
+    ActiveMultiBody(XMLNode& _node);
 
     ActiveMultiBody(const ActiveMultiBody&) = delete;            ///< No copy
     ActiveMultiBody& operator=(const ActiveMultiBody&) = delete; ///< No assign
@@ -173,6 +176,7 @@ class ActiveMultiBody : public MultiBody {
     ///@name I/O
     ///@{
 
+    virtual void ReadXML(XMLNode& _node);
     virtual void Read(istream& _is, CountingStreamBuffer& _cbs);
     virtual void Write(ostream& _os);
 

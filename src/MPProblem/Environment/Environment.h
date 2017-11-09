@@ -54,6 +54,12 @@ class Environment {
     /// @return Filename from which environment came
     const string& GetEnvFileName() const {return m_filename;}
 
+    /// Parse XML options from the Problem XML node.
+    void ReadXMLOptions(XMLNode& _node);
+
+    /// Parse XML environment file.
+    void ReadXML(XMLNode& _node);
+
     /// Parse environment file.
     /// @param _filename The name of the file to read.
     void Read(string _filename);

@@ -1,4 +1,5 @@
 #include "FreeBody.h"
+#include "Utilities/XMLNode.h"
 
 
 FreeBody::
@@ -7,6 +8,73 @@ FreeBody(MultiBody* _owner, size_t _index)
     m_movementType(MovementType::Translational) {
   /// @TODO Parse the label properly after we set up the robot xml file.
   m_label = std::to_string(m_index);
+}
+
+
+FreeBody::
+FreeBody(MultiBody* _owner, XMLNode& _node, size_t _index)
+  : Body(_owner, _node), m_index(_index), m_bodyType(BodyType::Planar),
+    m_movementType(MovementType::Translational) {
+  /// @TODO Parse the label properly after we set up the robot xml file.
+  m_label = std::to_string(m_index);
+
+  // Read geometry filename.
+  m_filename = _node.Read("filename", true, "", "File containing the geometry"
+      " information for this body.");
+
+  // Call base class Read() function to setup com adjust. The COM adjust was
+  // initially setup in the base class' (Body.h) constructor so we are
+  // safe to call this here.
+  Read(m_comAdjust);
+
+  // Read body type.
+  const string type = _node.Read("type", true, "",
+      "Type of the body (volumetric, planar, fixed, or joint.");
+
+  // Read movement type.
+  const string movement = _node.Read("movement", false, "",
+      "Type of the movement (rotational, or translational).");
+
+  // Assign movement type.
+  if(movement == "rotational")
+    m_movementType = MovementType::Rotational;
+  else if(movement == "translational")
+    m_movementType = MovementType::Translational;
+
+  // Assign body type.
+  if(type == "planar") {
+    m_bodyType = BodyType::Planar;
+
+    // Movement type is required for planar.
+    if(movement.empty())
+      throw ParseException(_node.Where(), "Movement type is required for planar"
+          " bodies. The movement type can be rotational or translational.");
+  }
+  else if(type == "volumetric") {
+    m_bodyType = BodyType::Volumetric;
+
+    // Movement type is required for volumetric.
+    if(movement.empty())
+      throw ParseException(_node.Where(), "Movement type is required for"
+          " volumetric bodies. The movement type can be rotational or"
+          " translational.");
+  }
+  else if(type == "fixed") {
+    m_bodyType = BodyType::Fixed;
+
+    const std::string transform = _node.Read("transform", true, "",
+        "The transform information of this body.");
+
+    istringstream iss(transform);
+    iss >> m_transform;
+  }
+  else if(type == "joint")
+    m_bodyType = BodyType::Joint;
+  else
+    throw ParseException(_node.Where(),
+        "Unknown base type '" + type + "'."
+        " Options are: 'planar', 'volumetric', 'fixed', or 'joint'.");
+
 }
 
 

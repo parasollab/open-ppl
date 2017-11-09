@@ -13,6 +13,7 @@ using namespace mathtool;
 
 class CollisionDetectionMethod;
 class MultiBody;
+class XMLNode;
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -38,6 +39,11 @@ class Body {
     /// Construct an empty body.
     /// @param _owner The owning multibody.
     Body(MultiBody* _owner);
+
+    /// Construct a body from an XML node.
+    /// @param _owner The owning multibody.
+    /// @param _node The XML node to parse.
+    Body(MultiBody* _owner, XMLNode& _node);
 
     Body(const Body& _other) = delete;            ///< No copy.
     Body& operator=(const Body& _other) = delete; ///< No assign.
@@ -192,7 +198,7 @@ class Body {
     Color4 m_color;                          ///< Optionally specified color
     bool m_colorLoaded{false};               ///< Was color option set?
 
-    string m_textureFile;                    ///< Optionally specified texture
+    string m_textureFile = "";               ///< Optionally specified texture
     bool m_textureLoaded{false};             ///< Was texture option set?
 
     GMSPolyhedron m_polyhedron;              ///< Model in model coordinates.

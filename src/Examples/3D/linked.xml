@@ -1,60 +1,41 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <Robot maxLinearVelocity="10" maxAngularVelocity="1">
 
-  <Multibody filename="linked.robot"/>
-
   <!-- Eventually we will go full XML and remove our custom parser because XML
-       is easier to extend and maintain.
+       is easier to extend and maintain. -->
   <Multibody>
     <Base>
       <Body filename="link.obj" color="0 1 0 1" type="volumetric"
         movement="rotational" mass="1"/>
-    <Base/>
+    </Base>
 
     <Link>
-      <Body filename="link.obj" color="0 1 0 1" index="1" parentIndex="0"
-        jointType="revolute" range="-1:1" mass="1"/>
-      <Connection transformParentToDH="0.7 0 0 0 0 0"
+      <Body filename="link.obj" color="0 1 0 1" index="1"
+        type="joint" movement="rotational" mass="1"/>
+      <Connection joint="revolute" range="-1:1"
+        parentIndex="0"
+        childIndex="1"
+        transformParentToDH="0.7 0 0 0 0 0"
         initialDHParams="0 0 0 0"
-        transformDHToCom="0.7 0 0 0 0 0"/>
+        transformDHToChild="0.7 0 0 0 0 0"/>
     </Link>
 
   </Multibody>
-  -->
 
-  <Actuators>
-    <!-- A thruster that can translate the robot in any direction. -->
-    <Actuator maxMagnitude=".5"
-      limits="-.5:.5  -.5:.5  -.5:.5  0:0  0:0  0:0  0:0">
-      <Control type="fixed" signal=" 1  0  0  0  0  0  0"/>
-      <Control type="fixed" signal="-1  0  0  0  0  0  0"/>
-      <Control type="fixed" signal=" 0  1  0  0  0  0  0"/>
-      <Control type="fixed" signal=" 0 -1  0  0  0  0  0"/>
-      <Control type="fixed" signal=" 0  0  1  0  0  0  0"/>
-      <Control type="fixed" signal=" 0  0 -1  0  0  0  0"/>
-    </Actuator>
 
-    <!-- A thruster that can rotate the robot in any direction. -->
-    <Actuator maxMagnitude=".3"
-      limits="0:0  0:0  0:0  -.3:.3  -.3:.3  -.3:.3  0:0">
-      <Control type="fixed" signal=" 0  0  0  1  0  0  0"/>
-      <Control type="fixed" signal=" 0  0  0 -1  0  0  0"/>
-      <Control type="fixed" signal=" 0  0  0  0  1  0  0"/>
-      <Control type="fixed" signal=" 0  0  0  0 -1  0  0"/>
-      <Control type="fixed" signal=" 0  0  0  0  0  1  0"/>
-      <Control type="fixed" signal=" 0  0  0  0  0 -1  0"/>
-    </Actuator>
+  <!-- A thruster that can translate the robot in any direction. -->
+  <Actuator label="translate" maxMagnitude=".5"
+    limits="-.5:.5  -.5:.5  -.5:.5  0:0  0:0  0:0 0:0"/>
 
-    <!-- A motor for the connection from base to joint 1. -->
-    <Actuator maxMagnitude=".1"
-      limits="0:0  0:0  0:0  0:0  0:0  0:0  -.1:.1">
-      <Control type="fixed" signal=" 0  0  0  0  0  0  1"/>
-      <Control type="fixed" signal=" 0  0  0  0  0  0 -1"/>
-    </Actuator>
-  </Actuators>
+  <!-- A thruster that can rotate the robot in any direction. -->
+  <Actuator label="rotate" maxMagnitude=".3"
+    limits="0:0  0:0  0:0  -.3:.3  -.3:.3  -.3:.3 0:0"/>
 
-  <Controller label="simple" coefficient=".1"/>
+  <Actuator label="connection" maxMagnitude=".1"
+    limits="0:0  0:0  0:0  0:0  0:0  0:0 -.1:1"/>
 
-  <Agent label="PathFollowing"/>
+  <Controller type="simple" gain=".1">
+    <ControlSet type="simple"/>
+  </Controller>
 
 </Robot>

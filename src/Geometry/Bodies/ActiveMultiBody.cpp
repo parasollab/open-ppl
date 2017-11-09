@@ -3,6 +3,7 @@
 #include "FreeBody.h"
 #include "Geometry/Boundaries/Boundary.h"
 #include "ConfigurationSpace/Cfg.h"
+#include "Utilities/XMLNode.h"
 
 
 /*------------------------------ Construction --------------------------------*/
@@ -10,6 +11,14 @@
 ActiveMultiBody::
 ActiveMultiBody() : MultiBody() {
   m_multiBodyType = MultiBodyType::Active;
+}
+
+
+ActiveMultiBody::
+ActiveMultiBody(XMLNode& _node) : MultiBody() {
+  m_multiBodyType = MultiBodyType::Active;
+
+  ReadXML(_node);
 }
 
 /*----------------------------- MultiBody Info -------------------------------*/
@@ -485,6 +494,79 @@ PolygonalApproximation(vector<Vector3d>& _result) {
 }
 
 /*--------------------------------- I/O --------------------------------------*/
+
+
+void
+ActiveMultiBody::
+ReadXML(XMLNode& _node) {
+  m_baseIndex = -1;
+  size_t baseBodyCount = 0;
+
+  // Read the free bodies in the multibody node.
+  for(auto& child : _node) {
+
+    // Read 'Base' and/or 'Link' bodies.
+    if(child.Name() == "Base") {
+      // Read the Base body. There should only be one.
+      const auto body = child.begin();
+
+      if(body == child.end())
+        throw ParseException(child.Where(), "Base node must contain one body.");
+
+      if(body->Name() == "Body") {
+        if(++baseBodyCount > 1)
+          throw ParseException(child.Where(),
+              "A base can only contain one body.");
+
+        // Assuming index of the base should be 0.
+        shared_ptr<FreeBody> free(new FreeBody(this, *body, 0));
+        AddBody(free);
+
+        m_baseIndex = 0;
+        m_baseBody = free;
+        m_baseType = free->GetBodyType();
+        m_baseMovement = free->GetMovementType();
+      }
+    }
+    else if(child.Name() == "Link") {
+      size_t linkBodyCount = 0;
+
+      // A link consists of one body and (a) connection node(s).
+      for(auto& linkChild : child) {
+        if(linkChild.Name() == "Body") {
+          if(++linkBodyCount > 1)
+            throw ParseException(linkChild.Where(),
+                "A link can only contain one body.");
+
+          const size_t index = linkChild.Read("index", true, size_t(1), size_t(1),
+              numeric_limits<size_t>::max(), "Index of the body in the multibody.");
+
+          shared_ptr<FreeBody> link(new FreeBody(this, linkChild, index));
+          AddBody(link);
+        }
+        else if(linkChild.Name() == "Connection") {
+          shared_ptr<Connection> c(new Connection(this));
+
+          c->ReadXML(linkChild);
+
+          m_joints.push_back(c);
+        }
+      }
+    }
+  }
+
+  // Make sure a base was provided.
+  if(m_baseIndex == size_t(-1))
+    throw ParseException(_node.Where(), "Body has no base.");
+
+  sort(m_joints.begin(), m_joints.end(),
+      [](const shared_ptr<Connection>& _a, const shared_ptr<Connection>& _b) {
+        return _a->GetGlobalIndex() < _b->GetGlobalIndex();
+      });
+
+  FindMultiBodyInfo();
+}
+
 
 void
 ActiveMultiBody::

@@ -1,0 +1,13 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<Environment saveDofs="false" frictionCoefficient=".01" gravityX="0"
+  gravityY="-9.8" gravityZ="0" positionRes=".05" orientationRes=".05">
+
+  <Boundary type="box" limits="[-25:25 ; -15:15 ; -25:25]"/>
+
+  <Multibody filename="block.obj" type="passive" comAdjustment="none"
+    color="0 0 1 1" transform="0 2.0 0 0 0 0"/>
+
+  <Multibody filename="block.obj" type="passive" comAdjustment="none"
+    color="0 0 1 1" transform="0 -2.0 0 0 0 0"/>
+
+</Environment>

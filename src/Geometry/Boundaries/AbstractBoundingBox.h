@@ -84,6 +84,8 @@ class AbstractBoundingBox :  public Boundary, public NBox {
     ///@name I/O
     ///@{
 
+    virtual void ReadXML(XMLNode& _node) override;
+
     virtual void Read(istream& _is, CountingStreamBuffer& _cbs) override;
 
     virtual void Write(ostream& _os) const override;

@@ -17,8 +17,42 @@
 Environment::
 Environment(XMLNode& _node) {
   m_filename = _node.Read("filename", true, "", "env filename");
-  m_saveDofs = _node.Read("saveDofs", false, m_saveDofs, "save DoF flag");
   m_filename = MPProblem::GetPath(m_filename);
+
+  // If the filename is an XML file we will read all of the environment
+  // information from that file.
+  const bool readXML = m_filename.substr(m_filename.rfind(".", string::npos))
+    == ".xml";
+
+  if(readXML) {
+    XMLNode envNode = XMLNode(m_filename, "Environment");
+    // First read options from environment XML file.
+    ReadXMLOptions(envNode);
+    ReadXML(envNode);
+
+    // Then read from problem XML node which may override some of the options from
+    // the environment XML file.
+    ReadXMLOptions(_node);
+  }
+  else {
+    ReadXMLOptions(_node);
+    Read(m_filename);
+  }
+}
+
+
+Environment::
+~Environment() {
+  delete m_boundary;
+}
+
+/*------------------------------------ I/O -----------------------------------*/
+
+
+void
+Environment::
+ReadXMLOptions(XMLNode& _node) {
+  m_saveDofs = _node.Read("saveDofs", false, m_saveDofs, "save DoF flag");
 
   // Read the friction coefficient (to be used uniformly for now)
   m_frictionCoefficient = _node.Read("frictionCoefficient", false, 0., 0.,
@@ -36,12 +70,10 @@ Environment(XMLNode& _node) {
       std::numeric_limits<double>::lowest(),
       std::numeric_limits<double>::max(), "Z gravity component");
 
-  //Put into the member gravity vector:
+  // Put into the member gravity vector:
   m_gravity(gravityX, gravityY, gravityZ);
 
-  Read(m_filename);
-
-  //If the position or orientation resolution is provided in the xml, overwrite
+  // If the position or orientation resolution is provided in the xml, overwrite
   // any previous value that could have been set in the env file.
   m_positionRes = _node.Read("positionRes", false, m_positionRes,
       std::numeric_limits<double>::lowest(), std::numeric_limits<double>::max(),
@@ -52,12 +84,57 @@ Environment(XMLNode& _node) {
 }
 
 
+void
 Environment::
-~Environment() {
-  delete m_boundary;
+ReadXML(XMLNode& _node) {
+  size_t sl = m_filename.rfind('/');
+  m_modelDataDir = m_filename.substr(0, sl == string::npos ? 0 : sl) + "/";
+  Body::m_modelDataDir = m_modelDataDir;
+
+  m_obstacles.clear();
+
+  // Read and construct boundary, bodies, and other objects in the environment.
+  for(auto& child : _node) {
+    if(child.Name() == "Boundary") {
+      const string type = child.Read("type", true, "", "The type of boundary for"
+          " the environment (box, box2d, sphere, sphere2d).");
+
+      if(type == "box")
+        m_boundary = new WorkspaceBoundingBox(3);
+      else if(type == "box2d")
+        m_boundary = new WorkspaceBoundingBox(2);
+      else if(type == "sphere")
+        m_boundary = new WorkspaceBoundingSphere(3);
+      else if(type == "sphere2d")
+        m_boundary = new WorkspaceBoundingSphere(2);
+      else
+        throw ParseException(child.Where(), "Unknown boundary type '" + type +
+            "'. Options are: box, box2d, sphere, or sphere2d.");
+
+      m_boundary->ReadXML(child);
+    }
+    else if(child.Name() == "Multibody") {
+      std::string type = child.Read("type", true, "", "The type of body"
+          " (active, passive, internal, or surface");
+
+      std::transform(type.begin(), type.end(), type.begin(), ::toupper);
+      const auto bodyType = MultiBody::GetMultiBodyTypeFromTag(type, child.Where());
+
+      switch(bodyType) {
+        case MultiBody::MultiBodyType::Active:
+          /// @TODO: Add support for dynamic obstacles
+          break;
+        case MultiBody::MultiBodyType::Internal:
+        case MultiBody::MultiBodyType::Passive:
+          shared_ptr<StaticMultiBody> mb(new StaticMultiBody(bodyType));
+          mb->ReadXML(child);
+          m_obstacles.push_back(mb);
+          break;
+      }
+    }
+  }
 }
 
-/*------------------------------------ I/O -----------------------------------*/
 
 void
 Environment::
