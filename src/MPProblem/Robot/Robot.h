@@ -135,6 +135,9 @@ class Robot {
     /// Get the MPProblem which owns this robot.
     MPProblem* GetMPProblem() const noexcept;
 
+    /// Align the multibody model to the robot's current simulated state.
+    void SynchronizeModels() noexcept;
+
     ///@}
     ///@name Geometry Accessors
     ///@{

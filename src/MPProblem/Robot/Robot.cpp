@@ -262,6 +262,15 @@ GetMPProblem() const noexcept {
   return m_problem;
 }
 
+
+void
+Robot::
+SynchronizeModels() noexcept {
+  auto dynamics = GetDynamicsModel();
+  if(dynamics)
+    GetMultiBody()->Configure(dynamics->GetSimulatedState());
+}
+
 /*--------------------------- Geometry Accessors -----------------------------*/
 
 ActiveMultiBody*
