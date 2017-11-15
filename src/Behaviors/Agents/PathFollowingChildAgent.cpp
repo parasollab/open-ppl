@@ -147,6 +147,7 @@ GetNextPath(MPTask* const _task) {
   // Use the planning library to find a path.
   MPSolution solution(m_parentRobot);
   m_library->Solve(m_robot->GetMPProblem(), _task, &solution);
+  m_robot->SynchronizeModels();
 
   // Extract the path from the solution.
   m_path = solution.GetPath()->Cfgs();
