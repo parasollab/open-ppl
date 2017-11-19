@@ -70,10 +70,11 @@ class ServerQueueInterface : public QueuedHardwareInterface
     ///@name Internal State
     ///@{
 
-    Command m_currentCommand;    ///< The current command being exeeuted.
+    Command m_currentCommand;    ///< The current command being executed.
     std::queue<Command> m_queue; ///< The command queue.
     const double m_period{.01};  ///< The polling period.
     volatile bool m_idle{true};  ///< Is the robot presently idle?
+    volatile bool m_currentCommandDone{true};  ///< Has the current command been executed?
 
     mutable std::atomic<bool> m_running; ///< Keep running the queue?
     std::thread m_thread;        ///< A thread for running the command queue.

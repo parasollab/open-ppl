@@ -378,6 +378,13 @@ IsVirtual() const noexcept {
 }
 
 
+void
+Robot::
+SetVirtual(bool _v) noexcept {
+  m_virtual = _v;
+}
+
+
 bool
 Robot::
 IsNonholonomic() const noexcept {

@@ -205,6 +205,8 @@ class Robot {
     /// Virtual robots will not appear at all in any simulations.
     bool IsVirtual() const noexcept;
 
+    void SetVirtual(bool) noexcept;
+
     /// Check if the robot is nonholonomic.
     bool IsNonholonomic() const noexcept;
 

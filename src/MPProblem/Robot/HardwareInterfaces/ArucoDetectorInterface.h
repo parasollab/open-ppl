@@ -31,7 +31,9 @@ class ArucoDetectorInterface : public HardwareInterface
     ///@name Detector Interface
     ///@{
 
-    std::vector<double> GetCoordinatesFromMarker() const;
+    std::vector<double> GetCoordinatesFromMarker();
+
+    size_t GetNumMarkersSeen();
 
     ///@}
 
@@ -42,6 +44,7 @@ class ArucoDetectorInterface : public HardwareInterface
 
     nonstd::tcp_socket* m_socket{nullptr}; ///< The TCP connection object.
 
+    size_t m_numMarkersSeen;
     ///@}
 
 };

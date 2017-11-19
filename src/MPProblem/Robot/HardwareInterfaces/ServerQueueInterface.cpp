@@ -79,6 +79,7 @@ StartQueue() {
 
     nonstd::timer clock;
 
+
     while(this->m_running)
     {
       clock.restart();
@@ -95,7 +96,7 @@ StartQueue() {
         queue.push({ControlSet(), period});
         current = queue.front();
         update = true;
-        m_idle = true;
+        m_idle = true and m_currentCommandDone;
       }
       else {
         // Get next command from the queue.
@@ -106,6 +107,7 @@ StartQueue() {
         if(!sameCommand) {
           current = front;
           update = true;
+          m_currentCommandDone = false;
         }
       }
 
@@ -153,6 +155,7 @@ StartQueue() {
                   << "robot than the polling period!\n";
       else
         usleep(remainingSleep * 1e6);
+      m_currentCommandDone = true;
     }
   };
 
