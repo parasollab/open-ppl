@@ -155,7 +155,8 @@ Step(const double _dt) {
  if(!InCollision()) {
     m_shouldHalt = false;
     ExecuteTask(m_dt);
-    m_avoidCollisionHalt = 0;
+    //m_avoidCollisionHalt = 0;
+    m_headOnCollidingRobot = nullptr;
   }
   // Otherwise, check if it should stop/plan around.
   else {
