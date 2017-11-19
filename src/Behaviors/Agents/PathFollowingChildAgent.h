@@ -66,11 +66,13 @@ class PathFollowingChildAgent : public Agent {
 
     Robot* GetParentRobot();
 
+    void Replan();
     //TODO: move this to protected and add getters and setters.
     Robot* m_parentRobot{nullptr};
 
     BatteryConstrainedGroup* m_parentAgent{nullptr};
 
+    void IsHeadOnCollision();
     ///@}
 
   private:
@@ -82,7 +84,13 @@ class PathFollowingChildAgent : public Agent {
 
     void HelperStep();
 
-    bool AvoidCollision();
+    void AvoidCollision();
+
+    void Localize(double);
+
+    void LocalizeAngle(double);
+
+    void Rotate(double&, double);
 
     /// Sum the length across an entire path.
     /// @param _path The path.
@@ -98,6 +106,9 @@ class PathFollowingChildAgent : public Agent {
     ///       metric, should replace with that.
     double EuclideanDistance(const Cfg& _point1, const Cfg& _point2) const;
 
+    void PauseSimulatedAgent(double);
+
+    void PauseHardwareAgent(double);
     ///@}
 
   protected:
@@ -133,6 +144,25 @@ class PathFollowingChildAgent : public Agent {
 
     double m_dt{0.0};                         ///< Track the amount of _dt steps taken
 
+    double m_distance{0.0}; ///< The distance traveled since localizing.
+
+    int m_numHardwareCommands{0};   ///< Number of commands that we sent to the robot so far
+
+    double m_localizingAngle{0.0};
+
+    int m_totalRotations{0};
+
+    vector< vector<double> > m_coordinates;
+
+    bool m_ignoreLocalization{false};  ///Using this to ignore positional localization when trying to localize the angle
+
+    bool m_ignoreAngleLocalization{true};
+
+    bool m_finishedLocalizing{true};
+
+    Robot* m_headOnCollidingRobot{nullptr};
+
+    Cfg m_robotPos; ///< Position of the physical robot
     ///@}
 
 };

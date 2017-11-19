@@ -108,6 +108,7 @@ class CollisionDetectionValidity : public ValidityCheckerMethod<MPTraits> {
 
     CollisionDetectionMethod* m_cdMethod; ///< Collision Detection library
     bool m_ignoreSelfCollision;           ///< Check self collisions
+    bool m_interRobotCollision{false};          ///< Check inter robot collisions
     size_t m_ignoreIAdjacentLinks;        ///< With self collisions how many
                                           ///< adjacent links to ignore
 };
@@ -133,6 +134,8 @@ CollisionDetectionValidity(XMLNode& _node) :
 
   m_ignoreSelfCollision = _node.Read("ignoreSelfCollision", false, false,
       "Check for self collision");
+  m_interRobotCollision = _node.Read("interRobotCollision", false, false,
+      "Check for intern robot collision");
   m_ignoreIAdjacentLinks = _node.Read("ignoreIAdjacentLinks", false, 1, 0,
       MAX_INT, "number of links to ignore for linkages");
 
@@ -233,7 +236,28 @@ IsInCollision(CDInfo& _cdInfo, const CfgType& _cfg, const string& _callName) {
     if(coll && !_cdInfo.m_retAllInfo)
       return true;
   }
+  if(m_interRobotCollision) {
+    //cout << "Checking for inter robot collision " << endl;
+    auto allRobots = this->GetMPProblem()->GetRobots();
+    for(auto robot : allRobots) {
+      if(_cfg.GetRobot() == robot or robot->IsVirtual())
+        continue;
 
+      CDInfo cdInfo(_cdInfo.m_retAllInfo);
+      cout << "Checking for robot collision " << endl;
+      cout << "Label: " << robot->GetLabel() << endl;
+      cout << "Simulated position: " << robot->GetDynamicsModel()->GetSimulatedState() << endl;
+      cout << "Multibody pos: ";
+      for(auto dof : robot->GetMultiBody()->GetCurrentDOFs())
+        cout << " " << dof;
+      cout << endl;
+      bool coll = IsInterRobotCollision(cdInfo, _cfg.GetRobot()->GetMultiBody(), robot->GetMultiBody(), _callName);
+      if(coll) {
+        cout << " Cfg in collision: " << _cfg << endl;
+        return true;
+      }
+    }
+  }
   return retVal;
 }
 

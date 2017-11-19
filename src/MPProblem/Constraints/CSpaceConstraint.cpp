@@ -19,9 +19,9 @@ CSpaceConstraint(Robot* const _r, const Cfg& _cfg)
     m_bbx(_r->GetMultiBody()->DOF() * (_r->IsNonholonomic() ? 2 : 1))
 {
   // Ensure that _cfg goes with _r.
-  if(_r != _cfg.GetRobot())
+  /*if(_r != _cfg.GetRobot())
     throw RunTimeException(WHERE, "Cannot create point task with "
-        "configuration for a different robot.");
+        "configuration for a different robot.");*/
 
   m_bbx.ShrinkToPoint(_cfg);
 }
