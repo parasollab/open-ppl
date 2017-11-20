@@ -85,6 +85,7 @@ class FreeBody : public Body {
     ///@{
 
     /// @return Is this body a base?
+    /// @TODO This is obviously wrong...
     bool IsBase() const {return m_bodyType != BodyType::Joint;}
 
     /// @param _bt BodyType

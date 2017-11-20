@@ -5,7 +5,7 @@
   <Problem>
 
     <Environment filename="3D/3d.env"
-        frictionCoefficient="0" gravityX="0" gravityY="0" gravityZ="0"/>
+      frictionCoefficient="0" gravityX="0" gravityY="0" gravityZ="0"/>
 
     <Robot label="boxy" filename="3D/boxy.robot"/>
 
@@ -118,11 +118,12 @@
       <UniformMedialAxisSampler label="UMAPRM" vcLabel="pqp_solid" useBBX="true"
         dmLabel="euclidean" d="2.00" t="10" clearanceType="exact"
         penetrationType="exact" debug="false" positional="true"/>
-      <WorkspaceImportanceSampler label="WIS" vcLabel="rapid" alpha="0.2"/>
+      <WorkspaceImportanceSampler label="WIS" vcLabel="rapid" alpha="0.2"
+        decompositionLabel="fine"/>
       <DynamicRegionSampler label="DynamicRegionSampler"
         samplerLabel="UniformRandom"
         explore=".2" regionFactor="2.5" penetration="1"
-        velocityBiasing="false" velocityAlignment=".4"/>
+        velocityBiasing="false" velocityAlignment=".4" decompositionLabel="fine"/>
     </Samplers>
 
     <LocalPlanners>
@@ -307,7 +308,7 @@
       </LazyToggleQuery>
       <PrintMapEvaluation label="PrintMap" base_name="Basic"/>
       <ConditionalEvaluator label="NodesEval" metric_method="NumNodes"
-        value="100" operator=">="/>
+        value="5000" operator=">="/>
       <ConditionalEvaluator label="EdgesEval" metric_method="NumEdges"
         value="1000" operator=">"/>
       <ConditionalEvaluator label="FreqNodeEval" metric_method="NumNodes"
@@ -448,6 +449,7 @@
       </BasicRRTStrategy>
 
       <!-- Adaptive RRT -->
+      <!-- Broken, disabled.
       <AdaptiveRRT label="AdaptiveRRT"
         numRoots="1" growthFocus="0.01" dmLabel="euclidean"
         nfLabel="BFNF" vcLabel="rapid" extenderLabel="BERO"
@@ -460,6 +462,7 @@
           <Extender label="ROVRO"/>
         </GrowthSet>
       </AdaptiveRRT>
+      -->
 
       <!-- DynamicDomainRRT -->
       <DynamicDomainRRT label="DynamicDomainRRT"
@@ -584,9 +587,30 @@
         vcLabel="rapid" lpLabel="sl"
         maxFailedIterations="20" debug="false"/>
 
+      <ScratchStrategy label="scratch"/>
+
     </MPStrategies>
 
     <MPTools>
+      <!-- Example nodes for a workspace decomposition with tetgen. -->
+      <TetGenDecomposition label="coarse" debug="false" switches="pnQ"/>
+      <TetGenDecomposition label="fine" debug="false" switches="pnqQ"/>
+
+      <!-- The same workspace decomposition nodes, this time reading in from
+           saved files like 'coarse.ele' and 'coarse.node'.
+      <TetGenDecomposition label="coarse" debug="false" switches="pnQ"
+        io="read" baseFilename="3D/coarse"/>
+      <TetGenDecomposition label="fine" debug="false" switches="pnqQ"
+        io="read" baseFilename="3D/quality"/>
+      -->
+
+      <TopologicalMap label="tm-coarse" decompositionLabel="coarse"
+        gridSize=".5"/>
+      <TopologicalMap label="tm-fine" decompositionLabel="fine"
+        gridSize=".5"/>
+
+      <ReebGraphConstruction debug="false" write="false" filename=""/>
+
       <ClearanceUtility label="clearanceUtil" vcLabel="pqp_solid"
         dmLabel="euclidean" clearanceType="exact" penetrationType="exact"
         useBBX="true" positional="true"/>
@@ -595,27 +619,12 @@
         dmLabel="euclidean" clearanceType="exact" penetrationType="exact"
         useBBX="true" positional="true"/>
 
-      <ReebGraphConstruction debug="false" write="false" filename=""/>
-
-      <TetGenDecomposition debug="false" switches="pnQ"
-        writeFreeModel="false" writeDecompModel="false"
-        decompModelFilename=""/>
-
-      <!-- If we were going to load a pair of tetgen files in the 3D dir called
-           'decomposed.ele' and 'decomposed.node', this is what the tetgen node
-           would look like.
-      <TetGenDecomposition debug="false" switches="pnQ"
-        writeFreeModel="false" writeDecompModel="false"
-        decompModelFilename="3D/decomposed"/>
-      -->
-
-      <TopologicalMap label="tm" gridSize=".5"/>
     </MPTools>
 
     <!-- MPProblem allows multiple solvers to be specified and executed. -->
 
-    <Solver mpStrategyLabel="BasicPRM1" seed="12345678"
-      baseFilename="Basic" vizmoDebug="true"/>
+    <Solver mpStrategyLabel="scratch" seed="12345678"
+      baseFilename="scratch" vizmoDebug="true"/>
 
   </Library>
 
