@@ -543,7 +543,6 @@ GeneratePath(const VID _start, const VID _end) {
   }
 
   // Extract path from sssp results.
-  /// @TODO Validate that this is OK when there is no path.
   vector<VID> path;
   path.push_back(_end);
   VID temp = _end;

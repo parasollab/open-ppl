@@ -92,6 +92,10 @@ class LazyQuery : public PRMQuery<MPTraits> {
     /// @param[in] _cfg The invalid configuration to handle.
     virtual void ProcessInvalidNode(const CfgType& _cfg) { }
 
+    /// Mark a roadmap configuration as unused.
+    /// @param _vid The unused vertex's descriptor.
+    void MarkVertexUnused(const VID _vid);
+
     ///@}
     ///@name MP Object Labels
     ///@{
@@ -285,11 +289,10 @@ ValidatePath() {
       cout << "\tPath is invalid." << endl;
     return false;
   }
-  else {
-    if(this->m_debug)
-      cout << "\tPath is valid." << endl;
-    return true;
-  }
+
+  if(this->m_debug)
+    cout << "\tPath is valid." << endl;
+  return true;
 }
 
 
@@ -341,10 +344,7 @@ PruneInvalidVertices() {
 
     // Delete invalid vertex.
     this->ProcessInvalidNode(cfg);
-    if(m_deleteInvalid)
-      g->DeleteVertex(vid);
-    else
-      m_invalidVertices[vid] = true;
+    MarkVertexUnused(vid);
     return true;
   }
 
@@ -482,6 +482,26 @@ NodeEnhance() {
 
   if(this->m_debug)
     cout << endl;
+}
+
+
+template <typename MPTraits>
+void
+LazyQuery<MPTraits>::
+MarkVertexUnused(const VID _vid) {
+  auto g = this->GetRoadmap()->GetGraph();
+
+  if(m_deleteInvalid)
+  {
+    g->DeleteVertex(_vid);
+    return;
+  }
+
+  // Mark this vertex and its edges as unused.
+  m_invalidVertices[_vid] = true;
+  auto vi = g->find_vertex(_vid);
+  for(auto ei = vi->begin(); ei != vi->end(); ++ei)
+    m_invalidEdges[ei->id()] = true;
 }
 
 /*----------------------------------------------------------------------------*/

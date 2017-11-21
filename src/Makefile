@@ -2,7 +2,7 @@
 
 # Set platform, debug mode, and parallel compile if not already set.
 platform ?= LINUX_gcc
-debug    ?= 1
+debug    ?= 0
 parallel ?= 0
 
 # Temporary setting for making vizmo-compatible maps for nonholonomic robots.
