@@ -103,6 +103,10 @@ class Robot {
     /// @param[in] _filename The file name.
     void ReadXMLFile(const std::string& _filename);
 
+    /// Parse multibody information from robot's XML file.
+    /// @param[in] _node The XML node to parse
+    void  ReadMultiBodyXML(XMLNode& _node);
+
     /// Parse a multibody file describing this robot.
     /// @param[in] _filename The file name.
     void ReadMultibodyFile(const std::string& _filename);

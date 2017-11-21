@@ -1,7 +1,5 @@
 #include "PQPCollisionDetection.h"
 
-#ifndef NO_PQP
-
 #include "CDInfo.h"
 #include "Geometry/Bodies/Body.h"
 #include <set>
@@ -78,6 +76,7 @@ IsInCollision(const Body* const _body1, const Body* const _body2,
     return inCollision;
   }
   else {
+
     PQP_CollideResult result;
     if(PQP_Collide(&result,
           t1.rotation().matrix(), t1.translation(), body1,
@@ -108,8 +107,13 @@ IsInCollision(const Body* const _body1, const Body* const _body2,
     CDInfo& _cdInfo) {
   bool collision = PQP::IsInCollision(_body1, _body2, _cdInfo);
   if(!collision)
-    collision = IsInsideObstacle(_body1->GetWorldPolyhedron().m_vertexList[0],
-                                 _body2);
+  {
+    const auto& modelPoint = _body1->GetPolyhedron().m_vertexList[0];
+    const auto  worldPoint = _body1->GetWorldTransformation() * modelPoint;
+
+    collision = IsInsideObstacle(worldPoint, _body2);
+  }
+
   return collision;
 }
 
@@ -208,5 +212,3 @@ BuildPseudoRay() const {
 }
 
 /*----------------------------------------------------------------------------*/
-
-#endif

@@ -6,6 +6,8 @@
 #include "Body.h"
 #include "Connection.h"
 
+class XMLNode;
+
 ////////////////////////////////////////////////////////////////////////////////
 /// A movable object in workspace.
 /// @ingroup Geometry
@@ -44,6 +46,13 @@ class FreeBody : public Body {
     /// @param _index Index in MultiBody
     FreeBody(MultiBody* _owner, size_t _index);
 
+    /// Create a free body with an XML node. Base class 'Body' is also
+    /// constructed with the XML node.
+    /// @param _owner Owner of this body.
+    /// @param _node The XML node to parse.
+    /// @param _index Index in MultiBody.
+    FreeBody(MultiBody* _owner, XMLNode& _node, size_t _index);
+
     FreeBody(const FreeBody&) = delete;            ///< No copy
     FreeBody& operator=(const FreeBody&) = delete; ///< No assign
 
@@ -76,6 +85,7 @@ class FreeBody : public Body {
     ///@{
 
     /// @return Is this body a base?
+    /// @TODO This is obviously wrong...
     bool IsBase() const {return m_bodyType != BodyType::Joint;}
 
     /// @param _bt BodyType
@@ -150,7 +160,7 @@ class FreeBody : public Body {
 
     using Body::Read;
 
-    /// Parse a bodyt from a geometry file.
+    /// Parse a body from a geometry file.
     /// @param[in] _is An open input stream for the geometry file.
     /// @param[in] _cbs A counting stream buffer for error reporting.
     void Read(istream& _is, CountingStreamBuffer& _cbs);

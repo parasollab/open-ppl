@@ -5,7 +5,7 @@
   <Problem>
 
     <Environment filename="3D/3d.env"
-        frictionCoefficient="0" gravityX="0" gravityY="0" gravityZ="0"/>
+      frictionCoefficient="0" gravityX="0" gravityY="0" gravityZ="0"/>
 
     <Robot label="boxy" filename="boxy.xml" nonholonomic="true"
       carlike="true"/>
@@ -119,11 +119,12 @@
       <UniformMedialAxisSampler label="UMAPRM" vcLabel="pqp_solid" useBBX="true"
         dmLabel="euclidean" d="2.00" t="10" clearanceType="exact"
         penetrationType="exact" debug="false" positional="true"/>
-      <WorkspaceImportanceSampler label="WIS" vcLabel="rapid" alpha="0.2"/>
+      <WorkspaceImportanceSampler label="WIS" vcLabel="rapid" alpha="0.2"
+        decompositionLabel="fine"/>
       <DynamicRegionSampler label="DynamicRegionSampler"
         samplerLabel="UniformRandom"
         explore=".2" regionFactor="2.5" penetration="1"
-        velocityBiasing="false" velocityAlignment=".4"/>
+        velocityBiasing="false" velocityAlignment=".4" decompositionLabel="fine"/>
     </Samplers>
 
     <LocalPlanners>
@@ -308,7 +309,7 @@
       </LazyToggleQuery>
       <PrintMapEvaluation label="PrintMap" base_name="Basic"/>
       <ConditionalEvaluator label="NodesEval" metric_method="NumNodes"
-        value="100" operator=">="/>
+        value="5000" operator=">="/>
       <ConditionalEvaluator label="EdgesEval" metric_method="NumEdges"
         value="1000" operator=">"/>
       <ConditionalEvaluator label="FreqNodeEval" metric_method="NumNodes"
@@ -378,9 +379,195 @@
       <!-- If optimal connection is wanted, the correct connector needs to be
            selected -->
 
+      <!-- The connector needs to be OptimalRewire for RRT* -->
+      <BasicRRTStrategy label="RRTstar"
+        numRoots="1" m="1" growthFocus="0.01" dmLabel="euclidean"
+        nfLabel="Nearest" vcLabel="rapid" extenderLabel="BERO"
+        connectorLabel="OptimalRewire" gtype="UNDIRECTED_GRAPH"
+        samplerLabel="UniformRandom">
+        <Evaluator label="NodesEval"/>
+      </BasicRRTStrategy>
+
+      <SRTStrategy label="SRT"
+        lpLabel="sl" dmLabel="euclidean" nfLabel="Nearest"
+        vcLabel="rapid" exLabel="BERO" debug="false" samples="5"
+        expansions="10" closeCent="1" randCent="2" closePairs="2" connIter="5">
+        <Evaluator label="ModQuery"/>
+      </SRTStrategy>
+
+      <!-- ObstacleBasedRRT -->
+      <!-- The extender needs to be MixExtender for OBRRT -->
+      <BasicRRTStrategy label="OBRRT"
+        numRoots="1" m="1" growthFocus="0.01" dmLabel="euclidean"
+        nfLabel="Nearest" vcLabel="rapid" connectorLabel="Closest"
+        gtype="UNDIRECTED_TREE" debug="false"
+        growGoals="true" extenderLabel="ME" samplerLabel="UniformRandom">
+        <Evaluator label="NodesEval"/>
+      </BasicRRTStrategy>
+
+      <!-- Adaptive RRT -->
+      <!-- Broken, disabled.
+      <AdaptiveRRT label="AdaptiveRRT"
+        numRoots="1" growthFocus="0.01" dmLabel="euclidean"
+        nfLabel="BFNF" vcLabel="rapid" extenderLabel="BERO"
+        gtype="UNDIRECTED_TREE" gamma="0.1" cost="reward" debug="true"
+        samplerLabel="UniformRandom">
+        <Evaluator label="NodesEval"/>
+        <GrowthSet threshold="0.0">
+          <Extender label="BERO"/>
+          <Extender label="BESO"/>
+          <Extender label="ROVRO"/>
+        </GrowthSet>
+      </AdaptiveRRT>
+      -->
+
+      <!-- DynamicDomainRRT -->
+      <DynamicDomainRRT label="DynamicDomainRRT"
+        growthFocus="0.01" dmLabel="euclidean" nfLabel="Nearest" vcLabel="rapid"
+        gtype="UNDIRECTED_TREE" debug="false" growGoals="false"
+        extenderLabel="BERO" samplerLabel="UniformRandom" r="2">
+        <Evaluator label="BoundedRRTQuery"/>
+      </DynamicDomainRRT>
+
+      <!-- DynamicRegionRRT -->
+      <BasicRRTStrategy label="DynamicRegionRRT"
+        growthFocus="0.01" dmLabel="euclidean"
+        nfLabel="Nearest" vcLabel="rapid"
+        gtype="UNDIRECTED_TREE" debug="false"
+        growGoals="false" extenderLabel="BERO"
+        samplerLabel="DynamicRegionSampler">
+        <Evaluator label="BoundedRRTQuery"/>
+      </BasicRRTStrategy>
+
+      <!-- Toggle PRM -->
+      <TogglePRMStrategy label="TogglePRM" priority="true">
+        <Sampler methodLabel="UniformRandomFree" number="10" attempts="1"/>
+        <Connector methodLabel="Closest"/>
+        <ColConnector methodLabel="ToggleConnect"/>
+        <Evaluator methodLabel="PRMQuery"/>
+      </TogglePRMStrategy>
+
+      <!-- Hybrid PRM -->
+      <HybridPRM label="HybridPRM" percent_random="0.5" bin_size="20"
+        window_percent="0.5" Count_Cost="false" fixed_cost="false"
+        resetting_learning="false" sampler_selection_distribution="window_hybrid">
+        <node_generation_method Method="Uniform" initialCost="1"/>
+        <node_generation_method Method="Gauss" initialCost="1"/>
+        <node_connection_method Method="Closest"/>
+        <evaluation_method Method="PRMQuery"/>
+      </HybridPRM>
+
+      <!-- UAStrategy -->
+      <!--UAStrategy label="UAPRM" iterations="10" num_samples="10">
+        <training_strategy Strategy="PRM1"/>
+        <region_identifier Method="kmeans"/>
+        <distribution_feature Feature="visibility"/>
+        <region_strategy Strategy="Hybrid"/>
+        <evaluation_method Method="NodesEval"/>
+        <evaluation_method Method="PRMQuery"/>
+      </UAStrategy-->
+
+      <!-- EvaluateMapStrategy -->
+      <EvaluateMapStrategy label="EvaluateMapStrategy" mapFilename="3D/3d.map">
+        <Evaluator label="NodesEval"/>
+      </EvaluateMapStrategy>
+
+      <UtilityGuidedGenerator label="UtilityGuided" vcLabel="rapid" nfLabel="BFNF"
+        connectorLabel="Closest">
+        <Evaluator label="NodesEval"/>
+      </UtilityGuidedGenerator>
+
+      <!-- Push Query to MA -->
+      <PushQueryToMA label="PushQueryToMA"
+        inFilename="3D/3d.query" outFilename="3D/3d.ma.query"
+        vcLabel="pqp_solid" dmLabel="euclidean"
+        clearanceType="exact" penetrationType="exact" useBBX="true"
+        positional="true"/>
+
+      <!-- Modify Path -->
+      <ModifyPath label="ModifyPath" pmLabel="CR" pathFile="3D/3d.path"/>
+
+      <!-- LP Compare - Compare edges between two roadmaps. -->
+      <LPCompare label="LPCompare" dmLabel="euclidean"
+        rdmp1="Map1.map" lpLabel1="sl"
+        rdmp2="Map2.map" lpLabel2="malpi"/>
+
+      <!-- MultiStrategy -->
+      <MultiStrategy label="MultiStrategy">
+        <MPStrategy method="BasicPRM1"/>
+        <MPStrategy method="AdaptiveRRT"/>
+      </MultiStrategy>
+
+      <!-- BlindRRT
+      <BlindRRT label="BlindRRT" delta="2.0" minDist="0.1"
+        CCconnection="NodeToNode" lpLabel="sl" dmLabel="euclidean"
+        initialSamples="200" ccIters="100" nfLabel="BFNF" vcLabel="rapid"
+        connectorLabel="RRTConnect" debug="false"/>-->
+
+      <!-- Spark PRM Examples -->
+      <SparkTogglePRMStrategy label="SparkToggle" maxNPCCSize="2"
+        initSamples="10" maxRRTSize="100" attemptRatio="10" delta="5"
+        minDist="0.1" vcLabel="rapid" nfLabel="BFNF" nfVertexLabel="Nearest"
+        trimDepth="2" dmLabel="euclidean" cLabel="SparkPRMConnector"
+        eLabel="BERO" priority="false" growthFocus="0.25" checkEdgeCases="true"
+        checkImportant="true" trimAll="true" biasConnect="true"
+        rrtDebug="false">
+        <Sampler methodLabel="UniformRandomFree" number="10" attempts="10"/>
+        <Connector methodLabel="ToggleConnect"/>
+        <ColConnector methodLabel="ToggleConnect"/>
+        <Evaluator methodLabel="ModQuery"/>
+      </SparkTogglePRMStrategy>
+
+      <SparkBasicPRM label="SparkUniform" maxNPCCSize="2" initSamples="10"
+        maxRRTSize="100" attemptRatio="10" delta="5" minDist="0.1" vcLabel="rapid"
+        nfLabel="BFNF" nfVertexLabel="Nearest" trimDepth="2" dmLabel="euclidean"
+        cLabel="SparkPRMConnector" eLabel="BERO" growthFocus="0.25"
+        checkEdgeCases="true" checkImportant="true" trimAll="true"
+        biasConnect="true" rrtDebug="false">
+        <Sampler method="UniformRandomFree" number="10" attempts="10"/>
+        <Connector method="Closest"/>
+        <Evaluator method="ModQuery"/>
+      </SparkBasicPRM>
+
+      <!-- Syclop -->
+      <Syclop label="Syclop"
+        numRoots="1" m="1" growthFocus="0.01" dmLabel="euclidean"
+        nfLabel="Nearest" vcLabel="rapid" connectorLabel="Closest"
+        gtype="UNDIRECTED_TREE" debug="false"
+        growGoals="false" extenderLabel="BERO" samplerLabel="UniformRandom"
+        tmLabel="tm">
+        <Evaluator label="RRTQuery"/>
+      </Syclop>
+
+      <!-- Visibility Based PRM Strategy -->
+      <VisibilityBasedPRM label="VBPRM" sampler="UniformRandomFree"
+        vcLabel="rapid" lpLabel="sl"
+        maxFailedIterations="20" debug="false"/>
+
+      <ScratchStrategy label="scratch"/>
+
     </MPStrategies>
 
     <MPTools>
+      <!-- Example nodes for a workspace decomposition with tetgen. -->
+      <TetGenDecomposition label="coarse" debug="false" switches="pnQ"/>
+      <TetGenDecomposition label="fine" debug="false" switches="pnqQ"/>
+
+      <!-- The same workspace decomposition nodes, this time reading in from
+           saved files like 'coarse.ele' and 'coarse.node'.
+      <TetGenDecomposition label="coarse" debug="false" switches="pnQ"
+        io="read" baseFilename="3D/coarse"/>
+      <TetGenDecomposition label="fine" debug="false" switches="pnqQ"
+        io="read" baseFilename="3D/quality"/>
+      -->
+
+      <TopologicalMap label="tm-coarse" decompositionLabel="coarse"
+        gridSize=".5"/>
+      <TopologicalMap label="tm-fine" decompositionLabel="fine"
+        gridSize=".5"/>
+
+      <ReebGraphConstruction debug="false" write="false" filename=""/>
+
       <ClearanceUtility label="clearanceUtil" vcLabel="pqp_solid"
         dmLabel="euclidean" clearanceType="exact" penetrationType="exact"
         useBBX="true" positional="true"/>
@@ -389,27 +576,12 @@
         dmLabel="euclidean" clearanceType="exact" penetrationType="exact"
         useBBX="true" positional="true"/>
 
-      <ReebGraphConstruction debug="false" write="false" filename=""/>
-
-      <TetGenDecomposition debug="false" switches="pnQ"
-        writeFreeModel="false" writeDecompModel="false"
-        decompModelFilename=""/>
-
-      <!-- If we were going to load a pair of tetgen files in the 3D dir called
-           'decomposed.ele' and 'decomposed.node', this is what the tetgen node
-           would look like.
-      <TetGenDecomposition debug="false" switches="pnQ"
-        writeFreeModel="false" writeDecompModel="false"
-        decompModelFilename="3D/decomposed"/>
-      -->
-
-      <TopologicalMap label="tm" gridSize=".5"/>
     </MPTools>
 
     <!-- MPProblem allows multiple solvers to be specified and executed. -->
 
-    <Solver mpStrategyLabel="KinoRRT" seed="12345678"
-      baseFilename="KinoRRTControlRoadmapTest" vizmoDebug="true"/>
+    <Solver mpStrategyLabel="BasicPRM1" seed="12345678"
+      baseFilename="Basic" vizmoDebug="true"/>
 
   </Library>
 

@@ -145,6 +145,24 @@ ResetBoundary(const vector<pair<double, double>>& _bbx, const double _margin) {
 
 void
 AbstractBoundingBox::
+ReadXML(XMLNode& _node) {
+  const string limits = _node.Read("limits", true, "", "The dimensions of the"
+      " bounding box.");
+
+  istringstream buffer(limits);
+
+  // Try to read in bounding box limits using NBox.
+  try {
+    buffer >> static_cast<NBox&>(*this);
+  }
+  catch(PMPLException& _e) {
+    throw ParseException(_node.Where(), _e.what());
+  }
+}
+
+
+void
+AbstractBoundingBox::
 Read(istream& _is, CountingStreamBuffer& _cbs) {
   // Try to read in using NBox. Re-propogate any exceptions with the better
   // debug info from the CountingStreamBuffer.

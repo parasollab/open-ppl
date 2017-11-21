@@ -2,6 +2,7 @@
 
 #include "ActiveMultiBody.h"
 #include "FreeBody.h"
+#include "Utilities/XMLNode.h"
 
 size_t Connection::m_globalCounter = 0;
 
@@ -43,6 +44,82 @@ GetTagFromJointType(JointType _j) {
     default:
       return "Unknown Joint Type";
   }
+}
+
+
+void
+Connection::
+ReadXML(XMLNode& _node) {
+  // Get the indices of the two bodies that are connected.
+  m_bodyIndices.first = _node.Read("parentIndex", true, size_t(0), size_t(0),
+      numeric_limits<size_t>::max(), "Index of the parent body.");
+  m_bodyIndices.second = _node.Read("childIndex", true, size_t(0), size_t(0),
+      numeric_limits<size_t>::max(), "Index of the child body.");
+
+  // Grab the shared_ptr to bodies.
+  m_bodies[0] =
+    static_cast<ActiveMultiBody*>(m_multibody)->GetFreeBody(m_bodyIndices.first);
+  m_bodies[1] =
+    static_cast<ActiveMultiBody*>(m_multibody)->GetFreeBody(m_bodyIndices.second);
+
+  // Read joint type.
+  string joint = _node.Read("joint", true, "", "Type of joint.");
+
+  // Conver to uppercase so that 'GetJointTypeFromTag
+  transform(joint.begin(), joint.end(), joint.begin(), ::toupper);
+  m_jointType = GetJointTypeFromTag(joint, _node.Where());
+
+  // Read the joint range.
+  const string rangeString = _node.Read("range", true, "", "Range of the joint.");
+
+  std::istringstream range(rangeString);
+  Range<double> temp;
+  range >> temp;
+
+  m_jointLimits[0] = make_pair(temp.min, temp.max);
+
+  // Spherical joints have two joint ranges.
+  if(m_jointType == JointType::Spherical) {
+    const string rangeString2 = _node.Read("range2", true, "",
+        "Range of the joint about the second axis.");
+
+    std::istringstream range(rangeString2);
+    Range<double> temp;
+    range >> temp;
+
+    m_jointLimits[1] = make_pair(temp.min, temp.max);
+  }
+
+  // Read the various transformation.
+
+  // Transform from parent to DH frame.
+  string parentToDHString = _node.Read("transformParentToDH", true, "",
+      "Transformation parameters of parent to DH frame.");
+
+  istringstream buffer1(parentToDHString);
+
+  while(buffer1)
+    buffer1 >> m_transformationToDHFrame;
+
+  // DH params.
+  string dhParamsString = _node.Read("initialDHParams", true, "",
+      "DH parameters.");
+
+  istringstream buffer2(dhParamsString);
+
+  while(buffer2)
+    buffer2 >> m_dhParameters;
+
+  // Transform from DH to com.
+  string dhToChildString = _node.Read("transformDHToChild", true, "",
+      "Transformation paremeters of DH to com.");
+
+  istringstream buffer3(dhToChildString);
+
+  while(buffer3)
+    buffer3 >> m_transformationToBody2;
+
+  m_bodies[0]->Link(this);
 }
 
 

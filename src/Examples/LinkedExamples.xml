@@ -4,11 +4,21 @@
   <!-- Here we specify input files, such as environment and query. -->
   <Problem>
 
-    <Environment filename="3D/3d.env"/>
+    <Environment filename="3D/3d.xml"/>
 
     <Robot label="linked" filename="3D/linked.xml"/>
 
-    <Query filename="3D/linked.query"/>
+    <!--Query filename="3D/linked.query"/-->
+
+    <Task label="query" robot="linked">
+      <StartConstraints>
+        <CSpaceConstraint point="0 0 0 0 0 0  0 0 0 0 0 0"/>
+      </StartConstraints>
+
+      <GoalConstraints>
+        <CSpaceConstraint point="20 5 10 0.2 0.8 0.5  .2 0 0 0 0 0"/>
+      </GoalConstraints>
+    </Task>
 
   </Problem>
 
@@ -37,7 +47,7 @@
       <NegateValidity label="nv" vcLabel="rapid"/>
       <MedialAxisClearance label="mac" maClearance="0.5" vcLabel="pqp_solid"
         dmLabel="euclidean" clearanceType="exact" penetrationType="exact"
-        useBBX="true" positional="true" epsilon="0.01" historyLength="5"/>
+        useBBX="true" positional="true"/>
       <ComposeValidity label="cv" operator="AND">
         <ValidityChecker label="pqp_solid"/>
         <ValidityChecker label="mac"/>
@@ -86,8 +96,7 @@
         dmLabel="euclidean" useBBX="true"/>
       <MedialAxisSampler label="MAPRM" vcLabel="pqp_solid" dmLabel="euclidean"
         clearanceType="exact" penetrationType="exact"
-        useBBX="true" debug="false" positional="true"
-        epsilon="0.01" historyLength="100"/>
+        useBBX="true" debug="false" positional="true"/>
       <GridSampler label="Grid" vcLabel="rapid">
         <Dimension index="0" points="10"/>
         <Dimension index="1" points="5"/>
@@ -102,7 +111,8 @@
       <UniformMedialAxisSampler label="UMAPRM" vcLabel="pqp_solid" useBBX="true"
         dmLabel="euclidean" d="2.00" t="10" clearanceType="exact"
         penetrationType="exact" debug="false" positional="true"/>
-      <WorkspaceImportanceSampler label="WIS" vcLabel="rapid" alpha="0.2"/>
+      <WorkspaceImportanceSampler label="WIS" vcLabel="rapid" alpha="0.2"
+        decompositionLabel="coarse"/>
     </Samplers>
 
     <LocalPlanners>
@@ -117,25 +127,25 @@
         maxTries="6" numNeighbors="10" histLength="10" debug="true"/>
       <AStarClearance label="asc" vcLabel="pqp_solid" maxTries="6" numNeighbors="3"
         histLength="10" dmLabel="euclidean" clearanceType="exact"
-        penetrationType="exact" clearanceRays="2" penetrationRays="2"
+        penetrationType="exact" clearanceRays="2"
         useBBX="true" positional="true" debug="false"/>
       <MedialAxisLP label="malpr" controller="recursive"
         macEpsilon="0.1" maxIter="10"
         vcLabel="pqp_solid" dmLabel="euclidean"
         clearanceType="exact" penetrationType="exact" useBBX="true"
-        epsilon="0.01" historyLength="5" positional="true"
+        positional="true"
         debug="true" saveIntermediates="true"/>
       <MedialAxisLP label="malpi" controller="iterative"
         resFactor="20" maxIter="100"
         vcLabel="pqp_solid" dmLabel="euclidean"
         clearanceType="exact" penetrationType="exact" useBBX="true"
-        epsilon="0.01" historyLength="5" positional="true"
+        positional="true"
         debug="true" saveIntermediates="true"/>
       <MedialAxisLP label="malpb" controller="binary"
         resFactor="20" maxIter="100"
         vcLabel="pqp_solid" dmLabel="euclidean"
         clearanceType="exact" penetrationType="exact" useBBX="true"
-        epsilon="0.01" historyLength="5" positional="true"
+        positional="true"
         debug="true" saveIntermediates="true"/>
       <ToggleLP label="togglelp" vcLabel="rapid" dmLabel="euclidean"
         lpLabel="sl" maxIter="5"/>
@@ -160,7 +170,7 @@
       <MedialAxisExtender label="MAE" maxDist="10.0" minDist="0.01"
         extendDist="0.5" maxIntermediates="10" lpLabel="sl" vcLabel="pqp_solid"
         dmLabel="euclidean" clearanceType="exact" penetrationType="exact"
-        useBBX="true" epsilon="0.01" historyLength="5" positional="true"/>
+        useBBX="true" positional="true"/>
       <RandomObstacleVector label="ROVRO" debug="false" dmLabel="euclidean"
         vcLabel="rapid" maxDist="10.0" minDist=".001"/>
       <RandomObstacleVector label="ROVSO" debug="false" dmLabel="euclidean"
@@ -380,7 +390,7 @@
         numRoots="1" m="1" growthFocus="0.01" dmLabel="euclidean"
         nfLabel="Nearest" vcLabel="rapid" connectorLabel="Closest"
         gtype="UNDIRECTED_TREE" debug="false"
-        growGoals="true" extenderLabel="BERO">
+        growGoals="true" extenderLabel="BERO" samplerLabel="UniformRandom">
         <Evaluator label="NodesEval"/>
       </BasicRRTStrategy>
 
@@ -389,7 +399,7 @@
         numRoots="1" m="1" growthFocus="0.01" dmLabel="euclidean"
         nfLabel="Nearest" vcLabel="rapid" connectorLabel="Closest"
         gtype="DIRECTED_TREE" debug="false"
-        growGoals="false" extenderLabel="KinoExtender">
+        growGoals="false" extenderLabel="KinoExtender" samplerLabel="UniformRandom">
         <Evaluator label="NodesEval"/>
       </BasicRRTStrategy>
 
@@ -398,7 +408,8 @@
       <BasicRRTStrategy label="RRG"
         numRoots="1" m="1" growthFocus="0.01" dmLabel="euclidean"
         nfLabel="Nearest" vcLabel="rapid" extenderLabel="BERO"
-        connectorLabel="OptimalConnector" gtype="UNDIRECTED_GRAPH">
+        connectorLabel="OptimalConnector" gtype="UNDIRECTED_GRAPH"
+        samplerLabel="UniformRandom">
         <Evaluator label="NodesEval"/>
       </BasicRRTStrategy>
 
@@ -406,7 +417,8 @@
       <BasicRRTStrategy label="RRTstar"
         numRoots="1" m="1" growthFocus="0.01" dmLabel="euclidean"
         nfLabel="Nearest" vcLabel="rapid" extenderLabel="BERO"
-        connectorLabel="OptimalRewire" gtype="UNDIRECTED_GRAPH">
+        connectorLabel="OptimalRewire" gtype="UNDIRECTED_GRAPH"
+        samplerLabel="UniformRandom">
         <Evaluator label="NodesEval"/>
       </BasicRRTStrategy>
 
@@ -423,39 +435,17 @@
         numRoots="1" m="1" growthFocus="0.01" dmLabel="euclidean"
         nfLabel="Nearest" vcLabel="rapid" connectorLabel="Closest"
         gtype="UNDIRECTED_TREE" debug="false"
-        growGoals="true" extenderLabel="ME">
+        growGoals="true" extenderLabel="ME" samplerLabel="UniformRandom">
         <Evaluator label="NodesEval"/>
       </BasicRRTStrategy>
-
-      <!-- Adaptive RRT -->
-      <AdaptiveRRT label="AdaptiveRRT"
-        numRoots="1" growthFocus="0.01" dmLabel="euclidean"
-        nfLabel="BFNF" vcLabel="rapid" extenderLabel="BERO"
-        gtype="UNDIRECTED_TREE" gamma="0.1" cost="reward" debug="true">
-        <Evaluator label="NodesEval"/>
-        <GrowthSet threshold="0.0">
-          <Extender label="BERO"/>
-          <Extender label="BESO"/>
-          <Extender label="ROVRO"/>
-        </GrowthSet>
-      </AdaptiveRRT>
 
       <!-- DynamicDomainRRT -->
       <DynamicDomainRRT label="DynamicDomainRRT"
         growthFocus="0.01" dmLabel="euclidean" nfLabel="Nearest" vcLabel="rapid"
         gtype="UNDIRECTED_TREE" debug="false" growGoals="false"
-        extenderLabel="BERO" r="2">
+        extenderLabel="BERO" r="2" samplerLabel="UniformRandom">
         <Evaluator label="BoundedRRTQuery"/>
       </DynamicDomainRRT>
-
-      <!-- DynamicRegionRRT -->
-      <DynamicRegionRRT label="DynamicRegionRRT"
-        growthFocus="0.01" dmLabel="euclidean"
-        nfLabel="Nearest" vcLabel="rapid"
-        gtype="UNDIRECTED_TREE" debug="false"
-        growGoals="false" extenderLabel="BERO">
-        <Evaluator label="BoundedRRTQuery"/>
-      </DynamicRegionRRT>
 
       <!-- Toggle PRM -->
       <TogglePRMStrategy label="TogglePRM" priority="true">
@@ -500,7 +490,7 @@
         inFilename="3D/3d.query" outFilename="3D/3d.ma.query"
         vcLabel="pqp_solid" dmLabel="euclidean"
         clearanceType="exact" penetrationType="exact" useBBX="true"
-        epsilon="0.01" historyLength="5" positional="true"/>
+        positional="true"/>
 
       <!-- Modify Path -->
       <ModifyPath label="ModifyPath" pmLabel="CR" pathFile="3D/3d.path"/>
@@ -513,7 +503,6 @@
       <!-- MultiStrategy -->
       <MultiStrategy label="MultiStrategy">
         <MPStrategy method="BasicPRM1"/>
-        <MPStrategy method="AdaptiveRRT"/>
       </MultiStrategy>
 
       <!-- BlindRRT
@@ -562,8 +551,10 @@
           useBBX="true" positional="false"/>
         <Clearance label="c2" vcLabel="pqp_solid" dmLabel="euclidean"
           clearanceType="approx" clearanceRays="10"
-          penetrationType="approx" penetrationRays="10"
-          useBBX="true" positional="false"/>
+          penetrationType="approx"
+          useBBX="true" positional="false" rayTickPosResolutionFactor="1.0"
+          orientationResolutionFactor="1.0" maxRayTickMagnitude="15"
+          penetrationRayFactor="1"/>
       </ClearanceTest>
 
     </MPStrategies>

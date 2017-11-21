@@ -58,11 +58,11 @@ class MPStrategyMethod : public MPBaseObject<MPTraits> {
     /// Execute the strategy by calling Initialize, Run, and Finalize.
     void operator()();
 
-    virtual void Initialize() = 0; ///< Set up the strategy.
+    virtual void Initialize() {}   ///< Set up the strategy.
     virtual void Run();            ///< Call Iterate until EvaluateMap is true.
     virtual bool EvaluateMap();    ///< Check if we satisfied all map evaluators.
     virtual void Iterate() {}      ///< Execute one iteration of the strategy.
-    virtual void Finalize() = 0;   ///< Clean-up and output results.
+    virtual void Finalize() {}     ///< Clean-up and output results.
 
     /// Determine if any of the map evaluators have "Query" in their label.
     /// @TODO Remove this once we finish setting up the new query mechanism.

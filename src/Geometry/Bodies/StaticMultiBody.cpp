@@ -1,6 +1,6 @@
 #include "StaticMultiBody.h"
-
 #include "FixedBody.h"
+#include "Utilities/XMLNode.h"
 
 StaticMultiBody::
 StaticMultiBody(MultiBodyType _m) : MultiBody() {
@@ -42,6 +42,18 @@ AddBody(const shared_ptr<FixedBody>& _body) {
   m_fixedBody.push_back(_body);
   MultiBody::AddBody(_body);
 }
+
+
+void
+StaticMultiBody::
+ReadXML(XMLNode& _node) {
+  shared_ptr<FixedBody> fix(new FixedBody(this, _node));
+
+  AddBody(fix);
+
+  FindMultiBodyInfo();
+}
+
 
 void
 StaticMultiBody::

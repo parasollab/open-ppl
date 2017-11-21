@@ -116,6 +116,24 @@ ResetBoundary(const vector<pair<double, double>>&, const double) {
 
 void
 AbstractBoundingSphere::
+ReadXML(XMLNode& _node) {
+  const string limits = _node.Read("limits", true, "", "The dimensions of the"
+      " bounding sphere.");
+
+  istringstream buffer(limits);
+
+  // Try to read in limits using NSphere.
+  try {
+    buffer >> static_cast<NSphere&>(*this);
+  }
+  catch(PMPLException& _e) {
+    throw ParseException(_node.Where(), _e.what());
+  }
+}
+
+
+void
+AbstractBoundingSphere::
 Read(istream& _is, CountingStreamBuffer& _cbs) {
   // Try to read in using NSphere. Re-propogate any exceptions with the better
   // debug info from the CountingStreamBuffer.

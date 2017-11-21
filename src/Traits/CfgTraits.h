@@ -126,6 +126,7 @@
 #include "MPLibrary/MPStrategies/MultiStrategy.h"
 #include "MPLibrary/MPStrategies/PushCfgToMATest.h"
 #include "MPLibrary/MPStrategies/PushQueryToMA.h"
+#include "MPLibrary/MPStrategies/ScratchStrategy.h"
 #include "MPLibrary/MPStrategies/SparkPRM.h"
 #include "MPLibrary/MPStrategies/SRTStrategy.h"
 #include "MPLibrary/MPStrategies/StableSparseRRT.h"
@@ -323,6 +324,7 @@ struct MPTraits {
     MultiStrategy<MPTraits>,
     PushCfgToMATest<MPTraits>,
     PushQueryToMA<MPTraits>,
+    ScratchStrategy<MPTraits>,
     SparkPRM<MPTraits, BasicPRM>,
     SparkPRM<MPTraits, TogglePRMStrategy>,
     SRTStrategy<MPTraits>,

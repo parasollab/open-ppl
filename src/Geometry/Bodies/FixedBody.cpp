@@ -7,6 +7,34 @@ FixedBody(MultiBody* _owner, const string& _filename) : Body(_owner) {
 }
 
 
+FixedBody::
+FixedBody(MultiBody* _owner, XMLNode& _node) : Body(_owner, _node) {
+  ReadXML(_node);
+}
+
+
+void
+FixedBody::
+ReadXML(XMLNode& _node) {
+  m_filename = _node.Read("filename", true, "", "The file containing the"
+      " geometry information of this body.");
+
+  // Call base class (Body.h) read. This is safe since the body was setup in the
+  // constructor.
+  Read(m_comAdjust);
+
+  // Read transform values.
+  const std::string transform = _node.Read("transform", false, "0 0 0 0 0 0",
+      "The transformation values (x, y, z, roll, pitch, yaw).");
+
+  // Use string stream to read values from string to a transform object.
+  istringstream buffer(transform);
+  buffer >> m_transform;
+
+  MarkDirty();
+}
+
+
 void
 FixedBody::
 Read(istream& _is, CountingStreamBuffer& _cbs) {

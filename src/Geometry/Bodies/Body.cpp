@@ -10,6 +10,8 @@
 #include "MPLibrary/ValidityCheckers/CollisionDetection/RapidCollisionDetection.h"
 #include "MPLibrary/ValidityCheckers/CollisionDetection/PQPCollisionDetection.h"
 
+#include "Utilities/XMLNode.h"
+
 
 /*---------------------------- Static Initializers ---------------------------*/
 
@@ -19,6 +21,46 @@ string Body::m_modelDataDir;
 
 Body::
 Body(MultiBody* _owner) : m_multibody(_owner) { }
+
+Body::
+Body(MultiBody* _owner, XMLNode& _node) : m_multibody(_owner) {
+  // Read the COM adjustment.
+  const string adjust = _node.Read("comAdjustment", false, "none",
+      "Specification of com adjustment");
+
+  if(adjust == "com")
+    m_comAdjust = GMSPolyhedron::COMAdjust::COM;
+  else if(adjust == "surface")
+    m_comAdjust = GMSPolyhedron::COMAdjust::Surface;
+  else if(adjust == "none")
+    m_comAdjust = GMSPolyhedron::COMAdjust::None;
+  else
+    throw ParseException(_node.Where(),
+        "Invalid specification of com adjustment: '" + adjust +
+        "'. Options are 'com', 'surface', or 'none'");
+
+  // Read the color.
+  const std::string color = _node.Read("color", false, "", "Color of the body.");
+
+  // Convert string of values to 4 rgba values.
+  if(!color.empty()) {
+    istringstream buffer(color);
+    buffer >> m_color;
+
+    m_colorLoaded = true;
+  }
+
+  // Parse optional texture file.
+  m_textureFile = _node.Read("textureFile", false, "", "Filename of the texture"
+      "file.");
+
+  if(!m_textureFile.empty())
+    m_textureLoaded = true;
+
+  // Read mass.
+  m_mass = _node.Read("mass", false, size_t(1), size_t(0),
+      std::numeric_limits<size_t>::max(), "Mass of the body.");
+}
 
 /*------------------------------- Validation ---------------------------------*/
 
@@ -423,7 +465,29 @@ ComputeWorldPolyhedron() const {
   ///       when we change the world transform and completed when we access
   ///       anything affected by that change.
   auto& poly = const_cast<GMSPolyhedron&>(m_worldPolyhedron);
-  poly = GetWorldTransformation() * m_polyhedron;
+
+  using CGAL::to_double;
+  using Kernel = GMSPolyhedron::CGALKernel;
+
+  const auto& transformation = GetWorldTransformation();
+  const auto& r = transformation.rotation().matrix();
+  const auto& t = transformation.translation();
+
+  CGAL::Aff_transformation_3<Kernel> cgalTrans(r[0][0], r[0][1], r[0][2], t[0],
+                                               r[1][0], r[1][1], r[1][2], t[1],
+                                               r[2][0], r[2][1], r[2][2], t[2]);
+
+  const auto& c = m_polyhedron.m_cgalPoints;
+  for(size_t i = 0; i < c.size(); ++i)
+    poly.m_cgalPoints[i] = cgalTrans(c[i]);
+
+  auto& vertices = m_polyhedron.m_vertexList;
+  for(size_t i = 0; i < vertices.size(); ++i)
+    poly.m_vertexList[i] = transformation * vertices[i];
+
+  auto& polygons = m_polyhedron.m_polygonList;
+  for(size_t i = 0; i < polygons.size(); ++i)
+    poly.m_polygonList[i].ComputeNormal();
 
   m_worldPolyhedronCached = true;
 }

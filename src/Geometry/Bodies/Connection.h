@@ -9,9 +9,11 @@ using namespace mathtool;
 
 #include "DHParameters.h"
 #include "Utilities/IOUtils.h"
+#include "Geometry/Boundaries/Range.h"
 
 class FreeBody;
 class MultiBody;
+class XMLNode;
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -64,6 +66,10 @@ class Connection final {
     /// @param _j Joint type
     /// @return String representation of _j.
     static string GetTagFromJointType(JointType _j);
+
+    /// Parse connection info from an XML node.
+    /// @param _node The input XML node to read.
+    void ReadXML(XMLNode& _node);
 
     /// Parse connection info from an input stream.
     /// @param _is The input stream to read.

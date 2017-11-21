@@ -4,6 +4,7 @@
 #include "MultiBody.h"
 
 class FixedBody;
+class XMLNode;
 
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup Geometry
@@ -54,6 +55,7 @@ class StaticMultiBody : public MultiBody {
     /// @param _body Fixed Body to add
     void AddBody(const shared_ptr<FixedBody>& _body);
 
+    virtual void ReadXML(XMLNode& _node);
     virtual void Read(istream& _is, CountingStreamBuffer& _cbs);
     virtual void Write(ostream& _os);
 

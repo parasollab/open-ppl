@@ -48,6 +48,7 @@ Robot(MPProblem* const _p, XMLNode& _node) : m_problem(_p) {
   const std::string path = GetPathName(_node.Filename());
   const std::string file = _node.Read("filename", true, "", "Robot file name");
   const std::string filename = path + file;
+
   if(!FileExists(filename))
     throw ParseException(_node.Where(), "File '" + filename + "' does not exist");
 
@@ -143,9 +144,15 @@ ReadXMLFile(const std::string& _filename) {
     if(child.Name() == "Multibody") {
       // Read the multibody file. Eventually we'll go full XML and pass the
       // child node directly to the multibody instead.
-      const std::string mbFile = child.Read("filename", true, "", "Name of the "
+      const std::string mbFile = child.Read("filename", false, "", "Name of the "
           "robot's multibody file");
-      ReadMultibodyFile(GetPathName(_filename) + mbFile);
+
+      // If there is no filename then the multibody information is in the XML
+      // child node.
+      if(mbFile == "")
+        ReadMultiBodyXML(child);
+      else
+        ReadMultibodyFile(GetPathName(_filename) + mbFile);
     }
     else if(child.Name() == "Actuator") {
       // Parse the actuator.
@@ -172,6 +179,19 @@ ReadXMLFile(const std::string& _filename) {
 
   // Throw errors for any unrequested attributes or nodes.
   node.WarnAll(true);
+}
+
+
+void
+Robot::
+ReadMultiBodyXML(XMLNode& _node) {
+  m_multibody = new ActiveMultiBody(_node);
+
+  // Initialize the DOF limits and set the robot to a zero starting configuration.
+  m_multibody->InitializeDOFs(m_problem->GetEnvironment()->GetBoundary());
+  m_multibody->Configure(std::vector<double>(m_multibody->DOF(), 0));
+
+  InitializePlanningSpaces();
 }
 
 

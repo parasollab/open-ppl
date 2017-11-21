@@ -11,6 +11,7 @@ using namespace mathtool;
 
 #include "Range.h"
 #include "Utilities/IOUtils.h"
+#include "Utilities/XMLNode.h"
 
 #include <CGAL/Exact_predicates_exact_constructions_kernel.h>
 #include <CGAL/Polyhedron_3.h>
@@ -139,6 +140,10 @@ class Boundary {
     ///@}
     ///@name I/O
     ///@{
+
+    /// Read in a boundary from an XML node.
+    /// @param _node The input node to read from
+    virtual void ReadXML(XMLNode& _node) {}
 
     /// Read in a boundary.
     /// @param _is The input stream to read from.
