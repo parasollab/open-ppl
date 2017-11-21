@@ -60,6 +60,8 @@ class BatteryConstrainedGroup : public Agent {
     ///@name Coordinator Interface
     ///@{
 
+    std::vector<Cfg> MakeNextPlan(MPTask* const _task, const bool _collisionAvoidance = false);
+
     /// Get a helpers robot for the worker robot
     std::vector<Robot*>& GetHelpers();
 

@@ -41,8 +41,9 @@ class PathFollowingChildAgent : public Agent {
     ///@{
 
     /// Get the next path for this child. Sets m_path.
-    /// @param _s The task defining the next goal.
-    void GetNextPath(MPTask* const _t);
+    /// @param _task The task defining the next goal.
+    /// @param _collisionAvoidance Is this a collision avoidance path?
+    void GetNextPath(MPTask* const _task, const bool _collisionAvoidance = false);
 
     Cfg GetRandomRoadmapPoint();
 

@@ -148,6 +148,27 @@ GetRandomRoadmapPoint() {
 
 /*---------------------------- Coordinator Helpers ---------------------------*/
 
+std::vector<Cfg>
+BatteryConstrainedGroup::
+MakeNextPlan(MPTask* const _task, const bool _collisionAvoidance) {
+  cout << "Graph size before calling solve: "
+       << m_solution->GetRoadmap()->GetGraph()->get_num_vertices()
+       << endl;
+
+  if(_collisionAvoidance)
+    m_library->Solve(m_robot->GetMPProblem(), _task, m_solution,
+        "LazyPRM", LRand(), "LazyCollisionAvoidance");
+  else
+    m_library->Solve(m_robot->GetMPProblem(), _task, m_solution);
+
+  cout << "Graph size after calling solve: "
+       << m_solution->GetRoadmap()->GetGraph()->get_num_vertices()
+       << endl;
+
+  return m_solution->GetPath()->Cfgs();
+}
+
+
 void
 BatteryConstrainedGroup::
 SetNextChildTask() {

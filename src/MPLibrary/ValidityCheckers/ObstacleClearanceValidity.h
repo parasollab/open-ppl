@@ -2,11 +2,13 @@
 #define OBSTACLE_CLEARANCE_VALIDITY_H_
 
 #include "ValidityCheckerMethod.h"
-#include "MPLibrary/MPTools/MedialAxisUtilities.h"
+
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Marks configurations as valid iff they are at least some minimum threshold
+/// distance away from the nearest obstacle.
+///
 /// @ingroup ValidityCheckers
-/// TODO
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
 class ObstacleClearanceValidity : public ValidityCheckerMethod<MPTraits> {
@@ -22,8 +24,7 @@ class ObstacleClearanceValidity : public ValidityCheckerMethod<MPTraits> {
     ///@name Construction
     ///@{
 
-    ObstacleClearanceValidity(double _obstClearance = 1.0,
-        const ClearanceUtility<MPTraits>& _c = ClearanceUtility<MPTraits>());
+    ObstacleClearanceValidity();
 
     ObstacleClearanceValidity(XMLNode& _node);
 
@@ -33,6 +34,8 @@ class ObstacleClearanceValidity : public ValidityCheckerMethod<MPTraits> {
     ///@name MPBaseObject Overrides
     ///@{
 
+    virtual void Initialize() override;
+
     virtual void Print(ostream& _os) const override;
 
     ///@}
@@ -40,7 +43,7 @@ class ObstacleClearanceValidity : public ValidityCheckerMethod<MPTraits> {
     ///@{
 
     virtual bool IsValidImpl(CfgType& _cfg, CDInfo& _cdInfo,
-        const string& _callName) override;
+        const std::string& _callName) override;
 
     ///@}
 
@@ -49,8 +52,8 @@ class ObstacleClearanceValidity : public ValidityCheckerMethod<MPTraits> {
     ///@name Internal State
     ///@{
 
-    double m_obstClearance;
-    ClearanceUtility<MPTraits> m_clearanceUtility;
+    double m_clearanceThreshold; ///< The minimum clearance threshold.
+    std::string m_vcLabel;       ///< The VC label, must point to pqp solid.
 
     ///@}
 };
@@ -59,9 +62,7 @@ class ObstacleClearanceValidity : public ValidityCheckerMethod<MPTraits> {
 
 template <typename MPTraits>
 ObstacleClearanceValidity<MPTraits>::
-ObstacleClearanceValidity(double _obstClearance,
-    const ClearanceUtility<MPTraits>& _c) :
-    m_obstClearance(_obstClearance), m_clearanceUtility(_c) {
+ObstacleClearanceValidity() {
   this->SetName("ObstacleClearance");
 }
 
@@ -69,10 +70,15 @@ ObstacleClearanceValidity(double _obstClearance,
 template <typename MPTraits>
 ObstacleClearanceValidity<MPTraits>::
 ObstacleClearanceValidity(XMLNode& _node) :
-    ValidityCheckerMethod<MPTraits>(_node), m_clearanceUtility(_node) {
+    ValidityCheckerMethod<MPTraits>(_node) {
   this->SetName("ObstacleClearance");
-  m_obstClearance = _node.Read("obstClearance", true, 1.0, -MAX_DBL, MAX_DBL,
-      "Required clearance from obstacles");
+
+  m_clearanceThreshold = _node.Read("clearanceThreshold", true, 1.0, -MAX_DBL,
+      MAX_DBL, "Minimum clearance from obstacles for a configuration to be "
+      "considered valid");
+
+  m_vcLabel = _node.Read("vcLabel", true, "", "The underlying validity checker "
+      "label (must be a PQP Solid type).");
 }
 
 /*-------------------------- MPBaseObject Overrides --------------------------*/
@@ -80,11 +86,31 @@ ObstacleClearanceValidity(XMLNode& _node) :
 template <typename MPTraits>
 void
 ObstacleClearanceValidity<MPTraits>::
-Print(ostream& _os) const {
+Initialize() {
+  // Ensure that the named validity checker is a PQP solid collision detector.
+  auto vc = this->GetValidityChecker(m_vcLabel);
+
+  CollisionDetectionValidity<MPTraits>* cd =
+      dynamic_cast<CollisionDetectionValidity<MPTraits>*>(vc.get());
+  if(!cd)
+    throw ParseException(WHERE, "Named validity checker '" + m_vcLabel +
+        "' is not a CollisionDetectionValidity object.");
+
+  PQPSolid* pqp = dynamic_cast<PQPSolid*>(cd->GetCDMethod());
+  if(!pqp)
+    throw ParseException(WHERE, "Named validity checker '" + m_vcLabel +
+        "' to a PQPSolid object.");
+}
+
+
+template <typename MPTraits>
+void
+ObstacleClearanceValidity<MPTraits>::
+Print(std::ostream& _os) const {
   ValidityCheckerMethod<MPTraits>::Print(_os);
-  _os << "\tRequired Clearance::" << m_obstClearance << endl;
-  _os << "\tClearanceUtil::" << endl;
-  m_clearanceUtility.Print(_os);
+  _os << "\tRequired Clearance: " << m_clearanceThreshold
+      << "\n\tValidity Checker: " << m_vcLabel
+      << std::endl;
 }
 
 /*------------------- ValidityCheckerMethod Overrides ------------------------*/
@@ -92,33 +118,23 @@ Print(ostream& _os) const {
 template <typename MPTraits>
 bool
 ObstacleClearanceValidity<MPTraits>::
-IsValidImpl(CfgType& _cfg, CDInfo& _cdInfo, const string& _callName) {
-  Environment* env = this->GetEnvironment();
-
-  auto b = env->GetBoundary();
+IsValidImpl(CfgType& _cfg, CDInfo& _cdInfo, const std::string& _callName) {
+  // Clear out the CD info and make sure we request everything to get the
+  // clearance info.
   _cdInfo.ResetVars();
   _cdInfo.m_retAllInfo = true;
 
-  CfgType cfg = _cfg;
-  CfgType dummy(cfg.GetRobot());
+  auto vc = this->GetValidityChecker(m_vcLabel);
+  const bool valid = vc->IsValid(_cfg, _cdInfo, _callName);
 
-  bool valid = m_clearanceUtility.CollisionInfo(cfg, dummy, b, _cdInfo);
-
-  if(this->m_debug) {
-    cout << "CFG::" << _cfg << endl;
-    cout << "ClrCfg::" << dummy << endl;
-    cout << "VALID::" << valid << endl;
-    cout << "Dist::" << _cdInfo.m_minDist << endl;
-  }
-
-  if(!valid || _cdInfo.m_minDist < m_obstClearance) {
+  // If the cfg is clear but not outside the threshold, mark it invalid.
+  if(valid && _cdInfo.m_minDist < m_clearanceThreshold) {
     _cfg.SetLabel("VALID", false);
     return false;
   }
-  else {
-    _cfg.SetLabel("VALID", true);
-    return true;
-  }
+
+  // Otherwise the validity is already correctly determined.
+  return valid;
 }
 
 /*----------------------------------------------------------------------------*/

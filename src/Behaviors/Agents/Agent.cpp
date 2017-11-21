@@ -67,6 +67,9 @@ Halt() {
 void
 Agent::
 SetCurrentTask(MPTask* const _task) {
+  // Guard against re-assignment.
+  if(_task == m_task)
+    return;
   delete m_task;
   m_task = _task;
 }

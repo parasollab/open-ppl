@@ -236,26 +236,21 @@ IsInCollision(CDInfo& _cdInfo, const CfgType& _cfg, const string& _callName) {
     if(coll && !_cdInfo.m_retAllInfo)
       return true;
   }
+
+  // Check against other robots if requested.
   if(m_interRobotCollision) {
-    //cout << "Checking for inter robot collision " << endl;
     auto allRobots = this->GetMPProblem()->GetRobots();
     for(auto robot : allRobots) {
+      // Skip self-checks and checks against virtual robots.
       if(_cfg.GetRobot() == robot or robot->IsVirtual())
         continue;
 
+      // Perform the collision check.
       CDInfo cdInfo(_cdInfo.m_retAllInfo);
-      cout << "Checking for robot collision " << endl;
-      cout << "Label: " << robot->GetLabel() << endl;
-      cout << "Simulated position: " << robot->GetDynamicsModel()->GetSimulatedState() << endl;
-      cout << "Multibody pos: ";
-      for(auto dof : robot->GetMultiBody()->GetCurrentDOFs())
-        cout << " " << dof;
-      cout << endl;
-      bool coll = IsInterRobotCollision(cdInfo, _cfg.GetRobot()->GetMultiBody(), robot->GetMultiBody(), _callName);
-      if(coll) {
-        cout << " Cfg in collision: " << _cfg << endl;
+      const bool collision = IsInterRobotCollision(cdInfo, _cfg.GetRobot()->GetMultiBody(),
+          robot->GetMultiBody(), _callName);
+      if(collision)
         return true;
-      }
     }
   }
   return retVal;
