@@ -58,8 +58,6 @@ Initialize() {
 
     // Set up priorities and charging locations based on the robot labels.
     if(IsHelper(robot)) {
-      cout << "Agent group is adding helpers " << endl;
-
       // Currently we assume that the starting location for each helper is a
       // charging location.
       auto helperPos = robot->GetDynamicsModel()->GetSimulatedState();
@@ -151,20 +149,12 @@ GetRandomRoadmapPoint() {
 std::vector<Cfg>
 BatteryConstrainedGroup::
 MakeNextPlan(MPTask* const _task, const bool _collisionAvoidance) {
-  cout << "Graph size before calling solve: "
-       << m_solution->GetRoadmap()->GetGraph()->get_num_vertices()
-       << endl;
-
-  if(_collisionAvoidance)
+  if(_collisionAvoidance) 
     m_library->Solve(m_robot->GetMPProblem(), _task, m_solution,
         "LazyPRM", LRand(), "LazyCollisionAvoidance");
-  else
+  else 
     m_library->Solve(m_robot->GetMPProblem(), _task, m_solution);
-
-  cout << "Graph size after calling solve: "
-       << m_solution->GetRoadmap()->GetGraph()->get_num_vertices()
-       << endl;
-
+    
   return m_solution->GetPath()->Cfgs();
 }
 
@@ -221,15 +211,21 @@ InitializeUnvisitedCfgs() {
   std::random_shuffle ( m_unvisitedCfgs.begin(), m_unvisitedCfgs.end() );*/
 
   Cfg point(m_robot);
-  /*std::istringstream pointStream("4 0 0 0 0 0");
+  std::istringstream pointStream0("1 0 0 0 0 0");
+  point.Read(pointStream0);
+  m_unvisitedCfgs.push_back(point);
+  std::istringstream pointStream("3 0 0 0 0 0");
   point.Read(pointStream);
   m_unvisitedCfgs.push_back(point);
-  std::istringstream pointStream2("4.75 0 0 0 0 0");
-  point.Read(pointStream2);
-  m_unvisitedCfgs.push_back(point);*/
-  std::istringstream pointStream3("4.87 -1.524 0 0 0 0");
-  point.Read(pointStream3);
+  std::istringstream pointStream1("5 -2 0 0 0 0");
+  point.Read(pointStream1);
   m_unvisitedCfgs.push_back(point);
+  /*std::istringstream pointStream2("4.75 0 0 0 0 0");
+  point.Read(pointStream2);
+  m_unvisitedCfgs.push_back(point);
+  std::istringstream pointStream3("4.87 -1.524 0 0 0 0");
+  point.Read(pointStream3);*/
+  //m_unvisitedCfgs.push_back(point);
 }
 
 /*----------------------------------------------------------------------------*/

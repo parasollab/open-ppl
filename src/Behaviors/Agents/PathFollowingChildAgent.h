@@ -79,9 +79,9 @@ class PathFollowingChildAgent : public Agent {
     ///@name Helper Functions
     ///@{
 
-    void WorkerStep();
+    void WorkerStep(double);
 
-    void HelperStep();
+    void HelperStep(double);
 
     void AvoidCollision();
 

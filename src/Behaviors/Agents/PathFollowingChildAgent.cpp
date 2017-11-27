@@ -130,6 +130,7 @@ PathFollowingChildAgent::
 Step(const double _dt) {
 
   Initialize();
+  
   //Skip till you match the hardware time.
   auto hardware = m_robot->GetHardwareInterface("base");
   if(hardware) {
@@ -139,15 +140,17 @@ Step(const double _dt) {
     if(m_dt < hardwareTime)
       return;
   }
-
+  else
+    m_dt = _dt;
+  
   //If we have moved 1.5 meters, localize. The error seems high just after 1 m, so
   //we would need to localize often.
-  if(m_distance > 1.5) {
+  if(m_distance > 1.5 and !m_shouldHalt) {
     Localize(m_dt);
     LocalizeAngle(m_dt);
     m_dt = 0;
-    if(!m_finishedLocalizing)
-      return;
+    //if(!m_finishedLocalizing)
+    return;
   }
 
   // If not in collision, keep going with current task.
@@ -159,26 +162,25 @@ Step(const double _dt) {
   // Otherwise, check if it should stop/plan around.
   else if(m_shouldHalt) {
     //halt and return, don't call Execute task
-    this->Halt();
+    PauseSimulatedAgent(m_dt);
+    PauseHardwareAgent(m_dt);
+    m_dt = 0;
     return;
   }
-  else {
+  else 
     IsHeadOnCollision();
-  }
 
   //If the tasked is assigned but not started
-  if(m_task && !m_task->IsStarted()) {
+  if(m_task && !m_task->IsStarted()) 
     GetNextPath(m_task);
-    std::cout << "Starting task...\n";
-  }
 
   ExecuteTask(m_dt);
 
-  m_dt = 0;
   if(m_parentAgent->IsHelper(m_robot))
-    HelperStep();
+    HelperStep(m_dt);
   else
-    WorkerStep();
+    WorkerStep(m_dt);
+  m_dt = 0;
 }
 
 
@@ -394,7 +396,7 @@ FindNearestChargingLocation() {
   vector<Cfg> tempPath;
   Cfg chargingLocation;
   double pathLength = 0;
-
+  pair<Cfg, bool>* chosenLocation = nullptr;
   // Find the closest charging location to m_robot
   for(auto tempLocation : m_parentAgent->GetChargingLocations()) {
     auto tempGoal = new CSpaceConstraint(m_parentRobot, tempLocation.first);
@@ -416,12 +418,13 @@ FindNearestChargingLocation() {
       pathLength = tempLength;
       task = tempTask;
       chargingLocation = tempLocation.first;
+      chosenLocation = &tempLocation;
     }
   }
 
+  chosenLocation->second = true;
   task->SetLabel("GettingToChargingLocation");
   this->SetCurrentTask(task);
-  //GetNextPath(task);
 }
 
 
@@ -588,7 +591,7 @@ LocalizeAngle(double _dt) {
       else {
         // reset this value to 60 degrees; TODO: don't use magic numbers
         m_localizingAngle = 1.0472;
-        cout << netbook->GetNumMarkersSeen() << " Markers found. Rotating more." << endl;
+        //cout << netbook->GetNumMarkersSeen() << " Markers found. Rotating more." << endl;
       }
     }
   }
@@ -599,13 +602,20 @@ LocalizeAngle(double _dt) {
 void
 PathFollowingChildAgent::
 ExecuteTask(double _dt) {
+  /*if(m_parentAgent->IsHelper(m_robot)) {
+    cout << endl;
+    cout << endl;
+    cout << "IN EXECUTE TASK FUNCTION" << endl;
+    cout << m_robot->GetLabel() << " executing task " << endl;
+    cout << m_path.size() << ", " << m_finishedLocalizing << ", " << m_pathIndex << endl;
+  }*/
   if(!m_finishedLocalizing)
     return;
   // Do nothing if there are no unvisited points left 
   auto hardwareInterface = static_cast<QueuedHardwareInterface*>
     (m_robot->GetHardwareInterface("base")); //TODO Magic string
 
-  if(m_pathIndex >= m_path.size() ) {
+  if(m_pathIndex >= m_path.size() or m_path.empty()) {
     return;
   }
 
@@ -654,7 +664,9 @@ ExecuteTask(double _dt) {
     cout << m_robot->GetDynamicsModel()->GetSimulatedState() << endl;
     PauseSimulatedAgent(_dt);
     m_task->SetCompleted();
+    //Reset values for certain variables;
     m_headOnCollidingRobot = nullptr;
+    m_distance = 0;
     return;
   }
 
@@ -663,6 +675,9 @@ ExecuteTask(double _dt) {
       m_path[m_pathIndex], _dt);
   bestControl.Execute();
 
+  //cout << "this is the control " << bestControl << endl;
+  //cout << endl;
+  //cout << endl;
   if(hardwareInterface) {
     //Keep track of the distance the the robot has moved so far. We would
     //localize after every few meters (or whatever distance we think is needed)
@@ -698,7 +713,9 @@ PauseHardwareAgent(double _dt) {
   auto hardwareInterface = static_cast<QueuedHardwareInterface*>
     (m_robot->GetHardwareInterface("base")); //TODO Magic string
 
-  hardwareInterface->EnqueueCommand({emptyControl}, _dt);
+  cout << "Pausing hardware agent: " << m_robot->GetLabel() << endl;
+  if(hardwareInterface)
+    hardwareInterface->EnqueueCommand({emptyControl}, _dt);
 }
 
 
@@ -723,20 +740,20 @@ Replan() {
   m_pathIndex = 0;
   m_path.clear();
 
-  //TODO: memory leak will happen, figure out why SetCurrentTask fails? 
-  //m_task = task;
   this->SetCurrentTask(task);
 }
 
 
 void
 PathFollowingChildAgent::
-WorkerStep() {
+WorkerStep(double _dt) {
   if(m_done)
     return;
 
-  m_battery->UpdateValue(0.04);
+  cout << "Current battery level " << m_battery->GetCurLevel() << endl;
 
+  m_battery->UpdateValue(0.32);
+  
   if(m_task->IsCompleted()) {
     m_pathIndex = 0;
     m_path.clear();
@@ -751,7 +768,9 @@ WorkerStep() {
         m_currentGoal = m_parentAgent->GetRandomRoadmapPoint();
       m_pathIndex = 0;
       m_path.clear();
-      this->Halt();
+      PauseSimulatedAgent(_dt);
+      //PauseHardwareAgent(_dt);
+      //this->Halt();
       CallForHelp();
       cout << "Called for help at position " << m_robot->GetDynamicsModel()->GetSimulatedState() << endl;
     }
@@ -808,16 +827,21 @@ WorkerStep() {
 
 void
 PathFollowingChildAgent::
-HelperStep() {
-
-  if(m_parentAgent->IsHelper(m_robot) && !IsAtChargingStation() && m_task->GetLabel() != "GoingToHelp") {
+HelperStep(double _dt) {
+  if(m_task->GetLabel() == "GoingToHelp")
+    return;
+  if(!IsAtChargingStation() ) {
+    cout << m_robot->GetLabel() << " Trying to go to charging station: " << endl;
+    cout << "Current path size is: " << m_path.size() << endl;
     FindNearestChargingLocation();
+    cout << "Found charging location" << endl;
   }
-  else if(m_parentAgent->IsHelper(m_robot) && IsAtChargingStation() && m_task->GetLabel() != "GoingToHelp") {
+  else {
     //Clear the current path and halt the robot
     m_path.clear();
     m_pathIndex = 0;
     this->Halt();
+    //PauseHardwareAgent(_dt);
     //Reset robot priority to 0 while it charges
     m_robot->GetAgent()->m_priority = 0;
     //if battery is low, charge
