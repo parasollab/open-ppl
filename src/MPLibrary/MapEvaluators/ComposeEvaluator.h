@@ -4,6 +4,9 @@
 #include "MapEvaluatorMethod.h"
 #include "EvaluatorFunctor.h"
 
+#include <algorithm>
+
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Combines two or more MapEvaluators to produce a compound condition.
 /// @ingroup MapEvaluators
@@ -13,41 +16,43 @@ class ComposeEvaluator : public MapEvaluatorMethod<MPTraits> {
 
   public:
 
-    ///\name Local Types
+    ///@name Local Types
     ///@{
 
     enum LogicalOperator {AND, OR}; ///< The supported logical operators.
 
     ///@}
-    ///\name Motion Planning Types
+    ///@name Motion Planning Types
     ///@{
 
     typedef typename MPTraits::MPLibrary MPLibrary;
 
     ///@}
-    ///\name Construction
+    ///@name Construction
     ///@{
 
     ComposeEvaluator(LogicalOperator _logicalOperator = AND,
         const vector<string>& _evalLabels = vector<string>());
+
     ComposeEvaluator(XMLNode& _node);
 
     ///@}
-    ///\name MPBaseObject Overrides
+    ///@name MPBaseObject Overrides
     ///@{
 
     virtual void Print(ostream& _os) const override;
+
     virtual bool operator()() override;
 
     ///@}
 
   private:
 
-    ///\name Internal State
+    ///@name Internal State
     ///@{
 
     LogicalOperator m_logicalOperator;
-    vector<string> m_evalLabels;
+    std::vector<string> m_evalLabels;
 
     ///@}
 };
@@ -65,15 +70,16 @@ ComposeEvaluator(LogicalOperator _logicalOperator,
 
 template <typename MPTraits>
 ComposeEvaluator<MPTraits>::
-ComposeEvaluator(XMLNode& _node) :
-    MapEvaluatorMethod<MPTraits>(_node) {
+ComposeEvaluator(XMLNode& _node) : MapEvaluatorMethod<MPTraits>(_node) {
   this->SetName("ComposeEvaluator");
 
-  string logicalOperator = _node.Read("operator", true, "", "operator");
+  std::string logicalOperator = _node.Read("operator", true, "", "operator");
+  std::transform(logicalOperator.begin(), logicalOperator.end(),
+                 logicalOperator.begin(), ::tolower);
 
-  if(logicalOperator == "AND" || logicalOperator == "and")
+  if(logicalOperator == "and")
     m_logicalOperator = AND;
-  else if(logicalOperator == "OR" || logicalOperator == "or")
+  else if(logicalOperator == "or")
     m_logicalOperator = OR;
   else
     throw ParseException(_node.Where(), "Operator '" + logicalOperator +
@@ -87,6 +93,7 @@ ComposeEvaluator(XMLNode& _node) :
     throw ParseException(_node.Where(), "Must specify at least two evaluators.");
 }
 
+/*-------------------------- MPBaseObject Overrides --------------------------*/
 
 template <typename MPTraits>
 void
@@ -136,5 +143,7 @@ operator()() {
   }
   return false;
 }
+
+/*----------------------------------------------------------------------------*/
 
 #endif

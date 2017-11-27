@@ -1,12 +1,15 @@
 #ifndef COMPOSE_VALIDITY_H
 #define COMPOSE_VALIDITY_H
 
-#include "ValidityCheckerMethod.h"
-#include "ValidityCheckerFunctor.h"
+#include "MPLibrary/ValidityCheckers/ValidityCheckerMethod.h"
+
+#include <algorithm>
+
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Composed validity checker which applies two or more validity conditions.
+///
 /// @ingroup ValidityCheckers
-/// @brief Apply boolean expressions on results of multiple ValidityChecker s.
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
 class ComposeValidity : public ValidityCheckerMethod<MPTraits> {
@@ -16,46 +19,50 @@ class ComposeValidity : public ValidityCheckerMethod<MPTraits> {
     ///@name Local Types
     ///@{
 
-    typedef typename MPTraits::CfgType CfgType;
+    enum LogicalOperator {AND, OR}; ///< The supported logical operators.
 
-    enum LogicalOperator {AND, OR};
+    ///@}
+    ///@name Motion Planning Types
+    ///@{
+
+    typedef typename MPTraits::CfgType CfgType;
 
     ///@}
     ///@name Construction
     ///@{
 
-    ComposeValidity(LogicalOperator _logicalOperator = AND,
-        const vector<string>& _vcLabel = vector<string>());
+    ComposeValidity();
+
     ComposeValidity(XMLNode& _node);
+
     virtual ~ComposeValidity() = default;
 
     ///@}
-    ///@name ValidityChecker Interface
+
+  protected:
+
+    ///@name ValidityChecker Overrides
     ///@{
 
     virtual bool IsValidImpl(CfgType& _cfg, CDInfo& _cdInfo,
-        const string& _callName);
+        const std::string& _callName) override;
 
     ///@}
-
-  private:
-
     ///@name Internal State
     ///@{
 
-    LogicalOperator m_logicalOperator;
-    vector<string> m_labels;
+    LogicalOperator m_operator; ///< The logical operator joining VC's.
+    std::vector<std::string> m_vcLabels; ///< The VC labels to combine.
 
     ///@}
+
 };
 
 /*------------------------------- Construction -------------------------------*/
 
 template <typename MPTraits>
 ComposeValidity<MPTraits>::
-ComposeValidity(LogicalOperator _operator, const vector<string>& _vcLabel) :
-    ValidityCheckerMethod<MPTraits>(), m_logicalOperator(_operator),
-    m_labels(_vcLabel) {
+ComposeValidity() {
   this->SetName("ComposeValidity");
 }
 
@@ -65,53 +72,70 @@ ComposeValidity<MPTraits>::
 ComposeValidity(XMLNode& _node) : ValidityCheckerMethod<MPTraits>(_node) {
   this->SetName("ComposeValidity");
 
-  string logicalOperator = _node.Read("operator", true, "", "operator");
-  if(logicalOperator == "AND" || logicalOperator == "and")
-    m_logicalOperator = AND;
-  else if(logicalOperator == "OR" || logicalOperator == "or")
-    m_logicalOperator = OR;
+  std::string logicalOperator = _node.Read("operator", true, "", "operator");
+  std::transform(logicalOperator.begin(), logicalOperator.end(),
+                 logicalOperator.begin(), ::tolower);
+
+  if(logicalOperator == "and")
+    m_operator = AND;
+  else if(logicalOperator == "or")
+    m_operator = OR;
   else
-    throw ParseException(_node.Where(),
-        "Unknown operator '" + logicalOperator + "'.");
+    throw ParseException(_node.Where(), "Operator '" + logicalOperator +
+        "' is unknown.");
 
   for(auto& child : _node)
     if(child.Name() == "ValidityChecker")
-      m_labels.push_back(
-          child.Read("label", true, "", "validity checker method"));
+      m_vcLabels.push_back(child.Read("label", true, "",
+            "ValidityChecker method to include in this set."));
+
+  if(m_vcLabels.size() < 2)
+    throw ParseException(_node.Where(), "Must specify at least two submethods.");
 }
 
-/*------------------------- ValidityChecker Interface ------------------------*/
+/*---------------------- ValidityCheckerMethod Overrides ---------------------*/
 
 template <typename MPTraits>
 bool
 ComposeValidity<MPTraits>::
-IsValidImpl(CfgType& _cfg, CDInfo& _cdInfo, const string& _callName) {
-  typedef typename MPTraits::MPLibrary::ValidityCheckerPointer
-      ValidityCheckerPointer;
-  typedef typename vector<ValidityCheckerPointer>::iterator VCIterator;
+IsValidImpl(CfgType& _cfg, CDInfo& _cdInfo, const std::string& _callName) {
+  if(this->m_debug)
+    std::cout << "ComposeValidity:: checking validity..."
+              << std::endl;
 
-  vector<ValidityCheckerPointer> vcMethod;
-  for(const auto& label : m_labels)
-    vcMethod.push_back(this->GetValidityChecker(label));
+  switch(m_operator) {
+    case AND:
+      for(auto label : m_vcLabels) {
+        auto vc = this->GetValidityChecker(label);
+        const bool passed = vc->IsValid(_cfg, _cdInfo, _callName);
 
-  ValidityCheckerFunctor<MPTraits> comFunc(_cfg, _cdInfo, _callName);
+        if(this->m_debug)
+          std::cout << "\t" << vc->GetNameAndLabel() << ": "
+                    << (passed ? "passed" : "failed")
+                    << std::endl;
 
-  if(m_logicalOperator == AND) {
-    Compose<VCIterator, logical_and<bool>, ValidityCheckerFunctor<MPTraits>>
-        andRelation;
-    return andRelation(vcMethod.begin(), vcMethod.end(), logical_and<bool>(),
-        comFunc);
+        if(!passed)
+          return false;
+      }
+      return true;
+    case OR:
+      for(auto label : m_vcLabels) {
+        auto vc = this->GetValidityChecker(label);
+        const bool passed = vc->IsValid(_cfg, _cdInfo, _callName);
+
+        if(this->m_debug)
+          std::cout << "\t" << vc->GetNameAndLabel() << ": "
+                    << (passed ? "passed" : "failed")
+                    << std::endl;
+
+        if(passed)
+          return true;
+      }
+      return false;
+    default:
+      throw RunTimeException(WHERE, "Unknown operator is stated.");
   }
-  else if(m_logicalOperator == OR) {
-    Compose<VCIterator, logical_or<bool>, ValidityCheckerFunctor<MPTraits>>
-        orRelation;
-    return orRelation(vcMethod.begin(), vcMethod.end(), logical_or<bool>(),
-        comFunc);
-  }
-  else {
-    cerr << "Error::Compose Validity read unknown label." << endl;
-    return false;
-  }
+  return false;
 }
 
 /*----------------------------------------------------------------------------*/

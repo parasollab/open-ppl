@@ -1,14 +1,15 @@
 #ifndef VALIDITY_CHECKER_METHOD_H
 #define VALIDITY_CHECKER_METHOD_H
 
-#include <string>
-#include "Utilities/MPUtils.h"
-#include "MPLibrary/ValidityCheckers/CollisionDetection/CDInfo.h"
 #include "MPLibrary/MPBaseObject.h"
+#include "MPLibrary/ValidityCheckers/CollisionDetection/CDInfo.h"
+#include "Utilities/MPUtils.h"
+
+#include <string>
+
 
 ////////////////////////////////////////////////////////////////////////////////
-/// @ingroup ValidityCheckers
-/// @brief Base algorithm abstraction for \ref ValidityCheckers.
+/// Base algorithm abstraction for \ref ValidityCheckers.
 ///
 /// ValidityCheckerMethod has two important methods: @c IsValid and
 /// @c IsInsideObstacle.
@@ -19,13 +20,15 @@
 /// @c IsInsideObstacle is meant mostly for medial axis related functions, but
 /// it takes as input a configuration @c c and determines whether the robot
 /// configured at @c lies entirely within an obstacle.
+///
+/// @ingroup ValidityCheckers
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
 class ValidityCheckerMethod : public MPBaseObject<MPTraits> {
 
   public:
 
-    ///@name Local Types
+    ///@name Motion Planning Types
     ///@{
 
     typedef typename MPTraits::CfgType CfgType;
@@ -35,25 +38,24 @@ class ValidityCheckerMethod : public MPBaseObject<MPTraits> {
     ///@{
 
     ValidityCheckerMethod() = default;
+
     ValidityCheckerMethod(XMLNode& _node) : MPBaseObject<MPTraits>(_node) {}
+
     virtual ~ValidityCheckerMethod() = default;
 
     ///@}
     ///@name ValidityChecker Interface
     ///@{
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// @brief Classify a configuration to either @cfree or @cobst
-    ///
+    /// Classify a configuration to either @cfree or @cobst. No extra collision
+    /// information is returned.
     /// @overload
-    /// No extra collision information is returned.
-    bool IsValid(CfgType& _cfg, const string& _callName) {
+    bool IsValid(CfgType& _cfg, const std::string& _callName) {
       CDInfo cdInfo;
       return IsValid(_cfg, cdInfo, _callName);
     }
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// @brief Classify a configuration to either @cfree or @cobst
+    /// Classify a configuration to either @cfree or @cobst.
     /// @param _cfg Configuration
     /// @param _cdInfo Extra computed information, e.g., minimum dist to
     ///        obstacle
@@ -68,15 +70,14 @@ class ValidityCheckerMethod : public MPBaseObject<MPTraits> {
     /// string callee("SomeFunc");
     /// bool valid = vc->IsValid(c, cdInfo, callee);
     /// @endcode
-    bool IsValid(CfgType& _cfg, CDInfo& _cdInfo, const string& _callName) {
+    bool IsValid(CfgType& _cfg, CDInfo& _cdInfo, const std::string& _callName) {
       if(m_validity)
         return IsValidImpl(_cfg, _cdInfo, _callName);
       else
         return !IsValidImpl(_cfg, _cdInfo, _callName);
     }
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// @brief Determines if a configuration lies entirely in a workspace obstacle
+    /// Determine if a configuration lies entirely in a workspace obstacle.
     /// @param _cfg Configuration
     /// @return boolean inside/outside of workspace obstacle.
     ///
@@ -87,31 +88,28 @@ class ValidityCheckerMethod : public MPBaseObject<MPTraits> {
     /// bool valid = vc->IsInsideObstacle(c);
     /// @endcode
     virtual bool IsInsideObstacle(const CfgType& _cfg) {
-      cerr << "error: IsInsideObstacle() not defined." << endl;
-      exit(-1);
+      throw RunTimeException(WHERE, "IsInsideObstacle() not defined.");
     }
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// @brief Switches the meaning of "valid" to "invalid" and vice versa
+    /// Switches the meaning of "valid" to "invalid" and vice versa
     void ToggleValidity() {m_validity = !m_validity;}
 
     bool GetValidity() const {return m_validity;}
 
   protected:
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// @brief Implementation of the classification of a configuration to either
-    ///        @cfree or @cobst
+    /// Implementation of the classification of a configuration to either @cfree
+    /// or @cobst
     /// @param _cfg Configuration
     /// @param _cdInfo Extra computed information, e.g., minimum dist to
     ///        obstacle
     /// @param _callName Function caller for statistics tracking
     /// @return boolean valid/invalid. Valid (true) implies @cfree.
-    ////////////////////////////////////////////////////////////////////////////
     virtual bool IsValidImpl(CfgType& _cfg, CDInfo& _cdInfo,
-        const string& _callName) = 0;
+        const std::string& _callName) = 0;
 
     bool m_validity{true}; ///< Use standard validity? False indicates negation.
+
 };
 
 #endif
