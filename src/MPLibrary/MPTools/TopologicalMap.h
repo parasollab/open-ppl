@@ -30,12 +30,32 @@ class TopologicalMap final : public MPBaseObject<MPTraits> {
     ///@name Motion Planning Types
     ///@{
 
-    typedef typename MPTraits::CfgType      CfgType;
-    typedef typename MPTraits::WeightType   WeightType;
-    typedef typename MPTraits::RoadmapType  RoadmapType;
-    typedef typename RoadmapType::VID       VID;
-    typedef typename RoadmapType::GraphType GraphType;
-    typedef typename GraphType::VI          VI;
+    typedef typename MPTraits::CfgType                CfgType;
+    typedef typename MPTraits::WeightType             WeightType;
+    typedef typename MPTraits::RoadmapType            RoadmapType;
+    typedef typename RoadmapType::VID                 VID;
+    typedef typename RoadmapType::GraphType           GraphType;
+    typedef typename GraphType::VI                    VI;
+    typedef WorkspaceDecomposition::vertex_descriptor VD;
+    typedef WorkspaceDecomposition::edge_descriptor   ED;
+
+    ///@}
+    ///@name Local Types
+    ///@{
+
+    /// A descriptor-based adjacency map for the successors from an SSSP run.
+    typedef std::unordered_map<VD, std::vector<VD>> AdjacencyMap;
+
+    ////////////////////////////////////////////////////////////////////////////
+    /// The output of an SSSP run.
+    ////////////////////////////////////////////////////////////////////////////
+    struct SSSPOutput {
+
+      std::unordered_map<VD, double> distances; ///< Distance to each cell from start.
+      std::vector<VD> ordering;                 ///< Cell discovery ordering.
+      AdjacencyMap successors;                  ///< Maps predecessor -> successors.
+
+    };
 
     ///@}
     ///@name Construction
@@ -109,9 +129,29 @@ class TopologicalMap final : public MPBaseObject<MPTraits> {
     const WorkspaceDecomposition* GetDecomposition() const;
 
     ///@}
+    ///@name SSSP
+    ///@{
+
+    /// Compute the SSSP through the workspace decomposition graph starting from
+    /// a designated cell.
+    /// @param _region The starting region.
+    /// @param _earlyStopDistance Stop after the last cell added is this far
+    ///                           from the first populated cell. Use -1 to
+    ///                           disable.
+    /// @param _adjacency An optional adjacency map to use instead of the
+    ///                   decomposition's.
+    /// @return The cell distances and successor tree.
+    SSSPOutput
+    ComputeSSSP(const WorkspaceRegion* const _region,
+        const double _earlyStopDistance = -1,
+        const AdjacencyMap& _adjacency = {});
 
   private:
 
+    /// Compute the weight map between adjacent decomposition cells.
+    void ComputeWeightMap();
+
+    ///@}
     ///@name Cfg Mapping
     ///@{
 
@@ -146,6 +186,12 @@ class TopologicalMap final : public MPBaseObject<MPTraits> {
 
     /// An inverse mapping from VID to the containing region.
     std::unordered_map<VID, const WorkspaceRegion*> m_vidToRegion;
+
+    /// After first SSSP computation, maintain a weight map to represent the
+    /// distances between decomposition regions, where the weight between cells
+    /// is the euclidean distance from cell center -> shared facet center ->
+    /// cell center.
+    std::unordered_map<size_t, double> m_weights;
 
     ///@}
 
@@ -189,6 +235,7 @@ void
 TopologicalMap<MPTraits>::
 Initialize() {
   ClearMap();
+  m_weights.clear();
 
   auto env = this->GetEnvironment();
   auto stats = this->GetStatClass();
@@ -211,6 +258,8 @@ Initialize() {
   // Undo the mapping when cfgs are deleted.
   g->InstallHook(GraphType::HookType::DeleteVertex, this->GetNameAndLabel(),
       [this](const VI _vi){this->UnmapCfg(_vi);});
+
+  ComputeWeightMap();
 }
 
 /*---------------------------------- Queries ---------------------------------*/
@@ -345,7 +394,7 @@ LocateNearestRegion(const Point3d& _p) const {
   /// @TODO This relies on magic strings in the XML. Make it more robust.
   CDInfo cdInfo(true);
   auto vc = this->GetValidityChecker("pqp_solid");
-  if(vc->IsValid(temp, cdInfo, "TopologicalFilter::FindCandidateRegions"))
+  if(vc->IsValid(temp, cdInfo, "TopologicalMap::FindCandidateRegions"))
     return LocateRegion(_p);
 
   // Compute the vector from the sampled point to the outside of the obstacle.
@@ -442,6 +491,191 @@ TopologicalMap<MPTraits>::
 ClearMap() {
   m_regionToVIDs.clear();
   m_vidToRegion.clear();
+}
+
+/*----------------------------------- SSSP -----------------------------------*/
+
+template <typename MPTraits>
+void
+TopologicalMap<MPTraits>::
+ComputeWeightMap() {
+  MethodTimer mt(this->GetStatClass(), "TopologicalMap::ComputeWeightMap");
+  m_weights.clear();
+
+  auto decomposition = GetDecomposition();
+
+  for(auto edge = decomposition->edges_begin();
+      edge != decomposition->edges_end(); ++edge) {
+    // Ensure there is exactly one facet between each pair of regions.
+    const WorkspacePortal& portal = edge->property();
+    auto facets = portal.FindFacets();
+    if(facets.size() > 1)
+      throw RunTimeException(WHERE, "This implementation assumes that the "
+          "WorkspaceRegions are connected by only one facet. At this time we do "
+          "not have any decompositions that need more than this. We can easily "
+          "extend this by searching through the possible lengths and choosing "
+          "the smallest.");
+
+    // Get the center points of each region and the facet.
+    const Point3d facet  = facets[0]->FindCenter(),
+                  source = portal.GetSource().FindCenter(),
+                  target = portal.GetTarget().FindCenter();
+
+    // Compute the map key and value.
+    const double distance = (target - facet).norm() + (facet - source).norm();
+
+    m_weights[edge->id()] = distance;
+  }
+}
+
+
+template <typename MPTraits>
+typename TopologicalMap<MPTraits>::SSSPOutput
+TopologicalMap<MPTraits>::
+ComputeSSSP(const WorkspaceRegion* const _region, const double _earlyStopDistance,
+    const AdjacencyMap& _adjacency) {
+  MethodTimer mt(this->GetStatClass(), "TopologicalMap::ComputeSSSP");
+  const bool customAdjacency = !_adjacency.empty();
+  const bool earlyStop = _earlyStopDistance != -1;
+
+  if(this->m_debug)
+    std::cout << "TopologicalMap::ComputeSSSP\n";
+
+  SSSPOutput output;
+  auto decomposition = GetDecomposition();
+
+
+  /// An element in the PQ for dijkstra's, representing one instance of
+  /// discovering a cell. Cells may be discovered multiple times from different
+  /// parents with different distances.
+  struct element {
+
+    VD parent;         ///< The parent cell descriptor.
+    VD vd;             ///< This cell descriptor.
+    double distance;   ///< Computed distance at the time of insertion.
+
+    /// Total ordering by decreasing distance.
+    bool operator>(const element& _e) const noexcept {
+      return distance > _e.distance;
+    }
+
+  };
+
+  // Define a min priority queue for dijkstras. We will not update elements when
+  // better distances are found - instead we will track the most up-to-date
+  // distance and ignore elements with different values. This is effectively a
+  // lazy delete of stale elements.
+  std::priority_queue<element,
+                      std::vector<element>,
+                      std::greater<element>> pq;
+
+  // Initialize visited and temporary distance maps. The later holds an *exact*
+  // copy of the most up-to-date distance for each node.
+  std::unordered_map<VD, bool> visited;
+  std::unordered_map<VD, double> distance;
+  for(auto iter = decomposition->begin(); iter != decomposition->end(); ++iter) {
+    visited[iter->descriptor()] = false;
+    distance[iter->descriptor()] = std::numeric_limits<double>::max();
+  }
+
+  // Define a relax edge function.
+  auto relax = [&distance, this, &pq](const ED& _ed) {
+    const double sourceDistance = distance[_ed.source()],
+                 targetDistance = distance[_ed.target()],
+                 edgeWeight     = this->m_weights[_ed.id()],
+                 newDistance    = sourceDistance + edgeWeight;
+
+    // If the new distance isn't better, quit.
+    if(newDistance >= targetDistance)
+      return;
+
+    // Otherwise, update target distance and add the target to the queue.
+    distance[_ed.target()] = newDistance;
+    pq.push(element{_ed.source(), _ed.target(), newDistance});
+  };
+
+  // Initialize the first node.
+  const VD root = decomposition->GetDescriptor(*_region);
+  distance[root] = 0;
+  pq.push(element{root, root, 0});
+
+  double maxDistance = std::numeric_limits<double>::max();
+  bool foundFirstPopulated = false;
+
+  // Dijkstras.
+  while(!pq.empty()) {
+    // Get the next element.
+    element current = pq.top();
+    pq.pop();
+
+    // If we are done with this node, the element is stale. Discard.
+    if(visited[current.vd])
+      continue;
+    visited[current.vd] = true;
+
+    // Save this score and successor relationship.
+    output.ordering.push_back(current.vd);
+    output.distances[current.vd] = distance[current.vd];
+    output.successors[current.parent].push_back(current.vd);
+
+    if(this->m_debug)
+      std::cout << "\tVertex " << current.vd
+                << " has parent " << current.parent
+                << ", score " << std::setprecision(4) << distance[current.vd]
+                << ", and center at "
+                << decomposition->GetRegion(current.vd).FindCenter()
+                << std::endl;
+
+    // Manage early stop conditions.
+    if(earlyStop) {
+      // If we haven't found the first populated region yet, check for it now.
+      if(!foundFirstPopulated) {
+        auto& region = decomposition->GetRegion(current.vd);
+        if(IsPopulated(&region)) {
+          foundFirstPopulated = true;
+          maxDistance = distance[current.vd] + _earlyStopDistance;
+
+          if(this->m_debug)
+            std::cout << "\t\tFirst populated node found, max distance is "
+                      << std::setprecision(4) << maxDistance << "."
+                      << std::endl;
+        }
+      }
+      // Otherwise, check for exceeding the max distance.
+      else if(distance[current.vd] > maxDistance) {
+        if(this->m_debug)
+          std::cout << "\t\tLast populated node found."
+                    << std::endl;
+        break;
+      }
+    }
+
+
+    // Relax each outgoing edge.
+    auto vertexIter = decomposition->find_vertex(current.vd);
+    for(auto edgeIter = vertexIter->begin(); edgeIter != vertexIter->end();
+        ++edgeIter) {
+      // If we are not using custom adjacency, simply relax the edge.
+      if(!customAdjacency)
+        relax(edgeIter->descriptor());
+      // Otherwise, only relax if this edge appears in _adjacency.
+      else if(_adjacency.count(current.vd)) {
+        const auto& neighbors = _adjacency.at(current.vd);
+        auto iter = std::find(neighbors.begin(), neighbors.end(),
+            edgeIter->target());
+        if(iter != neighbors.end())
+          relax(edgeIter->descriptor());
+      }
+    }
+  }
+
+  // The root was added to its own successor map - fix that now.
+  auto& rootMap = output.successors[root];
+  rootMap.erase(std::find(rootMap.begin(), rootMap.end(), root));
+
+  // The root was added to the front of the distance set, which we want.
+
+  return output;
 }
 
 /*----------------------------------------------------------------------------*/

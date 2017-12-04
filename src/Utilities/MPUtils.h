@@ -300,11 +300,12 @@ ClosestPtOnLineSegment(const CfgType& _ref, const CfgType& _p1,
 /// @param[in] _graph A pointer to the roadmap graph.
 /// @param[in] _cc The connected component.
 /// @return The centroid configuration of _cc.
-template<template<typename, typename> class Roadmap, class CfgType, class Weight>
+template<template<typename, typename> class RoadmapGraph, class CfgType,
+    class Weight>
 CfgType
-GetCentroid(Roadmap<CfgType, Weight>* _graph,
-    vector<typename Roadmap<CfgType, Weight>::VID>& _cc){
-  CfgType center;
+GetCentroid(RoadmapGraph<CfgType, Weight>* _graph,
+    vector<typename RoadmapGraph<CfgType, Weight>::VID>& _cc) {
+  CfgType center(_graph->begin()->property().GetRobot());
   for(size_t i = 0; i < _cc.size(); i++) {
     CfgType cfg = _graph->GetVertex(_cc[i]);
     center += cfg;

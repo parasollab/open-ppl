@@ -32,7 +32,7 @@
 
     <DistanceMetrics>
       <Euclidean label="euclidean"/>
-      <ScaledEuclidean label= "scaledEuclidean" scale ="0.5"/>
+      <ScaledEuclidean label="scaledEuclidean" scale="0.5"/>
       <CenterOfMass label="com"/>
       <KnotTheory label="knot"/>
       <Manhattan label="manhattan"/>
@@ -42,6 +42,8 @@
       <LPSwept label="LPSwept" posRes="5" oriRes="5" useBBox="true" lpLabel="sl"/>
       <BinaryLPSwept label="BLPSwept" posRes="5" oriRes="5" useBBox="true"
         lpLabel="sl"/>
+      <TopologicalDistance label="connectedFreeSpace" dmLabel="euclidean"
+        tmLabel="tm-coarse"/>
     </DistanceMetrics>
 
     <ValidityCheckers>
@@ -592,7 +594,10 @@
     </MPStrategies>
 
     <MPTools>
-      <!-- Example nodes for a workspace decomposition with tetgen. -->
+      <!-- Example nodes for a workspace decomposition with tetgen. Be aware
+           that each decomposition defined will be created immediately upon
+           initialization. If you don't need them, comment them out to save
+           pre-processing time. -->
       <TetGenDecomposition label="coarse" debug="false" switches="pnQ"/>
       <TetGenDecomposition label="fine" debug="false" switches="pnqQ"/>
 
@@ -604,6 +609,9 @@
         io="read" baseFilename="3D/quality"/>
       -->
 
+      <!-- Different objects need to work with different granularities when it
+           comes to decomposition-based tools. You can define multiple
+           topological maps for this purpose. -->
       <TopologicalMap label="tm-coarse" decompositionLabel="coarse"
         gridSize=".5"/>
       <TopologicalMap label="tm-fine" decompositionLabel="fine"
@@ -623,8 +631,8 @@
 
     <!-- MPProblem allows multiple solvers to be specified and executed. -->
 
-    <Solver mpStrategyLabel="scratch" seed="12345678"
-      baseFilename="scratch" vizmoDebug="true"/>
+    <Solver mpStrategyLabel="BasicPRM1" seed="12345678"
+      baseFilename="example" vizmoDebug="true"/>
 
   </Library>
 

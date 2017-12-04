@@ -192,6 +192,14 @@ class NeighborhoodFinderMethod : public MPBaseObject<MPTraits> {
     /// @return Distance of farthest potential neighbor
     double& GetRadius() {return m_radius;}
 
+    /// Set the distance metric label.
+    /// @param _label The new DM label to use.
+    void SetDMLabel(const std::string& _label) noexcept;
+
+    /// Get the distance metric label.
+    /// @return The label for the current DM.
+    const std::string& GetDMLabel() const noexcept;
+
     /// @return Distance Metric for this neighborhood finder
     virtual typename MPLibrary::DistanceMetricPointer GetDMMethod() const;
 
@@ -328,6 +336,22 @@ NeighborhoodFinderMethod(XMLNode& _node, bool _requireDM) :
 }
 
 /*----------------------------------------------------------------------------*/
+
+template <typename MPTraits>
+void
+NeighborhoodFinderMethod<MPTraits>::
+SetDMLabel(const std::string& _label) noexcept {
+  m_dmLabel = _label;
+}
+
+
+template <typename MPTraits>
+const std::string&
+NeighborhoodFinderMethod<MPTraits>::
+GetDMLabel() const noexcept {
+  return m_dmLabel;
+}
+
 
 template <typename MPTraits>
 typename MPTraits::MPLibrary::DistanceMetricPointer

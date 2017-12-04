@@ -258,6 +258,12 @@ WarnUnknownNode() {
             << "\nNode: " << Name()
             << "\nLine: " << m_node->Row()
             << "\nCol: " << m_node->Column()
+            << "\nIf you expected this to work, make sure:"
+            << "\n\t- There is a default (no arguments) constructor."
+            << "\n\t- No constructor is defined with = default."
+            << "\n\t- You have called this->SetName with the XML node name in "
+            << "every constructor."
+            << "\n\t- You have added this method to the traits."
             << "\n*************************************************************"
             << std::endl;
 }
