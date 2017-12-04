@@ -62,18 +62,18 @@ Initialize() {
 
 }
 
-void
+const bool
 PathFollowingChildAgent::
 IsHeadOnCollision() {
-  if(m_path.empty())
-    return;
+  if(m_pathIndex >= m_path.size())
+    return false;
   auto problem = m_robot->GetMPProblem();
 
   // Define the threshold for avoiding collisions. Plan to go around if the
   // robot's centers would come closer than this amount.
   /// @TODO This could be made a parameter if you want to dynamically adjust how
   ///       close the robots can get.
-  const double threshold = 3. * m_robot->GetMultiBody()->GetBoundingSphereRadius();
+  const double threshold = 2 * m_robot->GetMultiBody()->GetBoundingSphereRadius();
 
   // Check this robot against all others to see if it is about to hit something.
   const Cfg myCfg   = m_robot->GetDynamicsModel()->GetSimulatedState(),
@@ -97,10 +97,11 @@ IsHeadOnCollision() {
     auto myPosition = m_robot->GetDynamicsModel()->GetSimulatedState();
     double distance = EuclideanDistance(robotPosition, myPosition);
 
-    if(clearance < threshold && distance < 2*threshold) {
+    if(clearance < threshold && distance < 3*threshold) {
       //cout << m_robot->GetLabel() << " is in head on collision with " << robot->GetLabel() << endl;
       if(m_headOnCollidingRobot != robot) {
         this->Halt();
+        PauseHardwareAgent(m_dt);
         cout << "Goal: " << m_path[m_path.size()-1] << endl;
         cout << "Position of other robots: " << endl;
         for (auto& robot : problem->GetRobots()) {
@@ -116,12 +117,14 @@ IsHeadOnCollision() {
         cout << endl;
         AvoidCollision();
         m_headOnCollidingRobot = robot;
+        return true;
       }
     }
     else {
       m_headOnCollidingRobot = nullptr;
     }
   }
+  return false;
 }
 
 
@@ -143,9 +146,9 @@ Step(const double _dt) {
   else
     m_dt = _dt;
   
-  //If we have moved 1.5 meters, localize. The error seems high just after 1 m, so
+  //If we have moved 1.0 meters, localize. The error seems high just after 1 m, so
   //we would need to localize often.
-  if(m_distance > 1.5 and !m_shouldHalt) {
+  if(m_distance > 1.0) {
     Localize(m_dt);
     LocalizeAngle(m_dt);
     m_dt = 0;
@@ -153,33 +156,43 @@ Step(const double _dt) {
     return;
   }
 
+  if(m_parentAgent->IsHelper(m_robot))
+    HelperStep(m_dt);
+  else
+    WorkerStep(m_dt);
+
   // If not in collision, keep going with current task.
   const bool collision = InCollision();
+  bool inHeadonCollision = false;
   if(!collision) {
     m_shouldHalt = false;
     m_headOnCollidingRobot = nullptr;
   }
   // Otherwise, check if it should stop/plan around.
   else if(m_shouldHalt) {
+    this->Halt();
     //halt and return, don't call Execute task
-    PauseSimulatedAgent(m_dt);
+    //PauseSimulatedAgent(m_dt);
     PauseHardwareAgent(m_dt);
     m_dt = 0;
     return;
   }
   else 
-    IsHeadOnCollision();
+    inHeadonCollision = IsHeadOnCollision();
 
   //If the tasked is assigned but not started
-  if(m_task && !m_task->IsStarted()) 
-    GetNextPath(m_task);
-
+  if(m_task && !m_task->IsStarted()) {
+    //If in headon collision then skip this step and don't plan the task.
+    //Lazy PRM will tak care of it in the next time step.
+    if(!inHeadonCollision)
+      GetNextPath(m_task);
+    else {
+      m_dt = 0;
+      return;
+    }
+  }
+  
   ExecuteTask(m_dt);
-
-  if(m_parentAgent->IsHelper(m_robot))
-    HelperStep(m_dt);
-  else
-    WorkerStep(m_dt);
   m_dt = 0;
 }
 
@@ -241,7 +254,7 @@ InCollision() {
     double distance = EuclideanDistance(robotPosition, myPosition);
 
     // If the other robot has higher priority, halt this robot.
-    if(distance < 6. * m_robot->GetMultiBody()->GetBoundingSphereRadius()) {
+    if(distance < 8. * m_robot->GetMultiBody()->GetBoundingSphereRadius()) {
 
       if(m_robot->GetAgent()->m_priority < robot->GetAgent()->m_priority){
         m_shouldHalt = true;
@@ -469,14 +482,15 @@ Localize(double _dt) {
   auto hardwareInterface = static_cast<QueuedHardwareInterface*>
     (m_robot->GetHardwareInterface("base")); //TODO Magic string
 
-  // Rotate for 45 degrees
-  if(abs(m_localizingAngle) > 0.1)
+  // Rotate for about 90 degrees
+  if(abs(m_localizingAngle) > 0.2)
     Rotate(m_localizingAngle, _dt);
   else {
-    PauseSimulatedAgent(_dt);
+    //PauseSimulatedAgent(_dt);
+    this->Halt();
     if(hardwareInterface->IsIdle()) {
-      cout << "Coordinates in the simulator: " <<
-        m_robot->GetDynamicsModel()->GetSimulatedState() << endl;
+      //cout << "Coordinates in the simulator: " <<
+        //m_robot->GetDynamicsModel()->GetSimulatedState() << endl;
 
       ArucoDetectorInterface* netbook = static_cast<ArucoDetectorInterface*>
         (m_robot->GetHardwareInterface("netbook")); //TODO Magic string
@@ -486,15 +500,15 @@ Localize(double _dt) {
         coordinates = netbook->GetCoordinatesFromMarker();
 
       if(!coordinates.empty()) {
-        cout << "Coordinates from markers: " << endl;
+        /*cout << "Coordinates from markers: " << endl;
         for(auto info : coordinates)
           cout << info << ", ";
-        cout << endl;
+        cout << endl;*/
         coordinates[2] = coordinates[2]/(180); //Get it in the range [-1, 1]
         m_coordinates.push_back(coordinates);
       }
 
-      if(m_totalRotations >= 6) {
+      if(m_totalRotations >= 4) {
         m_totalRotations = 0;
 
         double x = 0, y = 0, ang = 0;
@@ -517,16 +531,17 @@ Localize(double _dt) {
 
         m_ignoreAngleLocalization = false;
 
-        cout << "Finished with positional localization, "
-          "angle will be calculated next. " << endl;
+        //cout << "Finished with positional localization, "
+          //"angle will be calculated next. " << endl;
         return;
       }
       else {
-        // reset this value to 60 degrees; TODO: don't use magic numbers
-        m_localizingAngle = 1.0472;
+        cout << "Changing angle " << endl;
+        // reset this value to 90 degrees; TODO: don't use magic numbers
+        m_localizingAngle = 1.57;
         m_totalRotations++;
-        cout << netbook->GetNumMarkersSeen() <<
-          " Markers found. Rotating more." << endl;
+        //cout << netbook->GetNumMarkersSeen() <<
+          //" Markers found. Rotating more." << endl;
       }
     }
   }
@@ -545,15 +560,16 @@ LocalizeAngle(double _dt) {
     (m_robot->GetHardwareInterface("base")); //TODO Magic string
 
   // Rotate till angle is almost 0
-  if(abs(m_localizingAngle) > 0.1)
+  if(abs(m_localizingAngle) > 0.2)
     Rotate(m_localizingAngle, _dt);
   else {
-    PauseSimulatedAgent(_dt);
+    this->Halt();
+    //PauseSimulatedAgent(_dt);
 
     if(hardwareInterface->IsIdle()) {
-      cout << "Calculating angle now " << endl;
-      cout << "Coordinates in the simulator: " <<
-        m_robot->GetDynamicsModel()->GetSimulatedState() << endl;
+      //cout << "Calculating angle now " << endl;
+      //cout << "Coordinates in the simulator: " <<
+        //m_robot->GetDynamicsModel()->GetSimulatedState() << endl;
 
       ArucoDetectorInterface* netbook = static_cast<ArucoDetectorInterface*>
         (m_robot->GetHardwareInterface("netbook")); //TODO Magic string
@@ -567,10 +583,10 @@ LocalizeAngle(double _dt) {
         Cfg tempPos(m_robot);
         tempPos.SetData(coordinates);
 
-        auto dist = EuclideanDistance(m_robotPos, tempPos);
-        cout << "Position calculated after all markers: " << m_robotPos << endl;
+        //auto dist = EuclideanDistance(m_robotPos, tempPos);
+        /*cout << "Position calculated after all markers: " << m_robotPos << endl;
         cout << "temporary position in after 360 rotation: " << tempPos << endl;
-        cout << "Distance between the physical robot and temppos: " << dist << endl;
+        cout << "Distance between the physical robot and temppos: " << dist << endl;*/
 
         if(EuclideanDistance(m_robotPos, tempPos) < 0.4) {
           m_distance = 0;
@@ -584,13 +600,13 @@ LocalizeAngle(double _dt) {
           return;
         }
         else {
-          m_localizingAngle = 1.0472;
+          m_localizingAngle = 1.57;
           return;
         }
       }
       else {
         // reset this value to 60 degrees; TODO: don't use magic numbers
-        m_localizingAngle = 1.0472;
+        m_localizingAngle = 1.57;
         //cout << netbook->GetNumMarkersSeen() << " Markers found. Rotating more." << endl;
       }
     }
@@ -662,11 +678,13 @@ ExecuteTask(double _dt) {
     std::cout << m_robot->GetLabel() << " : Reached the end of the path." << std::endl;
 
     cout << m_robot->GetDynamicsModel()->GetSimulatedState() << endl;
-    PauseSimulatedAgent(_dt);
+    this->Halt();
+    //PauseSimulatedAgent(_dt);
     m_task->SetCompleted();
+    m_path.clear();
+    m_pathIndex = 0;
     //Reset values for certain variables;
     m_headOnCollidingRobot = nullptr;
-    m_distance = 0;
     return;
   }
 
@@ -712,8 +730,6 @@ PauseHardwareAgent(double _dt) {
   auto emptyControl = m_robot->GetController()->operator()(point, point, _dt);
   auto hardwareInterface = static_cast<QueuedHardwareInterface*>
     (m_robot->GetHardwareInterface("base")); //TODO Magic string
-
-  cout << "Pausing hardware agent: " << m_robot->GetLabel() << endl;
   if(hardwareInterface)
     hardwareInterface->EnqueueCommand({emptyControl}, _dt);
 }
@@ -722,6 +738,8 @@ PauseHardwareAgent(double _dt) {
 void
 PathFollowingChildAgent::
 Replan() {
+  if(m_pathIndex >= m_path.size() or m_path.empty())
+    return;
   // Create a new task with the same goal as before
   // using current position as the start
   auto task = new MPTask(m_parentRobot);
@@ -749,10 +767,14 @@ PathFollowingChildAgent::
 WorkerStep(double _dt) {
   if(m_done)
     return;
+  
+  auto hardwareInterface = static_cast<QueuedHardwareInterface*>
+    (m_robot->GetHardwareInterface("base")); //TODO Magic string
 
-  cout << "Current battery level " << m_battery->GetCurLevel() << endl;
-
-  m_battery->UpdateValue(0.32);
+  if(hardwareInterface)
+    m_battery->UpdateValue(0.25);
+  else
+    m_battery->UpdateValue(.05);
   
   if(m_task->IsCompleted()) {
     m_pathIndex = 0;
@@ -760,18 +782,21 @@ WorkerStep(double _dt) {
     this->SetCurrentTask(GetNewTask());
   }
   if((m_battery->GetCurLevel() < 0.2*m_battery->GetMaxLevel())) {
-    // if you don't have a helper yet, call for help
     if(!m_myHelper) {
-      if(!m_path.empty())
+      // if you don't have a helper yet, call for help
+      if(!CallForHelp())
+        return;
+      if(m_path.size() < m_pathIndex) 
         m_currentGoal = m_path.back();
       else
         m_currentGoal = m_parentAgent->GetRandomRoadmapPoint();
       m_pathIndex = 0;
       m_path.clear();
-      PauseSimulatedAgent(_dt);
-      //PauseHardwareAgent(_dt);
+      this->Halt();
+      //PauseSimulatedAgent(_dt);
+      PauseHardwareAgent(_dt);
       //this->Halt();
-      CallForHelp();
+      m_distance = 1.2;
       cout << "Called for help at position " << m_robot->GetDynamicsModel()->GetSimulatedState() << endl;
     }
     // else check if the helper is close enough to you to take over
@@ -782,7 +807,7 @@ WorkerStep(double _dt) {
 
       //If the helper is close enough, initiate the behavior swap
       //TODO: Change the threshold
-      if(distance < 1.1) {
+      if(distance < 9. * m_robot->GetMultiBody()->GetBoundingSphereRadius()) {
         // Get this robot's task and assign it to worker. Get the goal constraint from the
         // worker's task
 
@@ -804,6 +829,7 @@ WorkerStep(double _dt) {
         newTask->AddStartConstraint(start);
        
         auto goalPos = m_currentGoal;
+        cout << "Seg faulting here: " << goalPos << endl;
         auto goal = new CSpaceConstraint(m_parentRobot, goalPos);
 
         newTask->AddGoalConstraint(goal);
@@ -830,18 +856,14 @@ PathFollowingChildAgent::
 HelperStep(double _dt) {
   if(m_task->GetLabel() == "GoingToHelp")
     return;
-  if(!IsAtChargingStation() ) {
-    cout << m_robot->GetLabel() << " Trying to go to charging station: " << endl;
-    cout << "Current path size is: " << m_path.size() << endl;
+  if(!IsAtChargingStation()) 
     FindNearestChargingLocation();
-    cout << "Found charging location" << endl;
-  }
   else {
     //Clear the current path and halt the robot
     m_path.clear();
     m_pathIndex = 0;
     this->Halt();
-    //PauseHardwareAgent(_dt);
+    PauseHardwareAgent(_dt);
     //Reset robot priority to 0 while it charges
     m_robot->GetAgent()->m_priority = 0;
     //if battery is low, charge
@@ -873,11 +895,12 @@ AvoidCollision() {
     auto myPosition = m_robot->GetDynamicsModel()->GetSimulatedState();
     double distance = EuclideanDistance(robotPosition, myPosition);
     double goalDistance = EuclideanDistance(robotPosition, currentGoal);
-    while(distance < 6. * m_robot->GetMultiBody()->GetBoundingSphereRadius()
+    while(distance < 8. * m_robot->GetMultiBody()->GetBoundingSphereRadius()
         && goalDistance <
         2. * m_robot->GetMultiBody()->GetBoundingSphereRadius()) {
       currentGoal = m_parentAgent->GetRandomRoadmapPoint();
       goalDistance = EuclideanDistance(robotPosition, currentGoal);
+      cout << "Goal distance is: " << goalDistance << endl;
     }
   }
 

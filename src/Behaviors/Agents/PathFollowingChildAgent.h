@@ -65,13 +65,13 @@ class PathFollowingChildAgent : public Agent {
     const Robot* GetParentRobot();
 
     void Replan();
-    //TODO: move this to protected and add getters and setters.
 
-    void IsHeadOnCollision();
+    const bool IsHeadOnCollision();
     ///@}
     //TODO: Make protected
     BatteryConstrainedGroup* m_parentAgent{nullptr};
     
+    //TODO: move this to protected and add getters and setters.
     Robot* m_parentRobot{nullptr};
 
   private:

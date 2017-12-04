@@ -217,6 +217,9 @@ InitializeUnvisitedCfgs() {
   std::istringstream pointStream("3 0 0 0 0 0");
   point.Read(pointStream);
   m_unvisitedCfgs.push_back(point);
+  std::istringstream pointStream2("5 0 0 0 0 0");
+  point.Read(pointStream2);
+  m_unvisitedCfgs.push_back(point);
   std::istringstream pointStream1("5 -2 0 0 0 0");
   point.Read(pointStream1);
   m_unvisitedCfgs.push_back(point);
