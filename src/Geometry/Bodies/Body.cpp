@@ -881,7 +881,6 @@ Read(std::istream& _is, CountingStreamBuffer& _cbs) {
   if(isalpha(_is.peek())) {
     std::string bodyTag = ReadFieldString(_is, _cbs, "Failed reading base tag."
         " Options are: planar, volumetric, fixed, or joint.");
-    std::cout << "Read bodyTag " << bodyTag << std::endl;
     SetBodyType(GetBodyTypeFromTag(bodyTag, _cbs.Where()));
   }
   else {
