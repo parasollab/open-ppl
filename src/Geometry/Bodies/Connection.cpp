@@ -73,41 +73,49 @@ Connection(MultiBody* const _owner, XMLNode& _node)
   m_jointType = GetJointTypeFromTag(joint, _node.Where());
 
   // Read the first joint range.
-  const std::string rangeString = _node.Read("range", true, "",
-      "Range of the joint.");
-  std::istringstream buffer(rangeString);
-  buffer >> m_jointRange[0];
+  {
+    const std::string rangeString = _node.Read("range", true, "",
+        "Range of the joint.");
+    std::istringstream buffer(rangeString);
+    buffer >> m_jointRange[0];
+  }
 
   // Spherical joints have two joint ranges, read the second now.
   if(IsSpherical()) {
     const std::string rangeString2 = _node.Read("range2", true, "",
         "Range of the joint about the second axis.");
-    buffer = std::istringstream(rangeString2);
+    std::istringstream buffer(rangeString2);
     buffer >> m_jointRange[1];
   }
 
   // Read the transformations and DH params.
 
   // Transform from parent to DH frame.
-  const std::string parentToDHString = _node.Read("transformParentToDH", true, "",
-      "Transformation parameters of parent to DH frame.");
-  buffer = std::istringstream(parentToDHString);
-  while(buffer)
-    buffer >> m_transformationToDHFrame;
+  {
+    const std::string parentToDHString = _node.Read("transformParentToDH", true,
+        "", "Transformation parameters of parent to DH frame.");
+    std::istringstream buffer(parentToDHString);
+    while(buffer)
+      buffer >> m_transformationToDHFrame;
+  }
 
   // DH params.
-  const std::string dhParamsString = _node.Read("initialDHParams", true, "",
-      "DH parameters.");
-  buffer = std::istringstream(dhParamsString);
-  while(buffer)
-    buffer >> m_dhParameters;
+  {
+    const std::string dhParamsString = _node.Read("initialDHParams", true, "",
+        "DH parameters.");
+    std::istringstream buffer(dhParamsString);
+    while(buffer)
+      buffer >> m_dhParameters;
+  }
 
   // Transform from DH to com.
-  const std::string dhToChildString = _node.Read("transformDHToChild", true, "",
-      "Transformation paremeters of DH to com.");
-  buffer = std::istringstream(dhToChildString);
-  while(buffer)
-    buffer >> m_transformationToBody2;
+  {
+    const std::string dhToChildString = _node.Read("transformDHToChild", true,
+        "", "Transformation paremeters of DH to com.");
+    std::istringstream buffer(dhToChildString);
+    while(buffer)
+      buffer >> m_transformationToBody2;
+  }
 }
 
 
