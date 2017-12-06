@@ -3,6 +3,7 @@
 
 #include <cstddef>
 #include <iostream>
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -41,10 +42,10 @@ class Boundary {
     virtual ~Boundary() = default;
 
     /// Duplicate this boundary and return a dynamically-allocated copy with the
-    /// same type.
-    /// @return A dynamically-allocated copy of this with the same type. Memory
-    ///         must be released by the user.
-    virtual Boundary* Clone() const = 0;
+    /// same type. This is provided in the base class so that we can copy a
+    /// boundary object without knowing its type.
+    /// @return A dynamically-allocated copy of this with the same type.
+    virtual std::unique_ptr<Boundary> Clone() const = 0;
 
     ///@}
     ///@name Property Accessors

@@ -1,17 +1,12 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <Robot maxLinearVelocity="10" maxAngularVelocity="1">
 
-  <!-- Eventually we will go full XML and remove our custom parser because XML
-       is easier to extend and maintain. -->
-  <Multibody>
-    <Base>
-      <Body filename="link.obj" color="0 1 0 1" type="volumetric"
-        movement="rotational" mass="1"/>
-    </Base>
+  <MultiBody type="active">
+    <Base filename="link.obj" color="0 1 0 1" type="volumetric"
+      movement="rotational" mass="1"/>
 
-    <Link>
-      <Body filename="link.obj" color="0 1 0 1" index="1"
-        type="joint" movement="rotational" mass="1"/>
+    <Link filename="link.obj" color="0 1 0 1" index="1"
+      type="joint" movement="rotational" mass="1">
       <Connection joint="revolute" range="-1:1"
         parentIndex="0"
         childIndex="1"
@@ -20,7 +15,7 @@
         transformDHToChild="0.7 0 0 0 0 0"/>
     </Link>
 
-  </Multibody>
+  </MultiBody>
 
 
   <!-- A thruster that can translate the robot in any direction. -->
@@ -31,6 +26,7 @@
   <Actuator label="rotate" maxMagnitude=".3"
     limits="0:0  0:0  0:0  -.3:.3  -.3:.3  -.3:.3 0:0"/>
 
+  <!-- This actuator articulates the link at the connection. -->
   <Actuator label="connection" maxMagnitude=".1"
     limits="0:0  0:0  0:0  0:0  0:0  0:0 -.1:1"/>
 

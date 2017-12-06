@@ -10,7 +10,7 @@
 #include "Behaviors/Agents/Agent.h"
 #include "Behaviors/Controllers/ControllerMethod.h"
 #include "ConfigurationSpace/Cfg.h"
-#include "Geometry/Bodies/ActiveMultiBody.h"
+#include "Geometry/Bodies/MultiBody.h"
 #include "Geometry/Boundaries/Boundary.h"
 #include "Geometry/Boundaries/CSpaceBoundingBox.h"
 #include "MPProblem/MPProblem.h"
@@ -86,7 +86,7 @@ Robot(MPProblem* const _p, XMLNode& _node) : m_problem(_p) {
 
 
 Robot::
-Robot(MPProblem* const _p, ActiveMultiBody* const _mb, const std::string& _label)
+Robot(MPProblem* const _p, MultiBody* const _mb, const std::string& _label)
     : m_problem(_p), m_label(_label), m_multibody(_mb) {
   m_multibody->InitializeDOFs(m_problem->GetEnvironment()->GetBoundary());
   m_multibody->Configure(std::vector<double>(m_multibody->DOF(), 0));
@@ -121,7 +121,7 @@ ReadXMLFile(const std::string& _filename) {
       std::numeric_limits<double>::max(), "The robot's maximum angular velocity");
 
   for(auto& child : node) {
-    if(child.Name() == "Multibody") {
+    if(child.Name() == "MultiBody") {
       // Read the multibody file. Eventually we'll go full XML and pass the
       // child node directly to the multibody instead.
       const std::string mbFile = child.Read("filename", false, "", "Name of the "
@@ -163,7 +163,7 @@ ReadXMLFile(const std::string& _filename) {
 void
 Robot::
 ReadMultiBodyXML(XMLNode& _node) {
-  m_multibody = new ActiveMultiBody(_node);
+  m_multibody = new MultiBody(_node);
 
   // Initialize the DOF limits and set the robot to a zero starting configuration.
   m_multibody->InitializeDOFs(m_problem->GetEnvironment()->GetBoundary());
@@ -181,7 +181,7 @@ ReadMultibodyFile(const std::string& _filename) {
   std::istream ifs(&cbs);
 
   // Parse the file to get the robot's geometry.
-  m_multibody = new ActiveMultiBody;
+  m_multibody = new MultiBody(MultiBody::Type::Active);
   m_multibody->Read(ifs, cbs);
 
   // Initialize the DOF limits and set the robot to a zero starting configuration.
@@ -268,14 +268,14 @@ GetMPProblem() const noexcept {
 
 /*--------------------------- Geometry Accessors -----------------------------*/
 
-ActiveMultiBody*
+MultiBody*
 Robot::
 GetMultiBody() noexcept {
   return m_multibody;
 }
 
 
-const ActiveMultiBody*
+const MultiBody*
 Robot::
 GetMultiBody() const noexcept {
   return m_multibody;

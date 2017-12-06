@@ -1,6 +1,6 @@
 #include "ControlSetGenerators.h"
 
-#include "Geometry/Bodies/ActiveMultiBody.h"
+#include "Geometry/Bodies/MultiBody.h"
 #include "MPProblem/Robot/Actuator.h"
 #include "MPProblem/Robot/Robot.h"
 #include "Utilities/PMPLExceptions.h"

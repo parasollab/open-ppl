@@ -5,11 +5,10 @@
 #include "Utilities/MetricUtils.h"
 #include "Utilities/MPUtils.h"
 
-template<class MPTraits> struct LPOutput;
+template <typename MPTraits> struct LPOutput;
 
 ////////////////////////////////////////////////////////////////////////////////
-/// @ingroup LocalPlanners
-/// @brief Base algorithm abstraction for \ref LocalPlanners.
+/// Base algorithm abstraction for \ref LocalPlanners.
 ///
 /// LocalPlannerMethod has two main functions: @c IsConnected and
 /// @c ReconstructPath.
@@ -24,44 +23,40 @@ template<class MPTraits> struct LPOutput;
 /// WeightType object's intermediate configurations. The function takes as input
 /// two configurations, a set of intermediate configurations, and validity
 /// resolutions.
+///
+/// @ingroup LocalPlanners
 ////////////////////////////////////////////////////////////////////////////////
-template<class MPTraits>
+template <typename MPTraits>
 class LocalPlannerMethod : public MPBaseObject<MPTraits> {
 
   public:
 
-    ///\name Motion Planning Types
+    ///@name Motion Planning Types
     ///@{
 
     typedef typename MPTraits::CfgType CfgType;
 
     ///@}
-    ///\name Construction
+    ///@name Construction
     ///@{
 
-    LocalPlannerMethod(bool _saveIntermediates = false) :
-        m_saveIntermediates(_saveIntermediates) { }
+    LocalPlannerMethod(bool _saveIntermediates = false);
 
-    LocalPlannerMethod(XMLNode& _node) :
-        MPBaseObject<MPTraits>(_node) {
-      m_saveIntermediates = _node.Read("saveIntermediates", false,
-          false, "Save intermediate nodes");
-    }
+    LocalPlannerMethod(XMLNode& _node);
 
     virtual ~LocalPlannerMethod() = default;
 
     ///@}
-    ///\name MPBaseObject Overrides
+    ///@name MPBaseObject Overrides
     ///@{
 
-    virtual void Print(ostream& _os) const;
+    virtual void Print(ostream& _os) const override;
 
     ///@}
-    ///\name Local Planner Interface
+    ///@name Local Planner Interface
     ///@{
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// @brief Validate a simple path between two nodes.
+    /// Validate a simple path between two nodes.
     /// @param _start The starting configuration.
     /// @param _end The ending configuration.
     /// @param _col The witness configuration on failure.
@@ -85,16 +80,14 @@ class LocalPlannerMethod : public MPBaseObject<MPTraits> {
         CfgType& _col, LPOutput<MPTraits>* _lpOutput, double _posRes,
         double _oriRes, bool _checkCollision = true, bool _savePath = false) = 0;
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// @brief Validate a simple path between two nodes without returning a
-    ///        witness node on failure.
+    /// Validate a simple path between two nodes without returning a
+    /// witness node on failure.
     /// @overload
     virtual bool IsConnected(const CfgType& _start, const CfgType& _end,
         LPOutput<MPTraits>* _lpOutput, double _posRes, double _oriRes,
         bool _checkCollision = true, bool _savePath = false);
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// @brief Reconstruct a previously computed simple path between two nodes
+    /// Reconstruct a previously computed simple path between two nodes
     /// @param _start Configuration 1
     /// @param _end Configuration 2
     /// @param _intermediates Intermediate configurations along simple path's
@@ -121,27 +114,44 @@ class LocalPlannerMethod : public MPBaseObject<MPTraits> {
 
   protected:
 
-    ///\name Internal State
+    ///@name Internal State
     ///@{
 
-    bool m_saveIntermediates; ///< Save the intermediates in the roadmap?
+    bool m_saveIntermediates{false}; ///< Save the intermediates in the roadmap?
 
     ///@}
 };
 
+/*------------------------------- Construction -------------------------------*/
+
+template <typename MPTraits>
+LocalPlannerMethod<MPTraits>::
+LocalPlannerMethod(const bool _saveIntermediates)
+  : m_saveIntermediates(_saveIntermediates)
+{ }
+
+
+template <typename MPTraits>
+LocalPlannerMethod<MPTraits>::
+LocalPlannerMethod(XMLNode& _node) : MPBaseObject<MPTraits>(_node) {
+  m_saveIntermediates = _node.Read("saveIntermediates", false,
+      m_saveIntermediates, "Save intermediate nodes");
+}
+
 /*------------------------- MPBaseObject Overrides ---------------------------*/
 
-template<class MPTraits>
+template <typename MPTraits>
 void
 LocalPlannerMethod<MPTraits>::
 Print(ostream& _os) const {
   _os << this->GetNameAndLabel()
-      << "\n\tSave intermediates: " << m_saveIntermediates << endl;
+      << "\n\tSave intermediates: " << m_saveIntermediates
+      << std::endl;
 }
 
 /*------------------------ LocalPlanner Interface ----------------------------*/
 
-template<class MPTraits>
+template <typename MPTraits>
 bool
 LocalPlannerMethod<MPTraits>::
 IsConnected(const CfgType& _start, const CfgType& _end,
@@ -153,7 +163,7 @@ IsConnected(const CfgType& _start, const CfgType& _end,
 }
 
 
-template<class MPTraits>
+template <typename MPTraits>
 vector<typename MPTraits::CfgType>
 LocalPlannerMethod<MPTraits>::
 ReconstructPath(const CfgType& _start, const CfgType& _end,

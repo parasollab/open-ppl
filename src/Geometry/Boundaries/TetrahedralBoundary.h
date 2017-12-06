@@ -35,7 +35,7 @@ class TetrahedralBoundary : public Boundary {
     TetrahedralBoundary(const std::vector<Point3d>& _pts,
         const bool _check = true);
 
-    virtual Boundary* Clone() const override;
+    virtual std::unique_ptr<Boundary> Clone() const override;
 
     virtual ~TetrahedralBoundary() = default;
 

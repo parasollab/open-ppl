@@ -11,7 +11,7 @@ using namespace mathtool;
 #include "Utilities/IOUtils.h"
 
 class Environment;
-class StaticMultiBody;
+class MultiBody;
 class WorkspaceDecomposition;
 class XMLNode;
 

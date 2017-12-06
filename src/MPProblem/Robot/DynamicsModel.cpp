@@ -3,7 +3,7 @@
 #include "Control.h"
 #include "Robot.h"
 #include "ConfigurationSpace/Cfg.h"
-#include "Geometry/Bodies/ActiveMultiBody.h"
+#include "Geometry/Bodies/MultiBody.h"
 #include "MPProblem/Environment/Environment.h"
 #include "MPProblem/MPProblem.h"
 #include "Utilities/PMPLExceptions.h"
@@ -257,18 +257,18 @@ ExtractSimulatedState(Robot* const _robot, const btMultiBody* const _model) {
 
   // First get the base state.
   switch(mb->GetBaseType()) {
-    case FreeBody::BodyType::Fixed:
+    case Body::Type::Fixed:
       break;
-    case FreeBody::BodyType::Planar:
+    case Body::Type::Planar:
       {
         // Get the base transform.
         auto transform = ToPMPL(_model->getBaseWorldTransform());
         auto cfg = transform.GetCfg();
 
         switch(mb->GetBaseMovementType()) {
-          case FreeBody::MovementType::Rotational:
+          case Body::MovementType::Rotational:
             out[2] = cfg[5];
-          case FreeBody::MovementType::Translational:
+          case Body::MovementType::Translational:
             out[0] = cfg[0];
             out[1] = cfg[1];
             break;
@@ -277,19 +277,19 @@ ExtractSimulatedState(Robot* const _robot, const btMultiBody* const _model) {
         }
       }
       break;
-    case FreeBody::BodyType::Volumetric:
+    case Body::Type::Volumetric:
       {
         // Get the base transform.
         auto transform = ToPMPL(_model->getBaseWorldTransform());
         auto cfg = transform.GetCfg();
 
         switch(mb->GetBaseMovementType()) {
-          case FreeBody::MovementType::Translational:
+          case Body::MovementType::Translational:
             out[0] = cfg[0];
             out[1] = cfg[1];
             out[2] = cfg[2];
             break;
-          case FreeBody::MovementType::Rotational:
+          case Body::MovementType::Rotational:
             for(size_t i = 0; i < 6; ++i)
               out[i] = cfg[i];
             break;
@@ -339,7 +339,7 @@ ConfigureSimulatedState(const Cfg& _c, btMultiBody* const _model) {
   ///       configure the PMPL robot. Ideally we should grab the base's world
   ///       transform directly from the _c cfg.
   _c.ConfigureRobot();
-  _model->setBaseWorldTransform(ToBullet(mb->GetFreeBody(0)->
+  _model->setBaseWorldTransform(ToBullet(mb->GetBody(0)->
         GetWorldTransformation()));
   if(getVelocity) {
     _model->setBaseVel(ToBullet(_c.GetLinearVelocity()));

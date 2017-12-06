@@ -1,6 +1,6 @@
 #include "Cfg.h"
 
-#include "Geometry/Bodies/ActiveMultiBody.h"
+#include "Geometry/Bodies/MultiBody.h"
 #include "Geometry/Boundaries/CSpaceBoundingBox.h"
 #include "MPProblem/Environment/Environment.h"
 #include "MPProblem/Robot/Robot.h"
@@ -403,7 +403,7 @@ GetRobot() const noexcept {
 }
 
 
-ActiveMultiBody*
+MultiBody*
 Cfg::
 GetMultiBody() const noexcept {
   return m_robot->GetMultiBody();
@@ -936,7 +936,8 @@ FindIncrement(const Cfg& _start, const Cfg& _goal, int* _nTicks,
     double _positionRes, double _orientationRes) {
   const Cfg diff = _goal - _start;
 
-  *_nTicks = max(1., ceil(max(diff.PositionMagnitude() / _positionRes,
+  *_nTicks = std::max(1., std::ceil(std::max(
+        diff.PositionMagnitude() / _positionRes,
         diff.OrientationMagnitude() / _orientationRes)));
 
   this->FindIncrement(_start, _goal, *_nTicks);

@@ -159,7 +159,7 @@ class BulletEngine final {
     /// @param _joints The list of connections between links.
     btMultiBody* AddObject(std::vector<btCollisionShape*>&& _shapes,
         btTransform&& _baseTransform, const double _baseMass,
-        std::vector<std::shared_ptr<Connection>>&& _joints);
+        std::vector<Connection*>&& _joints);
 
     /// Build a bullet collision shape from a pmpl MultiBody.
     /// @param _body The pmpl MultiBody.

@@ -14,10 +14,10 @@ CSpaceBoundingBox(const std::vector<double>& _center) :
     AbstractBoundingBox(_center) { }
 
 
-Boundary*
+std::unique_ptr<Boundary>
 CSpaceBoundingBox::
 Clone() const {
-  return new CSpaceBoundingBox(*this);
+  return std::unique_ptr<Boundary>(new CSpaceBoundingBox(*this));
 }
 
 /*--------------------------- Property Accessors -----------------------------*/

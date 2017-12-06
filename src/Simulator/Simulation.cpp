@@ -4,8 +4,7 @@
 
 #include "BulletEngine.h"
 #include "Conversions.h"
-#include "Geometry/Bodies/ActiveMultiBody.h"
-#include "Geometry/Bodies/StaticMultiBody.h"
+#include "Geometry/Bodies/MultiBody.h"
 #include "MPProblem/Environment/Environment.h"
 #include "MPProblem/MPProblem.h"
 #include "MPProblem/Robot/Robot.h"

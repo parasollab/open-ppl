@@ -7,7 +7,7 @@
 
 #include "DynamicsModel.h"
 #include "Robot.h"
-#include "Geometry/Bodies/ActiveMultiBody.h"
+#include "Geometry/Bodies/MultiBody.h"
 #include "Utilities/PMPLExceptions.h"
 #include "Utilities/XMLNode.h"
 

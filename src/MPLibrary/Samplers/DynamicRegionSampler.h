@@ -263,7 +263,7 @@ LazyInitialize() {
   auto env = this->GetEnvironment();
   auto robot = this->GetTask()->GetRobot();
   const bool threeD = robot->GetMultiBody()->GetBaseType() ==
-      FreeBody::BodyType::Volumetric;
+      Body::Type::Volumetric;
 
   if(threeD) {
     // Create a workspace skeleton using a reeb graph.
@@ -279,7 +279,7 @@ LazyInitialize() {
     std::vector<GMSPolyhedron> polyhedra;
     for(size_t i = 0; i < env->NumObstacles(); ++i) {
       auto obstacle = env->GetObstacle(i);
-      polyhedra.emplace_back(obstacle->GetFixedBody(0)->GetWorldPolyhedron());
+      polyhedra.emplace_back(obstacle->GetBody(0)->GetWorldPolyhedron());
     }
 
     // Build a skeleton from a 2D medial axis.

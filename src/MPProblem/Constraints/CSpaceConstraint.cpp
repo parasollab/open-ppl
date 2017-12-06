@@ -4,7 +4,7 @@
 #include <sstream>
 
 #include "ConfigurationSpace/Cfg.h"
-#include "Geometry/Bodies/ActiveMultiBody.h"
+#include "Geometry/Bodies/MultiBody.h"
 #include "MPProblem/Robot/Robot.h"
 #include "Utilities/IOUtils.h"
 #include "Utilities/PMPLExceptions.h"

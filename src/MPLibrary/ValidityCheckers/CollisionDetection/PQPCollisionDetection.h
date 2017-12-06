@@ -1,17 +1,17 @@
 #ifndef PQP_COLLISION_DETECTION_H_
 #define PQP_COLLISION_DETECTION_H_
 
-#include <PQP.h>
-
 #include "CollisionDetectionMethod.h"
+
+class PQP_Model;
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// @ingroup CollisionDetection
 /// Computed collision information with Proximity Query Package (PQP) package.
 /// PQP has the option to compute clearance and penetration information through
 /// distance queries. To enable this pass in @c CDInfo with @c m_retAllInfo set
 /// to true.
+/// @ingroup CollisionDetection
 ////////////////////////////////////////////////////////////////////////////////
 class PQP : public CollisionDetectionMethod {
 
@@ -39,12 +39,12 @@ class PQP : public CollisionDetectionMethod {
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// @ingroup CollisionDetection
 /// Computed collision information with PQP package. PQP has the option to
 /// compute clearance and penetration information through distance queries. To
 /// enable this pass in @c CDInfo with @c m_retAllInfo set to true. PQPSolid
 /// additionally can determine if a point lies within an obstacle or not, i.e.,
 /// it can be used for @c IsInsideObstacle checks.
+/// @ingroup CollisionDetection
 ////////////////////////////////////////////////////////////////////////////////
 class PQPSolid : public PQP {
 

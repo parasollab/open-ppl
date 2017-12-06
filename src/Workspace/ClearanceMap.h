@@ -6,7 +6,7 @@
 
 #include "ConfigurationSpace/Cfg.h"
 #include "Geometry/Boundaries/Boundary.h"
-#include "Geometry/Bodies/ActiveMultiBody.h"
+#include "Geometry/Bodies/MultiBody.h"
 #include "MPLibrary/ValidityCheckers/CollisionDetection/CDInfo.h"
 #include "MPLibrary/MPBaseObject.h"
 #include "WorkspaceSkeleton.h"
@@ -78,7 +78,7 @@ class ClearanceMap : public MPBaseObject<MPTraits> {
 
     ///@name Helpers
     ///@{
-    
+
     /// Compute the minimum clearance along an edge
     /// @param _ed The edge descriptor of graph
     void ComputeMinClearance(const ED& _ed);
@@ -110,9 +110,9 @@ class ClearanceMap : public MPBaseObject<MPTraits> {
 	}
 	return false;
       }
-    }; 
+    };
 
-    map<ED, double, EdgeDescriptorComp> m_clearanceMap;    ///< The map of edges and their 
+    map<ED, double, EdgeDescriptorComp> m_clearanceMap;    ///< The map of edges and their
     			                                   ///< corresponding clearance
     WorkspaceSkeleton* m_skeleton{nullptr};      ///< Original skeleton
 
@@ -128,7 +128,7 @@ void
 ClearanceMap<MPTraits>::
 Construct(WorkspaceSkeleton* _s){
   m_skeleton = _s;
-  for(auto eit = m_skeleton->GetGraph().edges_begin(); 
+  for(auto eit = m_skeleton->GetGraph().edges_begin();
 		  eit != m_skeleton->GetGraph().edges_end(); eit++){
     ComputeMinClearance(eit->descriptor());
   }
@@ -164,8 +164,8 @@ ClearanceMap<MPTraits>::
 GetAnnotatedSkeleton(FilterFunction&& _f){
 
   auto graph = m_skeleton->GetGraph();
-  
-  for(auto mit = m_clearanceMap.begin(); 
+
+  for(auto mit = m_clearanceMap.begin();
 		  mit != m_clearanceMap.end(); ++mit){
     if(_f(mit->second)){
       m_clearanceMap[mit->first] = numeric_limits<double>::infinity();
@@ -183,7 +183,7 @@ template<class MPTraits>
 map<typename ClearanceMap<MPTraits>::ED, double>&
 ClearanceMap<MPTraits>::
 GetAnnotatedClearanceMap(FilterFunction&& _f){
-  for(auto mit = m_clearanceMap.begin(); 
+  for(auto mit = m_clearanceMap.begin();
 		  mit != m_clearanceMap.end(); ++mit){
     if(_f(mit->second)){
       m_clearanceMap[mit->first] = numeric_limits<double>::infinity();

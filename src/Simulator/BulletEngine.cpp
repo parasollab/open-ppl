@@ -16,11 +16,8 @@
 
 #include "ConfigurationSpace/Cfg.h"
 
-#include "Geometry/Bodies/ActiveMultiBody.h"
 #include "Geometry/Bodies/Body.h"
-#include "Geometry/Bodies/FixedBody.h"
-#include "Geometry/Bodies/FreeBody.h"
-#include "Geometry/Bodies/StaticMultiBody.h"
+#include "Geometry/Bodies/MultiBody.h"
 #include "Geometry/GMSPolyhedron.h"
 
 #include "MPProblem/Environment/Environment.h"
@@ -143,7 +140,7 @@ btMultiBody*
 BulletEngine::
 AddRobot(Robot* const _robot) {
   // This is an active body.
-  ActiveMultiBody* activeBody = _robot->GetMultiBody();
+  MultiBody* activeBody = _robot->GetMultiBody();
   //Save the dofs that PMPL set the active body to for the first query cfg.
   std::vector<double> startDofs = activeBody->GetCurrentDOFs();
 
@@ -171,31 +168,25 @@ AddRobot(Robot* const _robot) {
 btMultiBody*
 BulletEngine::
 AddObject(MultiBody* _m) {
-  // Static and active bodies must be handled slightly differently. Try first
-  // for downcast to static body.
-  StaticMultiBody* sbody = dynamic_cast<StaticMultiBody*>(_m);
-  if(sbody) {
-    // This is a static body.
-    // For now, assume that static multibodies have no links. We should expand
-    // this in the future though to support fixed joints.
-    auto base = sbody->GetFixedBody(0);
+  auto base = _m->GetBody(0);
 
-    return AddObject(BuildCollisionShape(_m),
-        ToBullet(base->GetWorldTransformation()), 0, {});
-  }
-  else {
+  if(_m->IsActive()) {
     // This is an active body.
-    ActiveMultiBody* abody = dynamic_cast<ActiveMultiBody*>(_m);
-    auto base = abody->GetFreeBody(0);
 
     // Collect joint connection objects.
-    std::vector<std::shared_ptr<Connection>> joints;
-    std::copy(abody->joints_begin(), abody->joints_end(),
-        std::back_inserter(joints));
+    std::vector<Connection*> joints;
+    std::copy(_m->joints_begin(), _m->joints_end(), std::back_inserter(joints));
 
     return AddObject(BuildCollisionShape(_m),
         ToBullet(base->GetWorldTransformation()), base->GetMass(),
         std::move(joints));
+  }
+  else {
+    // This is a static body.
+    // For now, assume that static multibodies have no links. We should expand
+    // this in the future though to support fixed joints.
+    return AddObject(BuildCollisionShape(_m),
+        ToBullet(base->GetWorldTransformation()), 0, {});
   }
 }
 
@@ -210,7 +201,7 @@ AddObject(btCollisionShape* _shape, btTransform _transform, const double _mass) 
 btMultiBody*
 BulletEngine::
 AddObject(std::vector<btCollisionShape*>&& _shapes, btTransform&& _baseTransform,
-    const double _baseMass, std::vector<std::shared_ptr<Connection>>&& _joints) {
+    const double _baseMass, std::vector<Connection*>&& _joints) {
   if(m_debug)
     std::cout << "BulletEngine.cpp: adding object with "
               << _shapes.size() << " components and "
@@ -284,9 +275,7 @@ AddObject(std::vector<btCollisionShape*>&& _shapes, btTransform&& _baseTransform
       std::cout << "\tAdding joint " << i << "..." << std::endl;
 
     // Get the PMPL link.
-    /// @TODO This assumes that the PMPL body is an ActiveMultiBody. Generalize
-    ///       our bodies so that there is no such artificial distinction.
-    FreeBody* const linkBody = _joints[i]->GetNextBody();
+    Body* const linkBody = _joints[i]->GetNextBody();
 
     // Get the PMPL indices for this link and its parent.
     const int parentPmplIndex = _joints[i]->GetPreviousBodyIndex();
@@ -402,17 +391,17 @@ AddObject(std::vector<btCollisionShape*>&& _shapes, btTransform&& _baseTransform
                jointToLinkTranslation, disableParentCollision);
 
         // Add joint limits as a bullet constraint.
-        const pair<double, double> limits = _joints[i]->GetJointLimits(0);
+        const Range<double> range = _joints[i]->GetJointRange(0);
         btMultiBodyConstraint* con = new btMultiBodyJointLimitConstraint(mb,
-                              linkIndex, limits.first * PI, limits.second * PI);
+                              linkIndex, range.min * PI, range.max * PI);
 
         m_dynamicsWorld->addMultiBodyConstraint(con);
 
         if(m_debug)
           std::cout << "\t\tAdded revolute joint " << linkIndex
-                    << "with joint limits ["
-                    << std::setprecision(3) << limits.first * PI << " : "
-                    << std::setprecision(3) << limits.second * PI << "]."
+                    << "with joint range ["
+                    << std::setprecision(3) << range.min * PI << " : "
+                    << std::setprecision(3) << range.max * PI << "]."
                     << std::endl;
         break;
       }

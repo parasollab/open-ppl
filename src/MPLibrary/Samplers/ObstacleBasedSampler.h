@@ -39,25 +39,25 @@ class ObstacleBasedSampler : public SamplerMethod<MPTraits> {
     // The following was added after unification with WOBPRM code //
     ////////////////////////////////////////////////////////////////
 
-    // Returns a CfgType at the center of mass of the StaticMultiBody
-    CfgType ChooseCenterOfMass(StaticMultiBody* _mBody);
+    // Returns a CfgType at the center of mass of the MultiBody
+    CfgType ChooseCenterOfMass(MultiBody* _mBody);
 
-    // Returns a CfgType at a random vertex of the StaticMultiBody
-    CfgType ChooseRandomVertex(StaticMultiBody* _mBody, bool _isFreeBody);
+    // Returns a CfgType at a random vertex of the MultiBody
+    CfgType ChooseRandomVertex(MultiBody* _mBody, bool _isFreeBody);
 
     // Returns a point inside the triangle determined by the vectors
     Vector3d ChoosePointOnTriangle(Vector3d _p, Vector3d _q, Vector3d _r);
 
     // Chooses a random point on a random triangle (weighted by area) in the
-    // StaticMultiBody
-    CfgType ChooseRandomWeightedTriangle(StaticMultiBody* _mBody,
+    // MultiBody
+    CfgType ChooseRandomWeightedTriangle(MultiBody* _mBody,
         bool _isFreeBody);
 
-    // Chooses a random point in a random triangle in the StaticMultiBody
-    CfgType ChooseRandomTriangle(StaticMultiBody* _mBody, bool _isFreeBody);
+    // Chooses a random point in a random triangle in the MultiBody
+    CfgType ChooseRandomTriangle(MultiBody* _mBody, bool _isFreeBody);
 
-    // Chooses a random extreme vertex of the StaticMultiBody
-    CfgType ChooseExtremeVertex(StaticMultiBody* _mBody, bool _isFreeBody);
+    // Chooses a random extreme vertex of the MultiBody
+    CfgType ChooseExtremeVertex(MultiBody* _mBody, bool _isFreeBody);
 
     // Checks m_pointSelection and returns an appropriate CfgType
     virtual CfgType ChooseASample(CfgType& _cfg);
@@ -247,20 +247,20 @@ Sampler(CfgType& _cfg, const Boundary* const _boundary,
 // The following was added after unification with WOBPRM code //
 // ////////////////////////////////////////////////////////////////
 
-// Returns a CfgType at the center of mass of the StaticMultiBody
+// Returns a CfgType at the center of mass of the MultiBody
 template <typename MPTraits>
 typename ObstacleBasedSampler<MPTraits>::CfgType
 ObstacleBasedSampler<MPTraits>::
-ChooseCenterOfMass(StaticMultiBody* _mBody) {
+ChooseCenterOfMass(MultiBody* _mBody) {
   return GetCfgWithParams(_mBody->GetCenterOfMass());
 }
 
-// Returns a CfgType at a random vertex of the StaticMultiBody
+// Returns a CfgType at a random vertex of the MultiBody
 template <typename MPTraits>
 typename ObstacleBasedSampler<MPTraits>::CfgType
 ObstacleBasedSampler<MPTraits>::
-ChooseRandomVertex(StaticMultiBody* _mBody, bool _isFreeBody) {
-  const GMSPolyhedron& polyhedron = _mBody->GetFixedBody(0)->GetWorldPolyhedron();
+ChooseRandomVertex(MultiBody* _mBody, bool _isFreeBody) {
+  const GMSPolyhedron& polyhedron = _mBody->GetBody(0)->GetWorldPolyhedron();
   Vector3d x = polyhedron.m_vertexList[(int)(DRand()*polyhedron.m_vertexList.size())];
   return GetCfgWithParams(x);
 }
@@ -282,12 +282,12 @@ ChoosePointOnTriangle(Vector3d _p, Vector3d _q, Vector3d _r) {
   return (_p + u*s + v*t);
 }
 
-// Chooses a random point on a random triangle (weighted by area) in the StaticMultiBody
+// Chooses a random point on a random triangle (weighted by area) in the MultiBody
 template <typename MPTraits>
 typename ObstacleBasedSampler<MPTraits>::CfgType
 ObstacleBasedSampler<MPTraits>::
-ChooseRandomWeightedTriangle(StaticMultiBody* _mBody, bool _isFreeBody) {
-  const GMSPolyhedron& polyhedron = _mBody->GetFixedBody(0)->GetPolyhedron();
+ChooseRandomWeightedTriangle(MultiBody* _mBody, bool _isFreeBody) {
+  const GMSPolyhedron& polyhedron = _mBody->GetBody(0)->GetPolyhedron();
   // A random fraction of the area
   double targetArea = polyhedron.m_area * DRand();
   double sum = 0.0;
@@ -296,7 +296,7 @@ ChooseRandomWeightedTriangle(StaticMultiBody* _mBody, bool _isFreeBody) {
   // Choose index as the triangle that first makes sum > targetArea
   for(index = -1; sum <= targetArea; index++)
     sum += polyhedron.m_polygonList[index + 1].GetArea();
-  // Choose the triangle of the StaticMultiBody with that index
+  // Choose the triangle of the MultiBody with that index
   const GMSPolygon& poly = polyhedron.m_polygonList[index];
   // Choose a random point in that triangle
   const Vector3d& p = poly.GetPoint(0);
@@ -307,12 +307,12 @@ ChooseRandomWeightedTriangle(StaticMultiBody* _mBody, bool _isFreeBody) {
   return GetCfgWithParams(x);
 }
 
-// Chooses a random point in a random triangle in the StaticMultiBody
+// Chooses a random point in a random triangle in the MultiBody
 template <typename MPTraits>
 typename ObstacleBasedSampler<MPTraits>::CfgType
 ObstacleBasedSampler<MPTraits>::
-ChooseRandomTriangle(StaticMultiBody* _mBody, bool _isFreeBody) {
-  const GMSPolyhedron& polyhedron = _mBody->GetFixedBody(0)->GetPolyhedron();
+ChooseRandomTriangle(MultiBody* _mBody, bool _isFreeBody) {
+  const GMSPolyhedron& polyhedron = _mBody->GetBody(0)->GetPolyhedron();
 
   // Choose a random triangle
   const GMSPolygon& poly = polyhedron.m_polygonList[(int)(DRand()*polyhedron.m_polygonList.size())];
@@ -324,12 +324,12 @@ ChooseRandomTriangle(StaticMultiBody* _mBody, bool _isFreeBody) {
   return GetCfgWithParams(x);
 }
 
-// Chooses a random extreme vertex of the StaticMultiBody
+// Chooses a random extreme vertex of the MultiBody
 template <typename MPTraits>
 typename ObstacleBasedSampler<MPTraits>::CfgType
 ObstacleBasedSampler<MPTraits>::
-ChooseExtremeVertex(StaticMultiBody* _mBody, bool _isFreeBody) {
-  const GMSPolyhedron& polyhedron = _mBody->GetFixedBody(0)->GetPolyhedron();
+ChooseExtremeVertex(MultiBody* _mBody, bool _isFreeBody) {
+  const GMSPolyhedron& polyhedron = _mBody->GetBody(0)->GetPolyhedron();
   int xyz = LRand() % 3; // 0: x, 1: y, 2: z
   int minMax = LRand() % 2; // 0: min, 1: max
   int x = 0; // Index of extreme value
@@ -348,7 +348,7 @@ template <typename MPTraits>
 typename ObstacleBasedSampler<MPTraits>::CfgType
 ObstacleBasedSampler<MPTraits>::
 ChooseASample(CfgType& _cfg) {
-  StaticMultiBody* mBody{nullptr};
+  MultiBody* mBody{nullptr};
   if(m_pointSelection != "cspace")
     mBody = this->GetEnvironment()->GetRandomObstacle();
 

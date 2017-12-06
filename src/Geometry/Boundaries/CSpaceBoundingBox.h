@@ -20,7 +20,7 @@ class CSpaceBoundingBox : public AbstractBoundingBox {
 
     virtual ~CSpaceBoundingBox() = default;
 
-    virtual Boundary* Clone() const override;
+    virtual std::unique_ptr<Boundary> Clone() const override;
 
     ///@}
     ///@name Property Accessors

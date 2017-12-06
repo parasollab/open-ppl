@@ -1,11 +1,9 @@
 #include "RapidCollisionDetection.h"
 
-#ifndef NO_RAPID
-
-#include <RAPID.H>
-
 #include "CDInfo.h"
 #include "Geometry/Bodies/Body.h"
+
+#include <RAPID.H>
 
 
 /*------------------------------- Construction -------------------------------*/
@@ -19,7 +17,7 @@ void
 Rapid::
 Build(Body* const _body) {
   const GMSPolyhedron& poly = _body->GetPolyhedron();
-  unique_ptr<RAPID_model> rapidBody(new RAPID_model);
+  RAPID_model* rapidBody = new RAPID_model;
   rapidBody->BeginModel();
   for(size_t q = 0; q < poly.m_polygonList.size(); q++) {
     double point[3][3];
@@ -31,7 +29,7 @@ Build(Body* const _body) {
     rapidBody->AddTri(point[0], point[1], point[2], q);
   }
   rapidBody->EndModel();
-  _body->SetRapidBody(move(rapidBody));
+  _body->SetRapidBody(rapidBody);
 }
 
 
@@ -67,5 +65,3 @@ IsInCollision(const Body* const _body1, const Body* const _body2,
 }
 
 /*----------------------------------------------------------------------------*/
-
-#endif

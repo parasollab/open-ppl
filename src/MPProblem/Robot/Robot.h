@@ -8,7 +8,6 @@
 
 #include "Control.h"
 
-class ActiveMultiBody;
 class Actuator;
 class Agent;
 class btMultiBody;
@@ -18,6 +17,7 @@ class CSpaceBoundingBox;
 class DynamicsModel;
 class HardwareInterface;
 class MPProblem;
+class MultiBody;
 class XMLNode;
 
 
@@ -25,7 +25,7 @@ class XMLNode;
 /// Complete representation of a robot.
 ///
 /// @details A robot has many components, including:
-///   @arg ActiveMultiBody: The robot's physical geometry.
+///   @arg MultiBody: The robot's physical geometry.
 ///   @arg Agent: The robot's high-level decision-making algorithm. Determines
 ///               what actions the robot should take to complete its task. Used
 ///               only in simulations.
@@ -48,7 +48,7 @@ class Robot {
 
   std::string m_label;                     ///< The robot's unique label.
 
-  ActiveMultiBody* m_multibody{nullptr};   ///< Robot's geometric representation.
+  MultiBody* m_multibody{nullptr};         ///< Robot's geometric representation.
 
   std::string m_agentLabel;                ///< Agent type label.
   Agent* m_agent{nullptr};                 ///< High-level decision-making agent.
@@ -84,7 +84,7 @@ class Robot {
     /// Construct a robot from a multibody.
     /// @param[in] _p The owning MPProblem.
     /// @param[in] _label The unique label for this robot.
-    Robot(MPProblem* const _p, ActiveMultiBody* const _mb,
+    Robot(MPProblem* const _p, MultiBody* const _mb,
         const std::string& _label);
 
     virtual ~Robot() noexcept;
@@ -140,10 +140,10 @@ class Robot {
     ///@name Geometry Accessors
     ///@{
     /// Access the robot's geometric representation. The robot will take
-    /// ownership of its ActiveMultiBody and delete it when necessary.
+    /// ownership of its MultiBody and delete it when necessary.
 
-    ActiveMultiBody* GetMultiBody() noexcept;
-    const ActiveMultiBody* GetMultiBody() const noexcept;
+    MultiBody* GetMultiBody() noexcept;
+    const MultiBody* GetMultiBody() const noexcept;
 
     ///@}
     ///@name Agent Accessors

@@ -13,10 +13,10 @@ CSpaceBoundingSphere(const std::vector<double>& _center, const double _radius)
   : AbstractBoundingSphere(_center, _radius) { }
 
 
-Boundary*
+std::unique_ptr<Boundary>
 CSpaceBoundingSphere::
 Clone() const {
-  return new CSpaceBoundingSphere(*this);
+  return std::unique_ptr<Boundary>(new CSpaceBoundingSphere(*this));
 }
 
 /*---------------------------- Property Accessors ----------------------------*/

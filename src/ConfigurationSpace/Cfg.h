@@ -10,7 +10,7 @@
 
 #include "Vector.h"
 
-class ActiveMultiBody;
+class MultiBody;
 class Boundary;
 class Cfg;
 class Environment;
@@ -107,7 +107,7 @@ class Cfg {
     Robot* GetRobot() const noexcept;
 
     /// Get the robot's multibody.
-    ActiveMultiBody* GetMultiBody() const noexcept;
+    MultiBody* GetMultiBody() const noexcept;
 
     size_t DOF() const noexcept;
     size_t PosDOF() const noexcept;

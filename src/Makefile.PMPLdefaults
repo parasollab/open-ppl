@@ -321,12 +321,8 @@ PMPL_OBJS := \
   ConfigurationSpace/Cfg.o \
   Geometry/GMSPolygon.o \
   Geometry/GMSPolyhedron.o \
-  Geometry/Bodies/ActiveMultiBody.o \
   Geometry/Bodies/Body.o \
-  Geometry/Bodies/FixedBody.o \
-  Geometry/Bodies/FreeBody.o \
   Geometry/Bodies/MultiBody.o \
-  Geometry/Bodies/StaticMultiBody.o \
   Geometry/Bodies/Connection.o \
   Geometry/Bodies/DHParameters.o \
   Geometry/Boundaries/Boundary.o \

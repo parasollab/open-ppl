@@ -3,10 +3,9 @@
 
 #include "ValidityCheckerMethod.h"
 
-#include "Geometry/Bodies/ActiveMultiBody.h"
+#include "Geometry/Bodies/Body.h"
+#include "Geometry/Bodies/MultiBody.h"
 #include "MPProblem/Environment/Environment.h"
-#include "Geometry/Bodies/FixedBody.h"
-#include "Geometry/Bodies/StaticMultiBody.h"
 
 #include "Utilities/MetricUtils.h"
 
@@ -82,29 +81,29 @@ class CollisionDetectionValidity : public ValidityCheckerMethod<MPTraits> {
 
     /// Check self-collision with robot
     /// @param[out] _cdInfo CDInfo
-    /// @param _rob ActiveMultiBody of robot
+    /// @param _rob MultiBody of robot
     /// @param _callName Function calling validity checker
     /// @return Collision
-    bool IsInSelfCollision(CDInfo& _cdInfo, ActiveMultiBody* _rob,
+    bool IsInSelfCollision(CDInfo& _cdInfo, MultiBody* _rob,
         const string& _callName);
 
     /// Check inter-robot collision
     /// @param[out] _cdInfo CDInfo
-    /// @param _rob ActiveMultiBody of robot
-    /// @param _otherRobot ActiveMultiBody of the other robot to check
+    /// @param _rob MultiBody of robot
+    /// @param _otherRobot MultiBody of the other robot to check
     /// @param _callName Function calling validity checker
     /// @return Collision
-    bool IsInterRobotCollision(CDInfo& _cdInfo, ActiveMultiBody* _rob,
-        ActiveMultiBody* _otherRobot, const string& _callName);
+    bool IsInterRobotCollision(CDInfo& _cdInfo, MultiBody* _rob,
+        MultiBody* _otherRobot, const string& _callName);
 
     /// Check collision between robot and one obstacle
     /// @param[out] _cdInfo CDInfo
-    /// @param _rob ActiveMultiBody of robot
-    /// @param _obst StaticMultiBody of obstacle
+    /// @param _rob MultiBody of robot
+    /// @param _obst MultiBody of obstacle
     /// @param _callName Function calling validity checker
     /// @return Collision
-    bool IsInObstCollision(CDInfo& _cdInfo, ActiveMultiBody* _rob,
-        StaticMultiBody* _obst, const string& _callName);
+    bool IsInObstCollision(CDInfo& _cdInfo, MultiBody* _rob,
+        MultiBody* _obst, const string& _callName);
 
     CollisionDetectionMethod* m_cdMethod; ///< Collision Detection library
     bool m_ignoreSelfCollision;           ///< Check self collisions
@@ -136,22 +135,18 @@ CollisionDetectionValidity(XMLNode& _node) :
   m_ignoreIAdjacentLinks = _node.Read("ignoreIAdjacentLinks", false, 1, 0,
       MAX_INT, "number of links to ignore for linkages");
 
-  string cdLabel = _node.Read("method", true, "", "method");
+  const std::string cdLabel = _node.Read("method", true, "", "method");
 
   if(cdLabel == "BoundingSpheres")
     m_cdMethod = new BoundingSpheres();
   else if(cdLabel == "InsideSpheres")
     m_cdMethod = new InsideSpheres();
-#ifndef NO_RAPID
   else if(cdLabel == "RAPID")
     m_cdMethod = new Rapid();
-#endif
-#ifndef NO_PQP
   else if(cdLabel == "PQP")
     m_cdMethod = new PQP();
   else if(cdLabel == "PQP_SOLID")
     m_cdMethod = new PQPSolid();
-#endif
   else
     throw ParseException(_node.Where(),
         "Unknown collision detection library '" + cdLabel + "' requested.");
@@ -196,7 +191,7 @@ IsInCollision(CDInfo& _cdInfo, const CfgType& _cfg, const string& _callName) {
   auto multiBody = _cfg.GetMultiBody();
 
   //check self collision
-  if(!m_ignoreSelfCollision && multiBody->NumFreeBody() > 1 &&
+  if(!m_ignoreSelfCollision && multiBody->GetNumBodies() > 1 &&
       IsInSelfCollision(_cdInfo, multiBody, _callName)) {
     _cdInfo.m_collidingObstIndex = -1;
     return true;
@@ -241,17 +236,17 @@ IsInCollision(CDInfo& _cdInfo, const CfgType& _cfg, const string& _callName) {
 template <typename MPTraits>
 bool
 CollisionDetectionValidity<MPTraits>::
-IsInSelfCollision(CDInfo& _cdInfo, ActiveMultiBody* _rob,
+IsInSelfCollision(CDInfo& _cdInfo, MultiBody* _rob,
     const string& _callName) {
   this->GetStatClass()->IncNumCollDetCalls(m_cdMethod->GetName(), _callName);
 
-  size_t numBody = _rob->NumFreeBody();
+  size_t numBody = _rob->GetNumBodies();
   for(size_t i = 0; i < numBody - 1; ++i) {
-    for(size_t j = i+1; j < numBody; ++j) {
-      auto body1 = _rob->GetFreeBody(i);
-      auto body2 = _rob->GetFreeBody(j);
+    for(size_t j = i + 1; j < numBody; ++j) {
+      auto body1 = _rob->GetBody(i);
+      auto body2 = _rob->GetBody(j);
 
-      if(body1->IsWithinI(body2, m_ignoreIAdjacentLinks))
+      if(m_ignoreIAdjacentLinks and body1->IsAdjacent(body2))
         continue;
 
       if(m_cdMethod->IsInCollision(body1, body2, _cdInfo))
@@ -266,18 +261,18 @@ IsInSelfCollision(CDInfo& _cdInfo, ActiveMultiBody* _rob,
 template <typename MPTraits>
 bool
 CollisionDetectionValidity<MPTraits>::
-IsInterRobotCollision(CDInfo& _cdInfo, ActiveMultiBody* _rob,
-    ActiveMultiBody* _otherRobot, const string& _callName) {
+IsInterRobotCollision(CDInfo& _cdInfo, MultiBody* _rob,
+    MultiBody* _otherRobot, const string& _callName) {
   this->GetStatClass()->IncNumCollDetCalls(m_cdMethod->GetName(), _callName);
 
-  size_t numBody = _rob->NumFreeBody();
-  size_t numOtherBody = _otherRobot->NumFreeBody();
+  size_t numBody = _rob->GetNumBodies();
+  size_t numOtherBody = _otherRobot->GetNumBodies();
 
   for(size_t i = 0; i < numBody; ++i) {
     for(size_t j = 0; j < numOtherBody; ++j) {
       bool collisionFound =
-        m_cdMethod->IsInCollision(_rob->GetFreeBody(i),
-            _otherRobot->GetFreeBody(j), _cdInfo);
+        m_cdMethod->IsInCollision(_rob->GetBody(i),
+                                  _otherRobot->GetBody(j), _cdInfo);
 
       if(collisionFound)
         return true;
@@ -290,17 +285,18 @@ IsInterRobotCollision(CDInfo& _cdInfo, ActiveMultiBody* _rob,
 template <typename MPTraits>
 bool
 CollisionDetectionValidity<MPTraits>::
-IsInObstCollision(CDInfo& _cdInfo, ActiveMultiBody* _rob,
-    StaticMultiBody* _obst, const string& _callName) {
+IsInObstCollision(CDInfo& _cdInfo, MultiBody* _rob,
+    MultiBody* _obst, const string& _callName) {
   this->GetStatClass()->IncNumCollDetCalls(m_cdMethod->GetName(), _callName);
 
   bool collision = false;
-  size_t numBody = _rob->NumFreeBody();
-  auto obst = _obst->GetFixedBody(0);
+  size_t numBody = _rob->GetNumBodies();
+
 
   for(size_t i = 0; i < numBody; ++i) {
     CDInfo cdInfo(_cdInfo.m_retAllInfo);
-    bool coll = m_cdMethod->IsInCollision(_rob->GetFreeBody(i), obst, cdInfo);
+    bool coll = m_cdMethod->IsInCollision(_rob->GetBody(i), _obst->GetBody(0),
+        cdInfo);
 
     //retain minimum distance information
     if(cdInfo < _cdInfo)
@@ -324,11 +320,16 @@ IsInsideObstacle(const CfgType& _cfg) {
   Environment* env = this->GetEnvironment();
   size_t nMulti = env->NumObstacles();
 
+  throw RunTimeException(WHERE, "This function is incorrect - it checks the Cfg "
+      "reference point, which may be outside the robot geometry. A correct "
+      "implementation must check one of the robot body vertices instead. Please "
+      "repair before using.");
+
   Vector3d robotPt(_cfg.GetData()[0], _cfg.GetData()[1], _cfg.GetData()[2]);
 
   for(size_t i = 0; i < nMulti; ++i)
     if(m_cdMethod->IsInsideObstacle(
-          robotPt, env->GetObstacle(i)->GetFixedBody(0)))
+          robotPt, env->GetObstacle(i)->GetBody(0)))
       return true;
   return false;
 }
@@ -349,7 +350,7 @@ WorkspaceVisibility(const Point3d& _a, const Point3d& _b) {
     p = _a + Vector3d(0,1e-8,0);
 
   // Create a new free body with a nullptr as owning multibody
-  FixedBody* lineBody = new FixedBody(nullptr);
+  Body* lineBody = new Body(nullptr);
   // Create body geometry with a single triangle
   GMSPolyhedron poly;
   poly.GetVertexList() = vector<Vector3d>{{_a[0], _a[1], _a[2]},
@@ -367,7 +368,7 @@ WorkspaceVisibility(const Point3d& _a, const Point3d& _b) {
   bool visible = true;
 
   for(size_t i = 0; i < num; ++i) {
-    if(m_cdMethod->IsInCollision(lineBody, env->GetObstacle(i)->GetFixedBody(0),
+    if(m_cdMethod->IsInCollision(lineBody, env->GetObstacle(i)->GetBody(0),
         cdInfo)) {
       visible = false;
       break;

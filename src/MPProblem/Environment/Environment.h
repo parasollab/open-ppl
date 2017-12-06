@@ -14,11 +14,9 @@ using namespace mathtool;
 #include "Geometry/Boundaries/Boundary.h"
 #include "Utilities/MPUtils.h"
 
-class ActiveMultiBody;
 class CollisionDetectionMethod;
 class MultiBody;
 class Robot;
-class StaticMultiBody;
 class WorkspaceDecomposition;
 class XMLNode;
 
@@ -100,14 +98,14 @@ class Environment {
     void SetBoundary(Boundary* const _b) {m_boundary = _b;}
 
     /// Resize the boundary to the minimum bounding box surrounding the obstacles
-    /// increased by a margin of _d + robotRadius.
+    /// increased by a margin of _d + multibody radius.
     /// @param _d Margin to increase minimum bounding box
-    /// @param _robot Robot to base the margin off of
+    /// @param _multibody MultiBody to base the margin off of
     /// @TODO This is a temporary hack to be removed after cloning functions are
     ///       implemented in the boundary class hierarchy. Rather than changing
     ///       the environment boundary, methods wishing to use a modified
     ///       version of it should clone it and adjust the clone.
-    void ResetBoundary(double _d, ActiveMultiBody* _robot);
+    void ResetBoundary(double _d, const MultiBody* const _multibody);
 
     /// Forward to the boundary reset.
     /// @TODO This is a temporary hack to be removed after cloning functions are
@@ -117,35 +115,35 @@ class Environment {
     void ResetBoundary(const vector<pair<double, double>>& _bbx,
         const double _margin);
 
-    /// Expand the boundary by a margin of _d + robotRadius
+    /// Expand the boundary by a margin of _d + multibody radius
     /// @param _d Margin to increase bounding box
-    /// @param _robot Robot to base the margin off of
+    /// @param _multibody MultiBody to base the margin off of
     /// @TODO This is a temporary hack to be removed after cloning functions are
     ///       implemented in the boundary class hierarchy. Rather than changing
     ///       the environment boundary, methods wishing to use a modified
     ///       version of it should clone it and adjust the clone.
-    void ExpandBoundary(double _d, ActiveMultiBody* _robot);
+    void ExpandBoundary(double _d, const MultiBody* const _multibody);
 
     ///@}
     ///@name Obstacle Functions
     ///@{
 
-    /// Number of Static MultiBodies
+    /// Number of MultiBodies
     size_t NumObstacles() const {return m_obstacles.size();}
 
     /// @param _index Requested multibody
     /// @return Pointer to static multibody
-    StaticMultiBody* GetObstacle(size_t _index) const;
+    MultiBody* GetObstacle(size_t _index) const;
 
     /// @return Pointer to random static multibody
-    StaticMultiBody* GetRandomObstacle() const;
+    MultiBody* GetRandomObstacle() const;
 
     /// Add an obstacle to the environment.
     /// @param _dir Directory for geometry file
     /// @param _filename Geometry filename
     /// @param _t Transformation of object
     /// @return (index, pointer) pair to newly created obstacle
-    pair<size_t, shared_ptr<StaticMultiBody>> AddObstacle(const string& _dir,
+    pair<size_t, shared_ptr<MultiBody>> AddObstacle(const string& _dir,
         const string& _filename, const Transformation& _t = Transformation());
 
     /// Remove an obstacle from the environment.
@@ -154,7 +152,7 @@ class Environment {
 
     /// Remove obstacle from environment
     /// @param _obst Obstacle to be removed
-    void RemoveObstacle(shared_ptr<StaticMultiBody> _obst);
+    void RemoveObstacle(shared_ptr<MultiBody> _obst);
 
     /// Compute a mapping of the obstacle vertices.
     /// @return A map from obstacle points to obstacle indexes.
@@ -223,8 +221,8 @@ class Environment {
     ///@name Models
     ///@{
 
-    Boundary* m_boundary{nullptr};                   ///< Workspace boundary.
-    vector<shared_ptr<StaticMultiBody>> m_obstacles; ///< Obstacle multibodies.
+    Boundary* m_boundary{nullptr};             ///< Workspace boundary.
+    vector<shared_ptr<MultiBody>> m_obstacles; ///< Obstacle multibodies.
 
     ///@}
     ///@name Decomposition

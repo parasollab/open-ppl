@@ -1,7 +1,7 @@
 #include "WorkspaceConstraint.h"
 
-#include "Geometry/Bodies/ActiveMultiBody.h"
-#include "Geometry/Bodies/FreeBody.h"
+#include "Geometry/Bodies/Body.h"
+#include "Geometry/Bodies/MultiBody.h"
 #include "Geometry/Boundaries/Range.h"
 #include "MPProblem/Robot/Robot.h"
 #include "Utilities/IOUtils.h"
@@ -24,16 +24,16 @@ WorkspaceConstraint(Robot* const _r, XMLNode& _node) : Constraint(_r) {
   auto mb = m_robot->GetMultiBody();
 
   // Find the part.
-  for(size_t i = 0; i < mb->NumFreeBody(); ++i) {
-    auto body = mb->GetFreeBody(i);
+  for(size_t i = 0; i < mb->GetNumBodies(); ++i) {
+    auto body = mb->GetBody(i);
     if(body->Label() == partLabel) {
-      m_freeBody = body;
+      m_body = body;
       break;
     }
   }
 
   // Make sure we found it.
-  if(!m_freeBody)
+  if(!m_body)
     throw ParseException(WHERE, "Could not find robot part with label '" +
         partLabel + "'.");
 
@@ -57,7 +57,7 @@ Satisfied(const Cfg& _c) const {
   // Configure the object at _c and get the transformation for the constrained
   // free body.
   m_robot->GetMultiBody()->Configure(_c);
-  const auto& currentTransform = m_freeBody->GetWorldTransformation();
+  const auto& currentTransform = m_body->GetWorldTransformation();
 
   // Check the current transform against each constraint function. If any fail,
   // then the constraint isn't satisfied.

@@ -1,6 +1,6 @@
 #include "MPProblem.h"
 
-#include "Geometry/Bodies/ActiveMultiBody.h"
+#include "Geometry/Bodies/MultiBody.h"
 #include "MPProblem/MPTask.h"
 #include "MPProblem/Environment/Environment.h"
 #include "MPProblem/Robot/Robot.h"
@@ -258,11 +258,11 @@ void
 MPProblem::
 MakePointRobot() {
   // Make robot's multibody.
-  ActiveMultiBody* point = new ActiveMultiBody();
+  MultiBody* point = new MultiBody(MultiBody::Type::Active);
 
-  shared_ptr<FreeBody> free(new FreeBody(point, 0));
-  free->SetBodyType(FreeBody::BodyType::Volumetric);
-  free->SetMovementType(FreeBody::MovementType::Translational);
+  Body* body = new Body(point);
+  body->SetBodyType(Body::Type::Volumetric);
+  body->SetMovementType(Body::MovementType::Translational);
 
   // Create body geometry. Use a single, open triangle.
   GMSPolyhedron poly;
@@ -270,11 +270,11 @@ MakePointRobot() {
       {0, 0, 1e-8}, {-1e-8, 0, 0}};
   poly.GetPolygonList() = vector<GMSPolygon>{GMSPolygon(0, 1, 2,
       poly.GetVertexList())};
-  free->SetPolyhedron(poly);
+  body->SetPolyhedron(poly);
 
   // Add body geometry to multibody.
-  point->AddBody(free);
-  point->SetBaseBody(free);
+  point->AddBody(body);
+  point->SetBaseBody(body);
 
   // Make sure we didn't accidentally call another robot 'point'.
   if(GetRobot("point"))
@@ -283,4 +283,5 @@ MakePointRobot() {
 
   // Create the robot object.
   m_pointRobot = new Robot(this, point, "point");
+  //m_pointRobot->SetVirtual(true);
 }

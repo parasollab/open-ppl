@@ -7,7 +7,7 @@
 
 #include "Constraint.h"
 
-class FreeBody;
+class Body;
 class XMLNode;
 namespace mathtool {
   class Transformation;
@@ -18,7 +18,7 @@ namespace mathtool {
 /// Restrict the allowed world transformations for a specific component of a
 /// movable object.
 ///
-/// This constraint checks the world transformation of a specific FreeBody
+/// This constraint checks the world transformation of a specific Body
 /// against one or more constraint functions. All constraint functions must be
 /// satisfied for the constraint to be satisfied. Several primitive constraint
 /// functions can be combined to produce more complex constraints.
@@ -78,7 +78,7 @@ class WorkspaceConstraint : public Constraint {
     ///@name Internal State
     ///@{
 
-    FreeBody* m_freeBody{nullptr}; ///< The part of the object to constrain.
+    Body* m_body{nullptr}; ///< The part of the object to constrain.
 
     std::vector<ConstraintFunction> m_constraints; ///< The set of constraints.
 

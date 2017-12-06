@@ -25,7 +25,7 @@ class WorkspaceBoundingSphere : public AbstractBoundingSphere {
 
     virtual ~WorkspaceBoundingSphere() = default;
 
-    virtual Boundary* Clone() const override;
+    virtual std::unique_ptr<Boundary> Clone() const override;
 
     ///@}
     ///@name Property Accessors

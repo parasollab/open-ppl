@@ -4,10 +4,14 @@
 
   <Boundary type="box" limits="[-25:25 ; -15:15 ; -25:25]"/>
 
-  <Multibody filename="block.obj" type="passive" comAdjustment="none"
-    color="0 0 1 1" transform="0 2.0 0 0 0 0"/>
+  <MultiBody type="passive">
+    <Base filename="block.obj" comAdjustment="none" type="fixed"
+      color="0 0 1 1" transform="0 2.0 0 0 0 0"/>
+  </MultiBody>
 
-  <Multibody filename="block.obj" type="passive" comAdjustment="none"
-    color="0 0 1 1" transform="0 -2.0 0 0 0 0"/>
+  <MultiBody type="passive">
+    <Base filename="block.obj" comAdjustment="none" type="fixed"
+      color="0 0 1 1" transform="0 -2.0 0 0 0 0"/>
+  </MultiBody>
 
 </Environment>

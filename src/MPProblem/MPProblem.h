@@ -5,9 +5,9 @@
 #include <string>
 #include <vector>
 
-class ActiveMultiBody;
 class Environment;
 class MPTask;
+class MultiBody;
 class Robot;
 class XMLNode;
 

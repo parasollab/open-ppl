@@ -1,7 +1,7 @@
 #include "TetGenDecomposition.h"
 
-#include "Geometry/Bodies/FixedBody.h"
-#include "Geometry/Bodies/StaticMultiBody.h"
+#include "Geometry/Bodies/Body.h"
+#include "Geometry/Bodies/MultiBody.h"
 #include "MPProblem/Environment/Environment.h"
 #include "MPProblem/MPProblem.h"
 #include "Workspace/WorkspaceDecomposition.h"
@@ -209,9 +209,9 @@ AddHoles(tetgenio* const _freeModel, const NefPolyhedron& _freespace,
   NefPolyhedron boundary(cp);
   boundary = boundary.complement();
 
-  vector<StaticMultiBody*> holes;
+  vector<MultiBody*> holes;
   for(size_t i = 0; i < _env->NumObstacles(); ++i) {
-    StaticMultiBody* obst = _env->GetObstacle(i);
+    MultiBody* obst = _env->GetObstacle(i);
     if(!obst->IsInternal())
       holes.push_back(obst);
   }
@@ -223,7 +223,7 @@ AddHoles(tetgenio* const _freeModel, const NefPolyhedron& _freespace,
 
   size_t num = 0;
   for(const auto obst : holes) {
-    const auto& body = obst->GetFixedBody(0);
+    const auto body = obst->GetBody(0);
     const auto& com = body->GetWorldPolyhedron().GetCentroid();
     Vector3d hole = com;
     const GMSPolyhedron& poly = body->GetPolyhedron();
@@ -403,10 +403,10 @@ MakeFreeModel(const Environment* _env) {
     if(m_debug)
       cout << "\tAdding obstacle " << i << "..." << endl;
 
-    StaticMultiBody* obst = _env->GetObstacle(i);
+    MultiBody* obst = _env->GetObstacle(i);
     if(!obst->IsInternal()) {
       // Make CGAL representation of this obstacle.
-      auto ocp = obst->GetFixedBody(0)->GetWorldPolyhedron().CGAL();
+      auto ocp = obst->GetBody(0)->GetWorldPolyhedron().CGAL();
 
       if(m_debug)
         cout << "\t\tobstacle is " << (ocp.is_closed() ? "" : "not ")

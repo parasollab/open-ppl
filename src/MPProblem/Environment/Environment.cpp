@@ -1,10 +1,8 @@
 #include "MPProblem/Environment/Environment.h"
 
 #include "ConfigurationSpace/Cfg.h"
-#include "Geometry/Bodies/ActiveMultiBody.h"
-#include "Geometry/Bodies/FixedBody.h"
-#include "Geometry/Bodies/FreeBody.h"
-#include "Geometry/Bodies/StaticMultiBody.h"
+#include "Geometry/Bodies/Body.h"
+#include "Geometry/Bodies/MultiBody.h"
 #include "Geometry/Boundaries/WorkspaceBoundingBox.h"
 #include "Geometry/Boundaries/WorkspaceBoundingSphere.h"
 #include "MPProblem/MPProblem.h"
@@ -113,24 +111,14 @@ ReadXML(XMLNode& _node) {
 
       m_boundary->ReadXML(child);
     }
-    else if(child.Name() == "Multibody") {
-      std::string type = child.Read("type", true, "", "The type of body"
-          " (active, passive, internal, or surface");
+    else if(child.Name() == "MultiBody") {
+      std::shared_ptr<MultiBody> mb(new MultiBody(child));
+      m_obstacles.push_back(mb);
 
-      std::transform(type.begin(), type.end(), type.begin(), ::toupper);
-      const auto bodyType = MultiBody::GetMultiBodyTypeFromTag(type, child.Where());
-
-      switch(bodyType) {
-        case MultiBody::MultiBodyType::Active:
-          /// @TODO: Add support for dynamic obstacles
-          break;
-        case MultiBody::MultiBodyType::Internal:
-        case MultiBody::MultiBodyType::Passive:
-          shared_ptr<StaticMultiBody> mb(new StaticMultiBody(bodyType));
-          mb->ReadXML(child);
-          m_obstacles.push_back(mb);
-          break;
-      }
+      /// @TODO Add support for dynamic obstacles
+      if(mb->IsActive())
+        throw ParseException(_node.Where(), "Dynamic obstacles are not yet "
+            "supported.");
     }
   }
 }
@@ -184,28 +172,14 @@ Read(string _filename) {
 
   //parse and construct each multibody
   for(size_t m = 0; m < multibodyCount && ifs; ++m) {
-    string multibodyType = ReadFieldString(ifs, cbs,
-        "Failed reading multibody type."
-        " Options are: active, passive, internal, or surface.");
+    shared_ptr<MultiBody> mb(new MultiBody(MultiBody::Type::Passive));
+    mb->Read(ifs, cbs);
+    m_obstacles.push_back(mb);
 
-    MultiBody::MultiBodyType bodyType =
-        MultiBody::GetMultiBodyTypeFromTag(multibodyType, cbs.Where());
-
-    switch(bodyType) {
-      case MultiBody::MultiBodyType::Active:
-        {
-          /// @TODO: Add support for dynamic obstacles
-          break;
-        }
-      case MultiBody::MultiBodyType::Internal:
-      case MultiBody::MultiBodyType::Passive:
-        {
-          shared_ptr<StaticMultiBody> mb(new StaticMultiBody(bodyType));
-          mb->Read(ifs, cbs);
-          m_obstacles.push_back(mb);
-          break;
-        }
-    }
+    /// @TODO Add support for dynamic obstacles
+    if(mb->IsActive())
+      throw ParseException(cbs.Where(), "Dynamic obstacles are not yet "
+          "supported.");
   }
 }
 
@@ -213,13 +187,18 @@ Read(string _filename) {
 void
 Environment::
 Print(ostream& _os) const {
-  _os << "Environment" << endl
-      << "\tpositionRes::" << m_positionRes << endl
-      << "\torientationRes::" << m_orientationRes << endl
+  _os << "Environment"
+      << "\n\tpositionRes: " << m_positionRes
+      << "\n\torientationRes: " << m_orientationRes
 #if (defined(PMPReachDistCC) || defined(PMPReachDistCCFixed))
-      << "\trdRes::" << m_rdRes << endl
+      << "\n\trdRes: " << m_rdRes
 #endif
-      << "\tboundary::" << *m_boundary << endl;
+      << "\n\tboundary::" << *m_boundary
+      << std::endl;
+  for(const auto& obstacle : m_obstacles) {
+    obstacle->Write(_os);
+    _os << std::endl;
+  }
 }
 
 
@@ -271,12 +250,12 @@ ComputeResolution(const std::vector<Robot*>& _robots) {
 
 void
 Environment::
-ResetBoundary(double _d, ActiveMultiBody* _robot) {
+ResetBoundary(double _d, const MultiBody* const _multibody) {
   double minx, miny, minz, maxx, maxy, maxz;
   minx = miny = minz = numeric_limits<double>::max();
   maxx = maxy = maxz = -numeric_limits<double>::max();
 
-  double robotRadius = _robot->GetBoundingSphereRadius();
+  double robotRadius = _multibody->GetBoundingSphereRadius();
   _d += robotRadius;
 
   for(auto& body : m_obstacles) {
@@ -307,8 +286,8 @@ ResetBoundary(const vector<pair<double, double>>& _bbx, const double _margin) {
 
 void
 Environment::
-ExpandBoundary(double _d, ActiveMultiBody* _robot) {
-  double robotRadius = _robot->GetBoundingSphereRadius();
+ExpandBoundary(double _d, const MultiBody* const _multibody) {
+  double robotRadius = _multibody->GetBoundingSphereRadius();
   _d += robotRadius;
 
   vector<pair<double, double>> originBBX(3);
@@ -322,17 +301,17 @@ ExpandBoundary(double _d, ActiveMultiBody* _robot) {
 
 /*---------------------------- Obstacle Functions ----------------------------*/
 
-StaticMultiBody*
+MultiBody*
 Environment::
 GetObstacle(size_t _index) const {
   if(_index < 0 || _index >= m_obstacles.size())
     throw RunTimeException(WHERE,
-        "Cannot access StaticBody '" + ::to_string(_index) + "'.");
+        "Cannot access obstacle '" + ::to_string(_index) + "'.");
   return m_obstacles[_index].get();
 }
 
 
-StaticMultiBody*
+MultiBody*
 Environment::
 GetRandomObstacle() const {
   if(m_obstacles.empty())
@@ -343,14 +322,25 @@ GetRandomObstacle() const {
 }
 
 
-pair<size_t, shared_ptr<StaticMultiBody>>
+pair<size_t, shared_ptr<MultiBody>>
 Environment::
 AddObstacle(const string& _dir, const string& _filename,
     const Transformation& _t) {
-  shared_ptr<StaticMultiBody> mb(
-      new StaticMultiBody(MultiBody::MultiBodyType::Passive));
+  const std::string filename = _dir.empty() ? _filename
+                                            : _dir + '/' + _filename;
 
-  mb->Initialize(_dir == "" ? _filename : _dir + '/' + _filename, _t);
+  // Make a multibody for this obstacle.
+  shared_ptr<MultiBody> mb(new MultiBody(MultiBody::Type::Passive));
+
+  // Make the obstacle geometry.
+  Body* const body = new Body(mb.get());
+  body->SetBodyType(Body::Type::Fixed);
+  body->ReadGeometryFile(filename);
+  body->Configure(_t);
+
+  // Add the body to the multibody and finish initialization.
+  mb->AddBody(body);
+  mb->SetBaseBody(body);
 
   m_obstacles.push_back(mb);
   return make_pair(m_obstacles.size() - 1, m_obstacles.back());
@@ -370,7 +360,7 @@ RemoveObstacle(size_t position) {
 
 void
 Environment::
-RemoveObstacle(shared_ptr<StaticMultiBody> _obst) {
+RemoveObstacle(shared_ptr<MultiBody> _obst) {
   auto it = find(m_obstacles.begin(), m_obstacles.end(), _obst);
   if(it != m_obstacles.end())
     m_obstacles.erase(it);
@@ -387,7 +377,7 @@ ComputeObstacleVertexMap() const {
 
   // Iterate through all the obstacles and add their points to the map.
   for(size_t i = 0; i < NumObstacles(); ++i) {
-    const auto& obstaclePoly = GetObstacle(i)->GetFixedBody(0)->
+    const auto& obstaclePoly = GetObstacle(i)->GetBody(0)->
         GetWorldPolyhedron();
     for(const auto& v : obstaclePoly.GetVertexList())
       out[v].push_back(i);
