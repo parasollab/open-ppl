@@ -1,6 +1,7 @@
 #ifndef BODY_H_
 #define BODY_H_
 
+#include <memory>
 #include <set>
 #include <string>
 #include <vector>
@@ -200,10 +201,10 @@ class Body {
     void BuildCDModels();
 
     RAPID_model* GetRapidBody() const noexcept;
-    void SetRapidBody(RAPID_model* _r);
+    void SetRapidBody(std::unique_ptr<RAPID_model>&& _r);
 
     PQP_Model* GetPQPBody() const noexcept;
-    void SetPQPBody(PQP_Model* _p);
+    void SetPQPBody(std::unique_ptr<PQP_Model>&& _p);
 
     ///@}
     ///@name Connection Information
@@ -217,11 +218,11 @@ class Body {
 
     /// @param _index Index of desired forward Connection
     /// @return Requested forward Connection
-    Connection& GetForwardConnection(const size_t _index) noexcept;
+    Connection& GetForwardConnection(const size_t _index) const noexcept;
 
     /// @param _index Index of desired backward Connection
     /// @return Requested backward Connection
-    Connection& GetBackwardConnection(const size_t _index) noexcept;
+    Connection& GetBackwardConnection(const size_t _index) const noexcept;
 
     /// Determines if two bodies share the same joint
     /// @param _otherBody Second body
@@ -336,8 +337,8 @@ class Body {
     Matrix3x3 m_moment;                      ///< Moment of Inertia
     GMSPolyhedron::COMAdjust m_comAdjust{GMSPolyhedron::COMAdjust::COM};
 
-    RAPID_model* m_rapidBody{nullptr};  ///< RAPID model
-    PQP_Model* m_pqpBody{nullptr};      ///< PQP model
+    std::unique_ptr<RAPID_model> m_rapidBody;  ///< RAPID model
+    std::unique_ptr<PQP_Model> m_pqpBody;      ///< PQP model
 
     std::vector<Connection*> m_forwardConnections;  ///< Forward Connections
     std::vector<Connection*> m_backwardConnections; ///< Backward Connections

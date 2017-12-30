@@ -23,6 +23,7 @@
 #include "MPLibrary/ValidityCheckers/CollisionDetectionValidity.h"
 #include "MPLibrary/ValidityCheckers/ValidityCheckerMethod.h"
 
+
 ////////////////////////////////////////////////////////////////////////////////
 /// A collection of planning algorithms that can operate on a specific
 /// MPProblem and MPTask.
@@ -52,10 +53,10 @@ class MPLibraryType final
     /// Solver represents an input set to MPLibraryType. It includes an
     /// MPStrategy label, seed, base file name, and vizmo debug option.
     struct Solver {
-      std::string label;
-      long seed;
-      std::string baseFilename;
-      bool vizmoDebug;
+      std::string label;         ///< The XML label for the strategy to use.
+      long seed;                 ///< The seed.
+      std::string baseFilename;  ///< The base name for output files.
+      bool vizmoDebug;           ///< Save vizmo debug info?
     };
 
     ///@}
@@ -221,9 +222,6 @@ class MPLibraryType final
     ///@name Map Evaluator Accessors
     ///@{
 
-    string GetQueryFilename() const {return m_problem->GetQueryFilename();}
-    void SetQueryFilename(const string& _s) {m_problem->SetQueryFilename(_s);}
-
     MapEvaluatorPointer GetMapEvaluator(const string& _l) {
       return m_mapEvaluators->GetMethod(_l);
     }
@@ -332,10 +330,10 @@ class MPLibraryType final
     ///@name Inputs
     ///@{
 
-    MPProblem*     m_problem{nullptr};  ///< The current MPProblem.
-    MPTask*        m_task{nullptr};     ///< The current task.
-    MPSolution*    m_solution{nullptr}; ///< The current solution.
-    vector<Solver> m_solvers;           ///< The set of inputs to execute.
+    MPProblem*          m_problem{nullptr};  ///< The current MPProblem.
+    MPTask*             m_task{nullptr};     ///< The current task.
+    MPSolution*         m_solution{nullptr}; ///< The current solution.
+    std::vector<Solver> m_solvers;           ///< The set of inputs to execute.
 
     ///@}
     ///@name Method Sets

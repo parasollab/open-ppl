@@ -20,6 +20,8 @@
 using CGALKernel    = CGAL::Exact_predicates_exact_constructions_kernel;
 using NefPolyhedron = CGAL::Nef_polyhedron_3<CGALKernel>;
 
+using namespace std;
+
 
 /*---------------------------- Local Functions -------------------------------*/
 // These are implemented here to avoid including CGAL nef poly stuff in the
@@ -242,12 +244,16 @@ AddHoles(tetgenio* const _freeModel, const NefPolyhedron& _freespace,
 /*------------------------------- Construction -------------------------------*/
 
 TetGenDecomposition::
-TetGenDecomposition(const string& _switches, const std::string& _baseFilename)
-    : m_switches(_switches), m_baseFilename(_baseFilename) {
-  ValidateSwitches(m_switches);
-  if(!m_baseFilename.empty())
-    m_ioType = Read;
-}
+TetGenDecomposition() = default;
+//
+//
+//TetGenDecomposition::
+//TetGenDecomposition(const string& _switches, const std::string& _baseFilename)
+//    : m_switches(_switches), m_baseFilename(_baseFilename) {
+//  ValidateSwitches(m_switches);
+//  if(!m_baseFilename.empty())
+//    m_ioType = Read;
+//}
 
 
 TetGenDecomposition::
@@ -257,7 +263,8 @@ TetGenDecomposition(XMLNode& _node) {
       "Use 'q' for quality (finer-grained) tetrahedra. 'Q' for quiet. "
       "'r' for read input.");
 
-  m_baseFilename = _node.Read("baseFilename", false, m_baseFilename,
+  m_baseFilename = GetPathName(_node.Filename())
+      + _node.Read("baseFilename", false, m_baseFilename,
       "Specify a file name to read or write a decomposition. There are two "
       "files for a decomposition with .node and .ele extensions. This is the "
       "base name for those files.");
@@ -469,13 +476,11 @@ SaveDecompModel() {
 void
 TetGenDecomposition::
 LoadDecompModel() {
-  string basename = MPProblem::GetPath(m_baseFilename);
-
   if(m_debug)
-    cout << "Loading tetgen files with base name '" << basename << "'"
+    cout << "Loading tetgen files with base name '" << m_baseFilename << "'"
          << endl;
 
-  char* b = const_cast<char*>(basename.c_str());
+  char* b = const_cast<char*>(m_baseFilename.c_str());
   m_decompModel->load_node(b);
   m_decompModel->load_tet(b);
   //m_decompModel->load_neighbors(b);

@@ -51,38 +51,57 @@ class WorkspaceDecomposition : public stapl::sequential::graph<stapl::DIRECTED,
         Vector3d, double> DualGraph;
 
     ///@}
+    ///@name Construction
+    ///@{
+
+    WorkspaceDecomposition();
+
+    WorkspaceDecomposition(const WorkspaceDecomposition&);
+    WorkspaceDecomposition(WorkspaceDecomposition&&);
+
+    virtual ~WorkspaceDecomposition();
+
+    ///@}
+    ///@name Assignment
+    ///@{
+
+    WorkspaceDecomposition& operator=(const WorkspaceDecomposition&);
+    WorkspaceDecomposition& operator=(WorkspaceDecomposition&&);
+
+    ///@}
     ///@name Point Accessors
     ///@{
 
-    const size_t GetNumPoints() const {return m_points.size();}
+    const size_t GetNumPoints() const noexcept;
 
-    const Point3d& GetPoint(const size_t _i) const {return m_points[_i];}
-    const vector<Point3d>& GetPoints() const {return m_points;}
+    const Point3d& GetPoint(const size_t _i) const noexcept;
+
+    const std::vector<Point3d>& GetPoints() const noexcept;
 
     ///@}
     ///@name Region Accessors
     ///@{
 
-    const size_t GetNumRegions() const {return get_num_vertices();}
+    const size_t GetNumRegions() const noexcept;
 
-    const WorkspaceRegion& GetRegion(const size_t _i) const {
-      return find_vertex(_i)->property();
-    }
+    const WorkspaceRegion& GetRegion(const size_t _i) const noexcept;
 
-    const vertex_descriptor GetDescriptor(const WorkspaceRegion& _region) const;
+    const vertex_descriptor GetDescriptor(const WorkspaceRegion& _region) const
+        noexcept;
 
     ///@}
     ///@name Portal Accessors
     ///@{
 
-    const WorkspacePortal& GetPortal(const size_t _i1, const size_t _i2) const;
+    const WorkspacePortal& GetPortal(const size_t _i1, const size_t _i2) const
+        noexcept;
 
     ///@}
     ///@name Dual Graph Accessors
     ///@{
 
-    DualGraph& GetDualGraph() {return m_dual;}
-    const DualGraph& GetDualGraph() const {return m_dual;}
+    DualGraph& GetDualGraph() noexcept;
+    const DualGraph& GetDualGraph() const noexcept;
 
     ///@}
     ///@name Modifiers
@@ -131,14 +150,18 @@ class WorkspaceDecomposition : public stapl::sequential::graph<stapl::DIRECTED,
     /// Compute the dual of the region graph.
     void ComputeDualGraph();
 
+    /// Set the decomposition pointers for all regions and portals, which is
+    /// needed when copying/moving this object.
+    void UpdateDecompositionPointers();
+
     ///@}
     ///@name Internal State
     ///@{
 
-    vector<Point3d> m_points; ///< The points used in the decomposition.
-    DualGraph m_dual;         ///< The dual-graph of the decomposition.
+    std::vector<Point3d> m_points; ///< The points used in the decomposition.
+    DualGraph m_dual;              ///< The dual-graph of the decomposition.
 
-    bool m_finalized{false};  ///< Is the decomposition finalized?
+    bool m_finalized{false};       ///< Is the decomposition finalized?
 
     ///@}
 };

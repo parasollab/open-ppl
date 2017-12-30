@@ -27,7 +27,7 @@ class NBox {
     ///                dimension.
     explicit NBox(const std::vector<double>& _center);
 
-    virtual ~NBox() = default;
+    virtual ~NBox() noexcept;
 
     ///@}
     ///@name Accessors

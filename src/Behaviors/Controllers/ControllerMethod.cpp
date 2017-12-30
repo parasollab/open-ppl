@@ -1,6 +1,8 @@
 #include "ControllerMethod.h"
 
 #include "Behaviors/Controllers/ControlSetGenerators.h"
+#include "Behaviors/Controllers/PIDFeedback.h"
+#include "Behaviors/Controllers/SimpleController.h"
 #include "ConfigurationSpace/Cfg.h"
 #include "MPProblem/Robot/Actuator.h"
 #include "MPProblem/Robot/DynamicsModel.h"
@@ -9,6 +11,8 @@
 #include "Utilities/XMLNode.h"
 
 #include "nonstd/container_ops.h"
+
+#include <algorithm>
 
 
 /*------------------------------ Construction --------------------------------*/
@@ -40,6 +44,40 @@ ControllerMethod(Robot* const _r, XMLNode& _node) : ControllerMethod(_r) {
           std::back_inserter(*m_controls));
       RemoveDuplicateControls(m_controls);
     }
+}
+
+
+ControllerMethod::
+ControllerMethod(Robot* const _r, const ControllerMethod& _c)
+  : m_robot(_r),
+    m_debug(_c.m_debug)
+{
+  if(_c.m_controls)
+    SetControlSet(new ControlSet(*_c.m_controls));
+}
+
+
+std::unique_ptr<ControllerMethod>
+ControllerMethod::
+Factory(Robot* const _r, XMLNode& _node) {
+  // Read downcased controller type.
+  std::string controllerType = _node.Read("type", true, "",
+      "The controller class name.");
+  std::transform(controllerType.begin(), controllerType.end(),
+      controllerType.begin(), ::tolower);
+
+  std::unique_ptr<ControllerMethod> output;
+
+  // Setup the appropriate controller type.
+  if(controllerType == "simple")
+    output = std::unique_ptr<SimpleController>(new SimpleController(_r, _node));
+  else if(controllerType == "pid")
+    output = std::unique_ptr<PIDFeedback>(new PIDFeedback(_r, _node));
+  else
+    throw ParseException(_node.Where(), "Unknown controller label '" +
+        controllerType + "'. Currently only 'simple' is supported.");
+
+  return output;
 }
 
 
@@ -77,6 +115,8 @@ GetControlSet() noexcept {
 void
 ControllerMethod::
 SetControlSet(ControlSet* const _c) noexcept {
+  if(m_controls == _c)
+    return;
   delete m_controls;
   m_controls = _c;
 }

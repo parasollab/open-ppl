@@ -13,6 +13,25 @@
 PathFollowingAgent::
 PathFollowingAgent(Robot* const _r) : Agent(_r) { }
 
+
+PathFollowingAgent::
+PathFollowingAgent(Robot* const _r, const PathFollowingAgent& _a) : Agent(_r, _a)
+{ }
+
+
+PathFollowingAgent::
+PathFollowingAgent(Robot* const _r, XMLNode& _node) : Agent(_r) {
+  // Currently there are no parameters. Parse XML options here.
+}
+
+
+std::unique_ptr<Agent>
+PathFollowingAgent::
+Clone(Robot* const _r) const {
+  return std::unique_ptr<PathFollowingAgent>(new PathFollowingAgent(_r, *this));
+}
+
+
 PathFollowingAgent::
 ~PathFollowingAgent() {
   // Ensure agent is properly torn down.
@@ -36,7 +55,7 @@ Initialize() {
   m_library = new MPLibrary(xmlFile);
 
   /// @TODO Choose the task rather than just taking the first one.
-  auto task = problem->GetTasks().front();
+  auto task = problem->GetTasks().front().get();
 
   // Create a new solution object to hold a plan for this agent.
   auto solution = new MPSolution(task->GetRobot());

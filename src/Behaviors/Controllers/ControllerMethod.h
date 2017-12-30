@@ -33,7 +33,36 @@ class ControllerMethod {
     /// @param _node The XML node to read parameters from.
     ControllerMethod(Robot* const _r, XMLNode& _node);
 
+    /// Copy a controller for another robot.
+    /// @param _r The destination robot.
+    /// @param _c The controller to copy.
+    ControllerMethod(Robot* const _r, const ControllerMethod& _c);
+
+    /// Create a dynamically-allocated controller from an XML node.
+    /// @param _r The robot to control.
+    /// @param _node The XML node to read parameters from.
+    /// @return A controller of the type described by _node.
+    static std::unique_ptr<ControllerMethod> Factory(Robot* const _r,
+        XMLNode& _node);
+
+    /// Create a copy of this controller for another robot. This is provided so
+    /// that we can copy controllers without knowing their derived type.
+    virtual std::unique_ptr<ControllerMethod> Clone(Robot* const _r) const = 0;
+
     virtual ~ControllerMethod();
+
+    ///@}
+    ///@name Disabled Functions
+    ///@{
+    /// Regular copy/move is not allowed because there can only be one
+    /// controller per robot, and it must be constructed with the robot pointer
+    /// present.
+
+    ControllerMethod(const ControllerMethod&) = delete;
+    ControllerMethod(ControllerMethod&&) = delete;
+
+    ControllerMethod& operator=(const ControllerMethod&) = delete;
+    ControllerMethod& operator=(ControllerMethod&&) = delete;
 
     ///@}
     ///@name Interface

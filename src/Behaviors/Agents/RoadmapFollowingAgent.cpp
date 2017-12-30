@@ -14,6 +14,26 @@
 RoadmapFollowingAgent::
 RoadmapFollowingAgent(Robot* const _r) : Agent(_r) { }
 
+
+RoadmapFollowingAgent::
+RoadmapFollowingAgent(Robot* const _r, const RoadmapFollowingAgent& _a)
+  : Agent(_r, _a) { }
+
+
+RoadmapFollowingAgent::
+RoadmapFollowingAgent(Robot* const _r, XMLNode& _node) : Agent(_r) {
+  // Currently there are no parameters. Parse XML options here.
+}
+
+
+std::unique_ptr<Agent>
+RoadmapFollowingAgent::
+Clone(Robot* const _r) const {
+  return std::unique_ptr<RoadmapFollowingAgent>(
+      new RoadmapFollowingAgent(_r, *this));
+}
+
+
 RoadmapFollowingAgent::
 ~RoadmapFollowingAgent() {
   RoadmapFollowingAgent::Uninitialize();
@@ -36,7 +56,7 @@ Initialize() {
   m_library = new MPLibrary(xmlFile);
 
   /// @TODO Choose the task rather than just taking the first one.
-  auto task = problem->GetTasks().front();
+  auto task = problem->GetTasks().front().get();
 
   // Create a new solution object to hold a plan for this agent.
   m_solution = new MPSolution(task->GetRobot());

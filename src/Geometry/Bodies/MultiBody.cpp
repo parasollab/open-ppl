@@ -75,24 +75,22 @@ MultiBody(XMLNode& _node) {
       if(m_baseBody)
         throw ParseException(child.Where(), "Only one base is permitted.");
 
-      Body* free = new Body(this, child);
-      AddBody(free);
-      SetBaseBody(free);
+      const size_t index = AddBody(Body(this, child));
+      SetBaseBody(index);
     }
     else if(child.Name() == "Link") {
       // A link node has body information and a single child node describing its
       // connection to its parent body.
-      Body* link = new Body(this, child);
-      AddBody(link);
+      AddBody(Body(this, child));
 
       const bool oneChild = std::distance(child.begin(), child.end()) == 1;
       const bool isConnection = child.begin()->Name() == "Connection";
       if(!oneChild or !isConnection)
         throw ParseException(child.Where(), "Link nodes must have exactly one "
-            "connection child node.");
+            "connection child node. Support for multiple connections is not "
+            "yet implemented.");
 
-      Connection* c = new Connection(this, *child.begin());
-      m_joints.push_back(c);
+      m_joints.emplace_back(new Connection(this, *child.begin()));
     }
   }
 
@@ -106,42 +104,19 @@ MultiBody(XMLNode& _node) {
 
 
 MultiBody::
-MultiBody(const MultiBody& _other)
-  : m_multiBodyType(_other.m_multiBodyType),
-    m_com(_other.m_com),
-    m_radius(_other.m_radius),
-    m_boundingBox(_other.m_boundingBox),
-    m_maxAxisRange(_other.m_maxAxisRange),
-    m_baseIndex(_other.m_baseIndex),
-    m_dofInfo(_other.m_dofInfo),
-    m_currentDofs(_other.m_currentDofs)
-{
-  CopyComponentsFrom(_other);
+MultiBody(const MultiBody& _other) {
+  *this = _other;
 }
 
 
 MultiBody::
-MultiBody(MultiBody&& _other)
-  : m_multiBodyType(_other.m_multiBodyType),
-    m_com(std::move(_other.m_com)),
-    m_radius(_other.m_radius),
-    m_boundingBox(std::move(_other.m_boundingBox)),
-    m_maxAxisRange(_other.m_maxAxisRange),
-    m_baseIndex(_other.m_baseIndex),
-    m_dofInfo(std::move(_other.m_dofInfo)),
-    m_currentDofs(std::move(_other.m_currentDofs))
-{
-  MoveComponentsFrom(std::move(_other));
+MultiBody(MultiBody&& _other) {
+  *this = std::move(_other);
 }
 
 
 MultiBody::
-~MultiBody() {
-  for(Body* body : m_bodies)
-    delete body;
-  for(Joint* joint : m_joints)
-    delete joint;
-}
+~MultiBody() = default;
 
 
 void
@@ -205,15 +180,26 @@ MultiBody&
 MultiBody::
 operator=(const MultiBody& _other) {
   m_multiBodyType = _other.m_multiBodyType;
-  m_com = _other.m_com;
-  m_radius = _other.m_radius;
-  m_boundingBox = _other.m_boundingBox;
-  m_maxAxisRange = _other.m_maxAxisRange;
-  m_baseIndex = _other.m_baseIndex;
-  m_dofInfo = _other.m_dofInfo;
-  m_currentDofs = _other.m_currentDofs;
+  m_com           = _other.m_com;
+  m_radius        = _other.m_radius;
+  m_boundingBox   = _other.m_boundingBox;
+  m_maxAxisRange  = _other.m_maxAxisRange;
+  m_baseIndex     = _other.m_baseIndex;
+  m_dofInfo       = _other.m_dofInfo;
+  m_currentDofs   = _other.m_currentDofs;
 
-  CopyComponentsFrom(_other);
+  // Copy the bodies.
+  for(const auto& body : _other.m_bodies)
+    AddBody(Body(body));
+
+  // Set the base body.
+  SetBaseBody(m_baseIndex);
+
+  // Copy the joints.
+  for(const auto& joint : _other.m_joints) {
+    m_joints.emplace_back(new Connection(*joint));
+    m_joints.back()->SetBodies(this);
+  }
 
   return *this;
 }
@@ -222,16 +208,29 @@ operator=(const MultiBody& _other) {
 MultiBody&
 MultiBody::
 operator=(MultiBody&& _other) {
-  m_multiBodyType = _other.m_multiBodyType;
-  m_com = std::move(_other.m_com);
-  m_radius = _other.m_radius;
-  m_boundingBox = std::move(_other.m_boundingBox);
-  m_maxAxisRange = _other.m_maxAxisRange;
-  m_baseIndex = _other.m_baseIndex;
-  m_dofInfo = std::move(_other.m_dofInfo);
-  m_currentDofs = std::move(_other.m_currentDofs);
+  m_multiBodyType = std::move(_other.m_multiBodyType);
+  m_com           = std::move(_other.m_com);
+  m_radius        = std::move(_other.m_radius);
+  m_boundingBox   = std::move(_other.m_boundingBox);
+  m_maxAxisRange  = std::move(_other.m_maxAxisRange);
+  m_baseIndex     = std::move(_other.m_baseIndex);
+  m_dofInfo       = std::move(_other.m_dofInfo);
+  m_currentDofs   = std::move(_other.m_currentDofs);
 
-  MoveComponentsFrom(std::move(_other));
+  // Move the bodies and set their multibody pointers.
+  m_bodies = std::move(_other.m_bodies);
+  _other.m_bodies.clear();
+  for(auto& body : m_bodies)
+    body.SetMultiBody(this);
+
+  // Set the base body.
+  SetBaseBody(m_baseIndex);
+
+  // Move the joints and update their multibody pointers.
+  m_joints = std::move(_other.m_joints);
+  _other.m_joints.clear();
+  for(auto& joint : m_joints)
+    joint->SetBodies(this);
 
   return *this;
 }
@@ -322,38 +321,46 @@ GetNumBodies() const noexcept {
 Body*
 MultiBody::
 GetBody(const size_t _i) noexcept {
-  return m_bodies[_i];
+  return &m_bodies[_i];
 }
 
 
 const Body*
 MultiBody::
 GetBody(const size_t _i) const noexcept {
-  return m_bodies[_i];
+  return &m_bodies[_i];
 }
 
 
-void
+size_t
 MultiBody::
-AddBody(Body* const _body) {
+AddBody(Body&& _body) {
   /// @TODO Adjust our body tracking so that we don't have to add bodies in
   ///       index order.
-  m_bodies.push_back(_body);
-  if(_body->GetIndex() != m_bodies.size() - 1)
+  m_bodies.push_back(std::move(_body));
+  auto& body = m_bodies.back();
+  if(body.GetIndex() != m_bodies.size() - 1)
     throw ParseException(WHERE, "Added body with index " +
-        std::to_string(_body->GetIndex()) + ", but it landed in slot " +
+        std::to_string(body.GetIndex()) + ", but it landed in slot " +
         std::to_string(m_bodies.size()) + ".");
-  _body->SetMultiBody(this);
+  body.SetMultiBody(this);
+
+  return body.GetIndex();
 }
 
 
 void
 MultiBody::
-SetBaseBody(Body* const _body) {
-  m_baseBody = _body;
-  m_baseIndex = _body->GetIndex();
-  m_baseType = _body->GetBodyType();
-  m_baseMovement = _body->GetMovementType();
+SetBaseBody(const size_t _index) {
+  if(_index >= m_bodies.size())
+    throw RunTimeException(WHERE, "Cannot use index " + std::to_string(_index) +
+        " for base body because there are only " +
+        std::to_string(m_bodies.size()) + " parts in this multibody.");
+
+  m_baseIndex    = _index;
+  m_baseBody     = GetBody(_index);
+  m_baseType     = m_baseBody->GetBodyType();
+  m_baseMovement = m_baseBody->GetMovementType();
 }
 
 
@@ -430,8 +437,8 @@ PolygonalApproximation(std::vector<Vector3d>& _result) {
   }
   else {
     for(size_t i = 0; i < nfree - 1; ++i) {
-      const GMSPolyhedron bbox1 = m_bodies[i]->GetWorldBoundingBox();
-      const GMSPolyhedron bbox2 = m_bodies[i]->GetForwardConnection(0).
+      const GMSPolyhedron bbox1 = m_bodies[i].GetWorldBoundingBox();
+      const GMSPolyhedron bbox2 = m_bodies[i].GetForwardConnection(0).
           GetNextBody()->GetWorldBoundingBox();
 
       //find the four closest pairs of points between bbox1 and bbox2
@@ -500,24 +507,10 @@ PolygonalApproximation(std::vector<Vector3d>& _result) {
 
 /*------------------------------- Connections --------------------------------*/
 
-size_t
+const std::vector<std::unique_ptr<Connection>>&
 MultiBody::
-GetNumJoints() const noexcept {
-  return m_joints.size();
-}
-
-
-std::vector<MultiBody::Joint*>::const_iterator
-MultiBody::
-joints_begin() const noexcept {
-  return m_joints.begin();
-}
-
-
-std::vector<MultiBody::Joint*>::const_iterator
-MultiBody::
-joints_end() const noexcept {
-  return m_joints.end();
+GetJoints() const noexcept {
+  return m_joints;
 }
 
 
@@ -587,7 +580,7 @@ Configure(const vector<double>& _v) {
 
     // Get the connection object.
     const size_t jointIndex = joint->GetNextBodyIndex();
-    auto& connection = m_bodies[jointIndex]->GetBackwardConnection(0);
+    auto& connection = m_bodies[jointIndex].GetBackwardConnection(0);
     auto& dh = connection.GetDHParameters();
 
     // Adjust connection to reflect new configuration.
@@ -646,7 +639,7 @@ Configure(const std::vector<double>& _v, const std::vector<double>& _t) {
 
     // Get the connection object's DHParameters.
     const size_t jointIndex = joint->GetNextBodyIndex();
-    auto& connection = m_bodies[jointIndex]->GetBackwardConnection(0);
+    auto& connection = m_bodies[jointIndex].GetBackwardConnection(0);
     auto& dh = connection.GetDHParameters();
 
     // Adjust connection to reflect new configuration.
@@ -676,10 +669,8 @@ Read(std::istream& _is, CountingStreamBuffer& _cbs) {
 
   // Read passive bodies differently as per the old file format.
   if(IsPassive()) {
-    Body* fix = new Body(this);
-    fix->Read(_is, _cbs);
-
-    AddBody(fix);
+    const size_t index = AddBody(Body(this));
+    GetBody(index)->Read(_is, _cbs);
 
     FindMultiBodyInfo();
     return;
@@ -690,12 +681,9 @@ Read(std::istream& _is, CountingStreamBuffer& _cbs) {
 
   m_baseIndex = -1;
   for(size_t i = 0; i < bodyCount && _is; ++i) {
-    //read the free body
-    Body* free = new Body(this, i);
+    const size_t index = AddBody(Body(this, i));
+    auto free = GetBody(index);
     free->Read(_is, _cbs);
-
-    //add object to multibody
-    AddBody(free);
 
     if(free->IsBase() && m_baseIndex == size_t(-1)) {
       m_baseIndex = i;
@@ -719,9 +707,8 @@ Read(std::istream& _is, CountingStreamBuffer& _cbs) {
       "Failed reading number of connections.");
 
   for(size_t i = 0; i < connectionCount; ++i) {
-    //add connection info to multibody connection map
-    Connection* c = new Connection(this);
-    m_joints.push_back(c);
+    // add connection info to multibody connection map
+    m_joints.emplace_back(new Connection(this));
     m_joints.back()->Read(_is, _cbs);
   }
 
@@ -740,75 +727,37 @@ Write(std::ostream& _os) const {
   // with the old file format.
   if(IsPassive()) {
     for(const auto& body : m_bodies)
-      _os << *body << std::endl;
+      _os << body << std::endl;
     return;
   }
 
   // Write free body count and free bodies.
   _os << m_bodies.size() << std::endl;
   for(const auto& body : m_bodies)
-    _os << *body << std::endl;
+    _os << body << std::endl;
 
   // Write connections.
   size_t numConnection = 0;
   for(const auto& body : m_bodies)
-    numConnection += body->ForwardConnectionCount();
+    numConnection += body.ForwardConnectionCount();
 
   _os << "Connections\n"
       << numConnection
       << std::endl;
 
   for(const auto& body : m_bodies)
-    for(size_t j = 0; j < body->ForwardConnectionCount(); ++j)
-      _os << body->GetForwardConnection(j);
+    for(size_t j = 0; j < body.ForwardConnectionCount(); ++j)
+      _os << body.GetForwardConnection(j);
 }
 
 /*---------------------------------- Helpers ---------------------------------*/
 
 void
 MultiBody::
-CopyComponentsFrom(const MultiBody& _other) {
-  // Copy the bodies.
-  for(const Body* const body : _other.m_bodies)
-    AddBody(new Body(*body));
-
-  // Set the base body.
-  SetBaseBody(m_bodies[_other.m_baseIndex]);
-
-  // Copy the joints.
-  for(const Joint* const joint : _other.m_joints) {
-    Joint* const copy = new Joint(*joint);
-    copy->SetBodies(this);
-    m_joints.push_back(copy);
-  }
-}
-
-
-void
-MultiBody::
-MoveComponentsFrom(MultiBody&& _other) {
-  // Move the bodies and set their multibody pointers.
-  m_bodies = std::move(_other.m_bodies);
-  _other.m_bodies.clear();
-  for(Body* const body : m_bodies)
-    body->SetMultiBody(this);
-
-  // Set the base body.
-  SetBaseBody(m_bodies[_other.m_baseIndex]);
-
-  // Move the joints and update their multibody pointers.
-  m_joints = std::move(_other.m_joints);
-  _other.m_joints.clear();
-  for(Joint* const joint : m_joints)
-    joint->SetBodies(this);
-}
-
-
-void
-MultiBody::
 SortJoints() {
   const static auto sorter =
-      [](Connection* const _a, Connection* const _b)
+      [](const std::unique_ptr<Connection>& _a,
+         const std::unique_ptr<Connection>& _b)
       {
         if(_a->GetPreviousBodyIndex() != _b->GetPreviousBodyIndex())
           return _a->GetPreviousBodyIndex() < _b->GetPreviousBodyIndex();
@@ -822,14 +771,14 @@ void
 MultiBody::
 UpdateLinks() {
   for(auto& body : m_bodies)
-    if(!body->IsBase())
-      body->MarkDirty();
+    if(!body.IsBase())
+      body.MarkDirty();
 
   /// @TODO I think we should be able to remove this forced recomputation and
   ///       let it resolve lazily, need to test though.
   for(auto& body : m_bodies)
-    if(body->ForwardConnectionCount() == 0)  // tree tips: leaves.
-      body->GetWorldTransformation();
+    if(body.ForwardConnectionCount() == 0)  // tree tips: leaves.
+      body.GetWorldTransformation();
 }
 
 
@@ -839,7 +788,7 @@ FindMultiBodyInfo() {
   // Find COM
   m_com(0, 0, 0);
   for(auto& body : m_bodies)
-    m_com += body->GetWorldPolyhedron().GetCentroid();
+    m_com += body.GetWorldPolyhedron().GetCentroid();
   m_com /= m_bodies.size();
 
   //Find Bounding box
@@ -848,7 +797,7 @@ FindMultiBodyInfo() {
   maxX = maxY = maxZ = std::numeric_limits<double>::lowest();
 
   for(auto& body : m_bodies) {
-    const auto bbx = body->GetWorldBoundingBox();
+    const auto bbx = body.GetWorldBoundingBox();
     const auto& minVertex = bbx.m_vertexList[0];
     const auto& maxVertex = bbx.m_vertexList[7];
 
@@ -875,9 +824,9 @@ FindMultiBodyInfo() {
 
   // Roughly approximate the maximum bounding radius by assuming that all links
   // are chained sequentially end-to-end away from the base.
-  m_radius = m_bodies[0]->GetPolyhedron().m_maxRadius;
+  m_radius = m_bodies[0].GetPolyhedron().m_maxRadius;
   for(size_t i = 1; i < m_bodies.size(); ++i)
-    m_radius += m_bodies[i]->GetPolyhedron().m_maxRadius * 2.0;
+    m_radius += m_bodies[i].GetPolyhedron().m_maxRadius * 2.0;
 }
 
 /*----------------------------------------------------------------------------*/

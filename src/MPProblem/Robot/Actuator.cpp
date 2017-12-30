@@ -90,6 +90,18 @@ Actuator(Robot* const _r, XMLNode& _node) : m_robot(_r),
   ComputeControlSpace();
 }
 
+
+Actuator::
+Actuator(Robot* const _r, const Actuator& _a)
+  : m_robot(_r),
+    m_label(_a.m_label),
+    m_mask(_a.m_mask),
+    m_limits(_a.m_limits),
+    m_maxForce(_a.m_maxForce),
+    m_type(_a.m_type),
+    m_controlSpace(_a.m_controlSpace)
+{ }
+
 /*-------------------------- Actuator Properties -----------------------------*/
 
 void

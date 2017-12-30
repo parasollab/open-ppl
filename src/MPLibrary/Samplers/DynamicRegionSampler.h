@@ -269,7 +269,7 @@ LazyInitialize() {
     // Create a workspace skeleton using a reeb graph.
     auto decomposition = this->GetMPTools()->GetDecomposition(m_decompositionLabel);
     ReebGraphConstruction reeb;
-    reeb.Construct(decomposition, this->GetBaseFilename());
+    reeb.Construct(decomposition);
 
     // Create the workspace skeleton.
     m_skeleton = reeb.GetSkeleton();

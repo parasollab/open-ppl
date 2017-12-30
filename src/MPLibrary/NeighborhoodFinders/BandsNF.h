@@ -696,10 +696,8 @@ BandsNF<MPTraits>::
 FindNeighbors(RoadmapType* _roadmap,
     InputIterator _first, InputIterator _last, bool _fromFullRoadmap,
     const CfgType& _cfg, OutputIterator _out) {
-
+  MethodTimer mt(this->GetStatClass(), "BandsNF::FindNeighbors");
   this->IncrementNumQueries();
-  this->StartTotalTime();
-  this->StartQueryTime();
 
   vector< pair<VID, double> > neighbors;
 
@@ -740,9 +738,6 @@ FindNeighbors(RoadmapType* _roadmap,
     }
   }
 
-  this->EndQueryTime();
-  this->EndTotalTime();
-
   return _out;
 }
 
@@ -757,4 +752,4 @@ BandsNF<MPTraits>::FindNeighborPairs(RoadmapType* _roadmap,
   throw RunTimeException(WHERE, "FindNeighborPairs is not yet implemented.");
 }
 
-#endif //end #ifndef
+#endif

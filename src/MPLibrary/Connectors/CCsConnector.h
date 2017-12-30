@@ -218,7 +218,8 @@ CCsConnector<MPTraits>::
 ComputeAllPairsCCDist(RoadmapType* _rm, vector<pair<size_t, VID> >& _ccs) {
 
   GraphType* rgraph = _rm->GetGraph();
-  auto dmm = this->GetNeighborhoodFinder(this->m_nfLabel)->GetDMMethod();
+  auto nf = this->GetNeighborhoodFinder(this->m_nfLabel);
+  auto dm = this->GetDistanceMetric(nf->GetDMLabel());
   typename GraphType::ColorMap colorMap;
 
   //compute com of ccs
@@ -236,7 +237,7 @@ ComputeAllPairsCCDist(RoadmapType* _rm, vector<pair<size_t, VID> >& _ccs) {
     for(auto j = i; j != coms.end(); ++j)
       //dont track the CC distance if i and j are the same
       if(i != j){
-        double dist = dmm->Distance(i->second, j->second);
+        double dist = dm->Distance(i->second, j->second);
         m_ccDist[i->first].push_back(make_pair(j->first, dist));
         m_ccDist[j->first].push_back(make_pair(i->first, dist));
       }

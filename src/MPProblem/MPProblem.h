@@ -2,6 +2,7 @@
 #define MP_PROBLEM_H_
 
 #include <iostream>
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -32,10 +33,20 @@ class MPProblem final
     MPProblem();
 
     /// Instantiate an MPProblem from an XML file.
-    /// @param[in] _filename The name of the XML file.
-    MPProblem(const std::string& _filename);
+    /// @param _filename The name of the XML file.
+    explicit MPProblem(const std::string& _filename);
+
+    MPProblem(const MPProblem& _other); ///< Copy.
+    MPProblem(MPProblem&& _other);      ///< Move.
 
     ~MPProblem();
+
+    ///@}
+    ///@name Assignment
+    ///@{
+
+    MPProblem& operator=(const MPProblem& _other); ///< Copy.
+    MPProblem& operator=(MPProblem&& _other);      ///< Move.
 
     ///@}
     ///@name XML File Parsing
@@ -45,7 +56,7 @@ class MPProblem final
     const std::string& GetXMLFilename() const;
 
     /// Read an XML file.
-    /// @param[in] _filename The XML file name.
+    /// @param _filename The XML file name.
     void ReadXMLFile(const std::string& _filename);
 
     ///@}
@@ -56,7 +67,7 @@ class MPProblem final
     Environment* GetEnvironment();
 
     /// Set the environment object.
-    void SetEnvironment(Environment* _e);
+    void SetEnvironment(std::unique_ptr<Environment>&& _e);
 
     ///@}
     ///@name Robot Accessors
@@ -72,35 +83,40 @@ class MPProblem final
     Robot* GetRobot(const std::string& _label) const;
 
     /// Get all robots in this problem.
-    const std::vector<Robot*>& GetRobots() const noexcept;
+    const std::vector<std::unique_ptr<Robot>>& GetRobots() const noexcept;
 
     ///@}
     ///@name Task Accessors
     ///@{
     /// @TODO Add support for dynamically adding and removing tasks.
 
-    /// Ye olde query. To be removed.
-    const std::string& GetQueryFilename() const {return m_queryFilename;}
-    void SetQueryFilename(const std::string& _s) {m_queryFilename = _s;}
-
     /// Get all of the tasks in this problem.
-    const std::vector<MPTask*>& GetTasks() const noexcept;
+    const std::vector<std::unique_ptr<MPTask>>& GetTasks() const noexcept;
 
     ///@}
     ///@name Debugging
     ///@{
 
-    virtual void Print(std::ostream& _os) const; ///< Print each method set.
+    /// Print the environment, robot, and task information.
+    virtual void Print(std::ostream& _os) const;
 
     ///@}
     ///@name File Path Accessors
     ///@{
 
+    /// Get the base filename for output files.
     const std::string& GetBaseFilename() const;
+
+    /// Set the base filename for output files.
     void SetBaseFilename(const std::string& _s);
 
-    static std::string GetPath(const std::string& _filename);
-    static void SetPath(const std::string& _filename);
+    /// Add the base path for input files to a file name.
+    /// @param _filename The filename to modify.
+    /// @return The base path + filename, or just the path if no name is given.
+    std::string GetPath(const std::string& _filename = "");
+
+    /// Set the base path for input files.
+    void SetPath(const std::string& _filename);
 
     ///@}
 
@@ -110,7 +126,7 @@ class MPProblem final
     ///@{
 
     /// Helper for parsing XML nodes.
-    /// @param[in] _node The child node to be parsed.
+    /// @param _node The child node to be parsed.
     bool ParseChild(XMLNode& _node);
 
     /// Create a pseudo-point robot.
@@ -120,20 +136,18 @@ class MPProblem final
     ///@name Core Properties
     ///@{
 
-    Environment* m_environment{nullptr};  ///< The planning environment.
-    std::vector<Robot*> m_robots;         ///< The robots in our problem.
-    Robot* m_pointRobot{nullptr};         ///< A pseudo point-robot.
-    std::vector<MPTask*> m_tasks;         ///< The tasks in our problem.
+    std::unique_ptr<Environment> m_environment;   ///< The planning environment.
+    std::vector<std::unique_ptr<Robot>> m_robots; ///< The robots in our problem.
+    std::unique_ptr<Robot> m_pointRobot;          ///< A pseudo point-robot.
+    std::vector<std::unique_ptr<MPTask>> m_tasks; ///< The tasks in our problem.
 
     ///@}
     ///@name Files
     ///@{
 
-    std::string m_xmlFilename;     ///< The XML file name.
-    std::string m_baseFilename;    ///< The base name for output files.
-    std::string m_queryFilename;   ///< The query file name.
-
-    static std::string m_filePath; ///< The relative path for the problem XML.
+    std::string m_xmlFilename;   ///< The XML file name.
+    std::string m_baseFilename;  ///< The base name for output files.
+    std::string m_filePath;      ///< The relative path for the problem XML.
 
     ///@}
 

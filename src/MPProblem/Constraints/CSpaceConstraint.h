@@ -21,9 +21,14 @@ class CSpaceConstraint : public Constraint {
     ///@name Construction
     ///@{
 
-    CSpaceConstraint(Robot* const, XMLNode&);
+    /// Construct a constraint from an XML node.
+    /// @param _r The robot to constrain.
+    /// @param _node The node to parse.
+    explicit CSpaceConstraint(Robot* const _r, XMLNode& _node);
 
-    virtual ~CSpaceConstraint() = default;
+    virtual ~CSpaceConstraint();
+
+    virtual std::unique_ptr<Constraint> Clone() const override;
 
     ///@}
     ///@name Constraint Interface

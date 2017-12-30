@@ -18,29 +18,35 @@ WorkspaceConstraint(Robot* const _r, XMLNode& _node) : Constraint(_r) {
   throw RunTimeException(WHERE, "Not yet implemented");
 
   // Parse the label for the part we need to constrain.
-  std::string partLabel = _node.Read("part", true, "", "The label for the robot "
-      "part to constrain.");
-
-  auto mb = m_robot->GetMultiBody();
-
-  // Find the part.
-  for(size_t i = 0; i < mb->GetNumBodies(); ++i) {
-    auto body = mb->GetBody(i);
-    if(body->Label() == partLabel) {
-      m_body = body;
-      break;
-    }
-  }
-
-  // Make sure we found it.
-  if(!m_body)
-    throw ParseException(WHERE, "Could not find robot part with label '" +
-        partLabel + "'.");
+  const std::string partLabel = _node.Read("part", true, "",
+      "The label for the robot part to constrain.");
+  SetPart(partLabel);
 
   // @TODO Parse the constraint data.
 }
 
+
+WorkspaceConstraint::
+~WorkspaceConstraint() = default;
+
+
+std::unique_ptr<Constraint>
+WorkspaceConstraint::
+Clone() const {
+  return std::unique_ptr<WorkspaceConstraint>(new WorkspaceConstraint(*this));
+}
+
 /*------------------------------ Constraint Interface ------------------------*/
+
+void
+WorkspaceConstraint::
+SetRobot(Robot* const _r) {
+  // Update the body pointer.
+  const std::string partLabel = m_body->Label();
+  Constraint::SetRobot(_r);
+  SetPart(partLabel);
+}
+
 
 const Boundary*
 WorkspaceConstraint::
@@ -93,6 +99,28 @@ SetPositionalBound(const size_t _i, const double _min, const double _max) {
         const auto& position = _t.translation();
         return InRange(position[_i], _min, _max);
       });
+}
+
+/*--------------------------------- Helpers ----------------------------------*/
+
+void
+WorkspaceConstraint::
+SetPart(const std::string& _label) {
+  m_body = nullptr;
+  auto mb = m_robot->GetMultiBody();
+
+  for(size_t i = 0; i < mb->GetNumBodies(); ++i) {
+    auto body = mb->GetBody(i);
+    if(body->Label() == _label) {
+      m_body = body;
+      break;
+    }
+  }
+
+  // Make sure we found the constrained part.
+  if(!m_body)
+    throw ParseException(WHERE, "Could not find robot part with label '" +
+        _label + "'.");
 }
 
 /*----------------------------------------------------------------------------*/

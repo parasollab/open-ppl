@@ -1,7 +1,10 @@
 #ifndef AGENT_H_
 #define AGENT_H_
 
+#include <memory>
+
 class Robot;
+class XMLNode;
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -30,9 +33,38 @@ class Agent {
     ///@name Construction
     ///@{
 
+    /// Create an agent for a robot.
+    /// @param _r The robot which this agent will reason for.
     Agent(Robot* const _r);
 
+    /// Copy an agent for another robot.
+    /// @param _r The destination robot.
+    /// @param _a The agent to copy.
+    Agent(Robot* const _r, const Agent& _a);
+
+    /// Create a dynamically-allocated agent from an XML node.
+    /// @param _r The robot which this agent will reason for.
+    /// @param _node The XML node to parse.
+    /// @return An agent of the type specified by _node.
+    static std::unique_ptr<Agent> Factory(Robot* const _r, XMLNode& _node);
+
+    /// Create a copy of this agent for another robot. This is provided so that
+    /// we can copy an agent without knowing its type.
+    virtual std::unique_ptr<Agent> Clone(Robot* const _r) const = 0;
+
     virtual ~Agent();
+
+    ///@}
+    ///@name Disabled Functions
+    ///@{
+    /// Regular copy/move is disabled because each agent must be created for a
+    /// specific robot object.
+
+    Agent(const Agent&) = delete;
+    Agent(Agent&&) = delete;
+
+    Agent& operator=(const Agent&) = delete;
+    Agent& operator=(Agent&&) = delete;
 
     ///@}
     ///@name Simulation Interface
@@ -52,8 +84,9 @@ class Agent {
     virtual void Uninitialize() = 0;
 
     /// Stop the robot in simulation (places 0s in all 6 velocity dofs).
-    /// Currently used for stopping the robot after reaching the end of
-    /// a roadmap path.
+    /// @WARNING Arbitrarily setting the velocity does not respect the robot's
+    ///          dynamics. It is OK for debugging and freezing a scenario upon
+    ///          completion, but it is not physically realistic.
     virtual void Halt();
 
     ///@}

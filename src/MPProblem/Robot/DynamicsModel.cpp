@@ -122,12 +122,6 @@ Get() const noexcept {
   return m_model;
 }
 
-
-DynamicsModel::
-operator btMultiBody*() const noexcept {
-  return m_model;
-}
-
 /*------------------------------ Interface -----------------------------------*/
 
 Cfg

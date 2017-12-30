@@ -28,7 +28,6 @@ class GMSPolygon {
     typedef typename std::vector<Point3d>      PointList;
     typedef typename std::vector<int>          IndexList;
 
-    typedef typename IndexList::iterator       iterator;
     typedef typename IndexList::const_iterator const_iterator;
 
     ///@}
@@ -37,78 +36,110 @@ class GMSPolygon {
 
     /// Default construction is provided for compatibility with STL
     /// containers only. It should not be called otherwise.
-    GMSPolygon() = default;
+    GMSPolygon();
 
     /// Construct a polygon (triangle) from three vertex indexes.
-    GMSPolygon(int _v1, int _v2, int _v3, const PointList& _pts);
+    /// @param _v1 The first vertex index.
+    /// @param _v2 The second vertex index.
+    /// @param _v3 The third vertex index.
+    /// @param _pts The vector holding the vertex data.
+    GMSPolygon(const int _v1, const int _v2, const int _v3,
+        const PointList& _pts);
+
+    /// Construct a polygon from a range of vertex indexes.
+    /// @param _begin An iterator to the front of the range (first index).
+    /// @param _end An iterator to one-past-the-last of the range.
+    /// @param _pts The vector holding the vertex data.
+    GMSPolygon(const_iterator _begin, const_iterator _end,
+        const PointList& _pts);
+
+    ///@}
+    ///@name Iterators
+    ///@{
+    /// Iterate over the vertex indices in this polygon.
+
+    const_iterator begin() const noexcept;
+    const_iterator end() const noexcept;
 
     ///@}
     ///@name Accessors
     ///@}
 
-    iterator begin() {return m_indexes.begin();}
-    iterator end() {return m_indexes.end();}
+    /// Access a vertex index in the polygon.
+    /// @param _i The vertex index in range [0 : n - 1].
+    /// @return The _i'th vertex index in this polygon.
+    const int& operator[](const size_t _i) const noexcept;
 
-    const_iterator begin() const {return m_indexes.begin();}
-    const_iterator end() const {return m_indexes.end();}
+    /// Get the number of vertices in the polygon.
+    size_t GetNumVertices() const noexcept;
 
-    int& operator[](const size_t _i) {return m_indexes[_i];}
-    const int& operator[](const size_t _i) const {return m_indexes[_i];}
+    /// Get the vertex referenced by the _i'th index in the vertex list.
+    /// @param _i The vertex index in range [0 : n - 1].
+    /// @return The vertex which is the _i'th point in this polygon.
+    const Point3d& GetPoint(const size_t _i) const noexcept;
 
-    const size_t GetNumVertices() const {return m_indexes.size();}
+    /// Get the polygon's normal.
+    Vector3d& GetNormal() noexcept;
+    const Vector3d& GetNormal() const noexcept;
 
-    /// Get the actual point referenced by the _i'th index in the vertex list.
-    const Point3d& GetPoint(const size_t _i) const;
-
-    Vector3d& GetNormal() {return m_normal;}
-    const Vector3d& GetNormal() const {return m_normal;}
-
-    const double GetArea() const {return m_area;}
+    /// Get the polygon's area.
+    double GetArea() const noexcept;
 
     ///@}
     ///@name Modifiers
     ///@{
 
-    void Reverse(); ///< Reverse the facing of this polygon.
+    void Reverse();       ///< Reverse the facing of this polygon.
     void ComputeNormal(); ///< Compute the normal and area for this polygon.
 
     ///@}
     ///@name Equality
     ///@{
 
-    const bool operator==(const GMSPolygon& _p) const;
-    const bool operator!=(const GMSPolygon& _p) const;
+    const bool operator==(const GMSPolygon& _p) const noexcept;
+    const bool operator!=(const GMSPolygon& _p) const noexcept;
 
     ///@}
     ///@name Queries
     ///@{
 
-    const bool IsTriangle() const; ///< Test for three unique vertex indexes.
+    /// Test for three unique vertex indexes.
+    const bool IsTriangle() const noexcept;
 
     /// Find the centroid of this polygon.
-    const Point3d FindCenter() const;
+    const Point3d FindCenter() const noexcept;
 
     /// Test whether a point lies above or below the polygon plane. A
     /// point is considered above the plane when it is on the side where
     /// the normal faces outward.
     /// @param[in] _p The point to check.
-    const bool PointIsAbove(const Point3d& _p) const;
+    const bool PointIsAbove(const Point3d& _p) const noexcept;
 
     /// Find a common vertex between two polygons.
     /// @param[in] _p The other polygon under consideration.
     /// @return A common vertex index, or -1 if none exists.
-    const int CommonVertex(const GMSPolygon& _p) const;
+    const int CommonVertex(const GMSPolygon& _p) const noexcept;
 
     /// Find the common edge between two polygons.
     /// @param[in] _p The other polygon under consideration.
     /// @return A pair of vertex indexes if a common edge exists. If not, at
     ///         least one of the indexes will be -1.
-    const std::pair<int, int> CommonEdge(const GMSPolygon& _p) const;
+    const std::pair<int, int> CommonEdge(const GMSPolygon& _p) const noexcept;
 
     ///@}
 
   private:
 
+    ///@name Helpers
+    ///@{
+
+    /// Rotate the vertex list so that the lowest-index point is always first.
+    /// This is required to ensure that polygons constructed from points
+    /// {1, 2, 3} and {2, 3, 1}, which represent the same structure, compare as
+    /// equal.
+    void AlignIndexes() noexcept;
+
+    ///@}
     ///@name Internal State
     ///@{
 

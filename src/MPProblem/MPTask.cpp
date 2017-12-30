@@ -4,7 +4,6 @@
 #include "ConfigurationSpace/Cfg.h"
 #include "MPProblem/MPProblem.h"
 #include "MPProblem/Constraints/Constraint.h"
-#include "MPProblem/Constraints/ConstraintFactory.h"
 #include "MPProblem/Robot/Robot.h"
 #include "Utilities/IOUtils.h"
 #include "Utilities/PMPLExceptions.h"
@@ -14,7 +13,7 @@
 /*------------------------------ Construction --------------------------------*/
 
 MPTask::
-MPTask(Robot* const _robot) : m_robot(_robot) {
+MPTask(Robot& _robot) : m_robot(&_robot) {
   m_label = "null task";
   m_robotLabel = m_robot->GetLabel();
 }
@@ -31,31 +30,61 @@ MPTask(MPProblem* const _problem, XMLNode& _node) {
   m_robot = _problem->GetRobot(m_robotLabel);
 
   // Parse constraints.
-  ConstraintFactory factory;
-
-  for(auto& typeNode : _node) {
-    if(typeNode.Name() == "StartConstraints")
-      for(auto& constraintNode : typeNode)
-        m_startConstraints.push_back(factory(m_robot, constraintNode));
-    else if(typeNode.Name() == "PathConstraints")
-      for(auto& constraintNode : typeNode)
-        m_pathConstraints.push_back(factory(m_robot, constraintNode));
-    else if(typeNode.Name() == "GoalConstraints")
-      for(auto& constraintNode : typeNode)
-        m_goalConstraints.push_back(factory(m_robot, constraintNode));
+  for(auto& child : _node) {
+    if(child.Name() == "StartConstraints") {
+      for(auto& grandChild : child)
+        m_startConstraints.push_back(Constraint::Factory(m_robot, grandChild));
+    }
+    else if(child.Name() == "PathConstraints") {
+      for(auto& grandChild : child)
+        m_pathConstraints.push_back(Constraint::Factory(m_robot, grandChild));
+    }
+    else if(child.Name() == "GoalConstraints") {
+      for(auto& grandChild : child)
+        m_goalConstraints.push_back(Constraint::Factory(m_robot, grandChild));
+    }
   }
 }
 
 
 MPTask::
-~MPTask() {
-  for(auto c : m_startConstraints)
-    delete c;
-  for(auto c : m_pathConstraints)
-    delete c;
-  for(auto c : m_goalConstraints)
-    delete c;
+MPTask(const MPTask& _other) {
+  *this = _other;
 }
+
+
+MPTask::
+MPTask(MPTask&& _other) = default;
+
+
+MPTask::
+~MPTask() = default;
+
+/*-------------------------------- Assignment --------------------------------*/
+
+MPTask&
+MPTask::
+operator=(const MPTask& _other) {
+  if(this != &_other) {
+    m_label      = _other.m_label;
+    m_robotLabel = _other.m_robotLabel;
+    m_robot      = _other.m_robot;
+
+    for(const auto& c : _other.m_startConstraints)
+      m_startConstraints.push_back(c->Clone());
+    for(const auto& c : _other.m_pathConstraints)
+      m_pathConstraints.push_back(c->Clone());
+    for(const auto& c : _other.m_goalConstraints)
+      m_goalConstraints.push_back(c->Clone());
+  }
+
+  return *this;
+}
+
+
+MPTask&
+MPTask::
+operator=(MPTask&& _other) = default;
 
 /*--------------------------- Property Accessors -----------------------------*/
 
@@ -65,44 +94,59 @@ GetRobot() const noexcept {
   return m_robot;
 }
 
+
+void
+MPTask::
+SetRobot(Robot* const _r) {
+  m_robot = _r;
+  m_robotLabel = _r->GetLabel();
+
+  for(auto& c : m_startConstraints)
+    c->SetRobot(_r);
+  for(auto& c : m_pathConstraints)
+    c->SetRobot(_r);
+  for(auto& c : m_goalConstraints)
+    c->SetRobot(_r);
+}
+
 /*-------------------------- Constraint Accessors ----------------------------*/
 
 void
 MPTask::
-AddStartConstraint(Constraint* const _c) {
-  m_startConstraints.push_back(_c);
+AddStartConstraint(std::unique_ptr<Constraint>&& _c) {
+  m_startConstraints.push_back(std::move(_c));
 }
 
 
 void
 MPTask::
-AddPathConstraint(Constraint* const _c) {
-  m_pathConstraints.push_back(_c);
+AddPathConstraint(std::unique_ptr<Constraint>&& _c) {
+  m_pathConstraints.push_back(std::move(_c));
 }
 
 
 void
 MPTask::
-AddGoalConstraint(Constraint* const _c) {
-  m_goalConstraints.push_back(_c);
+AddGoalConstraint(std::unique_ptr<Constraint>&& _c) {
+  m_goalConstraints.push_back(std::move(_c));
 }
 
 
-const std::vector<Constraint*>&
+const MPTask::ConstraintSet&
 MPTask::
 GetStartConstraints() const noexcept {
   return m_startConstraints;
 }
 
 
-const std::vector<Constraint*>&
+const MPTask::ConstraintSet&
 MPTask::
 GetPathConstraints() const noexcept {
   return m_pathConstraints;
 }
 
 
-const std::vector<Constraint*>&
+const MPTask::ConstraintSet&
 MPTask::
 GetGoalConstraints() const noexcept {
   return m_goalConstraints;
@@ -179,7 +223,7 @@ EvaluateGoalConstraints(const std::vector<Cfg>& _p) const {
 bool
 MPTask::
 EvaluateConstraints(const std::vector<Cfg>& _p,
-    const std::vector<Constraint*>& _constraints) const {
+    const MPTask::ConstraintSet& _constraints) const {
   const auto& cfg = _p.back();
   for(const auto& constraint : _constraints)
     if(!constraint->Satisfied(cfg))
@@ -190,19 +234,16 @@ EvaluateConstraints(const std::vector<Cfg>& _p,
 
 const Boundary*
 MPTask::
-MakeComposeBoundary(const std::vector<Constraint*>& _constraints) const noexcept {
-  //Boundary* out = nullptr;
-  //for(const auto& constraint : _constraints)
-  //  /// @TODO Create a composed boundary from the constraint boundaries.
-  //  constraint->GetBoundary();
-  //return out;
+MakeComposeBoundary(const MPTask::ConstraintSet& _constraints) const noexcept {
+  /// @TODO Create a composed boundary from the constraint boundaries. We should
+  ///       cache this to avoid re-building the boundary repeatedly.
 
-  // If the constraint set is empty, return a null boundary.
   if(_constraints.empty())
     return nullptr;
 
-  std::cout << "Warning: MPTask is currently creating constraint boundaries from "
-            << "only the first constraint in each set!" << endl;
+  std::cout << "Warning: MPTask is currently creating constraint boundaries "
+            << "from only the first constraint in each set!"
+            << std::endl;
   return _constraints.front()->GetBoundary();
 }
 

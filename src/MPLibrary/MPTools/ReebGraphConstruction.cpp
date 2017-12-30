@@ -10,6 +10,7 @@
 #include "MPProblem/MPProblem.h"
 #include "Workspace/WorkspaceDecomposition.h"
 #include "Workspace/WorkspaceSkeleton.h"
+#include "Utilities/IOUtils.h"
 #include "Utilities/XMLNode.h"
 
 
@@ -23,20 +24,16 @@ ReebGraphConstruction::
 ReebGraphConstruction() : m_params(m_defaultParams) {}
 
 
-ReebGraphConstruction::
-ReebGraphConstruction(const std::string& _filename, const bool _write) :
-    ReebGraphConstruction() {
-  m_params.filename = _filename;
-  m_params.write = _write;
-}
-
-
 void
 ReebGraphConstruction::
 SetDefaultParameters(XMLNode& _node) {
-  m_defaultParams.filename = _node.Read("filename", false,
-      m_defaultParams.filename,
+  auto& filename = m_defaultParams.filename;
+  filename = _node.Read("filename", false, filename,
       "Filename for read or write ReebGraph operations.");
+
+  // If the filename isn't empty, prepend the base path from the XML file.
+  if(!filename.empty())
+    filename = GetPathName(_node.Filename()) + filename;
 
   m_defaultParams.write = _node.Read("write", false, m_defaultParams.write,
       "Write Reeb Graph to file");
@@ -49,18 +46,17 @@ SetDefaultParameters(XMLNode& _node) {
 
 void
 ReebGraphConstruction::
-Construct(const WorkspaceDecomposition* _decomposition,
-    const string& _baseFilename) {
+Construct(const WorkspaceDecomposition* _decomposition) {
   if(m_params.filename.empty()) {
     Initialize(_decomposition);
     Construct();
     Embed(_decomposition);
 
     if(m_params.write)
-      Write(_baseFilename + ".reeb");
+      Write(m_params.filename);
   }
   else
-    Read(MPProblem::GetPath(m_params.filename));
+    Read(m_params.filename);
 }
 
 

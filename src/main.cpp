@@ -24,7 +24,7 @@ main(int _argc, char** _argv) {
 
     // Create storage for the solution and ask the library to solve our problem.
     /// @TODO Generalize this to handle more than just the first task.
-    MPTask* task = problem->GetTasks().front();
+    MPTask* task = problem->GetTasks().front().get();
     pmpl->Solve(problem, task);
 
     // Release resources.

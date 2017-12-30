@@ -20,6 +20,10 @@ NBox(const std::vector<double>& _center) : m_center(_center),
                                            std::numeric_limits<double>::max())) {
 }
 
+
+NBox::
+~NBox() noexcept = default;
+
 /*------------------------------- Accessors ----------------------------------*/
 
 size_t
@@ -189,7 +193,7 @@ operator>>(std::istream& _is, NBox& _box) {
     throw ParseException(WHERE, "Failed reading NBox bounds. Missing '['.");
 
   Range<double> r;
-  while(1) {
+  while(true) {
     // Read the next range.
     if(!(_is >> r))
       throw ParseException(WHERE, "Failed reading NBox range " +

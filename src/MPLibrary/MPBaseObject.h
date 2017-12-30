@@ -3,7 +3,10 @@
 
 #include <iostream>
 #include <string>
+///@TODO Remove this everywhere. We should never have 'using namespace'
+///      directives in header files.
 using namespace std;
+///
 
 #include "MPProblem/MPProblem.h"
 #include "Utilities/IOUtils.h"
@@ -13,6 +16,7 @@ using namespace std;
 class Environment;
 class MPTask;
 class StatClass;
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Abstract base class for all algorithm abstractions in PMPL.
@@ -63,7 +67,7 @@ class MPBaseObject {
     /// @param _label ID of the object, i.e., user defined label
     /// @param _name Name of the object, i.e., derived class name
     /// @param _debug Turn debug output on or off
-    MPBaseObject(const string& _label = "", const string& _name = "",
+    MPBaseObject(const std::string& _label = "", const std::string& _name = "",
         bool _debug = false);
 
     /// XML constructor pulls label and debug from an XML node.
@@ -101,16 +105,16 @@ class MPBaseObject {
     ///@{
 
     /// Get the class name for this object.
-    const string& GetName() const {return m_name;}
+    const std::string& GetName() const;
 
     /// Get the unique label for this object.
-    const string& GetLabel() const {return m_label;}
+    const std::string& GetLabel() const;
 
     /// Get the unique string identifier for this object "m_name::m_label".
-    string GetNameAndLabel() const;
+    std::string GetNameAndLabel() const;
 
     /// Set the unique label for this object.
-    void SetLabel(const string&);
+    void SetLabel(const std::string&);
 
     ///@}
     ///@name MPLibrary Accessors
@@ -123,37 +127,37 @@ class MPBaseObject {
     MPLibrary* GetMPLibrary() const noexcept;
 
     /// Get a distance metric by label from the owning MPLibrary.
-    DistanceMetricPointer GetDistanceMetric(const string&) const noexcept;
+    DistanceMetricPointer GetDistanceMetric(const std::string&) const noexcept;
 
     /// Get a validity checker by label from the owning MPLibrary.
-    ValidityCheckerPointer GetValidityChecker(const string&) const noexcept;
+    ValidityCheckerPointer GetValidityChecker(const std::string&) const noexcept;
 
     /// Get a neighborhood finder by label from the owning MPLibrary.
-    NeighborhoodFinderPointer GetNeighborhoodFinder(const string&) const noexcept;
+    NeighborhoodFinderPointer GetNeighborhoodFinder(const std::string&) const noexcept;
 
     /// Get a sampler by label from the owning MPLibrary.
-    SamplerPointer GetSampler(const string&) const noexcept;
+    SamplerPointer GetSampler(const std::string&) const noexcept;
 
     /// Get a local planner by label from the owning MPLibrary.
-    LocalPlannerPointer GetLocalPlanner(const string&) const noexcept;
+    LocalPlannerPointer GetLocalPlanner(const std::string&) const noexcept;
 
     /// Get an extender by label from the owning MPLibrary.
-    ExtenderPointer GetExtender(const string&) const noexcept;
+    ExtenderPointer GetExtender(const std::string&) const noexcept;
 
     /// Get a path modifier by label from the owning MPLibrary.
-    PathModifierPointer GetPathModifier(const string&) const noexcept;
+    PathModifierPointer GetPathModifier(const std::string&) const noexcept;
 
     /// Get a connector by label from the owning MPLibrary.
-    ConnectorPointer GetConnector(const string&) const noexcept;
+    ConnectorPointer GetConnector(const std::string&) const noexcept;
 
     /// Get a metric by label from the owning MPLibrary.
-    MetricPointer GetMetric(const string&) const noexcept;
+    MetricPointer GetMetric(const std::string&) const noexcept;
 
     /// Get a map evaluator by label from the owning MPLibrary.
-    MapEvaluatorPointer GetMapEvaluator(const string&) const noexcept;
+    MapEvaluatorPointer GetMapEvaluator(const std::string&) const noexcept;
 
     /// Get a strategy by label from the owning MPLibrary.
-    MPStrategyPointer GetMPStrategy(const string&) const noexcept;
+    MPStrategyPointer GetMPStrategy(const std::string&) const noexcept;
 
     /// Get the MPTools container from the owning MPLibrary.
     typename MPTraits::MPTools* GetMPTools() const noexcept;
@@ -167,9 +171,6 @@ class MPBaseObject {
 
     /// Get the current environment.
     Environment* GetEnvironment() const noexcept;
-
-    /// Get the current query filename.
-    string GetQueryFilename() const noexcept;
 
     /// Get the current task.
     MPTask* GetTask() const noexcept;
@@ -195,10 +196,10 @@ class MPBaseObject {
   protected:
 
     /// @param _s Class name
-    void SetName(const string& _s) {m_name = _s;}
+    void SetName(const std::string& _s) {m_name = _s;}
 
     /// @return base file name from MPProblem
-    const string& GetBaseFilename() const {
+    const std::string& GetBaseFilename() const {
       return GetMPProblem()->GetBaseFilename();
     }
 
@@ -206,8 +207,8 @@ class MPBaseObject {
 
   private:
 
-    string m_name;                 ///< Class name
-    string m_label;                ///< Unique identifier.
+    std::string m_name;            ///< Class name
+    std::string m_label;           ///< Unique identifier.
     MPLibrary* m_library{nullptr}; ///< The owning MPLibrary.
 
     template<typename T, typename U> friend class MethodSet;
@@ -217,7 +218,7 @@ class MPBaseObject {
 
 template <typename MPTraits>
 MPBaseObject<MPTraits>::
-MPBaseObject(const string& _label, const string& _name, bool _debug) :
+MPBaseObject(const std::string& _label, const std::string& _name, bool _debug) :
     m_debug(_debug), m_name(_name), m_label(_label) { }
 
 
@@ -241,7 +242,25 @@ Print(ostream& _os) const {
 
 template <typename MPTraits>
 inline
-string
+const std::string&
+MPBaseObject<MPTraits>::
+GetName() const {
+  return m_name;
+}
+
+
+template <typename MPTraits>
+inline
+const std::string&
+MPBaseObject<MPTraits>::
+GetLabel() const {
+  return m_label;
+}
+
+
+template <typename MPTraits>
+inline
+std::string
 MPBaseObject<MPTraits>::
 GetNameAndLabel() const {
   return m_name + "::" + m_label;
@@ -252,7 +271,7 @@ template <typename MPTraits>
 inline
 void
 MPBaseObject<MPTraits>::
-SetLabel(const string& _s) {
+SetLabel(const std::string& _s) {
   m_label = _s;
 }
 
@@ -280,7 +299,7 @@ template <typename MPTraits>
 inline
 typename MPBaseObject<MPTraits>::DistanceMetricPointer
 MPBaseObject<MPTraits>::
-GetDistanceMetric(const string& _label) const noexcept {
+GetDistanceMetric(const std::string& _label) const noexcept {
   return m_library->GetDistanceMetric(_label);
 }
 
@@ -289,7 +308,7 @@ template <typename MPTraits>
 inline
 typename MPBaseObject<MPTraits>::ValidityCheckerPointer
 MPBaseObject<MPTraits>::
-GetValidityChecker(const string& _label) const noexcept {
+GetValidityChecker(const std::string& _label) const noexcept {
   return m_library->GetValidityChecker(_label);
 }
 
@@ -298,7 +317,7 @@ template <typename MPTraits>
 inline
 typename MPBaseObject<MPTraits>::NeighborhoodFinderPointer
 MPBaseObject<MPTraits>::
-GetNeighborhoodFinder(const string& _label) const noexcept {
+GetNeighborhoodFinder(const std::string& _label) const noexcept {
   return m_library->GetNeighborhoodFinder(_label);
 }
 
@@ -307,7 +326,7 @@ template <typename MPTraits>
 inline
 typename MPBaseObject<MPTraits>::SamplerPointer
 MPBaseObject<MPTraits>::
-GetSampler(const string& _label) const noexcept {
+GetSampler(const std::string& _label) const noexcept {
   return m_library->GetSampler(_label);
 }
 
@@ -316,7 +335,7 @@ template <typename MPTraits>
 inline
 typename MPBaseObject<MPTraits>::LocalPlannerPointer
 MPBaseObject<MPTraits>::
-GetLocalPlanner(const string& _label) const noexcept {
+GetLocalPlanner(const std::string& _label) const noexcept {
   return m_library->GetLocalPlanner(_label);
 }
 
@@ -325,7 +344,7 @@ template <typename MPTraits>
 inline
 typename MPBaseObject<MPTraits>::ExtenderPointer
 MPBaseObject<MPTraits>::
-GetExtender(const string& _label) const noexcept {
+GetExtender(const std::string& _label) const noexcept {
   return m_library->GetExtender(_label);
 }
 
@@ -334,7 +353,7 @@ template <typename MPTraits>
 inline
 typename MPBaseObject<MPTraits>::PathModifierPointer
 MPBaseObject<MPTraits>::
-GetPathModifier(const string& _label) const noexcept {
+GetPathModifier(const std::string& _label) const noexcept {
   return m_library->GetPathModifier(_label);
 }
 
@@ -343,7 +362,7 @@ template <typename MPTraits>
 inline
 typename MPBaseObject<MPTraits>::ConnectorPointer
 MPBaseObject<MPTraits>::
-GetConnector(const string& _label) const noexcept {
+GetConnector(const std::string& _label) const noexcept {
   return m_library->GetConnector(_label);
 }
 
@@ -352,7 +371,7 @@ template <typename MPTraits>
 inline
 typename MPBaseObject<MPTraits>::MetricPointer
 MPBaseObject<MPTraits>::
-GetMetric(const string& _label) const noexcept {
+GetMetric(const std::string& _label) const noexcept {
   return m_library->GetMetric(_label);
 }
 
@@ -361,7 +380,7 @@ template <typename MPTraits>
 inline
 typename MPBaseObject<MPTraits>::MapEvaluatorPointer
 MPBaseObject<MPTraits>::
-GetMapEvaluator(const string& _label) const noexcept {
+GetMapEvaluator(const std::string& _label) const noexcept {
   return m_library->GetMapEvaluator(_label);
 }
 
@@ -370,7 +389,7 @@ template <typename MPTraits>
 inline
 typename MPBaseObject<MPTraits>::MPStrategyPointer
 MPBaseObject<MPTraits>::
-GetMPStrategy(const string& _label) const noexcept {
+GetMPStrategy(const std::string& _label) const noexcept {
   return m_library->GetMPStrategy(_label);
 }
 
@@ -400,15 +419,6 @@ Environment*
 MPBaseObject<MPTraits>::
 GetEnvironment() const noexcept {
   return GetMPProblem()->GetEnvironment();
-}
-
-
-template <typename MPTraits>
-inline
-string
-MPBaseObject<MPTraits>::
-GetQueryFilename() const noexcept {
-  return GetMPProblem()->GetQueryFilename();
 }
 
 

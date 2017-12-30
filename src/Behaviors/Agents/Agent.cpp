@@ -1,18 +1,60 @@
 #include "Agent.h"
 
-#include <iostream>
+#ifdef PMPL_SIMULATOR
+#include "PathFollowingAgent.h"
+#include "RoadmapFollowingAgent.h"
+#endif
 
 #include "BulletDynamics/Featherstone/btMultiBody.h"
 #include "BulletDynamics/Featherstone/btMultiBodyLink.h"
 #include "MPProblem/Robot/DynamicsModel.h"
 #include "MPProblem/Robot/Robot.h"
+#include "Utilities/XMLNode.h"
 
+#include <iostream>
 
 
 /*------------------------------ Construction --------------------------------*/
 
 Agent::
 Agent(Robot* const _r) : m_robot(_r) { }
+
+
+Agent::
+Agent(Robot* const _r, const Agent& _a)
+  : m_robot(_r),
+    m_initialized(_a.m_initialized),
+    m_debug(_a.m_debug)
+{ }
+
+
+std::unique_ptr<Agent>
+Agent::
+Factory(Robot* const _r, XMLNode& _node) {
+  // Read the node and mark it as visited.
+  std::string type = _node.Read("type", true, "", "The Agent class name.");
+  std::transform(type.begin(), type.end(), type.begin(), ::tolower);
+
+  std::unique_ptr<Agent> output;
+
+#ifdef PMPL_SIMULATOR
+  if(type == "pathfollowing")
+    output = std::unique_ptr<PathFollowingAgent>(
+        new PathFollowingAgent(_r, _node)
+    );
+  else if(type == "roadmapfollowing")
+    output = std::unique_ptr<RoadmapFollowingAgent>(
+        new RoadmapFollowingAgent(_r, _node)
+    );
+  else
+    throw ParseException(_node.Where(), "Unknown agent type '" + type + "'.");
+#else
+  // If we are not building the simulator, ignore the agent node.
+  _node.Ignore();
+#endif
+
+  return output;
+}
 
 
 Agent::
@@ -25,11 +67,6 @@ Agent::
 Halt() {
   // Zero the robot's velocity so that we can tell that it has completed its
   // path by visual inspection.
-  /// @WARNING Arbitrarily setting the velocity does not respect the robot's
-  ///          dynamics. It is OK for now because we have not yet tried to make
-  ///          the robot do anything after traveling one path. For more complex
-  ///          behavior (like TMP type problems) where the robot will travel
-  ///          multiple paths, this will need to be removed.
   btMultiBody* body = m_robot->GetDynamicsModel()->Get();
   body->setBaseVel({0,0,0});
   body->setBaseOmega({0,0,0});

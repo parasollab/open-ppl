@@ -4,6 +4,13 @@
 #include "Geometry/Bodies/MultiBody.h"
 
 #include "Utilities/MetricUtils.h"
+#include "Utilities/XMLNode.h"
+
+
+/*------------------------------- Construction -------------------------------*/
+
+Boundary::
+~Boundary() noexcept = default;
 
 /*--------------------------- Containment Testing ----------------------------*/
 

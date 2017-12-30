@@ -14,16 +14,16 @@ class WorkspaceBoundingSphere : public AbstractBoundingSphere {
     ///@name Construction
     ///@{
 
-    WorkspaceBoundingSphere(const size_t _n,
+    explicit WorkspaceBoundingSphere(const size_t _n,
         const double _radius = std::numeric_limits<double>::max());
 
-    WorkspaceBoundingSphere(const std::vector<double>& _center,
+    explicit WorkspaceBoundingSphere(const std::vector<double>& _center,
         const double _radius = std::numeric_limits<double>::max());
 
-    WorkspaceBoundingSphere(const Vector3d& _center,
+    explicit WorkspaceBoundingSphere(const Vector3d& _center,
         const double _radius = std::numeric_limits<double>::max());
 
-    virtual ~WorkspaceBoundingSphere() = default;
+    virtual ~WorkspaceBoundingSphere() noexcept;
 
     virtual std::unique_ptr<Boundary> Clone() const override;
 

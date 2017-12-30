@@ -7,7 +7,9 @@
     <Environment filename="3D/3d.env"
       frictionCoefficient="0" gravityX="0" gravityY="0" gravityZ="0"/>
 
-    <Robot label="boxy" filename="3D/boxy.robot"/>
+    <Robot label="boxy" filename="3D/boxy.robot">
+      <Agent type="pathfollowing"/>
+    </Robot>
 
     <!-- WARNING Support for multiple constraints is not yet implemented! -->
     <!-- WARNING Workspace constraints are not finished and untested! -->

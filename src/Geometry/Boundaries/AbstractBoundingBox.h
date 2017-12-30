@@ -24,7 +24,7 @@ class AbstractBoundingBox :  public Boundary, public NBox {
     /// @param[in] _n The number of dimensions.
     explicit AbstractBoundingBox(const std::vector<double>& _center);
 
-    virtual ~AbstractBoundingBox() = default;
+    virtual ~AbstractBoundingBox() noexcept;
 
     ///@}
     ///@name Property Accesors

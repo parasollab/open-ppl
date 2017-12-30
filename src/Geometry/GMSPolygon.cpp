@@ -9,22 +9,80 @@ using namespace std;
 /*-------------------------------- Construction ------------------------------*/
 
 GMSPolygon::
-GMSPolygon(int _v1, int _v2, int _v3, const vector<Point3d>& _pts) :
-    m_indexes{_v1, _v2, _v3}, m_pointList(&_pts) {
-  // Rotate the vertex list so that the lowest-index point is always first. This
-  // is required to ensure that polygons constructed from points {1, 2, 3} and
-  // {2, 3, 1}, which represent the same structure, compare as equal.
-  auto iter = min_element(m_indexes.begin(), m_indexes.end());
-  rotate(m_indexes.begin(), iter, m_indexes.end());
+GMSPolygon() = default;
+
+
+GMSPolygon::
+GMSPolygon(const int _v1, const int _v2, const int _v3,
+    const vector<Point3d>& _pts) : m_indexes{_v1, _v2, _v3}, m_pointList(&_pts) {
+  AlignIndexes();
   ComputeNormal();
+}
+
+
+GMSPolygon::
+GMSPolygon(const_iterator _begin, const_iterator _end, const PointList& _pts)
+    : m_indexes(_begin, _end), m_pointList(&_pts) {
+  AlignIndexes();
+  ComputeNormal();
+}
+
+/*-------------------------------- Iterators ---------------------------------*/
+
+GMSPolygon::const_iterator
+GMSPolygon::
+begin() const noexcept {
+  return m_indexes.begin();
+}
+
+
+GMSPolygon::const_iterator
+GMSPolygon::
+end() const noexcept {
+  return m_indexes.end();
 }
 
 /*--------------------------------- Accessors --------------------------------*/
 
+const int&
+GMSPolygon::
+operator[](const size_t _i) const noexcept {
+  return m_indexes[_i];
+}
+
+
+size_t
+GMSPolygon::
+GetNumVertices() const noexcept {
+  return m_indexes.size();
+}
+
+
 const Point3d&
 GMSPolygon::
-GetPoint(const size_t _i) const {
+GetPoint(const size_t _i) const noexcept {
   return (*m_pointList)[m_indexes[_i]];
+}
+
+
+Vector3d&
+GMSPolygon::
+GetNormal() noexcept {
+  return m_normal;
+}
+
+
+const Vector3d&
+GMSPolygon::
+GetNormal() const noexcept {
+  return m_normal;
+}
+
+
+double
+GMSPolygon::
+GetArea() const noexcept {
+  return m_area;
 }
 
 /*--------------------------------- Modifiers --------------------------------*/
@@ -32,7 +90,7 @@ GetPoint(const size_t _i) const {
 void
 GMSPolygon::
 Reverse() {
-  reverse(++m_indexes.begin(), m_indexes.end());
+  std::reverse(++m_indexes.begin(), m_indexes.end());
   m_normal *= -1;
 }
 
@@ -52,7 +110,7 @@ ComputeNormal() {
 
 const bool
 GMSPolygon::
-operator==(const GMSPolygon& _p) const {
+operator==(const GMSPolygon& _p) const noexcept {
   return m_area == _p.m_area
       && m_pointList == _p.m_pointList
       && m_normal == _p.m_normal
@@ -62,7 +120,7 @@ operator==(const GMSPolygon& _p) const {
 
 const bool
 GMSPolygon::
-operator!=(const GMSPolygon& _p) const {
+operator!=(const GMSPolygon& _p) const noexcept {
   return !(*this == _p);
 }
 
@@ -70,7 +128,7 @@ operator!=(const GMSPolygon& _p) const {
 
 const bool
 GMSPolygon::
-IsTriangle() const {
+IsTriangle() const noexcept {
   return m_indexes.size() == 3 &&
       m_indexes[0] != m_indexes[1] &&
       m_indexes[1] != m_indexes[2] &&
@@ -80,7 +138,7 @@ IsTriangle() const {
 
 const Point3d
 GMSPolygon::
-FindCenter() const {
+FindCenter() const noexcept {
   Point3d center;
   for(size_t i = 0; i < m_indexes.size(); ++i)
     center += GetPoint(i);
@@ -90,14 +148,14 @@ FindCenter() const {
 
 const bool
 GMSPolygon::
-PointIsAbove(const Point3d& _p) const {
+PointIsAbove(const Point3d& _p) const noexcept {
   return (_p - GetPoint(0)) * m_normal > 0;
 }
 
 
 const int
 GMSPolygon::
-CommonVertex(const GMSPolygon& _p) const {
+CommonVertex(const GMSPolygon& _p) const noexcept {
   for(size_t i = 0; i < m_indexes.size(); ++i) {
     for(size_t j = 0; j < m_indexes.size(); ++j) {
       if(m_indexes[i] == _p.m_indexes[j]) {
@@ -109,10 +167,10 @@ CommonVertex(const GMSPolygon& _p) const {
 }
 
 
-const pair<int, int>
+const std::pair<int, int>
 GMSPolygon::
-CommonEdge(const GMSPolygon& _p) const {
-  pair<int, int> edgeID(-1, -1);
+CommonEdge(const GMSPolygon& _p) const noexcept {
+  std::pair<int, int> edgeID(-1, -1);
   for(size_t i = 0; i < m_indexes.size(); ++i) {
     for(size_t j = 0; j < m_indexes.size(); ++j) {
       if(m_indexes[i] == _p.m_indexes[j]) {
@@ -124,6 +182,15 @@ CommonEdge(const GMSPolygon& _p) const {
     }
   }
   return edgeID;
+}
+
+/*--------------------------------- Helpers ----------------------------------*/
+
+void
+GMSPolygon::
+AlignIndexes() noexcept {
+  auto iter = std::min_element(m_indexes.begin(), m_indexes.end());
+  std::rotate(m_indexes.begin(), iter, m_indexes.end());
 }
 
 /*----------------------------------------------------------------------------*/

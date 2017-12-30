@@ -148,6 +148,20 @@ Read(const std::string& _name, const bool _req, const std::string& _default,
 
 void
 XMLNode::
+Ignore() {
+  m_accessed = true;
+
+  // Set the list of requested attributes to those found in the node.
+  m_reqAttributes.clear();
+  for(const TiXmlAttribute* attr = m_node->ToElement()->FirstAttribute();
+      attr != nullptr; attr = attr->Next()) {
+    m_reqAttributes.insert(attr->Name());
+  }
+}
+
+
+void
+XMLNode::
 WarnAll(const bool _warningsAsErrors) {
   ComputeAccessed();
   bool anyWarnings = false;

@@ -22,6 +22,10 @@ WorkspaceBoundingSphere(const std::vector<double>& _center, const double _radius
 
 
 WorkspaceBoundingSphere::
+~WorkspaceBoundingSphere() noexcept = default;
+
+
+WorkspaceBoundingSphere::
 WorkspaceBoundingSphere(const Vector3d& _center, const double _radius)
   : AbstractBoundingSphere({_center[0], _center[1], _center[2]}, _radius) { }
 
@@ -29,7 +33,9 @@ WorkspaceBoundingSphere(const Vector3d& _center, const double _radius)
 std::unique_ptr<Boundary>
 WorkspaceBoundingSphere::
 Clone() const {
-  return std::unique_ptr<Boundary>(new WorkspaceBoundingSphere(*this));
+  return std::unique_ptr<WorkspaceBoundingSphere>(
+      new WorkspaceBoundingSphere(*this)
+  );
 }
 
 /*---------------------------- Property Accessors ----------------------------*/

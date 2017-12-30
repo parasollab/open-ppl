@@ -17,7 +17,7 @@ void
 Rapid::
 Build(Body* const _body) {
   const GMSPolyhedron& poly = _body->GetPolyhedron();
-  RAPID_model* rapidBody = new RAPID_model;
+  std::unique_ptr<RAPID_model> rapidBody(new RAPID_model);
   rapidBody->BeginModel();
   for(size_t q = 0; q < poly.m_polygonList.size(); q++) {
     double point[3][3];
@@ -29,7 +29,7 @@ Build(Body* const _body) {
     rapidBody->AddTri(point[0], point[1], point[2], q);
   }
   rapidBody->EndModel();
-  _body->SetRapidBody(rapidBody);
+  _body->SetRapidBody(std::move(rapidBody));
 }
 
 

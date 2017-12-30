@@ -16,6 +16,10 @@ NSphere::
 NSphere(const std::vector<double>& _c, const double _r) : m_center(_c),
     m_radius(_r) { }
 
+
+NSphere::
+~NSphere() noexcept = default;
+
 /*------------------------------- Accessors ----------------------------------*/
 
 size_t
@@ -143,7 +147,7 @@ operator>>(std::istream& _is, NSphere& _sphere) {
 
   // Read the center point values.
   double temp;
-  while(1) {
+  while(true) {
     // Eat white space.
     _is >> std::ws;
 

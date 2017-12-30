@@ -24,16 +24,58 @@ MPProblem(const string& _filename) {
 
 
 MPProblem::
-~MPProblem() {
-  delete m_environment;
-
-  delete m_pointRobot;
-  for(auto robot : m_robots)
-    delete robot;
-
-  for(auto task : m_tasks)
-    delete task;
+MPProblem(const MPProblem& _other) {
+  *this = _other;
 }
+
+
+MPProblem::
+MPProblem(MPProblem&& _other) = default;
+
+
+MPProblem::
+~MPProblem() = default;
+
+/*-------------------------------- Assignment --------------------------------*/
+
+MPProblem&
+MPProblem::
+operator=(const MPProblem& _other) {
+  // Guard against self-assignment.
+  if(this == &_other)
+    return *this;
+
+  // Copy environment.
+  m_environment = std::unique_ptr<Environment>(
+      new Environment(*_other.m_environment)
+  );
+
+  // Copy robots.
+  for(const auto& robot : _other.m_robots)
+    m_robots.emplace_back(new Robot(this, *robot));
+
+  // Copy tasks.
+  for(const auto& task : _other.m_tasks) {
+    // Copy the task from _other and assign it to the corresponding robot in
+    // this.
+    const std::string robotLabel = task->GetRobot()->GetLabel();
+    auto robot = this->GetRobot(robotLabel);
+
+    m_tasks.emplace_back(new MPTask(*task));
+    m_tasks.back()->SetRobot(robot);
+  }
+
+  m_xmlFilename = _other.m_xmlFilename;
+  m_baseFilename = _other.m_baseFilename;
+  m_filePath = _other.m_filePath;
+
+  return *this;
+}
+
+
+MPProblem&
+MPProblem::
+operator=(MPProblem&& _other) = default;
 
 /*---------------------------- XML Helpers -----------------------------------*/
 
@@ -47,7 +89,7 @@ GetXMLFilename() const {
 void
 MPProblem::
 ReadXMLFile(const string& _filename) {
-  const bool envIsSet = m_environment;
+  const bool envIsSet = m_environment.get();
 
   size_t sl = _filename.rfind("/");
   m_filePath = _filename.substr(0, sl == string::npos ? 0 : sl + 1);
@@ -92,55 +134,16 @@ ReadXMLFile(const string& _filename) {
           "node, but multiple robots are specified. Taskless execution only "
           "supports single robot problems.");
 
-    auto robot = m_robots.front();
+    auto& robot = m_robots.front();
     std::cout << "No task specified, assuming we want an unconstrained plan for "
-              << "the first robot, labeled \'" << robot->GetLabel() << "\'.\n";
+              << "the first robot, labeled \'" << robot->GetLabel() << "\'."
+              << std::endl;
 
-    std::cout << *robot << std::endl;
-
-    MPTask* nullTask = new MPTask(robot);
-    m_tasks.push_back(nullTask);
+    m_tasks.emplace_back(new MPTask(*robot));
   }
 
   // Compute the environment resolution.
   GetEnvironment()->ComputeResolution(GetRobots());
-
-  // Make a point robot that can do volumetric translational movement.
-  // It shouldn't be counted in the number of robots for MPProblem.
-  MakePointRobot();
-}
-
-
-bool
-MPProblem::
-ParseChild(XMLNode& _node) {
-  if(_node.Name() == "Environment") {
-    // Ignore this node if we already have an environment.
-    if(!m_environment)
-      m_environment = new Environment(_node);
-    return true;
-  }
-  else if(_node.Name() == "Robot") {
-    /// @TODO We currently assume that the environment is parsed first. Need to
-    ///       make sure this always happens regardless of the XML file ordering.
-    auto robot = new Robot(this, _node);
-    m_robots.push_back(robot);
-    return true;
-  }
-  else if(_node.Name() == "Query") {
-    /// @TODO Remove this as part of deleting ye olde query.
-    // Ignore this node if we already have a query file.
-    if(m_queryFilename.empty())
-      m_queryFilename = _node.Read("filename", true, "", "Query file name");
-    return true;
-  }
-  else if(_node.Name() == "Task") {
-    MPTask* newTask = new MPTask(this, _node);
-    m_tasks.push_back(newTask);
-    return true;
-  }
-  else
-    return false;
 }
 
 /*----------------------------- Environment Accessors ------------------------*/
@@ -148,14 +151,19 @@ ParseChild(XMLNode& _node) {
 Environment*
 MPProblem::
 GetEnvironment() {
-  return m_environment;
+  return m_environment.get();
 }
 
 
 void
 MPProblem::
-SetEnvironment(Environment* _e) {
-  m_environment = _e;
+SetEnvironment(std::unique_ptr<Environment>&& _e) {
+  m_environment = std::move(_e);
+
+  // Reset the robot DOF limits based on the new environment.
+  MakePointRobot();
+  for(auto& robot : m_robots)
+    robot->InitializePlanningSpaces();
 }
 
 /*------------------------------ Robot Accessors -----------------------------*/
@@ -174,7 +182,7 @@ GetRobot(size_t _index) const {
     throw RunTimeException(WHERE, "Requested Robot " + std::to_string(_index) +
         ", but only " + std::to_string(m_robots.size()) +
         " robots are available.");
-  return m_robots[_index];
+  return m_robots[_index].get();
 }
 
 
@@ -182,11 +190,11 @@ Robot*
 MPProblem::
 GetRobot(const std::string& _label) const {
   if(_label == "point")
-    return m_pointRobot;
+    return m_pointRobot.get();
 
-  for(auto robot : m_robots)
+  for(auto& robot : m_robots)
     if(robot->GetLabel() == _label)
-      return robot;
+      return robot.get();
 
   throw RunTimeException(WHERE, "Requested Robot with label '" + _label + "', "
       "but no such robot was found.");
@@ -194,7 +202,7 @@ GetRobot(const std::string& _label) const {
 }
 
 
-const std::vector<Robot*>&
+const std::vector<std::unique_ptr<Robot>>&
 MPProblem::
 GetRobots() const noexcept {
   return m_robots;
@@ -202,7 +210,7 @@ GetRobots() const noexcept {
 
 /*----------------------------- Task Accessors -------------------------------*/
 
-const std::vector<MPTask*>&
+const std::vector<std::unique_ptr<MPTask>>&
 MPProblem::
 GetTasks() const noexcept {
   return m_tasks;
@@ -213,8 +221,10 @@ GetTasks() const noexcept {
 void
 MPProblem::
 Print(ostream& _os) const {
-  _os << "MPProblem" << endl;
+  _os << "MPProblem"
+      << std::endl;
   m_environment->Print(_os);
+  /// @TODO Print robot and task information.
 }
 
 /*-------------------------- File Path Accessors -----------------------------*/
@@ -233,13 +243,10 @@ SetBaseFilename(const std::string& _s) {
 }
 
 
-string MPProblem::m_filePath = "";
-
-
 string
 MPProblem::
 GetPath(const string& _filename) {
-  if(_filename[0] != '/')
+  if(!_filename.empty() and _filename[0] != '/')
     return m_filePath + _filename;
   else
     return _filename;
@@ -252,17 +259,44 @@ SetPath(const string& _filename) {
   m_filePath = _filename;
 }
 
-/*----------------------------------------------------------------------------*/
+/*---------------------------- Construction Helpers --------------------------*/
+
+bool
+MPProblem::
+ParseChild(XMLNode& _node) {
+  if(_node.Name() == "Environment") {
+    // Ignore this node if we already have an environment.
+    if(!m_environment)
+      m_environment = std::unique_ptr<Environment>(new Environment(_node));
+    MakePointRobot();
+    return true;
+  }
+  else if(_node.Name() == "Robot") {
+    /// @TODO We currently assume that the environment is parsed first. Need to
+    ///       make sure this always happens regardless of the XML file ordering.
+    m_robots.emplace_back(new Robot(this, _node));
+    return true;
+  }
+  else if(_node.Name() == "Task") {
+    m_tasks.emplace_back(new MPTask(this, _node));
+    return true;
+  }
+  else
+    return false;
+}
+
 
 void
 MPProblem::
 MakePointRobot() {
-  // Make robot's multibody.
-  MultiBody* point = new MultiBody(MultiBody::Type::Active);
+  /// @TODO We should probably make the point robot planar for 2d boundaries.
 
-  Body* body = new Body(point);
-  body->SetBodyType(Body::Type::Volumetric);
-  body->SetMovementType(Body::MovementType::Translational);
+  // Make robot's multibody.
+  std::unique_ptr<MultiBody> point(new MultiBody(MultiBody::Type::Active));
+
+  Body body(point.get());
+  body.SetBodyType(Body::Type::Volumetric);
+  body.SetMovementType(Body::MovementType::Translational);
 
   // Create body geometry. Use a single, open triangle.
   GMSPolyhedron poly;
@@ -270,11 +304,11 @@ MakePointRobot() {
       {0, 0, 1e-8}, {-1e-8, 0, 0}};
   poly.GetPolygonList() = vector<GMSPolygon>{GMSPolygon(0, 1, 2,
       poly.GetVertexList())};
-  body->SetPolyhedron(poly);
+  body.SetPolyhedron(poly);
 
   // Add body geometry to multibody.
-  point->AddBody(body);
-  point->SetBaseBody(body);
+  const size_t index = point->AddBody(std::move(body));
+  point->SetBaseBody(index);
 
   // Make sure we didn't accidentally call another robot 'point'.
   if(GetRobot("point"))
@@ -282,6 +316,10 @@ MakePointRobot() {
         "This name is reserved for the internal point robot.");
 
   // Create the robot object.
-  m_pointRobot = new Robot(this, point, "point");
+  m_pointRobot = std::unique_ptr<Robot>(
+      new Robot(this, std::move(point), "point")
+  );
   //m_pointRobot->SetVirtual(true);
 }
+
+/*----------------------------------------------------------------------------*/

@@ -19,6 +19,7 @@ using namespace mathtool;
 #include <CGAL/Polyhedron_incremental_builder_3.h>
 
 class Cfg;
+class XMLNode;
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -39,7 +40,7 @@ class Boundary {
     ///@name Construction
     ///@{
 
-    virtual ~Boundary() = default;
+    virtual ~Boundary() noexcept;
 
     /// Duplicate this boundary and return a dynamically-allocated copy with the
     /// same type. This is provided in the base class so that we can copy a
@@ -154,7 +155,7 @@ class Boundary {
 
     /// Write out a boundary.
     /// @param _os The output stream to write to.
-    virtual void Write(std::ostream& _os) const = 0 ;
+    virtual void Write(std::ostream& _os) const = 0;
 
     ///@}
     ///@name CGAL Representations

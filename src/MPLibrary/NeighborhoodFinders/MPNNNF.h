@@ -8,6 +8,7 @@
 #include <functional>
 using namespace std;
 
+
 ////////////////////////////////////////////////////////////////////////////////
 /// TODO
 /// @ingroup NeighborhoodFinders
@@ -90,6 +91,8 @@ void
 MPNNNF<MPTraits>::
 UpdateInternalModel()
 {
+  MethodTimer mt(this->GetStatClass(), "MPNNNF::UpdateInternalModel");
+
   RoadmapType* _rmp = this->GetRoadmap();
   GraphType* g = _rmp->GetGraph();
   int curRdmpSize = 0;
@@ -138,8 +141,11 @@ UpdateInternalModel()
 template <typename MPTraits>
 template<typename InputIterator, typename OutputIterator>
 OutputIterator
-MPNNNF<MPTraits>::FindNeighbors(RoadmapType* _rmp, InputIterator _first, InputIterator _last,
+MPNNNF<MPTraits>::
+FindNeighbors(RoadmapType* _rmp, InputIterator _first, InputIterator _last,
     const CfgType& _cfg, OutputIterator _out) {
+  MethodTimer mt(this->GetStatClass(), "MPNNNF::FindNeighbors");
+  this->IncrementNumQueries();
 
   GraphType* map = _rmp->GetGraph();
   auto dmm = this->GetDistanceMetric(this->m_dmLabel);
@@ -152,29 +158,26 @@ MPNNNF<MPTraits>::FindNeighbors(RoadmapType* _rmp, InputIterator _first, InputIt
     return _out;
   }
 
-  this->IncrementNumQueries();
-  this->StartTotalTime();
-  this->StartQueryTime();
-
   this->UpdateInternalModel();
   vector< pair<VID, double> > closest;
   kdtree->KClosest(_cfg.GetData(), this->m_k, back_inserter(closest));
-
-
-  this->EndQueryTime();
-  this->EndTotalTime();
 
   // Reverse order
   return copy(closest.begin(), closest.end(), _out);
 }
 
+
 template <typename MPTraits>
 template<typename InputIterator, typename OutputIterator>
 OutputIterator
-MPNNNF<MPTraits>::FindNeighborPairs(RoadmapType* _rmp,
+MPNNNF<MPTraits>::
+FindNeighborPairs(RoadmapType* _rmp,
     InputIterator _first1, InputIterator _last1,
     InputIterator _first2, InputIterator _last2,
     OutputIterator _out) {
+  throw RunTimeException(WHERE, "Not implemented.");
+  MethodTimer mt(this->GetStatClass(), "MPNNNF::FindNeighborPairs");
+  this->IncrementNumQueries();
 
   GraphType* map = _rmp->GetGraph();
   auto dmm = this->GetDistanceMetric(this->m_dmLabel);
@@ -188,12 +191,8 @@ MPNNNF<MPTraits>::FindNeighborPairs(RoadmapType* _rmp,
               dmm->Distance(map->GetVertex(i1), map->GetVertex(i2)));
     return _out;
   }
-  cout << " findneighborpairs not implemented for MPNNNF. " << endl;
-  exit(-1);
   vector<pair<pair<VID, VID>, double> > closest;
   return copy(closest.rbegin(), closest.rend(), _out);
 }
-////////////////////////////////////////////////////////////////////////////////////////
 
-
-#endif //end #ifndef _MPNN_NEIGHBORHOOD_FINDER_H_
+#endif

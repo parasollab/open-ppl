@@ -9,17 +9,65 @@
 /*------------------------------ Construction --------------------------------*/
 
 WorkspaceRegion::
-WorkspaceRegion() : m_decomposition(nullptr) {}
+WorkspaceRegion() = default;
 
 
 WorkspaceRegion::
 WorkspaceRegion(WorkspaceDecomposition* const _wd) : m_decomposition(_wd) {}
 
+
+WorkspaceRegion::
+WorkspaceRegion(const WorkspaceRegion& _other) {
+  *this = _other;
+}
+
+
+WorkspaceRegion::
+WorkspaceRegion(WorkspaceRegion&& _other) {
+  *this = std::move(_other);
+}
+
+
+WorkspaceRegion::
+~WorkspaceRegion() = default;
+
+
+void
+WorkspaceRegion::
+SetDecomposition(WorkspaceDecomposition* const _wd) {
+  m_decomposition = _wd;
+  const auto& pointList = m_decomposition->GetPoints();
+
+  // Update the facets' point lists.
+  for(auto& facet : m_facets)
+    facet = Facet(facet.begin(), facet.end(), pointList);
+}
+
+/*-------------------------------- Assignment --------------------------------*/
+
+WorkspaceRegion&
+WorkspaceRegion::
+operator=(const WorkspaceRegion& _other) {
+  m_decomposition = _other.m_decomposition;
+  m_points = _other.m_points;
+  m_facets = _other.m_facets;
+
+  if(_other.m_boundary)
+    m_boundary = _other.m_boundary->Clone();
+
+  return *this;
+}
+
+
+WorkspaceRegion&
+WorkspaceRegion::
+operator=(WorkspaceRegion&& _other) = default;
+
 /*--------------------------------- Equality ---------------------------------*/
 
 bool
 WorkspaceRegion::
-operator==(const WorkspaceRegion& _region) const {
+operator==(const WorkspaceRegion& _region) const noexcept {
   return m_decomposition == _region.m_decomposition
      and m_points == _region.m_points
      and m_facets == _region.m_facets;
@@ -28,7 +76,7 @@ operator==(const WorkspaceRegion& _region) const {
 
 bool
 WorkspaceRegion::
-operator!=(const WorkspaceRegion& _region) const {
+operator!=(const WorkspaceRegion& _region) const noexcept {
   return !(*this == _region);
 }
 
@@ -50,8 +98,8 @@ AddFacet(Facet&& _f) {
 
 void
 WorkspaceRegion::
-AddBoundary(Boundary* const _b) {
-  m_boundary = shared_ptr<Boundary>(_b);
+AddBoundary(std::unique_ptr<Boundary>&& _b) {
+  m_boundary = std::move(_b);
 }
 
 /*--------------------------------- Accessors --------------------------------*/
@@ -104,7 +152,7 @@ GetBoundary() const noexcept {
 
 const bool
 WorkspaceRegion::
-HasPoint(const Point3d& _p) const {
+HasPoint(const Point3d& _p) const noexcept {
   for(const auto& index : m_points)
     if(m_decomposition->GetPoint(index) == _p)
       return true;
@@ -114,7 +162,7 @@ HasPoint(const Point3d& _p) const {
 
 const Point3d
 WorkspaceRegion::
-FindCenter() const {
+FindCenter() const noexcept {
   Point3d center;
   for(const auto& index : m_points)
     center += m_decomposition->GetPoint(index);
@@ -125,7 +173,7 @@ FindCenter() const {
 
 const vector<Point3d>
 WorkspaceRegion::
-FindSharedPoints(const WorkspaceRegion& _wr) const {
+FindSharedPoints(const WorkspaceRegion& _wr) const noexcept {
   // Find shared indexes.
   vector<size_t> mine = m_points;
   vector<size_t> theirs = _wr.m_points;
@@ -147,7 +195,7 @@ FindSharedPoints(const WorkspaceRegion& _wr) const {
 
 const vector<const WorkspaceRegion::Facet*>
 WorkspaceRegion::
-FindSharedFacets(const WorkspaceRegion& _wr) const {
+FindSharedFacets(const WorkspaceRegion& _wr) const noexcept {
   vector<const Facet*> out;
   for(const auto& myFacet : m_facets) {
     // Flip facet orientation before comparing as the normals will be reversed.

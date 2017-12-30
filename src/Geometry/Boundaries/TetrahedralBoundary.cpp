@@ -33,10 +33,14 @@ TetrahedralBoundary(const std::vector<Point3d>& _pts, const bool _check) {
 }
 
 
+TetrahedralBoundary::
+~TetrahedralBoundary() noexcept = default;
+
+
 std::unique_ptr<Boundary>
 TetrahedralBoundary::
 Clone() const {
-  return std::unique_ptr<Boundary>(new TetrahedralBoundary(*this));
+  return std::unique_ptr<TetrahedralBoundary>(new TetrahedralBoundary(*this));
 }
 
 /*---------------------------- Property Accessors ----------------------------*/

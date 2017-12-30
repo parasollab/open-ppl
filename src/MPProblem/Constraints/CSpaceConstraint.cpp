@@ -43,6 +43,17 @@ CSpaceConstraint(Robot* const _r, XMLNode& _node)
   }
 }
 
+
+CSpaceConstraint::
+~CSpaceConstraint() = default;
+
+
+std::unique_ptr<Constraint>
+CSpaceConstraint::
+Clone() const {
+  return std::unique_ptr<CSpaceConstraint>(new CSpaceConstraint(*this));
+}
+
 /*-------------------------- Constraint Interface ----------------------------*/
 
 const Boundary*

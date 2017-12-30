@@ -1,9 +1,13 @@
 #ifndef CONSTRAINT_H_
 #define CONSTRAINT_H_
 
+#include <memory>
+#include <vector>
+
 class Boundary;
 class Cfg;
 class Robot;
+class XMLNode;
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -20,13 +24,27 @@ class Constraint {
 
     /// Create a constraint for a robot.
     /// @param _r The robot to constrain.
-    Constraint(Robot* const _r);
+    explicit Constraint(Robot* const _r);
 
-    virtual ~Constraint() = default;
+    virtual ~Constraint();
+
+    /// Construct a constraint of the appropriate type from an XML node.
+    /// @param _r The robot to which the constraint applies.
+    /// @param _node The XML node to parse.
+    /// @return A constraint for _m of the type/parameters described by _node.
+    static std::unique_ptr<Constraint> Factory(Robot* const _r, XMLNode& _node);
+
+    /// Copy this constraint.
+    /// @return A copy of this constraint.
+    virtual std::unique_ptr<Constraint> Clone() const = 0;
 
     ///@}
     ///@name Constraint Interface
     ///@{
+
+    /// Change the subject of this constraint.
+    /// @param _r The new robot to constrain.
+    virtual void SetRobot(Robot* const _r);
 
     /// Get a sampling boundary that describes the subset of CSpace allowed by
     /// this constraint.
@@ -45,7 +63,7 @@ class Constraint {
     ///@name Internal State
     ///@{
 
-    Robot* const m_robot; ///< The subject of this constraint.
+    Robot* m_robot{nullptr}; ///< The subject of this constraint.
 
     ///@}
 

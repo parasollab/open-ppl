@@ -42,13 +42,20 @@ class WorkspaceConstraint : public Constraint {
     ///@name Construction
     ///@{
 
-    WorkspaceConstraint(Robot* const, XMLNode&);
+    /// Construct a constraint from an XML node.
+    /// @param _r The robot to constrain.
+    /// @param _node The node to parse.
+    explicit WorkspaceConstraint(Robot* const _r, XMLNode& _node);
 
-    virtual ~WorkspaceConstraint() = default;
+    virtual ~WorkspaceConstraint();
+
+    virtual std::unique_ptr<Constraint> Clone() const override;
 
     ///@}
     ///@name Constraint Interface
     ///@{
+
+    virtual void SetRobot(Robot* const _r) override;
 
     virtual const Boundary* GetBoundary() const override;
 
@@ -59,7 +66,7 @@ class WorkspaceConstraint : public Constraint {
     ///@{
 
     /// Add a generic constraint function.
-    /// @param[in] _f The constraint function to add.
+    /// @param _f The constraint function to add.
     void AddFunction(ConstraintFunction&& _f);
 
     /// Set a positional bound on the _i'th coordinate.
@@ -75,6 +82,14 @@ class WorkspaceConstraint : public Constraint {
 
   protected:
 
+    ///@name Helpers
+    ///@{
+
+    /// Set the constrained body pointer by part label.
+    /// @param _label The label of the part to constrain.
+    void SetPart(const std::string& _label);
+
+    ///@}
     ///@name Internal State
     ///@{
 

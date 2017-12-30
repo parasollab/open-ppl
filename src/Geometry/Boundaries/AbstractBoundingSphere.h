@@ -30,7 +30,7 @@ class AbstractBoundingSphere : public Boundary, public NSphere {
     explicit AbstractBoundingSphere(const std::vector<double>& _center,
         const double _radius = std::numeric_limits<double>::max());
 
-    virtual ~AbstractBoundingSphere() = default;
+    virtual ~AbstractBoundingSphere() noexcept;
 
     ///@}
     ///@name Boundary Properties

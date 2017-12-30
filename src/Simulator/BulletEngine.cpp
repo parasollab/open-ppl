@@ -1,29 +1,27 @@
 #include "BulletEngine.h"
 
-#include "BulletDynamics/Featherstone/btMultiBodyDynamicsWorld.h"
-#include "BulletDynamics/Featherstone/btMultiBodyConstraintSolver.h"
-#include "BulletDynamics/Featherstone/btMultiBodyLinkCollider.h"
-#include "BulletDynamics/Featherstone/btMultiBodyJointLimitConstraint.h"
-
-#include "BulletCollision/Gimpact/btGImpactShape.h"
-#include "BulletCollision/Gimpact/btGImpactCollisionAlgorithm.h"
-#include "ConvexDecomposition/cd_wavefront.h"
-
-#include "nonstd/runtime.h"
-#include "nonstd/io.h"
-
-#include "Conversions.h"
-
 #include "ConfigurationSpace/Cfg.h"
-
 #include "Geometry/Bodies/Body.h"
+#include "Geometry/Bodies/Connection.h"
 #include "Geometry/Bodies/MultiBody.h"
 #include "Geometry/GMSPolyhedron.h"
-
 #include "MPProblem/Environment/Environment.h"
 #include "MPProblem/MPProblem.h"
 #include "MPProblem/Robot/Robot.h"
 #include "MPProblem/Robot/DynamicsModel.h"
+
+#include "BulletDynamics/Featherstone/btMultiBodyDynamicsWorld.h"
+#include "BulletDynamics/Featherstone/btMultiBodyConstraintSolver.h"
+#include "BulletDynamics/Featherstone/btMultiBodyLinkCollider.h"
+#include "BulletDynamics/Featherstone/btMultiBodyJointLimitConstraint.h"
+#include "BulletCollision/Gimpact/btGImpactShape.h"
+#include "BulletCollision/Gimpact/btGImpactCollisionAlgorithm.h"
+#include "ConvexDecomposition/cd_wavefront.h"
+
+#include "Conversions.h"
+#include "nonstd/runtime.h"
+#include "nonstd/io.h"
+
 
 /*--------------------------- Static Initialization --------------------------*/
 
@@ -172,14 +170,9 @@ AddObject(MultiBody* _m) {
 
   if(_m->IsActive()) {
     // This is an active body.
-
-    // Collect joint connection objects.
-    std::vector<Connection*> joints;
-    std::copy(_m->joints_begin(), _m->joints_end(), std::back_inserter(joints));
-
     return AddObject(BuildCollisionShape(_m),
         ToBullet(base->GetWorldTransformation()), base->GetMass(),
-        std::move(joints));
+        _m->GetJoints());
   }
   else {
     // This is a static body.
@@ -201,9 +194,10 @@ AddObject(btCollisionShape* _shape, btTransform _transform, const double _mass) 
 btMultiBody*
 BulletEngine::
 AddObject(std::vector<btCollisionShape*>&& _shapes, btTransform&& _baseTransform,
-    const double _baseMass, std::vector<Connection*>&& _joints) {
+    const double _baseMass,
+    const std::vector<std::unique_ptr<Connection>>& _joints) {
   if(m_debug)
-    std::cout << "BulletEngine.cpp: adding object with "
+    std::cout << "BulletEngine: adding object with "
               << _shapes.size() << " components and "
               << _joints.size() << " joints." << std::endl;
 
@@ -275,7 +269,7 @@ AddObject(std::vector<btCollisionShape*>&& _shapes, btTransform&& _baseTransform
       std::cout << "\tAdding joint " << i << "..." << std::endl;
 
     // Get the PMPL link.
-    Body* const linkBody = _joints[i]->GetNextBody();
+    const Body* const linkBody = _joints[i]->GetNextBody();
 
     // Get the PMPL indices for this link and its parent.
     const int parentPmplIndex = _joints[i]->GetPreviousBodyIndex();

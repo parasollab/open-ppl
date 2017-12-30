@@ -196,6 +196,7 @@ FindNeighbors(RoadmapType* _rmp,
 
   auto stats = this->GetStatClass();
   MethodTimer mt(stats, "TopologicalFilter::FindNeighbors");
+  this->IncrementNumQueries();
 
   // This object only works on the free space roadmap right now. It could be
   // expanded to handle other maps if we want, but for now we will crash if this

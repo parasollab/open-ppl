@@ -16,6 +16,10 @@ AbstractBoundingSphere::
 AbstractBoundingSphere(const std::vector<double>& _center, const double _radius) :
     NSphere(_center, _radius) { }
 
+
+AbstractBoundingSphere::
+~AbstractBoundingSphere() noexcept = default;
+
 /*---------------------------- Property Accessors ----------------------------*/
 
 size_t

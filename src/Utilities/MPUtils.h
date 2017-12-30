@@ -138,29 +138,6 @@ struct CompareSecondReverse {
 
 };
 
-////////////////////////////////////////////////////////////////////////////////
-/// Find the closer of two input configurations to an initial reference cfg,
-/// assuming that the inputs are given as a pair<Cfg, Something>.
-////////////////////////////////////////////////////////////////////////////////
-template <class MPTraits, class P>
-struct DistanceCompareFirst : public binary_function<P, P, bool> {
-
-  typedef typename MPTraits::MPLibrary::DistanceMetricPointer
-      DistanceMetricPointer;
-
-  Environment* m_env;
-  DistanceMetricPointer m_dm;
-  const typename P::first_type& m_cfg;
-
-  DistanceCompareFirst(Environment* _e, DistanceMetricPointer _d,
-      const typename P::first_type& _c) : m_env(_e), m_dm(_d), m_cfg(_c) {}
-
-  bool operator()(const P& _p1, const P& _p2) const {
-    return m_dm->Distance(m_cfg, _p1.first) < m_dm->Distance(m_cfg, _p2.first);
-  }
-
-};
-
 /*----------------------------- Compose Functions ----------------------------*/
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -342,20 +319,6 @@ ComputeCCCentroidGraph(Roadmap<CfgType, Weight>* _graph,
 #endif
 
 /*----------------------------- Other Random Stuff ---------------------------*/
-
-////////////////////////////////////////////////////////////////////////////////
-/// Functor for adding the second types of two pairs.
-////////////////////////////////////////////////////////////////////////////////
-template <class P>
-struct PlusSecond : public binary_function<typename P::second_type, P,
-    typename P::second_type> {
-
-  typename P::second_type operator()(const typename P::second_type& p1,
-      const P& p2) const {
-    return plus<typename P::second_type>()(p1, p2.second);
-  }
-
-};
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Used for discarding collision data for regular sampling/connecting classes.

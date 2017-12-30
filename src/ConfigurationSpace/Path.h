@@ -26,7 +26,6 @@ class PathType {
     typedef typename MPTraits::RoadmapType   RoadmapType;
     typedef typename RoadmapType::GraphType  GraphType;
     typedef typename RoadmapType::VID        VID;
-    typedef typename MPTraits::MPLibrary     MPLibrary;
 
     ///@}
     ///@name Construction
@@ -34,28 +33,28 @@ class PathType {
 
     /// Construct an empty path.
     /// @param[in] _r The roadmap used by this path.
-    PathType(RoadmapType* _r) : m_roadmap(_r) { }
+    PathType(RoadmapType* const _r);
 
     ///@}
     ///@name Path Interface
     ///@{
 
     /// Get the roadmap used by this path.
-    RoadmapType* GetRoadmap() const {return m_roadmap;}
+    RoadmapType* GetRoadmap() const noexcept;
 
     /// Get the number of cfgs in the path.
-    size_t Size() const {return m_vids.size();}
+    size_t Size() const noexcept;
 
     /// Get the total edge weight.
     double Length() const;
 
     /// Get the VIDs in the path.
-    const vector<VID>& VIDs() const {return m_vids;}
+    const std::vector<VID>& VIDs() const noexcept;
 
     /// Get a copy of the Cfgs in the path.
     /// @warning If the cfgs in the roadmap are later altered (i.e., if the DOF
     ///          values or labels are edited), this copy will be out-of-date.
-    const vector<CfgType>& Cfgs() const;
+    const std::vector<CfgType>& Cfgs() const;
 
     /// Get the current full Cfg path with steps spaced one environment
     ///        resolution apart. This is not cached due to its size and
@@ -64,7 +63,8 @@ class PathType {
     /// @param[in] _lp  The local planner label to use when connecting cfgs.
     /// @return The full path of configurations, including local-plan
     ///         intermediates between the roadmap nodes.
-    const vector<CfgType> FullCfgs(MPLibrary* _lib,
+    template <typename MPLibrary>
+    const std::vector<CfgType> FullCfgs(MPLibrary* const _lib,
         const string& _lp = "") const;
 
     /// Append another path to the end of this one.
@@ -77,11 +77,11 @@ class PathType {
 
     /// Append a new set of VIDs to the end of this path.
     /// @param[in] _vids The VIDs to append.
-    PathType& operator+=(const vector<VID>& _vids);
+    PathType& operator+=(const std::vector<VID>& _vids);
 
     /// Add a new set of VIDs to the end of this path and return the result.
     /// @param[in] _vids The VIDs to add.
-    PathType operator+(const vector<VID>& _vids) const;
+    PathType operator+(const std::vector<VID>& _vids) const;
 
     /// Clear all data in the path.
     void Clear();
@@ -100,9 +100,9 @@ class PathType {
     ///@{
 
     RoadmapType* const m_roadmap;       ///< The roadmap.
-    vector<VID> m_vids;                 ///< The vids of the path configurations.
+    std::vector<VID> m_vids;            ///< The vids of the path configurations.
 
-    vector<CfgType> m_cfgs;             ///< The path configurations.
+    std::vector<CfgType> m_cfgs;        ///< The path configurations.
     mutable bool m_cfgsCached{false};   ///< Are the current cfgs correct?
 
     double m_length{0};                 ///< The path length.
@@ -111,7 +111,29 @@ class PathType {
     ///@}
 };
 
-/*---------------------------- Path Interface --------------------------------*/
+/*------------------------------- Construction -------------------------------*/
+
+template <typename MPTraits>
+PathType<MPTraits>::
+PathType(RoadmapType* const _r) : m_roadmap(_r) { }
+
+/*------------------------------ Path Interface ------------------------------*/
+
+template <typename MPTraits>
+typename MPTraits::RoadmapType*
+PathType<MPTraits>::
+GetRoadmap() const noexcept {
+  return m_roadmap;
+}
+
+
+template <typename MPTraits>
+size_t
+PathType<MPTraits>::
+Size() const noexcept {
+  return m_vids.size();
+}
+
 
 template <typename MPTraits>
 double
@@ -141,11 +163,19 @@ Length() const {
 
 
 template <typename MPTraits>
-const vector<typename MPTraits::CfgType>&
+const std::vector<typename PathType<MPTraits>::VID>&
+PathType<MPTraits>::
+VIDs() const noexcept {
+  return m_vids;
+}
+
+
+template <typename MPTraits>
+const std::vector<typename MPTraits::CfgType>&
 PathType<MPTraits>::
 Cfgs() const {
   if(!m_cfgsCached) {
-    vector<CfgType>& cfgs = const_cast<vector<CfgType>&>(m_cfgs);
+    std::vector<CfgType>& cfgs = const_cast<std::vector<CfgType>&>(m_cfgs);
     cfgs.clear();
     cfgs.reserve(m_vids.size());
     for(const auto& vid : m_vids)
@@ -157,14 +187,15 @@ Cfgs() const {
 
 
 template <typename MPTraits>
-const vector<typename MPTraits::CfgType>
+template <typename MPLibrary>
+const std::vector<typename MPTraits::CfgType>
 PathType<MPTraits>::
-FullCfgs(MPLibrary* _lib, const string& _lp) const {
+FullCfgs(MPLibrary* const _lib, const string& _lp) const {
   if(m_vids.empty())
     return std::vector<CfgType>();
 
   GraphType* g = m_roadmap->GetGraph();
-  vector<CfgType> out = {g->GetVertex(m_vids.front())};
+  std::vector<CfgType> out = {g->GetVertex(m_vids.front())};
 
   // Set up local planner to recreate edges. If none was provided, use edge
   // planner, or fall back to straight-line.
@@ -198,14 +229,15 @@ FullCfgs(MPLibrary* _lib, const string& _lp) const {
     // Recreate this edge, including intermediates.
     CfgType& start = g->GetVertex(*it);
     CfgType& end   = g->GetVertex(*(it+1));
-    vector<CfgType> recreatedEdge = ei->property().GetIntermediates();
+    std::vector<CfgType> recreatedEdge = ei->property().GetIntermediates();
     recreatedEdge.insert(recreatedEdge.begin(), start);
     recreatedEdge.push_back(end);
 
     // Construct a resolution-level path along the recreated edge.
     for(auto cit = recreatedEdge.begin(); cit + 1 != recreatedEdge.end(); ++cit) {
-      vector<CfgType> edge = lp->ReconstructPath(*cit, *(cit+1),
-          vector<CfgType>(), env->GetPositionRes(), env->GetOrientationRes());
+      std::vector<CfgType> edge = lp->ReconstructPath(*cit, *(cit+1),
+          std::vector<CfgType>(), env->GetPositionRes(),
+          env->GetOrientationRes());
       out.insert(out.end(), edge.begin(), edge.end());
     }
     out.push_back(end);
@@ -235,7 +267,7 @@ operator+(const PathType& _p) const {
 template <typename MPTraits>
 PathType<MPTraits>&
 PathType<MPTraits>::
-operator+=(const vector<VID>& _vids) {
+operator+=(const std::vector<VID>& _vids) {
   std::copy(_vids.begin(), _vids.end(), back_inserter(m_vids));
   m_lengthCached = false;
   m_cfgsCached = false;
@@ -246,7 +278,7 @@ operator+=(const vector<VID>& _vids) {
 template <typename MPTraits>
 PathType<MPTraits>
 PathType<MPTraits>::
-operator+(const vector<VID>& _vids) const {
+operator+(const std::vector<VID>& _vids) const {
   PathType out(*this);
   out += _vids;
   return out;

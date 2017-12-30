@@ -165,13 +165,10 @@ Body(MultiBody* const _owner, XMLNode& _node)
   std::string type = _node.Read("type", true, "",
       "Type of the body (volumetric, planar, fixed, or joint.");
   std::transform(type.begin(), type.end(), type.begin(), ::tolower);
-  if(type == "planar") {
-    SetBodyType(Body::Type::Planar);
-  }
-  else if(type == "volumetric") {
-    SetBodyType(Body::Type::Volumetric);
-  }
-  else if(type == "fixed") {
+  SetBodyType(GetBodyTypeFromTag(type, _node.Where()));
+
+  // Read the transform for fixed bodies.
+  if(type == "fixed") {
     SetBodyType(Body::Type::Fixed);
 
     const std::string transform = _node.Read("transform", true, "",
@@ -179,15 +176,6 @@ Body(MultiBody* const _owner, XMLNode& _node)
 
     std::istringstream buffer(transform);
     buffer >> m_transform;
-  }
-  else if(type == "joint") {
-    SetBodyType(Body::Type::Joint);
-  }
-  else
-  {
-    throw ParseException(_node.Where(),
-        "Unknown base type '" + type + "'."
-        " Options are: 'planar', 'volumetric', 'fixed', or 'joint'.");
   }
 
   // Read geometry file.
@@ -198,106 +186,56 @@ Body(MultiBody* const _owner, XMLNode& _node)
 
 
 Body::
-Body(const Body& _other)
-  : m_multibody(nullptr),
-    m_index(_other.m_index),
-    m_label(_other.m_label),
-    m_filename(_other.m_filename),
-    m_bodyType(_other.m_bodyType),
-    m_movementType(_other.m_movementType),
-    m_polyhedron(_other.m_polyhedron),
-    m_boundingBox(_other.m_boundingBox),
-    m_convexHull(_other.m_convexHull),
-    m_convexHullCached(_other.m_convexHullCached),
-    m_transform(_other.m_transform),
-    m_transformCached(_other.m_transformCached),
-    m_worldPolyhedron(_other.m_worldPolyhedron),
-    m_worldPolyhedronCached(_other.m_worldPolyhedronCached),
-    m_mass(_other.m_mass),
-    m_moment(_other.m_moment),
-    m_comAdjust(_other.m_comAdjust),
-    m_rapidBody(new RAPID_model(*_other.m_rapidBody)),
-    m_pqpBody(new PQP_Model(*_other.m_pqpBody)),
-    m_transformFetcher(_other.m_transformFetcher),
-    m_color(_other.m_color),
-    m_colorLoaded(_other.m_colorLoaded),
-    m_textureFile(_other.m_textureFile),
-    m_textureLoaded(_other.m_textureLoaded)
-{ }
-
-
-Body::
-Body(Body&& _other)
-  : m_multibody(_other.m_multibody),
-    m_index(_other.m_index),
-    m_label(std::move(_other.m_label)),
-    m_filename(std::move(_other.m_filename)),
-    m_bodyType(_other.m_bodyType),
-    m_movementType(_other.m_movementType),
-    m_polyhedron(std::move(_other.m_polyhedron)),
-    m_boundingBox(std::move(_other.m_boundingBox)),
-    m_convexHull(std::move(_other.m_convexHull)),
-    m_convexHullCached(_other.m_convexHullCached),
-    m_transform(std::move(_other.m_transform)),
-    m_transformCached(_other.m_transformCached),
-    m_worldPolyhedron(std::move(_other.m_worldPolyhedron)),
-    m_worldPolyhedronCached(_other.m_worldPolyhedronCached),
-    m_mass(_other.m_mass),
-    m_moment(std::move(_other.m_moment)),
-    m_comAdjust(_other.m_comAdjust),
-    m_rapidBody(_other.m_rapidBody),
-    m_pqpBody(_other.m_pqpBody),
-    m_forwardConnections(std::move(_other.m_forwardConnections)),
-    m_backwardConnections(std::move(_other.m_backwardConnections)),
-    m_transformFetcher(std::move(_other.m_transformFetcher)),
-    m_color(std::move(_other.m_color)),
-    m_colorLoaded(_other.m_colorLoaded),
-    m_textureFile(std::move(_other.m_textureFile)),
-    m_textureLoaded(_other.m_textureLoaded)
-{
-  _other.m_rapidBody = nullptr;
-  _other.m_pqpBody = nullptr;
+Body(const Body& _other) {
+  *this = _other;
 }
 
 
 Body::
-~Body() {
-  delete m_rapidBody;
-  delete m_pqpBody;
-}
+Body(Body&& _other) = default;
+
+
+Body::
+~Body() = default;
 
 /*-------------------------------- Assignment --------------------------------*/
 
 Body&
 Body::
 operator=(const Body& _other) {
-  m_multibody = nullptr;
-  m_index = _other.m_index;
-  m_label = _other.m_label;
-  m_filename = _other.m_filename;
-  m_bodyType = _other.m_bodyType;
-  m_movementType = _other.m_movementType;
-  m_polyhedron = _other.m_polyhedron;
-  m_boundingBox = _other.m_boundingBox;
-  m_convexHull = _other.m_convexHull;
-  m_convexHullCached = _other.m_convexHullCached;
-  m_transform = _other.m_transform;
-  m_transformCached = _other.m_transformCached;
-  m_worldPolyhedron = _other.m_worldPolyhedron;
+  if(this == &_other)
+    return *this;
+
+  m_multibody             = nullptr;
+  m_index                 = _other.m_index;
+  m_label                 = _other.m_label;
+  m_filename              = _other.m_filename;
+  m_bodyType              = _other.m_bodyType;
+  m_movementType          = _other.m_movementType;
+  m_polyhedron            = _other.m_polyhedron;
+  m_boundingBox           = _other.m_boundingBox;
+  m_convexHull            = _other.m_convexHull;
+  m_convexHullCached      = _other.m_convexHullCached;
+  m_transform             = _other.m_transform;
+  m_transformCached       = _other.m_transformCached;
+  m_worldPolyhedron       = _other.m_worldPolyhedron;
   m_worldPolyhedronCached = _other.m_worldPolyhedronCached;
-  m_mass = _other.m_mass;
-  m_moment = _other.m_moment;
-  m_comAdjust = _other.m_comAdjust;
-  m_rapidBody = new RAPID_model(*_other.m_rapidBody);
-  m_pqpBody = new PQP_Model(*_other.m_pqpBody);
+  m_mass                  = _other.m_mass;
+  m_moment                = _other.m_moment;
+  m_comAdjust             = _other.m_comAdjust;
+
+  // PQP and RAPID do not properly implement copying, so there is no way to copy
+  // those objects without later triggering a double-free. Rebuild the models
+  // instead.
+  BuildCDModels();
+
   m_forwardConnections.clear();
   m_backwardConnections.clear();
   m_transformFetcher = _other.m_transformFetcher;
 
-
-  m_color = _other.m_color;
-  m_colorLoaded = _other.m_colorLoaded;
-  m_textureFile = _other.m_textureFile;
+  m_color         = _other.m_color;
+  m_colorLoaded   = _other.m_colorLoaded;
+  m_textureFile   = _other.m_textureFile;
   m_textureLoaded = _other.m_textureLoaded;
 
   return *this;
@@ -306,41 +244,7 @@ operator=(const Body& _other) {
 
 Body&
 Body::
-operator=(Body&& _other) {
-  m_multibody = _other.m_multibody;
-  m_index = _other.m_index;
-  m_label = std::move(_other.m_label);
-  m_filename = std::move(_other.m_filename);
-  m_bodyType = _other.m_bodyType;
-  m_movementType = _other.m_movementType;
-  m_polyhedron = std::move(_other.m_polyhedron);
-  m_boundingBox = std::move(_other.m_boundingBox);
-  m_convexHull = std::move(_other.m_convexHull);
-  m_convexHullCached = _other.m_convexHullCached;
-  m_transform = std::move(_other.m_transform);
-  m_transformCached = _other.m_transformCached;
-  m_worldPolyhedron = std::move(_other.m_worldPolyhedron);
-  m_worldPolyhedronCached = _other.m_worldPolyhedronCached;
-  m_mass = _other.m_mass;
-  m_moment = std::move(_other.m_moment);
-  m_comAdjust = _other.m_comAdjust;
-  m_rapidBody = _other.m_rapidBody;
-  m_pqpBody = _other.m_pqpBody;
-  m_forwardConnections = std::move(_other.m_forwardConnections);
-  m_backwardConnections = std::move(_other.m_backwardConnections);
-  m_transformFetcher = std::move(_other.m_transformFetcher);
-
-  _other.m_rapidBody = nullptr;
-  _other.m_pqpBody = nullptr;
-
-
-  m_color = std::move(_other.m_color);
-  m_colorLoaded = _other.m_colorLoaded;
-  m_textureFile = std::move(_other.m_textureFile);
-  m_textureLoaded = _other.m_textureLoaded;
-
-  return *this;
-}
+operator=(Body&& _other) = default;
 
 /*------------------------------- Validation ---------------------------------*/
 
@@ -373,13 +277,14 @@ Validate(const bool _report) const {
   bool outward = true;
   {
     PQPSolid pqp;
+    const auto& t = this->GetWorldTransformation();
 
     // For each facet, make sure that the point just behind the center is inside.
     for(const auto& poly : m_polyhedron.GetPolygonList())
     {
       const Vector3d point = poly.FindCenter() - (1e-6 * poly.GetNormal());
 
-      outward &= pqp.IsInsideObstacle(point, this);
+      outward &= pqp.IsInsideObstacle(t * point, this);
       if(!outward)
         break;
     }
@@ -603,30 +508,28 @@ BuildCDModels() {
 RAPID_model*
 Body::
 GetRapidBody() const noexcept {
-  return m_rapidBody;
+  return m_rapidBody.get();
 }
 
 
 void
 Body::
-SetRapidBody(RAPID_model* const _r) {
-  delete m_rapidBody;
-  m_rapidBody = _r;
+SetRapidBody(std::unique_ptr<RAPID_model>&& _r) {
+  m_rapidBody = std::move(_r);
 }
 
 
 PQP_Model*
 Body::
 GetPQPBody() const noexcept {
-  return m_pqpBody;
+  return m_pqpBody.get();
 }
 
 
 void
 Body::
-SetPQPBody(PQP_Model* const _p) {
-  delete m_pqpBody;
-  m_pqpBody = _p;
+SetPQPBody(std::unique_ptr<PQP_Model>&& _p) {
+  m_pqpBody = std::move(_p);
 }
 
 /*--------------------------- Connection Properties --------------------------*/
@@ -647,7 +550,7 @@ BackwardConnectionCount() const noexcept {
 
 Connection&
 Body::
-GetForwardConnection(const size_t _index) noexcept {
+GetForwardConnection(const size_t _index) const noexcept {
   try {
     return *m_forwardConnections.at(_index);
   }
@@ -662,7 +565,7 @@ GetForwardConnection(const size_t _index) noexcept {
 
 Connection&
 Body::
-GetBackwardConnection(const size_t _index) noexcept {
+GetBackwardConnection(const size_t _index) const noexcept {
   try {
     return *m_backwardConnections.at(_index);
   }

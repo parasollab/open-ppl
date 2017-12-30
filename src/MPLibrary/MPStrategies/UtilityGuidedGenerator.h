@@ -3,11 +3,12 @@
 
 #include "MPStrategyMethod.h"
 
+#include <algorithm>
+
+
 ////////////////////////////////////////////////////////////////////////////////
+/// @TODO
 /// @ingroup MotionPlanningStrategyUtils
-/// @brief TODO
-///
-/// TODO
 ////////////////////////////////////////////////////////////////////////////////
 template <class MPTraits>
 struct ApproximateCSpaceModel {
@@ -16,38 +17,49 @@ struct ApproximateCSpaceModel {
   typedef typename MPTraits::MPLibrary MPLibrary;
   typedef typename MPLibrary::DistanceMetricPointer DistanceMetricPointer;
 
-  vector<pair<CfgType, double> > m_modelNodes;
-  Environment* m_env;
+  typedef typename std::pair<CfgType, double> ModelPair;
+
+  std::vector<ModelPair> m_modelNodes;
   DistanceMetricPointer m_dm;
 
-  ApproximateCSpaceModel(Environment* _env, DistanceMetricPointer _dm) :
-      m_env(_env), m_dm(_dm) {}
+  ApproximateCSpaceModel(DistanceMetricPointer _dm) : m_dm(_dm) {}
   ~ApproximateCSpaceModel() {}
 
   void AddSample(const CfgType& _c, double _coll) {
-    m_modelNodes.push_back(make_pair(_c, _coll));
+    m_modelNodes.emplace_back(_c, _coll);
   }
 
   double FreeProbability(const CfgType& _c, int _k) {
-    sort(m_modelNodes.begin(), m_modelNodes.end(),
-	 DistanceCompareFirst<MPTraits, pair<CfgType,double> >(m_env, m_dm, _c));
+    // Make a comparator to sort the model nodes.
+    auto comparator = [&_c, this](const ModelPair& _p1, const ModelPair& _p2)
+    {
+      return this->m_dm->Distance(_c, _p1.first)
+           < this->m_dm->Distance(_c, _p2.first);
+    };
+
+    std::sort(m_modelNodes.begin(), m_modelNodes.end(), comparator);
+
     int size = min<int>(_k, m_modelNodes.size());
     if(size == 0)
       return 0.0;
     else
-      return accumulate(m_modelNodes.begin(), m_modelNodes.begin() + size,
-			0.0, PlusSecond<pair<CfgType,double> >()) / size;
+    {
+      auto adder = [](const double _sum, const ModelPair& _p)
+      {
+        return std::plus<double>()(_sum, _p.second);
+      };
+      return std::accumulate(m_modelNodes.begin(), m_modelNodes.begin() + size,
+          0., adder) / size;
+    }
   }
 
 };
 
+
 ////////////////////////////////////////////////////////////////////////////////
-/// @ingroup MotionPlanningStrategies
-/// @brief TODO
-///
 /// TODO
-///
-/// \todo Configure for pausible execution.
+/// @todo Configure for pausible execution.
+/// @ingroup MotionPlanningStrategies
 ////////////////////////////////////////////////////////////////////////////////
 template <class MPTraits>
 class UtilityGuidedGenerator : public MPStrategyMethod<MPTraits> {
@@ -69,7 +81,7 @@ class UtilityGuidedGenerator : public MPStrategyMethod<MPTraits> {
     virtual void ParseXML(XMLNode& _node);
     virtual void Print(ostream& _os) const;
 
-    virtual void Initialize();
+    virtual void Initialize() {}
     virtual void Run();
     virtual void Finalize();
 
@@ -141,12 +153,6 @@ UtilityGuidedGenerator<MPTraits>::Print(ostream& _os) const {
   _os << endl;
 }
 
-template <class MPTraits>
-void
-UtilityGuidedGenerator<MPTraits>::Initialize() {
-  if(this->m_debug) cout << "\nInitializing UtilityGuidedGenerator::" << endl;
-  if(this->m_debug) cout << "\nEnding Initializing UtilityGuidedGenerator::" << endl;
-}
 
 template <class MPTraits>
 void
@@ -159,8 +165,9 @@ UtilityGuidedGenerator<MPTraits>::Run() {
   Environment* env = this->GetEnvironment();
   auto bb = env->GetBoundary();
 
-  auto dm = this->GetNeighborhoodFinder(m_nfLabel)->GetDMMethod();
-  ApproximateCSpaceModel<MPTraits> model(env, dm);
+  auto dm = this->GetDistanceMetric(this->GetNeighborhoodFinder(m_nfLabel)->
+      GetDMLabel());
+  ApproximateCSpaceModel<MPTraits> model(dm);
 
   auto vcm = this->GetValidityChecker(m_vcLabel);
   string callee(this->GetNameAndLabel() + "::Run()");
@@ -279,7 +286,7 @@ GenerateEntropyGuidedSample() {
   Environment* env = this->GetEnvironment();
   auto bb = env->GetBoundary();
   auto nf = this->GetNeighborhoodFinder(m_nfLabel);
-  auto dm = nf->GetDMMethod();
+  auto dm = this->GetDistanceMetric(nf->GetDMLabel());
   auto robot = this->GetTask()->GetRobot();
 
   CfgType q1(robot), q2(robot);
@@ -352,4 +359,3 @@ GenerateEntropyGuidedSample() {
 }
 
 #endif
-

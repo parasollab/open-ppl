@@ -99,6 +99,7 @@ class Cfg {
     ///@{
 
     bool operator<(const Cfg& _cfg) const;
+
     ///@}
     ///@name Robot Info
     ///@{

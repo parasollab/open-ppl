@@ -79,7 +79,7 @@ class MethodSet final {
     /// @param _mtl An instance of the method type list.
     /// @param _name The name of this method set.
     template <typename MethodTypeList>
-    MethodSet(MPLibrary* _p, const MethodTypeList& _mtl,
+    MethodSet(MPLibrary* const _p, const MethodTypeList& _mtl,
         const std::string& _name);
 
     ///@}
@@ -158,7 +158,7 @@ class MethodSet final {
 template <typename MPTraits, typename Method>
 template <typename MethodTypeList>
 MethodSet<MPTraits, Method>::
-MethodSet(MPLibrary* _p, const MethodTypeList& _mtl,
+MethodSet(MPLibrary* const _p, const MethodTypeList& _mtl,
     const std::string& _name) : m_library(_p), m_name(_name) {
   AddToUniverse(typename boost::mpl::begin<MethodTypeList>::type(),
                 typename boost::mpl::end<MethodTypeList>::type());

@@ -14,11 +14,11 @@ class CSpaceBoundingBox : public AbstractBoundingBox {
     ///@name Construction
     ///@{
 
-    CSpaceBoundingBox(const size_t _n);
+    explicit CSpaceBoundingBox(const size_t _n);
 
-    CSpaceBoundingBox(const std::vector<double>& _center);
+    explicit CSpaceBoundingBox(const std::vector<double>& _center);
 
-    virtual ~CSpaceBoundingBox() = default;
+    virtual ~CSpaceBoundingBox() noexcept;
 
     virtual std::unique_ptr<Boundary> Clone() const override;
 

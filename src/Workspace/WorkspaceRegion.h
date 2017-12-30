@@ -1,7 +1,6 @@
 #ifndef WORKSPACE_REGION_H_
 #define WORKSPACE_REGION_H_
 
-#include <memory>
 #include <vector>
 
 #include "Geometry/GMSPolygon.h"
@@ -38,23 +37,40 @@ class WorkspaceRegion final {
     /// @param _wd The owning workspace decomposition.
     WorkspaceRegion(WorkspaceDecomposition* const _wd);
 
+    WorkspaceRegion(const WorkspaceRegion&);  ///< Copy.
+    WorkspaceRegion(WorkspaceRegion&&);       ///< Move.
+
+    ~WorkspaceRegion();
+
+    /// Change the owning decomposition. This only makes sense when we are
+    /// copying/moving regions from one decomposition to another.
+    /// @param _wd The new owning decomposition.
+    void SetDecomposition(WorkspaceDecomposition* const _wd);
+
+    ///@}
+    ///@name Assignment
+    ///@{
+
+    WorkspaceRegion& operator=(const WorkspaceRegion&);  ///< Copy.
+    WorkspaceRegion& operator=(WorkspaceRegion&&);       ///< Move.
+
     ///@}
     ///@name Equality
     ///@{
 
-    bool operator==(const WorkspaceRegion& _region) const;
-    bool operator!=(const WorkspaceRegion& _region) const;
+    bool operator==(const WorkspaceRegion& _region) const noexcept;
+    bool operator!=(const WorkspaceRegion& _region) const noexcept;
 
     ///@}
     ///@name Modifiers
     ///@{
 
     void AddPoint(const size_t _i);
+
     void AddFacet(Facet&& _f);
 
     /// Add a boundary and assume ownership of it.
-    /// @param _b The (dynamically allocated) boundary to add.
-    void AddBoundary(Boundary* const _b);
+    void AddBoundary(std::unique_ptr<Boundary>&& _b);
 
     ///@}
     ///@name Accessors
@@ -83,17 +99,18 @@ class WorkspaceRegion final {
     ///@{
 
     /// Check if a given point is part of this region's boundary.
-    const bool HasPoint(const Point3d& _p) const;
+    const bool HasPoint(const Point3d& _p) const noexcept;
 
     /// Find the center of this region.
-    const Point3d FindCenter() const;
+    const Point3d FindCenter() const noexcept;
 
     /// Find shared points with another workspace region.
-    const std::vector<Point3d> FindSharedPoints(const WorkspaceRegion& _wr) const;
+    const std::vector<Point3d> FindSharedPoints(const WorkspaceRegion& _wr)
+        const noexcept;
 
     /// Find shared facets with another workspace region.
     const std::vector<const Facet*> FindSharedFacets(const WorkspaceRegion& _wr)
-        const;
+        const noexcept;
 
     ///@}
 
@@ -102,12 +119,12 @@ class WorkspaceRegion final {
     ///@name Internal State
     ///@{
 
-    WorkspaceDecomposition* const m_decomposition; ///< The owning decomposition.
+    WorkspaceDecomposition* m_decomposition{nullptr}; ///< Owning decomposition.
 
     std::vector<size_t> m_points;  ///< The bounding point indexes of this region.
     std::vector<Facet> m_facets;   ///< The bounding facets of this region.
 
-    std::shared_ptr<Boundary> m_boundary; ///< The boundary for this region.
+    std::unique_ptr<Boundary> m_boundary; ///< The boundary for this region.
 
     ///@}
 };

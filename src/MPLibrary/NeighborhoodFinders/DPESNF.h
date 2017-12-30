@@ -4,10 +4,9 @@
 #include <unordered_map>
 #include "NeighborhoodFinderMethod.h"
 
+
 ////////////////////////////////////////////////////////////////////////////////
-/// @ingroup NeighborhoodFinders
-/// @brief Distance-based Projection onto Euclidean Space (DPES)
-///
+/// Distance-based Projection onto Euclidean Space (DPES).
 /// Given a dimension \f$m\f$, project all input points onto
 /// \f$\mathcal{R}^m\f$. At query time, project query configuration to the lower
 /// dimensional space and use the Euclidean distance metric to determine
@@ -23,52 +22,76 @@
 ///
 /// @todo Abstract the underlying storage structure to allow for KD-tree or
 ///       other searches other than brute force searching.
+/// @ingroup NeighborhoodFinders
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
 class DPESNF : public NeighborhoodFinderMethod<MPTraits> {
 
   public:
 
+    ///@name Motion Planning Types
+    ///@{
+
     typedef typename MPTraits::CfgType     CfgType;
     typedef typename MPTraits::RoadmapType RoadmapType;
     typedef typename RoadmapType::VID      VID;
 
-    typedef vector<double> Projected; ///< Projected point of dim m
+    ///@}
+    ///@name Local Types
+    ///@{
+
+    typedef std::vector<double> Projected; ///< Projected point of dim m
 
     ////////////////////////////////////////////////////////////////////////////
-    ///@brief Model for DPES - includes points, pivots, and projected points
+    /// Model for DPES - includes points, pivots, and projected points
     ////////////////////////////////////////////////////////////////////////////
     struct DPESInfo {
       size_t m_currentRoadmapVersion{size_t(-1)};      ///< RDMPVersion info
-      unordered_set<VID> m_points;                     ///< Unprojected points
-      vector<CfgType> m_pivots;                        ///< Pivots
-      unordered_map<VID, Projected> m_projectedPoints; ///< Projected cfgs
+      std::unordered_set<VID> m_points;                ///< Unprojected points
+      std::vector<CfgType> m_pivots;                        ///< Pivots
+      std::unordered_map<VID, Projected> m_projectedPoints; ///< Projected cfgs
     };
+
+    ///@}
+    ///@name Construction
+    ///@{
 
     DPESNF(std::string _dmLabel = "", bool _unconnected = false,
         size_t _m = 3, size_t _k = 10);
 
     DPESNF(XMLNode& _node);
 
-    virtual ~DPESNF() = default;
+    virtual ~DPESNF();
 
-    virtual void Print(std::ostream& _os) const;
+    ///@}
+    ///@name MPBaseObject Overrides
+    ///@{
+
+    virtual void Print(std::ostream& _os) const override;
+
+    ///@}
+    ///@name NeighborhoodFinder Interface
+    ///@{
 
     template<typename InputIterator, typename OutputIterator>
-      OutputIterator FindNeighbors(RoadmapType* _rmp,
-          InputIterator _first, InputIterator _last, bool _fromFullRoadmap,
-          const CfgType& _cfg, OutputIterator _out);
+    OutputIterator FindNeighbors(RoadmapType* _rmp,
+        InputIterator _first, InputIterator _last, bool _fromFullRoadmap,
+        const CfgType& _cfg, OutputIterator _out);
 
     template<typename InputIterator, typename OutputIterator>
-      OutputIterator FindNeighborPairs(RoadmapType* _rmp,
-          InputIterator _first1, InputIterator _last1,
-          InputIterator _first2, InputIterator _last2,
-          OutputIterator _out);
+    OutputIterator FindNeighborPairs(RoadmapType* _rmp,
+        InputIterator _first1, InputIterator _last1,
+        InputIterator _first2, InputIterator _last2,
+        OutputIterator _out);
+
+    ///@}
 
   private:
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// @brief Add nodes to the model, updating pivots if necessary
+    ///@name Helpers
+    ///@{
+
+    /// Add nodes to the model, updating pivots if necessary
     /// @tparam InputIterator Input iterator of roadmap vertices
     /// @param _rdmp Roadmap
     /// @param _first Beginning iterator of input
@@ -77,11 +100,10 @@ class DPESNF : public NeighborhoodFinderMethod<MPTraits> {
     /// Add [_first, _last) to the appropriate DPES model. Will create m new
     /// pivots if it is the first call, or m pivots have not been made yet.
     template<typename InputIterator>
-      void CreatePivots(RoadmapType* _rdmp,
-          InputIterator _first, InputIterator _last);
+    void CreatePivots(RoadmapType* _rdmp,
+        InputIterator _first, InputIterator _last);
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// @brief Project point _c to R^m of pivot space
+    /// Project point _c to R^m of pivot space
     /// @param _c Cfg
     /// @return Projected point
     ///
@@ -89,24 +111,26 @@ class DPESNF : public NeighborhoodFinderMethod<MPTraits> {
     /// is one dimension of the projected point.
     Projected Project(const CfgType& _c);
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// @brief Brute force computation of the K-closest elements in the
-    ///        projected space.
+    /// Brute force computation of the K-closest elements in the
+    /// projected space.
     /// @tparam OutputIterator Output of vid, distance pairs for nearest
     ///                        elements
     /// @param _rdmp Roadmap
     /// @param _c Query point
     /// @param _out Output iterator
     template<typename OutputIterator>
-      OutputIterator KClosest(RoadmapType* _rdmp, const CfgType& _c,
-          OutputIterator _out);
+    OutputIterator KClosest(RoadmapType* _rdmp, const CfgType& _c,
+        OutputIterator _out);
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// @brief Euclidean distance in R^m
+    /// Euclidean distance in R^m
     /// @param _v1 Projected point 1
     /// @param _v2 Projected point 2
     /// @return Distance
     double Euclidean(const vector<double>& _v1, const vector<double>& _v2);
+
+    ///@}
+    ///@name Internal State
+    ///@{
 
     size_t m_m;   ///< Number of pivots
     unordered_map<RoadmapType*, DPESInfo>
@@ -115,28 +139,38 @@ class DPESNF : public NeighborhoodFinderMethod<MPTraits> {
     DPESInfo* m_queryInfo; ///< Current model to construct and query on
     DPESInfo* m_tmpInfo{nullptr}; ///< Model for when query is not from an
                                   ///< entire roadmap
+
+    ///@}
+
 };
 
-template <typename MPTraits>
-DPESNF<MPTraits>::
-DPESNF(std::string _dmLabel, bool _unconnected,
-    size_t _m, size_t _k) :
-  NeighborhoodFinderMethod<MPTraits>(_dmLabel, _unconnected),
-  m_m(_m) {
-    this->SetName("DPESNF");
-    this->m_nfType = K;
-    this->m_k = _k;
-  }
+/*------------------------------- Construction -------------------------------*/
 
 template <typename MPTraits>
 DPESNF<MPTraits>::
-DPESNF(XMLNode& _node) :
-  NeighborhoodFinderMethod<MPTraits>(_node) {
-    this->SetName("DPESNF");
-    this->m_nfType = K;
-    this->m_k = _node.Read("k", true, 5, 0, MAX_INT, "k value");
-    m_m = _node.Read("m", true, 3, 1, MAX_INT, "m value for DPES");
-  }
+DPESNF(std::string _dmLabel, bool _unconnected, size_t _m, size_t _k)
+  : NeighborhoodFinderMethod<MPTraits>(_dmLabel, _unconnected), m_m(_m) {
+  this->SetName("DPESNF");
+  this->m_nfType = K;
+  this->m_k = _k;
+}
+
+
+template <typename MPTraits>
+DPESNF<MPTraits>::
+DPESNF(XMLNode& _node) : NeighborhoodFinderMethod<MPTraits>(_node) {
+  this->SetName("DPESNF");
+  this->m_nfType = K;
+  this->m_k = _node.Read("k", true, 5, 0, MAX_INT, "k value");
+  m_m = _node.Read("m", true, 3, 1, MAX_INT, "m value for DPES");
+}
+
+
+template <typename MPTraits>
+DPESNF<MPTraits>::
+~DPESNF() = default;
+
+/*-------------------------- MPBaseObject Overrides --------------------------*/
 
 template <typename MPTraits>
 void
@@ -148,6 +182,8 @@ Print(std::ostream& _os) const {
     << "\tm: " << m_m << endl;
 }
 
+/*----------------------- NeighborhoodFinder Interface -----------------------*/
+
 template <typename MPTraits>
 template<typename InputIterator, typename OutputIterator>
 OutputIterator
@@ -155,9 +191,9 @@ DPESNF<MPTraits>::
 FindNeighbors(RoadmapType* _rmp,
     InputIterator _first, InputIterator _last, bool _fromFullRoadmap,
     const CfgType& _cfg, OutputIterator _out) {
-  this->StartTotalTime();
+  MethodTimer mt(this->GetStatClass(), "DPESNF::FindNeighbors");
+  this->IncrementNumQueries();
 
-  this->StartConstructionTime();
   size_t& currRdmp = m_dpesInfo[_rmp].m_currentRoadmapVersion;
   if(_fromFullRoadmap) {
     m_queryInfo = &m_dpesInfo[_rmp];
@@ -174,17 +210,12 @@ FindNeighbors(RoadmapType* _rmp,
     m_queryInfo = m_tmpInfo;
     CreatePivots(_rmp, _first, _last);
   }
-  this->EndConstructionTime();
 
-  this->IncrementNumQueries();
-
-  this->StartQueryTime();
   _out = KClosest(_rmp, _cfg, _out);
-  this->EndQueryTime();
 
-  this->EndTotalTime();
   return _out;
 }
+
 
 template <typename MPTraits>
 template<typename InputIterator, typename OutputIterator>
@@ -197,6 +228,8 @@ FindNeighborPairs(RoadmapType* _rmp,
   throw RunTimeException(WHERE, "FindNeighborPairs is not yet implemented.");
 }
 
+/*--------------------------------- Helpers ----------------------------------*/
+
 template <typename MPTraits>
 template<typename InputIterator>
 void
@@ -205,6 +238,7 @@ CreatePivots(RoadmapType* _rdmp,
     InputIterator _first, InputIterator _last) {
 
   typename RoadmapType::GraphType* g = _rdmp->GetGraph();
+  auto dm = this->GetDistanceMetric(this->GetDMLabel());
 
   //Compute more pivots if necessary
   if(m_queryInfo->m_pivots.size() < m_m) {
@@ -230,7 +264,7 @@ CreatePivots(RoadmapType* _rdmp,
         double minV = MAX_DBL;
         CfgType& c = g->GetVertex(i);
         for(auto& p : m_queryInfo->m_pivots)
-          minV = min(minV, this->GetDMMethod()->Distance(p, c));
+          minV = min(minV, dm->Distance(p, c));
 
         if(minV > maxV) {
           maxI = i;
@@ -261,9 +295,10 @@ template <typename MPTraits>
 typename DPESNF<MPTraits>::Projected
 DPESNF<MPTraits>::
 Project(const CfgType& _c) {
+  auto dm = this->GetDistanceMetric(this->GetDMLabel());
   Projected proj(m_m, 0);
   for(size_t i = 0; i < m_queryInfo->m_pivots.size(); ++i)
-    proj[i] = this->GetDMMethod()->Distance(_c, m_queryInfo->m_pivots[i]);
+    proj[i] = dm->Distance(_c, m_queryInfo->m_pivots[i]);
   return proj;
 }
 
@@ -331,5 +366,7 @@ Euclidean(const Projected& _v1, const Projected& _v2) {
     dist += sqr(_v1[i] - _v2[i]);
   return sqrt(dist);
 }
+
+/*----------------------------------------------------------------------------*/
 
 #endif

@@ -61,15 +61,15 @@ class Connection final {
     /// Copying a connection does not copy the multibody and body pointers, as
     /// this would not be a usable object. Call SetBodies to attach a newly
     /// copied connection to another multibody.
-    Connection(const Connection&);       ///< Copy.
-    Connection(Connection&&) = default;  ///< Move.
+    Connection(const Connection&);  ///< Copy.
+    Connection(Connection&&);       ///< Move.
 
     ///@}
     ///@name Assignment
     ///@{
 
-    Connection& operator=(const Connection&);       ///< Copy.
-    Connection& operator=(Connection&&) = default;  ///< Move.
+    Connection& operator=(const Connection&);  ///< Copy.
+    Connection& operator=(Connection&&);       ///< Move.
 
     ///@}
     ///@name I/O
@@ -160,7 +160,6 @@ class Connection final {
     ///@{
 
     MultiBody* m_multibody{nullptr};          ///< Owner of this Connection
-    std::array<Body*, 2> m_bodies;            ///< (previous body, next body)
     Transformation m_transformationToBody2;   ///< Transform to second body
     Transformation m_transformationToDHFrame; ///< Transform to DH frame
     DHParameters m_dhParameters;              ///< DH frame description

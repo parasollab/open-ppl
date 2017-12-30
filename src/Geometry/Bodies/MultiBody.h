@@ -1,6 +1,7 @@
 #ifndef MULTI_BODY_H_
 #define MULTI_BODY_H_
 
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -63,8 +64,6 @@ class MultiBody {
 
     ///@name Local Types
     ///@{
-
-    typedef Connection Joint; ///< Joint of robot
 
     /// The types of MultiBody that we can support.
     enum class Type {
@@ -146,11 +145,12 @@ class MultiBody {
 
     /// Add a body.
     /// @param _body The body to add.
-    void AddBody(Body* const _body);
+    /// @return The index of the added body.
+    size_t AddBody(Body&& _body);
 
     /// Set the base body.
-    /// @param _body The free body to use as the base.
-    void SetBaseBody(Body* const _body);
+    /// @param _index The index of the body to use as the base.
+    void SetBaseBody(const size_t _index);
 
     /// Get the body type of the base body.
     Body::Type GetBaseType() const noexcept;
@@ -185,14 +185,8 @@ class MultiBody {
     ///@name Connections
     ///@{
 
-    /// Get the number of Connections in this multibody.
-    size_t GetNumJoints() const noexcept;
-
-    /// Get a begin iterator for the multibody's joints.
-    std::vector<Joint*>::const_iterator joints_begin() const noexcept;
-
-    /// Get an end iterator for the multibody's joints.
-    std::vector<Joint*>::const_iterator joints_end() const noexcept;
+    /// Get the Connections in this multibody.
+    const std::vector<std::unique_ptr<Connection>>& GetJoints() const noexcept;
 
     /// Get the DOF type for a specific degree of freedom.
     const DofType& GetDOFType(const size_t _i) const noexcept;
@@ -242,12 +236,6 @@ class MultiBody {
     ///@name Helpers
     ///@{
 
-    /// Copy the sub-components (bodies and joints) from another multibody.
-    void CopyComponentsFrom(const MultiBody& _other);
-
-    /// Move the sub-components (bodies and joints) from another multibody.
-    void MoveComponentsFrom(MultiBody&& _other);
-
     /// Sort the joints by body indexes.
     void SortJoints();
 
@@ -267,25 +255,25 @@ class MultiBody {
     ///@name Internal State
     ///@{
 
-    Type m_multiBodyType{Type::Passive}; ///< The type of multibody.
+    Type m_multiBodyType{Type::Passive};  ///< The type of multibody.
 
-    std::vector<Body*> m_bodies;         ///< All bodies
+    std::vector<Body> m_bodies;           ///< The sub-parts.
 
-    Vector3d m_com;                      ///< Center of mass
+    Vector3d m_com;                       ///< Center of mass
 
     double m_radius{0};                   ///< Bounding Sphere
     std::array<double, 6> m_boundingBox;  ///< Bounding Box
     double m_maxAxisRange{0};             ///< Max axis range
 
-    size_t m_baseIndex{0};                   ///< Free body index for base
-    Body* m_baseBody{nullptr};               ///< Body of base
-    Body::Type m_baseType;                   ///< Type of base
-    Body::MovementType m_baseMovement;       ///< Type of movement for base
+    size_t m_baseIndex{0};                ///< Free body index for base
+    Body* m_baseBody{nullptr};            ///< Body of base
+    Body::Type m_baseType;                ///< Type of base
+    Body::MovementType m_baseMovement;    ///< Type of movement for base
 
-    std::vector<Joint*> m_joints;            ///< All Connections
+    std::vector<std::unique_ptr<Connection>> m_joints;  ///< All Connections
 
-    std::vector<DofInfo> m_dofInfo;          ///< DofInfo for each motion
-    std::vector<double> m_currentDofs;       ///< The current configuration DOFs
+    std::vector<DofInfo> m_dofInfo;       ///< DofInfo for each motion
+    std::vector<double> m_currentDofs;    ///< The current configuration DOFs
 
     ///@}
 };

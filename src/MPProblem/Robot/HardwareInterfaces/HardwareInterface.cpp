@@ -1,14 +1,24 @@
 #include "HardwareInterface.h"
 
-#include <algorithm>
-#include <sstream>
+#ifdef PMPL_USE_ICREATE
+#include "ICreateInterface.h"
+#endif
 
+#include "Utilities/XMLNode.h"
 #include "Utilities/PMPLExceptions.h"
+
 #include "nonstd/io.h"
 #include "nonstd/numerics.h"
 
+#include <algorithm>
+#include <sstream>
+
 
 /*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Command ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
+
+HardwareInterface::Command::
+Command() = default;
+
 
 HardwareInterface::Command::
 Command(const ControlSet& _c, const double _s) : controls(_c), seconds(_s) { }
@@ -26,6 +36,47 @@ operator==(const Command& _other) const noexcept {
 HardwareInterface::
 HardwareInterface(const std::string& _name, const std::string& _ip,
     const unsigned short _port) : m_name(_name), m_ip(_ip), m_port(_port) {}
+
+
+std::unique_ptr<HardwareInterface>
+HardwareInterface::
+Factory(XMLNode& _node) {
+  // Get the IP and port.
+  const std::string ip = _node.Read("ip", true, "",
+      "The IPv4 address for the robot hardware.");
+
+  unsigned short port = _node.Read<unsigned short>("port", false, 0, 0,
+      std::numeric_limits<unsigned short>::max(),
+      "The on-board controller port.");
+
+  // For some reason I can't get GCC to ignore an unused variable warning here,
+  // assigning to self as a hacky work-around.
+  port = port;
+
+  // Get the hardware type and downcase.
+  std::string type = _node.Read("hardware", true, "", "The type of hardware.");
+  std::transform(type.begin(), type.end(), type.begin(), ::tolower);
+
+  std::unique_ptr<HardwareInterface> output;
+
+  // Match the type string to known interfaces. Provide detailed errors here to
+  // make sure we don't waste time on sily configuration problems.
+  if(type == "icreate") {
+#ifdef PMPL_USE_ICREATE
+    output = std::unique_ptr<ICreateInterface>(
+        port == 0 ? new ICreateInterface(ip)
+                  : new ICreateInterface(ip, port)
+    );
+#else
+    throw ParseException(_node.Where(), "Requested interface for 'icreate', but "
+        "support for this was not compiled. Re-make with 'icreate=1' to enable.");
+#endif
+  }
+  else
+    throw ParseException(_node.Where(), "Unrecognized hardware '" + type + "'.");
+
+  return output;
+}
 
 /*------------------------ Hardware Robot Properties -------------------------*/
 
@@ -115,46 +166,6 @@ AggregatedControlVector(const ControlSet& _controls) const {
 
   // If the signal is OK, return the aggregated force.
   return force;
-}
-
-/*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ XML Factory ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
-
-#include "Utilities/XMLNode.h"
-
-#ifdef PMPL_USE_ICREATE
-#include "ICreateInterface.h"
-#endif
-
-HardwareInterface*
-HardwareInterfaceFactory(XMLNode& _node) {
-  // Get the IP and port.
-  const std::string ip = _node.Read("ip", true, "",
-      "The IPv4 address for the robot hardware.");
-
-  unsigned short port = _node.Read<unsigned short>("port", false, 0, 0,
-      std::numeric_limits<unsigned short>::max(),
-      "The on-board controller port.");
-
-  // For some reason I can't get GCC to ignore an unused variable warning here,
-  // assigning to self as a hacky work-around.
-  port = port;
-
-  // Get the hardware type and downcase.
-  const std::string parsedType = _node.Read("hardware", true, "",
-      "The type of hardware.");
-  std::string type = parsedType;
-  std::transform(type.begin(), type.end(), type.begin(), ::tolower);
-
-  // Match the type string to known interfaces.
-#ifdef PMPL_USE_ICREATE
-  if(type == "icreate")
-    return port == 0 ? new ICreateInterface(ip)
-                     : new ICreateInterface(ip, port);
-#endif
-
-  throw ParseException(_node.Where(),
-      "Unrecognized hardware '" + parsedType + "'.");
-  return nullptr;
 }
 
 /*----------------------------------------------------------------------------*/

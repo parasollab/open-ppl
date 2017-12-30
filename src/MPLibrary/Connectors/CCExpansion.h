@@ -5,8 +5,7 @@
 #include "MPLibrary/Extenders/BasicExtender.h"
 
 ////////////////////////////////////////////////////////////////////////////////
-/// @ingroup Connectors
-/// @brief Expand CCs out in attempt for better roadmap connectivity.
+/// Expand CCs out in attempt for better roadmap connectivity.
 /// @TODO This method is incorrectly implemented as a connector when in fact it
 ///       should be an MPStrategy. It needs to be moved to the strategies and to
 ///       have hard-coded things like the unit vector function replaced with
@@ -32,6 +31,7 @@
 /// 2. ExpandFrom: Expand away from the source CC's centroid.
 /// 3. ExpandTo: Expand to the nearest other CC's centroid.
 /// 4. MedialAxisExpand: Expand along tangents to the medial-axis.
+/// @ingroup Connectors
 ////////////////////////////////////////////////////////////////////////////////
 template <class MPTraits>
 class CCExpansion: public ConnectorMethod<MPTraits> {
@@ -376,7 +376,8 @@ RandomExpand(RoadmapType* _rm, int _index) {
   LPOutput<MPTraits> lpOutput;
   CDInfo cdInfo;
   CfgType prev(robot), node(robot), direction(robot), bumpPoint(robot);
-  auto dm = this->GetNeighborhoodFinder(this->m_nfLabel)->GetDMMethod();
+  auto nf = this->GetNeighborhoodFinder(this->m_nfLabel);
+  auto dm = this->GetDistanceMetric(nf->GetDMLabel());
   BasicExtender<MPTraits> be(m_dmLabel, m_vcLabel);
   be.SetMPLibrary(this->GetMPLibrary());
 
@@ -421,7 +422,8 @@ ExpandFrom(RoadmapType* _rm, int _index) {
   LPOutput<MPTraits> lpOutput;
   CDInfo cdInfo;
   CfgType prev(robot), node(robot), direction(robot), bumpPoint(robot);
-  auto dm = this->GetNeighborhoodFinder(this->m_nfLabel)->GetDMMethod();
+  auto nf = this->GetNeighborhoodFinder(this->m_nfLabel);
+  auto dm = this->GetDistanceMetric(nf->GetDMLabel());
   BasicExtender<MPTraits> be(m_dmLabel, m_vcLabel);
   be.SetMPLibrary(this->GetMPLibrary());
 
@@ -475,7 +477,8 @@ ExpandTo(RoadmapType* _rm, int _index) {
   CDInfo cdInfo;
   CfgType prev(robot), node(robot), direction(robot), bumpPoint(robot);
   CfgType target = m_goalTargetNode;
-  auto dm = this->GetNeighborhoodFinder(this->m_nfLabel)->GetDMMethod();
+  auto nf = this->GetNeighborhoodFinder(this->m_nfLabel);
+  auto dm = this->GetDistanceMetric(nf->GetDMLabel());
   BasicExtender<MPTraits> be(m_dmLabel, m_vcLabel);
   be.SetMPLibrary(this->GetMPLibrary());
 
@@ -522,7 +525,8 @@ MedialAxisExpand(RoadmapType* _rm, int _index) {
   LPOutput<MPTraits> lpOutput;
   CDInfo cdInfo;
   CfgType prev(robot), bump1(robot), bump2(robot), dir1(robot), dir2(robot);
-  auto dm = this->GetNeighborhoodFinder(this->m_nfLabel)->GetDMMethod();
+  auto nf = this->GetNeighborhoodFinder(this->m_nfLabel);
+  auto dm = this->GetDistanceMetric(nf->GetDMLabel());
   BasicExtender<MPTraits> be(m_dmLabel, m_vcLabel);
   be.SetMPLibrary(this->GetMPLibrary());
 
@@ -582,7 +586,8 @@ MedialRecurse(RoadmapType* _rm, CfgType& _prev, CfgType& _dir, int _count) {
 
   LPOutput<MPTraits> lpOutput;
   CDInfo cdInfo;
-  auto dm = this->GetNeighborhoodFinder(this->m_nfLabel)->GetDMMethod();
+  auto nf = this->GetNeighborhoodFinder(this->m_nfLabel);
+  auto dm = this->GetDistanceMetric(nf->GetDMLabel());
   BasicExtender<MPTraits> be(m_dmLabel, m_vcLabel);
   be.SetMPLibrary(this->GetMPLibrary());
 
@@ -668,7 +673,8 @@ CCExpansion<MPTraits>::
 FindNearestCC(RoadmapType* _rm, VID& _curCC, vector<VID>& _allCCs) {
   vector<VID> ccvids;
   pair<VID,double> nearestCC(INVALID_VID, numeric_limits<double>::max());
-  auto dm = this->GetNeighborhoodFinder(this->m_nfLabel)->GetDMMethod();
+  auto nf = this->GetNeighborhoodFinder(this->m_nfLabel);
+  auto dm = this->GetDistanceMetric(nf->GetDMLabel());
 
   for(auto it = _allCCs.begin(); it != _allCCs.end(); ++it){
     // Avoid self-check
@@ -701,7 +707,8 @@ TargetCCInfo(RoadmapType* _rm, vector<VID>& _curCC){
 
   vector< pair<VID,double> > cc1Mod;
   m_avgIntraDistTarget = 0;
-  auto dm = this->GetNeighborhoodFinder(this->m_nfLabel)->GetDMMethod();
+  auto nf = this->GetNeighborhoodFinder(this->m_nfLabel);
+  auto dm = this->GetDistanceMetric(nf->GetDMLabel());
 
   for(auto it = _curCC.begin(); it != _curCC.end(); ++it){
     CfgType cfg = _rm->GetGraph()->GetVertex(*it);
@@ -720,7 +727,8 @@ template<class MPTraits>
 void
 CCExpansion<MPTraits>::
 SelectCandidates(RoadmapType* _rm, vector<VID>& _curCC){
-  auto dm = this->GetNeighborhoodFinder(this->m_nfLabel)->GetDMMethod();
+  auto nf = this->GetNeighborhoodFinder(this->m_nfLabel);
+  auto dm = this->GetDistanceMetric(nf->GetDMLabel());
   m_expansionChains.clear();
 
   // Find max possible number of candidate nodes
@@ -765,7 +773,8 @@ CCExpansion<MPTraits>::
 GetMedialAxisRay(RoadmapType* _rm, CfgType& _prev, CfgType& _bumpPoint,
     CfgType& _curr, CfgType& _dir) {
 
-  auto dm = this->GetNeighborhoodFinder(this->m_nfLabel)->GetDMMethod();
+  auto nf = this->GetNeighborhoodFinder(this->m_nfLabel);
+  auto dm = this->GetDistanceMetric(nf->GetDMLabel());
   CfgType uA = _bumpPoint - _prev;
   CfgType uB = _curr - _bumpPoint;
 
@@ -811,7 +820,8 @@ template <class MPTraits>
 bool
 CCExpansion<MPTraits>::
 WithinProximity(RoadmapType* _rm, CfgType& _bumpPoint, CfgType& _target) {
-  auto dm = this->GetNeighborhoodFinder(this->m_nfLabel)->GetDMMethod();
+  auto nf = this->GetNeighborhoodFinder(this->m_nfLabel);
+  auto dm = this->GetDistanceMetric(nf->GetDMLabel());
   double dist = dm->Distance(_bumpPoint, _target);
   return (dist < m_avgIntraDistTarget) ? true : false;
 }
@@ -846,7 +856,8 @@ UpdateRoadmap(RoadmapType* _rm, CfgType& _prev,
   if(!m_addIntermediate) {
     auto robot = this->GetTask()->GetRobot();
     CfgType col(robot);
-    auto dm = this->GetNeighborhoodFinder(this->m_nfLabel)->GetDMMethod();
+    auto nf = this->GetNeighborhoodFinder(this->m_nfLabel);
+    auto dm = this->GetDistanceMetric(nf->GetDMLabel());
     test = this->GetLocalPlanner(this->m_lpLabel)->
       IsConnected(_prev, _target, col, &lpOutput,
           this->GetEnvironment()->GetPositionRes(),
@@ -897,7 +908,8 @@ IsClear(RoadmapType* _rm, CfgType& bumpPoint) {
   if(m_maxFailedExpansions == 0)
     return true;
   int numFails = 0;
-  auto dm = this->GetNeighborhoodFinder(this->m_nfLabel)->GetDMMethod();
+  auto nf = this->GetNeighborhoodFinder(this->m_nfLabel);
+  auto dm = this->GetDistanceMetric(nf->GetDMLabel());
 
   // Check to make sure that we are not expanding back into the chain
   for(auto it = m_allExpansionNodes.begin(); it != m_allExpansionNodes.end();

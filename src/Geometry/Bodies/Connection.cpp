@@ -50,7 +50,6 @@ GetTagFromJointType(const Connection::JointType _j) {
 Connection::
 Connection(MultiBody* const _owner)
   : m_multibody(_owner),
-    m_bodies{nullptr, nullptr},
     m_jointType(JointType::NonActuated)
 { }
 
@@ -120,35 +119,37 @@ Connection(MultiBody* const _owner, XMLNode& _node)
 
 
 Connection::
-Connection(const Connection& _other)
-  : m_multibody(nullptr),
-    m_bodies{nullptr, nullptr},
-    m_transformationToBody2(_other.m_transformationToBody2),
-    m_transformationToDHFrame(_other.m_transformationToDHFrame),
-    m_dhParameters(_other.m_dhParameters),
-    m_dhRenderParameters(_other.m_dhRenderParameters),
-    m_jointType(_other.m_jointType),
-    m_bodyIndices(_other.m_bodyIndices),
-    m_jointRange(_other.m_jointRange)
-{ }
+Connection(const Connection& _other) {
+  *this = _other;
+}
+
+
+Connection::
+Connection(Connection&&) = default;
 
 /*-------------------------------- Assignment --------------------------------*/
 
 Connection&
 Connection::
 operator=(const Connection& _other) {
-  m_multibody = nullptr;
-  m_bodies = {nullptr, nullptr};
-  m_transformationToBody2 = _other.m_transformationToBody2;
-  m_transformationToDHFrame = _other.m_transformationToDHFrame;
-  m_dhParameters = _other.m_dhParameters;
-  m_dhRenderParameters = _other.m_dhRenderParameters;
-  m_jointType = _other.m_jointType;
-  m_bodyIndices = _other.m_bodyIndices;
-  m_jointRange = _other.m_jointRange;
+  if(this != &_other) {
+    m_multibody               = nullptr;
+    m_transformationToBody2   = _other.m_transformationToBody2;
+    m_transformationToDHFrame = _other.m_transformationToDHFrame;
+    m_dhParameters            = _other.m_dhParameters;
+    m_dhRenderParameters      = _other.m_dhRenderParameters;
+    m_jointType               = _other.m_jointType;
+    m_bodyIndices             = _other.m_bodyIndices;
+    m_jointRange              = _other.m_jointRange;
+  }
 
   return *this;
 }
+
+
+Connection&
+Connection::
+operator=(Connection&&) = default;
 
 /*----------------------------------- I/O ------------------------------------*/
 
@@ -211,13 +212,6 @@ void
 Connection::
 SetBodies(MultiBody* const _owner, const size_t _parentIndex,
     const size_t _childIndex) {
-  // If the bodies are already set, this is an error. Once they are set, the
-  // multibody will be affected if we start changing things.
-  const bool alreadySet = m_bodies[0] != nullptr or m_bodies[1] != nullptr;
-  if(alreadySet)
-    throw RunTimeException(WHERE, "Cannot change the connected bodies once they "
-        "are set.");
-
   // Set the parent and child indexes.
   m_bodyIndices.first = _parentIndex;
   m_bodyIndices.second = _childIndex;
@@ -225,13 +219,9 @@ SetBodies(MultiBody* const _owner, const size_t _parentIndex,
   // Set the owning multibody.
   m_multibody = _owner;
 
-  // Retrieve the body pointers.
-  m_bodies[0] = m_multibody->GetBody(m_bodyIndices.first);
-  m_bodies[1] = m_multibody->GetBody(m_bodyIndices.second);
-
   // Update the bodies.
-  m_bodies[0]->LinkForward(this);
-  m_bodies[1]->LinkBackward(this);
+  GetPreviousBody()->LinkForward(this);
+  GetNextBody()->LinkBackward(this);
 }
 
 
@@ -298,14 +288,14 @@ GetJointRange(size_t _i) const noexcept {
 const Body*
 Connection::
 GetPreviousBody() const noexcept {
-  return m_bodies[0];
+  return m_multibody->GetBody(m_bodyIndices.first);
 }
 
 
 Body*
 Connection::
 GetPreviousBody() noexcept {
-  return m_bodies[0];
+  return m_multibody->GetBody(m_bodyIndices.first);
 }
 
 
@@ -319,14 +309,14 @@ GetPreviousBodyIndex() const noexcept {
 const Body*
 Connection::
 GetNextBody() const noexcept {
-  return m_bodies[1];
+  return m_multibody->GetBody(m_bodyIndices.second);
 }
 
 
 Body*
 Connection::
 GetNextBody() noexcept {
-  return m_bodies[1];
+  return m_multibody->GetBody(m_bodyIndices.second);
 }
 
 
