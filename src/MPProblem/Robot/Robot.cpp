@@ -41,6 +41,10 @@ Robot(MPProblem* const _p, XMLNode& _node) : m_problem(_p) {
   m_virtual = _node.Read("virtual", false, false, "Virtual robots are imaginary "
       "and will not be included in the simulation or CD checks.");
 
+  //TODO: The following should go in the behavior. We don't have XML parsing for that yet
+  //so I added it there. 
+  m_withoutHandOff = _node.Read("withoutHandoff", false, false, "Is the behavior without task hand-off");
+
   //std::string color = _node.Read("color", false, "1 0 0 1", "Color of the robot in simulation");
   //this->GetMultiBody()->GetBody(i)->SetBodyColor(color);
 

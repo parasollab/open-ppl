@@ -151,7 +151,10 @@ class PathFollowingChildAgent : public Agent {
     Cfg m_robotPos; ///< Position of the physical robot
 
     Cfg m_currentGoal;  ///< Current goal the agent is trying to go to
-    
+
+    bool m_goToSameGoal{true};   ///< Should the agent go to the same goal after replanning?
+   
+    double m_totalRunTime{0.0};
     ///@}
 
 };

@@ -62,7 +62,7 @@ class BatteryConstrainedGroup : public Agent {
 
     std::vector<Cfg> MakeNextPlan(MPTask* const _task, const bool _collisionAvoidance = false);
 
-    /// Get a helpers robot for the worker robot
+    /// Get a helper robot for the worker robot
     std::vector<Robot*>& GetHelpers();
 
     /// Get the charging locations for problem
@@ -72,8 +72,19 @@ class BatteryConstrainedGroup : public Agent {
     bool IsHelper(Robot* const _r) const;
 
     /// Get a random unvisited vertex from the roadmap.
-    const Cfg GetRandomRoadmapPoint();
+    const Cfg GetRandomRoadmapPoint(std::string _label);
 
+    /// Change the worker robot to a helper
+    void SetHelper(Robot* _r);
+    
+    /// Change the worker robot to a helper
+    void SetWorker(Robot* _r);
+
+    /// Add a goal for a given robot
+    void AddGoal(Cfg& _cfg, const std::string& _robotLabel);
+
+    /// See if all the goals have been compeleted
+    bool AllGoalsCompleted();
     ///@}
 
   private:
@@ -110,8 +121,13 @@ class BatteryConstrainedGroup : public Agent {
     std::vector<Robot*> m_availableHelpers;
 
     /// The set of Cfgs that need to be visited by a worker.
-    std::vector<Cfg> m_unvisitedCfgs;
+    std::map<std::string, std::vector<Cfg> > m_unvisitedCfgs;
 
+
+    ///Timers
+    double m_lazyTime{0.0};
+    
+    double m_prmTime{0.0};
     ///@}
 
 };

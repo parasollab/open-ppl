@@ -229,6 +229,10 @@ class Robot {
     /// Change the robot's unique label.
     void SetLabel(const std::string&);
 
+    /// Labels unique to Battery Constrained Coverage
+    /// shoulg go into the behavior xml node when there is one
+    bool m_withoutHandOff{false};
+
     ///@}
     ///@name Debug
     ///@{

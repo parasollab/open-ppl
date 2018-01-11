@@ -2,13 +2,15 @@
 
 #include <limits>
 
+#include "nonstd/numerics.h"
+#include "nonstd/timer.h"
+
 #include "Behaviors/Controllers/ControllerMethod.h"
 #include "MPProblem/Constraints/CSpaceConstraint.h"
 #include "BulletDynamics/Featherstone/btMultiBody.h"
 #include "MPProblem/Robot/Robot.h"
-#include "Behaviors/Agents/RoadmapFollowingAgent.h"
 #include "MPProblem/Robot/DynamicsModel.h"
-
+#include "MPProblem/Robot/HardwareInterfaces/QueuedHardwareInterface.h"
 
 /*------------------------------ Construction --------------------------------*/
 
@@ -49,6 +51,7 @@ Initialize() {
 
   auto childRobots = GetChildRobots();
   int priority = 1;
+  //double depletion = 0.20;
 
   // Initialize the agent for each child robot.
   for(auto robot : childRobots) {
@@ -67,6 +70,15 @@ Initialize() {
     }
     else {
       agent->m_priority = 1000 + priority++;
+      /*auto hardwareInterface = static_cast<QueuedHardwareInterface*>
+            (agent->GetRobot()->GetHardwareInterface("base")); //TODO Magic string
+      if(hardwareInterface){
+        agent->m_depletionRate = depletion;
+      }
+      else {
+        agent->m_depletionRate = depletion;
+      }
+      depletion += 0.05;*/
     }
 
     // Set up the shared roadmap and parent/child relationship.
@@ -75,6 +87,13 @@ Initialize() {
     agent->m_parentAgent = this;
     m_childAgents.push_back(agent);
   }
+      //auto helperPos = robot->GetDynamicsModel()->GetSimulatedState();
+
+  CfgType chargingPoint(m_robot);
+  auto newtask = m_robot->GetMPProblem()->GetTasks(m_robot).front();
+  auto boundary = newtask->GetStartBoundary();
+  chargingPoint.SetData(boundary->GetCenter());
+  m_chargingLocations.push_back(make_pair(chargingPoint, false));
 
   // Initialize the set of unvisited configurations.
   InitializeUnvisitedCfgs();
@@ -130,16 +149,50 @@ IsHelper(Robot* const _r) const {
 }
 
 
+void
+BatteryConstrainedGroup::
+SetHelper(Robot* _r) {
+  std::string label = _r->GetLabel();
+  label.replace(0,6,"helper");
+  _r->SetLabel(label);
+}
+
+
+void
+BatteryConstrainedGroup::
+SetWorker(Robot* _r) {
+  std::string label = _r->GetLabel();
+  label.replace(0,6,"worker");
+  _r->SetLabel(label);
+}
+
+
+bool 
+BatteryConstrainedGroup::
+AllGoalsCompleted() {
+  for(auto val: m_unvisitedCfgs)
+    if(!val.second.empty())
+      return false;
+  return true;
+}
+
+void
+BatteryConstrainedGroup::
+AddGoal(Cfg& _cfg, const std::string& _robotLabel) {
+  m_unvisitedCfgs[_robotLabel].push_back(_cfg);
+}
+
+
 const Cfg
 BatteryConstrainedGroup::
-GetRandomRoadmapPoint() {
+GetRandomRoadmapPoint(std::string _label) {
   Cfg empty(nullptr);
-  if(m_unvisitedCfgs.empty()) {
+  if(m_unvisitedCfgs[_label].empty()) {
     return empty;
   }
   else {
-    Cfg point = m_unvisitedCfgs.back();
-    m_unvisitedCfgs.pop_back();
+    Cfg point = m_unvisitedCfgs[_label].back();
+    m_unvisitedCfgs[_label].pop_back();
     return point;
   }
 }
@@ -149,12 +202,25 @@ GetRandomRoadmapPoint() {
 std::vector<Cfg>
 BatteryConstrainedGroup::
 MakeNextPlan(MPTask* const _task, const bool _collisionAvoidance) {
-  if(_collisionAvoidance) 
+  nonstd::timer clock;
+
+  if(_collisionAvoidance) {
+    clock.restart();
     m_library->Solve(m_robot->GetMPProblem(), _task, m_solution,
         "LazyPRM", LRand(), "LazyCollisionAvoidance");
-  else 
+    clock.stop();
+    m_lazyTime += (clock.elapsed()/1e9);
+  }
+  else {
+    clock.restart();
     m_library->Solve(m_robot->GetMPProblem(), _task, m_solution);
-    
+    clock.stop();
+    m_prmTime += (clock.elapsed()/1e9);
+  }
+
+  std::ofstream ofs("output.txt");
+  ofs << "Lazy Time: " << m_lazyTime << "\nBasic Time: " << m_prmTime << endl;
+  //Write basicTime and lazyTime to output file
   return m_solution->GetPath()->Cfgs();
 }
 
@@ -167,7 +233,7 @@ SetNextChildTask() {
 
     // Get a random roadmap point as the new goal for this agent, and also get
     // the current position.
-    const auto& newGoal = GetRandomRoadmapPoint();
+    const auto& newGoal = GetRandomRoadmapPoint(agentRobot->GetLabel());
     using CfgType = decltype(newGoal);
     const CfgType currentPos = agentRobot->GetDynamicsModel()->GetSimulatedState();
 
@@ -202,33 +268,18 @@ GetChildRobots() const {
 void
 BatteryConstrainedGroup::
 InitializeUnvisitedCfgs() {
-  /*for(typename GraphType::VI i = m_solution->GetRoadmap()->GetGraph()->begin();
-      i!=m_solution->GetRoadmap()->GetGraph()->end(); i++) {
-    Cfg cfg =  m_solution->GetRoadmap()->GetGraph()->GetVertex(i);
-    if (!(std::find(m_unvisitedCfgs.begin(), m_unvisitedCfgs.end(),cfg)!=m_unvisitedCfgs.end()))
-      m_unvisitedCfgs.push_back(cfg);
-  }
-  std::random_shuffle ( m_unvisitedCfgs.begin(), m_unvisitedCfgs.end() );*/
 
-  Cfg point(m_robot);
-  std::istringstream pointStream0("1 0 0 0 0 0");
-  point.Read(pointStream0);
-  m_unvisitedCfgs.push_back(point);
-  std::istringstream pointStream("3 0 0 0 0 0");
-  point.Read(pointStream);
-  m_unvisitedCfgs.push_back(point);
-  std::istringstream pointStream2("5 0 0 0 0 0");
-  point.Read(pointStream2);
-  m_unvisitedCfgs.push_back(point);
-  std::istringstream pointStream1("5 -2 0 0 0 0");
-  point.Read(pointStream1);
-  m_unvisitedCfgs.push_back(point);
-  /*std::istringstream pointStream2("4.75 0 0 0 0 0");
-  point.Read(pointStream2);
-  m_unvisitedCfgs.push_back(point);
-  std::istringstream pointStream3("4.87 -1.524 0 0 0 0");
-  point.Read(pointStream3);*/
-  //m_unvisitedCfgs.push_back(point);
+  for(auto robot : GetChildRobots()) {
+    auto tasks = m_robot->GetMPProblem()->GetTasks(robot);
+    std::vector<Cfg> workerCfgs;
+    for(auto task : tasks) {
+      auto boundary = task->GetGoalBoundary();
+      Cfg newCfg(m_robot);
+      newCfg.SetData(boundary->GetCenter());
+      workerCfgs.push_back(newCfg);
+    }
+    m_unvisitedCfgs[robot->GetLabel()] = workerCfgs;
+  }
 }
 
 /*----------------------------------------------------------------------------*/
