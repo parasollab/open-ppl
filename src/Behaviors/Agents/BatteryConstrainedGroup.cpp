@@ -70,15 +70,6 @@ Initialize() {
     }
     else {
       agent->m_priority = 1000 + priority++;
-      /*auto hardwareInterface = static_cast<QueuedHardwareInterface*>
-            (agent->GetRobot()->GetHardwareInterface("base")); //TODO Magic string
-      if(hardwareInterface){
-        agent->m_depletionRate = depletion;
-      }
-      else {
-        agent->m_depletionRate = depletion;
-      }
-      depletion += 0.05;*/
     }
 
     // Set up the shared roadmap and parent/child relationship.
@@ -89,6 +80,7 @@ Initialize() {
   }
       //auto helperPos = robot->GetDynamicsModel()->GetSimulatedState();
 
+  //Using the coordinator's start constraint to assigng charging location
   CfgType chargingPoint(m_robot);
   auto newtask = m_robot->GetMPProblem()->GetTasks(m_robot).front();
   auto boundary = newtask->GetStartBoundary();

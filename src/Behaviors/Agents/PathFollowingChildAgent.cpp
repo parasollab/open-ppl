@@ -863,11 +863,6 @@ WorkerStep(double _dt) {
         m_myHelper->GetAgent()->m_priority = m_robot->GetAgent()->m_priority;
         m_robot->GetAgent()->m_priority = temp;
         
-        // Swap the helper's and the worker's depletion rate
-        double tempD = m_myHelper->GetAgent()->m_depletionRate;
-        m_myHelper->GetAgent()->m_depletionRate = 
-          m_robot->GetAgent()->m_depletionRate;
-        m_robot->GetAgent()->m_depletionRate = tempD;
 
         //Create a new task for the new worker. The new worker get the same goal
         //as the previous worker
