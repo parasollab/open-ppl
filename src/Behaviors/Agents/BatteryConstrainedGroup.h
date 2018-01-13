@@ -9,10 +9,15 @@
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// This agent represents the battery constrained coverage behavior presented in
-/// the following paper:
+/// This agent represents the task hand-off behavior presented in
+/// the thesis Titled:
 ///
-///   S. Mishra et. al. "Battery Constrained Coverage" ...
+/// A Task Hand-Off Framework for Multi-Robot Systems by Saurabh Mishra
+///
+/// A portion of this work was also presented in:
+/// Mishra, Saurabh, Samuel Rodriguez, Marco Morales, and Nancy M. Amato.
+// "Battery-constrained coverage." In Automation Science and Engineering (CASE),
+//  2016 IEEE International Conference on, pp. 695-700. IEEE, 2016.
 ///
 /// This agent represents a coordinator and does not correspond to a physical
 /// robot. Its job is to coordinate the children and hold shared data structures
