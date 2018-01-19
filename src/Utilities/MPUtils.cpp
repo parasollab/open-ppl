@@ -170,15 +170,24 @@ NormalizeTheta(double _theta) {
 /*----------------------------------------------------------------------------*/
 
 std::vector<Cfg>
-LoadPath(const std::string &filename) {
+LoadPath(const std::string &_filename, Robot &_robot) {
   std::vector<Cfg> result;
-  if(!FileExists(filename)){
-    throw ParseException(WHERE, "File '" + filename + "' does not exist");
+  if(!FileExists(_filename)){
+    throw ParseException(WHERE, "File '" + _filename + "' does not exist");
     return result;
   }
 
-  throw RunTimeException(WHERE, "Not yet implemented.");
-
+  ifstream pathfile(_filename);
+  string line;
+  Cfg cfg = Cfg(&_robot);
+  getline(pathfile, line);
+  getline(pathfile, line);
+  getline(pathfile, line);
+  while(pathfile){
+    getline(pathfile, line);
+    istringstream cfgInput(line);
+    cfg.Read(cfgInput);
+  }
   return result;
 }
 

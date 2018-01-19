@@ -3,7 +3,6 @@
 
 #include <memory>
 #include <vector>
-
 #include "Geometry/GMSPolygon.h"
 
 class Boundary;
