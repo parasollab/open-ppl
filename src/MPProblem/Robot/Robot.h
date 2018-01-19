@@ -42,7 +42,7 @@ class Robot final {
   ///@name Internal State
   ///@{
 
-  MPProblem* const m_problem;              ///< The owning problem object.
+  MPProblem* m_problem{nullptr};              ///< The owning problem object.
 
   std::string m_label;                     ///< The robot's unique label.
 
@@ -102,10 +102,10 @@ class Robot final {
     /// robots. Destruct the old one and create a new one instead.
 
     Robot(const Robot&) = delete;
-    Robot(Robot&&) = default;
+    Robot(Robot&&);
 
     Robot& operator=(const Robot&) = delete;
-    Robot& operator=(Robot&&) = default;
+    Robot& operator=(Robot&&);
 
     ///@}
 

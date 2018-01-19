@@ -4,6 +4,7 @@
 #include "MPProblem/MPTask.h"
 #include "MPProblem/Environment/Environment.h"
 #include "MPProblem/Robot/Robot.h"
+#include "MPProblem/DynamicObstacle.h"
 #include "Utilities/MPUtils.h"
 #include "Utilities/PMPLExceptions.h"
 #include "Utilities/XMLNode.h"
@@ -275,6 +276,18 @@ ParseChild(XMLNode& _node) {
     /// @TODO We currently assume that the environment is parsed first. Need to
     ///       make sure this always happens regardless of the XML file ordering.
     m_robots.emplace_back(new Robot(this, _node));
+    return true;
+  }
+  else if(_node.Name() == "DynamicObstacle") {
+    // If this is a dynamic obstacle, get the path file name and make sure it exists.
+    const std::string filePath = GetPathName(_node.Filename());
+    const std::string obstacleFile = _node.Read("pathfile", true, "", "DynamicObstacle path file name");
+    const std::string obstacleFilename = filePath + obstacleFile;
+
+    vector<Cfg> path = LoadPath(obstacleFilename);
+    // TODO: Do we need to ensure that the path is not empty?
+    Robot robot(this, _node);
+    m_dynamicObstacles.emplace_back(new DynamicObstacle(std::move(robot), path));
     return true;
   }
   else if(_node.Name() == "Task") {

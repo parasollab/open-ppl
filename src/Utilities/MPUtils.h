@@ -18,7 +18,8 @@ using namespace mathtool;
 #include "IOUtils.h"
 
 class Environment;
-
+class Cfg;
+class Robot;
 
 ///@name MPUtils
 ///@{
@@ -363,6 +364,9 @@ BinarySearch(RandomIterator _begin, RandomIterator _end, const T& _value,
   }
   return _end;
 }
+
+/// Loads a configuration path from a file for a dynamic obstacle.
+std::vector<Cfg> LoadPath(const std::string &filename);
 
 /*----------------------------------------------------------------------------*/
 

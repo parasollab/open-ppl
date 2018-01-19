@@ -1,6 +1,7 @@
 #include "MPUtils.h"
 #include "MetricUtils.h"
-
+#include "ConfigurationSpace/Cfg.h"
+#include "MPProblem/Robot/Robot.h"
 
 /*------------------------- Random Number Generation -------------------------*/
 
@@ -167,3 +168,18 @@ NormalizeTheta(double _theta) {
 }
 
 /*----------------------------------------------------------------------------*/
+
+std::vector<Cfg>
+LoadPath(const std::string &filename) {
+  std::vector<Cfg> result;
+  if(!FileExists(filename)){
+    throw ParseException(WHERE, "File '" + filename + "' does not exist");
+    return result;
+  }
+
+  throw RunTimeException(WHERE, "Not yet implemented.");
+
+  return result;
+}
+
+

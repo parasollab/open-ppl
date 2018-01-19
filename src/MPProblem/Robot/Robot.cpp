@@ -160,6 +160,10 @@ Robot(MPProblem* const _p, const Robot& _r)
 Robot::
 ~Robot() = default;
 
+Robot::
+Robot(Robot&&) = default;
+
+Robot& Robot::operator=(Robot&&) = default;
 /*---------------------------------- I/O -------------------------------------*/
 
 void

@@ -11,7 +11,7 @@ class MPTask;
 class MultiBody;
 class Robot;
 class XMLNode;
-
+struct DynamicObstacle;
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Representation of a motion planning problem, including an environment,
@@ -136,10 +136,11 @@ class MPProblem final
     ///@name Core Properties
     ///@{
 
-    std::unique_ptr<Environment> m_environment;   ///< The planning environment.
-    std::vector<std::unique_ptr<Robot>> m_robots; ///< The robots in our problem.
-    std::unique_ptr<Robot> m_pointRobot;          ///< A pseudo point-robot.
-    std::vector<std::unique_ptr<MPTask>> m_tasks; ///< The tasks in our problem.
+    std::unique_ptr<Environment> m_environment;             ///< The planning environment.
+    std::vector<std::unique_ptr<Robot>> m_robots;           ///< The robots in our problem.
+    std::unique_ptr<Robot> m_pointRobot;                    ///< A pseudo point-robot.
+    std::vector<std::unique_ptr<MPTask>> m_tasks;           ///< The tasks in our problem.
+    std::vector<std::unique_ptr<DynamicObstacle>> m_dynamicObstacles; ///< The dynamic obstacles in our problem.
 
     ///@}
     ///@name Files
