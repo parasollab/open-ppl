@@ -20,7 +20,7 @@ SimpleControlSetGenerator(Robot* const _r) {
 
   // Create forward and reverse controls for each actuator.
   for(auto& actuatorPair : _r->GetActuators()) {
-    Actuator* actuator = actuatorPair.second;
+    Actuator* actuator = actuatorPair.second.get();
     auto mask = actuator->ControlMask();
     c.actuator = actuator;
 

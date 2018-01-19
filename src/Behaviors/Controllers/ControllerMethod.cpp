@@ -152,7 +152,7 @@ ComputeNearestContinuousControl(const Cfg& _current,
 
   // Check each actuator and find the nearest control.
   for(const auto& actuatorPair : m_robot->GetActuators()) {
-    const auto& actuator = actuatorPair.second;
+    const auto& actuator = actuatorPair.second.get();
 
     // Compute the nearest
     const auto signal = actuator->ComputeNearestSignal(desired);

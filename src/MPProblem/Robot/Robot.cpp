@@ -56,8 +56,9 @@ Robot(MPProblem* const _p, XMLNode& _node) : m_problem(_p) {
     // holonomic, we will only use the actuator in simulation.
     std::vector<double> reverse(m_multibody->DOF(), -1),
                         forward(m_multibody->DOF(),  1);
-    m_actuators["default"] = new Actuator(this, "default",
-          IsNonholonomic() ? Actuator::Force : Actuator::Velocity);
+    m_actuators["default"] = std::unique_ptr<Actuator>(
+        new Actuator(this, "default",
+          IsNonholonomic() ? Actuator::Force : Actuator::Velocity));
     m_actuators["default"]->SetLimits(reverse, forward);
     m_actuators["default"]->SetMaxForce(1);
 
@@ -113,8 +114,8 @@ Robot(MPProblem* const _p, const Robot& _r)
   // Copy actuators.
   for(const auto& labelPointer : _r.m_actuators) {
     auto label    = labelPointer.first;
-    auto actuator = labelPointer.second;
-    m_actuators[label] = new Actuator(this, *actuator);
+    auto actuator = labelPointer.second.get();
+    m_actuators[label] = std::unique_ptr<Actuator>(new Actuator(this, *actuator));
   }
 
   // Copy the planning spaces.
@@ -157,10 +158,7 @@ Robot(MPProblem* const _p, const Robot& _r)
 
 
 Robot::
-~Robot() noexcept {
-  for(auto& a : m_actuators)
-    delete a.second;
-}
+~Robot() = default;
 
 /*---------------------------------- I/O -------------------------------------*/
 
@@ -191,8 +189,8 @@ ReadXMLFile(const std::string& _filename) {
     }
     else if(child.Name() == "Actuator") {
       // Parse the actuator.
-      auto actuator = new Actuator(this, child);
-      m_actuators[actuator->GetLabel()] = actuator;
+      std::unique_ptr<Actuator> actuator(new Actuator(this, child));
+      m_actuators[actuator->GetLabel()] = std::move(actuator);
     }
     else if(child.Name() == "Controller") {
       auto controller = ControllerMethod::Factory(this, child);
@@ -351,11 +349,11 @@ SetController(std::unique_ptr<ControllerMethod>&& _c) noexcept {
 Actuator*
 Robot::
 GetActuator(const std::string& _label) noexcept {
-  return m_actuators[_label];
+  return m_actuators[_label].get();
 }
 
 
-const std::unordered_map<std::string, Actuator*>&
+const std::unordered_map<std::string, std::unique_ptr<Actuator>>&
 Robot::
 GetActuators() const noexcept {
   return m_actuators;
@@ -440,7 +438,7 @@ operator<<(std::ostream& _os, const Robot& _r) {
       << "\n\tJointDOF: " << _r.GetMultiBody()->JointDOF()
       << "\nActuators:\n";
   for(const auto& a : _r.GetActuators())
-    _os << *a.second << "\n";
+    _os << *a.second.get() << "\n";
   return _os << std::endl;
 }
 

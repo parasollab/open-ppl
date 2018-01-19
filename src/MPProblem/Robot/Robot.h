@@ -48,7 +48,8 @@ class Robot final {
 
   std::unique_ptr<MultiBody> m_multibody;  ///< Robot's geometric representation.
 
-  std::unordered_map<std::string, Actuator*> m_actuators; ///< Actuators.
+  /// Actuators.
+  std::unordered_map<std::string, std::unique_ptr<Actuator>> m_actuators;
 
   std::unique_ptr<ControllerMethod> m_controller; ///< Low-level controller.
 
@@ -101,10 +102,10 @@ class Robot final {
     /// robots. Destruct the old one and create a new one instead.
 
     Robot(const Robot&) = delete;
-    Robot(Robot&&) = delete;
+    Robot(Robot&&) = default;
 
     Robot& operator=(const Robot&) = delete;
-    Robot& operator=(Robot&&) = delete;
+    Robot& operator=(Robot&&) = default;
 
     ///@}
 
@@ -187,8 +188,8 @@ class Robot final {
     /// and cannot be changed otherwise.
 
     Actuator* GetActuator(const std::string& _label) noexcept;
-    const std::unordered_map<std::string, Actuator*>& GetActuators() const
-        noexcept;
+    const std::unordered_map<std::string, std::unique_ptr<Actuator>>&
+        GetActuators() const noexcept;
 
     ///@}
     ///@name Dynamics Accessors

@@ -1,6 +1,7 @@
 #ifndef WORKSPACE_REGION_H_
 #define WORKSPACE_REGION_H_
 
+#include <memory>
 #include <vector>
 
 #include "Geometry/GMSPolygon.h"
