@@ -494,10 +494,12 @@ ComputeObstacleVertexMap() const {
 
   // Iterate through all the obstacles and add their points to the map.
   for(size_t i = 0; i < NumObstacles(); ++i) {
-    const auto& obstaclePoly = GetObstacle(i)->GetBody(0)->
-        GetWorldPolyhedron();
-    for(const auto& v : obstaclePoly.GetVertexList())
-      out[v].push_back(i);
+    MultiBody* const obst = GetObstacle(i);
+    for(size_t j = 0; j < obst->GetNumBodies(); ++j) {
+      const auto& obstaclePoly = obst->GetBody(j)->GetWorldPolyhedron();
+      for(const auto& v : obstaclePoly.GetVertexList())
+        out[v].push_back(i);
+    }
   }
 
   return out;

@@ -36,9 +36,10 @@ class CollisionDetectionValidity : public ValidityCheckerMethod<MPTraits> {
 
     /// @param _cdMethod Collision detection library
     /// @param _ignoreSelfCollision Compute robot self-collisions?
-    /// @param _ignoreIAdjacentLinks For self-collision adjacent links to ignore
+    /// @param _ignoreAdjacentLinks For self-collision adjacent links to ignore
     CollisionDetectionValidity(CollisionDetectionMethod* _cdMethod = nullptr,
-        bool _ignoreSelfCollision = false, int _ignoreIAdjacentLinks = 1);
+        bool _ignoreSelfCollision = false, int _ignoreAdjacentLinks = 1,
+        bool measureSelfDist = false);
 
     CollisionDetectionValidity(XMLNode& _node);
 
@@ -68,7 +69,7 @@ class CollisionDetectionValidity : public ValidityCheckerMethod<MPTraits> {
 
     ///@}
 
-  private:
+  protected:
 
     /// Orchestrate collision computation between robot and environment
     /// multibodies
@@ -76,7 +77,7 @@ class CollisionDetectionValidity : public ValidityCheckerMethod<MPTraits> {
     /// @param _cfg Configuration of interest.
     /// @param _callName Function calling validity checker
     /// @return Collision
-    bool IsInCollision(CDInfo& _cdInfo, const CfgType& _cfg,
+    virtual bool IsInCollision(CDInfo& _cdInfo, const CfgType& _cfg,
         const string& _callName);
 
     /// Check self-collision with robot
@@ -84,7 +85,7 @@ class CollisionDetectionValidity : public ValidityCheckerMethod<MPTraits> {
     /// @param _rob MultiBody of robot
     /// @param _callName Function calling validity checker
     /// @return Collision
-    bool IsInSelfCollision(CDInfo& _cdInfo, MultiBody* _rob,
+    virtual bool IsInSelfCollision(CDInfo& _cdInfo, MultiBody* _rob,
         const string& _callName);
 
     /// Check inter-robot collision
@@ -102,13 +103,12 @@ class CollisionDetectionValidity : public ValidityCheckerMethod<MPTraits> {
     /// @param _obst MultiBody of obstacle
     /// @param _callName Function calling validity checker
     /// @return Collision
-    bool IsInObstCollision(CDInfo& _cdInfo, MultiBody* _rob,
+    virtual bool IsInObstCollision(CDInfo& _cdInfo, MultiBody* _rob,
         MultiBody* _obst, const string& _callName);
 
     CollisionDetectionMethod* m_cdMethod; ///< Collision Detection library
     bool m_ignoreSelfCollision;           ///< Check self collisions
-    size_t m_ignoreIAdjacentLinks;        ///< With self collisions how many
-                                          ///< adjacent links to ignore
+    bool m_ignoreAdjacentLinks;           ///< Ignore adj links in self collisions
 };
 
 /*------------------------------- Construction -------------------------------*/
@@ -116,10 +116,10 @@ class CollisionDetectionValidity : public ValidityCheckerMethod<MPTraits> {
 template <typename MPTraits>
 CollisionDetectionValidity<MPTraits>::
 CollisionDetectionValidity(CollisionDetectionMethod* _cdMethod,
-    bool _ignoreSelfCollision, int _ignoreIAdjacentLinks) :
+    bool _ignoreSelfCollision, int _ignoreAdjacentLinks, bool measureSelfDist) :
     ValidityCheckerMethod<MPTraits>(), m_cdMethod(_cdMethod),
     m_ignoreSelfCollision(_ignoreSelfCollision),
-    m_ignoreIAdjacentLinks(_ignoreIAdjacentLinks) {
+    m_ignoreAdjacentLinks(_ignoreAdjacentLinks) {
   this->SetName("CollisionDetection");
 }
 
@@ -131,9 +131,9 @@ CollisionDetectionValidity(XMLNode& _node) :
   this->SetName("CollisionDetection");
 
   m_ignoreSelfCollision = _node.Read("ignoreSelfCollision", false, false,
-      "Check for self collision");
-  m_ignoreIAdjacentLinks = _node.Read("ignoreIAdjacentLinks", false, 1, 0,
-      MAX_INT, "number of links to ignore for linkages");
+        "Check for self collision");
+  m_ignoreAdjacentLinks = _node.Read("ignoreAdjacentLinks", false, false,
+        "Ignore adjacent links in self-collision checks.");
 
   const std::string cdLabel = _node.Read("method", true, "", "method");
 
@@ -240,21 +240,36 @@ IsInSelfCollision(CDInfo& _cdInfo, MultiBody* _rob,
     const string& _callName) {
   this->GetStatClass()->IncNumCollDetCalls(m_cdMethod->GetName(), _callName);
 
+  bool collision = false;
   size_t numBody = _rob->GetNumBodies();
   for(size_t i = 0; i < numBody - 1; ++i) {
     for(size_t j = i + 1; j < numBody; ++j) {
       auto body1 = _rob->GetBody(i);
       auto body2 = _rob->GetBody(j);
 
-      if(m_ignoreIAdjacentLinks and body1->IsAdjacent(body2))
+      if(m_ignoreAdjacentLinks and body1->IsAdjacent(body2))
         continue;
 
-      if(m_cdMethod->IsInCollision(body1, body2, _cdInfo))
-        return true;
+      if (!_cdInfo.m_retAllInfo) {
+        if(m_cdMethod->IsInCollision(body1, body2, _cdInfo)) {
+          return true;
+        }
+      }
+      else {
+        CDInfo cdInfo(_cdInfo.m_retAllInfo);
+        bool collisionFound = m_cdMethod->IsInCollision(body1, body2, cdInfo);
+
+        //retain minimum distance information
+        if(cdInfo < _cdInfo)
+          _cdInfo = cdInfo;
+
+        if(collisionFound)
+          collision = true;
+      }
     }
   }
 
-  return false;
+  return collision;
 }
 
 
@@ -290,23 +305,26 @@ IsInObstCollision(CDInfo& _cdInfo, MultiBody* _rob,
   this->GetStatClass()->IncNumCollDetCalls(m_cdMethod->GetName(), _callName);
 
   bool collision = false;
-  size_t numBody = _rob->GetNumBodies();
-
+  const size_t numBody = _rob->GetNumBodies();
 
   for(size_t i = 0; i < numBody; ++i) {
     CDInfo cdInfo(_cdInfo.m_retAllInfo);
-    bool coll = m_cdMethod->IsInCollision(_rob->GetBody(i), _obst->GetBody(0),
-        cdInfo);
+    bool coll = false; // Start as false, then if set true it can't turn back.
+    for(unsigned int j = 0; j < _obst->GetNumBodies(); ++j) {
+      coll = coll || m_cdMethod->
+                     IsInCollision(_rob->GetBody(i), _obst->GetBody(j), cdInfo);
 
-    //retain minimum distance information
-    if(cdInfo < _cdInfo)
-      _cdInfo = cdInfo;
+      //retain minimum distance information
+      if(cdInfo < _cdInfo)
+        _cdInfo = cdInfo;
 
-    //Early quit if we do not care for distance information
-    if(coll && !_cdInfo.m_retAllInfo)
-      return true;
-    else if(coll)
-      collision = true;
+      //Early quit if we do not care for distance information
+      if(coll) {
+        if(!_cdInfo.m_retAllInfo)
+          return true;
+        collision = true;
+      }
+    }
   }
 
   return collision;
@@ -327,9 +345,9 @@ IsInsideObstacle(const CfgType& _cfg) {
 
   Vector3d robotPt(_cfg.GetData()[0], _cfg.GetData()[1], _cfg.GetData()[2]);
 
+  ///@TODO This needs to be fixed to go through all of each obstacle's bodies.
   for(size_t i = 0; i < nMulti; ++i)
-    if(m_cdMethod->IsInsideObstacle(
-          robotPt, env->GetObstacle(i)->GetBody(0)))
+    if(m_cdMethod->IsInsideObstacle(robotPt, env->GetObstacle(i)->GetBody(0)))
       return true;
   return false;
 }
@@ -367,6 +385,7 @@ WorkspaceVisibility(const Point3d& _a, const Point3d& _b) {
 
   bool visible = true;
 
+  ///@TODO This needs to be fixed to go through all of each obstacle's bodies.
   for(size_t i = 0; i < num; ++i) {
     if(m_cdMethod->IsInCollision(lineBody, env->GetObstacle(i)->GetBody(0),
         cdInfo)) {

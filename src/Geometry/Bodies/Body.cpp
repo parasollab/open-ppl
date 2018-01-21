@@ -478,6 +478,7 @@ MarkDirty() const {
   m_convexHullCached = false;
   m_transformCached = false;
   m_worldPolyhedronCached = false;
+  m_worldPolyhedron.MarkDirty(); /// Must do so for the polyhedron too.
 }
 
 

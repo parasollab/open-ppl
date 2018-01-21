@@ -301,9 +301,7 @@ IsConnectedSLSequential(
 
   if(this->m_debug)
     std::cout << "\n\tComputed increment for " << nTicks << " ticks: "
-              << incr.PrettyPrint()
-              << std::endl;
-
+              << incr.PrettyPrint() << std::endl;
   int nIter = 0;
   for(int i = 1; i < nTicks; i++) { //don't need to check the ends, _c1 and _c2
     tick += incr;
@@ -318,8 +316,6 @@ IsConnectedSLSequential(
         ///       whether we hit the boundary or obstacle.
         if(inBounds)
           _col = tick;
-        CfgType negIncr = -incr;
-        tick += negIncr;
         _lpOutput->m_edge.first.SetWeight(_lpOutput->m_edge.first.GetWeight()
             + nIter);
         _lpOutput->m_edge.second.SetWeight(_lpOutput->m_edge.second.GetWeight()

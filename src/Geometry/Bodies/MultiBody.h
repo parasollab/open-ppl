@@ -116,6 +116,9 @@ class MultiBody {
     /// Is this MultiBody an internal type?
     bool IsInternal() const noexcept;
 
+    /// Is this MultiBody a composite body? (used for assembly planning)
+    bool IsComposite() const noexcept;
+
     /// Get the number of DOF for this multibody.
     size_t DOF() const noexcept;
 
@@ -215,6 +218,16 @@ class MultiBody {
     /// stored in _v as full dofs since they are not treated as such.  Instead
     /// they are computed as a function of _v and other bio-specific things.
     void Configure(const std::vector<double>& _v, const std::vector<double>& _t);
+
+    /// A helper function that generates the transformation for the body
+    /// passed to it. given the dofs in _v and the _index offset.
+    Transformation GenerateModelTransformation(const std::vector<double>& _v,
+                            int& _index, const Body::MovementType _movementType,
+                            const Body::Type _bodyType) const;
+
+    /// Support function for configuring composite bodies.
+    void FinishConfigureCompositeBody(const std::vector<double>& _v,
+                                      int& _index);
 
     ///@}
     ///@name I/O

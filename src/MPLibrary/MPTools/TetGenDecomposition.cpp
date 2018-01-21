@@ -225,6 +225,7 @@ AddHoles(tetgenio* const _freeModel, const NefPolyhedron& _freespace,
 
   size_t num = 0;
   for(const auto obst : holes) {
+    ///@TODO This needs to be fixed to go through all of each obstacle's bodies.
     const auto body = obst->GetBody(0);
     const auto& com = body->GetWorldPolyhedron().GetCentroid();
     Vector3d hole = com;
@@ -413,6 +414,7 @@ MakeFreeModel(const Environment* _env) {
     MultiBody* obst = _env->GetObstacle(i);
     if(!obst->IsInternal()) {
       // Make CGAL representation of this obstacle.
+      ///@TODO This needs to be fixed to go through all of each obstacle's bodies.
       auto ocp = obst->GetBody(0)->GetWorldPolyhedron().CGAL();
 
       if(m_debug)

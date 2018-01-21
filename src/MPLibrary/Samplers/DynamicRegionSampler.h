@@ -278,8 +278,9 @@ LazyInitialize() {
     // Collect the obstacles we want to consider (all in this case).
     std::vector<GMSPolyhedron> polyhedra;
     for(size_t i = 0; i < env->NumObstacles(); ++i) {
-      auto obstacle = env->GetObstacle(i);
-      polyhedra.emplace_back(obstacle->GetBody(0)->GetWorldPolyhedron());
+      MultiBody* const obstacle = env->GetObstacle(i);
+      for(size_t j = 0; j < obstacle->GetNumBodies(); ++j)
+        polyhedra.emplace_back(obstacle->GetBody(j)->GetWorldPolyhedron());
     }
 
     // Build a skeleton from a 2D medial axis.

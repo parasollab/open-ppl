@@ -29,6 +29,8 @@
 #include "MPLibrary/ValidityCheckers/NegateValidity.h"
 #include "MPLibrary/ValidityCheckers/NodeClearanceValidity.h"
 #include "MPLibrary/ValidityCheckers/ObstacleClearanceValidity.h"
+#include "MPLibrary/ValidityCheckers/SpecificBodyCollisionValidity.h"
+#include "MPLibrary/ValidityCheckers/TwoBodyValidityChecker.h"
 
 //neighborhood finder includes
 #include "MPLibrary/NeighborhoodFinders/BandsNF.h"
@@ -46,6 +48,11 @@
 #include "MPLibrary/Samplers/DynamicRegionSampler.h"
 #include "MPLibrary/Samplers/GaussianSampler.h"
 #include "MPLibrary/Samplers/GridSampler.h"
+#include "MPLibrary/Samplers/MaskedProximitySampler.h"
+#include "MPLibrary/Samplers/MaskedRandomSampler.h"
+#include "MPLibrary/Samplers/MaskedSamplerMethod.h"
+#include "MPLibrary/Samplers/MatingNormalSampler.h"
+#include "MPLibrary/Samplers/MatingSphereSampler.h"
 #include "MPLibrary/Samplers/MedialAxisSampler.h"
 #include "MPLibrary/Samplers/MixSampler.h"
 #include "MPLibrary/Samplers/ObstacleBasedSampler.h"
@@ -56,6 +63,7 @@
 #include "MPLibrary/Samplers/WorkspaceImportanceSampler.h"
 
 //local planner includes
+#include "MPLibrary/LocalPlanners/ActiveBodyStraightLine.h"
 #include "MPLibrary/LocalPlanners/AStar.h"
 #include "MPLibrary/LocalPlanners/HierarchicalLP.h"
 #include "MPLibrary/LocalPlanners/MedialAxisLP.h"
@@ -66,6 +74,7 @@
 #include "MPLibrary/LocalPlanners/ApproxSpheres.h"
 
 //extenders includes
+#include "MPLibrary/Extenders/ActiveBodyExtender.h"
 #include "MPLibrary/Extenders/BasicExtender.h"
 #include "MPLibrary/Extenders/KinodynamicExtender.h"
 #include "MPLibrary/Extenders/LimitedDistanceExtender.h"
@@ -106,12 +115,16 @@
 //map evaluator includes
 #include "MPLibrary/MapEvaluators/ComposeEvaluator.h"
 #include "MPLibrary/MapEvaluators/ConditionalEvaluator.h"
+#include "MPLibrary/MapEvaluators/IterationCountEvaluator.h"
 #include "MPLibrary/MapEvaluators/LazyQuery.h"
 #include "MPLibrary/MapEvaluators/LazyToggleQuery.h"
+#include "MPLibrary/MapEvaluators/MinimumClearanceEvaluator.h"
+#include "MPLibrary/MapEvaluators/MinimumDistanceEvaluator.h"
 #include "MPLibrary/MapEvaluators/NegateEvaluator.h"
 #include "MPLibrary/MapEvaluators/PrintMapEvaluation.h"
 #include "MPLibrary/MapEvaluators/PRMQuery.h"
 #include "MPLibrary/MapEvaluators/RRTQuery.h"
+#include "MPLibrary/MapEvaluators/StrategyStateEvaluator.h"
 #include "MPLibrary/MapEvaluators/TimeEvaluator.h"
 #include "MPLibrary/MapEvaluators/TrueEvaluation.h"
 
@@ -119,6 +132,13 @@
 #include "MPLibrary/MPStrategies/AdaptiveRRT.h"
 #include "MPLibrary/MPStrategies/BasicPRM.h"
 #include "MPLibrary/MPStrategies/BasicRRTStrategy.h"
+#include "MPLibrary/MPStrategies/DisassemblyExhaustiveGraph.h"
+#include "MPLibrary/MPStrategies/DisassemblyParallel.h"
+#include "MPLibrary/MPStrategies/DisassemblyParallelizedSAs.h"
+#include "MPLibrary/MPStrategies/DisassemblyParallelRot.h"
+#include "MPLibrary/MPStrategies/DisassemblyRRTStrategy.h"
+#include "MPLibrary/MPStrategies/DisassemblySequential.h"
+#include "MPLibrary/MPStrategies/DisassemblyThanhLe.h"
 #include "MPLibrary/MPStrategies/DynamicDomainRRT.h"
 #include "MPLibrary/MPStrategies/EvaluateMapStrategy.h"
 #include "MPLibrary/MPStrategies/HybridPRM.h"
@@ -186,7 +206,9 @@ struct MPTraits {
     MedialAxisClearanceValidity<MPTraits>,
     NegateValidity<MPTraits>,
     NodeClearanceValidity<MPTraits>,
-    ObstacleClearanceValidity<MPTraits>
+    ObstacleClearanceValidity<MPTraits>,
+    SpecificBodyCollisionValidity<MPTraits>,
+    TwoBodyValidityChecker<MPTraits>
       > ValidityCheckerMethodList;
 
   //types of neighborhood finders available in our world
@@ -208,6 +230,10 @@ struct MPTraits {
     DynamicRegionSampler<MPTraits>,
     GaussianSampler<MPTraits>,
     GridSampler<MPTraits>,
+    MaskedRandomSampler<MPTraits>,
+    MaskedProximitySampler<MPTraits>,
+    MatingNormalSampler<MPTraits>,
+    MatingSphereSampler<MPTraits>,
     MedialAxisSampler<MPTraits>,
     MixSampler<MPTraits>,
     ObstacleBasedSampler<MPTraits>,
@@ -220,6 +246,7 @@ struct MPTraits {
 
   //types of local planners available in our world
   typedef boost::mpl::list<
+    ActiveBodyStraightLine<MPTraits>,
     AStarClearance<MPTraits>,
     AStarDistance<MPTraits>,
     HierarchicalLP<MPTraits>,
@@ -233,6 +260,7 @@ struct MPTraits {
 
   //types of extenders avaible in our world
   typedef boost::mpl::list<
+    ActiveBodyExtender<MPTraits>,
     BasicExtender<MPTraits>,
     KinodynamicExtender<MPTraits>,
     LimitedDistanceExtender<MPTraits>,
@@ -299,12 +327,16 @@ struct MPTraits {
   typedef boost::mpl::list<
     ComposeEvaluator<MPTraits>,
     ConditionalEvaluator<MPTraits>,
+    IterationCountEvaluator<MPTraits>,
     LazyQuery<MPTraits>,
     LazyToggleQuery<MPTraits>,
+    MinimumClearanceEvaluator<MPTraits>,
+    MinimumDistanceEvaluator<MPTraits>,
     NegateEvaluator<MPTraits>,
     PrintMapEvaluation<MPTraits>,
     PRMQuery<MPTraits>,
     RRTQuery<MPTraits>,
+    StrategyStateEvaluator<MPTraits>,
     TimeEvaluator<MPTraits>,
     TrueEvaluation<MPTraits>
       > MapEvaluatorMethodList;
@@ -317,6 +349,13 @@ struct MPTraits {
     BasicPRM<MPTraits>,
     BasicRRTStrategy<MPTraits>,
     ClearanceTestStrategy<MPTraits>,
+    DisassemblyExhaustiveGraph<MPTraits>,
+    DisassemblyParallel<MPTraits>,
+    DisassemblyParallelizedSAs<MPTraits>,
+    DisassemblyParallelRot<MPTraits>,
+    DisassemblyRRTStrategy<MPTraits>,
+    DisassemblySequential<MPTraits>,
+    DisassemblyThanhLe<MPTraits>,
     DMTestStrategy<MPTraits>,
     DynamicDomainRRT<MPTraits>,
     EvaluateMapStrategy<MPTraits>,

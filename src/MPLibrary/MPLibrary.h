@@ -257,6 +257,11 @@ class MPLibraryType final
     ///@name Solution Accessors
     ///@{
 
+    /// These are necessary for swapping out the solution when trying to run an
+    /// RRT during a disassembly extension.
+    MPSolution* GetMPSolution() {return m_solution;}
+    void SetMPSolution(MPSolution* _sol) {m_solution = _sol;}
+
     RoadmapType* GetRoadmap() {return m_solution->GetRoadmap();}
     RoadmapType* GetBlockRoadmap() {return m_solution->GetBlockRoadmap();}
     StatClass*   GetStatClass() {return m_solution->GetStatClass();}
@@ -277,6 +282,13 @@ class MPLibraryType final
     void AddSolver(const string& _label, long _seed,
         const string& _baseFileName, bool _vizmoDebug = false) {
       m_solvers.push_back(Solver{_label, _seed, _baseFileName, _vizmoDebug});
+    }
+
+    std::vector<std::string> GetSolverLabels() {
+      std::vector<std::string> labels;
+      for (auto& solver : m_solvers)
+        labels.push_back(solver.label);
+      return labels;
     }
 
     /// Run a single input (solver) and get back its solution.

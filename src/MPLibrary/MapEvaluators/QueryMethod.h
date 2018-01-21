@@ -137,6 +137,12 @@ class QueryMethod : public MapEvaluatorMethod<MPTraits> {
     /// Reset the path and list of undiscovered goals.
     virtual void Reset(RoadmapType* const _r);
 
+    /// Generate a path through the roadmap from a start node to an end node.
+    /// Made public for	disassembly planning.
+    /// @param[in] _start The start node.
+    /// @param[in] _end The end node.
+    std::vector<VID> GeneratePath(const VID _start, const VID _end);
+
     ///@}
 
   protected:
@@ -154,11 +160,6 @@ class QueryMethod : public MapEvaluatorMethod<MPTraits> {
     /// @param[in] _end The ending node's descriptor.
     /// @return True if _start and _goal are connected.
     bool SameCC(const VID _start, const VID _end) const;
-
-    /// Generate a path through the roadmap from a start node to an end node.
-    /// @param[in] _start The start node.
-    /// @param[in] _end The end node.
-    void GeneratePath(const VID _start, const VID _end);
 
     ///@}
     ///@name Query State
@@ -340,11 +341,11 @@ QueryMethod<MPTraits>::
 WritePath() const {
   if(!this->GetPath())
     return;
+  const std::string base = this->GetBaseFilename();
   if(m_fullRecreatePath)
-    ::WritePath(this->GetBaseFilename() + ".full.path",
-        this->GetPath()->FullCfgs(this->GetMPLibrary()));
+    ::WritePath(base + ".full.path", this->GetPath()->FullCfgs(this->GetMPLibrary()));
   else
-    ::WritePath(this->GetBaseFilename() + ".rdmp.path", this->GetPath()->Cfgs());
+    ::WritePath(base + ".rdmp.path", this->GetPath()->Cfgs());
 }
 
 
@@ -406,7 +407,7 @@ SameCC(const VID _start, const VID _end) const {
 
 
 template <typename MPTraits>
-void
+std::vector<typename QueryMethod<MPTraits>::VID>
 QueryMethod<MPTraits>::
 GeneratePath(const VID _start, const VID _end) {
   auto g = this->GetRoadmap()->GetGraph();
@@ -425,8 +426,9 @@ GeneratePath(const VID _start, const VID _end) {
       astar(*g, _start, _end, path, heuristic);
       break;
   }
-  *this->GetPath() += path;
+
   stats->StopClock("QueryMethod::GraphSearch");
+  return path;
 }
 
 /*----------------------------------------------------------------------------*/

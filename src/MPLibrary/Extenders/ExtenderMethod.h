@@ -80,6 +80,10 @@ class ExtenderMethod : public MPBaseObject<MPTraits> {
     virtual bool Extend(const CfgType& _start, const CfgType& _end,
         CfgType& _new, LPOutput<MPTraits>& _lp) = 0;
 
+    /// An optional version if CDInfo is desired. Not required to implement.
+    virtual bool Extend(const CfgType& _start, const CfgType& _end,
+            CfgType& _new, LPOutput<MPTraits>& _lp, CDInfo& _cdInfo);
+
     ///@}
 };
 
@@ -131,6 +135,14 @@ double
 ExtenderMethod<MPTraits>::
 GetMaxDistance() const {
   return m_maxDist;
+}
+
+template <typename MPTraits>
+bool
+ExtenderMethod<MPTraits>::
+Extend(const CfgType& _start, const CfgType& _end,
+       CfgType& _new, LPOutput<MPTraits>& _lp, CDInfo& _cdInfo) {
+  throw RunTimeException(WHERE, "Not implemented for the specific Extender!");
 }
 
 /*----------------------------------------------------------------------------*/

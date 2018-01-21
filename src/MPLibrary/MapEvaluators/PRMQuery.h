@@ -164,7 +164,8 @@ PerformSubQuery(const CfgType& _start, const CfgType& _goal) {
     // If start and goal are connected to the same CC, generate path and end.
     if(this->SameCC(start.first, goal.first)) {
       connected = true;
-      this->GeneratePath(start.first, goal.first);
+      // Generate and append the path VIDs.
+      *this->GetPath() += this->GeneratePath(start.first, goal.first);
       break;
     }
   }

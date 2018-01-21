@@ -39,6 +39,11 @@ struct CDInfo {
   typedef std::pair<int, int> CollisionPair;
 
   std::vector<CollisionPair> m_trianglePairs; ///< All colliding triangle pairs.
+
+  /// m_selfClearance is required for assembly planning. In the case of a
+  /// subassembly, this will normally be the closest distance wrt any body of it
+  std::vector<double> m_selfClearance; ///< Clearance of robot's bodies to
+                                       ///< each other.
 };
 
 #endif

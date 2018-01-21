@@ -202,7 +202,7 @@ PerformSubQuery(const CfgType& _start, const CfgType& _goal) {
   }
 
   if(success) {
-    this->GeneratePath(start, nearest.first);
+    *this->GetPath() += this->GeneratePath(start, nearest.first);
     if(this->m_debug)
       cout << "\tSuccess: found path from start to nearest node "
            << nearest.first << " at a distance of " << nearest.second

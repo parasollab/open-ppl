@@ -93,6 +93,8 @@ class Cfg {
 
     bool operator==(const Cfg& _cfg) const;
     bool operator!=(const Cfg& _cfg) const;
+    bool WithinResolution(const Cfg& _cfg, const double _posRes,
+                          const double _oriRes) const;
 
     ///@}
     ///@name Comparison

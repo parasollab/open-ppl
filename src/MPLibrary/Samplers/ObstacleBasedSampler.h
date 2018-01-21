@@ -260,7 +260,8 @@ template <typename MPTraits>
 typename ObstacleBasedSampler<MPTraits>::CfgType
 ObstacleBasedSampler<MPTraits>::
 ChooseRandomVertex(MultiBody* _mBody, bool _isFreeBody) {
-  const GMSPolyhedron& polyhedron = _mBody->GetBody(0)->GetWorldPolyhedron();
+  size_t body = LRand() % _mBody->GetNumBodies();
+  const GMSPolyhedron& polyhedron = _mBody->GetBody(body)->GetWorldPolyhedron();
   Vector3d x = polyhedron.m_vertexList[(int)(DRand()*polyhedron.m_vertexList.size())];
   return GetCfgWithParams(x);
 }
@@ -287,7 +288,8 @@ template <typename MPTraits>
 typename ObstacleBasedSampler<MPTraits>::CfgType
 ObstacleBasedSampler<MPTraits>::
 ChooseRandomWeightedTriangle(MultiBody* _mBody, bool _isFreeBody) {
-  const GMSPolyhedron& polyhedron = _mBody->GetBody(0)->GetPolyhedron();
+  size_t body = LRand() % _mBody->GetNumBodies();
+  const GMSPolyhedron& polyhedron = _mBody->GetBody(body)->GetWorldPolyhedron();
   // A random fraction of the area
   double targetArea = polyhedron.m_area * DRand();
   double sum = 0.0;
@@ -312,7 +314,8 @@ template <typename MPTraits>
 typename ObstacleBasedSampler<MPTraits>::CfgType
 ObstacleBasedSampler<MPTraits>::
 ChooseRandomTriangle(MultiBody* _mBody, bool _isFreeBody) {
-  const GMSPolyhedron& polyhedron = _mBody->GetBody(0)->GetPolyhedron();
+  size_t body = LRand() % _mBody->GetNumBodies();
+  const GMSPolyhedron& polyhedron = _mBody->GetBody(body)->GetWorldPolyhedron();
 
   // Choose a random triangle
   const GMSPolygon& poly = polyhedron.m_polygonList[(int)(DRand()*polyhedron.m_polygonList.size())];
@@ -329,7 +332,8 @@ template <typename MPTraits>
 typename ObstacleBasedSampler<MPTraits>::CfgType
 ObstacleBasedSampler<MPTraits>::
 ChooseExtremeVertex(MultiBody* _mBody, bool _isFreeBody) {
-  const GMSPolyhedron& polyhedron = _mBody->GetBody(0)->GetPolyhedron();
+  size_t body = LRand() % _mBody->GetNumBodies();
+  const GMSPolyhedron& polyhedron = _mBody->GetBody(body)->GetWorldPolyhedron();
   int xyz = LRand() % 3; // 0: x, 1: y, 2: z
   int minMax = LRand() % 2; // 0: min, 1: max
   int x = 0; // Index of extreme value

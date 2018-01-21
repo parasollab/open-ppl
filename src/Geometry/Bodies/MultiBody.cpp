@@ -169,6 +169,30 @@ InitializeDOFs(const Boundary* const _b) {
     }
   }
 
+  //Add dofs of multiple free bodies without connections for composite C-Spaces.
+  if (IsComposite()) {
+    for (size_t i = 1; i < m_bodies.size(); ++i) {
+      if(m_bodies[i].GetBodyType() == Body::Type::Planar) {
+        m_dofInfo.emplace_back("Base X Translation ", position, _b->GetRange(0));
+        m_dofInfo.emplace_back("Base Y Translation ", position, _b->GetRange(1));
+
+        if(m_bodies[i].GetMovementType() == Body::MovementType::Rotational)
+          m_dofInfo.emplace_back("Base Rotation ", rotation, full);
+      }
+      else if(m_bodies[i].GetBodyType() == Body::Type::Volumetric) {
+        m_dofInfo.emplace_back("Base X Translation ", position, _b->GetRange(0));
+        m_dofInfo.emplace_back("Base Y Translation ", position, _b->GetRange(1));
+        m_dofInfo.emplace_back("Base Z Translation ", position, _b->GetRange(2));
+
+        if(m_bodies[i].GetMovementType() == Body::MovementType::Rotational) {
+          m_dofInfo.emplace_back("Base X Rotation ", rotation, full);
+          m_dofInfo.emplace_back("Base Y Rotation ", rotation, full);
+          m_dofInfo.emplace_back("Base Z Rotation ", rotation, full);
+        }
+      }
+    }
+  }
+
   m_currentDofs.resize(DOF(), 0);
   Configure(m_currentDofs);
   FindMultiBodyInfo();
@@ -264,6 +288,12 @@ IsInternal() const noexcept {
   return m_multiBodyType == Type::Internal;
 }
 
+bool
+MultiBody::
+IsComposite() const noexcept {
+  //If no joints but multiple bodies, we consider that a sufficient condition.
+  return (m_joints.empty() && m_bodies.size() > 1);
+}
 
 size_t
 MultiBody::
@@ -421,6 +451,7 @@ PolygonalApproximation(std::vector<Vector3d>& _result) {
   //If rigid body then return the line between the first 4 vertices and the
   //second 4 vertices of the world bounding box
   if(nfree == 1) {
+    ///@TODO This needs to be fixed to go through all of each obstacle's bodies.
     const GMSPolyhedron bbox = GetBody(0)->GetWorldBoundingBox();
 
     Vector3d joint;
@@ -544,33 +575,22 @@ Configure(const vector<double>& _v) {
   std::copy(_v.begin(), _v.begin() + std::min(_v.size(), DOF()),
       m_currentDofs.begin());
 
+  ///@TODO: This is a band-aid for an issue where the m_baseBody pointer is off
+  /// from the the actual base's pointer. Also causes a CGAL crash, and occurred
+  /// after merging in assembly planning changes.
+  if(&m_bodies[m_baseIndex] != m_baseBody)
+    SetBaseBody(m_baseIndex);
+
   // Configure the base.
   if(m_baseType != Body::Type::Fixed) {
-    double x = 0, y = 0, z = 0, alpha = 0, beta = 0, gamma = 0;
-    x = _v[0];
-    y = _v[1];
-    index += 2;
-    if(m_baseType == Body::Type::Volumetric) {
-      index++;
-      z = _v[2];
-    }
-    if(m_baseMovement == Body::MovementType::Rotational) {
-      if(m_baseType == Body::Type::Planar) {
-        ++index;
-        gamma = _v[2];
-      }
-      else {
-        index += 3;
-        alpha = _v[3];
-        beta = _v[4];
-        gamma = _v[5];
-      }
-    }
-
-    Transformation t1(Vector3d(x, y, z), Orientation(EulerAngle(gamma * PI,
-        beta * PI, alpha * PI)));
+    Transformation t1 = GenerateModelTransformation(_v, index, m_baseMovement,
+                                                    m_baseType);
     m_baseBody->Configure(t1);
   }
+
+  // configure remaining free bodies, if this is a composite body
+  if (IsComposite())
+    FinishConfigureCompositeBody(_v, index);
 
   // Configure the links.
   for(auto& joint : m_joints) {
@@ -604,32 +624,14 @@ Configure(const std::vector<double>& _v, const std::vector<double>& _t) {
 
   // Configure the base.
   if(m_baseType != Body::Type::Fixed) {
-    double x = 0, y = 0, z = 0, alpha = 0, beta = 0, gamma = 0;
-
-    x = _v[0];
-    y = _v[1];
-    index += 2;
-    if(m_baseType == Body::Type::Volumetric) {
-      index++;
-      z = _v[2];
-    }
-    if(m_baseMovement == Body::MovementType::Rotational) {
-      if(m_baseType == Body::Type::Planar) {
-        ++index;
-        gamma = _v[2];
-      }
-      else {
-        index += 3;
-        alpha = _v[3];
-        beta = _v[4];
-        gamma = _v[5];
-      }
-    }
-
-    Transformation t1(Vector3d(x, y, z), Orientation(EulerAngle(gamma * PI,
-        beta * PI, alpha * PI)));
+    Transformation t1 = GenerateModelTransformation(_v, index, m_baseMovement,
+                                                    m_baseType);
     m_baseBody->Configure(t1);
   }
+
+  // configure remaining free bodies, if this is a composite body
+  if (IsComposite())
+    FinishConfigureCompositeBody(_v, index);
 
   // Configure the links.
   for(auto& joint : m_joints) {
@@ -651,6 +653,51 @@ Configure(const std::vector<double>& _v, const std::vector<double>& _t) {
 
   // The base transform has been updated, now update the links.
   UpdateLinks();
+}
+
+
+void
+MultiBody::
+FinishConfigureCompositeBody(const std::vector<double>& _v, int& _index) {
+  // This configures all but the base body for composite bodies. It updates
+  // the index that tracks which dofs in _v are accounted for.
+  for (size_t i = 0; i < m_bodies.size(); ++i) {
+    if(i == m_baseIndex)
+      continue;
+    Body* const part = &m_bodies[i];
+    if(part->GetBodyType() != Body::Type::Fixed) {
+      Transformation t = GenerateModelTransformation(_v, _index,
+                                  part->GetMovementType(), part->GetBodyType());
+      part->Configure(t);
+    }
+  }
+}
+
+
+Transformation
+MultiBody::
+GenerateModelTransformation(const std::vector<double>& _v, int& _index,
+                            const Body::MovementType _movementType,
+                            const Body::Type _bodyType) const {
+  double z = 0, alpha = 0, beta = 0, gamma = 0;
+  const double x = _v[_index];
+  const double y = _v[++_index];
+  if(_bodyType == Body::Type::Volumetric)
+    z = _v[++_index];
+
+  if(_movementType == Body::MovementType::Rotational) {
+    if(_bodyType == Body::Type::Planar)
+      gamma = _v[++_index];
+    else {
+      alpha = _v[++_index];
+      beta = _v[++_index];
+      gamma = _v[++_index];
+    }
+  }
+  ++_index; // Needs to happen to make up for first indexing with no addition.
+  Transformation t1(Vector3d(x, y, z), Orientation(EulerAngle(gamma * PI,
+                                                   beta * PI, alpha * PI)));
+  return t1;
 }
 
 /*----------------------------------- I/O ------------------------------------*/
@@ -676,8 +723,7 @@ Read(std::istream& _is, CountingStreamBuffer& _cbs) {
     return;
   }
 
-  size_t bodyCount = ReadField<size_t>(_is, _cbs,
-      "Failed reading body count.");
+  size_t bodyCount = ReadField<size_t>(_is, _cbs, "Failed reading body count.");
 
   m_baseIndex = -1;
   for(size_t i = 0; i < bodyCount && _is; ++i) {

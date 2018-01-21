@@ -45,6 +45,9 @@ class BasicExtender : public ExtenderMethod<MPTraits> {
     virtual bool Extend(const CfgType& _start, const CfgType& _end,
         CfgType& _new, LPOutput<MPTraits>& _lp) override;
 
+    virtual bool Extend(const CfgType& _start, const CfgType& _end,
+           CfgType& _new, LPOutput<MPTraits>& _lp, CDInfo& _cdInfo) override;
+
     ///@}
     ///@name Helpers
     ///@{
@@ -120,7 +123,7 @@ template <typename MPTraits>
 bool
 BasicExtender<MPTraits>::
 Extend(const CfgType& _start, const CfgType& _end, CfgType& _new,
-    LPOutput<MPTraits>& _lp) {
+       LPOutput<MPTraits>& _lp) {
   Environment* env = this->GetEnvironment();
 
   // If non-random orientation, adjust the end's non-positional DOFs to match
@@ -136,6 +139,29 @@ Extend(const CfgType& _start, const CfgType& _end, CfgType& _new,
       env->GetPositionRes(), env->GetOrientationRes());
 }
 
+template <typename MPTraits>
+bool
+BasicExtender<MPTraits>::
+Extend(const CfgType& _start, const CfgType& _end,
+       CfgType& _new, LPOutput<MPTraits>& _lp, CDInfo& _cdInfo) {
+  Environment* env = this->GetEnvironment();
+
+  //Assume that all CD info is wanted, and clear out all data:
+  _cdInfo.ResetVars(true);
+
+  // If non-random orientation, adjust the end's non-positional DOFs to match
+  // the start.
+  if(!m_randomOrientation) {
+    CfgType end = _end;
+    for(size_t i = end.PosDOF(); i < _end.DOF(); i++)
+      end[i] = _start[i];
+    return Expand(_start, end, _new, this->m_maxDist, _lp, _cdInfo,
+                  env->GetPositionRes(), env->GetOrientationRes());
+  }
+  return Expand(_start, _end, _new, this->m_maxDist, _lp, _cdInfo,
+                env->GetPositionRes(), env->GetOrientationRes());
+}
+
 /*-------------------------------- Helpers? ----------------------------------*/
 
 template <typename MPTraits>
@@ -144,8 +170,7 @@ BasicExtender<MPTraits>::
 Expand(const CfgType& _start, const CfgType& _end, CfgType& _newCfg,
     double _delta, LPOutput<MPTraits>& _lp, double _posRes, double _oriRes) {
   CDInfo cdInfo;
-  return Expand(_start, _end, _newCfg, _delta, _lp, cdInfo, _posRes,
-      _oriRes);
+  return Expand(_start, _end, _newCfg, _delta, _lp, cdInfo, _posRes, _oriRes);
 }
 
 

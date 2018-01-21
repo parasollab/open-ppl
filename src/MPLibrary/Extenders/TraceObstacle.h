@@ -90,6 +90,8 @@ Extend(const CfgType& _start, const CfgType& _end, CfgType& _new,
     cIndex = LRand() % env->NumObstacles();
     obsContactIndex = -1;
   }
+
+  ///@TODO This needs to be fixed to go through all of each obstacle's bodies.
   const GMSPolyhedron& poly =
       env->GetObstacle(cIndex)->GetBody(0)->GetWorldPolyhedron();
   const vector<Vector3d>& vertexList    = poly.m_vertexList;

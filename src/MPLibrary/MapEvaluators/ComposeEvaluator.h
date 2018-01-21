@@ -42,6 +42,8 @@ class ComposeEvaluator : public MapEvaluatorMethod<MPTraits> {
 
     virtual void Print(ostream& _os) const override;
 
+    virtual void Initialize() override;
+
     virtual bool operator()() override;
 
     ///@}
@@ -105,6 +107,16 @@ Print(ostream& _os) const {
   _os << "\n\t operator = " << m_logicalOperator << endl;
 }
 
+
+template <typename MPTraits>
+void
+ComposeEvaluator<MPTraits>::
+Initialize() {
+  if(this->m_debug)
+    std::cout << this->GetNameAndLabel() << "::Initialize()" << std::endl;
+  for(string label : m_evalLabels)
+    this->GetMapEvaluator(label)->Initialize();
+}
 
 template <typename MPTraits>
 bool

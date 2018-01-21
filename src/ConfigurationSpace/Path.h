@@ -5,6 +5,7 @@
 
 #include "Roadmap.h"
 #include "MPLibrary/LocalPlanners/StraightLine.h"
+#include "MPLibrary/LocalPlanners/ActiveBodyStraightLine.h"
 #include "Utilities/PMPLExceptions.h"
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -203,12 +204,16 @@ FullCfgs(MPLibrary* const _lib, const string& _lp) const {
 
   for(auto it = m_vids.begin(); it + 1 < m_vids.end(); ++it) {
     // Get the next edge.
+    bool validEdge = false;
     typename GraphType::adj_edge_iterator ei;
     {
       typename GraphType::edge_descriptor ed(*it, *(it+1));
       typename GraphType::vertex_iterator vi;
-      g->find_edge(ed, vi, ei);
+      validEdge = g->find_edge(ed, vi, ei);
     }
+
+    if(!validEdge)
+      throw RunTimeException(WHERE, "Edge doesn't exist in roadmap!");
 
     // Use the local planner from parameter if specified.
     // If not specified, use the edge lp.
@@ -222,23 +227,47 @@ FullCfgs(MPLibrary* const _lib, const string& _lp) const {
         lp = _lib->GetLocalPlanner(ei->property().GetLPLabel());
       }
       catch(...) {
-        lp = _lib->GetLocalPlanner("sl");
+        if(ei->property().GetActiveBodies().empty()) {
+          lp = _lib->GetLocalPlanner("sl");
+        }
+        else {
+          //This is important for disassembly planning, particularly for the
+          // support of subassemblies with rotations.
+          std::cout << "In Path using slSpecificBody" << std::endl;
+          lp = _lib->GetLocalPlanner("slSpecificBody");
+        }
       }
+    }
+
+    //If the LP needs active bodies, set them from the edge.
+    auto activeBodyLP =
+        std::dynamic_pointer_cast<ActiveBodyStraightLine<MPTraits> >(lp);
+    if(activeBodyLP) {
+      if(ei->property().GetActiveBodies().empty())
+        throw RunTimeException(WHERE, "Empty active bodies in edge when using "
+                                      "Active Body LP!!!");
+      activeBodyLP->SetActiveBodies(ei->property().GetActiveBodies());
     }
 
     // Recreate this edge, including intermediates.
     CfgType& start = g->GetVertex(*it);
     CfgType& end   = g->GetVertex(*(it+1));
-    std::vector<CfgType> recreatedEdge = ei->property().GetIntermediates();
-    recreatedEdge.insert(recreatedEdge.begin(), start);
-    recreatedEdge.push_back(end);
 
     // Construct a resolution-level path along the recreated edge.
-    for(auto cit = recreatedEdge.begin(); cit + 1 != recreatedEdge.end(); ++cit) {
+    if(!ei->property().SkipEdge()) {
+      std::vector<CfgType> recreatedEdge = ei->property().GetIntermediates();
+      recreatedEdge.insert(recreatedEdge.begin(), start);
+      recreatedEdge.push_back(end);
+      for(auto cit = recreatedEdge.begin(); cit + 1 != recreatedEdge.end(); ++cit) {
       std::vector<CfgType> edge = lp->ReconstructPath(*cit, *(cit+1),
-          std::vector<CfgType>(), env->GetPositionRes(),
-          env->GetOrientationRes());
+          std::vector<CfgType>(), env->GetPositionRes(), env->GetOrientationRes());
       out.insert(out.end(), edge.begin(), edge.end());
+      }
+    }
+    else {
+      //For assembly planning: Don't reconstruct the edge when it's for a part
+      // that has been placed off to the side, just use the two cfgs.
+      out.push_back(start); // This edge will just be (start, end)
     }
     out.push_back(end);
   }
