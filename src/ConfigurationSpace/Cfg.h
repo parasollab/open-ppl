@@ -7,6 +7,7 @@
 
 #include "MPLibrary/ValidityCheckers/CollisionDetection/CDInfo.h"
 #include "Utilities/MPUtils.h"
+#include "Geometry/Boundaries/Range.h"
 
 #include "Vector.h"
 
@@ -345,6 +346,10 @@ class Cfg {
 
     map<string, bool> m_labelMap;  ///< A map of labels for this cfg.
     map<string, double> m_statMap; ///< A map of stats for this cfg.
+
+    /// A vector of safe intervals, not in collision with Dynamic Obstacles
+    /// of known path, for this cfg.
+    std::vector<Range<double>> m_safeIntervals;
 
     ///@}
 

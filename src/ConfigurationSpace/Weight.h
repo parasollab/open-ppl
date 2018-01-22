@@ -13,6 +13,7 @@
 #include "MPProblem/Robot/Actuator.h"
 #include "MPProblem/Robot/Control.h"
 #include "Utilities/MPUtils.h"
+#include "Geometry/Boundaries/Range.h"
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -156,6 +157,10 @@ class DefaultWeight {
     // For nonholonomic robots.
     ControlSet m_controls;   ///< The controls used.
     size_t m_timeSteps;      ///< The number of timesteps to apply the controls.
+
+    /// A vector of safe intervals, not in collision with Dynamic Obstacles
+    /// of known path, for this cfg.
+    std::vector<Range<double>> m_safeIntervals;
 
     ///@}
 

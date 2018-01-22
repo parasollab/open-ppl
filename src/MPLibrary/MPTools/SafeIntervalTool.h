@@ -73,6 +73,10 @@ class SafeIntervalTool final : public MPBaseObject<MPTraits> {
 
     ///@}
 
+    ///@name Internal State
+    ///@{
+    std::string m_vcLabel;
+    ///@}
 };
 
 /*------------------------------- Construction -------------------------------*/
@@ -88,6 +92,8 @@ template <typename MPTraits>
 SafeIntervalTool<MPTraits>::
 SafeIntervalTool(XMLNode& _node) : MPBaseObject<MPTraits>(_node) {
   this->SetName("SafeIntervalTool");
+
+  m_vcLabel = _node.Read("vcLabel", true, "", "Validity Test Method");
 }
 
 
@@ -101,6 +107,7 @@ template <typename MPTraits>
 typename SafeIntervalTool<MPTraits>::Interval
 SafeIntervalTool<MPTraits>::
 ComputeInterval(const CfgType& _cfg) {
+
   return Interval();
 }
 
@@ -109,6 +116,7 @@ template <typename MPTraits>
 typename SafeIntervalTool<MPTraits>::Interval
 SafeIntervalTool<MPTraits>::
 ComputeInterval(const WeightType& _weight) {
+  //vector<Cfg>& cfgs = _weight->GetIntermediates()
   return Interval();
 }
 
@@ -118,9 +126,39 @@ template <typename MPTraits>
 bool
 SafeIntervalTool<MPTraits>::
 IsSafe(const CfgType& _cfg, const double _timestep) {
-  return false;
+
+  const auto& obstacles = this->GetMPProblem()->GetDynamicObstacles();
+  auto vc = this->GetValidityChecker(m_vcLabel);
+  auto env = this->GetEnvironment();
+
+  const double timeRes = env->GetTimeRes();
+
+  const long currentStep = std::lround(_timestep / timeRes);
+
+  for(auto& obstacle : obstacles){
+    if (_timestep > (timeRes * obstacle->m_path.size()))
+      continue;
+
+    // If the obstacle is in collision with _cfg at _timestep, return false
+    CDInfo cdinfo;
+    if(vc->IsInCollision(cdinfo,
+        obstacle->m_path[currentStep].GetRobot()->GetMultiBody(),
+        _cfg.GetRobot()->GetMultiBody(), this->GetNameAndLabel())) {
+      return false;
+    }
+  }
+  return true;
 }
 
+// TODO: Implement helper function for ComputeInterval
+// TODO: rename
+/*template <typename MPTraits>
+typename SafeIntervalTool<MPTraits>::Interval
+SafeIntervalTool<MPTraits>::
+ComputeInterval(std::vector<Cfg> _cfgs){
+
+  return Interval();
+}*/
 /*----------------------------------------------------------------------------*/
 
 #endif
