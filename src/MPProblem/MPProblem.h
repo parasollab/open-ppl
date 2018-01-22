@@ -94,6 +94,14 @@ class MPProblem final
     const std::vector<std::unique_ptr<MPTask>>& GetTasks() const noexcept;
 
     ///@}
+    ///@name Dynamic Obstacle Accessors
+    ///@{
+
+    /// Get all of the dynamic obstacles in this problem.
+    const std::vector<std::unique_ptr<DynamicObstacle>>& GetDynamicObstacles()
+        const noexcept;
+
+    ///@}
     ///@name Debugging
     ///@{
 

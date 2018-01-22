@@ -217,6 +217,13 @@ GetTasks() const noexcept {
   return m_tasks;
 }
 
+
+const std::vector<std::unique_ptr<DynamicObstacle>>&
+MPProblem::
+GetDynamicObstacles() const noexcept {
+  return m_dynamicObstacles;
+}
+
 /*-------------------------------- Debugging ---------------------------------*/
 
 void
@@ -280,7 +287,7 @@ ParseChild(XMLNode& _node) {
   }
   else if(_node.Name() == "DynamicObstacle") {
     // If this is a dynamic obstacle, get the path file name and make sure it exists.
-    
+
     Robot robot(this, _node);
 
     const std::string filePath = GetPathName(_node.Filename());
