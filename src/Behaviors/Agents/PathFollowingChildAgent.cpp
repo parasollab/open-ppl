@@ -53,16 +53,10 @@ Initialize() {
   m_robotPos = m_robot->GetDynamicsModel()->GetSimulatedState();
 
   // Copy this robot's first task so that it uses the parent robot pointer.
+  /// @TODO Why? This isn't the right way to use a task.
   auto firstTask = problem->GetTasks(m_robot).front();
-
-  m_task = new MPTask(m_parentRobot);
-  for(auto& constraint : firstTask->GetStartConstraints())
-    m_task->AddStartConstraint(constraint);
-  for(auto& constraint : firstTask->GetPathConstraints())
-    m_task->AddPathConstraint(constraint);
-  for(auto& constraint : firstTask->GetGoalConstraints())
-    m_task->AddGoalConstraint(constraint);
-
+  m_task = new MPTask(*firstTask);
+  m_task->SetRobot(m_parentRobot);
 }
 
 const bool
@@ -85,7 +79,8 @@ IsHeadOnCollision() {
   const Vector3d myPoint = myCfg.GetPoint(),
                  toGoal  = subGoal.GetPoint() - myPoint;
 
-  for(auto& robot : problem->GetRobots()) {
+  for(auto& robotPtr : problem->GetRobots()) {
+    auto robot = robotPtr.get();
     // Skip self and coordinator.
     if(robot == m_robot or robot->IsVirtual())
       continue;
@@ -105,6 +100,7 @@ IsHeadOnCollision() {
       if(m_headOnCollidingRobot != robot) {
         this->Halt();
         PauseHardwareAgent(m_dt);
+#if 0
         cout << "Goal: " << m_path[m_path.size()-1] << endl;
         cout << "Position of other robots: " << endl;
         for (auto& robot : problem->GetRobots()) {
@@ -118,6 +114,7 @@ IsHeadOnCollision() {
         cout << "with robot at position " << robot->GetDynamicsModel()->GetSimulatedState() << endl;
         cout << endl;
         cout << endl;
+#endif
         AvoidCollision();
         m_headOnCollidingRobot = robot;
         return true;
@@ -262,7 +259,8 @@ InCollision() {
 
   bool coll = false;
 
-  for(auto& robot : problem->GetRobots()) {
+  for(auto& robotPtr : problem->GetRobots()) {
+    auto robot = robotPtr.get();
     if(robot->IsVirtual() or robot == m_robot)
       continue;
 
@@ -325,8 +323,8 @@ CallForHelp() {
   auto helperPos = helper->GetDynamicsModel()->GetSimulatedState();
 
   auto helperTask = new MPTask(m_parentRobot);
-  auto start = new CSpaceConstraint(m_parentRobot, helperPos);
-  auto goal = new CSpaceConstraint(m_parentRobot, workerPos);
+  std::unique_ptr<CSpaceConstraint> start(new CSpaceConstraint(m_parentRobot, helperPos)),
+                                    goal(new CSpaceConstraint(m_parentRobot, workerPos));
 
   //let helper get close enough to worker
   //assign worker's old goal to new worker
@@ -417,6 +415,11 @@ ClearChargingStation() {
 void
 PathFollowingChildAgent::
 FindNearestChargingLocation() {
+  throw RunTimeException(WHERE, "This function has memory leaks all over the "
+      "place, and can trigger undefined behavior when 'start' is deleted by "
+      "more than one task. Please clean it up prior to use.");
+
+#if 0
   if(m_task->GetLabel() == "GettingToChargingLocation")
     return;
 
@@ -427,7 +430,7 @@ FindNearestChargingLocation() {
   vector<Cfg> tempPath;
   Cfg chargingLocation;
   double pathLength = 0;
-  pair<Cfg, bool>* chosenLocation = nullptr;
+
   // Find the closest charging location to m_robot
   for(auto tempLocation : m_parentAgent->GetChargingLocations()) {
     auto tempGoal = new CSpaceConstraint(m_parentRobot, tempLocation.first);
@@ -451,13 +454,12 @@ FindNearestChargingLocation() {
       pathLength = tempLength;
       task = tempTask;
       chargingLocation = tempLocation.first;
-      chosenLocation = &tempLocation;
     }
   }
 
-  chosenLocation->second = true;
   task->SetLabel("GettingToChargingLocation");
   this->SetCurrentTask(task);
+#endif
 }
 
 
@@ -466,14 +468,12 @@ PathFollowingChildAgent::
 Rotate(double& _angle, double _dt) {
 
   Cfg point(m_robot);
-  std::istringstream pointStream("0 0 0 0 0 0");
-  point.Read(pointStream);
+  point.SetData(std::vector<double>{0, 0, 0, 0, 0, 0});
 
   //TODO: Hacky solution to make it rotate. Could be done in a better way,
   //maybe?
   Cfg point2(m_robot);
-  std::istringstream pointStream2("0 0 "+to_string(_angle/M_PI)+" 0 0 0");
-  point2.Read(pointStream2);
+  point2.SetData(std::vector<double>{0, 0, _angle / M_PI, 0, 0, 0});
 
   auto bestControl = m_robot->GetController()->operator()
     (point2, point, _dt);
@@ -556,10 +556,10 @@ Localize(double _dt) {
         return;
       }
       else {
-        cout << "Changing angle " << endl;
-        // reset this value to 90 degrees; TODO: don't use magic numbers
+        // reset this value to 90 degrees
         m_localizingAngle = 1.57;
         m_totalRotations++;
+        //cout << "Changing angle " << endl;
         //cout << netbook->GetNumMarkersSeen() <<
           //" Markers found. Rotating more." << endl;
       }
@@ -786,7 +786,7 @@ void
 PathFollowingChildAgent::
 WorkerStep(double _dt) {
   //If workers is done, change label to a helper
-  if(m_done) 
+  if(m_done)
     return;
 
   auto hardwareInterface = static_cast<QueuedHardwareInterface*>
@@ -862,7 +862,7 @@ WorkerStep(double _dt) {
         int temp = m_myHelper->GetAgent()->m_priority;
         m_myHelper->GetAgent()->m_priority = m_robot->GetAgent()->m_priority;
         m_robot->GetAgent()->m_priority = temp;
-        
+
 
         //Create a new task for the new worker. The new worker get the same goal
         //as the previous worker
@@ -919,7 +919,7 @@ HelperStep(double _dt) {
         m_parentAgent->SetWorker(m_robot);
         return;
       }
-    
+
       auto curPos = m_robot->GetDynamicsModel()->GetSimulatedState();
       auto helpers = m_parentAgent->GetHelpers();
       // If m_robot is not on the helpers list, push it back

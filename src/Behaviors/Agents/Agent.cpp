@@ -1,7 +1,7 @@
 #include "Agent.h"
 
 #ifdef PMPL_SIMULATOR
-#include "BatteryConstrainedGroup.h"
+//#include "BatteryConstrainedGroup.h"
 #include "PathFollowingAgent.h"
 #include "RoadmapFollowingAgent.h"
 #endif
@@ -39,6 +39,7 @@ Factory(Robot* const _r, XMLNode& _node) {
   std::unique_ptr<Agent> output;
 
 #ifdef PMPL_SIMULATOR
+  /// @TODO Parse battery-constrained groups once fixed.
   if(type == "pathfollowing")
     output = std::unique_ptr<PathFollowingAgent>(
         new PathFollowingAgent(_r, _node)

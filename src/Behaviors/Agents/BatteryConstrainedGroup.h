@@ -81,7 +81,7 @@ class BatteryConstrainedGroup : public Agent {
 
     /// Change the worker robot to a helper
     void SetHelper(Robot* _r);
-    
+
     /// Change the worker robot to a helper
     void SetWorker(Robot* _r);
 
@@ -131,11 +131,10 @@ class BatteryConstrainedGroup : public Agent {
 
     ///Timers
     double m_lazyTime{0.0};
-    
+
     double m_prmTime{0.0};
     ///@}
 
 };
 
 #endif
-

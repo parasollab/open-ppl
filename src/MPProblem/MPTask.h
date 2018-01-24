@@ -60,7 +60,7 @@ class MPTask final {
 
     /// Create an empty task for a given robot.
     /// @param _robot The robot assigned to this task.
-    explicit MPTask(Robot& _robot);
+    explicit MPTask(Robot* const _robot);
 
     /// Parse the set of task constraints described in an XML node.
     /// @param _problem The MPProblem for this task.

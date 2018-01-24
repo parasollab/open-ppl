@@ -300,13 +300,13 @@ SIM_LIBS := $(QT_LIBS) $(GL_LIBS) -lpthread
 SIM_OBJS := \
   $(PMPL_DIR)/sim_main.o \
   Behaviors/Agents/PathFollowingAgent.o \
-  Behaviors/Agents/PathFollowingChildAgent.o \
   Behaviors/Agents/RoadmapFollowingAgent.o \
   Behaviors/Agents/Battery.o \
-  Behaviors/Agents/BatteryConstrainedGroup.o \
   Simulator/Simulation.o \
   Visualization/DrawableBody.o \
   Visualization/DrawableMultiBody.o
+#  Behaviors/Agents/BatteryConstrainedGroup.o \
+  Behaviors/Agents/PathFollowingChildAgent.o \
 
 ################################################################################
 # PMPL

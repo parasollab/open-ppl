@@ -10,6 +10,10 @@
 class BatteryConstrainedGroup;
 class NetbookInterface;
 
+static_assert(false, "PathFollowingChildAgent needs to be refactored so that it "
+    "is obviously correct before it is used again. Proper ownership and "
+    "configuration of tasks is the biggest problem. The many helper functions "
+    "need to be streamlined and properly documented as well.");
 
 ////////////////////////////////////////////////////////////////////////////////
 /// This agent follows a set of tasks and executes the helper worker behavior.
@@ -70,7 +74,7 @@ class PathFollowingChildAgent : public Agent {
     ///@}
     //TODO: Make protected
     BatteryConstrainedGroup* m_parentAgent{nullptr};
-    
+
     //TODO: move this to protected and add getters and setters.
     Robot* m_parentRobot{nullptr};
 
@@ -153,7 +157,7 @@ class PathFollowingChildAgent : public Agent {
     Cfg m_currentGoal;  ///< Current goal the agent is trying to go to
 
     bool m_goToSameGoal{true};   ///< Should the agent go to the same goal after replanning?
-   
+
     double m_totalRunTime{0.0};
     ///@}
 

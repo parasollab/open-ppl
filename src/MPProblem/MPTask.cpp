@@ -13,7 +13,7 @@
 /*------------------------------ Construction --------------------------------*/
 
 MPTask::
-MPTask(Robot& _robot) : m_robot(&_robot) {
+MPTask(Robot* const _robot) : m_robot(_robot) {
   m_label = "null task";
 }
 

@@ -135,12 +135,12 @@ ReadXMLFile(const string& _filename) {
           "node, but multiple robots are specified. Taskless execution only "
           "supports single robot problems.");
 
-    auto& robot = m_robots.front();
+    auto robot = m_robots.front().get();
     std::cout << "No task specified, assuming we want an unconstrained plan for "
               << "the first robot, labeled \'" << robot->GetLabel() << "\'."
               << std::endl;
 
-    m_taskMap[robot.get()].emplace_back(new MPTask(*robot));
+    m_taskMap[robot].emplace_back(new MPTask(robot));
   }
 
   // Compute the environment resolution.

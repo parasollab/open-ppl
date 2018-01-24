@@ -17,7 +17,7 @@ main(int _argc, char** _argv) {
     ///       explicitly or from a specific task. For now we will assume that
     ///       the first task is a query and its start boundary is a single point.
     for(const auto& robot : problem->GetRobots()) {
-      const Robot* const r = robot.get();
+      Robot* const r = robot.get();
       auto startBoundary = problem->GetTasks(r).front()->GetStartBoundary();
       r->GetMultiBody()->Configure(startBoundary->GetCenter());
       for(size_t i=0; i< r->GetMultiBody()->GetNumBodies();i++) {
