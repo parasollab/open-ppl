@@ -30,7 +30,7 @@ class NSphere {
     explicit NSphere(const std::vector<double>& _center,
         const double _r = std::numeric_limits<double>::max());
 
-    virtual ~NSphere() = default;
+    virtual ~NSphere() noexcept;
 
     ///@}
     ///@name Accessors

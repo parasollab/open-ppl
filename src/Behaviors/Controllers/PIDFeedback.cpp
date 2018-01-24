@@ -30,6 +30,33 @@ PIDFeedback(Robot* const _r, XMLNode& _node) : ControllerMethod(_r, _node) {
       "The derivative error gain");
 }
 
+
+PIDFeedback::
+PIDFeedback(Robot* const _r, const PIDFeedback& _c)
+  : ControllerMethod(_r, _c),
+    m_p(_c.m_p),
+    m_i(_c.m_i),
+    m_d(_c.m_d),
+    m_previousError(_r),
+    m_integral(_r),
+    m_target(_r)
+{
+  m_previousError.SetData(_c.m_previousError.GetData());
+  m_integral.SetData(_c.m_integral.GetData());
+  m_target.SetData(_c.m_target.GetData());
+}
+
+
+std::unique_ptr<ControllerMethod>
+PIDFeedback::
+Clone(Robot* const _r) const {
+  return std::unique_ptr<PIDFeedback>(new PIDFeedback(_r, *this));
+}
+
+
+PIDFeedback::
+~PIDFeedback() = default;
+
 /*-------------------------------- Interface ---------------------------------*/
 
 Control

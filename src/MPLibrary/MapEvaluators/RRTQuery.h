@@ -195,7 +195,7 @@ PerformSubQuery(const CfgType& _start, const CfgType& _goal) {
     success = nearest.first != INVALID_VID && nearest.second <= m_goalDist;
   }
   if(success) {
-    this->GeneratePath(start, nearest.first);
+    *this->GetPath() += this->GeneratePath(start, nearest.first);
     if(this->m_debug)
       cout << "\tSuccess: found path from start to nearest node "
            << nearest.first << " at a distance of " << nearest.second
@@ -338,6 +338,10 @@ ExtendToGoal(const pair<VID, double>& _nearest, const CfgType& _goal) const {
     cout << "\tTrying extension from node " << _nearest.first
          << " toward goal.\n";
 
+  // Use the NeighborhoodFinder's Distance metric for consistency.
+  auto nf = this->GetNeighborhoodFinder(m_nfLabel);
+  auto dm = this->GetDistanceMetric(nf->GetDMLabel());
+
   // Otherwise, try to extend from _nearest to _goal.
   CfgType qNew(this->GetTask()->GetRobot());
   LPOutput<MPTraits> lpOutput;
@@ -348,9 +352,7 @@ ExtendToGoal(const pair<VID, double>& _nearest, const CfgType& _goal) const {
       newVID = g->AddVertex(qNew);
       qNew.SetStat("Parent", _nearest.first);
       g->AddEdge(_nearest.first, newVID, lpOutput.m_edge);
-      // Using the NeighborhoodFinder's Distance metric for consistency.
-      distance = this->GetNeighborhoodFinder(m_nfLabel)->GetDMMethod()->
-          Distance(qNew, _goal);
+      distance = dm->Distance(qNew, _goal);
       if(this->m_debug)
         cout << "\t\tExtension succeeded, created new node " << newVID << " at "
              << "distance " << distance << " from goal." << endl;

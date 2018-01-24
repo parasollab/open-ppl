@@ -1,7 +1,7 @@
 #include "TetGenDecomposition.h"
 
-#include "Geometry/Bodies/FixedBody.h"
-#include "Geometry/Bodies/StaticMultiBody.h"
+#include "Geometry/Bodies/Body.h"
+#include "Geometry/Bodies/MultiBody.h"
 #include "MPProblem/Environment/Environment.h"
 #include "MPProblem/MPProblem.h"
 #include "Workspace/WorkspaceDecomposition.h"
@@ -19,6 +19,8 @@
 
 using CGALKernel    = CGAL::Exact_predicates_exact_constructions_kernel;
 using NefPolyhedron = CGAL::Nef_polyhedron_3<CGALKernel>;
+
+using namespace std;
 
 
 /*---------------------------- Local Functions -------------------------------*/
@@ -209,9 +211,9 @@ AddHoles(tetgenio* const _freeModel, const NefPolyhedron& _freespace,
   NefPolyhedron boundary(cp);
   boundary = boundary.complement();
 
-  vector<StaticMultiBody*> holes;
+  vector<MultiBody*> holes;
   for(size_t i = 0; i < _env->NumObstacles(); ++i) {
-    StaticMultiBody* obst = _env->GetObstacle(i);
+    MultiBody* obst = _env->GetObstacle(i);
     if(!obst->IsInternal())
       holes.push_back(obst);
   }
@@ -223,7 +225,8 @@ AddHoles(tetgenio* const _freeModel, const NefPolyhedron& _freespace,
 
   size_t num = 0;
   for(const auto obst : holes) {
-    const auto& body = obst->GetFixedBody(0);
+    ///@TODO This needs to be fixed to go through all of each obstacle's bodies.
+    const auto body = obst->GetBody(0);
     const auto& com = body->GetWorldPolyhedron().GetCentroid();
     Vector3d hole = com;
     const GMSPolyhedron& poly = body->GetPolyhedron();
@@ -242,12 +245,16 @@ AddHoles(tetgenio* const _freeModel, const NefPolyhedron& _freespace,
 /*------------------------------- Construction -------------------------------*/
 
 TetGenDecomposition::
-TetGenDecomposition(const string& _switches, const std::string& _baseFilename)
-    : m_switches(_switches), m_baseFilename(_baseFilename) {
-  ValidateSwitches(m_switches);
-  if(!m_baseFilename.empty())
-    m_ioType = Read;
-}
+TetGenDecomposition() = default;
+//
+//
+//TetGenDecomposition::
+//TetGenDecomposition(const string& _switches, const std::string& _baseFilename)
+//    : m_switches(_switches), m_baseFilename(_baseFilename) {
+//  ValidateSwitches(m_switches);
+//  if(!m_baseFilename.empty())
+//    m_ioType = Read;
+//}
 
 
 TetGenDecomposition::
@@ -257,7 +264,8 @@ TetGenDecomposition(XMLNode& _node) {
       "Use 'q' for quality (finer-grained) tetrahedra. 'Q' for quiet. "
       "'r' for read input.");
 
-  m_baseFilename = _node.Read("baseFilename", false, m_baseFilename,
+  m_baseFilename = GetPathName(_node.Filename())
+      + _node.Read("baseFilename", false, m_baseFilename,
       "Specify a file name to read or write a decomposition. There are two "
       "files for a decomposition with .node and .ele extensions. This is the "
       "base name for those files.");
@@ -403,10 +411,11 @@ MakeFreeModel(const Environment* _env) {
     if(m_debug)
       cout << "\tAdding obstacle " << i << "..." << endl;
 
-    StaticMultiBody* obst = _env->GetObstacle(i);
+    MultiBody* obst = _env->GetObstacle(i);
     if(!obst->IsInternal()) {
       // Make CGAL representation of this obstacle.
-      auto ocp = obst->GetFixedBody(0)->GetWorldPolyhedron().CGAL();
+      ///@TODO This needs to be fixed to go through all of each obstacle's bodies.
+      auto ocp = obst->GetBody(0)->GetWorldPolyhedron().CGAL();
 
       if(m_debug)
         cout << "\t\tobstacle is " << (ocp.is_closed() ? "" : "not ")
@@ -469,13 +478,11 @@ SaveDecompModel() {
 void
 TetGenDecomposition::
 LoadDecompModel() {
-  string basename = MPProblem::GetPath(m_baseFilename);
-
   if(m_debug)
-    cout << "Loading tetgen files with base name '" << basename << "'"
+    cout << "Loading tetgen files with base name '" << m_baseFilename << "'"
          << endl;
 
-  char* b = const_cast<char*>(basename.c_str());
+  char* b = const_cast<char*>(m_baseFilename.c_str());
   m_decompModel->load_node(b);
   m_decompModel->load_tet(b);
   //m_decompModel->load_neighbors(b);

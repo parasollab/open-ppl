@@ -1,6 +1,6 @@
 #include "ControlSetGenerators.h"
 
-#include "Geometry/Bodies/ActiveMultiBody.h"
+#include "Geometry/Bodies/MultiBody.h"
 #include "MPProblem/Robot/Actuator.h"
 #include "MPProblem/Robot/Robot.h"
 #include "Utilities/PMPLExceptions.h"
@@ -20,7 +20,7 @@ SimpleControlSetGenerator(Robot* const _r) {
 
   // Create forward and reverse controls for each actuator.
   for(auto& actuatorPair : _r->GetActuators()) {
-    Actuator* actuator = actuatorPair.second;
+    Actuator* actuator = actuatorPair.second.get();
     auto mask = actuator->ControlMask();
     c.actuator = actuator;
 

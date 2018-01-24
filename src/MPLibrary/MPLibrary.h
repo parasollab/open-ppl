@@ -23,6 +23,7 @@
 #include "MPLibrary/ValidityCheckers/CollisionDetectionValidity.h"
 #include "MPLibrary/ValidityCheckers/ValidityCheckerMethod.h"
 
+
 ////////////////////////////////////////////////////////////////////////////////
 /// A collection of planning algorithms that can operate on a specific
 /// MPProblem and MPTask.
@@ -52,10 +53,10 @@ class MPLibraryType final
     /// Solver represents an input set to MPLibraryType. It includes an
     /// MPStrategy label, seed, base file name, and vizmo debug option.
     struct Solver {
-      std::string label;
-      long seed;
-      std::string baseFilename;
-      bool vizmoDebug;
+      std::string label;         ///< The XML label for the strategy to use.
+      long seed;                 ///< The seed.
+      std::string baseFilename;  ///< The base name for output files.
+      bool vizmoDebug;           ///< Save vizmo debug info?
     };
 
     ///@}
@@ -221,9 +222,6 @@ class MPLibraryType final
     ///@name Map Evaluator Accessors
     ///@{
 
-    string GetQueryFilename() const {return m_problem->GetQueryFilename();}
-    void SetQueryFilename(const string& _s) {m_problem->SetQueryFilename(_s);}
-
     MapEvaluatorPointer GetMapEvaluator(const string& _l) {
       return m_mapEvaluators->GetMethod(_l);
     }
@@ -259,6 +257,11 @@ class MPLibraryType final
     ///@name Solution Accessors
     ///@{
 
+    /// These are necessary for swapping out the solution when trying to run an
+    /// RRT during a disassembly extension.
+    MPSolution* GetMPSolution() {return m_solution;}
+    void SetMPSolution(MPSolution* _sol) {m_solution = _sol;}
+
     RoadmapType* GetRoadmap() {return m_solution->GetRoadmap();}
     RoadmapType* GetBlockRoadmap() {return m_solution->GetBlockRoadmap();}
     StatClass*   GetStatClass() {return m_solution->GetStatClass();}
@@ -279,6 +282,13 @@ class MPLibraryType final
     void AddSolver(const string& _label, long _seed,
         const string& _baseFileName, bool _vizmoDebug = false) {
       m_solvers.push_back(Solver{_label, _seed, _baseFileName, _vizmoDebug});
+    }
+
+    std::vector<std::string> GetSolverLabels() {
+      std::vector<std::string> labels;
+      for (auto& solver : m_solvers)
+        labels.push_back(solver.label);
+      return labels;
     }
 
     /// Run a single input (solver) and get back its solution.
@@ -347,10 +357,10 @@ class MPLibraryType final
     ///@name Inputs
     ///@{
 
-    MPProblem*     m_problem{nullptr};  ///< The current MPProblem.
-    MPTask*        m_task{nullptr};     ///< The current task.
-    MPSolution*    m_solution{nullptr}; ///< The current solution.
-    vector<Solver> m_solvers;           ///< The set of inputs to execute.
+    MPProblem*          m_problem{nullptr};  ///< The current MPProblem.
+    MPTask*             m_task{nullptr};     ///< The current task.
+    MPSolution*         m_solution{nullptr}; ///< The current solution.
+    std::vector<Solver> m_solvers;           ///< The set of inputs to execute.
 
     ///@}
     ///@name Method Sets

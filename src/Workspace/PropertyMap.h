@@ -6,7 +6,7 @@
 
 #include "ConfigurationSpace/Cfg.h"
 #include "Geometry/Boundaries/Boundary.h"
-#include "Geometry/Bodies/ActiveMultiBody.h"
+#include "Geometry/Bodies/MultiBody.h"
 #include "MPLibrary/ValidityCheckers/CollisionDetection/CDInfo.h"
 #include "MPLibrary/MPBaseObject.h"
 #include "WorkspaceSkeleton.h"
@@ -64,7 +64,7 @@ class PropertyMap {
     ///@}
     ///@name Sub-graph Generators
     ///@{
-    
+
     /// Compute the graph in terms of filter funtion
     /// then replace the old graph with the annotated one
     /// @param _f Filter functor: Delete edges for which function returns true
@@ -86,9 +86,9 @@ class PropertyMap {
     EdgeMapType& GetEdgeMap() { return m_edgeMap; }
     void SetVertexMap(VertexMapType& _vMap)  { m_vertexMap = _vMap; }
     void SetEdgeMap(EdgeMapType& _eMap)  { m_edgeMap = _eMap; }
-	
+
     /// Individual accessors
-    
+
     void SetVertexProperty(const VD& _v, const VertexProperty& _vp);
     void SetEdgeProperty(const ED& _e, const EdgeProperty& _ep);
     VertexProperty& GetVertexProperty(const VD& _v);
@@ -141,11 +141,11 @@ SetVertexProperty(const VD& _v, const VertexProperty& _vp) {
 
 template<typename EdgeProperty, typename VertexProperty>
 WorkspaceSkeleton*
-PropertyMap<EdgeProperty, VertexProperty>:: 
+PropertyMap<EdgeProperty, VertexProperty>::
 GetVertexFilteredSkeleton(VertexFilterFunction&& _f)  {
   auto graph = m_skeleton->GetGraph();
-  
-  for(auto mit = m_vertexMap.begin(); 
+
+  for(auto mit = m_vertexMap.begin();
 	mit != m_vertexMap.end(); ++mit) {
     if(_f(mit->second)) {
       graph.delete_vertex(mit->first);
@@ -158,11 +158,11 @@ GetVertexFilteredSkeleton(VertexFilterFunction&& _f)  {
 
 template<typename EdgeProperty, typename VertexProperty>
 WorkspaceSkeleton*
-PropertyMap<EdgeProperty, VertexProperty>:: 
+PropertyMap<EdgeProperty, VertexProperty>::
 GetEdgeFilteredSkeleton(EdgeFilterFunction&& _f)  {
   auto graph = m_skeleton->GetGraph();
-  
-  for(auto mit = m_edgeMap.begin(); 
+
+  for(auto mit = m_edgeMap.begin();
 	mit != m_edgeMap.end(); ++mit)  {
     if(_f(mit->second))  {
       graph.delete_edge(mit->first);
@@ -177,8 +177,8 @@ GetEdgeFilteredSkeleton(EdgeFilterFunction&& _f)  {
 
 /// Function to generate the annotated clearance skeleton
 template <typename MPTraits>
-PropertyMap<vector<double>,double>* 
-ClearanceAnnotatedSkeleton(MPBaseObject<MPTraits>* _mp, WorkspaceSkeleton* _ws, 
+PropertyMap<vector<double>,double>*
+ClearanceAnnotatedSkeleton(MPBaseObject<MPTraits>* _mp, WorkspaceSkeleton* _ws,
        bool _boundary = true) {
   typedef typename MPTraits::CfgType CfgType;
   auto clearanceMap = new PropertyMap<vector<double>,double>(_ws);
@@ -218,32 +218,32 @@ ClearanceAnnotatedSkeleton(MPBaseObject<MPTraits>* _mp, WorkspaceSkeleton* _ws,
     vector<double> clearances;
     for(auto pit = eit->property().begin(); pit < eit->property().end(); ++pit)
       clearances.push_back(getClearance(*pit));
-    auto ed = WorkspaceSkeleton::ED(eit->source(), eit->target(), 
+    auto ed = WorkspaceSkeleton::ED(eit->source(), eit->target(),
         eit->descriptor().id());
     clearanceMap->SetEdgeProperty(ed,clearances);
   }
   return clearanceMap;
 }
 
-/// Function to generate the skeleton with edges filtered based on a 
+/// Function to generate the skeleton with edges filtered based on a
 //tolerance value
 template <typename MPTraits>
-void 
-ClearanceFilteredSkeleton(double _t, MPBaseObject<MPTraits>* _mp, 
+void
+ClearanceFilteredSkeleton(double _t, MPBaseObject<MPTraits>* _mp,
                           WorkspaceSkeleton* _ws, bool _boundary = true) {
 
   // Function for filtering edges based on minimum clearance
   struct ClearanceFiltration {
     double m_min;   ///< Minimum clearance
     ClearanceFiltration(double _a)  { m_min = _a; }
-    bool operator()(vector<double>& _i)  { 
+    bool operator()(vector<double>& _i)  {
       for(auto i: _i)
         if(i < m_min)
 	  return true;
-      return false; 
+      return false;
     }
   };
-  
+
   auto clearanceMap = ClearanceAnnotatedSkeleton(_mp, _ws, _boundary);
   _ws = clearanceMap->GetEdgeFilteredSkeleton(ClearanceFiltration(_t));
 }

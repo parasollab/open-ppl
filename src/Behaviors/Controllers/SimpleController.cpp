@@ -16,7 +16,9 @@ SimpleController(Robot* const _r, const double _gain, const double _max)
 
 
 SimpleController::
-SimpleController(Robot* const _r, XMLNode& _node) : ControllerMethod(_r, _node) {
+SimpleController(Robot* const _r, XMLNode& _node)
+  : ControllerMethod(_r, _node)
+{
   m_gain = _node.Read("gain", true, 0.,
       std::numeric_limits<double>::min(), std::numeric_limits<double>::max(),
       "The proportional gain");
@@ -26,6 +28,25 @@ SimpleController(Robot* const _r, XMLNode& _node) : ControllerMethod(_r, _node) 
       std::numeric_limits<double>::min(), std::numeric_limits<double>::max(),
       "The maximum force/velocity magnitude to request");
 }
+
+
+SimpleController::
+SimpleController(Robot* const _r, const SimpleController& _c)
+  : ControllerMethod(_r, _c),
+    m_gain(_c.m_gain),
+    m_max(_c.m_max)
+{ }
+
+
+std::unique_ptr<ControllerMethod>
+SimpleController::
+Clone(Robot* const _r) const {
+  return std::unique_ptr<SimpleController>(new SimpleController(_r, *this));
+}
+
+
+SimpleController::
+~SimpleController() = default;
 
 /*----------------------------- Control Selection ----------------------------*/
 

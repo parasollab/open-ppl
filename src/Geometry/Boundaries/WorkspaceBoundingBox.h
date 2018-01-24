@@ -14,13 +14,13 @@ class WorkspaceBoundingBox : public AbstractBoundingBox {
     ///@name Construction
     ///@{
 
-    WorkspaceBoundingBox(const size_t _n);
+    explicit WorkspaceBoundingBox(const size_t _n);
 
-    WorkspaceBoundingBox(const std::vector<double>& _center);
+    explicit WorkspaceBoundingBox(const std::vector<double>& _center);
 
-    virtual ~WorkspaceBoundingBox() = default;
+    virtual ~WorkspaceBoundingBox() noexcept;
 
-    virtual Boundary* Clone() const override;
+    virtual std::unique_ptr<Boundary> Clone() const override;
 
     ///@}
     ///@name Property Accessors

@@ -13,6 +13,7 @@
 #include "MPProblem/Robot/Actuator.h"
 #include "MPProblem/Robot/Control.h"
 #include "Utilities/MPUtils.h"
+#include "Geometry/Boundaries/Range.h"
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -76,6 +77,19 @@ class DefaultWeight {
     ControlSet& GetControlSet() noexcept;
     void SetControlSet(const ControlSet& _c) noexcept;
 
+    //For disassembly planning, we need the bodies (first one must be the body
+    // rotated about) that were moved to create the edge.
+    void SetActiveBodies(const std::vector<unsigned int>& _bodies) {
+      m_activeBodies = _bodies;
+    }
+    std::vector<unsigned int> GetActiveBodies() {return m_activeBodies;}
+
+    /// Call this so that Path::FullCfgs() doesn't reproduce intermediates for
+    /// this edge (only used for disassembly planning right now). This creates
+    /// INVALID roadmaps, and should only be used for visualization purposes.
+    void SetSkipEdge() { m_skipEdge = true; }
+    bool SkipEdge() { return m_skipEdge; }
+
     bool IsChecked(const int _mult) const noexcept;
     void SetChecked(const int _mult) noexcept;
 
@@ -86,7 +100,6 @@ class DefaultWeight {
     // The number of timesteps that the local plan on this edge cares about.
     size_t GetTimeSteps() const noexcept;
     void SetTimeSteps(std::size_t _steps) noexcept;
-
 
 
     ///@}
@@ -130,6 +143,13 @@ class DefaultWeight {
     double m_weight{0.};                  ///< The edge length.
     std::vector<CfgType> m_intermediates; ///< Intermediate configurations.
 
+    // In order to reproduce correct intermediates of a subassembly's path for
+    // disassembly planning, we need the moved parts, with the body num that was
+    // rotated about in the first element:
+    std::vector<unsigned int> m_activeBodies;
+
+    bool m_skipEdge{false}; ///< Don't compute intermediates in Path::FullCfgs()
+
     int m_checkedMult;
     bool m_hasClearance{false};
     double m_clearance;
@@ -137,6 +157,10 @@ class DefaultWeight {
     // For nonholonomic robots.
     ControlSet m_controls;   ///< The controls used.
     size_t m_timeSteps{0};   ///< The number of timesteps to apply the controls.
+
+    /// A vector of safe intervals, not in collision with Dynamic Obstacles
+    /// of known path, for this cfg.
+    std::vector<Range<double>> m_safeIntervals;
 
     ///@}
 

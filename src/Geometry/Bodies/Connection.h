@@ -1,8 +1,10 @@
 #ifndef CONNECTION_H
 #define CONNECTION_H
 
+#include <array>
 #include <memory>
-using namespace std;
+#include <string>
+#include <utility>
 
 #include <Transformation.h>
 using namespace mathtool;
@@ -11,22 +13,24 @@ using namespace mathtool;
 #include "Utilities/IOUtils.h"
 #include "Geometry/Boundaries/Range.h"
 
-class FreeBody;
+class Body;
 class MultiBody;
 class XMLNode;
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// @ingroup Environment
-/// @brief Connection information between two FreeBody s in a robot
+/// Connection information between two Bodys in a MultiBody.
 ///
 /// This class stores information about connection from one body to another one.
 /// The information stored in this class includes:
 ///   - Connection type
-///   - Two FreeBody instances
+///   - Two Body instances
 ///   - Transform from frame of body1 to DH-Frame
 ///   - DHParameter
 ///   - Transform from DH-Frame to frame of body2
+///
+/// @TODO Need to generalize the connection relationship to handle closed
+///       chains and multiple backward connections.
 ////////////////////////////////////////////////////////////////////////////////
 class Connection final {
 
@@ -35,9 +39,7 @@ class Connection final {
     ///@name Local Types
     ///@{
 
-    ////////////////////////////////////////////////////////////////////////////
     /// The supported connection types.
-    ////////////////////////////////////////////////////////////////////////////
     enum class JointType {
       Revolute,   ///< 1 DOF
       Spherical,  ///< 2 DOF
@@ -49,88 +51,106 @@ class Connection final {
     ///@{
 
     /// @param _owner MultiBody who owns this Connection
-    Connection(MultiBody* _owner);
+    Connection(MultiBody* const _owner);
+
+    /// Parse connection info from an XML node.
+    /// @param _owner MultiBody who owns this Connection
+    /// @param _node The input XML node to read.
+    Connection(MultiBody* const _owner, XMLNode& _node);
+
+    /// Copying a connection does not copy the multibody and body pointers, as
+    /// this would not be a usable object. Call SetBodies to attach a newly
+    /// copied connection to another multibody.
+    Connection(const Connection&);  ///< Copy.
+    Connection(Connection&&);       ///< Move.
+
+    ///@}
+    ///@name Assignment
+    ///@{
+
+    Connection& operator=(const Connection&);  ///< Copy.
+    Connection& operator=(Connection&&);       ///< Move.
 
     ///@}
     ///@name I/O
     ///@{
 
-    /// Parse the connection type from a string tag.
-    /// @param _tag The string tag to parse.
-    /// @param _where Location of \p _tag for error reporting.
-    /// @return The joint type represented by _tag.
-    static JointType GetJointTypeFromTag(const string& _tag,
-        const string& _where);
-
-    /// Create a string tag for a given connection type.
-    /// @param _j Joint type
-    /// @return String representation of _j.
-    static string GetTagFromJointType(JointType _j);
-
-    /// Parse connection info from an XML node.
-    /// @param _node The input XML node to read.
-    void ReadXML(XMLNode& _node);
-
-    /// Parse connection info from an input stream.
+    /// Parse connection info from an old-style env/robot file.
     /// @param _is The input stream to read.
     /// @param _cbs The input counting stream buffer.
     void Read(istream& _is, CountingStreamBuffer& _cbs);
 
-    friend ostream& operator<<(ostream& _os, const Connection& _c);
+    /// Set the free bodies which are joined by this connection.
+    /// @param _owner The owning multibody.
+    /// @param _parentIndex The parent body index.
+    /// @param _childIndex The child body index.
+    void SetBodies(MultiBody* const _owner, const size_t _parentIndex,
+        const size_t _childIndex);
+
+    /// This overload assumes that the parent/child indexes have already been
+    /// set and are the same in the new owner.
+    /// @overload
+    void SetBodies(MultiBody* const _owner);
+
+    friend std::ostream& operator<<(std::ostream& _os, const Connection& _c);
 
     ///@}
     ///@name Joint Information
     ///@{
 
-    /// @return Global connection index
-    size_t GetGlobalIndex() const;
+    /// Get the connection type.
+    JointType GetConnectionType() const noexcept;
 
-    /// @return Connection type
-    JointType GetConnectionType() const;
+    /// Check if this is a revolute joint.
+    bool IsRevolute() const noexcept;
 
-    /// @return Joint Limits
-    const pair<double, double>& GetJointLimits(size_t _i) const;
+    /// Check if this is a spherical joint.
+    bool IsSpherical() const noexcept;
+
+    /// Check if this is a non-actuated joint.
+    bool IsNonActuated() const noexcept;
+
+    /// Get a joint range.
+    /// @param _i The range to get (0 normally, 1 for second spherical range).
+    /// @return The corresponding range object.
+    const Range<double>& GetJointRange(size_t _i) const noexcept;
 
     ///@}
-    ///@name FreeBody information
+    ///@name Body information
     ///@{
 
-    /// @return Pointer to first FreeBody
-    const FreeBody* GetPreviousBody() const;
-    FreeBody* GetPreviousBody();
+    /// Get a pointer to the child Body.
+    const Body* GetPreviousBody() const noexcept;
+    Body* GetPreviousBody() noexcept;
 
-    /// @return Index of first FreeBody
-    size_t GetPreviousBodyIndex() const;
+    /// Get the index of the parent Body within the parent multibody.
+    size_t GetPreviousBodyIndex() const noexcept;
 
-    /// @return Pointer to second FreeBody
-    const FreeBody* GetNextBody() const;
-    FreeBody* GetNextBody();
+    /// Get a pointer to the child Body.
+    const Body* GetNextBody() const noexcept;
+    Body* GetNextBody() noexcept;
 
-    /// @return Index of second FreeBody
-    size_t GetNextBodyIndex() const;
+    /// Get the index of the child Body within the parent multibody.
+    size_t GetNextBodyIndex() const noexcept;
 
     ///@}
     ///@name Transformation information
     ///@{
 
     /// @return DH frame description
-    DHParameters& GetDHParameters();
-    const DHParameters& GetDHParameters() const;
+    DHParameters& GetDHParameters() noexcept;
+    const DHParameters& GetDHParameters() const noexcept;
 
     /// @return DH frame description for rendering
-    DHParameters& GetDHRenderParameters();
+    DHParameters& GetDHRenderParameters() noexcept;
 
     /// @return Transformation to second body
-    Transformation& GetTransformationToBody2();
-
-    /// @return Transformation to second body
-    const Transformation& GetTransformationToBody2() const;
+    Transformation& GetTransformationToBody2() noexcept;
+    const Transformation& GetTransformationToBody2() const noexcept;
 
     /// @return Transformation to DH frame
-    Transformation& GetTransformationToDHFrame();
-
-    /// @return Transformation to DH frame
-    const Transformation& GetTransformationToDHFrame() const;
+    Transformation& GetTransformationToDHFrame() noexcept;
+    const Transformation& GetTransformationToDHFrame() const noexcept;
 
     ///@}
 
@@ -139,19 +159,15 @@ class Connection final {
     ///@name Internal State
     ///@{
 
-    MultiBody* m_multibody;                   ///< Owner of this Connection
-    FreeBody* m_bodies[2];                    ///< (previous body, next body)
+    MultiBody* m_multibody{nullptr};          ///< Owner of this Connection
     Transformation m_transformationToBody2;   ///< Transform to second body
     Transformation m_transformationToDHFrame; ///< Transform to DH frame
     DHParameters m_dhParameters;              ///< DH frame description
     DHParameters m_dhRenderParameters;        ///< DH Rendering parameters
 
-    size_t m_globalIndex;                     ///< Global ID
-    JointType m_jointType;                    ///< Type of connection
-    pair<size_t, size_t> m_bodyIndices;       ///< (previous body, next body)
-    pair<double, double> m_jointLimits[2];    ///< valid range within [-1,1)
-
-    static size_t m_globalCounter;            ///< Global ID counter
+    JointType m_jointType;                     ///< Type of connection
+    std::pair<size_t, size_t> m_bodyIndices;   ///< (previous body, next body)
+    std::array<Range<double>, 2> m_jointRange; ///< The valid joint ranges.
 
     ///@}
 

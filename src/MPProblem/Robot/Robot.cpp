@@ -10,7 +10,7 @@
 #include "Behaviors/Agents/Agent.h"
 #include "Behaviors/Controllers/ControllerMethod.h"
 #include "ConfigurationSpace/Cfg.h"
-#include "Geometry/Bodies/ActiveMultiBody.h"
+#include "Geometry/Bodies/MultiBody.h"
 #include "Geometry/Boundaries/Boundary.h"
 #include "Geometry/Boundaries/CSpaceBoundingBox.h"
 #include "MPProblem/MPProblem.h"
@@ -41,10 +41,6 @@ Robot(MPProblem* const _p, XMLNode& _node) : m_problem(_p) {
   m_virtual = _node.Read("virtual", false, false, "Virtual robots are imaginary "
       "and will not be included in the simulation or CD checks.");
 
-  //TODO: The following should go in the behavior. We don't have XML parsing for that yet
-  //so I added it there. 
-  m_withoutHandOff = _node.Read("withoutHandoff", false, false, "Is the behavior without task hand-off");
-
   //std::string color = _node.Read("color", false, "1 0 0 1", "Color of the robot in simulation");
   //this->GetMultiBody()->GetBody(i)->SetBodyColor(color);
 
@@ -68,13 +64,16 @@ Robot(MPProblem* const _p, XMLNode& _node) : m_problem(_p) {
     // holonomic, we will only use the actuator in simulation.
     std::vector<double> reverse(m_multibody->DOF(), -1),
                         forward(m_multibody->DOF(),  1);
-    m_actuators["default"] = new Actuator(this, "default",
-          IsNonholonomic() ? Actuator::Force : Actuator::Velocity);
+    m_actuators["default"] = std::unique_ptr<Actuator>(
+        new Actuator(this, "default",
+          IsNonholonomic() ? Actuator::Force : Actuator::Velocity));
     m_actuators["default"]->SetLimits(reverse, forward);
     m_actuators["default"]->SetMaxForce(1);
 
     // Use the simplest controller.
-    m_controller = new SimpleController(this, 1, 1);
+    m_controller = std::unique_ptr<SimpleController>(
+        new SimpleController(this, 1, 1)
+    );
 
     // If the robot is nonholonomic, we need a discrete control set for now to
     // get the kinodynamic extender working.
@@ -84,53 +83,105 @@ Robot(MPProblem* const _p, XMLNode& _node) : m_problem(_p) {
 
   // Create dynamics model if the robot is nonholonomic.
   if(IsNonholonomic())
-    m_dynamicsModel = new DynamicsModel(this, nullptr);
+    SetDynamicsModel(nullptr);
 
   for(auto& child : _node) {
     if(child.Name() == "HardwareInterface") {
+      // Make sure we don't allow duplicate labels.
       const std::string label = child.Read("label", true, "",
           "A unique label for this hardware.");
-
-      // Make sure we don't allow duplicate labels.
       const bool duplicate = m_hardware.count(label);
       if(duplicate)
         throw RunTimeException(WHERE, "Hardware labels must be unique for a "
             "given robot.");
 
-      SetHardwareInterface(label, HardwareInterfaceFactory(child));
+      SetHardwareInterface(label, HardwareInterface::Factory(child));
+    }
+    else if(child.Name() == "Agent") {
+      SetAgent(Agent::Factory(this, child));
     }
   }
-
-  // The agent should be initialized by the Simulation object to avoid long
-  // compile times for this object.
-  m_agentLabel = _node.Read("agent", false, "", "Label for the agent type");
 }
 
 
 Robot::
-Robot(MPProblem* const _p, ActiveMultiBody* const _mb, const std::string& _label)
-    : m_problem(_p), m_label(_label), m_multibody(_mb) {
-  m_multibody->InitializeDOFs(m_problem->GetEnvironment()->GetBoundary());
-  m_multibody->Configure(std::vector<double>(m_multibody->DOF(), 0));
-
+Robot(MPProblem* const _p, std::unique_ptr<MultiBody>&& _mb,
+    const std::string& _label)
+  : m_problem(_p), m_label(_label), m_multibody(std::move(_mb)) {
   InitializePlanningSpaces();
+  m_multibody->Configure(std::vector<double>(m_multibody->DOF(), 0));
 }
 
 
 Robot::
-~Robot() noexcept {
-  for(auto& hardware : m_hardware)
-    delete hardware.second;
+Robot(MPProblem* const _p, const Robot& _r)
+  : m_problem(_p),
+    m_nonholonomic(_r.m_nonholonomic),
+    m_carlike(_r.m_carlike),
+    m_maxLinearVelocity(_r.m_maxLinearVelocity),
+    m_maxAngularVelocity(_r.m_maxAngularVelocity)
+{
+  // Copy the robot label. If the robot was copied to the same problem, append
+  // _copy to the end of the label to make sure it is unique.
+  const bool sameProblem = _p == _r.GetMPProblem();
+  m_label = _r.m_label + (sameProblem ? "_copy" : "");
 
-  delete m_agent;
-  delete m_controller;
-  delete m_dynamicsModel;
-  delete m_multibody;
+  // Copy multibody.
+  m_multibody = std::unique_ptr<MultiBody>(new MultiBody(*_r.m_multibody));
 
-  for(auto& a : m_actuators)
-    delete a.second;
+  // Copy actuators.
+  for(const auto& labelPointer : _r.m_actuators) {
+    auto label    = labelPointer.first;
+    auto actuator = labelPointer.second.get();
+    m_actuators[label] = std::unique_ptr<Actuator>(new Actuator(this, *actuator));
+  }
+
+  // Copy the planning spaces.
+  m_cspace = std::unique_ptr<CSpaceBoundingBox>(
+      new CSpaceBoundingBox(*_r.m_cspace)
+  );
+  if(_r.m_vspace)
+    m_vspace = std::unique_ptr<CSpaceBoundingBox>(
+        new CSpaceBoundingBox(*_r.m_vspace)
+    );
+
+  // Copy controller.
+  if(_r.m_controller)
+    SetController(_r.m_controller->Clone(this));
+
+  // We can't copy the bullet model directly - it must be recreated by adding
+  // this robot to a simulation because some of the related data is stored in
+  // the Simulation object. This will initialize the internal micro-sim only.
+  if(_r.m_dynamicsModel)
+    SetDynamicsModel(nullptr);
+
+  // TODO
+  // We will not copy the agent because each one must be created for a specific
+  // robot object. We will only copy the agent label and require the Simulation
+  // to handle the rest.
+  if(_r.m_agent)
+    std::cerr << "WARNING: copying a robot does not copy the agent object "
+              << "because each must be created for a terface object driving a "
+              << "given piece of hardware at a time."
+              << std::endl;
+
+  // We will not copy the hardware interfaces because there should only be one
+  // such object for a given piece of hardware. Warn the user in this case.
+  if(_r.m_hardware.size())
+    std::cerr << "WARNING: copying a robot does not copy the hardware interface "
+              << "because there should only be one interface object driving a "
+              << "given piece of hardware at a time."
+              << std::endl;
 }
 
+
+Robot::
+~Robot() = default;
+
+Robot::
+Robot(Robot&&) = default;
+
+Robot& Robot::operator=(Robot&&) = default;
 /*---------------------------------- I/O -------------------------------------*/
 
 void
@@ -145,7 +196,7 @@ ReadXMLFile(const std::string& _filename) {
       std::numeric_limits<double>::max(), "The robot's maximum angular velocity");
 
   for(auto& child : node) {
-    if(child.Name() == "Multibody") {
+    if(child.Name() == "MultiBody") {
       // Read the multibody file. Eventually we'll go full XML and pass the
       // child node directly to the multibody instead.
       const std::string mbFile = child.Read("filename", false, "", "Name of the "
@@ -160,24 +211,12 @@ ReadXMLFile(const std::string& _filename) {
     }
     else if(child.Name() == "Actuator") {
       // Parse the actuator.
-      auto actuator = new Actuator(this, child);
-      m_actuators[actuator->GetLabel()] = actuator;
+      std::unique_ptr<Actuator> actuator(new Actuator(this, child));
+      m_actuators[actuator->GetLabel()] = std::move(actuator);
     }
     else if(child.Name() == "Controller") {
-      // Read downcased controller type.
-      std::string controllerType = child.Read("type", true, "", "Label "
-          "of the controller type to use");
-      std::transform(controllerType.begin(), controllerType.end(),
-          controllerType.begin(), ::tolower);
-
-      // Setup the appropriate controller type.
-      if(controllerType == "simple")
-        m_controller = new SimpleController(this, child);
-      else if(controllerType == "icreatecontroller")
-        m_controller = new ICreateController(this, child);
-      else
-        throw ParseException(child.Where(), "Unknown controller label '" +
-            controllerType + "'. Currently only 'simple' is supported.");
+      auto controller = ControllerMethod::Factory(this, child);
+      SetController(std::move(controller));
     }
   }
 
@@ -189,13 +228,11 @@ ReadXMLFile(const std::string& _filename) {
 void
 Robot::
 ReadMultiBodyXML(XMLNode& _node) {
-  m_multibody = new ActiveMultiBody(_node);
+  m_multibody = std::unique_ptr<MultiBody>(new MultiBody(_node));
 
   // Initialize the DOF limits and set the robot to a zero starting configuration.
-  m_multibody->InitializeDOFs(m_problem->GetEnvironment()->GetBoundary());
-  m_multibody->Configure(std::vector<double>(m_multibody->DOF(), 0));
-
   InitializePlanningSpaces();
+  m_multibody->Configure(std::vector<double>(m_multibody->DOF(), 0));
 }
 
 
@@ -207,26 +244,26 @@ ReadMultibodyFile(const std::string& _filename) {
   std::istream ifs(&cbs);
 
   // Parse the file to get the robot's geometry.
-  m_multibody = new ActiveMultiBody;
+  m_multibody = std::unique_ptr<MultiBody>(new MultiBody(MultiBody::Type::Active));
   m_multibody->Read(ifs, cbs);
 
   // Initialize the DOF limits and set the robot to a zero starting configuration.
-  m_multibody->InitializeDOFs(m_problem->GetEnvironment()->GetBoundary());
-  m_multibody->Configure(std::vector<double>(m_multibody->DOF(), 0));
-
   InitializePlanningSpaces();
+  m_multibody->Configure(std::vector<double>(m_multibody->DOF(), 0));
 }
 
+/*--------------------------- Planning Interface -----------------------------*/
 
 void
 Robot::
 InitializePlanningSpaces() {
+  m_multibody->InitializeDOFs(m_problem->GetEnvironment()->GetBoundary());
+
   const size_t dof = m_multibody->DOF();
   const auto& dofInfo = m_multibody->GetDofInfo();
 
   // Create the configuration space boundary.
-  delete m_cspace;
-  m_cspace = new CSpaceBoundingBox(dof);
+  m_cspace = std::unique_ptr<CSpaceBoundingBox>(new CSpaceBoundingBox(dof));
 
   for(size_t i = 0; i < dof; ++i)
     m_cspace->SetRange(i, dofInfo[i].range);
@@ -236,8 +273,7 @@ InitializePlanningSpaces() {
     return;
 
   // Create the velocity space boundary.
-  delete m_vspace;
-  m_vspace = new CSpaceBoundingBox(dof);
+  m_vspace = std::unique_ptr<CSpaceBoundingBox>(new CSpaceBoundingBox(dof));
 
   const size_t pos = m_multibody->PosDOF(),
                ori = m_multibody->OrientationDOF();
@@ -253,19 +289,25 @@ InitializePlanningSpaces() {
     m_vspace->SetRange(i, -1, 1);
 }
 
-/*--------------------------- Planning Interface -----------------------------*/
 
 const CSpaceBoundingBox*
 Robot::
 GetCSpace() const noexcept {
-  return m_cspace;
+  return m_cspace.get();
 }
 
 
 const CSpaceBoundingBox*
 Robot::
 GetVSpace() const noexcept {
-  return m_vspace;
+  return m_vspace.get();
+}
+
+
+MPProblem*
+Robot::
+GetMPProblem() const noexcept {
+  return m_problem;
 }
 
 /*------------------------- Simulation Interface -----------------------------*/
@@ -280,13 +322,6 @@ Step(const double _dt) {
 }
 
 
-MPProblem*
-Robot::
-GetMPProblem() const noexcept {
-  return m_problem;
-}
-
-
 void
 Robot::
 SynchronizeModels() noexcept {
@@ -297,17 +332,17 @@ SynchronizeModels() noexcept {
 
 /*--------------------------- Geometry Accessors -----------------------------*/
 
-ActiveMultiBody*
+MultiBody*
 Robot::
 GetMultiBody() noexcept {
-  return m_multibody;
+  return m_multibody.get();
 }
 
 
-const ActiveMultiBody*
+const MultiBody*
 Robot::
 GetMultiBody() const noexcept {
-  return m_multibody;
+  return m_multibody.get();
 }
 
 /*------------------------------ Agent Accessors -----------------------------*/
@@ -315,15 +350,14 @@ GetMultiBody() const noexcept {
 Agent*
 Robot::
 GetAgent() noexcept {
-  return m_agent;
+  return m_agent.get();
 }
 
 
 void
 Robot::
-SetAgent(Agent* const _a) noexcept {
-  delete m_agent;
-  m_agent = _a;
+SetAgent(std::unique_ptr<Agent>&& _a) noexcept {
+  m_agent = std::move(_a);
 }
 
 /*---------------------------- Control Accessors -----------------------------*/
@@ -331,15 +365,14 @@ SetAgent(Agent* const _a) noexcept {
 ControllerMethod*
 Robot::
 GetController() noexcept {
-  return m_controller;
+  return m_controller.get();
 }
 
 
 void
 Robot::
-SetController(ControllerMethod* const _c) noexcept {
-  delete m_controller;
-  m_controller = _c;
+SetController(std::unique_ptr<ControllerMethod>&& _c) noexcept {
+  m_controller = std::move(_c);
 }
 
 /*---------------------------- Actuator Accessors ----------------------------*/
@@ -347,13 +380,13 @@ SetController(ControllerMethod* const _c) noexcept {
 Actuator*
 Robot::
 GetActuator(const std::string& _label) noexcept {
-  return m_actuators[_label];
+  return m_actuators[_label].get();
 }
 
 
-const std::unordered_map<std::string, Actuator*>&
+const std::unordered_map<std::string, std::unique_ptr<Actuator>>&
 Robot::
-GetActuators() noexcept {
+GetActuators() const noexcept {
   return m_actuators;
 }
 
@@ -362,15 +395,16 @@ GetActuators() noexcept {
 DynamicsModel*
 Robot::
 GetDynamicsModel() noexcept {
-  return m_dynamicsModel;
+  return m_dynamicsModel.get();
 }
 
 
 void
 Robot::
 SetDynamicsModel(btMultiBody* const _m) {
-  delete m_dynamicsModel;
-  m_dynamicsModel = new DynamicsModel(this, _m);
+  if(m_dynamicsModel and _m == m_dynamicsModel->Get())
+    return;
+  m_dynamicsModel = std::unique_ptr<DynamicsModel>(new DynamicsModel(this, _m));
 }
 
 /*---------------------------- Hardware Interface ----------------------------*/
@@ -379,18 +413,16 @@ HardwareInterface*
 Robot::
 GetHardwareInterface(const std::string& _label) const noexcept {
   if(m_hardware.count(_label))
-    return m_hardware.at(_label);
+    return m_hardware.at(_label).get();
   return nullptr;
 }
 
 
 void
 Robot::
-SetHardwareInterface(const std::string& _label, HardwareInterface* const _i)
-    noexcept {
-  if(m_hardware.count(_label))
-    delete m_hardware[_label];
-  m_hardware[_label] = _i;
+SetHardwareInterface(const std::string& _label,
+    std::unique_ptr<HardwareInterface>&& _i) noexcept {
+  m_hardware[_label] = std::move(_i);
 }
 
 /*------------------------------- Other --------------------------------------*/
@@ -460,8 +492,8 @@ operator<<(std::ostream& _os, const Robot& _r) {
       << "\n\tOriDOF:   " << _r.GetMultiBody()->OrientationDOF()
       << "\n\tJointDOF: " << _r.GetMultiBody()->JointDOF()
       << "\nActuators:\n";
-  for(const auto& a : _r.m_actuators)
-    _os << *a.second << "\n";
+  for(const auto& a : _r.GetActuators())
+    _os << *a.second.get() << "\n";
   return _os << std::endl;
 }
 

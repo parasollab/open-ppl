@@ -27,6 +27,12 @@ class RoadmapFollowingAgent : public Agent {
 
     RoadmapFollowingAgent(Robot* const _r);
 
+    RoadmapFollowingAgent(Robot* const _r, const RoadmapFollowingAgent& _a);
+
+    RoadmapFollowingAgent(Robot* const _r, XMLNode& _node);
+
+    virtual std::unique_ptr<Agent> Clone(Robot* const _r) const override;
+
     virtual ~RoadmapFollowingAgent();
 
     ///@}
@@ -52,7 +58,6 @@ class RoadmapFollowingAgent : public Agent {
     /// Check that the simulated robot state matches the expected state from the
     /// roadmap.
     void CheckRobot() const;
-
 
     /// Set the next subgoal in the path.
     void SetNextSubgoal();

@@ -7,7 +7,8 @@
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Chooses the control that drives most directly towards the target.
+/// Selects controls that require an iCreate-like robot to first turn towards
+/// its target and then translate in the desired direction.
 ////////////////////////////////////////////////////////////////////////////////
 class ICreateController : public ControllerMethod {
 
@@ -28,7 +29,14 @@ class ICreateController : public ControllerMethod {
     /// @param[in] _node The XML node to parse.
     ICreateController(Robot* const _r, XMLNode& _node);
 
-    virtual ~ICreateController() = default;
+    /// Copy a controller for another robot.
+    /// @param _r The destination robot.
+    /// @param _c The controller to copy.
+    ICreateController(Robot* const _r, const ICreateController& _c);
+
+    virtual std::unique_ptr<ControllerMethod> Clone(Robot* const _r) const;
+
+    virtual ~ICreateController();
 
     ///@}
 

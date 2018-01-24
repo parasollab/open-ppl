@@ -148,6 +148,20 @@ Read(const std::string& _name, const bool _req, const std::string& _default,
 
 void
 XMLNode::
+Ignore() {
+  m_accessed = true;
+
+  // Set the list of requested attributes to those found in the node.
+  m_reqAttributes.clear();
+  for(const TiXmlAttribute* attr = m_node->ToElement()->FirstAttribute();
+      attr != nullptr; attr = attr->Next()) {
+    m_reqAttributes.insert(attr->Name());
+  }
+}
+
+
+void
+XMLNode::
 WarnAll(const bool _warningsAsErrors) {
   ComputeAccessed();
   bool anyWarnings = false;
@@ -258,6 +272,12 @@ WarnUnknownNode() {
             << "\nNode: " << Name()
             << "\nLine: " << m_node->Row()
             << "\nCol: " << m_node->Column()
+            << "\nIf you expected this to work, make sure:"
+            << "\n\t- There is a default (no arguments) constructor."
+            << "\n\t- No constructor is defined with = default."
+            << "\n\t- You have called this->SetName with the XML node name in "
+            << "every constructor."
+            << "\n\t- You have added this method to the traits."
             << "\n*************************************************************"
             << std::endl;
 }

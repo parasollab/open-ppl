@@ -59,13 +59,11 @@ RandomNF<MPTraits>::
 FindNeighbors(RoadmapType* _rmp,
     InputIterator _first, InputIterator _last, bool _fromFullRoadmap,
     const CfgType& _cfg, OutputIterator _out) {
+  MethodTimer mt(this->GetStatClass(), "RandomNF::FindNeighbors");
+  this->IncrementNumQueries();
 
   GraphType* map = _rmp->GetGraph();
   auto dmm = this->GetDistanceMetric(this->m_dmLabel);
-
-  this->IncrementNumQueries();
-  this->StartTotalTime();
-  this->StartQueryTime();
 
   set<VID> vids;
   VID cvid = map->GetVID(_cfg);
@@ -80,19 +78,20 @@ FindNeighbors(RoadmapType* _rmp,
     *_out++ = make_pair(vid, dmm->Distance(_cfg, map->GetVertex(vid)));
   }
 
-  this->EndQueryTime();
-  this->EndTotalTime();
-
   return _out;
 }
+
 
 template <typename MPTraits>
 template<typename InputIterator, typename OutputIterator>
 OutputIterator
-RandomNF<MPTraits>::FindNeighborPairs(RoadmapType* _rmp,
+RandomNF<MPTraits>::
+FindNeighborPairs(RoadmapType* _rmp,
     InputIterator _first1, InputIterator _last1,
     InputIterator _first2, InputIterator _last2,
     OutputIterator _out) {
+  MethodTimer mt(this->GetStatClass(), "RandomNF::FindNeighborPairs");
+  this->IncrementNumQueries();
 
   GraphType* map = _rmp->GetGraph();
   auto dmm = this->GetDistanceMetric(this->m_dmLabel);

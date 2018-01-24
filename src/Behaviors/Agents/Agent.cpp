@@ -1,12 +1,19 @@
 #include "Agent.h"
 
-#include <iostream>
+#ifdef PMPL_SIMULATOR
+#include "BatteryConstrainedGroup.h"
+#include "PathFollowingAgent.h"
+#include "RoadmapFollowingAgent.h"
+#endif
+
 #include "BulletDynamics/Featherstone/btMultiBody.h"
 #include "BulletDynamics/Featherstone/btMultiBodyLink.h"
+#include "MPProblem/MPTask.h"
 #include "MPProblem/Robot/DynamicsModel.h"
 #include "MPProblem/Robot/Robot.h"
-#include "MPProblem/MPTask.h"
+#include "Utilities/XMLNode.h"
 
+#include <iostream>
 
 /*------------------------------ Construction --------------------------------*/
 
@@ -15,9 +22,45 @@ Agent(Robot* const _r) : m_robot(_r) { }
 
 
 Agent::
-~Agent() {
-  delete m_task;
+Agent(Robot* const _r, const Agent& _a)
+  : m_robot(_r),
+    m_initialized(_a.m_initialized),
+    m_debug(_a.m_debug)
+{ }
+
+
+std::unique_ptr<Agent>
+Agent::
+Factory(Robot* const _r, XMLNode& _node) {
+  // Read the node and mark it as visited.
+  std::string type = _node.Read("type", true, "", "The Agent class name.");
+  std::transform(type.begin(), type.end(), type.begin(), ::tolower);
+
+  std::unique_ptr<Agent> output;
+
+#ifdef PMPL_SIMULATOR
+  if(type == "pathfollowing")
+    output = std::unique_ptr<PathFollowingAgent>(
+        new PathFollowingAgent(_r, _node)
+    );
+  else if(type == "roadmapfollowing")
+    output = std::unique_ptr<RoadmapFollowingAgent>(
+        new RoadmapFollowingAgent(_r, _node)
+    );
+  else
+    throw ParseException(_node.Where(), "Unknown agent type '" + type + "'.");
+#else
+  // If we are not building the simulator, ignore the agent node.
+  _node.Ignore();
+#endif
+
+  return output;
 }
+
+
+Agent::
+~Agent() = default;
+//delete m_task;
 
 /*----------------------------- Accessors ------------------------------------*/
 
@@ -34,23 +77,18 @@ Agent::
 Halt() {
   // Zero the robot's velocity so that we can tell that it has completed its
   // path by visual inspection.
-  /// @WARNING Arbitrarily setting the velocity does not respect the robot's
-  ///          dynamics. It is OK for now because we have not yet tried to make
-  ///          the robot do anything after traveling one path. For more complex
-  ///          behavior (like TMP type problems) where the robot will travel
-  ///          multiple paths, this will need to be removed.
   btMultiBody* body = m_robot->GetDynamicsModel()->Get();
   body->setBaseVel({0,0,0});
   body->setBaseOmega({0,0,0});
   for(int i = 0; i < body->getNumLinks(); i++) {
-    //If it's a spherical (2 dof) joint, then we must use the other version of
+    // If it's a spherical (2 dof) joint, then we must use the other version of
     // setting the link velocity dofs for each value of desired velocity.
     if(body->getLink(i).m_jointType ==
         btMultibodyLink::eFeatherstoneJointType::eSpherical) {
       btScalar temp[] = {0,0};
       body->setJointVelMultiDof(i, temp);
     }
-    //Do nothing if the joint was a non-actuated joint.
+    // Do nothing if the joint was a non-actuated joint.
     else if (body->getLink(i).m_jointType !=
         btMultibodyLink::eFeatherstoneJointType::eFixed) {
       body->setJointVel(i, 0);
@@ -67,7 +105,7 @@ Halt() {
 void
 Agent::
 SetCurrentTask(MPTask* const _task) {
-  // Guard against re-assignment.
+  // Guard against self-assignment.
   if(_task == m_task)
     return;
   delete m_task;

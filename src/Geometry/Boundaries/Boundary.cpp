@@ -1,9 +1,16 @@
 #include "Geometry/Boundaries/Boundary.h"
 
 #include "ConfigurationSpace/Cfg.h"
-#include "Geometry/Bodies/ActiveMultiBody.h"
+#include "Geometry/Bodies/MultiBody.h"
 
 #include "Utilities/MetricUtils.h"
+#include "Utilities/XMLNode.h"
+
+
+/*------------------------------- Construction -------------------------------*/
+
+Boundary::
+~Boundary() noexcept = default;
 
 /*--------------------------- Containment Testing ----------------------------*/
 
@@ -29,8 +36,8 @@ InWorkspace(const Cfg& _cfg) const {
   _cfg.ConfigureRobot();
 
   // Check each part of the multibody for being inside of the boundary.
-  for(size_t m = 0; m < multiBody->NumFreeBody(); ++m) {
-    const auto body = multiBody->GetFreeBody(m);
+  for(size_t m = 0; m < multiBody->GetNumBodies(); ++m) {
+    const auto body = multiBody->GetBody(m);
 
     // First check if the body's bounding box intersects the boundary.
     bool bbxGood = true;

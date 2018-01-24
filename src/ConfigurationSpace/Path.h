@@ -5,6 +5,7 @@
 
 #include "Roadmap.h"
 #include "MPLibrary/LocalPlanners/StraightLine.h"
+#include "MPLibrary/LocalPlanners/ActiveBodyStraightLine.h"
 #include "Utilities/PMPLExceptions.h"
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -26,7 +27,6 @@ class PathType final {
     typedef typename MPTraits::RoadmapType   RoadmapType;
     typedef typename RoadmapType::GraphType  GraphType;
     typedef typename RoadmapType::VID        VID;
-    typedef typename MPTraits::MPLibrary     MPLibrary;
 
     ///@}
     ///@name Construction
@@ -34,28 +34,28 @@ class PathType final {
 
     /// Construct an empty path.
     /// @param[in] _r The roadmap used by this path.
-    PathType(RoadmapType* _r) : m_roadmap(_r) { }
+    PathType(RoadmapType* const _r);
 
     ///@}
     ///@name Path Interface
     ///@{
 
     /// Get the roadmap used by this path.
-    RoadmapType* GetRoadmap() const {return m_roadmap;}
+    RoadmapType* GetRoadmap() const noexcept;
 
     /// Get the number of cfgs in the path.
-    size_t Size() const {return m_vids.size();}
+    size_t Size() const noexcept;
 
     /// Get the total edge weight.
     double Length() const;
 
     /// Get the VIDs in the path.
-    const vector<VID>& VIDs() const {return m_vids;}
+    const std::vector<VID>& VIDs() const noexcept;
 
     /// Get a copy of the Cfgs in the path.
     /// @warning If the cfgs in the roadmap are later altered (i.e., if the DOF
     ///          values or labels are edited), this copy will be out-of-date.
-    const vector<CfgType>& Cfgs() const;
+    const std::vector<CfgType>& Cfgs() const;
 
     /// Get the current full Cfg path with steps spaced one environment
     ///        resolution apart. This is not cached due to its size and
@@ -64,7 +64,8 @@ class PathType final {
     /// @param[in] _lp  The local planner label to use when connecting cfgs.
     /// @return The full path of configurations, including local-plan
     ///         intermediates between the roadmap nodes.
-    const vector<CfgType> FullCfgs(MPLibrary* _lib,
+    template <typename MPLibrary>
+    const std::vector<CfgType> FullCfgs(MPLibrary* const _lib,
         const string& _lp = "") const;
 
     /// Append another path to the end of this one.
@@ -77,11 +78,11 @@ class PathType final {
 
     /// Append a new set of VIDs to the end of this path.
     /// @param[in] _vids The VIDs to append.
-    PathType& operator+=(const vector<VID>& _vids);
+    PathType& operator+=(const std::vector<VID>& _vids);
 
     /// Add a new set of VIDs to the end of this path and return the result.
     /// @param[in] _vids The VIDs to add.
-    PathType operator+(const vector<VID>& _vids) const;
+    PathType operator+(const std::vector<VID>& _vids) const;
 
     /// Clear all data in the path.
     void Clear();
@@ -100,9 +101,9 @@ class PathType final {
     ///@{
 
     RoadmapType* const m_roadmap;       ///< The roadmap.
-    vector<VID> m_vids;                 ///< The vids of the path configurations.
+    std::vector<VID> m_vids;            ///< The vids of the path configurations.
 
-    vector<CfgType> m_cfgs;             ///< The path configurations.
+    std::vector<CfgType> m_cfgs;        ///< The path configurations.
     mutable bool m_cfgsCached{false};   ///< Are the current cfgs correct?
 
     double m_length{0};                 ///< The path length.
@@ -111,7 +112,29 @@ class PathType final {
     ///@}
 };
 
-/*---------------------------- Path Interface --------------------------------*/
+/*------------------------------- Construction -------------------------------*/
+
+template <typename MPTraits>
+PathType<MPTraits>::
+PathType(RoadmapType* const _r) : m_roadmap(_r) { }
+
+/*------------------------------ Path Interface ------------------------------*/
+
+template <typename MPTraits>
+typename MPTraits::RoadmapType*
+PathType<MPTraits>::
+GetRoadmap() const noexcept {
+  return m_roadmap;
+}
+
+
+template <typename MPTraits>
+size_t
+PathType<MPTraits>::
+Size() const noexcept {
+  return m_vids.size();
+}
+
 
 template <typename MPTraits>
 double
@@ -141,11 +164,19 @@ Length() const {
 
 
 template <typename MPTraits>
-const vector<typename MPTraits::CfgType>&
+const std::vector<typename PathType<MPTraits>::VID>&
+PathType<MPTraits>::
+VIDs() const noexcept {
+  return m_vids;
+}
+
+
+template <typename MPTraits>
+const std::vector<typename MPTraits::CfgType>&
 PathType<MPTraits>::
 Cfgs() const {
   if(!m_cfgsCached) {
-    vector<CfgType>& cfgs = const_cast<vector<CfgType>&>(m_cfgs);
+    std::vector<CfgType>& cfgs = const_cast<std::vector<CfgType>&>(m_cfgs);
     cfgs.clear();
     cfgs.reserve(m_vids.size());
     for(const auto& vid : m_vids)
@@ -157,14 +188,15 @@ Cfgs() const {
 
 
 template <typename MPTraits>
-const vector<typename MPTraits::CfgType>
+template <typename MPLibrary>
+const std::vector<typename MPTraits::CfgType>
 PathType<MPTraits>::
-FullCfgs(MPLibrary* _lib, const string& _lp) const {
+FullCfgs(MPLibrary* const _lib, const string& _lp) const {
   if(m_vids.empty())
     return std::vector<CfgType>();
 
   GraphType* g = m_roadmap->GetGraph();
-  vector<CfgType> out = {g->GetVertex(m_vids.front())};
+  std::vector<CfgType> out = {g->GetVertex(m_vids.front())};
 
   // Set up local planner to recreate edges. If none was provided, use edge
   // planner, or fall back to straight-line.
@@ -172,12 +204,16 @@ FullCfgs(MPLibrary* _lib, const string& _lp) const {
 
   for(auto it = m_vids.begin(); it + 1 < m_vids.end(); ++it) {
     // Get the next edge.
+    bool validEdge = false;
     typename GraphType::adj_edge_iterator ei;
     {
       typename GraphType::edge_descriptor ed(*it, *(it+1));
       typename GraphType::vertex_iterator vi;
-      g->find_edge(ed, vi, ei);
+      validEdge = g->find_edge(ed, vi, ei);
     }
+
+    if(!validEdge)
+      throw RunTimeException(WHERE, "Edge doesn't exist in roadmap!");
 
     // Use the local planner from parameter if specified.
     // If not specified, use the edge lp.
@@ -191,22 +227,47 @@ FullCfgs(MPLibrary* _lib, const string& _lp) const {
         lp = _lib->GetLocalPlanner(ei->property().GetLPLabel());
       }
       catch(...) {
-        lp = _lib->GetLocalPlanner("sl");
+        if(ei->property().GetActiveBodies().empty()) {
+          lp = _lib->GetLocalPlanner("sl");
+        }
+        else {
+          //This is important for disassembly planning, particularly for the
+          // support of subassemblies with rotations.
+          std::cout << "In Path using slSpecificBody" << std::endl;
+          lp = _lib->GetLocalPlanner("slSpecificBody");
+        }
       }
+    }
+
+    //If the LP needs active bodies, set them from the edge.
+    auto activeBodyLP =
+        std::dynamic_pointer_cast<ActiveBodyStraightLine<MPTraits> >(lp);
+    if(activeBodyLP) {
+      if(ei->property().GetActiveBodies().empty())
+        throw RunTimeException(WHERE, "Empty active bodies in edge when using "
+                                      "Active Body LP!!!");
+      activeBodyLP->SetActiveBodies(ei->property().GetActiveBodies());
     }
 
     // Recreate this edge, including intermediates.
     CfgType& start = g->GetVertex(*it);
     CfgType& end   = g->GetVertex(*(it+1));
-    vector<CfgType> recreatedEdge = ei->property().GetIntermediates();
-    recreatedEdge.insert(recreatedEdge.begin(), start);
-    recreatedEdge.push_back(end);
 
     // Construct a resolution-level path along the recreated edge.
-    for(auto cit = recreatedEdge.begin(); cit + 1 != recreatedEdge.end(); ++cit) {
-      vector<CfgType> edge = lp->ReconstructPath(*cit, *(cit+1),
-          vector<CfgType>(), env->GetPositionRes(), env->GetOrientationRes());
+    if(!ei->property().SkipEdge()) {
+      std::vector<CfgType> recreatedEdge = ei->property().GetIntermediates();
+      recreatedEdge.insert(recreatedEdge.begin(), start);
+      recreatedEdge.push_back(end);
+      for(auto cit = recreatedEdge.begin(); cit + 1 != recreatedEdge.end(); ++cit) {
+      std::vector<CfgType> edge = lp->ReconstructPath(*cit, *(cit+1),
+          std::vector<CfgType>(), env->GetPositionRes(), env->GetOrientationRes());
       out.insert(out.end(), edge.begin(), edge.end());
+      }
+    }
+    else {
+      //For assembly planning: Don't reconstruct the edge when it's for a part
+      // that has been placed off to the side, just use the two cfgs.
+      out.push_back(start); // This edge will just be (start, end)
     }
     out.push_back(end);
   }
@@ -235,7 +296,7 @@ operator+(const PathType& _p) const {
 template <typename MPTraits>
 PathType<MPTraits>&
 PathType<MPTraits>::
-operator+=(const vector<VID>& _vids) {
+operator+=(const std::vector<VID>& _vids) {
   if(_vids.size()) {
     std::copy(_vids.begin(), _vids.end(), back_inserter(m_vids));
     m_lengthCached = false;
@@ -248,7 +309,7 @@ operator+=(const vector<VID>& _vids) {
 template <typename MPTraits>
 PathType<MPTraits>
 PathType<MPTraits>::
-operator+(const vector<VID>& _vids) const {
+operator+(const std::vector<VID>& _vids) const {
   PathType out(*this);
   out += _vids;
   return out;

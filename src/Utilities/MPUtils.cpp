@@ -1,6 +1,7 @@
 #include "MPUtils.h"
 #include "MetricUtils.h"
-
+#include "ConfigurationSpace/Cfg.h"
+#include "MPProblem/Robot/Robot.h"
 
 /*------------------------- Random Number Generation -------------------------*/
 
@@ -167,3 +168,27 @@ NormalizeTheta(double _theta) {
 }
 
 /*----------------------------------------------------------------------------*/
+
+std::vector<Cfg>
+LoadPath(const std::string &_filename, Robot &_robot) {
+  std::vector<Cfg> result;
+  if(!FileExists(_filename)){
+    throw ParseException(WHERE, "File '" + _filename + "' does not exist");
+    return result;
+  }
+
+  ifstream pathfile(_filename);
+  string line;
+  Cfg cfg = Cfg(&_robot);
+  getline(pathfile, line);
+  getline(pathfile, line);
+  getline(pathfile, line);
+  while(pathfile){
+    getline(pathfile, line);
+    istringstream cfgInput(line);
+    cfg.Read(cfgInput);
+  }
+  return result;
+}
+
+

@@ -3,8 +3,8 @@
 
 #include "BasicExtender.h"
 
-#include "Geometry/Bodies/FixedBody.h"
-#include "Geometry/Bodies/StaticMultiBody.h"
+#include "Geometry/Bodies/Body.h"
+#include "Geometry/Bodies/MultiBody.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Extend in a direction based upon a random obstacle vector.
@@ -75,12 +75,14 @@ Extend(const CfgType& _start, const CfgType& _end, CfgType& _new,
   double vecScale = 10.0;
 
   // Get an obstacle vector from env
-  int numBodies = env->NumObstacles();
-  if( numBodies > 1 ) {
+  const size_t numObstacles = env->NumObstacles();
+  if(numObstacles > 1) {
     //this growth method only works with obstacles (need 2 multibodies)
-    int randIndex = (LRand() % (numBodies-1)) + 1;
-    const GMSPolyhedron& poly = env->GetObstacle(randIndex)->GetFixedBody(0)->
-        GetWorldPolyhedron();
+    //Need a random body index greater than 0:
+    const size_t obstIndex = (LRand() % (numObstacles - 1)) + 1;
+    MultiBody* const obst = env->GetObstacle(obstIndex);
+    const unsigned int body = LRand() % obst->GetNumBodies(); // Any random body
+    const GMSPolyhedron& poly = obst->GetBody(body)->GetWorldPolyhedron();
     const vector<Vector3d>& vertexList    = poly.m_vertexList;
     const vector<GMSPolygon>& polygonList = poly.m_polygonList;
 

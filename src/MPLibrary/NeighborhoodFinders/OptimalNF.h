@@ -3,16 +3,23 @@
 
 #include "NeighborhoodFinderMethod.h"
 
+
 ////////////////////////////////////////////////////////////////////////////////
+/// This method appears to be a wrapper for k-nearest neighbors where k is
+/// dynamically adjusted based on the size of the roadmap. It is NOT "optimal" in
+/// any sense.
+/// @TODO Find the appropriate reference for this work and validate that it is
+///       worth maintaining... it does not appear that we would ever want to use
+///       this.
 /// @ingroup NeighborhoodFinders
-/// @brief TODO
-///
-/// TODO
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
 class OptimalNF : public NeighborhoodFinderMethod<MPTraits> {
 
   public:
+
+    ///@name Motion Planning Types
+    ///@{
 
     typedef typename MPTraits::CfgType      CfgType;
     typedef typename MPTraits::RoadmapType  RoadmapType;
@@ -22,42 +29,98 @@ class OptimalNF : public NeighborhoodFinderMethod<MPTraits> {
     typedef typename MPTraits::MPLibrary              MPLibrary;
     typedef typename MPLibrary::DistanceMetricPointer DistanceMetricPointer;
 
-    OptimalNF(string _dmLabel = "", bool _unconnected = false, size_t _k = 5) :
-      NeighborhoodFinderMethod<MPTraits>(_dmLabel, _unconnected) {
-        this->SetName("OptimalNF");
-        this->m_nfType = OPTIMAL;
-      }
+    ///@}
+    ///@name Construction
+    ///@{
 
-    OptimalNF(XMLNode& _node) :
-      NeighborhoodFinderMethod<MPTraits>(_node, false) {
-        this->SetName("OptimalNF");
-        this->m_nfType = OPTIMAL;
-        m_nfLabel = _node.Read("nfLabel", true, "", "Neighborhood Finder");
-      }
+    OptimalNF(const std::string& _dmLabel = "", const bool _unconnected = false,
+        const size_t _k = 5);
 
-    virtual void Print(ostream& _os) const {
-      NeighborhoodFinderMethod<MPTraits>::Print(_os);
-      _os << "\tnfLabel: " << m_nfLabel << endl;
-    }
+    OptimalNF(XMLNode& _node);
 
-    virtual DistanceMetricPointer GetDMMethod() const {
-      return this->GetNeighborhoodFinder(m_nfLabel)->GetDMMethod();
-    }
+    virtual ~OptimalNF();
 
-    template<typename InputIterator, typename OutputIterator>
-      OutputIterator FindNeighbors(RoadmapType* _rmp,
-          InputIterator _first, InputIterator _last, bool _fromFullRoadmap,
-          const CfgType& _cfg, OutputIterator _out);
+    ///@}
+    ///@name MPBaseObject Overrides
+    ///@{
 
-    template<typename InputIterator, typename OutputIterator>
-      OutputIterator FindNeighborPairs(RoadmapType* _rmp,
-          InputIterator _first1, InputIterator _last1,
-          InputIterator _first2, InputIterator _last2,
-          OutputIterator _out);
+    virtual void Initialize() override;
+
+    virtual void Print(std::ostream& _os) const override;
+
+    ///@}
+    ///@name NeighborhoodFinderMethod Interface
+    ///@{
+
+    template <typename InputIterator, typename OutputIterator>
+    OutputIterator FindNeighbors(RoadmapType* _rmp,
+        InputIterator _first, InputIterator _last, bool _fromFullRoadmap,
+        const CfgType& _cfg, OutputIterator _out);
+
+    template <typename InputIterator, typename OutputIterator>
+    OutputIterator FindNeighborPairs(RoadmapType* _rmp,
+        InputIterator _first1, InputIterator _last1,
+        InputIterator _first2, InputIterator _last2,
+        OutputIterator _out);
+
+    ///@}
 
   protected:
-    string m_nfLabel;
+
+    ///@name Internal State
+    ///@{
+
+    std::string m_nfLabel; ///< Label of the underlying neighborhood finder.
+
+    ///@}
+
 };
+
+/*------------------------------- Construction -------------------------------*/
+
+template <typename MPTraits>
+OptimalNF<MPTraits>::
+OptimalNF(const std::string& _dmLabel, const bool _unconnected, const size_t _k)
+  : NeighborhoodFinderMethod<MPTraits>(_dmLabel, _unconnected) {
+  this->SetName("OptimalNF");
+  this->m_nfType = OPTIMAL;
+}
+
+
+template <typename MPTraits>
+OptimalNF<MPTraits>::
+OptimalNF(XMLNode& _node) : NeighborhoodFinderMethod<MPTraits>(_node, false) {
+  this->SetName("OptimalNF");
+  this->m_nfType = OPTIMAL;
+  m_nfLabel = _node.Read("nfLabel", true, "", "Neighborhood Finder");
+}
+
+
+template <typename MPTraits>
+OptimalNF<MPTraits>::
+~OptimalNF() = default;
+
+/*-------------------------- MPBaseObject Overrides --------------------------*/
+
+template <typename MPTraits>
+void
+OptimalNF<MPTraits>::
+Initialize() {
+  // Set the DM label to be the same as for the underlying NF.
+  this->m_dmLabel = this->GetNeighborhoodFinder(m_nfLabel)->GetDMLabel();
+}
+
+
+template <typename MPTraits>
+void
+OptimalNF<MPTraits>::
+Print(std::ostream& _os) const {
+  NeighborhoodFinderMethod<MPTraits>::Print(_os);
+  _os << "\tnfLabel: " << m_nfLabel
+      << std::endl;
+}
+
+/*-------------------- NeighborhoodFinderMethod Interface --------------------*/
 
 template <typename MPTraits>
 template<typename InputIterator, typename OutputIterator>
@@ -66,10 +129,8 @@ OptimalNF<MPTraits>::
 FindNeighbors(RoadmapType* _rmp,
     InputIterator _first, InputIterator _last, bool _fromFullRoadmap,
     const CfgType& _cfg, OutputIterator _out) {
-
+  MethodTimer mt(this->GetStatClass(), "OptimalNF::FindNeighbors");
   this->IncrementNumQueries();
-  this->StartTotalTime();
-  this->StartQueryTime();
 
   auto nfptr = this->GetNeighborhoodFinder(this->m_nfLabel);
 
@@ -78,8 +139,10 @@ FindNeighbors(RoadmapType* _rmp,
   this->m_radius = nfptr->GetRadius();
 
   if(nfptr->GetNFType() == K) {
-    // Calculate k
-    nfptr->GetK() = min<size_t>(ceil(2*2.71828*log(_rmp->GetGraph()->get_num_vertices())), distance(_first, _last));  // Rounding up
+    // Calculate k rounding up
+    nfptr->GetK() = std::min<size_t>(
+        ceil(2*2.71828*log(_rmp->GetGraph()->get_num_vertices())),
+        distance(_first, _last));
     if(this->m_debug)
       cout << "Finding closest neighbors with k = " << nfptr->GetK() << endl;
   }
@@ -97,25 +160,25 @@ FindNeighbors(RoadmapType* _rmp,
   // Compute neighbors
   nfptr->FindNeighbors(_rmp, _first, _last, _fromFullRoadmap, _cfg, _out);
 
-  //reset k and radius
+  // Reset k and radius
   nfptr->GetK() = this->m_k;
   nfptr->GetRadius() = this->m_radius;
 
-  this->EndQueryTime();
-  this->EndTotalTime();
-
-  //return neighbors
   return _out;
 }
+
 
 template <typename MPTraits>
 template<typename InputIterator, typename OutputIterator>
 OutputIterator
-OptimalNF<MPTraits>::FindNeighborPairs(RoadmapType* _rmp,
+OptimalNF<MPTraits>::
+FindNeighborPairs(RoadmapType* _rmp,
     InputIterator _first1, InputIterator _last1,
     InputIterator _first2, InputIterator _last2,
     OutputIterator _out) {
   throw RunTimeException(WHERE, "FindNeighborPairs is not yet implemented.");
 }
+
+/*----------------------------------------------------------------------------*/
 
 #endif

@@ -2,7 +2,7 @@
 
 #include <random>
 
-#include "Geometry/Bodies/ActiveMultiBody.h"
+#include "Geometry/Bodies/MultiBody.h"
 #include "Geometry/Boundaries/WorkspaceBoundingSphere.h"
 #include "Utilities/MPUtils.h"
 #include "Utilities/XMLNode.h"

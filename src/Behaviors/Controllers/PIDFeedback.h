@@ -29,7 +29,15 @@ class PIDFeedback : public ControllerMethod {
     /// @param[in] _node The XML node to parse.
     PIDFeedback(Robot* const _r, XMLNode& _node);
 
-    virtual ~PIDFeedback() = default;
+    /// Copy a controller for another robot.
+    /// @param _r The destination robot.
+    /// @param _c The controller to copy.
+    PIDFeedback(Robot* const _r, const PIDFeedback& _c);
+
+    virtual std::unique_ptr<ControllerMethod> Clone(Robot* const _r) const
+        override;
+
+    virtual ~PIDFeedback();
 
     ///@}
     ///@name Interface

@@ -3,6 +3,7 @@
 
 #include <cstddef>
 #include <iostream>
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -18,6 +19,7 @@ using namespace mathtool;
 #include <CGAL/Polyhedron_incremental_builder_3.h>
 
 class Cfg;
+class XMLNode;
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -38,13 +40,13 @@ class Boundary {
     ///@name Construction
     ///@{
 
-    virtual ~Boundary() = default;
+    virtual ~Boundary() noexcept;
 
     /// Duplicate this boundary and return a dynamically-allocated copy with the
-    /// same type.
-    /// @return A dynamically-allocated copy of this with the same type. Memory
-    ///         must be released by the user.
-    virtual Boundary* Clone() const = 0;
+    /// same type. This is provided in the base class so that we can copy a
+    /// boundary object without knowing its type.
+    /// @return A dynamically-allocated copy of this with the same type.
+    virtual std::unique_ptr<Boundary> Clone() const = 0;
 
     ///@}
     ///@name Property Accessors
@@ -153,7 +155,7 @@ class Boundary {
 
     /// Write out a boundary.
     /// @param _os The output stream to write to.
-    virtual void Write(std::ostream& _os) const = 0 ;
+    virtual void Write(std::ostream& _os) const = 0;
 
     ///@}
     ///@name CGAL Representations

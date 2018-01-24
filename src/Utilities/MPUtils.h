@@ -18,7 +18,8 @@ using namespace mathtool;
 #include "IOUtils.h"
 
 class Environment;
-
+class Cfg;
+class Robot;
 
 ///@name MPUtils
 ///@{
@@ -134,29 +135,6 @@ struct CompareSecondReverse {
 
   const bool operator()(const pair<T, U>& _a, const pair<T, U>& _b) const {
     return _a.second > _b.second;
-  }
-
-};
-
-////////////////////////////////////////////////////////////////////////////////
-/// Find the closer of two input configurations to an initial reference cfg,
-/// assuming that the inputs are given as a pair<Cfg, Something>.
-////////////////////////////////////////////////////////////////////////////////
-template <class MPTraits, class P>
-struct DistanceCompareFirst : public binary_function<P, P, bool> {
-
-  typedef typename MPTraits::MPLibrary::DistanceMetricPointer
-      DistanceMetricPointer;
-
-  Environment* m_env;
-  DistanceMetricPointer m_dm;
-  const typename P::first_type& m_cfg;
-
-  DistanceCompareFirst(Environment* _e, DistanceMetricPointer _d,
-      const typename P::first_type& _c) : m_env(_e), m_dm(_d), m_cfg(_c) {}
-
-  bool operator()(const P& _p1, const P& _p2) const {
-    return m_dm->Distance(m_cfg, _p1.first) < m_dm->Distance(m_cfg, _p2.first);
   }
 
 };
@@ -300,11 +278,12 @@ ClosestPtOnLineSegment(const CfgType& _ref, const CfgType& _p1,
 /// @param[in] _graph A pointer to the roadmap graph.
 /// @param[in] _cc The connected component.
 /// @return The centroid configuration of _cc.
-template<template<typename, typename> class Roadmap, class CfgType, class Weight>
+template<template<typename, typename> class RoadmapGraph, class CfgType,
+    class Weight>
 CfgType
-GetCentroid(Roadmap<CfgType, Weight>* _graph,
-    vector<typename Roadmap<CfgType, Weight>::VID>& _cc){
-  CfgType center;
+GetCentroid(RoadmapGraph<CfgType, Weight>* _graph,
+    vector<typename RoadmapGraph<CfgType, Weight>::VID>& _cc) {
+  CfgType center(_graph->begin()->property().GetRobot());
   for(size_t i = 0; i < _cc.size(); i++) {
     CfgType cfg = _graph->GetVertex(_cc[i]);
     center += cfg;
@@ -341,20 +320,6 @@ ComputeCCCentroidGraph(Roadmap<CfgType, Weight>* _graph,
 #endif
 
 /*----------------------------- Other Random Stuff ---------------------------*/
-
-////////////////////////////////////////////////////////////////////////////////
-/// Functor for adding the second types of two pairs.
-////////////////////////////////////////////////////////////////////////////////
-template <class P>
-struct PlusSecond : public binary_function<typename P::second_type, P,
-    typename P::second_type> {
-
-  typename P::second_type operator()(const typename P::second_type& p1,
-      const P& p2) const {
-    return plus<typename P::second_type>()(p1, p2.second);
-  }
-
-};
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Used for discarding collision data for regular sampling/connecting classes.
@@ -399,6 +364,9 @@ BinarySearch(RandomIterator _begin, RandomIterator _end, const T& _value,
   }
   return _end;
 }
+
+/// Loads a configuration path from a file for a dynamic obstacle.
+std::vector<Cfg> LoadPath(const std::string &_filename, Robot &_robot);
 
 /*----------------------------------------------------------------------------*/
 

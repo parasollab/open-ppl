@@ -119,10 +119,8 @@ RadiusNF<MPTraits>::
 FindNeighbors(RoadmapType* _rmp,
     InputIterator _first, InputIterator _last, bool _fromFullRoadmap,
     const CfgType& _cfg, OutputIterator _out) {
-
+  MethodTimer mt(this->GetStatClass(), "RadiusNF::FindNeighbors");
   this->IncrementNumQueries();
-  this->StartTotalTime();
-  this->StartQueryTime();
 
   GraphType* map = _rmp->GetGraph();
   auto dmm = this->GetDistanceMetric(this->m_dmLabel);
@@ -158,9 +156,6 @@ FindNeighbors(RoadmapType* _rmp,
     }
   }
 
-  this->EndQueryTime();
-  this->EndTotalTime();
-
   // Return fallback if no nodes were found within the radius.
   if(m_useFallback and inRadius.empty())
     inRadius.insert(fallback);
@@ -172,10 +167,13 @@ FindNeighbors(RoadmapType* _rmp,
 template <typename MPTraits>
 template<typename InputIterator, typename OutputIterator>
 OutputIterator
-RadiusNF<MPTraits>::FindNeighborPairs(RoadmapType* _rmp,
+RadiusNF<MPTraits>::
+FindNeighborPairs(RoadmapType* _rmp,
     InputIterator _first1, InputIterator _last1,
     InputIterator _first2, InputIterator _last2,
     OutputIterator _out) {
+  MethodTimer mt(this->GetStatClass(), "RadiusNF::FindNeighborPairs");
+  this->IncrementNumQueries();
 
   GraphType* map = _rmp->GetGraph();
   auto dmm = this->GetDistanceMetric(this->m_dmLabel);

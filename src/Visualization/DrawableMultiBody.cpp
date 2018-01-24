@@ -1,10 +1,7 @@
 #include "DrawableMultiBody.h"
 
-#include "Geometry/Bodies/ActiveMultiBody.h"
-#include "Geometry/Bodies/FixedBody.h"
-#include "Geometry/Bodies/FreeBody.h"
+#include "Geometry/Bodies/Body.h"
 #include "Geometry/Bodies/MultiBody.h"
-#include "Geometry/Bodies/StaticMultiBody.h"
 
 
 /*------------------------------- Construction -------------------------------*/
@@ -12,21 +9,12 @@
 DrawableMultiBody::
 DrawableMultiBody(MultiBody* _m) {
   switch(_m->GetType()) {
-    case MultiBody::MultiBodyType::Active:
-      {
-        ActiveMultiBody* aMB = dynamic_cast<ActiveMultiBody*>(_m);
-        for(size_t i = 0; i < aMB->GetNumBodies(); ++i)
-          m_bodies.emplace_back(this, aMB->GetFreeBody(i));
-      }
+    case MultiBody::Type::Internal:
       break;
-    case MultiBody::MultiBodyType::Passive:
-      {
-        StaticMultiBody* sMB = dynamic_cast<StaticMultiBody*>(_m);
-        for(size_t i = 0; i < sMB->GetNumBodies(); ++i)
-          m_bodies.emplace_back(this, sMB->GetFixedBody(i));
-      }
-      break;
-    case MultiBody::MultiBodyType::Internal:
+    case MultiBody::Type::Active:
+    case MultiBody::Type::Passive:
+      for(size_t i = 0; i < _m->GetNumBodies(); ++i)
+        m_bodies.emplace_back(this, _m->GetBody(i));
       break;
     default:
       throw RunTimeException(WHERE, "Unrecognized MultiBody type");

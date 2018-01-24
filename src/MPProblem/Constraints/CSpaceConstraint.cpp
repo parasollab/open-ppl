@@ -4,7 +4,7 @@
 #include <sstream>
 
 #include "ConfigurationSpace/Cfg.h"
-#include "Geometry/Bodies/ActiveMultiBody.h"
+#include "Geometry/Bodies/MultiBody.h"
 #include "MPProblem/Robot/Robot.h"
 #include "Utilities/IOUtils.h"
 #include "Utilities/PMPLExceptions.h"
@@ -19,27 +19,11 @@ CSpaceConstraint(Robot* const _r, const Cfg& _cfg)
     m_bbx(_r->GetMultiBody()->DOF() * (_r->IsNonholonomic() ? 2 : 1))
 {
   // Ensure that _cfg goes with _r.
-  /*if(_r != _cfg.GetRobot())
+  if(_r != _cfg.GetRobot())
     throw RunTimeException(WHERE, "Cannot create point task with "
-        "configuration for a different robot.");*/
+        "configuration for a different robot.");
 
   m_bbx.ShrinkToPoint(_cfg);
-}
-
-
-CSpaceConstraint::
-CSpaceConstraint(Robot* const _r, const std::string& _pointString)
-  : Constraint(_r),
-    m_bbx(_r->GetMultiBody()->DOF() * (_r->IsNonholonomic() ? 2 : 1))
-{
-  /// @TODO Verify that this works with constraints of lower dimension than the
-  ///       robot's cspace (for partial constraint), or decide that we will not
-  ///       support this and throw an error if requested.
-
-  // This is a point constraint.
-  Cfg point(_r);
-  std::istringstream pointStream(_pointString);
-  pointStream >> m_bbx;
 }
 
 
@@ -75,6 +59,17 @@ CSpaceConstraint(Robot* const _r, XMLNode& _node)
 
     m_bbx.ShrinkToPoint(point);
   }
+}
+
+
+CSpaceConstraint::
+~CSpaceConstraint() = default;
+
+
+std::unique_ptr<Constraint>
+CSpaceConstraint::
+Clone() const {
+  return std::unique_ptr<CSpaceConstraint>(new CSpaceConstraint(*this));
 }
 
 /*-------------------------- Constraint Interface ----------------------------*/

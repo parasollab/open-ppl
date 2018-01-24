@@ -19,6 +19,12 @@ class PathFollowingAgent : public Agent {
 
     PathFollowingAgent(Robot* const _r);
 
+    PathFollowingAgent(Robot* const _r, const PathFollowingAgent& _a);
+
+    PathFollowingAgent(Robot* const _r, XMLNode& _node);
+
+    virtual std::unique_ptr<Agent> Clone(Robot* const _r) const override;
+
     virtual ~PathFollowingAgent();
 
     ///@}

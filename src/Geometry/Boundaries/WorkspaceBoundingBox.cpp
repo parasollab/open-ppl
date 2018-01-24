@@ -12,10 +12,14 @@ WorkspaceBoundingBox(const std::vector<double>& _center) :
     AbstractBoundingBox(_center) { }
 
 
-Boundary*
+WorkspaceBoundingBox::
+~WorkspaceBoundingBox() noexcept = default;
+
+
+std::unique_ptr<Boundary>
 WorkspaceBoundingBox::
 Clone() const {
-  return new WorkspaceBoundingBox(*this);
+  return std::unique_ptr<WorkspaceBoundingBox>(new WorkspaceBoundingBox(*this));
 }
 
 /*--------------------------- Property Accessors -----------------------------*/

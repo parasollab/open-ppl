@@ -1,6 +1,9 @@
 #ifndef HARDWARE_INTERFACE_H
 #define HARDWARE_INTERFACE_H
 
+#include "MPProblem/Robot/Control.h"
+
+#include <memory>
 #include <string>
 
 
@@ -23,6 +26,11 @@ class HardwareInterface
     ///                           the robot.
     HardwareInterface(const std::string& _name, const std::string& _ip,
         const unsigned short _port, const double _communicationTime);
+
+    /// Create an interface from an XML node.
+    /// @param _node
+    /// @return A dynamically allocated interface.
+    static std::unique_ptr<HardwareInterface> Factory(class XMLNode& _node);
 
     virtual ~HardwareInterface() = default;
 
@@ -60,12 +68,5 @@ class HardwareInterface
     ///@}
 
 };
-
-
-/// Factory function for generating an interface from an XML node.
-/// @param _node The XML node object.
-/// @return A dynamically allocated interface.
-HardwareInterface*
-HardwareInterfaceFactory(class XMLNode& _node);
 
 #endif

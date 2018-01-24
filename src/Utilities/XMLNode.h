@@ -131,6 +131,9 @@ class XMLNode {
         const std::string& _default,
         const std::string& _desc);
 
+    /// Ignore unrequested node/attribute errors for this node.
+    void Ignore();
+
     /// Report warnings for XML tree rooted at this node
     /// @param _warningsAsErrors True will throw exceptions for warnings
     ///

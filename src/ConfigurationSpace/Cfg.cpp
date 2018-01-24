@@ -1,6 +1,6 @@
 #include "Cfg.h"
 
-#include "Geometry/Bodies/ActiveMultiBody.h"
+#include "Geometry/Bodies/MultiBody.h"
 #include "Geometry/Boundaries/CSpaceBoundingBox.h"
 #include "MPProblem/Environment/Environment.h"
 #include "MPProblem/Robot/Robot.h"
@@ -295,36 +295,18 @@ bool
 Cfg::
 operator==(const Cfg& _cfg) const {
   // First check for same robot pointer.
-  if(m_robot != _cfg.m_robot)
-    return false;
-
-  static constexpr double tolerance = 100 * std::numeric_limits<double>::epsilon();
-
-  // Check all the DOFs and return on first failure.
-  const size_t posDOF = PosDOF(), oriDOF = OriDOF(), dof = DOF();
-
-  // Positional dofs
-  for(size_t i = 0; i < posDOF; ++i)
-    if(std::abs(m_dofs[i] - _cfg[i]) > tolerance)
+    if(m_robot != _cfg.m_robot)
       return false;
 
-  // Orientation dofs
-  for(size_t i = posDOF; i < posDOF + oriDOF; ++i)
-    if(std::abs(DirectedAngularDistance(m_dofs[i], _cfg[i])) > tolerance)
-      return false;
+    static constexpr double tolerance = 100 * std::numeric_limits<double>::epsilon();
 
-  // Joint dofs
-  for(size_t i = posDOF + oriDOF; i < dof; ++i)
-    if(std::abs(m_dofs[i] - _cfg[i]) > tolerance)
-      return false;
+    // Check the velocities.
+    for(size_t i = 0; i < m_vel.size(); ++i)
+      if(std::abs(m_vel[i] - _cfg.m_vel[i]) > tolerance)
+        return false;
 
-  // Check the velocities.
-  for(size_t i = 0; i < m_vel.size(); ++i)
-    if(std::abs(m_vel[i] - _cfg.m_vel[i]) > tolerance)
-      return false;
-
-  // If we're still here, the Cfgs are equal.
-  return true;
+    // Check everything else (joints, position, and rotational dofs).
+    return WithinResolution(_cfg, tolerance, tolerance);
 }
 
 
@@ -356,6 +338,53 @@ operator<(const Cfg& _cfg) const {
   }
 
   return false;
+}
+
+bool
+Cfg::
+WithinResolution(const Cfg& _cfg, const double _posRes,
+                 const double _oriRes) const {
+  ///@TODO comment this out if speed is important, the assembly planning stuff
+  ///      needs to have composite bodies analyzed differently for now though.
+  MultiBody* const mb = GetMultiBody();
+  if(mb->IsComposite()) {
+    for(unsigned int i = 0; i < DOF(); ++i) {
+      switch(mb->GetDOFType(i)) {
+        case DofType::Positional:
+        case DofType::Joint:
+          if(std::abs(m_dofs[i] - _cfg[i]) > _posRes)
+            return false;
+          break;
+        case DofType::Rotational:
+          if(std::abs(DirectedAngularDistance(m_dofs[i], _cfg[i])) > _oriRes)
+            return false;
+          break;
+      }
+    }
+    return true;
+  }
+  else {
+    // Check all the DOFs and return on first failure.
+    const size_t posDOF = PosDOF(), oriDOF = OriDOF(), dof = DOF();
+
+    // Positional dofs
+    for(size_t i = 0; i < posDOF; ++i)
+      if(std::abs(m_dofs[i] - _cfg[i]) > _posRes)
+        return false;
+
+    // Orientation dofs
+    for(size_t i = posDOF; i < posDOF + oriDOF; ++i)
+      if(std::abs(DirectedAngularDistance(m_dofs[i], _cfg[i])) > _oriRes)
+        return false;
+
+    // Joint dofs
+    for(size_t i = posDOF + oriDOF; i < dof; ++i)
+      if(std::abs(m_dofs[i] - _cfg[i]) > _posRes)
+        return false;
+
+    // If we're still here, the Cfgs are equal.
+    return true;
+  }
 }
 
 /*------------------------------- Robot Info ---------------------------------*/
@@ -403,7 +432,7 @@ GetRobot() const noexcept {
 }
 
 
-ActiveMultiBody*
+MultiBody*
 Cfg::
 GetMultiBody() const noexcept {
   return m_robot->GetMultiBody();
@@ -936,7 +965,8 @@ FindIncrement(const Cfg& _start, const Cfg& _goal, int* _nTicks,
     double _positionRes, double _orientationRes) {
   const Cfg diff = _goal - _start;
 
-  *_nTicks = max(1., ceil(max(diff.PositionMagnitude() / _positionRes,
+  *_nTicks = std::max(1., std::ceil(std::max(
+        diff.PositionMagnitude() / _positionRes,
         diff.OrientationMagnitude() / _orientationRes)));
 
   this->FindIncrement(_start, _goal, *_nTicks);

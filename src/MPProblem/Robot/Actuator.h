@@ -82,6 +82,11 @@ class Actuator final {
     /// @param[in] _node The XML input node.
     Actuator(Robot* const _r, XMLNode& _node);
 
+    /// Copy an actuator to another robot.
+    /// @param _r The robot which will own the new copy.
+    /// @param _a The actuator to copy.
+    Actuator(Robot* const _r, const Actuator& _a);
+
     ///@}
     ///@name Actuator Properties
     ///@{
@@ -135,10 +140,8 @@ class Actuator final {
     /// @param _model The bullet model of m_robot to control.
     void Execute(const Control::Signal& _s, btMultiBody* const _model) const;
 
-
     /// Get the label for this actuator
     std::string GetLabel() const;
-
 
     /// Get the robot that the actuator is on
     Robot* GetRobot() const;

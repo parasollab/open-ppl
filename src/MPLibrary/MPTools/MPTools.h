@@ -6,6 +6,7 @@
 
 #include "MedialAxisUtilities.h"
 #include "ReebGraphConstruction.h"
+#include "SafeIntervalTool.h"
 #include "SkeletonClearanceUtility.h"
 #include "TetGenDecomposition.h"
 #include "TopologicalMap.h"
@@ -57,6 +58,7 @@ class MPToolsType final {
   LabelMap<MedialAxisUtility> m_medialAxisUtils;
   LabelMap<SkeletonClearanceUtility> m_skeletonUtils;
   LabelMap<TopologicalMap> m_topologicalMaps;
+  LabelMap<SafeIntervalTool> m_safeIntervalTools;
 
   // Handling of tetgens is really hacky, need to streamline after current
   // ICRA deadline.
@@ -153,6 +155,24 @@ class MPToolsType final {
     /// @param _utility The TopologicalMap to use.
     void SetTopologicalMap(const std::string& _label,
         TopologicalMap<MPTraits>* const _utility);
+
+    ///@}
+    ///@name Safe Interval Tool
+    ///@{
+
+    /// Get a SafeIntervalTool by label.
+    /// @param _label The string label of the desired utility as defined in the
+    ///               XML file.
+    /// @return The labeled utility.
+    SafeIntervalTool<MPTraits>* GetSafeIntervalTool(const std::string& _label)
+        const;
+
+    /// Set a SafeIntervalTool. This object will take ownership of the utility and
+    /// delete it when necessary.
+    /// @param _label The string label for the new utility.
+    /// @param _utility The TopologicalMap to use.
+    void SetSafeIntervalTool(const std::string& _label,
+        SafeIntervalTool<MPTraits>* const _utility);
 
     ///@}
     ///@name Decompositions
@@ -372,6 +392,24 @@ MPToolsType<MPTraits>::
 SetTopologicalMap(const std::string& _label,
     TopologicalMap<MPTraits>* const _utility) {
   SetUtility(_label, _utility, m_topologicalMaps);
+}
+
+/*---------------------------- Safe Interval Tool ----------------------------*/
+
+template <typename MPTraits>
+SafeIntervalTool<MPTraits>*
+MPToolsType<MPTraits>::
+GetSafeIntervalTool(const std::string& _label) const {
+  return m_safeIntervalTools.at(_label);
+}
+
+
+template <typename MPTraits>
+void
+MPToolsType<MPTraits>::
+SetSafeIntervalTool(const std::string& _label,
+    SafeIntervalTool<MPTraits>* const _utility) {
+  SetUtility(_label, _utility, m_safeIntervalTools);
 }
 
 /*----------------------------- Decompositions -------------------------------*/

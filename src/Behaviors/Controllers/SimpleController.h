@@ -28,7 +28,15 @@ class SimpleController : public ControllerMethod {
     /// @param[in] _node The XML node to parse.
     SimpleController(Robot* const _r, XMLNode& _node);
 
-    virtual ~SimpleController() = default;
+    /// Copy a controller for another robot.
+    /// @param _r The destination robot.
+    /// @param _c The controller to copy.
+    SimpleController(Robot* const _r, const SimpleController& _c);
+
+    virtual std::unique_ptr<ControllerMethod> Clone(Robot* const _r) const
+        override;
+
+    virtual ~SimpleController();
 
     ///@}
 

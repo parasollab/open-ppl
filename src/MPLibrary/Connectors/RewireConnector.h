@@ -256,8 +256,9 @@ GetDistance(VID _vid1, VID _vid2, RoadmapType* _rm) {
     //grab the individual Cfgs and calculate distance
     CfgType& cfg1 = _rm->GetGraph()->GetVertex(_vid1);
     CfgType& cfg2 = _rm->GetGraph()->GetVertex(_vid2);
-    double distance = this->GetNeighborhoodFinder(this->m_nfLabel)->
-      GetDMMethod()->Distance(cfg1, cfg2);
+    auto nf = this->GetNeighborhoodFinder(this->m_nfLabel);
+    auto dm = this->GetDistanceMetric(nf->GetDMLabel());
+    double distance = dm->Distance(cfg1, cfg2);
     return distance;
   }
   else {

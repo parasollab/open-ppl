@@ -263,13 +263,13 @@ LazyInitialize() {
   auto env = this->GetEnvironment();
   auto robot = this->GetTask()->GetRobot();
   const bool threeD = robot->GetMultiBody()->GetBaseType() ==
-      FreeBody::BodyType::Volumetric;
+      Body::Type::Volumetric;
 
   if(threeD) {
     // Create a workspace skeleton using a reeb graph.
     auto decomposition = this->GetMPTools()->GetDecomposition(m_decompositionLabel);
     ReebGraphConstruction reeb;
-    reeb.Construct(decomposition, this->GetBaseFilename());
+    reeb.Construct(decomposition);
 
     // Create the workspace skeleton.
     m_skeleton = reeb.GetSkeleton();
@@ -278,8 +278,9 @@ LazyInitialize() {
     // Collect the obstacles we want to consider (all in this case).
     std::vector<GMSPolyhedron> polyhedra;
     for(size_t i = 0; i < env->NumObstacles(); ++i) {
-      auto obstacle = env->GetObstacle(i);
-      polyhedra.emplace_back(obstacle->GetFixedBody(0)->GetWorldPolyhedron());
+      MultiBody* const obstacle = env->GetObstacle(i);
+      for(size_t j = 0; j < obstacle->GetNumBodies(); ++j)
+        polyhedra.emplace_back(obstacle->GetBody(j)->GetWorldPolyhedron());
     }
 
     // Build a skeleton from a 2D medial axis.

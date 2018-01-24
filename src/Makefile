@@ -26,9 +26,9 @@ include $(PMPL_DIR)/Makefile.PMPLdefaults
 
 # Compiler Configuration ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
-DEFS := $(PMPL_DEF) $(UTILS_DEF) $(vizmo_map)
-INCL := $(PMPL_INCL) $(UTILS_INCL) $(STAPL_INCL) $(BOOST_INCL) $(SIM_INCL)
-LIBS := $(PMPL_LIB) $(UTILS_LIB) $(STAPL_LIB) $(BOOST_LIB) $(SIM_LIBS)
+DEFS = $(PMPL_DEF) $(UTILS_DEF) $(SIM_DEF) $(vizmo_map)
+INCL = $(PMPL_INCL) $(UTILS_INCL) $(STAPL_INCL) $(BOOST_INCL) $(SIM_INCL)
+LIBS = $(PMPL_LIB) $(UTILS_LIB) $(STAPL_LIB) $(BOOST_LIB) $(SIM_LIBS)
 DEPS = -MMD -MF $*.d
 
 # Object File Configuration ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
@@ -60,6 +60,7 @@ pmpl: $(MAIN) $(PMPL_LIBFILE)
 	@$(CXX) $(CXXFLAGS) $(OPTS) $(MAIN) $(LIBS) -o $@
 
 # Build the simulator.
+sim: SIM_DEF := -DPMPL_SIMULATOR
 sim: $(PMPL_LIBFILE) $(SIM_OBJS)
 	@echo Linking $@...
 	@$(CXX) $(CXXFLAGS) $(OPTS) $(SIM_OBJS) $(LIBS) -o $@

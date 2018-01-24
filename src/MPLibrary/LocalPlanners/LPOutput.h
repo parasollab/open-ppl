@@ -53,6 +53,8 @@ struct LPOutput {
 
   void AddIntermediatesToWeights(const bool _saveIntermediates);
 
+  void SetActiveBodies(const std::vector<unsigned int> _activeBodies);
+
   ///@}
 
 };
@@ -103,6 +105,15 @@ AddIntermediatesToWeights(const bool _saveIntermediates) {
   m_edge.first.SetIntermediates(m_intermediates);
   m_edge.second.SetIntermediates(tmp);
 }
+
+template <typename MPTraits>
+void
+LPOutput<MPTraits>::
+SetActiveBodies(const std::vector<unsigned int> _activeBodies) {
+  m_edge.first.SetActiveBodies(_activeBodies);
+  m_edge.second.SetActiveBodies(_activeBodies);
+}
+
 
 /*----------------------------------------------------------------------------*/
 

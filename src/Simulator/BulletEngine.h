@@ -3,9 +3,8 @@
 
 #include <functional>
 #include <map>
+#include <memory>
 #include <vector>
-
-#include "Geometry/Bodies/Connection.h"
 
 #include "btBulletDynamicsCommon.h"
 
@@ -22,6 +21,7 @@ class btMultiBody;
 
 // PMPL forward-declarations.
 class Body;
+class Connection;
 class MultiBody;
 class MPProblem;
 class Robot;
@@ -159,7 +159,7 @@ class BulletEngine final {
     /// @param _joints The list of connections between links.
     btMultiBody* AddObject(std::vector<btCollisionShape*>&& _shapes,
         btTransform&& _baseTransform, const double _baseMass,
-        std::vector<std::shared_ptr<Connection>>&& _joints);
+        const std::vector<std::unique_ptr<Connection>>& _joints);
 
     /// Build a bullet collision shape from a pmpl MultiBody.
     /// @param _body The pmpl MultiBody.

@@ -14,13 +14,12 @@ class TetrahedralBoundary : public Boundary {
     ///@name Construction
     ///@{
 
-    ////////////////////////////////////////////////////////////////////////////
     /// Construct a TetrahedralBoundary from four points.
     /// @param _pts The points to use.
     /// @param _check Check that the points are correct?
     ///
     /// If no check is used, the first three points must form an outward-facing
-    /// facet as shown.
+    /// facet using the right-hand rule as shown.
     ///
     ///     1
     ///    /|\
@@ -29,15 +28,15 @@ class TetrahedralBoundary : public Boundary {
     ///   \ | /
     ///    \|/
     ///     0
-    TetrahedralBoundary(const std::array<Point3d, 4>& _pts,
+    explicit TetrahedralBoundary(const std::array<Point3d, 4>& _pts,
         const bool _check = true);
 
-    TetrahedralBoundary(const std::vector<Point3d>& _pts,
+    explicit TetrahedralBoundary(const std::vector<Point3d>& _pts,
         const bool _check = true);
 
-    virtual Boundary* Clone() const override;
+    virtual std::unique_ptr<Boundary> Clone() const override;
 
-    virtual ~TetrahedralBoundary() = default;
+    virtual ~TetrahedralBoundary() noexcept;
 
     ///@}
     ///@name Property Accessors

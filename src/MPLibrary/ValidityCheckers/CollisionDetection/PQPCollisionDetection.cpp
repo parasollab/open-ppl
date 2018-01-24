@@ -2,7 +2,10 @@
 
 #include "CDInfo.h"
 #include "Geometry/Bodies/Body.h"
+
 #include <set>
+
+#include <PQP.h>
 
 
 /*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ PQP ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
@@ -17,7 +20,7 @@ void
 PQP::
 Build(Body* const _body) {
   const GMSPolyhedron& poly = _body->GetPolyhedron();
-  unique_ptr<PQP_Model> pqpBody(new PQP_Model);
+  std::unique_ptr<PQP_Model> pqpBody(new PQP_Model);
   pqpBody->BeginModel();
   for(size_t q = 0; q < poly.m_polygonList.size(); q++) {
     double point[3][3];
@@ -29,7 +32,7 @@ Build(Body* const _body) {
     pqpBody->AddTri(point[0], point[1], point[2], q);
   }
   pqpBody->EndModel();
-  _body->SetPQPBody(move(pqpBody));
+  _body->SetPQPBody(std::move(pqpBody));
 }
 
 

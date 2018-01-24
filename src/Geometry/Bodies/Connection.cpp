@@ -1,31 +1,27 @@
 #include "Connection.h"
 
-#include "ActiveMultiBody.h"
-#include "FreeBody.h"
+#include "Body.h"
+#include "MultiBody.h"
 #include "Utilities/XMLNode.h"
 
-size_t Connection::m_globalCounter = 0;
+#include <algorithm>
 
 
-/*------------------------------ Construction --------------------------------*/
+/*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Local Functions ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
 
-Connection::
-Connection(MultiBody* _owner) : m_multibody(_owner),
-    m_jointType(JointType::NonActuated) {
-  m_globalIndex = m_globalCounter++;
-}
-
-/*----------------------------------- I/O ------------------------------------*/
-
+/// Parse the connection type from a string tag.
+/// @param _tag The string tag to parse.
+/// @param _where Location of \p _tag for error reporting.
+/// @return The joint type represented by _tag.
 Connection::JointType
-Connection::
-GetJointTypeFromTag(const string& _tag, const string& _where) {
-  if(_tag == "REVOLUTE")
-    return JointType::Revolute;
-  else if(_tag == "SPHERICAL")
-    return JointType::Spherical;
-  else if(_tag == "NONACTUATED")
-    return JointType::NonActuated;
+GetJointTypeFromTag(std::string _tag, const std::string& _where) {
+  std::transform(_tag.begin(), _tag.end(), _tag.begin(), ::tolower);
+  if(_tag == "revolute")
+    return Connection::JointType::Revolute;
+  else if(_tag == "spherical")
+    return Connection::JointType::Spherical;
+  else if(_tag == "nonactuated")
+    return Connection::JointType::NonActuated;
   else
     throw ParseException(_where,
         "Unknown joint type '" + _tag + "'."
@@ -33,136 +29,166 @@ GetJointTypeFromTag(const string& _tag, const string& _where) {
 }
 
 
-string
-Connection::
-GetTagFromJointType(JointType _j) {
+/// Create a string tag for a given connection type.
+/// @param _j Joint type
+/// @return String representation of _j.
+std::string
+GetTagFromJointType(const Connection::JointType _j) {
   switch(_j) {
-    case JointType::Revolute:
+    case Connection::JointType::Revolute:
       return "Revolute";
-    case JointType::Spherical:
+    case Connection::JointType::Spherical:
       return "Spherical";
     default:
       return "Unknown Joint Type";
   }
 }
 
+/*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Connection ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
+/*------------------------------- Construction -------------------------------*/
 
-void
 Connection::
-ReadXML(XMLNode& _node) {
-  // Get the indices of the two bodies that are connected.
-  m_bodyIndices.first = _node.Read("parentIndex", true, size_t(0), size_t(0),
-      numeric_limits<size_t>::max(), "Index of the parent body.");
-  m_bodyIndices.second = _node.Read("childIndex", true, size_t(0), size_t(0),
-      numeric_limits<size_t>::max(), "Index of the child body.");
+Connection(MultiBody* const _owner)
+  : m_multibody(_owner),
+    m_jointType(JointType::NonActuated)
+{ }
 
-  // Grab the shared_ptr to bodies.
-  m_bodies[0] =
-    static_cast<ActiveMultiBody*>(m_multibody)->GetFreeBody(m_bodyIndices.first);
-  m_bodies[1] =
-    static_cast<ActiveMultiBody*>(m_multibody)->GetFreeBody(m_bodyIndices.second);
+
+Connection::
+Connection(MultiBody* const _owner, XMLNode& _node)
+  : Connection(_owner) {
+  // Get the indices of the two bodies that are connected.
+  const size_t parentIndex = _node.Read("parentIndex", true, size_t(0), size_t(0),
+      std::numeric_limits<size_t>::max(), "Index of the parent body.");
+  const size_t childIndex = _node.Read("childIndex", true, size_t(0), size_t(0),
+      std::numeric_limits<size_t>::max(), "Index of the child body.");
+  SetBodies(m_multibody, parentIndex, childIndex);
+
+  // Read the joint info.
 
   // Read joint type.
-  string joint = _node.Read("joint", true, "", "Type of joint.");
-
-  // Conver to uppercase so that 'GetJointTypeFromTag
-  transform(joint.begin(), joint.end(), joint.begin(), ::toupper);
+  std::string joint = _node.Read("joint", true, "", "Type of joint.");
+  std::transform(joint.begin(), joint.end(), joint.begin(), ::toupper);
   m_jointType = GetJointTypeFromTag(joint, _node.Where());
 
-  // Read the joint range.
-  const string rangeString = _node.Read("range", true, "", "Range of the joint.");
-
-  std::istringstream range(rangeString);
-  Range<double> temp;
-  range >> temp;
-
-  m_jointLimits[0] = make_pair(temp.min, temp.max);
-
-  // Spherical joints have two joint ranges.
-  if(m_jointType == JointType::Spherical) {
-    const string rangeString2 = _node.Read("range2", true, "",
-        "Range of the joint about the second axis.");
-
-    std::istringstream range(rangeString2);
-    Range<double> temp;
-    range >> temp;
-
-    m_jointLimits[1] = make_pair(temp.min, temp.max);
+  // Read the first joint range.
+  {
+    const std::string rangeString = _node.Read("range", true, "",
+        "Range of the joint.");
+    std::istringstream buffer(rangeString);
+    buffer >> m_jointRange[0];
   }
 
-  // Read the various transformation.
+  // Spherical joints have two joint ranges, read the second now.
+  if(IsSpherical()) {
+    const std::string rangeString2 = _node.Read("range2", true, "",
+        "Range of the joint about the second axis.");
+    std::istringstream buffer(rangeString2);
+    buffer >> m_jointRange[1];
+  }
+
+  // Read the transformations and DH params.
 
   // Transform from parent to DH frame.
-  string parentToDHString = _node.Read("transformParentToDH", true, "",
-      "Transformation parameters of parent to DH frame.");
-
-  istringstream buffer1(parentToDHString);
-
-  while(buffer1)
-    buffer1 >> m_transformationToDHFrame;
+  {
+    const std::string parentToDHString = _node.Read("transformParentToDH", true,
+        "", "Transformation parameters of parent to DH frame.");
+    std::istringstream buffer(parentToDHString);
+    while(buffer)
+      buffer >> m_transformationToDHFrame;
+  }
 
   // DH params.
-  string dhParamsString = _node.Read("initialDHParams", true, "",
-      "DH parameters.");
-
-  istringstream buffer2(dhParamsString);
-
-  while(buffer2)
-    buffer2 >> m_dhParameters;
+  {
+    const std::string dhParamsString = _node.Read("initialDHParams", true, "",
+        "DH parameters.");
+    std::istringstream buffer(dhParamsString);
+    while(buffer)
+      buffer >> m_dhParameters;
+  }
 
   // Transform from DH to com.
-  string dhToChildString = _node.Read("transformDHToChild", true, "",
-      "Transformation paremeters of DH to com.");
-
-  istringstream buffer3(dhToChildString);
-
-  while(buffer3)
-    buffer3 >> m_transformationToBody2;
-
-  m_bodies[0]->Link(this);
+  {
+    const std::string dhToChildString = _node.Read("transformDHToChild", true,
+        "", "Transformation paremeters of DH to com.");
+    std::istringstream buffer(dhToChildString);
+    while(buffer)
+      buffer >> m_transformationToBody2;
+  }
 }
 
+
+Connection::
+Connection(const Connection& _other) {
+  *this = _other;
+}
+
+
+Connection::
+Connection(Connection&&) = default;
+
+/*-------------------------------- Assignment --------------------------------*/
+
+Connection&
+Connection::
+operator=(const Connection& _other) {
+  if(this != &_other) {
+    m_multibody               = nullptr;
+    m_transformationToBody2   = _other.m_transformationToBody2;
+    m_transformationToDHFrame = _other.m_transformationToDHFrame;
+    m_dhParameters            = _other.m_dhParameters;
+    m_dhRenderParameters      = _other.m_dhRenderParameters;
+    m_jointType               = _other.m_jointType;
+    m_bodyIndices             = _other.m_bodyIndices;
+    m_jointRange              = _other.m_jointRange;
+  }
+
+  return *this;
+}
+
+
+Connection&
+Connection::
+operator=(Connection&&) = default;
+
+/*----------------------------------- I/O ------------------------------------*/
 
 void
 Connection::
 Read(istream& _is, CountingStreamBuffer& _cbs) {
   //body indices
-  m_bodyIndices.first = ReadField<int>(_is, _cbs,
-      "Failed reading previous body index.");
-  m_bodyIndices.second = ReadField<int>(_is, _cbs,
-      "Failed reading next body index.");
-
-  //grab the shared_ptr to bodies
-  m_bodies[0] = static_cast<ActiveMultiBody*>(m_multibody)->GetFreeBody(m_bodyIndices.first);
-  m_bodies[1] = static_cast<ActiveMultiBody*>(m_multibody)->GetFreeBody(m_bodyIndices.second);
+  const size_t parentIndex = ReadField<int>(_is, _cbs,
+      "Failed reading parent body index.");
+  const size_t childIndex = ReadField<int>(_is, _cbs,
+      "Failed reading child body index.");
+  SetBodies(m_multibody, parentIndex, childIndex);
 
   //grab the joint type
-  string connectionTypeTag = ReadFieldString(_is, _cbs,
+  std::string connectionTypeTag = ReadFieldString(_is, _cbs,
       "Failed reading connection type."
       " Options are: revolute, spherical, or nonactuated.");
   m_jointType = GetJointTypeFromTag(connectionTypeTag, _cbs.Where());
 
   //grab the joint limits for revolute and spherical joints
-  if(m_jointType == JointType::Revolute ||
-      m_jointType == JointType::Spherical) {
-    m_jointLimits[0].first = m_jointLimits[1].first = -1;
-    m_jointLimits[0].second = m_jointLimits[1].second = 1;
-    size_t numRange = m_jointType == JointType::Revolute ? 1 : 2;
-    for(size_t i = 0; i < numRange; i++){
-      string tok;
-      if(_is >> tok){
+  if(IsRevolute() || IsSpherical()) {
+    m_jointRange[0].min = m_jointRange[1].min = -1;
+    m_jointRange[0].max = m_jointRange[1].max = 1;
+    size_t numRange = IsRevolute() ? 1 : 2;
+    for(size_t i = 0; i < numRange; ++i) {
+      std::string tok;
+      if(_is >> tok) {
         size_t del = tok.find(":");
-        if(del == string::npos)
+        if(del == std::string::npos)
           throw ParseException(_cbs.Where(),
               "Failed reading joint range. Should be delimited by ':'.");
 
-        istringstream minv(tok.substr(0, del)),
+        std::istringstream minv(tok.substr(0, del)),
                       maxv(tok.substr(del+1, tok.length()));
-        if(!(minv >> m_jointLimits[i].first &&
-              maxv >> m_jointLimits[i].second))
+        if(!(minv >> m_jointRange[i].min &&
+              maxv >> m_jointRange[i].max))
           throw ParseException(_cbs.Where(), "Failed reading joint range.");
       }
-      else if(numRange == 2 && i==1) //error. only 1 token provided.
+      else if(numRange == 2 && i == 1) //error. only 1 token provided.
         throw ParseException(_cbs.Where(),
             "Failed reading joint ranges. Only one provided.");
     }
@@ -179,89 +205,124 @@ Read(istream& _is, CountingStreamBuffer& _cbs) {
   //transformation to next body
   m_transformationToBody2 = ReadField<Transformation>(_is, _cbs,
       "Failed reading transformation to next body.");
-
-  //make the connection
-  m_bodies[0]->Link(this);
 }
 
 
-ostream&
-operator<<(ostream& _os, const Connection& _c) {
-  _os << _c.m_bodyIndices.first << " " << _c.m_bodyIndices.second << " "
-      << Connection::GetTagFromJointType(_c.m_jointType);
-  if(_c.m_jointType == Connection::JointType::Revolute ||
-      _c.m_jointType == Connection::JointType::Spherical)
-    _os << " " << _c.GetJointLimits(0).first << ":"
-        << _c.GetJointLimits(0).second;
-  _os << endl
-      << _c.m_transformationToDHFrame << endl
-      << _c.m_dhParameters << endl
-      << _c.m_transformationToBody2 << endl;
+void
+Connection::
+SetBodies(MultiBody* const _owner, const size_t _parentIndex,
+    const size_t _childIndex) {
+  // Set the parent and child indexes.
+  m_bodyIndices.first = _parentIndex;
+  m_bodyIndices.second = _childIndex;
+
+  // Set the owning multibody.
+  m_multibody = _owner;
+
+  // Update the bodies.
+  GetPreviousBody()->LinkForward(this);
+  GetNextBody()->LinkBackward(this);
+}
+
+
+void
+Connection::
+SetBodies(MultiBody* const _owner) {
+  SetBodies(_owner, m_bodyIndices.first, m_bodyIndices.second);
+}
+
+
+std::ostream&
+operator<<(std::ostream& _os, const Connection& _c) {
+  _os << _c.m_bodyIndices.first << " "
+      << _c.m_bodyIndices.second << " "
+      << GetTagFromJointType(_c.m_jointType);
+
+  if(_c.IsRevolute() or _c.IsSpherical())
+    _os << " " << _c.GetJointRange(0);
+  _os << std::endl
+      << _c.m_transformationToDHFrame << std::endl
+      << _c.m_dhParameters << std::endl
+      << _c.m_transformationToBody2 << std::endl;
   return _os;
 }
 
 /*-------------------------- Joint Information -------------------------------*/
 
-size_t
-Connection::
-GetGlobalIndex() const {
-  return m_globalIndex;
-}
-
-
 Connection::JointType
 Connection::
-GetConnectionType() const {
+GetConnectionType() const noexcept {
   return m_jointType;
 }
 
 
-const pair<double, double>&
+bool
 Connection::
-GetJointLimits(size_t _i) const {
-  return m_jointLimits[_i];
-}
-
-/*----------------------- FreeBody Information -------------------------------*/
-
-const FreeBody*
-Connection::
-GetPreviousBody() const {
-  return m_bodies[0];
+IsRevolute() const noexcept {
+  return m_jointType == JointType::Revolute;
 }
 
 
-FreeBody*
+bool
 Connection::
-GetPreviousBody() {
-  return m_bodies[0];
+IsSpherical() const noexcept {
+  return m_jointType == JointType::Spherical;
+}
+
+
+bool
+Connection::
+IsNonActuated() const noexcept {
+  return m_jointType == JointType::NonActuated;
+}
+
+
+const Range<double>&
+Connection::
+GetJointRange(size_t _i) const noexcept {
+  return m_jointRange[_i];
+}
+
+/*----------------------------- Body Information -----------------------------*/
+
+const Body*
+Connection::
+GetPreviousBody() const noexcept {
+  return m_multibody->GetBody(m_bodyIndices.first);
+}
+
+
+Body*
+Connection::
+GetPreviousBody() noexcept {
+  return m_multibody->GetBody(m_bodyIndices.first);
 }
 
 
 size_t
 Connection::
-GetPreviousBodyIndex() const {
+GetPreviousBodyIndex() const noexcept {
   return m_bodyIndices.first;
 }
 
 
-const FreeBody*
+const Body*
 Connection::
-GetNextBody() const {
-  return m_bodies[1];
+GetNextBody() const noexcept {
+  return m_multibody->GetBody(m_bodyIndices.second);
 }
 
 
-FreeBody*
+Body*
 Connection::
-GetNextBody() {
-  return m_bodies[1];
+GetNextBody() noexcept {
+  return m_multibody->GetBody(m_bodyIndices.second);
 }
 
 
 size_t
 Connection::
-GetNextBodyIndex() const {
+GetNextBodyIndex() const noexcept {
   return m_bodyIndices.second;
 }
 
@@ -269,49 +330,49 @@ GetNextBodyIndex() const {
 
 DHParameters&
 Connection::
-GetDHParameters() {
+GetDHParameters() noexcept {
   return m_dhParameters;
 }
 
 
 const DHParameters&
 Connection::
-GetDHParameters() const {
+GetDHParameters() const noexcept {
   return m_dhParameters;
 }
 
 
 DHParameters&
 Connection::
-GetDHRenderParameters() {
+GetDHRenderParameters() noexcept {
   return m_dhRenderParameters;
 }
 
 
 Transformation&
 Connection::
-GetTransformationToBody2() {
+GetTransformationToBody2() noexcept {
   return m_transformationToBody2;
 }
 
 
 const Transformation&
 Connection::
-GetTransformationToBody2() const {
+GetTransformationToBody2() const noexcept {
   return m_transformationToBody2;
 }
 
 
 Transformation&
 Connection::
-GetTransformationToDHFrame() {
+GetTransformationToDHFrame() noexcept {
   return m_transformationToDHFrame;
 }
 
 
 const Transformation&
 Connection::
-GetTransformationToDHFrame() const {
+GetTransformationToDHFrame() const noexcept {
   return m_transformationToDHFrame;
 }
 

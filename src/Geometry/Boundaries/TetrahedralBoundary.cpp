@@ -13,8 +13,8 @@ TetrahedralBoundary(const std::array<Point3d, 4>& _pts, const bool _check) :
     m_points(_pts) {
   if(_check)
     FixPoints();
-  m_normals = std::move(ComputeNormals());
-  m_center = std::move(ComputeCenter());
+  m_normals = ComputeNormals();
+  m_center = ComputeCenter();
 }
 
 
@@ -28,16 +28,19 @@ TetrahedralBoundary(const std::vector<Point3d>& _pts, const bool _check) {
   std::copy(_pts.begin(), _pts.end(), m_points.begin());
   if(_check)
     FixPoints();
-  m_normals = std::move(ComputeNormals());
-  m_center = std::move(ComputeCenter());
+  m_normals = ComputeNormals();
+  m_center = ComputeCenter();
 }
 
 
-Boundary*
+TetrahedralBoundary::
+~TetrahedralBoundary() noexcept = default;
+
+
+std::unique_ptr<Boundary>
 TetrahedralBoundary::
 Clone() const {
-  throw RunTimeException(WHERE, "Not yet implemented");
-  return nullptr;
+  return std::unique_ptr<TetrahedralBoundary>(new TetrahedralBoundary(*this));
 }
 
 /*---------------------------- Property Accessors ----------------------------*/

@@ -1,8 +1,6 @@
 #ifndef TET_GEN_DECOMPOSITION_H_
 #define TET_GEN_DECOMPOSITION_H_
 
-using namespace std;
-
 #include <containers/sequential/graph/graph.h>
 
 #include <Vector.h>
@@ -11,7 +9,7 @@ using namespace mathtool;
 #include "Utilities/IOUtils.h"
 
 class Environment;
-class StaticMultiBody;
+class MultiBody;
 class WorkspaceDecomposition;
 class XMLNode;
 
@@ -19,13 +17,13 @@ class tetgenio;
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// @ingroup Utilities
 /// Tetrahedralization of workspace using TetGen library
 ///
 /// TetGen offers two levels of courseness - maximally course (default) and
 /// 'quality' (use 'q' in switches).
+/// @ingroup Utilities
 ////////////////////////////////////////////////////////////////////////////////
-class TetGenDecomposition {
+class TetGenDecomposition final {
 
   public:
 
@@ -33,14 +31,14 @@ class TetGenDecomposition {
     ///@name Construction
     ///@{
 
-    TetGenDecomposition() = default;
+    TetGenDecomposition();
 
     /// Create a TetGen decomposer manually. If a base file name is provided,
     /// output the decomposed model.
     /// @param _switches The switches to use.
     /// @param _baseFilename Base filename for output files.
-    TetGenDecomposition(const std::string& _switches,
-        const std::string& _baseFilename = "");
+    //TetGenDecomposition(const std::string& _switches,
+    //    const std::string& _baseFilename = "");
 
     /// Construct a TetGen decomposer from an XML node.
     /// @param _node The XML node to parse.

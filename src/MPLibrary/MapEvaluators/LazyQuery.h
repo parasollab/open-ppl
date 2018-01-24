@@ -219,7 +219,7 @@ PerformSubQuery(const CfgType& _start, const CfgType& _goal) {
 
     // If start and goal are connected to the same CC, generate path and end.
     while(!connected && this->SameCC(start.first, goal.first)) {
-      this->GeneratePath(start.first, goal.first);
+      *this->GetPath() += this->GeneratePath(start.first, goal.first);
       connected = this->ValidatePath();
     }
 

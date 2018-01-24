@@ -7,10 +7,11 @@
 
 #include "MPLibrary/ValidityCheckers/CollisionDetection/CDInfo.h"
 #include "Utilities/MPUtils.h"
+#include "Geometry/Boundaries/Range.h"
 
 #include "Vector.h"
 
-class ActiveMultiBody;
+class MultiBody;
 class Boundary;
 class Cfg;
 class Environment;
@@ -93,12 +94,15 @@ class Cfg {
 
     bool operator==(const Cfg& _cfg) const;
     bool operator!=(const Cfg& _cfg) const;
+    bool WithinResolution(const Cfg& _cfg, const double _posRes,
+                          const double _oriRes) const;
 
     ///@}
     ///@name Comparison
     ///@{
 
     bool operator<(const Cfg& _cfg) const;
+
     ///@}
     ///@name Robot Info
     ///@{
@@ -107,7 +111,7 @@ class Cfg {
     Robot* GetRobot() const noexcept;
 
     /// Get the robot's multibody.
-    ActiveMultiBody* GetMultiBody() const noexcept;
+    MultiBody* GetMultiBody() const noexcept;
 
     size_t DOF() const noexcept;
     size_t PosDOF() const noexcept;
@@ -342,6 +346,10 @@ class Cfg {
 
     map<string, bool> m_labelMap;  ///< A map of labels for this cfg.
     map<string, double> m_statMap; ///< A map of stats for this cfg.
+
+    /// A vector of safe intervals, not in collision with Dynamic Obstacles
+    /// of known path, for this cfg.
+    std::vector<Range<double>> m_safeIntervals;
 
     ///@}
 

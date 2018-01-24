@@ -149,6 +149,9 @@ class GMSPolyhedron final {
     /// Get the centroid of the polyhedron (average of the vertices).
     const Vector3d& GetCentroid() const;
 
+    /// Mark all cached objects as requiring an update.
+    void MarkDirty() const;
+
     /// Compute a GMSPolyhedron representation of an axis-aligned bounding box
     /// for this.
     ///

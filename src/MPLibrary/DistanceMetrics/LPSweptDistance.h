@@ -5,9 +5,9 @@
 
 #include "DistanceMetricMethod.h"
 
-#include "Geometry/Bodies/ActiveMultiBody.h"
+#include "Geometry/Bodies/Body.h"
+#include "Geometry/Bodies/MultiBody.h"
 #include "MPProblem/Environment/Environment.h"
-#include "Geometry/Bodies/FreeBody.h"
 #include "MPLibrary/LocalPlanners/LPOutput.h"
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -134,13 +134,13 @@ Distance(const CfgType& _c1, const CfgType& _c2) {
   double d = 0;
   vector<GMSPolyhedron> poly2;
   auto robot = _c1.GetMultiBody();
-  int bodyCount = robot->NumFreeBody();
+  int bodyCount = robot->GetNumBodies();
   cfgs.begin()->ConfigureRobot();
   for(int b=0; b<bodyCount; ++b) {
     if(m_useBBox)
-      poly2.push_back(robot->GetFreeBody(b)->GetWorldBoundingBox());
+      poly2.push_back(robot->GetBody(b)->GetWorldBoundingBox());
     else
-      poly2.push_back(robot->GetFreeBody(b)->GetWorldPolyhedron());
+      poly2.push_back(robot->GetBody(b)->GetWorldPolyhedron());
   }
   for(auto cit = cfgs.begin(); cit + 1 != cfgs.end(); ++cit) {
     vector<GMSPolyhedron> poly1(poly2);
@@ -148,9 +148,9 @@ Distance(const CfgType& _c1, const CfgType& _c2) {
     (cit+1)->ConfigureRobot();
     for(int b=0; b<bodyCount; ++b)
       if(m_useBBox)
-        poly2.push_back(robot->GetFreeBody(b)->GetWorldBoundingBox());
+        poly2.push_back(robot->GetBody(b)->GetWorldBoundingBox());
       else
-        poly2.push_back(robot->GetFreeBody(b)->GetWorldPolyhedron());
+        poly2.push_back(robot->GetBody(b)->GetWorldPolyhedron());
     d += SweptDistance(poly1, poly2);
   }
   return d;

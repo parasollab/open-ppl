@@ -11,6 +11,9 @@
 ////////////////////////////////////////////////////////////////////////////////
 /// A stop-watch like evaluator that returns false after a set amount of time.
 ///
+/// @TODO This should be removed, as it's redundant with just using the more
+///       flexibile ConditionalEvaluator with the TimeMetric.
+///
 /// @WARNING This evaluator uses an rusage-based clock just like our StatClass.
 ///          The two probably aren't safe to access concurrently. We can adjust
 ///          this by switching to a C++11 chrono-based clock when the need
@@ -82,6 +85,8 @@ template <typename MPTraits>
 void
 TimeEvaluator<MPTraits>::
 Initialize() {
+  if(this->m_debug)
+    std::cout << "TimeEvaluator::Initialize()" << std::endl;
   m_started = false;
   m_clock.ClearClock();
 }

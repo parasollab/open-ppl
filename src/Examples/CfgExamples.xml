@@ -7,8 +7,9 @@
     <Environment filename="3D/3d.env"
       frictionCoefficient="0" gravityX="0" gravityY="0" gravityZ="0"/>
 
-    <Robot label="boxy" filename="boxy.xml" nonholonomic="true"
-      carlike="true"/>
+    <Robot label="boxy" filename="3D/boxy.robot">
+      <Agent type="pathfollowing"/>
+    </Robot>
 
     <!-- WARNING Support for multiple constraints is not yet implemented! -->
     <!-- WARNING Workspace constraints are not finished and untested! -->
@@ -33,7 +34,7 @@
 
     <DistanceMetrics>
       <Euclidean label="euclidean"/>
-      <ScaledEuclidean label= "scaledEuclidean" scale ="0.5"/>
+      <ScaledEuclidean label="scaledEuclidean" scale="0.5"/>
       <CenterOfMass label="com"/>
       <KnotTheory label="knot"/>
       <Manhattan label="manhattan"/>
@@ -43,6 +44,8 @@
       <LPSwept label="LPSwept" posRes="5" oriRes="5" useBBox="true" lpLabel="sl"/>
       <BinaryLPSwept label="BLPSwept" posRes="5" oriRes="5" useBBox="true"
         lpLabel="sl"/>
+      <TopologicalDistance label="connectedFreeSpace" dmLabel="euclidean"
+        tmLabel="tm-coarse"/>
     </DistanceMetrics>
 
     <ValidityCheckers>
@@ -59,9 +62,7 @@
         <ValidityChecker label="mac"/>
       </ComposeValidity>
       <AlwaysTrueValidity label="alwaysTrue"/>
-      <ObstacleClearance label="oc" obstClearance="2.5" vcLabel="pqp_solid"
-        dmLabel="euclidean" clearanceType="exact" penetrationType="exact"
-        useBBX="true" positional="true"/>
+      <ObstacleClearance label="oc" clearanceThreshold="1" vcLabel="pqp_solid"/>
     </ValidityCheckers>
 
     <NeighborhoodFinders>
@@ -366,6 +367,43 @@
 
     <MPStrategies>
 
+      <!-- Basic PRM where num samples is based on Number -->
+      <BasicPRM label="BasicPRM1">
+        <Sampler method="UniformRandomFree" number="1" attempts="1"/>
+        <!--Sampler Method="Gauss" number="10" attempts="10"/-->
+        <!--Sampler Method="OBPRM" number="10" attempts="10"/-->
+        <!--Sampler Method="MAPRM" number="10" attempts="10"/-->
+        <Connector method="Closest"/>
+        <!--ComponentConnector method="ConnectCCs"/-->
+        <Evaluator method="PRMQuery"/>
+      </BasicPRM>
+
+      <!-- Basic PRM restarted from an input roadmap input.map at the beginning
+           of node connection -->
+      <BasicPRM label="BasicPRM2"
+        inputMap="input.map" startAt="connecting">
+        <Sampler method="UniformRandomFree" number="10" attempts="10"/>
+        <Connector method="Closest"/>
+        <ComponentConnector method="ConnectCCs"/>
+        <Evaluator method="NodesEval"/>
+      </BasicPRM>
+
+      <!-- PRM* -->
+      <BasicPRM label="OptimalPRM">
+        <Sampler method="UniformRandomFree" number="100" attempts="100"/>
+        <Connector method="OptimalConnector"/>
+        <Evaluator method="NodesEval"/>
+      </BasicPRM>
+
+      <!-- BasicRRT -->
+      <BasicRRTStrategy label="BasicRRT"
+        numRoots="1" m="1" growthFocus="0.01" dmLabel="euclidean"
+        nfLabel="Nearest" vcLabel="rapid" connectorLabel="Closest"
+        gtype="UNDIRECTED_TREE" debug="false"
+        growGoals="true" extenderLabel="BERO" samplerLabel="UniformRandom">
+        <Evaluator label="NodesEval"/>
+      </BasicRRTStrategy>
+
       <!-- Kindodynamic RRT -->
       <BasicRRTStrategy label="KinoRRT"
         numRoots="1" m="1" growthFocus="0.01" dmLabel="euclidean"
@@ -378,6 +416,13 @@
 
       <!-- If optimal connection is wanted, the correct connector needs to be
            selected -->
+      <BasicRRTStrategy label="RRG"
+        numRoots="1" m="1" growthFocus="0.01" dmLabel="euclidean"
+        nfLabel="Nearest" vcLabel="rapid" extenderLabel="BERO"
+        connectorLabel="OptimalConnector" gtype="UNDIRECTED_GRAPH"
+        samplerLabel="UniformRandom">
+        <Evaluator label="NodesEval"/>
+      </BasicRRTStrategy>
 
       <!-- The connector needs to be OptimalRewire for RRT* -->
       <BasicRRTStrategy label="RRTstar"
@@ -549,7 +594,10 @@
     </MPStrategies>
 
     <MPTools>
-      <!-- Example nodes for a workspace decomposition with tetgen. -->
+      <!-- Example nodes for a workspace decomposition with tetgen. Be aware
+           that each decomposition defined will be created immediately upon
+           initialization. If you don't need them, comment them out to save
+           pre-processing time. -->
       <TetGenDecomposition label="coarse" debug="false" switches="pnQ"/>
       <TetGenDecomposition label="fine" debug="false" switches="pnqQ"/>
 
@@ -561,6 +609,9 @@
         io="read" baseFilename="3D/quality"/>
       -->
 
+      <!-- Different objects need to work with different granularities when it
+           comes to decomposition-based tools. You can define multiple
+           topological maps for this purpose. -->
       <TopologicalMap label="tm-coarse" decompositionLabel="coarse"
         gridSize=".5"/>
       <TopologicalMap label="tm-fine" decompositionLabel="fine"
@@ -581,7 +632,7 @@
     <!-- MPProblem allows multiple solvers to be specified and executed. -->
 
     <Solver mpStrategyLabel="BasicPRM1" seed="12345678"
-      baseFilename="Basic" vizmoDebug="true"/>
+      baseFilename="example" vizmoDebug="true"/>
 
   </Library>
 

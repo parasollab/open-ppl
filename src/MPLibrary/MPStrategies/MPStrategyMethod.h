@@ -73,6 +73,8 @@ class MPStrategyMethod : public MPBaseObject<MPTraits> {
     ///       implement this.
     virtual bool CheckNarrowPassageSample(VID _vid) {return false;}
 
+    bool IsSuccessful() const {return m_successful;}
+
     ///@}
 
   protected:
@@ -81,6 +83,9 @@ class MPStrategyMethod : public MPBaseObject<MPTraits> {
     ///@{
 
     vector<string> m_meLabels;        ///< The list of map evaluators to use.
+
+    /// This is currently used in Disassembly planning methods.
+    bool m_successful{false}; ///< A flag to set as true in Finalize() to indicate success.
 
     ///@}
 };
@@ -125,6 +130,7 @@ Run() {
   if(this->m_debug)
     cout << clockName << endl;
   this->GetStatClass()->StartClock(clockName);
+  this->m_successful = false;
 
   do {
     this->Iterate();
@@ -161,9 +167,8 @@ EvaluateMap() {
       stats->StopClock(evalName);
 
       if(this->m_debug) {
-        stats->PrintClock(evaluator->GetNameAndLabel(), cout);
-        cout << evalName
-             << (passed ? "  (Passed)" : "  (Failed)") << endl;
+        stats->PrintClock(evalName, cout);
+        cout << evalName << (passed ? "  (Passed)" : "  (Failed)") << endl;
       }
 
       if(!passed)

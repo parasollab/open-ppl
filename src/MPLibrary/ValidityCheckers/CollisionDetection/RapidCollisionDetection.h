@@ -3,22 +3,34 @@
 
 #include "CollisionDetectionMethod.h"
 
+
 ////////////////////////////////////////////////////////////////////////////////
-/// @ingroup CollisionDetection
 /// RAPID is typically used to simply and quickly determine collision between
 /// two objects, but cannot compute any distance information. The contacts
 /// found, i.e., triangle IDs are stored in CDInfo.
+/// @ingroup CollisionDetection
 ////////////////////////////////////////////////////////////////////////////////
 class Rapid: public CollisionDetectionMethod {
 
   public:
 
+    ///@name Construction
+    ///@{
+
     Rapid();
+
+    virtual ~Rapid() = default;
+
+    ///@}
+    ///@name CollisionDetectionMethod Overrides
+    ///@{
 
     static void Build(Body* const _body);
 
     virtual bool IsInCollision(const Body* const _body1,
-        const Body* const _body2, CDInfo& _cdInfo);
+        const Body* const _body2, CDInfo& _cdInfo) override;
+
+    ///@}
 
 };
 

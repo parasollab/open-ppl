@@ -14,6 +14,10 @@ AbstractBoundingBox(const size_t _n) : NBox(_n) { }
 AbstractBoundingBox::
 AbstractBoundingBox(const std::vector<double>& _center) : NBox(_center) { }
 
+
+AbstractBoundingBox::
+~AbstractBoundingBox() noexcept = default;
+
 /*---------------------------- Property Accessors ----------------------------*/
 
 size_t
@@ -151,7 +155,8 @@ ReadXML(XMLNode& _node) {
 
   istringstream buffer(limits);
 
-  // Try to read in bounding box limits using NBox.
+  // Try to read in bounding box limits using NBox. Re-propogate any exceptions
+  // with more precise 'where' info.
   try {
     buffer >> static_cast<NBox&>(*this);
   }
@@ -163,9 +168,9 @@ ReadXML(XMLNode& _node) {
 
 void
 AbstractBoundingBox::
-Read(istream& _is, CountingStreamBuffer& _cbs) {
-  // Try to read in using NBox. Re-propogate any exceptions with the better
-  // debug info from the CountingStreamBuffer.
+Read(std::istream& _is, CountingStreamBuffer& _cbs) {
+  // Try to read in using NBox. Re-propogate any exceptions with more precise
+  // 'where' info.
   try {
     _is >> static_cast<NBox&>(*this);
   }
@@ -177,7 +182,7 @@ Read(istream& _is, CountingStreamBuffer& _cbs) {
 
 void
 AbstractBoundingBox::
-Write(ostream& _os) const {
+Write(std::ostream& _os) const {
   _os << static_cast<const NBox&>(*this);
 }
 

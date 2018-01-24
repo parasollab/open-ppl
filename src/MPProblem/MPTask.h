@@ -1,6 +1,7 @@
 #ifndef MP_TASK_TYPE_H_
 #define MP_TASK_TYPE_H_
 
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -50,19 +51,33 @@ class MPTask final {
     /// @arg Invalid A path constraint is violated.
     enum Status {OnDeck, InProgress, Complete, Invalid};
 
+    /// A set of constraints.
+    typedef std::vector<std::unique_ptr<Constraint>> ConstraintSet;
+
     ///@}
     ///@name Construction
     ///@{
 
     /// Create an empty task for a given robot.
-    MPTask(Robot* const _robot);
+    /// @param _robot The robot assigned to this task.
+    explicit MPTask(Robot& _robot);
 
     /// Parse the set of task constraints described in an XML node.
     /// @param _problem The MPProblem for this task.
     /// @param _node The XML node to parse.
-    MPTask(MPProblem* const _problem, XMLNode& _node);
+    explicit MPTask(MPProblem* const _problem, XMLNode& _node);
+
+    MPTask(const MPTask& _other);  ///< Copy.
+    MPTask(MPTask&& _other);       ///< Move.
 
     ~MPTask();
+
+    ///@}
+    ///@name Assignment
+    ///@{
+
+    MPTask& operator=(const MPTask& _other); ///< Copy.
+    MPTask& operator=(MPTask&& _other);      ///< Move.
 
     ///@}
     ///@name Property Accessors
@@ -77,6 +92,10 @@ class MPTask final {
     /// Set the unique label for this task.
     void SetLabel(const std::string& _label);
 
+    /// Re-assign this task to another robot.
+    /// @param _r The destination robot which will receive this assignment.
+    void SetRobot(Robot* const _r);
+
     ///@}
     ///@name Constraint Accessors
     ///@{
@@ -84,13 +103,13 @@ class MPTask final {
     /// when necessary. We require dynamically-allocated objects here because
     /// exact (derived) type of each constraint will not be known until runtime.
 
-    void AddStartConstraint(Constraint* const _c);
-    void AddPathConstraint(Constraint* const _c);
-    void AddGoalConstraint(Constraint* const _c);
+    void AddStartConstraint(std::unique_ptr<Constraint>&& _c);
+    void AddPathConstraint(std::unique_ptr<Constraint>&& _c);
+    void AddGoalConstraint(std::unique_ptr<Constraint>&& _c);
 
-    const std::vector<Constraint*>& GetStartConstraints() const noexcept;
-    const std::vector<Constraint*>& GetPathConstraints() const noexcept;
-    const std::vector<Constraint*>& GetGoalConstraints() const noexcept;
+    const ConstraintSet& GetStartConstraints() const noexcept;
+    const ConstraintSet& GetPathConstraints() const noexcept;
+    const ConstraintSet& GetGoalConstraints() const noexcept;
 
     const Boundary* GetStartBoundary() const noexcept;
     const Boundary* GetPathBoundary() const noexcept;
@@ -147,29 +166,29 @@ class MPTask final {
     /// @param _c The set of constraints to check.
     /// @return True if all constraints in _c are satisfied by _p.
     bool EvaluateConstraints(const std::vector<Cfg>& _p,
-        const std::vector<Constraint*>& _c) const;
+        const ConstraintSet& _c) const;
 
     /// Create a compose boundary object from a set of constraints.
     /// @param _c The set of constraints to use.
     /// @return A boundary describing the spaces that satisfy _c.
-    const Boundary* MakeComposeBoundary(const std::vector<Constraint*>& _c) const
-        noexcept;
+    const Boundary* MakeComposeBoundary(const ConstraintSet& _c) const noexcept;
 
     ///@}
     ///@name Internal State
     ///@{
 
     std::string m_label;          ///< The unique task label.
+    std::string m_robotLabel;     ///< The robot label.
 
-    Robot* m_robot{nullptr};      ///< The robot (group) assigned to this task.
+    Robot* m_robot{nullptr};      ///< The robot assigned to this task.
     /// @TODO Change this to a robot group when that code is ready.
     //RobotGroup* m_group{nullptr}; ///< The robot group assigned to this task.
 
     Status m_status{OnDeck};      ///< The status of the current task.
 
-    std::vector<Constraint*> m_startConstraints; ///< Req'd to start task.
-    std::vector<Constraint*> m_pathConstraints;  ///< Req'd during whole task.
-    std::vector<Constraint*> m_goalConstraints;  ///< Req'd to end task.
+    ConstraintSet m_startConstraints;  ///< Req'd to start task.
+    ConstraintSet m_pathConstraints;   ///< Req'd during whole task.
+    ConstraintSet m_goalConstraints;   ///< Req'd to end task.
 
     ///@}
 

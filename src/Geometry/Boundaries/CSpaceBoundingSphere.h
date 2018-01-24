@@ -14,15 +14,15 @@ class CSpaceBoundingSphere : public AbstractBoundingSphere {
     ///@name Construction
     ///@{
 
-    CSpaceBoundingSphere(const size_t _n,
+    explicit CSpaceBoundingSphere(const size_t _n,
         const double _radius = std::numeric_limits<double>::max());
 
-    CSpaceBoundingSphere(const std::vector<double>& _center,
+    explicit CSpaceBoundingSphere(const std::vector<double>& _center,
         const double _radius = std::numeric_limits<double>::max());
 
-    virtual ~CSpaceBoundingSphere() = default;
+    virtual ~CSpaceBoundingSphere() noexcept;
 
-    virtual Boundary* Clone() const override;
+    virtual std::unique_ptr<Boundary> Clone() const override;
 
     ///@}
     ///@name Property Accessors

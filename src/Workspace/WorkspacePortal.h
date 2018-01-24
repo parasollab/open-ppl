@@ -8,6 +8,7 @@
 class WorkspaceDecomposition;
 class WorkspaceRegion;
 
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Describes a connection between two workspace regions.
 ///
@@ -40,15 +41,20 @@ class WorkspacePortal {
     WorkspacePortal(WorkspaceDecomposition* const _wd, const size_t _s,
         const size_t _t);
 
+    /// Change the owning decomposition. This only makes sense when we are
+    /// copying/moving portals from one decomposition to another.
+    /// @param _wd The new owning decomposition.
+    void SetDecomposition(WorkspaceDecomposition* const _wd);
+
     ///@}
     ///@name Accessors
     ///@{
 
-    const size_t GetSourceDescriptor() const {return m_sourceIndex;}
-    const size_t GetTargetDescriptor() const {return m_targetIndex;}
+    const size_t GetSourceDescriptor() const noexcept;
+    const size_t GetTargetDescriptor() const noexcept;
 
-    const WorkspaceRegion& GetSource() const;
-    const WorkspaceRegion& GetTarget() const;
+    const WorkspaceRegion& GetSource() const noexcept;
+    const WorkspaceRegion& GetTarget() const noexcept;
 
     ///@}
     ///@name Queries
@@ -68,10 +74,10 @@ class WorkspacePortal {
     ///@name Internal State
     ///@{
 
-    WorkspaceDecomposition* const m_decomposition; ///< The owning decomposition.
+    WorkspaceDecomposition* m_decomposition{nullptr}; ///< Owning decomposition.
 
-    const size_t m_sourceIndex; ///< The source region.
-    const size_t m_targetIndex; ///< The target region.
+    size_t m_sourceIndex; ///< The source region.
+    size_t m_targetIndex; ///< The target region.
 
     ///@}
 

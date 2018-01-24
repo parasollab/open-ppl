@@ -275,10 +275,12 @@ FindVertex(int _witness, const CfgType& _c) {
   stat->StartClock("FindVertex");
   //Find the vertex which the witness points belong to first
   //assume obstacle multibodies have 1 body
+
+  ///@TODO This needs to be fixed to go through all of each obstacle's bodies.
   const GMSPolyhedron& polyhedron = env->GetObstacle(_witness)->
-      GetFixedBody(0)->GetPolyhedron();
+      GetBody(0)->GetPolyhedron();
   const Transformation& t = env->GetObstacle(_witness)->
-      GetFixedBody(0)->GetWorldTransformation();
+      GetBody(0)->GetWorldTransformation();
 
   Vector3d witnessPoint = -t * _c.m_clearanceInfo.m_objectPoint;
   for(size_t i=0; i < polyhedron.m_vertexList.size(); ++i) {
@@ -303,10 +305,12 @@ FindTriangle(int _witness, const CfgType& _c) {
   stat->StartClock("FindTriangle");
   //Find the triangles which the witness points belong to first
   //assume obstacle multibodies have 1 body
+
+  ///@TODO This needs to be fixed to go through all of each obstacle's bodies.
   const GMSPolyhedron& polyhedron = env->GetObstacle(_witness)->
-      GetFixedBody(0)->GetPolyhedron();
+      GetBody(0)->GetPolyhedron();
   const Transformation& t = env->GetObstacle(_witness)->
-      GetFixedBody(0)->GetWorldTransformation();
+      GetBody(0)->GetWorldTransformation();
 
   Vector3d witnessPoint = -t * _c.m_clearanceInfo.m_objectPoint;
 
@@ -367,17 +371,19 @@ template <typename MPTraits>
 bool
 UniformMedialAxisSampler<MPTraits>::
 CheckVertVert(int _w, int _v1, int _v2) {
-  Environment* env = this->GetEnvironment();
-  const GMSPolyhedron& polyhedron = env->GetObstacle(_w)->GetFixedBody(0)->
-      GetPolyhedron();
-  const vector<GMSPolygon>& polygons = polyhedron.m_polygonList;
+  Environment* const env = this->GetEnvironment();
+  MultiBody* const obst = env->GetObstacle(_w);
+  for(size_t j = 0; j < obst->GetNumBodies(); ++j) {
+    const GMSPolyhedron& polyhedron = obst->GetBody(j)->GetPolyhedron();
+    const vector<GMSPolygon>& polygons = polyhedron.m_polygonList;
 
-  for(auto pit = polygons.begin(); pit != polygons.end(); ++pit) {
-    if(find(pit->begin(), pit->end(), _v1) != pit->end() &&
-        find(pit->begin(), pit->end(), _v2) != pit->end())
-      return false;
+    for(auto pit = polygons.begin(); pit != polygons.end(); ++pit) {
+      const bool v1Found = (find(pit->begin(), pit->end(), _v1) != pit->end());
+      const bool v2Found = (find(pit->begin(), pit->end(), _v2) != pit->end());
+      if(v1Found && v2Found)
+        return false;
+    }
   }
-
   return true;
 }
 
@@ -388,8 +394,10 @@ UniformMedialAxisSampler<MPTraits>::
 CheckTriTri(int _w, int _t1, int _t2) {
   Environment* env = this->GetEnvironment();
   //Check if two triangles are adjacent to each other
-  const GMSPolyhedron& polyhedron = env->GetObstacle(_w)->
-      GetFixedBody(0)->GetPolyhedron();
+
+  ///@TODO This needs to be fixed to go through all of each obstacle's bodies.
+  MultiBody* const obst = env->GetObstacle(_w);
+  const GMSPolyhedron& polyhedron = obst->GetBody(0)->GetPolyhedron();
 
   //test if there is a common edge (v0, v1) between the triangles
   pair<int, int> edge = polyhedron.m_polygonList[_t1].
@@ -433,10 +441,11 @@ CheckTriTri(int _w, int _t1, int _t2) {
   }
 
   //test if there is one common vertex between the triangles
-  int vert = polyhedron.m_polygonList[_t1].
+  const int vert = polyhedron.m_polygonList[_t1].
       CommonVertex(polyhedron.m_polygonList[_t2]);
   if(vert != -1) {
-    return !env->GetObstacle(_w)->GetFixedBody(0)->
+    ///@TODO This needs to be fixed to go through all of each obstacle's bodies.
+    return !env->GetObstacle(_w)->GetBody(0)->
         IsConvexHullVertex(polyhedron.m_vertexList[vert]);
   }
   //no common edge or vertex, triangles are not adjacent
@@ -452,8 +461,10 @@ UniformMedialAxisSampler<MPTraits>::
 CheckVertTri(int _w, int _v, int _t) {
   Environment* env = this->GetEnvironment();
   //Check if vertex belongs to triangle, thus are adjacent
-  const GMSPolyhedron& polyhedron = env->GetObstacle(_w)->
-      GetFixedBody(0)->GetPolyhedron();
+
+  ///@TODO This needs to be fixed to go through all of each obstacle's bodies.
+  MultiBody* const obst = env->GetObstacle(_w);
+  const GMSPolyhedron& polyhedron = obst->GetBody(0)->GetPolyhedron();
   const Vector3d& vert = polyhedron.m_vertexList[_v];
   const GMSPolygon& poly = polyhedron.m_polygonList[_t];
   for(size_t i = 0; i < poly.GetNumVertices(); ++i) {

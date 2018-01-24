@@ -485,6 +485,14 @@ GetCentroid() const {
 }
 
 
+void
+GMSPolyhedron::
+MarkDirty() const {
+  m_centroidCached = false;
+  ///@TODO does m_boundaryBuilt need to be done in here too?
+}
+
+
 GMSPolyhedron
 GMSPolyhedron::
 ComputeBoundingPolyhedron() const {

@@ -3,8 +3,8 @@
 
 #include "BasicExtender.h"
 
-#include "Geometry/Bodies/FixedBody.h"
-#include "Geometry/Bodies/StaticMultiBody.h"
+#include "Geometry/Bodies/Body.h"
+#include "Geometry/Bodies/MultiBody.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup Extenders
@@ -90,8 +90,10 @@ Extend(const CfgType& _start, const CfgType& _end, CfgType& _new,
     cIndex = LRand() % env->NumObstacles();
     obsContactIndex = -1;
   }
+
+  ///@TODO This needs to be fixed to go through all of each obstacle's bodies.
   const GMSPolyhedron& poly =
-      env->GetObstacle(cIndex)->GetFixedBody(0)->GetWorldPolyhedron();
+      env->GetObstacle(cIndex)->GetBody(0)->GetWorldPolyhedron();
   const vector<Vector3d>& vertexList    = poly.m_vertexList;
   const vector<GMSPolygon>& polygonList = poly.m_polygonList;
 

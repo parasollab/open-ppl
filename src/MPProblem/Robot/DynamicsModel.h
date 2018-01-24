@@ -60,9 +60,6 @@ class DynamicsModel final {
     /// Get the underlying physics model.
     btMultiBody* Get() const noexcept;
 
-    /// Allows implicit access to underlying model pointer.
-    operator btMultiBody*() const noexcept;
-
     ///@}
     ///@name Interface
     ///@{

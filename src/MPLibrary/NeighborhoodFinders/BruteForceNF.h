@@ -55,6 +55,8 @@ BruteForceNF<MPTraits>::
 FindNeighbors(RoadmapType* _rmp,
     InputIterator _first, InputIterator _last, bool _fromFullRoadmap,
     const CfgType& _cfg, OutputIterator _out) {
+  MethodTimer mt(this->GetStatClass(), "BruteForceNF::FindNeighbors");
+  this->IncrementNumQueries();
 
   GraphType* map = _rmp->GetGraph();
   auto dmm = this->GetDistanceMetric(this->m_dmLabel);
@@ -66,10 +68,6 @@ FindNeighbors(RoadmapType* _rmp,
             dmm->Distance(_cfg, map->GetVertex(it)));
     return _out;
   }
-
-  this->IncrementNumQueries();
-  this->StartTotalTime();
-  this->StartQueryTime();
 
   // Keep sorted list of k best so far
   priority_queue<pair<VID, double>, vector<pair<VID, double> >, CompareSecond<VID, double> > pq;
@@ -107,9 +105,6 @@ FindNeighbors(RoadmapType* _rmp,
     pq.pop();
   }
 
-  this->EndQueryTime();
-  this->EndTotalTime();
-
   if(this->m_debug and closest.empty())
     std::cout << "closests is empty." << std::endl;
 
@@ -124,6 +119,8 @@ BruteForceNF<MPTraits>::FindNeighborPairs(RoadmapType* _rmp,
     InputIterator _first1, InputIterator _last1,
     InputIterator _first2, InputIterator _last2,
     OutputIterator _out) {
+  MethodTimer mt(this->GetStatClass(), "BruteForceNF::FindNeighborPairs");
+  this->IncrementNumQueries();
 
   GraphType* map = _rmp->GetGraph();
   auto dmm = this->GetDistanceMetric(this->m_dmLabel);

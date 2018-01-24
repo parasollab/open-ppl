@@ -4,8 +4,8 @@
 #include <ctgmath>
 #include <deque>
 
-#include "Geometry/Bodies/ActiveMultiBody.h"
-#include "Geometry/Bodies/FixedBody.h"
+#include "Geometry/Bodies/Body.h"
+#include "Geometry/Bodies/MultiBody.h"
 #include "MPLibrary/LocalPlanners/StraightLine.h"
 #include "MPLibrary/ValidityCheckers/CollisionDetection/CDInfo.h"
 #include "Utilities/MetricUtils.h"
@@ -526,8 +526,8 @@ GetNearestVertexWitness(CfgType& _cfg, CDInfo& _cdInfo,
 
     // Find closest point between robot and bbx, set if less than min dist
     // from obstacles
-    for(size_t m = 0; m < multiBody->NumFreeBody(); ++m) {
-      const GMSPolyhedron& poly = multiBody->GetFreeBody(m)->GetWorldPolyhedron();
+    for(size_t m = 0; m < multiBody->GetNumBodies(); ++m) {
+      const GMSPolyhedron& poly = multiBody->GetBody(m)->GetWorldPolyhedron();
       for(size_t j = 0; j < poly.m_vertexList.size(); ++j) {
         const double clr = _b->GetClearance(poly.m_vertexList[j]);
         if(clr < _cdInfo.m_minDist) {

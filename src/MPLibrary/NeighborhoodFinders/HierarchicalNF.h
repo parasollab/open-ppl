@@ -63,10 +63,8 @@ HierarchicalNF<MPTraits>::
 FindNeighbors(RoadmapType* _rmp,
     InputIterator _first, InputIterator _last, bool _fromFullRoadmap,
     const CfgType& _cfg, OutputIterator _out) {
-
+  MethodTimer mt(this->GetStatClass(), "HierarchicalNF::FindNeighbors");
   this->IncrementNumQueries();
-  this->StartTotalTime();
-  this->StartQueryTime();
 
   auto nf = this->GetNeighborhoodFinder(m_nfLabel);
   auto nf2 = this->GetNeighborhoodFinder(m_nfLabel2);
@@ -82,9 +80,6 @@ FindNeighbors(RoadmapType* _rmp,
 
   nf2->FindNeighbors(_rmp, closestVID.begin(), closestVID.end(), false,
       _cfg, _out);
-
-  this->EndQueryTime();
-  this->EndTotalTime();
 
   return _out;
 }

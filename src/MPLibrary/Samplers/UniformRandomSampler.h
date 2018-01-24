@@ -102,7 +102,7 @@ Sampler(CfgType& _cfg, const Boundary* const _boundary,
 
   // Debug.
   if(this->m_debug) {
-    std::cout << "Sampled Cfg: " << _cfg
+    std::cout << "Sampled Cfg: " << _cfg.PrettyPrint()
               << "\n\tBoundary: " << *_boundary
               << "\n\tValidity:  " << isValid
               << std::endl;

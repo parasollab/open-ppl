@@ -1,7 +1,3 @@
-#include "MPProblem/Constraints/CSpaceConstraint.h"
-#include "Behaviors/Agents/PathFollowingAgent.h"
-#include "Behaviors/Agents/RoadmapFollowingAgent.h"
-#include "Behaviors/Agents/BatteryConstrainedGroup.h"
 #include "MPLibrary/PMPL.h"
 #include "Simulator/Simulation.h"
 #include "sandbox/gui/main_window.h"
@@ -15,24 +11,13 @@ main(int _argc, char** _argv) {
 
     // Make problem object.
     MPProblem* problem = new MPProblem(_argv[2]);
-    auto robot = problem->GetRobot(0);
-
-    // If it's a nonholonomic robot, use the nonholonomic agent to correctly
-    // use the roadmap data (control sets between each pair of cfgs in roadmap).
-    if(!robot->IsNonholonomic())
-      //robot->SetAgent(new PathFollowingAgent(robot));
-      robot->SetAgent(new BatteryConstrainedGroup(robot));
-      //robot->SetAgent(new PathFollowingChildAgent(robot));
-    else
-      robot->SetAgent(new PathFollowingAgent(robot));
-      //robot->SetAgent(new BatteryConstrainedGroup(robot));
-      //robot->SetAgent(new RoadmapFollowingAgent(robot));
 
     // Position the robot by sampling from the first task and set colors.
     /// @TODO Decide on a way to declare the starting configuration either
     ///       explicitly or from a specific task. For now we will assume that
     ///       the first task is a query and its start boundary is a single point.
-    for(auto r: problem->GetRobots()) {
+    for(const auto& robot : problem->GetRobots()) {
+      const Robot* const r = robot.get();
       auto startBoundary = problem->GetTasks(r).front()->GetStartBoundary();
       r->GetMultiBody()->Configure(startBoundary->GetCenter());
       for(size_t i=0; i< r->GetMultiBody()->GetNumBodies();i++) {

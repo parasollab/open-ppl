@@ -147,7 +147,7 @@ void
 BasicPRM<MPTraits>::
 Print(ostream& _os) const {
   MPStrategyMethod<MPTraits>::Print(_os);
-  _os << "\tInput Map: " << m_inputMapFilename << endl;
+  _os << "\tInput Map: " << m_inputMapFilename << std::endl;
 
   _os << "\tStart At: ";
   switch(m_startAt) {
@@ -156,26 +156,26 @@ Print(ostream& _os) const {
     case ConnectingComponents: _os << "connectingcomponents"; break;
     case Evaluating: _os << "evaluating"; break;
   }
-  cout << endl;
+  std::cout << std::endl;
 
-  _os << "\tSamplers" << endl;
+  _os << "\tSamplers" << std::endl;
   for(const auto& label : m_samplerLabels)
     _os << "\t\t" << label.first
         << "\tNumber:"   << label.second.first
         << "\tAttempts:" << label.second.second
-        << endl;
+        << std::endl;
 
-  _os << "\tConnectors" << endl;
+  _os << "\tConnectors" << std::endl;
   for(const auto& label : m_connectorLabels)
-    _os << "\t\t" << label << endl;
+    _os << "\t\t" << label << std::endl;
 
-  _os << "\tComponentConnectors" << endl;
+  _os << "\tComponentConnectors" << std::endl;
   for(const auto& label : m_componentConnectorLabels)
-    _os << "\t\t" << label << endl;
+    _os << "\t\t" << label << std::endl;
 
-  _os<<"\tMapEvaluators" << endl;
+  _os<<"\tMapEvaluators" << std::endl;
   for(const auto& label : this->m_meLabels)
-    _os << "\t\t" << label << endl;
+    _os << "\t\t" << label << std::endl;
 }
 
 template <typename MPTraits>
@@ -183,25 +183,29 @@ void
 BasicPRM<MPTraits>::
 Initialize() {
   if(this->m_debug)
-    cout << this->GetNameAndLabel() << "::Initialize()" << endl;
+    std::cout << this->GetName() << "::Initialize"
+              << std::endl;
 
   //read in and reload roadmap and evaluators
   if(!m_inputMapFilename.empty()) {
     RoadmapType* r = this->GetRoadmap();
     if(this->m_debug)
-      cout << "Loading roadmap from \"" << m_inputMapFilename << "\".";
+      std::cout << "Loading roadmap from \"" << m_inputMapFilename << "\"."
+                << std::endl;
 
     r->Read(m_inputMapFilename.c_str());
 
     GraphType* g = r->GetGraph();
     for(typename GraphType::VI vi = g->begin(); vi != g->end(); ++vi)
       VDAddNode(g->GetVertex(vi));
-    if(this->m_debug) {
-      cout << "Roadmap has " << g->get_num_vertices() << " nodes and "
-           << g->get_num_edges() << " edges." << endl;
-      cout << "Resetting map evaluator states." << endl;
-    }
+    if(this->m_debug)
+      std::cout << "Roadmap has " << g->get_num_vertices()
+                << " nodes and " << g->get_num_edges() << " edges.\n"
+                << "Resetting map evaluator states."
+                << std::endl;
 
+    /// @TODO This cannot be different for PRM than for any other strategy. It
+    ///       must be removed or moved to the base class if needed.
     for(const auto& label: this->m_meLabels) {
       auto evaluator = this->GetMapEvaluator(label);
       if(evaluator->HasState())
@@ -216,6 +220,11 @@ void
 BasicPRM<MPTraits>::
 Iterate() {
   m_currentIteration++;
+  if(this->m_debug)
+    std::cout << this->GetName() << ":: starting iteration "
+              << m_currentIteration
+              << std::endl;
+
   vector<VID> vids;
 
   switch(m_startAt) {
@@ -250,6 +259,7 @@ Iterate() {
   m_startAt = Sampling;
 }
 
+
 template <typename MPTraits>
 void
 BasicPRM<MPTraits>::
@@ -264,81 +274,68 @@ Finalize() {
   stats->PrintAllStats(osStat, this->GetRoadmap());
 }
 
+
 template <typename MPTraits>
 template<typename OutputIterator>
 void
 BasicPRM<MPTraits>::
 Sample(OutputIterator _thisIterationOut) {
   if(this->m_debug)
-    cout << this->GetNameAndLabel() << "::Sample()";
+    std::cout << this->GetName() << "::Sample"
+              << std::endl;
 
   StatClass* stats = this->GetStatClass();
-  string clockName = "Total Node Generation";
-  stats->StartClock(clockName);
+  MethodTimer mt(stats, this->GetName() + "::Sample");
 
-  //For each sampler generate nodes into samples
+  // Generate nodes with each sampler.
   vector<CfgType> samples;
   for(auto&  sampler : m_samplerLabels) {
     auto s = this->GetSampler(sampler.first);
 
-    stats->StartClock(s->GetNameAndLabel());
-
     s->Sample(sampler.second.first, sampler.second.second,
         this->GetEnvironment()->GetBoundary(), back_inserter(samples));
-
-    stats->StopClock(s->GetNameAndLabel());
   }
 
-  if(this->m_debug && samples.empty())
-    cout << "No samples generated." << endl;
+  if(this->m_debug)
+    std::cout << "\tGenerated " << samples.size() << " samples."
+              << std::endl;
 
-  //add valid samples to roadmap
+  // Add valid samples to roadmap.
   GraphType* g = this->GetRoadmap()->GetGraph();
-  for(auto&  sample: samples) {
-    VID vid = g->AddVertex(sample);
+  for(auto& sample: samples) {
+    const VID vid = g->AddVertex(sample);
     *_thisIterationOut++ = vid;
   }
-
-  stats->StopClock(clockName);
-  if(this->m_debug) {
-    cout << this->GetNameAndLabel() << " has "
-      << g->get_num_vertices() << " total vertices. Time: " << endl;
-    this->GetStatClass()->PrintClock(clockName, cout);
-  }
 }
+
 
 template <typename MPTraits>
 template<class InputIterator>
 void
 BasicPRM<MPTraits>::
-Connect(InputIterator _first, InputIterator _last, const vector<string>& _labels) {
+Connect(InputIterator _first, InputIterator _last,
+    const std::vector<string>& _labels) {
   if(this->m_debug)
-    cout << this->GetNameAndLabel() << "::Connect()";
+    std::cout << this->GetNameAndLabel() << "::Connect()"
+              << std::endl;
 
   StatClass* stats = this->GetStatClass();
-  string clockName = "Total Connection";
-  stats->StartClock(clockName);
+  MethodTimer mt(stats, this->GetName() + "::Connect");
 
-  typedef vector<string>::const_iterator SIT;
-  for(SIT sit = _labels.begin(); sit != _labels.end(); ++sit){
-    auto c = this->GetConnector(*sit);
-
-    stats->StartClock(c->GetNameAndLabel());
-
+  for(const auto& label : _labels) {
+    auto c = this->GetConnector(label);
     c->Connect(this->GetRoadmap(), _first, _last);
-
-    stats->StopClock(c->GetNameAndLabel());
   }
 
-  stats->StopClock(clockName);
   if(this->m_debug) {
     GraphType* g = this->GetRoadmap()->GetGraph();
-    cout << this->GetNameAndLabel() << " has "
-      << g->get_num_edges() << " edges and "
-      << g->GetNumCCs() << " connected components. Time: " << endl;
-    stats->PrintClock(clockName, cout);
+    std::cout << "\tGraph has "
+              << g->get_num_edges() << " edges and "
+              << g->GetNumCCs() << " connected components."
+              << std::endl;
   }
 }
+
 
 template <typename MPTraits>
 template<class InputIterator>
@@ -346,7 +343,8 @@ void
 BasicPRM<MPTraits>::
 CheckNarrowPassageSamples(InputIterator _first, InputIterator _last) {
   if(this->m_debug)
-    cout << this->GetNameAndLabel() << "::CheckNarrowPassageSamples()";
+    std::cout << this->GetName() << "::CheckNarrowPassageSamples"
+              << std::endl;
 
   for(; _first != _last; _first++) {
     VID vid = this->GetRoadmap()->GetGraph()->GetVID(_first);

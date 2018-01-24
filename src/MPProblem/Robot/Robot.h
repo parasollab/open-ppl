@@ -2,13 +2,13 @@
 #define ROBOT_H_
 
 #include <iostream>
+#include <memory>
 #include <string>
 #include <vector>
 #include <unordered_map>
 
 #include "Control.h"
 
-class ActiveMultiBody;
 class Actuator;
 class Agent;
 class btMultiBody;
@@ -18,6 +18,7 @@ class CSpaceBoundingBox;
 class DynamicsModel;
 class HardwareInterface;
 class MPProblem;
+class MultiBody;
 class XMLNode;
 
 
@@ -25,7 +26,7 @@ class XMLNode;
 /// Complete representation of a robot.
 ///
 /// @details A robot has many components, including:
-///   @arg ActiveMultiBody: The robot's physical geometry.
+///   @arg MultiBody: The robot's physical geometry.
 ///   @arg Agent: The robot's high-level decision-making algorithm. Determines
 ///               what actions the robot should take to complete its task. Used
 ///               only in simulations.
@@ -35,42 +36,39 @@ class XMLNode;
 ///                    control should be applied to move from point to point.
 ///   @arg DynamicsModel: Simulation model of the robot. Represents the robot in
 ///                       the bullet world.
-///
-/// @TODO Think about const-correctness for this object. I've left it out for
-///       now because most of the functions alter the robot indirectly.
 ////////////////////////////////////////////////////////////////////////////////
-class Robot {
+class Robot final {
 
   ///@name Internal State
   ///@{
 
-  MPProblem* const m_problem;              ///< The owning problem object.
+  MPProblem* m_problem{nullptr};              ///< The owning problem object.
 
   std::string m_label;                     ///< The robot's unique label.
 
-  ActiveMultiBody* m_multibody{nullptr};   ///< Robot's geometric representation.
-
   bool m_virtual{false};                   ///< Is this an imaginary robot?
 
-  std::string m_agentLabel;                ///< Agent type label.
-  Agent* m_agent{nullptr};                 ///< High-level decision-making agent.
+  std::unique_ptr<MultiBody> m_multibody;  ///< Robot's geometric representation.
 
-  std::unordered_map<std::string, Actuator*> m_actuators; ///< Actuators.
+  /// Actuators.
+  std::unordered_map<std::string, std::unique_ptr<Actuator>> m_actuators;
 
-  ControllerMethod* m_controller{nullptr}; ///< Low-level controller.
+  std::unique_ptr<ControllerMethod> m_controller; ///< Low-level controller.
 
   bool m_nonholonomic{false};              ///< Is the robot nonholonomic?
   bool m_carlike{false};                   ///< Is the robot car-like?
-  DynamicsModel* m_dynamicsModel{nullptr}; ///< The bullet dynamics model.
+  std::unique_ptr<DynamicsModel> m_dynamicsModel; ///< The bullet dynamics model.
 
   double m_maxLinearVelocity{10};          ///< Max linear velocity.
   double m_maxAngularVelocity{1};          ///< Max angular velocity.
 
-  CSpaceBoundingBox* m_cspace{nullptr};    ///< The robot's configuration space.
-  CSpaceBoundingBox* m_vspace{nullptr};    ///< The robot's velocity space.
+  std::unique_ptr<CSpaceBoundingBox> m_cspace; ///< The robot's c-space.
+  std::unique_ptr<CSpaceBoundingBox> m_vspace; ///< The robot's velocity space.
+
+  std::unique_ptr<Agent> m_agent;          ///< High-level decision-making agent.
 
   /// Interfaces the robot's hardware, mapped by label.
-  std::unordered_map<std::string, HardwareInterface*> m_hardware;
+  std::unordered_map<std::string, std::unique_ptr<HardwareInterface>> m_hardware;
 
   ///@}
 
@@ -87,10 +85,29 @@ class Robot {
     /// Construct a robot from a multibody.
     /// @param[in] _p The owning MPProblem.
     /// @param[in] _label The unique label for this robot.
-    Robot(MPProblem* const _p, ActiveMultiBody* const _mb,
+    Robot(MPProblem* const _p, std::unique_ptr<MultiBody>&& _mb,
         const std::string& _label);
 
-    virtual ~Robot() noexcept;
+    /// Copy a robot to another MPProblem.
+    /// @param _p The destination MPProblem.
+    /// @param _r The source robot to copy.
+    Robot(MPProblem* const _p, const Robot& _r);
+
+    ~Robot() noexcept;
+
+    ///@}
+    ///@name Disabled Functions
+    ///@{
+    /// Regular copy/move is not allowed because we require a permanent
+    /// MPProblem for the robot to belong to.
+    /// Assignment is disabled because we should never need to re-assign entire
+    /// robots. Destruct the old one and create a new one instead.
+
+    Robot(const Robot&) = delete;
+    Robot(Robot&&);
+
+    Robot& operator=(const Robot&) = delete;
+    Robot& operator=(Robot&&);
 
     ///@}
 
@@ -105,14 +122,11 @@ class Robot {
 
     /// Parse multibody information from robot's XML file.
     /// @param[in] _node The XML node to parse
-    void  ReadMultiBodyXML(XMLNode& _node);
+    void ReadMultiBodyXML(XMLNode& _node);
 
     /// Parse a multibody file describing this robot.
     /// @param[in] _filename The file name.
     void ReadMultibodyFile(const std::string& _filename);
-
-    /// Compute the configuration and velocity spaces for this robot.
-    void InitializePlanningSpaces();
 
     ///@}
 
@@ -121,11 +135,17 @@ class Robot {
     ///@name Planning Interface
     ///@{
 
+    /// Compute the configuration and velocity spaces for this robot.
+    void InitializePlanningSpaces();
+
     /// Get the configuration space boundary for this robot.
     const CSpaceBoundingBox* GetCSpace() const noexcept;
 
     /// Get the velocity space boundary for this robot.
     const CSpaceBoundingBox* GetVSpace() const noexcept;
+
+    /// Get the owning MPProblem.
+    MPProblem* GetMPProblem() const noexcept;
 
     ///@}
     ///@name Simulation Interface
@@ -136,9 +156,6 @@ class Robot {
     /// @param[in] _dt The timestep length.
     void Step(const double _dt);
 
-    /// Get the MPProblem which owns this robot.
-    MPProblem* GetMPProblem() const noexcept;
-
     /// Align the multibody model to the robot's current simulated state.
     void SynchronizeModels() noexcept;
 
@@ -146,10 +163,10 @@ class Robot {
     ///@name Geometry Accessors
     ///@{
     /// Access the robot's geometric representation. The robot will take
-    /// ownership of its ActiveMultiBody and delete it when necessary.
+    /// ownership of its MultiBody and delete it when necessary.
 
-    ActiveMultiBody* GetMultiBody() noexcept;
-    const ActiveMultiBody* GetMultiBody() const noexcept;
+    MultiBody* GetMultiBody() noexcept;
+    const MultiBody* GetMultiBody() const noexcept;
 
     ///@}
     ///@name Agent Accessors
@@ -158,7 +175,7 @@ class Robot {
     /// delete it when necessary.
 
     Agent* GetAgent() noexcept;
-    void SetAgent(Agent* const _a) noexcept;
+    void SetAgent(std::unique_ptr<Agent>&& _a) noexcept;
 
     ///@}
     ///@name Control Accessors
@@ -167,7 +184,7 @@ class Robot {
     /// these and delete them when necessary.
 
     ControllerMethod* GetController() noexcept;
-    void SetController(ControllerMethod* const _c) noexcept;
+    void SetController(std::unique_ptr<ControllerMethod>&& _c) noexcept;
 
     ///@}
     ///@name Actuator Accessors
@@ -176,7 +193,8 @@ class Robot {
     /// and cannot be changed otherwise.
 
     Actuator* GetActuator(const std::string& _label) noexcept;
-    const std::unordered_map<std::string, Actuator*>& GetActuators() noexcept;
+    const std::unordered_map<std::string, std::unique_ptr<Actuator>>&
+        GetActuators() const noexcept;
 
     ///@}
     ///@name Dynamics Accessors
@@ -195,7 +213,7 @@ class Robot {
     HardwareInterface* GetHardwareInterface(const std::string& _label) const
         noexcept;
     void SetHardwareInterface(const std::string& _label,
-        HardwareInterface* const _i) noexcept;
+        std::unique_ptr<HardwareInterface>&& _i) noexcept;
 
     /// Get the minimum time between commands sent to the hardware, in seconds.
     double GetHardwareTime() const noexcept;
@@ -229,18 +247,14 @@ class Robot {
     /// Change the robot's unique label.
     void SetLabel(const std::string&);
 
-    /// Labels unique to Battery Constrained Coverage
-    /// shoulg go into the behavior xml node when there is one
-    bool m_withoutHandOff{false};
-
-    ///@}
-    ///@name Debug
-    ///@{
-
-    friend std::ostream& operator<<(std::ostream&, const Robot&);
-
     ///@}
 
 };
+
+/*----------------------------------- Debug ----------------------------------*/
+
+std::ostream& operator<<(std::ostream&, const Robot&);
+
+/*----------------------------------------------------------------------------*/
 
 #endif

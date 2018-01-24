@@ -234,11 +234,6 @@ class ReebGraphConstruction {
 
     ReebGraphConstruction();
 
-    /// @param _filename Filename to read or write embedded reeb graph.
-    /// @param _write Write the graph to _filename?
-    ReebGraphConstruction(const std::string& _filename,
-        const bool _write);
-
     /// Set the default parameters from an XML node.
     /// @param _node The XML node to parse.
     static void SetDefaultParameters(XMLNode& _node);
@@ -249,9 +244,9 @@ class ReebGraphConstruction {
 
     /// Construct a Reeb graph of an environment decomposition.
     /// @param _decomposition The workspace decomposition to use.
+    /// @param _baseInputPath Base file path for input files.
     /// @param _baseFilename Base filename used for saving models
-    void Construct(const WorkspaceDecomposition* _decomposition,
-        const string& _baseFilename = "");
+    void Construct(const WorkspaceDecomposition* _decomposition);
 
     /// Extract a workspace skeleton from the Reeb graph.
     /// @TODO Make this a const function if STAPL ever fixes the sequential
