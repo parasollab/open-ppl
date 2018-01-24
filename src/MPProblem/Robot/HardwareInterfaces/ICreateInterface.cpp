@@ -2,19 +2,23 @@
 
 #include "libplayerc++/playerc++.h"
 #include "nonstd/numerics.h"
+#include "nonstd/timer.h"
 
 #include "MPProblem/Robot/Actuator.h"
 
 
 /// The polling period to use for all iCreate interfaces, named here so that
-/// it is not a magic number.
-static constexpr double iCreatePollingPeriod = .1;
+/// it is not a magic number. We set this equal to 300ms because we have
+/// observed that m_position2d->SetSpeed takes about 200ms to return.
+static constexpr double iCreateCommunicationTime = .3,
+                        iCreatePollingPeriod = .3;
 
 /*------------------------------- Construction -------------------------------*/
 
 ICreateInterface::
 ICreateInterface(const std::string& _ip, const unsigned short _port)
-    : ServerQueueInterface(iCreatePollingPeriod, "iCreate", _ip, _port) {
+    : ServerQueueInterface(iCreatePollingPeriod, "iCreate", _ip, _port,
+        iCreateCommunicationTime) {
   // Create connections to the iCreate's onboard controller (i.e., the netbook
   // sitting on top of it running player).
   m_client = new PlayerCc::PlayerClient(_ip, _port);
@@ -50,6 +54,7 @@ ICreateInterface::
 FullStop() {
   // Halt the robot.
   m_position2d->SetSpeed(0, 0);
+  m_lastControls.clear();
 
   /// @TODO We may need a short wait here for the SetSpeed control to reach the
   ///       robot - as is we may see non-zero velocities.
@@ -71,11 +76,15 @@ ICreateInterface::
 SendToRobot(const Command& _command) {
   const auto& controlSet = _command.controls;
 
+  // If we are requesting the same action, do not resend.
+  if(controlSet == m_lastControls)
+    return;
   // If we received an empty control set, this is a wait command.
-  if(controlSet.empty()) {
+  else if(controlSet.empty()) {
     FullStop();
     return;
   }
+  m_lastControls = controlSet;
 
   // Determine the translation and rotation signals that we need to send to the
   // iCreate. The control should provide us with a velocity for the X, Y, and

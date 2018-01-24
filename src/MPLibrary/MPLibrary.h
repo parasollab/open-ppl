@@ -304,6 +304,21 @@ class MPLibraryType final
     /// @param[in] _task The task representation.
     void Solve(MPProblem* _problem, MPTask* _task);
 
+    /// Run a specific MPStrategy from the XML file with a designated seed and
+    /// base output file name. This is intended for use with the simulator where
+    /// agents may need to call various strategies within a single execution.
+    /// @param[in] _problem The problem representation.
+    /// @param[in] _task The task representation.
+    /// @param[in/out] _solution The solution container, which may or may not
+    ///                          already be populated. Existing solutions should
+    ///                          be extended, not overwritten.
+    /// @param[in] _label The label of the MPStrategy to call.
+    /// @param[in] _seed The seed to use.
+    /// @param[in] _baseFilename The base name for output files.
+    void Solve(MPProblem* _problem, MPTask* _task, MPSolution* _solution,
+        const std::string& _label, const long _seed,
+        const std::string& _baseFilename);
+
     ///@}
     ///@name Debugging
     ///@{
@@ -633,6 +648,21 @@ Solve(MPProblem* _problem, MPTask* _task) {
   }
 
   m_solution = nullptr;
+}
+
+
+template <typename MPTraits>
+void
+MPLibraryType<MPTraits>::
+Solve(MPProblem* _problem, MPTask* _task, MPSolution* _solution,
+    const std::string& _label, const long _seed,
+    const std::string& _baseFilename) {
+  SetMPProblem(_problem);
+  m_task = _task;
+  m_solution = _solution;
+
+  Solver s{_label, _seed, _baseFilename, false};
+  RunSolver(s);
 }
 
 

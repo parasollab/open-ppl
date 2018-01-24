@@ -96,6 +96,12 @@ Step() {
 
   const double timestep = m_problem->GetEnvironment()->GetTimeRes();
 
+  // Set each Robot's multibody to its current simulated state.
+  /// @TODO This will not work for concurrent planning by multiple agents.
+  ///       Replace as part of that upgrade.
+  for(size_t i = 0; i < m_problem->NumRobots(); ++i)
+    m_problem->GetRobot(i)->SynchronizeModels();
+
   // Step each Robot's agent to set the forces for the next step.
   for(size_t i = 0; i < m_problem->NumRobots(); ++i)
     m_problem->GetRobot(i)->Step(timestep);
@@ -217,6 +223,11 @@ Simulation::
 AddRobots() {
   for(size_t i = 0; i < m_problem->NumRobots(); ++i) {
     auto robot = m_problem->GetRobot(i);
+
+    // Do not add virtual robots to the simulation.
+    if(robot->IsVirtual())
+      continue;
+
     auto multiBody = robot->GetMultiBody();
     auto bulletModel = m_engine->AddRobot(robot);
 

@@ -56,14 +56,14 @@ operator=(const MPProblem& _other) {
     m_robots.emplace_back(new Robot(this, *robot));
 
   // Copy tasks.
-  for(const auto& task : _other.m_tasks) {
-    // Copy the task from _other and assign it to the corresponding robot in
-    // this.
-    const std::string robotLabel = task->GetRobot()->GetLabel();
-    auto robot = this->GetRobot(robotLabel);
+  for(const auto& robotTasks : _other.m_taskMap) {
+    Robot* const robot = robotTasks.first;
+    const auto& tasks = robotTasks.second;
 
-    m_tasks.emplace_back(new MPTask(*task));
-    m_tasks.back()->SetRobot(robot);
+    for(const auto& task : tasks) {
+      m_taskMap[robot].emplace_back(new MPTask(*task));
+      m_taskMap[robot].back()->SetRobot(robot);
+    }
   }
 
   m_xmlFilename = _other.m_xmlFilename;
@@ -129,22 +129,29 @@ ReadXMLFile(const string& _filename) {
 
   // If no tasks were specified, assume we want an unconstrained plan for the
   // first robot.
-  if(m_tasks.empty()) {
+  if(m_taskMap.empty()) {
     if(m_robots.size() > 1)
       throw ParseException(input.Where(), "No task was specified in the problem "
           "node, but multiple robots are specified. Taskless execution only "
           "supports single robot problems.");
 
-    auto& robot = m_robots.front();
+    auto robot = m_robots.front().get();
     std::cout << "No task specified, assuming we want an unconstrained plan for "
               << "the first robot, labeled \'" << robot->GetLabel() << "\'."
               << std::endl;
 
-    m_tasks.emplace_back(new MPTask(*robot));
+    m_taskMap[robot].emplace_back(new MPTask(robot));
   }
 
   // Compute the environment resolution.
   GetEnvironment()->ComputeResolution(GetRobots());
+}
+
+
+void
+MPProblem::
+AddTask(Robot* const _robot, std::unique_ptr<MPTask>&& _task) {
+  m_taskMap[_robot].push_back(std::move(_task));
 }
 
 /*----------------------------- Environment Accessors ------------------------*/
@@ -211,10 +218,10 @@ GetRobots() const noexcept {
 
 /*----------------------------- Task Accessors -------------------------------*/
 
-const std::vector<std::unique_ptr<MPTask>>&
+const std::list<std::unique_ptr<MPTask>>&
 MPProblem::
-GetTasks() const noexcept {
-  return m_tasks;
+GetTasks(Robot* const _robot) const noexcept {
+  return m_taskMap.at(_robot);
 }
 
 
@@ -291,15 +298,18 @@ ParseChild(XMLNode& _node) {
     Robot robot(this, _node);
 
     const std::string filePath = GetPathName(_node.Filename());
-    const std::string obstacleFile = _node.Read("pathfile", true, "", "DynamicObstacle path file name");
+    const std::string obstacleFile = _node.Read("pathfile", true, "",
+        "DynamicObstacle path file name");
     const std::string obstacleFilename = filePath + obstacleFile;
+
     vector<Cfg> path = LoadPath(obstacleFilename, robot);
-    // TODO: Do we need to ensure that the path is not empty?
     m_dynamicObstacles.emplace_back(new DynamicObstacle(std::move(robot), path));
     return true;
   }
   else if(_node.Name() == "Task") {
-    m_tasks.emplace_back(new MPTask(this, _node));
+    const std::string label = _node.Read("robot", true, "", "Label for the robot "
+        " assigned to this task.");
+    m_taskMap[this->GetRobot(label)].emplace_back(new MPTask(this, _node));
     return true;
   }
   else
@@ -340,7 +350,7 @@ MakePointRobot() {
   m_pointRobot = std::unique_ptr<Robot>(
       new Robot(this, std::move(point), "point")
   );
-  //m_pointRobot->SetVirtual(true);
+  m_pointRobot->SetVirtual(true);
 }
 
 /*----------------------------------------------------------------------------*/

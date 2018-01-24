@@ -2,16 +2,22 @@
 #define LAZY_QUERY_H_
 
 #include "PRMQuery.h"
-#include <functional>
-#include <algorithm>
 
-using namespace std;
+#include <algorithm>
+#include <functional>
+#include <unordered_map>
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Lazy @prm, extract path, validate, and repeat
 ///
 /// First assumes all nodes and edges are valid, then checks for validity in the
 /// query phase and deletes nodes and edges found to be invalid.
+///
+/// @TODO Validate that the enhancement edges are working properly. It appears
+///       that once a candidate edge is created, it will never be released. This
+///       looks wrong and should be validated against the paper (include
+///       reference here as well).
 /// @ingroup MapEvaluators
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
@@ -22,10 +28,14 @@ class LazyQuery : public PRMQuery<MPTraits> {
     ///@name Motion Planning Types
     ///@{
 
-    typedef typename MPTraits::CfgType      CfgType;
-    typedef typename MPTraits::RoadmapType  RoadmapType;
-    typedef typename RoadmapType::GraphType GraphType;
-    typedef typename RoadmapType::VID       VID;
+    typedef typename MPTraits::CfgType            CfgType;
+    typedef typename MPTraits::RoadmapType        RoadmapType;
+    typedef typename RoadmapType::GraphType       GraphType;
+    typedef typename GraphType::VID               VID;
+    typedef typename GraphType::EID::edge_id_type EID;
+
+    typedef std::unordered_map<VID, bool>   UnusedVertexMap;
+    typedef std::unordered_map<VID, bool>   UnusedEdgeMap;
 
     ///@}
     ///@name Construction
@@ -40,6 +50,7 @@ class LazyQuery : public PRMQuery<MPTraits> {
     ///@{
 
     virtual void Print(ostream& _os) const override;
+    virtual void Initialize() override;
 
     ///@}
     ///@name QueryMethod Overrides
@@ -47,6 +58,10 @@ class LazyQuery : public PRMQuery<MPTraits> {
 
     virtual bool PerformSubQuery(const CfgType& _start, const CfgType& _goal)
         override;
+
+    virtual bool IsVertexUsed(const VID _vid) const override;
+
+    virtual bool IsEdgeUsed(const EID _eid) const override;
 
     ///@}
 
@@ -77,18 +92,26 @@ class LazyQuery : public PRMQuery<MPTraits> {
     /// @param[in] _cfg The invalid configuration to handle.
     virtual void ProcessInvalidNode(const CfgType& _cfg) { }
 
+    /// Mark a roadmap configuration as unused.
+    /// @param _vid The unused vertex's descriptor.
+    void MarkVertexUnused(const VID _vid);
+
     ///@}
     ///@name MP Object Labels
     ///@{
     /// These objects are used to lazily validate the computed path.
 
-    string m_dmLabel{"euclidean"};
-    string m_vcLabel{"pqp_solid"};
-    string m_lpLabel{"sl"};
+    std::string m_dmLabel{"euclidean"};  ///< The distance metric label.
+    std::string m_vcLabel{"pqp_solid"};  ///< The validity checker label.
+    std::string m_lpLabel{"sl"};         ///< The local planner label.
 
     ///@}
-    ///@name Enhancement State
+    ///@name Internal State
     ///@{
+
+    bool m_deleteInvalid{true};   ///< Remove invalid vertices from the roadmap?
+    UnusedVertexMap m_invalidVertices; ///< The non-removed invalid vertices.
+    UnusedEdgeMap m_invalidEdges;      ///< The non-removed invalid vertices.
 
     vector<int> m_resolutions{1}; ///< List of resolution multiples to check.
     int m_numEnhance{0};          ///< Number of enhancement nodes to generate.
@@ -116,6 +139,9 @@ LazyQuery(XMLNode& _node) : PRMQuery<MPTraits>(_node) {
   m_dmLabel = _node.Read("dmLabel", false, m_dmLabel, "Distance metric method");
   m_vcLabel = _node.Read("vcMethod", false, m_vcLabel, "Validity checker method");
   m_lpLabel = _node.Read("lpLabel", false, m_lpLabel, "Local planner method");
+
+  m_deleteInvalid = _node.Read("deleteInvalid", false, m_deleteInvalid,
+      "Remove invalid vertices from the roadmap?");
 
   m_numEnhance = _node.Read("numEnhance", false, m_numEnhance, 0, MAX_INT,
       "Number of nodes to generate in node enhancement");
@@ -146,12 +172,24 @@ Print(ostream& _os) const {
   _os << "\tDistance Metric: " << m_dmLabel
       << "\n\tValidity Checker: " << m_vcLabel
       << "\n\tLocal Planner: " << m_lpLabel
+      << "\n\tDelete Invalid: " << m_deleteInvalid
       << "\n\tnumEnhance: " << m_numEnhance
       << "\n\td: " << m_d
       << "\n\tresolutions:";
   for(const auto r : m_resolutions)
     _os << " " << r;
   _os << endl;
+}
+
+
+template <typename MPTraits>
+void
+LazyQuery<MPTraits>::
+Initialize() {
+  QueryMethod<MPTraits>::Initialize();
+  m_invalidVertices.clear();
+  m_invalidEdges.clear();
+  m_edges.clear();
 }
 
 /*--------------------------- QueryMethod Overrides --------------------------*/
@@ -212,28 +250,49 @@ PerformSubQuery(const CfgType& _start, const CfgType& _goal) {
   return connected;
 }
 
+
+template <typename MPTraits>
+bool
+LazyQuery<MPTraits>::
+IsVertexUsed(const VID _vid) const {
+  return !bool(m_invalidVertices.count(_vid)) or !m_invalidVertices.at(_vid);
+}
+
+
+template <typename MPTraits>
+bool
+LazyQuery<MPTraits>::
+IsEdgeUsed(const EID _eid) const {
+  return !bool(m_invalidEdges.count(_eid)) or !m_invalidEdges.at(_eid);
+}
+
 /*----------------------------------------------------------------------------*/
 
 template <typename MPTraits>
 bool
 LazyQuery<MPTraits>::
 ValidatePath() {
-  if(this->m_debug)
-    cout << "\tValidating path for lazy query..." << endl;
+  auto path = this->GetPath();
+
+  if(this->m_debug) {
+    std::cout << "\tValidating path for lazy query...\n\t";
+    for(const auto vid : path->VIDs())
+      std::cout << "  " << vid;
+    std::cout << std::endl;
+  }
 
   // Check vertices and edges for validity. If any are removed, the path is
   // invalid.
-  if(PruneInvalidVertices() || PruneInvalidEdges()) {
-    this->GetPath()->Clear();
+  if(path->Size() == 0 or PruneInvalidVertices() or PruneInvalidEdges()) {
+    path->Clear();
     if(this->m_debug)
       cout << "\tPath is invalid." << endl;
     return false;
   }
-  else {
-    if(this->m_debug)
-      cout << "\tPath is valid." << endl;
-    return true;
-  }
+
+  if(this->m_debug)
+    cout << "\tPath is valid." << endl;
+  return true;
 }
 
 
@@ -285,7 +344,7 @@ PruneInvalidVertices() {
 
     // Delete invalid vertex.
     this->ProcessInvalidNode(cfg);
-    g->DeleteVertex(vid);
+    MarkVertexUnused(vid);
     return true;
   }
 
@@ -330,16 +389,14 @@ PruneInvalidEdges() {
       // Skip checks if already checked and valid
       if(edge->property().IsChecked(res))
         continue;
+      edge->property().SetChecked(res);
 
       // Validate edge with local planner.
       CfgType witness;
       LPOutput<MPTraits> lpo;
-      if(lp->IsConnected(g->GetVertex(v1), g->GetVertex(v2), witness, &lpo,
+
+      if(!lp->IsConnected(g->GetVertex(v1), g->GetVertex(v2), witness, &lpo,
             env->GetPositionRes() * res, env->GetOrientationRes() * res, true)) {
-        // The edge is valid: mark it as checked at this resolution.
-        edge->property().SetChecked(res);
-      }
-      else {
         // The edge is invalid.
         if(this->m_debug)
           cout << "\n\t\tEdge (" << v1 << ", " << v2 << ") is invalid at "
@@ -359,8 +416,19 @@ PruneInvalidEdges() {
 
         // Delete invalid (bidirectional) edge.
         this->ProcessInvalidNode(witness);
-        g->DeleteEdge(v1, v2);
-        g->DeleteEdge(v2, v1);
+        if(m_deleteInvalid)
+        {
+          g->DeleteEdge(v1, v2);
+          g->DeleteEdge(v2, v1);
+        }
+        else
+        {
+          typename GraphType::EI ei;
+          g->GetEdge(v1, v2, ei);
+          m_invalidEdges[ei->id()] = true;
+          g->GetEdge(v2, v1, ei);
+          m_invalidEdges[ei->id()] = true;
+        }
         return true;
       }
     }
@@ -414,6 +482,26 @@ NodeEnhance() {
 
   if(this->m_debug)
     cout << endl;
+}
+
+
+template <typename MPTraits>
+void
+LazyQuery<MPTraits>::
+MarkVertexUnused(const VID _vid) {
+  auto g = this->GetRoadmap()->GetGraph();
+
+  if(m_deleteInvalid)
+  {
+    g->DeleteVertex(_vid);
+    return;
+  }
+
+  // Mark this vertex and its edges as unused.
+  m_invalidVertices[_vid] = true;
+  auto vi = g->find_vertex(_vid);
+  for(auto ei = vi->begin(); ei != vi->end(); ++ei)
+    m_invalidEdges[ei->id()] = true;
 }
 
 /*----------------------------------------------------------------------------*/

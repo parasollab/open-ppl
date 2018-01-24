@@ -3,6 +3,8 @@
 #include <algorithm>
 #include <limits>
 
+#include "MPProblem/Robot/DynamicsModel.h"
+#include "MPProblem/Robot/Robot.h"
 #include "Utilities/XMLNode.h"
 
 
@@ -120,6 +122,9 @@ ComputeDesiredForce(const Cfg& _current, const Cfg&, const double _dt) {
                );
 
   m_previousError = error;
+
+  // Put the force into the robot's local frame.
+  m_robot->GetDynamicsModel()->WorldToLocal(force);
 
   return force;
 }

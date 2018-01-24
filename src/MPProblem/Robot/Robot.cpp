@@ -20,6 +20,7 @@
 // Temporaries for hard-coded stuff
 #include "Behaviors/Controllers/ControlSetGenerators.h"
 #include "Behaviors/Controllers/SimpleController.h"
+#include "Behaviors/Controllers/ICreateController.h"
 #include "nonstd/io.h"
 
 /*------------------------------ Construction --------------------------------*/
@@ -35,6 +36,13 @@ Robot(MPProblem* const _p, XMLNode& _node) : m_problem(_p) {
 
   // Get the (optional) car-likeness, assuming not car-like.
   m_carlike = _node.Read("carlike", false, false, "Is the robot car-like?");
+
+  // Check if this robot is flagged as virtual.
+  m_virtual = _node.Read("virtual", false, false, "Virtual robots are imaginary "
+      "and will not be included in the simulation or CD checks.");
+
+  //std::string color = _node.Read("color", false, "1 0 0 1", "Color of the robot in simulation");
+  //this->GetMultiBody()->GetBody(i)->SetBodyColor(color);
 
   // Get the multibody file name and make sure it exists.
   const std::string path = GetPathName(_node.Filename());
@@ -78,10 +86,20 @@ Robot(MPProblem* const _p, XMLNode& _node) : m_problem(_p) {
     SetDynamicsModel(nullptr);
 
   for(auto& child : _node) {
-    if(child.Name() == "HardwareInterface")
-      SetHardwareInterface(HardwareInterface::Factory(child));
-    if(child.Name() == "Agent")
+    if(child.Name() == "HardwareInterface") {
+      // Make sure we don't allow duplicate labels.
+      const std::string label = child.Read("label", true, "",
+          "A unique label for this hardware.");
+      const bool duplicate = m_hardware.count(label);
+      if(duplicate)
+        throw RunTimeException(WHERE, "Hardware labels must be unique for a "
+            "given robot.");
+
+      SetHardwareInterface(label, HardwareInterface::Factory(child));
+    }
+    else if(child.Name() == "Agent") {
       SetAgent(Agent::Factory(this, child));
+    }
   }
 }
 
@@ -149,7 +167,7 @@ Robot(MPProblem* const _p, const Robot& _r)
 
   // We will not copy the hardware interfaces because there should only be one
   // such object for a given piece of hardware. Warn the user in this case.
-  if(_r.m_hardware)
+  if(_r.m_hardware.size())
     std::cerr << "WARNING: copying a robot does not copy the hardware interface "
               << "because there should only be one interface object driving a "
               << "given piece of hardware at a time."
@@ -303,6 +321,15 @@ Step(const double _dt) {
     m_agent->Step(_dt);
 }
 
+
+void
+Robot::
+SynchronizeModels() noexcept {
+  auto dynamics = GetDynamicsModel();
+  if(dynamics)
+    GetMultiBody()->Configure(dynamics->GetSimulatedState());
+}
+
 /*--------------------------- Geometry Accessors -----------------------------*/
 
 MultiBody*
@@ -384,18 +411,35 @@ SetDynamicsModel(btMultiBody* const _m) {
 
 HardwareInterface*
 Robot::
-GetHardwareInterface() const noexcept {
-  return m_hardware.get();
+GetHardwareInterface(const std::string& _label) const noexcept {
+  if(m_hardware.count(_label))
+    return m_hardware.at(_label).get();
+  return nullptr;
 }
 
 
 void
 Robot::
-SetHardwareInterface(std::unique_ptr<HardwareInterface>&& _i) noexcept {
-  m_hardware = std::move(_i);
+SetHardwareInterface(const std::string& _label,
+    std::unique_ptr<HardwareInterface>&& _i) noexcept {
+  m_hardware[_label] = std::move(_i);
 }
 
 /*------------------------------- Other --------------------------------------*/
+
+bool
+Robot::
+IsVirtual() const noexcept {
+  return m_virtual;
+}
+
+
+void
+Robot::
+SetVirtual(bool _v) noexcept {
+  m_virtual = _v;
+}
+
 
 bool
 Robot::

@@ -1,6 +1,7 @@
 #include "Agent.h"
 
 #ifdef PMPL_SIMULATOR
+//#include "BatteryConstrainedGroup.h"
 #include "PathFollowingAgent.h"
 #include "RoadmapFollowingAgent.h"
 #endif
@@ -12,7 +13,6 @@
 #include "Utilities/XMLNode.h"
 
 #include <iostream>
-
 
 /*------------------------------ Construction --------------------------------*/
 
@@ -38,6 +38,7 @@ Factory(Robot* const _r, XMLNode& _node) {
   std::unique_ptr<Agent> output;
 
 #ifdef PMPL_SIMULATOR
+  /// @TODO Parse battery-constrained groups once fixed.
   if(type == "pathfollowing")
     output = std::unique_ptr<PathFollowingAgent>(
         new PathFollowingAgent(_r, _node)
@@ -60,7 +61,15 @@ Factory(Robot* const _r, XMLNode& _node) {
 Agent::
 ~Agent() = default;
 
-/*----------------------------- Model Affectors ------------------------------*/
+/*----------------------------- Accessors ------------------------------------*/
+
+Robot*
+Agent::
+GetRobot() const noexcept {
+  return m_robot;
+}
+
+/*---------------------------- Simulation Interface --------------------------*/
 
 void
 Agent::
@@ -71,14 +80,14 @@ Halt() {
   body->setBaseVel({0,0,0});
   body->setBaseOmega({0,0,0});
   for(int i = 0; i < body->getNumLinks(); i++) {
-    //If it's a spherical (2 dof) joint, then we must use the other version of
+    // If it's a spherical (2 dof) joint, then we must use the other version of
     // setting the link velocity dofs for each value of desired velocity.
     if(body->getLink(i).m_jointType ==
         btMultibodyLink::eFeatherstoneJointType::eSpherical) {
       btScalar temp[] = {0,0};
       body->setJointVelMultiDof(i, temp);
     }
-    //Do nothing if the joint was a non-actuated joint.
+    // Do nothing if the joint was a non-actuated joint.
     else if (body->getLink(i).m_jointType !=
         btMultibodyLink::eFeatherstoneJointType::eFixed) {
       body->setJointVel(i, 0);
@@ -89,6 +98,20 @@ Halt() {
     std::cout << "\nRoadmap finished."
               << "\nAll velocity DOFs set to 0 for visual inspection."
               << std::endl;
+}
+
+
+void
+Agent::
+SetTask(MPTask* const _task) {
+  m_task = _task;
+}
+
+
+MPTask*
+Agent::
+GetTask() const noexcept {
+  return m_task;
 }
 
 /*----------------------------------------------------------------------------*/

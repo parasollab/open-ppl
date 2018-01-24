@@ -6,6 +6,7 @@
 #include <string>
 #include <vector>
 
+#include "glutils/color.h"
 #include "Geometry/GMSPolyhedron.h"
 #include "Utilities/Color.h"
 #include "Utilities/MPUtils.h"
@@ -275,6 +276,17 @@ class Body {
     void Read(std::istream& _is, CountingStreamBuffer& _cbs);
 
     ///@}
+    ///@name Visualization
+    ///@{
+    ///@TODO Figure out how to move this to the DrawableBody class.
+
+    /// Get the color for the body.
+    const glutils::color& GetBodyColor() const;
+
+    /// Set the color for the body.
+    void SetBodyColor(const glutils::color& _c);
+
+    ///@}
 
   private:
 
@@ -370,6 +382,8 @@ class Body {
 
     std::string m_textureFile;               ///< Optionally specified texture
     bool m_textureLoaded{false};             ///< Was texture option set?
+
+    glutils::color m_bodyColor{glutils::color::blue}; ///< Simulator color.
 
     ///@}
 

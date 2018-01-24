@@ -6,7 +6,7 @@
 #include "BulletDynamics/Featherstone/btMultiBody.h"
 #include "MPProblem/Robot/Robot.h"
 #include "MPProblem/Robot/DynamicsModel.h"
-#include "MPProblem/Robot/HardwareInterfaces/HardwareInterface.h"
+#include "MPProblem/Robot/HardwareInterfaces/QueuedHardwareInterface.h"
 
 
 /*------------------------------ Construction --------------------------------*/
@@ -55,11 +55,12 @@ Initialize() {
   // Initialize the agent's planning library.
   m_library = new MPLibrary(xmlFile);
 
-  /// @TODO Choose the task rather than just taking the first one.
-  auto task = problem->GetTasks().front().get();
+  /// @TODO Choose the task intelligently rather than just taking the first one.
+  auto task = problem->GetTasks(m_robot).front().get();
+  this->SetTask(task);
 
   // Create a new solution object to hold a plan for this agent.
-  m_solution = new MPSolution(task->GetRobot());
+  m_solution = new MPSolution(m_robot);
 
   // Use the planning library to find a path.
   m_library->Solve(problem, task, m_solution);
@@ -207,7 +208,7 @@ SetNextControls() {
 
   // If there is a hardware robot attached to our simulation, send it the
   // commands also.
-  auto hardwareInterface = m_robot->GetHardwareInterface();
+  auto hardwareInterface = static_cast<QueuedHardwareInterface*>(m_robot->GetHardwareInterface("base"));
   if(hardwareInterface)
     hardwareInterface->EnqueueCommand(m_edge->GetControlSet(),
         m_stepsRemaining * m_robot->GetMPProblem()->GetEnvironment()->GetTimeRes());

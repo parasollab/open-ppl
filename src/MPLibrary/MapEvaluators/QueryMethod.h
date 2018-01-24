@@ -26,8 +26,8 @@ struct Heuristic {
     ///@name Motion Planning Types
     ///@{
 
-    typedef typename MPTraits::CfgType    CfgType;
-    typedef typename MPTraits::WeightType WeightType;
+    typedef typename MPTraits::CfgType                     CfgType;
+    typedef typename MPTraits::WeightType                  WeightType;
 
     ///@}
     ///@name Construction
@@ -79,11 +79,14 @@ class QueryMethod : public MapEvaluatorMethod<MPTraits> {
     ///@name Motion Planning Types
     ///@{
 
-    typedef typename MPTraits::CfgType      CfgType;
-    typedef typename MPTraits::WeightType   WeightType;
-    typedef typename MPTraits::RoadmapType  RoadmapType;
-    typedef typename RoadmapType::GraphType GraphType;
-    typedef typename RoadmapType::VID       VID;
+    typedef typename MPTraits::CfgType            CfgType;
+    typedef typename MPTraits::WeightType         WeightType;
+    typedef typename MPTraits::RoadmapType        RoadmapType;
+    typedef typename RoadmapType::GraphType       GraphType;
+    typedef typename GraphType::VID               VID;
+    typedef typename GraphType::EID::edge_id_type EID;
+
+    typedef stapl::sequential::map_property_map<GraphType, size_t> ColorMap;
 
     ///@}
     ///@name Construction
@@ -161,12 +164,31 @@ class QueryMethod : public MapEvaluatorMethod<MPTraits> {
     /// @return True if _start and _goal are connected.
     bool SameCC(const VID _start, const VID _end) const;
 
+    /// Determine whether a vertex is used or has been marked as ignored somehow
+    /// (as in lazy query).
+    /// @param _vid The vertex ID.
+    /// @return True if _vid is considered for paths by this query, false if it
+    ///         is marked unused.
+    virtual bool IsVertexUsed(const VID _vid) const;
+
+    /// Determine whether an edge is used or has been marked as ignored somehow
+    /// (as in lazy query).
+    /// @param _eid The edge ID.
+    /// @return True if _eid is considered for paths by this query, false if it
+    ///         is marked unused.
+    virtual bool IsEdgeUsed(const EID _eid) const;
+
+    /// Generate a color map for CC operations which marks the unused vertices
+    /// as 'black' (already completed), which causes them to be skipped in graph
+    /// operations.
+    ColorMap GetColorMap() const;
+
     ///@}
     ///@name Query State
     ///@{
 
-    vector<CfgType> m_query;    ///< The start and all goal configurations.
-    vector<CfgType> m_goals;    ///< The undiscovered goal configurations.
+    std::vector<CfgType> m_query;    ///< The start and all goal configurations.
+    std::vector<CfgType> m_goals;    ///< The undiscovered goal configurations.
 
     bool m_fullRecreatePath{true};     ///< Create full paths or just VIDs?
 
@@ -391,16 +413,64 @@ SameCC(const VID _start, const VID _end) const {
   auto g = this->GetRoadmap()->GetGraph();
   auto stats = this->GetStatClass();
 
+  MethodTimer mt(stats, "QueryMethod::CCTesting");
   stats->IncStat("CC Operations");
 
-  stats->StartClock("QueryMethod::CCTesting");
-  stapl::sequential::vector_property_map<GraphType, size_t> cmap;
-  bool connected = is_same_cc(*g, cmap, _start, _end);
-  stats->StopClock("QueryMethod::CCTesting");
+  // If either the start or goal is unused, these nodes cannot be connected.
+  const bool noStart = !IsVertexUsed(_start),
+             noEnd   = !IsVertexUsed(_end);
+  if(noStart or noEnd) {
+    if(this->m_debug)
+      std::cout << "\t\t"
+                << (noStart ? "Start" : "")
+                << (noStart and noEnd ? " and " : "")
+                << (noEnd ? "End" : "")
+                << " marked as unused, cannot connect."
+                << std::endl;
+    return false;
+  }
+
+  bool connected = _start == _end;
+
+  // We cannot use stapl's is_same_cc because it offers no way to ignore
+  // specific edges. We will instead do a BFS from _start manually and
+  // terminate upon either running out of nodes or finding _end.
+  std::unordered_map<VID, bool> finished;
+  std::queue<VID> queue;
+  queue.push(_start);
+  while(!connected and !queue.empty())
+  {
+    // Get the next node in the queue.
+    const VID current = queue.front();
+    queue.pop();
+    finished[current] = true;
+
+    // Enqueue undiscovered children.
+    auto vi = g->find_vertex(current);
+    for(auto ei = vi->begin(); ei != vi->end(); ++ei) {
+      const VID child = ei->target();
+      const bool discovered = finished.count(child);
+
+      // Skip if the child is discovered or either child/edge is unused.
+      if(discovered or !this->IsEdgeUsed(ei->id()) or !this->IsVertexUsed(child))
+        continue;
+
+      // If this is the goal, we are done.
+      if(child == _end) {
+        connected = true;
+        break;
+      }
+
+      // Enqueue the child.
+      queue.push(child);
+      finished[child] = false;
+    }
+  }
 
   if(this->m_debug)
-    cout << "\t\tNodes " << _start << " and " << _end << " are "
-         << (connected ? "" : "not ") << "connected." << endl;
+    std::cout << "\t\tNodes " << _start << " and " << _end
+              << " are " << (connected ? "" : "not ") << "connected."
+              << std::endl;
 
   return connected;
 }
@@ -410,25 +480,122 @@ template <typename MPTraits>
 std::vector<typename QueryMethod<MPTraits>::VID>
 QueryMethod<MPTraits>::
 GeneratePath(const VID _start, const VID _end) {
-  auto g = this->GetRoadmap()->GetGraph();
   auto stats = this->GetStatClass();
+  MethodTimer mt(stats, "QueryMethod::GraphSearch");
   stats->IncStat("Graph Search");
-  stats->StartClock("QueryMethod::GraphSearch");
-  vector<VID> path;
+
+  // Define types we will need for the graph search.
+  using namespace stapl::sequential;
+  using namespace stapl;
+
+  typedef typename GraphType::vertex_reference     VR;
+  typedef map_property_map<GraphType, VID>         ParentMap;
+  typedef map_property_map<GraphType, WeightType>  DistanceMap;
+  typedef std::less<WeightType>                    Comparator;
+  typedef std::plus<WeightType>                    Combiner;
+  typedef d_ary_heap_indirect<VR, 4, ParentMap, DistanceMap, Comparator> Queue;
+
+  // Build structures for STAPL graph search.
+  static const WeightType weightMax("", std::numeric_limits<double>::max()),
+                          weightZero("", 0.);
+  static const Combiner combiner;
+  static const Comparator comparator;
+  ParentMap parentMap, indexMap, colorMap = GetColorMap();
+  DistanceMap weightMap, distanceMap;
+
+  auto g = this->GetRoadmap()->GetGraph();
+
+  // Initialize the various maps.
+  for(auto vi = g->begin(); vi != g->end(); ++vi) {
+    parentMap.put(*vi, vi->descriptor());
+
+    // Intialize the distance to this vertex as 0 if we are not using it. This
+    // causes it to be skipped by the graph searches. Otherwise initialize to
+    // max weight.
+    const bool usingThis = IsVertexUsed(vi->descriptor());
+    distanceMap.put(*vi, usingThis ? weightMax : weightZero);
+
+    // Initialize the edge weight map for each adjacent edge.
+    for(auto ei = vi->begin(); ei != vi->end(); ++ei)
+      weightMap.put(*ei, this->IsEdgeUsed(ei->id()) ? ei->property() : weightMax);
+  }
+
+  // Make sure the start vertex has zero distance.
+  distanceMap.put(_start, weightZero);
+
+  Queue queue(distanceMap, indexMap, comparator);
+
+  // Run the graph search.
   switch(m_searchAlg) {
     case DIJKSTRAS:
-      find_path_dijkstra(*g, _start, _end, path, WeightType::MaxWeight());
+      dijkstra_sssp(*g, parentMap, distanceMap, weightMap,
+                    _start, _end, comparator, weightMax,
+                    combiner, colorMap, queue);
       break;
     case ASTAR:
       Heuristic<MPTraits> heuristic(g->GetVertex(_end),
           this->GetEnvironment()->GetPositionRes(),
           this->GetEnvironment()->GetOrientationRes());
-      astar(*g, _start, _end, path, heuristic);
+      DistanceMap dummyMap;
+      astar(*g, parentMap, distanceMap, dummyMap, weightMap,
+            _start, _end, heuristic, comparator,
+            combiner, colorMap, queue);
       break;
   }
 
-  stats->StopClock("QueryMethod::GraphSearch");
+  // Extract path from sssp results.
+  vector<VID> path;
+  path.push_back(_end);
+  VID temp = _end;
+  while(parentMap.get(temp) != temp)
+  {
+    path.push_back(parentMap.get(temp));
+    temp = parentMap.get(temp);
+  }
+
+  // A path was found if temp is the start node. In that case reverse it so that
+  // it goes from start to goal.
+  if(temp == _start)
+    std::reverse(path.begin(), path.end());
+  else
+    path.clear();
+
   return path;
+}
+
+
+template <typename MPTraits>
+bool
+QueryMethod<MPTraits>::
+IsVertexUsed(const VID) const {
+  return true;
+}
+
+
+template <typename MPTraits>
+bool
+QueryMethod<MPTraits>::
+IsEdgeUsed(const EID) const {
+  return true;
+}
+
+
+template <typename MPTraits>
+typename QueryMethod<MPTraits>::ColorMap
+QueryMethod<MPTraits>::
+GetColorMap() const {
+  auto g = this->GetRoadmap()->GetGraph();
+
+  // Define a constant for the color marking.
+  static const auto black = stapl::graph_color<size_t>::black(),
+                    white = stapl::graph_color<size_t>::white();
+
+  // Mark unused vertices.
+  ColorMap colorMap;
+  for(auto vi = g->begin(); vi != g->end(); ++vi)
+    colorMap.put(*vi, IsVertexUsed(vi->descriptor()) ? white : black);
+
+  return colorMap;
 }
 
 /*----------------------------------------------------------------------------*/

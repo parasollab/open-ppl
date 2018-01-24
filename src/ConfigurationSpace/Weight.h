@@ -36,7 +36,7 @@ class DefaultWeight {
     ///@name Construction
     ///@{
 
-    DefaultWeight(const std::string& _label = "", const double _w = 1,
+    DefaultWeight(const std::string& _label = "", const double _w = 0,
         const std::vector<CfgType>& _intermediates = std::vector<CfgType>());
 
     virtual ~DefaultWeight() = default;
@@ -140,7 +140,7 @@ class DefaultWeight {
 
     std::string m_lpLabel;   ///< Label of local planner that built this edge.
 
-    double m_weight;         ///< The edge length.
+    double m_weight{0.};                  ///< The edge length.
     std::vector<CfgType> m_intermediates; ///< Intermediate configurations.
 
     // In order to reproduce correct intermediates of a subassembly's path for
@@ -151,12 +151,12 @@ class DefaultWeight {
     bool m_skipEdge{false}; ///< Don't compute intermediates in Path::FullCfgs()
 
     int m_checkedMult;
-    bool m_hasClearance;
+    bool m_hasClearance{false};
     double m_clearance;
 
     // For nonholonomic robots.
     ControlSet m_controls;   ///< The controls used.
-    size_t m_timeSteps;      ///< The number of timesteps to apply the controls.
+    size_t m_timeSteps{0};   ///< The number of timesteps to apply the controls.
 
     /// A vector of safe intervals, not in collision with Dynamic Obstacles
     /// of known path, for this cfg.
@@ -319,6 +319,7 @@ DefaultWeight<CfgType>::
 GetControlSet() noexcept {
   return m_controls;
 }
+
 
 // We can potentially have multiple controls to get from one configuration to
 // the next, so the entire set of those controls can be set here.

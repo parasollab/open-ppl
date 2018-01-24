@@ -3,6 +3,7 @@
 
 #include <memory>
 
+class MPTask;
 class Robot;
 class XMLNode;
 
@@ -23,6 +24,7 @@ class Agent {
 
     Robot* const m_robot;              ///< The robot that this agent controls.
     mutable bool m_initialized{false}; ///< Is the agent initialized?
+    MPTask* m_task{nullptr};           ///< The task this agent is working on.
 
     bool m_debug{false};               ///< Toggle debug messages.
 
@@ -53,6 +55,13 @@ class Agent {
     virtual std::unique_ptr<Agent> Clone(Robot* const _r) const = 0;
 
     virtual ~Agent();
+
+    ///@}
+    ///@name Accessors
+    ///@{
+
+    /// Get the robot object which this agent belongs to.
+    virtual Robot* GetRobot() const noexcept;
 
     ///@}
     ///@name Disabled Functions
@@ -88,6 +97,14 @@ class Agent {
     ///          dynamics. It is OK for debugging and freezing a scenario upon
     ///          completion, but it is not physically realistic.
     virtual void Halt();
+
+    /// Set the task for this agent.
+    /// @param _task The new task for this agent. Should be owned by the
+    ///              MPProblem.
+    virtual void SetTask(MPTask* const _task);
+
+    /// Get the task that the agent is currently working on.
+    MPTask* GetTask() const noexcept;
 
     ///@}
 

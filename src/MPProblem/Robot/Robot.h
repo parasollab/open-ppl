@@ -46,6 +46,8 @@ class Robot final {
 
   std::string m_label;                     ///< The robot's unique label.
 
+  bool m_virtual{false};                   ///< Is this an imaginary robot?
+
   std::unique_ptr<MultiBody> m_multibody;  ///< Robot's geometric representation.
 
   /// Actuators.
@@ -65,8 +67,8 @@ class Robot final {
 
   std::unique_ptr<Agent> m_agent;          ///< High-level decision-making agent.
 
-  /// An interface to attached hardware.
-  std::unique_ptr<HardwareInterface> m_hardware;
+  /// Interfaces the robot's hardware, mapped by label.
+  std::unordered_map<std::string, std::unique_ptr<HardwareInterface>> m_hardware;
 
   ///@}
 
@@ -154,6 +156,9 @@ class Robot final {
     /// @param[in] _dt The timestep length.
     void Step(const double _dt);
 
+    /// Align the multibody model to the robot's current simulated state.
+    void SynchronizeModels() noexcept;
+
     ///@}
     ///@name Geometry Accessors
     ///@{
@@ -205,12 +210,26 @@ class Robot final {
     ///@{
     /// Access the interface to the hardware robot (if any).
 
-    HardwareInterface* GetHardwareInterface() const noexcept;
-    void SetHardwareInterface(std::unique_ptr<HardwareInterface>&& _i) noexcept;
+    HardwareInterface* GetHardwareInterface(const std::string& _label) const
+        noexcept;
+    void SetHardwareInterface(const std::string& _label,
+        std::unique_ptr<HardwareInterface>&& _i) noexcept;
+
+    /// Get the minimum time between commands sent to the hardware, in seconds.
+    double GetHardwareTime() const noexcept;
 
     ///@}
     ///@name Other Properties
     ///@{
+
+    /// Check if this is a 'virtual' robot. These do not represent physical
+    /// robots, and will be ignored by other robots in collision detection.
+    /// Virtual robots will not appear in simulations.
+    bool IsVirtual() const noexcept;
+
+    /// Set the robot's virtual flag.
+    /// @param _v The new value for the virtual flag.
+    void SetVirtual(const bool _v) noexcept;
 
     /// Check if the robot is nonholonomic.
     bool IsNonholonomic() const noexcept;

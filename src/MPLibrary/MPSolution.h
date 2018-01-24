@@ -28,23 +28,16 @@ class MPSolutionType final {
     ~MPSolutionType();
 
     ///@}
-    ///@name Roadmap Accessors
+    ///@name Accessors
     ///@{
 
-    RoadmapType* GetRoadmap() noexcept;
-    RoadmapType* GetBlockRoadmap() noexcept;
+    RoadmapType* GetRoadmap() const noexcept;
 
-    ///@}
-    ///@name Path Accessors
-    ///@{
+    RoadmapType* GetBlockRoadmap() const noexcept;
 
-    Path* GetPath() noexcept;
+    Path* GetPath() const noexcept;
 
-    ///@}
-    ///@name StatClass Accessor
-    ///@{
-
-    StatClass* GetStatClass() noexcept;
+    StatClass* GetStatClass() const noexcept;
 
     ///@}
 
@@ -54,6 +47,7 @@ class MPSolutionType final {
     ///@{
 
     Robot* const m_robot;            ///< The robot executing this task.
+
     RoadmapType* m_freeMap{nullptr}; ///< The free-space roadmap.
     RoadmapType* m_obstMap{nullptr}; ///< The obstacle-space roadmap.
     Path*        m_path{nullptr};    ///< The current solution path.
@@ -89,7 +83,7 @@ template <typename MPTraits>
 inline
 typename MPTraits::RoadmapType*
 MPSolutionType<MPTraits>::
-GetRoadmap() noexcept {
+GetRoadmap() const noexcept {
   return m_freeMap;
 }
 
@@ -98,27 +92,25 @@ template <typename MPTraits>
 inline
 typename MPTraits::RoadmapType*
 MPSolutionType<MPTraits>::
-GetBlockRoadmap() noexcept {
+GetBlockRoadmap() const noexcept {
   return m_obstMap;
 }
 
-/*------------------------------ Path Accessors ------------------------------*/
 
 template <typename MPTraits>
 inline
 typename MPTraits::Path*
 MPSolutionType<MPTraits>::
-GetPath() noexcept {
+GetPath() const noexcept {
   return m_path;
 }
 
-/*------------------------------ Stats Accessors -----------------------------*/
 
 template <typename MPTraits>
 inline
 StatClass*
 MPSolutionType<MPTraits>::
-GetStatClass() noexcept {
+GetStatClass() const noexcept {
   return m_stats;
 }
 

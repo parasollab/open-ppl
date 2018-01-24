@@ -60,7 +60,7 @@ class MPTask final {
 
     /// Create an empty task for a given robot.
     /// @param _robot The robot assigned to this task.
-    explicit MPTask(Robot& _robot);
+    explicit MPTask(Robot* const _robot);
 
     /// Parse the set of task constraints described in an XML node.
     /// @param _problem The MPProblem for this task.
@@ -134,6 +134,21 @@ class MPTask final {
     bool EvaluateGoalConstraints(const std::vector<Cfg>& _p) const;
 
     ///@}
+    ///@name Task Status
+    ///@{
+    /// Check/set the status of this task manually (as opposed to the Evaluate
+    /// function).
+
+    bool IsCompleted() const;
+    void SetCompleted();
+
+    bool IsStarted() const;
+    void SetStarted();
+
+    /// Reset the task as not started.
+    void Reset();
+
+    ///@}
 
   private:
 
@@ -157,11 +172,12 @@ class MPTask final {
     ///@{
 
     std::string m_label;          ///< The unique task label.
-    std::string m_robotLabel;     ///< The robot label.
 
     Robot* m_robot{nullptr};      ///< The robot assigned to this task.
     /// @TODO Change this to a robot group when that code is ready.
     //RobotGroup* m_group{nullptr}; ///< The robot group assigned to this task.
+
+    Status m_status{OnDeck};      ///< The status of the current task.
 
     ConstraintSet m_startConstraints;  ///< Req'd to start task.
     ConstraintSet m_pathConstraints;   ///< Req'd during whole task.

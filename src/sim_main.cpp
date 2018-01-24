@@ -11,14 +11,24 @@ main(int _argc, char** _argv) {
 
     // Make problem object.
     MPProblem* problem = new MPProblem(_argv[2]);
-    auto robot = problem->GetRobot(0);
 
-    // Position the robot by sampling from the first task.
+    // Position the robot by sampling from the first task and set colors.
     /// @TODO Decide on a way to declare the starting configuration either
     ///       explicitly or from a specific task. For now we will assume that
     ///       the first task is a query and its start boundary is a single point.
-    auto startBoundary = problem->GetTasks().front()->GetStartBoundary();
-    robot->GetMultiBody()->Configure(startBoundary->GetCenter());
+    for(const auto& robot : problem->GetRobots()) {
+      Robot* const r = robot.get();
+      auto startBoundary = problem->GetTasks(r).front()->GetStartBoundary();
+      r->GetMultiBody()->Configure(startBoundary->GetCenter());
+
+      // Randomize body colors for now to help see the robots.
+      for(size_t i=0; i< r->GetMultiBody()->GetNumBodies();i++) {
+        glutils::color c = {float(DRand() * .5 + .5),
+                            float(DRand() * .5 + .5),
+                            float(DRand() * .5 + .5), 1.};
+        r->GetMultiBody()->GetBody(i)->SetBodyColor(c);
+      }
+    }
 
     // Make simulation object.
     Simulation simulation(problem);

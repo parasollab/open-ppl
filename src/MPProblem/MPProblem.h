@@ -2,16 +2,19 @@
 #define MP_PROBLEM_H_
 
 #include <iostream>
+#include <list>
 #include <memory>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
+class DynamicObstacle;
 class Environment;
 class MPTask;
 class MultiBody;
 class Robot;
 class XMLNode;
-struct DynamicObstacle;
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Representation of a motion planning problem, including an environment,
@@ -90,8 +93,16 @@ class MPProblem final
     ///@{
     /// @TODO Add support for dynamically adding and removing tasks.
 
-    /// Get all of the tasks in this problem.
-    const std::vector<std::unique_ptr<MPTask>>& GetTasks() const noexcept;
+    /// Get the tasks currently assigned to a given robot.
+    /// @param _robot The robot to retrieve tasks for.
+    /// @return The set of tasks currently assigned to _robot.
+    const std::list<std::unique_ptr<MPTask>>& GetTasks(Robot* const _robot)
+        const noexcept;
+
+    /// Add a task to the problem for a given robot.
+    /// @param _robot The robot to which the new task is assigned.
+    /// @param _task The new task.
+    void AddTask(Robot* const _robot, std::unique_ptr<MPTask>&& _task);
 
     ///@}
     ///@name Dynamic Obstacle Accessors
@@ -147,8 +158,10 @@ class MPProblem final
     std::unique_ptr<Environment> m_environment;             ///< The planning environment.
     std::vector<std::unique_ptr<Robot>> m_robots;           ///< The robots in our problem.
     std::unique_ptr<Robot> m_pointRobot;                    ///< A pseudo point-robot.
-    std::vector<std::unique_ptr<MPTask>> m_tasks;           ///< The tasks in our problem.
     std::vector<std::unique_ptr<DynamicObstacle>> m_dynamicObstacles; ///< The dynamic obstacles in our problem.
+
+    /// Map the tasks assigned to each robot.
+    std::unordered_map<Robot*, std::list<std::unique_ptr<MPTask>>> m_taskMap;
 
     ///@}
     ///@name Files

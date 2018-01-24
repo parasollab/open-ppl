@@ -95,8 +95,8 @@ class ControllerMethod {
     ///@name Control Selection
     ///@{
 
-    /// Compute the desired generalized force in world coordinates to move from
-    /// the current position to the target.
+    /// Compute the desired generalized force in the robot's local fraame to
+    /// move from the current position to the target.
     /// @param[in] _current The current configuration.
     /// @param[in] _target The target configuration.
     /// @param[in] _dt The timestep length.
@@ -106,7 +106,7 @@ class ControllerMethod {
 
     /// Compute the control that produces the closest force to the ideal.
     /// @param[in] _current The current configuration.
-    /// @param[in] _force The desired force.
+    /// @param[in] _force The desired force in the robot's local frame.
     /// @return The control whos result is nearest to _force.
     virtual Control ComputeNearestControl(const Cfg& _current,
         std::vector<double>&& _force);
@@ -114,7 +114,7 @@ class ControllerMethod {
     /// Compute the continuous control that produces the closest force to the
     /// ideal.
     /// @param[in] _current The current configuration.
-    /// @param[in] _force The desired force.
+    /// @param[in] _force The desired force in the robot's local frame.
     /// @return The control whos result is nearest to _force.
     virtual Control ComputeNearestContinuousControl(const Cfg& _current,
         std::vector<double>&& _force);
@@ -122,7 +122,7 @@ class ControllerMethod {
     /// Compute the discrete control that produces the closest force to the
     /// ideal.
     /// @param[in] _current The current configuration.
-    /// @param[in] _force The desired force.
+    /// @param[in] _force The desired force in the robot's local frame.
     /// @return The control whos result is nearest to _force.
     virtual Control ComputeNearestDiscreteControl(const Cfg& _current,
         std::vector<double>&& _force);

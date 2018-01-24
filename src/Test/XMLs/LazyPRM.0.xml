@@ -48,7 +48,7 @@
     <MapEvaluators>
       <LazyQuery label="LazyQuery" fullRecreatePath="false" lpLabel="sl"
         dmLabel="euclidean" vcMethod="pqp_solid" graphSearchAlg="astar"
-        deleteNodes="false" numEnhance="10" d="0.5">
+        deleteNodes="false" numEnhance="10" d="0.5" deleteInvalid="true">
         <NodeConnectionMethod method="ClosestAlwaysTrue"/>
         <Resolution mult="27"/>
         <Resolution mult="16"/>

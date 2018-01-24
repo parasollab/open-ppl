@@ -3,11 +3,6 @@
 
 #include "QueryMethod.h"
 
-#include "MPLibrary/LocalPlanners/LPOutput.h"
-#include "MPLibrary/LocalPlanners/StraightLine.h"
-#include "Utilities/MetricUtils.h"
-
-#include <containers/sequential/graph/algorithms/astar.h>
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Evaluate a roadmap under construction to see if a query has been satisfied.
@@ -147,12 +142,12 @@ PerformSubQuery(const CfgType& _start, const CfgType& _goal) {
          << "\tfrom " << _start << endl
          << "\tto   " << _goal << endl;
 
-  // Find connected components.
-  auto ccs = FindCCs();
-
   // Add start and goal to roadmap (if not already there).
   auto start = EnsureCfgInMap(_start);
   auto goal  = EnsureCfgInMap(_goal);
+
+  // Find connected components.
+  auto ccs = FindCCs();
 
   // Check each connected component.
   bool connected = false;
@@ -235,13 +230,12 @@ vector<pair<size_t, typename PRMQuery<MPTraits>::VID>>
 PRMQuery<MPTraits>::
 FindCCs() {
   auto stats = this->GetStatClass();
+  MethodTimer mt(stats, "PRMQuery::FindCCs");
   stats->IncStat("CC Operations");
 
-  stats->StartClock("PRMQuery::FindCCs");
   vector<pair<size_t, VID>> ccs;
-  stapl::sequential::vector_property_map<GraphType, size_t> cmap;
-  get_cc_stats(*this->GetRoadmap()->GetGraph(), cmap, ccs);
-  stats->StopClock("PRMQuery::FindCCs");
+  auto colorMap = this->GetColorMap();
+  get_cc_stats(*this->GetRoadmap()->GetGraph(), colorMap, ccs);
 
   if(this->m_debug)
     cout << "\tThere are " << ccs.size() << " CCs." << endl;
@@ -264,19 +258,17 @@ ConnectToCC(const VID _toConnect, const VID _inCC) {
 
   auto stats = this->GetStatClass();
   stats->IncStat("CC Operations");
-  stats->StartClock("PRMQuery::ConnectToCC");
+  MethodTimer mt(stats, "PRMQuery::ConnectToCC");
 
   // Get the CC containing _inCC.
   vector<VID> cc;
-  stapl::sequential::vector_property_map<GraphType, size_t> cmap;
-  stapl::sequential::get_cc(*this->GetRoadmap()->GetGraph(), cmap, _inCC, cc);
+  auto colorMap = this->GetColorMap();
+  stapl::sequential::get_cc(*this->GetRoadmap()->GetGraph(), colorMap, _inCC, cc);
 
   // Try to join _toConnect to that CC using each connector.
   for(auto& label : m_ncLabels)
     this->GetConnector(label)->Connect(this->GetRoadmap(), _toConnect,
         cc.begin(), cc.end(), false);
-
-  stats->StopClock("PRMQuery::ConnectToCC");
 }
 
 /*----------------------------------------------------------------------------*/

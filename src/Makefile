@@ -11,7 +11,7 @@ vizmo_map := #-DVIZMO_MAP
 # Define robot type if it isn't already set.
 ROBOT_DEF ?= PMPCfg
 
-# Build the controller for iCreate?
+# Build support for iCreate hardware?
 icreate ?= 0
 
 # Directory Layout ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#

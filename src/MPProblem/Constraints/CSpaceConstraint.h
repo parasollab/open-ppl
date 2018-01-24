@@ -21,6 +21,12 @@ class CSpaceConstraint : public Constraint {
     ///@name Construction
     ///@{
 
+    /// Construct a constraint from a specific configuration.
+    /// @param _r The robot to constrain.
+    /// @param _c The single configuration for _r which satisfies this
+    ///           constraint.
+    explicit CSpaceConstraint(Robot* const _r, const Cfg& _c);
+
     /// Construct a constraint from an XML node.
     /// @param _r The robot to constrain.
     /// @param _node The node to parse.

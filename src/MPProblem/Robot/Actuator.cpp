@@ -12,6 +12,7 @@
 #include "Utilities/XMLNode.h"
 
 #include "BulletDynamics/Featherstone/btMultiBody.h"
+#include "nonstd/numerics.h"
 
 
 /*------------------------------- Construction -------------------------------*/
@@ -190,8 +191,12 @@ ComputeNearestSignal(const std::vector<double>& _force) const {
   // Convert the requested force to control space representation.
   double largestSignal = 0;
   for(size_t i = 0; i < _force.size(); ++i) {
-    const auto limit = _force[i] > 0 ? m_limits[i].max : m_limits[i].min ;
-    signal[i] = std::abs(_force[i]) / limit;
+    const auto limit = _force[i] > 0 ? m_limits[i].max
+                                     : m_limits[i].min;
+
+    // If the limit is 0, just set signal = 0 to avoid div/0.
+    signal[i] = nonstd::approx(limit, 0.) ? 0.
+                                          : std::abs(_force[i]) / limit;
 
     largestSignal = std::max(largestSignal, std::abs(signal[i]));
   }

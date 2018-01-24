@@ -53,15 +53,9 @@ class RRTQuery : public QueryMethod<MPTraits> {
     /// Get a random unconnected goal.
     const CfgType& GetRandomGoal() const;
 
-    /// Check whether a path connecting a given start and goal exists in the
-    /// roadmap.
-    /// @param[in] _start The starting configuration to use.
-    /// @param[in] _goal  The goal configuration to use.
-    /// @return A bool indicating whether the path was found.
     virtual bool PerformSubQuery(const CfgType& _start, const CfgType& _goal)
         override;
 
-    /// Reset the path and list of undiscovered goals.
     virtual void Reset(RoadmapType* const _r) override;
 
     ///@}
@@ -200,7 +194,6 @@ PerformSubQuery(const CfgType& _start, const CfgType& _goal) {
     nearest = ExtendToGoal(nearest, _goal);
     success = nearest.first != INVALID_VID && nearest.second <= m_goalDist;
   }
-
   if(success) {
     *this->GetPath() += this->GeneratePath(start, nearest.first);
     if(this->m_debug)

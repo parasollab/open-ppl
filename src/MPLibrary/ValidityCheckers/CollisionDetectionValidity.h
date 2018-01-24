@@ -71,6 +71,9 @@ class CollisionDetectionValidity : public ValidityCheckerMethod<MPTraits> {
 
   protected:
 
+    ///@name Helpers
+    ///@{
+
     /// Orchestrate collision computation between robot and environment
     /// multibodies
     /// @param[out] _cdInfo CDInfo
@@ -106,9 +109,18 @@ class CollisionDetectionValidity : public ValidityCheckerMethod<MPTraits> {
     virtual bool IsInObstCollision(CDInfo& _cdInfo, MultiBody* _rob,
         MultiBody* _obst, const string& _callName);
 
-    CollisionDetectionMethod* m_cdMethod; ///< Collision Detection library
-    bool m_ignoreSelfCollision;           ///< Check self collisions
-    bool m_ignoreAdjacentLinks;           ///< Ignore adj links in self collisions
+    ///@}
+    ///@name Internal State
+    ///@{
+
+    CollisionDetectionMethod* m_cdMethod{nullptr}; ///< Collision Detection library
+
+    bool m_ignoreSelfCollision{false};    ///< Check self collisions
+    bool m_interRobotCollision{false};    ///< Check inter-robot collisions
+    bool m_ignoreAdjacentLinks{false};    ///< Ignore adj links in self collisions
+
+    ///@}
+
 };
 
 /*------------------------------- Construction -------------------------------*/
@@ -131,9 +143,11 @@ CollisionDetectionValidity(XMLNode& _node) :
   this->SetName("CollisionDetection");
 
   m_ignoreSelfCollision = _node.Read("ignoreSelfCollision", false, false,
-        "Check for self collision");
+      "Check for self collision");
+  m_interRobotCollision = _node.Read("interRobotCollision", false, false,
+      "Check for intern robot collision");
   m_ignoreAdjacentLinks = _node.Read("ignoreAdjacentLinks", false, false,
-        "Ignore adjacent links in self-collision checks.");
+      "Ignore adjacent links in self-collision checks.");
 
   const std::string cdLabel = _node.Read("method", true, "", "method");
 
@@ -178,6 +192,7 @@ IsValidImpl(CfgType& _cfg, CDInfo& _cdInfo, const string& _callName) {
   return !inCollision;
 }
 
+/*--------------------------------- Helpers ----------------------------------*/
 
 template <typename MPTraits>
 bool
@@ -229,6 +244,22 @@ IsInCollision(CDInfo& _cdInfo, const CfgType& _cfg, const string& _callName) {
       return true;
   }
 
+  // Check against other robots if requested.
+  if(m_interRobotCollision) {
+    const auto& allRobots = this->GetMPProblem()->GetRobots();
+    for(const auto& robot : allRobots) {
+      // Skip self-checks and checks against virtual robots.
+      if(_cfg.GetRobot() == robot.get() or robot->IsVirtual())
+        continue;
+
+      // Perform the collision check.
+      CDInfo cdInfo(_cdInfo.m_retAllInfo);
+      const bool collision = IsInterRobotCollision(cdInfo, _cfg.GetRobot()->GetMultiBody(),
+          robot->GetMultiBody(), _callName);
+      if(collision)
+        return true;
+    }
+  }
   return retVal;
 }
 

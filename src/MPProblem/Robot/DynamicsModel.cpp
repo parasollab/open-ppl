@@ -131,6 +131,13 @@ GetSimulatedState() const {
 }
 
 
+void
+DynamicsModel::
+SetSimulatedState(const Cfg& _cfg) {
+  ConfigureSimulatedState(_cfg, m_model);
+}
+
+
 std::vector<double>
 DynamicsModel::
 GetSimulatedForces() const {

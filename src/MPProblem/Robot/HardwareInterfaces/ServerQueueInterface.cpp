@@ -3,14 +3,25 @@
 #include <unistd.h>
 
 #include "nonstd/numerics.h"
+#include "nonstd/timer.h"
 
 
 /*------------------------------- Construction -------------------------------*/
 
 ServerQueueInterface::
 ServerQueueInterface(const double _period, const std::string& _name,
-    const std::string& _ip, const unsigned short _port)
-    : HardwareInterface(_name, _ip, _port), m_period(_period) { }
+    const std::string& _ip, const unsigned short _port,
+    const double _communicationTime)
+    : QueuedHardwareInterface(_name, _ip, _port, _communicationTime)
+    , m_period(_period)
+{
+  // Ensure that the communication time is less than the period, otherwise we
+  // cannot send a command to the robot before the next check begins.
+  if(m_period < m_communicationTime)
+    throw RunTimeException(WHERE, "Requested polling period '" +
+        std::to_string(m_period) + "' is less than the time needed to send a "
+        "command '" + std::to_string(m_communicationTime) + "'.");
+}
 
 
 ServerQueueInterface::
@@ -20,7 +31,7 @@ ServerQueueInterface::
 
 /*------------------------------ Command Queue -------------------------------*/
 
-HardwareInterface::Command
+QueuedHardwareInterface::Command
 ServerQueueInterface::
 GetCurrentCommand() const {
   std::lock_guard<std::mutex> guard(m_lock);
@@ -45,6 +56,14 @@ ClearCommandQueue() {
 }
 
 
+bool
+ServerQueueInterface::
+IsIdle() const {
+  std::lock_guard<std::mutex> guard(m_lock);
+  return m_idle;
+}
+
+
 void
 ServerQueueInterface::
 StartQueue() {
@@ -58,8 +77,13 @@ StartQueue() {
     auto& current = this->m_currentCommand;
     const auto& period = this->m_period;
 
+    nonstd::timer clock;
+
+
     while(this->m_running)
     {
+      clock.restart();
+
       bool update = false;
 
       // Lock the queue while we check it and pull the next command.
@@ -72,16 +96,18 @@ StartQueue() {
         queue.push({ControlSet(), period});
         current = queue.front();
         update = true;
+        m_idle = true and m_currentCommandDone;
       }
       else {
         // Get next command from the queue.
         const Command& front = queue.front();
-
+        m_idle = false;
         // If we changed commands, an update is needed.
         const bool sameCommand = current == front;
         if(!sameCommand) {
           current = front;
           update = true;
+          m_currentCommandDone = false;
         }
       }
 
@@ -120,9 +146,16 @@ StartQueue() {
       if(nonstd::approx(timeLeft, 0.))
         queue.pop();
 
+      clock.stop();
+      const double remainingSleep = sleepTime - (clock.elapsed() / 1e9);
       lock.unlock();
 
-      usleep(sleepTime * 1e6);
+      if(remainingSleep <= 0)
+        std::cerr << "WARNING: ServerQueueInterface taking longer to talk to "
+                  << "robot than the polling period!\n";
+      else
+        usleep(remainingSleep * 1e6);
+      m_currentCommandDone = true;
     }
   };
 
@@ -136,11 +169,15 @@ void
 ServerQueueInterface::
 StopQueue() {
   std::lock_guard<std::mutex> guard(m_lock);
-  FullStop();
 
   m_running = false;
   if(m_thread.joinable())
     m_thread.join();
+
+  // We must wait for the thread to stop before calling full stop or we might
+  // send the command too early (could be ignored by robot if it is busy
+  // receiving the previous command).
+  FullStop();
 
   // Do NOT use ClearCommandQueue here - deadlock will ensue as m_lock is
   // already held and there is no need to lock twice.

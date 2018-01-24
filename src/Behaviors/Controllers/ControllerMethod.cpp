@@ -1,6 +1,7 @@
 #include "ControllerMethod.h"
 
 #include "Behaviors/Controllers/ControlSetGenerators.h"
+#include "Behaviors/Controllers/ICreateController.h"
 #include "Behaviors/Controllers/PIDFeedback.h"
 #include "Behaviors/Controllers/SimpleController.h"
 #include "ConfigurationSpace/Cfg.h"
@@ -26,7 +27,7 @@ ControllerMethod(Robot* const _r, XMLNode& _node) : ControllerMethod(_r) {
   m_debug = _node.Read("debug", false, false, "Show debug output");
 
   // Parse control set node(s) if provided.
-  for(auto& child : _node)
+  for(auto& child : _node) {
     if(child.Name() == "ControlSet") {
       // Generate a control set from this node.
       auto controls = XMLControlSetGenerator(_r, child);
@@ -44,6 +45,7 @@ ControllerMethod(Robot* const _r, XMLNode& _node) : ControllerMethod(_r) {
           std::back_inserter(*m_controls));
       RemoveDuplicateControls(m_controls);
     }
+  }
 }
 
 
@@ -73,6 +75,8 @@ Factory(Robot* const _r, XMLNode& _node) {
     output = std::unique_ptr<SimpleController>(new SimpleController(_r, _node));
   else if(controllerType == "pid")
     output = std::unique_ptr<PIDFeedback>(new PIDFeedback(_r, _node));
+  else if(controllerType == "icreatecontroller")
+    output = std::unique_ptr<ICreateController>(new ICreateController(_r, _node));
   else
     throw ParseException(_node.Where(), "Unknown controller label '" +
         controllerType + "'. Currently only 'simple' is supported.");
@@ -145,20 +149,17 @@ ComputeNearestContinuousControl(const Cfg& _current,
   double bestDot = -1;
 
   // Find the unit vector of the desired force in the robot's local coordinates.
-  auto world = _force;
-  auto desired = _force;
-  m_robot->GetDynamicsModel()->WorldToLocal(desired);
-  auto desiredDirection = nonstd::unit(desired);
+  auto desiredDirection = nonstd::unit(_force);
 
   // Check each actuator and find the nearest control.
   for(const auto& actuatorPair : m_robot->GetActuators()) {
     const auto& actuator = actuatorPair.second.get();
 
     // Compute the nearest
-    const auto signal = actuator->ComputeNearestSignal(desired);
-    const auto force = nonstd::unit(actuator->ComputeForce(signal));
+    const auto signal = actuator->ComputeNearestSignal(_force);
+    const auto unitForce = nonstd::unit(actuator->ComputeForce(signal));
 
-    const double dot = nonstd::dot<double>(desiredDirection, force);
+    const double dot = nonstd::dot<double>(desiredDirection, unitForce);
     if(dot >= bestDot) {
       best = Control{actuator, signal};
       bestDot = dot;
@@ -168,8 +169,7 @@ ComputeNearestContinuousControl(const Cfg& _current,
   // Debug.
   if(m_debug) {
     std::cout << "Computing best continuous control...\n" << std::endl
-              << "\tdesired force (world): " << world << std::endl
-              << "\tdesired force (local): " << desired << std::endl
+              << "\tdesired force (local): " << _force << std::endl
               << "\tbest control:          " << best << std::endl;
     if(best.actuator)
       std::cout << "\tbest force (local):    "
@@ -194,13 +194,12 @@ ComputeNearestDiscreteControl(const Cfg& _current, std::vector<double>&& _force)
   double bestDot = -1;
 
   // Find the unit vector of the desired force in the robot's local coordinates.
-  auto desired = nonstd::unit(_force);
-  m_robot->GetDynamicsModel()->WorldToLocal(desired);
+  auto desiredDirection = nonstd::unit(_force);
 
   // Rank force similarity first by direction and then by magnitude.
   for(const auto& control : *GetControlSet()) {
-    const auto force = nonstd::unit(control.GetForce());
-    const double dot = nonstd::dot<double>(desired, force);
+    const auto unitForce = nonstd::unit(control.GetForce());
+    const double dot = nonstd::dot<double>(desiredDirection, unitForce);
     if(dot > bestDot) {
       best = control;
       bestDot = dot;
@@ -210,8 +209,8 @@ ComputeNearestDiscreteControl(const Cfg& _current, std::vector<double>&& _force)
   // Debug.
   if(m_debug) {
     std::cout << "Computing best discrete control..." << std::endl
-              << "\tdesired force: " << desired << std::endl
-              << "\tbest control:  " << best << std::endl;
+              << "\tdesired force (local): " << desiredDirection << std::endl
+              << "\tbest control:          " << best << std::endl;
     if(best.actuator)
       std::cout << "\tbest force:    "
                 << best.actuator->ComputeForce(best.signal) << std::endl;
@@ -225,6 +224,7 @@ ComputeNearestDiscreteControl(const Cfg& _current, std::vector<double>&& _force)
         "This is probably an error in the control set definition.");
 
   return best;
+
 }
 
 /*----------------------------------------------------------------------------*/
