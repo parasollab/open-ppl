@@ -9,9 +9,10 @@
 #include "MPProblem/MPProblem.h"
 #include "MPProblem/MPTask.h"
 #include "MPProblem/Robot/Robot.h"
+#include "Utilities/DynamicWeightMap.h"
 #include "Utilities/MetricUtils.h"
 
-#include <containers/sequential/graph/algorithms/astar.h>
+#include "containers/sequential/graph/algorithms/astar.h"
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -490,7 +491,8 @@ GeneratePath(const VID _start, const VID _end) {
 
   typedef typename GraphType::vertex_reference     VR;
   typedef map_property_map<GraphType, VID>         ParentMap;
-  typedef map_property_map<GraphType, WeightType>  DistanceMap;
+  //typedef map_property_map<GraphType, WeightType>  DistanceMap;
+  typedef DynamicWeightMap<GraphType, WeightType>  DistanceMap;
   typedef std::less<WeightType>                    Comparator;
   typedef std::plus<WeightType>                    Combiner;
   typedef d_ary_heap_indirect<VR, 4, ParentMap, DistanceMap, Comparator> Queue;
