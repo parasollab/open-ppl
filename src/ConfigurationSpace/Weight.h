@@ -158,10 +158,6 @@ class DefaultWeight {
     ControlSet m_controls;   ///< The controls used.
     size_t m_timeSteps{0};   ///< The number of timesteps to apply the controls.
 
-    /// A vector of safe intervals, not in collision with Dynamic Obstacles
-    /// of known path, for this cfg.
-    std::vector<Range<double>> m_safeIntervals;
-
     ///@}
 
   public:

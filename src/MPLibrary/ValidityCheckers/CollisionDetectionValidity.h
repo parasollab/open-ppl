@@ -67,6 +67,15 @@ class CollisionDetectionValidity : public ValidityCheckerMethod<MPTraits> {
     /// @return True if _a is visible from _b and vice versa.
     virtual bool WorkspaceVisibility(const Point3d& _a, const Point3d& _b);
 
+    /// Check inter-robot collision
+    /// @param[out] _cdInfo CDInfo
+    /// @param _rob MultiBody of robot
+    /// @param _otherRobot MultiBody of the other robot to check
+    /// @param _callName Function calling validity checker
+    /// @return Collision
+    bool IsInterRobotCollision(CDInfo& _cdInfo, MultiBody* _rob,
+        MultiBody* _otherRobot, const string& _callName);
+
     ///@}
 
   protected:
@@ -90,15 +99,6 @@ class CollisionDetectionValidity : public ValidityCheckerMethod<MPTraits> {
     /// @return Collision
     virtual bool IsInSelfCollision(CDInfo& _cdInfo, MultiBody* _rob,
         const string& _callName);
-
-    /// Check inter-robot collision
-    /// @param[out] _cdInfo CDInfo
-    /// @param _rob MultiBody of robot
-    /// @param _otherRobot MultiBody of the other robot to check
-    /// @param _callName Function calling validity checker
-    /// @return Collision
-    bool IsInterRobotCollision(CDInfo& _cdInfo, MultiBody* _rob,
-        MultiBody* _otherRobot, const string& _callName);
 
     /// Check collision between robot and one obstacle
     /// @param[out] _cdInfo CDInfo

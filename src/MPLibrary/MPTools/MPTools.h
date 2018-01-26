@@ -289,6 +289,17 @@ ParseXML(XMLNode& _node) {
 
       ReebGraphConstruction::SetDefaultParameters(child);
     }
+    else if(child.Name() == "SafeIntervalTool") {
+      auto utility = new SafeIntervalTool<MPTraits>(child);
+
+      // A second node with the same label is an error during XML parsing.
+      if(m_safeIntervalTools.count(utility->GetLabel()))
+        throw ParseException(child.Where(), "Second SafeIntervalTool "
+            "node with the label '" + utility->GetLabel() + "'. Labels must be "
+            "unique.");
+
+      SetSafeIntervalTool(utility->GetLabel(), utility);
+    }
   }
 }
 

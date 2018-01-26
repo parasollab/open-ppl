@@ -50,7 +50,7 @@
     <MapEvaluators>
       <LazyToggleQuery label="LazyToggleQuery" fullRecreatePath="false"
         lpLabel="sl" dmLabel="euclidean" vcMethod="pqp_solid" graphSearchAlg="astar"
-        deleteNodes="false" iterative="true">
+        deleteNodes="false" iterative="true" safeIntervalToolLabel="SI">
         <NodeConnectionMethod method="ClosestAlwaysTrue"/>
         <ToggleConnectionMethod method="ToggleConnect"/>
         <Resolution mult="27"/>
@@ -67,6 +67,10 @@
         <Evaluator methodLabel="LazyToggleQuery"/>
       </TogglePRMStrategy>
     </MPStrategies>
+
+    <MPTools>
+      <SafeIntervalTool label="SI" vcLabel="pqp_solid"/>
+    </MPTools>
 
     <Solver mpStrategyLabel="LazyTogglePRM" seed="0"
       baseFilename="../Scratch/LazyTogglePRM"/>

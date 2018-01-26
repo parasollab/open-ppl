@@ -147,6 +147,12 @@ class QueryMethod : public MapEvaluatorMethod<MPTraits> {
     /// @param[in] _end The end node.
     std::vector<VID> GeneratePath(const VID _start, const VID _end);
 
+    /// Generate a path through the roadmap from a start node to an end node.
+    /// Called when using dynamic obstacles.
+    /// @param[in] _start The start node.
+    /// @param[in] _end The end node.
+    // TODO: Verify that this is correct with LazyPRM
+    std::vector<VID> GeneratePathDynamic(const VID _start, const VID _end);
     ///@}
 
   protected:
@@ -203,6 +209,8 @@ class QueryMethod : public MapEvaluatorMethod<MPTraits> {
     GraphSearchAlg m_searchAlg{DIJKSTRAS};  ///< The sssp algorithm to use.
 
     ///@}
+
+    std::string m_safeIntervalLabel;    ///< The XML label for the SafeIntervalTool
 };
 
 /*----------------------------- Construction ---------------------------------*/
@@ -224,6 +232,9 @@ QueryMethod(XMLNode& _node) :
       "search algorithm");
   m_fullRecreatePath = _node.Read("fullRecreatePath", false, true, "Whether or "
       "not to recreate path");
+
+  m_safeIntervalLabel = _node.Read("safeIntervalToolLabel", false, "",
+      "Label of the SafeIntervalTool");
 
   SetSearchAlgViaString(searchAlg, _node.Where());
 }
@@ -481,6 +492,10 @@ template <typename MPTraits>
 std::vector<typename QueryMethod<MPTraits>::VID>
 QueryMethod<MPTraits>::
 GeneratePath(const VID _start, const VID _end) {
+
+  if(!(this->GetMPProblem()->GetDynamicObstacles().empty()))
+    return GeneratePathDynamic(_start, _end);
+
   auto stats = this->GetStatClass();
   MethodTimer mt(stats, "QueryMethod::GraphSearch");
   stats->IncStat("Graph Search");
@@ -565,6 +580,122 @@ GeneratePath(const VID _start, const VID _end) {
   return path;
 }
 
+template <typename MPTraits>
+std::vector<typename QueryMethod<MPTraits>::VID>
+QueryMethod<MPTraits>::
+GeneratePathDynamic(const VID _start, const VID _end) {
+
+  if(_start == _end){
+    return std::vector<VID>{_start};
+  }
+
+  typedef typename GraphType::EID                 ED;
+  typedef typename GraphType::adj_edge_iterator   EI;
+  typedef std::unordered_map<VID, VID>            ParentMap;
+
+  MethodTimer mt(this->GetStatClass(), "QueryMethod::GeneratePathDynamic");
+
+  auto g = this->GetRoadmap()->GetGraph();
+
+  SafeIntervalTool<MPTraits>* iTool = this->GetMPTools()->GetSafeIntervalTool(m_safeIntervalLabel);
+
+  ParentMap parentMap;
+  /// An element in the PQ for dijkstra's. Elements will store
+  /// their time, which will be used to check possible edges for
+  /// containment within a Safe Interval.
+  struct element{
+
+    VID parent;         ///< The parent cell descriptor.
+    VID vd;             ///< This cell descriptor.
+    double distance;    ///< Computed distance (time) at the time of insertion.
+
+    /// Total order by decreasing distance.
+    bool operator>(const element& _e) const noexcept {
+      return distance > _e.distance;
+    }
+
+  };
+
+  // Define a min priority queue for dijkstras. We will not update elements when
+  // better distances are found - instead we will trak the most up-to-date
+  // distance and ignore elements with different values.
+  std::priority_queue<element,
+                      std::vector<element>,
+                      std::greater<element>> pq;
+
+  std::unordered_map<VID, bool> visited;
+  std::unordered_map<VID, double> distance;
+  // Initialize the various maps.
+  for(auto vi = g->begin(); vi != g->end(); ++vi) {
+    visited[vi->descriptor()] = false;
+    distance[vi->descriptor()] = std::numeric_limits<double>::max();
+  }
+
+  auto relax = [&distance, this, &pq, iTool, g, &parentMap](const ED& _ed) {
+    EI edgeIter;
+    bool valid = g->GetEdge(_ed.source(), _ed.target(), edgeIter);
+    if(!valid)
+      throw RunTimeException(WHERE, "Edge not found.");
+
+    const double sourceDistance = distance[_ed.source()],
+                 targetDistance = distance[_ed.target()],
+                 edgeWeight     = edgeIter->property().GetTimeSteps(),
+                 newDistance    = sourceDistance + edgeWeight;
+
+    if(newDistance >= targetDistance)
+      return;
+
+    // Ensure that the target vertex is contained within a SafeInterval when
+    // arriving.
+    auto vertexIntervals = iTool->ComputeIntervals(g->GetVertex(_ed.target()));
+    if(!(iTool->ContainsTimestep(vertexIntervals, targetDistance)))
+      return;
+
+    // Ensure that the edge is contained within a SafeInterval if leaving now.
+    auto edgeIntervals = iTool->ComputeIntervals(edgeIter->property());
+    if(!(iTool->ContainsTimestep(edgeIntervals, sourceDistance)))
+      return;
+
+    distance[_ed.target()] = newDistance;
+    pq.push(element{_ed.source(), _ed.target(), newDistance});
+    parentMap[_ed.target()] = _ed.source();
+  };
+
+  distance[_start] = 0;
+  pq.push(element{_start, _start, 0});
+  parentMap[_start] = _start;
+
+  // Dijkstras
+  while(!pq.empty()) {
+    // Get the next element
+    element current = pq.top();
+    pq.pop();
+
+    // If we are done with this node, discard the element.
+    if(visited[current.vd])
+      continue;
+    visited[current.vd] = true;
+
+    auto vertexIter = g->find_vertex(current.vd);
+    for(auto edgeIter = vertexIter->begin(); edgeIter != vertexIter->end();
+        ++edgeIter) {
+      relax(edgeIter->descriptor());
+    }
+  }
+
+  vector<VID> path;
+  if(!parentMap.count(_end))
+    return path;
+
+  VID current = _end;
+  while(current != _start){
+    path.push_back(current);
+    current = parentMap[current];
+  }
+  path.push_back(_start);
+  std::reverse(path.begin(), path.end());
+  return path;
+}
 
 template <typename MPTraits>
 bool

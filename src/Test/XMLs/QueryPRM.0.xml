@@ -42,7 +42,8 @@
     </Connectors>
 
     <MapEvaluators>
-      <PRMQuery label="PRMQuery" debug="false" fullRecreatePath="false">
+      <PRMQuery label="PRMQuery" debug="false" fullRecreatePath="false"
+                safeIntervalToolLabel="SI">
         <NodeConnectionMethod method="Closest"/>
       </PRMQuery>
     </MapEvaluators>
@@ -54,6 +55,10 @@
         <Evaluator method="PRMQuery"/>
       </BasicPRM>
     </MPStrategies>
+
+    <MPTools>
+      <SafeIntervalTool label="SI" vcLabel="pqp_solid"/>
+    </MPTools>
 
     <Solver mpStrategyLabel="QueryPRM" seed="0"
       baseFilename="../Scratch/QueryPRM"/>
