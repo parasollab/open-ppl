@@ -366,7 +366,7 @@ BinarySearch(RandomIterator _begin, RandomIterator _end, const T& _value,
 }
 
 /// Loads a configuration path from a file for a dynamic obstacle.
-std::vector<Cfg> LoadPath(const std::string &_filename, Robot &_robot);
+std::vector<Cfg> LoadPath(const std::string &_filename, Robot* _robot);
 
 /*----------------------------------------------------------------------------*/
 

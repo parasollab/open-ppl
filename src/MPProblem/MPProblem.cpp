@@ -295,14 +295,14 @@ ParseChild(XMLNode& _node) {
   else if(_node.Name() == "DynamicObstacle") {
     // If this is a dynamic obstacle, get the path file name and make sure it exists.
 
-    Robot robot(this, _node);
+    std::unique_ptr<Robot> robot(new Robot(this, _node));
 
     const std::string filePath = GetPathName(_node.Filename());
     const std::string obstacleFile = _node.Read("pathfile", true, "",
         "DynamicObstacle path file name");
     const std::string obstacleFilename = filePath + obstacleFile;
 
-    vector<Cfg> path = LoadPath(obstacleFilename, robot);
+    vector<Cfg> path = LoadPath(obstacleFilename, robot.get());
     m_dynamicObstacles.emplace_back(new DynamicObstacle(std::move(robot), path));
     return true;
   }

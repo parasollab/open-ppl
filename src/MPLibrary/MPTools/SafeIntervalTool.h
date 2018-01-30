@@ -192,9 +192,6 @@ IsSafe(const CfgType& _cfg, const double _timestep) {
   }
   return true;
 }
-
-// TODO: Implement helper function for ComputeIntervals
-// TODO: rename
 template <typename MPTraits>
 typename SafeIntervalTool<MPTraits>::Intervals
 SafeIntervalTool<MPTraits>::

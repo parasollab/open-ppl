@@ -493,8 +493,10 @@ std::vector<typename QueryMethod<MPTraits>::VID>
 QueryMethod<MPTraits>::
 GeneratePath(const VID _start, const VID _end) {
 
-  if(!(this->GetMPProblem()->GetDynamicObstacles().empty()))
+  if(!(this->GetMPProblem()->GetDynamicObstacles().empty())){
+    std::cout << "Number of Dynamic Obstacles: " << this->GetMPProblem()->GetDynamicObstacles().size() << std::endl;
     return GeneratePathDynamic(_start, _end);
+  }
 
   auto stats = this->GetStatClass();
   MethodTimer mt(stats, "QueryMethod::GraphSearch");
@@ -626,6 +628,7 @@ GeneratePathDynamic(const VID _start, const VID _end) {
   std::unordered_map<VID, bool> visited;
   std::unordered_map<VID, double> distance;
   // Initialize the various maps.
+
   for(auto vi = g->begin(); vi != g->end(); ++vi) {
     visited[vi->descriptor()] = false;
     distance[vi->descriptor()] = std::numeric_limits<double>::max();
@@ -659,26 +662,32 @@ GeneratePathDynamic(const VID _start, const VID _end) {
     distance[_ed.target()] = newDistance;
     pq.push(element{_ed.source(), _ed.target(), newDistance});
     parentMap[_ed.target()] = _ed.source();
+    std::cout << "======Relaxed Edge======" << std::endl;
   };
 
   distance[_start] = 0;
   pq.push(element{_start, _start, 0});
   parentMap[_start] = _start;
-
+  
   // Dijkstras
   while(!pq.empty()) {
     // Get the next element
     element current = pq.top();
     pq.pop();
 
+    std::cout << "======Popped Element======" << std::endl;
+
     // If we are done with this node, discard the element.
     if(visited[current.vd])
       continue;
     visited[current.vd] = true;
 
+    std::cout << "======Set visited for " << current.vd << "======" << std::endl;
+
     auto vertexIter = g->find_vertex(current.vd);
     for(auto edgeIter = vertexIter->begin(); edgeIter != vertexIter->end();
         ++edgeIter) {
+      std::cout << "======Relaxing Edge======" << std::endl;
       relax(edgeIter->descriptor());
     }
   }

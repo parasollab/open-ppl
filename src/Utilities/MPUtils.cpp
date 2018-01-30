@@ -170,7 +170,7 @@ NormalizeTheta(double _theta) {
 /*----------------------------------------------------------------------------*/
 
 std::vector<Cfg>
-LoadPath(const std::string &_filename, Robot &_robot) {
+LoadPath(const std::string &_filename, Robot* _robot) {
   std::vector<Cfg> result;
   if(!FileExists(_filename)){
     throw ParseException(WHERE, "File '" + _filename + "' does not exist");
@@ -179,7 +179,7 @@ LoadPath(const std::string &_filename, Robot &_robot) {
 
   ifstream pathfile(_filename);
   string line;
-  Cfg cfg = Cfg(&_robot);
+  Cfg cfg = Cfg(_robot);
   getline(pathfile, line);
   getline(pathfile, line);
   getline(pathfile, line);
@@ -187,6 +187,7 @@ LoadPath(const std::string &_filename, Robot &_robot) {
     getline(pathfile, line);
     istringstream cfgInput(line);
     cfg.Read(cfgInput);
+    result.push_back(cfg);
   }
   return result;
 }
