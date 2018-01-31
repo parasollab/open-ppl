@@ -11,6 +11,7 @@
 #include "MPProblem/Robot/Robot.h"
 #include "Utilities/DynamicWeightMap.h"
 #include "Utilities/MetricUtils.h"
+#include "nonstd/io.h"
 
 #include "containers/sequential/graph/algorithms/astar.h"
 
@@ -645,24 +646,36 @@ GeneratePathDynamic(const VID _start, const VID _end) {
                  edgeWeight     = edgeIter->property().GetTimeSteps(),
                  newDistance    = sourceDistance + edgeWeight;
 
-    if(newDistance >= targetDistance)
+    if(newDistance >= targetDistance){
+      if(this->m_debug)
+        std::cout << "Breaking because the path is not optimal." << std::endl;
       return;
+    }
 
     // Ensure that the target vertex is contained within a SafeInterval when
     // arriving.
     auto vertexIntervals = iTool->ComputeIntervals(g->GetVertex(_ed.target()));
-    if(!(iTool->ContainsTimestep(vertexIntervals, targetDistance)))
+    if(!(iTool->ContainsTimestep(vertexIntervals, newDistance))){
+      if(this->m_debug){
+        std::cout << "Breaking because the vertex is invalid." << std::endl;
+        std::cout << "vertexIntervals: " << vertexIntervals << std::endl;
+      }
       return;
+    }
 
     // Ensure that the edge is contained within a SafeInterval if leaving now.
     auto edgeIntervals = iTool->ComputeIntervals(edgeIter->property());
-    if(!(iTool->ContainsTimestep(edgeIntervals, sourceDistance)))
+    if(!(iTool->ContainsTimestep(edgeIntervals, sourceDistance))){
+      if(this->m_debug)
+        std::cout << "Breaking because the edge is invalid." << std::endl;
       return;
+    }
 
     distance[_ed.target()] = newDistance;
     pq.push(element{_ed.source(), _ed.target(), newDistance});
     parentMap[_ed.target()] = _ed.source();
-    std::cout << "======Relaxed Edge======" << std::endl;
+    if(this->m_debug)
+      std::cout << "======Relaxed Edge======" << std::endl;
   };
 
   distance[_start] = 0;
@@ -675,19 +688,14 @@ GeneratePathDynamic(const VID _start, const VID _end) {
     element current = pq.top();
     pq.pop();
 
-    std::cout << "======Popped Element======" << std::endl;
-
     // If we are done with this node, discard the element.
     if(visited[current.vd])
       continue;
     visited[current.vd] = true;
 
-    std::cout << "======Set visited for " << current.vd << "======" << std::endl;
-
     auto vertexIter = g->find_vertex(current.vd);
     for(auto edgeIter = vertexIter->begin(); edgeIter != vertexIter->end();
         ++edgeIter) {
-      std::cout << "======Relaxing Edge======" << std::endl;
       relax(edgeIter->descriptor());
     }
   }

@@ -216,7 +216,6 @@ ComputeSafeIntervals(const std::vector<Cfg>& _cfgs){
     }
   }
 
-
   auto env = this->GetEnvironment();
   const double timeRes = env->GetTimeRes();
 
@@ -238,13 +237,12 @@ ComputeSafeIntervals(const std::vector<Cfg>& _cfgs){
     }
     // no longer safe and ending current interval
     else if(!safe and currentInterval){
-      safeIntervals.push_back(*currentInterval);
-      delete currentInterval;
       currentInterval = nullptr;
     }
     // newly safe so starting new interval
     else if(safe and !currentInterval){
-      currentInterval = new Range<double>(tstep*timeRes,tstep*timeRes);
+      safeIntervals.emplace_back(tstep*timeRes, tstep*timeRes);
+      currentInterval = &safeIntervals.back();
     }
   }
   return safeIntervals;
