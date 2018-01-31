@@ -212,15 +212,24 @@ PerformSubQuery(const CfgType& _start, const CfgType& _goal) {
 
   // Check each connected component.
   bool connected = false;
-  for(auto cc : ccs) {
+  for(auto& cc : ccs) {
     // Try connecting the start and goal to this CC.
     this->ConnectToCC(start.first, cc.second);
     this->ConnectToCC(goal.first, cc.second);
 
     // If start and goal are connected to the same CC, generate path and end.
     while(!connected && this->SameCC(start.first, goal.first)) {
-      *this->GetPath() += this->GeneratePath(start.first, goal.first);
-      connected = this->ValidatePath();
+      auto path = this->GeneratePath(start.first, goal.first);
+
+      // If a path was generated, try to validate it against the lazy VC.
+      if(!path.empty()) {
+        *this->GetPath() += path;
+        connected = this->ValidatePath();
+      }
+      // Otherwise, dynamic obstacles are occluding all paths through this CC.
+      // Move on to the next one.
+      else
+        break;
     }
 
     // Quit when we find a valid path.

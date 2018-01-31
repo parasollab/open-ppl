@@ -151,17 +151,22 @@ PerformSubQuery(const CfgType& _start, const CfgType& _goal) {
 
   // Check each connected component.
   bool connected = false;
-  for(auto cc : ccs) {
+  for(auto& cc : ccs) {
     // Try connecting the start and goal to this CC.
     ConnectToCC(start.first, cc.second);
     ConnectToCC(goal.first, cc.second);
 
     // If start and goal are connected to the same CC, generate path and end.
     if(this->SameCC(start.first, goal.first)) {
-      connected = true;
-      // Generate and append the path VIDs.
-      *this->GetPath() += this->GeneratePath(start.first, goal.first);
-      break;
+      // Try to generate a path.
+      auto path = this->GeneratePath(start.first, goal.first);
+
+      // If the path succeeded, we can connect.
+      if(!path.empty()) {
+        connected = true;
+        *this->GetPath() += path;
+        break;
+      }
     }
   }
 

@@ -175,7 +175,7 @@ PerformSubQuery(const CfgType& _start, const CfgType& _goal) {
 
   VID start = this->GetRoadmap()->GetGraph()->GetVID(_start);
   pair<VID, double> nearest;
-  bool success = false;
+  bool connected = false;
 
   // Find the nearest node to _goal that is also connected to _start.
   nearest = FindNearestConnectedNeighbor(start, _goal);
@@ -183,28 +183,41 @@ PerformSubQuery(const CfgType& _start, const CfgType& _goal) {
   if(nearest.first == INVALID_VID)
     // If the nearest node is invalid, it means that the goal is in the map and
     // not connected to start. In this case, we can't connect.
-    success = false;
+    connected = false;
   else if(nearest.second <= m_goalDist)
     // The nearest node is within the goal distance, so we are close enough.
-    success = true;
+    connected = true;
   else {
     // The nearest node is too far and the goal isn't already connected. Try to
     // extend toward goal if we are within extender's delta range. If we can't
     // extend, we can't connect.
     nearest = ExtendToGoal(nearest, _goal);
-    success = nearest.first != INVALID_VID && nearest.second <= m_goalDist;
+    connected = nearest.first != INVALID_VID && nearest.second <= m_goalDist;
   }
-  if(success) {
-    *this->GetPath() += this->GeneratePath(start, nearest.first);
-    if(this->m_debug)
-      cout << "\tSuccess: found path from start to nearest node "
-           << nearest.first << " at a distance of " << nearest.second
-           << " from the goal." << endl;
-  }
-  else if(this->m_debug)
-    cout << "\tFailed to connect (distance threshold is " << m_goalDist << ").\n";
 
-  return success;
+  // If we have a successful connection through the roadmap, attempt to generate
+  // the path.
+  if(connected) {
+    auto path = this->GeneratePath(start, nearest.first);
+
+    if(!path.empty()) {
+      *this->GetPath() += path;
+      if(this->m_debug)
+        cout << "\tSuccess: found path from start to nearest node "
+             << nearest.first << " at a distance of " << nearest.second
+             << " from the goal." << endl;
+      return true;
+    }
+    else if(this->m_debug)
+      std::cout << "\tStart and goal are connected, but path is not valid."
+                << std::endl;
+  }
+
+  if(this->m_debug)
+    std::cout << "\tFailed to connect (distance threshold is " << m_goalDist << ")."
+              << std::endl;
+
+  return false;
 }
 
 
