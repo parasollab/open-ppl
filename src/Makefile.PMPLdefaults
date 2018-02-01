@@ -357,6 +357,7 @@ PMPL_OBJS := \
   MPProblem/Constraints/Constraint.o \
   MPProblem/Constraints/CSpaceConstraint.o \
   MPProblem/Constraints/WorkspaceConstraint.o \
+  MPProblem/DynamicObstacle.o \
   MPProblem/Environment/Environment.o \
   MPProblem/Robot/Actuator.o \
   MPProblem/Robot/Control.o \

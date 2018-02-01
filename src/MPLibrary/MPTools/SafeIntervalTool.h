@@ -8,6 +8,7 @@
 #include "MPProblem/DynamicObstacle.h"
 #include "MPLibrary/ValidityCheckers/CollisionDetectionValidity.h"
 
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Computes safe intervals for Cfgs and Edges. A 'safe interval' is an interval
 /// of time where collision with a known dynamic obstacle (with known
@@ -34,7 +35,7 @@ class SafeIntervalTool final : public MPBaseObject<MPTraits> {
     ///@name Local Types
     ///@{
 
-    typedef std::vector<Range<double>> Intervals;
+    typedef std::vector<Range<double>> Intervals; ///< A set of time intervals.
 
     ///@}
     ///@name Construction
@@ -47,7 +48,13 @@ class SafeIntervalTool final : public MPBaseObject<MPTraits> {
     virtual ~SafeIntervalTool();
 
     ///@}
-    ///@name Intervals Computation
+    ///@name MPBaseObject Overrides
+    ///@{
+
+    virtual void Initialize() override;
+
+    ///@}
+    ///@name Interval Computation
     ///@{
 
     /// Compute the safe intervals for a given Cfg.
@@ -61,11 +68,16 @@ class SafeIntervalTool final : public MPBaseObject<MPTraits> {
     Intervals ComputeIntervals(const WeightType& _weight);
 
     ///@}
+    ///@name Interval Checking
+    ///@{
 
     /// Determine if a timestep is contained within a SafeInterval
     /// @param _intervals The safe intervals to check in.
     /// @param _timestep The timestep to check.
     bool ContainsTimestep(const Intervals& _intervals, const double _timestep);
+
+    ///@}
+
   private:
 
     ///@name Helpers
@@ -76,18 +88,24 @@ class SafeIntervalTool final : public MPBaseObject<MPTraits> {
     /// @param _timestep The timestep for the dynamic obstacles.
     bool IsSafe(const CfgType& _cfg, const double _timestep);
 
-    /// Computes the safe interval(s) for a Cfg or Edge
-    /// @param _cfgs The cfg(s) to compute the safeIntervalss for.
-    /// Represent a cfg as a vector of size 1 and an
-    /// edge as a vector of cfgs.
+    /// Computes the safe interval(s) for a set of configurations.
+    /// @param _cfgs The cfgs to compute the safeIntervals for. These are
+    ///              assumed to be a sequence which will be followed by the robot
+    ///              at a rate of one cfg per time resolution.
+    /// @return The set of time intervals for which it is safe to start
+    ///         following the configuration sequence.
     Intervals ComputeSafeIntervals(const std::vector<Cfg>& _cfgs);
-    ///@}
 
+    ///@}
     ///@name Internal State
     ///@{
-    std::string m_vcLabel;
 
+    std::string m_vcLabel; ///< The validity checker to use.
+
+    /// A cache of computed safe intervals for roadmap configurations.
     std::unordered_map<const CfgType*, Intervals> m_cfgIntervals;
+
+    /// A cache of computed safe intervals for roadmap edges.
     std::unordered_map<const WeightType*, Intervals> m_edgeIntervals;
 
     ///@}
@@ -115,14 +133,25 @@ template <typename MPTraits>
 SafeIntervalTool<MPTraits>::
 ~SafeIntervalTool() = default;
 
+/*-------------------------- MPBaseObject Overrides ---------------------------*/
+
+template <typename MPTraits>
+void
+SafeIntervalTool<MPTraits>::
+Initialize() {
+  // Clear out the interval caches.
+  m_cfgIntervals.clear();
+  m_edgeIntervals.clear();
+}
+
 /*-------------------------- Intervals Computations ---------------------------*/
 
 template <typename MPTraits>
 typename SafeIntervalTool<MPTraits>::Intervals
 SafeIntervalTool<MPTraits>::
 ComputeIntervals(const CfgType& _cfg) {
-  if(m_cfgIntervals[&_cfg].empty()){
-    const std::vector<CfgType> cfg = {_cfg};
+  if(m_cfgIntervals[&_cfg].empty()) {
+    const std::vector<CfgType> cfg{_cfg};
     m_cfgIntervals[&_cfg] = ComputeSafeIntervals(cfg);
   }
 
@@ -134,7 +163,7 @@ template <typename MPTraits>
 typename SafeIntervalTool<MPTraits>::Intervals
 SafeIntervalTool<MPTraits>::
 ComputeIntervals(const WeightType& _weight) {
-  if(m_edgeIntervals[&_weight].empty()){
+  if(m_edgeIntervals[&_weight].empty()) {
     const vector<CfgType>& cfgs = _weight.GetIntermediates();
     m_edgeIntervals[&_weight] = ComputeSafeIntervals(cfgs);
   }
@@ -142,11 +171,12 @@ ComputeIntervals(const WeightType& _weight) {
   return m_edgeIntervals[&_weight];
 }
 
+
 template <typename MPTraits>
 bool
 SafeIntervalTool<MPTraits>::
-ContainsTimestep(const Intervals& _intervals, const double _timestep){
-  for(auto& range : _intervals){
+ContainsTimestep(const Intervals& _intervals, const double _timestep) {
+  for(auto& range : _intervals) {
     if(range.Contains(_timestep))
       return true;
   }
@@ -159,94 +189,115 @@ template <typename MPTraits>
 bool
 SafeIntervalTool<MPTraits>::
 IsSafe(const CfgType& _cfg, const double _timestep) {
-
+  // Configure _cfg's robot at _cfg.
   auto robotMultiBody = _cfg.GetRobot()->GetMultiBody();
   robotMultiBody->Configure(_cfg);
 
-  const auto& obstacles = this->GetMPProblem()->GetDynamicObstacles();
+  // Get the valididty checker and make sure it has type
+  // CollisionDetectionValidity.
+  /// @TODO Figure out how to avoid needing this downcast so that we can
+  ///       leverage more efficient compose checks (like checking the bounding
+  ///       spheres first).
   auto basevc = this->GetValidityChecker(m_vcLabel).get();
   auto vc = dynamic_cast<CollisionDetectionValidity<MPTraits>*>(basevc);
-  auto env = this->GetEnvironment();
 
-  const double timeRes = env->GetTimeRes();
+  // Compute the step number associated with _timestep.
+  const double timeRes = this->GetEnvironment()->GetTimeRes();
+  const size_t currentStep = std::lround(_timestep / timeRes);
 
-  const long currentStep = std::lround(_timestep / timeRes);
+  // Check this configuration against each dynamic obstacle.
+  const auto& obstacles = this->GetMPProblem()->GetDynamicObstacles();
+  for(const auto& obstacle : obstacles) {
+    // Determine the obstacle's position at the current timestep. If it is
+    // already done moving, use its last position.
+    const auto& path = obstacle->GetPath();
+    const size_t lastStep = path.size(),
+                 useStep  = std::min(currentStep, lastStep);
+    const CfgType& position = path[useStep];
 
-  Cfg* currentObstaclePosition;
+    // Configure the obstacle at the current timestep.
+    auto obstacleMultiBody = obstacle->GetRobot()->GetMultiBody();
+    obstacleMultiBody->Configure(position);
 
-  for(auto& obstacle : obstacles){
-    if (_timestep > (timeRes * obstacle->m_path.size())){
-      currentObstaclePosition = &obstacle->m_path.back();
-    }
-    else{
-      currentObstaclePosition = &obstacle->m_path[currentStep];
-    }
-    auto obstacleMultiBody = currentObstaclePosition->GetRobot()->GetMultiBody();
-    obstacleMultiBody->Configure(*currentObstaclePosition);
     // If the obstacle is in collision with _cfg at _timestep, return false
-    CDInfo cdinfo;
-    if(vc->IsInterRobotCollision(cdinfo, obstacleMultiBody, robotMultiBody,
-          this->GetNameAndLabel())) {
+    CDInfo cdInfo;
+    if(vc->IsInterRobotCollision(cdInfo, obstacleMultiBody, robotMultiBody,
+        this->GetNameAndLabel())) {
       return false;
     }
   }
+
+  // If we haven't detected a collision, the configuration is safe.
   return true;
 }
+
+
 template <typename MPTraits>
 typename SafeIntervalTool<MPTraits>::Intervals
 SafeIntervalTool<MPTraits>::
-ComputeSafeIntervals(const std::vector<Cfg>& _cfgs){
+ComputeSafeIntervals(const std::vector<Cfg>& _cfgs) {
   MethodTimer mt(this->GetStatClass(), "SafeIntervalTool::ComputeSafeIntervals");
-  Intervals safeIntervals;
-  Range<double>* currentInterval = nullptr;
-
-  // Find how long there is potential for collision with dynamic obstacles
-  // following known paths.
-  // Need a different distinction to account for period motion of DOs.
-  size_t timeFinal = 0;
-  const auto& obstacles = this->GetMPProblem()->GetDynamicObstacles();
 
   // If there are no dynamic obstacles, the safe interval is infinite.
+  const auto& obstacles = this->GetMPProblem()->GetDynamicObstacles();
   if(obstacles.empty())
     return Intervals{Range<double>(0, std::numeric_limits<double>::max())};
 
-  for(auto& obstacle : obstacles){
-    if(obstacle->m_path.size() > timeFinal){
-      timeFinal = obstacle->m_path.size();
-    }
-  }
+  // Find the latest timestep in which a dynamic obstacle is still moving.
+  size_t timeFinal = 0;
+  for(auto& obstacle : obstacles)
+    if(obstacle->GetPath().size() > timeFinal)
+      timeFinal = obstacle->GetPath().size();
 
-  auto env = this->GetEnvironment();
-  const double timeRes = env->GetTimeRes();
+  // Determine all of the intervals for which it is safe to start following this
+  // set of configurations.
+  const double timeRes = this->GetEnvironment()->GetTimeRes();
 
-  for(size_t tstep = 0; tstep < timeFinal; tstep++){
+  Intervals safeIntervals;                  // All intervals for this sequence.
+  Range<double>* currentInterval = nullptr; // The current interval under construction.
+
+  // Try starting the sequence at each time step where dynamic obstacles are
+  // moving.
+  for(size_t tstep = 0; tstep < timeFinal; ++tstep) {
+    const double startTime = tstep * timeRes;
+
+    // Check if it is safe to start the sequence at startTime.
     bool safe = true;
-    int i = 0; // iterates over an edge to find safe interval
-               //to start down an edge
-    for(Cfg cfg : _cfgs){
-      if(IsSafe(cfg,(tstep+i)*timeRes)){
-        i++;
-        continue;
-      }
-      safe = false;
-      break;
+    size_t i = 0;
+    for(const CfgType& cfg : _cfgs) {
+      safe &= IsSafe(cfg, startTime + i * timeRes);
+      if(!safe)
+        break;
+      ++i;
     }
-    // still safe and expanding current interval
-    if(safe and currentInterval){
-      currentInterval->max = tstep*timeRes;
-    }
-    // no longer safe and ending current interval
-    else if(!safe and currentInterval){
+
+    // If it is not safe to start the sequence from startTime, end the current
+    // safe interval, if any.
+    if(!safe) {
       currentInterval = nullptr;
     }
-    // newly safe so starting new interval
-    else if(safe and !currentInterval){
-      safeIntervals.emplace_back(tstep*timeRes, tstep*timeRes);
-      currentInterval = &safeIntervals.back();
+    // Otherwise, we can include this startTime in the safe intervals.
+    else {
+      // Start a new interval if we don't have one already.
+      if(!currentInterval) {
+        safeIntervals.emplace_back(startTime, startTime);
+        currentInterval = &safeIntervals.back();
+      }
+
+      // Expand the end of the current interval to include this startTime.
+      currentInterval->max = startTime;
     }
   }
+
+  // If we still have a current interval, then the last interval was safe
+  // through the end of the dynamic obstacle motions. Extend it to the end of
+  // time.
+  if(currentInterval)
+    currentInterval->max = std::numeric_limits<double>::max();
+
   return safeIntervals;
 }
+
 /*----------------------------------------------------------------------------*/
 
 #endif
