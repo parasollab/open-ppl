@@ -5,6 +5,7 @@
 #include "nonstd/numerics.h"
 #include "nonstd/timer.h"
 
+#include "Behaviors/Agents/PathFollowingChildAgent.h"
 #include "Behaviors/Controllers/ControllerMethod.h"
 #include "MPProblem/Constraints/CSpaceConstraint.h"
 #include "BulletDynamics/Featherstone/btMultiBody.h"
@@ -16,6 +17,41 @@
 
 BatteryConstrainedGroup::
 BatteryConstrainedGroup(Robot* const _r) : Agent(_r) {
+}
+
+
+BatteryConstrainedGroup::
+BatteryConstrainedGroup(Robot* const _r, XMLNode& _node) : Agent(_r, _node) {
+  // Parse the labels of the group members.
+  for(auto& child : _node) {
+    // Parse the robot label.
+    const std::string memberLabel = _node.Read("label", true, "",
+        "The label of the member robot.");
+    m_memberLabels.push_back(memberLabel);
+
+    // Parse the initial role.
+    std::string role = _node.Read("role", true, "", "This robot's initial "
+        "role in the group {worker, helper}.");
+
+    std::transform(role.begin(), role.end(), role.begin(), ::tolower);
+    Role memberRole;
+    if(role == "worker")
+      memberRole = Worker;
+    else if(role == "helper")
+      memberRole = Helper;
+    else if(role == "charging")
+      memberRole = Charging;
+    else
+      throw ParseException(_node.Where(), "Unrecognized role '" + role + "'.");
+
+    m_initialRoles[memberLabel] = memberRole;
+  }
+
+  // This is a coordinator agent, which does not make sense without some group
+  // members to coordinate. Throw an exception if it has no members.
+  if(m_memberLabels.empty())
+    throw ParseException(_node.Where(), "BatteryConstrainedGroup requires at "
+        "least one member robot.");
 }
 
 
@@ -37,7 +73,46 @@ Initialize() {
   auto problem = m_robot->GetMPProblem();
   const std::string& xmlFile = problem->GetXMLFilename();
 
-  //TODO: Get distance thresholds from XML
+  // Set up the group member structures.
+  int priority = 1;
+  for(const auto& memberLabel : m_memberLabels) {
+    Robot* member = problem->GetRobot(memberLabel);
+
+    // We are assuming that all member robots have a compatible agent type.
+    // Throw an exception if not.
+    /// @TODO Generalize code so that this is not necessary.
+    Agent* memberAgent = member->GetAgent();
+    PathFollowingChildAgent* a = dynamic_cast<PathFollowingChildAgent*>(memberAgent);
+    if(!a)
+      throw RunTimeException(WHERE, "Incompatible agent type specified for "
+          "group member '" + memberLabel + "'.");
+    m_memberAgents.push_back(a);
+
+    a->m_parentRobot = m_robot;
+    a->m_parentAgent = this;
+
+    // Set the initial role for this member.
+    SetRole(a, m_initialRoles[memberLabel]);
+
+    // Set the initial priority.
+    SetPriority(a, isWorker ? 1000 + priority++ : 0);
+
+    /// @TODO Currently we assume that the starting location for each helper is a
+    ///       charging location. We need to implement a set of labeled regions
+    ///       in a problem to define charging areas independently.
+    /// @TODO We currently assume that charging locations are XY regions which
+    ///       extend infinitely in the z-dimension.
+    if(GetRole(a) == Helper or GetRole(a) == Charging) {
+      // Get the position of the member.
+      auto position = robot->GetDynamicsModel()->GetSimulatedState();
+
+      std::unique_ptr<CSpaceBoundingBox> boundary(2);
+      boundary->ShrinkToPoint(position);
+
+      // Initialize this charging location with the helper/charging member.
+      m_chargingLocations.emplace_back(std::move(boundary), a);
+    }
+  }
 
   // Initialize the agent's planning library.
   m_library = new MPLibrary(xmlFile);
@@ -46,49 +121,9 @@ Initialize() {
   m_solution = new MPSolution(m_robot);
 
   // Generate the shared roadmap.
-  auto task = problem->GetTasks(m_robot).front();
-  m_library->Solve(problem, task, m_solution);
-
-  auto childRobots = GetChildRobots();
-  int priority = 1;
-  //double depletion = 0.20;
-
-  // Initialize the agent for each child robot.
-  for(auto robot : childRobots) {
-    // Create an agent for this child.
-    auto agent = new PathFollowingChildAgent(robot);
-    robot->SetAgent(agent);
-
-    // Set up priorities and charging locations based on the robot labels.
-    if(IsHelper(robot)) {
-      // Currently we assume that the starting location for each helper is a
-      // charging location.
-      auto helperPos = robot->GetDynamicsModel()->GetSimulatedState();
-      m_chargingLocations.push_back(make_pair(helperPos, true));
-      m_availableHelpers.push_back(robot);
-      agent->m_priority = 0;
-    }
-    else {
-      agent->m_priority = 1000 + priority++;
-    }
-
-    // Set up the shared roadmap and parent/child relationship.
-    //agent->InitializeMPSolution(m_solution);
-    agent->m_parentRobot = m_robot;
-    agent->m_parentAgent = this;
-    m_childAgents.push_back(agent);
-  }
-      //auto helperPos = robot->GetDynamicsModel()->GetSimulatedState();
-
-  //Using the coordinator's start constraint to assigng charging location
-  CfgType chargingPoint(m_robot);
-  auto newtask = m_robot->GetMPProblem()->GetTasks(m_robot).front();
-  auto boundary = newtask->GetStartBoundary();
-  chargingPoint.SetData(boundary->GetCenter());
-  m_chargingLocations.push_back(make_pair(chargingPoint, false));
-
-  // Initialize the set of unvisited configurations.
-  InitializeUnvisitedCfgs();
+  std::unique_ptr<MPTask> sharedRoadmap(new MPTask(m_robot));
+  m_library->Solve(problem, sharedRoadmap.get(), m_solution);
+  sharedRoadmap->SetCompleted();
 }
 
 
@@ -113,80 +148,24 @@ Uninitialize() {
   delete m_library;
 
   m_chargingLocations.clear();
-  m_availableHelpers.clear();
   m_solution = nullptr;
   m_library  = nullptr;
 }
 
 /*--------------------------- Coordinator Functions --------------------------*/
 
-std::vector<Robot*>&
-BatteryConstrainedGroup::
-GetHelpers() {
-  return m_availableHelpers;
-}
-
-
-std::vector<pair<Cfg, bool>>&
-BatteryConstrainedGroup::
-GetChargingLocations() {
-  return m_chargingLocations;
-}
-
-
-bool
-BatteryConstrainedGroup::
-IsHelper(Robot* const _r) const {
-  return _r->GetLabel().compare(0, 6, "helper") == 0;
-}
-
-
 void
 BatteryConstrainedGroup::
-SetHelper(Robot* _r) {
-  std::string label = _r->GetLabel();
-  label.replace(0,6,"helper");
-  _r->SetLabel(label);
-}
-
-
-void
-BatteryConstrainedGroup::
-SetWorker(Robot* _r) {
-  std::string label = _r->GetLabel();
-  label.replace(0,6,"worker");
-  _r->SetLabel(label);
-}
-
-
-bool 
-BatteryConstrainedGroup::
-AllGoalsCompleted() {
-  for(auto val: m_unvisitedCfgs)
-    if(!val.second.empty())
-      return false;
-  return true;
-}
-
-void
-BatteryConstrainedGroup::
-AddGoal(Cfg& _cfg, const std::string& _robotLabel) {
-  m_unvisitedCfgs[_robotLabel].push_back(_cfg);
-}
-
-
-const Cfg
-BatteryConstrainedGroup::
-GetRandomRoadmapPoint(std::string _label) {
-  Cfg empty(nullptr);
-  if(m_unvisitedCfgs[_label].empty()) {
-    return empty;
-  }
-  else {
-    Cfg point = m_unvisitedCfgs[_label].back();
-    m_unvisitedCfgs[_label].pop_back();
-    return point;
-  }
+ArbitrateCollision(const vector<Robot*>& _robots){
+  /// @TODO  
+  //if(m_robot->GetAgent()->m_priority < robot->GetAgent()->m_priority){
+  //  m_shouldHalt = true;
+  //  return true;
+  //}
+  //else{
+  //  m_shouldHalt = false;
+  //  coll = true;
+  //}
 }
 
 /*---------------------------- Coordinator Helpers ---------------------------*/
@@ -212,7 +191,6 @@ MakeNextPlan(MPTask* const _task, const bool _collisionAvoidance) {
 
   std::ofstream ofs("output.txt");
   ofs << "Lazy Time: " << m_lazyTime << "\nBasic Time: " << m_prmTime << endl;
-  //Write basicTime and lazyTime to output file
   return m_solution->GetPath()->Cfgs();
 }
 
@@ -220,7 +198,7 @@ MakeNextPlan(MPTask* const _task, const bool _collisionAvoidance) {
 void
 BatteryConstrainedGroup::
 SetNextChildTask() {
-  for(auto agent : m_childAgents) {
+  for(auto agent : m_memberAgents) {
     auto agentRobot = agent->GetRobot();
 
     // Get a random roadmap point as the new goal for this agent, and also get
@@ -242,36 +220,127 @@ SetNextChildTask() {
   }
 }
 
+/*--------------------------- Member Management ------------------------------*/
 
-std::vector<Robot*>
+void
 BatteryConstrainedGroup::
-GetChildRobots() const {
-  auto problem = m_robot->GetMPProblem();
+SetPriority(Agent* const _a, const size_t _priority) {
+  m_memberPriorities[_a] = _priority;
+}
 
-  std::vector<Robot*> childRobots;
-  for(auto i : problem->GetRobots()) {
-    if(i->GetLabel() != m_robot->GetLabel())
-      childRobots.push_back(i);
-  }
-  return childRobots;
+
+size_t
+BatteryConstrainedGroup::
+GetPriority(Agent* const _a) {
+  return m_memberPriorities[_a];
 }
 
 
 void
 BatteryConstrainedGroup::
-InitializeUnvisitedCfgs() {
+SetRole(Agent* const _a, const Role _r) {
+  m_roleMap[_a] = _r;
+}
 
-  for(auto robot : GetChildRobots()) {
-    auto tasks = m_robot->GetMPProblem()->GetTasks(robot);
-    std::vector<Cfg> workerCfgs;
-    for(auto task : tasks) {
-      auto boundary = task->GetGoalBoundary();
-      Cfg newCfg(m_robot);
-      newCfg.SetData(boundary->GetCenter());
-      workerCfgs.push_back(newCfg);
+
+BatteryConstrainedGroup::Role
+BatteryConstrainedGroup::
+GetRole(Agent* const _a) const {
+  return m_roleMap[_a];
+}
+
+
+std::vector<Robot*>
+BatteryConstrainedGroup::
+GetHelpers() {
+  std::vector<Robot*> output;
+
+  for(auto member : m_memberAgents)
+    if(GetRole(member) == Helper)
+      output.push_back(member);
+
+  return output;
+}
+
+
+Agent*
+BatteryConstrainedGroup::
+GetNearestHelper(Agent* const _member) {
+  auto robot = _member->GetRobot();
+  const Cfg memberPos = robot->GetDynamicsModel()->GetSimulatedState();
+
+  double nearestDistance = std::numeric_limits<double>::max();
+  Agent* nearestHelper = nullptr;
+
+  auto dm = m_library->GetDistanceMetric("connectedFreeSpace");
+
+  for(auto helper : GetHelpers()) {
+    const Cfg helperPos = helper->GetDynamicsModel()->GetSimulatedState();
+    const double distance = dm->Distance(memberPos, helperPos);
+
+    if(distance < nearestDistance) {
+      nearestDistance = distance;
+      nearestHelper = helper->GetAgent();
     }
-    m_unvisitedCfgs[robot->GetLabel()] = workerCfgs;
   }
+
+  return nearestHelper;
+}
+
+/*---------------------------- Charging Locations ----------------------------*/
+
+std::pair<Boundary*, double>
+BatteryConstrainedGroup::
+FindNearestChargingLocation(Agent* const _a) {
+  auto robot = _a->GetRobot();
+  auto currentPos = robot->GetDynamicsModel()->GetSimulatedState();
+
+  Boundary* bestChargingLocation = nullptr;
+  double bestDistance = std::numeric_limits<double>::max();
+
+  /// @TODO Create this distance metric during initialization if it does not
+  /// already exist.
+  auto dm = m_library->GetDistanceMetric("connectedFreeSpace");
+
+  // Find the closest charging location to m_robot
+  for(const auto& chargingLocation : m_chargingLocations) {
+    // Skip occupied locations.
+    if(chargingLocation.second)
+      continue;
+
+    // Get a random configuration within the charging region.
+    Boundary* region = chargingLocation.first.get();
+    Cfg chargingCfg(robot);
+    chargingCfg.SetData(region->GetRandomPoint());
+
+    // Get the freespace distance.
+    const double distance = dm->Distance(currentPos, chargingCfg);
+
+    if(distance < bestDistance) {
+      bestDistance = distance;
+      bestChargingLocation = region;
+    }
+  }
+
+  return {bestChargingLocation, bestDistance};
+}
+
+
+bool
+BatteryConstrainedGroup::
+IsAtChargingStation(Agent* const _member) {
+  auto nearest = FindNearestChargingLocation(_member);
+  Boundary* location = nearest.first;
+  const double distance = nearest.second;
+
+  if(!location)
+    return false;
+
+  // Define a distance threshold. We say a member is 'at' a charging location if
+  // it is within this ammount.
+  static constexpr double threshold = .15;
+  
+  return distance <= threshold;
 }
 
 /*----------------------------------------------------------------------------*/

@@ -5,15 +5,10 @@
 
 #include "ConfigurationSpace/Cfg.h"
 #include "MPLibrary/PMPL.h"
-#include "Battery.h"
 
 class BatteryConstrainedGroup;
 class NetbookInterface;
 
-static_assert(false, "PathFollowingChildAgent needs to be refactored so that it "
-    "is obviously correct before it is used again. Proper ownership and "
-    "configuration of tasks is the biggest problem. The many helper functions "
-    "need to be streamlined and properly documented as well.");
 
 ////////////////////////////////////////////////////////////////////////////////
 /// This agent follows a set of tasks and executes the helper worker behavior.
@@ -48,35 +43,15 @@ class PathFollowingChildAgent : public Agent {
     /// @param _collisionAvoidance Is this a collision avoidance path?
     void GetNextPath(MPTask* const _task, const bool _collisionAvoidance = false);
 
-    MPTask* GetNewTask();
-
     const bool CallForHelp();
-
-    const int GetNearestHelper();
-
-    const bool IsAtChargingStation();
-
-    void ClearChargingStation();
-
-    void FindNearestChargingLocation();
 
     void ExecuteTask(double _dt);
 
-    const bool InCollision();
-
-    void SetParentRobot(Robot*);
-
-    const Robot* GetParentRobot();
+    void InCollision();
 
     void Replan();
 
     const bool IsHeadOnCollision();
-    ///@}
-    //TODO: Make protected
-    BatteryConstrainedGroup* m_parentAgent{nullptr};
-
-    //TODO: move this to protected and add getters and setters.
-    Robot* m_parentRobot{nullptr};
 
   private:
 
@@ -112,6 +87,7 @@ class PathFollowingChildAgent : public Agent {
     void PauseSimulatedAgent(double);
 
     void PauseHardwareAgent(double);
+
     ///@}
 
   protected:
@@ -119,16 +95,12 @@ class PathFollowingChildAgent : public Agent {
     ///@name Internal State
     ///@{
 
+    BatteryConstrainedGroup* m_parentAgent{nullptr};
+
     std::vector<Cfg> m_path; ///< The path to follow.
     size_t m_pathIndex{0};   ///< The path node that is the current subgoal.
 
     MPLibrary* m_library{nullptr}; ///< This agent's planning library.
-
-    bool m_done{false};
-
-    Battery* m_battery{nullptr};
-
-    Robot* m_myHelper{nullptr};
 
     bool m_waitForHelp{true};
 

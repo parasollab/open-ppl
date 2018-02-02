@@ -7,7 +7,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 /// Models a simulated battery with a finite amount of charge.
 ///
-/// @TODO Move this to the hardware code. We want a general 'battery' base class
+/// @TODO Unify with other hardware code. We want a general 'battery' base class
 ///       which could represent either a real or simulated battery. This should
 ///       be derived to describe either option.
 ////////////////////////////////////////////////////////////////////////////////

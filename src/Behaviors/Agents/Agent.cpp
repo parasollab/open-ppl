@@ -11,6 +11,10 @@
 #include "MPProblem/Robot/DynamicsModel.h"
 #include "MPProblem/Robot/Robot.h"
 #include "Utilities/XMLNode.h"
+#include "MPLibrary/DistanceMetrics/WeightedEuclideanDistance.h"
+#include "MPProblem/MPProblem.h"
+#include "ConfigurationSpace/Cfg.h"
+#include "MPLibrary/PMPL.h"
 
 #include <iostream>
 
@@ -38,7 +42,6 @@ Factory(Robot* const _r, XMLNode& _node) {
   std::unique_ptr<Agent> output;
 
 #ifdef PMPL_SIMULATOR
-  /// @TODO Parse battery-constrained groups once fixed.
   if(type == "pathfollowing")
     output = std::unique_ptr<PathFollowingAgent>(
         new PathFollowingAgent(_r, _node)
@@ -46,6 +49,10 @@ Factory(Robot* const _r, XMLNode& _node) {
   else if(type == "roadmapfollowing")
     output = std::unique_ptr<RoadmapFollowingAgent>(
         new RoadmapFollowingAgent(_r, _node)
+    );
+  else if(type == "batteryconstrainedgroup")
+    output = std::unique_ptr<BatteryConstrainedGroup>(
+        new BatteryConstrainedGroup(_r, _node)
     );
   else
     throw ParseException(_node.Where(), "Unknown agent type '" + type + "'.");
@@ -112,6 +119,34 @@ MPTask*
 Agent::
 GetTask() const noexcept {
   return m_task;
+}
+
+
+std::vector<Robot*> 
+Agent::
+ProximityCheck(const double _distance) const {
+  // TODO: WeightedEuclideanDistance assumes that both robots have identical
+  // configuration spaces. Adjust this function to find the true minimum
+  // distance between the robot bodies.
+  static WeightedEuclideanDistance<PMPLTraits> dm(1,0,0,0);
+  auto problem = m_robot->GetMPProblem();
+
+  vector<Robot*> result;
+
+  for(auto& robotPtr : problem->GetRobots()) {
+    auto robot = robotPtr.get();
+    if(robot->IsVirtual() or robot == m_robot)
+      continue;
+
+    auto robotPosition = robot->GetDynamicsModel()->GetSimulatedState();
+    auto myPosition = m_robot->GetDynamicsModel()->GetSimulatedState();
+    double distance = dm.Distance(robotPosition, myPosition);
+
+    if(distance < _distance){
+      result.push_back(robot);
+    }
+  }
+  return result;
 }
 
 /*----------------------------------------------------------------------------*/

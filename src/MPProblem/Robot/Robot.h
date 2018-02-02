@@ -7,6 +7,7 @@
 #include <vector>
 #include <unordered_map>
 
+#include "HardwareInterfaces/Battery.h"
 #include "Control.h"
 
 class Actuator;
@@ -69,6 +70,8 @@ class Robot final {
 
   /// Interfaces the robot's hardware, mapped by label.
   std::unordered_map<std::string, std::unique_ptr<HardwareInterface>> m_hardware;
+  
+  std::unique_ptr<Battery> m_battery; ///< An emulated battery for this agent. TODO: Unify with other hardware stuff
 
   ///@}
 
@@ -215,8 +218,7 @@ class Robot final {
     void SetHardwareInterface(const std::string& _label,
         std::unique_ptr<HardwareInterface>&& _i) noexcept;
 
-    /// Get the minimum time between commands sent to the hardware, in seconds.
-    double GetHardwareTime() const noexcept;
+    Battery* GetBattery() const noexcept;
 
     ///@}
     ///@name Other Properties

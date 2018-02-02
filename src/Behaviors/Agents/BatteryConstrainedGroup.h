@@ -4,7 +4,6 @@
 #include "Agent.h"
 
 #include "ConfigurationSpace/Cfg.h"
-#include "Behaviors/Agents/PathFollowingChildAgent.h"
 #include "MPLibrary/PMPL.h"
 
 
@@ -31,6 +30,12 @@ class BatteryConstrainedGroup : public Agent {
 
   public:
 
+    ///@name Local Types
+    ///@{
+
+    enum Role {Worker, Helper, Charging};
+
+    ///@}
     ///@name Motion Planning Types
     ///@{
 
@@ -45,6 +50,8 @@ class BatteryConstrainedGroup : public Agent {
     /// Create an agent group with some robot as the coordinator.
     /// @param _r The coordinator robot.
     BatteryConstrainedGroup(Robot* const _r);
+
+    BatteryConstrainedGroup(Robot* const _r, XMLNode& _node);
 
     virtual ~BatteryConstrainedGroup();
 
@@ -65,31 +72,18 @@ class BatteryConstrainedGroup : public Agent {
     ///@name Coordinator Interface
     ///@{
 
+    /// Assign a new task to a group member.
+    /// @param _member The member which is requesting a new task.
+    void AssignTask(Agent* const _member);
+
     std::vector<Cfg> MakeNextPlan(MPTask* const _task, const bool _collisionAvoidance = false);
 
-    /// Get a helper robot for the worker robot
-    std::vector<Robot*>& GetHelpers();
+    /// Decide what to do when some group of robots are facing a potential
+    /// collision. Send a command to each robot in this group to resolve the
+    /// potential collision. 
+    /// @param _robots The robots that are potentially in collision.
+    void ArbitrateCollision(const vector<Robot*>& _robots); 
 
-    /// Get the charging locations for problem
-    std::vector<pair<Cfg, bool>>& GetChargingLocations();
-
-    /// Check a robot label to see if it is currently a helper.
-    bool IsHelper(Robot* const _r) const;
-
-    /// Get a random unvisited vertex from the roadmap.
-    const Cfg GetRandomRoadmapPoint(std::string _label);
-
-    /// Change the worker robot to a helper
-    void SetHelper(Robot* _r);
-
-    /// Change the worker robot to a helper
-    void SetWorker(Robot* _r);
-
-    /// Add a goal for a given robot
-    void AddGoal(Cfg& _cfg, const std::string& _robotLabel);
-
-    /// See if all the goals have been compeleted
-    bool AllGoalsCompleted();
     ///@}
 
   private:
@@ -100,12 +94,52 @@ class BatteryConstrainedGroup : public Agent {
     /// Set the next task for each child agent.
     void SetNextChildTask();
 
-    /// Get all robots in the problem that are not the coordinator agent.
-    std::vector<Robot*> GetChildRobots() const;
+    ///@}
+    ///@name Member Management
+    ///@{
 
-    /// Create a vector of all cfgs that are not yet visited. We want to visit
-    /// each one exactly once with any one worker robot.
-    void InitializeUnvisitedCfgs();
+    /// Set the priority of a member agent.
+    /// @param _a The member agent to set priority for.
+    /// @param _priority The priority value.
+    void SetPriority(Agent* const _a, const size_t _priority);
+
+    /// Get the priority of a member agent.
+    /// @param _a The member agent to set priority for.
+    /// @return The priority of _a.
+    size_t GetPriority(Agent* const _a);
+
+    /// Change the role of a group member.
+    /// @param _member The member agent.
+    /// @param _role The new role for _member.
+    void SetRole(Agent* const _member, const Role _role);
+
+    /// Get the current role for a group member.
+    /// @param _member The member agent.
+    /// @return The current role of _member.
+    Role GetRole(Agent* const _member);
+
+    /// Get the set of all robots which are currently helpers.
+    std::vector<Robot*>& GetHelpers();
+
+    /// Get the nearest helper to another group member.
+    /// @param _member The target group member.
+    /// @return The nearest helper to _member.
+    Agent* GetNearestHelper(Agent* const _member);
+
+    ///@}
+    ///@name Charging Locations
+    ///@{
+
+    /// Locate the nearest unoccupied charging location to a given group member.
+    /// @param _a The group member.
+    /// @return A pointer to the charging region nearest to _a.
+    std::pair<Boundary*, double> FindNearestChargingLocation(Agent* const _a);
+
+    /// Determine whether a group member is at a charging location. 
+    /// @param _member The group member.
+    /// @return A pointer to the nearest charging location within the threshold,
+    ///         or null if none was found.
+    bool IsAtChargingStation(Agent* const _member);
 
     ///@}
 
@@ -118,21 +152,30 @@ class BatteryConstrainedGroup : public Agent {
 
     MPSolution* m_solution{nullptr}; ///< The shared-roadmap solution.
 
-    std::vector<PathFollowingChildAgent*> m_childAgents;  ///< All robots in the group.
+    std::vector<std::string> m_memberLabels;  ///< Labels for the group members.
+    std::vector<Agent*> m_memberAgents;       ///< All robots in the group.
 
-    std::vector<pair<Cfg, bool>> m_chargingLocations;  ///< pair of <chargingLocation, isFree>
-
-    /// The helper robots which are currently idle.
-    std::vector<Robot*> m_availableHelpers;
+    /// The relative priorities for member robots.
+    std::unordered_map<Agent*, size_t> m_memberPriorities;
+    
+    /// The set of charging locations and the group member which occupies it, if
+    /// any.
+    std::vector<std::pair<std::unique_ptr<Boundary>, Agent*>> m_chargingLocations;
 
     /// The set of Cfgs that need to be visited by a worker.
     std::map<std::string, std::vector<Cfg> > m_unvisitedCfgs;
-
 
     ///Timers
     double m_lazyTime{0.0};
 
     double m_prmTime{0.0};
+
+    /// Map group members to their current role.
+    std::unordered_map<Agent*, Role> m_roleMap;
+
+    /// Map group members to their initial roles (needed for parsing only).
+    std::unordered_map<std::string, Role> m_initialRoles;
+
     ///@}
 
 };

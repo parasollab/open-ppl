@@ -302,7 +302,6 @@ SIM_OBJS := \
   $(PMPL_DIR)/sim_main.o \
   Behaviors/Agents/PathFollowingAgent.o \
   Behaviors/Agents/RoadmapFollowingAgent.o \
-  Behaviors/Agents/Battery.o \
   Simulator/Simulation.o \
   Visualization/DrawableBody.o \
   Visualization/DrawableMultiBody.o
@@ -364,6 +363,7 @@ PMPL_OBJS := \
   MPProblem/Robot/DynamicsModel.o \
   MPProblem/Robot/Robot.o \
   MPProblem/Robot/HardwareInterfaces/ArucoDetectorInterface.o \
+  MPProblem/Robot/HardwareInterfaces/Battery.o \
   MPProblem/Robot/HardwareInterfaces/HardwareInterface.o \
   MPProblem/Robot/HardwareInterfaces/QueuedHardwareInterface.o \
   MPProblem/Robot/HardwareInterfaces/ServerQueueInterface.o \

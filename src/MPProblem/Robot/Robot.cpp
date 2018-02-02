@@ -85,6 +85,7 @@ Robot(MPProblem* const _p, XMLNode& _node) : m_problem(_p) {
   if(IsNonholonomic())
     SetDynamicsModel(nullptr);
 
+  // Parse hardware and agent child nodes.
   for(auto& child : _node) {
     if(child.Name() == "HardwareInterface") {
       // Make sure we don't allow duplicate labels.
@@ -101,6 +102,9 @@ Robot(MPProblem* const _p, XMLNode& _node) : m_problem(_p) {
       SetAgent(Agent::Factory(this, child));
     }
   }
+
+  // Initialize the emulated battery.
+  m_battery = std::unique_ptr<Battery>(new Battery());
 }
 
 
@@ -110,6 +114,8 @@ Robot(MPProblem* const _p, std::unique_ptr<MultiBody>&& _mb,
   : m_problem(_p), m_label(_label), m_multibody(std::move(_mb)) {
   InitializePlanningSpaces();
   m_multibody->Configure(std::vector<double>(m_multibody->DOF(), 0));
+
+  m_battery = std::unique_ptr<Battery>(new Battery());
 }
 
 
@@ -172,6 +178,9 @@ Robot(MPProblem* const _p, const Robot& _r)
               << "because there should only be one interface object driving a "
               << "given piece of hardware at a time."
               << std::endl;
+
+  if(_r.m_battery.get())
+    m_battery = std::unique_ptr<Battery>(new Battery(*_r.m_battery));
 }
 
 
@@ -182,6 +191,7 @@ Robot::
 Robot(Robot&&) = default;
 
 Robot& Robot::operator=(Robot&&) = default;
+
 /*---------------------------------- I/O -------------------------------------*/
 
 void
@@ -423,6 +433,13 @@ Robot::
 SetHardwareInterface(const std::string& _label,
     std::unique_ptr<HardwareInterface>&& _i) noexcept {
   m_hardware[_label] = std::move(_i);
+}
+
+
+Battery*
+Robot::
+GetBattery() const noexcept {
+  return m_battery.get();
 }
 
 /*------------------------------- Other --------------------------------------*/

@@ -2,6 +2,7 @@
 #define AGENT_H_
 
 #include <memory>
+#include <vector>
 
 class MPTask;
 class Robot;
@@ -105,6 +106,12 @@ class Agent {
 
     /// Get the task that the agent is currently working on.
     MPTask* GetTask() const noexcept;
+
+    /// Check for proximity of other robots and return those that lie within
+    /// some threshold. 
+    /// @param _distance The distance threshold.
+    /// @return the vector of Robots within the threshold.
+    std::vector<Robot*> ProximityCheck(const double _distance) const;
 
     ///@}
 

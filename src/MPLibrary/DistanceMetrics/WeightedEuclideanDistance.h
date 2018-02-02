@@ -27,6 +27,9 @@ class WeightedEuclideanDistance : public DistanceMetricMethod<MPTraits> {
 
     WeightedEuclideanDistance(XMLNode& _node);
 
+    WeightedEuclideanDistance(const double _pos, const double _rot, 
+                              const double _vel, const double _avl);
+
     virtual ~WeightedEuclideanDistance() = default;
 
     ///@}
@@ -83,6 +86,28 @@ WeightedEuclideanDistance(XMLNode& _node) :
   m_avlW /= sum;
 }
 
+
+template <typename MPTraits>
+WeightedEuclideanDistance<MPTraits>::
+WeightedEuclideanDistance(const double _pos, const double _rot, 
+                          const double _vel, const double _avl) {
+  this->SetName("WeightedEuclidean");
+
+  m_posW = _pos;
+  m_rotW = _rot;
+  m_velW = _vel;
+  m_avlW = _avl;
+
+  // Normalize weights.
+  const double sum = m_posW + m_rotW + m_velW + m_avlW;
+  if(sum <= 0)
+    throw ParseException(WHERE, "Sum of weights are non-positive.");
+
+  m_posW /= sum;
+  m_rotW /= sum;
+  m_velW /= sum;
+  m_avlW /= sum;
+}
 /*----------------------------- Distance Interface ---------------------------*/
 
 template <typename MPTraits>
