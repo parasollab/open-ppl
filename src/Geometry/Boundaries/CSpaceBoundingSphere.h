@@ -20,6 +20,8 @@ class CSpaceBoundingSphere : public AbstractBoundingSphere {
     explicit CSpaceBoundingSphere(const std::vector<double>& _center,
         const double _radius = std::numeric_limits<double>::max());
 
+    CSpaceBoundingSphere(XMLNode& _node);
+
     virtual ~CSpaceBoundingSphere() noexcept;
 
     virtual std::unique_ptr<Boundary> Clone() const override;

@@ -24,6 +24,10 @@ class AbstractBoundingBox :  public Boundary, public NBox {
     /// @param[in] _n The number of dimensions.
     explicit AbstractBoundingBox(const std::vector<double>& _center);
 
+    /// Construct a bounding box from an XML node.
+    /// @param _node The XML node to parse.
+    AbstractBoundingBox(XMLNode& _node);
+
     virtual ~AbstractBoundingBox() noexcept;
 
     ///@}
@@ -83,8 +87,6 @@ class AbstractBoundingBox :  public Boundary, public NBox {
     ///@}
     ///@name I/O
     ///@{
-
-    virtual void ReadXML(XMLNode& _node) override;
 
     virtual void Read(istream& _is, CountingStreamBuffer& _cbs) override;
 

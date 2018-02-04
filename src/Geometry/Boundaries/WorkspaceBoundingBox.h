@@ -18,6 +18,8 @@ class WorkspaceBoundingBox : public AbstractBoundingBox {
 
     explicit WorkspaceBoundingBox(const std::vector<double>& _center);
 
+    WorkspaceBoundingBox(XMLNode& _node);
+
     virtual ~WorkspaceBoundingBox() noexcept;
 
     virtual std::unique_ptr<Boundary> Clone() const override;

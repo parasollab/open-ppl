@@ -1,4 +1,5 @@
 #include "Constraint.h"
+#include "BoundaryConstraint.h"
 #include "CSpaceConstraint.h"
 #include "WorkspaceConstraint.h"
 
@@ -26,6 +27,9 @@ Factory(Robot* const _r, XMLNode& _node) {
   else if(_node.Name() == "WorkspaceConstraint")
     output = std::unique_ptr<WorkspaceConstraint>(
         new WorkspaceConstraint(_r, _node));
+  else if(_node.Name() == "BoundaryConstraint")
+    output = std::unique_ptr<BoundaryConstraint>(
+        new BoundaryConstraint(_r, _node));
   else
     throw RunTimeException(WHERE, "Unrecognized constraint type '" +
         _node.Name() + "'.");

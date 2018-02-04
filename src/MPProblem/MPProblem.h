@@ -91,18 +91,21 @@ class MPProblem final
     ///@}
     ///@name Task Accessors
     ///@{
-    /// @TODO Add support for dynamically adding and removing tasks.
 
-    /// Get the tasks currently assigned to a given robot.
+    /// Get the unfinished tasks currently assigned to a given robot.
     /// @param _robot The robot to retrieve tasks for.
     /// @return The set of tasks currently assigned to _robot.
-    const std::list<std::unique_ptr<MPTask>>& GetTasks(Robot* const _robot)
-        const noexcept;
+    std::vector<MPTask*> GetTasks(Robot* const _robot) const noexcept;
 
-    /// Add a task to the problem for a given robot.
-    /// @param _robot The robot to which the new task is assigned.
+    /// Add a task to the problem. The assigned robot will be taken from the
+    /// task object.
     /// @param _task The new task.
-    void AddTask(Robot* const _robot, std::unique_ptr<MPTask>&& _task);
+    void AddTask(std::unique_ptr<MPTask>&& _task);
+
+    /// Reassign a task to another robot.
+    /// @param _task The task to reassign.
+    /// @param _newOwner The new robot assigned to _task.
+    void ReassignTask(MPTask* const _task, Robot* const _newOwner);
 
     ///@}
     ///@name Dynamic Obstacle Accessors

@@ -14,6 +14,10 @@ CSpaceBoundingSphere(const std::vector<double>& _center, const double _radius)
 
 
 CSpaceBoundingSphere::
+CSpaceBoundingSphere(XMLNode& _node) : AbstractBoundingSphere(_node) { }
+
+
+CSpaceBoundingSphere::
 ~CSpaceBoundingSphere() noexcept = default;
 
 

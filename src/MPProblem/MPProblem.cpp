@@ -150,8 +150,34 @@ ReadXMLFile(const string& _filename) {
 
 void
 MPProblem::
-AddTask(Robot* const _robot, std::unique_ptr<MPTask>&& _task) {
-  m_taskMap[_robot].push_back(std::move(_task));
+AddTask(std::unique_ptr<MPTask>&& _task) {
+  auto robot = _task->GetRobot();
+  m_taskMap[robot].push_back(std::move(_task));
+}
+
+
+void
+MPProblem::
+ReassignTask(MPTask* const _task, Robot* const _newOwner) {
+  // Find an iterator to the existing entry in the task map.
+  auto oldOwner = _task->GetRobot();
+  auto& oldTasks = m_taskMap.at(oldOwner);
+  auto iter = oldTasks.begin();
+  for(; iter != oldTasks.end(); ++iter)
+    if(iter->get() == _task)
+      break;
+
+  // If we hit the end, the task was not found.
+  if(iter == oldTasks.end())
+    throw RunTimeException(WHERE, "Requested task was not found.");
+
+  // Set the task's robot.
+  (*iter)->SetRobot(_newOwner);
+
+  // Move the task to the new owner's map.
+  auto& newTasks = m_taskMap.at(_newOwner);
+  newTasks.emplace_back(std::move(*iter));
+  oldTasks.erase(iter);
 }
 
 /*----------------------------- Environment Accessors ------------------------*/
@@ -218,10 +244,18 @@ GetRobots() const noexcept {
 
 /*----------------------------- Task Accessors -------------------------------*/
 
-const std::list<std::unique_ptr<MPTask>>&
+std::vector<MPTask*>
 MPProblem::
 GetTasks(Robot* const _robot) const noexcept {
-  return m_taskMap.at(_robot);
+  const auto& tasks = m_taskMap.at(_robot);
+
+  std::vector<MPTask*> output;
+
+  for(const auto& task : tasks)
+    if(!task->IsCompleted())
+      output.push_back(task.get());
+
+  return output;
 }
 
 

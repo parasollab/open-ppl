@@ -22,6 +22,8 @@ class PathFollowingChildAgent : public Agent {
 
     PathFollowingChildAgent(Robot* const _r);
 
+    PathFollowingChildAgent(Robot* const _r, XMLNode& _node);
+
     virtual ~PathFollowingChildAgent();
 
     ///@}
@@ -38,6 +40,15 @@ class PathFollowingChildAgent : public Agent {
     ///@name Child Interface
     ///@{
 
+    /// Check if the agent's battery is considered to be below the 'low'
+    /// threshold.
+    bool IsBatteryLow();
+
+    /// Check if the agent's battery is considered to be above the 'high'
+    /// threshold.
+    bool IsBatteryLow();
+
+
     /// Get the next path for this child. Sets m_path.
     /// @param _task The task defining the next goal.
     /// @param _collisionAvoidance Is this a collision avoidance path?
@@ -47,16 +58,26 @@ class PathFollowingChildAgent : public Agent {
 
     void ExecuteTask(double _dt);
 
-    void InCollision();
-
-    void Replan();
-
     const bool IsHeadOnCollision();
+
+    ///@}
 
   private:
 
     ///@name Helper Functions
     ///@{
+
+    /// Execute a control on the robot, and on the hardware if present.
+    /// @param _c The control to execute.
+    /// @param _dt The length of time to execute the control.
+    void ExecuteControl(const Control _c, const double _dt);
+
+    /// Check if this member is in collision proximity to any others. If so, ask
+    /// the coordinator to arbitrate the collision.
+    void InCollision();
+
+    /// Generate a new plan for the robot's current task.
+    void GeneratePlan();
 
     void WorkerStep(double);
 
@@ -75,15 +96,6 @@ class PathFollowingChildAgent : public Agent {
     /// @return The length of _path from start to goal.
     const double GetPathLength(const vector<Cfg>& _path) const;
 
-    /// Compute the euclidean distance in the XY plane between two
-    /// configurations (ignoring Z and any rotations).
-    /// @param _point1 The first cfg.
-    /// @param _point1 The second cfg.
-    /// @return The distance.
-    /// @TODO This can be done with the existing WeightedEuclideanDistance
-    ///       metric, should replace with that.
-    const double EuclideanDistance(const Cfg& _point1, const Cfg& _point2) const;
-
     void PauseSimulatedAgent(double);
 
     void PauseHardwareAgent(double);
@@ -97,12 +109,11 @@ class PathFollowingChildAgent : public Agent {
 
     BatteryConstrainedGroup* m_parentAgent{nullptr};
 
+    MPLibrary* m_library{nullptr}; ///< This agent's planning library.
+
     std::vector<Cfg> m_path; ///< The path to follow.
     size_t m_pathIndex{0};   ///< The path node that is the current subgoal.
 
-    MPLibrary* m_library{nullptr}; ///< This agent's planning library.
-
-    bool m_waitForHelp{true};
 
     bool m_shouldHalt{false}; ///< The robot should halt if inCollision & lower priority.
 
@@ -114,7 +125,6 @@ class PathFollowingChildAgent : public Agent {
 
     int m_totalRotations{0};
 
-    vector< vector<double> > m_coordinates;
 
     bool m_ignoreLocalization{false};  ///Using this to ignore positional localization when trying to localize the angle
 
@@ -126,11 +136,8 @@ class PathFollowingChildAgent : public Agent {
 
     Cfg m_robotPos; ///< Position of the physical robot
 
-    Cfg m_currentGoal;  ///< Current goal the agent is trying to go to
-
     bool m_goToSameGoal{true};   ///< Should the agent go to the same goal after replanning?
 
-    double m_totalRunTime{0.0};
     ///@}
 
 };

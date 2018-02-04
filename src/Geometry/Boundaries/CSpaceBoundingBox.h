@@ -18,6 +18,8 @@ class CSpaceBoundingBox : public AbstractBoundingBox {
 
     explicit CSpaceBoundingBox(const std::vector<double>& _center);
 
+    CSpaceBoundingBox(XMLNode& _node);
+
     virtual ~CSpaceBoundingBox() noexcept;
 
     virtual std::unique_ptr<Boundary> Clone() const override;

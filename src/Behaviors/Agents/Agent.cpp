@@ -50,10 +50,10 @@ Factory(Robot* const _r, XMLNode& _node) {
     output = std::unique_ptr<RoadmapFollowingAgent>(
         new RoadmapFollowingAgent(_r, _node)
     );
-  else if(type == "batteryconstrainedgroup")
-    output = std::unique_ptr<BatteryConstrainedGroup>(
-        new BatteryConstrainedGroup(_r, _node)
-    );
+  //else if(type == "batteryconstrainedgroup")
+  //  output = std::unique_ptr<BatteryConstrainedGroup>(
+  //      new BatteryConstrainedGroup(_r, _node)
+  //  );
   else
     throw ParseException(_node.Where(), "Unknown agent type '" + type + "'.");
 #else
@@ -122,7 +122,7 @@ GetTask() const noexcept {
 }
 
 
-std::vector<Robot*> 
+std::vector<Robot*>
 Agent::
 ProximityCheck(const double _distance) const {
   // TODO: WeightedEuclideanDistance assumes that both robots have identical

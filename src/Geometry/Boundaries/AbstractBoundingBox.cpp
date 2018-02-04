@@ -3,6 +3,9 @@
 #include "ConfigurationSpace/Cfg.h"
 #include "Utilities/MPUtils.h"
 #include "Utilities/PMPLExceptions.h"
+#include "Utilities/XMLNode.h"
+
+#include <sstream>
 
 
 /*------------------------------- Construction -------------------------------*/
@@ -13,6 +16,24 @@ AbstractBoundingBox(const size_t _n) : NBox(_n) { }
 
 AbstractBoundingBox::
 AbstractBoundingBox(const std::vector<double>& _center) : NBox(_center) { }
+
+
+AbstractBoundingBox::
+AbstractBoundingBox(XMLNode& _node) : NBox(0) {
+  const std::string limits = _node.Read("limits", true, "",
+      "The dimensions of the bounding box.");
+
+  std::istringstream buffer(limits);
+
+  // Try to read in bounding box limits using NBox. Re-propogate any exceptions
+  // with more precise 'where' info.
+  try {
+    buffer >> static_cast<NBox&>(*this);
+  }
+  catch(PMPLException& _e) {
+    throw ParseException(_node.Where(), _e.what());
+  }
+}
 
 
 AbstractBoundingBox::
@@ -146,25 +167,6 @@ ResetBoundary(const vector<pair<double, double>>& _bbx, const double _margin) {
 }
 
 /*------------------------------------ I/O -----------------------------------*/
-
-void
-AbstractBoundingBox::
-ReadXML(XMLNode& _node) {
-  const string limits = _node.Read("limits", true, "", "The dimensions of the"
-      " bounding box.");
-
-  istringstream buffer(limits);
-
-  // Try to read in bounding box limits using NBox. Re-propogate any exceptions
-  // with more precise 'where' info.
-  try {
-    buffer >> static_cast<NBox&>(*this);
-  }
-  catch(PMPLException& _e) {
-    throw ParseException(_node.Where(), _e.what());
-  }
-}
-
 
 void
 AbstractBoundingBox::

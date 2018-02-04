@@ -34,6 +34,8 @@ class TetrahedralBoundary : public Boundary {
     explicit TetrahedralBoundary(const std::vector<Point3d>& _pts,
         const bool _check = true);
 
+    TetrahedralBoundary(XMLNode& _node);
+
     virtual std::unique_ptr<Boundary> Clone() const override;
 
     virtual ~TetrahedralBoundary() noexcept;

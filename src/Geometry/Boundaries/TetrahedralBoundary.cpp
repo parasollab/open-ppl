@@ -34,6 +34,12 @@ TetrahedralBoundary(const std::vector<Point3d>& _pts, const bool _check) {
 
 
 TetrahedralBoundary::
+TetrahedralBoundary(XMLNode& _node) {
+  throw RunTimeException(WHERE, "Not yet implemented.");
+}
+
+
+TetrahedralBoundary::
 ~TetrahedralBoundary() noexcept = default;
 
 

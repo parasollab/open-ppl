@@ -30,6 +30,10 @@ class AbstractBoundingSphere : public Boundary, public NSphere {
     explicit AbstractBoundingSphere(const std::vector<double>& _center,
         const double _radius = std::numeric_limits<double>::max());
 
+    /// Construct a bounding sphere from an XML node.
+    /// @param _node The XML node to parse.
+    AbstractBoundingSphere(XMLNode& _node);
+
     virtual ~AbstractBoundingSphere() noexcept;
 
     ///@}
@@ -83,8 +87,6 @@ class AbstractBoundingSphere : public Boundary, public NSphere {
     ///@}
     ///@name I/O
     ///@{
-
-    virtual void ReadXML(XMLNode& _node) override;
 
     virtual void Read(istream& _is, CountingStreamBuffer& _cbs) override;
 

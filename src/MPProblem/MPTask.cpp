@@ -106,6 +106,20 @@ SetRobot(Robot* const _r) {
     c->SetRobot(_r);
 }
 
+
+const std::string&
+MPTask::
+GetLabel() const noexcept {
+  return m_label;
+}
+
+
+void
+MPTask::
+SetLabel(const std::string& _label) noexcept {
+  m_label = _label;
+}
+
 /*-------------------------- Constraint Accessors ----------------------------*/
 
 void

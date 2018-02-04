@@ -55,7 +55,7 @@ Initialize() {
   m_library = new MPLibrary(xmlFile);
 
   /// @TODO Choose the task intelligently rather than just taking the first one.
-  auto task = problem->GetTasks(m_robot).front().get();
+  auto task = problem->GetTasks(m_robot).front();
   this->SetTask(task);
 
   // Create a new solution object to hold a plan for this agent.

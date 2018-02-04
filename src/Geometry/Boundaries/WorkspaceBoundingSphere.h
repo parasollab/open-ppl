@@ -23,6 +23,8 @@ class WorkspaceBoundingSphere : public AbstractBoundingSphere {
     explicit WorkspaceBoundingSphere(const Vector3d& _center,
         const double _radius = std::numeric_limits<double>::max());
 
+    WorkspaceBoundingSphere(XMLNode& _node);
+
     virtual ~WorkspaceBoundingSphere() noexcept;
 
     virtual std::unique_ptr<Boundary> Clone() const override;

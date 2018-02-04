@@ -12,7 +12,6 @@ using namespace mathtool;
 
 #include "Range.h"
 #include "Utilities/IOUtils.h"
-#include "Utilities/XMLNode.h"
 
 #include <CGAL/Exact_predicates_exact_constructions_kernel.h>
 #include <CGAL/Polyhedron_3.h>
@@ -41,6 +40,11 @@ class Boundary {
     ///@{
 
     virtual ~Boundary() noexcept;
+
+    /// Construct a boundary as described by an XML node.
+    /// @param _node The XML node.
+    /// @return A boundary of the appropriate type.
+    static std::unique_ptr<Boundary> Factory(XMLNode& _node);
 
     /// Duplicate this boundary and return a dynamically-allocated copy with the
     /// same type. This is provided in the base class so that we can copy a
@@ -142,10 +146,6 @@ class Boundary {
     ///@}
     ///@name I/O
     ///@{
-
-    /// Read in a boundary from an XML node.
-    /// @param _node The input node to read from
-    virtual void ReadXML(XMLNode& _node) {}
 
     /// Read in a boundary.
     /// @param _is The input stream to read from.

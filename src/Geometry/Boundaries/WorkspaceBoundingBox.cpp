@@ -13,6 +13,10 @@ WorkspaceBoundingBox(const std::vector<double>& _center) :
 
 
 WorkspaceBoundingBox::
+WorkspaceBoundingBox(XMLNode& _node) : AbstractBoundingBox(_node) { }
+
+
+WorkspaceBoundingBox::
 ~WorkspaceBoundingBox() noexcept = default;
 
 

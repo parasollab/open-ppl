@@ -15,6 +15,10 @@ CSpaceBoundingBox(const std::vector<double>& _center) :
 
 
 CSpaceBoundingBox::
+CSpaceBoundingBox(XMLNode& _node) : AbstractBoundingBox(_node) { }
+
+
+CSpaceBoundingBox::
 ~CSpaceBoundingBox() noexcept = default;
 
 

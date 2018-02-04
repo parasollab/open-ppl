@@ -2,6 +2,10 @@
 
 #include "ConfigurationSpace/Cfg.h"
 #include "Geometry/Bodies/MultiBody.h"
+#include "Geometry/Boundaries/CSpaceBoundingBox.h"
+#include "Geometry/Boundaries/CSpaceBoundingSphere.h"
+#include "Geometry/Boundaries/WorkspaceBoundingBox.h"
+#include "Geometry/Boundaries/WorkspaceBoundingSphere.h"
 
 #include "Utilities/MetricUtils.h"
 #include "Utilities/XMLNode.h"
@@ -11,6 +15,52 @@
 
 Boundary::
 ~Boundary() noexcept = default;
+
+
+std::unique_ptr<Boundary>
+Boundary::
+Factory(XMLNode& _node) {
+  // Read the boundary space, shape, and dimension.
+  std::string space = _node.Read("space", false, "workspace",
+      "The boundary space {cspace | workspace}.");
+  std::string shape = _node.Read("shape", true, "",
+      "The boundary shape {box | sphere}.");
+
+  // Downcase space and shape.
+  std::transform(space.begin(), space.end(), space.begin(), ::tolower);
+  std::transform(shape.begin(), shape.end(), shape.begin(), ::tolower);
+
+  // Initialize the boundary object.
+  std::unique_ptr<Boundary> output;
+
+  if(space == "cspace") {
+    if(shape == "box")
+      output = std::unique_ptr<CSpaceBoundingBox>(
+          new CSpaceBoundingBox(_node));
+    else if(shape == "sphere")
+      output = std::unique_ptr<CSpaceBoundingSphere>(
+          new CSpaceBoundingSphere(_node));
+    else
+      throw ParseException(_node.Where(), "Unrecognized shape option '" + shape +
+          "'.");
+  }
+  else if(space == "workspace") {
+    if(shape == "box")
+      output = std::unique_ptr<WorkspaceBoundingBox>(
+          new WorkspaceBoundingBox(_node));
+    else if(shape == "sphere")
+      output = std::unique_ptr<WorkspaceBoundingSphere>(
+          new WorkspaceBoundingSphere(_node));
+    else
+      throw ParseException(_node.Where(), "Unrecognized shape option '" + shape +
+          "'.");
+  }
+  else
+    throw ParseException(_node.Where(), "Unrecognized space option '" + space +
+        "'.");
+
+  return output;
+}
 
 /*--------------------------- Containment Testing ----------------------------*/
 

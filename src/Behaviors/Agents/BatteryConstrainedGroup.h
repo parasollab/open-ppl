@@ -15,8 +15,8 @@
 ///
 /// A portion of this work was also presented in:
 /// Mishra, Saurabh, Samuel Rodriguez, Marco Morales, and Nancy M. Amato.
-// "Battery-constrained coverage." In Automation Science and Engineering (CASE),
-//  2016 IEEE International Conference on, pp. 695-700. IEEE, 2016.
+/// "Battery-constrained coverage." In Automation Science and Engineering (CASE),
+///  2016 IEEE International Conference on, pp. 695-700. IEEE, 2016.
 ///
 /// This agent represents a coordinator and does not correspond to a physical
 /// robot. Its job is to coordinate the children and hold shared data structures
@@ -76,23 +76,15 @@ class BatteryConstrainedGroup : public Agent {
     /// @param _member The member which is requesting a new task.
     void AssignTask(Agent* const _member);
 
-    std::vector<Cfg> MakeNextPlan(MPTask* const _task, const bool _collisionAvoidance = false);
-
     /// Decide what to do when some group of robots are facing a potential
     /// collision. Send a command to each robot in this group to resolve the
-    /// potential collision. 
+    /// potential collision.
     /// @param _robots The robots that are potentially in collision.
-    void ArbitrateCollision(const vector<Robot*>& _robots); 
+    void ArbitrateCollision(const vector<Robot*>& _robots);
 
     ///@}
 
   private:
-
-    ///@name Coordinator Helpers
-    ///@{
-
-    /// Set the next task for each child agent.
-    void SetNextChildTask();
 
     ///@}
     ///@name Member Management
@@ -126,16 +118,37 @@ class BatteryConstrainedGroup : public Agent {
     /// @return The nearest helper to _member.
     Agent* GetNearestHelper(Agent* const _member);
 
+    /// Send a group member to a designated location by assigning a new task.
+    /// The group member still needs to plan for the new task with PMPL.
+    /// @param _member The group member to dispatch.
+    /// @param _where The location to send _member.
+    void DispatchTo(Agent* const _member, std::unique_ptr<Boundary>&& _where);
+
+    /// Check whether two group members are close enough to execute a task
+    /// handoff.
+    /// @param _member1 The first member.
+    /// @param _member2 The second member.
+    /// @return True if the members are close enough to execute a handoff.
+    bool InHandoffProximity(Agent* const _member1, Agent* const _member2);
+
     ///@}
     ///@name Charging Locations
     ///@{
+
+    /// Create the set of charging locations.
+    /// @TODO Currently we assume that the starting location for each helper is a
+    ///       charging location. We need to implement a set of labeled regions
+    ///       in a problem to define charging areas independently.
+    /// @TODO We currently assume that charging locations are XY regions which
+    ///       extend infinitely in the z-dimension.
+    void InitializeChargingLocations();
 
     /// Locate the nearest unoccupied charging location to a given group member.
     /// @param _a The group member.
     /// @return A pointer to the charging region nearest to _a.
     std::pair<Boundary*, double> FindNearestChargingLocation(Agent* const _a);
 
-    /// Determine whether a group member is at a charging location. 
+    /// Determine whether a group member is at a charging location.
     /// @param _member The group member.
     /// @return A pointer to the nearest charging location within the threshold,
     ///         or null if none was found.
@@ -157,17 +170,13 @@ class BatteryConstrainedGroup : public Agent {
 
     /// The relative priorities for member robots.
     std::unordered_map<Agent*, size_t> m_memberPriorities;
-    
+
     /// The set of charging locations and the group member which occupies it, if
     /// any.
     std::vector<std::pair<std::unique_ptr<Boundary>, Agent*>> m_chargingLocations;
 
-    /// The set of Cfgs that need to be visited by a worker.
-    std::map<std::string, std::vector<Cfg> > m_unvisitedCfgs;
-
-    ///Timers
+    /// Timers
     double m_lazyTime{0.0};
-
     double m_prmTime{0.0};
 
     /// Map group members to their current role.

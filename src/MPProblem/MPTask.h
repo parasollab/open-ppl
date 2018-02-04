@@ -90,6 +90,12 @@ class MPTask final {
     /// @param _r The destination robot which will receive this assignment.
     void SetRobot(Robot* const _r);
 
+    /// Get the semantic label for this task.
+    const std::string& GetLabel() const noexcept;
+
+    /// Set the semantic label for this task.
+    void SetLabel(const std::string& _label) noexcept;
+
     ///@}
     ///@name Constraint Accessors
     ///@{
@@ -171,11 +177,10 @@ class MPTask final {
     ///@name Internal State
     ///@{
 
-    std::string m_label;          ///< The unique task label.
+    std::string m_label;          ///< The task's semantic label.
 
-    Robot* m_robot{nullptr};      ///< The robot assigned to this task.
     /// @TODO Change this to a robot group when that code is ready.
-    //RobotGroup* m_group{nullptr}; ///< The robot group assigned to this task.
+    Robot* m_robot{nullptr};      ///< The robot assigned to this task.
 
     Status m_status{OnDeck};      ///< The status of the current task.
 

@@ -14,6 +14,11 @@ class XMLNode;
 /// An abstract base class representing the required interface for a constraint
 /// on the state of a robot. The Constraint interface requires plain jane Cfg's
 /// to ensure that they are usable by reactive agents.
+///
+/// Constraints may apply to specific robots, or they may be more general
+/// criterion on any robot. In the later case, the robot pointer for the
+/// constraint will be null.
+///
 ////////////////////////////////////////////////////////////////////////////////
 class Constraint {
 
@@ -43,11 +48,15 @@ class Constraint {
     ///@{
 
     /// Change the subject of this constraint.
-    /// @param _r The new robot to constrain.
+    /// @param _r The new robot to constrain, or null to represent any robot.
     virtual void SetRobot(Robot* const _r);
 
     /// Get a sampling boundary that describes the subset of CSpace allowed by
     /// this constraint.
+    /// @note Many constraints can be described in terms of boundaries, but some
+    ///       cannot (such as constraints with ordering requirements). If the
+    ///       constraint can't be represented as a boundary, this will return a
+    ///       null pointer.
     virtual const Boundary* GetBoundary() const = 0;
 
     /// Determine whether a given configuration of the robot satisfies this

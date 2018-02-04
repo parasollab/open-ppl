@@ -156,10 +156,7 @@ ReadXML(XMLNode& _node) {
   // Read and construct boundary, bodies, and other objects in the environment.
   for(auto& child : _node) {
     if(child.Name() == "Boundary") {
-      std::string type = child.Read("type", true, "", "The type of boundary for"
-          " the environment (box, box2d, sphere, sphere2d).");
-      InitializeBoundary(type, child.Where());
-      m_boundary->ReadXML(child);
+      m_boundary = Boundary::Factory(_node);
     }
     else if(child.Name() == "MultiBody") {
       m_obstacles.emplace_back(new MultiBody(child));

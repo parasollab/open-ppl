@@ -22,12 +22,16 @@ WorkspaceBoundingSphere(const std::vector<double>& _center, const double _radius
 
 
 WorkspaceBoundingSphere::
-~WorkspaceBoundingSphere() noexcept = default;
+WorkspaceBoundingSphere(const Vector3d& _center, const double _radius)
+  : AbstractBoundingSphere({_center[0], _center[1], _center[2]}, _radius) { }
 
 
 WorkspaceBoundingSphere::
-WorkspaceBoundingSphere(const Vector3d& _center, const double _radius)
-  : AbstractBoundingSphere({_center[0], _center[1], _center[2]}, _radius) { }
+WorkspaceBoundingSphere(XMLNode& _node) : AbstractBoundingSphere(_node) { }
+
+
+WorkspaceBoundingSphere::
+~WorkspaceBoundingSphere() noexcept = default;
 
 
 std::unique_ptr<Boundary>

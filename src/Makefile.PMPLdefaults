@@ -354,6 +354,7 @@ PMPL_OBJS := \
   MPProblem/MPProblem.o \
   MPProblem/MPTask.o \
   MPProblem/Constraints/Constraint.o \
+  MPProblem/Constraints/BoundaryConstraint.o \
   MPProblem/Constraints/CSpaceConstraint.o \
   MPProblem/Constraints/WorkspaceConstraint.o \
   MPProblem/DynamicObstacle.o \

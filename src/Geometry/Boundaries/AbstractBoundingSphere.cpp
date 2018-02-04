@@ -3,6 +3,7 @@
 #include "Geometry/Boundaries/Range.h"
 #include "Utilities/MPUtils.h"
 #include "Utilities/PMPLExceptions.h"
+#include "Utilities/XMLNode.h"
 
 
 /*------------------------------- Construction -------------------------------*/
@@ -15,6 +16,23 @@ AbstractBoundingSphere(const size_t _n, const double _radius) :
 AbstractBoundingSphere::
 AbstractBoundingSphere(const std::vector<double>& _center, const double _radius) :
     NSphere(_center, _radius) { }
+
+
+AbstractBoundingSphere::
+AbstractBoundingSphere(XMLNode& _node) : NSphere(0) {
+  const std::string limits = _node.Read("limits", true, "",
+      "The dimensions of the bounding sphere.");
+
+  std::istringstream buffer(limits);
+
+  // Try to read in limits using NSphere.
+  try {
+    buffer >> static_cast<NSphere&>(*this);
+  }
+  catch(PMPLException& _e) {
+    throw ParseException(_node.Where(), _e.what());
+  }
+}
 
 
 AbstractBoundingSphere::
@@ -117,24 +135,6 @@ ResetBoundary(const vector<pair<double, double>>&, const double) {
 }
 
 /*------------------------------------ I/O -----------------------------------*/
-
-void
-AbstractBoundingSphere::
-ReadXML(XMLNode& _node) {
-  const string limits = _node.Read("limits", true, "", "The dimensions of the"
-      " bounding sphere.");
-
-  istringstream buffer(limits);
-
-  // Try to read in limits using NSphere.
-  try {
-    buffer >> static_cast<NSphere&>(*this);
-  }
-  catch(PMPLException& _e) {
-    throw ParseException(_node.Where(), _e.what());
-  }
-}
-
 
 void
 AbstractBoundingSphere::
