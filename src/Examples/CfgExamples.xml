@@ -400,7 +400,7 @@
         numRoots="1" m="1" growthFocus="0.01" dmLabel="euclidean"
         nfLabel="Nearest" vcLabel="rapid" connectorLabel="Closest"
         gtype="UNDIRECTED_TREE" debug="false"
-        growGoals="true" extenderLabel="BERO" samplerLabel="UniformRandom">
+        growGoals="false" extenderLabel="BERO" samplerLabel="UniformRandom">
         <Evaluator label="NodesEval"/>
       </BasicRRTStrategy>
 

@@ -397,10 +397,10 @@ Initialize() {
 
 #if 0
 #else
-  // While I have the trees turned off, bi-directional will not work. Not using
-  // a query also will not work. Throw an exception if we try to use that to
-  // remind us.
-  if(m_growGoals or !this->UsingQuery())
+  // While I have the trees turned off, bi-directional will not work. Using more
+  // than one root will also not work. Throw an exception if we try to use that
+  // to remind us.
+  if(m_growGoals or m_numRoots > 1)
     throw RunTimeException(WHERE, "Tree tracking is disabled due to bugs. To be "
         "fixed after ICRA.");
 #endif
